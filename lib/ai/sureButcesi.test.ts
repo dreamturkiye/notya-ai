@@ -36,7 +36,11 @@ beforeEach(() => {
       return new Promise<Response>((_coz, reddet) => {
         const s = o?.signal
         if (!s) return
-        s.addEventListener('abort', () => reddet(Object.assign(new Error('timeout'), { name: 'TimeoutError' })))
+        // A real request holds an open socket. The caller's timeout is AbortSignal.timeout(), whose timer is unref'd:
+        // with nothing else pending the test process's event loop drains and node:test cancels the test ("Promise
+        // resolution is still pending") before the timeout can fire. Hold the loop until the abort, as a socket would.
+        const tut = setInterval(() => {}, 1_000)
+        s.addEventListener('abort', () => { clearInterval(tut); reddet(Object.assign(new Error('timeout'), { name: 'TimeoutError' })) })
       })
     }
     return new Response(c.durum && c.durum >= 400 ? '' : govde(c.metin ?? 'tamam'), { status: c.durum ?? 200 })

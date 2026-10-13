@@ -9,7 +9,8 @@
  */
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { RESMI_TATILLER_2026 } from '@/lib/randevu/resmiTatiller'
-import { doktorIletisimAyari, hastaAdiCoz, hastaIletisimi, tabloYokMu, type DoktorIletisimAyari } from '@/lib/iletisim/sunucu'
+import { doktorIletisimAyari, hastaAdiCoz, tabloYokMu, type DoktorIletisimAyari } from '@/lib/iletisim/sunucu'
+import { hastaIletisimiTamamla } from '@/lib/iletisim/hastaIletisimiTamamla'
 import { sessizSaatMi } from '@/lib/iletisim/otomatikGonderim'
 import { siteAdresi } from '@/lib/iletisim/otomatik/eposta/ayar'
 import { VARSAYILAN_AYAR, ayarNormalize, portalTuruMu, type PortalRandevuAyari } from './ayar'
@@ -515,7 +516,7 @@ export async function isleriCalistir(
       if (!doktorlar.has(doktorId)) doktorlar.set(doktorId, { ayar: await ayarGetir(sb, doktorId), iletisim: await doktorIletisimAyari(sb, doktorId) })
       const d = doktorlar.get(doktorId)!
       if (!d.ayar.acik) { ozet.atlanan++; await bitir('atlandi', 'kapali'); continue }
-      const hasta = await hastaIletisimi(sb, doktorId, r.patient_id, d.iletisim.brans)
+      const hasta = await hastaIletisimiTamamla(sb, doktorId, r.patient_id, d.iletisim.brans)
       if (!hasta) { ozet.atlanan++; await bitir('atlandi', 'hasta_yok'); continue }
 
       const metin = randevuEpostasi(tur, {

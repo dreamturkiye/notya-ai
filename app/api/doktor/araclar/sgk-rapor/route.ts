@@ -7,8 +7,10 @@ import { aiCagir, rotaButcesiMs, yanitMetni } from '@/lib/ai/cagir'
 import { jsonCikar } from '@/lib/ai/jsonOnar'
 import {
   addDaysTr,
+  raporSureSiniri,
   resolveRaporTipi,
   systemPromptFor,
+  UC_YILLIK_RAPOR,
   type HekimKimlik,
   type SgkRaporDraft,
 } from '@/lib/sgk/raporTipleri'
@@ -68,7 +70,11 @@ export async function POST(request: NextRequest) {
     if (!hastaId || !Number.isFinite(sureRaw)) {
       return NextResponse.json({ hata: 'Eksik parametreler' }, { status: 400 })
     }
-    const sure = Math.min(tip.sureMax, Math.max(tip.sureMin, Math.round(sureRaw)))
+    // NOTYA-SUT-RAPOR-01 — SUT 4.1.3(5): two years at most; SUT 4.2.16(2),(6): three years for the reports the
+    // doctor marks as such (coeliac disease, special formulas in inborn metabolic disease). raporSureSiniri decides.
+    const ozelSure = body?.ozelSure === UC_YILLIK_RAPOR.id ? UC_YILLIK_RAPOR.id : null
+    const sinir = raporSureSiniri(tip, ozelSure)
+    const sure = Math.min(sinir.max, Math.max(sinir.min, Math.round(sureRaw)))
 
     const { data: hasta, error: hastaError } = await sb
       .from('patients')
@@ -114,7 +120,7 @@ export async function POST(request: NextRequest) {
     const userPrompt = `Rapor tipi: ${tip.label} (${tip.id}). Süre: ${sureLabel}. Hasta: [HASTA]. Hasta notları: ${guvenliNotlar}`
     assertNoTckn(userPrompt, 'sgk-rapor')
 
-    const rapor = restoreDeep(await taslakUret(systemPromptFor(tip), userPrompt, user.id), map) as SgkRaporDraft
+    const rapor = restoreDeep(await taslakUret(systemPromptFor(tip, ozelSure), userPrompt, user.id), map) as SgkRaporDraft
     rapor.hastaAdi = hastaAdi
     rapor.tcSon4 = ''
     rapor.hekim_notu = hekimNotu
@@ -134,12 +140,12 @@ export async function POST(request: NextRequest) {
     rapor.baslangicTarihi = rapor.baslangicTarihi || tarih
 
     if (tip.sureBirimi === 'gun') {
-      const gun = Math.min(tip.sureMax, Math.max(tip.sureMin, Number(rapor.istirahat_suresi_gun) || sure))
+      const gun = Math.min(sinir.max, Math.max(sinir.min, Number(rapor.istirahat_suresi_gun) || sure))
       rapor.istirahat_suresi_gun = gun
       rapor.bitisTarihi = addDaysTr(bugun, gun)
       delete rapor.onerilen_sure_ay
     } else {
-      const ay = Math.min(tip.sureMax, Math.max(tip.sureMin, Number(rapor.onerilen_sure_ay) || sure))
+      const ay = Math.min(sinir.max, Math.max(sinir.min, Number(rapor.onerilen_sure_ay) || sure))
       rapor.onerilen_sure_ay = ay
       delete rapor.istirahat_suresi_gun
     }

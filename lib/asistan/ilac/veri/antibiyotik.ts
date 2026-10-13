@@ -364,7 +364,10 @@ export const ANTIBIYOTIK: Record<string, TürkishDrug> = {
     },
     form: 'Film tablet, oral süspansiyon',
     sgkCovered: true,
-    sgkRestriction: 'SUT: penisilin alerjisi veya atipik pnömoni belgelendiğinde ödenir.',
+    // NOTYA-SUT-RAPOR-01 — SUT EK-4/E 2-A/1 "Azitromisin Oral: KY" (no restriction), 2-A/1.1 "Azitromisin Parenteral: UH-P".
+    // Source: SGK güncel SUT, 02.10.2026 (RG 33388) işlenmiş hali. The earlier line stated a payment condition
+    // (penicillin allergy / atypical pneumonia) that the text does not contain.
+    sgkRestriction: 'SUT EK-4/E: oral formda reçeteleme kısıtlaması yok; parenteral form ayaktan tedavide uzman hekimlerce veya uzman hekim raporuyla reçete edilir.',
     category: 'Makrolid antibiyotik',
     siniflar: ['Makrolid', 'Azalid', 'Antibiyotik', 'QT uzatan ilaç'],
     alerjiSinifi: ['makrolid'],

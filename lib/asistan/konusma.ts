@@ -238,9 +238,12 @@ export class SesAkisi {
     }
     const madde = LISTE_MADDESI.test(ham)
     if (!madde) this.listeyiBitir()
-    const s = this.temizle(satirIciSade(ham)).trim()
+    const sade = satirIciSade(ham)
+    const s = this.temizle(sade).trim()
     if (!s) return
-    if (kimlikDegeriVarMi(s)) {
+    // The identity check reads the sentence as WRITTEN as well: the cleaner may spell digits out for the speech
+    // provider (elevenMetni, NOTYA-SES-SAYI-NET-01), and a phone / T.C. number in words no longer looks like one.
+    if (kimlikDegeriVarMi(sade) || kimlikDegeriVarMi(s)) {
       if (!this.iletisimNotu) { this.iletisimNotu = true; this.soyle(ILETISIM_EKRANDA, true) }
       return
     }

@@ -13,7 +13,8 @@
  * Slots are bare times; nobody learns whose appointment was cancelled.
  */
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { doktorIletisimAyari, hastaIletisimi, tabloYokMu } from '@/lib/iletisim/sunucu'
+import { doktorIletisimAyari, tabloYokMu } from '@/lib/iletisim/sunucu'
+import { hastaIletisimiTamamla } from '@/lib/iletisim/hastaIletisimiTamamla'
 import { sessizSaatMi } from '@/lib/iletisim/otomatikGonderim'
 import { siteAdresi } from '@/lib/iletisim/otomatik/eposta/ayar'
 import { ayarGetir, hastaIslem, musaitSlotlar, olayYaz, type Islem } from './sunucu'
@@ -169,7 +170,7 @@ export async function teklifTara(sb: Sb, o: { simdi?: number; bitis: number; kan
         teklifte.add(Date.parse(slot.bas))
         ozet.teklif++
         await olayYaz(sb, { randevuId: b.randevu_id, doktorId, olay: 'bekleme_teklif', yapan: 'sistem', detay: { baslangic: slot.bas } })
-        const hasta = await hastaIletisimi(sb, doktorId, b.patient_id, iletisim.brans)
+        const hasta = await hastaIletisimiTamamla(sb, doktorId, b.patient_id, iletisim.brans)
         if (!hasta) continue
         const jeton = randevuJetonu(String(yeni.id), 'teklif', son)
         const m = randevuEpostasi('bekleme_teklif', {

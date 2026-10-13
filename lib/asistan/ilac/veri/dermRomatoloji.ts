@@ -34,7 +34,10 @@ export const DERM_ROMATOLOJI: Record<string, TürkishDrug> = {
     },
     form: 'Yumuşak kapsül',
     sgkCovered: true,
-    sgkRestriction: 'SUT: dermatoloji uzman hekim raporu ve endikasyon koşullarına bakınız.',
+    // NOTYA-SUT-RAPOR-01 — SUT EK-4/E 13/17.1 (added by RG 29.08.2026 no. 33355 art. 21, in force 05.09.2026):
+    // "Isotretinoin (oral formları): Yalnızca dermatoloji uzman hekimlerince reçete edilmesi halinde bedelleri Kurumca
+    // karşılanır." Source: SGK güncel SUT, 02.10.2026 (RG 33388) işlenmiş hali. There is no report route for other doctors.
+    sgkRestriction: 'SUT EK-4/E: oral formları yalnızca dermatoloji uzman hekimlerince reçete edildiğinde ödenir.',
     category: 'Sistemik retinoid',
     siniflar: ['Retinoid', 'Sistemik retinoid', 'A vitamini türevi'],
     yasKontrendikasyonAy: 144,

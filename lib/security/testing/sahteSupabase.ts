@@ -127,6 +127,7 @@ class Sorgu {
   private dondur = false
   private secim = '*'
   private sayim: { head: boolean } | null = null
+  private yazmaSayimi = false
   private yuk: Satir[] = []
   private guncelleme: Satir = {}
   private cakisma: string[] = ['id']
@@ -164,8 +165,9 @@ class Sorgu {
     if (o?.onConflict) this.cakisma = o.onConflict.split(',').map((s) => s.trim())
     return this
   }
-  update(g: Satir) { this.islem = 'update'; this.guncelleme = g; return this }
-  delete() { this.islem = 'delete'; return this }
+  /** `{ count: 'exact' }` on a write answers the number of rows it touched (PostgREST `Prefer: count=exact`). */
+  update(g: Satir, o?: { count?: string }) { this.islem = 'update'; this.guncelleme = g; this.yazmaSayimi = !!o?.count; return this }
+  delete(o?: { count?: string }) { this.islem = 'delete'; this.yazmaSayimi = !!o?.count; return this }
 
   private kosul(kolon: string, test: (v: unknown) => boolean) { this.kosullar.push({ kolon, test }); return this }
   eq(k: string, d: unknown) { return this.kosul(k, (v) => esit(v, d)) }
@@ -274,11 +276,13 @@ class Sorgu {
     const eslesen = tablo.filter((r) => this.eslesir(this.gommeleriUygula(this.ad, { ...r }, gommeler), gommeler))
     if (this.islem === 'update') {
       for (const r of eslesen) Object.assign(r, this.guncelleme)
-      return this.sonuc(this.dondur ? eslesen.map((r) => ({ ...r })) : null)
+      const y = this.sonuc(this.dondur ? eslesen.map((r) => ({ ...r })) : null)
+      return this.yazmaSayimi ? { ...y, count: eslesen.length } : y
     }
     if (this.islem === 'delete') {
       for (const r of eslesen) tablo.splice(tablo.indexOf(r), 1)
-      return this.sonuc(this.dondur ? eslesen : null)
+      const y = this.sonuc(this.dondur ? eslesen : null)
+      return this.yazmaSayimi ? { ...y, count: eslesen.length } : y
     }
 
     let satirlar = tablo

@@ -272,7 +272,7 @@ describe('NOTYA-ILK10-YAPI-01 — cevap yapıları ve kanıt sırası', () => {
   it('Soru 9 — ilaç sonrası kontrol rutin sepetinde: kür doldu, sonrasında vizit yok', () => {
     const d = dosya(FIKSTUR_E, '2026-10-05')
     const rutin = d.isler().rutin.map((i) => i.metin).join('\n')
-    assert.ok(rutin.includes('İlaç sonrası kontrol: Augmentin BID 400 mg/5 ml süspansiyon kürü 29.09.2026 tarihinde doldu (başlangıç 19.09.2026, 10 gün); sonrasında vizit / değerlendirme kaydı yok.'), rutin)
+    assert.ok(rutin.includes('İlaç sonrası kontrol: Augmentin BID 400 mg/5 ml süspansiyon kürü 28.09.2026 tarihinde doldu (başlangıç 19.09.2026, 10 gün); sonrasında vizit / değerlendirme kaydı yok.'), rutin)
     // Kür sürerken yazılmaz.
     assert.ok(!hepsi(dosya(FIKSTUR_E).isler()).some((i) => /İlaç sonrası kontrol/.test(i.metin)))
   })

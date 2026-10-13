@@ -13,7 +13,7 @@ import { kanitBlogu } from './kanit'
 import { dosyaSorguKuralBlogu, GENEL_KURALLAR, SORU_SABLONLARI } from './kurallar'
 import { parametreSec, TEMEL_SORGU } from './parametreler'
 import { FIKSTURLER, DENETIM_BUGUN } from './denetim/fikstur'
-import { olaylariKur, hastaKur, ilacDurumu, type HamDosya } from '@/lib/doktor/dosyaOlaylari'
+import { olaylariKur, hastaKur, ilacDurumu, kurSonGunuIso, type HamDosya } from '@/lib/doktor/dosyaOlaylari'
 import { acikIsleriBul } from '@/lib/doktor/acikIsler'
 import { planIfadesiSinifla, planIfadeleriniCikar, asiTamBeyaniMi } from '@/lib/doktor/planIfadesi'
 import { esanlamGenislet, esanlamGruplariBul, SIKAYET_GRUPLARI } from '@/lib/klinik/sikayetEsanlam'
@@ -230,6 +230,18 @@ describe('ilacDurumu — okuma anında durum', () => {
     assert.equal(ilacDurumu({ ilac_adi: 'Montelukast', kullanim_sikli: '1x1', baslangic_tarihi: '2026-01-01', aktif: false, bitis_tarihi: '2026-06-01' }, DENETIM_BUGUN).durum, 'kesildi')
     assert.equal(ilacDurumu({ ilac_adi: 'Levotiroksin', kullanim_sikli: '1x1', baslangic_tarihi: '2025-01-01', aktif: true }, DENETIM_BUGUN).durum, 'aktif')
     assert.equal(ilacDurumu({ ilac_adi: 'Demir damla', kullanim_sikli: '1x1, 3 ay', baslangic_tarihi: '2026-02-10', aktif: true }, DENETIM_BUGUN).durum, 'tamamlandi')
+  })
+
+  // Başlangıç günü kürün 1. günüdür: 1 Eylül'de başlayan 7 günlük kürün son günü 7 Eylül'dür. Kaynak: CDC NHSN AUR
+  // Module protocol (July 2026), AU Option — "Antimicrobial Days (Days of Therapy)": ilacın verildiği her takvim günü
+  // bir gün sayılır, ilk gün dahil (açıldı 2026-10-10). Durum hesabı zaten böyleydi; cümledeki tarih bir gün geçti.
+  it('kürün son günü: son gün hâlâ aktif, ertesi gün tamamlandı; cümle son günü yazar (bir gün sonrasını değil)', () => {
+    const ilac = { ilac_adi: 'Amoksisilin', kullanim_sikli: '2x1, 7 gün', baslangic_tarihi: '2026-09-01', aktif: true }
+    assert.equal(kurSonGunuIso('2026-09-01', 7), '2026-09-07')
+    assert.equal(ilacDurumu(ilac, '2026-09-07').durum, 'aktif')
+    const ertesiGun = ilacDurumu(ilac, '2026-09-08')
+    assert.equal(ertesiGun.durum, 'tamamlandi')
+    assert.match(ertesiGun.neden, /planlanan süre \(7 gün\) 07\.09\.2026 tarihinde doldu/)
   })
 })
 

@@ -234,7 +234,7 @@ export const BRANS = {
   body: "30 branşta, o branşın gündelik işine göre hazırlanmış çalışma alanı. Kayıt olurken branşınızı seçersiniz; ekranınız ona göre kurulur.",
   examples: [
     { k: "Pediatri", v: "Büyüme, aşı ve gelişim takibi tek bakışta." },
-    { k: "Kadın Doğum", v: "Gebelik takvimi ve izlem pencereleri kendiliğinden." },
+    { k: "Kadın Hastalıkları ve Doğum", v: "Gebelik takvimi ve izlem pencereleri kendiliğinden." },
     { k: "Göz", v: "Görme takibi, vizitten vizite karşılaştırmalı." },
   ],
 } as const;

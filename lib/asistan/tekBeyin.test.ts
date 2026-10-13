@@ -327,8 +327,15 @@ describe('kilitler — sunucu sırrı + imzalı konuşma jetonu', () => {
     assert.ok(!y.metin.includes('Umutcan'), 'başka doktorun jetonuyla hasta çözülmemeli')
     assert.equal(db.tablo('asistan_sessions').find((o) => o.id === s.oturum)?.messages.length, 0, 'bu doktorun oturumuna yazılmamalı')
     const p = await ses({ sahne: s, mesaj: 'Durumu nasıl?', jetonVeri: { d: s.diger.id, p: s.hasta } })
-    assert.match(p.metin, /bulamadım/)
+    // NOTYA-SES-TEK-CEVAP-01 (79c503fd): the turn lock is claimed on the session row scoped to the token's doctor.
+    // A foreign doctor's token cannot claim this doctor's session, so the turn closes fail-closed: the keep-alive
+    // period only — no "bulamadım" sentence, no patient, no model call, nothing written.
+    assert.equal(p.status, 200)
+    assert.equal(p.metin.trim(), '.', 'yabancı jeton: tur sessiz kapanır')
+    assert.ok(!p.ham.includes('Umutcan') && !p.ham.includes(ANNE), 'başka doktorun jetonuyla hasta çözülmemeli')
+    assert.equal(modelIstekleri.length, 0, 'yabancı jetonla model çağrılmaz')
     assert.ok(!modelIstekleri.some((m) => m.govde.includes(s.hasta)))
+    assert.equal(db.tablo('asistan_sessions').find((o) => o.id === s.oturum)?.messages.length, 0, 'bu doktorun oturumuna yazılmamalı')
   })
 })
 
@@ -700,13 +707,21 @@ describe('NOTYA-SAYFA-HASTA-01: asistan doktorun açtığı hasta sayfasını ta
     method: 'POST', headers: { ...(token ? { authorization: `Bearer ${token}` } : {}), 'content-type': 'application/json' }, body: JSON.stringify(govde),
   } as ConstructorParameters<typeof NextRequestSinifi>[1])) as Promise<Response>
   const oturumu = (id: string) => db.tablo('asistan_sessions').find((o) => o.id === id)!
-  /** İkinci hasta (Ayşe Yeşil) + iki çocuğun da onaylı cihaz kilosu; oturum Ayşe Yeşil'e odaklı başlar. */
+  /**
+   * İkinci hasta (Ayşe Yeşil) + iki çocuğun da kilosu; oturum Ayşe Yeşil'e odaklı başlar. Kilo iki yerde durur:
+   * onaylı muayenenin yaşamsal bulgusu (hızlı kartın "Son ölçüm"ü buradan okunur — cihaz köprüsü d5b8e2da ile
+   * kaldırıldı, kart artık cihaz tablosunu okumaz) ve eski cihaz satırı (büyüme kanıtı onu hâlâ okur).
+   */
   function ikiHasta() {
     const s = sahne()
     const ayse = db.ekle('patients', { doctor_id: s.doktor.id, is_active: true, name_encrypted: encrypt(JSON.stringify({ ad: 'Ayşe Yeşil' })), dob_encrypted: encrypt('2021-02-03') }).id
     indeksle(s.doktor.id, ayse, 'Ayşe Yeşil')
     db.ekle('cihaz_olcumleri', { doctor_id: s.doktor.id, patient_id: ayse, tur: 'kilo', deger: 18.4, birim: 'kg', alindi: '2026-09-20T09:00:00Z', onaylandi: true })
     db.ekle('cihaz_olcumleri', { doctor_id: s.doktor.id, patient_id: s.hasta, tur: 'kilo', deger: 21.7, birim: 'kg', alindi: '2026-09-22T09:00:00Z', onaylandi: true })
+    for (const [hasta, kilo, gun] of [[ayse, 18.4, '2026-09-20'], [s.hasta, 21.7, '2026-09-22']] as const) {
+      const seans = db.ekle('sessions', { patient_id: hasta, doctor_id: s.doktor.id, created_at: `${gun}T09:00:00Z`, status: 'completed', specialty: 'pediatri', session_type: 'muayene', archived_at: null }).id
+      db.ekle('notes', { session_id: seans, doctor_id: s.doktor.id, patient_id: hasta, created_at: `${gun}T09:10:00Z`, approved_at: `${gun}T09:20:00Z`, vitaller: { kilo } })
+    }
     oturumu(s.oturum).active_context = { specialty: 'pediatri', currentPatientId: ayse, patientName: 'Ayşe Yeşil' }
     return { ...s, ayse }
   }
@@ -829,9 +844,12 @@ describe('NOTYA-SES-BAGLAM-KUCULT-01: sesli turda kısa, güvenlik-tam dosya; İ
     modelIstekleri.length = 0
   }
   const sistem = () => {
-    // [0] asıl tur; "bana" gibi bir söz arka plan öğrenme çağrısını (sohbettenOgren) da tetikleyebilir.
-    assert.ok(modelIstekleri.length >= 1, 'model turu')
-    return (JSON.parse(modelIstekleri[0].govde).system as { text: string }[]).map((b) => b.text).join('\n')
+    // Asıl tur: sistem istemi blok dizisi olan istek. "bana" gibi bir söz arka plan öğrenme çağrısını (sohbettenOgren,
+    // düz metin sistem istemi) da tetikler; o çağrı arka planda sürer (arkaPlandaSurdur) ve önceki turunki bu turun
+    // isteğinden ÖNCE de düşebilir — sırasına güvenilmez.
+    const asil = modelIstekleri.map((m) => JSON.parse(m.govde).system).filter((x) => Array.isArray(x)) as { text: string }[][]
+    assert.equal(asil.length, 1, 'tek asıl model turu')
+    return asil[0].map((b) => b.text).join('\n')
   }
   async function paket(s: Sahne & { h: string }) {
     const sb = db.istemci() as never

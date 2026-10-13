@@ -147,6 +147,10 @@ type Hekim = {
   gelenBelge: string
   /** NOTYA-TEK-BEYIN: yazı + sesin ortak asistan oturumu (bir sesli tur, işaretli) */
   asistanOturum: string
+  /** NOTYA-TAKIP-01: an open follow-up case of the doctor's own patient */
+  takip: string
+  /** KONSULTASYONLAR-01: one consultant in the doctor's address book (Defter) */
+  defter: string
   /** Rows THIS doctor filed under the OTHER doctor's patient — the contamination a pre-fix IDOR left behind. */
   hileliSeans: string; hileliNot: string
 }
@@ -247,12 +251,17 @@ function hekimKur(harf: Harf): Hekim {
     okuma_sifreli: encrypt(JSON.stringify({ ozet: `Hemogram ${m}`, belgeTuru: 'Lab Sonucu', metin: null, kimlik: { ad: null, dogum: null, tc: null, tcSon: null }, belgeTarihi: null, konsultasyonYaniti: false, okundu: true })),
     gonderen_sifreli: null, oneriler: [{ patient_id: hasta, guven: 85, kesinlik: 'eminim', nedenler: ['ad soyad'] }],
   })
+  // NOTYA-TAKIP-01: an open follow-up case. Type 'konsultasyon' without a sevk link on purpose — the sync that runs on
+  // every read closes kontrol / gelmedi cases when a future appointment exists, which would depend on the clock.
+  const takip = db.ekle('takip_isleri', { doktor_id: id, patient_id: hasta, tur: 'konsultasyon', durum: 'acik', vade: trGun(-2, 12).slice(0, 10), kosullu: false, kaynak_not_id: null, kaynak_randevu_id: null, kaynak_sevk_id: null, ozet: `Takip ${m}`, alinti: null, kapandi_at: null, kapandi_neden: null }).id
+  // KONSULTASYONLAR-01: the doctor's consultant address book
+  const defter = db.ekle('konsultasyon_defter', { doctor_id: id, ad_soyad: `Dr. Defter ${m}`, brans: 'kulak-burun-bogaz', telefon: null, ofis_telefon: null, adres: null, eposta: null, whatsapp: null, kurum_ici: false, not_metni: null }).id
   const zaman = new Date(Date.now() - 60e3).toISOString()
   const asistanOturum = db.ekle('asistan_sessions', {
     doctor_id: id, patient_id: null, persona_id: 'aysekaya', active_context: {},
     messages: [{ role: 'user', content: 'Sentetik soru', kanal: 'ses', zaman }, { role: 'assistant', content: `Cevap ${m}`, kanal: 'ses', zaman }],
   }).id
-  return { harf, id, token, hasta, seans, not, bekleyenNot, ilac, panel, belge, randevu, serbestRandevu, talep, hastaDerm, lezyon, dogum, bebekKart, portalToken, konu, asistanEylem, gozGoruntu, belgeAnaliz, dermAnaliz, konsultasyon, konsultasyonYanitli, kasaBelge, asiHatirlatma, eylemOneri, eylemKayit, sonlanmisIlac, kuyruk, gelenBelge, asistanOturum, hileliSeans: '', hileliNot: '' }
+  return { takip, defter, harf, id, token, hasta, seans, not, bekleyenNot, ilac, panel, belge, randevu, serbestRandevu, talep, hastaDerm, lezyon, dogum, bebekKart, portalToken, konu, asistanEylem, gozGoruntu, belgeAnaliz, dermAnaliz, konsultasyon, konsultasyonYanitli, kasaBelge, asiHatirlatma, eylemOneri, eylemKayit, sonlanmisIlac, kuyruk, gelenBelge, asistanOturum, hileliSeans: '', hileliNot: '' }
 }
 
 /** Contamination X planted under Y's patient before the fixes (anon-key session insert, unchecked POSTs). */
@@ -454,6 +463,21 @@ const VAKALAR: Vaka[] = [
   { ad: 'POST /api/doktor/eylem geri_al (yabancı kaydı geri alma)', red: 404,
     yazdi: (a) => !!tablo('eylem_kayitlari').find((x) => x.id === a.eylemKayit)?.geri_alindi_at,
     cagir: (r, a, h) => coz(r.eylem.POST(iste('POST', '/api/doktor/eylem', { token: a.token, govde: { adim: 'geri_al', kayitId: h.eylemKayit } }))) },
+  // NOTYA-TAKIP-01 — follow-up cases (doktor + sekreter). The list is the practice's own; a foreign case cannot be closed.
+  { ad: 'GET /api/doktor/takip (açık takip işleri)', okur: true,
+    cagir: (r, a) => coz(r.takip.GET(iste('GET', '/api/doktor/takip', { token: a.token }))) },
+  { ad: 'PATCH /api/doktor/takip kapat (yabancı takip işini kapatma)', red: 404,
+    yazdi: (a) => tablo('takip_isleri').find((x) => x.id === a.takip)?.durum === 'kapandi',
+    cagir: (r, a, h) => coz(r.takip.PATCH(iste('PATCH', '/api/doktor/takip', { token: a.token, govde: { id: h.takip, islem: 'kapat' } }))) },
+  // KONSULTASYONLAR-01 — konsültan defteri (doktor + sekreter). Holds no patient data; a foreign entry cannot be read, edited or deleted.
+  { ad: 'GET /api/doktor/konsultasyon/defter', okur: true,
+    cagir: (r, a) => coz(r.konsultasyonDefter.GET(iste('GET', '/api/doktor/konsultasyon/defter', { token: a.token }))) },
+  { ad: 'PATCH /api/doktor/konsultasyon/defter (yabancı kaydı düzenleme)', red: 404,
+    yazdi: (a) => tablo('konsultasyon_defter').find((x) => x.id === a.defter)?.ad_soyad === 'Dr. QA Duzenlendi',
+    cagir: (r, a, h) => coz(r.konsultasyonDefter.PATCH(iste('PATCH', '/api/doktor/konsultasyon/defter', { token: a.token, govde: { id: h.defter, adSoyad: 'Dr. QA Duzenlendi', brans: 'kulak-burun-bogaz' } }))) },
+  { ad: 'DELETE /api/doktor/konsultasyon/defter (yabancı kaydı silme)', red: 404,
+    yazdi: (a) => !tablo('konsultasyon_defter').some((x) => x.id === a.defter),
+    cagir: (r, a, h) => coz(r.konsultasyonDefter.DELETE(iste('DELETE', `/api/doktor/konsultasyon/defter?id=${h.defter}`, { token: a.token }))) },
   // Araçlar
   { ad: 'POST /api/doktor/araclar/epikriz (kendi seansı + yabancı hastaId)', red: 404, okur: true,
     cagir: (r, a, h) => coz(r.epikriz.POST(iste('POST', '/api/doktor/araclar/epikriz', { token: a.token, govde: { hastaId: h.hasta, seansId: a.seans } }))) },
@@ -783,6 +807,10 @@ describe('HASTA-İZOLASYON: doktor A ve doktor B birbirinin hastasına hiçbir r
       portal: await ice('app/api/portal/hasta/[token]/route'),
       portalMesajlar: await ice('app/api/portal/hasta/[token]/mesajlar/route'),
       portalRandevu: await ice('app/api/portal/hasta/[token]/randevu/route'),
+      portalBelge: await ice('app/api/portal/hasta/[token]/belge/[id]/route'),
+      takip: await ice('app/api/doktor/takip/route'),
+      konsultasyonDefter: await ice('app/api/doktor/konsultasyon/defter/route'),
+      konsultan: await ice('app/api/konsultan/route'),
       randevuTalepleri: await ice('app/api/doktor/randevu-portal/talepler/route'),
       randevuPortalAyar: await ice('app/api/doktor/randevu-portal/ayar/route'),
       MCHAT_R_SORULARI: (await import('../clinical/mchatR')).MCHAT_R_SORULARI,
@@ -903,9 +931,13 @@ describe('HASTA-İZOLASYON: doktor A ve doktor B birbirinin hastasına hiçbir r
       }
     }
     const SORU = `${AD}’nın alerjisi neydi, annesinin adı ne ve bugün kimler geliyor?`
-    const cagrilar: { ad: string; cagir: (x: Hekim) => Promise<Yanit> }[] = [
-      { ad: 'POST /api/asistan/chat', cagir: (x) => coz(R.asistanChat.POST(iste('POST', '/api/asistan/chat', { token: x.token, govde: { message: SORU, specialty: 'pediatri', saatDilimi: 'Europe/Istanbul' } }))) },
-      { ad: 'POST /api/asistan/fish-tur', cagir: (x) => coz(R.fishTur.POST(iste('POST', '/api/asistan/fish-tur', { token: x.token, govde: { mesaj: SORU, asistanSessionId: x.asistanOturum, specialty: 'pediatri', personaId: 'aysekaya', saatDilimi: 'Europe/Istanbul' } }))) },
+    // The second turn of each case is a DIFFERENT sentence. Since NOTYA-SES-ARKA-01 / NOTYA-SES-TEK-CEVAP-01
+    // (0f97c058, 79c503fd) the voice route answers a question once: the same sentence sent again in the same session
+    // closes the turn before the model, so no tool would run and the case would test nothing.
+    const SORU_2 = `${AD} dosyasında ilaç kaydı, eksikler ve velisinin telefonu nedir, takvimde kim var?`
+    const cagrilar: { ad: string; cagir: (x: Hekim, soru?: string) => Promise<Yanit> }[] = [
+      { ad: 'POST /api/asistan/chat', cagir: (x, soru = SORU) => coz(R.asistanChat.POST(iste('POST', '/api/asistan/chat', { token: x.token, govde: { message: soru, specialty: 'pediatri', saatDilimi: 'Europe/Istanbul' } }))) },
+      { ad: 'POST /api/asistan/fish-tur', cagir: (x, soru = SORU) => coz(R.fishTur.POST(iste('POST', '/api/asistan/fish-tur', { token: x.token, govde: { mesaj: soru, asistanSessionId: x.asistanOturum, specialty: 'pediatri', personaId: 'aysekaya', saatDilimi: 'Europe/Istanbul' } }))) },
     ]
     async function okumaTuru<T>(is: () => Promise<T>): Promise<T> {
       process.env.NOTYA_HIZLI_YOL_KAPALI = '1'
@@ -935,7 +967,7 @@ describe('HASTA-İZOLASYON: doktor A ve doktor B birbirinin hastasına hiçbir r
           ]
         }
         modelIstekleri.length = 0
-        const y2 = await okumaTuru(() => c.cagir(A))
+        const y2 = await okumaTuru(() => c.cagir(A, SORU_2))
         const sonIstek = modelIstekleri[modelIstekleri.length - 1]
         assert.ok(sonIstek.includes('tool_result'), 'araç sonucu modele dönmedi — vaka boşa koştu')
         assert.ok(sonIstek.includes(`Alerji ${isaret('A')}`), 'kendi hastasının alerjisi araç sonucunda yok')
@@ -979,7 +1011,7 @@ describe('HASTA-İZOLASYON: doktor A ve doktor B birbirinin hastasına hiçbir r
               { type: 'tool_use', id: 'toolu_h', name: 'eksikler', input: { hasta_adi: AD } },
             ]
           }
-          const y2 = await okumaTuru(() => c.cagir(arayan))
+          const y2 = await okumaTuru(() => c.cagir(arayan, SORU_2))
           assert.ok(modelIstekleri.some((m) => m.includes('tool_result')), 'araç turu koşmadı — vaka boşa koştu')
           for (const y of [y1, y2]) {
             assert.equal(y.status, 200, y.metin.slice(0, 300))
@@ -1062,6 +1094,147 @@ describe('HASTA-İZOLASYON: doktor A ve doktor B birbirinin hastasına hiçbir r
         const y = await coz(R.konsultasyon.PATCH(iste('PATCH', '/api/doktor/konsultasyon', { token: arayan.token, govde: { id: kapali.id, islem: 'sil' } })))
         assert.equal(y.status, 404)
         assert.ok(tablo('sevkler').some((x) => x.id === kapali.id), 'kurban satırı silinmemeli')
+      })
+    }
+  })
+
+  /**
+   * KONSULTASYONLAR-01 — the consultant portal has NO account: a link (signed token) names exactly one consultation.
+   * What it shows comes from that consultation's doctor and patient and nothing else. The source muayene note
+   * (`sevkler.kaynak_not_id`) arrives in the request body when the doctor creates the request, so it is the one id an
+   * attacker controls: doctor X must not be able to make the portal show doctor Y's note — neither through the create
+   * route (404) nor through a row that already carries a foreign note id (legacy / direct insert).
+   */
+  describe('Konsültan portalı (hesapsız, jetonlu): yalnız isteyen hekimin o hastaya ait notu', () => {
+    const ISTEM = { hedefBrans: 'kulak-burun-bogaz', klinikSoru: 'QA işitme kaybı var mı, değerlendirir misiniz?' }
+    const RAPOR = { ad: 'rapor.pdf', mime: 'application/pdf', base64: Buffer.from('%PDF-1.4 sentetik konsultan raporu').toString('base64') }
+    let jeton: (sevkId: string) => string
+    before(async () => {
+      const { konsultanJetonu } = await import('../doktor/konsultanJeton')
+      jeton = (sevkId) => konsultanJetonu(sevkId, Date.now() + 86400e3)!
+    })
+    const portalOku = (t: string) => coz(R.konsultan.GET(iste('GET', `/api/konsultan?t=${encodeURIComponent(t)}`)))
+    const portalYaz = (t: string) => coz(R.konsultan.POST(iste('POST', '/api/konsultan', { govde: { t, not: 'QA işitme kaybı saptanmadı.', dosyalar: [RAPOR] } })))
+
+    it('pozitif kontrol: kendi hastası + kendi onaylı notu → portal o notun cümlelerini ve hasta adını gösterir; yanıt kendi dosyasına düşer', async () => {
+      const { A } = sahneKur()
+      const y = await coz(R.konsultasyon.POST(iste('POST', '/api/doktor/konsultasyon', { token: A.token, govde: { patientId: A.hasta, ...ISTEM, kaynakNotId: A.not } })))
+      assert.equal(y.status, 201, y.metin.slice(0, 300))
+      const id = JSON.parse(y.metin).konsultasyon.id as string
+      assert.equal(tablo('sevkler').find((x) => x.id === id)?.kaynak_not_id, A.not)
+      const g = await portalOku(jeton(id))
+      assert.equal(g.status, 200, g.metin.slice(0, 300))
+      assert.ok(g.metin.includes(`Plan ${isaret('A')}`) && g.metin.includes(`Tani ${isaret('A')}`), `onaylı not cümleleri portalda yok: ${g.metin.slice(0, 400)}`)
+      assert.ok(g.metin.includes(`QA Hasta A ${isaret('A')}`), 'kendi hastasının adı portalda yok')
+      const p = await portalYaz(jeton(id))
+      assert.equal(p.status, 200, p.metin.slice(0, 300))
+      assert.ok(String(tablo('notes').find((n) => n.id === A.not)?.content_degerlendirme || '').includes('QA işitme kaybı saptanmadı.'), 'konsültan notu isteyen muayeneye düşmedi')
+      assert.ok(tablo('medical_documents').some((d) => d.doctor_id === A.id && d.patient_id === A.hasta && d.category === 'konsultasyon'), 'rapor kendi hastasının kasasına düşmedi')
+    })
+
+    it('jetonsuz 400; sahte, bozuk ve süresi geçmiş jeton 404 — hiçbir şey okunmaz', async () => {
+      const { A } = sahneKur()
+      const { konsultanJetonu } = await import('../doktor/konsultanJeton')
+      assert.equal((await coz(R.konsultan.GET(iste('GET', '/api/konsultan')))).status, 400)
+      const gecerli = jeton(A.konsultasyon)
+      for (const t of [`${A.konsultasyon}.${Date.now() + 86400e3}.sahteimza`, `${gecerli}x`, konsultanJetonu(A.konsultasyon, Date.now() - 1000) || 'yok', 'rastgele-jeton']) {
+        const g = await portalOku(t)
+        assert.equal(g.status, 404, t.slice(0, 40))
+        assert.ok(!g.metin.includes(isaret('A')))
+        assert.equal((await portalYaz(t)).status, 404)
+      }
+    })
+
+    for (const [saldiran, kurbanHarf] of [['A', 'B'], ['B', 'A']] as const) {
+      it(`${saldiran} → ${kurbanHarf}: yabancı muayene notu kaynak gösterilemez (404), kirli satırdan da okunmaz / yazılmaz`, async () => {
+        const s = sahneKur()
+        const x = s[saldiran], k = s[kurbanHarf]
+        const once = anlikGoruntu(k)
+        // 1) create route: the victim's note id in the body → 404, no row
+        const sevkSayisi = tablo('sevkler').length
+        const y = await coz(R.konsultasyon.POST(iste('POST', '/api/doktor/konsultasyon', { token: x.token, govde: { patientId: x.hasta, ...ISTEM, kaynakNotId: k.not } })))
+        assert.equal(y.status, 404, y.metin.slice(0, 300))
+        assert.equal(tablo('sevkler').length, sevkSayisi, 'yabancı notla istem kaydedildi')
+        // 2) a row that already points at the victim's note (attacker's own patient): the portal shows none of it
+        const kirli = db.ekle('sevkler', { doctor_id: x.id, patient_id: x.hasta, hedef: 'kulak-burun-bogaz', hedef_brans: 'kulak-burun-bogaz', klinik_soru: 'QA kirli satır sorusu', durum: 'yanit_bekleniyor', istem_tarihi: '2026-09-05', kaynak: 'konsultasyon', kaynak_not_id: k.not, belge_id: null, belge_idler: null, konsultan_notu: null }).id
+        const g = await portalOku(jeton(kirli))
+        assert.equal(g.status, 200, g.metin.slice(0, 300))
+        assert.ok(!g.metin.includes(isaret(kurbanHarf)), `SIZINTI: ${kurbanHarf} hekiminin notu konsültan portalında: ${g.metin.slice(0, 400)}`)
+        assert.deepEqual(JSON.parse(g.metin).dilim.onayliCumleler, [], 'yabancı nottan cümle çıktı')
+        // … and the consultant's reply is not written into the victim's note
+        const p = await portalYaz(jeton(kirli))
+        assert.equal(p.status, 200, p.metin.slice(0, 300))
+        // 3) the attacker's own note of ANOTHER patient of his is not a source for this patient either
+        const baskaHasta = db.ekle('patients', { doctor_id: x.id, is_active: true, name_encrypted: encrypt(JSON.stringify({ ad: 'QA Baska Hasta' })) }).id
+        const baskaSeans = db.ekle('sessions', { doctor_id: x.id, patient_id: baskaHasta, specialty: 'pediatri', status: 'completed' }).id
+        const baskaNot = db.ekle('notes', { session_id: baskaSeans, doctor_id: x.id, note_type: 'soap', approved_at: new Date().toISOString(), content_plan: 'BASKA-HASTA-PLANI gizli kalmali', content_ilaclar: [], vitaller: {} }).id
+        const y3 = await coz(R.konsultasyon.POST(iste('POST', '/api/doktor/konsultasyon', { token: x.token, govde: { patientId: x.hasta, ...ISTEM, kaynakNotId: baskaNot } })))
+        assert.equal(y3.status, 404, 'başka hastanın notu bu hastanın istemine kaynak oldu')
+        const kirli3 = db.ekle('sevkler', { doctor_id: x.id, patient_id: x.hasta, hedef: 'kulak-burun-bogaz', hedef_brans: 'kulak-burun-bogaz', klinik_soru: 'QA kirli satır sorusu 3', durum: 'yanit_bekleniyor', istem_tarihi: '2026-09-05', kaynak: 'konsultasyon', kaynak_not_id: baskaNot, belge_id: null, belge_idler: null, konsultan_notu: null }).id
+        assert.ok(!(await portalOku(jeton(kirli3))).metin.includes('BASKA-HASTA-PLANI'), 'başka hastanın notu konsültana gösterildi')
+        // 4) the attacker's row filed under the VICTIM's patient (hileliKur): no victim name, and no upload into the victim's vault
+        const hileli = tablo('sevkler').find((r) => r.doctor_id === x.id && r.patient_id === k.hasta)!
+        const hg = await portalOku(jeton(String(hileli.id)))
+        assert.ok(!hg.metin.includes(isaret(kurbanHarf)), `SIZINTI: ${kurbanHarf} hekiminin hasta adı konsültan portalında`)
+        const hp = await portalYaz(jeton(String(hileli.id)))
+        assert.notEqual(hp.status, 200, 'yabancı hastanın kasasına rapor yüklendi')
+        assert.ok(!tablo('medical_documents').some((d) => d.patient_id === k.hasta && d.doctor_id === x.id), 'yabancı hastaya belge yazıldı')
+        const sonra = anlikGoruntu(k)
+        assert.equal(sonra.sahip, once.sahip, 'kurbanın satırı değişti')
+        assert.deepEqual([...sonra.atiflar].filter((a) => !once.atiflar.has(a) && !a.startsWith('sevkler:')), [], 'kurbanın kimliğine yeni atıf')
+      })
+    }
+  })
+
+  /**
+   * NOTYA-PORTAL-TETKIK-01 + KONSULTASYON-01 — Sağlığım › belge indirme. The document id comes from the URL: it is
+   * served only when it is THIS patient's document filed by the token's doctor, behind the PIN. A consultation
+   * report (linked to a consultation, or filed as one) is never listed and never served — the patient sees only
+   * "yönlendirildiniz · sonuç alındı".
+   */
+  describe('Sağlığım belge indirme: yalnız token\'ın hastası + doktoru; konsültasyon raporu hiç', () => {
+    async function cerezAl(token: string): Promise<string> {
+      const { setUnlockCookie, UNLOCK_COOKIE } = await import('../portal/pinAuth')
+      const { NextResponse } = await import('next/server')
+      const res = NextResponse.json({})
+      setUnlockCookie(res, token)
+      return `${UNLOCK_COOKIE}=${res.cookies.get(UNLOCK_COOKIE)?.value}`
+    }
+    for (const [hastaHarf, digerHarf] of [['A', 'B'], ['B', 'A']] as const) {
+      it(`${hastaHarf} hastası: kendi tahlili iner; ${digerHarf} hekiminin belgesi ve konsültasyon raporları 404, listede de yok`, async () => {
+        const s = sahneKur()
+        const h = s[hastaHarf], diger = s[digerHarf]
+        const { uploadDocument } = await import('../vault/service')
+        const yukle = async (k: Hekim, hasta: string, ad: string, category: string) => (await uploadDocument({ supabase: db.istemci() as never }, {
+          doctorId: k.id, patientId: hasta, visitId: null, fileName: ad, fileType: 'application/pdf', bytes: Buffer.from(`%PDF-1.4 icerik ${isaret(k.harf)} ${ad}`), notes: null, category, uploadedBy: k.id,
+        })).id
+        const kendi = await yukle(h, h.hasta, 'tahlil-kendi.pdf', 'Lab Sonucu')
+        const yabanci = await yukle(diger, diger.hasta, 'tahlil-yabanci.pdf', 'Lab Sonucu')
+        const raporKategori = await yukle(h, h.hasta, 'konsultan-yukledi.pdf', 'konsultasyon')
+        const raporBagli = await yukle(h, h.hasta, 'bagli-rapor.pdf', 'Diğer')
+        const raporCoklu = await yukle(h, h.hasta, 'coklu-rapor.pdf', 'Diğer')
+        Object.assign(tablo('sevkler').find((x) => x.id === h.konsultasyon)!, { belge_id: raporBagli, belge_idler: [raporBagli, raporCoklu] })
+        const cerez = await cerezAl(h.portalToken)
+        const al = (id: string, pinli = true) => coz(R.portalBelge.GET(iste('GET', `/api/portal/hasta/${h.portalToken}/belge/${id}`, pinli ? { cerez } : {}), prm({ token: h.portalToken, id })))
+
+        const ok = await al(kendi)
+        assert.equal(ok.status, 200, ok.metin.slice(0, 200))
+        assert.ok(ok.metin.includes(`icerik ${isaret(hastaHarf)} tahlil-kendi.pdf`), 'kendi belgesinin içeriği gelmedi')
+        assert.equal((await al(kendi, false)).status, 401, 'PIN çerezi olmadan belge verilmez')
+        for (const [ad, id] of [['başka hekimin belgesi', yabanci], ['konsültan portalından gelen rapor', raporKategori], ['konsültasyona bağlı rapor', raporBagli], ['konsültasyona bağlı ikinci rapor', raporCoklu], ['"Konsültasyon raporu" türündeki belge', h.kasaBelge], ['var olmayan belge', randomUUID()]] as const) {
+          const y = await al(id)
+          assert.equal(y.status, 404, `${ad}: ${y.status}`)
+          assert.ok(!y.metin.includes('icerik') && !y.metin.includes(isaret(digerHarf)), `${ad}: içerik döndü`)
+        }
+
+        const liste = await coz(R.portal.GET(iste('GET', `/api/portal/hasta/${h.portalToken}`, { cerez }), prm({ token: h.portalToken })))
+        assert.equal(liste.status, 200, liste.metin.slice(0, 300))
+        assert.ok(liste.metin.includes(kendi) && liste.metin.includes('tahlil-kendi.pdf'), 'kendi tahlili Sağlığım listesinde yok')
+        for (const [ad, id] of [['başka hekimin belgesi', yabanci], ['konsültan raporu (kategori)', raporKategori], ['konsültasyona bağlı rapor', raporBagli], ['konsültasyona bağlı ikinci rapor', raporCoklu], ['Konsültasyon raporu türü', h.kasaBelge]] as const) {
+          assert.ok(!liste.metin.includes(id), `Sağlığım listesine sızdı: ${ad}`)
+        }
+        assert.ok(!liste.metin.includes('konsultan-yukledi') && !liste.metin.includes('bagli-rapor') && !liste.metin.includes('coklu-rapor') && !liste.metin.includes('kbb-raporu'), 'rapor adı Sağlığım listesinde')
+        assert.ok(!liste.metin.includes(isaret(digerHarf)))
       })
     }
   })

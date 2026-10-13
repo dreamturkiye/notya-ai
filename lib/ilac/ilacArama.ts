@@ -30,13 +30,30 @@ export interface IlacKaydi {
   barkod?: string
   kamuNo?: string
   esdegerGrubu?: string
+  /**
+   * false = SGK does not pay for this product today (SUT 4.1.9(1): a product not on EK-4/A is not paid under any
+   * condition). Set by scripts/import-sgk-ilac.mjs; `sgkDurum` says why.
+   */
   sgk?: boolean
+  /**
+   * NOTYA-SUT-RAPOR-01i — only on a record with `sgk: false`:
+   *   'pasif'     = on the list, but its latest "Pasiflenme Tarihi" is later than its latest "Aktiflenme Tarihi";
+   *   'cikarildi' = no longer on the list (withdrawn by a ÇIKARILANLAR sheet or missing from the full list).
+   */
+  sgkDurum?: 'pasif' | 'cikarildi'
+  /** 'pasif': the passivation date. 'cikarildi': the date of the list that no longer names the product. */
+  sgkDurumTarihi?: string
   form?: string
   doz?: string
   /** NOTYA-ILAC-07: from TİTCK's licensed-products list, joined by barcode (scripts/import-titck-etken.mjs). */
   atc?: string
-  /** 'titck' = direct barcode match; 'esdeger' = inherited from an eşdeğer grubu that shares one ATC. */
-  etkenKaynak?: 'titck' | 'esdeger'
+  /**
+   * 'titck' = direct barcode match; 'esdeger' = inherited from an eşdeğer grubu that shares one ATC;
+   * 'eski-barkod' = SGK re-barcoded the product (its "Eski Barkodlar" column, same Kamu No) and the ingredient
+   * recorded under the former barcode was carried to the new one. Absent on a record with no ingredient yet
+   * (new on the SGK list since the last TİTCK import) — such a record is found by name only.
+   */
+  etkenKaynak?: 'titck' | 'esdeger' | 'eski-barkod'
   /** TİTCK licence suspension code (1 = madde-23, 2 = farmakovijilans, 3 = madde-22). Absent when active. */
   ruhsatAskida?: number
 }
