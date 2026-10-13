@@ -20,9 +20,10 @@ import React, { useCallback, useEffect, useRef, useState, type CSSProperties, ty
 import { ulkeIstemciSupabase } from '@/lib/ulke/istemciSupabase'
 import { UYGULAMA_EKRANLARI, type UygulamaEkrani } from '@/lib/ulke/tipler'
 import { ulkeYolu } from '@/lib/ulke/yol'
+import { useBitki } from './bitki'
 import { CHROME_FONT, CHROME_FONT_HREF, CHROME_RENK as R } from '@/lib/doktor/chromeRenk'
 import { araclarMetni, klinikMetni, marka, randevuMetni, roller, rolMu, uygulamaDili, uygulamaMetni, type UygulamaMetni } from '@/lib/ulke/arayuz'
-import { hesapSaatDilimiAyarla } from '@/lib/ulke/arayuz/bicim'
+import { hesapSaatDilimi, hesapSaatDilimiAyarla, saatBicimi } from '@/lib/ulke/arayuz/bicim'
 import { ozellikAcik, ulkePaketi } from '@/lib/ulke/ulke'
 import type { DilKodu } from '@/lib/ulke/tipler'
 
@@ -48,6 +49,8 @@ export type Hesap = {
   /** The account's time zone and the zones it may choose — present only where the country has more than one. */
   saatDilimi?: string
   saatDilimleri?: readonly string[]
+  /** Optional professional registration. Absent when the account has none. */
+  meslekKaydi?: string
   /**
    * NOTYA-ULKE-KLINIK-01 — true = a FRONT-DESK member of a clinic who works in no role: the application is the
    * front-desk workspace, the clinic and the settings, and the navigation shows those and no doctor's screen.
@@ -135,7 +138,7 @@ export function useUygulama(ekran: UygulamaEkrani): Uygulama {
       // Every day and hour the screens write from now on is in the account's own time zone (one of the pack's list).
       hesapSaatDilimiAyarla(r.j.saatDilimi)
       const dilimler = Array.isArray(r.j.saatDilimleri) ? (r.j.saatDilimleri as unknown[]).filter((x): x is string => typeof x === 'string') : []
-      setHesap({ dil: uygulamaDili(r.j.dil), notDili: uygulamaDili(r.j.notDili), ad: String(r.j.ad || ''), rol, dilSoruldu, ...(onBuro ? { onBuro: true } : {}), ...(dilimler.length > 1 && typeof r.j.saatDilimi === 'string' ? { saatDilimi: r.j.saatDilimi, saatDilimleri: dilimler } : {}) })
+      setHesap({ dil: uygulamaDili(r.j.dil), notDili: uygulamaDili(r.j.notDili), ad: String(r.j.ad || ''), rol, dilSoruldu, ...(onBuro ? { onBuro: true } : {}), ...(dilimler.length > 1 && typeof r.j.saatDilimi === 'string' ? { saatDilimi: r.j.saatDilimi, saatDilimleri: dilimler } : {}), ...(typeof r.j.meslekKaydi === 'string' && r.j.meslekKaydi ? { meslekKaydi: r.j.meslekKaydi } : {}) })
     })()
     return () => { iptal = true }
   }, [api, cikis, ekran])
@@ -147,17 +150,77 @@ export function useUygulama(ekran: UygulamaEkrani): Uygulama {
 }
 
 /** Colours and fonts as variables on the root, from the one source of the look (lib/doktor/chromeRenk.ts). */
-const DEGISKENLER = {
+  const DEGISKENLER = {
   '--uza-krem': R.cream, '--uza-kagit': R.paper, '--uza-murekkep': R.ink, '--uza-soluk': R.muted, '--uza-cam': R.pine,
-  '--uza-uyari': R.warn, '--uza-cizgi': R.border, '--uza-altin': R.gold, '--uza-serif': CHROME_FONT.serif, '--uza-sans': CHROME_FONT.sans,
+  '--uza-uyari': R.warn, '--uza-cizgi': R.border, '--uza-altin': R.gold, '--uza-nav': R.nav, '--uza-serif': CHROME_FONT.serif, '--uza-sans': CHROME_FONT.sans,
 } as CSSProperties
 
 export type Sekme = 'bugun' | 'takvim' | 'hastalar' | 'araclar' | 'klinik' | 'onBuro' | 'ayarlar'
 
-export function Cerceve({ dil, m, ad, aktif, cikis, sade, onBuro, children }: {
+/** WMO weather code to a glyph. Same bands as the reference chrome; no sentence, so nothing to translate. */
+function havaIkonu(kod: number): string {
+  if (kod === 0) return '\u2600\uFE0F'
+  if (kod <= 3) return '\u26C5'
+  if (kod === 45 || kod === 48) return '\u{1F32B}\uFE0F'
+  if (kod >= 51 && kod <= 67) return '\u{1F326}\uFE0F'
+  if (kod >= 71 && kod <= 77) return '\u2744\uFE0F'
+  if (kod >= 80 && kod <= 82) return '\u{1F326}\uFE0F'
+  if (kod >= 95) return '\u26C8\uFE0F'
+  return '\u{1F324}\uFE0F'
+}
+
+/** Clock in the account's zone, with the weather chip under it when the browser shares a place. */
+function SaatKutusu() {
+  const [saat, setSaat] = useState('')
+  const [hava, setHava] = useState<{ sicaklik: number; kod: number } | null>(null)
+  useEffect(() => {
+    const yaz = () => {
+      const tz = hesapSaatDilimi()
+      const yerel = ulkePaketi().bicim.yerel
+      setSaat(new Intl.DateTimeFormat(yerel, { hour: saatBicimi() === 12 ? 'numeric' : '2-digit', minute: '2-digit', hour12: saatBicimi() === 12, timeZone: tz }).format(new Date()))
+    }
+    yaz()
+    const t = setInterval(yaz, 30000)
+    return () => clearInterval(t)
+  }, [])
+  useEffect(() => {
+    if (typeof navigator === 'undefined' || !navigator.geolocation) return
+    let iptal = false
+    navigator.geolocation.getCurrentPosition(
+      (konum) => {
+        const { latitude, longitude } = konum.coords
+        fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code`)
+          .then((r) => (r.ok ? r.json() : null))
+          .then((d: { current?: { temperature_2m?: number; weather_code?: number } } | null) => {
+            if (iptal || !d?.current || typeof d.current.temperature_2m !== 'number') return
+            setHava({ sicaklik: Math.round(d.current.temperature_2m), kod: Number(d.current.weather_code) })
+          })
+          .catch(() => {})
+      },
+      () => {},
+      { timeout: 8000, maximumAge: 30 * 60 * 1000 },
+    )
+    return () => { iptal = true }
+  }, [])
+  return (
+    <div className="uza-saat-kutu">
+      <div className="uza-saat-buyuk">{saat || '\u00A0'}</div>
+      {hava ? <div className="uza-hava"><span>{havaIkonu(hava.kod)}</span><span>{hava.sicaklik}{'°'}</span></div> : null}
+    </div>
+  )
+}
+
+function harfler(ad: string): string {
+  const p = ad.trim().split(/\s+/).filter(Boolean)
+  return ((p[0]?.[0] ?? '') + (p[1]?.[0] ?? '')).toUpperCase()
+}
+
+export function Cerceve({ dil, m, ad, unvan, aktif, cikis, sade, onBuro, children }: {
   dil: DilKodu
   m: UygulamaMetni
   ad?: string
+  /** Role name under the account, in the account's language. */
+  unvan?: string
   aktif?: Sekme | null
   cikis?: () => void
   /** true = no navigation (the first-login question, and "loading" before the account is known). */
@@ -169,25 +232,48 @@ export function Cerceve({ dil, m, ad, aktif, cikis, sade, onBuro, children }: {
   const baglanti = (s: Sekme, href: string, ad2: string) => (
     <a href={href} className="uza-sekme" aria-current={aktif === s ? 'page' : undefined}>{ad2}</a>
   )
+  // Bundled photograph when the page provides one. The public/ address is only a fallback for a
+  // test render: a country build does not serve files from public/.
+  const bitkiSrc = useBitki() || ulkeYolu('/doktor-chrome/plant.jpg')
   return (
     <div className="uza" lang={dil} style={DEGISKENLER}>
       {/* eslint-disable-next-line @next/next/no-page-custom-font */}
       <link rel="stylesheet" href={CHROME_FONT_HREF} />
+      {/* The same plant the Turkish doctor chrome uses (public/doktor-chrome/plant.jpg). The address goes through
+          the country's path prefix; alt stays empty so it is decoration, not a sentence. */}
+      {sade ? null : (
+        <div className="uza-bitki-kutu" aria-hidden="true">
+          <img src={bitkiSrc} alt="" className="uza-bitki" />
+        </div>
+      )}
       <header className="uza-ust">
         <div className="uza-ic uza-ust-ic">
-          <a href={sade ? undefined : onBuro ? (ozellikAcik('randevu') ? YOL.onBuro : YOL.klinik) : YOL.bugun} className="uza-marka">{marka()}</a>
+          <a href={sade ? undefined : onBuro ? (ozellikAcik('randevu') ? YOL.onBuro : YOL.klinik) : YOL.bugun} className="uza-marka">
+            <span className="uza-marka-yazi">
+              <span className="uza-marka-ad">{marka()}</span>
+              {m.kabuk.kas ? <span className="uza-kas">{onBuro && m.kabuk.onBuroKas ? m.kabuk.onBuroKas : m.kabuk.kas}</span> : null}
+            </span>
+          </a>
           {sade ? null : onBuro ? (
             <nav className="uza-nav" aria-label={m.kabuk.menu}>
+              {m.kabuk.calismaAlani ? <div className="uza-grup">{m.kabuk.calismaAlani}</div> : null}
               {ozellikAcik('randevu') ? baglanti('onBuro', YOL.onBuro, klinikMetni(dil).kabuk.onBuro) : null}
               {baglanti('klinik', YOL.klinik, klinikMetni(dil).kabuk.klinik)}
+              {m.kabuk.diger ? <><div className="uza-ayrac" /><div className="uza-grup">{m.kabuk.diger}</div></> : null}
               {baglanti('ayarlar', YOL.ayarlar, m.kabuk.ayarlar)}
             </nav>
           ) : (
             <nav className="uza-nav" aria-label={m.kabuk.menu}>
+              {m.pano ? <span className="uza-duvar uza-asistan" data-duvar="asistan">{m.pano.asistanaSor}</span> : null}
+              {m.kabuk.calismaAlani ? <div className="uza-grup">{m.kabuk.calismaAlani}</div> : null}
               {baglanti('bugun', YOL.bugun, m.kabuk.bugun)}
               {/* NOTYA-UZ-RANDEVU-01: the calendar. Its name is in the appointment catalogue, in the same form. */}
               {HAZIR.takvim ? baglanti('takvim', YOL.takvim, randevuMetni(dil).kabuk.takvim) : null}
               {baglanti('hastalar', YOL.hastalar, m.kabuk.hastalar)}
+              {m.pano ? <span className="uza-duvar" data-duvar="mesaj">{m.pano.mesajlar}</span> : null}
+              {m.kabuk.diger ? <><div className="uza-ayrac" /><div className="uza-grup">{m.kabuk.diger}</div></> : null}
+              {m.pano ? <span className="uza-duvar" data-duvar="rapor">{m.pano.raporlar}</span> : null}
+              {m.pano ? <span className="uza-duvar" data-duvar="odeme">{m.pano.odeme}</span> : null}
               {/* NOTYA-ULKE-ARACLAR-01: the tools area, where the country has it. Its name is in the tools catalogue, in the same form. */}
               {ozellikAcik('araclar') ? baglanti('araclar', YOL.araclar, araclarMetni(dil).kabuk.araclar) : null}
               {/* NOTYA-ULKE-KLINIK-01: the clinic, where the country has clinic accounts. Its name is in the clinic catalogue, in the same form. */}
@@ -195,12 +281,24 @@ export function Cerceve({ dil, m, ad, aktif, cikis, sade, onBuro, children }: {
               {baglanti('ayarlar', YOL.ayarlar, m.kabuk.ayarlar)}
             </nav>
           )}
-          <div className="uza-hesap">
-            {ad ? <span className="uza-hesap-ad">{ad}</span> : null}
-            {cikis ? <button type="button" className="uza-dugme uza-dugme-cizgi uza-dugme-kucuk" onClick={cikis}>{m.kabuk.cikis}</button> : null}
-          </div>
         </div>
       </header>
+      {/* Account row sits beside the sidebar (the Turkish chrome's top-right cluster), not inside it. */}
+      {ad || cikis ? (
+        <div className="uza-hesap">
+          {ad ? <span className="uza-avatar" aria-hidden="true">{harfler(ad)}</span> : null}
+          {ad ? (
+            <span className="uza-hesap-blok">
+              <span className="uza-hesap-ad">{ad}</span>
+              {unvan ? <small className="uza-hesap-unvan">{unvan}</small> : null}
+            </span>
+          ) : null}
+          <span className="uza-dik" aria-hidden="true" />
+          <SaatKutusu />
+          <span className="uza-dik" aria-hidden="true" />
+          {cikis ? <button type="button" className="uza-dugme uza-dugme-cizgi uza-dugme-kucuk" onClick={cikis}>{m.kabuk.cikis}</button> : null}
+        </div>
+      ) : null}
       <main className="uza-ic uza-govde">{children}</main>
     </div>
   )

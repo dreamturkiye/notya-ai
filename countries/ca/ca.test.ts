@@ -19,6 +19,7 @@ import { CA_GIRDI } from './ayarlar'
 import derleme from './derleme.mjs'
 import { CA_PAKETI } from './index'
 import { CA_KLINIK } from './klinik'
+import { CA_ACIL_CUMLE } from './klinik/formEk'
 import { CA_ROLLER } from './roller'
 
 const D = 'en-CA'
@@ -44,6 +45,9 @@ ingilizcePaketSinamasi({
   rolDegisimi: CA_ROLLER,
   // … and the two tools only it has, both switched on (./araclar/)
   ekAraclar: ['ca-unit-converter', 'ca-egfr-ckd-epi-2021'],
+  acilCumle: CA_ACIL_CUMLE,
+  yasakAcil: /\b(999|111|000|112|103)\b/,
+  idIpucu: /health card/i,
 })
 
 describe('ca: what is Canada\'s', () => {
@@ -106,7 +110,7 @@ describe('ca: what is Canada\'s', () => {
     assert.ok(!('ng/mL' in a.birimler), 'no second unit of the amount is offered: nothing is converted')
     assert.ok(!a.araclar.some((x) => x.anahtar === 'rapor-taslagi'))
     assert.equal(a.yuvalar.find((y) => y.anahtar === 'rapor-taslagi')?.lisans?.durum, 'izin-gerekli')
-    assert.equal(CA_KLINIK.riza.surum, 'ca-draft-2026-10-09')
+    assert.equal(CA_KLINIK.riza.surum, 'ca-draft-2026-10-11')
     assert.equal(CA_ARAYUZ.metinler[D]!.muayene.riza, CA_GIRDI.sozler.kayitRizasi)
   })
 })

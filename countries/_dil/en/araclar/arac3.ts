@@ -78,7 +78,7 @@ export const EN_ARACLAR_3: readonly HamArac[] = [
     not: DOZSUZ,
   },
   {
-    anahtar: 'vas-fonksiyon', roller: ['orthopaedics'],
+    anahtar: 'vas-fonksiyon', roller: ['orthopaedics', 'physiotherapy', 'rehabilitation-medicine'],
     ad: 'Pain and function rating',
     aciklama: 'Pain from 0 to 10 and four items of function from 0 to 4 (0 = no difficulty, 4 = cannot do it). The tool shows the two figures and names no grade.',
     alanlar: { vas: 'Pain from 0 to 10', yurume: 'Walking', merdiven: 'Going up and down stairs', gunluk: 'Daily activities (dressing, washing)', uyku: 'Sleep disturbed by pain' },
@@ -132,7 +132,7 @@ export const EN_ARACLAR_3: readonly HamArac[] = [
 
   // ── plastic surgery ──
   {
-    anahtar: 'plastik-yara-greft', roller: ['plastic-surgery'],
+    anahtar: 'plastik-yara-greft', roller: ['plastic-surgery', 'aesthetic-surgery'],
     ad: 'Wound, graft and flap follow-up',
     aciklama: 'What is being followed, the site, and the dates of the procedure, the next dressing and the removal of stitches. No diagnosis and no dose of any medicine is stated.',
     alanlar: { tip: 'What is being followed', bolge: 'Site', taraf: 'Side (optional)', islem: 'Date of the procedure (optional)', pansuman: 'Date of the next dressing (optional)', dikis_alma: 'Date for removal of stitches (optional)' },

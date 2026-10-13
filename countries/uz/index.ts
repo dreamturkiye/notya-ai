@@ -15,6 +15,7 @@ import {
 import { uzAramaKatla } from './arama'
 import { UZ_ROLLER } from './klinik/rolAdlari'
 import { UZ_VELI_YASI } from './ayarlar'
+import { UZ_RESMI_GUNLER } from './resmiGunler'
 
 const metin = paketMetinleri({
   acikDiller: ['uz-Latn', 'ru'],
@@ -45,7 +46,9 @@ export const UZ_PAKETI: UlkePaketi = {
   saatDilimi: 'Asia/Tashkent',
   bicim: { yerel: 'uz-Latn-UZ', tarihDeseni: 'DD.MM.YYYY', ondalikAyraci: ',', binlikAyraci: ' ', haftaBasi: 1 },
   telefon: { ulkeOnEki: '+998', ulusalHane: 9, ornek: '+998 90 123 45 67', cepGecerliMi: uzCepGecerliMi },
-  // JSHSHIR (PINFL): 14 digits. Format only — the check-digit rule is to verify (checklist G5).
+  // JSHSHIR (PINFL): 14 digits. Format only here. The structure and the control-digit rule were verified on 2026-10-09
+  // against Cabinet of Ministers Resolution No. 177 of 12.04.2022 (https://lex.uz/docs/5955665) and are stated in
+  // ./kimlik.ts (`uzJshshirYapisiGecerliMi`); they are NOT applied: see `uygulama.kimlikNumarasi` below.
   ulusalKimlik: { ad: 'JSHSHIR', hane: 14, gecerliMi: (ham) => /^\d{14}$/.test(String(ham ?? '').trim()) },
   // Fail closed: only what has been built FOR Uzbekistan is on. Landing page, login, sign-up by invitation code, and
   // the single holding page an account sees after login (NOTYA-ULKE-01, 2026-10-08). Everything else is off —
@@ -102,7 +105,7 @@ export const UZ_PAKETI: UlkePaketi = {
   // The ONLY paths that exist in an Uzbekistan deployment. Every other path of the application answers 404 in the
   // middleware. A path is added here in the same pull request that brings its Uzbek and Russian text and its leak test.
   rotalar: {
-    sayfalar: ['/', '/login', '/signup', '/welcome', '/start', '/today', '/settings', '/patients', '/patients/new', '/patient', '/visit', '/calendar', '/portal', '/tools', '/clinic', '/desk'],
+    sayfalar: ['/', '/for-clinics', '/login', '/signup', '/welcome', '/start', '/today', '/settings', '/patients', '/patients/new', '/patient', '/visit', '/calendar', '/portal', '/tools', '/clinic', '/desk', '/privacy', '/terms', '/cookies', '/data-request', '/accessibility', '/medical-disclaimer', '/security'],
     apiOnEkleri: ['/api/ulke/'],
   },
   // NOTYA-UZ-MUAYENE-01 (Kaan, 2026-10-08): served at notya.io/uzbek. The paths above are relative to this prefix.
@@ -116,6 +119,7 @@ export const UZ_PAKETI: UlkePaketi = {
   yuzeyler: metin.yuzeyler,
   metinler: metin.metinler,
   dilAdlari: { 'uz-Latn': 'Oʻzbekcha', 'uz-Cyrl': 'Ўзбекча', ru: 'Русский' },
+  resmiGunler: UZ_RESMI_GUNLER,
   uygulama: {
     // Inside the signed-in application an account may also choose Uzbek in Cyrillic script: those screens are written
     // in all three forms (countries/uz/uygulama/metinler.ts). The public pages above stay in the two `acikDiller`.
@@ -123,23 +127,29 @@ export const UZ_PAKETI: UlkePaketi = {
     // The patient's own language, recorded per patient (script is the doctor's choice, not the patient's).
     hastaDilleri: ['uz', 'ru'],
     aramaKatla: uzAramaKatla,
-    // NOTYA-UZ-BRANSLAR-01: the 40 roles an account chooses from at first login (30 doctor specialties, 5 clinic
-    // doctors, 5 clinic allied professions). Keys only; the names are in ./klinik/rolAdlari.ts.
+    // NOTYA-UZ-BRANSLAR-01 · NOTYA-ULKE-UYGULA-UZ (2026-10-10): the roles an account chooses from at first login.
+    // UZBEKISTAN'S OWN LIST since the audit of the specialties against the Ministry of Health's nomenclature (order
+    // No. 6 of 12.05.2021, registration No. 3303) was applied: 42 roles — 37 doctor specialties, 3 clinic doctors,
+    // 2 clinic allied professions. What was renamed, split, added, moved and removed, and why: ./klinik/rolListesi.ts
+    // (and, as data, countries/rol-eslemesi.json → ulkeyeOzel.uz). Keys only; the names are in ./klinik/rolAdlari.ts.
     roller: UZ_ROLLER,
     // NOTYA-UZ-RANDEVU-01 — appointment norms. STARTING VALUES, to verify with the local clinical lead (checklist J4):
     // the usual working week and hours of a private clinic in Uzbekistan were not checked against a local source.
     // An account changes all of it for itself on the calendar's settings view. The time zone is `saatDilimi` above
-    // and the week starts on `bicim.haftaBasi`. PUBLIC HOLIDAYS are deliberately absent: they are local content
-    // (docs/COUNTRY-PACK-UZBEKISTAN.md, "needs local content"), and a hard-coded list would silently go stale.
+    // and the week starts on `bicim.haftaBasi`. The working pattern does not close a public day. The calendar
+    // reads `resmiGunler` on this pack. The movable days there are a draft until the year's decree is copied in.
     randevu: {
       varsayilan: { gunler: [1, 2, 3, 4, 5], baslangic: '09:00', bitis: '18:00', sureDk: 30, molalar: [{ baslangic: '13:00', bitis: '14:00' }] },
       sureSecenekleri: [10, 15, 20, 30, 45, 60, 90],
     },
     // NOTYA-ULKE-PORTAL-01 — a portal link works for 30 days, then the doctor gives a new one. A STARTING VALUE, not a
     // local rule: to confirm with the owner and, for how long a patient's access may stand, with a lawyer (checklist I1).
-    // The ambulance number the patient's page names is LOCAL CONTENT. 103 was written by Claude from general knowledge
-    // and is UNVERIFIED: a local source must confirm it before any patient sees the portal (docs/COUNTRY-PACK-UZBEKISTAN.md,
-    // "Needs local content", row 78). null here = the page names no number.
+    // The ambulance number the patient's page names is LOCAL CONTENT. null here = the page names no number.
+    // 103 — CHECKED AGAINST AN OFFICIAL SOURCE on 2026-10-09 (country audit, docs/COUNTRY-AUDIT-UZBEKISTAN.md, A10): the
+    // state services portal's page of the emergency medical service says to call the short number "103", free of charge
+    // (https://gov.uz/oz/advice/63/document/1090). The single dispatch number 112 also exists (Cabinet of Ministers
+    // Resolution No. 304 of 29.05.2024, https://gov.uz/en/advice/502/document/3256); whether the patient's page should
+    // name 112 beside or instead of 103 is for a local clinician and the owner. Not yet confirmed by a person in the country.
     portal: { baglantiGecerlilikGun: 30, acilNumara: '103' },
     // NOTYA-ULKE-MESAJ-01 — TELLING A PATIENT THAT THEIR DOCTOR WROTE: A SLOT, SWITCHED OFF. No provider is contracted
     // and the kit sends nothing to anybody; the doctor tells the patient. Waits on Kaan (which channel patients here
@@ -163,14 +173,18 @@ export const UZ_PAKETI: UlkePaketi = {
     // they are answered the pack takes the narrow side wherever there is one:
     //   yetkiTurleri              all five, each given by the doctor whose patients they are, one at a time.
     //   sahipHekimAdinaVerebilir  NO: a clinic's owner cannot give a permission for a doctor's patients. (Kaan / lawyer.)
-    //   paylasimRolleri           the five clinic specialist roles of this pack may be given ONE patient's approved
-    //                             notes by that patient's doctor. UNVERIFIED: the scope of each profession is for a lawyer.
+    //   paylasimRolleri           the clinic specialist roles of this pack (the allied professions) may be given ONE
+    //                             patient's approved notes by that patient's doctor. UNVERIFIED: the scope of each
+    //                             profession is for a lawyer. TWO since 2026-10-10 (NOTYA-ULKE-UYGULA-UZ): occupational
+    //                             therapy is not in the nomenclature and left the role list; dietology and surdology
+    //                             are doctors' specialties there, and a doctor is given cover or a consultation, not
+    //                             this share. Nobody gained access by that change; three roles lost this way in.
     //   davetGecerlilikGun        an invitation works for 7 days.   vekaletAzamiGun   cover lasts at most 14 days.
     //   kayitSaklama              a slot, off: no record row is ever deleted and no purge exists.
     klinikHesaplari: {
       yetkiTurleri: ['on-buro-randevu', 'on-buro-hasta', 'on-buro-portal', 'paylasim', 'vekalet'],
       sahipHekimAdinaVerebilir: false,
-      paylasimRolleri: ['fizyoterapi', 'klinik-psikolog', 'diyetisyen', 'ergoterapi', 'odyoloji'],
+      paylasimRolleri: ['fizyoterapi', 'klinik-psikolog'],
       davetGecerlilikGun: 7,
       vekaletAzamiGun: 14,
       kayitSaklama: null,
@@ -189,7 +203,9 @@ export const UZ_PAKETI: UlkePaketi = {
     birimler: { agirlik: 'kg', boy: 'cm', sicaklik: 'C' },
     // The patronymic (otasining ismi / отчество) is its own field on the patient form.
     adAlanlari: { ikinciAd: true },
-    // JSHSHIR is optional free text, stored encrypted and NOT validated: the check-digit rule is to verify (checklist G5).
+    // JSHSHIR is optional free text, stored encrypted and NOT validated. The official structure is now known (./kimlik.ts,
+    // verified 2026-10-09); refusing a number that fails it is the owner's decision, and whether a private product may
+    // ask for the number is a question for a lawyer (checklist G5; docs/COUNTRY-AUDIT-UZBEKISTAN.md, "Open items").
     kimlikNumarasi: { dogrula: false },
     // Guardian wording for a patient under 18 on the day of the visit. An assumption to confirm with a lawyer (checklist B12).
     veliYasi: UZ_VELI_YASI,

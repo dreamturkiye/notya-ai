@@ -187,13 +187,14 @@ describe('Uzbekistan visit: pack settings', () => {
     assert.match(readFileSync(join(KOK, 'countries/tr/klinik.ts'), 'utf8'), /export const TR_KLINIK: UlkeKlinigi \| null = null\n/)
   })
 
-  it('templates: the general one first, then one per role — all 30 specialties write with their own; none is signed off', async () => {
+  it('templates: the general one first, then one per role — all 37 doctor specialties write under their own key; none is signed off', async () => {
     const b = await import('../klinik/branslar')
     const { UZ_ROLLER } = await import('../klinik/rolAdlari')
     assert.deepEqual([...b.UZ_ACIK_SABLONLAR], ['genel', ...UZ_ROLLER])
-    assert.equal(b.UZ_ACIK_SABLONLAR.length, 41)
+    // 42 roles since the audit of 2026-10-10 was applied (countries/uz/klinik/rolListesi.ts): 37 doctor specialties among them
+    assert.equal(b.UZ_ACIK_SABLONLAR.length, 43)
     const liste = Object.entries(b.UZ_BRANSLAR)
-    assert.equal(liste.length, 30)
+    assert.equal(liste.length, 37)
     for (const [k, x] of liste) assert.deepEqual(x, { kendiSablonuAcik: true, sablon: k, yerelInceleyen: null }, k)
     const { UZ_KLINIK } = await import('../klinik/index')
     assert.deepEqual([...UZ_KLINIK.sablonlar], ['genel', ...UZ_ROLLER])
@@ -409,7 +410,7 @@ describe('Uzbekistan visit: recording → transcript (speech provider is a stand
     stt.cevaplar = [cevap('juda qisqa', 'uzb', 0.99, -0.05)]
     assert.deepEqual(await dene(), { s: 422, j: { code: 'KISA_KAYIT' } })
     // Another role's template (A is a paediatrician), and something that is no template at all.
-    for (const sablon of ['kardiyoloji', 'dahiliye', 'odyoloji', '', 'Pediatri', 'kadin-dogum']) assert.deepEqual(await dene({ sablon }), { s: 400, j: { code: 'GECERSIZ', alan: 'sablon' } }, sablon)
+    for (const sablon of ['kardiyoloji', 'dahiliye', 'surdoloji', 'odyoloji', '', 'Pediatri', 'kadin-dogum']) assert.deepEqual(await dene({ sablon }), { s: 400, j: { code: 'GECERSIZ', alan: 'sablon' } }, sablon)
     const anahtar = process.env.ELEVENLABS_API_KEY
     delete process.env.ELEVENLABS_API_KEY
     try { assert.deepEqual(await dene(), { s: 503, j: { code: 'HAZIR_DEGIL' } }) } finally { process.env.ELEVENLABS_API_KEY = anahtar }
@@ -545,7 +546,9 @@ describe('Uzbekistan visit: screens in the three forms', () => {
 
   it('the template is the account\'s role — never the patient\'s age; no role (or a value that is not one) is the general template', () => {
     assert.equal(Muayene.hesapSablonu('kardiyoloji'), 'kardiyoloji')
-    assert.equal(Muayene.hesapSablonu('odyoloji'), 'odyoloji')
+    assert.equal(Muayene.hesapSablonu('surdoloji'), 'surdoloji')
+    // a key the audit of 2026-10-10 took off the role list is no template: the general one
+    assert.equal(Muayene.hesapSablonu('odyoloji'), 'genel')
     for (const ham of [null, undefined, '', 'kadin-dogum', 'Pediatri']) assert.equal(Muayene.hesapSablonu(ham), 'genel', String(ham))
     // A template is named for a person in the screen's form; a key is never the name.
     assert.deepEqual(FORMLAR.map((f) => Muayene.sablonAdi(M.uygulamaMetni(f), 'kardiyoloji')), ['Kardiologiya', 'Кардиология', 'Кардиология'])

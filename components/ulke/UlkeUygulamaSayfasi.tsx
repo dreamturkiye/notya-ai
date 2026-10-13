@@ -8,10 +8,12 @@ import React from 'react'
 import { notFound } from 'next/navigation'
 import { AKTIF_ARAYUZ } from '@/countries/active/arayuz'
 import { UYGULAMA_EKRAN_BILESENLERI } from '@/components/ulke/uygulama'
+import { BitkiSaglayici } from '@/components/ulke/uygulama/bitki'
 import { UYGULAMA_EKRANLARI } from '@/lib/ulke/tipler'
 import { ozellikAcik, ulkePaketi } from '@/lib/ulke/ulke'
 import { rotaAcikMi } from '@/lib/ulke/rotaKapisi'
 import type { UygulamaEkrani } from '@/lib/ulke/tipler'
+import bitki from '../../public/doktor-chrome/plant.jpg'
 
 export function UlkeUygulamaSayfasi({ ekran }: { ekran: UygulamaEkrani }) {
   // A screen exists where the feature is on, the pack brings content for the shared screens, and the pack lists the
@@ -21,5 +23,5 @@ export function UlkeUygulamaSayfasi({ ekran }: { ekran: UygulamaEkrani }) {
     && ((ekran !== 'klinik' && ekran !== 'onBuro') || ozellikAcik('klinikHesaplari')) && (ekran !== 'onBuro' || ozellikAcik('randevu'))
   const Ekran = var_ ? UYGULAMA_EKRAN_BILESENLERI[ekran] : undefined
   if (!Ekran) notFound()
-  return <Ekran />
+  return <BitkiSaglayici src={bitki.src}><Ekran /></BitkiSaglayici>
 }

@@ -25,6 +25,7 @@ import { ulkeServisSupabase } from '@/lib/ulke/sunucuOturum'
 import { sinirda } from '@/lib/ulke/uygulama/sinir'
 import { aktifUlke, ozellikAcik, ulkePaketi } from '@/lib/ulke/ulke'
 import { davetKoduBicimiGecerli, davetKoduHash, kayitKoduGerekliMi } from '@/lib/ulke/davet'
+import { meslekKaydiGecerli } from '@/lib/ulke/uygulama/meslekKaydi'
 import { ulkeIslevi, ulkeTablosu } from '@/lib/ulke/uygulama/tablolar'
 
 export const dynamic = 'force-dynamic'
@@ -48,6 +49,9 @@ export const POST = sinirda('sign-up POST', async (req: NextRequest) => {
   if (eposta.length > 200 || !EPOSTA.test(eposta)) return cevap({ code: 'EPOSTA_GECERSIZ' }, 400)
   if (sifre.length < 8 || sifre.length > 200) return cevap({ code: 'SIFRE_KISA' }, 400)
   if (kodGerekli && !davetKoduBicimiGecerli(g?.davetKodu)) return cevap({ code: 'KOD_GECERSIZ' }, 400)
+  // Optional professional registration. Checked BEFORE the invitation is consumed, so a bad value leaves the code unused.
+  const meslek = meslekKaydiGecerli(g?.meslekKaydi)
+  if (meslek === null) return cevap({ code: 'GECERSIZ', alan: 'meslekKaydi' }, 400)
   // The interface language must be one this country has switched on; anything else is the country's default.
   const paket = ulkePaketi()
   const dil = (paket.acikDiller as readonly string[]).includes(dilHam) ? dilHam : paket.varsayilanDil
@@ -68,7 +72,7 @@ export const POST = sinirda('sign-up POST', async (req: NextRequest) => {
     password: sifre,
     email_confirm: true,
     app_metadata: { country: ulke },
-    user_metadata: { full_name: adSoyad, ui_language: dil, davetli: kodGerekli },
+    user_metadata: { full_name: adSoyad, ui_language: dil, davetli: kodGerekli, ...(meslek ? { meslekKaydi: meslek } : {}) },
   })
   const userId = yeni?.user?.id
   if (hesapHatasi || !userId) {

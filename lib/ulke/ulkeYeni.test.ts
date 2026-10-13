@@ -90,7 +90,7 @@ describe('scripts/ulke-yeni.mjs — a new country from the template', () => {
     assert.match(oku(`countries/${K}/uygulama/portalMetinleri.ts`), /^    \/\/ saatDilimi: '…',   ← REQUIRED if the country has more than one time zone/m)
     const yeniIndex = oku(`countries/${K}/index.ts`)
     assert.match(yeniIndex, /^\s+hastaPortali: true,$/m)
-    assert.match(yeniIndex, /'\/calendar', '\/portal', '\/tools', '\/clinic', '\/desk'\]/)
+    assert.match(yeniIndex, /'\/calendar', '\/portal', '\/tools', '\/clinic', '\/desk', '\/privacy', '\/terms', '\/cookies', '\/data-request', '\/accessibility', '\/medical-disclaimer', '\/security'\]/)
     // NOTYA-ULKE-ARACLAR-01: the tools area is part of what a new country is given — its own words (every group), the
     // patient page's tile as the one base tool, and NO other tool: which of the kit's tools a country has, and for
     // which roles, is decided there with a clinician. No tool text of any country is copied.
@@ -135,7 +135,7 @@ describe('scripts/ulke-yeni.mjs — a new country from the template', () => {
     const yeniIndex = oku(`countries/${K}/index.ts`)
     assert.match(yeniIndex, /^\s+klinikHesaplari: true,$/m)
     const klinikSekli = (JSON.parse(readFileSync(join(KOK, 'scripts/ulke-sablon/sekil.json'), 'utf8')) as { klinik: Record<string, unknown> }).klinik
-    assert.deepEqual(Object.keys(klinikSekli).sort(), ['davet', 'giris', 'kabuk', 'kayit', 'klinik', 'konum', 'onBuro', 'paylasilan', 'takvim', 'yetki', 'yetkiAciklama', 'yetkiTuru'])
+    assert.deepEqual(Object.keys(klinikSekli).sort(), ['davet', 'giris', 'kabuk', 'kayit', 'klinik', 'konum', 'onBuro', 'paylasilan', 'saklama', 'takvim', 'yetki', 'yetkiAciklama', 'yetkiTuru'])
     const yeniKlinik = oku(`countries/${K}/uygulama/klinikMetinleri.ts`)
     for (const grup of Object.keys(klinikSekli)) assert.match(yeniKlinik, new RegExp(`^  ${grup}: `, 'm'))
     assert.match(yeniKlinik, new RegExp(`^const EN: KlinikMetni = \\{$`, 'm'))

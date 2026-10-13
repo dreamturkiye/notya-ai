@@ -193,7 +193,7 @@ function kapiNotu(kapi: string): string {
     F7: 'NOT DONE. No specialty has a sign-off.', G5: `UNVERIFIED. ${U.kimlikNotu}`, H1: 'No other country\'s state system exists in this build.', H3: 'No integration is claimed anywhere (tested).',
     I1: `NOT DONE — ${LAWYER}. Both consent sentences are drafts.`, I2: `NOT DONE — ${LAWYER}. ${U.veliNotu}`, I6: `NOT DECIDED — ${LAWYER} and the owner. No database, no provider account exists for this country.`,
     J2: 'All 40 roles are offered; none is reviewed.', J3: 'See C1.', J4: 'Starting values (settings below).', J6: 'NO PRICE. Every plan is "by quote". WAITING ON KAAN.', J7: 'None. No trial, no discount.',
-    K1: 'One landing page, in English, machine-written.', K2: 'Hidden: noindex on every response, robots.txt disallows everything.', K3: 'No public demo, no integration claim (tested).', K4: 'ABSENT. No legal pages exist. ' + LAWYER + '.',
+    K1: 'One landing page, in English, machine-written.', K2: 'Hidden: noindex on every response, robots.txt disallows everything.', K3: 'No public demo, no integration claim (tested).', K4: 'DRAFTS, UNREAD. Pages: /privacy, /terms, /cookies, /data-request, /accessibility, /medical-disclaimer, /security, and /.well-known/security.txt. Addresses: privacy@, support@, security@, legal@, billing@, hello@notya.io. ' + LAWYER + '.',
     M1: 'NO DATABASE EXISTS. Waits on the owner.', M2: 'Not run.', M3: 'Not run.', M4: 'Not set.', M5: 'Not set.', M6: 'True: no script of this country was run on any database.',
   }
   return N[kapi] ?? 'Not answered.'

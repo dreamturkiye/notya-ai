@@ -51,6 +51,7 @@ import { enYaz } from '../varyant'
 import { EN_ARACLAR_1 } from './arac1'
 import { EN_ARACLAR_2 } from './arac2'
 import { EN_ARACLAR_3 } from './arac3'
+import { EN_ARACLAR_4 } from './arac4'
 import { araciBicimle, lisansiBicimle, type EnDegisen, type EnLisans, type HamArac } from './yardimci'
 import { enAracYuvalari, yuva } from './yuvalar'
 
@@ -65,7 +66,7 @@ export const EN_TEMEL_ARACLAR: readonly HamArac[] = [
 ]
 
 /** Every ROLE tool the set has written, in the order the grid shows them. */
-export const EN_ROL_ARACLARI: readonly HamArac[] = [...EN_ARACLAR_1, ...EN_ARACLAR_2, ...EN_ARACLAR_3]
+export const EN_ROL_ARACLARI: readonly HamArac[] = [...EN_ARACLAR_1, ...EN_ARACLAR_2, ...EN_ARACLAR_3, ...EN_ARACLAR_4]
 
 const TAKIP: Omit<HamArac, 'roller'> = {
   anahtar: 'takip-paneli',
@@ -109,6 +110,12 @@ export const EN_BIRIM_ADLARI: Readonly<Record<string, string>> = {
   'mmol/mol': 'mmol/mol',
   'ug/L': 'µg/L',
   'ug/L/yil': 'µg/L per year',
+  mmHg: 'mmHg',
+  kcal: 'kcal',
+  g: 'g',
+  cm2: 'cm²',
+  '1/cm2': '/cm²',
+  hafta: 'weeks',
 }
 
 /** The sentence under a number whose unit the doctor has not chosen yet. Base spelling. Only in a pack that accepts several units for a value. */

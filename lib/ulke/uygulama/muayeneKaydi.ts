@@ -37,7 +37,7 @@ export type MuayeneGirdisi = {
   /** NOTYA-UZ-RANDEVU-01: the appointment this visit is started from. Absent = a visit without an appointment. */
   randevuId?: string | null
 }
-export type MuayeneRetKodu = 'RIZA_GEREKLI' | 'GECERSIZ' | 'NOT_FOUND' | 'HAZIR_DEGIL' | 'LIMIT' | 'SES_OKUNAMADI' | 'KISA_KAYIT' | 'BASARISIZ'
+export type MuayeneRetKodu = 'RIZA_GEREKLI' | 'GECERSIZ' | 'NOT_FOUND' | 'HAZIR_DEGIL' | 'LIMIT' | 'SES_OKUNAMADI' | 'KISA_KAYIT' | 'BASARISIZ' | 'ONAYLI'
 export type MuayeneSonucu =
   | { tamam: true; seansId: string; ikinciGecis: boolean; dusukGuven: boolean; /** true = the visit is linked to the appointment it was started from. */ randevuBagli: boolean }
   | { tamam: false; kod: MuayeneRetKodu; alan?: string }
@@ -201,4 +201,22 @@ export async function muayeneGetir(supabase: SupabaseClient, doktorId: string, s
     notDurumu: !not ? 'notsuz' : not.approved_at ? 'onayli' : 'taslak',
     konusma: konusmaOzeti(kayit as KayitSatiri | null),
   }
+}
+
+/**
+ * Deletes a visit that has no approved note. The appointment's link is cleared first: that foreign key has no
+ * ON DELETE. Notes of the visit go with it (cascade). An approved note is not deleted; the visit stays.
+ * A foreign id answers NOT_FOUND, the same as a missing id.
+ */
+export async function muayeneSil(supabase: SupabaseClient, doktorId: string, seansId: string): Promise<{ tamam: true } | { tamam: false; kod: MuayeneRetKodu }> {
+  const { data: s, error } = await ulkeTablosu(supabase, 'ulke_muayeneler').select('id').eq('id', seansId).eq('doctor_id', doktorId).maybeSingle()
+  if (error || !s) return { tamam: false, kod: 'NOT_FOUND' }
+  const { data: notlar, error: notHatasi } = await ulkeTablosu(supabase, 'ulke_notlar').select('id, approved_at').eq('session_id', seansId).eq('doctor_id', doktorId)
+  if (notHatasi) return { tamam: false, kod: 'BASARISIZ' }
+  if (((notlar as { approved_at: string | null }[] | null) ?? []).some((n) => n.approved_at)) return { tamam: false, kod: 'ONAYLI' }
+  const { error: randevuHatasi } = await ulkeTablosu(supabase, 'ulke_randevulari').update({ session_id: null }).eq('session_id', seansId).eq('doctor_id', doktorId)
+  if (randevuHatasi) return { tamam: false, kod: 'BASARISIZ' }
+  const { error: silHatasi } = await ulkeTablosu(supabase, 'ulke_muayeneler').delete().eq('id', seansId).eq('doctor_id', doktorId)
+  if (silHatasi) return { tamam: false, kod: 'BASARISIZ' }
+  return { tamam: true }
 }
