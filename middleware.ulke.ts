@@ -6,37 +6,40 @@
  *   1. Country gate. Only the paths the active pack lists exist; anything else answers 404 here, before any screen
  *      renders. The build already contains only *.ulke.* routes; this is the second lock, and it also closes the
  *      static files in public/ that every build carries (internal pages, the Turkish app manifest, the service worker).
- *   2. Headers: the same security headers the application has always sent, plus "do not index" on every response
- *      and a robots.txt that disallows everything while the country is hidden from search engines. The patient's
- *      page (/portal) is never indexed, never cached and names no referrer, whatever the country's setting.
+ *   2. Headers: the same security headers the application has always sent. While the country is hidden from
+ *      search engines, the signed-in application is noindex and robots.txt disallows it. The public legal and
+ *      medical pages stay reachable and are allowed. The patient's page (/portal) is never indexed, never cached
+ *      and names no referrer, whatever the country's setting.
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { AKTIF_PAKET } from '@/countries/active'
 import { bulunamadiHtml } from '@/lib/ulke/bulunamadiHtml'
-import { ARAMA_GIZLI_BASLIGI, ROBOTS_HERKESE_KAPALI, rotaAcikMi } from '@/lib/ulke/rotaKapisi'
+import { icerikHerkezeAcikMi, robotsAcikMetni } from '@/lib/ulke/acikIcerik'
+import { ARAMA_GIZLI_BASLIGI, rotaAcikMi } from '@/lib/ulke/rotaKapisi'
 import { securityTxt } from '@/lib/ulke/yasal/securityTxt'
 import { PORTAL_SAYFASI } from '@/lib/ulke/portal/sabitler'
 
-function guvenlikBasliklari(h: Headers) {
+function guvenlikBasliklari(h: Headers, pathname: string) {
   h.set('X-Frame-Options', 'DENY')
   h.set('X-Content-Type-Options', 'nosniff')
   h.set('Referrer-Policy', 'strict-origin-when-cross-origin')
   h.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload')
-  if (AKTIF_PAKET.aramaMotorlarinaGizli) h.set('X-Robots-Tag', ARAMA_GIZLI_BASLIGI)
+  const herkeseAcik = icerikHerkezeAcikMi(pathname) || pathname === '/.well-known/security.txt' || pathname === '/robots.txt'
+  if (AKTIF_PAKET.aramaMotorlarinaGizli && !herkeseAcik) h.set('X-Robots-Tag', ARAMA_GIZLI_BASLIGI)
 }
 
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
 
   if (pathname === '/robots.txt' && AKTIF_PAKET.aramaMotorlarinaGizli) {
-    const r = new NextResponse(ROBOTS_HERKESE_KAPALI, { status: 200, headers: { 'Content-Type': 'text/plain; charset=utf-8' } })
-    guvenlikBasliklari(r.headers)
+    const r = new NextResponse(robotsAcikMetni(), { status: 200, headers: { 'Content-Type': 'text/plain; charset=utf-8' } })
+    guvenlikBasliklari(r.headers, pathname)
     return r
   }
 
   if (pathname === '/.well-known/security.txt') {
     const r = new NextResponse(securityTxt(), { status: 200, headers: { 'Content-Type': 'text/plain; charset=utf-8' } })
-    guvenlikBasliklari(r.headers)
+    guvenlikBasliklari(r.headers, pathname)
     return r
   }
 
@@ -48,12 +51,12 @@ export function middleware(req: NextRequest) {
       ? NextResponse.json({ code: 'NOT_FOUND' }, { status: 404 })
       : new NextResponse(bulunamadiHtml(), { status: 404, headers: { 'Content-Type': 'text/html; charset=utf-8' } })
     r.headers.set('Cache-Control', 'no-store')
-    guvenlikBasliklari(r.headers)
+    guvenlikBasliklari(r.headers, pathname)
     return r
   }
 
   const r = NextResponse.next()
-  guvenlikBasliklari(r.headers)
+  guvenlikBasliklari(r.headers, pathname)
   // NOTYA-ULKE-PORTAL-01: the patient's page is never indexed (whatever the country's own setting), never kept by a
   // shared cache, and names no referrer. Its API routes set the same headers themselves (lib/ulke/portal/rotaYardimcisi.ts).
   if (pathname === PORTAL_SAYFASI) {

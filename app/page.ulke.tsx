@@ -9,6 +9,7 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { UlkeAcilisSayfasi } from '@/components/ulke/acilis'
 import { acilisFormu } from '@/components/ulke/acilis/AcilisSayfasi'
+import { ACIK_ROBOTS } from '@/lib/ulke/acikIcerik'
 import { acilis } from '@/lib/ulke/arayuz'
 import { ozellikAcik } from '@/lib/ulke/ulke'
 import { sayfaDili, type AramaParametreleri } from '@/lib/ulke/sayfaDili'
@@ -21,7 +22,7 @@ export function generateMetadata({ searchParams }: { searchParams?: AramaParamet
   const ham = searchParams?.dil
   const d = acilisFormu(icerik, sayfaDili(searchParams), (Array.isArray(ham) ? ham[0] : ham) ?? null)
   const t = icerik.icerik[d]?.meta
-  return t ? { title: t.baslik, description: t.aciklama } : {}
+  return t ? { title: t.baslik, description: t.aciklama, robots: ACIK_ROBOTS } : {}
 }
 
 export default function UlkeKokSayfasi({ searchParams }: { searchParams?: AramaParametreleri }) {
