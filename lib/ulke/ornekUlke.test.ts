@@ -154,7 +154,8 @@ describe('1. roles of its own', () => {
     assert.ok(t.startsWith('Your colleague is a health professional and not a doctor: their profession is "Nurse practitioner".'), t.split('\n')[0])
     assert.match(t, /- xx_scope_note — What was referred on, and to whom/)
     const bolum = formBolumleri(XX_KLINIK.hastaFormu!, { rol: icerikAnahtari(XX_ARAYUZ.roller, 'xx-nurse', XX_KLINIK.hastaFormu!.roller), veli: false, cinsiyet: '' }).find((b) => b.anahtar === 'rol')!
-    assert.deepEqual(bolum.sorular.map((s) => s.anahtar), ['xx_np_reason', 'xx_np_medicines'])
+    // The role's own questions, then the shared depth questions (red flag and two follow-ups) every role set receives.
+    assert.deepEqual(bolum.sorular.map((s) => s.anahtar), ['xx_np_reason', 'xx_np_medicines', 'xx_rf', 'xx_x_worse', 'xx_x_tried'])
   })
 
   it('INTAKE: a role asks the questions of the role it behaves like, and of no other; every role of the pack has questions', () => {
@@ -269,7 +270,7 @@ describe('2. a tool catalogue of its own', () => {
     assert.deepEqual([...takip], ROLLER.filter((r) => kayitli.some((p) => p.roller?.includes(r))))
     assert.ok(takip.includes('xx-nurse'), 'an allied profession with a tool of its own')
     assert.ok(takip.includes('xx-cardiac'))
-    assert.ok(!takip.includes('clinical-psychology'), 'a role with no tool whose result is kept')
+    assert.ok(takip.includes('clinical-psychology'), 'a safety record and a next session can be kept')
   })
 })
 

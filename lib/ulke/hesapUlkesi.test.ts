@@ -151,7 +151,12 @@ describe('real handlers', () => {
 
     const yeni = 'jeton-yeni'
     HESAPLAR[yeni] = { id: '55555555-5555-4555-8555-555555555555', email: 'qa-yeni@notya.test', app_metadata: { provider: 'email' } }
-    const ok = await profil.POST(iste(yeni, '/api/users/profile', { method: 'POST', body: JSON.stringify({ profession_type: 'doktor', specialty: 'pediatri', full_name: 'QA Yeni Hekim' }) }))
+    // Main's onboarding route (2026-10-09) requires the full first-time body. The country stamp is still a separate write.
+    const ok = await profil.POST(iste(yeni, '/api/users/profile', { method: 'POST', body: JSON.stringify({
+      profession_type: 'doktor', specialty: 'pediatri', full_name: 'QA Yeni Hekim',
+      title: 'Dr.', firstName: 'QA', lastName: 'Yeni', cepTelefonu: '0532 123 45 67',
+      gender: 'Erkek', addressingPreference: 'Hocam', kvkk_onay: true,
+    }) }))
     assert.equal(ok.status, 200)
     const damga = metaYazilari.find((m) => m.id === HESAPLAR[yeni].id && 'app_metadata' in m.govde)
     assert.deepEqual(damga?.govde, { app_metadata: { provider: 'email', country: 'tr' } }, 'existing app_metadata kept, country added')

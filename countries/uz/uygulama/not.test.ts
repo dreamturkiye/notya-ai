@@ -243,10 +243,10 @@ describe('INSTRUCTIONS to the model: the Uzbek pack\'s own, in three forms', () 
     assert.equal(g('uz-Cyrl'), `БЕМОР: ёши — 5 ёш; жинси — аёл.\n${MINOR_CYR}\n\nСУҲБАТ МАТНИ:\nMATN`)
     assert.equal(g('ru'), `ПАЦИЕНТ: возраст — 5 лет; пол — женский.\n${MINOR_RU}\n\nТЕКСТ БЕСЕДЫ:\nMATN`)
     // An adult gets no such line, in paediatrics as everywhere; an unknown age is not a child outside the children's roles.
-    for (const sablon of ['genel', 'pediatri', 'kardiyoloji', 'odyoloji']) assert.equal(T.uzNotGirdisi('uz-Latn', { dogumTarihi: '1980-12-31', cinsiyet: 'male', muayeneTarihi: '2026-10-08', metin: 'MATN', sablon }), 'BEMOR: yoshi — 45 yosh; jinsi — erkak.\n\nSUHBAT MATNI:\nMATN', sablon)
-    for (const sablon of ['genel', 'kardiyoloji', 'odyoloji', undefined]) assert.ok(!T.uzNotGirdisi('ru', { dogumTarihi: '', cinsiyet: '', muayeneTarihi: '2026-10-08', metin: 'x', sablon }).includes(MINOR_RU), String(sablon))
+    for (const sablon of ['genel', 'pediatri', 'kardiyoloji', 'surdoloji']) assert.equal(T.uzNotGirdisi('uz-Latn', { dogumTarihi: '1980-12-31', cinsiyet: 'male', muayeneTarihi: '2026-10-08', metin: 'MATN', sablon }), 'BEMOR: yoshi — 45 yosh; jinsi — erkak.\n\nSUHBAT MATNI:\nMATN', sablon)
+    for (const sablon of ['genel', 'kardiyoloji', 'surdoloji', undefined]) assert.ok(!T.uzNotGirdisi('ru', { dogumTarihi: '', cinsiyet: '', muayeneTarihi: '2026-10-08', metin: 'x', sablon }).includes(MINOR_RU), String(sablon))
     for (const sablon of ['pediatri', 'cocuk-cerrahisi']) assert.ok(T.uzNotGirdisi('ru', { dogumTarihi: '', cinsiyet: '', muayeneTarihi: '2026-10-08', metin: 'x', sablon }).includes(MINOR_RU), sablon)
-    for (const sablon of ['genel', 'kardiyoloji', 'goz-hastaliklari', 'diyetisyen']) assert.ok(T.uzNotGirdisi('uz-Cyrl', { dogumTarihi: '2016-10-09', cinsiyet: 'male', muayeneTarihi: '2026-10-08', metin: 'x', sablon }).includes(MINOR_CYR), sablon)
+    for (const sablon of ['genel', 'kardiyoloji', 'goz-hastaliklari', 'diyetoloji']) assert.ok(T.uzNotGirdisi('uz-Cyrl', { dogumTarihi: '2016-10-09', cinsiyet: 'male', muayeneTarihi: '2026-10-08', metin: 'x', sablon }).includes(MINOR_CYR), sablon)
     // The day of the eighteenth birthday is the first adult day.
     assert.ok(T.uzNotGirdisi('ru', { dogumTarihi: '2008-10-09', cinsiyet: '', muayeneTarihi: '2026-10-08', metin: 'x' }).includes(MINOR_RU)); assert.ok(!T.uzNotGirdisi('ru', { dogumTarihi: '2008-10-08', cinsiyet: '', muayeneTarihi: '2026-10-08', metin: 'x' }).includes(MINOR_RU))
     assert.equal(T.uzYasMetni('uz-Latn', '2026-03-09', '2026-10-08'), '6 oylik')
@@ -341,7 +341,7 @@ describe('Uzbekistan note: write, rewrite in the other language, edit, approve (
     const n = await notOku('jeton-a', v.notId)
     assert.equal(n.s, 200)
     const { muayene, ...not } = n.j.not
-    assert.deepEqual(not, { notId: v.notId, seansId: v.seans, onayli: false, onayTarihi: null, dil: 'uz-Latn', icerik: UZ_NOT, ikinci: null, yenidenYazilabilir: 'ru', alanAnahtarlari: ['history_giver', 'birth_history', 'feeding', 'sleep', 'development', 'vaccination_said', 'weight_height', 'head_circumference', 'temperature'] })
+    assert.deepEqual(not, { notId: v.notId, seansId: v.seans, onayli: false, onayTarihi: null, dil: 'uz-Latn', icerik: UZ_NOT, ikinci: null, yenidenYazilabilir: 'ru', alanAnahtarlari: ['history_giver', 'birth_history', 'feeding', 'sleep', 'development', 'vaccination_said', 'weight_height', 'head_circumference', 'temperature'], ekMetin: '' })
     assert.deepEqual([muayene.seansId, muayene.metin, muayene.hasta.ad, muayene.notId, muayene.notDurumu], [v.seans, UZ_METIN, 'QA Karimova Dilnoza', v.notId, 'taslak'])
     // The note is still written; the screen is told to ask the doctor to check it carefully.
     assert.deepEqual(muayene.konusma, { dil: 'uz', dilKesin: true, ikinciGecis: true, dusukGuven: true })

@@ -50,7 +50,7 @@ export const XX_PAKETI: UlkePaketi = {
   ozellikler: { acilisSayfasi: true, cekirdekGiris: true, davetliKayit: true, bekletmeSayfasi: true, cekirdekMuayene: true, randevu: true, hastaPortali: true, hastaFormu: true, araclar: true },
   araclar: [],
   rotalar: {
-    sayfalar: ['/', '/login', '/signup', '/welcome', '/start', '/today', '/settings', '/patients', '/patients/new', '/patient', '/visit', '/calendar', '/portal', '/tools'],
+    sayfalar: ['/', '/for-clinics', '/login', '/signup', '/welcome', '/start', '/today', '/settings', '/patients', '/patients/new', '/patient', '/visit', '/calendar', '/portal', '/tools'],
     apiOnEkleri: ['/api/ulke/'],
   },
   yolOnEki: '/xx',

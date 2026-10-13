@@ -13,7 +13,7 @@
  *      listed as an ordinary word.
  *   5. The set belongs to no country: it names no country, no country's system, authority, law or number, and it
  *      makes no claim of compliance, approval, certification or integration.
- *   6. The intake form: 23 core questions and 228 role questions, one set for each of the 40 roles, every key unique.
+ *   6. The intake form: 36 core questions and 350 role questions, one set for each of the 40 roles, every key unique.
  */
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
@@ -23,10 +23,13 @@ import { EN_ARACLAR_METNI_TEMEL } from './araclarMetni'
 import { EN_CEKIRDEK_TEMEL } from './cekirdek'
 import { EN_FORM_TEMEL } from './form'
 import { EN_CEKIRDEK_BOLUMLER } from './klinik/hastaFormu/cekirdek'
+import { derinSorular, VARSAYILAN_ACIL } from './klinik/hastaFormu/derinlik'
 import { EN_FORM_RIZASI, EN_ROL_SORULARI, enHastaFormu } from './klinik/hastaFormu'
 import { EN_ALANLAR, EN_ROL_ALANLARI, enNotSablonlari } from './klinik/notSablonlari'
 import { EN_ROL_SATIRLARI, EN_ROLLER, enRolTanimlari } from './klinik/roller'
 import { EN_TALIMAT_TEMEL, enTalimatlar } from './klinik/talimatlar'
+import { EN_KLINIK_METIN_TEMEL } from './klinikMetinleri'
+import { EN_MESAJ_TEMEL } from './mesaj'
 import { EN_PORTAL_TEMEL } from './portal'
 import { EN_RANDEVU_TEMEL } from './randevu'
 import { KELIMELER, KORUNAN } from './sozluk'
@@ -40,6 +43,8 @@ const TEMEL = {
   uygulama: EN_UYGULAMA_TEMEL,
   randevu: EN_RANDEVU_TEMEL,
   portal: EN_PORTAL_TEMEL,
+  mesaj: EN_MESAJ_TEMEL,
+  klinikMetin: EN_KLINIK_METIN_TEMEL,
   form: EN_FORM_TEMEL,
   araclarMetni: EN_ARACLAR_METNI_TEMEL,
   roller: Object.fromEntries(EN_ROL_SATIRLARI.map((r) => [r.anahtar, r.ad])),
@@ -47,6 +52,8 @@ const TEMEL = {
   talimatlar: EN_TALIMAT_TEMEL,
   formCekirdek: EN_CEKIRDEK_BOLUMLER,
   formRolleri: EN_ROL_SORULARI,
+  formDerinlik: Object.fromEntries(EN_ROLLER.map((rol) => [rol, derinSorular(rol, 'x')])),
+  formAcilYok: VARSAYILAN_ACIL,
   formRizasi: EN_FORM_RIZASI,
   araclar: Object.fromEntries([...EN_TEMEL_ARACLAR, ...EN_ROL_ARACLARI].map((a) => [a.anahtar, { ...a, roller: undefined }])),
   acilis: EN_ACILIS_TEMEL,
@@ -308,12 +315,12 @@ describe('English language set: roles, templates, instructions and the intake fo
     assert.match(kur(18).notGirdisi('en-GB', girdi('general', '1980-01-01')), /^PATIENT: age — 46 years; sex — female\.\n\nTRANSCRIPT OF THE VISIT:\nx$/)
   })
 
-  it('the intake form: 23 core questions, 228 role questions, a set for every role, every key unique', () => {
+  it('the intake form: 36 core questions, 350 role questions, a set for every role, every key unique', () => {
     const f = enHastaFormu({ bicim: 'en-GB', surum: 'test-1' })
     const cekirdek = f.cekirdek.bolumler.flatMap((b) => b.sorular)
     const rol = Object.values(f.roller).flatMap((r) => r.sorular)
-    assert.equal(cekirdek.length, 23)
-    assert.equal(rol.length, 228)
+    assert.equal(cekirdek.length, 36)
+    assert.equal(rol.length, 350)
     assert.deepEqual(Object.keys(f.roller).sort(), [...EN_ROLLER].sort())
     const anahtarlar = [...cekirdek, ...rol].map((q) => q.anahtar)
     assert.equal(new Set(anahtarlar).size, anahtarlar.length)

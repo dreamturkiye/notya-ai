@@ -11,8 +11,11 @@
  */
 import { paketMetinleri, type UlkePaketi } from '@/lib/ulke/tipler'
 import { enCekirdek } from '../_dil/en/cekirdek'
-import { EN_ROLLER } from '../_dil/en/klinik/roller'
-import { NZ_BIRIMLER, NZ_VELI_YASI } from './ayarlar'
+import { enKlinikHesaplari } from '../_dil/en/klinikHesaplari'
+import { enRolAnahtarlari } from '../_dil/en/klinik/roller'
+import { enMesajAyarlari } from '../_dil/en/mesaj'
+import { NZ_BIRIMLER, NZ_ROLLER, NZ_VELI_YASI } from './ayarlar'
+import { NZ_RESMI_GUNLER } from './resmiGunler'
 
 const cekirdek = enCekirdek('en-NZ')
 const metin = paketMetinleri({
@@ -21,7 +24,12 @@ const metin = paketMetinleri({
   metinler: { 'en-NZ': cekirdek },
 })
 
-/** Mobile number: +64 and eight to ten digits beginning with 2, in any common spelling (02… at home). UNVERIFIED format rule. */
+/**
+ * Mobile number: +64 and eight to ten digits beginning with 2, in any common spelling (02… at home). UNVERIFIED format rule.
+ * (Mobile numbers here begin 02; the commonest have nine digits after the trunk 0. The numbering plan's own register
+ * was not read by the audit of 2026-10-09: the lengths are from general knowledge. A landline is not a mobile number
+ * and is refused by this rule. No screen of the country kit applies the rule today: a phone number is stored as typed.)
+ */
 function nzCepGecerliMi(ham: string | null | undefined): boolean {
   const t = String(ham ?? '').trim()
   if (!t || !/^[0-9+()\-.\s]+$/.test(t)) return false
@@ -32,6 +40,17 @@ function nzCepGecerliMi(ham: string | null | undefined): boolean {
   return /^2\d{7,9}$/.test(rakam)
 }
 
+/**
+ * FINDING A NAME (checklist E10). A name is stored and shown exactly as it was typed, macrons included ("Pōtae"); a
+ * search finds it whether or not the macron is typed ("potae"), because many keyboards and many callers leave it out.
+ * Lower case; marks above a letter and apostrophe variants are dropped FOR COMPARISON ONLY. Pure.
+ * Added by the audit of 2026-10-09: the national identity standard requires that names keep their macrons, and this
+ * rule changes nothing that is stored.
+ */
+export function nzAramaKatla(ham: string): string {
+  return String(ham ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/['\u2018\u2019\u02bb\u02bc`]/g, '').toLowerCase()
+}
+
 export const NZ_PAKETI: UlkePaketi = {
   kod: 'nz',
   // Unique marker: the build proof looks for it to show that a build holds this pack and no other. Never reuse it.
@@ -40,15 +59,19 @@ export const NZ_PAKETI: UlkePaketi = {
   acikDiller: metin.acikDiller,
   varsayilanDil: 'en-NZ',
   paraBirimi: { kod: 'NZD', simge: '$', ondalikHane: 2 },
-  // The default time zone of a new account. UNVERIFIED choice.
+  // The default time zone of a new account. SOURCE-CHECKED (Time Act 1974): New Zealand standard time is 12 hours
+  // ahead of UTC and the Chatham Islands keep their own time, 45 minutes ahead of it; both move by one hour for
+  // daylight time. Nearly every account is on the main islands' time.
   saatDilimi: 'Pacific/Auckland',
   bicim: { yerel: 'en-NZ', tarihDeseni: 'DD/MM/YYYY', ondalikAyraci: '.', binlikAyraci: ',', haftaBasi: 1 },
   telefon: { ulkeOnEki: '+64', ulusalHane: 9, ornek: '+64 2X XXX XXXX', cepGecerliMi: nzCepGecerliMi },
   // THE PATIENT IDENTIFIER: an OPTIONAL FREE-TEXT field, stored encrypted and never validated (`dogrula: false`
-  // below). `hane: 0` = no length is assumed. The label ("NHI number") is unverified wording (./ayarlar.ts).
+  // below). `hane: 0` = no length is assumed. The label ("NHI number") is source-checked wording (./ayarlar.ts).
+  // An NHI number holds LETTERS and digits (seven characters, two forms): nothing here may assume digits only.
   ulusalKimlik: { ad: 'NHI number', hane: 0, gecerliMi: (ham) => String(ham ?? '').trim().length > 0 },
-  // Fail closed: what the country kit has built is on; everything else (the assistant in text and voice, the voice
-  // profile, image evaluation, consultation, messaging) is off.
+  // Fail closed. Messages stay on the patient's page (no outbound channel). Clinic accounts are on, with starting
+  // values a lawyer has not read. Still off: the assistant in text and voice, the voice profile, image evaluation,
+  // consultation between doctors, and a doctor's own templates.
   ozellikler: {
     acilisSayfasi: true,
     cekirdekGiris: true,
@@ -59,11 +82,13 @@ export const NZ_PAKETI: UlkePaketi = {
     hastaPortali: true,
     hastaFormu: true,
     araclar: true,
+    hastaMesajlari: true,
+    klinikHesaplari: true,
   },
   araclar: [],
   // The ONLY paths that exist in this country's deployment; every other path answers 404 in the middleware.
   rotalar: {
-    sayfalar: ['/', '/login', '/signup', '/welcome', '/start', '/today', '/settings', '/patients', '/patients/new', '/patient', '/visit', '/calendar', '/portal', '/tools'],
+    sayfalar: ['/', '/for-clinics', '/login', '/signup', '/welcome', '/start', '/today', '/settings', '/patients', '/patients/new', '/patient', '/visit', '/calendar', '/portal', '/tools', '/clinic', '/desk', '/privacy', '/terms', '/cookies', '/data-request', '/accessibility', '/medical-disclaimer', '/security'],
     apiOnEkleri: ['/api/ulke/'],
   },
   // The path of the main site this country is served under.
@@ -78,25 +103,36 @@ export const NZ_PAKETI: UlkePaketi = {
   yuzeyler: metin.yuzeyler,
   metinler: metin.metinler,
   dilAdlari: { 'en-NZ': 'English' },
+  resmiGunler: NZ_RESMI_GUNLER,
   uygulama: {
     diller: ['en-NZ'],
     hastaDilleri: ['en'],
-    roller: EN_ROLLER,
+    aramaKatla: nzAramaKatla,
+    // THE COUNTRY'S OWN ROLE LIST: the shared forty, none taken out, with the thirteen roles only New Zealand has
+    // (./ayarlar.ts → NZ_ROLLER; recorded in countries/rol-eslemesi.json under `ulkeyeOzel.nz`).
+    roller: enRolAnahtarlari(NZ_ROLLER),
     // STARTING VALUES, to verify with a local clinical lead (checklist J4). An account changes all of it for itself.
-    // PUBLIC HOLIDAYS are deliberately absent: they are local content (national and regional anniversary days).
+    // The working pattern does not close a public day. National days and anniversary days are `resmiGunler` on this pack.
     randevu: {
       varsayilan: { gunler: [1, 2, 3, 4, 5], baslangic: '09:00', bitis: '17:00', sureDk: 30, molalar: [{ baslangic: '12:00', bitis: '13:00' }] },
       sureSecenekleri: [10, 15, 20, 30, 45, 60, 90],
     },
     // A portal link works for 30 days: a STARTING VALUE the owner confirms; how long a patient's access may stand is
-    // for a lawyer. THE EMERGENCY NUMBER IS UNVERIFIED LOCAL CONTENT: written from general knowledge, to be confirmed
-    // by a local source before any patient sees the portal. null here = the patient's page names no number.
+    // for a lawyer. THE EMERGENCY NUMBER IS LOCAL CONTENT. SOURCE-CHECKED 2026-10-09: New Zealand Police's own page
+    // states that 111 is the emergency number for Police, Fire and Ambulance. Still to be confirmed by a person of
+    // New Zealand before any patient sees the portal. null here = the patient's page names no number.
+    // (The free health advice line is a different number and the kit has no place for it: see the audit document.)
     portal: { baglantiGecerlilikGun: 30, acilNumara: '111' },
+    mesaj: enMesajAyarlari('New Zealand'),
+    klinikHesaplari: enKlinikHesaplari(NZ_ROLLER),
     // One language in one script: no account is asked a language question.
     dilGruplari: [{ temel: 'en', bicimler: [{ yazi: null, dil: 'en-NZ' }] }],
-    // Two time zones (the main islands and the Chatham Islands): an account chooses its own (settings). UNVERIFIED choice.
+    // Two time zones (the main islands and the Chatham Islands): an account chooses its own (settings).
+    // SOURCE-CHECKED (Time Act 1974): these are the two times the law sets for New Zealand.
     saatDilimleri: ['Pacific/Auckland', 'Pacific/Chatham'],
-    // UNVERIFIED choice between the 24-hour and the 12-hour clock for clinic screens.
+    // UNVERIFIED choice between the 24-hour and the 12-hour clock for clinic screens. FOR A LOCAL CLINICAL LEAD:
+    // the government's writing guidance for the public uses the 12-hour clock ("5:30pm"); the national medication
+    // charting standard requires the 24-hour clock in clinical records. The kit has ONE setting for every screen.
     saatBicimi: 12,
     birimler: NZ_BIRIMLER,
     adAlanlari: { ikinciAd: false },

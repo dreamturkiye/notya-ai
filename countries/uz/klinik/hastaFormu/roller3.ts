@@ -1,7 +1,13 @@
 /**
- * NOTYA-ULKE-INTAKE-01 — Uzbekistan: THE ROLE QUESTIONS of the intake form, part 3 of 3 — the ten clinic roles:
- * five clinic doctors (hair transplantation … preventive medicine) and five allied professions (physical
- * rehabilitation … audiology), in the order of ../rolAdlari.ts.
+ * NOTYA-ULKE-INTAKE-01 — Uzbekistan: THE ROLE QUESTIONS of the intake form, part 3 of 3 — the clinic side: three
+ * clinic doctors and two allied professions, and the two sets that two doctor roles now ask through `gibi`.
+ *
+ * NOTYA-ULKE-UYGULA-UZ (2026-10-10): the sets of the three roles the audit took out (hair transplantation,
+ * preventive and anti-ageing medicine, occupational therapy) are gone. `diyetisyen` and `odyoloji` are no roles any
+ * more: their sets stay, as the questions of the doctor roles that behave like them (diyetoloji, surdoloji;
+ * ../rolListesi.ts). Not one question was written or reworded by that job. A role only Uzbekistan has asks the
+ * questions of the role it behaves like: vascular surgery cardiac surgery's, allergology therapy's, reproductology
+ * obstetrics and gynaecology's, paediatric neurology neurology's, narcology psychiatry's (the rule is the kit's).
  *
  * MACHINE-WRITTEN. EVERY SET AWAITS A LOCAL CLINICIAN OR PRACTITIONER OF THAT ROLE AND A NATIVE READER.
  * PATIENT-FACING. Everything said at the top of ./roller1.ts holds here. For the allied professions the open
@@ -11,7 +17,7 @@
  * No product, brand or device is named: a patient is asked which procedures they had, in their own words.
  */
 import type { RolSorulari } from '@/lib/ulke/intake/tipler'
-import { BALL, cok, eh, KIMDA, kisa, MAKINE, MARTA, QACHON, QANDAY, s, SOAT, son, STAKAN, tek, u, uzun, YOQ } from './yardimci'
+import { BALL, cok, eh, kisa, MAKINE, MARTA, QACHON, QANDAY, s, son, STAKAN, tek, u, uzun, YOQ } from './yardimci'
 
 const OGRIQ_KUCHI = u('Ogʻriq qanchalik kuchli? (0 — ogʻriq yoʻq, 10 — chidab boʻlmaydi)', 'Оғриқ қанчалик кучли? (0 — оғриқ йўқ, 10 — чидаб бўлмайди)', 'Насколько сильная боль? (0 — боли нет, 10 — невыносимая)')
 const VOSITA = u('Foydalaniladigan yordamchi vositalar (ortez, protez, hassa va boshqalar)', 'Фойдаланиладиган ёрдамчи воситалар (ортез, протез, ҳасса ва бошқалар)', 'Используемые вспомогательные средства (ортез, протез, трость и другое)')
@@ -22,34 +28,6 @@ const faollik = () => [
 ]
 
 export const UZ_ROL_SORULARI_3: Readonly<Record<string, RolSorulari>> = {
-  'sac-ekimi': {
-    baslik: u('Soch va bosh terisi', 'Соч ва бош териси', 'Волосы и кожа головы'),
-    inceleme: MAKINE,
-    sorular: [
-      tek('se_muddat', u('Soch toʻkilishi qachondan beri?', 'Соч тўкилиши қачондан бери?', 'Как давно выпадают волосы?'), [
-        s('yil', 'Bir yildan kam', 'Бир йилдан кам', 'Меньше года'),
-        s('yillar', 'Bir necha yil', 'Бир неча йил', 'Несколько лет'),
-        s('uzoq', 'Koʻp yillardan beri', 'Кўп йиллардан бери', 'Много лет'),
-      ]),
-      cok('se_soha', u('Soch qayerda koʻproq toʻkiladi?', 'Соч қаерда кўпроқ тўкилади?', 'Где волосы выпадают сильнее?'), [
-        s('peshona', 'Peshona chizigʻi', 'Пешона чизиғи', 'Линия лба'),
-        s('tepa', 'Tepa qism', 'Тепа қисм', 'Макушка'),
-        s('butun', 'Butun bosh boʻylab', 'Бутун бош бўйлаб', 'По всей голове'),
-        s('qosh', 'Qosh yoki soqol', 'Қош ёки соқол', 'Брови или борода'),
-      ]),
-      cok('se_teri', u('Bosh terisida quyidagilardan qaysilari bor?', 'Бош терисида қуйидагилардан қайсилари бор?', 'Что из перечисленного есть на коже головы?'), [
-        s('qichishish', 'Qichishish', 'Қичишиш', 'Зуд'),
-        s('qazgoq', 'Qazgʻoq', 'Қазғоқ', 'Перхоть'),
-        s('yara', 'Qizarish yoki yara', 'Қизариш ёки яра', 'Покраснение или ранки'),
-        YOQ(),
-      ]),
-      eh('se_davolash', u('Soch toʻkilishi uchun avval davolash oʻtkazilganmi?', 'Соч тўкилиши учун аввал даволаш ўтказилганми?', 'Проводилось ли раньше лечение выпадения волос?'), QANDAY),
-      eh('se_avval', u('Avval soch koʻchirib oʻtkazilganmi?', 'Аввал соч кўчириб ўтказилганми?', 'Проводилась ли раньше пересадка волос?'), QACHON),
-      eh('se_ogriqsizlantirish', u('Mahalliy ogʻriqsizlantirishda muammo boʻlganmi?', 'Маҳаллий оғриқсизлантиришда муаммо бўлганми?', 'Были ли проблемы при местном обезболивании?'), QANDAY),
-      eh('se_oila', u('Oilada soch toʻkilishi bormi?', 'Оилада соч тўкилиши борми?', 'Есть ли в семье выпадение волос?'), KIMDA),
-    ],
-  },
-
   'estetik-cerrahi': {
     baslik: u('Estetik xirurgiya boʻyicha maslahat', 'Эстетик хирургия бўйича маслаҳат', 'Консультация по эстетической хирургии'),
     inceleme: MAKINE,
@@ -95,24 +73,6 @@ export const UZ_ROL_SORULARI_3: Readonly<Record<string, RolSorulari>> = {
         s('bazan', 'Baʼzan', 'Баъзан', 'Иногда'),
         s('yoq', 'Yoʻq', 'Йўқ', 'Нет'),
       ]),
-    ],
-  },
-
-  longevity: {
-    baslik: u('Turmush tarzi va profilaktika', 'Турмуш тарзи ва профилактика', 'Образ жизни и профилактика'),
-    inceleme: MAKINE,
-    sorular: [
-      uzun('lg_maqsad', u('Sogʻligʻingiz boʻyicha asosiy maqsadingiz nima?', 'Соғлиғингиз бўйича асосий мақсадингиз нима?', 'Какая у вас главная цель в отношении здоровья?'), { zorunlu: true, veliMetni: u('Bolaning sogʻligʻi boʻyicha asosiy maqsadingiz nima?', 'Боланинг соғлиғи бўйича асосий мақсадингиз нима?', 'Какая у вас главная цель в отношении здоровья ребёнка?') }),
-      tek('lg_faollik', u('Jismoniy faollik', 'Жисмоний фаоллик', 'Физическая активность'), faollik()),
-      son('lg_uyqu', u('Tunda oʻrtacha necha soat uxlaysiz?', 'Тунда ўртача неча соат ухлайсиз?', 'Сколько часов в среднем вы спите ночью?'), SOAT, 1, 16, { veliMetni: u('Bola tunda oʻrtacha necha soat uxlaydi?', 'Бола тунда ўртача неча соат ухлайди?', 'Сколько часов в среднем ребёнок спит ночью?') }),
-      tek('lg_stress', u('Oxirgi oyda zoʻriqish darajasi', 'Охирги ойда зўриқиш даражаси', 'Уровень напряжения за последний месяц'), [
-        s('past', 'Past', 'Паст', 'Низкий'),
-        s('ortacha', 'Oʻrtacha', 'Ўртача', 'Средний'),
-        s('yuqori', 'Yuqori', 'Юқори', 'Высокий'),
-      ]),
-      uzun('lg_ovqat', u('Odatdagi ovqatlanishingizni qisqacha tasvirlang', 'Одатдаги овқатланишингизни қисқача тасвирланг', 'Коротко опишите своё обычное питание')),
-      uzun('lg_qoshimcha', u('Qabul qilinadigan vitamin va qoʻshimchalar', 'Қабул қилинадиган витамин ва қўшимчалар', 'Принимаемые витамины и добавки')),
-      kisa('lg_tekshiruv', u('Oxirgi keng qamrovli tekshiruv qachon boʻlgan?', 'Охирги кенг қамровли текширув қачон бўлган?', 'Когда было последнее комплексное обследование?')),
     ],
   },
 
@@ -178,26 +138,6 @@ export const UZ_ROL_SORULARI_3: Readonly<Record<string, RolSorulari>> = {
       uzun('dt_parhez', u('Amal qilinayotgan parhez yoki ovqatlanish cheklovlari', 'Амал қилинаётган парҳез ёки овқатланиш чекловлари', 'Диета или ограничения в питании, которые соблюдаются')),
       uzun('dt_yoqmas', u('Yeyilmaydigan yoki yoqmaydigan mahsulotlar', 'Ейилмайдиган ёки ёқмайдиган маҳсулотлар', 'Продукты, которые не едят или которые плохо переносятся')),
       tek('dt_faollik', u('Jismoniy faollik', 'Жисмоний фаоллик', 'Физическая активность'), faollik()),
-    ],
-  },
-
-  ergoterapi: {
-    baslik: u('Kundalik faoliyat', 'Кундалик фаолият', 'Повседневная деятельность'),
-    inceleme: MAKINE,
-    sorular: [
-      cok('et_sohalar', u('Kundalik hayotda qaysi ishlar qiyin?', 'Кундалик ҳаётда қайси ишлар қийин?', 'Какие повседневные дела даются трудно?'), [
-        s('kiyinish', 'Kiyinish', 'Кийиниш', 'Одевание'),
-        s('ovqat', 'Ovqatlanish', 'Овқатланиш', 'Приём пищи'),
-        s('yuvinish', 'Yuvinish', 'Ювиниш', 'Умывание и купание'),
-        s('qol', 'Yozish yoki mayda qoʻl harakatlari', 'Ёзиш ёки майда қўл ҳаракатлари', 'Письмо или мелкие движения рук'),
-        s('uy', 'Uy ishlari', 'Уй ишлари', 'Домашние дела'),
-        s('ish', 'Ish yoki oʻqish', 'Иш ёки ўқиш', 'Работа или учёба'),
-        YOQ(),
-      ]),
-      uzun('et_tashxis', u('Shifokor qoʻygan tashxis boʻlsa, yozing', 'Шифокор қўйган ташхис бўлса, ёзинг', 'Если есть диагноз, поставленный врачом, напишите его')),
-      eh('et_yordam', u('Avval reabilitatsiya yoki maxsus yordam koʻrsatilganmi?', 'Аввал реабилитация ёки махсус ёрдам кўрсатилганми?', 'Проводилась ли раньше реабилитация или оказывалась специальная помощь?'), QANDAY),
-      kisa('et_vosita', VOSITA),
-      kisa('et_mashgulot', u('Oʻqish yoki ish (qayerda, qanday)', 'Ўқиш ёки иш (қаерда, қандай)', 'Учёба или работа (где, какая)')),
     ],
   },
 

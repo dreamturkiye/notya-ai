@@ -2,11 +2,10 @@
 
 /**
  * NOTYA-UZ-ACILIS-02 — top bar of the Uzbekistan landing page. Same markup and classes as the Turkish page's bar
- * (components/doktor-landing/site-nav.tsx, which holds Turkish text and so is not reused), with three differences:
- *   - a language switch, set in the same type as the section links;
- *   - the bar has its paper ground at 92% (see the note at the class below);
- *   - the section links appear from 1280px, not 1024px: with the switch and the longer Russian labels the bar does
- *     not fit before that. Below it the links are in the menu, as on a phone.
+ * (components/doktor-landing/site-nav.tsx, which holds Turkish text and so is not reused), with one addition:
+ *   - a language switch, set in the same type as the section links.
+ * Breakpoints, the bar class and the menu match that bar: links from 1024px (`lg`), `bg-paper/92` (the same class;
+ * opacity 92 is not a Tailwind step, so both bars are paper-coloured by the page behind them).
  * All text arrives as properties, from the pack's catalogue.
  */
 import React from 'react'
@@ -43,7 +42,7 @@ export function DilSecici({ etiket, secenekler, className }: { etiket: string; s
   )
 }
 
-export function UstCubuk({ metin, diller, girisHref, sorovHref, marka, ustHref }: { metin: AcilisIcerigi['nav']; diller: readonly DilSecenegi[]; girisHref: string; sorovHref: string; /** The word mark (the pack's). */ marka: string; /** The address of the top of the page (the pack's anchor). */ ustHref: string }) {
+export function UstCubuk({ metin, diller, girisHref, sorovHref, marka, markaEk, ustHref }: { metin: AcilisIcerigi['nav']; diller: readonly DilSecenegi[]; girisHref: string; sorovHref: string; /** The word mark (the pack's). */ marka: string; /** Small word beside the mark, as on the Turkish clinic page. Omitted on the doctor page. */ markaEk?: string; /** The address of the top of the page (the pack's anchor). */ ustHref: string }) {
   const [scrolled, setScrolled] = useState(false)
   const [open, setOpen] = useState(false)
 
@@ -65,17 +64,16 @@ export function UstCubuk({ metin, diller, girisHref, sorovHref, marka, ustHref }
     <>
       <header
         className={cn(
-          // The Turkish bar says bg-paper/92, which is not a step of the opacity scale and compiles to nothing (its bar
-          // is see-through). The intended 92% is written here in the form that compiles.
-          'fixed inset-x-0 top-0 z-40 bg-paper/[0.92] text-ink transition-shadow duration-300',
+          'fixed inset-x-0 top-0 z-40 bg-paper/92 text-ink transition-shadow duration-300',
           scrolled || open ? 'shadow-border' : '',
         )}
       >
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-5 sm:px-8">
-          <a href={ustHref} className="font-display text-2xl italic leading-none tracking-tight">
+          <a href={ustHref} className="flex items-baseline gap-2 font-display text-2xl italic leading-none tracking-tight">
             {marka}
+            {markaEk ? <span className="font-outfit text-[11px] not-italic uppercase tracking-[0.3em] text-pine">{markaEk}</span> : null}
           </a>
-          <nav className="hidden items-center gap-7 xl:flex" aria-label={metin.bolumler}>
+          <nav className="hidden items-center gap-7 lg:flex" aria-label={metin.bolumler}>
             {metin.havolalar.map((item) => (
               <a key={item.capa} href={`#${item.capa}`} className="group flex items-baseline gap-2 text-sm font-outfit">
                 <span className="font-outfit text-xs uppercase tracking-widest text-ink-muted">{item.no}</span>
@@ -85,7 +83,7 @@ export function UstCubuk({ metin, diller, girisHref, sorovHref, marka, ustHref }
           </nav>
           <div className="flex items-center gap-3">
             <DilSecici etiket={metin.dil} secenekler={diller} className="mr-1" />
-            <a href={girisHref} className="hidden font-outfit text-sm text-ink-2 hover:text-ink xl:inline">
+            <a href={girisHref} className="hidden font-outfit text-sm text-ink-2 hover:text-ink lg:inline">
               {metin.giris}
             </a>
             <Button href={sorovHref} variant="pine" size="sm" className="hidden sm:inline-flex">
@@ -96,7 +94,7 @@ export function UstCubuk({ metin, diller, girisHref, sorovHref, marka, ustHref }
               type="button"
               variant="outline"
               size="icon"
-              className="xl:hidden"
+              className="lg:hidden"
               aria-expanded={open}
               aria-label={open ? metin.menyuYop : metin.menyuAc}
               onClick={() => setOpen((v) => !v)}
@@ -108,7 +106,7 @@ export function UstCubuk({ metin, diller, girisHref, sorovHref, marka, ustHref }
       </header>
 
       {open ? (
-        <div className="fixed inset-0 z-30 bg-paper pt-20 text-ink xl:hidden">
+        <div className="fixed inset-0 z-30 bg-paper pt-20 text-ink lg:hidden">
           <nav className="flex flex-col gap-1 px-6 py-8" aria-label={metin.mobil}>
             {metin.havolalar.map((item) => (
               <a
