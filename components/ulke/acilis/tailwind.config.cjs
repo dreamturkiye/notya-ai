@@ -20,6 +20,8 @@ module.exports = {
   corePlugins: { preflight: false },
   content: [
     './components/ulke/acilis/*.tsx',
+    // NOTYA-ULKE-DEMO-01: the "Book a demo" page uses this stylesheet too.
+    './components/ulke/demo/*.tsx',
     // Shared presentational components the page reuses (allowed by name in lib/ulke/ulkeDuvarlari.test.ts).
     './components/doktor-landing/button.tsx',
     './components/doktor-landing/feature.tsx',
