@@ -9,6 +9,12 @@
  * doctor sees only their own patients, the doctor approves every step). What stays forbidden there: naming any law
  * or regulator, claiming compliance, and saying where data is kept.
  *
+ * NOTYA-ULKE-DEMO-01 (Kaan, 2026-10-13): every Notya site, this one included, now has a real "Book a demo" page
+ * (a Cal.com booking calendar with Dr. Gokhan Mamur — not a product screenshot, not a sales promise of one). The
+ * "no public demo" rule below still bans claiming or showing a demo of the PRODUCT; it no longer bans the booking
+ * feature's own fixed vocabulary ("Demo uchrashuv…" / "Демо учрашув…" / "Демо-звонок…" / "demo" immediately before
+ * "booking"/"uchrashuv"/"звонок"), which `istisna` below carries and the test strips out before matching.
+ *
  * NOTYA-UZ-FIYAT-UNVAN-01 (Kaan, 2026-10-09). Two rules changed:
  *   - PRICES are shown now, in soʻm, from the pack's price list. What is forbidden instead: anything of the Turkish
  *     currency (its sign, its code, its name, an amount of the Turkish page) and any other foreign currency; and an
@@ -18,8 +24,19 @@
  *     What stays forbidden: a biography. No title spelled out as a rank, no years of practice, no place of work or
  *     study. Which name the page may carry is checked by the test itself (the featured persona's and no other).
  */
-export const UZ_YASAKLI_IFADELER: readonly { neden: string; desen: RegExp; /** true = a rule for the copy only, not for the rendered page */ yalnizMetin?: true }[] = [
-  { neden: 'no public demo', desen: /\bdemo\b|демо/i },
+export const UZ_YASAKLI_IFADELER: readonly {
+  neden: string
+  desen: RegExp
+  /** true = a rule for the copy only, not for the rendered page */
+  yalnizMetin?: true
+  /** NOTYA-ULKE-DEMO-01: text matching this is removed before `desen` is tested — the one carve-out in this file. */
+  istisna?: RegExp
+}[] = [
+  {
+    neden: 'no public demo',
+    desen: /\bdemo\b|демо/i,
+    istisna: /demo uchrashuv\w*|демо учрашув\w*|демо-?\s*звонок\w*|book a demo|demo booking/gi,
+  },
   { neden: 'no integration claim', desen: /integratsiya|интеграц|\bDMED\b|davlat tizimi|давлат тизими|государственн\S* систем/i },
   { neden: 'no mention of the voice profile', desen: /ovoz (profil|izi)|овоз (профил|изи)|голосов\S* (профил|отпечат)|biometr|биометр/i },
   { neden: 'no mention of image evaluation', desen: /(tasvir|rasm|surat)\S* (baholash|tahlil)|(тасвир|расм|сурат)\S* (баҳолаш|таҳлил)|rentgen|изображени|снимк|рентген/i },

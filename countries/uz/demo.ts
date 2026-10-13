@@ -21,6 +21,18 @@ export const UZ_DEMO: UlkeDemosu = {
     yakindaGovde: 'Taqvim tayyor boʻlgach, shu sahifaning oʻzida vaqt band qilishingiz mumkin boʻladi.',
     saglayici: 'Vaqt band qilish Cal.com orqali amalga oshiriladi.',
     takvimEtiketi: 'Demo uchrashuv taqvimi',
+    bolum: {
+      ustBaslik: 'Demo uchrashuv',
+      baslik: 'Notyani',
+      baslikVurgu: 'jonli koʻring',
+      govde: 'Dr. Gokhan Mamur video qoʻngʻiroqda haqiqiy qabulni koʻrsatib beradi — 60 daqiqa, sizga mos vaqtda.',
+      kartEtiketi: 'Qoʻngʻiroqda',
+      satirlar: [
+        { k: 'Jonli koʻrsatma', v: 'Haqiqiy qabul, boshidan oxirigacha' },
+        { k: '60 daqiqa', v: 'Vaqtlar oʻz vaqt mintaqangizda' },
+        { k: 'Savollaringiz', v: 'Ular uchun ham vaqt ajratiladi' },
+      ],
+    },
   },
   'uz-Cyrl': {
     meta: { baslik: 'Демо учрашувга ёзилиш — Notya', aciklama: 'Др. Гёкхан Мамур билан 60 дақиқалик видео қўнғироққа ёзилинг.' },
@@ -31,6 +43,18 @@ export const UZ_DEMO: UlkeDemosu = {
     yakindaGovde: 'Тақвим тайёр бўлгач, шу саҳифанинг ўзида вақт банд қилишингиз мумкин бўлади.',
     saglayici: 'Вақт банд қилиш Cal.com орқали амалга оширилади.',
     takvimEtiketi: 'Демо учрашув тақвими',
+    bolum: {
+      ustBaslik: 'Демо учрашув',
+      baslik: 'Notyani',
+      baslikVurgu: 'жонли кўринг',
+      govde: 'Др. Гёкхан Мамур видео қўнғироқда ҳақиқий қабулни кўрсатиб беради — 60 дақиқа, сизга мос вақтда.',
+      kartEtiketi: 'Қўнғироқда',
+      satirlar: [
+        { k: 'Жонли кўрсатма', v: 'Ҳақиқий қабул, бошидан охиригача' },
+        { k: '60 дақиқа', v: 'Вақтлар ўз вақт минтақангизда' },
+        { k: 'Саволларингиз', v: 'Улар учун ҳам вақт ажратилади' },
+      ],
+    },
   },
   ru: {
     meta: { baslik: 'Записаться на демо — Notya', aciklama: 'Запишитесь на 60-минутный видеозвонок с доктором Гёкханом Мамуром.' },
@@ -41,5 +65,17 @@ export const UZ_DEMO: UlkeDemosu = {
     yakindaGovde: 'Когда календарь будет готов, записаться можно будет прямо на этой странице.',
     saglayici: 'Запись проводится через Cal.com.',
     takvimEtiketi: 'Календарь записи на демо',
+    bolum: {
+      ustBaslik: 'Демо-звонок',
+      baslik: 'Посмотрите Notya',
+      baslikVurgu: 'в живом звонке',
+      govde: 'Доктор Гёкхан Мамур покажет настоящий приём на видеозвонке — 60 минут, в удобное для вас время.',
+      kartEtiketi: 'На звонке',
+      satirlar: [
+        { k: 'Живой показ', v: 'Настоящий приём от начала до конца' },
+        { k: '60 минут', v: 'Время показано в вашем часовом поясе' },
+        { k: 'Ваши вопросы', v: 'Для них отведено время' },
+      ],
+    },
   },
 }

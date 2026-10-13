@@ -21,6 +21,19 @@ export type DemoMetni = {
   saglayici: string
   /** Accessible name of the calendar. */
   takvimEtiketi: string
+  /**
+   * The dedicated section on the landing page, right after the hero (same place and markup as the Turkish
+   * page's demo section: eyebrow, display heading, body, a typographic card, the same button as `dugme`).
+   * Absent while a pack has no demo words, exactly like the rest of this type.
+   */
+  bolum: {
+    ustBaslik: string
+    baslik: string
+    baslikVurgu: string
+    govde: string
+    kartEtiketi: string
+    satirlar: readonly { k: string; v: string }[]
+  }
 }
 
 /** One entry per form of the landing page (UlkeAcilisi.diller). A form without words gets no demo page and no button. */

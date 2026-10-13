@@ -72,7 +72,8 @@ describe('A. the pack', () => {
       assert.match(m.giris, /\b60\b/, d)
       assert.match(m.giris, /Mamur|Мамур/, d)
       assert.match(m.saglayici, /Cal\.com/, d)
-      const hepsi = Object.values(m).flatMap((v) => (typeof v === 'string' ? [v] : Object.values(v))).join('\n')
+      const duzlestir = (v: unknown): string[] => (typeof v === 'string' ? [v] : Array.isArray(v) ? v.flatMap(duzlestir) : v && typeof v === 'object' ? Object.values(v).flatMap(duzlestir) : [])
+      const hepsi = duzlestir(m).join('\n')
       assert.doesNotMatch(hepsi, /@|mailto:|https?:\/\//, `${d}: no address of any kind`)
       assert.doesNotMatch(hepsi, /complian|certif|HIPAA|GDPR|integrat|интеграц|guarant|гарант|kafolat|\$|£|€|%|price|narx|нарх|цен|so'm|soʻm|сум|сўм/i, `${d}: no claim, no price`)
     }
@@ -97,13 +98,14 @@ describe('B. no link', () => {
         const l = acilisCiz(d)
         assert.ok(!l.includes(`href="${kacisli(D.demoAdresi(d))}"`), `${d}: landing links to /demo without a link`)
         assert.ok(!l.includes(`>${kacisli(m.dugme)}<`), `${d}: the button's label is on the landing page`)
+        assert.ok(!l.includes('id="demo"'), `${d}: the landing page's demo section renders without a link`)
       }
     }
   })
 })
 
 describe('C. link set', () => {
-  it('/demo holds the calendar; the bar and the hero of the landing page link to /demo in the same form', () => {
+  it('/demo holds the calendar; the bar, the hero and the demo section of the landing page link to /demo in the same form', () => {
     if (!ACIK) return
     ayarla('https://cal.com/example')
     for (const d of FORMLAR) {
@@ -114,8 +116,12 @@ describe('C. link set', () => {
       assert.ok(s.includes(kacisli(m.saglayici)), d)
       const l = acilisCiz(d)
       const href = `href="${kacisli(D.demoAdresi(d))}"`
-      assert.equal(l.split(href).length - 1, 2, `${d}: one button in the bar, one in the hero`)
+      assert.equal(l.split(href).length - 1, 3, `${d}: one button in the bar, one in the hero, one in the demo section`)
       assert.ok(D.demoAdresi(d).startsWith(U.ulkePaketi().yolOnEki ?? '/'), `${d}: under the build's path prefix`)
+      assert.ok(l.includes('id="demo"'), `${d}: the landing page has the demo section`)
+      assert.ok(l.includes(kacisli(m.bolum.baslik)), `${d}: the demo section's heading`)
+      assert.ok(l.includes(kacisli(m.bolum.govde)), `${d}: the demo section's body`)
+      for (const row of m.bolum.satirlar) assert.ok(l.includes(kacisli(row.k)), `${d}: the demo section's card row "${row.k}"`)
     }
   })
 })
