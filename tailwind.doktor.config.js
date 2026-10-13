@@ -10,6 +10,9 @@ module.exports = {
     // from the compiled output and the page ships half-styled — the exact bug this file fixed.
     "./app/klinik/**/*.{js,ts,jsx,tsx}",
     "./components/klinik-landing/**/*.{js,ts,jsx,tsx}",
+    // NOTYA-DEMO-01: /demo imports the same stylesheet.
+    "./app/demo/**/*.{js,ts,jsx,tsx}",
+    "./components/demo/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
     extend: {
