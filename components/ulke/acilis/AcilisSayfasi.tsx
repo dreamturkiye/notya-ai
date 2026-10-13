@@ -19,6 +19,8 @@ import React from 'react'
 import { Button } from '@/components/doktor-landing/button'
 import { FeatureSection, TypeCard } from '@/components/doktor-landing/feature'
 import { ArrowUpRight } from '@/components/doktor-landing/icons'
+import { betaNotu } from '@/lib/ulke/acikIcerik'
+import { araclarMetni } from '@/lib/ulke/arayuz'
 import { dilSec, ulkePaketi } from '@/lib/ulke/ulke'
 import { dilliYol } from '@/lib/ulke/sayfaDili'
 import { YASAL_ANAHTARLARI, YASAL_YOLLAR } from '@/lib/ulke/yasal/tipler'
@@ -279,6 +281,7 @@ export function AcilisSayfasi({ dil, istenenDil, iletisimEposta, gorseller, acil
             <div>
               <p className="font-display text-3xl italic">{a.markaYazisi}</p>
               <p className="mt-2 max-w-xs font-outfit text-sm leading-relaxed text-ink-muted">{t.altBilgi.tanim}</p>
+              <p className="mt-3 font-outfit text-sm text-ink-2" data-beta="evet">{betaNotu(d)}</p>
             </div>
             <nav className="flex flex-wrap gap-x-6 gap-y-2 font-outfit text-sm" aria-label={t.altBilgi.havolalar}>
               <a href={dilliYol('/for-clinics', dilSec(d))} className="text-ink-2 hover:text-ink">
@@ -289,6 +292,9 @@ export function AcilisSayfasi({ dil, istenenDil, iletisimEposta, gorseller, acil
               </a>
               <a href={kayitHref} className="text-ink-2 hover:text-ink">
                 {t.altBilgi.kayit}
+              </a>
+              <a href={dilliYol('/medical', d)} className="text-ink-2 hover:text-ink">
+                {araclarMetni(d).kabuk.araclar}
               </a>
               {t.altBilgi.yasal.map((etiket, i) => (
                 <a key={YASAL_ANAHTARLARI[i]} href={dilliYol(YASAL_YOLLAR[YASAL_ANAHTARLARI[i]], d)} className="text-ink-2 hover:text-ink">

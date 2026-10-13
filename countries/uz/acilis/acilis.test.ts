@@ -200,7 +200,7 @@ describe('Uzbekistan landing page', () => {
       assert.match(html, new RegExp(`alt="${t.klinik.kahraman.gorselAlt.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}"`))
       assert.doesNotMatch(html, /bepul|бесплатн|бепул/i)
       const hrefler = [...html.matchAll(/<a\b[^>]*\bhref="([^"]+)"/g)].map((m) => m[1].replace(/&amp;/g, '&'))
-      const izinli = new RegExp(`^(#(${[CAPA.klinikUst, CAPA.klinikPortal, CAPA.klinikDallar, CAPA.klinikFiyat, CAPA.klinikSorov].join('|')})|/uzbek(\\?dil=(uz-Cyrl|ru))?|/uzbek/for-clinics(\\?dil=(uz-Cyrl|ru))?|/uzbek/login(\\?dil=ru)?|/uzbek/signup(\\?dil=ru)?|/uzbek/(privacy|terms|cookies|data-request|accessibility|medical-disclaimer|security)(\\?dil=(uz-Cyrl|ru))?)$`)
+      const izinli = new RegExp(`^(#(${[CAPA.klinikUst, CAPA.klinikPortal, CAPA.klinikDallar, CAPA.klinikFiyat, CAPA.klinikSorov].join('|')})|/uzbek(\\?dil=(uz-Cyrl|ru))?|/uzbek/for-clinics(\\?dil=(uz-Cyrl|ru))?|/uzbek/login(\\?dil=ru)?|/uzbek/signup(\\?dil=ru)?|/uzbek/(privacy|terms|cookies|data-request|accessibility|medical-disclaimer|security|medical)(\\?dil=(uz-Cyrl|ru))?)$`)
       for (const h of hrefler) assert.match(h, izinli, `clinic link to ${h}`)
     })
 
@@ -231,7 +231,7 @@ describe('Uzbekistan landing page', () => {
       const hrefler = [...html.matchAll(/<a\b[^>]*\bhref="([^"]+)"/g)].map((m) => m[1].replace(/&amp;/g, '&'))
       assert.ok(hrefler.length > 15)
       // NOTYA-UZ-MUAYENE-01: the build is served under /uzbek; a link to '/login' would land on Türkiye's site.
-      const izinli = new RegExp(`^(#(${BOLUM_SIRASI.join('|')})|/uzbek(\\?dil=(uz-Cyrl|ru))?|/uzbek/for-clinics(\\?dil=(uz-Cyrl|ru))?|/uzbek/login(\\?dil=ru)?|/uzbek/signup(\\?dil=ru)?|/uzbek/(privacy|terms|cookies|data-request|accessibility|medical-disclaimer|security)(\\?dil=(uz-Cyrl|ru))?)$`)
+      const izinli = new RegExp(`^(#(${BOLUM_SIRASI.join('|')})|/uzbek(\\?dil=(uz-Cyrl|ru))?|/uzbek/for-clinics(\\?dil=(uz-Cyrl|ru))?|/uzbek/login(\\?dil=ru)?|/uzbek/signup(\\?dil=ru)?|/uzbek/(privacy|terms|cookies|data-request|accessibility|medical-disclaimer|security|medical)(\\?dil=(uz-Cyrl|ru))?)$`)
       for (const h of hrefler) assert.match(h, izinli, `link to ${h}`)
       for (const h of hrefler.filter((x) => x.startsWith('#'))) assert.ok(html.includes(`id="${h.slice(1)}"`), `${h} has no target on the page`)
       // The switch in the bar: Uzbek and Russian, named in their own words, the other one a real link.
