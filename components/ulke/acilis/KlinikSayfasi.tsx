@@ -11,6 +11,8 @@ import React from 'react'
 import { Button } from '@/components/doktor-landing/button'
 import { FeatureSection, TypeCard } from '@/components/doktor-landing/feature'
 import { ArrowUpRight } from '@/components/doktor-landing/icons'
+import { betaNotu } from '@/lib/ulke/acikIcerik'
+import { araclarMetni } from '@/lib/ulke/arayuz'
 import { dilSec, ulkePaketi } from '@/lib/ulke/ulke'
 import { dilliYol } from '@/lib/ulke/sayfaDili'
 import { YASAL_ANAHTARLARI, YASAL_YOLLAR } from '@/lib/ulke/yasal/tipler'
@@ -164,6 +166,9 @@ export function KlinikSayfasi({ dil, istenenDil, iletisimEposta, gorsel, acilis:
               <span className="font-outfit text-[11px] not-italic uppercase tracking-[0.3em] text-pine">{k.markaEk}</span>
             </a>
             <nav className="flex flex-wrap gap-x-6 gap-y-2 font-outfit text-sm text-ink-2" aria-label={k.altBilgi.havolalar}>
+              <a href={dilliYol('/medical', d)} className="hover:text-ink">
+                {araclarMetni(d).kabuk.araclar}
+              </a>
               {k.altBilgi.yasal.map((etiket, i) => (
                 <a key={YASAL_ANAHTARLARI[i]} href={dilliYol(YASAL_YOLLAR[YASAL_ANAHTARLARI[i]], d)} className="hover:text-ink">
                   {etiket}
@@ -182,6 +187,7 @@ export function KlinikSayfasi({ dil, istenenDil, iletisimEposta, gorsel, acilis:
           </div>
           <div className="mx-auto flex max-w-7xl flex-col gap-2 border-t border-line px-5 py-6 sm:px-8">
             <p className="max-w-xs font-outfit text-sm leading-relaxed text-ink-muted">{k.altBilgi.tanim}</p>
+            <p className="font-outfit text-sm text-ink-2" data-beta="evet">{betaNotu(d)}</p>
             <DilSecici etiket={k.altBilgi.diller} secenekler={alt} className="uzl-dil-alt gap-3 text-xs uppercase tracking-[0.14em]" />
           </div>
         </footer>
