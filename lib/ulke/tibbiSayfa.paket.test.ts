@@ -10,7 +10,7 @@ import { betaNotu } from './acikIcerik'
 import { arayuz } from './arayuz'
 import { bicimli } from './araclar/paket'
 import { sizintiYok } from './testing/sizintiTarayici'
-import { ulkePaketi } from './ulke'
+import { ulkePaketi, uygulamaDilleri } from './ulke'
 import { YASAL_EPOSTA } from './yasal/eposta'
 
 const icinde = (html: string, s: string) => html.includes(s) || html.includes(s.replaceAll("'", '&#x27;'))
@@ -44,5 +44,13 @@ describe('public medical catalogue', () => {
       assert.ok(bos.includes(`data-yuva="${yuva.anahtar}"`))
     }
     assert.throws(() => renderToStaticMarkup(React.createElement(Sayfa, { searchParams: { arac: 'no-such-tool' } })))
+    for (const ek of uygulamaDilleri()) {
+      if (ek === dil || !icerik!.metinler[ek]) continue
+      const htmlEk = renderToStaticMarkup(React.createElement(Sayfa, { searchParams: { dil: ek } }))
+      assert.ok(htmlEk.includes(betaNotu(ek)), ek)
+      const adEk = bicimli(bir.metin.ad, ek)
+      assert.ok(adEk && icinde(htmlEk, adEk), `${ek} ${bir.anahtar}`)
+      assert.ok(htmlEk.includes(`dil=${encodeURIComponent(ek)}`), ek)
+    }
   })
 })
