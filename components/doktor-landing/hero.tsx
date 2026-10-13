@@ -1,8 +1,10 @@
-import { LINKS, HERO, HERO_STRIP } from "./content";
+import { DEMO, LINKS, HERO, HERO_STRIP } from "./content";
+import { demoBaglantisi } from "@/lib/demo/demoBaglantisi";
 import { Button } from "./button";
 import { ArrowUpRight } from "./icons";
 
 export function Hero() {
+  const demoAcik = demoBaglantisi() !== null;
   return (
     <section id="top" className="relative bg-paper">
       <div className="mx-auto grid max-w-7xl items-center gap-10 px-5 pb-10 pt-24 sm:px-8 lg:grid-cols-2 lg:gap-14 lg:pb-14 lg:pt-28">
@@ -26,6 +28,11 @@ export function Hero() {
             <Button href="#konusma" variant="outline" size="lg" className="w-full sm:w-auto">
               Muayeneyi izleyin
             </Button>
+            {demoAcik ? (
+              <Button href={LINKS.demo} variant="outline" size="lg" className="w-full sm:w-auto">
+                {DEMO.cta}
+              </Button>
+            ) : null}
           </div>
         </div>
 

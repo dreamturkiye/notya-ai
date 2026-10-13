@@ -4,6 +4,32 @@ export const LINKS = {
   assistant: "/asistan",
   kvkk: "/kvkk",
   home: "/home",
+  // NOTYA-DEMO-01: shown only when NEXT_PUBLIC_DEMO_BOOKING_URL holds a Cal.com link (lib/demo/demoBaglantisi.ts).
+  demo: "/demo",
+} as const;
+
+// NOTYA-DEMO-01 — /demo page copy. No claims about compliance, integrations, prices or results.
+export const DEMO = {
+  cta: "Demo planla",
+  title: "Demo planla",
+  lede: "Dr. Gökhan Mamur ile 60 dakikalık bir görüntülü görüşme. Saatler kendi saat diliminizde gösterilir.",
+  soonTitle: "Demo randevuları çok yakında açılıyor.",
+  soonBody: "Takvim hazır olduğunda bu sayfadan doğrudan randevu alabileceksiniz.",
+  provider: "Randevu işlemleri Cal.com üzerinden yürütülür.",
+  calendarLabel: "Demo randevu takvimi",
+  // Landing section right after the hero (shown only when the booking link is set).
+  section: {
+    eyebrow: "Demo",
+    title: "Notya'yı bir hekimle birlikte görün.",
+    titleItalic: "60 dakikalık bir görüşmede.",
+    body: "Dr. Gökhan Mamur ile görüntülü bir görüşme planlayın. Size uygun saati takvimden seçin; saatler kendi saat diliminizde gösterilir.",
+    cardLabel: "Demo görüşmesi",
+    rows: [
+      { k: "60 dakika", v: "Görüntülü görüşme" },
+      { k: "Dr. Gökhan Mamur", v: "Sorularınızı birlikte konuşun" },
+      { k: "Kendi saatinizle", v: "Takvim saat diliminize göre açılır" },
+    ],
+  },
 } as const;
 
 export const NAV = [
