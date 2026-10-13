@@ -21,6 +21,7 @@ import { NZ_GIRDI, NZ_ROLLER } from './ayarlar'
 import derleme from './derleme.mjs'
 import { NZ_PAKETI, nzAramaKatla } from './index'
 import { NZ_KLINIK } from './klinik'
+import { NZ_ACIL_CUMLE } from './klinik/formEk'
 import { NZ_KENDI_BASLIKLI_ROLLER } from './klinik/hastaFormu'
 
 const D = 'en-NZ'
@@ -45,6 +46,9 @@ ingilizcePaketSinamasi({
   // NOTYA-ULKE-UYGULA-NZ: the country's own role list, and the tools it has beyond the shared set
   rolDegisimi: NZ_ROLLER,
   ekAraclar: NZ_ONAYSIZ_ARACLAR,
+  acilCumle: NZ_ACIL_CUMLE,
+  yasakAcil: /\b(911|999|000|112|103)\b/,
+  idIpucu: /\bNHI\b/,
 })
 
 const a = NZ_ARAYUZ.araclar!
@@ -98,7 +102,7 @@ describe('nz: what is New Zealand\'s', () => {
     assert.equal(a.birimler['ug/L'][D], 'µg/L')
     assert.equal(a.birimler['ug/L/yil'][D], 'µg/L per year')
     assert.ok(!('ng/mL' in a.birimler), 'no tool shows ng/mL here')
-    assert.equal(NZ_KLINIK.riza.surum, 'nz-draft-2026-10-09')
+    assert.equal(NZ_KLINIK.riza.surum, 'nz-draft-2026-10-11')
     assert.equal(NZ_ARAYUZ.metinler[D]!.muayene.riza, NZ_GIRDI.sozler.kayitRizasi)
   })
 })
@@ -310,17 +314,23 @@ describe('nz: who sees which tool — the audit\'s decisions, with existing tool
 
   it('the roles this country adds see the tools the audit names for them, and only those', () => {
     const araclari = (rol: string) => a.araclar.filter((p) => p.roller?.includes(rol)).map((p) => p.anahtar).filter((k) => !k.startsWith('nz-') && k !== 'takip-paneli').sort()
-    assert.deepEqual(araclari('urgent-care-medicine'), ['antibiyotik-sure', 'doz-hesabi', 'kirik-alci-takip', 'kritik-yol'])
-    assert.deepEqual(araclari('rural-hospital-medicine'), ['doz-hesabi', 'kritik-yol'])
-    assert.deepEqual(araclari('musculoskeletal-medicine'), ['sakatlik-gunlugu', 'vas-fonksiyon'])
-    assert.deepEqual(araclari('pain-medicine'), ['postop-agri'])
+    assert.deepEqual(araclari('urgent-care-medicine'), ['antibiyotik-sure', 'birinci-acil-bayrak', 'doz-hesabi', 'kirik-alci-takip', 'kritik-yol'])
+    assert.deepEqual(araclari('rural-hospital-medicine'), ['birinci-acil-bayrak', 'doz-hesabi', 'kritik-yol', 'kronik-izlem-kaydi'])
+    assert.deepEqual(araclari('musculoskeletal-medicine'), ['icf-ozet', 'sakatlik-gunlugu', 'seans-plani', 'vas-fonksiyon'])
+    assert.deepEqual(araclari('pain-medicine'), ['icf-ozet', 'postop-agri', 'seans-plani'])
     assert.deepEqual(araclari('oral-maxillofacial-surgery'), ['genel-preop', 'yara-dren-izlem'])
-    for (const rol of ['occupational-medicine', 'sexual-health-medicine', 'family-planning-reproductive-health', 'palliative-medicine']) assert.deepEqual(araclari(rol), [], rol)
-    assert.deepEqual(araclari('physiotherapy'), ['sakatlik-gunlugu', 'vas-fonksiyon'])
-    assert.deepEqual(araclari('osteopathy'), ['vas-fonksiyon'])
-    assert.deepEqual(araclari('chiropractic'), ['vas-fonksiyon'])
-    // no tool of a doctor role reaches a profession the audit names none for
-    for (const rol of ['podiatry', 'psychotherapy', 'clinical-psychology', 'occupational-therapy']) assert.deepEqual(a.araclar.filter((p) => p.roller?.includes(rol)).map((p) => p.anahtar), [], rol)
+    assert.deepEqual(araclari('occupational-medicine'), ['kronik-izlem-kaydi'])
+    assert.deepEqual(araclari('sexual-health-medicine'), ['gebelik-gun'])
+    assert.deepEqual(araclari('family-planning-reproductive-health'), ['gebelik-gun'])
+    assert.deepEqual(araclari('palliative-medicine'), [])
+    assert.deepEqual(araclari('physiotherapy'), ['icf-ozet', 'sakatlik-gunlugu', 'seans-plani', 'vas-fonksiyon'])
+    assert.deepEqual(araclari('osteopathy'), ['seans-plani', 'vas-fonksiyon'])
+    assert.deepEqual(araclari('chiropractic'), ['seans-plani', 'vas-fonksiyon'])
+    // allied professions the audit named none for now keep a record of their own, then the follow-up list
+    assert.deepEqual(a.araclar.filter((p) => p.roller?.includes('podiatry')).map((p) => p.anahtar), ['seans-plani', 'takip-paneli'])
+    assert.deepEqual(a.araclar.filter((p) => p.roller?.includes('psychotherapy')).map((p) => p.anahtar), ['psikiyatri-guvenlik', 'takip-paneli'])
+    assert.deepEqual(a.araclar.filter((p) => p.roller?.includes('clinical-psychology')).map((p) => p.anahtar), ['psikiyatri-guvenlik', 'sonraki-seans', 'takip-paneli'])
+    assert.deepEqual(a.araclar.filter((p) => p.roller?.includes('occupational-therapy')).map((p) => p.anahtar), ['seans-plani', 'icf-ozet', 'takip-paneli'])
   })
 
   it('A SPECIALTY\'S TOOL STAYS ITS OWN: no cardiology, ophthalmology or obstetric role sees a paediatric or a dermatology tool', () => {

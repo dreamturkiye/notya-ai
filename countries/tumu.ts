@@ -19,6 +19,13 @@ import { NZ_PAKETI } from './nz/index'
 import { NZ_SIZINTI_HARFLERI, NZ_SIZINTI_TERIMLERI } from './nz/sizintiTerimleri'
 import { CA_PAKETI } from './ca/index'
 import { CA_SIZINTI_HARFLERI, CA_SIZINTI_TERIMLERI } from './ca/sizintiTerimleri'
+import { AU_YASAL } from './au/yasal'
+import { CA_YASAL } from './ca/yasal'
+import { GB_YASAL } from './gb/yasal'
+import { NZ_YASAL } from './nz/yasal'
+import { US_YASAL } from './us/yasal'
+import { UZ_YASAL } from './uz/yasal'
+import type { YasalKapisi } from '@/lib/ulke/yasal/tipler'
 
 export type UlkeKaydi = { paket: UlkePaketi; sizintiTerimleri: readonly SizintiTerimi[]; sizintiHarfleri: string }
 
@@ -30,4 +37,14 @@ export const TUM_ULKELER: Record<UlkeKodu, UlkeKaydi> = {
   au: { paket: AU_PAKETI, sizintiTerimleri: AU_SIZINTI_TERIMLERI, sizintiHarfleri: AU_SIZINTI_HARFLERI },
   nz: { paket: NZ_PAKETI, sizintiTerimleri: NZ_SIZINTI_TERIMLERI, sizintiHarfleri: NZ_SIZINTI_HARFLERI },
   ca: { paket: CA_PAKETI, sizintiTerimleri: CA_SIZINTI_TERIMLERI, sizintiHarfleri: CA_SIZINTI_HARFLERI },
+}
+
+/** Policy drafts. Türkiye's page is app/kvkk/page.tsx and is not in this map. */
+export const YASAL_PAKETLERI: Record<Exclude<UlkeKodu, 'tr'>, YasalKapisi> = {
+  us: US_YASAL,
+  gb: GB_YASAL,
+  ca: CA_YASAL,
+  au: AU_YASAL,
+  nz: NZ_YASAL,
+  uz: UZ_YASAL,
 }

@@ -130,6 +130,9 @@ export const NZ_GIRDI: EnUlkeGirdisi = {
     saatDilimiCumlesi: 'Times are shown in the time zone set for your account.',
     // SOURCE-CHECKED: day, month, year (the national medication charting standard: "day/month/year format").
     tarihOrnegi: 'DD/MM/YYYY',
+    // Optional. Not checked against the Medical Council or any other register. Not an authorisation.
+    meslekKaydiEtiketi: 'Professional registration number',
+    odeme: 'NHI',
   },
   ulkeAdi: 'New Zealand',
   // The word a senior doctor goes by here. SOURCE-CHECKED: the medical council describes vocational registration as
@@ -164,7 +167,7 @@ export const NZ_GIRDI: EnUlkeGirdisi = {
   roller: NZ_ROLLER,
   veliYasi: NZ_VELI_YASI,
   birimler: NZ_BIRIMLER,
-  surum: 'nz-draft-2026-10-09',
+  surum: 'nz-draft-2026-10-11',
   konusma: {
     saglayici: 'elevenlabs-scribe',
     model: 'scribe_v2',
@@ -270,11 +273,17 @@ export const NZ_GIRDI: EnUlkeGirdisi = {
       'kalp-damar-preop': ['thoracic-surgery', 'cardiovascular-surgery'],
       'odyometri-pta': ['otolaryngology', 'audiology'],
       'kirik-alci-takip': ['orthopaedics', 'urgent-care-medicine'],
-      'vas-fonksiyon': ['orthopaedics', 'musculoskeletal-medicine', 'physiotherapy', 'osteopathy', 'chiropractic'],
+      'vas-fonksiyon': ['orthopaedics', 'rehabilitation-medicine', 'musculoskeletal-medicine', 'physiotherapy', 'osteopathy', 'chiropractic'],
       'plastik-yara-greft': ['plastic-surgery', 'aesthetic-surgery'],
       'sakatlik-gunlugu': ['sports-medicine', 'musculoskeletal-medicine', 'physiotherapy'],
       // children here are mostly seen outside paediatrics
       'doz-hesabi': ['emergency-medicine', 'family-medicine', 'paediatric-surgery', 'paediatrics', 'urgent-care-medicine', 'rural-hospital-medicine'],
+      'seans-plani': ['rehabilitation-medicine', 'physiotherapy', 'occupational-therapy', 'pain-medicine', 'musculoskeletal-medicine', 'podiatry', 'osteopathy', 'chiropractic'],
+      'icf-ozet': ['physiotherapy', 'occupational-therapy', 'rehabilitation-medicine', 'pain-medicine', 'musculoskeletal-medicine'],
+      'psikiyatri-guvenlik': ['psychiatry', 'clinical-psychology', 'psychotherapy'],
+      'kronik-izlem-kaydi': ['family-medicine', 'internal-medicine', 'rural-hospital-medicine', 'occupational-medicine'],
+      'gebelik-gun': ['obstetrics-gynaecology', 'family-medicine', 'family-planning-reproductive-health', 'sexual-health-medicine'],
+      'birinci-acil-bayrak': ['family-medicine', 'rural-hospital-medicine', 'urgent-care-medicine'],
     },
     // THE LICENCE STATE of the two tools whose rights holder requires permission (docs/COUNTRY-PACK-HOWTO.md, "Country-only
     // tools and roles", point 5): "izin-gerekli" = permission needed. While it stands, the pack check refuses to switch

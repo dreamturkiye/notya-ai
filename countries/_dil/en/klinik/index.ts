@@ -14,11 +14,19 @@
 import type { UlkeKlinigi } from '@/lib/ulke/tipler'
 import type { EnUlkeGirdisi } from '../girdi'
 import { enHastaFormu } from './hastaFormu'
+import type { HamBolum } from './hastaFormu/yardimci'
 import { enNotSablonlari } from './notSablonlari'
 import { enRolTanimlari } from './roller'
 import { enTalimatlar } from './talimatlar'
 
-export function enKlinik(g: EnUlkeGirdisi): UlkeKlinigi {
+export type EnKlinikEk = {
+  /** Identifier, payer and consent sections. Only this country. */
+  cekirdekEk?: readonly HamBolum[]
+  /** The country's emergency sentence, written into red-flag help. Includes the local number. */
+  acilCumle?: string
+}
+
+export function enKlinik(g: EnUlkeGirdisi & EnKlinikEk): UlkeKlinigi {
   const bicim = g.sozler.bicim
   // `g.roller`: where this country's role list differs from the shared forty (NOTYA-ULKE-OZEL-01); absent = the forty.
   const t = enTalimatlar({ bicim, kidemliHekim: g.kidemliHekim, roller: enRolTanimlari(bicim, g.rolAdlari, g.roller), sablonlar: enNotSablonlari(bicim, g.roller), veliYasi: g.veliYasi })
@@ -34,7 +42,13 @@ export function enKlinik(g: EnUlkeGirdisi): UlkeKlinigi {
     notAlanlari: t.notAlanlari,
     hastaOzetiTalimati: t.hastaOzetiTalimati,
     hastaOzetiGirdisi: t.hastaOzetiGirdisi,
-    hastaFormu: enHastaFormu({ bicim, surum: g.surum, ...(g.formRizasi ? { riza: g.formRizasi } : {}), ...(g.roller ? { rolDegisimi: g.roller } : {}) }),
+    hastaFormu: enHastaFormu({
+      bicim, surum: g.surum,
+      ...(g.formRizasi ? { riza: g.formRizasi } : {}),
+      ...(g.roller ? { rolDegisimi: g.roller } : {}),
+      ...(g.cekirdekEk ? { cekirdekEk: g.cekirdekEk } : {}),
+      ...(g.acilCumle ? { acilCumle: g.acilCumle } : {}),
+    }),
     yenidenYazimTalimati: () => null,
     yenidenYazimGirdisi: () => '',
     digerDil: () => null,

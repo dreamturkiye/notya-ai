@@ -7,7 +7,7 @@ import React from 'react'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import DavetliKayitFormu from '@/components/ulke/DavetliKayitFormu'
-import { acilisCapasi } from '@/lib/ulke/arayuz'
+import { acilisCapasi, uygulamaMetni } from '@/lib/ulke/arayuz'
 import { kayitKoduGerekliMi } from '@/lib/ulke/davet'
 import { ozellikAcik, ulkePaketi } from '@/lib/ulke/ulke'
 import { yuzeyMetinleri } from '@/lib/ulke/metin'
@@ -21,6 +21,7 @@ export const metadata: Metadata = { robots: { index: false, follow: false } }
 export default function SignupPage({ searchParams }: { searchParams?: AramaParametreleri }) {
   if (!ozellikAcik('davetliKayit')) notFound()
   const dil = sayfaDili(searchParams)
+  const a = uygulamaMetni(dil).ayarlar
   return (
     <DavetliKayitFormu
       kodGerekli={kayitKoduGerekliMi(ulkePaketi())}
@@ -31,6 +32,7 @@ export default function SignupPage({ searchParams }: { searchParams?: AramaParam
       anaSayfa={dilliYol('/', dil)}
       giris={dilliYol('/login', dil)}
       fiyat={dilliYol('/', dil, acilisCapasi('narx') ? `#${acilisCapasi('narx')}` : '')}
+      meslek={{ etiket: a.meslekKaydi, izoh: a.meslekKaydiIzoh, gecersiz: a.meslekKaydiGecersiz }}
     />
   )
 }

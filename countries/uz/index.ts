@@ -15,6 +15,7 @@ import {
 import { uzAramaKatla } from './arama'
 import { UZ_ROLLER } from './klinik/rolAdlari'
 import { UZ_VELI_YASI } from './ayarlar'
+import { UZ_RESMI_GUNLER } from './resmiGunler'
 
 const metin = paketMetinleri({
   acikDiller: ['uz-Latn', 'ru'],
@@ -104,7 +105,7 @@ export const UZ_PAKETI: UlkePaketi = {
   // The ONLY paths that exist in an Uzbekistan deployment. Every other path of the application answers 404 in the
   // middleware. A path is added here in the same pull request that brings its Uzbek and Russian text and its leak test.
   rotalar: {
-    sayfalar: ['/', '/login', '/signup', '/welcome', '/start', '/today', '/settings', '/patients', '/patients/new', '/patient', '/visit', '/calendar', '/portal', '/tools', '/clinic', '/desk'],
+    sayfalar: ['/', '/for-clinics', '/login', '/signup', '/welcome', '/start', '/today', '/settings', '/patients', '/patients/new', '/patient', '/visit', '/calendar', '/portal', '/tools', '/clinic', '/desk', '/privacy', '/terms', '/cookies', '/data-request', '/accessibility', '/medical-disclaimer', '/security'],
     apiOnEkleri: ['/api/ulke/'],
   },
   // NOTYA-UZ-MUAYENE-01 (Kaan, 2026-10-08): served at notya.io/uzbek. The paths above are relative to this prefix.
@@ -118,6 +119,7 @@ export const UZ_PAKETI: UlkePaketi = {
   yuzeyler: metin.yuzeyler,
   metinler: metin.metinler,
   dilAdlari: { 'uz-Latn': 'Oʻzbekcha', 'uz-Cyrl': 'Ўзбекча', ru: 'Русский' },
+  resmiGunler: UZ_RESMI_GUNLER,
   uygulama: {
     // Inside the signed-in application an account may also choose Uzbek in Cyrillic script: those screens are written
     // in all three forms (countries/uz/uygulama/metinler.ts). The public pages above stay in the two `acikDiller`.
@@ -134,8 +136,8 @@ export const UZ_PAKETI: UlkePaketi = {
     // NOTYA-UZ-RANDEVU-01 — appointment norms. STARTING VALUES, to verify with the local clinical lead (checklist J4):
     // the usual working week and hours of a private clinic in Uzbekistan were not checked against a local source.
     // An account changes all of it for itself on the calendar's settings view. The time zone is `saatDilimi` above
-    // and the week starts on `bicim.haftaBasi`. PUBLIC HOLIDAYS are deliberately absent: they are local content
-    // (docs/COUNTRY-PACK-UZBEKISTAN.md, "needs local content"), and a hard-coded list would silently go stale.
+    // and the week starts on `bicim.haftaBasi`. The working pattern does not close a public day. The calendar
+    // reads `resmiGunler` on this pack. The movable days there are a draft until the year's decree is copied in.
     randevu: {
       varsayilan: { gunler: [1, 2, 3, 4, 5], baslangic: '09:00', bitis: '18:00', sureDk: 30, molalar: [{ baslangic: '13:00', bitis: '14:00' }] },
       sureSecenekleri: [10, 15, 20, 30, 45, 60, 90],

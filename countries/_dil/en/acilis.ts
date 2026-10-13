@@ -8,10 +8,15 @@
  *
  * The LAYOUT is the kit's (components/ulke/acilis/): the same sections, in the same order, for every country. What
  * the sections SAY is written here FOR THE ENGLISH-SPEAKING BUILDS, and it describes ONLY WHAT SUCH A BUILD DOES:
- * recording a visit, a drafted note the doctor approves, role templates, the calendar, the patient's page, the form
- * before a visit, the tools area with the follow-up list. Nothing of the pre-split application that a country build
- * does not have is promised (no spoken assistant, no consultation between colleagues, no messaging, no reminders
- * sent by the system, no learning of a doctor's habits, no dose warnings).
+ * recording a visit, a drafted note the doctor approves, role templates, the calendar, the patient's page, messages
+ * kept on that page, the form before a visit, the tools area with the follow-up list, and a clinic account with a
+ * front desk. Nothing of the pre-split application that a country build does not have is promised (no spoken
+ * assistant, no consultation between colleagues, no doctor's own text templates, no reminders sent by the system,
+ * no learning of a doctor's habits, no dose warnings).
+ *
+ * THE CLINIC PAGE (`/for-clinics`) uses the Turkish clinic page's section inventory. It describes a clinic account:
+ * positions, permissions a clinician grants, and a front desk that sees only what was granted. It does not claim a
+ * free trial. Discipline names are the pack's own clinic-side roles, filled in `enAcilis`.
  *
  * STANDING RULES (checked by ./acilis.test.ts and by each pack's own test):
  *   - NO CLAIM of compliance with any law or standard, of approval, clearance or certification by any authority, of
@@ -36,6 +41,7 @@ import { enCevir } from './varyant'
 export const EN_CAPA = {
   ust: 'top', suhbat: 'visit', qabul: 'note', portal: 'patient-page', maslahat: 'before-the-visit', jadval: 'calendar',
   yonalish: 'specialties', kuzatuv: 'tools', organish: 'approval', xavfsizlik: 'safeguards', narx: 'plans', sorov: 'quote',
+  klinikUst: 'clinicpage', klinikPortal: 'clinicportal', klinikDallar: 'disciplines', klinikFiyat: 'clinicplans', klinikSorov: 'clinicquote',
 } as const
 
 /** The layout's two faces, for a language written in Latin letters. */
@@ -46,6 +52,9 @@ export const EN_PLANLAR = { doctor: 'doctor', clinic: 'clinic' } as const
 const GRUP = { solo: 'solo', clinic: 'clinic' } as const
 
 /** `%M` the word mark; `%K` the country's word for a senior doctor. The lists a country fills are put in by `enAcilis`. */
+/** Footer labels for the policy pages, in YASAL_ANAHTARLARI order. No statute is named. */
+const EN_YASAL = ['Privacy', 'Terms of use', 'Cookies', 'Your information', 'Accessibility', 'Medical disclaimer', 'Security'] as const
+
 const TEMEL: AcilisIcerigi = {
   meta: {
     baslik: '%M — a clinical assistant for doctors',
@@ -72,7 +81,7 @@ const TEMEL: AcilisIcerigi = {
     ustBaslik: 'A clinical assistant for doctors',
     baslik: 'The patient leaves the room —',
     baslikVurgu: 'and the note is already drafted.',
-    giris: '%M records the visit and drafts the visit note for you to read, correct and approve. It keeps your calendar and gives each patient a page of their own. Nothing takes effect until you approve it.',
+    giris: '%M records the visit and drafts the note for you to read, correct and approve. The calendar stays with the visit, and each patient has a page of their own. Nothing is saved to the patient file until you approve it.',
     birinciDugme: 'Request a quote',
     ikinciDugme: 'See a visit',
     gorselAlt: 'A doctor\'s room in daylight: an examination couch, a stethoscope, a blood pressure monitor and framed certificates',
@@ -127,9 +136,9 @@ const TEMEL: AcilisIcerigi = {
   },
   qabul: {
     ustBaslik: '02 — The note',
-    baslik: 'From the recording',
-    baslikVurgu: 'to an approved note.',
-    govde: 'The draft holds what was said at the visit and nothing more. You correct it, and you approve it. An approved note is never changed afterwards.',
+    baslik: 'The visit closes',
+    baslikVurgu: 'in one flow.',
+    govde: 'The steps at the end of the visit stand in front of you, in order. The draft holds what was said and nothing more. You correct it, and you approve it. An approved note is never changed afterwards.',
     maddeler: ['Four sections, and the fields of your own specialty', 'Unclear places are marked, not guessed', 'The transcript stays beside the note'],
     kart: {
       etiket: 'The visit note',
@@ -141,11 +150,11 @@ const TEMEL: AcilisIcerigi = {
     ustBaslik: '03 — Patient\'s page',
     baslik: 'A page of their own',
     baslikVurgu: 'for each patient.',
-    govde: 'You give a patient a link and a PIN. On their page they see their coming appointments and the summaries you chose to share, and they can ask for an appointment. No app needs to be installed.',
-    maddeler: ['Nothing is shared by itself: you choose', 'The visit note itself is never shown to the patient', 'The system sends nothing: you give the link and the PIN yourself'],
+    govde: 'You give a patient a link and a PIN. On their page: coming appointments, the summaries you chose to share, a request for an appointment, the form before a visit, and messages you write, which they read and answer there. No app to install.',
+    maddeler: ['Nothing is shared by itself: you choose', 'The visit note itself is never shown to the patient', 'A message stays on the page: nothing is sent out, and you tell the patient'],
     kart: {
       etiket: 'Patient\'s page',
-      satirlar: [{ k: 'Coming appointments' }, { k: 'Summaries you shared' }, { k: 'A request for an appointment' }, { k: 'The form before a visit' }],
+      satirlar: [{ k: 'Coming appointments' }, { k: 'Summaries you shared' }, { k: 'A request for an appointment' }, { k: 'Messages you write' }, { k: 'The form before a visit' }],
       not: 'One link and a PIN. No app.',
     },
   },
@@ -175,7 +184,7 @@ const TEMEL: AcilisIcerigi = {
     ustBaslik: '06 — Your specialty',
     baslik: 'Not a general assistant.',
     baslikVurgu: 'Your specialty.',
-    govde: 'Each specialty and profession has a note template of its own, its own questions on the form before a visit, and its own tools. They were drafted by machine and await review by clinicians of each specialty.',
+    govde: 'Each specialty and profession has a note of its own shape, its own questions before a visit, and its own tools. You choose it when the account is opened, and the screen is set up for it. The texts were drafted by machine and await a clinician of each specialty.',
     misollar: [],
     royxatEtiketi: 'Specialties and professions',
     royxat: [],
@@ -208,13 +217,13 @@ const TEMEL: AcilisIcerigi = {
     baslik: 'Fifty patients, a long day —',
     baslikVurgu: 'and nothing leaves without you.',
     iqtibos: 'The assistant drafts. The doctor decides.',
-    izoh: 'What a draft does not know, it does not write. What you have not approved, nobody else sees.',
+    izoh: 'What the recording does not contain, the draft does not add. What you have not approved, the patient does not see.',
     gorselAlt: 'A clinic corridor in daylight: doors of doctors\' rooms and a bench for waiting',
     gorselAlti: 'A clinic corridor · illustration',
     dalillar: [
       { k: 'Separate access', v: 'Each doctor sees only their own patients.' },
       { k: 'The doctor\'s approval', v: 'A note, and everything a patient sees, passes your approval first.' },
-      { k: 'Nothing sent by itself', v: 'The system sends no message to a patient: you send what you choose.' },
+      { k: 'Nothing sent by itself', v: 'The system sends nothing out. A message stays on the patient\'s page, and you tell the patient it is there.' },
       { k: 'Decision support', v: '%M supports your decisions; diagnosis and treatment are the doctor\'s.' },
     ],
   },
@@ -232,13 +241,13 @@ const TEMEL: AcilisIcerigi = {
       {
         id: GRUP.solo,
         ad: 'Doctor',
-        rejalar: [{ id: EN_PLANLAR.doctor, ad: 'One doctor', maddeler: ['Recorded visits and drafted notes', 'The note template of your specialty', 'Calendar and working hours', 'A page for each patient', 'The form before a visit', 'The tools of your specialty and your follow-up list'] }],
+        rejalar: [{ id: EN_PLANLAR.doctor, ad: 'One doctor', maddeler: ['A visit recorded with consent, and a drafted note', 'The note template of your specialty', 'Unclear places marked, never guessed', 'Calendar, working hours, and a reminder text you send yourself', 'A protected page for each patient', 'Messages with a patient, kept on their page', 'The form before a visit', 'The tools of your specialty and the follow-up dates you set'] }],
         izoh: 'Accounts are opened by invitation code for now. Prices are given by quote.',
       },
       {
         id: GRUP.clinic,
         ad: 'Clinic',
-        rejalar: [{ id: EN_PLANLAR.clinic, ad: 'Clinic', maddeler: ['An account for each doctor and health professional', 'Each account sees only its own patients', 'Everything in the plan for one doctor'] }],
+        rejalar: [{ id: EN_PLANLAR.clinic, ad: 'Clinic', maddeler: ['An account for each doctor and health professional', 'Positions, and permissions a clinician grants', 'A front desk that sees only what was granted', 'Each account sees only its own patients, unless a permission says otherwise', 'The note, the page and the tools of that account\'s discipline', 'A quote for the number of accounts'] }],
         izoh: 'Accounts are opened by invitation code for now. The price depends on the number of accounts.',
       },
     ],
@@ -247,7 +256,7 @@ const TEMEL: AcilisIcerigi = {
     ustBaslik: 'For your work',
     baslik: 'Request a quote.',
     baslikVurgu: 'We will contact you.',
-    govde: 'By invitation code only, for now. In English.',
+    govde: 'By invitation code only, for now. Tell us the specialty and how you work, and we will come back with a quote. In English.',
     form: {
       etiket: 'Request for a quote',
       adSoyad: 'Full name',
@@ -271,8 +280,80 @@ const TEMEL: AcilisIcerigi = {
     havolalar: 'Footer links',
     giris: 'Sign in',
     kayit: 'Create an account with an invitation code',
+    klinik: 'For clinics',
     haklar: '%M',
     diller: 'Language',
+    yasal: EN_YASAL,
+  },
+  klinik: {
+    meta: {
+      baslik: '%M — your clinic and your patient, on the same page',
+      aciklama: 'Set up for the discipline you work in. Each patient is given a protected page that opens without an app. Every step takes effect only when the clinician approves it.',
+    },
+    markaEk: 'clinic',
+    nav: {
+      bolumler: 'Sections',
+      mobil: 'Mobile menu',
+      dil: 'Language',
+      havolalar: [
+        { capa: EN_CAPA.klinikPortal, etiket: 'Patient\'s page', no: '01' },
+        { capa: EN_CAPA.klinikDallar, etiket: 'Disciplines', no: '02' },
+        { capa: EN_CAPA.klinikFiyat, etiket: 'Plans', no: '03' },
+      ],
+      giris: 'Sign in',
+      girisUzun: 'Sign in to your account',
+      sorov: 'Request a quote',
+      menyuAc: 'Open the menu',
+      menyuYop: 'Close the menu',
+    },
+    kahraman: {
+      ustBaslik: 'For clinics',
+      baslik: 'Your clinic and your patient,',
+      baslikVurgu: 'on the same page.',
+      giris: '%M is set up for the discipline you work in, and each patient is given a protected page that opens without an app.',
+      birinciDugme: 'Request a quote',
+      ikinciDugme: 'Find your discipline',
+      gorselAlt: 'A clinic corridor in daylight: doors of doctors\' rooms and a bench for waiting',
+      gorselAlti: 'A clinic · illustration',
+    },
+    portal: {
+      ustBaslik: '01 — Patient\'s page',
+      baslik: 'A page of their own,',
+      baslikVurgu: 'for every patient.',
+      govde: 'Coming appointments, the summaries you chose to share, a request for an appointment, messages kept on the page, and the form before a visit, on one link and a PIN. No app to install.',
+      maddeler: ['Nothing is shared by itself: you choose', 'The visit note itself is never shown to the patient', 'You give the link and the PIN yourself', 'A message stays on the page: nothing is sent out'],
+      kart: {
+        etiket: 'Patient\'s page',
+        satirlar: [{ k: 'Coming appointments' }, { k: 'Summaries you shared' }, { k: 'A request for an appointment' }, { k: 'Messages' }, { k: 'The form before a visit' }],
+        not: 'One link and a PIN. No app.',
+      },
+    },
+    dallar: {
+      ustBaslik: '02 — Disciplines',
+      baslik: 'Set up for',
+      baslikVurgu: 'the work you do.',
+      govde: 'The note, the form before a visit and the tools follow the discipline of the account. The names are this country\'s.',
+      royxatEtiketi: 'Disciplines',
+      royxat: [],
+    },
+    guven: '%M keeps the record and the follow-up dates you set. Diagnosis and treatment remain with the clinician.',
+    fiyat: { ustBaslik: '03 — Plans', baslik: 'By the account.', baslikVurgu: 'By quote.' },
+    cta: {
+      ustBaslik: 'For your clinic',
+      baslik: 'Request a quote.',
+      baslikVurgu: 'We will contact you.',
+      govde: 'By invitation code only, for now. Tell us the discipline and how many accounts you need.',
+      ikinciDugme: 'One doctor? %M for doctors',
+    },
+    altBilgi: {
+      tanim: 'A clinical assistant for clinics.',
+      havolalar: 'Footer links',
+      doktor: '%M for doctors',
+      giris: 'Sign in',
+      haklar: '%M',
+      diller: 'Language',
+      yasal: EN_YASAL,
+    },
   },
 }
 
@@ -312,6 +393,13 @@ export function enAcilis(g: EnAcilisGirdisi): AcilisIcerigi {
       // An example names a role: a country that does not have the role (NOTYA-ULKE-OZEL-01) shows no example for it.
       misollar: MISALLER.filter((m) => g.roller.some((r) => r.anahtar === m.rol)).map((m) => ({ k: ad(m.rol), v: enCevir(m.v, bicim) })),
       royxat: g.roller.map((r) => r.ad[bicim]),
+    },
+    klinik: {
+      ...metin.klinik,
+      dallar: {
+        ...metin.klinik.dallar,
+        royxat: g.roller.filter((r) => r.taraf === 'klinik-hekim' || r.taraf === 'klinik-muttefik').map((r) => r.ad[bicim]).filter((x): x is string => Boolean(x)),
+      },
     },
     narx: { ...metin.narx, oylik: g.aylikTutarKalibi },
   }

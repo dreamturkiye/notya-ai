@@ -12,6 +12,7 @@
 import type { UlkeKlinigi } from '@/lib/ulke/tipler'
 import { enKlinik } from '../../_dil/en/klinik'
 import { NZ_GIRDI } from '../ayarlar'
+import { NZ_ACIL_CUMLE, NZ_CEKIRDEK_EK } from './formEk'
 import { NZ_ROLLER_FORMLU } from './hastaFormu'
 
-export const NZ_KLINIK: UlkeKlinigi = enKlinik({ ...NZ_GIRDI, roller: NZ_ROLLER_FORMLU })
+export const NZ_KLINIK: UlkeKlinigi = enKlinik({ ...NZ_GIRDI, roller: NZ_ROLLER_FORMLU, cekirdekEk: NZ_CEKIRDEK_EK, acilCumle: NZ_ACIL_CUMLE })

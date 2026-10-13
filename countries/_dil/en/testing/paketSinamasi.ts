@@ -68,6 +68,12 @@ export type EnPaketSinamasi = {
   ekAraclar?: readonly string[]
   /** The tools whose numbers this country states (thresholds, intervals, a table), by key. Absent = none: no such tool is on. */
   sayiliAraclar?: readonly string[]
+  /** The country's emergency sentence, written into every red-flag help line. Includes that country's number. */
+  acilCumle: string
+  /** Emergency numbers that belong to other countries. None may appear in this pack's form. */
+  yasakAcil: RegExp
+  /** A word of this country's own identifier or payer section. Must appear there, and nowhere is a Social Security number asked. */
+  idIpucu: RegExp
 }
 
 const TURKIYE_OZBEKISTAN = /Türkiye|Turkey|Turkish|Uzbek|Tashkent|\bSGK\b|MEDULA|e-Nabız|\bKVKK\b|JSHSHIR|PINFL|[çğıöşüİĞŞÇÖÜʻўқғҳЎҚҒҲ]/
@@ -185,7 +191,7 @@ export function ingilizcePaketSinamasi(s: EnPaketSinamasi): void {
       assert.equal(paket.uygulama!.kayitAcik, false)
     })
     it('only what the country kit has built is switched on', () => {
-      assert.deepEqual(Object.keys(paket.ozellikler).sort(), ['acilisSayfasi', 'araclar', 'bekletmeSayfasi', 'cekirdekGiris', 'cekirdekMuayene', 'davetliKayit', 'hastaFormu', 'hastaPortali', 'randevu'])
+      assert.deepEqual(Object.keys(paket.ozellikler).sort(), ['acilisSayfasi', 'araclar', 'bekletmeSayfasi', 'cekirdekGiris', 'cekirdekMuayene', 'davetliKayit', 'hastaFormu', 'hastaMesajlari', 'hastaPortali', 'klinikHesaplari', 'randevu'])
       assert.deepEqual([...paket.araclar], [])
     })
   })
@@ -199,9 +205,49 @@ export function ingilizcePaketSinamasi(s: EnPaketSinamasi): void {
         assert.equal(arayuz.metinler[bicim]!.yeniHasta.ulusalKimlik, paket.ulusalKimlik.ad)
         assert.doesNotMatch(paket.ulusalKimlik.ad, KIMLIK)
       }
-      // the intake form asks for no identity, policy or insurance number
+      // A country may ask its own identifier and payer. Nothing asks for a Social Security number, and no Turkish identity term is used.
       const sorular = [...klinik.hastaFormu!.cekirdek.bolumler.flatMap((b) => b.sorular), ...Object.values(klinik.hastaFormu!.roller).flatMap((r) => r.sorular)]
-      for (const q of sorular) assert.doesNotMatch(q.metin[bicim], /\b(insurance|policy|identity|passport)\b|\bnumber of your\b/i, q.anahtar)
+      for (const q of sorular) {
+        const metin = `${q.metin[bicim] ?? ''} ${q.veliMetni?.[bicim] ?? ''} ${q.yardim?.[bicim] ?? ''}`
+        assert.doesNotMatch(metin, KIMLIK, q.anahtar)
+        assert.doesNotMatch(metin, /T\.?C\.?\b|\bSGK\b|KVKK|e-?Nabız|MEDULA|JSHSHIR|PINFL/i, q.anahtar)
+      }
+      const kimlik = klinik.hastaFormu!.cekirdek.bolumler.find((b) => b.anahtar === 'id_payer')
+      const riza = klinik.hastaFormu!.cekirdek.bolumler.find((b) => b.anahtar === 'consent_ack')
+      assert.ok(kimlik && kimlik.sorular.length >= 3, 'identifier and payer section')
+      assert.ok(riza && riza.sorular.length === 3, 'three consent acknowledgements')
+      const parcalar = kimlik!.sorular.flatMap((q) => [
+        q.metin[bicim] ?? '',
+        q.veliMetni?.[bicim] ?? '',
+        ...((q.tur === 'tek-secim' || q.tur === 'cok-secim') ? q.secenekler.map((o) => o.ad[bicim] ?? '') : []),
+      ])
+      assert.match(parcalar.join(' '), s.idIpucu)
+      assert.equal(klinik.hastaFormu!.riza.hukukcuInceledi, false)
+    })
+  })
+
+  describe(`${kod}: intake depth — red flags, safety, local emergency number`, () => {
+    it('every role set has a red-flag box and between 6 and 20 questions, machine-written', () => {
+      const f = klinik.hastaFormu!
+      for (const [rol, r] of Object.entries(f.roller)) {
+        assert.ok(r.sorular.length >= 6 && r.sorular.length <= 20, `${rol}: ${r.sorular.length} questions`)
+        assert.deepEqual(r.inceleme, { makineYazimi: true, klinisyen: null }, rol)
+        const rf = r.sorular.find((q) => q.anahtar.endsWith('_rf'))
+        assert.ok(rf?.yardim?.[bicim], `${rol}: red flag`)
+        assert.equal(rf!.yardim![bicim], s.acilCumle, rol)
+        assert.doesNotMatch(rf!.yardim![bicim], s.yasakAcil, rol)
+      }
+      for (const rol of ['psychiatry', 'clinical-psychology'] as const) {
+        const r = f.roller[rol]
+        if (!r) continue
+        const guvenlik = r.sorular.find((q) => q.anahtar.endsWith('_safety'))
+        assert.ok(guvenlik?.zorunlu, `${rol}: safety question`)
+        assert.match(guvenlik!.yardim?.[bicim] ?? '', /clinician reviews/i, rol)
+        assert.ok((guvenlik!.yardim?.[bicim] ?? '').includes(s.acilCumle), rol)
+      }
+      assert.doesNotMatch(s.acilCumle, s.yasakAcil)
+      assert.equal(f.cekirdek.inceleme.klinisyen, null)
+      assert.equal(f.cekirdek.inceleme.makineYazimi, true)
     })
   })
 
@@ -336,6 +382,29 @@ export function ingilizcePaketSinamasi(s: EnPaketSinamasi): void {
     })
     it('who wrote the tool texts: a machine; which clinician read them: nobody yet', () => {
       assert.deepEqual(a.inceleme, { makineYazimi: true, klinisyen: null })
+    })
+    it('messages and clinic accounts are on; templates and consultation stay off', () => {
+      assert.equal(paket.ozellikler.hastaMesajlari, true)
+      assert.equal(paket.ozellikler.klinikHesaplari, true)
+      assert.equal('hekimSablonlari' in paket.ozellikler, false)
+      assert.equal('konsultasyon' in paket.ozellikler, false)
+      assert.ok(arayuz.mesajMetinleri?.[bicim])
+      assert.ok(arayuz.klinikMetinleri?.[bicim])
+      assert.equal(arayuz.sablonMetinleri, undefined)
+      assert.equal(arayuz.konsultasyonMetinleri, undefined)
+      assert.equal(paket.uygulama?.mesaj?.disBildirim.acik, false)
+      assert.equal(paket.uygulama?.mesaj?.disBildirim.saglayici, null)
+      assert.equal(paket.uygulama?.klinikHesaplari?.inceleme.makineYazimi, true)
+      assert.equal(paket.uygulama?.klinikHesaplari?.inceleme.hukukcu, null)
+      assert.equal(paket.uygulama?.klinikHesaplari?.sahipHekimAdinaVerebilir, false)
+      assert.equal(paket.uygulama?.klinikHesaplari?.kayitSaklama, null)
+      if (paket.rotalar !== 'hepsi') {
+        assert.ok(paket.rotalar.sayfalar.includes('/clinic'))
+        assert.ok(paket.rotalar.sayfalar.includes('/desk'))
+      }
+      const muttefik = arayuz.roller.filter((r) => r.taraf === 'klinik-muttefik').map((r) => r.anahtar)
+      assert.deepEqual([...(paket.uygulama?.klinikHesaplari?.paylasimRolleri ?? [])], muttefik)
+      assert.ok(muttefik.length >= 5, 'the shared allied professions, plus any this country adds')
     })
   })
 

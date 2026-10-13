@@ -417,7 +417,78 @@ The amounts are **not** in the copy. The page writes them from the price list (`
 | `altBilgi.giris` | Kirish | Войти | Log in |
 | `altBilgi.kayit` | Taklif kodi bilan roʻyxatdan oʻtish | Регистрация по коду приглашения | Sign up with an invitation code |
 | `altBilgi.haklar` | Notya | Notya | Notya |
+| `altBilgi.klinik` | Klinikalar uchun | Для клиник | For clinics |
 | `altBilgi.diller` | Til va yozuv | Язык и письмо | Language and script |
+| `altBilgi.yasal` | Maxfiylik · Foydalanish shartlari · Cookie-fayllar · Maʼlumot soʻrovi · Foydalanish qulayligi · Tibbiy ogohlantirish · Xavfsizlik | Конфиденциальность · Условия использования · Файлы куки · Запрос о данных · Доступность · Медицинское предупреждение · Безопасность | Privacy, terms, cookies, your information, accessibility, medical disclaimer, security. Labels only; the pages name the statute. |
+
+### Clinic landing (`/for-clinics`)
+
+Same section order as the Turkish clinic page: hero, patient page, disciplines, trust line, price, close. Discipline names are this pack's clinic-side roles. MACHINE-WRITTEN; a native speaker must read them.
+
+| Key | Uzbek (Latin) | Russian | English |
+|---|---|---|---|
+| `klinik.meta.baslik` | Notya Klinika — klinikangiz va bemoringiz bir sahifada | Notya Клиника — ваша клиника и пациент на одной странице | Notya Clinic — your clinic and your patient on one page |
+| `klinik.meta.aciklama` | Notya klinikangiz yoʻnalishiga qarab tuziladi va har bir bemoringizga ilova oʻrnatmasdan ochiladigan himoyalangan sahifa beradi. | Notya собирается под направление вашей клиники и даёт каждому пациенту защищённую страницу, которая открывается без установки приложения. | Notya is set up for your clinic's discipline and gives each patient a protected page that opens without installing an app. |
+| `klinik.markaEk` | klinika | клиника | clinic |
+| `klinik.nav.bolumler` | Boʻlimlar | Разделы | Sections |
+| `klinik.nav.mobil` | Mobil menyu | Мобильное меню | Mobile menu |
+| `klinik.nav.dil` | Til | Язык | Language |
+| `klinik.nav.havolalar[1].etiket` | Bemor portali | Портал | Portal |
+| `klinik.nav.havolalar[2].etiket` | Yoʻnalishlar | Направления | Disciplines |
+| `klinik.nav.havolalar[3].etiket` | Narx | Цена | Price |
+| `klinik.nav.giris` | Kirish | Войти | Log in |
+| `klinik.nav.girisUzun` | Hisobga kirish | Войти в аккаунт | Log in to your account |
+| `klinik.nav.sorov` | Narxni soʻrash | Запросить цену | Request a price |
+| `klinik.nav.menyuAc` | Menyuni ochish | Открыть меню | Open the menu |
+| `klinik.nav.menyuYop` | Menyuni yopish | Закрыть меню | Close the menu |
+| `klinik.kahraman.ustBaslik` | Klinikalar uchun | Для клиник | For clinics |
+| `klinik.kahraman.baslik` | Klinikangiz va bemoringiz | Ваша клиника и пациент | Your clinic and your patient |
+| `klinik.kahraman.baslikVurgu` | bir sahifada. | на одной странице. | on one page. |
+| `klinik.kahraman.giris` | Notya klinikangiz yoʻnalishiga qarab tuziladi va har bir bemoringizga ilova oʻrnatmasdan ochiladigan himoyalangan sahifa beradi. | Notya собирается под направление вашей клиники и даёт каждому пациенту защищённую страницу, которая открывается без установки приложения. | Notya is set up for your clinic's discipline and gives each patient a protected page that opens without installing an app. |
+| `klinik.kahraman.birinciDugme` | Narxni soʻrash | Запросить цену | Request a price |
+| `klinik.kahraman.ikinciDugme` | Yoʻnalishingizni toping | Найти своё направление | Find your discipline |
+| `klinik.kahraman.gorselAlt` | Kunduzgi yorugʻlikdagi klinik yoʻlagi: shifokor xonalari eshiklari va kutish oʻrindigʻi | Коридор клиники при дневном свете: двери кабинетов и скамья для ожидания | A clinic corridor in daylight: doors of rooms and a bench for waiting |
+| `klinik.kahraman.gorselAlti` | Klinika · tasviriy surat | Клиника · иллюстрация | Clinic · illustration |
+| `klinik.portal.ustBaslik` | 01 — Bemor portali | 01 — Портал пациента | 01 — Patient portal |
+| `klinik.portal.baslik` | Bemoringizga alohida, | Отдельная страница | A separate page, |
+| `klinik.portal.baslikVurgu` | himoyalangan sahifa. | для каждого пациента. | for every patient. |
+| `klinik.portal.govde` | Qabul xulosasi, natijalar, dorilar, kuzatuv rejasi va sizga yozilgan xabarlar bitta havolada. Ilova oʻrnatish shart emas. | Итог приёма, результаты, лекарства, план наблюдения и сообщения для вас — по одной ссылке. Устанавливать приложение не нужно. | Visit summary, results, medicines, follow-up plan and messages to you, on one link. No app to install. |
+| `klinik.portal.maddeler[1]` | Mazmun yoʻnalishga qarab tartiblangan | Содержание выстроено по специальности | Content arranged by specialty |
+| `klinik.portal.maddeler[2]` | Qabulga yozilish soʻrovi | Запрос на приём | A request for an appointment |
+| `klinik.portal.maddeler[3]` | Bemorga koʻrsatiladigan har bir maʼlumot shifokor tasdigʻidan oʻtadi | Всё, что видит пациент, проходит подтверждение врача | Everything the patient sees passes the doctor's approval |
+| `klinik.portal.kart.etiket` | Bemor sahifasi | Страница пациента | The patient's page |
+| `klinik.portal.kart.satirlar[1]` | Qabul xulosasi | Итог приёма | Visit summary |
+| `klinik.portal.kart.satirlar[2]` | Natijalar | Результаты | Results |
+| `klinik.portal.kart.satirlar[3]` | Dorilar | Лекарства | Medicines |
+| `klinik.portal.kart.satirlar[4]` | Kuzatuv rejasi | План наблюдения | Follow-up plan |
+| `klinik.portal.kart.satirlar[5]` | Xabarlar | Сообщения | Messages |
+| `klinik.portal.kart.not` | Bitta havola. Ilova kerak emas. | Одна ссылка. Приложение не нужно. | One link. No app needed. |
+| `klinik.dallar.ustBaslik` | 02 — Yoʻnalishlar | 02 — Направления | 02 — Disciplines |
+| `klinik.dallar.baslik` | Klinikangiz yoʻnalishiga qarab | Собирается под | Set up for |
+| `klinik.dallar.baslikVurgu` | tuziladi. | направление клиники. | the clinic's discipline. |
+| `klinik.dallar.govde` | Har bir hisob oʻz yoʻnalishining yozuvi, savollari va vositalari bilan ochiladi. | Каждый аккаунт открывается с записью, вопросами и инструментами своего направления. | Each account opens with the note, questions and tools of its discipline. |
+| `klinik.dallar.royxatEtiketi` | Yoʻnalishlar | Направления | Disciplines |
+| `klinik.dallar.royxat[1]` | Plastik xirurgiya | Пластическая хирургия | Plastic surgery |
+| `klinik.dallar.royxat[2]` | Tibbiy kosmetologiya | Медицинская косметология | Medical cosmetology |
+| `klinik.dallar.royxat[3]` | Dermatovenerologiya | Дерматовенерология | Dermatovenereology |
+| `klinik.dallar.royxat[4]` | Jismoniy reabilitatsiya mutaxassisi | Специалист по физической реабилитации | Physical rehabilitation specialist |
+| `klinik.dallar.royxat[5]` | Klinik psixolog | Клинический психолог | Clinical psychologist |
+| `klinik.guven` | Notya yozuv va kuzatuv vositasidir; tashxis va davolash qarori shifokorga tegishli. | Notya — средство записи и наблюдения; решение о диагнозе и лечении остаётся за врачом. | Notya is a tool for the record and for follow-up; diagnosis and treatment stay with the doctor. |
+| `klinik.fiyat.ustBaslik` | 03 — Narx | 03 — Цена | 03 — Price |
+| `klinik.fiyat.baslik` | Hisob boshiga. | На аккаунт. | Per account. |
+| `klinik.fiyat.baslikVurgu` | Soʻrov boʻyicha. | По запросу. | On request. |
+| `klinik.cta.ustBaslik` | Klinika | Клиника | Clinic |
+| `klinik.cta.baslik` | Narxni soʻrang. | Запросите цену. | Request a price. |
+| `klinik.cta.baslikVurgu` | Siz bilan bogʻlanamiz. | Мы свяжемся с вами. | We will contact you. |
+| `klinik.cta.govde` | Hozircha faqat taklif kodi bilan. Oʻzbek va rus tillarida. | Пока только по коду приглашения. На узбекском и русском. | By invitation code only, for now. In Uzbek and Russian. |
+| `klinik.cta.ikinciDugme` | Shifokor qabuli bormi? Notya shifokorlar uchun | Приём одного врача? Notya для врачей | A doctor's practice? Notya for doctors |
+| `klinik.altBilgi.tanim` | Klinikalar uchun klinik yordamchi. | Клинический помощник для клиник. | A clinical assistant for clinics. |
+| `klinik.altBilgi.havolalar` | Quyi havolalar | Нижние ссылки | Footer links |
+| `klinik.altBilgi.doktor` | Notya shifokorlar uchun | Notya для врачей | Notya for doctors |
+| `klinik.altBilgi.giris` | Kirish | Войти | Log in |
+| `klinik.altBilgi.haklar` | Notya | Notya | Notya |
+| `klinik.altBilgi.diller` | Til va yozuv | Язык и письмо | Language and script |
+| `klinik.altBilgi.yasal` | Maxfiylik · Foydalanish shartlari · Cookie-fayllar · Maʼlumot soʻrovi · Foydalanish qulayligi · Tibbiy ogohlantirish · Xavfsizlik | Конфиденциальность · Условия использования · Файлы куки · Запрос о данных · Доступность · Медицинское предупреждение · Безопасность | Same policy links as the doctor footer. |
 
 ### Page title and description (not visible on the page)
 

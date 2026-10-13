@@ -73,6 +73,9 @@ export const AU_GIRDI: EnUlkeGirdisi = {
     cokSaatDilimi: true,
     saatDilimiCumlesi: 'Times are shown in the time zone set for your account.',
     tarihOrnegi: 'DD/MM/YYYY',
+    // Optional. Not checked against the AHPRA register. Not an authorisation.
+    meslekKaydiEtiketi: 'AHPRA registration number',
+    odeme: 'Medicare',
   },
   ulkeAdi: 'Australia',
   // The word a senior doctor goes by here: the Medical Board registers "specialists" (specialist registration; a
@@ -108,7 +111,7 @@ export const AU_GIRDI: EnUlkeGirdisi = {
   roller: AU_ROLLER,
   veliYasi: AU_VELI_YASI,
   birimler: AU_BIRIMLER,
-  surum: 'au-draft-2026-10-09',
+  surum: 'au-draft-2026-10-11',
   konusma: {
     saglayici: 'elevenlabs-scribe',
     model: 'scribe_v2',
@@ -164,6 +167,9 @@ export const AU_GIRDI: EnUlkeGirdisi = {
       'kdigo-evre': { eksik: 'Laboratories here report the urine albumin-to-creatinine ratio in mg/mmol, and the national handbook for primary care writes its categories as below 3.0, 3.0 to 30 and above 30 mg/mmol and has a colour chart of its own that differs from the international grid in two cells; the handbook may not be reproduced without its publisher\'s written permission. Needed: a nephrologist\'s decision on which chart applies here, and that permission. ' + EMIR_BOBREK, kimden: KLINISYEN },
       'kdigo-serit': { eksik: 'The same as the general-medicine kidney tool: the national handbook\'s categories in mg/mmol and its own colour chart, which needs its publisher\'s permission. A nephrologist may prefer the international grid; the screen must then say which grid it shows. ' + EMIR_BOBREK, kimden: KLINISYEN },
       'rapor-taslagi': { eksik: 'The tool offers the BI-RADS assessment categories. Which reporting categories radiologists in Australia use for which examination is for a local radiologist to say; until then only the general outline would be right, and the tool is kept off as a whole. ' + EMIR_RAPOR, kimden: HAK_SAHIBI },
+      // This pack has no clinic-dermatology role. The two reminder calendars are for that role only.
+      'akne-vade': { eksik: 'This country has no clinic-dermatology role, so this reminder calendar stays off. It is a product reminder for that role, not a national schedule.', kimden: KLINISYEN },
+      'lazer-vade': { eksik: 'This country has no clinic-dermatology role, so this interval record stays off. The interval is one the clinician chooses, and the role is not in this pack.', kimden: KLINISYEN },
     },
     // WORDS OF A SHARED TOOL THIS COUNTRY WRITES DIFFERENTLY.
     degisen: {
@@ -224,6 +230,10 @@ export const AU_GIRDI: EnUlkeGirdisi = {
       'plastik-yara-greft': ['plastic-surgery', 'aesthetic-surgery'],
       // audiologists measure it: the allied profession sees the tool the set gives to the surgeon only
       'odyometri-pta': ['otolaryngology', 'audiology'],
+      'seans-plani': ['rehabilitation-medicine', 'physiotherapy', 'occupational-therapy', 'pain-medicine', 'podiatry'],
+      'icf-ozet': ['physiotherapy', 'occupational-therapy', 'rehabilitation-medicine', 'pain-medicine'],
+      'kronik-izlem-kaydi': ['family-medicine', 'internal-medicine', 'geriatric-medicine'],
+      'sonraki-seans': ['clinical-psychology', 'audiology', 'speech-pathology'],
     },
     // THE LICENCE STATE of the two tools whose rights holder requires permission (docs/COUNTRY-PACK-HOWTO.md, "Country-only
     // tools and roles", point 5): "izin-gerekli" = permission needed. While it stands, the pack check refuses to switch

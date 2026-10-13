@@ -154,7 +154,7 @@ export const UZ_ROL_ARACLARI_5: readonly PaketAraci[] = [
     },
   },
   {
-    anahtar: 'vas-fonksiyon', roller: ['ortopedi'],
+    anahtar: 'vas-fonksiyon', roller: ['ortopedi', 'fizik-tedavi', 'fizyoterapi'],
     metin: {
       ad: u('Ogʻriq va funksiya bali', 'Оғриқ ва функция бали', 'Оценка боли и функции'),
       aciklama: u('Ogʻriq 0 dan 10 gacha va toʻrtta funksiya bandi 0 dan 4 gacha (0 — qiyinchiliksiz, 4 — bajara olmaydi). Vosita ikki koʻrsatkichni koʻrsatadi va darajani nomlamaydi.', 'Оғриқ 0 дан 10 гача ва тўртта функция банди 0 дан 4 гача (0 — қийинчиликсиз, 4 — бажара олмайди). Восита икки кўрсаткични кўрсатади ва даражани номламайди.', 'Боль от 0 до 10 и четыре пункта функции от 0 до 4 (0 — без затруднений, 4 — не может выполнить). Инструмент показывает два показателя и не называет степень.'),

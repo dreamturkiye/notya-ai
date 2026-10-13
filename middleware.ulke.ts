@@ -12,7 +12,9 @@
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { AKTIF_PAKET } from '@/countries/active'
+import { bulunamadiHtml } from '@/lib/ulke/bulunamadiHtml'
 import { ARAMA_GIZLI_BASLIGI, ROBOTS_HERKESE_KAPALI, rotaAcikMi } from '@/lib/ulke/rotaKapisi'
+import { securityTxt } from '@/lib/ulke/yasal/securityTxt'
 import { PORTAL_SAYFASI } from '@/lib/ulke/portal/sabitler'
 
 function guvenlikBasliklari(h: Headers) {
@@ -32,13 +34,19 @@ export function middleware(req: NextRequest) {
     return r
   }
 
+  if (pathname === '/.well-known/security.txt') {
+    const r = new NextResponse(securityTxt(), { status: 200, headers: { 'Content-Type': 'text/plain; charset=utf-8' } })
+    guvenlikBasliklari(r.headers)
+    return r
+  }
+
   // A pack that claims the whole pre-split application must not be built with this middleware at all
   // (next.config.mjs picks middleware.ts for it). If it ever is, close everything rather than open everything.
   const izin = AKTIF_PAKET.rotalar === 'hepsi' ? { sayfalar: [], apiOnEkleri: [] } : AKTIF_PAKET.rotalar
   if (!rotaAcikMi(izin, pathname)) {
     const r = pathname.startsWith('/api/')
       ? NextResponse.json({ code: 'NOT_FOUND' }, { status: 404 })
-      : new NextResponse(null, { status: 404 })
+      : new NextResponse(bulunamadiHtml(), { status: 404, headers: { 'Content-Type': 'text/html; charset=utf-8' } })
     r.headers.set('Cache-Control', 'no-store')
     guvenlikBasliklari(r.headers)
     return r

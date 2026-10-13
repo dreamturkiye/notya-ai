@@ -56,6 +56,9 @@ export const UZ_ARAC_BIRIMLERI: Readonly<Record<string, Uc>> = {
   // NOTYA-ULKE-UYGULA-UZ: the units of the tools only this country has (./kendi/tanimlar.ts)
   'kg/m2': u('kg/m²', 'кг/м²', 'кг/м²'),
   hafta: u('hafta', 'ҳафта', 'нед.'),
+  mmHg: u('mm simob ustuni', 'мм симоб устуни', 'мм рт. ст.'),
+  kcal: u('kkal', 'ккал', 'ккал'),
+  g: u('g', 'г', 'г'),
 }
 
 /** One entry of the table below with where its unit was read; `kaynak: null` = no national text read states it. */

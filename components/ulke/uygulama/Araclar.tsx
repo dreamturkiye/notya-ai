@@ -37,7 +37,7 @@ import { ulkeGunu } from '@/lib/ulke/uygulama/gun'
 import { ulkePaketi } from '@/lib/ulke/ulke'
 import { alanAraligi, alanBirimi, alanBirimleri, birimAnahtari, type BirimOrtami } from '@/lib/ulke/araclar/birimler'
 import { birimiSecilmeyenler, girdiyiCoz, hamdanGosterilen, okunamayanAlanlar, type HamGirdi } from '@/lib/ulke/araclar/girdi'
-import { alanEtiketi, aracAra, aracCalistir, aracinKapisi, aracOzeti, bicimli, hesabinAraci, hesabinAraclari, lisansBildirimi, sayiMetni, type GorunurArac, type Yazici } from '@/lib/ulke/araclar/paket'
+import { alanEtiketi, aracAra, aracCalistir, aracGorunurMu, aracinKapisi, aracOzeti, bicimli, hesabinAraci, hesabinAraclari, lisansBildirimi, paketinTanimi, sayiMetni, type GorunurArac, type Yazici } from '@/lib/ulke/araclar/paket'
 import type { AracAlani, UlkeAraclari } from '@/lib/ulke/araclar/tipler'
 import { alanVarMi, METIN_UZUNLUGU } from '@/lib/ulke/araclar/yardimci'
 import type { DilKodu } from '@/lib/ulke/tipler'
@@ -56,15 +56,44 @@ export { aracYolu, araclarYolu, birimOrtami, yazici } from './aracOrtak'
 
 // ───────────────────────── the grid ─────────────────────────
 
-function Kutu({ x, dil, hastaId }: { x: GorunurArac; dil: DilKodu; hastaId?: string | null }) {
+function Kutu({ x, dil, hastaId, duvar }: { x: GorunurArac; dil: DilKodu; hastaId?: string | null; duvar?: boolean }) {
+  const ic = (
+    <>
+      <span className="uza-arac-serit" aria-hidden="true" />
+      <span className="uza-arac-ust">
+        <span className="uza-arac-daire" aria-hidden="true" />
+        <span className="uza-arac-ad">{bicimli(x.paket.metin.ad, dil)}</span>
+        <span className="uza-arac-ok" aria-hidden="true" />
+      </span>
+      <span className="uza-arac-aciklama">{bicimli(x.paket.metin.aciklama, dil)}</span>
+    </>
+  )
   return (
     <li>
-      <a className="uza-arac-kutu" href={aracYolu(x.tanim.anahtar, hastaId)} data-arac={x.tanim.anahtar} data-kapsam={x.paket.roller === null ? 'temel' : 'rol'} data-tur={x.tanim.tur === 'baglanti' ? 'baglanti' : undefined}>
-        <span className="uza-arac-ad">{bicimli(x.paket.metin.ad, dil)}</span>
-        <span className="uza-arac-aciklama">{bicimli(x.paket.metin.aciklama, dil)}</span>
-      </a>
+      {duvar ? <span className="uza-arac-kutu" data-duvar="evet">{ic}</span> : (
+        <a className="uza-arac-kutu" href={aracYolu(x.tanim.anahtar, hastaId)} data-arac={x.tanim.anahtar} data-kapsam={x.paket.roller === null ? 'temel' : 'rol'} data-tur={x.tanim.tur === 'baglanti' ? 'baglanti' : undefined}>{ic}</a>
+      )}
     </li>
   )
+}
+
+type IzgaraSatiri = { x: GorunurArac; duvar: boolean }
+
+/** Open tools keep their link. A pack tool this role may see, but that the licence keeps shut, keeps the same slot as a wall. */
+function izgaraSatirlari(icerik: UlkeAraclari, rol: string | null, hasta?: AracHastasi | null, bugun?: string): { temel: IzgaraSatiri[]; rol: IzgaraSatiri[] } {
+  const gorunen = hesabinAraclari(icerik, rol, hasta && bugun ? { hasta, bugun } : null)
+  const acik = new Set([...gorunen.temel, ...gorunen.rol].map((x) => x.tanim.anahtar))
+  const temel: IzgaraSatiri[] = []
+  const kendi: IzgaraSatiri[] = []
+  for (const p of icerik.araclar ?? []) {
+    if (!aracGorunurMu(p, rol)) continue
+    const tanim = paketinTanimi(icerik, p)
+    if (!tanim) continue
+    const x = { tanim, paket: p }
+    if (hasta && bugun && aracinKapisi(x, hasta, bugun) === 'degil') continue
+    ;(p.roller === null ? temel : kendi).push({ x, duvar: !acik.has(p.anahtar) })
+  }
+  return { temel, rol: kendi }
 }
 
 export function AraclarIzgarasi({ a, dil, icerik, rol, q, hasta, bugun }: {
@@ -74,19 +103,38 @@ export function AraclarIzgarasi({ a, dil, icerik, rol, q, hasta, bugun }: {
   /** Today in the account's time zone. With a patient: a tool that is not for that patient's age or sex is left out. */
   bugun?: string
 }) {
-  const hepsi = hesabinAraclari(icerik, rol, hasta && bugun ? { hasta, bugun } : null)
+  const ham = izgaraSatirlari(icerik, rol, hasta, bugun)
   const katla = ulkePaketi().uygulama?.aramaKatla
-  const temel = aracAra(hepsi.temel, q, dil, katla), kendi = aracAra(hepsi.rol, q, dil, katla)
-  const hicYok = hepsi.temel.length + hepsi.rol.length === 0
+  const daralt = (liste: IzgaraSatiri[]) => {
+    const acik = new Set(aracAra(liste.filter((s) => !s.duvar).map((s) => s.x), q, dil, katla).map((x) => x.tanim.anahtar))
+    const kapali = new Set(aracAra(liste.filter((s) => s.duvar).map((s) => s.x), q, dil, katla).map((x) => x.tanim.anahtar))
+    return liste.filter((s) => acik.has(s.x.tanim.anahtar) || kapali.has(s.x.tanim.anahtar))
+  }
+  const [filtre, setFiltre] = useState<'hepsi' | 'temel' | 'rol'>('hepsi')
+  const temel = daralt(ham.temel)
+  const kendi = daralt(ham.rol)
+  const gosterTemel = filtre !== 'rol' ? temel : []
+  const gosterRol = filtre !== 'temel' ? kendi : []
+  const hicYok = ham.temel.length + ham.rol.length === 0
   const rolunAdi = rolAdi(rol, dil)
+  const toplam = ham.temel.length + ham.rol.length
+  const acikRol = ham.rol.some((s) => !s.duvar)
   return (
     <>
-      <section className="uza-kart">
+      <section className="yg-arac-baslik">
+        <p className="yg-kicker">{a.kabuk.araclar}</p>
         <h1 className="uza-h1">{a.izgara.baslik}</h1>
-        <p className="uza-aciklama">{a.izgara.aciklama}</p>
+        {hicYok ? null : <p className="yg-arac-say">{rolunAdi ? <>{rolunAdi}{'\u00b7'}{toplam}</> : toplam}</p>}
         {hasta ? <p className="uza-ipucu" data-alan="arac-hastasi" data-hasta={hasta.id}><a className="uza-baglanti" href={`${YOL.hasta}?id=${hasta.id}`}>{yerine(a.kayit.hastaIcin, hasta.ad)}</a></p> : null}
+        {hicYok || ham.temel.length === 0 || ham.rol.length === 0 ? null : (
+          <div className="yg-arac-cipler">
+            <button type="button" className="yg-arac-cip" data-aktif={filtre === 'hepsi' ? 'evet' : undefined} onClick={() => setFiltre('hepsi')}>{a.izgara.baslik} {toplam}</button>
+            <button type="button" className="yg-arac-cip" data-filtre="temel" data-aktif={filtre === 'temel' ? 'evet' : undefined} onClick={() => setFiltre('temel')}>{a.izgara.temel} {ham.temel.length}</button>
+            {rolunAdi ? <button type="button" className="yg-arac-cip" data-filtre="rol" data-aktif={filtre === 'rol' ? 'evet' : undefined} onClick={() => setFiltre('rol')}>{yerine(a.izgara.rol, rolunAdi)} {ham.rol.length}</button> : null}
+          </div>
+        )}
         {hicYok ? null : (
-          <form className="uza-arama" action={YOL.araclar} method="get" role="search" style={{ marginTop: 16 }}>
+          <form className="uza-arama yg-arac-ara-gizli" action={YOL.araclar} method="get" role="search">
             <label className="uza-etiket" htmlFor="uza-arac-ara">{a.izgara.ara}</label>
             <div className="uza-arama-satir">
               {hasta ? <input type="hidden" name="hasta" value={hasta.id} /> : null}
@@ -95,17 +143,17 @@ export function AraclarIzgarasi({ a, dil, icerik, rol, q, hasta, bugun }: {
           </form>
         )}
       </section>
-      {hicYok ? <p className="uza-bos">{a.izgara.bos}</p> : temel.length + kendi.length === 0 ? <p className="uza-bos" role="status">{a.izgara.sonucYok}</p> : null}
-      {temel.length ? (
-        <section className="uza-kart" data-grup="temel">
-          <h2 className="uza-h2">{a.izgara.temel}</h2>
-          <ul className="uza-arac-izgara">{temel.map((x) => <Kutu key={x.tanim.anahtar} x={x} dil={dil} hastaId={hasta?.id} />)}</ul>
+      {hicYok ? <p className="uza-bos">{a.izgara.bos}</p> : gosterTemel.length + gosterRol.length === 0 ? <p className="uza-bos" role="status">{a.izgara.sonucYok}</p> : null}
+      {gosterTemel.length ? (
+        <section data-grup="temel">
+          <div className="yg-arac-grup"><span className="yg-arac-cubuk" data-grup="temel" /><h2 className="uza-h2">{a.izgara.temel}</h2></div>
+          <ul className="uza-arac-izgara">{gosterTemel.map((s) => <Kutu key={s.x.tanim.anahtar} x={s.x} dil={dil} hastaId={hasta?.id} duvar={s.duvar} />)}</ul>
         </section>
       ) : null}
-      {kendi.length && rolunAdi ? (
-        <section className="uza-kart" data-grup="rol">
-          <h2 className="uza-h2">{yerine(a.izgara.rol, rolunAdi)}</h2>
-          <ul className="uza-arac-izgara">{kendi.map((x) => <Kutu key={x.tanim.anahtar} x={x} dil={dil} hastaId={hasta?.id} />)}</ul>
+      {gosterRol.length && rolunAdi ? (
+        <section data-grup={acikRol ? 'rol' : undefined} data-duvar-grup={acikRol ? undefined : 'rol'}>
+          <div className="yg-arac-grup"><span className="yg-arac-cubuk yg-arac-cubuk-rol" /><h2 className="uza-h2">{yerine(a.izgara.rol, rolunAdi)}</h2></div>
+          <ul className="uza-arac-izgara">{gosterRol.map((s) => <Kutu key={s.x.tanim.anahtar} x={s.x} dil={dil} hastaId={hasta?.id} duvar={s.duvar} />)}</ul>
         </section>
       ) : null}
     </>

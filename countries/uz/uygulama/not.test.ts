@@ -341,7 +341,7 @@ describe('Uzbekistan note: write, rewrite in the other language, edit, approve (
     const n = await notOku('jeton-a', v.notId)
     assert.equal(n.s, 200)
     const { muayene, ...not } = n.j.not
-    assert.deepEqual(not, { notId: v.notId, seansId: v.seans, onayli: false, onayTarihi: null, dil: 'uz-Latn', icerik: UZ_NOT, ikinci: null, yenidenYazilabilir: 'ru', alanAnahtarlari: ['history_giver', 'birth_history', 'feeding', 'sleep', 'development', 'vaccination_said', 'weight_height', 'head_circumference', 'temperature'] })
+    assert.deepEqual(not, { notId: v.notId, seansId: v.seans, onayli: false, onayTarihi: null, dil: 'uz-Latn', icerik: UZ_NOT, ikinci: null, yenidenYazilabilir: 'ru', alanAnahtarlari: ['history_giver', 'birth_history', 'feeding', 'sleep', 'development', 'vaccination_said', 'weight_height', 'head_circumference', 'temperature'], ekMetin: '' })
     assert.deepEqual([muayene.seansId, muayene.metin, muayene.hasta.ad, muayene.notId, muayene.notDurumu], [v.seans, UZ_METIN, 'QA Karimova Dilnoza', v.notId, 'taslak'])
     // The note is still written; the screen is told to ask the doctor to check it carefully.
     assert.deepEqual(muayene.konusma, { dil: 'uz', dilKesin: true, ikinciGecis: true, dusukGuven: true })

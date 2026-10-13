@@ -62,6 +62,9 @@ export const GB_ARACLAR: EnUlkeGirdisi['araclar'] = {
     'kdigo-evre': { eksik: 'The referral lines of the tool follow the list of the KDIGO guideline. The national guideline on chronic kidney disease (NICE NG203) has categories in mg/mmol and a referral list of its own, which the tools audit of 2026-10-10 found different (docs/araclar-denetim/GB.md): a doctor here follows the national list. Needed: a clinical decision on which list the tool shows. ' + EMIR_BOBREK, kimden: KLINISYEN },
     'kdigo-serit': { eksik: 'The same grid as the general-medicine kidney tool, without referral lines. The tools audit proposes one kidney tool for this country, not two. ' + EMIR_BOBREK, kimden: KLINISYEN },
     'rapor-taslagi': { eksik: 'The tool offers the BI-RADS assessment categories. Which reporting categories radiologists in the United Kingdom use for which examination is for a local radiologist to say; until then only the general outline would be right, and the tool is kept off as a whole. ' + EMIR_RAPOR, kimden: HAK_SAHIBI },
+    // This pack has no clinic-dermatology role (./roller.ts). The two reminder calendars are for that role only.
+    'akne-vade': { eksik: 'This country has no clinic-dermatology role, so this reminder calendar stays off. It is a product reminder for that role, not a national schedule.', kimden: KLINISYEN },
+    'lazer-vade': { eksik: 'This country has no clinic-dermatology role, so this interval record stays off. The interval is one the clinician chooses, and the role is not in this pack.', kimden: KLINISYEN },
   },
 
   // ───────────────────────── WHO SEES WHICH TOOL HERE (decisions: `proposedSpecialties`, and Part 3 of GB.md) ─────────────────────────
@@ -85,6 +88,12 @@ export const GB_ARACLAR: EnUlkeGirdisi['araclar'] = {
     'toksisite-listesi': ['oncology', 'clinical-oncology'],
     'genel-preop': ['general-surgery', 'oral-maxillofacial-surgery'],
     'yara-dren-izlem': ['paediatric-surgery', 'general-surgery', 'oral-maxillofacial-surgery'],
+    // structural tools of the set, plus roles only this country has (the set's roles are restated: a list here replaces the set's)
+    'seans-plani': ['rehabilitation-medicine', 'physiotherapy', 'occupational-therapy', 'podiatry'],
+    'psikiyatri-guvenlik': ['psychiatry', 'clinical-psychology', 'child-adolescent-psychiatry', 'old-age-psychiatry'],
+    'kronik-izlem-kaydi': ['family-medicine', 'internal-medicine', 'geriatric-medicine'],
+    'gebelik-gun': ['obstetrics-gynaecology', 'family-medicine', 'community-sexual-reproductive-health'],
+    'sonraki-seans': ['clinical-psychology', 'audiology', 'speech-language-therapy'],
   },
 
   // ───────────────────────── THE COUNTRY'S OWN NUMBERS FOR SHARED TOOLS ─────────────────────────

@@ -18,10 +18,11 @@ import type { HastaFormuIcerigi } from '@/lib/ulke/intake/tipler'
 import { enYaz, type EnBicim } from '../../varyant'
 import { EN_ROLLER, enGibiRolleri, enRolSatirlari, type EnRol, type EnRolDegisimi } from '../roller'
 import { EN_CEKIRDEK_BOLUMLER } from './cekirdek'
+import { ACIL_JETONU, ekleDerinlik, VARSAYILAN_ACIL } from './derinlik'
 import { EN_ROL_SORULARI_1 } from './roller1'
 import { EN_ROL_SORULARI_2 } from './roller2'
 import { EN_ROL_SORULARI_3 } from './roller3'
-import { bolumuBicimle, MAKINE, roluBicimle, type HamRol } from './yardimci'
+import { bolumuBicimle, MAKINE, roluBicimle, type HamBolum, type HamRol } from './yardimci'
 
 export { enFormYuvalari, type EnFormYuvasi } from './yuvalar'
 
@@ -46,17 +47,26 @@ export type EnFormGirdisi = {
    * through `RolTanimi.gibi`), or its own (`EnEkRol.form`).
    */
   rolDegisimi?: EnRolDegisimi
+  /** Sections only this country asks (identifier, payer, consent acknowledgements). Written in the set's base spelling. */
+  cekirdekEk?: readonly HamBolum[]
+  /** Replaces `{{ACIL}}` in help lines. The country's own emergency sentence, including its number. */
+  acilCumle?: string
 }
 
 /** The intake form's content in a country's form of English. */
+const acilYaz = (metin: string, cumle: string): string => (metin.includes(ACIL_JETONU) ? metin.split(ACIL_JETONU).join(cumle) : metin)
+
 export function enHastaFormu(g: EnFormGirdisi): HastaFormuIcerigi {
   const roller: Record<string, ReturnType<typeof roluBicimle>> = {}
   const satirlar = enRolSatirlari(g.rolDegisimi)
+  const cumle = g.acilCumle?.trim() || VARSAYILAN_ACIL
   // The shared roles this country keeps, and the shared roles one of its own roles behaves like — in the set's order.
   const tutulan = new Set<string>([...satirlar.filter((r) => !r.ek).map((r) => r.anahtar), ...enGibiRolleri(g.rolDegisimi)])
-  for (const rol of EN_ROLLER) if (tutulan.has(rol)) roller[rol] = roluBicimle(EN_ROL_SORULARI[rol], g.bicim)
-  // A role of the country's own that brings its own questions: written like the set's (base spelling), in the country's own folder.
-  for (const r of satirlar) if (r.ek?.form) roller[r.anahtar] = roluBicimle(r.ek.form, g.bicim)
+  for (const rol of EN_ROLLER) if (tutulan.has(rol)) roller[rol] = roluBicimle(ekleDerinlik(EN_ROL_SORULARI[rol], rol, rol), g.bicim)
+  // A role of the country's own that brings its own questions: the red-flag list is the role it behaves like, under keys of its own.
+  for (const r of satirlar) if (r.ek?.form) roller[r.anahtar] = roluBicimle(ekleDerinlik(r.ek.form, r.ek.gibi ?? r.anahtar, r.anahtar), g.bicim)
+  const hazir = (s: (typeof roller)[string]['sorular'][number]) => (s.yardim ? { ...s, yardim: Object.fromEntries(Object.entries(s.yardim).map(([d, t]) => [d, acilYaz(t, cumle)])) } : s)
+  for (const rol of Object.keys(roller)) roller[rol] = { ...roller[rol], sorular: roller[rol].sorular.map(hazir) }
   return {
     surum: g.surum,
     riza: {
@@ -65,7 +75,7 @@ export function enHastaFormu(g: EnFormGirdisi): HastaFormuIcerigi {
       metin: { [g.bicim]: g.riza?.metin ?? enYaz(EN_FORM_RIZASI.metin, g.bicim) },
       veliMetni: { [g.bicim]: g.riza?.veliMetni ?? enYaz(EN_FORM_RIZASI.veliMetni, g.bicim) },
     },
-    cekirdek: { bolumler: EN_CEKIRDEK_BOLUMLER.map((b) => bolumuBicimle(b, g.bicim)), inceleme: MAKINE },
+    cekirdek: { bolumler: [...EN_CEKIRDEK_BOLUMLER, ...(g.cekirdekEk ?? [])].map((b) => bolumuBicimle(b, g.bicim)), inceleme: MAKINE },
     roller,
   }
 }

@@ -77,6 +77,9 @@ export const CA_GIRDI: EnUlkeGirdisi = {
     cokSaatDilimi: true,
     saatDilimiCumlesi: 'Times are shown in the time zone set for your account.',
     tarihOrnegi: 'YYYY-MM-DD',
+    // Optional. Not checked against a provincial college or any other register. Not an authorisation.
+    meslekKaydiEtiketi: 'Professional registration number',
+    odeme: 'Health card',
   },
   ulkeAdi: 'Canada',
   // UNVERIFIED: the word a senior hospital doctor goes by here.
@@ -101,7 +104,7 @@ export const CA_GIRDI: EnUlkeGirdisi = {
   roller: CA_ROLLER,
   veliYasi: CA_VELI_YASI,
   birimler: CA_BIRIMLER,
-  surum: 'ca-draft-2026-10-09',
+  surum: 'ca-draft-2026-10-11',
   konusma: {
     saglayici: 'elevenlabs-scribe',
     model: 'scribe_v2',
@@ -181,6 +184,11 @@ export const CA_GIRDI: EnUlkeGirdisi = {
       'plastik-yara-greft': ['plastic-surgery', 'aesthetic-surgery'],
       // post-operative pain follow-up: also pain medicine
       'postop-agri': ['anaesthesia', 'pain-medicine'],
+      'seans-plani': ['rehabilitation-medicine', 'physiotherapy', 'occupational-therapy', 'pain-medicine'],
+      'icf-ozet': ['physiotherapy', 'occupational-therapy', 'rehabilitation-medicine', 'pain-medicine'],
+      'psikiyatri-guvenlik': ['psychiatry', 'clinical-psychology', 'psychotherapy'],
+      'kronik-izlem-kaydi': ['family-medicine', 'internal-medicine', 'geriatric-medicine'],
+      'gebelik-gun': ['obstetrics-gynaecology', 'family-medicine', 'reproductive-endocrinology'],
     },
     // NOT APPLIED, AND WHY. The audit also changes who would see 17 PLACEHOLDERS (the PHQ-9 with GAD-7, the kidney
     // tool, the family-medicine lists and others) and makes five base placeholders doctor-only. A placeholder is on no

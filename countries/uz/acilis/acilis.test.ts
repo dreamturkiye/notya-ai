@@ -28,6 +28,7 @@ import { join, resolve } from 'node:path'
 import React from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { AcilisSayfasi, narxSatirlari } from '@/components/ulke/acilis/AcilisSayfasi'
+import { KlinikSayfasi } from '@/components/ulke/acilis/KlinikSayfasi'
 import { Narx } from '@/components/ulke/acilis/Narx'
 import { sayiYazKuralla } from '@/lib/ulke/arayuz/sayi'
 import { ACILIS_ASISTAN_ROLU, ACILIS_DILLERI, ACILIS_ICERIGI, CAPA, UZ_ACILIS, acilisIcerigi, type AcilisDili } from './icerik'
@@ -50,6 +51,8 @@ const GORSELLER = { xona: '/uzbek/_next/static/media/xona.jpg', stol: '/uzbek/_n
 /** The page as app/page.ulke.tsx renders it for the address `?dil=<dil>`. */
 const ciz = (dil: AcilisDili, iletisimEposta: string | null = 'pilot@example.com') =>
   renderToStaticMarkup(React.createElement(AcilisSayfasi, { dil: dilSec(dil), istenenDil: dil, iletisimEposta, gorseller: GORSELLER, acilis: UZ_ACILIS }))
+const cizKlinik = (dil: AcilisDili, iletisimEposta: string | null = 'pilot@example.com') =>
+  renderToStaticMarkup(React.createElement(KlinikSayfasi, { dil: dilSec(dil), istenenDil: dil, iletisimEposta, gorsel: GORSELLER.yolak, acilis: UZ_ACILIS }))
 /** Keys whose values are identifiers, not text. */
 const KIMLIK = new Set(['capa', 'id', 'rol'])
 /** Every piece of text in a catalogue, with its path — whatever the page shows it in. */
@@ -186,6 +189,21 @@ describe('Uzbekistan landing page', () => {
       for (const g of gorseller) assert.match(g, /alt="[^"]{20,}"/)
     })
 
+    it(`${dil}: the clinic page has the Turkish clinic page's sections, in that order`, () => {
+      const html = cizKlinik(dil)
+      const idler = [...html.matchAll(/<section id="([a-z]+)"/g)].map((m) => m[1])
+      assert.deepEqual(idler, [CAPA.klinikUst, CAPA.klinikPortal, CAPA.klinikDallar, CAPA.klinikFiyat, CAPA.klinikSorov])
+      assert.ok(html.includes(t.klinik.guven))
+      assert.ok(html.includes(t.klinik.kahraman.baslik))
+      assert.ok(t.klinik.dallar.royxat.length >= 5, 'the pack clinic-side roles')
+      for (const ad of t.klinik.dallar.royxat) assert.ok(html.includes(ad), ad)
+      assert.match(html, new RegExp(`alt="${t.klinik.kahraman.gorselAlt.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}"`))
+      assert.doesNotMatch(html, /bepul|бесплатн|бепул/i)
+      const hrefler = [...html.matchAll(/<a\b[^>]*\bhref="([^"]+)"/g)].map((m) => m[1].replace(/&amp;/g, '&'))
+      const izinli = new RegExp(`^(#(${[CAPA.klinikUst, CAPA.klinikPortal, CAPA.klinikDallar, CAPA.klinikFiyat, CAPA.klinikSorov].join('|')})|/uzbek(\\?dil=(uz-Cyrl|ru))?|/uzbek/for-clinics(\\?dil=(uz-Cyrl|ru))?|/uzbek/login(\\?dil=ru)?|/uzbek/signup(\\?dil=ru)?|/uzbek/(privacy|terms|cookies|data-request|accessibility|medical-disclaimer|security)(\\?dil=(uz-Cyrl|ru))?)$`)
+      for (const h of hrefler) assert.match(h, izinli, `clinic link to ${h}`)
+    })
+
     it(`${dil}: buttons — every button of the bar, the hero and the price section leads to the request form; the second hero button to the illustration on this page`, () => {
       const html = ciz(dil)
       const baglantilar = (kaynak: string, etiket: string) => [...kaynak.matchAll(/<a\b[^>]*\bhref="([^"]+)"[^>]*>([^<]*)</g)].filter((m) => m[2] === etiket).map((m) => m[1])
@@ -213,7 +231,7 @@ describe('Uzbekistan landing page', () => {
       const hrefler = [...html.matchAll(/<a\b[^>]*\bhref="([^"]+)"/g)].map((m) => m[1].replace(/&amp;/g, '&'))
       assert.ok(hrefler.length > 15)
       // NOTYA-UZ-MUAYENE-01: the build is served under /uzbek; a link to '/login' would land on Türkiye's site.
-      const izinli = new RegExp(`^(#(${BOLUM_SIRASI.join('|')})|/uzbek(\\?dil=(uz-Cyrl|ru))?|/uzbek/login(\\?dil=ru)?|/uzbek/signup(\\?dil=ru)?)$`)
+      const izinli = new RegExp(`^(#(${BOLUM_SIRASI.join('|')})|/uzbek(\\?dil=(uz-Cyrl|ru))?|/uzbek/for-clinics(\\?dil=(uz-Cyrl|ru))?|/uzbek/login(\\?dil=ru)?|/uzbek/signup(\\?dil=ru)?|/uzbek/(privacy|terms|cookies|data-request|accessibility|medical-disclaimer|security)(\\?dil=(uz-Cyrl|ru))?)$`)
       for (const h of hrefler) assert.match(h, izinli, `link to ${h}`)
       for (const h of hrefler.filter((x) => x.startsWith('#'))) assert.ok(html.includes(`id="${h.slice(1)}"`), `${h} has no target on the page`)
       // The switch in the bar: Uzbek and Russian, named in their own words, the other one a real link.

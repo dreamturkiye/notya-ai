@@ -11,8 +11,11 @@
  */
 import { paketMetinleri, type UlkePaketi } from '@/lib/ulke/tipler'
 import { enCekirdek } from '../_dil/en/cekirdek'
+import { enKlinikHesaplari } from '../_dil/en/klinikHesaplari'
 import { enRolAnahtarlari } from '../_dil/en/klinik/roller'
+import { enMesajAyarlari } from '../_dil/en/mesaj'
 import { US_ROLLER } from './roller'
+import { US_RESMI_GUNLER } from './resmiGunler'
 import { US_BIRIMLER, US_VELI_YASI } from './temel'
 
 const cekirdek = enCekirdek('en-US')
@@ -58,8 +61,9 @@ export const US_PAKETI: UlkePaketi = {
   // below). `hane: 0` = no length is assumed. The label ("Patient identifier") is unverified wording (./ayarlar.ts). NEVER A SOCIAL
   // SECURITY NUMBER: no screen of this pack asks for one, and a test fails if any text mentions it.
   ulusalKimlik: { ad: 'Patient identifier', hane: 0, gecerliMi: (ham) => String(ham ?? '').trim().length > 0 },
-  // Fail closed: what the country kit has built is on; everything else (the assistant in text and voice, the voice
-  // profile, image evaluation, consultation, messaging) is off.
+  // Fail closed. Messages stay on the patient's page (no outbound channel). Clinic accounts are on, with starting
+  // values a lawyer has not read. Still off: the assistant in text and voice, the voice profile, image evaluation,
+  // consultation between doctors, and a doctor's own templates.
   ozellikler: {
     acilisSayfasi: true,
     cekirdekGiris: true,
@@ -70,11 +74,13 @@ export const US_PAKETI: UlkePaketi = {
     hastaPortali: true,
     hastaFormu: true,
     araclar: true,
+    hastaMesajlari: true,
+    klinikHesaplari: true,
   },
   araclar: [],
   // The ONLY paths that exist in this country's deployment; every other path answers 404 in the middleware.
   rotalar: {
-    sayfalar: ['/', '/login', '/signup', '/welcome', '/start', '/today', '/settings', '/patients', '/patients/new', '/patient', '/visit', '/calendar', '/portal', '/tools'],
+    sayfalar: ['/', '/for-clinics', '/login', '/signup', '/welcome', '/start', '/today', '/settings', '/patients', '/patients/new', '/patient', '/visit', '/calendar', '/portal', '/tools', '/clinic', '/desk', '/privacy', '/terms', '/cookies', '/data-request', '/accessibility', '/medical-disclaimer', '/security'],
     apiOnEkleri: ['/api/ulke/'],
   },
   // The path of the main site this country is served under.
@@ -89,6 +95,7 @@ export const US_PAKETI: UlkePaketi = {
   yuzeyler: metin.yuzeyler,
   metinler: metin.metinler,
   dilAdlari: { 'en-US': 'English' },
+  resmiGunler: US_RESMI_GUNLER,
   uygulama: {
     diller: ['en-US'],
     hastaDilleri: ['en'],
@@ -96,7 +103,7 @@ export const US_PAKETI: UlkePaketi = {
     // and two professions of its own (./roller.ts → US_ROLLER, where each difference and its source stands).
     roller: enRolAnahtarlari(US_ROLLER),
     // STARTING VALUES, to verify with a local clinical lead (checklist J4). An account changes all of it for itself.
-    // PUBLIC HOLIDAYS are deliberately absent: they are local content (federal and state holidays differ).
+    // The working pattern does not close a public day. Federal days are `resmiGunler` on this pack, shown on the calendar.
     randevu: {
       varsayilan: { gunler: [1, 2, 3, 4, 5], baslangic: '09:00', bitis: '17:00', sureDk: 30, molalar: [{ baslangic: '12:00', bitis: '13:00' }] },
       sureSecenekleri: [10, 15, 20, 30, 45, 60, 90],
@@ -107,6 +114,12 @@ export const US_PAKETI: UlkePaketi = {
     // must before any patient sees the portal. The kit has room for ONE number: the suicide and crisis line 988
     // (fcc.gov/988-suicide-and-crisis-lifeline) is not named anywhere. null here = the patient's page names no number.
     portal: { baglantiGecerlilikGun: 30, acilNumara: '911' },
+    // Messages stay on the patient's page. The outbound channel is a slot: nothing is sent. Machine-written; a lawyer
+    // of this country has not read whether a doctor may write to a patient this way.
+    mesaj: enMesajAyarlari('the United States'),
+    // Clinic accounts. Starting values, machine-written, unread by a lawyer (countries/_dil/en/klinikHesaplari.ts).
+    // Every allied profession of this pack may be offered a share; whether that profession may read a record is open.
+    klinikHesaplari: enKlinikHesaplari(US_ROLLER),
     // One language in one script: no account is asked a language question.
     dilGruplari: [{ temel: 'en', bicimler: [{ yazi: null, dil: 'en-US' }] }],
     // Several time zones: an account chooses its own (settings). The law names nine zones (49 CFR part 71,

@@ -49,7 +49,7 @@ const T = 'uz-tana-vazni-indeksi', H = 'uz-homiladorlik-muddati', E = 'uz-emlash
 const KAPALI: Readonly<Record<string, string>> = { 'esi-triyaj': 'acil-tip', 'kdigo-evre': 'dahiliye', 'kdigo-serit': 'nefroloji', 'rapor-taslagi': 'radyoloji' }
 const ROL_ARACLARI: Readonly<Record<string, readonly string[]>> = {
   'acil-tip': ['kritik-yol', T, P_],
-  'aile-hekimligi': [T, H, E, P_],
+  'aile-hekimligi': ['kronik-izlem-kaydi', 'birinci-acil-bayrak', T, H, E, P_],
   anestezi: ['asa-preop', 'hava-yolu-notu', 'postop-agri', T, P_],
   'beyin-cerrahisi': ['noro-postop', 'nobet-bilinc', T, P_],
   'cocuk-cerrahisi': ['cocuk-prepost-op', 'yara-dren-izlem', T, P_],
@@ -57,40 +57,41 @@ const ROL_ARACLARI: Readonly<Record<string, readonly string[]>> = {
   'gogus-cerrahisi': ['toraks-preop', 'toraks-tup-yara', T, P_],
   'gogus-hastaliklari': ['inhaler-teknik', T, P_],
   'goz-hastaliklari': ['gorme-keskinligi', T, P_],
-  dahiliye: [T, P_],
-  dermatoloji: ['pasi', 'easi', 'scorad', 'yama-okuma', T, P_],
+  dahiliye: ['kronik-izlem-kaydi', T, P_],
+  dermatoloji: ['pasi', 'easi', 'scorad', 'yama-okuma', 'akne-vade', 'lazer-vade', T, P_],
   endokrinoloji: ['rejim-karti', T, P_],
   'enfeksiyon-hastaliklari': ['antibiyotik-sure', T, P_],
-  gastroenteroloji: [T, P_],
+  gastroenteroloji: ['endoskopi-kaydi', T, P_],
   'kadin-hastaliklari-dogum': [T, H, P_],
   'kalp-damar-cerrahisi': ['kalp-damar-preop', 'greft-yara-izlem', 'antikoagulan-vadeleri', T, P_],
   // the vascular half of the specialty the audit split: the same three tools
   'damar-cerrahisi': ['kalp-damar-preop', 'greft-yara-izlem', 'antikoagulan-vadeleri', T, P_],
-  kardiyoloji: [T, P_],
+  kardiyoloji: ['kardiyo-not', T, P_],
   'kulak-burun-bogaz': ['odyometri-pta', 'otoskopi-notu', 'vertigo-notu', T, P_],
   nefroloji: ['diyaliz-seans', T, P_],
-  noroloji: [T, P_],
+  noroloji: ['inme-bayraklari', T, P_],
   onkoloji: ['kur-sayaci', 'toksisite-listesi', T, P_],
   ortopedi: ['kirik-alci-takip', 'ortopedi-op-protokol', 'vas-fonksiyon', T, P_],
   pediatri: ['hedef-boy', 'doz-hesabi', T, E, P_],
   'plastik-cerrahi': ['plastik-yara-greft', T, P_],
-  psikiyatri: [T, P_],
+  psikiyatri: ['psikiyatri-guvenlik', T, P_],
   radyoloji: ['tetkik-kuyrugu', T, P_],
   romatoloji: ['das28', 'eklem-28', T, P_],
   uroloji: ['psa-hizi', T, P_],
   'spor-hekimligi': ['rtp-basamak', 'sakatlik-gunlugu', T, P_],
-  'fizik-tedavi': [T, P_],
+  'fizik-tedavi': ['vas-fonksiyon', 'seans-plani', 'icf-ozet', T, P_],
   // ── roles the audit of 2026-10-10 added: the core set and nothing more until a local specialist names what is used.
   //    Of the core set, the body mass index and the follow-up list exist; its other tools are placeholders or switched off.
-  'alerji-immunoloji': [T, P_], reproduktoloji: [T, P_], 'cocuk-norolojisi': [T, P_], narkoloji: [T, P_], diyetoloji: [T, P_],
+  'alerji-immunoloji': [T, P_], reproduktoloji: [T, P_], 'cocuk-norolojisi': [T, P_], narkoloji: [T, P_], diyetoloji: ['makro-kaydi', T, P_],
   // surdology (the doctor's specialty of hearing; an allied "audiologist" with base tools only before): the hearing average
-  surdoloji: ['odyometri-pta', T, P_],
+  surdoloji: ['odyometri-pta', 'sonraki-seans', T, P_],
   // ── clinic doctors. Two carry the same specialty as a doctor role since the audit and see that specialty's tools:
-  'estetik-cerrahi': ['plastik-yara-greft', T, P_],
-  'klinik-dermatoloji': ['pasi', 'easi', 'scorad', 'yama-okuma', T, P_],
-  'medikal-estetik': [T, P_],
-  // ── allied professions: base tools only (the core set is a doctor's)
-  fizyoterapi: [], 'klinik-psikolog': [],
+  'estetik-cerrahi': ['plastik-yara-greft', 'estetik-cerrahi-vade', T, P_],
+  'klinik-dermatoloji': ['pasi', 'easi', 'scorad', 'yama-okuma', 'akne-vade', 'lazer-vade', T, P_],
+  'medikal-estetik': ['estetik-islem-vade', T, P_],
+  // allied professions: a session or safety record of their own, then the follow-up list
+  fizyoterapi: ['vas-fonksiyon', 'seans-plani', 'icf-ozet', P_],
+  'klinik-psikolog': ['psikiyatri-guvenlik', 'sonraki-seans', P_],
 }
 /** The same table before the audit was applied, for the roles whose grid changed: what each saw then (base tools apart). */
 const ONCE: Readonly<Record<string, readonly string[] | null>> = {
@@ -146,16 +147,16 @@ describe('Uzbekistan — tools: who sees what, the three scripts, and what is de
     // NOTHING ELSE MOVED among the tools of the kit: a tool's role list today is its list of before, plus only the roles
     // named in ONCE. (The follow-up list and the three tools of the country's own are every doctor role's or a named few's: below, and ./kendi/kendi.test.ts.)
     const yeni = new Set(Object.keys(ONCE))
-    const beklenenEk: Record<string, string[]> = { 'kalp-damar-preop': ['damar-cerrahisi'], 'greft-yara-izlem': ['damar-cerrahisi'], 'antikoagulan-vadeleri': ['damar-cerrahisi'], 'odyometri-pta': ['surdoloji'], pasi: ['klinik-dermatoloji'], easi: ['klinik-dermatoloji'], scorad: ['klinik-dermatoloji'], 'yama-okuma': ['klinik-dermatoloji'], 'plastik-yara-greft': ['estetik-cerrahi'] }
+    const beklenenEk: Record<string, string[]> = { 'kalp-damar-preop': ['damar-cerrahisi'], 'greft-yara-izlem': ['damar-cerrahisi'], 'antikoagulan-vadeleri': ['damar-cerrahisi'], 'odyometri-pta': ['surdoloji'], pasi: ['klinik-dermatoloji'], easi: ['klinik-dermatoloji'], scorad: ['klinik-dermatoloji'], 'yama-okuma': ['klinik-dermatoloji'], 'plastik-yara-greft': ['estetik-cerrahi'], 'akne-vade': ['klinik-dermatoloji'], 'lazer-vade': ['klinik-dermatoloji'], 'estetik-cerrahi-vade': ['estetik-cerrahi'], 'makro-kaydi': ['diyetoloji'], 'sonraki-seans': ['surdoloji'], 'takip-paneli': Object.keys(ONCE) }
     for (const p of icerik.araclar) {
       if (p.roller === null || p.sinif === 'hekimler' || p.anahtar.startsWith('uz-')) continue
       assert.deepEqual(p.roller.filter((r) => yeni.has(r)).sort(), [...(beklenenEk[p.anahtar] ?? [])].sort(), `${p.anahtar}: the roles it gained`)
     }
     // WHAT IS SWITCHED ON: the 43 tools of before, the dose calculator again, and the three tools of the country's own
     const { UZ_KAPALI_ARACLAR } = await import('./index')
-    assert.equal(icerik.araclar.length, 47)
+    assert.equal(icerik.araclar.length, 61)
     assert.deepEqual(icerik.araclar.filter((p) => p.anahtar.startsWith('uz-')).map((p) => p.anahtar), [T, H, E])
-    assert.deepEqual(icerik.araclar.filter((p) => p.sinif === 'hekimler').map((p) => p.anahtar), [T, P_])
+    assert.deepEqual(icerik.araclar.filter((p) => p.sinif === 'hekimler').map((p) => p.anahtar), [T])
     for (const k of UZ_KAPALI_ARACLAR) assert.ok(!icerik.araclar.some((p) => p.anahtar === k), k)
   })
 
@@ -189,8 +190,7 @@ describe('Uzbekistan — tools: who sees what, the three scripts, and what is de
     for (const anahtar of ['esi-triyaj', 'rapor-taslagi']) assert.equal(icerik.yuvalar.find((y) => y.anahtar === anahtar)!.lisans?.durum, 'izin-gerekli', anahtar)
   })
 
-  it('THE FOLLOW-UP LIST over the 42-role table: a role sees it exactly when it has a tool whose result can be kept — all 40 doctor roles see it, the 2 allied professions do not', async () => {
-    const { UZ_HEKIM_ROLLERI } = await import('../../klinik/rolListesi')
+  it('THE FOLLOW-UP LIST over the 42-role table: a role sees it exactly when it has a tool whose result can be kept — all 42 roles see it', async () => {
     // a screen of the kit and a link-out tile work nothing out, so nothing of them can be kept (lib/ulke/araclar/kayit.ts)
     const saklanabilir = (anahtar: string) => { const t = P.paketinAraci(icerik, anahtar)!.tanim; return t.tur !== 'ekran' && t.tur !== 'baglanti' }
     const goren: string[] = [], gormeyen: string[] = []
@@ -201,17 +201,16 @@ describe('Uzbekistan — tools: who sees what, the three scripts, and what is de
       assert.equal(Boolean(panel), araciVar, `${rol}: the follow-up list is ${panel ? 'shown' : 'not shown'} and the role ${araciVar ? 'has' : 'has no'} tool whose result can be kept`)
       if (panel) { goren.push(rol); assert.equal(kendi[kendi.length - 1], 'takip-paneli', `${rol}: the list comes after the role's own tools`) } else gormeyen.push(rol)
     }
-    assert.deepEqual([goren.length, gormeyen.length], [40, 2])
-    assert.deepEqual(goren, [...UZ_HEKIM_ROLLERI], 'the list is the tool of every doctor role')
-    // the 2: the allied professions, whose grid is the base tools — a role that gains its first tool must gain the list with it
-    assert.deepEqual(gormeyen.sort(), ['fizyoterapi', 'klinik-psikolog'])
+    assert.deepEqual([goren.length, gormeyen.length], [42, 0])
+    assert.deepEqual(goren, [...roller], 'the list is shown to every role, in the pack\'s order')
     assert.equal(P.hesabinAraci(icerik, null, 'takip-paneli'), null, 'an account without a role has no tool to keep and no list')
     const panel = icerik.araclar.find((p) => p.anahtar === 'takip-paneli')!
-    assert.deepEqual([panel.sinif, panel.roller!.length], ['hekimler', 40])
-    // BEFORE the country's own tools: 26 roles saw it. The 14 doctor roles that gained it have one tool to keep a result of, the body mass index (two of them a second one).
-    const yeniGoren = ['aile-hekimligi', 'alerji-immunoloji', 'cocuk-norolojisi', 'dahiliye', 'diyetoloji', 'fizik-tedavi', 'gastroenteroloji', 'kadin-hastaliklari-dogum', 'kardiyoloji', 'medikal-estetik', 'narkoloji', 'noroloji', 'psikiyatri', 'reproduktoloji']
-    for (const rol of yeniGoren) assert.deepEqual(ROL_ARACLARI[rol].filter((k) => !k.startsWith('uz-')), ['takip-paneli'], rol)
-    assert.equal(roller.filter((r) => ROL_ARACLARI[r].some((k) => k !== 'takip-paneli' && !k.startsWith('uz-'))).length, 26)
+    assert.equal(panel.sinif, undefined, 'an allied profession sees the list, so it is not the doctor-only class')
+    assert.equal(panel.roller!.length, 42)
+    // Roles that still have no specialty tool of the kit, only the country\'s own tools and the list.
+    const yalnizTakip = ['alerji-immunoloji', 'cocuk-norolojisi', 'kadin-hastaliklari-dogum', 'narkoloji', 'reproduktoloji']
+    for (const rol of yalnizTakip) assert.deepEqual(ROL_ARACLARI[rol].filter((k) => !k.startsWith('uz-')), ['takip-paneli'], rol)
+    assert.equal(roller.filter((r) => ROL_ARACLARI[r].some((k) => k !== 'takip-paneli' && !k.startsWith('uz-'))).length, 37)
   })
 
   it('THE AUDIT, LINE BY LINE: every one of the 144 audited tools is done, a slot or absent — as the document says, checked against the pack; the sums are 96, 34 and 14', async () => {
@@ -253,8 +252,12 @@ describe('Uzbekistan — tools: who sees what, the three scripts, and what is de
     const belgesiz = [...acik, ...yuvalar].filter((k) => !hesapli.has(k))
     // tools the table names in a note rather than in its key column: the second and third score of one audited tile, and two half-tools;
     // and the three tools only Uzbekistan has, which the pre-split application did not have and the section names above its table
-    assert.deepEqual(belgesiz.sort(), ['basdai', 'easi', 'iltihap-lab-izlem', 'scorad', E, H, T])
-    for (const k of belgesiz) assert.ok(sonuc.includes('`' + k + '`'), `${k} is in the pack and not mentioned in the outcome table`)
+    // Structural records added after the audit document. They are not rows of that document; the outcome section is left as it was.
+    const yeniYapisal = ['akne-vade', 'birinci-acil-bayrak', 'endoskopi-kaydi', 'estetik-cerrahi-vade', 'estetik-islem-vade', 'icf-ozet', 'inme-bayraklari', 'kardiyo-not', 'kronik-izlem-kaydi', 'lazer-vade', 'makro-kaydi', 'psikiyatri-guvenlik', 'seans-plani', 'sonraki-seans']
+    const belgesizEski = belgesiz.filter((k) => !yeniYapisal.includes(k))
+    assert.deepEqual(belgesizEski.sort(), ['basdai', 'easi', 'iltihap-lab-izlem', 'scorad', E, H, T])
+    for (const k of belgesizEski) assert.ok(sonuc.includes('`' + k + '`'), `${k} is in the pack and not mentioned in the outcome table`)
+    for (const k of yeniYapisal) assert.ok(acik.has(k), `${k} is not switched on`)
   })
 
   it('every text is in its own script, and the three forms are three texts', () => {
