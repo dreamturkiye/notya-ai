@@ -42,7 +42,7 @@ export function DilSecici({ etiket, secenekler, className }: { etiket: string; s
   )
 }
 
-export function UstCubuk({ metin, diller, girisHref, sorovHref, marka, markaEk, ustHref }: { metin: AcilisIcerigi['nav']; diller: readonly DilSecenegi[]; girisHref: string; sorovHref: string; /** The word mark (the pack's). */ marka: string; /** Small word beside the mark, as on the Turkish clinic page. Omitted on the doctor page. */ markaEk?: string; /** The address of the top of the page (the pack's anchor). */ ustHref: string }) {
+export function UstCubuk({ metin, diller, girisHref, sorovHref, marka, markaEk, ustHref, demo }: { metin: AcilisIcerigi['nav']; diller: readonly DilSecenegi[]; girisHref: string; sorovHref: string; /** The word mark (the pack's). */ marka: string; /** Small word beside the mark, as on the Turkish clinic page. Omitted on the doctor page. */ markaEk?: string; /** The address of the top of the page (the pack's anchor). */ ustHref: string; /** NOTYA-ULKE-DEMO-01: the "Book a demo" button, only when the booking link is set (lib/ulke/demo). */ demo?: { href: string; etiket: string } | null }) {
   const [scrolled, setScrolled] = useState(false)
   const [open, setOpen] = useState(false)
 
@@ -86,6 +86,11 @@ export function UstCubuk({ metin, diller, girisHref, sorovHref, marka, markaEk, 
             <a href={girisHref} className="hidden font-outfit text-sm text-ink-2 hover:text-ink lg:inline">
               {metin.giris}
             </a>
+            {demo ? (
+              <Button href={demo.href} variant="outline" size="sm" className="hidden sm:inline-flex">
+                {demo.etiket}
+              </Button>
+            ) : null}
             <Button href={sorovHref} variant="pine" size="sm" className="hidden sm:inline-flex">
               {metin.sorov}
               <ArrowUpRight className="size-3.5" />
@@ -123,6 +128,11 @@ export function UstCubuk({ metin, diller, girisHref, sorovHref, marka, markaEk, 
               <Button href={sorovHref} size="lg" onClick={() => setOpen(false)}>
                 {metin.sorov}
               </Button>
+              {demo ? (
+                <Button href={demo.href} variant="outline" size="lg">
+                  {demo.etiket}
+                </Button>
+              ) : null}
               <Button href={girisHref} variant="outline" size="lg">
                 {metin.girisUzun}
               </Button>
