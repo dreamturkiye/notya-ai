@@ -4,9 +4,11 @@
  *
  *   1. Leak test: nothing of Türkiye — in the rendered page AND in every string of the catalogue, shown at first
  *      paint or not (the typed visits, the menu, the form's messages are not in the first HTML).
- *   2. Uzbekistan's own rules for this page: no trial, no demo, no integration claim, no named law, no voice
- *      profile, no image evaluation, no biography of the assistant, "30 specialties" only as what the product is
- *      designed for.
+ *   2. Uzbekistan's own rules for this page: no trial, no unbuilt-demo claim, no integration claim, no named law,
+ *      no voice profile, no image evaluation, no biography of the assistant, "30 specialties" only as what the
+ *      product is designed for. NOTYA-ULKE-DEMO-01 (Kaan, 2026-10-13): the real "Book a demo" booking feature
+ *      (./yasakliIfadeler.ts's `istisna`) is the one carve-out — it still bans claiming or showing a demo of the
+ *      product itself.
  *   2a. NOTYA-UZ-FIYAT-UNVAN-01 — PRICES: the amounts are the pack's price list, written by the pack's number rules;
  *      each equals the Turkish page's price for the same plan at the recorded rate, rounded as recorded; nothing of
  *      the Turkish currency is anywhere; plans the Turkish page sells by quote carry no amount.
@@ -62,6 +64,10 @@ function metinler(o: unknown, yol = ''): { yol: string; metin: string }[] {
   return Object.entries(o).flatMap(([k, v]) => (KIMLIK.has(k) ? [] : metinler(v, `${yol}.${k}`)))
 }
 const sekil = (o: unknown): unknown => (typeof o === 'string' ? '' : Array.isArray(o) ? o.map(sekil) : o && typeof o === 'object' ? Object.fromEntries(Object.entries(o).map(([k, v]) => [k, KIMLIK.has(k) ? v : sekil(v)])) : o)
+// NOTYA-ULKE-DEMO-01 (Kaan, 2026-10-13): the page also has a 'demo' section, hardcoded (AcilisSayfasi.tsx) right
+// after the hero, exactly where the Turkish page now has its own — but only while the booking link is set. None
+// of this file's renders set NEXT_PUBLIC_DEMO_BOOKING_URL, so it stays off here and 'demo' is correctly absent
+// below; lib/ulke/demo/demo.paket.test.ts covers the page with the link on.
 const BOLUM_SIRASI = [CAPA.ust, CAPA.suhbat, CAPA.qabul, CAPA.portal, CAPA.maslahat, CAPA.jadval, CAPA.yonalish, CAPA.kuzatuv, CAPA.organish, CAPA.xavfsizlik, CAPA.narx, CAPA.sorov]
 const ek = (dil: AcilisDili) => (dil === 'uz-Latn' ? '' : `?dil=${dil}`)
 /** An amount as the pack writes numbers: its own separators, the currency's own decimal places. */
@@ -137,11 +143,14 @@ describe('Uzbekistan landing page', () => {
       for (const { yol, metin } of hepsi) assert.deepEqual(sizintiTara(metin, { hedefUlke: 'uz', kaynak: `catalogue ${dil}${yol}` }), [])
     })
 
-    it(`${dil}: no trial, demo, integration claim, named law, voice profile, image evaluation, foreign currency or biography of the assistant`, () => {
+    it(`${dil}: no trial, unbuilt-demo claim, integration claim, named law, voice profile, image evaluation, foreign currency or biography of the assistant`, () => {
       const gorunen = gorunurMetin(ciz(dil))
       for (const y of UZ_YASAKLI_IFADELER) {
+        // NOTYA-ULKE-DEMO-01: the real "Book a demo" feature's own fixed wording is carved out of this one check
+        // (yasakliIfadeler.ts) before the rule runs — everything else still obeys it, including the catalogue below.
+        const sinanan = y.istisna ? gorunen.replace(y.istisna, '') : gorunen
         // A rule marked for the copy only (an amount written into a sentence) does not apply to the page, which shows the price list.
-        if (!y.yalnizMetin) { assert.doesNotMatch(gorunen, y.desen, y.neden); assert.doesNotMatch(fiyatMetni(dil), y.desen, `${y.neden} — price section`) }
+        if (!y.yalnizMetin) { assert.doesNotMatch(sinanan, y.desen, y.neden); assert.doesNotMatch(fiyatMetni(dil), y.desen, `${y.neden} — price section`) }
         for (const { yol, metin } of metinler(t)) assert.doesNotMatch(metin, y.desen, `${y.neden} — ${yol}`)
       }
       // Numbers. Allowed: section numbers, the clock and the figures of the fictional visits (age, weight, dose),

@@ -24,6 +24,7 @@ import { dilliYol } from '@/lib/ulke/sayfaDili'
 import { YASAL_ANAHTARLARI, YASAL_YOLLAR } from '@/lib/ulke/yasal/tipler'
 import type { AcilisSayfasiProps } from '@/lib/ulke/tipler'
 import { ulkeYolu } from '@/lib/ulke/yol'
+import { demoDugmesi, demoMetni } from '@/lib/ulke/demo'
 import type { AcilisCapasi, AcilisIcerigi, OzellikBolumu, UlkeAcilisi } from '@/lib/ulke/arayuz/acilisTipleri'
 import type { DilGrubu, DilKodu } from '@/lib/ulke/tipler'
 import { tutarYaz } from '@/lib/ulke/arayuz/sayi'
@@ -85,7 +86,7 @@ function Ozellik({ id, b, tone, reverse }: { id: string; b: OzellikBolumu; tone:
   )
 }
 
-function Kahraman({ t, gorsel, c }: { t: AcilisIcerigi['kahraman']; gorsel: string; c: Capalar }) {
+function Kahraman({ t, gorsel, c, demo }: { t: AcilisIcerigi['kahraman']; gorsel: string; c: Capalar; demo: { href: string; etiket: string } | null }) {
   return (
     <section id={c.ust} className="relative bg-paper">
       <div className="mx-auto grid max-w-7xl items-center gap-10 px-5 pb-10 pt-24 sm:px-8 lg:grid-cols-2 lg:gap-14 lg:pb-14 lg:pt-28">
@@ -108,6 +109,12 @@ function Kahraman({ t, gorsel, c }: { t: AcilisIcerigi['kahraman']; gorsel: stri
             <Button href={`#${c.suhbat}`} variant="outline" size="lg" className="w-full sm:w-auto">
               {t.ikinciDugme}
             </Button>
+            {/* NOTYA-ULKE-DEMO-01: booking a call with Dr. Mamur (/demo), only when the booking link is set. */}
+            {demo ? (
+              <Button href={demo.href} variant="outline" size="lg" className="w-full sm:w-auto">
+                {demo.etiket}
+              </Button>
+            ) : null}
           </div>
         </div>
 
@@ -126,6 +133,42 @@ function Kahraman({ t, gorsel, c }: { t: AcilisIcerigi['kahraman']; gorsel: stri
           </li>
         ))}
       </ul>
+    </section>
+  )
+}
+
+/**
+ * NOTYA-ULKE-DEMO-01 — "Book a demo" section right after the hero, same place and markup as the Turkish page's own
+ * demo section (eyebrow, display heading, body, a typographic card, the pine button). Renders nothing while the
+ * booking link (NEXT_PUBLIC_DEMO_BOOKING_URL) is not set, or this pack brings no demo words — the same gate as the
+ * bar and hero buttons (lib/ulke/demo).
+ */
+function DemoBolumu({ dil, demo }: { dil: DilKodu; demo: { href: string; etiket: string } | null }) {
+  if (!demo) return null
+  const m = demoMetni(dil)
+  if (!m) return null
+  const b = m.bolum
+  return (
+    <section id="demo" className="scroll-mt-16 bg-paper-2 py-20 sm:py-28">
+      <div className="mx-auto grid max-w-7xl items-center gap-12 px-5 sm:px-8 lg:grid-cols-2 lg:gap-20">
+        <div className="min-w-0">
+          <p className="font-outfit text-xs uppercase tracking-[0.22em] text-ink-muted">{b.ustBaslik}</p>
+          <h2 className="mt-4 font-display text-display font-medium leading-display tracking-display">
+            {b.baslik}
+            <span className="block italic font-normal text-pine">{b.baslikVurgu}</span>
+          </h2>
+          <p className="mt-6 max-w-md font-outfit text-lede font-light leading-relaxed text-ink-2">{b.govde}</p>
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+            <Button href={demo.href} variant="pine" size="lg" className="w-full sm:w-auto">
+              {demo.etiket}
+              <ArrowUpRight className="size-4" />
+            </Button>
+          </div>
+        </div>
+        <div className="min-w-0">
+          <TypeCard label={b.kartEtiketi} rows={b.satirlar} />
+        </div>
+      </div>
     </section>
   )
 }
@@ -253,15 +296,17 @@ export function AcilisSayfasi({ dil, istenenDil, iletisimEposta, gorseller, acil
   const kayitHref = dilliYol('/signup', dilSec(d))
   const ustDiller = ustDilSecenekleri(a, ulkePaketi().uygulama?.dilGruplari ?? [], d)
   const altDiller = a.diller.map((k) => dilSecenegi(a, k, k === d, '/'))
+  const demo = demoDugmesi(d)
 
   return (
     <div className="uzl" lang={d}>
       {/* eslint-disable-next-line @next/next/no-page-custom-font */}
       <link rel="stylesheet" href={a.fontHref} />
       <div className="relative bg-paper text-ink">
-        <UstCubuk metin={t.nav} diller={ustDiller} girisHref={girisHref} sorovHref={`#${c.sorov}`} marka={a.markaYazisi} ustHref={`#${c.ust}`} />
+        <UstCubuk metin={t.nav} diller={ustDiller} girisHref={girisHref} sorovHref={`#${c.sorov}`} marka={a.markaYazisi} ustHref={`#${c.ust}`} demo={demo} />
         <main>
-          <Kahraman c={c} t={t.kahraman} gorsel={gorseller.xona} />
+          <Kahraman c={c} t={t.kahraman} gorsel={gorseller.xona} demo={demo} />
+          <DemoBolumu dil={d} demo={demo} />
           <Suhbat metin={t.suhbat} capa={c.suhbat} />
           <Ozellik id={c.qabul} b={t.qabul} tone="paper-2" />
           <Ozellik id={c.portal} b={t.portal} tone="paper" reverse />
