@@ -91,6 +91,25 @@
         { "anahtar": "speech-language-therapy", "taraf": "klinik-muttefik", "gibi": "occupational-therapy" }
       ]
     },
+    "nz": {
+      "sutun": "en",
+      "cikar": [],
+      "ekle": [
+        { "anahtar": "urgent-care-medicine", "taraf": "doktor", "gibi": "emergency-medicine" },
+        { "anahtar": "rural-hospital-medicine", "taraf": "doktor", "gibi": "family-medicine" },
+        { "anahtar": "musculoskeletal-medicine", "taraf": "doktor", "gibi": "rehabilitation-medicine" },
+        { "anahtar": "occupational-medicine", "taraf": "doktor", "gibi": "family-medicine" },
+        { "anahtar": "pain-medicine", "taraf": "doktor", "gibi": "rehabilitation-medicine" },
+        { "anahtar": "sexual-health-medicine", "taraf": "doktor", "gibi": "family-medicine" },
+        { "anahtar": "family-planning-reproductive-health", "taraf": "doktor", "gibi": "obstetrics-gynaecology" },
+        { "anahtar": "palliative-medicine", "taraf": "doktor", "gibi": "internal-medicine" },
+        { "anahtar": "oral-maxillofacial-surgery", "taraf": "doktor", "gibi": "plastic-surgery" },
+        { "anahtar": "podiatry", "taraf": "klinik-muttefik", "gibi": "physiotherapy" },
+        { "anahtar": "osteopathy", "taraf": "klinik-muttefik", "gibi": "physiotherapy" },
+        { "anahtar": "chiropractic", "taraf": "klinik-muttefik", "gibi": "physiotherapy" },
+        { "anahtar": "psychotherapy", "taraf": "klinik-muttefik", "gibi": "clinical-psychology" }
+      ]
+    },
     "us": {
       "sutun": "en",
       "cikar": ["clinic-dermatology"],

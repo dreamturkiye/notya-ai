@@ -141,6 +141,37 @@ export async function hastaOlustur(supabase: SupabaseClient, doktorId: string, h
   return birlestir(h as HastaSatiri, ek)
 }
 
+/**
+ * Replaces the identity fields of ONE patient of THIS doctor. The id and the doctor are matched in the same
+ * statement. A foreign id and a missing id both answer null. Fields the pack does not have are dropped first.
+ */
+export async function hastaGuncelle(supabase: SupabaseClient, doktorId: string, hastaId: string, ham: HastaGirdisi): Promise<Hasta | null> {
+  const g = hastaGirdisiniSuz(ham)
+  const { data: h, error } = await ulkeTablosu(supabase, 'ulke_hastalar')
+    .update({
+      name_encrypted: encrypt(JSON.stringify({ ad: g.ad })),
+      dob_encrypted: g.dogumTarihi ? encrypt(g.dogumTarihi) : null,
+      gender_encrypted: g.cinsiyet ? encrypt(g.cinsiyet) : null,
+      phone_encrypted: g.telefon ? encrypt(g.telefon) : null,
+    })
+    .eq('id', hastaId)
+    .eq('doctor_id', doktorId)
+    .select(HASTA_KOLONLARI)
+    .maybeSingle()
+  if (error || !h) return null
+  const ek = {
+    ota_ismi_encrypted: g.otaIsmi ? encrypt(g.otaIsmi) : null,
+    dil: g.dil,
+    ulusal_kimlik_encrypted: g.ulusalKimlik ? encrypt(g.ulusalKimlik) : null,
+  }
+  const { data: varOlan } = await ulkeTablosu(supabase, 'hasta_ulke_bilgisi').select('patient_id').eq('patient_id', hastaId).eq('doctor_id', doktorId).maybeSingle()
+  const { error: ekHatasi } = varOlan
+    ? await ulkeTablosu(supabase, 'hasta_ulke_bilgisi').update(ek).eq('patient_id', hastaId).eq('doctor_id', doktorId)
+    : await ulkeTablosu(supabase, 'hasta_ulke_bilgisi').insert({ patient_id: hastaId, doctor_id: doktorId, ...ek })
+  if (ekHatasi) return null
+  return birlestir(h as HastaSatiri, { patient_id: hastaId, ...ek })
+}
+
 /** One patient of THIS doctor, or null — for a foreign id exactly as for an id that does not exist. */
 export async function hastaGetir(supabase: SupabaseClient, doktorId: string, hastaId: string): Promise<Hasta | null> {
   const { data: h, error } = await ulkeTablosu(supabase, 'ulke_hastalar').select(HASTA_KOLONLARI).eq('id', hastaId).eq('doctor_id', doktorId).maybeSingle()

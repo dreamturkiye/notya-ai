@@ -268,10 +268,10 @@ describe('Uzbekistan — the tools only this country has, in the pack: who sees 
       for (const r of ['fizyoterapi', 'klinik-psikolog']) assert.equal(P.hesabinAraci(icerik, r, k), null, `${k}: ${r}`)
       assert.notEqual(icerik.araclar.find((p) => p.anahtar === k)!.roller, null, `${k} is a base tool`)
     }
-    // BEFORE → NOW, three doctors: a cardiologist had the three base tools only; a family doctor too; a paediatrician had the expected height
+    // three doctors, after the structural tools: cardiology keeps a note; family medicine a chronic record and danger signs; paediatrics the height and dose tools
     const kendi = (rol: string) => P.hesabinAraclari(icerik, rol).rol.map((x) => x.tanim.anahtar)
-    assert.deepEqual(kendi('kardiyoloji'), ['uz-tana-vazni-indeksi', 'takip-paneli'])
-    assert.deepEqual(kendi('aile-hekimligi'), ['uz-tana-vazni-indeksi', 'uz-homiladorlik-muddati', 'uz-emlash-qaydi', 'takip-paneli'])
+    assert.deepEqual(kendi('kardiyoloji'), ['kardiyo-not', 'uz-tana-vazni-indeksi', 'takip-paneli'])
+    assert.deepEqual(kendi('aile-hekimligi'), ['kronik-izlem-kaydi', 'birinci-acil-bayrak', 'uz-tana-vazni-indeksi', 'uz-homiladorlik-muddati', 'uz-emlash-qaydi', 'takip-paneli'])
     assert.deepEqual(kendi('pediatri'), ['hedef-boy', 'doz-hesabi', 'uz-tana-vazni-indeksi', 'uz-emlash-qaydi', 'takip-paneli'])
   })
 

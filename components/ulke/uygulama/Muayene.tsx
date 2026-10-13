@@ -49,6 +49,7 @@ export function muayeneHataMetni(m: UygulamaMetni, kod: string | null): string |
   const harita: Record<string, string> = {
     RIZA_GEREKLI: v.rizaGerekli, KISA_KAYIT: v.kisaKayit, SES_OKUNAMADI: v.sesOkunamadi, LIMIT: v.limit, HAZIR_DEGIL: v.hazirDegil,
     NOT_FOUND: m.hasta.bulunamadi, MIKROFON: v.mikrofonYok, BAGLANTI: m.kabuk.baglanti, NOT_YAZILAMADI: v.notYazilamadi,
+    SES_BUYUK: v.sesBuyuk, SES_TUR: v.sesTur,
   }
   return harita[kod] ?? m.kabuk.hata
 }
@@ -108,12 +109,16 @@ export function HastaSecGorunumu({ m, q, hastalar, hata }: { m: UygulamaMetni; q
 
 export type KayitDurumu = 'hazir' | 'kayit' | 'yukleniyor' | 'isleniyor'
 
-export function KayitGorunumu({ m, hasta, sablon, riza, setRiza, durum, sure, hataKodu, baslat, durdur, vazgec, rol, randevu }: {
+const SES_AZAMI = 25 * 1024 * 1024
+
+export function KayitGorunumu({ m, hasta, sablon, riza, setRiza, durum, sure, hataKodu, baslat, durdur, vazgec, rol, randevu, dosyaSec }: {
   /** NOTYA-UZ-RANDEVU-01: the appointment this visit is started from, if any — shown, and where "back" leads. */
   randevu?: Pick<RandevuKaydi, 'id' | 'gun' | 'saat'> | null
   m: UygulamaMetni; hasta: Pick<HastaKaydi, 'id' | 'ad' | 'otaIsmi'>; /** The template the note will be written with: shown, not chosen. */ sablon: string
   riza: boolean; setRiza: (r: boolean) => void; durum: KayitDurumu; sure: number; hataKodu: string | null
   baslat: () => void; durdur: () => void; vazgec: () => void
+  /** An audio file the doctor already has. Same consent and the same upload as a recording just made. */
+  dosyaSec?: (dosya: File) => void
   /** NOTYA-UZ-BRANSLAR-01: the account's role — names the assistant that will prepare the note. No role = the neutral assistant. */
   rol?: string | null
 }) {
@@ -137,6 +142,13 @@ export function KayitGorunumu({ m, hasta, sablon, riza, setRiza, durum, sure, ha
             <button type="button" className="uza-dugme" disabled={!riza} onClick={baslat}>{v.kayitBaslat}</button>
             {riza ? null : <p className="uza-ipucu" id="uza-riza-ipucu">{v.rizaGerekli}</p>}
           </div>
+          {dosyaSec ? (
+            <div data-alan="ses-dosyasi" data-yazdirma-gizle>
+              <label className="uza-etiket" htmlFor="uza-ses-dosyasi">{v.sesDosyasi}</label>
+              <input id="uza-ses-dosyasi" type="file" accept="audio/*" className="uza-girdi" disabled={!riza || durum !== 'hazir'} onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) dosyaSec(f) }} />
+              <p className="uza-ipucu">{v.sesDosyasiIzoh}</p>
+            </div>
+          ) : null}
           <p className="uza-ipucu"><a className="uza-baglanti" href={randevu ? takvimYolu({ randevu: randevu.id }) : `${YOL.hasta}?id=${hasta.id}`}>{m.kabuk.geri}</a></p>
         </div>
       ) : durum === 'kayit' ? (
@@ -240,6 +252,15 @@ function YeniMuayene({ u, hastaId, randevuId }: { u: ReturnType<typeof useUygula
     setDurum('yukleniyor')
   }
 
+  function dosyaSec(dosya: File) {
+    if (!riza) { setHataKodu('RIZA_GEREKLI'); return }
+    if (!dosya.type.startsWith('audio/')) { setHataKodu('SES_TUR'); return }
+    if (dosya.size > SES_AZAMI) { setHataKodu('SES_BUYUK'); return }
+    setHataKodu(null)
+    setDurum('yukleniyor')
+    void gonder(dosya)
+  }
+
   async function gonder(ses: Blob) {
     const geri = (kod: string) => { parcalar.current = []; setHataKodu(kod); setDurum('hazir') }
     try {
@@ -249,7 +270,8 @@ function YeniMuayene({ u, hastaId, randevuId }: { u: ReturnType<typeof useUygula
       if (!supabase || !hesapId) { u.cikis(); return }
       // The recording goes to the doctor's OWN folder; the storage policy accepts nothing else.
       const ad = (typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`)
-      const yol = `${sesKlasoru(hesapId)}/${ad}.${ses.type.includes('mp4') ? 'm4a' : 'webm'}`
+      const uzanti = ses.type.includes('mp4') || ses.type.includes('m4a') ? 'm4a' : ses.type.includes('mpeg') || ses.type.includes('mp3') ? 'mp3' : ses.type.includes('wav') ? 'wav' : ses.type.includes('ogg') ? 'ogg' : 'webm'
+      const yol = `${sesKlasoru(hesapId)}/${ad}.${uzanti}`
       const { error } = await supabase.storage.from(MUAYENE_SES_KOVASI).upload(yol, ses, { contentType: ses.type || 'audio/webm' })
       if (error) { geri('SES_OKUNAMADI'); return }
       setDurum('isleniyor')
@@ -272,7 +294,7 @@ function YeniMuayene({ u, hastaId, randevuId }: { u: ReturnType<typeof useUygula
   }
   return (
     <>
-      <KayitGorunumu m={u.m} hasta={hasta} sablon={sablon} randevu={randevu} riza={riza} setRiza={(r) => { setRiza(r); setHataKodu(null) }} durum={durum} sure={sure} hataKodu={hataKodu} baslat={baslat} durdur={durdur} vazgec={vazgec} rol={u.hesap?.rol} />
+      <KayitGorunumu m={u.m} hasta={hasta} sablon={sablon} randevu={randevu} riza={riza} setRiza={(r) => { setRiza(r); setHataKodu(null) }} durum={durum} sure={sure} hataKodu={hataKodu} baslat={baslat} durdur={durdur} vazgec={vazgec} rol={u.hesap?.rol} dosyaSec={dosyaSec} />
       {/* NOTYA-ULKE-INTAKE-01: what the patient wrote before the visit, to read while it is recorded. Never sent to the model. */}
       {formAcik() ? <HastaFormuKarti u={u} hastaId={hasta.id} mod="muayene" /> : null}
     </>

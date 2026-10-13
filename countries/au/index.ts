@@ -11,8 +11,11 @@
  */
 import { paketMetinleri, type UlkePaketi } from '@/lib/ulke/tipler'
 import { enCekirdek } from '../_dil/en/cekirdek'
+import { enKlinikHesaplari } from '../_dil/en/klinikHesaplari'
 import { enRolAnahtarlari } from '../_dil/en/klinik/roller'
+import { enMesajAyarlari } from '../_dil/en/mesaj'
 import { AU_ROL_LISTESI } from './klinik/rolListesi'
+import { AU_RESMI_GUNLER } from './resmiGunler'
 import { AU_BIRIMLER, AU_VELI_YASI } from './temel'
 
 const cekirdek = enCekirdek('en-AU')
@@ -48,8 +51,9 @@ export const AU_PAKETI: UlkePaketi = {
   // THE PATIENT IDENTIFIER: an OPTIONAL FREE-TEXT field, stored encrypted and never validated (`dogrula: false`
   // below). `hane: 0` = no length is assumed. The label is the national data element's name (./ayarlar.ts).
   ulusalKimlik: { ad: 'Medicare card number', hane: 0, gecerliMi: (ham) => String(ham ?? '').trim().length > 0 },
-  // Fail closed: what the country kit has built is on; everything else (the assistant in text and voice, the voice
-  // profile, image evaluation, consultation, messaging) is off.
+  // Fail closed. Messages stay on the patient's page (no outbound channel). Clinic accounts are on, with starting
+  // values a lawyer has not read. Still off: the assistant in text and voice, the voice profile, image evaluation,
+  // consultation between doctors, and a doctor's own templates.
   ozellikler: {
     acilisSayfasi: true,
     cekirdekGiris: true,
@@ -60,11 +64,13 @@ export const AU_PAKETI: UlkePaketi = {
     hastaPortali: true,
     hastaFormu: true,
     araclar: true,
+    hastaMesajlari: true,
+    klinikHesaplari: true,
   },
   araclar: [],
   // The ONLY paths that exist in this country's deployment; every other path answers 404 in the middleware.
   rotalar: {
-    sayfalar: ['/', '/login', '/signup', '/welcome', '/start', '/today', '/settings', '/patients', '/patients/new', '/patient', '/visit', '/calendar', '/portal', '/tools'],
+    sayfalar: ['/', '/for-clinics', '/login', '/signup', '/welcome', '/start', '/today', '/settings', '/patients', '/patients/new', '/patient', '/visit', '/calendar', '/portal', '/tools', '/clinic', '/desk', '/privacy', '/terms', '/cookies', '/data-request', '/accessibility', '/medical-disclaimer', '/security'],
     apiOnEkleri: ['/api/ulke/'],
   },
   // The path of the main site this country is served under.
@@ -79,6 +85,7 @@ export const AU_PAKETI: UlkePaketi = {
   yuzeyler: metin.yuzeyler,
   metinler: metin.metinler,
   dilAdlari: { 'en-AU': 'English' },
+  resmiGunler: AU_RESMI_GUNLER,
   uygulama: {
     diller: ['en-AU'],
     hastaDilleri: ['en'],
@@ -86,7 +93,7 @@ export const AU_PAKETI: UlkePaketi = {
     // surgical roles split along the Medical Board's line, one clinic role removed, seven roles added.
     roller: enRolAnahtarlari(AU_ROL_LISTESI),
     // STARTING VALUES, to verify with a local clinical lead (checklist J4). An account changes all of it for itself.
-    // PUBLIC HOLIDAYS are deliberately absent: they are local content (and differ between the states and territories).
+    // The working pattern does not close a public day. National days and the state selector are `resmiGunler` on this pack.
     randevu: {
       varsayilan: { gunler: [1, 2, 3, 4, 5], baslangic: '09:00', bitis: '17:00', sureDk: 30, molalar: [{ baslangic: '12:00', bitis: '13:00' }] },
       sureSecenekleri: [10, 15, 20, 30, 45, 60, 90],
@@ -97,6 +104,8 @@ export const AU_PAKETI: UlkePaketi = {
     // Not yet confirmed by a person of the country. The national health advice line is NOT named: the patient's page
     // has one place for one number. null here = the patient's page names no number.
     portal: { baglantiGecerlilikGun: 30, acilNumara: '000' },
+    mesaj: enMesajAyarlari('Australia'),
+    klinikHesaplari: enKlinikHesaplari(AU_ROL_LISTESI),
     // One language in one script: no account is asked a language question.
     dilGruplari: [{ temel: 'en', bicimler: [{ yazi: null, dil: 'en-AU' }] }],
     // Several time zones: an account chooses its own (settings). One zone for each state's and mainland territory's

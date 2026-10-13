@@ -178,7 +178,7 @@ describe('Uzbekistan — the intake form: questions of the core set and of the 4
     assert.deepEqual(Object.fromEntries(UZ_ROLLER.filter((r) => setAnahtari(r) !== r).map((r) => [r, setAnahtari(r)])), { 'damar-cerrahisi': 'kalp-damar-cerrahisi', 'alerji-immunoloji': 'dahiliye', reproduktoloji: 'kadin-hastaliklari-dogum', 'cocuk-norolojisi': 'noroloji', narkoloji: 'psikiyatri', diyetoloji: 'diyetisyen', surdoloji: 'odyoloji' })
     for (const k of ['sac-ekimi', 'longevity', 'ergoterapi']) assert.equal(UZ_HASTA_FORMU.roller[k], undefined, `${k}: the set of a role the audit took out is still there`)
     const cekirdek = new Set(UZ_HASTA_FORMU.cekirdek.bolumler.flatMap((b) => b.sorular.map((q) => q.anahtar)))
-    assert.equal(cekirdek.size, 23, 'the core questions')
+    assert.equal(cekirdek.size, 42, 'the core questions')
     const isaretler = new Map<string, string>()
     const sahibi = new Map<string, string>()
     let toplam = 0
@@ -187,7 +187,7 @@ describe('Uzbekistan — the intake form: questions of the core set and of the 4
       assert.ok(set, `${rol}: no set`)
       const r = UZ_HASTA_FORMU.roller[set!]
       assert.deepEqual(r.inceleme, { makineYazimi: true, klinisyen: null }, `${rol}: the set must say it is machine-written and unread`)
-      assert.ok(r.sorular.length >= 4 && r.sorular.length <= 9, `${rol}: ${r.sorular.length} questions`)
+      assert.ok(r.sorular.length >= 6 && r.sorular.length <= 20, `${rol}: ${r.sorular.length} questions`)
       // a set that two roles ask is counted, and held to its one mark, once
       // One mark per role, and every key of the role under it: a key can belong to one set only.
       const isaret = new Set(r.sorular.map((q) => q.anahtar.split('_')[0]))
@@ -227,8 +227,8 @@ describe('Uzbekistan — the intake form: questions of the core set and of the 4
         }
       }
     }
-    // 228 questions in 40 sets until 2026-10-10; the three sets that left held 7, 7 and 5
-    assert.equal(toplam, 209, 'the role questions of the 37 sets')
+    // 209 until 2026-10-11, then a red-flag box and two depth questions on every set, plus a safety question on psychiatry and psychology
+    assert.equal(toplam, 322, 'the role questions of the 37 sets')
     assert.equal(isaretler.size, 37)
     // A key that is no role any more gets no role section, though a set may still stand under it: the kit asks for a ROLE first.
     for (const k of ['sac-ekimi', 'longevity', 'ergoterapi', 'diyetisyen', 'odyoloji']) assert.equal(setAnahtari(k) !== null && UZ_ROLLER.includes(k), false, k)
@@ -278,18 +278,25 @@ describe('Uzbekistan — the intake form: questions of the core set and of the 4
     const hepsi = butunMetinler()
     for (const [yer, m] of hepsi) {
       const lat = m['uz-Latn'], kirVeRu = `${m['uz-Cyrl']} ${m.ru}`
-      // Identity, payer, insurance: not asked in any wording.
-      assert.doesNotMatch(lat, /pasport|JSHSHIR|PINFL|sugʻurta|polis\b|guvohnoma|T\.?C\.?\b|SGK|KVKK|e-?Nabız/i, `${yer}: identity or insurance ("${lat}")`)
-      assert.doesNotMatch(kirVeRu, /паспорт|ЖШШИР|ПИНФЛ|суғурта|страхов|полис(?!ист)|гувоҳнома|свидетельств/i, `${yer}: identity or insurance ("${kirVeRu}")`)
+      // Turkish identity terms stay out of every wording. This country's document and state-cover questions live only in core/shaxs.
+      assert.doesNotMatch(`${lat} ${kirVeRu}`, /T\.?C\.?\b|SGK|KVKK|e-?Nabız|MEDULA/i, `${yer}: a Turkish term`)
+      if (!yer.startsWith('core/shaxs')) {
+        assert.doesNotMatch(lat, /pasport|JSHSHIR|PINFL|sugʻurta|polis\b|guvohnoma/i, `${yer}: identity or insurance ("${lat}")`)
+        assert.doesNotMatch(kirVeRu, /паспорт|ЖШШИР|ПИНФЛ|суғурта|страхов|полис(?!ист)|гувоҳнома|свидетельств/i, `${yer}: identity or insurance ("${kirVeRu}")`)
+      }
       // No dose, strength or frequency of a medicine; no percentage; no age band that would be a schedule.
       assert.doesNotMatch(`${lat} ${kirVeRu}`, /\d\s*(mg|mkg|ml|мг|мкг|мл|ME\b|МЕ\b|ХБ\b|%)/, `${yer}: a dose or a percentage`)
       assert.doesNotMatch(`${lat} ${kirVeRu}`, /\d+\s*[-–]\s*\d+\s*(yosh|oy|ёш|ой|лет|мес)/, `${yer}: an age band`)
-      // An emergency number, a web address or a phone number is never part of a question.
-      assert.doesNotMatch(`${lat} ${kirVeRu}`, /\b10[1-4]\b|\b112\b|https?:|www\.|\+\d/, `${yer}: a number to call or an address`)
+      // 103 is allowed only in the help line of a red-flag or safety question. 101, 102, 104 and 112 are not.
+      const acilYordam = /_(rf|safety) \(help\)$/.test(yer)
+      assert.doesNotMatch(`${lat} ${kirVeRu}`, acilYordam ? /\b10[124]\b|\b112\b|https?:|www\.|\+\d/ : /\b10[1-4]\b|\b112\b|https?:|www\.|\+\d/, `${yer}: a number to call or an address`)
     }
-    // Digits appear only where a scale's two ends are described in words (0 … 10), and nowhere else.
+    // Digits appear on a described 0–10 scale, or as 103 in a red-flag or safety help line.
     const rakamli = hepsi.filter(([, m]) => /\d/.test(m['uz-Latn']))
-    for (const [yer, m] of rakamli) assert.match(m['uz-Latn'], /\(0 — [^)]+, 10 — [^)]+\)/, `${yer}: a digit outside a described 0–10 scale ("${m['uz-Latn']}")`)
+    for (const [yer, m] of rakamli) {
+      const faqat103 = /_(rf|safety) \(help\)$/.test(yer) && (m['uz-Latn'].match(/\d+/g) ?? []).every((d) => d === '103')
+      if (!faqat103) assert.match(m['uz-Latn'], /\(0 — [^)]+, 10 — [^)]+\)/, `${yer}: a digit outside a described 0–10 scale ("${m['uz-Latn']}")`)
+    }
     // A measure is asked in the PACK's unit: the kit writes the unit beside the field, the question never does.
     const olculer: [string, Soru][] = [...UZ_HASTA_FORMU.cekirdek.bolumler.flatMap((b) => b.sorular.map((q) => [`core/${b.anahtar}`, q] as [string, Soru])), ...Object.entries(UZ_HASTA_FORMU.roller).flatMap(([rol, r]) => r.sorular.map((q) => [rol, q] as [string, Soru]))].filter(([, q]) => q.tur === 'sayi' && Boolean(q.olcu))
     for (const o of ['boy', 'agirlik', 'sicaklik']) assert.ok(olculer.some(([, q]) => q.tur === 'sayi' && q.olcu === o), `no question asks the measure "${o}" in the pack's unit`)

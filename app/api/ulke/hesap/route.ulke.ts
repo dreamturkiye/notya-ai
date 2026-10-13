@@ -6,6 +6,7 @@
  *   200 { ulke, dil, durum: 'bekletme', ad }                         where the application is not switched on
  *   200 { ulke, dil, durum: 'uygulama', ad, notDili, dilSoruldu }    where it is (feature `cekirdekMuayene`);
  *       plus { saatDilimi, saatDilimleri } where the country has more than one time zone
+ *       plus { meslekKaydi } only when the account has a non-empty professional registration of an accepted shape
  *   401 { code: 'OTURUM_YOK' }    no session, an invalid one, or an account stamped with another country
  *   403 { code: 'HESAP_REDDI' }   a session whose country account row is missing or belongs to another country
  *
@@ -19,6 +20,7 @@ import { HESAP_REDDI_KODU } from '@/lib/ulke/hesapUlkesi'
 import { aktifUlke, dilSec, ozellikAcik, ulkePaketi } from '@/lib/ulke/ulke'
 import { saatDilimiMi, saatDilimleri } from '@/lib/ulke/uygulama/saatDilimi'
 import { dilTercihleriniOku } from '@/lib/ulke/uygulama/dilTercihleri'
+import { meslekKaydiOku } from '@/lib/ulke/uygulama/meslekKaydi'
 import { ulkeTablosu } from '@/lib/ulke/uygulama/tablolar'
 
 export const dynamic = 'force-dynamic'
@@ -45,5 +47,6 @@ export const GET = sinirda('hesap GET', async (req: NextRequest) => {
   // say: the pack's zone is the only one). Its choice when that is one of the pack's zones, otherwise the default.
   const dilimler = saatDilimleri()
   const saatDilimi = dilimler.length > 1 ? { saatDilimi: saatDilimiMi(s.saat_dilimi) ? s.saat_dilimi : ulkePaketi().saatDilimi, saatDilimleri: dilimler } : {}
-  return cevap({ ulke: aktifUlke(), dil: t.arayuzDili, durum: 'uygulama', ad, notDili: t.notDili, dilSoruldu: t.soruldu, ...saatDilimi }, 200)
+  const meslekKaydi = meslekKaydiOku(oturum.user.user_metadata)
+  return cevap({ ulke: aktifUlke(), dil: t.arayuzDili, durum: 'uygulama', ad, notDili: t.notDili, dilSoruldu: t.soruldu, ...saatDilimi, ...(meslekKaydi ? { meslekKaydi } : {}) }, 200)
 })

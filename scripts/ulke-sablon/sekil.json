@@ -70,7 +70,11 @@
    "yukleniyor": "$m",
    "hata": "$m",
    "baglanti": "$m",
-   "geri": "$m"
+   "geri": "$m",
+   "calismaAlani": "$m",
+   "diger": "$m",
+   "kas": "$m",
+   "onBuroKas": "$m"
   },
   "diller": {
    "$dil": "temel"
@@ -98,6 +102,9 @@
    "kaydediliyor": "$m",
    "kaydedildi": "$m",
    "kaydedilemedi": "$m",
+   "meslekKaydi": "$m",
+   "meslekKaydiIzoh": "$m",
+   "meslekKaydiGecersiz": "$m",
    "saatDilimi": {
     "$istege": "REQUIRED if the country has more than one time zone (uygulama.saatDilimleri): label of the setting"
    },
@@ -123,6 +130,49 @@
    "muayeneBaslat": "$m",
    "hastasiz": "$m",
    "tumHastalar": "$m"
+  },
+  "pano": {
+   "sabah": "$m",
+   "gun": "$m",
+   "aksam": "$m",
+   "gece": "$m",
+   "hizliAraclar": "$m",
+   "hizliErisim": "$m",
+   "bugun": "$m",
+   "buHafta": "$m",
+   "randevuEkle": "$m",
+   "haftaYok": "$m",
+   "planYok": "$m",
+   "kpiMuayene": "$m",
+   "kpiMuayeneAlt": "$m",
+   "kpiOnay": "$m",
+   "kpiOnayAlt": "$m",
+   "kpiAy": "$m",
+   "kpiAyAlt": "$m",
+   "kpiHasta": "$m",
+   "kpiHastaAlt": "$m",
+   "haftaOzeti": "$m",
+   "haftaSeans": "$m",
+   "haftaOnay": "$m",
+   "haftaBekleyen": "$m",
+   "tumunuGor": "$m",
+   "onayBekleyen": "$m",
+   "epikriz": "$m",
+   "kodlama": "$m",
+   "raporlar": "$m",
+   "mesajlar": "$m",
+   "belgeler": "$m",
+   "inceleme": "$m",
+   "odeme": "$m",
+   "aktif": "$m",
+   "pasif": "$m",
+   "ayarKas": "$m",
+   "ayarAciklama": "$m",
+   "asistanaSor": "$m",
+   "fisilti": "$m",
+   "fisiltiBos": "$m",
+   "asistanAc": "$m",
+   "belgeYukle": "$m"
   },
   "hastalar": {
    "baslik": "$m",
@@ -163,7 +213,9 @@
    "taslaklar": "$m",
    "notsuzlar": "$m",
    "notsuz": "$m",
-   "ac": "$m"
+   "ac": "$m",
+   "duzenle": "$m",
+   "duzenlendi": "$m"
   },
   "muayene": {
    "baslik": "$m",
@@ -200,7 +252,11 @@
    "notHazirla": "$m",
    "notYaziliyor": "$m",
    "notuAc": "$m",
-   "hastaSec": "$m"
+   "hastaSec": "$m",
+   "sesDosyasi": "$m",
+   "sesDosyasiIzoh": "$m",
+   "sesBuyuk": "$m",
+   "sesTur": "$m"
   },
   "not": {
    "baslik": "$m",
@@ -227,7 +283,28 @@
    "kaydedilemedi": "$m",
    "onaylanamadi": "$m",
    "zatenOnayli": "$m",
-   "ikinciTaslak": "$m"
+   "ikinciTaslak": "$m",
+   "ekBaslik": "$m",
+   "ekIzoh": "$m",
+   "ekKaydet": "$m",
+   "ekKaydedildi": "$m",
+   "ekKaydedilemedi": "$m",
+   "ekTaslak": "$m",
+   "yazdir": "$m",
+   "disaAktar": "$m",
+   "kopyaIzoh": "$m",
+   "sil": "$m",
+   "silOnay": "$m",
+   "silindi": "$m",
+   "silinemedi": "$m",
+   "silOnayli": "$m",
+   "kapaliBaslik": "$m",
+   "kapaliIzoh": "$m",
+   "kapaliKodlama": "$m",
+   "kapaliRecete": "$m",
+   "kapaliIlac": "$m",
+   "kapaliTalep": "$m",
+   "kapaliDevlet": "$m"
   },
   "asistan": {
    "etiket": "$m",
@@ -1056,6 +1133,11 @@
    "yapilamadi": "$m",
    "bekliyor": "$m",
    "kapat": "$m"
+  },
+  "saklama": {
+   "baslik": "$m",
+   "aciklama": "$m",
+   "sahip": "$m"
   }
  },
  "acilis": {
@@ -1645,8 +1727,150 @@
    "havolalar": "$m",
    "giris": "$m",
    "kayit": "$m",
+   "klinik": "$m",
    "haklar": "$m",
-   "diller": "$m"
+   "diller": "$m",
+   "yasal": [
+    "$m",
+    "$m",
+    "$m",
+    "$m",
+    "$m",
+    "$m",
+    "$m"
+   ]
+  },
+  "klinik": {
+   "meta": {
+    "baslik": "$m",
+    "aciklama": "$m"
+   },
+   "markaEk": "$m",
+   "nav": {
+    "bolumler": "$m",
+    "mobil": "$m",
+    "dil": "$m",
+    "havolalar": [
+     {
+      "capa": {
+       "$capa": "klinikPortal"
+      },
+      "etiket": "$m",
+      "no": {
+       "$sabit": "01"
+      }
+     },
+     {
+      "capa": {
+       "$capa": "klinikDallar"
+      },
+      "etiket": "$m",
+      "no": {
+       "$sabit": "02"
+      }
+     },
+     {
+      "capa": {
+       "$capa": "klinikFiyat"
+      },
+      "etiket": "$m",
+      "no": {
+       "$sabit": "03"
+      }
+     }
+    ],
+    "giris": "$m",
+    "girisUzun": "$m",
+    "sorov": "$m",
+    "menyuAc": "$m",
+    "menyuYop": "$m"
+   },
+   "kahraman": {
+    "ustBaslik": "$m",
+    "baslik": "$m",
+    "baslikVurgu": "$m",
+    "giris": "$m",
+    "birinciDugme": "$m",
+    "ikinciDugme": "$m",
+    "gorselAlt": "$m",
+    "gorselAlti": "$m"
+   },
+   "portal": {
+    "ustBaslik": "$m",
+    "baslik": "$m",
+    "baslikVurgu": "$m",
+    "govde": "$m",
+    "maddeler": [
+     "$m",
+     "$m",
+     "$m"
+    ],
+    "kart": {
+     "etiket": "$m",
+     "satirlar": [
+      {
+       "k": "$m"
+      },
+      {
+       "k": "$m"
+      },
+      {
+       "k": "$m"
+      },
+      {
+       "k": "$m"
+      },
+      {
+       "k": "$m"
+      }
+     ],
+     "not": "$m"
+    }
+   },
+   "dallar": {
+    "ustBaslik": "$m",
+    "baslik": "$m",
+    "baslikVurgu": "$m",
+    "govde": "$m",
+    "royxatEtiketi": "$m",
+    "royxat": [
+     "$m",
+     "$m",
+     "$m",
+     "$m",
+     "$m"
+    ]
+   },
+   "guven": "$m",
+   "fiyat": {
+    "ustBaslik": "$m",
+    "baslik": "$m",
+    "baslikVurgu": "$m"
+   },
+   "cta": {
+    "ustBaslik": "$m",
+    "baslik": "$m",
+    "baslikVurgu": "$m",
+    "govde": "$m",
+    "ikinciDugme": "$m"
+   },
+   "altBilgi": {
+    "tanim": "$m",
+    "havolalar": "$m",
+    "doktor": "$m",
+    "giris": "$m",
+    "haklar": "$m",
+    "diller": "$m",
+    "yasal": [
+     "$m",
+     "$m",
+     "$m",
+     "$m",
+     "$m",
+     "$m",
+     "$m"
+    ]
+   }
   }
  }
 }

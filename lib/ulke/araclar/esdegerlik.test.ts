@@ -21,7 +21,7 @@ import assert from 'node:assert/strict'
 import { ORNEK_BUGUN, ORNEK_PARAMETRELER, ornekGirdiler, ornekOrtam } from '../testing/aracOrnekleri'
 import { KIT_ARACLARI, kitAraci } from './katalog'
 import type { AracGirdisi, AracSonucu } from './tipler'
-import { gunEkle, isaretliler } from './yardimci'
+import { isaretliler } from './yardimci'
 import * as K1 from './tanimlar/acilAnesteziBeyin'
 import { ESI_KAYNAKLAR, esiSkorla } from '@/specialties/acil-tip/engines/esi'
 import { KRITIK_MADDELER, KRITIK_YOLLAR, kritikYolSkorla } from '@/specialties/acil-tip/engines/kritikYol'
@@ -211,8 +211,8 @@ SATIRLAR_2: {
         return { tamam: Object.keys(tarihler).length > 0, tarihler }
       },
     },
-    { arac: 'antibiyotik-sure', karsilik: 'specialties/enfeksiyon-hastaliklari/engines/atbSure.ts → atbHesapla (THE KIT\'S LAST DAY IS ONE DAY EARLIER: the first day is day 1; see DELIBERATE DIFFERENCES)', listeler: [],
-      onlar: (g) => { const r = atbHesapla(g.baslangic as string | null, g.sure_gun as number | null, g.kontrol as string | null); const bitis = r.tamamMi && r.kart.bitis ? gunEkle(r.kart.bitis, -1) : null; return { tamam: r.tamamMi, tarihler: r.tamamMi ? dolu({ bitis, kontrol: typeof g.kontrol === 'string' ? r.kart.kontrol : bitis }) : {} } } },
+    { arac: 'antibiyotik-sure', karsilik: 'specialties/enfeksiyon-hastaliklari/engines/atbSure.ts → atbHesapla (the first day is day 1 in both, since the pre-split application was corrected)', listeler: [],
+      onlar: (g) => { const r = atbHesapla(g.baslangic as string | null, g.sure_gun as number | null, g.kontrol as string | null); return { tamam: r.tamamMi, tarihler: r.tamamMi ? dolu({ bitis: r.kart.bitis, kontrol: typeof g.kontrol === 'string' ? r.kart.kontrol : r.kart.bitis }) : {} } } },
     { arac: 'viral-izlem', karsilik: 'specialties/enfeksiyon-hastaliklari/engines/viralIzlem.ts → viralPlanla (with that application\'s own months as parameters)', listeler: [],
       onlar: (g) => { if (g.tur === null) return { tamam: false }; const r = viralPlanla(g.tur as 'hbv', g.son_tarih as string | null, BUGUN); return { tamam: r.tamamMi, tarihler: dolu({ sonraki: r.sonrakiTarih }), uyarilar: r.sonrakiTarih && r.sonrakiTarih < BUGUN ? ['gecikti'] : [] } } },
     {
@@ -434,6 +434,24 @@ const KARSILIKSIZ: Readonly<Record<string, string>> = {
   'konsultasyonlar': 'a screen of the kit, not arithmetic: consultation between doctors of the same country database (migration 142). The pre-split application sends its consultation to an outside consultant by e-mail; the kit\'s is between two accounts, by code, with nothing sent. There is no function to compare with.',
   'ortopedi-op-protokol': 'the pre-split application has the six items as a plain list of sentences and no function over them; the length of the two lists is compared below',
   'rtp-basamak': 'NOTYA-ULKE-ARAC-DUZELTME-01, fault 7: the kit holds NO staging of return to sport. The pre-split application has six stages of its own (0 to 5) with days it proposes; the kit\'s tool counts the days since the injury and takes its steps, where a country supplies them, from that country\'s table. There is nothing left to compare; the difference is stated in DELIBERATE DIFFERENCES.',
+  'endoskopi-kaydi': 'records the examination type and dates the clinician enters. The pre-split endoscopy helper proposes default months with no source; the kit proposes none.',
+  'kronik-izlem-kaydi': 'records a chronic-condition note and an optional next date. The pre-split family-medicine helper proposes 3-month and 6-month packages from a Turkish circular; the kit proposes no interval.',
+  'birinci-acil-bayrak': 'a product checklist of danger signs. It names no emergency number. The pre-split lists name 112.',
+  'inme-bayraklari': 'a product checklist of stroke signs. It names no emergency number and no scale licence.',
+  'psikiyatri-guvenlik': 'a product checklist of safety signs. It states no detention rule and names no emergency number.',
+  'seans-plani': 'records modalities and session counts the clinician enters (1 to 60, 1 to 7 per week: the pre-split screen limits). The pre-split helper adds a payer warning; the kit does not.',
+  'icf-ozet': 'records which functioning domains were noted and that a physician plan is on file. It does not reproduce a licensed classification\'s wording.',
+  'greft-tahmini': 'returns the rounded product of area and density. The pre-split helper also returns unsourced count bands; the kit returns the count only.',
+  'sac-bakim-vade': 'reminder days 1, 3, 10 and 14 from a start date, the product\'s own. The pre-split helper also names a photo rule and 112; the kit does neither.',
+  'estetik-cerrahi-vade': 'reminder days 1, 7, 14 and 42 from a start date, the product\'s own. No national aftercare schedule.',
+  'estetik-islem-vade': 'reminder days 1, 14 and 28 from a start date, the product\'s own. No national aftercare schedule.',
+  'akne-vade': 'reminder days 14, 42 and 84 from a start date, the product\'s own (weeks 2, 6 and 12). No national acne protocol.',
+  'lazer-vade': 'the next day is the start plus an interval of 14 to 90 days the clinician chooses. The kit proposes no interval of its own.',
+  'infuzyon-guvenlik': 'ticks for lot, allergy and a physician plan on file. No mixture, no dose and no emergency number. The pre-split longevity list names 112.',
+  'makro-kaydi': 'records kilocalories and protein the clinician enters. The pre-split helper multiplies weight by unsourced factors; the kit does not.',
+  'sonraki-seans': 'records this date and the next date the clinician enters. No proposed gap.',
+  'kardiyo-not': 'records a cardiology note and the measurements the clinician enters. Threshold warnings stay on the slot kardiyo-izlem, which needs a country\'s own numbers.',
+  'gebelik-gun': 'days and whole weeks since the last menstrual period the clinician typed, and an expected date echoed if the clinician typed one. No 280-day rule. A national gestational rule stays a country-only tool.',
 }
 
 describe('tools — the kit\'s arithmetic equals the pre-split application\'s, input for input', () => {
@@ -525,8 +543,8 @@ describe('tools — the kit\'s arithmetic equals the pre-split application\'s, i
       assert.equal(s.sayilar.find((x) => x.anahtar === 'doz_ml')!.deger, 0.16)
     })
 
-    it('fault 3, antibiotic course: 7 days from 1 October — that application ends on 8 October, the kit on 7 October', () => {
-      assert.equal(atbHesapla('2026-10-01', 7).kart.bitis, '2026-10-08')
+    it('fault 3, antibiotic course: 7 days from 1 October ends on 7 October in both — the pre-split application was corrected to count the first day as day 1', () => {
+      assert.equal(atbHesapla('2026-10-01', 7).kart.bitis, '2026-10-07')
       assert.deepEqual(kit('antibiyotik-sure').hesapla({ baslangic: '2026-10-01', sure_gun: 7, kontrol: null, sinif: null }, O).tarihler, [{ anahtar: 'bitis', tarih: '2026-10-07' }, { anahtar: 'kontrol', tarih: '2026-10-07' }])
     })
 

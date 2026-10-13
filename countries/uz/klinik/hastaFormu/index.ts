@@ -18,24 +18,31 @@
  * Thirty-five roles have a set under their own key; the seven roles only Uzbekistan has ask the questions of the
  * role each behaves like (the kit's rule, lib/ulke/arayuz/rolIcerigi.ts), two of them through the sets kept under
  * `diyetisyen` and `odyoloji`, which are no roles any more. The sets of the three roles the audit took out are gone.
- * NO QUESTION CHANGED, so the version stamp of the question set did not change.
+ * NOTYA-ULKE-INTAKE-02 (2026-10-11) — core identifier, payer and consent acknowledgements, and a red-flag
+ * box on every set. MACHINE-WRITTEN. The stamp changed with the questions. Hair transplant, longevity and
+ * occupational therapy stay out: the 2026-10-10 audit found they are not recognised specialties in the Ministry
+ * order. Their sets are not restored.
  *
  * What the form deliberately does not ask, and what a local source must supply first: ./yerelIcerik.ts.
  * The answers are NOT given to the model that writes a visit note (docs/OPEN-COMMITMENTS.md, NOTYA-ULKE-INTAKE-01).
  */
 import type { HastaFormuIcerigi } from '@/lib/ulke/intake/tipler'
 import { UZ_CEKIRDEK_BOLUMLER } from './cekirdek'
+import { UZ_CEKIRDEK_EK } from './cekirdekEk'
+import { derinlestir } from './derinlik'
 import { UZ_ROL_SORULARI_1 } from './roller1'
 import { UZ_ROL_SORULARI_2 } from './roller2'
 import { UZ_ROL_SORULARI_3 } from './roller3'
 import { MAKINE, u } from './yardimci'
 
+const ROL_MANBALARI = { ...UZ_ROL_SORULARI_1, ...UZ_ROL_SORULARI_2, ...UZ_ROL_SORULARI_3 }
+
 export { UZ_FORM_YEREL_ICERIK, type UzFormYuvasi } from './yerelIcerik'
 
 export const UZ_HASTA_FORMU: HastaFormuIcerigi = {
-  surum: 'uz-taslak-2026-10-09',
+  surum: 'uz-taslak-2026-10-11',
   riza: {
-    surum: 'uz-taslak-2026-10-09',
+    surum: 'uz-taslak-2026-10-11',
     hukukcuInceledi: false,
     metin: u(
       'Javoblaringizni faqat shifokoringiz koʻradi. Ular sizning tibbiy maʼlumotlaringiz sifatida himoyalangan holda saqlanadi va koʻrikka tayyorlanish uchun ishlatiladi. Soʻrovnomani toʻldirish ixtiyoriy.',
@@ -48,6 +55,6 @@ export const UZ_HASTA_FORMU: HastaFormuIcerigi = {
       'Ваши ответы увидит только врач ребёнка. Они хранятся в защищённом виде как медицинские сведения ребёнка и используются для подготовки к приёму. Вы заполняете анкету как родитель или законный представитель ребёнка. Заполнять её необязательно.',
     ),
   },
-  cekirdek: { bolumler: UZ_CEKIRDEK_BOLUMLER, inceleme: MAKINE },
-  roller: { ...UZ_ROL_SORULARI_1, ...UZ_ROL_SORULARI_2, ...UZ_ROL_SORULARI_3 },
+  cekirdek: { bolumler: [...UZ_CEKIRDEK_BOLUMLER, ...UZ_CEKIRDEK_EK], inceleme: MAKINE },
+  roller: Object.fromEntries(Object.entries(ROL_MANBALARI).map(([rol, r]) => [rol, derinlestir(rol, r)])),
 }

@@ -36,7 +36,7 @@ export const KLINIK_YER_TUTUCULARI: readonly (readonly [string, readonly string[
 ]
 
 /** Every key the catalogue must have, as paths (the type is the source; this list lets the check name what is missing in a pack that was not type-checked). */
-const GRUPLAR = ['kabuk', 'konum', 'yetkiTuru', 'yetkiAciklama', 'giris', 'klinik', 'davet', 'takvim', 'yetki', 'kayit', 'paylasilan', 'onBuro'] as const
+const GRUPLAR = ['kabuk', 'konum', 'yetkiTuru', 'yetkiAciklama', 'giris', 'klinik', 'davet', 'takvim', 'yetki', 'kayit', 'paylasilan', 'onBuro', 'saklama'] as const
 
 function metinleriGez(deger: unknown, yer: string, s: KlinikSorunu[]): void {
   if (eksikAyarMi(deger)) { s.push({ yer, sorun: `${TESLIM}: ${deger.__eksikAyar}` }); return }

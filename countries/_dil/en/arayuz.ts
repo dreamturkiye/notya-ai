@@ -14,6 +14,8 @@ import { enForm } from './form'
 import type { EnUlkeGirdisi } from './girdi'
 import { enNotSablonlari } from './klinik/notSablonlari'
 import { enRolTanimlari } from './klinik/roller'
+import { enKlinikMetinleri } from './klinikMetinleri'
+import { enMesaj } from './mesaj'
 import { enPortal } from './portal'
 import { enRandevu } from './randevu'
 import { enUygulama } from './uygulama'
@@ -27,6 +29,9 @@ export function enArayuz(g: EnUlkeGirdisi): UlkeArayuzu {
     metinler: { [bicim]: enUygulama(g.sozler) },
     randevuMetinleri: { [bicim]: enRandevu(g.sozler) },
     portalMetinleri: { [bicim]: enPortal(g.sozler) },
+    // Messages and clinic accounts. Templates and consultation stay off: those catalogues are not assembled.
+    mesajMetinleri: { [bicim]: enMesaj(bicim) },
+    klinikMetinleri: { [bicim]: enKlinikMetinleri(bicim) },
     formMetinleri: { [bicim]: enForm(g.sozler) },
     araclar: enAraclar({ sozler: g.sozler, ulke: g.ulkeAdi, birimler: g.birimler, ...g.araclar, ...(g.roller ? { roller } : {}) }),
     roller,

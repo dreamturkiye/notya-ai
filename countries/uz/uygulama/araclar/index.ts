@@ -40,6 +40,7 @@ import { UZ_ROL_ARACLARI_2 } from './rol2'
 import { UZ_ROL_ARACLARI_3 } from './rol3'
 import { UZ_ROL_ARACLARI_4 } from './rol4'
 import { UZ_ROL_ARACLARI_5 } from './rol5'
+import { UZ_ROL_ARACLARI_6 } from './rol6'
 import { UZ_TAKIP_ARACLARI } from './takip'
 import { UZ_KENDI_ARACLAR } from './kendi/metinler'
 import { UZ_KENDI_TANIMLAR } from './kendi/tanimlar'
@@ -69,7 +70,7 @@ const acikOlanlar = (liste: readonly PaketAraci[]): PaketAraci[] => liste.filter
 
 export const UZ_ARACLAR: UlkeAraclari = {
   metinler: UZ_ARACLAR_METINLERI,
-  araclar: [...UZ_TEMEL_ARACLAR, ...acikOlanlar([...UZ_ROL_ARACLARI_1, ...UZ_ROL_ARACLARI_2, ...UZ_ROL_ARACLARI_3, ...UZ_ROL_ARACLARI_4, ...UZ_ROL_ARACLARI_5]), ...UZ_KENDI_ARACLAR, ...UZ_TAKIP_ARACLARI],
+  araclar: [...UZ_TEMEL_ARACLAR, ...acikOlanlar([...UZ_ROL_ARACLARI_1, ...UZ_ROL_ARACLARI_2, ...UZ_ROL_ARACLARI_3, ...UZ_ROL_ARACLARI_4, ...UZ_ROL_ARACLARI_5, ...UZ_ROL_ARACLARI_6]), ...UZ_KENDI_ARACLAR, ...UZ_TAKIP_ARACLARI],
   // the mechanisms of the three tools only this country has; each key is listed for "uz" in countries/yasak-araclar.json
   kendiAraclari: UZ_KENDI_TANIMLAR,
   birimler: UZ_ARAC_BIRIMLERI,

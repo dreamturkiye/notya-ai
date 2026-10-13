@@ -102,9 +102,13 @@ describe('Uzbekistan — the settings the audit found to conform (docs/COUNTRY-A
     assert.deepEqual(UZ_PAKETI.uygulama?.birimler, { agirlik: 'kg', boy: 'cm', sicaklik: 'C' })
   })
 
-  it('A10: the ambulance number is 103 and it stands in no sentence of any catalogue', () => {
+  it('A10: the ambulance number is 103; it appears only in intake help, and 112 appears nowhere', () => {
     assert.equal(UZ_PAKETI.uygulama?.portal?.acilNumara, '103')
-    for (const b of BICIMLER) assert.deepEqual(bul(M[b], /(?<![\d,.])(?:103|112)(?![\d,.])/), [], b)
+    for (const b of BICIMLER) {
+      const bulunan = bul(M[b], /(?<![\d,.])(?:103|112)(?![\d,.])/)
+      const disarida = bulunan.filter((satir) => satir.includes('112') || !satir.includes('hastaFormu') || !satir.includes('.yardim.'))
+      assert.deepEqual(disarida, [], b)
+    }
   })
 
   it('A16: +998 and nine digits; the example is written +998 XX XXX XX XX and passes the pack\'s own rule', () => {

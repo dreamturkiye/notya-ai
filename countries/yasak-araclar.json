@@ -10,6 +10,11 @@
     "gb-fracture-risk-link",
     "gb-valproate-forms"
   ],
+  "nz": [
+    "nz-bmi-waist",
+    "nz-psa-thresholds",
+    "nz-smoking-abc"
+  ],
   "tr": [
     "sgk-medula",
     "enabiz",

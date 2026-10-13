@@ -90,6 +90,7 @@ export const XX_GIRDI: EnUlkeGirdisi = {
     cokSaatDilimi: false,
     saatDilimiCumlesi: 'All times are local time.',
     tarihOrnegi: 'DD/MM/YYYY',
+    meslekKaydiEtiketi: 'Professional registration number',
   },
   ulkeAdi: 'the test country',
   kidemliHekim: 'consultant',
@@ -107,6 +108,12 @@ export const XX_GIRDI: EnUlkeGirdisi = {
     dozYazimi: { sondaSifir: false },
     kapali: {
       'doz-hesabi': { eksik: 'TEST: kept as a placeholder by the test country.', kimden: 'TEST: nobody' },
+      // the test country takes these roles out, so the tools that name only them stay slots
+      'greft-tahmini': { eksik: 'TEST: this country has no hair-transplant role.', kimden: 'TEST: nobody' },
+      'sac-bakim-vade': { eksik: 'TEST: this country has no hair-transplant role.', kimden: 'TEST: nobody' },
+      'estetik-islem-vade': { eksik: 'TEST: this country has no aesthetic-medicine role.', kimden: 'TEST: nobody' },
+      'akne-vade': { eksik: 'TEST: this country has no clinic-dermatology role.', kimden: 'TEST: nobody' },
+      'lazer-vade': { eksik: 'TEST: this country has no clinic-dermatology role.', kimden: 'TEST: nobody' },
     },
     birimAdlari: { 'xx-a': 'scale A', 'xx-b': 'scale B' },
     degisen: {

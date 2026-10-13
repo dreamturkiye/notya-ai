@@ -72,19 +72,21 @@ describe('gb A: who sees which tool (decisions: `proposedSpecialties`; GB.md, "W
     assert.deepEqual(gorulen(null), ['hasta-portali'], 'an account without a role: the base tool only')
   })
 
-  it('GENERAL PRACTICE had the patient\'s page and nothing else; now it has ten tools', () => {
-    // BEFORE (the shared set): no tool names family medicine
-    assert.ok(!EN_ROL_ARACLARI.some((a) => a.roller?.includes('family-medicine')))
-    assert.deepEqual(gorulen('family-medicine'), ['hasta-portali', 'antibiyotik-sure', 'inhaler-teknik', 'antikoagulan-vadeleri', 'otoskopi-notu', 'vertigo-notu', 'rtp-basamak', 'gb-four-at', 'gb-fracture-risk-link', 'gb-valproate-forms', 'takip-paneli'].filter((k) => gorulen('family-medicine').includes(k)))
-    assert.deepEqual([...gorulen('family-medicine')].sort(), ['antibiyotik-sure', 'antikoagulan-vadeleri', 'gb-four-at', 'gb-fracture-risk-link', 'gb-valproate-forms', 'hasta-portali', 'inhaler-teknik', 'otoskopi-notu', 'rtp-basamak', 'takip-paneli', 'vertigo-notu'])
+  it('GENERAL PRACTICE has the shared records for family medicine as well as the tools the audit named', () => {
+    assert.ok(EN_ROL_ARACLARI.some((a) => a.roller?.includes('family-medicine')))
+    assert.deepEqual([...gorulen('family-medicine')].sort(), ['antibiyotik-sure', 'antikoagulan-vadeleri', 'birinci-acil-bayrak', 'gb-four-at', 'gb-fracture-risk-link', 'gb-valproate-forms', 'gebelik-gun', 'hasta-portali', 'inhaler-teknik', 'kronik-izlem-kaydi', 'otoskopi-notu', 'rtp-basamak', 'takip-paneli', 'vertigo-notu'])
   })
 
   it('two more examples: cardio-thoracic surgery takes the heart operations; the audiologist gets the hearing tools', () => {
     assert.deepEqual(goren('kalp-damar-preop'), ['thoracic-surgery', 'cardiovascular-surgery'])
     assert.ok(gorulen('thoracic-surgery').includes('toraks-preop') && gorulen('thoracic-surgery').includes('kalp-damar-preop'))
-    assert.deepEqual(gorulen('audiology').sort(), ['hasta-portali', 'odyometri-pta', 'otoskopi-notu', 'takip-paneli', 'vertigo-notu'])
-    // the other allied professions: the patient's page only
-    for (const r of MUTTEFIKLER.filter((x) => x !== 'audiology')) assert.deepEqual(gorulen(r), ['hasta-portali'], r)
+    assert.deepEqual(gorulen('audiology').sort(), ['hasta-portali', 'odyometri-pta', 'otoskopi-notu', 'sonraki-seans', 'takip-paneli', 'vertigo-notu'])
+    assert.deepEqual(gorulen('physiotherapy'), ['hasta-portali', 'vas-fonksiyon', 'seans-plani', 'icf-ozet', 'takip-paneli'])
+    assert.deepEqual(gorulen('clinical-psychology'), ['hasta-portali', 'psikiyatri-guvenlik', 'sonraki-seans', 'takip-paneli'])
+    assert.deepEqual(gorulen('dietetics'), ['hasta-portali', 'makro-kaydi', 'takip-paneli'])
+    assert.deepEqual(gorulen('occupational-therapy'), ['hasta-portali', 'seans-plani', 'icf-ozet', 'takip-paneli'])
+    assert.deepEqual(gorulen('podiatry'), ['hasta-portali', 'seans-plani', 'takip-paneli'])
+    assert.deepEqual(gorulen('speech-language-therapy'), ['hasta-portali', 'sonraki-seans', 'takip-paneli'])
   })
 
   it('every tool whose roles this country restates is seen by exactly the roles it names', () => {
@@ -100,6 +102,11 @@ describe('gb A: who sees which tool (decisions: `proposedSpecialties`; GB.md, "W
       'toksisite-listesi': ['oncology', 'clinical-oncology'],
       'genel-preop': ['general-surgery', 'oral-maxillofacial-surgery'],
       'yara-dren-izlem': ['paediatric-surgery', 'general-surgery', 'oral-maxillofacial-surgery'],
+      'seans-plani': ['rehabilitation-medicine', 'physiotherapy', 'occupational-therapy', 'podiatry'],
+      'psikiyatri-guvenlik': ['psychiatry', 'clinical-psychology', 'child-adolescent-psychiatry', 'old-age-psychiatry'],
+      'kronik-izlem-kaydi': ['family-medicine', 'internal-medicine', 'geriatric-medicine'],
+      'gebelik-gun': ['obstetrics-gynaecology', 'family-medicine', 'community-sexual-reproductive-health'],
+      'sonraki-seans': ['clinical-psychology', 'audiology', 'speech-language-therapy'],
     }
     assert.deepEqual(Object.keys(GB_ARACLAR.gorenler ?? {}).sort(), [...Object.keys(beklenen), 'antibiyotik-sure'].sort())
     for (const [k, roller] of Object.entries(beklenen)) assert.deepEqual(goren(k).sort(), [...roller].sort(), k)
@@ -122,12 +129,15 @@ describe('gb A: who sees which tool (decisions: `proposedSpecialties`; GB.md, "W
       // THE FOLLOW-UP LIST follows the kit's rule, not the file: it goes to every role that has a tool whose result
       // can be kept. The file gives it to doctors only; the audiologist has three such tools and therefore has it too.
       if (kit.some((k) => k !== 'hasta-portali' && k !== 'takip-paneli')) beklenen.add('takip-paneli'); else beklenen.delete('takip-paneli')
-      assert.deepEqual(kit, [...beklenen].sort(), s.key)
+      // Structural records added after the decisions file. The file's tools stay; anything further must be one of these.
+      const yapisal = new Set(['endoskopi-kaydi', 'kronik-izlem-kaydi', 'birinci-acil-bayrak', 'gebelik-gun', 'kardiyo-not', 'inme-bayraklari', 'psikiyatri-guvenlik', 'seans-plani', 'icf-ozet', 'greft-tahmini', 'sac-bakim-vade', 'estetik-cerrahi-vade', 'estetik-islem-vade', 'infuzyon-guvenlik', 'makro-kaydi', 'sonraki-seans', 'vas-fonksiyon', 'plastik-yara-greft'])
+      for (const k of beklenen) assert.ok(kit.includes(k), `${s.key} lost ${k}`)
+      for (const k of kit) if (!beklenen.has(k)) assert.ok(yapisal.has(k), `${s.key} gained ${k}`)
     }
   })
 
-  it('the follow-up list: every doctor role and the audiologist — exactly the roles that have a tool whose result can be kept', () => {
-    assert.deepEqual(goren('takip-paneli'), [...DOKTORLAR, 'audiology'])
+  it('the follow-up list: every role that has a tool whose result can be kept, which is every role of this pack', () => {
+    assert.deepEqual(goren('takip-paneli'), [...ROLLER])
   })
 })
 
@@ -413,12 +423,12 @@ describe('gb C: the tools only this country has', () => {
 
 describe('gb D: what stays off', () => {
   it('the four tools the owner keeps off are placeholders: ESI triage, the report outline, both kidney tools — and only the dose calculator came back', () => {
-    const kapali = ['esi-triyaj', 'kdigo-evre', 'kdigo-serit', 'rapor-taslagi']
+    const kapali = ['akne-vade', 'esi-triyaj', 'kdigo-evre', 'kdigo-serit', 'lazer-vade', 'rapor-taslagi']
     assert.deepEqual(Object.keys(GB_ARACLAR.kapali).sort(), kapali)
     for (const k of kapali) { assert.ok(!A.araclar.some((p) => p.anahtar === k), k); assert.ok(A.yuvalar.some((y) => y.anahtar === k), k); for (const r of [null, ...ROLLER]) assert.equal(hesabinAraci(A, r, k), null, `${k}: ${r}`) }
     // NO TOOL THAT WAS OFF IS ON, but the dose calculator: the switched-on tools are the set's tools minus the four, the two screens, and this country's three
     assert.deepEqual(A.araclar.map((p) => p.anahtar).sort(), [...EN_ROL_ARACLARI.map((a) => a.anahtar).filter((k) => !kapali.includes(k)), 'hasta-portali', 'takip-paneli', ...GB_OZEL_ANAHTARLAR].sort())
-    assert.equal(A.araclar.length, 45)
+    assert.equal(A.araclar.length, 61)
   })
 
   it('EVERY TOOL THE DECISIONS MARK "remove" IS OFF in this country', () => {
