@@ -17,6 +17,7 @@ export type Ref =
   | 'SB_ENDO'
   | 'SGK_SUT'
   | 'TITCK'
+  | 'KDIGO_2024'
 
 export type Dipnot = { ref: Ref; not: string }
 
@@ -27,6 +28,7 @@ export const REF_ACIKLAMA: Record<Ref, string> = {
   SB_ENDO: 'T.C. Sağlık Bakanlığı — diyabet / tiroid / osteoporoz birinci basamak yönlendirme düzenlemeleri',
   SGK_SUT: 'SGK Sağlık Uygulama Tebliği (SUT) — endokrin rapor/endikasyon; güncel metin hekim doğrular',
   TITCK: 'TİTCK — KÜB; insülin ve levotiroksin dozu Notya tarafından üretilmez',
+  KDIGO_2024: 'KDIGO 2024 CKD Guideline, Kidney Int. 2024;105(4S):S117-S314 — diyabetik böbrek hastalığı izlemi için eGFR/ACR risk kategorisi (ADA-KDIGO 2022 konsensüs raporu); kit kendi sunumu, KDIGO ısı haritası/renkleri değil',
 }
 
 export const HEKIM_KILIT_METNI =
