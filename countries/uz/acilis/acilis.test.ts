@@ -65,10 +65,9 @@ function metinler(o: unknown, yol = ''): { yol: string; metin: string }[] {
 }
 const sekil = (o: unknown): unknown => (typeof o === 'string' ? '' : Array.isArray(o) ? o.map(sekil) : o && typeof o === 'object' ? Object.fromEntries(Object.entries(o).map(([k, v]) => [k, KIMLIK.has(k) ? v : sekil(v)])) : o)
 // NOTYA-ULKE-DEMO-01 (Kaan, 2026-10-13): the page also has a 'demo' section, hardcoded (AcilisSayfasi.tsx) right
-// after the hero, exactly where the Turkish page now has its own — but only while the booking link is set. None
-// of this file's renders set NEXT_PUBLIC_DEMO_BOOKING_URL, so it stays off here and 'demo' is correctly absent
-// below; lib/ulke/demo/demo.paket.test.ts covers the page with the link on.
+// after the hero. The button to /demo is shown whether or not NEXT_PUBLIC_DEMO_BOOKING_URL is set.
 const BOLUM_SIRASI = [CAPA.ust, CAPA.suhbat, CAPA.qabul, CAPA.portal, CAPA.maslahat, CAPA.jadval, CAPA.yonalish, CAPA.kuzatuv, CAPA.organish, CAPA.xavfsizlik, CAPA.narx, CAPA.sorov]
+const SAYFA_SIRASI = [BOLUM_SIRASI[0], 'demo', ...BOLUM_SIRASI.slice(1)]
 const ek = (dil: AcilisDili) => (dil === 'uz-Latn' ? '' : `?dil=${dil}`)
 /** An amount as the pack writes numbers: its own separators, the currency's own decimal places. */
 const tutar = (n: number) => sayiYazKuralla(n, UZ_PAKETI.bicim, UZ_PAKETI.paraBirimi.ondalikHane)
@@ -179,8 +178,8 @@ describe('Uzbekistan landing page', () => {
     it(`${dil}: the same sections as the Turkish page, in its order, numbered as there`, () => {
       const html = ciz(dil)
       const idler = [...html.matchAll(/<section id="([a-z]+)"/g)].map((m) => m[1])
-      assert.deepEqual(idler, BOLUM_SIRASI)
-      assert.equal((html.match(/<section\b/g) || []).length, BOLUM_SIRASI.length)
+      assert.deepEqual(idler, SAYFA_SIRASI)
+      assert.equal((html.match(/<section\b/g) || []).length, SAYFA_SIRASI.length)
       const ustBasliklar = [t.suhbat, t.qabul, t.portal, t.maslahat, t.jadval, t.yonalish, t.kuzatuv, t.organish, t.xavfsizlik, t.narx].map((b) => b.ustBaslik)
       ustBasliklar.forEach((u, i) => {
         assert.ok(u.startsWith(`${String(i + 1).padStart(2, '0')} — `), u)
@@ -240,7 +239,7 @@ describe('Uzbekistan landing page', () => {
       const hrefler = [...html.matchAll(/<a\b[^>]*\bhref="([^"]+)"/g)].map((m) => m[1].replace(/&amp;/g, '&'))
       assert.ok(hrefler.length > 15)
       // NOTYA-UZ-MUAYENE-01: the build is served under /uzbek; a link to '/login' would land on Türkiye's site.
-      const izinli = new RegExp(`^(#(${BOLUM_SIRASI.join('|')})|/uzbek(\\?dil=(uz-Cyrl|ru))?|/uzbek/for-clinics(\\?dil=(uz-Cyrl|ru))?|/uzbek/login(\\?dil=ru)?|/uzbek/signup(\\?dil=ru)?|/uzbek/(privacy|terms|cookies|data-request|accessibility|medical-disclaimer|security|medical)(\\?dil=(uz-Cyrl|ru))?)$`)
+      const izinli = new RegExp(`^(#(${BOLUM_SIRASI.join('|')})|/uzbek(\\?dil=(uz-Cyrl|ru))?|/uzbek/for-clinics(\\?dil=(uz-Cyrl|ru))?|/uzbek/login(\\?dil=ru)?|/uzbek/signup(\\?dil=ru)?|/uzbek/demo(\\?dil=(uz-Cyrl|ru))?|/uzbek/(privacy|terms|cookies|data-request|accessibility|medical-disclaimer|security|medical)(\\?dil=(uz-Cyrl|ru))?)$`)
       for (const h of hrefler) assert.match(h, izinli, `link to ${h}`)
       for (const h of hrefler.filter((x) => x.startsWith('#'))) assert.ok(html.includes(`id="${h.slice(1)}"`), `${h} has no target on the page`)
       // The switch in the bar: Uzbek and Russian, named in their own words, the other one a real link.
