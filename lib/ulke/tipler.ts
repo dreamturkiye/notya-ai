@@ -515,6 +515,22 @@ export type NotGirdisi = {
   sablon?: string
 }
 
+/** A voice the pack may speak with. `id` is the provider's voice id. */
+export type UlkeSesi = { ad: string; id: string }
+
+/**
+ * Text to speech for a pack (lib/ulke/uygulama/sesSentez.ts). `dilKodu` is the ISO 639-1 code sent as
+ * `language_code` (English is `en`). `yerel` is the BCP 47 locale the voices were verified for, and it is the
+ * pack's own default language. The accent is the voice, not a second language code.
+ */
+export type UlkeSesCikisi = {
+  saglayici: 'elevenlabs'
+  model: 'eleven_flash_v2_5'
+  dilKodu: string
+  yerel: string
+  sesler: { erkek: UlkeSesi; kadin: UlkeSesi }
+}
+
 /** What a pack brings for the visit: recording → transcript → note. Server-side only. null = the country has none. */
 export type UlkeKlinigi = {
   konusma: KonusmaTanimaAyarlari
@@ -566,6 +582,12 @@ export type UlkeKlinigi = {
    * `hukukcuInceledi` stays false until a lawyer of the country has read the sentence. Required where `konsultasyon` is on.
    */
   konsultasyonRizasi?: { surum: string; hukukcuInceledi: boolean }
+  /**
+   * Text to speech. Absent = this country does not speak (the visit is still transcribed by `konusma`).
+   * The engine is lib/ulke/uygulama/sesSentez.ts. A pack names the model, the ISO 639-1 language code and one
+   * male and one female voice. Countries without this field are unchanged.
+   */
+  ses?: UlkeSesCikisi
 }
 
 // ───────────────────────── text surfaces (translation mechanism — lib/ulke/metin.ts) ─────────────────────────

@@ -399,6 +399,19 @@ function kurallar(paket: UlkePaketi, arayuz: UlkeArayuzu | null, klinik: UlkeKli
       if (diger) { const t = klinik.yenidenYazimTalimati(diger); if (!dolu(t)) ekle(`klinik.yenidenYazimTalimati(${diger})`, 'a rewrite into this form is offered and has no instruction'); else if (eksikMetinMi(t)) ekle(`klinik.yenidenYazimTalimati(${diger})`, TESLIM) }
     }
     for (const t of new Set(Object.values(kayit(klinik.konusma?.beklenenDiller)))) if (!temeller.includes(t)) ekle('klinik.konusma.beklenenDiller', `"${t}" is not a language of uygulama.dilGruplari`)
+    // Spoken answers. Absent = this country does not speak, and nothing below applies.
+    if (klinik.ses) {
+      const ses = klinik.ses
+      if (ses.saglayici !== 'elevenlabs') ekle('klinik.ses.saglayici', 'the speech engine is ElevenLabs')
+      if (ses.model !== 'eleven_flash_v2_5') ekle('klinik.ses.model', 'spoken answers use eleven_flash_v2_5')
+      if (!/^[a-z]{2}$/.test(ses.dilKodu ?? '')) ekle('klinik.ses.dilKodu', 'the provider language code is ISO 639-1')
+      if (ses.yerel !== paket.varsayilanDil) ekle('klinik.ses.yerel', 'the voice locale is the pack\'s default language')
+      for (const cins of ['erkek', 'kadin'] as const) {
+        const v = ses.sesler?.[cins]
+        if (!dolu(v?.ad)) ekle(`klinik.ses.sesler.${cins}.ad`, 'the voice has no name')
+        if (!/^[A-Za-z0-9]{20}$/.test(v?.id ?? '')) ekle(`klinik.ses.sesler.${cins}.id`, 'the voice id is not the provider\'s id')
+      }
+    }
     // THE INTAKE FORM'S QUESTIONS: a core set and one set per role, a text in every form, keys that never repeat,
     // who wrote and who reviewed each set. What a machine cannot check — whether a question is the right one to
     // ask — is a clinician's, and is recorded per set.
