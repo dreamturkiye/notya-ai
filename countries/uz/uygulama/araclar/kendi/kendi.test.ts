@@ -263,16 +263,21 @@ describe('Uzbekistan — the tools only this country has, in the pack: who sees 
     assert.deepEqual(goren('uz-tana-vazni-indeksi'), [...UZ_HEKIM_ROLLERI])
     assert.deepEqual(goren('uz-homiladorlik-muddati').sort(), ['aile-hekimligi', 'kadin-hastaliklari-dogum'])
     assert.deepEqual(goren('uz-emlash-qaydi').sort(), ['aile-hekimligi', 'pediatri'])
-    for (const k of ['uz-tana-vazni-indeksi', 'uz-homiladorlik-muddati', 'uz-emlash-qaydi']) {
+    assert.deepEqual(goren('uz-emlash-taqvimi').sort(), ['aile-hekimligi', 'pediatri'])
+    assert.deepEqual(goren('uz-asosiy-dorilar'), [...UZ_HEKIM_ROLLERI])
+    assert.deepEqual(goren('uz-retsept-qaydi'), [...UZ_HEKIM_ROLLERI])
+    assert.deepEqual(goren('uz-giyohvand-qoidalari'), [...UZ_HEKIM_ROLLERI])
+    for (const k of ['uz-tana-vazni-indeksi', 'uz-homiladorlik-muddati', 'uz-emlash-qaydi', 'uz-emlash-taqvimi', 'uz-asosiy-dorilar', 'uz-retsept-qaydi', 'uz-giyohvand-qoidalari']) {
       assert.equal(P.hesabinAraci(icerik, null, k), null, `${k}: an account without a role`)
       for (const r of ['fizyoterapi', 'klinik-psikolog']) assert.equal(P.hesabinAraci(icerik, r, k), null, `${k}: ${r}`)
       assert.notEqual(icerik.araclar.find((p) => p.anahtar === k)!.roller, null, `${k} is a base tool`)
     }
     // three doctors, after the structural tools: cardiology keeps a note; family medicine a chronic record and danger signs; paediatrics the height and dose tools
     const kendi = (rol: string) => P.hesabinAraclari(icerik, rol).rol.map((x) => x.tanim.anahtar)
-    assert.deepEqual(kendi('kardiyoloji'), ['kardiyo-not', 'uz-tana-vazni-indeksi', 'takip-paneli'])
-    assert.deepEqual(kendi('aile-hekimligi'), ['kronik-izlem-kaydi', 'birinci-acil-bayrak', 'uz-tana-vazni-indeksi', 'uz-homiladorlik-muddati', 'uz-emlash-qaydi', 'takip-paneli'])
-    assert.deepEqual(kendi('pediatri'), ['hedef-boy', 'doz-hesabi', 'uz-tana-vazni-indeksi', 'uz-emlash-qaydi', 'takip-paneli'])
+    const doktor = ['uz-asosiy-dorilar', 'uz-retsept-qaydi', 'uz-giyohvand-qoidalari']
+    assert.deepEqual(kendi('kardiyoloji'), ['kardiyo-not', 'uz-tana-vazni-indeksi', ...doktor, 'takip-paneli'])
+    assert.deepEqual(kendi('aile-hekimligi'), ['kronik-izlem-kaydi', 'birinci-acil-bayrak', 'uz-tana-vazni-indeksi', 'uz-homiladorlik-muddati', 'uz-emlash-qaydi', 'uz-emlash-taqvimi', ...doktor, 'takip-paneli'])
+    assert.deepEqual(kendi('pediatri'), ['hedef-boy', 'doz-hesabi', 'uz-tana-vazni-indeksi', 'uz-emlash-qaydi', 'uz-emlash-taqvimi', ...doktor, 'takip-paneli'])
   })
 
   it('THE PATIENT GATE of the index: opened for a patient under 20, or for one whose birth date is not recorded, the tool is not there; without a patient it opens with the sentence that says who it is for', async () => {
@@ -289,7 +294,7 @@ describe('Uzbekistan — the tools only this country has, in the pack: who sees 
     assert.ok(!cocuk.includes('uz-tana-vazni-indeksi') && cocuk.includes('uz-emlash-qaydi') && cocuk.includes('hedef-boy'))
     for (const f of ['uz-Latn', 'uz-Cyrl', 'ru'] as const) assert.match(p.metin.hastaKapisi![f], /20/)
     // the other two have no gate, and so no sentence about one
-    for (const k of ['uz-homiladorlik-muddati', 'uz-emlash-qaydi']) { const x = icerik.araclar.find((y) => y.anahtar === k)!; assert.deepEqual([x.hasta, x.metin.hastaKapisi], [undefined, undefined], k) }
+    for (const k of ['uz-homiladorlik-muddati', 'uz-emlash-qaydi', 'uz-emlash-taqvimi', 'uz-asosiy-dorilar', 'uz-retsept-qaydi', 'uz-giyohvand-qoidalari']) { const x = icerik.araclar.find((y) => y.anahtar === k)!; assert.deepEqual([x.hasta, x.metin.hastaKapisi], [undefined, undefined], k) }
   })
 
   it('THROUGH THE SCREEN\'S OWN PATH: what a doctor types in this country\'s units and number style gives the source\'s example', async () => {
@@ -314,7 +319,7 @@ describe('Uzbekistan — the tools only this country has, in the pack: who sees 
     const acikYeni = icerik.araclar.map((p) => p.anahtar).filter((k) => ulkeyeOzelMi(k, 'uz')).sort()
     const liste = UZ_ONAYSIZ_YENI_ARACLAR.map((x) => x.anahtar).sort()
     assert.deepEqual(liste, acikYeni, 'a new tool is switched on and not on the list of ./onay.ts, or is on the list and not switched on')
-    assert.deepEqual(liste, ['uz-emlash-qaydi', 'uz-homiladorlik-muddati', 'uz-tana-vazni-indeksi'])
+    assert.deepEqual(liste, ['uz-asosiy-dorilar', 'uz-emlash-qaydi', 'uz-emlash-taqvimi', 'uz-giyohvand-qoidalari', 'uz-homiladorlik-muddati', 'uz-retsept-qaydi', 'uz-tana-vazni-indeksi'])
     assert.deepEqual(UZ_KENDI_TANIMLAR.map((t) => t.anahtar).sort(), liste, 'a mechanism without a switched-on tool, or the other way round')
     assert.deepEqual(UZ_KENDI_ARACLAR.map((p) => p.anahtar).sort(), liste)
     const kayit = JSON.parse(readFileSync(join(KOK, 'countries/yasak-araclar.json'), 'utf8')) as Record<string, string[]>
@@ -369,7 +374,7 @@ describe('Uzbekistan — the tools only this country has, in the pack: who sees 
     assert.ok(anket.lisans!.kaynak!.includes('"No permission required to reproduce, translate, display or distribute."') && anket.lisans!.kaynak!.includes(OKUNDU))
     assert.deepEqual([anket.acik, anket.icerik], [false, null], 'a licence is not an authorised translation: the placeholder stays a placeholder')
     // EXACTLY THESE state a licence, and no further tool was switched off on licence grounds
-    assert.deepEqual(icerik.araclar.filter((p) => p.lisans).map((p) => p.anahtar).sort(), ['uz-emlash-qaydi', 'uz-homiladorlik-muddati', 'uz-tana-vazni-indeksi'])
+    assert.deepEqual(icerik.araclar.filter((p) => p.lisans).map((p) => p.anahtar).sort(), ['uz-asosiy-dorilar', 'uz-emlash-qaydi', 'uz-emlash-taqvimi', 'uz-giyohvand-qoidalari', 'uz-homiladorlik-muddati', 'uz-retsept-qaydi', 'uz-tana-vazni-indeksi'])
     assert.deepEqual(icerik.yuvalar.filter((y) => y.lisans).map((y) => [y.anahtar, y.lisans!.durum]).sort(), [['esi-triyaj', 'izin-gerekli'], ['phq9-gad7', 'serbest'], ['rapor-taslagi', 'izin-gerekli']])
     assert.notEqual(icerik.lisansTam, true, 'the pack does not claim that every licence is stated: the others are listed for the owner')
   })

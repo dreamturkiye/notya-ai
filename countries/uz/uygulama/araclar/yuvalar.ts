@@ -32,20 +32,20 @@ export const UZ_ARAC_YUVALARI: readonly AracYuvasi[] = [
   // ── THE CORE SET OF EVERY DOCTOR ROLE (the audit of 2026-10-10, section 2.1, second pass): five placeholders that
   // were written "for every role". A prescription, a diagnosis code, a certificate and a laboratory request are a
   // doctor's: the two allied professions and an account without a role are not among those who would see them. ──
-  yuva('recete', HEKIMLER, 'Prescription drafting: the register of medicines authorised in Uzbekistan (names, forms, strengths), the prescription form and its mandatory fields, the language rule, and the rules for controlled medicines. Without the register no medicine can be offered or checked.'),
+  yuva('recete', HEKIMLER, 'Prescription drafting still needs the State Register of authorised brands, the ordinary prescription blank and its fields, and any sending of a note. The essential-medicines annex, a local note that is not sent, and the narcotic ticks from order No. 3604 are separate tools. None of them is the pink form.'),
   // ── base (every role): dropped from the core set by the audit until their source is found; unchanged ──
   yuva('muayene-ozeti-belgesi', null, 'Visit and discharge summary as a document: the headings and mandatory fields of the summary an Uzbek clinic issues, in Uzbek and Russian, and whether a state form number applies.'),
-  yuva('tani-kodlama', HEKIMLER, 'Diagnosis coding: the coding edition in force in Uzbekistan and its official titles in Uzbek and Russian. A coding table is reference content of an authority and is not written by a machine.'),
-  yuva('ilac-etkilesimi', null, 'Medicine interactions: the interaction data itself (by active substance) from a licensed or official source, and the register of products and brand names sold in Uzbekistan to search by.'),
+  yuva('tani-kodlama', HEKIMLER, 'Diagnosis coding: no official code table of Uzbekistan was opened. The World Health Organization edition is copyrighted and is not stored. A national edition, if one is in force, has to be obtained from the ministry or from the rights holder before any code is shown.'),
+  yuva('ilac-etkilesimi', null, 'Medicine interactions: no free licensed pair list was found. The unconnected adapter holds no pairs. A commercial database needs a contract before any pair is shown, and the brand register to search by was not copied.'),
   yuva('hasta-belgeleri', HEKIMLER, 'Certificates for patients: the forms an Uzbek outpatient clinic issues (temporary incapacity certificate, fitness and attendance certificates), their numbers, fields and the periods the rules allow.', HUKUK),
-  yuva('tetkik-istek', HEKIMLER, 'Laboratory and imaging requests: the catalogue of tests offered locally with their names in Uzbek and Russian, units and reference ranges of the local laboratories, and the request form layout.'),
+  yuva('tetkik-istek', HEKIMLER, 'Laboratory and imaging requests: the catalogue of tests offered locally with their names in Uzbek and Russian, reference ranges of the local laboratories, and the request form layout. A few units already stated elsewhere are not a panel list and carry no reference range.'),
   yuva('muayene-sonu', HEKIMLER, 'End-of-visit flow: it strings together prescription, certificate, follow-up appointment and the summary for the patient. It waits for the prescription and certificate slots above; the appointment and the summary exist already as screens of their own.'),
 
   // ── emergency medicine ──
   yuva('acil-sevk', ['acil-tip'], 'Admission, referral and discharge package of an emergency department: the documents that go with each, the levels of care a patient can be referred to, and who must be notified.'),
 
   // ── family medicine: all four tools rest on national programmes ──
-  yuva('aile-asi-tarama', ['aile-hekimligi'], 'The national vaccination calendar of Uzbekistan with its catch-up rules, and the national screening programme (which examination, at which age, how often).'),
+  yuva('aile-asi-tarama', ['aile-hekimligi'], 'The sanitary-service flyer is a separate tool. Still missing: catch-up rules, dose intervals, and the national screening programme (which examination, at which age, how often).'),
   yuva('aile-kronik', ['aile-hekimligi'], 'Follow-up intervals for diabetes and hypertension in primary care, from the national primary-care protocols.'),
   yuva('aile-sevk', ['aile-hekimligi'], 'Referral and emergency triage in primary care: the referral levels of the Uzbek system, the criteria for each, and the emergency number confirmed by a local source.'),
   yuva('aile-kohort', ['aile-hekimligi'], 'The follow-up panel of family medicine: it lists patients by the three tools above and has nothing to list until they exist.'),
@@ -67,7 +67,7 @@ export const UZ_ARAC_YUVALARI: readonly AracYuvasi[] = [
 
   // ── infectious diseases ──
   yuva('viral-izlem', ['enfeksiyon-hastaliklari'], 'HIV and viral hepatitis follow-up: the months between two checks (3 numbers) from the national HIV and hepatitis protocols.', KLINISYEN, true),
-  yuva('enfeksiyon-bildirim', ['enfeksiyon-hastaliklari'], 'Isolation and notification: the list of notifiable diseases in Uzbekistan, to whom and by when each is reported, the report form, and isolation periods from the national rules.'),
+  yuva('enfeksiyon-bildirim', ['enfeksiyon-hastaliklari'], 'A complete national list of notifiable diseases was not found on the pages opened on 2026-10-14. Still needed: that list, to whom and by when each is reported, the report form, and isolation periods from the national rules.'),
 
   // ── nephrology ──
   yuva('anemi-izlem', ['nefroloji'], 'Anaemia follow-up in chronic kidney disease: the target haemoglobin range, the lower limit and the months until the next check (6 numbers) from the national nephrology protocol; and the unit the local laboratories report haemoglobin in.', KLINISYEN, true),
@@ -101,7 +101,7 @@ export const UZ_ARAC_YUVALARI: readonly AracYuvasi[] = [
 
   // ── paediatrics ──
   yuva('buyume-persentil', ['pediatri'], 'Growth and percentiles: the growth standard used in Uzbekistan (WHO standards to be confirmed) with its reference tables. The pre-split tool also carries a national reference of another country, which must not be shown here.'),
-  yuva('asi-takvimi', ['pediatri'], 'Vaccination calendar and catch-up: the national immunisation calendar of Uzbekistan with its catch-up rules.'),
+  yuva('asi-takvimi', ['pediatri'], 'The sanitary-service flyer is a separate tool for paediatrics and family medicine. Still missing: catch-up rules, dose intervals, an adult table, and a dated national calendar. The flyer has no issue date, and the text the 22 November 2024 resolution asked to be reviewed was not opened.'),
   yuva('gelisim-tarama', ['pediatri'], 'Development and screening panel: the national screening programme for children (hearing, vision, supplements: which, at which age).'),
   yuva('mchat-rf', ['pediatri'], 'M-CHAT-R/F (Modified Checklist for Autism in Toddlers, Revised, with Follow-Up): a published questionnaire for parents. Needed: the authorised Uzbek and Russian versions and the permission of its authors. The wording is not translated by a machine; the scoring is not switched on without it.', ANKET),
   yuva('pediatri-kohort', ['pediatri'], 'The follow-up panel of paediatrics: it lists patients by the vaccination calendar and the screening programme above and has nothing to list until they exist.'),

@@ -20,9 +20,10 @@
  * Russian as a first language, and no clinician, has read a line of it (`inceleme.klinisyen` is null). A rule
  * cannot know every loan word's spelling: the Cyrillic form in particular must be read before a doctor relies on it.
  *
- * WHAT IS AND IS NOT HERE. The lists are the product's own checklists, translated; the arithmetic is the kit's and
- * cites its published source. There is NO national reference content: no vaccination calendar, drug list, dosing
- * table, protocol or reference range of an authority. Tools that need one are slots (./yuvalar.ts).
+ * WHAT IS AND IS NOT HERE. The lists that are the product's own checklists are translated; the arithmetic is the kit's
+ * and cites its published source. Official annexes that were opened sit in ./kendi (the essential-medicines annex,
+ * the immunisation flyer, and the narcotic-prescription order), each unsigned and each beside the page it was read on.
+ * Tools that still need an official text that was not opened stay slots (./yuvalar.ts).
  * ONE EXCEPTION, SAID WHERE IT STANDS: two of the country's own tools (./kendi/tanimlar.ts) hold numbers of a national
  * protocol — the limits of the four classes of the body mass index, and the rule the expected date of birth is
  * counted by — each beside the place it was read in, and neither read by a clinician yet.

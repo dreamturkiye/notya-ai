@@ -32,7 +32,7 @@ const DIZIN = join(KOK, 'countries/uz/uygulama/araclar')
 const FORMLAR = ['uz-Latn', 'uz-Cyrl', 'ru'] as const
 
 /** Latin written inside a Cyrillic or Russian sentence on purpose: names the profession itself writes in Latin letters. */
-const LATIN_KALABILIR = /\b(ESI(?: [1-5])?|ASA(?: (?:I{1,3}|IV|VI|V))?|ABCDE|ST|PASI|EASI|SCORAD|KDIGO|G[1-5][ab]?(?:–G5)?|A[1-3](?:–A3)?|D[24]|logMAR|BI-RADS [0-6]|DAS28|I{1,3}|IV|VI|V|E|A|B|C)\b/g
+const LATIN_KALABILIR = /\b(ESI(?: [1-5])?|ASA(?: (?:I{1,3}|IV|VI|V))?|ABCDE|ST|PASI|EASI|SCORAD|KDIGO|G[1-5][ab]?(?:–G5)?|A[1-3](?:–A3)?|D[24]|logMAR|BI-RADS [0-6]|DAS28|K1|N\d+|I{1,3}|IV|VI|V|E|A|B|C)\b/g
 
 /**
  * Role → the role tools it sees, in the grid's order. Base tools are the same for every role and are listed apart.
@@ -46,53 +46,55 @@ const LATIN_KALABILIR = /\b(ESI(?: [1-5])?|ASA(?: (?:I{1,3}|IV|VI|V))?|ABCDE|ST|
 const TEMEL = ['hasta-portali', 'sablonlarim', 'konsultasyonlar']
 /** The body mass index, the gestational age and expected date of birth, the vaccination record; and the follow-up list. */
 const T = 'uz-tana-vazni-indeksi', H = 'uz-homiladorlik-muddati', E = 'uz-emlash-qaydi', P_ = 'takip-paneli'
+/** Annex row, local prescription note, narcotic-form ticks (every doctor); the flyer of ages (paediatrics and family medicine). */
+const D = 'uz-asosiy-dorilar', R = 'uz-retsept-qaydi', G = 'uz-giyohvand-qoidalari', A = 'uz-emlash-taqvimi'
 /** Off by Kaan's order of 2026-10-10, each with the role it was shown to until that day. */
 const KAPALI: Readonly<Record<string, string>> = { 'esi-triyaj': 'acil-tip', 'kdigo-evre': 'dahiliye', 'kdigo-serit': 'nefroloji', 'rapor-taslagi': 'radyoloji' }
 /** A fifth tool is a slot too, but for a different reason: a brand-new mechanism, off pending a clinician's sign-off, not Kaan's order. */
 const YENI_KAPALI = 'kbh-risk-kategorisi'
 const YENI_KAPALI_ROLLER = ['nefroloji', 'dahiliye', 'aile-hekimligi', 'endokrinoloji', 'kardiyoloji', 'uroloji', 'onkoloji'] as const
 const ROL_ARACLARI: Readonly<Record<string, readonly string[]>> = {
-  'acil-tip': ['kritik-yol', T, P_],
-  'aile-hekimligi': ['kronik-izlem-kaydi', 'birinci-acil-bayrak', T, H, E, P_],
-  anestezi: ['asa-preop', 'hava-yolu-notu', 'postop-agri', T, P_],
-  'beyin-cerrahisi': ['noro-postop', 'nobet-bilinc', T, P_],
-  'cocuk-cerrahisi': ['cocuk-prepost-op', 'yara-dren-izlem', T, P_],
-  'genel-cerrahi': ['yara-dren-izlem', 'genel-preop', T, P_],
-  'gogus-cerrahisi': ['toraks-preop', 'toraks-tup-yara', T, P_],
-  'gogus-hastaliklari': ['inhaler-teknik', T, P_],
-  'goz-hastaliklari': ['gorme-keskinligi', T, P_],
-  dahiliye: ['kronik-izlem-kaydi', T, P_],
-  dermatoloji: ['pasi', 'easi', 'scorad', 'yama-okuma', 'akne-vade', 'lazer-vade', T, P_],
-  endokrinoloji: ['rejim-karti', T, P_],
-  'enfeksiyon-hastaliklari': ['antibiyotik-sure', T, P_],
-  gastroenteroloji: ['endoskopi-kaydi', T, P_],
-  'kadin-hastaliklari-dogum': [T, H, P_],
-  'kalp-damar-cerrahisi': ['kalp-damar-preop', 'greft-yara-izlem', 'antikoagulan-vadeleri', T, P_],
+  'acil-tip': ['kritik-yol', T, D, R, G, P_],
+  'aile-hekimligi': ['kronik-izlem-kaydi', 'birinci-acil-bayrak', T, H, E, A, D, R, G, P_],
+  anestezi: ['asa-preop', 'hava-yolu-notu', 'postop-agri', T, D, R, G, P_],
+  'beyin-cerrahisi': ['noro-postop', 'nobet-bilinc', T, D, R, G, P_],
+  'cocuk-cerrahisi': ['cocuk-prepost-op', 'yara-dren-izlem', T, D, R, G, P_],
+  'genel-cerrahi': ['yara-dren-izlem', 'genel-preop', T, D, R, G, P_],
+  'gogus-cerrahisi': ['toraks-preop', 'toraks-tup-yara', T, D, R, G, P_],
+  'gogus-hastaliklari': ['inhaler-teknik', T, D, R, G, P_],
+  'goz-hastaliklari': ['gorme-keskinligi', T, D, R, G, P_],
+  dahiliye: ['kronik-izlem-kaydi', T, D, R, G, P_],
+  dermatoloji: ['pasi', 'easi', 'scorad', 'yama-okuma', 'akne-vade', 'lazer-vade', T, D, R, G, P_],
+  endokrinoloji: ['rejim-karti', T, D, R, G, P_],
+  'enfeksiyon-hastaliklari': ['antibiyotik-sure', T, D, R, G, P_],
+  gastroenteroloji: ['endoskopi-kaydi', T, D, R, G, P_],
+  'kadin-hastaliklari-dogum': [T, H, D, R, G, P_],
+  'kalp-damar-cerrahisi': ['kalp-damar-preop', 'greft-yara-izlem', 'antikoagulan-vadeleri', T, D, R, G, P_],
   // the vascular half of the specialty the audit split: the same three tools
-  'damar-cerrahisi': ['kalp-damar-preop', 'greft-yara-izlem', 'antikoagulan-vadeleri', T, P_],
-  kardiyoloji: ['kardiyo-not', T, P_],
-  'kulak-burun-bogaz': ['odyometri-pta', 'otoskopi-notu', 'vertigo-notu', T, P_],
-  nefroloji: ['diyaliz-seans', T, P_],
-  noroloji: ['inme-bayraklari', T, P_],
-  onkoloji: ['kur-sayaci', 'toksisite-listesi', T, P_],
-  ortopedi: ['kirik-alci-takip', 'ortopedi-op-protokol', 'vas-fonksiyon', T, P_],
-  pediatri: ['hedef-boy', 'doz-hesabi', T, E, P_],
-  'plastik-cerrahi': ['plastik-yara-greft', T, P_],
-  psikiyatri: ['psikiyatri-guvenlik', T, P_],
-  radyoloji: ['tetkik-kuyrugu', T, P_],
-  romatoloji: ['das28', 'eklem-28', T, P_],
-  uroloji: ['psa-hizi', T, P_],
-  'spor-hekimligi': ['rtp-basamak', 'sakatlik-gunlugu', T, P_],
-  'fizik-tedavi': ['vas-fonksiyon', 'seans-plani', 'icf-ozet', T, P_],
+  'damar-cerrahisi': ['kalp-damar-preop', 'greft-yara-izlem', 'antikoagulan-vadeleri', T, D, R, G, P_],
+  kardiyoloji: ['kardiyo-not', T, D, R, G, P_],
+  'kulak-burun-bogaz': ['odyometri-pta', 'otoskopi-notu', 'vertigo-notu', T, D, R, G, P_],
+  nefroloji: ['diyaliz-seans', T, D, R, G, P_],
+  noroloji: ['inme-bayraklari', T, D, R, G, P_],
+  onkoloji: ['kur-sayaci', 'toksisite-listesi', T, D, R, G, P_],
+  ortopedi: ['kirik-alci-takip', 'ortopedi-op-protokol', 'vas-fonksiyon', T, D, R, G, P_],
+  pediatri: ['hedef-boy', 'doz-hesabi', T, E, A, D, R, G, P_],
+  'plastik-cerrahi': ['plastik-yara-greft', T, D, R, G, P_],
+  psikiyatri: ['psikiyatri-guvenlik', T, D, R, G, P_],
+  radyoloji: ['tetkik-kuyrugu', T, D, R, G, P_],
+  romatoloji: ['das28', 'eklem-28', T, D, R, G, P_],
+  uroloji: ['psa-hizi', T, D, R, G, P_],
+  'spor-hekimligi': ['rtp-basamak', 'sakatlik-gunlugu', T, D, R, G, P_],
+  'fizik-tedavi': ['vas-fonksiyon', 'seans-plani', 'icf-ozet', T, D, R, G, P_],
   // ── roles the audit of 2026-10-10 added: the core set and nothing more until a local specialist names what is used.
   //    Of the core set, the body mass index and the follow-up list exist; its other tools are placeholders or switched off.
-  'alerji-immunoloji': [T, P_], reproduktoloji: [T, P_], 'cocuk-norolojisi': [T, P_], narkoloji: [T, P_], diyetoloji: ['makro-kaydi', T, P_],
+  'alerji-immunoloji': [T, D, R, G, P_], reproduktoloji: [T, D, R, G, P_], 'cocuk-norolojisi': [T, D, R, G, P_], narkoloji: [T, D, R, G, P_], diyetoloji: ['makro-kaydi', T, D, R, G, P_],
   // surdology (the doctor's specialty of hearing; an allied "audiologist" with base tools only before): the hearing average
-  surdoloji: ['odyometri-pta', 'sonraki-seans', T, P_],
+  surdoloji: ['odyometri-pta', 'sonraki-seans', T, D, R, G, P_],
   // ── clinic doctors. Two carry the same specialty as a doctor role since the audit and see that specialty's tools:
-  'estetik-cerrahi': ['plastik-yara-greft', 'estetik-cerrahi-vade', T, P_],
-  'klinik-dermatoloji': ['pasi', 'easi', 'scorad', 'yama-okuma', 'akne-vade', 'lazer-vade', T, P_],
-  'medikal-estetik': ['estetik-islem-vade', T, P_],
+  'estetik-cerrahi': ['plastik-yara-greft', 'estetik-cerrahi-vade', T, D, R, G, P_],
+  'klinik-dermatoloji': ['pasi', 'easi', 'scorad', 'yama-okuma', 'akne-vade', 'lazer-vade', T, D, R, G, P_],
+  'medikal-estetik': ['estetik-islem-vade', T, D, R, G, P_],
   // allied professions: a session or safety record of their own, then the follow-up list
   fizyoterapi: ['vas-fonksiyon', 'seans-plani', 'icf-ozet', P_],
   'klinik-psikolog': ['psikiyatri-guvenlik', 'sonraki-seans', P_],
@@ -156,11 +158,12 @@ describe('Uzbekistan — tools: who sees what, the three scripts, and what is de
       if (p.roller === null || p.sinif === 'hekimler' || p.anahtar.startsWith('uz-')) continue
       assert.deepEqual(p.roller.filter((r) => yeni.has(r)).sort(), [...(beklenenEk[p.anahtar] ?? [])].sort(), `${p.anahtar}: the roles it gained`)
     }
-    // WHAT IS SWITCHED ON: the 43 tools of before, the dose calculator again, and the three tools of the country's own
+    // WHAT IS SWITCHED ON: the 43 tools of before, the dose calculator again, the three tools of the country's own,
+    // and the four tools read from official texts on 2026-10-14 (flyer, annex, prescription note, narcotic ticks).
     const { UZ_KAPALI_ARACLAR } = await import('./index')
-    assert.equal(icerik.araclar.length, 61)
-    assert.deepEqual(icerik.araclar.filter((p) => p.anahtar.startsWith('uz-')).map((p) => p.anahtar), [T, H, E])
-    assert.deepEqual(icerik.araclar.filter((p) => p.sinif === 'hekimler').map((p) => p.anahtar), [T])
+    assert.equal(icerik.araclar.length, 65)
+    assert.deepEqual(icerik.araclar.filter((p) => p.anahtar.startsWith('uz-')).map((p) => p.anahtar), [T, H, E, A, D, R, G])
+    assert.deepEqual(icerik.araclar.filter((p) => p.sinif === 'hekimler').map((p) => p.anahtar), [T, D, R, G])
     for (const k of UZ_KAPALI_ARACLAR) assert.ok(!icerik.araclar.some((p) => p.anahtar === k), k)
   })
 
@@ -268,7 +271,7 @@ describe('Uzbekistan — tools: who sees what, the three scripts, and what is de
     // tools the table names in a note rather than in its key column: the second and third score of one audited tile, and two half-tools;
     // and the three tools only Uzbekistan has, which the pre-split application did not have and the section names above its table
     // Structural records added after the audit document. They are not rows of that document; the outcome section is left as it was.
-    const yeniYapisal = ['akne-vade', 'birinci-acil-bayrak', 'endoskopi-kaydi', 'estetik-cerrahi-vade', 'estetik-islem-vade', 'icf-ozet', 'inme-bayraklari', 'kardiyo-not', 'kronik-izlem-kaydi', 'lazer-vade', 'makro-kaydi', 'psikiyatri-guvenlik', 'seans-plani', 'sonraki-seans']
+    const yeniYapisal = ['akne-vade', 'birinci-acil-bayrak', 'endoskopi-kaydi', 'estetik-cerrahi-vade', 'estetik-islem-vade', 'icf-ozet', 'inme-bayraklari', 'kardiyo-not', 'kronik-izlem-kaydi', 'lazer-vade', 'makro-kaydi', 'psikiyatri-guvenlik', 'seans-plani', 'sonraki-seans', A, D, R, G]
     const belgesizEski = belgesiz.filter((k) => !yeniYapisal.includes(k))
     // kbh-risk-kategorisi is a slot too (YENI_KAPALI above), not switched on, so it belongs here rather than in yeniYapisal
     assert.deepEqual(belgesizEski.sort(), ['basdai', 'easi', 'iltihap-lab-izlem', 'kbh-risk-kategorisi', 'scorad', E, H, T].sort())
@@ -304,7 +307,7 @@ describe('Uzbekistan — tools: who sees what, the three scripts, and what is de
 
   it('the folder says what it is: machine-written, Cyrillic derived by rule, read by no clinician, no reference content', () => {
     const bas = readFileSync(join(DIZIN, 'index.ts'), 'utf8').slice(0, 4400)
-    for (const d of [/MACHINE-WRITTEN\. AWAITS NATIVE AND CLINICAL REVIEW\./, /UZBEK IN CYRILLIC SCRIPT DERIVED FROM\s+\* THE LATIN TEXT BY RULE/, /NO national reference content/, /items of published questionnaires are NOT translated/]) assert.match(bas, d)
+    for (const d of [/MACHINE-WRITTEN\. AWAITS NATIVE AND CLINICAL REVIEW\./, /UZBEK IN CYRILLIC SCRIPT DERIVED FROM\s+\* THE LATIN TEXT BY RULE/, /Official annexes that were opened/, /items of published questionnaires are NOT translated/]) assert.match(bas, d)
     assert.deepEqual(icerik.inceleme, { makineYazimi: true, klinisyen: null })
     for (const ad of readdirSync(DIZIN).filter((x) => /^(temel|rol\d+|takip|yardimci|metinler|birimler)\.ts$/.test(x))) assert.match(readFileSync(join(DIZIN, ad), 'utf8').slice(0, 1600), /MACHINE-WRITTEN\. AWAITS NATIVE REVIEW/, `${ad} does not say it is machine-written`)
   })

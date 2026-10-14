@@ -37,6 +37,7 @@
  *   [IMM]   SanQvaM 0239-07/3, "Oʻzbekiston Respublikasida yuqumli kasalliklar immunoprofilaktikasi", approved by the
  *           Chief State Sanitary Doctor on 15.03.2015; amendment of 19.07.2021 the latest shown.
  *           https://lex.uz/uz/acts/-5524039 — opened for its title and status ONLY. NOTHING OF ITS CALENDAR IS IN THE PRODUCT.
+ *           The sanitary service's undated flyer is a separate tool (./tibbi.ts), not this act.
  *
  * LICENCE, as read (./metinler.ts states it per tool): the arithmetic and the limits are taken from official
  * documents of the state and from pages of public bodies; no wording of any of them is reproduced. Law of the
@@ -49,6 +50,7 @@
  */
 import type { AracSayisi, AracTanimi } from '@/lib/ulke/araclar/tipler'
 import { BOS_SONUC, gunEkle, gunFarki, gunMu, sayi, sayiMi, secim, tarih } from '@/lib/ulke/araclar/yardimci'
+import { UZ_ASOSIY_DORILAR, UZ_EMLASH_TAQVIMI, UZ_GIYOHVAND_QOIDALARI, UZ_RETSEPT_QAYDI } from './tibbi'
 
 // ───────────────────────── 1. body mass index ─────────────────────────
 
@@ -188,9 +190,9 @@ export const UZ_HOMILADORLIK_MUDDATI: AracTanimi = {
  * ONE VACCINATION AS THE DOCTOR ENTERS IT: the name of the vaccine in the doctor's own words, the number of the
  * dose, the day it was given, where the fact comes from (the vaccination document, or what the patient or a parent
  * said), and — if the doctor sets one — a next day.
- * THE TOOL KNOWS NO VACCINE, NO AGE AND NO INTERVAL. The national calendar of preventive vaccinations ([IMM]) is an
- * act of the Chief State Sanitary Doctor and is NOT in the product: nothing of it was copied, the tool proposes no
- * vaccine and no date, and it never says that a vaccination is due, late or missing. It only repeats what was typed.
+ * THE TOOL KNOWS NO VACCINE, NO AGE AND NO INTERVAL. It proposes no vaccine and no date, and it never says that a
+ * vaccination is due, late or missing. It only repeats what was typed. The sanitary service's flyer of ages is a
+ * different tool (./tibbi.ts). The act of the Chief State Sanitary Doctor ([IMM]) is still not copied.
  * A vaccination with a day after today is not a vaccination that was given: no result.
  * The range of the dose number is a limit of what can be typed, not a clinical limit.
  */
@@ -215,4 +217,4 @@ export const UZ_EMLASH_QAYDI: AracTanimi = {
 }
 
 /** The mechanisms of the pack's own tools: `UlkeAraclari.kendiAraclari`. */
-export const UZ_KENDI_TANIMLAR: readonly AracTanimi[] = [UZ_TANA_VAZNI_INDEKSI, UZ_HOMILADORLIK_MUDDATI, UZ_EMLASH_QAYDI]
+export const UZ_KENDI_TANIMLAR: readonly AracTanimi[] = [UZ_TANA_VAZNI_INDEKSI, UZ_HOMILADORLIK_MUDDATI, UZ_EMLASH_QAYDI, UZ_EMLASH_TAQVIMI, UZ_ASOSIY_DORILAR, UZ_RETSEPT_QAYDI, UZ_GIYOHVAND_QOIDALARI]

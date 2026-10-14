@@ -208,7 +208,8 @@ describe('Uzbekistan — mechanical conformity of every text (A18; machine-writt
   it('EVERY FORM: numbers as the country writes them — a decimal comma and never a decimal point, no 12-hour clock, no date in another order', () => {
     for (const b of BICIMLER) {
       assert.deepEqual(bul(M[b], /\d\.\d/), [], `${b}: decimal point`)
-      assert.deepEqual(bul(M[b], /\d,\d{3}(?!\d)/), [], `${b}: a comma between thousands`)
+      // A comma and three digits is a thousands mark (12,500), except a dose the annex writes to three decimal places (3,125 mg, 0,125%).
+      assert.deepEqual(bul(M[b], /\d,\d{3}(?!\d)(?!\s*(?:%|mg\b|мг|ml\b|мл|mkg\b|мкг|g\b|г(?![\p{L}])))/u), [], `${b}: a comma between thousands`)
       assert.deepEqual(bul(M[b], /\b(?:AM|PM|a\.m\.|p\.m\.)\b/), [], `${b}: 12-hour clock`)
       assert.deepEqual(bul(M[b], /\d{1,4}[/-]\d{1,2}[/-]\d{2,4}/), [], `${b}: a date written with slashes or hyphens`)
     }

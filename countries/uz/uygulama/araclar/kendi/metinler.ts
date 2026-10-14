@@ -31,6 +31,7 @@ import type { PaketAraci } from '@/lib/ulke/araclar/tipler'
 import { UZ_HEKIM_ROLLERI } from '../../../klinik/rolListesi'
 import { u } from '../yardimci'
 import { UZ_TVI_ENG_KICHIK_YOSH } from './tanimlar'
+import { UZ_TIBBI_ARACLAR } from './tibbiMetin'
 
 export const UZ_KENDI_ARACLAR: readonly PaketAraci[] = [
   {
@@ -129,6 +130,11 @@ export const UZ_KENDI_ARACLAR: readonly PaketAraci[] = [
       },
       not: u('Faqat qayd: vosita milliy emlash kalendarini oʻz ichiga olmaydi, vaksina yoki sana taklif qilmaydi va emlash kechikkanini aytmaydi.', 'Фақат қайд: восита миллий эмлаш календарини ўз ичига олмайди, вакцина ёки сана таклиф қилмайди ва эмлаш кечикканини айтмайди.', 'Только запись: инструмент не содержит национального календаря прививок, не предлагает ни вакцину, ни дату и не сообщает о пропущенной прививке.'),
     },
-    lisans: { durum: 'serbest', kaynak: 'The product\'s own record of five fields: it holds nothing of a third party. The national calendar of preventive vaccinations (SanQvaM 0239-07/3) is not in the product.' },
+    lisans: { durum: 'serbest', kaynak: 'The product\'s own record of five fields: it holds nothing of a third party. The national calendar of preventive vaccinations (SanQvaM 0239-07/3) is not in this tool.' },
   },
+  // Flyer first, then the annex tools, so the grid matches ./tanimlar.ts.
+  UZ_TIBBI_ARACLAR[3],
+  UZ_TIBBI_ARACLAR[0],
+  UZ_TIBBI_ARACLAR[1],
+  UZ_TIBBI_ARACLAR[2],
 ]

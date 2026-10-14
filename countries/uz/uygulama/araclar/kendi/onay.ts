@@ -55,7 +55,44 @@ export const UZ_ONAYSIZ_YENI_ARACLAR: readonly UzOnaysizArac[] = [
     ne: 'One vaccination as the doctor enters it: name, dose number, day, source of the fact, and a next day the doctor sets.',
     teyit: [
       'The five fields are what a doctor here records for a vaccination, and nothing needed is missing (series and batch number are not asked).',
-      'The tool holds no vaccine, no age and no interval, and must not be taken for the national calendar (SanQvaM 0239-07/3), which is not in the product.',
+      'The tool holds no vaccine, no age and no interval, and must not be taken for the national calendar (SanQvaM 0239-07/3), which is not in this tool.',
+    ],
+  },
+  {
+    anahtar: 'uz-emlash-taqvimi',
+    ne: 'The ages and vaccine kinds printed on the sanitary service flyer, as ticks the doctor sets.',
+    teyit: [
+      'The flyer opened on 2026-10-14 is the calendar in force. It has no issue date. Resolution PQ-402 of 22 November 2024 tells the ministry to review it; the re-approved text was not opened.',
+      'The eleven rows are the flyer\'s ages and nothing else: no catch-up rule, no interval, and the 9 to 13 year row does not state sex or the gap between doses.',
+      'The Cyrillic spelling is the letter-by-letter rule, not a native reader\'s, and a paediatrician confirms each row.',
+    ],
+  },
+  {
+    anahtar: 'uz-asosiy-dorilar',
+    ne: 'One row of the essential-medicines annex: international nonproprietary name, form and strength, in annex order.',
+    teyit: [
+      'The annex of order No. 34 of 21 August 2023, registration No. 3455, is the list in force, and the 502 rows are every numbered row of the page opened on 2026-10-14.',
+      'The position is the annex order, not a count of prescriptions. No brand was added beyond a parenthetical the annex itself prints.',
+      'The Cyrillic and Russian lines are a machine rendering of the annex\'s Latin spelling. A pharmacist confirms them before a doctor relies on the spelling.',
+      'The licence was read by a machine: a lawyer confirms that the annex may be stored in a commercial product.',
+    ],
+  },
+  {
+    anahtar: 'uz-retsept-qaydi',
+    ne: 'A local note naming one annex row, plus a quantity and directions the doctor types. It is not sent.',
+    teyit: [
+      'The quantity is the doctor\'s and is not a dose the tool chose. The strength on the row is the annex\'s form, not a suggested dose.',
+      'The note is not the pink narcotic form, is not sent to a pharmacy, and does not apply the narcotic rules. Those rules are the other tool.',
+      'A lawyer confirms the same reading of the copyright law as for the annex itself.',
+    ],
+  },
+  {
+    anahtar: 'uz-giyohvand-qoidalari',
+    ne: 'Ticks for the narcotic-prescription requirements in paragraphs 33, 34, 36 and 37 of order No. 3604.',
+    teyit: [
+      'Those four paragraphs, as opened on 2026-10-14, are the rules in force, and no required field from them is missing from the nine ticks.',
+      'The tool does not check a form, does not send one, and is not the pink blank. Other annexes of the order were not opened.',
+      'A lawyer confirms that storing these requirements from the order is allowed, and a clinician confirms the wording of each tick.',
     ],
   },
 ]
