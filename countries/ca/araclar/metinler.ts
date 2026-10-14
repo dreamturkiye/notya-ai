@@ -23,6 +23,7 @@
  */
 import type { AracLisansi, PaketAraci } from '@/lib/ulke/araclar/tipler'
 import type { BicimliMetin } from '@/lib/ulke/arayuz/tipler'
+import { CA_DPD_SATIRLAR } from './tanimlar'
 
 const D = 'en-CA'
 const m = (metin: string): BicimliMetin => ({ [D]: metin })
@@ -88,8 +89,42 @@ export function caKendiAraclari(r: CaRolleri): readonly PaketAraci[] {
       lisans: NIDDK_LISANSI,
     },
     caNarkotik(r.hekimler),
+    caDpd(r.hekimler),
     caPrescribeIt(r.hekimler),
   ]
+}
+
+/** The register's own brand, DIN and ingredient line. Not rewritten into Canadian spelling. */
+export function caDpdEtiket(r: (typeof CA_DPD_SATIRLAR)[number]): string {
+  const icerik = r.ingredients.map((i) => [i.name, i.strength, i.unit].filter(Boolean).join(' ')).join('; ')
+  const govde = `${r.brand} — DIN ${r.din}`
+  return icerik ? `${govde} — ${icerik}` : govde
+}
+
+/**
+ * A lookup of approved human products. Every doctor role. Not a ranking and not a dose.
+ * Classified as Canada-only: the register is Health Canada's, so no other country lists this key.
+ */
+export function caDpd(hekimler: readonly string[]): PaketAraci {
+  return {
+    anahtar: 'ca-dpd-lookup',
+    roller: [...hekimler], sinif: 'hekimler',
+    metin: {
+      ad: m('Drug Product Database lookup'),
+      aciklama: m('Finds an approved human product in the Drug Product Database by brand, ingredient or drug identification number. Type at least two characters, then choose the row. It is a register of approved products, not a ranking of what is prescribed.'),
+      alanlar: sozluk({ urun: 'Product' }),
+      secenekler: { urun: Object.fromEntries(CA_DPD_SATIRLAR.map((r) => [r.key, m(caDpdEtiket(r))])) },
+      sayilar: sozluk({ bilesen: 'Active ingredients on the row' }),
+      uyarilar: sozluk({ kayit: 'The row is the register\'s own wording. Confirm it on the Drug Product Database before you use it.' }),
+      not: m('A copy of one approved row. It is not a dose, not a prescription and nothing is sent. It does nothing else. Whether the product is right for this patient is the doctor\'s.'),
+    },
+    lisans: {
+      durum: 'serbest',
+      hakSahibi: 'Government of Canada',
+      kaynak: 'https://open.canada.ca/en/open-government-licence-canada, read 2026-10-14',
+      bildirim: m('Contains information licensed under the Open Government Licence – Canada. The federal health department has not reviewed this product. This is not an official version of the Drug Product Database.'),
+    },
+  }
 }
 
 /** A record of the written narcotic order, from the regulation opened on 14 October 2026. Nothing is sent. */

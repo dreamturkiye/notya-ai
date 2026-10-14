@@ -50,6 +50,14 @@ export const CA_ONAY_BEKLEYEN: readonly OnayBekleyen[] = [
     ],
   },
   {
+    anahtar: 'ca-dpd-lookup',
+    sorular: [
+      'The list is every approved human product the Drug Product Database API returned on 14 October 2026, with the English ingredient names from that day. Disinfectants, veterinary products and radiopharmaceuticals are not on it. Is that the set a clinic should search?',
+      'The screen shows the register\'s own brand, drug identification number and ingredient line. It does not rank products and it does not suggest a dose. Is a lookup, with the doctor choosing the row, enough?',
+      'Cancelled and dormant products are not in this file. Should a clinic also see those, or only products the API marked approved?',
+    ],
+  },
+  {
     anahtar: 'ca-prescribeit-link',
     sorular: [
       'The tile only opens the homepage. The page says a standards working group is how the national prescribing standard is reached. This product has not joined. Is a link, with no registration, the right thing to show?',

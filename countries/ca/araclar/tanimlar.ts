@@ -17,6 +17,7 @@
  */
 import type { AracTanimi } from '@/lib/ulke/araclar/tipler'
 import { BOS_SONUC, kontrolListesi, sayi, sayiMi, secim } from '@/lib/ulke/araclar/yardimci'
+import dpdHam from '../referans/dpd-onayli.json'
 
 // ───────────────────────── 1. unit converter: pounds, feet and inches ─────────────────────────
 
@@ -166,5 +167,39 @@ export const CA_NARKOTIK: AracTanimi = kontrolListesi({
   kaynak: 'Narcotic Control Regulations, C.R.C., c. 1041, sections 2 and 31, current to 2026-09-21.',
 })
 
+/**
+ * APPROVED HUMAN PRODUCTS from the Drug Product Database, retrieved 2026-10-14.
+ * Not a ranking of prescriptions. The row the doctor picks is repeated in the copied note by its own label.
+ */
+export type CaDpdSatir = {
+  key: string
+  din: string
+  brand: string
+  company: string
+  ingredients: readonly { name: string; strength: string; unit: string }[]
+}
+
+export const CA_DPD_SATIRLAR = dpdHam.rows as CaDpdSatir[]
+const CA_DPD_SIRA = new Map(CA_DPD_SATIRLAR.map((r, i) => [r.key, i]))
+
+export const CA_DPD: AracTanimi = {
+  anahtar: 'ca-dpd-lookup',
+  tur: 'hesap',
+  alanlar: [secim('urun', CA_DPD_SATIRLAR.map((r) => r.key))],
+  cikti: { sayilar: ['bilesen'], bantlar: [], uyarilar: ['kayit'], tarihler: [] },
+  kaynak: 'Drug Product Database, approved human products, retrieved 2026-10-14 from https://health-products.canada.ca/api/drug/drugproduct/?status=1&lang=en&type=json',
+  hesapla: (g) => {
+    const n = typeof g.urun === 'string' ? CA_DPD_SIRA.get(g.urun) : undefined
+    if (n === undefined) return BOS_SONUC
+    return {
+      tamam: true,
+      sayilar: [{ anahtar: 'bilesen', deger: CA_DPD_SATIRLAR[n].ingredients.length, ondalik: 0 }],
+      bant: null,
+      uyarilar: ['kayit'],
+      tarihler: [],
+    }
+  },
+}
+
 /** The mechanisms of the tools only this country has, in the order the grid shows them. */
-export const CA_TANIMLAR: readonly AracTanimi[] = [CA_BIRIM_CEVIRICI, CA_EGFR, CA_NARKOTIK]
+export const CA_TANIMLAR: readonly AracTanimi[] = [CA_BIRIM_CEVIRICI, CA_EGFR, CA_NARKOTIK, CA_DPD]

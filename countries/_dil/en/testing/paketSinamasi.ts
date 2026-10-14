@@ -144,7 +144,9 @@ export function ingilizcePaketSinamasi(s: EnPaketSinamasi): void {
     it('no text shows the spelling of another form of English', () => {
       // field keys in an instruction are the contract with the code ("prior_anesthesia"), not text
       const temiz = (m: string) => m.replace(/^- [a-z_]+ — /gm, '- ').replace(/"[a-z_]+": /g, '')
-      assert.deepEqual(metinler.flatMap((x) => bicimYazimSorunlari(temiz(x.metin), bicim).map((sorun) => `${x.yer}: ${sorun}`)), [])
+      // A copied official register (field key `urun`) keeps that file's own spelling, including another form of English.
+      const yazilan = metinler.filter((x) => !x.yer.includes('.secenekler.urun.'))
+      assert.deepEqual(yazilan.flatMap((x) => bicimYazimSorunlari(temiz(x.metin), bicim).map((sorun) => `${x.yer}: ${sorun}`)), [])
     })
   })
 
