@@ -16,6 +16,7 @@ export type Ref =
   | 'SGK_SUT'
   | 'TITCK'
   | 'ESMO_TR'
+  | 'KDIGO_2012_AKI'
 
 export type Dipnot = { ref: Ref; not: string }
 
@@ -25,6 +26,7 @@ export const REF_ACIKLAMA: Record<Ref, string> = {
   SGK_SUT: 'SGK Sağlık Uygulama Tebliği (SUT) — onkoloji ilaç/rapor endikasyon; güncel metin hekim doğrular; canlı e-imza yok',
   TITCK: 'TİTCK — KÜB; kemoterapi / hedefe yönelik ajan dozu Notya tarafından üretilmez',
   ESMO_TR: 'ESMO/NCCN derinliği — TTOD üzerinden TR ilaç erişimine uyarlanmış klinik bağlam; tanı hekimde',
+  KDIGO_2012_AKI: 'KDIGO 2012 AKI Guideline, Kidney Int. Suppl. 2012;2:19-36, Table 2 (s.19) — nefrotoksik kemoterapi (örn. sisplatin) izleminde akut böbrek hasarı evrelemesi; kit kendi sunumu, tanı/doz hekimde',
 }
 
 export const HEKIM_KILIT_METNI =

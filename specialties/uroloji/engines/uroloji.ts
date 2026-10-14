@@ -18,6 +18,7 @@ export type Ref =
   | 'TITCK'
   | 'IPSS'
   | 'PSA_IZLEM'
+  | 'KDIGO_2012_AKI'
 
 export type Dipnot = { ref: Ref; not: string }
 
@@ -28,6 +29,7 @@ export const REF_ACIKLAMA: Record<Ref, string> = {
   TITCK: 'TİTCK — ürün kısa ürün bilgileri (KÜB); ilaç dozu Notya tarafından üretilmez',
   IPSS: 'IPSS (International Prostate Symptom Score) — 7 madde 0–5, toplam 0–35; şiddet bandı klinik karar desteğidir, tanı değildir',
   PSA_IZLEM: 'PSA ng/mL izlemi — değer ve hız karar desteğidir; kanser tanısı değildir; yorum ve ileri tetkik kararı hekimindir',
+  KDIGO_2012_AKI: 'KDIGO 2012 AKI Guideline, Kidney Int. Suppl. 2012;2:19-36, Table 2 (s.19) — obstrüktif (post-renal) akut böbrek hasarı evrelemesi; kit kendi sunumu, tanı/doz hekimde',
 }
 
 export const HEKIM_KILIT_METNI =

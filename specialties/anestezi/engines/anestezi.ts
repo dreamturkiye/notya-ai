@@ -15,6 +15,7 @@ export type Ref =
   | 'SGK_ANESTEZI'
   | 'TITCK'
   | 'ASA_TR'
+  | 'KDIGO_2012_AKI'
 
 export type Dipnot = { ref: Ref; not: string }
 
@@ -24,6 +25,7 @@ export const REF_ACIKLAMA: Record<Ref, string> = {
   SGK_ANESTEZI: 'SGK anestezi işlem ve rapor kuralları — güncel metin hekim doğrular; canlı e-imza yok',
   TITCK: 'TİTCK — KÜB; anestezik / analjezik doz Notya tarafından üretilmez',
   ASA_TR: 'ASA fiziksel durum sınıflaması — karar desteği; tanı ve işlem planı hekimde',
+  KDIGO_2012_AKI: 'KDIGO 2012 AKI Guideline, Kidney Int. Suppl. 2012;2:19-36, Table 2 (s.19) — perioperatif / yoğun bakım akut böbrek hasarı evrelemesi; kit kendi sunumu, tanı/doz hekimde',
 }
 
 export const HEKIM_KILIT_METNI =

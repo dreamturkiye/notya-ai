@@ -16,6 +16,7 @@ export type Ref =
   | 'SB_AKS'
   | 'TITCK'
   | 'SCORE2_ESC'
+  | 'KDIGO_2024'
 
 export type Dipnot = { ref: Ref; not: string }
 
@@ -26,6 +27,7 @@ export const REF_ACIKLAMA: Record<Ref, string> = {
   SB_AKS: 'T.C. Sağlık Bakanlığı — göğüs ağrısı / AKS acil protokolleri; ayaktan izlem yeterli değildir',
   TITCK: 'TİTCK — KÜB; ilaç dozu Notya tarafından üretilmez',
   SCORE2_ESC: 'ESC 2021 SCORE2 (ehab309) — 10 yıllık KV olay riski; Türkiye yüksek risk bölgesi; bant karar desteğidir, tanı değildir',
+  KDIGO_2024: 'KDIGO 2024 CKD Guideline, Kidney Int. 2024;105(4S):S117-S314 — kardiyorenal izlem (ACEi/ARB/SGLT2 ve eGFR/ACR risk kategorisi) için; kit kendi sunumu, KDIGO ısı haritası/renkleri değil',
 }
 
 export const HEKIM_KILIT_METNI =

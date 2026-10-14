@@ -17,6 +17,7 @@ export type Ref =
   | 'ATLS_TR'
   | 'SGK_ACIL'
   | 'TITCK'
+  | 'KDIGO_2012_AKI'
 
 export type Dipnot = { ref: Ref; not: string }
 
@@ -28,6 +29,7 @@ export const REF_ACIKLAMA: Record<Ref, string> = {
   ATLS_TR: 'ATLS Türkiye uygulamaları — travma yol bayrağı; tanı hekimde',
   SGK_ACIL: 'SGK acil işlem ve rapor kuralları — güncel metin hekim doğrular; canlı e-imza yok',
   TITCK: 'TİTCK — KÜB; ilaç doz Notya tarafından üretilmez',
+  KDIGO_2012_AKI: 'KDIGO 2012 AKI Guideline, Kidney Int. Suppl. 2012;2:19-36, Table 2 (s.19) — akut böbrek hasarı evrelemesi (kreatinin/idrar çıkışı); kit kendi sunumu, tanı/doz hekimde',
 }
 
 export const HEKIM_KILIT_METNI =
