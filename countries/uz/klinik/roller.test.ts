@@ -164,9 +164,9 @@ describe('42 roles: the decisions of the audit of 2026-10-10, as applied (./rolL
     const kaynak = readFileSync(join(KOK, 'countries/uz/klinik/rolListesi.ts'), 'utf8')
     for (const [k, ad] of [['kulak-burun-bogaz', 'Otorinolaringologiya (LOR)'], ['nefroloji', 'Nefrologiya'], ['onkoloji', 'Onkologiya']] as const) { assert.equal(R.UZ_ROL_ADLARI[k]['uz-Latn'], ad); assert.notEqual(satir(k).resmiAd, ad) }
     assert.match(kaynak, /keeps "\(LOR\)", which the order does not have/)
-    assert.deepEqual(UZ_KAPSAM_DISI.map((x) => x.resmiAd), ['Stomatologiya', 'Xalq tabobati'])
+    assert.deepEqual(UZ_KAPSAM_DISI.map((x) => x.resmiAd), ['Stomatologiya', 'Xalq tabobati', 'Ftiziatriya'])
     const adlar = Object.values(R.UZ_ROL_ADLARI).map((a) => a['uz-Latn']).join(' | ')
-    assert.doesNotMatch(adlar, /[Ss]tomatolog|tabobat/)
+    assert.doesNotMatch(adlar, /[Ss]tomatolog|tabobat|[Ff]tiziatr/)
   })
 
   it('THE SOURCE is named with its number, its date and the day it was read; and NO RUSSIAN NAME IS OFFICIAL', () => {

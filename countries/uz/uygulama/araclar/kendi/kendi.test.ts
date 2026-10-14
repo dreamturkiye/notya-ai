@@ -23,8 +23,8 @@ import assert from 'node:assert/strict'
 import { readFileSync, readdirSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import type { AracGirdisi, AracSonucu, UlkeAraclari } from '@/lib/ulke/araclar/tipler'
-import { gunEkle, gunFarki } from '@/lib/ulke/araclar/yardimci'
-import { UZ_EMLASH_QAYDI, UZ_HOMILADORLIK_MUDDATI, UZ_HOMILADORLIK_QOIDASI, UZ_KENDI_TANIMLAR, UZ_TANA_VAZNI_INDEKSI, UZ_TVI_CHEGARALARI, UZ_TVI_ENG_KICHIK_YOSH } from './tanimlar'
+import { ayEkle, gunEkle, gunFarki } from '@/lib/ulke/araclar/yardimci'
+import { UZ_EMLASH_JADVALI, UZ_EMLASH_JADVALI_YOSHLARI, UZ_EMLASH_QAYDI, UZ_HOMILADORLIK_MUDDATI, UZ_HOMILADORLIK_QOIDASI, UZ_KENDI_TANIMLAR, UZ_TANA_VAZNI_INDEKSI, UZ_TVI_CHEGARALARI, UZ_TVI_ENG_KICHIK_YOSH } from './tanimlar'
 import { UZ_KENDI_ARACLAR } from './metinler'
 import { UZ_ONAYSIZ_GERI_ACILAN, UZ_ONAYSIZ_YENI_ARACLAR } from './onay'
 import { UZ_LAB_BIRIM_KAYNAKLARI, UZ_LAB_BIRIMLERI } from '../birimler'
@@ -45,11 +45,13 @@ const KAYNAKLAR = {
   IMM: 'https://lex.uz/uz/acts/-5524039',
   TELIF: 'https://lex.uz/en/acts/-1022944',
   CDC_BILDIRIM: 'https://cdc.gov/other/agencymaterials.html',
+  SANEPID: 'https://gov.uz/oz/sanepid/news/view/223776',
 } as const
 
 const tvi = (vazn: number | null, boy: number | null, bel: number | null = null): AracSonucu => UZ_TANA_VAZNI_INDEKSI.hesapla({ vazn, boy, bel }, { bugun: BUGUN, p: {} })
 const muddat = (g: AracGirdisi, bugun: string): AracSonucu => UZ_HOMILADORLIK_MUDDATI.hesapla({ usul: null, oxirgi_hayz: null, sikl: null, uzi_tugish: null, kochirish: null, kultivatsiya: null, ...g }, { bugun, p: {} })
 const emlash = (g: AracGirdisi, bugun = BUGUN): AracSonucu => UZ_EMLASH_QAYDI.hesapla({ vaksina: null, doza: null, sana: null, manba: null, keyingi: null, ...g }, { bugun, p: {} })
+const jadval = (tugilgan_sana: string | null, bugun: string): AracSonucu => UZ_EMLASH_JADVALI.hesapla({ tugilgan_sana }, { bugun, p: {} })
 const sayi = (s: AracSonucu, k: string) => s.sayilar.find((x) => x.anahtar === k)?.deger
 const gun = (s: AracSonucu, k: string) => s.tarihler.find((x) => x.anahtar === k)?.tarih
 
@@ -58,7 +60,8 @@ describe('Uzbekistan — the tools only this country has: the numbers are the so
     const kaynak = readFileSync(join(DIZIN, 'tanimlar.ts'), 'utf8')
     for (const [ad, adres] of Object.entries(KAYNAKLAR)) assert.ok(kaynak.includes(adres), `${ad}: ${adres} is not cited in tanimlar.ts`)
     assert.ok(kaynak.includes(OKUNDU))
-    assert.match(kaynak, /WRITTEN BY A MACHINE FROM SOURCES OPENED ON 2026-10-10\. NO CLINICIAN OF UZBEKISTAN HAS READ A LINE OF THIS FILE\./)
+    assert.match(kaynak, /WRITTEN BY A MACHINE FROM SOURCES OPENED ON 2026-10-10 \(tools 1 to 3\) AND 2026-10-13 \(tool 4\)\./)
+    assert.match(kaynak, /NO CLINICIAN OF\s*\n \* UZBEKISTAN HAS READ A LINE OF THIS FILE\./)
     assert.match(readFileSync(join(DIZIN, 'metinler.ts'), 'utf8').slice(0, 1200), /MACHINE-WRITTEN\. AWAITS NATIVE REVIEW/)
   })
 
@@ -229,12 +232,59 @@ describe('Uzbekistan — a vaccination, recorded: the tool knows no vaccine and 
 
   it('NOTHING OF THE NATIONAL CALENDAR IS IN THE FOLDER: the act is named for its title and status only, and no file holds an age, an interval or a list of vaccines', () => {
     const tanimlar = readFileSync(join(DIZIN, 'tanimlar.ts'), 'utf8')
-    assert.match(tanimlar, /NOTHING OF ITS CALENDAR IS IN THE PRODUCT/)
-    const blok = tanimlar.slice(tanimlar.indexOf('export const UZ_EMLASH_QAYDI'), tanimlar.indexOf('/** The mechanisms of the pack\'s own tools'))
+    assert.match(tanimlar, /NOTHING OF ITS[\s\S]{0,30}CALENDAR IS IN THE PRODUCT/)
+    const blok = tanimlar.slice(tanimlar.indexOf('export const UZ_EMLASH_QAYDI'), tanimlar.indexOf('// ──END OF TOOL 3──'))
     // besides zero, the mechanism's code holds exactly two numbers: the limits of what can be typed as a dose number
     assert.deepEqual(blok.replace(/\/\/.*$/gm, '').match(/\b\d+\b/g), ['1', '20', '0', '0', '0'])
     const p = UZ_KENDI_ARACLAR.find((x) => x.anahtar === 'uz-emlash-qaydi')!
     for (const metin of [p.metin.ad, p.metin.aciklama, p.metin.not, ...Object.values(p.metin.alanlar), ...Object.values(p.metin.bantlar ?? {})]) for (const v of Object.values(metin)) assert.doesNotMatch(v, /\d/, `a number in a text of the vaccination record: "${v}"`)
+  })
+})
+
+describe('Uzbekistan — the national immunisation calendar: date arithmetic from the Sanitary and Epidemiological Welfare Committee\'s own published calendar', () => {
+  const DOB = '2026-01-10' // an arbitrary date of birth used only to exercise the arithmetic
+
+  it('THE THIRTEEN AGE POINTS of [SANEPID], each the stated number of days or months after birth', () => {
+    const s = jadval(DOB, DOB)
+    assert.equal(s.tamam, true)
+    assert.deepEqual([gun(s, 'tugilganda'), gun(s, 'ikki_besh_kun')], [DOB, gunEkle(DOB, 2)]) // birth; 2–5-day window, earliest day
+    assert.deepEqual([gun(s, 'ikki_oy'), gun(s, 'uch_oy'), gun(s, 'tort_oy')], ['2026-03-10', '2026-04-10', '2026-05-10']) // 2, 3, 4 months
+    assert.equal(gun(s, 'olti_oy_qoshimcha'), '2026-07-10') // 6 months — the additional measles dose
+    assert.equal(gun(s, 'toqqiz_oy'), '2026-10-10') // 9 months
+    assert.deepEqual([gun(s, 'bir_yosh'), gun(s, 'on_olti_oy')], ['2027-01-10', '2027-05-10']) // 12, 16 months
+    assert.deepEqual([gun(s, 'olti_yosh'), gun(s, 'yetti_yosh')], ['2032-01-10', '2033-01-10']) // 6, 7 years
+    assert.equal(gun(s, 'toqqiz_yosh'), '2035-01-10') // 9 years
+    assert.equal(gun(s, 'on_olti_yosh'), '2042-01-10') // 16 years
+    // every date is exactly the month count of UZ_EMLASH_JADVALI_YOSHLARI applied by the kit's own month arithmetic
+    for (const [anahtar, yosh] of Object.entries(UZ_EMLASH_JADVALI_YOSHLARI)) {
+      assert.equal(gun(s, anahtar), 'gun' in yosh ? gunEkle(DOB, yosh.gun) : ayEkle(DOB, yosh.ay), anahtar)
+    }
+    assert.deepEqual(UZ_EMLASH_JADVALI.cikti.tarihler, Object.keys(UZ_EMLASH_JADVALI_YOSHLARI))
+    assert.equal(UZ_EMLASH_JADVALI.cikti.tarihler.length, 13)
+  })
+
+  it('A WARNING, AND ONLY ONE, WHEN A DATE HAS PASSED: nothing at birth (the earliest row IS the day of birth), present from the next day on', () => {
+    assert.deepEqual(jadval(DOB, DOB).uyarilar, [], 'on the day of birth the "at birth" row itself is today, not yet in the past')
+    assert.deepEqual(jadval(DOB, gunEkle(DOB, 1)).uyarilar, ['otgan_sanalar_bor'], 'one day on: the "at birth" row is already behind today')
+    assert.deepEqual(jadval(DOB, gunEkle(DOB, 3)).uyarilar, ['otgan_sanalar_bor'], 'three days on: the same, and the 2–5-day row too')
+    assert.deepEqual(UZ_EMLASH_JADVALI.cikti.uyarilar, ['otgan_sanalar_bor'])
+  })
+
+  it('NO RESULT without a date of birth, or for a date of birth after today; the mechanism reads no number of its own, no laboratory value and no table', () => {
+    assert.equal(jadval(null, BUGUN).tamam, false)
+    assert.equal(jadval(gunEkle(BUGUN, 1), BUGUN).tamam, false, 'a birth date after today')
+    assert.equal(jadval(BUGUN, BUGUN).tamam, true, 'born today')
+    assert.deepEqual(UZ_EMLASH_JADVALI.alanlar, [{ anahtar: 'tugilgan_sana', tur: 'tarih' }])
+    assert.deepEqual([UZ_EMLASH_JADVALI.parametreler ?? [], UZ_EMLASH_JADVALI.tablolar ?? []], [[], []])
+    assert.ok(!UZ_EMLASH_JADVALI.alanlar.some((a) => a.lab))
+  })
+
+  it('THE ADDITIONAL MEASLES DOSE AT 6 MONTHS IS MARKED AS AN ADDITION, not folded into a fixed row, and no vaccine or disease name beyond [SANEPID]\'s own page is in the file', () => {
+    const tanimlar = readFileSync(join(DIZIN, 'tanimlar.ts'), 'utf8')
+    assert.match(tanimlar, /NOT a fixed row|NOT A FIXED PART OF THE CALENDAR/)
+    assert.ok(tanimlar.includes(KAYNAKLAR.SANEPID))
+    const p = UZ_KENDI_ARACLAR.find((x) => x.anahtar === 'uz-emlash-jadvali')!
+    for (const f of ['uz-Latn', 'uz-Cyrl', 'ru'] as const) assert.match(p.metin.tarihler!.olti_oy_qoshimcha[f], /QO|ДОПОЛНИТЕЛЬНАЯ|ҚЎШИМЧА/i)
   })
 })
 
@@ -251,8 +301,8 @@ describe('Uzbekistan — the tools only this country has, in the pack: who sees 
   it('the pack check finds nothing to say about the tools area with the three new tools in it', async () => {
     const { araclarSorunlari } = await import('@/lib/ulke/araclar/denetim')
     const { UZ_PAKETI } = await import('../../../index')
-    const { AKTIF_ARAYUZ } = await import('@/countries/active/arayuz')
-    assert.deepEqual(araclarSorunlari(UZ_PAKETI, AKTIF_ARAYUZ, UZ_PAKETI.diller), [])
+    const { UZ_ARAYUZ } = await import('../../../arayuz')
+    assert.deepEqual(araclarSorunlari(UZ_PAKETI, UZ_ARAYUZ, UZ_PAKETI.diller), [])
     assert.deepEqual(icerik.kendiAraclari, UZ_KENDI_TANIMLAR)
   })
 
@@ -263,16 +313,17 @@ describe('Uzbekistan — the tools only this country has, in the pack: who sees 
     assert.deepEqual(goren('uz-tana-vazni-indeksi'), [...UZ_HEKIM_ROLLERI])
     assert.deepEqual(goren('uz-homiladorlik-muddati').sort(), ['aile-hekimligi', 'kadin-hastaliklari-dogum'])
     assert.deepEqual(goren('uz-emlash-qaydi').sort(), ['aile-hekimligi', 'pediatri'])
-    for (const k of ['uz-tana-vazni-indeksi', 'uz-homiladorlik-muddati', 'uz-emlash-qaydi']) {
+    assert.deepEqual(goren('uz-emlash-jadvali'), [...UZ_HEKIM_ROLLERI], 'the immunisation calendar is CORE: every doctor role')
+    for (const k of ['uz-tana-vazni-indeksi', 'uz-homiladorlik-muddati', 'uz-emlash-qaydi', 'uz-emlash-jadvali']) {
       assert.equal(P.hesabinAraci(icerik, null, k), null, `${k}: an account without a role`)
       for (const r of ['fizyoterapi', 'klinik-psikolog']) assert.equal(P.hesabinAraci(icerik, r, k), null, `${k}: ${r}`)
       assert.notEqual(icerik.araclar.find((p) => p.anahtar === k)!.roller, null, `${k} is a base tool`)
     }
     // three doctors, after the structural tools: cardiology keeps a note; family medicine a chronic record and danger signs; paediatrics the height and dose tools
     const kendi = (rol: string) => P.hesabinAraclari(icerik, rol).rol.map((x) => x.tanim.anahtar)
-    assert.deepEqual(kendi('kardiyoloji'), ['kardiyo-not', 'uz-tana-vazni-indeksi', 'takip-paneli'])
-    assert.deepEqual(kendi('aile-hekimligi'), ['kronik-izlem-kaydi', 'birinci-acil-bayrak', 'uz-tana-vazni-indeksi', 'uz-homiladorlik-muddati', 'uz-emlash-qaydi', 'takip-paneli'])
-    assert.deepEqual(kendi('pediatri'), ['hedef-boy', 'doz-hesabi', 'uz-tana-vazni-indeksi', 'uz-emlash-qaydi', 'takip-paneli'])
+    assert.deepEqual(kendi('kardiyoloji'), ['kardiyo-not', 'uz-tana-vazni-indeksi', 'uz-emlash-jadvali', 'takip-paneli'])
+    assert.deepEqual(kendi('aile-hekimligi'), ['kronik-izlem-kaydi', 'birinci-acil-bayrak', 'uz-tana-vazni-indeksi', 'uz-homiladorlik-muddati', 'uz-emlash-qaydi', 'uz-emlash-jadvali', 'takip-paneli'])
+    assert.deepEqual(kendi('pediatri'), ['hedef-boy', 'doz-hesabi', 'uz-tana-vazni-indeksi', 'uz-emlash-qaydi', 'uz-emlash-jadvali', 'takip-paneli'])
   })
 
   it('THE PATIENT GATE of the index: opened for a patient under 20, or for one whose birth date is not recorded, the tool is not there; without a patient it opens with the sentence that says who it is for', async () => {
@@ -288,8 +339,8 @@ describe('Uzbekistan — the tools only this country has, in the pack: who sees 
     const cocuk = P.hesabinAraclari(icerik, 'pediatri', { hasta: { dogumTarihi: '2019-05-01' }, bugun: BUGUN }).rol.map((x) => x.tanim.anahtar)
     assert.ok(!cocuk.includes('uz-tana-vazni-indeksi') && cocuk.includes('uz-emlash-qaydi') && cocuk.includes('hedef-boy'))
     for (const f of ['uz-Latn', 'uz-Cyrl', 'ru'] as const) assert.match(p.metin.hastaKapisi![f], /20/)
-    // the other two have no gate, and so no sentence about one
-    for (const k of ['uz-homiladorlik-muddati', 'uz-emlash-qaydi']) { const x = icerik.araclar.find((y) => y.anahtar === k)!; assert.deepEqual([x.hasta, x.metin.hastaKapisi], [undefined, undefined], k) }
+    // the other three have no gate, and so no sentence about one
+    for (const k of ['uz-homiladorlik-muddati', 'uz-emlash-qaydi', 'uz-emlash-jadvali']) { const x = icerik.araclar.find((y) => y.anahtar === k)!; assert.deepEqual([x.hasta, x.metin.hastaKapisi], [undefined, undefined], k) }
   })
 
   it('THROUGH THE SCREEN\'S OWN PATH: what a doctor types in this country\'s units and number style gives the source\'s example', async () => {
@@ -309,12 +360,12 @@ describe('Uzbekistan — the tools only this country has, in the pack: who sees 
     for (const b of ['kg/m2', 'hafta', 'gun', 'kg', 'cm']) for (const f of ['uz-Latn', 'uz-Cyrl', 'ru'] as const) assert.ok(icerik.birimler[b]?.[f], `${b} ${f}`)
   })
 
-  it('SWITCHED ON WITHOUT A CLINICIAN\'S SIGN-OFF: the list and the pack\'s switched-on new tools match exactly — and the register of tools that are one country\'s alone lists the same three', async () => {
+  it('SWITCHED ON WITHOUT A CLINICIAN\'S SIGN-OFF: the list and the pack\'s switched-on new tools match exactly — and the register of tools that are one country\'s alone lists the same four', async () => {
     const { ulkeyeOzelMi } = await import('@/lib/ulke/araclar/ulkeyeOzel')
     const acikYeni = icerik.araclar.map((p) => p.anahtar).filter((k) => ulkeyeOzelMi(k, 'uz')).sort()
     const liste = UZ_ONAYSIZ_YENI_ARACLAR.map((x) => x.anahtar).sort()
     assert.deepEqual(liste, acikYeni, 'a new tool is switched on and not on the list of ./onay.ts, or is on the list and not switched on')
-    assert.deepEqual(liste, ['uz-emlash-qaydi', 'uz-homiladorlik-muddati', 'uz-tana-vazni-indeksi'])
+    assert.deepEqual(liste, ['uz-emlash-jadvali', 'uz-emlash-qaydi', 'uz-homiladorlik-muddati', 'uz-tana-vazni-indeksi'])
     assert.deepEqual(UZ_KENDI_TANIMLAR.map((t) => t.anahtar).sort(), liste, 'a mechanism without a switched-on tool, or the other way round')
     assert.deepEqual(UZ_KENDI_ARACLAR.map((p) => p.anahtar).sort(), liste)
     const kayit = JSON.parse(readFileSync(join(KOK, 'countries/yasak-araclar.json'), 'utf8')) as Record<string, string[]>
@@ -359,7 +410,7 @@ describe('Uzbekistan — the tools only this country has, in the pack: who sees 
     for (const p of icerik.araclar) { const t = P.paketinTanimi(icerik, p)!; assert.ok(!t.alanlar.some((a) => a.lab === 'kreatinin'), p.anahtar) }
   })
 
-  it('LICENCE: each of the three states "free" and where that was read; the placeholder of the two questionnaires states "free" by the notice printed on the forms; no other tool or placeholder gained a statement', () => {
+  it('LICENCE: each of the four states "free" and where that was read; the placeholder of the two questionnaires states "free" by the notice printed on the forms; no other tool or placeholder gained a statement', () => {
     for (const p of UZ_KENDI_ARACLAR) { assert.equal(p.lisans?.durum, 'serbest', p.anahtar); assert.ok((p.lisans?.kaynak ?? '').length > 60, `${p.anahtar}: where the licence was read`); assert.equal(p.lisans?.bildirim, undefined) }
     assert.ok(UZ_KENDI_ARACLAR[0].lisans!.kaynak!.includes(KAYNAKLAR.CDC_BILDIRIM))
     assert.ok(UZ_KENDI_ARACLAR[1].lisans!.kaynak!.includes(KAYNAKLAR.TELIF))
@@ -369,7 +420,7 @@ describe('Uzbekistan — the tools only this country has, in the pack: who sees 
     assert.ok(anket.lisans!.kaynak!.includes('"No permission required to reproduce, translate, display or distribute."') && anket.lisans!.kaynak!.includes(OKUNDU))
     assert.deepEqual([anket.acik, anket.icerik], [false, null], 'a licence is not an authorised translation: the placeholder stays a placeholder')
     // EXACTLY THESE state a licence, and no further tool was switched off on licence grounds
-    assert.deepEqual(icerik.araclar.filter((p) => p.lisans).map((p) => p.anahtar).sort(), ['uz-emlash-qaydi', 'uz-homiladorlik-muddati', 'uz-tana-vazni-indeksi'])
+    assert.deepEqual(icerik.araclar.filter((p) => p.lisans).map((p) => p.anahtar).sort(), ['uz-emlash-jadvali', 'uz-emlash-qaydi', 'uz-homiladorlik-muddati', 'uz-tana-vazni-indeksi'])
     assert.deepEqual(icerik.yuvalar.filter((y) => y.lisans).map((y) => [y.anahtar, y.lisans!.durum]).sort(), [['esi-triyaj', 'izin-gerekli'], ['phq9-gad7', 'serbest'], ['rapor-taslagi', 'izin-gerekli']])
     assert.notEqual(icerik.lisansTam, true, 'the pack does not claim that every licence is stated: the others are listed for the owner')
   })

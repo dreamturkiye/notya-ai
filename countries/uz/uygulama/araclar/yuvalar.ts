@@ -68,6 +68,20 @@ export const UZ_ARAC_YUVALARI: readonly AracYuvasi[] = [
   // ── infectious diseases ──
   yuva('viral-izlem', ['enfeksiyon-hastaliklari'], 'HIV and viral hepatitis follow-up: the months between two checks (3 numbers) from the national HIV and hepatitis protocols.', KLINISYEN, true),
   yuva('enfeksiyon-bildirim', ['enfeksiyon-hastaliklari'], 'Isolation and notification: the list of notifiable diseases in Uzbekistan, to whom and by when each is reported, the report form, and isolation periods from the national rules.'),
+  // FOUND by the redone tools audit (point 5, 2026-10-13), not proposed by any pass that worked from Turkiye's
+  // catalogue: WHO calls Uzbekistan a "globally high MDR-TB burden country", one of 30 worldwide and one of 18
+  // high-priority countries in the WHO European Region, with an estimated 24% of new and 63% of previously-treated
+  // TB cases rifampicin/multidrug-resistant (WHO Country Brief, Uzbekistan, read 2026-10-13:
+  // who-sandbox.squiz.cloud/__data/assets/pdf_file/0005/335543/UZB_TB_Brief_0223-AM-edits-D1-20-03-17.pdf). The
+  // brief also says Uzbekistan adopted its own first national MDR-TB guidelines, but this pass did not open that
+  // guideline itself — only the WHO summary of its existence — so no monitoring interval or regimen number is here.
+  // The official nomenclature (../../klinik/rolListesi.ts → UZ_KAPSAM_DISI) threads "Ftiziatriya" through six
+  // specialties by name; nothing of this pack has a role for it, so the slot is offered to the two existing roles
+  // closest to first-line TB care. Unlike the sibling "…-izlem" slots above (lab-izlem, viral-izlem, anemi-izlem,
+  // …), the kit has NO mechanism under this key yet — none of the pre-split application's engines covers TB —
+  // so `mekanizmaHazir` is false: this needs a kit mechanism built, proven equal to a sourced worked example,
+  // before it needs the country's own numbers.
+  yuva('mdr-tb-izlem', ['enfeksiyon-hastaliklari', 'gogus-hastaliklari'], 'Tuberculosis treatment follow-up, first-line and MDR-TB: which tests, how soon and how often, and the drug-susceptibility rule for stepping up to the second-line regimen, from Uzbekistan\'s own national MDR-TB guideline (adopted per the WHO brief above; not itself opened this pass) and the register of anti-TB medicines authorised in Uzbekistan.'),
 
   // ── nephrology ──
   yuva('anemi-izlem', ['nefroloji'], 'Anaemia follow-up in chronic kidney disease: the target haemoglobin range, the lower limit and the months until the next check (6 numbers) from the national nephrology protocol; and the unit the local laboratories report haemoglobin in.', KLINISYEN, true),
@@ -100,8 +114,23 @@ export const UZ_ARAC_YUVALARI: readonly AracYuvasi[] = [
   yuva('antiepileptik-izlem', ['noroloji'], 'Laboratory monitoring of antiseizure medicines: which tests, how soon after starting and how often, from the national protocol, and the register of medicines sold in Uzbekistan to recognise each by name. RECLASSIFIED from "keep": the pre-split tool recognises medicines by the names and brands of another country and cites that country\'s regulator.'),
 
   // ── paediatrics ──
-  yuva('buyume-persentil', ['pediatri'], 'Growth and percentiles: the growth standard used in Uzbekistan (WHO standards to be confirmed) with its reference tables. The pre-split tool also carries a national reference of another country, which must not be shown here.'),
-  yuva('asi-takvimi', ['pediatri'], 'Vaccination calendar and catch-up: the national immunisation calendar of Uzbekistan with its catch-up rules.'),
+  // Growth standard, redone audit of 2026-10-13: UNICEF's own published Uzbekistan country nutrition profile
+  // (data.unicef.org/wp-content/uploads/cp/nutrition/Nutrition_UZB.pdf, read 2026-10-13) labels every CURRENT
+  // figure for stunting, wasting and underweight "WHO Child Growth Standards" — the 2006 standard, not the older
+  // NCHS reference its own trend charts (1996-2006) still carry. No Ministry of Health clinical-protocol document
+  // naming a growth-chart reference was found on gov.uz's own protocol library, its sanitary-rules section or its
+  // children's-health section when searched and opened this day: physical development of a healthy child is not
+  // filed there as a disease protocol. So WHO 2006 was NOT "to be confirmed" by guesswork: it is what the country's
+  // own reported child-nutrition statistics already use. What is still missing before this can be built is not the
+  // choice of standard but its CONTENT: the WHO reference tables themselves (weight/height/head-circumference by
+  // age and sex, LMS parameters), which a machine does not copy from memory into a clinical product.
+  yuva('buyume-persentil', ['pediatri'], 'Growth and percentiles: WHO Child Growth Standards (2006) — confirmed by Uzbekistan\'s own reported child-nutrition statistics (UNICEF country profile, read 2026-10-13), no Uzbek document naming a different reference found. Needed: the WHO reference tables themselves, read from the WHO source and cited, and a local clinical lead confirming current paediatric practice has not since moved to a different chart. The pre-split tool also carries a national reference of another country, which must not be shown here.'),
+  // The core tool `uz-emlash-jadvali` (countries/uz/uygulama/araclar/kendi/, switched on for every doctor role,
+  // owner's order of 2026-10-13) now gives the SCHEDULE'S OWN dates from a date of birth. What this slot still
+  // lacks is CATCH-UP: what to do for a child who missed a scheduled dose (how far behind counts as missed, what
+  // order to give the remaining doses in, any minimum interval) — content the Committee's published calendar page
+  // does not itself state.
+  yuva('asi-takvimi', ['pediatri'], 'Vaccination catch-up: what to do for a child who missed a dose of the national calendar (uz-emlash-jadvali gives the calendar\'s own dates; this slot is the catch-up rule the calendar page does not state).'),
   yuva('gelisim-tarama', ['pediatri'], 'Development and screening panel: the national screening programme for children (hearing, vision, supplements: which, at which age).'),
   yuva('mchat-rf', ['pediatri'], 'M-CHAT-R/F (Modified Checklist for Autism in Toddlers, Revised, with Follow-Up): a published questionnaire for parents. Needed: the authorised Uzbek and Russian versions and the permission of its authors. The wording is not translated by a machine; the scoring is not switched on without it.', ANKET),
   yuva('pediatri-kohort', ['pediatri'], 'The follow-up panel of paediatrics: it lists patients by the vaccination calendar and the screening programme above and has nothing to list until they exist.'),

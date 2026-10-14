@@ -58,6 +58,17 @@ export const UZ_ONAYSIZ_YENI_ARACLAR: readonly UzOnaysizArac[] = [
       'The tool holds no vaccine, no age and no interval, and must not be taken for the national calendar (SanQvaM 0239-07/3), which is not in the product.',
     ],
   },
+  {
+    anahtar: 'uz-emlash-jadvali',
+    ne: 'The national immunisation calendar by age: from a date of birth, the date of every scheduled dose, named and sourced to the Sanitary and Epidemiological Welfare Committee\'s own published calendar. CORE, switched on for every doctor role by the owner\'s explicit order of 2026-10-13 (the redone audit), ahead of the usual clinician sign-off that every other new tool of this pack waits for.',
+    teyit: [
+      'The thirteen rows match the Committee\'s own page read on 2026-10-13 (https://gov.uz/oz/sanepid/news/view/223776 and its Russian form): a clinician confirms that page is still the current calendar and that nothing has changed since.',
+      'The legal instrument the page implements (SanQvaM 0239-07/3, approved by the Chief State Sanitary Doctor) was not itself reopened for its calendar text: a local clinician or lawyer should compare the Committee\'s page against that instrument directly, since the page is a summary and not the instrument.',
+      'The 2–5 day window for BCG-1 is shown as its earliest day only, because the tool can show one date, not a range: a clinician confirms that showing the earliest day, with the window named in words beside it, is the right way to present it.',
+      'The additional measles dose at 6 months is marked in the tool\'s own words as an addition tied to the current epidemiological situation, not a fixed row of the calendar: a clinician confirms it is still in effect before relying on it, and that it should stay a separate, clearly marked row rather than being merged into the fixed schedule.',
+      'The tool answers with dates only and does not compare them with any record of what was actually given: a clinician confirms that doctors understand to cross-check against the patient\'s own vaccination record (the separate tool `uz-emlash-qaydi`) rather than reading a shown date as proof a dose is due or missed.',
+    ],
+  },
 ]
 
 export const UZ_ONAYSIZ_GERI_ACILAN: readonly UzOnaysizArac[] = [
