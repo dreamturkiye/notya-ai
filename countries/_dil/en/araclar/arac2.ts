@@ -279,6 +279,27 @@ export const EN_ARACLAR_2: readonly HamArac[] = [
     uyarilar: { ...KDIGO_G, ...KDIGO_A, uacr_yok: KDIGO_UACR_YOK },
     not: KARAR,
   },
+  // CKD RISK TIER, the kit's own open-facts tool (lib/ulke/araclar/tanimlar/kbhRiskKategorisi.ts): the SAME GFR and
+  // albuminuria categories as the grid above, read into one of KDIGO's own four risk WORDS — plain text, no chart, no
+  // colour, so it is not kdigo-serit renamed and carries none of that tool's licence question. Chronic risk
+  // categorisation of this kind is in everyday use well beyond nephrology: internal medicine and family medicine/
+  // general practice (most CKD monitoring in these countries happens in primary care and general medicine, not only
+  // in nephrology clinics), endocrinology (diabetic kidney disease: routine ACR screening in diabetes guidance),
+  // cardiology (cardiorenal monitoring around renin-angiotensin-system therapy and heart failure), urology (transplant
+  // and obstructive-uropathy follow-up) and oncology (nephrotoxic-therapy monitoring, beside this set's own
+  // toksisite-listesi "bobrek_lab" item). NOT given here to emergency medicine or anaesthesia: those specialties stage
+  // ACUTE kidney injury (a creatinine-rise-plus-urine-output criterion, on a different KDIGO guideline), not this
+  // CHRONIC risk tier, and the kit has no AKI-staging mechanism to wire in its place (see each pack's own `kapali`
+  // entry for this key). Ships OFF everywhere pending a clinician's sign-off, same as every other new tool here.
+  {
+    anahtar: 'kbh-risk-kategorisi', roller: ['nephrology', 'internal-medicine', 'family-medicine', 'endocrinology', 'cardiology', 'urology', 'oncology'],
+    ad: 'Chronic kidney disease risk tier',
+    aciklama: 'The GFR category (G1 to G5), the albuminuria category (A1 to A3) and, once both results are entered, the composite risk tier in one of four plain words (low, moderately increased, high, very high risk) — KDIGO\'s own category boundaries and risk-tier words, in the kit\'s own presentation: no coloured chart and no grid. No treatment plan and no follow-up interval is stated.',
+    alanlar: { egfr: 'Estimated GFR', acr: 'Urine albumin-to-creatinine ratio (without it no risk tier is shown)' },
+    bantlar: { dusuk: 'Low risk', orta: 'Moderately increased risk', yuksek: 'High risk', cokYuksek: 'Very high risk' },
+    uyarilar: { ...KDIGO_G, ...KDIGO_A, acr_yok: 'No urine albumin-to-creatinine ratio was entered: the risk tier needs both results and is not shown' },
+    not: KARAR,
+  },
   {
     anahtar: 'diyaliz-seans', roller: ['nephrology'],
     ad: 'Dialysis session and next date',

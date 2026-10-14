@@ -326,10 +326,10 @@ describe('Uzbekistan — the tools only this country has, in the pack: who sees 
     assert.deepEqual(icerik.yuvalar.filter((y) => ulkeyeOzelMi(y.anahtar, 'uz')), [])
   })
 
-  it('THE DOSE CALCULATOR IS ON AGAIN by the owner\'s order, for paediatrics only, and on the list of what is on without a sign-off; the other four of that day stay off', async () => {
+  it('THE DOSE CALCULATOR IS ON AGAIN by the owner\'s order, for paediatrics only, and on the list of what is on without a sign-off; the other four of that day, and a fifth slot added later for its own reason, stay off', async () => {
     const { UZ_KAPALI_ARACLAR } = await import('../index')
     assert.deepEqual(UZ_ONAYSIZ_GERI_ACILAN.map((x) => x.anahtar), ['doz-hesabi'])
-    assert.deepEqual([...UZ_KAPALI_ARACLAR].sort(), ['esi-triyaj', 'kdigo-evre', 'kdigo-serit', 'rapor-taslagi'])
+    assert.deepEqual([...UZ_KAPALI_ARACLAR].sort(), ['esi-triyaj', 'kbh-risk-kategorisi', 'kdigo-evre', 'kdigo-serit', 'rapor-taslagi'])
     assert.deepEqual(roller.filter((r) => P.hesabinAraci(icerik, r, 'doz-hesabi')), ['pediatri'])
     assert.ok(!icerik.yuvalar.some((y) => y.anahtar === 'doz-hesabi'), 'the dose calculator is still a placeholder')
     assert.deepEqual(icerik.dozYazimi, { sondaSifir: true })
