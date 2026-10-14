@@ -29,6 +29,7 @@ import type { PaketAraci } from '@/lib/ulke/araclar/tipler'
 import type { EnEkAraclar } from '../../_dil/en/araclar'
 import { enCocukRolleri, enRolSatirlari } from '../../_dil/en/klinik/roller'
 import { NZ_ROLLER } from '../ayarlar'
+import { nzNzeps, nzPharmacAraclari } from './pharmac'
 import { NZ_TANIMLAR } from './tanimlar'
 
 const D = 'en-NZ'
@@ -138,6 +139,8 @@ export const NZ_EK_ARACLAR: readonly PaketAraci[] = [
       bildirim: m(`Levels and referral groups from: Ministry of Health. 2015. Prostate Cancer Management and Referral Guidance. Wellington: Ministry of Health. ${CC_BY}`),
     },
   },
+  ...nzPharmacAraclari(HEKIMLER),
+  nzNzeps(HEKIMLER),
 ]
 
 /** The tools this country has beyond the shared English set, as the set takes them (countries/_dil/en/araclar → `ek`). */

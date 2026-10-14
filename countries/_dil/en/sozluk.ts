@@ -151,6 +151,8 @@ export const KORUNAN: readonly string[] = [
   // published names
   'Generalized Anxiety Disorder', 'Eczema Area and Severity Index', 'Psoriasis Area and Severity Index', 'Emergency Severity Index',
   'American Society of Anesthesiologists', 'Kidney Disease: Improving Global Outcomes', 'European League Against Rheumatism',
+  // Pharmac Schedule chemical names, printed with the American stem
+  'Sodium picosulfate', 'Ferrous sulfate',
 ]
 
 /**

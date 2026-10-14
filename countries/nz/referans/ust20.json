@@ -1,0 +1,30 @@
+{
+  "retrieved": "2026-10-14",
+  "source_name": "Pharmac, Medicines prescription count. Number of funded prescriptions dispensed in the 2023/24 financial year.",
+  "source_url": "https://www.pharmac.govt.nz/news-and-resources/publications/year-in-review/top-20s/community-medicines",
+  "page_updated": "2024-02-26",
+  "year": "2023/24",
+  "what_is_counted": "Funded prescriptions dispensed in the community. The page gives 20 ranks. Hospitals, and products Pharmac buys directly and holds no prescription data for, are left out by the page. No strength, brand, or dose.",
+  "rows": [
+    { "rank": 1, "generic": "Paracetamol", "group": "Analgesics", "count": 3720000 },
+    { "rank": 2, "generic": "Atorvastatin", "group": "Lipid-modifying agents", "count": 1990000 },
+    { "rank": 3, "generic": "Omeprazole", "group": "Antiulcerants", "count": 1770000 },
+    { "rank": 4, "generic": "Ibuprofen", "group": "Non-steroidal anti-inflammatory", "count": 1300000 },
+    { "rank": 5, "generic": "Amoxicillin", "group": "Antibacterial", "count": 1290000 },
+    { "rank": 6, "generic": "Colecalciferol", "group": "Vitamins", "count": 1260000 },
+    { "rank": 7, "generic": "Aspirin", "group": "Antithrombotics", "count": 1090000 },
+    { "rank": 8, "generic": "Metoprolol succinate", "group": "Beta-adrenoceptor blockers", "count": 920000 },
+    { "rank": 9, "generic": "Salbutamol", "group": "Beta-adrenoceptor agonists", "count": 840000 },
+    { "rank": 10, "generic": "Candesartan cilexetil", "group": "Agents affecting the renin-angiotensin system", "count": 790000 },
+    { "rank": 11, "generic": "Amlodipine", "group": "Calcium channel blockers", "count": 760000 },
+    { "rank": 12, "generic": "Cetirizine hydrochloride", "group": "Antihistamines", "count": 750000 },
+    { "rank": 13, "generic": "Levothyroxine", "group": "Thyroid and antithyroid agents", "count": 740000 },
+    { "rank": 14, "generic": "Prednisone", "group": "Corticosteroids", "count": 710000 },
+    { "rank": 15, "generic": "Zopiclone", "group": "Sedatives and hypnotics", "count": 670000 },
+    { "rank": 16, "generic": "Docusate sodium with sennosides", "group": "Laxatives", "count": 660000 },
+    { "rank": 17, "generic": "Celecoxib", "group": "Non-Steroidal Anti-Inflammatory Drugs", "count": 650000 },
+    { "rank": 18, "generic": "Loratadine", "group": "Antihistamines", "count": 620000 },
+    { "rank": 19, "generic": "Codeine phosphate", "group": "Analgesics", "count": 610000 },
+    { "rank": 20, "generic": "Metformin hydrochloride", "group": "Diabetes", "count": 580000 }
+  ]
+}

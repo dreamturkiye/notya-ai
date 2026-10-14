@@ -36,7 +36,7 @@ describe('nz: the tools of this country\'s own — switched on, and listed as no
     const acik = a.araclar.map((p) => p.anahtar).filter((k) => k.startsWith('nz-')).sort()
     const listede = [...NZ_ONAYSIZ_ARACLAR, ...Object.keys(NZ_ONAYLI_ARACLAR)].sort()
     assert.deepEqual(acik, listede)
-    assert.deepEqual(acik, ['nz-bmi-waist', 'nz-psa-thresholds', 'nz-smoking-abc'])
+    assert.deepEqual(acik, ['nz-bmi-waist', 'nz-nzeps-link', 'nz-pharmac-top-20', 'nz-prescription-note', 'nz-psa-thresholds', 'nz-schedule-medicines', 'nz-smoking-abc'])
     // no key on both lists; a signed-off tool names its clinician and its date
     for (const k of NZ_ONAYSIZ_ARACLAR) assert.ok(!(k in NZ_ONAYLI_ARACLAR), k)
     for (const [k, v] of Object.entries(NZ_ONAYLI_ARACLAR)) { assert.ok(v.klinisyen.trim(), k); assert.match(v.tarih, /^\d{4}-\d{2}-\d{2}$/, k) }
@@ -46,17 +46,27 @@ describe('nz: the tools of this country\'s own — switched on, and listed as no
   })
 
   it('each has its mechanism in this folder, under a key that carries New Zealand\'s code, is no tool of the kit, and is on the list the walls enforce', () => {
-    assert.deepEqual(NZ_TANIMLAR.map((t) => t.anahtar).sort(), [...NZ_ONAYSIZ_ARACLAR].sort())
+    const baglanti = 'nz-nzeps-link'
+    const mekanizma = NZ_ONAYSIZ_ARACLAR.filter((k) => k !== baglanti)
+    assert.deepEqual(NZ_TANIMLAR.map((t) => t.anahtar).sort(), [...mekanizma].sort())
     assert.deepEqual(NZ_EK_ARACLAR.map((p) => p.anahtar).sort(), [...NZ_ONAYSIZ_ARACLAR].sort())
-    for (const t of NZ_TANIMLAR) { assert.match(t.anahtar, /^nz-[a-z0-9]+(-[a-z0-9]+)*$/); assert.equal(kitAraci(t.anahtar), null, t.anahtar); assert.ok(t.kaynak?.startsWith('Ministry of Health.'), `${t.anahtar}: its source is cited under every result`) }
+    const eski = ['nz-bmi-waist', 'nz-psa-thresholds', 'nz-smoking-abc']
+    for (const t of NZ_TANIMLAR) {
+      assert.match(t.anahtar, /^nz-[a-z0-9]+(-[a-z0-9]+)*$/)
+      assert.equal(kitAraci(t.anahtar), null, t.anahtar)
+      if (eski.includes(t.anahtar)) assert.ok(t.kaynak?.startsWith('Ministry of Health.'), `${t.anahtar}: its source is cited under every result`)
+    }
     const yasak = JSON.parse(readFileSync(join(resolve(__dirname, '../../..'), 'countries/yasak-araclar.json'), 'utf8')) as Record<string, string[]>
     assert.deepEqual([...yasak.nz].sort(), ulkeyeOzelAnahtarlar(a, 'nz'))
-    // NO PAYER TOOL WAS BUILT: nothing of this country's own answers whether funding criteria are met
-    for (const p of NZ_EK_ARACLAR) assert.doesNotMatch(JSON.stringify(p.metin), /Pharmac|Special Authority|funded|funding|eligib|\bACC\b|Work and Income/i, p.anahtar)
+    // the original three do not answer whether funding criteria are met; the Pharmac tools name the payer and still do not
+    for (const p of NZ_EK_ARACLAR) {
+      assert.doesNotMatch(JSON.stringify(p.metin), /Special Authority|eligib|\bACC\b|Work and Income/i, p.anahtar)
+      if (eski.includes(p.anahtar)) assert.doesNotMatch(JSON.stringify(p.metin), /Pharmac|\bfunded\b|\bfunding\b/i, p.anahtar)
+    }
   })
 
   it('LICENCE: each states "free", the rights holder, where the notice was read, and carries the credit its licence asks for — never a claim of approval', () => {
-    for (const p of NZ_EK_ARACLAR) {
+    for (const p of NZ_EK_ARACLAR.filter((x) => ['nz-bmi-waist', 'nz-psa-thresholds', 'nz-smoking-abc'].includes(x.anahtar))) {
       assert.equal(p.lisans?.durum, 'serbest', p.anahtar)
       assert.equal(p.lisans?.hakSahibi, 'Ministry of Health (New Zealand)', p.anahtar)
       assert.match(p.lisans?.kaynak ?? '', /printed in the document itself \(Creative Commons Attribution 4\.0 International\), read 2026-10-10: https:\/\/(www\.)?health\.govt\.nz\//, p.anahtar)

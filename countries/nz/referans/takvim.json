@@ -1,0 +1,2009 @@
+{
+  "retrieved": "2026-10-14",
+  "edition": "October 2026",
+  "published": "2026-10-08",
+  "source_url": "https://schedule.pharmac.govt.nz/pub/schedule/archive/Schedule_2026-10.xml",
+  "what_is_counted": "The first 250 chemical entries in Section B (Community Pharmaceuticals) of the October 2026 Pharmaceutical Schedule, in file order. Not a count of prescriptions. One formulation and the first brand of that formulation. No dose. No controlled-drug schedule.",
+  "rows": [
+    {
+      "rank": 1,
+      "generic": "Alginic acid",
+      "brand": "Gaviscon Infant",
+      "formulation": "Sodium alginate 225 mg and magnesium alginate 87.5 mg per sachet",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 2,
+      "generic": "Sodium alginate",
+      "brand": "Acidex",
+      "formulation": "Oral liq 500 mg with sodium bicarbonate 267 mg and calcium carbonate 160 mg per 10 ml",
+      "subsidised": true,
+      "partCharge": true
+    },
+    {
+      "rank": 3,
+      "generic": "Aluminium hydroxide",
+      "brand": "Alu-Tab",
+      "formulation": "Tab 600 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 4,
+      "generic": "Calcium carbonate",
+      "brand": "Roxane",
+      "formulation": "Oral liq 1,250 mg per 5 ml (500 mg elemental per 5 ml)",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 5,
+      "generic": "Loperamide hydrochloride",
+      "brand": "Diamide Relief",
+      "formulation": "Cap 2 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 6,
+      "generic": "Budesonide",
+      "brand": "Budesonide Te Arai",
+      "formulation": "Cap modified-release 3 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 7,
+      "generic": "Hydrocortisone acetate",
+      "brand": "Colifoam",
+      "formulation": "Rectal foam 10%, CFC-Free (14 applications)",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 8,
+      "generic": "Sodium cromoglicate",
+      "brand": "Nalcrom",
+      "formulation": "Cap 100 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 9,
+      "generic": "Sulfasalazine",
+      "brand": "Salazopyrin",
+      "formulation": "Tab 500 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 10,
+      "generic": "Olsalazine",
+      "brand": "Dipentum",
+      "formulation": "Cap 250 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 11,
+      "generic": "Mesalazine",
+      "brand": "Pentasa",
+      "formulation": "Tab long-acting 500 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 12,
+      "generic": "Hydrocortisone acetate with pramoxine hydrochloride",
+      "brand": "Proctofoam",
+      "formulation": "Topical aerosol foam, 1% with pramoxine hydrochloride 1%",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 13,
+      "generic": "Fluocortolone caproate with fluocortolone pivalate and cinchocaine",
+      "brand": "Ultraproct",
+      "formulation": "Suppos 630 mcg, with fluocortolone pivalate 610 mcg, and cinchocaine hydrochloride 1 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 14,
+      "generic": "Hydrocortisone with cinchocaine",
+      "brand": "Proctosedyl",
+      "formulation": "Oint 5 mg with cinchocaine hydrochloride 5 mg per g",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 15,
+      "generic": "Prednisolone hexanoate with cinchocaine hydrochloride",
+      "brand": "Scheriproct",
+      "formulation": "Suppos 1.3 mg with cinchocaine hydrochloride 1 mg per g",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 16,
+      "generic": "Glyceryl trinitrate",
+      "brand": "Rectogesic",
+      "formulation": "Oint 0.2%",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 17,
+      "generic": "Hyoscine butylbromide",
+      "brand": "Hyoscine Butylbromide (Adiramedica)",
+      "formulation": "Tab 10 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 18,
+      "generic": "Mebeverine hydrochloride",
+      "brand": "Colofac",
+      "formulation": "Tab 135 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 19,
+      "generic": "Glycopyrronium bromide",
+      "brand": "Glycopyrronium-AFT",
+      "formulation": "Inj 200 mcg per ml, 1 ml ampoule",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 20,
+      "generic": "Misoprostol",
+      "brand": "Cytotec",
+      "formulation": "Tab 200 mcg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 21,
+      "generic": "Clarithromycin",
+      "brand": "Klacid",
+      "formulation": "Tab 500 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 22,
+      "generic": "Famotidine",
+      "brand": "Famotidine Hovid",
+      "formulation": "Tab 20 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 23,
+      "generic": "Lansoprazole",
+      "brand": "Lanzol Relief",
+      "formulation": "Cap 30 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 24,
+      "generic": "Pantoprazole",
+      "brand": "Panzop Relief",
+      "formulation": "Tab EC 40 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 25,
+      "generic": "Omeprazole",
+      "brand": "Omeprazole actavis 20",
+      "formulation": "Cap 20 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 26,
+      "generic": "Sucralfate",
+      "brand": "Carafate",
+      "formulation": "Tab 1 g",
+      "subsidised": true,
+      "partCharge": true
+    },
+    {
+      "rank": 27,
+      "generic": "Colloidal bismuth subcitrate",
+      "brand": "Gastrodenol",
+      "formulation": "Tab 120 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 28,
+      "generic": "Rifaximin",
+      "brand": "Xifaxan",
+      "formulation": "Tab 550 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 29,
+      "generic": "Glucose [Dextrose]",
+      "brand": "HypoPak Glucose",
+      "formulation": "Oral soln 15 g per 80 ml sachet",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 30,
+      "generic": "Glucagon hydrochloride",
+      "brand": "Glucagen Hypokit",
+      "formulation": "Inj 1 mg syringe kit",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 31,
+      "generic": "Diazoxide",
+      "brand": "Proglicem",
+      "formulation": "Cap 100 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 32,
+      "generic": "Insulin neutral",
+      "brand": "Actrapid Penfill",
+      "formulation": "Inj human 100 u per ml, 3 ml",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 33,
+      "generic": "Insulin isophane",
+      "brand": "Protaphane Penfill",
+      "formulation": "Inj human 100 u per ml, 3 ml",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 34,
+      "generic": "Insulin lispro with insulin lispro protamine",
+      "brand": "Humalog Mix 25",
+      "formulation": "Inj lispro 25% with insulin lispro protamine 75% 100 u per ml, 3 ml",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 35,
+      "generic": "Insulin aspart with insulin aspart protamine",
+      "brand": "NovoMix 30 FlexPen",
+      "formulation": "Inj 100 iu per ml, 3 ml prefilled pen",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 36,
+      "generic": "Insulin degludec with insulin aspart",
+      "brand": "Ryzodeg 70/30 Penfill",
+      "formulation": "Inj degludec 70 u with insulin aspart 30 u, 100 u per ml, 3 ml",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 37,
+      "generic": "Insulin isophane with insulin neutral",
+      "brand": "Humulin 30/70",
+      "formulation": "Inj human with neutral insulin 100 u per ml, 3 ml",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 38,
+      "generic": "Insulin glargine",
+      "brand": "Lantus",
+      "formulation": "Inj 100 u per ml, 3 ml",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 39,
+      "generic": "Insulin lispro",
+      "brand": "Humalog",
+      "formulation": "Inj 100 u per ml, 3 ml",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 40,
+      "generic": "Insulin aspart",
+      "brand": "NovoRapid Penfill",
+      "formulation": "Inj 100 u per ml, 3 ml",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 41,
+      "generic": "Insulin glulisine",
+      "brand": "Apidra",
+      "formulation": "Inj 100 u per ml, 10 ml",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 42,
+      "generic": "Acarbose",
+      "brand": "Accarb",
+      "formulation": "Tab 50 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 43,
+      "generic": "Glibenclamide",
+      "brand": "Daonil",
+      "formulation": "Tab 5 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 44,
+      "generic": "Gliclazide",
+      "brand": "Glizide",
+      "formulation": "Tab 80 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 45,
+      "generic": "Glipizide",
+      "brand": "Minidiab",
+      "formulation": "Tab 5 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 46,
+      "generic": "Metformin hydrochloride",
+      "brand": "Metformin Viatris",
+      "formulation": "Tab immediate-release 500 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 47,
+      "generic": "Pioglitazone",
+      "brand": "Vexazone",
+      "formulation": "Tab 15 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 48,
+      "generic": "Vildagliptin",
+      "brand": "Galvus",
+      "formulation": "Tab 50 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 49,
+      "generic": "Vildagliptin with metformin hydrochloride",
+      "brand": "Galvumet",
+      "formulation": "Tab 50 mg with 850 mg metformin hydrochloride",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 50,
+      "generic": "Dulaglutide",
+      "brand": "Trulicity",
+      "formulation": "Inj 1.5mg per 0.5 ml prefilled pen",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 51,
+      "generic": "Liraglutide",
+      "brand": "Victoza",
+      "formulation": "Inj 6 mg per ml, 3 ml prefilled pen",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 52,
+      "generic": "Empagliflozin",
+      "brand": "Jardiance",
+      "formulation": "Tab 10 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 53,
+      "generic": "Empagliflozin with metformin hydrochloride",
+      "brand": "Jardiamet",
+      "formulation": "Tab 5 mg with 500 mg metformin hydrochloride",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 54,
+      "generic": "Blood Ketone Diagnostic Test Strip",
+      "brand": "KetoSens",
+      "formulation": "Test strips",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 55,
+      "generic": "Dual blood glucose and blood ketone diagnostic test meter",
+      "brand": "CareSens Dual",
+      "formulation": "Meter with 50 lancets, a lancing device and 10 blood glucose diagnostic test strips",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 56,
+      "generic": "Blood glucose diagnostic test strip",
+      "brand": "CareSens N",
+      "formulation": "Test strips",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 57,
+      "generic": "Blood glucose diagnostic test meter",
+      "brand": "CareSens N",
+      "formulation": "Meter with 50 lancets, a lancing device and 10 diagnostic test strips",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 58,
+      "generic": "Blood glucose test strips (visually impaired)",
+      "brand": "SensoCard",
+      "formulation": "Blood glucose test strips",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 59,
+      "generic": "Insulin pen needles",
+      "brand": "B-D Micro-Fine",
+      "formulation": "29 g x 12.7 mm",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 60,
+      "generic": "Insulin syringes, disposable with attached needle",
+      "brand": "B-D Ultra Fine",
+      "formulation": "Syringe 0.3 ml with 29 g x 12.7 mm needle",
+      "subsidised": true,
+      "partCharge": true
+    },
+    {
+      "rank": 61,
+      "generic": "Insulin pump with algorithm",
+      "brand": "Tandem t:slim X2 with Basal-IQ",
+      "formulation": "Min basal rate 0.1 U/h",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 62,
+      "generic": "Insulin pump reservoir",
+      "brand": "mylife YpsoPump Reservoir",
+      "formulation": "10 x 1.6 ml glass reservoir for YpsoPump",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 63,
+      "generic": "Insulin pump infusion set (teflon cannula, straight insertion with insertion device)",
+      "brand": "AutoSoft 90",
+      "formulation": "6 mm teflon cannula; straight insertion; insertion device; 60 cm line x 10 with 10 needles",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 64,
+      "generic": "Insulin pump infusion set (teflon cannula, angle insertion with insertion device)",
+      "brand": "AutoSoft 30",
+      "formulation": "13 mm teflon cannula; angle insertion; insertion device; 60 cm line x 10 with 10 needles",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 65,
+      "generic": "Insulin pump infusion set (steel cannula, straight insertion)",
+      "brand": "TruSteel",
+      "formulation": "6 mm steel cannula; straight insertion; 60 cm line x 10 with 10 needles",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 66,
+      "generic": "Insulin pump cartridge",
+      "brand": "Tandem Cartridge",
+      "formulation": "Cartridge 300 u, t:lock x 10",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 67,
+      "generic": "Insulin pump infusion set (teflon cannula, flexible insertion with insertion device)",
+      "brand": "mylife Inset soft",
+      "formulation": "6 mm teflon cannula; flexible insertion; insertion device; 46 cm line x 10 with 10 needles",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 68,
+      "generic": "Insulin pump infusion set (teflon cannula, variable insertion)",
+      "brand": "VariSoft",
+      "formulation": "13 mm teflon cannula; variable insertion; 60 cm line x 10 with 10 needles",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 69,
+      "generic": "Insulin pump infusion set (teflon cannula, flexible insertion)",
+      "brand": "mylife Orbit soft",
+      "formulation": "6 mm teflon cannula; flexible insertion; 45 cm line x 10 needles",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 70,
+      "generic": "Continuous glucose monitor (standalone)",
+      "brand": "Dexcom ONE+",
+      "formulation": "Sensor (Dexcom ONE+)",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 71,
+      "generic": "Continuous glucose monitor (interoperable)",
+      "brand": "Dexcom G6",
+      "formulation": "Sensor (9) and transmitter (Dexcom G6)",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 72,
+      "generic": "Ursodeoxycholic acid",
+      "brand": "Ursosan",
+      "formulation": "Cap 250 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 73,
+      "generic": "Pancreatic enzyme",
+      "brand": "Creon 25000",
+      "formulation": "Cap pancreatin 300 mg (amylase 18,000 Ph Eur U, lipase 25,000 Ph Eur U, total protease 1,000 Ph Eur U) ",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 74,
+      "generic": "Ispaghula (psyllium) husk",
+      "brand": "Konsyl-D",
+      "formulation": "Powder for oral soln",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 75,
+      "generic": "Docusate sodium",
+      "brand": "Coloxyl",
+      "formulation": "Tab 50 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 76,
+      "generic": "Poloxamer",
+      "brand": "Coloxyl",
+      "formulation": "Oral drops 10%",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 77,
+      "generic": "Docusate sodium with sennosides",
+      "brand": "Solax",
+      "formulation": "Tab 50 mg with sennosides 8 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 78,
+      "generic": "Methylnaltrexone bromide",
+      "brand": "Relistor",
+      "formulation": "Inj 12 mg per 0.6 ml vial",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 79,
+      "generic": "Glycerol",
+      "brand": "Lax-suppositories Glycerol",
+      "formulation": "Suppos 2.8/4.0 g",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 80,
+      "generic": "Sodium citrate with sodium lauryl sulphoacetate",
+      "brand": "Micolette",
+      "formulation": "Enema 90 mg with sodium lauryl sulphoacetate 9 mg per ml, 5 ml",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 81,
+      "generic": "Lactulose",
+      "brand": "Laevolac",
+      "formulation": "Oral liq 10 g per 15 ml",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 82,
+      "generic": "Sodium acid phosphate",
+      "brand": "Fleet Phosphate Enema",
+      "formulation": "Enema 16% with sodium phosphate 8%",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 83,
+      "generic": "Macrogol 3350 with potassium chloride, sodium bicarbonate and sodium chloride",
+      "brand": "Movicol",
+      "formulation": "Powder for oral soln 13.125 g with potassium chloride 46.6 mg, sodium bicarbonate 178.5 mg and sodium chloride 350.7 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 84,
+      "generic": "Senna",
+      "brand": "Senokot",
+      "formulation": "Tab, standardised",
+      "subsidised": true,
+      "partCharge": true
+    },
+    {
+      "rank": 85,
+      "generic": "Bisacodyl",
+      "brand": "Bisacodyl-AFT",
+      "formulation": "Tab 5 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 86,
+      "generic": "Sodium picosulfate",
+      "brand": "Dulcolax SP Drop",
+      "formulation": "Oral soln 7.5 mg per ml",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 87,
+      "generic": "Galsulfase",
+      "brand": "Naglazyme",
+      "formulation": "Inj 1 mg per ml, 5 ml vial",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 88,
+      "generic": "Sodium phenylbutyrate",
+      "brand": "Pheburane",
+      "formulation": "Grans 483 mg per g",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 89,
+      "generic": "Sodium benzoate",
+      "brand": "Amzoate",
+      "formulation": "Soln 100 mg per ml",
+      "subsidised": false,
+      "partCharge": false
+    },
+    {
+      "rank": 90,
+      "generic": "Alglucosidase alfa",
+      "brand": "Myozyme",
+      "formulation": "Inj 50 mg vial",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 91,
+      "generic": "Idursulfase",
+      "brand": "Elaprase",
+      "formulation": "Inj 2 mg per ml, 3 ml vial",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 92,
+      "generic": "Laronidase",
+      "brand": "Aldurazyme",
+      "formulation": "Inj 100 U per ml, 5 ml vial",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 93,
+      "generic": "Betaine",
+      "brand": "Cystadane",
+      "formulation": "Powder for oral soln",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 94,
+      "generic": "Sapropterin dihydrochloride",
+      "brand": "Kuvan",
+      "formulation": "Tab soluble 100 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 95,
+      "generic": "Coenzyme Q10",
+      "brand": "Solgar",
+      "formulation": "Cap 120 mg",
+      "subsidised": false,
+      "partCharge": false
+    },
+    {
+      "rank": 96,
+      "generic": "Levocarnitine",
+      "brand": "Solgar",
+      "formulation": "Tab 500 mg",
+      "subsidised": false,
+      "partCharge": false
+    },
+    {
+      "rank": 97,
+      "generic": "Riboflavin",
+      "brand": "Solgar",
+      "formulation": "Cap 100 mg",
+      "subsidised": false,
+      "partCharge": false
+    },
+    {
+      "rank": 98,
+      "generic": "Arginine",
+      "brand": "Clinicians",
+      "formulation": "Tab 1,000 mg",
+      "subsidised": false,
+      "partCharge": false
+    },
+    {
+      "rank": 99,
+      "generic": "Taurine",
+      "brand": "Life Extension",
+      "formulation": "Cap 1,000 mg",
+      "subsidised": false,
+      "partCharge": false
+    },
+    {
+      "rank": 100,
+      "generic": "Trientine",
+      "brand": "Trientine Waymade",
+      "formulation": "Cap 250 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 101,
+      "generic": "Nitisinone",
+      "brand": "Nitisinone LogixX Pharma",
+      "formulation": "Cap 2 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 102,
+      "generic": "Taliglucerase alfa",
+      "brand": "Elelyso",
+      "formulation": "Inj 200 unit vial",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 103,
+      "generic": "Benzydamine hydrochloride",
+      "brand": "Difflam",
+      "formulation": "Soln 0.15%",
+      "subsidised": true,
+      "partCharge": true
+    },
+    {
+      "rank": 104,
+      "generic": "Carmellose sodium with gelatin and pectin",
+      "brand": "Stomahesive",
+      "formulation": "Paste",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 105,
+      "generic": "Triamcinolone acetonide",
+      "brand": "Kenalog in Orabase",
+      "formulation": "Paste 0.1% ",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 106,
+      "generic": "Amphotericin B",
+      "brand": "Fungilin",
+      "formulation": "Lozenges 10 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 107,
+      "generic": "Miconazole",
+      "brand": "Decozol",
+      "formulation": "Oral gel 20 mg per g",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 108,
+      "generic": "Nystatin",
+      "brand": "Nilstat",
+      "formulation": "Oral liq 100,000 u per ml",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 109,
+      "generic": "Hydroxocobalamin",
+      "brand": "Hydroxocobalamin Panpharma",
+      "formulation": "Inj 1 mg per ml, 1 ml ampoule",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 110,
+      "generic": "Pyridoxine hydrochloride",
+      "brand": "Vitamin B6 25",
+      "formulation": "Tab 25 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 111,
+      "generic": "Thiamine hydrochloride",
+      "brand": "Thiamine multichem",
+      "formulation": "Tab 50 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 112,
+      "generic": "Vitamin B complex",
+      "brand": "Bplex",
+      "formulation": "Tab, strong, BPC",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 113,
+      "generic": "Ascorbic acid",
+      "brand": "Cvite",
+      "formulation": "Tab 100 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 114,
+      "generic": "Alfacalcidol",
+      "brand": "One-Alpha",
+      "formulation": "Cap 0.25 mcg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 115,
+      "generic": "Colecalciferol",
+      "brand": "Vit.D3",
+      "formulation": "Cap 1.25 mg (50,000 iu)",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 116,
+      "generic": "Calcitriol",
+      "brand": "Calcitriol-AFT",
+      "formulation": "Cap 0.25 mcg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 117,
+      "generic": "Vitamins",
+      "brand": "Mvite",
+      "formulation": "Tab (BPC cap strength)",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 118,
+      "generic": "Multivitamins",
+      "brand": "Paediatric Seravit",
+      "formulation": "Powder",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 119,
+      "generic": "Multivitamin renal",
+      "brand": "Clinicians Renal Vit",
+      "formulation": "Cap",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 120,
+      "generic": "Calcium carbonate",
+      "brand": "Calci-Tab 500",
+      "formulation": "Tab 1.25 g (500 mg elemental)",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 121,
+      "generic": "Calcium gluconate",
+      "brand": "Max Health - Hameln",
+      "formulation": "Inj 10%, 10 ml ampoule",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 122,
+      "generic": "Potassium iodate",
+      "brand": "NeuroTabs",
+      "formulation": "Tab 253 mcg (150 mcg elemental iodine)",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 123,
+      "generic": "Iron polymaltose",
+      "brand": "Ferrosig",
+      "formulation": "Inj 50 mg per ml, 2 ml ampoule",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 124,
+      "generic": "Ferrous sulfate",
+      "brand": "Ferro-Liquid",
+      "formulation": "Oral liq 30 mg (6 mg elemental) per 1 ml",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 125,
+      "generic": "Ferrous fumarate",
+      "brand": "Ferro-tab",
+      "formulation": "Tab 200 mg (65.7 mg elemental)",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 126,
+      "generic": "Ferrous fumarate with folic acid",
+      "brand": "Ferro-F-Tabs",
+      "formulation": "Tab 310 mg (100 mg elemental) with folic acid 350 mcg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 127,
+      "generic": "Iron (as ferric carboxymaltose)",
+      "brand": "Ferinject",
+      "formulation": "Inj 50 mg per ml, 10 ml vial",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 128,
+      "generic": "Magnesium hydroxide",
+      "brand": "Phillips Milk of Magnesia",
+      "formulation": "Suspension 8%",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 129,
+      "generic": "Magnesium sulphate",
+      "brand": "Martindale",
+      "formulation": "Inj 2 mmol per ml, 5 ml ampoule",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 130,
+      "generic": "Zinc sulphate",
+      "brand": "Zincaps",
+      "formulation": "Cap 137.4 mg (50 mg elemental)",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 131,
+      "generic": "Epoetin alfa",
+      "brand": "Binocrit",
+      "formulation": "Inj 3,000 iu in 0.3 ml, syringe",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 132,
+      "generic": "Folic acid",
+      "brand": "Folic Acid Viatris",
+      "formulation": "Tab 5 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 133,
+      "generic": "Sodium tetradecyl sulphate",
+      "brand": "Fibro-vein",
+      "formulation": "Inj 3% 2 ml",
+      "subsidised": true,
+      "partCharge": true
+    },
+    {
+      "rank": 134,
+      "generic": "Tranexamic acid",
+      "brand": "Mercury Pharma",
+      "formulation": "Tab 500 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 135,
+      "generic": "Octocog alfa [Recombinant factor VIII] (Advate)",
+      "brand": "Advate",
+      "formulation": "Inj 500 iu vial",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 136,
+      "generic": "Eptacog alfa [Recombinant factor VIIa]",
+      "brand": "NovoSeven RT",
+      "formulation": "Inj 1 mg syringe",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 137,
+      "generic": "Moroctocog alfa [Recombinant factor VIII]",
+      "brand": "Xyntha",
+      "formulation": "Inj 250 iu prefilled syringe",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 138,
+      "generic": "Octocog alfa [Recombinant factor VIII] (Kogenate FS)",
+      "brand": "Kogenate FS",
+      "formulation": "Inj 250 iu vial",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 139,
+      "generic": "Factor eight inhibitor bypassing fraction",
+      "brand": "FEIBA NF",
+      "formulation": "Inj 500 U",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 140,
+      "generic": "Eltrombopag",
+      "brand": "Revolade",
+      "formulation": "Tab 25 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 141,
+      "generic": "Nonacog gamma, [Recombinant Factor IX]",
+      "brand": "RIXUBIS",
+      "formulation": "Inj 1,000 iu vial",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 142,
+      "generic": "Eftrenonacog alfa [Recombinant factor IX]",
+      "brand": "Alprolix",
+      "formulation": "Inj 250 iu vial",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 143,
+      "generic": "Rurioctocog alfa pegol [Recombinant factor VIII]",
+      "brand": "Adynovate",
+      "formulation": "Inj 1,000 iu vial",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 144,
+      "generic": "Emicizumab",
+      "brand": "Hemlibra",
+      "formulation": "Inj 30 mg in 1 ml vial",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 145,
+      "generic": "Phytomenadione",
+      "brand": "Konakion MM",
+      "formulation": "Inj 10 mg per ml, 1 ml",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 146,
+      "generic": "Aspirin",
+      "brand": "Ethics Aspirin EC",
+      "formulation": "Tab 100 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 147,
+      "generic": "Dipyridamole",
+      "brand": "Dipyridamole - Strides",
+      "formulation": "Cap modified-release 200 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 148,
+      "generic": "Clopidogrel",
+      "brand": "Arrow - Clopid",
+      "formulation": "Tab 75 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 149,
+      "generic": "Ticagrelor",
+      "brand": "Ticagrelor Sandoz",
+      "formulation": "Tab 90 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 150,
+      "generic": "Tenecteplase",
+      "brand": "Metalyse",
+      "formulation": "Inj 50 mg per vial with diluent",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 151,
+      "generic": "Heparin sodium",
+      "brand": "Pfizer",
+      "formulation": "Inj 1,000 iu per ml, 5 ml ampoule",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 152,
+      "generic": "Enoxaparin sodium",
+      "brand": "Clexane",
+      "formulation": "Inj 20 mg in 0.2 ml syringe",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 153,
+      "generic": "Heparinised saline",
+      "brand": "Pfizer",
+      "formulation": "Inj 10 iu per ml, 5 ml",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 154,
+      "generic": "Warfarin sodium",
+      "brand": "Coumadin",
+      "formulation": "Tab 1 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 155,
+      "generic": "Rivaroxaban",
+      "brand": "Xarelto",
+      "formulation": "Tab 10 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 156,
+      "generic": "Dabigatran",
+      "brand": "Pradaxa",
+      "formulation": "Cap 75 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 157,
+      "generic": "Filgrastim",
+      "brand": "Nivestim",
+      "formulation": "Inj 300 mcg per 0.5 ml prefilled syringe",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 158,
+      "generic": "Pegfilgrastim",
+      "brand": "Ziextenzo",
+      "formulation": "Inj 6 mg per 0.6 ml syringe",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 159,
+      "generic": "Glucose [Dextrose]",
+      "brand": "Biomed",
+      "formulation": "Inj 50%, 10 ml ampoule",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 160,
+      "generic": "Potassium chloride",
+      "brand": "Juno",
+      "formulation": "Inj 75 mg per ml, 10 ml",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 161,
+      "generic": "Sodium bicarbonate",
+      "brand": "Biomed",
+      "formulation": "Inj 8.4%, 100 ml",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 162,
+      "generic": "Sodium chloride",
+      "brand": "Fresenius Kabi",
+      "formulation": "Inj 0.9%, 5 ml ampoule",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 163,
+      "generic": "Water",
+      "brand": "Multichem",
+      "formulation": "Inj 10 ml ampoule",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 164,
+      "generic": "Total parenteral nutrition (TPN)",
+      "brand": "TPN",
+      "formulation": "Infusion",
+      "subsidised": false,
+      "partCharge": false
+    },
+    {
+      "rank": 165,
+      "generic": "Calcium polystyrene sulphonate",
+      "brand": "Calcium Resonium",
+      "formulation": "Powder",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 166,
+      "generic": "Compound electrolytes with glucose [Dextrose]",
+      "brand": "Pedialyte",
+      "formulation": "Soln with electrolytes (2 x 500 ml)",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 167,
+      "generic": "Compound electrolytes",
+      "brand": "Electral",
+      "formulation": "Powder for oral soln ",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 168,
+      "generic": "Phosphorus",
+      "brand": "Phosphate Phebra",
+      "formulation": "Tab eff 500 mg (16 mmol)",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 169,
+      "generic": "Potassium chloride",
+      "brand": "Chlorvescent",
+      "formulation": "Tab eff 548 mg (14 m eq) with chloride 285 mg (8 m eq)",
+      "subsidised": true,
+      "partCharge": true
+    },
+    {
+      "rank": 170,
+      "generic": "Sodium bicarbonate",
+      "brand": "Sodibic",
+      "formulation": "Cap 840 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 171,
+      "generic": "Sodium polystyrene sulphonate",
+      "brand": "Resonium-A",
+      "formulation": "Powder",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 172,
+      "generic": "Phenoxybenzamine hydrochloride",
+      "brand": "BNM",
+      "formulation": "Cap 10 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 173,
+      "generic": "Prazosin",
+      "brand": "Minipress",
+      "formulation": "Tab 1 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 174,
+      "generic": "Doxazosin",
+      "brand": "Doxazosin Clinect",
+      "formulation": "Tab 2 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 175,
+      "generic": "Enalapril maleate",
+      "brand": "Ipca-Enalapril",
+      "formulation": "Tab 5 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 176,
+      "generic": "Quinapril",
+      "brand": "Arrow-Quinapril 5",
+      "formulation": "Tab 5 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 177,
+      "generic": "Lisinopril",
+      "brand": "Teva Lisinopril",
+      "formulation": "Tab 5 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 178,
+      "generic": "Perindopril",
+      "brand": "Coversyl",
+      "formulation": "Tab 4 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 179,
+      "generic": "Captopril",
+      "brand": "DP-Captopril",
+      "formulation": "Oral liq 5 mg per ml",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 180,
+      "generic": "Ramipril",
+      "brand": "Tryzan",
+      "formulation": "Cap 1.25 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 181,
+      "generic": "Losartan potassium",
+      "brand": "Losartan Actavis",
+      "formulation": "Tab 50 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 182,
+      "generic": "Candesartan cilexetil",
+      "brand": "Candestar",
+      "formulation": "Tab 4 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 183,
+      "generic": "Losartan potassium with hydrochlorothiazide",
+      "brand": "Losartan & Hydrochlorothiazide (Ipca)",
+      "formulation": "Tab 50 mg with hydrochlorothiazide 12.5 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 184,
+      "generic": "Candesartan cilexetil with hydrochlorothiazide",
+      "brand": "APO-Candesartan HCTZ 16/12.5",
+      "formulation": "Tab 16 mg with hydrochlorothiazide 12.5 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 185,
+      "generic": "Sacubitril with valsartan",
+      "brand": "Entresto 24/26",
+      "formulation": "Tab 24.3 mg with valsartan 25.7 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 186,
+      "generic": "Amiodarone hydrochloride",
+      "brand": "Aratac",
+      "formulation": "Tab 100 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 187,
+      "generic": "Atropine sulphate",
+      "brand": "Martindale",
+      "formulation": "Inj 600 mcg per ml, 1 ml ampoule",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 188,
+      "generic": "Digoxin",
+      "brand": "Lanoxin PG",
+      "formulation": "Tab 62.5 mcg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 189,
+      "generic": "Disopyramide",
+      "brand": "Rythmodan - Cheplafarm",
+      "formulation": "Cap 100 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 190,
+      "generic": "Flecainide acetate",
+      "brand": "Flecainide BNM",
+      "formulation": "Tab 50 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 191,
+      "generic": "Mexiletine hydrochloride",
+      "brand": "Teva",
+      "formulation": "Cap 150 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 192,
+      "generic": "Propafenone hydrochloride",
+      "brand": "Rytmonorm",
+      "formulation": "Tab 150 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 193,
+      "generic": "Midodrine",
+      "brand": "Midodrine Medsurge",
+      "formulation": "Tab 2.5 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 194,
+      "generic": "Atenolol",
+      "brand": "Viatris",
+      "formulation": "Tab 50 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 195,
+      "generic": "Labetalol",
+      "brand": "Trandate",
+      "formulation": "Tab 100 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 196,
+      "generic": "Metoprolol succinate",
+      "brand": "Myloc CR",
+      "formulation": "Tab long-acting 47.5 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 197,
+      "generic": "Metoprolol tartrate",
+      "brand": "IPCA-Metoprolol",
+      "formulation": "Tab 50 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 198,
+      "generic": "Nadolol",
+      "brand": "Nadolol BNM",
+      "formulation": "Tab 40 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 199,
+      "generic": "Propranolol",
+      "brand": "Drofate",
+      "formulation": "Tab 10 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 200,
+      "generic": "Sotalol",
+      "brand": "Mylan",
+      "formulation": "Tab 80 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 201,
+      "generic": "Carvedilol",
+      "brand": "Carvedilol Sandoz",
+      "formulation": "Tab 6.25 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 202,
+      "generic": "Bisoprolol fumarate",
+      "brand": "Ipca-Bisoprolol",
+      "formulation": "Tab 2.5 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 203,
+      "generic": "Nifedipine",
+      "brand": "Tensipine MR10",
+      "formulation": "Tab long-acting 10 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 204,
+      "generic": "Felodipine",
+      "brand": "Felo 5 ER",
+      "formulation": "Tab long-acting 5 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 205,
+      "generic": "Amlodipine",
+      "brand": "Vasorex",
+      "formulation": "Tab 5 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 206,
+      "generic": "Perhexiline maleate",
+      "brand": "Pexsig",
+      "formulation": "Tab 100 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 207,
+      "generic": "Verapamil hydrochloride",
+      "brand": "Isoptin",
+      "formulation": "Tab 40 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 208,
+      "generic": "Diltiazem hydrochloride",
+      "brand": "Diltiazem CD Clinect",
+      "formulation": "Cap long-acting 120 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 209,
+      "generic": "Clonidine",
+      "brand": "Mylan",
+      "formulation": "Patch 2.5 mg, 100 mcg per day",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 210,
+      "generic": "Clonidine hydrochloride",
+      "brand": "Catapres",
+      "formulation": "Tab 150 mcg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 211,
+      "generic": "Methyldopa",
+      "brand": "Methyldopa Viatris",
+      "formulation": "Tab 250 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 212,
+      "generic": "Bumetanide",
+      "brand": "Burinex",
+      "formulation": "Tab 1 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 213,
+      "generic": "Furosemide [Frusemide]",
+      "brand": "IPCA-Frusemide",
+      "formulation": "Tab 40 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 214,
+      "generic": "Amiloride hydrochloride",
+      "brand": "Wockhardt",
+      "formulation": "Tab 5 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 215,
+      "generic": "Spironolactone",
+      "brand": "Spiractin",
+      "formulation": "Tab 25 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 216,
+      "generic": "Eplerenone",
+      "brand": "Inspra",
+      "formulation": "Tab 25 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 217,
+      "generic": "Amiloride hydrochloride with furosemide",
+      "brand": "Frumil",
+      "formulation": "Tab 5 mg with furosemide 40 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 218,
+      "generic": "Amiloride hydrochloride with hydrochlorothiazide",
+      "brand": "Moduretic",
+      "formulation": "Tab 5 mg with hydrochlorothiazide 50 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 219,
+      "generic": "Bendroflumethiazide [Bendrofluazide]",
+      "brand": "Arrow-Bendrofluazide",
+      "formulation": "Tab 2.5 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 220,
+      "generic": "Chlorothiazide",
+      "brand": "Biomed",
+      "formulation": "Oral liq 50 mg per ml",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 221,
+      "generic": "Chlortalidone [Chlorthalidone]",
+      "brand": "Hygroton",
+      "formulation": "Tab 25 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 222,
+      "generic": "Indapamide",
+      "brand": "Dapa-Tabs",
+      "formulation": "Tab 2.5 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 223,
+      "generic": "Metolazone",
+      "brand": "Zaroxolyn",
+      "formulation": "Tab 5 mg",
+      "subsidised": false,
+      "partCharge": false
+    },
+    {
+      "rank": 224,
+      "generic": "Tolvaptan",
+      "brand": "Jinarc",
+      "formulation": "Tab 15 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 225,
+      "generic": "Bezafibrate",
+      "brand": "Bezalip",
+      "formulation": "Tab 200 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 226,
+      "generic": "Acipimox",
+      "brand": "Olbetam",
+      "formulation": "Cap 250 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 227,
+      "generic": "Colestyramine",
+      "brand": "Colestyramine - Mylan",
+      "formulation": "Powder for oral suspension 4 g sachet",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 228,
+      "generic": "Atorvastatin",
+      "brand": "Lorstat",
+      "formulation": "Tab 10 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 229,
+      "generic": "Simvastatin",
+      "brand": "Simvastatin Mylan",
+      "formulation": "Tab 10 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 230,
+      "generic": "Pravastatin",
+      "brand": "Clinect",
+      "formulation": "Tab 20 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 231,
+      "generic": "Rosuvastatin",
+      "brand": "Rosuvastatin Viatris",
+      "formulation": "Tab 5 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 232,
+      "generic": "Ezetimibe",
+      "brand": "Ezetimibe Sandoz",
+      "formulation": "Tab 10 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 233,
+      "generic": "Ezetimibe with simvastatin",
+      "brand": "Zimybe",
+      "formulation": "Tab 10 mg with simvastatin 20 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 234,
+      "generic": "Glyceryl trinitrate",
+      "brand": "Nitroderm TTS",
+      "formulation": "Patch 50 mg, 10 mg per day",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 235,
+      "generic": "Isosorbide mononitrate",
+      "brand": "Ismo 20",
+      "formulation": "Tab 20 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 236,
+      "generic": "Adrenaline",
+      "brand": "DBL Adrenaline",
+      "formulation": "Inj 1 in 1,000, 1 ml ampoule",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 237,
+      "generic": "Hydralazine hydrochloride",
+      "brand": "Hydralazine",
+      "formulation": "Tab 25 mg",
+      "subsidised": false,
+      "partCharge": false
+    },
+    {
+      "rank": 238,
+      "generic": "Papaverine hydrochloride",
+      "brand": "Hospira",
+      "formulation": "Inj 12 mg per ml, 10 ml ampoule",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 239,
+      "generic": "Minoxidil",
+      "brand": "Loniten",
+      "formulation": "Tab 10 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 240,
+      "generic": "Pentoxifylline [Oxpentifylline]",
+      "brand": "Trental 400",
+      "formulation": "Tab 400 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 241,
+      "generic": "Nicorandil",
+      "brand": "Max Health",
+      "formulation": "Tab 10 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 242,
+      "generic": "Bosentan",
+      "brand": "Bosentan Dr Reddy's",
+      "formulation": "Tab 62.5 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 243,
+      "generic": "Ambrisentan",
+      "brand": "Ambrisentan Viatris",
+      "formulation": "Tab 5 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 244,
+      "generic": "Sildenafil",
+      "brand": "Vedafil",
+      "formulation": "Tab 25 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 245,
+      "generic": "Iloprost",
+      "brand": "Vebulis",
+      "formulation": "Nebuliser soln 10 mcg per ml, 2 ml",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 246,
+      "generic": "Epoprostenol",
+      "brand": "Veletri",
+      "formulation": "Inj 500 mcg vial",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 247,
+      "generic": "Isotretinoin",
+      "brand": "Oratane",
+      "formulation": "Cap 10 mg",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 248,
+      "generic": "Tretinoin",
+      "brand": "ReTrieve",
+      "formulation": "Crm 0.5 mg per g",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 249,
+      "generic": "Adapalene",
+      "brand": "Differin",
+      "formulation": "Gel 0.1%",
+      "subsidised": true,
+      "partCharge": false
+    },
+    {
+      "rank": 250,
+      "generic": "Sodium Fusidate [fusidic acid]",
+      "brand": "Foban",
+      "formulation": "Crm 2%",
+      "subsidised": true,
+      "partCharge": false
+    }
+  ]
+}
