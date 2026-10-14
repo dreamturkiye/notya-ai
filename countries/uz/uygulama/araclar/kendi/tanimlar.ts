@@ -1,13 +1,18 @@
 /**
- * NOTYA-ULKE-UYGULA-UZ — Uzbekistan: THE MECHANISMS OF THE TOOLS ONLY UZBEKISTAN HAS. Three tools, proposed by the
- * tools audit of 2026-10-10 (docs/araclar-denetim/UZ.md, "The proposals and the core set") and built for this
+ * NOTYA-ULKE-UYGULA-UZ — Uzbekistan: THE MECHANISMS OF THE TOOLS ONLY UZBEKISTAN HAS. Four tools, built for this
  * country alone: no other country's build holds them (wall rule D7; countries/yasak-araclar.json lists the keys).
+ * Tools 1 to 3 were proposed by the tools audit of 2026-10-10 (docs/araclar-denetim/UZ.md, "The proposals and the
+ * core set"). Tool 4, the immunisation calendar, is NOT from that audit: the owner asked directly, on redoing the
+ * Uzbekistan audit (2026-10-13), for a vaccination-schedule tool, as a CORE tool (every doctor role), built from the
+ * country's actual official calendar and switched on now — unlike the usual rule that a new tool with clinical
+ * content ships off as a slot pending a clinician's sign-off. See ./onay.ts for what is still owed on it.
  *
  * ────────────────────────────────────────────────────────────────────────────────────────────────────────────
- * WRITTEN BY A MACHINE FROM SOURCES OPENED ON 2026-10-10. NO CLINICIAN OF UZBEKISTAN HAS READ A LINE OF THIS FILE.
- * The three tools are SWITCHED ON by the owner's order of 2026-10-10 ("Bring on all the tools built for the new 6
- * countries now. We will test as we go."), without a clinician's sign-off: ./onay.ts lists them and says what a
- * clinician has to confirm for each. Nothing here was written from memory: every number below stands beside the
+ * WRITTEN BY A MACHINE FROM SOURCES OPENED ON 2026-10-10 (tools 1 to 3) AND 2026-10-13 (tool 4). NO CLINICIAN OF
+ * UZBEKISTAN HAS READ A LINE OF THIS FILE. Tools 1 to 3 were SWITCHED ON by the owner's order of 2026-10-10 ("Bring
+ * on all the tools built for the new 6 countries now. We will test as we go."); tool 4 was switched on by the
+ * owner's explicit order of 2026-10-13 (the redone audit). None has a clinician's sign-off: ./onay.ts lists each and
+ * says what a clinician has to confirm. Nothing here was written from memory: every number below stands beside the
  * place of the source it was read in, and ./kendi.test.ts holds the code to the same numbers. AT MOST ONE SHORT
  * PHRASE OF A SOURCE IS QUOTED; everything else is said in this file's own words.
  * ────────────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -36,7 +41,21 @@
  *   [JE]    Government of Jersey, "Due date calculator". https://gov.je/Health/PregnancyAndBirth/YourPregnancy/Pages/DueDateCalculator.aspx
  *   [IMM]   SanQvaM 0239-07/3, "Oʻzbekiston Respublikasida yuqumli kasalliklar immunoprofilaktikasi", approved by the
  *           Chief State Sanitary Doctor on 15.03.2015; amendment of 19.07.2021 the latest shown.
- *           https://lex.uz/uz/acts/-5524039 — opened for its title and status ONLY. NOTHING OF ITS CALENDAR IS IN THE PRODUCT.
+ *           https://lex.uz/uz/acts/-5524039 — opened again for its title and status only; AS BEFORE, NOTHING OF ITS
+ *           CALENDAR IS IN THE PRODUCT (its own calendar text still did not surface, as in the second pass,
+ *           docs/araclar-denetim/UZ.md). The dates and vaccine names of tool 4 below are read from [SANEPID] instead.
+ *   [SANEPID] Sanitariya-epidemiologiya farovonligi va jamoat salomatligi qoʻmitasi ("Sanitary and Epidemiological
+ *           Welfare Committee"), the state body that under Law No. ZRU-393 of 26.08.2015, article 33, carries out
+ *           what the law assigns to the Chief State Sanitary Doctor, among it the National Calendar of Preventive
+ *           Vaccinations. Its own page on the government portal: "Bolalarga profilaktik emlashlar qachon va qaysi
+ *           kasalliklarga qarshi oʻtkaziladi?" / "Когда и против каких заболеваний проводятся профилактические
+ *           прививки детям?", read 2026-10-13 in all three forms the page itself offers:
+ *           https://gov.uz/oz/sanepid/news/view/223776 (uz-Latn) ; https://gov.uz/ru/sanepid/news/view/223776 (ru) ;
+ *           https://gov.uz/en/sanepid/news/view/223776 (en, read for cross-check only). THIS IS THE COMMITTEE'S OWN
+ *           CURRENT SUMMARY OF THE CALENDAR, not the legal instrument itself (SanQvaM 0239-07/3, [IMM], never opened
+ *           for its calendar in any pass): where the two might differ, [SANEPID] is what a doctor reading the
+ *           committee's own public page sees today, dated by the page itself (news item 2026-09-23, page updated
+ *           2026-09-24). The page gives every age and vaccine of tool 4 below; nothing beyond its own text is used.
  *
  * LICENCE, as read (./metinler.ts states it per tool): the arithmetic and the limits are taken from official
  * documents of the state and from pages of public bodies; no wording of any of them is reproduced. Law of the
@@ -48,7 +67,7 @@
  * domain". This is a machine's reading of those texts, not a lawyer's.
  */
 import type { AracSayisi, AracTanimi } from '@/lib/ulke/araclar/tipler'
-import { BOS_SONUC, gunEkle, gunFarki, gunMu, sayi, sayiMi, secim, tarih } from '@/lib/ulke/araclar/yardimci'
+import { ayEkle, BOS_SONUC, gunEkle, gunFarki, gunMu, sayi, sayiMi, secim, tarih } from '@/lib/ulke/araclar/yardimci'
 
 // ───────────────────────── 1. body mass index ─────────────────────────
 
@@ -214,5 +233,59 @@ export const UZ_EMLASH_QAYDI: AracTanimi = {
   },
 }
 
+// ──END OF TOOL 3── // ───────────────────────── 4. the national immunisation calendar, by age ─────────────────────────
+
+/**
+ * THE AGE OF EACH DOSE, in whole months from birth (day arithmetic for the two earliest), exactly as [SANEPID]
+ * lists them. Where [SANEPID] gives a window ("2–5-й день жизни") the EARLIEST day of the window is the date shown,
+ * and the tool's own words say so, because the kit's date arithmetic gives one day, not a range.
+ * ONE ROW OF [SANEPID] IS NOT A FIXED PART OF THE CALENDAR: the page says that, "due to the epidemiological
+ * situation", a measles dose is CURRENTLY also given at 6 months; it is kept as its own entry, marked as such in
+ * the tool's words, never merged into the fixed rows.
+ * NOTHING ELSE OF THE NATIONAL CALENDAR IS HERE: no catch-up rule, no contraindication, no interval between two
+ * live vaccines, no brand or manufacturer. The tool answers with dates only; it does not say a dose is "due" or
+ * "overdue" against any record of what was actually given (that is ./tanimlar.ts's tool 3, `uz-emlash-qaydi`).
+ */
+export const UZ_EMLASH_JADVALI_YOSHLARI = {
+  tugilganda: { gun: 0 }, // [SANEPID]: "в первые 24 часа жизни" — HepB-1 / VGB-1
+  ikki_besh_kun: { gun: 2 }, // [SANEPID]: "на 2–5-й день жизни" — BCG-1 / BSJ-1; earliest day of the window shown
+  ikki_oy: { ay: 2 }, // [SANEPID]: "в 2 месяца" — OPV-1, Rota-1, PCV-1, Penta-1
+  uch_oy: { ay: 3 }, // [SANEPID]: "в 3 месяца" — OPV-2, Rota-2, PCV-2, Penta-2
+  tort_oy: { ay: 4 }, // [SANEPID]: "в 4 месяца" — OPV-3, Rota-3, Penta-3, IPV-1
+  olti_oy_qoshimcha: { ay: 6 }, // [SANEPID]: measles currently also given at 6 months — NOT a fixed row
+  toqqiz_oy: { ay: 9 }, // [SANEPID]: "в 9 месяцев" — IPV-2
+  bir_yosh: { ay: 12 }, // [SANEPID]: "в 12 месяцев" — MMR-1 / KPK-1, PCV-3
+  on_olti_oy: { ay: 16 }, // [SANEPID]: "в 16 месяцев" — DTP-4 / AKDS-4, OPV-4
+  olti_yosh: { ay: 72 }, // [SANEPID]: "в 6 лет" (6 × 12) — MMR-2 / KPK-2
+  yetti_yosh: { ay: 84 }, // [SANEPID]: "в 7 лет" (7 × 12) — Td-5 / ADS-M-5, OPV-5
+  toqqiz_yosh: { ay: 108 }, // [SANEPID]: "в 9 лет" (9 × 12) — HPV / VPCH
+  on_olti_yosh: { ay: 192 }, // [SANEPID]: "в 16 лет" (16 × 12) — Td-6 / ADS-M-6
+} as const
+
+/**
+ * THE NATIONAL IMMUNISATION CALENDAR — date arithmetic only: from the patient's date of birth, the date of every
+ * age point above. No vaccine name and no disease name is worked out here; they are the tool's fixed words
+ * (./metinler.ts), read beside the date exactly as [SANEPID] names them.
+ * ONE WARNING ONLY: that one or more of the dates shown have already passed — a prompt to check the patient's own
+ * vaccination record (`uz-emlash-qaydi`), never a claim that a dose was missed.
+ * No result for a date of birth in the future, or for no date of birth at all.
+ */
+export const UZ_EMLASH_JADVALI: AracTanimi = {
+  anahtar: 'uz-emlash-jadvali',
+  tur: 'takvim',
+  alanlar: [tarih('tugilgan_sana')],
+  cikti: { sayilar: [], bantlar: [], uyarilar: ['otgan_sanalar_bor'], tarihler: Object.keys(UZ_EMLASH_JADVALI_YOSHLARI) },
+  kaynak: 'Oʻzbekiston Respublikasi Sanitariya-epidemiologiya farovonligi va jamoat salomatligi qoʻmitasi, "Bolalarga profilaktik emlashlar qachon va qaysi kasalliklarga qarshi oʻtkaziladi?" (https://gov.uz/oz/sanepid/news/view/223776, read 2026-10-13); legal basis: Law of the Republic of Uzbekistan No. ZRU-393 of 26.08.2015, article 33.',
+  hesapla: (g, { bugun }) => {
+    if (!gunMu(g.tugilgan_sana) || gunFarki(g.tugilgan_sana, bugun) < 0) return BOS_SONUC
+    const tarihler = Object.entries(UZ_EMLASH_JADVALI_YOSHLARI).map(([anahtar, yosh]) => ({
+      anahtar,
+      tarih: 'gun' in yosh ? gunEkle(g.tugilgan_sana as string, yosh.gun) : ayEkle(g.tugilgan_sana as string, yosh.ay),
+    }))
+    const uyarilar = tarihler.some((t) => gunFarki(t.tarih, bugun) > 0) ? ['otgan_sanalar_bor'] : []
+    return { tamam: true, sayilar: [], bant: null, uyarilar, tarihler }
+  },
+}
+
 /** The mechanisms of the pack's own tools: `UlkeAraclari.kendiAraclari`. */
-export const UZ_KENDI_TANIMLAR: readonly AracTanimi[] = [UZ_TANA_VAZNI_INDEKSI, UZ_HOMILADORLIK_MUDDATI, UZ_EMLASH_QAYDI]
+export const UZ_KENDI_TANIMLAR: readonly AracTanimi[] = [UZ_TANA_VAZNI_INDEKSI, UZ_HOMILADORLIK_MUDDATI, UZ_EMLASH_QAYDI, UZ_EMLASH_JADVALI]

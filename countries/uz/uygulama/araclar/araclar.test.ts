@@ -43,52 +43,52 @@ const LATIN_KALABILIR = /\b(ESI(?: [1-5])?|ASA(?: (?:I{1,3}|IV|VI|V))?|ABCDE|ST|
  * follow-up list comes last: T (every doctor role), H (obstetrics, family medicine), E (paediatrics, family medicine).
  */
 const TEMEL = ['hasta-portali', 'sablonlarim', 'konsultasyonlar']
-/** The body mass index, the gestational age and expected date of birth, the vaccination record; and the follow-up list. */
-const T = 'uz-tana-vazni-indeksi', H = 'uz-homiladorlik-muddati', E = 'uz-emlash-qaydi', P_ = 'takip-paneli'
+/** The body mass index, the gestational age and expected date of birth, the vaccination record, the immunisation calendar; and the follow-up list. */
+const T = 'uz-tana-vazni-indeksi', H = 'uz-homiladorlik-muddati', E = 'uz-emlash-qaydi', EJ = 'uz-emlash-jadvali', P_ = 'takip-paneli'
 /** Off by Kaan's order of 2026-10-10, each with the role it was shown to until that day. */
 const KAPALI: Readonly<Record<string, string>> = { 'esi-triyaj': 'acil-tip', 'kdigo-evre': 'dahiliye', 'kdigo-serit': 'nefroloji', 'rapor-taslagi': 'radyoloji' }
 const ROL_ARACLARI: Readonly<Record<string, readonly string[]>> = {
-  'acil-tip': ['kritik-yol', T, P_],
-  'aile-hekimligi': ['kronik-izlem-kaydi', 'birinci-acil-bayrak', T, H, E, P_],
-  anestezi: ['asa-preop', 'hava-yolu-notu', 'postop-agri', T, P_],
-  'beyin-cerrahisi': ['noro-postop', 'nobet-bilinc', T, P_],
-  'cocuk-cerrahisi': ['cocuk-prepost-op', 'yara-dren-izlem', T, P_],
-  'genel-cerrahi': ['yara-dren-izlem', 'genel-preop', T, P_],
-  'gogus-cerrahisi': ['toraks-preop', 'toraks-tup-yara', T, P_],
-  'gogus-hastaliklari': ['inhaler-teknik', T, P_],
-  'goz-hastaliklari': ['gorme-keskinligi', T, P_],
-  dahiliye: ['kronik-izlem-kaydi', T, P_],
-  dermatoloji: ['pasi', 'easi', 'scorad', 'yama-okuma', 'akne-vade', 'lazer-vade', T, P_],
-  endokrinoloji: ['rejim-karti', T, P_],
-  'enfeksiyon-hastaliklari': ['antibiyotik-sure', T, P_],
-  gastroenteroloji: ['endoskopi-kaydi', T, P_],
-  'kadin-hastaliklari-dogum': [T, H, P_],
-  'kalp-damar-cerrahisi': ['kalp-damar-preop', 'greft-yara-izlem', 'antikoagulan-vadeleri', T, P_],
+  'acil-tip': ['kritik-yol', T, EJ, P_],
+  'aile-hekimligi': ['kronik-izlem-kaydi', 'birinci-acil-bayrak', T, H, E, EJ, P_],
+  anestezi: ['asa-preop', 'hava-yolu-notu', 'postop-agri', T, EJ, P_],
+  'beyin-cerrahisi': ['noro-postop', 'nobet-bilinc', T, EJ, P_],
+  'cocuk-cerrahisi': ['cocuk-prepost-op', 'yara-dren-izlem', T, EJ, P_],
+  'genel-cerrahi': ['yara-dren-izlem', 'genel-preop', T, EJ, P_],
+  'gogus-cerrahisi': ['toraks-preop', 'toraks-tup-yara', T, EJ, P_],
+  'gogus-hastaliklari': ['inhaler-teknik', T, EJ, P_],
+  'goz-hastaliklari': ['gorme-keskinligi', T, EJ, P_],
+  dahiliye: ['kronik-izlem-kaydi', T, EJ, P_],
+  dermatoloji: ['pasi', 'easi', 'scorad', 'yama-okuma', 'akne-vade', 'lazer-vade', T, EJ, P_],
+  endokrinoloji: ['rejim-karti', T, EJ, P_],
+  'enfeksiyon-hastaliklari': ['antibiyotik-sure', T, EJ, P_],
+  gastroenteroloji: ['endoskopi-kaydi', T, EJ, P_],
+  'kadin-hastaliklari-dogum': [T, H, EJ, P_],
+  'kalp-damar-cerrahisi': ['kalp-damar-preop', 'greft-yara-izlem', 'antikoagulan-vadeleri', T, EJ, P_],
   // the vascular half of the specialty the audit split: the same three tools
-  'damar-cerrahisi': ['kalp-damar-preop', 'greft-yara-izlem', 'antikoagulan-vadeleri', T, P_],
-  kardiyoloji: ['kardiyo-not', T, P_],
-  'kulak-burun-bogaz': ['odyometri-pta', 'otoskopi-notu', 'vertigo-notu', T, P_],
-  nefroloji: ['diyaliz-seans', T, P_],
-  noroloji: ['inme-bayraklari', T, P_],
-  onkoloji: ['kur-sayaci', 'toksisite-listesi', T, P_],
-  ortopedi: ['kirik-alci-takip', 'ortopedi-op-protokol', 'vas-fonksiyon', T, P_],
-  pediatri: ['hedef-boy', 'doz-hesabi', T, E, P_],
-  'plastik-cerrahi': ['plastik-yara-greft', T, P_],
-  psikiyatri: ['psikiyatri-guvenlik', T, P_],
-  radyoloji: ['tetkik-kuyrugu', T, P_],
-  romatoloji: ['das28', 'eklem-28', T, P_],
-  uroloji: ['psa-hizi', T, P_],
-  'spor-hekimligi': ['rtp-basamak', 'sakatlik-gunlugu', T, P_],
-  'fizik-tedavi': ['vas-fonksiyon', 'seans-plani', 'icf-ozet', T, P_],
+  'damar-cerrahisi': ['kalp-damar-preop', 'greft-yara-izlem', 'antikoagulan-vadeleri', T, EJ, P_],
+  kardiyoloji: ['kardiyo-not', T, EJ, P_],
+  'kulak-burun-bogaz': ['odyometri-pta', 'otoskopi-notu', 'vertigo-notu', T, EJ, P_],
+  nefroloji: ['diyaliz-seans', T, EJ, P_],
+  noroloji: ['inme-bayraklari', T, EJ, P_],
+  onkoloji: ['kur-sayaci', 'toksisite-listesi', T, EJ, P_],
+  ortopedi: ['kirik-alci-takip', 'ortopedi-op-protokol', 'vas-fonksiyon', T, EJ, P_],
+  pediatri: ['hedef-boy', 'doz-hesabi', T, E, EJ, P_],
+  'plastik-cerrahi': ['plastik-yara-greft', T, EJ, P_],
+  psikiyatri: ['psikiyatri-guvenlik', T, EJ, P_],
+  radyoloji: ['tetkik-kuyrugu', T, EJ, P_],
+  romatoloji: ['das28', 'eklem-28', T, EJ, P_],
+  uroloji: ['psa-hizi', T, EJ, P_],
+  'spor-hekimligi': ['rtp-basamak', 'sakatlik-gunlugu', T, EJ, P_],
+  'fizik-tedavi': ['vas-fonksiyon', 'seans-plani', 'icf-ozet', T, EJ, P_],
   // ── roles the audit of 2026-10-10 added: the core set and nothing more until a local specialist names what is used.
   //    Of the core set, the body mass index and the follow-up list exist; its other tools are placeholders or switched off.
-  'alerji-immunoloji': [T, P_], reproduktoloji: [T, P_], 'cocuk-norolojisi': [T, P_], narkoloji: [T, P_], diyetoloji: ['makro-kaydi', T, P_],
+  'alerji-immunoloji': [T, EJ, P_], reproduktoloji: [T, EJ, P_], 'cocuk-norolojisi': [T, EJ, P_], narkoloji: [T, EJ, P_], diyetoloji: ['makro-kaydi', T, EJ, P_],
   // surdology (the doctor's specialty of hearing; an allied "audiologist" with base tools only before): the hearing average
-  surdoloji: ['odyometri-pta', 'sonraki-seans', T, P_],
+  surdoloji: ['odyometri-pta', 'sonraki-seans', T, EJ, P_],
   // ── clinic doctors. Two carry the same specialty as a doctor role since the audit and see that specialty's tools:
-  'estetik-cerrahi': ['plastik-yara-greft', 'estetik-cerrahi-vade', T, P_],
-  'klinik-dermatoloji': ['pasi', 'easi', 'scorad', 'yama-okuma', 'akne-vade', 'lazer-vade', T, P_],
-  'medikal-estetik': ['estetik-islem-vade', T, P_],
+  'estetik-cerrahi': ['plastik-yara-greft', 'estetik-cerrahi-vade', T, EJ, P_],
+  'klinik-dermatoloji': ['pasi', 'easi', 'scorad', 'yama-okuma', 'akne-vade', 'lazer-vade', T, EJ, P_],
+  'medikal-estetik': ['estetik-islem-vade', T, EJ, P_],
   // allied professions: a session or safety record of their own, then the follow-up list
   fizyoterapi: ['vas-fonksiyon', 'seans-plani', 'icf-ozet', P_],
   'klinik-psikolog': ['psikiyatri-guvenlik', 'sonraki-seans', P_],
@@ -152,11 +152,11 @@ describe('Uzbekistan — tools: who sees what, the three scripts, and what is de
       if (p.roller === null || p.sinif === 'hekimler' || p.anahtar.startsWith('uz-')) continue
       assert.deepEqual(p.roller.filter((r) => yeni.has(r)).sort(), [...(beklenenEk[p.anahtar] ?? [])].sort(), `${p.anahtar}: the roles it gained`)
     }
-    // WHAT IS SWITCHED ON: the 43 tools of before, the dose calculator again, and the three tools of the country's own
+    // WHAT IS SWITCHED ON: the 43 tools of before, the dose calculator again, and the four tools of the country's own
     const { UZ_KAPALI_ARACLAR } = await import('./index')
-    assert.equal(icerik.araclar.length, 61)
-    assert.deepEqual(icerik.araclar.filter((p) => p.anahtar.startsWith('uz-')).map((p) => p.anahtar), [T, H, E])
-    assert.deepEqual(icerik.araclar.filter((p) => p.sinif === 'hekimler').map((p) => p.anahtar), [T])
+    assert.equal(icerik.araclar.length, 62)
+    assert.deepEqual(icerik.araclar.filter((p) => p.anahtar.startsWith('uz-')).map((p) => p.anahtar), [T, H, E, EJ])
+    assert.deepEqual(icerik.araclar.filter((p) => p.sinif === 'hekimler').map((p) => p.anahtar), [T, EJ])
     for (const k of UZ_KAPALI_ARACLAR) assert.ok(!icerik.araclar.some((p) => p.anahtar === k), k)
   })
 
@@ -255,7 +255,7 @@ describe('Uzbekistan — tools: who sees what, the three scripts, and what is de
     // Structural records added after the audit document. They are not rows of that document; the outcome section is left as it was.
     const yeniYapisal = ['akne-vade', 'birinci-acil-bayrak', 'endoskopi-kaydi', 'estetik-cerrahi-vade', 'estetik-islem-vade', 'icf-ozet', 'inme-bayraklari', 'kardiyo-not', 'kronik-izlem-kaydi', 'lazer-vade', 'makro-kaydi', 'psikiyatri-guvenlik', 'seans-plani', 'sonraki-seans']
     const belgesizEski = belgesiz.filter((k) => !yeniYapisal.includes(k))
-    assert.deepEqual(belgesizEski.sort(), ['basdai', 'easi', 'iltihap-lab-izlem', 'scorad', E, H, T])
+    assert.deepEqual(belgesizEski.sort(), ['basdai', 'easi', 'iltihap-lab-izlem', 'scorad', E, EJ, H, T].sort())
     for (const k of belgesizEski) assert.ok(sonuc.includes('`' + k + '`'), `${k} is in the pack and not mentioned in the outcome table`)
     for (const k of yeniYapisal) assert.ok(acik.has(k), `${k} is not switched on`)
   })
