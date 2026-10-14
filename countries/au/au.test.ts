@@ -57,8 +57,9 @@ ingilizcePaketSinamasi({
   // United Kingdom, United States, Canada, New Zealand: their systems, identifiers, currencies, names, usage
   yabanci: /\b(NHS|NHI|GBP|USD|CAD|NZD|United Kingdom|United States|Canada|Canadian|provincial|Quebec|New Zealand|HIPAA|Medicaid|health card|Anaesthetics|Anesthesiology|Pulmonology|Respirology|Physical therapist|attending physician|staff physician|consultant)\b|£/,
   // off by Kaan's order of 2026-10-10 (NOTYA-ULKE-ARAC-01b): these four. The dose calculator is ON AGAIN by his later
-  // order of the same day (its fault was corrected in the kit; the guard list no longer holds it).
-  kapaliAraclar: ['akne-vade', 'esi-triyaj', 'kdigo-evre', 'kdigo-serit', 'lazer-vade', 'rapor-taslagi'],
+  // order of the same day (its fault was corrected in the kit; the guard list no longer holds it). A third kidney
+  // tool, added later, is off for an unrelated reason: a brand-new tool pending a clinician's sign-off.
+  kapaliAraclar: ['akne-vade', 'esi-triyaj', 'kbh-risk-kategorisi', 'kdigo-evre', 'kdigo-serit', 'lazer-vade', 'rapor-taslagi'],
   birimler: { agirlik: 'kg', boy: 'cm', sicaklik: 'C' },
   labBirimleri: LAB,
   kidemliHekim: 'specialist',
@@ -361,9 +362,9 @@ describe('au: who sees which tool — the audit\'s decisions, with existing tool
     assert.deepEqual(goren('takip-paneli'), [...ROLLER])
   })
 
-  it('REMOVED FOR AUSTRALIA: the American triage scale is off, on no grid and at no address — and so are the three other tools the owner keeps off', () => {
+  it('REMOVED FOR AUSTRALIA: the American triage scale is off, on no grid and at no address — and so are the three other tools the owner keeps off, and a new fourth kidney tool pending sign-off', () => {
     const acik = A.araclar.map((p) => p.anahtar)
-    for (const k of ['esi-triyaj', 'kdigo-evre', 'kdigo-serit', 'rapor-taslagi']) {
+    for (const k of ['esi-triyaj', 'kbh-risk-kategorisi', 'kdigo-evre', 'kdigo-serit', 'rapor-taslagi']) {
       assert.ok(!acik.includes(k), `${k} is switched on`)
       assert.deepEqual(goren(k), [], k)
       assert.ok(A.yuvalar.some((y) => y.anahtar === k && y.acik === false), `${k} is a switched-off slot`)

@@ -3,7 +3,7 @@
   "ogeler": [
     {
       "dosya": "countries/gb/araclar.ts",
-      "satir": 43,
+      "satir": 44,
       "kilavuz": "NG203, NG12",
       "baslik": "NG203 Chronic kidney disease: assessment and management; NG12 Suspected cancer: recognition and referral",
       "adres": "https://www.nice.org.uk/guidance/ng203/chapter/Recommendations ; https://www.nice.org.uk/guidance/ng12/documents/draft-guideline-4",
@@ -12,7 +12,7 @@
     },
     {
       "dosya": "countries/gb/araclar.ts",
-      "satir": 118,
+      "satir": 120,
       "kilavuz": "TA195",
       "baslik": "NICE technology appraisal guidance TA195 (rheumatoid arthritis after the failure of a TNF inhibitor), section 2 Clinical need and practice, paragraph 2.10",
       "adres": "https://www.nice.org.uk/guidance/ta195/chapter/2-clinical-need-and-practice",
@@ -21,7 +21,7 @@
     },
     {
       "dosya": "countries/gb/araclar.ts",
-      "satir": 172,
+      "satir": 174,
       "kilavuz": "TA195",
       "baslik": "as above",
       "adres": "https://www.nice.org.uk/guidance/ta195/chapter/2-clinical-need-and-practice",
@@ -30,7 +30,7 @@
     },
     {
       "dosya": "countries/gb/araclar.ts",
-      "satir": 157,
+      "satir": 159,
       "kilavuz": "NG98",
       "baslik": "NICE guideline NG98 Hearing loss in adults: assessment and management, recommendation 1.3.2",
       "adres": "https://www.nice.org.uk/guidance/NG98/chapter/recommendations",
