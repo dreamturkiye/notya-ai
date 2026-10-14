@@ -3,13 +3,14 @@
  * (./baglanti). The page is components/ulke/demo/; the route app/demo/page.ulke.tsx.
  *
  * The page exists when the landing page is on, the pack lists /demo among its routes and brings words for it.
- * A button to it shows only when, in addition, the booking link is set: no link, no button anywhere.
+ * The landing button links to that page whenever the page exists. The booking link only decides what /demo shows:
+ * a calendar when it is set, and "booking opens soon" when it is not.
  */
 import { AKTIF_DEMO } from '@/countries/active/demo'
 import { ozellikAcik, ulkePaketi } from '@/lib/ulke/ulke'
 import { ulkeYolu } from '@/lib/ulke/yol'
 import type { DilKodu } from '@/lib/ulke/tipler'
-import { DEMO_SAYFASI, demoBaglantisi } from './baglanti'
+import { DEMO_SAYFASI } from './baglanti'
 import type { DemoMetni } from './tipler'
 
 export { demoBaglantisi, demoBaglantisiCoz, DEMO_SAYFASI } from './baglanti'
@@ -32,9 +33,10 @@ export function demoAdresi(dil: DilKodu): string {
   return ulkeYolu(`${DEMO_SAYFASI}${dil === ulkePaketi().varsayilanDil ? '' : `?dil=${dil}`}`)
 }
 
-/** The "Book a demo" button of the landing page, or null: no page, no link, or no words for this form. */
+/** The "Book a demo" button of the landing page, or null when this build has no demo page or no words for this form.
+ * The button is shown whether or not the booking link is set: it always goes to /demo. */
 export function demoDugmesi(dil: DilKodu): { href: string; etiket: string } | null {
   const m = demoMetni(dil)
-  if (!m || !demoSayfasiVar() || !demoBaglantisi()) return null
+  if (!m || !demoSayfasiVar()) return null
   return { href: demoAdresi(dil), etiket: m.dugme }
 }
