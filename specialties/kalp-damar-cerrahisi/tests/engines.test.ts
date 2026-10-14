@@ -9,6 +9,7 @@ import { antikoagSkorla, antikoagYasakIceriyorMu } from '../engines/antikoag'
 import { acilTara, hekimOnayiGerekliMi } from '../engines/acil'
 import { kdcKohortSatirlari } from '../engines/kohort'
 import { hastaDiliTemizMi } from '../engines/portal-damar'
+import { akiEvreDegerlendir } from '../engines/kdigoAki'
 
 describe('kalp-damar-cerrahisi preop', () => {
   it('checklist karar desteği; SCORE2/doz reddi', () => {
@@ -68,5 +69,37 @@ describe('kalp-damar-cerrahisi portal dil kilidi', () => {
     assert.equal(hastaDiliTemizMi('Kalbim'), false)
     assert.equal(hastaDiliTemizMi('tanı kondu'), false)
     assert.equal(hastaDiliTemizMi('5 mg'), false)
+  })
+})
+
+describe('kalp-damar-cerrahisi kdigoAki', () => {
+  const temelHasta = { yas: 65, krea: null, kreaBazal: null, kreaArtis48Saat: null, idrarMlKgSaat: null, idrarSuresiSaat: null, anuriSuresiSaat: null, rrtBaslandi: false }
+
+  it('KDIGO 2012 Table 2 creatinine-fold boundaries: evre1/2/3 (CSA-AKI izlemi)', () => {
+    assert.equal(akiEvreDegerlendir({ ...temelHasta, krea: 1.8, kreaBazal: 1.2 }).evre, 'evre1')
+    assert.equal(akiEvreDegerlendir({ ...temelHasta, krea: 2.6, kreaBazal: 1.2 }).evre, 'evre2')
+    assert.equal(akiEvreDegerlendir({ ...temelHasta, krea: 4.0, kreaBazal: 1.2 }).evre, 'evre3')
+  })
+
+  it('RRT initiation alone is evre3', () => {
+    assert.equal(akiEvreDegerlendir({ ...temelHasta, rrtBaslandi: true }).evre, 'evre3')
+  })
+
+  it('worse-stage rule: creatinine and urine output can disagree, higher wins', () => {
+    const s = akiEvreDegerlendir({ ...temelHasta, krea: 1.8, kreaBazal: 1.2, idrarMlKgSaat: 0.2, idrarSuresiSaat: 26 })
+    assert.equal(s.evre, 'evre3')
+    assert.ok(s.uyarilar.includes('kreatinin_idrar_farkli_evre'))
+  })
+
+  it('pediatric patient is refused — adult-only tool (çocuk kalp cerrahisi kapsam dışı)', () => {
+    const s = akiEvreDegerlendir({ ...temelHasta, yas: 5, krea: 1, kreaBazal: 0.4 })
+    assert.equal(s.tamamMi, false)
+    assert.ok(s.uyarilar.includes('pediatrik_disi'))
+  })
+
+  it('wording is decision-support, no colour, no invented fluid/RRT order', () => {
+    const s = akiEvreDegerlendir({ ...temelHasta, krea: 1.8, kreaBazal: 1.2 })
+    assert.match(s.ozet, /karar desteği/i)
+    assert.doesNotMatch(s.ozet, /yesil|sari|turuncu|kirmizi|green|yellow|orange|red/i)
   })
 })

@@ -17,6 +17,7 @@ export type Ref =
   | 'TKD_DAMAR'
   | 'SGK_SUT'
   | 'TITCK'
+  | 'KDIGO_2012_AKI'
 
 export type Dipnot = { ref: Ref; not: string }
 
@@ -26,6 +27,7 @@ export const REF_ACIKLAMA: Record<Ref, string> = {
   TKD_DAMAR: 'Türk Damar Cerrahisi / periferik arter hastalıkları konsensüsleri — tanı hekimde',
   SGK_SUT: 'SGK Sağlık Uygulama Tebliği (SUT) — kalp-damar cerrahi paket/rapor; güncel metin hekim doğrular; canlı e-imza yok',
   TITCK: 'TİTCK — KÜB; antikoagülan dozu Notya tarafından üretilmez',
+  KDIGO_2012_AKI: 'KDIGO 2012 AKI Guideline, Kidney Int. Suppl. 2012;2:19-36, Table 2 (s.19) — kalp-damar cerrahisi sonrası (CSA-AKI) akut böbrek hasarı evrelemesi; kit kendi sunumu, tanı/doz hekimde',
 }
 
 export const HEKIM_KILIT_METNI =
