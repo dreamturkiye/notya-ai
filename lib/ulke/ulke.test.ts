@@ -45,7 +45,10 @@ describe('no country configured = Türkiye, as before', () => {
     // The redirect list is still the literal in next.config.mjs, line for line as on main, returned only for the
     // pre-split application; another country never gets it.
     assert.equal(d.bolunmemisUygulama, true)
-    const liste = /if \(!ulkeDerleme\.bolunmemisUygulama\) return ulkeDerleme\.yonlendirmeler\n\s+return \[([\s\S]*?)\n\s+\]\n\s+\},/.exec(config)
+    // NOTYA-ANASAYFA-404-01: the Türkiye literal list sits in the `return [...]` after the if-block that now also
+    // builds the one root redirect every other country gets (KOK_YONLENDIRME, below) — anchored on its own first
+    // entry's comment so it cannot accidentally match that unrelated block.
+    const liste = /return \[\n(\s+\/\/ NOTYA-KOK-DOKTOR-01[\s\S]*?)\n\s+\]\n\s+\},/.exec(config)
     assert.ok(liste, 'redirect block not found in next.config.mjs')
     assert.deepEqual(liste![1].split('\n').map((s) => s.trim()).filter((s) => s.startsWith('{')), [
       "{ source: '/', destination: '/doktor', permanent: false },",
@@ -64,10 +67,14 @@ describe('no country configured = Türkiye, as before', () => {
     assert.equal(ulkeYolOnEki(), '')
     for (const y of ['/', '/doktor', '/giris?x=1', '/api/users/me', '#top', '/?a=1#b']) assert.equal(ulkeYolu(y), y)
     const config = oku('next.config.mjs')
-    // The ONLY place basePath is written: spread in when the country's build file names a prefix, absent otherwise.
-    assert.equal((config.match(/basePath/g) || []).length, 1, 'basePath is written in exactly one place')
+    // basePath is written in exactly two places: the value itself, spread in when the country's build file names a
+    // prefix (absent otherwise), and `basePath: false` on the one redirect (NOTYA-ANASAYFA-404-01) that matches the
+    // bare domain root from OUTSIDE a basePath build and sends it to the already-prefixed home page — the documented
+    // Next.js way to do that, and the only way, since a basePath build mounts nothing at the true, unprefixed root.
+    assert.equal((config.match(/basePath/g) || []).length, 2, 'basePath is written in exactly two places')
     assert.match(config, /\.\.\.\(YOL_ON_EKI \? \{ basePath: YOL_ON_EKI \} : \{\}\),/)
     assert.match(config, /const YOL_ON_EKI = ulkeDerleme\.yolOnEki \|\| ''/)
+    assert.match(config, /\{ source: '\/', destination: YOL_ON_EKI, basePath: false, permanent: false \}/)
     assert.doesNotMatch(config, /assetPrefix|trailingSlash|async rewrites/, 'no forwarding rule and no other path setting belongs in this file')
   })
 
