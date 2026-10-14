@@ -8,6 +8,7 @@ import { toksisiteSkorla } from '../engines/toksisite'
 import { sutTaslagi } from '../engines/sut'
 import { acilTara, hekimOnayiGerekliMi } from '../engines/acil'
 import { onkoKohortSatirlari } from '../engines/kohort'
+import { akiEvreDegerlendir } from '../engines/kdigoAki'
 
 describe('onkoloji kur', () => {
   it('kür sayacı karar desteği; doz reddi', () => {
@@ -55,5 +56,37 @@ describe('onkoloji kohort', () => {
       sonVizit: null, portalVar: true, goruntuBekliyor: false,
     }], '2026-09-19')
     assert.ok(s[0].bayraklar.includes('kur_gecikmis') || s[0].bayraklar.includes('gecikmis_kontrol'))
+  })
+})
+
+describe('onkoloji kdigoAki', () => {
+  const temelHasta = { yas: 55, krea: null, kreaBazal: null, kreaArtis48Saat: null, idrarMlKgSaat: null, idrarSuresiSaat: null, anuriSuresiSaat: null, rrtBaslandi: false }
+
+  it('KDIGO 2012 Table 2 creatinine-fold boundaries: evre1/2/3 (nefrotoksik kür izlemi)', () => {
+    assert.equal(akiEvreDegerlendir({ ...temelHasta, krea: 1.8, kreaBazal: 1.2 }).evre, 'evre1')
+    assert.equal(akiEvreDegerlendir({ ...temelHasta, krea: 2.6, kreaBazal: 1.2 }).evre, 'evre2')
+    assert.equal(akiEvreDegerlendir({ ...temelHasta, krea: 4.0, kreaBazal: 1.2 }).evre, 'evre3')
+  })
+
+  it('RRT initiation alone is evre3', () => {
+    assert.equal(akiEvreDegerlendir({ ...temelHasta, rrtBaslandi: true }).evre, 'evre3')
+  })
+
+  it('worse-stage rule: creatinine and urine output can disagree, higher wins', () => {
+    const s = akiEvreDegerlendir({ ...temelHasta, krea: 1.8, kreaBazal: 1.2, idrarMlKgSaat: 0.2, idrarSuresiSaat: 26 })
+    assert.equal(s.evre, 'evre3')
+    assert.ok(s.uyarilar.includes('kreatinin_idrar_farkli_evre'))
+  })
+
+  it('pediatric patient is refused — adult-only tool', () => {
+    const s = akiEvreDegerlendir({ ...temelHasta, yas: 9, krea: 2, kreaBazal: 0.8 })
+    assert.equal(s.tamamMi, false)
+    assert.ok(s.uyarilar.includes('pediatrik_disi'))
+  })
+
+  it('wording is decision-support, no colour, no invented dose/azaltma', () => {
+    const s = akiEvreDegerlendir({ ...temelHasta, krea: 1.8, kreaBazal: 1.2 })
+    assert.match(s.ozet, /karar desteği/i)
+    assert.doesNotMatch(s.ozet, /yesil|sari|turuncu|kirmizi|green|yellow|orange|red|\bmg\b/i)
   })
 })
