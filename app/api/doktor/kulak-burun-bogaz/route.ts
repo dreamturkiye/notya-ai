@@ -39,6 +39,14 @@ import {
 import {
   REF_ACIKLAMA, HEKIM_KILIT_METNI, ACIL_YONLENDIRME_METNI, KAPSAM_NOTU, YAN_AD, gunEkle, yanGecerliMi,
 } from '@/specialties/kulak-burun-bogaz/engines/kbb'
+import { KBB_GORUNTU_DISCLAIMER, okumaGecisi as kbbOkumaGecisi, taslakTaniDiliUyarisi as kbbTaslakTaniDiliUyarisi, type KbbGoruntuModalite } from '@/specialties/kulak-burun-bogaz/imaging/dualSign'
+import {
+  analizKopruyeUygun as kbbAnalizKopruyeUygun, belgeModaliteKbb, belgeTaslakMetni as kbbBelgeTaslakMetni,
+  guvenUst as kbbGuvenUst, kopruTarafDogrula, taslakAyiricilar as kbbTaslakAyiricilar, taslakSonrakiAdim as kbbTaslakSonrakiAdim,
+} from '@/specialties/kulak-burun-bogaz/imaging/belgeKopru'
+import { tierAYazVeFuzyonla } from '@/core/belgeler/tierA'
+import { bransKurali } from '@/core/belgeler/router'
+import type { BelgeRaporu } from '@/core/belgeler/types'
 
 export const dynamic = 'force-dynamic'
 
@@ -242,6 +250,90 @@ export async function POST(req: NextRequest) {
       await gorevEkle(sb, user.id, patientId, [{ kod: 'osas_sevk', ad: 'Uyku tetkiki (OSAS) sevki', due, kaynak: 'osas' }])
     }
     return NextResponse.json({ ok: true })
+  }
+
+  // ────────────────────────── KBB-GORUNTU-OKUMA-01 — KBB'nin KENDİ dual-sign görüntü köprüsü ──────────────────────────
+  // dermatoloji/göz'ün taslak metnini/alanlarını kullanmaz — kendi muayene sırası, kendi disclaimer'ı, kendi tablosu
+  // (kbb_goruntu_okumalari). Ortak olan: Tier A model çağrısı (tierAYazVeFuzyonla), güven üst sınırı şekli, dual-sign.
+  if (adim === 'goruntu_okuma') {
+    const eylem = String(b.eylem || '')
+    const modalite = (['otoskopi', 'nazoendoskopi', 'laringoskopi'] as const).includes(String(b.modalite) as any)
+      ? (String(b.modalite) as KbbGoruntuModalite) : null
+    if (!modalite) return NextResponse.json({ error: 'Modalite seçin: otoskopi, nazoendoskopi veya laringoskopi.' }, { status: 400 })
+    const tarafR = kopruTarafDogrula(modalite, b.taraf)
+    if (!tarafR.ok) return NextResponse.json({ error: tarafR.hata }, { status: 400 })
+
+    if (eylem === 'belge_taslak') {
+      const { data: a } = await sb.from('belge_analizleri').select('id, belge_id, modality_final, durum, sonuc, fusion')
+        .eq('id', String(b.analizId || '')).eq('doctor_id', user.id).eq('patient_id', patientId).maybeSingle()
+      if (!a) return NextResponse.json({ error: 'Analiz bulunamadı.' }, { status: 404 })
+      if (!belgeModaliteKbb(String(a.modality_final), modalite === 'otoskopi' ? undefined : modalite)) {
+        return NextResponse.json({ error: 'Yalnız otoskopi / endoskopi analizi KBB okumasına aktarılır.' }, { status: 400 })
+      }
+      const rapor = a.sonuc as BelgeRaporu | null
+      const uygun = kbbAnalizKopruyeUygun(String(a.durum), rapor)
+      if (!uygun.ok) return NextResponse.json({ error: uygun.hata }, { status: 400 })
+      const ust = kbbGuvenUst((a.fusion as { capPct?: number } | null)?.capPct, false)
+      const taslak = kbbBelgeTaslakMetni({ rapor: rapor!, modalite, taraf: tarafR.taraf, guvenUstPct: ust })
+      const { data: eklenen, error } = await sb.from('kbb_goruntu_okumalari').insert({
+        patient_id: patientId, doctor_id: user.id, goruntu_id: null, belge_id: a.belge_id, belge_analiz_id: a.id,
+        modalite, taraf: tarafR.taraf, kaynak: 'belge_tier_a', guven_ust_pct: ust, asistan_rapor: rapor,
+        taslak, taslak_yazan: 'asistan', durum: 'draft', disclaimer: KBB_GORUNTU_DISCLAIMER,
+      }).select('id').single()
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json({ ok: true, guvenUst: ust, visionReadId: eklenen?.id ?? null, taslak, uyari: kbbTaslakTaniDiliUyarisi(taslak) })
+    }
+
+    if (eylem === 'asistana_raporla') {
+      const { data: img } = await sb.from('hasta_goruntulemeler').select('id').eq('id', String(b.goruntuId || '')).eq('patient_id', patientId).eq('doctor_id', user.id).maybeSingle()
+      if (!img) return NextResponse.json({ error: 'Görüntü bulunamadı.' }, { status: 404 })
+      if (b.kimlikYok !== true) return NextResponse.json({ error: 'Göndermeden önce görüntüde hasta adı / T.C. / doğum tarihi olmadığını onaylayın (KVKK).' }, { status: 400 })
+      const d = (b.deid || {}) as { mime?: string; base64?: string }
+      if (!d.base64 || typeof d.base64 !== 'string' || d.base64.length > 12_000_000) return NextResponse.json({ error: 'Kimliksizleştirilmiş görüntü gerekli.' }, { status: 400 })
+      const mime = (['image/jpeg', 'image/png', 'image/webp'].includes(String(d.mime)) ? d.mime : 'image/jpeg') as 'image/jpeg' | 'image/png' | 'image/webp'
+      const kural = bransKurali('kbb')
+      const belgeModalite = modalite === 'otoskopi' ? 'otoskopi' : 'endoskopi'
+      const iskelet = async (neden: string) => {
+        const yedek = `Bulgu kontrol listesi taslağı (${modalite}) — ${KBB_GORUNTU_DISCLAIMER}`
+        const { data: eklenen } = await sb.from('kbb_goruntu_okumalari').insert({
+          patient_id: patientId, doctor_id: user.id, goruntu_id: img.id, modalite, taraf: tarafR.taraf,
+          kaynak: 'ayse_iskelet', taslak: yedek, taslak_yazan: 'asistan', durum: 'draft', disclaimer: KBB_GORUNTU_DISCLAIMER,
+        }).select('id').single()
+        return NextResponse.json({ ok: true, yedek: true, uyari: `${neden} — kontrol listesi taslağı eklendi.`, visionReadId: eklenen?.id ?? null, taslak: yedek })
+      }
+      let sonuc
+      try {
+        sonuc = await tierAYazVeFuzyonla({
+          persona: kural.persona,
+          girdi: { brans: kural.ad, modality_final: belgeModalite, yasAy: null, cinsiyet: null, klinikNot: b.klinikNot ? String(b.klinikNot).slice(0, 300) : '' },
+          gorsel: { tip: 'image', mime, base64: d.base64 }, tierB: [], modalite: belgeModalite, yasAy: null, fitzpatrickBilinmiyor: false, doctorId: user.id,
+        })
+      } catch { return iskelet('Görüntü asistan tarafından okunamadı') }
+      const uygun = kbbAnalizKopruyeUygun('taslak', sonuc.rapor)
+      if (!uygun.ok) return iskelet('Görüntü kalitesi düşük')
+      const ust = kbbGuvenUst(sonuc.fusion.capPct, false)
+      const taslak = kbbBelgeTaslakMetni({ rapor: sonuc.rapor, modalite, taraf: tarafR.taraf, guvenUstPct: ust })
+      const { data: eklenen, error } = await sb.from('kbb_goruntu_okumalari').insert({
+        patient_id: patientId, doctor_id: user.id, goruntu_id: img.id, modalite, taraf: tarafR.taraf,
+        kaynak: 'belge_tier_a', guven_ust_pct: ust, asistan_rapor: sonuc.rapor, taslak, taslak_yazan: 'asistan',
+        durum: 'draft', disclaimer: KBB_GORUNTU_DISCLAIMER,
+      }).select('id').single()
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json({
+        ok: true, guvenUst: ust, visionReadId: eklenen?.id ?? null, taslak, uyari: kbbTaslakTaniDiliUyarisi(taslak),
+        differentials: kbbTaslakAyiricilar(sonuc.rapor, ust), nextStep: kbbTaslakSonrakiAdim(sonuc.rapor, modalite),
+      })
+    }
+
+    if (['onayla', 'duzelt', 'reddet'].includes(eylem)) {
+      const { data: ok } = await sb.from('kbb_goruntu_okumalari').select('*').eq('id', String(b.id || '')).eq('patient_id', patientId).eq('doctor_id', user.id).maybeSingle()
+      if (!ok) return NextResponse.json({ error: 'Okuma bulunamadı.' }, { status: 404 })
+      const g = kbbOkumaGecisi({ taslak: ok.taslak, taslakYazan: ok.taslak_yazan, durum: ok.durum, uzmanMetin: ok.uzman_metin }, eylem as 'onayla' | 'duzelt' | 'reddet', 'uzman', b.uzmanMetin ? String(b.uzmanMetin) : undefined)
+      if (!g.ok) return NextResponse.json({ error: g.hata }, { status: 403 })
+      await sb.from('kbb_goruntu_okumalari').update({ durum: g.okuma.durum, uzman_metin: g.okuma.uzmanMetin, onay_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq('id', ok.id)
+      return NextResponse.json({ ok: true })
+    }
+    return NextResponse.json({ error: 'Bilinmeyen görüntü okuma eylemi.' }, { status: 400 })
   }
 
   return NextResponse.json({ error: 'Geçersiz adım' }, { status: 400 })
