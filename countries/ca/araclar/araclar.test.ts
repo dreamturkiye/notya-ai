@@ -44,8 +44,8 @@ const calistir = (k: string, ham: Record<string, string | boolean>) => { const x
 const yazili = (k: string, ham: Record<string, string | boolean>) => Object.fromEntries(calistir(k, ham).sayilar.map((s) => [s.anahtar, sayiMetni(s, M, yazici, O)]))
 const metin = (k: string) => araci(k).metin
 
-/** The four tools of the set that are off here, by the owner's order of 2026-10-10. */
-const EMIRLE_KAPALI = ['esi-triyaj', 'kdigo-evre', 'kdigo-serit', 'rapor-taslagi']
+/** The five tools of the set that are off here: four by the owner's order of 2026-10-10, and a new kidney tool off pending a clinician's sign-off. */
+const EMIRLE_KAPALI = ['esi-triyaj', 'kbh-risk-kategorisi', 'kdigo-evre', 'kdigo-serit', 'rapor-taslagi']
 
 /** WHO SEES A TOOL OF THE SET HERE, where the audit's decision differs from the set: the set's role(s) first, then the roles the audit adds. */
 const GORENLER: Readonly<Record<string, readonly string[]>> = {
@@ -75,7 +75,7 @@ describe('ca tools 1: which tools of the shared set are on', () => {
     for (const k of acik) assert.equal(Boolean(kitAraci(k)), !KENDI.includes(k), `${k}: a tool of the kit, or one of the two of this country's own`)
   })
 
-  it('THE FOUR STAY OFF: ESI triage (the audit\'s one "remove"), the report outline and both kidney tools — placeholders, on no grid', () => {
+  it('THE FOUR STAY OFF: ESI triage (the audit\'s one "remove"), the report outline and both kidney tools — placeholders, on no grid; a third kidney tool stays off too, pending a clinician\'s sign-off', () => {
     for (const k of EMIRLE_KAPALI) {
       assert.ok(!acik.includes(k), `${k} is switched on`)
       assert.equal(A.yuvalar.find((y) => y.anahtar === k)?.acik, false, k)
