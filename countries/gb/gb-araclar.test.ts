@@ -422,8 +422,8 @@ describe('gb C: the tools only this country has', () => {
 })
 
 describe('gb D: what stays off', () => {
-  it('the four tools the owner keeps off are placeholders: ESI triage, the report outline, both kidney tools — and only the dose calculator came back', () => {
-    const kapali = ['akne-vade', 'esi-triyaj', 'kdigo-evre', 'kdigo-serit', 'lazer-vade', 'rapor-taslagi']
+  it('the four tools the owner keeps off are placeholders: ESI triage, the report outline, both kidney tools — and only the dose calculator came back; a third kidney tool stays off pending sign-off', () => {
+    const kapali = ['akne-vade', 'esi-triyaj', 'kbh-risk-kategorisi', 'kdigo-evre', 'kdigo-serit', 'lazer-vade', 'rapor-taslagi']
     assert.deepEqual(Object.keys(GB_ARACLAR.kapali).sort(), kapali)
     for (const k of kapali) { assert.ok(!A.araclar.some((p) => p.anahtar === k), k); assert.ok(A.yuvalar.some((y) => y.anahtar === k), k); for (const r of [null, ...ROLLER]) assert.equal(hesabinAraci(A, r, k), null, `${k}: ${r}`) }
     // NO TOOL THAT WAS OFF IS ON, but the dose calculator: the switched-on tools are the set's tools minus the four, the two screens, and this country's three
