@@ -9,6 +9,8 @@ import { CA_LABORATUVAR } from './kayit/laboratuvar'
 import { CA_KAYIT_SISTEMLERI } from './kayit/sistemler'
 import { CA_TANI } from './kayit/tani'
 
+const BUGUN = '2026-10-14'
+
 describe('ca codes, interactions, laboratory units, and prescribing link', () => {
   it('no interaction pair, no diagnosis code, and no laboratory range was added', () => {
     assert.equal(CA_ETKILESIM.bagli, false)
@@ -25,9 +27,9 @@ describe('ca codes, interactions, laboratory units, and prescribing link', () =>
   it('the narcotic record has the five points the regulation names and nothing else', () => {
     assert.equal(CA_NARKOTIK.anahtar, 'ca-narcotic-note')
     assert.deepEqual(CA_NARKOTIK.alanlar.map((a) => a.anahtar), [...CA_NARKOTIK_ANAHTARLARI])
-    const bos = CA_NARKOTIK.hesapla({})
+    const bos = CA_NARKOTIK.hesapla({}, { bugun: BUGUN, p: {} })
     assert.equal(bos.tamam, false)
-    const dolu = CA_NARKOTIK.hesapla({ yazili: true, imza: true, tarihli: true, miktar: true, ad: true })
+    const dolu = CA_NARKOTIK.hesapla({ yazili: true, imza: true, tarihli: true, miktar: true, ad: true }, { bugun: BUGUN, p: {} })
     assert.equal(dolu.tamam, true)
     assert.equal(dolu.sayilar.find((s) => s.anahtar === 'isaretli')?.deger, 5)
   })
