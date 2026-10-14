@@ -35,7 +35,7 @@ export const UZ_YASAKLI_IFADELER: readonly {
   {
     neden: 'no public demo',
     desen: /\bdemo\b|демо/i,
-    istisna: /demo uchrashuv\w*|демо учрашув\w*|демо-?\s*звонок\w*|book a demo|demo booking/gi,
+    istisna: /demo uchrashuv\w*|демо учрашув\w*|демо-?\s*звонок\w*|записаться на демо|book a demo|demo booking/gi,
   },
   { neden: 'no integration claim', desen: /integratsiya|интеграц|\bDMED\b|davlat tizimi|давлат тизими|государственн\S* систем/i },
   { neden: 'no mention of the voice profile', desen: /ovoz (profil|izi)|овоз (профил|изи)|голосов\S* (профил|отпечат)|biometr|биометр/i },

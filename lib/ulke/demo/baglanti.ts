@@ -4,7 +4,8 @@
  * The link is NEXT_PUBLIC_DEMO_BOOKING_URL, one value per country deployment (each country is its own Vercel
  * project). Only a Cal.com booking address counts: https://cal.com/<user>[/<event>] or https://app.cal.com/<…>.
  * Anything else — empty, http, another host, a bare domain, credentials, a port, odd characters — is NOT SET: the
- * page says booking opens soon and no "Book a demo" button appears anywhere. Plain data and pure functions: no pack.
+ * page says booking opens soon and embeds no calendar. The landing button still links to that page. Plain data
+ * and pure functions: no pack.
  */
 
 export type DemoBaglantisi = {
