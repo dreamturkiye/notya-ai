@@ -68,6 +68,20 @@ export const UZ_ARAC_YUVALARI: readonly AracYuvasi[] = [
   // ── infectious diseases ──
   yuva('viral-izlem', ['enfeksiyon-hastaliklari'], 'HIV and viral hepatitis follow-up: the months between two checks (3 numbers) from the national HIV and hepatitis protocols.', KLINISYEN, true),
   yuva('enfeksiyon-bildirim', ['enfeksiyon-hastaliklari'], 'Isolation and notification: the list of notifiable diseases in Uzbekistan, to whom and by when each is reported, the report form, and isolation periods from the national rules.'),
+  // FOUND by the redone tools audit (point 5, 2026-10-13), not proposed by any pass that worked from Turkiye's
+  // catalogue: WHO calls Uzbekistan a "globally high MDR-TB burden country", one of 30 worldwide and one of 18
+  // high-priority countries in the WHO European Region, with an estimated 24% of new and 63% of previously-treated
+  // TB cases rifampicin/multidrug-resistant (WHO Country Brief, Uzbekistan, read 2026-10-13:
+  // who-sandbox.squiz.cloud/__data/assets/pdf_file/0005/335543/UZB_TB_Brief_0223-AM-edits-D1-20-03-17.pdf). The
+  // brief also says Uzbekistan adopted its own first national MDR-TB guidelines, but this pass did not open that
+  // guideline itself — only the WHO summary of its existence — so no monitoring interval or regimen number is here.
+  // The official nomenclature (../../klinik/rolListesi.ts → UZ_KAPSAM_DISI) threads "Ftiziatriya" through six
+  // specialties by name; nothing of this pack has a role for it, so the slot is offered to the two existing roles
+  // closest to first-line TB care. Unlike the sibling "…-izlem" slots above (lab-izlem, viral-izlem, anemi-izlem,
+  // …), the kit has NO mechanism under this key yet — none of the pre-split application's engines covers TB —
+  // so `mekanizmaHazir` is false: this needs a kit mechanism built, proven equal to a sourced worked example,
+  // before it needs the country's own numbers.
+  yuva('mdr-tb-izlem', ['enfeksiyon-hastaliklari', 'gogus-hastaliklari'], 'Tuberculosis treatment follow-up, first-line and MDR-TB: which tests, how soon and how often, and the drug-susceptibility rule for stepping up to the second-line regimen, from Uzbekistan\'s own national MDR-TB guideline (adopted per the WHO brief above; not itself opened this pass) and the register of anti-TB medicines authorised in Uzbekistan.'),
 
   // ── nephrology ──
   yuva('anemi-izlem', ['nefroloji'], 'Anaemia follow-up in chronic kidney disease: the target haemoglobin range, the lower limit and the months until the next check (6 numbers) from the national nephrology protocol; and the unit the local laboratories report haemoglobin in.', KLINISYEN, true),

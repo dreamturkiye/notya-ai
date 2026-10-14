@@ -163,4 +163,15 @@ export const UZ_HEKIM_ROLLERI: readonly string[] = UZ_ROL_SATIRLARI.filter((x) =
 export const UZ_KAPSAM_DISI: readonly { resmiAd: string; yer: string; neden: string }[] = [
   { resmiAd: 'Stomatologiya', yer: 'section IV, rows 42 to 52', neden: 'A whole direction of the nomenclature with seven specialties. It needs a note template, an intake set and tools of its own: out of scope of the job that applied the audit, and the owner\'s decision.' },
   { resmiAd: 'Xalq tabobati', yer: 'section VIII, row 58 (and order No. 54 of 27.11.2018, registration No. 3111)', neden: 'A recognised direction with an order of its own. No role of the product is close enough to behave like; whether the product wants this field at all is the owner\'s decision.' },
+  // FOUND by the redone tools audit (point 5, 2026-10-13), not by the 2026-10-10 job that built this file: row 20
+  // stands alone in the order, with no bachelor-level specialty of its own and no Turkiye role it was ever going to
+  // be found by renaming one — which is very likely why the 2026-10-10 pass, built specialty by specialty against
+  // Turkiye's existing 40, never surfaced it, unlike the four ADDED roles above. WHO calls Uzbekistan a "globally
+  // high MDR-TB burden country", one of 30 worldwide and one of 18 high-priority countries in the WHO European
+  // Region (WHO Country Brief, Uzbekistan, read 2026-10-13: who-sandbox.squiz.cloud, UZB_TB_Brief). The order also
+  // threads the specialty through six others as a named additional specialty: Ftizioginekologiya (row 1),
+  // Ftiziooftalmologiya (row 16), Suyak tizimi ftiziatriyasi (row 18), Ftiziourologiya (row 19), Ftizioxirurgiya
+  // (row 21), Ftiziopediatriya / "bolalar ftiziatriyasi" (row 25) — a weight in the nomenclature a translated
+  // Turkish catalogue gives no reason to expect.
+  { resmiAd: 'Ftiziatriya', yer: 'row 20, standing alone (and threaded through six other specialties by name: rows 1, 16, 18, 19, 21, 25)', neden: 'A recognised clinical specialty (tuberculosis medicine) with no role in this pack at all — not even built and left out like the two above. Uzbekistan is one of WHO\'s 30 globally high MDR-TB burden countries; a Turkish tool catalogue gives no reason to expect this specialty, which is very likely why it was missed on 2026-10-10. Whether to add the role (a new intake set, note template and tools, same undertaking as the two above) is the owner\'s decision; nothing of it is built by this pass.' },
 ]

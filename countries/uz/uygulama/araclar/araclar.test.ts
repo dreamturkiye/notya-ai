@@ -255,7 +255,7 @@ describe('Uzbekistan — tools: who sees what, the three scripts, and what is de
     // Structural records added after the audit document. They are not rows of that document; the outcome section is left as it was.
     const yeniYapisal = ['akne-vade', 'birinci-acil-bayrak', 'endoskopi-kaydi', 'estetik-cerrahi-vade', 'estetik-islem-vade', 'icf-ozet', 'inme-bayraklari', 'kardiyo-not', 'kronik-izlem-kaydi', 'lazer-vade', 'makro-kaydi', 'psikiyatri-guvenlik', 'seans-plani', 'sonraki-seans']
     const belgesizEski = belgesiz.filter((k) => !yeniYapisal.includes(k))
-    assert.deepEqual(belgesizEski.sort(), ['basdai', 'easi', 'iltihap-lab-izlem', 'scorad', E, EJ, H, T].sort())
+    assert.deepEqual(belgesizEski.sort(), ['basdai', 'easi', 'iltihap-lab-izlem', 'mdr-tb-izlem', 'scorad', E, EJ, H, T].sort())
     for (const k of belgesizEski) assert.ok(sonuc.includes('`' + k + '`'), `${k} is in the pack and not mentioned in the outcome table`)
     for (const k of yeniYapisal) assert.ok(acik.has(k), `${k} is not switched on`)
   })
