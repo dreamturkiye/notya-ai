@@ -16,6 +16,7 @@ export type Ref =
   | 'SGK_SUT'
   | 'TITCK'
   | 'ASPS_TR'
+  | 'ENTOKEY_PICTORIAL'
 
 export type Dipnot = { ref: Ref; not: string }
 
@@ -25,6 +26,10 @@ export const REF_ACIKLAMA: Record<Ref, string> = {
   SGK_SUT: 'SGK Sağlık Uygulama Tebliği (SUT) — plastik işlem endikasyon; güncel metin hekim doğrular; canlı e-imza yok',
   TITCK: 'TİTCK — KÜB; lokal anestezik / antibiyotik dozu Notya tarafından üretilmez',
   ASPS_TR: 'Uluslararası plastik cerrahi derinliği — TPRECD üzerinden TR klinik bağlama uyarlanmış; tanı hekimde',
+  // GORSEL-YAKALAMA-01: standardize edilmiş önce/sonra foto görünümleri (frontal/oblik/lateral/bazal/posterior/yakın
+  // çekim) ve pozisyonlama kuralları (Frankfort düzlemi, sabit mesafe, vücut döndürme değil baş döndürme değil).
+  // Hekim onayı/tanı kilidi bu kaynaktan değişmez — yalnız fotoğraf standardizasyonu.
+  ENTOKEY_PICTORIAL: 'Patel AK, Karam AM, Lam SM. "Pictorial Documentation: Digital Imaging and Traditional Photography." Bailey\'s Head and Neck Surgery — Otolaryngology (EntoKey, 2016 güncellemesi) — standart foto görünümleri; dogrulama: ikincil, 2026-10-14 okundu',
 }
 
 export const HEKIM_KILIT_METNI =
