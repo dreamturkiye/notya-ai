@@ -31,7 +31,7 @@ import { CA_PAKETI } from '../index'
 import { CA_KLINIK } from '../klinik'
 import { caKendiAraclari } from './metinler'
 import { CA_ONAY_BEKLEYEN, CA_ONAY_BEKLEYEN_ANAHTARLAR } from './onayBekleyen'
-import { CA_BIRIM_CEVIRICI, CA_EGFR, CA_FT_CM, CA_IN_CM, CA_LB_KG, CA_TANIMLAR, caEgfr2021 } from './tanimlar'
+import { CA_BIRIM_CEVIRICI, CA_EGFR, CA_FT_CM, CA_IN_CM, CA_LB_KG, CA_NARKOTIK, CA_NARKOTIK_ANAHTARLARI, CA_TANIMLAR, caEgfr2021 } from './tanimlar'
 
 const D = 'en-CA'
 const KOK = resolve(__dirname, '../../..')
@@ -40,7 +40,8 @@ const M = A.metinler[D]!
 const ROLLER = CA_PAKETI.uygulama!.roller!
 const BUGUN = '2026-10-10'
 const ORTAM = { bugun: BUGUN, p: {} }
-const MEKANIZMA = ['ca-unit-converter', 'ca-egfr-ckd-epi-2021']
+const ILK_MEKANIZMA = ['ca-unit-converter', 'ca-egfr-ckd-epi-2021']
+const MEKANIZMA = [...ILK_MEKANIZMA, 'ca-narcotic-note']
 const ANAHTARLAR = [...MEKANIZMA, 'ca-prescribeit-link']
 const hesapla = (t: AracTanimi, g: AracGirdisi): AracSonucu => t.hesapla(g, ORTAM)
 const O: BirimOrtami = { birimler: CA_PAKETI.uygulama!.birimler, lab: A.labBirimleri, sayi: CA_PAKETI.bicim }
@@ -83,7 +84,7 @@ describe('ca new tools 1: BOTH ARE SWITCHED ON, without a clinician\'s sign-off,
   it('THE PROPOSALS THAT WERE NOT BUILT are not half-built: no key of theirs is anywhere in the pack', () => {
     // each needs a rights holder's permission, or its terms or its defining publication could not be opened (the report of 2026-10-10)
     const yapilmayan = ['ca-blood-pressure', 'ca-ctas', 'ca-framingham', 'ca-chads65', 'ca-kfre', 'ca-canrisk', 'ca-fracture-risk', 'ca-who-growth-charts', 'ca-rourke', 'ca-concussion-steps', 'ca-ottawa-rules', 'ca-stroke-scales', 'ca-pregnancy-dating']
-    assert.equal(yapilmayan.length + MEKANIZMA.length, 15, 'the fifteen proposals of the audit')
+    assert.equal(yapilmayan.length + ILK_MEKANIZMA.length, 15, 'the fifteen proposals of the audit')
     const hepsi = [...A.araclar.map((p) => p.anahtar), ...A.yuvalar.map((y) => y.anahtar), ...(A.kendiAraclari ?? []).map((t) => t.anahtar)]
     for (const k of yapilmayan) assert.ok(!hepsi.includes(k), k)
   })
@@ -308,5 +309,8 @@ describe('ca new tools 4: the words and the licences', () => {
     assert.match(KENDI[1].lisans!.kaynak!, /niddk\.nih\.gov\/copyright/)
     assert.match(KENDI[1].lisans!.bildirim![D], /as published by the National Institute of Diabetes and Digestive and Kidney Diseases/)
     assert.match(KENDI[1].lisans!.bildirim![D], /has not reviewed this product/)
+    const narkotik = KENDI.find((p) => p.anahtar === 'ca-narcotic-note')!
+    assert.match(narkotik.lisans!.kaynak!, /C\.R\.C\.,_c\._1041/)
+    assert.match(narkotik.lisans!.bildirim![D], /not an official version/)
   })
 })

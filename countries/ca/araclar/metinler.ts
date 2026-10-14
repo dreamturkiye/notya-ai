@@ -87,8 +87,36 @@ export function caKendiAraclari(r: CaRolleri): readonly PaketAraci[] {
       hasta: { enAzYas: 18 },
       lisans: NIDDK_LISANSI,
     },
+    caNarkotik(r.hekimler),
     caPrescribeIt(r.hekimler),
   ]
+}
+
+/** A record of the written narcotic order, from the regulation opened on 14 October 2026. Nothing is sent. */
+export function caNarkotik(hekimler: readonly string[]): PaketAraci {
+  return {
+    anahtar: 'ca-narcotic-note',
+    roller: [...hekimler], sinif: 'hekimler',
+    metin: {
+      ad: m('Narcotic order: points the regulation names'),
+      aciklama: m('A record of the points the Narcotic Control Regulations name for a written narcotic order or prescription: written, signed by a practitioner, dated, a stated amount, and the person named or the animal identified. Diacetylmorphine (heroin) is signed and dated by a practitioner of medicine or a nurse practitioner. A verbal prescription narcotic may be a verbal order. The book a pharmacist keeps is not on this list.'),
+      alanlar: sozluk({
+        yazili: 'Written order or prescription',
+        imza: 'Signed by a practitioner',
+        tarihli: 'Dated',
+        miktar: 'States an amount of the narcotic',
+        ad: 'Names the person, or identifies the animal',
+      }),
+      sayilar: sozluk({ isaretli: 'Points recorded' }),
+      not: m('A record of those points. It is not a prescription, nothing is printed and nothing is sent. Targeted-substance regulations, the controlled-drug part of the food and drug regulations, and provincial rules were not opened. It does nothing else. Whether to write the order is the doctor\'s.'),
+    },
+    lisans: {
+      durum: 'serbest',
+      hakSahibi: 'Government of Canada (federal enactments)',
+      kaynak: 'Narcotic Control Regulations, C.R.C., c. 1041 (current to 2026-09-21), https://laws-lois.justice.gc.ca/eng/regulations/C.R.C.,_c._1041/FullText.html, read 2026-10-14',
+      bildirim: m('Points from the Narcotic Control Regulations (C.R.C., c. 1041), sections 2 and 31. This is not an official version.'),
+    },
+  }
 }
 
 /** A link only. The homepage was read on 14 October 2026. No call is made. */

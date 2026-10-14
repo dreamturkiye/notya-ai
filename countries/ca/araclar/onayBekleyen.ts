@@ -42,6 +42,14 @@ export const CA_ONAY_BEKLEYEN: readonly OnayBekleyen[] = [
     ],
   },
   {
+    anahtar: 'ca-narcotic-note',
+    sorular: [
+      'The five ticks are the points sections 2 and 31 name for a written narcotic order. The pharmacist\'s book under section 38 is not on the list. Is that the split a clinic wants?',
+      'Diacetylmorphine and a verbal prescription narcotic are named in the description and are not their own ticks. Should either become its own row?',
+      'Targeted-substance regulations, the controlled-drug part of the food and drug regulations, and provincial rules were not opened. Is the note enough until those texts are stored?',
+    ],
+  },
+  {
     anahtar: 'ca-prescribeit-link',
     sorular: [
       'The tile only opens the homepage. The page says a standards working group is how the national prescribing standard is reached. This product has not joined. Is a link, with no registration, the right thing to show?',

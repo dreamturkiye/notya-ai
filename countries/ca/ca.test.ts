@@ -45,7 +45,7 @@ ingilizcePaketSinamasi({
   // NOTYA-ULKE-UYGULA-CA: this country's own role list (nothing taken out, seven added: ./roller.ts, ./roller.test.ts)
   rolDegisimi: CA_ROLLER,
   // … and the two tools only it has, both switched on (./araclar/)
-  ekAraclar: ['ca-unit-converter', 'ca-egfr-ckd-epi-2021', 'ca-prescribeit-link'],
+  ekAraclar: ['ca-unit-converter', 'ca-egfr-ckd-epi-2021', 'ca-narcotic-note', 'ca-prescribeit-link'],
   acilCumle: CA_ACIL_CUMLE,
   yasakAcil: /\b(999|111|000|112|103)\b/,
   idIpucu: /health card/i,

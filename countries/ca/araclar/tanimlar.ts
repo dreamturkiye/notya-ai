@@ -16,7 +16,7 @@
  * ────────────────────────────────────────────────────────────────────────────────────────────────────────────
  */
 import type { AracTanimi } from '@/lib/ulke/araclar/tipler'
-import { BOS_SONUC, sayi, sayiMi, secim } from '@/lib/ulke/araclar/yardimci'
+import { BOS_SONUC, kontrolListesi, sayi, sayiMi, secim } from '@/lib/ulke/araclar/yardimci'
 
 // ───────────────────────── 1. unit converter: pounds, feet and inches ─────────────────────────
 
@@ -141,5 +141,30 @@ export const CA_EGFR: AracTanimi = {
   },
 }
 
+/**
+ * A RECORD of what a written narcotic order or prescription must be, as the regulation prints it.
+ *
+ * SOURCE (OPENED 2026-10-14): Narcotic Control Regulations, C.R.C., c. 1041, current to 2026-09-21 and last
+ * amended on 2024-06-05, https://laws-lois.justice.gc.ca/eng/regulations/C.R.C.,_c._1041/FullText.html
+ * Reproduction: Reproduction of Federal Law Order, SI/97-5, already cited for the unit converter.
+ *
+ * WHAT THE SOURCE PRINTS, and what is ticked:
+ *   section 2, "prescription": an authorization given by a practitioner that a stated amount of a narcotic be
+ *   dispensed for the person named in it or the animal identified in it;
+ *   section 31(2)(b): a written order or prescription for the narcotic that is signed and dated by a practitioner
+ *   (diacetylmorphine is paragraph (c): a practitioner of medicine or a nurse practitioner).
+ *
+ * NOT TICKED, because the source does not make them contents of the order itself: the book a pharmacist keeps
+ * under section 38. A verbal prescription narcotic under section 34 is named in the screen note and is not a tick.
+ * The targeted-substance regulations and the controlled-drug part of the Food and Drug Regulations were not opened.
+ */
+export const CA_NARKOTIK_ANAHTARLARI = ['yazili', 'imza', 'tarihli', 'miktar', 'ad'] as const
+
+export const CA_NARKOTIK: AracTanimi = kontrolListesi({
+  anahtar: 'ca-narcotic-note',
+  maddeler: CA_NARKOTIK_ANAHTARLARI,
+  kaynak: 'Narcotic Control Regulations, C.R.C., c. 1041, sections 2 and 31, current to 2026-09-21.',
+})
+
 /** The mechanisms of the tools only this country has, in the order the grid shows them. */
-export const CA_TANIMLAR: readonly AracTanimi[] = [CA_BIRIM_CEVIRICI, CA_EGFR]
+export const CA_TANIMLAR: readonly AracTanimi[] = [CA_BIRIM_CEVIRICI, CA_EGFR, CA_NARKOTIK]
