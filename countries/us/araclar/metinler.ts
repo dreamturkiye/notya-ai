@@ -28,6 +28,8 @@
  */
 import type { AracLisansi, AracTanimi, PaketAraci } from '@/lib/ulke/araclar/tipler'
 import type { BicimliMetin } from '@/lib/ulke/arayuz/tipler'
+import { usAsiAraci } from './asilar'
+import { usBlueButton, usPartDAraclari } from './partD'
 import { US_TANIMLAR } from './tanimlar'
 
 const D = 'en-US'
@@ -222,6 +224,9 @@ export function usKendiAraclari(r: UsRolleri): readonly PaketAraci[] {
       },
       lisans: ECOG_LISANSI,
     },
+    ...usPartDAraclari(r.hekimler),
+    usAsiAraci(r.hekimler),
+    usBlueButton(r.hekimler),
   ]
 }
 

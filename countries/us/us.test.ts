@@ -44,7 +44,8 @@ ingilizcePaketSinamasi({
   bicim: D,
   ayarlarKaynagi: kaynakOku(join(__dirname, 'ayarlar.ts')),
   // United Kingdom, Canada, Australia, New Zealand: their systems, identifiers, currencies, names, usage
-  yabanci: /\b(NHS|NHI|GBP|CAD|AUD|NZD|United Kingdom|Canada|Canadian|provincial|Quebec|Australia|Australian|New Zealand|Medicare|health card|General practice|Anaesthetics|Respirology|staff physician|consultant)\b|£/,
+  // Medicare is this country's payer. Australia uses the same word; a sentence here that says Medicare is naming CMS.
+  yabanci: /\b(NHS|NHI|GBP|CAD|AUD|NZD|United Kingdom|Canada|Canadian|provincial|Quebec|Australia|Australian|New Zealand|health card|General practice|Anaesthetics|Respirology|staff physician|consultant)\b|£/,
   // off by Kaan's order of 2026-10-10 (NOTYA-ULKE-ARAC-01b): all five; only 'doz-hesabi' was off here before that day.
   // A sixth, a third kidney tool added later, is off for an unrelated reason: a brand-new tool pending sign-off.
   kapaliAraclar: ['akne-vade', 'doz-hesabi', 'esi-triyaj', 'kbh-risk-kategorisi', 'kdigo-evre', 'kdigo-serit', 'lazer-vade', 'rapor-taslagi'],
@@ -175,7 +176,7 @@ describe('us: CONVENTIONAL UNITS — worked by hand', () => {
     // internal medicine had the kidney tool and nothing else of the set. The chronic-condition record is the set's
     // tool for it now. The follow-up list is there for the tools of this country's own that every doctor role has.
     assert.ok(a.araclar.find((x) => x.anahtar === 'takip-paneli')!.roller!.includes('internal-medicine'))
-    assert.deepEqual(a.araclar.filter((x) => x.roller?.includes('internal-medicine')).map((x) => x.anahtar), ['kronik-izlem-kaydi', 'us-bmi', 'us-egfr-ckd-epi-2021', 'us-pack-years', 'us-blood-sugar-ranges', 'us-fall-risk-screen', 'us-phq-9', 'takip-paneli'])
+    assert.deepEqual(a.araclar.filter((x) => x.roller?.includes('internal-medicine')).map((x) => x.anahtar), ['kronik-izlem-kaydi', 'us-bmi', 'us-egfr-ckd-epi-2021', 'us-pack-years', 'us-blood-sugar-ranges', 'us-fall-risk-screen', 'us-phq-9', 'us-part-d-medicines', 'us-prescription-note', 'us-immunization-schedule', 'us-blue-button-link', 'takip-paneli'])
   })
 
   it('the intake form asks every height, weight and temperature in this country\'s unit, with the unit named', () => {

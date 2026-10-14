@@ -49,6 +49,7 @@ const calistir = (k: string, ham: Record<string, string | boolean>) => { const x
 const EMIRLE_KAPALI = ['akne-vade', 'doz-hesabi', 'esi-triyaj', 'kbh-risk-kategorisi', 'kdigo-evre', 'kdigo-serit', 'lazer-vade', 'rapor-taslagi']
 /** The six tools of this country's own that every doctor role sees (the seventh, the ECOG grade, is for three specialties). */
 const CEKIRDEK = ['us-bmi', 'us-egfr-ckd-epi-2021', 'us-pack-years', 'us-blood-sugar-ranges', 'us-fall-risk-screen', 'us-phq-9']
+const PART_D = ['us-part-d-medicines', 'us-prescription-note', 'us-immunization-schedule', 'us-blue-button-link']
 
 /** WHO SEES A TOOL OF THE SET HERE, where the audit's decision differs from the set: the set's role(s) first, then the roles the audit adds. */
 const GORENLER: Readonly<Record<string, readonly string[]>> = {
@@ -71,12 +72,12 @@ const GORENLER: Readonly<Record<string, readonly string[]>> = {
 }
 
 describe('us tools 1: no tool of the shared set is switched on or off by this job', () => {
-  it('the same tools of the set are on as before: every one but the five that were off, the patient\'s page and the follow-up list; beyond the set, the seven of this country\'s own', () => {
+  it('the same tools of the set are on as before: every one but the five that were off, the patient\'s page and the follow-up list; beyond the set, the eleven of this country\'s own', () => {
     const setten = ['hasta-portali', ...EN_ROL_ARACLARI.map((a) => a.anahtar).filter((k) => !EMIRLE_KAPALI.includes(k))]
     assert.deepEqual(acik, [...setten, ...KENDI, 'takip-paneli'])
     assert.equal(setten.length + 1, 57, 'the patient page, the open role tools and the follow-up list')
-    assert.equal(acik.length, 57 + 7)
-    for (const k of acik) assert.equal(Boolean(kitAraci(k)), !KENDI.includes(k), `${k}: a tool of the kit, or one of the seven of this country's own`)
+    assert.equal(acik.length, 57 + 11)
+    for (const k of acik) assert.equal(Boolean(kitAraci(k)), !KENDI.includes(k), `${k}: a tool of the kit, or one of the eleven of this country's own`)
   })
 
   it('THE FIVE THAT WERE OFF STAY OFF: the dose calculator (this pack\'s own decision), and by the owner\'s order ESI triage, the report outline and both kidney tools; a sixth, a third kidney tool added later, stays off pending a clinician\'s sign-off', () => {
@@ -117,19 +118,19 @@ describe('us tools 2: who sees which tool', () => {
 
   it('WHAT A DOCTOR SEES ON THE GRID, before and after — three examples', () => {
     // FAMILY MEDICINE: before, the patient's page and nothing else
-    assert.deepEqual(izgara('family-medicine'), ['hasta-portali', 'inhaler-teknik', 'hedef-boy', 'rtp-basamak', 'kronik-izlem-kaydi', 'birinci-acil-bayrak', 'gebelik-gun', ...CEKIRDEK, 'takip-paneli'])
+    assert.deepEqual(izgara('family-medicine'), ['hasta-portali', 'inhaler-teknik', 'hedef-boy', 'rtp-basamak', 'kronik-izlem-kaydi', 'birinci-acil-bayrak', 'gebelik-gun', ...CEKIRDEK, ...PART_D, 'takip-paneli'])
     // THE AUDIOLOGIST: the hearing average and the next-session record
     assert.deepEqual(izgara('audiology'), ['hasta-portali', 'odyometri-pta', 'sonraki-seans', 'takip-paneli'])
     // THORACIC AND CARDIAC SURGERY: the checklist before a heart operation is new, and the six of every doctor role
-    assert.deepEqual(izgara('thoracic-surgery'), ['hasta-portali', 'toraks-preop', 'toraks-tup-yara', 'kalp-damar-preop', ...CEKIRDEK, 'takip-paneli'])
+    assert.deepEqual(izgara('thoracic-surgery'), ['hasta-portali', 'toraks-preop', 'toraks-tup-yara', 'kalp-damar-preop', ...CEKIRDEK, ...PART_D, 'takip-paneli'])
     // a specialty the audit adds: radiation oncology, with the two oncology lists of the set and the ECOG grade
-    assert.deepEqual(izgara('radiation-oncology'), ['hasta-portali', 'kur-sayaci', 'toksisite-listesi', ...CEKIRDEK, 'us-ecog-performance-status', 'takip-paneli'])
+    assert.deepEqual(izgara('radiation-oncology'), ['hasta-portali', 'kur-sayaci', 'toksisite-listesi', ...CEKIRDEK, 'us-ecog-performance-status', ...PART_D, 'takip-paneli'])
     // CARDIOLOGY and PSYCHIATRY: before, the patient's page and nothing else; now the six of every doctor role
-    assert.deepEqual(izgara('cardiology'), ['hasta-portali', 'kardiyo-not', ...CEKIRDEK, 'takip-paneli'])
-    assert.deepEqual(izgara('psychiatry'), ['hasta-portali', 'psikiyatri-guvenlik', ...CEKIRDEK, 'takip-paneli'])
-    assert.deepEqual(izgara('geriatric-medicine'), ['hasta-portali', 'kronik-izlem-kaydi', ...CEKIRDEK, 'takip-paneli'])
-    assert.deepEqual(izgara('sleep-medicine'), ['hasta-portali', ...CEKIRDEK, 'takip-paneli'])
-    assert.deepEqual(izgara('longevity'), ['hasta-portali', 'infuzyon-guvenlik', ...CEKIRDEK, 'takip-paneli'])
+    assert.deepEqual(izgara('cardiology'), ['hasta-portali', 'kardiyo-not', ...CEKIRDEK, ...PART_D, 'takip-paneli'])
+    assert.deepEqual(izgara('psychiatry'), ['hasta-portali', 'psikiyatri-guvenlik', ...CEKIRDEK, ...PART_D, 'takip-paneli'])
+    assert.deepEqual(izgara('geriatric-medicine'), ['hasta-portali', 'kronik-izlem-kaydi', ...CEKIRDEK, ...PART_D, 'takip-paneli'])
+    assert.deepEqual(izgara('sleep-medicine'), ['hasta-portali', ...CEKIRDEK, ...PART_D, 'takip-paneli'])
+    assert.deepEqual(izgara('longevity'), ['hasta-portali', 'infuzyon-guvenlik', ...CEKIRDEK, ...PART_D, 'takip-paneli'])
     // the professions: only what was named for each
     assert.deepEqual(izgara('dietetics'), ['hasta-portali', 'makro-kaydi', 'us-bmi', 'us-blood-sugar-ranges', 'takip-paneli'])
     assert.deepEqual(izgara('clinical-social-work'), ['hasta-portali', 'psikiyatri-guvenlik', 'us-phq-9', 'takip-paneli'])
@@ -307,7 +308,7 @@ describe('us tools 4: licence states', () => {
   it('the two the owner\'s order names stay "permission needed"; no other tool or placeholder of the set states a licence', () => {
     for (const k of ['esi-triyaj', 'rapor-taslagi']) assert.equal(A.yuvalar.find((y) => y.anahtar === k)?.lisans?.durum, 'izin-gerekli', k)
     assert.deepEqual(Object.keys(US_GIRDI.araclar.lisanslar ?? {}).sort(), ['esi-triyaj', 'phq9-gad7', 'rapor-taslagi'])
-    // of the switched-on tools, only the seven of this country's own state a licence (each "free", by a notice that was read)
+    // of the switched-on tools, only the eleven of this country's own state a licence (each "free", by a notice that was read)
     assert.deepEqual(A.araclar.filter((p) => p.lisans).map((p) => p.anahtar), [...KENDI])
     for (const p of A.araclar.filter((x) => x.lisans)) assert.equal(p.lisans!.durum, 'serbest', p.anahtar)
     assert.notEqual(A.lisansTam, true)

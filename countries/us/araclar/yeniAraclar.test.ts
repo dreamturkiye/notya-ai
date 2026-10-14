@@ -40,7 +40,8 @@ const A = US_ARAYUZ.araclar as UlkeAraclari
 const ROLLER = US_PAKETI.uygulama!.roller!
 const BUGUN = '2026-10-10'
 const ORTAM = { bugun: BUGUN, p: {} }
-const ANAHTARLAR = ['us-bmi', 'us-egfr-ckd-epi-2021', 'us-pack-years', 'us-blood-sugar-ranges', 'us-fall-risk-screen', 'us-phq-9', 'us-ecog-performance-status']
+const MEKANIZMA = ['us-bmi', 'us-egfr-ckd-epi-2021', 'us-pack-years', 'us-blood-sugar-ranges', 'us-fall-risk-screen', 'us-phq-9', 'us-ecog-performance-status', 'us-part-d-medicines', 'us-prescription-note', 'us-immunization-schedule']
+const ANAHTARLAR = [...MEKANIZMA, 'us-blue-button-link']
 const hesapla = (t: AracTanimi, g: AracGirdisi): AracSonucu => t.hesapla(g, ORTAM)
 
 /** The tools are in the pack itself: `B` is the pack's own tools area (the name is kept from the day they were tried outside it). */
@@ -51,9 +52,9 @@ const yazici: Yazici = { sayi: (deger, ondalik) => deger.toFixed(ondalik), tarih
 const yazarak = (k: string, ham: Record<string, string | boolean>) => { const x = paketinAraci(B, k)!; return aracCalistir(x, girdiyiCoz(x.tanim.alanlar, ham, O), BUGUN, B) }
 const goren = (k: string): string[] => ROLLER.filter((r) => hesabinAraci(B, r, k) !== null)
 
-describe('us new tools 1: ALL SEVEN ARE SWITCHED ON, without a clinician\'s sign-off, and the list says so', () => {
-  it('the seven: their mechanisms, their words and the list name the same keys', () => {
-    assert.deepEqual(US_TANIMLAR.map((t) => t.anahtar), ANAHTARLAR)
+describe('us new tools 1: ALL OF THIS COUNTRY\'S OWN TOOLS ARE SWITCHED ON, without a clinician\'s sign-off, and the list says so', () => {
+  it('their mechanisms, their words and the list name the same keys', () => {
+    assert.deepEqual(US_TANIMLAR.map((t) => t.anahtar), MEKANIZMA)
     assert.deepEqual([...US_ONAY_BEKLEYEN_ANAHTARLAR], ANAHTARLAR)
     assert.deepEqual(usKendiAraclari({ hekimler: US_HEKIMLER }).map((p) => p.anahtar), ANAHTARLAR)
     for (const x of US_ONAY_BEKLEYEN) assert.ok(x.sorular.length > 0 && x.sorular.every((q) => q.trim().length > 20), `${x.anahtar}: what the clinician is asked`)
@@ -64,7 +65,7 @@ describe('us new tools 1: ALL SEVEN ARE SWITCHED ON, without a clinician\'s sign
     // every tool of the pack that carries this country's code: switched on, each with a mechanism of the pack's own
     const kendi = A.araclar.filter((p) => anahtarUlkesi(p.anahtar, 'us') === 'us').map((p) => p.anahtar)
     assert.deepEqual(kendi, [...US_ONAY_BEKLEYEN_ANAHTARLAR], 'a tool of this country is switched on and not on the list of tools without a clinician\'s sign-off, or on that list and not switched on (countries/us/araclar/onayBekleyen.ts)')
-    assert.deepEqual([...(A.kendiAraclari ?? [])].map((t) => t.anahtar), [...US_ONAY_BEKLEYEN_ANAHTARLAR])
+    assert.deepEqual([...(A.kendiAraclari ?? [])].map((t) => t.anahtar), MEKANIZMA, 'a link-out tile has no mechanism')
     assert.deepEqual(ulkeyeOzelAnahtarlar(A, 'us'), [...US_ONAY_BEKLEYEN_ANAHTARLAR].sort())
     // none is a placeholder as well, and each opens for a role that has it
     for (const k of US_ONAY_BEKLEYEN_ANAHTARLAR) {
@@ -289,12 +290,12 @@ describe('us new tools 3: each is complete in the pack', () => {
   it('the whole pack check finds nothing: every word, unit, role, patient gate and licence is there', () => {
     assert.deepEqual(paketiDenetle(US_PAKETI, ACIK_ARAYUZ, US_KLINIK).map((x) => `${x.yer}: ${x.sorun}`), [])
     for (const k of ANAHTARLAR) assert.ok(paketinAraci(B, k), k)
-    assert.deepEqual([...(B.kendiAraclari ?? [])].map((t) => t.anahtar), ANAHTARLAR)
+    assert.deepEqual([...(B.kendiAraclari ?? [])].map((t) => t.anahtar), MEKANIZMA)
     // ONE TOOL CAN BE SWITCHED OFF WITHOUT THE OTHERS: the pack names the ones it keeps, and the pack check still finds nothing
     const kalan = ANAHTARLAR.filter((k) => k !== 'us-phq-9')
     const azEk = usAcilacakEk({ hekimler: US_HEKIMLER }, kalan)
     assert.deepEqual(azEk.ek.araclar.map((p) => p.anahtar), kalan)
-    assert.deepEqual(azEk.ek.tanimlar.map((t) => t.anahtar), kalan)
+    assert.deepEqual(azEk.ek.tanimlar.map((t) => t.anahtar), kalan.filter((k) => k !== 'us-blue-button-link'))
     const az = enArayuz({ ...US_GIRDI, araclar: { ...US_GIRDI.araclar, ek: azEk.ek } })
     assert.deepEqual(paketiDenetle(US_PAKETI, az, US_KLINIK).map((x) => `${x.yer}: ${x.sorun}`), [])
     assert.equal(paketinAraci(az.araclar, 'us-phq-9'), null)
@@ -369,7 +370,7 @@ describe('us new tools 4: the words and the licences', () => {
   })
 
   it('nothing of another country, no claim, no price, no identity number', () => {
-    const YABANCI = /\b(NHS|NHI|GBP|CAD|AUD|NZD|United Kingdom|Canada|Canadian|provincial|Quebec|Australia|Australian|New Zealand|Medicare|health card|General practice|Anaesthetics|Respirology|staff physician|consultant)\b|£/
+    const YABANCI = /\b(NHS|NHI|GBP|CAD|AUD|NZD|United Kingdom|Canada|Canadian|provincial|Quebec|Australia|Australian|New Zealand|health card|General practice|Anaesthetics|Respirology|staff physician|consultant)\b|£/
     const TURKIYE_OZBEKISTAN = /Türkiye|Turkey|Turkish|Uzbek|Tashkent|\bSGK\b|MEDULA|e-Nabız|\bKVKK\b|JSHSHIR|PINFL|[çğıöşüİĞŞÇÖÜʻўқғҳЎҚҒҲ]/
     const IDDIA = /\b(HIPAA|GDPR|PIPEDA|FDA|TGA|MHRA|Medsafe|Health Canada|ISO ?\d+|SOC ?2|CE[- ]mark\w*|compliant|compliance|certified|certification|accredited|accreditation|endorsed|clinically proven|cleared|integrat\w*|trusted by|award\w*|guarantee\w*|free trial|discount\w*)\b/i
     const KIMLIK = /social security|\bSSN\b/i
@@ -394,6 +395,10 @@ describe('us new tools 4: the words and the licences', () => {
       'us-egfr-ckd-epi-2021': [/National Institute of Diabetes and Digestive and Kidney Diseases/, 'https://www.niddk.nih.gov/copyright'],
       'us-ecog-performance-status': [/ECOG-ACRIN Cancer Research Group/, 'https://ecog-acrin.org/resources/ecog-performance-status/'],
       'us-phq-9': [/Pfizer Inc\./, 'https://www.hhs.nd.gov/sites/www/files/documents/BH/BHC/PHQ-9-and-GAD-7.pdf'],
+      'us-part-d-medicines': [/Centers for Medicare & Medicaid Services/, 'https://data.cms.gov/summary-statistics-on-use-and-payments/medicare-medicaid-spending-by-drug/medicare-part-d-spending-by-drug'],
+      'us-prescription-note': [/Centers for Medicare & Medicaid Services/, 'https://data.cms.gov/summary-statistics-on-use-and-payments/medicare-medicaid-spending-by-drug/medicare-part-d-spending-by-drug'],
+      'us-immunization-schedule': [/Centers for Disease Control and Prevention/, 'https://www.cdc.gov/other/agencymaterials.html'],
+      'us-blue-button-link': [/Centers for Medicare & Medicaid Services/, 'https://bluebutton.cms.gov/'],
     }
     assert.deepEqual(Object.keys(beklenen).sort(), [...ANAHTARLAR].sort())
     for (const p of araclar) {
@@ -401,7 +406,7 @@ describe('us new tools 4: the words and the licences', () => {
       assert.equal(p.lisans?.durum, 'serbest', p.anahtar)
       assert.match(p.lisans?.hakSahibi ?? '', sahip, p.anahtar)
       assert.ok(p.lisans?.kaynak?.includes(adres), `${p.anahtar}: ${adres}`)
-      assert.match(p.lisans?.kaynak ?? '', /read 2026-10-10/, p.anahtar)
+      assert.match(p.lisans?.kaynak ?? '', /read 2026-10-1[04]/, p.anahtar)
       // the notice: the credit, as the holder asks for it, shown under every result and copied with the summary
       const bildirim = lisansBildirimi({ paket: B.araclar.find((x) => x.anahtar === p.anahtar)! }, D)
       assert.match(bildirim, sahip, p.anahtar)

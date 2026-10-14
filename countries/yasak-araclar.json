@@ -44,7 +44,11 @@
     "us-egfr-ckd-epi-2021",
     "us-fall-risk-screen",
     "us-pack-years",
-    "us-phq-9"
+    "us-part-d-medicines",
+    "us-phq-9",
+    "us-prescription-note",
+    "us-immunization-schedule",
+    "us-blue-button-link"
   ],
   "uz": [
     "uz-emlash-qaydi",

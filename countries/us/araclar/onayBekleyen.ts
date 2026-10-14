@@ -74,6 +74,34 @@ export const US_ONAY_BEKLEYEN: readonly OnayBekleyen[] = [
       'The grades are shown by number only (the wording of the scale is not in the product). Is a tool that records a number without its wording of use in an office visit?',
     ],
   },
+  {
+    anahtar: 'us-part-d-medicines',
+    sorular: [
+      'The list is Medicare Part D claims in 2024, every manufacturer combined, not all prescriptions in the country. Is that the list a prescriber here should see first?',
+      'No strength, dosage form, or controlled-substance schedule is in the source extract. Should the screen say that more plainly?',
+    ],
+  },
+  {
+    anahtar: 'us-prescription-note',
+    sorular: [
+      'The quantity is whatever the doctor types. The tool suggests no dose. Is the warning that the note is not sent clear enough that nobody will treat it as a transmitted prescription?',
+      'Federal controlled-substance writing rules were not loaded, because the regulation site blocked automated reading. Should this note stay off until those rules are read?',
+    ],
+  },
+  {
+    anahtar: 'us-immunization-schedule',
+    sorular: [
+      'The ticks follow the 2025 child and adolescent age table only. The notes, the catch-up table, the medical-indication table, and the adult schedule are not loaded. Is a record of that kind safe to show?',
+      'Several rows say the table says see the notes and do not state a dose count. Should those rows stay, or only the rows that state a dose number?',
+      'Influenza is one tick for both inactivated and live products. Should they be separate ticks?',
+    ],
+  },
+  {
+    anahtar: 'us-blue-button-link',
+    sorular: [
+      'The tile only opens the CMS page. Nothing is connected. Is a link, with no sandbox account, the right thing to show?',
+    ],
+  },
 ]
 
 /** The keys alone. */
