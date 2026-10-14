@@ -2,15 +2,13 @@ import { DEMO, LINKS } from "./content";
 import { Button } from "./button";
 import { TypeCard } from "./feature";
 import { ArrowUpRight } from "./icons";
-import { demoBaglantisi } from "@/lib/demo/demoBaglantisi";
 
 /**
  * NOTYA-DEMO-01 — "Demo planla" section right after the hero. Same markup and classes as the page's feature
- * sections (FeatureSection header, TypeCard, pine button). Renders nothing while NEXT_PUBLIC_DEMO_BOOKING_URL
- * holds no Cal.com link.
+ * sections (FeatureSection header, TypeCard, the contrasting demo button). The button links to /demo whether
+ * or not NEXT_PUBLIC_DEMO_BOOKING_URL is set; that page says booking opens soon until the calendar is open.
  */
 export function DemoSection() {
-  if (!demoBaglantisi()) return null;
   const t = DEMO.section;
   return (
     <section id="demo" className="scroll-mt-16 bg-paper-2 py-20 sm:py-28">
@@ -23,7 +21,7 @@ export function DemoSection() {
           </h2>
           <p className="mt-6 max-w-md font-outfit text-lede font-light leading-relaxed text-ink-2">{t.body}</p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
-            <Button href={LINKS.demo} variant="pine" size="lg" className="w-full sm:w-auto">
+            <Button href={LINKS.demo} variant="demo" size="lg" className="w-full sm:w-auto">
               {DEMO.cta}
               <ArrowUpRight className="size-4" />
             </Button>
