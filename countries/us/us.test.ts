@@ -45,8 +45,9 @@ ingilizcePaketSinamasi({
   ayarlarKaynagi: kaynakOku(join(__dirname, 'ayarlar.ts')),
   // United Kingdom, Canada, Australia, New Zealand: their systems, identifiers, currencies, names, usage
   yabanci: /\b(NHS|NHI|GBP|CAD|AUD|NZD|United Kingdom|Canada|Canadian|provincial|Quebec|Australia|Australian|New Zealand|Medicare|health card|General practice|Anaesthetics|Respirology|staff physician|consultant)\b|£/,
-  // off by Kaan's order of 2026-10-10 (NOTYA-ULKE-ARAC-01b): all five; only 'doz-hesabi' was off here before that day
-  kapaliAraclar: ['akne-vade', 'doz-hesabi', 'esi-triyaj', 'kdigo-evre', 'kdigo-serit', 'lazer-vade', 'rapor-taslagi'],
+  // off by Kaan's order of 2026-10-10 (NOTYA-ULKE-ARAC-01b): all five; only 'doz-hesabi' was off here before that day.
+  // A sixth, a third kidney tool added later, is off for an unrelated reason: a brand-new tool pending sign-off.
+  kapaliAraclar: ['akne-vade', 'doz-hesabi', 'esi-triyaj', 'kbh-risk-kategorisi', 'kdigo-evre', 'kdigo-serit', 'lazer-vade', 'rapor-taslagi'],
   birimler: BIRIMLER,
   labBirimleri: { ...LAB, crp: CRP },
   kidemliHekim: 'attending physician',
