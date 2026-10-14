@@ -2,7 +2,7 @@
  * PLASTIK-CERRAHI-EXCEPTIONAL-01 — Plastik Cerrahi API. Ayaktan muayenehane akışı.
  * HASTA-İZOLASYON: her istek hastaSahibiMi kapısından geçer.
  * GET  ?patientId= → şerit, yara, foto, acil, görevler
- * POST adim: yara | foto | onam | risk | gorev | kontrol
+ * POST adim: yara | foto | onam | risk | gorev | kontrol | goruntu_okuma
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { doktorOturum } from '@/lib/doktor/serverAuth'
@@ -16,8 +16,16 @@ import {
 } from '@/specialties/plastik-cerrahi/engines/acil'
 import { plastikSeridi } from '@/specialties/plastik-cerrahi/engines/serit'
 import {
-  REF_ACIKLAMA, HEKIM_KILIT_METNI, ACIL_YONLENDIRME_METNI, KAPSAM_NOTU, ISO_GUN,
+  REF_ACIKLAMA, HEKIM_KILIT_METNI, ACIL_YONLENDIRME_METNI, KAPSAM_NOTU, ISO_GUN, dozVeyaTaniKilidiIceriyorMu,
 } from '@/specialties/plastik-cerrahi/engines/plastik'
+import { PLASTIK_GORUNTU_DISCLAIMER, okumaGecisi as plastikOkumaGecisi, taslakTaniDiliUyarisi as plastikTaslakTaniDiliUyarisi, PLASTIK_GORUNUMLER, type PlastikGorunum } from '@/specialties/plastik-cerrahi/imaging/dualSign'
+import {
+  analizKopruyeUygun as plastikAnalizKopruyeUygun, belgeModalitePlastik, belgeTaslakMetni as plastikBelgeTaslakMetni,
+  guvenUst as plastikGuvenUst, kopruGorunumDogrula, taslakSonrakiAdim as plastikTaslakSonrakiAdim,
+} from '@/specialties/plastik-cerrahi/imaging/belgeKopru'
+import { tierAYazVeFuzyonla } from '@/core/belgeler/tierA'
+import { bransKurali } from '@/core/belgeler/router'
+import type { BelgeRaporu } from '@/core/belgeler/types'
 
 export const dynamic = 'force-dynamic'
 
@@ -136,6 +144,89 @@ export async function POST(req: NextRequest) {
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
     await gorevEkle(sb, user.id, patientId, [{ kod: 'kontrol_randevu', ad: 'Kontrol randevusu', due: tarih, kaynak: 'kontrol' }])
     return NextResponse.json({ ok: true })
+  }
+
+  // dermatoloji/göz/KBB'nin taslak metnini/alanlarını kullanmaz — standart önce/sonra görünüm + işlem kategorisi + gün
+  // sayısı kendi alanları, kendi disclaimer'ı, kendi tablosu (plastik_goruntu_okumalari). TANI/KOMPLİKASYON ADI YAZILMAZ
+  // (dozVeyaTaniKilidiIceriyorMu taslağı da tarar — plastik.ts'in var olan kilidi burada gevşetilmedi, genişletildi).
+  if (adim === 'goruntu_okuma') {
+    const eylem = String(b.eylem || '')
+    const gorunumR = kopruGorunumDogrula(b.gorunum)
+    if (!gorunumR.ok) return NextResponse.json({ error: gorunumR.hata }, { status: 400 })
+    const gorunum: PlastikGorunum = gorunumR.gorunum
+    const procedureKategori = b.procedureKategori ? String(b.procedureKategori).slice(0, 80) : null
+    const gunSayisi = b.gunSayisi != null && Number.isFinite(Number(b.gunSayisi)) ? Math.max(0, Math.round(Number(b.gunSayisi))) : null
+    if (procedureKategori && dozVeyaTaniKilidiIceriyorMu(procedureKategori)) {
+      return NextResponse.json({ error: 'İşlem kategorisinde doz/tanı dili yazılamaz.' }, { status: 400 })
+    }
+
+    if (eylem === 'belge_taslak') {
+      const { data: a } = await sb.from('belge_analizleri').select('id, belge_id, modality_final, durum, sonuc, fusion')
+        .eq('id', String(b.analizId || '')).eq('doctor_id', user.id).eq('patient_id', patientId).maybeSingle()
+      if (!a) return NextResponse.json({ error: 'Analiz bulunamadı.' }, { status: 404 })
+      if (!belgeModalitePlastik(String(a.modality_final))) return NextResponse.json({ error: 'Yalnız yara / foto izlem analizi plastik cerrahi okumasına aktarılır.' }, { status: 400 })
+      const rapor = a.sonuc as BelgeRaporu | null
+      const uygun = plastikAnalizKopruyeUygun(String(a.durum), rapor)
+      if (!uygun.ok) return NextResponse.json({ error: uygun.hata }, { status: 400 })
+      const ust = plastikGuvenUst((a.fusion as { capPct?: number } | null)?.capPct)
+      const taslak = plastikBelgeTaslakMetni({ rapor: rapor!, gorunum, procedureKategori, gunSayisi, guvenUstPct: ust })
+      const { data: eklenen, error } = await sb.from('plastik_goruntu_okumalari').insert({
+        patient_id: patientId, doctor_id: user.id, goruntu_id: null, belge_id: a.belge_id, belge_analiz_id: a.id,
+        gorunum, procedure_kategori: procedureKategori, gun_sayisi: gunSayisi, kaynak: 'belge_tier_a',
+        guven_ust_pct: ust, asistan_rapor: rapor, taslak, taslak_yazan: 'asistan', durum: 'draft', disclaimer: PLASTIK_GORUNTU_DISCLAIMER,
+      }).select('id').single()
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json({ ok: true, guvenUst: ust, visionReadId: eklenen?.id ?? null, taslak, uyari: plastikTaslakTaniDiliUyarisi(taslak) })
+    }
+
+    if (eylem === 'asistana_raporla') {
+      const { data: img } = await sb.from('hasta_goruntulemeler').select('id').eq('id', String(b.goruntuId || '')).eq('patient_id', patientId).eq('doctor_id', user.id).maybeSingle()
+      if (!img) return NextResponse.json({ error: 'Görüntü bulunamadı.' }, { status: 404 })
+      if (b.kimlikYok !== true) return NextResponse.json({ error: 'Göndermeden önce görüntüde hasta adı / T.C. / doğum tarihi olmadığını onaylayın (KVKK).' }, { status: 400 })
+      const d = (b.deid || {}) as { mime?: string; base64?: string }
+      if (!d.base64 || typeof d.base64 !== 'string' || d.base64.length > 12_000_000) return NextResponse.json({ error: 'Kimliksizleştirilmiş görüntü gerekli.' }, { status: 400 })
+      const mime = (['image/jpeg', 'image/png', 'image/webp'].includes(String(d.mime)) ? d.mime : 'image/jpeg') as 'image/jpeg' | 'image/png' | 'image/webp'
+      const kural = bransKurali('plastik')
+      const iskelet = async (neden: string) => {
+        const yedek = `Foto izlem gözlem taslağı (${gorunum}) — ${PLASTIK_GORUNTU_DISCLAIMER}`
+        const { data: eklenen } = await sb.from('plastik_goruntu_okumalari').insert({
+          patient_id: patientId, doctor_id: user.id, goruntu_id: img.id, gorunum, procedure_kategori: procedureKategori, gun_sayisi: gunSayisi,
+          kaynak: 'ayse_iskelet', taslak: yedek, taslak_yazan: 'asistan', durum: 'draft', disclaimer: PLASTIK_GORUNTU_DISCLAIMER,
+        }).select('id').single()
+        return NextResponse.json({ ok: true, yedek: true, uyari: `${neden} — gözlem taslağı eklendi.`, visionReadId: eklenen?.id ?? null, taslak: yedek })
+      }
+      let sonuc
+      try {
+        sonuc = await tierAYazVeFuzyonla({
+          persona: kural.persona,
+          girdi: { brans: kural.ad, modality_final: 'yara', yasAy: null, cinsiyet: null, klinikNot: [`Görünüm: ${gorunum}.`, procedureKategori ? `İşlem: ${procedureKategori}.` : '', b.klinikNot ? String(b.klinikNot).slice(0, 300) : ''].filter(Boolean).join(' ') },
+          gorsel: { tip: 'image', mime, base64: d.base64 }, tierB: [], modalite: 'yara', yasAy: null, fitzpatrickBilinmiyor: false, doctorId: user.id,
+        })
+      } catch { return iskelet('Görüntü asistan tarafından okunamadı') }
+      const uygun = plastikAnalizKopruyeUygun('taslak', sonuc.rapor)
+      if (!uygun.ok) return iskelet('Görüntü kalitesi düşük')
+      const ust = plastikGuvenUst(sonuc.fusion.capPct)
+      const taslak = plastikBelgeTaslakMetni({ rapor: sonuc.rapor, gorunum, procedureKategori, gunSayisi, guvenUstPct: ust })
+      const { data: eklenen, error } = await sb.from('plastik_goruntu_okumalari').insert({
+        patient_id: patientId, doctor_id: user.id, goruntu_id: img.id, gorunum, procedure_kategori: procedureKategori, gun_sayisi: gunSayisi,
+        kaynak: 'belge_tier_a', guven_ust_pct: ust, asistan_rapor: sonuc.rapor, taslak, taslak_yazan: 'asistan', durum: 'draft', disclaimer: PLASTIK_GORUNTU_DISCLAIMER,
+      }).select('id').single()
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json({ ok: true, guvenUst: ust, visionReadId: eklenen?.id ?? null, taslak, uyari: plastikTaslakTaniDiliUyarisi(taslak), nextStep: plastikTaslakSonrakiAdim(sonuc.rapor) })
+    }
+
+    if (['onayla', 'duzelt', 'reddet'].includes(eylem)) {
+      const { data: ok } = await sb.from('plastik_goruntu_okumalari').select('*').eq('id', String(b.id || '')).eq('patient_id', patientId).eq('doctor_id', user.id).maybeSingle()
+      if (!ok) return NextResponse.json({ error: 'Okuma bulunamadı.' }, { status: 404 })
+      if (eylem === 'duzelt' && b.uzmanMetin && dozVeyaTaniKilidiIceriyorMu(String(b.uzmanMetin))) {
+        return NextResponse.json({ error: 'Düzeltme metninde doz/tanı dili yazılamaz.' }, { status: 400 })
+      }
+      const g = plastikOkumaGecisi({ taslak: ok.taslak, taslakYazan: ok.taslak_yazan, durum: ok.durum, uzmanMetin: ok.uzman_metin }, eylem as 'onayla' | 'duzelt' | 'reddet', 'uzman', b.uzmanMetin ? String(b.uzmanMetin) : undefined)
+      if (!g.ok) return NextResponse.json({ error: g.hata }, { status: 403 })
+      await sb.from('plastik_goruntu_okumalari').update({ durum: g.okuma.durum, uzman_metin: g.okuma.uzmanMetin, onay_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq('id', ok.id)
+      return NextResponse.json({ ok: true })
+    }
+    return NextResponse.json({ error: 'Bilinmeyen görüntü okuma eylemi.' }, { status: 400 })
   }
 
   return NextResponse.json({ error: 'Geçersiz adım' }, { status: 400 })
