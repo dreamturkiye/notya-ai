@@ -37,7 +37,8 @@ ingilizcePaketSinamasi({
   yabanci: /\b(NHS|GBP|USD|CAD|AUD|United Kingdom|United States|Canada|Canadian|provincial|Quebec|Australia|Australian|HIPAA|Medicaid|Medicare|health card|Anaesthetics|Anesthesiology|Pulmonology|Respirology|Respiratory and sleep medicine|Physical therapist|attending physician|staff physician|consultant)\b|£/,
   // off by Kaan's order of 2026-10-10 (NOTYA-ULKE-ARAC-01b): these four. 'doz-hesabi' was switched off with them and
   // is ON again since his order of the same day ("Bring on all the tools"), its fault corrected in the kit (#615).
-  kapaliAraclar: ['esi-triyaj', 'kdigo-evre', 'kdigo-serit', 'rapor-taslagi'],
+  // A third kidney tool, added later, is off for an unrelated reason: a brand-new tool pending a clinician's sign-off.
+  kapaliAraclar: ['esi-triyaj', 'kbh-risk-kategorisi', 'kdigo-evre', 'kdigo-serit', 'rapor-taslagi'],
   birimler: { agirlik: 'kg', boy: 'cm', sicaklik: 'C' },
   labBirimleri: { albuminKreatinin: 'mg/mmol', hemoglobin: 'g/L', kreatinin: 'umol/L', glukoz: 'mmol/L', kolesterol: 'mmol/L', hba1c: 'mmol/mol', crp: 'mg/L', psa: 'ug/L' },
   kidemliHekim: 'specialist',
