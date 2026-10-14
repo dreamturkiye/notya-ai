@@ -24,6 +24,10 @@ import type { BransKapsami } from '@/lib/specialties/kapsam';
 import { istemciKapsami } from '@/lib/specialties/kapsamIstemci';
 import { bransEtiketi } from '@/lib/doktor/bransAdlari';
 import YasamsalBulgularFormu from '@/components/doktor/YasamsalBulgularFormu';
+import DermNotGorselYakala from '@/specialties/dermatoloji/ui/DermNotGorselYakala';
+import KbbNotGorselYakala from '@/specialties/kulak-burun-bogaz/ui/KbbNotGorselYakala';
+import PlastikNotGorselYakala from '@/specialties/plastik-cerrahi/ui/PlastikNotGorselYakala';
+import GozNotGorselYakala from '@/specialties/goz-hastaliklari/ui/GozNotGorselYakala';
 import { satirBasiNumarala } from '@/lib/doktor/satirBasiNumarala';
 import {
   NOT_YENIDEN_DEGERLENDIR_DEBOUNCE_MS,
@@ -59,6 +63,9 @@ interface NotVeri {
     id: string
     createdAt: string
     approvedAt: string | null
+    /** GORSEL-YAKALAMA-01: the muayene's visit unit (sessions.id) — the inline capture widget tags
+     * a photo/PDF with THIS id, not the note's own id. */
+    sessionId?: string | null
     /** NOTYA-RECETE-07: daha önce onaylanan Plan+İlaç imzası. */
     ilacUyumImza?: string | null
     /** NOTYA-ARSIV-01: muayenesi arşivde — hiçbir listede görünmez, yalnız doğrudan açılır. */
@@ -519,6 +526,33 @@ export default function NotSayfasi() {
       {not.arsivde && (
         <div role="status" style={{ margin: '12px 16px 0', padding: '10px 14px', borderRadius: 10, background: 'rgba(139,125,112,0.12)', border: '1px solid rgba(139,125,112,0.35)', color: '#6d6055', fontSize: 13 }}>
           <b>Arşivde</b> — bu muayene arşivlendi; panoda, listelerde, aramada ve hasta portalında görünmez. Geri almak için Muayene Geçmişi › Arşivlenenler › <b>Arşivden çıkar</b>.
+        </div>
+      )}
+
+      {/* GORSEL-YAKALAMA-01 — brans-alan-sizmasi: dermatoloji-only capture block, gated on the SAME
+          server-computed kapsam.brans every other specialty gate in this file reads (never a local
+          specialty/text guess). Absent for every other branş — see
+          specialties/dermatoloji/tests/gorsel-yakalama-not-kapisi.test.ts. */}
+      {kapsam.brans === 'dermatoloji' && hasta.patientId && (
+        <div style={{ margin: '12px 16px 0' }}>
+          <DermNotGorselYakala patientId={hasta.patientId} visitId={not.sessionId ?? null} />
+        </div>
+      )}
+      {/* GORSEL-YAKALAMA-02/03/04 — same brans-alan-sizmasi pattern as derm above: each block gated
+          on its OWN kapsam.brans value, mutually exclusive with the others. */}
+      {kapsam.brans === 'kulak-burun-bogaz' && hasta.patientId && (
+        <div style={{ margin: '12px 16px 0' }}>
+          <KbbNotGorselYakala patientId={hasta.patientId} visitId={not.sessionId ?? null} />
+        </div>
+      )}
+      {kapsam.brans === 'plastik-cerrahi' && hasta.patientId && (
+        <div style={{ margin: '12px 16px 0' }}>
+          <PlastikNotGorselYakala patientId={hasta.patientId} visitId={not.sessionId ?? null} />
+        </div>
+      )}
+      {kapsam.brans === 'goz-hastaliklari' && hasta.patientId && (
+        <div style={{ margin: '12px 16px 0' }}>
+          <GozNotGorselYakala patientId={hasta.patientId} visitId={not.sessionId ?? null} />
         </div>
       )}
 

@@ -139,6 +139,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       id: not.id,
       createdAt: not.created_at,
       approvedAt: not.approved_at,
+      // GORSEL-YAKALAMA-01: the universal "visit" unit an inline capture (note screen) tags a
+      // photo/PDF with — sessions.id, not this note's own id. Nullable in principle; every note has one.
+      sessionId: not.session_id ? String(not.session_id) : null,
       /** NOTYA-RECETE-07: daha önce onaylanan Plan+İlaç imzası — aynıysa uyum kartı sorulmaz. */
       ilacUyumImza: typeof (not as { ilac_uyum_imza?: string | null }).ilac_uyum_imza === 'string'
         ? (not as { ilac_uyum_imza: string }).ilac_uyum_imza
