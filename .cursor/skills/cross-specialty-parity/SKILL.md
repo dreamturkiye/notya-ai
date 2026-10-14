@@ -3,12 +3,15 @@ name: cross-specialty-parity
 description: >-
   Standing rule for every bug fix or feature change in Notya: a fix made where a
   bug was *noticed* must actually land for **all** branches Notya supports, not
-  just that one. Use before closing out any change to a shared/baseline-spine
-  component (SOAP, İnceleme/onay, reçete/Medula, Belge Kasası, randevu/takvim,
-  epikriz, Asistan sohbet, Sağlığım portal shell, intake, doz kilidi, kaynak
-  kilidi, markdown render, mobil düzen) — and when writing the PR description
-  for one. Answers "does any specialty have its own forked copy of this that
-  would miss the fix?"
+  just that one — AND, when the change is core/universal (not one branş's own
+  clinical content), for all six countries, each adapted to its own language
+  and legal requirements, not copy-pasted. Use before closing out any change to
+  a shared/baseline-spine component (SOAP, İnceleme/onay, reçete/Medula, Belge
+  Kasası, randevu/takvim, epikriz, Asistan sohbet, Sağlığım portal shell,
+  intake, doz kilidi, kaynak kilidi, markdown render, mobil düzen, görsel
+  yakalama) — and when writing the PR description for one. Answers "does any
+  specialty, or any country, have its own forked copy of this that would miss
+  the fix?"
 ---
 
 # Cross-specialty parity (tek yerde düzelttim ≠ her branşta düzeldi)
@@ -123,6 +126,66 @@ Required block, Turkish, in the PR body:
 
 Reviewers should reject a shared-spine PR that omits it.
 
+## Six-country propagation (Türkiye golden reference → ülke paketleri)
+
+Boss rule (verbatim intent, 2026-10): **notya.io (Türkiye, `main`) is the golden
+reference.** When a change there is *core/universal* — not one branş's own
+clinical content — it is not finished until it has also reached the other six
+countries (us, gb, ca, au, nz, uz; `release/<code>` branches, `countries/<code>/`
+packs), each with **its own** language, legal text and clinical sourcing. This
+rule sits beside — does not replace — the branş-parity check above: classify
+by branş first, then by country.
+
+### 1. Classify what actually changed
+
+| Kind | Example from this repo | Propagates to the 6 countries? |
+|------|-------------------------|---------------------------------|
+| **Universal mechanism** — chapter-agnostic, carries no clinical content | `GorselYakalaPaneli` (camera/file capture, downscale, PDF attach, generic visit-linked upload) | **Yes** — same mechanism, wired per country |
+| **Specialty clinical content, universally relevant to that branş** | Dermatoloji body map / lesion cards / PASI-EASI; KBB otoskopi/nazoendoskopi dual-sign; plastik cerrahi standardized views; göz fundus/OCT rule-based taslak | **Yes, to that same branş in each country that has it** — but **independently sourced per country** (own clinical references, own language), never copied verbatim from the Turkish version |
+| **Turkish-only legal/regulatory content** | KVKK consent wording, Medula/SUT report text, Form 014, Turkish MoH circulars | **No** — each country has its own regulator and its own equivalent, sourced separately (e.g. Uzbekistan's KDIGO rollout was sourced from its own MOH order, not copied from the English roster) |
+| **One branş's content unrelated to the change's purpose** | Derm's PASI/EASI fields appearing on kardiyoloji | **No, never** — this is branş-alan-sızması, not a propagation gap |
+
+If a change doesn't fit cleanly, default to the narrower reading: propagate the
+*mechanism*, re-source the *content*, never propagate *country-specific legal
+text*.
+
+### 2. For a universal mechanism — propagate the shape, not the content
+
+Ship the same component/contract to every country's pack, but let each
+country's own specialty wiring, language strings and legal gates differ. "Same
+mechanism" means: same props/behavior/upload contract; it does **not** mean
+copy-pasting Turkish UI strings or Turkish-specific consent checkboxes (KVKK)
+into a country pack that has its own privacy regime.
+
+### 3. For specialty clinical content — propagate the branş, re-source the facts
+
+When a branş gets a new clinical module in Türkiye (a scoring system, a
+standardized capture vocabulary, a dual-sign bridge), the same branş in each of
+the six countries that offers it needs its own equivalent — built from that
+country's own clinical references, in that country's language — not a
+translated copy of the Turkish content. Log each country's sourcing
+separately in the PR/commit, the same way KDIGO's six-country extension cited
+each country's own source rather than the Turkish roster.
+
+### 4. PR description requirement — "Ülke kapsamı" block
+
+Any PR whose change is core/universal (table 1 above) must state which
+countries were updated, which were N/A, and why — alongside the existing
+"Branş kapsamı" block:
+
+```markdown
+### Ülke kapsamı
+- **Mekanizma (evrensel):** aynı `GorselYakalaPaneli` sözleşmesi altı ülkede de kullanılacak.
+- **Bu PR'da yapılan:** Türkiye (main) — golden reference, bu PR'da tamamlandı.
+- **Sıradaki iş (ayrı PR/iş):** us/gb/ca/au/nz/uz — her ülkenin kendi branş paketine,
+  kendi dili ve kendi yasal gereksinimleriyle kablolanacak; klinik içerik (varsa) o
+  ülke için ayrıca kaynaklanacak, Türkçe sürümden kopyalanmayacak.
+```
+
+A change scoped entirely to Türkiye's own clinical/legal content (Medula, SUT,
+KVKK text, a Turkish-only form) states plainly that it is Türkiye-only and why
+— that is a valid, expected outcome, not a gap.
+
 ## Anti-patterns
 
 - Fixing the bug inside `specialties/<slug>/` when the broken code is in
@@ -137,6 +200,13 @@ Reviewers should reject a shared-spine PR that omits it.
   result** — say it plainly instead of manufacturing diff.
 - Adding the rule to the runtime guard but not to the chapter prompts (or the
   reverse). Two layers, both needed.
+- Treating "core/universal, must propagate to six countries" as license to
+  copy Turkish clinical content, Turkish legal text, or Turkish UI strings
+  verbatim into a country pack — propagate the mechanism, re-source the
+  content, per country.
+- Silently leaving the six-country propagation undone with no PR note —
+  "Türkiye only, countries are a separate follow-up" is fine when stated; an
+  unstated gap is not.
 
 ## Quick checklist
 
@@ -149,6 +219,10 @@ Reviewers should reject a shared-spine PR that omits it.
 - [ ] promptsLock / chapter test extended where a fork was patched
 - [ ] PR body carries the "Branş kapsamı" block
 - [ ] No invented changes in chapters that already inherit
+- [ ] Change classified: universal mechanism / branş clinical content /
+      Türkiye-only legal content — table in "Six-country propagation" above
+- [ ] If universal or branş-clinical: PR body carries the "Ülke kapsamı" block,
+      stating which of the six countries are done, deferred, or N/A and why
 ```
 
 ## When this skill applies
