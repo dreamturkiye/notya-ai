@@ -53,6 +53,11 @@ import { UZ_ARAC_YUVALARI } from './yuvalar'
  * why, and what its licence state is) and is taken off the list of switched-on tools below, so it is on no grid,
  * does not open from its address, and the server keeps no result of it: exactly like every other slot.
  *
+ * `kbh-risk-kategorisi` (added later, visibility job of 2026-10-13) is a FOURTH kidney tool, kept off for a DIFFERENT
+ * reason: it is new, not one of the two licence-blocked tools above (see ./rol5.ts for why it carries none of their
+ * licence question), and every new tool here ships off until a clinician signs it off — the same standing rule, not
+ * Kaan's order of 2026-10-10.
+ *
  * THE DOSE CALCULATOR IS BACK ON (`doz-hesabi`; Kaan, 2026-10-10 14:17, later the same day: "Bring on all the tools
  * built for the new 6 countries now. We will test as we go."). It was the fifth of that order. Its fault was
  * corrected in the kit (pull request #615: the volume is no longer rounded to any step, a volume below 1 ml carries a
@@ -65,7 +70,7 @@ import { UZ_ARAC_YUVALARI } from './yuvalar'
  * list below, and they are not on it. A tool comes back by leaving this list AND ./yuvalar.ts — after its fault is
  * corrected in the kit or its licence is granted; lib/ulke/araclar/kapaliAraclar.paket.test.ts fails until then.
  */
-export const UZ_KAPALI_ARACLAR: readonly string[] = ['esi-triyaj', 'kdigo-evre', 'kdigo-serit', 'rapor-taslagi']
+export const UZ_KAPALI_ARACLAR: readonly string[] = ['esi-triyaj', 'kdigo-evre', 'kdigo-serit', 'kbh-risk-kategorisi', 'rapor-taslagi']
 const acikOlanlar = (liste: readonly PaketAraci[]): PaketAraci[] => liste.filter((p) => !UZ_KAPALI_ARACLAR.includes(p.anahtar))
 
 export const UZ_ARACLAR: UlkeAraclari = {
