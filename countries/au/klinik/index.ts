@@ -9,6 +9,10 @@
 import type { UlkeKlinigi } from '@/lib/ulke/tipler'
 import { enKlinik } from '../../_dil/en/klinik'
 import { AU_GIRDI } from '../ayarlar'
+import { AU_SES } from '../ses'
 import { AU_ACIL_CUMLE, AU_CEKIRDEK_EK } from './formEk'
 
-export const AU_KLINIK: UlkeKlinigi = enKlinik({ ...AU_GIRDI, cekirdekEk: AU_CEKIRDEK_EK, acilCumle: AU_ACIL_CUMLE })
+export const AU_KLINIK: UlkeKlinigi = {
+  ...enKlinik({ ...AU_GIRDI, cekirdekEk: AU_CEKIRDEK_EK, acilCumle: AU_ACIL_CUMLE }),
+  ses: AU_SES,
+}
