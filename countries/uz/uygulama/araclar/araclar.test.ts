@@ -38,7 +38,8 @@ const LATIN_KALABILIR = /\b(ESI(?: [1-5])?|ASA(?: (?:I{1,3}|IV|VI|V))?|ABCDE|ST|
  * Role → the role tools it sees, in the grid's order. Base tools are the same for every role and are listed apart.
  * NOTYA-ULKE-ARAC-01b — four tools are OFF BY KAAN'S ORDER OF 2026-10-10 and are slots now (KAPALI below): the table
  * shows the grid without them. The fifth of that order, the dose calculator, is on again by the owner's order of
- * later the same day.
+ * later the same day. A fifth slot (YENI_KAPALI below), added after that order, is off for an unrelated reason: a
+ * brand-new tool pending a clinician's sign-off, not Kaan's order.
  * NOTYA-ULKE-UYGULA-UZ — the three tools only Uzbekistan has come after a role's own tools, in this order, and the
  * follow-up list comes last: T (every doctor role), H (obstetrics, family medicine), E (paediatrics, family medicine).
  */
@@ -47,6 +48,9 @@ const TEMEL = ['hasta-portali', 'sablonlarim', 'konsultasyonlar']
 const T = 'uz-tana-vazni-indeksi', H = 'uz-homiladorlik-muddati', E = 'uz-emlash-qaydi', P_ = 'takip-paneli'
 /** Off by Kaan's order of 2026-10-10, each with the role it was shown to until that day. */
 const KAPALI: Readonly<Record<string, string>> = { 'esi-triyaj': 'acil-tip', 'kdigo-evre': 'dahiliye', 'kdigo-serit': 'nefroloji', 'rapor-taslagi': 'radyoloji' }
+/** A fifth tool is a slot too, but for a different reason: a brand-new mechanism, off pending a clinician's sign-off, not Kaan's order. */
+const YENI_KAPALI = 'kbh-risk-kategorisi'
+const YENI_KAPALI_ROLLER = ['nefroloji', 'dahiliye', 'aile-hekimligi', 'endokrinoloji', 'kardiyoloji', 'uroloji', 'onkoloji'] as const
 const ROL_ARACLARI: Readonly<Record<string, readonly string[]>> = {
   'acil-tip': ['kritik-yol', T, P_],
   'aile-hekimligi': ['kronik-izlem-kaydi', 'birinci-acil-bayrak', T, H, E, P_],
@@ -178,7 +182,7 @@ describe('Uzbekistan — tools: who sees what, the three scripts, and what is de
 
   it('OFF BY KAAN\'S ORDER OF 2026-10-10: the four that stay off are slots that say why, open for no role — not even the one that had them — and the two licence cases say "permission needed"', async () => {
     const { UZ_KAPALI_ARACLAR } = await import('./index')
-    assert.deepEqual([...UZ_KAPALI_ARACLAR].sort(), Object.keys(KAPALI).sort())
+    assert.deepEqual([...UZ_KAPALI_ARACLAR].sort(), [...Object.keys(KAPALI), YENI_KAPALI].sort())
     for (const [anahtar, rol] of Object.entries(KAPALI)) {
       assert.ok(!icerik.araclar.some((p) => p.anahtar === anahtar), `${anahtar} is switched on`)
       for (const r of [null, ...roller]) assert.equal(P.hesabinAraci(icerik, r, anahtar), null, `${anahtar} opens for ${r}`)
@@ -188,6 +192,17 @@ describe('Uzbekistan — tools: who sees what, the three scripts, and what is de
       assert.match(yuva.eksik, /off by the owner's order of 2026-10-10/, anahtar)
     }
     for (const anahtar of ['esi-triyaj', 'rapor-taslagi']) assert.equal(icerik.yuvalar.find((y) => y.anahtar === anahtar)!.lisans?.durum, 'izin-gerekli', anahtar)
+  })
+
+  it('A FIFTH SLOT, OFF FOR A DIFFERENT REASON: the new kidney-risk-category tool stays off pending a clinician\'s sign-off, open for no role, and carries no licence block', () => {
+    assert.ok(!icerik.araclar.some((p) => p.anahtar === YENI_KAPALI), `${YENI_KAPALI} is switched on`)
+    for (const r of [null, ...roller]) assert.equal(P.hesabinAraci(icerik, r, YENI_KAPALI), null, `${YENI_KAPALI} opens for ${r}`)
+    const yuva: AracYuvasi | undefined = icerik.yuvalar.find((y) => y.anahtar === YENI_KAPALI)
+    assert.ok(yuva, `${YENI_KAPALI} is not a slot`)
+    assert.deepEqual([yuva.acik, yuva.icerik, yuva.mekanizmaHazir, [...(yuva.roller ?? [])]], [false, null, true, [...YENI_KAPALI_ROLLER]], YENI_KAPALI)
+    assert.match(yuva.eksik, /pending a clinician's sign-off/, YENI_KAPALI)
+    assert.doesNotMatch(yuva.eksik, /off by the owner's order of 2026-10-10/, YENI_KAPALI)
+    assert.equal(yuva.lisans, undefined, `${YENI_KAPALI}: no licence block, unlike esi-triyaj and rapor-taslagi`)
   })
 
   it('THE FOLLOW-UP LIST over the 42-role table: a role sees it exactly when it has a tool whose result can be kept — all 42 roles see it', async () => {
@@ -255,7 +270,8 @@ describe('Uzbekistan — tools: who sees what, the three scripts, and what is de
     // Structural records added after the audit document. They are not rows of that document; the outcome section is left as it was.
     const yeniYapisal = ['akne-vade', 'birinci-acil-bayrak', 'endoskopi-kaydi', 'estetik-cerrahi-vade', 'estetik-islem-vade', 'icf-ozet', 'inme-bayraklari', 'kardiyo-not', 'kronik-izlem-kaydi', 'lazer-vade', 'makro-kaydi', 'psikiyatri-guvenlik', 'seans-plani', 'sonraki-seans']
     const belgesizEski = belgesiz.filter((k) => !yeniYapisal.includes(k))
-    assert.deepEqual(belgesizEski.sort(), ['basdai', 'easi', 'iltihap-lab-izlem', 'scorad', E, H, T])
+    // kbh-risk-kategorisi is a slot too (YENI_KAPALI above), not switched on, so it belongs here rather than in yeniYapisal
+    assert.deepEqual(belgesizEski.sort(), ['basdai', 'easi', 'iltihap-lab-izlem', 'kbh-risk-kategorisi', 'scorad', E, H, T].sort())
     for (const k of belgesizEski) assert.ok(sonuc.includes('`' + k + '`'), `${k} is in the pack and not mentioned in the outcome table`)
     for (const k of yeniYapisal) assert.ok(acik.has(k), `${k} is not switched on`)
   })
