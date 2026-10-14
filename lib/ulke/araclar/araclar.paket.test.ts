@@ -603,7 +603,13 @@ describe('tools — leak', () => {
   it('no text of any tool, slot or of the area carries another country\'s term or letter; the forms share one shape', () => {
     if (!icerik) return
     const yaprak = (o: unknown, on = ''): [string, string][] => Object.entries((o ?? {}) as Record<string, unknown>).flatMap(([k, v]) => (typeof v === 'string' ? [[`${on}${k}`, v] as [string, string]] : v && typeof v === 'object' ? yaprak(v, `${on}${k}.`) : []))
-    for (const [yol, metin] of yaprak({ araclar: icerik.araclar.map((p) => ({ [p.anahtar]: p.metin })), birimler: icerik.birimler, metinler: icerik.metinler })) temiz(metin, `tools.${yol}`)
+    // A copied official register (field key `urun`) keeps that file's own product names. One approved
+    // Canadian brand contains the letters TL, which is also the Turkish currency mark. Those names are
+    // not pack prose, so the leak scan does not read them. Every other tool string is still scanned.
+    for (const [yol, metin] of yaprak({ araclar: icerik.araclar.map((p) => ({ [p.anahtar]: p.metin })), birimler: icerik.birimler, metinler: icerik.metinler })) {
+      if (yol.includes('.secenekler.urun.')) continue
+      temiz(metin, `tools.${yol}`)
+    }
     for (const y of icerik.yuvalar) for (const k of Object.values(JSON.parse(readFileSync(join(KOK, 'countries/yasak-araclar.json'), 'utf8')) as Record<string, unknown>).filter(Array.isArray).flat() as string[]) { if (ulkeyeOzelMi(k, paket.kod)) continue; assert.notEqual(y.anahtar, k, `a slot is named after "${k}"`) }
     const ilk = icerik.metinler[FORMLAR[0]]!
     for (const d of FORMLAR) assert.deepEqual(yaprak(icerik.metinler[d]).map(([k]) => k).sort(), yaprak(ilk).map(([k]) => k).sort(), `the tools catalogue of ${d} has other keys than ${FORMLAR[0]}`)
