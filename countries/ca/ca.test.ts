@@ -34,8 +34,9 @@ ingilizcePaketSinamasi({
   // United Kingdom, United States, Australia, New Zealand: their systems, identifiers, currencies, names, usage
   yabanci: /\b(NHS|NHI|GBP|USD|AUD|NZD|United Kingdom|United States|Australia|Australian|New Zealand|HIPAA|Medicaid|Medicare|General practice|Anaesthetics|Pulmonology|Respiratory and sleep medicine|Physical therapist|attending physician|consultant)\b|£/,
   // off by Kaan's order of 2026-10-10 (NOTYA-ULKE-ARAC-01b): four. The dose calculator was the fifth and is back on here
-  // by his order later the same day, its fault corrected in the kit (./ayarlar.ts).
-  kapaliAraclar: ['esi-triyaj', 'kdigo-evre', 'kdigo-serit', 'rapor-taslagi'],
+  // by his order later the same day, its fault corrected in the kit (./ayarlar.ts). A third kidney tool, added later,
+  // is off for an unrelated reason: a brand-new tool pending a clinician's sign-off.
+  kapaliAraclar: ['esi-triyaj', 'kbh-risk-kategorisi', 'kdigo-evre', 'kdigo-serit', 'rapor-taslagi'],
   birimler: { agirlik: 'kg', boy: 'cm', sicaklik: 'C' },
   labBirimleri: LAB,
   kidemliHekim: 'staff physician',
