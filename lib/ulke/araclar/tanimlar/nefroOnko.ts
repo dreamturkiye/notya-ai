@@ -6,6 +6,7 @@
 import type { AracTanimi } from '../tipler'
 import { ayEkle, BOS_SONUC, gunMu, kontrolListesi, metin, sayi, sayiMi, secim, tarih } from '../yardimci'
 import { KDIGO_A, KDIGO_G, kdigoSinifla } from './cerrahiDahiliyeDerm'
+import { KBH_RISK_KATEGORISI } from './kbhRiskKategorisi'
 
 /**
  * The KDIGO grid for a nephrologist: GFR category, albuminuria category, risk cell. No referral flag (the reader is
@@ -92,4 +93,4 @@ export const KUR_SAYACI: AracTanimi = {
 export const TOKSISITE_MADDELERI = ['bulanti_kusma', 'ishal', 'mukozit', 'notropeni_risk', 'anemi_halsizlik', 'noropati', 'deri_reaksiyon', 'kardiyak_belirti', 'bobrek_lab', 'infeksiyon'] as const
 export const TOKSISITE: AracTanimi = kontrolListesi({ anahtar: 'toksisite-listesi', maddeler: TOKSISITE_MADDELERI })
 
-export const NEFRO_ONKO: readonly AracTanimi[] = [KDIGO_SERIT, DIYALIZ_SEANS, ANEMI_IZLEM, KUR_SAYACI, TOKSISITE]
+export const NEFRO_ONKO: readonly AracTanimi[] = [KDIGO_SERIT, KBH_RISK_KATEGORISI, DIYALIZ_SEANS, ANEMI_IZLEM, KUR_SAYACI, TOKSISITE]
