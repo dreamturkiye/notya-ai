@@ -147,3 +147,9 @@ export async function konusmayiTani(ses: Blob, notDili: DilKodu): Promise<Tanima
     gecisSureleri: { ilk: ilk.sureSn, ...(ikinci ? { ikinci: ikinci.sureSn } : {}) },
   }
 }
+
+/**
+ * Spoken answers leave through the same speech module. `sesSentezle` reads the active pack's `ses`
+ * (male and female, Flash v2.5, the pack's language code). A pack with no `ses` does not speak.
+ */
+export { sesIstegi, sesSentezle } from './sesSentez'
