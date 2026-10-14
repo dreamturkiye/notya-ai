@@ -97,11 +97,11 @@ describe('landing + /demo, both states', () => {
     const nav = renderToStaticMarkup(createElement(SiteNav))
     const bolum = renderToStaticMarkup(createElement(DemoSection))
     assert.match(hero, /href="\/demo"[^>]*>Demo planla/)
-    assert.match(hero, /bg-\[#c2410c\]/)
+    assert.match(hero, /bg-\[#1e3a8a\]/)
     assert.match(nav, /href="\/demo"[^>]*>Demo planla/)
     assert.match(bolum, /<section id="demo"/)
     assert.match(bolum, /href="\/demo"[^>]*>Demo planla/)
-    assert.match(bolum, /bg-\[#c2410c\]/)
+    assert.match(bolum, /bg-\[#1e3a8a\]/)
     const s = renderToStaticMarkup(createElement(DemoPage))
     assert.match(s, /<h1[^>]*>Demo planla<\/h1>/)
     assert.match(s, /Dr\. Gökhan Mamur ile 60 dakikalık bir görüntülü görüşme/)
@@ -123,7 +123,7 @@ describe('landing + /demo, both states', () => {
   it('link set: header + hero buttons point to /demo; page holds the calendar', () => {
     process.env.NEXT_PUBLIC_DEMO_BOOKING_URL = 'https://cal.com/example'
     assert.match(renderToStaticMarkup(createElement(Hero)), /href="\/demo"[^>]*>Demo planla/)
-    assert.match(renderToStaticMarkup(createElement(Hero)), /bg-\[#c2410c\]/)
+    assert.match(renderToStaticMarkup(createElement(Hero)), /bg-\[#1e3a8a\]/)
     assert.match(renderToStaticMarkup(createElement(SiteNav)), /href="\/demo"[^>]*>Demo planla/)
     const bolum = renderToStaticMarkup(createElement(DemoSection))
     assert.match(bolum, /<section id="demo"/)
