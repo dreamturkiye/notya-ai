@@ -51,6 +51,51 @@ export const UZ_ROL_ARACLARI_5: readonly PaketAraci[] = [
       not: KARAR,
     },
   },
+  // CKD RISK TIER, the kit's own open-facts tool (lib/ulke/araclar/tanimlar/kbhRiskKategorisi.ts): the SAME GFR and
+  // albuminuria categories as the grid above, read into one of KDIGO's own four risk WORDS, in plain text, with no
+  // chart and no colour — so it carries none of kdigo-serit's/kdigo-evre's licence question. OFF BY KAAN'S ORDER OF
+  // 2026-10-10 ALL THE SAME: every new tool here ships off pending a clinician's sign-off, which this one has not
+  // had either; a slot in ./yuvalar.ts, and not on the list of tools (./index.ts → UZ_KAPALI_ARACLAR).
+  // ROLES, decided for Uzbekistan on its own terms (not copied from the five English-speaking packs), from the
+  // nomenclature at ../../klinik/rolListesi.ts: nefroloji (its own tool), dahiliye/Terapiya (internal medicine; most
+  // CKD monitoring in general medicine, not only nephrology clinics, as for ./rol2.ts's kdigo-evre above),
+  // aile-hekimligi/Oilaviy shifokorlik (primary care first reads an eGFR/ACR pair), endokrinoloji (diabetic kidney
+  // disease), kardiyoloji (cardiorenal monitoring) and uroloji (transplant and obstructive-uropathy follow-up,
+  // beside its own psa-hizi below), onkoloji (nephrotoxic-therapy monitoring, beside its own toksisite-listesi
+  // "bobrek_lab" item above). NOT given to acil-tip or anestezi (which covers reanimatology/intensive care here):
+  // those stage ACUTE kidney injury, a different KDIGO tool this kit does not yet have. NOT given to a geriatric
+  // role: the nomenclature read for this pack's role list has none — older patients stay under dahiliye and
+  // aile-hekimligi, as the rest of this pack already treats them.
+  {
+    anahtar: 'kbh-risk-kategorisi', roller: ['nefroloji', 'dahiliye', 'aile-hekimligi', 'endokrinoloji', 'kardiyoloji', 'uroloji', 'onkoloji'],
+    metin: {
+      ad: u('Buyrak surunkali kasalligi: xavf toifasi', 'Буйрак сурункали касаллиги: хавф тоифаси', 'Хроническая болезнь почек: категория риска'),
+      aciklama: u(
+        'KFT toifasi (G1–G5), albuminuriya toifasi (A1–A3) va, ikkala natija kiritilganda, toʻrtta soʻzdan birida ifodalangan umumiy xavf toifasi (past, oʻrtacha oshgan, yuqori, juda yuqori xavf) — rangli jadvalsiz. Davolash rejasi va kuzatuv muddati yozilmaydi.',
+        'КФТ тоифаси (G1–G5), альбуминурия тоифаси (A1–A3) ва, иккала натижа киритилганда, тўртта сўздан бирида ифодаланган умумий хавф тоифаси (паст, ўртача ошган, юқори, жуда юқори хавф) — ранг жадвалисиз. Даволаш режаси ва кузатув муддати ёзилмайди.',
+        'Категория СКФ (G1–G5), категория альбуминурии (A1–A3) и, когда введены оба результата, итоговая категория риска, выраженная одним из четырёх слов (низкий, умеренно повышенный, высокий, очень высокий риск) — без цветной таблицы. План лечения и сроки наблюдения не указываются.',
+      ),
+      alanlar: {
+        egfr: u('Hisoblangan KFT', 'Ҳисобланган КФТ', 'Расчётная СКФ'),
+        acr: u('Siydikda albumin va kreatinin nisbati (usiz xavf toifasi koʻrsatilmaydi)', 'Сийдикда альбумин ва креатинин нисбати (усиз хавф тоифаси кўрсатилмайди)', 'Отношение альбумина к креатинину в моче (без него категория риска не показывается)'),
+      },
+      bantlar: {
+        dusuk: u('Past xavf', 'Паст хавф', 'Низкий риск'),
+        orta: u('Oʻrtacha oshgan xavf', 'Ўртача ошган хавф', 'Умеренно повышенный риск'),
+        yuksek: u('Yuqori xavf', 'Юқори хавф', 'Высокий риск'),
+        cokYuksek: u('Juda yuqori xavf', 'Жуда юқори хавф', 'Очень высокий риск'),
+      },
+      uyarilar: {
+        ...KDIGO_TOIFALARI,
+        acr_yok: u(
+          'Siydikda albumin va kreatinin nisbati kiritilmagan: xavf toifasi ikkala natijani talab qiladi va koʻrsatilmaydi',
+          'Сийдикда альбумин ва креатинин нисбати киритилмаган: хавф тоифаси иккала натижани талаб қилади ва кўрсатилмайди',
+          'Отношение альбумина к креатинину в моче не введено: для категории риска нужны оба результата, и она не показывается',
+        ),
+      },
+      not: KARAR,
+    },
+  },
   {
     anahtar: 'diyaliz-seans', roller: ['nefroloji'],
     metin: {

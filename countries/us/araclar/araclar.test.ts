@@ -42,10 +42,11 @@ const izgara = (rol: string | null): string[] => { const x = hesabinAraclari(A, 
 const calistir = (k: string, ham: Record<string, string | boolean>) => { const x = paketinAraci(A, k)!; return aracCalistir(x, girdiyiCoz(x.tanim.alanlar, ham, O), BUGUN, A) }
 
 /**
- * The five tools of the set that are off here: four by the owner's order of 2026-10-10 (ESI triage, the report
- * outline, both kidney tools), and the dose calculator by this pack's own, earlier decision (weight is in pounds).
+ * The six tools of the set that are off here: four by the owner's order of 2026-10-10 (ESI triage, the report
+ * outline, both kidney tools), the dose calculator by this pack's own, earlier decision (weight is in pounds), and a
+ * third kidney tool — new since then — off pending a clinician's sign-off.
  */
-const EMIRLE_KAPALI = ['akne-vade', 'doz-hesabi', 'esi-triyaj', 'kdigo-evre', 'kdigo-serit', 'lazer-vade', 'rapor-taslagi']
+const EMIRLE_KAPALI = ['akne-vade', 'doz-hesabi', 'esi-triyaj', 'kbh-risk-kategorisi', 'kdigo-evre', 'kdigo-serit', 'lazer-vade', 'rapor-taslagi']
 /** The six tools of this country's own that every doctor role sees (the seventh, the ECOG grade, is for three specialties). */
 const CEKIRDEK = ['us-bmi', 'us-egfr-ckd-epi-2021', 'us-pack-years', 'us-blood-sugar-ranges', 'us-fall-risk-screen', 'us-phq-9']
 
@@ -78,7 +79,7 @@ describe('us tools 1: no tool of the shared set is switched on or off by this jo
     for (const k of acik) assert.equal(Boolean(kitAraci(k)), !KENDI.includes(k), `${k}: a tool of the kit, or one of the seven of this country's own`)
   })
 
-  it('THE FIVE THAT WERE OFF STAY OFF: the dose calculator (this pack\'s own decision), and by the owner\'s order ESI triage, the report outline and both kidney tools', () => {
+  it('THE FIVE THAT WERE OFF STAY OFF: the dose calculator (this pack\'s own decision), and by the owner\'s order ESI triage, the report outline and both kidney tools; a sixth, a third kidney tool added later, stays off pending a clinician\'s sign-off', () => {
     for (const k of EMIRLE_KAPALI) {
       assert.ok(!acik.includes(k), `${k} is switched on`)
       assert.equal(A.yuvalar.find((y) => y.anahtar === k)?.acik, false, k)
