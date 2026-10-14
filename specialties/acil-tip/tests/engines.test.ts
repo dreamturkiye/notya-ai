@@ -9,6 +9,7 @@ import { sevkSkorla } from '../engines/sevk'
 import { acilTara, hekimOnayiGerekliMi, INTAKE_ACIL_SECENEKLERI } from '../engines/acil'
 import { atKohortSatirlari } from '../engines/kohort'
 import { dozIceriyorMu } from '../engines/acilTip'
+import { akiEvreDegerlendir } from '../engines/kdigoAki'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
@@ -65,5 +66,61 @@ describe('acil-tip kohort', () => {
       sonVizit: null, portalVar: true, esiSeviye: 2, kritikYolVar: false, sevkVar: false,
     }], '2026-09-19')
     assert.ok(s[0].bayraklar.includes('esi_yuksek') || s[0].bayraklar.includes('gecikmis_kontrol'))
+  })
+})
+
+describe('acil-tip kdigoAki', () => {
+  const temelHasta = { yas: 45, krea: null, kreaBazal: null, kreaArtis48Saat: null, idrarMlKgSaat: null, idrarSuresiSaat: null, anuriSuresiSaat: null, rrtBaslandi: false }
+
+  it('KDIGO 2012 Table 2 creatinine-fold boundaries: evre1/2/3', () => {
+    assert.equal(akiEvreDegerlendir({ ...temelHasta, krea: 1.8, kreaBazal: 1.2 }).evre, 'evre1') // 1.5x
+    assert.equal(akiEvreDegerlendir({ ...temelHasta, krea: 2.6, kreaBazal: 1.2 }).evre, 'evre2') // 2.17x
+    assert.equal(akiEvreDegerlendir({ ...temelHasta, krea: 4.0, kreaBazal: 1.2 }).evre, 'evre3') // 3.3x
+  })
+
+  it('absolute 48h rise ≥0.3 mg/dL triggers evre1 even without a known fold-baseline', () => {
+    const s = akiEvreDegerlendir({ ...temelHasta, kreaArtis48Saat: 0.4 })
+    assert.equal(s.evre, 'evre1')
+  })
+
+  it('RRT initiation alone is evre3 (KDIGO Table 2, Stage 3)', () => {
+    assert.equal(akiEvreDegerlendir({ ...temelHasta, rrtBaslandi: true }).evre, 'evre3')
+  })
+
+  it('urine-output criteria: <0.5 mL/kg/h for 6-12h → evre1; ≥12h → evre2; <0.3 for ≥24h or anuria ≥12h → evre3', () => {
+    assert.equal(akiEvreDegerlendir({ ...temelHasta, idrarMlKgSaat: 0.4, idrarSuresiSaat: 8 }).evre, 'evre1')
+    assert.equal(akiEvreDegerlendir({ ...temelHasta, idrarMlKgSaat: 0.4, idrarSuresiSaat: 14 }).evre, 'evre2')
+    assert.equal(akiEvreDegerlendir({ ...temelHasta, idrarMlKgSaat: 0.2, idrarSuresiSaat: 26 }).evre, 'evre3')
+    assert.equal(akiEvreDegerlendir({ ...temelHasta, anuriSuresiSaat: 13 }).evre, 'evre3')
+  })
+
+  it('KDIGO worse-stage rule (p.21): whichever of creatinine/urine-output gives the higher stage wins', () => {
+    const s = akiEvreDegerlendir({ ...temelHasta, krea: 1.8, kreaBazal: 1.2, idrarMlKgSaat: 0.2, idrarSuresiSaat: 26 })
+    assert.equal(s.kreaEvre, 'evre1')
+    assert.equal(s.idrarEvre, 'evre3')
+    assert.equal(s.evre, 'evre3')
+    assert.ok(s.uyarilar.includes('kreatinin_idrar_farkli_evre'))
+  })
+
+  it('pediatric patient is refused — adult-only tool', () => {
+    const s = akiEvreDegerlendir({ ...temelHasta, yas: 10, krea: 2, kreaBazal: 0.8 })
+    assert.equal(s.tamamMi, false)
+    assert.ok(s.uyarilar.includes('pediatrik_disi'))
+  })
+
+  it('no data → no stage, not a guessed evre1', () => {
+    assert.equal(akiEvreDegerlendir(temelHasta).tamamMi, false)
+  })
+
+  it('wording is decision-support, no colour', () => {
+    const s = akiEvreDegerlendir({ ...temelHasta, krea: 1.8, kreaBazal: 1.2 })
+    assert.match(s.ozet, /karar desteği/i)
+    assert.doesNotMatch(s.ozet, /yesil|sari|turuncu|kirmizi|green|yellow|orange|red/i)
+  })
+
+  it('is independent from the CKD eGFR/ACR categories (different inputs, different file)', () => {
+    const s = akiEvreDegerlendir({ ...temelHasta, krea: 1.8, kreaBazal: 1.2 })
+    assert.ok(!('eGFR' in (s as unknown as Record<string, unknown>)))
+    assert.ok(!('tiyer' in (s as unknown as Record<string, unknown>)))
   })
 })
