@@ -8,7 +8,15 @@
  */
 import type { UlkeKlinigi } from '@/lib/ulke/tipler'
 import { enKlinik } from '../../_dil/en/klinik'
+import { AU_KONSULTASYON_RIZA_SURUMU } from '../araclar/konsultasyonMetinleri'
 import { AU_GIRDI } from '../ayarlar'
 import { AU_ACIL_CUMLE, AU_CEKIRDEK_EK } from './formEk'
 
-export const AU_KLINIK: UlkeKlinigi = enKlinik({ ...AU_GIRDI, cekirdekEk: AU_CEKIRDEK_EK, acilCumle: AU_ACIL_CUMLE })
+export const AU_KLINIK: UlkeKlinigi = {
+  ...enKlinik({ ...AU_GIRDI, cekirdekEk: AU_CEKIRDEK_EK, acilCumle: AU_ACIL_CUMLE }),
+  // NOTYA-ARACLAR-DENETIM-02-AU, 2026-10-13 — the stamp of the consent sentence an asking doctor ticks
+  // (../araclar/konsultasyonMetinleri.ts → iste.riza). `hukukcuInceledi: false`: a draft, not legal advice; NO
+  // LAWYER HAS READ IT YET. This item is flagged in this audit's report for a docs/OPEN-COMMITMENTS.md entry — not
+  // added here, since this change is scoped to countries/au/ and its own tests. Flip to true only once a lawyer has.
+  konsultasyonRizasi: { surum: AU_KONSULTASYON_RIZA_SURUMU, hukukcuInceledi: false },
+}
