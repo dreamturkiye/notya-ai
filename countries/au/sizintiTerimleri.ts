@@ -13,7 +13,9 @@ const KELIME = (terim: string): SizintiTerimi => ({ terim, eslesme: 'kelime', bu
 
 export const AU_SIZINTI_TERIMLERI: readonly SizintiTerimi[] = [
   // the regulator writes its own name "Ahpra"; the older all-capitals spelling is still in circulation
-  KELIME('AHPRA'), KELIME('Ahpra'), KELIME('DVA'), parca('Australia'), parca('Medicare'), parca('Aboriginal'), parca('Torres Strait'), parca('My Health Record'), parca('Respiratory and sleep medicine'),
+  // "Medicare" is not an Australia-only mark: the United States pack names Medicare Part D.
+  // Australia's own screens still say "Medicare card number" (./au.test.ts).
+  KELIME('AHPRA'), KELIME('Ahpra'), KELIME('DVA'), parca('Australia'), parca('Aboriginal'), parca('Torres Strait'), parca('My Health Record'), parca('Respiratory and sleep medicine'),
 ]
 
 /** English is written in plain Latin letters: no letter marks this country. */
