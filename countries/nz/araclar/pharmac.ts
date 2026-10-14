@@ -4,7 +4,7 @@
  */
 import type { AracTanimi, PaketAraci } from '@/lib/ulke/araclar/tipler'
 import type { BicimliMetin } from '@/lib/ulke/arayuz/tipler'
-import { BOS_SONUC, metin, sayi, secim } from '@/lib/ulke/araclar/yardimci'
+import { BOS_SONUC, kontrolListesi, metin, sayi, secim } from '@/lib/ulke/araclar/yardimci'
 import {
   NZ_TAKVIM, NZ_TAKVIM_KAYIT, NZ_UST20, NZ_UST_KAYIT,
   nzTakvimAnahtari, nzTakvimBul, nzTakvimCumlesi, nzUstAnahtari, nzUstBul, nzUstCumlesi,
@@ -70,6 +70,21 @@ export const NZ_TAKVIM_LISTE: AracTanimi = {
   hesapla: (g) => takvimSonuc(g.ilac, ['dosya_sirasi']),
 }
 
+/**
+ * A record of regulation 29, read 14 October 2026 from the consolidation current to 5 July 2024.
+ * There is no copyright in New Zealand legislation (legislation.govt.nz/copyright, read the same day).
+ * The six points in `NZ_KONTROLLU_HER` are regulation 29(4) for every controlled-drug prescription.
+ * The later points apply only in the case each label names.
+ */
+export const NZ_KONTROLLU_HER = ['tarih', 'adres', 'kisi', 'ad', 'miktar', 'doz'] as const
+export const NZ_KONTROLLU_DURUM = ['yas12', 'dis', 'ebe', 'vet', 'kagit', 'sinif'] as const
+
+export const NZ_KONTROLLU: AracTanimi = kontrolListesi({
+  anahtar: 'nz-controlled-drug-note',
+  maddeler: [...NZ_KONTROLLU_HER, ...NZ_KONTROLLU_DURUM],
+  kaynak: 'Misuse of Drugs Regulations 1977 (SR 1977/37), regulation 29, as at 5 July 2024.',
+})
+
 export const NZ_RECETE: AracTanimi = {
   anahtar: 'nz-prescription-note',
   tur: 'liste',
@@ -134,7 +149,42 @@ export function nzPharmacAraclari(hekimler: readonly string[]): readonly PaketAr
       },
       lisans: PHARMAC_LISANS,
     },
+    nzKontrollu(hekimler),
   ]
+}
+
+/** Regulation 29, as read on 14 October 2026. A record. Nothing is sent. */
+export function nzKontrollu(hekimler: readonly string[]): PaketAraci {
+  return {
+    anahtar: 'nz-controlled-drug-note',
+    roller: [...hekimler], sinif: 'hekimler',
+    metin: {
+      ad: m('Controlled-drug prescription: points regulation 29 names'),
+      aciklama: m('A record of regulation 29 of the Misuse of Drugs Regulations 1977. The first six points are for every controlled-drug prescription. The other points apply only in the case the label names. A specified Class C drug, in regulation 29(5), is amobarbital, amobarbital sodium, buprenorphine, butobarbitone, glutethimide, ketamine, secobarbital, or secobarbital sodium, or a combination of two or more of those, unless it is combined with another active substance that the same clause excludes.'),
+      alanlar: {
+        tarih: m('Dated with the date it was issued'),
+        adres: m('Address of the controlled-drug prescriber'),
+        kisi: m('Surname, initials, and address of the person, or of the person who has custody of the animal'),
+        ad: m('Name of the controlled drug'),
+        miktar: m('Total amount for the one occasion, or for each occasion'),
+        doz: m('Dose and how often, or directions for use if it is for external use'),
+        yas12: m('Person under 12 years: age in years and months, written in words'),
+        dis: m('Dentist: includes the words “for dental treatment only”'),
+        ebe: m('Midwife: includes the words “for midwifery use only”'),
+        vet: m('Veterinarian: includes the words “for animal treatment only”'),
+        kagit: m('Paper form: legible, indelible, and signed in the prescriber’s own handwriting'),
+        sinif: m('Class A, Class B, or a specified Class C drug: paper form the Director-General provides, in the prescriber’s handwriting, or an electronic form sent through a system named by notice in the Gazette'),
+      },
+      sayilar: { isaretli: m('Points recorded') },
+      not: m('A record of those points. It is not a prescription and nothing is sent. A methadone prescription from a medical practitioner, nurse practitioner, or designated prescriber nurse at a place the Minister specifies may also be on another form the Director-General provides. An unusual dose is underlined on paper, with the prescriber’s initials in the margin. The prescription must not be in cipher. It does nothing else. Whether to write it is the doctor’s.'),
+    },
+    lisans: {
+      durum: 'serbest',
+      hakSahibi: 'Parliamentary Counsel Office (New Zealand legislation)',
+      kaynak: 'No copyright in New Zealand legislation, https://www.legislation.govt.nz/copyright/, read 2026-10-14. Regulation 29, as at 5 July 2024, https://www.legislation.govt.nz/regulation/public/1977/0037/latest/whole.html, read 2026-10-14',
+      bildirim: m('Points from the Misuse of Drugs Regulations 1977, regulation 29, as at 5 July 2024. There is no copyright in New Zealand legislation.'),
+    },
+  }
 }
 
 export const NZ_NZEPS_ADRESI = 'https://www.tewhatuora.govt.nz/health-services-and-programmes/digital-health/emedicines-and-the-new-zealand-e-prescription-service'

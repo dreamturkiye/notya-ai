@@ -36,7 +36,7 @@ describe('nz: the tools of this country\'s own — switched on, and listed as no
     const acik = a.araclar.map((p) => p.anahtar).filter((k) => k.startsWith('nz-')).sort()
     const listede = [...NZ_ONAYSIZ_ARACLAR, ...Object.keys(NZ_ONAYLI_ARACLAR)].sort()
     assert.deepEqual(acik, listede)
-    assert.deepEqual(acik, ['nz-bmi-waist', 'nz-nzeps-link', 'nz-pharmac-top-20', 'nz-prescription-note', 'nz-psa-thresholds', 'nz-schedule-medicines', 'nz-smoking-abc'])
+    assert.deepEqual(acik, ['nz-bmi-waist', 'nz-controlled-drug-note', 'nz-nzeps-link', 'nz-pharmac-top-20', 'nz-prescription-note', 'nz-psa-thresholds', 'nz-schedule-medicines', 'nz-smoking-abc'])
     // no key on both lists; a signed-off tool names its clinician and its date
     for (const k of NZ_ONAYSIZ_ARACLAR) assert.ok(!(k in NZ_ONAYLI_ARACLAR), k)
     for (const [k, v] of Object.entries(NZ_ONAYLI_ARACLAR)) { assert.ok(v.klinisyen.trim(), k); assert.match(v.tarih, /^\d{4}-\d{2}-\d{2}$/, k) }

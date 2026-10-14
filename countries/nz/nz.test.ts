@@ -422,7 +422,7 @@ describe('nz: country data for the shared tools — each from a national source 
 
   it('LICENCES: "free" is stated only for the three tools whose source prints its own free licence; "permission needed" for the two the owner\'s order names; nothing for any other', () => {
     const belirtilen = [...a.araclar.filter((p) => p.lisans).map((p) => `${p.anahtar}:${p.lisans!.durum}`), ...a.yuvalar.filter((y) => y.lisans).map((y) => `${y.anahtar}:${y.lisans!.durum}`)].sort()
-    assert.deepEqual(belirtilen, ['esi-triyaj:izin-gerekli', 'nz-bmi-waist:serbest', 'nz-nzeps-link:serbest', 'nz-pharmac-top-20:serbest', 'nz-prescription-note:serbest', 'nz-psa-thresholds:serbest', 'nz-schedule-medicines:serbest', 'nz-smoking-abc:serbest', 'rapor-taslagi:izin-gerekli'])
+    assert.deepEqual(belirtilen, ['esi-triyaj:izin-gerekli', 'nz-bmi-waist:serbest', 'nz-controlled-drug-note:serbest', 'nz-nzeps-link:serbest', 'nz-pharmac-top-20:serbest', 'nz-prescription-note:serbest', 'nz-psa-thresholds:serbest', 'nz-schedule-medicines:serbest', 'nz-smoking-abc:serbest', 'rapor-taslagi:izin-gerekli'])
     assert.notEqual(a.lisansTam, true, 'this pack does not state every licence: it stays on countries/lisans-borcu.json')
   })
 })

@@ -23,7 +23,7 @@
  */
 import type { AracTanimi } from '@/lib/ulke/araclar/tipler'
 import { BOS_SONUC, isaret, kontrolListesi, metin, sayi, sayiMi, secim } from '@/lib/ulke/araclar/yardimci'
-import { NZ_RECETE, NZ_TAKVIM_LISTE, NZ_UST } from './pharmac'
+import { NZ_KONTROLLU, NZ_RECETE, NZ_TAKVIM_LISTE, NZ_UST } from './pharmac'
 
 // ───────────────────────── nz-bmi-waist ─────────────────────────
 
@@ -210,4 +210,4 @@ export const NZ_PSA_THRESHOLDS: AracTanimi = {
   },
 }
 
-export const NZ_TANIMLAR: readonly AracTanimi[] = [NZ_BMI_WAIST, NZ_SMOKING_ABC, NZ_PSA_THRESHOLDS, NZ_UST, NZ_TAKVIM_LISTE, NZ_RECETE]
+export const NZ_TANIMLAR: readonly AracTanimi[] = [NZ_BMI_WAIST, NZ_SMOKING_ABC, NZ_PSA_THRESHOLDS, NZ_UST, NZ_TAKVIM_LISTE, NZ_RECETE, NZ_KONTROLLU]

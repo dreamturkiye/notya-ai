@@ -13,7 +13,7 @@
  */
 export const NZ_ONAYSIZ_ARACLAR: readonly string[] = [
   'nz-bmi-waist', 'nz-psa-thresholds', 'nz-smoking-abc',
-  'nz-pharmac-top-20', 'nz-schedule-medicines', 'nz-prescription-note', 'nz-nzeps-link',
+  'nz-pharmac-top-20', 'nz-schedule-medicines', 'nz-prescription-note', 'nz-controlled-drug-note', 'nz-nzeps-link',
 ]
 
 /** Signed off by a named clinician of New Zealand: key → who and when. Empty today. */
