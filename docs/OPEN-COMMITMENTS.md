@@ -1,5 +1,17 @@
 # OPEN COMMITMENTS — Notya AI
 
+## NOTYA-ANASAYFA-404-01 — every country subdomain's bare domain root ("/") 404s; /us, /uk etc. work fine (Kaan live, 2026-10-13, branch `fix/anasayfa-404`, owner Claude)
+
+Confirmed live 2026-10-13 on all six country subdomains (us/uk/ca/au/nz/uz.notya.io): each country build's real home page is served under its own path prefix (Next's `basePath`, e.g. `/us`; Uzbekistan's is `/uzbek`, never `/uz`), and the bare domain root sits outside that prefix, so nothing is ever mounted there. DNS and the Vercel deployments were already correctly configured — this was a routing-only gap.
+
+**DONE 2026-10-13 — code, not merged.** Fix: one redirect in `next.config.mjs`'s `redirects()`, generated from the build's own path prefix for every non-Türkiye country (`{ source: '/', destination: YOL_ON_EKI, basePath: false, permanent: false }`). No page content moves; `/us`, `/uk`, `/ca`, `/au`, `/nz`, `/uzbek` are unchanged. Verified on real builds: `NOTYA_COUNTRY=us` and `NOTYA_COUNTRY=uz npm run build:ulke` both succeed, and `.next/routes-manifest.json` shows the new redirect landing on the correct prefixed path for each (`/us`, `/uzbek`). Full country test suite, `ulke-duvarlari` and `tsc --noEmit` all pass; the only other red item (`countries/uz/acilis/acilis.test.ts`, a missing `tailwindcss/lib/cli.js` in this environment's `node_modules`) is a pre-existing, unrelated install gap, not caused by this fix.
+
+Seven pull requests opened 2026-10-13, none merged: #649 into `feat/ulke-butun`, and narrow cherry-picks of only this fix's commit into each release branch — #650 (`release/us`), #651 (`release/gb`), #652 (`release/ca`), #653 (`release/au`), #654 (`release/nz`), #655 (`release/uz`). `main`/Türkiye untouched.
+
+| Item | Waits on |
+|---|---|
+| Merge PR #649 into `feat/ulke-butun`, and the six release-branch PRs (#650–#655) — this is a live-production routing change | Kaan |
+
 ## NOTYA-AYSE-SAYI-SIRA-01 — "Kayıtlarda 0 hasta." for a doctor with one patient, and a reply shown above the sentence it answers (Kaan live, 2026-10-10, branch `fix/ayse-hasta-sayisi-ve-sira`, owner Claude)
 
 Kaan's own test account (pediatri, persona `aysekaya`, voice, one active patient), 2026-10-11 01:07–01:08 UTC — the evening of 2026-10-10 in his timezone, the night before a beta session with Dr. Gökhan. Five turns; two faults.
