@@ -3,7 +3,10 @@
   "au": [
     "au-body-size",
     "au-mental-health-screen",
-    "au-oncology-grading"
+    "au-oncology-grading",
+    "au-immunisation-schedule",
+    "au-my-health-record",
+    "au-growth-chart-reference"
   ],
   "gb": [
     "gb-four-at",

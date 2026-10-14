@@ -24,7 +24,8 @@
 import { hekimRolleri } from '@/lib/ulke/araclar/paket'
 import type { EnUlkeGirdisi } from '../_dil/en/girdi'
 import { enRolSatirlari } from '../_dil/en/klinik/roller'
-import { auEkAraclar } from './araclar/metinler'
+import { AU_GROWTH_CHART_REFERENCE, AU_MY_HEALTH_RECORD } from './araclar/baglantilar'
+import { AU_ASI_TAKVIMI_ARACI, AU_KONSULTASYON_ARACI, auEkAraclar } from './araclar/metinler'
 import { AU_TANIMLAR } from './araclar/tanimlar'
 import { AU_ROLLER } from './klinik/roller'
 import { AU_BIRIMLER, AU_VELI_YASI } from './temel'
@@ -248,10 +249,20 @@ export const AU_GIRDI: EnUlkeGirdisi = {
     // THE TOOLS ONLY AUSTRALIA HAS (./araclar/): switched on by the owner's order of 2026-10-10, each on the list of
     // tools switched on without a clinician's sign-off (./araclar/onaysizAciklar.ts).
     ek: {
-      araclar: auEkAraclar({
-        yetiskinHekimleriVePsikolog: [...YETISKIN_HEKIMLERI, 'clinical-psychology'],
-        onkoloji: ['oncology', 'radiation-oncology'],
-      }),
+      araclar: [
+        ...auEkAraclar({
+          yetiskinHekimleriVePsikolog: [...YETISKIN_HEKIMLERI, 'clinical-psychology'],
+          onkoloji: ['oncology', 'radiation-oncology'],
+        }),
+        // NOTYA-ARACLAR-DENETIM-02-AU, 2026-10-13 — consultation between doctors, switched on (see ../klinik/index.ts).
+        AU_KONSULTASYON_ARACI,
+        // NOTYA-ARACLAR-DENETIM-02-AU, 2026-10-13 — the National Immunisation Program schedule, CORE (every role).
+        AU_ASI_TAKVIMI_ARACI,
+        // NOTYA-ARACLAR-DENETIM-02-AU, 2026-10-13 — two link-out tiles (../araclar/baglantilar.ts): My Health
+        // Record (founder's question #4) and which growth chart to use (founder's question #3).
+        AU_MY_HEALTH_RECORD,
+        AU_GROWTH_CHART_REFERENCE,
+      ],
       tanimlar: AU_TANIMLAR,
     },
   },
