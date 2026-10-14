@@ -21,6 +21,10 @@ export type ImagingModalityCode =
   | 'oct'
   | 'fundus'
   | 'on_segment'
+  | 'otoskopi'
+  | 'nazoendoskopi'
+  | 'laringoskopi'
+  | 'plastik_foto'
 
 export type ImagingPortalKind = 'goruntuleme' | 'ekg' | 'diger'
 
@@ -51,6 +55,12 @@ export const IMAGING_MODALITIES: ImagingModality[] = [
   { code: 'oct', label: 'OCT', patientLabel: 'OCT', portalKind: 'goruntuleme', color: '#6366f1' },
   { code: 'fundus', label: 'Fundus fotoğrafı', patientLabel: 'Göz dibi fotoğrafı', portalKind: 'goruntuleme', color: '#dc2626' },
   { code: 'on_segment', label: 'Ön segment fotoğrafı', patientLabel: 'Ön segment fotoğrafı', portalKind: 'goruntuleme', color: '#0891b2' },
+  // KBB-GORUNTU-OKUMA-01: otoskopi (kulak zarı), nazoendoskopi, laringoskopi — ayrı, KBB'nin kendi dual-sign köprüsü.
+  { code: 'otoskopi', label: 'Otoskopi (kulak zarı)', patientLabel: 'Kulak muayenesi fotoğrafı', portalKind: 'goruntuleme', color: '#7c3aed' },
+  { code: 'nazoendoskopi', label: 'Nazoendoskopi', patientLabel: 'Burun endoskopisi', portalKind: 'goruntuleme', color: '#8b5cf6' },
+  { code: 'laringoskopi', label: 'Laringoskopi', patientLabel: 'Gırtlak endoskopisi', portalKind: 'goruntuleme', color: '#a78bfa' },
+  // PLASTIK-GORUNTU-OKUMA-01: standardize edilmiş önce/sonra foto görünümü — kendi dual-sign köprüsü.
+  { code: 'plastik_foto', label: 'Plastik cerrahi foto (standart görünüm)', patientLabel: 'Önce/sonra foto', portalKind: 'goruntuleme', color: '#f472b6' },
   { code: 'diger', label: 'Diğer', patientLabel: 'Diğer görüntüleme', portalKind: 'diger', color: '#6b7280' },
 ]
 
@@ -81,6 +91,10 @@ export function normalizeImagingModality(raw: string | null | undefined): Imagin
   if (/^oct\b|^okt\b|optik koherens/.test(t)) return 'oct'
   if (/fundus|goz dibi/.test(t)) return 'fundus'
   if (/on segment|on_segment|biyomikroskop|slit/.test(t)) return 'on_segment'
+  if (/otoskopi|kulak zar/.test(t)) return 'otoskopi'
+  if (/nazoendoskopi|burun endoskop/.test(t)) return 'nazoendoskopi'
+  if (/laringoskopi|girtlak|gırtlak/.test(t)) return 'laringoskopi'
+  if (/plastik|once.?sonra|önce.?sonra/.test(t)) return 'plastik_foto'
   if (BY_CODE.has(t as ImagingModalityCode)) return t as ImagingModalityCode
   return 'diger'
 }
@@ -117,7 +131,7 @@ export const BRANS_GORUNTULEME_ONCELIGI: Partial<Record<SpecialtyKey, readonly I
   kardiyoloji: ['ekg', 'eko', 'bt', 'xray'], // bt = koroner BT anjiyo
   'kalp-damar-cerrahisi': ['eko', 'bt', 'ekg', 'us', 'xray'], // us = Doppler
   dermatoloji: ['dermatoskopi', 'derm', 'yara'],
-  'plastik-cerrahi': ['yara', 'derm'],
+  'plastik-cerrahi': ['plastik_foto', 'yara', 'derm'],
   'kadin-hastaliklari-dogum': ['us', 'mamografi', 'mri'],
   dahiliye: ['xray', 'us', 'bt', 'ekg'],
   pediatri: ['xray', 'us', 'ekg'],
@@ -144,7 +158,7 @@ export const BRANS_GORUNTULEME_ONCELIGI: Partial<Record<SpecialtyKey, readonly I
   'spor-hekimligi': ['mri', 'us', 'xray', 'ekg'],
   'gogus-cerrahisi': ['xray', 'bt', 'pet'],
   'cocuk-cerrahisi': ['us', 'xray', 'bt'],
-  'kulak-burun-bogaz': ['bt', 'mri', 'us'],
+  'kulak-burun-bogaz': ['otoskopi', 'nazoendoskopi', 'laringoskopi', 'bt', 'mri', 'us'],
 }
 
 export type BransGoruntulemeGruplari = {

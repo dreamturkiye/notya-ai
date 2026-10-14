@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { normalizeImagingModality } from '@/lib/doktor/imagingModalities'
-import { hastaSahibiMi } from '@/lib/doktor/hastaSahipligi'
+import { hastaSahibiMi, seansSahibi } from '@/lib/doktor/hastaSahipligi'
+import { gorselYakalamaDogrula, gorselYakalamaTuru } from '@/lib/doktor/gorselYakalama'
 
 export const dynamic = 'force-dynamic'
 
@@ -35,6 +36,13 @@ export async function POST(request: NextRequest) {
     const vucut_bolgesi = formData.get('vucut_bolgesi') as string
     const rapor_metni = String(formData.get('rapor_metni') || formData.get('rapor') || '')
     const tarih = formData.get('tarih') as string
+    // GORSEL-YAKALAMA-01: optional — set when this upload comes from the inline "capture at this
+    // muayene" widget (note screen / chapter capture panel) instead of the generic archive. The id
+    // is a `sessions.id` (the universal visit unit every note belongs to), not derm_ziyaretleri.
+    // This route stays chapter-blind like the rest of it — the gate below checks visit OWNERSHIP
+    // (whose session is it), never which medical chapter the doctor practices.
+    const visitIdHam = formData.get('visitId')
+    const visitId = typeof visitIdHam === 'string' && visitIdHam.trim() ? visitIdHam.trim() : null
 
     if (!file || !hastaId) {
       return NextResponse.json({ error: 'Dosya ve hastaId zorunludur' }, { status: 400 })
@@ -43,6 +51,21 @@ export async function POST(request: NextRequest) {
     // without this, imaging (and its portal card) could be filed under another doctor's patient.
     if (!(await hastaSahibiMi(supabase, user.id, hastaId))) {
       return NextResponse.json({ error: 'Hasta bulunamadı' }, { status: 404 })
+    }
+
+    // GORSEL-YAKALAMA-01: a visitId must be THIS doctor's own session (seansSahibi — same pattern as
+    // every other seans-scoped route) AND that session's patient must be the SAME patient this upload
+    // names — otherwise a stale tab could tag patient A's photo onto patient B's visit.
+    const vizit = visitId ? await seansSahibi(supabase, user.id, visitId) : null
+    const gecerlilik = gorselYakalamaDogrula({
+      tur: gorselYakalamaTuru(file.type),
+      bayt: file.size || 0,
+      hastaId,
+      visitId,
+      visit: vizit,
+    })
+    if (!gecerlilik.ok) {
+      return NextResponse.json({ error: gecerlilik.hata }, { status: gecerlilik.durum })
     }
 
     const timestamp = Date.now()
@@ -76,6 +99,7 @@ export async function POST(request: NextRequest) {
         dosya_url: urlData.publicUrl,
         rapor_metni: rapor_metni || null,
         goruntuleme_tarihi: tarih || null,
+        visit_id: visitId || null,
       })
       .select()
       .single()
