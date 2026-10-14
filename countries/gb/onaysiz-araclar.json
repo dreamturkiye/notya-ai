@@ -58,7 +58,7 @@
       "acildi": "2026-10-14",
       "kaynak": "UK Health Security Agency, complete routine immunisation schedule from 1 September 2026, updated 24 September 2026, opened 2026-10-14: https://www.gov.uk/government/publications/the-complete-routine-immunisation-schedule/complete-routine-immunisation-schedule-from-1-july-2026",
       "lisans": "free, with a lawyer question: Open Government Licence v3.0 for Crown copyright, and the page says third-party copyright needs the holders' permission. Trade names are omitted. For the lawyer: whether the age, disease and site rows are covered.",
-      "klinisyeninBakacagi": "the cohort sentences inside the 18-month and 3-year-4-month rows; that selective programmes (birth hepatitis B, BCG, pregnancy, medical conditions) are named in the note and are not ticks; that this is a record and not a catch-up",
+      "klinisyeninBakacagi": "the cohort sentences inside the 18-month and 3-year-4-month rows; the selective and additional rows, including the complement row that prints no vaccine; that a row pointing at the Green Book does not state a dose count; that this is a record and not a catch-up",
       "klinisyen": null
     },
     {

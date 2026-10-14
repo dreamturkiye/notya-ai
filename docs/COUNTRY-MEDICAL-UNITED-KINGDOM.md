@@ -20,11 +20,12 @@ Switched on before this job: 4AT, the valproate annual-review dates, a link to t
 
 Empty slots that are still empty, on purpose:
 
-- `prescription` — a full prescription form, controlled-drug rules, and transmission. The new note does not replace this slot.
-- `medicine-interactions` — no interaction pair was loaded. DrugBank is CC BY-NC; the BNF is not free to copy into this product.
-- `diagnosis-coding` — ICD-10 and SNOMED CT were not pasted. SNOMED CT needs a licence. The NHSBSA workbook has a SNOMED sheet; it was not imported.
-- `vaccination-schedule` and `notifiable-diseases` — the shared slots stay, because the new tools are records and lists, not the full Green Book and not the laboratory organism list.
-- `lab-izlem` — units for the tools that already use a laboratory value are in `countries/gb/araclar.ts` (`mg/mmol`, `g/L`, `µmol/L`, `mmol/L`, `mg/L`, `µg/L`). No reference range was invented, so no second catalogue was added.
+- `medicine-interactions` — no interaction pair was loaded. DrugBank is CC BY-NC. The BNF is not copied. `countries/gb/kayit/etkilesim.ts` names a commercial contract. First Databank is one path.
+- `diagnosis-coding` — ICD-10 and SNOMED CT were not pasted. SNOMED CT needs a licence. WHO ICD-10 is copyrighted. `countries/gb/kayit/tani.ts` states that path. The NHSBSA workbook has a SNOMED sheet; it was not imported.
+- `prescription` — a full prescription form and transmission. The note does not replace this slot. Regulation 15 of the Misuse of Drugs Regulations 2001 was opened on 14 October 2026 (https://www.legislation.gov.uk/uksi/2001/3998/regulation/15). The site says the revised text may not be fully up to date, and it lists an amendment not yet applied to regulation 15 (S.I. 2025/1249). No writing-rule tick was taken from that text.
+- `vaccination-schedule` — the shared slot stays. The country tool now holds the routine, selective, and additional tables from the same GOV.UK page. Catch-up intervals beyond a second dose that page prints, and Green Book chapters, are not loaded.
+- `notifiable-diseases` — the shared slot stays. The country tool holds the 43 diseases a registered medical practitioner reports. The laboratory organism list is a separate page (https://www.gov.uk/guidance/notifiable-organisms-and-how-to-report-them) and was not copied.
+- `lab-izlem` — units for the tools that already use a laboratory value are in `countries/gb/araclar.ts` (`mg/mmol`, `g/L`, `µmol/L`, `mmol/L`, `mg/L`, `µg/L`). No reference range was invented. `countries/gb/kayit/laboratuvar.ts` restates those units with an empty panel list.
 
 ## What this job added
 
@@ -32,7 +33,7 @@ Empty slots that are still empty, on purpose:
 | --- | --- | --- |
 | `gb-medicine-list` | 250 chemical substances | NHSBSA Prescription Cost Analysis, England 2025/26, national summary workbook `pca_summary_tables_2025_26_v001.xlsx`, retrieved 14 October 2026. Chapters 01–15 only (medicines). Chapter 21 appliances were in the overall top and were left out. The presentation is the single presentation of that chemical with the highest item count, not every strength. Rank 1 is atorvastatin, 78,042,871 items, presentation "Atorvastatin 20mg tablets". |
 | `gb-prescription-note` | the same 250, plus a quantity and directions the doctor types | Same workbook. The quantity is not a suggested dose. The note is not sent. |
-| `gb-immunisation-schedule` | 20 routine rows | UKHSA, "Complete routine immunisation schedule from 1 September 2026", updated 24 September 2026. https://www.gov.uk/government/publications/the-complete-routine-immunisation-schedule/complete-routine-immunisation-schedule-from-1-july-2026 |
+| `gb-immunisation-schedule` | 41 rows | UKHSA, "Complete routine immunisation schedule from 1 September 2026", updated 24 September 2026. The same page's selective table and additional-conditions table are included. Trade names are not copied. Green Book chapters are not copied, so those rows do not state a dose count. The complement row prints no vaccine. |
 | `gb-notifiable-diseases` | 43 diseases | UKHSA, "Notifiable diseases and causative organisms: how to report", last updated 19 May 2026. https://www.gov.uk/guidance/notifiable-diseases-and-causative-organisms-how-to-report |
 | `gb-eps-link` | a link | https://digital.nhs.uk/services/electronic-prescription-service |
 | Local FHIR draft | one MedicationRequest, status `draft` | `countries/gb/kayit/fhirTaslak.ts`. No patient identifier. No network call. |
@@ -60,7 +61,7 @@ No clinician and no lawyer has signed these tools. They are listed in `countries
 
 - Lawyer: immunisation rows under the Open Government Licence once trade names are removed; the page's third-party sentence is quoted on the tool.
 - Lawyer: whether a commercial product may show the NHSBSA top 250 under the Open Government Licence with attribution (the dataset page states that licence).
-- Clinician: the 18-month and 3-year-4-month rows name both birth cohorts in one tick and do not choose between them.
-- Clinician: conditional notification rows (brucellosis, food poisoning, malaria, tetanus, tuberculosis, whooping cough, yellow fever).
-- Clinician: the prescription note must not be used as an FP10 or as a controlled-drug rule. The workbook has no schedule column.
-- Not loaded, because the source was not opened or is not free to copy: the Green Book, BNF monographs, interaction pairs, a SNOMED or ICD-10 table, controlled-drug writing particulars, and any live NHS API.
+- Clinician: the 18-month and 3-year-4-month rows name both birth cohorts in one tick and do not choose between them. Selective and additional rows are ticks. The complement row prints no vaccine. A row that points at the Green Book does not state a dose count.
+- Clinician: conditional notification rows (brucellosis, food poisoning, malaria, tetanus, tuberculosis, whooping cough, yellow fever). Laboratory organisms are still not ticks.
+- Clinician: the prescription note must not be used as an FP10 or as a controlled-drug rule. Regulation 15 was opened and not copied, because the revised text says it may not be fully up to date.
+- Not loaded: Green Book chapters, BNF monographs, interaction pairs, a SNOMED or ICD-10 table, a controlled-drug checklist, the laboratory organism list, and any live NHS API.

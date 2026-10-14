@@ -10,6 +10,9 @@ import { GB_ARAYUZ } from './arayuz'
 import { gbFhirTaslak } from './kayit/fhirTaslak'
 import { GB_KAYIT_SISTEMLERI } from './kayit/sistemler'
 import { GB_ILACLAR, gbIlacAnahtari } from './referans/ilaclar'
+import { GB_ETKILESIM } from './kayit/etkilesim'
+import { GB_LABORATUVAR } from './kayit/laboratuvar'
+import { GB_TANI } from './kayit/tani'
 import { GB_ASI_ANAHTARLARI, GB_BILDIRIM, GB_EPS_ADRESI, GB_HASTALIK_ANAHTARLARI, GB_ILAC_LISTESI, GB_RECETE_NOTU } from './tibbiAraclar'
 
 const A = GB_ARAYUZ.araclar!
@@ -53,8 +56,12 @@ describe('gb medicines: NHSBSA Prescription Cost Analysis 2025/26', () => {
 })
 
 describe('gb immunisation and notification lists', () => {
-  it('twenty routine rows, and a tick is a record', () => {
-    assert.equal(GB_ASI_ANAHTARLARI.length, 20)
+  it('routine, selective and additional rows from the same page, and a tick is a record', () => {
+    assert.equal(GB_ASI_ANAHTARLARI.length, 41)
+    assert.equal(GB_ASI_ANAHTARLARI[19], 'child_flu')
+    assert.equal(GB_ASI_ANAHTARLARI[20], 'hepb_birth')
+    assert.ok(GB_ASI_ANAHTARLARI.includes('complement'))
+    assert.equal(GB_ASI_ANAHTARLARI.at(-1), 'homeless')
     const g = Object.fromEntries(GB_ASI_ANAHTARLARI.map((k) => [k, k === 'w8_hex']))
     const s = calistir('gb-immunisation-schedule', g)
     assert.equal(s.sayilar[0].deger, 1)
@@ -95,6 +102,16 @@ describe('gb record services: configured, not connected', () => {
     assert.equal((kaynak.medicationCodeableConcept as { text: string }).text, 'Atorvastatin 20mg tablets')
     assert.equal(JSON.stringify(b).includes('patient'), false)
     assert.match(JSON.stringify(b), /Not submitted/)
+  })
+
+  it('no interaction pair, no diagnosis code, and no laboratory range was added', () => {
+    assert.equal(GB_ETKILESIM.bagli, false)
+    assert.deepEqual([...GB_ETKILESIM.juftlar], [])
+    assert.deepEqual([...GB_TANI.satirlar], [])
+    assert.equal(GB_LABORATUVAR.birimler.kreatinin, 'umol/L')
+    assert.equal(GB_LABORATUVAR.birimler.hemoglobin, 'g/L')
+    assert.deepEqual([...GB_LABORATUVAR.paneller], [])
+    assert.deepEqual([...GB_LABORATUVAR.araliklar], [])
   })
 })
 

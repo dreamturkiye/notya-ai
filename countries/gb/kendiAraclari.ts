@@ -25,7 +25,7 @@
  * a controlled-drug rule and a live transmission stay empty: these tools are the partial fill.
  *   gb-medicine-list         250 chemical substances, England community dispensing 2025/26.
  *   gb-prescription-note     the same list, plus a quantity and directions the doctor types. Not sent.
- *   gb-immunisation-schedule routine immunisation rows from 1 September 2026. A record, not a catch-up.
+ *   gb-immunisation-schedule routine, selective and additional rows from 1 September 2026. A record, not a catch-up.
  *   gb-notifiable-diseases   England notification list. Not a report sent to the health protection team.
  *   gb-eps-link              a link to the Electronic Prescription Service page. No call.
  */
