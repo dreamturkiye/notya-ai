@@ -452,6 +452,7 @@ const KARSILIKSIZ: Readonly<Record<string, string>> = {
   'sonraki-seans': 'records this date and the next date the clinician enters. No proposed gap.',
   'kardiyo-not': 'records a cardiology note and the measurements the clinician enters. Threshold warnings stay on the slot kardiyo-izlem, which needs a country\'s own numbers.',
   'gebelik-gun': 'days and whole weeks since the last menstrual period the clinician typed, and an expected date echoed if the clinician typed one. No 280-day rule. A national gestational rule stays a country-only tool.',
+  'kbh-risk-kategorisi': 'NOTYA-ULKE-ARAC-KBH-RISK-01: a brand-new tool, not a port of a pre-split one. It classifies the same open KDIGO 2024 categories (GFR, albuminuria) and risk tiers as kdigo-evre/kdigo-serit (both switched off, kapaliAraclar.paket.test.ts), in its own words and band keys and with no colour and no chart, so that the kit can offer the classification without the licence exposure of reproducing KDIGO\'s coloured grid. Its own sources and reasoning are in tanimlar/kbhRiskKategorisi.ts.',
 }
 
 describe('tools — the kit\'s arithmetic equals the pre-split application\'s, input for input', () => {
