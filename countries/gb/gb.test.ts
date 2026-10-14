@@ -28,7 +28,7 @@ ingilizcePaketSinamasi({
   // is off for an unrelated reason: a brand-new tool pending a clinician's sign-off.
   kapaliAraclar: ['akne-vade', 'esi-triyaj', 'kbh-risk-kategorisi', 'kdigo-evre', 'kdigo-serit', 'lazer-vade', 'rapor-taslagi'],
   // the tools only this country has, all switched on (./kendiAraclari.ts; ./gb-araclar.test.ts tests each against its source)
-  ekAraclar: ['gb-four-at', 'gb-fracture-risk-link', 'gb-valproate-forms'],
+  ekAraclar: ['gb-eps-link', 'gb-four-at', 'gb-fracture-risk-link', 'gb-immunisation-schedule', 'gb-medicine-list', 'gb-notifiable-diseases', 'gb-prescription-note', 'gb-valproate-forms'],
   birimler: { agirlik: 'kg', boy: 'cm', sicaklik: 'C' },
   labBirimleri: { albuminKreatinin: 'mg/mmol', hemoglobin: 'g/L', kreatinin: 'umol/L', glukoz: 'mmol/L', kolesterol: 'mmol/L', crp: 'mg/L', psa: 'ug/L' },
   kidemliHekim: 'consultant',

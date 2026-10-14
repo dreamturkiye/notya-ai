@@ -151,6 +151,9 @@ export const KORUNAN: readonly string[] = [
   // published names
   'Generalized Anxiety Disorder', 'Eczema Area and Severity Index', 'Psoriasis Area and Severity Index', 'Emergency Severity Index',
   'American Society of Anesthesiologists', 'Kidney Disease: Improving Global Outcomes', 'European League Against Rheumatism',
+  // BNF chemical names as NHSBSA prints them (Prescription Cost Analysis). The table's British spelling is "sulphate";
+  // these cited names are not rewritten.
+  'Morphine sulfate', 'Ferrous sulfate', 'Quinine sulfate', 'Hydroxychloroquine sulfate',
 ]
 
 /**

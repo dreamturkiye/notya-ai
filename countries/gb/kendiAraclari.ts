@@ -20,9 +20,18 @@
  *   gb-valproate-forms       valproate: when the risk acknowledgement form was last completed, and the day the annual
  *                            review falls due. Dates and ticks only.
  *   gb-fracture-risk-link    a link-out tile to the FRAX calculator on its owner's site. Nothing of FRAX is here.
+ *
+ * ADDED 2026-10-14 from sources opened that day (./tibbiAraclar.ts). The shared slots for a full register, a dose,
+ * a controlled-drug rule and a live transmission stay empty: these tools are the partial fill.
+ *   gb-medicine-list         250 chemical substances, England community dispensing 2025/26.
+ *   gb-prescription-note     the same list, plus a quantity and directions the doctor types. Not sent.
+ *   gb-immunisation-schedule routine immunisation rows from 1 September 2026. A record, not a catch-up.
+ *   gb-notifiable-diseases   England notification list. Not a report sent to the health protection team.
+ *   gb-eps-link              a link to the Electronic Prescription Service page. No call.
  */
 import type { AracTanimi, PaketAraci } from '@/lib/ulke/araclar/tipler'
 import { ayEkle, BOS_SONUC, gunMu, isaret, secim, tarih } from '@/lib/ulke/araclar/yardimci'
+import { GB_TIBBI_ARACLARI, GB_TIBBI_TANIMLARI } from './tibbiAraclar'
 
 const D = 'en-GB'
 const m = (metin: string) => ({ [D]: metin })
@@ -231,8 +240,8 @@ const FRAX: PaketAraci = {
 }
 
 /** The mechanisms of the tools only this country has (a link-out tile has none). */
-export const GB_KENDI_TANIMLARI: readonly AracTanimi[] = [GB_FOUR_AT, GB_VALPROATE]
+export const GB_KENDI_TANIMLARI: readonly AracTanimi[] = [GB_FOUR_AT, GB_VALPROATE, ...GB_TIBBI_TANIMLARI]
 /** The tools only this country has, as the pack lists them, in the order the grid shows them. All switched on. */
-export const GB_KENDI_ARACLARI: readonly PaketAraci[] = [FOUR_AT, FRAX, VALPROATE]
-/** Every key that is this country's alone: the list of countries/yasak-araclar.json under "gb". */
-export const GB_OZEL_ANAHTARLAR: readonly string[] = ['gb-four-at', 'gb-fracture-risk-link', 'gb-valproate-forms']
+export const GB_KENDI_ARACLARI: readonly PaketAraci[] = [FOUR_AT, FRAX, VALPROATE, ...GB_TIBBI_ARACLARI]
+/** Every key that is this country's alone, sorted: the list of countries/yasak-araclar.json under "gb". */
+export const GB_OZEL_ANAHTARLAR: readonly string[] = ['gb-eps-link', 'gb-four-at', 'gb-fracture-risk-link', 'gb-immunisation-schedule', 'gb-medicine-list', 'gb-notifiable-diseases', 'gb-prescription-note', 'gb-valproate-forms']

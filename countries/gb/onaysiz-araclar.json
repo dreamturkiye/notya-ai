@@ -30,6 +30,56 @@
       "lisans": "free: the page's own notice (Open Government Licence v3.0); no form is reproduced",
       "klinisyeninBakacagi": "that \"one year after the form was last completed\" is how the annual review is counted in practice; what applies to patients of 55 and over (not read); whether old age psychiatry and paediatrics should see it",
       "klinisyen": null
+    },
+    {
+      "anahtar": "gb-medicine-list",
+      "ad": "Medicines dispensed most often in England",
+      "kimGorur": "every doctor role (not the allied professions)",
+      "acildi": "2026-10-14",
+      "kaynak": "NHS Business Services Authority, Prescription Cost Analysis – England 2025/26, national summary tables, retrieved 2026-10-14: https://nhsbsa-opendata.s3.eu-west-2.amazonaws.com/pca/pca_summary_tables_2025_26_v001.xlsx",
+      "lisans": "free: Open Government Licence 3.0, as the NHSBSA Open Data Portal dataset page states it. 250 chemical substances, chapters 1 to 15, highest-volume presentation only. No dose.",
+      "klinisyeninBakacagi": "that a closed list of 250 community-dispensed chemicals is the right surface, and that omitting appliances (chapter 21) and every strength but the highest-volume presentation is acceptable",
+      "klinisyen": null
+    },
+    {
+      "anahtar": "gb-prescription-note",
+      "ad": "Prescription note (not sent)",
+      "kimGorur": "every doctor role (not the allied professions)",
+      "acildi": "2026-10-14",
+      "kaynak": "the same NHSBSA workbook as the medicine list, retrieved 2026-10-14: https://nhsbsa-opendata.s3.eu-west-2.amazonaws.com/pca/pca_summary_tables_2025_26_v001.xlsx",
+      "lisans": "free: Open Government Licence 3.0 for the rows. The note itself is the doctor's own quantity and directions. Nothing is sent.",
+      "klinisyeninBakacagi": "that the note must not be mistaken for an FP10 or for a controlled-drug writing rule; the schedule is not in the source table",
+      "klinisyen": null
+    },
+    {
+      "anahtar": "gb-immunisation-schedule",
+      "ad": "Routine immunisation schedule (record)",
+      "kimGorur": "every role, including an account with no role",
+      "acildi": "2026-10-14",
+      "kaynak": "UK Health Security Agency, complete routine immunisation schedule from 1 September 2026, updated 24 September 2026, opened 2026-10-14: https://www.gov.uk/government/publications/the-complete-routine-immunisation-schedule/complete-routine-immunisation-schedule-from-1-july-2026",
+      "lisans": "free, with a lawyer question: Open Government Licence v3.0 for Crown copyright, and the page says third-party copyright needs the holders' permission. Trade names are omitted. For the lawyer: whether the age, disease and site rows are covered.",
+      "klinisyeninBakacagi": "the cohort sentences inside the 18-month and 3-year-4-month rows; that selective programmes (birth hepatitis B, BCG, pregnancy, medical conditions) are named in the note and are not ticks; that this is a record and not a catch-up",
+      "klinisyen": null
+    },
+    {
+      "anahtar": "gb-notifiable-diseases",
+      "ad": "Notifiable diseases (England)",
+      "kimGorur": "every doctor role (not the allied professions)",
+      "acildi": "2026-10-14",
+      "kaynak": "UK Health Security Agency, notifiable diseases and causative organisms: how to report, last updated 19 May 2026, opened 2026-10-14: https://www.gov.uk/guidance/notifiable-diseases-and-causative-organisms-how-to-report",
+      "lisans": "free: GOV.UK Open Government Licence v3.0 unless that page states otherwise. Disease names and the urgent or routine mark only. No form is copied and no report is sent.",
+      "klinisyeninBakacagi": "the conditional rows (brucellosis, food poisoning, malaria, tetanus, tuberculosis, whooping cough, yellow fever) against the page; that laboratory causative organisms are not in this list; England only",
+      "klinisyen": null
+    },
+    {
+      "anahtar": "gb-eps-link",
+      "ad": "Electronic Prescription Service (link)",
+      "kimGorur": "every doctor role (not the allied professions)",
+      "acildi": "2026-10-14",
+      "kaynak": "NHS England Digital, Electronic Prescription Service, opened 2026-10-14: https://digital.nhs.uk/services/electronic-prescription-service",
+      "lisans": "a link only: nothing is called. Registration, the Care Identity Service and a supplier onboard are not done.",
+      "klinisyeninBakacagi": "that the tile is not read as a live connection to the Electronic Prescription Service",
+      "klinisyen": null
     }
   ],
   "ayrica": [

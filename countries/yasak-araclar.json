@@ -6,8 +6,13 @@
     "au-oncology-grading"
   ],
   "gb": [
+    "gb-eps-link",
     "gb-four-at",
     "gb-fracture-risk-link",
+    "gb-immunisation-schedule",
+    "gb-medicine-list",
+    "gb-notifiable-diseases",
+    "gb-prescription-note",
     "gb-valproate-forms"
   ],
   "nz": [

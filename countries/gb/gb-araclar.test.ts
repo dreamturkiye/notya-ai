@@ -69,24 +69,24 @@ describe('gb A: who sees which tool (decisions: `proposedSpecialties`; GB.md, "W
     assert.equal(A.araclar.find((p) => p.anahtar === 'antibiyotik-sure')?.sinif, 'hekimler')
     // an allied profession and an account without a role do not see a doctor's tool
     for (const r of [...MUTTEFIKLER, null]) assert.ok(!gorulen(r).includes('antibiyotik-sure'), String(r))
-    assert.deepEqual(gorulen(null), ['hasta-portali'], 'an account without a role: the base tool only')
+    assert.deepEqual(gorulen(null), ['hasta-portali', 'gb-immunisation-schedule'], 'an account without a role: the base tool, and the immunisation record which every role sees')
   })
 
   it('GENERAL PRACTICE has the shared records for family medicine as well as the tools the audit named', () => {
     assert.ok(EN_ROL_ARACLARI.some((a) => a.roller?.includes('family-medicine')))
-    assert.deepEqual([...gorulen('family-medicine')].sort(), ['antibiyotik-sure', 'antikoagulan-vadeleri', 'birinci-acil-bayrak', 'gb-four-at', 'gb-fracture-risk-link', 'gb-valproate-forms', 'gebelik-gun', 'hasta-portali', 'inhaler-teknik', 'kronik-izlem-kaydi', 'otoskopi-notu', 'rtp-basamak', 'takip-paneli', 'vertigo-notu'])
+    assert.deepEqual([...gorulen('family-medicine')].sort(), ['antibiyotik-sure', 'antikoagulan-vadeleri', 'birinci-acil-bayrak', 'gb-eps-link', 'gb-four-at', 'gb-fracture-risk-link', 'gb-immunisation-schedule', 'gb-medicine-list', 'gb-notifiable-diseases', 'gb-prescription-note', 'gb-valproate-forms', 'gebelik-gun', 'hasta-portali', 'inhaler-teknik', 'kronik-izlem-kaydi', 'otoskopi-notu', 'rtp-basamak', 'takip-paneli', 'vertigo-notu'])
   })
 
   it('two more examples: cardio-thoracic surgery takes the heart operations; the audiologist gets the hearing tools', () => {
     assert.deepEqual(goren('kalp-damar-preop'), ['thoracic-surgery', 'cardiovascular-surgery'])
     assert.ok(gorulen('thoracic-surgery').includes('toraks-preop') && gorulen('thoracic-surgery').includes('kalp-damar-preop'))
-    assert.deepEqual(gorulen('audiology').sort(), ['hasta-portali', 'odyometri-pta', 'otoskopi-notu', 'sonraki-seans', 'takip-paneli', 'vertigo-notu'])
-    assert.deepEqual(gorulen('physiotherapy'), ['hasta-portali', 'vas-fonksiyon', 'seans-plani', 'icf-ozet', 'takip-paneli'])
-    assert.deepEqual(gorulen('clinical-psychology'), ['hasta-portali', 'psikiyatri-guvenlik', 'sonraki-seans', 'takip-paneli'])
-    assert.deepEqual(gorulen('dietetics'), ['hasta-portali', 'makro-kaydi', 'takip-paneli'])
-    assert.deepEqual(gorulen('occupational-therapy'), ['hasta-portali', 'seans-plani', 'icf-ozet', 'takip-paneli'])
-    assert.deepEqual(gorulen('podiatry'), ['hasta-portali', 'seans-plani', 'takip-paneli'])
-    assert.deepEqual(gorulen('speech-language-therapy'), ['hasta-portali', 'sonraki-seans', 'takip-paneli'])
+    assert.deepEqual(gorulen('audiology').sort(), ['gb-immunisation-schedule', 'hasta-portali', 'odyometri-pta', 'otoskopi-notu', 'sonraki-seans', 'takip-paneli', 'vertigo-notu'])
+    assert.deepEqual(gorulen('physiotherapy'), ['hasta-portali', 'gb-immunisation-schedule', 'vas-fonksiyon', 'seans-plani', 'icf-ozet', 'takip-paneli'])
+    assert.deepEqual(gorulen('clinical-psychology'), ['hasta-portali', 'gb-immunisation-schedule', 'psikiyatri-guvenlik', 'sonraki-seans', 'takip-paneli'])
+    assert.deepEqual(gorulen('dietetics'), ['hasta-portali', 'gb-immunisation-schedule', 'makro-kaydi', 'takip-paneli'])
+    assert.deepEqual(gorulen('occupational-therapy'), ['hasta-portali', 'gb-immunisation-schedule', 'seans-plani', 'icf-ozet', 'takip-paneli'])
+    assert.deepEqual(gorulen('podiatry'), ['hasta-portali', 'gb-immunisation-schedule', 'seans-plani', 'takip-paneli'])
+    assert.deepEqual(gorulen('speech-language-therapy'), ['hasta-portali', 'gb-immunisation-schedule', 'sonraki-seans', 'takip-paneli'])
   })
 
   it('every tool whose roles this country restates is seen by exactly the roles it names', () => {
@@ -274,8 +274,8 @@ describe('gb B: the country\'s own numbers, each from a source opened on 2026-10
 })
 
 describe('gb C: the tools only this country has', () => {
-  it('three tools, each with this country\'s code, each switched on, each on the register no other country may name', () => {
-    assert.deepEqual([...GB_OZEL_ANAHTARLAR], ['gb-four-at', 'gb-fracture-risk-link', 'gb-valproate-forms'])
+  it('the tools only this country has, each with this country\'s code, each switched on, each on the register no other country may name', () => {
+    assert.deepEqual([...GB_OZEL_ANAHTARLAR], ['gb-eps-link', 'gb-four-at', 'gb-fracture-risk-link', 'gb-immunisation-schedule', 'gb-medicine-list', 'gb-notifiable-diseases', 'gb-prescription-note', 'gb-valproate-forms'])
     assert.deepEqual(GB_KENDI_ARACLARI.map((p) => p.anahtar).sort(), [...GB_OZEL_ANAHTARLAR])
     assert.deepEqual(ulkeyeOzelAnahtarlar(A, 'gb'), [...GB_OZEL_ANAHTARLAR])
     assert.deepEqual(oku<Record<string, string[]>>('countries/yasak-araclar.json').gb, [...GB_OZEL_ANAHTARLAR])
@@ -296,7 +296,7 @@ describe('gb C: the tools only this country has', () => {
       assert.equal(x.ad, ad(x.anahtar), `${x.anahtar}: the list names the tool as the screen does`)
       assert.equal(x.klinisyen, null, `${x.anahtar}: nobody has signed it; a signed tool leaves the list`)
       assert.match(x.kaynak, /https:\/\//)
-      assert.ok(x.lisans.trim() && x.acildi === '2026-10-10')
+      assert.ok(x.lisans.trim() && /^2026-10-1[04]$/.test(x.acildi))
     }
     // the shared tool switched back on by the same order is named beside the list, and is on
     assert.deepEqual(liste.ayrica.map((x) => x.anahtar), ['doz-hesabi'])
@@ -428,7 +428,7 @@ describe('gb D: what stays off', () => {
     for (const k of kapali) { assert.ok(!A.araclar.some((p) => p.anahtar === k), k); assert.ok(A.yuvalar.some((y) => y.anahtar === k), k); for (const r of [null, ...ROLLER]) assert.equal(hesabinAraci(A, r, k), null, `${k}: ${r}`) }
     // NO TOOL THAT WAS OFF IS ON, but the dose calculator: the switched-on tools are the set's tools minus the four, the two screens, and this country's three
     assert.deepEqual(A.araclar.map((p) => p.anahtar).sort(), [...EN_ROL_ARACLARI.map((a) => a.anahtar).filter((k) => !kapali.includes(k)), 'hasta-portali', 'takip-paneli', ...GB_OZEL_ANAHTARLAR].sort())
-    assert.equal(A.araclar.length, 61)
+    assert.equal(A.araclar.length, 66)
   })
 
   it('EVERY TOOL THE DECISIONS MARK "remove" IS OFF in this country', () => {
@@ -444,10 +444,10 @@ describe('gb D: what stays off', () => {
 })
 
 describe('gb E: licence states', () => {
-  it('"free" is stated for the three tools whose rights holder\'s own notice was opened, and for no other; the two that need permission say so', () => {
+  it('"free" is stated for the tools whose rights holder\'s own notice was opened, and for no other; the two that need permission say so', () => {
     const belirtilen = A.araclar.filter((p) => p.lisans !== undefined).map((p) => p.anahtar).sort()
     assert.deepEqual(belirtilen, [...GB_OZEL_ANAHTARLAR])
-    for (const p of A.araclar.filter((q) => q.lisans)) { assert.ok(LISANS_ACIK.includes(p.lisans!.durum), p.anahtar); assert.match(p.lisans!.kaynak ?? '', /2026-10-10/, `${p.anahtar}: where and when the notice was read`) }
+    for (const p of A.araclar.filter((q) => q.lisans)) { assert.ok(LISANS_ACIK.includes(p.lisans!.durum), p.anahtar); assert.match(p.lisans!.kaynak ?? '', /2026-10-1[04]/, `${p.anahtar}: where and when the notice was read`) }
     assert.deepEqual(A.yuvalar.filter((y) => y.lisans).map((y) => [y.anahtar, y.lisans!.durum]).sort(), [['esi-triyaj', 'izin-gerekli'], ['rapor-taslagi', 'izin-gerekli']])
     assert.notEqual(A.lisansTam, true, 'this country does not yet state the licence of every shared tool (countries/lisans-borcu.json)')
     assert.ok(oku<{ ulkeler: string[] }>('countries/lisans-borcu.json').ulkeler.includes('gb'))
