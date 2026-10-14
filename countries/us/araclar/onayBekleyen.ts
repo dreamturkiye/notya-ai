@@ -91,9 +91,23 @@ export const US_ONAY_BEKLEYEN: readonly OnayBekleyen[] = [
   {
     anahtar: 'us-immunization-schedule',
     sorular: [
-      'The ticks follow the 2025 child and adolescent age table only. The notes, the catch-up table, the medical-indication table, and the adult schedule are not loaded. Is a record of that kind safe to show?',
+      'The ticks follow the 2025 child and adolescent age table only. The notes, the catch-up table, and the medical-indication table are not loaded. The adult age table is a separate record. Is a record of that kind safe to show?',
       'Several rows say the table says see the notes and do not state a dose count. Should those rows stay, or only the rows that state a dose number?',
       'Influenza is one tick for both inactivated and live products. Should they be separate ticks?',
+    ],
+  },
+  {
+    anahtar: 'us-adult-immunization',
+    sorular: [
+      'The ticks follow the 2025 adult age table only. The color legend was not kept with the cells, so no row is marked routine, risk, or shared decision. The notes, Table 2, the appendix, and the addendum text are not loaded. Is a record of that kind safe to show?',
+      'Several rows quote more than one cell, including cells that only say see the notes. Should those rows stay?',
+    ],
+  },
+  {
+    anahtar: 'us-notifiable-diseases',
+    sorular: [
+      'The ticks follow the 2026 national notification protocol for public health agencies. State and territorial lists were not loaded. Is a national protocol, with a line that says nothing is sent, the right record to show a doctor?',
+      'One animal-rabies sentence on the protocol was not copied because it used a claim-word this product does not print. The circumstances from that section are on the row. Is that enough?',
     ],
   },
   {

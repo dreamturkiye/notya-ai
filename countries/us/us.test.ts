@@ -176,7 +176,7 @@ describe('us: CONVENTIONAL UNITS — worked by hand', () => {
     // internal medicine had the kidney tool and nothing else of the set. The chronic-condition record is the set's
     // tool for it now. The follow-up list is there for the tools of this country's own that every doctor role has.
     assert.ok(a.araclar.find((x) => x.anahtar === 'takip-paneli')!.roller!.includes('internal-medicine'))
-    assert.deepEqual(a.araclar.filter((x) => x.roller?.includes('internal-medicine')).map((x) => x.anahtar), ['kronik-izlem-kaydi', 'us-bmi', 'us-egfr-ckd-epi-2021', 'us-pack-years', 'us-blood-sugar-ranges', 'us-fall-risk-screen', 'us-phq-9', 'us-part-d-medicines', 'us-prescription-note', 'us-immunization-schedule', 'us-blue-button-link', 'takip-paneli'])
+    assert.deepEqual(a.araclar.filter((x) => x.roller?.includes('internal-medicine')).map((x) => x.anahtar), ['kronik-izlem-kaydi', 'us-bmi', 'us-egfr-ckd-epi-2021', 'us-pack-years', 'us-blood-sugar-ranges', 'us-fall-risk-screen', 'us-phq-9', 'us-part-d-medicines', 'us-prescription-note', 'us-immunization-schedule', 'us-adult-immunization', 'us-notifiable-diseases', 'us-blue-button-link', 'takip-paneli'])
   })
 
   it('the intake form asks every height, weight and temperature in this country\'s unit, with the unit named', () => {

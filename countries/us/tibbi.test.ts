@@ -5,6 +5,12 @@ import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 import { aracCalistir } from '@/lib/ulke/araclar/paket'
 import { US_ASI, US_ASI_ANAHTARLARI } from './araclar/asilar'
+import { US_BILDIRIM, US_BILDIRIM_ANAHTARLARI } from './araclar/bildirim'
+import { US_YETISKIN_ASI, US_YETISKIN_ASI_ANAHTARLARI } from './araclar/yetiskinAsi'
+import { US_ETKILESIM } from './kayit/etkilesim'
+import { US_LABORATUVAR } from './kayit/laboratuvar'
+import { US_TANI } from './kayit/tani'
+import { usIcdBak, usIcdSay } from './referans/icd10cm'
 import { US_ARAYUZ } from './arayuz'
 import { usFhirTaslak } from './kayit/fhirTaslak'
 import { US_KAYIT_SISTEMLERI } from './kayit/sistemler'
@@ -59,6 +65,66 @@ describe('us immunization record', () => {
     assert.equal(s.sayilar[0].deger, 1)
     assert.deepEqual([...s.uyarilar], ['kayit', 'notlar'])
     assert.equal(US_ASI.hesapla(Object.fromEntries(US_ASI_ANAHTARLARI.map((k) => [k, false])), { bugun: BUGUN, p: {} }).tamam, false)
+  })
+
+  it('the adult age table is eighteen rows, and the row count stays off the result', () => {
+    assert.equal(US_YETISKIN_ASI_ANAHTARLARI.length, 18)
+    assert.equal(US_YETISKIN_ASI_ANAHTARLARI[0], 'covid')
+    assert.equal(US_YETISKIN_ASI_ANAHTARLARI[17], 'ipv')
+    const g = Object.fromEntries(US_YETISKIN_ASI_ANAHTARLARI.map((k) => [k, k === 'tdap']))
+    const s = calistir('us-adult-immunization', g)
+    assert.equal(s.sayilar[0].deger, 1)
+    assert.equal(s.sayilar[0].enCok, undefined)
+    assert.equal(JSON.stringify(s).includes('18'), false)
+    assert.deepEqual([...s.uyarilar], ['kayit', 'notlar'])
+    assert.equal(US_YETISKIN_ASI.hesapla(Object.fromEntries(US_YETISKIN_ASI_ANAHTARLARI.map((k) => [k, false])), { bugun: BUGUN, p: {} }).tamam, false)
+  })
+})
+
+describe('us nationally notifiable conditions, 2026', () => {
+  it('every condition row of the protocol, and the length stays off the result', () => {
+    assert.equal(US_BILDIRIM_ANAHTARLARI.length, 94)
+    assert.equal(US_BILDIRIM_ANAHTARLARI[0], 'anthrax')
+    assert.equal(US_BILDIRIM_ANAHTARLARI.at(-1), 'zika')
+    assert.equal(new Set(US_BILDIRIM_ANAHTARLARI).size, 94)
+    const g = Object.fromEntries(US_BILDIRIM_ANAHTARLARI.map((k) => [k, k === 'measles']))
+    const s = calistir('us-notifiable-diseases', g)
+    assert.equal(s.sayilar[0].deger, 1)
+    assert.equal(s.sayilar[0].enCok, undefined)
+    assert.equal(JSON.stringify(s).includes('94'), false)
+    assert.deepEqual([...s.uyarilar], ['kayit', 'gonderilmedi'])
+    assert.equal(US_BILDIRIM.hesapla(Object.fromEntries(US_BILDIRIM_ANAHTARLARI.map((k) => [k, false])), { bugun: BUGUN, p: {} }).tamam, false)
+  })
+})
+
+describe('us codes, interactions, and laboratory units', () => {
+  it('the FY2027 order file is stored, and it is not a screen list', () => {
+    const say = usIcdSay()
+    assert.equal(say.satir, 98403)
+    assert.equal(say.bildirilir, 74879)
+    assert.equal(say.baslik, 23524)
+    const a00 = usIcdBak('A00')!
+    assert.equal(a00.bayrak, '0')
+    assert.equal(a00.kisa, 'Cholera')
+    const a000 = usIcdBak('A00.0')!
+    assert.equal(a000.bayrak, '1')
+    assert.match(a000.kisa, /Vibrio cholerae 01, biovar cholerae/)
+    assert.equal(usIcdBak('E11.9')!.kisa, 'Type 2 diabetes mellitus without complications')
+    assert.equal(usIcdBak('I10')!.kisa, 'Essential (primary) hypertension')
+    assert.equal(usIcdBak('U09.9')!.kod, 'U099')
+    assert.equal(usIcdBak('NOPE'), null)
+    assert.deepEqual(US_TANI.satirlar, [])
+    assert.equal(US_TANI.ekranda, false)
+  })
+
+  it('no interaction pair is stored, and no laboratory range was added', () => {
+    assert.equal(US_ETKILESIM.bagli, false)
+    assert.deepEqual([...US_ETKILESIM.juftlar], [])
+    assert.equal(US_ETKILESIM.sozlesmeGerekli, true)
+    assert.equal(US_LABORATUVAR.birimler.kreatinin, 'mg/dL')
+    assert.equal(US_LABORATUVAR.birimler.hemoglobin, 'g/dL')
+    assert.deepEqual([...US_LABORATUVAR.paneller], [])
+    assert.deepEqual([...US_LABORATUVAR.araliklar], [])
   })
 })
 

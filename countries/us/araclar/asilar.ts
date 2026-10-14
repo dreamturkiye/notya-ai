@@ -1,7 +1,8 @@
 /**
  * UNITED STATES — a record of the 2025 child and adolescent immunization age table.
  * The age grid was read on 14 October 2026. Catch-up intervals, the medical-indication
- * table, contraindications, and the adult schedule were not loaded. A tick records a
+ * table, and contraindications were not loaded. The adult age table is a separate
+ * record. A tick records a
  * dose. It does not choose a product and it does not calculate a catch-up.
  */
 import type { AracTanimi, PaketAraci } from '@/lib/ulke/araclar/tipler'
@@ -76,7 +77,7 @@ export function usAsiAraci(hekimler: readonly string[]): PaketAraci {
         kayit: m('A tick records a dose given. It is not an appointment and it is not a catch-up calculation.'),
         notlar: m('The page says the table must be read with its notes. Those notes, the catch-up table, and the medical-indication table are not loaded here.'),
       },
-      not: m('Ages 19 and older are not on this record: that schedule page was not opened. Dengue, mpox, and RSV vaccine in pregnancy are on the child and adolescent page as special rows and are not ticks here. Product names on the page are not shown. Diagnosis and treatment are the doctor\'s.'),
+      not: m('Ages 19 and older are not on this record. The adult age table is a separate record. Dengue, mpox, and RSV vaccine in pregnancy are on the child and adolescent page as special rows and are not ticks here. Product names on the page are not shown. Diagnosis and treatment are the doctor\'s.'),
     },
     lisans: {
       durum: 'serbest',

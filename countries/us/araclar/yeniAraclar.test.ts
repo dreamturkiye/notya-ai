@@ -40,7 +40,7 @@ const A = US_ARAYUZ.araclar as UlkeAraclari
 const ROLLER = US_PAKETI.uygulama!.roller!
 const BUGUN = '2026-10-10'
 const ORTAM = { bugun: BUGUN, p: {} }
-const MEKANIZMA = ['us-bmi', 'us-egfr-ckd-epi-2021', 'us-pack-years', 'us-blood-sugar-ranges', 'us-fall-risk-screen', 'us-phq-9', 'us-ecog-performance-status', 'us-part-d-medicines', 'us-prescription-note', 'us-immunization-schedule']
+const MEKANIZMA = ['us-bmi', 'us-egfr-ckd-epi-2021', 'us-pack-years', 'us-blood-sugar-ranges', 'us-fall-risk-screen', 'us-phq-9', 'us-ecog-performance-status', 'us-part-d-medicines', 'us-prescription-note', 'us-immunization-schedule', 'us-adult-immunization', 'us-notifiable-diseases']
 const ANAHTARLAR = [...MEKANIZMA, 'us-blue-button-link']
 const hesapla = (t: AracTanimi, g: AracGirdisi): AracSonucu => t.hesapla(g, ORTAM)
 
@@ -398,6 +398,8 @@ describe('us new tools 4: the words and the licences', () => {
       'us-part-d-medicines': [/Centers for Medicare & Medicaid Services/, 'https://data.cms.gov/summary-statistics-on-use-and-payments/medicare-medicaid-spending-by-drug/medicare-part-d-spending-by-drug'],
       'us-prescription-note': [/Centers for Medicare & Medicaid Services/, 'https://data.cms.gov/summary-statistics-on-use-and-payments/medicare-medicaid-spending-by-drug/medicare-part-d-spending-by-drug'],
       'us-immunization-schedule': [/Centers for Disease Control and Prevention/, 'https://www.cdc.gov/other/agencymaterials.html'],
+      'us-adult-immunization': [/Centers for Disease Control and Prevention/, 'https://www.cdc.gov/other/agencymaterials.html'],
+      'us-notifiable-diseases': [/Centers for Disease Control and Prevention/, 'https://www.cdc.gov/other/agencymaterials.html'],
       'us-blue-button-link': [/Centers for Medicare & Medicaid Services/, 'https://bluebutton.cms.gov/'],
     }
     assert.deepEqual(Object.keys(beklenen).sort(), [...ANAHTARLAR].sort())

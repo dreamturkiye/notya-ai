@@ -29,7 +29,9 @@
 import type { AracLisansi, AracTanimi, PaketAraci } from '@/lib/ulke/araclar/tipler'
 import type { BicimliMetin } from '@/lib/ulke/arayuz/tipler'
 import { usAsiAraci } from './asilar'
+import { usBildirimAraci } from './bildirim'
 import { usBlueButton, usPartDAraclari } from './partD'
+import { usYetiskinAsiAraci } from './yetiskinAsi'
 import { US_TANIMLAR } from './tanimlar'
 
 const D = 'en-US'
@@ -226,6 +228,8 @@ export function usKendiAraclari(r: UsRolleri): readonly PaketAraci[] {
     },
     ...usPartDAraclari(r.hekimler),
     usAsiAraci(r.hekimler),
+    usYetiskinAsiAraci(r.hekimler),
+    usBildirimAraci(r.hekimler),
     usBlueButton(r.hekimler),
   ]
 }

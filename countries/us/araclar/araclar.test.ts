@@ -49,7 +49,7 @@ const calistir = (k: string, ham: Record<string, string | boolean>) => { const x
 const EMIRLE_KAPALI = ['akne-vade', 'doz-hesabi', 'esi-triyaj', 'kbh-risk-kategorisi', 'kdigo-evre', 'kdigo-serit', 'lazer-vade', 'rapor-taslagi']
 /** The six tools of this country's own that every doctor role sees (the seventh, the ECOG grade, is for three specialties). */
 const CEKIRDEK = ['us-bmi', 'us-egfr-ckd-epi-2021', 'us-pack-years', 'us-blood-sugar-ranges', 'us-fall-risk-screen', 'us-phq-9']
-const PART_D = ['us-part-d-medicines', 'us-prescription-note', 'us-immunization-schedule', 'us-blue-button-link']
+const PART_D = ['us-part-d-medicines', 'us-prescription-note', 'us-immunization-schedule', 'us-adult-immunization', 'us-notifiable-diseases', 'us-blue-button-link']
 
 /** WHO SEES A TOOL OF THE SET HERE, where the audit's decision differs from the set: the set's role(s) first, then the roles the audit adds. */
 const GORENLER: Readonly<Record<string, readonly string[]>> = {
@@ -72,12 +72,12 @@ const GORENLER: Readonly<Record<string, readonly string[]>> = {
 }
 
 describe('us tools 1: no tool of the shared set is switched on or off by this job', () => {
-  it('the same tools of the set are on as before: every one but the five that were off, the patient\'s page and the follow-up list; beyond the set, the eleven of this country\'s own', () => {
+  it('the same tools of the set are on as before: every one but the five that were off, the patient\'s page and the follow-up list; beyond the set, the thirteen of this country\'s own', () => {
     const setten = ['hasta-portali', ...EN_ROL_ARACLARI.map((a) => a.anahtar).filter((k) => !EMIRLE_KAPALI.includes(k))]
     assert.deepEqual(acik, [...setten, ...KENDI, 'takip-paneli'])
     assert.equal(setten.length + 1, 57, 'the patient page, the open role tools and the follow-up list')
-    assert.equal(acik.length, 57 + 11)
-    for (const k of acik) assert.equal(Boolean(kitAraci(k)), !KENDI.includes(k), `${k}: a tool of the kit, or one of the eleven of this country's own`)
+    assert.equal(acik.length, 57 + 13)
+    for (const k of acik) assert.equal(Boolean(kitAraci(k)), !KENDI.includes(k), `${k}: a tool of the kit, or one of the thirteen of this country's own`)
   })
 
   it('THE FIVE THAT WERE OFF STAY OFF: the dose calculator (this pack\'s own decision), and by the owner\'s order ESI triage, the report outline and both kidney tools; a sixth, a third kidney tool added later, stays off pending a clinician\'s sign-off', () => {
@@ -308,7 +308,7 @@ describe('us tools 4: licence states', () => {
   it('the two the owner\'s order names stay "permission needed"; no other tool or placeholder of the set states a licence', () => {
     for (const k of ['esi-triyaj', 'rapor-taslagi']) assert.equal(A.yuvalar.find((y) => y.anahtar === k)?.lisans?.durum, 'izin-gerekli', k)
     assert.deepEqual(Object.keys(US_GIRDI.araclar.lisanslar ?? {}).sort(), ['esi-triyaj', 'phq9-gad7', 'rapor-taslagi'])
-    // of the switched-on tools, only the eleven of this country's own state a licence (each "free", by a notice that was read)
+    // of the switched-on tools, only the thirteen of this country's own state a licence (each "free", by a notice that was read)
     assert.deepEqual(A.araclar.filter((p) => p.lisans).map((p) => p.anahtar), [...KENDI])
     for (const p of A.araclar.filter((x) => x.lisans)) assert.equal(p.lisans!.durum, 'serbest', p.anahtar)
     assert.notEqual(A.lisansTam, true)

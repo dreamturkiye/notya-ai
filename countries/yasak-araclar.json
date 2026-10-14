@@ -48,6 +48,8 @@
     "us-phq-9",
     "us-prescription-note",
     "us-immunization-schedule",
+    "us-adult-immunization",
+    "us-notifiable-diseases",
     "us-blue-button-link"
   ],
   "uz": [

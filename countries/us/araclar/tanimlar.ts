@@ -18,7 +18,9 @@ import { INC_CM, LB_KG } from '@/lib/ulke/araclar/birimler'
 import type { AracTanimi } from '@/lib/ulke/araclar/tipler'
 import { BOS_SONUC, puan, sayi, sayiMi, secim } from '@/lib/ulke/araclar/yardimci'
 import { US_ASI } from './asilar'
+import { US_BILDIRIM } from './bildirim'
 import { US_PART_D, US_RECETE } from './partD'
+import { US_YETISKIN_ASI } from './yetiskinAsi'
 
 const EVET_HAYIR = ['evet', 'hayir'] as const
 
@@ -319,4 +321,4 @@ export const US_PHQ9: AracTanimi = {
 }
 
 /** Every mechanism this country brings, in the order the grid shows the tools. */
-export const US_TANIMLAR: readonly AracTanimi[] = [US_BMI, US_EGFR, US_PAKET_YIL, US_GLUKOZ, US_DUSME, US_PHQ9, US_ECOG, US_PART_D, US_RECETE, US_ASI]
+export const US_TANIMLAR: readonly AracTanimi[] = [US_BMI, US_EGFR, US_PAKET_YIL, US_GLUKOZ, US_DUSME, US_PHQ9, US_ECOG, US_PART_D, US_RECETE, US_ASI, US_YETISKIN_ASI, US_BILDIRIM]
