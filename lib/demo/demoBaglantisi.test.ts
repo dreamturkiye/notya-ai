@@ -1,5 +1,6 @@
 /**
- * NOTYA-DEMO-01 — "Demo planla": only a Cal.com link switches it on; both states rendered with react-dom/server.
+ * NOTYA-DEMO-01 — "Demo planla": the landing button is always on; a Cal.com link only switches the calendar on.
+ * Both states rendered with react-dom/server.
  */
 import { describe, it, afterEach } from 'node:test'
 import assert from 'node:assert/strict'
@@ -90,11 +91,17 @@ describe('demo CSP', () => {
 })
 
 describe('landing + /demo, both states', () => {
-  it('link NOT set: no "Demo planla" button in header or hero; page says booking opens soon, embeds nothing', () => {
+  it('link NOT set: "Demo planla" is in the header, the hero and the section; page says booking opens soon, embeds nothing', () => {
     delete process.env.NEXT_PUBLIC_DEMO_BOOKING_URL
-    assert.doesNotMatch(renderToStaticMarkup(createElement(Hero)), /Demo planla|href="\/demo"/)
-    assert.doesNotMatch(renderToStaticMarkup(createElement(SiteNav)), /Demo planla|href="\/demo"/)
-    assert.equal(renderToStaticMarkup(createElement(DemoSection)), '')
+    const hero = renderToStaticMarkup(createElement(Hero))
+    const nav = renderToStaticMarkup(createElement(SiteNav))
+    const bolum = renderToStaticMarkup(createElement(DemoSection))
+    assert.match(hero, /href="\/demo"[^>]*>Demo planla/)
+    assert.match(hero, /bg-\[#c2410c\]/)
+    assert.match(nav, /href="\/demo"[^>]*>Demo planla/)
+    assert.match(bolum, /<section id="demo"/)
+    assert.match(bolum, /href="\/demo"[^>]*>Demo planla/)
+    assert.match(bolum, /bg-\[#c2410c\]/)
     const s = renderToStaticMarkup(createElement(DemoPage))
     assert.match(s, /<h1[^>]*>Demo planla<\/h1>/)
     assert.match(s, /Dr\. Gökhan Mamur ile 60 dakikalık bir görüntülü görüşme/)
@@ -106,15 +113,17 @@ describe('landing + /demo, both states', () => {
     assert.doesNotMatch(s, /href="\/demo"/, 'no button to itself')
   })
 
-  it('link not a Cal.com address: same as not set', () => {
+  it('link not a Cal.com address: the landing button stays, and /demo still says booking opens soon', () => {
     process.env.NEXT_PUBLIC_DEMO_BOOKING_URL = 'https://calendly.com/notya/demo'
-    assert.doesNotMatch(renderToStaticMarkup(createElement(Hero)), /Demo planla/)
+    assert.match(renderToStaticMarkup(createElement(Hero)), /href="\/demo"[^>]*>Demo planla/)
     assert.match(renderToStaticMarkup(createElement(DemoPage)), /çok yakında açılıyor/)
+    assert.doesNotMatch(renderToStaticMarkup(createElement(DemoPage)), /aria-label="Demo randevu takvimi"/)
   })
 
   it('link set: header + hero buttons point to /demo; page holds the calendar', () => {
     process.env.NEXT_PUBLIC_DEMO_BOOKING_URL = 'https://cal.com/example'
     assert.match(renderToStaticMarkup(createElement(Hero)), /href="\/demo"[^>]*>Demo planla/)
+    assert.match(renderToStaticMarkup(createElement(Hero)), /bg-\[#c2410c\]/)
     assert.match(renderToStaticMarkup(createElement(SiteNav)), /href="\/demo"[^>]*>Demo planla/)
     const bolum = renderToStaticMarkup(createElement(DemoSection))
     assert.match(bolum, /<section id="demo"/)

@@ -6,6 +6,8 @@ const variants = {
   cream: "bg-cream text-ink hover:bg-paper",
   ink: "bg-ink text-cream hover:bg-ink-2",
   outline: "bg-transparent text-ink ring-1 ring-line hover:bg-paper-2",
+  // Filled orange, against the pine and outline buttons, so "Demo planla" reads as its own action.
+  demo: "bg-[#c2410c] text-white hover:bg-[#9a3412]",
 } as const;
 
 const sizes = {

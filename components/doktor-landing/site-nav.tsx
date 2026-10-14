@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { DEMO, LINKS, NAV } from "./content";
-import { demoBaglantisi } from "@/lib/demo/demoBaglantisi";
 import { cn } from "./cn";
 import { Button } from "./button";
 import { ArrowUpRight, IconClose, IconMenu } from "./icons";
@@ -13,7 +12,7 @@ import { ArrowUpRight, IconClose, IconMenu } from "./icons";
  */
 export function SiteNav({ home = "" }: { home?: string } = {}) {
   // On /demo itself (home set) the bar does not link to the page it is on.
-  const demoAcik = !home && demoBaglantisi() !== null;
+  const demoGoster = !home;
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
 
@@ -59,8 +58,8 @@ export function SiteNav({ home = "" }: { home?: string } = {}) {
             <a href={LINKS.login} className="hidden font-outfit text-sm text-ink-2 hover:text-ink lg:inline">
               Giriş
             </a>
-            {demoAcik ? (
-              <Button href={LINKS.demo} variant="outline" size="sm">
+            {demoGoster ? (
+              <Button href={LINKS.demo} variant="demo" size="sm">
                 {DEMO.cta}
               </Button>
             ) : null}
@@ -101,8 +100,8 @@ export function SiteNav({ home = "" }: { home?: string } = {}) {
               <Button href={LINKS.signup} size="lg">
                 15 gün ücretsiz başlayın
               </Button>
-              {demoAcik ? (
-                <Button href={LINKS.demo} variant="outline" size="lg">
+              {demoGoster ? (
+                <Button href={LINKS.demo} variant="demo" size="lg">
                   {DEMO.cta}
                 </Button>
               ) : null}

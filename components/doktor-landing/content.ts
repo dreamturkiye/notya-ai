@@ -4,7 +4,7 @@ export const LINKS = {
   assistant: "/asistan",
   kvkk: "/kvkk",
   home: "/home",
-  // NOTYA-DEMO-01: shown only when NEXT_PUBLIC_DEMO_BOOKING_URL holds a Cal.com link (lib/demo/demoBaglantisi.ts).
+  // NOTYA-DEMO-01: the landing button links here whether or not NEXT_PUBLIC_DEMO_BOOKING_URL is set.
   demo: "/demo",
 } as const;
 
