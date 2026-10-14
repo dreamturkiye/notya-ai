@@ -5,8 +5,14 @@
     "au-mental-health-screen",
     "au-oncology-grading",
     "au-immunisation-schedule",
-    "au-my-health-record",
-    "au-growth-chart-reference"
+    "au-growth-chart-reference",
+    "au-mandatory-notifications",
+    "au-triage-scale",
+    "au-diabetic-retinopathy-referral",
+    "au-oncology-care-pathway",
+    "au-anaesthesia-fasting",
+    "au-rehab-outcome",
+    "au-fracture-risk"
   ],
   "gb": [
     "gb-four-at",

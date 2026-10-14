@@ -38,11 +38,15 @@ const LAB = { albuminKreatinin: 'mg/mmol', hemoglobin: 'g/L', kreatinin: 'umol/L
 /** The tools with a MECHANISM only Australia has (./araclar/tanimlar.ts): switched on 2026-10-10 and 2026-10-13. */
 const KENDI_MEKANIZMALI = ['au-body-size', 'au-mental-health-screen', 'au-oncology-grading', 'au-immunisation-schedule']
 /** NOTYA-ARACLAR-DENETIM-02-AU, 2026-10-13 — link-out tiles only Australia has: no mechanism, no arithmetic (./araclar/baglantilar.ts). */
-const KENDI_BAGLANTILARI = ['au-my-health-record', 'au-growth-chart-reference']
+const KENDI_BAGLANTILARI = ['au-growth-chart-reference']
 /** Every tool that carries Australia's own code, switched on by the owner's order of 2026-10-10 or 2026-10-13. */
 const KENDI_ARACLARI = [...KENDI_MEKANIZMALI, ...KENDI_BAGLANTILARI]
 /** Every tool Australia has added beyond the shared set, mechanism or not: fed to the shared harness's count check. */
 const EK_ARACLAR = [...KENDI_ARACLARI, 'konsultasyonlar']
+/** NOTYA-ARACLAR-DENETIM-03-AU, 2026-10-14 — the slots this pass proposed: never switched on, so never in `acik`, but
+ * still carrying Australia's own code, so `ulkeyeOzelAnahtarlar` (which scans araclar + yuvalar + kendiAraclari) sees
+ * them too. */
+const YUVA_ANAHTARLARI = ['au-mandatory-notifications', 'au-triage-scale', 'au-diabetic-retinopathy-referral', 'au-oncology-care-pathway', 'au-anaesthesia-fasting', 'au-rehab-outcome', 'au-fracture-risk']
 
 ingilizcePaketSinamasi({
   paket: AU_PAKETI,
@@ -426,11 +430,12 @@ describe('au: the tools only Australia has — switched on by the owner\'s order
     const acik = A.araclar.map((p) => p.anahtar).filter((k) => k.startsWith('au-')).sort()
     assert.deepEqual(acik, [...AU_ONAYSIZ_ACIK_ANAHTARLAR])
     assert.deepEqual(acik, [...KENDI_ARACLARI].sort())
-    // everything Australia brought of its own is one of them: every mechanism tool and every link-out tile, nothing left over
-    assert.deepEqual(ulkeyeOzelAnahtarlar(A, 'au'), acik)
+    // everything Australia brought of its own is one of them: every mechanism tool and every link-out tile, plus the
+    // slots this pass proposed but did not switch on — nothing left over
+    assert.deepEqual(ulkeyeOzelAnahtarlar(A, 'au'), [...acik, ...YUVA_ANAHTARLARI].sort())
     // NOTYA-ARACLAR-DENETIM-02-AU, 2026-10-13 — a link-out tile has no mechanism by design (tur: 'baglanti'): only
-    // the mechanism-backed subset matches kendiAraclari; au-my-health-record and au-growth-chart-reference are not
-    // in it, and ARE in acik (via A.araclar) and in AU_ONAYSIZ_ACIK_ANAHTARLAR.
+    // the mechanism-backed subset matches kendiAraclari; au-growth-chart-reference is not in it, and IS in acik
+    // (via A.araclar) and in AU_ONAYSIZ_ACIK_ANAHTARLAR.
     assert.deepEqual((A.kendiAraclari ?? []).map((t) => t.anahtar).sort(), [...KENDI_MEKANIZMALI].sort())
     for (const k of KENDI_BAGLANTILARI) {
       const p = A.araclar.find((x) => x.anahtar === k)!
@@ -449,7 +454,7 @@ describe('au: the tools only Australia has — switched on by the owner\'s order
       assert.match(l.kaynak ?? '', /^https:\/\/\S+ \(read 2026-10-(10|13)\): /, k)
       assert.ok((l.bildirim?.[D] ?? '').length > 20, `${k}: the rights holder's notice`)
     }
-    // the two link-out tiles: free, but no reproduced notice is shown under a result they never give
+    // the link-out tile: free, but no reproduced notice is shown under a result it never gives
     for (const k of KENDI_BAGLANTILARI) assert.equal(A.araclar.find((p) => p.anahtar === k)!.lisans?.durum, 'serbest', k)
     // no tool of the shared set has "free" written on it here: no rights holder's notice was read for one; nor does
     // the consultation tile (a product screen, like the patient's page and "my templates" — no clinical content)
@@ -475,13 +480,36 @@ describe('au: the tools only Australia has — switched on by the owner\'s order
     assert.ok(!izgara(null).includes('au-body-size'), 'an unknown birth date never opens it')
   })
 
-  it('NOTYA-ARACLAR-DENETIM-02-AU, 2026-10-13 — the immunisation schedule and both link-out tiles are base tools, every role', () => {
-    for (const k of ['au-immunisation-schedule', 'au-my-health-record', 'au-growth-chart-reference', 'konsultasyonlar']) assert.deepEqual(goren(k), ['(no role)', ...ROLLER], k)
+  it('NOTYA-ARACLAR-DENETIM-02-AU, 2026-10-13 — the immunisation schedule and the growth-chart link-out tile are base tools, every role', () => {
+    for (const k of ['au-immunisation-schedule', 'au-growth-chart-reference', 'konsultasyonlar']) assert.deepEqual(goren(k), ['(no role)', ...ROLLER], k)
   })
 
-  it('the growth-chart link-out tile is for a patient under 18; My Health Record and the immunisation schedule are for everybody', () => {
+  it('the growth-chart link-out tile is for a patient under 18; the immunisation schedule is for everybody', () => {
     assert.deepEqual(A.araclar.find((p) => p.anahtar === 'au-growth-chart-reference')!.hasta, { enCokYas: 18 })
-    for (const k of ['au-my-health-record', 'au-immunisation-schedule']) assert.equal(A.araclar.find((p) => p.anahtar === k)!.hasta, undefined, k)
+    assert.equal(A.araclar.find((p) => p.anahtar === 'au-immunisation-schedule')!.hasta, undefined)
+  })
+})
+
+describe('au: the proposed slots this pass found but did not build (NOTYA-ARACLAR-DENETIM-03-AU, 2026-10-14)', () => {
+  it('each is a slot, not a switched-on tool: empty, off, not among this country\'s own prefixed keys that are live', () => {
+    const anahtarlar = A.araclar.map((p) => p.anahtar)
+    const yuvalar = A.yuvalar.filter((y) => YUVA_ANAHTARLARI.includes(y.anahtar))
+    assert.deepEqual(yuvalar.map((y) => y.anahtar).sort(), [...YUVA_ANAHTARLARI].sort())
+    for (const y of yuvalar) {
+      assert.equal(y.acik, false, y.anahtar)
+      assert.equal(y.icerik, null, y.anahtar)
+      assert.ok(!anahtarlar.includes(y.anahtar), `${y.anahtar}: must not also be switched on`)
+      assert.ok(y.eksik.trim().length > 40 && y.kimden.trim(), y.anahtar)
+    }
+    // my-health-record was built, then removed on reconsideration: it is neither a live tool nor a proposed slot
+    assert.ok(!anahtarlar.includes('au-my-health-record'))
+    assert.ok(!A.yuvalar.some((y) => y.anahtar === 'au-my-health-record'))
+  })
+  it('the two with a confirmed rights-holder question say so (ACEM for the triage scale, UDSMR for the rehabilitation outcome measure); nothing claims "free" without having read a notice', () => {
+    const yuva = (k: string) => A.yuvalar.find((y) => y.anahtar === k)!
+    assert.equal(yuva('au-triage-scale').lisans?.durum, 'izin-gerekli')
+    assert.equal(yuva('au-rehab-outcome').lisans?.durum, 'izin-gerekli')
+    for (const k of YUVA_ANAHTARLARI) assert.notEqual(yuva(k).lisans?.durum, 'serbest', k)
   })
 })
 

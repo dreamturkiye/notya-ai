@@ -24,9 +24,10 @@
 import { hekimRolleri } from '@/lib/ulke/araclar/paket'
 import type { EnUlkeGirdisi } from '../_dil/en/girdi'
 import { enRolSatirlari } from '../_dil/en/klinik/roller'
-import { AU_GROWTH_CHART_REFERENCE, AU_MY_HEALTH_RECORD } from './araclar/baglantilar'
+import { AU_GROWTH_CHART_REFERENCE } from './araclar/baglantilar'
 import { AU_ASI_TAKVIMI_ARACI, AU_KONSULTASYON_ARACI, auEkAraclar } from './araclar/metinler'
 import { AU_TANIMLAR } from './araclar/tanimlar'
+import { AU_EK_YUVALAR } from './araclar/yuvalarim'
 import { AU_ROLLER } from './klinik/roller'
 import { AU_BIRIMLER, AU_VELI_YASI } from './temel'
 
@@ -258,12 +259,19 @@ export const AU_GIRDI: EnUlkeGirdisi = {
         AU_KONSULTASYON_ARACI,
         // NOTYA-ARACLAR-DENETIM-02-AU, 2026-10-13 — the National Immunisation Program schedule, CORE (every role).
         AU_ASI_TAKVIMI_ARACI,
-        // NOTYA-ARACLAR-DENETIM-02-AU, 2026-10-13 — two link-out tiles (../araclar/baglantilar.ts): My Health
-        // Record (founder's question #4) and which growth chart to use (founder's question #3).
-        AU_MY_HEALTH_RECORD,
+        // NOTYA-ARACLAR-DENETIM-02-AU, 2026-10-13 — the growth-chart link-out tile (founder's question #3).
+        // My Health Record was REMOVED from this list on reconsideration (NOTYA-ARACLAR-DENETIM-03-AU,
+        // 2026-10-14): a government link-out reference is not the kind of thing that belongs in a core,
+        // every-role workflow set just because Türkiye's e-Nabız tile does — see docs/COUNTRY-PACK-AUSTRALIA.md
+        // and the audit report for the reasoning. The research finding itself stands (My Health Record is
+        // confirmed as Australia's name for this), it is simply not shipped as a tool.
         AU_GROWTH_CHART_REFERENCE,
       ],
       tanimlar: AU_TANIMLAR,
+      // NOTYA-ARACLAR-DENETIM-03-AU, 2026-10-14 — Australia's OWN proposed slots: distinctive Australian practice
+      // this pass found and is not yet built (either a new mechanism or a licence question is missing). See
+      // ./araclar/yuvalarim.ts for what each is and why it is not live.
+      yuvalar: AU_EK_YUVALAR,
     },
   },
   acilis: {

@@ -37,10 +37,6 @@ export const AU_ONAYSIZ_ACIK_ARACLAR: readonly OnaysizAcikArac[] = [
     bakilacak: 'Only the performance status grade is recorded, by its number. The graded side effects the proposal names beside it are not built. The Australian source is one state body\'s assessment form.',
   },
   {
-    anahtar: 'au-my-health-record', oneri: 'NOTYA-ARACLAR-DENETIM-02-AU (founder\'s question #4, 2026-10-13)', klinisyen: null,
-    bakilacak: 'A link-out tile only: opens the Department of Health, Disability and Ageing\'s own page about My Health Record. No connection to My Health Record exists, and none is implied. Check that the page named is still the right one for a doctor (not a consumer-only page) and that the wording does not overstate what the tile does.',
-  },
-  {
     anahtar: 'au-growth-chart-reference', oneri: 'NOTYA-ARACLAR-DENETIM-02-AU (founder\'s question #3, 2026-10-13)', klinisyen: null,
     bakilacak: 'Names WHO (under 2) and ANZSPED\'s own charts or the CDC 2000 charts (2 to 18) without choosing between the latter two, because ANZSPED\'s own page does not say which takes precedence. A paediatrician should say whether this product\'s own patients should default to one of them, and whether the under-18 age gate is the right cut-off (ANZSPED\'s charts run to 18; some practices may want this available to 19- or 20-year-olds using the CDC set).',
   },

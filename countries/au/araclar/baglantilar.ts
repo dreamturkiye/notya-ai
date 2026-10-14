@@ -5,49 +5,25 @@
  * `PaketAraci.baglanti` alone, so no entry in ./tanimlar.ts is needed). Listed, with every other key only this
  * country has, in countries/yasak-araclar.json.
  *
- *   au-my-health-record         answers the founder's question #4: does Australia have an equivalent of Türkiye's
- *                                e-Nabız, and should the AU pack reference it. It does — My Health Record — and
- *                                this is that reference, built the same way e-Nabız is referenced for Türkiye
- *                                (lib/doktor/doktorAraclari.ts: a tile, not a data connection).
  *   au-growth-chart-reference   answers the founder's question #3: which growth-chart reference Australian
  *                                paediatric practice actually uses. It is not a calculator — no LMS percentile
  *                                data of WHO's, the paediatric endocrine society's or the CDC's was read or copied
  *                                into this product in this session — it names which chart applies by age and
  *                                opens the page a clinician reads the charts from.
  *
- * MACHINE-WRITTEN, UNREAD BY A CLINICIAN OF AUSTRALIA: both are on the worklist of the local clinical lead
- * (./onaysizAciklar.ts), the same as the other three tools only this country has.
+ * MACHINE-WRITTEN, UNREAD BY A CLINICIAN OF AUSTRALIA: on the worklist of the local clinical lead
+ * (./onaysizAciklar.ts), the same as the other tools only this country has.
+ *
+ * NOTE (NOTYA-ARACLAR-DENETIM-03-AU, 2026-10-14): a My Health Record link-out tile (au-my-health-record) was built
+ * here and then REMOVED on reconsideration, after confirming it answers question #4 — My Health Record is indeed
+ * Australia's name for the e-Nabız equivalent — but a government link-out reference is not the kind of thing that
+ * belongs in a core, every-role workflow tool set just because Türkiye's e-Nabız tile does. See the audit report for
+ * the reasoning; the research finding stands, the tool does not.
  */
 import type { PaketAraci } from '@/lib/ulke/araclar/tipler'
 
 const D = 'en-AU'
 const m = (metin: string) => ({ [D]: metin })
-
-/**
- * MY HEALTH RECORD: Australia's national electronic health record system, read 2026-10-13 — Australian Government
- * Department of Health, Disability and Ageing, "My Health Record",
- * https://www.health.gov.au/topics/health-technologies-and-digital-health/my-health-record: "My Health Record is a
- * national electronic health record system... holds an online summary of your key health information." The System
- * Operator is the Australian Digital Health Agency; privacy is overseen by the Office of the Australian Information
- * Commissioner. THE PAGE NAMES NO SINGLE LOGIN ADDRESS FOR A CLINICIAN: it says a healthcare provider accesses and
- * uploads through their own clinical software (not a browser login the way a consumer uses myGov), and points to
- * the Australian Digital Health Agency for provider-specific detail — not opened in this session. THIS TILE DOES
- * NOT CONNECT TO MY HEALTH RECORD: it only opens the Department's own explanatory page, the way Türkiye's product
- * references e-Nabız as a tile and not a data connection (lib/doktor/doktorAraclari.ts, key `enabiz`).
- */
-export const AU_MY_HEALTH_RECORD: PaketAraci = {
-  anahtar: 'au-my-health-record',
-  roller: null,
-  metin: {
-    ad: m('My Health Record'),
-    aciklama: m('Australia’s national electronic health record, run by the Australian Digital Health Agency: a patient’s own online summary of key health information (medicines, immunisations, pathology and imaging reports, hospital discharge summaries). A doctor accesses and uploads to it through their own clinical software, not through this product — Notya holds no connection to it and copies nothing to or from it.'),
-    alanlar: {},
-    not: m('This opens the Department of Health, Disability and Ageing’s own page about My Health Record. Nothing of this patient is sent anywhere.'),
-    baglanti: m('Open the My Health Record page (health.gov.au)'),
-  },
-  baglanti: { adres: 'https://www.health.gov.au/topics/health-technologies-and-digital-health/my-health-record' },
-  lisans: { durum: 'serbest', kaynak: 'https://www.health.gov.au/topics/health-technologies-and-digital-health/my-health-record (read 2026-10-13): the Department’s own page; a link-out tile reproduces none of its text.' },
-}
 
 /**
  * WHICH GROWTH CHART APPLIES, BY AGE: read 2026-10-13 — Australian and New Zealand Society for Paediatric
