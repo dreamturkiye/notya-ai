@@ -1,0 +1,421 @@
+{
+  "source_name": "Therapeutic Goods (Poisons Standard—October 2026) Instrument 2026",
+  "citation": "Standard for the Uniform Scheduling of Medicines and Poisons No. 51",
+  "source_url": "https://www.legislation.gov.au/F2026L01327/asmade/2026-09-30",
+  "retrieved": "2026-10-14",
+  "commenced": "2026-10-01",
+  "made": "2026-09-28",
+  "licence": "Creative Commons Attribution 4.0 International. Based on content from the Federal Register of Legislation at 14 October 2026. For the latest information on Australian Government legislation please go to https://www.legislation.gov.au.",
+  "schedule_1": "This Schedule is intentionally blank.",
+  "classes": [
+    {
+      "anahtar": "s2",
+      "kod": "2",
+      "baslik": "Schedule 2",
+      "ad": "Pharmacy medicines",
+      "aciklama": "Substances, the safe use of which may require advice from a pharmacist and which should be available from a pharmacy or, where a pharmacy service is not available, from a licensed person."
+    },
+    {
+      "anahtar": "s3",
+      "kod": "3",
+      "baslik": "Schedule 3",
+      "ad": "Pharmacist only medicines",
+      "aciklama": "Substances, the safe use of which requires professional advice but which should be available to the public from a pharmacist without a prescription."
+    },
+    {
+      "anahtar": "s4",
+      "kod": "4",
+      "baslik": "Schedule 4",
+      "ad": "Prescription only medicines and prescription animal remedies",
+      "aciklama": "Substances, the use or supply of which should be by or on the order of persons permitted by State or Territory legislation to prescribe and should be available from a pharmacist on prescription."
+    },
+    {
+      "anahtar": "s5",
+      "kod": "5",
+      "baslik": "Schedule 5",
+      "ad": "Caution",
+      "aciklama": "Substances with a low potential for causing harm, the extent of which can be reduced through the use of appropriate packaging with simple warnings and safety directions on the label."
+    },
+    {
+      "anahtar": "s6",
+      "kod": "6",
+      "baslik": "Schedule 6",
+      "ad": "Poisons",
+      "aciklama": "Substances with a moderate potential for causing harm, the extent of which can be reduced through the use of distinctive packaging with strong warnings and safety directions on the label."
+    },
+    {
+      "anahtar": "s7",
+      "kod": "7",
+      "baslik": "Schedule 7",
+      "ad": "Dangerous poisons",
+      "aciklama": "Substances with a high potential for causing harm at low exposure and which require special precautions during manufacture, handling or use. These poisons should be available only to specialised or authorised users who have the skills necessary to handle them safely. Special regulations restricting their availability, possession, storage or use may apply."
+    },
+    {
+      "anahtar": "s8",
+      "kod": "8",
+      "baslik": "Schedule 8",
+      "ad": "Controlled drugs",
+      "aciklama": "Substances which should be available for use but require restriction of manufacture, supply, distribution, possession and use to reduce abuse, misuse and physical or psychological dependence."
+    },
+    {
+      "anahtar": "s9",
+      "kod": "9",
+      "baslik": "Schedule 9",
+      "ad": "Prohibited substances",
+      "aciklama": "Substances which may be abused or misused, the manufacture, possession, supply or use of which should be prohibited by law except when required for medical or scientific research, or for analytical, teaching or training purposes with approval of Commonwealth and/or State or Territory Health Authorities."
+    },
+    {
+      "anahtar": "s10",
+      "kod": "10",
+      "baslik": "Schedule 10 (previously Appendix C)",
+      "ad": "Substances of such danger to health as to warrant prohibition of supply and use",
+      "aciklama": "Substances which are prohibited for the purpose or purposes listed for each poison."
+    }
+  ],
+  "schedule8": [
+    {
+      "anahtar": "s8-acetyldihydrocodeine",
+      "ad": "ACETYLDIHYDROCODEINE."
+    },
+    {
+      "anahtar": "s8-acetylmethadol",
+      "ad": "ACETYLMETHADOL."
+    },
+    {
+      "anahtar": "s8-acetylmorphines",
+      "ad": "ACETYLMORPHINES."
+    },
+    {
+      "anahtar": "s8-alfentanil",
+      "ad": "ALFENTANIL."
+    },
+    {
+      "anahtar": "s8-alphacetylmethadol",
+      "ad": "ALPHACETYLMETHADOL."
+    },
+    {
+      "anahtar": "s8-alphaprodine",
+      "ad": "ALPHAPRODINE."
+    },
+    {
+      "anahtar": "s8-alprazolam",
+      "ad": "# ALPRAZOLAM."
+    },
+    {
+      "anahtar": "s8-amfetamine",
+      "ad": "AMFETAMINE."
+    },
+    {
+      "anahtar": "s8-amobarbital",
+      "ad": "AMOBARBITAL except when included in Schedule 4."
+    },
+    {
+      "anahtar": "s8-anileridine",
+      "ad": "ANILERIDINE."
+    },
+    {
+      "anahtar": "s8-benzylmorphine",
+      "ad": "BENZYLMORPHINE."
+    },
+    {
+      "anahtar": "s8-bezitramide",
+      "ad": "BEZITRAMIDE."
+    },
+    {
+      "anahtar": "s8-buprenorphine",
+      "ad": "BUPRENORPHINE."
+    },
+    {
+      "anahtar": "s8-butobarbital",
+      "ad": "BUTOBARBITAL."
+    },
+    {
+      "anahtar": "s8-butorphanol",
+      "ad": "BUTORPHANOL."
+    },
+    {
+      "anahtar": "s8-cannabis",
+      "ad": "# CANNABIS (including seeds, extracts, resins and the plant, and any part of the plant) when prepared or packed for human therapeutic use, when: (a)cultivated or produced, or in products manufactured, in accordance with the Narcotic Drugs Act 1967; and/or (b)for use in products manufactured in accordance with the Narcotic Drugs Act 1967; and/or (c)imported as therapeutic goods, or for use in therapeutic goods, for supply, in accordance with the Act; and/or (d)in therapeutic goods supplied in accordance with the Act; except: (e)when it is in a product to which item 4, 8, 10, 11 or 12 of Schedule 5A to the Therapeutic Goods Regulations 1990 applies; or (f)when separately specified in the NABIXIMOLS entry in this Schedule; or (g)when captured by the CANNABIDIOL entry in Schedule 4 or Schedule 3; or (h)hemp seed oil containing 75 mg/kg or less of cannabidiol and 10 mg/kg or less of tetrahydrocannabinols."
+    },
+    {
+      "anahtar": "s8-carfentanyl",
+      "ad": "CARFENTANYL."
+    },
+    {
+      "anahtar": "s8-cocaine",
+      "ad": "COCAINE."
+    },
+    {
+      "anahtar": "s8-codeine",
+      "ad": "CODEINE except when included in Schedule 4."
+    },
+    {
+      "anahtar": "s8-codeine-n-oxide",
+      "ad": "CODEINE-N-OXIDE."
+    },
+    {
+      "anahtar": "s8-concentrate-of-poppy-straw",
+      "ad": "CONCENTRATE OF POPPY STRAW (the material arising when poppy straw has entered into a process for concentration of its alkaloids)."
+    },
+    {
+      "anahtar": "s8-4-cyano-1-methyl-4-phenylpiperidine",
+      "ad": "4-CYANO-1-METHYL-4-PHENYLPIPERIDINE (Pethidine intermediate A)."
+    },
+    {
+      "anahtar": "s8-cyclobarbital",
+      "ad": "CYCLOBARBITAL."
+    },
+    {
+      "anahtar": "s8-dexamfetamine",
+      "ad": "DEXAMFETAMINE."
+    },
+    {
+      "anahtar": "s8-dextromoramide",
+      "ad": "DEXTROMORAMIDE."
+    },
+    {
+      "anahtar": "s8-dextropropoxyphene",
+      "ad": "# DEXTROPROPOXYPHENE except when included in Schedule 4."
+    },
+    {
+      "anahtar": "s8-difenoxin",
+      "ad": "DIFENOXIN except when included in Schedule 4."
+    },
+    {
+      "anahtar": "s8-dihydrocodeine",
+      "ad": "DIHYDROCODEINE except when included in Schedule 3 or 4."
+    },
+    {
+      "anahtar": "s8-dihydromorphine",
+      "ad": "DIHYDROMORPHINE."
+    },
+    {
+      "anahtar": "s8-mdma",
+      "ad": "# N, α -DIMETHYL-3,4-(METHYLENEDIOXY)PHENYLETHYLAMINE *(MDMA) in preparations for human therapeutic use for the treatment of post-traumatic stress disorder."
+    },
+    {
+      "anahtar": "s8-diphenoxylate",
+      "ad": "DIPHENOXYLATE except when included in Schedule 3 or 4."
+    },
+    {
+      "anahtar": "s8-dipipanone",
+      "ad": "DIPIPANONE."
+    },
+    {
+      "anahtar": "s8-dronabinol",
+      "ad": "# DRONABINOL (delta-9-tetrahydrocannabinol) when prepared and packed for therapeutic use."
+    },
+    {
+      "anahtar": "s8-drotebanol",
+      "ad": "DROTEBANOL."
+    },
+    {
+      "anahtar": "s8-esketamine",
+      "ad": "ESKETAMINE."
+    },
+    {
+      "anahtar": "s8-ethylamfetamine",
+      "ad": "ETHYLAMFETAMINE."
+    },
+    {
+      "anahtar": "s8-ethylmorphine",
+      "ad": "ETHYLMORPHINE except when included in Schedule 4."
+    },
+    {
+      "anahtar": "s8-fentanyl",
+      "ad": "FENTANYL."
+    },
+    {
+      "anahtar": "s8-flunitrazepam",
+      "ad": "# FLUNITRAZEPAM."
+    },
+    {
+      "anahtar": "s8-hydrocodone",
+      "ad": "HYDROCODONE."
+    },
+    {
+      "anahtar": "s8-hydromorphinol",
+      "ad": "HYDROMORPHINOL."
+    },
+    {
+      "anahtar": "s8-hydromorphone",
+      "ad": "HYDROMORPHONE."
+    },
+    {
+      "anahtar": "s8-ketamine",
+      "ad": "KETAMINE."
+    },
+    {
+      "anahtar": "s8-levamfetamine",
+      "ad": "LEVAMFETAMINE."
+    },
+    {
+      "anahtar": "s8-levomethamfetamine",
+      "ad": "LEVOMETHAMFETAMINE."
+    },
+    {
+      "anahtar": "s8-levomoramide",
+      "ad": "LEVOMORAMIDE."
+    },
+    {
+      "anahtar": "s8-levorphanol",
+      "ad": "LEVORPHANOL (excluding its stereoisomers)."
+    },
+    {
+      "anahtar": "s8-lisdexamfetamine",
+      "ad": "LISDEXAMFETAMINE."
+    },
+    {
+      "anahtar": "s8-methadone",
+      "ad": "METHADONE."
+    },
+    {
+      "anahtar": "s8-metamfetamine",
+      "ad": "METAMFETAMINE."
+    },
+    {
+      "anahtar": "s8-methyldihydromorphine",
+      "ad": "METHYLDIHYDROMORPHINE."
+    },
+    {
+      "anahtar": "s8-methylphenidate",
+      "ad": "METHYLPHENIDATE."
+    },
+    {
+      "anahtar": "s8-1-methyl-4-phenylpiperidine-4-carboxylic-acid",
+      "ad": "1-METHYL-4-PHENYLPIPERIDINE-4-CARBOXYLIC ACID (Pethidine intermediate C)."
+    },
+    {
+      "anahtar": "s8-morphine",
+      "ad": "MORPHINE."
+    },
+    {
+      "anahtar": "s8-morphine-methobromide",
+      "ad": "MORPHINE METHOBROMIDE."
+    },
+    {
+      "anahtar": "s8-morphine-n-oxide",
+      "ad": "MORPHINE-N-OXIDE."
+    },
+    {
+      "anahtar": "s8-nabilone",
+      "ad": "NABILONE."
+    },
+    {
+      "anahtar": "s8-nabiximols",
+      "ad": "# NABIXIMOLS (botanical extract of Cannabis sativa which includes the following cannabinoids: tetrahydrocannabinols, cannabidiol, cannabinol, cannabigerol, cannabichromene, cannabidiolic acid, tetrahydrocannabinolic acids, tetrahydrocannabivarol, and cannabidivarol, where tetrahydrocannabinols and cannabidiol (in approximately equal proportions) comprise not less than 90% of the total cannabinoid content) in a buccal spray for human therapeutic use."
+    },
+    {
+      "anahtar": "s8-norcodeine",
+      "ad": "NORCODEINE."
+    },
+    {
+      "anahtar": "s8-normethadone",
+      "ad": "NORMETHADONE."
+    },
+    {
+      "anahtar": "s8-opium",
+      "ad": "OPIUM except the alkaloids noscapine in Schedule 2 and papaverine when included in Schedule 2 or 4."
+    },
+    {
+      "anahtar": "s8-oxycodone",
+      "ad": "OXYCODONE."
+    },
+    {
+      "anahtar": "s8-oxymorphone",
+      "ad": "OXYMORPHONE."
+    },
+    {
+      "anahtar": "s8-pentazocine",
+      "ad": "PENTAZOCINE."
+    },
+    {
+      "anahtar": "s8-pentobarbital",
+      "ad": "# PENTOBARBITAL except when included in Schedule 4."
+    },
+    {
+      "anahtar": "s8-pethidine",
+      "ad": "PETHIDINE."
+    },
+    {
+      "anahtar": "s8-phendimetrazine",
+      "ad": "PHENDIMETRAZINE."
+    },
+    {
+      "anahtar": "s8-phenmetrazine",
+      "ad": "PHENMETRAZINE."
+    },
+    {
+      "anahtar": "s8-phenoperidine",
+      "ad": "PHENOPERIDINE."
+    },
+    {
+      "anahtar": "s8-4-phenylpiperidine-4-carboxylic-acid-ethyl-ester",
+      "ad": "4-PHENYLPIPERIDINE-4-CARBOXYLIC ACID ETHYL ESTER (Pethidine intermediate B)."
+    },
+    {
+      "anahtar": "s8-pholcodine",
+      "ad": "PHOLCODINE except when included in Schedule 2 or 4."
+    },
+    {
+      "anahtar": "s8-piritramide",
+      "ad": "PIRITRAMIDE."
+    },
+    {
+      "anahtar": "s8-propiram",
+      "ad": "PROPIRAM."
+    },
+    {
+      "anahtar": "s8-psilocybine",
+      "ad": "# PSILOCYBINE in preparations for human therapeutic use for the treatment of treatment-resistant depression."
+    },
+    {
+      "anahtar": "s8-racemoramide",
+      "ad": "RACEMORAMIDE."
+    },
+    {
+      "anahtar": "s8-remifentanil",
+      "ad": "REMIFENTANIL."
+    },
+    {
+      "anahtar": "s8-secbutobarbital",
+      "ad": "SECBUTOBARBITAL."
+    },
+    {
+      "anahtar": "s8-secobarbital",
+      "ad": "SECOBARBITAL."
+    },
+    {
+      "anahtar": "s8-sodium-oxybate",
+      "ad": "# SODIUM OXYBATE for human therapeutic use."
+    },
+    {
+      "anahtar": "s8-sufentanil",
+      "ad": "SUFENTANIL."
+    },
+    {
+      "anahtar": "s8-tapentadol",
+      "ad": "TAPENTADOL."
+    },
+    {
+      "anahtar": "s8-tetrahydrocannabinols",
+      "ad": "# TETRAHYDROCANNABINOLS when extracted from cannabis for human therapeutic use, when: (a)included in products manufactured in accordance with the Narcotic Drugs Act 1967; and/or (b)imported as therapeutic goods, or for use in therapeutic goods, for supply, in accordance with the Act; and/or (c)in therapeutic goods supplied in accordance with the Act; except when: (d)it is in a product to which item 4, 8, 10, 11 or 12 of Schedule 5A to the Therapeutic Goods Regulations 1990 applies; or (e)separately specified in the NABIXIMOLS entry in this Schedule; or (f)captured by the CANNABIDIOL entry in Schedule 4 or Schedule 3; or (g)in hemp seed oil at a concentration of 10 mg/kg or less."
+    },
+    {
+      "anahtar": "s8-thebacon",
+      "ad": "THEBACON."
+    },
+    {
+      "anahtar": "s8-thebaine",
+      "ad": "THEBAINE."
+    },
+    {
+      "anahtar": "s8-thiafentanil",
+      "ad": "THIAFENTANIL."
+    },
+    {
+      "anahtar": "s8-tilidine",
+      "ad": "TILIDINE."
+    }
+  ]
+}

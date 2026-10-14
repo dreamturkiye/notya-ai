@@ -3,6 +3,10 @@
   "au": [
     "au-body-size",
     "au-mental-health-screen",
+    "au-notifiable-diseases",
+    "au-poisons-schedules",
+    "au-schedule-8",
+    "au-dispensing-label",
     "au-oncology-grading",
     "au-immunisation-schedule",
     "au-growth-chart-reference",

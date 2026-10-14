@@ -18,6 +18,8 @@
  */
 import type { AracSayisi, AracTanimi } from '@/lib/ulke/araclar/tipler'
 import { BOS_SONUC, kontrolListesi, puan, sayi, sayiMi, secim, tarih } from '@/lib/ulke/araclar/yardimci'
+import { AU_BILDIRIM } from './bildirim'
+import { AU_ETIKET, AU_SCHEDULE_8_TANIMI, AU_ZEHIR_SINIFI } from './poisons'
 
 // ───────────────────────── 1. K10: the total score ─────────────────────────
 
@@ -207,4 +209,4 @@ export const AU_ASI_TAKVIMI: AracTanimi = kontrolListesi({
 })
 
 /** The mechanisms only Australia has, in the order the grid shows their tools. */
-export const AU_TANIMLAR: readonly AracTanimi[] = [AU_BEDEN, AU_K10, AU_ECOG, AU_ASI_TAKVIMI]
+export const AU_TANIMLAR: readonly AracTanimi[] = [AU_BEDEN, AU_K10, AU_ECOG, AU_ASI_TAKVIMI, AU_BILDIRIM, AU_ZEHIR_SINIFI, AU_SCHEDULE_8_TANIMI, AU_ETIKET]

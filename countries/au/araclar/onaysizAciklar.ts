@@ -45,6 +45,22 @@ export const AU_ONAYSIZ_ACIK_ARACLAR: readonly OnaysizAcikArac[] = [
     bakilacak: 'The tile only opens the report index. No drug row was copied, because the site copyright does not grant that. A clinician should say whether a link, with the top-50 table left out, is the right thing to show until the Department allows reuse.',
   },
   {
+    anahtar: 'au-poisons-schedules', oneri: 'Poisons Standard, October 2026, schedule classes', klinisyen: null,
+    bakilacak: 'Nine schedule classes from the instrument that commenced on 1 October 2026, general descriptions only. Schedule 1 is blank and is not offered. A clinician should confirm the instrument is still the current Poisons Standard, and that State or Territory law is what a prescription must follow.',
+  },
+  {
+    anahtar: 'au-schedule-8', oneri: 'Poisons Standard, October 2026, Schedule 8', klinisyen: null,
+    bakilacak: 'Every Schedule 8 entry from the instrument that commenced on 1 October 2026, including the exception printed in the entry and the hash mark for Appendix D. This is the schedule, not a ranking of prescriptions. A clinician should confirm the instrument is still in force before anyone relies on an entry.',
+  },
+  {
+    anahtar: 'au-dispensing-label', oneri: 'Poisons Standard, October 2026, Appendix L clause 1', klinisyen: null,
+    bakilacak: 'The human-medicine label details in Appendix L clause 1. The veterinary line and the clause 2 warning-statement table are not in the tool. Nothing is printed. A clinician should say whether a checklist of label details is the right screen until a State or Territory prescription form is loaded.',
+  },
+  {
+    anahtar: 'au-notifiable-diseases', oneri: 'National Notifiable Disease List, compilation of 22 May 2026', klinisyen: null,
+    bakilacak: 'Seventy-one names from the compilation in force on 22 May 2026, including item 1A. The amendment history says item 1A expires at the end of 22 November 2026. No case definition, no time limit and no addressee is in the tool. A clinician should confirm the compilation is still the one in force.',
+  },
+  {
     anahtar: 'au-immunisation-schedule', oneri: 'NOTYA-ARACLAR-DENETIM-02-AU (founder\'s question #2, 2026-10-13)', klinisyen: null,
     bakilacak: 'Built CORE and switched on by the owner\'s explicit instruction, not waiting on this list — but still machine-written and unread by a clinician of Australia. It is a record only: no catch-up schedule, no eligibility test and no brand name. Sourced to NSW Health\'s published rendering of the National Immunisation Program Schedule (the Department\'s own PDF was robots-blocked this session): a clinician of Australia should confirm that rendering is still a faithful, current copy of the national schedule, and that the twelve milestones chosen are the right set to show (no risk-based or Aboriginal-and-Torres-Strait-Islander-specific additions beyond the one line that names them).',
   },

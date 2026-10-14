@@ -36,7 +36,7 @@ import { AU_SIZINTI_TERIMLERI } from './sizintiTerimleri'
 const D = 'en-AU'
 const LAB = { albuminKreatinin: 'mg/mmol', hemoglobin: 'g/L', kreatinin: 'umol/L', glukoz: 'mmol/L', kolesterol: 'mmol/L', crp: 'mg/L', psa: 'ug/L', hba1c: ['%', 'mmol/mol'] } as const
 /** The tools with a MECHANISM only Australia has (./araclar/tanimlar.ts): switched on 2026-10-10 and 2026-10-13. */
-const KENDI_MEKANIZMALI = ['au-body-size', 'au-mental-health-screen', 'au-oncology-grading', 'au-immunisation-schedule']
+const KENDI_MEKANIZMALI = ['au-body-size', 'au-mental-health-screen', 'au-oncology-grading', 'au-immunisation-schedule', 'au-notifiable-diseases', 'au-poisons-schedules', 'au-schedule-8', 'au-dispensing-label']
 /** NOTYA-ARACLAR-DENETIM-02-AU, 2026-10-13 — link-out tiles only Australia has: no mechanism, no arithmetic (./araclar/baglantilar.ts). */
 const KENDI_BAGLANTILARI = ['au-growth-chart-reference', 'au-pbs-report-link']
 /** Every tool that carries Australia's own code, switched on by the owner's order of 2026-10-10 or 2026-10-13. */
@@ -452,7 +452,7 @@ describe('au: the tools only Australia has — switched on by the owner\'s order
     for (const k of KENDI_MEKANIZMALI) {
       const l = A.araclar.find((p) => p.anahtar === k)!.lisans!
       assert.equal(l.durum, 'serbest', k)
-      assert.match(l.kaynak ?? '', /^https:\/\/\S+ \(read 2026-10-(10|13)\): /, k)
+      assert.match(l.kaynak ?? '', /^https:\/\/\S+ \(read 2026-10-(10|13|14)\): /, k)
       assert.ok((l.bildirim?.[D] ?? '').length > 20, `${k}: the rights holder's notice`)
     }
     // the link-out tile: free, but no reproduced notice is shown under a result it never gives
@@ -491,6 +491,11 @@ describe('au: the tools only Australia has — switched on by the owner\'s order
     assert.ok(goren('au-pbs-report-link').includes('paediatrics'))
     assert.equal(goren('au-pbs-report-link').includes('dietetics'), false)
     assert.equal(goren('au-pbs-report-link').includes('(no role)'), false)
+    for (const k of ['au-notifiable-diseases', 'au-poisons-schedules', 'au-schedule-8', 'au-dispensing-label']) {
+      assert.ok(goren(k).includes('family-medicine'), k)
+      assert.equal(goren(k).includes('dietetics'), false, k)
+      assert.equal(goren(k).includes('(no role)'), false, k)
+    }
     assert.equal(A.araclar.find((p) => p.anahtar === 'au-immunisation-schedule')!.hasta, undefined)
   })
 })
