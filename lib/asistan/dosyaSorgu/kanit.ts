@@ -9,7 +9,7 @@
  * Branşa bağlı kısımlar (büyüme eğrisi, aşı takvimi, gelişim) BransSorguParametreleri'nden gelir.
  */
 import type { DosyaHastasi, DosyaOlayi } from '@/lib/doktor/dosyaOlaylari'
-import { trGun, gunEkleIso } from '@/lib/doktor/dosyaOlaylari'
+import { trGun, gunEkleIso, kurSonGunuIso } from '@/lib/doktor/dosyaOlaylari'
 import { acikIsleriBul, alerjiCatismalari, asiBeyanCeliskileri, tekrarlayanPaternler, type AcikIs } from '@/lib/doktor/acikIsler'
 import { asiPlanSatiri, durumAdi, labAdlari, planKarsiligi, planOlaylari } from '@/lib/doktor/planTakibi'
 import { eksikDozEtiketi, parametreSec, type BransSorguParametreleri } from '@/lib/asistan/dosyaSorgu/parametreler'
@@ -75,8 +75,9 @@ function ilacBolumleri(olaylar: DosyaOlayi[], hasta: DosyaHastasi): string[] {
   const receteler = olaylar.filter((o) => o.kaynak === 'ilac' && o.tur === 'recete' && o.tarih >= sinir)
   out.push('SON 90 GÜNÜN REÇETELERİ (vizit notundan — reçete edildi ≠ aktif kullanım):')
   out.push(...(receteler.length ? receteler.map((o) => {
-    const bitis = o.sureGun ? gunEkleIso(o.tarih, o.sureGun) : null
-    return `- ${o.metin} — reçete ${trGun(o.tarih)}${bitis ? `, planlanan süre ${bitis <= hasta.bugunIso ? `${trGun(bitis)} tarihinde doldu` : `${trGun(bitis)} tarihine kadar`}` : ''}; ${o.kilo != null ? `reçete tarihindeki kilo ${trS(o.kilo)} kg (${trGun(o.kiloTarihi)})` : 'reçete tarihinde kilo kaydı yok'}`
+    // Start date = day 1: the course is over once today is past its last day (kurSonGunuIso); the date shown is that last day.
+    const sonGun = o.sureGun ? kurSonGunuIso(o.tarih, o.sureGun) : null
+    return `- ${o.metin} — reçete ${trGun(o.tarih)}${sonGun ? `, planlanan süre ${sonGun < hasta.bugunIso ? `${trGun(sonGun)} tarihinde doldu` : `${trGun(sonGun)} tarihine kadar`}` : ''}; ${o.kilo != null ? `reçete tarihindeki kilo ${trS(o.kilo)} kg (${trGun(o.kiloTarihi)})` : 'reçete tarihinde kilo kaydı yok'}`
   }) : ['- (yok)']))
   out.push(guncelKilo ? `GÜNCEL KİLO: ${trS(guncelKilo.deger!)} kg (${trGun(guncelKilo.tarih)}) — mg/kg hesabı reçete tarihindeki kiloyla yapılır, bununla karıştırma.` : 'GÜNCEL KİLO: kayıt yok.')
   return out

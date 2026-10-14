@@ -59,6 +59,7 @@ import { acikDosyaDisiSoruMu, aktifHastaKullanilsinMi, dosyaAcmaIstegiMi } from 
 import { aiAkis, aiCagir, girdiTokenTahmini, yanitMetni, type AiMesaj } from "@/lib/ai/cagir"
 import { anilanBaskaKisi, okumaAraciCalistir, okumaAraciKapali, okumaAraciMi, OKUMA_ARACI_BLOGU, OKUMA_ARACLARI, OKUMA_TUR_TAVANI, type OkumaSonucu } from "@/lib/asistan/okumaAraclari"
 import { aramaCevabiGuvenilirMi, kimlikAcikDosyayaDusmesinMi } from "@/lib/asistan/ikiBeyinBirde"
+import { turZamanlari } from "@/lib/asistan/balonSirasi"
 import { AlanDefteri, alanlariYerineKoy, alanSozcusu, verilmeyenleriSil, type AlanRef } from "@/lib/asistan/hastaAlan"
 import { asistanModelYonlendir, gecmisiKirp, netSosyalMi, sohbetKademesi, SOHBET_SAKLANAN_MESAJ } from "@/lib/ai/modeller"
 import { aracTanimlari, eylemKapali, HASTA_ADI_ALANI } from "@/core/eylemler/araclar"
@@ -376,8 +377,11 @@ export async function ayseCevapla(g: AyseGirdisi): Promise<AyseSonucu> {
     // NOTYA-SES-TUR-02: this turn was cancelled (barge-in / sentence merge) -- never let its answer reach
     // the session record, where a later poll or follow-up turn could surface it as a fresh answer.
     if (g.sinyal?.aborted) return
-    const kullanici: OturumMesaji = ses ? { role: "user", content: hamMesaj, kanal: "ses", zaman: simdi() } : { role: "user", content: hamMesaj }
-    const asistanZamani = simdi()
+    // NOTYA-AYSE-SAYI-SIRA-01: the doctor's line carries its own time (the moment the sentence reached this turn), the
+    // reply a strictly later one. Both used to be stamped here, at write time, with the same instant.
+    const zamanlar = turZamanlari(turBaslangic)
+    const kullanici: OturumMesaji = ses ? { role: "user", content: hamMesaj, kanal: "ses", zaman: zamanlar.soru } : { role: "user", content: hamMesaj }
+    const asistanZamani = zamanlar.cevap
     const asistan: OturumMesaji = ses
       ? {
           role: "assistant", content: asistanSozu, kanal: "ses", zaman: asistanZamani,

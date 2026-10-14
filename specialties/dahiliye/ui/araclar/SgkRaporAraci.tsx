@@ -89,7 +89,7 @@ export default function SgkRaporAraci() {
         <div style={etiket}>Şablon</div>
         <div style={satir}>
           <Secim etiket="Rapor şablonu" deger={sablon} set={(x) => setSablon(x as SgkSablon)} secenekler={SABLON} />
-          <Sayi ad="Süre" deger={sureAy} set={setSureAy} birim="ay (en fazla 24)" genislik={90} />
+          <Sayi ad="Süre" deger={sureAy} set={setSureAy} birim={`ay (en fazla ${sonuc.sureTavani})`} genislik={90} />
         </div>
         <div style={satir}>
           <Sayi ad="Yaş" deger={yas} set={setYas} genislik={90} />

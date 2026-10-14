@@ -131,7 +131,19 @@ describe('hasta dosya derleyici — kart başta kalır, izolasyon', () => {
 
   it('her tablo sorgusu doktor kolonuna kilitli', () => {
     const fromlar = [...derle.matchAll(/\.from\('([^']+)'\)/g)]
-    assert.ok(fromlar.length >= 10, 'derleme tabloları eksik')
+    // 9 direct table reads since the device bridge (cihaz_olcumleri) was removed in d5b8e2da; sessions, notes,
+    // hasta_ilaclar and asilar go through the archive helpers (asserted below). Each one is checked for the doctor filter.
+    assert.ok(fromlar.length >= 9, 'derleme tabloları eksik')
+    assert.deepEqual(
+      ['patients', 'hasta_intake_formlari', 'hasta_goruntulemeler', 'hasta_belgeler', 'belge_analizleri', 'users', 'randevular', 'lab_satirlar', 'goruntu_calisma'].filter((t) => !fromlar.some((m) => m[1] === t)),
+      [],
+      'derleyicinin okuduğu tablo listesi değişti — yeni tabloyu doktor filtresiyle ekleyin',
+    )
+    for (const yardimci of ['arsivsizSeanslar', 'arsivsizIlaclar', 'arsivsizAsilar', 'arsivsizNotlar']) {
+      const i = derle.indexOf(`${yardimci}(supabase`)
+      assert.ok(i > 0, `${yardimci} okuması yok`)
+      assert.ok(/doctor_id|doktor_id/.test(derle.slice(i, i + 280)), `${yardimci} doktor filtresi yok`)
+    }
     for (const m of fromlar) {
       const parca = derle.slice(m.index ?? 0, (m.index ?? 0) + 280)
       if (m[1] === 'users') {

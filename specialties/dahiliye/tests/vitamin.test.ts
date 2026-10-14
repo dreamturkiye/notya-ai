@@ -43,9 +43,9 @@ test('SGK şablonları: vitd E55.9 ve b12 (anemi varsa D51.9) — lab kanıtı y
   assert.ok(SGK_SABLONLARI.some((x) => x.id === 'vitd') && SGK_SABLONLARI.some((x) => x.id === 'b12'))
   const hasta = { adSoyad: 'Test', yas: 70, kadin: true }
   const v = sgkRaporTaslagi({ sablon: 'vitd', hasta, bugun: '2026-09-17', ilaclar: [{ ad: 'Devit-3', etken: 'kolekalsiferol', aktif: true }], labs: { VitD: [{ ad: 'VitD', deger: 8, tarih: '2026-09-10' }], Ca: [{ ad: 'Ca', deger: 9.4, tarih: '2026-09-10' }] } })
-  assert.equal(v.draft.tani.icd10, 'E55.9'); assert.deepEqual(v.draft.etkenMaddeler, ['kolekalsiferol']); assert.equal(v.sutKontrol[0].tamam, true); assert.equal(v.eksikler.length, 0)
+  assert.equal(v.draft.tani.icd10, 'E55.9'); assert.deepEqual(v.draft.etkenMaddeler, ['kolekalsiferol']); assert.match(v.sutKontrol[0].madde, /SUT EK-4\/E 13\/31/); assert.equal(v.sutKontrol[0].tamam, null); assert.equal(v.eksikler.length, 0)
   const b = sgkRaporTaslagi({ sablon: 'b12', hasta, bugun: '2026-09-17', ilaclar: [], labs: { B12: [{ ad: 'B12', deger: 140, tarih: '2026-09-10' }], Hb: [{ ad: 'Hb', deger: 10.8, tarih: '2026-09-10' }] } })
   assert.equal(b.draft.tani.icd10, 'D51.9'); assert.ok(b.eksikler.some((e) => /Etken madde/.test(e)))
   const yok = sgkRaporTaslagi({ sablon: 'b12', hasta, bugun: '2026-09-17', ilaclar: [], labs: {} })
-  assert.equal(yok.draft.tani.icd10, 'E53.8'); assert.equal(yok.sutKontrol[0].tamam, false)
+  assert.equal(yok.draft.tani.icd10, 'E53.8'); assert.ok(yok.eksikler.some((e) => /Onaylı B12 lab satırı/.test(e))); assert.ok(yok.sutKontrol.every((k) => k.tamam === null))
 })

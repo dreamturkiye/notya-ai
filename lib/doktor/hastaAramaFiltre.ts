@@ -54,6 +54,11 @@ export interface SorguAyik {
   /** NOTYA-ARAMA-DOGUM-NEGASYON-01: "doğum tarihi kayıtlı olmayan / girilmemiş / eksik" — charts with no birth date. */
   dogumYok: boolean
   ozet: string
+  /**
+   * NOTYA-AYSE-SAYI-SIRA-01: the doctor's own words that became mandatory search terms, as a label ("aranan söz: astım").
+   * The count sentence names it, so a number can never be narrowed by a word the answer does not say.
+   */
+  sozFiltre?: string
   /** Doctor timezone the window was built in (NOTYA-AYSE-100-LUNA a). */
   tz: string
 }
@@ -180,6 +185,18 @@ const DURAK = new Set([
   // NOTYA-KORPUS-KALAN-01 (G-22): "ilaç kullanan hastam var mı" → term "kullanan" → "Kayıtlarda 0 hasta. Filtre: İlaç."
   // The participle that ties a patient to a record ("kullanan", "alan", "içen") is a function word, like "olan".
   'kullanan', 'kullananlar', 'kullanmakta', 'kullaniyor', 'kullandigi', 'alan', 'alanlar', 'almakta', 'aliyor', 'icen', 'icenler',
+  // NOTYA-AYSE-SAYI-SIRA-01 (Kaan live, voice, 2026-10-11 01:08 UTC): "Tabii, tabii. Hocam, kaç tane hastamız var şu anda
+  // bizim?" → "Kayıtlarda 0 hasta." with one active patient. "tabii" and "bizim" were not stop words, so they became
+  // mandatory search terms no chart contains — and the answer did not say so. Words of conversation (agreement,
+  // "ours / with us", "the number of", "in the system") are never search terms.
+  'tabii', 'tabi', 'tabiki', 'tabiiki', 'elbette', 'evet', 'hayir', 'tamam', 'peki', 'yani', 'iste', 'sey', 'hani', 'hadi', 'lutfen',
+  'aaa', 'aaaa', 'haa', 'ooo', 'yaa', 'bizim', 'bizde', 'bizdeki', 'bize', 'sizin', 'sizde', 'sizdeki', 'bende', 'bendeki',
+  'sayim', 'sayimiz', 'sayimi', 'sayimizi', 'sayisini', 'sayiniz', 'sayisinin', 'kisi', 'kisiyiz',
+  'elimizde', 'elimde', 'sistemde', 'sistemimizde', 'kayitlarimizda', 'kayitlarimizdaki', 'listede', 'listemizde', 'listemde',
+  'soyler', 'soyleyin', 'soylesene', 'soyleyebilir', 'oldu', 'olmus', 'etti', 'ediyor', 'gorunuyor',
+  // The participle that ties a patient to a place is a function word too: "İstanbul'da oturan kaç hastam var" required
+  // the word "oturan" in the chart and answered 0 for a patient who lives in İstanbul.
+  'oturan', 'oturanlar', 'yasayan', 'yasayanlar', 'ikamet', 'eden', 'edenler',
 ])
 
 const YAZI_SAYI: Record<string, number> = {
@@ -484,7 +501,8 @@ export function sorguyuAyikla(mesaj: string, now = new Date(), tz: string = VARS
   const cogul = /hastalar|hangileri|kimler|hangileriyedi|hepsi|listele/.test(n0)
   // NOTYA-SES-KAC-HASTA-02 (Kaan, 2026-09-29): "kaç" before a measure word ("hastamız kaç yaşında", "kaç kilo",
   // "kaç gün") is a value question about one patient, not a count — it answered "Kayıtlarda 0 hasta".
-  const sayim = /\bkac\b|\bsayisi\b|\bkaci\b|how many|number of/.test(n0.replace(SAYIM_OLCU, ' '))
+  // NOTYA-AYSE-SAYI-SIRA-01: "hasta sayımız nedir", "hasta sayımızı söyler misin" ask for the count without "kaç".
+  const sayim = /\bkac\b|\bsayisi\b|\bkaci\b|\bhasta sayi(si|sini|miz|mizi|m|mi|niz|nizi)?\b|how many|number of/.test(n0.replace(SAYIM_OLCU, ' '))
   const asi = ASI_KELIME.test(n0)
   // Spoken forms too: "bugün kaç hasta baktım / gördük" — these are visit verbs, not search terms.
   const ziyaret = /gordugum|gorduklerim|gorduk|muayene|ettigim|baktigim|baktim|baktik|baktin|gelen|geldi|gordum|gordun|\bhad\b|\bsaw\b/.test(n0)
@@ -629,11 +647,16 @@ export function sorguyuAyikla(mesaj: string, now = new Date(), tz: string = VARS
     alanlar.push({ anahtar: alan.anahtar, etiket: alan.etiket, degerler: [...degerler] })
   }
 
+  // NOTYA-AYSE-SAYI-SIRA-01: every word that survives as a mandatory term is kept, to be named in the answer.
+  const hamSozler: string[] = []
   const terimCikar = (parca: string): string[] => {
     const ham = parca
+      // "kaç adet hasta" — the counter word of the question, not the clinical "adet".
+      .replace(/\bkac\s+adet\b/g, 'kac')
       .split(/[^a-z0-9]+/)
       .filter((k) => k.length >= 3 && !DURAK.has(k))
       .map((k) => k.replace(/i[hl]tihabi?|iltehabi?|iltihabi?|iltehap|ihtihab/, 'iltihap'))
+    hamSozler.push(...ham)
     const terimler = new Set<string>()
     const genis = new Set(['ilac', 'antibiyotik'])
     for (const k of ham) {
@@ -673,6 +696,15 @@ export function sorguyuAyikla(mesaj: string, now = new Date(), tz: string = VARS
     || veya.some((g) => g.some((t) => Boolean(ESANLAM[t])))
   const bolum = Boolean(seriGecikme || mchat || persentilEsik || kirilim || minSeans || bayrakVe.length || portalYok || hatirlatmaSay || yasKirilim || ucDeger || bolumIstegi || ziyaretYok)
   const klinik = (asi && !haric.includes('asi')) || cogul || sayim || klinikKelime || Boolean(y.yas) || Boolean(p.pencere && ziyaret) || alanlar.length > 0 || sayisal.length > 0 || haric.length > 0 || Boolean(kanGrubu) || Boolean(c.cinsiyet) || sureSor || Boolean(olcum) || bolum || dg.dogumYok
+  // The doctor's spelling of each kept word ("astım", not "astim"); a field's own name ("ilaç", "aşı") is not repeated.
+  const asilSoz = new Map<string, string>()
+  for (const w of String(mesaj || '').split(/[^\p{L}\p{N}]+/u)) {
+    const k = trAramaNormalize(w)
+    if (k && !asilSoz.has(k)) asilSoz.set(k, w)
+  }
+  const alanSozleri = new Set(alanlar.flatMap((a) => [a.anahtar, trAramaNormalize(a.etiket)]))
+  const sozler = [...new Set(hamSozler)].filter((k) => !alanSozleri.has(k)).map((k) => asilSoz.get(k) || k)
+  const sozFiltre = sozler.length ? `aranan söz: ${sozler.join(', ')}` : ''
   const etiketler = [
     y.yas?.etiket,
     p.pencere?.etiket,
@@ -720,6 +752,7 @@ export function sorguyuAyikla(mesaj: string, now = new Date(), tz: string = VARS
     ziyaretYok,
     dogumYok: dg.dogumYok,
     ozet: etiketler.join(' · '),
+    sozFiltre,
     tz,
   }
 }
@@ -950,6 +983,10 @@ export function istatistikKur(
   } else if (q.sayim) {
     cumle = `${donem[0]?.toLocaleUpperCase('tr-TR') || ''}${donem.slice(1)} ${g.hastaSayisi} hasta.`
   }
-  if (q.ozet) cumle += ` Filtre: ${q.ozet}.`
+  // NOTYA-AYSE-SAYI-SIRA-01: every filter that was applied is named — the field labels AND the doctor's own words that
+  // the search required in the chart. (The breakdowns do not apply the words, so they do not name them.)
+  const sozUygulandi = !(q.olcum === 'sure' || q.kirilim === 'asi_adi' || q.kirilim === 'ilac_adi' || q.ucDeger || q.yasKirilim)
+  const filtre = [q.ozet, sozUygulandi ? q.sozFiltre : ''].filter(Boolean).join(' · ')
+  if (filtre) cumle += ` Filtre: ${filtre}.`
   return { ...g, birim, cumle }
 }

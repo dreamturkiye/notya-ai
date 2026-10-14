@@ -98,7 +98,7 @@ function sesiDokunustaAc(): AudioContext | null {
 
 export type ConvStatus = SesDurumu
 /** sira: sesli ve yazılı mesajları yüzen panelde tek zaman çizgisinde sıralamak için. */
-export type Message = { id: string; role: "user" | "ai"; text: string; sira: number; olay?: number }
+export type Message = { id: string; role: "user" | "ai"; text: string; sira: number; olay?: number; soru?: string }
 
 // NOTYA-EYLEM: cards ride ON the assistant message. This surface has no patientId on the client —
 // the patient is resolved server-side from free text — so both the proposal ids and the header name
@@ -650,7 +650,10 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
             const hamSoru = String(tur.soru || "").trim()
             // NOTYA-SES-ESKI-01: before the Fish work the poll wrote only the answer; the doctor line came from ElevenLabs alone. A second source made double bubbles.
             const soru = fishAcikRef.current && hamSoru && hamSoru !== DEVAM_ISARETI && !kendiSelamiMi(hamSoru) ? hamSoru : null
-            next = cevapEkle(next, soru, tur.metin, yeniBalon)
+            // NOTYA-AYSE-SAYI-SIRA-01: the reply remembers the doctor line it answers, so a transcript that arrives
+            // after it is shown in front of it. A hidden or pause turn has no doctor bubble and is not remembered.
+            const cevaplanan = hamSoru && hamSoru !== DEVAM_ISARETI && !kendiSelamiMi(hamSoru) && !kesintiMesajiMi(hamSoru) && !sesGurultusuMu(hamSoru) ? hamSoru : null
+            next = cevapEkle(next, soru, tur.metin, yeniBalon, cevaplanan)
           }
           messagesRef.current = next
           return next

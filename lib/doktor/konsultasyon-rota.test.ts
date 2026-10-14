@@ -222,7 +222,10 @@ describe('KONSULTASYON-01 — kapalı döngü (gerçek rota, sahte veritabanı)'
     assert.equal((await patch(k3.id, {
       islem: 'yanit',
       yanitOzeti: 'İşitme kaybı saptanmadı.',
-      yanitTarihi: new Date().toISOString().slice(0, 10),
+      // "Today" as the route counts it: the calendar day in Türkiye (UTC+3 all year), not the UTC day. With the UTC
+      // day this test failed every day between 21:00 and 24:00 UTC — the request is dated tomorrow (TR) and a reply
+      // dated today (UTC) is rightly refused as "before the request".
+      yanitTarihi: new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 10),
     })).status, 200)
     assert.equal((await patch(k3.id, { islem: 'sil' })).status, 409, 'yanıtlanmış kanıt silinmez')
   })

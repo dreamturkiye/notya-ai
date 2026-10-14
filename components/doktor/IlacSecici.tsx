@@ -128,7 +128,7 @@ export default function IlacSecici({ onSelect, inputStyle, labelStyle }: Props) 
         >
           <option value="">{secili ? 'Eczanedeki sunumu seçin' : 'Önce ilacı seçin'}</option>
           {secili?.sunumlar.map((su) => (
-            <option key={su.barkod} value={su.barkod}>{su.ad}{su.ruhsatAskida ? ' — RUHSAT ASKIDA' : ''}</option>
+            <option key={su.barkod} value={su.barkod}>{su.ad}{su.sgk === false ? ' — SGK ödemiyor' : ''}{su.ruhsatAskida ? ' — RUHSAT ASKIDA' : ''}</option>
           ))}
         </select>
         {/* NOTYA-ILAC-09: suspension is a property of the chosen PACK. Warn at the moment of
@@ -136,6 +136,12 @@ export default function IlacSecici({ onSelect, inputStyle, labelStyle }: Props) 
         {sunum?.ruhsatAskida && (
           <div style={{ marginTop: 6, fontSize: 12, color: '#DC2626', fontWeight: 600 }}>
             TİTCK ruhsatı askıda — reçete etmeden önce güncel durumu kontrol edin.
+          </div>
+        )}
+        {/* NOTYA-SUT-RAPOR-01i: the chosen pack is passive on SGK's list or no longer on it (SUT 4.1.9(1)). */}
+        {sunum?.sgk === false && (
+          <div style={{ marginTop: 6, fontSize: 12, color: '#B45309', fontWeight: 600 }}>
+            Bu ürün SGK tarafından ödenmiyor.
           </div>
         )}
       </div>

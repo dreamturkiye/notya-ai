@@ -5,7 +5,7 @@
  *
  * HASTA-IZOLASYON-01: every id arrives from outside. The queue item, appointment and vaccine rows
  * are read with id AND the doctor's column together; the patient is re-checked with the doctor
- * (hastaIletisimi → patients id + doctor_id). A foreign id answers exactly like a missing one.
+ * (hastaIletisimiTamamla → hastaIletisimi → patients id + doctor_id). A foreign id answers exactly like a missing one.
  * Staff (sekreter) may only prepare PERSONEL_TURLERI — checked before any read.
  */
 import type { SupabaseClient } from '@supabase/supabase-js'
@@ -14,7 +14,8 @@ import { arsivsizAsilar } from '@/lib/doktor/arsiv'
 import { ensurePatientPortalUrl } from '@/lib/portal/notifyPatientEmail'
 import { mesajHazirla, type HazirMesaj } from './sablonlar'
 import { turIzinliMi } from './kuyruk'
-import { hastaIletisimi, sonKanal, type HastaIletisimi } from './sunucu'
+import { sonKanal, type HastaIletisimi } from './sunucu'
+import { hastaIletisimiTamamla } from './hastaIletisimiTamamla'
 import { mesajTuruMu, type IletisimKanali, type MesajTuru } from './tipler'
 
 export type HazirlikGirdisi = {
@@ -111,7 +112,7 @@ export async function iletisimHazirla(
   }
 
   if (!patientId) return { durum: 400, hata: 'Hasta seçilmedi.' }
-  const hasta = await hastaIletisimi(sb, doktorId, patientId, secenek.doktorBransi)
+  const hasta = await hastaIletisimiTamamla(sb, doktorId, patientId, secenek.doktorBransi)
   if (!hasta) return { durum: 404, hata: 'Hasta bulunamadı.' }
   // Bu randevuya özel e-posta kartta yoksa doğrudan bu satırdan (hastaIletisimi son randevuya bakar;
   // verilen randevuId farklıysa yine de buradaki değeri kullan).

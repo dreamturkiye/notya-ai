@@ -169,6 +169,9 @@ function sgkSetiYukle(): Set<string> {
     const ham = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'data', 'sgk-ilaclar.json'), 'utf8'))
     const set = new Set<string>()
     for (const i of ham.ilaclar || []) {
+      // NOTYA-SUT-RAPOR-01i: the catalogue keeps products that are passive on EK-4/A or no longer on it, marked
+      // sgk:false (SUT 4.1.9(1)). They are not "on the list" for this check.
+      if (i.sgk === false) continue
       const ad = normalize(String(i.ad || ''))
       if (ad) set.add(ad.split(' ').slice(0, 2).join(' ')) // ilk iki kelime yeterli ayırt edicilik
     }

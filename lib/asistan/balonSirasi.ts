@@ -12,7 +12,73 @@
  * user line is treated as an orphan reply and the question slots in front of it.
  */
 
-export type Balon = { role: 'user' | 'ai'; text: string; olay?: number }
+/**
+ * `sira`: the timeline key the floating panel and the saved history sort by. `soru`: on a reply painted by the
+ * screen poll, the doctor line the server stored in front of it (NOTYA-AYSE-SAYI-SIRA-01).
+ */
+export type Balon = { role: 'user' | 'ai'; text: string; olay?: number; sira?: number; soru?: string }
+
+/**
+ * NOTYA-AYSE-SAYI-SIRA-01 (Kaan live, 2026-10-11 01:08 UTC) — the reply to the THIRD sentence of a voice
+ * conversation was shown above that sentence.
+ *
+ * Two causes, both here:
+ *   1. `yetimCevapYeri` can only see an orphan reply on the first turn. From the second turn on the trailing AI block
+ *      starts right after a doctor line ([…, soru2, cevap2, cevap3]), so it answered "no orphan" and the late
+ *      transcript of sentence 3 was appended AFTER its reply. The poll knows which doctor line each reply answers
+ *      (the server stores the pair in order): the reply bubble now carries it (`soru`), and a late transcript of that
+ *      same sentence goes in front of that reply — on any turn.
+ *   2. A bubble put in front of a reply kept the `sira` of the moment it was created, i.e. a LATER one than the reply.
+ *      The floating panel and the saved history sort by `sira`, so they showed the reply first even when the list was
+ *      right. A bubble placed in front of later ones now takes a `sira` between its neighbours.
+ */
+const sozDuz = (s: string) => String(s || '').toLocaleLowerCase('tr-TR').replace(/[^\p{L}\p{N}]+/gu, ' ').trim()
+
+/** The transcript the page received and the line the server stored are the same sentence (case, punctuation and a clipped edge aside). */
+export function ayniSozMu(a: string, b: string): boolean {
+  const x = sozDuz(a)
+  const y = sozDuz(b)
+  if (!x || !y) return false
+  if (x === y) return true
+  const kisa = x.length <= y.length ? x : y
+  const uzun = x.length <= y.length ? y : x
+  return kisa.length >= 12 && uzun.includes(kisa)
+}
+
+/** Index of the poll reply that answers `soz` and has no doctor line in front of it yet; null when there is none. */
+export function sorusuzCevapYeri<T extends Balon>(prev: T[], soz: string): number | null {
+  for (let i = prev.length - 1; i >= 0; i--) {
+    const m = prev[i]
+    if (m.role !== 'ai' || !m.soru || !ayniSozMu(m.soru, soz)) continue
+    if (i > 0 && prev[i - 1].role === 'user') return null
+    return i
+  }
+  return null
+}
+
+/** The bubble at `i` stands in front of later ones: its `sira` moves between its neighbours (no other bubble changes). */
+export function siraAraya<T extends Balon>(liste: T[], i: number): T[] {
+  const b = liste[i]
+  const sonraki = liste[i + 1]
+  if (!b || typeof b.sira !== 'number' || !sonraki || typeof sonraki.sira !== 'number' || b.sira < sonraki.sira) return liste
+  const onceki = i > 0 ? liste[i - 1].sira : undefined
+  const alt = typeof onceki === 'number' && onceki < sonraki.sira ? onceki : sonraki.sira - 1
+  const kopya = liste.slice()
+  kopya[i] = { ...b, sira: (alt + sonraki.sira) / 2 }
+  return kopya
+}
+
+/**
+ * Stored times of one voice turn: the doctor's line keeps ITS OWN time (the moment the sentence reached the server)
+ * and the reply a strictly later one. Before, both were stamped with the same instant when the reply was written.
+ */
+export function turZamanlari(soruZamani: string, simdi: Date = new Date()): { soru: string; cevap: string } {
+  const s = simdi.toISOString()
+  const t = Date.parse(soruZamani)
+  if (!Number.isFinite(t)) return { soru: s, cevap: new Date(simdi.getTime() + 1).toISOString() }
+  const soru = new Date(Math.min(t, simdi.getTime())).toISOString()
+  return { soru, cevap: s > soru ? s : new Date(Date.parse(soru) + 1).toISOString() }
+}
 
 function olayYeri<T extends Balon>(prev: T[], olay: number | undefined): number {
   if (olay == null) return prev.length
@@ -112,16 +178,17 @@ export function kullaniciEkle<T extends Balon>(
     const damga = prev[ayni].olay ?? olay
     if (hedef === ayni && prev[ayni].olay === damga) return prev
     const msg = { ...prev[ayni], olay: damga }
-    return [...rest.slice(0, hedef), msg, ...rest.slice(hedef)]
+    return siraAraya([...rest.slice(0, hedef), msg, ...rest.slice(hedef)], hedef)
   }
   const msg = ekle('user', t, olay)
   let at = olayYeri(prev, olay)
   // NOTYA-SES-SIRA-02: no usable event order (poll AI has no olay) → still put the question before the orphan reply.
   if (at >= prev.length) {
-    const yetim = yetimCevapYeri(prev)
+    // NOTYA-AYSE-SAYI-SIRA-01: the reply that answers THIS sentence is already on screen → in front of it, on any turn.
+    const yetim = sorusuzCevapYeri(prev, t) ?? yetimCevapYeri(prev)
     if (yetim != null) at = yetim
   }
-  return [...prev.slice(0, at), msg, ...prev.slice(at)]
+  return siraAraya([...prev.slice(0, at), msg, ...prev.slice(at)], at)
 }
 
 /**
@@ -134,6 +201,12 @@ export function cevapEkle<T extends Balon>(
   soru: string | null,
   cevap: string,
   ekle: (role: 'user' | 'ai', text: string) => T,
+  /**
+   * NOTYA-AYSE-SAYI-SIRA-01: the stored doctor line this reply answers, when it is a real sentence. Recorded on the
+   * reply bubble only — no doctor bubble is made from it (on ElevenLabs the transcript is the one source of that
+   * bubble, NOTYA-SES-ESKI-01) — so that a transcript arriving after the reply finds its place in front of it.
+   */
+  cevaplanan: string | null = null,
 ): T[] {
   const c = String(cevap || '').trim()
   if (!c) return prev
@@ -150,10 +223,11 @@ export function cevapEkle<T extends Balon>(
       const [u] = next.splice(ui, 1)
       ci = cevapIndeksi()
       next.splice(ci, 0, u)
+      next = siraAraya(next, ci)
     } else if (ui === -1) {
       const u = ekle('user', s)
       ci = cevapIndeksi()
-      if (ci >= 0) next.splice(ci, 0, u)
+      if (ci >= 0) { next.splice(ci, 0, u); next = siraAraya(next, ci) }
       else next.push(u)
     }
   }
@@ -161,7 +235,8 @@ export function cevapEkle<T extends Balon>(
     // NOTYA-BUYUME-KISA-01 / multi-reply: aynı klinik cevabın 2.–3. modeli (araya kullanıcı
     // satırı girse bile) yeni balon açmasın — son birkaç AI'ya bak.
     const sonAilar = next.filter((m) => m.role === 'ai').slice(-4)
-    if (!sonAilar.some((m) => benzerCevapMi(m.text, c))) next.push(ekle('ai', c))
+    const etiket = String(cevaplanan || '').trim()
+    if (!sonAilar.some((m) => benzerCevapMi(m.text, c))) next.push(etiket ? { ...ekle('ai', c), soru: etiket } : ekle('ai', c))
   }
   return next
 }

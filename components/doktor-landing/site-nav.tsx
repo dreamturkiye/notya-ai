@@ -1,12 +1,19 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { LINKS, NAV } from "./content";
+import { DEMO, LINKS, NAV } from "./content";
+import { demoBaglantisi } from "@/lib/demo/demoBaglantisi";
 import { cn } from "./cn";
 import { Button } from "./button";
 import { ArrowUpRight, IconClose, IconMenu } from "./icons";
 
-export function SiteNav() {
+/**
+ * `home` prefixes the section anchors and the logo when the nav sits on a page other than the landing
+ * (NOTYA-DEMO-01: /demo passes "/doktor" so "#nasil" becomes "/doktor#nasil").
+ */
+export function SiteNav({ home = "" }: { home?: string } = {}) {
+  // On /demo itself (home set) the bar does not link to the page it is on.
+  const demoAcik = !home && demoBaglantisi() !== null;
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
 
@@ -33,12 +40,12 @@ export function SiteNav() {
         )}
       >
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-5 sm:px-8">
-          <a href="#top" className="font-display text-2xl italic leading-none tracking-tight">
+          <a href={`${home}#top`} className="font-display text-2xl italic leading-none tracking-tight">
             notya
           </a>
           <nav className="hidden items-center gap-7 lg:flex" aria-label="Bölümler">
             {NAV.map((item) => (
-              <a key={item.href} href={item.href} className="group flex items-baseline gap-2 text-sm font-outfit">
+              <a key={item.href} href={`${home}${item.href}`} className="group flex items-baseline gap-2 text-sm font-outfit">
                 <span className="font-outfit text-xs uppercase tracking-widest text-ink-muted">
                   {item.index}
                 </span>
@@ -52,6 +59,11 @@ export function SiteNav() {
             <a href={LINKS.login} className="hidden font-outfit text-sm text-ink-2 hover:text-ink lg:inline">
               Giriş
             </a>
+            {demoAcik ? (
+              <Button href={LINKS.demo} variant="outline" size="sm">
+                {DEMO.cta}
+              </Button>
+            ) : null}
             <Button href={LINKS.signup} variant="pine" size="sm" className="hidden sm:inline-flex">
               15 gün ücretsiz
               <ArrowUpRight className="size-3.5" />
@@ -77,7 +89,7 @@ export function SiteNav() {
             {NAV.map((item) => (
               <a
                 key={item.href}
-                href={item.href}
+                href={`${home}${item.href}`}
                 onClick={() => setOpen(false)}
                 className="flex items-baseline justify-between border-b border-line py-4"
               >
@@ -89,6 +101,11 @@ export function SiteNav() {
               <Button href={LINKS.signup} size="lg">
                 15 gün ücretsiz başlayın
               </Button>
+              {demoAcik ? (
+                <Button href={LINKS.demo} variant="outline" size="lg">
+                  {DEMO.cta}
+                </Button>
+              ) : null}
               <Button href={LINKS.login} variant="outline" size="lg">
                 Giriş yapın
               </Button>

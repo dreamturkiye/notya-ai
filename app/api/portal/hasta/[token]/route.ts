@@ -239,6 +239,7 @@ import {
 } from '@/specialties/aile-hekimligi/engines/portal-saglik-paketim'
 import { decrypt } from '@/lib/security/encryption'
 import { hastaAdSoyad } from '@/lib/portal/hastaAdi'
+import { konsultasyonBelgeIdleri, konsultasyonBelgesiMi } from '@/lib/portal/konsultasyonBelgeleri'
 import { arsivsizIlaclar, arsivsizNotlar, arsivsizSeanslar } from '@/lib/doktor/arsiv'
 import type {
   PortalBundle,
@@ -562,16 +563,20 @@ export async function GET(
     }
   } catch { /* soft */ }
   try {
-    const { data: belgeler } = await sb
+    // KONSULTASYON-01: the consultant's report never reaches Sağlığım — the patient sees only "yönlendirildiniz ·
+    // sonuç alındı". If the consultation links cannot be read, no vault document is listed (fail closed).
+    const konsultasyonBelgeleri = await konsultasyonBelgeIdleri(sb, doctorId, patientId)
+    const { data: belgeler } = konsultasyonBelgeleri ? await sb
       .from('medical_documents')
       .select('id, file_name, file_type, category, created_at')
       .eq('patient_id', patientId)
       .eq('doctor_id', doctorId)
       .is('deleted_at', null)
       .order('created_at', { ascending: false })
-      .limit(40)
+      .limit(40) : { data: [] }
     for (const b of belgeler || []) {
       const id = String(b.id)
+      if (konsultasyonBelgeleri?.has(id) || konsultasyonBelgesiMi(b.category)) continue
       if (labBelgeIds.has(id)) continue // lab paneli zaten results'ta
       if (results.some((r) => r.id === id)) continue
       const cat = String(b.category || '')

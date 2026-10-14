@@ -325,7 +325,7 @@ describe('ASI-KARNESI-01 — dijital aşı karnesi: Sağlığım bundle + PDF (g
     assert.equal(y.status, 404)
   })
 
-  it('Sağlığım bundle: kayıt varsa Aşı Karnesi modülü + veri (her branşta); kirli satır yok; kayıt yoksa modül yok', async () => {
+  it('Sağlığım bundle: Aşı Karnesi modülü her hastada açık (her branşta); kayıt varsa veri, kirli satır yok; kayıt yoksa veri boş', async () => {
     const { A } = sahneKur()
     const y = await coz(portal.GET(iste('GET', `/api/portal/hasta/${A.portalToken}`, { cerez: await portalCerezi(A.portalToken) }), prm({ token: A.portalToken })))
     assert.equal(y.status, 200, y.metin.slice(0, 200))
@@ -340,7 +340,10 @@ describe('ASI-KARNESI-01 — dijital aşı karnesi: Sağlığım bundle + PDF (g
     const bos = await coz(portal.GET(iste('GET', `/api/portal/hasta/${A.bosPortalToken}`, { cerez: await portalCerezi(A.bosPortalToken) }), prm({ token: A.bosPortalToken })))
     assert.equal(bos.status, 200)
     assert.equal(bos.json.asiKarnesi, null)
-    assert.ok(!bos.json.portal.moduller.includes('asi-karnesi'))
+    // 4157dab4 (2026-10-04): Aşı Karnesi is always on — every branch, Klinik, records or not. A patient without a
+    // record still gets the module and its nav entry; the page shows the empty state (no data in the bundle).
+    assert.ok(bos.json.portal.moduller.includes('asi-karnesi'))
+    assert.ok(bos.json.portal.nav.some((n: { path: string }) => n.path === '/asi-karnesi'))
   })
 
   it('PORTAL-HASTA-ADI: bundle carries the name only after unlock; nameless record → null; nothing else of the patient', async () => {

@@ -83,6 +83,19 @@ export interface GogusRaporGirdi {
   bugun: string
 }
 
+/**
+ * NOTYA-SUT-RAPOR-01 — the draft had no upper limit on the report length. The oxygen and nebuliser templates are
+ * reports for medical materials in continuous use: SUT 3.1.2.2(2), "Sürekli kullanılan tıbbi malzemelere ilişkin
+ * sağlık raporları SUT’ta belirtilen istisnalar hariç olmak üzere en fazla 2 (iki) yıl geçerlidir." A medicine report
+ * has the same ceiling: SUT 4.1.3(5). Default stays 6 months; anything longer than 24 is cut to 24.
+ * Source: SGK güncel SUT, 02.10.2026 (RG 33388) işlenmiş hali.
+ */
+export const GOGUS_RAPOR_EN_FAZLA_AY = 24
+export function gogusRaporSuresi(sureAy: number | null | undefined): number {
+  if (!sureAy || !Number.isFinite(sureAy) || sureAy <= 0) return 6
+  return Math.min(GOGUS_RAPOR_EN_FAZLA_AY, Math.max(1, Math.round(sureAy)))
+}
+
 export function gogusRaporTaslagi(g: GogusRaporGirdi): GogusRaporSonuc {
   const ad = GOGUS_RAPOR_SABLONLARI.find((x) => x.id === g.sablon)?.ad || g.sablon
   const liste = KONTROL_LISTESI[g.sablon]
@@ -102,7 +115,7 @@ export function gogusRaporTaslagi(g: GogusRaporGirdi): GogusRaporSonuc {
       tcSon4: '',
       tani: g.tani?.icd10 ? { icd10: g.tani.icd10.toUpperCase(), aciklama: g.tani.aciklama || '' } : null,
       skorOzet: g.skorOzet || [],
-      sureAy: g.sureAy && g.sureAy > 0 ? g.sureAy : 6,
+      sureAy: gogusRaporSuresi(g.sureAy),
       hekimDegerlendirmesi: (g.hekimDegerlendirmesi || '').trim(),
       izlemPlani: g.izlemPlani || [],
       duzenlemeTarihi: g.bugun,

@@ -20,7 +20,8 @@ import { hastaSahibiMi } from '@/lib/doktor/hastaSahipligi'
 import { arsivsizAsilar } from '@/lib/doktor/arsiv'
 import { gonderilebilirMi } from '@/lib/iletisim/izin'
 import { PERSONEL_TURLERI, turIzinliMi } from '@/lib/iletisim/kuyruk'
-import { hastaAdiCoz, hastaIletisimi, tabloYokMu } from '@/lib/iletisim/sunucu'
+import { hastaAdiCoz, tabloYokMu } from '@/lib/iletisim/sunucu'
+import { hastaIletisimiTamamla } from '@/lib/iletisim/hastaIletisimiTamamla'
 import { kanalMi, mesajTuruMu } from '@/lib/iletisim/tipler'
 
 export const dynamic = 'force-dynamic'
@@ -84,7 +85,7 @@ export async function POST(req: NextRequest) {
   if (!patientId || !kanalMi(kanal) || !mesajTuruMu(tur)) return NextResponse.json({ error: 'Eksik bilgi.' }, { status: 400 })
   if (!turIzinliMi(rol, tur)) return NextResponse.json({ error: 'Bu mesajı yalnızca doktor gönderebilir.' }, { status: 403 })
 
-  const hasta = await hastaIletisimi(supabase, doktorId, patientId)
+  const hasta = await hastaIletisimiTamamla(supabase, doktorId, patientId)
   if (!hasta) return NextResponse.json({ error: 'Hasta bulunamadı.' }, { status: 404 })
   if (!gonderilebilirMi(hasta, kanal)) return NextResponse.json({ error: 'Hasta iletişim izni vermedi.' }, { status: 409 })
 

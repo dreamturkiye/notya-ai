@@ -19,6 +19,8 @@
  */
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
+import path from 'node:path'
 
 import {
   MOLEKUL_SAYISI,
@@ -358,5 +360,79 @@ describe('NOTYA-EYLEM-28 · renkli reçete tutarlılığı', () => {
     assert.equal(TURKISH_DRUGS.pregabalin.renkliRecete, 'yesil')
     assert.equal(TURKISH_DRUGS.metilfenidat.renkliRecete, 'kirmizi')
     assert.equal(TURKISH_DRUGS.parasetamol.renkliRecete, 'normal')
+  })
+})
+
+/**
+ * NOTYA-SUT-RAPOR-01 — the assistant's SGK lines against the official text.
+ * Source for every assertion below: SGK güncel SUT, 02.10.2026 (RG 33388) işlenmiş hali, with its annexes
+ * EK-4/E, EK-4/F and the EK-4/A list in force from 02.10.2026. A line here changes only when that text changes.
+ */
+describe('NOTYA-SUT-RAPOR-01 · SGK satırları resmî SUT metniyle aynı kuralı söyler', () => {
+  const satir = (anahtar: string) => String(TURKISH_DRUGS[anahtar]?.sgkRestriction || '')
+
+  it('SUT EK-4/E 2-A/1: oral azitromisin kısıtlamasızdır (KY); penisilin alerjisi / atipik pnömoni koşulu yazılmaz', () => {
+    assert.match(satir('azitromisin'), /EK-4\/E/)
+    assert.match(satir('azitromisin'), /kısıtlaması yok/)
+    assert.doesNotMatch(satir('azitromisin'), /penisilin|atipik/i)
+  })
+
+  it('SUT EK-4/E 10/10: terbinafin kısıtlamasızdır (KY); metinde olmayan mikolojik doğrulama maddesine gönderme yapılmaz', () => {
+    assert.match(satir('terbinafin'), /EK-4\/E/)
+    assert.doesNotMatch(satir('terbinafin'), /mikolojik/i)
+  })
+
+  it('SUT EK-4/E 11/13: oseltamivir yalnız influenza endikasyonunda ve uzman hekim koşuluyla (UH-P); sezon koşulu yazılmaz', () => {
+    assert.match(satir('oseltamivir'), /influenza/)
+    assert.match(satir('oseltamivir'), /uzman hekim/)
+    assert.doesNotMatch(satir('oseltamivir'), /sezon/i)
+  })
+
+  it('SUT EK-4/E 13/17.1 (yürürlük 05.09.2026): oral izotretinoin yalnız dermatoloji uzmanınca; rapor yolu yazılmaz', () => {
+    assert.match(satir('izotretinoin'), /yalnızca dermatoloji uzman hekimlerince/)
+    assert.doesNotMatch(satir('izotretinoin'), /rapor/i)
+  })
+
+  it('SUT EK-4/E 13/5: metilfenidat yalnız 25 yaş altında ve psikiyatri uzmanınca; rapor yolu yazılmaz', () => {
+    assert.match(satir('metilfenidat'), /25 yaş altında/)
+    assert.match(satir('metilfenidat'), /psikiyatri uzman hekimlerince/)
+    assert.doesNotMatch(satir('metilfenidat'), /rapor/i)
+    assert.match(satir('metilfenidat'), /KIRMIZI REÇETE/)
+  })
+
+  it('SUT EK-4/F 16: atomoksetin sağlık kurulu raporu ister (uzman hekim raporu değil)', () => {
+    assert.match(satir('atomoksetin'), /EK-4\/F/)
+    assert.match(satir('atomoksetin'), /sağlık kurulu raporu/)
+  })
+
+  it('SUT 4.1.9(1) + EK-4/A (02.10.2026): semaglutid listede yok, SGK öder diye gösterilmez', () => {
+    assert.equal(TURKISH_DRUGS.semaglutidOral.sgkCovered, false)
+    assert.match(satir('semaglutidOral'), /EK-4\/A/)
+    assert.doesNotMatch(satir('semaglutidOral'), /rapor koşullarına bakınız/)
+  })
+
+  it('SUT 4.1.9(1) + EK-4/A (02.10.2026): simvastatin içeren ürün listede yok, SGK öder diye gösterilmez', () => {
+    assert.equal(TURKISH_DRUGS.simvastatin.sgkCovered, false)
+    assert.match(satir('simvastatin'), /EK-4\/A/)
+    assert.match(satir('simvastatin'), /SUT 4\.1\.9/)
+    assert.doesNotMatch(satir('simvastatin'), /ödeme koşullarına bakınız/)
+    // The list itself: no record of the catalogue built from the 02.10.2026 list carries simvastatin.
+    const katalog = JSON.parse(readFileSync(path.join(process.cwd(), 'data', 'sgk-ilaclar.json'), 'utf8')) as { guncelleme: string; ilaclar: { ad: string; etkenMadde?: string }[] }
+    assert.equal(katalog.guncelleme, '2026-10-02')
+    assert.equal(katalog.ilaclar.filter((k) => /simvastatin/i.test(`${k.etkenMadde || ''} ${k.ad}`)).length, 0)
+    const markalar = TURKISH_DRUGS.simvastatin.brand.map((b) => b.toLocaleUpperCase('tr'))
+    assert.equal(katalog.ilaclar.filter((k) => markalar.some((m) => k.ad.toLocaleUpperCase('tr').startsWith(`${m} `))).length, 0, markalar.join(', '))
+    // The other statins of the table are on the list and stay covered.
+    for (const anahtar of ['atorvastatin', 'rosuvastatin']) {
+      if (TURKISH_DRUGS[anahtar]) assert.equal(TURKISH_DRUGS[anahtar].sgkCovered, true, anahtar)
+    }
+  })
+
+  it('SUT 4.2.74(2): empagliflozin satırı kronik böbrek hastalığını da söyler (önceki metin yalnız tip 2 DM / kalp yetmezliği)', () => {
+    assert.match(satir('empagliflozin'), /SUT 4\.2\.74/)
+    assert.match(satir('empagliflozin'), /kronik böbrek hastalığı/)
+    assert.match(satir('empagliflozin'), /kalp yetmezliği/)
+    assert.match(satir('empagliflozin'), /SUT 4\.2\.38/)
+    assert.equal(TURKISH_DRUGS.empagliflozin.sgkCovered, true)
   })
 })
