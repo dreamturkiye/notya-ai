@@ -17,6 +17,7 @@
  *                             any other role: nobody else was named for it by the audit.
  */
 import type { PaketAraci } from '@/lib/ulke/araclar/tipler'
+import { AU_ASI_TAKVIMI_MADDELERI } from './tanimlar'
 
 const D = 'en-AU'
 const m = (metin: string) => ({ [D]: metin })
@@ -26,6 +27,67 @@ const ABS = 'by the grouping of the Australian Bureau of Statistics'
 
 /** The roles the tools are given to, as ../ayarlar.ts works them out from the country's own role list. */
 export type AuAracRolleri = { yetiskinHekimleriVePsikolog: readonly string[]; onkoloji: readonly string[] }
+
+/**
+ * THE CONSULTATION TILE (feature `konsultasyon`; the mechanism is the kit's, `lib/ulke/araclar/katalog.ts` →
+ * `konsultasyonlar`, a screen with no arithmetic). Switched on by NOTYA-ARACLAR-DENETIM-02-AU, 2026-10-13: the
+ * audit of 2026-10-10 left the feature off only because its consent sentence was never drafted
+ * (docs/araclar-denetim/AU.md, "Still unverified, and why"); the owner asked for a sensible draft and the feature
+ * on now, with the sentence itself flagged for a lawyer (../klinik/index.ts → `konsultasyonRizasi`). A base tool,
+ * every role, like "My templates" and the patient's page: no clinical content, so no licence question.
+ */
+export const AU_KONSULTASYON_ARACI: PaketAraci = {
+  anahtar: 'konsultasyonlar',
+  roller: null,
+  metin: {
+    ad: m('Consultations'),
+    aciklama: m('Ask a colleague of your own choosing — by their consultation code — for an opinion on a patient\'s care, and answer a colleague who asks you. You choose what to share; nothing is shared until you tick the consent sentence.'),
+    alanlar: {},
+    not: m('A written opinion between two doctors: diagnosis and treatment of this patient remain yours.'),
+  },
+}
+
+/** One row of the National Immunisation Program schedule: its tick label, and the vaccines it names (./tanimlar.ts). */
+const AU_ASI_SATIRLARI: Readonly<Record<(typeof AU_ASI_TAKVIMI_MADDELERI)[number], { etiket: string; icerik: string }>> = {
+  dogum: { etiket: 'Birth', icerik: 'Hepatitis B (within 7 days of birth, ideally within 24 hours).' },
+  hafta6: { etiket: '6 weeks', icerik: 'Diphtheria/tetanus/pertussis/hepatitis B/polio/Hib; pneumococcal (PCV20); rotavirus (dose 1); meningococcal B for Aboriginal and Torres Strait Islander children (others per the Handbook).' },
+  ay4: { etiket: '4 months', icerik: 'Diphtheria/tetanus/pertussis/hepatitis B/polio/Hib; pneumococcal; rotavirus (dose 2); meningococcal B for Aboriginal and Torres Strait Islander and medically at-risk children.' },
+  ay6: { etiket: '6 months', icerik: 'Diphtheria/tetanus/pertussis/hepatitis B/polio/Hib; pneumococcal for Aboriginal and Torres Strait Islander children and specified risk conditions; annual influenza from this age.' },
+  ay12: { etiket: '12 months', icerik: 'Meningococcal ACWY; pneumococcal; measles/mumps/rubella; meningococcal B for Aboriginal and Torres Strait Islander children (others per the Handbook).' },
+  ay18: { etiket: '18 months', icerik: 'Diphtheria/tetanus/pertussis; measles/mumps/rubella/varicella; Hib.' },
+  yas4: { etiket: '4 years (school entry)', icerik: 'Diphtheria/tetanus/pertussis/polio; annual influenza if applicable.' },
+  yil7: { etiket: 'School Year 7', icerik: 'Diphtheria/tetanus/pertussis booster; human papillomavirus (HPV).' },
+  yil10: { etiket: 'School Year 10', icerik: 'Meningococcal ACWY booster.' },
+  gebelik: { etiket: 'Pregnancy (each pregnancy)', icerik: 'Influenza (any trimester); pertussis booster (20–32 weeks, up to delivery); RSV (from 28 weeks).' },
+  yas65: { etiket: '65 years and over', icerik: 'Pneumococcal; annual influenza; herpes zoster (2 doses); COVID-19 (annually).' },
+  yas75: { etiket: '75 years and over', icerik: 'RSV; COVID-19 (2 doses annually).' },
+}
+
+/**
+ * THE NATIONAL IMMUNISATION PROGRAM SCHEDULE, as a record. CORE (every doctor role): switched on by the owner's
+ * instruction of 2026-10-13 (NOTYA-ARACLAR-DENETIM-02) — the arithmetic and its source are ./tanimlar.ts. A tick
+ * records that the milestone's visit happened; the date beside it is optional and the doctor's own.
+ */
+export const AU_ASI_TAKVIMI_ARACI: PaketAraci = {
+  anahtar: 'au-immunisation-schedule',
+  roller: null,
+  metin: {
+    ad: m('National Immunisation Program schedule'),
+    aciklama: m('A record of the National Immunisation Program (NIP) schedule’s milestones, from birth to the recommended vaccines of later life. Tick a milestone once it is done and, if you wish, the date. This is a record, not a reminder: it works out no catch-up schedule and no eligibility, and it does not name which brand or exact risk-based addition was given — read those from the schedule itself.'),
+    alanlar: Object.fromEntries(AU_ASI_TAKVIMI_MADDELERI.flatMap((k) => [[k, m(`${AU_ASI_SATIRLARI[k].etiket} — ${AU_ASI_SATIRLARI[k].icerik}`)], [`${k}_tarih`, m(`Date given (${AU_ASI_SATIRLARI[k].etiket.toLowerCase()})`)]])),
+    // One label per milestone's date, for the RESULT line once it is kept (./tanimlar.ts `tarihler`) — distinct from
+    // `alanlar` above, which labels the typed field itself (lib/ulke/araclar/tipler.ts, `AracMetni.tarihler`).
+    tarihler: Object.fromEntries(AU_ASI_TAKVIMI_MADDELERI.map((k) => [`${k}_tarih`, m(`Date given (${AU_ASI_SATIRLARI[k].etiket.toLowerCase()})`)])),
+    sayilar: { isaretli: m('Milestones recorded') },
+    not: m('A record of the national schedule’s milestones, kept by this product; it is not a reminder service and sends nothing to the patient. Source: Australian Government Department of Health, Disability and Ageing, National Immunisation Program Schedule.'),
+  },
+  lisans: {
+    durum: 'serbest',
+    hakSahibi: 'Australian Government Department of Health, Disability and Ageing',
+    kaynak: 'https://www.health.nsw.gov.au/schedule (read 2026-10-13): NSW Health’s published rendering of the Australian Government’s National Immunisation Program Schedule, current as at 1 October 2026; the Department’s own PDF refused this session’s automated reader (robots-disallowed).',
+    bildirim: m('Content: Australian Government Department of Health, Disability and Ageing, National Immunisation Program Schedule, as published by NSW Health, current as at 1 October 2026.'),
+  },
+}
 
 /** The tools only Australia has, in the order the grid shows them. */
 export function auEkAraclar(roller: AuAracRolleri): readonly PaketAraci[] {

@@ -68,6 +68,8 @@ export type EnPaketSinamasi = {
   ekAraclar?: readonly string[]
   /** The tools whose numbers this country states (thresholds, intervals, a table), by key. Absent = none: no such tool is on. */
   sayiliAraclar?: readonly string[]
+  /** NOTYA-ULKE-OZEL-01 — whether this country has switched consultation between doctors on, as its record states (docs/COUNTRY-PACK-HOWTO.md). Absent/false = off, as the set: no country had built it until one states so here. */
+  konsultasyonAcik?: boolean
   /** The country's emergency sentence, written into every red-flag help line. Includes that country's number. */
   acilCumle: string
   /** Emergency numbers that belong to other countries. None may appear in this pack's form. */
@@ -191,7 +193,7 @@ export function ingilizcePaketSinamasi(s: EnPaketSinamasi): void {
       assert.equal(paket.uygulama!.kayitAcik, false)
     })
     it('only what the country kit has built is switched on', () => {
-      assert.deepEqual(Object.keys(paket.ozellikler).sort(), ['acilisSayfasi', 'araclar', 'bekletmeSayfasi', 'cekirdekGiris', 'cekirdekMuayene', 'davetliKayit', 'hastaFormu', 'hastaMesajlari', 'hastaPortali', 'klinikHesaplari', 'randevu'])
+      assert.deepEqual(Object.keys(paket.ozellikler).sort(), ['acilisSayfasi', 'araclar', 'bekletmeSayfasi', 'cekirdekGiris', 'cekirdekMuayene', 'davetliKayit', 'hastaFormu', 'hastaMesajlari', 'hastaPortali', 'klinikHesaplari', ...(s.konsultasyonAcik ? ['konsultasyon'] : []), 'randevu'].sort())
       assert.deepEqual([...paket.araclar], [])
     })
   })
@@ -383,15 +385,20 @@ export function ingilizcePaketSinamasi(s: EnPaketSinamasi): void {
     it('who wrote the tool texts: a machine; which clinician read them: nobody yet', () => {
       assert.deepEqual(a.inceleme, { makineYazimi: true, klinisyen: null })
     })
-    it('messages and clinic accounts are on; templates and consultation stay off', () => {
+    it('messages and clinic accounts are on; templates stay off; consultation is off unless the country\'s record states it is on', () => {
       assert.equal(paket.ozellikler.hastaMesajlari, true)
       assert.equal(paket.ozellikler.klinikHesaplari, true)
       assert.equal('hekimSablonlari' in paket.ozellikler, false)
-      assert.equal('konsultasyon' in paket.ozellikler, false)
       assert.ok(arayuz.mesajMetinleri?.[bicim])
       assert.ok(arayuz.klinikMetinleri?.[bicim])
       assert.equal(arayuz.sablonMetinleri, undefined)
-      assert.equal(arayuz.konsultasyonMetinleri, undefined)
+      if (s.konsultasyonAcik) {
+        assert.equal(paket.ozellikler.konsultasyon, true)
+        assert.ok(arayuz.konsultasyonMetinleri?.[bicim])
+      } else {
+        assert.equal('konsultasyon' in paket.ozellikler, false)
+        assert.equal(arayuz.konsultasyonMetinleri, undefined)
+      }
       assert.equal(paket.uygulama?.mesaj?.disBildirim.acik, false)
       assert.equal(paket.uygulama?.mesaj?.disBildirim.saglayici, null)
       assert.equal(paket.uygulama?.klinikHesaplari?.inceleme.makineYazimi, true)

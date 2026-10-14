@@ -17,7 +17,7 @@
  *   au-oncology-grading       a record of the ECOG performance status grade the doctor assessed
  */
 import type { AracSayisi, AracTanimi } from '@/lib/ulke/araclar/tipler'
-import { BOS_SONUC, puan, sayi, sayiMi, secim } from '@/lib/ulke/araclar/yardimci'
+import { BOS_SONUC, kontrolListesi, puan, sayi, sayiMi, secim, tarih } from '@/lib/ulke/araclar/yardimci'
 
 // ───────────────────────── 1. K10: the total score ─────────────────────────
 
@@ -158,5 +158,53 @@ export const AU_ECOG: AracTanimi = {
   },
 }
 
+// ───────────────────────── 4. The National Immunisation Program schedule: a record of what was given ─────────────────────────
+
+/**
+ * THE NATIONAL IMMUNISATION PROGRAM (NIP) SCHEDULE: a tick and an optional date for each of its milestones. The
+ * tool works nothing out and holds no dose, no catch-up rule and no eligibility test — it is a record, exactly like
+ * the many other checklists of this product that the audit kept as "record lists, no formula, no guideline needed
+ * to confirm or contradict them" (docs/araclar-denetim/AU.md, part (a)). CORE: every doctor role, not specialty-
+ * gated, per the owner's instruction of 2026-10-13 (NOTYA-ARACLAR-DENETIM-02) — every doctor who sees a child, and
+ * several who see adults (pregnancy, 65 and over), needs this, and it was missing entirely.
+ *
+ * SOURCE, read 2026-10-13 — the schedule is the Australian Government Department of Health, Disability and Ageing's
+ *   National Immunisation Program (NIP) Schedule, https://www.health.gov.au/resources/publications/national-
+ *   immunisation-program-schedule (the PDF itself, national-immunisation-program-schedule.pdf, refused this
+ *   session's automated reader — robots-disallowed, the same failure mode the audit of 2026-10-10 recorded for
+ *   other health.gov.au pages). ITS CONTENT WAS READ, IN THIS SESSION, from NSW Health's own published rendering of
+ *   the same national schedule: https://www.health.nsw.gov.au/schedule, which states on its face "funded under the
+ *   National Immunisation Program (NIP) as of 1 October 2026" and "Current as at: Thursday 1 October 2026". Every
+ *   milestone and every vaccine named below is exactly as that page printed it on 2026-10-13. NOT A STATE SCHEDULE
+ *   OF ITS OWN: NSW Health's page is this country's own window onto the ONE national schedule; no state-specific
+ *   content (NSW program names, NSW-only funding) is carried into this tool.
+ * NOT IN THIS TOOL, because the national schedule itself does not reduce them to a tick-box, or because the audit
+ *   already named the right place for them:
+ *   - WHICH BRAND is given at an age (the schedule names a specific brand for most doses; a clinician reads it from
+ *     the schedule itself, same as a drug name is never invented by this product);
+ *   - CATCH-UP SCHEDULES for a child or adult who has missed a dose (the Department publishes a separate catch-up
+ *     calculator for people under 20, already named by the audit as part of the `vaccination-schedule` slot:
+ *     docs/araclar-denetim/au-kararlar.json, slot `vaccination-schedule`);
+ *   - RISK-BASED AND ABORIGINAL-AND-TORRES-STRAIT-ISLANDER-SPECIFIC ADDITIONS the page lists beside several ages
+ *     (extra pneumococcal and meningococcal B doses, earlier Aboriginal adult schedules): read by the clinician from
+ *     the page itself; a tick here only records that the AGE MILESTONE's visit happened, not which of its variants
+ *     was given;
+ *   - DOSE INTERVALS AND ELIGIBILITY (who may have a free dose under the NIP and when): the schedule's own text.
+ * A later pass that reaches the Department's own PDF (through a browser, not this session's blocked reader) should
+ * confirm nothing on NSW Health's page has drifted from the national document; neither has been read by an
+ * Australian clinician or immunisation nurse (the worklist this tool should join once one is kept for CORE tools).
+ */
+export const AU_ASI_TAKVIMI_MADDELERI = [
+  'dogum', 'hafta6', 'ay4', 'ay6', 'ay12', 'ay18', 'yas4', 'yil7', 'yil10', 'gebelik', 'yas65', 'yas75',
+] as const
+const asiTarihAlani = (k: string) => tarih(`${k}_tarih`, true)
+export const AU_ASI_TAKVIMI: AracTanimi = kontrolListesi({
+  anahtar: 'au-immunisation-schedule',
+  maddeler: AU_ASI_TAKVIMI_MADDELERI,
+  ek: AU_ASI_TAKVIMI_MADDELERI.map(asiTarihAlani),
+  tarihler: AU_ASI_TAKVIMI_MADDELERI.map((k) => `${k}_tarih`),
+  kaynak: 'Australian Government Department of Health, Disability and Ageing, National Immunisation Program (NIP) Schedule; read 2026-10-13 via NSW Health, "NSW immunisation schedule (children and adults)", https://www.health.nsw.gov.au/schedule, current as at 1 October 2026.',
+})
+
 /** The mechanisms only Australia has, in the order the grid shows their tools. */
-export const AU_TANIMLAR: readonly AracTanimi[] = [AU_BEDEN, AU_K10, AU_ECOG]
+export const AU_TANIMLAR: readonly AracTanimi[] = [AU_BEDEN, AU_K10, AU_ECOG, AU_ASI_TAKVIMI]
