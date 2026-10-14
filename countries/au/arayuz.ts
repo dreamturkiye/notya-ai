@@ -8,6 +8,12 @@
  */
 import type { UlkeArayuzu } from '@/lib/ulke/arayuz/tipler'
 import { enArayuz } from '../_dil/en/arayuz'
+import { AU_KONSULTASYON_METNI } from './araclar/konsultasyonMetinleri'
 import { AU_GIRDI } from './ayarlar'
 
-export const AU_ARAYUZ: UlkeArayuzu = enArayuz(AU_GIRDI)
+export const AU_ARAYUZ: UlkeArayuzu = {
+  ...enArayuz(AU_GIRDI),
+  // NOTYA-ARACLAR-DENETIM-02-AU, 2026-10-13 — the English language set has not written consultation between doctors
+  // for any of the five English-speaking countries; Australia's own words are here, not in countries/_dil/en/.
+  konsultasyonMetinleri: { 'en-AU': AU_KONSULTASYON_METNI },
+}

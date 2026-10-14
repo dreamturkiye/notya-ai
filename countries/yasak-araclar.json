@@ -3,7 +3,16 @@
   "au": [
     "au-body-size",
     "au-mental-health-screen",
-    "au-oncology-grading"
+    "au-oncology-grading",
+    "au-immunisation-schedule",
+    "au-growth-chart-reference",
+    "au-mandatory-notifications",
+    "au-triage-scale",
+    "au-diabetic-retinopathy-referral",
+    "au-oncology-care-pathway",
+    "au-anaesthesia-fasting",
+    "au-rehab-outcome",
+    "au-fracture-risk"
   ],
   "gb": [
     "gb-four-at",

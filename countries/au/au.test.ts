@@ -35,8 +35,18 @@ import { AU_SIZINTI_TERIMLERI } from './sizintiTerimleri'
 
 const D = 'en-AU'
 const LAB = { albuminKreatinin: 'mg/mmol', hemoglobin: 'g/L', kreatinin: 'umol/L', glukoz: 'mmol/L', kolesterol: 'mmol/L', crp: 'mg/L', psa: 'ug/L', hba1c: ['%', 'mmol/mol'] } as const
-/** The tools only Australia has: every one switched on by the owner's order of 2026-10-10. */
-const KENDI_ARACLARI = ['au-body-size', 'au-mental-health-screen', 'au-oncology-grading']
+/** The tools with a MECHANISM only Australia has (./araclar/tanimlar.ts): switched on 2026-10-10 and 2026-10-13. */
+const KENDI_MEKANIZMALI = ['au-body-size', 'au-mental-health-screen', 'au-oncology-grading', 'au-immunisation-schedule']
+/** NOTYA-ARACLAR-DENETIM-02-AU, 2026-10-13 — link-out tiles only Australia has: no mechanism, no arithmetic (./araclar/baglantilar.ts). */
+const KENDI_BAGLANTILARI = ['au-growth-chart-reference']
+/** Every tool that carries Australia's own code, switched on by the owner's order of 2026-10-10 or 2026-10-13. */
+const KENDI_ARACLARI = [...KENDI_MEKANIZMALI, ...KENDI_BAGLANTILARI]
+/** Every tool Australia has added beyond the shared set, mechanism or not: fed to the shared harness's count check. */
+const EK_ARACLAR = [...KENDI_ARACLARI, 'konsultasyonlar']
+/** NOTYA-ARACLAR-DENETIM-03-AU, 2026-10-14 — the slots this pass proposed: never switched on, so never in `acik`, but
+ * still carrying Australia's own code, so `ulkeyeOzelAnahtarlar` (which scans araclar + yuvalar + kendiAraclari) sees
+ * them too. */
+const YUVA_ANAHTARLARI = ['au-mandatory-notifications', 'au-triage-scale', 'au-diabetic-retinopathy-referral', 'au-oncology-care-pathway', 'au-anaesthesia-fasting', 'au-rehab-outcome', 'au-fracture-risk']
 
 ingilizcePaketSinamasi({
   paket: AU_PAKETI,
@@ -56,7 +66,9 @@ ingilizcePaketSinamasi({
   ornekTelefon: /^\+61 491 570 (006|110|15[6-9])$/,
   // NOTYA-ULKE-UYGULA-AU: Australia's own role list, and the tools it has beyond the set
   rolDegisimi: AU_ROLLER,
-  ekAraclar: KENDI_ARACLARI,
+  ekAraclar: EK_ARACLAR,
+  // switched on by the owner's explicit instruction of 2026-10-13 (NOTYA-ARACLAR-DENETIM-02-AU, founder's question #1)
+  konsultasyonAcik: true,
   acilCumle: AU_ACIL_CUMLE,
   yasakAcil: /\b(911|999|111|112|103)\b/,
   idIpucu: /\bMedicare\b/,
@@ -418,22 +430,34 @@ describe('au: the tools only Australia has — switched on by the owner\'s order
     const acik = A.araclar.map((p) => p.anahtar).filter((k) => k.startsWith('au-')).sort()
     assert.deepEqual(acik, [...AU_ONAYSIZ_ACIK_ANAHTARLAR])
     assert.deepEqual(acik, [...KENDI_ARACLARI].sort())
-    // everything Australia brought of its own is one of them: no placeholder, no link-out tile, no mechanism left over
-    assert.deepEqual(ulkeyeOzelAnahtarlar(A, 'au'), acik)
-    assert.deepEqual((A.kendiAraclari ?? []).map((t) => t.anahtar).sort(), acik)
+    // everything Australia brought of its own is one of them: every mechanism tool and every link-out tile, plus the
+    // slots this pass proposed but did not switch on — nothing left over
+    assert.deepEqual(ulkeyeOzelAnahtarlar(A, 'au'), [...acik, ...YUVA_ANAHTARLARI].sort())
+    // NOTYA-ARACLAR-DENETIM-02-AU, 2026-10-13 — a link-out tile has no mechanism by design (tur: 'baglanti'): only
+    // the mechanism-backed subset matches kendiAraclari; au-growth-chart-reference is not in it, and IS in acik
+    // (via A.araclar) and in AU_ONAYSIZ_ACIK_ANAHTARLAR.
+    assert.deepEqual((A.kendiAraclari ?? []).map((t) => t.anahtar).sort(), [...KENDI_MEKANIZMALI].sort())
+    for (const k of KENDI_BAGLANTILARI) {
+      const p = A.araclar.find((x) => x.anahtar === k)!
+      assert.ok(p.baglanti?.adres.startsWith('https://'), k)
+      assert.equal((A.kendiAraclari ?? []).some((t) => t.anahtar === k), false, `${k}: a link-out tile, no mechanism`)
+    }
     // nobody has signed one off yet
     for (const a of AU_ONAYSIZ_ACIK_ARACLAR) { assert.equal(a.klinisyen, null, a.anahtar); assert.ok(a.bakilacak.trim().length > 40, a.anahtar) }
     assert.deepEqual(A.inceleme, { makineYazimi: true, klinisyen: null })
   })
 
   it('each states a licence that is free on its rights holder\'s own notice, names the page it was read on, and shows the notice under the result', () => {
-    for (const k of KENDI_ARACLARI) {
+    for (const k of KENDI_MEKANIZMALI) {
       const l = A.araclar.find((p) => p.anahtar === k)!.lisans!
       assert.equal(l.durum, 'serbest', k)
-      assert.match(l.kaynak ?? '', /^https:\/\/\S+ \(read 2026-10-10\): /, k)
+      assert.match(l.kaynak ?? '', /^https:\/\/\S+ \(read 2026-10-(10|13)\): /, k)
       assert.ok((l.bildirim?.[D] ?? '').length > 20, `${k}: the rights holder's notice`)
     }
-    // no tool of the shared set has "free" written on it here: no rights holder's notice was read for one
+    // the link-out tile: free, but no reproduced notice is shown under a result it never gives
+    for (const k of KENDI_BAGLANTILARI) assert.equal(A.araclar.find((p) => p.anahtar === k)!.lisans?.durum, 'serbest', k)
+    // no tool of the shared set has "free" written on it here: no rights holder's notice was read for one; nor does
+    // the consultation tile (a product screen, like the patient's page and "my templates" — no clinical content)
     for (const p of A.araclar) if (!KENDI_ARACLARI.includes(p.anahtar)) assert.equal(p.lisans, undefined, p.anahtar)
   })
 
@@ -454,5 +478,51 @@ describe('au: the tools only Australia has — switched on by the owner\'s order
     assert.ok(izgara('1990-05-01').includes('au-body-size'), 'an adult')
     assert.ok(!izgara('2012-05-01').includes('au-body-size'), 'a child of 14')
     assert.ok(!izgara(null).includes('au-body-size'), 'an unknown birth date never opens it')
+  })
+
+  it('NOTYA-ARACLAR-DENETIM-02-AU, 2026-10-13 — the immunisation schedule and the growth-chart link-out tile are base tools, every role', () => {
+    for (const k of ['au-immunisation-schedule', 'au-growth-chart-reference', 'konsultasyonlar']) assert.deepEqual(goren(k), ['(no role)', ...ROLLER], k)
+  })
+
+  it('the growth-chart link-out tile is for a patient under 18; the immunisation schedule is for everybody', () => {
+    assert.deepEqual(A.araclar.find((p) => p.anahtar === 'au-growth-chart-reference')!.hasta, { enCokYas: 18 })
+    assert.equal(A.araclar.find((p) => p.anahtar === 'au-immunisation-schedule')!.hasta, undefined)
+  })
+})
+
+describe('au: the proposed slots this pass found but did not build (NOTYA-ARACLAR-DENETIM-03-AU, 2026-10-14)', () => {
+  it('each is a slot, not a switched-on tool: empty, off, not among this country\'s own prefixed keys that are live', () => {
+    const anahtarlar = A.araclar.map((p) => p.anahtar)
+    const yuvalar = A.yuvalar.filter((y) => YUVA_ANAHTARLARI.includes(y.anahtar))
+    assert.deepEqual(yuvalar.map((y) => y.anahtar).sort(), [...YUVA_ANAHTARLARI].sort())
+    for (const y of yuvalar) {
+      assert.equal(y.acik, false, y.anahtar)
+      assert.equal(y.icerik, null, y.anahtar)
+      assert.ok(!anahtarlar.includes(y.anahtar), `${y.anahtar}: must not also be switched on`)
+      assert.ok(y.eksik.trim().length > 40 && y.kimden.trim(), y.anahtar)
+    }
+    // my-health-record was built, then removed on reconsideration: it is neither a live tool nor a proposed slot
+    assert.ok(!anahtarlar.includes('au-my-health-record'))
+    assert.ok(!A.yuvalar.some((y) => y.anahtar === 'au-my-health-record'))
+  })
+  it('the two with a confirmed rights-holder question say so (ACEM for the triage scale, UDSMR for the rehabilitation outcome measure); nothing claims "free" without having read a notice', () => {
+    const yuva = (k: string) => A.yuvalar.find((y) => y.anahtar === k)!
+    assert.equal(yuva('au-triage-scale').lisans?.durum, 'izin-gerekli')
+    assert.equal(yuva('au-rehab-outcome').lisans?.durum, 'izin-gerekli')
+    for (const k of YUVA_ANAHTARLARI) assert.notEqual(yuva(k).lisans?.durum, 'serbest', k)
+  })
+})
+
+describe('au: consultation between doctors — switched on 2026-10-13 (NOTYA-ARACLAR-DENETIM-02-AU)', () => {
+  it('the feature, the two periods and the tile are all on; the consent sentence carries no placeholder and is not read by a lawyer yet', () => {
+    assert.equal(AU_PAKETI.ozellikler.konsultasyon, true)
+    assert.deepEqual(AU_PAKETI.uygulama!.konsultasyon, { acikGun: 14, kapanisSonrasiGun: 7 })
+    assert.deepEqual(AU_KLINIK.konsultasyonRizasi, { surum: 'au-konsultasyon-riza-v1', hukukcuInceledi: false })
+    const km = AU_ARAYUZ.konsultasyonMetinleri?.[D]!
+    assert.ok(km.iste.riza.length > 80, 'a real sentence, not a placeholder')
+    assert.ok(!/%/.test(km.iste.riza), 'the consent sentence carries no value')
+    assert.match(km.iste.riza, /copied and shown to that colleague/)
+    const tile = A.araclar.find((p) => p.anahtar === 'konsultasyonlar')!
+    assert.equal(tile.roller, null)
   })
 })

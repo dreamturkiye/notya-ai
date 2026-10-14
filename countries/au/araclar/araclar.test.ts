@@ -10,7 +10,7 @@ import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 import type { AracGirdisi, AracSonucu, AracTanimi } from '@/lib/ulke/araclar/tipler'
 import { kosullariUygula } from '@/lib/ulke/araclar/yardimci'
-import { AU_BEDEN, AU_ECOG, AU_K10, AU_TANIMLAR, BEL_SINIRLARI, bmiSinifi, ECOG_DERECELERI, k10Grubu, K10_MADDELERI } from './tanimlar'
+import { AU_ASI_TAKVIMI, AU_ASI_TAKVIMI_MADDELERI, AU_BEDEN, AU_ECOG, AU_K10, AU_TANIMLAR, BEL_SINIRLARI, bmiSinifi, ECOG_DERECELERI, k10Grubu, K10_MADDELERI } from './tanimlar'
 
 const BUGUN = '2026-10-10'
 const kos = (t: AracTanimi, g: AracGirdisi): AracSonucu => t.hesapla(kosullariUygula(t.alanlar, g), { bugun: BUGUN, p: {} })
@@ -109,9 +109,43 @@ describe('au-oncology-grading — a record of the ECOG grade (ECOG-ACRIN, "ECOG 
   })
 })
 
+describe('au-immunisation-schedule — the National Immunisation Program schedule (read via NSW Health\'s published rendering, health.nsw.gov.au/schedule, current as at 1 October 2026, read 2026-10-13)', () => {
+  const kosAsi = (g: AracGirdisi) => AU_ASI_TAKVIMI.hesapla(kosullariUygula(AU_ASI_TAKVIMI.alanlar, g), { bugun: BUGUN, p: {} })
+
+  it('twelve milestones, birth to 75 years and over, exactly as the page lists them, in order', () => {
+    assert.deepEqual([...AU_ASI_TAKVIMI_MADDELERI], ['dogum', 'hafta6', 'ay4', 'ay6', 'ay12', 'ay18', 'yas4', 'yil7', 'yil10', 'gebelik', 'yas65', 'yas75'])
+  })
+
+  it('a tick alone, with no date, is still a complete record (the date is optional)', () => {
+    const r = kosAsi({ dogum: true })
+    assert.deepEqual([r.tamam, sayi(r, 'isaretli'), r.tarihler], [true, 1, []])
+  })
+
+  it('a tick with its date is recorded under that milestone\'s own date key', () => {
+    const r = kosAsi({ ay12: true, ay12_tarih: '2026-10-01' })
+    assert.deepEqual(r.tarihler, [{ anahtar: 'ay12_tarih', tarih: '2026-10-01' }])
+  })
+
+  it('every milestone can be ticked at once, and the count is exactly twelve', () => {
+    const tumu = Object.fromEntries(AU_ASI_TAKVIMI_MADDELERI.map((k) => [k, true]))
+    const r = kosAsi(tumu)
+    assert.deepEqual([r.tamam, sayi(r, 'isaretli')], [true, 12])
+  })
+
+  it('nothing ticked gives no result: the tool works nothing out and holds no default', () => {
+    assert.equal(kosAsi({}).tamam, false)
+  })
+
+  it('the tool has no dose, no catch-up rule and no eligibility test: it carries no parameter and no table', () => {
+    assert.equal(AU_ASI_TAKVIMI.parametreler, undefined)
+    assert.equal(AU_ASI_TAKVIMI.tablolar, undefined)
+    assert.ok((AU_ASI_TAKVIMI.kaynak ?? '').includes('National Immunisation Program'))
+  })
+})
+
 describe('the mechanisms only Australia has', () => {
   it('each key carries the country\'s code, each names the source of its arithmetic, and none asks the country for a number of its own', () => {
-    assert.deepEqual(AU_TANIMLAR.map((t) => t.anahtar), ['au-body-size', 'au-mental-health-screen', 'au-oncology-grading'])
+    assert.deepEqual(AU_TANIMLAR.map((t) => t.anahtar), ['au-body-size', 'au-mental-health-screen', 'au-oncology-grading', 'au-immunisation-schedule'])
     for (const t of AU_TANIMLAR) {
       assert.match(t.anahtar, /^au-[a-z0-9]+(-[a-z0-9]+)*$/)
       assert.ok((t.kaynak ?? '').length > 20, t.anahtar)
