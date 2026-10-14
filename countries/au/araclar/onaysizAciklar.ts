@@ -41,6 +41,10 @@ export const AU_ONAYSIZ_ACIK_ARACLAR: readonly OnaysizAcikArac[] = [
     bakilacak: 'Names WHO (under 2) and ANZSPED\'s own charts or the CDC 2000 charts (2 to 18) without choosing between the latter two, because ANZSPED\'s own page does not say which takes precedence. A paediatrician should say whether this product\'s own patients should default to one of them, and whether the under-18 age gate is the right cut-off (ANZSPED\'s charts run to 18; some practices may want this available to 19- or 20-year-olds using the CDC set).',
   },
   {
+    anahtar: 'au-pbs-report-link', oneri: 'PBS expenditure reports, 2026-10-14', klinisyen: null,
+    bakilacak: 'The tile only opens the report index. No drug row was copied, because the site copyright does not grant that. A clinician should say whether a link, with the top-50 table left out, is the right thing to show until the Department allows reuse.',
+  },
+  {
     anahtar: 'au-immunisation-schedule', oneri: 'NOTYA-ARACLAR-DENETIM-02-AU (founder\'s question #2, 2026-10-13)', klinisyen: null,
     bakilacak: 'Built CORE and switched on by the owner\'s explicit instruction, not waiting on this list — but still machine-written and unread by a clinician of Australia. It is a record only: no catch-up schedule, no eligibility test and no brand name. Sourced to NSW Health\'s published rendering of the National Immunisation Program Schedule (the Department\'s own PDF was robots-blocked this session): a clinician of Australia should confirm that rendering is still a faithful, current copy of the national schedule, and that the twelve milestones chosen are the right set to show (no risk-based or Aboriginal-and-Torres-Strait-Islander-specific additions beyond the one line that names them).',
   },

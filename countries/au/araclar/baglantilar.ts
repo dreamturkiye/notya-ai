@@ -54,3 +54,31 @@ export const AU_GROWTH_CHART_REFERENCE: PaketAraci = {
   baglanti: { adres: 'https://anzsped.org/clinical-resources-links/growth-growth-charts/' },
   lisans: { durum: 'serbest', kaynak: 'https://anzsped.org/clinical-resources-links/growth-growth-charts/ (read 2026-10-13): ANZSPED’s own page; a link-out tile reproduces none of its charts or data.' },
 }
+
+/**
+ * PBS expenditure and prescriptions reports. The index was opened on 14 October 2026.
+ * The tables were not copied: the site's copyright page, as quoted in docs/medicines/AUSTRALIA.md
+ * from a reading on 9 October 2026, allows personal reference and reserves other rights.
+ * Doctors only. Not a formulary and not a rank inside this product.
+ */
+export function auPbsRaporu(hekimler: readonly string[]): PaketAraci {
+  return {
+    anahtar: 'au-pbs-report-link',
+    roller: [...hekimler],
+    sinif: 'hekimler',
+    metin: {
+      ad: m('PBS expenditure and prescriptions (link)'),
+      aciklama: m('Opens the Pharmaceutical Benefits Scheme page that lists the yearly expenditure and prescriptions reports. This product does not copy those tables.'),
+      alanlar: {},
+      not: m('The report index names a current file for 1 July 2024 to 30 June 2025. No drug name from it is stored here. Whether a medicine is right for this patient is the doctor\'s decision.'),
+      baglanti: m('Open the PBS reports page'),
+    },
+    baglanti: { adres: 'https://www.pbs.gov.au/info/statistics/expenditure-prescriptions/pbs-expenditure-and-prescriptions' },
+    lisans: {
+      durum: 'serbest',
+      hakSahibi: 'Pharmaceutical Benefits Scheme',
+      kaynak: 'A link only. The report index was read 2026-10-14: https://www.pbs.gov.au/info/statistics/expenditure-prescriptions/pbs-expenditure-and-prescriptions. No table was copied. The copyright page (https://www.pbs.gov.au/general/copyright, last updated 6 July 2022) was read on 9 October 2026 and is quoted in docs/medicines/AUSTRALIA.md: personal reference, other rights reserved.',
+      bildirim: m('A link to a Pharmaceutical Benefits Scheme page. This tile does not copy the reports. This product is not the Department\'s.'),
+    },
+  }
+}

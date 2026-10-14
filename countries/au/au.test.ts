@@ -38,7 +38,7 @@ const LAB = { albuminKreatinin: 'mg/mmol', hemoglobin: 'g/L', kreatinin: 'umol/L
 /** The tools with a MECHANISM only Australia has (./araclar/tanimlar.ts): switched on 2026-10-10 and 2026-10-13. */
 const KENDI_MEKANIZMALI = ['au-body-size', 'au-mental-health-screen', 'au-oncology-grading', 'au-immunisation-schedule']
 /** NOTYA-ARACLAR-DENETIM-02-AU, 2026-10-13 — link-out tiles only Australia has: no mechanism, no arithmetic (./araclar/baglantilar.ts). */
-const KENDI_BAGLANTILARI = ['au-growth-chart-reference']
+const KENDI_BAGLANTILARI = ['au-growth-chart-reference', 'au-pbs-report-link']
 /** Every tool that carries Australia's own code, switched on by the owner's order of 2026-10-10 or 2026-10-13. */
 const KENDI_ARACLARI = [...KENDI_MEKANIZMALI, ...KENDI_BAGLANTILARI]
 /** Every tool Australia has added beyond the shared set, mechanism or not: fed to the shared harness's count check. */
@@ -487,6 +487,10 @@ describe('au: the tools only Australia has — switched on by the owner\'s order
 
   it('the growth-chart link-out tile is for a patient under 18; the immunisation schedule is for everybody', () => {
     assert.deepEqual(A.araclar.find((p) => p.anahtar === 'au-growth-chart-reference')!.hasta, { enCokYas: 18 })
+    assert.ok(goren('au-pbs-report-link').includes('family-medicine'))
+    assert.ok(goren('au-pbs-report-link').includes('paediatrics'))
+    assert.equal(goren('au-pbs-report-link').includes('dietetics'), false)
+    assert.equal(goren('au-pbs-report-link').includes('(no role)'), false)
     assert.equal(A.araclar.find((p) => p.anahtar === 'au-immunisation-schedule')!.hasta, undefined)
   })
 })

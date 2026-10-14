@@ -24,7 +24,7 @@
 import { hekimRolleri } from '@/lib/ulke/araclar/paket'
 import type { EnUlkeGirdisi } from '../_dil/en/girdi'
 import { enRolSatirlari } from '../_dil/en/klinik/roller'
-import { AU_GROWTH_CHART_REFERENCE } from './araclar/baglantilar'
+import { AU_GROWTH_CHART_REFERENCE, auPbsRaporu } from './araclar/baglantilar'
 import { AU_ASI_TAKVIMI_ARACI, AU_KONSULTASYON_ARACI, auEkAraclar } from './araclar/metinler'
 import { AU_TANIMLAR } from './araclar/tanimlar'
 import { AU_EK_YUVALAR } from './araclar/yuvalarim'
@@ -268,6 +268,9 @@ export const AU_GIRDI: EnUlkeGirdisi = {
         // and the audit report for the reasoning. The research finding itself stands (My Health Record is
         // confirmed as Australia's name for this), it is simply not shipped as a tool.
         AU_GROWTH_CHART_REFERENCE,
+        // The PBS top-drugs tables are not copied. The copyright page reserves rights beyond personal
+        // reference (docs/medicines/AUSTRALIA.md). This tile only opens the report index. Doctors only.
+        auPbsRaporu(hekimRolleri(SATIRLAR)),
       ],
       tanimlar: AU_TANIMLAR,
       // NOTYA-ARACLAR-DENETIM-03-AU, 2026-10-14 — Australia's OWN proposed slots: distinctive Australian practice
