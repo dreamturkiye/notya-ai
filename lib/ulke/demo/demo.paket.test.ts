@@ -84,7 +84,7 @@ const acilisDugmesi = (d: DilKodu) => {
   const l = acilisCiz(d)
   const href = `href="${kacisli(D.demoAdresi(d))}"`
   assert.equal(l.split(href).length - 1, 3, `${d}: one button in the bar, one in the hero, one in the demo section`)
-  assert.equal(l.split('bg-[#c2410c]').length - 1, 3, `${d}: the demo button uses the contrasting fill`)
+  assert.equal(l.split('bg-[#1e3a8a]').length - 1, 3, `${d}: the demo button uses the contrasting fill`)
   assert.ok(D.demoAdresi(d).startsWith(U.ulkePaketi().yolOnEki ?? '/'), `${d}: under the build's path prefix`)
   assert.ok(l.includes('id="demo"'), `${d}: the landing page has the demo section`)
   const m = D.demoMetni(d)!
