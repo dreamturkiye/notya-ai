@@ -1,6 +1,6 @@
 /**
  * NOTYA-DERM-02 — Derm spine API (dermatoloji only). Every write is a doctor action.
- * POST adim: lezyon_degerlendir | lezyon_tani | onam | islem | islem_patoloji | biyolojik_kapisi | biyolojik_basla | izotretinoin_basla | pediatrik | gorev
+ * POST adim: lezyon_degerlendir | lezyon_tani | onam | islem | islem_patoloji | biyolojik_kapisi | biyolojik_basla | izotretinoin_basla | pediatrik | gorev | foto_vizit
  * GET ?patientId= → lezyonlar (degerlendirme/resmi tanı), islemler, ilac guvenlik, görevler, onamlar, kutuphane
  */
 import { NextRequest, NextResponse } from 'next/server'
@@ -8,7 +8,10 @@ import { doktorOturum } from '@/lib/doktor/serverAuth'
 import { decrypt } from '@/lib/security/encryption'
 import { gununNotunaEkle } from '@/lib/doktor/gununNotunaEkle'
 import { lezyonDegerlendir, islemGorevleri, DERM_ONAMLAR, ISLEM_SABLONLARI, RESMI_TANI_SECENEKLERI, biyolojikKapisi, izotretinoinKapisi, PEDIATRIK_SABLONLAR, type IslemTuru, type Abcde } from '@/specialties/dermatoloji/engines/derm-spine'
-import { hastaSahibiMi } from '@/lib/doktor/hastaSahipligi'
+import { hastaSahibiMi, seansSahibi } from '@/lib/doktor/hastaSahipligi'
+import { vizitHastayaUygunMu } from '@/lib/doktor/gorselYakalama'
+import { attachToVisit } from '@/specialties/dermatoloji/imaging/vision-tools'
+import type { PhotoAsset } from '@/specialties/dermatoloji/schema'
 
 export const dynamic = 'force-dynamic'
 const bugun = () => new Date().toISOString().slice(0, 10)
@@ -45,6 +48,40 @@ export async function POST(req: NextRequest) {
   }
 
   if (adim === 'gorev') { const { error } = await sb.from('derm_gorevleri').update({ durum: String(b.durum || 'tamam'), tamam_at: b.durum === 'tamam' ? new Date().toISOString() : null }).eq('id', String(b.gorevId || '')).eq('doctor_id', user.id); return error ? NextResponse.json({ error: 'Yazılamadı' }, { status: 500 }) : NextResponse.json({ ok: true }) }
+
+  // GORSEL-YAKALAMA-01 — wires the previously-unused attachToVisit() (vision-tools.ts) into a real
+  // route: a photo/PDF just captured inline (hasta_goruntulemeler, optionally already visit-tagged by
+  // the upload call) is explicitly linked to THIS lesion + THIS visit. Never writes a diagnosis —
+  // derm_foto_meta only carries kind/lesion/consent metadata; resmi_tani stays the hekim's own lock
+  // (adım lezyon_tani above).
+  if (adim === 'foto_vizit') {
+    const coreImageId = String(b.coreImageId || '')
+    const { data: img } = await sb.from('hasta_goruntulemeler').select('id, visit_id').eq('id', coreImageId).eq('patient_id', hasta.id).eq('doctor_id', user.id).maybeSingle()
+    if (!img) return NextResponse.json({ error: 'Görüntü bulunamadı' }, { status: 404 })
+    const visitId = b.visitId ? String(b.visitId) : null
+    const vizit = visitId ? await seansSahibi(sb, user.id, visitId) : null
+    if (visitId && !vizit) return NextResponse.json({ error: 'Vizit bulunamadı' }, { status: 404 })
+    if (vizit && !vizitHastayaUygunMu(vizit.patient_id, hasta.id)) return NextResponse.json({ error: 'Vizit bu hastaya ait değil' }, { status: 400 })
+    const lezyonId = b.lezyonId ? await lezyonBu(b.lezyonId) : null
+    if (b.lezyonId && !lezyonId) return NextResponse.json({ error: 'Lezyon bulunamadı' }, { status: 404 })
+    const bolge = String(b.bolge || '').trim().slice(0, 120) || 'belirtilmedi'
+    const kind = (['klinik_genel', 'klinik_yakin', 'dermoskopi_polarize', 'dermoskopi_immersion'] as const).includes(String(b.kind) as any)
+      ? (String(b.kind) as PhotoAsset['kind']) : 'klinik_genel'
+    const photo: PhotoAsset = {
+      id: String(img.id), coreImageId: String(img.id), kind, lesionId: lezyonId, capturedAt: new Date().toISOString(),
+      region: bolge, genital_consent: false, pediatric_consent: false, education_anonymized: false, patient_share: false,
+    }
+    const baglanti = attachToVisit(photo, visitId || '')
+    if (visitId && img.visit_id !== visitId) {
+      await sb.from('hasta_goruntulemeler').update({ visit_id: visitId }).eq('id', img.id)
+    }
+    const { error } = await sb.from('derm_foto_meta').upsert(
+      { doctor_id: user.id, patient_id: hasta.id, core_image_id: img.id, lesion_id: lezyonId, kind, updated_at: new Date().toISOString() },
+      { onConflict: 'doctor_id,core_image_id' },
+    )
+    if (error) return NextResponse.json({ error: 'Vizite bağlanamadı' }, { status: 500 })
+    return NextResponse.json({ ok: true, baglanti })
+  }
 
   if (adim === 'lezyon_degerlendir') {
     const lezyonId = await lezyonBu(b.lezyonId)
