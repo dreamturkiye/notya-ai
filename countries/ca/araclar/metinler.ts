@@ -87,5 +87,28 @@ export function caKendiAraclari(r: CaRolleri): readonly PaketAraci[] {
       hasta: { enAzYas: 18 },
       lisans: NIDDK_LISANSI,
     },
+    caPrescribeIt(r.hekimler),
   ]
+}
+
+/** A link only. The homepage was read on 14 October 2026. No call is made. */
+export function caPrescribeIt(hekimler: readonly string[]): PaketAraci {
+  return {
+    anahtar: 'ca-prescribeit-link',
+    roller: [...hekimler], sinif: 'hekimler',
+    metin: {
+      ad: m('PrescribeIT (link)'),
+      aciklama: m('Opens the PrescribeIT page. This product does not call that service and does not sign in.'),
+      alanlar: {},
+      not: m('The page says the national prescribing standard is reached by joining its standards working group. This product has not joined. Nothing from the patient file is sent. It does nothing else. Whether to use the service is the doctor\'s decision.'),
+      baglanti: m('Open the PrescribeIT page'),
+    },
+    baglanti: { adres: 'https://www.prescribeit.ca/' },
+    lisans: {
+      durum: 'serbest',
+      hakSahibi: 'PrescribeIT',
+      kaynak: 'A link only. https://www.prescribeit.ca/, read 2026-10-14',
+      bildirim: m('A link to the PrescribeIT page. This tile does not copy that page and does not call the service.'),
+    },
+  }
 }

@@ -41,6 +41,12 @@ export const CA_ONAY_BEKLEYEN: readonly OnayBekleyen[] = [
       'Creatinine is typed in µmol/L and divided by 88.4. Does any laboratory here report it in another unit?',
     ],
   },
+  {
+    anahtar: 'ca-prescribeit-link',
+    sorular: [
+      'The tile only opens the homepage. The page says a standards working group is how the national prescribing standard is reached. This product has not joined. Is a link, with no registration, the right thing to show?',
+    ],
+  },
 ]
 
 /** The keys alone. */

@@ -40,7 +40,8 @@ const M = A.metinler[D]!
 const ROLLER = CA_PAKETI.uygulama!.roller!
 const BUGUN = '2026-10-10'
 const ORTAM = { bugun: BUGUN, p: {} }
-const ANAHTARLAR = ['ca-unit-converter', 'ca-egfr-ckd-epi-2021']
+const MEKANIZMA = ['ca-unit-converter', 'ca-egfr-ckd-epi-2021']
+const ANAHTARLAR = [...MEKANIZMA, 'ca-prescribeit-link']
 const hesapla = (t: AracTanimi, g: AracGirdisi): AracSonucu => t.hesapla(g, ORTAM)
 const O: BirimOrtami = { birimler: CA_PAKETI.uygulama!.birimler, lab: A.labBirimleri, sayi: CA_PAKETI.bicim }
 const yazici: Yazici = { sayi: (deger, ondalik) => deger.toFixed(ondalik), tarih: (iso) => iso, birim: (kod) => A.birimler[kod]?.[D] ?? `?${kod}?` }
@@ -51,7 +52,7 @@ const KENDI = caKendiAraclari({ hekimler: CA_HEKIMLER })
 
 describe('ca new tools 1: BOTH ARE SWITCHED ON, without a clinician\'s sign-off, and the list says so', () => {
   it('the two: their mechanisms, their words and the list name the same keys', () => {
-    assert.deepEqual(CA_TANIMLAR.map((t) => t.anahtar), ANAHTARLAR)
+    assert.deepEqual(CA_TANIMLAR.map((t) => t.anahtar), MEKANIZMA)
     assert.deepEqual([...CA_ONAY_BEKLEYEN_ANAHTARLAR], ANAHTARLAR)
     assert.deepEqual(KENDI.map((p) => p.anahtar), ANAHTARLAR)
     for (const x of CA_ONAY_BEKLEYEN) assert.ok(x.sorular.length > 0 && x.sorular.every((s) => s.trim().length > 20), `${x.anahtar}: what the clinician is asked`)
@@ -62,7 +63,7 @@ describe('ca new tools 1: BOTH ARE SWITCHED ON, without a clinician\'s sign-off,
     assert.deepEqual([...acikKendi].sort(), [...CA_ONAY_BEKLEYEN_ANAHTARLAR].sort(), 'a tool of this country is on and not on the list, or is on the list and not on: countries/ca/araclar/onayBekleyen.ts and ../ayarlar.ts → ek.araclar must name the same tools. A tool leaves the list only with the clinician\'s name recorded.')
     // every key of the country's own anywhere in the pack (a tool, a placeholder, a mechanism) is one of them: nothing is half-added
     assert.deepEqual(ulkeyeOzelAnahtarlar(A, 'ca'), [...CA_ONAY_BEKLEYEN_ANAHTARLAR].sort())
-    assert.deepEqual((A.kendiAraclari ?? []).map((t) => t.anahtar), ANAHTARLAR)
+    assert.deepEqual((A.kendiAraclari ?? []).map((t) => t.anahtar), MEKANIZMA)
     assert.deepEqual((CA_GIRDI.araclar.ek?.araclar ?? []).map((p) => p.anahtar), ANAHTARLAR)
     // on, so not a placeholder
     for (const k of ANAHTARLAR) { assert.ok(paketinAraci(A, k), k); assert.ok(!A.yuvalar.some((y) => y.anahtar === k), `${k} is also a placeholder`) }
@@ -82,7 +83,7 @@ describe('ca new tools 1: BOTH ARE SWITCHED ON, without a clinician\'s sign-off,
   it('THE PROPOSALS THAT WERE NOT BUILT are not half-built: no key of theirs is anywhere in the pack', () => {
     // each needs a rights holder's permission, or its terms or its defining publication could not be opened (the report of 2026-10-10)
     const yapilmayan = ['ca-blood-pressure', 'ca-ctas', 'ca-framingham', 'ca-chads65', 'ca-kfre', 'ca-canrisk', 'ca-fracture-risk', 'ca-who-growth-charts', 'ca-rourke', 'ca-concussion-steps', 'ca-ottawa-rules', 'ca-stroke-scales', 'ca-pregnancy-dating']
-    assert.equal(yapilmayan.length + ANAHTARLAR.length, 15, 'the fifteen proposals of the audit')
+    assert.equal(yapilmayan.length + MEKANIZMA.length, 15, 'the fifteen proposals of the audit')
     const hepsi = [...A.araclar.map((p) => p.anahtar), ...A.yuvalar.map((y) => y.anahtar), ...(A.kendiAraclari ?? []).map((t) => t.anahtar)]
     for (const k of yapilmayan) assert.ok(!hepsi.includes(k), k)
   })
@@ -297,7 +298,7 @@ describe('ca new tools 4: the words and the licences', () => {
     for (const p of KENDI) {
       assert.equal(p.lisans?.durum, 'serbest', p.anahtar)
       assert.ok(p.lisans?.hakSahibi?.trim(), p.anahtar)
-      assert.match(p.lisans?.kaynak ?? '', /https:\/\/\S+, read 2026-10-10$/, p.anahtar)
+      assert.match(p.lisans?.kaynak ?? '', /https:\/\/\S+, read 2026-10-1[04]$/, p.anahtar)
       assert.ok(lisansBildirimi(paketinAraci(A, p.anahtar)!, D).trim(), `${p.anahtar}: the notice under the result`)
     }
     // federal enactments: the Reproduction of Federal Law Order; the reproduction is not represented as an official version

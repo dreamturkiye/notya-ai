@@ -35,7 +35,8 @@
   ],
   "ca": [
     "ca-egfr-ckd-epi-2021",
-    "ca-unit-converter"
+    "ca-unit-converter",
+    "ca-prescribeit-link"
   ],
   "us": [
     "us-blood-sugar-ranges",
