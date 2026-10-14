@@ -3398,3 +3398,13 @@ Context: Kaan sent four invitation e-mails from his own mailbox at 15:10 ET on 2
 - **01d (2026-10-09) — no invitation page.** A page where an invited doctor sets their own password from a personal link (so sign-up can stay closed) was planned for #577 and not built: the job was stopped before it started. Waits on: Kaan's word to build it.
 - **01e (2026-10-09) — no system e-mail.** Custom SMTP is off and the project's Site URL is `http://localhost:3000`, with no redirect URLs. Invitations, sign-up confirmation and password reset by e-mail are all impossible until a mail provider and DNS on the sending domain exist. Waits on: Kaan (provider account and key).
 - **01f (2026-10-09) — two older accounts are stuck unconfirmed** from earlier sign-up attempts. Not touched. Waits on: Kaan to say whether they are real people.
+
+## NOTYA-TEST-SANDBOX-27-01 — 27 recurring test failures are a sandbox network gap, not a code defect (2026-10-14)
+
+Context: surfaced independently by two separate jobs in one night (the six-country PR #668 deploy, and the Türkiye PR #660 glob-gap fix) — both ran the full suite and hit the same 27 failures. Both verified, separately, that the failures are identical in count and name on unmodified `main`/`release/*` with none of that night's changes applied, and have zero file overlap with anything either job touched (voice/socket/Fish-TTS clients, AI-budget timing tests — all need an external service this sandbox's egress allowlist can't reach).
+
+Logging this once so a future job doesn't re-discover and re-investigate it from scratch. If these ever show as failing in real CI (which does have network access to those services), that is a real regression and this entry does not excuse it — this only covers failures reproduced in this sandboxed agent environment.
+
+| ID | Date | Status | What | Owner / waiting on |
+|----|------|--------|------|--------------------|
+| NOTYA-TEST-SANDBOX-27-01 | 2026-10-14 | OPEN (informational) | 27 tests across the repo fail in this sandbox only, because they need network access to voice/socket/Fish-TTS or AI-budget-timing services that the sandbox's egress allowlist blocks. Confirmed identical on unmodified `main` and `release/*`. Not a code defect; no fix needed unless it also reproduces in real CI. | Claude: cite this entry instead of re-investigating; Kaan: flag if real CI ever shows these failing for a different reason |
