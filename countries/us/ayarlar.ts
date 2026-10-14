@@ -54,6 +54,7 @@ const DOZ_BUGUN = 'The two faults the audits found in the tool itself (it rounde
 const EMIR_ESI = 'LICENCE, off by the owner\'s order of 2026-10-10: the Emergency Severity Index belongs to the Emergency Nurses Association, which requires written permission for its use; none has been given. Needed: that permission, recorded.'
 const EMIR_RAPOR = 'LICENCE, off by the owner\'s order of 2026-10-10: the BI-RADS categories the tool prints belong to the American College of Radiology, which requires a licence agreement for commercial software; there is none. The tool stays off as a whole: the categories are not edited out of it. Needed: that agreement, recorded.'
 const EMIR_BOBREK = 'SAFETY, off by the owner\'s order of 2026-10-10: the tool shows "Low risk (green cell)" when no urine albumin result was typed, and the internal-medicine tool labels its referral flags as KDIGO criteria that the guideline does not state that way. Needed: both corrected in the kit (NOTYA-ULKE-ARAC-01b).'
+const EMIR_KBH = 'NEW TOOL, ships off pending a clinician\'s sign-off (the standing rule for every new tool, not the KDIGO-chart licence question above: this tool is kit\'s own open-facts classifier, no coloured chart, built for this reason — lib/ulke/araclar/tanimlar/kbhRiskKategorisi.ts). Needed: a nephrologist or internal-medicine lead in the United States to confirm (a) the specialty roster the kit defaults to (nephrology, internal medicine, family medicine, endocrinology, cardiology, urology, oncology — diabetic and cardiorenal monitoring, transplant/obstructive follow-up and nephrotoxic-therapy monitoring, not only nephrology clinics) fits US practice, including whether Geriatric Medicine (this pack\'s own added role) should be added, and (b) the urine albumin-to-creatinine ratio unit already stated above (mg/g) is right for this tool too. NOT given to emergency medicine here: that specialty stages ACUTE kidney injury, a different KDIGO tool this kit does not yet have (see docs/OPEN-COMMITMENTS.md).'
 /** Who lifts a licence block: the owner obtains the rights holder's permission; a local clinician then confirms the tool. */
 const HAK_SAHIBI = `the owner, with the rights holder's written permission; then ${KLINISYEN}`
 
@@ -135,6 +136,7 @@ export const US_GIRDI: EnUlkeGirdisi = {
       'esi-triyaj': { eksik: EMIR_ESI, kimden: HAK_SAHIBI },
       'kdigo-evre': { eksik: EMIR_BOBREK, kimden: KLINISYEN },
       'kdigo-serit': { eksik: EMIR_BOBREK, kimden: KLINISYEN },
+      'kbh-risk-kategorisi': { eksik: EMIR_KBH, kimden: KLINISYEN },
       'rapor-taslagi': { eksik: EMIR_RAPOR, kimden: HAK_SAHIBI },
       // This pack has no clinic-dermatology role (./roller.ts). The two reminder calendars are for that role only.
       'akne-vade': { eksik: 'This country has no clinic-dermatology role, so this reminder calendar stays off. It is a product reminder for that role, not a national schedule.', kimden: KLINISYEN },
