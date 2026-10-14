@@ -66,9 +66,9 @@ describe('nz codes, interactions, and laboratory units', () => {
   it('the controlled-drug record starts with the six points that apply to every prescription', () => {
     assert.deepEqual(NZ_KONTROLLU.alanlar.slice(0, 6).map((a) => a.anahtar), [...NZ_KONTROLLU_HER])
     assert.equal(NZ_KONTROLLU.alanlar.length, 12)
-    assert.equal(NZ_KONTROLLU.hesapla({}).tamam, false)
+    assert.equal(NZ_KONTROLLU.hesapla({}, { bugun: BUGUN, p: {} }).tamam, false)
     const g = Object.fromEntries(NZ_KONTROLLU.alanlar.map((a) => [a.anahtar, true]))
-    const s = NZ_KONTROLLU.hesapla(g)
+    const s = NZ_KONTROLLU.hesapla(g, { bugun: BUGUN, p: {} })
     assert.equal(s.tamam, true)
     assert.equal(s.sayilar.find((x) => x.anahtar === 'isaretli')?.deger, 12)
   })
