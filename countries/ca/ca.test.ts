@@ -45,7 +45,7 @@ ingilizcePaketSinamasi({
   // NOTYA-ULKE-UYGULA-CA: this country's own role list (nothing taken out, seven added: ./roller.ts, ./roller.test.ts)
   rolDegisimi: CA_ROLLER,
   // … and the two tools only it has, both switched on (./araclar/)
-  ekAraclar: ['ca-unit-converter', 'ca-egfr-ckd-epi-2021', 'ca-narcotic-note', 'ca-prescribeit-link'],
+  ekAraclar: ['ca-unit-converter', 'ca-egfr-ckd-epi-2021', 'ca-narcotic-note', 'ca-dpd-lookup', 'ca-prescribeit-link'],
   acilCumle: CA_ACIL_CUMLE,
   yasakAcil: /\b(999|111|000|112|103)\b/,
   idIpucu: /health card/i,
@@ -92,7 +92,11 @@ describe('ca: what is Canada\'s', () => {
     assert.deepEqual(Object.keys(CA_KLINIK.konusma.zorlamaDilKodlari), [D])
     assert.match(kaynakOku(join(__dirname, 'ayarlar.ts')), /ENGLISH ONLY\. FRENCH IS ABSENT — WAITING ON KAAN/)
     const hepsi = tumMetinler({ paket: CA_PAKETI.metinler, arayuz: { ...CA_ARAYUZ, asistan: undefined }, form: CA_KLINIK.hastaFormu })
-    for (const x of hepsi) assert.doesNotMatch(x.metin, /[àâçéèêëîïôùûüœ]|\b(le|la|les|des|une|vous|votre|pour|avec|santé)\b/i, `${x.yer}: "${x.metin.slice(0, 60)}"`)
+    // Product rows are the register's own names. Many are the French name on the registration. The pack's own sentences stay English.
+    for (const x of hepsi) {
+      if (x.yer.includes('.secenekler.urun.')) continue
+      assert.doesNotMatch(x.metin, /[àâçéèêëîïôùûüœ]|\b(le|la|les|des|une|vous|votre|pour|avec|santé)\b/i, `${x.yer}: "${x.metin.slice(0, 60)}"`)
+    }
   })
 
   it('the patient identifier is labelled "Health card number"; the guardian age is the pack\'s setting in both halves', () => {

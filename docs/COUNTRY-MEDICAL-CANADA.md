@@ -18,7 +18,7 @@ A unit converter and the 2021 eGFR equation. Laboratory units already live on th
 
 | Source | Why it is not a screen |
 | --- | --- |
-| Open Government Licence – Canada, version 2.0, read 14 October 2026 at https://open.canada.ca/en/open-government-licence-canada | Commercial use is allowed with attribution. That licence does not create a national ranking of medicines. No official national top 250 by prescriptions was found, so the Drug Product Database was not copied and then labelled as most prescribed. |
+| Open Government Licence – Canada, version 2.0, read 14 October 2026 at https://open.canada.ca/en/open-government-licence-canada | Commercial use is allowed with attribution. The licence does not create a ranking of prescriptions. The approved human products are stored as a lookup (`ca-dpd-lookup`), not as a most-prescribed list. |
 | Canadian Immunization Guide, recommended schedules, read 14 October 2026 at https://www.canada.ca/en/public-health/services/publications/healthy-living/canadian-immunization-guide-part-1-key-immunization-information/page-13-recommended-immunization-schedules.html | The chapter says it has not been updated with NACI guidance of May 2026 (meningococcal vaccines under 2 years), 30 January 2026 (rabies pre-exposure), and 15 November 2024 (pneumococcal vaccines in adults, including Pneu-C-21). It also says it contains no COVID-19 information. A schedule taken from that chapter would be stale. It was not copied. |
 | Nationally notifiable diseases, page date modified 7 October 2026, https://diseases.canada.ca/notifiable/diseases-list | The HTML shell does not include the disease rows. They are drawn into the page by a script. The rows were not in the file that was saved, so none were copied. Historical names that are no longer notifiable were not taken from a search snippet. |
 | Controlled-drug writing rules | No current regulation text was saved. No field was invented. |
@@ -30,6 +30,7 @@ A unit converter and the 2021 eGFR equation. Laboratory units already live on th
 | Item | What it is |
 | --- | --- |
 | `ca-narcotic-note` | Five ticks from the Narcotic Control Regulations, C.R.C., c. 1041, sections 2 and 31(2), current to 2026-09-21 and last amended on 2024-06-05. Read 14 October 2026 at https://laws-lois.justice.gc.ca/eng/regulations/C.R.C.,_c._1041/FullText.html. Reproduction is under the Reproduction of Federal Law Order, SI/97-5, and the screen says it is not an official version. |
+| `ca-dpd-lookup` | Approved human products from the Drug Product Database API (`status=1`, class Human), with English ingredient names, retrieved 14 October 2026. Open Government Licence – Canada. Not a ranking and not a dose. Disinfectants, veterinary products and radiopharmaceuticals are not in the file. |
 | Interaction stub | `countries/ca/kayit/etkilesim.ts`. No pair. A commercial contract is required. First Databank is one path. No call. |
 | Diagnosis stub | `countries/ca/kayit/tani.ts`. No code. Path: an ICD-10-CA licence from the Canadian Institute for Health Information, or a WHO ICD-10 licence. |
 | Laboratory stub | `countries/ca/kayit/laboratuvar.ts`. Units already in the pack. No panel and no numeric range. |

@@ -31,7 +31,7 @@ import { CA_PAKETI } from '../index'
 import { CA_KLINIK } from '../klinik'
 import { caKendiAraclari } from './metinler'
 import { CA_ONAY_BEKLEYEN, CA_ONAY_BEKLEYEN_ANAHTARLAR } from './onayBekleyen'
-import { CA_BIRIM_CEVIRICI, CA_EGFR, CA_FT_CM, CA_IN_CM, CA_LB_KG, CA_NARKOTIK, CA_NARKOTIK_ANAHTARLARI, CA_TANIMLAR, caEgfr2021 } from './tanimlar'
+import { CA_BIRIM_CEVIRICI, CA_DPD_SATIRLAR, CA_EGFR, CA_FT_CM, CA_IN_CM, CA_LB_KG, CA_NARKOTIK, CA_NARKOTIK_ANAHTARLARI, CA_TANIMLAR, caEgfr2021 } from './tanimlar'
 
 const D = 'en-CA'
 const KOK = resolve(__dirname, '../../..')
@@ -41,7 +41,7 @@ const ROLLER = CA_PAKETI.uygulama!.roller!
 const BUGUN = '2026-10-10'
 const ORTAM = { bugun: BUGUN, p: {} }
 const ILK_MEKANIZMA = ['ca-unit-converter', 'ca-egfr-ckd-epi-2021']
-const MEKANIZMA = [...ILK_MEKANIZMA, 'ca-narcotic-note']
+const MEKANIZMA = [...ILK_MEKANIZMA, 'ca-narcotic-note', 'ca-dpd-lookup']
 const ANAHTARLAR = [...MEKANIZMA, 'ca-prescribeit-link']
 const hesapla = (t: AracTanimi, g: AracGirdisi): AracSonucu => t.hesapla(g, ORTAM)
 const O: BirimOrtami = { birimler: CA_PAKETI.uygulama!.birimler, lab: A.labBirimleri, sayi: CA_PAKETI.bicim }
@@ -251,6 +251,12 @@ describe('ca new tools 3: each is complete in the pack', () => {
     // a number typed as mg/dL by mistake (0.9) is below what the field takes in µmol/L: no result, never a wrong one
     assert.equal(yazarak('ca-egfr-ckd-epi-2021', { cinsiyet: 'erkek', yas: '40', kreatinin: '0.9' }).tamam, false)
     assert.equal(yazarak('ca-egfr-ckd-epi-2021', { cinsiyet: 'erkek', yas: '17', kreatinin: '80' }).tamam, false)
+    // One approved human row, retrieved 2026-10-14: sodium chloride injection, one ingredient. An unknown key is no result.
+    const tuz = CA_DPD_SATIRLAR.find((r) => r.din === '02533537')!
+    assert.equal(tuz.brand, '0.9% SODIUM CHLORIDE INJECTION, USP')
+    assert.equal(tuz.ingredients.length, 1)
+    assert.deepEqual(yazili('ca-dpd-lookup', { urun: tuz.key }), { bilesen: '1' })
+    assert.equal(yazarak('ca-dpd-lookup', { urun: 'd00000000' }).tamam, false)
   })
 })
 
@@ -269,12 +275,18 @@ describe('ca new tools 4: the words and the licences', () => {
 
   it('Canadian spelling in every word of every screen', () => {
     assert.ok(metinler.length >= 20)
-    for (const x of metinler) { assert.ok(x.metin?.trim(), x.yer); assert.deepEqual(bicimYazimSorunlari(x.metin, D), [], x.yer) }
+    for (const x of metinler) {
+      assert.ok(x.metin?.trim(), x.yer)
+      // The product rows are the register's own strings. They are not rewritten into Canadian spelling.
+      if (x.yer.startsWith('ca-dpd-lookup.secenekler.')) continue
+      assert.deepEqual(bicimYazimSorunlari(x.metin, D), [], x.yer)
+    }
     assert.match(KENDI[0].metin.aciklama[D], /centimetres/)
   })
 
   it('nothing of another country, no claim, no price, no identity number; and no recommendation to screen anybody', () => {
     for (const x of metinler) {
+      if (x.yer.startsWith('ca-dpd-lookup.secenekler.')) continue
       assert.doesNotMatch(x.metin, /\b(NHS|NHI|United Kingdom|United States|Australia|New Zealand|HIPAA|Medicaid|Medicare|attending physician|consultant)\b|£/, x.yer)
       assert.doesNotMatch(x.metin, /\b(compliant|compliance|certified|certification|accredited|endorsed|approved by|cleared|clinically proven|guarantee\w*)\b/i, x.yer)
       assert.doesNotMatch(x.metin, /[$€]\s*\d|social insurance|health card/i, x.yer)

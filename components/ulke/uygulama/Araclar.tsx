@@ -163,6 +163,7 @@ export function AraclarIzgarasi({ a, dil, icerik, rol, q, hasta, bugun }: {
 // ───────────────────────── one tool ─────────────────────────
 
 function Alan({ x, alan, dil, a, gm, ham, degistir, o, y, birimEksik }: { x: GorunurArac; alan: AracAlani; dil: DilKodu; a: AraclarMetni; gm: GirdiMetni; ham: HamGirdi; degistir: (k: string, v: string | boolean) => void; o: BirimOrtami; y: Yazici; /** A number is typed here and its unit is not chosen yet. */ birimEksik?: boolean }) {
+  const [daralt, setDaralt] = useState('')
   const etiket = alanEtiketi(x, alan.anahtar, dil, a)
   const id = `uza-arac-${alan.anahtar}`
   const v = ham[alan.anahtar]
@@ -171,11 +172,17 @@ function Alan({ x, alan, dil, a, gm, ham, degistir, o, y, birimEksik }: { x: Gor
   }
   if (alan.tur === 'secim' || alan.tur === 'puan') {
     const secenekler = alan.tur === 'secim' ? (alan.secenekler ?? []).map((k) => ({ k, ad: bicimli(x.paket.metin.secenekler?.[alan.anahtar]?.[k], dil) })) : Array.from({ length: (alan.enCok ?? 0) - (alan.enAz ?? 0) + 1 }, (_, i) => String((alan.enAz ?? 0) + i)).map((k) => ({ k, ad: k }))
+    // A long register is not a wall of radios. The field's own label says what to type. No sentence is added here.
+    const uzun = secenekler.length > 24
+    const q = daralt.trim().toLocaleLowerCase()
+    const daraltilmis = uzun && q.length >= 2 ? secenekler.filter((s) => s.ad.toLocaleLowerCase().includes(q) || s.k.toLocaleLowerCase().includes(q)).slice(0, 40) : secenekler
+    const goster = uzun && typeof v === 'string' && !daraltilmis.some((s) => s.k === v) ? [secenekler.find((s) => s.k === v), ...daraltilmis].filter((s): s is { k: string; ad: string } => !!s) : (uzun && q.length < 2 ? (typeof v === 'string' ? secenekler.filter((s) => s.k === v) : []) : daraltilmis)
     return (
-      <fieldset className="uza-secim" data-alan={alan.anahtar}>
+      <fieldset className="uza-secim" data-alan={alan.anahtar} data-uzun={uzun ? 'evet' : undefined}>
         <legend className="uza-etiket">{etiket}</legend>
+        {uzun ? <input type="text" className="uza-girdi" value={daralt} autoComplete="off" aria-label={etiket} onChange={(e) => setDaralt(e.target.value)} /> : null}
         <div className="uza-secim-satir">
-          {secenekler.map((s) => (
+          {goster.map((s) => (
             <label key={s.k} className="uza-secenek" data-secili={v === s.k ? 'evet' : undefined}>
               <input type="radio" name={id} value={s.k} checked={v === s.k} onChange={() => degistir(alan.anahtar, s.k)} />
               <span>{s.ad}</span>
