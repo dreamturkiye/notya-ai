@@ -13,6 +13,20 @@
 
 ---
 
+> **IMPLEMENTATION HONESTY NOTICE (added 2026-10-15, divergence from v1.1 below — see §4.1)**
+> This is a real-money, PCI/KVKK-sensitive feature. The implementation does **not** fabricate
+> working integrations against bank or e-belge APIs without verified documentation. Of the 11
+> banks in §2.6 and the e-belge integrators in §2.3.1, **exactly one bank adapter and one e-belge
+> adapter are fully real and working** (a clearly-labeled generic/sandbox hosted-redirect pattern
+> for each, since no specific bank/integrator API docs were supplied). The other 10 banks and the
+> named e-belge vendors (NES, QNB eSolutions, Logo) are implemented as **honest stubs**: they
+> satisfy the same `BankPosAdapter` / `EbelgeAdapter` interface, throw a clear
+> `"<vendor> adapter not implemented — see checklist"` error instead of returning invented
+> request/response shapes, and ship with a documented per-adapter completion checklist (endpoint,
+> auth method, required fields) in `lib/accounting/banks/CHECKLIST.md` and
+> `lib/accounting/ebelge/CHECKLIST.md`. §4.1 records this as a deliberate divergence from the
+> "all 11 banks MVP" framing below, ordered by the CEO himself before implementation began.
+
 ## 1. Architecture overview
 
 Notya Accounting is an **optional clinic billing & collections module** for Turkish doctors. It sits beside clinical Notya (notes, asistan, hasta portalı) and is switched on per practice from **Entegrasyonlar**.
@@ -382,6 +396,38 @@ All mutations write audit rows (actor, before/after, IP/session).
 
 ---
 
+## 4.1 Honesty divergence from "all 11 banks" MVP framing (added 2026-10-15)
+
+§4's phased plan and its "MVP definition of done" describe all 11 banks and the named e-belge
+vendors as shipping certified adapters. The CEO's own build brief overrode that with a mandatory
+honesty rule before implementation started: do not write plausible-looking request/response
+shapes against bank or integrator APIs that were never verified against real documentation —
+wrong field names/endpoints are actively dangerous with real money and PCI/KVKK exposure.
+
+What actually ships in `feat/notya-accounting`:
+
+- **`BankPosAdapter`** — full interface (hosted 3DS session creation, webhook handling, status
+  query) implemented once, for real, as a **generic/sandbox hosted-redirect adapter**
+  (`lib/accounting/banks/generic_hosted.ts`) — a self-consistent, documented pattern that matches
+  how Turkish bank sanal POS hosted-3DS integrations generally work (redirect token → bank-hosted
+  page → signed server callback → status query), without claiming to be any specific bank's real
+  production API. The other 10 (`yapi_kredi`, `isbank`, `garanti`, `akbank`, `qnb`, `ziraat`,
+  `vakifbank`, `halkbank`, `denizbank`, `teb`, `kuveyt_turk`) are registered against the same
+  interface and throw `AdapterNotImplementedError` with a pointer to the checklist — they are not
+  silently missing, they are explicitly stubbed.
+- **`EbelgeAdapter`** — same approach: one real generic REST adapter
+  (`lib/accounting/ebelge/generic_rest.ts`) per §2.3.1 item 5; `nes.ts`, `qnb_esolutions.ts`,
+  `logo.ts` are stubs with the same `AdapterNotImplementedError` + checklist pattern.
+- Per-adapter completion checklists: `lib/accounting/banks/CHECKLIST.md`,
+  `lib/accounting/ebelge/CHECKLIST.md` — endpoint, auth method, required fields, and exactly what
+  the CEO needs to supply (sandbox credentials + API docs) to finish each one.
+- `docs/OPEN-COMMITMENTS.md` carries the same list as a standing open item.
+
+Everything else in §1–§10 (ledger, invoice state machine, RBAC, AR aging, discounts, catalog,
+RLS/isolation, country-agnostic core) is implemented for real, not stubbed — the stub boundary is
+narrow and limited to the two adapter families that call systems Notya does not have verified
+credentials/docs for.
+
 ## 5. Data model notes
 
 Illustrative tables (Supabase / Postgres, practice-scoped RLS; encrypt sensitive columns at rest as elsewhere in Notya).
@@ -497,6 +543,7 @@ UI entry: **Entegrasyonlar → Faturalama & Tahsilat**.
 |---------|------|--------|
 | 1.0 | 2026-10-15 | Initial master architecture: optional Entegrasyonlar module, doctor-owned POS + e-belge, 11-bank MVP, e-SMM primary, AR/RBAC/reporting/portal toggle, hosted 3DS, GİB/KDV/KVKK, TR as template for 6 later countries |
 | 1.1 | 2026-10-15 | Added §2.3.1 e-SMM / e-Fatura integrator setup (vendors, vault credentials, wizard, test/live, submission model, config, errors) |
+| 1.2 | 2026-10-15 | Added implementation honesty notice + §4.1: one real generic `BankPosAdapter` + one real generic `EbelgeAdapter`, the rest stubbed with per-adapter checklists — mandatory override from the CEO's own build brief, divergence recorded explicitly as instructed |
 
 ---
 
