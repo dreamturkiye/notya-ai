@@ -70,3 +70,32 @@ customers; their real API references are reasonably expected to live behind a cu
 which is exactly what the original checklist already anticipated. The research did not find a
 shortcut around that, so each stays a stub with the same requirement: a sandbox/test account from
 that vendor, obtained by Kaan or whoever sets up the merchant relationship.
+
+## 2026-10-15 compliance audit addendum (NOTYA-ACCOUNTING-COMPLIANCE-01)
+
+Full writeup with sources: `docs/ARCH-NOTYA-ACCOUNTING.md` §4.6. The parts specific to this
+directory's adapters:
+
+- **UBL-TR / ETTN / mali mühür are the integrator's job, not this adapter's, by design** — and
+  that is exactly why none of this audit's fixes touch `generic_rest.ts`'s wire protocol. Notya's
+  own code builds a business-data DTO and hands it to whichever integrator is configured; the
+  integrator builds the actual GİB-compliant document. This is a legitimate common pattern, but it
+  means **no adapter in this directory can be marked "GİB field-compliant"** — only "correctly
+  implements its own stated (generic, for `generic_rest`; or not-yet-implemented, for the three
+  stubs) protocol." Confirming real GİB-level field compliance requires picking a real integrator
+  (NES / QNB eSolutions / Logo / a different "other") and verifying against ITS actual API, which
+  is unchanged — still blocked on a sandbox account for any of the three, per the section above.
+- **Buyer identity fix** (§4.6.2 of the arch doc) was made in the call site
+  (`lib/accounting/invoices/engine.ts`'s `issueInvoice`), not in any adapter here — the DTO
+  (`EbelgeInvoiceDto.buyer`) now carries the patient's real name (and email, when on file) instead
+  of a hardcoded `"Hasta"` placeholder. Every adapter in this directory (real or stub) receives
+  whatever `buyer` the DTO carries unchanged — this fix benefits `generic_rest` today and will
+  benefit NES/QNB eSolutions/Logo/other automatically once any of them is built for real.
+- **Credit notes** (`EbelgeAdapter.credit()`) were already implemented in `generic_rest.ts` before
+  this pass — the gap was that nothing in the invoice engine ever called it (fixed in
+  `lib/accounting/invoices/engine.ts`'s new `creditInvoice()`, see the arch doc §4.6.5). No change
+  needed in this directory.
+- **Retention**: this directory's adapters return `pdfUrl` (a vendor-hosted link) in
+  `EbelgeIssueResult`; nothing here downloads or stores the actual file bytes. Flagged as an open
+  gap in the arch doc §4.6.3, not fixed this pass (storage-infra and KVKK-retention-of-a-copy
+  decision, not a guess to make unilaterally).

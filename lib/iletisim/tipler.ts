@@ -23,6 +23,12 @@ export type MesajTuru =
   | 'asi_hatirlatma'
   | 'kontrol_hatirlatma'
   | 'serbest'
+  // NOTYA-ACCOUNTING-COMPLIANCE-01 (2026-10-15): AR late-payment reminder draft. Financial, not
+  // clinical, content — the one exception to "no amounts in a message" is amounts ARE allowed
+  // here (lib/accounting/ar/reminders.ts), the "no clinical info" rule this module exists for is
+  // untouched. Deliberately absent from OTOMATIK_TURLER (lib/iletisim/otomatik.ts) — see that
+  // file; this type can never be sent without a human tap, structurally, not just by default.
+  | 'odeme_hatirlatma'
 
 export const MESAJ_TURLERI: readonly MesajTuru[] = [
   'randevu_hatirlatma',
@@ -35,6 +41,7 @@ export const MESAJ_TURLERI: readonly MesajTuru[] = [
   'asi_hatirlatma',
   'kontrol_hatirlatma',
   'serbest',
+  'odeme_hatirlatma',
 ]
 
 export function mesajTuruMu(x: unknown): x is MesajTuru {
@@ -71,4 +78,5 @@ export const TUR_ETIKETI: Record<MesajTuru, string> = {
   asi_hatirlatma: 'Aşı hatırlatma',
   kontrol_hatirlatma: 'Kontrol hatırlatma',
   serbest: 'Mesaj',
+  odeme_hatirlatma: 'Ödeme hatırlatma',
 }

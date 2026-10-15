@@ -102,7 +102,13 @@ describe('epostaLinki', () => {
 describe('şablonlar', () => {
   const BUGUN = '2026-09-25'
   const yarin1030 = '2026-09-26T07:30:00.000Z' // 10:30 TRT
-  const temel = { hastaAdi: 'Ayşe Yılmaz', doktorAdi: 'Dr. Gökhan Mamur', randevuIso: yarin1030, bugunIso: BUGUN, link: 'https://www.notya.io/intake/abc', tarihIso: '2026-10-01', metin: 'Serbest metin' }
+  const temel = {
+    hastaAdi: 'Ayşe Yılmaz', doktorAdi: 'Dr. Gökhan Mamur', randevuIso: yarin1030, bugunIso: BUGUN, link: 'https://www.notya.io/intake/abc', tarihIso: '2026-10-01', metin: 'Serbest metin',
+    // NOTYA-ACCOUNTING-COMPLIANCE-01: so the generic "her tür üretilir" / "klinik bilgi yok" / "veli
+    // dili" loops below (which iterate MESAJ_TURLERI) also exercise 'odeme_hatirlatma' instead of
+    // hitting its "no amount → null" guard.
+    odemeTutarKurus: 50000, odemeFaturaRef: 'INV-100', odemeKademe: 1 as const,
+  }
 
   it('gün ifadesi TRT gününe göre: bugün / yarın / tarih', () => {
     assert.equal(gunIfadesi('2026-09-25T20:00:00.000Z', BUGUN), 'bugün') // 23:00 TRT, still 25 Eylül
@@ -280,8 +286,12 @@ describe('personel (sekreter) yetkisi', () => {
       assert.equal(turIzinliMi('sekreter', t), false, t)
     }
   })
-  it('migration 095 personel politikası aynı tür listesini kullanır', () => {
-    const sql = readFileSync(join(KOK, 'lib/db/migrations/095_iletisim.sql'), 'utf8')
+  it('migration 157 personel politikası (095’in güncellenmiş hâli) aynı tür listesini kullanır', () => {
+    // NOTYA-ACCOUNTING-COMPLIANCE-01: 095 may already be applied in a live environment, so the
+    // current staff policy text lives in 157 (drop + recreate with the new tur list), not by
+    // editing 095 in place — see that migration's own comment. 157 is the file this assertion
+    // must track from now on.
+    const sql = readFileSync(join(KOK, 'lib/db/migrations/157_accounting_reminders.sql'), 'utf8')
     const liste = PERSONEL_TURLERI.map((t) => `'${t}'`).join(', ')
     assert.ok(sql.includes(`tur in (${liste})`), 'personel politikasındaki tür listesi PERSONEL_TURLERI ile aynı olmalı')
   })

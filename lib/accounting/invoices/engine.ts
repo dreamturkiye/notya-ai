@@ -23,7 +23,8 @@ import { getEbelgeAdapter } from '../ebelge'
 import type { EbelgeCredentials, EbelgeInvoiceDto, SellerIdentity } from '../ebelge/types'
 import { decryptSecrets } from '../vault'
 import { decryptPII } from '@/lib/security/encryption'
-import { postArCharge } from '../ar/ledger'
+import { hastaAdSoyad } from '@/lib/portal/hastaAdi'
+import { postArCharge, postArCredit } from '../ar/ledger'
 
 export interface DraftLineInput {
   serviceId?: string
@@ -205,11 +206,42 @@ export async function issueInvoice(supabase: SupabaseClient, actor: ActingUser, 
     vergiDairesi: taxProfile.vergi_dairesi ?? undefined,
   }
 
+  // NOTYA-ACCOUNTING-COMPLIANCE-01 (2026-10-15 audit §4.6.2): the buyer's real name/email are
+  // resolved from the owned patient record when one is attached — a generic "Hasta" placeholder
+  // name is not a GİB-valid alıcı tanımı even on the e-Arşiv final-consumer (nihai tüketici) path,
+  // which still requires the buyer's actual name. Buyer TCKN/VKN capture is NOT in the patient
+  // schema anywhere in this codebase (no TCKN/national-id column on `patients`), so idType stays
+  // 'unknown' here — that remains ACCOUNTING-11, an open gap needing Kaan's decision (collecting a
+  // patient's TCKN is its own KVKK-sensitive intake-form change), not something to fabricate.
+  let buyer: EbelgeInvoiceDto['buyer'] = { idType: 'unknown', name: 'Hasta' }
+  if (before.patientId) {
+    const { data: patientRow } = await supabase
+      .from('patients')
+      .select('name_encrypted, email_encrypted')
+      .eq('id', before.patientId)
+      .eq('doctor_id', actor.doktorId) // ownership scoped in the same query — hasta-izolasyon
+      .maybeSingle()
+    if (patientRow) {
+      // Fail soft: a legacy/malformed encrypted value must never break invoice issuance.
+      const coz = (v: unknown): string | null => {
+        if (!v) return null
+        try { return decryptPII(String(v)) } catch { return null }
+      }
+      const ad = hastaAdSoyad(coz(patientRow.name_encrypted))
+      const eposta = coz(patientRow.email_encrypted)
+      buyer = {
+        idType: 'unknown',
+        name: ad || 'Hasta',
+        ...(eposta && /@/.test(eposta) ? { email: eposta } : {}),
+      }
+    }
+  }
+
   const dto: EbelgeInvoiceDto = {
     invoiceId: before.id,
     docType: before.docType,
     seller,
-    buyer: { idType: 'unknown', name: 'Hasta' }, // buyer PII resolution left to the patient-record lookup a future pass wires in
+    buyer,
     lines: (lineRows || []).map((l) => ({
       description: l.description,
       quantity: Number(l.quantity),
@@ -330,6 +362,92 @@ export async function cancelInvoice(
     action: ok ? 'cancel_success' : 'cancel_failure',
     before,
     after: { ...invoice, reason },
+  })
+  return invoice
+}
+
+/**
+ * NOTYA-ACCOUNTING-COMPLIANCE-01 (2026-10-15 audit §4.6.5) — düzeltme/iade: credit note for an
+ * already-issued invoice. This is a legally required capability under Turkish KDV/VUK rules (an
+ * issued e-belge is corrected or reversed with its own linked document, never edited in place) and
+ * was architecturally scaffolded (state machine `request_credit`/`credit_success`/`credit_failure`,
+ * `EbelgeAdapter.credit()`, the `accounting_credits` table) but had no engine function actually
+ * calling it before this pass — `cancelInvoice` existed, this did not. Mirrors `cancelInvoice`'s
+ * shape exactly: integrator call under the SAME doctor-owned credentials/identity, full audit log,
+ * AR ledger posting (a credit note reduces the patient's open balance just like a payment does).
+ *
+ * `amountKurus` may be less than the invoice total (partial credit note) — common for a line-item
+ * correction — but never more.
+ */
+export async function creditInvoice(
+  supabase: SupabaseClient,
+  actor: ActingUser,
+  invoiceId: string,
+  amountKurus: Money,
+  reason: string
+): Promise<Invoice> {
+  assertCan(actor.role, 'invoice.credit', await loadGrants(supabase, actor))
+  const row = await loadOwnedInvoice(supabase, actor.doktorId, invoiceId)
+  const before = rowToInvoice(row)
+  nextInvoiceStatus(before.status, 'request_credit') // throws if not issued/partially_paid/paid
+  if (!Number.isInteger(amountKurus) || amountKurus <= 0) throw new Error('İade/düzeltme tutarı geçersiz.')
+  if (amountKurus > before.totalKurus) throw new Error('İade/düzeltme tutarı fatura toplamını aşamaz.')
+  if (!before.ebelgeUuid || !before.ebelgeVendor) throw new Error('Bu fatura bir e-belge entegratörü üzerinden kesilmemiş; düzeltme uygulanamaz.')
+
+  const { data: credRow } = await supabase
+    .from('accounting_ebelge_credentials')
+    .select('*')
+    .eq('doctor_id', actor.doktorId)
+    .eq('is_active', true)
+    .maybeSingle()
+  if (!credRow) throw new Error('Aktif bir e-belge entegratörü tanımlı değil.')
+
+  await supabase.from('accounting_invoices').update({ status: 'credit_pending', updated_at: new Date().toISOString() }).eq('id', invoiceId)
+
+  const adapter = getEbelgeAdapter(credRow.vendor)
+  const credentials: EbelgeCredentials = { vendor: credRow.vendor, environment: credRow.environment, fields: decryptSecrets(credRow.secrets_enc) }
+
+  let ok = true
+  let creditUuid: string | null = null
+  try {
+    const result = await adapter.credit(credentials, before.ebelgeUuid, amountKurus, reason)
+    creditUuid = result.creditUuid
+  } catch {
+    ok = false
+  }
+
+  const status = nextInvoiceStatus('credit_pending', ok ? 'credit_success' : 'credit_failure')
+  const { data: updated } = await supabase
+    .from('accounting_invoices')
+    .update({ status, updated_at: new Date().toISOString() })
+    .eq('id', invoiceId)
+    .select('*')
+    .single()
+  const invoice = rowToInvoice(updated)
+
+  if (ok) {
+    await supabase.from('accounting_credits').insert({
+      doctor_id: actor.doktorId,
+      patient_id: invoice.patientId,
+      invoice_id: invoice.id,
+      kind: 'credit_note',
+      amount_kurus: amountKurus,
+      remaining_kurus: amountKurus,
+      reason,
+      status: 'active',
+    })
+    await postArCredit(supabase, { doctorId: actor.doktorId, patientId: invoice.patientId, invoiceId: invoice.id, amountKurus })
+  }
+
+  await writeAuditLog(supabase, {
+    doctorId: actor.doktorId,
+    actorId: actor.userId,
+    actorRole: actor.role,
+    entityType: 'accounting_invoice',
+    entityId: invoice.id,
+    action: ok ? 'credit_success' : 'credit_failure',
+    before,
+    after: { ...invoice, amountKurus, reason, creditUuid },
   })
   return invoice
 }
