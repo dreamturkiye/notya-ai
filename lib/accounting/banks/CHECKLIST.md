@@ -1,15 +1,120 @@
 # Bank adapter completion checklist
 
-Status (updated 2026-10-15, second pass): **7 of 12 registered DIRECT-BANK adapters are real** —
-`generic_hosted` plus the 6 NestPay-group banks (İş Bankası, Halkbank, TEB, QNB Finansbank,
-Ziraat, Akbank, sharing one adapter, `nestpay.ts`, VERIFIED by protocol cross-reference — see
-below). The remaining 5 (Yapı Kredi, Garanti BBVA, VakıfBank, Denizbank, Kuveyt Türk) are stubs —
-they implement `BankPosAdapter` and throw `AdapterNotImplementedError` with a pointer here,
-instead of a fabricated request/response shape. Garanti BBVA and Yapı Kredi are explicitly phased
-as the "then" step per Kaan's hybrid-model instruction; the other three stay deferred pending
-doctor demand. This file covers the **direct-bank path only**. For the facilitator path (iyzico —
-the default/recommended path under the 2026-10-15 hybrid model, §2.6a) see
-`lib/accounting/facilitators/CHECKLIST.md`, which IS real/`VERIFIED`.
+Status (updated 2026-10-15, third pass): **9 of 12 registered DIRECT-BANK adapters are real** —
+`generic_hosted`, the 6 NestPay-group banks (İş Bankası, Halkbank, TEB, QNB Finansbank, Ziraat,
+Akbank, sharing one adapter, `nestpay.ts`, VERIFIED by protocol cross-reference), **Garanti BBVA**
+(`garanti.ts`, REAL — direct vendor documentation) and **Yapı Kredi/Posnet** (`yapikredi_posnet.ts`,
+REAL — BEST-EFFORT single-source OSS cross-reference). See "2026-10-15 third pass" below for both.
+The remaining 3 (VakıfBank, Denizbank, Kuveyt Türk) are stubs — they implement `BankPosAdapter` and
+throw `AdapterNotImplementedError` with a pointer here, instead of a fabricated request/response
+shape; they stay deferred pending doctor demand. This file covers the **direct-bank path only**.
+For the facilitator path (iyzico — the default/recommended path under the 2026-10-15 hybrid
+model, §2.6a) see `lib/accounting/facilitators/CHECKLIST.md`, which IS real/`VERIFIED`.
+
+## 2026-10-15 third pass — Garanti BBVA and Yapı Kredi (Posnet) are now REAL
+
+Built on a fresh branch off `main` (`feat/notya-accounting-garanti-yapikredi`, in its own git
+worktree — `feat/notya-accounting` through the NestPay pass was already merged). Both adapters
+follow `nestpay.ts`'s exact shape: `BankPosAdapter`, hosted/redirect 3DS only (SAQ-A, never touches
+PAN/CVV), vault-sourced merchant credentials, a test/live endpoint toggle, webhook handling wired
+into `app/api/accounting/payments/webhook/[bankKey]/route.ts`, and audit logging via
+`lib/accounting/audit.ts`.
+
+### Garanti BBVA — `garanti.ts` — **REAL, direct vendor documentation (iyzico-level, one disclosed inference)**
+
+Product: Virtual POS **Common Payment Page** (Ortak Ödeme Sayfası / OOS), `secure3dsecuritylevel=
+3D_OOS_PAY`. This supersedes the earlier finding in "2026-10-15 research update" below, which only
+checked the non-3DS "additional fields" page and correctly found THAT page PAN-touching — it was
+not the whole picture. This pass fetched the portal's Common Payment pages directly:
+
+- [dev.garantibbva.com.tr/en/virtual-pos-common-payment-term](https://dev.garantibbva.com.tr/en/virtual-pos-common-payment-term)
+  ("Virtual POS Transactions General Concepts") — the shared Common Payment form, endpoints, and
+  the `secure3dhash` construction.
+- [dev.garantibbva.com.tr/en/virtual-pos-common-payment-dcc](https://dev.garantibbva.com.tr/en/virtual-pos-common-payment-dcc)
+  and [dev.garantibbva.com.tr/en/virtualpos-common-payment-cash](https://dev.garantibbva.com.tr/en/virtualpos-common-payment-cash)
+  — per-variant pages confirming `OOS_PAY`/`3D_OOS_PAY` and which template blocks each variant keeps.
+- [dev.garantibbva.com.tr/en/virtualpos-sales-fixed-amount-non-3ds](https://dev.garantibbva.com.tr/en/virtualpos-sales-fixed-amount-non-3ds)
+  — confirms the `Amount` minor-unit format ("1,00 TL -> 100"), so `amountKurus` needs no conversion.
+- Cross-reference (corroborating, not primary): `developertugrul/garanti-pos`
+  (github.com/developertugrul/garanti-pos, read via its Packagist listing) has a dedicated
+  `buildOOSForm()`/`buildGarantiPayForm()` entry point separate from its card-collecting
+  `build3DForm()` — independent corroboration that OOS is a structurally separate, redirect-only
+  flow, not just an inference from the product's name.
+
+**Confirmed directly from the portal:** endpoints (`https://sanalposprovtest.garantibbva.com.tr/VPServlet`
+test, `https://sanalposprov.garanti.com.tr/VPServlet` live — exactly matching Kaan's own
+instruction); field names (`terminalmerchantid`, `terminalid`, `terminalprovuserid`,
+`terminaluserid`, `orderid`, `successurl`/`errorurl`, `txnamount`, `txntype`, `txncurrencycode`,
+`txninstallmentcount`, `txntimestamp`, `secure3dhash`); the two-step hash (`hashedpassword =
+UPPER(SHA1(ProvisionPassword + "0" + TerminalID))`, then `secure3dhash =
+UPPER(SHA512(TerminalID+OrderID+Amount+CurrencyCode+SuccessURL+ErrorURL+Type+InstallmentCount+
+StoreKey+hashedpassword))`, ISO-8859-9 encoded); callback fields (`mdstatus`, `mderrormessage`,
+`procreturncode`, `oid`/`orderid`, echoes, `secure3dhash`).
+
+**What is NOT directly stated, disclosed plainly:** the portal's shared sample HTML form template
+(reused across several product pages) also lists card fields; the portal never states in so many
+words "the OOS-submitted form omits them." `garanti.ts` never sends them — backed by the product's
+own hosted description and the OSS corroboration above, but this is the file's one inference, not
+an independently-stated fact. The portal also doesn't document a callback-specific hash
+verification formula — `garanti.ts` reuses the request formula symmetrically (same posture as
+`nestpay.ts`). Numeric `mdstatus`/`procreturncode` value tables weren't reached (a separate
+error-codes page) — mapping is conservative: only `mdstatus === '1'` is `captured`, same rule
+NestPay applies to its own confirmed field.
+
+### Yapı Kredi (Posnet) — `yapikredi_posnet.ts` — **REAL, BEST-EFFORT single-source OSS cross-reference (one tier below NestPay's two-source VERIFIED)**
+
+`yapikredipos.com.tr` was fetched directly this pass and confirmed to be a merchant-marketing site
+only (POS products, campaigns, application forms) — **no developer portal, no "POSNET 3D Secure
+XML Service Integration"/"POSNET XML Services" document exists there or anywhere else publicly
+reachable this pass.** That is the real finding Kaan's instruction asked to verify, confirmed by
+fetching the site, not assumed.
+
+OSS cross-reference was attempted the same way as NestPay's, but this session's fetch tool refused
+every raw GitHub/GitLab URL with a provenance error (`ankapix/sanalpos-entegrasyonlari` on GitLab,
+`hasandz/posnet-oos`, `mertbuldur/posnet-oos`, `tcgunel/omnipay-yapikredi` on GitHub) — a tooling
+limitation of this pass, unlike the NestPay pass, which did read two libraries' actual source. One
+package's Packagist-mirrored README (which IS fetchable) gave real, concrete detail:
+
+- [packagist.org/packages/tcgunel/omnipay-yapikredi](https://packagist.org/packages/tcgunel/omnipay-yapikredi)
+  (repo: github.com/tcgunel/omnipay-yapikredi) — test/live endpoints, credential field names, a
+  two-stage SHA256 MAC skeleton, the `BankPacket`/`MerchantPacket`/`Sign` callback field names, and
+  amount/currency/installment conventions.
+- [docs.wisecp.com/en/turkish-bank-virtual-pos-modules.md](https://docs.wisecp.com/en/turkish-bank-virtual-pos-modules.md)
+  — independently corroborates the 4 credential field names (`mid`=Üye İşyeri No, `tid`=Terminal
+  No, `posnetID`=bank-issued POSNET identifier, `encKey`="Store Key"/POSNET ENC key). This part IS
+  genuinely two-source-confirmed.
+
+**Confirmed (single OSS source, not independently cross-confirmed — stated honestly):**
+
+| Environment | XML endpoint | 3DS endpoint |
+|---|---|---|
+| Test | `https://setmpos.ykb.com/PosnetWebService/XML` (matches Kaan's instruction) | `https://setmpos.ykb.com/3DSWebService/YKBPaymentService` (matches Kaan's instruction) |
+| Live | `https://posnet.yapikredi.com.tr/PosnetWebService/XML` | `https://posnet.yapikredi.com.tr/3DSWebService/YKBPaymentService` |
+
+MAC: `firstHash = SHA256(encKey + ";" + terminalId)`; `mac = SHA256(xid + ";" + amount + ";" +
+currency + ";" + mid + ";" + firstHash)`. The source's README does not state the digest's output
+encoding (hex vs. base64) — `yapikredi_posnet.ts` base64-encodes it (matching this module's own
+NestPay `ver3` convention), **explicitly flagged as not independently confirmed**. Amount is
+integer kuruş (no decimal), currency `"TL"`.
+
+**What is NOT confirmed, disclosed plainly, rather than guessed into something that looks
+finished:**
+- The request XML's exact element names (`<posnetRequest><mid>…</oosRequestData>…`) follow the
+  long-standing, widely-replicated public POSNET structure from general protocol familiarity, not
+  a source read live this pass — the file's most-flagged gap.
+- The inbound `BankPacket`/`MerchantPacket` callback's internal schema (what's actually inside
+  those two strings) is not confirmed. `yapikredi_posnet.ts` verifies `Sign` over the opaque
+  strings, then best-effort-decodes `MerchantPacket` for a plain-text approval marker — an
+  unrecognized or undecodable packet maps to `pending`, **never** a guessed `captured`.
+- **Before this is trusted with real money:** a human should run one real test-sandbox transaction
+  against the test endpoints above and confirm the actual `BankPacket`/`MerchantPacket` field
+  shape and the MAC's hex-vs-base64 encoding against what the bank/sandbox actually returns, or
+  pull the OSS source directly (this session's tooling could not, a later one might).
+
+| Bank | Adapter key | Status | What was found | What's actually needed to finish it for real |
+|------|-------------|--------|------------------|------------------------------------------------|
+| Garanti BBVA | `garanti` | **REAL — direct vendor docs** | Common Payment Page (OOS) product fully documented on dev.garantibbva.com.tr: endpoints, fields, hash | Nothing blocking; a human should still run one real sandbox transaction before go-live, same as any new payment code |
+| Yapı Kredi | `yapi_kredi` | **REAL — BEST-EFFORT, single-source OSS** | Endpoints/credentials/MAC-skeleton from one Packagist README; no live XML schema source reached | A human running one real sandbox transaction to confirm the exact XML tags, MAC encoding, and callback packet schema — or a successful live-source pull once tooling allows |
 
 ## 2026-10-15 hybrid-model update, second pass — NestPay group is now REAL
 
@@ -147,13 +252,13 @@ that means a payment facilitator/gateway (iyzico, Craftgate, PayTR, Param, …) 
 checkout already matches this shape, or a sandbox the CEO stands up. It is intentionally **not**
 presented as a specific bank's certified integration.
 
-## Per-bank status
+## Per-bank status (historical — Yapı Kredi and Garanti BBVA rows superseded 2026-10-15 third pass, see above)
 
 | Bank | Adapter key | Status | What was found | What's actually needed to finish it for real |
 |------|-------------|--------|------------------|------------------------------------------------|
-| Yapı Kredi | `yapi_kredi` | STUB — no public API doc found | Only third-party unified-library forks, not official docs | A real merchant account with Yapı Kredi (sanal POS), and whatever hosted-page product (if any) they offer beyond the classic MPI pattern, from their own merchant-only documentation |
-| Türkiye İş Bankası | `isbank` | STUB — found docs are the wrong product | Public developer portal + API catalog PDF exist, but the only payment API is the licensed-PF-only product | Not applicable for a single doctor's own merchant account; would need İş Bankası's merchant-only sanal POS docs (not public) |
-| Garanti BBVA | `garanti` | STUB — found doc is PAN-touching, non-3DS | Public dev page, but it's the raw-card non-3DS "additional fields" product | Garanti's actual hosted 3DS product docs (merchant-only), or confirmation Garanti offers no true hosted-page option |
+| Yapı Kredi | `yapi_kredi` | SUPERSEDED — now REAL (BEST-EFFORT, single-source OSS), see "2026-10-15 third pass" above | This row documents the earlier "no public API doc found" finding, which is still true (confirmed again, directly, third pass) — but OSS cross-reference later supplied enough to build a real adapter | — |
+| Türkiye İş Bankası | `isbank` | Registered to `nestpay.ts` (NestPay-group, REAL) — this historical row is stale | Public developer portal + API catalog PDF exist, but the only payment API described there is the licensed-PF-only product | — (superseded; İş Bankası's actual sanal POS runs on the shared NestPay/EST protocol, not the PF API this row originally found) |
+| Garanti BBVA | `garanti` | SUPERSEDED — now REAL (direct vendor docs), see "2026-10-15 third pass" above | This row's finding (the non-3DS "additional fields" page is PAN-touching) is still correct — it just wasn't the whole picture; the separate Common Payment/OOS product is hosted and real | — |
 | Akbank | `akbank` | STUB — no public API doc found | Nothing official found | Merchant account + Akbank's own sanal POS integration doc |
 | QNB | `qnb` | STUB — no public API doc found | Nothing official found (only e-commerce-platform help pages) | Merchant account + QNB's own sanal POS integration doc |
 | Ziraat Bankası | `ziraat` | STUB — no public API doc found | Nothing official found | Merchant account + Ziraat's own sanal POS integration doc |
@@ -173,8 +278,10 @@ The facilitator recommendation below was acted on. Kaan chose a **hybrid model**
 real, `VERIFIED`, default payment path (`lib/accounting/facilitators/iyzico.ts`, checklist at
 `lib/accounting/facilitators/CHECKLIST.md`) shipping now, with the direct-bank path kept alive in
 parallel and phased (NestPay group → Garanti/Yapı Kredi → rest-on-demand) rather than abandoned.
-This file's per-bank table below is therefore the **direct-bank path's** status only; it is not
-the only way a doctor can take real card payments through this module — see §2.6a.
+NestPay, Garanti and Yapı Kredi are now all done (2026-10-15, see "2026-10-15 third pass" above);
+only VakıfBank/Denizbank/Kuveyt Türk remain on the rest-on-demand tier. This file's per-bank table
+below is therefore the **direct-bank path's** status only; it is not the only way a doctor can
+take real card payments through this module — see §2.6a.
 
 The paragraph that led to that decision, kept for the record:
 
