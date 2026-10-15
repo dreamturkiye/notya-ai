@@ -15,6 +15,21 @@
 /** Integer kuruş (TRY × 100). Never a float. */
 export type Money = number
 
+/**
+ * NOTYA-ACCOUNTING-COMPLIANCE-01 (2026-10-15 audit §4.6.1) — the single source of truth for the
+ * reduced KDV rate this module defaults new services/settings to. Traced (as of this audit) to the
+ * 7346 sayılı Cumhurbaşkanı Kararı KDV rate structure for health/medical services — see
+ * docs/ARCH-NOTYA-ACCOUNTING.md §4.6.1 for sources and confidence level (MODERATE, not
+ * independently re-verified against a live GİB rate table). Every other "1000" literal in this
+ * module (migration column default, `catalog/service.ts`) must be read as THIS rate; if the rate
+ * ever changes, update here AND the `default_kdv_rate_bp` column default in
+ * `lib/db/migrations/151_accounting_core.sql` (a new migration — the old column default cannot be
+ * changed retroactively for already-created rows, which is correct: an already-issued invoice's
+ * stored rate must never silently change). This constant does not reach out to a live government
+ * rate table; nothing in this module does — see §4.6.1 for why that is a named operational risk.
+ */
+export const KDV_RATE_BP_HEALTH_DEFAULT = 1000 // 1000 bp = 10.00%
+
 export type AccountingRole = 'doktor' | 'sekreter'
 
 /** Who is acting, resolved the same way every other Notya route resolves it (pratikOturum). */

@@ -628,17 +628,284 @@ Illustrative tables (Supabase / Postgres, practice-scoped RLS; encrypt sensitive
 
 ---
 
+## 4.6 Compliance audit (2026 TR e-belge rules) + late-payment reminders design (2026-10-15, fifth round)
+
+**Scope.** Two asks: (A) a plain-verdict legal/technical compliance audit of this module's
+e-Fatura/e-Arşiv/e-SMM handling against current (2026) GİB rules, with sources cited for every
+legal claim, fixing what is safely fixable and flagging what needs Kaan's own decision; (B) a
+late-payment WhatsApp/email reminder feature with mandatory human review (design in §4.6.6; the
+feature itself lives in `lib/accounting/ar/reminders.ts` + `lib/iletisim/*`, not in this doc's
+engine/ebelge sections, since it reuses the existing patient-communications module rather than a
+new one).
+
+**Method and its limits, stated up front.** This session has WebSearch/WebFetch but no access to
+gib.gov.tr's own e-Belge portal interactively, no sandbox GİB test environment, and several
+secondary-source URLs it found could not actually be fetched (tool-level provenance restriction —
+a URL surfaced by search is not automatically fetchable; only a URL the search tool's own quoted
+snippet already resolved, or a page another fetch chained to, could be read in full). Every claim
+below is marked VERIFIED (read a primary/official source), MODERATE CONFIDENCE (secondary tax-
+advisory sources, consistent with each other and with no contrary 2025/2026 change found, but the
+single current authoritative GİB page stating it plainly could not be reached this pass), or
+COULD NOT VERIFY FROM HERE. None of this is "100% compliant" anywhere — per instruction, that
+phrase is not used unless every element behind it is independently sourced AND code-verified,
+which is not the case for the e-belge field-level/XML layer (see §4.6.2).
+
+### 4.6.1 KDV rate — **MODERATE CONFIDENCE, not independently re-verified from a live GİB rate table this pass**
+
+The module's default is **10% (1000 bp)** for health/muayene services
+(`lib/accounting/types.ts` → `KDV_RATE_BP_HEALTH_DEFAULT`, now the single named constant; see
+§4.6.2's code-hygiene fix below). This rate traces to **Cumhurbaşkanı Kararı (Karar Sayısı: 7346)**,
+Resmî Gazete 7 July 2023, effective **10 July 2023**, which raised the general KDV rate 18%→20%
+and the reduced rate 8%→10% — health services sit on the reduced-rate line of the KDV Kanunu's
+(II) sayılı liste. Sources: [Alomaliye — 7346 sayılı Karar metni](https://www.alomaliye.com/2023/07/07/katma-deger-vergisi-oranlari-karar-sayisi-7346/),
+[Alomaliye — KDV oran değişiklikleri özeti](https://www.alomaliye.com/2023/07/12/kdv-oran-degisiklikleri/),
+[PwC Türkiye — KDV oranlarında değişiklik](https://www.pwc.com.tr/tr/hizmetlerimiz/vergi/dolayli-vergi/bultenler/kdv-otv-bultenleri/2023/kdv-oranlarinda-degisiklik.html).
+A later decree, **Karar Sayısı: 9126** (Resmî Gazete 14 Nov 2024, effective 15 Nov 2024,
+GİB's own published bilgi notu: [gib.gov.tr/.../KDVCK9126_abn.pdf](https://www.gib.gov.tr/sites/default/files/fileadmin/mevzuatek/mevzuatbilginotu/KDVCK9126_abn.pdf) —
+this one IS a primary source, actually fetched) changed rates for specific **goods** (medicinal
+products' raw materials, certain ÖTV-listed goods) but **did not touch the health-SERVICES line
+item** that muayene/consultation billing falls under. No 2025/2026 Cumhurbaşkanı Kararı changing
+the health-services rate specifically turned up in this session's searches.
+**Verdict: MODERATE CONFIDENCE the 10% default is still current — not a GİB-primary-source
+"verified current as of today" confirmation, because the one GİB page this session could reach
+(9126's bilgi notu) is about goods, not the health-services list, and the live GİB rate-lookup
+page itself was not reachable from here.** This is exactly the operational risk the brief asked to
+check for: **the rate is configurable (not hardcoded with no update path)** —
+`accounting_module_settings.default_kdv_rate_bp` (per-doctor) and `accounting_services.kdv_rate_bp`
+(per-service) are both live, writable DB columns, and a rate change needs no code deploy — but the
+TypeScript **fallback literal** used when no row/override exists was previously duplicated
+verbatim (`1000`) in three places (`catalog/service.ts`, `module.ts`, and the type comment) with
+no single source of truth. **Fixed this pass**: added `KDV_RATE_BP_HEALTH_DEFAULT` to
+`lib/accounting/types.ts` and pointed both call sites at it. The DB column defaults
+(`default_kdv_rate_bp integer not null default 1000` in migration 151, `kdv_rate_bp` in the same
+migration's `accounting_services`) are **not** changed retroactively by this fix — correctly, since
+an already-issued invoice's stored rate must never move under it — but that means **a future rate
+change needs a deliberate, tracked action**: update the TS constant, ship a new migration for the
+column defaults, and — separately — decide whether any doctor's already-configured
+`accounting_module_settings` row should be bulk-updated. **No such mechanism exists today; this is
+a real, named operational risk, not fixed this pass** (it is a product/ops decision — who watches
+for the next KDV Kararı and triggers that update — not a code gap this session can close by
+guessing a process).
+
+### 4.6.2 e-SMM/e-Fatura/e-Arşiv mandatory field coverage — **gap found, partially fixed, partially needs Kaan's decision**
+
+**What the architecture actually does (by design, stated plainly in §2.3.1 already):** Notya never
+builds a UBL-TR XML document, never generates an ETTN, never applies a mali mühür / signs anything.
+It builds a business-data DTO (`EbelgeInvoiceDto`: seller, buyer, lines with KDV breakdown,
+currency, issue date, invoice id as idempotency key) and hands it to **whichever e-belge
+integrator the doctor has configured**, over that integrator's own API. The integrator is the
+party that actually constructs the compliant UBL-TR document, assigns the ETTN, and applies the
+mali mühür / signs it with GİB. **This is a legitimate, common integration model** (every real
+e-belge SaaS — NES, QNB eSolutions, Logo, and the "generic REST" shape this module's one real
+adapter targets — works this way for a client application) — but it means **Notya's own code
+cannot be the thing that is "GİB-compliant" at the field/XML level; the chosen integrator is.**
+Sources on what GİB actually requires at that layer (ETTN as a UUID, UBL-TR 1.2 structure, XAdES
+mali mühür signature, real-time clearance for e-Fatura/e-İrsaliye vs. T+1 batch reporting for
+e-Arşiv): [ecosio — Türkiye e-invoicing compliance](https://ecosio.com/en/compliance/turkiye/e-invoicing/)
+(a third-party compliance vendor's summary, not GİB itself — **MODERATE CONFIDENCE**, GİB's own
+e-Belge portal documentation was not reachable from here this pass).
+
+Two concrete, code-level gaps this audit found and treated differently:
+
+1. **Buyer identity was a hardcoded placeholder (`{ idType: 'unknown', name: 'Hasta' }`) for every
+   invoice, regardless of which patient it was for.** A generic "Hasta" is not a valid alıcı
+   (buyer) identification even under the e-Arşiv final-consumer (nihai tüketici) relaxation, which
+   waives the TCKN/VKN requirement but still requires the buyer's **real name**. **Fixed this
+   pass**: `issueInvoice` in `lib/accounting/invoices/engine.ts` now resolves the buyer's real
+   name (and email, when on file) from the owned patient record
+   (`hasta-izolasyon`-scoped: `patients.id = patientId AND patients.doctor_id = doktorId`, reusing
+   `lib/portal/hastaAdi.ts`'s existing name-parsing helper and the same `decryptPII` the tax
+   profile already used) before building the DTO, falling back to the old placeholder only when
+   there is genuinely no patient record attached to the invoice (a cash-only/no-patient-record
+   billing line, which this module already supports per §2.2) or the stored value cannot be
+   decrypted (fail-soft, never a crash mid-issue).
+2. **Buyer TCKN/VKN is still not resolved — this is ACCOUNTING-11, left exactly as open as before.**
+   There is **no TCKN/national-id column anywhere on the `patients` table** in this codebase (every
+   migration was checked). Adding one is its own KVKK-sensitive decision (collecting a national ID
+   number is a new, more sensitive category of patient data, and a new intake-form field) — **this
+   needs Kaan's decision, not a guess**, and is NOT fixed this pass. Practically: so long as the
+   doctor's e-Arşiv is issued on the final-consumer path (which the generic adapter's `buyer.idType:
+   'unknown'` already signals honestly) this is legally tolerable per the e-Arşiv relaxation above —
+   but it forecloses ever issuing a genuine named e-Fatura to a buyer who IS an e-Fatura mükellefi
+   (e.g. a corporate patient wanting the service billed to their company), which needs real VKN
+   capture. Flagging, not guessing.
+
+**Verdict for this item: COULD NOT VERIFY "the chosen integrator's output is GİB-valid UBL-TR"
+from here — no integrator is actually chosen yet (NES/QNB eSolutions/Logo/other all remain honest
+stubs per `lib/accounting/ebelge/CHECKLIST.md`, unchanged by this pass) — this audit fixed what it
+could fix in Notya's own DTO-building code (buyer name) and left what needs a business/legal
+decision (buyer TCKN capture; which integrator) exactly as open and as explicitly flagged as it
+already was.**
+
+### 4.6.3 Retention / archiving — **gap found, partially satisfied, one real gap not fixed this pass**
+
+Legal retention period, sourced: **VUK Madde 253** sets **5 years** for defter ve belgeler
+("ilgili bulundukları yılı takip eden takvim yılından başlayarak beş yıl süre ile muhafaza etmeye
+mecburdurlar"), running from the year *after* the tax year concerned — source:
+[TÜRMOB — VUK'a göre defter ve belgelerin saklanma süreleri](https://www.turmob.org.tr/BasinOdasi/BasinArsiv/Detay/9682a497-ca2e-487e-abb6-fe3440cdfa69/vuk-a-gore-defter-ve-belgelerin-saklanma-sureleri-ve-ozellikli-durumlar)
+(TÜRMOB's own disclaimer on that page says it cannot guarantee the article's accuracy — treat as
+**MODERATE CONFIDENCE for the exact figure, VERIFIED that Article 253 is the right legal basis**).
+**This is shorter than the "generally 5 years" the brief already assumed is roughly right, but
+note the brief's own phrasing hedged correctly** — the commonly-quoted **10 years** figure (which
+several e-belge vendor blogs state flatly as "the" retention period) comes from **TTK (Türk Ticaret
+Kanunu)**'s separate ticari defter/belge retention rule, which binds a **tacir** (merchant/company)
+under commercial law — an independent doctor billing as **serbest meslek erbabı** (not incorporated)
+is not a tacir and is not independently shown by this audit's sources to be bound by TTK's 10-year
+rule; a doctor billing through an incorporated clinic (VKN, not TCKN) likely is. **This distinction
+matters and was not previously documented anywhere in this module** — added here rather than
+silently picking one number. **Practical recommendation (not a code change, a policy one): treat 10
+years as the safe floor regardless of corporate form, since it's what most integrator contracts
+already promise and it covers the stricter TTK case without needing to re-derive which legal form
+each doctor uses.**
+
+What's actually true of this codebase, checked directly (code-verified, not a legal claim):
+**no code path anywhere in `lib/accounting/` or `app/api/accounting/` ever deletes a row from
+`accounting_invoices`, `accounting_invoice_lines`, or `accounting_credits`** (grepped the whole
+module and its API routes for `.delete(`/`DROP TABLE`/any cron or job referencing these tables —
+none found). Issued, cancelled and credited invoices all stay in the database permanently with
+their full line/amount/KDV/buyer/seller snapshot — **the structured DATA satisfies "retrievable for
+the statutory period" with no time-based purge to worry about.**
+
+**The real gap, not fixed this pass:** `accounting_invoices.ebelge_pdf_url` stores only a **URL
+string** pointing at wherever the e-belge integrator hosts the document — Notya never downloads
+and stores the actual PDF/XML bytes itself (checked: that column is only ever written, never read
+back into a fetch/download anywhere in this codebase). The **retention obligation is the doctor's
+own**, not the integrator's — if an integrator's hosted-document URL stops resolving after some
+shorter retention window on their side (vendor contracts vary and this audit has no visibility into
+any specific one, since none is chosen yet), the doctor could be left without a retrievable copy
+well before the statutory period ends, even though Notya's own ledger data about that invoice is
+intact. **This needs a decision, not a guess**: either (a) require/verify that whichever integrator
+is eventually chosen contractually guarantees hosting for the full retention period, or (b) have
+Notya itself fetch and store the PDF/XML bytes (e.g. in Supabase Storage) right after a successful
+`issue()` call, as its own durable copy independent of the integrator's hosting. Flagging this
+explicitly for Kaan rather than picking (a) or (b) silently, since (b) has real storage-cost and
+KVKK-retention-of-a-copy implications that are a product decision.
+
+### 4.6.4 Doctor-as-issuer correctness — **VERIFIED (code-read, high confidence)**
+
+This is the one item in this audit that is a **direct code read, not an external legal citation**,
+so "verified" here means "the code actually does what the architecture document already claims it
+does," checked line by line in `lib/accounting/invoices/engine.ts` this pass:
+
+- `issueInvoice`'s `seller: SellerIdentity` is built **exclusively** from the doctor's own
+  `accounting_tax_profiles` row (`id_type`, decrypted `id_value_enc`, `unvan`, `address`,
+  `vergi_dairesi`) — there is no Notya-owned seller constant anywhere in this file or in
+  `lib/accounting/ebelge/*`.
+- The e-belge credentials used for every call (`accounting_ebelge_credentials`, decrypted via
+  `lib/accounting/vault.ts`) are selected `.eq('doctor_id', actor.doktorId).eq('is_active', true)`
+  — always that specific doctor's own integrator account, never a shared/platform credential.
+- `cancelInvoice` and the newly-added `creditInvoice` (§4.6.5) both re-use the **same**
+  doctor-scoped credentials and seller identity for the reversal/correction call — the ownership
+  boundary holds across the full lifecycle, not just at initial issuance.
+- `lib/accounting/ebelge/generic_rest.ts` (the one real adapter) never injects or overrides
+  `invoice.seller` — it passes the DTO's seller object straight through to the integrator's API.
+
+**No code path in this module lets an invoice be issued, cancelled, or credited under any identity
+other than the specific doctor's own**, enforced by the same `doctor_id`-scoped-query pattern used
+everywhere else in this codebase (hasta-izolasyon), not merely documented as a principle.
+
+### 4.6.5 Cancellation / düzeltme (correction) — **gap found and fixed**
+
+`lib/accounting/invoices/stateMachine.ts` already defined the `request_credit` /
+`credit_success` / `credit_failure` transitions (and they were already unit-tested in
+`stateMachine.test.ts`), `EbelgeAdapter.credit()` was already implemented in `generic_rest.ts`, and
+`accounting_credits` was already a real table (migration 153) — but **no engine function and no
+API route ever actually called any of that.** `cancelInvoice` (iptal) existed and worked end to
+end; the düzeltme/credit-note path was architecturally scaffolded but dead — a doctor had no way to
+actually issue a correction for an already-issued invoice. Turkish KDV/VUK practice requires an
+issued e-belge to be corrected or reversed via its own linked document (a credit note / iade
+faturası), never edited in place — this is a **legally required capability, not optional**, exactly
+as the brief said.
+
+**Fixed this pass**: added `creditInvoice()` to `lib/accounting/invoices/engine.ts`, mirroring
+`cancelInvoice`'s exact shape — same RBAC capability (`invoice.credit`), same doctor-scoped
+credentials, same audit logging, plus (new) an `accounting_credits` insert and an AR ledger credit
+posting (`postArCredit`) so a credit note correctly reduces the patient's open receivable balance.
+Added `POST /api/accounting/invoices/[id]/credit` (body: `{ amountKurus, reason }`), mirroring the
+existing cancel route. Supports a **partial** credit (amount less than the invoice total — the
+common case for a line-item correction), validated against the invoice total. Not unit-tested at
+the engine level — consistent with this module's existing pattern (`cancelInvoice`/`issueInvoice`
+are DB-coupled and not unit-tested either; the pure transition logic they both call IS unit-tested
+in `stateMachine.test.ts`, which already covered `request_credit`/`credit_success`/`credit_failure`
+before this pass and needed no changes).
+
+### 4.6.6 Late-payment reminders — design
+
+Built on `lib/accounting/ar/aging.ts`'s existing buckets (`0-30`/`31-60`/`61-90`/`90+`) rather than
+inventing a new ladder: `0-30` sends nothing (grace period / not yet meaningfully overdue), a
+reminder entering `31-60` is **tier 1 (gentle)**, entering `61-90` or `90+` is **tier 2 (firm)** —
+two tiers, driven directly by buckets already in the codebase.
+
+**Reused, not rebuilt**: every patient message in Notya — appointment reminders, test-result
+nudges, intake forms — already goes through one shared pipeline in `lib/iletisim/*`: a drafts
+queue (`iletisim_kuyrugu`), sent only by a human tapping send from their own connected WhatsApp/
+e-mail account (never a Notya-owned sender), with consent gating and a `tekil_anahtar` de-dup key.
+Payment reminders reuse that pipeline end to end — queue table, send/log routes, consent checks,
+RBAC-for-staff gate — rather than a parallel send path:
+
+- `lib/accounting/ar/reminders.ts` — pure decision logic, no I/O: tier mapping, candidate-building
+  from open receivables, idempotency key format. Fully unit-tested
+  (`lib/accounting/ar/reminders.test.ts`).
+- `lib/accounting/ar/reminderSweep.ts` — the only new I/O: reads open `accounting_invoices`,
+  resolves contact/consent via `lib/iletisim/sunucu.ts`'s existing `hastaIletisimi` (never a bespoke
+  phone/consent check), and inserts draft rows via that module's existing `kuyrugaEkle`.
+- `lib/iletisim/tipler.ts` / `sablonlar.ts` / `kuyruk.ts` — one new message type
+  (`odeme_hatirlatma`) added to the existing type registry, Turkish gentle/firm templates added to
+  the existing template switch, and new nullable display columns (`invoice_id`,
+  `odeme_tutar_kurus`, `odeme_fatura_ref`, `odeme_kademe`) added to `iletisim_kuyrugu`
+  (migration 157) so the accounting module never has to be imported back into `lib/iletisim`
+  (one-directional dependency, avoiding a cycle).
+- `lib/accounting/rbac.ts` — two new capabilities, `ar.reminder.view`/`ar.reminder.send`, granted to
+  **both** doktor and sekreter **by default** (no explicit grant needed — same tier as
+  `invoice.issue`/`payment.charge`, matching that file's own existing header description of the
+  sekreter default as "can charge, generate, email, print"). Verified against
+  `lib/accounting/rbac.test.ts`, not assumed.
+- Routes: `GET /api/accounting/reminders` (list pending drafts with amount/reference for the
+  Faturalama panel), `POST /api/accounting/reminders/sweep` (manual "check now"),
+  `GET /api/cron/odeme-hatirlatma` (daily scheduled sweep, `vercel.json`, 05:00 UTC / 08:00 TRT,
+  cron-secret gated). Opening/editing/**sending** a drafted reminder happens through the existing
+  `/api/doktor/iletisim/{hazirla,kayit}` flow, unchanged.
+
+**Mandatory human review is structural, not configured**: `odeme_hatirlatma` is deliberately absent
+from `lib/iletisim/otomatikGonderim.ts`'s `OTOMATIK_TURLER` allowlist — the unattended-dispatcher
+cron's own `SELECT` filters by that list, so a payment-reminder draft is physically never read by
+the auto-send path, regardless of any flag. **No code path in this feature can send a message
+without a human opening it and tapping send in their own WhatsApp/mail app first.**
+
+**Disclosed architectural limitation**: the existing one-tap queue stores one `metin` string per
+draft shared by whichever channel (WhatsApp or e-mail) the human ends up sending from — it was not
+designed for channel-specific bodies. Building that distinction would mean widening the shared
+`iletisim_kuyrugu`/send-route contract for every message type, a materially larger change than this
+pass's scope. Each reminder's single template body is written short enough to read naturally as a
+WhatsApp message and complete enough (amount + fatura reference) to stand alone as an e-mail, but
+this is **one honest template per tier, not two independently-tuned channel templates** as the
+brief's ideal described. Flagged here plainly rather than claimed as done.
+
+**Scheduling, stated plainly**: `vercel.json`'s cron entry is real and wired (same mechanism as
+every other `app/api/cron/*` job in this repo) and will fire daily in any environment where Vercel
+Cron is actually enabled for this project. This pass did not itself trigger or observe a live cron
+invocation — that is Vercel's own scheduler, outside what a code session can execute or prove from
+inside a container. The manual `POST /api/accounting/reminders/sweep` route exists specifically so
+the sweep can be exercised for real (by a doctor/sekreter action) without waiting on cron.
+
+See this round's dated entry in `docs/OPEN-COMMITMENTS.md` for the test/typecheck results.
+
+---
+
 ## 6. Compliance summary (TR)
 
 | Topic | Stance |
 |-------|--------|
-| GİB e-belge | Issued only via doctor’s registered integrator; Notya does not self-issue |
-| e-SMM / e-Fatura / e-Arşiv | Primary e-SMM; others architecturally ready |
-| KDV | Default **%10** for health services; keep rate table versioned |
+| GİB e-belge | Issued only via doctor’s registered integrator; Notya does not self-issue — **code-verified §4.6.4** |
+| e-SMM / e-Fatura / e-Arşiv | Primary e-SMM; others architecturally ready. UBL-TR/ETTN/mali mühür are the chosen integrator's responsibility by design — **no integrator chosen yet, §4.6.2** |
+| KDV | Default **%10** for health services (now one named constant, `KDV_RATE_BP_HEALTH_DEFAULT`); traces to 7346 sayılı CBK (10 Jul 2023) — **moderate confidence current, not re-verified live, §4.6.1** |
+| Düzeltme/iade | `creditInvoice()` + `/api/accounting/invoices/[id]/credit` — **gap fixed §4.6.5** (was scaffolded, not callable) |
+| Retention | Invoice/ledger DATA never purged (code-verified); **PDF/XML bytes are not independently archived by Notya, only a vendor URL — open gap, §4.6.3** |
 | Funds | Never held by Notya; doctor is merchant of record |
 | PCI | Hosted 3DS preferred; no PAN storage |
 | KVKK | Existing Notya encryption + audit; portal visibility as disclosure control |
 | Official tax filing | Out of scope — exports for mali müşavir |
+| Payment reminders | Draft-only, human-send-only, via existing `lib/iletisim/*` infra — **§4.6.6**, built this round |
 
 ---
 
@@ -721,6 +988,7 @@ UI entry: **Entegrasyonlar → Faturalama & Tahsilat**.
 | 1.4 | 2026-10-15 | Added §2.6a hybrid payment model (iyzico facilitator as default/`VERIFIED`, NestPay-group/Garanti/Yapı Kredi direct-bank path phased and parallel) and §4.3 (adopted the hybrid model in full; merge/deploy still not performed, for the same provenance reason as §4.2, applied even though this message claimed to be direct rather than relayed) |
 | 1.5 | 2026-10-15 | NestPay group moved from stub to REAL (`lib/accounting/banks/nestpay.ts`, VERIFIED by protocol cross-reference against two independent open-source implementations' source code) per Kaan's correction that "no portal" ≠ "no documentation." Added §4.4. Merge/deploy handed back to Kaan for this round, per his own instruction — no provenance conflict this time. |
 | 1.6 | 2026-10-15 | Garanti BBVA moved from stub to REAL (`lib/accounting/banks/garanti.ts`, direct vendor docs on dev.garantibbva.com.tr — Common Payment Page/OOS, iyzico-level confidence with one disclosed inference) and Yapı Kredi/Posnet moved from stub to REAL (`lib/accounting/banks/yapikredi_posnet.ts`, BEST-EFFORT single-source OSS cross-reference, one tier below NestPay's). Added §4.5. Built on a fresh branch off `main` (`feat/notya-accounting-garanti-yapikredi`) in its own worktree, since `feat/notya-accounting` was already merged; pushed, not merged. |
+| 1.7 | 2026-10-15 | Added §4.6: 2026 compliance audit (KDV rate sourcing, buyer-identity placeholder fixed, düzeltme/credit-note capability built — was scaffolded, not callable — retention gap on PDF/XML bytes disclosed, doctor-as-issuer correctness code-verified) + late-payment reminders design pointer. Built on `feat/notya-accounting-compliance-tahsilat-hatirlatma`, off `main`, in its own worktree. §6 compliance summary table updated to match. |
 
 ---
 

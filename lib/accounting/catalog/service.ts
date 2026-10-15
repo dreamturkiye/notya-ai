@@ -9,6 +9,7 @@
  */
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { AccountingService, ServiceKind, Money } from '../types'
+import { KDV_RATE_BP_HEALTH_DEFAULT } from '../types'
 import { writeAuditLog } from '../audit'
 import type { ActingUser } from '../types'
 import { assertCan } from '../rbac'
@@ -67,7 +68,7 @@ export async function createService(
       name: input.name.trim(),
       description: input.description?.trim() || null,
       price_kurus: input.priceKurus,
-      kdv_rate_bp: input.kdvRateBp ?? 1000,
+      kdv_rate_bp: input.kdvRateBp ?? KDV_RATE_BP_HEALTH_DEFAULT,
       active: true,
     })
     .select('*')

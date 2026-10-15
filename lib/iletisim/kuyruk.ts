@@ -27,6 +27,10 @@ export const PERSONEL_TURLERI: readonly MesajTuru[] = [
   'randevu_iptali',
   'tetkik_getirin',
   'bilgi_formu',
+  // NOTYA-ACCOUNTING-COMPLIANCE-01: day-to-day collections work, same RBAC tier as the accounting
+  // module's own default sekreter capabilities (invoice.issue, payment.charge) — not cancel/credit
+  // tier. lib/accounting/rbac.ts's `ar.reminder.send` mirrors this default; keep both in sync.
+  'odeme_hatirlatma',
 ]
 
 export function turIzinliMi(rol: PratikRol, tur: MesajTuru): boolean {
@@ -44,6 +48,18 @@ export type KuyrukAdayi = {
   /** YYYY-MM-DD (Turkey) the item belongs to — "Bugün N mesaj hazır" counts items up to today. */
   planlanan_gun: string
   tekil_anahtar: string
+  /**
+   * NOTYA-ACCOUNTING-COMPLIANCE-01 — 'odeme_hatirlatma' only. Snapshot at draft-generation time
+   * (lib/accounting/ar/reminders.ts): which invoice, the open balance in kuruş, a short display
+   * reference, and the escalation tier (1 gentle / 2 firm). Stored on the row rather than
+   * re-resolved when a human opens the item, so lib/iletisim never has to import the accounting
+   * module (would create a circular dependency: lib/accounting's own sweep already imports FROM
+   * lib/iletisim to reuse its patient-contact/consent/queue helpers).
+   */
+  invoice_id?: string | null
+  odeme_tutar_kurus?: number | null
+  odeme_fatura_ref?: string | null
+  odeme_kademe?: 1 | 2 | null
 }
 
 export const tekilAnahtar = {
@@ -54,6 +70,13 @@ export const tekilAnahtar = {
   /** Without a thread id: one notice per patient per day. */
   saglikimMesajiHasta: (patientId: string, gunIso: string) => `saglikim_yeni_mesaj:hasta:${patientId}:${gunIso}`,
   asi: (asiId: string, sonrakiDozIso: string) => `asi_hatirlatma:${asiId}:${sonrakiDozIso}`,
+  /**
+   * One draft per invoice PER TIER, ever (not per day) — an invoice sitting in the same aging
+   * bucket for weeks must not re-generate a new draft every sweep run. A new draft is only
+   * generated when the invoice crosses into a MORE URGENT bucket than any draft already made for
+   * it (tier 1 → tier 2), which the bucket label in the key naturally expresses.
+   */
+  odemeHatirlatma: (invoiceId: string, bucket: string) => `odeme_hatirlatma:${invoiceId}:${bucket}`,
 }
 
 /** Drops candidates whose key already exists (in the DB or earlier in the same batch). */

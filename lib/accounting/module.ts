@@ -4,6 +4,7 @@
  * payment links, no e-belge jobs, no AR UI (docs/ARCH-NOTYA-ACCOUNTING.md §2.1).
  */
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { KDV_RATE_BP_HEALTH_DEFAULT } from './types'
 
 export interface AccountingModuleSettings {
   doctorId: string
@@ -15,7 +16,7 @@ export interface AccountingModuleSettings {
 
 const DEFAULTS: Omit<AccountingModuleSettings, 'doctorId'> = {
   enabled: false,
-  defaultKdvRateBp: 1000,
+  defaultKdvRateBp: KDV_RATE_BP_HEALTH_DEFAULT,
   defaultDocType: 'esmm',
   portalVisibleDefault: false,
 }

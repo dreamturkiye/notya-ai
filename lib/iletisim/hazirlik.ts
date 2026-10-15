@@ -73,9 +73,13 @@ export async function iletisimHazirla(
   let asiId = str(g.asiId) || null
   const kuyrukId = str(g.kuyrukId) || null
 
+  // NOTYA-ACCOUNTING-COMPLIANCE-01: only read for 'odeme_hatirlatma' rows; null for every other type.
+  let odemeTutarKurus: number | null = null
+  let odemeFaturaRef: string | null = null
+  let odemeKademe: 1 | 2 | null = null
   if (kuyrukId) {
     const { data: k, error } = await sb.from('iletisim_kuyrugu')
-      .select('id, patient_id, tur, randevu_id, asi_id')
+      .select('id, patient_id, tur, randevu_id, asi_id, odeme_tutar_kurus, odeme_fatura_ref, odeme_kademe')
       .eq('id', kuyrukId).eq('doctor_id', doktorId).maybeSingle()
     if (error || !k || !mesajTuruMu(k.tur)) return { durum: 404, hata: 'Mesaj bulunamadı.' }
     if (!turIzinliMi(rol, k.tur)) return { durum: 404, hata: 'Mesaj bulunamadı.' }
@@ -83,6 +87,9 @@ export async function iletisimHazirla(
     patientId = String(k.patient_id)
     randevuId = k.randevu_id ? String(k.randevu_id) : null
     asiId = k.asi_id ? String(k.asi_id) : null
+    odemeTutarKurus = typeof k.odeme_tutar_kurus === 'number' ? k.odeme_tutar_kurus : null
+    odemeFaturaRef = k.odeme_fatura_ref ? String(k.odeme_fatura_ref) : null
+    odemeKademe = k.odeme_kademe === 1 || k.odeme_kademe === 2 ? k.odeme_kademe : null
   }
   if (!tur) return { durum: 400, hata: 'Mesaj türü geçersiz.' }
   if (!turIzinliMi(rol, tur)) return { durum: 403, hata: 'Bu mesajı yalnızca doktor hazırlayabilir.' }
@@ -129,6 +136,9 @@ export async function iletisimHazirla(
     link,
     tarihIso: asiTarih,
     metin: tur === 'serbest' ? str(g.metin).slice(0, 1500) : null,
+    odemeTutarKurus,
+    odemeFaturaRef,
+    odemeKademe,
   })
   return { tur, hasta, mesaj, sonKanal: await sonKanal(sb, doktorId, patientId), randevuId, asiId, kuyrukId, randevu, link }
 }

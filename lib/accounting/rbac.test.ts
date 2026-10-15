@@ -52,4 +52,23 @@ describe('accounting/rbac', () => {
     assert.throws(() => assertCan('sekreter', 'module.toggle'), AccountingForbiddenError)
     assert.doesNotThrow(() => assertCan('doktor', 'module.toggle'))
   })
+
+  // NOTYA-ACCOUNTING-COMPLIANCE-01 (2026-10-15): payment-reminder drafts are day-to-day collections
+  // work, explicitly the same tier as invoice.issue/payment.charge per §2.8's own "can charge,
+  // generate, email, print" wording — sekreter has both by DEFAULT, no grant needed. This mirrors
+  // lib/iletisim/kuyruk.ts's PERSONEL_TURLERI (which is the actual send-time gate for this feature,
+  // since reminders are opened/sent through the existing iletisim queue) — a sekreter without an
+  // explicit grant must still be able to view and send a reminder, and that is asserted here, not
+  // assumed.
+  it('sekreter can view and send payment-reminder drafts by default (no grant needed)', () => {
+    assert.equal(canPerform('sekreter', 'ar.reminder.view'), true)
+    assert.equal(canPerform('sekreter', 'ar.reminder.send'), true)
+    assert.doesNotThrow(() => assertCan('sekreter', 'ar.reminder.view'))
+    assert.doesNotThrow(() => assertCan('sekreter', 'ar.reminder.send'))
+  })
+
+  it('doktor can also view and send payment-reminder drafts', () => {
+    assert.equal(canPerform('doktor', 'ar.reminder.view'), true)
+    assert.equal(canPerform('doktor', 'ar.reminder.send'), true)
+  })
 })

@@ -39,6 +39,12 @@ export type SablonGirdisi = {
   tarihIso?: string | null
   /** Only for 'serbest': the text the doctor wrote. */
   metin?: string | null
+  /** Only for 'odeme_hatirlatma' (NOTYA-ACCOUNTING-COMPLIANCE-01): open balance, in kuruş. */
+  odemeTutarKurus?: number | null
+  /** Only for 'odeme_hatirlatma': short display reference for the invoice (doc number or id tail). */
+  odemeFaturaRef?: string | null
+  /** Only for 'odeme_hatirlatma': 1 = gentle (first reminder), 2 = firm (follow-up). */
+  odemeKademe?: 1 | 2 | null
 }
 
 export type HazirMesaj = { konu: string; metin: string }
@@ -210,7 +216,47 @@ export function mesajHazirla(tur: MesajTuru, g: SablonGirdisi): HazirMesaj | nul
       if (!metin) return null
       return { konu: konuYap('Muayenehanemizden mesaj', g), metin: imzala([metin], g) }
     }
+    case 'odeme_hatirlatma': {
+      // NOTYA-ACCOUNTING-COMPLIANCE-01. One template body serves both channels in this system
+      // (the one-tap flow uses the same `metin` for the WhatsApp link and the mailto/Gmail/Outlook
+      // link — see lib/iletisim/README.md; there is no per-channel body anywhere else in this
+      // module either, 'bilgi_formu' included). Kept short enough to read naturally on WhatsApp,
+      // with the amount + invoice reference included so it also stands on its own as an email body
+      // — not two independent template sets, by the architecture's own existing constraint; see
+      // docs/ARCH-NOTYA-ACCOUNTING.md §4.6.6 for this disclosed explicitly.
+      const tutar = odemeTutarYaz(g.odemeTutarKurus)
+      if (!tutar) return null
+      const ref = temiz(g.odemeFaturaRef)
+      const kime = g.veliDili ? `${temiz(g.hastaAdi) || 'Hastamız'} için` : ''
+      const faturaSatiri = ref ? ` (${ref})` : ''
+      if (g.odemeKademe === 2) {
+        return {
+          konu: konuYap('Ödemenizi hatırlatmak isteriz', g),
+          metin: imzala(
+            [
+              `${merhaba(g)} ${kime ? `${kime} ` : ''}${tutar} tutarındaki${faturaSatiri} ödemeniz hâlâ bekliyor. Mümkün olan en kısa sürede tamamlamanızı rica ederiz; ödeme yapıldıysa lütfen bize bildirin, kaydımızı güncelleyelim.`,
+            ],
+            g,
+          ),
+        }
+      }
+      return {
+        konu: konuYap('Küçük bir ödeme hatırlatması', g),
+        metin: imzala(
+          [
+            `${merhaba(g)} ${kime ? `${kime} ` : ''}${tutar} tutarındaki${faturaSatiri} ödemenizi henüz göremedik. Uygun olduğunuzda tamamlarsanız seviniriz; bir sorun varsa bize yazabilirsiniz.`,
+          ],
+          g,
+        ),
+      }
+    }
   }
+}
+
+/** "1.250,00 TL", or null for a missing/invalid amount (never shows "NaN" or "0,00" for a gap). */
+function odemeTutarYaz(kurus: number | null | undefined): string | null {
+  if (typeof kurus !== 'number' || !Number.isFinite(kurus) || kurus <= 0) return null
+  return `${(kurus / 100).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TL`
 }
 
 /** Short one-line preview for lists (queue, contact log). */
