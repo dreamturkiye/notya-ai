@@ -83,14 +83,29 @@ const IDDIA = /\b(HIPAA|GDPR|PIPEDA|FDA|TGA|MHRA|Medsafe|Health Canada|ISO ?\d+|
 const KIMLIK = /social security|\bSSN\b/i
 const PARA = /\d[\d,.]*\s*(USD|GBP|CAD|AUD|NZD|dollars?|pounds?)\b|[$£€]\s*\d/
 
+/**
+ * The assistant instruction with published titles (2) and (3) removed. The national source stays, and so does
+ * the sentence after the list. A title that itself contains " (2) " would be cut early; none of the shared titles do.
+ */
+function uluslararasiBasliksiz(metin: string): string {
+  const i2 = metin.indexOf(' (2) ')
+  const i3 = metin.indexOf(' (3) ')
+  if (i2 < 0 || i3 < i2) return metin
+  const sonra = metin.slice(i3 + 5)
+  const nokta = sonra.indexOf('. ')
+  return metin.slice(0, i2) + (nokta < 0 ? '' : sonra.slice(nokta))
+}
+
 /** Every text a pack shows or hands the model, with its place. */
 export function paketMetinleri(s: Pick<EnPaketSinamasi, 'paket' | 'arayuz' | 'klinik' | 'bicim'>): { yer: string; metin: string }[] {
   const { paket, arayuz, klinik, bicim } = s
   const talimatlar = Object.fromEntries(klinik.sablonlar.map((sablon) => [sablon, klinik.notTalimati(bicim, sablon) ?? '']))
+  const asistanTalimat = Object.fromEntries(arayuz.roller.map((r) => [r.anahtar, klinik.asistanTalimati?.(bicim, r.anahtar) ?? '']))
+  const asistanAd = Object.fromEntries(arayuz.roller.map((r) => [r.anahtar, arayuz.asistan(r.anahtar, bicim)?.tamAd ?? '']))
   return tumMetinler({
     paket: { kabuk: paket.kabuk, metinler: paket.metinler, dilAdlari: paket.dilAdlari },
     arayuz: { ...arayuz, asistan: undefined, acilis: arayuz.acilis ? { ...arayuz.acilis, capalar: undefined, fontHref: undefined } : null },
-    klinik: { talimatlar, ozet: klinik.hastaOzetiTalimati?.(bicim) ?? '', form: klinik.hastaFormu },
+    klinik: { talimatlar, asistanTalimat, asistanAd, ozet: klinik.hastaOzetiTalimati?.(bicim) ?? '', form: klinik.hastaFormu },
   }).filter((x) => !/(^|\.)(anahtar|tur|kime|cinsiyet|olcu|capa|id|rol|no|saat|taraf|bolum|surum|kimden|genelSablon)$/.test(x.yer) && !/\.(rolAlanlari|cocukRolleri|roller)\b/.test(x.yer) && !/\.yuvalar\[/.test(x.yer))
 }
 
@@ -144,15 +159,21 @@ export function ingilizcePaketSinamasi(s: EnPaketSinamasi): void {
   describe(`${kod}: spelling — every text is written in ${bicim}`, () => {
     it('there is a body of text', () => assert.ok(metinler.length > 1500, `${metinler.length} texts`))
     it('no text shows the spelling of another form of English', () => {
-      // field keys in an instruction are the contract with the code ("prior_anesthesia"), not text
+      // field keys in an instruction are the contract with the code ("prior_anesthesia"), not text.
+      // The assistant instruction quotes published book titles and a national body's own name, which keep
+      // the spelling they were published in, so that check does not read them.
       const temiz = (m: string) => m.replace(/^- [a-z_]+ — /gm, '- ').replace(/"[a-z_]+": /g, '')
-      assert.deepEqual(metinler.flatMap((x) => bicimYazimSorunlari(temiz(x.metin), bicim).map((sorun) => `${x.yer}: ${sorun}`)), [])
+      assert.deepEqual(metinler.filter((x) => !x.yer.includes('asistanTalimat')).flatMap((x) => bicimYazimSorunlari(temiz(x.metin), bicim).map((sorun) => `${x.yer}: ${sorun}`)), [])
     })
   })
 
   describe(`${kod}: walls — nothing of another country`, () => {
     it('nothing of another English-speaking country is shown', () => {
-      assert.deepEqual(metinler.filter((x) => s.yabanci.test(x.metin)).map((x) => `${x.yer}: ${s.yabanci.exec(x.metin)?.[0]}`), [])
+      // References (2) and (3) are published international titles from the shared secondary list. They keep the
+      // publisher's wording (a book may be titled "Anesthesiology"). The national source (1), the character, and
+      // the chart rules stay under this wall.
+      const duvar = (x: { yer: string; metin: string }) => x.yer.includes('asistanTalimat') ? uluslararasiBasliksiz(x.metin) : x.metin
+      assert.deepEqual(metinler.filter((x) => s.yabanci.test(duvar(x))).map((x) => `${x.yer}: ${s.yabanci.exec(duvar(x))?.[0]}`), [])
     })
     it('nothing of Türkiye or of Uzbekistan is shown, and no letter of their alphabets', () => {
       assert.deepEqual(metinler.filter((x) => TURKIYE_OZBEKISTAN.test(x.metin)).map((x) => `${x.yer}: ${TURKIYE_OZBEKISTAN.exec(x.metin)?.[0]}`), [])
@@ -185,8 +206,28 @@ export function ingilizcePaketSinamasi(s: EnPaketSinamasi): void {
       const n = arayuz.acilis!.icerik[bicim]!.narx
       assert.deepEqual(n.gruplar.flatMap((g) => g.rejalar.map((r) => r.id)).sort(), Object.keys(f).sort())
     })
-    it('no assistant is named: every role shows the neutral line', () => {
-      for (const r of ROLLER) assert.equal(arayuz.asistan(r, bicim), null, r)
+    it('every role, including a clinic role, has this country\'s assistant and no other', () => {
+      for (const r of arayuz.roller) {
+        const kim = arayuz.asistan(r.anahtar, bicim)
+        assert.ok(kim, r.anahtar)
+        assert.equal(kim!.makineTuretimi, true, r.anahtar)
+        const beklenen = r.taraf === 'klinik-muttefik' ? `Senior ${r.ad[bicim]}` : `Professor of ${r.ad[bicim]}`
+        assert.equal(kim!.tamAd, beklenen, r.anahtar)
+        const t = klinik.asistanTalimati?.(bicim, r.anahtar) ?? ''
+        assert.match(t, /more than twenty years/, r.anahtar)
+        assert.match(t, /Do not state a number that is not on the record/, r.anahtar)
+        assert.match(t, /Do not derive a weight from a medicine dose/, r.anahtar)
+        assert.equal((t.match(/\(1\) |\(2\) |\(3\) /g) ?? []).length, 3, r.anahtar)
+        if (r.taraf === 'klinik-muttefik') assert.match(t, /You are not a doctor/, r.anahtar)
+        else assert.match(t, new RegExp(`professor of ${r.ad[bicim]!.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`), r.anahtar)
+      }
+      assert.equal(arayuz.asistan('not-a-role', bicim), null)
+      const ped = klinik.asistanTalimati?.(bicim, 'paediatrics') ?? ''
+      const kalp = klinik.asistanTalimati?.(bicim, 'cardiology') ?? ''
+      assert.match(ped, /Nelson Textbook of Pediatrics/)
+      assert.doesNotMatch(ped, /Braunwald/)
+      assert.match(kalp, /Braunwald/)
+      assert.doesNotMatch(kalp, /Nelson Textbook of Pediatrics/)
     })
     it('hidden from search; sign-up by invitation code only', () => {
       assert.equal(paket.aramaMotorlarinaGizli, true)

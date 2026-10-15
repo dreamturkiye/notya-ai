@@ -32,6 +32,7 @@
 import { hekimRolleri } from '@/lib/ulke/araclar/paket'
 import type { EnUlkeGirdisi } from '../_dil/en/girdi'
 import { enRolSatirlari } from '../_dil/en/klinik/roller'
+import { CA_ULUSAL } from './asistan/ulusal'
 import { caKendiAraclari } from './araclar/metinler'
 import { CA_TANIMLAR } from './araclar/tanimlar'
 import { CA_ROLLER, CA_YENIDEN_ADLANANLAR } from './roller'
@@ -83,6 +84,7 @@ export const CA_GIRDI: EnUlkeGirdisi = {
     odeme: 'Health card',
   },
   ulkeAdi: 'Canada',
+  asistanUlusal: CA_ULUSAL,
   // UNVERIFIED: the word a senior hospital doctor goes by here.
   kidemliHekim: 'staff physician',
   // How each specialty is named in Canada, where it differs from the set's base name. The five names below are the

@@ -34,6 +34,7 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { gorunurMetin, sizintiTara } from '@/lib/ulke/testing/sizintiTarayici'
 import { sahteVeritabani } from '@/lib/ulke/testing/sahteVeritabani'
 import { UZ_ASISTAN_ADLARI, uzAsistanAdi } from './asistanAdlari'
+import { UZ_ROL_ADLARI } from './rolAdlari'
 import { uzAsistanKimligi } from './asistanKimligi'
 import { UZ_ESKI_ROLLER, uzBugunkuRol } from './eskiRoller'
 import { UZ_HEKIM_ROLLERI, UZ_KAPSAM_DISI, UZ_NOMENKLATURA, UZ_ROL_ANAHTARLARI, UZ_ROL_SATIRLARI, UZ_RUSCHA_ADLAR_RESMIY } from './rolListesi'
@@ -320,7 +321,13 @@ describe('42 roles: the assistant\'s identity', () => {
 
   it('THE SEVEN ROLES THE AUDIT ADDED HAVE NO ASSISTANT YET: no name in any form — not the name of the role they behave like, not a made-up one', () => {
     assert.deepEqual(ADSIZ.map((r) => r.rol), ['damar-cerrahisi', 'alerji-immunoloji', 'reproduktoloji', 'cocuk-norolojisi', 'narkoloji', 'diyetoloji', 'surdoloji'])
-    for (const { rol } of ADSIZ) for (const f of FORMLAR) assert.equal(K.uzAsistanKimligi(rol, f), null, `${rol}/${f}`)
+    for (const { rol } of ADSIZ) for (const f of FORMLAR) {
+      const k = K.uzAsistanKimligi(rol, f)
+      assert.ok(k, `${rol}/${f}`)
+      assert.equal(k!.makineTuretimi, true, `${rol}/${f}`)
+      assert.ok(k!.tamAd.includes(UZ_ROL_ADLARI[rol][f]), `${rol}/${f}: the specialty's own name`)
+      for (const baska of ADLI) assert.ok(!k!.tamAd.includes(baska.kisaAd), `${rol}/${f}: uses ${baska.rol}'s name`)
+    }
     // the role each behaves like has (or had) a name in the owner's list — and it is NOT handed on
     for (const x of UZ_ROL_SATIRLARI.filter((y) => y.gibi)) assert.ok(uzAsistanAdi(x.gibi!), x.anahtar)
     assert.match(readFileSync(join(KOK, 'countries/uz/klinik/asistanKimligi.ts'), 'utf8'), /does NOT take that role's assistant/)
@@ -511,15 +518,16 @@ describe('42 roles: screens (the question, settings, home)', () => {
   }
 
   for (const { rol } of ADSIZ) {
-    it(`${rol}: no assistant has been named for this role — the home shows the neutral assistant with the role's own name, and no other role's assistant`, () => {
+    it(`${rol}: no personal name yet — the home shows the professor of this specialty, and no other role's assistant`, () => {
       for (const f of FORMLAR) {
         const m = M.uygulamaMetni(f)
-        const notr = m.asistan.notr.replace('%', 'Notya')
-        assert.equal(Asistan.asistanAdi(m, rol), notr, `${rol}/${f}`)
+        const kim = K.uzAsistanKimligi(rol, f)!
+        assert.equal(Asistan.asistanAdi(m, rol), kim.tamAd, `${rol}/${f}`)
         const html = cerceve(f, React.createElement(Bugun.BugunGorunumu, { m, ad: 'QA Shifokor', muayeneler: [], hata: false, rol }))
         const gorunur = gorunurMetin(html)
-        assert.ok(gorunur.includes(notr), `${rol}/${f}`)
-        for (const baska of ADLI) assert.ok(!gorunur.includes(K.uzAsistanKimligi(baska.rol, f)!.tamAd) && !gorunur.includes(K.uzAsistanKimligi(baska.rol, f)!.kisaAd), `${rol}/${f}: shows ${baska.rol}'s assistant`)
+        assert.ok(gorunur.includes(kim.tamAd), `${rol}/${f}`)
+        assert.ok(gorunur.includes(R.UZ_ROL_ADLARI[rol][f]), `${rol}/${f}: the specialty`)
+        for (const baska of ADLI) assert.ok(!gorunur.includes(K.uzAsistanKimligi(baska.rol, f)!.tamAd) && !gorunur.includes(baska.kisaAd), `${rol}/${f}: shows ${baska.rol}'s assistant`)
         ekranTemiz(html, `/today ${rol} ${f}`); anahtarGorunmez(html, `/today ${rol} ${f}`)
       }
     })

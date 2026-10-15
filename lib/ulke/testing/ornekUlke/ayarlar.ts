@@ -93,6 +93,8 @@ export const XX_GIRDI: EnUlkeGirdisi = {
     meslekKaydiEtiketi: 'Professional registration number',
   },
   ulkeAdi: 'the test country',
+  asistanUlusal: Object.fromEntries(SATIRLAR.map((r) => [r.anahtar, 'TEST: national guidance for this role'])),
+  asistanEkKitap: { 'xx-nurse': ['TEST textbook one', 'TEST textbook two'] },
   kidemliHekim: 'consultant',
   rolAdlari: { 'family-medicine': 'General practice' },
   roller: XX_ROLLER,
