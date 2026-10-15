@@ -554,7 +554,7 @@ export default function HastaProfilPage() {
 
         {/* Ayşe şeridi: Özet'te iki özetin altında; diğer sekmelerde sekmeler ↔ içerik — Gökhan/Boss 2026-09-20 */}
         {!loading && !error && patient && (
-          <HastaKonsult patientId={patientId} baslangicAcik={tabParam === 'ayse'} hastaDogumIso={patient.dogum_tarihi} />
+          <HastaKonsult patientId={patientId} baslangicAcik={tabParam === 'ayse'} hastaDogumIso={patient.dogum_tarihi} doktorBransi={doktorBransi} />
         )}
 
         {loading && <div style={{ ...panel, padding: 18, color: CHROME_RENK.muted, fontSize: 14 }}>Dosya yükleniyor…</div>}
