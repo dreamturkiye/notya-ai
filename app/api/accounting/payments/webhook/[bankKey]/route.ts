@@ -33,6 +33,55 @@ function redirectHtml(returnUrl: string): string {
   return `<!doctype html><html><head><meta http-equiv="refresh" content="0;url=${safeUrl}"></head><body>Yönlendiriliyor… <a href="${safeUrl}">devam et</a></body></html>`
 }
 
+/**
+ * GET-based bank redirect callback (VakıfBank PayFlex Common Payment — see
+ * lib/accounting/banks/vakifbank.ts header "third disclosed gap"; the library's own reference
+ * example confirms this gateway replies with a browser GET, not a POST, unlike every other
+ * adapter in this module). The browser lands here directly with query params — our own
+ * `merchantRef` (embedded on SuccessUrl/FailUrl by the adapter) plus whatever the bank appends
+ * (`TransactionId`/`PaymentToken` for VakıfBank). Written generically by query-string shape, not
+ * hardcoded to one bank key, since the same shape could fit another GET-replying gateway later.
+ */
+export async function GET(req: NextRequest, { params }: { params: { bankKey: string } }) {
+  const bankKey = params.bankKey as BankKey
+  const searchParams = req.nextUrl.searchParams
+  const merchantRef = searchParams.get('merchantRef') || searchParams.get('oid') || ''
+  const supabase = servisSupabase()
+  const { data: payment } = await supabase
+    .from('accounting_payments')
+    .select('doctor_id, return_url')
+    .eq('merchant_ref', merchantRef)
+    .eq('bank_key', bankKey)
+    .maybeSingle()
+  const fallbackReturnUrl = payment?.return_url || '/'
+  if (!payment) {
+    return new Response(redirectHtml(fallbackReturnUrl), { status: 200, headers: { 'Content-Type': 'text/html; charset=utf-8' } })
+  }
+
+  const { data: merchant } = await supabase
+    .from('accounting_bank_merchants')
+    .select('*')
+    .eq('doctor_id', payment.doctor_id)
+    .eq('bank_key', bankKey)
+    .maybeSingle()
+  if (merchant) {
+    const adapter = getBankAdapter(bankKey)
+    const body: Record<string, string> = {}
+    for (const [key, value] of searchParams.entries()) body[key] = value
+    try {
+      const event = await adapter.parseWebhook(
+        { bankKey, environment: merchant.environment, fields: decryptSecrets(merchant.secrets_enc) },
+        { body }
+      )
+      await applyPaymentEvent(supabase, bankKey, event)
+    } catch {
+      // Same posture as the POST/form-redirect branch below: fall through regardless — the
+      // doctor's own return page re-reads the invoice/payment status itself.
+    }
+  }
+  return new Response(redirectHtml(payment.return_url || fallbackReturnUrl), { status: 200, headers: { 'Content-Type': 'text/html; charset=utf-8' } })
+}
+
 export async function POST(req: NextRequest, { params }: { params: { bankKey: string } }) {
   const bankKey = params.bankKey as BankKey
 

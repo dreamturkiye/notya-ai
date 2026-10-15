@@ -1109,6 +1109,66 @@ registration in `banks/index.ts`. `npx tsc --noEmit` clean. Pushed
 `feat/notya-accounting-vakifbank-denizbank-kuveytturk`, **not merged** — per standing instruction,
 Kaan merges.
 
+## 4.8 Denizbank and VakıfBank moved from stub to REAL; Kuveyt Türk stays the one honest stub (2026-10-15, seventh round, final pass)
+
+A final, focused research pass on the three remaining stubs from §4.7, per Kaan's own explicit
+instruction, non-negotiable as stated: *"Only ship a real adapter if it is fully hosted/
+redirect-based and never receives or stores raw card data. Otherwise keep the honest stub and
+document why."* He explicitly accepted leaving a bank stubbed as a correct outcome — nothing below
+was stretched to reach a round number.
+
+**The tooling fix**: §4.7's fetch tool had refused every raw GitHub/GitLab URL for
+`InterPos.php`/`VakifBankPosPay.php` (a provenance restriction). This pass used `git clone --depth
+1 https://github.com/mewebstudio/pos.git` directly via the shell and read the cloned source with
+Read/Grep — this worked cleanly for GitHub. GitLab turned out to be blocked separately, at the
+network/proxy policy level (`git clone` of `gitlab.com/Ankapix/sanalpos-entegrasyonlari` got a 403
+at the CONNECT tunnel) — a different kind of block `git clone` cannot route around; that package's
+README was still read via its Packagist HTTP mirror.
+
+- **Denizbank → REAL** (`lib/accounting/banks/denizbank.ts`). Reading `InterPos.php`'s actual
+  request-builder directly settled exactly what §4.7 could not: the SAME function used for every
+  3D model only adds card fields `if ($creditCard instanceof CreditCardInterface)`, and for the
+  `3DHost` model specifically, the library's own `AbstractGateway::check3DFormInputs()` *throws* if
+  a card is passed with that model — a structural confirmation stronger than a name or a model
+  list, the same bar §4.4 set for NestPay. Also resolved §4.7's open "InterPOS vs. shared NestPay
+  rails" question: `mews/pos`'s own config registers Denizbank under `InterPos::class` specifically,
+  with a dedicated `gateway_3d_host` endpoint. One disclosed gap: only one library's source was
+  read (GitLab being blocked, not refused, is a real gap against NestPay's two-source bar).
+- **VakıfBank → REAL** (`lib/accounting/banks/vakifbank.ts`, BEST-EFFORT tier). The specific
+  `vakifbankpay`/`VakifBankPosPay.php` lead named in the instruction turned out to be a
+  stale/renamed Packagist listing — current `mews/pos` has no such file. What it DOES have, under
+  config key `'vakifbank-cp'`, is `PayFlexCPV4Pos` — VakıfBank's own "PayFlex Common Payment"
+  product, almost certainly the "Güvenli Ortak Ödeme" product the instruction named, reached via
+  its current driver name. Reading its source confirms the same card-free structural pattern as
+  Denizbank, PLUS this gateway doesn't even offer a card-collecting transaction type for a sale —
+  only the hosted models exist. Three gaps disclosed plainly, not papered over (see
+  `vakifbank.ts`'s header and `CHECKLIST.md` for the full detail): the hash formula carries the
+  library author's own unresolved `// todo`/known-error-5029 flag; the confirmed response-shape
+  type hint for the status-check call appears stale against the response mapper's own
+  unconditional field reads; and whether VakıfBank's redirect preserves a merchant-appended
+  correlation query parameter is not source-confirmed. None of the three gaps concern whether PAN
+  reaches Notya (that is structurally confirmed) — they concern finishing the integration
+  correctly, the same tier of gap `yapikredi_posnet.ts` already carries for its own MAC encoding.
+  A new `GET` handler was added to
+  `app/api/accounting/payments/webhook/[bankKey]/route.ts` (written generically by request shape,
+  not hardcoded to this bank) because VakıfBank's PayFlex Common Payment replies via browser GET
+  instead of POST — confirmed directly from `mews/pos`'s own reference example.
+- **Kuveyt Türk stays the stub**, per Kaan's own instruction not to force this one — it was already
+  settled by his own read of §4.7's two-independent-OSS-source finding that `ThreeDModelPayGate` is
+  PAN-touching. Only a quick re-check was asked for and done: `mews/pos` has no other Kuveyt Türk
+  gateway, and a brief search found no hosted/"Ortak Ödeme" product. Nothing changed.
+
+Registry now 11 of 12 real (`generic_hosted` + 6 NestPay-group + `garanti` + `yapi_kredi` +
+`denizbank` + `vakifbank`); `kuveyt_turk` stays the one stub. New tests added to
+`denizbank.test.ts` and `vakifbank.test.ts` (replacing their §4.7 stub-behavior tests), confirming:
+no PAN/CVV/expiry field ever appears in either bank's outbound request; hash/MAC construction
+matches each source exactly; callback/status-response mapping is conservative (never guesses a
+half-secure or ambiguous result into `captured`); and each bad-hash/missing-field callback is
+rejected before any status is trusted. `kuveyt_turk.test.ts` unchanged (still asserts the stub's
+`AdapterNotImplementedError` behavior). Built on a fresh branch off `origin/main`
+(`feat/notya-accounting-bank-final-pass`), in its own worktree. Pushed, **not merged** — per
+standing instruction, Kaan merges.
+
 ## 8. Suggested code layout (implementation guide)
 
 ```text
@@ -1164,6 +1224,7 @@ UI entry: **Entegrasyonlar → Faturalama & Tahsilat**.
 | 1.7 | 2026-10-15 | Added §4.6: fixed a full round of remaining English/raw-technical leaks in the Entegrasyonlar → Faturalama & Tahsilat panel (invoice status/doc-type/environment/verificationStatus shown raw, a `JSON.stringify` field dump, period-decimal money formatting, a latent English leak in the cancel-invoice API's generic error path) and replaced the Raporlar tab's engineering-stub text with a real monthly screen plus a one-click "Mali Müşavire Gönder" Excel export (`lib/accounting/reports/monthly.ts`, `musavirExport.ts`), researched against TÜRMOB's own serbest meslek kazancı rehberi and serbest-meslek KDV guidance rather than guessed. Built on `feat/notya-accounting-raporlar-musavir`, in its own worktree, concurrently with another job's AR-reminder/e-belge-compliance work — did not touch `lib/accounting/ar/*` or `lib/accounting/ebelge/*`. Pushed, not merged. |
 | 1.8 | 2026-10-15 | VakıfBank, Denizbank, Kuveyt Türk researched directly on a fresh branch off `main` (`feat/notya-accounting-vakifbank-denizbank-kuveytturk`) — all three stay honest stubs (no genuinely hosted/SAQ-A-safe path confirmed for any), each now with its own dedicated, documented stub file instead of the generic factory. Added §4.7. Registry still 9 of 12 real. Pushed, not merged. |
 | 1.9 | 2026-10-15 | Added §4.9: 2026 compliance audit (KDV rate sourcing, buyer-identity placeholder fixed, düzeltme/credit-note capability built — was scaffolded, not callable — retention gap on PDF/XML bytes disclosed, doctor-as-issuer correctness code-verified) + late-payment reminders design pointer. Built on `feat/notya-accounting-compliance-tahsilat-hatirlatma`, off `main`, in its own worktree. §6 compliance summary table updated to match. |
+| 2.0 | 2026-10-15 | Final focused pass on the 3 remaining stubs, per Kaan's own explicit "only ship if genuinely hosted, otherwise keep the honest stub" instruction. Denizbank (`denizbank.ts`, InterPOS 3DHost) and VakıfBank (`vakifbank.ts`, PayFlex Common Payment) moved from stub to REAL via a `git clone`-based workaround for the prior pass's GitHub-provenance tooling block; Kuveyt Türk stays the one honest stub, re-checked and unchanged. Added §4.8, GET-callback handler on the bank webhook route. Registry now 11 of 12 real. Pushed `feat/notya-accounting-bank-final-pass`, not merged. |
 ---
 
 *End of master architecture — Notya Accounting / Faturalama & Tahsilat.*

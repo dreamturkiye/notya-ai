@@ -36,10 +36,12 @@ for (const key of NESTPAY_GROUP_BANK_KEYS) {
 // see CHECKLIST.md for the per-bank confidence tier and sources.
 registry.set('garanti', createGarantiAdapter())
 registry.set('yapi_kredi', createYapiKrediPosnetAdapter())
-// 2026-10-15, fourth pass — VakıfBank, Denizbank, Kuveyt Türk researched directly (not left on the
-// generic stub factory): each gets its own dedicated, documented stub file explaining exactly why
-// no genuinely hosted/SAQ-A-safe path was confirmed for it this pass. See each file's header and
-// CHECKLIST.md "2026-10-15 fourth pass" for the per-bank findings and what would unstub each one.
+// 2026-10-15, fifth pass (final pass on the three remaining stubs, per Kaan's own instruction):
+// VakıfBank (PayFlex Common Payment V4, REAL — BEST-EFFORT single-source OSS) and Denizbank
+// (InterPOS 3DHost, REAL — structurally confirmed by direct source read) are now real, hosted,
+// card-free adapters — see each file's header and CHECKLIST.md "2026-10-15 fifth pass" for exactly
+// what was read and what's still disclosed as uncertain. Kuveyt Türk stays the honest stub from
+// the fourth pass (re-checked this pass, nothing new found) — see kuveyt_turk.ts.
 registry.set('vakifbank', createVakifBankAdapter())
 registry.set('denizbank', createDenizbankAdapter())
 registry.set('kuveyt_turk', createKuveytTurkAdapter())

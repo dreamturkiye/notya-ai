@@ -137,13 +137,11 @@ describe('accounting/banks/index registry — NestPay group is now real', () => 
     }
   })
 
-  it('does not affect the 3 remaining stubbed banks (garanti/yapi_kredi became real 2026-10-15, phase 2 — see CHECKLIST.md)', () => {
-    for (const key of ['vakifbank', 'denizbank', 'kuveyt_turk'] as const) {
-      assert.equal(getBankAdapter(key).isReal, false)
-    }
+  it('does not affect kuveyt_turk, the one remaining stub (garanti/yapi_kredi/denizbank/vakifbank all became real across later passes — see CHECKLIST.md)', () => {
+    assert.equal(getBankAdapter('kuveyt_turk').isReal, false)
   })
 
-  it('listBankAdapters now reports 9 real adapters total (7 + garanti + yapi_kredi)', () => {
-    assert.equal(listBankAdapters().filter((a) => a.isReal).length, 9)
+  it('listBankAdapters now reports 11 real adapters total (7 + garanti + yapi_kredi + denizbank + vakifbank)', () => {
+    assert.equal(listBankAdapters().filter((a) => a.isReal).length, 11)
   })
 })

@@ -135,13 +135,11 @@ describe('accounting/banks/index registry — yapi_kredi is now real', () => {
     assert.equal(adapter.bankKey, 'yapi_kredi')
   })
 
-  it('does not affect the remaining stubbed banks (vakifbank, denizbank, kuveyt_turk)', () => {
-    for (const key of ['vakifbank', 'denizbank', 'kuveyt_turk'] as const) {
-      assert.equal(getBankAdapter(key).isReal, false)
-    }
+  it('does not affect kuveyt_turk, the one remaining stub (vakifbank/denizbank moved to real in the 2026-10-15 fifth pass — see their own test files)', () => {
+    assert.equal(getBankAdapter('kuveyt_turk').isReal, false)
   })
 
-  it('listBankAdapters reports 9 real adapters total', () => {
-    assert.equal(listBankAdapters().filter((a) => a.isReal).length, 9)
+  it('listBankAdapters reports 11 real adapters total (fifth pass: + denizbank + vakifbank)', () => {
+    assert.equal(listBankAdapters().filter((a) => a.isReal).length, 11)
   })
 })

@@ -10,12 +10,14 @@ Payment path (hybrid model, `docs/ARCH-NOTYA-ACCOUNTING.md` §2.6a): **iyzico** 
 `PaymentFacilitatorAdapter` (`facilitators/iyzico.ts`) and the default/recommended path. Of the 11
 named direct banks, 6 (İş Bankası, Halkbank, TEB, QNB Finansbank, Ziraat, Akbank) share one real
 adapter (`banks/nestpay.ts`, NestPay/EST "3D Pay Hosting", VERIFIED by protocol cross-reference),
-**Garanti BBVA** (`banks/garanti.ts`, REAL — direct vendor docs) and **Yapı Kredi**
-(`banks/yapikredi_posnet.ts`, REAL — BEST-EFFORT single-source OSS cross-reference) are each real,
-plus `generic_hosted.ts` (one real documented generic protocol); the remaining 3 (VakıfBank,
-Denizbank, Kuveyt Türk) are honest stubs, each with its own dedicated, documented file
-(`banks/vakifbank.ts`, `banks/denizbank.ts`, `banks/kuveyt_turk.ts`) explaining why no genuinely
-hosted/SAQ-A-safe path was confirmed — see `banks/CHECKLIST.md` "2026-10-15 fourth pass". One real `EbelgeAdapter`
+**Garanti BBVA** (`banks/garanti.ts`, REAL — direct vendor docs), **Yapı Kredi**
+(`banks/yapikredi_posnet.ts`, REAL — BEST-EFFORT single-source OSS cross-reference), **Denizbank**
+(`banks/denizbank.ts`, REAL — structurally confirmed by direct source read, same bar as NestPay)
+and **VakıfBank** (`banks/vakifbank.ts`, REAL — BEST-EFFORT single-source OSS, one disclosed
+hash-correctness gap) are each real, plus `generic_hosted.ts` (one real documented generic
+protocol); **Kuveyt Türk** is the one remaining honest stub (`banks/kuveyt_turk.ts`), explaining why
+no genuinely hosted/SAQ-A-safe path was confirmed for it — see `banks/CHECKLIST.md` "2026-10-15
+fifth pass". One real `EbelgeAdapter`
 (`ebelge/generic_rest.ts`); the 3 named e-belge vendors are honest stubs
 (`AdapterNotImplementedError`). See `banks/CHECKLIST.md`, `facilitators/CHECKLIST.md` and
 `ebelge/CHECKLIST.md` for exactly what's needed to finish each one.

@@ -61,6 +61,18 @@
  * genuinely hosted/card-free payment-page product distinct from `ThreeDModelPayGate` — not more
  * web research, since two independent, concrete OSS sources already agree on what the public
  * product actually is.
+ *
+ * 2026-10-15, FIFTH PASS — RE-CHECKED, STILL A STUB (per Kaan's own instruction: this finding was
+ * already settled by his own read of the fourth pass, so this pass deliberately did NOT spend
+ * much time here). A fresh, brief `mews/pos` source clone (`git clone --depth 1
+ * github.com/mewebstudio/pos` — the same workaround that unstubbed Denizbank/VakıfBank this pass)
+ * confirms `mews/pos` has NO Kuveyt Türk gateway other than `KuveytPos` (config key `'kuveytpos'`,
+ * endpoints `sanalpos.kuveytturk.com.tr/ServiceGateWay/Home` /
+ * `boa.kuveytturk.com.tr/BOA.Integration.WCFService/.../VirtualPosService.svc/Basic`) — the SAME
+ * BOA "ThreeDModelPayGate"-family product the fourth pass's two independent OSS SDKs already
+ * confirmed is merchant-collects-card. A brief, targeted web search this pass for a Kuveyt Türk
+ * "Ortak Ödeme Sayfası" or hosted-payment-page product found nothing new either. Nothing in this
+ * pass changes the fourth pass's finding — left exactly as it was, not re-litigated.
  */
 import { AdapterNotImplementedError } from '../types'
 import type { BankPosAdapter } from '../payments/types'
