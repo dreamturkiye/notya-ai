@@ -10,7 +10,11 @@ import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 import type { AracGirdisi, AracSonucu, AracTanimi } from '@/lib/ulke/araclar/tipler'
 import { kosullariUygula } from '@/lib/ulke/araclar/yardimci'
+import { alanVarMi } from '@/lib/ulke/araclar/yardimci'
 import { AU_ASI_TAKVIMI, AU_ASI_TAKVIMI_MADDELERI, AU_BEDEN, AU_ECOG, AU_K10, AU_TANIMLAR, BEL_SINIRLARI, bmiSinifi, ECOG_DERECELERI, k10Grubu, K10_MADDELERI } from './tanimlar'
+import { AU_MEDICARE } from './medicareParticulars'
+import { AU_ZORUNLU_BILDIRIM } from './notifications'
+import { AU_PBS_RECETE } from './pbsPrescription'
 
 const BUGUN = '2026-10-10'
 const kos = (t: AracTanimi, g: AracGirdisi): AracSonucu => t.hesapla(kosullariUygula(t.alanlar, g), { bugun: BUGUN, p: {} })
@@ -145,7 +149,7 @@ describe('au-immunisation-schedule — the National Immunisation Program schedul
 
 describe('the mechanisms only Australia has', () => {
   it('each key carries the country\'s code, each names the source of its arithmetic, and none asks the country for a number of its own', () => {
-    assert.deepEqual(AU_TANIMLAR.map((t) => t.anahtar), ['au-body-size', 'au-mental-health-screen', 'au-oncology-grading', 'au-immunisation-schedule', 'au-notifiable-diseases', 'au-poisons-schedules', 'au-schedule-8', 'au-dispensing-label'])
+    assert.deepEqual(AU_TANIMLAR.map((t) => t.anahtar), ['au-body-size', 'au-mental-health-screen', 'au-oncology-grading', 'au-immunisation-schedule', 'au-notifiable-diseases', 'au-poisons-schedules', 'au-schedule-8', 'au-dispensing-label', 'au-mandatory-notifications', 'au-pbs-prescription', 'au-medicare-particulars'])
     for (const t of AU_TANIMLAR) {
       assert.match(t.anahtar, /^au-[a-z0-9]+(-[a-z0-9]+)*$/)
       assert.ok((t.kaynak ?? '').length > 20, t.anahtar)
@@ -153,5 +157,46 @@ describe('the mechanisms only Australia has', () => {
       // NO TOOL OF AUSTRALIA'S OWN WRITES AN AMOUNT OF A MEDICINE
       assert.equal(t.dozYazar, undefined, t.anahtar)
     }
+  })
+})
+
+const gorunen = (t: AracTanimi, ham: AracGirdisi) => t.alanlar.filter((a) => a.tur === 'isaret' && alanVarMi(a, kosullariUygula(t.alanlar, ham))).map((a) => a.anahtar)
+
+describe('statutory checklists read on 2026-10-15 — a tick on the wrong path does not count', () => {
+  it('mandatory notifications: the treating-practitioner path is not the section 140 path', () => {
+    assert.equal(kos(AU_ZORUNLU_BILDIRIM, { m_cinsel: true }).tamam, false)
+    const meslek = kos(AU_ZORUNLU_BILDIRIM, { yol: 'meslek', m_cinsel: true, t_cinsel: true })
+    assert.equal(meslek.tamam, true)
+    assert.equal(sayi(meslek, 'isaretli'), 1)
+    assert.equal(meslek.sayilar[0].enCok, 5)
+    assert.deepEqual(gorunen(AU_ZORUNLU_BILDIRIM, { yol: 'meslek' }).includes('t_cinsel'), false)
+    assert.deepEqual(gorunen(AU_ZORUNLU_BILDIRIM, { yol: 'tedavi' }), ['t_cinsel', 't_bozukluk', 't_alkol', 't_standart', 't_ogrenci'])
+    assert.equal(gorunen(AU_ZORUNLU_BILDIRIM, { yol: 'isveren' }).length, 4)
+    assert.deepEqual(meslek.uyarilar, ['gonderilmedi', 'istisna'])
+  })
+
+  it('PBS prescription: a paper form shows the paper lines, and an electronic prescription does not', () => {
+    assert.equal(kos(AU_PBS_RECETE, { ad: true }).tamam, false)
+    const kagit = kos(AU_PBS_RECETE, { bicim: 'kagit', ad: true, olcu: true, meta: true })
+    assert.equal(kagit.tamam, true)
+    assert.equal(sayi(kagit, 'isaretli'), 2)
+    assert.ok(gorunen(AU_PBS_RECETE, { bicim: 'kagit' }).includes('olcu'))
+    assert.equal(gorunen(AU_PBS_RECETE, { bicim: 'kagit' }).includes('meta'), false)
+    assert.ok(gorunen(AU_PBS_RECETE, { bicim: 'elektronik' }).includes('meta'))
+    assert.equal(gorunen(AU_PBS_RECETE, { bicim: 'elektronik' }).includes('olcu'), false)
+    assert.equal(kagit.sayilar[0].enCok, gorunen(AU_PBS_RECETE, { bicim: 'kagit' }).length)
+    assert.deepEqual(kagit.uyarilar, ['gonderilmedi'])
+  })
+
+  it('Medicare particulars: a general medical service does not show the pathology lines', () => {
+    assert.equal(kos(AU_MEDICARE, { ad: true }).tamam, false)
+    const genel = kos(AU_MEDICARE, { sinif: 'genel', ad: true, pat_kim: true })
+    assert.equal(genel.tamam, true)
+    assert.equal(sayi(genel, 'isaretli'), 1)
+    assert.equal(genel.sayilar[0].enCok, 7)
+    assert.equal(gorunen(AU_MEDICARE, { sinif: 'genel' }).includes('pat_kim'), false)
+    assert.ok(gorunen(AU_MEDICARE, { sinif: 'patoloji' }).includes('pat_kim'))
+    assert.equal(gorunen(AU_MEDICARE, { sinif: 'goruntuleme' }).includes('kim'), false)
+    assert.deepEqual(genel.uyarilar, ['gonderilmedi'])
   })
 })

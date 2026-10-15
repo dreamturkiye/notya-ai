@@ -64,6 +64,30 @@ export const AU_ONAYSIZ_ACIK_ARACLAR: readonly OnaysizAcikArac[] = [
     anahtar: 'au-immunisation-schedule', oneri: 'NOTYA-ARACLAR-DENETIM-02-AU (founder\'s question #2, 2026-10-13)', klinisyen: null,
     bakilacak: 'Built CORE and switched on by the owner\'s explicit instruction, not waiting on this list — but still machine-written and unread by a clinician of Australia. It is a record only: no catch-up schedule, no eligibility test and no brand name. Sourced to NSW Health\'s published rendering of the National Immunisation Program Schedule (the Department\'s own PDF was robots-blocked this session): a clinician of Australia should confirm that rendering is still a faithful, current copy of the national schedule, and that the twelve milestones chosen are the right set to show (no risk-based or Aboriginal-and-Torres-Strait-Islander-specific additions beyond the one line that names them).',
   },
+  {
+    anahtar: 'au-mandatory-notifications', oneri: 'National Law sections 140 to 142, Queensland Act, 2026-10-15', klinisyen: null,
+    bakilacak: 'The grounds follow the Queensland Act current as at 10 April 2026. A treating practitioner is not on the section 140 test. A lawyer should read the National Law as it applies in each other State and Territory before anyone relies on this screen outside Queensland. Nothing is sent.',
+  },
+  {
+    anahtar: 'au-pbs-prescription', oneri: 'Pharmaceutical Benefits Regulations, compilation of 15 August 2026', klinisyen: null,
+    bakilacak: 'Section 40 particulars for a prescription that is not a medication chart. A tick is a note, not a decision that the prescription is valid. No medicine name is stored. Nothing is sent and there is no prescription-exchange connection. A clinician should confirm the compilation is still in force.',
+  },
+  {
+    anahtar: 'au-medicare-particulars', oneri: 'Health Insurance Regulations 2018, compilation of 1 March 2026', klinisyen: null,
+    bakilacak: 'Particulars for an account, a receipt or an assignment. Not a claim. Sections 52 and 57 are named in the note and are not ticks. No fee and no item number is stored. A clinician should confirm the compilation is still in force.',
+  },
+  {
+    anahtar: 'au-pbs-schedule-link', oneri: 'PBS medicine listings, 2026-10-15', klinisyen: null,
+    bakilacak: 'The tile only opens the listings index. No listing, restriction or price was copied. A clinician should say whether a link, with the listings left on the Department\'s site, is the right screen until reuse is allowed.',
+  },
+  {
+    anahtar: 'au-mbs-online-link', oneri: 'MBS Online, 2026-10-15', klinisyen: null,
+    bakilacak: 'The tile only opens MBS Online. No item, fee or rule was copied. A notice granting reuse of the schedule was not read. A clinician should say whether a link is the right screen.',
+  },
+  {
+    anahtar: 'au-cvd-risk-link', oneri: 'Australian CVD risk calculator, 2026-10-15', klinisyen: null,
+    bakilacak: 'The tile only opens the calculator. No equation, coefficient or age band was copied. The copyright page did not return a reuse grant. It is not the shared cardiovascular-risk slot, which stays empty. A clinician should say which roles should see the link.',
+  },
 ]
 
 /** The keys alone, sorted. */

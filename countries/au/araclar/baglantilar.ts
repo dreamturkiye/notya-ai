@@ -82,3 +82,81 @@ export function auPbsRaporu(hekimler: readonly string[]): PaketAraci {
     },
   }
 }
+
+/**
+ * The medicine-listing index. Opened 2026-10-15 (HTTP 200). No listing, restriction or price was copied.
+ * The same copyright page as the report tile: personal reference, other rights reserved.
+ * Doctors only.
+ */
+export function auPbsListesi(hekimler: readonly string[]): PaketAraci {
+  return {
+    anahtar: 'au-pbs-schedule-link',
+    roller: [...hekimler],
+    sinif: 'hekimler',
+    metin: {
+      ad: m('PBS medicine listings (link)'),
+      aciklama: m('Opens the Pharmaceutical Benefits Scheme page that lists medicine listings. This product does not copy a listing, a restriction or a price.'),
+      alanlar: {},
+      not: m('A link only. Whether a medicine is right for this patient is the doctor\'s decision. Nothing is sent.'),
+      baglanti: m('Open the PBS medicine listings'),
+    },
+    baglanti: { adres: 'https://www.pbs.gov.au/browse/medicine-listing' },
+    lisans: {
+      durum: 'serbest',
+      hakSahibi: 'Pharmaceutical Benefits Scheme',
+      kaynak: 'A link only. The listings index returned HTTP 200 on 15 October 2026: https://www.pbs.gov.au/browse/medicine-listing. No row was copied. The copyright page (https://www.pbs.gov.au/general/copyright, last updated 6 July 2022) was read on 9 October 2026 and is quoted in docs/medicines/AUSTRALIA.md: personal reference, other rights reserved.',
+      bildirim: m('A link to a Pharmaceutical Benefits Scheme page. This tile does not copy the listings. This product is not the Department\'s.'),
+    },
+  }
+}
+
+/**
+ * MBS Online. The home page returned HTTP 200 on 15 October 2026. No item and no fee was copied.
+ * A notice granting commercial reuse of the schedule was not read, and none is claimed.
+ * Doctors only.
+ */
+export function auMbsBaglantisi(hekimler: readonly string[]): PaketAraci {
+  return {
+    anahtar: 'au-mbs-online-link',
+    roller: [...hekimler],
+    sinif: 'hekimler',
+    metin: {
+      ad: m('MBS Online (link)'),
+      aciklama: m('Opens MBS Online, where a practitioner looks up an item in the Medicare Benefits Schedule. This product does not copy an item, a fee or a rule.'),
+      alanlar: {},
+      not: m('A link only. Nothing is claimed and nothing is sent.'),
+      baglanti: m('Open MBS Online'),
+    },
+    baglanti: { adres: 'https://www.mbsonline.gov.au/' },
+    lisans: {
+      durum: 'serbest',
+      kaynak: 'A link only. https://www.mbsonline.gov.au/ returned HTTP 200 on 15 October 2026. No item and no fee was copied. A notice granting commercial reuse of the schedule was not read, and none is claimed.',
+      bildirim: m('A link only. This tile does not copy the Medicare Benefits Schedule.'),
+    },
+  }
+}
+
+/**
+ * The Australian cardiovascular disease risk calculator. The calculator page returned HTTP 200 on 15 October 2026.
+ * The copyright page did not return a reuse grant, so no equation, coefficient or age band is stored.
+ * General practice, general medicine, cardiology, endocrinology and geriatric medicine. Not paediatrics.
+ */
+export function auCvdBaglantisi(roller: readonly string[]): PaketAraci {
+  return {
+    anahtar: 'au-cvd-risk-link',
+    roller: [...roller],
+    metin: {
+      ad: m('Australian CVD risk calculator (link)'),
+      aciklama: m('Opens the Australian cardiovascular disease risk calculator for health professionals. This product does not calculate a risk and does not copy the equation.'),
+      alanlar: {},
+      not: m('A link only. A result from the calculator is not kept here.'),
+      baglanti: m('Open the Australian CVD risk calculator'),
+    },
+    baglanti: { adres: 'https://www.cvdcheck.org.au/calculator' },
+    lisans: {
+      durum: 'serbest',
+      kaynak: 'A link only. https://www.cvdcheck.org.au/calculator returned HTTP 200 on 15 October 2026. https://www.cvdcheck.org.au/copyright did not return a reuse grant. No equation, coefficient or age band was copied.',
+      bildirim: m('A link only. This tile does not copy the calculator or its equation.'),
+    },
+  }
+}

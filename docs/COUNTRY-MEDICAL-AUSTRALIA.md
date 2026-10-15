@@ -15,7 +15,22 @@ Read on 14 October 2026. This file is the gap record for the Australian pack (`c
 
 ## What was already in the pack
 
-Body size, a mental-health screen, oncology grading, the immunisation record, a growth-chart link, and consultations. `au-mandatory-notifications` stays a slot: it is the practitioner-conduct duty (impairment, intoxication, standards, sexual misconduct), not the disease list.
+Body size, a mental-health screen, oncology grading, the immunisation record, a growth-chart link, and consultations.
+
+## Read on 15 October 2026 and switched on
+
+Still unsigned. Nothing below is a live connection.
+
+| Tool | Source read that day | Who sees it |
+| --- | --- | --- |
+| `au-mandatory-notifications` | Health Practitioner Regulation National Law as set out in the Queensland Act, current as at 10 April 2026, sections 140 to 142. Queensland Legislation copyright page: Creative Commons Attribution 4.0. The regulator's guidance page was not copied. A treating practitioner is on sections 141A and 141B, not the section 140 test. The National Law outside Queensland was not read. | Medical practitioners, plus physiotherapy, occupational therapy, psychology and podiatry (the public professions list, page reviewed 11 April 2025). Not dietetics, audiology or speech pathology. |
+| `au-pbs-prescription` | National Health (Pharmaceutical Benefits) Regulations 2017, compilation in force on 15 August 2026, sections 40, 41A and 42. Register terms: Creative Commons Attribution 4.0. Not a medicine list and not a State or Territory form. | Doctors |
+| `au-medicare-particulars` | Health Insurance Regulations 2018, compilation in force on 1 March 2026, sections 47 to 56. Same register terms. Not a claim. Sections 52 and 57 are not ticks. | Doctors |
+| `au-pbs-schedule-link` | Listings index, HTTP 200. No row copied. Same PBS copyright page as the report link. | Doctors |
+| `au-mbs-online-link` | MBS Online home page, HTTP 200. No item copied. A reuse grant for the schedule was not read. | Doctors |
+| `au-cvd-risk-link` | Calculator page, HTTP 200. The copyright page did not return a reuse grant. No equation or age band copied. This does not fill the shared cardiovascular-risk slot. | General practice, general medicine, cardiology, endocrinology, geriatric medicine |
+
+Department of Health pages (Immunisation Handbook, cancer screening, real-time prescription monitoring) did not load in this session, so no link and no age was added from them.
 
 ## What is on a screen
 
@@ -53,6 +68,6 @@ A local FHIR draft can build one MedicationRequest with status `draft`. It is no
 
 ## Clinician and lawyer
 
-- Lawyer: PBS tables and ARTG rows stay out. Disease names, schedule classes, Schedule 8 entries and Appendix L clause 1 are stored under the register's Creative Commons Attribution 4.0 terms, with the required attribution on each tool. Catch-up immunisation text stays out under the Department copyright notice.
-- Clinician: the new tools are unsigned. Confirm the 22 May 2026 disease compilation is still in force, including the expiry of item 1A, and that the October 2026 Poisons Standard is still current.
+- Lawyer: PBS tables and ARTG rows stay out. Disease names, schedule classes, Schedule 8 entries and Appendix L clause 1 are stored under the register's Creative Commons Attribution 4.0 terms, with the required attribution on each tool. The 15 October 2026 checklists (notification grounds, PBS prescription particulars, Medicare account particulars) use the same register terms, or Queensland's, and say which compilation was read. Catch-up immunisation text stays out under the Department copyright notice. The National Law outside Queensland was not read.
+- Clinician: the new tools are unsigned. Confirm the 22 May 2026 disease compilation is still in force, including the expiry of item 1A, and that the October 2026 Poisons Standard is still current. Confirm the 15 August 2026 PBS compilation, the 1 March 2026 Medicare compilation, and the Queensland Act current as at 10 April 2026 are still the text to show.
 - Not loaded: interaction pairs, ICD-10-AM, a ranked medicine list, State or Territory prescription forms, catch-up immunisation rows, and any live API.

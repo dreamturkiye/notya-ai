@@ -36,9 +36,9 @@ import { AU_SIZINTI_TERIMLERI } from './sizintiTerimleri'
 const D = 'en-AU'
 const LAB = { albuminKreatinin: 'mg/mmol', hemoglobin: 'g/L', kreatinin: 'umol/L', glukoz: 'mmol/L', kolesterol: 'mmol/L', crp: 'mg/L', psa: 'ug/L', hba1c: ['%', 'mmol/mol'] } as const
 /** The tools with a MECHANISM only Australia has (./araclar/tanimlar.ts): switched on 2026-10-10 and 2026-10-13. */
-const KENDI_MEKANIZMALI = ['au-body-size', 'au-mental-health-screen', 'au-oncology-grading', 'au-immunisation-schedule', 'au-notifiable-diseases', 'au-poisons-schedules', 'au-schedule-8', 'au-dispensing-label']
-/** NOTYA-ARACLAR-DENETIM-02-AU, 2026-10-13 — link-out tiles only Australia has: no mechanism, no arithmetic (./araclar/baglantilar.ts). */
-const KENDI_BAGLANTILARI = ['au-growth-chart-reference', 'au-pbs-report-link']
+const KENDI_MEKANIZMALI = ['au-body-size', 'au-mental-health-screen', 'au-oncology-grading', 'au-immunisation-schedule', 'au-notifiable-diseases', 'au-poisons-schedules', 'au-schedule-8', 'au-dispensing-label', 'au-mandatory-notifications', 'au-pbs-prescription', 'au-medicare-particulars']
+/** Link-out tiles only Australia has: no mechanism, no arithmetic (./araclar/baglantilar.ts). */
+const KENDI_BAGLANTILARI = ['au-growth-chart-reference', 'au-pbs-report-link', 'au-pbs-schedule-link', 'au-mbs-online-link', 'au-cvd-risk-link']
 /** Every tool that carries Australia's own code, switched on by the owner's order of 2026-10-10 or 2026-10-13. */
 const KENDI_ARACLARI = [...KENDI_MEKANIZMALI, ...KENDI_BAGLANTILARI]
 /** Every tool Australia has added beyond the shared set, mechanism or not: fed to the shared harness's count check. */
@@ -46,7 +46,7 @@ const EK_ARACLAR = [...KENDI_ARACLARI, 'konsultasyonlar']
 /** NOTYA-ARACLAR-DENETIM-03-AU, 2026-10-14 — the slots this pass proposed: never switched on, so never in `acik`, but
  * still carrying Australia's own code, so `ulkeyeOzelAnahtarlar` (which scans araclar + yuvalar + kendiAraclari) sees
  * them too. */
-const YUVA_ANAHTARLARI = ['au-mandatory-notifications', 'au-triage-scale', 'au-diabetic-retinopathy-referral', 'au-oncology-care-pathway', 'au-anaesthesia-fasting', 'au-rehab-outcome', 'au-fracture-risk']
+const YUVA_ANAHTARLARI = ['au-triage-scale', 'au-diabetic-retinopathy-referral', 'au-oncology-care-pathway', 'au-anaesthesia-fasting', 'au-rehab-outcome', 'au-fracture-risk']
 
 ingilizcePaketSinamasi({
   paket: AU_PAKETI,
@@ -452,7 +452,7 @@ describe('au: the tools only Australia has — switched on by the owner\'s order
     for (const k of KENDI_MEKANIZMALI) {
       const l = A.araclar.find((p) => p.anahtar === k)!.lisans!
       assert.equal(l.durum, 'serbest', k)
-      assert.match(l.kaynak ?? '', /^https:\/\/\S+ \(read 2026-10-(10|13|14)\): /, k)
+      assert.match(l.kaynak ?? '', /^https:\/\/\S+ \(read 2026-10-(10|13|14|15)\): /, k)
       assert.ok((l.bildirim?.[D] ?? '').length > 20, `${k}: the rights holder's notice`)
     }
     // the link-out tile: free, but no reproduced notice is shown under a result it never gives
@@ -497,6 +497,25 @@ describe('au: the tools only Australia has — switched on by the owner\'s order
       assert.equal(goren(k).includes('(no role)'), false, k)
     }
     assert.equal(A.araclar.find((p) => p.anahtar === 'au-immunisation-schedule')!.hasta, undefined)
+  })
+
+  it('statutory checklists and the links opened on 2026-10-15: doctors for PBS and Medicare; registered professions for notifications; five roles for the CVD link', () => {
+    const hekimler = hekimRolleri(AU_ARAYUZ.roller)
+    const kayitli = [...hekimler, 'physiotherapy', 'occupational-therapy', 'clinical-psychology', 'podiatry']
+    assert.deepEqual(goren('au-mandatory-notifications').sort(), [...kayitli].sort())
+    for (const r of ['dietetics', 'audiology', 'speech-pathology', '(no role)']) assert.equal(goren('au-mandatory-notifications').includes(r), false, r)
+    assert.ok(!A.yuvalar.some((y) => y.anahtar === 'au-mandatory-notifications'))
+    for (const k of ['au-pbs-prescription', 'au-medicare-particulars', 'au-pbs-schedule-link', 'au-mbs-online-link']) {
+      assert.deepEqual(goren(k).sort(), [...hekimler].sort(), k)
+      assert.equal(goren(k).includes('physiotherapy'), false, k)
+    }
+    assert.deepEqual(goren('au-cvd-risk-link').sort(), ['cardiology', 'endocrinology', 'family-medicine', 'geriatric-medicine', 'internal-medicine'])
+    assert.equal(goren('au-cvd-risk-link').includes('paediatrics'), false)
+    const bildirim = A.araclar.find((p) => p.anahtar === 'au-mandatory-notifications')!
+    assert.match(bildirim.metin.alanlar.t_cinsel[D], /at risk of engaging/)
+    assert.doesNotMatch(bildirim.metin.alanlar.m_cinsel[D], /at risk of engaging/)
+    assert.match(bildirim.metin.not?.[D] ?? '', /Queensland Act/)
+    assert.match(bildirim.metin.uyarilar.gonderilmedi[D], /Nothing was sent/)
   })
 })
 

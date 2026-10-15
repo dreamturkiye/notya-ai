@@ -4,7 +4,7 @@
  * tests only — no screen reads a slot, and a slot is never switched on by itself."
  *
  * These answer the founder's second audit question ("does Australian practice in this specialty have something
- * distinctive Türkiye doesn't have") for the seven findings that (a) are genuinely new — the shared English kit's
+ * distinctive Türkiye doesn't have") for the findings that (a) are genuinely new — the shared English kit's
  * own slot list (countries/_dil/en/araclar/yuvalar.ts) already covers several other findings of this pass
  * (cardiovascular risk, antenatal/screening windows, the vaccination-and-screening schedule, isotretinoin pregnancy
  * prevention, notifiable diseases) and nothing is added here for those — and (b) are responsibly buildable later:
@@ -21,18 +21,8 @@ const KLINISYEN = 'a clinical lead in Australia, with the national source named'
 const HUKUK = 'a lawyer of Australia, with the clinical lead'
 
 export const AU_EK_YUVALAR: readonly AracYuvasi[] = [
-  // ── core (every role) ──
-  {
-    anahtar: 'au-mandatory-notifications',
-    acik: false,
-    icerik: null,
-    mekanizmaHazir: false,
-    eksik:
-      'A plain-English reference naming the FOUR mandatory-notification grounds every registered health practitioner in Australia must act on under the Health Practitioner Regulation National Law (impairment, intoxication while practising, departure from accepted professional standards, and sexual misconduct) — binding on every specialty alike, with no equivalent elsewhere in this product. Read 2026-10-13, Australian Health Practitioner Regulation Agency (Ahpra), "Mandatory notifications", https://www.ahpra.gov.au/Notifications/Raise-a-concern/Mandatory-notifications.aspx. Needed before a build: a clinician or lawyer confirming the plain-English summary of the four grounds is accurate and current, and who in the practice (not just the treating doctor) the duty actually falls on.',
-    kimden: HUKUK,
-    roller: null,
-    lisans: { durum: 'belirsiz', hakSahibi: 'Australian Health Practitioner Regulation Agency (Ahpra) / the Health Practitioner Regulation National Law', kaynak: 'https://www.ahpra.gov.au/Notifications/Raise-a-concern/Mandatory-notifications.aspx (read 2026-10-13): Ahpra\'s own regulatory guidance; its copyright/reproduction terms were not separately opened this session, so no stronger licence state than "unclear" is claimed even though the content is a statutory duty, not proprietary material.' },
-  },
+  // Mandatory notifications left this list on 2026-10-15. The screen is au-mandatory-notifications, built from the
+  // Queensland Act (sections 140 to 142), not from a regulator's guidance page. See ./notifications.ts.
   // ── emergency medicine: the correct replacement for the closed ESI tool ──
   {
     anahtar: 'au-triage-scale',

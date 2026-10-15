@@ -26,7 +26,10 @@ import type { EnUlkeGirdisi } from '../_dil/en/girdi'
 import { enRolSatirlari } from '../_dil/en/klinik/roller'
 import { auBildirimAraci } from './araclar/bildirim'
 import { auEtiketAraci, auSchedule8Araci, auZehirSinifiAraci } from './araclar/poisons'
-import { AU_GROWTH_CHART_REFERENCE, auPbsRaporu } from './araclar/baglantilar'
+import { AU_GROWTH_CHART_REFERENCE, auCvdBaglantisi, auMbsBaglantisi, auPbsListesi, auPbsRaporu } from './araclar/baglantilar'
+import { auMedicare } from './araclar/medicareParticulars'
+import { auZorunluBildirim } from './araclar/notifications'
+import { auPbsRecete } from './araclar/pbsPrescription'
 import { AU_ASI_TAKVIMI_ARACI, AU_KONSULTASYON_ARACI, auEkAraclar } from './araclar/metinler'
 import { AU_TANIMLAR } from './araclar/tanimlar'
 import { AU_EK_YUVALAR } from './araclar/yuvalarim'
@@ -280,6 +283,25 @@ export const AU_GIRDI: EnUlkeGirdisi = {
         auZehirSinifiAraci(hekimRolleri(SATIRLAR)),
         auSchedule8Araci(hekimRolleri(SATIRLAR)),
         auEtiketAraci(hekimRolleri(SATIRLAR)),
+        // National Law (Queensland Act, current as at 10 April 2026). Registered professions only.
+        // Treating practitioners are a different test from section 140. Nothing is sent.
+        auZorunluBildirim([
+          ...hekimRolleri(SATIRLAR),
+          'physiotherapy',
+          'occupational-therapy',
+          'clinical-psychology',
+          'podiatry',
+        ]),
+        // PBS prescription particulars, compilation in force on 15 August 2026. Not a prescription.
+        auPbsRecete(hekimRolleri(SATIRLAR)),
+        // Listings index only. No row copied. Doctors only.
+        auPbsListesi(hekimRolleri(SATIRLAR)),
+        // MBS Online. No item copied. Doctors only.
+        auMbsBaglantisi(hekimRolleri(SATIRLAR)),
+        // Medicare account particulars, compilation in force on 1 March 2026. Not a claim.
+        auMedicare(hekimRolleri(SATIRLAR)),
+        // CVD calculator link. No equation copied. Not the shared cardiovascular-risk slot.
+        auCvdBaglantisi(['family-medicine', 'internal-medicine', 'cardiology', 'endocrinology', 'geriatric-medicine']),
       ],
       tanimlar: AU_TANIMLAR,
       // NOTYA-ARACLAR-DENETIM-03-AU, 2026-10-14 — Australia's OWN proposed slots: distinctive Australian practice
