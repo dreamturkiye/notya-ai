@@ -13,7 +13,9 @@ adapter (`banks/nestpay.ts`, NestPay/EST "3D Pay Hosting", VERIFIED by protocol 
 **Garanti BBVA** (`banks/garanti.ts`, REAL — direct vendor docs) and **Yapı Kredi**
 (`banks/yapikredi_posnet.ts`, REAL — BEST-EFFORT single-source OSS cross-reference) are each real,
 plus `generic_hosted.ts` (one real documented generic protocol); the remaining 3 (VakıfBank,
-Denizbank, Kuveyt Türk) are stubs — see `banks/CHECKLIST.md`. One real `EbelgeAdapter`
+Denizbank, Kuveyt Türk) are honest stubs, each with its own dedicated, documented file
+(`banks/vakifbank.ts`, `banks/denizbank.ts`, `banks/kuveyt_turk.ts`) explaining why no genuinely
+hosted/SAQ-A-safe path was confirmed — see `banks/CHECKLIST.md` "2026-10-15 fourth pass". One real `EbelgeAdapter`
 (`ebelge/generic_rest.ts`); the 3 named e-belge vendors are honest stubs
 (`AdapterNotImplementedError`). See `banks/CHECKLIST.md`, `facilitators/CHECKLIST.md` and
 `ebelge/CHECKLIST.md` for exactly what's needed to finish each one.
@@ -29,7 +31,7 @@ lib/accounting/
   ar/{ledger,aging}.ts
   payments/{types,session}.ts                    # direct-bank orchestrator
   payments/{facilitatorTypes,facilitatorSession}.ts  # facilitator orchestrator — parallel, independent
-  banks/{index,generic_hosted,nestpay,stub,CHECKLIST.md}
+  banks/{index,generic_hosted,nestpay,garanti,yapikredi_posnet,vakifbank,denizbank,kuveyt_turk,stub,CHECKLIST.md}
   facilitators/{index,iyzico,CHECKLIST.md}
   ebelge/{index,generic_rest,stub,types,CHECKLIST.md}
   reports/index.ts
