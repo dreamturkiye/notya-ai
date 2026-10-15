@@ -13,6 +13,7 @@
  * ./roller.ts (the role list) and ./araclar.ts with ./kendiAraclari.ts (the tools).
  */
 import type { EnUlkeGirdisi } from '../_dil/en/girdi'
+import { GB_ULUSAL } from './asistan/ulusal'
 import { GB_ARACLAR } from './araclar'
 import { GB_ROL_ADLARI, GB_ROLLER } from './roller'
 import { GB_BIRIMLER, GB_KIMLIK_ETIKETI, GB_VELI_YASI } from './temel'
@@ -38,6 +39,7 @@ export const GB_GIRDI: EnUlkeGirdisi = {
     odeme: 'NHS',
   },
   ulkeAdi: 'the United Kingdom',
+  asistanUlusal: GB_ULUSAL,
   // UNVERIFIED: the word a senior hospital doctor goes by here. (A consultant surgeon is addressed as Mr, Ms, Miss or
   // Mrs rather than Dr: that matters when an assistant is given a name and a title, which this pack does not do.)
   // LOCALISATION AUDIT 2026-10-09: a general practitioner is not a consultant, yet the set has one word for every

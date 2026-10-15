@@ -560,6 +560,13 @@ export type UlkeKlinigi = {
    */
   hastaFormu?: HastaFormuIcerigi
   /**
+   * NOTYA-ASISTAN-SABLON — who the assistant is for this role, for the model. The chart rules inside it are the
+   * shared core (lib/asistan/cekirdekEgitim.ts); the name, the specialty and the three references are the pack's.
+   * null = this language or this role has none. Absent = the pack has not brought an assistant instruction.
+   * This does not write the visit note: the note instruction stays free of textbooks.
+   */
+  asistanTalimati?: (dil: DilKodu, rol: string) => string | null
+  /**
    * NOTYA-ULKE-MESAJ-01 — THE CONSENT BASIS FOR SHARING a patient's data with a colleague in a consultation. The
    * sentence the asking doctor ticks is the pack's catalogue text; this is its STAMP, stored with every consultation
    * so that it is always known which wording was ticked. Change the stamp whenever the sentence changes.

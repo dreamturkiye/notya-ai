@@ -17,6 +17,16 @@ export type EnUlkeGirdisi = {
   sozler: EnUlkeSozleri
   /** The country's name in English, for the sentences of the slots ("the register of medicines authorised in …"). */
   ulkeAdi: string
+  /**
+   * NOTYA-ASISTAN-SABLON — the national reference for every role this country has, the first of the assistant's
+   * three. The other two come from the shared textbook list. A missing role is a mistake, not a silent gap.
+   */
+  asistanUlusal: Readonly<Record<string, string>>
+  /**
+   * Two international titles for a role the shared catalogue does not know (a test role that behaves like none).
+   * A real country leaves this unset: its roles are in the catalogue, or they behave like one that is.
+   */
+  asistanEkKitap?: Readonly<Record<string, readonly [string, string]>>
   /** The country's word for a senior doctor, inside "You are an experienced …" (consultant, attending physician, specialist). */
   kidemliHekim: string
   /** The names THIS COUNTRY uses for a role where they differ from the set's base name, in the country's own spelling. */

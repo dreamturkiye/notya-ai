@@ -11,6 +11,7 @@ import { UZ_ACIK_SABLONLAR } from './branslar'
 import { UZ_HASTA_FORMU } from './hastaFormu'
 import { uzHastaOzetiGirdisi, uzHastaOzetiTalimati } from './hastaOzeti'
 import { uzSablonAlanlari } from './notSablonlari'
+import { uzAsistanTalimati } from '../asistan/talimat'
 import { uzDigerDil, uzNotGirdisi, uzNotTalimati, uzYenidenYazimGirdisi, uzYenidenYazimTalimati } from './talimatlar'
 
 export const UZ_KLINIK: UlkeKlinigi = {
@@ -38,6 +39,7 @@ export const UZ_KLINIK: UlkeKlinigi = {
   gunlukMuayeneLimiti: 200,
   // Instructions to the model: written fresh in Uzbek (both scripts) and Russian, no source cited (./talimatlar.ts).
   notTalimati: uzNotTalimati,
+  asistanTalimati: uzAsistanTalimati,
   notGirdisi: uzNotGirdisi,
   // NOTYA-UZ-BRANSLAR-01: the fields a note of a template may carry — a role's own, plus the guardian field for a
   // patient under 18. Everything else the model returns, or a request sends, is dropped by core.
