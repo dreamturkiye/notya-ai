@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Notya Australia launch audit — against Türkiye</title>
+<style>
+  :root { --bg:#060C18; --card:#0D1526; --ink:#E7EEF8; --muted:#93A4BD; --line:#1C2A42; --teal:#2DD4BF; --amber:#F5B942; --red:#F07178; --info:#7DD3FC; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.5 Georgia, "Iowan Old Style", Palatino, serif; }
+  main { max-width:1080px; margin:0 auto; padding:32px 20px 80px; }
+  h1 { font:600 28px/1.2 ui-sans-serif, system-ui, sans-serif; margin:8px 0 12px; }
+  h2 { font:600 18px/1.3 ui-sans-serif, system-ui, sans-serif; margin:36px 0 12px; }
+  p, li { color:var(--ink); }
+  .muted { color:var(--muted); font-family:ui-sans-serif, system-ui, sans-serif; font-size:14px; }
+  .banner { font:600 12px/1 ui-sans-serif, system-ui, sans-serif; letter-spacing:.08em; text-transform:uppercase; color:var(--teal); }
+  .pills, .stats, .cards, .ships { display:flex; flex-wrap:wrap; gap:10px; }
+  .pill { font:600 12px/1 ui-sans-serif, system-ui, sans-serif; border-radius:999px; padding:6px 10px; border:1px solid var(--line); }
+  .strong { color:#04221C; background:var(--teal); }
+  .partial { color:#2A1D05; background:var(--amber); }
+  .thin, .missing { color:#2A0C10; background:var(--red); }
+  .info { color:#06202C; background:var(--info); }
+  .stats { margin:18px 0; }
+  .stat { background:var(--card); border:1px solid var(--line); padding:14px 16px; min-width:180px; flex:1; }
+  .stat b { display:block; font:600 26px/1.1 ui-sans-serif, system-ui, sans-serif; }
+  .stat span { color:var(--muted); font:13px/1.3 ui-sans-serif, system-ui, sans-serif; }
+  .callout { background:var(--card); border-left:3px solid var(--teal); padding:14px 16px; margin:16px 0; }
+  table { width:100%; border-collapse:collapse; font:14px/1.4 ui-sans-serif, system-ui, sans-serif; }
+  th, td { text-align:left; vertical-align:top; padding:8px 10px; border-bottom:1px solid var(--line); }
+  th { color:var(--muted); font-weight:600; }
+  .bar { display:grid; grid-template-columns:210px 1fr 42px; gap:8px; align-items:center; margin:6px 0; font:13px/1.2 ui-sans-serif, system-ui, sans-serif; }
+  .track { background:#132033; height:10px; }
+  .fill { background:var(--teal); height:10px; }
+  .fill.warn { background:var(--amber); }
+  .fill.bad { background:var(--red); }
+  .cards { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .card, .ship { background:var(--card); border:1px solid var(--line); padding:14px 16px; }
+  .card h3, .ship h3 { margin:0 0 8px; font:600 15px/1.3 ui-sans-serif, system-ui, sans-serif; }
+  a { color:var(--teal); }
+  footer { margin-top:40px; color:var(--muted); font:13px/1.4 ui-sans-serif, system-ui, sans-serif; }
+  @media (max-width:900px) { .cards { grid-template-columns:1fr; } .bar { grid-template-columns:1fr; } .stats { display:grid; grid-template-columns:1fr 1fr; } }
+</style>
+</head>
+<body>
+<main>
+  <div class="banner">Pre-launch snapshot · 15 October 2026 · Australia against the Turkish product</div>
+  <h1>Notya Australia is a clinic shell. Türkiye is the clinical product.</h1>
+  <p class="muted">Compared <a href="https://au.notya.io/au">au.notya.io/au</a> (release/au <code>80672d2a</code>) with <a href="https://notya.io/doktor">notya.io</a> (main <code>c4d79aef</code>). Scores are how much of each Turkish slice an Australian doctor can do today. 100 would mean the same job, in Australian words and under Australian law. No patient data.</p>
+  <div class="pills">
+    <span class="pill strong">Shell is live</span>
+    <span class="pill partial">65 tools, 10 of them Australia’s own, none signed</span>
+    <span class="pill missing">No voice, no eRx, no PBS table, no ICD-10-AM</span>
+  </div>
+  <div class="stats">
+    <div class="stat"><b>40</b><span>Turkish specialty chapters with engines. Australia has 40 role names and shared note templates.</span></div>
+    <div class="stat"><b>328</b><span>Turkish engine files. Australia’s own arithmetic is 8 calculators plus 2 links.</span></div>
+    <div class="stat"><b>145</b><span>Tiles on the Turkish doctor tools grid. Australia switches on 65 country tools.</span></div>
+    <div class="stat"><b>0</b><span>Australian clinicians or lawyers who have signed the pack.</span></div>
+  </div>
+  <div class="callout">
+    <p>An invited general practitioner can open a day list, a patient, a visit, a calculator, an immunisation tick-list, a notifiable-disease name, and the Poisons Standard. That is a real product. It is not the product a Turkish doctor uses. The daily wow there is the voice assistant, the specialty note, the reimbursed medicine list, and a prescription that leaves the building. None of those exist for Australia. A launch can be an invited notes-and-reference beta. It cannot be advertised as the same Notya.</p>
+  </div>
+
+  <h2>Coverage</h2>
+  <table>
+    <thead><tr><th>Domain</th><th>Depth</th><th>Türkiye today</th><th>Australia today</th><th>Next action</th></tr></thead>
+    <tbody>
+      <tr><td>Landing, login, today, patients, calendar</td><td><span class="pill partial">Partial</span></td><td>Doctor home is the product. Demo booking is live.</td><td>Same shell under /au. Invitation sign-up. Hidden from search. Prices are “by quote”.</td><td>Decide the invitation list and who may see the site.</td></tr>
+      <tr><td>Visit note</td><td><span class="pill thin">Thin</span></td><td>SOAP, specialty prompts, recording, photo and PDF on four specialties.</td><td>Core visit is on. Recording-consent sentence is a draft. Photo capture is not in this build. /au/asistan is 404.</td><td>Ship a visit a GP recognises, or say the assistant is later.</td></tr>
+      <tr><td>Specialty engines</td><td><span class="pill thin">Thin</span></td><td>40 chapters, 328 engine files, 52 prompt files.</td><td>Role names follow the Medical Board list. Templates are the shared English set. No chapter UI.</td><td>Pick the launch specialties (general practice first) and deepen those only.</td></tr>
+      <tr><td>Calculators</td><td><span class="pill partial">Partial</span></td><td>About 145 doctor-tool tiles, many specialty-only.</td><td>52 shared English tools on. Seven held off (ESI, two KDIGO grids, kidney-risk category, BI-RADS report, acne calendar, laser calendar).</td><td>A GP and the relevant specialist read the tools their role sees.</td></tr>
+      <tr><td>Medicines</td><td><span class="pill thin">Thin</span></td><td>e-Reçete, SGK list, interaction checks.</td><td>Poisons Standard classes, Schedule 8 ticks, a dispensing-label checklist, a link to the PBS report index. No PBS table, no ARTG, no dose.</td><td>Say on the first screen that this is not a prescription. Then decide eRx.</td></tr>
+      <tr><td>Diagnosis codes</td><td><span class="pill missing">Missing</span></td><td>ICD-10 in the note.</td><td>No code stored. ICD-10-AM is a paid licence.</td><td>Buy the licence or leave coding out of the launch claim.</td></tr>
+      <tr><td>Drug interactions</td><td><span class="pill missing">Missing</span></td><td>Interaction tool in daily use.</td><td>Adapter is unconnected. No pairs.</td><td>A commercial interaction contract, or no interaction claim.</td></tr>
+      <tr><td>Immunisation</td><td><span class="pill partial">Partial</span></td><td>Schedule plus a vaccine-card PDF.</td><td>National Immunisation Program milestones as ticks. No catch-up. Handbook text was not copied: the Department copyright notice does not allow commercial reuse.</td><td>A paediatrician confirms the milestone wording. Catch-up waits on a licence.</td></tr>
+      <tr><td>Notifiable diseases</td><td><span class="pill partial">Partial</span></td><td>Notification flows inside the Turkish product.</td><td>22 May 2026 national list on screen. A tick is not a notice to a state health department.</td><td>A clinician confirms the list is still in force, including item 1A.</td></tr>
+      <tr><td>Hasta portalı (patient page)</td><td><span class="pill partial">Partial</span></td><td>Specialty modules on the shared patient shell.</td><td>Generic patient page, intake form, on-page messages. No specialty module. Emergency number 000 is unverified in the pack record.</td><td>Keep it generic for launch. Do not invent a general-practice portal chapter yet.</td></tr>
+      <tr><td>Consultations</td><td><span class="pill partial">Partial</span></td><td>Colleague opinion with a reviewed consent line.</td><td>Switched on. The consent sentence is flagged unread by a lawyer.</td><td>A lawyer reads the sentence before a clinic relies on it.</td></tr>
+      <tr><td>Voice assistant</td><td><span class="pill missing">Missing</span></td><td>Ayşe, text and voice, is the product.</td><td>Explicitly off. Speech settings exist for a future scribe and have not been heard on Australian clinic audio.</td><td>A product decision: assistant in the launch, or a written “not in this version”.</td></tr>
+      <tr><td>My Health Record and eRx</td><td><span class="pill missing">Missing</span></td><td>National record and prescribing are part of the Turkish day.</td><td>My Health Record pages timed out. eRx homepage returned 403. A link-out tile was removed on purpose. Nothing is connected.</td><td>Open the provider registration, or leave both off the launch story.</td></tr>
+      <tr><td>Medicare billing</td><td><span class="pill missing">Missing</span></td><td>SGK reimbursement is in the note and the tools.</td><td>The word Medicare is a label. No claim, no fee, no item number. Prices are empty.</td><td>Do not imply billing. Set a price only when you choose one.</td></tr>
+      <tr><td>Clinician and lawyer reading</td><td><span class="pill missing">Missing</span></td><td>The Turkish product is already in doctors’ hands.</td><td>Every line is machine-written. Ten Australia-only tools are on the unsigned list. Privacy Act, state recording law, SaMD, and advertising are unanswered.</td><td>One GP, one pharmacist, one lawyer, before the first invitation that is not internal.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Completeness against the Turkish product</h2>
+  <p class="muted">Each bar is the share of that Turkish slice an Australian doctor can do on au.notya.io today. Source: release/au at 80672d2a and live checks on 15 October 2026.</p>
+  <div id="bars"></div>
+
+  <h2>What a clinic will feel</h2>
+  <div class="cards">
+    <article class="card"><h3>Writing a prescription</h3><p class="muted">Daily cost: the script is the visit.</p><p><b>Now.</b> A dispensing-label checklist and a PBS link. Nothing is sent to a pharmacy.</p><p><b>Wow move.</b> Either an eRx connection or a screen that says “this note is not a prescription” before the doctor looks for one.</p></article>
+    <article class="card"><h3>The voice they were shown</h3><p class="muted">Daily cost: typing the note.</p><p><b>Now.</b> A core visit and a draft recording sentence. No assistant.</p><p><b>Wow move.</b> The same visit loop as Türkiye, with an Australian voice, or a launch that does not promise one.</p></article>
+    <article class="card"><h3>Catch-up vaccines</h3><p class="muted">Daily cost: the child who is late.</p><p><b>Now.</b> Milestone ticks. The Handbook catch-up text was not copied.</p><p><b>Wow move.</b> Written permission from the Department, then a catch-up a paediatrician has read.</p></article>
+    <article class="card"><h3>The national record</h3><p class="muted">Daily cost: retyping what the patient already has.</p><p><b>Now.</b> No My Health Record and no Healthcare Identifier. The identifier field is an optional Medicare card number, and a lawyer has not said it may be stored.</p><p><b>Wow move.</b> Provider registration, or a one-line absence on the patient page.</p></article>
+    <article class="card"><h3>Interactions and codes</h3><p class="muted">Daily cost: a second screen outside Notya.</p><p><b>Now.</b> No interaction pairs. No ICD-10-AM.</p><p><b>Wow move.</b> A paid interaction source and an IHACPA licence, or those jobs stay outside the product.</p></article>
+    <article class="card"><h3>Trust</h3><p class="muted">Daily cost: a doctor will not bet a script on an unread tool.</p><p><b>Now.</b> Ten Australia-only tools are on without a name beside them.</p><p><b>Wow move.</b> A named GP and a named pharmacist on the unsigned list.</p></article>
+  </div>
+
+  <h2>Forms and references</h2>
+  <table>
+    <thead><tr><th>Item</th><th>Status</th><th>Action</th></tr></thead>
+    <tbody>
+      <tr><td>National Immunisation Program milestones</td><td><span class="pill partial">Partial</span></td><td>Paediatrician reads the ticks. Catch-up stays out until the copyright notice allows it.</td></tr>
+      <tr><td>K10 distress score</td><td><span class="pill partial">Partial</span></td><td>Items are not printed. Confirm the ABS bands are the ones this launch should show.</td></tr>
+      <tr><td>ECOG grade</td><td><span class="pill partial">Partial</span></td><td>The tool stores a number. It does not describe the grades. Oncology reads it.</td></tr>
+      <tr><td>Poisons Standard, October 2026</td><td><span class="pill partial">Partial</span></td><td>Classes, Schedule 8, and Appendix L clause 1. Not a state prescription form. Confirm it is still current.</td></tr>
+      <tr><td>Notifiable diseases, 22 May 2026</td><td><span class="pill partial">Partial</span></td><td>Names on a screen. Not a submission. Confirm item 1A.</td></tr>
+      <tr><td>PBS report index</td><td><span class="pill thin">Thin</span></td><td>Link only. Tables were not copied. Copyright reserves commercial reuse.</td></tr>
+      <tr><td>Growth-chart reference</td><td><span class="pill thin">Thin</span></td><td>Link only. No chart is drawn.</td></tr>
+      <tr><td>Australasian Triage Scale, ESI, KDIGO colour grid, BI-RADS</td><td><span class="pill missing">Missing</span></td><td>Held off. Each needs the rights holder’s permission.</td></tr>
+      <tr><td>Mandatory notifications, fasting, fracture risk, retinopathy referral, rehab outcome, oncology pathway</td><td><span class="pill missing">Missing</span></td><td>Written as slots. Not built.</td></tr>
+      <tr><td>ICD-10-AM, ARTG, interaction pairs, state prescription blanks</td><td><span class="pill missing">Missing</span></td><td>Licence or a decision to leave them out of the launch.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Game changers, in order</h2>
+  <table>
+    <thead><tr><th></th><th>Move</th><th>Why they will care</th><th>Size</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Write the launch boundary into the product: note, calculators, immunisation record, poisons reference. Not a prescription, not a claim, not the national record.</td><td>A GP finds the edge in the first minute instead of hunting for eRx.</td><td><span class="pill info">S</span></td></tr>
+      <tr><td>2</td><td>Lawyer packet: Privacy Act and the state health-records laws, recording by state, Medicare card number, software as a medical device, advertising.</td><td>Nothing else should be shown to a paying clinic before this.</td><td><span class="pill partial">M</span></td></tr>
+      <tr><td>3</td><td>One general practitioner and one pharmacist read the ten unsigned tools.</td><td>The tools are already on. A name is what makes them usable.</td><td><span class="pill partial">M</span></td></tr>
+      <tr><td>4</td><td>Decide the visit: assistant in this launch, or a core note with that promise removed.</td><td>This is the difference people remember from the Turkish product.</td><td><span class="pill missing">L</span></td></tr>
+      <tr><td>5</td><td>Prescription story: connect eRx, or keep the dispensing label and say it is not sent.</td><td>Prescribing is the job. A checklist is not a script.</td><td><span class="pill missing">L</span></td></tr>
+      <tr><td>6</td><td>Confirm the Australia database, the invitation path, and that 000 on the patient page is the number you want shown.</td><td>The public site answers. A clinic database was not re-checked in this audit.</td><td><span class="pill info">S</span></td></tr>
+      <tr><td>7</td><td>A native editor reads the Australian English. Then PBS, ARTG, and ICD-10-AM stay out until the licences exist.</td><td>Wrong spelling and a borrowed code set are both launch risks.</td><td><span class="pill partial">M</span></td></tr>
+    </tbody>
+  </table>
+
+  <h2>What to do next</h2>
+  <div class="ships">
+    <article class="ship"><h3>Impress</h3><p>A general-practice visit that records, drafts, and shows the NIP and the Poisons Standard without pretending to prescribe.</p></article>
+    <article class="ship"><h3>Velocity</h3><p>The launch-boundary screen and the unsigned-tool list with two names. No new clinical engine.</p></article>
+    <article class="ship"><h3>Mandate</h3><p>The lawyer packet, then My Health Record and eRx only if registration is actually open.</p></article>
+  </div>
+
+  <h2>Already real, and worth keeping</h2>
+  <ul>
+    <li>The site answers: home, tools, medical, visit, today, and the patient page return 200. <code>/au/doktor</code> and <code>/au/asistan</code> return 404, which is correct. Those routes belong to Türkiye.</li>
+    <li>Australian role names, en-AU spelling, kilogram and centimetre, mmol/L, 12-hour time, and the state time zones are in the pack.</li>
+    <li>National Immunisation Program ticks, the notifiable-disease list, and the October 2026 Poisons Standard are on screen with attribution.</li>
+    <li>K10, adult BMI and waist, and an ECOG grade record are Australia’s own tools. Each licence notice was read. None has a clinician’s name.</li>
+    <li>Risky shared tools stay off: ESI, the BI-RADS report, and the KDIGO colour grids.</li>
+  </ul>
+
+  <h2>Sources</h2>
+  <p class="muted">Pack: <code>countries/au/</code> on <code>release/au</code> at <code>80672d2a</code>. Record: <code>docs/COUNTRY-MEDICAL-AUSTRALIA.md</code>, <code>docs/COUNTRY-PACK-AUSTRALIA.md</code>. Turkish gold: <code>main</code> at <code>c4d79aef</code>, <code>specialties/</code> (40 chapters, 328 engine files), <code>lib/doktor/doktorAraclari.ts</code> (145 titles). Live: au.notya.io/au and notya.io/doktor on 15 October 2026.</p>
+  <p class="muted">Intentionally out of the wow for this launch until a licence or a registration exists: PBS tables, ARTG rows, ICD-10-AM, the immunisation Handbook catch-up, the Australasian Triage Scale, ESI, BI-RADS, the Kidney Health Australia colour chart, My Health Record, eRx, and any live national API.</p>
+  <footer>Pre-launch snapshot · 15 October 2026 · no patient data · Australia compared with the Turkish product, not with a wish list.</footer>
+</main>
+<script>
+const rows = [
+  ["Clinic shell", 62],
+  ["Shared calculators", 55],
+  ["Notifiable-disease list", 48],
+  ["Immunisation record", 42],
+  ["Patient page", 36],
+  ["Consultations", 40],
+  ["Medicines reference", 32],
+  ["Visit note", 22],
+  ["Specialty engines", 18],
+  ["On-page messages", 25],
+  ["Voice assistant", 2],
+  ["Diagnosis codes", 4],
+  ["Drug interactions", 4],
+  ["eRx and My Health Record", 6],
+  ["Medicare billing", 6],
+  ["Clinician and lawyer sign-off", 8]
+];
+const host = document.getElementById("bars");
+for (const [name, n] of rows) {
+  const cls = n >= 50 ? "" : n >= 25 ? "warn" : "bad";
+  const row = document.createElement("div");
+  row.className = "bar";
+  row.innerHTML = "<div>" + name + "</div><div class='track'><div class='fill " + cls + "' style='width:" + n + "%'></div></div><div>" + n + "</div>";
+  host.appendChild(row);
+}
+</script>
+</body>
+</html>
