@@ -1,0 +1,114 @@
+/**
+ * NOTYA-ASISTAN-PERSONA-BRANS (bu panel) + NOTYA-SES-DANIS-HATA-01 — regresyon kilidi.
+ *
+ * BUG A (kimlik — CEO düzeltmesi: "by design" DEĞİL, gerçek bir leak): "Ayşe'ye Danış" paneli artık
+ * hekimin KENDİ branşının uzmanını okur; hardcoded "Ayşe" DEĞİL. dermatoloji hekimi "Selin'e Danış"
+ * görür, kardiyoloji hekimi "Mehmet'e Danış" görür, bir Klinik dalı (sac-ekimi) "Emre Kaya'ya
+ * Danış" görür (Klinik'in KENDİ 10 dallık rosteri — doktor rosteriyle karışmaz). Bilinmeyen bir
+ * branş/dal yoksa baseline'a (Ayşe) düşer — hiçbir yeni branş kapısı EKLENMEDİ; var olan İKİ roster
+ * (`specialistsCatalog.ts`, `klinik_uzmanlar.ts`) tek paylaşılan `bransAsistanPersonasiBul` ile
+ * okunuyor — ayrıntılı branş-bazlı kanıt: `lib/asistan/bransAsistanPersonasi.test.ts`.
+ *
+ * BUG B (ses): "Konuş" düğmesi her üç bağlamda da (dermatoloji, kardiyoloji, Klinik dalı) AYNI
+ * şekilde render edilir — devre dışı değil, branşa göre kaldırılmıyor. Gerçek kök-neden fix'i
+ * (unsupported durumda panelin açılması + onerror'un artık sessiz kalmaması) saf fonksiyon
+ * seviyesinde `lib/asistan/sesliGirisYardimci.test.ts`'te kanıtlanmıştır; burası o paylaşılan
+ * mekanizmanın panelden GERÇEKTEN çağrıldığını (kaynak metninde) ve düğmenin her bağlamda var
+ * olduğunu doğrular.
+ */
+import { describe, it } from 'node:test'
+import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
+import React, { createElement } from 'react'
+import { renderToStaticMarkup } from 'react-dom/server'
+import HastaKonsult from '../../components/doktor/HastaKonsult'
+import { turkceYonelmeHali } from '../colleagueAddress'
+
+const sar = (branş: string | null) =>
+  renderToStaticMarkup(
+    createElement(HastaKonsult, { patientId: 'p1', doktorBransi: branş, hastaDogumIso: null }),
+  )
+
+describe('HastaKonsult — "Ayşe\'ye Danış" paneli: kimlik branşa göre, ses her yerde aynı', () => {
+  it('dermatoloji hekimi kendi uzmanını görür — "Selin\'e Danış" (hardcoded "Ayşe" DEĞİL)', () => {
+    const html = sar('dermatoloji')
+    assert.match(html, /Selin&#x27;e Danış|Selin'e Danış/)
+    assert.doesNotMatch(html, /Ayşe&#x27;ye Danış|Ayşe'ye Danış/)
+  })
+
+  it('kardiyoloji hekimi "Mehmet\'e Danış" görür', () => {
+    const html = sar('kardiyoloji')
+    assert.match(html, /Mehmet&#x27;e Danış|Mehmet'e Danış/)
+  })
+
+  it('Klinik dalı (sac-ekimi) KENDİ uzmanını görür — "Emre Kaya\'ya Danış" (Doktor rosterinde yok; Klinik\'in kendi rosterinden — klinik_uzmanlar.ts)', () => {
+    const html = sar('sac-ekimi')
+    assert.match(html, /Emre Kaya&#x27;ya Danış|Emre Kaya'ya Danış/)
+    assert.doesNotMatch(html, /Ayşe&#x27;ye Danış|Ayşe'ye Danış/)
+  })
+
+  it('branş bilinmiyorsa (null) de baseline "Ayşe\'ye Danış" — pediatri varsayılanı, yeni bir "pediatri" kapısı değil', () => {
+    const html = sar(null)
+    assert.match(html, /Ayşe&#x27;ye Danış|Ayşe'ye Danış/)
+  })
+
+  it('"Konuş" düğmesi dermatoloji, kardiyoloji ve Klinik dalında (sac-ekimi) AYNI şekilde var — branşa göre kaldırılmıyor', () => {
+    for (const branş of ['dermatoloji', 'kardiyoloji', 'sac-ekimi', null]) {
+      const html = sar(branş)
+      assert.match(html, />Konuş</, `branş=${branş} için Konuş düğmesi bulunamadı`)
+    }
+  })
+
+  it('başlık metni her branşta turkceYonelmeHali(personaAdi) + " Danış" kalıbını izler', () => {
+    const beklenenler: Array<[string, string]> = [
+      ['dermatoloji', 'Selin'],
+      ['kardiyoloji', 'Mehmet'],
+      ['psikiyatri', 'Deniz'],
+    ]
+    for (const [branş, isim] of beklenenler) {
+      const html = sar(branş)
+      const beklenenBaslik = `${turkceYonelmeHali(isim)} Danış`
+      assert.ok(
+        html.includes(beklenenBaslik) || html.includes(beklenenBaslik.replace("'", '&#x27;')),
+        `branş=${branş}: "${beklenenBaslik}" bulunamadı`,
+      )
+    }
+  })
+})
+
+describe('HastaKonsult kaynağı — paylaşılan ses mekanizması gerçekten çağrılıyor (branş kapısı yok)', () => {
+  const kaynak = readFileSync(join(__dirname, '../../components/doktor/HastaKonsult.tsx'), 'utf8')
+
+  it('sesliGirisDesteklenmiyorMu / sesliGirisHataMetni paylaşılan yardımcıları import edilmiş ve kullanılmış', () => {
+    assert.match(kaynak, /from '@\/lib\/asistan\/sesliGirisYardimci'/)
+    assert.match(kaynak, /sesliGirisDesteklenmiyorMu\(/)
+    assert.match(kaynak, /sesliGirisHataMetni\(/)
+  })
+
+  it('mikrofon() artık desteklenmeyen tarayıcı durumunda da paneli açıyor (eski kök neden: panel kapalı kalırdı)', () => {
+    const mikrofonGovdesi = kaynak.slice(kaynak.indexOf('function mikrofon('), kaynak.indexOf('function mikrofon(') + 900)
+    assert.match(mikrofonGovdesi, /sesliGirisDesteklenmiyorMu\(w\)/)
+    assert.match(mikrofonGovdesi, /setAcik\(true\)/)
+  })
+
+  it('onerror artık dinliyor\'u kapatmakla kalmıyor — hata mesajı da yazıyor (eski kök neden: sessiz kalırdı)', () => {
+    const onerrorIdx = kaynak.indexOf('t.onerror = (e)')
+    assert.ok(onerrorIdx > -1, 't.onerror handler bulunamadı')
+    const govde = kaynak.slice(onerrorIdx, onerrorIdx + 200)
+    assert.match(govde, /sesliGirisHataMetni\(e\?\.error\)/)
+    assert.match(govde, /setHata\(mesaj\)/)
+  })
+
+  it('kimlik başlığı artık hardcoded "Ayşe\'ye Danış" literal\'i DEĞİL — iki rosteri birleştiren paylaşılan lookup\'tan okunuyor', () => {
+    assert.doesNotMatch(kaynak, />Ayşe&apos;ye Danış</)
+    assert.match(kaynak, /turkceYonelmeHali\(personaAdi\)/)
+    assert.match(kaynak, /from '@\/lib\/asistan\/bransAsistanPersonasi'/)
+    assert.match(kaynak, /bransAsistanPersonasiBul\(/)
+  })
+
+  it('branşa göre çatallanan bir "if (brans === …)" sesli giriş kapısı YOK — tek paylaşılan mekanizma', () => {
+    const mikrofonGovdesi = kaynak.slice(kaynak.indexOf('function mikrofon('), kaynak.indexOf('function gonder('))
+    assert.doesNotMatch(mikrofonGovdesi, /brans(i)?\s*===|doktorBransi\s*===/i)
+  })
+})

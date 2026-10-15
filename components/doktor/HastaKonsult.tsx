@@ -7,7 +7,7 @@
 
 import HafifMarkdown from '@/components/asistan/HafifMarkdown'
 import MuayeneCekListesi from '@/components/doktor/MuayeneCekListesi'
-import { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth'
 import { EylemKarti, EylemToplu, type EylemHasta, type EylemOneriGorunumu } from '@/components/core/EylemKarti'
 import {
@@ -19,6 +19,13 @@ import {
   muayeneCekListesi,
 } from '@/lib/doktor/muayeneCekListesi'
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
+import { turkceYonelmeHali } from '@/lib/colleagueAddress'
+import { bransAsistanPersonasiBul } from '@/lib/asistan/bransAsistanPersonasi'
+import {
+  SESLI_GIRIS_DESTEKLENMIYOR_METNI,
+  sesliGirisDesteklenmiyorMu,
+  sesliGirisHataMetni,
+} from '@/lib/asistan/sesliGirisYardimci'
 
 // NOTYA-EYLEM: an assistant turn may carry confirm cards. They live ON the message so they stay in
 // place as the conversation grows — a card that jumps to the bottom is a card tapped for the wrong turn.
@@ -26,13 +33,14 @@ interface Mesaj { rol: 'doktor' | 'asistan'; icerik: string; oneriler?: EylemOne
 
 interface TanimaSonucu { isFinal: boolean; 0: { transcript: string } }
 interface TanimaOlayi { resultIndex: number; results: { length: number; [i: number]: TanimaSonucu } }
+interface TanimaHatasi { error?: string }
 interface Tanima {
   lang: string
   continuous: boolean
   interimResults: boolean
   onresult: ((e: TanimaOlayi) => void) | null
   onend: (() => void) | null
-  onerror: (() => void) | null
+  onerror: ((e: TanimaHatasi) => void) | null
   start: () => void
   stop: () => void
 }
@@ -82,6 +90,12 @@ export default function HastaKonsult({
     try { setBransOnbel(localStorage.getItem('notya_doktor_specialty')) } catch { /* yok */ }
   }, [doktorBransi])
   const cekMaddeler = muayeneCekListesi({ doktorBransi: bransOnbel, hastaDogumIso })
+  // NOTYA-ASISTAN-PERSONA-BRANS-LOOKUP-01 (CEO düzeltmesi — BUG A gerçek, "by design" değil):
+  // "Ayşe'ye Danış" paneli hekimin KENDİ branşının uzmanını gösterir — "Ayşe" yalnız pediatrinin
+  // kendi uzmanıdır, başka branşta görünmemeli. `bransAsistanPersonasiBul` Doktor'un 30 branşlık
+  // rosterini VE Klinik'in 10 dallık rosterini (ikisi de repo'da ZATEN tam) tek noktada birleştirir
+  // — branşa göre çatallanan yeni bir kapı değil, var olan iki rosteri okuyan tek paylaşılan fonksiyon.
+  const personaAdi = bransAsistanPersonasiBul(bransOnbel).kisaAd
   const altRef = useRef<HTMLDivElement>(null)
   const tanimaRef = useRef<Tanima | null>(null)
 
@@ -122,12 +136,16 @@ export default function HastaKonsult({
   function mikrofon() {
     if (dinliyor) { mikrofonDurdur(); return }
     const w = window as unknown as { webkitSpeechRecognition?: new () => Tanima; SpeechRecognition?: new () => Tanima }
-    const Ctor = w.SpeechRecognition || w.webkitSpeechRecognition
-    if (!Ctor) {
-      setHata('Bu tarayıcı sesli girişi desteklemiyor — yazarak sorun.')
+    // NOTYA-SES-DANIS-HATA-01: eskiden panel AÇILMADAN bu hata yazılıyordu — panel kapalıyken
+    // {hata && …} hiç render edilmediği için hekim "Konuş'a bastım, hiçbir şey olmadı" görürdü.
+    // Şimdi panel her durumda açılır; mesaj her branşta/Klinik'te aynı paylaşılan metin.
+    if (sesliGirisDesteklenmiyorMu(w)) {
+      setAcik(true)
       setMod('yaz')
+      setHata(SESLI_GIRIS_DESTEKLENMIYOR_METNI)
       return
     }
+    const Ctor = (w.SpeechRecognition || w.webkitSpeechRecognition) as new () => Tanima
     setHata('')
     setMod('konus')
     setAcik(true)
@@ -143,7 +161,14 @@ export default function HastaKonsult({
       if (son) setGirdi((g) => (g ? `${g} ` : '') + son.trim())
     }
     t.onend = () => setDinliyor(false)
-    t.onerror = () => setDinliyor(false)
+    // NOTYA-SES-DANIS-HATA-01: eskiden yalnız `dinliyor`u kapatıyordu — mikrofon izni reddedildiğinde,
+    // mikrofon bulunamadığında veya ağ hatasında hekime HİÇBİR mesaj görünmüyordu (buton sessizce
+    // "Konuş"a dönüyordu). Artık hata kodu okunabilir bir cümleye çevrilir ve gösterilir.
+    t.onerror = (e) => {
+      setDinliyor(false)
+      const mesaj = sesliGirisHataMetni(e?.error)
+      if (mesaj) setHata(mesaj)
+    }
     tanimaRef.current = t
     t.start()
     setDinliyor(true)
@@ -201,7 +226,7 @@ export default function HastaKonsult({
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', flexWrap: 'wrap' }}>
         <span style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(15,155,142,0.14)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, flexShrink: 0 }}>🩺</span>
         <div style={{ flex: 1, minWidth: 160 }}>
-          <div style={{ fontSize: 14, fontWeight: 800, color: CHROME_RENK.ink }}>Ayşe&apos;ye Danış</div>
+          <div style={{ fontSize: 14, fontWeight: 800, color: CHROME_RENK.ink }}>{turkceYonelmeHali(personaAdi)} Danış</div>
           <div style={{ fontSize: 11, color: CHROME_RENK.muted, marginTop: 1 }}>Dosyayı bilir, kayıt da hazırlar · onaylamadan hiçbir şey yazılmaz</div>
         </div>
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
@@ -374,7 +399,7 @@ export default function HastaKonsult({
                 ) : null}
               </div>
             ))}
-            {bekliyor && <div style={{ alignSelf: 'flex-start', color: CHROME_RENK.muted, fontSize: 12.5 }}>Ayşe dosyayı inceliyor…</div>}
+            {bekliyor && <div style={{ alignSelf: 'flex-start', color: CHROME_RENK.muted, fontSize: 12.5 }}>{personaAdi} dosyayı inceliyor…</div>}
             <div ref={altRef} />
           </div>
 
