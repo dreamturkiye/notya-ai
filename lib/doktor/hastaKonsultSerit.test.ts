@@ -9,6 +9,12 @@
  * (`specialistsCatalog.ts`, `klinik_uzmanlar.ts`) tek paylaşılan `bransAsistanPersonasiBul` ile
  * okunuyor — ayrıntılı branş-bazlı kanıt: `lib/asistan/bransAsistanPersonasi.test.ts`.
  *
+ * NOTYA-UZ-ASISTAN-PERSONA-DOKTOR-01 (release/uz ONLY): bu dalda Doktor'un 30 branşı artık TR
+ * roster'ından ÖNCE Kaan'ın 2026-10-08/09 UZ adlarıyla çözülüyor (countries/uz/klinik/asistanAdlari.ts
+ * + lib/asistan/uzDoktorPersonaSesi.ts) — bu yüzden aşağıdaki beklenen isimler TR (Selin/Mehmet/Deniz)
+ * DEĞİL, UZ (Sevara/Kamola/Zulfiya) karşılıkları. Klinik rosteri (sac-ekimi → Emre Kaya) ve bilinmeyen
+ * branş fallback'i (Ayşe) release/uz'da da DEĞİŞMEDİ — ayrıntılı kanıt: `lib/asistan/bransAsistanPersonasi.test.ts`.
+ *
  * BUG B (ses): "Konuş" düğmesi her üç bağlamda da (dermatoloji, kardiyoloji, Klinik dalı) AYNI
  * şekilde render edilir — devre dışı değil, branşa göre kaldırılmıyor. Gerçek kök-neden fix'i
  * (unsupported durumda panelin açılması + onerror'un artık sessiz kalmaması) saf fonksiyon
@@ -31,15 +37,16 @@ const sar = (branş: string | null) =>
   )
 
 describe('HastaKonsult — "Ayşe\'ye Danış" paneli: kimlik branşa göre, ses her yerde aynı', () => {
-  it('dermatoloji hekimi kendi uzmanını görür — "Selin\'e Danış" (hardcoded "Ayşe" DEĞİL)', () => {
+  it('dermatoloji hekimi (release/uz) kendi UZ uzmanını görür — "Sevara\'ya Danış" (hardcoded "Ayşe" DEĞİL, TR "Selin" de DEĞİL)', () => {
     const html = sar('dermatoloji')
-    assert.match(html, /Selin&#x27;e Danış|Selin'e Danış/)
+    assert.match(html, /Sevara&#x27;ya Danış|Sevara'ya Danış/)
     assert.doesNotMatch(html, /Ayşe&#x27;ye Danış|Ayşe'ye Danış/)
+    assert.doesNotMatch(html, /Selin&#x27;e Danış|Selin'e Danış/)
   })
 
-  it('kardiyoloji hekimi "Mehmet\'e Danış" görür', () => {
+  it('kardiyoloji hekimi (release/uz) "Kamola\'ya Danış" görür', () => {
     const html = sar('kardiyoloji')
-    assert.match(html, /Mehmet&#x27;e Danış|Mehmet'e Danış/)
+    assert.match(html, /Kamola&#x27;ya Danış|Kamola'ya Danış/)
   })
 
   it('Klinik dalı (sac-ekimi) KENDİ uzmanını görür — "Emre Kaya\'ya Danış" (Doktor rosterinde yok; Klinik\'in kendi rosterinden — klinik_uzmanlar.ts)', () => {
@@ -60,11 +67,11 @@ describe('HastaKonsult — "Ayşe\'ye Danış" paneli: kimlik branşa göre, ses
     }
   })
 
-  it('başlık metni her branşta turkceYonelmeHali(personaAdi) + " Danış" kalıbını izler', () => {
+  it('başlık metni her branşta (release/uz: UZ adıyla) turkceYonelmeHali(personaAdi) + " Danış" kalıbını izler', () => {
     const beklenenler: Array<[string, string]> = [
-      ['dermatoloji', 'Selin'],
-      ['kardiyoloji', 'Mehmet'],
-      ['psikiyatri', 'Deniz'],
+      ['dermatoloji', 'Sevara'],
+      ['kardiyoloji', 'Kamola'],
+      ['psikiyatri', 'Zulfiya'],
     ]
     for (const [branş, isim] of beklenenler) {
       const html = sar(branş)

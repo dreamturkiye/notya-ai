@@ -33,7 +33,11 @@ const ON_UNLULER = new Set(['e', 'i', 'ö', 'ü'])
  * uyumu). TDK kuralı: özel ada eklenen bu ek kesme işaretiyle ayrılır VE kökün yazımı değişmez (ünsüz
  * yumuşaması yazıya yansımaz — "Burak'a", "Burağa" değil). Ad sesli harfle bitiyorsa araya "y" girer
  * ("Ayşe'ye", "Tolga'ya"). 30 persona adının tamamı (`specialistsCatalog.ts`) ve bilinmeyen adlar için
- * doğrulanmıştır — bkz. `colleagueAddress.test.ts`.
+ * doğrulanmıştır — bkz. `colleagueAddress.test.ts`. NOT Turkish-specific beyond its character set: it
+ * looks for the last Latin vowel (a/ı/o/u = back, e/i/ö/ü = front) and never throws, so a non-Turkish
+ * Latin name (release/uz: the 30 Uzbek Doktor given names in countries/uz/klinik/asistanAdlari.ts —
+ * none use the Uzbek-only "oʻ"/"gʻ" apostrophe letters) still gets a sane, non-crashing suffix instead
+ * of a mangled one — verified for all 30 in `colleagueAddress.test.ts`.
  */
 export function turkceYonelmeHali(isim: string): string {
   const ad = isim.trim()

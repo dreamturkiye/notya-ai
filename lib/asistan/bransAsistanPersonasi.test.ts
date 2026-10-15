@@ -4,59 +4,88 @@
  * görünmemesi gerekir. Bu dosya, repo'da zaten tam olan iki rosterin (Doktor 30 branş + Klinik
  * 10 dal = 40) HER anahtarını tek tek dener — hiçbiri burada icat edilmedi, ikisi de mevcut
  * kaynak dosyalardan (`specialistsCatalog.ts`, `klinik_uzmanlar.ts`) okunuyor.
+ *
+ * NOTYA-UZ-ASISTAN-PERSONA-DOKTOR-01 (release/uz ONLY): bu dalda `uzAsistanAdi()`
+ * (countries/uz/klinik/asistanAdlari.ts) TR Doktor rosterinden ÖNCE denenir ve 30/30 branşı
+ * kapsar — bu yüzden release/uz'da "30 branşın hepsi" testi artık TR adlarını (Ayşe/Mehmet/…)
+ * DEĞİL, Kaan'ın 2026-10-08/09 UZ adlarını bekler; kaynak 'doktor-brans-uz' olur. TR roster
+ * testi (aşağıda, ayrı describe) `getSpecialistForSpecialty`'yi DOĞRUDAN çağırarak TR katalogun
+ * kendisinin bozulmadığını ayrıca doğrular — bu dal release/AU/CA/GB/NZ/US/TR'de hâlâ canlı yol.
  */
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 import { bransAsistanPersonasiBul, bransPersonasiBulunamadiMi } from './bransAsistanPersonasi'
+import { getSpecialistForSpecialty } from './specialistsCatalog'
 
-describe('bransAsistanPersonasiBul — Doktor rosteri (30/30 branş, hiçbiri "Ayşe" değil)', () => {
+describe('bransAsistanPersonasiBul — Doktor rosteri (release/uz: 30/30 branş → UZ adı, "doktor-brans-uz")', () => {
+  // Kaan'ın 2026-10-08/09 UZ Doktor listesi (countries/uz/klinik/asistanAdlari.ts) — tam 30/30,
+  // boşluksuz. "dermatoloji" burada da ASLA Ayşe/Selin değil — kendi UZ uzmanı Sevara.
   const beklenen: Record<string, string> = {
-    pediatri: 'Ayşe',
-    kardiyoloji: 'Mehmet',
-    noroloji: 'Elif',
-    dahiliye: 'Zeynep',
-    psikiyatri: 'Deniz',
-    'genel-cerrahi': 'Hakan',
-    ortopedi: 'Burak',
-    // BUG A'nın tam konusu: dermatoloji ASLA Ayşe değil, kendi uzmanı Selin.
-    dermatoloji: 'Selin',
-    'kulak-burun-bogaz': 'Emre',
-    'goz-hastaliklari': 'İrem',
-    'kadin-hastaliklari-dogum': 'Fatma',
-    uroloji: 'Murat',
-    radyoloji: 'Caner',
-    anestezi: 'Pınar',
-    'acil-tip': 'Oğuz',
-    'fizik-tedavi': 'Aylin',
-    'enfeksiyon-hastaliklari': 'Serkan',
-    endokrinoloji: 'Gülşah',
-    gastroenteroloji: 'Volkan',
-    nefroloji: 'Mert',
-    romatoloji: 'Nazlı',
-    onkoloji: 'Ece',
-    'gogus-hastaliklari': 'Barış',
-    'gogus-cerrahisi': 'Tolga',
-    'plastik-cerrahi': 'Melis',
-    'beyin-cerrahisi': 'Kerem',
-    'kalp-damar-cerrahisi': 'Sinan',
-    'cocuk-cerrahisi': 'Derya',
-    'aile-hekimligi': 'Yusuf',
-    'spor-hekimligi': 'Cemre',
+    pediatri: 'Malika',
+    kardiyoloji: 'Kamola',
+    noroloji: 'Bobur',
+    dahiliye: 'Madina',
+    psikiyatri: 'Zulfiya',
+    'genel-cerrahi': 'Sherzod',
+    ortopedi: 'Ulugbek',
+    dermatoloji: 'Sevara',
+    'kulak-burun-bogaz': 'Nodir',
+    'goz-hastaliklari': 'Aziza',
+    'kadin-hastaliklari-dogum': 'Shahnoza',
+    uroloji: 'Javohir',
+    radyoloji: 'Akmal',
+    anestezi: 'Bekzod',
+    'acil-tip': 'Jasur',
+    'fizik-tedavi': 'Laziz',
+    'enfeksiyon-hastaliklari': 'Otabek',
+    endokrinoloji: 'Dilnoza',
+    gastroenteroloji: 'Jamshid',
+    nefroloji: 'Mohira',
+    romatoloji: 'Saodat',
+    onkoloji: 'Nigora',
+    'gogus-hastaliklari': 'Gulnoza',
+    'gogus-cerrahisi': 'Farrux',
+    'plastik-cerrahi': 'Barno',
+    'beyin-cerrahisi': 'Alisher',
+    'kalp-damar-cerrahisi': 'Temur',
+    'cocuk-cerrahisi': 'Sardor',
+    'aile-hekimligi': 'Nilufar',
+    'spor-hekimligi': 'Sanjar',
   }
 
-  it('30 branşın hepsi doğru kendi uzmanını döner, "doktor-brans" kaynaklı, hiçbiri çökmez', () => {
+  it('30 branşın hepsi UZ uzmanını döner, "doktor-brans-uz" kaynaklı, "Prof. Dr. <ad> <soyad>" tamAd, hiçbiri çökmez', () => {
     assert.equal(Object.keys(beklenen).length, 30, 'liste 30 branşı kapsamalı (lib/doktor/specialties.ts ile aynı sayı)')
     for (const [brans, isim] of Object.entries(beklenen)) {
       const p = bransAsistanPersonasiBul(brans)
       assert.equal(p.kisaAd, isim, `${brans} → ${isim} bekleniyordu, ${p.kisaAd} geldi`)
-      assert.equal(p.kaynak, 'doktor-brans', `${brans} kaynağı doktor-brans olmalı`)
+      assert.equal(p.kaynak, 'doktor-brans-uz', `${brans} kaynağı doktor-brans-uz olmalı`)
+      assert.equal(p.tamAd, `Prof. Dr. ${isim} ${p.tamAd.split(' ').pop()}`, `${brans} tamAd "Prof. Dr. …" biçiminde olmalı`)
+      assert.ok(p.tamAd.startsWith('Prof. Dr. '), `${brans} tamAd "Prof. Dr." ile başlamalı`)
       assert.ok(p.voiceId, `${brans} için voiceId eksik`)
       assert.ok(p.gender === 'female' || p.gender === 'male', `${brans} için gender eksik/geçersiz`)
     }
   })
 
-  it('"kadin-dogum" (eski veri anahtarı) de "kadin-hastaliklari-dogum" ile AYNI kişiyi (Fatma) döner — bransAnahtari takma adı çözer', () => {
-    assert.equal(bransAsistanPersonasiBul('kadin-dogum').kisaAd, 'Fatma')
+  // CEO'nun doğrudan örneği (tam senaryo): dermatoloji → "Sevara Ismailova", ASLA "Ayşe".
+  it('dermatoloji → "Prof. Dr. Sevara Ismailova" (release/uz), ASLA "Ayşe" — TR fix\'in direkt UZ paraleli', () => {
+    const p = bransAsistanPersonasiBul('dermatoloji')
+    assert.equal(p.tamAd, 'Prof. Dr. Sevara Ismailova')
+    assert.equal(p.kisaAd, 'Sevara')
+    assert.equal(p.kaynak, 'doktor-brans-uz')
+    assert.notEqual(p.kisaAd, 'Ayşe')
+    assert.notEqual(p.kisaAd, 'Selin') // TR dermatoloji uzmanı — release/uz'da görünmemeli
+  })
+
+  it('"kadin-dogum" (eski veri anahtarı) de "kadin-hastaliklari-dogum" ile AYNI kişiyi (UZ: Shahnoza) döner — bransAnahtari takma adı çözer', () => {
+    assert.equal(bransAsistanPersonasiBul('kadin-dogum').kisaAd, 'Shahnoza')
+  })
+})
+
+describe('TR Doktor katalogu (specialistsCatalog.ts) — UZ önceliği onun ÜZERİNE binmiyor, kendisi bozulmadı', () => {
+  it('getSpecialistForSpecialty TR katalogdan okumayı sürdürür (bransAsistanPersonasiBul değil) — TR/AU/CA/GB/NZ/US dallarının canlı yolu bu', () => {
+    assert.equal(getSpecialistForSpecialty('dermatoloji').shortName, 'Selin')
+    assert.equal(getSpecialistForSpecialty('pediatri').shortName, 'Ayşe')
+    assert.equal(getSpecialistForSpecialty('kardiyoloji').shortName, 'Mehmet')
   })
 })
 
@@ -89,10 +118,10 @@ describe('bransAsistanPersonasiBul — Klinik rosteri (10/10 dal, kendi adı —
     }
   })
 
-  it('"dermatoloji" anahtarı iki rosterde de var — Doktor branş anahtarına çözüldüğü için Doktor kazanır (Selin Aksoy), Klinik\'in Selin Çelik\'i bu ortak anahtarla ERİŞİLEMEZ (bilinen, belgelenen veri çakışması — icat değil)', () => {
+  it('"dermatoloji" anahtarı iki rosterde de var — Doktor branş anahtarına çözüldüğü için Doktor kazanır; release/uz\'da bu da UZ önceliklidir (Sevara), Klinik\'in Selin Çelik\'i bu ortak anahtarla ERİŞİLEMEZ (bilinen, belgelenen veri çakışması — icat değil)', () => {
     const p = bransAsistanPersonasiBul('dermatoloji')
-    assert.equal(p.kaynak, 'doktor-brans')
-    assert.equal(p.kisaAd, 'Selin')
+    assert.equal(p.kaynak, 'doktor-brans-uz')
+    assert.equal(p.kisaAd, 'Sevara')
   })
 })
 
