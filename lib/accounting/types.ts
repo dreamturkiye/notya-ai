@@ -152,6 +152,15 @@ export interface HostedSession {
   merchantRef: string
   environment: 'test' | 'live'
   expiresAt: string
+  /**
+   * Some gateways (NestPay/EST "3D Pay Hosting" — see lib/accounting/banks/nestpay.ts) deliver
+   * their session as a set of form fields the BROWSER must POST to `redirectUrl`, not a
+   * server-created session the browser can simply navigate to with a GET. When set, the UI must
+   * render a hidden auto-submitting form instead of `window.location.href = redirectUrl`.
+   * Omitted (undefined) means the classic GET-navigation redirect every other adapter uses.
+   */
+  redirectMethod?: 'GET' | 'POST'
+  redirectFormFields?: Record<string, string>
 }
 
 export interface PaymentEvent {
@@ -222,13 +231,12 @@ export const ALL_BANK_KEYS: BankKey[] = [
 ]
 
 /**
- * Direct-bank keys that share the NestPay/ASSEMIST (Payten) gateway infrastructure, per Kaan's
- * 2026-10-15 hybrid-model instruction ("one adapter covers İş Bankası, Halkbank, TEB, QNB
+ * Direct-bank keys that share the NestPay/ASSEMIST (Payten/Asseco) gateway infrastructure, per
+ * Kaan's 2026-10-15 hybrid-model instruction ("one adapter covers İş Bankası, Halkbank, TEB, QNB
  * Finansbank, Ziraat NestPay, Akbank NestPay"). They stay in `ALL_BANK_KEYS`/`BankKey` unchanged —
- * a doctor still picks their own bank by name — but all six are registered against ONE shared
- * stub implementation (lib/accounting/banks/nestpay_group.ts) instead of six separate ones, so a
- * future real NestPay adapter only has to be written once. See
- * lib/accounting/banks/CHECKLIST.md "NestPay/EST group" section for why this is still a stub.
+ * a doctor still picks their own bank by name — but all six are registered against ONE real
+ * adapter (lib/accounting/banks/nestpay.ts, "3D Pay Hosting" mode) instead of six separate ones.
+ * See lib/accounting/banks/CHECKLIST.md "NestPay/EST group" section for sources and status.
  */
 export const NESTPAY_GROUP_BANK_KEYS: BankKey[] = ['isbank', 'halkbank', 'teb', 'qnb', 'ziraat', 'akbank']
 

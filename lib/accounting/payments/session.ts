@@ -69,6 +69,9 @@ export async function createPaymentSession(
     merchant_ref: session.merchantRef,
     status: 'pending',
     amount_kurus: openKurus,
+    // Only consumed by adapters whose gateway has no separate async webhook (NestPay "3D Pay
+    // Hosting" — see migration 156); every other adapter's webhook route ignores this column.
+    return_url: args.returnUrl,
   })
 
   await writeAuditLog(supabase, {

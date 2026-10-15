@@ -7,9 +7,11 @@ for.
 ## What's real vs. stubbed, in one line
 
 Payment path (hybrid model, `docs/ARCH-NOTYA-ACCOUNTING.md` §2.6a): **iyzico** is a real, `VERIFIED`
-`PaymentFacilitatorAdapter` (`facilitators/iyzico.ts`) and the default/recommended path. The 11
-named direct banks are `BankPosAdapter` stubs except `generic_hosted.ts` (one real documented
-generic protocol, not a fabricated bank API) — see `banks/CHECKLIST.md`. One real `EbelgeAdapter`
+`PaymentFacilitatorAdapter` (`facilitators/iyzico.ts`) and the default/recommended path. Of the 11
+named direct banks, 6 (İş Bankası, Halkbank, TEB, QNB Finansbank, Ziraat, Akbank) share one real
+adapter (`banks/nestpay.ts`, NestPay/EST "3D Pay Hosting", VERIFIED by protocol cross-reference)
+plus `generic_hosted.ts` (one real documented generic protocol); the remaining 5 (Yapı Kredi,
+Garanti BBVA, VakıfBank, Denizbank, Kuveyt Türk) are stubs — see `banks/CHECKLIST.md`. One real `EbelgeAdapter`
 (`ebelge/generic_rest.ts`); the 3 named e-belge vendors are honest stubs
 (`AdapterNotImplementedError`). See `banks/CHECKLIST.md`, `facilitators/CHECKLIST.md` and
 `ebelge/CHECKLIST.md` for exactly what's needed to finish each one.
@@ -25,7 +27,7 @@ lib/accounting/
   ar/{ledger,aging}.ts
   payments/{types,session}.ts                    # direct-bank orchestrator
   payments/{facilitatorTypes,facilitatorSession}.ts  # facilitator orchestrator — parallel, independent
-  banks/{index,generic_hosted,nestpay_group,stub,CHECKLIST.md}
+  banks/{index,generic_hosted,nestpay,stub,CHECKLIST.md}
   facilitators/{index,iyzico,CHECKLIST.md}
   ebelge/{index,generic_rest,stub,types,CHECKLIST.md}
   reports/index.ts

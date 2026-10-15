@@ -19,6 +19,8 @@ const WARN = CHROME_RENK.warn
 
 type Tab = 'kurulum' | 'katalog' | 'faturalar' | 'tahsilat' | 'raporlar'
 
+const NESTPAY_GROUP_KEYS = ['isbank', 'halkbank', 'teb', 'qnb', 'ziraat', 'akbank']
+
 const BANK_LABELS: Record<string, string> = {
   generic_hosted: 'Genel sanal POS (gerçek, sandbox)',
   yapi_kredi: 'Yapı Kredi',
@@ -32,6 +34,23 @@ const BANK_LABELS: Record<string, string> = {
   denizbank: 'Denizbank',
   teb: 'TEB',
   kuveyt_turk: 'Kuveyt Türk',
+}
+
+/** Some gateways (NestPay "3D Pay Hosting") deliver their session as form fields the BROWSER
+ *  must POST, not a URL it can simply navigate to — see lib/accounting/types.ts HostedSession. */
+function submitRedirectForm(url: string, fields: Record<string, string>) {
+  const form = document.createElement('form')
+  form.method = 'POST'
+  form.action = url
+  for (const [name, value] of Object.entries(fields)) {
+    const input = document.createElement('input')
+    input.type = 'hidden'
+    input.name = name
+    input.value = value
+    form.appendChild(input)
+  }
+  document.body.appendChild(form)
+  form.submit()
 }
 
 async function api(path: string, opts: RequestInit = {}) {
@@ -310,7 +329,11 @@ export default function FaturalamaTahsilatPaneli() {
           method: 'POST',
           body: JSON.stringify({ invoiceId, bankKey: bankKey || 'generic_hosted', returnUrl: window.location.href }),
         })
-        if (res.data?.redirectUrl) window.location.href = res.data.redirectUrl
+        if (res.data?.redirectMethod === 'POST' && res.data?.redirectFormFields) {
+          submitRedirectForm(res.data.redirectUrl, res.data.redirectFormFields)
+        } else if (res.data?.redirectUrl) {
+          window.location.href = res.data.redirectUrl
+        }
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Ödeme oturumu açılamadı — bu sağlayıcı henüz uygulanmamış olabilir (bkz. CHECKLIST.md).')
@@ -519,7 +542,7 @@ export default function FaturalamaTahsilatPaneli() {
 
               <SectionCard
                 title="Banka sanal POS (doğrudan, aşamalı)"
-                subtitle="İş Bankası / Halkbank / TEB / QNB / Ziraat / Akbank (NestPay altyapısı, ortak tek adaptör — şu an stub), Garanti BBVA ve Yapı Kredi sıradaki aşamalar (arayüze hazır, henüz stub). 'Genel sanal POS' gerçek çalışır bağlantıdır. Kontrol listesi: lib/accounting/banks/CHECKLIST.md."
+                subtitle="İş Bankası / Halkbank / TEB / QNB / Ziraat / Akbank artık gerçek çalışır (NestPay 3D Pay Hosting, ortak tek adaptör). Garanti BBVA ve Yapı Kredi sıradaki aşamalar (arayüze hazır, henüz stub). 'Genel sanal POS' de gerçek çalışır bağlantıdır. Kontrol listesi: lib/accounting/banks/CHECKLIST.md."
               >
                 <Field label="Banka">
                   <select style={inputStyle} value={bankKey} onChange={(e) => setBankKey(e.target.value)}>
@@ -536,15 +559,37 @@ export default function FaturalamaTahsilatPaneli() {
                     <option value="live">Canlı</option>
                   </select>
                 </Field>
-                <Field label="Base URL">
-                  <input style={inputStyle} value={bankFields.baseUrl || ''} onChange={(e) => setBankFields({ ...bankFields, baseUrl: e.target.value })} />
-                </Field>
-                <Field label="Merchant ID">
-                  <input style={inputStyle} value={bankFields.merchantId || ''} onChange={(e) => setBankFields({ ...bankFields, merchantId: e.target.value })} />
-                </Field>
-                <Field label="Store Key">
-                  <input style={inputStyle} type="password" value={bankFields.storeKey || ''} onChange={(e) => setBankFields({ ...bankFields, storeKey: e.target.value })} />
-                </Field>
+                {NESTPAY_GROUP_KEYS.includes(bankKey) ? (
+                  <>
+                    <Field label="Gateway URL (bankanızdan aldığınız 3D Pay Hosting adresi)">
+                      <input style={inputStyle} value={bankFields.gatewayUrl || ''} onChange={(e) => setBankFields({ ...bankFields, gatewayUrl: e.target.value })} />
+                    </Field>
+                    <Field label="Client ID">
+                      <input style={inputStyle} value={bankFields.clientId || ''} onChange={(e) => setBankFields({ ...bankFields, clientId: e.target.value })} />
+                    </Field>
+                    <Field label="Store Key">
+                      <input style={inputStyle} type="password" value={bankFields.storeKey || ''} onChange={(e) => setBankFields({ ...bankFields, storeKey: e.target.value })} />
+                    </Field>
+                    <Field label="Kullanıcı adı (opsiyonel — durum sorgusu için)">
+                      <input style={inputStyle} value={bankFields.username || ''} onChange={(e) => setBankFields({ ...bankFields, username: e.target.value })} />
+                    </Field>
+                    <Field label="Şifre (opsiyonel — durum sorgusu için)">
+                      <input style={inputStyle} type="password" value={bankFields.password || ''} onChange={(e) => setBankFields({ ...bankFields, password: e.target.value })} />
+                    </Field>
+                  </>
+                ) : (
+                  <>
+                    <Field label="Base URL">
+                      <input style={inputStyle} value={bankFields.baseUrl || ''} onChange={(e) => setBankFields({ ...bankFields, baseUrl: e.target.value })} />
+                    </Field>
+                    <Field label="Merchant ID">
+                      <input style={inputStyle} value={bankFields.merchantId || ''} onChange={(e) => setBankFields({ ...bankFields, merchantId: e.target.value })} />
+                    </Field>
+                    <Field label="Store Key">
+                      <input style={inputStyle} type="password" value={bankFields.storeKey || ''} onChange={(e) => setBankFields({ ...bankFields, storeKey: e.target.value })} />
+                    </Field>
+                  </>
+                )}
                 <button style={buttonStyle} onClick={() => void saveBank()}>
                   Kaydet
                 </button>

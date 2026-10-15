@@ -15,8 +15,64 @@ import { decryptSecrets } from '@/lib/accounting/vault'
 import { applyPaymentEvent } from '@/lib/accounting/payments/session'
 import type { BankKey } from '@/lib/accounting/types'
 
+/**
+ * NestPay "3D Pay Hosting" has no async webhook distinct from the browser's own return trip: the
+ * bank's hosted page POSTs its result straight to this route as `okUrl`/`failUrl`
+ * (`application/x-www-form-urlencoded`), i.e. the BROWSER lands here, not just the bank's server.
+ * So this one bank family needs an HTML redirect response back to the doctor-facing return page
+ * instead of bare JSON — every other adapter's webhook is bank-server-to-our-server only and the
+ * browser never touches this route, so their JSON response is unaffected.
+ */
+function isFormPost(req: NextRequest): boolean {
+  const ct = req.headers.get('content-type') || ''
+  return ct.includes('application/x-www-form-urlencoded') || ct.includes('multipart/form-data')
+}
+
+function redirectHtml(returnUrl: string): string {
+  const safeUrl = returnUrl.replace(/"/g, '&quot;')
+  return `<!doctype html><html><head><meta http-equiv="refresh" content="0;url=${safeUrl}"></head><body>Yönlendiriliyor… <a href="${safeUrl}">devam et</a></body></html>`
+}
+
 export async function POST(req: NextRequest, { params }: { params: { bankKey: string } }) {
   const bankKey = params.bankKey as BankKey
+
+  if (isFormPost(req)) {
+    const form = await req.formData()
+    const body: Record<string, string> = {}
+    for (const [key, value] of form.entries()) body[key] = String(value)
+    const merchantRef = body.oid || ''
+    const supabase = servisSupabase()
+    const { data: payment } = await supabase
+      .from('accounting_payments')
+      .select('doctor_id, return_url')
+      .eq('merchant_ref', merchantRef)
+      .eq('bank_key', bankKey)
+      .maybeSingle()
+    const fallbackReturnUrl = payment?.return_url || '/'
+    if (!payment) return new Response(redirectHtml(fallbackReturnUrl), { status: 200, headers: { 'Content-Type': 'text/html; charset=utf-8' } })
+
+    const { data: merchant } = await supabase
+      .from('accounting_bank_merchants')
+      .select('*')
+      .eq('doctor_id', payment.doctor_id)
+      .eq('bank_key', bankKey)
+      .maybeSingle()
+    if (merchant) {
+      const adapter = getBankAdapter(bankKey)
+      try {
+        const event = await adapter.parseWebhook(
+          { bankKey, environment: merchant.environment, fields: decryptSecrets(merchant.secrets_enc) },
+          { body }
+        )
+        await applyPaymentEvent(supabase, bankKey, event)
+      } catch {
+        // Fall through to redirecting the browser regardless — the doctor's return page re-reads
+        // the invoice/payment status itself rather than trusting this redirect's happy path.
+      }
+    }
+    return new Response(redirectHtml(payment.return_url || fallbackReturnUrl), { status: 200, headers: { 'Content-Type': 'text/html; charset=utf-8' } })
+  }
+
   const rawBody = await req.text()
   let parsedBody: Record<string, unknown> = {}
   try {

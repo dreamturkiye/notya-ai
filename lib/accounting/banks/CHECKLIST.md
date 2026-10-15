@@ -1,53 +1,81 @@
 # Bank adapter completion checklist
 
-Status: **1 of 12 registered DIRECT-BANK adapters is real** (`generic_hosted`). The 11 named banks
-from `docs/ARCH-NOTYA-ACCOUNTING.md` §2.6 are stubs — they implement `BankPosAdapter` and throw
-`AdapterNotImplementedError` with a pointer here, instead of a fabricated request/response shape.
-This file covers the **direct-bank path only**. For the facilitator path (iyzico — the
-default/recommended path under the 2026-10-15 hybrid model, §2.6a) see
+Status (updated 2026-10-15, second pass): **7 of 12 registered DIRECT-BANK adapters are real** —
+`generic_hosted` plus the 6 NestPay-group banks (İş Bankası, Halkbank, TEB, QNB Finansbank,
+Ziraat, Akbank, sharing one adapter, `nestpay.ts`, VERIFIED by protocol cross-reference — see
+below). The remaining 5 (Yapı Kredi, Garanti BBVA, VakıfBank, Denizbank, Kuveyt Türk) are stubs —
+they implement `BankPosAdapter` and throw `AdapterNotImplementedError` with a pointer here,
+instead of a fabricated request/response shape. Garanti BBVA and Yapı Kredi are explicitly phased
+as the "then" step per Kaan's hybrid-model instruction; the other three stay deferred pending
+doctor demand. This file covers the **direct-bank path only**. For the facilitator path (iyzico —
+the default/recommended path under the 2026-10-15 hybrid model, §2.6a) see
 `lib/accounting/facilitators/CHECKLIST.md`, which IS real/`VERIFIED`.
 
-## 2026-10-15 hybrid-model update (later same day) — NestPay group consolidated, still stub
+## 2026-10-15 hybrid-model update, second pass — NestPay group is now REAL
 
-Per Kaan's hybrid-model instruction (§2.6a), İş Bankası/Halkbank/TEB/QNB Finansbank/Ziraat/Akbank
-now share **one** stub factory (`lib/accounting/banks/nestpay_group.ts`) instead of six, since they
-all sit behind the same NestPay/ASSEMIST (Payten) gateway. Research done (WebSearch/WebFetch,
-same standard applied to every other bank in this file — named banks are not exempt from
-verification just because the CEO named them):
+The first pass (below, kept for the record) stopped at "no modern developer *portal*" and treated
+that as blocking. Kaan's follow-up correctly pushed back: NestPay/EST is a real, long-standing
+protocol, documented as PDFs/vendor guides rather than a web portal, and implemented by mature
+open-source libraries used in real production systems — "no portal" is not "no documentation."
+This pass read two independent, actively-real, MIT-licensed libraries' **source code** (not just
+READMEs) to confirm the protocol structurally:
 
-- No official, bank- or Asseco-published developer documentation of the NestPay **"3D Pay
-  Hosting"** protocol was found publicly. `see.asseco.com` (NestPay's own vendor) describes the
-  product at a marketing level only — no technical docs, no banks named.
-- What is public: third-party reverse-engineered client libraries — `node-nestpay`
-  ([cdn.jsdelivr.net/npm/node-nestpay@2.1.0/README.md](https://cdn.jsdelivr.net/npm/node-nestpay@2.1.0/README.md)),
-  Omnipay/NestPay forks, and WiseCP's integration notes
-  ([docs.wisecp.com/en/turkish-bank-virtual-pos-modules.md](https://docs.wisecp.com/en/turkish-bank-virtual-pos-modules.md)).
-  Every one of them shows sample code where the merchant's own server function takes `number`,
-  `cvv`, `year`, `month` as arguments even for the "hosting" storetype — which is either evidence
-  the merchant server still handles the PAN in practice, or just a generic-library artifact that
-  wraps several storetypes under one call signature. No source resolves that ambiguity.
-- One potentially authoritative source — QNB's own
-  `vpos.qnb.com.tr/Help/apiIntegrationDocument` — could not be fetched in this research pass. The
-  fetch failed with a tool-level provenance/permission timeout (`PROVENANCE_REQUIRED`), not a
-  content refusal, on two attempts. **This is an open lead, not a dead end** — a human with direct
-  browser access should check it before concluding either way.
-- WiseCP's page also links Garanti's and QNB's own integration-doc URLs directly
-  (`dev.garantibbva.com.tr/sanalpos-satis-on-otorizasyon-3dli`,
-  `vpos.qnb.com.tr/Help/apiIntegrationDocument`) — worth a human revisiting both with a real
-  browser session, since this research pass's automated fetch tooling could reach one and not the
-  other.
+- [github.com/uskur/omnipay-nestpay](https://github.com/uskur/omnipay-nestpay) — `src/Message/PostRequest.php`
+  (the "3D Pay Hosting" request builder), `src/ThreeDPayHostingGateway.php`, `src/Message/PostResponse.php`.
+- [github.com/mewebstudio/pos](https://github.com/mewebstudio/pos) — actively maintained,
+  `src/Gateway/AssecoPos.php`, `src/Crypt/AssecoPosCrypt.php`,
+  `src/DataMapper/Request/Mapper/AssecoPosRequestDataMapper.php`,
+  `src/DataMapper/Response/Mapper/AssecoPosResponseDataMapper.php` — explicitly supports
+  `MODEL_3D_PAY_HOSTING`/`MODEL_3D_HOST`, with its own dedicated hash and response-mapping classes.
 
-**Verdict applied, consistently with the rest of this file:** given that the two confirmed, citable
-Turkish-bank docs anywhere in this whole project (Garanti's non-3DS page, VakıfBank's PDF) both
-turned out to require raw-PAN submission, treating NestPay's own "Hosting" branding as proof of
-SAQ-A safety without a citable source would repeat the exact mistake this file's honesty rule
-exists to prevent. So: **stub**, with the finding documented plainly, not a guessed
-`BEST_EFFORT_UNVERIFIED` shape. See `lib/accounting/banks/nestpay_group.ts` for the code-level
-note.
+**The structural confirmation (not an inference from the word "Hosting"):** in BOTH libraries, the
+exact same request-builder function used for every NestPay storetype only adds card PAN/expiry/
+CVV fields `if ($creditCard instanceof CreditCardInterface)` — the hosting-mode call path passes
+no card object at all, so the resulting form has no card field. Cross-referencing two independent
+implementations of this detail (not just one) is what makes this a real confirmation rather than a
+guess.
+
+**Hash algorithm (`ver3`), identical in both libraries:** sort fields by key (natural,
+case-insensitive), escape `\`→`\\` and `|`→`\|` in each value, join with `|`, append the escaped
+store key as the final joined element, SHA-512 the UTF-8 string, base64-encode the **raw digest
+bytes** (not hex text). The same function verifies an inbound callback — recompute over its own
+fields (excluding `hash`/`HASH`/`encoding`/`nationalidno`) and compare to its `HASH` field.
+Implemented in `lib/accounting/banks/nestpay.ts` → `buildNestpayHash`, with a test that
+independently reproduces the algorithm rather than calling the function under test twice.
+
+**Confirmed callback fields** (from `AssecoPosResponseDataMapper::map3DHostResponseData` /
+`extractMdStatus` / `is3dAuthSuccess`): `oid`, `mdStatus` (`'1'` = full 3D Secure success only —
+`'2'`/`'3'`/`'4'` = "half 3D Secure", mapped to `failed` here out of caution, not `captured`),
+`amount`, `currency`, `taksit`, `maskedCreditCard` (masked, never full PAN), `mdErrorMsg`. For the
+Hosting model the callback IS the final result — no separate provisioning call follows it.
+
+**What is still NOT verified, disclosed plainly (so this doesn't read as more certain than it
+is):** no primary bank-published PDF was located this pass either — this status rests on
+cross-referencing two independent, real, production-used implementations, which is the standard
+Kaan asked for, but is one tier below reading a bank's own current spec directly (iyzico's
+status). Exact field-name casing is known to vary slightly bank-to-bank in practice (e.g.
+`Instalment` vs `taksit`, `HASH` vs `hash`) — the adapter sends both common hash-field casings
+defensively rather than guessing one, and does NOT hardcode any bank's hostname: `gatewayUrl` is a
+required merchant-supplied field (Kaan's own instruction), which is also the honest choice given
+that variance. The offline XML status-query API (needed only if a webhook/callback is missed) was
+**not** built this pass — `queryStatus` throws a clear, actionable error rather than fabricating
+an XML-API caller from a shape that wasn't independently confirmed.
+
+One lead from the first pass remains genuinely open, not resolved either way: QNB's own
+`vpos.qnb.com.tr/Help/apiIntegrationDocument` still could not be fetched (tool-level
+provenance/permission timeout, not a content refusal) — worth a human checking with a real
+browser session, independent of the above (this file's VERIFIED status does not depend on it).
 
 | Banks | Adapter keys | Status |
 |-------|--------------|--------|
-| İş Bankası, Halkbank, TEB, QNB Finansbank, Ziraat, Akbank | `isbank`, `halkbank`, `teb`, `qnb`, `ziraat`, `akbank` (one shared stub factory) | STUB — protocol ambiguous/unconfirmed from public sources; one lead (QNB's own doc) blocked by a tool-level fetch timeout, not resolved either way |
+| İş Bankası, Halkbank, TEB, QNB Finansbank, Ziraat, Akbank | `isbank`, `halkbank`, `teb`, `qnb`, `ziraat`, `akbank` (one shared real adapter, `nestpay.ts`) | **REAL — VERIFIED by protocol cross-reference** (3D Pay Hosting mode; see above for exactly what was and wasn't confirmed) |
+
+### First-pass findings (2026-10-15, superseded above, kept for the record)
+
+The earlier pass found no official, bank- or Asseco-published developer documentation of the
+NestPay "3D Pay Hosting" protocol in a modern web portal, and stopped there rather than reading
+open-source implementations' actual source code (it only read their READMEs, which were
+genuinely ambiguous on card handling). That was the gap Kaan's follow-up instruction closed.
 
 **Garanti BBVA and Yapı Kredi (Posnet)** are explicitly phased as "then" steps after NestPay per
 Kaan's own instruction — not attempted again in this pass. Garanti's status is unchanged from the
