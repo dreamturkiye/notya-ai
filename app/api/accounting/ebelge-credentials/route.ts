@@ -13,7 +13,7 @@ import { getEbelgeAdapter } from '@/lib/accounting/ebelge'
 import { writeAuditLog } from '@/lib/accounting/audit'
 import type { EbelgeVendor } from '@/lib/accounting/types'
 
-const VENDORS: EbelgeVendor[] = ['generic_rest', 'nes', 'qnb_esolutions', 'logo', 'other']
+const VENDORS: EbelgeVendor[] = ['generic_rest', 'parasut', 'nes', 'qnb_esolutions', 'logo', 'other']
 
 export async function GET(req: NextRequest) {
   const oturum = await doktorOturum(req)

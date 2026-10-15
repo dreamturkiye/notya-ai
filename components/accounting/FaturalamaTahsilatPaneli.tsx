@@ -10,6 +10,7 @@ import React, { useCallback, useEffect, useState } from 'react'
 import { getDoctorAccessToken } from '@/lib/doktor/clientAuth'
 import { CHROME_RENK, CHROME_FONT } from '@/lib/doktor/chromeTheme'
 import { formatTRY } from '@/lib/accounting/ledger/money'
+import { DosyaSecDugmesi } from '@/components/core/DosyaSecDugmesi'
 
 const TEAL = CHROME_RENK.pine
 const CARD = '#FFFFFF'
@@ -42,6 +43,7 @@ const DOC_TYPE_LABELS: Record<string, string> = { esmm: 'e-SMM', efatura: 'e-Fat
 
 const EBELGE_VENDOR_LABELS: Record<string, string> = {
   generic_rest: 'Genel REST',
+  parasut: 'Paraşüt',
   nes: 'NES',
   qnb_esolutions: 'QNB eSolutions',
   logo: 'Logo',
@@ -58,6 +60,11 @@ const CREDENTIAL_FIELD_LABELS: Record<string, string> = {
   gatewayUrl: 'Sanal POS Adresi',
   username: 'Kullanıcı Adı',
   password: 'Şifre',
+  // Paraşüt (lib/accounting/ebelge/parasut.ts) — doktorun kendi Paraşüt hesabı/uygulaması.
+  apiBaseUrl: 'API Adresi (v4)',
+  tokenUrl: 'OAuth Token Adresi',
+  clientSecret: 'Client Secret',
+  companyId: 'Şirket No (company_id)',
 }
 
 function formatMaskedFields(fields: Record<string, string> | undefined | null): string {
@@ -156,16 +163,26 @@ const buttonStyle: React.CSSProperties = {
 
 export default function FaturalamaTahsilatPaneli() {
   const [tab, setTab] = useState<Tab>('kurulum')
+  // NOTYA-ACCOUNTING-ENCOUNTER-01: a draft created from the "Faturala" end-of-muayene flow hands
+  // off here via ?tab=faturalar&invoiceId=<id> — read once on mount (no next/navigation hook, so
+  // this stays a plain client component with no Suspense-boundary requirement).
+  const [highlightInvoiceId, setHighlightInvoiceId] = useState<string | null>(null)
   const [enabled, setEnabled] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
 
-  // Tax profile
-  const [tax, setTax] = useState({ idType: 'tckn', idValue: '', unvan: '', address: '', vergiDairesi: '' })
+  // Tax profile — iban + logo added for real-looking invoice/makbuz PDFs (NOTYA-ACCOUNTING-ENCOUNTER-01).
+  const [tax, setTax] = useState({ idType: 'tckn', idValue: '', unvan: '', address: '', vergiDairesi: '', iban: '' })
+  // IBAN is secret (financial account data) — like idValue, the GET route never returns it in
+  // clear, only a masked hint. `tax.iban` therefore stays blank after load (blank on save = "leave
+  // the stored IBAN unchanged", enforced server-side) and this holds only the display hint.
+  const [ibanMasked, setIbanMasked] = useState('')
+  const [logoDataUrl, setLogoDataUrl] = useState<string | null>(null)
+  const [logoUploading, setLogoUploading] = useState(false)
 
   // e-Belge
-  const [ebelgeVendor, setEbelgeVendor] = useState<'generic_rest' | 'nes' | 'qnb_esolutions' | 'logo' | 'other'>('generic_rest')
+  const [ebelgeVendor, setEbelgeVendor] = useState<'generic_rest' | 'parasut' | 'nes' | 'qnb_esolutions' | 'logo' | 'other'>('generic_rest')
   const [ebelgeEnv, setEbelgeEnv] = useState<'test' | 'live'>('test')
   const [ebelgeFields, setEbelgeFields] = useState<Record<string, string>>({ baseUrl: '', apiKey: '' })
   const [ebelgeStatus, setEbelgeStatus] = useState<any>(null)
@@ -201,11 +218,14 @@ export default function FaturalamaTahsilatPaneli() {
   const [draft, setDraft] = useState<{ patientId: string; serviceId: string; quantity: string }>({ patientId: '', serviceId: '', quantity: '1' })
   const [busyInvoiceId, setBusyInvoiceId] = useState<string | null>(null)
 
-  // Raporlar — mali müşavir aylık raporu. Strictly monthly (Kaan, 2026-10-15: "Bu raporlar
-  // sadece aylık olabilir") — no custom range anywhere in this tab.
+  // Raporlar — mali müşavir raporu, aylık veya günlük (NOTYA-ACCOUNTING-DAILY-01, 2026-10-15:
+  // Kaan reversed the earlier monthly-only scope call that same day after beta doctors asked for a
+  // daily view too — docs/OPEN-COMMITMENTS.md). Still never a free-form custom date range.
   const now = new Date()
+  const [raporGranularity, setRaporGranularity] = useState<'ay' | 'gun'>('ay')
   const [musavirYear, setMusavirYear] = useState(now.getFullYear())
   const [musavirMonth, setMusavirMonth] = useState(now.getMonth() + 1)
+  const [musavirDay, setMusavirDay] = useState(now.getDate())
   const [musavirReport, setMusavirReport] = useState<any>(null)
   const [musavirLoading, setMusavirLoading] = useState(false)
   const [musavirExporting, setMusavirExporting] = useState(false)
@@ -226,6 +246,21 @@ export default function FaturalamaTahsilatPaneli() {
       setEbelgeStatus(eb.data)
       const inv = await api('/invoices')
       setInvoices(inv.data || [])
+      const tp = await api('/tax-profile')
+      if (tp.data) {
+        setTax((t) => ({
+          ...t,
+          idType: tp.data.id_type || t.idType,
+          unvan: tp.data.unvan || '',
+          address: tp.data.address || '',
+          vergiDairesi: tp.data.vergi_dairesi || '',
+        }))
+        setIbanMasked(tp.data.ibanMasked || '')
+      }
+      try {
+        const logo = await api('/tax-profile/logo')
+        setLogoDataUrl(logo.data?.dataUrl || null)
+      } catch { /* logo optional */ }
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Yüklenemedi.')
     } finally {
@@ -236,6 +271,16 @@ export default function FaturalamaTahsilatPaneli() {
   useEffect(() => {
     void load()
   }, [load])
+
+  useEffect(() => {
+    try {
+      const sp = new URLSearchParams(window.location.search)
+      const t = sp.get('tab')
+      if (t && ['kurulum', 'katalog', 'faturalar', 'tahsilat', 'raporlar'].includes(t)) setTab(t as Tab)
+      const inv = sp.get('invoiceId')
+      if (inv) setHighlightInvoiceId(inv)
+    } catch { /* query parse is best-effort only */ }
+  }, [])
 
   const toggleModule = async (next: boolean) => {
     try {
@@ -248,8 +293,12 @@ export default function FaturalamaTahsilatPaneli() {
 
   const saveTax = async () => {
     try {
-      await api('/tax-profile', { method: 'PUT', body: JSON.stringify(tax) })
+      const res = await api('/tax-profile', { method: 'PUT', body: JSON.stringify(tax) })
       setNotice('Vergi profili kaydedildi.')
+      if (res.data?.ibanMasked !== undefined) {
+        setIbanMasked(res.data.ibanMasked || '')
+        setTax((t) => ({ ...t, iban: '' }))
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Kaydedilemedi.')
     }
@@ -409,10 +458,11 @@ export default function FaturalamaTahsilatPaneli() {
     }
   }
 
-  const loadMusavirReport = useCallback(async (year: number, month: number) => {
+  const loadMusavirReport = useCallback(async (year: number, month: number, granularity: 'ay' | 'gun', day: number) => {
     setMusavirLoading(true)
     try {
-      const res = await api(`/reports?type=musavir&year=${year}&month=${month}`)
+      const q = granularity === 'gun' ? `type=daily&year=${year}&month=${month}&day=${day}` : `type=musavir&year=${year}&month=${month}`
+      const res = await api(`/reports?${q}`)
       setMusavirReport(res.data)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Rapor yüklenemedi.')
@@ -425,9 +475,10 @@ export default function FaturalamaTahsilatPaneli() {
     setMusavirExporting(true)
     try {
       const token = getDoctorAccessToken()
-      const res = await fetch(`/api/accounting/reports/musavir-export?year=${musavirYear}&month=${musavirMonth}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+      const path = raporGranularity === 'gun'
+        ? `/api/accounting/reports/daily-export?year=${musavirYear}&month=${musavirMonth}&day=${musavirDay}`
+        : `/api/accounting/reports/musavir-export?year=${musavirYear}&month=${musavirMonth}`
+      const res = await fetch(path, { headers: { Authorization: `Bearer ${token}` } })
       if (!res.ok) {
         const json = await res.json().catch(() => ({}))
         throw new Error(json.error || 'Rapor oluşturulamadı.')
@@ -436,7 +487,9 @@ export default function FaturalamaTahsilatPaneli() {
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `musavir-raporu-${musavirYear}-${String(musavirMonth).padStart(2, '0')}.xlsx`
+      a.download = raporGranularity === 'gun'
+        ? `musavir-raporu-${musavirYear}-${String(musavirMonth).padStart(2, '0')}-${String(musavirDay).padStart(2, '0')}.xlsx`
+        : `musavir-raporu-${musavirYear}-${String(musavirMonth).padStart(2, '0')}.xlsx`
       document.body.appendChild(a)
       a.click()
       a.remove()
@@ -480,7 +533,7 @@ export default function FaturalamaTahsilatPaneli() {
             onClick={() => {
               setTab(t.key)
               if (t.key === 'tahsilat') void loadAging()
-              if (t.key === 'raporlar' && !musavirReport) void loadMusavirReport(musavirYear, musavirMonth)
+              if (t.key === 'raporlar' && !musavirReport) void loadMusavirReport(musavirYear, musavirMonth, raporGranularity, musavirDay)
             }}
             style={{
               padding: '7px 14px',
@@ -529,18 +582,58 @@ export default function FaturalamaTahsilatPaneli() {
                 <Field label="Vergi dairesi (opsiyonel)">
                   <input style={inputStyle} value={tax.vergiDairesi} onChange={(e) => setTax({ ...tax, vergiDairesi: e.target.value })} />
                 </Field>
+                <Field label={ibanMasked ? `IBAN (kayıtlı: ${ibanMasked} — değiştirmek için yeniden girin, boş bırakmak değiştirmez)` : 'IBAN (opsiyonel — fatura/makbuz üzerinde gösterilir)'}>
+                  <input style={inputStyle} placeholder="TR.. .. .... .... .... .... .." value={tax.iban} onChange={(e) => setTax({ ...tax, iban: e.target.value })} />
+                </Field>
                 <button style={buttonStyle} onClick={() => void saveTax()}>
                   Kaydet
                 </button>
+
+                <div style={{ marginTop: 18, paddingTop: 14, borderTop: `1px solid ${BORDER}` }}>
+                  <Field label="Logo (fatura/makbuz başlığında — JPEG/PNG/WebP, 2 MB'a kadar)">
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                      {logoDataUrl ? (
+                        <img src={logoDataUrl} alt="Logo" style={{ height: 48, maxWidth: 160, objectFit: 'contain', border: `1px solid ${BORDER}`, borderRadius: 8, padding: 4, background: '#fff' }} />
+                      ) : (
+                        <div style={{ fontSize: 12.5, color: MUTED }}>Henüz logo yüklenmedi.</div>
+                      )}
+                      <DosyaSecDugmesi
+                        dosya={null}
+                        etiket={logoUploading ? 'Yükleniyor…' : 'Logo seç'}
+                        accept="image/jpeg,image/png,image/webp"
+                        disabled={logoUploading}
+                        onSec={async (file) => {
+                          if (!file) return
+                          setLogoUploading(true)
+                          try {
+                            const token = getDoctorAccessToken()
+                            const form = new FormData()
+                            form.append('file', file)
+                            const res = await fetch('/api/accounting/tax-profile/logo', { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: form })
+                            const json = await res.json()
+                            if (!res.ok) throw new Error(json.error || 'Logo yüklenemedi.')
+                            setLogoDataUrl(json.data?.dataUrl || null)
+                            setNotice('Logo kaydedildi.')
+                          } catch (err) {
+                            setError(err instanceof Error ? err.message : 'Logo yüklenemedi.')
+                          } finally {
+                            setLogoUploading(false)
+                          }
+                        }}
+                      />
+                    </div>
+                  </Field>
+                </div>
               </SectionCard>
 
               <SectionCard
                 title="e-Belge entegratörü"
-                subtitle="e-SMM / e-Fatura / e-Arşiv, sizin entegratörünüz üzerinden gönderilir. Şu an yalnız 'Genel REST' sağlayıcısı gerçek çalışır bağlantıdır; NES / QNB eSolutions / Logo için kontrol listesi: lib/accounting/ebelge/CHECKLIST.md."
+                subtitle="e-SMM / e-Fatura / e-Arşiv, sizin entegratörünüz üzerinden gönderilir — bu sizin kendi Paraşüt/NES/QNB eSolutions/Logo hesabınızdır, Notya'nın değil. 'Genel REST' ve 'Paraşüt' gerçek çalışır bağlantılardır (Paraşüt: çapraz kaynaklı, Paraşüt'ün kendi birincil dokümantasyonu bu oturumdan erişilemedi — bkz. CHECKLIST.md). NES / QNB eSolutions / Logo için kontrol listesi: lib/accounting/ebelge/CHECKLIST.md."
               >
                 <Field label="Entegratör">
                   <select style={inputStyle} value={ebelgeVendor} onChange={(e) => setEbelgeVendor(e.target.value as any)}>
                     <option value="generic_rest">Genel REST (gerçek, sandbox uyumlu)</option>
+                    <option value="parasut">Paraşüt (gerçek — e-SMM/e-Arşiv; e-Fatura henüz yok)</option>
                     <option value="nes">NES (henüz uygulanmadı)</option>
                     <option value="qnb_esolutions">QNB eSolutions (henüz uygulanmadı)</option>
                     <option value="logo">Logo (henüz uygulanmadı)</option>
@@ -553,12 +646,40 @@ export default function FaturalamaTahsilatPaneli() {
                     <option value="live">Canlı</option>
                   </select>
                 </Field>
-                <Field label="Servis Adresi (URL)">
-                  <input style={inputStyle} value={ebelgeFields.baseUrl || ''} onChange={(e) => setEbelgeFields({ ...ebelgeFields, baseUrl: e.target.value })} />
-                </Field>
-                <Field label="API Anahtarı">
-                  <input style={inputStyle} type="password" value={ebelgeFields.apiKey || ''} onChange={(e) => setEbelgeFields({ ...ebelgeFields, apiKey: e.target.value })} />
-                </Field>
+                {ebelgeVendor === 'parasut' ? (
+                  <>
+                    <Field label="API Adresi (v4) — örn. https://api.parasut.com/v4">
+                      <input style={inputStyle} value={ebelgeFields.apiBaseUrl || ''} onChange={(e) => setEbelgeFields({ ...ebelgeFields, apiBaseUrl: e.target.value })} />
+                    </Field>
+                    <Field label="OAuth Token Adresi (Paraşüt Geliştirici Paneli'nden)">
+                      <input style={inputStyle} value={ebelgeFields.tokenUrl || ''} onChange={(e) => setEbelgeFields({ ...ebelgeFields, tokenUrl: e.target.value })} />
+                    </Field>
+                    <Field label="Client ID">
+                      <input style={inputStyle} value={ebelgeFields.clientId || ''} onChange={(e) => setEbelgeFields({ ...ebelgeFields, clientId: e.target.value })} />
+                    </Field>
+                    <Field label="Client Secret">
+                      <input style={inputStyle} type="password" value={ebelgeFields.clientSecret || ''} onChange={(e) => setEbelgeFields({ ...ebelgeFields, clientSecret: e.target.value })} />
+                    </Field>
+                    <Field label="Paraşüt E-posta">
+                      <input style={inputStyle} value={ebelgeFields.username || ''} onChange={(e) => setEbelgeFields({ ...ebelgeFields, username: e.target.value })} />
+                    </Field>
+                    <Field label="Paraşüt Şifre">
+                      <input style={inputStyle} type="password" value={ebelgeFields.password || ''} onChange={(e) => setEbelgeFields({ ...ebelgeFields, password: e.target.value })} />
+                    </Field>
+                    <Field label="Şirket No (company_id)">
+                      <input style={inputStyle} value={ebelgeFields.companyId || ''} onChange={(e) => setEbelgeFields({ ...ebelgeFields, companyId: e.target.value })} />
+                    </Field>
+                  </>
+                ) : (
+                  <>
+                    <Field label="Servis Adresi (URL)">
+                      <input style={inputStyle} value={ebelgeFields.baseUrl || ''} onChange={(e) => setEbelgeFields({ ...ebelgeFields, baseUrl: e.target.value })} />
+                    </Field>
+                    <Field label="API Anahtarı">
+                      <input style={inputStyle} type="password" value={ebelgeFields.apiKey || ''} onChange={(e) => setEbelgeFields({ ...ebelgeFields, apiKey: e.target.value })} />
+                    </Field>
+                  </>
+                )}
                 <div style={{ display: 'flex', gap: 10 }}>
                   <button style={buttonStyle} onClick={() => void saveEbelge()}>
                     Kaydet
@@ -772,13 +893,37 @@ export default function FaturalamaTahsilatPaneli() {
 
               <SectionCard title="Faturalar" subtitle="Son 100 fatura.">
                 {invoices.map((inv) => (
-                  <div key={inv.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderTop: `1px solid ${BORDER}`, fontSize: 13.5, gap: 10 }}>
+                  <div key={inv.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 10px', margin: '0 -10px', borderTop: `1px solid ${BORDER}`, borderRadius: inv.id === highlightInvoiceId ? 10 : 0, background: inv.id === highlightInvoiceId ? '#E4F3F1' : 'transparent', fontSize: 13.5, gap: 10 }}>
                     <div>
-                      {DOC_TYPE_LABELS[inv.doc_type] || inv.doc_type.toUpperCase()} — {INVOICE_STATUS_LABELS[inv.status] || inv.status} {inv.ebelge_doc_number ? `(${inv.ebelge_doc_number})` : ''}
+                      {inv.encounter_id ? '📋 ' : ''}{DOC_TYPE_LABELS[inv.doc_type] || inv.doc_type.toUpperCase()} — {INVOICE_STATUS_LABELS[inv.status] || inv.status} {inv.ebelge_doc_number ? `(${inv.ebelge_doc_number})` : ''}
                       {inv.ebelge_last_error && <div style={{ color: WARN, fontSize: 11.5 }}>{inv.ebelge_last_error}</div>}
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <span>{formatTRY(inv.total_kurus)}</span>
+                      <a
+                        href={`/api/accounting/invoices/${inv.id}/pdf`}
+                        target="_blank"
+                        rel="noreferrer"
+                        onClick={(e) => {
+                          // PDF route needs the bearer token too; a plain <a> can't send headers,
+                          // so this opens via a token-bearing fetch + blob URL instead of the bare href.
+                          e.preventDefault()
+                          void (async () => {
+                            try {
+                              const token = getDoctorAccessToken()
+                              const res = await fetch(`/api/accounting/invoices/${inv.id}/pdf`, { headers: { Authorization: `Bearer ${token}` } })
+                              if (!res.ok) { const j = await res.json().catch(() => ({})); throw new Error(j.error || 'PDF oluşturulamadı.') }
+                              const blob = await res.blob()
+                              window.open(URL.createObjectURL(blob), '_blank')
+                            } catch (err) {
+                              setError(err instanceof Error ? err.message : 'PDF oluşturulamadı.')
+                            }
+                          })()
+                        }}
+                        style={{ fontSize: 12, color: TEAL, textDecoration: 'none', border: `1px solid ${TEAL}`, borderRadius: 999, padding: '6px 10px' }}
+                      >
+                        PDF
+                      </a>
                       {inv.status === 'draft' && (
                         <button style={{ ...buttonStyle, padding: '6px 10px', fontSize: 12 }} disabled={busyInvoiceId === inv.id} onClick={() => void issueOne(inv.id)}>
                           Kes
@@ -822,9 +967,39 @@ export default function FaturalamaTahsilatPaneli() {
           {tab === 'raporlar' && (
             <SectionCard
               title="Raporlar"
-              subtitle="Aylık gelir-gider özeti, kesilen belgeler, tahsilat ve KDV — mali müşavirinize göndermek için. Bu raporlar sadece aylık görüntülenir."
+              subtitle="Gelir-gider özeti, kesilen belgeler, tahsilat ve KDV — mali müşavirinize göndermek için. Aylık veya günlük görüntülenebilir; hâlâ serbest bir tarih aralığı yok."
             >
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: 10, alignItems: 'end', marginBottom: 18 }}>
+              <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
+                {(['ay', 'gun'] as const).map((g) => (
+                  <button
+                    key={g}
+                    type="button"
+                    onClick={() => { setRaporGranularity(g); void loadMusavirReport(musavirYear, musavirMonth, g, musavirDay) }}
+                    style={{ padding: '6px 14px', borderRadius: 999, border: `1px solid ${TEAL}`, background: raporGranularity === g ? TEAL : '#fff', color: raporGranularity === g ? '#fff' : TEAL, fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}
+                  >
+                    {g === 'ay' ? 'Aylık' : 'Günlük'}
+                  </button>
+                ))}
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: raporGranularity === 'gun' ? '1fr 1fr 1fr auto' : '1fr 1fr auto', gap: 10, alignItems: 'end', marginBottom: 18 }}>
+                {raporGranularity === 'gun' && (
+                  <Field label="Gün">
+                    <select
+                      style={inputStyle}
+                      value={musavirDay}
+                      onChange={(e) => {
+                        const d = Number(e.target.value)
+                        setMusavirDay(d)
+                        void loadMusavirReport(musavirYear, musavirMonth, raporGranularity, d)
+                      }}
+                    >
+                      {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
+                        <option key={d} value={d}>{d}</option>
+                      ))}
+                    </select>
+                  </Field>
+                )}
                 <Field label="Ay">
                   <select
                     style={inputStyle}
@@ -832,7 +1007,7 @@ export default function FaturalamaTahsilatPaneli() {
                     onChange={(e) => {
                       const m = Number(e.target.value)
                       setMusavirMonth(m)
-                      void loadMusavirReport(musavirYear, m)
+                      void loadMusavirReport(musavirYear, m, raporGranularity, musavirDay)
                     }}
                   >
                     {AY_ADLARI.map((ad, i) => (
@@ -849,7 +1024,7 @@ export default function FaturalamaTahsilatPaneli() {
                     onChange={(e) => {
                       const y = Number(e.target.value)
                       setMusavirYear(y)
-                      void loadMusavirReport(y, musavirMonth)
+                      void loadMusavirReport(y, musavirMonth, raporGranularity, musavirDay)
                     }}
                   >
                     {[now.getFullYear(), now.getFullYear() - 1, now.getFullYear() - 2].map((y) => (
@@ -871,7 +1046,7 @@ export default function FaturalamaTahsilatPaneli() {
               {musavirLoading ? (
                 <div style={{ color: MUTED, fontSize: 13 }}>Yükleniyor…</div>
               ) : !musavirReport ? (
-                <div style={{ color: MUTED, fontSize: 13 }}>Seçilen ay için henüz veri yüklenmedi.</div>
+                <div style={{ color: MUTED, fontSize: 13 }}>Seçilen {raporGranularity === 'gun' ? 'gün' : 'ay'} için henüz veri yüklenmedi.</div>
               ) : (
                 <>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 18 }}>

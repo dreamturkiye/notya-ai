@@ -22,7 +22,7 @@
 import * as XLSX from 'xlsx'
 import type { MonthlyMusavirReport } from './monthly'
 
-const AY_ADLARI = [
+export const AY_ADLARI = [
   'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
   'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık',
 ]
@@ -41,16 +41,31 @@ function dateOnly(iso: string): string {
   return iso.slice(0, 10)
 }
 
-/** Builds the workbook buffer. Pure (no I/O) — the API route is the only place that writes it out. */
-export function buildMusavirExportWorkbook(report: MonthlyMusavirReport, doctorLabel?: string): Buffer {
+/**
+ * Builds the workbook buffer. Pure (no I/O) — the API route is the only place that writes it out.
+ *
+ * `periodLabelOverride` (NOTYA-ACCOUNTING-DAILY-01, 2026-10-15): lets the daily-export route reuse
+ * this exact function/layout for a single-day report — the only thing that differs between a
+ * monthly and a daily export is the human-readable period string ("Ekim 2026" vs "15 Ekim 2026"),
+ * everything else (sheet layout, column order, TRY-not-string numeric cells) is identical and
+ * shared, per Kaan's own "low-effort to reuse" instruction. Any report shaped like
+ * `MonthlyMusavirReport` (daily's report has the same fields, just a different `period` shape)
+ * works here unchanged when a label is supplied.
+ */
+export function buildMusavirExportWorkbook(
+  report: MonthlyMusavirReport,
+  doctorLabel?: string,
+  periodLabelOverride?: string,
+  reportKindLabel: 'Aylık' | 'Günlük' = 'Aylık'
+): Buffer {
   const { period, gelirGiderIcmali, kesilenBelgeler, kdvOzeti, tahsilatOzeti, stopajNotu } = report
-  const donemEtiketi = `${AY_ADLARI[period.month - 1]} ${period.year}`
+  const donemEtiketi = periodLabelOverride || `${AY_ADLARI[period.month - 1]} ${period.year}`
 
   const wb = XLSX.utils.book_new()
 
   // 1) Gelir-Gider Özeti
   const ozetRows: (string | number)[][] = [
-    ['Mali Müşavire Aylık Rapor'],
+    [`Mali Müşavire ${reportKindLabel} Rapor`],
     ['Dönem', donemEtiketi],
     ...(doctorLabel ? [['Hekim/Klinik', doctorLabel]] : []),
     [],
@@ -108,4 +123,11 @@ export function buildMusavirExportWorkbook(report: MonthlyMusavirReport, doctorL
 export function musavirExportFilename(period: { year: number; month: number }): string {
   const mm = String(period.month).padStart(2, '0')
   return `musavir-raporu-${period.year}-${mm}.xlsx`
+}
+
+/** NOTYA-ACCOUNTING-DAILY-01 — daily-report filename counterpart. */
+export function dailyMusavirExportFilename(period: { year: number; month: number; day: number }): string {
+  const mm = String(period.month).padStart(2, '0')
+  const dd = String(period.day).padStart(2, '0')
+  return `musavir-raporu-${period.year}-${mm}-${dd}.xlsx`
 }

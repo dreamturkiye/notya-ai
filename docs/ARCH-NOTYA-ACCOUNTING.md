@@ -1018,12 +1018,159 @@ See this round's dated entry in `docs/OPEN-COMMITMENTS.md` for the test/typechec
 
 ---
 
+## 4.10 Three audit gaps closed: invoice-from-encounter, daily reports, e-belge/branding strengthening (2026-10-15, eighth round)
+
+Source: a fresh skeptical audit scored the module Strong (pricing/catalog) / Partial (invoice
+generation) / Strong-monthly-only (reports — a scope call this same day, reversed because beta
+doctors asked for daily too) / Missing (e-Fatura/e-Arşiv). Built on `feat/accounting-strong-closeout`
+off `main`, in its own worktree. Per the standing rule on this project, pushed, **not merged, not
+deployed** — Kaan's explicit say is required and wasn't given.
+
+### 4.10.1 Invoice generation: Partial → real encounter-linked flow
+
+**Gap closed.** `accounting_invoices` gained a nullable `encounter_id` FK to `sessions.id`
+(migration `158_accounting_encounter_branding.sql`) — `sessions` is this repo's actual clinical
+visit/muayene record (confirmed via `lib/db/schema.sql`), there is no separate "encounters" table.
+`lib/accounting/invoices/engine.ts`'s `createDraftInvoice()` now resolves and verifies
+`patientId`/`encounterId` via the existing `seansSahibi()` ownership helper
+(`lib/doktor/hastaSahipligi.ts`) before any write — the same ownership-isolation pattern
+`hasta-izolasyon` requires for every patient/session-derived id, reused rather than reinvented.
+
+A new "🧾 Faturala" button is on the muayene note page (`app/dashboard/doktor/notlar/[id]/page.tsx`),
+in the sticky header action bar next to Tetkikler/Sil/Onayla — not buried in the accounting panel —
+shown only when the note is `onayli` and the accounting module is enabled for this doctor
+(`faturalamaAcik`, fetched from `/api/accounting/module`). This mirrors the "bill at the end of the
+visit, after the clinical note is locked" pattern common to EHR/PM products (Kareo/Tebra, DrChrono,
+athenahealth all surface billing as a post-encounter action, not a separate standalone module entry
+point) rather than inventing a bespoke UX.
+
+Clicking it navigates to a new review page, `app/dashboard/doktor/notlar/[id]/faturala/page.tsx`,
+which calls `POST /api/accounting/invoices/suggest-from-encounter`
+(`suggestEncounterInvoiceLines()` in `engine.ts`) to pre-fill line items from the active
+`accounting_services` catalog — the first `muayene`-kind service, plus any administered aşı names
+matched against `asi`-kind catalog entries by normalized name — with the patient already resolved
+from the encounter (**no manual "Hasta ID" typing**, closing the audit's specific complaint). The
+doctor can edit/remove/add lines on this page before "Taslak oluştur" calls the existing
+`POST /api/accounting/invoices` (now accepting `encounterId`) and redirects into the existing
+Faturalama panel, pre-populated, to issue from there — reusing the issue/cancel/credit machinery
+rather than duplicating it.
+
+**Cross-specialty universality**: `app/dashboard/doktor/notlar/[id]/page.tsx` is the single shared
+note page for all ~30 specialties — no branch/fork by specialty exists in this file or in the new
+`faturala/` page, `suggest-from-encounter` route, or engine changes. Per
+`brans-alan-sizmasi`/`specialty-universal-vs-chapter`: this is shared-spine chrome (an action on the
+universal note-approval bar), not chapter content, so it correctly stays ungated — every specialty
+gets the identical "Faturala" button under the identical condition (`onayli && faturalamaAcik`).
+No specialty-specific field was added to get here.
+
+### 4.10.2 Daily reports: monthly-only scope reversed
+
+Kaan's earlier same-day call ("Bu raporlar sadece aylık olabilir") is explicitly reversed, dated
+**2026-10-15**, because beta doctors asked for a daily view too — recorded in
+`docs/OPEN-COMMITMENTS.md`'s dated entry for this round. `lib/accounting/reports/daily.ts` mirrors
+`monthly.ts`'s exact shape (`DailyPeriod`, `dayBoundsIso()`, `aggregateDailyMusavirReport()`,
+`buildDailyMusavirReport()`), reusing `monthly.ts`'s raw-row types and `STOPAJ_NOTU` constant
+(exported for this reuse) rather than duplicating them. `app/api/accounting/reports/route.ts` gained
+a `type=daily` branch; `app/api/accounting/reports/daily-export/route.ts` reuses
+`buildMusavirExportWorkbook()` unchanged (extended with an optional `periodLabelOverride`/
+`reportKindLabel` pair) for the Excel export, per Kaan's own "low-effort to reuse" steer — the sheet
+layout, column order and TRY-not-string numeric cells are identical between daily and monthly, only
+the period label differs. The Raporlar tab in `FaturalamaTahsilatPaneli.tsx` gained an Ay/Gün toggle
+and a day picker; its old "sadece aylık" subtitle text is gone.
+
+### 4.10.3 e-Fatura / e-Arşiv: Missing → Partial-strong, one named external blocker remains
+
+**Regulatory model re-verified, not changed**: re-reading §2.3.1 and the existing
+`accounting_tax_profiles.id_type`/`default_doc_type` design confirms the e-SMM (serbest meslek
+erbabı hekim) vs e-Fatura/e-Arşiv (VKN-holding company above/exception threshold) split was already
+correctly modeled — no fix needed. Research this round sharpens the citation: e-SMM is mandatory
+for **every** serbest meslek erbabı regardless of revenue, with no threshold at all, since **1
+February 2020** (509 Sıra No'lu Vergi Usul Kanunu Genel Tebliği) — a stronger floor than the arch
+doc previously stated. e-Fatura becomes mandatory at the general 3M TL turnover threshold (2022+
+Tebliğ series), **or regardless of revenue for SGK-contracted sağlık hizmeti sunucuları** (the
+sector-specific exception already anticipated architecturally). e-Arşiv's own threshold was reduced
+to 3.000 TL for 2025 and the Tebliğ removes it entirely from 2026 — i.e. by regulation almost every
+remaining paper/e-Arşiv edge case is being phased out anyway, which if anything *reduces* the size
+of the remaining gap rather than growing it.
+
+**Integrator re-research, with fresh eyes, confirms the architecture (BYO-entegratör) was already
+right**: Notya is not and cannot be the GİB-connected party (Kaan's company isn't legally formed
+yet) — each doctor/klinik must enter **their own** integrator credentials, exactly what
+`accounting_ebelge_credentials` (per-doctor vault row) already implements; no change needed to that
+part. Checked for fresh public self-serve developer docs + sandbox on Nilvera, İzibiz, Foriba
+(Digital Planet), Uyumsoft, Mikro, alongside NES/QNB eSolutions/Logo: **none expose field-level API
+documentation publicly without a signed mükellef relationship** — same "pure access gap, not a
+protocol conflict" finding the 2026-10-15 research update in `lib/accounting/ebelge/CHECKLIST.md`
+already recorded for NES/QNB/Logo, now extended to the five newly-checked names too. **Paraşüt is
+the one exception**: it has a real, documented OAuth2 ("password" grant) JSON:API
+(`https://api.parasut.com/v4`, resources `e_smms`/`sales_invoices`/`e_archives`/`e_invoices`),
+confirmed by converging third-party/SDK documentation even though this session's own tooling
+couldn't directly fetch `apidocs.parasut.com` — stated at **BEST-EFFORT/cross-referenced**
+confidence, one tier below iyzico's `VERIFIED`, the same honesty convention
+`facilitators/iyzico.ts`'s comment header already established.
+
+**A real adapter was built**: `lib/accounting/ebelge/parasut.ts`
+(`createParasutEbelgeAdapter()`), registered in `ebelge/index.ts` and the `EbelgeVendor` union/
+credentials-route `VENDORS` list. It implements `esmm` (`POST /{companyId}/e_smms`) and `earsiv`
+(two-step `sales_invoices` → `e_archives`) against Paraşüt's documented fields.
+**`issue()` for `efatura` deliberately throws** rather than fabricate a call — Paraşüt's e-Fatura
+flow needs the buyer's GİB mailbox (PK) resolved first, which this module has no capture path for
+yet (tracked against the existing `ACCOUNTING-11` open item). `cancel()`/`credit()` return an honest
+"not documented" result rather than guessing an endpoint. This is a second real, non-stub adapter
+alongside `generic_rest.ts` — the checklist's "1 of 4 real" line is now out of date and corrected in
+`CHECKLIST.md` directly.
+
+**Company/practice profile + logo, real now**: `accounting_tax_profiles` gained `iban_enc` (via the
+existing string-PII `lib/security/encryption.ts` pattern, masked on read — `GET /tax-profile`
+returns `ibanMasked` like `TR12…6789`, never the full IBAN; `PUT` only touches `iban_enc` when a new
+value is typed, so a blank field never erases the stored one) and `logo_image_encrypted`/
+`logo_mime_type`/`logo_byte_length` (binary-safe `lib/vault/crypto.ts` pattern, mirroring
+`lib/doktor/avatar.ts`/`app/api/doktor/profil/avatar/route.ts` exactly). New route
+`app/api/accounting/tax-profile/logo/route.ts` (GET/POST/DELETE, 2MB cap, JPEG/PNG/WebP). The
+Faturalama panel's tax-profile form was also fixed to actually **load** the existing tax profile on
+open — a pre-existing bug (the form never fetched `/tax-profile` at all before this round) is now
+fixed in passing.
+
+**Real-looking PDF output, independent of any live integrator connection**: researched actual
+serbest meslek makbuzu / e-Arşiv fatura PDF layout conventions, then built
+`lib/accounting/invoices/invoicePdf.tsx` (`InvoicePdfBelgesi` + `invoicePdf()`) using
+`@react-pdf/renderer` with the same embedded Liberation Sans TTF pattern `lib/asi/karnePdf.tsx`
+already established (Helvetica lacks ı/İ/ş/Ş/ğ/Ğ). Renders: logo + hekim/klinik header (unvan,
+VKN/TCKN, vergi dairesi, adres), ETTN/belge no, tarih, a hizmet/hasta detay line table, KDV +
+stopaj breakdown (stopaj line honestly reads "Uygulanmadı" — this module does not withhold stopaj,
+it does not claim to), toplam, and a signature area — downloadable via
+`GET /api/accounting/invoices/[id]/pdf` **today**, before any GİB-connected integrator is live for
+that doctor, with a visible draft badge when the invoice hasn't been issued yet.
+
+**Verdict, stated plainly, not rounded up**: e-Fatura/e-Arşiv is **Partial-strong, not Strong** —
+the regulatory model is correct and cited, the architecture (BYO-entegratör, per-doctor credentials)
+is correct, one real integrator adapter now exists against real documented fields (Paraşüt, e-SMM +
+e-Arşiv; e-Fatura explicitly not yet, pending buyer-PK capture), company profile/logo/PDF output are
+all real and usable today independent of any live connection. **The named, non-engineering blocker
+that remains**: no sandbox credentials exist for Paraşüt or any other integrator in this
+environment, so `parasut.ts` has never been exercised against a live API — it is built against
+documented fields with high care, not live-tested. This is the same category of gap the bank
+adapters' own `CHECKLIST.md`/`docs/OPEN-COMMITMENTS.md` entries already flag for their own
+pre-go-live sandbox checks (ACCOUNTING-21/22) — a human with real credentials must run one live
+`testConnection()`/`issue()` round-trip before any doctor trusts this with a real document. Recorded
+in `docs/OPEN-COMMITMENTS.md`'s dated entry for this round.
+
+**Landing-page marketing-copy check (requested, not this round's work to fix)**: diffed
+`origin/feat/notya-landing-faturalama-capability` against `main` for the doktor/klinik landing pages
+and their content files. **Clean finding — nothing to flag.** The added "Faturalama" copy ("e-Belge,
+hizmeti veren hekimin kendi kimliğiyle kesilir", "Kart bilgisi hiçbir zaman Notya'da tutulmaz", "Ay
+sonu raporu mali müşavirinize tek tıkla") is accurate given the module's real BYO-entegratör/doctor-
+as-merchant-of-record architecture; no instance of "ready"/"hazır" or "ortağınız" (claiming a live
+integrator partnership) was found anywhere in that branch's diff.
+
+---
+
 ## 6. Compliance summary (TR)
 
 | Topic | Stance |
 |-------|--------|
 | GİB e-belge | Issued only via doctor’s registered integrator; Notya does not self-issue — **code-verified §4.9.4** |
-| e-SMM / e-Fatura / e-Arşiv | Primary e-SMM; others architecturally ready. UBL-TR/ETTN/mali mühür are the chosen integrator's responsibility by design — **no integrator chosen yet, §4.9.2** |
+| e-SMM / e-Fatura / e-Arşiv | e-SMM mandatory for every serbest meslek hekim with no revenue threshold since 1 Feb 2020 (509 Sıra No'lu VUK Genel Tebliği); e-Fatura at 3M TL turnover or for SGK-contracted sağlık sunucuları regardless of revenue; e-Arşiv threshold now 3.000 TL (2025), removed 2026 — **§4.10.3**. One real integrator adapter now exists (Paraşüt, `lib/accounting/ebelge/parasut.ts`, BEST-EFFORT, e-SMM+e-Arşiv; e-Fatura not yet — buyer PK unresolved, ACCOUNTING-11) alongside `generic_rest.ts`. UBL-TR/ETTN/mali mühür remain the chosen integrator's responsibility by design. **Partial-strong: no sandbox credentials to live-test `parasut.ts` in this environment — §4.10.3** |
 | KDV | Default **%10** for health services (now one named constant, `KDV_RATE_BP_HEALTH_DEFAULT`); traces to 7346 sayılı CBK (10 Jul 2023) — **moderate confidence current, not re-verified live, §4.9.1** |
 | Düzeltme/iade | `creditInvoice()` + `/api/accounting/invoices/[id]/credit` — **gap fixed §4.9.5** (was scaffolded, not callable) |
 | Retention | Invoice/ledger DATA never purged (code-verified); **PDF/XML bytes are not independently archived by Notya, only a vendor URL — open gap, §4.9.3** |
@@ -1203,10 +1350,13 @@ UI entry: **Entegrasyonlar → Faturalama & Tahsilat**.
 
 ## 9. Open decisions (non-blocking for this architecture)
 
-- Preferred e-belge integrator partner(s) for first production clinics.
+- Preferred e-belge integrator partner(s) for first production clinics — Paraşüt now has a real
+  built adapter (§4.10.3), still unverified against a live sandbox; final choice is still Kaan's.
 - Which bank goes live first in Phase 1 while Phase 2 completes the other ten.
 - Exact sekretary cancel/credit policy defaults.
 - Naming in nav: “Notya Accounting” (EN) vs “Faturalama & Tahsilat” (TR) — both refer to this sub-project.
+- Buyer GİB mailbox (PK) capture for `efatura` doc type (ACCOUNTING-11) — needed before
+  `parasut.ts`'s `issue()` can support `efatura`, not just `esmm`/`earsiv`.
 
 ---
 
@@ -1225,6 +1375,7 @@ UI entry: **Entegrasyonlar → Faturalama & Tahsilat**.
 | 1.8 | 2026-10-15 | VakıfBank, Denizbank, Kuveyt Türk researched directly on a fresh branch off `main` (`feat/notya-accounting-vakifbank-denizbank-kuveytturk`) — all three stay honest stubs (no genuinely hosted/SAQ-A-safe path confirmed for any), each now with its own dedicated, documented stub file instead of the generic factory. Added §4.7. Registry still 9 of 12 real. Pushed, not merged. |
 | 1.9 | 2026-10-15 | Added §4.9: 2026 compliance audit (KDV rate sourcing, buyer-identity placeholder fixed, düzeltme/credit-note capability built — was scaffolded, not callable — retention gap on PDF/XML bytes disclosed, doctor-as-issuer correctness code-verified) + late-payment reminders design pointer. Built on `feat/notya-accounting-compliance-tahsilat-hatirlatma`, off `main`, in its own worktree. §6 compliance summary table updated to match. |
 | 2.0 | 2026-10-15 | Final focused pass on the 3 remaining stubs, per Kaan's own explicit "only ship if genuinely hosted, otherwise keep the honest stub" instruction. Denizbank (`denizbank.ts`, InterPOS 3DHost) and VakıfBank (`vakifbank.ts`, PayFlex Common Payment) moved from stub to REAL via a `git clone`-based workaround for the prior pass's GitHub-provenance tooling block; Kuveyt Türk stays the one honest stub, re-checked and unchanged. Added §4.8, GET-callback handler on the bank webhook route. Registry now 11 of 12 real. Pushed `feat/notya-accounting-bank-final-pass`, not merged. |
+| 2.1 | 2026-10-15 | Added §4.10: closed three audit gaps. Invoice generation now links to the real clinical encounter (`sessions`) via a new "Faturala" button at the end of the muayene flow, pre-filling patient+lines, confirmed universal/ungated across all ~30 specialties. Daily reports added (`lib/accounting/reports/daily.ts`), the same-day monthly-only scope call explicitly reversed. e-Fatura/e-Arşiv: e-SMM mandatory-threshold research sharpened, a real Paraşüt adapter built (`ebelge/parasut.ts`, BEST-EFFORT, e-SMM+e-Arşiv only), company profile (IBAN, logo) + a real PDF generator (`invoicePdf.tsx`) built — verdict stated as Partial-strong, one named blocker (no live sandbox to test `parasut.ts` against). §6/§9 updated to match. Landing-page marketing-copy check (`feat/notya-landing-faturalama-capability`) found clean, nothing to flag. Built on `feat/accounting-strong-closeout`, pushed, not merged. |
 ---
 
 *End of master architecture — Notya Accounting / Faturalama & Tahsilat.*

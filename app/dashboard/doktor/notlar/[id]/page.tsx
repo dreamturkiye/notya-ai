@@ -162,8 +162,22 @@ export default function NotSayfasi() {
   // NOTYA-NOT-HIZ-03: öneri arka planda hazırlanıyor (yeni not, öneri alanları boş).
   const [oneriBekleniyor, setOneriBekleniyor] = useState(false);
   const ilkAiDegRef = useRef('');
+  // NOTYA-ACCOUNTING-ENCOUNTER-01: "Faturala" yalnız Faturalama & Tahsilat modülü açıkken
+  // gösterilir (docs/ARCH-NOTYA-ACCOUNTING.md §2.1 "Off -> no billing nav") — tek, hafif bir GET.
+  const [faturalamaAcik, setFaturalamaAcik] = useState(false);
 
   useEffect(() => { ilacRef.current = ilac }, [ilac])
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const t = await ensureDoctorAccessToken();
+        const r = await fetch('/api/accounting/module', { headers: { Authorization: `Bearer ${t}` } });
+        const j = await r.json();
+        setFaturalamaAcik(!!(r.ok && j.data?.enabled));
+      } catch { setFaturalamaAcik(false); }
+    })();
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -513,6 +527,22 @@ export default function NotSayfasi() {
         <a href={`/dashboard/doktor/notlar/${not.id}/yazdir`} target="_blank" rel="noreferrer" style={{ color: CHROME_RENK.ink, fontSize: 13, textDecoration: 'none', border: '1px solid rgba(58,44,34,0.16)', borderRadius: 999, padding: '7px 12px' }}>🖨️ Yazdır / PDF</a>
         <a href={`/dashboard/doktor/notlar/${not.id}/recete`} target="_blank" rel="noreferrer" style={{ color: CHROME_RENK.pine, fontSize: 13, textDecoration: 'none', border: '1px solid rgba(47,67,52,0.4)', borderRadius: 999, padding: '7px 12px' }}>🧾 Reçete</a>
         <a href={`/dashboard/doktor/notlar/${not.id}/tetkikler`} target="_blank" rel="noreferrer" style={{ color: CHROME_RENK.pine, fontSize: 13, textDecoration: 'none', border: '1px solid rgba(47,67,52,0.4)', borderRadius: 999, padding: '7px 12px' }}>🧪 Tetkikler</a>
+        {onayli && faturalamaAcik && (
+          // NOTYA-ACCOUNTING-ENCOUNTER-01: muayene bitince doğal son adım — "Faturala", bu
+          // muayeneyi (not.sessionId) ve o anki aşı listesini taslak faturaya taşır. Her branşta
+          // aynı (base/universal — bu sayfa tüm ~30 branşın paylaştığı tek notlar sayfası).
+          <button
+            type="button"
+            onClick={() => {
+              const asiParam = encodeURIComponent(asilar.map((a) => a.asi_adi).filter(Boolean).join('|'));
+              const sessionParam = not.sessionId ? `&session=${encodeURIComponent(not.sessionId)}` : '';
+              router.push(`/dashboard/doktor/notlar/${not.id}/faturala?asi=${asiParam}${sessionParam}`);
+            }}
+            style={{ color: CHROME_RENK.pine, fontSize: 13, background: 'transparent', textDecoration: 'none', border: '1px solid rgba(47,67,52,0.4)', borderRadius: 999, padding: '7px 12px', cursor: 'pointer' }}
+          >
+            🧾 Faturala
+          </button>
+        )}
         {!onayli && (
           <button type="button" onClick={() => { void notuSil() }} disabled={durum === 'kaydediyor'} style={{ background: 'transparent', border: '1px solid rgba(178,58,58,0.5)', color: '#B23A3A', borderRadius: 10, padding: '8px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
             Sil

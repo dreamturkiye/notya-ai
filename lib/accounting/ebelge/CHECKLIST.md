@@ -1,10 +1,12 @@
 # e-Belge adapter completion checklist
 
-Status: **1 of 4 registered adapters is real** (`generic_rest`). `nes`, `qnb_esolutions`, `logo`
-are stubs — they implement `EbelgeAdapter` and throw `AdapterNotImplementedError` with a pointer
-here instead of a fabricated request/response shape. `other` is a deliberate placeholder for
-whatever integrator a practice names in the wizard's "Other" option — it stays a stub until a
-real adapter is written for that specific vendor.
+Status (2026-10-15 update): **2 of 5 registered adapters are real** (`generic_rest`, and now
+`parasut` — BEST-EFFORT/cross-referenced, `esmm`+`earsiv` only, `efatura` deliberately throws
+pending buyer-PK capture; see the 2026-10-15 Paraşüt section below). `nes`, `qnb_esolutions`,
+`logo` are still stubs — they implement `EbelgeAdapter` and throw `AdapterNotImplementedError`
+with a pointer here instead of a fabricated request/response shape. `other` is a deliberate
+placeholder for whatever integrator a practice names in the wizard's "Other" option — it stays a
+stub until a real adapter is written for that specific vendor.
 
 ## Generic protocol (what `generic_rest.ts` actually implements, for reference)
 
@@ -26,10 +28,16 @@ invoice engine from the tax profile, not by any adapter.
 
 | Vendor | Adapter key | What's needed |
 |--------|-------------|----------------|
+| Paraşüt | `parasut` | **Real as of 2026-10-15** (`parasut.ts`) for `esmm`/`earsiv`. Still needed: live sandbox credentials to actually exercise `testConnection()`/`issue()` once (never done in this environment); buyer GİB mailbox (PK) capture to unblock `efatura` (tracked as ACCOUNTING-11) |
 | NES | `nes` | NES sandbox account + API credentials (API key or client id/secret); current NES API documentation for e-SMM/e-Fatura/e-Arşiv issuance (endpoint URLs test+live, auth method, exact request/response field names, status codes, cancel/credit-note endpoints, webhook format if they push status) |
 | QNB eSolutions | `qnb_esolutions` | QNB eSolutions sandbox credentials; current API doc (same field list as NES above) — confirm whether this is the same stack as the bank's own payment APIs or a separate e-belge product |
 | Logo | `logo` | Logo e-belge module sandbox/test tenant + API credentials; current API doc. Logo is often ERP-linked (invoked via their accounting product rather than a bare REST API) — confirm the actual integration surface (REST API vs. file-based batch vs. ERP plugin) before building |
 | Other (custom) | `other` | Whichever integrator a specific practice names — base URL, auth method and field names supplied by that integrator's own docs once a practice picks one |
+
+Five more names were re-checked on 2026-10-15 specifically for a public self-serve developer API +
+sandbox, prioritizing ones not requiring a signed mükellef contract first (Nilvera, İzibiz, Foriba/
+Digital Planet, Uyumsoft, Mikro) — see that section below for per-vendor findings; none cleared the
+bar, same "pure access gap" category as NES/QNB/Logo above.
 
 For every integrator, the minimum to actually finish it:
 
@@ -85,6 +93,44 @@ directory's adapters:
   stubs) protocol." Confirming real GİB-level field compliance requires picking a real integrator
   (NES / QNB eSolutions / Logo / a different "other") and verifying against ITS actual API, which
   is unchanged — still blocked on a sandbox account for any of the three, per the section above.
+## 2026-10-15 re-research: Paraşüt moves to real; Nilvera/İzibiz/Foriba/Uyumsoft/Mikro re-checked, stay out of reach
+
+Re-opened the integrator question with fresh eyes per a later instruction, prioritizing vendors
+that don't require a signed mükellef contract first (since Kaan's company isn't legally formed yet,
+Notya cannot itself be the GİB-connected party — the correct architecture stays BYO-entegratör:
+each doctor/klinik enters **their own** integrator credentials into `accounting_ebelge_credentials`,
+confirmed unchanged and correct this pass).
+
+- **Paraşüt — moved to REAL** (`parasut.ts`). Has a genuine, documented OAuth2 ("password" grant)
+  JSON:API at `https://api.parasut.com/v4` (resources `e_smms`, `sales_invoices`, `e_archives`,
+  `e_invoices`), confirmed through converging third-party/SDK documentation even though this
+  session's tooling could not directly fetch `apidocs.parasut.com` itself — stated at
+  **BEST-EFFORT/cross-referenced** confidence, the same tier convention
+  `lib/accounting/facilitators/iyzico.ts` uses for its own `VERIFIED` tier, one notch down.
+  Implements `esmm` (`POST /{companyId}/e_smms`) and `earsiv` (two-step `sales_invoices` →
+  `e_archives`). `issue()` for `efatura` deliberately throws (buyer PK not captured yet — see
+  ACCOUNTING-11 in `docs/OPEN-COMMITMENTS.md`). `cancel()`/`credit()` return/throw an honest
+  "not documented" result rather than guess an endpoint. **Never exercised against a live
+  Paraşüt sandbox in this environment** — a human with real company credentials must run one
+  live round trip before trusting this with a real document, same bar the bank adapters already
+  carry for their own pre-go-live checks.
+- **Nilvera**: no public field-level developer API reference found reachable without an existing
+  account/contract. Marketing/product pages only.
+- **İzibiz**: same — no public self-serve API docs found; integrator pages describe the product,
+  not its wire protocol.
+- **Foriba (Digital Planet)**: same pattern as Logo — material found is product/ERP-integration
+  marketing, not a bare REST/SOAP reference a separate web app could call directly.
+- **Uyumsoft**: no public field-level API documentation found without a customer login.
+- **Mikro**: same — Mikro's e-belge integration is ERP-linked like Logo's; no standalone public API
+  reference found.
+
+None of these five is a protocol conflict (unlike the bank/PCI side) — it's a pure access-gap, the
+same honest category the original 2026-10-15 NES/QNB/Logo research update above already
+established. Each stays a stub (or, for the three not yet in the adapter registry at all — Nilvera/
+İzibiz/Foriba/Uyumsoft/Mikro — simply unbuilt; they are not `EbelgeVendor` keys and were not added
+as speculative stubs, to avoid implying a commitment the research doesn't support) until a sandbox
+account materializes for one of them.
+
 - **Buyer identity fix** (§4.6.2 of the arch doc) was made in the call site
   (`lib/accounting/invoices/engine.ts`'s `issueInvoice`), not in any adapter here — the DTO
   (`EbelgeInvoiceDto.buyer`) now carries the patient's real name (and email, when on file) instead

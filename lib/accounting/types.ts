@@ -102,6 +102,13 @@ export interface Invoice {
   id: string
   doctorId: string
   patientId: string | null
+  /**
+   * NOTYA-ACCOUNTING-ENCOUNTER-01 (2026-10-15) — the clinical visit (`sessions.id`) this invoice
+   * was raised from, when it was created via the "Faturala" entry point at the end of a muayene.
+   * Nullable: billing can stand alone with no clinical visit behind it (docs/ARCH-NOTYA-ACCOUNTING.md
+   * §2.2), e.g. a Faturalar-tab draft created straight from the catalog.
+   */
+  encounterId: string | null
   status: InvoiceStatus
   docType: EbelgeDocType
   subtotalKurus: Money
@@ -216,7 +223,7 @@ export interface AgingBucket {
 // Credentials (e-belge + bank merchants) — encrypted at rest, never logged
 // ---------------------------------------------------------------------------
 
-export type EbelgeVendor = 'generic_rest' | 'nes' | 'qnb_esolutions' | 'logo' | 'other'
+export type EbelgeVendor = 'generic_rest' | 'parasut' | 'nes' | 'qnb_esolutions' | 'logo' | 'other'
 export type BankKey =
   | 'generic_hosted'
   | 'yapi_kredi'

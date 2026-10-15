@@ -4,10 +4,12 @@
 import type { EbelgeVendor } from '../types'
 import type { EbelgeAdapter } from './types'
 import { createGenericRestEbelgeAdapter } from './generic_rest'
+import { createParasutEbelgeAdapter } from './parasut'
 import { createStubEbelgeAdapter } from './stub'
 
 const registry = new Map<EbelgeVendor, EbelgeAdapter>()
 registry.set('generic_rest', createGenericRestEbelgeAdapter())
+registry.set('parasut', createParasutEbelgeAdapter())
 registry.set('nes', createStubEbelgeAdapter('nes'))
 registry.set('qnb_esolutions', createStubEbelgeAdapter('qnb_esolutions'))
 registry.set('logo', createStubEbelgeAdapter('logo'))
