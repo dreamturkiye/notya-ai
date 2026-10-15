@@ -454,10 +454,10 @@ export default function FaturalamaTahsilatPaneli() {
                     <option value="live">Canlı</option>
                   </select>
                 </Field>
-                <Field label="Base URL">
+                <Field label="Servis Adresi (URL)">
                   <input style={inputStyle} value={ebelgeFields.baseUrl || ''} onChange={(e) => setEbelgeFields({ ...ebelgeFields, baseUrl: e.target.value })} />
                 </Field>
-                <Field label="API Key">
+                <Field label="API Anahtarı">
                   <input style={inputStyle} type="password" value={ebelgeFields.apiKey || ''} onChange={(e) => setEbelgeFields({ ...ebelgeFields, apiKey: e.target.value })} />
                 </Field>
                 <div style={{ display: 'flex', gap: 10 }}>
@@ -482,14 +482,14 @@ export default function FaturalamaTahsilatPaneli() {
               >
                 <Field label="Ortam">
                   <select style={inputStyle} value={facilitatorEnv} onChange={(e) => setFacilitatorEnv(e.target.value as any)}>
-                    <option value="test">Sandbox</option>
+                    <option value="test">Test</option>
                     <option value="live">Canlı</option>
                   </select>
                 </Field>
-                <Field label="API Key">
+                <Field label="API Anahtarı">
                   <input style={inputStyle} value={facilitatorFields.apiKey || ''} onChange={(e) => setFacilitatorFields({ ...facilitatorFields, apiKey: e.target.value })} />
                 </Field>
-                <Field label="Secret Key">
+                <Field label="Gizli Anahtar">
                   <input style={inputStyle} type="password" value={facilitatorFields.secretKey || ''} onChange={(e) => setFacilitatorFields({ ...facilitatorFields, secretKey: e.target.value })} />
                 </Field>
                 <button style={buttonStyle} onClick={() => void saveFacilitator()}>
@@ -561,13 +561,13 @@ export default function FaturalamaTahsilatPaneli() {
                 </Field>
                 {NESTPAY_GROUP_KEYS.includes(bankKey) ? (
                   <>
-                    <Field label="Gateway URL (bankanızdan aldığınız 3D Pay Hosting adresi)">
+                    <Field label="Sanal POS Adresi (bankanızdan aldığınız 3D Pay Hosting adresi)">
                       <input style={inputStyle} value={bankFields.gatewayUrl || ''} onChange={(e) => setBankFields({ ...bankFields, gatewayUrl: e.target.value })} />
                     </Field>
-                    <Field label="Client ID">
+                    <Field label="Üye İşyeri Numarası">
                       <input style={inputStyle} value={bankFields.clientId || ''} onChange={(e) => setBankFields({ ...bankFields, clientId: e.target.value })} />
                     </Field>
-                    <Field label="Store Key">
+                    <Field label="Mağaza Anahtarı">
                       <input style={inputStyle} type="password" value={bankFields.storeKey || ''} onChange={(e) => setBankFields({ ...bankFields, storeKey: e.target.value })} />
                     </Field>
                     <Field label="Kullanıcı adı (opsiyonel — durum sorgusu için)">
@@ -579,13 +579,13 @@ export default function FaturalamaTahsilatPaneli() {
                   </>
                 ) : (
                   <>
-                    <Field label="Base URL">
+                    <Field label="Sanal POS Adresi">
                       <input style={inputStyle} value={bankFields.baseUrl || ''} onChange={(e) => setBankFields({ ...bankFields, baseUrl: e.target.value })} />
                     </Field>
-                    <Field label="Merchant ID">
+                    <Field label="Üye İşyeri Numarası">
                       <input style={inputStyle} value={bankFields.merchantId || ''} onChange={(e) => setBankFields({ ...bankFields, merchantId: e.target.value })} />
                     </Field>
-                    <Field label="Store Key">
+                    <Field label="Mağaza Anahtarı">
                       <input style={inputStyle} type="password" value={bankFields.storeKey || ''} onChange={(e) => setBankFields({ ...bankFields, storeKey: e.target.value })} />
                     </Field>
                   </>
