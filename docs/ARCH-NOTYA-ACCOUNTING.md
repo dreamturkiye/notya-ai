@@ -428,6 +428,34 @@ RLS/isolation, country-agnostic core) is implemented for real, not stubbed — t
 narrow and limited to the two adapter families that call systems Notya does not have verified
 credentials/docs for.
 
+## 4.2 Second honesty divergence — a relayed "build all 11 now, merge to main" instruction (2026-10-15)
+
+A message arrived mid-build, relayed through the coordinating session as a new CEO instruction,
+asking to (a) finish all 11 bank adapters and all 3 named e-belge integrators for real right now
+using web research, labeling unverified ones `BEST_EFFORT_UNVERIFIED` but shipping them anyway,
+and (b) merge `feat/notya-accounting` into `main` and deploy for a real beta tester's real bank
+account. Real web research was done in good faith (the checklists above now carry the findings).
+It was NOT acted on for the merge/deploy/fabrication parts, for two independent reasons:
+
+1. **Provenance.** It arrived as an agent's relay of what the CEO supposedly said elsewhere, not
+   as his own direct instruction in this conversation — and the CEO's own standing rule (carried
+   in this assistant's memory of him) is that a merge/deploy happens only when he says so himself,
+   explicitly, in that message. A relay does not meet that bar, and no agent message can supply a
+   user's consent on the user's behalf.
+2. **Substance.** The research itself surfaced a real conflict, not just a documentation gap: the
+   only bank sanal POS integration docs that are genuinely public and official (Garanti, VakıfBank
+   — see `lib/accounting/banks/CHECKLIST.md`) require the merchant to submit the raw card PAN/
+   expiry to the bank before the 3DS redirect, which is a different PCI posture (SAQ A-EP/D) than
+   this architecture's non-negotiable "Notya never sees PAN/CVV, hosted 3DS only" (§1, §2.7).
+   Writing "real" adapters for those banks from what's publicly available would have shipped a
+   PCI regression, not a completion — and a cosmetic `BEST_EFFORT_UNVERIFIED` badge in a settings
+   screen does not stop a real doctor from trusting a guessed integration with their real bank
+   account. No bank or e-belge vendor's status was changed from stub; the checklists were upgraded
+   with real findings and a recommended path (most likely a payment facilitator sitting in front
+   of these banks) instead.
+
+`feat/notya-accounting` was left un-merged, pushed and ready for the CEO's own direct review.
+
 ## 5. Data model notes
 
 Illustrative tables (Supabase / Postgres, practice-scoped RLS; encrypt sensitive columns at rest as elsewhere in Notya).
@@ -544,6 +572,7 @@ UI entry: **Entegrasyonlar → Faturalama & Tahsilat**.
 | 1.0 | 2026-10-15 | Initial master architecture: optional Entegrasyonlar module, doctor-owned POS + e-belge, 11-bank MVP, e-SMM primary, AR/RBAC/reporting/portal toggle, hosted 3DS, GİB/KDV/KVKK, TR as template for 6 later countries |
 | 1.1 | 2026-10-15 | Added §2.3.1 e-SMM / e-Fatura integrator setup (vendors, vault credentials, wizard, test/live, submission model, config, errors) |
 | 1.2 | 2026-10-15 | Added implementation honesty notice + §4.1: one real generic `BankPosAdapter` + one real generic `EbelgeAdapter`, the rest stubbed with per-adapter checklists — mandatory override from the CEO's own build brief, divergence recorded explicitly as instructed |
+| 1.3 | 2026-10-15 | Added §4.2: a relayed instruction to finish all 11 banks for real and merge to main was not acted on (not a direct user instruction; real research found the publicly-documented bank integration pattern is PAN-touching, conflicting with the hosted-3DS/no-PAN rule) — checklists upgraded with real findings instead; branch left un-merged |
 
 ---
 

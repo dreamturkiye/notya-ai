@@ -44,3 +44,29 @@ For every integrator, the minimum to actually finish it:
 
 Until these arrive, each vendor stays a stub and the module only goes live on `generic_rest` per
 docs/ARCH-NOTYA-ACCOUNTING.md §4 Phase 1.
+
+## 2026-10-15 research update
+
+Real research (WebSearch + WebFetch) was done against NES, QNB eSolutions and Logo before a later
+instruction asked for all three to be finished for real now. Result: **no vendor moved from stub
+to real**, and no fabricated "best-effort" adapter was written for a named vendor — here, unlike
+the bank side, it's a pure access gap rather than a protocol conflict:
+
+- **NES**: no public developer/API reference found. Search results are limited to the vendor's
+  own marketing/contact pages and unrelated third-party e-fatura tooling.
+- **QNB eSolutions**: no public API reference found. Results are e-commerce marketplace app
+  listings (Shopify, Wix, ikas) for their e-Fatura plugin, which confirms the product exists and
+  is integrated by platforms, but exposes no field-level API documentation publicly.
+- **Logo**: the one Logo-branded document found (`docs.logo.com.tr/.../Support_E-Fatura.pdf`) is
+  **Netsis end-user support documentation, not a Logo developer API reference** — it describes a
+  Windows COM library (`EFatAPI.dll`) used by Netsis's own desktop ERP product, not a REST/SOAP
+  service a separate web app like Notya could call over HTTPS. This confirms the original
+  checklist's suspicion: Logo's e-belge integration is ERP-plugin-shaped, not a bare REST API, so
+  "finishing" it for real may mean a fundamentally different integration surface (possibly no
+  direct server-to-server option at all) rather than just filling in field names.
+
+None of this is surprising — all three are commercial products sold to onboarded business
+customers; their real API references are reasonably expected to live behind a customer login,
+which is exactly what the original checklist already anticipated. The research did not find a
+shortcut around that, so each stays a stub with the same requirement: a sandbox/test account from
+that vendor, obtained by Kaan or whoever sets up the merchant relationship.
