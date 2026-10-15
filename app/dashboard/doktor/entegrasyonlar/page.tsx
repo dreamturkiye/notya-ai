@@ -5,6 +5,7 @@ import { getDoctorAccessToken } from '@/lib/doktor/clientAuth'
 import { CHROME_RENK, CHROME_FONT } from '@/lib/doktor/chromeTheme'
 import RandevuPortalKarti from '@/components/doktor/randevu/RandevuPortalKarti'
 import GoogleTakvimKarti from '@/components/doktor/randevu/GoogleTakvimKarti'
+import FaturalamaKarti from '@/components/accounting/FaturalamaKarti'
 
 type Provider = 'medula' | 'nvi_kps'
 
@@ -234,6 +235,8 @@ export default function EntegrasyonlarPage() {
         {!loading && <RandevuPortalKarti />}
         {/* NOTYA-RANDEVU-V2 PR2: hidden until Google credentials exist */}
         {!loading && <GoogleTakvimKarti />}
+        {/* NOTYA-ACCOUNTING-01: Faturalama & Tahsilat — optional module, own page (setup wizard + catalog + invoices + AR) */}
+        {!loading && <FaturalamaKarti />}
       </div>
 
       {active && (
