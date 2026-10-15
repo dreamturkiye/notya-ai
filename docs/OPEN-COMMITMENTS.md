@@ -3427,3 +3427,11 @@ Source: Kaan — dermatoloji was going to Belgeler to attach photos instead of c
 **Not built (Kaan's own scope narrowing, 2026-10):** video capture — photo + PDF only, by explicit instruction; do not add without Kaan asking again. Dermatoloji's clinical content is not duplicated into cardiology or any unrelated branş — would be both branş-alan-sızması and clinically meaningless.
 
 - 2026-10-14 NOTYA-TEST-SANDBOX-FONT-01: `npm test` in this session's sandbox showed 12 failing leaf tests, all tracing to one cause — `node_modules/pdfjs-dist/standard_fonts/LiberationSans-Regular.ttf` was missing from the installed package (only the Foxit `.pfb` fonts were present), which broke every aşı-karnesi PDF route (`ENOENT` / 500) and the tests that call it (`lib/asi/asiKarnesi.test.ts`, `lib/security/hasta-izolasyon.test.ts` PDF subtests). Unrelated to this session's actual work (dermatoloji/KBB/plastik-cerrahi/göz görsel yakalama — zero PDF/font files touched); confirmed by checking the font file was simply absent from `node_modules`, not a code regression. Same class of sandbox-install gap as NOTYA-TEST-SANDBOX-27-01 above. **FIXED 2026-10-14**: `npm install pdfjs-dist@^4.10.38 --no-save` (sandbox-local only, `package.json`/`package-lock.json` untouched) restored the missing Liberation Sans fonts; re-ran `lib/asi/asiKarnesi.test.ts` after — 39/39 pass. No application code changed; nothing to merge for this one.
+
+## NOTYA-PEDIATRI-BETA-01 — Pediatrist beta-test gap backlog (Kaan, 2026-10-15, branch docs/pediatri-beta-master-todo)
+
+14-item backlog from the first live pediatrist beta-test session, audited against actual code (9 Missing, 4 Thin, 4 Partial, 2 Strong-by-omission across 19 sub-capabilities). Full list: `docs/PEDIATRI-BETA-MASTER-TODO.md`. Full audit: https://claude.ai/artifact/SqCkViXhiQB1m5umAEui9K
+
+| Item | Status | Waits on |
+|------|--------|----------|
+| All 14 backlog items | Open | Kaan + Dr. Gökhan review, then per-item go-ahead |
