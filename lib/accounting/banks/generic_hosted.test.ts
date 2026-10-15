@@ -84,29 +84,39 @@ describe('accounting/banks/generic_hosted (mocked transport)', () => {
 })
 
 describe('accounting/banks/index registry', () => {
-  it('registers generic_hosted, the 6 NestPay-group banks, garanti and yapi_kredi as real (2026-10-15 phase 2); the other 3 named banks stay stubs', () => {
+  it('registers generic_hosted, the 6 NestPay-group banks, garanti, yapi_kredi, denizbank and vakifbank as real (2026-10-15 fifth pass); kuveyt_turk stays the one stub', () => {
     const adapters = listBankAdapters()
     const real = adapters.filter((a) => a.isReal).map((a) => a.bankKey).sort()
     assert.deepEqual(
       real,
-      ['akbank', 'garanti', 'generic_hosted', 'halkbank', 'isbank', 'qnb', 'teb', 'yapi_kredi', 'ziraat'].sort()
+      [
+        'akbank',
+        'denizbank',
+        'garanti',
+        'generic_hosted',
+        'halkbank',
+        'isbank',
+        'qnb',
+        'teb',
+        'vakifbank',
+        'yapi_kredi',
+        'ziraat',
+      ].sort()
     )
   })
 
-  it('every remaining named bank stub throws AdapterNotImplementedError, not a fake response', async () => {
-    for (const key of ['vakifbank', 'denizbank', 'kuveyt_turk'] as const) {
-      const adapter = getBankAdapter(key)
-      assert.equal(adapter.isReal, false)
-      await assert.rejects(
-        adapter.createHosted3dsSession({ bankKey: key, environment: 'test', fields: {} }, {
-          invoiceId: 'x',
-          amountKurus: 100,
-          currency: 'TRY',
-          returnUrl: 'x',
-          webhookUrl: 'y',
-        }),
-        AdapterNotImplementedError
-      )
-    }
+  it('kuveyt_turk, the one remaining named stub, throws AdapterNotImplementedError, not a fake response', async () => {
+    const adapter = getBankAdapter('kuveyt_turk')
+    assert.equal(adapter.isReal, false)
+    await assert.rejects(
+      adapter.createHosted3dsSession({ bankKey: 'kuveyt_turk', environment: 'test', fields: {} }, {
+        invoiceId: 'x',
+        amountKurus: 100,
+        currency: 'TRY',
+        returnUrl: 'x',
+        webhookUrl: 'y',
+      }),
+      AdapterNotImplementedError
+    )
   })
 })
