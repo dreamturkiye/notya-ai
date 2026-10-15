@@ -318,4 +318,6 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   'app/api/cron/kvkk-imha/route.ts': I('cron-secret gated retention job; no cross-doctor read path (NOTYA-GELEN-BELGELER: deletes unfiled inbox rows + their files by age only, returns counts)'),
   'app/api/cron/meslektas-rutin/route.ts': I('cron-secret gated; 30-day usage purge + per-doctor rutinTuret on that doctor_id only; no patient ids'),
   'app/api/cron/meslektas-onbellek/route.ts': I('cron-secret gated; builds hasta_dosya_onbellek per randevu row doctor_id+patient_id; no cross-doctor key'),
+  // ── NOTYA-ACCOUNTING-01: Faturalama & Tahsilat (optional Entegrasyonlar module) ──
+  'app/api/accounting/invoices/route.ts': I('GET: optional patientId query param checked with hastaSahibiMi(supabase, doktorId, patientId) → 404 before it scopes the invoice list query; POST: createDraftInvoice (lib/accounting/invoices/engine.ts) runs the same hastaSahibiMi check before inserting a patient-linked draft. Every invoice row is additionally scoped .eq(doctor_id) and protected by the migration-104-style RESTRICTIVE hasta-sahipligi RLS policy on accounting_invoices (lib/db/migrations/153_accounting_invoices.sql)'),
 }
