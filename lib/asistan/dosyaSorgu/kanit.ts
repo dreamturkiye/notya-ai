@@ -21,6 +21,7 @@ import { vizitOzetiSec, vizitOzetKanitSatirlari, vizitOzetSablonu, type VizitOze
 import { kanonikTr } from '@/core/lab/kanonik'
 import { asiKaniti, asiKanitSatirlari, asiOzetSatirlari } from '@/lib/asistan/dosyaSorgu/asiKaniti'
 import { dozGuvenligi, dozGuvenligiSatirlari } from '@/lib/doktor/dozGuvenligi'
+import { labSerileri } from '@/lib/asistan/dosyaSorgu/labSerisi'
 
 export interface KanitEki {
   /** Hekimin mesajı — Soru 7'de aranan şikayet buradan çıkar. */
@@ -83,8 +84,7 @@ function ilacBolumleri(olaylar: DosyaOlayi[], hasta: DosyaHastasi): string[] {
 }
 
 function labBolumu(olaylar: DosyaOlayi[]): string[] {
-  const seri = new Map<string, DosyaOlayi[]>()
-  for (const o of olaylar) if (o.kaynak === 'lab' && o.anahtar) seri.set(o.anahtar, [...(seri.get(o.anahtar) || []), o])
+  const seri = new Map(labSerileri(olaylar).map((s) => [s.anahtar, s.olcumler]))
   const satir = (k: string) => {
     const s = seri.get(k)!
     const son = s[s.length - 1]

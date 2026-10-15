@@ -26,6 +26,7 @@ import type { EnUlkeGirdisi } from '../_dil/en/girdi'
 import { enRolSatirlari } from '../_dil/en/klinik/roller'
 import { auEkAraclar } from './araclar/metinler'
 import { AU_TANIMLAR } from './araclar/tanimlar'
+import { AU_ULUSAL } from './asistan/ulusal'
 import { AU_ROLLER } from './klinik/roller'
 import { AU_BIRIMLER, AU_VELI_YASI } from './temel'
 
@@ -79,6 +80,7 @@ export const AU_GIRDI: EnUlkeGirdisi = {
     odeme: 'Medicare',
   },
   ulkeAdi: 'Australia',
+  asistanUlusal: AU_ULUSAL,
   // The word a senior doctor goes by here: the Medical Board registers "specialists" (specialist registration; a
   // general practitioner's title is "specialist general practitioner"). Hospital usage ("consultant") NOT checked.
   kidemliHekim: 'specialist',

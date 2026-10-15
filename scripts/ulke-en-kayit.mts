@@ -170,7 +170,7 @@ function kapiNotu(kapi: string): string {
     '2': 'Nothing falls back: the pack check finds nothing missing, and a tool this country does not have is a slot, not another country\'s tool.',
     '3': `Every tool is classified (base, or these roles) and ${kendiYuvalari.length} tool(s) of the shared English set are kept off for this country (below).`,
     '4': 'As in the kit: country and language are stamped at sign-up. One language form, `' + d + '`.',
-    '5': 'The assistant in text and voice is not part of a country build. No assistant is named.',
+    '5': 'Every role has a screen title and a chart instruction on the shared core (one national source and two international titles). No personal name is invented. The floating panel and the voice stay off.',
     '6': 'One pack per build: built with `NOTYA_COUNTRY=' + p.kod + ' npm run build:ulke`, proven on the output. NO DATABASE EXISTS for this country (section M).',
     '7': `The leak scan runs over every screen of this pack for the terms of every other country, the other English-speaking countries included (countries/${p.kod}/sizintiTerimleri.ts states this country's).`,
     '8': 'Türkiye\'s build is untouched by this pack; the Turkish suite is compared with `main` by test name.',
@@ -184,7 +184,7 @@ function kapiNotu(kapi: string): string {
     C8: 'UNVERIFIED. The unit each laboratory value is reported in is a starting value (settings below). No reference range is in the pack.',
     C9: 'ABSENT. No growth chart, vaccination schedule or screening programme is in the pack: each is a slot.', C12: 'MACHINE-BUILT. 40 templates, read by no clinician of this country.',
     C13: `MACHINE-WRITTEN. ${hf.cekirdek.bolumler.flatMap((b) => b.sorular).length} core questions and ${Object.values(hf.roller).flatMap((r) => r.sorular).length} role questions, read by no clinician of this country.`,
-    C14: 'NOBODY. No role is signed off.', D1: 'NO NAME PROPOSED. The pack builds without one; every role shows the neutral assistant line. WAITING ON KAAN.',
+    C14: 'NOBODY. No role is signed off.', D1: 'A title, not a personal name: every role shows Professor of that specialty, or Senior for an allied profession. A personal name waits on the owner.',
     D5: 'Not part of this job: the assistant\'s voice.', E1: 'All screen text comes from the English language set and this folder; none is written in code.',
     E2: `One form, \`${d}\`: the spelling is made from the set's base by the spelling table (countries/_dil/en/sozluk.ts). No native editor has read it.`,
     E3: 'Settings below; every one unverified.', E5: 'One engine, English; the one second pass (on low confidence) repeats the same recording in English. No second language.',
@@ -258,7 +258,7 @@ ${[
   satir('Phone: prefix, example, rule', `${p.telefon.ulkeOnEki}; ${p.telefon.ornek}; a format rule only`, `a local lead. ${U.telefonNotu}`),
   satir('Appointment norms', `${u.randevu?.varsayilan.baslangic}–${u.randevu?.varsayilan.bitis}, ${u.randevu?.varsayilan.sureDk} min; no public holiday`, 'a local clinical lead'),
   satir('Speech: model, thresholds', `${k.konusma.model}; ${k.konusma.dilOlasiligiEsigi}, ${k.konusma.ortalamaLogOlasilikEsigi}, ${k.konusma.asgariKarakter} characters`, 'engineering, on real clinic audio of this country'),
-  satir('Assistant names', 'NONE. Every role shows the neutral line', '**WAITING ON KAAN**'),
+  satir('Assistant names', 'No personal name. Every role shows "Professor of {specialty}" or "Senior {profession}". The chart instruction is on for every role; the floating panel and the voice stay off', 'the owner, to replace the title with a name'),
   satir('Sign-up; search', 'invitation only; hidden', 'the owner'),
 ].join('\n')}
 
@@ -317,6 +317,7 @@ ${kapilar.join('\n').trim()}
 ## Decisions and open questions
 
 - 2026-10-09 (the coordinator, for the owner): spelling is converted when the pack loads; one English role-key set for the five countries; no assistant names; birth weight asked as free text; patient wording kept country-neutral.
+- 2026-10-15: the assistant template is on for every role of the pack, doctors and clinic alike. The chart rules are the shared list, so a change there reaches this country without a copy. Each role has exactly three references: this country's national source, then two international titles. No personal name is invented. The floating panel and the voice stay off. The visit-note instruction still cites no textbook.
 - 2026-10-09 (the coordinator, for the owner): unit and scale decisions accepted as stated — each **for a local clinical lead**: the KDIGO tools are switched on only where laboratories report mg/g; the ESI triage record only in the United States; the BI-RADS report outline only in the United States and Canada; weight-based dose arithmetic is a slot where weight is measured in pounds; the DAS28 C-reactive protein field is labelled mg/L; prostate-specific antigen is shown in µg/L where that is the unit in use.
 - 2026-10-09 (the coordinator, for the owner): an allied profession's instruction does not open with the senior-doctor line — its first sentence states the profession and that the colleague is not a doctor; the example phone number is from a range reserved for fiction where this job is certain of one, otherwise a shape that is no number; the sentences of the slots stay in British spelling in every pack (accepted).
 - Open, with who each waits on: \`docs/OPEN-COMMITMENTS.md\`, NOTYA-ULKE-EN-01.

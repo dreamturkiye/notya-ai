@@ -19,7 +19,7 @@ A pack that builds has every text and setting filled in. It says nothing about w
 
 ## What is in this pack, and where it comes from
 
-- **From the shared English set** (`countries/_dil/en/`, written once for five countries): 2751 texts as this pack shows them or hands the model (the country's own, counted in the next line, among them) — the screens, the role names, 40 note templates, the instructions to the model, the intake questions, 63 tools, the landing copy — written in `en-NZ` spelling by the set's spelling table.
+- **From the shared English set** (`countries/_dil/en/`, written once for five countries): 2857 texts as this pack shows them or hands the model (the country's own, counted in the next line, among them) — the screens, the role names, 40 note templates, the instructions to the model, the intake questions, 63 tools, the landing copy — written in `en-NZ` spelling by the set's spelling table.
 - **This country's own** (`countries/nz/`, six small files): 36 texts it writes itself (its consent sentence, identifier label, time sentence, date example, name, word for a senior doctor, role names where they differ, what its closed tools are missing and who decides, unit names and tool words it writes differently, the example phone number and the pattern of an amount) and the settings in the table below.
 
 ## Settings — every one unverified
@@ -45,7 +45,7 @@ A pack that builds has every text and setting filled in. It says nothing about w
 | Phone: prefix, example, rule | +64; +64 2X XXX XXXX; a format rule only | a local lead. THE EXAMPLE IS A SHAPE, NOT A NUMBER ("X" in place of digits): this job knows of no range New Zealand reserves for fiction with certainty. It cannot be dialled and can be nobody's. A number from a reserved range, if a local source names one, may replace it. Unverified. |
 | Appointment norms | 09:00–17:00, 30 min; no public holiday | a local clinical lead |
 | Speech: model, thresholds | scribe_v2; 0.8, -0.36, 40 characters | engineering, on real clinic audio of this country |
-| Assistant names | NONE. Every role shows the neutral line | **WAITING ON KAAN** |
+| Assistant names | No personal name. Every role shows "Professor of {specialty}" or "Senior {profession}". The chart instruction is on for every role; the floating panel and the voice stay off | the owner, to replace the title with a name |
 | Sign-up; search | invitation only; hidden | the owner |
 
 - New Zealand spelling is the British base, unchanged; no New Zealand editor has read it.
@@ -302,7 +302,7 @@ Every gate is unticked: a gate is ticked by a person, with a name and a date. Th
 - [ ] 4. The account carries its country and language, set at sign-up from that country's landing page.
   - As in the kit: country and language are stamped at sign-up. One language form, `en-NZ`.
 - [ ] 5. Ayşe answers only from the account's country pack and says so when no national source exists.
-  - The assistant in text and voice is not part of a country build. No assistant is named.
+  - Every role has a screen title and a chart instruction on the shared core (one national source and two international titles). No personal name is invented. The floating panel and the voice stay off.
 - [ ] 6. Each country has its own deployment and its own database; no country script is ever run on another country's database or on the Turkish one; every country row still carries its country's code and no read or write crosses countries; a build contains only its own pack.
   - One pack per build: built with `NOTYA_COUNTRY=nz npm run build:ulke`, proven on the output. NO DATABASE EXISTS for this country (section M).
 - [ ] 7. An automated leak test scans every screen, note, answer, message and PDF for another country's terms.
@@ -404,7 +404,7 @@ For each entry: official local name, what it governs, source link, date checked,
 ## D. Ayşe for the country
 
 - [ ] D1 Locally natural name, title and background of a senior professor with 20+ years of practice in that country, decided with the clinical lead.
-  - NO NAME PROPOSED. The pack builds without one; every role shows the neutral assistant line. WAITING ON KAAN.
+  - A title, not a personal name: every role shows Professor of that specialty, or Senior for an allied profession. A personal name waits on the owner.
 - [ ] D2 Manner of address, formality, patronymics or honorifics.
   - Not answered.
 - [ ] D3 Sources: only section C.
@@ -584,6 +584,7 @@ How each step is done: `docs/COUNTRY-PACK-DB-ROLLOUT.md`, "Creating a new countr
 ## Decisions and open questions
 
 - 2026-10-09 (the coordinator, for the owner): spelling is converted when the pack loads; one English role-key set for the five countries; no assistant names; birth weight asked as free text; patient wording kept country-neutral.
+- 2026-10-15: the assistant template is on for every role of the pack, doctors and clinic alike. The chart rules are the shared list, so a change there reaches this country without a copy. Each role has exactly three references: this country's national source, then two international titles. No personal name is invented. The floating panel and the voice stay off. The visit-note instruction still cites no textbook.
 - 2026-10-09 (the coordinator, for the owner): unit and scale decisions accepted as stated — each **for a local clinical lead**: the KDIGO tools are switched on only where laboratories report mg/g; the ESI triage record only in the United States; the BI-RADS report outline only in the United States and Canada; weight-based dose arithmetic is a slot where weight is measured in pounds; the DAS28 C-reactive protein field is labelled mg/L; prostate-specific antigen is shown in µg/L where that is the unit in use.
 - 2026-10-09 (the coordinator, for the owner): an allied profession's instruction does not open with the senior-doctor line — its first sentence states the profession and that the colleague is not a doctor; the example phone number is from a range reserved for fiction where this job is certain of one, otherwise a shape that is no number; the sentences of the slots stay in British spelling in every pack (accepted).
 - Open, with who each waits on: `docs/OPEN-COMMITMENTS.md`, NOTYA-ULKE-EN-01.

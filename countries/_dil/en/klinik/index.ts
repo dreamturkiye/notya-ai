@@ -17,6 +17,7 @@ import { enHastaFormu } from './hastaFormu'
 import type { HamBolum } from './hastaFormu/yardimci'
 import { enNotSablonlari } from './notSablonlari'
 import { enRolTanimlari } from './roller'
+import { enAsistan } from '../asistan'
 import { enTalimatlar } from './talimatlar'
 
 export type EnKlinikEk = {
@@ -29,7 +30,9 @@ export type EnKlinikEk = {
 export function enKlinik(g: EnUlkeGirdisi & EnKlinikEk): UlkeKlinigi {
   const bicim = g.sozler.bicim
   // `g.roller`: where this country's role list differs from the shared forty (NOTYA-ULKE-OZEL-01); absent = the forty.
-  const t = enTalimatlar({ bicim, kidemliHekim: g.kidemliHekim, roller: enRolTanimlari(bicim, g.rolAdlari, g.roller), sablonlar: enNotSablonlari(bicim, g.roller), veliYasi: g.veliYasi })
+  const roller = enRolTanimlari(bicim, g.rolAdlari, g.roller)
+  const t = enTalimatlar({ bicim, kidemliHekim: g.kidemliHekim, roller, sablonlar: enNotSablonlari(bicim, g.roller), veliYasi: g.veliYasi })
+  const asistan = enAsistan({ bicim, ulkeAdi: g.ulkeAdi, ulusal: g.asistanUlusal, ...(g.asistanEkKitap ? { ekKitap: g.asistanEkKitap } : {}), roller })
   return {
     konusma: g.konusma,
     // The sentence beside the box is the country's own (`sozler.kayitRizasi`). This stamp is stored with every visit,
@@ -49,6 +52,7 @@ export function enKlinik(g: EnUlkeGirdisi & EnKlinikEk): UlkeKlinigi {
       ...(g.cekirdekEk ? { cekirdekEk: g.cekirdekEk } : {}),
       ...(g.acilCumle ? { acilCumle: g.acilCumle } : {}),
     }),
+    asistanTalimati: (dil, rol) => (dil === bicim ? asistan.talimat(rol) : null),
     yenidenYazimTalimati: () => null,
     yenidenYazimGirdisi: () => '',
     digerDil: () => null,
