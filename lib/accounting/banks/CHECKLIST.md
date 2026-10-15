@@ -1,15 +1,114 @@
 # Bank adapter completion checklist
 
-Status (updated 2026-10-15, third pass): **9 of 12 registered DIRECT-BANK adapters are real** —
-`generic_hosted`, the 6 NestPay-group banks (İş Bankası, Halkbank, TEB, QNB Finansbank, Ziraat,
-Akbank, sharing one adapter, `nestpay.ts`, VERIFIED by protocol cross-reference), **Garanti BBVA**
-(`garanti.ts`, REAL — direct vendor documentation) and **Yapı Kredi/Posnet** (`yapikredi_posnet.ts`,
-REAL — BEST-EFFORT single-source OSS cross-reference). See "2026-10-15 third pass" below for both.
-The remaining 3 (VakıfBank, Denizbank, Kuveyt Türk) are stubs — they implement `BankPosAdapter` and
-throw `AdapterNotImplementedError` with a pointer here, instead of a fabricated request/response
-shape; they stay deferred pending doctor demand. This file covers the **direct-bank path only**.
-For the facilitator path (iyzico — the default/recommended path under the 2026-10-15 hybrid
-model, §2.6a) see `lib/accounting/facilitators/CHECKLIST.md`, which IS real/`VERIFIED`.
+Status (updated 2026-10-15, fourth pass): **still 9 of 12 registered DIRECT-BANK adapters are
+real** — `generic_hosted`, the 6 NestPay-group banks (İş Bankası, Halkbank, TEB, QNB Finansbank,
+Ziraat, Akbank, sharing one adapter, `nestpay.ts`, VERIFIED by protocol cross-reference), **Garanti
+BBVA** (`garanti.ts`, REAL — direct vendor documentation) and **Yapı Kredi/Posnet**
+(`yapikredi_posnet.ts`, REAL — BEST-EFFORT single-source OSS cross-reference). The remaining 3
+(VakıfBank, Denizbank, Kuveyt Türk) were researched directly this pass, on their own branch
+(`feat/notya-accounting-vakifbank-denizbank-kuveytturk`) — **all three stay honest stubs**, each
+now with its own dedicated file (`vakifbank.ts`, `denizbank.ts`, `kuveyt_turk.ts`, replacing the
+generic `stub.ts` factory for these three keys specifically) documenting exactly what was checked
+and why no genuinely hosted/SAQ-A-safe path was confirmed for any of them. See "2026-10-15 fourth
+pass" below. This file covers the **direct-bank path only**. For the facilitator path (iyzico — the
+default/recommended path under the 2026-10-15 hybrid model, §2.6a) see
+`lib/accounting/facilitators/CHECKLIST.md`, which IS real/`VERIFIED`.
+
+## 2026-10-15 fourth pass — VakıfBank, Denizbank, Kuveyt Türk researched directly; all three stay honest stubs
+
+Built on a fresh branch off `main` (`feat/notya-accounting-vakifbank-denizbank-kuveytturk`, its own
+git worktree — NestPay through Garanti/Yapı Kredi were already merged). The instruction asked for
+these three specifically, in order, with an explicit standing rule not to force a PAN-touching flow
+into a "hosted" label just to reach "11/11 implemented" — each got its own full research pass
+(direct bank-site fetches, the two named OSS cross-reference libraries `mews/pos` and `CP.VPOS`,
+plus others found along the way) rather than being left on the generic `stub.ts` factory. Full
+findings and sources are in each adapter file's own header comment; summarized here:
+
+### VakıfBank — `vakifbank.ts` — **STUB, real official doc found, but it's PAN-touching (re-confirmed)**
+
+Fetched VakıfBank's own official, versioned PDF directly again this pass
+(`vbassets.vakifbank.com.tr/.../vakifbank-sanal-pos-entegrasyon-dokumani-2.4-versiyon.pdf`, v2.4):
+confirms the earlier finding still holds — every documented flow (`MPI_Enrollment.aspx`,
+`Vposreq.aspx`, `TransactionServices.asmx`, "GET 7/24 MPI", Half/Non Secure, PanCode, Visa Token
+Service) has the merchant site collecting and submitting the raw card number/expiry/CVV2; the only
+redirect anywhere in the document is the issuer's 3-D Secure OTP step. Searched specifically for
+"Ortak Ödeme Sayfası"/"Güvenli Ortak Ödeme" (the product name named in the instruction) — not
+found on vakifbank.com.tr or in the PDF. Checked VakıfBank's own official open-banking developer
+portal (`apiportal.vakifbank.com.tr`) directly — it's account/transfer/loan open banking, no
+virtual-POS product at all. One real lead, not resolved: `mews/pos`'s Packagist listing shows a
+SECOND, distinct VakıfBank gateway (`vakifbankpay`, driver `VakifBankPay`, different fields —
+`merchant_id`/`username`/`password`, `customerId`/`order_list`) alongside the confirmed-PAN-touching
+`vakifbank` (Standart API) one. An Odoo marketplace module names this as "PayFlex VPOS 3D Host API"
+("all transactions run through the bank's 3D Secure flow"), suggestive of a card-free hosted mode —
+but a WisecP-published VakıfBank module page explicitly describes an ON-SITE form instead ("WISECP
+uses the payment form... without leaving the site"), and this session's fetch tool refused every
+raw GitHub URL for `VakifBankPosPay.php`'s actual source (provenance error, same tooling limit as
+Yapı Kredi's pass) — so this second product's card-handling could not be settled either way.
+**Not enough to build, honestly**: one confirmed-PAN-touching product, one real-but-unconfirmed
+candidate.
+
+### Denizbank — `denizbank.ts` — **STUB, a "3DHost" model name exists in one OSS source, no structural confirmation**
+
+No official Denizbank sanal POS developer portal/PDF found (`apiportal.denizbank.com` is
+open-banking only, confirmed by fetching it directly — no virtual-POS product). Both OSS
+cross-reference libraries Kaan named were checked: `mews/pos`'s Packagist listing and
+`ankapix/sanalpos-entegrasyonlari`'s README both list "InterPOS"/"InterVPos" as Denizbank's own
+distinct gateway (not the shared NestPay/Asseco one), and `ankapix`'s feature table names its
+payment models as "NonSecure, 3DSecure, 3DPay, **3DHost**" — the same vocabulary structurally
+confirmed card-free for NestPay/Asseco by reading two libraries' actual source in the second pass.
+That source-level read could NOT be repeated for InterPos this pass: every raw GitHub/GitLab URL
+for `mews/pos`'s `InterPos.php` (direct, via a jsdelivr GitHub mirror, and via Sourcegraph) was
+refused with a provenance error — the identical tooling limitation already disclosed for Yapı
+Kredi. Every source that COULD be read concretely this pass (`CP.VPOS`'s .NET `SaleInfo` object,
+`omerkamcili/denizbank`'s `getPaid()` example, `evrenonur/sanalpos`'s own README, which explicitly
+groups Denizbank under the SAME field mapping as its NestPay-family banks) shows a
+merchant-collects-card flow, not a hosted one — though `CP.VPOS`'s Denizbank credential field
+names (`merchantID`/`merchantUser`/`merchantPassword`/`merchantStorekey`) do corroborate Kaan's own
+listed fields (Shop Code/Merchant ID, API user, 3D key) closely, a real but partial finding. One
+unresolved cross-source inconsistency, disclosed rather than silently picked: an Odoo module
+description and the npm `node-nestpay` library both describe/list Denizbank as running on the
+NestPay(Asseco EST) gateway family, conflicting with `mews/pos`/`ankapix` treating InterPos as its
+own separate driver — not settled either way this pass. **Not enough to build**: a model name
+without an endpoint, a request field shape, or a hash/MAC algorithm from any source actually read.
+
+### Kuveyt Türk — `kuveyt_turk.ts` — **STUB, two independent OSS sources confirm ThreeDModelPayGate is PAN-touching despite its name**
+
+This is the one of the three with the clearest, best-sourced finding. Two independent, concrete,
+directly-fetched OSS implementations — `emre-tarhan/kuveytturk-vpos-laravel-sdk` and
+`elsayed85/bank3` (different authors, different codebases) — agree on the SAME endpoint names
+(`ThreeDModelPayGate` test `boatest.kuveytturk.com.tr/boa.virtualpos.services/Home/
+ThreeDModelPayGate`, live `sanalpos.kuveytturk.com.tr/.../ThreeDModelPayGate` /
+`boa.kuveytturk.com.tr/sanalposservice/Home/ThreeDModelPayGate`) and the SAME shape: the merchant's
+own server collects `cardNumber`/`cardCVV2`/expiry/`cardHolderName` via its own builder methods
+(`setCardNumber`, `setCardCvv2`, …) and posts them in cleartext request fields to
+`ThreeDModelPayGate` BEFORE any redirect — the redirect that follows covers only the issuer's 3-D
+Secure OTP step, never card entry. `ThreeDModelProvisionGate` then completes the sale. Both SDKs'
+credential field semantics (MerchantId/CustomerId/UserName/Password) match Kaan's own listed
+fields closely — a real, useful corroboration, just of a PAN-touching flow, not a hosted one. The
+"Gate" in the name suggested hosted, exactly the caution Kaan's own instruction named — two
+independent sources settle that it is not. No separate hosted/card-free Kuveyt Türk product
+surfaced in this pass's searches. **This is the strongest-sourced of the three "not enough to
+build" findings — not a research gap, a settled PCI-shape conflict.**
+
+### Common thread across all three, and why none was forced into "real"
+
+Same PCI pattern already identified for the rest of this file's "research update" section below:
+every Turkish bank's publicly-documented, non-facilitator sanal POS product that this project could
+actually find and read concretely is merchant-collects-card (SAQ A-EP/D), not hosted (SAQ-A). Where
+a "hosted"/"3DHost"-named product's existence is plausible (VakıfBank's `vakifbankpay`, Denizbank's
+InterPOS "3DHost" model), this pass could not get the source-code-level read that settled the same
+question for NestPay — a disclosed tooling limitation (GitHub/GitLab fetches refused this pass), not
+a claim that no such product exists. Forcing any of the three into a "real" adapter from a model
+*name* alone, or from unconfirmed field-shape guesses, would be exactly the fabrication this
+module's honesty rule exists to prevent — each file's header says plainly what would actually
+unstub it (mostly: either a working GitHub-source-reading session, or a real merchant account's own
+integration pack).
+
+| Bank | Adapter key | Status | What was found | What's actually needed to finish it for real |
+|------|-------------|--------|------------------|------------------------------------------------|
+| VakıfBank | `vakifbank` | STUB — official doc confirmed PAN-touching (re-verified); second `vakifbankpay` product real but unconfirmed | Official v2.4 PDF (MPI enrollment, PAN-touching); `vakifbankpay`/"PayFlex VPOS 3D Host" exists in `mews/pos` but card-handling unconfirmed (GitHub source blocked) | Bank confirmation that `vakifbankpay` is genuinely card-free, with its real field shape — or a session that can read `VakifBankPosPay.php` source directly |
+| Denizbank | `denizbank` | STUB — "3DHost" model name found, no structural card-free confirmation | InterPOS is a real, distinct gateway per `mews/pos`/`ankapix`, with a listed "3DHost" model; every concretely-readable source shows card-collecting flows instead | A session that can read `InterPos.php` source directly, or a real Denizbank merchant account's own integration pack |
+| Kuveyt Türk | `kuveyt_turk` | STUB — two-source-confirmed PAN-touching despite the "Gate" name | `ThreeDModelPayGate`/`ThreeDModelProvisionGate`, confirmed by two independent OSS SDKs to require merchant-submitted PAN/CVV/expiry before any redirect | Bank confirmation of a separate, genuinely hosted/card-free product, if one exists — not more web research |
 
 ## 2026-10-15 third pass — Garanti BBVA and Yapı Kredi (Posnet) are now REAL
 

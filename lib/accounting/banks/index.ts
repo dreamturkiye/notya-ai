@@ -15,6 +15,9 @@ import { createStubBankAdapter } from './stub'
 import { createNestpayAdapter } from './nestpay'
 import { createGarantiAdapter } from './garanti'
 import { createYapiKrediPosnetAdapter } from './yapikredi_posnet'
+import { createVakifBankAdapter } from './vakifbank'
+import { createDenizbankAdapter } from './denizbank'
+import { createKuveytTurkAdapter } from './kuveyt_turk'
 
 const registry = new Map<BankKey, BankPosAdapter>()
 registry.set('generic_hosted', createGenericHostedAdapter())
@@ -33,6 +36,13 @@ for (const key of NESTPAY_GROUP_BANK_KEYS) {
 // see CHECKLIST.md for the per-bank confidence tier and sources.
 registry.set('garanti', createGarantiAdapter())
 registry.set('yapi_kredi', createYapiKrediPosnetAdapter())
+// 2026-10-15, fourth pass — VakıfBank, Denizbank, Kuveyt Türk researched directly (not left on the
+// generic stub factory): each gets its own dedicated, documented stub file explaining exactly why
+// no genuinely hosted/SAQ-A-safe path was confirmed for it this pass. See each file's header and
+// CHECKLIST.md "2026-10-15 fourth pass" for the per-bank findings and what would unstub each one.
+registry.set('vakifbank', createVakifBankAdapter())
+registry.set('denizbank', createDenizbankAdapter())
+registry.set('kuveyt_turk', createKuveytTurkAdapter())
 
 export function getBankAdapter(bankKey: BankKey): BankPosAdapter {
   const adapter = registry.get(bankKey)

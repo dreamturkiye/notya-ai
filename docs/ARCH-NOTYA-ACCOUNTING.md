@@ -795,6 +795,53 @@ Rules for expansion:
 
 ---
 
+## 4.7 VakıfBank, Denizbank, Kuveyt Türk researched directly; all three stay honest stubs (2026-10-15, sixth round)
+
+A further round asked for these three specific remaining direct banks, in order, on their own
+branch off `main` (`feat/notya-accounting-vakifbank-denizbank-kuveytturk`, its own worktree),
+explicitly warning not to force a PAN-touching flow into a "hosted" label just to reach "11/11
+implemented," and to build an honest, clearly-labeled stub with the real reason if no genuinely
+hosted/SAQ-A-safe path exists. Each bank got its own direct research pass (official bank sites/PDFs
+where they exist, plus the named OSS cross-reference libraries `mews/pos` and `CP.VPOS`, plus
+others found along the way) — full findings in each file's own header comment
+(`lib/accounting/banks/{vakifbank,denizbank,kuveyt_turk}.ts`) and summarized in
+`lib/accounting/banks/CHECKLIST.md` "2026-10-15 fourth pass". All three stay stubs, each now with
+its own dedicated, documented file (replacing the generic `stub.ts` factory for these three keys)
+instead of a silent gap:
+
+- **VakıfBank**: the real, official, versioned PDF integration guide
+  (`vbassets.vakifbank.com.tr/.../vakifbank-sanal-pos-entegrasyon-dokumani-2.4-versiyon.pdf`) was
+  re-fetched directly and re-confirms the earlier finding (§4.2) — every documented flow is
+  merchant-collects-card (MPI enrollment), no "Ortak Ödeme Sayfası" found anywhere. One real,
+  unresolved lead: a second gateway (`vakifbankpay`/"PayFlex VPOS 3D Host") appears in `mews/pos`'s
+  listing and one marketplace description hints it may be hosted, but a different third-party
+  module description says it is on-site, and this session's tooling could not read the gateway's
+  own source to settle it (GitHub fetches blocked by a provenance restriction, the same limitation
+  §4.5 disclosed for Yapı Kredi).
+- **Denizbank**: no official sanal POS developer portal/PDF exists publicly (only open banking).
+  InterPOS is confirmed as Denizbank's own real, distinct gateway name in two OSS libraries, with a
+  "3DHost" model listed by name — but every source this pass could actually read in concrete detail
+  showed a merchant-collects-card flow, and the one read that would have settled the model
+  structurally (`InterPos.php` source) was blocked by the same GitHub-provenance tooling limit.
+- **Kuveyt Türk**: the clearest finding of the three. Two independent OSS SDKs
+  (`emre-tarhan/kuveytturk-vpos-laravel-sdk`, `elsayed85/bank3`) agree, concretely, that
+  `ThreeDModelPayGate` requires the merchant's own server to collect and submit raw card
+  number/CVV/expiry/holder name before any redirect — the "Gate" in the name is not a hosted
+  checkout page. This is a settled PCI-shape finding, not an open research gap.
+
+Credential field semantics (merchant ID / terminal ID / API user-password / store key /
+customer ID, per Kaan's own listed fields) were cross-referenced and corroborate reasonably well
+for all three banks across multiple independent sources — it is specifically the request/callback
+field shape, endpoints, and hash/MAC algorithm for a genuinely hosted mode that could not be
+confirmed, which is the part that actually matters for the "Notya never sees PAN/CVV" rule.
+Registry count unchanged: still 9 of 12 real (`generic_hosted` + 6 NestPay-group + `garanti` +
+`yapi_kredi`); `vakifbank`/`denizbank`/`kuveyt_turk` stay stubs. 18 new tests
+(`vakifbank.test.ts`, `denizbank.test.ts`, `kuveyt_turk.test.ts`) confirming each stub's `isReal:
+false`, its `AdapterNotImplementedError` behavior on all three interface methods, and its correct
+registration in `banks/index.ts`. `npx tsc --noEmit` clean. Pushed
+`feat/notya-accounting-vakifbank-denizbank-kuveytturk`, **not merged** — per standing instruction,
+Kaan merges.
+
 ## 8. Suggested code layout (implementation guide)
 
 ```text
@@ -848,6 +895,7 @@ UI entry: **Entegrasyonlar → Faturalama & Tahsilat**.
 | 1.5 | 2026-10-15 | NestPay group moved from stub to REAL (`lib/accounting/banks/nestpay.ts`, VERIFIED by protocol cross-reference against two independent open-source implementations' source code) per Kaan's correction that "no portal" ≠ "no documentation." Added §4.4. Merge/deploy handed back to Kaan for this round, per his own instruction — no provenance conflict this time. |
 | 1.6 | 2026-10-15 | Garanti BBVA moved from stub to REAL (`lib/accounting/banks/garanti.ts`, direct vendor docs on dev.garantibbva.com.tr — Common Payment Page/OOS, iyzico-level confidence with one disclosed inference) and Yapı Kredi/Posnet moved from stub to REAL (`lib/accounting/banks/yapikredi_posnet.ts`, BEST-EFFORT single-source OSS cross-reference, one tier below NestPay's). Added §4.5. Built on a fresh branch off `main` (`feat/notya-accounting-garanti-yapikredi`) in its own worktree, since `feat/notya-accounting` was already merged; pushed, not merged. |
 | 1.7 | 2026-10-15 | Added §4.6: fixed a full round of remaining English/raw-technical leaks in the Entegrasyonlar → Faturalama & Tahsilat panel (invoice status/doc-type/environment/verificationStatus shown raw, a `JSON.stringify` field dump, period-decimal money formatting, a latent English leak in the cancel-invoice API's generic error path) and replaced the Raporlar tab's engineering-stub text with a real monthly screen plus a one-click "Mali Müşavire Gönder" Excel export (`lib/accounting/reports/monthly.ts`, `musavirExport.ts`), researched against TÜRMOB's own serbest meslek kazancı rehberi and serbest-meslek KDV guidance rather than guessed. Built on `feat/notya-accounting-raporlar-musavir`, in its own worktree, concurrently with another job's AR-reminder/e-belge-compliance work — did not touch `lib/accounting/ar/*` or `lib/accounting/ebelge/*`. Pushed, not merged. |
+| 1.8 | 2026-10-15 | VakıfBank, Denizbank, Kuveyt Türk researched directly on a fresh branch off `main` (`feat/notya-accounting-vakifbank-denizbank-kuveytturk`) — all three stay honest stubs (no genuinely hosted/SAQ-A-safe path confirmed for any), each now with its own dedicated, documented stub file instead of the generic factory. Added §4.7. Registry still 9 of 12 real. Pushed, not merged. |
 
 ---
 
