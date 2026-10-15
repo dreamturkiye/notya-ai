@@ -19,7 +19,7 @@ export const LINKS = {
 export const NAV = [
   { href: "#portal", label: "Hasta portalı", index: "01" },
   { href: "#dallar", label: "Dallar", index: "02" },
-  { href: "#fiyat", label: "Fiyat", index: "03" },
+  { href: "#fiyat", label: "Fiyat", index: "04" },
 ] as const;
 
 export const HERO = {
@@ -52,3 +52,17 @@ export const DALLAR = [
 ] as const;
 
 export const GUVEN_SATIRI = "Notya kayıt ve takip aracıdır; tanı ve tedavi kararı hekime aittir.";
+
+/** NOTYA-FATURA-LANDING-01 — capability block only; no vendor/integration names (rule: competitive discretion). */
+export const FATURA = {
+  eyebrow: "03 — Faturalama ve Tahsilat",
+  title: "Faturalama da",
+  titleItalic: "kliniğinizle birlikte.",
+  body: "Kliniğinizin tüm hekimleri için hizmet ve fiyat kataloğu, e-belge ve tahsilat tek sistemde.",
+  bullets: [
+    "Her hekim kendi hizmet ve fiyatını tanımlar",
+    "e-Belge, hizmeti veren hekimin kendi kimliğiyle kesilir",
+    "Kart bilgisi hiçbir zaman Notya'da tutulmaz",
+    "Ay sonu raporu mali müşavirinize tek tıkla",
+  ],
+} as const;

@@ -10,6 +10,7 @@ import { useEffect } from "react";
 import { KlinikNav } from "@/components/klinik-landing/nav";
 import {
   Dallar,
+  Faturalama,
   GuvenSatiri,
   HastaPortali,
   Hero,
@@ -23,7 +24,7 @@ function Fiyat() {
   return (
     <section id="fiyat" className="bg-paper py-20 sm:py-28">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
-        <p className="font-outfit text-xs uppercase tracking-[0.22em] text-ink-muted">03 — Fiyat</p>
+        <p className="font-outfit text-xs uppercase tracking-[0.22em] text-ink-muted">04 — Fiyat</p>
         <h2 className="mt-4 font-display text-display font-medium leading-display tracking-display">
           Koltuk başına.
           <span className="italic font-normal"> Şeffaf.</span>
@@ -90,6 +91,7 @@ export default function KlinikLandingPage() {
         <Hero />
         <HastaPortali />
         <Dallar />
+        <Faturalama />
         <GuvenSatiri />
         <Fiyat />
         <SonCta />

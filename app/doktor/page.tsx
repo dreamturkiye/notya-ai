@@ -4,6 +4,7 @@ import { DemoSection } from "@/components/doktor-landing/demo-section";
 import { Conversation } from "@/components/doktor-landing/conversation";
 import {
   Branslar,
+  Faturalama,
   HastaPortali,
   Konsultasyon,
   MuayeneSonu,
@@ -34,6 +35,7 @@ export default function DoktorLandingPage() {
         <Takip />
         <Learning />
         <Safety />
+        <Faturalama />
         <Pricing />
         <FinalCta />
       </main>

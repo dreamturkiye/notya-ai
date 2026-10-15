@@ -9,7 +9,7 @@
 import { Button } from "@/components/doktor-landing/button";
 import { ArrowUpRight } from "@/components/doktor-landing/icons";
 import { FeatureSection, TypeCard } from "@/components/doktor-landing/feature";
-import { DALLAR, GUVEN_SATIRI, HERO, LINKS, PORTAL } from "./content";
+import { DALLAR, FATURA, GUVEN_SATIRI, HERO, LINKS, PORTAL } from "./content";
 
 export function Hero() {
   return (
@@ -89,6 +89,31 @@ export function Dallar() {
         </ul>
       </div>
     </section>
+  );
+}
+
+export function Faturalama() {
+  return (
+    <FeatureSection
+      id="faturalama"
+      tone="paper-2"
+      eyebrow={FATURA.eyebrow}
+      title={FATURA.title}
+      titleItalic={FATURA.titleItalic}
+      body={FATURA.body}
+      bullets={FATURA.bullets}
+      card={
+        <TypeCard
+          label="Faturalama ve Tahsilat"
+          rows={[
+            { k: "Fiyat kataloğu", v: "Her hekim için kendi fiyatı" },
+            { k: "e-Belge", v: "Hekimin kendi kimliğiyle" },
+            { k: "Tahsilat", v: "Kart bilgisi Notya'da tutulmaz" },
+            { k: "Mali müşavir raporu", v: "Ay sonunda tek tıkla" },
+          ]}
+        />
+      }
+    />
   );
 }
 
