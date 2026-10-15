@@ -103,6 +103,20 @@ export default function FaturalamaTahsilatPaneli() {
   const [ebelgeStatus, setEbelgeStatus] = useState<any>(null)
   const [testResult, setTestResult] = useState('')
 
+  // Payment provider — hybrid model (Kaan, 2026-10-15): facilitator (iyzico) is the default/
+  // recommended path; direct bank adapters are a parallel, optional path for doctors who already
+  // have their own merchant account. 'provider' picks which one "Ödeme bağlantısı" actually uses.
+  const [provider, setProvider] = useState<'facilitator' | 'bank'>('facilitator')
+
+  // Facilitator (iyzico) merchant
+  const [facilitatorEnv, setFacilitatorEnv] = useState<'test' | 'live'>('test')
+  const [facilitatorFields, setFacilitatorFields] = useState<Record<string, string>>({ apiKey: '', secretKey: '' })
+  const [facilitators, setFacilitators] = useState<any>({ configured: [], catalog: [] })
+  // Buyer identity for the one charge being attempted — iyzico's Checkout Form requires it and
+  // Notya does not yet auto-resolve it from the patient record (docs/OPEN-COMMITMENTS.md
+  // ACCOUNTING-11), so it is collected here, once, right before "Ödeme bağlantısı".
+  const [buyer, setBuyer] = useState({ name: '', surname: '', identityNumber: '', registrationAddress: '', city: '' })
+
   // Bank merchants
   const [bankKey, setBankKey] = useState('generic_hosted')
   const [bankEnv, setBankEnv] = useState<'test' | 'live'>('test')
@@ -129,6 +143,8 @@ export default function FaturalamaTahsilatPaneli() {
       setServices(svc.data || [])
       const bk = await api('/bank-merchants')
       setBanks(bk.data || { configured: [], catalog: [] })
+      const fc = await api('/facilitator-merchants')
+      setFacilitators(fc.data || { configured: [], catalog: [] })
       const eb = await api('/ebelge-credentials')
       setEbelgeStatus(eb.data)
       const inv = await api('/invoices')
@@ -189,6 +205,20 @@ export default function FaturalamaTahsilatPaneli() {
       setNotice(res.warning || 'Banka hesabı kaydedildi.')
       const bk = await api('/bank-merchants')
       setBanks(bk.data || { configured: [], catalog: [] })
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Kaydedilemedi.')
+    }
+  }
+
+  const saveFacilitator = async () => {
+    try {
+      const res = await api('/facilitator-merchants', {
+        method: 'POST',
+        body: JSON.stringify({ facilitatorKey: 'iyzico', environment: facilitatorEnv, fields: facilitatorFields }),
+      })
+      setNotice(res.warning || 'iyzico hesabı kaydedildi.')
+      const fc = await api('/facilitator-merchants')
+      setFacilitators(fc.data || { configured: [], catalog: [] })
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Kaydedilemedi.')
     }
@@ -255,13 +285,35 @@ export default function FaturalamaTahsilatPaneli() {
   const chargeOne = async (invoiceId: string) => {
     setBusyInvoiceId(invoiceId)
     try {
-      const res = await api('/payments/sessions', {
-        method: 'POST',
-        body: JSON.stringify({ invoiceId, bankKey: bankKey || 'generic_hosted', returnUrl: window.location.href }),
-      })
-      if (res.data?.redirectUrl) window.location.href = res.data.redirectUrl
+      if (provider === 'facilitator') {
+        if (!buyer.surname || !buyer.identityNumber || !buyer.registrationAddress || !buyer.city) {
+          throw new Error('iyzico ile tahsilat için önce alıcı bilgilerini (ad, soyad, TCKN, adres, şehir) girin.')
+        }
+        const res = await api('/payments/facilitator-sessions', {
+          method: 'POST',
+          body: JSON.stringify({
+            invoiceId,
+            facilitatorKey: 'iyzico',
+            returnUrl: window.location.href,
+            buyerName: buyer.name,
+            buyer: {
+              surname: buyer.surname,
+              identityNumber: buyer.identityNumber,
+              registrationAddress: buyer.registrationAddress,
+              city: buyer.city,
+            },
+          }),
+        })
+        if (res.data?.redirectUrl) window.location.href = res.data.redirectUrl
+      } else {
+        const res = await api('/payments/sessions', {
+          method: 'POST',
+          body: JSON.stringify({ invoiceId, bankKey: bankKey || 'generic_hosted', returnUrl: window.location.href }),
+        })
+        if (res.data?.redirectUrl) window.location.href = res.data.redirectUrl
+      }
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Ödeme oturumu açılamadı — banka henüz uygulanmamış olabilir (bkz. CHECKLIST.md).')
+      setError(e instanceof Error ? e.message : 'Ödeme oturumu açılamadı — bu sağlayıcı henüz uygulanmamış olabilir (bkz. CHECKLIST.md).')
     } finally {
       setBusyInvoiceId(null)
     }
@@ -402,8 +454,72 @@ export default function FaturalamaTahsilatPaneli() {
               </SectionCard>
 
               <SectionCard
-                title="Banka sanal POS"
-                subtitle="11 banka da aynı arayüzü uygular; şu an yalnız 'Genel sanal POS' gerçek çalışır bağlantıdır. Diğerleri için kontrol listesi: lib/accounting/banks/CHECKLIST.md."
+                title="Ödeme kuruluşu — iyzico (önerilen)"
+                subtitle="Varsayılan ve en hızlı yol: kendi iyzico hesabınızı bağlayın. Kart bilgisi hiçbir zaman Notya'ya ulaşmaz — ödeme iyzico'nun kendi ödeme sayfasında alınır (PCI SAQ-A). Doğrulama durumu: VERIFIED (docs.iyzico.com üzerinden, 2026-10-15)."
+              >
+                <Field label="Ortam">
+                  <select style={inputStyle} value={facilitatorEnv} onChange={(e) => setFacilitatorEnv(e.target.value as any)}>
+                    <option value="test">Sandbox</option>
+                    <option value="live">Canlı</option>
+                  </select>
+                </Field>
+                <Field label="API Key">
+                  <input style={inputStyle} value={facilitatorFields.apiKey || ''} onChange={(e) => setFacilitatorFields({ ...facilitatorFields, apiKey: e.target.value })} />
+                </Field>
+                <Field label="Secret Key">
+                  <input style={inputStyle} type="password" value={facilitatorFields.secretKey || ''} onChange={(e) => setFacilitatorFields({ ...facilitatorFields, secretKey: e.target.value })} />
+                </Field>
+                <button style={buttonStyle} onClick={() => void saveFacilitator()}>
+                  Kaydet
+                </button>
+                <div style={{ marginTop: 14 }}>
+                  {(facilitators.configured || []).map((f: any) => (
+                    <div key={f.id} style={{ fontSize: 12.5, color: MUTED, padding: '6px 0', borderTop: `1px solid ${BORDER}` }}>
+                      iyzico — {f.environment} — {f.verificationStatus || 'VERIFIED'}
+                    </div>
+                  ))}
+                </div>
+              </SectionCard>
+
+              <SectionCard
+                title="Ödeme kaynağı seçimi"
+                subtitle="'Ödeme bağlantısı' hangi sağlayıcıyı kullansın? iyzico önerilir; kendi banka sanal POS hesabınız varsa doğrudan banka da seçebilirsiniz."
+              >
+                <Field label="Sağlayıcı">
+                  <select style={inputStyle} value={provider} onChange={(e) => setProvider(e.target.value as any)}>
+                    <option value="facilitator">iyzico (önerilen)</option>
+                    <option value="bank">Doğrudan banka sanal POS</option>
+                  </select>
+                </Field>
+                {provider === 'facilitator' && (
+                  <>
+                    <div style={{ fontSize: 12.5, color: MUTED, marginBottom: 8 }}>
+                      Alıcı bilgileri (iyzico'nun ödeme formu için zorunlu — bkz. ACCOUNTING-11):
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                      <Field label="Ad">
+                        <input style={inputStyle} value={buyer.name} onChange={(e) => setBuyer({ ...buyer, name: e.target.value })} />
+                      </Field>
+                      <Field label="Soyad">
+                        <input style={inputStyle} value={buyer.surname} onChange={(e) => setBuyer({ ...buyer, surname: e.target.value })} />
+                      </Field>
+                    </div>
+                    <Field label="TCKN">
+                      <input style={inputStyle} value={buyer.identityNumber} onChange={(e) => setBuyer({ ...buyer, identityNumber: e.target.value })} />
+                    </Field>
+                    <Field label="Adres">
+                      <input style={inputStyle} value={buyer.registrationAddress} onChange={(e) => setBuyer({ ...buyer, registrationAddress: e.target.value })} />
+                    </Field>
+                    <Field label="Şehir">
+                      <input style={inputStyle} value={buyer.city} onChange={(e) => setBuyer({ ...buyer, city: e.target.value })} />
+                    </Field>
+                  </>
+                )}
+              </SectionCard>
+
+              <SectionCard
+                title="Banka sanal POS (doğrudan, aşamalı)"
+                subtitle="İş Bankası / Halkbank / TEB / QNB / Ziraat / Akbank (NestPay altyapısı, ortak tek adaptör — şu an stub), Garanti BBVA ve Yapı Kredi sıradaki aşamalar (arayüze hazır, henüz stub). 'Genel sanal POS' gerçek çalışır bağlantıdır. Kontrol listesi: lib/accounting/banks/CHECKLIST.md."
               >
                 <Field label="Banka">
                   <select style={inputStyle} value={bankKey} onChange={(e) => setBankKey(e.target.value)}>

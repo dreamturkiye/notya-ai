@@ -6,10 +6,13 @@ for.
 
 ## What's real vs. stubbed, in one line
 
-One real `BankPosAdapter` (`banks/generic_hosted.ts`) and one real `EbelgeAdapter`
-(`ebelge/generic_rest.ts`) — both documented generic protocols, not fabricated bank/integrator
-APIs. The 11 named banks and 3 named e-belge vendors are honest stubs (`AdapterNotImplementedError`).
-See `banks/CHECKLIST.md` and `ebelge/CHECKLIST.md` for exactly what's needed to finish each one.
+Payment path (hybrid model, `docs/ARCH-NOTYA-ACCOUNTING.md` §2.6a): **iyzico** is a real, `VERIFIED`
+`PaymentFacilitatorAdapter` (`facilitators/iyzico.ts`) and the default/recommended path. The 11
+named direct banks are `BankPosAdapter` stubs except `generic_hosted.ts` (one real documented
+generic protocol, not a fabricated bank API) — see `banks/CHECKLIST.md`. One real `EbelgeAdapter`
+(`ebelge/generic_rest.ts`); the 3 named e-belge vendors are honest stubs
+(`AdapterNotImplementedError`). See `banks/CHECKLIST.md`, `facilitators/CHECKLIST.md` and
+`ebelge/CHECKLIST.md` for exactly what's needed to finish each one.
 
 ## Layout
 
@@ -20,8 +23,10 @@ lib/accounting/
   invoices/{engine,stateMachine}.ts
   catalog/service.ts      # open-ended muayene/aşı/hizmet/paket
   ar/{ledger,aging}.ts
-  payments/{types,session}.ts
-  banks/{index,generic_hosted,stub,CHECKLIST.md}
+  payments/{types,session}.ts                    # direct-bank orchestrator
+  payments/{facilitatorTypes,facilitatorSession}.ts  # facilitator orchestrator — parallel, independent
+  banks/{index,generic_hosted,nestpay_group,stub,CHECKLIST.md}
+  facilitators/{index,iyzico,CHECKLIST.md}
   ebelge/{index,generic_rest,stub,types,CHECKLIST.md}
   reports/index.ts
 ```
@@ -40,6 +45,19 @@ lib/accounting/
    `generic_hosted.test.ts`.
 5. Update the checklist row to `DONE` and update `docs/ARCH-NOTYA-ACCOUNTING.md` §4.1's "1 of 12"
    count.
+
+## Adding a new payment facilitator (parallel to the bank path, not instead of it)
+
+1. Read/update `facilitators/CHECKLIST.md` — same honesty rule as banks: real public docs for
+   the hosted/checkout flow, confirmed to have no PAN/CVV field, before writing any code.
+2. Create `lib/accounting/facilitators/<key>.ts` implementing `PaymentFacilitatorAdapter`
+   (`payments/facilitatorTypes.ts`) — use `iyzico.ts` as the shape, not something to copy
+   verbatim.
+3. Register it in `facilitators/index.ts`. Do **not** touch `banks/index.ts`,
+   `payments/session.ts` or anything under `banks/` — the two provider families are deliberately
+   independent (Kaan, 2026-10-15).
+4. Add a mocked-transport test file, same pattern as `facilitators/iyzico.test.ts`, including an
+   explicit assertion that the request body never contains a card field.
 
 ## Adding a new e-belge integrator
 

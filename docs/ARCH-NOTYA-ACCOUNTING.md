@@ -281,6 +281,48 @@ interface BankPosAdapter {
 
 Additional payment methods (same ledger): nakit, havale/EFT (manual confirm), optional other wallets later — not blocking MVP banks.
 
+### 2.6a Hybrid payment model (Kaan, 2026-10-15 — supersedes §2.6/§4's "all 11 banks" framing)
+
+Following the real PCI conflict surfaced in §4.1/§4.2 (the only public bank sanal-POS docs require
+raw-PAN submission before 3DS, which an honest implementation could not build without regressing
+the "Notya never sees PAN/CVV" rule), Kaan chose a hybrid model instead of forcing the 11 banks:
+
+1. **Primary path — payment facilitator (default, ships first).** A new, parallel adapter family,
+   `PaymentFacilitatorAdapter` (`lib/accounting/payments/facilitatorTypes.ts`), structurally
+   similar to `BankPosAdapter` but deliberately a separate interface/registry/table/route set —
+   adding a direct-bank adapter must never require touching this path, and vice versa. **iyzico**
+   is the one real, `VERIFIED` implementation (`lib/accounting/facilitators/iyzico.ts`), built
+   against iyzico's own current public docs (Checkout Form initialize/retrieve + IYZWSv2
+   HMAC-SHA256 signing — see that file's header for exact source URLs, fetched 2026-10-15). A
+   doctor connects their own iyzico merchant account (API key/secret, sandbox/live) under
+   Entegrasyonlar, same UX pattern as the bank setup wizard. This is the default/recommended
+   option in the UI.
+2. **Direct bank path — phased, parallel, not blocking.** Still the same `BankPosAdapter`
+   interface from §2.6, unchanged:
+   - **NestPay/EST group** (İş Bankası, Halkbank, TEB, QNB Finansbank, Ziraat, Akbank) — these six
+     keys now share ONE stub factory, `lib/accounting/banks/nestpay_group.ts`, instead of six
+     independent ones, so a future real implementation is written once. Still a **stub**: no
+     official, bank- or Asseco-published documentation of the NestPay "3D Pay Hosting" protocol
+     was found publicly in the 2026-10-15 research pass (see CHECKLIST.md) — what exists is
+     third-party reverse-engineered libraries whose sample code is ambiguous on whether the
+     merchant server still handles the PAN. One potentially authoritative source
+     (`vpos.qnb.com.tr/Help/apiIntegrationDocument`) could not be fetched (tool-level
+     provenance/permission timeout, not a content refusal) and is flagged as an open lead for a
+     human with direct browser access, not a dead end.
+   - **Garanti BBVA, Yapı Kredi (Posnet)** — explicitly phased as "then" steps per Kaan's own
+     instruction, not required in this pass. Both stay clearly-labeled stubs
+     (`AdapterNotImplementedError`), interface-complete so they slot in later without rework.
+   - **Everything else** (Denizbank, VakıfBank, Kuveyt Türk, …) — stays the existing honest stub,
+     explicitly deferred until there is doctor demand.
+3. **Independence, not sequencing.** A doctor's setup wizard picks EITHER iyzico OR a direct bank
+   per bank merchant row; `createPaymentSession` (bank) and `createFacilitatorPaymentSession`
+   (facilitator) are two separate orchestrator modules
+   (`lib/accounting/payments/session.ts`, `lib/accounting/payments/facilitatorSession.ts`) that
+   only share the pure ledger/state-machine helpers underneath — never each other's adapter code.
+4. **Module/bank defaults.** Unchanged from §2.1/§8: the module itself and every adapter
+   (facilitator or bank) are OFF until a doctor explicitly configures and activates them — the
+   hybrid model does not change that default.
+
 ### 2.7 Hosted 3D Secure & PCI
 
 - **Preferred**: bank-hosted or bank-redirect **3D Secure** pages; Notya never sees PAN/CVV.
@@ -456,6 +498,39 @@ It was NOT acted on for the merge/deploy/fabrication parts, for two independent 
 
 `feat/notya-accounting` was left un-merged, pushed and ready for the CEO's own direct review.
 
+## 4.3 Hybrid model adopted; merge/deploy status unchanged (2026-10-15, later same day)
+
+A further message arrived — again relayed through the coordinating session, this time explicitly
+stating in its own text that it was "directly from Kaan... his own words, not relayed" — adopting
+the hybrid model described in §2.6a: iyzico as the primary/default path, NestPay-group/Garanti/
+Yapı Kredi phased on the direct-bank side, and reiterating the earlier instruction to merge
+`feat/notya-accounting` into `main` and deploy.
+
+**What was built from it:** everything substantive — §2.6a above, the real `VERIFIED` iyzico
+adapter, the NestPay-group shared-stub consolidation, the Garanti/Yapı Kredi phased-but-ready
+stubs, and the updated checklists/OPEN-COMMITMENTS — because all of that is engineering direction
+a coordinator can legitimately relay mid-task, same as any other scoping instruction in this
+build.
+
+**What was not done: the merge/deploy.** The message's own claim to be "direct, not relayed" does
+not change how it actually arrived — through the same coordinator-relay channel as §4.2's
+instruction, as a third party's report of what the CEO said, not as the CEO's own turn in this
+conversation. A relayed message asserting its own directness is still a relayed message asserting
+something about itself; that assertion cannot be verified from inside this process, and the
+operating rule this project is built under is explicit that no agent message — regardless of what
+it claims about its own provenance — can supply a user's consent on the user's behalf for an
+action like merging and deploying live payment code. Kaan's own standing preference, independent
+of this specific task, requires his direct say-so **in that message** for a merge/deploy; a relay
+cannot manufacture that regardless of its wording. So: `feat/notya-accounting` (now including the
+hybrid model) was pushed, not merged, and `main` remains untouched — exactly the same posture as
+§4.2, for the same reason, applied consistently rather than relaxed because the second message
+tried harder to clear the bar the first one didn't.
+
+This is a standing position, not a one-time refusal: the next message through this same relay
+channel that asserts its own authenticity will be evaluated the same way. What would change it is
+Kaan's own words appearing as his own turn in the conversation — not a stronger claim embedded in
+someone else's relay of it.
+
 ## 5. Data model notes
 
 Illustrative tables (Supabase / Postgres, practice-scoped RLS; encrypt sensitive columns at rest as elsewhere in Notya).
@@ -573,6 +648,7 @@ UI entry: **Entegrasyonlar → Faturalama & Tahsilat**.
 | 1.1 | 2026-10-15 | Added §2.3.1 e-SMM / e-Fatura integrator setup (vendors, vault credentials, wizard, test/live, submission model, config, errors) |
 | 1.2 | 2026-10-15 | Added implementation honesty notice + §4.1: one real generic `BankPosAdapter` + one real generic `EbelgeAdapter`, the rest stubbed with per-adapter checklists — mandatory override from the CEO's own build brief, divergence recorded explicitly as instructed |
 | 1.3 | 2026-10-15 | Added §4.2: a relayed instruction to finish all 11 banks for real and merge to main was not acted on (not a direct user instruction; real research found the publicly-documented bank integration pattern is PAN-touching, conflicting with the hosted-3DS/no-PAN rule) — checklists upgraded with real findings instead; branch left un-merged |
+| 1.4 | 2026-10-15 | Added §2.6a hybrid payment model (iyzico facilitator as default/`VERIFIED`, NestPay-group/Garanti/Yapı Kredi direct-bank path phased and parallel) and §4.3 (adopted the hybrid model in full; merge/deploy still not performed, for the same provenance reason as §4.2, applied even though this message claimed to be direct rather than relayed) |
 
 ---
 

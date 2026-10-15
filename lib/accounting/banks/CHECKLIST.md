@@ -1,8 +1,60 @@
 # Bank adapter completion checklist
 
-Status: **1 of 12 registered adapters is real** (`generic_hosted`). The 11 named banks from
-`docs/ARCH-NOTYA-ACCOUNTING.md` §2.6 are stubs — they implement `BankPosAdapter` and throw
+Status: **1 of 12 registered DIRECT-BANK adapters is real** (`generic_hosted`). The 11 named banks
+from `docs/ARCH-NOTYA-ACCOUNTING.md` §2.6 are stubs — they implement `BankPosAdapter` and throw
 `AdapterNotImplementedError` with a pointer here, instead of a fabricated request/response shape.
+This file covers the **direct-bank path only**. For the facilitator path (iyzico — the
+default/recommended path under the 2026-10-15 hybrid model, §2.6a) see
+`lib/accounting/facilitators/CHECKLIST.md`, which IS real/`VERIFIED`.
+
+## 2026-10-15 hybrid-model update (later same day) — NestPay group consolidated, still stub
+
+Per Kaan's hybrid-model instruction (§2.6a), İş Bankası/Halkbank/TEB/QNB Finansbank/Ziraat/Akbank
+now share **one** stub factory (`lib/accounting/banks/nestpay_group.ts`) instead of six, since they
+all sit behind the same NestPay/ASSEMIST (Payten) gateway. Research done (WebSearch/WebFetch,
+same standard applied to every other bank in this file — named banks are not exempt from
+verification just because the CEO named them):
+
+- No official, bank- or Asseco-published developer documentation of the NestPay **"3D Pay
+  Hosting"** protocol was found publicly. `see.asseco.com` (NestPay's own vendor) describes the
+  product at a marketing level only — no technical docs, no banks named.
+- What is public: third-party reverse-engineered client libraries — `node-nestpay`
+  ([cdn.jsdelivr.net/npm/node-nestpay@2.1.0/README.md](https://cdn.jsdelivr.net/npm/node-nestpay@2.1.0/README.md)),
+  Omnipay/NestPay forks, and WiseCP's integration notes
+  ([docs.wisecp.com/en/turkish-bank-virtual-pos-modules.md](https://docs.wisecp.com/en/turkish-bank-virtual-pos-modules.md)).
+  Every one of them shows sample code where the merchant's own server function takes `number`,
+  `cvv`, `year`, `month` as arguments even for the "hosting" storetype — which is either evidence
+  the merchant server still handles the PAN in practice, or just a generic-library artifact that
+  wraps several storetypes under one call signature. No source resolves that ambiguity.
+- One potentially authoritative source — QNB's own
+  `vpos.qnb.com.tr/Help/apiIntegrationDocument` — could not be fetched in this research pass. The
+  fetch failed with a tool-level provenance/permission timeout (`PROVENANCE_REQUIRED`), not a
+  content refusal, on two attempts. **This is an open lead, not a dead end** — a human with direct
+  browser access should check it before concluding either way.
+- WiseCP's page also links Garanti's and QNB's own integration-doc URLs directly
+  (`dev.garantibbva.com.tr/sanalpos-satis-on-otorizasyon-3dli`,
+  `vpos.qnb.com.tr/Help/apiIntegrationDocument`) — worth a human revisiting both with a real
+  browser session, since this research pass's automated fetch tooling could reach one and not the
+  other.
+
+**Verdict applied, consistently with the rest of this file:** given that the two confirmed, citable
+Turkish-bank docs anywhere in this whole project (Garanti's non-3DS page, VakıfBank's PDF) both
+turned out to require raw-PAN submission, treating NestPay's own "Hosting" branding as proof of
+SAQ-A safety without a citable source would repeat the exact mistake this file's honesty rule
+exists to prevent. So: **stub**, with the finding documented plainly, not a guessed
+`BEST_EFFORT_UNVERIFIED` shape. See `lib/accounting/banks/nestpay_group.ts` for the code-level
+note.
+
+| Banks | Adapter keys | Status |
+|-------|--------------|--------|
+| İş Bankası, Halkbank, TEB, QNB Finansbank, Ziraat, Akbank | `isbank`, `halkbank`, `teb`, `qnb`, `ziraat`, `akbank` (one shared stub factory) | STUB — protocol ambiguous/unconfirmed from public sources; one lead (QNB's own doc) blocked by a tool-level fetch timeout, not resolved either way |
+
+**Garanti BBVA and Yapı Kredi (Posnet)** are explicitly phased as "then" steps after NestPay per
+Kaan's own instruction — not attempted again in this pass. Garanti's status is unchanged from the
+finding below (public doc found, but it's the PAN-touching non-3DS product). Yapı Kredi/Posnet:
+no additional research was done this pass, consistent with "then," not "now" — it remains exactly
+where §4.1 left it (no public API doc found). Both remain interface-complete stubs
+(`AdapterNotImplementedError`) so they slot in cleanly once their phase comes.
 
 ## 2026-10-15 research update — why this is still the honest state, not an oversight
 
@@ -87,17 +139,25 @@ No bank in this table was promoted to a fabricated "best-effort" implementation.
 adapter that happens to compile is not a safer state than an honest stub for a feature that moves
 real money through a real bank account — it is a worse one, because it looks finished.
 
-## Recommended real path (for Kaan's decision, not implemented here)
+## Recommended real path — DECIDED (2026-10-15): hybrid model, see §2.6a
+
+The facilitator recommendation below was acted on. Kaan chose a **hybrid model**: iyzico as the
+real, `VERIFIED`, default payment path (`lib/accounting/facilitators/iyzico.ts`, checklist at
+`lib/accounting/facilitators/CHECKLIST.md`) shipping now, with the direct-bank path kept alive in
+parallel and phased (NestPay group → Garanti/Yapı Kredi → rest-on-demand) rather than abandoned.
+This file's per-bank table below is therefore the **direct-bank path's** status only; it is not
+the only way a doctor can take real card payments through this module — see §2.6a.
+
+The paragraph that led to that decision, kept for the record:
 
 The fastest way to get a genuinely real, PCI-safe, hosted-3DS path across many/all of these banks
 at once is very likely a **payment facilitator** (iyzico, Craftgate, PayTR, Param, or similar) —
 they already provide exactly the `generic_hosted`-shaped hosted checkout, already support most of
-these 11 banks' cards under one merchant agreement, and keep the PCI scope off Notya. That is a
-business decision (which facilitator, whose merchant agreement) rather than something to default
-into alone. Direct bank-by-bank integration remains an option, but — per the VakıfBank and Garanti
-findings above — only once each bank's own *hosted-page* product (not the classic MPI/enrollment
-one) is confirmed, which in practice means after a clinic has actually opened a merchant account
-with that bank and can request their merchant-only documentation.
+these 11 banks' cards under one merchant agreement, and keep the PCI scope off Notya. Direct
+bank-by-bank integration remains an option, but — per the VakıfBank and Garanti findings above —
+only once each bank's own *hosted-page* product (not the classic MPI/enrollment one) is confirmed,
+which in practice means after a clinic has actually opened a merchant account with that bank and
+can request their merchant-only documentation.
 
 For every bank, the minimum to finish it for real, whichever path is chosen:
 

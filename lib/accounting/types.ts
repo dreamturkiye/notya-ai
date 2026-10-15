@@ -123,6 +123,26 @@ export interface PaySessionInput {
   webhookUrl: string
   buyerName?: string
   buyerEmail?: string
+  /**
+   * Facilitator-only buyer fields (iyzico's Checkout Form `buyer` object requires all of these —
+   * see lib/accounting/facilitators/iyzico.ts). Bank adapters ignore them entirely.
+   *
+   * KNOWN GAP (docs/OPEN-COMMITMENTS.md ACCOUNTING-11, unchanged by this hybrid-model pass):
+   * the invoice engine does not yet resolve a patient's real TCKN/address onto these fields —
+   * callers currently pass conservative placeholders. Finishing ACCOUNTING-11 (a KVKK-aware
+   * decision on how much patient PII an outside facilitator/e-belge vendor may see) is what
+   * replaces the placeholders with real patient data; it does not change this adapter's protocol.
+   */
+  buyer?: {
+    id: string
+    surname: string
+    identityNumber: string
+    gsmNumber?: string
+    registrationAddress: string
+    city: string
+    country: string
+    ip?: string
+  }
 }
 
 export interface HostedSession {
@@ -200,6 +220,28 @@ export const ALL_BANK_KEYS: BankKey[] = [
   'teb',
   'kuveyt_turk',
 ]
+
+/**
+ * Direct-bank keys that share the NestPay/ASSEMIST (Payten) gateway infrastructure, per Kaan's
+ * 2026-10-15 hybrid-model instruction ("one adapter covers İş Bankası, Halkbank, TEB, QNB
+ * Finansbank, Ziraat NestPay, Akbank NestPay"). They stay in `ALL_BANK_KEYS`/`BankKey` unchanged —
+ * a doctor still picks their own bank by name — but all six are registered against ONE shared
+ * stub implementation (lib/accounting/banks/nestpay_group.ts) instead of six separate ones, so a
+ * future real NestPay adapter only has to be written once. See
+ * lib/accounting/banks/CHECKLIST.md "NestPay/EST group" section for why this is still a stub.
+ */
+export const NESTPAY_GROUP_BANK_KEYS: BankKey[] = ['isbank', 'halkbank', 'teb', 'qnb', 'ziraat', 'akbank']
+
+/**
+ * Payment facilitator keys (docs/ARCH-NOTYA-ACCOUNTING.md §2.6a — hybrid model). A facilitator
+ * sits in front of many banks under one merchant agreement and, unlike the 11 direct banks, has
+ * genuinely public hosted-checkout API docs (see lib/accounting/facilitators/iyzico.ts). This is
+ * the default/recommended path in the UI; direct bank adapters are a parallel, not sequential,
+ * path (Kaan, 2026-10-15: "Adding more direct-bank adapters later should never require touching
+ * the facilitator code path or vice versa").
+ */
+export type FacilitatorKey = 'iyzico'
+export const ALL_FACILITATOR_KEYS: FacilitatorKey[] = ['iyzico']
 
 export class AdapterNotImplementedError extends Error {
   constructor(public readonly adapterKey: string, public readonly checklistPath: string) {
