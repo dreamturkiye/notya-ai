@@ -1981,3 +1981,30 @@ test('Radyoloji-only Araçlar: radyoloji sees all four; foreign never', () => {
   const kabuk = fs.readFileSync(path.join(kok, 'specialties/radyoloji/ui/araclar/RadyoAracKabugu.tsx'), 'utf8')
   assert.match(kabuk, /Bu araç yalnızca radyoloji için\./)
 })
+
+// ─── NOTYA-OKUL-RAPOR-01 — İstirahat/Katılım/ÇÖZGER: base/ORTAK, gate is the PATIENT's age/öğrenci flag ───
+const OKUL_ROTALARI = ['/doktor-tools/istirahat-raporu', '/doktor-tools/katilim-raporu', '/doktor-tools/cozger-takip']
+
+test('İstirahat / Katılım / ÇÖZGER tiles are base (ORTAK), identical for every branş — not pediatri-only', () => {
+  for (const r of OKUL_ROTALARI) {
+    assert.ok(ORTAK_DOKTOR_ARACLARI.some((a) => a.route === r), `${r} must be a shared ORTAK tile`)
+    assert.ok(!BRANS_DOKTOR_ARACLARI.some((a) => a.route === r), `${r} must not be a chapter-only tile`)
+  }
+  const anahtarlar = Object.keys(BRANS_ETIKETLERI)
+  assert.ok(anahtarlar.length >= 25)
+  for (const b of [...anahtarlar, null, '', 'bilinmeyen-brans']) {
+    const liste = doktorAraclariListesi(b)
+    for (const r of OKUL_ROTALARI) {
+      assert.ok(liste.some((a) => a.route === r), `${b} must see shared ${r}`)
+      assert.equal(doktorAraciBransaUygun(r, b), true, `${b} deep-link ${r}`)
+    }
+  }
+})
+
+test('İstirahat / Katılım / ÇÖZGER commercial copy: no sprint jargon, person names, or ARACLAR ticket ids', () => {
+  for (const r of OKUL_ROTALARI) {
+    const arac = TUM_DOKTOR_ARACLARI.find((a) => a.route === r)!
+    assert.ok(arac, r)
+    assert.doesNotMatch(`${arac.title} ${arac.desc}`, /sprint|audit|Gökhan|Gokhan|Kaan|\.html|ARACLAR-/i, r)
+  }
+})

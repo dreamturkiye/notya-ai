@@ -71,4 +71,19 @@ describe('hastaOzetKayit', () => {
       false,
     )
   })
+
+  it('NOTYA-OKUL-RAPOR-01: ogrenci_mi notes.ogrenciMi\'den okunur, varsayılan null (iddia edilmez)', () => {
+    const bos = notlardanOzetAlanlari({}, { ad_soyad: 'Hasta', dogum_tarihi: null, cinsiyetHam: null, telefon: null, eposta: null })
+    assert.equal(bos.ogrenci_mi, null)
+    const isaretli = notlardanOzetAlanlari({ ogrenciMi: true }, { ad_soyad: 'Hasta', dogum_tarihi: null, cinsiyetHam: null, telefon: null, eposta: null })
+    assert.equal(isaretli.ogrenci_mi, true)
+  })
+
+  it('notesOzetGuncelle ogrenci_mi gövdesini notes.ogrenciMi olarak yazar', () => {
+    const { notes, notesDegisti } = notesOzetGuncelle({}, { ogrenci_mi: true })
+    assert.equal(notesDegisti, true)
+    assert.equal(notes.ogrenciMi, true)
+    const { notes: notes2 } = notesOzetGuncelle({ ogrenciMi: true }, { ogrenci_mi: false })
+    assert.equal(notes2.ogrenciMi, false)
+  })
 })

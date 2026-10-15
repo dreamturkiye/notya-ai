@@ -3427,3 +3427,49 @@ Source: Kaan — dermatoloji was going to Belgeler to attach photos instead of c
 **Not built (Kaan's own scope narrowing, 2026-10):** video capture — photo + PDF only, by explicit instruction; do not add without Kaan asking again. Dermatoloji's clinical content is not duplicated into cardiology or any unrelated branş — would be both branş-alan-sızması and clinically meaningless.
 
 - 2026-10-14 NOTYA-TEST-SANDBOX-FONT-01: `npm test` in this session's sandbox showed 12 failing leaf tests, all tracing to one cause — `node_modules/pdfjs-dist/standard_fonts/LiberationSans-Regular.ttf` was missing from the installed package (only the Foxit `.pfb` fonts were present), which broke every aşı-karnesi PDF route (`ENOENT` / 500) and the tests that call it (`lib/asi/asiKarnesi.test.ts`, `lib/security/hasta-izolasyon.test.ts` PDF subtests). Unrelated to this session's actual work (dermatoloji/KBB/plastik-cerrahi/göz görsel yakalama — zero PDF/font files touched); confirmed by checking the font file was simply absent from `node_modules`, not a code regression. Same class of sandbox-install gap as NOTYA-TEST-SANDBOX-27-01 above. **FIXED 2026-10-14**: `npm install pdfjs-dist@^4.10.38 --no-save` (sandbox-local only, `package.json`/`package-lock.json` untouched) restored the missing Liberation Sans fonts; re-ran `lib/asi/asiKarnesi.test.ts` after — 39/39 pass. No application code changed; nothing to merge for this one.
+
+## NOTYA-OKUL-RAPOR-01 — İstirahat / Katılım / ÇÖZGER okul-rapor araçları (Kaan, 2026-10-15, branch `feat/pediatri-okul-raporlari`, owner Claude)
+
+Three new base (`ORTAK_DOKTOR_ARACLARI`) Doktor Araçları tools: İstirahat ve Geçici Hastalık Raporu
+(okul/kreş izin raporu), Durum Bildirir Sağlık Raporları / Katılım Belgeleri (spor/kreş/erteleme), ÇÖZGER
+takip ve katkı. Full write-up: `docs/README_OKUL_COZGER_RAPORLARI.md`. Migration `151_okul_cozger_raporlari.sql`
+(`istirahat_raporlari`, `katilim_raporlari`, `cozger_basvurulari`, `cozger_kurul_katkilari`; additive, RLS +
+hasta-izolasyon restrictive policy on each, same pattern as migration `104`).
+
+- **Country-pack mismatch, found during this job.** The task brief assumed `ulkeler`/`countries/tr/araclar.ts`/
+  `npm run ulke:arac-anlik` exist on `main` (they are real on other branches, e.g. `release/uz`, which this
+  session's working tree happened to be checked out to before the branch for this work was created off
+  `origin/main`). `main` has none of that — `DoktorArac` carries no `ulkeler` field at all. Implemented the way
+  `main` actually works: plain `ORTAK_DOKTOR_ARACLARI` entries, `branslar: null`, no country field. **Waits on
+  Kaan/Claude**: when the country-pack branch merges into `main`, these three tiles need a `ulkeler: ['tr']`
+  entry and a line in `countries/tr/araclar.ts`, same as every other tool.
+- **e-Okul is NOT a live MEB/Sağlık Bakanlığı integration.** Notya has no such API access or authorization today.
+  The "e-Okul'a iletildi" field is only a checkbox recording that the doctor themself handled their own
+  school/parent communication (same pattern as `DERM-FORM014-BILDIRIM`). **Waits on Kaan**: whether a real
+  e-Okul integration is ever pursued; nothing is built toward it beyond this checkbox.
+- **ÇÖZGER module is a tracking/contribution aid, never an official report generator.** Notya cannot and does
+  not produce an official ÇÖZGER report — that is issued only by the Çocuk Sağlık Kurulu via an MHRS/Alo 182
+  appointment, entirely outside Notya. The fixed on-screen/print warning (`COZGER_UYARI_METNI`) states this.
+  Kurul-member collaboration is scoped so that each doctor's contribution is still gated by their OWN patient
+  ownership (`hastaSahibiMi`) — no new cross-doctor read path was added. **Open, waits on Kaan**: how kurul
+  members actually discover/receive a colleague's `basvuru_id` today is manual/out-of-band (shown as a copyable
+  code on screen); an invite/notification flow (closest existing precedent: the Konsültasyonlar tool's
+  consultant-email pattern) was judged a separate, larger job and was not built here.
+- **Kreş report's "aşı takvimi tam mı" is a conservative proxy, not the national-calendar overdue engine.** The
+  API reads `asiKarnesiVerisi()` (existing aşı karnesi reader) and only asserts "complete" when the patient has
+  no recorded upcoming/pending next-dose entry; it never asserts "incomplete" it cannot verify (left `null`
+  instead). The real gecikme/"zamanı geldi" computation against the national takvim lives inside the pediatri
+  chapter's kohort engine and was not wired into this base (non-pediatri) tool in this job. **Waits on Kaan**:
+  whether that full cross-check is worth building as a shared helper usable from a non-pediatri branş; until
+  then this is the stated, documented limitation.
+- **Age/öğrenci gate** (`lib/doktor/okulAraclariKapisi.ts`) reuses `veliOnamGerekliMi` (age < 18, any branş) OR a
+  doctor-entered `ogrenci_mi` flag stored in the patient's existing `notes_encrypted` JSON (no new patients-table
+  column). The three pages show a soft, non-blocking notice for a patient who is neither — never a hard route
+  block, since the clinical judgment to proceed stays with the doctor.
+- **Tests, this job:** `npx tsc --noEmit` clean (one pre-existing-shape fix: `PatientData` in
+  `app/dashboard/doktor/hastalar/[id]/page.tsx` gained `ogrenci_mi?` to match `HastaOzetKayit`). New unit tests
+  (`okulAraclariKapisi`, `istirahatRaporu`, `katilimRaporu`, `cozgerTakip`, two new `hastaOzetKayit` cases, two
+  new `doktorAraclari` cases) all pass. `lib/security/hasta-izolasyon.test.ts` + its envanter: seven new A↔B
+  cross-doctor cases (GET/POST/PATCH on all three tools) all pass (positive + both cross directions), including
+  a ÇÖZGER-contribution case with an unrelated foreign `basvuruId` to confirm the writer's own patient ownership
+  is what actually gates the write. Full `npm test` run and reported separately (see PR).

@@ -220,6 +220,12 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   'app/api/doktor/fizik-tedavi/route.ts': I('GET and POST both open with hastaSahibiMi(supabase, user.id, patientId) → 404 for a foreign patient; every ftr_* / hasta_fizik_tedavi read/write .eq(patient_id).eq(doctor_id), and row-id updates (gorev, kontrol) carry id + doctor_id + patient_id in the same query'),
   // ── Araçlar ──
   'app/api/doktor/araclar/epikriz/route.ts': T,
+  // NOTYA-OKUL-RAPOR-01
+  'app/api/doktor/araclar/istirahat-raporu/route.ts': T,
+  'app/api/doktor/araclar/istirahat-raporu/[id]/route.ts': T,
+  'app/api/doktor/araclar/katilim-raporu/route.ts': T,
+  'app/api/doktor/araclar/cozger-takip/route.ts': T,
+  'app/api/doktor/araclar/cozger-takip/katki/route.ts': T,
   'app/api/doktor/araclar/enabiz/route.ts': T,
   'app/api/doktor/araclar/enabiz/mbys/route.ts': T,
   'app/api/doktor/araclar/erecete/route.ts': I('patient ownership check (id AND doctor_id) before any read → 404'),

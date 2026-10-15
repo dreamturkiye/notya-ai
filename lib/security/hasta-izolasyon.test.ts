@@ -153,6 +153,8 @@ type Hekim = {
   defter: string
   /** Rows THIS doctor filed under the OTHER doctor's patient — the contamination a pre-fix IDOR left behind. */
   hileliSeans: string; hileliNot: string
+  /** NOTYA-OKUL-RAPOR-01: an existing İstirahat raporu of the doctor's own patient (PATCH e-Okul target). */
+  istirahatRaporu: string
 }
 const isaret = (h: Harf) => `GIZLI-${h}-7Q`
 
@@ -256,12 +258,14 @@ function hekimKur(harf: Harf): Hekim {
   const takip = db.ekle('takip_isleri', { doktor_id: id, patient_id: hasta, tur: 'konsultasyon', durum: 'acik', vade: trGun(-2, 12).slice(0, 10), kosullu: false, kaynak_not_id: null, kaynak_randevu_id: null, kaynak_sevk_id: null, ozet: `Takip ${m}`, alinti: null, kapandi_at: null, kapandi_neden: null }).id
   // KONSULTASYONLAR-01: the doctor's consultant address book
   const defter = db.ekle('konsultasyon_defter', { doctor_id: id, ad_soyad: `Dr. Defter ${m}`, brans: 'kulak-burun-bogaz', telefon: null, ofis_telefon: null, adres: null, eposta: null, whatsapp: null, kurum_ici: false, not_metni: null }).id
+  // NOTYA-OKUL-RAPOR-01: bu hekimin kendi hastası için yazdığı bir istirahat raporu (PATCH e-Okul hedefi).
+  const istirahatRaporu = db.ekle('istirahat_raporlari', { doctor_id: id, patient_id: hasta, tani: `Rapor ${m}`, gun_sayisi: 3, baslangic_tarihi: '2026-10-01', bitis_tarihi: '2026-10-03', egitim_yili: '2026-2027', e_okula_iletildi: false }).id
   const zaman = new Date(Date.now() - 60e3).toISOString()
   const asistanOturum = db.ekle('asistan_sessions', {
     doctor_id: id, patient_id: null, persona_id: 'aysekaya', active_context: {},
     messages: [{ role: 'user', content: 'Sentetik soru', kanal: 'ses', zaman }, { role: 'assistant', content: `Cevap ${m}`, kanal: 'ses', zaman }],
   }).id
-  return { takip, defter, harf, id, token, hasta, seans, not, bekleyenNot, ilac, panel, belge, randevu, serbestRandevu, talep, hastaDerm, lezyon, dogum, bebekKart, portalToken, konu, asistanEylem, gozGoruntu, belgeAnaliz, dermAnaliz, konsultasyon, konsultasyonYanitli, kasaBelge, asiHatirlatma, eylemOneri, eylemKayit, sonlanmisIlac, kuyruk, gelenBelge, asistanOturum, hileliSeans: '', hileliNot: '' }
+  return { takip, defter, harf, id, token, hasta, seans, not, bekleyenNot, ilac, panel, belge, randevu, serbestRandevu, talep, hastaDerm, lezyon, dogum, bebekKart, portalToken, konu, asistanEylem, gozGoruntu, belgeAnaliz, dermAnaliz, konsultasyon, konsultasyonYanitli, kasaBelge, asiHatirlatma, eylemOneri, eylemKayit, sonlanmisIlac, kuyruk, gelenBelge, asistanOturum, hileliSeans: '', hileliNot: '', istirahatRaporu }
 }
 
 /** Contamination X planted under Y's patient before the fixes (anon-key session insert, unchecked POSTs). */
@@ -483,6 +487,27 @@ const VAKALAR: Vaka[] = [
     cagir: (r, a, h) => coz(r.epikriz.POST(iste('POST', '/api/doktor/araclar/epikriz', { token: a.token, govde: { hastaId: h.hasta, seansId: a.seans } }))) },
   { ad: 'GET /api/doktor/araclar/enabiz?hastaId (e-Nabız masası)', red: 404, okur: true,
     cagir: (r, a, h) => coz(r.enabizMasa.GET(iste('GET', `/api/doktor/araclar/enabiz?hastaId=${h.hasta}`, { token: a.token }))) },
+  // NOTYA-OKUL-RAPOR-01 — İstirahat / Katılım / ÇÖZGER: her yeni tablo patient_id + doctor_id ile, hastaSahibiMi
+  // ile korunuyor; yabancı hastaId her uçta 404.
+  { ad: 'GET /api/doktor/araclar/istirahat-raporu?hastaId', red: 404,
+    cagir: (r, a, h) => coz(r.istirahatRaporu.GET(iste('GET', `/api/doktor/araclar/istirahat-raporu?hastaId=${h.hasta}`, { token: a.token }))) },
+  { ad: 'POST /api/doktor/araclar/istirahat-raporu (okul izin raporu)', red: 404,
+    yazdi: (a) => tablo('istirahat_raporlari').some((x) => x.patient_id === a.hasta && x.tani === 'QA Grip'),
+    cagir: (r, a, h) => coz(r.istirahatRaporu.POST(iste('POST', '/api/doktor/araclar/istirahat-raporu', { token: a.token, govde: { hastaId: h.hasta, tani: 'QA Grip', gunSayisi: 3, baslangicTarihi: '2026-10-01' } }))) },
+  { ad: 'PATCH /api/doktor/araclar/istirahat-raporu/[id] (e-Okul işareti, yabancı rapor)', red: 404,
+    cagir: (r, a, h) => coz(r.istirahatRaporuDetay.PATCH(iste('PATCH', `/api/doktor/araclar/istirahat-raporu/${h.istirahatRaporu}`, { token: a.token, govde: { eOkulaIletildi: true } }), prm({ id: h.istirahatRaporu }))) },
+  { ad: 'GET /api/doktor/araclar/katilim-raporu?hastaId', red: 404,
+    cagir: (r, a, h) => coz(r.katilimRaporu.GET(iste('GET', `/api/doktor/araclar/katilim-raporu?hastaId=${h.hasta}`, { token: a.token }))) },
+  { ad: 'POST /api/doktor/araclar/katilim-raporu (spor katılım raporu)', red: 404,
+    yazdi: (a) => tablo('katilim_raporlari').some((x) => x.patient_id === a.hasta && x.tur === 'spor'),
+    cagir: (r, a, h) => coz(r.katilimRaporu.POST(iste('POST', '/api/doktor/araclar/katilim-raporu', { token: a.token, govde: { hastaId: h.hasta, tur: 'spor', sonuc: { sakinca: 'yok' } } }))) },
+  { ad: 'GET /api/doktor/araclar/cozger-takip?hastaId', red: 404,
+    cagir: (r, a, h) => coz(r.cozgerTakip.GET(iste('GET', `/api/doktor/araclar/cozger-takip?hastaId=${h.hasta}`, { token: a.token }))) },
+  { ad: 'POST /api/doktor/araclar/cozger-takip (başvuru oluştur)', red: 404,
+    yazdi: (a) => tablo('cozger_basvurulari').some((x) => x.patient_id === a.hasta),
+    cagir: (r, a, h) => coz(r.cozgerTakip.POST(iste('POST', '/api/doktor/araclar/cozger-takip', { token: a.token, govde: { hastaId: h.hasta } }))) },
+  { ad: 'POST /api/doktor/araclar/cozger-takip/katki (kurul katkısı, yabancı hastaId)', red: 404,
+    cagir: (r, a, h) => coz(r.cozgerKatki.POST(iste('POST', '/api/doktor/araclar/cozger-takip/katki', { token: a.token, govde: { basvuruId: randomUUID(), hastaId: h.hasta, brans: 'Çocuk Psikiyatrisi', bulgu: 'QA bulgu' } }))) },
   // MBYS-YARDIMCI-01 — Gün sonu MBYS kuyruğu: a foreign visit's record / status / identity is never read or written.
   { ad: 'GET /api/doktor/araclar/enabiz/mbys?notId (MBYS kaydı)', red: 404, okur: true,
     cagir: (r, a, h) => coz(r.enabizMbys.GET(iste('GET', `/api/doktor/araclar/enabiz/mbys?notId=${h.not}`, { token: a.token }))) },
@@ -757,6 +782,12 @@ describe('HASTA-İZOLASYON: doktor A ve doktor B birbirinin hastasına hiçbir r
       randevu: await ice('app/api/doktor/randevular/[id]/route'),
       gunProgrami: await ice('app/api/doktor/gun-programi/route'),
       epikriz: await ice('app/api/doktor/araclar/epikriz/route'),
+      // NOTYA-OKUL-RAPOR-01
+      istirahatRaporu: await ice('app/api/doktor/araclar/istirahat-raporu/route'),
+      istirahatRaporuDetay: await ice('app/api/doktor/araclar/istirahat-raporu/[id]/route'),
+      katilimRaporu: await ice('app/api/doktor/araclar/katilim-raporu/route'),
+      cozgerTakip: await ice('app/api/doktor/araclar/cozger-takip/route'),
+      cozgerKatki: await ice('app/api/doktor/araclar/cozger-takip/katki/route'),
       enabizMasa: await ice('app/api/doktor/araclar/enabiz/route'),
       enabizMbys: await ice('app/api/doktor/araclar/enabiz/mbys/route'),
       asilar: await ice('app/api/doktor/asilar/route'),

@@ -38,6 +38,12 @@ export const ORTAK_DOKTOR_ARACLARI: readonly DoktorArac[] = [
   { circleColor: '#F59E0B', icon: 'SK', title: 'Sık kullandıklarım', desc: 'Kendi vizit şablonlarınız: alışılmış tanı · reçete taslağı · kontrol aralığı — tek dokunuşla ön doldurulur, tamamen düzenlenebilir', route: '/doktor-tools/sablonlarim', branslar: null },
   // KONSULTASYONLAR-01 — defter · istem · bekleyen (alt sekme) · konsültan portalı; kohort paneli olsun olmasın her branşta aynı.
   { circleColor: '#0891B2', icon: 'KS', title: 'Konsültasyonlar', desc: 'Güvendiğiniz konsültan defteri · muayeneden istem · yanıt bekleyenler · konsültan e-posta linkiyle rapor bırakır', route: '/doktor-tools/konsultasyonlar', branslar: null },
+  // NOTYA-OKUL-RAPOR-01 (Kaan, 2026-10-15) — base/ORTAK: her branş görür; gate PATIENT yaşı/öğrenci bayrağıdır
+  // (lib/doktor/okulAraclariKapisi.ts), branş DEĞİL. Bir kardiyolog, dermatolog vs. çocuk/öğrenci hastaya okul
+  // izin raporu veya spor katılım raporu yazabilir; ÇÖZGER kurulunda pediatri ≥4 branştan sadece biridir.
+  { circleColor: '#A16207', icon: 'İR', title: 'İstirahat ve Geçici Hastalık Raporu', desc: "Okul/kreş izin raporu — tek seferde en çok 10 gün · eğitim yılı toplamı 20 günü aşarsa bilgi uyarısı · e-Okul'a iletildi işareti (canlı MEB entegrasyonu değil)", route: '/doktor-tools/istirahat-raporu', branslar: null },
+  { circleColor: '#C2410C', icon: 'DB', title: 'Durum Bildirir Sağlık Raporları', desc: 'Spor katılım · kreş/okul öncesi sağlık · okula başlama erteleme raporu — aşı takvimi tam olup olmadığı aşı modülünden okunur', route: '/doktor-tools/katilim-raporu', branslar: null },
+  { circleColor: '#7C3AED', icon: 'ÇÖ', title: 'ÇÖZGER takip ve katkı', desc: 'Kurul üyesi doktorların kendi bulgularını ortak başvuruya bağlı kaydetmesi ve başvuru durumu takibi — resmi ÇÖZGER raporu üretmez, Çocuk Sağlık Kurulu düzenler', route: '/doktor-tools/cozger-takip', branslar: null },
 ]
 
 /**

@@ -115,6 +115,8 @@ interface PatientData {
   alerjiler: string | null
   surekli_ilaclar: string | null
   sigara_alkol: string | null
+  /** NOTYA-OKUL-RAPOR-01 */
+  ogrenci_mi?: boolean | null
   anne_boy_cm?: number | null
   baba_boy_cm?: number | null
   /** NOTYA-OZET-CIFT-01 */

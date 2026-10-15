@@ -18,6 +18,9 @@ export type HastaOzetKayit = {
   alerjiler: string | null
   surekli_ilaclar: string | null
   sigara_alkol: string | null
+  /** NOTYA-OKUL-RAPOR-01: hekimin işaretlediği "öğrenci" bayrağı — reşit öğrenci için okul araçları gatesi
+   *  (lib/doktor/okulAraclariKapisi.ts). Yaştan bağımsız, branştan bağımsız; yalnız bu hastaya bağlı. */
+  ogrenci_mi: boolean | null
 }
 
 export function kronikListesi(notes: Record<string, unknown>): string[] {
@@ -53,6 +56,7 @@ export function notlardanOzetAlanlari(
     alerjiler: notes.alerjiler != null ? String(notes.alerjiler) || null : null,
     surekli_ilaclar: notes.suregenIlaclar != null ? String(notes.suregenIlaclar) || null : null,
     sigara_alkol: notes.sigaraAlkol != null ? String(notes.sigaraAlkol) || null : null,
+    ogrenci_mi: typeof notes.ogrenciMi === 'boolean' ? notes.ogrenciMi : null,
   }
 }
 
@@ -109,6 +113,7 @@ export function notesOzetGuncelle(
   if (body.alerjiler !== undefined) yaz('alerjiler', String(body.alerjiler || '').trim())
   if (body.surekli_ilaclar !== undefined) yaz('suregenIlaclar', String(body.surekli_ilaclar || '').trim())
   if (body.sigara_alkol !== undefined) yaz('sigaraAlkol', String(body.sigara_alkol || '').trim())
+  if (body.ogrenci_mi !== undefined) yaz('ogrenciMi', body.ogrenci_mi === true)
   if (body.kronik_hastaliklar !== undefined) {
     const raw = body.kronik_hastaliklar
     const liste = Array.isArray(raw)
