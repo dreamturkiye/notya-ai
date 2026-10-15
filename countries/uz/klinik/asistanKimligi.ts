@@ -38,7 +38,8 @@
 import { uzKirillga, uzRuschaYozuvga } from '../yozuv'
 import { uzAsistanAdi } from './asistanAdlari'
 import { UZ_ASISTAN_UNVANLARI } from './asistanUnvanlari'
-import { uzAdDili, uzRolMu, type UzAdDili } from './rolAdlari'
+import { UZ_ROL_SATIRLARI } from './rolListesi'
+import { UZ_ROL_ADLARI, uzAdDili, uzRolMu, type UzAdDili } from './rolAdlari'
 
 export type AsistanKimligi = {
   /** Full name with its title, in the form asked for. */
@@ -61,8 +62,19 @@ function yaz(latin: string, d: UzAdDili): string {
 export function uzAsistanKimligi(rol: unknown, dil: unknown): AsistanKimligi | null {
   // Only a role of the pack has an assistant: the owner's list still holds the names of the roles the audit of
   // 2026-10-10 took out (./rolListesi.ts), and none of them is shown any more.
-  const a = uzRolMu(rol) ? uzAsistanAdi(rol) : null
-  if (!a) return null
+  if (!uzRolMu(rol)) return null
+  const a = uzAsistanAdi(rol)
+  if (!a) {
+    // NOTYA-ASISTAN-SABLON — a role the owner has not named yet still has the professor of that specialty.
+    // No personal name is invented. The title is the catalogue's, and the specialty is this role's own.
+    const satir = UZ_ROL_SATIRLARI.find((r) => r.anahtar === rol)
+    const ad = UZ_ROL_ADLARI[rol]
+    if (!satir || !ad) return null
+    const d = uzAdDili(dil)
+    if (satir.taraf === 'klinik-muttefik') return { tamAd: ad[d], kisaAd: ad[d], unvanliKisaAd: ad[d], makineTuretimi: true }
+    const unvan = UZ_ASISTAN_UNVANLARI[d]['prof-dr']
+    return { tamAd: `${unvan.tam} ${ad[d]}`, kisaAd: ad[d], unvanliKisaAd: `${unvan.kisa} ${ad[d]}`, makineTuretimi: true }
+  }
   const d = uzAdDili(dil)
   const kisaAd = yaz(a.kisaAd, d)
   const soyad = yaz(a.soyad, d)

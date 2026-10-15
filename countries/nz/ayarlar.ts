@@ -23,6 +23,7 @@
  * Plain data: type-only imports, so that the pack's light data file can read it.
  */
 import type { EnUlkeGirdisi } from '../_dil/en/girdi'
+import { NZ_ULUSAL } from './asistan/ulusal'
 import type { EnRolDegisimi } from '../_dil/en/klinik/roller'
 import type { Birimler } from '@/lib/ulke/tipler'
 
@@ -136,6 +137,7 @@ export const NZ_GIRDI: EnUlkeGirdisi = {
     odeme: 'NHI',
   },
   ulkeAdi: 'New Zealand',
+  asistanUlusal: NZ_ULUSAL,
   // The word a senior doctor goes by here. SOURCE-CHECKED: the medical council describes vocational registration as
   // "specialist registration". Hospitals also say "consultant" and "senior medical officer": for a local clinical lead.
   kidemliHekim: 'specialist',

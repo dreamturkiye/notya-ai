@@ -4,8 +4,8 @@
  * CONTENT ONLY, client-safe. The instructions to the model and the intake questions are the server half
  * (./klinik/index.ts) and are not imported here.
  *
- * NO ASSISTANT IS NAMED. An English-speaking pack brings no persona name (the owner's decision per country,
- * checklist D1; none has been proposed): every role shows the neutral assistant line.
+ * THE ASSISTANT is one professor per role (a senior professional for an allied role), named by title until the
+ * owner gives her a personal name. The chart core is shared; the national reference is the country's.
  */
 import type { UlkeArayuzu } from '@/lib/ulke/arayuz/tipler'
 import { EN_CAPA, EN_FONT_HREF, enAcilis } from './acilis'
@@ -14,6 +14,7 @@ import { enForm } from './form'
 import type { EnUlkeGirdisi } from './girdi'
 import { enNotSablonlari } from './klinik/notSablonlari'
 import { enRolTanimlari } from './klinik/roller'
+import { asistanKimligiKur } from '@/lib/ulke/asistan/kimlik'
 import { enKlinikMetinleri } from './klinikMetinleri'
 import { enMesaj } from './mesaj'
 import { enPortal } from './portal'
@@ -35,8 +36,12 @@ export function enArayuz(g: EnUlkeGirdisi): UlkeArayuzu {
     formMetinleri: { [bicim]: enForm(g.sozler) },
     araclar: enAraclar({ sozler: g.sozler, ulke: g.ulkeAdi, birimler: g.birimler, ...g.araclar, ...(g.roller ? { roller } : {}) }),
     roller,
-    // No persona is named in an English-speaking pack: the screens show the neutral line for every role.
-    asistan: () => null,
+    // One assistant for every role of the pack, including clinic doctors and allied professions. The title only:
+    // the three references are the server instruction, not this screen. A key that is not a role has none.
+    asistan: (rol) => {
+      const r = roller.find((x) => x.anahtar === rol)
+      return r ? asistanKimligiKur({ uzmanlik: r.ad[bicim] ?? rol, taraf: r.taraf }) : null
+    },
     notSablonlari: enNotSablonlari(bicim, g.roller),
     acilis: {
       diller: [bicim],
