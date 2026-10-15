@@ -99,6 +99,129 @@ Pipeline:
 5. Status machine: `draft → pending_issue → issued → partially_paid → paid → cancelled/void` (+ credit-note path).
 6. Store integrator response + Notya ledger IDs; never forge GİB documents locally.
 
+### 2.3.1 e-SMM / e-Fatura integrator setup
+
+This subsection specifies how a doctor connects a **private GİB e-belge integrator** so Notya can submit documents **only as that doctor’s (or clinic’s) taxpayer**. Notya is never the issuer.
+
+#### Who the integrator is
+
+The doctor (or clinic) already has — or obtains — a commercial e-belge provider registered with GİB, for example:
+
+| Example vendor | Typical use |
+|----------------|-------------|
+| **NES** | e-SMM / e-Fatura / e-Arşiv APIs |
+| **QNB eSolutions** | Bank-adjacent e-belge stack |
+| **Logo** | ERP-linked e-belge |
+| Other GİB-listed integrators | Same pattern via adapter |
+
+Notya does **not** pick a single exclusive vendor at architecture level. Each practice selects their integrator in Entegrasyonlar; Notya talks to them through a thin **e-belge adapter** (`lib/accounting/ebelge/*`) keyed by `integrator_vendor`.
+
+#### Ownership & issuance rule (repeat)
+
+1. Legal issuer on every document = doctor’s **TCKN** or clinic’s **VKN** (from `accounting_tax_profiles`).
+2. Credentials belong to the doctor’s integrator account.
+3. Notya stores credentials in the **encrypted vault**, calls the integrator API, and records ETN/UUID/PDF URLs.
+4. Notya **must not** embed a Notya VKN/TCKN as issuer, mint local “fake” e-belge XML for GİB, or settle fees as if Notya were the merchant of the tax document.
+
+#### Credentials stored in the encrypted vault
+
+Exact field names vary by vendor; the vault payload is vendor-shaped JSON under `accounting_ebelge_credentials.secrets_enc`. Common required material:
+
+| Field (logical) | Purpose |
+|-----------------|--------|
+| `integrator_vendor` | e.g. `nes`, `qnb_esolutions`, `logo`, `other` |
+| `environment` | `test` \| `live` |
+| `api_base_url` | Vendor endpoint (test vs live URLs differ) |
+| `client_id` / `api_key` | Application identity |
+| `client_secret` / `api_secret` | Confidential (never logged) |
+| `username` / `password` | Some vendors use basic or form auth |
+| `vkn_or_tckn` | Taxpayer identity bound to the integrator contract (must match tax profile) |
+| `alias` / `gb_pk` / mailbox codes | e-Fatura sender/receiver unit codes when required |
+| `certificate` / `private_key` (PEM) or `pfx` + passphrase | If vendor uses mutual TLS or signed envelopes |
+| `webhook_secret` | Optional HMAC for status callbacks from integrator |
+| `company_code` / `branch_code` | Multi-branch clinic mappings |
+
+Operational rules: secrets only in vault; UI shows masked values; rotate via re-entry; audit who changed credentials (never the secret values themselves).
+
+#### Setup wizard steps (Entegrasyonlar → Faturalama & Tahsilat)
+
+When the module is on, the wizard (or Settings → e-Belge) runs in order:
+
+1. **Tax profile** — TCKN or VKN, unvan, address, vergi dairesi; default KDV %10 (health).
+2. **Choose integrator** — NES / QNB eSolutions / Logo / Other (custom base URL + field map).
+3. **Environment** — Start on **test**; require explicit “Go live” later.
+4. **Enter credentials** — Secure form → encrypted vault; optional “Test connection”.
+5. **Document capability check** — Probe which products the account can issue: e-SMM, e-Fatura, e-Arşiv.
+6. **Defaults** — Default document type (usually **e-SMM** for independent doctors); default KDV rate code; optional e-Fatura GB/PK aliases.
+7. **Bank POS** (separate step) — merchant config; independent of e-belge but same module.
+8. **Confirm** — Summary; module ready for drafts; live issue blocked until environment = live **and** connection test passed.
+
+Sekretary cannot edit integrator credentials (doktor-only).
+
+#### e-SMM vs e-Fatura / e-Arşiv flows
+
+| | **e-SMM** (primary) | **e-Fatura** | **e-Arşiv Fatura** |
+|--|---------------------|--------------|---------------------|
+| Typical customer | Independent / serbest hekim | Clinic / company selling to **VKN** (e-Fatura mükellefi) buyer | Clinic / hekim selling to consumer or non–e-Fatura buyer when e-Arşiv obligation applies |
+| Buyer id | Often TCKN or foreign id | **VKN** + e-Fatura mailbox (PK) | TCKN/VKN/foreign per rules |
+| Notya default | **Default document type for MVP** | Available when integrator + tax profile allow | Same — architecturally ready |
+| Submit path | Adapter `issueEsmm(invoice)` → integrator → GİB | `issueEfatura(invoice)` | `issueEarsiv(invoice)` |
+| Portal PDF | Integrator PDF/UUID if allowed | Same | Same |
+
+**Independent doctors:** wizard defaults to e-SMM; UI can still offer e-Arşiv/e-Fatura if the integrator account supports them and product policy allows.
+
+**Clinics / SGK-contracted practices:** may default to e-Fatura or e-Arşiv by practice setting; SGK settlement **claims** are out of scope of this billing module unless a later adapter is added — this section only covers commercial e-belge issuance to patients/payers.
+
+Shared pipeline for all types:
+
+`draft → validate (buyer + tax profile + rate) → pending_issue → POST to doctor’s integrator → issued (store ETN/UUID/PDF) → pay/AR → paid`  
+Failures: `pending_issue → issue_failed` with vendor error code; user can retry or edit draft.
+
+#### Testing vs live
+
+| | Test | Live |
+|--|------|------|
+| Credentials | Vendor sandbox keys | Production keys |
+| GİB effect | No real fiscal document (or vendor test GİB) | Real e-belge under doctor’s identity |
+| Notya gate | `environment=test` allows end-to-end UI + fake/sandbox pay | Issue + real POS only if `environment=live` and doktor confirmed |
+| Switch | Explicit “Promote to live” after successful test issue | Demote only with doktor confirm (blocks new live issues) |
+
+Never mix: a live invoice must not call the test base URL.
+
+#### How Notya submits without issuing in its own name
+
+1. Build canonical invoice DTO from ledger (lines, matrah, KDV, buyer, seller = **tax profile**).
+2. Map DTO → vendor payload; **seller identity fields always from doctor/clinic profile**, never from Notya platform constants.
+3. Authenticate with **vault credentials for that practice**.
+4. HTTP(S) call to integrator; persist raw response id, status, PDF link.
+5. On success, mark `issued` and show doctor’s document numbers in UI/portal.
+6. On cancel/credit, call integrator reverse/credit APIs under the **same** taxpayer identity.
+
+#### Configuration options (module + invoice)
+
+- Default document type: `esmm` \| `efatura` \| `earsiv`
+- Default KDV rate / `KDV_10_HEALTH` with line overrides
+- Portal visibility default
+- Integrator vendor + environment
+- Optional auto-send pay link after successful issue
+- Retry policy (max attempts, backoff) for transient integrator errors
+- Webhook URL registered at vendor (if supported) pointing at `/api/accounting/ebelge/webhook`
+
+#### Error handling & status tracking
+
+| Invoice / job status | Meaning |
+|----------------------|---------|
+| `draft` | Editable; not sent |
+| `pending_issue` | Submit in flight |
+| `issued` | Integrator accepted; ETN/UUID stored |
+| `issue_failed` | Vendor/GİB rejection; error code + message stored for doktor |
+| `cancel_pending` / `cancelled` | Void/cancel path |
+| `credit_pending` / `credited` | Credit note path |
+
+Errors: map vendor codes to user-visible Turkish messages (auth, validation, buyer not e-Fatura mükellefi, quota, timeout). Idempotency key = Notya `invoice_id` so retries do not double-issue. Background job re-queries integrator status when webhook missed. All transitions → `accounting_audit_log`.
+
+---
+
 ### 2.4 Discounts & credits
 
 - Line or invoice-level discount (% or fixed TRY), with reason + actor audit.
@@ -373,6 +496,7 @@ UI entry: **Entegrasyonlar → Faturalama & Tahsilat**.
 | Version | Date | Change |
 |---------|------|--------|
 | 1.0 | 2026-10-15 | Initial master architecture: optional Entegrasyonlar module, doctor-owned POS + e-belge, 11-bank MVP, e-SMM primary, AR/RBAC/reporting/portal toggle, hosted 3DS, GİB/KDV/KVKK, TR as template for 6 later countries |
+| 1.1 | 2026-10-15 | Added §2.3.1 e-SMM / e-Fatura integrator setup (vendors, vault credentials, wizard, test/live, submission model, config, errors) |
 
 ---
 
