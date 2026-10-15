@@ -27,6 +27,7 @@
 import { hekimRolleri } from '@/lib/ulke/araclar/paket'
 import type { EnUlkeGirdisi } from '../_dil/en/girdi'
 import { enRolSatirlari } from '../_dil/en/klinik/roller'
+import { US_ULUSAL } from './asistan/ulusal'
 import { usAcilacakEk } from './araclar/metinler'
 import { US_ROLLER, US_YENIDEN_ADLANANLAR } from './roller'
 import { US_BIRIMLER, US_VELI_YASI } from './temel'
@@ -78,6 +79,7 @@ export const US_GIRDI: EnUlkeGirdisi = {
     odeme: 'Health plan',
   },
   ulkeAdi: 'the United States',
+  asistanUlusal: US_ULUSAL,
   // The word a senior hospital doctor goes by here. Source: the glossary of the body that accredits residency
   // programs defines "attending physician" (acgme.org/globalassets/pdfs/ab_acgmeglossary.pdf, read 2026-10-09).
   kidemliHekim: 'attending physician',
