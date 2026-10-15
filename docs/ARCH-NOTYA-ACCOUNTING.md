@@ -300,15 +300,17 @@ the "Notya never sees PAN/CVV" rule), Kaan chose a hybrid model instead of forci
 2. **Direct bank path — phased, parallel, not blocking.** Still the same `BankPosAdapter`
    interface from §2.6, unchanged:
    - **NestPay/EST group** (İş Bankası, Halkbank, TEB, QNB Finansbank, Ziraat, Akbank) — these six
-     keys now share ONE stub factory, `lib/accounting/banks/nestpay_group.ts`, instead of six
-     independent ones, so a future real implementation is written once. Still a **stub**: no
-     official, bank- or Asseco-published documentation of the NestPay "3D Pay Hosting" protocol
-     was found publicly in the 2026-10-15 research pass (see CHECKLIST.md) — what exists is
-     third-party reverse-engineered libraries whose sample code is ambiguous on whether the
-     merchant server still handles the PAN. One potentially authoritative source
-     (`vpos.qnb.com.tr/Help/apiIntegrationDocument`) could not be fetched (tool-level
-     provenance/permission timeout, not a content refusal) and is flagged as an open lead for a
-     human with direct browser access, not a dead end.
+     keys share ONE real adapter, `lib/accounting/banks/nestpay.ts` ("3D Pay Hosting" mode),
+     **VERIFIED by protocol cross-reference** (2026-10-15, second research pass). The first pass
+     found no modern developer *portal* and stopped there; Kaan's follow-up correctly pointed out
+     that is not the same as "no documentation exists" — this pass read two independent,
+     actively-real, MIT-licensed open-source libraries' actual source code (not just READMEs) to
+     confirm, structurally, that the Hosting-mode request has no card field at all and to
+     cross-confirm the exact hash/signature algorithm. See `lib/accounting/banks/CHECKLIST.md` for
+     the full citation trail and exactly what is and isn't confirmed (no primary bank-published
+     PDF was found either pass — this status rests on cross-referenced open-source protocol
+     confirmation, one tier below iyzico's direct-vendor-docs confirmation, and that distinction
+     is stated plainly rather than blurred).
    - **Garanti BBVA, Yapı Kredi (Posnet)** — explicitly phased as "then" steps per Kaan's own
      instruction, not required in this pass. Both stay clearly-labeled stubs
      (`AdapterNotImplementedError`), interface-complete so they slot in later without rework.
@@ -531,7 +533,29 @@ channel that asserts its own authenticity will be evaluated the same way. What w
 Kaan's own words appearing as his own turn in the conversation — not a stronger claim embedded in
 someone else's relay of it.
 
-## 5. Data model notes
+## 4.4 NestPay built for real; merge handed back to Kaan this round (2026-10-15, third message)
+
+A further relayed message pushed back specifically on the §4.2/§4.3 NestPay finding: "no modern
+developer portal" is not "no documentation exists," and asked for the NestPay group to be built
+for real using the known protocol plus existing open-source reference implementations — the
+correct standard, which the first two passes had not actually applied (they stopped at a portal
+search and read READMEs, not source code). This time the message did **not** ask this session to
+merge/deploy — it said Kaan would handle that himself from the main conversation after reviewing
+this report, which is exactly the posture §4.2/§4.3 said was needed (his own direct word, not a
+relay, authorizing that specific action). That removes the provenance conflict for this round
+entirely: everything asked for here was ordinary engineering direction, acted on in full.
+
+What was built: `lib/accounting/banks/nestpay.ts`, a real `BankPosAdapter` for NestPay/EST "3D Pay
+Hosting" mode, covering all six NestPay-group banks, built by reading two independent, real,
+actively-maintained MIT-licensed libraries' source code (not READMEs, not copied code) — see
+CHECKLIST.md for the full citation trail. Cross-referencing two independent implementations of
+the same structural detail (no card field in the hosting-mode request; the exact SHA-512/`ver3`
+hash algorithm) is what makes this a real confirmation, not a guess — the same evidentiary bar
+already applied to iyzico, just reached through open-source protocol study instead of a vendor's
+own docs portal, since that is genuinely what exists for this protocol.
+
+`feat/notya-accounting` remains pushed, not merged by this session — per this round's own
+instruction, Kaan takes that step himself.
 
 Illustrative tables (Supabase / Postgres, practice-scoped RLS; encrypt sensitive columns at rest as elsewhere in Notya).
 
@@ -649,6 +673,7 @@ UI entry: **Entegrasyonlar → Faturalama & Tahsilat**.
 | 1.2 | 2026-10-15 | Added implementation honesty notice + §4.1: one real generic `BankPosAdapter` + one real generic `EbelgeAdapter`, the rest stubbed with per-adapter checklists — mandatory override from the CEO's own build brief, divergence recorded explicitly as instructed |
 | 1.3 | 2026-10-15 | Added §4.2: a relayed instruction to finish all 11 banks for real and merge to main was not acted on (not a direct user instruction; real research found the publicly-documented bank integration pattern is PAN-touching, conflicting with the hosted-3DS/no-PAN rule) — checklists upgraded with real findings instead; branch left un-merged |
 | 1.4 | 2026-10-15 | Added §2.6a hybrid payment model (iyzico facilitator as default/`VERIFIED`, NestPay-group/Garanti/Yapı Kredi direct-bank path phased and parallel) and §4.3 (adopted the hybrid model in full; merge/deploy still not performed, for the same provenance reason as §4.2, applied even though this message claimed to be direct rather than relayed) |
+| 1.5 | 2026-10-15 | NestPay group moved from stub to REAL (`lib/accounting/banks/nestpay.ts`, VERIFIED by protocol cross-reference against two independent open-source implementations' source code) per Kaan's correction that "no portal" ≠ "no documentation." Added §4.4. Merge/deploy handed back to Kaan for this round, per his own instruction — no provenance conflict this time. |
 
 ---
 
