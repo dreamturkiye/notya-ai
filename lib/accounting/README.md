@@ -9,9 +9,11 @@ for.
 Payment path (hybrid model, `docs/ARCH-NOTYA-ACCOUNTING.md` §2.6a): **iyzico** is a real, `VERIFIED`
 `PaymentFacilitatorAdapter` (`facilitators/iyzico.ts`) and the default/recommended path. Of the 11
 named direct banks, 6 (İş Bankası, Halkbank, TEB, QNB Finansbank, Ziraat, Akbank) share one real
-adapter (`banks/nestpay.ts`, NestPay/EST "3D Pay Hosting", VERIFIED by protocol cross-reference)
-plus `generic_hosted.ts` (one real documented generic protocol); the remaining 5 (Yapı Kredi,
-Garanti BBVA, VakıfBank, Denizbank, Kuveyt Türk) are stubs — see `banks/CHECKLIST.md`. One real `EbelgeAdapter`
+adapter (`banks/nestpay.ts`, NestPay/EST "3D Pay Hosting", VERIFIED by protocol cross-reference),
+**Garanti BBVA** (`banks/garanti.ts`, REAL — direct vendor docs) and **Yapı Kredi**
+(`banks/yapikredi_posnet.ts`, REAL — BEST-EFFORT single-source OSS cross-reference) are each real,
+plus `generic_hosted.ts` (one real documented generic protocol); the remaining 3 (VakıfBank,
+Denizbank, Kuveyt Türk) are stubs — see `banks/CHECKLIST.md`. One real `EbelgeAdapter`
 (`ebelge/generic_rest.ts`); the 3 named e-belge vendors are honest stubs
 (`AdapterNotImplementedError`). See `banks/CHECKLIST.md`, `facilitators/CHECKLIST.md` and
 `ebelge/CHECKLIST.md` for exactly what's needed to finish each one.

@@ -542,7 +542,7 @@ export default function FaturalamaTahsilatPaneli() {
 
               <SectionCard
                 title="Banka sanal POS (doğrudan, aşamalı)"
-                subtitle="İş Bankası / Halkbank / TEB / QNB / Ziraat / Akbank artık gerçek çalışır (NestPay 3D Pay Hosting, ortak tek adaptör). Garanti BBVA ve Yapı Kredi sıradaki aşamalar (arayüze hazır, henüz stub). 'Genel sanal POS' de gerçek çalışır bağlantıdır. Kontrol listesi: lib/accounting/banks/CHECKLIST.md."
+                subtitle="İş Bankası / Halkbank / TEB / QNB / Ziraat / Akbank (NestPay 3D Pay Hosting, ortak tek adaptör), Garanti BBVA (Ortak Ödeme Sayfası) ve Yapı Kredi (POSNET OOS) artık gerçek çalışır. VakıfBank / Denizbank / Kuveyt Türk henüz stub. 'Genel sanal POS' de gerçek çalışır bağlantıdır. Kontrol listesi: lib/accounting/banks/CHECKLIST.md."
               >
                 <Field label="Banka">
                   <select style={inputStyle} value={bankKey} onChange={(e) => setBankKey(e.target.value)}>

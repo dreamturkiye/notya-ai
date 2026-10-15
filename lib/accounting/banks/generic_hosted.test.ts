@@ -84,14 +84,17 @@ describe('accounting/banks/generic_hosted (mocked transport)', () => {
 })
 
 describe('accounting/banks/index registry', () => {
-  it('registers generic_hosted and the 6 NestPay-group banks as real; the other 5 named banks stay stubs', () => {
+  it('registers generic_hosted, the 6 NestPay-group banks, garanti and yapi_kredi as real (2026-10-15 phase 2); the other 3 named banks stay stubs', () => {
     const adapters = listBankAdapters()
     const real = adapters.filter((a) => a.isReal).map((a) => a.bankKey).sort()
-    assert.deepEqual(real, ['akbank', 'generic_hosted', 'halkbank', 'isbank', 'qnb', 'teb', 'ziraat'].sort())
+    assert.deepEqual(
+      real,
+      ['akbank', 'garanti', 'generic_hosted', 'halkbank', 'isbank', 'qnb', 'teb', 'yapi_kredi', 'ziraat'].sort()
+    )
   })
 
   it('every remaining named bank stub throws AdapterNotImplementedError, not a fake response', async () => {
-    for (const key of ['yapi_kredi', 'garanti', 'vakifbank', 'denizbank', 'kuveyt_turk'] as const) {
+    for (const key of ['vakifbank', 'denizbank', 'kuveyt_turk'] as const) {
       const adapter = getBankAdapter(key)
       assert.equal(adapter.isReal, false)
       await assert.rejects(

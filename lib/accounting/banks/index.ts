@@ -13,6 +13,8 @@ import { ALL_BANK_KEYS, NESTPAY_GROUP_BANK_KEYS } from '../types'
 import { createGenericHostedAdapter } from './generic_hosted'
 import { createStubBankAdapter } from './stub'
 import { createNestpayAdapter } from './nestpay'
+import { createGarantiAdapter } from './garanti'
+import { createYapiKrediPosnetAdapter } from './yapikredi_posnet'
 
 const registry = new Map<BankKey, BankPosAdapter>()
 registry.set('generic_hosted', createGenericHostedAdapter())
@@ -26,6 +28,11 @@ for (const key of ALL_BANK_KEYS) {
 for (const key of NESTPAY_GROUP_BANK_KEYS) {
   registry.set(key, createNestpayAdapter(key))
 }
+// Phase 2 of the hybrid model (Kaan, 2026-10-15): Garanti BBVA (Common Payment Page/OOS, REAL —
+// direct vendor docs) and Yapı Kredi (POSNET OOS, REAL — single-source OSS cross-reference) —
+// see CHECKLIST.md for the per-bank confidence tier and sources.
+registry.set('garanti', createGarantiAdapter())
+registry.set('yapi_kredi', createYapiKrediPosnetAdapter())
 
 export function getBankAdapter(bankKey: BankKey): BankPosAdapter {
   const adapter = registry.get(bankKey)

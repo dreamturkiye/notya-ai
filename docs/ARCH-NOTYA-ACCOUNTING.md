@@ -557,6 +557,52 @@ own docs portal, since that is genuinely what exists for this protocol.
 `feat/notya-accounting` remains pushed, not merged by this session — per this round's own
 instruction, Kaan takes that step himself.
 
+## 4.5 Garanti BBVA + Yapı Kredi (Posnet) built for real, on their own branch (2026-10-15, fourth round)
+
+`feat/notya-accounting` (through §4.4, NestPay) had already been merged into `main` by the time
+this round started — this work was done on a fresh branch off `main`,
+`feat/notya-accounting-garanti-yapikredi`, in its own git worktree, per this round's own
+instruction, and is pushed but **not merged**; the merge is handled separately, same posture as
+every prior round.
+
+Two more real (non-stub) `BankPosAdapter`s were built, both hosted/redirect-3DS-only (SAQ-A):
+
+- **Garanti BBVA** (`lib/accounting/banks/garanti.ts`) — the Virtual POS "Common Payment Page"
+  (Ortak Ödeme Sayfası / OOS) product. **REAL — direct vendor documentation.** This round re-read
+  dev.garantibbva.com.tr directly (not just the one non-3DS "additional fields" page §4.2 found)
+  and located the actual Common Payment / OOS product pages, which give concrete field names,
+  endpoints (matching Kaan's own `sanalposprovtest`/`sanalposprov` `VPServlet` instruction exactly)
+  and the `secure3dhash` SHA-512 construction at the same confidence tier as iyzico's own docs.
+  §4.2's earlier finding ("Garanti's public doc is the PAN-touching non-3DS product") is correct
+  as far as it went — that specific page is still PAN-touching — but it was not the whole picture;
+  the Common Payment product is a separate, hosted page, confirmed this round. One inference is
+  disclosed plainly in the file header: the portal's shared sample form template also lists card
+  fields that this adapter never sends — a deliberate choice backed by the product's own hosted
+  description and by one corroborating open-source implementation's separate OOS code path, not an
+  independently-stated "the form has no card fields" sentence on the portal itself.
+- **Yapı Kredi (Posnet)** (`lib/accounting/banks/yapikredi_posnet.ts`) — POSNET 3D Secure/OOS.
+  **BEST-EFFORT — single-source OSS cross-reference**, one tier below NestPay's two-source
+  `VERIFIED`. `yapikredipos.com.tr` was fetched directly and confirmed to be a merchant-marketing
+  site with no developer/API documentation at all (the real finding Kaan's instruction asked to
+  verify, not assumed). This session's fetch tooling could not reach GitHub/GitLab source for the
+  community POSNET libraries directly (a tooling limitation of this pass, unlike §4.4's NestPay
+  pass, which did read two libraries' source) — but one package's Packagist-mirrored README
+  (`tcgunel/omnipay-yapikredi`) gave concrete endpoints (confirming Kaan's test URLs and newly
+  confirming the live `posnet.yapikredi.com.tr` paths), the 4 credential fields (independently
+  corroborated a second time by `docs.wisecp.com`'s bank-POS reference), and a two-stage SHA256 MAC
+  skeleton. The MAC's exact output encoding (hex vs. base64) and the inbound `BankPacket`/
+  `MerchantPacket` callback's internal schema were **not** independently confirmed this pass — both
+  gaps are disclosed in the file header rather than hidden, and the callback parser is built to
+  fall back to `pending` (never a guessed `captured`) when it cannot recognize the decoded payload.
+  CHECKLIST.md carries the full citation trail and exactly what a human should verify against a
+  live sandbox transaction before this one is trusted with real money.
+
+Both adapters follow the same `BankPosAdapter` shape, vault/credential pattern, webhook route
+wiring, and audit logging as `nestpay.ts`; registered in `lib/accounting/banks/index.ts`, tested
+in `garanti.test.ts`/`yapikredi_posnet.test.ts` (mirroring `nestpay.test.ts`'s structure), with the
+registry now reporting 9 real adapters (`generic_hosted`, the 6 NestPay-group banks, `garanti`,
+`yapi_kredi`) and 3 remaining honest stubs (`vakifbank`, `denizbank`, `kuveyt_turk`).
+
 Illustrative tables (Supabase / Postgres, practice-scoped RLS; encrypt sensitive columns at rest as elsewhere in Notya).
 
 | Table | Purpose |
@@ -674,6 +720,7 @@ UI entry: **Entegrasyonlar → Faturalama & Tahsilat**.
 | 1.3 | 2026-10-15 | Added §4.2: a relayed instruction to finish all 11 banks for real and merge to main was not acted on (not a direct user instruction; real research found the publicly-documented bank integration pattern is PAN-touching, conflicting with the hosted-3DS/no-PAN rule) — checklists upgraded with real findings instead; branch left un-merged |
 | 1.4 | 2026-10-15 | Added §2.6a hybrid payment model (iyzico facilitator as default/`VERIFIED`, NestPay-group/Garanti/Yapı Kredi direct-bank path phased and parallel) and §4.3 (adopted the hybrid model in full; merge/deploy still not performed, for the same provenance reason as §4.2, applied even though this message claimed to be direct rather than relayed) |
 | 1.5 | 2026-10-15 | NestPay group moved from stub to REAL (`lib/accounting/banks/nestpay.ts`, VERIFIED by protocol cross-reference against two independent open-source implementations' source code) per Kaan's correction that "no portal" ≠ "no documentation." Added §4.4. Merge/deploy handed back to Kaan for this round, per his own instruction — no provenance conflict this time. |
+| 1.6 | 2026-10-15 | Garanti BBVA moved from stub to REAL (`lib/accounting/banks/garanti.ts`, direct vendor docs on dev.garantibbva.com.tr — Common Payment Page/OOS, iyzico-level confidence with one disclosed inference) and Yapı Kredi/Posnet moved from stub to REAL (`lib/accounting/banks/yapikredi_posnet.ts`, BEST-EFFORT single-source OSS cross-reference, one tier below NestPay's). Added §4.5. Built on a fresh branch off `main` (`feat/notya-accounting-garanti-yapikredi`) in its own worktree, since `feat/notya-accounting` was already merged; pushed, not merged. |
 
 ---
 
