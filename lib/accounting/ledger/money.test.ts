@@ -7,6 +7,7 @@ import {
   applyFixedDiscount,
   computeLine,
   computeInvoiceTotals,
+  formatTRY,
 } from './money'
 
 describe('accounting/ledger/money', () => {
@@ -79,5 +80,15 @@ describe('accounting/ledger/money', () => {
     const totals = computeInvoiceTotals([l1], { type: 'fixed', value: 11000 })
     assert.equal(totals.discountKurus, 11000)
     assert.equal(totals.totalKurus, 99000)
+  })
+
+  it('formats kuruş as Turkish-locale TRY — dot thousands, comma decimals, ₺ suffix', () => {
+    assert.equal(formatTRY(123456), '1.234,56 ₺')
+    assert.equal(formatTRY(0), '0,00 ₺')
+    assert.equal(formatTRY(50000), '500,00 ₺')
+  })
+
+  it('formatTRY rejects a float kuruş amount the same as every other money helper', () => {
+    assert.throws(() => formatTRY(10.5), TypeError)
   })
 })

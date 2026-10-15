@@ -28,6 +28,25 @@ export function roundKurus(value: number): Money {
 }
 
 /**
+ * Display-only Turkish money formatting — "1.234,56 ₺" (dot thousands, comma decimals, a space,
+ * then the ₺ suffix — Kaan's explicit format). Deliberately NOT `Intl.NumberFormat(..., {style:
+ * 'currency', currency: 'TRY'})`: that puts the ₺ glyph first with no space on this runtime's ICU
+ * data ("₺1.234,56"), which is ICU-version-dependent and not the format asked for. Formatting the
+ * number with the Turkish decimal locale and appending " ₺" ourselves is stable across runtimes.
+ * Converts kuruş -> TRY only for display — every computation upstream of this stays in integer
+ * kuruş; this is never used for arithmetic.
+ */
+const TRY_NUMBER_FORMATTER = new Intl.NumberFormat('tr-TR', {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+})
+
+export function formatTRY(kurus: Money): string {
+  assertKurus(kurus, 'kurus')
+  return `${TRY_NUMBER_FORMATTER.format(kurus / 100)} ₺`
+}
+
+/**
  * Apply a KDV rate (in basis points, e.g. 1000 = 10.00%) to a matrah (tax base) in kuruş.
  * Returns the KDV amount in kuruş, rounded to the nearest kuruş.
  */

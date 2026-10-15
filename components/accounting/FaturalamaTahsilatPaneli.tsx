@@ -9,6 +9,7 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import { getDoctorAccessToken } from '@/lib/doktor/clientAuth'
 import { CHROME_RENK, CHROME_FONT } from '@/lib/doktor/chromeTheme'
+import { formatTRY } from '@/lib/accounting/ledger/money'
 
 const TEAL = CHROME_RENK.pine
 const CARD = '#FFFFFF'
@@ -20,6 +21,54 @@ const WARN = CHROME_RENK.warn
 type Tab = 'kurulum' | 'katalog' | 'faturalar' | 'tahsilat' | 'raporlar'
 
 const NESTPAY_GROUP_KEYS = ['isbank', 'halkbank', 'teb', 'qnb', 'ziraat', 'akbank']
+
+const ENVIRONMENT_LABELS: Record<string, string> = { test: 'Test', live: 'Canlı' }
+const VERIFICATION_LABELS: Record<string, string> = { VERIFIED: 'Doğrulandı', BEST_EFFORT_UNVERIFIED: 'Doğrulanmamış (en iyi çaba)' }
+
+const INVOICE_STATUS_LABELS: Record<string, string> = {
+  draft: 'Taslak',
+  pending_issue: 'Kesiliyor',
+  issued: 'Kesildi',
+  issue_failed: 'Kesim başarısız',
+  partially_paid: 'Kısmi ödendi',
+  paid: 'Ödendi',
+  cancel_pending: 'İptal bekliyor',
+  cancelled: 'İptal edildi',
+  credit_pending: 'İade bekliyor',
+  credited: 'İade edildi',
+}
+
+const DOC_TYPE_LABELS: Record<string, string> = { esmm: 'e-SMM', efatura: 'e-Fatura', earsiv: 'e-Arşiv' }
+
+const EBELGE_VENDOR_LABELS: Record<string, string> = {
+  generic_rest: 'Genel REST',
+  nes: 'NES',
+  qnb_esolutions: 'QNB eSolutions',
+  logo: 'Logo',
+  other: 'Diğer',
+}
+
+const CREDENTIAL_FIELD_LABELS: Record<string, string> = {
+  baseUrl: 'Servis Adresi',
+  apiKey: 'API Anahtarı',
+  secretKey: 'Gizli Anahtar',
+  merchantId: 'Üye İşyeri Numarası',
+  storeKey: 'Mağaza Anahtarı',
+  clientId: 'Üye İşyeri Numarası',
+  gatewayUrl: 'Sanal POS Adresi',
+  username: 'Kullanıcı Adı',
+  password: 'Şifre',
+}
+
+function formatMaskedFields(fields: Record<string, string> | undefined | null): string {
+  if (!fields) return ''
+  return Object.entries(fields)
+    .map(([k, v]) => `${CREDENTIAL_FIELD_LABELS[k] || k}: ${v}`)
+    .join(', ')
+}
+
+const AY_ADLARI = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık']
+const METHOD_LABELS: Record<string, string> = { card_3ds: 'Kredi/Banka Kartı (3D)', nakit: 'Nakit', havale_eft: 'Havale/EFT' }
 
 const BANK_LABELS: Record<string, string> = {
   generic_hosted: 'Genel sanal POS (gerçek, sandbox)',
@@ -151,6 +200,15 @@ export default function FaturalamaTahsilatPaneli() {
   const [aging, setAging] = useState<any>(null)
   const [draft, setDraft] = useState<{ patientId: string; serviceId: string; quantity: string }>({ patientId: '', serviceId: '', quantity: '1' })
   const [busyInvoiceId, setBusyInvoiceId] = useState<string | null>(null)
+
+  // Raporlar — mali müşavir aylık raporu. Strictly monthly (Kaan, 2026-10-15: "Bu raporlar
+  // sadece aylık olabilir") — no custom range anywhere in this tab.
+  const now = new Date()
+  const [musavirYear, setMusavirYear] = useState(now.getFullYear())
+  const [musavirMonth, setMusavirMonth] = useState(now.getMonth() + 1)
+  const [musavirReport, setMusavirReport] = useState<any>(null)
+  const [musavirLoading, setMusavirLoading] = useState(false)
+  const [musavirExporting, setMusavirExporting] = useState(false)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -351,6 +409,46 @@ export default function FaturalamaTahsilatPaneli() {
     }
   }
 
+  const loadMusavirReport = useCallback(async (year: number, month: number) => {
+    setMusavirLoading(true)
+    try {
+      const res = await api(`/reports?type=musavir&year=${year}&month=${month}`)
+      setMusavirReport(res.data)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Rapor yüklenemedi.')
+    } finally {
+      setMusavirLoading(false)
+    }
+  }, [])
+
+  const exportMusavir = async () => {
+    setMusavirExporting(true)
+    try {
+      const token = getDoctorAccessToken()
+      const res = await fetch(`/api/accounting/reports/musavir-export?year=${musavirYear}&month=${musavirMonth}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({}))
+        throw new Error(json.error || 'Rapor oluşturulamadı.')
+      }
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `musavir-raporu-${musavirYear}-${String(musavirMonth).padStart(2, '0')}.xlsx`
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      URL.revokeObjectURL(url)
+      setNotice('Mali müşavir raporu indirildi.')
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Rapor oluşturulamadı.')
+    } finally {
+      setMusavirExporting(false)
+    }
+  }
+
   const TABS: { key: Tab; label: string }[] = [
     { key: 'kurulum', label: 'Kurulum' },
     { key: 'katalog', label: 'Katalog' },
@@ -382,6 +480,7 @@ export default function FaturalamaTahsilatPaneli() {
             onClick={() => {
               setTab(t.key)
               if (t.key === 'tahsilat') void loadAging()
+              if (t.key === 'raporlar' && !musavirReport) void loadMusavirReport(musavirYear, musavirMonth)
             }}
             style={{
               padding: '7px 14px',
@@ -471,7 +570,8 @@ export default function FaturalamaTahsilatPaneli() {
                 {testResult && <div style={{ fontSize: 13, marginTop: 8, color: MUTED }}>{testResult}</div>}
                 {ebelgeStatus && (
                   <div style={{ fontSize: 12.5, marginTop: 10, color: MUTED }}>
-                    Kayıtlı: {ebelgeStatus.vendor} ({ebelgeStatus.environment}) — alanlar: {JSON.stringify(ebelgeStatus.maskedFields)}
+                    Kayıtlı: {EBELGE_VENDOR_LABELS[ebelgeStatus.vendor] || ebelgeStatus.vendor} ({ENVIRONMENT_LABELS[ebelgeStatus.environment] || ebelgeStatus.environment}) —
+                    alanlar: {formatMaskedFields(ebelgeStatus.maskedFields)}
                   </div>
                 )}
               </SectionCard>
@@ -498,7 +598,7 @@ export default function FaturalamaTahsilatPaneli() {
                 <div style={{ marginTop: 14 }}>
                   {(facilitators.configured || []).map((f: any) => (
                     <div key={f.id} style={{ fontSize: 12.5, color: MUTED, padding: '6px 0', borderTop: `1px solid ${BORDER}` }}>
-                      iyzico — {f.environment} — {f.verificationStatus || 'VERIFIED'}
+                      iyzico — {ENVIRONMENT_LABELS[f.environment] || f.environment} — {VERIFICATION_LABELS[f.verificationStatus || 'VERIFIED'] || f.verificationStatus}
                     </div>
                   ))}
                 </div>
@@ -596,7 +696,7 @@ export default function FaturalamaTahsilatPaneli() {
                 <div style={{ marginTop: 14 }}>
                   {(banks.configured || []).map((b: any) => (
                     <div key={b.id} style={{ fontSize: 12.5, color: MUTED, padding: '6px 0', borderTop: `1px solid ${BORDER}` }}>
-                      {BANK_LABELS[b.bank_key] || b.bank_key} — {b.environment} — {b.isReal ? 'kullanılabilir' : 'henüz uygulanmadı'}
+                      {BANK_LABELS[b.bank_key] || b.bank_key} — {ENVIRONMENT_LABELS[b.environment] || b.environment} — {b.isReal ? 'kullanılabilir' : 'henüz uygulanmadı'}
                     </div>
                   ))}
                 </div>
@@ -636,7 +736,7 @@ export default function FaturalamaTahsilatPaneli() {
                       <strong>{s.name}</strong> <span style={{ color: MUTED }}>({s.kind})</span>
                       {s.description && <div style={{ color: MUTED, fontSize: 12 }}>{s.description}</div>}
                     </div>
-                    <div>{(s.priceKurus / 100).toFixed(2)} TRY</div>
+                    <div>{formatTRY(s.priceKurus)}</div>
                   </div>
                 ))}
                 {!services.length && <div style={{ color: MUTED, fontSize: 13 }}>Henüz hizmet tanımlanmadı.</div>}
@@ -653,7 +753,7 @@ export default function FaturalamaTahsilatPaneli() {
                       <option value="">Seçin…</option>
                       {services.map((s) => (
                         <option key={s.id} value={s.id}>
-                          {s.name} — {(s.priceKurus / 100).toFixed(2)} TRY
+                          {s.name} — {formatTRY(s.priceKurus)}
                         </option>
                       ))}
                     </select>
@@ -674,11 +774,11 @@ export default function FaturalamaTahsilatPaneli() {
                 {invoices.map((inv) => (
                   <div key={inv.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderTop: `1px solid ${BORDER}`, fontSize: 13.5, gap: 10 }}>
                     <div>
-                      {inv.doc_type.toUpperCase()} — {inv.status} {inv.ebelge_doc_number ? `(${inv.ebelge_doc_number})` : ''}
+                      {DOC_TYPE_LABELS[inv.doc_type] || inv.doc_type.toUpperCase()} — {INVOICE_STATUS_LABELS[inv.status] || inv.status} {inv.ebelge_doc_number ? `(${inv.ebelge_doc_number})` : ''}
                       {inv.ebelge_last_error && <div style={{ color: WARN, fontSize: 11.5 }}>{inv.ebelge_last_error}</div>}
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span>{(inv.total_kurus / 100).toFixed(2)} TRY</span>
+                      <span>{formatTRY(inv.total_kurus)}</span>
                       {inv.status === 'draft' && (
                         <button style={{ ...buttonStyle, padding: '6px 10px', fontSize: 12 }} disabled={busyInvoiceId === inv.id} onClick={() => void issueOne(inv.id)}>
                           Kes
@@ -708,7 +808,7 @@ export default function FaturalamaTahsilatPaneli() {
                   {(['0-30', '31-60', '61-90', '90+'] as const).map((b) => (
                     <div key={b} style={{ border: `1px solid ${BORDER}`, borderRadius: 10, padding: 12, textAlign: 'center' }}>
                       <div style={{ fontSize: 12, color: MUTED }}>{b} gün</div>
-                      <div style={{ fontSize: 16, fontWeight: 700 }}>{(aging.buckets[b].totalKurus / 100).toFixed(2)} TRY</div>
+                      <div style={{ fontSize: 16, fontWeight: 700 }}>{formatTRY(aging.buckets[b].totalKurus)}</div>
                       <div style={{ fontSize: 11, color: MUTED }}>{aging.buckets[b].invoiceIds.length} fatura</div>
                     </div>
                   ))}
@@ -720,10 +820,113 @@ export default function FaturalamaTahsilatPaneli() {
           )}
 
           {tab === 'raporlar' && (
-            <SectionCard title="Raporlar" subtitle="Banka bazında tahsilat, hizmet bazında satış ve KDV özeti — mali müşavire aktarım için.">
-              <div style={{ color: MUTED, fontSize: 13 }}>
-                Detaylı rapor ekranları için /api/accounting/reports?type=collections|sales|kdv uç noktalarını kullanın.
+            <SectionCard
+              title="Raporlar"
+              subtitle="Aylık gelir-gider özeti, kesilen belgeler, tahsilat ve KDV — mali müşavirinize göndermek için. Bu raporlar sadece aylık görüntülenir."
+            >
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: 10, alignItems: 'end', marginBottom: 18 }}>
+                <Field label="Ay">
+                  <select
+                    style={inputStyle}
+                    value={musavirMonth}
+                    onChange={(e) => {
+                      const m = Number(e.target.value)
+                      setMusavirMonth(m)
+                      void loadMusavirReport(musavirYear, m)
+                    }}
+                  >
+                    {AY_ADLARI.map((ad, i) => (
+                      <option key={ad} value={i + 1}>
+                        {ad}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+                <Field label="Yıl">
+                  <select
+                    style={inputStyle}
+                    value={musavirYear}
+                    onChange={(e) => {
+                      const y = Number(e.target.value)
+                      setMusavirYear(y)
+                      void loadMusavirReport(y, musavirMonth)
+                    }}
+                  >
+                    {[now.getFullYear(), now.getFullYear() - 1, now.getFullYear() - 2].map((y) => (
+                      <option key={y} value={y}>
+                        {y}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+                <button
+                  style={{ ...buttonStyle, background: '#fff', color: TEAL, border: `1px solid ${TEAL}`, height: 38 }}
+                  disabled={musavirExporting}
+                  onClick={() => void exportMusavir()}
+                >
+                  {musavirExporting ? 'Hazırlanıyor…' : 'Mali Müşavire Gönder (Excel)'}
+                </button>
               </div>
+
+              {musavirLoading ? (
+                <div style={{ color: MUTED, fontSize: 13 }}>Yükleniyor…</div>
+              ) : !musavirReport ? (
+                <div style={{ color: MUTED, fontSize: 13 }}>Seçilen ay için henüz veri yüklenmedi.</div>
+              ) : (
+                <>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 18 }}>
+                    <div style={{ border: `1px solid ${BORDER}`, borderRadius: 10, padding: 12, textAlign: 'center' }}>
+                      <div style={{ fontSize: 12, color: MUTED }}>Toplam Tahsilat</div>
+                      <div style={{ fontSize: 17, fontWeight: 700 }}>{formatTRY(musavirReport.gelirGiderIcmali.toplamTahsilatKurus)}</div>
+                    </div>
+                    <div style={{ border: `1px solid ${BORDER}`, borderRadius: 10, padding: 12, textAlign: 'center' }}>
+                      <div style={{ fontSize: 12, color: MUTED }}>Toplam Satış/Gelir</div>
+                      <div style={{ fontSize: 17, fontWeight: 700 }}>{formatTRY(musavirReport.gelirGiderIcmali.toplamGelirKurus)}</div>
+                    </div>
+                    <div style={{ border: `1px solid ${BORDER}`, borderRadius: 10, padding: 12, textAlign: 'center' }}>
+                      <div style={{ fontSize: 12, color: MUTED }}>Toplam KDV</div>
+                      <div style={{ fontSize: 17, fontWeight: 700 }}>{formatTRY(musavirReport.kdvOzeti.kdvKurus)}</div>
+                    </div>
+                  </div>
+
+                  <div style={{ fontSize: 13, color: MUTED, marginBottom: 6 }}>
+                    KDV matrahı: {formatTRY(musavirReport.kdvOzeti.matrahKurus)} · Açık bakiye: {formatTRY(musavirReport.gelirGiderIcmali.acikBakiyeKurus)} ·{' '}
+                    {musavirReport.gelirGiderIcmali.faturaSayisi} belge
+                  </div>
+
+                  <div style={{ fontFamily: CHROME_FONT.serif, fontSize: 15, marginTop: 16, marginBottom: 6 }}>Tahsilat özeti (kanal/yöntem)</div>
+                  {(musavirReport.tahsilatOzeti || []).length ? (
+                    musavirReport.tahsilatOzeti.map((t: any, i: number) => (
+                      <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderTop: `1px solid ${BORDER}`, fontSize: 13 }}>
+                        <span>
+                          {t.channelKey === 'diger' ? 'Diğer' : BANK_LABELS[t.channelKey] || t.channelKey} — {METHOD_LABELS[t.method] || t.method}
+                        </span>
+                        <span>
+                          {formatTRY(t.capturedKurus)} ({t.paymentCount} işlem)
+                        </span>
+                      </div>
+                    ))
+                  ) : (
+                    <div style={{ color: MUTED, fontSize: 13 }}>Bu ay tahsilat yok.</div>
+                  )}
+
+                  <div style={{ fontFamily: CHROME_FONT.serif, fontSize: 15, marginTop: 16, marginBottom: 6 }}>Kesilen belgeler</div>
+                  {(musavirReport.kesilenBelgeler || []).length ? (
+                    musavirReport.kesilenBelgeler.map((b: any) => (
+                      <div key={b.invoiceId} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderTop: `1px solid ${BORDER}`, fontSize: 13 }}>
+                        <span>
+                          {b.issuedAt.slice(0, 10)} — {DOC_TYPE_LABELS[b.docType] || b.docType} {b.docNumber ? `(${b.docNumber})` : ''}
+                        </span>
+                        <span>{formatTRY(b.totalKurus)}</span>
+                      </div>
+                    ))
+                  ) : (
+                    <div style={{ color: MUTED, fontSize: 13 }}>Bu ay kesilen belge yok.</div>
+                  )}
+
+                  <div style={{ fontSize: 11.5, color: MUTED, marginTop: 16 }}>{musavirReport.stopajNotu}</div>
+                </>
+              )}
             </SectionCard>
           )}
         </>
