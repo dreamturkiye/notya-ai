@@ -628,6 +628,132 @@ Illustrative tables (Supabase / Postgres, practice-scoped RLS; encrypt sensitive
 
 ---
 
+## 4.6 Raporlar rebuild: real monthly screen + mali müşavir Excel export (2026-10-15, fifth round)
+
+Source: the CEO found the live Raporlar tab showing an engineering stub verbatim to the doctor
+("Detaylı rapor ekranları için /api/accounting/reports?type=collections|sales|kdv uç noktalarını
+kullanın.") with literal English words in it. Two-part instruction: (1) audit every user-facing
+string this module has shown so far and fix all remaining English/raw-technical leaks, (2) replace
+the stub with a real screen plus a one/two-click monthly export for the doctor's mali müşavir.
+Built on `feat/notya-accounting-raporlar-musavir`, in its own worktree, concurrently with another
+job's AR-reminder/e-belge-compliance work on the same module — this round never touched
+`lib/accounting/ar/*`, the reminder/messaging code, or `lib/accounting/ebelge/*` internals, per the
+coordination note in its own brief.
+
+### Part 1 — English-word audit findings (fixed, this round)
+
+The bank-credential field labels Kaan fixed earlier the same day (Merchant ID→Üye İşyeri Numarası,
+Store Key→Mağaza Anahtarı, Base URL→Sanal POS Adresi/Servis Adresi, API Key→API Anahtarı, Secret
+Key→Gizli Anahtar, Sandbox→Test) were confirmed still correct — not redone. Beyond those, found and
+fixed in `components/accounting/FaturalamaTahsilatPaneli.tsx`:
+
+- **The Raporlar stub itself** — replaced with the real screen described in Part 2 below.
+- **Invoice status shown raw** (Faturalar tab): `{inv.doc_type.toUpperCase()} — {inv.status}` was
+  printing literal English enum values (`draft`, `issue_failed`, `partially_paid`, `cancelled`,
+  `credit_pending`, …) straight from the DB column. Added `INVOICE_STATUS_LABELS` (Taslak, Kesim
+  başarısız, Kısmi ödendi, İptal edildi, İade bekliyor, …) and `DOC_TYPE_LABELS` (esmm→e-SMM,
+  efatura→e-Fatura, earsiv→e-Arşiv) instead of `.toUpperCase()`.
+- **`environment` shown raw** in three places (iyzico configured list, bank configured list,
+  e-Belge "Kayıtlı:" status line): `test`/`live` printed verbatim instead of `Test`/`Canlı`. Added
+  `ENVIRONMENT_LABELS` and applied it everywhere `environment` reaches the screen.
+- **`verificationStatus` shown raw**: the iyzico configured list printed the literal code
+  `VERIFIED` instead of a Turkish word. Added `VERIFICATION_LABELS` (`VERIFIED`→"Doğrulandı").
+- **e-Belge credential field dump**: `JSON.stringify(ebelgeStatus.maskedFields)` was rendering a
+  raw JS object literal (`{"baseUrl":"***"}`) to the doctor — not just English, not a finished
+  screen at all. Replaced with `formatMaskedFields()`, which maps each field key through the same
+  `CREDENTIAL_FIELD_LABELS` Turkish names used on the entry form (Servis Adresi, API Anahtarı, …)
+  and joins them as a plain sentence. Also mapped the e-Belge `vendor` code through
+  `EBELGE_VENDOR_LABELS` instead of printing `generic_rest` verbatim.
+- **Money formatting**: every amount in this component was `(kurus / 100).toFixed(2)} TRY` — a
+  period decimal separator and the bare ISO code, not Turkish formatting. Added `formatTRY()` to
+  `lib/accounting/ledger/money.ts` (display-only; never used for arithmetic) and replaced all four
+  call sites (katalog price list + katalog select, invoice list total, aging bucket totals) plus
+  every new Raporlar number with it. Deliberately NOT `Intl.NumberFormat(..., {style:'currency',
+  currency:'TRY'})` — that construct put the ₺ glyph first with no space on this runtime's ICU data
+  (`"₺1.234,56"`), which is ICU-version-dependent and not Kaan's asked-for "1.234,56 ₺" shape;
+  formatting the number with the `tr-TR` decimal locale and appending `" ₺"` is stable.
+- **Latent English leak in the cancel-invoice API** (found while auditing, fixed defensively even
+  though no UI control currently calls it): `app/api/accounting/invoices/[id]/cancel/route.ts` had
+  no specific handler for `InvalidInvoiceTransitionError`, so an illegal cancel would have fallen
+  through to the generic catch-all and surfaced the state machine's own English message
+  (`Invoice cannot go from "paid" via "request_cancel"`) raw in `error`. `issue/route.ts` already
+  guarded against this same error class; `cancel/route.ts` now does too (`'Bu fatura şu an iptal
+  edilemez.'`), mirroring the existing pattern.
+
+Audited but left unchanged (webhook error strings like `"Geçersiz webhook gövdesi."`/`"merchantRef
+eksik."` in `app/api/accounting/payments/{webhook,facilitator-webhook}/*`): these responses are
+read by the bank/facilitator's own server calling the webhook, never rendered in the doctor's UI,
+so they are out of this audit's "reaches the UI" scope by the brief's own definition. `inv.kind`
+(muayene/aşı/hizmet/paket) and `inv.ebelge_last_error` (the integrator's own raw error text,
+owned by the other job's e-belge compliance work this round) were also left as-is.
+
+### Part 2 — Research basis for the monthly mali müşavir export format
+
+Researched directly rather than assumed, per the brief:
+
+- **KDV beyannamesi for a serbest meslek erbabı (hekim) is filed monthly** (KDV1, due the 24th of
+  the following month) — confirmed via [hemenhesap.com's "Serbest Meslek KDV" guide](https://www.hemenhesap.com/blog/serbest-meslek-kdv)
+  and the general filing-calendar structure in [Paraşüt's "Girişimcinin Muhasebe Takvimi"](https://www.parasut.com/blog/girisimcinin-muhasebe-takvimi).
+  This is exactly why Kaan's "sadece aylık olabilir" constraint is not just a product preference —
+  it matches the real monthly obligation the müşavir is preparing the KDV1 beyannamesi against.
+- **What the serbest meslek kazanç defteri needs recorded**: per TÜRMOB's own
+  [2023 Serbest Meslek Kazancı Rehberi](https://www.turmob.org.tr/Arsiv/FCKEditor/userfiles/file/GIB-2023-REHBERLER/2023_serbestmeslekkazancirehber.pdf) —
+  income must be documented with an e-SMM, recorded "günü gününe" (day-of), and every collection
+  traced back to its document. That maps directly onto this report's "kesilen belgeler" sheet
+  (tarih, belge no, matrah/KDV split) plus the separate "tahsilat özeti" sheet for reconciling
+  against what was actually collected (not just what was billed).
+- **Stopaj/tevkifat**: GVK md. 94 withholding is the *payer's* obligation and only applies when the
+  payer is a kurumsal/tüzel kişi — not a gerçek kişi hasta paying their own doctor directly, which
+  is every invoice this module issues today. Confirmed via the same TÜRMOB rehber and
+  hemenhesap's guide. The monthly report states this explicitly (`stopajNotu` field / the Excel's
+  own row) rather than silently omitting the topic, so the müşavir sees the module's own position
+  on it instead of wondering whether it was overlooked.
+- **Excel (.xlsx), not PDF, is the realistic monthly handoff format.** Not a single source states
+  this as a rule, so it is reasoned rather than cited to one page: a PDF cannot be re-imported or
+  re-totalled by the müşavir's own bookkeeping software (Logo/Luca/Mikro/Paraşüt) or their own
+  Excel şablonu — a müşavir who receives a PDF has to retype the numbers. An .xlsx with real
+  numeric cells (not text with a currency symbol glued on) can be opened, SUM()'d, or imported
+  directly. This also matches what `reports/index.ts`'s own pre-existing comment already said
+  about this module's scope ("a CSV/Excel handoff to their mali müşavir, not for GİB declaration").
+
+### What was built
+
+- `lib/accounting/reports/monthly.ts` — `monthBoundsIso()` (pure, UTC month bounds), and
+  `aggregateMonthlyMusavirReport()` (pure aggregation over already-fetched rows: income only counts
+  invoices actually issued — never draft/pending_issue/issue_failed; collections only count
+  `status: 'captured'` payments; tahsilat bucketed by `bank_key ?? facilitator_key ?? 'diger'` ×
+  `method`), following `lib/accounting/ar/aging.ts`'s own pure-function-plus-DB-wrapper shape so it
+  is unit-testable without Supabase. `buildMonthlyMusavirReport()` is the thin DB wrapper, reading
+  `accounting_invoices`/`accounting_invoice_lines`/`accounting_payments` directly (not
+  `lib/accounting/ar/*`, which the concurrent job owns this round).
+- `lib/accounting/reports/musavirExport.ts` — builds the `.xlsx` workbook with the `xlsx` (SheetJS)
+  package already a dependency of this repo (same one `lib/ingestion/pipeline.ts` and
+  `lib/gelenBelgeler/donustur.ts` already use — no new dependency added). Four sheets: **Gelir-Gider
+  Özeti**, **Kesilen Belgeler**, **Tahsilat Özeti**, **KDV Özeti**. Amount cells are plain numbers
+  (TRY, two-decimal) with Turkish column headers naming the unit — not strings with "₺" appended,
+  so the file stays summable/importable (see research note above).
+- `app/api/accounting/reports/route.ts` — added `?type=musavir&year=&month=` (JSON, for the on-
+  screen tab).
+- `app/api/accounting/reports/musavir-export/route.ts` — new route, `?year=&month=` returns the
+  `.xlsx` as a download (`Content-Disposition: attachment`), gated on the existing
+  `reports.export` RBAC capability (already in `lib/accounting/rbac.ts`, unchanged).
+- `components/accounting/FaturalamaTahsilatPaneli.tsx` Raporlar tab rebuilt: Ay/Yıl selects (no
+  custom range — the UI only ever offers whole months), three summary tiles (Toplam Tahsilat,
+  Toplam Satış/Gelir, Toplam KDV), a tahsilat-by-channel list, a kesilen-belgeler list, the stopaj
+  note, and a **"Mali Müşavire Gönder (Excel)"** button that fetches the `.xlsx` as a blob and
+  triggers a browser download — one click, no API endpoint for the doctor to find or type.
+- Tests: `lib/accounting/reports/monthly.test.ts` (month-boundary rollover incl. December→January,
+  draft/failed/pending exclusion, captured-only collections, channel/method bucketing reconciling
+  to the same total as the summary, açık-bakiye floor-at-zero, empty-month handling) and
+  `lib/accounting/reports/musavirExport.test.ts` (sheet names, numeric — not string — amount cells,
+  tahsilat sheet reconciling to the summary total, filename format). `lib/accounting/ledger/
+  money.test.ts` extended with `formatTRY` cases. 90/90 in the targeted accounting suite (money,
+  stateMachine, rbac, aging, the two new report files, generic_hosted, nestpay, generic_rest,
+  iyzico); `hasta-izolasyon-envanter.test.ts` re-run clean (no shared-table regression).
+  `npx tsc --noEmit -p .` clean across the whole repo.
+
+---
+
 ## 6. Compliance summary (TR)
 
 | Topic | Stance |
@@ -721,6 +847,7 @@ UI entry: **Entegrasyonlar → Faturalama & Tahsilat**.
 | 1.4 | 2026-10-15 | Added §2.6a hybrid payment model (iyzico facilitator as default/`VERIFIED`, NestPay-group/Garanti/Yapı Kredi direct-bank path phased and parallel) and §4.3 (adopted the hybrid model in full; merge/deploy still not performed, for the same provenance reason as §4.2, applied even though this message claimed to be direct rather than relayed) |
 | 1.5 | 2026-10-15 | NestPay group moved from stub to REAL (`lib/accounting/banks/nestpay.ts`, VERIFIED by protocol cross-reference against two independent open-source implementations' source code) per Kaan's correction that "no portal" ≠ "no documentation." Added §4.4. Merge/deploy handed back to Kaan for this round, per his own instruction — no provenance conflict this time. |
 | 1.6 | 2026-10-15 | Garanti BBVA moved from stub to REAL (`lib/accounting/banks/garanti.ts`, direct vendor docs on dev.garantibbva.com.tr — Common Payment Page/OOS, iyzico-level confidence with one disclosed inference) and Yapı Kredi/Posnet moved from stub to REAL (`lib/accounting/banks/yapikredi_posnet.ts`, BEST-EFFORT single-source OSS cross-reference, one tier below NestPay's). Added §4.5. Built on a fresh branch off `main` (`feat/notya-accounting-garanti-yapikredi`) in its own worktree, since `feat/notya-accounting` was already merged; pushed, not merged. |
+| 1.7 | 2026-10-15 | Added §4.6: fixed a full round of remaining English/raw-technical leaks in the Entegrasyonlar → Faturalama & Tahsilat panel (invoice status/doc-type/environment/verificationStatus shown raw, a `JSON.stringify` field dump, period-decimal money formatting, a latent English leak in the cancel-invoice API's generic error path) and replaced the Raporlar tab's engineering-stub text with a real monthly screen plus a one-click "Mali Müşavire Gönder" Excel export (`lib/accounting/reports/monthly.ts`, `musavirExport.ts`), researched against TÜRMOB's own serbest meslek kazancı rehberi and serbest-meslek KDV guidance rather than guessed. Built on `feat/notya-accounting-raporlar-musavir`, in its own worktree, concurrently with another job's AR-reminder/e-belge-compliance work — did not touch `lib/accounting/ar/*` or `lib/accounting/ebelge/*`. Pushed, not merged. |
 
 ---
 
