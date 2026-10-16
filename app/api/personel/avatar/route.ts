@@ -12,8 +12,8 @@ export const runtime = 'nodejs'
 
 function sekreterPersonelId(oturum: Awaited<ReturnType<typeof pratikOturum>>): string | NextResponse {
   if ('hata' in oturum) return oturum.hata
-  if (oturum.rol !== 'sekreter' || !oturum.personelId) {
-    return NextResponse.json({ error: 'Bu işlem yalnızca sekreter hesabı içindir.' }, { status: 403 })
+  if (oturum.rol === 'doktor' || !oturum.personelId) {
+    return NextResponse.json({ error: 'Bu işlem yalnızca personel hesabı içindir.' }, { status: 403 })
   }
   return oturum.personelId
 }

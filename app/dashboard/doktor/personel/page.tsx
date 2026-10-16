@@ -1,13 +1,15 @@
 'use client';
 
 /**
- * NOTYA-RANDEVU-01 / NOTYA-SEKRETER-01 — personel (sekreter) yönetimi.
+ * NOTYA-RANDEVU-01 / NOTYA-SEKRETER-01 / MOBIL-PERSONEL-01 — personel yönetimi: sekreter, asistan, hasta danışmanı.
+ * Doktor davet eder, rolü değiştirir, pasif yapar veya kaldırır; yetkiler lib/doktor/personelYetki.ts'deki tek haritadan gelir.
  * Ad ve soyad ayrı girilir; sekreter dashboard'u kendi adıyla selamlanır.
  */
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import { CHROME_RENK, CHROME_FONT } from '@/lib/doktor/chromeTheme';
+import { PERSONEL_ROLLERI, personelRoluMu, ROL_ETIKETI_TR, ROL_KISA_ETIKETI_TR, ROL_ACIKLAMASI_TR, type PersonelRol } from '@/lib/doktor/personelYetki';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,6 +32,7 @@ export default function PersonelPage() {
   const [ad, setAd] = useState('');
   const [soyad, setSoyad] = useState('');
   const [email, setEmail] = useState('');
+  const [yeniRol, setYeniRol] = useState<PersonelRol>('sekreter');
   const [kaydediyor, setKaydediyor] = useState(false);
   const [sonDavetLinki, setSonDavetLinki] = useState<{ adSoyad: string; link: string } | null>(null);
   const [kopyalandi, setKopyalandi] = useState(false);
@@ -71,7 +74,7 @@ export default function PersonelPage() {
       const r = await fetch('/api/doktor/personel', {
         method: 'POST',
         headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ad: ad.trim(), soyad: soyad.trim(), email: email.trim() }),
+        body: JSON.stringify({ ad: ad.trim(), soyad: soyad.trim(), email: email.trim(), rol: yeniRol }),
       });
       const d = await r.json();
       if (!r.ok) { setHata(d.error || 'Personel eklenemedi.'); return; }
@@ -99,6 +102,23 @@ export default function PersonelPage() {
     } catch { /* ignore */ }
   }
 
+  async function rolDegistir(id: string, rol: PersonelRol, eski: string) {
+    if (rol === eski) return;
+    if (!confirm(`Bu personelin rolü "${ROL_KISA_ETIKETI_TR[rol]}" olarak değişsin mi? Yeni yetkiler hemen geçerli olur.`)) { await yukle(); return; }
+    setHata('');
+    try {
+      const t = await token();
+      if (!t) return;
+      const r = await fetch(`/api/doktor/personel/${id}`, {
+        method: 'PATCH',
+        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rol }),
+      });
+      if (!r.ok) { const d = await r.json().catch(() => ({})); setHata(d.error || 'Rol değiştirilemedi.'); }
+      await yukle();
+    } catch { setHata('Rol değiştirilemedi. Bağlantınızı kontrol edin.'); }
+  }
+
   async function kaldir(id: string) {
     if (!confirm('Bu personeli tamamen kaldırmak istiyor musunuz?')) return;
     try {
@@ -122,15 +142,16 @@ export default function PersonelPage() {
       <div style={{ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', fontSize: 15, color: '#6d6055', marginBottom: 4 }}>Ayarlar</div>
       <h1 style={{ fontFamily: CHROME_FONT.serif, fontWeight: 500, fontSize: 32, margin: '0 0 4px', color: '#2e251d', letterSpacing: '-0.02em' }}>Personel</h1>
       <p style={{ color: CHROME_RENK.muted, fontSize: 14, marginBottom: 20, maxWidth: 560 }}>
-        Sekreterinizi ad ve soyadıyla davet edin — randevu, hasta kaydı ve mesajları sizin adınıza yönetir.
-        Klinik notlara, e-reçeteye ve SGK araçlarına erişemez; ön büro masasında kendi adıyla karşılanır.
+        Ekip arkadaşlarınızı ad, soyad ve rolleriyle davet edin. Her rol yalnızca kendi işine yetecek kadar erişir;
+        hiçbiri not onaylayamaz, e-reçete veya SGK araçlarına erişemez, ayarları ve personeli yönetemez. Rolü istediğiniz an değiştirebilir
+        ya da erişimi kapatabilirsiniz. Personel, her yerden (ofis, ev, telefon) kendi şifresiyle giriş yapabilir.
       </p>
-      <div style={{ maxWidth: 640 }}>
+      <div style={{ maxWidth: 640, width: '100%' }}>
 
         {hata && <div className="ni-error" style={{ marginBottom: 16 }}>{hata}</div>}
 
         <form onSubmit={davetGonder} className="ni-card">
-          <h3 className="ni-h3">Sekreter Davet Et</h3>
+          <h3 className="ni-h3">Personel Davet Et</h3>
           <div className="ni-grid">
             <div className="ni-field">
               <label className="ni-label">Ad *</label>
@@ -141,8 +162,15 @@ export default function PersonelPage() {
               <input className="ni-input" value={soyad} onChange={(e) => setSoyad(e.target.value)} placeholder="Örn. Yılmaz" autoComplete="family-name" />
             </div>
             <div className="ni-field" style={{ gridColumn: '1 / -1' }}>
+              <label className="ni-label" htmlFor="personel-rol">Rol *</label>
+              <select id="personel-rol" className="ni-input" value={yeniRol} onChange={(e) => setYeniRol(e.target.value as PersonelRol)} style={{ minHeight: 44 }}>
+                {PERSONEL_ROLLERI.map((r) => <option key={r} value={r}>{ROL_ETIKETI_TR[r]}</option>)}
+              </select>
+              <p className="ni-hint" style={{ marginTop: 6 }}>{ROL_ACIKLAMASI_TR[yeniRol]}</p>
+            </div>
+            <div className="ni-field" style={{ gridColumn: '1 / -1' }}>
               <label className="ni-label">E-posta *</label>
-              <input className="ni-input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="sekreter@ornek.com" autoComplete="email" />
+              <input className="ni-input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="personel@ornek.com" autoComplete="email" />
             </div>
           </div>
           <button type="submit" className="ni-btn" disabled={kaydediyor}>
@@ -174,7 +202,7 @@ export default function PersonelPage() {
                 <div>
                   <div style={{ fontWeight: 600, color: CHROME_RENK.ink }}>
                     {p.adSoyad || `${p.ad} ${p.soyad}`.trim()}{' '}
-                    <span style={{ fontWeight: 400, color: CHROME_RENK.muted, fontSize: 12 }}>· Sekreter</span>
+                    <span style={{ fontWeight: 400, color: CHROME_RENK.muted, fontSize: 12 }}>· {personelRoluMu(p.rol) ? ROL_KISA_ETIKETI_TR[p.rol] : 'Personel'}</span>
                   </div>
                   {(p.ad || p.soyad) && (
                     <div style={{ fontSize: 12, color: CHROME_RENK.muted, marginTop: 2 }}>
@@ -188,7 +216,15 @@ export default function PersonelPage() {
                     {!p.davetBeklemede && <span style={{ color: p.aktif ? '#3F7D4A' : CHROME_RENK.muted }}>{p.aktif ? 'Aktif' : 'Pasif'}</span>}
                   </div>
                 </div>
-                <div style={{ display: 'flex', gap: 6 }}>
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+                  <select
+                    aria-label={`${p.adSoyad} rolü`}
+                    value={personelRoluMu(p.rol) ? p.rol : 'sekreter'}
+                    onChange={(e) => rolDegistir(p.id, e.target.value as PersonelRol, p.rol)}
+                    style={{ ...aksiyonBtn, minHeight: 44, cursor: 'pointer' }}
+                  >
+                    {PERSONEL_ROLLERI.map((r) => <option key={r} value={r}>{ROL_KISA_ETIKETI_TR[r]}</option>)}
+                  </select>
                   {!p.davetBeklemede && (
                     <button type="button" onClick={() => aktiflikDegistir(p.id, !p.aktif)} style={aksiyonBtn}>
                       {p.aktif ? 'Pasif Yap' : 'Aktif Yap'}
@@ -211,6 +247,7 @@ const aksiyonBtn: React.CSSProperties = {
   color: CHROME_RENK.ink,
   borderRadius: 8,
   padding: '6px 12px',
+  minHeight: 44,
   fontSize: 12,
   cursor: 'pointer',
 };

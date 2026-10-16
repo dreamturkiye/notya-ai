@@ -30,7 +30,10 @@ export type Money = number
  */
 export const KDV_RATE_BP_HEALTH_DEFAULT = 1000 // 1000 bp = 10.00%
 
-export type AccountingRole = 'doktor' | 'sekreter'
+import type { PratikRol } from '@/lib/doktor/personelYetki'
+
+/** MOBIL-PERSONEL-01: the practice roles. Only 'doktor' and 'sekreter' can ever hold an accounting capability (rbac.canPerform). */
+export type AccountingRole = PratikRol
 
 /** Who is acting, resolved the same way every other Notya route resolves it (pratikOturum). */
 export interface ActingUser {

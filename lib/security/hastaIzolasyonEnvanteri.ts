@@ -34,6 +34,7 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   'app/api/doktor/hastalar/[id]/sessions/[sessionId]/kalici-sil/route.ts': I('same session ownership check as arsivle (doctor_id + patient_id together, 404 otherwise), plus requires archived_at already set; every child-table delete is additionally scoped by ids derived from that owned session/note, never from raw request input'),
   'app/api/doktor/hastalar/[id]/buyume-egrileri/route.ts': T,
   'app/api/doktor/hastalar/[id]/hedef-boy/route.ts': T,
+  'app/api/doktor/hastalar/[id]/olcumler/route.ts': T,
   'app/api/doktor/hastalar/[id]/klinik-ozet/route.ts': I('hastaKlinikOzetleriGuncelle: reads/writes scoped doctor_id+patient_id; foreign patient → fail'),
   // ── Notlar / seanslar ──
   'app/api/notes/route.ts': T,
@@ -84,7 +85,7 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   'app/api/doktor/on-buro-fisilti/route.ts': I('pratikOturum, GET only, takes no id from the request. Every source is read by the practice doctor id: randevular (doktor_id), patients (doctor_id), intake forms (doktor_id), gelen_belgeler (doctor_id), takip (takipSenkronize + takipAcikListe by doktor_id, names from patients.doctor_id); unread messages come from /api/doktor/mesajlar called with the caller\'s own authorization header'),
   // NOTYA-EYLEM — Ayşe hazırlar, hekim onaylar (core/eylemler/*)
   'app/api/doktor/eylem/route.ts': T,
-  'app/api/doktor/documents/route.ts': I('vault listDocuments/uploadDocument — doctor-scoped, assertPatientOwned (lib/vault/service.acl.test.ts)'),
+  'app/api/doktor/documents/route.ts': I('vault listDocuments/uploadDocument — doctor-scoped (pratikOturum doktorId, MOBIL-PERSONEL-01), assertPatientOwned (lib/vault/service.acl.test.ts); unchanged secretary refused by personelYetki'),
   'app/api/doktor/documents/[id]/route.ts': I('vault getDocumentMeta/softDeleteDocument by doctor_id (lib/vault/service.acl.test.ts)'),
   'app/api/doktor/documents/[id]/download/route.ts': I('vault downloadDocument by doctor_id (lib/vault/service.acl.test.ts)'),
   'app/api/doktor/goruntuleme/route.ts': T,
@@ -263,6 +264,7 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   'app/api/doktor/rutin/route.ts': I('doktor_rutin / kullanim olaylari scoped by doktorId; no patient table'),
   'app/api/doktor/onbellek-isin/route.ts': I('hastaSahibiMi before patientId; randevu list .eq(doktor_id); onbellek key doctor_id+patient_id'),
   'app/api/doktor/hesap/sifre-degistir/route.ts': I('own auth account only'),
+  'app/api/doktor/hesap/oturum/route.ts': I('takes no id; reads / revokes the sessions of the account the bearer token resolves to (auth.admin.signOut(token, global)) — own account only'),
   'app/api/doktor/id-card/parse/route.ts': I('OCR of an uploaded image; stores nothing'),
   'app/api/doktor/ilac-ara/route.ts': I('drug catalogue search; no patient data'),
   'app/api/doktor/integrations/route.ts': I('doctor_integrations of user.id only'),

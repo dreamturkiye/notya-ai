@@ -94,6 +94,9 @@ export function canPerform(
   grants?: SekreterGrants
 ): boolean {
   if (role === 'doktor') return DOKTOR_CAPS.has(capability)
+  // MOBIL-PERSONEL-01 defence in depth: asistan / hasta_danismani never hold an accounting capability, even if a route
+  // forgot the pratikOturum role gate (lib/doktor/personelYetki.ts closes /api/accounting to them as well).
+  if (role !== 'sekreter') return false
 
   if (SEKRETER_DEFAULT_CAPS.has(capability)) return true
 

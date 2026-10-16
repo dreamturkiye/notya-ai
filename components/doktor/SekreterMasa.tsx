@@ -17,6 +17,7 @@ import RandevuTalepleri from '@/components/doktor/randevu/RandevuTalepleri'
 import GelenBelgelerKarti from '@/components/doktor/gelenBelgeler/GelenBelgelerKarti'
 import OnBuroFisildiyor from '@/components/doktor/OnBuroFisildiyor'
 import TakipPaneli from '@/components/doktor/TakipPaneli'
+import { izinVarMi, personelRoluMu, ROL_KISA_ETIKETI_TR, type PratikRol } from '@/lib/doktor/personelYetki'
 
 type RandevuSatir = {
   id: string
@@ -73,18 +74,24 @@ export default function SekreterMasa() {
   const [mesajlar, setMesajlar] = useState<MesajOzet[]>([])
   const [gelenSayi, setGelenSayi] = useState(0)
   const [yukleniyor, setYukleniyor] = useState(true)
+  // MOBIL-PERSONEL-01: this desk serves all three staff roles; each sees only the cards its role may use.
+  const [rol, setRol] = useState<PratikRol>('sekreter')
+  const can = (y: Parameters<typeof izinVarMi>[1]) => izinVarMi(rol, y)
 
   const yukle = useCallback(async () => {
     const token = await ensureDoctorAccessToken()
     if (!token) { router.push(DOKTOR_GIRIS); return }
     const hdr = { Authorization: `Bearer ${token}` }
 
+    let meRol: PratikRol = 'sekreter'
     try {
       const me = await fetch('/api/personel/me', { headers: hdr, cache: 'no-store' }).then((r) => (r.ok ? r.json() : null))
-      if (me?.rol !== 'sekreter') {
+      if (!me || !personelRoluMu(me.rol)) {
         // Doktor yanlışlıkla buraya düşerse kendi ana sayfasına dönmesin — parent zaten dallanır.
         setKisaAd('')
       } else {
+        meRol = me.rol
+        setRol(me.rol)
         setKisaAd(String(me.personelKisaAdi || me.personelAdi || '').trim())
         setTamAd(String(me.personelAdi || '').trim())
         setDoktorAdi(String(me.doktorAdi || '').trim())
@@ -105,14 +112,18 @@ export default function SekreterMasa() {
           setRandevular(liste)
         })
         .catch(() => setRandevular([])),
-      fetch('/api/doktor/mesajlar?unread=1', { headers: hdr })
-        .then((r) => (r.ok ? r.json() : null))
-        .then((j) => setMesajlar(Array.isArray(j?.threads) ? j.threads.slice(0, 4) : []))
-        .catch(() => setMesajlar([])),
-      fetch('/api/doktor/gelen-belgeler?sayi=1', { headers: hdr, cache: 'no-store' })
-        .then((r) => (r.ok ? r.json() : null))
-        .then((j) => setGelenSayi(j?.erisim === true ? Number(j.sayi) || 0 : 0))
-        .catch(() => setGelenSayi(0)),
+      izinVarMi(meRol, 'mesaj')
+        ? fetch('/api/doktor/mesajlar?unread=1', { headers: hdr })
+            .then((r) => (r.ok ? r.json() : null))
+            .then((j) => setMesajlar(Array.isArray(j?.threads) ? j.threads.slice(0, 4) : []))
+            .catch(() => setMesajlar([]))
+        : Promise.resolve(),
+      izinVarMi(meRol, 'gelen_belge')
+        ? fetch('/api/doktor/gelen-belgeler?sayi=1', { headers: hdr, cache: 'no-store' })
+            .then((r) => (r.ok ? r.json() : null))
+            .then((j) => setGelenSayi(j?.erisim === true ? Number(j.sayi) || 0 : 0))
+            .catch(() => setGelenSayi(0))
+        : Promise.resolve(),
     ])
     setYukleniyor(false)
   }, [router])
@@ -144,10 +155,10 @@ export default function SekreterMasa() {
   }
 
   const hizli = [
-    { etiket: 'Randevu ekle', yol: '/dashboard/doktor/randevular?yeni=1', ikon: 'takvim' as const, vurgu: true },
-    { etiket: 'Hasta bul', yol: '/dashboard/doktor/hastalar', ikon: 'hasta' as const, vurgu: false },
-    { etiket: mesajlar.length ? `Mesajlar (${mesajlar.length})` : 'Mesajlar', yol: '/dashboard/doktor/mesajlar', ikon: 'mesaj' as const, vurgu: false },
-    ...(gelenSayi > 0
+    ...(can('randevu.yonet') ? [{ etiket: 'Randevu ekle', yol: '/dashboard/doktor/randevular?yeni=1', ikon: 'takvim' as const, vurgu: true }] : []),
+    { etiket: 'Hasta bul', yol: '/dashboard/doktor/hastalar', ikon: 'hasta' as const, vurgu: !can('randevu.yonet') },
+    ...(can('mesaj') ? [{ etiket: mesajlar.length ? `Mesajlar (${mesajlar.length})` : 'Mesajlar', yol: '/dashboard/doktor/mesajlar', ikon: 'mesaj' as const, vurgu: false }] : []),
+    ...(gelenSayi > 0 && can('gelen_belge')
       ? [{ etiket: `Gelen belgeler (${gelenSayi})`, yol: '/dashboard/doktor/gelen-belgeler', ikon: 'belge' as const, vurgu: false }]
       : [{ etiket: 'Takvim', yol: '/dashboard/doktor/randevular', ikon: 'saat' as const, vurgu: false }]),
   ]
@@ -186,14 +197,14 @@ export default function SekreterMasa() {
             color: CHROME_RENK.pine, background: 'rgba(47,67,52,0.08)', borderRadius: 999,
             padding: '6px 12px', border: '1px solid rgba(47,67,52,0.12)',
           })}>
-            Sekreter · {tamAd}
+            {rol !== 'doktor' ? ROL_KISA_ETIKETI_TR[rol] : 'Personel'} · {tamAd}
           </div>
         )}
       </header>
 
       {/* Ön büro fısıltısı — mesaj, talep, belge, telefon, gelmedi, form (klinik kohort yok) */}
       <section className="sek-gir-2" aria-label="Ön büro fısıltısı">
-        <OnBuroFisildiyor />
+        {can('onburo') && <OnBuroFisildiyor />}
       </section>
 
       {/* Hemen yap */}
@@ -351,8 +362,8 @@ export default function SekreterMasa() {
           Bekleyenler
         </h2>
         <TakipPaneli kartStili={kart} />
-        <RandevuTalepleri kartStili={kart} />
-        <GelenBelgelerKarti kartStili={kart} />
+        {can('portal.baglanti') && <RandevuTalepleri kartStili={kart} />}
+        {can('gelen_belge') && <GelenBelgelerKarti kartStili={kart} />}
         {mesajlar.length > 0 && (
           <div style={{ ...kart, padding: '16px 18px' }}>
             <div style={S({ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 10 })}>
@@ -382,7 +393,7 @@ export default function SekreterMasa() {
         )}
       </section>
 
-      <section>
+      {can('iletisim.gonder') && <section>
         <h2 style={S({
           fontFamily: CHROME_FONT.serif, fontWeight: 500, fontSize: 22, margin: '0 0 10px',
           color: '#2e251d', letterSpacing: '-0.02em',
@@ -392,8 +403,8 @@ export default function SekreterMasa() {
         <p style={S({ margin: '0 0 12px', fontSize: 13, color: CHROME_RENK.muted, maxWidth: 520 })}>
           Randevu hatırlatması, değişiklik ve bilgi formu — tek dokunuşla WhatsApp / e-posta.
         </p>
-        <HazirMesajlar kartStili={kart} />
-      </section>
+        {can('iletisim.gonder') ? <HazirMesajlar kartStili={kart} /> : null}
+      </section>}
     </div>
   )
 }

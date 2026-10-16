@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { doktorOturum } from '@/lib/doktor/serverAuth'
+import { pratikOturum } from '@/lib/doktor/pratikOturum'
+// MOBIL-PERSONEL-01: pratikOturum — the asistan role uploads/reads attachments for the doctor it works for
+// (scope = doktorId; uploadedBy stays the real uploader). The unchanged secretary is refused by personelYetki.
 import { belgeTuruIzinliMi } from '@/lib/doktor/belgeTurleri'
 import {
   VaultAccessError,
@@ -13,15 +15,15 @@ export const runtime = 'nodejs'
 
 /** GET /api/doktor/documents?patientId=&visitId= — metadata only */
 export async function GET(req: NextRequest) {
-  const oturum = await doktorOturum(req)
+  const oturum = await pratikOturum(req)
   if ('hata' in oturum) return oturum.hata
-  const { user, supabase } = oturum
+  const { user, supabase, doktorId } = oturum
 
   const patientId = req.nextUrl.searchParams.get('patientId') || undefined
   const visitId = req.nextUrl.searchParams.get('visitId') || undefined
 
   try {
-    const documents = await listDocuments({ supabase }, user.id, { patientId, visitId })
+    const documents = await listDocuments({ supabase }, doktorId, { patientId, visitId })
     return NextResponse.json({ documents })
   } catch {
     return NextResponse.json({ error: 'Belgeler listelenemedi' }, { status: 500 })
@@ -30,9 +32,9 @@ export async function GET(req: NextRequest) {
 
 /** POST multipart: file, patientId, visitId?, notes?, category? */
 export async function POST(req: NextRequest) {
-  const oturum = await doktorOturum(req)
+  const oturum = await pratikOturum(req)
   if ('hata' in oturum) return oturum.hata
-  const { user, supabase } = oturum
+  const { user, supabase, doktorId } = oturum
 
   try {
     const form = await req.formData()
@@ -51,7 +53,7 @@ export async function POST(req: NextRequest) {
 
     // BRANŞ-ALAN-SIZMASI: Yenidoğan Taburculuk Epikrizi yalnız pediatri / KD.
     if (category) {
-      const { data: doktor } = await supabase.from('users').select('specialty').eq('id', user.id).maybeSingle()
+      const { data: doktor } = await supabase.from('users').select('specialty').eq('id', doktorId).maybeSingle()
       if (!belgeTuruIzinliMi(category, doktor?.specialty)) {
         return NextResponse.json(
           { error: 'Bu belge türü branşınız için kullanılamaz.' },
@@ -77,7 +79,7 @@ export async function POST(req: NextRequest) {
     const document = await uploadDocument(
       { supabase },
       {
-        doctorId: user.id,
+        doctorId: doktorId,
         patientId,
         visitId,
         fileName: file.name || 'belge',

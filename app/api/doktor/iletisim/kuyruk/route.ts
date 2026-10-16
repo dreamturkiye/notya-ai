@@ -121,7 +121,7 @@ export async function PATCH(req: NextRequest) {
   const { data: k } = await supabase.from('iletisim_kuyrugu').select('id, tur').eq('id', id).eq('doctor_id', doktorId).maybeSingle()
   if (!k || !mesajTuruMu(k.tur) || !turIzinliMi(rol, k.tur)) return NextResponse.json({ error: 'Mesaj bulunamadı.' }, { status: 404 })
 
-  const guncelleme = kuyrukGuncellemesi(b.islem, new Date().toISOString(), { userId: user.id, personelId: rol === 'sekreter' ? personelId : null })
+  const guncelleme = kuyrukGuncellemesi(b.islem, new Date().toISOString(), { userId: user.id, personelId: rol !== 'doktor' ? personelId : null })
   // Only a waiting item changes: one that already left by itself is never turned into "atlandi".
   const { error } = await supabase.from('iletisim_kuyrugu').update(guncelleme).eq('id', id).eq('doctor_id', doktorId).eq('durum', 'bekliyor')
   if (error) return NextResponse.json({ error: 'Kaydedilemedi.' }, { status: 500 })

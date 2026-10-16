@@ -14,6 +14,7 @@
  */
 import { createHash } from 'node:crypto'
 import type { MbysEksik, MbysKayit } from './kontrol'
+import type { PratikRol } from '@/lib/doktor/personelYetki'
 
 /** Audit events, in the order a bildirim goes through them. */
 export type BildirimOlay = 'onaylandi' | 'devredildi' | 'devir_basarisiz'
@@ -53,7 +54,7 @@ export function kayitOzeti(kayit: MbysKayit): string {
 // ── Confirmation gate ──────────────────────────────────────────────────────────────────────────────────────────
 
 export type KapiGirdi = {
-  rol: 'doktor' | 'sekreter'
+  rol: PratikRol
   notOnayli: boolean
   /** The patient refused e-Nabız sharing. */
   kilit: boolean

@@ -365,7 +365,7 @@ export async function onBuroFisiltiOgeleri(
   try {
     const erisim = gelenBelgeErisimi(
       rol,
-      rol === 'sekreter' ? await sekreterErisimiAcikMi(supabase, doktorId) : true,
+      rol !== 'doktor' ? await sekreterErisimiAcikMi(supabase, doktorId) : true,
     )
     if (erisim) {
       const sayi = await yeniSayisi(supabase, doktorId)

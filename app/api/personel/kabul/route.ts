@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
 
   const { data: davet } = await supabase
     .from('personel')
-    .select('id, email, ad_soyad, davet_expires_at, davet_kabul_edildi_at, doktor_id')
+    .select('id, email, ad_soyad, rol, davet_expires_at, davet_kabul_edildi_at, doktor_id')
     .eq('davet_token_hash', tokenHash)
     .maybeSingle()
 
@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
 
   const email = String(davet.email || '').trim().toLowerCase()
   const adSoyad = String(davet.ad_soyad || '').trim()
-  const meta = { ad_soyad: adSoyad, personel: true, onboarding_completed: true }
+  const meta = { ad_soyad: adSoyad, personel: true, personel_rol: davet.rol ?? 'sekreter', onboarding_completed: true }
 
   let userId: string | null = null
 
@@ -83,7 +83,7 @@ export async function POST(req: NextRequest) {
       .maybeSingle()
     if (doktorProfil && (doktorProfil.profession_type === 'doktor' || doktorProfil.id === davet.doktor_id)) {
       return NextResponse.json({
-        error: 'Bu e-posta bir hekim hesabına ait. Sekreter için ayrı bir e-posta kullanın.',
+        error: 'Bu e-posta bir hekim hesabına ait. Personel için ayrı bir e-posta kullanın.',
       }, { status: 400 })
     }
     const { error: guncelleHata } = await supabase.auth.admin.updateUserById(mevcut.id, {

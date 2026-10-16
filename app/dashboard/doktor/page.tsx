@@ -171,7 +171,7 @@ export default function DoktorDashboard() {
         const r = await fetch('/api/personel/me', { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' })
         if (r.ok) {
           const d = await r.json()
-          if (!iptal && d.rol === 'sekreter') { setSekreterMi(true); setRolHazir(true); setLoading(false); return }
+          if (!iptal && d.rol && d.rol !== 'doktor') { setSekreterMi(true); setRolHazir(true); setLoading(false); return }
         }
       } catch { /* doktor varsayılanı */ }
       if (!iptal) setRolHazir(true)

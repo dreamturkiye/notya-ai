@@ -398,6 +398,12 @@ const VAKALAR: Vaka[] = [
     cagir: (r, a, h) => coz(r.buyume.GET(iste('GET', `/api/doktor/hastalar/${h.hasta}/buyume-egrileri`, { token: a.token }), prm({ id: h.hasta }))) },
   { ad: 'GET /api/doktor/hastalar/[id]/hedef-boy', red: 404,
     cagir: (r, a, h) => coz(r.hedefBoy.GET(iste('GET', `/api/doktor/hastalar/${h.hasta}/hedef-boy`, { token: a.token }), prm({ id: h.hasta }))) },
+  // MOBIL-PERSONEL-01: asistan / doktor manual measurements
+  { ad: 'GET /api/doktor/hastalar/[id]/olcumler', red: 404,
+    cagir: (r, a, h) => coz(r.olcumler.GET(iste('GET', `/api/doktor/hastalar/${h.hasta}/olcumler`, { token: a.token }), prm({ id: h.hasta }))) },
+  { ad: 'POST /api/doktor/hastalar/[id]/olcumler (ölçüm ekle)', red: 404,
+    yazdi: (a) => tablo('cihaz_olcumleri').some((o) => o.patient_id === a.hasta && o.doctor_id === a.id && o.kaynak === 'manuel'),
+    cagir: (r, a, h) => coz(r.olcumler.POST(iste('POST', `/api/doktor/hastalar/${h.hasta}/olcumler`, { token: a.token, govde: { tur: 'ates', deger: '37.2' } }), prm({ id: h.hasta }))) },
   // Notlar
   { ad: 'GET /api/notes/[id] (not detayı)', red: 404, okur: true,
     cagir: (r, a, h) => coz(r.notDetay.GET(iste('GET', `/api/notes/${h.not}`, { token: a.token }), prm({ id: h.not }))) },
@@ -757,6 +763,7 @@ describe('HASTA-İZOLASYON: doktor A ve doktor B birbirinin hastasına hiçbir r
       hastaSeanslari: await ice('app/api/doktor/hastalar/[id]/sessions/route'),
       buyume: await ice('app/api/doktor/hastalar/[id]/buyume-egrileri/route'),
       hedefBoy: await ice('app/api/doktor/hastalar/[id]/hedef-boy/route'),
+      olcumler: await ice('app/api/doktor/hastalar/[id]/olcumler/route'),
       notlar: await ice('app/api/notes/route'),
       notDetay: await ice('app/api/notes/[id]/route'),
       notOnay: await ice('app/api/notes/[id]/approve/route'),

@@ -31,6 +31,7 @@ import { CHROME_RENK, CHROME_FONT, saatTRT } from '@/lib/doktor/chromeTheme';
 import { KADIN_HASTALIKLARI_DOGUM_KISA_ETIKETI } from '@/lib/doktor/specialties';
 import KullanimIzle from './KullanimIzle';
 import { SAAT_DILIMI_CEREZ, tarayiciSaatDilimi } from '@/lib/doktor/selam';
+import { izinVarMi, ROL_KISA_ETIKETI_TR, ROL_ONBURO_ETIKETI_TR, type PratikRol, type Yetki } from '@/lib/doktor/personelYetki';
 
 /**
  * A page rendered under a chrome-owning layout (e.g. hedef-boy's "aile" / family-facing embed
@@ -68,6 +69,8 @@ interface NavItem {
   sadeceSekreter?: boolean;
   /** NOTYA-GELEN-BELGELER: shown to a secretary only when the doctor opened access (server decides). */
   gelenBelge?: boolean;
+  /** MOBIL-PERSONEL-01: capability a NEW staff role (asistan / hasta_danismani) needs to see this item. No yetki = hidden for them. */
+  yetki?: Yetki;
 }
 
 // Kept in lockstep with the pre-Sidebar-B dock's navItems -- same routes, same sadeceDoktor gating.
@@ -76,10 +79,10 @@ interface NavItem {
 const navItems: (NavItem & { grup: 'asistan' | 'calisma' | 'diger' })[] = [
   { label: 'Asistan', route: '/asistan', sadeceDoktor: true, grup: 'asistan' },
   // NOTYA-SEKRETER-01: Ana Sayfa sekreterde Ön büro masası (SekreterMasa); doktor klinik ana sayfa.
-  { label: 'Ana Sayfa', route: '/dashboard/doktor', grup: 'calisma' },
-  { label: 'Randevular', route: '/dashboard/doktor/randevular', grup: 'calisma' },
-  { label: 'Hastalar', route: '/dashboard/doktor/hastalar', grup: 'calisma' },
-  { label: 'Mesajlar', route: '/dashboard/doktor/mesajlar', grup: 'calisma' },
+  { label: 'Ana Sayfa', route: '/dashboard/doktor', yetki: 'hesap.kendi', grup: 'calisma' },
+  { label: 'Randevular', route: '/dashboard/doktor/randevular', yetki: 'randevu.gor', grup: 'calisma' },
+  { label: 'Hastalar', route: '/dashboard/doktor/hastalar', yetki: 'hasta.liste', grup: 'calisma' },
+  { label: 'Mesajlar', route: '/dashboard/doktor/mesajlar', yetki: 'mesaj', grup: 'calisma' },
   { label: 'Gelen Belgeler', route: '/dashboard/doktor/gelen-belgeler', gelenBelge: true, grup: 'calisma' },
   // KONSULTASYONLAR-02: sekreter ofis saatleri / telefon notlarını defterden görür ve günceller.
   { label: 'Konsültan defteri', route: '/doktor-tools/konsultasyonlar', sadeceSekreter: true, grup: 'calisma' },
@@ -194,7 +197,7 @@ function havaIkonu(kod: number): string {
 export default function DoktorChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const [rol, setRol] = useState<'doktor' | 'sekreter'>('doktor');
+  const [rol, setRol] = useState<PratikRol>('doktor');
   const [doktorAdi, setDoktorAdi] = useState('');
   const [mesajUnread, setMesajUnread] = useState(0);
   const [gelenSayi, setGelenSayi] = useState(0);
@@ -267,9 +270,9 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
         const r = await fetch('/api/personel/me', { headers: { Authorization: `Bearer ${t}` }, cache: 'no-store' });
         if (r.ok) {
           const d = await r.json();
-          if (d.rol === 'sekreter') {
+          if (d.rol && d.rol !== 'doktor') {
             sekreterOturum = true
-            setRol('sekreter');
+            setRol(d.rol);
             // NOTYA-SEKRETER-01: kendi adı — Dr. unvanı yok. Doktor önbelleğini kullanma.
             const personelAdi = String(d.personelAdi || d.personelKisaAdi || '').trim();
             if (personelAdi) setAd(personelAdi);
@@ -355,11 +358,13 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
     window.location.href = '/giris/doktor';
   }
 
-  const gorunurItems = navItems.filter((i) =>
-    !(i.sadeceDoktor && rol === 'sekreter')
-    && !(i.sadeceSekreter && rol !== 'sekreter')
-    && !(i.gelenBelge && !gelenErisim)
-  );
+  const gorunurItems = navItems.filter((i) => {
+    // The unchanged secretary and the doctor keep exactly the old rules; the two new roles see only what their capability allows.
+    if (rol === 'asistan' || rol === 'hasta_danismani') return !!i.yetki && !i.sadeceDoktor && izinVarMi(rol, i.yetki);
+    return !(i.sadeceDoktor && rol === 'sekreter')
+      && !(i.sadeceSekreter && rol !== 'sekreter')
+      && !(i.gelenBelge && !gelenErisim);
+  });
   const asistanItem = gorunurItems.find((i) => i.grup === 'asistan');
   const calismaItems = gorunurItems.filter((i) => i.grup === 'calisma');
   const digerItems = gorunurItems.filter((i) => i.grup === 'diger');
@@ -424,7 +429,7 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
         <div>
           <div style={S({ fontFamily: CHROME_FONT.serif, fontSize: 22, fontWeight: 500, letterSpacing: '-0.02em', lineHeight: 1, color: CHROME_RENK.ink })}>Notya</div>
           <span style={S({ display: 'block', marginTop: 3, fontSize: 9, letterSpacing: '0.28em', fontWeight: 700, color: '#7d7164' })}>
-            {rol === 'sekreter' ? 'ÖN BÜRO' : 'DOKTOR'}
+            {rol === 'doktor' ? 'DOKTOR' : ROL_ONBURO_ETIKETI_TR[rol]}
           </span>
         </div>
       </div>
@@ -618,7 +623,7 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
               <button
                 type="button"
                 onClick={() => handleNav('/dashboard/doktor/hesap')}
-                title={ad ? `${ad} — profil fotoğrafı` : (rol === 'sekreter' ? 'Profil fotoğrafı' : 'Hesabım')}
+                title={ad ? `${ad} — profil fotoğrafı` : (rol !== 'doktor' ? 'Profil fotoğrafı' : 'Hesabım')}
                 aria-label="Profil fotoğrafını düzenle"
                 style={S({
                   width: 44, height: 44, borderRadius: '50%', overflow: 'hidden', flexShrink: 0,
@@ -631,11 +636,11 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
               </button>
               <div>
                 <strong style={S({ display: 'block', color: CHROME_RENK.ink, fontSize: 14.5, fontWeight: 650, whiteSpace: 'nowrap' })}>
-                  {ad ? (rol === 'sekreter' ? ad : hekimUnvanli(ad)) : '\u00A0'}
+                  {ad ? (rol !== 'doktor' ? ad : hekimUnvanli(ad)) : '\u00A0'}
                 </strong>
                 <small style={S({ color: '#8a7b6c', fontSize: 12 })}>
-                  {rol === 'sekreter'
-                    ? (doktorAdi ? `${hekimUnvanli(doktorAdi)} · sekreter` : 'Sekreter')
+                  {rol !== 'doktor'
+                    ? (doktorAdi ? `${hekimUnvanli(doktorAdi)} · ${ROL_KISA_ETIKETI_TR[rol].toLowerCase()}` : ROL_KISA_ETIKETI_TR[rol])
                     : (BRANS_ETIKET[brans] || '\u00A0')}
                 </small>
               </div>

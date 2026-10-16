@@ -14,6 +14,7 @@
  * pratikOturum() resolved and this module does not re-narrow it.
  */
 import type { SupabaseClient } from '@supabase/supabase-js'
+import type { PratikRol } from '@/lib/doktor/personelYetki'
 import { gonderilebilirMi } from '../izin'
 import { smsNumarasi, epostaAdresi } from '../baglantilar'
 import { vazgecBaglantisi, vazgecAnahtariVarMi } from '../vazgecJetonu'
@@ -28,7 +29,7 @@ export class KampanyaHatasi extends Error {
   constructor(mesaj: string, public kod?: string) { super(mesaj) }
 }
 
-export type KimlikBilgisi = { userId: string; personelId: string | null; rol: 'doktor' | 'sekreter' }
+export type KimlikBilgisi = { userId: string; personelId: string | null; rol: PratikRol }
 
 export async function kampanyaOnizle(supabase: SupabaseClient, doktorId: string, filtre: KampanyaOlusturGirdisi['filtre']): Promise<{ aday: AdayHasta[]; hedefSayisi: number }> {
   const aday = await adaylariGetir(supabase, doktorId, filtre)

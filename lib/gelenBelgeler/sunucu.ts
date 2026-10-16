@@ -18,6 +18,7 @@ import { createHash, randomUUID } from 'crypto'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { encrypt, decrypt, hashTCKimlik } from '@/lib/security/encryption'
 import { servisSupabase } from '@/lib/doktor/serverAuth'
+import type { PratikRol } from '@/lib/doktor/personelYetki'
 import { hastaSahibiMi } from '@/lib/doktor/hastaSahipligi'
 import { aiKotaKullan } from '@/lib/doktor/hizLimiti'
 import { belgeTuruIzinliMi, belgeTurleriIcinBrans } from '@/lib/doktor/belgeTurleri'
@@ -245,7 +246,7 @@ export async function hastaAra(sb: SupabaseClient, doktorId: string, sorgu: stri
     .map((h) => ({ id: h.id, ad: h.ad, dogum: h.dogum }))
 }
 
-export type Isleyen = { userId: string; personelId: string | null; rol: 'doktor' | 'sekreter' }
+export type Isleyen = { userId: string; personelId: string | null; rol: PratikRol }
 
 export type DosyalamaSonucu =
   | { ok: true; belgeId: string; patientId: string; belgeTuru: string }

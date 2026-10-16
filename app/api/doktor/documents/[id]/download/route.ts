@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { doktorOturum } from '@/lib/doktor/serverAuth'
+import { pratikOturum } from '@/lib/doktor/pratikOturum'
 import { VaultAccessError, downloadDocument } from '@/lib/vault/service'
 import { contentDispositionAd } from '@/lib/vault/validation'
 
@@ -10,13 +10,13 @@ type Ctx = { params: { id: string } }
 
 /** Authenticated download — never expose public Storage URLs. */
 export async function GET(req: NextRequest, { params }: Ctx) {
-  const oturum = await doktorOturum(req)
+  const oturum = await pratikOturum(req)
   if ('hata' in oturum) return oturum.hata
 
   try {
     const { meta, bytes } = await downloadDocument(
       { supabase: oturum.supabase },
-      oturum.user.id,
+      oturum.doktorId,
       params.id
     )
     const disposition = req.nextUrl.searchParams.get('download') === '1' ? 'attachment' : 'inline'

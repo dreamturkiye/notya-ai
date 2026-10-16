@@ -103,7 +103,7 @@ export async function POST(req: NextRequest) {
     izin,
     kaynak,
     kaydeden_user_id: user.id,
-    kaydeden_personel_id: rol === 'sekreter' ? personelId ?? null : null,
+    kaydeden_personel_id: rol !== 'doktor' ? personelId ?? null : null,
   })
   return NextResponse.json({ ok: true, kanal, izin, guncelleme: simdi })
 }

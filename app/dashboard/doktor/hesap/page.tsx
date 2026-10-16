@@ -8,6 +8,7 @@ import DoktorAvatar from '@/components/doktor/DoktorAvatar';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import { AVATAR_IZINLI_MIME, AVATAR_MAX_BYTES, avatarDogrula, AvatarGecersizError } from '@/lib/doktor/avatar';
 import { CHROME_RENK, CHROME_FONT } from '@/lib/doktor/chromeTheme';
+import OturumKarti from '@/components/doktor/OturumKarti';
 
 const AVATAR_ONBELLEK = 'notya_doktor_avatar';
 const AVATAR_OLAY = 'notya-avatar-guncellendi';
@@ -39,7 +40,7 @@ export default function HesabimPage() {
         const pm = personelRes.ok
           ? await personelRes.json().catch(() => ({} as { rol?: string; personelAdi?: string; personelKisaAdi?: string }))
           : null;
-        const sekreter = pm?.rol === 'sekreter';
+        const sekreter = !!pm?.rol && pm.rol !== 'doktor';
         setSekreterMi(sekreter);
 
         if (sekreter) {
@@ -211,6 +212,7 @@ export default function HesabimPage() {
             {durum === 'kaydediyor' ? 'Kaydediliyor…' : durum === 'kaydedildi' ? '✓ Şifre değiştirildi' : 'Şifreyi Kaydet'}
           </button>
         </div>
+        <OturumKarti />
         <button
           type="button"
           onClick={() => {

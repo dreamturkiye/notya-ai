@@ -5,6 +5,7 @@
  * Fail closed: the record is released to the browser only AFTER the 'onaylandi' audit row is written. If the audit
  * write fails, nothing is released.
  */
+import type { PratikRol } from '@/lib/doktor/personelYetki'
 import { mbysDuzMetin, type MbysEksik, type MbysKayit } from './kontrol'
 import {
   adaptorSec,
@@ -61,7 +62,7 @@ export async function bildirimOnizle(depo: BildirimDeposu, a: { doktorId: string
 
 export async function bildirimOnayla(
   depo: BildirimDeposu,
-  a: { doktorId: string; rol: 'doktor' | 'sekreter'; notId: string; onay: boolean; gonderilenOzet: string },
+  a: { doktorId: string; rol: PratikRol; notId: string; onay: boolean; gonderilenOzet: string },
 ): Promise<OnayYaniti | AkisHatasi> {
   // Ownership first: a foreign or missing note is a 404 whatever else is wrong with the request.
   const n = await depo.notKaydi(a.doktorId, a.notId)
@@ -90,7 +91,7 @@ export async function bildirimOnayla(
 
 export async function devirKaydet(
   depo: BildirimDeposu,
-  a: { doktorId: string; rol: 'doktor' | 'sekreter'; onayId: string; sonuc: DevirSonucu },
+  a: { doktorId: string; rol: PratikRol; onayId: string; sonuc: DevirSonucu },
 ): Promise<{ ok: true; durum: 'aktarildi' | 'basarisiz' } | AkisHatasi> {
   if (a.rol !== 'doktor') return { ok: false, durum: 403, kod: 'rol', mesaj: 'Muayeneyi yalnız hekim bildirebilir.' }
   const onay = await depo.onayBul(a.doktorId, a.onayId)

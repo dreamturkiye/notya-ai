@@ -18,6 +18,7 @@ import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import { resmiTatilMi } from '@/lib/randevu/resmiTatiller';
+import { izinVarMi, ROL_KISA_ETIKETI_TR, type PratikRol } from '@/lib/doktor/personelYetki';
 import { randevuAksiyonlari, REAKTIVASYON_DURUMU } from '@/lib/randevu/randevuDurum';
 import { trAramaNormalize, trIcerir } from '@/lib/utils/turkceArama';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
@@ -172,7 +173,9 @@ export default function RandevularPage() {
   const [yukleniyor, setYukleniyor] = useState(true);
   const [hata, setHata] = useState('');
   const [basariMesaji, setBasariMesaji] = useState('');
-  const [rol, setRol] = useState<'doktor' | 'sekreter' | null>(null);
+  const [rol, setRol] = useState<PratikRol | null>(null);
+  // MOBIL-PERSONEL-01: a role without 'randevu.yonet' (asistan) sees the calendar read-only; the server enforces it.
+  const yonet = !rol || izinVarMi(rol, 'randevu.yonet');
 
   const [formAcik, setFormAcik] = useState(false);
   const [duzenlenenId, setDuzenlenenId] = useState<string | null>(null);
@@ -557,12 +560,14 @@ export default function RandevularPage() {
   }
 
   function yeniRandevuAc(hedefGun?: Date) {
+    if (!yonet) return;
     formuSifirla();
     if (hedefGun) setGun(hedefGun);
     setFormAcik(true);
   }
 
   function duzenlemeyeAc(rv: Randevu) {
+    if (!yonet) return;
     // Modalın iptal-nedeni satırı AÇIK kalmış olabilir: "İptal Et"e basıp modalı arka plana
     // (backdrop) dokunarak kapatmak formuSifirla()'yı çağırmıyordu, bayrak true kalıyordu. Bir
     // sonraki randevu açıldığında aksiyon satırının tamamı (İptal Et dahil) gizli geliyor, üstelik
@@ -912,15 +917,15 @@ export default function RandevularPage() {
       <div className="fv-wrap" style={{ maxWidth: '100%', margin: '0 auto', padding: '12px 4px 24px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 14 }}>
           <h1 style={{ fontSize: 22, margin: 0 }}>Randevular</h1>
-          {rol === 'sekreter' && (
+          {rol && rol !== 'doktor' && (
             <span style={{ fontSize: 12, padding: '4px 10px', borderRadius: 999, background: '#E4F3F1', color: CHROME_RENK.pine }}>
-              Sekreter olarak bağlısınız
+              {ROL_KISA_ETIKETI_TR[rol]} olarak bağlısınız{yonet ? '' : ' · yalnızca görüntüleme'}
             </span>
           )}
         </div>
 
         {/* NOTYA-ILETISIM-01: the secretary has no Ana Sayfa — prepared appointment messages live here for them */}
-        {rol === 'sekreter' && <HazirMesajlar kartStili={{ marginBottom: 14 }} />}
+        {rol && rol !== 'doktor' && izinVarMi(rol, 'iletisim.gonder') && <HazirMesajlar kartStili={{ marginBottom: 14 }} />}
 
         <div style={{ display: 'flex', alignItems: 'stretch', borderRadius: 16, overflow: 'hidden', boxShadow: '0 10px 44px rgba(58,44,34,0.14)', border: '1px solid rgba(58,44,34,0.08)' }}>
 
@@ -1024,9 +1029,9 @@ export default function RandevularPage() {
                   >{v}</button>
                 ))}
               </div>
-              <button type="button" className="fv-ekle" onClick={() => yeniRandevuAc(gorunum === 'gun' ? gun : new Date())} style={{ background: CHROME_RENK.pine, border: 'none', color: 'white', borderRadius: 9, padding: '8px 14px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+              {yonet && <button type="button" className="fv-ekle" onClick={() => yeniRandevuAc(gorunum === 'gun' ? gun : new Date())} style={{ background: CHROME_RENK.pine, border: 'none', color: 'white', borderRadius: 9, padding: '8px 14px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
                 + Randevu
-              </button>
+              </button>}
             </div>
 
             <div style={{ padding: '12px 16px 0' }}>
@@ -1101,7 +1106,7 @@ export default function RandevularPage() {
                             {gosterilen.map((rv) => {
                               const turRenk = TUR_RENK[rv.tur] || TUR_RENK.diger;
                               const durumBilgi = DURUM_ETIKET[rv.durum] || DURUM_ETIKET.planlandi;
-                              const surukleyebilir = rv.durum === 'planlandi' || rv.durum === 'onaylandi';
+                              const surukleyebilir = yonet && (rv.durum === 'planlandi' || rv.durum === 'onaylandi');
                               const iptalMi = rv.durum === 'iptal';
                               return (
                                 <div

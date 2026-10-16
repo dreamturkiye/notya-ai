@@ -8,6 +8,7 @@ import {
   notesOzetGuncelle,
 } from '@/lib/doktor/hastaOzetKayit'
 import { klinikOzetleriNotesOku } from '@/lib/doktor/hastaKlinikOzet'
+import { izinVarMi } from '@/lib/doktor/personelYetki'
 
 export const dynamic = 'force-dynamic'
 
@@ -24,7 +25,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   // NOTYA-SEKRETER-01: sekreter bağlı hekimin hasta dosyasını okuyabilir.
   const oturum = await pratikOturum(req)
   if ('hata' in oturum) return oturum.hata
-  const { supabase, doktorId } = oturum
+  const { supabase, doktorId, rol } = oturum
 
   const { data: patient, error } = await supabase
     .from('patients')
@@ -71,6 +72,26 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   })
   const klinik = klinikOzetleriNotesOku(notesData)
 
+  // MOBIL-PERSONEL-01: a role that may not read the clinical file (hasta_danismani) gets identity + contact only —
+  // no history, allergies, medications, clinical summaries or parental heights.
+  if (!izinVarMi(rol, 'hasta.dosya.oku')) {
+    return NextResponse.json({
+      patient: {
+        id: patient.id,
+        ad_soyad: ozet.ad_soyad,
+        dogum_tarihi: ozet.dogum_tarihi,
+        cinsiyet: ozet.cinsiyet,
+        telefon: ozet.telefon,
+        eposta: ozet.eposta,
+        sehir: ozet.sehir,
+        anne_adi: ozet.anne_adi,
+        baba_adi: ozet.baba_adi,
+        is_active: patient.is_active,
+        created_at: patient.created_at,
+      },
+    })
+  }
+
   return NextResponse.json({
     patient: {
       id: patient.id,
@@ -100,9 +121,14 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
   // NOTYA-SEKRETER-01: ön büro iletişim/kimlik güncellemesi — kapsam doktorId.
   const oturum = await pratikOturum(req)
   if ('hata' in oturum) return oturum.hata
-  const { supabase, doktorId } = oturum
+  const { supabase, doktorId, rol } = oturum
 
-  const body = await req.json()
+  const bodyHam = await req.json()
+  // MOBIL-PERSONEL-01: without clinical-file write access only identity + contact fields are accepted.
+  const ILETISIM_ALANLARI = ['ad_soyad', 'dogum_tarihi', 'cinsiyet', 'telefon', 'eposta', 'sehir', 'anne_adi', 'baba_adi']
+  const body = izinVarMi(rol, 'hasta.dosya.yaz')
+    ? bodyHam
+    : Object.fromEntries(Object.entries(bodyHam || {}).filter(([k]) => ILETISIM_ALANLARI.includes(k)))
 
   const { data: mevcut, error: okumaHata } = await supabase
     .from('patients')
