@@ -3947,3 +3947,15 @@ Verified 2026-10-14: all 31 have zero rows, nothing in app code references them 
 | Item | Status | Waits on |
 |---|---|---|
 | NOTYA-NZ-DEBRIS-01 | **CLOSED 2026-10-14 — decision: leave as-is.** The 31 empty `zz_wrong_*` tables stay in NZ's schema permanently. If a future schema diff / parity check on NZ shows 379 tables instead of 348, this is why — not a new leak. | Nobody. Only run `147_nz_drop_zz_wrong_debris.sql` by hand in the NZ (`itcrfagsjzwzupqlzbqe`) SQL editor if cosmetic cleanup is ever wanted — purely optional, not required. |
+
+## TOPLU-ULKE-01 — batch-card checkbox fix (Selin "İlaç ekle") ported to the country builds (2026-10-16, owner Claude, branch `fix/selin-ilac-ekle-checkbox-nz`)
+
+Kaan's country-parity rule (2026-10-16): the fix on `fix/selin-ilac-ekle-checkbox` (20b7c668) was not in any country build. This branch ports it to `release/nz` (shared code: `components/core/EylemKarti.tsx` EylemToplu + `topluSecim.ts`, byte-identical to main before the fix).
+
+- **Done on this branch.** Rows with missing required fields are tickable and show inline inputs; written only when ticked and complete. Required keys are the shared base action's real keys on this release branch: `ilac_ekle` requires `ilac_adi`, `doz`, `kullanim_sikli` (core/eylemler/temelEylemler.ts is identical on all six release branches; there is no per-country medication schema, so no country key differs). The batch card's copy is injected (`components/core/topluMetin.ts`, active country via `countries/active/toplu.ts`); Türkiye's text moved unchanged to `countries/tr/toplu.ts`.
+- **NOT done — waits on Claude (wider i18n plumbing, not built).** Text the SERVER sends is still Turkish in country builds: labels of actions other than `ilac_ekle`, field labels of other actions, select-option labels, drug-warning titles/text (`core/eylemler/ilacUyari.ts`) and server error messages shown per row (`hata`). Needs a localized server-side catalogue.
+- **NOT done — waits on Claude.** The single-record card (`EylemKarti`, incl. its Save/Cancel buttons) is not localized; only the batch card is. The batch card has no Cancel button.
+- **NOT done — waits on Claude.** The card follows the pack's default language, not the signed-in account's chosen language (matters for uz: Russian / Cyrillic accounts still see Uzbek Latin).
+- **Waits on Kaan / a native speaker.** Uzbek wording in `countries/uz/toplu.ts` is machine-written and needs native review (same standing as countries/uz/metinler.ts). English wording needs no review beyond the usual.
+- **Waits on Kaan.** Visual check in a browser; merging this branch into `release/nz` and deploying the country site (neither done by this job).
+- **Waits on Claude.** main still has the inline Turkish copy in EylemKarti/topluSecim (no `countries/` dir on main); the TopluMetin refactor exists only on the country branches. `scripts/ulke-turkce-tavan.mjs` reports 1700 vs ceiling 1698 on `release/nz` before and after this change (pre-existing; this change adds no counted file).
