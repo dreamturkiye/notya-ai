@@ -28,6 +28,8 @@ import YasamsalBulgularFormu from '@/components/doktor/YasamsalBulgularFormu';
 import { satirBasiNumarala } from '@/lib/doktor/satirBasiNumarala';
 import { motorAfisiTemizle } from '@/core/belgeler/yazar';
 import MuayeneEkleri from '@/components/doktor/MuayeneEkleri';
+import AsiOnamPaneli from '@/components/doktor/AsiOnamPaneli';
+import { asiOnamBransUygunMu } from '@/lib/asi/onam/asiOnamBransKapisi';
 import SizinTarzinizChip from '@/components/doktor/SizinTarzinizChip';
 import SonrakiAdim from '@/components/doktor/SonrakiAdim';
 import { useRutinPaket } from '@/lib/doktor/ogrenme/rutinIstemci';
@@ -602,6 +604,15 @@ export default function IncelemePage() {
                           eriskinVkiGoster={!note.bransKapsami.pediatrik}
                         />
                       </div>
+                      {/* NOTYA-ASI-ONAM-01 — Pediatri'ye ÖZEL (brans-alan-sizmasi): tab/panel mount'u
+                          AYNI kapıdan geçer — asiOnamBransUygunMu(note.bransKapsami.brans). Başka
+                          branşlarda (çocuk-cerrahisi, aile-hekimliği dahil) bu panel HİÇ mount edilmez. */}
+                      {note.patientId && asiOnamBransUygunMu(note.bransKapsami.brans) && (
+                        <div style={{ marginBottom: 10 }}>
+                          <div style={{ fontSize: 12, fontWeight: 700, color: CHROME_RENK.pine, marginBottom: 3 }}>Aşı Onamı</div>
+                          <AsiOnamPaneli patientId={note.patientId} sessionId={note.sessionId} />
+                        </div>
+                      )}
                       {(['subjektif', 'objektif', 'degerlendirme', 'plan'] as const).map((alan) => (
                         <div key={alan} style={{ marginBottom: 10 }}>
                           <div style={{ fontSize: 12, fontWeight: 700, color: CHROME_RENK.pine, marginBottom: 3 }}>

@@ -193,6 +193,22 @@ export function mesajHazirla(tur: MesajTuru, g: SablonGirdisi): HazirMesaj | nul
         metin: imzala([`${merhaba(g)} ${kimin}belgelerinize, mesajlarınıza ve kayıtlarınıza Sağlığım’dan güvenle ulaşabilirsiniz:`, link, 'Giriş için muayenehanemizin size verdiği 6 haneli PIN gerekir.', '', ACIL_SATIRI], g),
       }
     }
+    case 'asi_onam_hazir': {
+      // NOTYA-ASI-ONAM-01: no vaccine name, no content — only a generic notice + the Sağlığım link,
+      // same as saglikim_baglanti / bilgi_formu. veliDili is always true here in practice (Pediatri-only feature).
+      if (!link) return null
+      const kimin = temiz(g.hastaAdi) ? `${temiz(g.hastaAdi)} için ` : ''
+      return {
+        konu: konuYap('Aşı bilgilendirme ve onay formu hazır', g),
+        metin: imzala([
+          `${merhaba(g)} ${kimin}bir aşı bilgilendirme ve onay formu hazırlandı. İçeriği okumak ve onaylamak için Sağlığım’a girin:`,
+          link,
+          'Giriş için muayenehanemizin size verdiği 6 haneli PIN gerekir.',
+          '',
+          ACIL_SATIRI,
+        ], g),
+      }
+    }
     case 'bilgi_formu': {
       if (!link) return null
       const b = bilgiFormuSatirlari(g, link)

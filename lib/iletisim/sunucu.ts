@@ -252,6 +252,22 @@ export async function saglikimMesajiKuyrugaEkle(sb: Sb, g: { doctorId: string; p
   }])
 }
 
+/**
+ * NOTYA-ASI-ONAM-01 — one queue item so the doctor's existing "Bugün N mesaj hazır" one-tap flow
+ * (HazirMesajlar) picks up the notice, exactly like saglikimMesajiKuyrugaEkle above. No separate
+ * send path, no clinical content: the queued message (mesajHazirla 'asi_onam_hazir') only points
+ * at the Sağlığım link; the actual vaccine content lives behind the PIN gate.
+ */
+export async function asiOnamTalebiKuyrugaEkle(sb: Sb, g: { doctorId: string; patientId: string; talepId: string }): Promise<number> {
+  return kuyrugaEkle(sb, [{
+    doctor_id: g.doctorId,
+    patient_id: g.patientId,
+    tur: 'asi_onam_hazir',
+    planlanan_gun: bugunTrIso(),
+    tekil_anahtar: tekilAnahtar.asiOnamTalebi(g.talepId),
+  }])
+}
+
 /** Queue window for due vaccines: up to 7 days ahead, up to 30 days overdue. */
 export const ASI_KUYRUK_ILERI_GUN = 7
 export const ASI_KUYRUK_GERI_GUN = 30

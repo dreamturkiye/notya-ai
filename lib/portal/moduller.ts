@@ -144,6 +144,9 @@ export function portalModulleri(g: PortalUygunlukGirdisi): PortalModulSonucu {
   // RADYOLOJI-EXCEPTIONAL-01 — Tetkiklerim yalnız radyoloji hekiminin token'ında;
   // dahiliye / onkoloji / göğüs'e taşınmaz.
   if (brans === 'radyoloji') aktif.add('tetkiklerim')
+  // NOTYA-ASI-ONAM-01 — Pediatri'ye ÖZEL: Aşı Karnesi'nin tersine branş kapısı VAR. Başka hiçbir
+  // branşa (çocuk-cerrahisi, aile-hekimliği dahil) taşınmaz — lib/asi/onam/asiOnamBransKapisi.ts.
+  if (brans === 'pediatri') aktif.add('asi-onam')
   const klinikDal = klinikSlugCoz(g.doktorBransi)
   if (klinikDal) {
     aktif.delete('dermatoloji')
@@ -181,6 +184,7 @@ export function portalModulleri(g: PortalUygunlukGirdisi): PortalModulSonucu {
     beslenmem: 'klinik',
     ergom: 'klinik',
     'isitmem-odyoloji': 'klinik',
+    'asi-onam': 'pediatri',
   }
   const nav = sirali.flatMap((id) => {
     if (id === 'asi-karnesi') return [ASI_KARNESI_NAV]

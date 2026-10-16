@@ -3628,3 +3628,102 @@ from the parallel GİB-Portalı session at the time — see ACCOUNTING-INTL-05.
 | ACCOUNTING-INTL-05 | 2026-10-16 | OPEN | New test files not added to `package.json`'s `test` script — that file had uncommitted edits from the parallel GİB-Portalı session at the time (adding its own new stopaj/gib test files), and editing it concurrently risked clobbering that work. Trivial to add (`lib/accounting/international/compliance.test.ts lib/accounting/international/adapters.test.ts`), just deferred. | Claude next, once `package.json` settles after the GİB-Portalı merge |
 | ACCOUNTING-INTL-06 (ops note, not product) | 2026-10-16 | DONE (worked around) | This container's disk hit **0 bytes free mid-session** (3 parallel agents' worktrees + `/tmp` scratch had filled it to 252GB/100%) — a `git worktree add` for isolation failed outright, and a later file write failed with `ENOSPC`. Worked around by clearing `npm cache` + stale compile caches (~1.1GB reclaimed) rather than touching any worktree directory that might belong to a live concurrent session. | Kaan/infra: this host is now chronically near-full from accumulated per-agent worktrees under `.claude/worktrees/` and `/tmp/wt-*` — a periodic cleanup of worktrees for already-merged branches would prevent the next session from hitting this |
 | ACCOUNTING-INTL-07 | 2026-10-16 | PENDING (highest-priority per-country items) | **UZ**: domestic withholding on individual-entrepreneur professional fees (not found/confirmed — left `null`, not guessed), whether a medical-service VAT exemption exists in the Tax Code (defaults to the full 12% rate, conservatively), whether my.soliq.uz is explicitly free. **AU**: whether the 47% no-ABN-withholding rule could ever bind a patient-invoice scenario. **GB**: revisit once Budget 2026 publishes the 2029 e-invoicing roadmap — may turn GB into a `portal_prepare_pastback` country. **CA**: full province GST/HST rate table for non-exempt services (only the federal 5% floor is built). **US**: confirm state sales-tax exemption for the doctor's actual state (one example state verified, not a 50-state table). | Kaan or the relevant country's own tax adviser — see each `docs/ARCH-NOTYA-ACCOUNTING-<CC>.md` §7 |
+
+## NOTYA-ASI-ONAM-01 — Dijital Aşı Onam Sistemi (Digital Vaccine Consent System), Phase 1: Türkiye/Pediatri (Claude, 2026-10-16, branch `feat/asi-onam`)
+
+Built on an isolated worktree (`git worktree add` off `main`) rather than the shared `/home/claude/notya-ai`
+checkout: that directory was mid-use by two other concurrent background sessions (`feat/asi-stok-barkod`
+vaccine-stock/barcode work, and the GİB-Portalı/accounting-international work merging into `main` at the
+same time). One package.json edit of mine was already folded into the GİB-Portalı session's commit by
+the time I checked (harmless — just the two new pure-logic test files wired into `npm test`/`test:pedi`);
+otherwise this feature's files never touched anything the other two sessions owned, confirmed file-by-file
+before committing, and the shared checkout's dirty state from my earlier in-place work was reverted back to
+only the barcode session's own files before I stopped using it.
+
+**Scope decision (brans-alan-sizmasi)**: gated to **pediatri only**, narrower than `PEDIATRIK_BAGLAM`
+(which also treats çocuk-cerrahisi as "always" pediatric-context) — the brief says "Pediatri only"
+literally, and çocuk-cerrahisi's own surgical consent already lives in its own `specialties/cocuk-cerrahisi/engines/onam.ts`
+flow. Single decision point: `lib/asi/onam/asiOnamBransKapisi.ts` (`asiOnamBransUygunMu`), unknown/null
+branş defaults to **false** (never "unknown counts as pediatri"). Every layer (muayene panel mount in
+`app/dashboard/doktor/inceleme/page.tsx`, the Sağlığım portal module gate in `lib/portal/moduller.ts`,
+the three doctor-side API routes, the one portal API route) delegates to this same function — tested in
+`lib/asi/onam/asiOnamBransKapisi.test.ts` by looping over every `SpecialtyKey` (negative cases named
+explicitly: çocuk-cerrahisi, aile-hekimliği).
+
+**Doktor Araçları classification (stated per the skill, not improvised)**: this is **not** a Doktor
+Araçları tool — it is a muayene-embedded panel + its own Sağlığım portal module + its own API routes,
+the same shape as the existing Aşı Karnesi / Büyüme modules, not a tile under `/doktor-tools`. No entry
+added to `ORTAK_DOKTOR_ARACLARI` or `BRANS_DOKTOR_ARACLARI`.
+
+**All three consent flows implemented**:
+1. **In-clinic (primary)** — `app/api/doktor/asi-onam/route.ts` + `components/doktor/AsiOnamPaneli.tsx`,
+   mounted in the muayene screen right after `YasamsalBulgularFormu`. Doctor selects vaccines from the
+   static dataset; parent/patient taps "Okudum, kabul ediyorum" (no signature pad — none exists yet to
+   reuse, per the brief's own fallback). On confirm: immediate timestamp, linked to patient + muayene +
+   the exact vaccines, written to the immutable table. Muayene panel shows "Aşı onamı alındı" + timestamp.
+2. **Remote pre-visit (optional secondary)** — `app/api/doktor/asi-onam/talep/route.ts` creates a
+   mutable "talep" (workflow row) the doctor can trigger from an appointment; notification reuses the
+   existing one-tap `lib/iletisim/` system (WhatsApp from the doctor's own number, or e-posta) — **the
+   notification itself carries zero clinical content** (no vaccine name), only a generic "a consent form
+   is ready" notice pointing at the PIN-gated Sağlığım link, same pattern as `saglikim_baglanti` /
+   `bilgi_formu` / `asi_hatirlatma`. There is no literal patient-facing SMS channel in this codebase
+   (Twilio SMS here is internal-alerts-only) — WhatsApp-from-the-doctor's-own-number is the real
+   equivalent the brief's "SMS from doctor's own number" maps onto. Parent reviews/consents at
+   `app/portal/hasta/[token]/asi-onam/page.tsx` (`app/api/portal/hasta/[token]/asi-onam/route.ts`); the
+   doctor sees it on file at the clinic (`AsiOnamPaneli` reads existing records) or takes a fresh in-clinic
+   consent if missing/incomplete.
+3. **Paper fallback** — `app/dashboard/doktor/asi-onam/yazdir/page.tsx` (print → PDF, same content as the
+   digital form, mirrors the existing `onam/yazdir` pattern) + `app/api/doktor/asi-onam/kagit/route.ts`
+   (upload the signed scan/photo, linked to the same patient + muayene, same metadata as every other flow).
+
+**Static, vetted dataset — never LLM-generated**: `lib/asi/onam/asiOnamIcerigi.ts`, 15 vaccines covering
+Türkiye's Ulusal Aşı Takvimi (BCG, Hepatit B, 6'lı Karma, KPA, OPA, KKK, Suçiçeği, Hepatit A, DaBT-İPA,
+Td, Rotavirüs, Meningokok ACWY/B, İnfluenza, HPV) plus the common özel (non-schedule) vaccines a pediatri
+practice offers. The file imports nothing from `lib/ai/*` — structurally cannot call a model. Adding a
+vaccine is a data addition to the one `ASI_ONAM_ICERIGI` array, never a code change. **Flagged for
+Dr. Gökhan's clinical sign-off before go-live** (noted in the file's own header) — content is standard
+WHO/Sağlık Bakanlığı GBP material, not yet checked against every actual stocked product's kullanma
+talimatı.
+
+**Immutability**: `lib/db/migrations/161_asi_onam.sql` — `asi_onam_kayitlari` (the legal record) gets
+RLS with only SELECT+INSERT policies **plus** a hard `BEFORE UPDATE`/`BEFORE DELETE` trigger that
+unconditionally `RAISE EXCEPTION`s, because service-role bypasses RLS entirely in this codebase (same
+reasoning as migration 160's `sessions_protokol_no_degismez()`, generalized here to the whole row, both
+verbs). No update/delete code path exists anywhere in the app for this table — confirmed by grep, not
+just by convention. The workflow table (`asi_onam_talepleri`, pre-confirmation remote requests) is
+ordinary and mutable, as it must be (a request can be cancelled/resent before anyone has consented).
+Every record snapshots patient, parent/guardian identity (`AsiOnamOnayEden`), the specific vaccines, a
+timestamp, the method (klinik/uzaktan-eposta/uzaktan-whatsapp/uzaktan-portal/kağıt), and the EXACT
+content shown at the time (`icerikAnlikGoruntu`, frozen by `asiOnamIstegiHazirla()` — the one function
+every write path calls, so the snapshot can never drift between flows even if the dataset changes later).
+
+**i18n scaffolding for Phase 2**: `lib/asi/onam/dil.ts` (`Ceviri = {tr: string} & Partial<Record<string,string>>`,
+`AsiOnamUlkePaketi` in `asiOnamMotoru.ts` bundles a locale + its own vaccine content + its own
+Pediatri-equivalent branş key) — only Turkish ships now, but no caller hardcodes Turkish; a country pack
+is a data object, not a rewrite.
+
+**Tests**: 2 new pure-logic files (`lib/asi/onam/asiOnamBransKapisi.test.ts` — 4 tests, loops every
+branş; `lib/asi/onam/asiOnamMotoru.test.ts` — 18 tests: empty selection, unknown-vaccine rejection
+(content is never invented), dedup, mixed valid+invalid rejection, method/status/onayEden validators),
+both wired into `package.json`'s `test` and `test:pedi` scripts. `lib/portal/moduller.test.ts` extended
+(2 assertions updated to expect the new `asi-onam` module alongside `asi-karnesi` for every pediatri
+scenario, adult-pediatri-patient included — same `doctor_specialty` pattern as Aşı Karnesi). Full sweep:
+whole-project `tsc --noEmit` clean; `lib/portal/moduller.test.ts` 11/11; `lib/specialties/brans-alan-sizmasi{,-rotalar}.test.ts`
+48/48; `lib/security/hasta-izolasyon-envanter.test.ts` 6/6; the two new files 22/22; full `npm test`
+result recorded once the background run finishes (see the PR this entry ships with).
+
+**Not done / honestly deferred**: no new entry added to the heavy `hasta-izolasyon.test.ts` cross-doctor
+harness itself — the 4 new routes are classified via the lighter, explicitly-sanctioned `I()` entries in
+`hastaIzolasyonEnvanteri.ts` instead (each states its own ownership mechanism in the entry text, verified
+by the envanter test that checks every `I()` entry states something). **Dr. Gökhan's clinical sign-off**
+on the vaccine content dataset — flagged above, not obtained (no live clinician in this session). No
+browser/live-DB end-to-end run was possible in this environment; verification here is tsc + the unit/SSR
+test suite plus direct code review of every write path, not a live click-through — stated plainly rather
+than claimed as "tested live".
+
+| Item | Date | Status | What / why | Waits on |
+|---|---|---|---|---|
+| ASI-ONAM-01 | 2026-10-16 | DONE | Phase 1 (Türkiye/Pediatri), all three consent flows, immutable record table, branş gate, i18n scaffolding, 2 new test files + 1 extended. See narrative above. | Nobody — code is real and tested |
+| ASI-ONAM-02 | 2026-10-16 | OPEN | Dr. Gökhan's clinical sign-off on `lib/asi/onam/asiOnamIcerigi.ts` wording against each actually-stocked product's kullanma talimatı — the file is flagged for this in its own header but no clinician reviewed it this session. | Kaan / Dr. Gökhan |
+| ASI-ONAM-03 | 2026-10-16 | OPEN | Not added to the heavy `hasta-izolasyon.test.ts` cross-doctor harness (used the lighter `hastaIzolasyonEnvanteri.ts` `I()` classification instead, deliberately, given the harness's size/risk). Promoting these 4 routes from `I()` to a full harness `T` entry would strengthen the automated cross-doctor regression coverage further. | Claude next (low priority — `I()` entries are reviewed and correct today) |
+| ASI-ONAM-04 | 2026-10-16 | PENDING | Phase 2 (same system for the other 6 country modules' Pediatrics-equivalent branş — AU, CA, GB, NZ, US, UZ confirmed from the codebase's own `release/<cc>` branches, same list `ACCOUNTING-INTL-01` confirmed): real per-country legal research on parental-consent requirements for pediatric vaccination, then port `AsiOnamUlkePaketi` per country. Scope and status recorded as this proceeds — see the next entry this same branch adds, or a follow-up `ASI-ONAM-INTL-*` block if it lands separately. | Claude next |

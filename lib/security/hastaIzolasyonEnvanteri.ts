@@ -51,6 +51,10 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   'app/api/doktor/asilar/karne/route.ts': T,
   'app/api/doktor/asilar/karne/pdf/route.ts': T,
   'app/api/doktor/asilar/hatirlatma/route.ts': T,
+  // NOTYA-ASI-ONAM-01 — immutable consent records + their mutable remote-request workflow.
+  'app/api/doktor/asi-onam/route.ts': I('hastaSahibiMi(patientId) before any read/write; seansSahibi(sessionId) + session.patient_id === patientId check before linking a muayene; insert always carries doktor_id = doktorId'),
+  'app/api/doktor/asi-onam/talep/route.ts': I('hastaSahibiMi(patientId); randevuId/sessionId re-resolved and ownership-checked (randevular.doktor_id / seansSahibi) before being stored on the request; queue enqueue (asiOnamTalebiKuyrugaEkle) is doctor-scoped like saglikimMesajiKuyrugaEkle'),
+  'app/api/doktor/asi-onam/kagit/route.ts': I('hastaSahibiMi(patientId) + seansSahibi(sessionId) before upload; storage path is doktorId/patientId/asi-onam/…; insert carries doktor_id = doktorId'),
   'app/api/doktor/belgeler/lab/route.ts': T,
   'app/api/doktor/belgeler/analiz/route.ts': I('document via vault getDocumentMeta(doctorId) (assertPatientOwned); analyses by doctor_id'),
   'app/api/doktor/belgeler/analiz/onayla/route.ts': I('analysis by id AND doctor_id; target note by id AND doctor_id'),
@@ -310,6 +314,10 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   'app/api/portal/hasta/[token]/randevu/route.ts': T,
   'app/api/randevu/eylem/route.ts': I('NOTYA-RANDEVU-V2 e-mail links: HMAC-signed token (PORTAL_TOKEN_SECRET) names one randevu id + one action; that row\'s own doktor_id + patient_id scope every further read/write (hastaIslem re-resolves id + doktor_id + patient_id); response carries time, doctor name and state only — no patient name, phone, e-mail or clinical field'),
   'app/api/portal/hasta/[token]/asi-karnesi/pdf/route.ts': T,
+  // NOTYA-ASI-ONAM-01 — token resolves to (doctor_id, patient_id) via resolvePortalToken; every
+  // read/write on asi_onam_talepleri / asi_onam_kayitlari is scoped by BOTH together; a non-Pediatri
+  // doctor's token answers 404 (brans-alan-sizmasi gate doubles as a route gate here).
+  'app/api/portal/hasta/[token]/asi-onam/route.ts': I('resolvePortalToken fixes doctor_id+patient_id from the PIN-unlocked token; talep/kayit reads and writes scoped by both; asiOnamBransUygunMu(brans) 404s a non-Pediatri token'),
   'app/api/portal/hasta/[token]/dahiliye-anket/route.ts': I('token → (patient_id, doctor_id); every read/write scoped by both'),
   'app/api/portal/hasta/[token]/unlock/route.ts': I('PIN check for the token row only'),
   'app/api/intake/[token]/route.ts': I('token → form row; patient from that row (form was created after an ownership check); NOTYA-ILETISIM-01 / NOTYA-GELEN-BELGELER consent writes scoped by that row\'s patient_id AND doktor_id'),

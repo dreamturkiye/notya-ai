@@ -77,6 +77,8 @@ export const tekilAnahtar = {
    * it (tier 1 → tier 2), which the bucket label in the key naturally expresses.
    */
   odemeHatirlatma: (invoiceId: string, bucket: string) => `odeme_hatirlatma:${invoiceId}:${bucket}`,
+  /** NOTYA-ASI-ONAM-01: one notice per talep (a new talep for the same patient gets its own notice). */
+  asiOnamTalebi: (talepId: string) => `asi_onam_hazir:${talepId}`,
 }
 
 /** Drops candidates whose key already exists (in the DB or earlier in the same batch). */

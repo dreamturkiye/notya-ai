@@ -79,6 +79,14 @@ export const PEDIATRI_PROFILE: SpecialtyProfile = {
     id: 'buyume', nav: [], bundleKeys: ['buyume', 'hedefBoy'], eligibility: 'combined',
     copyHints: ['Persentil eğrileri Neyzi referansıdır; yorum ve hedef doktorunuzdadır.', 'Hedef boy bir tahmindir, tanı değildir.'],
     views: ['BuyumeEgrileriView', 'HedefBoyAileKart'], derinlik: 'Partial',
+  }, {
+    // NOTYA-ASI-ONAM-01 — Dijital Aşı Onam Sistemi. Pediatri'ye ÖZEL (lib/asi/onam/asiOnamBransKapisi.ts):
+    // doctor_specialty eligibility, own dedicated route (/asi-onam, own API — not the shared bundle),
+    // so this module carries no bundleKeys (lib/portal/moduller.ts marks it attached; the page fetches
+    // its own data from app/api/portal/hasta/[token]/asi-onam/route.ts).
+    id: 'asi-onam', nav: [{ key: 'asi-onam', label: 'Aşı Onamı', path: '/asi-onam' }], bundleKeys: [], eligibility: 'doctor_specialty',
+    copyHints: ['Aşı bilgilendirme ve onay formu burada okunur; onay verildiğinde geri alınamaz, yalnız yeni bir muayenede yeniden değerlendirilir.', 'Red de kabul kadar geçerli bir yanıttır.'],
+    views: ['AsiOnamView'], derinlik: 'Strong',
   }],
 
   // KONSULTASYON-01 (Kaan 2026-09-19): çocuk hekiminin en sık yönlendirdiği branşlar — yalnız sıralama.
