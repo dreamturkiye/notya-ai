@@ -23,6 +23,12 @@ export type MesajTuru =
   | 'asi_hatirlatma'
   | 'kontrol_hatirlatma'
   | 'serbest'
+  // NOTYA-ASI-ONAM-01 (2026-10-16): a vaccine informed-consent form is ready to review in Sağlığım
+  // (Pediatri only). Same "no clinical content" rule as every other template here — this notice
+  // never names a vaccine; it only points at the PIN-gated Sağlığım link where the parent reviews
+  // and confirms. Deliberately absent from OTOMATIK_TURLER (lib/iletisim/otomatik.ts) — like
+  // asi_hatirlatma, always one-tap, never sent by a cron.
+  | 'asi_onam_hazir'
   // NOTYA-ACCOUNTING-COMPLIANCE-01 (2026-10-15): AR late-payment reminder draft. Financial, not
   // clinical, content — the one exception to "no amounts in a message" is amounts ARE allowed
   // here (lib/accounting/ar/reminders.ts), the "no clinical info" rule this module exists for is
@@ -42,6 +48,7 @@ export const MESAJ_TURLERI: readonly MesajTuru[] = [
   'kontrol_hatirlatma',
   'serbest',
   'odeme_hatirlatma',
+  'asi_onam_hazir',
 ]
 
 export function mesajTuruMu(x: unknown): x is MesajTuru {
@@ -79,4 +86,5 @@ export const TUR_ETIKETI: Record<MesajTuru, string> = {
   kontrol_hatirlatma: 'Kontrol hatırlatma',
   serbest: 'Mesaj',
   odeme_hatirlatma: 'Ödeme hatırlatma',
+  asi_onam_hazir: 'Aşı onam formu hazır',
 }

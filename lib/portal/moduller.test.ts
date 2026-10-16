@@ -17,16 +17,17 @@ describe('pediatri portal is not göz portal', () => {
       assert.deepEqual(portalModulleri(hasta).moduller, ['gozlerim', 'asi-karnesi'])
     }
   })
-  it('pediatri doctor: büyüme for a child (or unknown DOB) + Aşı Karnesi always, never Gözlerim', () => {
+  it('pediatri doctor: büyüme for a child (or unknown DOB) + Aşı Onam + Aşı Karnesi always, never Gözlerim', () => {
     // ASI-KARNESI-01 — Aşı Karnesi kayıtsızda da açık (ebeveyn / yetişkin keşfi).
-    assert.deepEqual(portalModulleri(g({ doktorBransi: 'pediatri', hastaYasYil: 4 })).moduller, ['buyume', 'asi-karnesi'])
-    assert.deepEqual(portalModulleri(g({ doktorBransi: 'pediatri', hastaYasYil: null })).moduller, ['buyume', 'asi-karnesi'])
+    // NOTYA-ASI-ONAM-01 (2026-10-16): Aşı Onam da pediatri'de doctor_specialty ile her zaman açık (asi-karnesi ile aynı desen).
+    assert.deepEqual(portalModulleri(g({ doktorBransi: 'pediatri', hastaYasYil: 4 })).moduller, ['buyume', 'asi-onam', 'asi-karnesi'])
+    assert.deepEqual(portalModulleri(g({ doktorBransi: 'pediatri', hastaYasYil: null })).moduller, ['buyume', 'asi-onam', 'asi-karnesi'])
     assert.ok(!portalModulleri(g({ doktorBransi: 'pediatri', hastaYasYil: 4 })).moduller.includes('gozlerim'))
   })
   it('adult patient never gets büyüme (bug: curves were built for every patient with a DOB)', () => {
     for (const b of ['pediatri', 'aile-hekimligi', null]) assert.ok(!portalModulleri(g({ doktorBransi: b, hastaYasYil: 35, buyumeOlcumu: true })).moduller.includes('buyume'))
-    // Pediatri yetişkininde Aşı Karnesi yine açık; büyüme kapalı.
-    assert.deepEqual(portalModulleri(g({ doktorBransi: 'pediatri', hastaYasYil: 35 })).moduller, ['asi-karnesi'])
+    // Pediatri yetişkininde Aşı Onam ve Aşı Karnesi yine açık (hasta hâlâ aynı pediatristin takibindeyse kendi onayını verir — VELI-YASAL-ONAM); büyüme kapalı.
+    assert.deepEqual(portalModulleri(g({ doktorBransi: 'pediatri', hastaYasYil: 35 })).moduller, ['asi-onam', 'asi-karnesi'])
   })
 })
 
