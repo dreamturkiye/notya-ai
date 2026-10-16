@@ -29,6 +29,9 @@ const btn = (bg: string, fg: string): React.CSSProperties => ({ background: bg, 
 // tamamını tarayıcıya taşımasın; metin aynı kalmalı, biri değişirse diğeri de güncellenmeli.
 const ACIL_SATIRI = 'Bu mesaj kanalı acil durumlar için değildir; acil bir durumda 112’yi arayın ya da en yakın acil servise başvurun.'
 const SMS_VAZGEC_SATIRI = 'Bu mesajları almak istemiyorsanız STOP yazıp gönderin.'
+// NETGSM-01: STOP replies are not captured for NetGSM (nor in the copy-paste list, where no gateway receives them),
+// so those use a line that is true: contact the clinic.
+const SMS_VAZGEC_SATIRI_NETGSM = 'Bu mesajları almak istemiyorsanız muayenehanemizi arayarak bildirebilirsiniz.'
 
 const SABLONLAR: { anahtar: string; etiket: string; metin: string }[] = [
   { anahtar: 'asi_stok_geldi', etiket: 'Aşı stoğa geldi', metin: 'Merhaba, beklediğiniz aşı stoğumuza geldi. Randevu almak için bizi arayabilir ya da WhatsApp\'tan yazabilirsiniz.' },
@@ -37,6 +40,7 @@ const SABLONLAR: { anahtar: string; etiket: string; metin: string }[] = [
   { anahtar: 'serbest', etiket: 'Serbest metin', metin: '' },
 ]
 
+type SmsDurum = { saglayici: 'android_sms_gateway' | 'netgsm' | null; hazir: boolean; etiket: string | null; vazgecSatiri: string; kredi?: { deger: number | null; hata?: string } }
 type Onizleme = { hedefSayisi: number; smsHazirSayisi: number; epostaHazirSayisi: number; ornekler: { id: string; ad: string }[] }
 type GecmisSatiri = { id: string; konu: string | null; govde: string; hedef_sayisi: number; durum: string; created_at: string; olusturan_rol: string; sayilar: { gonderildi: number; basarisiz: number; atlandi: number } }
 
@@ -65,6 +69,7 @@ function HastaIletisimiIcerik() {
   const [sonuc, setSonuc] = useState<{ hedefSayisi: number; gonderildi: number; basarisiz: number; atlandi: number; vazgecYok: number; kalan: number; smsManuelListesi?: { ad: string; telefon: string }[] } | null>(null)
   const [hata, setHata] = useState('')
   const [gecmis, setGecmis] = useState<GecmisSatiri[]>([])
+  const [smsDurum, setSmsDurum] = useState<SmsDurum | null>(null)
   // Stable across retries of the SAME send (so a double-click or network retry is deduped by the
   // server's idempotency key, never sends twice) but regenerated after every successful send
   // (below) — otherwise a second, genuinely different campaign composed later in the same page
@@ -161,6 +166,19 @@ function HastaIletisimiIcerik() {
   }
   useEffect(() => { void gecmisiYukle() }, [])
 
+  // NETGSM-01: which SMS channel will send (and the NetGSM credit), so nobody wonders where the messages go.
+  useEffect(() => {
+    void (async () => {
+      const h = basliklar(); if (!h) return
+      try {
+        const r = await fetch('/api/doktor/iletisim/toplu/sms-durum', { headers: h })
+        if (r.ok) setSmsDurum(await r.json())
+      } catch { /* fail soft — the banner just does not show */ }
+    })()
+  }, [])
+  const smsVazgecSatiri = smsDurum && smsDurum.saglayici !== 'android_sms_gateway' ? SMS_VAZGEC_SATIRI_NETGSM : SMS_VAZGEC_SATIRI
+  const smsMetniUzunluk = `${govde} ${ACIL_SATIRI} ${smsVazgecSatiri}`.length
+
   return (
     <div style={{ maxWidth: 760, margin: '0 auto', padding: '24px 20px 80px', fontFamily: CHROME_FONT.sans, color: INK }}>
       <Link href="/doktor-tools" style={{ color: MUTED, fontSize: 13, textDecoration: 'none' }}>← Araçlar</Link>
@@ -168,6 +186,26 @@ function HastaIletisimiIcerik() {
       <p style={{ color: MUTED, fontSize: 14, marginBottom: 20 }}>
         Birden çok hastaya SMS ve/veya e-posta ile tek seferde mesaj gönderin. Gönderimden önce her zaman bir onay adımı vardır.
       </p>
+
+      {smsDurum && (kanal === 'sms' || kanal === 'ikisi') && (
+        <div style={{ ...kutu, padding: 14, background: smsDurum.hazir ? '#F3F8F0' : '#FFF6E5', border: `1px solid ${smsDurum.hazir ? '#3F7D4A' : '#E8C77A'}`, fontSize: 14 }}>
+          {smsDurum.hazir ? (
+            <>
+              <b>SMS kanalı:</b> {smsDurum.etiket}
+              {smsDurum.saglayici === 'netgsm' && (
+                <div style={{ marginTop: 4 }}>
+                  {smsDurum.kredi && smsDurum.kredi.deger !== null
+                    ? <>NetGSM kalan kredi: <b>{String(smsDurum.kredi.deger).replace('.', ',')}</b></>
+                    : <>NetGSM kalan kredi okunamadı{smsDurum.kredi?.hata ? ` — ${smsDurum.kredi.hata}` : ''}. Kredinizi NetGSM hesabınızdan kontrol edin.</>}
+                  <div style={{ color: MUTED, fontSize: 12.5, marginTop: 2 }}>SMS ücreti NetGSM hesabınızdan düşer; Notya ücret almaz. Bu kanalda hastaların STOP yanıtı otomatik işlenmez.</div>
+                </div>
+              )}
+            </>
+          ) : (
+            <>SMS kanalı bağlı değil — gönderimde size kopyalanabilir bir SMS listesi hazırlanır (otomatik gönderim yapılmaz). Otomatik gönderim için Ayarlar › İletişim › SMS bölümünden Android telefonunuzu ya da NetGSM hesabınızı bağlayın.</>
+          )}
+        </div>
+      )}
 
       {asiAdi && (
         <div style={{ ...kutu, background: '#F3F8F0', border: `1px solid #3F7D4A` }}>
@@ -209,7 +247,7 @@ function HastaIletisimiIcerik() {
           ))}
         </div>
         {kanal !== 'sms' && <input style={{ ...inp, marginBottom: 10 }} placeholder="E-posta konusu" value={konu} onChange={(e) => setKonu(e.target.value)} />}
-        <textarea style={{ ...inp, minHeight: 110, resize: 'vertical' }} value={govde} onChange={(e) => { setGovde(e.target.value); setOnayAsamasi(false) }} placeholder="Mesaj metni — tüm alıcılara aynen bu metin gider (112 bilgi satırı ve vazgeçme bağlantısı/STOP bilgisi otomatik eklenir, aşağıda önizlemede görünür)." />
+        <textarea style={{ ...inp, minHeight: 110, resize: 'vertical' }} value={govde} onChange={(e) => { setGovde(e.target.value); setOnayAsamasi(false) }} placeholder="Mesaj metni — tüm alıcılara aynen bu metin gider (112 bilgi satırı ve vazgeçme bağlantısı / vazgeçme bilgisi otomatik eklenir, aşağıda önizlemede görünür)." />
       </section>
 
       <section style={kutu}>
@@ -223,7 +261,12 @@ function HastaIletisimiIcerik() {
             <div style={{ fontSize: 14, marginBottom: 6 }}><b>{onizleme.hedefSayisi}</b> hastaya gönderilecek — SMS için hazır: <b>{onizleme.smsHazirSayisi}</b>, e-posta için hazır: <b>{onizleme.epostaHazirSayisi}</b>.</div>
             {(kanal === 'sms' || kanal === 'ikisi') && (
               <div style={{ fontSize: 13, color: MUTED, marginBottom: 6 }}>
-                SMS olarak gidecek tam metin: <i>"{govde} {ACIL_SATIRI} {SMS_VAZGEC_SATIRI}"</i>
+                SMS olarak gidecek tam metin: <i>"{govde} {ACIL_SATIRI} {smsVazgecSatiri}"</i>
+                {smsDurum?.saglayici === 'netgsm' && (
+                  <div style={{ marginTop: 4 }}>
+                    Bu metin {smsMetniUzunluk} karakter. NetGSM, 160 karakteri aşan mesajları birden fazla SMS sayabilir (Türkçe karakter varsa sınır daha düşük olabilir); kredi buna göre düşer. Kesin sayı için NetGSM paket bilgilerinize bakın.
+                  </div>
+                )}
               </div>
             )}
             {(kanal === 'eposta' || kanal === 'ikisi') && (
@@ -246,7 +289,7 @@ function HastaIletisimiIcerik() {
               <div style={{ marginTop: 10, fontSize: 13 }}>
                 SMS gateway bağlı değil — aşağıdaki listeyi kendi telefonunuzdan gönderin:
                 <pre style={{ whiteSpace: 'pre-wrap', fontSize: 12.5, background: '#fff', padding: 10, borderRadius: 8, marginTop: 6 }}>
-                  {sonuc.smsManuelListesi.map((x) => `${x.ad} — ${x.telefon}: ${govde} ${ACIL_SATIRI} ${SMS_VAZGEC_SATIRI}`).join('\n')}
+                  {sonuc.smsManuelListesi.map((x) => `${x.ad} — ${x.telefon}: ${govde} ${ACIL_SATIRI} ${SMS_VAZGEC_SATIRI_NETGSM}`).join('\n')}
                 </pre>
               </div>
             )}

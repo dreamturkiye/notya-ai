@@ -46,7 +46,8 @@ if the doctor had typed it. That is what is implemented:
 | `tipler.ts` | `SmsGondericiSonuc`, `SmsGonderimIstegi` |
 | `gonderici.ts` | `SmsGonderici` interface, registry (`smsGondericiler`), `hazirSmsGonderici(doktorId)` |
 | `androidGateway.ts` | The one real adapter — HTTP client + response parsing |
-| `ayar.ts` | Doctor's own gateway connection: read/write `iletisim_sms_ayarlari` (encrypted password) |
+| `ayar.ts` | Doctor's own SMS connection (provider choice + credentials): read/write `iletisim_sms_ayarlari` (encrypted passwords) |
+| `netgsm.ts` | NETGSM-01: the second adapter — the doctor's OWN NetGSM account, for iPhone doctors (see below) |
 
 ## STOP / DUR (opt-out)
 
@@ -64,3 +65,23 @@ but undiscoverable. `lib/iletisim/toplu/sablonlar.ts`'s `TOPLU_SMS_VAZGEC_SATIRI
 istemiyorsanız STOP yazıp gönderin.") is appended to every bulk SMS send (`kampanya.ts`) for exactly this
 reason. The e-mail equivalent is a per-patient, HMAC-signed unsubscribe link (`lib/iletisim/vazgecJetonu.ts`,
 `app/api/iletisim/vazgec/[jeton]/route.ts`) appended as a footer to every bulk e-mail.
+
+## NetGSM (NETGSM-01, 2026-10-16) — the second adapter, for iPhone doctors
+
+An iPhone cannot run android-sms-gateway, so most Turkish doctors had no real bulk SMS. `netgsm.ts` sends through the
+doctor's **own** NetGSM account (the doctor signs up, pays NetGSM per message and pastes usercode / API password /
+approved sender name into Ayarlar › İletişim › SMS). Notya pays nothing and holds no SMS account — the "no Twilio,
+no paid per-message API paid by Notya" rule stands. Provider choice is per doctor (`iletisim_sms_ayarlari.saglayici`,
+migration 173); the **default stays `android_sms_gateway`**, so existing doctors are unaffected.
+
+* Fixed host `https://api.netgsm.com.tr` (no doctor-supplied URL → no SSRF), redirects refused, 15 s timeout,
+  credentials never logged and never in an error message; the password is `encryptPII`-encrypted at rest.
+* NetGSM error codes are mapped to Turkish doctor-facing text (`NETGSM_HATA_MESAJLARI`).
+* "Bağlantıyı test et" sends **no** SMS: it lists the account's approved sender names and reads the credit.
+* **Opt-out is not the same on both channels.** Android: STOP replies are captured by the webhook. NetGSM: they are
+  NOT (alphanumeric sender name, no push inbound). `smsVazgecSatiri(saglayici)` (`toplu/sablonlar.ts`) picks a footer that is
+  true for the channel; `SmsGonderimIstegi.beklenenSaglayici` makes `smsGonder` refuse if the provider changed between
+  composing and sending. Opted-out patients stay excluded in recipient selection.
+* Turkey-only. Country builds are exempt (OPEN-COMMITMENTS NETGSM-02).
+* **Untested against the live API** — see `docs/NETGSM-SMS-research.md` (what the docs specify, what they do not,
+  İYS / 6563 notes) and OPEN-COMMITMENTS NETGSM-01.

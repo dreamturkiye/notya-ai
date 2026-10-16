@@ -5,6 +5,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { smsAyarGetir } from './ayar'
 import { androidGatewayGonder } from './androidGateway'
+import { netgsmGonder } from './netgsm'
 import type { SmsAyar, SmsGonderimIstegi, SmsGonderimSonucu } from './tipler'
 
 export interface SmsGonderici {
@@ -13,7 +14,9 @@ export interface SmsGonderici {
 }
 
 const KAYITLI_GONDERICILER: readonly SmsGonderici[] = [
-  { saglayici: 'android_sms_gateway', gonder: androidGatewayGonder },
+  { saglayici: 'android_sms_gateway', gonder: (ayar, alici, metin) => ayar.saglayici === 'android_sms_gateway' ? androidGatewayGonder(ayar, alici, metin) : Promise.resolve({ ok: false, hata: 'SMS sağlayıcı ayarı uyuşmuyor.' }) },
+  // NETGSM-01: the doctor's own NetGSM account — for iPhone doctors (an iPhone cannot be a gateway).
+  { saglayici: 'netgsm', gonder: (ayar, alici, metin) => ayar.saglayici === 'netgsm' ? netgsmGonder(ayar, alici, metin) : Promise.resolve({ ok: false, hata: 'SMS sağlayıcı ayarı uyuşmuyor.' }) },
 ]
 
 function gondericiBul(saglayici: string): SmsGonderici | null {
@@ -34,6 +37,10 @@ export async function smsGonder(supabase: SupabaseClient, istek: SmsGonderimIste
   try {
     const hazir = await hazirSmsGonderici(supabase, istek.doktorId)
     if (!hazir) return { ok: false, hata: 'SMS gateway bağlı değil.' }
+    // The opt-out footer in `metin` was written for one provider; never send it through another.
+    if (istek.beklenenSaglayici && istek.beklenenSaglayici !== hazir.ayar.saglayici) {
+      return { ok: false, hata: 'SMS sağlayıcısı gönderim sırasında değiştirildi; bu alıcıya mesaj gönderilmedi (başarısız sayıldı).' }
+    }
     return await hazir.gonderici.gonder(hazir.ayar, istek.alici, istek.metin)
   } catch (e) {
     return { ok: false, hata: e instanceof Error ? e.message : 'bilinmeyen hata' }

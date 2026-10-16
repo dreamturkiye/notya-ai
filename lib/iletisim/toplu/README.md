@@ -43,7 +43,7 @@ The engine sends the doctor's edited `govde` **verbatim** to every recipient —
 substitution at send time (`lib/iletisim/toplu/sablonlar.ts` file header). What the compose screen's
 preview shows is channel-aware and includes the two lines the engine actually appends: the product-wide
 112 non-emergency-channel line (`TOPLU_ACIL_SATIRI`), and — SMS only — the STOP opt-out disclosure line
-(`TOPLU_SMS_VAZGEC_SATIRI`); for e-mail it also notes that a per-patient unsubscribe link is appended as a
+(`TOPLU_SMS_VAZGEC_SATIRI`, or — on the NetGSM channel, where STOP replies are not captured — the clinic-contact line from `smsVazgecSatiri('netgsm')`, see `lib/iletisim/sms/README.md`); for e-mail it also notes that a per-patient unsubscribe link is appended as a
 footer (not shown verbatim in the preview because it differs per recipient). The preview never overclaims
 "this exact text, nothing more" the way an earlier draft of this screen did — see
 `docs/OPEN-COMMITMENTS.md`.

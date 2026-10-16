@@ -17,7 +17,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { gonderilebilirMi } from '../izin'
 import { smsNumarasi, epostaAdresi } from '../baglantilar'
 import { vazgecBaglantisi, vazgecAnahtariVarMi } from '../vazgecJetonu'
-import { TOPLU_ACIL_SATIRI, TOPLU_SMS_VAZGEC_SATIRI } from './sablonlar'
+import { TOPLU_ACIL_SATIRI, smsVazgecSatiri } from './sablonlar'
 import { adaylariGetir } from './filtre'
 import { smsGonder, hazirSmsGonderici } from '../sms/gonderici'
 import { gonderici as epostaGondericisi } from '../otomatik/eposta'
@@ -161,7 +161,9 @@ export async function kampanyaGonder(supabase: SupabaseClient, doktorId: string,
 
   const aday = await b.adaylariGetir(supabase, doktorId, kampanya.filtre || {})
   const epostaHazir = kanallar.includes('eposta') ? await b.epostaGondericisi.hazirMi(doktorId) : false
-  const smsHazir = kanallar.includes('sms') ? (await b.hazirSmsGonderici(supabase, doktorId)) !== null : false
+  const smsHazirSonuc = kanallar.includes('sms') ? await b.hazirSmsGonderici(supabase, doktorId) : null
+  const smsHazir = smsHazirSonuc !== null
+  const smsSaglayici = smsHazirSonuc?.ayar?.saglayici // NETGSM-01: the opt-out footer depends on the channel
   const gondericiHazir: Record<'sms' | 'eposta', boolean> = { sms: smsHazir, eposta: epostaHazir }
 
   const mevcut = await mevcutAlicilar(supabase, doktorId, kampanyaId)
@@ -177,7 +179,7 @@ export async function kampanyaGonder(supabase: SupabaseClient, doktorId: string,
       if (m && m.durum !== 'bekliyor') continue // already gonderildi / basarisiz / atlandi → never touched again
       if (isSayisi >= b.istekAliciSiniri || b.simdi() - baslangic > b.sureButcesiMs) { kalan++; continue }
       isSayisi++
-      const sonuc = await tekAliciyaGonder(supabase, b, doktorId, kampanyaId, kampanya.konu, kampanya.govde, h, kanal, gondericiHazir[kanal], kampanya.olusturan_user_id, kampanya.olusturan_personel_id, m)
+      const sonuc = await tekAliciyaGonder(supabase, b, doktorId, kampanyaId, kampanya.konu, kampanya.govde, h, kanal, gondericiHazir[kanal], kampanya.olusturan_user_id, kampanya.olusturan_personel_id, m, smsSaglayici)
       if (sonuc === 'mesgul') mesgul++
       else if (sonuc) sonuclar.push(sonuc)
     }
@@ -215,6 +217,7 @@ async function tekAliciyaGonder(
   olusturanUserId: string | null,
   olusturanPersonelId: string | null,
   mevcut: MevcutSatir | undefined,
+  smsSaglayici?: 'android_sms_gateway' | 'netgsm',
 ): Promise<AliciSonucu | 'mesgul' | null> {
   // Consent is re-evaluated on EVERY attempt, including a resume: an opt-out that arrived after the
   // first (crashed) attempt must win over the stale 'bekliyor' row.
@@ -261,7 +264,7 @@ async function tekAliciyaGonder(
   let sonuc: { ok: true; mesajId?: string } | { ok: false; hata: string }
   if (kanal === 'sms') {
     const alici = smsNumarasi(h.telefon)!
-    const r = await b.smsGonder(supabase, { doktorId, patientId: h.id, alici, metin: `${govde} ${TOPLU_ACIL_SATIRI} ${TOPLU_SMS_VAZGEC_SATIRI}` })
+    const r = await b.smsGonder(supabase, { doktorId, patientId: h.id, alici, metin: `${govde} ${TOPLU_ACIL_SATIRI} ${smsVazgecSatiri(smsSaglayici)}`, ...(smsSaglayici ? { beklenenSaglayici: smsSaglayici } : {}) })
     sonuc = r.ok ? { ok: true, mesajId: r.saglayiciMesajId } : r
   } else {
     const alici = epostaAdresi(h.eposta)!

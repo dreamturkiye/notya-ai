@@ -74,3 +74,17 @@ export const TOPLU_ACIL_SATIRI = ACIL_SATIRI
  * which carries the unsubscribe link instead.
  */
 export const TOPLU_SMS_VAZGEC_SATIRI = 'Bu mesajları almak istemiyorsanız STOP yazıp gönderin.'
+
+/**
+ * NETGSM-01 — the opt-out line must only promise what the chosen SMS channel really does.
+ * - android_sms_gateway: the inbound webhook (app/api/iletisim/sms/webhook/) turns a STOP/DUR/İPTAL reply into
+ *   an opt-out, so the STOP line is true (when the doctor configured the webhook in the gateway app).
+ * - netgsm: STOP replies are NOT captured automatically (messages leave under an alphanumeric sender name,
+ *   which cannot receive replies, and no inbound mechanism is wired) — so the line tells the patient to contact
+ *   the clinic, and the doctor then switches the patient's SMS consent off by hand.
+ */
+export const TOPLU_SMS_VAZGEC_SATIRI_NETGSM = 'Bu mesajları almak istemiyorsanız muayenehanemizi arayarak bildirebilirsiniz.'
+
+export function smsVazgecSatiri(saglayici?: string | null): string {
+  return saglayici === 'netgsm' ? TOPLU_SMS_VAZGEC_SATIRI_NETGSM : TOPLU_SMS_VAZGEC_SATIRI
+}

@@ -5,8 +5,9 @@
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { pratikOturum, sadeceDoktor } from '@/lib/doktor/pratikOturum'
-import { smsAyarGoruntu, smsAyarKaydet, SmsAyarHatasi, smsAyarGetir } from '@/lib/iletisim/sms/ayar'
+import { smsAyarGoruntu, smsAyarKaydet, SmsAyarHatasi, smsAyarGetir, smsSaglayiciAdi } from '@/lib/iletisim/sms/ayar'
 import { androidGatewayBaglantiTest } from '@/lib/iletisim/sms/androidGateway'
+import { netgsmBaglantiTest } from '@/lib/iletisim/sms/netgsm'
 import { encryptPII, generateSecureToken } from '@/lib/security/encryption'
 
 export const dynamic = 'force-dynamic'
@@ -27,11 +28,16 @@ export async function POST(req: NextRequest) {
   if (yasak) return yasak
   const { supabase, doktorId } = oturum
 
-  const body = (await req.json().catch(() => null)) as { tabanUrl?: string; kullaniciAdi?: string; sifre?: string | null; gonderenNumara?: string | null; aktif?: boolean; test?: boolean } | null
+  const body = (await req.json().catch(() => null)) as { tabanUrl?: string; kullaniciAdi?: string; sifre?: string | null; gonderenNumara?: string | null; aktif?: boolean; test?: boolean; saglayici?: string; netgsmKullaniciKodu?: string; netgsmSifre?: string | null; netgsmBaslik?: string } | null
   if (!body) return NextResponse.json({ error: 'Geçersiz istek.' }, { status: 400 })
 
   try {
+    const saglayici = smsSaglayiciAdi(body.saglayici)
     await smsAyarKaydet(supabase, doktorId, {
+      saglayici,
+      netgsmKullaniciKodu: body.netgsmKullaniciKodu || '',
+      netgsmSifre: body.netgsmSifre ?? null,
+      netgsmBaslik: body.netgsmBaslik || '',
       tabanUrl: body.tabanUrl || '',
       kullaniciAdi: body.kullaniciAdi || '',
       sifre: body.sifre ?? null,
@@ -43,15 +49,20 @@ export async function POST(req: NextRequest) {
     // header config (X-Notya-Webhook-Secret) and the "STOP/DUR" URL below; never stored in plaintext.
     const { data: mevcut } = await supabase.from('iletisim_sms_ayarlari').select('webhook_sirri_encrypted').eq('doctor_id', doktorId).maybeSingle()
     let webhookSirriYeni: string | null = null
-    if (!mevcut?.webhook_sirri_encrypted) {
+    // NetGSM has no inbound mechanism wired (STOP replies are not captured) — no webhook secret to issue.
+    if (saglayici === 'android_sms_gateway' && !mevcut?.webhook_sirri_encrypted) {
       webhookSirriYeni = generateSecureToken(24)
       await supabase.from('iletisim_sms_ayarlari').update({ webhook_sirri_encrypted: encryptPII(webhookSirriYeni) }).eq('doctor_id', doktorId)
     }
 
-    let baglantiTest: { ok: boolean; hata?: string } | null = null
+    let baglantiTest: { ok: boolean; hata?: string; uyari?: string; kredi?: number | null; baslikOnayli?: boolean | null } | null = null
     if (body.test) {
       const ayar = await smsAyarGetir(supabase, doktorId)
-      if (ayar) {
+      if (ayar?.saglayici === 'netgsm') {
+        // Non-sending check (approved sender names + credit). No SMS is sent by a test.
+        const sonuc = await netgsmBaglantiTest(ayar)
+        baglantiTest = sonuc.ok ? { ok: true, uyari: sonuc.uyari, kredi: sonuc.kredi, baslikOnayli: sonuc.baslikOnayli } : { ok: false, hata: sonuc.hata }
+      } else if (ayar) {
         const sonuc = await androidGatewayBaglantiTest(ayar)
         baglantiTest = sonuc.ok ? { ok: true } : { ok: false, hata: sonuc.hata }
       }
@@ -61,7 +72,7 @@ export async function POST(req: NextRequest) {
       ayar: ayarGoruntu,
       baglantiTest,
       webhookSirriYeni,
-      webhookUrl: `https://www.notya.io/api/iletisim/sms/webhook/${doktorId}`,
+      webhookUrl: saglayici === 'android_sms_gateway' ? `https://www.notya.io/api/iletisim/sms/webhook/${doktorId}` : null,
     })
   } catch (e) {
     if (e instanceof SmsAyarHatasi) return NextResponse.json({ error: e.message }, { status: 400 })
