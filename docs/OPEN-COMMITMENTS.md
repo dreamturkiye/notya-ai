@@ -3933,3 +3933,4 @@ every other Phase-2-only feature in this file.
 
 - 2026-10-16 (waits on Claude): verify Hasta İletişimi (bd79f738) end-to-end — run tests, read consent logic, confirm SMS gateway send path; set audit item #3 from the result.
 - 2026-10-16 (waits on Claude): rebuild MBYS "Muayeneyi Bildir" (audit item #1); dcd67b0e / feat/mbys-onayla never reached the remote.
+- 2026-10-16 (waits on Kaan): visually verify the batch-card fix (fix/selin-ilac-ekle-checkbox) in a browser on a Dermatoloji "İlaç ekle" batch — inline Doz/Kullanım inputs, tick, count label — before merge; no browser was available to the fixing agent. Also: the live label is "Seçilenleri kaydet (N)", not "Seçili ilaçları ekle" (kept generic because the card serves all record types).
