@@ -46,6 +46,8 @@ export type KampanyaOlusturGirdisi = {
   asiStokLotId?: string | null
   /** Idempotency key — the client generates one per compose session and resends it on retry. */
   idempotencyKey: string
+  /** The audience size the human saw (and confirmed) in the preview; create rejects a material drift. */
+  onizlemeHedefSayisi?: number | null
 }
 
 export type AliciSonucu = { patientId: string; kanal: 'sms' | 'eposta'; durum: 'gonderildi' | 'basarisiz' | 'atlandi'; sebep?: string }
@@ -54,5 +56,8 @@ export type KampanyaSonucu = {
   kampanyaId: string
   hedefSayisi: number
   sonuclar: AliciSonucu[]
-  durum: 'tamamlandi' | 'basarisiz'
+  /** 'devam' = the request hit its work/time budget (or rows are held by a concurrent request): resend the SAME idempotencyKey to continue. */
+  durum: 'tamamlandi' | 'basarisiz' | 'devam'
+  /** Recipient rows still to be processed when durum === 'devam'. */
+  kalan?: number
 }

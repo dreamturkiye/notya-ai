@@ -56,6 +56,8 @@ export function vazgecBaglantisi(doktorId: string, patientId: string, kanal: Ile
 
 /** STOP/DUR keywords checked against the inbound SMS body (trimmed, case-folded). */
 export function vazgecKelimesiMi(govde: string): boolean {
-  const t = String(govde || '').trim().toLocaleLowerCase('tr-TR')
+  // tr-TR lower-casing turns a dotless "I" into "ı" ("IPTAL" → "ıptal"), which would silently miss an
+  // opt-out typed in capitals on a Turkish keyboard — fold ı back to i, and ignore trailing punctuation.
+  const t = String(govde || '').trim().toLocaleLowerCase('tr-TR').replace(/ı/g, 'i').replace(/[.!\s]+$/, '')
   return t === 'stop' || t === 'dur' || t === 'iptal'
 }
