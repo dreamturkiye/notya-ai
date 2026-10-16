@@ -32,6 +32,8 @@ export type EnabizTur =
   | 'e_dogum'
   | 'lohusa_izlem'
   | 'pregnancy_outcome'
+  /** NOTYA-ASI-STOK-BARKOD-01 — stok/barkoddan tek aksiyonla uygulanan aşı (lot kanıt izi dahil). */
+  | 'asi_uygulama'
 
 export type EnabizPaket = {
   schema: typeof ENABIZ_SCHEMA
@@ -107,7 +109,53 @@ export const ENABIZ_ARTEFAKTLAR: {
   { tur: 'e_dogum', ad: 'e-Doğum / DBS', kanal: 'uss_form_json', ornek: 'Canlı + ölü ≥22hf/≥500g alanları' },
   { tur: 'lohusa_izlem', ad: 'Lohusa izlem', kanal: 'uss_form_json', ornek: 'Lohusa gün + TA + emzirme' },
   { tur: 'pregnancy_outcome', ad: 'Gebelik sonucu', kanal: 'uss_form_json', ornek: 'Canlı/ölü/abortus/ektopik' },
+  { tur: 'asi_uygulama', ad: 'Aşı uygulaması (stok/barkod)', kanal: 'fhir_r4', ornek: 'Immunization + lot/parti no' },
 ]
+
+// ---------- FHIR: Immunization (NOTYA-ASI-STOK-BARKOD-01) ----------
+
+export function enabizAsiUygulama(g: {
+  id?: string
+  asiAdi: string
+  lotNo?: string | null
+  barkod?: string | null
+  uygulamaTarihi: string
+  uygulamaBolgesi?: string | null
+  dozNo?: number | null
+  hastaId?: string
+  hekimAd?: string
+}): EnabizPaket {
+  const id = g.id || `asi-${Date.now()}`
+  const eksikler: string[] = []
+  if (!g.hastaId) eksikler.push('hasta_id (e-Nabız eşlemesi için)')
+  if (!g.lotNo && !g.barkod) eksikler.push('lot/parti no (geri çağırma izlenebilirliği için önerilir)')
+  const resource = {
+    resourceType: 'Immunization',
+    id,
+    status: 'completed',
+    vaccineCode: { text: g.asiAdi },
+    patient: g.hastaId
+      ? { reference: `Patient/${g.hastaId}`, identifier: { system: `${SIS.notya}/hasta-id`, value: g.hastaId } }
+      : undefined,
+    occurrenceDateTime: g.uygulamaTarihi,
+    lotNumber: g.lotNo || undefined,
+    site: g.uygulamaBolgesi ? { text: g.uygulamaBolgesi } : undefined,
+    protocolApplied: g.dozNo ? [{ doseNumberPositiveInt: g.dozNo }] : undefined,
+    performer: g.hekimAd ? [{ actor: { display: g.hekimAd } }] : undefined,
+    extension: [
+      { url: `${SIS.notya}/lot-barkod`, valueString: g.barkod || null },
+      { url: `${SIS.notya}/live-write`, valueBoolean: false },
+    ],
+  }
+  const kopya = [
+    `Aşı: ${g.asiAdi}`,
+    g.lotNo ? `Lot/Parti No: ${g.lotNo}` : '',
+    g.barkod ? `Barkod: ${g.barkod}` : '',
+    `Uygulama tarihi: ${g.uygulamaTarihi}`,
+    g.uygulamaBolgesi ? `Uygulama bölgesi: ${g.uygulamaBolgesi}` : '',
+  ].filter(Boolean).join('\n')
+  return paket('asi_uygulama', 'fhir_r4', { resourceType: 'Bundle', type: 'collection', entry: [{ resource }] }, kopya, eksikler)
+}
 
 // ---------- FHIR: USG DiagnosticReport ----------
 

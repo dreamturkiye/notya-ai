@@ -129,6 +129,17 @@ export class SahteVeritabani {
           db.protokolSayaclari.set(anahtar, simdiki)
           return { data: `${args.p_yil}-${String(simdiki).padStart(6, '0')}`, error: null }
         }
+        // NOTYA-ASI-STOK-BARKOD-01: mirrors asi_stok_dekrement() (165_asi_stok_barkod.sql) — a single
+        // UPDATE ... WHERE miktar > 0 RETURNING. The real concurrency guarantee is Postgres's row
+        // lock on that statement; this fake only needs the same "never goes below 0, 0 rows if
+        // already 0 or foreign doktor_id" shape so route-level tests exercise the real call.
+        if (ad === 'asi_stok_dekrement') {
+          const lot = db.tablo('asi_stok_lotlari').find((r) => r.id === args.p_lot_id && r.doktor_id === args.p_doktor_id && Number(r.miktar) > 0)
+          if (!lot) return { data: [], error: null }
+          lot.miktar = Number(lot.miktar) - 1
+          lot.updated_at = new Date().toISOString()
+          return { data: [lot], error: null }
+        }
         throw new Error(`[sahteSupabase] desteklenmeyen rpc: ${ad}`)
       },
     }

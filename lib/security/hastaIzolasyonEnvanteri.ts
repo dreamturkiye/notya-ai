@@ -55,6 +55,12 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   'app/api/doktor/asi-onam/route.ts': I('hastaSahibiMi(patientId) before any read/write; seansSahibi(sessionId) + session.patient_id === patientId check before linking a muayene; insert always carries doktor_id = doktorId'),
   'app/api/doktor/asi-onam/talep/route.ts': I('hastaSahibiMi(patientId); randevuId/sessionId re-resolved and ownership-checked (randevular.doktor_id / seansSahibi) before being stored on the request; queue enqueue (asiOnamTalebiKuyrugaEkle) is doctor-scoped like saglikimMesajiKuyrugaEkle'),
   'app/api/doktor/asi-onam/kagit/route.ts': I('hastaSahibiMi(patientId) + seansSahibi(sessionId) before upload; storage path is doktorId/patientId/asi-onam/…; insert carries doktor_id = doktorId'),
+  // NOTYA-ASI-STOK-BARKOD-01 — stok (asi_stok_lotlari) kendisi doktor-kapsamlı, hasta kimliği taşımaz;
+  // yalnız uygula/route.ts dışarıdan patientId + sessionId alır.
+  'app/api/doktor/asi-stok/route.ts': I('yalnız asi_stok_lotlari okur/yazar (doktor_id = doktorId); hasta kimliği hiçbir yerde girdi değil'),
+  'app/api/doktor/asi-stok/tara/route.ts': I('yalnız lotu barkod + doktor_id ile bulur; hasta kimliği girdi değil, yazma yok'),
+  'app/api/doktor/asi-stok/modul/route.ts': I('yalnız asi_stok_modul_ayarlari, kapsam doktorId; hasta kimliği yok'),
+  'app/api/doktor/asi-stok/uygula/route.ts': I('lib/asi/stok/motor.ts asiUygula(): patientId hastaSahibiMi(supabase, doktorId, patientId) ile, sessionId seansSahibi(supabase, doktorId, sessionId) İLE VE o seansın hastasının patientId ile eşleştiği doğrulanmadan hiçbir okuma/yazma yapılmaz; lotId her adımda .eq(\'doktor_id\', doktorId) ile yeniden kapsanır (RPC asi_stok_dekrement de p_doktor_id alır)'),
   'app/api/doktor/belgeler/lab/route.ts': T,
   'app/api/doktor/belgeler/analiz/route.ts': I('document via vault getDocumentMeta(doctorId) (assertPatientOwned); analyses by doctor_id'),
   'app/api/doktor/belgeler/analiz/onayla/route.ts': I('analysis by id AND doctor_id; target note by id AND doctor_id'),

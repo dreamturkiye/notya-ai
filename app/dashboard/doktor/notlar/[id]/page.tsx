@@ -24,6 +24,7 @@ import type { BransKapsami } from '@/lib/specialties/kapsam';
 import { istemciKapsami } from '@/lib/specialties/kapsamIstemci';
 import { bransEtiketi } from '@/lib/doktor/bransAdlari';
 import YasamsalBulgularFormu from '@/components/doktor/YasamsalBulgularFormu';
+import AsiStokTarama from '@/components/doktor/AsiStokTarama';
 import DermNotGorselYakala from '@/specialties/dermatoloji/ui/DermNotGorselYakala';
 import KbbNotGorselYakala from '@/specialties/kulak-burun-bogaz/ui/KbbNotGorselYakala';
 import PlastikNotGorselYakala from '@/specialties/plastik-cerrahi/ui/PlastikNotGorselYakala';
@@ -663,6 +664,7 @@ export default function NotSayfasi() {
           />
         </div>
         <div>
+          <AsiStokTarama patientId={veri.hasta.patientId} sessionId={veri.not.sessionId ?? null} />
           <div style={etiket}>Bu muayenede uygulanan aşılar <span style={{ fontWeight: 400, color: CHROME_RENK.muted }}>(onayda aşı kartına işlenir · planlanan aşılar burada değil, planda kalır)</span></div>
           {asilar.length === 0 ? (
             <div style={{ fontSize: 12, color: CHROME_RENK.muted, marginBottom: 6 }}>Bu muayenede uygulanan aşı yok.</div>
