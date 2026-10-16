@@ -1202,12 +1202,6 @@ export default function RandevularPage() {
                               {aks.yenidenPlanla && (
                                 <button type="button" onClick={() => duzenlemeyeAc(rv)} style={aksiyonBtn}>Yeniden Planla</button>
                               )}
-                              {aks.onayla && (
-                                <button type="button" onClick={() => durumDegistir(rv.id, 'onaylandi')} style={{ ...aksiyonBtn, color: '#2E6E4E', fontWeight: 600 }}>Onayla</button>
-                              )}
-                              {aks.tamamlandi && (
-                                <button type="button" onClick={() => durumDegistir(rv.id, 'tamamlandi')} style={aksiyonBtn}>Tamamlandı</button>
-                              )}
                               {aks.gelmedi && (
                                 <button type="button" onClick={() => durumDegistir(rv.id, 'gelmedi')} style={{ ...aksiyonBtn, color: '#B4832F' }}>Gelmedi</button>
                               )}
@@ -1386,12 +1380,6 @@ export default function RandevularPage() {
                             )}
                             {duzenlenenRandevu.patientId && (
                               <button type="button" onClick={() => router.push(`/dashboard/doktor/hastalar/${duzenlenenRandevu.patientId}?tab=formu`)} style={{ ...modalAksiyonBtn, color: CHROME_RENK.pine, borderColor: CHROME_RENK.pine }}>Hasta Formu</button>
-                            )}
-                            {aks.onayla && (
-                              <button type="button" onClick={() => modalDurumDegistir('onaylandi')} style={modalAksiyonBtn}>Onayla</button>
-                            )}
-                            {aks.tamamlandi && (
-                              <button type="button" onClick={() => modalDurumDegistir('tamamlandi')} style={modalAksiyonBtn}>Tamamlandı</button>
                             )}
                             {aks.gelmedi && (
                               <button type="button" onClick={() => modalDurumDegistir('gelmedi')} style={{ ...modalAksiyonBtn, color: '#F59E0B', borderColor: '#F59E0B' }}>Gelmedi</button>
