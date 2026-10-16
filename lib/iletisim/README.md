@@ -75,7 +75,10 @@ interface OtomatikGonderici {
 - Credentials (OAuth refresh tokens, Meta tokens) live server-side only, encrypted, never in the browser, never in
   this module's return values. UI copy never says OAuth, token, API or deep link.
 - WhatsApp Business: template messages only where Meta requires them (utility templates for randevu reminders).
-  NOTYA-ILETISIM-04 goes further: the automatic WhatsApp path sends approved templates ONLY, never free text.
+  NOTYA-ILETISIM-04 goes further: the automatic WhatsApp path from the queue sends approved templates ONLY, never free text.
+  WHATSAPP-API-01 adds exactly two free-text cases, both inside Meta's 24h customer-service window: the fixed confirmation
+  sentence after a patient's own EVET / İPTAL / DUR (`lib/iletisim/whatsapp/serbest.ts` `SABIT`) and the doctor's one-tap
+  "Yanıtla". Outside the window only the generic `genel_bildirim` template may go.
 
 ## Automatic sending (NOTYA-ILETISIM-04)
 
@@ -110,3 +113,21 @@ Ayarlar’daki muayenehane numarası tek başına “bağlı” değildir; Meta�
 
 Onaylı SOAP ve Kalkan Onayla aynı paketi doldurur. Kapı 3 uyarır, kapı 2 kopyalar. İkisi de ilaç kartını kesmez.
 Migration `104_seans_paketi.sql` uygulanmadan kapılar susar.
+
+## WHATSAPP-API-01 (2026-10-16) — inbound replies, inbox, quota, audit
+
+Code: `lib/iletisim/whatsapp/` (niyet, eslestir, randevuEylem, yanit, eylem, serbest, yedek, bakim, webhookIsle, kvkk, yardim) and
+`lib/iletisim/otomatik/whatsapp/{kota,gunluk,saglik}.ts`. Migration `169_whatsapp_cloud_api.sql` (written, NOT applied).
+Setup and Meta console steps: `docs/iletisim-kurulum-whatsapp.md`.
+
+- **Env names**: `WHATSAPP_APP_ID`, `WHATSAPP_APP_SECRET`, `WHATSAPP_ES_CONFIG_ID`, `WHATSAPP_VERIFY_TOKEN` (the earlier `META_*` /
+  `WHATSAPP_WEBHOOK_VERIFY_TOKEN` names remain a fallback). Webhook URL: `/api/whatsapp/webhook` (the old URL runs the same handler).
+- **İPTAL rule**: with an upcoming appointment İPTAL cancels that appointment; only STOP / DUR opt out. With nothing to cancel
+  İPTAL opts out, as on SMS (`vazgecKelimesiMi`). Turkish case folding is done by `katla()` (`IPTAL`, `İPTAL`, `ıptal`, `iptal!`).
+- **Safety boundary**: only a rule match (not the model) may confirm / cancel / opt out, and only with exactly one matching patient
+  in THAT doctor's roster. The model's label only decorates the doctor's card.
+- **Tables** (169): `whatsapp_mesaj_gunlugu` (append-only audit; body encrypted; counterpart keyed hash), `whatsapp_yanitlar`
+  (inbox cards), `whatsapp_kota_saatlik` (hourly quota buckets) + RPCs `whatsapp_kota_al`, `whatsapp_kota_iade`, `whatsapp_gunluk_imha`.
+- **Cron**: `/api/cron/whatsapp-bakim` hourly at :17.
+- **Isolation (hasta-izolasyon)**: the receiving `phone_number_id` decides the doctor; every read/write carries `doctor_id`; card
+  actions re-resolve the appointment with the doctor id AND the card's own patient id. Tests: `lib/iletisim/whatsapp/whatsapp-api.test.ts`.

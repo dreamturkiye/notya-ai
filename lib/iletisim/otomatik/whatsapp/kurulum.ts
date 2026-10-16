@@ -18,12 +18,16 @@ import { graph, type FetchFn } from './graph'
 import { baglantiKaydet, baglantiOku, baglantiSil, TABLO } from './depo'
 import { sablonlariHazirla } from './sablonlar'
 import type { WhatsAppAyar } from './ayar'
+import { gunlukYaz } from './gunluk'
+import { KVKK_ONAY_SURUM } from '@/lib/iletisim/whatsapp/kvkk'
 
 export interface KurulumGirdisi {
   code: string
   wabaId: string
   phoneNumberId: string | null
   businessId: string | null
+  /** WHATSAPP-API-01: the doctor ticked the KVKK / Meta sub-processor consent. Required. */
+  kvkkOnay: boolean
 }
 
 const KIMLIK = /^\d{5,25}$/
@@ -37,7 +41,7 @@ export function kurulumGirdisiDogrula(g: unknown): KurulumGirdisi | null {
   const businessId = bosMu(o.businessId) ? null : String(o.businessId).trim()
   if (!code || code.length > 2000 || !KIMLIK.test(wabaId)) return null
   if ((phoneNumberId && !KIMLIK.test(phoneNumberId)) || (businessId && !KIMLIK.test(businessId))) return null
-  return { code, wabaId, phoneNumberId, businessId }
+  return { code, wabaId, phoneNumberId, businessId, kvkkOnay: o.kvkkOnay === true }
 }
 
 export type KurulumSonucu = { ok: true; numara: string | null } | { ok: false; durum: number; hata: string }
@@ -61,6 +65,8 @@ export async function kurulumuTamamla(
   ayar: WhatsAppAyar,
   f: FetchFn = fetch
 ): Promise<KurulumSonucu> {
+  // KVKK: no consent, no connection — checked before any call to Meta.
+  if (!g.kvkkOnay) return { ok: false, durum: 400, hata: 'Devam etmek için KVKK onayını işaretleyin.' }
   // 1) Kod → işletme anahtarı (yalnız sunucuda; app secret tarayıcıya hiç çıkmaz). Varsayılan: süresiz.
   let token = ''
   try {
@@ -112,8 +118,12 @@ export async function kurulumuTamamla(
   const k = await baglantiKaydet(sb, {
     doktorId, businessId: g.businessId, wabaId: g.wabaId, phoneNumberId,
     gorunenNumara: numara, gorunenAd: n.verified_name ? String(n.verified_name) : null, token, sablonlar,
+    kvkkOnayAt: new Date().toISOString(), kvkkOnaySurum: KVKK_ONAY_SURUM,
   })
   if (!k.ok) return { ok: false, durum: 500, hata: 'Bağlantı kaydedilemedi. Lütfen yeniden deneyin.' }
+  // Audit (best effort — the table appears with migration 169): consent and connection are KVKK events.
+  await gunlukYaz(sb, { doktorId, yon: 'olay', tur: 'kvkk_onay', durum: 'olay', ayrinti: { surum: KVKK_ONAY_SURUM } }).catch(() => undefined)
+  await gunlukYaz(sb, { doktorId, yon: 'olay', tur: 'baglanti_kuruldu', durum: 'olay', ayrinti: { coexistence: n.is_on_biz_app !== false } }).catch(() => undefined)
   return { ok: true, numara }
 }
 
@@ -123,4 +133,6 @@ export async function baglantiKaldir(sb: SupabaseClient, doktorId: string, f: Fe
   // Meta'ya ulaşılamasa da doktorun isteği geçerli: anahtar bizde kalmaz.
   if (b) await graph(`${b.wabaId}/subscribed_apps`, { method: 'DELETE', token: b.token }, f).catch(() => {})
   await baglantiSil(sb, doktorId)
+  // Disconnect never deletes messages, replies or the audit trail — only the connection row and its encrypted token.
+  await gunlukYaz(sb, { doktorId, yon: 'olay', tur: 'baglanti_kaldirildi', durum: 'olay' }).catch(() => undefined)
 }

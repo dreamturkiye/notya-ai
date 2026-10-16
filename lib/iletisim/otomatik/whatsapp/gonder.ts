@@ -8,7 +8,19 @@ import { normalizeTrPhoneE164 } from '@/lib/doktor/twilioNotify'
 import { graph, GraphHatasi, type FetchFn } from './graph'
 import { SABLONLAR, SAGLIKIM_KOK, type SablonKodu } from './sablonlar'
 
-export type GonderSonucu = { ok: true; disId?: string } | { ok: false; hata: string }
+/**
+ * `kod`: Meta's error code when Meta ANSWERED with an error (the message did not leave). `belirsiz`: no answer at all
+ * (timeout / network) — the message may have left, so callers must not send it again.
+ */
+export type GonderSonucu = { ok: true; disId?: string } | { ok: false; hata: string; kod?: number | null; belirsiz?: boolean }
+
+/** The text the patient sees: the template body with its variables filled in (for the encrypted audit log). */
+export function sablonMetni(sablonKodu: SablonKodu, degiskenler: string[]): string {
+  const t = SABLONLAR[sablonKodu]
+  if (!t) return ''
+  const govde = t.dugme ? degiskenler.slice(0, -1) : degiskenler
+  return t.govde.replace(/\{\{(\d+)\}\}/g, (_, n) => String(govde[Number(n) - 1] ?? ''))
+}
 
 export function sablonMesajiKur(sablonKodu: SablonKodu, alici: string, degiskenler: string[]): { govde: Record<string, unknown> } | { hata: string } {
   const t = SABLONLAR[sablonKodu]
@@ -56,8 +68,8 @@ export async function sablonGonder(
     const disId = r.messages?.[0]?.id
     return disId ? { ok: true, disId: String(disId) } : { ok: true }
   } catch (e) {
-    if (e instanceof GraphHatasi) return { ok: false, hata: hataMetni(e) }
-    return { ok: false, hata: 'WhatsApp şu an ulaşılamıyor.' }
+    if (e instanceof GraphHatasi) return { ok: false, hata: hataMetni(e), kod: e.kod ?? e.durum, ...(e.durum >= 500 && e.kod == null ? { belirsiz: true } : {}) }
+    return { ok: false, hata: 'WhatsApp şu an ulaşılamıyor.', belirsiz: true }
   }
 }
 

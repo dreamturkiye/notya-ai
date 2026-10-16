@@ -92,7 +92,19 @@ export default function KvkkPage() {
         <li style={S.li}><strong>Yapay zekâ metin işleme:</strong> Anthropic, OpenAI</li>
         <li style={S.li}><strong>Ses işleme:</strong> Deepgram (döküm), ElevenLabs (sesli yanıt)</li>
         <li style={S.li}><strong>Uygulama barındırma:</strong> Vercel</li>
+        <li style={S.li}><strong>WhatsApp mesajlaşması (yalnız hekim bağlarsa):</strong> Meta Platforms Ireland Ltd. / Meta Platforms, Inc. (WhatsApp Business Platform) — alt işleyici</li>
       </ul>
+      <p style={S.p}>
+        <strong>WhatsApp Business bağlantısı.</strong> Hekim isterse kendi WhatsApp Business numarasını
+        Notya’ya bağlayabilir. Bu durumda randevu hatırlatması, sonuç bildirimi ve hastanın verdiği
+        yanıtlar (örneğin “EVET” ya da “İPTAL”) Meta’nın WhatsApp Business Platform altyapısı üzerinden
+        iletilir; Meta bu işlemde Notya’nın <strong>alt işleyicisidir</strong>. Hasta adı, telefon numarası ve
+        mesaj metni Meta’ya mesajın iletilmesi için gereken ölçüde aktarılır; yapay zekâ sağlayıcılarına ise
+        yalnızca kimliksizleştirilmiş metin gider. Bağlantı, hekimin Notya içinde işaretlediği açık onayla
+        kurulur; hekim bağlantıyı dilediği an kaldırabilir. Hasta “DUR” yazarak otomatik mesajları
+        durdurabilir. Mesaj trafiği (zaman, durum, mesaj kimliği; telefon numarası yalnızca geri döndürülemez
+        özet olarak) bir denetim kaydında tutulur; mesaj gövdesi şifrelidir.
+      </p>
       <p style={S.p}>
         <strong>Kimliksizleştirme (pseudonymisation).</strong> Yapay zekâ sağlayıcılarına gönderilen
         içerikten, istek yurt dışına çıkmadan önce kimlik bilgileri otomatik olarak çıkarılır ve
@@ -116,6 +128,7 @@ export default function KvkkPage() {
         <li style={S.li}>Hasta kayıtları: ilgili sağlık mevzuatında öngörülen süre boyunca; hekimin talebi hâlinde daha erken silinir</li>
         <li style={S.li}>Hesap verileri: hesap açık olduğu sürece ve kapanışından itibaren 1 yıl</li>
         <li style={S.li}>Giriş/işlem kayıtları: 2 yıl</li>
+        <li style={S.li}>WhatsApp mesaj denetim kaydı ve gelen yanıtlar: 2 yıl; süre dolunca günlük imha ile silinir. Kayıtlar yalnızca bağlantıyı kuran hekimin hesabına aittir.</li>
         <li style={S.li}>Kayıtlı muayenehane WhatsApp hattındaki yazışmalar: şifreli gövde, 2 yıl; süre dolunca günlük imha ile silinir. Amaç, bakımın koordinasyonu ve mesajın muayenehane kaydında durmasıdır. İlaç veya talimat ancak hekim Notya’da onayladıktan sonra hasta kartına işlenir.</li>
         <li style={S.li}>Onaylı seans paketi: tedavi ve yasal kayıt taslağıdır, şifreli tutulur. Hekim metni kopyalar veya indirir; Notya bunu bir kuruma kendiliğinden iletmez. e-Nabız biçimindeki dosya yalnız hasta bunu istemediğini işaretlemediyse ve izin açıksa üretilir. Paket, hasta kaydıyla birlikte saklanır.</li>
         <li style={S.li}>Süre sonunda veriler silinir, yok edilir veya anonim hâle getirilir</li>

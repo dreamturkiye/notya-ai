@@ -140,6 +140,25 @@ export class SahteVeritabani {
           lot.updated_at = new Date().toISOString()
           return { data: [lot], error: null }
         }
+        // WHATSAPP-API-01: mirrors whatsapp_kota_al / whatsapp_kota_iade (169_whatsapp_cloud_api.sql) — hourly buckets
+        // per doctor, a rolling 24h window (a bucket counts while its END is inside the last 24h). The real atomicity is
+        // Postgres's advisory lock; this fake is single-threaded and only needs the same ok/kullanilan answer.
+        if (ad === 'whatsapp_kota_al') {
+          const simdi = Date.now()
+          const saat = new Date(Math.floor(simdi / 3600000) * 3600000).toISOString()
+          const satirlar = db.tablo('whatsapp_kota_saatlik').filter((r) => r.doctor_id === args.p_doctor && Date.parse(String(r.saat)) + 3600000 > simdi - 24 * 3600000)
+          const toplam = satirlar.reduce((n, r) => n + Number(r.adet), 0)
+          if (toplam >= Number(args.p_limit)) return { data: { ok: false, kullanilan: toplam }, error: null }
+          const var_ = satirlar.find((r) => r.saat === saat)
+          if (var_) var_.adet = Number(var_.adet) + 1
+          else db.tablo('whatsapp_kota_saatlik').push({ doctor_id: args.p_doctor, saat, adet: 1 })
+          return { data: { ok: true, kullanilan: toplam + 1 }, error: null }
+        }
+        if (ad === 'whatsapp_kota_iade') {
+          const dolu = db.tablo('whatsapp_kota_saatlik').filter((r) => r.doctor_id === args.p_doctor && Number(r.adet) > 0).sort((a, b) => String(b.saat).localeCompare(String(a.saat)))[0]
+          if (dolu) dolu.adet = Number(dolu.adet) - 1
+          return { data: null, error: null }
+        }
         throw new Error(`[sahteSupabase] desteklenmeyen rpc: ${ad}`)
       },
     }

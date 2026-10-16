@@ -39,7 +39,8 @@ export type OtomatikGonderimIstegi = {
 export type OtomatikGonderimSonucu =
   /** `saglayici` overrides the sender's own id when it knows better (e-posta: 'gmail' | 'outlook'). */
   | { ok: true; saglayiciMesajId?: string; saglayici?: string }
-  | { ok: false; hata: string }
+  /** `belirsiz`: the provider gave no answer — the message may have left; the dispatcher must not try another channel. */
+  | { ok: false; hata: string; belirsiz?: boolean }
 
 export interface OtomatikGonderici {
   kanal: IletisimKanali
@@ -112,8 +113,8 @@ type EpostaCekirdegi = {
 }
 type WhatsappCekirdegi = {
   hazirMi(doktorId: string): Promise<boolean>
-  gonder(g: { doktorId: string; alici: string; metin: string; sablonKodu?: string; degiskenler?: string[] }): Promise<
-    { ok: true; disId?: string } | { ok: false; hata: string }
+  gonder(g: { doktorId: string; alici: string; metin: string; sablonKodu?: string; degiskenler?: string[]; idemAnahtar?: string; hastaId?: string | null; tur?: string }): Promise<
+    { ok: true; disId?: string } | { ok: false; hata: string; belirsiz?: boolean }
   >
 }
 
@@ -156,8 +157,12 @@ export function whatsappAdaptoru(c: WhatsappCekirdegi = whatsappGondericisi): Ot
       guvenli<OtomatikGonderimSonucu>(async () => {
         if (!i.sablon) return { ok: false, hata: 'Bu mesaj için onaylı WhatsApp şablonu yok.' }
         // `metin` is required by the sender's type but never sent: WhatsApp gets the template only.
-        const s = await c.gonder({ doktorId: i.doktorId, alici: i.alici, metin: '', sablonKodu: i.sablon.kod, degiskenler: i.sablon.degiskenler })
-        if (!s.ok) return { ok: false, hata: s.hata }
+        // WHATSAPP-API-01: the queue item id is the idempotency key; patient + type go to the audit log.
+        const s = await c.gonder({
+          doktorId: i.doktorId, alici: i.alici, metin: '', sablonKodu: i.sablon.kod, degiskenler: i.sablon.degiskenler,
+          ...(i.kuyrukId ? { idemAnahtar: `kuyruk:${i.kuyrukId}` } : {}), hastaId: i.patientId, tur: i.tur,
+        })
+        if (!s.ok) return { ok: false, hata: s.hata, ...(s.belirsiz ? { belirsiz: true } : {}) }
         return { ok: true, ...(s.disId ? { saglayiciMesajId: s.disId } : {}) }
       }, { ok: false, hata: 'WhatsApp şu an ulaşılamıyor.' }),
   }

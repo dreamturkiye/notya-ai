@@ -129,9 +129,10 @@ describe('şablonlar: Türkçe UTILITY, klinik ayrıntı yok', () => {
     assert.equal(d.randevu_hatirlatma?.durum, 'APPROVED')
     assert.deepEqual([d.saglikim_yeni_mesaj?.id, d.saglikim_yeni_mesaj?.durum], ['7', 'PENDING'])
     const post = cagrilar.filter((c) => c.method === 'POST')
-    assert.equal(post.length, 1)
-    assert.equal(post[0].url.pathname, '/v25.0/WABA1/message_templates')
-    assert.equal(post[0].body.name, 'saglikim_yeni_mesaj')
+    // randevu_hatirlatma exists; the other three (saglikim_yeni_mesaj, sonuc_hazir, genel_bildirim) are created.
+    assert.equal(post.length, 3)
+    assert.ok(post.every((c) => c.url.pathname === '/v25.0/WABA1/message_templates'))
+    assert.deepEqual(post.map((c) => c.body.name).sort(), ['genel_bildirim', 'saglikim_yeni_mesaj', 'sonuc_hazir'])
     assert.equal(post[0].auth, 'Bearer TOKEN-QA')
     assert.equal(sablonOzeti(d), 'bekliyor')
     assert.equal(sablonOzeti({ randevu_hatirlatma: { id: '1', durum: 'APPROVED', guncellendi: '' }, saglikim_yeni_mesaj: { id: '2', durum: 'APPROVED', guncellendi: '' } }), 'hazir')
@@ -198,15 +199,25 @@ describe('kurulum: Embedded Signup tamamlama', () => {
     return { status: 404, json: { error: { message: 'beklenmeyen ' + p, code: 1 } } }
   })
 
-  const girdi = { code: 'KOD-QA', wabaId: 'WABA1', phoneNumberId: 'PN1', businessId: '333' }
+  const girdi = { code: 'KOD-QA', wabaId: 'WABA1', phoneNumberId: 'PN1', businessId: '333', kvkkOnay: true }
 
   it('girdi doğrulaması', () => {
-    assert.deepEqual(kurulumGirdisiDogrula({ code: 'k', wabaId: '12345', phoneNumberId: '67890' }), { code: 'k', wabaId: '12345', phoneNumberId: '67890', businessId: null })
-    assert.deepEqual(kurulumGirdisiDogrula({ code: 'k', wabaId: '12345', phoneNumberId: null }), { code: 'k', wabaId: '12345', phoneNumberId: null, businessId: null })
+    assert.deepEqual(kurulumGirdisiDogrula({ code: 'k', wabaId: '12345', phoneNumberId: '67890' }), { code: 'k', wabaId: '12345', phoneNumberId: '67890', businessId: null, kvkkOnay: false })
+    assert.deepEqual(kurulumGirdisiDogrula({ code: 'k', wabaId: '12345', phoneNumberId: null }), { code: 'k', wabaId: '12345', phoneNumberId: null, businessId: null, kvkkOnay: false })
     assert.equal(kurulumGirdisiDogrula({ code: 'k', wabaId: '12/../x', phoneNumberId: '67890' }), null)
     assert.equal(kurulumGirdisiDogrula({ code: 'k', wabaId: '12345', phoneNumberId: '1/messages' }), null)
     assert.equal(kurulumGirdisiDogrula({ wabaId: '12345', phoneNumberId: '67890' }), null)
     assert.equal(kurulumGirdisiDogrula(null), null)
+    assert.equal(kurulumGirdisiDogrula({ code: 'k', wabaId: '12345', phoneNumberId: '67890', kvkkOnay: true })?.kvkkOnay, true)
+    assert.equal(kurulumGirdisiDogrula({ code: 'k', wabaId: '12345', phoneNumberId: '67890', kvkkOnay: 'true' })?.kvkkOnay, false)
+  })
+
+  it('KVKK onayı olmadan Meta\'ya hiç gidilmez', async () => {
+    const { f, cagrilar } = metaSahte()
+    const s = await kurulumuTamamla(sb, DOKTOR_A, { ...girdi, kvkkOnay: false }, AYAR, f)
+    assert.equal(s.ok, false)
+    assert.equal(cagrilar.length, 0)
+    assert.equal(await baglantiOku(sb, DOKTOR_A), null)
   })
 
   it('numaraSec: oturumdaki numara WABA\'da olmalı; yoksa tek uygulama numarası; belirsizse hiçbiri', () => {
@@ -230,7 +241,7 @@ describe('kurulum: Embedded Signup tamamlama', () => {
     const satir = db.tablo(TABLO)[0]
     assert.equal(satir.doctor_id, DOKTOR_A)
     assert.ok(satir.token_encrypted && !String(satir.token_encrypted).includes('TOKEN-QA'))
-    assert.deepEqual(Object.keys(satir.sablon_durumlari).sort(), ['randevu_hatirlatma', 'saglikim_yeni_mesaj'])
+    assert.deepEqual(Object.keys(satir.sablon_durumlari).sort(), ['genel_bildirim', 'randevu_hatirlatma', 'saglikim_yeni_mesaj', 'sonuc_hazir'])
     assert.ok(cagrilar.some((c) => c.method === 'POST' && c.url.pathname.endsWith('/WABA1/subscribed_apps')))
     assert.ok(!cagrilar.some((c) => /\/register$|\/deregister$/.test(c.url.pathname)), 'coexistence numarası yeniden kaydedilmemeli')
     assert.deepEqual(cagrilar.filter((c) => c.url.pathname.endsWith('/PN1/smb_app_data')).map((c) => c.body.sync_type), ['smb_app_state_sync', 'history'])
@@ -331,8 +342,11 @@ describe('WhatsAppBaglan arayüzü', () => {
     const h = ciz({ tur: 'bagli-degil', kurulum: { appId: '1', configId: '2', graphSurum: 'v25.0' } })
     assert.match(h, /WhatsApp mesajları kendiliğinden gitsin/)
     assert.match(h, /WhatsApp’ı bağla/)
-    assert.match(h, /WhatsApp Business uygulaması gerekir — ücretsizdir, numaranız ve sohbetleriniz aynen kalır\./)
-    assert.equal((h.match(/<button/g) || []).length, 1)
+    assert.match(h, /SMS ya da sesli arama alabilen bir cep numarası/)
+    assert.match(h, /ücretsiz WhatsApp Business uygulaması/)
+    assert.match(h, /type="checkbox"/)
+    assert.match(h, /<button[^>]*disabled=""[^>]*>WhatsApp’ı bağla/)
+    assert.equal((h.match(/<button/g) || []).length, 2) // bağla + yardım
     assert.match(h, /min-height:44px/)
   })
 
@@ -342,15 +356,17 @@ describe('WhatsAppBaglan arayüzü', () => {
     assert.match(ciz({ tur: 'bagli', numara: null, sablon: 'hazir' }), /Hazır/)
   })
 
-  it('yakında / yükleniyor', () => {
-    assert.match(ciz({ tur: 'yakinda' }), /yakında/)
+  it('kurulum bekleniyor / yükleniyor', () => {
+    const k = ciz({ tur: 'kurulum-bekliyor' })
+    assert.match(k, /kurulum bekleniyor/)
+    assert.ok(!/yakında/i.test(k))
     assert.equal(ciz({ tur: 'yukleniyor' }), '')
   })
 
   it('hiçbir durumda jargon yok', () => {
-    for (const g of [{ tur: 'yakinda' }, { tur: 'bagli-degil', kurulum: { appId: '1', configId: '2', graphSurum: 'v' } }, { tur: 'bagli', numara: '1', sablon: 'sorun' }]) {
+    for (const g of [{ tur: 'kurulum-bekliyor' }, { tur: 'bagli-degil', kurulum: { appId: '1', configId: '2', graphSurum: 'v' } }, { tur: 'bagli', numara: '1', sablon: 'sorun' }]) {
       const h = ciz(g, 'WhatsApp bağlantısı tamamlanamadı.').replace(/<[^>]+>/g, ' ')
-      assert.ok(!/OAuth|API|token|webhook|Meta|WABA/i.test(h), h)
+      assert.ok(!/OAuth|API|token|webhook|WABA/i.test(h), h)
     }
   })
 

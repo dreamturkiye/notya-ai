@@ -47,7 +47,7 @@ export function ilacSec(adlar: { id: string; ad: string }[], metin: string): { i
 export async function kalkanIsle(
   sb: Sb,
   olaylar: KalkanHam[],
-  opt: { simdi?: Date; gonder?: KalkanGonderici } = {},
+  opt: { simdi?: Date; gonder?: KalkanGonderici; otomatikYanitAtla?: ReadonlySet<string> } = {},
 ): Promise<{ yazilan: number; taslak: number }> {
   const simdi = opt.simdi || new Date()
   const gonder = opt.gonder || varsayilanGonder
@@ -55,7 +55,7 @@ export async function kalkanIsle(
   let taslak = 0
   for (const o of olaylar) {
     try {
-      const r = await birOlay(sb, o, simdi, gonder)
+      const r = await birOlay(sb, o, simdi, gonder, opt.otomatikYanitAtla?.has(o.wamid) === true)
       yazilan += r.yazildi ? 1 : 0
       taslak += r.taslak ? 1 : 0
     } catch (e) {
@@ -65,7 +65,8 @@ export async function kalkanIsle(
   return { yazilan, taslak }
 }
 
-async function birOlay(sb: Sb, o: KalkanHam, simdi: Date, gonder: KalkanGonderici): Promise<{ yazildi: boolean; taslak: boolean }> {
+/** `yanitAtla`: WHATSAPP-API-01 already answered this message itself (EVET/İPTAL/STOP/slot proposal) — no fixed-sentence reply on top. */
+async function birOlay(sb: Sb, o: KalkanHam, simdi: Date, gonder: KalkanGonderici, yanitAtla = false): Promise<{ yazildi: boolean; taslak: boolean }> {
   const { data: bag, error: bagHata } = await sb
     .from('doktor_whatsapp_baglantilari')
     .select('doctor_id, phone_number_id, token_encrypted, durum')
@@ -141,7 +142,7 @@ async function birOlay(sb: Sb, o: KalkanHam, simdi: Date, gonder: KalkanGonderic
     }
   }
 
-  if (yon === 'gelen' && es.eslesme !== 'coklu') {
+  if (yon === 'gelen' && es.eslesme !== 'coklu' && !yanitAtla) {
     const metin = yanitMetni(sinif.sinif, { mesaiDisi: mesaiDisiMi(simdi), link: Boolean(es.hastaId) })
     if (metin && bag.token_encrypted) {
       const { data: once } = await sb.from('wa_satir').select('id').eq('doctor_id', doktorId).eq('kaynak_wamid', o.wamid).eq('yon', 'giden_sistem').maybeSingle()
