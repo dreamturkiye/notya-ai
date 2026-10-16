@@ -23,6 +23,7 @@ import React, { useMemo, useState } from 'react'
 // NOTYA-ASISTAN-YUZEN-01: next/link — kart asistan oturumunun içinde; tam sayfa yüklemesi oturumu öldürürdü.
 import Link from 'next/link'
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth'
+import { baslangicSecimi, ciddiVarMi, dugmeMetni, eksikAlanlar, sayim, topluGovde, TOPLU_METIN_TR, type TopluDuzeltme, type TopluMetin } from './topluSecim'
 
 export interface EylemAlan {
   anahtar: string
@@ -365,30 +366,34 @@ export function EylemKarti({
 /**
  * Batch card — "epikrizdeki her şeyi işle" produces several proposals at once (docs §4 P2).
  * ONE card with checkbox rows, not five stacked cards: the doctor reads the list, unticks what is
- * wrong, and taps once. A row with a missing required field cannot be ticked — the same rule as the
- * single card, applied per row, so a batch can never become the way to slip a guess through.
+ * wrong, and taps once. A row with a missing required field CAN be ticked and shows inline inputs for
+ * the missing fields; it is written only once the doctor has filled them (same rule as the single
+ * card, per row), so a batch can never become the way to slip a guess through.
  */
 export function EylemToplu({
   oneriler,
   hasta,
   tokenAl = ensureDoctorAccessToken,
   onSonuc,
+  metin = TOPLU_METIN_TR,
 }: {
   oneriler: EylemOneriGorunumu[]
   hasta: EylemHasta
   tokenAl?: () => Promise<string | null>
   onSonuc?: (d: { kaydedilen: number }) => void
+  /** Gating-UI copy; Turkish by default, a country build passes its own (topluSecim.ts TopluMetin). */
+  metin?: TopluMetin
 }) {
-  const eksikOlan = (o: EylemOneriGorunumu) => (o.zorunlu || []).filter((k) => o.veri?.[k] == null || String(o.veri[k]).trim() === '')
-  // NOTYA-EYLEM-21: a `ciddi` warning costs the same deliberate acknowledgement inside a batch as it
-  // does on its own card — "Seçilenleri kaydet" must never be the way a serious warning gets skipped.
-  const ciddiOlan = (o: EylemOneriGorunumu) => (o.uyari_detay || []).some((u) => u.siddet === 'ciddi')
-  const [secili, setSecili] = useState<Record<string, boolean>>(() => Object.fromEntries(oneriler.map((o) => [o.id, eksikOlan(o).length === 0 && !ciddiOlan(o)])))
+  // BUG FIX (2026-10-16): rows with missing required fields used to be `disabled` with no way to fill
+  // them, so the whole batch was stuck. Rows are always tickable now; missing fields get inline inputs
+  // and a row is only written once ticked AND complete. All gating lives in ./topluSecim (tested).
+  const [secili, setSecili] = useState<Record<string, boolean>>(() => baslangicSecimi(oneriler))
   const [gorulen, setGorulen] = useState<Record<string, boolean>>({})
+  const [duzeltme, setDuzeltme] = useState<TopluDuzeltme>({})
   const [durum, setDurum] = useState<'acik' | 'kaydediliyor' | 'bitti'>('acik')
   const [rapor, setRapor] = useState<{ oneriId: string; ok: boolean; hata?: string }[]>([])
 
-  const secililer = oneriler.filter((o) => secili[o.id] && eksikOlan(o).length === 0 && (!ciddiOlan(o) || gorulen[o.id]))
+  const say = sayim(oneriler, secili, duzeltme, gorulen)
 
   async function kaydet() {
     setDurum('kaydediliyor')
@@ -400,11 +405,7 @@ export function EylemToplu({
     const r = await fetch('/api/doktor/eylem', {
       method: 'POST',
       headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        adim: 'toplu_onayla',
-        oneriIdler: secililer.map((o) => o.id),
-        uyariGoruldu: Object.fromEntries(secililer.map((o) => [o.id, Boolean(gorulen[o.id])])),
-      }),
+      body: JSON.stringify(topluGovde(oneriler, secili, duzeltme, gorulen)),
     })
     const d = (await r.json().catch(() => ({}))) as { sonuclar?: { oneriId: string; ok: boolean; hata?: string }[] }
     setRapor(d.sonuclar || [])
@@ -423,14 +424,15 @@ export function EylemToplu({
       <Baslik hasta={hasta} etiket={`${oneriler.length} kayıt hazırlandı`} kademe="T1" />
       <div style={{ display: 'grid', gap: 8 }}>
         {oneriler.map((o) => {
-          const eksik = eksikOlan(o)
+          const eksik = eksikAlanlar(o, duzeltme)
+          const ciddi = ciddiVarMi(o)
           const r = rapor.find((x) => x.oneriId === o.id)
           return (
             <div key={o.id} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', paddingBottom: 8, borderBottom: '1px solid rgba(58,44,34,0.08)' }}>
               <input
                 type="checkbox"
-                checked={Boolean(secili[o.id]) && !eksik.length && (!ciddiOlan(o) || Boolean(gorulen[o.id]))}
-                disabled={eksik.length > 0 || (ciddiOlan(o) && !gorulen[o.id]) || durum !== 'acik'}
+                checked={Boolean(secili[o.id])}
+                disabled={durum !== 'acik'}
                 onChange={(e) => setSecili((s) => ({ ...s, [o.id]: e.target.checked }))}
                 style={{ marginTop: 3 }}
               />
@@ -438,15 +440,46 @@ export function EylemToplu({
                 <div style={{ fontWeight: 600 }}>{o.etiket}{goreliZaman(o.created_at) ? <span style={{ ...kucuk, fontWeight: 400 }}> · {goreliZaman(o.created_at)}</span> : null}</div>
                 <div style={kucuk}>{ozet(o) || '—'}</div>
                 <EylemUyarilari uyarilar={o.uyari_detay} />
-                {ciddiOlan(o) ? (
+                {ciddi ? (
                   <label style={{ display: 'flex', gap: 6, alignItems: 'center', minHeight: 44, fontSize: 12.5, color: '#B42318', fontWeight: 700 }}>
                     <input type="checkbox" checked={Boolean(gorulen[o.id])} disabled={durum !== 'acik'} onChange={(e) => setGorulen((g) => ({ ...g, [o.id]: e.target.checked }))} />
                     Uyarıyı gördüm, kaydedilebilir
                   </label>
                 ) : null}
-                {eksik.length ? (
-                  <div style={{ ...kucuk, color: '#8A5A12' }}>
-                    Eksik alan var — tek tek açıp doldurmanız gerekiyor ({eksik.map((k) => o.alanlar.find((a) => a.anahtar === k)?.etiket || k).join(', ')}).
+                {(o.zorunlu || []).some((k) => !String(o.veri?.[k] ?? '').trim()) && !r?.ok ? (
+                  <div style={{ display: 'grid', gap: 6, marginTop: 4 }}>
+                    <div style={{ ...kucuk, color: '#8A5A12' }}>
+                      {metin.eksikAciklama}
+                    </div>
+                    {(o.zorunlu || [])
+                      .filter((k) => !String(o.veri?.[k] ?? '').trim())
+                      .map((k) => o.alanlar.find((a) => a.anahtar === k))
+                      .filter((a): a is EylemAlan => Boolean(a) && !a?.sunucu)
+                      .map((a) => {
+                        const v = duzeltme[o.id]?.[a.anahtar] || ''
+                        const yaz = (x: string) => setDuzeltme((d) => ({ ...d, [o.id]: { ...d[o.id], [a.anahtar]: x } }))
+                        return (
+                          <label key={a.anahtar} style={{ display: 'block' }}>
+                            <div style={{ ...kucuk, marginBottom: 2 }}>{a.etiket}{a.birim ? ` (${a.birim})` : ''} *</div>
+                            {a.tip === 'secim' ? (
+                              <select value={v} disabled={durum !== 'acik'} onChange={(e) => yaz(e.target.value)} style={v.trim() ? girdi : girdiBos}>
+                                <option value="">Seçin…</option>
+                                {(a.secenekler || []).map((s) => <option key={s.deger} value={s.deger}>{s.etiket}</option>)}
+                              </select>
+                            ) : (
+                              <input
+                                type={a.tip === 'tarih' ? 'date' : a.tip === 'sayi' ? 'number' : 'text'}
+                                step={a.tip === 'sayi' ? 'any' : undefined}
+                                value={v}
+                                disabled={durum !== 'acik'}
+                                onChange={(e) => yaz(e.target.value)}
+                                style={v.trim() ? girdi : girdiBos}
+                              />
+                            )}
+                          </label>
+                        )
+                      })}
+                    {secili[o.id] && eksik.length ? <div style={{ ...kucuk, color: '#8A5A12' }}>{metin.seciliEksik(eksik.map((k) => o.alanlar.find((a) => a.anahtar === k)?.etiket || k))}</div> : null}
                   </div>
                 ) : null}
                 {r ? <div style={{ ...kucuk, color: r.ok ? '#1E7A3E' : '#B42318' }}>{r.ok ? 'Kaydedildi' : r.hata}</div> : null}
@@ -457,8 +490,8 @@ export function EylemToplu({
       </div>
       {durum !== 'bitti' ? (
         <div style={{ marginTop: 10, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          <button type="button" onClick={kaydet} disabled={durum === 'kaydediliyor' || !secililer.length} style={{ ...birincil, opacity: !secililer.length ? 0.5 : 1 }}>
-            {durum === 'kaydediliyor' ? 'Kaydediliyor…' : `Seçilenleri kaydet (${secililer.length})`}
+          <button type="button" onClick={kaydet} disabled={durum === 'kaydediliyor' || !say.hazir} style={{ ...birincil, opacity: !say.hazir ? 0.5 : 1 }}>
+            {durum === 'kaydediliyor' ? 'Kaydediliyor…' : dugmeMetni(say, metin)}
           </button>
         </div>
       ) : null}
