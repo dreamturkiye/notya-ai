@@ -3,7 +3,13 @@ export const dynamic = 'force-dynamic'
 /**
  * NOTYA-ACCOUNTING-01 — module on/off + defaults (Entegrasyonlar → Faturalama & Tahsilat).
  * GET  -> current settings (defaults if never configured)
- * PUT  { enabled?, defaultKdvRateBp?, defaultDocType?, portalVisibleDefault? } -> doktor-only
+ * PUT  { enabled?, defaultKdvRateBp?, defaultDocType?, portalVisibleDefault?, doctorType?,
+ *        ebelgeMode? } -> doktor-only
+ *
+ * NOTYA-ACCOUNTING-GIB-PORTAL-01 (2026-10-16): `doctorType` ('serbest_meslek' | 'sirket') and
+ * `ebelgeMode` ('gib_portal' | 'integrator') added. Changing `doctorType` re-locks
+ * `defaultDocType` to what that legal form actually issues (lib/accounting/module.ts's
+ * `setModuleSettings`) — e-SMM and e-Fatura/e-Arşiv must never be offered interchangeably.
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { pratikOturum } from '@/lib/doktor/pratikOturum'
@@ -38,6 +44,8 @@ export async function PUT(req: NextRequest) {
     defaultKdvRateBp: typeof body.defaultKdvRateBp === 'number' ? body.defaultKdvRateBp : undefined,
     defaultDocType: body.defaultDocType,
     portalVisibleDefault: typeof body.portalVisibleDefault === 'boolean' ? body.portalVisibleDefault : undefined,
+    doctorType: body.doctorType === 'sirket' || body.doctorType === 'serbest_meslek' ? body.doctorType : undefined,
+    ebelgeMode: body.ebelgeMode === 'integrator' || body.ebelgeMode === 'gib_portal' ? body.ebelgeMode : undefined,
   })
   await writeAuditLog(supabase, {
     doctorId: doktorId,

@@ -1165,6 +1165,89 @@ integrator partnership) was found anywhere in that branch's diff.
 
 ---
 
+## 4.11 GİB Portalı becomes the default e-belge path; Paraşüt demoted from required dependency to optional provider (2026-10-16, ninth round)
+
+**Problem this round fixed.** The 2026-10-15 accounting-strong-closeout round shipped a Paraşüt
+adapter (`lib/accounting/ebelge/parasut.ts`) that `issueInvoice()` treated as the module's one
+required integrator path: no `accounting_ebelge_credentials` row (Paraşüt or otherwise) meant the
+invoice simply could not be issued (`'Aktif bir e-belge entegratörü tanımlı değil.'`). Two
+problems with that, stated by the CEO: (1) Paraşüt was **never round-tripped against a live
+sandbox** — real as in "correctly implements Paraşüt's documented wire protocol per three
+independent cross-referenced sources", not as in "proven to work against GİB"; (2) it forces
+**every** doctor, including one with no corporate structure at all, to hold their **own** separate
+Paraşüt subscription just to issue the e-SMM they are legally required to issue — unnecessary cost
+and friction for something Türkiye already offers for free.
+
+**The fix.** Türkiye's own GİB Portalı (gib.gov.tr / earsivportal.efatura.gov.tr) issues both
+e-SMM and e-Fatura/e-Arşiv for free, using only the e-imza/mali mühür a doctor already must hold
+for this obligation — no integrator license. Its one real limitation: **no API, web-form entry
+only.** So Notya's role on this path is to compute the numbers and hand the doctor a copy-ready,
+ordered field list (`lib/accounting/ebelge/gibPortal.ts`'s `buildGibPortalFields`) instead of
+submitting anything — the doctor issues the real document on GİB's own site and pastes the
+resulting document number back into Notya
+(`lib/accounting/invoices/engine.ts`'s `prepareGibPortalInvoice`/`confirmGibPortalIssuance`,
+`POST /api/accounting/invoices/[id]/issue` for the former when `ebelgeMode === 'gib_portal'`,
+`POST .../gib-confirm` for the latter). This is now `accounting_module_settings.ebelge_mode`'s
+**default** value (migration 162); `issueInvoice()`/`getEbelgeAdapter()`/
+`accounting_ebelge_credentials` are never touched anywhere on this path — the default, fully
+working path has **zero** dependency on Paraşüt or any other integrator and **zero** license cost.
+
+**Dual doctor-type mode, legally required, now enforced at the settings layer.** A **serbest
+meslek** (solo/individual) doctor is legally required to issue **e-SMM**, never e-Fatura/e-Arşiv
+(509 Sıra No'lu VUK Genel Tebliği, already cited in §6 below); e-Fatura/e-Arşiv applies only when
+billing through a **şirket** (Ltd/AŞ). These must never be offered interchangeably to the same
+doctor. `accounting_module_settings.doctor_type` (migration 162) is the stored choice;
+`lib/accounting/module.ts`'s `isDocTypeAllowedForDoctorType`/`defaultDocTypeForDoctorType` is the
+single source of truth both `setModuleSettings` (re-locks `defaultDocType` the instant
+`doctorType` changes) and the Entegrasyonlar UI read from — a şirket doctor is never shown an
+e-SMM option and vice versa.
+
+**Stopaj (withholding), computed for the first time, verified rather than assumed.** The
+previous rounds' `STOPAJ_NOTU` (period-level mali müşavir report note) already correctly
+established that GVK md. 94 withholding is the **payer's** obligation and only applies when the
+payer is a kurumsal/tüzel ödeyici — never a gerçek kişi hasta, which is how this module bills
+almost exclusively. This round adds the actual **per-invoice computation**
+(`lib/accounting/stopaj.ts`'s `computeStopaj`) for the rare case a doctor IS paid by an
+institution, re-verifying the %20 rate (GVK md. 94/2-b) via WebSearch/WebFetch against three
+current (2026) independent secondary sources that agree with each other and with this module's
+own pre-existing determination (hukukihaber.net ×2, faturaport.com's 2026-dated rehber) —
+**MODERATE CONFIDENCE**, same tier as the KDV rate in §4.9.1, because gib.gov.tr's own primary
+rate table was not directly reachable from this session either. The rate is a single named
+constant (`GVK_94_STOPAJ_RATE_BP_SERBEST_MESLEK`, same convention as `KDV_RATE_BP_HEALTH_DEFAULT`)
+with an explicit `rateBpOverride` escape hatch — **not hardcoded with no way to change it** — and
+`computeStopaj` never applies it unless the doctor explicitly marks the buyer as kurumsal (a
+checkbox in the Faturalar tab, default unchecked); Notya never infers institutional-payer status
+from a buyer's name. **Flagged for Kaan's own confirmation, not treated as final** — see
+`docs/OPEN-COMMITMENTS.md`.
+
+**The generic pluggable integrator interface already existed — nothing needed to change there.**
+`EbelgeAdapter` (`lib/accounting/ebelge/types.ts`) was already vendor-neutral before this pass;
+the only things that needed to change were (a) the invoice engine branching on `ebelgeMode`
+instead of assuming an integrator is always configured, and (b) the module settings' default.
+Paraşüt's own code (`parasut.ts`) is untouched and remains a real, working `EbelgeAdapter`
+implementation — it simply moves from "the module's one required path" to "one optional provider
+a doctor opts into via `ebelgeMode: 'integrator'`", alongside `generic_rest` and, in the future,
+whichever lightweight low-volume entegratör (Nilvera or similar) eventually surfaces a public
+self-serve API (none did as of the 2026-10-15 research pass — `lib/accounting/ebelge/CHECKLIST.md`).
+A doctor who already had an active `accounting_ebelge_credentials` row before this pass keeps it,
+but their practice now defaults to `ebelge_mode: 'gib_portal'` (migration 162's column default
+applies uniformly) and must explicitly switch back to `integrator` in Entegrasyonlar to keep using
+it — a deliberate choice, since "was this doctor's integrator ever actually live-tested" is
+exactly the open question this round was asked to stop defaulting past.
+
+**Not built this round, stated plainly:** the future low-volume entegratör slot (Nilvera or
+similar) — no public self-serve API was found for it as of the last research pass, so nothing
+here pretends one is wired up; the interface it would implement (`EbelgeAdapter`) is ready and
+unchanged. GİB Portalı's field order (`buildGibPortalFields`) was composed from this module's own
+existing GİB-referenced PDF layout (`invoicePdf.tsx`, itself researched against a TÜRMOB e-SMM
+guide — §4.9.9/4.10.3) and general e-Arşiv/e-Fatura convention, not a direct screenshot-level
+read of GİB Portalı's live form (this session has no interactive access to gib.gov.tr) — the
+**numbers** (matrah, KDV, stopaj, total) are exact; the exact on-screen field labels/order on
+GİB's own form may differ slightly and should be confirmed against a live GİB Portalı session
+before being treated as a pixel-perfect mirror.
+
+---
+
 ## 6. Compliance summary (TR)
 
 | Topic | Stance |

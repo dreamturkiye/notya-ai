@@ -77,6 +77,39 @@ export type InvoiceStatus =
 
 export type EbelgeDocType = 'esmm' | 'efatura' | 'earsiv'
 
+/**
+ * NOTYA-ACCOUNTING-GIB-PORTAL-01 (Kaan, 2026-10-16) — a doctor's legal issuing form. A **serbest
+ * meslek** (solo/individual) doctor is legally required to issue **e-SMM**, never e-Fatura/
+ * e-Arşiv; a doctor billing through a **şirket** (Ltd/AŞ) issues e-Fatura/e-Arşiv, never e-SMM.
+ * These must never be offered interchangeably to the same doctor — see
+ * `defaultDocTypeForDoctorType`/`isDocTypeAllowedForDoctorType` (lib/accounting/module.ts), the
+ * single source of truth both the settings route and the UI read from.
+ */
+export type DoctorType = 'serbest_meslek' | 'sirket'
+
+/**
+ * How this practice's e-belge documents actually get issued:
+ *  - `gib_portal` — the **default, free** MVP path. Notya computes amount/KDV/stopaj and renders
+ *    a copy-ready field list for GİB's own free portal (earsivportal.efatura.gov.tr); the doctor
+ *    issues it themselves there and pastes the resulting document number back into Notya. No
+ *    integrator credentials, no third-party subscription, no API call Notya makes on the
+ *    doctor's behalf.
+ *  - `integrator` — an optional path for a doctor who wants API automation instead of manual GİB
+ *    Portalı entry, via a pluggable `EbelgeAdapter` (lib/accounting/ebelge/*) the doctor connects
+ *    with their OWN account/credentials (e.g. Paraşüt, or a future low-volume entegratör like
+ *    Nilvera). Never the default, never required.
+ */
+export type EbelgeMode = 'gib_portal' | 'integrator'
+
+/**
+ * Sentinel `accounting_invoices.ebelge_vendor` / `accounting_ebelge_credentials`-free value for
+ * the manual GİB Portalı path (lib/accounting/ebelge/gibPortal.ts). Deliberately NOT a member of
+ * `EbelgeVendor` below — GİB Portalı has no API and is never routed through `getEbelgeAdapter()`;
+ * it is a parallel, simpler path the invoice engine branches to directly based on
+ * `AccountingModuleSettings.ebelgeMode`.
+ */
+export const GIB_PORTAL_VENDOR_KEY = 'gib_portal' as const
+
 export interface InvoiceLine {
   id: string
   invoiceId: string

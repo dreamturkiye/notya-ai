@@ -12,6 +12,7 @@
  */
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { ActingUser, DiscountInput, EbelgeDocType, Invoice, Money, ServiceKind } from '../types'
+import { GIB_PORTAL_VENDOR_KEY } from '../types'
 import { assertCan } from '../rbac'
 import { loadGrants } from '../grants'
 import { computeLine, computeInvoiceTotals, type LineComputationResult } from '../ledger/money'
@@ -21,10 +22,12 @@ import { hastaSahibiMi, seansSahibi } from '@/lib/doktor/hastaSahipligi'
 import { getModuleSettings } from '../module'
 import { getEbelgeAdapter } from '../ebelge'
 import type { EbelgeCredentials, EbelgeInvoiceDto, SellerIdentity } from '../ebelge/types'
+import { buildGibPortalFields, type GibPortalField } from '../ebelge/gibPortal'
 import { decryptSecrets } from '../vault'
 import { decryptPII } from '@/lib/security/encryption'
 import { hastaAdSoyad } from '@/lib/portal/hastaAdi'
 import { postArCharge, postArCredit } from '../ar/ledger'
+import { computeStopaj, type StopajResult } from '../stopaj'
 
 export interface DraftLineInput {
   serviceId?: string
@@ -305,22 +308,61 @@ export async function resolveBuyerIdentity(
 }
 
 /**
+ * Shared DTO builder used by both the integrator path (`issueInvoice`) and the GİB Portalı path
+ * (`prepareGibPortalInvoice`) — one place resolves seller (tax profile)/buyer/lines so the two
+ * flows can never drift into submitting different numbers for the same invoice.
+ */
+async function buildInvoiceDto(supabase: SupabaseClient, doktorId: string, invoice: Invoice): Promise<EbelgeInvoiceDto> {
+  const { data: taxProfile } = await supabase
+    .from('accounting_tax_profiles')
+    .select('*')
+    .eq('doctor_id', doktorId)
+    .maybeSingle()
+  if (!taxProfile) throw new Error('Vergi profili tanımlı değil. Önce Faturalama & Tahsilat kurulumunu tamamlayın.')
+
+  const { data: lineRows } = await supabase.from('accounting_invoice_lines').select('*').eq('invoice_id', invoice.id)
+  const seller: SellerIdentity = {
+    idType: taxProfile.id_type,
+    idValue: decryptPII(taxProfile.id_value_enc),
+    unvan: taxProfile.unvan,
+    address: taxProfile.address,
+    vergiDairesi: taxProfile.vergi_dairesi ?? undefined,
+  }
+  const buyer = await resolveBuyerIdentity(supabase, doktorId, invoice.patientId)
+
+  return {
+    invoiceId: invoice.id,
+    docType: invoice.docType,
+    seller,
+    buyer,
+    lines: (lineRows || []).map((l) => ({
+      description: l.description,
+      quantity: Number(l.quantity),
+      unitPriceKurus: l.unit_price_kurus,
+      kdvRateBp: l.kdv_rate_bp,
+      kdvKurus: l.kdv_kurus,
+      lineTotalKurus: l.line_total_kurus,
+    })),
+    subtotalKurus: invoice.subtotalKurus,
+    kdvKurus: invoice.kdvKurus,
+    totalKurus: invoice.totalKurus,
+    currency: 'TRY',
+    issueDate: new Date().toISOString().slice(0, 10),
+  }
+}
+
+/**
  * Validate + submit: draft -> pending_issue -> (issued | issue_failed) via the practice's active
- * e-belge integrator. Seller identity always comes from the doctor's own tax profile — never a
- * Notya constant (docs/ARCH-NOTYA-ACCOUNTING.md §1, §2.3.1).
+ * e-belge integrator (`accounting_module_settings.ebelgeMode === 'integrator'` — the OPTIONAL
+ * path; see `prepareGibPortalInvoice` below for the default, free GİB Portalı path). Seller
+ * identity always comes from the doctor's own tax profile — never a Notya constant
+ * (docs/ARCH-NOTYA-ACCOUNTING.md §1, §2.3.1).
  */
 export async function issueInvoice(supabase: SupabaseClient, actor: ActingUser, invoiceId: string): Promise<Invoice> {
   assertCan(actor.role, 'invoice.issue')
   const row = await loadOwnedInvoice(supabase, actor.doktorId, invoiceId)
   const before = rowToInvoice(row)
   nextInvoiceStatus(before.status, 'validate') // throws if draft isn't actually draft
-
-  const { data: taxProfile } = await supabase
-    .from('accounting_tax_profiles')
-    .select('*')
-    .eq('doctor_id', actor.doktorId)
-    .maybeSingle()
-  if (!taxProfile) throw new Error('Vergi profili tanımlı değil. Önce Faturalama & Tahsilat kurulumunu tamamlayın.')
 
   const { data: credRow } = await supabase
     .from('accounting_ebelge_credentials')
@@ -332,36 +374,7 @@ export async function issueInvoice(supabase: SupabaseClient, actor: ActingUser, 
 
   await supabase.from('accounting_invoices').update({ status: 'pending_issue', updated_at: new Date().toISOString() }).eq('id', invoiceId)
 
-  const { data: lineRows } = await supabase.from('accounting_invoice_lines').select('*').eq('invoice_id', invoiceId)
-  const seller: SellerIdentity = {
-    idType: taxProfile.id_type,
-    idValue: decryptPII(taxProfile.id_value_enc),
-    unvan: taxProfile.unvan,
-    address: taxProfile.address,
-    vergiDairesi: taxProfile.vergi_dairesi ?? undefined,
-  }
-
-  const buyer = await resolveBuyerIdentity(supabase, actor.doktorId, before.patientId)
-
-  const dto: EbelgeInvoiceDto = {
-    invoiceId: before.id,
-    docType: before.docType,
-    seller,
-    buyer,
-    lines: (lineRows || []).map((l) => ({
-      description: l.description,
-      quantity: Number(l.quantity),
-      unitPriceKurus: l.unit_price_kurus,
-      kdvRateBp: l.kdv_rate_bp,
-      kdvKurus: l.kdv_kurus,
-      lineTotalKurus: l.line_total_kurus,
-    })),
-    subtotalKurus: before.subtotalKurus,
-    kdvKurus: before.kdvKurus,
-    totalKurus: before.totalKurus,
-    currency: 'TRY',
-    issueDate: new Date().toISOString().slice(0, 10),
-  }
+  const dto = await buildInvoiceDto(supabase, actor.doktorId, before)
 
   const credentials: EbelgeCredentials = {
     vendor: credRow.vendor,
@@ -554,6 +567,187 @@ export async function creditInvoice(
     action: ok ? 'credit_success' : 'credit_failure',
     before,
     after: { ...invoice, amountKurus, reason, creditUuid },
+  })
+  return invoice
+}
+
+// ---------------------------------------------------------------------------
+// NOTYA-ACCOUNTING-GIB-PORTAL-01 (Kaan, 2026-10-16) — the default, free e-belge path.
+//
+// GİB Portalı (earsivportal.efatura.gov.tr) has no API, so there is no adapter to call here —
+// this is a parallel, simpler flow to `issueInvoice` above. Notya computes the numbers and hands
+// the doctor a copy-ready field list (`buildGibPortalFields`); the doctor issues the real
+// document themselves on GİB's own site and pastes the resulting document number back into
+// `confirmGibPortalIssuance`. No `accounting_ebelge_credentials` row is read or required anywhere
+// in this section — the doctor remains the legal issuer of record (docs/ARCH-NOTYA-ACCOUNTING.md
+// §1), and this path has zero dependency on Paraşüt or any other integrator.
+// ---------------------------------------------------------------------------
+
+export interface GibPortalPrepareResult {
+  invoice: Invoice
+  fields: GibPortalField[]
+  stopaj: StopajResult
+}
+
+/**
+ * Validate + prepare: draft -> pending_issue (same state-machine transition `issueInvoice` uses,
+ * since "submitted for issuance" is accurate either way), computing the GİB Portalı field list
+ * instead of calling any adapter. Idempotent while already prepared: calling this again on an
+ * invoice already in `pending_issue` with `ebelgeVendor === GIB_PORTAL_VENDOR_KEY` just
+ * recomputes and returns the same fields (no new DB write, no new audit row) — the UI relies on
+ * this to re-show the fields after a page reload without needing a separate read endpoint or a
+ * new column to persist them in.
+ */
+export async function prepareGibPortalInvoice(
+  supabase: SupabaseClient,
+  actor: ActingUser,
+  invoiceId: string,
+  opts: { buyerIsKurumsal?: boolean; stopajRateBpOverride?: number } = {}
+): Promise<GibPortalPrepareResult> {
+  assertCan(actor.role, 'invoice.issue')
+  const row = await loadOwnedInvoice(supabase, actor.doktorId, invoiceId)
+  const before = rowToInvoice(row)
+
+  const settings = await getModuleSettings(supabase, actor.doktorId)
+  if (settings.ebelgeMode !== 'gib_portal') {
+    throw new Error('Bu pratik API entegratörü modunda; GİB Portalı hazırlığı burada kullanılamaz. Entegrasyonlar\'dan modu değiştirin.')
+  }
+
+  let invoice = before
+  if (before.status === 'draft') {
+    nextInvoiceStatus(before.status, 'validate') // throws if draft isn't actually draft
+    const nowIso = new Date().toISOString()
+    const { data: updated } = await supabase
+      .from('accounting_invoices')
+      .update({
+        status: 'pending_issue',
+        ebelge_vendor: GIB_PORTAL_VENDOR_KEY,
+        ebelge_environment: null,
+        ebelge_last_error: null,
+        updated_at: nowIso,
+      })
+      .eq('id', invoiceId)
+      .select('*')
+      .single()
+    invoice = rowToInvoice(updated)
+    await writeAuditLog(supabase, {
+      doctorId: actor.doktorId,
+      actorId: actor.userId,
+      actorRole: actor.role,
+      entityType: 'accounting_invoice',
+      entityId: invoice.id,
+      action: 'gib_portal_prepare',
+      before,
+      after: invoice,
+    })
+  } else if (before.status === 'pending_issue' && before.ebelgeVendor === GIB_PORTAL_VENDOR_KEY) {
+    // Re-view: already prepared for GİB Portalı, just recompute the fields (e.g. after a reload).
+  } else {
+    throw new Error('Bu fatura şu an GİB Portalı için hazırlanamaz.')
+  }
+
+  const dto = await buildInvoiceDto(supabase, actor.doktorId, invoice)
+  const stopaj = computeStopaj({
+    docType: dto.docType,
+    matrahKurus: dto.subtotalKurus,
+    kdvKurus: dto.kdvKurus,
+    totalKurus: dto.totalKurus,
+    buyerIsKurumsal: !!opts.buyerIsKurumsal,
+    rateBpOverride: opts.stopajRateBpOverride,
+  })
+  const fields = buildGibPortalFields(dto, stopaj)
+
+  return { invoice, fields, stopaj }
+}
+
+/**
+ * The doctor issued the real document themselves on GİB Portalı and is pasting its official
+ * document number back into Notya: pending_issue -> issued, same tail as `issueInvoice`'s success
+ * path (AR charge posted, audit logged) but with no adapter result to read from — `documentNumber`
+ * comes from the doctor's own input, trusted the same way a doctor-entered IBAN or TCKN already is
+ * elsewhere in this module (not independently verifiable against GİB from inside Notya).
+ */
+export async function confirmGibPortalIssuance(
+  supabase: SupabaseClient,
+  actor: ActingUser,
+  invoiceId: string,
+  documentNumber: string,
+  issueDateOverride?: string
+): Promise<Invoice> {
+  assertCan(actor.role, 'invoice.issue')
+  const row = await loadOwnedInvoice(supabase, actor.doktorId, invoiceId)
+  const before = rowToInvoice(row)
+  if (before.ebelgeVendor !== GIB_PORTAL_VENDOR_KEY) {
+    throw new Error('Bu fatura GİB Portalı akışında değil.')
+  }
+  nextInvoiceStatus(before.status, 'issue_success') // throws unless pending_issue
+
+  const docNumber = String(documentNumber || '').trim()
+  if (!docNumber) throw new Error('GİB belge numarası zorunludur.')
+
+  const nowIso = new Date().toISOString()
+  const { data: updated } = await supabase
+    .from('accounting_invoices')
+    .update({
+      status: 'issued',
+      ebelge_doc_number: docNumber,
+      ebelge_uuid: null,
+      ebelge_pdf_url: null,
+      ebelge_last_error: null,
+      issued_at: issueDateOverride || nowIso,
+      updated_at: nowIso,
+    })
+    .eq('id', invoiceId)
+    .select('*')
+    .single()
+  const invoice = rowToInvoice(updated)
+  await postArCharge(supabase, { doctorId: actor.doktorId, patientId: invoice.patientId, invoiceId: invoice.id, amountKurus: invoice.totalKurus })
+  await writeAuditLog(supabase, {
+    doctorId: actor.doktorId,
+    actorId: actor.userId,
+    actorRole: actor.role,
+    entityType: 'accounting_invoice',
+    entityId: invoice.id,
+    action: 'gib_portal_confirm',
+    before,
+    after: invoice,
+  })
+  return invoice
+}
+
+/**
+ * The doctor abandons a GİB Portalı prepare before actually issuing anything on GİB's site
+ * (e.g. they spotted a mistake) — pending_issue -> draft, so the lines can be edited again. Only
+ * legal for an invoice this same GİB Portalı path put into pending_issue; an integrator submission
+ * in flight is untouched by this function (and in practice never lingers in pending_issue anyway,
+ * since `issueInvoice` resolves synchronously to issued/issue_failed).
+ */
+export async function abandonGibPortalPrepare(supabase: SupabaseClient, actor: ActingUser, invoiceId: string): Promise<Invoice> {
+  assertCan(actor.role, 'invoice.issue')
+  const row = await loadOwnedInvoice(supabase, actor.doktorId, invoiceId)
+  const before = rowToInvoice(row)
+  if (before.ebelgeVendor !== GIB_PORTAL_VENDOR_KEY) {
+    throw new Error('Bu fatura GİB Portalı akışında değil.')
+  }
+  nextInvoiceStatus(before.status, 'abandon_prepare') // throws unless pending_issue
+
+  const nowIso = new Date().toISOString()
+  const { data: updated } = await supabase
+    .from('accounting_invoices')
+    .update({ status: 'draft', ebelge_vendor: null, ebelge_environment: null, ebelge_last_error: null, updated_at: nowIso })
+    .eq('id', invoiceId)
+    .select('*')
+    .single()
+  const invoice = rowToInvoice(updated)
+  await writeAuditLog(supabase, {
+    doctorId: actor.doktorId,
+    actorId: actor.userId,
+    actorRole: actor.role,
+    entityType: 'accounting_invoice',
+    entityId: invoice.id,
+    action: 'gib_portal_abandon',
+    before,
+    after: invoice,
   })
   return invoice
 }
