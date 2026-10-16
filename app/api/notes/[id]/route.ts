@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { pratikOturum } from '@/lib/doktor/pratikOturum'
 import { decrypt } from '@/lib/security/encryption'
 import { yasHesapla } from '@/lib/doktor/yas'
+import { yasGosterim } from '@/lib/doktor/sinavHastaBilgisi'
 import { cinsiyetTr } from '@/lib/utils/cinsiyet'
 import { buyumePersentilleriniHesapla, buyumeYorumunuEkle, type Cinsiyet } from '@/lib/clinical/buyumeEgrisi'
 import { vitalOlcumleriniNormallestir } from '@/lib/clinical/olcumCoz'
@@ -113,6 +114,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   // BRANS-ALAN-SIZMASI: not sayfası / yazdır branşa göre çizilir (ölçüm alanları: branş; hasta/veli hitabı: yaş — VELI-YASAL-ONAM)
   const kapsam = await notKapsamiGetir(supabase, { doctorId: doktorId, seansBransi: seans?.specialty ?? null, hastaDogumIso: dogumIso })
   const bransKapsami = { brans: kapsam.brans, pediatrik: kapsam.pediatrik, veliDili: kapsam.veliDili, olcumler: kapsam.olcumler, hitap: kapsam.hitap }
+  // PEDIATRI-SINAV-01: pediatrik notta yaş yıl+ay ("2 yaş 3 ay") — Tetkik İstek Formu "Yaş" satırı bunu basar; diğerleri yasHesapla'da kalır.
+  if (kapsam.pediatrik && dogumIso) hasta.yas = yasGosterim(dogumIso, Date.parse(not.created_at) || Date.now()) || hasta.yas
   const buyume = kapsam.pediatrik ? buyumePersentilleriniHesapla(not.vitaller, dogumIso, cinsiyetHam, not.created_at) : null
 
   // NOTYA-CEK-DOGRULA-02: çek listesi girdileri — sayfa paneli notun GÜNCEL alanlarından her düzenlemede yeniden hesaplar.

@@ -14,6 +14,8 @@ import { CHROME_FONT, CHROME_FONT_HREF } from "@/lib/doktor/chromeTheme"
 import { turkceHataMesaji } from "@/lib/turkce/dogrulamaMesaji"
 import MuayeneCekListesi from "@/components/doktor/MuayeneCekListesi"
 import MuayeneEklerAdimi, { type EkPayload } from "@/components/doktor/MuayeneEklerAdimi"
+import SinavHastaBilgisi from "@/components/doktor/SinavHastaBilgisi"
+import { sinavHastaBilgisi } from "@/lib/doktor/sinavHastaBilgisi"
 import { onerilerPaneliGorunurMu } from "@/lib/doktor/oneriPaneli"
 import {
   cekListeDogrula,
@@ -107,6 +109,7 @@ function NewSessionInner() {
     cekListeSifirla(patientId)
     setCekIsaret({})
     setPediKayitlari(null)
+    setHastaKarti(null)
     if (!patientId) { setHastaDogumIso(null); return }
     let iptal = false
     ;(async () => {
@@ -123,6 +126,8 @@ function NewSessionInner() {
           const d = await hastaR.json()
           const dob = d?.patient?.dogum_tarihi || d?.dogum_tarihi
           if (dob) setHastaDogumIso(String(dob).slice(0, 10))
+          const hp = d?.patient || d
+          if (!iptal) setHastaKarti({ adSoyad: hp?.ad_soyad ?? null, cinsiyet: hp?.cinsiyet ?? null, anneAdi: hp?.anne_adi ?? null, babaAdi: hp?.baba_adi ?? null })
         }
         if (taramaR.ok) {
           const t = await taramaR.json()
@@ -166,6 +171,8 @@ function NewSessionInner() {
   const [cekIsaret, setCekIsaret] = useState<Record<string, boolean>>({})
   const [cekDogrulama, setCekDogrulama] = useState<CekDogrulamaSatir[] | null>(null)
   const [hastaDogumIso, setHastaDogumIso] = useState<string | null>(null)
+  // PEDIATRI-SINAV-01: ekran başlığı için hasta kartı alanları (aynı /api/doktor/hastalar/[id] yanıtı; ek istek yok).
+  const [hastaKarti, setHastaKarti] = useState<{ adSoyad: string | null; cinsiyet: string | null; anneAdi: string | null; babaAdi: string | null } | null>(null)
   const [pediKayitlari, setPediKayitlari] = useState<SaglamCocukKayitlari | null>(null)
   const cekGirdi = { seansBransi: specialty, hastaDogumIso, referansIso: efektifTarihIso, pediKayitlari }
   // NOTYA-PEDI-ONERI-01: pediatride öneriler paneli yalnız sağlam çocuk muayenesinde; diğer branşlar değişmez.
@@ -546,6 +553,10 @@ function NewSessionInner() {
         </div>
 
         {error && <div style={S({background:"#FCEBEB",border:"1px solid #F09595",borderRadius:"12px",padding:"14px",fontSize:"13px",color:"#A32D2D",marginBottom:"16px"})}>{error}</div>}
+
+        {patientId && hastaKarti && (step === "setup" || step === "recording") && (
+          <SinavHastaBilgisi bilgi={sinavHastaBilgisi({ ...hastaKarti, dogumIso: hastaDogumIso, seansBransi: specialty, nowMs: efektifTarihIso ? new Date(efektifTarihIso).getTime() : undefined })} />
+        )}
 
         {step === "setup" && (
           <div style={S({background:"#faf6ee",border:"1px solid rgba(58,44,34,0.08)",borderRadius:"20px",padding:"24px"})}>

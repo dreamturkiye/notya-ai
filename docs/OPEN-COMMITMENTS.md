@@ -1,5 +1,14 @@
 # OPEN COMMITMENTS — Notya AI
 
+## PEDIATRI-SINAV-01 — Exam-screen patient info (audit item 5) + pediatri photo capture (audit item 9a) (Kaan, 2026-10-16, branch `feature/pediatri-sinav-bilgi-foto`, owner Claude)
+
+Done on the branch: `lib/doktor/sinavHastaBilgisi.ts` (single age formatter `yasGosterim` + gate `sinavHastaBilgisi`), `components/doktor/SinavHastaBilgisi.tsx`, mounted in `app/session/new/page.tsx` (setup + recording steps). Name/gender/age are universal chrome; anne/baba only in pediatrik context and never for a known adult.
+
+Open (2026-10-16):
+- [ ] **Waits on Claude (after merge to main): port to the six `release/<cc>` branches** (us, gb, ca, au, nz, uz). All six carry `app/session/new/page.tsx` (shared code), so the fix applies once cherry-picked. The component's labels ("Anne:", "Baba:") and `yasGosterim` suffixes ("günlük", "aylık", "yaş", "ay") are Turkish and must come from each country pack's copy object, not hardcoded; each country's own age/guardian conventions need review per `international-data-model-dogrulama`. Not done in this change set because country builds live on separate branches.
+- [ ] **Waits on Kaan (decision): pediatri photo on the note screen.** Photo capture already exists for pediatri in the post-recording "Ekleri Ekle" step (`MuayeneEklerAdimi`, "Fotoğraf çek", visit-linked, all branşlar). Not duplicated. If Dr. Gökhan still wants the derm/KBB-style inline widget on `notlar/[id]` (a `PediNotGorselYakala` wrapper gated on `kapsam.brans === 'pediatri'`, plus an entry in `gorsel-yakalama-brans-kapisi.test.ts`), say so and it is a small follow-up.
+- [ ] Waits on Claude: dev-browser visual check of the new patient strip on a phone-width screen (not run in this job).
+
 ## WHATSAPP-API-01 — WhatsApp Business Cloud API: guided signup, automatic templates, inbound replies, "Gelen Yanıtlar" (Kaan, 2026-10-16, branch `feature/whatsapp-business-api`, owner Claude)
 
 Built on the existing job-C code (097) and the dispatcher (098), not beside it. Everything below was verified only against an
