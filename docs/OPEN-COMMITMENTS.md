@@ -4052,3 +4052,22 @@ Kayıt kesintisiz -> durdur -> **Ekleri Ekle** (sürükle-bırak / dosya / kamer
 - Standing rules for Claude: batch changes into one push to `main`; docs-only commits use `[skip ci]` in the message; no per-agent pushes to `main`; do not re-enable branch previews without Kaan.
 - Weekly check (scheduled task, Mondays): compare daily spend with the $2/day target; flag anything above $5/day or any new product line.
 - Open: build machine size unknown (Settings > Build and Deployment); Observability Events $4.46/mo (consider off during beta); fallback if builds stay costly = build in GitHub Actions + `vercel deploy --prebuilt`. Waits on: Claude (check after one week of data, ~2026-10-23).
+
+## MOBIL-PERSONEL — Pediatri Beta Audit item 2: phone use and staff roles (2026-10-16, branch `feature/mobil-personel-erisimi`, owner Claude)
+
+Audit: `docs/audits/ITEM2-MOBIL-PERSONEL.md`. Verified only with headless Chromium on mocked APIs, unit tests and the in-memory Supabase stand-in. **No real phone, no real RLS, no migration applied.**
+
+| Date | Item | Owner | Status / what is needed |
+|------|------|-------|-------------------------|
+| 2026-10-16 | **MOBIL-PERSONEL-01 — apply migration `172_personel_roller.sql`** to production and to the six country projects (us, gb, ca, au, nz, uz; countries need it only if the Turkish staff routes are ever opened there). Until applied, inviting an asistan or hasta_danismani fails with a clear message and the audit table does not exist (the log write is best-effort) | Kaan / Claude on request | OPEN |
+| 2026-10-16 | **MOBIL-PERSONEL-02 — RLS and devices untested.** The staff-role RLS narrowing in 172 and every route guard were tested only on the fake DB; no real Supabase session, no iPhone Safari, no Android Chrome run | Claude + a doctor's phone | OPEN |
+| 2026-10-16 | **MOBIL-PERSONEL-03 — no invite e-mail.** The doctor copies the invite link; nothing is sent. Needs a mail provider decision | Kaan decides | OPEN |
+| 2026-10-16 | **MOBIL-PERSONEL-04 — a sekreter can read note content and delete a draft note** (`app/api/notes/[id]`). Pre-existing, left unchanged by instruction ("sekreter must not lose a permission"). Decide whether sekreter keeps clinical read | Kaan / the pilot doctor decides | OPEN |
+| 2026-10-16 | **MOBIL-PERSONEL-05 — per-device login history (Oturumlar).** Supabase has no per-device session list. Needs our own `giris_gecmisi` table written at sign-in (device label, time; no IP stored unless KVKK review allows) and a "sign out this device" action. What shipped: last sign-in, this device, sign out everywhere | Claude | OPEN |
+| 2026-10-16 | **MOBIL-PERSONEL-06 — bulk campaigns stay sekreter-only** (`iletisim.toplu`); asistan and hasta_danismani cannot send them. hasta_danismani may arguably need it | Kaan decides | OPEN |
+| 2026-10-16 | **MOBIL-PERSONEL-07 — UI polish for the new roles**: asistan and hasta_danismani see the capability-filtered menu, but no role-specific home. Role matrix needs a clinician's review | Claude | OPEN |
+| 2026-10-16 | **MOBIL-PERSONEL-08 — a removed or deactivated staff member** falls through `pratikOturum` as the doctor of her own empty practice instead of a clean 401. Pre-existing; no data exposed | Claude | OPEN |
+| 2026-10-16 | **MOBIL-PERSONEL-09 — country builds have no asistan / hasta_danismani.** They use the clinic-account model (`on-buro` position with per-doctor grants), and the Turkish staff routes are closed there. Adding Clinical Assistant and Patient Coordinator means new positions and grants, which the kit leaves to a lawyer of each country. Labels when built: Receptionist (US, CA) or Secretary (GB, AU, NZ), Clinical Assistant, Patient Coordinator; Uzbek needs a native reviewer | Kaan + a lawyer per country | OPEN |
+| 2026-10-16 | **MOBIL-PERSONEL-10 — country kit phone fix not rendered.** The 44px tap-target block in `components/ulke/uygulama/uygulama.css` is on the six country branches but was never viewed in a browser (no country harness) | Claude | OPEN |
+| 2026-10-16 | **MOBIL-PERSONEL-11 — `app/session/new` phone fixes** (another agent owns the file): see the last section of the audit | the session/new owner | OPEN |
+| 2026-10-16 | **MOBIL-PERSONEL-12 — `release/us` Turkish-text ceiling is already breached** (1700 against 1698 on `origin/release/us` before this work). Not caused by this change; found while measuring | Claude | OPEN |
