@@ -15,7 +15,7 @@ multi-doctor clinic shares one sequence; every doctor without one (every real be
 today) gets their own, the closest real equivalent, with no code change needed when a clinic's
 `clinic_id` actually gets used.
 
-**Atomicity**: `lib/db/migrations/159_protokol_numarasi.sql` — `protokol_sayaclari` (one counter
+**Atomicity**: `lib/db/migrations/160_protokol_numarasi.sql` — `protokol_sayaclari` (one counter
 row per scope+year) + `protokol_no_ata()`, a single `INSERT ... ON CONFLICT ... DO UPDATE ...
 RETURNING` statement (Postgres row-locks the counter row for the statement's duration — not the
 naive "SELECT max+1" the brief warned against). **Proved against a real, live local Postgres 16

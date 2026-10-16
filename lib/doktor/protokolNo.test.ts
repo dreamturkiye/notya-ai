@@ -6,7 +6,7 @@
  * it carefully — a naive SELECT max+1 WILL collide under concurrent requests") and runs
  * against a REAL Postgres instance — not a mock, not a single-threaded happy path — firing
  * hundreds of truly concurrent calls at `protokol_no_ata()` (lib/db/migrations/
- * 159_protokol_numarasi.sql) over a real connection pool, across two different scopes at the
+ * 160_protokol_numarasi.sql) over a real connection pool, across two different scopes at the
  * same time, and asserting zero duplicates and a dense sequence for each. It needs
  * DATABASE_URL or SUPABASE_DB_URL (same env contract as scripts/run-sql-migration.mjs) and
  * skips with a clear message when neither is set, so `npm test` still passes with no DB

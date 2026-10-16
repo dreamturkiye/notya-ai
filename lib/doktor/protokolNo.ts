@@ -4,7 +4,7 @@
  * practice field, printed on prescriptions/reports and required for future MBYS/e-Nabız/
  * private insurance export packages — closed here to a genuinely Strong implementation
  * (atomic DB counter + DB-enforced immutability + DB-enforced per-scope uniqueness), not a
- * token field. See lib/db/migrations/159_protokol_numarasi.sql for the schema and the full
+ * token field. See lib/db/migrations/160_protokol_numarasi.sql for the schema and the full
  * reasoning this file's comments summarize.
  *
  * SCOPING: `clinics`/`clinic_members` (migration 004) is a real multi-doctor entity, and
