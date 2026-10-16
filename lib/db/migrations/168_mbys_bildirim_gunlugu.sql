@@ -1,4 +1,4 @@
--- 167 — MBYS-BILDIR-01 (2026-10-16): "Muayeneyi Bildir" audit trail.
+-- 168 — MBYS-BILDIR-01 (2026-10-16): "Muayeneyi Bildir" audit trail.
 --
 -- mbys_bildirim_gunlugu: APPEND-ONLY log of every "Muayeneyi Bildir" step a doctor took on an approved muayene:
 --   'onaylandi'       the doctor confirmed the exact record shown (payload_hash = SHA-256 of that record)
