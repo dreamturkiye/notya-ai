@@ -4045,3 +4045,10 @@ Kayıt kesintisiz -> durdur -> **Ekleri Ekle** (sürükle-bırak / dosya / kamer
 - Done already: Meta app "Notya" (1129698619396523), Embedded Signup config, Vercel env vars, webhook endpoint /api/whatsapp/webhook (fails closed until all env vars are set), migration 169, code on main.
 - Not blocked: dev-mode testing with app-role users and the Meta test number; the code path stays dormant for real doctors.
 - Resume when: entity exists. Claude then drafts App Review answers, reviewer instructions and the screen-recording script.
+
+## COST-VERCEL-01 — Vercel cost control (2026-10-16, owner: Claude, standing)
+- Why: pre-revenue; Oct billing cycle hit $79.37, of which Build CPU Minutes $71.74 (341 h). Traffic/functions are ~zero.
+- Done 2026-10-16: project "Ignored Build Step" so only `main` and `release/*` build (feature/fix/docs branches skipped).
+- Standing rules for Claude: batch changes into one push to `main`; docs-only commits use `[skip ci]` in the message; no per-agent pushes to `main`; do not re-enable branch previews without Kaan.
+- Weekly check (scheduled task, Mondays): compare daily spend with the $2/day target; flag anything above $5/day or any new product line.
+- Open: build machine size unknown (Settings > Build and Deployment); Observability Events $4.46/mo (consider off during beta); fallback if builds stay costly = build in GitHub Actions + `vercel deploy --prebuilt`. Waits on: Claude (check after one week of data, ~2026-10-23).
