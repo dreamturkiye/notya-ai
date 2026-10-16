@@ -1,5 +1,69 @@
 # OPEN COMMITMENTS — Notya AI
 
+## NOTYA-PROTOKOL-NO-01 — Protokol Numarası: atomic, sequential, immutable per-muayene document number (Kaan, 2026-10-15, branch `feat/hasta-raporlari-unified`, owner Claude)
+
+Beta-pediatrician audit finding: muayene records had no Protokol Numarası — a standard Turkish
+clinical-practice field printed on prescriptions/reports and used in MBYS/e-Nabız/insurance
+submissions. Closed to a genuinely Strong implementation per the brief's technical notes, which
+explicitly flagged atomicity as "the part most likely to be gotten wrong."
+
+**Scoping**: `clinics`/`clinic_members` (migration 004) IS a real multi-doctor entity — the
+clinic-invite-accept flow (`app/api/klinik/invite/accept/route.ts`) genuinely sets
+`users.clinic_id` for any invited doctor, not gated behind the superuser-only "Klinik yüzü"
+preview dashboard. So the counter scopes to `COALESCE(users.clinic_id, doctor_id)` — a real
+multi-doctor clinic shares one sequence; every doctor without one (every real beta account
+today) gets their own, the closest real equivalent, with no code change needed when a clinic's
+`clinic_id` actually gets used.
+
+**Atomicity**: `lib/db/migrations/159_protokol_numarasi.sql` — `protokol_sayaclari` (one counter
+row per scope+year) + `protokol_no_ata()`, a single `INSERT ... ON CONFLICT ... DO UPDATE ...
+RETURNING` statement (Postgres row-locks the counter row for the statement's duration — not the
+naive "SELECT max+1" the brief warned against). **Proved against a real, live local Postgres 16
+instance** (`pg_ctlcluster 16 main start` + a scratch DB — not mocked, not single-threaded): 200
+truly concurrent calls against each of two different scopes, interleaved on a 40-connection pool
+— zero duplicates, a dense 1..200 sequence per scope, and the two scopes independently producing
+identical numbers (expected, per spec: "different clinics/doctors can reuse the same number
+independently"). The same proof is committed as `lib/doktor/protokolNo.test.ts` (two `describe`
+blocks gated on `DATABASE_URL`/`SUPABASE_DB_URL` — skip cleanly with none configured, run for
+real with one; the DB-level per-scope uniqueness is also enforced structurally by a partial
+unique index on `(protokol_scope_id, protokol_no)`, verified manually against the same instance).
+
+**Immutability**: a `BEFORE UPDATE` trigger on `sessions` (`trg_sessions_protokol_no_degismez`)
+raises an exception on any attempt to change a non-null `protokol_no` — verified manually
+against the live instance (blocked an UPDATE attempt; allowed an unrelated-field UPDATE through).
+Defense in depth: the application code also never updates it after the insert that sets it.
+
+**Insertion points, both covered**: `sessions` is created in exactly two places in this codebase
+(confirmed by direct trace, not assumed) — `app/api/sessions/start/route.ts` (the normal muayene
+start) and `app/api/doktor/belgeler/analiz/onayla/route.ts` (NOTYA-LAB-02's "no encounter →
+create one" path). Both now allocate the number atomically BEFORE the insert and write it into
+the SAME insert() payload — never a follow-up update — and both fail the whole request (500) if
+allocation fails, rather than silently creating a protokol_no-less muayene.
+
+**Historical data**: left NULL, not backfilled — a backfill could not guarantee it would never
+collide with a number the live counter is about to hand out for the same scope+year once a later
+year's sequence resets to 1. UI renders "—".
+
+**Shown on**: the muayene screen (`app/dashboard/doktor/notlar/[id]/page.tsx` header) and Muayene
+Geçmişi (`app/dashboard/doktor/hastalar/[id]/page.tsx`); the printed muayene notu
+(`.../notlar/[id]/yazdir`); the kâğıt reçete print page AND the Medula e-reçete `<protokolNo>`
+XML field (`app/api/doktor/medula/recete/route.ts` — this replaces a fake `NOTYA-<noteId
+slice>` placeholder that was already there, now carries the real number); and every Hasta
+Raporları PDF through the ONE shared template point (`lib/doktor/raporPdfSablonu.tsx` +
+`lib/doktor/raporBelgesi.ts`, extended once — not duplicated per report). Of the three routes
+that render through that shared model, only `cocuk-rapor` has a real linked muayene today;
+`sgk-rapor/pdf` and `cozger-takip/pdf` are pre-existing, already-documented scope boundaries (not
+visit-linked in this product's data model) and correctly render "—", nothing invented.
+
+**Tests**: `lib/doktor/protokolNo.test.ts` (scoping resolution + the two live-Postgres
+concurrency proofs above), `lib/doktor/raporBelgesi.test.ts` extended, `lib/doktor/arsiv.test.ts`
+allowlist extended for the one new ownership-scoped raw session read in `cocuk-rapor/route.ts`,
+`lib/security/testing/sahteSupabase.ts` extended with an in-memory `protokol_no_ata` RPC stand-in
+so route-level fake-DB tests (hasta-izolasyon suite) exercise the real call shape. Full targeted
+suite (~500 tests incl. the entire hasta-izolasyon + hasta-izolasyon-envanter packages) green;
+`npx tsc --noEmit -p .` clean. | Kaan: review `feat/hasta-raporlari-unified` and merge when
+ready — not merged or deployed by this session, per standing instruction.
+
 ## NOTYA-ASISTAN-PANEL-SES-KIMLIK-01 — "Ayşe'ye Danış" panel: wrong persona on non-pediatri branşlar, and "Konuş" silently did nothing (Kaan, 2026-10-15, branch `fix/asistan-panel-ses-kimlik`, owner Claude)
 
 Reported from a dermatoloji hasta özet page screenshot, doctor's test account pediatri. Two faults in `components/doktor/HastaKonsult.tsx` (the actual "Ayşe'ye Danış" patient-file consult panel — not `HastaKonsultasyonlar.tsx`, a different hekimden-hekime feature), mounted only from `app/dashboard/doktor/hastalar/[id]/page.tsx`.

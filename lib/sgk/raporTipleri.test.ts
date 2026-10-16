@@ -7,7 +7,10 @@ import {
   addDaysTr,
   raporSureSiniri,
   resolveRaporTipi,
+  sgkRaporMetniBirlesik,
+  sgkRaporUyariMetni,
   systemPromptFor,
+  type SgkRaporDraft,
 } from './raporTipleri'
 
 describe('sgk raporTipleri', () => {
@@ -86,5 +89,62 @@ describe('NOTYA-SUT-RAPOR-01 · Hasta Raporları süre sınırları resmî SUT m
     // Sayfa süre sınırını ortak fonksiyondan okur; 4.2.16 seçeneği yalnız ilaç kullanım raporunda görünür.
     assert.match(ekran, /raporSureSiniri\(tipMeta/)
     assert.match(ekran, /tipMeta\.id === 'ilac_kullanim' && \(/)
+  })
+})
+
+/**
+ * NOTYA-HASTA-RAPORLARI-UNIFIED-01 — flattening the 6 existing draft types into the unified
+ * PDF template's single klinik block, without silently dropping a section `show()` would render.
+ */
+describe('NOTYA-HASTA-RAPORLARI-UNIFIED-01 · sgkRaporMetniBirlesik / sgkRaporUyariMetni', () => {
+  const taslak: SgkRaporDraft = {
+    raporBasligi: 'İş Göremezlik (e-İstirahat) Raporu',
+    raporTuru: 'Ilk',
+    hastaAdi: 'Test Hasta',
+    tcSon4: '',
+    tani: { icd10: 'J06.9', aciklama: 'Üst solunum yolu enfeksiyonu' },
+    hekim_degerlendirmesi: 'Ateş ve boğaz ağrısı ile başvurdu.',
+    isGoremezlikGerekcesi: 'İstirahat gerektirir.',
+    istirahat_suresi_gun: 3,
+    baslangicTarihi: '05.09.2026',
+    bitisTarihi: '07.09.2026',
+    hekim_notu: 'Kontrol gerekirse başvurunuz.',
+  }
+
+  it('is_goremezlik: tanı, gerekçe, klinik, rapor bilgileri ve hekim açıklaması hepsi metinde', () => {
+    const tip = resolveRaporTipi('is_goremezlik')
+    const metin = sgkRaporMetniBirlesik(tip, taslak, 3)
+    assert.match(metin, /TANI \(ICD-10\)/)
+    assert.match(metin, /J06\.9/)
+    assert.match(metin, /İŞ GÖREMEZLİK GEREKÇESİ/)
+    assert.match(metin, /MUAYENE BULGULARI \/ KLİNİK DEĞERLENDİRME/)
+    assert.match(metin, /RAPOR BİLGİLERİ/)
+    assert.match(metin, /İstirahat süresi: 3 gün/)
+    assert.match(metin, /HEKİM AÇIKLAMASI/)
+    assert.match(metin, /Kontrol gerekirse/)
+    // etken/malzeme/tetkik bu rapor tipinde yok — boş değilse bile metne girmemeli
+    assert.doesNotMatch(metin, /ETKEN MADDELER/)
+  })
+
+  it('ilaç kullanım: etken maddeler ve rapor süresi (ay) metinde, gerekçe bölümü yok', () => {
+    const tip = resolveRaporTipi('ilac_kullanim')
+    const metin = sgkRaporMetniBirlesik(tip, { ...taslak, onerilen_sure_ay: 6, etkenMaddeler: ['Levotiroksin'] }, 6)
+    assert.match(metin, /ETKEN MADDELER/)
+    assert.match(metin, /Levotiroksin/)
+    assert.match(metin, /RAPOR SÜRESİ/)
+    assert.doesNotMatch(metin, /İŞ GÖREMEZLİK GEREKÇESİ/)
+  })
+
+  it('medula_not uyarısı yalnız Medula kanallı tiplerde, özel uyarı yalnız muayenehane istirahatinde', () => {
+    const medula = sgkRaporUyariMetni(resolveRaporTipi('is_goremezlik'), true)
+    assert.match(String(medula), /Medula/)
+    const ozel = sgkRaporUyariMetni(resolveRaporTipi('muayenehane_istirahat'), true)
+    assert.match(String(ozel), /SGK e-İstirahat değildir/)
+    assert.equal(sgkRaporUyariMetni(resolveRaporTipi('saglik_kurulu'), true) !== undefined, true) // saglik_kurulu da medula_not taşır
+  })
+
+  it('Medula bağlı değilse medula_not uyarısı bunu söyler', () => {
+    const uyari = sgkRaporUyariMetni(resolveRaporTipi('ilac_kullanim'), false)
+    assert.match(String(uyari), /Entegrasyonlar sayfasından bağlayın/)
   })
 })

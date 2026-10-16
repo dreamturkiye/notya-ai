@@ -11,6 +11,24 @@ import { bransAnahtari } from '@/lib/specialties/bransAnahtari'
 /** Sabit etiket — vault category ve yükleme select ile aynı string. */
 export const YENIDOGAN_TABURCULUK_EPIKRIZI = 'Yenidoğan Taburculuk Epikrizi'
 
+/**
+ * NOTYA-HASTA-RAPORLARI-UNIFIED-01 — Çocuk Hasta Raporları (Araçlar → Hasta Raporları alt bölümü).
+ * Pediatri + Çocuk Cerrahisi dışında hiçbir branşta anlamlı değil (brans-alan-sızması): bir kardiyoloji
+ * ya da göz hastası için "kreşe başlayabilir" ya da "okul raporu" üretmek klinik olarak tutarsız —
+ * .cursor/skills/specialty-doktor-araclari/SKILL.md "classify before add" → BRANS_DOKTOR_ARACLARI.
+ */
+export const COCUK_ISTIRAHAT_RAPORU = 'Çocuk İstirahat Raporu'
+export const COCUK_SPOR_RAPORU = 'Çocuk Spor Yapabilir Raporu'
+export const COCUK_KRESE_RAPORU = 'Çocuk Kreşe Başlayabilir Raporu'
+export const COCUK_OKUL_RAPORU = 'Çocuk Okul Raporu'
+
+export const COCUK_HASTA_RAPORU_TURLERI = [
+  COCUK_ISTIRAHAT_RAPORU,
+  COCUK_SPOR_RAPORU,
+  COCUK_KRESE_RAPORU,
+  COCUK_OKUL_RAPORU,
+] as const
+
 export const ORTAK_BELGE_TURLERI = [
   'Lab Sonucu',
   'Görüntüleme Raporu',
@@ -42,7 +60,17 @@ export const BRANS_BELGE_TURLERI: ReadonlyArray<{
     branslar: ['pediatri', 'kadin-hastaliklari-dogum'],
     epikrizSonrasi: true,
   },
+  { ad: COCUK_ISTIRAHAT_RAPORU, branslar: ['pediatri', 'cocuk-cerrahisi'] },
+  { ad: COCUK_SPOR_RAPORU, branslar: ['pediatri', 'cocuk-cerrahisi'] },
+  { ad: COCUK_KRESE_RAPORU, branslar: ['pediatri', 'cocuk-cerrahisi'] },
+  { ad: COCUK_OKUL_RAPORU, branslar: ['pediatri', 'cocuk-cerrahisi'] },
 ]
+
+/** Çocuk Hasta Raporları bu branşta mı — Araçlar alt bölümünün render kapısı (brans-alan-sızması). */
+export function cocukHastaRaporuBransiMi(hamBrans: string | SpecialtyKey | null | undefined): boolean {
+  const brans = typeof hamBrans === 'string' ? bransAnahtari(hamBrans) : hamBrans ?? null
+  return brans === 'pediatri' || brans === 'cocuk-cerrahisi'
+}
 
 export function yenidoganTaburcuEpikriziBransiMi(brans: SpecialtyKey | null | undefined): boolean {
   if (!brans) return false

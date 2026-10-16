@@ -151,6 +151,80 @@ export function raporSureSiniri(tip: RaporTipiMeta, ozelSure?: string | null): {
   return { min: tip.sureMin, max: tip.sureMax, madde: tip.id === 'tibbi_malzeme' ? 'SUT 3.1.2.2(2)' : null }
 }
 
+/**
+ * NOTYA-HASTA-RAPORLARI-UNIFIED-01 — the 6 SGK/Medula + özel muayenehane draft's content,
+ * flattened into ONE ordered text block for the unified PDF template's single "klinik"
+ * section (lib/doktor/raporPdfSablonu.tsx). Same section order and headings the on-screen
+ * draft already uses (app/doktor-tools/sgk-rapor/page.tsx `show()`); hasta/hekim blocks
+ * are NOT repeated here — the unified template renders those itself from its own model.
+ */
+export function sgkRaporMetniBirlesik(tip: RaporTipiMeta, rapor: SgkRaporDraft, sure: number): string {
+  const var_ = (key: RaporTipiMeta['bolumler'][number]) => tip.bolumler.includes(key)
+  const parcalar: string[] = []
+  const ekle = (baslik: string, metin: string | null | undefined) => {
+    const t = String(metin || '').trim()
+    if (t) parcalar.push(`${baslik}\n${t}`)
+  }
+
+  if (var_('rapor_meta') && (tip.id === 'is_goremezlik' || tip.id === 'muayenehane_istirahat')) {
+    const satirlar = [
+      tip.id === 'is_goremezlik' ? `Rapor türü: ${rapor.raporTuru || 'İlk'} (İlk / Devam / Kontrol)` : null,
+      `Başlangıç tarihi: ${rapor.baslangicTarihi || '—'}`,
+      `Bitiş tarihi: ${rapor.bitisTarihi || '—'}`,
+      `İstirahat süresi: ${rapor.istirahat_suresi_gun ?? sure} gün`,
+    ].filter(Boolean)
+    ekle('RAPOR BİLGİLERİ', satirlar.join('\n'))
+  }
+  if (var_('tani')) {
+    ekle('TANI (ICD-10)', `${rapor.tani?.icd10 ? `${rapor.tani.icd10} — ` : ''}${rapor.tani?.aciklama || '—'}`)
+  }
+  if (var_('gerekce')) {
+    ekle('İŞ GÖREMEZLİK GEREKÇESİ', rapor.isGoremezlikGerekcesi || rapor.mevcutDurum)
+  }
+  if (var_('klinik')) {
+    if (rapor.anamnez) ekle('ANAMNEZ', rapor.anamnez)
+    const baslik = tip.id === 'is_goremezlik' || tip.id === 'muayenehane_istirahat'
+      ? 'MUAYENE BULGULARI / KLİNİK DEĞERLENDİRME'
+      : 'MEVCUT DURUM / KLİNİK DEĞERLENDİRME'
+    ekle(baslik, rapor.hekim_degerlendirmesi || rapor.mevcutDurum)
+  }
+  if (var_('sure') && tip.sureBirimi === 'ay') {
+    ekle('RAPOR SÜRESİ', `${rapor.onerilen_sure_ay ?? sure} ay — başlangıç ${rapor.baslangicTarihi || '—'} (bitiş Medula / SUT kurallarına göre)`)
+  }
+  if (var_('etken') && Array.isArray(rapor.etkenMaddeler) && rapor.etkenMaddeler.length > 0) {
+    ekle('ETKEN MADDELER (Medula listesiyle eşleştirin)', rapor.etkenMaddeler.map((e) => `• ${e}`).join('\n'))
+  }
+  if (var_('malzeme') && Array.isArray(rapor.malzemeOnerileri) && rapor.malzemeOnerileri.length > 0) {
+    ekle('TIBBİ MALZEME ÖNERİLERİ (SUT kodunu Medula’dan seçin)', rapor.malzemeOnerileri.map((e) => `• ${e}`).join('\n'))
+  }
+  if (var_('tetkik') && Array.isArray(rapor.zorunluTetkikler) && rapor.zorunluTetkikler.length > 0) {
+    ekle('ZORUNLU / DESTEKLEYİCİ TETKİKLER', rapor.zorunluTetkikler.map((t) => `• ${t}`).join('\n'))
+  }
+  ekle('HEKİM AÇIKLAMASI', rapor.hekim_notu || '—')
+  return parcalar.join('\n\n')
+}
+
+/** Medula notu / özel uyarı — unified template'in tek "uyari" alanına gider. */
+export function sgkRaporUyariMetni(tip: RaporTipiMeta, hekimMedulaBagli: boolean): string | undefined {
+  if (tip.bolumler.includes('medula_not')) {
+    return (
+      'Yasal / Medula notu: Bu çıktı Medula’ya girilecek verinin taslağıdır. MEDULA’yı kullanan sağlık hizmeti ' +
+      'sunucuları ilaç kullanım raporunu elektronik ortamda düzenler (SUT 4.1.3(2)); geçerli rapor Medula’da e-Rapor ' +
+      'kaydı + hekim güvenli elektronik imzası ile oluşur. Rapor teşhis kodu ve (varsa) etken madde / SUT kodları SGK ' +
+      'Medula listelerinden seçilmelidir.' +
+      (hekimMedulaBagli ? '' : ' Medula hesabınız Notya’ya bağlı değil — Entegrasyonlar sayfasından bağlayın.')
+    )
+  }
+  if (tip.bolumler.includes('ozel_uyari')) {
+    return (
+      'Önemli: Bu belge SGK e-İstirahat değildir. Özel muayenehane raporları tek başına SGK geçici iş görmezlik ' +
+      'ödeneğine esas kabul edilmez; ödenek için hastanın sözleşmeli / yetkili sağlık hizmet sunucusundan Medula ' +
+      'e-İstirahat alması gerekir. İşverenin özel muayenehane belgesini kabul edip etmeyeceği işyeri uygulamasına bağlıdır.'
+    )
+  }
+  return undefined
+}
+
 export function raporTipiById(id: string): RaporTipiMeta | undefined {
   return RAPOR_TIPLERI.find((t) => t.id === id)
 }

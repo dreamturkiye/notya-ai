@@ -18,8 +18,25 @@ import {
   type RaporTipiMeta,
   type SgkRaporDraft,
 } from '@/lib/sgk/raporTipleri'
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { CHROME_RENK, CHROME_FONT } from '@/lib/doktor/chromeTheme'
+import { cocukHastaRaporuBransiMi } from '@/lib/doktor/belgeTurleri'
+import {
+  COCUK_RAPOR_TIPLERI,
+  cocukRaporTipiById,
+  istirahatBitisTarihi,
+  type CocukRaporTipiId,
+} from '@/lib/doktor/cocukHastaRaporlari'
+import {
+  COZGER_DURUMLARI,
+  COZGER_DUZEYLERI,
+  COZGER_GECERLILIK_TIPLERI,
+  COZGER_UYARI_METNI,
+  cozgerYenilemeUyarisiGerekliMi,
+  type CozgerDurum,
+  type CozgerDuzey,
+  type CozgerGecerlilikTipi,
+} from '@/lib/doktor/cozgerTakip'
 
 export default function SgkRaporPage() {
   const [hastaId, setHastaId] = useState('')
@@ -42,6 +59,24 @@ export default function SgkRaporPage() {
   const [enabiz, setEnabiz] = useState<Record<string, unknown> | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [pdfIndiriliyor, setPdfIndiriliyor] = useState(false)
+
+  // NOTYA-HASTA-RAPORLARI-UNIFIED-01 — Çocuk Hasta Raporları alt bölümü yalnız pediatri / çocuk
+  // cerrahisi doktoruna görünür (brans-alan-sızması: doktorun KENDİ branşı, hasta değil).
+  const [cocukBrans, setCocukBrans] = useState<boolean | null>(null)
+  useEffect(() => {
+    let iptal = false
+    ;(async () => {
+      try {
+        const token = await getAccessTokenAsync()
+        if (!token) return
+        const r = await fetch('/api/users/me', { headers: { Authorization: `Bearer ${token}` } })
+        const j = r.ok ? await r.json() : null
+        if (!iptal) setCocukBrans(cocukHastaRaporuBransiMi(j?.data?.specialty ?? null))
+      } catch { if (!iptal) setCocukBrans(false) }
+    })()
+    return () => { iptal = true }
+  }, [])
 
   const onTipChange = (id: typeof raporTipiId) => {
     const t = RAPOR_TIPLERI.find((x) => x.id === id) || RAPOR_TIPLERI[0]
@@ -524,6 +559,40 @@ export default function SgkRaporPage() {
               >
                 Yazdır
               </button>
+              <button
+                type="button"
+                disabled={pdfIndiriliyor}
+                onClick={async () => {
+                  setPdfIndiriliyor(true)
+                  setError('')
+                  try {
+                    const token = await getAccessTokenAsync()
+                    const res = await fetch('/api/doktor/araclar/sgk-rapor/pdf', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                      body: JSON.stringify({ hastaId, raporTipiId: draftTip.id, rapor, sure }),
+                    })
+                    if (!res.ok) {
+                      const d = await res.json().catch(() => ({}))
+                      setError(String((d as { error?: string }).error || 'PDF indirilemedi.'))
+                      return
+                    }
+                    const blob = await res.blob()
+                    const a = document.createElement('a')
+                    a.href = URL.createObjectURL(blob)
+                    a.download = `${draftTip.id}-rapor.pdf`
+                    a.click()
+                    URL.revokeObjectURL(a.href)
+                  } catch {
+                    setError('PDF indirilemedi. Tekrar deneyin.')
+                  } finally {
+                    setPdfIndiriliyor(false)
+                  }
+                }}
+                style={{ ...toolsPrimaryBtn(pdfIndiriliyor), background: '#6D4C2B' }}
+              >
+                {pdfIndiriliyor ? 'Hazırlanıyor…' : '⬇ PDF indir'}
+              </button>
               {enabiz && (
                 <>
                   <button
@@ -555,6 +624,14 @@ export default function SgkRaporPage() {
             </div>
           </div>
         )}
+
+        {cocukBrans === true && (
+          <CocukHastaRaporlariBolumu hastaId={hastaId} hastaLabel={hastaLabel} onError={setError} />
+        )}
+
+        {cocukBrans === true && (
+          <CozgerTakipBolumu hastaId={hastaId} hastaLabel={hastaLabel} onError={setError} />
+        )}
       </div>
 
       <style>{`
@@ -583,4 +660,519 @@ const noteBox: React.CSSProperties = {
   fontSize: 11,
   lineHeight: 1.55,
   color: '#5a4e42',
+}
+
+/**
+ * NOTYA-HASTA-RAPORLARI-UNIFIED-01 — Çocuk Hasta Raporları (Pediatri / Çocuk Cerrahisi only).
+ * Reuses the hasta already selected above (same Araçlar → Hasta Raporları screen, spec: "Do not
+ * create a separate top-level section"); generates from that patient's most recent muayene,
+ * stores the PDF in the Kasa linked to it, and gives the doctor İndir/Yazdır for the result.
+ */
+function CocukHastaRaporlariBolumu({
+  hastaId,
+  hastaLabel,
+  onError,
+}: {
+  hastaId: string
+  hastaLabel: string
+  onError: (m: string) => void
+}) {
+  const [tipId, setTipId] = useState<CocukRaporTipiId>('istirahat')
+  const tip = useMemo(() => cocukRaporTipiById(tipId) || COCUK_RAPOR_TIPLERI[0], [tipId])
+  const bugun = new Date().toISOString().slice(0, 10)
+  const [baslangic, setBaslangic] = useState(bugun)
+  const [gun, setGun] = useState(tip.gunVarsayilan)
+  const [tarih, setTarih] = useState(bugun)
+  const [gerekce, setGerekce] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [sonuc, setSonuc] = useState<{
+    documentId: string
+    belgeNo: string
+    tarih: string
+    klinikMetin: string
+    bitisTarihi: string | null
+  } | null>(null)
+  const [indiriliyor, setIndiriliyor] = useState<'indir' | 'yazdir' | null>(null)
+
+  const indirYaDaYazdir = async (mod: 'indir' | 'yazdir') => {
+    if (!sonuc) return
+    setIndiriliyor(mod)
+    try {
+      const token = await getAccessTokenAsync()
+      const res = await fetch(`/api/doktor/documents/${sonuc.documentId}/download${mod === 'indir' ? '?download=1' : ''}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (!res.ok) { onError('Belge açılamadı.'); return }
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      if (mod === 'indir') {
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `${tip.id}-rapor.pdf`
+        a.click()
+      } else {
+        window.open(url, '_blank')
+      }
+      setTimeout(() => URL.revokeObjectURL(url), 10_000)
+    } catch {
+      onError('Belge açılamadı.')
+    } finally {
+      setIndiriliyor(null)
+    }
+  }
+
+  return (
+    <div style={{ ...toolsCard, marginTop: 20 }} className="no-print">
+      <div style={{ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', fontSize: 14, color: '#6d6055', marginBottom: 4 }}>
+        Hasta Raporları
+      </div>
+      <h2 style={{ margin: '0 0 4px', fontSize: 20, color: CHROME_RENK.ink, fontWeight: 650 }}>Çocuk Hasta Raporları</h2>
+      <p style={{ margin: '0 0 16px', fontSize: 13, color: CHROME_RENK.muted, lineHeight: 1.5 }}>
+        İstirahat, Spor Yapabilir, Kreşe Başlayabilir ve Okul raporları — hastanın en son muayenesinden üretilir ve o
+        muayeneye bağlı olarak Kasa’da saklanır.
+      </p>
+
+      <label style={toolsLabel}>Rapor Tipi</label>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 16 }}>
+        {COCUK_RAPOR_TIPLERI.map((t) => (
+          <label
+            key={t.id}
+            style={{
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: 10,
+              padding: '10px 12px',
+              borderRadius: 12,
+              border: `1px solid ${tipId === t.id ? CHROME_RENK.pine + '88' : CHROME_RENK.border}`,
+              background: tipId === t.id ? '#E4F3F1' : '#FFFFFF',
+              cursor: 'pointer',
+            }}
+          >
+            <input
+              type="radio"
+              name="cocukRaporTipi"
+              value={t.id}
+              checked={tipId === t.id}
+              onChange={() => { setTipId(t.id); setGun(t.gunVarsayilan); setSonuc(null) }}
+              style={{ marginTop: 3, accentColor: CHROME_RENK.pine, flexShrink: 0 }}
+            />
+            <span>
+              <span style={{ display: 'block', color: CHROME_RENK.ink, fontSize: 14, fontWeight: 650 }}>{t.label}</span>
+              <span style={{ display: 'block', marginTop: 4, color: CHROME_RENK.muted, fontSize: 12, lineHeight: 1.4 }}>{t.aciklama}</span>
+            </span>
+          </label>
+        ))}
+      </div>
+
+      {!hastaId ? (
+        <div style={{ fontSize: 13, color: CHROME_RENK.muted, marginBottom: 14 }}>
+          Önce yukarıdan bir hasta seçin.
+        </div>
+      ) : (
+        <div style={{ fontSize: 13, color: CHROME_RENK.muted, marginBottom: 14 }}>
+          Hasta: <strong style={{ color: CHROME_RENK.ink }}>{hastaLabel || '—'}</strong>
+        </div>
+      )}
+
+      {tip.gunAyarlanabilir ? (
+        <>
+          <label style={toolsLabel}>Başlangıç Tarihi</label>
+          <input
+            type="date"
+            value={baslangic}
+            onChange={(e) => setBaslangic(e.target.value)}
+            style={{ ...toolsInput, marginBottom: 14 }}
+          />
+          <label style={toolsLabel}>İstirahat Süresi (Gün)</label>
+          <input
+            type="number"
+            min={tip.gunMin}
+            max={tip.gunMax}
+            value={gun}
+            onChange={(e) => setGun(parseInt(e.target.value || String(tip.gunVarsayilan), 10))}
+            style={{ ...toolsInput, marginBottom: 6 }}
+          />
+          <div style={{ fontSize: 12, color: CHROME_RENK.muted, marginBottom: 14 }}>
+            Bitiş tarihi: {istirahatBitisTarihi(baslangic, gun)} ({tip.gunMin}–{tip.gunMax} gün aralığında)
+          </div>
+        </>
+      ) : (
+        <>
+          <label style={toolsLabel}>Karar Tarihi</label>
+          <input type="date" value={tarih} onChange={(e) => setTarih(e.target.value)} style={{ ...toolsInput, marginBottom: 14 }} />
+        </>
+      )}
+
+      <label style={toolsLabel}>Hekim Gerekçesi / Ek Not (opsiyonel)</label>
+      <textarea
+        value={gerekce}
+        onChange={(e) => setGerekce(e.target.value)}
+        rows={3}
+        maxLength={1000}
+        placeholder="Kararın raporda aynen yer alacak ek açıklaması…"
+        style={{ ...toolsInput, width: '100%', boxSizing: 'border-box', minHeight: 72, resize: 'vertical', marginBottom: 14 }}
+      />
+
+      <button
+        type="button"
+        disabled={loading || !hastaId}
+        onClick={async () => {
+          setLoading(true)
+          onError('')
+          setSonuc(null)
+          try {
+            const token = await getAccessTokenAsync()
+            const res = await fetch('/api/doktor/araclar/cocuk-rapor', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+              body: JSON.stringify({
+                hastaId,
+                raporTipiId: tip.id,
+                baslangicTarihi: tip.gunAyarlanabilir ? baslangic : undefined,
+                gunSayisi: tip.gunAyarlanabilir ? gun : undefined,
+                tarih: tip.gunAyarlanabilir ? undefined : tarih,
+                hekimGerekcesi: gerekce,
+              }),
+            })
+            const data = await res.json().catch(() => ({}))
+            if (!res.ok) {
+              onError(String((data as { error?: string }).error || 'Rapor oluşturulamadı.'))
+              return
+            }
+            setSonuc(data as typeof sonuc & object)
+          } catch {
+            onError('Sunucu hatası. Tekrar deneyin.')
+          } finally {
+            setLoading(false)
+          }
+        }}
+        style={toolsPrimaryBtn(loading || !hastaId)}
+      >
+        {loading ? 'Oluşturuluyor...' : 'Oluştur'}
+      </button>
+
+      {sonuc && (
+        <div style={{ marginTop: 18, padding: 16, background: '#FFFFFF', border: '1px solid #E5DFD0', borderRadius: 12 }}>
+          <div style={{ fontSize: 12, color: CHROME_RENK.muted, marginBottom: 8 }}>
+            Rapor tarihi: {sonuc.tarih} · Belge No: {sonuc.belgeNo}
+          </div>
+          <div style={{ fontSize: 14, color: CHROME_RENK.ink, whiteSpace: 'pre-wrap', lineHeight: 1.6, marginBottom: 14 }}>
+            {sonuc.klinikMetin}
+          </div>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <button type="button" disabled={indiriliyor !== null} onClick={() => void indirYaDaYazdir('indir')} style={{ ...toolsPrimaryBtn(indiriliyor !== null), background: '#6D4C2B' }}>
+              {indiriliyor === 'indir' ? 'Hazırlanıyor…' : '⬇ PDF indir'}
+            </button>
+            <button type="button" disabled={indiriliyor !== null} onClick={() => void indirYaDaYazdir('yazdir')} style={toolsPrimaryBtn(indiriliyor !== null)}>
+              {indiriliyor === 'yazdir' ? 'Hazırlanıyor…' : 'Yazdır'}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+type CozgerTakipKaydi = {
+  durum: CozgerDurum
+  kurum_adi: string | null
+  basvuru_tarihi: string | null
+  heyet_tarihi: string | null
+  sonuc_duzeyi: CozgerDuzey | null
+  sonuc_tarihi: string | null
+  gecerlilik_tipi: CozgerGecerlilikTipi | null
+  gecerlilik_bitis_tarihi: string | null
+  rapor_no: string | null
+  not_metni: string | null
+}
+
+/**
+ * NOTYA-COZGER-TAKIP-01 — ÇÖZGER sürecine takip (Pediatri / Çocuk Cerrahisi only, Çocuk Hasta
+ * Raporları ile AYNI ekran — brief: "do not create a separate top-level section"). Notya resmi
+ * ÇÖZGER raporu ÜRETMEZ; bu bölüm sadece bu hekimin kendi hastasının süreç durumunu takip eder ve
+ * aileye verilecek bir yönlendirme notu üretir (COZGER_UYARI_METNI her zaman görünür).
+ */
+function CozgerTakipBolumu({
+  hastaId,
+  hastaLabel,
+  onError,
+}: {
+  hastaId: string
+  hastaLabel: string
+  onError: (m: string) => void
+}) {
+  const [takip, setTakip] = useState<CozgerTakipKaydi | null>(null)
+  const [yukleniyor, setYukleniyor] = useState(false)
+  const [kaydediliyor, setKaydediliyor] = useState(false)
+  const [pdfIndiriliyor, setPdfIndiriliyor] = useState(false)
+  const [kurumAdiTaslak, setKurumAdiTaslak] = useState('')
+  const [basvuruTarihiTaslak, setBasvuruTarihiTaslak] = useState(new Date().toISOString().slice(0, 10))
+
+  const yukle = async (id: string) => {
+    setYukleniyor(true)
+    try {
+      const token = await getAccessTokenAsync()
+      const r = await fetch(`/api/doktor/araclar/cozger-takip?hastaId=${encodeURIComponent(id)}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      const j = await r.json().catch(() => ({}))
+      if (!r.ok) { onError(String(j.error || 'ÇÖZGER takip kaydı alınamadı.')); return }
+      setTakip((j as { takip: CozgerTakipKaydi | null }).takip || null)
+    } catch {
+      onError('Sunucu hatası. Tekrar deneyin.')
+    } finally {
+      setYukleniyor(false)
+    }
+  }
+
+  useEffect(() => {
+    setTakip(null)
+    if (hastaId) void yukle(hastaId)
+  }, [hastaId])
+
+  const basvuruBaslat = async () => {
+    if (!hastaId) { onError('Lütfen hasta seçin.'); return }
+    setKaydediliyor(true)
+    onError('')
+    try {
+      const token = await getAccessTokenAsync()
+      const r = await fetch('/api/doktor/araclar/cozger-takip', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ hastaId, kurumAdi: kurumAdiTaslak, basvuruTarihi: basvuruTarihiTaslak }),
+      })
+      const j = await r.json().catch(() => ({}))
+      if (!r.ok) { onError(String(j.error || 'Takip başlatılamadı.')); return }
+      setTakip((j as { takip: CozgerTakipKaydi }).takip)
+    } catch {
+      onError('Sunucu hatası. Tekrar deneyin.')
+    } finally {
+      setKaydediliyor(false)
+    }
+  }
+
+  const alanGuncelle = async (alanlar: Record<string, unknown>) => {
+    if (!hastaId) return
+    setKaydediliyor(true)
+    onError('')
+    try {
+      const token = await getAccessTokenAsync()
+      const r = await fetch('/api/doktor/araclar/cozger-takip', {
+        method: 'PATCH',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ hastaId, ...alanlar }),
+      })
+      const j = await r.json().catch(() => ({}))
+      if (!r.ok) { onError(String(j.error || 'Güncellenemedi.')); return }
+      setTakip((j as { takip: CozgerTakipKaydi }).takip)
+    } catch {
+      onError('Sunucu hatası. Tekrar deneyin.')
+    } finally {
+      setKaydediliyor(false)
+    }
+  }
+
+  const notuIndir = async () => {
+    if (!hastaId) return
+    setPdfIndiriliyor(true)
+    onError('')
+    try {
+      const token = await getAccessTokenAsync()
+      const res = await fetch('/api/doktor/araclar/cozger-takip/pdf', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ hastaId }),
+      })
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}))
+        onError(String((d as { error?: string }).error || 'Not indirilemedi.'))
+        return
+      }
+      const blob = await res.blob()
+      const a = document.createElement('a')
+      a.href = URL.createObjectURL(blob)
+      a.download = 'cozger-yonlendirme-notu.pdf'
+      a.click()
+      URL.revokeObjectURL(a.href)
+    } catch {
+      onError('Not indirilemedi. Tekrar deneyin.')
+    } finally {
+      setPdfIndiriliyor(false)
+    }
+  }
+
+  const yenilemeUyarisi =
+    !!takip && cozgerYenilemeUyarisiGerekliMi(takip.gecerlilik_tipi, takip.gecerlilik_bitis_tarihi)
+
+  return (
+    <div style={{ ...toolsCard, marginTop: 20 }} className="no-print">
+      <div style={{ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', fontSize: 14, color: '#6d6055', marginBottom: 4 }}>
+        Hasta Raporları
+      </div>
+      <h2 style={{ margin: '0 0 4px', fontSize: 20, color: CHROME_RENK.ink, fontWeight: 650 }}>ÇÖZGER Takip</h2>
+      <div style={{ ...toolsErrorBox, background: '#FFF7E6', borderColor: '#D9B35C', color: CHROME_RENK.ink, marginBottom: 14, fontSize: 12.5, lineHeight: 1.5 }}>
+        {COZGER_UYARI_METNI}
+      </div>
+
+      {!hastaId ? (
+        <div style={{ fontSize: 13, color: CHROME_RENK.muted, marginBottom: 14 }}>
+          Önce yukarıdan bir hasta seçin.
+        </div>
+      ) : (
+        <div style={{ fontSize: 13, color: CHROME_RENK.muted, marginBottom: 14 }}>
+          Hasta: <strong style={{ color: CHROME_RENK.ink }}>{hastaLabel || '—'}</strong>
+        </div>
+      )}
+
+      {hastaId && yukleniyor && (
+        <div style={{ fontSize: 13, color: CHROME_RENK.muted }}>Yükleniyor…</div>
+      )}
+
+      {hastaId && !yukleniyor && !takip && (
+        <>
+          <label style={toolsLabel}>Yönlendirilen Kurum (opsiyonel)</label>
+          <input
+            type="text"
+            value={kurumAdiTaslak}
+            onChange={(e) => setKurumAdiTaslak(e.target.value)}
+            placeholder="Örn. … Devlet Hastanesi Çocuk Sağlık Kurulu"
+            style={{ ...toolsInput, marginBottom: 14 }}
+          />
+          <label style={toolsLabel}>Başvuru Tarihi</label>
+          <input
+            type="date"
+            value={basvuruTarihiTaslak}
+            onChange={(e) => setBasvuruTarihiTaslak(e.target.value)}
+            style={{ ...toolsInput, marginBottom: 14 }}
+          />
+          <button type="button" disabled={kaydediliyor} onClick={() => void basvuruBaslat()} style={toolsPrimaryBtn(kaydediliyor)}>
+            {kaydediliyor ? 'Başlatılıyor…' : 'Takibi Başlat'}
+          </button>
+        </>
+      )}
+
+      {hastaId && !yukleniyor && takip && (
+        <>
+          {yenilemeUyarisi && (
+            <div style={{ ...toolsErrorBox, background: '#FDEAEA', borderColor: '#D96C6C', color: '#7A2E2E', marginBottom: 14, fontSize: 12.5 }}>
+              Geçerlilik süresi dolmuş veya 60 gün içinde doluyor — yenileme başvurusu için aileyi bilgilendirin.
+            </div>
+          )}
+
+          <label style={toolsLabel}>Süreç Durumu</label>
+          <select
+            value={takip.durum}
+            onChange={(e) => void alanGuncelle({ durum: e.target.value })}
+            disabled={kaydediliyor}
+            style={{ ...toolsInput, marginBottom: 14 }}
+          >
+            {COZGER_DURUMLARI.map((d) => (
+              <option key={d.id} value={d.id}>{d.etiket}</option>
+            ))}
+          </select>
+
+          <label style={toolsLabel}>Yönlendirilen Kurum</label>
+          <input
+            type="text"
+            defaultValue={takip.kurum_adi || ''}
+            onBlur={(e) => void alanGuncelle({ kurumAdi: e.target.value })}
+            placeholder="Örn. … Devlet Hastanesi Çocuk Sağlık Kurulu"
+            style={{ ...toolsInput, marginBottom: 14 }}
+          />
+
+          <div style={{ display: 'flex', gap: 12, marginBottom: 14, flexWrap: 'wrap' }}>
+            <div style={{ flex: 1, minWidth: 180 }}>
+              <label style={toolsLabel}>Başvuru Tarihi</label>
+              <input
+                type="date"
+                defaultValue={takip.basvuru_tarihi || ''}
+                onBlur={(e) => void alanGuncelle({ basvuruTarihi: e.target.value })}
+                style={{ ...toolsInput, width: '100%', boxSizing: 'border-box' }}
+              />
+            </div>
+            <div style={{ flex: 1, minWidth: 180 }}>
+              <label style={toolsLabel}>Heyet Tarihi</label>
+              <input
+                type="date"
+                defaultValue={takip.heyet_tarihi || ''}
+                onBlur={(e) => void alanGuncelle({ heyetTarihi: e.target.value })}
+                style={{ ...toolsInput, width: '100%', boxSizing: 'border-box' }}
+              />
+            </div>
+          </div>
+
+          <label style={toolsLabel}>Sonuç Düzeyi (oran YAZILMAZ — madde 8/f)</label>
+          <select
+            value={takip.sonuc_duzeyi || ''}
+            onChange={(e) => void alanGuncelle({ sonucDuzeyi: e.target.value })}
+            disabled={kaydediliyor}
+            style={{ ...toolsInput, marginBottom: 14 }}
+          >
+            <option value="">— Henüz sonuçlanmadı —</option>
+            {COZGER_DUZEYLERI.map((d) => (
+              <option key={d} value={d}>{d}</option>
+            ))}
+          </select>
+
+          {takip.sonuc_duzeyi && (
+            <>
+              <label style={toolsLabel}>Sonuç Tarihi</label>
+              <input
+                type="date"
+                defaultValue={takip.sonuc_tarihi || ''}
+                onBlur={(e) => void alanGuncelle({ sonucTarihi: e.target.value })}
+                style={{ ...toolsInput, marginBottom: 14 }}
+              />
+
+              <label style={toolsLabel}>Rapor No (sistem numarası — madde 8/ğ)</label>
+              <input
+                type="text"
+                defaultValue={takip.rapor_no || ''}
+                onBlur={(e) => void alanGuncelle({ raporNo: e.target.value })}
+                style={{ ...toolsInput, marginBottom: 14 }}
+              />
+
+              <label style={toolsLabel}>Geçerlilik</label>
+              <select
+                value={takip.gecerlilik_tipi || ''}
+                onChange={(e) => void alanGuncelle({ gecerlilikTipi: e.target.value })}
+                disabled={kaydediliyor}
+                style={{ ...toolsInput, marginBottom: 14 }}
+              >
+                <option value="">— Belirtilmedi —</option>
+                {COZGER_GECERLILIK_TIPLERI.map((t) => (
+                  <option key={t} value={t}>{t === 'sureli' ? 'Süreli' : 'Sürekli'}</option>
+                ))}
+              </select>
+
+              {takip.gecerlilik_tipi === 'sureli' && (
+                <>
+                  <label style={toolsLabel}>Geçerlilik Bitiş Tarihi</label>
+                  <input
+                    type="date"
+                    defaultValue={takip.gecerlilik_bitis_tarihi || ''}
+                    onBlur={(e) => void alanGuncelle({ gecerlilikBitisTarihi: e.target.value })}
+                    style={{ ...toolsInput, marginBottom: 14 }}
+                  />
+                </>
+              )}
+            </>
+          )}
+
+          <label style={toolsLabel}>Not (opsiyonel)</label>
+          <textarea
+            defaultValue={takip.not_metni || ''}
+            onBlur={(e) => void alanGuncelle({ notMetni: e.target.value })}
+            rows={3}
+            maxLength={2000}
+            style={{ ...toolsInput, width: '100%', boxSizing: 'border-box', minHeight: 72, resize: 'vertical', marginBottom: 14 }}
+          />
+
+          <button type="button" disabled={pdfIndiriliyor} onClick={() => void notuIndir()} style={{ ...toolsPrimaryBtn(pdfIndiriliyor), background: '#6D4C2B' }}>
+            {pdfIndiriliyor ? 'Hazırlanıyor…' : '⬇ Aileye Yönlendirme Notu (PDF)'}
+          </button>
+        </>
+      )}
+    </div>
+  )
 }

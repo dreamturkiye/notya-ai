@@ -11,6 +11,7 @@ import { arsivsizNotlar } from '@/lib/doktor/arsiv'
 import { seansiBasarisizIsaretle, soapHataKodu, soapHataLogMetni, soapUretYeniden, takiliSeanslariKapat } from '@/lib/doktor/soapYeniden'
 import { oneriyiArkaPlandaYaz } from '@/lib/doktor/oneriArkaPlan'
 import type { SoapOnerisi } from '@/lib/doktor/soapUret'
+import { protokolNumarasiAta } from '@/lib/doktor/protokolNo'
 
 // AUDIT-2026-09-03: not üretimi (dosya bağlamı + Sonnet) varsayılan fonksiyon süresini
 // aşıyordu — Dr. Gökhan canlı betada 504 aldı. Ses-yükleme rotasıyla aynı sınır.
@@ -59,6 +60,30 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     }
     isaretlenecek = { doktorId: user.id, sessionId }
 
+    // NOTYA-PROTOKOL-NO-01: this is the client-side session-creation path (app/session/new/page.tsx
+    // inserts the `sessions` row directly from the browser, before this route is ever called) —
+    // it cannot call the atomic RPC itself (no service-role access), so the protokol numarası is
+    // assigned HERE instead: synchronously, as the very first write this route makes, before any
+    // AI/note work starts, and merged into the SAME "processing" update below — never a deferred
+    // or background call. Verification pass (2026-10) found this path missed entirely (permanent
+    // NULL protokol_no). Setting it here still satisfies the "never a follow-up UPDATE" intent in
+    // spirit: there is no window where the muayene is usable with a note attached and no number —
+    // this fires before note generation can begin, and fails the whole request if it fails. Once
+    // already set (e.g. a retried "Seansı Bitir" reusing the same session id, or a session created
+    // via /api/sessions/start which already set it on insert) it is left untouched — the DB trigger
+    // forbids changing a non-null protokol_no, and this never attempts to.
+    // HASTA-IZOLASYON pattern: id AND doctor_id in the same query — seans above already proved
+    // ownership, this just reads the one extra column seansSahibi() doesn't carry.
+    let protokolAtamasi: { protokol_no: string; protokol_scope_id: string } | null = null
+    const { data: protokolDurumu } = await getSupabase().from('sessions').select('protokol_no').eq('id', sessionId).eq('doctor_id', user.id).maybeSingle()
+    if (!protokolDurumu?.protokol_no) {
+      const protokol = await protokolNumarasiAta(getSupabase(), user.id)
+      if (!protokol) {
+        return NextResponse.json({ success: false, error: 'Protokol numarası oluşturulamadı.' }, { status: 500 })
+      }
+      protokolAtamasi = { protokol_no: protokol.protokolNo, protokol_scope_id: protokol.scopeId }
+    }
+
     // NOTYA-BETA-0925 (e): bu doktorun `processing`'de takılı kalmış eski seansları (not yok, 15 dk'dan eski) failed
     // olur — ör. 2026-09-25 19:45'te 500 alıp işaretlenmeden kalan seans. Kritik değil: hata bitişi engellemez.
     try {
@@ -80,6 +105,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       transcript_cleaned: transcript,
       duration_seconds: body.duration_seconds || 0,
       ...(gecmisTarihIso ? { started_at: gecmisTarihIso } : {}),
+      ...(protokolAtamasi || {}),
     }).eq("id", sessionId).eq("doctor_id", user.id)
 
     // Mali müşavirlik path

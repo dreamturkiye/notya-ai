@@ -37,7 +37,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   // reaches it from Arşivlenenler) — the page shows an "Arşivde" banner from `arsivde`.
   const { data: not } = await supabase
     .from('notes')
-    .select('*, sessions(patient_id, specialty, archived_at)')
+    .select('*, sessions(patient_id, specialty, archived_at, protokol_no)')
     .eq('id', id)
     .eq('doctor_id', doktorId)
     .maybeSingle()
@@ -142,6 +142,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       // GORSEL-YAKALAMA-01: the universal "visit" unit an inline capture (note screen) tags a
       // photo/PDF with — sessions.id, not this note's own id. Nullable in principle; every note has one.
       sessionId: not.session_id ? String(not.session_id) : null,
+      // NOTYA-PROTOKOL-NO-01: the muayenenin protokol numarası — '—' (null) for sessions
+      // created before the migration (not backfilled, see lib/db/migrations/159_*).
+      protokolNo: seans?.protokol_no ? String(seans.protokol_no) : null,
       /** NOTYA-RECETE-07: daha önce onaylanan Plan+İlaç imzası — aynıysa uyum kartı sorulmaz. */
       ilacUyumImza: typeof (not as { ilac_uyum_imza?: string | null }).ilac_uyum_imza === 'string'
         ? (not as { ilac_uyum_imza: string }).ilac_uyum_imza
