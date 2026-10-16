@@ -224,6 +224,9 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   'app/api/doktor/araclar/enabiz/mbys/route.ts': T,
   'app/api/doktor/araclar/erecete/route.ts': I('patient ownership check (id AND doctor_id) before any read → 404'),
   'app/api/doktor/araclar/sgk-rapor/route.ts': I('patient ownership check (id AND doctor_id) before any read → 404'),
+  // NOTYA-HASTA-RAPORLARI-UNIFIED-01
+  'app/api/doktor/araclar/sgk-rapor/pdf/route.ts': I('hastaSahibiMi(doktorId, hastaId) → 404 before any patient read; name/dob/gender re-decrypted from the doctor-scoped patients row, never trusted from the client-sent draft; renders no vault document (live PDF only, same as asilar/karne/pdf)'),
+  'app/api/doktor/araclar/cocuk-rapor/route.ts': I('hastaSahibiMi(doktorId, hastaId) → 404 before any read; an explicit visitId is re-verified with seansSahibi AND its patient_id must equal the already-owned hastaId (404 otherwise); an auto-resolved visit is looked up .eq(doctor_id).eq(patient_id) directly; patient name/dob/gender/anneAdi/babaAdi re-decrypted from that same doctor-scoped row; the generated PDF is stored via vault uploadDocument, which re-runs assertPatientOwned + assertVisitOwned a second time (lib/vault/service.ts, lib/vault/service.acl.test.ts) before the medical_documents insert'),
   'app/api/doktor/araclar/hasta-portali/route.ts': I('patient ownership check before token mint; share preview scoped by doctor_id'),
   'app/api/doktor/araclar/nota-ekle/route.ts': T,
   'app/api/doktor/araclar/sablonlarim/route.ts': I('doctor-only quick templates — no patient id, no patient table; every read/write .eq(doctor_id, user.id), id-keyed update/delete carry the same filter (404 otherwise)'),

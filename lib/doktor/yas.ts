@@ -24,3 +24,24 @@ export function yasHesapla(dogumIso: string): string {
   if (ay < 24) return `${ay} aylık`
   return `${Math.floor(ay / 12)} yaşında`
 }
+
+/**
+ * NOTYA-HASTA-RAPORLARI-UNIFIED-01 — resmî belge yaş biçimi: "yıl + ay" (ör. "3 yaş 4 ay",
+ * "0 yaş 7 ay"). `yasHesapla` konuşma diline uygundur ("8 aylık", "5 yaşında") ve resmî
+ * rapor başlığında bu haliyle kalır; Çocuk Hasta Raporları'nın hasta bloğu hem yılı hem
+ * ayı ayrı ayrı istediği için (spec: "Yaş (years + months for pediatric reports)") aynı
+ * takvim-ayı hesabı burada ayrı bir biçimde sunulur — iki fonksiyon aynı günü sayar,
+ * farklı yazar.
+ */
+export function yasYilAy(dogumIso: string, bugunIso?: string): string {
+  const d = new Date(dogumIso)
+  if (isNaN(d.getTime())) return ''
+  const simdi = bugunIso ? new Date(bugunIso) : new Date()
+  if (isNaN(simdi.getTime())) return ''
+  let ay = (simdi.getFullYear() - d.getFullYear()) * 12 + (simdi.getMonth() - d.getMonth())
+  if (simdi.getDate() < d.getDate()) ay -= 1
+  if (ay < 0) return ''
+  const yil = Math.floor(ay / 12)
+  const kalanAy = ay % 12
+  return `${yil} yaş ${kalanAy} ay`
+}

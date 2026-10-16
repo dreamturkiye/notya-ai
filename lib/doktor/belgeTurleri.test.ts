@@ -6,6 +6,12 @@ import {
   yenidoganTaburcuEpikriziBransiMi,
   YENIDOGAN_TABURCULUK_EPIKRIZI,
   ORTAK_BELGE_TURLERI,
+  COCUK_HASTA_RAPORU_TURLERI,
+  COCUK_ISTIRAHAT_RAPORU,
+  COCUK_SPOR_RAPORU,
+  COCUK_KRESE_RAPORU,
+  COCUK_OKUL_RAPORU,
+  cocukHastaRaporuBransiMi,
 } from './belgeTurleri'
 
 describe('belgeTurleri — Yenidoğan Taburculuk Epikrizi (brans-alan-sızması)', () => {
@@ -52,5 +58,45 @@ describe('belgeTurleri — Yenidoğan Taburculuk Epikrizi (brans-alan-sızması)
     assert.ok(belgeTurleriIcinBrans('pediatri').includes('İşitme testi'))
     assert.ok(belgeTurleriIcinBrans('dahiliye').includes('İşitme testi'))
     assert.equal(belgeTuruIzinliMi('İşitme testi', 'kulak-burun-bogaz'), true)
+  })
+})
+
+/**
+ * NOTYA-HASTA-RAPORLARI-UNIFIED-01 — Çocuk Hasta Raporları (Araçlar → Hasta Raporları alt bölümü).
+ * brans-alan-sızması: pediatri + çocuk cerrahisi dışında hiçbir branş bu 4 türü görmez/yükleyemez.
+ */
+describe('belgeTurleri — Çocuk Hasta Raporları (brans-alan-sızması)', () => {
+  it('pediatri ve çocuk cerrahisi select’te 4 türün tamamını görür', () => {
+    for (const ham of ['pediatri', 'Çocuk Sağlığı ve Hastalıkları', 'cocuk-cerrahisi', 'Çocuk Cerrahisi']) {
+      const liste = belgeTurleriIcinBrans(ham)
+      for (const tur of COCUK_HASTA_RAPORU_TURLERI) assert.ok(liste.includes(tur), `${ham}: ${tur}`)
+    }
+  })
+
+  it('dahiliye / kardiyoloji / göz / KD select’te HİÇBİRİNİ görmez', () => {
+    for (const ham of ['dahiliye', 'kardiyoloji', 'goz-hastaliklari', 'kadin-hastaliklari-dogum', '']) {
+      const liste = belgeTurleriIcinBrans(ham)
+      for (const tur of COCUK_HASTA_RAPORU_TURLERI) assert.equal(liste.includes(tur), false, `${ham}: ${tur}`)
+    }
+  })
+
+  it('API kapısı: yabancı branş hiçbir Çocuk Hasta Raporu türünü yükleyemez', () => {
+    for (const tur of [COCUK_ISTIRAHAT_RAPORU, COCUK_SPOR_RAPORU, COCUK_KRESE_RAPORU, COCUK_OKUL_RAPORU]) {
+      assert.equal(belgeTuruIzinliMi(tur, 'pediatri'), true, tur)
+      assert.equal(belgeTuruIzinliMi(tur, 'cocuk-cerrahisi'), true, tur)
+      assert.equal(belgeTuruIzinliMi(tur, 'dahiliye'), false, tur)
+      assert.equal(belgeTuruIzinliMi(tur, 'kardiyoloji'), false, tur)
+      assert.equal(belgeTuruIzinliMi(tur, 'goz-hastaliklari'), false, tur)
+    }
+  })
+
+  it('cocukHastaRaporuBransiMi yalnız pediatri + çocuk cerrahisi', () => {
+    assert.equal(cocukHastaRaporuBransiMi('pediatri'), true)
+    assert.equal(cocukHastaRaporuBransiMi('cocuk-cerrahisi'), true)
+    assert.equal(cocukHastaRaporuBransiMi('Çocuk Cerrahisi'), true)
+    assert.equal(cocukHastaRaporuBransiMi('dahiliye'), false)
+    assert.equal(cocukHastaRaporuBransiMi('kardiyoloji'), false)
+    assert.equal(cocukHastaRaporuBransiMi(null), false)
+    assert.equal(cocukHastaRaporuBransiMi(undefined), false)
   })
 })
