@@ -36,7 +36,7 @@ export const PERSONEL_TURLERI: readonly MesajTuru[] = [
 export function turIzinliMi(rol: PratikRol, tur: MesajTuru): boolean {
   if (rol === 'doktor') return true
   // MOBIL-PERSONEL-01: the patient liaison never sees billing (payment-reminder) items.
-  if (rol === 'hasta_danismani' && tur === 'odeme_hatirlatma') return false
+  if (rol === 'hasta_danismani' && (tur as string) === 'odeme_hatirlatma') return false
   return (PERSONEL_TURLERI as readonly string[]).includes(tur)
 }
 
