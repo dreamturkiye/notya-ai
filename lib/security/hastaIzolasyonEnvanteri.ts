@@ -22,6 +22,9 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   'app/api/doktor/muayene-ekleri/tur/route.ts': I('same baglamYukle gate as siniflandir; writes (doctor_id, belge_id) / (doctor_id, brans) scoped rows only'),
   'app/api/doktor/muayene-ekleri/degerlendir/route.ts': I('same baglamYukle gate; cache + vault reads scoped by doctor_id; the AI never receives patient identity'),
   'app/api/doktor/muayene-ekleri/liste/route.ts': I('seansSahibi(doctor, session) then rows filtered by doctor_id + session_id; 404 for a foreign session'),
+  // MUAYENE-EKLERI-07 — "Yüklenen dosyalar": list + byte stream of a visit's vault documents (pratikOturum: doctor or staff)
+  'app/api/doktor/muayene-ekleri/yuklenenler/route.ts': T,
+  'app/api/doktor/muayene-ekleri/yuklenenler/[belgeId]/route.ts': T,
   // ── Hasta kaydı ──
   'app/api/doktor/hastalar/route.ts': T,
   'app/api/doktor/hastalar/[id]/route.ts': T,

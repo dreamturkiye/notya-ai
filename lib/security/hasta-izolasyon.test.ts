@@ -151,12 +151,15 @@ type Hekim = {
   takip: string
   /** KONSULTASYONLAR-01: one consultant in the doctor's address book (Defter) */
   defter: string
+  /** MUAYENE-EKLERI-07: a file uploaded during THIS doctor's completed visit (`seans`), bytes encrypted in the vault */
+  yuklenenBelge: string
   /** Rows THIS doctor filed under the OTHER doctor's patient — the contamination a pre-fix IDOR left behind. */
   hileliSeans: string; hileliNot: string
 }
 const isaret = (h: Harf) => `GIZLI-${h}-7Q`
 
 let encrypt: (s: string) => string
+let encryptBytes: (b: Buffer) => Buffer
 let decrypt: (s: string) => string
 
 /** Turkey is UTC+3 all year — a fixed point inside "today" in Turkish time, whatever the host clock. */
@@ -261,7 +264,11 @@ function hekimKur(harf: Harf): Hekim {
     doctor_id: id, patient_id: null, persona_id: 'aysekaya', active_context: {},
     messages: [{ role: 'user', content: 'Sentetik soru', kanal: 'ses', zaman }, { role: 'assistant', content: `Cevap ${m}`, kanal: 'ses', zaman }],
   }).id
-  return { takip, defter, harf, id, token, hasta, seans, not, bekleyenNot, ilac, panel, belge, randevu, serbestRandevu, talep, hastaDerm, lezyon, dogum, bebekKart, portalToken, konu, asistanEylem, gozGoruntu, belgeAnaliz, dermAnaliz, konsultasyon, konsultasyonYanitli, kasaBelge, asiHatirlatma, eylemOneri, eylemKayit, sonlanmisIlac, kuyruk, gelenBelge, asistanOturum, hileliSeans: '', hileliNot: '' }
+  // MUAYENE-EKLERI-07: a vault document attached to this doctor's visit (visit_id = seans); the plaintext carries the marker.
+  const yuklenenBelge = db.ekle('medical_documents', { doctor_id: id, patient_id: hasta, visit_id: seans, file_name: `yuklenen-${m}.pdf`, file_type: 'application/pdf', file_size: 40, category: 'Lab Sonucu', uploaded_by: id, storage_backend: 'db', storage_key: 'db:pending', deleted_at: null }).id
+  db.tablo('medical_documents').find((r) => r.id === yuklenenBelge)!.storage_key = `db:${yuklenenBelge}`
+  db.bloblar.set(yuklenenBelge, encryptBytes(Buffer.from(`%PDF-1.4 icerik ${m}`)).toString('base64'))
+  return { yuklenenBelge, takip, defter, harf, id, token, hasta, seans, not, bekleyenNot, ilac, panel, belge, randevu, serbestRandevu, talep, hastaDerm, lezyon, dogum, bebekKart, portalToken, konu, asistanEylem, gozGoruntu, belgeAnaliz, dermAnaliz, konsultasyon, konsultasyonYanitli, kasaBelge, asiHatirlatma, eylemOneri, eylemKayit, sonlanmisIlac, kuyruk, gelenBelge, asistanOturum, hileliSeans: '', hileliNot: '' }
 }
 
 /** Contamination X planted under Y's patient before the fixes (anon-key session insert, unchecked POSTs). */
@@ -376,6 +383,13 @@ const VAKALAR: Vaka[] = [
   { ad: 'PUT /api/doktor/hastalar/[id] (hasta düzenleme)',
     yazdi: (a) => tablo('patients').some((p) => p.id === a.hasta && decrypt(p.name_encrypted).includes('QA Duzenlendi')),
     cagir: (r, a, h) => coz(r.hastaDetay.PUT(iste('PUT', `/api/doktor/hastalar/${h.hasta}`, { token: a.token, govde: { ad_soyad: 'QA Duzenlendi' } }), prm({ id: h.hasta }))) },
+  // MUAYENE-EKLERI-07 — "Yüklenen dosyalar": list + file stream of a visit. Foreign visit/file ids are 404.
+  { ad: 'GET /api/doktor/muayene-ekleri/yuklenenler (muayenenin yüklenen dosya listesi)', red: 404, okur: true,
+    cagir: (r, a, h) => coz(r.yuklenenler.GET(iste('GET', `/api/doktor/muayene-ekleri/yuklenenler?sessionId=${h.seans}`, { token: a.token }))) },
+  { ad: 'GET /api/doktor/muayene-ekleri/yuklenenler/[belgeId] (dosya akışı; yabancı seans + yabancı belge)', red: 404, okur: true,
+    cagir: (r, a, h) => coz(r.yuklenenDosya.GET(iste('GET', `/api/doktor/muayene-ekleri/yuklenenler/${h.yuklenenBelge}?sessionId=${h.seans}`, { token: a.token }), prm({ belgeId: h.yuklenenBelge }))) },
+  { ad: 'GET /api/doktor/muayene-ekleri/yuklenenler/[belgeId] (kendi seansı + yabancı belge)', red: 404,
+    cagir: (r, a, h) => coz(r.yuklenenDosya.GET(iste('GET', `/api/doktor/muayene-ekleri/yuklenenler/${h.yuklenenBelge}?sessionId=${a.seans}`, { token: a.token }), prm({ belgeId: h.yuklenenBelge }))) },
   { ad: 'GET /api/doktor/hastalar (hasta listesi)', okur: true,
     cagir: (r, a) => coz(r.hastalar.GET(iste('GET', '/api/doktor/hastalar', { token: a.token }))) },
   { ad: 'GET /api/doktor/hastalar/[id]/sessions (muayene geçmişi)', okur: true,
@@ -734,6 +748,7 @@ describe('HASTA-İZOLASYON: doktor A ve doktor B birbirinin hastasına hiçbir r
   let R: Rotalar
   before(async () => {
     ;({ encrypt, decrypt } = await import('../security/encryption'))
+    ;({ encryptBytes } = await import('../vault/crypto'))
     NextRequestSinifi = (await import('next/server')).NextRequest
     const ice = (y: string) => import(`../../${y}`)
     R = {
@@ -808,6 +823,8 @@ describe('HASTA-İZOLASYON: doktor A ve doktor B birbirinin hastasına hiçbir r
       portalMesajlar: await ice('app/api/portal/hasta/[token]/mesajlar/route'),
       portalRandevu: await ice('app/api/portal/hasta/[token]/randevu/route'),
       portalBelge: await ice('app/api/portal/hasta/[token]/belge/[id]/route'),
+      yuklenenler: await ice('app/api/doktor/muayene-ekleri/yuklenenler/route'),
+      yuklenenDosya: await ice('app/api/doktor/muayene-ekleri/yuklenenler/[belgeId]/route'),
       takip: await ice('app/api/doktor/takip/route'),
       konsultasyonDefter: await ice('app/api/doktor/konsultasyon/defter/route'),
       konsultan: await ice('app/api/konsultan/route'),
@@ -1405,5 +1422,95 @@ describe('HASTA-İZOLASYON: doktor A ve doktor B birbirinin hastasına hiçbir r
         assert.equal(yabanciYaz.status, 404)
       })
     }
+  })
+  describe('MUAYENE-EKLERI-07 Yüklenen dosyalar: personel, tahmin edilen kimlik, yanlış seans, silinmiş belge, kapalı anahtar', () => {
+    const liste = (r: Rotalar, token: string, sid: string) => coz(r.yuklenenler.GET(iste('GET', `/api/doktor/muayene-ekleri/yuklenenler?sessionId=${sid}`, { token })))
+    const dosya = (r: Rotalar, token: string, sid: string, bid: string, ek = '') => r.yuklenenDosya.GET(iste('GET', `/api/doktor/muayene-ekleri/yuklenenler/${bid}?sessionId=${sid}${ek}`, { token }), prm({ belgeId: bid }))
+
+    for (const harf of ['A', 'B'] as const) {
+      it(`${harf}: hekim de, hekimin personeli de açar; başka hekimin personeli açamaz`, async () => {
+        const s = sahneKur()
+        const x = s[harf], y = s[harf === 'A' ? 'B' : 'A']
+        const personelToken = `qa-yuklenen-personel-${harf}`
+        db.kullanicilar.set(personelToken, { id: randomUUID() })
+        db.ekle('personel', { user_id: db.kullanicilar.get(personelToken)!.id, doktor_id: x.id, aktif: true })
+        // the doctor
+        const hekim = await dosya(R, x.token, x.seans, x.yuklenenBelge)
+        assert.equal(hekim.status, 200)
+        assert.equal(hekim.headers.get('content-type'), 'application/pdf')
+        assert.match(hekim.headers.get('content-disposition') || '', /^inline;/)
+        assert.equal(hekim.headers.get('cache-control'), 'private, no-store')
+        assert.ok((await hekim.text()).includes(isaret(harf)), 'bayt içeriği çözülüp akıtılmadı')
+        assert.ok(db.tablo('audit_logs').some((r) => r.user_id === x.id && r.resource_type === 'muayene_ek_dosya' && r.resource_id === x.yuklenenBelge), 'dosya erişimi denetim kaydına yazılmadı')
+        // the doctor's staff (scope = the doctor of the practice, never a client value)
+        const sek = await dosya(R, personelToken, x.seans, x.yuklenenBelge)
+        assert.equal(sek.status, 200)
+        assert.ok((await sek.text()).includes(isaret(harf)))
+        const sekListe = await liste(R, personelToken, x.seans)
+        assert.equal(sekListe.status, 200)
+        assert.ok(sekListe.metin.includes(isaret(harf)))
+        // staff of doctor X reaching doctor Y's visit / file → 404, nothing of Y in the answer
+        const yabanci = await dosya(R, personelToken, y.seans, y.yuklenenBelge)
+        assert.equal(yabanci.status, 404)
+        assert.ok(!(await yabanci.text()).includes(isaret(y.harf)))
+        assert.equal((await liste(R, personelToken, y.seans)).status, 404)
+        // a doctor B-token must not ride on doctor A's staff row either
+        assert.equal((await dosya(R, y.token, x.seans, x.yuklenenBelge)).status, 404)
+      })
+    }
+
+    it('tahmin edilen / uydurma kimlikler 404; kimliksiz 401; sessionId eksik 400', async () => {
+      const { A } = sahneKur()
+      assert.equal((await dosya(R, A.token, randomUUID(), A.yuklenenBelge)).status, 404)
+      assert.equal((await dosya(R, A.token, A.seans, randomUUID())).status, 404)
+      assert.equal((await dosya(R, A.token, A.seans, 'not-a-uuid')).status, 404)
+      assert.equal((await dosya(R, A.token, "x' or '1'='1", A.yuklenenBelge)).status, 404)
+      assert.equal((await liste(R, A.token, randomUUID())).status, 404)
+      assert.equal((await dosya(R, 'gecersiz-token', A.seans, A.yuklenenBelge)).status, 401)
+      assert.equal((await coz(R.yuklenenler.GET(iste('GET', '/api/doktor/muayene-ekleri/yuklenenler', { token: A.token })))).status, 400)
+    })
+
+    it('aynı hekimin BAŞKA muayenesi ya da başka hastası altında görünen belge bu seansın dosyası sayılmaz', async () => {
+      const { A } = sahneKur()
+      // seans2 is A's own pending visit; the file belongs to the first visit → not reachable through seans2
+      const baskaSeans = db.tablo('sessions').find((r) => r.doctor_id === A.id && r.id !== A.seans)!.id as string
+      assert.equal((await dosya(R, A.token, baskaSeans, A.yuklenenBelge)).status, 404)
+      const liste2 = await liste(R, A.token, baskaSeans)
+      assert.equal(liste2.status, 200)
+      assert.ok(!liste2.metin.includes(isaret('A')), 'başka muayenenin dosyası bu seansın listesinde')
+      // a document whose patient differs from the visit's patient is dropped even if visit_id matches (dirty row)
+      const baskaHasta = db.ekle('patients', { doctor_id: A.id, is_active: true, name_encrypted: encrypt(JSON.stringify({ ad: 'Baska' })), dob_encrypted: encrypt('2020-01-01'), gender_encrypted: encrypt('male') }).id
+      db.tablo('medical_documents').find((r) => r.id === A.yuklenenBelge)!.patient_id = baskaHasta
+      assert.equal((await dosya(R, A.token, A.seans, A.yuklenenBelge)).status, 404)
+      assert.ok(!(await liste(R, A.token, A.seans)).metin.includes(isaret('A')))
+    })
+
+    it('silinmiş belge listelenmez ve açılmaz; PDF/görsel dışı tür her zaman indirme olarak gider', async () => {
+      const { A } = sahneKur()
+      const satir = db.tablo('medical_documents').find((r) => r.id === A.yuklenenBelge)!
+      satir.file_type = 'application/dicom'
+      satir.file_name = 'tomografi.dcm'
+      const dcm = await dosya(R, A.token, A.seans, A.yuklenenBelge)
+      assert.equal(dcm.status, 200)
+      assert.match(dcm.headers.get('content-disposition') || '', /^attachment;/)
+      satir.deleted_at = new Date().toISOString()
+      assert.equal((await dosya(R, A.token, A.seans, A.yuklenenBelge)).status, 404)
+      assert.ok(!(await liste(R, A.token, A.seans)).metin.includes('tomografi.dcm'))
+    })
+
+    it('NOTYA_MUAYENE_EKLERI=off: iki rota da 404 (bölüm görünmez); açılınca tekrar çalışır', async () => {
+      const { A } = sahneKur()
+      const onceki = process.env.NOTYA_MUAYENE_EKLERI
+      try {
+        process.env.NOTYA_MUAYENE_EKLERI = 'off'
+        assert.equal((await liste(R, A.token, A.seans)).status, 404)
+        assert.equal((await dosya(R, A.token, A.seans, A.yuklenenBelge)).status, 404)
+        delete process.env.NOTYA_MUAYENE_EKLERI
+        assert.equal((await liste(R, A.token, A.seans)).status, 200)
+      } finally {
+        if (onceki === undefined) delete process.env.NOTYA_MUAYENE_EKLERI
+        else process.env.NOTYA_MUAYENE_EKLERI = onceki
+      }
+    })
   })
 })

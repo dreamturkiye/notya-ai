@@ -23,12 +23,16 @@ import { hekimUnvanli } from '@/lib/doktor/hekimAdi';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme'
 import { motorAfisiTemizle } from '@/core/belgeler/yazar'
 import SeansKapilari from '@/components/doktor/seans/SeansKapilari'
+import YuklenenDosyalar from '@/components/doktor/YuklenenDosyalar'
+import { YUKLENEN_DOSYALAR_BASLIGI, yazdirSatirlari, type YuklenenDosya } from '@/lib/doktor/muayeneEk/yuklenenDosyalar'
 
 interface NotVeri {
   not: {
     createdAt?: string; approvedAt?: string | null; arsivde?: boolean; specialty?: string; basvuruYakinmasi?: string;
     /** NOTYA-PROTOKOL-NO-01: muayenenin protokol numarası — eski seanslarda null ("—" basılır). */
     protokolNo?: string | null;
+    /** MUAYENE-EKLERI-07: the visit (sessions.id) — key of the "Yüklenen dosyalar" list. */
+    sessionId?: string | null;
     subjektif?: string; objektif?: string; degerlendirme?: string; plan?: string; tani?: string;
     ilaclar?: { ad?: string; doz?: string; kullanim?: string; sure?: string }[];
     receteOnerisi?: { etkenMadde?: string; ticariOrnek?: string; doz?: string; kullanim?: string; sure?: string; not?: string; sgkListesinde?: boolean }[];
@@ -55,6 +59,8 @@ export default function NotYazdir() {
   const [veri, setVeri] = useState<NotVeri | null>(null);
   const [hata, setHata] = useState('');
   const [kopyalandi, setKopyalandi] = useState(false);
+  // MUAYENE-EKLERI-07: files uploaded during the visit (filled by <YuklenenDosyalar>); names go into the HBYS text export.
+  const [ekDosyalar, setEkDosyalar] = useState<YuklenenDosya[]>([]);
   // NOTYA-MEDULA P1: Medula'ya hazır reçete — kopyala + Ayşe'nin SUT/güvenlik uyarıları
   const [medulaDurum, setMedulaDurum] = useState<'bos' | 'yukleniyor' | 'kopyalandi' | 'hata'>('bos');
   const [medulaUyarilar, setMedulaUyarilar] = useState<string[]>([]);
@@ -103,6 +109,7 @@ export default function NotYazdir() {
       ['Fizik Muayene', motorAfisiTemizle(not.objektif || '')],
       ['Tanı', not.tani || not.degerlendirme || ''],
       ['Tedavi', not.plan || ''],
+      ...(ekDosyalar.length ? [[YUKLENEN_DOSYALAR_BASLIGI, yazdirSatirlari(ekDosyalar).join('\n')] as [string, string]] : []),
     ],
   });
   function hbysKopyala() {
@@ -133,7 +140,7 @@ export default function NotYazdir() {
   if (!bp?.vki && eriskin) vitalParcalar.push(`VKİ: ${eriskin.ozet}`);
 
   return (
-    <div style={{ background: 'white', color: '#111', minHeight: '100vh', fontFamily: 'Georgia, "Times New Roman", serif' }}>
+    <div style={{ background: 'white', color: '#111', minHeight: '100vh', fontFamily: 'Georgia, "Times New Roman", serif', paddingRight: 'var(--yd-sag, 0px)', transition: 'padding-right .15s ease' }}>
       <style>{`
         @media print { .yazdirma-gizle { display: none !important; } body { -webkit-print-color-adjust: exact; } }
         /* NOTYA-PDF-01 (Gökhan): sayfalandırma — başlık sayfa sonunda yetim kalmasın,
@@ -252,6 +259,9 @@ export default function NotYazdir() {
             </div>
           </div>
         )}
+
+        {/* MUAYENE-EKLERI-07: on screen = links + side viewer; in print = plain list of names (+ classification). */}
+        <YuklenenDosyalar sessionId={not.sessionId} onListe={setEkDosyalar} yazdirSayfasi />
 
         {/* Kaan (2026-09-10): yapay zekâ/onay ibaresi çıktıdan kaldırıldı — rapor doktorun belgesidir */}
         <div style={{ borderTop: '1px solid #999', marginTop: 22, paddingTop: 10 }}>
