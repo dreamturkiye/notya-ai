@@ -8,7 +8,7 @@
  *
  * Query params (set by "Bekleyen ailelere bildir" on Aşı Stok): asiAdi, lotId, sablon.
  */
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { Suspense, useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { getDoctorAccessToken } from '@/lib/doktor/clientAuth'
@@ -40,7 +40,7 @@ const SABLONLAR: { anahtar: string; etiket: string; metin: string }[] = [
 type Onizleme = { hedefSayisi: number; smsHazirSayisi: number; epostaHazirSayisi: number; ornekler: { id: string; ad: string }[] }
 type GecmisSatiri = { id: string; konu: string | null; govde: string; hedef_sayisi: number; durum: string; created_at: string; olusturan_rol: string; sayilar: { gonderildi: number; basarisiz: number; atlandi: number } }
 
-export default function HastaIletisimiSayfasi() {
+function HastaIletisimiIcerik() {
   const params = useSearchParams()
   const asiAdi = params.get('asiAdi')
   const lotId = params.get('lotId')
@@ -251,5 +251,14 @@ export default function HastaIletisimiSayfasi() {
         ))}
       </section>
     </div>
+  )
+}
+
+// useSearchParams() requires a Suspense boundary or the static prerender fails the build.
+export default function HastaIletisimiSayfasi() {
+  return (
+    <Suspense fallback={null}>
+      <HastaIletisimiIcerik />
+    </Suspense>
   )
 }
