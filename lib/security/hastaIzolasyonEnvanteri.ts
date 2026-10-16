@@ -16,6 +16,12 @@ const T = { durum: 'test' } as const
 const I = (kapsam: string): Siniflama => ({ durum: 'incelendi', kapsam })
 
 export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
+  // ── MUAYENE-EKLERI-01 ──
+  'app/api/doktor/muayene-ekleri/durum/route.ts': I('takes no id; returns only the feature-flag state to an authenticated user'),
+  'app/api/doktor/muayene-ekleri/siniflandir/route.ts': I('sessionId + belgeId resolved by baglamYukle: seansSahibi(doctor, session) then getDocumentMeta(doctor, belge) with visitId === session and patientId === the session patient; 404 otherwise; doctor-only'),
+  'app/api/doktor/muayene-ekleri/tur/route.ts': I('same baglamYukle gate as siniflandir; writes (doctor_id, belge_id) / (doctor_id, brans) scoped rows only'),
+  'app/api/doktor/muayene-ekleri/degerlendir/route.ts': I('same baglamYukle gate; cache + vault reads scoped by doctor_id; the AI never receives patient identity'),
+  'app/api/doktor/muayene-ekleri/liste/route.ts': I('seansSahibi(doctor, session) then rows filtered by doctor_id + session_id; 404 for a foreign session'),
   // ── Hasta kaydı ──
   'app/api/doktor/hastalar/route.ts': T,
   'app/api/doktor/hastalar/[id]/route.ts': T,

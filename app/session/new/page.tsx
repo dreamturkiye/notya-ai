@@ -13,6 +13,7 @@ import { seansGeriHref } from "@/lib/doktor/geriNavigasyon"
 import { CHROME_FONT, CHROME_FONT_HREF } from "@/lib/doktor/chromeTheme"
 import { turkceHataMesaji } from "@/lib/turkce/dogrulamaMesaji"
 import MuayeneCekListesi from "@/components/doktor/MuayeneCekListesi"
+import MuayeneEklerAdimi, { type EkPayload } from "@/components/doktor/MuayeneEklerAdimi"
 import { onerilerPaneliGorunurMu } from "@/lib/doktor/oneriPaneli"
 import {
   cekListeDogrula,
@@ -142,7 +143,7 @@ function NewSessionInner() {
     return () => { iptal = true }
   }, [patientId])
   const [sessionType, setSessionType] = useState("muayene")
-  const [step, setStep] = useState<"setup"|"recording"|"processing"|"done">("setup")
+  const [step, setStep] = useState<"setup"|"recording"|"ekler"|"processing"|"done">("setup")
   // NOTYA-GECMIS-MUAYENE-01 (Kaan/Gökhan, 2026-09-22): test/geçmiş veri girişi için opsiyonel
   // geçmiş tarih. Boş bırakılırsa hiçbir şey değişmez (varsayılan: şimdi). Sadece GEÇMİŞ tarih
   // kabul edilir; gelecek tarih sunucuda yok sayılır (aşağıdaki API'ler).
@@ -174,6 +175,28 @@ function NewSessionInner() {
   const transcriptRef = useRef("")  // Keep ref in sync for speech callbacks
   /** NOTYA-BETA-0925 (d): sunucunun açıkça başarısız dediği seans — tekrar denemede yeniden kullanılır. */
   const basarisizSeansRef = useRef<{ id: string; anahtar: string } | null>(null)
+  // MUAYENE-EKLERI-01: kill switch (sunucu NOTYA_MUAYENE_EKLERI, varsayılan açık) istemciye yansıtılır. Durum alınamazsa
+  // (hata, zaman aşımı, 404 = kapalı) KAPALI sayılır: kayıt → not akışı tam olarak eski davranıştır.
+  const [ekAcik, setEkAcik] = useState(false)
+  /** Ek adımı için önceden açılmış seans satırı (ekler bu seansa bağlı yüklenir). */
+  const ekSeansRef = useRef<{ id: string; anahtar: string } | null>(null)
+  useEffect(() => {
+    let iptal = false
+    const denetim = new AbortController()
+    const zamanAsimi = window.setTimeout(() => denetim.abort(), 4000)
+    ;(async () => {
+      try {
+        const { ensureDoctorAccessToken } = await import('@/lib/doktor/clientAuth')
+        const t = await ensureDoctorAccessToken()
+        if (!t) return
+        const r = await fetch('/api/doktor/muayene-ekleri/durum', { headers: { Authorization: `Bearer ${t}` }, signal: denetim.signal })
+        if (!r.ok) return
+        const d = await r.json().catch(() => null)
+        if (!iptal && d?.acik === true) setEkAcik(true)
+      } catch { /* kapalı kalır — eski akış */ } finally { window.clearTimeout(zamanAsimi) }
+    })()
+    return () => { iptal = true; window.clearTimeout(zamanAsimi); denetim.abort() }
+  }, [])
 
   // NOTYA-KAYIT-SURE-01 (Kaan, 2026-09-23): muayene kaydı 60 dk; 55. dk'da sesli (bip) + görsel uyarı,
   // "+30 dk uzat" (en fazla 120 dk). Süre dolunca dikte durur, yazılan her şey ekranda kalır.
@@ -366,7 +389,48 @@ function NewSessionInner() {
     startTimer()
   }
 
-  async function processSession() {
+  /** Seans satırı: önce ek adımında açılmış olan, sonra başarısız denemeden kalan, yoksa yeni (eski davranış). */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async function seansKaydiHazirla(supabase: ReturnType<typeof createClient<any>>, userId: string): Promise<{ id: string }> {
+    const anahtar = [patientId || "", specialty, sessionType, efektifTarihIso || ""].join("|")
+    const ek = ekSeansRef.current
+    if (ek && ek.anahtar === anahtar) return { id: ek.id }
+    const onceki = basarisizSeansRef.current
+    if (onceki && onceki.anahtar === anahtar) return { id: onceki.id }
+    const { data, error: se } = await supabase.from("sessions").insert({
+      doctor_id: userId, patient_id: patientId, specialty, session_type: sessionType,
+      status: "processing", duration_seconds: seconds,
+      patient_consent_given: true, patient_consent_at: new Date().toISOString(),
+      ...(efektifTarihIso ? { started_at: efektifTarihIso } : {}),
+    }).select().single()
+    if (se || !data) throw new Error("Seans oluşturulamadı. Lütfen tekrar deneyin.")
+    return data as { id: string }
+  }
+
+  /** "Seansı Bitir": kill switch kapalıysa ya da ek adımı herhangi bir nedenle kurulamazsa eski yol (doğrudan not). */
+  async function seansiBitir() {
+    if (!ekAcik) return processSession()
+    if (notIstegiSuruyorRef.current) return
+    istenenKayitRef.current = false
+    try { recognitionRef.current?.stop() } catch { /* yok */ }
+    setIsRecordingVoice(false)
+    stopTimer()
+    if (!transcript.trim()) { setError("Lütfen önce muayene notlarını yazın veya sesle kaydedin."); return }
+    try {
+      const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user || !patientId) return processSession()
+      const s = await seansKaydiHazirla(supabase, user.id)
+      ekSeansRef.current = { id: s.id, anahtar: [patientId || "", specialty, sessionType, efektifTarihIso || ""].join("|") }
+      setError("")
+      setStep("ekler")
+    } catch {
+      ekSeansRef.current = null
+      return processSession() // ek adımı kurulamadı: not eski yoldan üretilir
+    }
+  }
+
+  async function processSession(ekPayload?: EkPayload | null) {
     if (notIstegiSuruyorRef.current) return
     istenenKayitRef.current = false
     try { recognitionRef.current?.stop() } catch { /* yok */ }
@@ -390,18 +454,7 @@ function NewSessionInner() {
       // kaydedilmedi, seans failed işaretlendi) aynı hasta / branş / tür / tarih için aynı seans yeniden kullanılır.
       // Sonucu bilinmeyen yanıtta (504, bağlantı koptu) not kaydedilmiş olabilir — o zaman eskisi gibi yeni seans.
       const anahtar = [patientId || "", specialty, sessionType, efektifTarihIso || ""].join("|")
-      const onceki = basarisizSeansRef.current
-      let session: { id: string } | null = onceki && onceki.anahtar === anahtar ? { id: onceki.id } : null
-      if (!session) {
-        const { data, error: se } = await supabase.from("sessions").insert({
-          doctor_id: user.id, patient_id: patientId, specialty, session_type: sessionType,
-          status: "processing", duration_seconds: seconds,
-          patient_consent_given: true, patient_consent_at: new Date().toISOString(),
-          ...(efektifTarihIso ? { started_at: efektifTarihIso } : {}),
-        }).select().single()
-        if (se || !data) throw new Error("Seans oluşturulamadı. Lütfen tekrar deneyin.")
-        session = data as { id: string }
-      }
+      const session = await seansKaydiHazirla(supabase, user.id)
       basarisizSeansRef.current = null
 
       const { data: { session: authSession } } = await (async () => { const raw = localStorage.getItem(Object.keys(localStorage).find(k=>k.includes('auth-token'))||''); return raw ? { data: { session: JSON.parse(raw) } } : { data: { session: null } } })()
@@ -416,6 +469,7 @@ function NewSessionInner() {
           transcript, duration_seconds: seconds, profession: "doktor",
           context: { specialty, session_type: sessionType },
           cekListe: cekIsaret,
+          ...(ekPayload && ekPayload.ekler.length ? { ekler: ekPayload.ekler, asiOnay: ekPayload.asiOnay } : {}),
           ...(efektifTarihIso ? { tarih: efektifTarihIso } : {}),
         })
       })
@@ -447,7 +501,8 @@ function NewSessionInner() {
       setStep("done")
     } catch (e: unknown) {
       setError(turkceHataMesaji(e instanceof Error ? e.message : "") || "Bir hata oluştu. Lütfen tekrar deneyin.")
-      setStep("recording")
+      // Ek adımından gelindiyse oraya dön (yüklenenler korunur); değilse eski davranış.
+      setStep(ekPayload !== undefined && ekSeansRef.current ? "ekler" : "recording")
     } finally {
       notIstegiSuruyorRef.current = false
     }
@@ -609,7 +664,7 @@ function NewSessionInner() {
                 style={S({flex:1,padding:"14px",background:"#F1F5F9",color:"#3b2e24",border:"none",borderRadius:"10px",fontSize:"14px",cursor:"pointer"})}>
                 İptal
               </button>
-              <button onClick={processSession}
+              <button onClick={() => void seansiBitir()}
                 style={S({flex:2,padding:"14px",background:transcript.trim()?"#DC2626":"#8b7d70",color:"#fff",border:"none",borderRadius:"10px",fontSize:"15px",fontWeight:"600",cursor:transcript.trim()?"pointer":"not-allowed"})}>
                 ⏹ Seansı Bitir → Not Oluştur
               </button>
@@ -631,6 +686,17 @@ function NewSessionInner() {
           />
           )}
           </div>
+        )}
+
+        {step === "ekler" && ekSeansRef.current && (
+          <MuayeneEklerAdimi
+            sessionId={ekSeansRef.current.id}
+            patientId={patientId || ""}
+            transcript={transcript}
+            pediatrik={specialty === "pediatri"}
+            hata={error}
+            onDevam={(payload) => { void processSession(payload) }}
+          />
         )}
 
         {step === "processing" && (
