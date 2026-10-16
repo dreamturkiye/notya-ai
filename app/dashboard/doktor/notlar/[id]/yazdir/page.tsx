@@ -27,6 +27,8 @@ import SeansKapilari from '@/components/doktor/seans/SeansKapilari'
 interface NotVeri {
   not: {
     createdAt?: string; approvedAt?: string | null; arsivde?: boolean; specialty?: string; basvuruYakinmasi?: string;
+    /** NOTYA-PROTOKOL-NO-01: muayenenin protokol numarası — eski seanslarda null ("—" basılır). */
+    protokolNo?: string | null;
     subjektif?: string; objektif?: string; degerlendirme?: string; plan?: string; tani?: string;
     ilaclar?: { ad?: string; doz?: string; kullanim?: string; sure?: string }[];
     receteOnerisi?: { etkenMadde?: string; ticariOrnek?: string; doz?: string; kullanim?: string; sure?: string; not?: string; sgkListesinde?: boolean }[];
@@ -181,6 +183,8 @@ export default function NotYazdir() {
             </div>
             <div style={{ fontSize: 22, fontWeight: 500 }}>Muayene Notu</div>
             <div style={{ font: '12px system-ui', color: '#444' }}>{bransEtiketi(not.specialty)} · {trTarih(not.createdAt)} (TRT)</div>
+            {/* NOTYA-PROTOKOL-NO-01: standart Türk tıbbi form yerleşimi — başlık bloğunun hemen altı. */}
+            <div style={{ font: '12px system-ui', color: '#444' }}>Protokol No: {not.protokolNo || '—'}</div>
             {/* Akış: Anamnez → Fizik Muayene → Tanı → Tedavi (Dr. Gökhan referansları) */}
           </div>
           <div style={{ textAlign: 'right' }}>

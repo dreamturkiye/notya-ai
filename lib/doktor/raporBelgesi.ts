@@ -26,6 +26,8 @@ export type RaporBelgesiModeli = {
   ustBaslik: string
   altBaslik?: string
   belgeNo: string
+  /** NOTYA-PROTOKOL-NO-01 — muayenenin protokol numarası; muayeneye bağlı değilse '—'. */
+  protokolNo: string
   /** Her zaman görünüm biçimi (tr-TR) — ISO burada tutulmaz. */
   tarihGorunum: string
   hasta: {
@@ -57,6 +59,14 @@ export type RaporBelgesiGirdi = {
   ustBaslik: string
   altBaslik?: string
   belgeNo: string
+  /**
+   * NOTYA-PROTOKOL-NO-01 — the muayene's own protokol numarası (lib/doktor/protokolNo.ts),
+   * read from the SPECIFIC session this report/reçete is for. null when the report genuinely
+   * has no linked muayene today (the 6 SGK/Medula + özel muayenehane types and the ÇÖZGER
+   * takip note — see their routes' own comments for why) — renders as '—', never a
+   * manufactured number.
+   */
+  protokolNo?: string | null
   tarihIso?: string | null
   hasta: RaporHastaModeli
   /** true → yaş alanı "X yaş Y ay" (Çocuk Hasta Raporları); false → yasHesapla tarzı ya da boş. */
@@ -74,6 +84,7 @@ export function raporBelgesiModeliKur(g: RaporBelgesiGirdi): RaporBelgesiModeli 
     ustBaslik: g.ustBaslik,
     altBaslik: g.altBaslik,
     belgeNo: g.belgeNo,
+    protokolNo: String(g.protokolNo || '').trim() || '—',
     tarihGorunum: belgeTarihGorunum(g.tarihIso),
     hasta: {
       adSoyad: g.hasta.adSoyad || 'Hasta',

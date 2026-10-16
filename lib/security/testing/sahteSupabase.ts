@@ -70,6 +70,8 @@ export class SahteVeritabani {
   depolamaOkumalari: string[] = []
   kullanicilar = new Map<string, { id: string; email?: string }>()
   bloblar = new Map<string, string>()
+  /** NOTYA-PROTOKOL-NO-01: protokol_no_ata() in-memory stand-in state — key "scope_type:scope_id:yil" -> last number. */
+  protokolSayaclari = new Map<string, number>()
 
   tablo(ad: string): Satir[] {
     if (!this.tablolar.has(ad)) this.tablolar.set(ad, [])
@@ -113,9 +115,20 @@ export class SahteVeritabani {
           createSignedUrl: async (yol: string, sn: number) => ({ data: { signedUrl: `https://sahte.supabase.test/storage/v1/object/sign/${kova}/${yol}?token=sahte&expiresIn=${sn}` }, error: null }),
         }),
       },
-      rpc: async (ad: string, args: Record<string, string>) => {
-        if (ad === 'vault_put_blob') { db.bloblar.set(args.p_document_id, args.p_ciphertext_b64); return { data: null, error: null } }
-        if (ad === 'vault_get_blob') { const v = db.bloblar.get(args.p_document_id); return { data: v ?? null, error: v ? null : { message: 'missing' } } }
+      rpc: async (ad: string, args: Record<string, unknown>) => {
+        if (ad === 'vault_put_blob') { db.bloblar.set(args.p_document_id as string, args.p_ciphertext_b64 as string); return { data: null, error: null } }
+        if (ad === 'vault_get_blob') { const v = db.bloblar.get(args.p_document_id as string); return { data: v ?? null, error: v ? null : { message: 'missing' } } }
+        // NOTYA-PROTOKOL-NO-01: mirrors protokol_no_ata() (lib/db/migrations/159_*) — an
+        // in-memory counter keyed the same way (scope_type, scope_id, yil). The real atomicity
+        // guarantee is Postgres's, proven separately against a live instance
+        // (lib/doktor/protokolNo.test.ts); this fake only needs to return the right NEXT
+        // number for each key so route-level tests exercise the real call shape.
+        if (ad === 'protokol_no_ata') {
+          const anahtar = `${args.p_scope_type}:${args.p_scope_id}:${args.p_yil}`
+          const simdiki = (db.protokolSayaclari.get(anahtar) || 0) + 1
+          db.protokolSayaclari.set(anahtar, simdiki)
+          return { data: `${args.p_yil}-${String(simdiki).padStart(6, '0')}`, error: null }
+        }
         throw new Error(`[sahteSupabase] desteklenmeyen rpc: ${ad}`)
       },
     }

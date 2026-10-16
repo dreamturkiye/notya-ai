@@ -88,6 +88,10 @@ export async function POST(req: NextRequest) {
     ustBaslik: rapor.raporBasligi || tip.label,
     altBaslik: tip.kanal === 'sgk_medula' ? 'SGK / Medula rapor taslağı — canlı gönderim değildir' : 'Özel muayenehane klinik belge taslağı',
     belgeNo: tip.kanal === 'sgk_medula' ? 'Medula tarafından atanır' : belgeNo,
+    // NOTYA-PROTOKOL-NO-01: null — these 6 report types are NOT tied to one muayene in the
+    // product's data model today (see this route's header comment, a documented pre-existing
+    // scope boundary, not new). Renders '—'; nothing is invented.
+    protokolNo: null,
     hasta: { adSoyad, dogumTarihiIso, cinsiyetHam },
     pediatrikYasBicimi: false,
     klinikBaslik: 'KLİNİK / RAPOR İÇERİĞİ',

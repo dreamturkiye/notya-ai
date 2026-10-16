@@ -131,7 +131,7 @@ interface SeansNotu {
   basvuru_yakinmasi?: string | null
   approved_at?: string | null
 }
-interface Seans { id: string; created_at: string; notes?: SeansNotu[] | SeansNotu | null }
+interface Seans { id: string; created_at: string; protokol_no?: string | null; notes?: SeansNotu[] | SeansNotu | null }
 
 const panel: React.CSSProperties = {
   background: '#FFFFFF',
@@ -680,7 +680,7 @@ export default function HastaProfilPage() {
                         onKeyDown={(e) => { if (e.key === 'Enter' && n?.id) router.push(`/dashboard/doktor/notlar/${n.id}/yazdir`); }}
                         title={n?.id ? 'Raporu aç — düzenlemek için Yeniden Düzenle' : undefined}
                         style={{ minWidth: 0, flex: 1, cursor: n?.id ? 'pointer' : 'default' }}>
-                        <span style={{ display: 'block', fontSize: 12, color: CHROME_RENK.muted }}>{trTarih(seansTarihi(s))}</span>
+                        <span style={{ display: 'block', fontSize: 12, color: CHROME_RENK.muted }}>{trTarih(seansTarihi(s))}{s.protokol_no ? ` · Protokol No: ${s.protokol_no}` : ''}</span>
                         <span style={{ display: 'block', fontSize: 13.5, color: CHROME_RENK.ink, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ozet}</span>
                       </span>
                       {n?.id && mbysDurumlari[n.id] && (

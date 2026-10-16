@@ -13,7 +13,7 @@ import path from 'node:path'
 import React from 'react'
 import { Document, Font, Page, Path, StyleSheet, Svg, Text, View, renderToBuffer } from '@react-pdf/renderer'
 import type { RaporBelgesiModeli } from './raporBelgesi'
-import { RAPOR_BASLIK_BOLUM, RAPOR_ETIKET, belgeNoEtiketi, raporTarihiEtiketi } from './raporMetinleri'
+import { RAPOR_BASLIK_BOLUM, RAPOR_ETIKET, belgeNoEtiketi, protokolNoEtiketi, raporTarihiEtiketi } from './raporMetinleri'
 
 export const RAPOR_FONT = 'NotyaRaporBelgeSans'
 let fontKayitli = false
@@ -89,6 +89,9 @@ export function RaporBelgesiPdf({ belge }: { belge: RaporBelgesiModeli }) {
           <View style={s.sag}>
             <Text style={s.meta}>{raporTarihiEtiketi(belge.tarihGorunum)}</Text>
             <Text style={s.meta}>{belgeNoEtiketi(belge.belgeNo)}</Text>
+            {/* NOTYA-PROTOKOL-NO-01: muayenenin protokol numarası — her zaman belgeNo'nun hemen
+                altında, standart Türk tıbbi form başlık bloğu konumu (brief). */}
+            <Text style={s.meta}>{protokolNoEtiketi(belge.protokolNo)}</Text>
           </View>
         </View>
         <View style={s.cizgi} />

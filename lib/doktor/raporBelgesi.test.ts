@@ -84,6 +84,18 @@ describe('raporBelgesiModeliKur', () => {
     assert.equal(m.belgeNo, 'NOTYA-ISTIRAHAT-20261015-ABCD')
     assert.match(m.tarihGorunum, /15\.10\.2026/)
   })
+
+  it('NOTYA-PROTOKOL-NO-01: protokolNo verildiğinde birebir taşınır', () => {
+    const m = raporBelgesiModeliKur(girdi({ protokolNo: '2026-000123' }))
+    assert.equal(m.protokolNo, '2026-000123')
+  })
+
+  it('NOTYA-PROTOKOL-NO-01: protokolNo verilmediğinde (muayeneye bağlı olmayan rapor) "—" gösterilir, asla sayı icat edilmez', () => {
+    const m = raporBelgesiModeliKur(girdi())
+    assert.equal(m.protokolNo, '—')
+    const mNull = raporBelgesiModeliKur(girdi({ protokolNo: null }))
+    assert.equal(mNull.protokolNo, '—')
+  })
 })
 
 describe('raporDosyaAdi', () => {

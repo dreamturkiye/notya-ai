@@ -101,6 +101,10 @@ export async function POST(req: NextRequest) {
     ustBaslik: 'ÇÖZGER Sürecine Yönlendirme Notu',
     altBaslik: 'Hasta Raporları — Çocuk Hasta Raporları',
     belgeNo,
+    // NOTYA-PROTOKOL-NO-01: null — this note is a process-tracking document, not tied to one
+    // muayene (see this route's own header comment: "bu süreç belirli bir muayeneye bağlı
+    // değildir"). Renders '—'; nothing is invented.
+    protokolNo: null,
     tarihIso: bugunIso,
     hasta: { adSoyad, dogumTarihiIso, cinsiyetHam },
     pediatrikYasBicimi: true,

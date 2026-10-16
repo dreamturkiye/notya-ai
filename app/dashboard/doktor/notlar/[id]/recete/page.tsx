@@ -28,7 +28,7 @@ interface Veri {
   tanilar: { taniKodu: string; taniAdi?: string }[]
   uyarilar: string[]
   metin: string
-  baslik: { doktor: { unvan: string; ad: string; brans: string; klinik: string }; ozel?: { satirlar: string[]; diplomaNo: string; logoDataUrl: string }; taslakMi?: boolean; hasta: { ad: string; dogum: string | null; cinsiyet: string | null }; tarih: string }
+  baslik: { doktor: { unvan: string; ad: string; brans: string; klinik: string }; ozel?: { satirlar: string[]; diplomaNo: string; logoDataUrl: string }; taslakMi?: boolean; hasta: { ad: string; dogum: string | null; cinsiyet: string | null }; tarih: string; protokolNo?: string }
   xml: string
   enabiz?: Record<string, unknown>
   /** NOTYA-ARSIV-01 */
@@ -297,6 +297,8 @@ export default function ReceteYazdirPage() {
           </div>
           <div style={{ textAlign: 'right' }}>
             <div><b>Tarih:</b> {trTarih(baslik.tarih)}</div>
+            {/* NOTYA-PROTOKOL-NO-01: standart Türk tıbbi form yerleşimi — tarih/tanı bloğunun yanında. */}
+            <div><b>Protokol No:</b> {baslik.protokolNo || '—'}</div>
             {tanilar.length > 0 && <div><b>Tanı:</b> {tanilar.map((t) => t.taniKodu).join(', ')}</div>}
           </div>
         </div>

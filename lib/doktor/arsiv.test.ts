@@ -47,6 +47,7 @@ const IZINLI: Record<string, { adet: number; neden: string }> = {
   'lib/doktor/oneriArkaPlan.ts': { adet: 1, neden: 'NOTYA-NOT-HIZ-03: background advisory write reads ONE note by id + doctor id (the note this request just created) to merge ai_degerlendirme without overwriting a doctor edit; never lists visits' },
   'lib/vault/service.ts': { adet: 1, neden: 'ownership check of a visit id before filing a document' },
   'lib/doktor/soapYeniden.ts': { adet: 2, neden: 'status bookkeeping only (NOTYA-BETA-0925): stuck `processing` sessions → failed; must see archived notes too so a session that has a note is never marked failed. Nothing reaches a screen or the model' },
+  'app/api/doktor/araclar/cocuk-rapor/route.ts': { adet: 1, neden: 'NOTYA-PROTOKOL-NO-01: reads protokol_no of the ONE seansId already verified above (seansSahibi, which allows an explicitly-named archived visit — same "by-id open stays allowed" exception as medula/recete) — not a list, doctor_id-scoped' },
 }
 
 /**

@@ -54,3 +54,14 @@ export function belgeNoEtiketi(belgeNo: string): string {
 export function raporTarihiEtiketi(tarih: string): string {
   return `Rapor Tarihi: ${tarih}`
 }
+
+/**
+ * NOTYA-PROTOKOL-NO-01 — the muayenenin KENDİ protokol numarası, distinct from `belgeNo`
+ * (this document's own Notya-internal number, lib/doktor/raporBelgeNo.ts). Printed in the
+ * same header meta block, right under belgeNo — standard Turkish medical form placement
+ * (near the header/patient block). "—" when the report is not tied to one muayene (see
+ * lib/doktor/raporBelgesi.ts RaporBelgesiGirdi.protokolNo).
+ */
+export function protokolNoEtiketi(protokolNo: string): string {
+  return `Protokol No: ${protokolNo}`
+}

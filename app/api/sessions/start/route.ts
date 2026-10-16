@@ -8,6 +8,7 @@ import { createClient } from '@supabase/supabase-js'
 import { createDeepgramToken } from '@/lib/transcription/deepgramClient'
 import { logAccess } from '@/lib/security/auditLogger'
 import { hastaSahibiMi } from '@/lib/doktor/hastaSahipligi'
+import { protokolNumarasiAta } from '@/lib/doktor/protokolNo'
 
 const getSupabase = () => createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -58,6 +59,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'Hasta bulunamadı' }, { status: 404 })
     }
 
+    // NOTYA-PROTOKOL-NO-01: atomically reserved BEFORE the insert, then written into the SAME
+    // insert() payload — a session can never be created without one (lib/doktor/protokolNo.ts).
+    // A failure here fails the whole request rather than silently creating a protokol_no-less
+    // muayene.
+    const protokol = await protokolNumarasiAta(getSupabase(), user.id)
+    if (!protokol) {
+      return NextResponse.json({ success: false, error: 'Protokol numarası oluşturulamadı.' }, { status: 500 })
+    }
+
     // Seans oluştur
     const { data: session, error: sessionError } = await getSupabase()
       .from('sessions')
@@ -69,6 +79,8 @@ export async function POST(req: NextRequest) {
         status: 'recording',
         patient_consent_given: body.patient_consent === true,
         patient_consent_at: body.patient_consent === true ? new Date().toISOString() : null,
+        protokol_no: protokol.protokolNo,
+        protokol_scope_id: protokol.scopeId,
       })
       .select()
       .single()
@@ -93,6 +105,7 @@ export async function POST(req: NextRequest) {
       success: true,
       data: {
         session_id: session.id,
+        protokol_no: session.protokol_no,
         deepgram_token: deepgramToken,
         websocket_url: `wss://api.deepgram.com/v1/listen`,
         expires_at,

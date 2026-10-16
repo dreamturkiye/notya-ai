@@ -17,7 +17,8 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     // patlıyor, catch boş liste döndürüyordu — Muayene Geçmişi HER hastada boş görünüyordu.
     // Doğrusu ilişki gömme: notes(...). Sessiz catch de artık loglar.
     let q = sb.from('sessions')
-      .select('id, created_at, notes(id, created_at, approved_at, basvuru_yakinmasi, content_tani, content_degerlendirme)')
+      // NOTYA-PROTOKOL-NO-01: protokol_no selected so Muayene Geçmişi can show it per visit.
+      .select('id, created_at, protokol_no, notes(id, created_at, approved_at, basvuru_yakinmasi, content_tani, content_degerlendirme)')
       .eq('patient_id', params.id)
       .eq('doctor_id', user.id)
       .order('created_at', { ascending: false })

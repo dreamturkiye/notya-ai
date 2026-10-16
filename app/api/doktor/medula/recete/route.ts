@@ -25,9 +25,13 @@ function coz(v: string | null | undefined): string { if (!v) return ''; try { re
 async function taslakUret(supabase: ReturnType<typeof Object>, doktorId: string, noteId: string) {
   const sb = supabase as any
   // NOTYA-ARSIV-01: by-id open stays allowed for an archived muayene; `arsivde` drives the page banner.
-  const { data: not } = await sb.from('notes').select('id, icd10_codes, created_at, approved_at, content_ilaclar, recete_onerisi, sessions!inner(patient_id, archived_at)').eq('id', noteId).eq('doctor_id', doktorId).maybeSingle()
+  const { data: not } = await sb.from('notes').select('id, icd10_codes, created_at, approved_at, content_ilaclar, recete_onerisi, sessions!inner(patient_id, archived_at, protokol_no)').eq('id', noteId).eq('doctor_id', doktorId).maybeSingle()
   if (!not) return null
-  const pid = Array.isArray(not.sessions) ? not.sessions[0]?.patient_id : not.sessions?.patient_id
+  const notSeans = Array.isArray(not.sessions) ? not.sessions[0] : not.sessions
+  const pid = notSeans?.patient_id
+  // NOTYA-PROTOKOL-NO-01: the muayenenin own protokol numarası — replaces the old noteId-slice
+  // placeholder below. '—' when the linked session predates the migration (not backfilled).
+  const protokolNo: string = notSeans?.protokol_no ? String(notSeans.protokol_no) : '—'
   const [{ data: ilaclar }, { data: hasta }, { data: doktor }] = await Promise.all([
     arsivsizIlaclar(sb, 'ilac_adi, etken_madde, doz, kullanim_sikli, notlar, baslangic_tarihi, bitis_tarihi').eq('kaynak_note_id', noteId).eq('onay_durumu', 'onayli'),
     pid ? sb.from('patients').select('name_encrypted, dob_encrypted, gender_encrypted').eq('id', pid).eq('doctor_id', doktorId).maybeSingle() : Promise.resolve({ data: null }),
@@ -52,7 +56,12 @@ async function taslakUret(supabase: ReturnType<typeof Object>, doktorId: string,
     tanilar: kodlar,
     hasta: { ad, soyad, dogumTarihi: coz(hasta?.dob_encrypted) || null, cinsiyet: cins === 'male' || cins === 'female' ? cins : null },
     doktor: { ad: doktor?.first_name || '', soyad: doktor?.last_name || '', bransKodu: ayarBransKodu(doktor?.erecete_ayar) ?? BRANS_SGK[String(doktor?.specialty || '')] ?? null },
-    protokolNo: `NOTYA-${String(noteId).slice(0, 8).toUpperCase()}`,
+    // NOTYA-PROTOKOL-NO-01: the muayenenin REAL protokol numarası (was a fake `NOTYA-<noteId
+    // slice>` placeholder) — this is exactly the clinic protokol numarası Medula's own
+    // <protokolNo> field expects. '' (not '—') when the linked session predates the
+    // migration, so the XML <protokolNo> tag is correctly omitted (lib/medula/receteHazirla.ts
+    // opt()) instead of carrying a literal em dash.
+    protokolNo: protokolNo === '—' ? '' : protokolNo,
     receteTarihi: new Date(not.created_at),
   })
   // Kâğıt reçete başlığı için (NOTYA-MEDULA P1b)
@@ -66,6 +75,8 @@ async function taslakUret(supabase: ReturnType<typeof Object>, doktorId: string,
     taslakMi,
     hasta: { ad: `${ad} ${soyad}`.trim(), dogum: coz(hasta?.dob_encrypted) || null, cinsiyet: cins || null },
     tarih: not.created_at,
+    // NOTYA-PROTOKOL-NO-01: for display on the kâğıt reçete (recete/page.tsx) — always '—' or a real number, never ''.
+    protokolNo,
   }
   return { ...taslak, baslik, arsivde: seansArsivdeMi(not.sessions) }
 }

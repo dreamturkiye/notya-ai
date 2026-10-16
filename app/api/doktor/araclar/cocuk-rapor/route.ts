@@ -109,6 +109,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Bu hasta için kayıtlı bir muayene bulunamadı. Önce bir muayene başlatın.' }, { status: 400 })
   }
 
+  // NOTYA-PROTOKOL-NO-01: this report IS tied to a real muayene (seansId above) — read ITS
+  // own protokol_no (doctor-scoped, same ownership the seans itself was just verified under)
+  // rather than generating a new one; the number belongs to the muayene, not to the report.
+  const { data: seansProtokol } = await supabase.from('sessions').select('protokol_no').eq('id', seansId).eq('doctor_id', doktorId).maybeSingle()
+  const protokolNo = seansProtokol?.protokol_no ? String(seansProtokol.protokol_no) : null
+
   // 4) Hasta temel bilgisi — doğrudan şifreli alanlardan, istemciden GELEN ad/doğum tarihi değil.
   const { data: hastaRow } = await supabase
     .from('patients')
@@ -169,6 +175,7 @@ export async function POST(req: NextRequest) {
     ustBaslik: tip.label,
     altBaslik: 'Çocuk Hasta Raporları',
     belgeNo,
+    protokolNo,
     tarihIso,
     hasta: { ...hasta, cinsiyetHam },
     pediatrikYasBicimi: true,
@@ -208,6 +215,7 @@ export async function POST(req: NextRequest) {
       documentId: belge.id,
       dosyaAdi,
       belgeNo,
+      protokolNo: model.protokolNo,
       tarih: model.tarihGorunum,
       seansId,
       klinikMetin,

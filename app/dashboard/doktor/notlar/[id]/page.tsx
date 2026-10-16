@@ -66,6 +66,8 @@ interface NotVeri {
     /** GORSEL-YAKALAMA-01: the muayene's visit unit (sessions.id) — the inline capture widget tags
      * a photo/PDF with THIS id, not the note's own id. */
     sessionId?: string | null
+    /** NOTYA-PROTOKOL-NO-01: muayenenin protokol numarası — eski seanslarda null ("—" gösterilir). */
+    protokolNo?: string | null
     /** NOTYA-RECETE-07: daha önce onaylanan Plan+İlaç imzası. */
     ilacUyumImza?: string | null
     /** NOTYA-ARSIV-01: muayenesi arşivde — hiçbir listede görünmez, yalnız doğrudan açılır. */
@@ -498,7 +500,7 @@ export default function NotSayfasi() {
         </GeriLink>
         
         <div style={{ flex: 1, minWidth: 200 }}>
-          <div style={{ fontSize: 16, fontWeight: 800 }}>{hasta.ad} <span style={{ color: CHROME_RENK.muted, fontWeight: 500 }}>· {bransEtiketi(not.specialty)} · {trTarih(not.createdAt)}</span></div>
+          <div style={{ fontSize: 16, fontWeight: 800 }}>{hasta.ad} <span style={{ color: CHROME_RENK.muted, fontWeight: 500 }}>· {bransEtiketi(not.specialty)} · {trTarih(not.createdAt)} · Protokol No: {not.protokolNo || '—'}</span></div>
           <div style={{ fontSize: 12, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginTop: 3 }}>
             <span style={{ padding: '2px 10px', borderRadius: 999, fontWeight: 700, fontSize: 11.5, background: onayli ? 'rgba(46,110,78,0.12)' : 'rgba(180,131,47,0.14)', color: onayli ? '#2E6E4E' : '#B4832F', border: `1px solid ${onayli ? 'rgba(46,110,78,0.35)' : 'rgba(180,131,47,0.4)'}` }}>{onayli ? `Onaylı — ${trTarih(not.approvedAt)}` : 'Onay bekliyor'}</span>
             {not.uygulananKurallar && not.uygulananKurallar.length > 0 ? <SizinTarzinizChip kurallar={not.uygulananKurallar} /> : null}
