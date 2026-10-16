@@ -37,7 +37,7 @@ export const NAV = [
   { href: "#portal", label: "Portal", index: "03" },
   { href: "#brans", label: "Branşlar", index: "06" },
   { href: "#guvenlik", label: "Güvenlik", index: "09" },
-  { href: "#fiyat", label: "Fiyat", index: "10" },
+  { href: "#fiyat", label: "Fiyat", index: "11" },
 ] as const;
 
 export const HERO = {
@@ -271,6 +271,20 @@ export const TAKIP = {
   titleItalic: "takipten düşmez.",
   body: "Kontrolü geciken ve izlemi kaçan hastalar kendiliğinden listelenir. Tek dokunuşla hatırlatma gönderirsiniz.",
   rows: ["Kontrolü geciken", "İzlemi kaçan"],
+} as const;
+
+/** NOTYA-FATURA-LANDING-01 — capability block only; no vendor/integration names (rule: competitive discretion). */
+export const FATURA = {
+  eyebrow: "10 — Faturalama ve Tahsilat",
+  title: "Faturanız da",
+  titleItalic: "aynı sistemde.",
+  body: "Hizmet ve fiyat kataloğunuzu siz oluşturursunuz; e-belge kendi kimliğinizle kesilir, tahsilat hastanızdan güvenle alınır.",
+  bullets: [
+    "Muayene, aşı, her hizmet için kendi fiyatınız",
+    "Kart bilgisi hiçbir zaman Notya'da tutulmaz",
+    "Hatırlatma, onayınızdan geçmeden gitmez",
+    "Ay sonu raporu mali müşavirinize tek tıkla",
+  ],
 } as const;
 
 export type ChartTurn = {
