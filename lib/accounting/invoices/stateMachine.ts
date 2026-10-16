@@ -22,6 +22,13 @@ export type InvoiceAction =
   | 'request_credit' // issued | partially_paid | paid -> credit_pending
   | 'credit_success' // credit_pending -> credited
   | 'credit_failure' // credit_pending -> previous status (caller supplies it)
+  // NOTYA-ACCOUNTING-GIB-PORTAL-01 (2026-10-16): pending_issue -> draft, for the GİB Portalı
+  // manual-entry path only (lib/accounting/invoices/engine.ts's `abandonGibPortalPrepare`) — the
+  // doctor prepared the numbers but spotted a mistake before actually issuing anything on GİB's
+  // own site, so the lines go back to being editable. Gated to GİB-Portalı-vendor invoices at the
+  // engine layer, not here — this state machine stays a pure "is this transition legal at all"
+  // check, same as every other action in this file.
+  | 'abandon_prepare' // pending_issue -> draft
 
 const TRANSITIONS: Record<InvoiceAction, { from: InvoiceStatus[]; to: InvoiceStatus }> = {
   validate: { from: ['draft'], to: 'pending_issue' },
@@ -29,6 +36,7 @@ const TRANSITIONS: Record<InvoiceAction, { from: InvoiceStatus[]; to: InvoiceSta
   issue_failure: { from: ['pending_issue'], to: 'issue_failed' },
   retry_issue: { from: ['issue_failed'], to: 'pending_issue' },
   edit_draft: { from: ['issue_failed'], to: 'draft' },
+  abandon_prepare: { from: ['pending_issue'], to: 'draft' },
   record_partial_payment: { from: ['issued', 'partially_paid'], to: 'partially_paid' },
   record_full_payment: { from: ['issued', 'partially_paid'], to: 'paid' },
   request_cancel: { from: ['draft', 'issued'], to: 'cancel_pending' },

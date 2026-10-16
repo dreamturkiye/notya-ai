@@ -23,6 +23,9 @@ type Tab = 'kurulum' | 'katalog' | 'faturalar' | 'tahsilat' | 'raporlar'
 
 const NESTPAY_GROUP_KEYS = ['isbank', 'halkbank', 'teb', 'qnb', 'ziraat', 'akbank']
 
+/** GİB's own free e-belge portal — NOTYA-ACCOUNTING-GIB-PORTAL-01 (2026-10-16) default path. */
+const GIB_PORTAL_LINK = 'https://earsivportal.efatura.gov.tr'
+
 const ENVIRONMENT_LABELS: Record<string, string> = { test: 'Test', live: 'Canlı' }
 const VERIFICATION_LABELS: Record<string, string> = { VERIFIED: 'Doğrulandı', BEST_EFFORT_UNVERIFIED: 'Doğrulanmamış (en iyi çaba)' }
 
@@ -172,6 +175,20 @@ export default function FaturalamaTahsilatPaneli() {
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
 
+  // NOTYA-ACCOUNTING-GIB-PORTAL-01 (2026-10-16): hekim türü (serbest meslek -> e-SMM, şirket ->
+  // e-Fatura/e-Arşiv) ve belge gönderim yöntemi (gib_portal: ücretsiz/varsayılan, integrator:
+  // isteğe bağlı API entegratörü). Belirler: hangi belge türü ve hangi hazırlık akışı gösterilir.
+  const [doctorType, setDoctorType] = useState<'serbest_meslek' | 'sirket'>('serbest_meslek')
+  const [ebelgeMode, setEbelgeMode] = useState<'gib_portal' | 'integrator'>('gib_portal')
+  // Per-invoice GİB Portalı state: prepared field list + stopaj breakdown (recomputed each time
+  // "Hazırla"/"Alanları görüntüle" is clicked — never persisted as its own column, see
+  // lib/accounting/invoices/engine.ts's prepareGibPortalInvoice), the paste-back doc-number input,
+  // and the rare "alıcı kurumsal" checkbox read only at prepare time.
+  const [gibPrepared, setGibPrepared] = useState<Record<string, { fields: { label: string; value: string }[]; stopaj: any }>>({})
+  const [gibDocNumber, setGibDocNumber] = useState<Record<string, string>>({})
+  const [gibBuyerKurumsal, setGibBuyerKurumsal] = useState<Record<string, boolean>>({})
+  const [gibCopyNotice, setGibCopyNotice] = useState<string>('')
+
   // Tax profile — iban + logo added for real-looking invoice/makbuz PDFs (NOTYA-ACCOUNTING-ENCOUNTER-01).
   const [tax, setTax] = useState({ idType: 'tckn', idValue: '', unvan: '', address: '', vergiDairesi: '', iban: '' })
   // IBAN is secret (financial account data) — like idValue, the GET route never returns it in
@@ -236,6 +253,8 @@ export default function FaturalamaTahsilatPaneli() {
     try {
       const mod = await api('/module')
       setEnabled(!!mod.data?.enabled)
+      setDoctorType(mod.data?.doctorType === 'sirket' ? 'sirket' : 'serbest_meslek')
+      setEbelgeMode(mod.data?.ebelgeMode === 'integrator' ? 'integrator' : 'gib_portal')
       const svc = await api('/catalog?includeInactive=1')
       setServices(svc.data || [])
       const bk = await api('/bank-merchants')
@@ -286,6 +305,30 @@ export default function FaturalamaTahsilatPaneli() {
     try {
       await api('/module', { method: 'PUT', body: JSON.stringify({ enabled: next }) })
       setEnabled(next)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Değiştirilemedi.')
+    }
+  }
+
+  const changeDoctorType = async (next: 'serbest_meslek' | 'sirket') => {
+    try {
+      const res = await api('/module', { method: 'PUT', body: JSON.stringify({ doctorType: next }) })
+      setDoctorType(next)
+      setNotice(
+        next === 'serbest_meslek'
+          ? 'Hekim türü: Serbest meslek (bireysel) — kesilecek belge türü artık e-SMM.'
+          : 'Hekim türü: Şirket (Ltd/AŞ) — kesilecek belge türü artık e-Fatura/e-Arşiv.'
+      )
+      void res
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Değiştirilemedi.')
+    }
+  }
+
+  const changeEbelgeMode = async (next: 'gib_portal' | 'integrator') => {
+    try {
+      await api('/module', { method: 'PUT', body: JSON.stringify({ ebelgeMode: next }) })
+      setEbelgeMode(next)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Değiştirilemedi.')
     }
@@ -397,12 +440,71 @@ export default function FaturalamaTahsilatPaneli() {
   const issueOne = async (invoiceId: string) => {
     setBusyInvoiceId(invoiceId)
     try {
-      await api(`/invoices/${invoiceId}/issue`, { method: 'POST' })
-      setNotice('Fatura kesildi (veya entegratör hatası döndüyse durum güncellendi).')
+      const res = await api(`/invoices/${invoiceId}/issue`, {
+        method: 'POST',
+        body: JSON.stringify({ buyerIsKurumsal: !!gibBuyerKurumsal[invoiceId] }),
+      })
+      if (res.gibPortal) {
+        // GİB Portalı mode: nothing was actually issued anywhere yet — this just computed the
+        // numbers. Keep the fields in local state so "Kopyala"/paste-back can use them without a
+        // separate read endpoint (lib/accounting/invoices/engine.ts's prepareGibPortalInvoice is
+        // idempotent, so re-clicking after a reload recomputes the same fields for free).
+        setGibPrepared((m) => ({ ...m, [invoiceId]: { fields: res.gibPortal.fields, stopaj: res.gibPortal.stopaj } }))
+        setNotice('Fatura hazırlandı — alanları GİB Portalı\'na kopyalayıp orada kesin, sonra belge numarasını buraya girin.')
+      } else {
+        setNotice('Fatura kesildi (veya entegratör hatası döndüyse durum güncellendi).')
+      }
       const inv = await api('/invoices')
       setInvoices(inv.data || [])
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Kesilemedi.')
+    } finally {
+      setBusyInvoiceId(null)
+    }
+  }
+
+  const copyGibFields = async (invoiceId: string) => {
+    const prepared = gibPrepared[invoiceId]
+    if (!prepared) return
+    const text = prepared.fields.map((f) => `${f.label}: ${f.value}`).join('\n')
+    try {
+      await navigator.clipboard.writeText(text)
+      setGibCopyNotice('Alanlar panoya kopyalandı.')
+    } catch {
+      setGibCopyNotice('Kopyalanamadı — alanları elle seçip kopyalayın.')
+    }
+  }
+
+  const confirmGib = async (invoiceId: string) => {
+    const docNumber = (gibDocNumber[invoiceId] || '').trim()
+    if (!docNumber) {
+      setError('GİB Portalı\'ndan aldığınız belge numarasını girin.')
+      return
+    }
+    setBusyInvoiceId(invoiceId)
+    try {
+      await api(`/invoices/${invoiceId}/gib-confirm`, { method: 'POST', body: JSON.stringify({ documentNumber: docNumber }) })
+      setNotice('Belge numarası kaydedildi — fatura kesildi olarak işaretlendi.')
+      setGibPrepared((m) => { const n = { ...m }; delete n[invoiceId]; return n })
+      const inv = await api('/invoices')
+      setInvoices(inv.data || [])
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Onaylanamadı.')
+    } finally {
+      setBusyInvoiceId(null)
+    }
+  }
+
+  const revertGib = async (invoiceId: string) => {
+    setBusyInvoiceId(invoiceId)
+    try {
+      await api(`/invoices/${invoiceId}/gib-revert`, { method: 'POST' })
+      setNotice('Taslağa döndürüldü.')
+      setGibPrepared((m) => { const n = { ...m }; delete n[invoiceId]; return n })
+      const inv = await api('/invoices')
+      setInvoices(inv.data || [])
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Taslağa döndürülemedi.')
     } finally {
       setBusyInvoiceId(null)
     }
@@ -627,75 +729,124 @@ export default function FaturalamaTahsilatPaneli() {
               </SectionCard>
 
               <SectionCard
-                title="e-Belge entegratörü"
-                subtitle="e-SMM / e-Fatura / e-Arşiv, sizin entegratörünüz üzerinden gönderilir — bu sizin kendi Paraşüt/NES/QNB eSolutions/Logo hesabınızdır, Notya'nın değil. 'Genel REST' ve 'Paraşüt' gerçek çalışır bağlantılardır (Paraşüt: çapraz kaynaklı, Paraşüt'ün kendi birincil dokümantasyonu bu oturumdan erişilemedi — bkz. CHECKLIST.md). NES / QNB eSolutions / Logo için kontrol listesi: lib/accounting/ebelge/CHECKLIST.md."
+                title="Hekim türü ve belge gönderim yöntemi"
+                subtitle="Bu iki seçim, ürünün sizin için göstereceği belge hazırlık akışını belirler — ikisi birden sunulmaz."
               >
-                <Field label="Entegratör">
-                  <select style={inputStyle} value={ebelgeVendor} onChange={(e) => setEbelgeVendor(e.target.value as any)}>
-                    <option value="generic_rest">Genel REST (gerçek, sandbox uyumlu)</option>
-                    <option value="parasut">Paraşüt (gerçek — e-SMM/e-Arşiv; e-Fatura henüz yok)</option>
-                    <option value="nes">NES (henüz uygulanmadı)</option>
-                    <option value="qnb_esolutions">QNB eSolutions (henüz uygulanmadı)</option>
-                    <option value="logo">Logo (henüz uygulanmadı)</option>
-                    <option value="other">Diğer (henüz uygulanmadı)</option>
+                <Field label="Hekim türü">
+                  <select style={inputStyle} value={doctorType} onChange={(e) => void changeDoctorType(e.target.value as any)}>
+                    <option value="serbest_meslek">Serbest meslek (bireysel) — e-SMM</option>
+                    <option value="sirket">Şirket (Ltd / AŞ) — e-Fatura / e-Arşiv</option>
                   </select>
                 </Field>
-                <Field label="Ortam">
-                  <select style={inputStyle} value={ebelgeEnv} onChange={(e) => setEbelgeEnv(e.target.value as any)}>
-                    <option value="test">Test</option>
-                    <option value="live">Canlı</option>
-                  </select>
-                </Field>
-                {ebelgeVendor === 'parasut' ? (
-                  <>
-                    <Field label="API Adresi (v4) — örn. https://api.parasut.com/v4">
-                      <input style={inputStyle} value={ebelgeFields.apiBaseUrl || ''} onChange={(e) => setEbelgeFields({ ...ebelgeFields, apiBaseUrl: e.target.value })} />
-                    </Field>
-                    <Field label="OAuth Token Adresi (Paraşüt Geliştirici Paneli'nden)">
-                      <input style={inputStyle} value={ebelgeFields.tokenUrl || ''} onChange={(e) => setEbelgeFields({ ...ebelgeFields, tokenUrl: e.target.value })} />
-                    </Field>
-                    <Field label="Client ID">
-                      <input style={inputStyle} value={ebelgeFields.clientId || ''} onChange={(e) => setEbelgeFields({ ...ebelgeFields, clientId: e.target.value })} />
-                    </Field>
-                    <Field label="Client Secret">
-                      <input style={inputStyle} type="password" value={ebelgeFields.clientSecret || ''} onChange={(e) => setEbelgeFields({ ...ebelgeFields, clientSecret: e.target.value })} />
-                    </Field>
-                    <Field label="Paraşüt E-posta">
-                      <input style={inputStyle} value={ebelgeFields.username || ''} onChange={(e) => setEbelgeFields({ ...ebelgeFields, username: e.target.value })} />
-                    </Field>
-                    <Field label="Paraşüt Şifre">
-                      <input style={inputStyle} type="password" value={ebelgeFields.password || ''} onChange={(e) => setEbelgeFields({ ...ebelgeFields, password: e.target.value })} />
-                    </Field>
-                    <Field label="Şirket No (company_id)">
-                      <input style={inputStyle} value={ebelgeFields.companyId || ''} onChange={(e) => setEbelgeFields({ ...ebelgeFields, companyId: e.target.value })} />
-                    </Field>
-                  </>
-                ) : (
-                  <>
-                    <Field label="Servis Adresi (URL)">
-                      <input style={inputStyle} value={ebelgeFields.baseUrl || ''} onChange={(e) => setEbelgeFields({ ...ebelgeFields, baseUrl: e.target.value })} />
-                    </Field>
-                    <Field label="API Anahtarı">
-                      <input style={inputStyle} type="password" value={ebelgeFields.apiKey || ''} onChange={(e) => setEbelgeFields({ ...ebelgeFields, apiKey: e.target.value })} />
-                    </Field>
-                  </>
-                )}
-                <div style={{ display: 'flex', gap: 10 }}>
-                  <button style={buttonStyle} onClick={() => void saveEbelge()}>
-                    Kaydet
-                  </button>
-                  <button style={{ ...buttonStyle, background: '#fff', color: TEAL, border: `1px solid ${TEAL}` }} onClick={() => void testEbelge()}>
-                    Bağlantıyı test et
-                  </button>
+                <div style={{ fontSize: 12.5, color: MUTED, marginBottom: 14 }}>
+                  Bu modda kesilecek belge türü: <strong>{doctorType === 'sirket' ? 'e-Fatura / e-Arşiv' : 'e-SMM'}</strong>
+                  {doctorType === 'sirket'
+                    ? ' — serbest meslek erbabı için zorunlu e-SMM burada sunulmaz.'
+                    : ' — serbest meslek erbabı yasal olarak e-SMM kesmek zorundadır; e-Fatura/e-Arşiv ancak şirket üzerinden fatura kesildiğinde geçerlidir.'}
                 </div>
-                {testResult && <div style={{ fontSize: 13, marginTop: 8, color: MUTED }}>{testResult}</div>}
-                {ebelgeStatus && (
-                  <div style={{ fontSize: 12.5, marginTop: 10, color: MUTED }}>
-                    Kayıtlı: {EBELGE_VENDOR_LABELS[ebelgeStatus.vendor] || ebelgeStatus.vendor} ({ENVIRONMENT_LABELS[ebelgeStatus.environment] || ebelgeStatus.environment}) —
-                    alanlar: {formatMaskedFields(ebelgeStatus.maskedFields)}
-                  </div>
-                )}
+                <Field label="Belge gönderim yöntemi">
+                  <select style={inputStyle} value={ebelgeMode} onChange={(e) => void changeEbelgeMode(e.target.value as any)}>
+                    <option value="gib_portal">GİB Portalı (ücretsiz — varsayılan)</option>
+                    <option value="integrator">API entegratörü (isteğe bağlı — Paraşüt, Nilvera vb.)</option>
+                  </select>
+                </Field>
+                <div style={{ fontSize: 11.5, color: MUTED }}>
+                  Her iki yöntemde de belgenin yasal düzenleyicisi sizsiniz — Notya yalnızca verileri hazırlar, hiçbir belgeyi kendi adına kesmez.
+                </div>
               </SectionCard>
+
+              {ebelgeMode === 'gib_portal' ? (
+                <SectionCard
+                  title="GİB Portalı — ücretsiz, varsayılan yöntem"
+                  subtitle="Entegratör gerekmez, abonelik ücreti yoktur."
+                >
+                  <div style={{ fontSize: 13, color: INK, marginBottom: 10 }}>
+                    Belgeler, zaten bu yükümlülük için sahip olmanız gereken e-imza/mali mühür ile{' '}
+                    <a href={GIB_PORTAL_LINK} target="_blank" rel="noreferrer" style={{ color: TEAL }}>
+                      GİB'in kendi portalı
+                    </a>{' '}
+                    üzerinden (earsivportal.efatura.gov.tr) sizin tarafınızdan elle kesilir. Notya; tutar, KDV ve (e-SMM için) stopajı
+                    hesaplar ve portala girilecek sırayla kopyalanabilir alanlar hazırlar — "Faturalar" sekmesinde bir taslağı
+                    "Hazırla" dediğinizde bu alanları görürsünüz. Belgeyi kestikten sonra GİB'in verdiği belge numarasını buraya
+                    yapıştırırsınız; Notya onu faturanıza bağlar.
+                  </div>
+                  <div style={{ fontSize: 11.5, color: MUTED }}>
+                    GİB Portalı'nın kendisi bir API sunmaz — giriş yalnızca web formu üzerinden, elle yapılır; bu yüzden Notya
+                    burada otomatik gönderim yapamaz, yalnızca rakamları hazırlar.
+                  </div>
+                </SectionCard>
+              ) : (
+                <SectionCard
+                  title="e-Belge entegratörü (isteğe bağlı)"
+                  subtitle="e-SMM / e-Fatura / e-Arşiv, sizin entegratörünüz üzerinden gönderilir — bu sizin kendi Paraşüt/Nilvera/NES/QNB eSolutions/Logo hesabınızdır, Notya'nın değil. 'Genel REST' ve 'Paraşüt' gerçek çalışır bağlantılardır (Paraşüt: çapraz kaynaklı, Paraşüt'ün kendi birincil dokümantasyonu bu oturumdan erişilemedi — bkz. CHECKLIST.md). NES / QNB eSolutions / Logo için kontrol listesi: lib/accounting/ebelge/CHECKLIST.md."
+                >
+                  <Field label="Entegratör">
+                    <select style={inputStyle} value={ebelgeVendor} onChange={(e) => setEbelgeVendor(e.target.value as any)}>
+                      <option value="generic_rest">Genel REST (gerçek, sandbox uyumlu)</option>
+                      <option value="parasut">Paraşüt (gerçek — e-SMM/e-Arşiv; e-Fatura henüz yok)</option>
+                      <option value="nes">NES (henüz uygulanmadı)</option>
+                      <option value="qnb_esolutions">QNB eSolutions (henüz uygulanmadı)</option>
+                      <option value="logo">Logo (henüz uygulanmadı)</option>
+                      <option value="other">Diğer (henüz uygulanmadı)</option>
+                    </select>
+                  </Field>
+                  <Field label="Ortam">
+                    <select style={inputStyle} value={ebelgeEnv} onChange={(e) => setEbelgeEnv(e.target.value as any)}>
+                      <option value="test">Test</option>
+                      <option value="live">Canlı</option>
+                    </select>
+                  </Field>
+                  {ebelgeVendor === 'parasut' ? (
+                    <>
+                      <Field label="API Adresi (v4) — örn. https://api.parasut.com/v4">
+                        <input style={inputStyle} value={ebelgeFields.apiBaseUrl || ''} onChange={(e) => setEbelgeFields({ ...ebelgeFields, apiBaseUrl: e.target.value })} />
+                      </Field>
+                      <Field label="OAuth Token Adresi (Paraşüt Geliştirici Paneli'nden)">
+                        <input style={inputStyle} value={ebelgeFields.tokenUrl || ''} onChange={(e) => setEbelgeFields({ ...ebelgeFields, tokenUrl: e.target.value })} />
+                      </Field>
+                      <Field label="Client ID">
+                        <input style={inputStyle} value={ebelgeFields.clientId || ''} onChange={(e) => setEbelgeFields({ ...ebelgeFields, clientId: e.target.value })} />
+                      </Field>
+                      <Field label="Client Secret">
+                        <input style={inputStyle} type="password" value={ebelgeFields.clientSecret || ''} onChange={(e) => setEbelgeFields({ ...ebelgeFields, clientSecret: e.target.value })} />
+                      </Field>
+                      <Field label="Paraşüt E-posta">
+                        <input style={inputStyle} value={ebelgeFields.username || ''} onChange={(e) => setEbelgeFields({ ...ebelgeFields, username: e.target.value })} />
+                      </Field>
+                      <Field label="Paraşüt Şifre">
+                        <input style={inputStyle} type="password" value={ebelgeFields.password || ''} onChange={(e) => setEbelgeFields({ ...ebelgeFields, password: e.target.value })} />
+                      </Field>
+                      <Field label="Şirket No (company_id)">
+                        <input style={inputStyle} value={ebelgeFields.companyId || ''} onChange={(e) => setEbelgeFields({ ...ebelgeFields, companyId: e.target.value })} />
+                      </Field>
+                    </>
+                  ) : (
+                    <>
+                      <Field label="Servis Adresi (URL)">
+                        <input style={inputStyle} value={ebelgeFields.baseUrl || ''} onChange={(e) => setEbelgeFields({ ...ebelgeFields, baseUrl: e.target.value })} />
+                      </Field>
+                      <Field label="API Anahtarı">
+                        <input style={inputStyle} type="password" value={ebelgeFields.apiKey || ''} onChange={(e) => setEbelgeFields({ ...ebelgeFields, apiKey: e.target.value })} />
+                      </Field>
+                    </>
+                  )}
+                  <div style={{ display: 'flex', gap: 10 }}>
+                    <button style={buttonStyle} onClick={() => void saveEbelge()}>
+                      Kaydet
+                    </button>
+                    <button style={{ ...buttonStyle, background: '#fff', color: TEAL, border: `1px solid ${TEAL}` }} onClick={() => void testEbelge()}>
+                      Bağlantıyı test et
+                    </button>
+                  </div>
+                  {testResult && <div style={{ fontSize: 13, marginTop: 8, color: MUTED }}>{testResult}</div>}
+                  {ebelgeStatus && (
+                    <div style={{ fontSize: 12.5, marginTop: 10, color: MUTED }}>
+                      Kayıtlı: {EBELGE_VENDOR_LABELS[ebelgeStatus.vendor] || ebelgeStatus.vendor} ({ENVIRONMENT_LABELS[ebelgeStatus.environment] || ebelgeStatus.environment}) —
+                      alanlar: {formatMaskedFields(ebelgeStatus.maskedFields)}
+                    </div>
+                  )}
+                </SectionCard>
+              )}
 
               <SectionCard
                 title="Ödeme kuruluşu — iyzico (önerilen)"
@@ -892,55 +1043,131 @@ export default function FaturalamaTahsilatPaneli() {
               </SectionCard>
 
               <SectionCard title="Faturalar" subtitle="Son 100 fatura.">
-                {invoices.map((inv) => (
-                  <div key={inv.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 10px', margin: '0 -10px', borderTop: `1px solid ${BORDER}`, borderRadius: inv.id === highlightInvoiceId ? 10 : 0, background: inv.id === highlightInvoiceId ? '#E4F3F1' : 'transparent', fontSize: 13.5, gap: 10 }}>
-                    <div>
-                      {inv.encounter_id ? '📋 ' : ''}{DOC_TYPE_LABELS[inv.doc_type] || inv.doc_type.toUpperCase()} — {INVOICE_STATUS_LABELS[inv.status] || inv.status} {inv.ebelge_doc_number ? `(${inv.ebelge_doc_number})` : ''}
-                      {inv.ebelge_last_error && <div style={{ color: WARN, fontSize: 11.5 }}>{inv.ebelge_last_error}</div>}
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span>{formatTRY(inv.total_kurus)}</span>
-                      <a
-                        href={`/api/accounting/invoices/${inv.id}/pdf`}
-                        target="_blank"
-                        rel="noreferrer"
-                        onClick={(e) => {
-                          // PDF route needs the bearer token too; a plain <a> can't send headers,
-                          // so this opens via a token-bearing fetch + blob URL instead of the bare href.
-                          e.preventDefault()
-                          void (async () => {
-                            try {
-                              const token = getDoctorAccessToken()
-                              const res = await fetch(`/api/accounting/invoices/${inv.id}/pdf`, { headers: { Authorization: `Bearer ${token}` } })
-                              if (!res.ok) { const j = await res.json().catch(() => ({})); throw new Error(j.error || 'PDF oluşturulamadı.') }
-                              const blob = await res.blob()
-                              window.open(URL.createObjectURL(blob), '_blank')
-                            } catch (err) {
-                              setError(err instanceof Error ? err.message : 'PDF oluşturulamadı.')
-                            }
-                          })()
-                        }}
-                        style={{ fontSize: 12, color: TEAL, textDecoration: 'none', border: `1px solid ${TEAL}`, borderRadius: 999, padding: '6px 10px' }}
-                      >
-                        PDF
-                      </a>
-                      {inv.status === 'draft' && (
-                        <button style={{ ...buttonStyle, padding: '6px 10px', fontSize: 12 }} disabled={busyInvoiceId === inv.id} onClick={() => void issueOne(inv.id)}>
-                          Kes
-                        </button>
-                      )}
-                      {(inv.status === 'issued' || inv.status === 'partially_paid') && (
-                        <button
-                          style={{ ...buttonStyle, padding: '6px 10px', fontSize: 12, background: '#fff', color: TEAL, border: `1px solid ${TEAL}` }}
-                          disabled={busyInvoiceId === inv.id}
-                          onClick={() => void chargeOne(inv.id)}
+                {invoices.map((inv) => {
+                  const isGibPending = inv.status === 'pending_issue' && inv.ebelge_vendor === 'gib_portal'
+                  const prepared = gibPrepared[inv.id]
+                  return (
+                  <div key={inv.id} style={{ padding: '8px 10px', margin: '0 -10px', borderTop: `1px solid ${BORDER}`, borderRadius: inv.id === highlightInvoiceId ? 10 : 0, background: inv.id === highlightInvoiceId ? '#E4F3F1' : 'transparent', fontSize: 13.5 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
+                      <div>
+                        {inv.encounter_id ? '📋 ' : ''}{DOC_TYPE_LABELS[inv.doc_type] || inv.doc_type.toUpperCase()} — {INVOICE_STATUS_LABELS[inv.status] || inv.status} {inv.ebelge_doc_number ? `(${inv.ebelge_doc_number})` : ''}
+                        {inv.ebelge_last_error && <div style={{ color: WARN, fontSize: 11.5 }}>{inv.ebelge_last_error}</div>}
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span>{formatTRY(inv.total_kurus)}</span>
+                        <a
+                          href={`/api/accounting/invoices/${inv.id}/pdf`}
+                          target="_blank"
+                          rel="noreferrer"
+                          onClick={(e) => {
+                            // PDF route needs the bearer token too; a plain <a> can't send headers,
+                            // so this opens via a token-bearing fetch + blob URL instead of the bare href.
+                            e.preventDefault()
+                            void (async () => {
+                              try {
+                                const token = getDoctorAccessToken()
+                                const res = await fetch(`/api/accounting/invoices/${inv.id}/pdf`, { headers: { Authorization: `Bearer ${token}` } })
+                                if (!res.ok) { const j = await res.json().catch(() => ({})); throw new Error(j.error || 'PDF oluşturulamadı.') }
+                                const blob = await res.blob()
+                                window.open(URL.createObjectURL(blob), '_blank')
+                              } catch (err) {
+                                setError(err instanceof Error ? err.message : 'PDF oluşturulamadı.')
+                              }
+                            })()
+                          }}
+                          style={{ fontSize: 12, color: TEAL, textDecoration: 'none', border: `1px solid ${TEAL}`, borderRadius: 999, padding: '6px 10px' }}
                         >
-                          Ödeme bağlantısı
-                        </button>
-                      )}
+                          PDF
+                        </a>
+                        {inv.status === 'draft' && (
+                          <button style={{ ...buttonStyle, padding: '6px 10px', fontSize: 12 }} disabled={busyInvoiceId === inv.id} onClick={() => void issueOne(inv.id)}>
+                            {ebelgeMode === 'gib_portal' ? 'Hazırla' : 'Kes'}
+                          </button>
+                        )}
+                        {isGibPending && (
+                          <button style={{ ...buttonStyle, padding: '6px 10px', fontSize: 12 }} disabled={busyInvoiceId === inv.id} onClick={() => void issueOne(inv.id)}>
+                            {prepared ? 'Yeniden hazırla' : 'Alanları görüntüle'}
+                          </button>
+                        )}
+                        {(inv.status === 'issued' || inv.status === 'partially_paid') && (
+                          <button
+                            style={{ ...buttonStyle, padding: '6px 10px', fontSize: 12, background: '#fff', color: TEAL, border: `1px solid ${TEAL}` }}
+                            disabled={busyInvoiceId === inv.id}
+                            onClick={() => void chargeOne(inv.id)}
+                          >
+                            Ödeme bağlantısı
+                          </button>
+                        )}
+                      </div>
                     </div>
+
+                    {inv.status === 'draft' && ebelgeMode === 'gib_portal' && inv.doc_type === 'esmm' && (
+                      <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11.5, color: MUTED, marginTop: 6 }}>
+                        <input
+                          type="checkbox"
+                          checked={!!gibBuyerKurumsal[inv.id]}
+                          onChange={(e) => setGibBuyerKurumsal((m) => ({ ...m, [inv.id]: e.target.checked }))}
+                        />
+                        Alıcı kurumsal/tüzel bir ödeyici (nadir — işaretlenirse GVK md. 94 stopajı hesaplanır)
+                      </label>
+                    )}
+
+                    {isGibPending && (
+                      <div style={{ marginTop: 10, padding: 12, borderRadius: 10, background: '#F7F4EC', border: `1px solid ${BORDER}` }}>
+                        {!prepared ? (
+                          <div style={{ fontSize: 12.5, color: MUTED }}>Alanları görmek için "Alanları görüntüle"ye tıklayın.</div>
+                        ) : (
+                          <>
+                            <div style={{ fontSize: 12, color: MUTED, marginBottom: 8 }}>
+                              GİB Portalı'na girilecek alanlar — sırayla:
+                            </div>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2px 14px', marginBottom: 10 }}>
+                              {prepared.fields.map((f, i) => (
+                                <React.Fragment key={i}>
+                                  <div style={{ fontSize: 12, color: MUTED }}>{f.label}</div>
+                                  <div style={{ fontSize: 12.5, color: INK, fontWeight: 600, wordBreak: 'break-word' }}>{f.value}</div>
+                                </React.Fragment>
+                              ))}
+                            </div>
+                            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
+                              <button style={{ ...buttonStyle, padding: '6px 12px', fontSize: 12 }} onClick={() => void copyGibFields(inv.id)}>
+                                Kopyala
+                              </button>
+                              <a
+                                href={GIB_PORTAL_LINK}
+                                target="_blank"
+                                rel="noreferrer"
+                                style={{ fontSize: 12, color: TEAL, textDecoration: 'none', border: `1px solid ${TEAL}`, borderRadius: 999, padding: '6px 12px', display: 'inline-flex', alignItems: 'center' }}
+                              >
+                                GİB Portalı'nı Aç
+                              </a>
+                              {gibCopyNotice && <span style={{ fontSize: 11.5, color: TEAL, alignSelf: 'center' }}>{gibCopyNotice}</span>}
+                            </div>
+                            <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                              <input
+                                style={{ ...inputStyle, width: 220 }}
+                                placeholder="GİB belge numarası"
+                                value={gibDocNumber[inv.id] || ''}
+                                onChange={(e) => setGibDocNumber((m) => ({ ...m, [inv.id]: e.target.value }))}
+                              />
+                              <button style={buttonStyle} disabled={busyInvoiceId === inv.id} onClick={() => void confirmGib(inv.id)}>
+                                Onayla
+                              </button>
+                              <button
+                                style={{ ...buttonStyle, background: '#fff', color: WARN, border: `1px solid ${WARN}` }}
+                                disabled={busyInvoiceId === inv.id}
+                                onClick={() => void revertGib(inv.id)}
+                              >
+                                Vazgeç (taslağa dön)
+                              </button>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    )}
                   </div>
-                ))}
+                  )
+                })}
                 {!invoices.length && <div style={{ color: MUTED, fontSize: 13 }}>Henüz fatura yok.</div>}
               </SectionCard>
             </>

@@ -1,12 +1,47 @@
 # e-Belge adapter completion checklist
 
-Status (2026-10-15 update): **2 of 5 registered adapters are real** (`generic_rest`, and now
-`parasut` — BEST-EFFORT/cross-referenced, `esmm`+`earsiv` only, `efatura` deliberately throws
-pending buyer-PK capture; see the 2026-10-15 Paraşüt section below). `nes`, `qnb_esolutions`,
-`logo` are still stubs — they implement `EbelgeAdapter` and throw `AdapterNotImplementedError`
-with a pointer here instead of a fabricated request/response shape. `other` is a deliberate
-placeholder for whatever integrator a practice names in the wizard's "Other" option — it stays a
-stub until a real adapter is written for that specific vendor.
+## 2026-10-16 update — GİB Portalı is now the default MVP path; this whole directory is optional
+
+**Everything below this point describes the OPTIONAL `integrator` e-belge mode**
+(`accounting_module_settings.ebelgeMode === 'integrator'`). As of 2026-10-16
+(NOTYA-ACCOUNTING-GIB-PORTAL-01), the **default** mode is `gib_portal`: Notya computes
+amount/KDV/(for e-SMM) stopaj and renders a copy-ready field list for GİB's own free portal
+(earsivportal.efatura.gov.tr) — the doctor issues the real document themselves there and pastes
+the resulting document number back into Notya. See `lib/accounting/ebelge/gibPortal.ts` and
+`lib/accounting/invoices/engine.ts`'s `prepareGibPortalInvoice`/`confirmGibPortalIssuance`. This
+path:
+
+- Requires **zero** rows in `accounting_ebelge_credentials` and **zero** entries from this
+  directory's adapter registry — `getEbelgeAdapter()` is never called.
+- Costs the doctor **nothing** beyond the e-imza/mali mühür they already must have for this
+  legal obligation — no integrator subscription.
+- Is the reason **Paraşüt moved from "the one real adapter a doctor must connect" to "one optional
+  provider among several"** — it was shipped as a hard dependency of the issuance flow in the
+  previous round (2026-10-15) without ever being round-tripped against a live sandbox, and it
+  forced every doctor to hold their own separate Paraşüt subscription just to issue documents.
+  That dependency is removed; `parasut.ts` is unchanged code-wise and still a real, working
+  adapter for a doctor who explicitly switches to `ebelgeMode: 'integrator'` and wants API
+  automation instead of manual GİB Portalı entry — it is simply never required and never the
+  default now.
+
+The `EbelgeAdapter` interface itself (this directory) was **already a generic, pluggable
+integrator contract** before this pass — nothing about its shape needed to change to make it
+"optional"; only the invoice engine's branch-on-`ebelgeMode` and the module settings' default
+needed to change (see `docs/ARCH-NOTYA-ACCOUNTING.md` §4.11). A future lightweight, low-volume
+entegratör (Nilvera or similar — re-checked 2026-10-15 below and found to have no public
+self-serve API at that time, so not built yet) plugs into this exact same interface as a new
+optional provider whenever one becomes reachable, same as Paraşüt did.
+
+---
+
+Status (2026-10-15 update, for the optional `integrator` mode only): **2 of 5 registered
+adapters are real** (`generic_rest`, and now `parasut` — BEST-EFFORT/cross-referenced,
+`esmm`+`earsiv` only, `efatura` deliberately throws pending buyer-PK capture; see the 2026-10-15
+Paraşüt section below). `nes`, `qnb_esolutions`, `logo` are still stubs — they implement
+`EbelgeAdapter` and throw `AdapterNotImplementedError` with a pointer here instead of a
+fabricated request/response shape. `other` is a deliberate placeholder for whatever integrator a
+practice names in the wizard's "Other" option — it stays a stub until a real adapter is written
+for that specific vendor.
 
 ## Generic protocol (what `generic_rest.ts` actually implements, for reference)
 

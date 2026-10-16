@@ -30,6 +30,15 @@ describe('accounting/invoices/stateMachine', () => {
     assert.equal(nextInvoiceStatus('issue_failed', 'edit_draft'), 'draft')
   })
 
+  it('allows abandoning a GİB Portalı prepare back to draft', () => {
+    assert.equal(nextInvoiceStatus('pending_issue', 'abandon_prepare'), 'draft')
+  })
+
+  it('rejects abandoning a prepare that is not actually pending', () => {
+    assert.throws(() => nextInvoiceStatus('draft', 'abandon_prepare'), InvalidInvoiceTransitionError)
+    assert.throws(() => nextInvoiceStatus('issued', 'abandon_prepare'), InvalidInvoiceTransitionError)
+  })
+
   it('walks cancel path from issued', () => {
     let s = nextInvoiceStatus('issued', 'request_cancel')
     assert.equal(s, 'cancel_pending')
