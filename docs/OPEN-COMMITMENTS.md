@@ -4000,3 +4000,10 @@ Kayıt kesintisiz -> durdur -> **Ekleri Ekle** (sürükle-bırak / dosya / kamer
 | MUAYENE-EKLERI-05 | 2026-10-16 | OPEN | Maliyet izleme: her ek 1 sınıflandırma (yalnız emin değilse AI) + 1 değerlendirme çağrısı; günlük `ek` kotası 300 (`lib/doktor/hizLimiti.ts`). `ai_token_kullanim` görev 'goruntu-inceleme'/'klinik-analiz' ile ilk hafta izlenmeli; sık "yeniden değerlendir" ve 12 ek sınırı kullanımı bakılacak. | Kaan |
 | MUAYENE-EKLERI-06 | 2026-10-16 | OPEN | Kapsam dışı / yapılmadı: sesli yükleme (`ses-yukle`) yolunda ek adımı yok (yalnız canlı kayıt/yazı akışı); önce-sonra fotoğraflar arası karşılaştırma yok (her foto ayrı gözlem); lab satırlarının `lab_satirlar`a yazımı mevcut lab onay akışında kalır (burada yazılmaz); Belgeler sayfasında "değerlendirilemedi" ekler için yeniden-dene düğmesi yok (yalnız bu ekranda); kullanıcıya özel bayrak yok (tek global env). | Claude next |
 
+
+## WHATSAPP-META-01 — Meta business verification blocks production WhatsApp (2026-10-16)
+- Status: BLOCKED, waits on Kaan (no registered legal entity / EIN yet; company not formed).
+- Needed before real doctors can connect: business verification, Tech Provider status, App Review (whatsapp_business_management + whatsapp_business_messaging), app icon, privacy policy URL https://www.notya.io/kvkk, publish app.
+- Done already: Meta app "Notya" (1129698619396523), Embedded Signup config, Vercel env vars, webhook endpoint /api/whatsapp/webhook (fails closed until all env vars are set), migration 169, code on main.
+- Not blocked: dev-mode testing with app-role users and the Meta test number; the code path stays dormant for real doctors.
+- Resume when: entity exists. Claude then drafts App Review answers, reviewer instructions and the screen-recording script.
