@@ -6,6 +6,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { encryptPII, decryptPII } from '@/lib/security/encryption'
 import type { SmsAyar } from './tipler'
+import { gatewayUrlDogrula } from './gatewayUrl'
 
 export async function smsAyarGetir(supabase: SupabaseClient, doktorId: string): Promise<SmsAyar | null> {
   let data: Record<string, any> | null = null
@@ -43,10 +44,12 @@ export type SmsAyarGirdisi = {
 export class SmsAyarHatasi extends Error {}
 
 export async function smsAyarKaydet(supabase: SupabaseClient, doktorId: string, girdi: SmsAyarGirdisi): Promise<void> {
-  const tabanUrl = String(girdi.tabanUrl || '').trim()
+  let tabanUrl = String(girdi.tabanUrl || '').trim()
   const kullaniciAdi = String(girdi.kullaniciAdi || '').trim()
   if (girdi.aktif) {
-    if (!/^https?:\/\//i.test(tabanUrl)) throw new SmsAyarHatasi('Geçerli bir adres girin (http:// veya https:// ile başlamalı).')
+    const url = gatewayUrlDogrula(tabanUrl)
+    if (!url.ok) throw new SmsAyarHatasi(url.hata)
+    tabanUrl = url.url // canonical form (no trailing slash)
     if (!kullaniciAdi) throw new SmsAyarHatasi('Kullanıcı adı zorunludur.')
   }
   const satir: Record<string, unknown> = {

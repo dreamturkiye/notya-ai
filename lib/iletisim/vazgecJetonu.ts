@@ -23,6 +23,11 @@ function imza(gizli: string, doktorId: string, patientId: string, kanal: string)
   return createHmac('sha256', gizli).update(`vazgec:${doktorId}|${patientId}|${kanal}`).digest('base64url')
 }
 
+/** true when unsubscribe links can be signed — callers check this BEFORE sending anything that must carry one. */
+export function vazgecAnahtariVarMi(): boolean {
+  return gizliAnahtar() !== null
+}
+
 /** null when the secret is not configured — the e-mail then carries no unsubscribe link (and so must not be sent — see kampanya.ts). */
 export function vazgecJetonu(doktorId: string, patientId: string, kanal: IletisimKanali, gizli?: string): string | null {
   const g = gizliAnahtar(gizli)

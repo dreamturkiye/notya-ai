@@ -11,6 +11,7 @@
  * Always answers 200 (a gateway retries aggressively on anything else) — failures are logged, not surfaced.
  */
 import { NextRequest, NextResponse } from 'next/server'
+import { createHash, timingSafeEqual } from 'crypto'
 import { servisSupabase } from '@/lib/doktor/serverAuth'
 import { decryptPII, decrypt } from '@/lib/security/encryption'
 import { vazgecKelimesiMi } from '@/lib/iletisim/vazgecJetonu'
@@ -20,6 +21,13 @@ import { whatsappNumarasi } from '@/lib/iletisim/baglantilar'
 export const dynamic = 'force-dynamic'
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+/** Constant-time secret comparison (hash both sides so differing lengths do not leak via early exit). */
+function sirEsitMi(gelen: string, beklenen: string): boolean {
+  const a = createHash('sha256').update(gelen).digest()
+  const b = createHash('sha256').update(beklenen).digest()
+  return timingSafeEqual(a, b)
+}
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ doktorId: string }> }) {
   const { doktorId } = await params
@@ -36,7 +44,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ dok
   let beklenenSir = ''
   try { beklenenSir = decryptPII(ayar.webhook_sirri_encrypted) } catch { return NextResponse.json({ ok: true }) }
   const gelenSir = req.headers.get('x-notya-webhook-secret') || ''
-  if (!beklenenSir || gelenSir !== beklenenSir) return NextResponse.json({ ok: true })
+  if (!beklenenSir || !gelenSir || !sirEsitMi(gelenSir, beklenenSir)) return NextResponse.json({ ok: true })
 
   const govde = (await req.json().catch(() => null)) as Record<string, unknown> | null
   if (!govde) return NextResponse.json({ ok: true })

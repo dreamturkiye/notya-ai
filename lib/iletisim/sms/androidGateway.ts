@@ -7,15 +7,20 @@
  * { message, phoneNumbers: [E.164] } → 200/201 { id, state } on accept. Never throws.
  */
 import type { SmsAyar } from './tipler'
+import { gatewayUrlDogrula } from './gatewayUrl'
 
 const ISTEK_ZAMAN_ASIMI_MS = 15_000
 
 export async function androidGatewayGonder(ayar: SmsAyar, aliciE164: string, metin: string): Promise<{ ok: true; saglayiciMesajId?: string } | { ok: false; hata: string }> {
+  // Re-checked at send time: a URL saved before the SSRF guard existed must not be called.
+  const adres = gatewayUrlDogrula(ayar.tabanUrl)
+  if (!adres.ok) return { ok: false, hata: 'Gateway adresi güvenli değil (herkese açık https adresi gerekir).' }
   const kontrolcu = new AbortController()
   const zamanlayici = setTimeout(() => kontrolcu.abort(), ISTEK_ZAMAN_ASIMI_MS)
   try {
-    const yanit = await fetch(`${ayar.tabanUrl}/message`, {
+    const yanit = await fetch(`${adres.url}/message`, {
       method: 'POST',
+      redirect: 'error', // a public host must not be able to bounce the request to an internal address
       signal: kontrolcu.signal,
       headers: {
         'Content-Type': 'application/json',
@@ -39,10 +44,13 @@ export async function androidGatewayGonder(ayar: SmsAyar, aliciE164: string, met
 
 /** Ayarlar "Bağlantıyı test et" — same call, a 1-recipient no-op is not possible on every build, so this just checks the base URL answers auth, not that an SMS left. */
 export async function androidGatewayBaglantiTest(ayar: SmsAyar): Promise<{ ok: true } | { ok: false; hata: string }> {
+  const adres = gatewayUrlDogrula(ayar.tabanUrl)
+  if (!adres.ok) return { ok: false, hata: adres.hata }
   const kontrolcu = new AbortController()
   const zamanlayici = setTimeout(() => kontrolcu.abort(), ISTEK_ZAMAN_ASIMI_MS)
   try {
-    const yanit = await fetch(`${ayar.tabanUrl}/health`, {
+    const yanit = await fetch(`${adres.url}/health`, {
+      redirect: 'error',
       signal: kontrolcu.signal,
       headers: { Authorization: `Basic ${Buffer.from(`${ayar.kullaniciAdi}:${ayar.sifre}`).toString('base64')}` },
     })

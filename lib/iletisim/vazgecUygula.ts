@@ -3,7 +3,7 @@
  * gates on (lib/iletisim/izin.ts) to false, and logs it exactly like any other consent change
  * (iletisim_izin_kayitlari, kaynak = 'vazgecme'). Called from the public unsubscribe link
  * (app/api/iletisim/vazgec/[jeton]/route.ts) and the inbound SMS STOP/DUR webhook
- * (app/api/iletisim/sms/webhook/route.ts). Idempotent — opting out twice is a no-op, not an error.
+ * (app/api/iletisim/sms/webhook/[doktorId]/route.ts). Idempotent — opting out twice is a no-op, not an error.
  */
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { IletisimKanali } from './tipler'
