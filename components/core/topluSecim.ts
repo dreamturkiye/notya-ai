@@ -94,10 +94,34 @@ export function topluGovde(oneriler: TopluOneri[], secili: Record<string, boolea
   }
 }
 
+/**
+ * Copy shown by the batch card's gating UI. Turkish is the default (the Türkiye product is untouched);
+ * a country build passes its own object (see docs/OPEN-COMMITMENTS.md TOPLU-ULKE-01). Never hardcode
+ * these strings back into the component, and never translate field labels here — field labels (`etiket`)
+ * and required-field keys (`zorunlu`) come from each build's own action definitions.
+ */
+export interface TopluMetin {
+  hazir: (n: number) => string
+  eksikli: (n: number) => string
+  uyariBekleyen: (n: number) => string
+  dugme: (parcalar: string[]) => string
+  eksikAciklama: string
+  seciliEksik: (alanlar: string[]) => string
+}
+
+export const TOPLU_METIN_TR: TopluMetin = {
+  hazir: (n) => `${n} hazır`,
+  eksikli: (n) => `${n} kayıtta eksik alan var`,
+  uyariBekleyen: (n) => `${n} kayıtta uyarı onayı bekliyor`,
+  dugme: (parcalar) => `Seçilenleri kaydet (${parcalar.join(', ')})`,
+  eksikAciklama: 'Eksik alan var — aşağıya siz girin; doldurulmadan bu kayıt eklenmez. Ayşe bu alanları tahmin etmedi.',
+  seciliEksik: (alanlar) => `Seçili — ${alanlar.join(', ')} girilince eklenecek.`,
+}
+
 /** Button label: says how many are ready and how many still need fields. */
-export function dugmeMetni(s: TopluSayim): string {
-  const parca = [`${s.hazir} hazır`]
-  if (s.eksikli) parca.push(`${s.eksikli} kayıtta eksik alan var`)
-  if (s.uyariBekleyen) parca.push(`${s.uyariBekleyen} kayıtta uyarı onayı bekliyor`)
-  return `Seçilenleri kaydet (${parca.join(', ')})`
+export function dugmeMetni(s: TopluSayim, m: TopluMetin = TOPLU_METIN_TR): string {
+  const parca = [m.hazir(s.hazir)]
+  if (s.eksikli) parca.push(m.eksikli(s.eksikli))
+  if (s.uyariBekleyen) parca.push(m.uyariBekleyen(s.uyariBekleyen))
+  return m.dugme(parca)
 }

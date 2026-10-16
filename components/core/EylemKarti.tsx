@@ -23,7 +23,7 @@ import React, { useMemo, useState } from 'react'
 // NOTYA-ASISTAN-YUZEN-01: next/link — kart asistan oturumunun içinde; tam sayfa yüklemesi oturumu öldürürdü.
 import Link from 'next/link'
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth'
-import { baslangicSecimi, ciddiVarMi, dugmeMetni, eksikAlanlar, sayim, topluGovde, type TopluDuzeltme } from './topluSecim'
+import { baslangicSecimi, ciddiVarMi, dugmeMetni, eksikAlanlar, sayim, topluGovde, TOPLU_METIN_TR, type TopluDuzeltme, type TopluMetin } from './topluSecim'
 
 export interface EylemAlan {
   anahtar: string
@@ -375,11 +375,14 @@ export function EylemToplu({
   hasta,
   tokenAl = ensureDoctorAccessToken,
   onSonuc,
+  metin = TOPLU_METIN_TR,
 }: {
   oneriler: EylemOneriGorunumu[]
   hasta: EylemHasta
   tokenAl?: () => Promise<string | null>
   onSonuc?: (d: { kaydedilen: number }) => void
+  /** Gating-UI copy; Turkish by default, a country build passes its own (topluSecim.ts TopluMetin). */
+  metin?: TopluMetin
 }) {
   // BUG FIX (2026-10-16): rows with missing required fields used to be `disabled` with no way to fill
   // them, so the whole batch was stuck. Rows are always tickable now; missing fields get inline inputs
@@ -446,7 +449,7 @@ export function EylemToplu({
                 {(o.zorunlu || []).some((k) => !String(o.veri?.[k] ?? '').trim()) && !r?.ok ? (
                   <div style={{ display: 'grid', gap: 6, marginTop: 4 }}>
                     <div style={{ ...kucuk, color: '#8A5A12' }}>
-                      Eksik alan var — aşağıya siz girin; doldurulmadan bu kayıt eklenmez. Ayşe bu alanları tahmin etmedi.
+                      {metin.eksikAciklama}
                     </div>
                     {(o.zorunlu || [])
                       .filter((k) => !String(o.veri?.[k] ?? '').trim())
@@ -476,7 +479,7 @@ export function EylemToplu({
                           </label>
                         )
                       })}
-                    {secili[o.id] && eksik.length ? <div style={{ ...kucuk, color: '#8A5A12' }}>Seçili — {eksik.map((k) => o.alanlar.find((a) => a.anahtar === k)?.etiket || k).join(', ')} girilince eklenecek.</div> : null}
+                    {secili[o.id] && eksik.length ? <div style={{ ...kucuk, color: '#8A5A12' }}>{metin.seciliEksik(eksik.map((k) => o.alanlar.find((a) => a.anahtar === k)?.etiket || k))}</div> : null}
                   </div>
                 ) : null}
                 {r ? <div style={{ ...kucuk, color: r.ok ? '#1E7A3E' : '#B42318' }}>{r.ok ? 'Kaydedildi' : r.hata}</div> : null}
@@ -488,7 +491,7 @@ export function EylemToplu({
       {durum !== 'bitti' ? (
         <div style={{ marginTop: 10, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <button type="button" onClick={kaydet} disabled={durum === 'kaydediliyor' || !say.hazir} style={{ ...birincil, opacity: !say.hazir ? 0.5 : 1 }}>
-            {durum === 'kaydediliyor' ? 'Kaydediliyor…' : dugmeMetni(say)}
+            {durum === 'kaydediliyor' ? 'Kaydediliyor…' : dugmeMetni(say, metin)}
           </button>
         </div>
       ) : null}

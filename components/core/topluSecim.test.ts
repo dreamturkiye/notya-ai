@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
-import { baslangicSecimi, dugmeMetni, eksikAlanlar, hazirMi, sayim, topluGovde, type TopluOneri } from './topluSecim'
+import { baslangicSecimi, dugmeMetni, eksikAlanlar, hazirMi, sayim, topluGovde, TOPLU_METIN_TR, type TopluMetin, type TopluOneri } from './topluSecim'
 
 const alanlar = [
   { anahtar: 'ilac_adi', etiket: 'İlaç' },
@@ -57,5 +57,43 @@ describe('topluSecim', () => {
   it('button label states ready and needs-fields counts', () => {
     assert.equal(dugmeMetni({ secilen: 3, hazir: 1, eksikli: 2, uyariBekleyen: 0 }), 'Seçilenleri kaydet (1 hazır, 2 kayıtta eksik alan var)')
     assert.equal(dugmeMetni({ secilen: 0, hazir: 0, eksikli: 0, uyariBekleyen: 0 }), 'Seçilenleri kaydet (0 hazır)')
+  })
+})
+
+/** NOTYA-ULKE-PARITE: the six country builds (us gb ca au nz uz) carry this same card, so the gating must not
+ *  depend on Turkish field keys or Turkish copy. */
+describe('topluSecim — country builds', () => {
+  const EN: TopluMetin = {
+    hazir: (n) => `${n} ready`,
+    eksikli: (n) => `${n} with missing fields`,
+    uyariBekleyen: (n) => `${n} awaiting warning acknowledgement`,
+    dugme: (p) => `Save selected (${p.join(', ')})`,
+    eksikAciklama: 'Required fields are empty. Enter them below.',
+    seciliEksik: (a) => `Selected — will be added once ${a.join(', ')} is filled in.`,
+  }
+  const enAlanlar = [
+    { anahtar: 'drug_name', etiket: 'Drug' },
+    { anahtar: 'dose', etiket: 'Dose' },
+    { anahtar: 'frequency', etiket: 'Frequency' },
+  ]
+  const enZorunlu = ['drug_name', 'dose', 'frequency']
+  const enEksik: TopluOneri = { id: 'x', alanlar: enAlanlar, zorunlu: enZorunlu, veri: { drug_name: 'Metformin' } }
+
+  it('gating works for any required-field keys, not just ilac_adi/doz/kullanim_sikli', () => {
+    assert.deepEqual(eksikAlanlar(enEksik), ['dose', 'frequency'])
+    assert.deepEqual(baslangicSecimi([enEksik]), { x: false })
+    const g = topluGovde([enEksik], { x: true }, { x: { dose: '500 mg', frequency: 'twice daily' } }, {})
+    assert.deepEqual(g.oneriIdler, ['x'])
+    assert.deepEqual(g.duzeltmeler, { x: { dose: '500 mg', frequency: 'twice daily' } })
+  })
+  it('an incomplete ticked row is never sent', () => {
+    assert.deepEqual(topluGovde([enEksik], { x: true }, {}, {}).oneriIdler, [])
+  })
+  it('button copy comes from the injected strings; Turkish stays the default', () => {
+    const s = sayim([enEksik], { x: true }, {}, {})
+    assert.equal(dugmeMetni(s, EN), 'Save selected (0 ready, 1 with missing fields)')
+    assert.equal(dugmeMetni(s), dugmeMetni(s, TOPLU_METIN_TR))
+    assert.match(dugmeMetni(s), /^Seçilenleri kaydet/)
+    assert.doesNotMatch(dugmeMetni(s, EN), /[çğıöşüÇĞİÖŞÜ]/)
   })
 })
