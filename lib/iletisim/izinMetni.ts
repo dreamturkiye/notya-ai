@@ -8,16 +8,21 @@ import type { IletisimKanali } from './tipler'
 export const IZIN_METNI: Record<IletisimKanali, string> = {
   whatsapp: 'Randevu ve bilgilendirme mesajlarının WhatsApp ile gönderilmesine izin veriyorum.',
   eposta: 'Randevu ve bilgilendirme mesajlarının e-posta ile gönderilmesine izin veriyorum.',
+  // NOTYA-HASTA-ILETISIMI-01: same scope as whatsapp/eposta (randevu + bilgilendirme only — never
+  // clinical content) — this is the one checkbox that opens the SMS channel for both the one-tap/
+  // bulk flows and the stock-arrival notice. Existing-patient relationship, not cold marketing.
+  sms: 'Randevu ve bilgilendirme mesajlarının SMS ile gönderilmesine izin veriyorum.',
 }
 
 /** Small print under the checkboxes (KVKK açık rıza scope). */
 export const IZIN_ACIKLAMASI =
-  'Bu mesajlar yalnızca randevu ve bilgilendirme içindir; tanı, tahlil sonucu veya ilaç bilgisi içermez. İzninizi dilediğiniz zaman geri alabilirsiniz.'
+  'Bu mesajlar yalnızca randevu ve bilgilendirme içindir; tanı, tahlil sonucu veya ilaç bilgisi içermez. İzninizi dilediğiniz zaman geri alabilirsiniz (e-postadaki "Aboneliği bırak" bağlantısı veya SMS\'e "DUR" yanıtı).'
 
 /** Intake field ids (hasta bilgi formu › Onay). */
 export const IZIN_ALANI: Record<IletisimKanali, string> = {
   whatsapp: 'iletisimIzniWhatsapp',
   eposta: 'iletisimIzniEposta',
+  sms: 'iletisimIzniSms',
 }
 
 /** The one option of each consent line — ticked = consent. */
@@ -28,6 +33,7 @@ export function intakeIzinleri(yanitlar: Record<string, unknown>): Record<Iletis
   return {
     whatsapp: yanitlar[IZIN_ALANI.whatsapp] === IZIN_EVET,
     eposta: yanitlar[IZIN_ALANI.eposta] === IZIN_EVET,
+    sms: yanitlar[IZIN_ALANI.sms] === IZIN_EVET,
   }
 }
 

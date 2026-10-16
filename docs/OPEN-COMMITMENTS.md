@@ -3821,3 +3821,112 @@ gaps.
 | ASI-STOK-INTL-01 | 2026-10-16 | DONE | Phase 2 research + reusable country-pack data layer for AU/CA/GB/NZ/US/UZ — barcode format, digital-registry existence, lot-tracking law, each cited with a confidence level. See `docs/ASI-STOK-INTL-01-research.md` and `lib/asi/stok/intl/ulkePaketleri.ts`. 9 new tests. | Nobody — researched and tested |
 | ASI-STOK-INTL-02 | 2026-10-16 | PENDING | No release/<cc> branch wired yet. AU is the best Phase-3 candidate (AIR is real, national, API-reachable and legally mandatory) — building an `enabiz.ts`-style "ready but not live" AIR package generator against `release/au` is the natural next step. CA/GB/US need a specific jurisdiction (province/devolved nation/state) chosen first since all three are structurally fragmented; NZ's NIR submission mechanism and UZ's FHIR IG workflow need their MODERATE research gaps closed before any export code is written against them. | Claude next (or Kaan, if a specific country should be prioritized) |
 | ASI-STOK-INTL-03 | 2026-10-16 | OPEN | Two specific research gaps flagged rather than guessed: UZ's Asl Belgisi GS1 serialization system was confirmed for "medicines and medical devices" generally, not vaccines by name (BEST-EFFORT, not VERIFIED); UZ's immunization-specific lot/batch legal record-keeping requirement has no citable source at all (UNCONFIRMED, no claim made). Also NZ's HISO 10063 GS1 Standards document body and its NIR's mandatory-reporting status were not independently fetched (MODERATE). | Claude next, if a UZ or NZ rollout is prioritized |
+
+## NOTYA-HASTA-ILETISIMI-01 — Hasta İletişimi (bulk patient communication), Phase 1: Türkiye (universal, every branş + Klinik) + Phase 2: 6-country consent research (Claude, 2026-10-16, branch `feat/hasta-iletisimi-bulk`)
+
+Classification per `.cursor/skills/specialty-doktor-araclari/SKILL.md`: **base** — identical for every
+branş, `ORTAK_DOKTOR_ARACLARI` (`lib/doktor/doktorAraclari.ts`). No specialty gate anywhere in this
+feature; this was the brief's own framing and nothing in the build argued otherwise.
+
+**Phase 1 (Türkiye) — DONE, real, not a stub.** Audience → template/compose → preview → send, under
+`/doktor-tools/hasta-iletisimi`, reusing every piece of existing infrastructure the brief asked for
+instead of inventing new ones: the existing doctor's-own-account e-mail sender (`lib/iletisim/otomatik/eposta`),
+the existing per-channel KVKK consent model (`lib/iletisim/izin.ts`, now widened to a third channel, SMS),
+the existing `pratikOturum()` permission resolution (doktor + personel/sekreter get the SAME full access —
+there is no separate DB "asistan" role to reuse, `personel.rol` only allows `'sekreter'`, documented as
+that explicit classification decision in migration 166's own comments), and the existing patient table/
+encryption/isolation conventions. New, real pieces: a pluggable SMS sender interface
+(`lib/iletisim/sms/gonderici.ts`) with one working adapter — **android-sms-gateway**
+(github.com/capcom6/android-sms-gateway, MIT, free, NOT Twilio, NOT any paid per-message API, consistent
+with Kaan's standing no-Twilio decision already on record for GOZ-SMS-RECALL/DERM-SMS-RECALL) — plus an
+honest semi-automated manual-list fallback when no gateway is connected, stated plainly in both the code
+comments and the UI (never oversold as "sent" when it was only prepared); an idempotent bulk-send engine
+(`lib/iletisim/toplu/kampanya.ts`) with TWO real Postgres unique-constraint guards (campaign-level
+`idempotency_key`, recipient-level `(kampanya_id, patient_id, kanal)`) — not a read-then-write race; a
+real unsubscribe link (HMAC-signed, `lib/iletisim/vazgecJetonu.ts`) in every bulk e-mail footer and a real
+inbound SMS STOP/DUR/İPTAL webhook (`app/api/iletisim/sms/webhook/[doktorId]/route.ts`), both flipping the
+SAME consent column every send already gates on — opt-out is enforced where recipients are selected, not
+a UI checkbox a retry could skip; a vaccine-stock-arrival trigger wired into the REAL stock system merged
+to `main` (`app/api/doktor/asi-stok/route.ts` now returns `sifirdanGeldi`/`bekleyenSayisi`, and
+`entegrasyonlar/asi-stok`'s page shows a real "Bekleyen ailelere bildir" banner that pre-fills this
+screen — not a mock); and a bulk-communication consent checkbox added to the EXISTING intake form +
+invitation-email system (`lib/intake/coreAlanlar.ts`'s universal Onay section, reused — not a new form —
+across all 30 branş + Klinik, since it lives in the shared core fields every intake form renders),
+captured from intake onward for every new patient, not only asked at send time (coordinator's Addition 1).
+
+**Mid-build correction incorporated, not treated as a separate patch** (coordinator, 2026-10-16): the
+legal framing was corrected to existing-patient-relationship messaging (appointment reminders,
+stock-arrival notices, general clinic info to the doctor's OWN patients), not cold marketing to
+prospects — this changed how the Phase 2 per-country research below was read (existing-business-
+relationship exemptions, not the strict new-marketing-consent bar), while real consent capture and
+respect for it stayed explicitly required regardless, which Phase 1 already built. Two additions were
+folded in: (1) intake-time consent capture, described above; (2) a real, durable, send-layer-enforced
+unsubscribe/opt-out mechanism, described above.
+
+**Verified before calling Phase 1 done**: `tsc --noEmit` clean; full suite passing (see PR for the exact
+count on top of the accounting GİB-Portalı merge this branch picked up along the way — `git log` shows
+`0f9f5ef3` already on `main` before this branch started, so no live-agent conflict was found, contrary to
+the brief's caution that one might exist); bulk e-mail sends for real through the doctor's own configured
+mailbox (reuses `lib/iletisim/otomatik/eposta`'s already-tested sender, unchanged); SMS is honestly
+**semi-automated by default, fully automated once a doctor connects an android-sms-gateway instance** —
+the HTTP client is real, working code against that project's documented API contract, but was **not**
+exercised against a live phone in this sandbox (no device available), stated plainly in
+`lib/iletisim/sms/README.md` rather than oversold; doktor and personel/sekreter both get full
+create-and-send access end to end (no `sadeceDoktor` guard on compose/preview/send/history — only on the
+SMS gateway's own credential screen, which is account setup, not a send action); the vaccine-arrival flow
+reads the REAL pre-add lot quantity before `stokEkle` mutates it, so "was this lot at zero" is answered
+correctly and the banner only offers itself when there both was a stockout AND there are real waiting
+patients; double-send protection was verified by reasoning through both unique constraints (not yet
+exercised with a live concurrent-request test — see HASTA-ILETISIMI-03 below); every bulk read/write is
+`doctor_id`-scoped the same way the rest of this codebase is, reviewed and classified in
+`hastaIzolasyonEnvanteri.ts` (six new `I()` entries, same precedent as `ASI-STOK-03`/`ASI-ONAM-03`).
+
+**Phase 2 (6 non-Turkey countries) — DONE as cited research + a reusable, localized consent-wording data
+layer; no release/<cc> branch touched**, same shape and same honest scoping as `ASI-STOK-INTL-01`/
+`ASI-ONAM-INTL-01` before it. `docs/HASTA-ILETISIMI-INTL-01-research.md` has real, cited research per
+country on unsolicited bulk patient SMS/e-mail rules, read for their EXISTING-patient-relationship
+treatment per the coordinator's correction: **US** (TCPA, 47 U.S.C. §227/47 C.F.R. §64.1200 — the 2015
+healthcare treatment-purpose exemption is real but deliberately NOT relied on, because this engine's
+free-text body doesn't meet its content/length/frequency conditions; consent is the basis used instead);
+**GB** (PECR soft opt-in for existing customers, plus the single most important cross-cutting finding of
+this research — the ICO's purpose-and-tone marketing test has NO de-minimis carve-out, so one promotional
+line inside an otherwise-informational message, e.g. this product's own "beklediğiniz aşı stoğumuza
+geldi… randevu alabilirsiniz" preset, risks reclassifying the WHOLE message as marketing); **CA** (CASL
+s.6-7/10(9)-10(10) — a real 2-year existing-business-relationship implied-consent window exists but is
+not relied on, express intake consent is simpler and safer); **AU** (Spam Act 2003 s.16, inferred consent
+from an existing relationship — BEST-EFFORT on exact scope, not VERIFIED to a specific duration the way
+CASL's is); **NZ** (Unsolicited Electronic Messages Act 2007 — same structure and same BEST-EFFORT
+caveat as AU); **UZ** (a genuinely NEW, dated finding, not an assumption: a 2026-07-16 government
+announcement confirms consent for promotional SMS becomes a legal requirement from 1 November 2026 —
+existing-customer and informational-message carve-outs are both explicitly UNCONFIRMED, so UZ gets the
+SAME no-exemption-claimed treatment as every other country). **The one finding that matters most for
+every country at once**: because none of the six regimes cleanly exempt informational/service content in
+a bright-line way, this feature does not try to classify which of its own message types would count as
+"service" in which jurisdiction — it requires real per-channel opt-in consent, logs its provenance, and
+enforces revocation at the sending layer everywhere, which is compliant under every regime regardless of
+how any one message would ultimately be classified. This means the bulk-send ENGINE itself
+(`lib/iletisim/toplu/kampanya.ts`, `lib/iletisim/izin.ts`, `lib/iletisim/vazgecJetonu.ts`) needed **zero**
+country-specific code — only intake WORDING differs, which is what Phase 2 actually produced:
+`lib/iletisim/toplu/intl/ulkeIzinMetinleri.ts`, one `IletisimIzinUlkePaketi` per country, composed (not
+translated word-for-word from the Turkish line, per the coordinator's explicit instruction) to match each
+country's own disclosure norm — US's "message frequency varies, msg & data rates may apply" STOP
+convention, GB/CA/AU/NZ's plain consent-plus-opt-out phrasing, and UZ's Uzbek-language (uz-Latn) wording
+that frames the checkbox itself as the "written or electronic consent" the new 2026 rule requires. 11 new
+tests (`lib/iletisim/toplu/intl/ulkeIzinMetinleri.test.ts`) prove all six packs are populated, genuinely
+distinct from each other (not copy-pasted across the five English-speaking countries), carry no clinical
+content, and each name their opt-out mechanism.
+
+**Not done / honestly deferred**: no release/<cc> branch was touched — the country consent-wording packs
+live on the shared trunk only; see the table below for every itemized gap, same transparency standard as
+every other Phase-2-only feature in this file.
+
+| Item | Date | Status | What / why | Waits on |
+|---|---|---|---|---|
+| HASTA-ILETISIMI-01 | 2026-10-16 | DONE | Phase 1 (Türkiye) — universal bulk SMS/e-mail engine, idempotent send, real opt-out enforced at the send layer, vaccine-stock-arrival trigger wired into the real stock system, intake-time consent capture. 4 new test files added. `tsc --noEmit` clean, full suite passing. | Nobody — code is real and tested |
+| HASTA-ILETISIMI-02 | 2026-10-16 | PENDING | No `release/<cc>` branch wired yet for Phase 2 — only the cited research doc + the localized consent-wording data layer exist on the shared trunk. Porting `lib/intake/coreAlanlar.ts`'s Onay section (and the consent intake flow) to read from `lib/iletisim/toplu/intl/ulkeIzinMetinleri.ts` on each of `release/au`/`release/ca`/`release/gb`/`release/nz`/`release/us`/`release/uz` is separate follow-on work — the engine itself needs no per-country change, only the intake UI's wording source. | Claude next (or Kaan, if a specific country should be prioritized) |
+| HASTA-ILETISIMI-03 | 2026-10-16 | OPEN | Cross-doctor isolation for the 6 new API routes (bulk onizleme/gonder/gecmis/sms-ayarlari, the SMS STOP webhook, the public unsubscribe link) was classified via the lighter `hastaIzolasyonEnvanteri.ts` `I()` entries with a written mechanism per route, not added to the heavy `hasta-izolasyon.test.ts` cross-doctor regression harness — same precedent and reasoning as `ASI-STOK-03`/`ASI-ONAM-03`. The idempotency guard's two unique constraints were also reasoned through rather than exercised with a live concurrent-double-submit test. | Claude next (low priority — the `I()` entries and the constraint logic are reviewed and correct today, but a live concurrency test would be a stronger proof) |
+| HASTA-ILETISIMI-04 | 2026-10-16 | PENDING | The SMS adapter (`lib/iletisim/sms/androidGateway.ts`) is real, working client code against android-sms-gateway's documented HTTP contract, but has never been exercised against a live phone/app instance — no device was available in this sandbox. The first real send should be watched once by a doctor or Kaan before relying on it unattended; the UI/README already say this plainly rather than overselling "fully automated." | A doctor (or Kaan) with an Android phone to install the gateway app on and do one supervised test send |
+| HASTA-ILETISIMI-INTL-01 | 2026-10-16 | DONE | Phase 2 per-country consent-law research (US/GB/CA/AU/NZ/UZ), read for the existing-patient-relationship case per the coordinator's correction, each cited. See `docs/HASTA-ILETISIMI-INTL-01-research.md` and the resulting localized-wording data layer `lib/iletisim/toplu/intl/ulkeIzinMetinleri.ts`. 11 new tests. | Nobody — researched and tested |
+| HASTA-ILETISIMI-INTL-02 | 2026-10-16 | PENDING | Same gap as HASTA-ILETISIMI-02 above, named separately because it's specifically the Phase-2 half: the per-country consent WORDING data layer is not wired into any `release/<cc>` branch's actual intake form yet. | Claude next (or Kaan, if a specific country should be prioritized) |
+| HASTA-ILETISIMI-INTL-03 | 2026-10-16 | OPEN | Two specific research gaps flagged rather than guessed: AU's and NZ's existing-relationship inferred-consent provisions are confirmed to exist (BEST-EFFORT) but no fixed time window was found for either, unlike CASL's explicit 2 years (VERIFIED); UZ's new Nov-2026 consent rule's exact presidential-resolution number was not available from the fetched source, and whether it exempts existing customers or plain informational messages is UNCONFIRMED either way, so UZ was deliberately given no exemption claim at all. | Claude next, if a specific country's legal posture needs tightening before that country's rollout |
+| HASTA-ILETISIMI-INTL-04 | 2026-10-16 | OPEN | UZ's intake wording (`uz-Latn`, Uzbek Latin script) was composed to match the legal finding above but was NOT cross-checked against whatever locale convention `release/uz`'s own existing patient-facing copy already uses — flagged so whoever wires HASTA-ILETISIMI-INTL-02 checks that branch's convention first rather than assuming this file's choice is already aligned with it. | Claude next, when release/uz wiring is prioritized |

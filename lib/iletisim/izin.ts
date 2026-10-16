@@ -11,7 +11,7 @@
  * Only `true` opens a channel. Unknown is treated like "no" — the send button explains it in plain
  * words and offers the one-tap mark, which records who marked it and when.
  */
-import { whatsappNumarasi, epostaAdresi } from './baglantilar'
+import { whatsappNumarasi, epostaAdresi, smsNumarasi } from './baglantilar'
 import type { IletisimKanali } from './tipler'
 
 export type IzinDegeri = boolean | null
@@ -29,13 +29,28 @@ export type HastaIletisimBilgisi = {
   eposta?: string | null
   izinWhatsapp?: IzinDegeri
   izinEposta?: IzinDegeri
+  /** NOTYA-HASTA-ILETISIMI-01 */
+  izinSms?: IzinDegeri
+}
+
+function adresGetir(h: HastaIletisimBilgisi, kanal: IletisimKanali): string | null {
+  if (kanal === 'whatsapp') return whatsappNumarasi(h.telefon)
+  if (kanal === 'sms') return smsNumarasi(h.telefon)
+  return epostaAdresi(h.eposta)
+}
+
+function izinGetir(h: HastaIletisimBilgisi, kanal: IletisimKanali): IzinDegeri {
+  if (kanal === 'whatsapp') return h.izinWhatsapp ?? null
+  if (kanal === 'sms') return h.izinSms ?? null
+  return h.izinEposta ?? null
 }
 
 export function kanalDurumu(h: HastaIletisimBilgisi, kanal: IletisimKanali): KanalDurumu {
-  const adres = kanal === 'whatsapp' ? whatsappNumarasi(h.telefon) : epostaAdresi(h.eposta)
+  const adres = adresGetir(h, kanal)
   if (!adres) return 'adres_yok'
-  const izin = kanal === 'whatsapp' ? h.izinWhatsapp : h.izinEposta
-  return izin === true ? 'hazir' : 'izin_yok'
+  // Opt-out (unsubscribe link / STOP-DUR reply) flips this SAME column to false — enforced here,
+  // at the one place every send (one-tap AND bulk) asks "can this channel be used".
+  return izinGetir(h, kanal) === true ? 'hazir' : 'izin_yok'
 }
 
 export function gonderilebilirMi(h: HastaIletisimBilgisi, kanal: IletisimKanali): boolean {
@@ -56,7 +71,7 @@ export function onerilenKanal(h: HastaIletisimBilgisi, sonKanal?: IletisimKanali
 /** Plain-Turkish line under a channel that cannot be used yet. */
 export function kanalAciklamasi(d: KanalDurumu, kanal: IletisimKanali): string {
   if (d === 'hazir') return ''
-  if (d === 'adres_yok') return kanal === 'whatsapp' ? 'Hastanın kayıtlı telefonu yok.' : 'Hastanın kayıtlı e-posta adresi yok.'
+  if (d === 'adres_yok') return kanal === 'eposta' ? 'Hastanın kayıtlı e-posta adresi yok.' : 'Hastanın kayıtlı telefonu yok.'
   return 'Hasta iletişim izni vermedi.'
 }
 
