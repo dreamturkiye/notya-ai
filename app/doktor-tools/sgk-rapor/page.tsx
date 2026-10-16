@@ -27,6 +27,16 @@ import {
   istirahatBitisTarihi,
   type CocukRaporTipiId,
 } from '@/lib/doktor/cocukHastaRaporlari'
+import {
+  COZGER_DURUMLARI,
+  COZGER_DUZEYLERI,
+  COZGER_GECERLILIK_TIPLERI,
+  COZGER_UYARI_METNI,
+  cozgerYenilemeUyarisiGerekliMi,
+  type CozgerDurum,
+  type CozgerDuzey,
+  type CozgerGecerlilikTipi,
+} from '@/lib/doktor/cozgerTakip'
 
 export default function SgkRaporPage() {
   const [hastaId, setHastaId] = useState('')
@@ -618,6 +628,10 @@ export default function SgkRaporPage() {
         {cocukBrans === true && (
           <CocukHastaRaporlariBolumu hastaId={hastaId} hastaLabel={hastaLabel} onError={setError} />
         )}
+
+        {cocukBrans === true && (
+          <CozgerTakipBolumu hastaId={hastaId} hastaLabel={hastaLabel} onError={setError} />
+        )}
       </div>
 
       <style>{`
@@ -854,6 +868,310 @@ function CocukHastaRaporlariBolumu({
             </button>
           </div>
         </div>
+      )}
+    </div>
+  )
+}
+
+type CozgerTakipKaydi = {
+  durum: CozgerDurum
+  kurum_adi: string | null
+  basvuru_tarihi: string | null
+  heyet_tarihi: string | null
+  sonuc_duzeyi: CozgerDuzey | null
+  sonuc_tarihi: string | null
+  gecerlilik_tipi: CozgerGecerlilikTipi | null
+  gecerlilik_bitis_tarihi: string | null
+  rapor_no: string | null
+  not_metni: string | null
+}
+
+/**
+ * NOTYA-COZGER-TAKIP-01 — ÇÖZGER sürecine takip (Pediatri / Çocuk Cerrahisi only, Çocuk Hasta
+ * Raporları ile AYNI ekran — brief: "do not create a separate top-level section"). Notya resmi
+ * ÇÖZGER raporu ÜRETMEZ; bu bölüm sadece bu hekimin kendi hastasının süreç durumunu takip eder ve
+ * aileye verilecek bir yönlendirme notu üretir (COZGER_UYARI_METNI her zaman görünür).
+ */
+function CozgerTakipBolumu({
+  hastaId,
+  hastaLabel,
+  onError,
+}: {
+  hastaId: string
+  hastaLabel: string
+  onError: (m: string) => void
+}) {
+  const [takip, setTakip] = useState<CozgerTakipKaydi | null>(null)
+  const [yukleniyor, setYukleniyor] = useState(false)
+  const [kaydediliyor, setKaydediliyor] = useState(false)
+  const [pdfIndiriliyor, setPdfIndiriliyor] = useState(false)
+  const [kurumAdiTaslak, setKurumAdiTaslak] = useState('')
+  const [basvuruTarihiTaslak, setBasvuruTarihiTaslak] = useState(new Date().toISOString().slice(0, 10))
+
+  const yukle = async (id: string) => {
+    setYukleniyor(true)
+    try {
+      const token = await getAccessTokenAsync()
+      const r = await fetch(`/api/doktor/araclar/cozger-takip?hastaId=${encodeURIComponent(id)}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      const j = await r.json().catch(() => ({}))
+      if (!r.ok) { onError(String(j.error || 'ÇÖZGER takip kaydı alınamadı.')); return }
+      setTakip((j as { takip: CozgerTakipKaydi | null }).takip || null)
+    } catch {
+      onError('Sunucu hatası. Tekrar deneyin.')
+    } finally {
+      setYukleniyor(false)
+    }
+  }
+
+  useEffect(() => {
+    setTakip(null)
+    if (hastaId) void yukle(hastaId)
+  }, [hastaId])
+
+  const basvuruBaslat = async () => {
+    if (!hastaId) { onError('Lütfen hasta seçin.'); return }
+    setKaydediliyor(true)
+    onError('')
+    try {
+      const token = await getAccessTokenAsync()
+      const r = await fetch('/api/doktor/araclar/cozger-takip', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ hastaId, kurumAdi: kurumAdiTaslak, basvuruTarihi: basvuruTarihiTaslak }),
+      })
+      const j = await r.json().catch(() => ({}))
+      if (!r.ok) { onError(String(j.error || 'Takip başlatılamadı.')); return }
+      setTakip((j as { takip: CozgerTakipKaydi }).takip)
+    } catch {
+      onError('Sunucu hatası. Tekrar deneyin.')
+    } finally {
+      setKaydediliyor(false)
+    }
+  }
+
+  const alanGuncelle = async (alanlar: Record<string, unknown>) => {
+    if (!hastaId) return
+    setKaydediliyor(true)
+    onError('')
+    try {
+      const token = await getAccessTokenAsync()
+      const r = await fetch('/api/doktor/araclar/cozger-takip', {
+        method: 'PATCH',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ hastaId, ...alanlar }),
+      })
+      const j = await r.json().catch(() => ({}))
+      if (!r.ok) { onError(String(j.error || 'Güncellenemedi.')); return }
+      setTakip((j as { takip: CozgerTakipKaydi }).takip)
+    } catch {
+      onError('Sunucu hatası. Tekrar deneyin.')
+    } finally {
+      setKaydediliyor(false)
+    }
+  }
+
+  const notuIndir = async () => {
+    if (!hastaId) return
+    setPdfIndiriliyor(true)
+    onError('')
+    try {
+      const token = await getAccessTokenAsync()
+      const res = await fetch('/api/doktor/araclar/cozger-takip/pdf', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ hastaId }),
+      })
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}))
+        onError(String((d as { error?: string }).error || 'Not indirilemedi.'))
+        return
+      }
+      const blob = await res.blob()
+      const a = document.createElement('a')
+      a.href = URL.createObjectURL(blob)
+      a.download = 'cozger-yonlendirme-notu.pdf'
+      a.click()
+      URL.revokeObjectURL(a.href)
+    } catch {
+      onError('Not indirilemedi. Tekrar deneyin.')
+    } finally {
+      setPdfIndiriliyor(false)
+    }
+  }
+
+  const yenilemeUyarisi =
+    !!takip && cozgerYenilemeUyarisiGerekliMi(takip.gecerlilik_tipi, takip.gecerlilik_bitis_tarihi)
+
+  return (
+    <div style={{ ...toolsCard, marginTop: 20 }} className="no-print">
+      <div style={{ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', fontSize: 14, color: '#6d6055', marginBottom: 4 }}>
+        Hasta Raporları
+      </div>
+      <h2 style={{ margin: '0 0 4px', fontSize: 20, color: CHROME_RENK.ink, fontWeight: 650 }}>ÇÖZGER Takip</h2>
+      <div style={{ ...toolsErrorBox, background: '#FFF7E6', borderColor: '#D9B35C', color: CHROME_RENK.ink, marginBottom: 14, fontSize: 12.5, lineHeight: 1.5 }}>
+        {COZGER_UYARI_METNI}
+      </div>
+
+      {!hastaId ? (
+        <div style={{ fontSize: 13, color: CHROME_RENK.muted, marginBottom: 14 }}>
+          Önce yukarıdan bir hasta seçin.
+        </div>
+      ) : (
+        <div style={{ fontSize: 13, color: CHROME_RENK.muted, marginBottom: 14 }}>
+          Hasta: <strong style={{ color: CHROME_RENK.ink }}>{hastaLabel || '—'}</strong>
+        </div>
+      )}
+
+      {hastaId && yukleniyor && (
+        <div style={{ fontSize: 13, color: CHROME_RENK.muted }}>Yükleniyor…</div>
+      )}
+
+      {hastaId && !yukleniyor && !takip && (
+        <>
+          <label style={toolsLabel}>Yönlendirilen Kurum (opsiyonel)</label>
+          <input
+            type="text"
+            value={kurumAdiTaslak}
+            onChange={(e) => setKurumAdiTaslak(e.target.value)}
+            placeholder="Örn. … Devlet Hastanesi Çocuk Sağlık Kurulu"
+            style={{ ...toolsInput, marginBottom: 14 }}
+          />
+          <label style={toolsLabel}>Başvuru Tarihi</label>
+          <input
+            type="date"
+            value={basvuruTarihiTaslak}
+            onChange={(e) => setBasvuruTarihiTaslak(e.target.value)}
+            style={{ ...toolsInput, marginBottom: 14 }}
+          />
+          <button type="button" disabled={kaydediliyor} onClick={() => void basvuruBaslat()} style={toolsPrimaryBtn(kaydediliyor)}>
+            {kaydediliyor ? 'Başlatılıyor…' : 'Takibi Başlat'}
+          </button>
+        </>
+      )}
+
+      {hastaId && !yukleniyor && takip && (
+        <>
+          {yenilemeUyarisi && (
+            <div style={{ ...toolsErrorBox, background: '#FDEAEA', borderColor: '#D96C6C', color: '#7A2E2E', marginBottom: 14, fontSize: 12.5 }}>
+              Geçerlilik süresi dolmuş veya 60 gün içinde doluyor — yenileme başvurusu için aileyi bilgilendirin.
+            </div>
+          )}
+
+          <label style={toolsLabel}>Süreç Durumu</label>
+          <select
+            value={takip.durum}
+            onChange={(e) => void alanGuncelle({ durum: e.target.value })}
+            disabled={kaydediliyor}
+            style={{ ...toolsInput, marginBottom: 14 }}
+          >
+            {COZGER_DURUMLARI.map((d) => (
+              <option key={d.id} value={d.id}>{d.etiket}</option>
+            ))}
+          </select>
+
+          <label style={toolsLabel}>Yönlendirilen Kurum</label>
+          <input
+            type="text"
+            defaultValue={takip.kurum_adi || ''}
+            onBlur={(e) => void alanGuncelle({ kurumAdi: e.target.value })}
+            placeholder="Örn. … Devlet Hastanesi Çocuk Sağlık Kurulu"
+            style={{ ...toolsInput, marginBottom: 14 }}
+          />
+
+          <div style={{ display: 'flex', gap: 12, marginBottom: 14, flexWrap: 'wrap' }}>
+            <div style={{ flex: 1, minWidth: 180 }}>
+              <label style={toolsLabel}>Başvuru Tarihi</label>
+              <input
+                type="date"
+                defaultValue={takip.basvuru_tarihi || ''}
+                onBlur={(e) => void alanGuncelle({ basvuruTarihi: e.target.value })}
+                style={{ ...toolsInput, width: '100%', boxSizing: 'border-box' }}
+              />
+            </div>
+            <div style={{ flex: 1, minWidth: 180 }}>
+              <label style={toolsLabel}>Heyet Tarihi</label>
+              <input
+                type="date"
+                defaultValue={takip.heyet_tarihi || ''}
+                onBlur={(e) => void alanGuncelle({ heyetTarihi: e.target.value })}
+                style={{ ...toolsInput, width: '100%', boxSizing: 'border-box' }}
+              />
+            </div>
+          </div>
+
+          <label style={toolsLabel}>Sonuç Düzeyi (oran YAZILMAZ — madde 8/f)</label>
+          <select
+            value={takip.sonuc_duzeyi || ''}
+            onChange={(e) => void alanGuncelle({ sonucDuzeyi: e.target.value })}
+            disabled={kaydediliyor}
+            style={{ ...toolsInput, marginBottom: 14 }}
+          >
+            <option value="">— Henüz sonuçlanmadı —</option>
+            {COZGER_DUZEYLERI.map((d) => (
+              <option key={d} value={d}>{d}</option>
+            ))}
+          </select>
+
+          {takip.sonuc_duzeyi && (
+            <>
+              <label style={toolsLabel}>Sonuç Tarihi</label>
+              <input
+                type="date"
+                defaultValue={takip.sonuc_tarihi || ''}
+                onBlur={(e) => void alanGuncelle({ sonucTarihi: e.target.value })}
+                style={{ ...toolsInput, marginBottom: 14 }}
+              />
+
+              <label style={toolsLabel}>Rapor No (sistem numarası — madde 8/ğ)</label>
+              <input
+                type="text"
+                defaultValue={takip.rapor_no || ''}
+                onBlur={(e) => void alanGuncelle({ raporNo: e.target.value })}
+                style={{ ...toolsInput, marginBottom: 14 }}
+              />
+
+              <label style={toolsLabel}>Geçerlilik</label>
+              <select
+                value={takip.gecerlilik_tipi || ''}
+                onChange={(e) => void alanGuncelle({ gecerlilikTipi: e.target.value })}
+                disabled={kaydediliyor}
+                style={{ ...toolsInput, marginBottom: 14 }}
+              >
+                <option value="">— Belirtilmedi —</option>
+                {COZGER_GECERLILIK_TIPLERI.map((t) => (
+                  <option key={t} value={t}>{t === 'sureli' ? 'Süreli' : 'Sürekli'}</option>
+                ))}
+              </select>
+
+              {takip.gecerlilik_tipi === 'sureli' && (
+                <>
+                  <label style={toolsLabel}>Geçerlilik Bitiş Tarihi</label>
+                  <input
+                    type="date"
+                    defaultValue={takip.gecerlilik_bitis_tarihi || ''}
+                    onBlur={(e) => void alanGuncelle({ gecerlilikBitisTarihi: e.target.value })}
+                    style={{ ...toolsInput, marginBottom: 14 }}
+                  />
+                </>
+              )}
+            </>
+          )}
+
+          <label style={toolsLabel}>Not (opsiyonel)</label>
+          <textarea
+            defaultValue={takip.not_metni || ''}
+            onBlur={(e) => void alanGuncelle({ notMetni: e.target.value })}
+            rows={3}
+            maxLength={2000}
+            style={{ ...toolsInput, width: '100%', boxSizing: 'border-box', minHeight: 72, resize: 'vertical', marginBottom: 14 }}
+          />
+
+          <button type="button" disabled={pdfIndiriliyor} onClick={() => void notuIndir()} style={{ ...toolsPrimaryBtn(pdfIndiriliyor), background: '#6D4C2B' }}>
+            {pdfIndiriliyor ? 'Hazırlanıyor…' : '⬇ Aileye Yönlendirme Notu (PDF)'}
+          </button>
+        </>
       )}
     </div>
   )
