@@ -3946,3 +3946,12 @@ Kaan's country-parity rule (2026-10-16). The hardening on main (fix/hasta-iletis
 - **Waits on Claude (when the feature itself is ported — HASTA-ILETISIMI-02 on main).** The bulk feature must land in `release/ca` already carrying the hardening (never the pre-hardening version), with: strings through the country pack (English; Uzbek for uz), the country's own phone normalisation instead of the Turkish `cepTelefonu` rules, per-language SMS opt-out keywords (STOP/UNSUBSCRIBE/etc.; Uzbek equivalents for uz), consent wording from `lib/iletisim/toplu/intl/ulkeIzinMetinleri.ts`, and the SMS gateway/android-gateway adapter re-checked for the country's SMS rules.
 - **Migrations the country DB will need at that point (NOT applied, nothing needed today):** 166_hasta_iletisimi_toplu.sql then 167_hasta_iletisimi_toplu_devam.sql. 166 depends on `asi_stok_lotlari` (migration 165, absent from this branch's migration set) and `personel`, `patients`, 095 consent tables; apply 165 first or drop that FK for the country (decision for the DB owner). 168 (MBYS) is Turkey-only and exempt.
 - **Waits on Kaan.** Priority/ordering of the bulk-feature port per country; native review of any Uzbek wording once written.
+
+## MOBIL-PERSONEL (country parity) — phone use and staff roles (2026-10-16, owner Claude)
+
+Full audit on `main` / `feature/mobil-personel-erisimi`: `docs/audits/ITEM2-MOBIL-PERSONEL.md`. This build serves the country kit, not the Turkish doctor screens (`/dashboard/doktor` and `/api/doktor/*` are closed by the route gate).
+
+| Date | Item | Owner | Status / what is needed |
+|------|------|-------|-------------------------|
+| 2026-10-16 | **MOBIL-PERSONEL-09 — no Clinical Assistant / Patient Coordinator position.** The clinic-account model has `on-buro` (front desk) with per-doctor grants. Two new positions need new grants and a lawyer of the country (`inceleme.hukukcu`); labels when built: Receptionist, Clinical Assistant, Patient Coordinator. Nothing of the Turkish staff-role code was ported (dead behind the route gate, and it would raise the Turkish-text ceiling) | Kaan + a lawyer | OPEN |
+| 2026-10-16 | **MOBIL-PERSONEL-10 — phone tap-target block not rendered.** `components/ulke/uygulama/uygulama.css` now raises `.uza-dugme-kucuk`, `.yg-arac-cip`, calendar nav and day cells and the region select to 44px at max-width 899px. Reviewed as CSS only; never viewed in a browser, no real phone | Claude | OPEN |
