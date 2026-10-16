@@ -3754,3 +3754,70 @@ commit touches neither of their files, and its own migration (162) was numbered 
 | ACCOUNTING-GIB-06 | 2026-10-16 | OPEN — acknowledged, not done | ACCOUNTING-INTL-04 (above) asks that `lib/accounting/international/portalAdapter.ts` (UZ's own prepare→paste-back path) be reconciled with `lib/accounting/ebelge/gibPortal.ts` behind one shared interface, now that this round has landed. Not done in this same round to avoid a third concurrent-edit pass over `engine.ts`/`FaturalamaTahsilatPaneli.tsx` in the same shared checkout session the international work was already deliberately avoiding. | Claude next — low-risk refactor (two already-similar prepare/paste-back shapes), no urgency |
 | ACCOUNTING-GIB-07 | 2026-10-16 | DONE | `tsc --noEmit` (whole project): clean. Full `npm test` (re-run after merging the international kits and again in an isolated worktree after the shared checkout's HEAD was moved by a concurrent agent mid-verification): 5679 tests, 5679 pass, 0 fail on `feat/accounting-gib-portal` alone. Every accounting test, including the 4 new suites added this round (`accounting/stopaj`, `accounting/module`, `accounting/ebelge/gibPortal`, plus the updated `accounting/invoices/stateMachine`), passes. New test files added to `package.json`'s `test` script (see ACCOUNTING-GIB-08 for the merge-time union with the asi-onam/asi-stok/international additions). | Nobody — verified clean for this round's own scope |
 | ACCOUNTING-GIB-08 | 2026-10-16 | DONE | Merging into `main` conflicted on `package.json`'s `test` script (asi-onam and asi-stok-barkod had each independently appended their own new test files to the same line, from a base predating this round's addition). Resolved as a straight union of all four sessions' additions, duplicates removed, and — closing `ACCOUNTING-INTL-05` in the same edit — also added the two international-module test files (`lib/accounting/international/compliance.test.ts`, `lib/accounting/international/adapters.test.ts`) that no prior round had wired in yet. Re-ran the full suite after merging; see the merge commit's own report. | Nobody — settled |
+| ACCOUNTING-GIB-09 | 2026-10-16 | DONE | `origin/main` moved again (asi-stok-barkod's Phase 2 country research, `39b36a27`) between this round's first and second merge-to-`main` attempts, re-conflicting the same two files (`package.json`, `docs/OPEN-COMMITMENTS.md`). Re-resolved the same way — union of test files (now also including `lib/asi/stok/intl/ulkePaketleri.test.ts`), both commitments sections kept in full. No content lost across either merge round. | Nobody — settled |
+
+## NOTYA-ASI-STOK-BARKOD-01 — Aşı Stok Yönetimi ve Barkod Sistemi: clinic vaccine-lot stock tracking + barcode scan/administration on the muayene screen (Kaan, 2026-10-16, merged to `main` at `2b3f979e`, owner Claude)
+
+**Phase 1 (Türkiye) — DONE, merged to `main`.** New `lib/asi/stok/*` engine: `tipler.ts` (SKT-status
+thresholds), `barkod.ts` (`gs1Coz()` — a dependency-free GS1 Application-Identifier parser for AI
+01/17/10/21/240, matching İTS's GS1 DataMatrix encoding), `motor.ts` (`lotlariListele`, `stokEkle`
+— merges quantity on duplicate barkod, `barkodTara` — SKT status + `engellenir` only when expired,
+`asiUygula` — atomic stock decrement via a new `asi_stok_dekrement()` Postgres RPC mirroring the
+existing `protokol_no_ata()` row-lock pattern, writes the lot snapshot onto the SAME `asilar` row
+used by both muayene note and aşı karnesi with `kaynak_note_id` left NULL so the SOAP-re-sync path
+never touches it, telafi/rollback of stock if the `asilar` insert fails, optional invoice-line add
+reusing `lib/accounting`'s existing `kind:'asi'` catalog match — never blocks the core record on
+invoice failure). Module gating is a genuine doctor-level + specialty-level toggle
+(`asi_stok_modul_ayarlari`, `aktif_override` nullable — NULL means "branş varsayılanı", non-null
+overrides it), default-ON for Pediatri/Aile Hekimliği/Enfeksiyon Hastalıkları/Kadın Hastalıkları ve
+Doğum/Dahiliye and default-OFF-but-doctor-enablable for every other branş — **does not fit the
+classic ORTAK/BRANS binary in `.cursor/skills/specialty-doktor-araclari/SKILL.md`**, which can only
+express "everyone" or "only these branşlar," not "default-on for these branşlar but anyone can
+switch it on." Documented as a genuine third pattern (extending the same per-doctor toggle
+`lib/accounting/module.ts` already uses for Faturalama, with a branş-default layer added) rather
+than forced into the existing two buckets. When off: `AsiStokTarama.tsx` (the muayene-screen
+widget) self-checks the module via API and renders `null` — no dead controls, no leaked UI, same
+seriousness as branş alan sızması. 30 Phase-1 unit tests (GS1 parsing, SKT thresholds, branş-default/
+override resolution, stock add/merge, barcode lookup incl. cross-doctor isolation, `asiUygula` happy
+path + cross-doctor/cross-session isolation + expired-lot block + stock-exhaustion + invoice
+optionality) + the 4 new routes classified in `hastaIzolasyonEnvanteri.ts` (lighter `I()` entries,
+same precedent as `ASI-ONAM-03` below). Full suite 5717/5717 passing, `tsc --noEmit` clean, on top
+of the `asi-onam` merge.
+
+**Phase 2 (6 non-Turkey countries) — DONE as a reusable, cited data layer; no release/<cc> branch
+touched.** `docs/ASI-STOK-INTL-01-research.md` has real, cited research per country (AU/CA/GB/NZ/
+US/UZ, the same 6 `ASI-ONAM-INTL-01`/`ACCOUNTING-INTL-01` independently confirmed) on three
+questions: the vaccine-packaging barcode standard (all six are GS1 or GS1-compatible — the Phase 1
+`gs1Coz()` parser needed zero changes), whether a national digital immunization registry
+equivalent to e-Nabız exists (**AU: yes, real, national, legally mandatory — AIR**; **NZ: yes, real,
+national, mandatory-reporting status unconfirmed — NIR**; **UZ: yes, a real national FHIR
+Implementation Guide with a dedicated immunization model, exact workflow unconfirmed**; **CA: no
+single national one — provincial only**; **US: no single national one — 63 separate state/local
+IISs**; **GB: fragmented by devolved nation — Scotland has a real FHIR API, England a contractual
+reporting duty, no single UK-wide one** — honest per the brief, nothing invented), and the legal
+lot-number record-keeping requirement (**US has the clearest citation of all six: 42 U.S.C.
+§300aa-25(a)**; AU/CA/GB also VERIFIED; NZ MODERATE; **UZ UNCONFIRMED and left that way, no legal
+claim invented**). `lib/asi/stok/intl/ulkePaketleri.ts` registers all 6 as a typed
+`AsiStokUlkePaketi` with every field cited — unlike `ASI-ONAM-01`'s country packs (deliberately
+empty `icerik: []`, because a consent flow needs a vetted per-vaccine content dataset), this
+feature never needed a pre-built catalog (a clinic's stock is whatever it has on hand), so every
+field here is fully populated, not a placeholder. 9 new tests in
+`lib/asi/stok/intl/ulkePaketleri.test.ts` prove the branş-default list and the GS1 parser both work
+unchanged across all 6 packs. Full suite + tsc re-run clean on this branch before merge (see the PR
+this entry ships with).
+
+**Not done / honestly deferred**: no release/<cc> branch was touched — the country packs live on
+the shared trunk only, same as `asi-onam`'s own Phase 2 scaffold, so wiring one into a live
+country build (an "export to AIR/NIR/etc." button, a country-specific `enabiz.ts`-style package
+generator) is separate follow-on work, not attempted here. See the table below for the itemized
+gaps.
+
+| Item | Date | Status | What / why | Waits on |
+|---|---|---|---|---|
+| ASI-STOK-01 | 2026-10-16 | DONE | Phase 1 (Türkiye) — stock tracking, GS1 barcode scan/block-on-expired, atomic one-action administration, doctor+branş module toggle. Merged to `main` at `2b3f979e`. 30 tests, full suite 5717/5717, tsc clean. | Nobody — code is real and tested |
+| ASI-STOK-02 | 2026-10-16 | OPEN | Module classification (`.cursor/skills/specialty-doktor-araclari/SKILL.md`'s ORTAK/BRANS binary doesn't express "default-on for 5 branşlar, doctor-enablable for the rest") was extended as a documented third pattern rather than forced into the existing two. Worth a deliberate skill-doc update if a second feature ever needs the same shape, so the next person doesn't have to re-derive it from this feature's comments alone. | Kaan (skill-doc decision, not urgent — the code itself is correct and documented inline today) |
+| ASI-STOK-03 | 2026-10-16 | OPEN | The 4 new `asi-stok` API routes are classified via the lighter `hastaIzolasyonEnvanteri.ts` `I()` entries, not added to the heavy `hasta-izolasyon.test.ts` cross-doctor harness — same precedent and same reasoning as `ASI-ONAM-03`. | Claude next (low priority — `I()` entries are reviewed and correct today) |
+| ASI-STOK-04 | 2026-10-16 | PENDING | `lib/enabiz/masa.ts` (the separate free-text "copy into e-Nabız manually" desk) was deliberately NOT extended for vaccine administration — `enabizAsiUygulama()` (FHIR Immunization bundle generator, `lib/enabiz/paket.ts`) already covers the "ready but not live" package pattern this product uses everywhere else, and `masa.ts` is a structurally separate, narrower surface (free-text per-encounter notes) that this feature never needed. Flagged here only so a future reviewer doesn't assume it was missed. | Nobody — a scoping decision, not a gap |
+| ASI-STOK-INTL-01 | 2026-10-16 | DONE | Phase 2 research + reusable country-pack data layer for AU/CA/GB/NZ/US/UZ — barcode format, digital-registry existence, lot-tracking law, each cited with a confidence level. See `docs/ASI-STOK-INTL-01-research.md` and `lib/asi/stok/intl/ulkePaketleri.ts`. 9 new tests. | Nobody — researched and tested |
+| ASI-STOK-INTL-02 | 2026-10-16 | PENDING | No release/<cc> branch wired yet. AU is the best Phase-3 candidate (AIR is real, national, API-reachable and legally mandatory) — building an `enabiz.ts`-style "ready but not live" AIR package generator against `release/au` is the natural next step. CA/GB/US need a specific jurisdiction (province/devolved nation/state) chosen first since all three are structurally fragmented; NZ's NIR submission mechanism and UZ's FHIR IG workflow need their MODERATE research gaps closed before any export code is written against them. | Claude next (or Kaan, if a specific country should be prioritized) |
+| ASI-STOK-INTL-03 | 2026-10-16 | OPEN | Two specific research gaps flagged rather than guessed: UZ's Asl Belgisi GS1 serialization system was confirmed for "medicines and medical devices" generally, not vaccines by name (BEST-EFFORT, not VERIFIED); UZ's immunization-specific lot/batch legal record-keeping requirement has no citable source at all (UNCONFIRMED, no claim made). Also NZ's HISO 10063 GS1 Standards document body and its NIR's mandatory-reporting status were not independently fetched (MODERATE). | Claude next, if a UZ or NZ rollout is prioritized |
