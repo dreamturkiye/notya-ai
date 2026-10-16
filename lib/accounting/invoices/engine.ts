@@ -17,7 +17,7 @@ import { loadGrants } from '../grants'
 import { computeLine, computeInvoiceTotals, type LineComputationResult } from '../ledger/money'
 import { nextInvoiceStatus } from './stateMachine'
 import { writeAuditLog } from '../audit'
-import { hastaSahibiMi } from '@/lib/doktor/hastaSahipligi'
+import { hastaSahibiMi, seansSahibi } from '@/lib/doktor/hastaSahipligi'
 import { getModuleSettings } from '../module'
 import { getEbelgeAdapter } from '../ebelge'
 import type { EbelgeCredentials, EbelgeInvoiceDto, SellerIdentity } from '../ebelge/types'
@@ -37,6 +37,13 @@ export interface DraftLineInput {
 
 export interface CreateDraftInput {
   patientId?: string | null
+  /**
+   * NOTYA-ACCOUNTING-ENCOUNTER-01 — the muayene (sessions.id) this draft is raised from, when
+   * created via the "Faturala" entry point at the end of a visit. Ownership is re-derived here
+   * (seansSahibi), never trusted from the caller — same hasta-izolasyon pattern as every other
+   * patient-derived id in this file.
+   */
+  encounterId?: string | null
   docType?: EbelgeDocType
   lines: DraftLineInput[]
   invoiceDiscount?: { type: 'percent' | 'fixed'; value: number; reason: string }
@@ -48,6 +55,7 @@ function rowToInvoice(row: Record<string, any>): Invoice {
     id: row.id,
     doctorId: row.doctor_id,
     patientId: row.patient_id,
+    encounterId: row.encounter_id ?? null,
     status: row.status,
     docType: row.doc_type,
     subtotalKurus: row.subtotal_kurus,
@@ -95,8 +103,21 @@ export async function createDraftInvoice(
   input: CreateDraftInput
 ): Promise<Invoice> {
   assertCan(actor.role, 'invoice.draft.create')
-  if (input.patientId) {
-    if (!(await hastaSahibiMi(supabase, actor.doktorId, input.patientId))) {
+
+  // NOTYA-ACCOUNTING-ENCOUNTER-01: an encounter id is attacker-controlled input like any other
+  // patient-derived id (hasta-izolasyon pattern #1/#4) — re-derive ownership here, never trust it.
+  // When the caller also passed an explicit patientId, that one wins (a doctor may re-point a
+  // visit-born draft at a different billing patient); otherwise the encounter's own patient is used.
+  let patientId = input.patientId ?? null
+  let encounterId: string | null = null
+  if (input.encounterId) {
+    const encounter = await seansSahibi(supabase, actor.doktorId, input.encounterId)
+    if (!encounter) throw new Error('Muayene bulunamadı.')
+    encounterId = encounter.id
+    if (!patientId) patientId = encounter.patient_id
+  }
+  if (patientId) {
+    if (!(await hastaSahibiMi(supabase, actor.doktorId, patientId))) {
       throw new Error('Hasta bulunamadı.')
     }
   }
@@ -115,7 +136,8 @@ export async function createDraftInvoice(
     .from('accounting_invoices')
     .insert({
       doctor_id: actor.doktorId,
-      patient_id: input.patientId ?? null,
+      patient_id: patientId,
+      encounter_id: encounterId,
       status: 'draft',
       doc_type: input.docType ?? settings.defaultDocType,
       subtotal_kurus: totals.subtotalKurus,
@@ -169,6 +191,119 @@ export async function createDraftInvoice(
   return invoice
 }
 
+export interface EncounterInvoiceSuggestion {
+  patientId: string | null
+  lines: DraftLineInput[]
+  /** Aşı names the doctor administered this visit that have no matching catalog price — cannot be
+   *  invented, so they are surfaced for the doctor to add manually or price in the Katalog tab. */
+  unmatchedAsiNames: string[]
+}
+
+/**
+ * NOTYA-ACCOUNTING-ENCOUNTER-01 — read-only preview for the "Faturala" entry point at the end of a
+ * muayene (app/dashboard/doktor/notlar/[id]/faturala/page.tsx). Suggests, never writes:
+ *  - the encounter's own active muayene-kind catalog service (first one, if the doctor has defined
+ *    any — never a fabricated price for an undefined one), and
+ *  - a line for every administered aşı name that matches an active 'asi'-kind catalog service by
+ *    name (case/whitespace-insensitive); names with no catalog match are returned separately rather
+ *    than silently dropped or priced at a guess.
+ */
+export async function suggestEncounterInvoiceLines(
+  supabase: SupabaseClient,
+  actor: ActingUser,
+  encounterId: string,
+  administeredAsiNames: string[] = []
+): Promise<EncounterInvoiceSuggestion> {
+  assertCan(actor.role, 'invoice.draft.create')
+  const encounter = await seansSahibi(supabase, actor.doktorId, encounterId)
+  if (!encounter) throw new Error('Muayene bulunamadı.')
+
+  const { data: serviceRows } = await supabase
+    .from('accounting_services')
+    .select('id, kind, name, price_kurus, kdv_rate_bp')
+    .eq('doctor_id', actor.doktorId)
+    .eq('active', true)
+
+  const services = serviceRows || []
+  const lines: DraftLineInput[] = []
+
+  const muayeneService = services.filter((s) => s.kind === 'muayene').sort((a, b) => String(a.name).localeCompare(String(b.name)))[0]
+  if (muayeneService) {
+    lines.push({
+      serviceId: muayeneService.id,
+      description: muayeneService.name,
+      quantity: 1,
+      unitPriceKurus: muayeneService.price_kurus,
+      kdvRateBp: muayeneService.kdv_rate_bp,
+    })
+  }
+
+  const asiServices = services.filter((s) => s.kind === 'asi')
+  const normalize = (s: string) => s.trim().toLocaleLowerCase('tr-TR')
+  const unmatchedAsiNames: string[] = []
+  const seenAsi = new Set<string>()
+  for (const rawName of administeredAsiNames) {
+    const name = String(rawName || '').trim()
+    if (!name || seenAsi.has(normalize(name))) continue
+    seenAsi.add(normalize(name))
+    const match = asiServices.find((s) => normalize(String(s.name)) === normalize(name))
+    if (match) {
+      lines.push({
+        serviceId: match.id,
+        description: match.name,
+        quantity: 1,
+        unitPriceKurus: match.price_kurus,
+        kdvRateBp: match.kdv_rate_bp,
+      })
+    } else {
+      unmatchedAsiNames.push(name)
+    }
+  }
+
+  return { patientId: encounter.patient_id, lines, unmatchedAsiNames }
+}
+
+/**
+ * NOTYA-ACCOUNTING-COMPLIANCE-01 (2026-10-15 audit §4.6.2) — the buyer's real name/email, resolved
+ * from the owned patient record when one is attached. A generic "Hasta" placeholder name is not a
+ * GİB-valid alıcı tanımı even on the e-Arşiv final-consumer (nihai tüketici) path, which still
+ * requires the buyer's actual name. Buyer TCKN/VKN capture is NOT in the patient schema anywhere in
+ * this codebase (no TCKN/national-id column on `patients`), so idType stays 'unknown' here — that
+ * remains ACCOUNTING-11, an open gap needing Kaan's decision, not something to fabricate.
+ * Extracted (2026-10-15, encounter-invoicing round) so the invoice PDF generator
+ * (lib/accounting/invoices/invoicePdf.tsx) shows the exact same buyer name `issueInvoice` submits
+ * to the integrator — one resolver, not two copies that could drift.
+ */
+export async function resolveBuyerIdentity(
+  supabase: SupabaseClient,
+  doctorId: string,
+  patientId: string | null
+): Promise<EbelgeInvoiceDto['buyer']> {
+  let buyer: EbelgeInvoiceDto['buyer'] = { idType: 'unknown', name: 'Hasta' }
+  if (!patientId) return buyer
+  const { data: patientRow } = await supabase
+    .from('patients')
+    .select('name_encrypted, email_encrypted')
+    .eq('id', patientId)
+    .eq('doctor_id', doctorId) // ownership scoped in the same query — hasta-izolasyon
+    .maybeSingle()
+  if (patientRow) {
+    // Fail soft: a legacy/malformed encrypted value must never break invoice issuance/PDF render.
+    const coz = (v: unknown): string | null => {
+      if (!v) return null
+      try { return decryptPII(String(v)) } catch { return null }
+    }
+    const ad = hastaAdSoyad(coz(patientRow.name_encrypted))
+    const eposta = coz(patientRow.email_encrypted)
+    buyer = {
+      idType: 'unknown',
+      name: ad || 'Hasta',
+      ...(eposta && /@/.test(eposta) ? { email: eposta } : {}),
+    }
+  }
+  return buyer
+}
+
 /**
  * Validate + submit: draft -> pending_issue -> (issued | issue_failed) via the practice's active
  * e-belge integrator. Seller identity always comes from the doctor's own tax profile — never a
@@ -206,36 +341,7 @@ export async function issueInvoice(supabase: SupabaseClient, actor: ActingUser, 
     vergiDairesi: taxProfile.vergi_dairesi ?? undefined,
   }
 
-  // NOTYA-ACCOUNTING-COMPLIANCE-01 (2026-10-15 audit §4.6.2): the buyer's real name/email are
-  // resolved from the owned patient record when one is attached — a generic "Hasta" placeholder
-  // name is not a GİB-valid alıcı tanımı even on the e-Arşiv final-consumer (nihai tüketici) path,
-  // which still requires the buyer's actual name. Buyer TCKN/VKN capture is NOT in the patient
-  // schema anywhere in this codebase (no TCKN/national-id column on `patients`), so idType stays
-  // 'unknown' here — that remains ACCOUNTING-11, an open gap needing Kaan's decision (collecting a
-  // patient's TCKN is its own KVKK-sensitive intake-form change), not something to fabricate.
-  let buyer: EbelgeInvoiceDto['buyer'] = { idType: 'unknown', name: 'Hasta' }
-  if (before.patientId) {
-    const { data: patientRow } = await supabase
-      .from('patients')
-      .select('name_encrypted, email_encrypted')
-      .eq('id', before.patientId)
-      .eq('doctor_id', actor.doktorId) // ownership scoped in the same query — hasta-izolasyon
-      .maybeSingle()
-    if (patientRow) {
-      // Fail soft: a legacy/malformed encrypted value must never break invoice issuance.
-      const coz = (v: unknown): string | null => {
-        if (!v) return null
-        try { return decryptPII(String(v)) } catch { return null }
-      }
-      const ad = hastaAdSoyad(coz(patientRow.name_encrypted))
-      const eposta = coz(patientRow.email_encrypted)
-      buyer = {
-        idType: 'unknown',
-        name: ad || 'Hasta',
-        ...(eposta && /@/.test(eposta) ? { email: eposta } : {}),
-      }
-    }
-  }
+  const buyer = await resolveBuyerIdentity(supabase, actor.doktorId, before.patientId)
 
   const dto: EbelgeInvoiceDto = {
     invoiceId: before.id,

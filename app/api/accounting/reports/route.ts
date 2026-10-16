@@ -10,6 +10,7 @@ import { assertCan, AccountingForbiddenError } from '@/lib/accounting/rbac'
 import { loadGrants } from '@/lib/accounting/grants'
 import { collectionsByBank, salesByService, kdvSummary } from '@/lib/accounting/reports'
 import { buildMonthlyMusavirReport } from '@/lib/accounting/reports/monthly'
+import { buildDailyMusavirReport } from '@/lib/accounting/reports/daily'
 
 export async function GET(req: NextRequest) {
   const oturum = await pratikOturum(req)
@@ -30,8 +31,8 @@ export async function GET(req: NextRequest) {
   if (type === 'sales') return NextResponse.json({ success: true, data: await salesByService(supabase, doktorId, since) })
   if (type === 'kdv') return NextResponse.json({ success: true, data: await kdvSummary(supabase, doktorId, since, until) })
 
-  // Monthly mali müşavir report (Raporlar tab) — strictly ay/yıl, never a custom range, per Kaan's
-  // "Bu raporlar sadece aylık olabilir" instruction (2026-10-15). See lib/accounting/reports/monthly.ts.
+  // Monthly mali müşavir report (Raporlar tab) — strictly one calendar month per request, same
+  // "pure aggregation + DB wrapper" shape as the daily report below. See lib/accounting/reports/monthly.ts.
   if (type === 'musavir') {
     const year = Number(req.nextUrl.searchParams.get('year'))
     const month = Number(req.nextUrl.searchParams.get('month'))
@@ -43,6 +44,25 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ success: true, data: report })
     } catch (err) {
       if (err instanceof RangeError) return NextResponse.json({ success: false, error: 'Geçersiz ay/yıl.' }, { status: 400 })
+      throw err
+    }
+  }
+
+  // Daily mali müşavir report (NOTYA-ACCOUNTING-DAILY-01, 2026-10-15: Kaan reversed the earlier
+  // monthly-only scope call the same day beta doctors asked for a daily view too — see
+  // docs/OPEN-COMMITMENTS.md). Strictly one calendar day per request.
+  if (type === 'daily') {
+    const year = Number(req.nextUrl.searchParams.get('year'))
+    const month = Number(req.nextUrl.searchParams.get('month'))
+    const day = Number(req.nextUrl.searchParams.get('day'))
+    if (!Number.isInteger(year) || !Number.isInteger(month) || !Number.isInteger(day)) {
+      return NextResponse.json({ success: false, error: 'Gün, ay ve yıl zorunludur.' }, { status: 400 })
+    }
+    try {
+      const report = await buildDailyMusavirReport(supabase, doktorId, { year, month, day })
+      return NextResponse.json({ success: true, data: report })
+    } catch (err) {
+      if (err instanceof RangeError) return NextResponse.json({ success: false, error: 'Geçersiz tarih.' }, { status: 400 })
       throw err
     }
   }

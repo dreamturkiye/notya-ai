@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic'
 /**
  * NOTYA-ACCOUNTING-01 — invoice list + draft creation.
  * GET  ?status=&patientId=  (patientId checked for ownership before it scopes anything)
- * POST { patientId?, docType?, lines:[{serviceId?,description,quantity,unitPriceKurus,discountKurus?,kdvRateBp}], invoiceDiscount?, portalVisible? }
+ * POST { patientId?, encounterId?, docType?, lines:[{serviceId?,description,quantity,unitPriceKurus,discountKurus?,kdvRateBp}], invoiceDiscount?, portalVisible? }
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { pratikOturum } from '@/lib/doktor/pratikOturum'
@@ -39,6 +39,7 @@ export async function POST(req: NextRequest) {
       { userId: user.id, doktorId, role: rol },
       {
         patientId: body.patientId ?? null,
+        encounterId: body.encounterId ?? null,
         docType: body.docType,
         lines: Array.isArray(body.lines) ? body.lines : [],
         invoiceDiscount: body.invoiceDiscount,

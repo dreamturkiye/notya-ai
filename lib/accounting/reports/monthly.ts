@@ -102,7 +102,7 @@ export interface MonthlyMusavirReport {
   stopajNotu: string
 }
 
-const STOPAJ_NOTU =
+export const STOPAJ_NOTU =
   'Bu dönemde stopaj/tevkifat uygulanmadı: faturalar gerçek kişi hastalara kesildi (GVK md. 94 stopajı, ödeyici kurumsal/tüzel kişi olduğunda devreye girer). Doktor bir kuruma/kliniğe hizmet verip kurumsal ödeme alırsa, o faturalar için stopaj durumu ayrıca değerlendirilmelidir.'
 
 /** Pure aggregation — no Supabase, unit-testable with canned rows. */

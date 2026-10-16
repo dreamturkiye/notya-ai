@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic'
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { doktorOturum } from '@/lib/doktor/serverAuth'
-import { encryptPII } from '@/lib/security/encryption'
+import { encryptPII, decryptPII } from '@/lib/security/encryption'
 import { writeAuditLog } from '@/lib/accounting/audit'
 
 export async function GET(req: NextRequest) {
@@ -16,12 +16,21 @@ export async function GET(req: NextRequest) {
   const { user, supabase } = oturum
   const { data } = await supabase
     .from('accounting_tax_profiles')
-    .select('doctor_id, id_type, unvan, address, vergi_dairesi, created_at, updated_at')
+    .select('doctor_id, id_type, unvan, address, vergi_dairesi, iban_enc, created_at, updated_at')
     .eq('doctor_id', user.id)
     .maybeSingle()
+  if (!data) return NextResponse.json({ success: true, data: null })
   // id_value_enc never selected here — this route only ever returns the fact that a TCKN/VKN is
-  // on file, not its value.
-  return NextResponse.json({ success: true, data: data ? { ...data, idConfigured: true } : null })
+  // on file, not its value. IBAN gets the same treatment: masked, never the full number.
+  const { iban_enc, ...rest } = data
+  let ibanMasked = ''
+  if (iban_enc) {
+    try {
+      const iban = decryptPII(iban_enc)
+      ibanMasked = iban.length > 4 ? `${iban.slice(0, 4)}…${iban.slice(-4)}` : '****'
+    } catch { ibanMasked = '' }
+  }
+  return NextResponse.json({ success: true, data: { ...rest, idConfigured: true, ibanMasked } })
 }
 
 export async function PUT(req: NextRequest) {
@@ -36,6 +45,12 @@ export async function PUT(req: NextRequest) {
   if (!idValue || !unvan || !address) {
     return NextResponse.json({ success: false, error: 'TCKN/VKN, unvan ve adres zorunludur.' }, { status: 400 })
   }
+  // IBAN is optional and secret like idValue — but unlike idValue (always required, so always
+  // re-sent), a blank iban here must mean "leave the stored IBAN unchanged", not "erase it". A
+  // Supabase upsert only UPDATEs the keys present in the payload, so omitting iban_enc entirely
+  // when no new value was typed is enough to leave an existing one untouched.
+  const ibanRaw = typeof body.iban === 'string' ? body.iban.trim() : ''
+
   const { data, error } = await supabase
     .from('accounting_tax_profiles')
     .upsert(
@@ -47,10 +62,11 @@ export async function PUT(req: NextRequest) {
         address,
         vergi_dairesi: body.vergiDairesi ? String(body.vergiDairesi).trim() : null,
         updated_at: new Date().toISOString(),
+        ...(ibanRaw ? { iban_enc: encryptPII(ibanRaw) } : {}),
       },
       { onConflict: 'doctor_id' }
     )
-    .select('doctor_id, id_type, unvan, address, vergi_dairesi')
+    .select('doctor_id, id_type, unvan, address, vergi_dairesi, iban_enc')
     .single()
   if (error) return NextResponse.json({ success: false, error: 'Vergi profili kaydedilemedi.' }, { status: 500 })
 
@@ -61,7 +77,15 @@ export async function PUT(req: NextRequest) {
     entityType: 'accounting_tax_profile',
     entityId: user.id,
     action: 'upsert',
-    after: { idType, unvan, address }, // id value itself never audited in clear
+    after: { idType, unvan, address, ibanChanged: !!ibanRaw }, // id/iban values themselves never audited in clear
   })
-  return NextResponse.json({ success: true, data })
+  const { iban_enc, ...rest } = data
+  let ibanMasked = ''
+  if (iban_enc) {
+    try {
+      const iban = decryptPII(iban_enc)
+      ibanMasked = iban.length > 4 ? `${iban.slice(0, 4)}…${iban.slice(-4)}` : '****'
+    } catch { ibanMasked = '' }
+  }
+  return NextResponse.json({ success: true, data: { ...rest, ibanMasked } })
 }

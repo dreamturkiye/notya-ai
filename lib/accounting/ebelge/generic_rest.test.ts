@@ -70,10 +70,12 @@ describe('accounting/ebelge/generic_rest (mocked transport)', () => {
 })
 
 describe('accounting/ebelge/index registry', () => {
-  it('registers generic_rest as the only real adapter', () => {
+  it('registers generic_rest and parasut as the real adapters', () => {
+    // NOTYA-ACCOUNTING-STRONG-CLOSEOUT-01 (2026-10-15): parasut.ts joined generic_rest.ts as a
+    // real (non-stub) adapter — see lib/accounting/ebelge/parasut.ts and CHECKLIST.md.
     const real = listEbelgeAdapters().filter((a) => a.isReal)
-    assert.equal(real.length, 1)
-    assert.equal(real[0].vendor, 'generic_rest')
+    assert.equal(real.length, 2)
+    assert.deepEqual(real.map((a) => a.vendor).sort(), ['generic_rest', 'parasut'])
   })
 
   it('named vendor stubs throw AdapterNotImplementedError on issue', async () => {
