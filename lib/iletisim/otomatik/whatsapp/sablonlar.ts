@@ -11,7 +11,7 @@ import { graph, GraphHatasi, type FetchFn } from './graph'
 
 export const SAGLIKIM_KOK = 'https://www.notya.io/portal/hasta/'
 
-export type SablonKodu = 'randevu_hatirlatma' | 'saglikim_yeni_mesaj' | 'sonuc_hazir' | 'genel_bildirim'
+export type SablonKodu = 'randevu_hatirlatma' | 'saglikim_yeni_mesaj' | 'sonuc_hazir' | 'genel_bildirim' | 'randevu_iptal_onay'
 
 export interface SablonTanimi {
   kod: SablonKodu
@@ -47,6 +47,15 @@ export const SABLONLAR: Record<SablonKodu, SablonTanimi> = {
     ornek: ['Ayşe', 'Dr. Mehmet Demir'],
     dugme: { metin: 'Görüntüle', url: `${SAGLIKIM_KOK}{{1}}`, ornek: `${SAGLIKIM_KOK}ornek-baglanti` },
   },
+  // WHATSAPP-CANCEL-01: confirmation of a cancelled appointment. Inside the 24h window the patient gets the same sentence as
+  // free text (serbest.ts iptalOnayMetni); this approved template is for a cancel confirmed after the window has closed
+  // (the doctor cancels from the inbox card). Date and time only — no reason, no clinical text.
+  randevu_iptal_onay: {
+    kod: 'randevu_iptal_onay',
+    degiskenler: ['hasta adı', 'tarih', 'saat', 'doktor adı'],
+    govde: 'Merhaba {{1}}, {{2}} tarihinde saat {{3}}’teki randevunuz iptal edildi. Yeni randevu için {{4}} muayenehanesiyle iletişime geçebilirsiniz.',
+    ornek: ['Ayşe', '12 Ekim Pazartesi', '14:30', 'Dr. Mehmet Demir'],
+  },
   // Generic fallback: also what a doctor's card reply uses when the patient's 24h session window is closed.
   genel_bildirim: {
     kod: 'genel_bildirim',
@@ -67,6 +76,7 @@ export const SABLON_ADI: Record<SablonKodu, string> = {
   saglikim_yeni_mesaj: 'Sağlığım’da yeni mesaj',
   sonuc_hazir: 'Bildirim hazır',
   genel_bildirim: 'Genel bildirim',
+  randevu_iptal_onay: 'Randevu iptal onayı',
 }
 
 /** Meta'nın şablon durumları + henüz oluşturulamadıysa YOK. */

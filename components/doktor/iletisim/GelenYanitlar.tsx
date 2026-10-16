@@ -31,6 +31,12 @@ const OTOMATIK_ETIKET: Record<string, string> = {
   onaylandi: 'Randevu otomatik onaylandı',
   iptal_edildi: 'Randevu hastanın isteğiyle iptal edildi',
   slot_onerildi: 'Hastaya yeni saatler önerildi',
+  // WHATSAPP-CANCEL-01: the values yanit.ts really writes.
+  randevu_onaylandi: 'Randevu otomatik onaylandı',
+  randevu_iptal: 'Hasta iptal etti; randevu iptal edildi ve saat boşaldı. Hastaya onay mesajı gitti.',
+  randevu_iptal_gec: 'Hasta iptal süre sınırı içinde iptal etti; randevu iptal edildi ve saat boşaldı. Hastaya onay mesajı gitti.',
+  randevu_iptal_geri_alindi: 'Bu iptal geri alındı; randevu yeniden geçerli.',
+  zayif_iptal: 'Hasta gelemeyebileceğini yazdı ama net iptal etmedi; randevu iptal EDİLMEDİ. Hastayı arayıp netleştirin.',
 }
 
 const dugme: React.CSSProperties = {
@@ -46,7 +52,7 @@ export function YanitKartiGorunumu(props: {
   k: YanitKarti
   mesgul?: boolean
   mesaj?: string | null
-  onEylem?: (eylem: 'onayla' | 'iptal' | 'yeniden_planla' | 'yanitla' | 'goruldu', ek?: { metin?: string; baslangic?: string }) => void
+  onEylem?: (eylem: 'onayla' | 'iptal' | 'yeniden_planla' | 'yanitla' | 'goruldu' | 'geri_al', ek?: { metin?: string; baslangic?: string }) => void
 }) {
   const { k, mesgul } = props
   const [yanitAcik, setYanitAcik] = useState(false)
@@ -82,6 +88,9 @@ export function YanitKartiGorunumu(props: {
             <button type="button" disabled={kapali} style={dugme} onClick={() => props.onEylem?.('yeniden_planla')}>Yeniden Planla</button>
           </>
         )}
+        {k.eylemYapilabilir && (k.otomatikEylem === 'randevu_iptal' || k.otomatikEylem === 'randevu_iptal_gec') && (
+          <button type="button" disabled={kapali} style={dugme} onClick={() => props.onEylem?.('geri_al')}>İptali geri al</button>
+        )}
         {k.yanitlanabilir && <button type="button" disabled={kapali} style={dugme} onClick={() => setYanitAcik(!yanitAcik)}>Yanıtla</button>}
         {k.durum === 'yeni' && <button type="button" disabled={kapali} style={{ ...dugme, fontWeight: 400, color: CHROME_RENK.muted }} onClick={() => props.onEylem?.('goruldu')}>Görüldü</button>}
       </div>
@@ -116,6 +125,7 @@ export default function GelenYanitlar(props: { yeni?: number }) {
 
   const eylem = async (id: string, e: string, ek?: { metin?: string; baslangic?: string }) => {
     if (e === 'iptal' && !window.confirm('Randevu iptal edilsin mi? Hastaya bildirim gider.')) return
+    if (e === 'geri_al' && !window.confirm('Hastanın WhatsApp ile yaptığı iptal geri alınsın mı? Hastaya randevusunun yeniden geçerli olduğu bildirilir.')) return
     setMesgul(true)
     try {
       const r = await waIstek(`/api/doktor/iletisim/whatsapp/yanitlar/${id}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ eylem: e, ...ek }) })

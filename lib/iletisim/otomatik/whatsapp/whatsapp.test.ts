@@ -129,10 +129,10 @@ describe('şablonlar: Türkçe UTILITY, klinik ayrıntı yok', () => {
     assert.equal(d.randevu_hatirlatma?.durum, 'APPROVED')
     assert.deepEqual([d.saglikim_yeni_mesaj?.id, d.saglikim_yeni_mesaj?.durum], ['7', 'PENDING'])
     const post = cagrilar.filter((c) => c.method === 'POST')
-    // randevu_hatirlatma exists; the other three (saglikim_yeni_mesaj, sonuc_hazir, genel_bildirim) are created.
-    assert.equal(post.length, 3)
+    // randevu_hatirlatma exists; the other four (saglikim_yeni_mesaj, sonuc_hazir, genel_bildirim, randevu_iptal_onay) are created.
+    assert.equal(post.length, 4)
     assert.ok(post.every((c) => c.url.pathname === '/v25.0/WABA1/message_templates'))
-    assert.deepEqual(post.map((c) => c.body.name).sort(), ['genel_bildirim', 'saglikim_yeni_mesaj', 'sonuc_hazir'])
+    assert.deepEqual(post.map((c) => c.body.name).sort(), ['genel_bildirim', 'randevu_iptal_onay', 'saglikim_yeni_mesaj', 'sonuc_hazir'])
     assert.equal(post[0].auth, 'Bearer TOKEN-QA')
     assert.equal(sablonOzeti(d), 'bekliyor')
     assert.equal(sablonOzeti({ randevu_hatirlatma: { id: '1', durum: 'APPROVED', guncellendi: '' }, saglikim_yeni_mesaj: { id: '2', durum: 'APPROVED', guncellendi: '' } }), 'hazir')
@@ -241,7 +241,7 @@ describe('kurulum: Embedded Signup tamamlama', () => {
     const satir = db.tablo(TABLO)[0]
     assert.equal(satir.doctor_id, DOKTOR_A)
     assert.ok(satir.token_encrypted && !String(satir.token_encrypted).includes('TOKEN-QA'))
-    assert.deepEqual(Object.keys(satir.sablon_durumlari).sort(), ['genel_bildirim', 'randevu_hatirlatma', 'saglikim_yeni_mesaj', 'sonuc_hazir'])
+    assert.deepEqual(Object.keys(satir.sablon_durumlari).sort(), ['genel_bildirim', 'randevu_hatirlatma', 'randevu_iptal_onay', 'saglikim_yeni_mesaj', 'sonuc_hazir'])
     assert.ok(cagrilar.some((c) => c.method === 'POST' && c.url.pathname.endsWith('/WABA1/subscribed_apps')))
     assert.ok(!cagrilar.some((c) => /\/register$|\/deregister$/.test(c.url.pathname)), 'coexistence numarası yeniden kaydedilmemeli')
     assert.deepEqual(cagrilar.filter((c) => c.url.pathname.endsWith('/PN1/smb_app_data')).map((c) => c.body.sync_type), ['smb_app_state_sync', 'history'])

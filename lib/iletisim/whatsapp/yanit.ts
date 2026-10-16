@@ -11,6 +11,11 @@
  *        İPTAL → that appointment is cancelled, the doctor sees a flagged card   (randevuEylem.randevuIptal)
  *        STOP/DUR → WhatsApp consent flips to false for the matching patient(s)   (vazgecUygula, same column as SMS/e-mail)
  *        "ertele / başka gün" → up to 3 free times are proposed; a bare "1/2/3" back picks one for the doctor to approve
+ *      WHATSAPP-CANCEL-01: İPTAL is any STRONG cancel phrasing (iptalNiyeti.ts: typos, "gelemiyorum", "vazgeçtim" …). The
+ *      cancel goes through the shared randevu cancel path (randevuIptalEt), the patient gets a date/time confirmation, and the
+ *      card (otomatik_eylem randevu_iptal*) is what the doctor's inbox and the Ön büro fısıltısı (doctor + secretary) read —
+ *      one card per inbound wamid, so a redelivered webhook neither cancels nor notifies twice. AMBIGUOUS wording
+ *      ("müsait değilim") never cancels: the card is flagged zayif_iptal and the propose-slots flow runs.
  *      Everything else (questions, anything the LLM labelled, ambiguous numbers or appointments) only becomes a card.
  *   6. a card row (whatsapp_yanitlar) is written for matched patients and for anything that is not plain chatter.
  *
@@ -29,8 +34,9 @@ import { gunlukYaz, karsiTarafIzi, GUNLUK } from '@/lib/iletisim/otomatik/whatsa
 import type { FetchFn } from '@/lib/iletisim/otomatik/whatsapp/graph'
 import { hastalariEslestir, numaraRakam, type EslesmeTuru } from './eslestir'
 import { niyetBul, slotSecimi, type Niyet, type NiyetSonucu, type SiniflandirmaFn } from './niyet'
-import { hedefRandevu, randevuIptal, randevuTeyit, slotOner, type OnerilenSlot } from './randevuEylem'
-import { oturumMetniGonder, SABIT, OTURUM_PENCERESI_MS } from './serbest'
+import { IPTAL_NEDENI, hedefRandevu, randevuIptal, randevuTeyit, slotOner, type HedefRandevu, type OnerilenSlot } from './randevuEylem'
+import { iptalOnayMetni, oturumMetniGonder, SABIT, OTURUM_PENCERESI_MS } from './serbest'
+import { randevuSonrasi } from './sonrasi'
 
 export const YANITLAR = 'whatsapp_yanitlar'
 
@@ -49,20 +55,29 @@ export interface YanitOzeti {
   tekrarGerekli: boolean
 }
 
-type KartSatiri = { id: string; eylem_sonucu: string | null }
+type KartSatiri = { id: string; eylem_sonucu: string | null; otomatik_eylem: string | null; randevu_id: string | null }
 
 export function slotMetni(slotlar: OnerilenSlot[]): string {
   return `Size uygun zamanlar:\n${slotlar.map((s, i) => `${i + 1}) ${s.etiket}`).join('\n')}\nSeçmek için numarasını yazın; hekimimiz onaylayacaktır.`
 }
 
-async function acikOneri(sb: SupabaseClient, doktorId: string, patientId: string, simdi: Date): Promise<{ id: string; slotlar: OnerilenSlot[] } | null> {
-  const { data } = await sb.from(YANITLAR).select('id, onerilen_slotlar, secilen_slot, created_at')
-    .eq('doctor_id', doktorId).eq('patient_id', patientId).eq('otomatik_eylem', 'slot_onerildi')
+async function acikOneri(sb: SupabaseClient, doktorId: string, patientId: string, simdi: Date): Promise<{ id: string; slotlar: OnerilenSlot[]; randevuId: string | null } | null> {
+  const { data } = await sb.from(YANITLAR).select('id, randevu_id, onerilen_slotlar, secilen_slot, created_at')
+    .eq('doctor_id', doktorId).eq('patient_id', patientId).in('otomatik_eylem', ['slot_onerildi', 'zayif_iptal'])
     .gte('created_at', new Date(simdi.getTime() - OTURUM_PENCERESI_MS).toISOString())
     .order('created_at', { ascending: false }).limit(1)
   const r = data?.[0]
   if (!r || r.secilen_slot || !Array.isArray(r.onerilen_slotlar) || !r.onerilen_slotlar.length) return null
-  return { id: String(r.id), slotlar: r.onerilen_slotlar as OnerilenSlot[] }
+  return { id: String(r.id), slotlar: r.onerilen_slotlar as OnerilenSlot[], randevuId: r.randevu_id ? String(r.randevu_id) : null }
+}
+
+/** The patient's own appointment that a WhatsApp reply cancelled within the last `gun` days (rebooking / repeated İPTAL). */
+async function sonOtomatikIptal(sb: SupabaseClient, doktorId: string, patientId: string, simdi: Date, gun = 7): Promise<HedefRandevu | null> {
+  const { data } = await sb.from('randevular').select('id, baslangic, bitis, durum, iptal_nedeni')
+    .eq('doktor_id', doktorId).eq('patient_id', patientId).eq('durum', 'iptal')
+    .gte('baslangic', new Date(simdi.getTime() - gun * 86_400_000).toISOString()).order('baslangic', { ascending: false }).limit(5)
+  const r = (data || []).find((x) => String(x.iptal_nedeni || '').startsWith(IPTAL_NEDENI))
+  return r ? { id: String(r.id), baslangic: String(r.baslangic), bitis: String(r.bitis), durum: 'iptal', teyit: false } : null
 }
 
 export async function yanitIsle(sb: SupabaseClient, olaylar: KalkanHam[], deps: YanitDeps = {}): Promise<YanitOzeti> {
@@ -95,7 +110,7 @@ async function birMesaj(sb: SupabaseClient, o: KalkanHam, deps: YanitDeps): Prom
   const doktorId = String(bag.doctor_id)
 
   // 2) Already finished? (webhook retry)
-  const { data: kartVar, error: vErr } = await sb.from(YANITLAR).select('id, eylem_sonucu').eq('doctor_id', doktorId).eq('wamid', o.wamid).maybeSingle()
+  const { data: kartVar, error: vErr } = await sb.from(YANITLAR).select('id, eylem_sonucu, otomatik_eylem, randevu_id').eq('doctor_id', doktorId).eq('wamid', o.wamid).maybeSingle()
   if (vErr) throw vErr
   const onceki = kartVar as KartSatiri | null
   if (onceki?.eylem_sonucu) return { islendi: false, kart: false, yanitlandi: false }
@@ -113,7 +128,7 @@ async function birMesaj(sb: SupabaseClient, o: KalkanHam, deps: YanitDeps): Prom
   if (!denetim.ok && !denetim.tekrar) throw new Error('gunluk_yazilamadi')
 
   // 5) Intent. A bare "1/2/3" right after our proposal is a slot choice, not a question for the model.
-  let secim: { oneri: { id: string; slotlar: OnerilenSlot[] }; sira: number } | null = null
+  let secim: { oneri: { id: string; slotlar: OnerilenSlot[]; randevuId: string | null }; sira: number } | null = null
   if (tek) {
     const sira = slotSecimi(o.govde)
     if (sira) {
@@ -158,12 +173,24 @@ async function birMesaj(sb: SupabaseClient, o: KalkanHam, deps: YanitDeps): Prom
     const r = await oturumMetniGonder(sb, { doktorId, phoneNumberId: o.phoneNumberId, token }, { to: numara, metin, tur, idemAnahtar: `yanit:${o.wamid}:${anahtar}`, hastaId: tek?.id ?? null, kaynakWamid: o.wamid }, deps.fetch, simdi)
     return r.ok
   }
-  let otomatikEylem: string | null = kirmizi ? 'acil_uyari' : null
+  let otomatikEylem: string | null = kirmizi ? 'acil_uyari' : niyet.zayif ? 'zayif_iptal' : null
   let eylemSonucu = 'tamam'
   let randevuId: string | null = null
   let slotlar: OnerilenSlot[] | null = null
   let secilen: string | null = null
   let yanitlandi = false
+  // Crash-safe resume: the cancel was already done for THIS wamid (the card carries the marker) — never cancel (or fall back to
+  // the opt-out meaning of İPTAL) a second time; only the idempotent follow-ups run again.
+  const iptalYapilmisId = onceki && String(onceki.otomatik_eylem || '').startsWith('randevu_iptal') && onceki.randevu_id ? String(onceki.randevu_id) : null
+
+  // After a cancel made for this message: the marker first (crash safety), then calendar sync and the patient's confirmation.
+  const iptalSonrasi = async (hedef: HedefRandevu, eylem: string): Promise<void> => {
+    randevuId = hedef.id
+    otomatikEylem = eylem
+    if (kartId) await sb.from(YANITLAR).update({ patient_id: tek?.id ?? null, randevu_id: hedef.id, otomatik_eylem: eylem }).eq('id', kartId).eq('doctor_id', doktorId)
+    await randevuSonrasi(sb, doktorId, hedef.id)
+    yanitlandi = await gonder(iptalOnayMetni(hedef.baslangic), 'otomatik_yanit', 'iptal')
+  }
 
   if (niyet.niyet === 'vazgec' && niyet.kaynak === 'kural' && es.hastalar.length) {
     // STOP / DUR: the number asked to stop. Every patient of this doctor on that number (siblings on a parent's phone) is opted out.
@@ -171,23 +198,52 @@ async function birMesaj(sb: SupabaseClient, o: KalkanHam, deps: YanitDeps): Prom
     await gunlukYaz(sb, { doktorId, patientId: tek?.id ?? null, yon: 'olay', tur: 'vazgec_uygulandi', durum: 'olay', kaynakWamid: o.wamid, ayrinti: { hasta_sayisi: es.hastalar.length } })
     otomatikEylem = 'vazgec_uygulandi'
     yanitlandi = await gonder(SABIT.vazgec, 'otomatik_yanit', 'vazgec')
+  } else if (tek && iptalYapilmisId && niyet.niyet === 'iptal') {
+    // Resume after a crash between the cancel and the end of this handler.
+    const { data: r } = await sb.from('randevular').select('id, baslangic, bitis, durum').eq('id', iptalYapilmisId).eq('doktor_id', doktorId).eq('patient_id', tek.id).maybeSingle()
+    if (r) await iptalSonrasi({ id: String(r.id), baslangic: String(r.baslangic), bitis: String(r.bitis), durum: String(r.durum), teyit: false }, String(onceki!.otomatik_eylem))
+    else eylemSonucu = 'iptal_olmadi'
   } else if (tek && niyet.kaynak === 'kural' && (niyet.niyet === 'onay' || niyet.niyet === 'iptal' || niyet.niyet === 'yeniden_planla')) {
-    const hedef = await hedefRandevu(sb, doktorId, tek.id, simdi)
+    const hedef = await hedefRandevu(sb, doktorId, tek.id, simdi, { enYakin: niyet.niyet === 'iptal' && !niyet.zayif })
     if (secim) {
       // The patient picked a proposed time: it waits for the doctor's one-tap approval — nothing moves on its own.
       const s = secim.oneri.slotlar[secim.sira - 1]
-      if (hedef.ok) randevuId = hedef.randevu.id
+      // A pick after a cancel (rebooking) refers to the cancelled appointment the proposal was made for.
+      randevuId = hedef.ok ? hedef.randevu.id : secim.oneri.randevuId
       secilen = s.bas
       otomatikEylem = 'slot_secildi'
       await sb.from(YANITLAR).update({ secilen_slot: s.bas }).eq('id', secim.oneri.id).eq('doctor_id', doktorId)
       yanitlandi = await gonder(SABIT.secimAlindi, 'otomatik_yanit', 'secim')
+    } else if (niyet.yenidenRandevu) {
+      // "yeni randevu": a rebook wish. With an active appointment it may be a SECOND booking — the doctor decides.
+      const eski = hedef.ok ? null : await sonOtomatikIptal(sb, doktorId, tek.id, simdi)
+      if (!eski) eylemSonucu = 'yeni_randevu_istegi'
+      else {
+        const oneriler = await slotOner(sb, doktorId, eski, simdi)
+        randevuId = eski.id
+        if (oneriler.length) {
+          slotlar = oneriler
+          otomatikEylem = 'slot_onerildi'
+          yanitlandi = await gonder(slotMetni(oneriler), 'otomatik_yanit', 'oneri')
+        } else {
+          eylemSonucu = 'slot_yok'
+          yanitlandi = await gonder(SABIT.yenidenYok, 'otomatik_yanit', 'yeniden_yok')
+        }
+      }
     } else if (!hedef.ok) {
-      if (niyet.niyet === 'iptal' && hedef.neden === 'yok' && !hedef.hatirlatmaVardi) {
-        // Nothing to cancel and no reminder behind the word: "İPTAL" keeps the meaning it has on the SMS channel — stop messages.
-        await vazgecUygula(sb, doktorId, tek.id, 'whatsapp')
-        await gunlukYaz(sb, { doktorId, patientId: tek.id, yon: 'olay', tur: 'vazgec_uygulandi', durum: 'olay', kaynakWamid: o.wamid, ayrinti: { kaynak: 'iptal_kelimesi' } })
-        otomatikEylem = 'vazgec_uygulandi'
-        yanitlandi = await gonder(SABIT.vazgec, 'otomatik_yanit', 'vazgec')
+      if (niyet.niyet === 'iptal' && hedef.neden === 'yok') {
+        const onceden = await sonOtomatikIptal(sb, doktorId, tek.id, simdi, 1)
+        if (onceden) {
+          // Already cancelled by an earlier message: a repeated İPTAL is not an opt-out.
+          eylemSonucu = 'zaten_iptal'
+          randevuId = onceden.id
+        } else if (niyet.yalinIptal && !hedef.hatirlatmaVardi) {
+          // The lone word "İPTAL" with nothing to cancel and no reminder behind it keeps the meaning it has on the SMS channel: stop messages.
+          await vazgecUygula(sb, doktorId, tek.id, 'whatsapp')
+          await gunlukYaz(sb, { doktorId, patientId: tek.id, yon: 'olay', tur: 'vazgec_uygulandi', durum: 'olay', kaynakWamid: o.wamid, ayrinti: { kaynak: 'iptal_kelimesi' } })
+          otomatikEylem = 'vazgec_uygulandi'
+          yanitlandi = await gonder(SABIT.vazgec, 'otomatik_yanit', 'vazgec')
+        } else eylemSonucu = 'randevu_yok'
       } else {
         eylemSonucu = hedef.neden === 'birden_cok' ? 'birden_cok_randevu' : 'randevu_yok'
       }
@@ -205,17 +261,20 @@ async function birMesaj(sb: SupabaseClient, o: KalkanHam, deps: YanitDeps): Prom
         const s = await randevuIptal(sb, doktorId, tek.id, hedef.randevu, simdi)
         if (s.sonuc === 'olmadi') eylemSonucu = 'iptal_olmadi'
         else {
-          otomatikEylem = s.gec ? 'randevu_iptal_gec' : 'randevu_iptal'
           await gunlukYaz(sb, { doktorId, patientId: tek.id, yon: 'olay', tur: 'randevu_iptal', durum: 'olay', kaynakWamid: o.wamid, ayrinti: { randevu_id: randevuId, gec: s.gec } })
-          yanitlandi = await gonder(SABIT.iptal, 'otomatik_yanit', 'iptal')
+          await iptalSonrasi(hedef.randevu, s.gec ? 'randevu_iptal_gec' : 'randevu_iptal')
         }
       } else {
+        // yeniden_planla — a clear reschedule wish, or (zayif) an ambiguous "can't make it" that must NOT cancel anything.
         const oneriler = await slotOner(sb, doktorId, hedef.randevu, simdi)
         if (oneriler.length) {
           slotlar = oneriler
-          otomatikEylem = 'slot_onerildi'
+          otomatikEylem = niyet.zayif ? 'zayif_iptal' : 'slot_onerildi'
           yanitlandi = await gonder(slotMetni(oneriler), 'otomatik_yanit', 'oneri')
-        } else eylemSonucu = 'slot_yok'
+        } else {
+          eylemSonucu = 'slot_yok'
+          if (niyet.zayif) yanitlandi = await gonder(SABIT.zayifIptal, 'otomatik_yanit', 'zayif')
+        }
       }
     }
   }

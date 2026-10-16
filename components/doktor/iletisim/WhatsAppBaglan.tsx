@@ -34,6 +34,7 @@ export type WhatsAppGorunumu =
       limitEtiketi?: string
       kullanim?: { son24Saat: number; buAy?: number; tahminiUsd?: number }
       yeniYanit?: number
+      sonucBildirimi?: boolean
     }
 
 const SABLON_DURUMU: Record<string, string> = { APPROVED: 'Hazır', PENDING: 'Onay bekliyor', IN_APPEAL: 'Onay bekliyor', REJECTED: 'Onaylanmadı', YOK: 'Gönderilecek' }
@@ -89,6 +90,7 @@ export function WhatsAppBaglanKarti(props: {
   hata?: string | null
   onBagla?: () => void
   onKaldir?: () => void
+  onSonucBildirimi?: (acik: boolean) => void
   kvkkOnay?: boolean
   onKvkkOnay?: (v: boolean) => void
   yanitlar?: React.ReactNode
@@ -154,6 +156,19 @@ export function WhatsAppBaglanKarti(props: {
           {g.kullanim?.buAy != null && (<><dt style={{ color: CHROME_RENK.muted }}>Bu ay</dt><dd style={{ margin: 0, fontVariantNumeric: 'tabular-nums' }}>{g.kullanim.buAy} mesaj{g.kullanim.tahminiUsd != null ? ` · tahmini Meta ücreti ≈ $${g.kullanim.tahminiUsd.toFixed(2)}` : ''}</dd></>)}
         </dl>
       )}
+      <label data-whatsapp-sonuc-bildirimi style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginTop: 14, fontSize: 14, color: CHROME_RENK.ink, cursor: 'pointer' }}>
+        <input
+          type="checkbox" checked={!!g.sonucBildirimi} disabled={mesgul}
+          onChange={(e) => props.onSonucBildirimi?.(e.target.checked)}
+          style={{ width: 20, height: 20, marginTop: 1, flexShrink: 0 }}
+        />
+        <span>
+          “Bildiriminiz hazır” mesajı (Sağlığım bağlantılı)
+          <span style={{ display: 'block', fontSize: 13, color: CHROME_RENK.muted, marginTop: 2, lineHeight: 1.4 }}>
+            Varsayılan kapalı. Bu mesaj şu an hastalara kendiliğinden gönderilmiyor; bu anahtarı açmak yalnızca tercihinizi kaydeder. Otomatik gönderim eklendiğinde yalnızca açık olan hekimler için çalışacaktır.
+          </span>
+        </span>
+      </label>
       {props.yanitlar}
       <button type="button" onClick={props.onKaldir} disabled={mesgul} style={{ ...sessizDugme, marginTop: 6 }}>
         Bağlantıyı kaldır
@@ -239,7 +254,7 @@ export default function WhatsAppBaglan(props: { onDegisti?: () => void } = {}) {
       if (j.bagli) {
         setG({
           tur: 'bagli', numara: j.numara ?? null, sablon: j.sablon || 'bekliyor', ad: j.ad ?? null, sablonlar: j.sablonlar,
-          kalite: j.kalite ?? null, limit: j.limit, limitEtiketi: j.limitEtiketi, kullanim: j.kullanim, yeniYanit: j.yeniYanit,
+          kalite: j.kalite ?? null, limit: j.limit, limitEtiketi: j.limitEtiketi, kullanim: j.kullanim, yeniYanit: j.yeniYanit, sonucBildirimi: !!j.sonucBildirimi,
         })
       } else setG({ tur: 'bagli-degil', kurulum: j.kurulum, sorun: j.sorun })
     } catch {
@@ -327,6 +342,18 @@ export default function WhatsAppBaglan(props: { onDegisti?: () => void } = {}) {
     )
   }
 
+  const sonucBildirimiKaydet = async (acik: boolean) => {
+    setMesgul(true)
+    try {
+      const r = await waIstek('/api/iletisim/whatsapp/sonuc-bildirimi', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ acik }) })
+      setHata(r?.ok ? null : 'Ayar şu an kaydedilemedi. Lütfen yeniden deneyin.')
+    } catch {
+      setHata('Ayar şu an kaydedilemedi. Lütfen yeniden deneyin.')
+    }
+    setMesgul(false)
+    yenile()
+  }
+
   const kaldir = async () => {
     if (!window.confirm('WhatsApp bağlantısı kaldırılsın mı? Telefonunuzdaki uygulama ve sohbetleriniz etkilenmez.')) return
     setMesgul(true)
@@ -344,7 +371,7 @@ export default function WhatsAppBaglan(props: { onDegisti?: () => void } = {}) {
 
   return (
     <WhatsAppBaglanKarti
-      g={g} mesgul={mesgul} hata={hata} onBagla={bagla} onKaldir={kaldir}
+      g={g} mesgul={mesgul} hata={hata} onBagla={bagla} onKaldir={kaldir} onSonucBildirimi={sonucBildirimiKaydet}
       kvkkOnay={kvkkOnay} onKvkkOnay={setKvkkOnay}
       yanitlar={g.tur === 'bagli' ? <GelenYanitlar yeni={g.yeniYanit || 0} /> : undefined}
     />

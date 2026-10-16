@@ -56,8 +56,11 @@ export async function GET(req: NextRequest) {
     faturali ? buAy(supabase, user.id) : Promise.resolve(null),
     supabase.from('whatsapp_yanitlar').select('id', { count: 'exact', head: true }).eq('doctor_id', user.id).eq('durum', 'yeni'),
   ])
+  // WHATSAPP-CANCEL-01: the doctor's "result ready" switch (migration 170). Own connection row only; absent column → off.
+  const sonuc = await supabase.from('doktor_whatsapp_baglantilari').select('sonuc_bildirimi_acik').eq('doctor_id', user.id).eq('durum', 'bagli').maybeSingle()
   return NextResponse.json({
     bagli: true,
+    sonucBildirimi: !sonuc.error && (sonuc.data as { sonuc_bildirimi_acik?: boolean } | null)?.sonuc_bildirimi_acik === true,
     numara: b.gorunenNumara,
     ad: b.gorunenAd,
     sablon: sablonOzeti(sablonlar),

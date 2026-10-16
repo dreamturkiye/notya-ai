@@ -15,12 +15,14 @@ import { whatsappGondericisi } from '@/lib/iletisim/otomatik/whatsapp'
 import type { FetchFn } from '@/lib/iletisim/otomatik/whatsapp/graph'
 import { doktorIletisimAyari, hastaAdiCoz } from '@/lib/iletisim/sunucu'
 import { gunlukYaz } from '@/lib/iletisim/otomatik/whatsapp/gunluk'
-import { doktorIptal, hedefRandevu, randevuTasi, randevuTeyit, slotOner, type OnerilenSlot } from './randevuEylem'
-import { oturumMetniGonder, SABIT } from './serbest'
+import { doktorIptal, hedefRandevu, iptalGeriAl, randevuTasi, randevuTeyit, slotOner, type OnerilenSlot } from './randevuEylem'
+import { geriAlindiMetni, iptalOnayMetni, oturumMetniGonder, SABIT } from './serbest'
+import { randevuSonrasi } from './sonrasi'
 import { slotMetni, YANITLAR } from './yanit'
+import { gunEtiketi, saatEtiketi } from '@/lib/randevu/v2/zaman'
 
-export type KartEylemi = 'onayla' | 'iptal' | 'yeniden_planla' | 'yanitla' | 'goruldu'
-export const KART_EYLEMLERI: readonly KartEylemi[] = ['onayla', 'iptal', 'yeniden_planla', 'yanitla', 'goruldu']
+export type KartEylemi = 'onayla' | 'iptal' | 'yeniden_planla' | 'yanitla' | 'goruldu' | 'geri_al'
+export const KART_EYLEMLERI: readonly KartEylemi[] = ['onayla', 'iptal', 'yeniden_planla', 'yanitla', 'goruldu', 'geri_al']
 
 export type KartSonucu =
   | { ok: true; mesaj: string; bildirildi?: boolean; slotlar?: OnerilenSlot[] }
@@ -30,7 +32,7 @@ const yok = (): KartSonucu => ({ ok: false, durum: 404, hata: 'Yanıt bulunamad�
 
 interface Kart {
   id: string; patient_id: string | null; randevu_id: string | null; niyet: string; durum: string
-  karsi_taraf_encrypted: string | null; secilen_slot: string | null; onerilen_slotlar: unknown
+  karsi_taraf_encrypted: string | null; secilen_slot: string | null; onerilen_slotlar: unknown; otomatik_eylem: string | null
 }
 
 export async function kartEylemi(
@@ -40,7 +42,7 @@ export async function kartEylemi(
 ): Promise<KartSonucu> {
   const simdi = deps.simdi ?? new Date()
   const { data, error } = await sb.from(YANITLAR)
-    .select('id, patient_id, randevu_id, niyet, durum, karsi_taraf_encrypted, secilen_slot, onerilen_slotlar')
+    .select('id, patient_id, randevu_id, niyet, durum, karsi_taraf_encrypted, secilen_slot, onerilen_slotlar, otomatik_eylem')
     .eq('id', g.kartId).eq('doctor_id', g.doktorId).maybeSingle()
   if (error || !data) return yok()
   const kart = data as unknown as Kart
@@ -63,6 +65,27 @@ export async function kartEylemi(
     const r = await oturumMetniGonder(sb, { doktorId: g.doktorId, phoneNumberId: bag.phoneNumberId, token: bag.token },
       { to: numara, metin, tur: 'hekim_yaniti', idemAnahtar: `kart:${kart.id}:${anahtar}`, hastaId: kart.patient_id }, deps.fetch, simdi)
     return r.ok
+  }
+
+  // The doctor cancels from the card: the patient gets date and time as free text inside the 24h window, otherwise the approved
+  // `randevu_iptal_onay` template (free text may never leave outside the window). Falls back to the generic sentence when the
+  // appointment time cannot be read.
+  const iptalBildir = async (rid: string): Promise<boolean> => {
+    if (!bag || !numara || !kart.patient_id) return false
+    const { data: r } = await sb.from('randevular').select('baslangic').eq('id', rid).eq('doktor_id', g.doktorId).eq('patient_id', kart.patient_id).maybeSingle()
+    const bas = r?.baslangic ? String(r.baslangic) : null
+    const x = await oturumMetniGonder(sb, { doktorId: g.doktorId, phoneNumberId: bag.phoneNumberId, token: bag.token },
+      { to: numara, metin: bas ? iptalOnayMetni(bas) : SABIT.iptal, tur: 'hekim_yaniti', idemAnahtar: `kart:${kart.id}:iptal`, hastaId: kart.patient_id }, deps.fetch, simdi)
+    if (x.ok || !x.pencereKapali || !bas) return x.ok
+    const { data: h } = await sb.from('patients').select('name_encrypted').eq('id', kart.patient_id).eq('doctor_id', g.doktorId).maybeSingle()
+    const hastaAdi = hastaAdiCoz(h?.name_encrypted)
+    const ayar = await doktorIletisimAyari(sb, g.doktorId)
+    if (!hastaAdi || !ayar.doktorAdi) return false
+    const t = await whatsappGondericisi({ sb: () => sb, fetch: deps.fetch }).gonder({
+      doktorId: g.doktorId, alici: numara, metin: '', sablonKodu: 'randevu_iptal_onay', degiskenler: [hastaAdi, gunEtiketi(bas), saatEtiketi(bas), ayar.doktorAdi],
+      idemAnahtar: `kart:${kart.id}:iptal:sablon`, hastaId: kart.patient_id, tur: 'hekim_yaniti',
+    })
+    return t.ok
   }
 
   if (g.eylem === 'yanitla') {
@@ -94,6 +117,19 @@ export async function kartEylemi(
   // The remaining actions change an appointment: they need a matched patient (exactly one).
   if (!kart.patient_id) return { ok: false, durum: 409, hata: 'Bu yanıt tek bir hastayla eşleşmedi; işlem yapılamaz.' }
   let randevuId = kart.randevu_id
+
+  // WHATSAPP-CANCEL-01 "Geri al": undo an AUTOMATIC cancel recorded on this card (never a random appointment: the card's own
+  // randevu_id, its own patient, a cancel that the patient's WhatsApp reply made).
+  if (g.eylem === 'geri_al') {
+    if (!randevuId || !String(kart.otomatik_eylem || '').startsWith('randevu_iptal')) return { ok: false, durum: 409, hata: 'Bu kartta geri alınacak bir otomatik iptal yok.' }
+    const t = await iptalGeriAl(sb, { doktorId: g.doktorId, patientId: kart.patient_id, randevuId, yapanId: g.yapanId, simdi })
+    if (!t.ok) return { ok: false, durum: 409, hata: t.hata }
+    await sb.from(YANITLAR).update({ otomatik_eylem: 'randevu_iptal_geri_alindi' }).eq('id', kart.id).eq('doctor_id', g.doktorId)
+    await randevuSonrasi(sb, g.doktorId, randevuId)
+    const bildirildi = await bildir(geriAlindiMetni(t.etiket), 'geri_al')
+    return bitir(`İptal geri alındı: ${t.etiket}.`, { bildirildi })
+  }
+
   if (!randevuId) {
     const h = await hedefRandevu(sb, g.doktorId, kart.patient_id, simdi)
     if (!h.ok) return { ok: false, durum: 409, hata: h.neden === 'birden_cok' ? 'Hastanın birden çok yaklaşan randevusu var; takvimden işlem yapın.' : 'Hastanın yaklaşan randevusu bulunamadı.' }
@@ -105,8 +141,9 @@ export async function kartEylemi(
   if (g.eylem === 'onayla') {
     if (kart.secilen_slot) {
       // The patient picked a proposed time → move the appointment there.
-      const t = await randevuTasi(sb, { doktorId: g.doktorId, patientId: kart.patient_id, randevuId, baslangicIso: kart.secilen_slot, yapanId: g.yapanId, simdi })
+      const t = await randevuTasi(sb, { doktorId: g.doktorId, patientId: kart.patient_id, randevuId, baslangicIso: kart.secilen_slot, yapanId: g.yapanId, simdi, yenidenAc: true })
       if (!t.ok) return { ok: false, durum: 409, hata: t.hata }
+      await randevuSonrasi(sb, g.doktorId, randevuId)
       const bildirildi = await bildir(`Randevunuz ${t.etiket} olarak güncellendi.`, 'tasindi')
       return bitir(`Randevu ${t.etiket} olarak güncellendi.`, { bildirildi })
     }
@@ -122,14 +159,16 @@ export async function kartEylemi(
   if (g.eylem === 'iptal') {
     const s = await doktorIptal(sb, g.doktorId, kart.patient_id, randevuId, g.yapanId)
     if (s === 'olmadi') return { ok: false, durum: 409, hata: 'Randevu iptal edilemedi.' }
-    const bildirildi = s === 'iptal' ? await bildir(SABIT.iptal, 'iptal') : false
+    if (s === 'iptal') await randevuSonrasi(sb, g.doktorId, randevuId)
+    const bildirildi = s === 'iptal' ? await iptalBildir(randevuId) : false
     return bitir(s === 'zaten' ? 'Randevu zaten iptal.' : 'Randevu iptal edildi.', { bildirildi })
   }
 
   // yeniden_planla
   if (g.baslangic) {
-    const t = await randevuTasi(sb, { doktorId: g.doktorId, patientId: kart.patient_id, randevuId, baslangicIso: g.baslangic, yapanId: g.yapanId, simdi })
+    const t = await randevuTasi(sb, { doktorId: g.doktorId, patientId: kart.patient_id, randevuId, baslangicIso: g.baslangic, yapanId: g.yapanId, simdi, yenidenAc: true })
     if (!t.ok) return { ok: false, durum: 409, hata: t.hata }
+    await randevuSonrasi(sb, g.doktorId, randevuId)
     const bildirildi = await bildir(`Randevunuz ${t.etiket} olarak güncellendi.`, 'tasindi')
     return bitir(`Randevu ${t.etiket} olarak güncellendi.`, { bildirildi })
   }

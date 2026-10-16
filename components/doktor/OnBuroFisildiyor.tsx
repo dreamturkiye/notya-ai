@@ -30,6 +30,7 @@ const CTA: Record<OnBuroFisiltiItem['kaynak'], string> = {
   gelmedi: 'Randevuyu aç',
   form: 'Dosyayı aç',
   takip: 'Takibi aç',
+  iptal: 'Takvimi aç',
 }
 
 export default function OnBuroFisildiyor() {
@@ -56,6 +57,18 @@ export default function OnBuroFisildiyor() {
   }, [])
 
   useEffect(() => { void yukle() }, [yukle])
+
+  // WHATSAPP-CANCEL-01: the desk acknowledges a WhatsApp cancellation ("Gördüm") — the item clears for doctor and secretary.
+  const gordum = useCallback(async (kartId: string) => {
+    try {
+      const t = await ensureDoctorAccessToken()
+      if (!t) return
+      await fetch('/api/doktor/on-buro-fisilti/iptal', {
+        method: 'POST', headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ kartId }),
+      })
+    } catch { /* the next load shows the truth */ }
+    void yukle()
+  }, [yukle])
 
   if (yukleniyor) return null
 
@@ -127,6 +140,26 @@ export default function OnBuroFisildiyor() {
         >
           {CTA[item.kaynak]} ›
         </button>
+        {item.kaynak === 'iptal' && item.kartId && (
+          <button
+            type="button"
+            onClick={() => void gordum(item.kartId as string)}
+            style={S({
+              marginLeft: 8,
+              background: 'transparent',
+              border: `1px solid ${FISILTI_BORDER}`,
+              borderRadius: 999,
+              color: FISILTI_INK,
+              fontSize: 12,
+              padding: '6px 12px',
+              minHeight: 32,
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+            })}
+          >
+            Gördüm
+          </button>
+        )}
       </div>
     </div>
   )

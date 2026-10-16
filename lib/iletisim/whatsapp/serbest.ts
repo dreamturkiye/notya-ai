@@ -11,6 +11,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { graph, GraphHatasi, type FetchFn } from '@/lib/iletisim/otomatik/whatsapp/graph'
 import { denemeVarMi, gunlukYaz, karsiTarafIzi, GUNLUK } from '@/lib/iletisim/otomatik/whatsapp/gunluk'
 import { tokenGecersiz } from '@/lib/iletisim/otomatik/whatsapp/saglik'
+import { gunEtiketi, saatEtiketi } from '@/lib/randevu/v2/zaman'
 
 
 export const OTURUM_PENCERESI_MS = 24 * 3600_000
@@ -21,7 +22,21 @@ export const SABIT = {
   iptal: 'Randevunuz iptal edildi. Yeni randevu için bizimle iletişime geçebilirsiniz.',
   vazgec: 'Anlaşıldı. Bundan sonra size otomatik WhatsApp mesajı göndermeyeceğiz.',
   secimAlindi: 'Seçiminiz iletildi. Hekimimiz onayladığında size bildirilecektir.',
+  // WHATSAPP-CANCEL-01: an ambiguous "can't make it" message — nothing was cancelled, the practice decides.
+  zayifIptal: 'Mesajınızı aldık. Randevunuzu iptal etmedik; hekimimiz sizinle ilgilenecektir. İptal etmek isterseniz “İPTAL” yazabilirsiniz.',
+  // WHATSAPP-CANCEL-01: the patient asked for a new time after cancelling and no free time could be offered.
+  yenidenYok: 'Mesajınızı aldık. Size uygun bir saat için muayenehane sizinle iletişime geçecektir.',
 } as const
+
+/** Confirmation of an automatic cancel: date and time, and how to rebook. No name, no clinical text. */
+export function iptalOnayMetni(baslangicIso: string): string {
+  return `Randevunuz iptal edildi: ${gunEtiketi(baslangicIso)} ${saatEtiketi(baslangicIso)}. Yeniden randevu almak isterseniz bu numaraya “yeni randevu” yazabilir ya da muayenehaneyi arayabilirsiniz.`
+}
+
+/** The doctor undid an automatic cancel. */
+export function geriAlindiMetni(etiket: string): string {
+  return `Randevunuz yeniden geçerli: ${etiket}. Görüşmek üzere.`
+}
 
 /** Has this number written to the doctor's line within the last 24 hours? */
 export async function pencereAcikMi(sb: SupabaseClient, doktorId: string, numara: string, simdi: Date = new Date()): Promise<boolean> {

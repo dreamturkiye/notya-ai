@@ -14,14 +14,32 @@
  * the SMS channel (vazgecKelimesiMi), so the word is never silently ignored. The decision lives in yanit.ts; this file
  * only recognises the words.
  *
+ * WHATSAPP-CANCEL-01: the cancel decision is made by iptalNiyeti.ts (many phrasings, typos, negation/question guards,
+ * strong vs ambiguous). A STRONG signal → niyet 'iptal' (may auto-cancel the next appointment); an AMBIGUOUS one →
+ * niyet 'yeniden_planla' with `zayif: true` (never cancels: flagged card + propose-slots); a reschedule wish wins over a
+ * cancel word; negations → 'diger', questions → 'soru' (both rule-labelled, neither acts). The LLM below can never turn
+ * any of these into a cancel: only a rule result with kaynak 'kural' drives an action.
+ *
  * Turkish case folding: "IPTAL" typed with a capital dotless/dotted I must still match. `katla` maps İ, I and ı to "i"
  * BEFORE lower-casing, then strips diacritics (ç→c, ş→s, ğ→g, ö→o, ü→u) — plain toLocaleLowerCase('tr-TR') turns "IPTAL"
  * into "ıptal" and misses it.
  */
 
+import { iptalSiniflandir, yenidenRandevuMu } from './iptalNiyeti'
+
 export type Niyet = 'onay' | 'iptal' | 'yeniden_planla' | 'soru' | 'vazgec' | 'diger'
 export type NiyetKaynagi = 'kural' | 'yapay_zeka' | 'varsayilan'
-export interface NiyetSonucu { niyet: Niyet; kaynak: NiyetKaynagi; guven: number }
+export interface NiyetSonucu {
+  niyet: Niyet
+  kaynak: NiyetKaynagi
+  guven: number
+  /** WHATSAPP-CANCEL-01: ambiguous "can't make it" wording — flagged card, never an automatic cancel. */
+  zayif?: boolean
+  /** The message is exactly "iptal": with nothing to cancel it keeps its SMS meaning (stop messages). */
+  yalinIptal?: boolean
+  /** "yeni randevu almak istiyorum": a rebook wish. Acts only for a patient with no active appointment and a recent automatic cancel. */
+  yenidenRandevu?: boolean
+}
 
 export const NIYET_ETIKETI: Record<Niyet, string> = {
   onay: 'Onay',
@@ -48,11 +66,6 @@ const ONAY = new Set([
   'geliyorum', 'gelecegim', 'evet geliyorum', 'evet gelecegim', 'evet onayliyorum', 'evet tamam', 'evet olur', 'tamam geliyorum',
   'tamam gelecegim', 'uygun', 'evet uygun', 'evet teyit', 'yes',
 ])
-const IPTAL = new Set([
-  'iptal', 'iptal et', 'iptal edin', 'iptal edebilir misiniz', 'iptal ediyorum', 'iptal olsun', 'randevu iptal', 'randevuyu iptal et',
-  'randevumu iptal et', 'randevumu iptal edin', 'randevuyu iptal edin', 'randevuyu iptal ediyorum', 'randevumu iptal ediyorum',
-  'gelemiyorum', 'gelemeyecegim', 'gelmeyecegim', 'vazgectim',
-])
 const VAZGEC = new Set([
   'stop', 'dur', 'durdur', 'unsubscribe', 'mesaj gondermeyin', 'mesaj atmayin', 'mesaj gondermeyiniz', 'rahatsiz etmeyin', 'bana yazmayin',
   'aboneligi iptal et',
@@ -60,13 +73,10 @@ const VAZGEC = new Set([
 /** A lone thumbs-up / check mark is a yes (folded text would be empty). */
 const ONAY_EMOJI = /^[\s👍✅✔️☑️🙏]+$/u
 
-/** Reschedule wording (a suggestion for the card + proposal, never an automatic change). Applied to folded text. */
-const YENIDEN = /\b(ertel\w*|degistir\w*|kaydir\w*|yeniden planla\w*|baska (bir )?(gun|saat|zaman|tarih)\w*|baska (bir )?zamana|saati uygun degil|gunu uygun degil|uygun degil|gec\w* gelebilir|erken gelebilir)\b/
-const OLUMSUZLAMA = /\b(istemiyorum|istemiyoruz|etmeyin|etme|edemem|degil|olmasin|yapmayin|vazgecmedim)\b/
 
 /**
  * Whole-message rule matching. Returns null when the rules do not recognise the message.
- * "iptal etmek istemiyorum" is NOT a cancel: a negation anywhere sends the message to the LLM / the doctor instead.
+ * Order: lone thumbs-up → STOP/DUR (exact) → EVET (exact) → the cancel/reschedule classifier (iptalNiyeti.ts).
  */
 export function kuralNiyeti(metin: string): NiyetSonucu | null {
   const ham = String(metin || '')
@@ -74,11 +84,17 @@ export function kuralNiyeti(metin: string): NiyetSonucu | null {
   const k = katla(ham)
   if (!k) return null
   if (VAZGEC.has(k)) return { niyet: 'vazgec', kaynak: 'kural', guven: 1 }
-  if (OLUMSUZLAMA.test(k)) return null
-  if (IPTAL.has(k)) return { niyet: 'iptal', kaynak: 'kural', guven: 1 }
   if (ONAY.has(k)) return { niyet: 'onay', kaynak: 'kural', guven: 1 }
-  if (YENIDEN.test(k) && k.split(' ').length <= 14) return { niyet: 'yeniden_planla', kaynak: 'kural', guven: 0.8 }
-  return null
+  const c = iptalSiniflandir(ham)
+  switch (c.tur) {
+    case 'guclu': return { niyet: 'iptal', kaynak: 'kural', guven: 1, ...(c.yalinIptal ? { yalinIptal: true } : {}) }
+    case 'zayif': return { niyet: 'yeniden_planla', kaynak: 'kural', guven: 0.6, zayif: true }
+    case 'yeniden': return { niyet: 'yeniden_planla', kaynak: 'kural', guven: 0.8 }
+    case 'soru': return { niyet: 'soru', kaynak: 'kural', guven: 0.5 }
+    case 'olumsuz':
+    case 'celiski': return { niyet: 'diger', kaynak: 'kural', guven: 0.5 }
+    default: return yenidenRandevuMu(ham) ? { niyet: 'yeniden_planla', kaynak: 'kural', guven: 0.7, yenidenRandevu: true } : null
+  }
 }
 
 const ETIKETLER: Record<string, Niyet> = {

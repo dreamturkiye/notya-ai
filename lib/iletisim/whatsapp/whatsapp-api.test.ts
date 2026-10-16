@@ -179,8 +179,8 @@ describe('niyet: kural önce, LLM yalnız etiketler (sahte LLM)', () => {
   })
 
   it('olumsuzlama otomatik eylemi engeller: "iptal etmek istemiyorum" iptal sayılmaz', () => {
-    assert.equal(kuralNiyeti('iptal etmek istemiyorum'), null)
-    assert.equal(kuralNiyeti('evet değil'), null)
+    assert.equal(kuralNiyeti('iptal etmek istemiyorum')?.niyet, 'diger')
+    assert.equal(kuralNiyeti('evet değil')?.niyet ?? 'diger', 'diger')
   })
 
   it('yeniden planlama kuralı', () => {
