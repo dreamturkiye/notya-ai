@@ -749,6 +749,20 @@ textarea.uza-hatirlatma { min-height: 0; margin-top: 8px; }
 .uza-girdi[aria-invalid='true'] { border-color: var(--uza-uyari); }
 .uza-girdi-hata { color: var(--uza-uyari); }
 
+/* MOBIL-PERSONEL-01 — phone tap targets: every control the doctor or front desk presses with a thumb is >= 44px.
+   Phone breakpoint only (the same 899px the bottom navigation uses): the desktop layout is untouched. */
+@media (max-width: 899px) {
+  .uza-dugme-kucuk,
+  .yg-arac-cip,
+  .yg-ay-gun,
+  .yg-ay-ok,
+  .yg-ay-bugun,
+  .yg-ay-bolge select { min-height: 44px; }
+  .yg-ay-ok, .yg-ay-bugun { min-width: 44px; }
+  .uza-dugme-kucuk { min-width: 44px; }
+  .uza-ic a[href].uza-satir, .uza-ic button { min-height: 44px; }
+}
+
 @media print {
   .uza-ust, .uza-nav, .uza-hesap, .uza-bitki, .uza-bitki-kutu, [data-yazdirma-gizle] { display: none !important; }
 }
