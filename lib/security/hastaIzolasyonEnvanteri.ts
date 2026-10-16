@@ -232,6 +232,7 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   'app/api/doktor/araclar/epikriz/route.ts': T,
   'app/api/doktor/araclar/enabiz/route.ts': T,
   'app/api/doktor/araclar/enabiz/mbys/route.ts': T,
+  'app/api/doktor/araclar/enabiz/mbys/bildir/route.ts': I('MBYS-BILDIR-01: doctor-only (secretary 403). notId read through notKaydiHazirla = note by id AND doctor_id, then seansSahibi(session + its patient) → 404 for a foreign note; the audit row an onayId names is looked up with id AND doctor_id AND olay=onaylandi → 404 otherwise; every audit/aktarim write carries the doctor id and a patient id derived from the owned note, never from the request. Logic covered by lib/enabiz/mbys/bildirAkis.test.ts against an in-memory store; NOT in the cross-doctor A↔B harness (OPEN-COMMITMENTS MBYS-BILDIR-03)'),
   'app/api/doktor/araclar/erecete/route.ts': I('patient ownership check (id AND doctor_id) before any read → 404'),
   'app/api/doktor/araclar/sgk-rapor/route.ts': I('patient ownership check (id AND doctor_id) before any read → 404'),
   // NOTYA-HASTA-RAPORLARI-UNIFIED-01

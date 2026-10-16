@@ -17,10 +17,8 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { pratikOturum } from '@/lib/doktor/pratikOturum'
 import { hastaSahibiMi, seansSahibi } from '@/lib/doktor/hastaSahipligi'
 import { hastaAdiCoz } from '@/lib/doktor/hastaCozumleyici'
-import { notAlanlariCoz } from '@/lib/doktor/hastaKayitAlanlari'
 import { arsivsizNotlar, arsivsizSeanslar } from '@/lib/doktor/arsiv'
-import { decrypt, encrypt } from '@/lib/security/encryption'
-import { formlariBirlestir, sifreliFormlariCoz } from '@/lib/intake/formBirlestir'
+import { encrypt } from '@/lib/security/encryption'
 import {
   mbysAyarCoz,
   mbysDurum,
@@ -30,19 +28,13 @@ import {
   type MbysAyar,
 } from '@/lib/enabiz/mbys/kontrol'
 import { mbysKayitKur, mbysKayitTuruCoz, mbysCinsiyetCoz, mbysTarihCoz, type MbysKimlikEk } from '@/lib/enabiz/mbys/kayit'
+import { NOT_ALANLARI, KILIT_EKSIK, ayarOku, hastaBilgileri, notKaydiHazirla } from '@/lib/enabiz/mbys/sunucu'
 
 export const dynamic = 'force-dynamic'
 
 type Sb = SupabaseClient
 
 const bulunamadi = () => NextResponse.json({ error: 'Hasta bulunamadı.' }, { status: 404 })
-const NOT_ALANLARI = 'id, session_id, created_at, approved_at, basvuru_yakinmasi, content_subjektif, content_objektif, content_degerlendirme, content_plan, icd10_codes, vitaller'
-
-function coz(v: unknown): string {
-  if (!v) return ''
-  try { return String(decrypt(String(v)) || '') } catch { return '' }
-}
-
 /** Turkey is UTC+3 all year. */
 function trGunAraligi(gun: string): { bas: string; son: string; gun: string } {
   const simdiTr = new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 10)
@@ -56,43 +48,6 @@ function saatTr(iso: unknown): string {
   return Number.isNaN(d.getTime()) ? '' : d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Istanbul' })
 }
 
-async function ayarOku(supabase: Sb, doktorId: string): Promise<MbysAyar> {
-  const { data } = await supabase.from('users').select('mbys_ayar').eq('id', doktorId).maybeSingle()
-  return mbysAyarCoz((data as { mbys_ayar?: unknown } | null)?.mbys_ayar)
-}
-
-/** Everything the record needs about the patients, read under the doctor. */
-async function hastaBilgileri(supabase: Sb, doktorId: string, hastaIds: string[]) {
-  const harita = new Map<string, { ad: string; dogum: string; cinsiyet: string; kartTc: string; kilit: boolean; form: Record<string, unknown> | null; ek: MbysKimlikEk | null }>()
-  if (!hastaIds.length) return harita
-  const [hastaQ, formQ, ekQ] = await Promise.all([
-    supabase.from('patients').select('id, name_encrypted, dob_encrypted, gender_encrypted, notes_encrypted, enabiz_gonderilmesin').eq('doctor_id', doktorId).in('id', hastaIds),
-    supabase.from('hasta_intake_formlari').select('patient_id, form_data_encrypted, created_at').eq('doktor_id', doktorId).in('patient_id', hastaIds).not('form_data_encrypted', 'is', null).order('created_at', { ascending: false }).limit(hastaIds.length * 3 + 10),
-    supabase.from('mbys_hasta_kimlik').select('patient_id, kimlik_encrypted').eq('doctor_id', doktorId).in('patient_id', hastaIds),
-  ])
-  for (const p of (hastaQ.data || []) as Record<string, unknown>[]) {
-    const id = String(p.id)
-    const kart = notAlanlariCoz(p.notes_encrypted as string | null)
-    const formSatir = ((formQ.data || []) as { patient_id: string; form_data_encrypted: string; created_at: string }[]).filter((f) => f.patient_id === id)
-    const birlesik = formlariBirlestir(sifreliFormlariCoz(formSatir).formlar)
-    const ekSatir = ((ekQ.data || []) as { patient_id: string; kimlik_encrypted: string }[]).find((e) => e.patient_id === id)
-    let ek: MbysKimlikEk | null = null
-    try { ek = ekSatir ? (JSON.parse(coz(ekSatir.kimlik_encrypted) || 'null') as MbysKimlikEk | null) : null } catch { ek = null }
-    harita.set(id, {
-      ad: hastaAdiCoz(p.name_encrypted as string),
-      dogum: coz(p.dob_encrypted),
-      cinsiyet: coz(p.gender_encrypted),
-      kartTc: String(kart.tcKimlik || kart.tcKimlikNo || '').trim(),
-      kilit: p.enabiz_gonderilmesin === true,
-      form: birlesik?.yanitlar ?? null,
-      ek,
-    })
-  }
-  return harita
-}
-
-const KILIT_EKSIK = { alan: 'izin', mesaj: 'Hasta e-Nabız’a gönderilmesini istemiyor', duzelt: 'yok' as const }
-
 export async function GET(req: NextRequest) {
   const oturum = await pratikOturum(req)
   if ('hata' in oturum) return oturum.hata
@@ -105,26 +60,17 @@ export async function GET(req: NextRequest) {
 
   // ── One visit's record (the helper's input) ──
   if (notIdQ) {
-    const { data: not } = await arsivsizNotlar(supabase, NOT_ALANLARI).eq('id', notIdQ).eq('doctor_id', doktorId).maybeSingle()
-    if (!not) return bulunamadi()
-    const n = not as unknown as Record<string, unknown>
-    const seans = await seansSahibi(supabase, doktorId, String(n.session_id))
-    if (!seans?.patient_id) return bulunamadi()
-    const hastaId = String(seans.patient_id)
-    const h = (await hastaBilgileri(supabase, doktorId, [hastaId])).get(hastaId)
-    if (!h) return bulunamadi()
-    const { data: akt } = await supabase.from('mbys_aktarimlar').select('durum').eq('doctor_id', doktorId).eq('note_id', notIdQ).maybeSingle()
-    const kayit = mbysKayitKur({ hastaAd: h.ad, dogum: h.dogum, cinsiyet: h.cinsiyet, kartTc: h.kartTc, form: h.form, ek: h.ek, not: n, ayar, muayeneDahil })
-    const eksikler = [...(h.kilit ? [KILIT_EKSIK] : []), ...mbysKontrol(kayit)]
+    const r = await notKaydiHazirla(supabase, doktorId, notIdQ, muayeneDahil)
+    if (!r) return bulunamadi()
     return NextResponse.json({
       notId: notIdQ,
-      hastaId,
-      hastaAd: h.ad,
-      durum: mbysDurum(eksikler, mbysDurumCoz(akt?.durum)),
-      eksikler,
+      hastaId: r.hastaId,
+      hastaAd: r.hastaAd,
+      durum: r.durum,
+      eksikler: r.eksikler,
       // A patient who refused e-Nabız sharing gets no record at all.
-      kayit: h.kilit ? null : kayit,
-      metin: h.kilit ? '' : mbysDuzMetin(kayit),
+      kayit: r.kayit,
+      metin: r.metin,
       rol,
     })
   }
