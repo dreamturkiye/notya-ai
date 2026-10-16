@@ -109,6 +109,10 @@ describe('şablonlar', () => {
     // hitting its "no amount → null" guard.
     odemeTutarKurus: 50000, odemeFaturaRef: 'INV-100', odemeKademe: 1 as const,
   }
+  // NOTYA-HASTA-ILETISIMI-01: 'toplu_mesaj' is NOT a per-patient auto-generated template — mesajHazirla
+  // always returns null for it by design (lib/iletisim/sablonlar.ts); bulk campaigns are composed by
+  // lib/iletisim/toplu/kampanya.ts instead. Excluded here the same way 'serbest' already is below.
+  const SABLON_TURLERI = MESAJ_TURLERI.filter((t) => t !== 'toplu_mesaj')
 
   it('gün ifadesi TRT gününe göre: bugün / yarın / tarih', () => {
     assert.equal(gunIfadesi('2026-09-25T20:00:00.000Z', BUGUN), 'bugün') // 23:00 TRT, still 25 Eylül
@@ -126,7 +130,8 @@ describe('şablonlar', () => {
   })
 
   it('her tür üretilir; gerekli parça yoksa null (uydurma yok)', () => {
-    for (const tur of MESAJ_TURLERI) assert.ok(mesajHazirla(tur, temel), tur)
+    for (const tur of SABLON_TURLERI) assert.ok(mesajHazirla(tur, temel), tur)
+    assert.equal(mesajHazirla('toplu_mesaj', temel), null, 'toplu_mesaj: kampanya.ts üretir, mesajHazirla değil')
     assert.equal(mesajHazirla('randevu_hatirlatma', { ...temel, randevuIso: null }), null)
     assert.equal(mesajHazirla('randevu_degisikligi', { ...temel, randevuIso: 'bozuk' }), null)
     assert.equal(mesajHazirla('bilgi_formu', { ...temel, link: null }), null)
@@ -137,7 +142,7 @@ describe('şablonlar', () => {
   })
 
   it('klinik bilgi yok: hiçbir şablon tanı / ilaç / tahlil / aşı adı taşımaz', () => {
-    for (const tur of MESAJ_TURLERI.filter((t) => t !== 'serbest')) {
+    for (const tur of SABLON_TURLERI.filter((t) => t !== 'serbest')) {
       for (const veliDili of [false, true]) {
         const m = mesajHazirla(tur, { ...temel, veliDili })!
         assert.doesNotMatch(`${m.konu}\n${m.metin}`, /tanı|teşhis|ilaç|reçete|tahlil sonucu|mg\b|doz\b|KKK|BCG|hepatit/i, `${tur}/${veliDili}`)
@@ -146,7 +151,7 @@ describe('şablonlar', () => {
   })
 
   it('veli dili yaşa göre: erişkin "veli/çocuğunuz" görmez; reşit olmayan için ad + "adına"', () => {
-    for (const tur of MESAJ_TURLERI.filter((t) => t !== 'serbest')) {
+    for (const tur of SABLON_TURLERI.filter((t) => t !== 'serbest')) {
       assert.doesNotMatch(mesajHazirla(tur, { ...temel, veliDili: false })!.metin, /veli|çocuğunuz/i, tur)
     }
     const c = mesajHazirla('randevu_hatirlatma', { ...temel, hastaAdi: 'Ali', veliDili: true })!
@@ -208,14 +213,14 @@ describe('iletişim izni', () => {
   })
   it('bilgi formu: kanal başına tek satır, isteğe bağlı; işaretsiz = izin yok', () => {
     const onay = coreBolumlerIcin('kardiyoloji').find((b) => b.baslik === 'Onay')!
-    for (const id of [IZIN_ALANI.whatsapp, IZIN_ALANI.eposta]) {
+    for (const id of [IZIN_ALANI.whatsapp, IZIN_ALANI.eposta, IZIN_ALANI.sms]) {
       const a = onay.alanlar.find((x) => x.id === id)
       assert.ok(a, id)
       assert.ok(!a!.zorunlu, `${id} zorunlu olmamalı`)
       assert.deepEqual(a!.secenekler, [IZIN_EVET])
     }
-    assert.deepEqual(intakeIzinleri({ [IZIN_ALANI.whatsapp]: IZIN_EVET }), { whatsapp: true, eposta: false })
-    assert.deepEqual(intakeIzinleri({}), { whatsapp: false, eposta: false })
+    assert.deepEqual(intakeIzinleri({ [IZIN_ALANI.whatsapp]: IZIN_EVET }), { whatsapp: true, eposta: false, sms: false })
+    assert.deepEqual(intakeIzinleri({}), { whatsapp: false, eposta: false, sms: false })
   })
 })
 

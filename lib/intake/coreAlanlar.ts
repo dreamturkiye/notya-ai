@@ -153,7 +153,10 @@ export const CORE_BOLUMLER: IntakeBolum[] = [
       // NOTYA-ILETISIM-01: one clear line per channel (KVKK açık rıza — randevu + bilgilendirme only, no clinical content).
       // Optional; left empty = the patient did not consent to that channel. Written to patients.iletisim_izni_* on submit.
       { id: IZIN_ALANI.whatsapp, etiket: IZIN_METNI.whatsapp, tur: 'radio', secenekler: [IZIN_EVET] },
-      { id: IZIN_ALANI.eposta, etiket: IZIN_METNI.eposta, tur: 'radio', secenekler: [IZIN_EVET], yardim: IZIN_ACIKLAMASI },
+      { id: IZIN_ALANI.eposta, etiket: IZIN_METNI.eposta, tur: 'radio', secenekler: [IZIN_EVET] },
+      // NOTYA-HASTA-ILETISIMI-01 (2026-10-16): third channel, same scope/wording pattern, captured
+      // at intake from day one — not only asked later at bulk-send time.
+      { id: IZIN_ALANI.sms, etiket: IZIN_METNI.sms, tur: 'radio', secenekler: [IZIN_EVET], yardim: IZIN_ACIKLAMASI },
       // NOTYA-GELEN-BELGELER: optional; what the patient sends (lab results, photos, voice messages) may be filed.
       // Written to patients.gelen_belge_izni on submit (migration 099).
       { id: GELEN_BELGE_IZIN_ALANI, etiket: GELEN_BELGE_IZIN_METNI, tur: 'radio', secenekler: [IZIN_EVET] },
