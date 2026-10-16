@@ -27,11 +27,12 @@
 -- duration, so two concurrent calls for the same scope+year can never both read the same
 -- `son_numara` and both write the next value — the exact collision a naive "SELECT max+1"
 -- (read, then separate write) would hit under concurrent muayene creation. Verified with a
--- real concurrency test against a live Postgres instance (not mocked): 200 concurrent calls
--- against each of two different scopes, interleaved on a 40-connection pool — zero
--- duplicates, a dense 1..200 sequence for each scope, and the two scopes independently
--- producing the SAME numbers (expected — see "different clinics/doctors can reuse the same
--- number independently" below). The live-Postgres proof lives in lib/doktor/protokolNo.test.ts
+-- real concurrency test against a live Postgres instance (not mocked): 150 concurrent calls
+-- against a single scope, and 50+50 concurrent calls across two different scopes at the same
+-- time, each on a 20-connection pool — zero duplicates, a dense 1..N sequence for each scope,
+-- and the two scopes independently producing the SAME numbers (expected — see "different
+-- clinics/doctors can reuse the same number independently" below). The live-Postgres proof
+-- lives in lib/doktor/protokolNo.test.ts
 -- (its own header explains how to re-run it against a real database; it skips cleanly in
 -- `npm test` when none is configured).
 --

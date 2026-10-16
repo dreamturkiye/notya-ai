@@ -18,6 +18,7 @@ import { kritikAlarm } from '@/lib/alarm'
 import { hekimAdi, hekimBransi } from '@/lib/doktor/hekimAdi'
 import { hastaSahibiMi } from '@/lib/doktor/hastaSahipligi'
 import { arsivsizNotlar } from '@/lib/doktor/arsiv'
+import { protokolNumarasiAta } from '@/lib/doktor/protokolNo'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 300
@@ -92,6 +93,17 @@ export async function POST(req: NextRequest) {
 
   const brans = specialty || 'genel'
 
+  // NOTYA-PROTOKOL-NO-01: atomically reserved BEFORE the insert, then written into the SAME
+  // insert() payload — same pattern as app/api/sessions/start/route.ts and
+  // app/api/doktor/belgeler/analiz/onayla/route.ts. This route was a missed path (verification
+  // pass, 2026-10): it inserted directly into `sessions` with no protokol number at all, so
+  // every audio-upload muayene got a permanent NULL. A failure here fails the whole request
+  // rather than silently creating a protokol_no-less muayene.
+  const protokol = await protokolNumarasiAta(supabase, doktorId)
+  if (!protokol) {
+    return NextResponse.json({ error: 'Protokol numarası oluşturulamadı.' }, { status: 500 })
+  }
+
   // 3) Seans kaydı oluştur
   const { data: seans, error: seansHata } = await supabase
     .from('sessions')
@@ -102,6 +114,8 @@ export async function POST(req: NextRequest) {
       session_type: sessionType,
       status: 'completed',
       transcript_cleaned: transcript,
+      protokol_no: protokol.protokolNo,
+      protokol_scope_id: protokol.scopeId,
       ...(gecmisTarihIso ? { started_at: gecmisTarihIso } : {}),
     })
     .select('id')
