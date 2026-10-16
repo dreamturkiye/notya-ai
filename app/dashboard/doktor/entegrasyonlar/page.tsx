@@ -6,6 +6,7 @@ import { CHROME_RENK, CHROME_FONT } from '@/lib/doktor/chromeTheme'
 import RandevuPortalKarti from '@/components/doktor/randevu/RandevuPortalKarti'
 import GoogleTakvimKarti from '@/components/doktor/randevu/GoogleTakvimKarti'
 import FaturalamaKarti from '@/components/accounting/FaturalamaKarti'
+import AsiStokKarti from '@/components/doktor/AsiStokKarti'
 
 type Provider = 'medula' | 'nvi_kps'
 
@@ -237,6 +238,7 @@ export default function EntegrasyonlarPage() {
         {!loading && <GoogleTakvimKarti />}
         {/* NOTYA-ACCOUNTING-01: Faturalama & Tahsilat — optional module, own page (setup wizard + catalog + invoices + AR) */}
         {!loading && <FaturalamaKarti />}
+        {!loading && <AsiStokKarti />}
       </div>
 
       {active && (
