@@ -3937,3 +3937,13 @@ Kaan's country-parity rule (2026-10-16): the fix on `fix/selin-ilac-ekle-checkbo
 - **Waits on Kaan / a native speaker.** Uzbek wording in `countries/uz/toplu.ts` is machine-written and needs native review (same standing as countries/uz/metinler.ts). English wording needs no review beyond the usual.
 - **Waits on Kaan.** Visual check in a browser; merging this branch into `release/gb` and deploying the country site (neither done by this job).
 - **Waits on Claude.** main still has the inline Turkish copy in EylemKarti/topluSecim (no `countries/` dir on main); the TopluMetin refactor exists only on the country branches. `scripts/ulke-turkce-tavan.mjs` reports 1700 vs ceiling 1698 on `release/gb` before and after this change (pre-existing; this change adds no counted file).
+
+
+## MOBIL-PERSONEL (country parity) — phone use and staff roles (2026-10-16, owner Claude)
+
+Full audit on `main` / `feature/mobil-personel-erisimi`: `docs/audits/ITEM2-MOBIL-PERSONEL.md`. This build serves the country kit, not the Turkish doctor screens (`/dashboard/doktor` and `/api/doktor/*` are closed by the route gate).
+
+| Date | Item | Owner | Status / what is needed |
+|------|------|-------|-------------------------|
+| 2026-10-16 | **MOBIL-PERSONEL-09 — no Clinical Assistant / Patient Coordinator position.** The clinic-account model has `on-buro` (front desk) with per-doctor grants. Two new positions need new grants and a lawyer of the country (`inceleme.hukukcu`); labels when built: Secretary, Clinical Assistant, Patient Coordinator. Nothing of the Turkish staff-role code was ported (dead behind the route gate, and it would raise the Turkish-text ceiling) | Kaan + a lawyer | OPEN |
+| 2026-10-16 | **MOBIL-PERSONEL-10 — phone tap-target block not rendered.** `components/ulke/uygulama/uygulama.css` now raises `.uza-dugme-kucuk`, `.yg-arac-cip`, calendar nav and day cells and the region select to 44px at max-width 899px. Reviewed as CSS only; never viewed in a browser, no real phone | Claude | OPEN |
