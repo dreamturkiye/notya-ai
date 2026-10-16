@@ -555,7 +555,7 @@ export default function NotSayfasi() {
             Sil
           </button>
         )}
-        <button type="button" onClick={() => { void kaydetVeOnayla() }} disabled={durum === 'kaydediyor'} style={{ background: CHROME_RENK.pine, border: 'none', color: 'white', borderRadius: 10, padding: '10px 18px', fontSize: 14, fontWeight: 800, cursor: 'pointer', opacity: aiDurum === 'bekliyor' ? 0.85 : 1 }}>
+        <button type="button" className="notya-ana-eylem" onClick={() => { void kaydetVeOnayla() }} disabled={durum === 'kaydediyor'} style={{ background: CHROME_RENK.pine, border: 'none', color: 'white', borderRadius: 10, padding: '10px 18px', fontSize: 14, fontWeight: 800, cursor: 'pointer', opacity: aiDurum === 'bekliyor' ? 0.85 : 1 }}>
           {durum === 'kaydediyor' ? 'Kaydediliyor…' : durum === 'kaydedildi' ? '✓ Onaylandı' : onayli ? 'Kaydet ve yeniden onayla' : 'Onayla'}
         </button>
       </div>

@@ -19,6 +19,7 @@
  * location prompt or the fetch fails, the weather chip simply doesn't render.
  */
 
+import { TELEFON_DOKUNMA_CSS } from '@/lib/doktor/telefonStil';
 import React, { useEffect, useState, createContext, useContext } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { getDoctorAccessToken, ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
@@ -541,6 +542,7 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
           background: ${CHROME_RENK.cream};
           border-bottom: 1px solid ${CHROME_RENK.border};
         }
+        ${TELEFON_DOKUNMA_CSS}
         .notya-bitki { opacity: 0.28; }
         .notya-bitki-asagi {
           top: 18rem !important;
