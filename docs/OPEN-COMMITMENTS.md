@@ -3933,3 +3933,16 @@ every other Phase-2-only feature in this file.
 
 - 2026-10-16 (waits on Claude): verify Hasta İletişimi (bd79f738) end-to-end — run tests, read consent logic, confirm SMS gateway send path; set audit item #3 from the result.
 - 2026-10-16 (waits on Claude): rebuild MBYS "Muayeneyi Bildir" (audit item #1); dcd67b0e / feat/mbys-onayla never reached the remote.
+
+## 2026-10-16 — MBYS-BILDIR-01: "Muayeneyi Bildir" (Pediatri Beta Audit item #1), on `feat/mbys-muayene-bildir`
+
+Rebuild after the lost `feat/mbys-onayla` (dcd67b0e). Built on MBYS-YARDIMCI-01 (stage 1, assisted fill). Migration `167_mbys_bildirim_gunlugu.sql`.
+What is real: one-click button on an approved muayene (`components/doktor/MbysBildirButonu.tsx`, notlar page), a confirmation dialog showing the exact record, a mandatory tick-box, a server gate (`lib/enabiz/mbys/bildir.ts`: doctor-only, note approved, no missing data, patient allows e-Nabız, explicit confirmation of the SAME SHA-256 fingerprint), an append-only audit log written BEFORE the record is released (fails closed), hand-over to the browser helper or clipboard, and an outcome report back to the log. What is NOT real: any server-side submission to MBYS. No Ministry API, credential flow or contract exists in the repo; the only server adapter is a stub that reports `gonderildi: false`. The extension's field map is still unverified against the live MBYS page (MBYS-YARDIMCI-01a).
+
+| ID | Date | State | What | Waits on |
+|----|------|-------|------|----------|
+| MBYS-BILDIR-01 | 2026-10-16 | CODE READY, not merged, migration 167 NOT applied | Confirmation gate, fingerprint, audit trail, stub adapter, UI, 19 tests. | Kaan: review, apply migration 167, merge |
+| MBYS-BILDIR-02 | 2026-10-16 | OPEN | A real MBYS submission needs what the repo does not have: the Ministry's accepted channel (API / integration agreement / credential flow) for private-practice doctors. Until then the audit pill stays below Strong. A real adapter implements `MbysBildirimAdaptoru` and may return `gonderildi: true` only on a Ministry receipt, with a test against the real endpoint. | Kaan (Ministry channel and credentials); Claude builds the adapter once known |
+| MBYS-BILDIR-03 | 2026-10-16 | OPEN | The new route is classified `incelendi` in `hastaIzolasyonEnvanteri.ts`, not in the cross-doctor A↔B harness (`hasta-izolasyon.test.ts`); its ownership logic is tested only against an in-memory store. Same precedent as ASI-STOK-03. Also never run against a live Postgres: the append-only trigger and RLS in migration 167 are unexercised. | Claude next (low priority) |
+| MBYS-BILDIR-04 | 2026-10-16 | OPEN | Not exercised in a browser: the dialog and the helper hand-over were not clicked through (no browser/extension in this sandbox). Kaan or Dr. Gökhan should do one supervised run on a test visit after migration 167 is applied. | Kaan / Dr. Gökhan |
+

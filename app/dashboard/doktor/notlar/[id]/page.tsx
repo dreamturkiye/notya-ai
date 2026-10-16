@@ -25,6 +25,7 @@ import { istemciKapsami } from '@/lib/specialties/kapsamIstemci';
 import { bransEtiketi } from '@/lib/doktor/bransAdlari';
 import YasamsalBulgularFormu from '@/components/doktor/YasamsalBulgularFormu';
 import AsiStokTarama from '@/components/doktor/AsiStokTarama';
+import MbysBildirButonu from '@/components/doktor/MbysBildirButonu';
 import DermNotGorselYakala from '@/specialties/dermatoloji/ui/DermNotGorselYakala';
 import KbbNotGorselYakala from '@/specialties/kulak-burun-bogaz/ui/KbbNotGorselYakala';
 import PlastikNotGorselYakala from '@/specialties/plastik-cerrahi/ui/PlastikNotGorselYakala';
@@ -530,6 +531,8 @@ export default function NotSayfasi() {
         <a href={`/dashboard/doktor/notlar/${not.id}/yazdir`} target="_blank" rel="noreferrer" style={{ color: CHROME_RENK.ink, fontSize: 13, textDecoration: 'none', border: '1px solid rgba(58,44,34,0.16)', borderRadius: 999, padding: '7px 12px' }}>🖨️ Yazdır / PDF</a>
         <a href={`/dashboard/doktor/notlar/${not.id}/recete`} target="_blank" rel="noreferrer" style={{ color: CHROME_RENK.pine, fontSize: 13, textDecoration: 'none', border: '1px solid rgba(47,67,52,0.4)', borderRadius: 999, padding: '7px 12px' }}>🧾 Reçete</a>
         <a href={`/dashboard/doktor/notlar/${not.id}/tetkikler`} target="_blank" rel="noreferrer" style={{ color: CHROME_RENK.pine, fontSize: 13, textDecoration: 'none', border: '1px solid rgba(47,67,52,0.4)', borderRadius: 999, padding: '7px 12px' }}>🧪 Tetkikler</a>
+        {/* MBYS-BILDIR-01: one-click report of an approved muayene, behind a mandatory confirmation dialog. */}
+        <MbysBildirButonu notId={not.id} onayli={onayli && !degisti} />
         {onayli && faturalamaAcik && (
           // NOTYA-ACCOUNTING-ENCOUNTER-01: muayene bitince doğal son adım — "Faturala", bu
           // muayeneyi (not.sessionId) ve o anki aşı listesini taslak faturaya taşır. Her branşta
