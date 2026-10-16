@@ -15,7 +15,7 @@ import { hastaSahibiMi } from '@/lib/doktor/hastaSahipligi'
 export const dynamic = 'force-dynamic'
 
 /** What a staff member may enter by hand. Units are fixed per type so the file stays comparable. */
-export const OLCUM_TURLERI = {
+const OLCUM_TURLERI = {
   ates: { ad: 'Ateş', birim: '°C', min: 30, max: 45 },
   nabiz: { ad: 'Nabız', birim: '/dk', min: 20, max: 300 },
   spo2: { ad: 'SpO₂', birim: '%', min: 40, max: 100 },
@@ -28,7 +28,7 @@ export const OLCUM_TURLERI = {
 export type OlcumTuru = keyof typeof OLCUM_TURLERI
 
 /** Pure validation, exported for tests. Returns the stored `deger` string and `ayrinti`, or an error message. */
-export function olcumDogrula(tur: unknown, deger: unknown, ikinci?: unknown): { deger: string; ayrinti: Record<string, unknown> } | { hata: string } {
+function olcumDogrula(tur: unknown, deger: unknown, ikinci?: unknown): { deger: string; ayrinti: Record<string, unknown> } | { hata: string } {
   if (typeof tur !== 'string' || !(tur in OLCUM_TURLERI)) return { hata: 'Geçersiz ölçüm türü.' }
   const t = OLCUM_TURLERI[tur as OlcumTuru]
   const sayi = (x: unknown) => {
