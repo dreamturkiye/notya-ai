@@ -70,8 +70,10 @@ export const TUM_YETKILER: readonly Yetki[] = [
 export const ROL_YETKILERI: Record<PratikRol, readonly Yetki[]> = {
   doktor: TUM_YETKILER,
   sekreter: [
+    // MOBIL-PERSONEL-04 (Kaan, 2026-10-16): a sekreter reads no clinical note content and can never delete a note
+    // ('not.oku' / 'not.yaz' removed on purpose; routes: /api/notes/*, /api/doktor/son-notlar). Do not add them back.
     'randevu.gor', 'randevu.yonet', 'hasta.liste', 'hasta.kayit', 'hasta.dosya.oku', 'hasta.dosya.yaz',
-    'not.oku', 'not.yaz', 'olcum.ekle', 'iletisim.gonder', 'iletisim.toplu', 'mesaj', 'intake.oku',
+    'olcum.ekle', 'iletisim.gonder', 'iletisim.toplu', 'mesaj', 'intake.oku',
     'intake.yonet', 'portal.baglanti', 'gelen_belge', 'onburo', 'fatura', 'ayar', 'ai.asistan', 'hesap.kendi',
   ],
   asistan: [
@@ -129,8 +131,9 @@ export const ROTA_YETKILERI: readonly Kural[] = [
   K('/api/doktor/hastalar/[id]/klinik-ozet', 'hasta.dosya.oku', 'hasta.dosya.yaz'),
   K('/api/doktor/hastalar/[id]/hedef-boy', 'hasta.dosya.oku', 'hasta.dosya.yaz'),
   K('/api/doktor/hastalar/[id]/olcumler', 'olcum.ekle', 'olcum.ekle', { sekreterKapali: true }),
-  K('/api/doktor/son-notlar', 'not.oku', null),
-  K('/api/notes', 'not.oku', 'not.yaz'),
+  // MOBIL-PERSONEL-04 (Kaan, 2026-10-16): a sekreter never reads clinical note content and never deletes a note.
+  K('/api/doktor/son-notlar', 'not.oku', null, { sekreterKapali: true }),
+  K('/api/notes', 'not.oku', 'not.yaz', { sekreterKapali: true }),
   K('/api/doktor/asilar', 'hasta.dosya.oku', 'hasta.dosya.yaz'),
   K('/api/doktor/asi-onam', 'hasta.dosya.oku', 'hasta.dosya.yaz'),
   K('/api/doktor/dermatoloji', 'hasta.dosya.oku', 'hasta.dosya.yaz'),

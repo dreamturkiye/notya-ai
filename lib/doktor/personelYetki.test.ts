@@ -18,7 +18,7 @@ const BEKLENEN: Record<PratikRol, Yetki[]> = {
   doktor: [...TUM_YETKILER],
   // Frozen: what a secretary could do before this change (every pratikOturum route not guarded by sadeceDoktor/doktorOturum).
   sekreter: [
-    'randevu.gor', 'randevu.yonet', 'hasta.liste', 'hasta.kayit', 'hasta.dosya.oku', 'hasta.dosya.yaz', 'not.oku', 'not.yaz',
+    'randevu.gor', 'randevu.yonet', 'hasta.liste', 'hasta.kayit', 'hasta.dosya.oku', 'hasta.dosya.yaz',
     'olcum.ekle', 'iletisim.gonder', 'iletisim.toplu', 'mesaj', 'intake.oku', 'intake.yonet', 'portal.baglanti', 'gelen_belge',
     'onburo', 'fatura', 'ayar', 'ai.asistan', 'hesap.kendi',
   ],
@@ -179,12 +179,26 @@ describe('pratikOturum kullanan her rota sınıflandırılmış', () => {
   }
   it('sekreter, sekreterKapali olmayan her mevcut rotada eskisi gibi girer (hiçbir yetki kaybı yok)', () => {
     const YENI_ROTALAR = new Set(['/api/doktor/hastalar/[id]/olcumler', '/api/doktor/documents', '/api/doktor/documents/[id]', '/api/doktor/documents/[id]/download', '/api/doktor/hesap/oturum'])
+    // MOBIL-PERSONEL-04: the only deliberate secretary loss — clinical note content (read) and note deletion.
+    const NOT_KAPALI = (y: string) => y === '/api/doktor/son-notlar' || y === '/api/notes' || y.startsWith('/api/notes/')
     for (const yol of PRATIK_ROTALAR) {
-      if (YENI_ROTALAR.has(yol)) continue
+      if (YENI_ROTALAR.has(yol) || NOT_KAPALI(yol)) continue
       for (const m of ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']) {
         assert.equal(yolIzniVarMi('sekreter', yol, m).izin, true, `sekreter ${m} ${yol}`)
       }
     }
+  })
+  it('MOBIL-PERSONEL-04: sekreter muayene notunu okuyamaz ve hiçbir notu silemez; doktor ve asistan okuyabilir', () => {
+    for (const m of ['GET', 'DELETE', 'PATCH', 'PUT', 'POST']) {
+      assert.equal(yolIzniVarMi('sekreter', '/api/notes/[id]', m).izin, false, `sekreter ${m} /api/notes/[id]`)
+      assert.equal(yolIzniVarMi('sekreter', '/api/notes/abc-123', m).izin, false, `sekreter ${m} /api/notes/abc-123`)
+    }
+    assert.equal(yolIzniVarMi('sekreter', '/api/doktor/son-notlar', 'GET').izin, false)
+    assert.equal(izinVarMi('sekreter', 'not.oku'), false)
+    assert.equal(izinVarMi('sekreter', 'not.yaz'), false)
+    assert.equal(yolIzniVarMi('doktor', '/api/notes/[id]', 'DELETE').izin, true)
+    assert.equal(yolIzniVarMi('asistan', '/api/notes/[id]', 'GET').izin, true)
+    assert.equal(yolIzniVarMi('asistan', '/api/notes/[id]', 'DELETE').izin, false)
   })
   it('asistan ve danışman hiçbir rotada onay / silme / personel yönetimi / reçete / fatura yapamaz', () => {
     const YASAK = [/\/approve$/, /\/accounting/, /\/doktor\/personel$/, /\/doktor\/personel\/\[id\]$/, /\/medula/, /\/erecete-ayar/, /\/araclar\/enabiz/, /\/asi-stok/]
