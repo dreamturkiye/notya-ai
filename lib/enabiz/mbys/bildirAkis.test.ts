@@ -215,8 +215,8 @@ describe('devirKaydet', () => {
   })
 })
 
-describe('migration 167', () => {
-  const sql = readFileSync(new URL('../../db/migrations/167_mbys_bildirim_gunlugu.sql', import.meta.url), 'utf8')
+describe('migration 168', () => {
+  const sql = readFileSync(new URL('../../db/migrations/168_mbys_bildirim_gunlugu.sql', import.meta.url), 'utf8')
   it('is append-only, RLS-protected, patient-isolated and holds no clinical text', () => {
     assert.match(sql, /before update or delete on public\.mbys_bildirim_gunlugu/i)
     assert.match(sql, /enable row level security/i)

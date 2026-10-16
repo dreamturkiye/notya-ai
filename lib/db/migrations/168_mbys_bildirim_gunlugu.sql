@@ -55,6 +55,6 @@ begin
 end $$;
 
 insert into schema_migrations (version, filename, checksum, applied_at, backfilled, note)
-values ('167', '167_mbys_bildirim_gunlugu.sql', null, now(), false,
+values ('168', '168_mbys_bildirim_gunlugu.sql', null, now(), false,
   'MBYS-BILDIR-01: append-only mbys_bildirim_gunlugu audit trail')
 on conflict (version) do nothing;
