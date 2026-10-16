@@ -23,6 +23,11 @@ function imza(gizli: string, doktorId: string, patientId: string, kanal: string)
   return createHmac('sha256', gizli).update(`vazgec:${doktorId}|${patientId}|${kanal}`).digest('base64url')
 }
 
+/** true when unsubscribe links can be signed — callers check this BEFORE sending anything that must carry one. */
+export function vazgecAnahtariVarMi(): boolean {
+  return gizliAnahtar() !== null
+}
+
 /** null when the secret is not configured — the e-mail then carries no unsubscribe link (and so must not be sent — see kampanya.ts). */
 export function vazgecJetonu(doktorId: string, patientId: string, kanal: IletisimKanali, gizli?: string): string | null {
   const g = gizliAnahtar(gizli)
@@ -51,6 +56,8 @@ export function vazgecBaglantisi(doktorId: string, patientId: string, kanal: Ile
 
 /** STOP/DUR keywords checked against the inbound SMS body (trimmed, case-folded). */
 export function vazgecKelimesiMi(govde: string): boolean {
-  const t = String(govde || '').trim().toLocaleLowerCase('tr-TR')
+  // tr-TR lower-casing turns a dotless "I" into "ı" ("IPTAL" → "ıptal"), which would silently miss an
+  // opt-out typed in capitals on a Turkish keyboard — fold ı back to i, and ignore trailing punctuation.
+  const t = String(govde || '').trim().toLocaleLowerCase('tr-TR').replace(/ı/g, 'i').replace(/[.!\s]+$/, '')
   return t === 'stop' || t === 'dur' || t === 'iptal'
 }

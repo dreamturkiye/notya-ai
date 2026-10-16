@@ -62,7 +62,7 @@ function HastaIletisimiIcerik() {
   const [onizleniyor, setOnizleniyor] = useState(false)
   const [gonderiliyor, setGonderiliyor] = useState(false)
   const [onayAsamasi, setOnayAsamasi] = useState(false)
-  const [sonuc, setSonuc] = useState<{ hedefSayisi: number; gonderildi: number; basarisiz: number; atlandi: number; smsManuelListesi?: { ad: string; telefon: string }[] } | null>(null)
+  const [sonuc, setSonuc] = useState<{ hedefSayisi: number; gonderildi: number; basarisiz: number; atlandi: number; vazgecYok: number; kalan: number; smsManuelListesi?: { ad: string; telefon: string }[] } | null>(null)
   const [hata, setHata] = useState('')
   const [gecmis, setGecmis] = useState<GecmisSatiri[]>([])
   // Stable across retries of the SAME send (so a double-click or network retry is deduped by the
@@ -124,14 +124,27 @@ function HastaIletisimiIcerik() {
         body: JSON.stringify({
           filtre, kanal, konu, govde, sablonAnahtari, idempotencyKey: idemKey,
           tetikleyici: asiAdi ? 'asi_stok' : 'manuel', asiStokLotId: lotId || null, onay: true,
+          onizlemeHedefSayisi: onizleme?.hedefSayisi ?? null,
         }),
       })
       const d = await r.json()
       if (!r.ok) { setHata(d?.error || 'Gönderilemedi.'); return }
-      const gonderildi = (d.sonuclar || []).filter((s: any) => s.durum === 'gonderildi').length
-      const basarisiz = (d.sonuclar || []).filter((s: any) => s.durum === 'basarisiz').length
-      const atlandi = (d.sonuclar || []).filter((s: any) => s.durum === 'atlandi').length
-      setSonuc({ hedefSayisi: d.hedefSayisi, gonderildi, basarisiz, atlandi, smsManuelListesi: d.smsManuelListesi })
+      const say = (f: (s: any) => boolean) => (d.sonuclar || []).filter(f).length
+      const devam = d.durum === 'devam'
+      // A 'devam' answer covers only part of the campaign; the same key is resent to continue, so totals accumulate.
+      setSonuc((onceki) => {
+        const t = onceki?.kalan ? onceki : null
+        return {
+          hedefSayisi: d.hedefSayisi,
+          gonderildi: (t?.gonderildi || 0) + say((s) => s.durum === 'gonderildi'),
+          basarisiz: (t?.basarisiz || 0) + say((s) => s.durum === 'basarisiz'),
+          atlandi: (t?.atlandi || 0) + say((s) => s.durum === 'atlandi' && s.sebep !== 'vazgec_baglantisi_yok'),
+          vazgecYok: (t?.vazgecYok || 0) + say((s) => s.sebep === 'vazgec_baglantisi_yok'),
+          kalan: devam ? Number(d.kalan || 0) : 0,
+          smsManuelListesi: d.smsManuelListesi,
+        }
+      })
+      if (devam) { void gecmisiYukle(); return } // keep the same idemKey + confirm step: pressing the button again continues
       setOnayAsamasi(false)
       setIdemKey(yeniIdemKeyUret()) // ready for a NEXT, distinct campaign in this same page session
       void gecmisiYukle()
@@ -219,7 +232,7 @@ function HastaIletisimiIcerik() {
               </div>
             )}
             <button type="button" disabled={gonderiliyor} onClick={() => void gonder()} style={{ ...btn('#B3261E', '#fff'), width: '100%' }}>
-              {gonderiliyor ? 'Gönderiliyor…' : `Onaylıyorum, ${onizleme.hedefSayisi} hastaya gönder`}
+              {gonderiliyor ? 'Gönderiliyor…' : (sonuc && sonuc.kalan > 0) ? 'Devam et' : `Onaylıyorum, ${onizleme.hedefSayisi} hastaya gönder`}
             </button>
           </div>
         )}
@@ -227,6 +240,8 @@ function HastaIletisimiIcerik() {
         {sonuc && (
           <div style={{ marginTop: 14, padding: 14, background: '#F3F8F0', borderRadius: 12, border: '1px solid #3F7D4A' }}>
             Gönderildi: <b>{sonuc.gonderildi}</b> · Başarısız: <b>{sonuc.basarisiz}</b> · Atlandı (izin/adres yok): <b>{sonuc.atlandi}</b>
+            {sonuc.vazgecYok > 0 && (<div style={{ marginTop: 6, fontSize: 13, color: '#B3261E' }}>{sonuc.vazgecYok} e-posta GÖNDERİLMEDİ: abonelikten çıkma bağlantısı oluşturulamadı (sunucu yapılandırması). Lütfen yöneticiye bildirin.</div>)}
+            {sonuc.kalan > 0 && (<div style={{ marginTop: 6, fontSize: 13 }}>Gönderim henüz tamamlanmadı — {sonuc.kalan} alıcı kaldı. Devam etmek için onay düğmesine tekrar basın; daha önce gönderilenlere ikinci kez gönderilmez.</div>)}
             {sonuc.smsManuelListesi && sonuc.smsManuelListesi.length > 0 && (
               <div style={{ marginTop: 10, fontSize: 13 }}>
                 SMS gateway bağlı değil — aşağıdaki listeyi kendi telefonunuzdan gönderin:
