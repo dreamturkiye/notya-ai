@@ -32,6 +32,10 @@ export function ingilizceYasal(o: {
   cookies: string
   /** Medical-device or advertising rule, named for the lawyer. */
   medical: string
+  /** The refund/cancellation statute or consumer guarantee, named for the lawyer. HUKUK-01. */
+  refund: string
+  /** The copyright/infringement-notice statute, named for the lawyer. HUKUK-01. */
+  copyright: string
 }): YasalDilPaketi {
   const belgeler: YasalBelge[] = [
     {
@@ -157,6 +161,41 @@ export function ingilizceYasal(o: {
             'This draft offers no payment for a report. A lawyer decides whether a programme of that kind exists.',
           ],
         },
+        posta('Addresses'),
+      ],
+    },
+    {
+      // HUKUK-01 (2026-10-17): refund/cancellation, added to match the Türkiye suite's document set.
+      anahtar: 'refund',
+      baslik: 'Refunds and cancellation',
+      inceleme: INCELEME,
+      bolumler: [
+        {
+          baslik: 'Cancelling',
+          paragraflar: [
+            'The clinician can cancel at any time. The paid period that has already started continues to the date it was paid for; no further period begins after that date.',
+          ],
+        },
+        { baslik: 'For a lawyer to review', paragraflar: [o.refund] },
+        { baslik: 'Billing questions', paragraflar: [`Write to ${E.billing}.`] },
+        posta('Addresses'),
+      ],
+    },
+    {
+      anahtar: 'copyright',
+      baslik: 'Copyright',
+      inceleme: INCELEME,
+      bolumler: [
+        {
+          baslik: 'The software',
+          paragraflar: ['The software, its interface and the Notya name belong to Notya. A subscription is a right to use it, not a transfer of it.'],
+        },
+        {
+          baslik: "The clinician's own record",
+          paragraflar: ['What a clinician writes or records about their own patient belongs to the clinician. Notya does not claim it, does not sell it, and does not use it to train a model.'],
+        },
+        { baslik: 'For a lawyer to review', paragraflar: [o.copyright] },
+        { baslik: 'A notice of infringement', paragraflar: [`Send a notice to ${E.legal}: who you are, what you believe is yours, and where you saw it used.`] },
         posta('Addresses'),
       ],
     },

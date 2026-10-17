@@ -53,7 +53,7 @@ const GRUP = { solo: 'solo', clinic: 'clinic' } as const
 
 /** `%M` the word mark; `%K` the country's word for a senior doctor. The lists a country fills are put in by `enAcilis`. */
 /** Footer labels for the policy pages, in YASAL_ANAHTARLARI order. No statute is named. */
-const EN_YASAL = ['Privacy', 'Terms of use', 'Cookies', 'Your information', 'Accessibility', 'Medical disclaimer', 'Security'] as const
+const EN_YASAL = ['Privacy', 'Terms of use', 'Cookies', 'Your information', 'Accessibility', 'Medical disclaimer', 'Security', 'Refunds and cancellation', 'Copyright'] as const
 
 const TEMEL: AcilisIcerigi = {
   meta: {
