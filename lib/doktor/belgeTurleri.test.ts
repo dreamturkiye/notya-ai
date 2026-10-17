@@ -1,10 +1,12 @@
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
+import { etkinModalite } from '../../core/belgeler/router'
 import {
   belgeTurleriIcinBrans,
   belgeTuruIzinliMi,
   yenidoganTaburcuEpikriziBransiMi,
   YENIDOGAN_TABURCULUK_EPIKRIZI,
+  EKOKARDIYOGRAFI,
   ORTAK_BELGE_TURLERI,
 } from './belgeTurleri'
 
@@ -52,5 +54,22 @@ describe('belgeTurleri — Yenidoğan Taburculuk Epikrizi (brans-alan-sızması)
     assert.ok(belgeTurleriIcinBrans('pediatri').includes('İşitme testi'))
     assert.ok(belgeTurleriIcinBrans('dahiliye').includes('İşitme testi'))
     assert.equal(belgeTuruIzinliMi('İşitme testi', 'kulak-burun-bogaz'), true)
+  })
+
+  it('Ekokardiyografi EKG’nin yanında, her branş dosyalar; ASE okuması kardiyoloji ve kalp damarda', () => {
+    assert.equal(ORTAK_BELGE_TURLERI[ORTAK_BELGE_TURLERI.indexOf('EKG') + 1], EKOKARDIYOGRAFI)
+    for (const ham of ['pediatri', 'dahiliye', 'kardiyoloji', 'goz-hastaliklari', 'Kalp ve Damar Cerrahisi', 'kadin-hastaliklari-dogum', '']) {
+      assert.ok(belgeTurleriIcinBrans(ham).includes(EKOKARDIYOGRAFI), ham || '(boş)')
+    }
+    assert.equal(belgeTuruIzinliMi(EKOKARDIYOGRAFI, 'goz-hastaliklari'), true)
+    assert.equal(belgeTuruIzinliMi(EKOKARDIYOGRAFI, 'dahiliye'), true)
+    assert.equal(belgeTuruIzinliMi(EKOKARDIYOGRAFI, 'pediatri'), true)
+    assert.equal(belgeTuruIzinliMi(EKOKARDIYOGRAFI, 'kardiyoloji'), true)
+    assert.equal(etkinModalite('goz', 'eko').modalite, 'serbest')
+    assert.equal(etkinModalite('dahiliye', 'eko').modalite, 'serbest')
+    assert.equal(etkinModalite('pediatri', 'eko').modalite, 'serbest')
+    assert.equal(etkinModalite('kadin_dogum', 'eko').modalite, 'serbest')
+    assert.equal(etkinModalite('kardiyoloji', 'eko').modalite, 'eko')
+    assert.equal(etkinModalite('kalp_damar', 'eko').modalite, 'eko')
   })
 })
