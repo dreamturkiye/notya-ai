@@ -4140,7 +4140,7 @@ Closes the backlog item flagged (not actioned) at the bottom of HASTA-IZOLASYON-
 
 **Migrations applied + verified (Supabase MCP tools, per the task's instruction to apply them directly):** `174_hasta_foto_arsivi.sql` applied to all 6 country projects (`xmoxiprwisegunbrpstw` US, `gscfutmlozfvwrndwecw` GB, `urdxvmsertgnxtapypig` CA, `sllwiuhobuagumwbvulf` AU, `itcrfagsjzwzupqlzbqe` NZ, `pzleklfytbigsurumekn` UZ) — it was already applied on production (`anjayzospuurymjmmtim`, confirmed via `list_migrations` before touching anything). Verified per project: all 5 tables present (`information_schema.tables`), `get_advisors(security)` shows no new RLS/policy finding. No other migration was needed for NOTYA-TAKIP-01/KONSULTASYONLAR-01/MUAYENE-EKLERI-07 — they use tables (`takip_isleri`, `konsultasyon_defter`, `medical_documents`) already present on every country project.
 
-**Commits:** `[COMMITS-PLACEHOLDER]`
+**Commits:** `release/us@4e4b96fa`, `release/gb@0647d44e`, `release/ca@ea2c065e`, `release/au@117c451d`, `release/nz@983ced0a`, `release/uz@c85b570a`, `main@f7762d36`+`30e20bfc` (docs)
 
 **Decision points for Kaan (not resolved here, per the task's explicit "stop and report, do not guess" instruction):**
 1. **FOTO-ARSIV-01 country port (UI/viewer/compare/annotations):** who translates the copy per country (Uzbek needs a native reviewer, already flagged before this job) and on what timeline — see FOTO-ARSIV-01's own row above.
