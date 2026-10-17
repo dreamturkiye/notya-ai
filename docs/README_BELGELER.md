@@ -17,7 +17,7 @@ Blocked for commercial use (eval harness only): RETFound (CC BY-NC 4.0), UNI / C
 
 ## Eko (`eko-ase`) — rule engine, no weights
 
-Not a `motor_kayit` row. There is no ONNX file, sha256, or model URL. `core/belgeler/ekoAse.ts` reads the text layer of a signed TTE/TEE PDF and applies published adult ASE/EACVI cutoffs (Lang 2015 chamber quantification, TAPSE &lt;17 mm, Nagueh 2016 average E/e′ &gt;14, PASP ≥40 mmHg, ESC severe aortic stenosis). It runs only when the belge router’s effective modality is `eko` (kardiyoloji and kalp damar cerrahisi). Other branşlar stay on `serbest` / describe-only. Stills and cine are not re-measured. The draft is stored on the document; the visit note (`content_objektif`) changes only when the doctor presses Onayla.
+Not a `motor_kayit` row. There is no ONNX file, sha256, or model URL. `core/belgeler/ekoAse.ts` reads the text layer of a signed TTE/TEE PDF and applies published adult ASE/EACVI cutoffs (Lang 2015 chamber quantification, TAPSE &lt;17 mm, Nagueh 2016 average E/e′ &gt;14, PASP ≥40 mmHg, ESC severe aortic stenosis). Concordant severe AS (at least two of area, mean gradient, Vmax) is separated from low-gradient / discordant AS, which is not upgraded to severe. The draft is a sectioned note (LV, diastolic, right heart, valves, pericardium) plus a short impression and a list of missing measurements. It runs only when the belge router’s effective modality is `eko` (kardiyoloji and kalp damar cerrahisi). Other branşlar stay on `serbest` / describe-only. Stills and cine are not re-measured. The draft is stored on the document; the visit note (`content_objektif`) changes only when the doctor presses Onayla.
 
 ## Runtime
 
