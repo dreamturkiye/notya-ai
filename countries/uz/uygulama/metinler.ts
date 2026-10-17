@@ -295,6 +295,88 @@ const UZ_LATN: UygulamaMetni = {
     sayiOkunamadi: 'Bu sonni oʻqib boʻlmadi. Uni qaytadan yozing, masalan: %1 yoki %2.',
     duzelt: 'Yozganlaringizdan baʼzilarini oʻqib boʻlmadi. Belgilangan maydonlarni tuzating yoki tozalang va qaytadan urinib koʻring.',
   },
+  // YENI-DOKTOR-UX-2026-10 — in-place tips (one "?" per screen) and the first-run checklist. MACHINE-WRITTEN,
+  // awaits native review like the rest of this file.
+  ipuclari: {
+    rozet: 'MASLAHAT',
+    anladim: 'Tushundim',
+    birDaha: 'Qayta koʻrsatma',
+    ac: 'Maslahat: %',
+    ayarEtiket: 'Maslahatlarni koʻrsatish',
+    ayarIzoh: 'Har bir ekrandagi kichik “?” orqali ochiladigan qisqa maslahatlar; ekran birinchi marta ochilganda faqat bir marta oʻzi koʻrinadi.',
+    bolumler: {
+      bugun: {
+        baslik: 'Bugun',
+        satirlar: [
+          'Kuningiz shu yerdan boshlanadi: bugungi qabullar va koʻriklar bir joyda koʻrinadi.',
+          'Bemor bilan ishlash uchun Bemorlar boʻlimini, kunni rejalashtirish uchun Taqvimni oching.',
+        ],
+      },
+      takvim: {
+        baslik: 'Taqvim',
+        satirlar: [
+          'Qabullaringiz kun va hafta boʻyicha shu yerda.',
+          'Yangi qabulni shu yerdan yozing; bemor kelganda koʻrikni toʻgʻridan-toʻgʻri shu qabuldan boshlaysiz.',
+        ],
+      },
+      hastalar: {
+        baslik: 'Bemorlar',
+        satirlar: [
+          'Yozgan barcha bemorlaringiz shu yerda — ularni faqat siz koʻrasiz.',
+          'Ism yoki telefon raqami boʻyicha qidiring.',
+          'Bemorning qatoriga bosilganda uning yozuvlari ochiladi; koʻrik ham shu yerdan boshlanadi.',
+        ],
+      },
+      muayene: {
+        baslik: 'Koʻrik',
+        satirlar: [
+          'Bemor bilan odatdagidek gaplashing — yozib olingan ovoz koʻrik qaydining qoralamasiga aylanadi.',
+          'Qoralamani oʻqing va kerak boʻlgan joyini tuzating.',
+          'Siz tasdiqlamaguningizcha hech qaysi qayd yakuniy hisoblanmaydi.',
+        ],
+      },
+      araclar: {
+        baslik: 'Vositalar',
+        satirlar: [
+          'Kundalik ishga yordam beradigan kichik vositalar, har biri oʻz ekranida.',
+          'Vosita bemorning yozuvini oʻzi oʻzgartirmaydi: saqlashni siz bosasiz.',
+        ],
+      },
+      klinik: {
+        baslik: 'Klinika',
+        satirlar: [
+          'Klinikangiz shu yerda: aʼzolar, taklifnomalar va lavozimlar.',
+          'Bemorlaringiz bilan kim yordam bera olishini shu yerda berasiz — va istalgan vaqt qaytarib olasiz.',
+        ],
+      },
+      onBuro: {
+        baslik: 'Qabulxona',
+        satirlar: [
+          'Sizga ruxsat bergan shifokorlarning qabullari shu bir ish maydonida.',
+          'Qabulni shu yerdan yozing va boshqaring; tibbiy yozuv shifokorning oʻzida qoladi.',
+        ],
+      },
+      ayarlar: {
+        baslik: 'Sozlamalar',
+        satirlar: [
+          'Til, mutaxassislik va boshqa sozlashlar shu yerda.',
+          'Bir marta sozlang, oʻzgarish kerak boʻlganda qaytib keling.',
+        ],
+      },
+    },
+  },
+  ilkAdimlar: {
+    baslik: 'Xush kelibsiz — boshlashdan oldin',
+    aciklama: 'Bir necha qadam — va ishga tayyorsiz. Har bir qator toʻgʻri joyga olib boradi.',
+    gizle: 'Yashirish',
+    tamamOrani: '%1 / %2 bajarildi',
+    adimlar: {
+      rol: { etiket: 'Mutaxassisligingizni tanlang', aciklama: 'Yordamchingiz va koʻrik qaydi shunga qarab tuziladi' },
+      hasta: { etiket: 'Birinchi bemoringizni qoʻshing', aciklama: 'Yozuvlari va koʻriklari bir joyda saqlanadi' },
+      randevu: { etiket: 'Birinchi qabulingizni yozing', aciklama: 'Taqvimdan' },
+      muayene: { etiket: 'Birinchi koʻrikingizni boshlang', aciklama: 'Bemorning yozuvidan yoki qabuldan boshlang' },
+    },
+  },
 }
 
 
@@ -566,6 +648,88 @@ const UZ_CYRL: UygulamaMetni = {
     sayiOkunamadi: 'Бу сонни ўқиб бўлмади. Уни қайтадан ёзинг, масалан: %1 ёки %2.',
     duzelt: 'Ёзганларингиздан баъзиларини ўқиб бўлмади. Белгиланган майдонларни тузатинг ёки тозаланг ва қайтадан уриниб кўринг.',
   },
+  // YENI-DOKTOR-UX-2026-10 — in-place tips (one "?" per screen) and the first-run checklist. MACHINE-WRITTEN,
+  // awaits native review like the rest of this file.
+  ipuclari: {
+    rozet: 'МАСЛАҲАТ',
+    anladim: 'Тушундим',
+    birDaha: 'Қайта кўрсатма',
+    ac: 'Маслаҳат: %',
+    ayarEtiket: 'Маслаҳатларни кўрсатиш',
+    ayarIzoh: 'Ҳар бир экрандаги кичик “?” орқали очиладиган қисқа маслаҳатлар; экран биринчи марта очилганда фақат бир марта ўзи кўринади.',
+    bolumler: {
+      bugun: {
+        baslik: 'Бугун',
+        satirlar: [
+          'Кунингиз шу ердан бошланади: бугунги қабуллар ва кўриклар бир жойда кўринади.',
+          'Бемор билан ишлаш учун Беморлар бўлимини, кунни режалаштириш учун Тақвимни очинг.',
+        ],
+      },
+      takvim: {
+        baslik: 'Тақвим',
+        satirlar: [
+          'Қабулларингиз кун ва ҳафта бўйича шу ерда.',
+          'Янги қабулни шу ердан ёзинг; бемор келганда кўрикни тўғридан-тўғри шу қабулдан бошлайсиз.',
+        ],
+      },
+      hastalar: {
+        baslik: 'Беморлар',
+        satirlar: [
+          'Ёзган барча беморларингиз шу ерда — уларни фақат сиз кўрасиз.',
+          'Исм ёки телефон рақами бўйича қидиринг.',
+          'Беморнинг қаторига босилганда унинг ёзувлари очилади; кўрик ҳам шу ердан бошланади.',
+        ],
+      },
+      muayene: {
+        baslik: 'Кўрик',
+        satirlar: [
+          'Бемор билан одатдагидек гаплашинг — ёзиб олинган овоз кўрик қайдининг қораламасига айланади.',
+          'Қораламани ўқинг ва керак бўлган жойини тузатинг.',
+          'Сиз тасдиқламагунингизча ҳеч қайси қайд якуний ҳисобланмайди.',
+        ],
+      },
+      araclar: {
+        baslik: 'Воситалар',
+        satirlar: [
+          'Кундалик ишга ёрдам берадиган кичик воситалар, ҳар бири ўз экранида.',
+          'Восита беморнинг ёзувини ўзи ўзгартирмайди: сақлашни сиз босасиз.',
+        ],
+      },
+      klinik: {
+        baslik: 'Клиника',
+        satirlar: [
+          'Клиникангиз шу ерда: аъзолар, таклифномалар ва лавозимлар.',
+          'Беморларингиз билан ким ёрдам бера олишини шу ерда берасиз — ва исталган вақт қайтариб оласиз.',
+        ],
+      },
+      onBuro: {
+        baslik: 'Қабулхона',
+        satirlar: [
+          'Сизга рухсат берган шифокорларнинг қабуллари шу бир иш майдонида.',
+          'Қабулни шу ердан ёзинг ва бошқаринг; тиббий ёзув шифокорнинг ўзида қолади.',
+        ],
+      },
+      ayarlar: {
+        baslik: 'Созламалар',
+        satirlar: [
+          'Тил, мутахассислик ва бошқа созлашлар шу ерда.',
+          'Бир марта созланг, ўзгариш керак бўлганда қайтиб келинг.',
+        ],
+      },
+    },
+  },
+  ilkAdimlar: {
+    baslik: 'Хуш келибсиз — бошлашдан олдин',
+    aciklama: 'Бир неча қадам — ва ишга тайёрсиз. Ҳар бир қатор тўғри жойга олиб боради.',
+    gizle: 'Яшириш',
+    tamamOrani: '%1 / %2 бажарилди',
+    adimlar: {
+      rol: { etiket: 'Мутахассислигингизни танланг', aciklama: 'Ёрдамчингиз ва кўрик қайди шунга қараб тузилади' },
+      hasta: { etiket: 'Биринчи беморингизни қўшинг', aciklama: 'Ёзувлари ва кўриклари бир жойда сақланади' },
+      randevu: { etiket: 'Биринчи қабулингизни ёзинг', aciklama: 'Тақвимдан' },
+      muayene: { etiket: 'Биринчи кўрикингизни бошланг', aciklama: 'Беморнинг ёзувидан ёки қабулдан бошланг' },
+    },
+  },
 }
 
 const RU: UygulamaMetni = {
@@ -835,6 +999,88 @@ const RU: UygulamaMetni = {
     saatGecersiz: 'Время указано не полностью или неверно. Введите часы и минуты двумя цифрами.',
     sayiOkunamadi: 'Не удалось прочитать это число. Введите его ещё раз, например: %1 или %2.',
     duzelt: 'Часть введённого не удалось прочитать. Исправьте или очистите отмеченные поля и повторите попытку.',
+  },
+  // YENI-DOKTOR-UX-2026-10 — in-place tips (one "?" per screen) and the first-run checklist. MACHINE-WRITTEN,
+  // awaits native review like the rest of this file.
+  ipuclari: {
+    rozet: 'СОВЕТ',
+    anladim: 'Понятно',
+    birDaha: 'Больше не показывать',
+    ac: 'Совет: %',
+    ayarEtiket: 'Показывать советы',
+    ayarIzoh: 'Небольшие подсказки «?» на каждом экране; при первом открытии экрана совет показывается один раз сам.',
+    bolumler: {
+      bugun: {
+        baslik: 'Сегодня',
+        satirlar: [
+          'Ваш день начинается здесь: приёмы и записи на сегодня — в одном месте.',
+          'Чтобы поработать с пациентом, откройте «Пациенты»; чтобы спланировать день — «Календарь».',
+        ],
+      },
+      takvim: {
+        baslik: 'Календарь',
+        satirlar: [
+          'Здесь — все ваши приёмы по дням и неделям.',
+          'Новый приём запишите прямо здесь; когда пациент придёт, начните приём из самой записи.',
+        ],
+      },
+      hastalar: {
+        baslik: 'Пациенты',
+        satirlar: [
+          'Все пациенты, которых вы когда-либо записывали — видны только вам.',
+          'Ищите по имени или номеру телефона.',
+          'Нажатие на пациента открывает его карту; приём начинается оттуда же.',
+        ],
+      },
+      muayene: {
+        baslik: 'Приём',
+        satirlar: [
+          'Говорите с пациентом как обычно — запись разговора становится черновиком записи приёма.',
+          'Прочитайте черновик и исправьте, где нужно.',
+          'Ни одна запись не считается окончательной, пока вы её не утвердите.',
+        ],
+      },
+      araclar: {
+        baslik: 'Инструменты',
+        satirlar: [
+          'Небольшие помощники для повседневной работы, каждый на своём экране.',
+          'Инструмент сам не изменяет карту пациента: сохраняете вы.',
+        ],
+      },
+      klinik: {
+        baslik: 'Клиника',
+        satirlar: [
+          'Здесь — ваша клиника: участники, приглашения и должности.',
+          'Кто может помогать с вашими пациентами, вы разрешаете здесь — и можете забрать это разрешение в любой момент.',
+        ],
+      },
+      onBuro: {
+        baslik: 'Регистратура',
+        satirlar: [
+          'Приёмы врачей, которые дали этому аккаунту доступ, — в одном рабочем месте.',
+          'Записывайте и ведите приёмы здесь; медицинская запись остаётся у врача.',
+        ],
+      },
+      ayarlar: {
+        baslik: 'Настройки',
+        satirlar: [
+          'Здесь — язык, специальность и другие настройки.',
+          'Настройте один раз и возвращайтесь, когда нужно что-то изменить.',
+        ],
+      },
+    },
+  },
+  ilkAdimlar: {
+    baslik: 'С чего начать',
+    aciklama: 'Ещё несколько шагов — и вы готовы к работе. Каждая строка ведёт на нужный экран.',
+    gizle: 'Скрыть',
+    tamamOrani: '%1 из %2 сделано',
+    adimlar: {
+      rol: { etiket: 'Выберите специальность', aciklama: 'От этого зависят ассистент и структура записи приёма' },
+      hasta: { etiket: 'Добавьте первого пациента', aciklama: 'Его карта и приёмы хранятся в одном месте' },
+      randevu: { etiket: 'Запишите первый приём', aciklama: 'Из календаря' },
+      muayene: { etiket: 'Начните первый приём', aciklama: 'Начните из карты пациента или из самой записи' },
+    },
   },
 }
 
