@@ -88,10 +88,11 @@ Tanı kesinliği yok; "…düşündürür" dili.`
     return `Dış göz fotoğrafı — kapak, konjonktiva, kornea yüzey, kızarıklık dağılımı; fundus yorumu yapma.`
   }
   if (modalite === 'eko') {
-    return `EKOKARDİYOGRAFİ — taslağı şu sırayla yaz: LV/EF, sol atriyum, diyastolik (E/e′), RV/TAPSE, kapaklar, perikard, PASP.
-Ölçüm dökümü verilmişse EF, kalınlık, TAPSE, kapak alanı, gradyan ve PASP sayılarını AYNEN alıntıla. Farklı bir EF, alan veya gradyan uydurma.
-Durağan kare ve sine döngüsünden sayısal EF üretme. 16 yaş altı ve fetal ekoda erişkin bantlarını tanıya çevirme.
-Tamponad ifadesi varsa acil_bayrak true. Destek alanına motor adı yazma; "rapor metnindeki ölçüm" de.`
+    return `EKOKARDİYOGRAFİ — taslağı şu sırayla yaz: Yorum, LV/EF, sol atriyum ve diyastol, sağ kalp, kapaklar, perikard/aort, eksik ölçüm.
+Ölçüm dökümündeki sayıları AYNEN alıntıla. Farklı bir EF, alan veya gradyan uydurma. Eksik satırındaki ölçümü üretme.
+"Düşük gradyanlı" aort darlığını ileri darlık diye yükseltme. Kalp yetersizliği veya HFpEF tanısı koyma; doluş basıncını "açısından" diye yaz.
+Durağan kare ve sineden sayısal EF üretme. 16 yaş altı ve fetal ekoda erişkin bantlarını tanıya çevirme.
+Tamponad veya çökme/kollaps ifadesi varsa acil_bayrak true. Destek alanına motor adı yazma; "rapor metnindeki ölçüm" de.`
   }
   return null
 }
