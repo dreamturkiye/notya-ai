@@ -2,7 +2,7 @@
  * Belge routing helpers — lab PDFs use NOTYA-LAB-01 (/lab);
  * röntgen / imaging use NOTYA-BELGE-01 (Asistana raporla + CXR engine).
  */
-import { YENIDOGAN_TABURCULUK_EPIKRIZI } from '@/lib/doktor/belgeTurleri'
+import { EKOKARDIYOGRAFI, YENIDOGAN_TABURCULUK_EPIKRIZI } from '@/lib/doktor/belgeTurleri'
 
 export function belgeYenidoganTaburcuEpikriziMi(doc: {
   fileName?: string | null
@@ -121,7 +121,7 @@ export function belgeDegerlendirmeCtalari(doc: {
 /** Vault / list display: prefer Turkish “Röntgen” over raw “X-Ray”. */
 export function belgeKategoriEtiket(doc: { fileName?: string | null; category?: string | null; fileType?: string | null }): string {
   if (belgeYenidoganTaburcuEpikriziMi(doc)) return YENIDOGAN_TABURCULUK_EPIKRIZI
-  if (belgeEkoMi(doc)) return 'Ekokardiyografi'
+  if (belgeEkoMi(doc)) return EKOKARDIYOGRAFI
   if (belgeRontgenMi(doc)) return 'Röntgen'
   if (belgeLabMi(doc)) return doc.category || 'Lab Sonucu'
   return doc.category || doc.fileType || 'Belge'

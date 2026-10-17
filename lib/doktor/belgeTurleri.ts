@@ -11,10 +11,18 @@ import { bransAnahtari } from '@/lib/specialties/bransAnahtari'
 /** Sabit etiket — vault category ve yükleme select ile aynı string. */
 export const YENIDOGAN_TABURCULUK_EPIKRIZI = 'Yenidoğan Taburculuk Epikrizi'
 
+/**
+ * Ortak kasa türü — EKG ve Röntgen ile aynı yer.
+ * Her branş hastanın getirdiği eko raporunu dosyalar. Erişkin ASE okuması bu listede değil;
+ * o kapı `etkinModalite` (yalnız kardiyoloji ve kalp damar cerrahisi).
+ */
+export const EKOKARDIYOGRAFI = 'Ekokardiyografi' as const
+
 export const ORTAK_BELGE_TURLERI = [
   'Lab Sonucu',
   'Görüntüleme Raporu',
   'EKG',
+  EKOKARDIYOGRAFI,
   'Röntgen',
   'İşitme testi',
   'Epikriz',
