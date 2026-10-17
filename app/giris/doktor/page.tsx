@@ -31,7 +31,7 @@ export default function Giris() {
       })
       if (personelRes.ok) {
         const pm = await personelRes.json().catch(() => ({} as { rol?: string }))
-        if (pm.rol === 'sekreter') {
+        if (pm.rol && pm.rol !== 'doktor') {
           router.replace('/dashboard/doktor')
           return
         }

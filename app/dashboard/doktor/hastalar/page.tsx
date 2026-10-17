@@ -6,6 +6,7 @@ import { trIcerir } from '@/lib/utils/turkceArama';
 import { klinikAramaMi } from '@/lib/doktor/hastaAramaFiltre';
 import { useRouter } from 'next/navigation';
 import { CHROME_RENK, CHROME_FONT } from '@/lib/doktor/chromeTheme';
+import IpucuBaloncugu from '@/components/doktor/IpucuBaloncugu';
 
 export const dynamic = 'force-dynamic';
 
@@ -145,7 +146,10 @@ export default function HastalarPage() {
   return (
     <div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 24 }}>
-        <h1 style={{ fontFamily: CHROME_FONT.serif, fontWeight: 500, fontSize: 32, margin: 0, color: '#2e251d', letterSpacing: '-0.02em' }}>Hastalar</h1>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+          <h1 style={{ fontFamily: CHROME_FONT.serif, fontWeight: 500, fontSize: 32, margin: 0, color: '#2e251d', letterSpacing: '-0.02em' }}>Hastalar</h1>
+          <IpucuBaloncugu bolum="hastalar" />
+        </span>
         {/* NOTYA-SADE-01 (Ö2): üst menüden kalkan "Hasta Ekle" buraya buton olarak geldi */}
         <button type="button" onClick={() => router.push('/dashboard/doktor/hasta-ekle')} style={{ background: CHROME_RENK.pine, border: 'none', color: '#FAF8F4', borderRadius: 999, padding: '10px 18px', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>+ Hasta Ekle</button>
       </div>
@@ -182,9 +186,24 @@ export default function HastalarPage() {
           <div style={{ color: CHROME_RENK.warn, padding: '24px 4px' }}>{loadError}</div>
         )}
         {!loading && !loadError && filtered.length === 0 && (
-          <div style={{ color: CHROME_RENK.muted, padding: '24px 4px' }}>
-            {search.trim() ? 'Aramanızla eşleşen hasta bulunamadı.' : 'Henüz hasta kaydı yok.'}
-          </div>
+          search.trim() ? (
+            <div style={{ color: CHROME_RENK.muted, padding: '24px 4px' }}>Aramanızla eşleşen hasta bulunamadı.</div>
+          ) : (
+            /* YENI-DOKTOR-UX-2026-10: boş ekran ne işe yaradığını söyler ve ilk eylemi bağlar. */
+            <div style={{ background: '#FFFFFF', border: `1px solid ${CHROME_RENK.border}`, borderRadius: 16, padding: '28px 22px', textAlign: 'center', boxShadow: '0 8px 18px rgba(58,44,34,0.045)' }}>
+              <div style={{ fontFamily: CHROME_FONT.serif, fontSize: 22, color: CHROME_RENK.ink }}>Henüz hasta yok</div>
+              <div style={{ fontSize: 14, color: CHROME_RENK.muted, marginTop: 6, lineHeight: 1.5 }}>
+                Hasta kaydı açtığınızda dosyası, muayeneleri ve belgeleri burada toplanır — yalnızca siz görürsünüz.
+              </div>
+              <button
+                type="button"
+                onClick={() => router.push('/dashboard/doktor/hasta-ekle')}
+                style={{ marginTop: 14, background: CHROME_RENK.pine, border: 'none', color: '#FAF8F4', borderRadius: 999, padding: '11px 20px', minHeight: 44, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}
+              >
+                + İlk hastanızı ekleyin
+              </button>
+            </div>
+          )
         )}
         {filtered.map((p) => (
           <div

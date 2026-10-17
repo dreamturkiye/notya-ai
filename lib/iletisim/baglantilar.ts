@@ -39,6 +39,16 @@ export function epostaAdresi(adres: string | null | undefined): string | null {
   return /^[^\s@<>(),;:"]+@[^\s@<>(),;:"]+\.[^\s@<>(),;:"]+$/.test(a) ? a : null
 }
 
+/**
+ * NOTYA-HASTA-ILETISIMI-01 — E.164 WITH "+" for the SMS gateway (whatsappNumarasi strips it for
+ * wa.me links; SMS gateway APIs, incl. android-sms-gateway, expect "+905XXXXXXXXX"). Same
+ * normalisation as whatsappNumarasi, just not stripped.
+ */
+export function smsNumarasi(telefon: string | null | undefined): string | null {
+  const digits = whatsappNumarasi(telefon)
+  return digits ? `+${digits}` : null
+}
+
 /** Encodes like encodeURIComponent; mailto bodies also want CRLF line breaks (RFC 6068). */
 function kodla(s: string, crlf = false): string {
   const metin = crlf ? s.replace(/\r?\n/g, '\r\n') : s

@@ -1,0 +1,638 @@
+{
+ "surum": 1,
+ "ad": "sentetik-ornek (gercek goruntu yok)",
+ "olgular": [
+  {
+   "id": "sentetik-01-temiz-kol",
+   "not": "Synthetic: clean arm photo, no red flag. The scripted answer agrees with the reference.",
+   "mod": "genel",
+   "yas": null,
+   "veliDili": false,
+   "beklenen": {
+    "bolge": "kol-sag",
+    "degerlendirilebilir": true,
+    "kirmiziBayrak": [],
+    "kalite": "iyi"
+   },
+   "yanit": {
+    "kalite": {
+     "genel": "iyi",
+     "bulaniklik": "yok",
+     "isik": "yeterli",
+     "kadraj": "uygun",
+     "olcekReferansi": true,
+     "bolgeBelirlenebilir": true,
+     "yenidenCekim": null
+    },
+    "bolge": {
+     "id": "kol-sag",
+     "guven": "orta"
+    },
+    "degerlendirilebilir": true,
+    "abstain": null,
+    "morfoloji": {
+     "renk": "eritemli",
+     "boyut": null,
+     "sinir": "düzgün",
+     "yuzey": "düz",
+     "dagilim": "tek odak",
+     "sayi": "tek"
+    },
+    "gozlemler": [
+     {
+      "metin": "Sınırlı eritemli alan görülüyor.",
+      "guven": "orta"
+     }
+    ],
+    "kirmiziBayraklar": [
+     {
+      "kod": "pigmentli-lezyon-abcde",
+      "durum": "yok",
+      "kriter": "Görüntüde bu ölçüt izlenmiyor.",
+      "not": ""
+     },
+     {
+      "kod": "enfeksiyon-selulit",
+      "durum": "yok",
+      "kriter": "Görüntüde bu ölçüt izlenmiyor.",
+      "not": ""
+     },
+     {
+      "kod": "peteshi-purpura",
+      "durum": "yok",
+      "kriter": "Görüntüde bu ölçüt izlenmiyor.",
+      "not": ""
+     },
+     {
+      "kod": "sarilik",
+      "durum": "yok",
+      "kriter": "Görüntüde bu ölçüt izlenmiyor.",
+      "not": ""
+     },
+     {
+      "kod": "yanik",
+      "durum": "yok",
+      "kriter": "Görüntüde bu ölçüt izlenmiyor.",
+      "not": ""
+     },
+     {
+      "kod": "yara-ulser-nekroz",
+      "durum": "yok",
+      "kriter": "Görüntüde bu ölçüt izlenmiyor.",
+      "not": ""
+     },
+     {
+      "kod": "akut-sislik-anjiyoodem",
+      "durum": "yok",
+      "kriter": "Görüntüde bu ölçüt izlenmiyor.",
+      "not": ""
+     },
+     {
+      "kod": "aktif-kanama",
+      "durum": "yok",
+      "kriter": "Görüntüde bu ölçüt izlenmiyor.",
+      "not": ""
+     }
+    ],
+    "ayiricilar": [
+     {
+      "ad": "Kontakt dermatit",
+      "guven": "dusuk",
+      "ayirtEdici": "Maruziyet öyküsü ayırt eder."
+     }
+    ],
+    "oneri": null,
+    "sinirlar": []
+   }
+  },
+  {
+   "id": "sentetik-02-peteshi",
+   "not": "Synthetic: petechial rash; the scripted answer flags it correctly (true positive).",
+   "mod": "pediatrik",
+   "yas": "4 yaşında",
+   "veliDili": true,
+   "beklenen": {
+    "bolge": "gogus",
+    "degerlendirilebilir": true,
+    "kirmiziBayrak": [
+     "peteshi-purpura"
+    ],
+    "kalite": "iyi"
+   },
+   "yanit": {
+    "kalite": {
+     "genel": "iyi",
+     "bulaniklik": "yok",
+     "isik": "yeterli",
+     "kadraj": "uygun",
+     "olcekReferansi": true,
+     "bolgeBelirlenebilir": true,
+     "yenidenCekim": null
+    },
+    "bolge": {
+     "id": "gogus",
+     "guven": "orta"
+    },
+    "degerlendirilebilir": true,
+    "abstain": null,
+    "morfoloji": {
+     "renk": "eritemli",
+     "boyut": null,
+     "sinir": "düzgün",
+     "yuzey": "düz",
+     "dagilim": "tek odak",
+     "sayi": "tek"
+    },
+    "gozlemler": [
+     {
+      "metin": "Sınırlı eritemli alan görülüyor.",
+      "guven": "orta"
+     }
+    ],
+    "kirmiziBayraklar": [
+     {
+      "kod": "pigmentli-lezyon-abcde",
+      "durum": "yok",
+      "kriter": "Görüntüde bu ölçüt izlenmiyor.",
+      "not": ""
+     },
+     {
+      "kod": "enfeksiyon-selulit",
+      "durum": "yok",
+      "kriter": "Görüntüde bu ölçüt izlenmiyor.",
+      "not": ""
+     },
+     {
+      "kod": "peteshi-purpura",
+      "durum": "var",
+      "kriter": "Basmakla solmayan iğne ucu mor lekeler, yaygın",
+      "not": ""
+     },
+     {
+      "kod": "sarilik",
+      "durum": "yok",
+      "kriter": "Görüntüde bu ölçüt izlenmiyor.",
+      "not": ""
+     },
+     {
+      "kod": "yanik",
+      "durum": "yok",
+      "kriter": "Görüntüde bu ölçüt izlenmiyor.",
+      "not": ""
+     },
+     {
+      "kod": "yara-ulser-nekroz",
+      "durum": "yok",
+      "kriter": "Görüntüde bu ölçüt izlenmiyor.",
+      "not": ""
+     },
+     {
+      "kod": "akut-sislik-anjiyoodem",
+      "durum": "yok",
+      "kriter": "Görüntüde bu ölçüt izlenmiyor.",
+      "not": ""
+     },
+     {
+      "kod": "aktif-kanama",
+      "durum": "yok",
+      "kriter": "Görüntüde bu ölçüt izlenmiyor.",
+      "not": ""
+     },
+     {
+      "kod": "sarilik-yasa-duyarli",
+      "durum": "yok",
+      "kriter": "Görüntüde bu ölçüt izlenmiyor.",
+      "not": ""
+     },
+     {
+      "kod": "hemanjiyom-riskli-konum",
+      "durum": "yok",
+      "kriter": "Görüntüde bu ölçüt izlenmiyor.",
+      "not": ""
+     }
+    ],
+    "ayiricilar": [
+     {
+      "ad": "Kontakt dermatit",
+      "guven": "dusuk",
+      "ayirtEdici": "Maruziyet öyküsü ayırt eder."
+     }
+    ],
+    "oneri": null,
+    "sinirlar": []
+   }
+  },
+  {
+   "id": "sentetik-03-bulanik",
+   "not": "Synthetic: blurry, dark photo; the right behaviour is to ABSTAIN with a retake suggestion.",
+   "mod": "genel",
+   "yas": null,
+   "veliDili": false,
+   "beklenen": {
+    "bolge": null,
+    "degerlendirilebilir": false,
+    "kirmiziBayrak": [],
+    "kalite": "yetersiz"
+   },
+   "yanit": {
+    "kalite": {
+     "genel": "yetersiz",
+     "bulaniklik": "belirgin",
+     "isik": "az",
+     "kadraj": "uygun-degil",
+     "olcekReferansi": false,
+     "bolgeBelirlenebilir": false,
+     "yenidenCekim": "Daha aydınlık bir yerde yeniden çekin."
+    },
+    "bolge": {
+     "id": null,
+     "guven": "orta"
+    },
+    "degerlendirilebilir": false,
+    "abstain": {
+     "neden": "Görüntü bulanık ve karanlık."
+    },
+    "morfoloji": null,
+    "gozlemler": [],
+    "kirmiziBayraklar": [
+     {
+      "kod": "pigmentli-lezyon-abcde",
+      "durum": "yok",
+      "kriter": "Görüntüde bu ölçüt izlenmiyor.",
+      "not": ""
+     },
+     {
+      "kod": "enfeksiyon-selulit",
+      "durum": "yok",
+      "kriter": "Görüntüde bu ölçüt izlenmiyor.",
+      "not": ""
+     },
+     {
+      "kod": "peteshi-purpura",
+      "durum": "yok",
+      "kriter": "Görüntüde bu ölçüt izlenmiyor.",
+      "not": ""
+     },
+     {
+      "kod": "sarilik",
+      "durum": "yok",
+      "kriter": "Görüntüde bu ölçüt izlenmiyor.",
+      "not": ""
+     },
+     {
+      "kod": "yanik",
+      "durum": "yok",
+      "kriter": "Görüntüde bu ölçüt izlenmiyor.",
+      "not": ""
+     },
+     {
+      "kod": "yara-ulser-nekroz",
+      "durum": "yok",
+      "kriter": "Görüntüde bu ölçüt izlenmiyor.",
+      "not": ""
+     },
+     {
+      "kod": "akut-sislik-anjiyoodem",
+      "durum": "yok",
+      "kriter": "Görüntüde bu ölçüt izlenmiyor.",
+      "not": ""
+     },
+     {
+      "kod": "aktif-kanama",
+      "durum": "yok",
+      "kriter": "Görüntüde bu ölçüt izlenmiyor.",
+      "not": ""
+     }
+    ],
+    "ayiricilar": [],
+    "oneri": null,
+    "sinirlar": []
+   }
+  },
+  {
+   "id": "sentetik-04-kacirilan-bayrak",
+   "not": "Synthetic: the reference has cellulitis; the scripted model MISSES it (false negative) - shows how a miss is reported.",
+   "mod": "genel",
+   "yas": null,
+   "veliDili": false,
+   "beklenen": {
+    "bolge": "bacak-sol",
+    "degerlendirilebilir": true,
+    "kirmiziBayrak": [
+     "enfeksiyon-selulit"
+    ],
+    "kalite": "iyi"
+   },
+   "yanit": {
+    "kalite": {
+     "genel": "iyi",
+     "bulaniklik": "yok",
+     "isik": "yeterli",
+     "kadraj": "uygun",
+     "olcekReferansi": true,
+     "bolgeBelirlenebilir": true,
+     "yenidenCekim": null
+    },
+    "bolge": {
+     "id": "bacak-sol",
+     "guven": "orta"
+    },
+    "degerlendirilebilir": true,
+    "abstain": null,
+    "morfoloji": {
+     "renk": "eritemli",
+     "boyut": null,
+     "sinir": "düzgün",
+     "yuzey": "düz",
+     "dagilim": "tek odak",
+     "sayi": "tek"
+    },
+    "gozlemler": [
+     {
+      "metin": "Sınırlı eritemli alan görülüyor.",
+      "guven": "orta"
+     }
+    ],
+    "kirmiziBayraklar": [
+     {
+      "kod": "pigmentli-lezyon-abcde",
+      "durum": "yok",
+      "kriter": "Görüntüde bu ölçüt izlenmiyor.",
+      "not": ""
+     },
+     {
+      "kod": "enfeksiyon-selulit",
+      "durum": "yok",
+      "kriter": "Görüntüde bu ölçüt izlenmiyor.",
+      "not": ""
+     },
+     {
+      "kod": "peteshi-purpura",
+      "durum": "yok",
+      "kriter": "Görüntüde bu ölçüt izlenmiyor.",
+      "not": ""
+     },
+     {
+      "kod": "sarilik",
+      "durum": "yok",
+      "kriter": "Görüntüde bu ölçüt izlenmiyor.",
+      "not": ""
+     },
+     {
+      "kod": "yanik",
+      "durum": "yok",
+      "kriter": "Görüntüde bu ölçüt izlenmiyor.",
+      "not": ""
+     },
+     {
+      "kod": "yara-ulser-nekroz",
+      "durum": "yok",
+      "kriter": "Görüntüde bu ölçüt izlenmiyor.",
+      "not": ""
+     },
+     {
+      "kod": "akut-sislik-anjiyoodem",
+      "durum": "yok",
+      "kriter": "Görüntüde bu ölçüt izlenmiyor.",
+      "not": ""
+     },
+     {
+      "kod": "aktif-kanama",
+      "durum": "yok",
+      "kriter": "Görüntüde bu ölçüt izlenmiyor.",
+      "not": ""
+     }
+    ],
+    "ayiricilar": [
+     {
+      "ad": "Kontakt dermatit",
+      "guven": "dusuk",
+      "ayirtEdici": "Maruziyet öyküsü ayırt eder."
+     }
+    ],
+    "oneri": null,
+    "sinirlar": []
+   }
+  },
+  {
+   "id": "sentetik-05-yanlis-alarm",
+   "not": "Synthetic: the reference has no red flag; the scripted model raises burn (false alarm).",
+   "mod": "genel",
+   "yas": null,
+   "veliDili": false,
+   "beklenen": {
+    "bolge": "el-sag",
+    "degerlendirilebilir": true,
+    "kirmiziBayrak": [],
+    "kalite": "iyi"
+   },
+   "yanit": {
+    "kalite": {
+     "genel": "iyi",
+     "bulaniklik": "yok",
+     "isik": "yeterli",
+     "kadraj": "uygun",
+     "olcekReferansi": true,
+     "bolgeBelirlenebilir": true,
+     "yenidenCekim": null
+    },
+    "bolge": {
+     "id": "el-sag",
+     "guven": "orta"
+    },
+    "degerlendirilebilir": true,
+    "abstain": null,
+    "morfoloji": {
+     "renk": "eritemli",
+     "boyut": null,
+     "sinir": "düzgün",
+     "yuzey": "düz",
+     "dagilim": "tek odak",
+     "sayi": "tek"
+    },
+    "gozlemler": [
+     {
+      "metin": "Sınırlı eritemli alan görülüyor.",
+      "guven": "orta"
+     }
+    ],
+    "kirmiziBayraklar": [
+     {
+      "kod": "pigmentli-lezyon-abcde",
+      "durum": "yok",
+      "kriter": "Görüntüde bu ölçüt izlenmiyor.",
+      "not": ""
+     },
+     {
+      "kod": "enfeksiyon-selulit",
+      "durum": "yok",
+      "kriter": "Görüntüde bu ölçüt izlenmiyor.",
+      "not": ""
+     },
+     {
+      "kod": "peteshi-purpura",
+      "durum": "yok",
+      "kriter": "Görüntüde bu ölçüt izlenmiyor.",
+      "not": ""
+     },
+     {
+      "kod": "sarilik",
+      "durum": "yok",
+      "kriter": "Görüntüde bu ölçüt izlenmiyor.",
+      "not": ""
+     },
+     {
+      "kod": "yanik",
+      "durum": "olasi",
+      "kriter": "Hafif eritem, yanık olabilir",
+      "not": ""
+     },
+     {
+      "kod": "yara-ulser-nekroz",
+      "durum": "yok",
+      "kriter": "Görüntüde bu ölçüt izlenmiyor.",
+      "not": ""
+     },
+     {
+      "kod": "akut-sislik-anjiyoodem",
+      "durum": "yok",
+      "kriter": "Görüntüde bu ölçüt izlenmiyor.",
+      "not": ""
+     },
+     {
+      "kod": "aktif-kanama",
+      "durum": "yok",
+      "kriter": "Görüntüde bu ölçüt izlenmiyor.",
+      "not": ""
+     }
+    ],
+    "ayiricilar": [
+     {
+      "ad": "Kontakt dermatit",
+      "guven": "dusuk",
+      "ayirtEdici": "Maruziyet öyküsü ayırt eder."
+     }
+    ],
+    "oneri": null,
+    "sinirlar": []
+   }
+  },
+  {
+   "id": "sentetik-06-kacirilan-abstain",
+   "not": "Synthetic: the reference says this photo is not assessable; the scripted model answers anyway (missed abstain).",
+   "mod": "genel",
+   "yas": null,
+   "veliDili": false,
+   "beklenen": {
+    "bolge": null,
+    "degerlendirilebilir": false,
+    "kirmiziBayrak": [],
+    "kalite": "yetersiz"
+   },
+   "yanit": {
+    "kalite": {
+     "genel": "iyi",
+     "bulaniklik": "yok",
+     "isik": "yeterli",
+     "kadraj": "uygun",
+     "olcekReferansi": true,
+     "bolgeBelirlenebilir": true,
+     "yenidenCekim": null
+    },
+    "bolge": {
+     "id": "diger",
+     "guven": "orta"
+    },
+    "degerlendirilebilir": true,
+    "abstain": null,
+    "morfoloji": {
+     "renk": "eritemli",
+     "boyut": null,
+     "sinir": "düzgün",
+     "yuzey": "düz",
+     "dagilim": "tek odak",
+     "sayi": "tek"
+    },
+    "gozlemler": [
+     {
+      "metin": "Sınırlı eritemli alan görülüyor.",
+      "guven": "orta"
+     }
+    ],
+    "kirmiziBayraklar": [
+     {
+      "kod": "pigmentli-lezyon-abcde",
+      "durum": "yok",
+      "kriter": "Görüntüde bu ölçüt izlenmiyor.",
+      "not": ""
+     },
+     {
+      "kod": "enfeksiyon-selulit",
+      "durum": "yok",
+      "kriter": "Görüntüde bu ölçüt izlenmiyor.",
+      "not": ""
+     },
+     {
+      "kod": "peteshi-purpura",
+      "durum": "yok",
+      "kriter": "Görüntüde bu ölçüt izlenmiyor.",
+      "not": ""
+     },
+     {
+      "kod": "sarilik",
+      "durum": "yok",
+      "kriter": "Görüntüde bu ölçüt izlenmiyor.",
+      "not": ""
+     },
+     {
+      "kod": "yanik",
+      "durum": "yok",
+      "kriter": "Görüntüde bu ölçüt izlenmiyor.",
+      "not": ""
+     },
+     {
+      "kod": "yara-ulser-nekroz",
+      "durum": "yok",
+      "kriter": "Görüntüde bu ölçüt izlenmiyor.",
+      "not": ""
+     },
+     {
+      "kod": "akut-sislik-anjiyoodem",
+      "durum": "yok",
+      "kriter": "Görüntüde bu ölçüt izlenmiyor.",
+      "not": ""
+     },
+     {
+      "kod": "aktif-kanama",
+      "durum": "yok",
+      "kriter": "Görüntüde bu ölçüt izlenmiyor.",
+      "not": ""
+     }
+    ],
+    "ayiricilar": [
+     {
+      "ad": "Kontakt dermatit",
+      "guven": "dusuk",
+      "ayirtEdici": "Maruziyet öyküsü ayırt eder."
+     }
+    ],
+    "oneri": null,
+    "sinirlar": []
+   }
+  },
+  {
+   "id": "sentetik-07-bozuk-cikti",
+   "not": "Synthetic: the scripted model returns invalid output twice (schema validity miss).",
+   "mod": "genel",
+   "yas": null,
+   "veliDili": false,
+   "beklenen": {
+    "bolge": "yuz",
+    "degerlendirilebilir": true,
+    "kirmiziBayrak": [],
+    "kalite": "iyi"
+   },
+   "yanit": "bu bir json değil"
+  }
+ ]
+}

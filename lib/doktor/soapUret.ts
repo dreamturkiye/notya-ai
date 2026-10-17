@@ -223,6 +223,8 @@ export interface SoapGirdi {
   doktorBransi?: string | null // DAH-PROMPTS-LOCK: users.specialty — seans bağlamı branş göndermese de kilit uygulanır
   hastaDogumIso?: string | null // BRANS-ALAN-SIZMASI: aile/genel pediatrik bağlam + VELI-YASAL-ONAM (<18 → veli dili, her branş)
   doctorId?: string | null // NOTYA-MALIYET-01: yalnız ai_token_kullanim ölçümü (prompta girmez)
+  /** MUAYENE-EKLERI-01: eklerin değerlendirmesi (lib/doktor/muayeneEk/rapor.ekPromptBlogu) — kimliksiz, [EK-n] etiketli. Boşsa hiçbir şey eklenmez. */
+  ekBlogu?: string
   cekListeBlogu?: string // hekim çek listesi — gövdeye uydurma yasağı
   /** UYGULANIR kurallar — değişken (önbelleksiz) blok. En fazla 12. */
   doktorKurallari?: { slug: string; satir: string }[]
@@ -297,6 +299,7 @@ export function soapSistemBloklari(girdi: SoapGirdi): SistemBlogu[] {
     doktorKurallariBlogu(girdi.doktorKurallari),
     girdi.doktorAdi ? `\nHEKİM ADI: ${girdi.doktorAdi}. hasta_ozeti ve alarmBulgulari metinlerinde "doktorunuz" / "hekiminiz" yerine bu adı kullan (örn. "${girdi.doktorAdi} antibiyotik başladı", "şu durumlarda ${girdi.doktorAdi} ile temas kurun").` : '',
     ...(girdi.cekListeBlogu ? [girdi.cekListeBlogu] : []),
+    ...(girdi.ekBlogu ? [girdi.ekBlogu] : []),
   ]
   return [
     { metin: sabit.filter(Boolean).join('\n'), onbellek: true },

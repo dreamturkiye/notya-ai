@@ -23,8 +23,9 @@ import {
   type TakipIsi,
 } from '@/lib/doktor/takip'
 import { bugunTrIso } from '@/lib/iletisim/sablonlar'
+import { iptalKartlari, iptalOgeleri } from '@/lib/iletisim/whatsapp/onBuro'
 
-export type OnBuroKaynak = 'mesaj' | 'talep' | 'belge' | 'telefon' | 'gelmedi' | 'form' | 'takip'
+export type OnBuroKaynak = 'mesaj' | 'talep' | 'belge' | 'telefon' | 'gelmedi' | 'form' | 'takip' | 'iptal'
 
 export interface OnBuroFisiltiItem {
   id: string
@@ -39,6 +40,8 @@ export interface OnBuroFisiltiItem {
   oncelik: number
   patientId?: string | null
   toplamBekleyen?: number
+  /** WHATSAPP-CANCEL-01: the inbox card behind an 'iptal' item — what the desk's "Gördüm" acknowledges. */
+  kartId?: string
 }
 
 /** TR calendar day (Europe/Istanbul) as YYYY-MM-DD. */
@@ -362,7 +365,7 @@ export async function onBuroFisiltiOgeleri(
   try {
     const erisim = gelenBelgeErisimi(
       rol,
-      rol === 'sekreter' ? await sekreterErisimiAcikMi(supabase, doktorId) : true,
+      rol !== 'doktor' ? await sekreterErisimiAcikMi(supabase, doktorId) : true,
     )
     if (erisim) {
       const sayi = await yeniSayisi(supabase, doktorId)
@@ -411,6 +414,11 @@ export async function onBuroFisiltiOgeleri(
   try {
     ogeler.push(...formOgeleri(await doldurulmusFormlar(supabase, doktorId)))
   } catch { /* soft */ }
+
+  // WHATSAPP-CANCEL-01: patients who cancelled (or may not come) by WhatsApp — doctor AND secretary, minimal PII
+  try {
+    ogeler.push(...iptalOgeleri(await iptalKartlari(supabase, doktorId)))
+  } catch { /* soft before migration 169 */ }
 
   return onBuroSirala(ogeler)
 }

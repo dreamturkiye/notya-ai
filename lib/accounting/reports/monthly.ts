@@ -103,7 +103,7 @@ export interface MonthlyMusavirReport {
 }
 
 export const STOPAJ_NOTU =
-  'Bu dönemde stopaj/tevkifat uygulanmadı: faturalar gerçek kişi hastalara kesildi (GVK md. 94 stopajı, ödeyici kurumsal/tüzel kişi olduğunda devreye girer). Doktor bir kuruma/kliniğe hizmet verip kurumsal ödeme alırsa, o faturalar için stopaj durumu ayrıca değerlendirilmelidir.'
+  'Bu dönemde stopaj (gelir vergisi tevkifatı) kesilmedi: faturalar gerçek kişi hastalara kesildi ve GVK md. 94 uyarınca gerçek kişi hasta tevkifat yapmak zorunda değildir. Doktor bir kuruma/şirkete veya defter tutan bir tacir/serbest meslek erbabına hizmet verip ödeme alırsa, o faturalar için %20 stopaj ayrıca değerlendirilmelidir.'
 
 /** Pure aggregation — no Supabase, unit-testable with canned rows. */
 export function aggregateMonthlyMusavirReport(

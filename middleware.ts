@@ -27,6 +27,15 @@ const PUBLIC_ROUTES = [
   '/hakkimizda',
   '/gizlilik',
   '/kullanim-kosullari',
+  // HUKUK-01: yasal metinler — bu rotalar dashboard/api altında olmadığından zaten geçiyor;
+  // açıkça listelemek niyeti belgeler ve ileride PROTECTED_ROUTES mantığı değişirse korur.
+  '/kvkk',
+  '/veri-isleme',
+  '/cerez-politikasi',
+  '/klinik-karar-destegi',
+  '/iade-ve-iptal',
+  '/telif-hakki',
+  '/yasal',
   '/giris',
   '/onboarding',
 ]

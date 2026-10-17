@@ -11,9 +11,9 @@ import { iletisimIstek } from '@/lib/iletisim/istemci'
 import { KANAL_ETIKETI, TUR_ETIKETI, type IletisimKanali, type MesajTuru } from '@/lib/iletisim/tipler'
 import { GELEN_BELGE_IZIN_PROFIL } from '@/lib/iletisim/izinMetni'
 
-type Izin = { whatsapp: boolean | null; eposta: boolean | null; guncelleme: string | null; kaydedilebilir: boolean; gelenBelge?: boolean | null; gelenBelgeKaydedilebilir?: boolean }
+type Izin = { whatsapp: boolean | null; eposta: boolean | null; sms: boolean | null; guncelleme: string | null; kaydedilebilir: boolean; gelenBelge?: boolean | null; gelenBelgeKaydedilebilir?: boolean }
 type IzinKanali = IletisimKanali | 'gelen_belge'
-const IZIN_ANAHTARI = { whatsapp: 'whatsapp', eposta: 'eposta', gelen_belge: 'gelenBelge' } as const
+const IZIN_ANAHTARI = { whatsapp: 'whatsapp', eposta: 'eposta', sms: 'sms', gelen_belge: 'gelenBelge' } as const
 type Kayit = { id: string; kanal: IletisimKanali; tur: MesajTuru; durum: 'acildi' | 'gonderildi'; gonderen: string; tarih: string }
 
 const R = CHROME_RENK
@@ -75,6 +75,7 @@ export default function HastaIletisim({ patientId }: { patientId: string }) {
       <div style={{ fontSize: 13, color: R.muted, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>İletişim izni</div>
       {satir('whatsapp', 'Randevu ve bilgilendirme mesajları WhatsApp ile gönderilebilir')}
       {satir('eposta', 'Randevu ve bilgilendirme mesajları e-posta ile gönderilebilir')}
+      {satir('sms', 'Randevu ve bilgilendirme mesajları SMS ile gönderilebilir')}
       {izin.gelenBelgeKaydedilebilir && satir('gelen_belge', GELEN_BELGE_IZIN_PROFIL, true)}
       {izin.guncelleme && <div style={{ fontSize: 12, color: R.muted, marginTop: 2 }}>Son güncelleme: {tarihSaat(izin.guncelleme)}</div>}
       {!izin.kaydedilebilir && <div style={{ fontSize: 12, color: R.muted, marginTop: 4 }}>İletişim izni kısa süre içinde buradan düzenlenebilecek.</div>}

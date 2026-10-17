@@ -21,6 +21,12 @@ export default function KayitPage() {
   // the aydınlatma metni at COLLECTION — not linked from a footer afterwards. Never
   // pre-checked: consent must be 'özgür iradeyle açıklanan'.
   const [kvkkOnay, setKvkkOnay] = useState(false);
+  // HUKUK-01: a second, independent checkbox — kept separate from the KVKK box above rather than
+  // merged into its text, because lib/onboarding/kvkkOnay.ts and the onboarding step-3 mirror of
+  // this exact KVKK box (lib/onboarding/adimUi.test.ts, profilDogrula.test.ts, NOTYA-ONBOARDING-01)
+  // depend on that box's wording being byte-identical to /kayit's. Merging the two would have broken
+  // that synchronization for no real benefit — two short checkboxes is no heavier for the doctor.
+  const [kosullarOnay, setKosullarOnay] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -30,6 +36,11 @@ export default function KayitPage() {
 
     if (password !== confirmPassword) {
       setError('Şifreler eşleşmiyor.');
+      return;
+    }
+
+    if (!kosullarOnay) {
+      setError('Devam edebilmek için Kullanım Koşulları\'nı okuyup onaylamanız gerekmektedir.');
       return;
     }
 
@@ -47,10 +58,15 @@ export default function KayitPage() {
         options: {
           // Consent must be PROVABLE, not merely collected: the moment and the text version mean a
           // later dispute can be answered with what was actually agreed to.
+          // HUKUK-01: the same checkbox now covers the Kullanım Koşulları too; both acceptances are
+          // stored with their own timestamp + text version in auth metadata (additive — no migration).
           data: {
             kvkk_onay: true,
             kvkk_onay_tarihi: new Date().toISOString(),
-            kvkk_metin_versiyonu: '2026-08-25-v2',
+            kvkk_metin_versiyonu: '2026-10-17-v6',
+            kosullar_onay: true,
+            kosullar_onay_tarihi: new Date().toISOString(),
+            kosullar_metin_versiyonu: '2026-10-17-v1',
           },
         },
       });
@@ -164,7 +180,7 @@ export default function KayitPage() {
           )}
 
           <label style={{
-            display: 'flex', alignItems: 'flex-start', gap: 10, fontSize: 13, lineHeight: 1.55, marginBottom: 18,
+            display: 'flex', alignItems: 'flex-start', gap: 10, fontSize: 13, lineHeight: 1.55, marginBottom: 12,
             color: R.ink, cursor: 'pointer',
           }}>
             <input
@@ -180,6 +196,25 @@ export default function KayitPage() {
               &apos;ni okudum. Kişisel verilerimin ve hastalarıma ait sağlık verilerinin metinde
               açıklanan amaçlarla işlenmesini ve belirtilen hizmet sağlayıcılara aktarılmasını kabul
               ediyorum.
+            </span>
+          </label>
+
+          {/* HUKUK-01: separate checkbox, kept out of the KVKK box above — see the state comment. */}
+          <label style={{
+            display: 'flex', alignItems: 'flex-start', gap: 10, fontSize: 13, lineHeight: 1.55, marginBottom: 18,
+            color: R.ink, cursor: 'pointer',
+          }}>
+            <input
+              type="checkbox"
+              checked={kosullarOnay}
+              onChange={(e) => setKosullarOnay(e.target.checked)}
+              style={{ marginTop: 3, width: 16, height: 16, flexShrink: 0, cursor: 'pointer', accentColor: R.pine }}
+            />
+            <span>
+              <a href="/kullanim-kosullari" target="_blank" rel="noopener noreferrer" style={{ color: R.pine, fontWeight: 600 }}>
+                Kullanım Koşulları
+              </a>
+              &apos;nı okudum, kabul ediyorum.
             </span>
           </label>
 

@@ -25,6 +25,7 @@ import { istemciKapsami } from '@/lib/specialties/kapsamIstemci';
 import { bransEtiketi } from '@/lib/doktor/bransAdlari';
 import YasamsalBulgularFormu from '@/components/doktor/YasamsalBulgularFormu';
 import AsiStokTarama from '@/components/doktor/AsiStokTarama';
+import MbysBildirButonu from '@/components/doktor/MbysBildirButonu';
 import DermNotGorselYakala from '@/specialties/dermatoloji/ui/DermNotGorselYakala';
 import KbbNotGorselYakala from '@/specialties/kulak-burun-bogaz/ui/KbbNotGorselYakala';
 import PlastikNotGorselYakala from '@/specialties/plastik-cerrahi/ui/PlastikNotGorselYakala';
@@ -52,6 +53,7 @@ import { CHROME_RENK } from '@/lib/doktor/chromeTheme'
 import { motorAfisiTemizle } from '@/core/belgeler/yazar'
 import SizinTarzinizChip from '@/components/doktor/SizinTarzinizChip'
 import SonrakiAdim from '@/components/doktor/SonrakiAdim'
+import YuklenenDosyalar from '@/components/doktor/YuklenenDosyalar'
 import { useRutinPaket } from '@/lib/doktor/ogrenme/rutinIstemci'
 import { kullanimEylem } from '@/lib/telemetri/kullanim'
 import { oneriGeldiMi, oneriYoklamasiGerekli, oneriyiYokla } from '@/lib/doktor/oneriBekle';
@@ -502,7 +504,7 @@ export default function NotSayfasi() {
   const oncekiler = (cekCanli || []).filter((s) => s.durum === 'onceki').map((s) => s.etiket);
 
   return (
-    <div style={{ minHeight: '100vh', background: 'transparent', color: CHROME_RENK.ink, fontFamily: 'system-ui' }}>
+    <div style={{ minHeight: '100vh', background: 'transparent', color: CHROME_RENK.ink, fontFamily: 'system-ui', paddingRight: 'var(--yd-sag, 0px)', transition: 'padding-right .15s ease' }}>
       {uyum ? (
         <IlacUyumKarti durum={uyum} onGuncelleOnayla={(m) => { void kaydetVeOnayla(m) }} onMevcutlaOnayla={() => { void kaydetVeOnayla(ilac) }} onVazgec={() => setUyum(null)} />
       ) : null}
@@ -530,6 +532,8 @@ export default function NotSayfasi() {
         <a href={`/dashboard/doktor/notlar/${not.id}/yazdir`} target="_blank" rel="noreferrer" style={{ color: CHROME_RENK.ink, fontSize: 13, textDecoration: 'none', border: '1px solid rgba(58,44,34,0.16)', borderRadius: 999, padding: '7px 12px' }}>🖨️ Yazdır / PDF</a>
         <a href={`/dashboard/doktor/notlar/${not.id}/recete`} target="_blank" rel="noreferrer" style={{ color: CHROME_RENK.pine, fontSize: 13, textDecoration: 'none', border: '1px solid rgba(47,67,52,0.4)', borderRadius: 999, padding: '7px 12px' }}>🧾 Reçete</a>
         <a href={`/dashboard/doktor/notlar/${not.id}/tetkikler`} target="_blank" rel="noreferrer" style={{ color: CHROME_RENK.pine, fontSize: 13, textDecoration: 'none', border: '1px solid rgba(47,67,52,0.4)', borderRadius: 999, padding: '7px 12px' }}>🧪 Tetkikler</a>
+        {/* MBYS-BILDIR-01: one-click report of an approved muayene, behind a mandatory confirmation dialog. */}
+        <MbysBildirButonu notId={not.id} onayli={onayli && !degisti} />
         {onayli && faturalamaAcik && (
           // NOTYA-ACCOUNTING-ENCOUNTER-01: muayene bitince doğal son adım — "Faturala", bu
           // muayeneyi (not.sessionId) ve o anki aşı listesini taslak faturaya taşır. Her branşta
@@ -551,7 +555,7 @@ export default function NotSayfasi() {
             Sil
           </button>
         )}
-        <button type="button" onClick={() => { void kaydetVeOnayla() }} disabled={durum === 'kaydediyor'} style={{ background: CHROME_RENK.pine, border: 'none', color: 'white', borderRadius: 10, padding: '10px 18px', fontSize: 14, fontWeight: 800, cursor: 'pointer', opacity: aiDurum === 'bekliyor' ? 0.85 : 1 }}>
+        <button type="button" className="notya-ana-eylem" onClick={() => { void kaydetVeOnayla() }} disabled={durum === 'kaydediyor'} style={{ background: CHROME_RENK.pine, border: 'none', color: 'white', borderRadius: 10, padding: '10px 18px', fontSize: 14, fontWeight: 800, cursor: 'pointer', opacity: aiDurum === 'bekliyor' ? 0.85 : 1 }}>
           {durum === 'kaydediyor' ? 'Kaydediliyor…' : durum === 'kaydedildi' ? '✓ Onaylandı' : onayli ? 'Kaydet ve yeniden onayla' : 'Onayla'}
         </button>
       </div>
@@ -703,6 +707,8 @@ export default function NotSayfasi() {
           <div style={etiket}>{kapsam.hitap.ozetEtiketi} <span style={{ fontWeight: 400, color: CHROME_RENK.muted }}>(portala gider)</span></div>
           <textarea value={ozet} onChange={(e) => isaretle(setOzet)(e.target.value)} rows={4} style={kutu} />
         </div>
+        {/* MUAYENE-EKLERI-07: visit uploads as links; the viewer opens beside the report (no navigation, no unmount). */}
+        <YuklenenDosyalar sessionId={not.sessionId} />
       </div>
       {cekVar ? (
         <aside style={{ background: 'rgba(180,131,47,0.08)', border: '1px solid rgba(180,131,47,0.30)', borderRadius: 12, padding: '12px 14px' }}>

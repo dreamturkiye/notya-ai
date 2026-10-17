@@ -57,6 +57,8 @@ export async function sesiYaziyaDok(bytes: Buffer, mime: string, ad: string, fet
       method: 'POST',
       headers: { 'xi-api-key': process.env.ELEVENLABS_API_KEY },
       body: fd,
+      // SAGLAMLIK-2026-10: asılı kalan STT fonksiyonu kilitlemesin; aşım zaten null dönen catch'e düşer.
+      signal: AbortSignal.timeout(120_000),
     })
     const veri = (await r.json().catch(() => ({}))) as { text?: unknown }
     if (!r.ok) { console.error('[gelen-belgeler] ses', r.status); return null }

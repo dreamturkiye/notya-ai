@@ -144,7 +144,7 @@ export async function mevcutHastaMi(sb: Sb, doktorId: string, patientId: string)
 
 // ── Event log and jobs ───────────────────────────────────────────────────────────────────────────────
 
-export type Yapan = 'hasta' | 'doktor' | 'sekreter' | 'sistem'
+export type Yapan = 'hasta' | 'doktor' | 'sekreter' | 'asistan' | 'hasta_danismani' | 'sistem'
 
 export async function olayYaz(sb: Sb, o: { randevuId: string; doktorId: string; olay: string; yapan: Yapan; yapanId?: string | null; detay?: Record<string, unknown> }): Promise<void> {
   await sb.from('randevu_olaylari').insert({
@@ -165,10 +165,11 @@ async function satirGetir(sb: Sb, doktorId: string, randevuId: string, patientId
   return data as unknown as V2Randevu
 }
 
-async function kosulluGuncelle(sb: Sb, r: V2Randevu, alanlar: Record<string, unknown>): Promise<Islem> {
-  const { data, error } = await sb.from('randevular').update(alanlar)
+async function kosulluGuncelle(sb: Sb, r: V2Randevu, alanlar: Record<string, unknown>, patientId?: string): Promise<Islem> {
+  let q = sb.from('randevular').update(alanlar)
     .eq('id', r.id).eq('doktor_id', r.doktor_id).eq('durum', r.durum)
-    .select(RANDEVU_ALANLARI)
+  if (patientId) q = q.eq('patient_id', patientId)
+  const { data, error } = await q.select(RANDEVU_ALANLARI)
   if (error) return cakismaHatasiMi(error) ? hata(409, MESAJ.dolu) : hata(500, MESAJ.hata)
   const satir = (data || [])[0] as unknown as V2Randevu | undefined
   if (!satir) return hata(409, MESAJ.yanitlandi)
@@ -217,7 +218,7 @@ export async function talepOlustur(sb: Sb, g: { doktorId: string; patientId: str
 
 export type PratikIslemi = 'onayla' | 'oner' | 'reddet'
 
-export async function pratikIslem(sb: Sb, g: { doktorId: string; randevuId: string; islem: PratikIslemi; baslangic?: string; yapan: 'doktor' | 'sekreter'; yapanId: string; simdi?: number }): Promise<Islem> {
+export async function pratikIslem(sb: Sb, g: { doktorId: string; randevuId: string; islem: PratikIslemi; baslangic?: string; yapan: Exclude<Yapan, 'hasta' | 'sistem'>; yapanId: string; simdi?: number }): Promise<Islem> {
   const simdi = g.simdi ?? Date.now()
   const r = await satirGetir(sb, g.doktorId, g.randevuId)
   if (!r) return hata(404, MESAJ.yok)
@@ -257,6 +258,47 @@ export async function pratikIslem(sb: Sb, g: { doktorId: string; randevuId: stri
   return s
 }
 
+// ── Cancellation: ONE implementation ─────────────────────────────────────────────────────────────────
+
+/**
+ * The single cancel path. The portal button (hastaIslem), the practice's calendar actions and the WhatsApp reply
+ * (lib/iletisim/whatsapp) all end here, so the side effects are identical everywhere: the row becomes 'iptal' (the slot
+ * is free for the booking engine and the waitlist sweep — bekleme.ts offers freed times), waiting reminder jobs are
+ * dropped, the cancellation notice job is queued, and a randevu_olaylari row records who did it and the state before.
+ * The caller does the network follow-ups it always did after this call: isleriCalistir (sends the queued notice) and
+ * googleaGonder (Google Calendar).
+ * Conditional on the state read by the caller (a concurrent change answers 409, never a double cancel).
+ */
+export async function randevuIptalUygula(
+  sb: Sb, r: V2Randevu,
+  g: { neden: string; yapan: Yapan; yapanId?: string | null; detay?: Record<string, unknown>; simdi?: number; patientId?: string },
+): Promise<Islem> {
+  const simdi = g.simdi ?? Date.now()
+  const s = await kosulluGuncelle(sb, r, { durum: 'iptal', iptal_nedeni: g.neden }, g.patientId)
+  if (!s.ok) return s
+  await bekleyenIsleriIptal(sb, r.doktor_id, r.id)
+  await isEkle(sb, s.randevu, [{ tur: 'iptal_eposta', zaman: new Date(simdi).toISOString() }])
+  await olayYaz(sb, { randevuId: r.id, doktorId: r.doktor_id, olay: 'iptal', yapan: g.yapan, yapanId: g.yapanId, detay: { ...(g.detay ?? {}), onceki: r.durum } })
+  return s
+}
+
+/**
+ * Cancel by id (WhatsApp reply, practice action). Scoped by doktor_id and, when given, patient_id in the same queries.
+ * Idempotent: an already cancelled appointment answers ok. Not blocked by the patient cutoff (iptal_sinir_saat) — that
+ * rule belongs to the portal button; callers pass `gec` in `detay` when they want to flag a late cancel.
+ */
+export async function randevuIptalEt(
+  sb: Sb,
+  g: { doktorId: string; randevuId: string; patientId?: string; neden: string; yapan: Yapan; yapanId?: string | null; detay?: Record<string, unknown>; simdi?: number },
+): Promise<Islem> {
+  const simdi = g.simdi ?? Date.now()
+  const r = await satirGetir(sb, g.doktorId, g.randevuId, g.patientId)
+  if (!r) return hata(404, MESAJ.yok)
+  if (r.durum === 'iptal') return { ok: true, randevu: r }
+  if (!aktifMi(r) || !(Date.parse(r.baslangic) > simdi)) return hata(409, 'Bu randevu artık iptal edilemez.')
+  return randevuIptalUygula(sb, r, { neden: g.neden, yapan: g.yapan, yapanId: g.yapanId, detay: g.detay, simdi, patientId: g.patientId })
+}
+
 // ── Patient: act on own appointment ──────────────────────────────────────────────────────────────────
 
 export type HastaIslemi = 'iptal' | 'ertele' | 'teyit' | 'kabul'
@@ -292,12 +334,7 @@ export async function hastaIslem(sb: Sb, g: { doktorId: string; patientId: strin
   if (g.islem === 'iptal') {
     if (r.durum === 'iptal') return { ok: true, randevu: r }
     if (!izin.iptal) return hata(409, izin.neden || 'Bu randevu iptal edilemez.')
-    const s = await kosulluGuncelle(sb, r, { durum: 'iptal', iptal_nedeni: r.oneri_at ? 'Hasta öneriyi kabul etmedi' : 'Hasta iptal etti' })
-    if (!s.ok) return s
-    await bekleyenIsleriIptal(sb, g.doktorId, r.id)
-    await isEkle(sb, s.randevu, [{ tur: 'iptal_eposta', zaman: new Date(simdi).toISOString() }])
-    await olayYaz(sb, { randevuId: r.id, doktorId: g.doktorId, olay: 'iptal', yapan: 'hasta', detay })
-    return s
+    return randevuIptalUygula(sb, r, { neden: r.oneri_at ? 'Hasta öneriyi kabul etmedi' : 'Hasta iptal etti', yapan: 'hasta', detay, simdi })
   }
 
   // 'ertele' — move to another free slot of the same length; the approval mode decides whether it is a request again.

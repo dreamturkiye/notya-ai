@@ -1,6 +1,6 @@
 /**
  * NOTYA-RANDEVU-01 / NOTYA-SEKRETER-01 — kim oturum açtı: doktor mu, sekreter mi.
- * Sekreter için personel adı (ad/soyad) döner — chrome ve ön büro bunu gösterir (Dr. yok).
+ * Personel (sekreter / asistan / hasta danışmanı — MOBIL-PERSONEL-01) için ad/soyad döner; `rol` gerçek roldür — chrome ve ön büro bunu gösterir (Dr. yok).
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { pratikOturum } from '@/lib/doktor/pratikOturum'
@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
 
   const doktorAdi = (await hekimAdi(supabase, doktorId)) || null
 
-  if (rol !== 'sekreter' || !personelId) {
+  if (rol === 'doktor' || !personelId) {
     return NextResponse.json({ rol, doktorAdi, personelAdi: null, personelKisaAdi: null, personelAd: null, personelSoyad: null })
   }
 

@@ -340,11 +340,82 @@ export async function GET(
   const doctorId = tokenData.doctor_id as string
   const bundle: PortalBundle = emptyPortalBundle()
 
+  // PERF-2026-10: (doctor_id, patient_id) kapsamlı, birbirinden bağımsız okumaların tümü burada
+  // eş zamanlı başlatılır; aşağıda her blok kendi yerinde AYNI hata/sonuç anlamıyla tüketir.
+  // PostgREST kurucusu tembeldir — Promise.resolve(...) sorguyu hemen yola çıkarır (kurucular
+  // reddetmez, {data,error} döner). Fırlatabilen yardımcılar sar() ile taşınır ve ORİJİNAL
+  // noktalarında aynı şekilde çözülür/rethrow edilir — davranış birebir, izolasyon filtreleri aynen.
+  const sar = <T>(p: Promise<T>) => p.then((v) => ({ ok: true as const, v }), (e) => ({ ok: false as const, e }))
+  const hekimKartiP = sar(portalHekimKarti(sb, doctorId))
+  const sessionsP = Promise.resolve(arsivsizSeanslar(sb, 'id, created_at, specialty')
+    .eq('patient_id', patientId)
+    .eq('doctor_id', doctorId)
+    .order('created_at', { ascending: false })
+    .limit(40))
+  const yonP = Promise.resolve(sb
+    .from('sevkler')
+    .select('id, hedef_brans, istem_tarihi, created_at, durum, yanit_tarihi')
+    .eq('patient_id', patientId)
+    .eq('doctor_id', doctorId)
+    .not('hedef_brans', 'is', null)
+    .order('created_at', { ascending: false })
+    .limit(40))
+  const medsP = Promise.resolve(arsivsizIlaclar(sb, 'id, ilac_adi, doz, kullanim_sikli, notlar, aktif, baslangic_tarihi, bitis_tarihi, yazan_doktor')
+    .eq('patient_id', patientId)
+    .eq('doctor_id', doctorId)
+    .eq('onay_durumu', 'onayli')
+    .order('baslangic_tarihi', { ascending: false })
+    .limit(60))
+  const labP = Promise.resolve(sb
+    .from('hasta_lab_sonuclari')
+    .select('id, testler, created_at, lab_adi, sonuc_tarihi')
+    .eq('patient_id', patientId)
+    .eq('doctor_id', doctorId)
+    .order('created_at', { ascending: false })
+    .limit(15))
+  const imgP = Promise.resolve(sb
+    .from('hasta_goruntulemeler')
+    .select('id, created_at, modalite, vucut_bolgesi, rapor_metni, goruntuleme_tarihi, dosya_url')
+    .eq('patient_id', patientId)
+    .eq('doctor_id', doctorId)
+    .order('created_at', { ascending: false })
+    .limit(15))
+  const labPanelP = Promise.resolve(sb
+    .from('lab_paneller')
+    .select('belge_id')
+    .eq('patient_id', patientId)
+    .eq('doctor_id', doctorId)
+    .not('belge_id', 'is', null)
+    .limit(80))
+  const konsBelgeP = sar(konsultasyonBelgeIdleri(sb, doctorId, patientId))
+  const ceketP = Promise.resolve(sb
+    .from('goruntu_calisma')
+    .select('id, tip, modalite, bolge, tarih, onay_durum, hekim_yorum, created_at')
+    .eq('patient_id', patientId)
+    .eq('doctor_id', doctorId)
+    .eq('onay_durum', 'hasta_paylas')
+    .order('tarih', { ascending: false, nullsFirst: false })
+    .limit(20))
+  const hastaRowP = Promise.resolve(sb.from('patients').select('name_encrypted, dob_encrypted, gender_encrypted, notes_encrypted, gender').eq('id', patientId).eq('doctor_id', doctorId).maybeSingle())
+  const hekimBransiP = sar(hekimBransi(sb, tokenData.doctor_id as string))
+  const gebP = Promise.resolve(sb.from('gebelikler').select('id, sat, tdt').eq('patient_id', patientId).eq('doctor_id', doctorId).eq('durum', 'aktif').order('created_at', { ascending: false }).limit(1).maybeSingle())
+  const ksP = Promise.resolve(sb.from('kadin_sagligi').select('son_pap, son_hpv, son_mamografi, son_dxa, son_kolorektal, hrt, hrt_baslangic, histerektomi').eq('patient_id', patientId).eq('doctor_id', doctorId).maybeSingle())
+  const kontrP = Promise.resolve(sb.from('kontrasepsiyon').select('yontem, baslangic, ria_notu, aktif').eq('patient_id', patientId).eq('doctor_id', doctorId).eq('aktif', true).maybeSingle())
+  const asiKarnesiP = sar(asiKarnesiVerisi(sb, doctorId, patientId))
+  const dahiliyeKartP = sar(dahiliyeKartlari(sb, patientId, doctorId))
+  const mesajlarP = sar(loadPortalMessages(sb, patientId, doctorId))
+  const yaklasanKontrolP = sar(import('@/lib/doktor/takip').then((m) => m.portalYaklasanKontrol(sb, doctorId, patientId)))
+  const rvP = Promise.resolve(sb.from('randevular').select('baslangic')
+    .eq('doktor_id', doctorId).eq('patient_id', patientId)
+    .in('durum', ['planlandi', 'onaylandi'])
+    .gt('baslangic', new Date().toISOString())
+    .order('baslangic', { ascending: true }).limit(1).maybeSingle())
+
   // PORTAL-HEKIM-01 — Özet hero: ad, foto, adres, muayenehane telefonu (yalnız token doktoru).
-  try {
-    bundle.hekim = await portalHekimKarti(sb, doctorId)
-  } catch (e) {
-    console.error('[portal] hekim-karti:', e)
+  {
+    const r = await hekimKartiP
+    if (r.ok) bundle.hekim = r.v
+    else console.error('[portal] hekim-karti:', r.e)
   }
 
   // Sessions + notes → visits.
@@ -355,13 +426,10 @@ export async function GET(
   // drafts and even sessions whose note was unapproved/absent. Now: pull sessions, then keep only
   // those whose note is approved.
   // NOTYA-ARSIV-01: an archived muayene never reaches Sağlığım (lib/doktor/arsiv).
-  const { data: sessionsRaw } = await arsivsizSeanslar(sb, 'id, created_at, specialty')
-    .eq('patient_id', patientId)
-    // HASTA-IZOLASYON-01: every portal read is scoped to the token's linked doctor as well as the
-    // patient — a row another doctor managed to file under this patient id never reaches the portal.
-    .eq('doctor_id', doctorId)
-    .order('created_at', { ascending: false })
-    .limit(40)
+  // HASTA-IZOLASYON-01: every portal read is scoped to the token's linked doctor as well as the
+  // patient — a row another doctor managed to file under this patient id never reaches the portal.
+  // (Sorgu yukarıdaki PERF bloğunda aynı filtrelerle başlatıldı.)
+  const { data: sessionsRaw } = await sessionsP
 
   const sessionIds = ((sessionsRaw || []) as { id: string }[]).map((s) => s.id)
   type NoteRow = {
@@ -426,14 +494,7 @@ export async function GET(
   // Yalnız hastaya gösterilecek kolonlar seçilir: klinik soru, tanılar, yanıt özeti, belge ve konsültan adı
   // bu sorguya HİÇ girmez. Token'ın doktoruna kapsanır (HASTA-IZOLASYON-01). Tablo/kolon yoksa boş kalır.
   try {
-    const { data: yonRows } = await sb
-      .from('sevkler')
-      .select('id, hedef_brans, istem_tarihi, created_at, durum, yanit_tarihi')
-      .eq('patient_id', patientId)
-      .eq('doctor_id', doctorId)
-      .not('hedef_brans', 'is', null)
-      .order('created_at', { ascending: false })
-      .limit(40)
+    const { data: yonRows } = await yonP
     bundle.yonlendirmeler = portalYonlendirmeleri(yonRows || [])
   } catch (e) { console.error('[portal] yonlendirmeler:', e) }
 
@@ -443,12 +504,7 @@ export async function GET(
   // (Dr. Mamur, 2026-09-08 — Seçenek C). Biten bir antibiyotik kürünü aylar sonra
   // "Aktif" diye göstermek zararlı olacağı için karar tahmin edilmez.
   // NOTYA-ARSIV-02: arşivlenmiş muayenenin yazdığı ilaç İlaçlarım'da görünmez (arşivden çıkınca geri gelir).
-  const { data: medsRaw } = await arsivsizIlaclar(sb, 'id, ilac_adi, doz, kullanim_sikli, notlar, aktif, baslangic_tarihi, bitis_tarihi, yazan_doktor')
-    .eq('patient_id', patientId)
-    .eq('doctor_id', doctorId)
-    .eq('onay_durumu', 'onayli')
-    .order('baslangic_tarihi', { ascending: false })
-    .limit(60)
+  const { data: medsRaw } = await medsP
 
   const medications: PortalMedication[] = (medsRaw || []).map((m) => ({
     id: m.id,
@@ -489,13 +545,7 @@ export async function GET(
   bundle.medicationHistory = medicationHistory
 
   // Labs → results
-  const { data: labRaw } = await sb
-    .from('hasta_lab_sonuclari')
-    .select('id, testler, created_at, lab_adi, sonuc_tarihi')
-    .eq('patient_id', patientId)
-    .eq('doctor_id', doctorId)
-    .order('created_at', { ascending: false })
-    .limit(15)
+  const { data: labRaw } = await labP
 
   const results: PortalResult[] = []
   for (const row of labRaw || []) {
@@ -517,13 +567,7 @@ export async function GET(
   }
 
   // Imaging — columns from hasta_goruntulemeler schema
-  const { data: imgRaw } = await sb
-    .from('hasta_goruntulemeler')
-    .select('id, created_at, modalite, vucut_bolgesi, rapor_metni, goruntuleme_tarihi, dosya_url')
-    .eq('patient_id', patientId)
-    .eq('doctor_id', doctorId)
-    .order('created_at', { ascending: false })
-    .limit(15)
+  const { data: imgRaw } = await imgP
 
   for (const row of imgRaw || []) {
     const tip = String(row.modalite || '')
@@ -551,13 +595,7 @@ export async function GET(
   // Lab satırları zaten hasta_lab_sonuclari'ndan geldiyse çift saymamak için belge_id ile eşleştirilir.
   const labBelgeIds = new Set<string>()
   try {
-    const { data: labPaneller } = await sb
-      .from('lab_paneller')
-      .select('belge_id')
-      .eq('patient_id', patientId)
-      .eq('doctor_id', doctorId)
-      .not('belge_id', 'is', null)
-      .limit(80)
+    const { data: labPaneller } = await labPanelP
     for (const p of labPaneller || []) {
       if (p.belge_id) labBelgeIds.add(String(p.belge_id))
     }
@@ -565,7 +603,9 @@ export async function GET(
   try {
     // KONSULTASYON-01: the consultant's report never reaches Sağlığım — the patient sees only "yönlendirildiniz ·
     // sonuç alındı". If the consultation links cannot be read, no vault document is listed (fail closed).
-    const konsultasyonBelgeleri = await konsultasyonBelgeIdleri(sb, doctorId, patientId)
+    const konsBelgeSonuc = await konsBelgeP
+    if (!konsBelgeSonuc.ok) throw konsBelgeSonuc.e
+    const konsultasyonBelgeleri = konsBelgeSonuc.v
     const { data: belgeler } = konsultasyonBelgeleri ? await sb
       .from('medical_documents')
       .select('id, file_name, file_type, category, created_at')
@@ -601,14 +641,7 @@ export async function GET(
     }
   } catch (e) { console.error('[portal] medical_documents:', e) }
 
-  const { data: ceket } = await sb
-    .from('goruntu_calisma')
-    .select('id, tip, modalite, bolge, tarih, onay_durum, hekim_yorum, created_at')
-    .eq('patient_id', patientId)
-    .eq('doctor_id', doctorId)
-    .eq('onay_durum', 'hasta_paylas')
-    .order('tarih', { ascending: false, nullsFirst: false })
-    .limit(20)
+  const { data: ceket } = await ceketP
   for (const row of ceket || []) {
     if (!portaldaGorunurMu(row)) continue
     const tip = String(row.tip || 'diger') as GoruntuTip
@@ -662,19 +695,25 @@ export async function GET(
   // SAGLIGIM-PORTAL-REGISTRY — specialty slices attach ONLY via lib/portal/moduller.ts eligibility
   // (token doctor's specialty × patient records × age). Previously büyüme was computed for every patient
   // with a DOB (adults included) and Pap/HPV reminders for every woman, whatever the practice.
-  const hastaRow = (await sb.from('patients').select('name_encrypted, dob_encrypted, gender_encrypted, notes_encrypted, gender').eq('id', patientId).eq('doctor_id', doctorId).maybeSingle()).data
+  const hastaRow = (await hastaRowP).data
   const coz = (v: unknown) => { try { return v ? decrypt(String(v)) : null } catch { return null } }
   // PORTAL-HASTA-ADI — name only (this point is past requirePortalUnlock); null → UI shows nothing.
   bundle.hasta = { adSoyad: hastaAdSoyad(coz(hastaRow?.name_encrypted)) }
   const dogumIso = coz(hastaRow?.dob_encrypted)
   const cinsiyetHam = coz(hastaRow?.gender_encrypted) || ''
-  const doktorBransi = await hekimBransi(sb, tokenData.doctor_id as string)
-  const { data: geb } = await sb.from('gebelikler').select('id, sat, tdt').eq('patient_id', patientId).eq('doctor_id', doctorId).eq('durum', 'aktif').order('created_at', { ascending: false }).limit(1).maybeSingle()
-  const { data: ks } = await sb.from('kadin_sagligi').select('son_pap, son_hpv, son_mamografi, son_dxa, son_kolorektal, hrt, hrt_baslangic, histerektomi').eq('patient_id', patientId).eq('doctor_id', doctorId).maybeSingle()
-  const { data: kontr } = await sb.from('kontrasepsiyon').select('yontem, baslangic, ria_notu, aktif').eq('patient_id', patientId).eq('doctor_id', doctorId).eq('aktif', true).maybeSingle()
+  const hekimBransiSonuc = await hekimBransiP
+  if (!hekimBransiSonuc.ok) throw hekimBransiSonuc.e
+  const doktorBransi = hekimBransiSonuc.v
+  const { data: geb } = await gebP
+  const { data: ks } = await ksP
+  const { data: kontr } = await kontrP
   // ASI-KARNESI-01 — evrensel Aşı Karnesi: pediatride her zaman; diğer branşlarda kayıt varsa. PDF ile AYNI veri.
   let asiKarnesi: AsiKarnesi | null = null
-  try { asiKarnesi = await asiKarnesiVerisi(sb, doctorId, patientId) } catch (e) { console.error('[portal] asi-karnesi:', e) }
+  try {
+    const r = await asiKarnesiP
+    if (!r.ok) throw r.e
+    asiKarnesi = r.v
+  } catch (e) { console.error('[portal] asi-karnesi:', e) }
   const asiDolu = asiKarnesiDoluMu(asiKarnesi)
   bundle.portal = portalModulleri({
     doktorBransi,
@@ -682,7 +721,7 @@ export async function GET(
     gebelikAktif: !!geb,
     kdKaydi: !!ks || !!kontr,
     buyumeOlcumu: buyumeHamNoktalar.length > 0,
-    dahiliyeKaydi: (await dahiliyeKartlari(sb, patientId, doctorId)).length > 0,
+    dahiliyeKaydi: await dahiliyeKartP.then((r) => { if (!r.ok) throw r.e; return r.v.length > 0 }),
     asiKaydi: asiDolu,
   })
   const modulAktif = (id: Parameters<typeof portalModulAktif>[1]) => portalModulAktif(bundle, id)
@@ -1564,7 +1603,9 @@ export async function GET(
   } catch (e) { console.error('[portal] saglik-paketim:', e) }
 
   // Messages from DB
-  const messages = await loadPortalMessages(sb, patientId, doctorId)
+  const mesajlarSonuc = await mesajlarP
+  if (!mesajlarSonuc.ok) throw mesajlarSonuc.e
+  const messages = mesajlarSonuc.v
   bundle.messages = messages
   bundle.history = emptyPortalBundle().history
 
@@ -1577,16 +1618,13 @@ export async function GET(
   let yaklasanKontrol: string | null = null
   let muayeneUyari48s: string | null = null
   try {
-    const { portalYaklasanKontrol } = await import('@/lib/doktor/takip')
-    yaklasanKontrol = await portalYaklasanKontrol(sb, doctorId, patientId)
+    const r = await yaklasanKontrolP
+    if (!r.ok) throw r.e
+    yaklasanKontrol = r.v
   } catch { /* takip tablosu yoksa Planlanmadı */ }
   // Fallback: next future practice appointment date (still patient-safe).
   try {
-    const { data: rv } = await sb.from('randevular').select('baslangic')
-      .eq('doktor_id', doctorId).eq('patient_id', patientId)
-      .in('durum', ['planlandi', 'onaylandi'])
-      .gt('baslangic', new Date().toISOString())
-      .order('baslangic', { ascending: true }).limit(1).maybeSingle()
+    const { data: rv } = await rvP
     if (rv?.baslangic) {
       const bas = new Date(String(rv.baslangic))
       const etiket = new Intl.DateTimeFormat('tr-TR', {

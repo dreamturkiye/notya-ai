@@ -182,9 +182,21 @@ export default function HomePage() {
         </div>
       </section>
 
-      <footer style={{ padding: '36px 40px', borderTop: '1px solid rgba(10,10,10,0.08)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <footer style={{ padding: '36px 40px', borderTop: '1px solid rgba(10,10,10,0.08)', display: 'flex', flexWrap: 'wrap', gap: '16px', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ fontSize: '13px', fontWeight: 700 }}>NOTYA<span style={{ fontSize: '9px', verticalAlign: 'super', opacity: 0.5 }}>™</span></div>
-        <div style={{ fontSize: '11px', color: 'rgba(10,10,10,0.4)', textAlign: 'right', lineHeight: 1.6 }}>&copy; 2026 Notya AI. Tüm hakları saklıdır.<br />Bu yazılım 5846 sayılı FSEK ve ABD telif hukuku (17 U.S.C.) kapsamında korunmaktadır. İzinsiz kopyalanamaz ve tersine mühendislik yapılamaz. &middot; KVKK Uyumlu</div>
+        {/* HUKUK-01: yasal metin bağlantıları */}
+        <nav aria-label="Yasal bağlantılar" style={{ display: 'flex', flexWrap: 'wrap', gap: '14px', fontSize: '11px' }}>
+          {[
+            ['/kullanim-kosullari', 'Kullanım Koşulları'],
+            ['/gizlilik', 'Gizlilik'],
+            ['/kvkk', 'KVKK'],
+            ['/cerez-politikasi', 'Çerezler'],
+            ['/yasal', 'Tüm yasal metinler'],
+          ].map(([href, etiket]) => (
+            <Link key={href} href={href} style={{ color: 'rgba(10,10,10,0.55)', textDecoration: 'none' }}>{etiket}</Link>
+          ))}
+        </nav>
+        <div style={{ fontSize: '11px', color: 'rgba(10,10,10,0.4)', textAlign: 'right', lineHeight: 1.6 }}>&copy; 2026 Notya AI. Tüm hakları saklıdır.<br />Bu yazılım 5846 sayılı FSEK ve ABD telif hukuku (17 U.S.C.) kapsamında korunmaktadır. İzinsiz kopyalanamaz ve tersine mühendislik yapılamaz.</div>
       </footer>
 
     </main>

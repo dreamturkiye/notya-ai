@@ -305,6 +305,17 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     } catch (e) { console.error('[asi-aktarim]', e) }
   }
 
+  // MUAYENE-EKLERI-01: onaydan sonra röntgen/EKG ekleri hasta görüntü bölümüne bağlanır (best effort, bayrak kapalıysa atlanır).
+  if (hastaBenim && hastaIdA && existing.session_id) {
+    try {
+      const { muayeneEkleriAcikMi } = await import('@/lib/doktor/muayeneEk/bayrak')
+      if (muayeneEkleriAcikMi()) {
+        const { onayliEkleriYonlendir } = await import('@/lib/doktor/muayeneEk/yonlendir')
+        await onayliEkleriYonlendir(supabase, { doktorId: user.id, patientId: hastaIdA, sessionId: String(existing.session_id), noteId })
+      }
+    } catch { console.error('[muayene-ekleri] approve yonlendirme atlandi') }
+  }
+
   try {
     const patientId = hastaIdA
     if (patientId && hastaBenim) {

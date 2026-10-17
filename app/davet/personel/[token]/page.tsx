@@ -1,11 +1,12 @@
 'use client';
 
-/** NOTYA-RANDEVU-01 — sekreter davet kabul sayfası. Public — token kendisi kimlik doğrulamadır. */
+/** NOTYA-RANDEVU-01 / MOBIL-PERSONEL-01 — personel (sekreter / asistan / hasta danışmanı) davet kabul sayfası. Public — token kendisi kimlik doğrulamadır. */
 
 import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
 import { CHROME_RENK, CHROME_FONT, CHROME_FONT_HREF } from "@/lib/doktor/chromeTheme";
+import { personelRoluMu, ROL_KISA_ETIKETI_TR, ROL_DAVET_CUMLESI_TR } from '@/lib/doktor/personelYetki';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,7 +16,7 @@ export default function DavetKabulPage() {
   const token = String(params?.token || '');
 
   const [durum, setDurum] = useState<'yukleniyor' | 'gecerli' | 'gecersiz' | 'tamamlandi'>('yukleniyor');
-  const [bilgi, setBilgi] = useState<{ adSoyad: string; email: string; doktorAdi: string } | null>(null);
+  const [bilgi, setBilgi] = useState<{ adSoyad: string; email: string; doktorAdi: string; rol?: string } | null>(null);
   const [hataMesaji, setHataMesaji] = useState('');
   const [sifre, setSifre] = useState('');
   const [sifreTekrar, setSifreTekrar] = useState('');
@@ -152,10 +153,10 @@ export default function DavetKabulPage() {
 
         {durum === 'gecerli' && bilgi && (
           <>
-            <h3 style={baslik}>Sekreter Daveti</h3>
+            <h3 style={baslik}>{personelRoluMu(bilgi.rol) ? `${ROL_KISA_ETIKETI_TR[bilgi.rol]} Daveti` : 'Personel Daveti'}</h3>
             <p style={{ fontSize: 14, color: R.ink, lineHeight: 1.55, marginBottom: 16 }}>
-              Merhaba <strong>{bilgi.adSoyad}</strong>, <strong>{bilgi.doktorAdi || "Doktorunuz"}</strong> sizi Notya üzerinde sekreter olarak
-              çalışmaya davet etti. Randevuları görüp yönetebileceksiniz. Devam etmek için bir şifre belirleyin.
+              Merhaba <strong>{bilgi.adSoyad}</strong>, <strong>{bilgi.doktorAdi || "Doktorunuz"}</strong> sizi Notya üzerinde{' '}
+              {personelRoluMu(bilgi.rol) ? ROL_DAVET_CUMLESI_TR[bilgi.rol] : 'personel olarak çalışmaya davet etti. Yetkileriniz doktorunuz tarafından belirlenir.'} Devam etmek için bir şifre belirleyin.
             </p>
             <form onSubmit={kabulEt}>
               <div style={{ marginBottom: 14 }}>

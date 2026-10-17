@@ -71,7 +71,7 @@ export async function randevuIletisiminiKaydet(
         izin: true,
         kaynak: IZIN_KAYNAGI_RANDEVU,
         kaydeden_user_id: g.userId,
-        kaydeden_personel_id: g.rol === 'sekreter' ? g.personelId ?? null : null,
+        kaydeden_personel_id: g.rol !== 'doktor' ? g.personelId ?? null : null,
       }
       const { error: gecmisHata } = await supabase.from('iletisim_izin_kayitlari').insert(satir)
       if (gecmisHata) await supabase.from('iletisim_izin_kayitlari').insert({ ...satir, kaynak: 'gonder_dugmesi' })

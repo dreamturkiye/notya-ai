@@ -163,7 +163,7 @@ async function zamanAsimli(p: Promise<OtomatikGonderimSonucu>, ms: number): Prom
 }
 
 /** Why an item cannot go automatically right now (→ untouched, stays with people), or null when it can. */
-function engel(h: Hazirlik, simdi: Date): string | null {
+export function engel(h: Hazirlik, simdi: Date): string | null {
   if (!otomatikTurMu(h.tur)) return 'tur'
   if (h.tur === 'randevu_hatirlatma' || h.tur === 'randevu_degisikligi') {
     const r = h.randevu
@@ -176,7 +176,7 @@ function engel(h: Hazirlik, simdi: Date): string | null {
 }
 
 /** Build the request for one channel, or null when that channel cannot carry this message. */
-function istekKur(h: Hazirlik, kanal: IletisimKanali, doktorId: string, doktorAdi: string): OtomatikGonderimIstegi | null {
+export function istekKur(h: Hazirlik, kanal: IletisimKanali, doktorId: string, doktorAdi: string): OtomatikGonderimIstegi | null {
   if (!gonderilebilirMi(h.hasta, kanal)) return null
   const temel = { doktorId, patientId: h.hasta.id, tur: h.tur, kuyrukId: h.kuyrukId, konu: h.mesaj?.konu || '', metin: h.mesaj?.metin || '' }
   if (kanal === 'whatsapp') {
@@ -247,7 +247,7 @@ async function doktoruIsle(sb: Sb, doktorId: string, ogeler: Oge[], liste: Otoma
       let belirsiz = false
       for (const adim of plan) {
         const s = await zamanAsimli(adim.g.gonder(adim.istek), GONDERIM_ZAMAN_ASIMI_MS)
-        if (s === 'belirsiz') { belirsiz = true; break }
+        if (s === 'belirsiz' || (!s.ok && s.belirsiz)) { belirsiz = true; break }
         if (s.ok) { basari = { ...adim, s }; break }
         hatalar.push(s.hata)
       }

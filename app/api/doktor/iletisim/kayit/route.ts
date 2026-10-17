@@ -107,7 +107,7 @@ export async function POST(req: NextRequest) {
     tur,
     durum: 'acildi',
     gonderen_user_id: user.id,
-    gonderen_personel_id: rol === 'sekreter' ? personelId ?? null : null,
+    gonderen_personel_id: rol !== 'doktor' ? personelId ?? null : null,
     kuyruk_id: kuyrukId,
     randevu_id: randevuId,
   }).select('id').single()
@@ -146,7 +146,7 @@ export async function PATCH(req: NextRequest) {
       .eq('id', kuyrukId).eq('doctor_id', doktorId).eq('patient_id', patientId).maybeSingle()
     if (k && mesajTuruMu(k.tur) && turIzinliMi(rol, k.tur)) {
       const { data } = await supabase.from('iletisim_kuyrugu')
-        .update({ durum: 'gonderildi', updated_at: simdi, isleyen_user_id: user.id, isleyen_personel_id: rol === 'sekreter' ? personelId ?? null : null })
+        .update({ durum: 'gonderildi', updated_at: simdi, isleyen_user_id: user.id, isleyen_personel_id: rol !== 'doktor' ? personelId ?? null : null })
         .eq('id', kuyrukId).eq('doctor_id', doktorId).select('id')
       kuyrukGuncellendi = !!data?.length
       asiId = asiId || (k.asi_id ? String(k.asi_id) : null)

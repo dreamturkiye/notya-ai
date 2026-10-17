@@ -3,6 +3,7 @@ import { pratikOturum } from '@/lib/doktor/pratikOturum';
 import { encrypt, decrypt } from '@/lib/security/encryption';
 import { hastaDosyaAra, klinikAramaMi } from '@/lib/doktor/hastaDosyaAra';
 import { hastaAramaIndeksiniGuncelle } from '@/lib/doktor/hastaAramaIndeksi'
+import { izinVarMi } from '@/lib/doktor/personelYetki'
 
 export const dynamic = 'force-dynamic';
 
@@ -10,10 +11,11 @@ export async function GET(req: NextRequest) {
   // NOTYA-SEKRETER-01: pratikOturum — sekreter, bağlı hekimin hasta listesini görür (doktorId).
   const oturum = await pratikOturum(req);
   if ('hata' in oturum) return oturum.hata;
-  const { supabase, doktorId } = oturum;
+  const { supabase, doktorId, rol } = oturum;
 
   const q = String(req.nextUrl.searchParams.get('q') || '').trim()
-  if (q && klinikAramaMi(q)) {
+  // MOBIL-PERSONEL-01: the clinical-content search returns file summaries — only roles that may read the file.
+  if (q && klinikAramaMi(q) && izinVarMi(rol, 'hasta.dosya.oku')) {
     const ara = await hastaDosyaAra(supabase, doktorId, q)
     return NextResponse.json({
       arama: true,
@@ -75,10 +77,12 @@ export async function POST(req: NextRequest) {
   // NOTYA-SEKRETER-01: ön büro da hekim adına hasta ekleyebilir — doctor_id = doktorId.
   const oturum = await pratikOturum(req);
   if ('hata' in oturum) return oturum.hata;
-  const { supabase, doktorId } = oturum;
+  const { supabase, doktorId, rol } = oturum;
 
   const body = await req.json();
   const { tcKimlikNo, adSoyad, dogumTarihi, cinsiyet, telefon, eposta, sehir, kanGrubu, kronikHastaliklar, alerjiler, suregenIlaclar, sigaraAlkol } = body;
+  // MOBIL-PERSONEL-01: a role without clinical-file write access (hasta_danismani) registers demographics + contact only.
+  const klinikYazabilir = izinVarMi(rol, 'hasta.dosya.yaz');
 
   // QA-2026-09-06 (bot bulgusu): manuel formda e-posta ve TC alanları yokken API ikisini de
   // ZORUNLU sayıyordu — manuel hasta eklemek imkansızdı. Ürün felsefesiyle hizalandı:
@@ -101,7 +105,9 @@ export async function POST(req: NextRequest) {
   const encryptedGender = cinsiyet ? encrypt(cinsiyet) : null;
   const encryptedPhone = telefon ? encrypt(telefon) : null;
   const encryptedEmail = eposta ? encrypt(String(eposta).trim()) : null;
-  const notesPayload = { sehir, kanGrubu, kronikHastaliklar, alerjiler, suregenIlaclar, sigaraAlkol };
+  const notesPayload = klinikYazabilir
+    ? { sehir, kanGrubu, kronikHastaliklar, alerjiler, suregenIlaclar, sigaraAlkol }
+    : { sehir };
   const encryptedNotes = encrypt(JSON.stringify(notesPayload));
 
   const { data, error } = await supabase

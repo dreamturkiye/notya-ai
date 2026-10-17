@@ -130,7 +130,7 @@ export async function POST(req: NextRequest) {
 
   await supabase.from('hasta_mesajlar').insert({
     konu_id: created.id,
-    taraf: rol === 'sekreter' ? 'klinik' : 'doktor',
+    taraf: rol === 'doktor' ? 'doktor' : 'klinik',
     yazar_user_id: user.id,
     metin,
   })

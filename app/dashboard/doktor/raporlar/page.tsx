@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react'
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth'
 import { CHROME_RENK, CHROME_FONT } from '@/lib/doktor/chromeTheme'
+import IpucuBaloncugu from '@/components/doktor/IpucuBaloncugu'
 import {
   RAPOR_ARALIKLARI,
   sureYazi,
@@ -122,7 +123,10 @@ export default function RaporlarSayfasi() {
   return (
     <div style={{ fontFamily: CHROME_FONT.sans, color: CHROME_RENK.ink }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, flexWrap: 'wrap', marginBottom: 8 }}>
-        <div style={{ fontFamily: CHROME_FONT.serif, fontWeight: 500, fontSize: dar ? 26 : 32, letterSpacing: '-0.02em' }}>Raporlar</div>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ fontFamily: CHROME_FONT.serif, fontWeight: 500, fontSize: dar ? 26 : 32, letterSpacing: '-0.02em' }}>Raporlar</div>
+          <IpucuBaloncugu bolum="raporlar" />
+        </span>
         <button type="button" onClick={indir} disabled={pdf || yukleniyor} style={btn(true, pdf || yukleniyor)}>{pdf ? 'Hazırlanıyor…' : 'PDF indir'}</button>
       </div>
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 8 }}>

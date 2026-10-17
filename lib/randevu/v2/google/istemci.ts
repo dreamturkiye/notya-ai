@@ -54,12 +54,17 @@ export function yetkiAdresi(p: { durum: string; meydanOkuma: string }): string {
   })}`
 }
 
+/** SAGLAMLIK-2026-10: zaman aşımı — asılı kalan Google ucu, isteği fonksiyon ömrü boyunca kilitlemesin.
+ * Aşım fetch'in reddi olarak mevcut hata yollarına düşer (yeni hata sınıfı yok). */
+const GOOGLE_ZAMAN_ASIMI_MS = 20_000
+
 async function formPost(url: string, alanlar: Record<string, string>): Promise<{ durum: number; veri: Record<string, unknown> }> {
   const y = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded', Accept: 'application/json' },
     body: new URLSearchParams(alanlar).toString(),
     cache: 'no-store',
+    signal: AbortSignal.timeout(GOOGLE_ZAMAN_ASIMI_MS),
   })
   return { durum: y.status, veri: (await y.json().catch(() => ({}))) as Record<string, unknown> }
 }
@@ -104,6 +109,7 @@ async function api<T = Record<string, unknown>>(jeton: string, yontem: string, y
     headers: { Authorization: `Bearer ${jeton}`, Accept: 'application/json', ...(govde ? { 'Content-Type': 'application/json' } : {}) },
     body: govde ? JSON.stringify(govde) : undefined,
     cache: 'no-store',
+    signal: AbortSignal.timeout(GOOGLE_ZAMAN_ASIMI_MS),
   })
   const veri = y.status === 204 ? ({} as T) : ((await y.json().catch(() => ({}))) as T)
   return { durum: y.status, veri }

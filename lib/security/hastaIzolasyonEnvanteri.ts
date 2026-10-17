@@ -16,6 +16,26 @@ const T = { durum: 'test' } as const
 const I = (kapsam: string): Siniflama => ({ durum: 'incelendi', kapsam })
 
 export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
+  // ── MUAYENE-EKLERI-01 ──
+  'app/api/doktor/muayene-ekleri/durum/route.ts': I('takes no id; returns only the feature-flag state to an authenticated user'),
+  'app/api/doktor/muayene-ekleri/siniflandir/route.ts': I('sessionId + belgeId resolved by baglamYukle: seansSahibi(doctor, session) then getDocumentMeta(doctor, belge) with visitId === session and patientId === the session patient; 404 otherwise; doctor-only'),
+  'app/api/doktor/muayene-ekleri/tur/route.ts': I('same baglamYukle gate as siniflandir; writes (doctor_id, belge_id) / (doctor_id, brans) scoped rows only'),
+  'app/api/doktor/muayene-ekleri/degerlendir/route.ts': I('same baglamYukle gate; cache + vault reads scoped by doctor_id; the AI never receives patient identity'),
+  'app/api/doktor/muayene-ekleri/liste/route.ts': I('seansSahibi(doctor, session) then rows filtered by doctor_id + session_id; 404 for a foreign session'),
+  // MUAYENE-EKLERI-07 — "Yüklenen dosyalar": list + byte stream of a visit's vault documents (pratikOturum: doctor or staff)
+  'app/api/doktor/muayene-ekleri/yuklenenler/route.ts': T,
+  'app/api/doktor/muayene-ekleri/yuklenenler/[belgeId]/route.ts': T,
+  // ── FOTO-ARSIV-01 / FOTO-AI-01: hasta fotoğraf arşivi + yapay zekâ değerlendirme (patient proved by hastaSahibiMi, photo by fotoBaglami; sekreter/danışman closed in personelYetki) ──
+  'app/api/doktor/hasta-foto/[patientId]/route.ts': T,
+  'app/api/doktor/hasta-foto/[patientId]/toplu/route.ts': T,
+  'app/api/doktor/hasta-foto/[patientId]/rapor/route.ts': T,
+  'app/api/doktor/hasta-foto/[patientId]/kalite/route.ts': T,
+  'app/api/doktor/hasta-foto/[patientId]/[belgeId]/route.ts': T,
+  'app/api/doktor/hasta-foto/[patientId]/[belgeId]/dosya/route.ts': T,
+  'app/api/doktor/hasta-foto/[patientId]/[belgeId]/kucuk/route.ts': T,
+  'app/api/doktor/hasta-foto/[patientId]/[belgeId]/ai/route.ts': T,
+  'app/api/doktor/hasta-foto/[patientId]/[belgeId]/ai/karsilastir/route.ts': T,
+  'app/api/doktor/hasta-foto/[patientId]/[belgeId]/ai/geri-bildirim/route.ts': T,
   // ── Hasta kaydı ──
   'app/api/doktor/hastalar/route.ts': T,
   'app/api/doktor/hastalar/[id]/route.ts': T,
@@ -25,6 +45,7 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   'app/api/doktor/hastalar/[id]/sessions/[sessionId]/kalici-sil/route.ts': I('same session ownership check as arsivle (doctor_id + patient_id together, 404 otherwise), plus requires archived_at already set; every child-table delete is additionally scoped by ids derived from that owned session/note, never from raw request input'),
   'app/api/doktor/hastalar/[id]/buyume-egrileri/route.ts': T,
   'app/api/doktor/hastalar/[id]/hedef-boy/route.ts': T,
+  'app/api/doktor/hastalar/[id]/olcumler/route.ts': T,
   'app/api/doktor/hastalar/[id]/klinik-ozet/route.ts': I('hastaKlinikOzetleriGuncelle: reads/writes scoped doctor_id+patient_id; foreign patient → fail'),
   // ── Notlar / seanslar ──
   'app/api/notes/route.ts': T,
@@ -33,6 +54,7 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   'app/api/notes/[id]/ilac-sonlandir-geri-al/route.ts': T,
   'app/api/notes/pdf/route.ts': I('renders only the body it is given (mali note); reads no patient table'),
   'app/api/doktor/son-notlar/route.ts': T,
+  'app/api/doktor/ilk-adimlar/route.ts': I('setup-state booleans only: every count scoped to the authenticated doctor (doctor_id/doktor_id = doktorId); takes no id from the request; no patient identity in the response'),
   'app/api/sessions/start/route.ts': T,
   'app/api/sessions/[id]/end/route.ts': T,
   'app/api/sessions/ses-yukle/route.ts': T,
@@ -75,7 +97,7 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   'app/api/doktor/on-buro-fisilti/route.ts': I('pratikOturum, GET only, takes no id from the request. Every source is read by the practice doctor id: randevular (doktor_id), patients (doctor_id), intake forms (doktor_id), gelen_belgeler (doctor_id), takip (takipSenkronize + takipAcikListe by doktor_id, names from patients.doctor_id); unread messages come from /api/doktor/mesajlar called with the caller\'s own authorization header'),
   // NOTYA-EYLEM — Ayşe hazırlar, hekim onaylar (core/eylemler/*)
   'app/api/doktor/eylem/route.ts': T,
-  'app/api/doktor/documents/route.ts': I('vault listDocuments/uploadDocument — doctor-scoped, assertPatientOwned (lib/vault/service.acl.test.ts)'),
+  'app/api/doktor/documents/route.ts': I('vault listDocuments/uploadDocument — doctor-scoped (pratikOturum doktorId, MOBIL-PERSONEL-01), assertPatientOwned (lib/vault/service.acl.test.ts); unchanged secretary refused by personelYetki'),
   'app/api/doktor/documents/[id]/route.ts': I('vault getDocumentMeta/softDeleteDocument by doctor_id (lib/vault/service.acl.test.ts)'),
   'app/api/doktor/documents/[id]/download/route.ts': I('vault downloadDocument by doctor_id (lib/vault/service.acl.test.ts)'),
   'app/api/doktor/goruntuleme/route.ts': T,
@@ -232,6 +254,7 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   'app/api/doktor/araclar/epikriz/route.ts': T,
   'app/api/doktor/araclar/enabiz/route.ts': T,
   'app/api/doktor/araclar/enabiz/mbys/route.ts': T,
+  'app/api/doktor/araclar/enabiz/mbys/bildir/route.ts': I('MBYS-BILDIR-01: doctor-only (secretary 403). notId read through notKaydiHazirla = note by id AND doctor_id, then seansSahibi(session + its patient) → 404 for a foreign note; the audit row an onayId names is looked up with id AND doctor_id AND olay=onaylandi → 404 otherwise; every audit/aktarim write carries the doctor id and a patient id derived from the owned note, never from the request. Logic covered by lib/enabiz/mbys/bildirAkis.test.ts against an in-memory store; NOT in the cross-doctor A↔B harness (OPEN-COMMITMENTS MBYS-BILDIR-03)'),
   'app/api/doktor/araclar/erecete/route.ts': I('patient ownership check (id AND doctor_id) before any read → 404'),
   'app/api/doktor/araclar/sgk-rapor/route.ts': I('patient ownership check (id AND doctor_id) before any read → 404'),
   // NOTYA-HASTA-RAPORLARI-UNIFIED-01
@@ -253,6 +276,7 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   'app/api/doktor/rutin/route.ts': I('doktor_rutin / kullanim olaylari scoped by doktorId; no patient table'),
   'app/api/doktor/onbellek-isin/route.ts': I('hastaSahibiMi before patientId; randevu list .eq(doktor_id); onbellek key doctor_id+patient_id'),
   'app/api/doktor/hesap/sifre-degistir/route.ts': I('own auth account only'),
+  'app/api/doktor/hesap/oturum/route.ts': I('takes no id; reads / revokes the sessions of the account the bearer token resolves to (auth.admin.signOut(token, global)) — own account only'),
   'app/api/doktor/id-card/parse/route.ts': I('OCR of an uploaded image; stores nothing'),
   'app/api/doktor/ilac-ara/route.ts': I('drug catalogue search; no patient data'),
   'app/api/doktor/integrations/route.ts': I('doctor_integrations of user.id only'),
@@ -346,4 +370,19 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   // ── NOTYA-ACCOUNTING-COMPLIANCE-01: late-payment reminder drafts (reuses the iletisim queue) ──
   'app/api/accounting/reminders/route.ts': I('GET only, gated by ar.reminder.view; the iletisim_kuyrugu query itself is .eq(\'doctor_id\', doktorId) — never takes a patient id from the request. Patient NAMES shown alongside each draft are resolved from a second query that is both .eq(\'doctor_id\', doktorId) AND .in(\'id\', patientIds-drawn-from-the-first-query), so a draft from another doctor can never leak a name even if the queue row itself were somehow cross-doctor'),
   'app/api/cron/odeme-hatirlatma/route.ts': I('cron-secret gated (cronYetkiliMi); takes no id from the request. sweepPaymentReminders (lib/accounting/ar/reminderSweep.ts) iterates doctors with the module enabled and, per doctor, reads accounting_invoices with .eq(\'doctor_id\', that doctor) only; the candidate\'s patient contact is re-resolved via hastaIletisimi(doktorId, patientId) (same helper randevu-hatirlatma/iletisim-otomatik use) before a draft is queued into that same doctor\'s iletisim_kuyrugu row (.eq(doctor_id) on write). Writes a DRAFT only — never sends (see lib/accounting/ar/reminders.ts header)'),
+  // ── NOTYA-HASTA-ILETISIMI-01: bulk patient communication (universal, doktor + personel) ──
+  'app/api/doktor/iletisim/toplu/onizleme/route.ts': I('pratikOturum → doktorId; adaylariGetir (lib/iletisim/toplu/filtre.ts) reads patients with .eq(\'doctor_id\', doktorId) only — the filter body carries no patient id, only doctor-scoped criteria (branş/yaş/etiket/filters)'),
+  'app/api/doktor/iletisim/toplu/gonder/route.ts': I('pratikOturum → doktorId; kampanyaOlustur/kampanyaGonder (lib/iletisim/toplu/kampanya.ts) re-derive the recipient list the same doctor-scoped way as onizleme on every send, never trust a client-supplied recipient list; the campaign row and every kampanya_alicilari row are written with doctor_id = doktorId; requires body.onay === true — never sends implicitly; resumable sends (migration 167) claim a stale row with a compare-and-swap UPDATE scoped by kampanya_id + doctor_id + patient_id + kanal, and the preview-drift check only compares audience COUNTS (no ids cross the wire); e-mail is refused up front (503) when PORTAL_TOKEN_SECRET is unset'),
+  'app/api/doktor/iletisim/toplu/gecmis/route.ts': I('pratikOturum → doktorId; both the single-campaign lookup (?id=) and the list are .eq(\'doctor_id\', doktorId) — a foreign campaign id 404s; the per-recipient breakdown is only ever fetched for a campaign id already confirmed to belong to doktorId'),
+  'app/api/doktor/iletisim/toplu/sms-ayarlari/route.ts': I('pratikOturum + sadeceDoktor (credentials, not patient data); iletisim_sms_ayarlari is keyed 1:1 by doctor_id, no patient identifiers ever read or written here'),
+  'app/api/doktor/iletisim/toplu/sms-durum/route.ts': I('pratikOturum → doktorId; reads only the caller\'s own iletisim_sms_ayarlari row (.eq(\'doctor_id\', doktorId)) and, for NetGSM, the credit of that doctor\'s own NetGSM account; no patient identifier is read or written and no credential is returned (provider name, readiness, opt-out line, credit number only)'),
+  'app/api/iletisim/sms/webhook/[doktorId]/route.ts': I('public inbound webhook from the doctor\'s own SMS gateway app, not pratikOturum — authenticated instead by a per-doctor shared secret (encrypted at rest, compared with the header the doctor configured in their own gateway); candidate patients are read with .eq(\'doctor_id\', doktorId) AND .eq(\'is_active\', true), and the opt-out write (vazgecUygula) re-scopes by .eq(\'id\', patientId).eq(\'doctor_id\', doktorId) together — the secret is compared in constant time (sha256 + timingSafeEqual); a correct doktorId with the wrong secret authenticates nothing, and the write itself cannot touch a different doctor\'s row even if it tried'),
+  'app/api/iletisim/vazgec/[jeton]/route.ts': I('public unsubscribe link, no session — authenticated by an HMAC-signed token (vazgecJetonu.ts, PORTAL_TOKEN_SECRET) that names exactly one (doktorId, patientId, kanal); vazgecUygula\'s write is additionally scoped .eq(\'id\', patientId).eq(\'doctor_id\', doktorId) together, so a tampered or cross-patient token either fails signature verification (lib/iletisim/vazgecJetonu.test.ts) or matches no row'),
+  'app/api/cron/whatsapp-bakim/route.ts': I('WHATSAPP-API-01: cron-secret gated (cronYetkiliMi); lib/iletisim/whatsapp/bakim.ts walks doctors that have a connection and handles each one with its own doctor_id: health refresh, stuck-attempt close, failed-delivery e-mail fallback (patient re-read with .eq(doctor_id)) and the 2-year audit purge via the whatsapp_gunluk_imha RPC; no request-supplied id'),
+  'app/api/doktor/iletisim/whatsapp/yanitlar/route.ts': I('WHATSAPP-API-01: doktorOturum only (secretary refused); whatsapp_yanitlar read with .eq(doctor_id, user.id); patient names resolved by a second query that is ALSO .eq(doctor_id) and limited to ids drawn from the first; takes no id from the request'),
+  'app/api/doktor/iletisim/whatsapp/yanitlar/[id]/route.ts': I('WHATSAPP-API-01: doktorOturum only; card loaded by id AND doctor_id (404 otherwise), the appointment and patient are then resolved with doctor_id AND the card\'s OWN patient_id (lib/iletisim/whatsapp/eylem.ts, randevuEylem.ts) — the request carries only the card id, an action, optional free text and a time that must pass the slot engine; never a patient id'),
+  'app/api/whatsapp/webhook/route.ts': I('WHATSAPP-API-01: public Meta webhook, no session — X-Hub-Signature-256 HMAC (WHATSAPP_APP_SECRET, timingSafeEqual) verified before anything is read; the connection is resolved from phone_number_id, then patients are matched ONLY among that doctor\'s active patients (hastalariEslestir) and every write carries that doctor_id; an unknown phone_number_id is dropped'),
+  'app/api/doktor/on-buro-fisilti/iptal/route.ts': I('WHATSAPP-CANCEL-01: pratikOturum (doctor or the doctor\'s own secretary, scope = doktorId never the secretary\'s user id); takes only an inbox-card id (UUID-checked): the card is read by id AND doctor_id (404 otherwise), must be a cancellation-class card (iptalKartTuru) and is only moved yeni → goruldu with id AND doctor_id AND durum in the same update; no patient or appointment id is accepted, nothing clinical is read or returned'),
+  'app/api/iletisim/whatsapp/sonuc-bildirimi/route.ts': I('WHATSAPP-CANCEL-01: doktorOturum only (secretary refused); a boolean for the doctor\'s OWN connection row (.eq doctor_id = session doctor); no patient, appointment or message id in the request, no patient table read'),
+  'app/api/iletisim/whatsapp/yardim/route.ts': I('WHATSAPP-API-01: setup helper; doktorOturum, answers from a static FAQ or the AI gateway, takes a question string only — reads no patient table'),
 }

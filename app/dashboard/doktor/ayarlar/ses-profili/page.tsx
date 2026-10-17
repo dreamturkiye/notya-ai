@@ -45,7 +45,7 @@ export default function SesProfiliPage() {
 
   return (
     <div style={{ maxWidth: 680, fontFamily: CHROME_FONT.sans, color: CHROME_RENK.ink }}>
-      <div style={{ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', fontSize: 15, color: '#6d6055', marginBottom: 4 }}>Ayarlar</div>
+      <a href="/dashboard/doktor/ayarlar" style={{ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', fontSize: 15, color: '#6d6055', marginBottom: 4, display: 'inline-block', textDecoration: 'none' }}>‹ Ayarlar</a>
       <h1 style={{ fontFamily: CHROME_FONT.serif, fontWeight: 500, fontSize: 32, margin: '0 0 6px', color: '#2e251d' }}>Ses profili</h1>
       <p style={{ fontSize: 14, color: CHROME_RENK.muted, marginBottom: 22 }}>
         İsteğe bağlı. Ayşe konuşurken sizin sesinizi odadaki diğer seslerden ayırt etmesine yardım eder. Ses kaydınız saklanmaz; yalnızca matematiksel profil saklanır.

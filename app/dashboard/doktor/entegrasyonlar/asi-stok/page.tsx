@@ -40,6 +40,8 @@ export default function AsiStokPage() {
   const [modulDurumu, setModulDurumu] = useState<{ aktifOverride: boolean | null; faturaVarsayilan: boolean; bransVarsayilani: boolean; etkinAktif: boolean } | null>(null)
   const [form, setForm] = useState(bos)
   const [kaydediliyor, setKaydediliyor] = useState(false)
+  // NOTYA-HASTA-ILETISIMI-01: stok sıfırdan geldiyse ve bekleyen aile varsa, toplu mesaj ekranına kısayol.
+  const [bildirBanner, setBildirBanner] = useState<{ asiAdi: string; lotId: string; bekleyenSayisi: number } | null>(null)
 
   const token = () => getDoctorAccessToken()
 
@@ -101,7 +103,11 @@ export default function AsiStokPage() {
       })
       const d = await r.json()
       if (!r.ok) setHata(d?.error || 'Stok eklenemedi.')
-      else { setForm(bos); await yukle() }
+      else {
+        setForm(bos)
+        setBildirBanner(d.sifirdanGeldi && d.bekleyenSayisi > 0 ? { asiAdi: d.lot.asiAdi, lotId: d.lot.id, bekleyenSayisi: d.bekleyenSayisi } : null)
+        await yukle()
+      }
     } catch {
       setHata('Bağlantı hatası.')
     } finally {
@@ -145,6 +151,20 @@ export default function AsiStokPage() {
       {kapaliVeBransVarsayilaniKapali && (
         <div style={{ fontSize: 13, color: AMBER, marginBottom: 16 }}>
           Modül kapalı — muayene ekranında barkod tarama görünmez, stok eklenemez. "Aç"a basarak etkinleştirin.
+        </div>
+      )}
+
+      {bildirBanner && (
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, background: '#F3F8F0', border: `1px solid ${GREEN}`, borderRadius: 14, padding: '14px 16px', marginBottom: 16 }}>
+          <div style={{ fontSize: 13.5, color: INK }}>
+            <b>{bildirBanner.asiAdi}</b> stoğunuz yoktu, şimdi geldi. <b>{bildirBanner.bekleyenSayisi}</b> aile bu aşıyı bekliyor olabilir.
+          </div>
+          <Link
+            href={`/doktor-tools/hasta-iletisimi?asiAdi=${encodeURIComponent(bildirBanner.asiAdi)}&lotId=${encodeURIComponent(bildirBanner.lotId)}&sablon=asi_stok_geldi`}
+            style={{ ...btn(GREEN, '#fff'), whiteSpace: 'nowrap', textDecoration: 'none', display: 'inline-block' }}
+          >
+            Bekleyen ailelere bildir
+          </Link>
         </div>
       )}
 

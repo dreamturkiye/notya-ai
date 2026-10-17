@@ -3,7 +3,14 @@
  * Pure, client-safe. Rule and contract: lib/iletisim/README.md.
  */
 
-export type IletisimKanali = 'whatsapp' | 'eposta'
+/**
+ * NOTYA-HASTA-ILETISIMI-01 (2026-10-16): 'sms' is the third channel, added for the bulk patient
+ * communication feature only (lib/iletisim/toplu/, lib/iletisim/sms/) — the doctor's own phone
+ * number via a pluggable gateway, never Twilio. The original one-tap/automatic system (this
+ * file's `kanalMi`, baglantilar.ts, otomatik.ts) is deliberately untouched and still only
+ * recognises whatsapp/eposta; do not widen those without checking every call site.
+ */
+export type IletisimKanali = 'whatsapp' | 'eposta' | 'sms'
 
 /** Where an email opens on THIS device: the device mail app (mailto:), Gmail web or Outlook web. */
 export type EpostaAcilis = 'uygulama' | 'gmail' | 'outlook'
@@ -35,6 +42,13 @@ export type MesajTuru =
   // untouched. Deliberately absent from OTOMATIK_TURLER (lib/iletisim/otomatik.ts) — see that
   // file; this type can never be sent without a human tap, structurally, not just by default.
   | 'odeme_hatirlatma'
+  // NOTYA-HASTA-ILETISIMI-01 (2026-10-16): a bulk campaign message (lib/iletisim/toplu/) — audience
+  // filter → template/compose → preview → send. Free text the doctor/sekreter wrote or edited from
+  // a preset; unlike the rest of this file it is NOT auto-generated per patient from a fixed
+  // template, so the "no clinical content" rule here is enforced by UI guidance + the preset
+  // library (lib/iletisim/toplu/sablonlar.ts), not by construction. Never in OTOMATIK_TURLER —
+  // every bulk send requires an explicit human confirmation (lib/iletisim/toplu/kampanya.ts).
+  | 'toplu_mesaj'
 
 export const MESAJ_TURLERI: readonly MesajTuru[] = [
   'randevu_hatirlatma',
@@ -49,6 +63,7 @@ export const MESAJ_TURLERI: readonly MesajTuru[] = [
   'serbest',
   'odeme_hatirlatma',
   'asi_onam_hazir',
+  'toplu_mesaj',
 ]
 
 export function mesajTuruMu(x: unknown): x is MesajTuru {
@@ -72,6 +87,7 @@ export type KuyrukDurumu = 'bekliyor' | 'gonderildi' | 'atlandi'
 export const KANAL_ETIKETI: Record<IletisimKanali, string> = {
   whatsapp: 'WhatsApp',
   eposta: 'E-posta',
+  sms: 'SMS',
 }
 
 export const TUR_ETIKETI: Record<MesajTuru, string> = {
@@ -87,4 +103,5 @@ export const TUR_ETIKETI: Record<MesajTuru, string> = {
   serbest: 'Mesaj',
   odeme_hatirlatma: 'Ödeme hatırlatma',
   asi_onam_hazir: 'Aşı onam formu hazır',
+  toplu_mesaj: 'Toplu mesaj',
 }

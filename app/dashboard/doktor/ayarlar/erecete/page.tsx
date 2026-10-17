@@ -70,7 +70,7 @@ export default function EReceteAyarPage() {
 
   return (
     <div>
-      <div style={{ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', fontSize: 15, color: '#6d6055', marginBottom: 4 }}>Ayarlar</div>
+      <a href="/dashboard/doktor/ayarlar" style={{ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', fontSize: 15, color: '#6d6055', marginBottom: 4, display: 'inline-block', textDecoration: 'none' }}>‹ Ayarlar</a>
       <h1 style={{ fontFamily: CHROME_FONT.serif, fontWeight: 500, fontSize: 30, margin: '0 0 6px', color: '#2e251d', letterSpacing: '-0.02em' }}>💊 e-Reçete</h1>
       <p style={{ fontSize: 14, color: CHROME_RENK.muted, marginBottom: 18 }}>SGK Medula kimliğinizi bir kez girin; reçeteyi Notya&apos;dan gönderin. Şifreniz şifreli saklanır ve ekrana bir daha gelmez. e-imza PIN&apos;i her reçetede sizden istenir — burada saklanmaz (yasal zorunluluk).</p>
       <div style={{ maxWidth: 720 }}>

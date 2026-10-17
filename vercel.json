@@ -77,6 +77,10 @@
       "schedule": "*/10 4-17 * * *"
     },
     {
+      "path": "/api/cron/whatsapp-bakim",
+      "schedule": "17 * * * *"
+    },
+    {
       "path": "/api/cron/meslektas-rutin",
       "schedule": "30 0 * * *"
     },

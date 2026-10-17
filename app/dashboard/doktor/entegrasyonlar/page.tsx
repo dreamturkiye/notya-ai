@@ -165,7 +165,7 @@ export default function EntegrasyonlarPage() {
   return (
     <div style={{ backgroundColor: BG, color: INK, fontFamily: CHROME_FONT.sans }}>
       <div style={{ maxWidth: 560 }}>
-        <div style={{ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', fontSize: 15, color: '#6d6055', marginBottom: 4 }}>Ayarlar</div>
+        <a href="/dashboard/doktor/ayarlar" style={{ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', fontSize: 15, color: '#6d6055', marginBottom: 4, display: 'inline-block', textDecoration: 'none' }}>‹ Ayarlar</a>
         <h1 style={{ fontFamily: CHROME_FONT.serif, fontWeight: 500, fontSize: 32, margin: '0 0 8px', color: '#2e251d', letterSpacing: '-0.02em' }}>Entegrasyonlar</h1>
         <p style={{ color: MUTED, fontSize: 14, margin: '0 0 28px', lineHeight: 1.5 }}>
           Şifreniz şifreli saklanır; sorgular sizin yetkinizle yapılır.

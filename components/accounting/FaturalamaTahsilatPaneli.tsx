@@ -9,6 +9,7 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import { getDoctorAccessToken } from '@/lib/doktor/clientAuth'
 import { CHROME_RENK, CHROME_FONT } from '@/lib/doktor/chromeTheme'
+import IpucuBaloncugu from '@/components/doktor/IpucuBaloncugu'
 import { formatTRY } from '@/lib/accounting/ledger/money'
 import { DosyaSecDugmesi } from '@/components/core/DosyaSecDugmesi'
 
@@ -616,7 +617,10 @@ export default function FaturalamaTahsilatPaneli() {
     <div style={{ fontFamily: CHROME_FONT.sans, color: INK }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
         <div>
-          <div style={{ fontFamily: CHROME_FONT.serif, fontSize: 22, color: INK }}>Faturalama &amp; Tahsilat</div>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ fontFamily: CHROME_FONT.serif, fontSize: 22, color: INK }}>Faturalama &amp; Tahsilat</div>
+            <IpucuBaloncugu bolum="faturalama" />
+          </span>
           <div style={{ fontSize: 13, color: MUTED }}>Notya Accounting — isteğe bağlı modül. Banka sanal POS ve e-belge hesapları size aittir.</div>
         </div>
         <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13.5 }}>

@@ -5,7 +5,7 @@
  * Liste notes.content_tetkikler (yoksa plandan çıkarım); onayda elektronik kayda geçer.
  */
 import { useEffect, useState } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth'
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme'
 import { BRANS_ETIKETLERI } from '@/lib/intake/bransSorulari'
@@ -29,6 +29,12 @@ type Baslik = {
 
 export default function TetkiklerYazdirPage() {
   const params = useParams<{ id: string }>()
+  const router = useRouter()
+  // Back to where the doctor came from; if the page was opened directly (no history), go to the note.
+  const geri = () => {
+    if (typeof window !== 'undefined' && window.history.length > 1) router.back()
+    else router.push(`/dashboard/doktor/notlar/${params.id}`)
+  }
   const [tetkikler, setTetkikler] = useState<NotTetkik[]>([])
   const [hasta, setHasta] = useState({ ad: '', yas: '', cinsiyet: '' })
   const [endikasyon, setEndikasyon] = useState('')
@@ -113,6 +119,13 @@ export default function TetkiklerYazdirPage() {
       `}</style>
 
       <div className="yazdirma-gizle" style={{ maxWidth: 560, margin: '0 auto 12px', display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+        <button
+          type="button"
+          onClick={geri}
+          style={{ background: 'transparent', border: `1px solid ${CHROME_RENK.ink}`, color: CHROME_RENK.ink, borderRadius: 10, padding: '8px 14px', fontFamily: 'system-ui', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
+        >
+          ← Geri
+        </button>
         <span style={{ color: '#2e251d', fontFamily: 'system-ui', fontSize: 14, fontWeight: 700 }}>
           Tetkikler · {hasta.ad || 'Hasta'}
         </span>

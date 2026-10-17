@@ -8,6 +8,7 @@ import { pratikOturum, sadeceDoktor } from '@/lib/doktor/pratikOturum'
 import { asiStokModuluAktifMiDoktor } from '@/lib/asi/stok/modul'
 import { lotlariListele, stokEkle, AsiStokHatasi } from '@/lib/asi/stok/motor'
 import { DUSUK_STOK_ESIGI, sktDurumu } from '@/lib/asi/stok/tipler'
+import { asiBekleyenHastaIdleri } from '@/lib/asi/bekleyenler'
 
 export const dynamic = 'force-dynamic'
 const MODUL_KAPALI = 'Aşı Stok ve Barkod Sistemi bu hekim/branş için açık değil.'
@@ -42,9 +43,17 @@ export async function POST(req: NextRequest) {
   if (!body) return NextResponse.json({ error: 'Geçersiz istek.' }, { status: 400 })
 
   try {
+    const asiAdi = String(body.asiAdi || '')
+    const barkod = String(body.barkod || '')
+    // NOTYA-HASTA-ILETISIMI-01: "was this lot at zero before this add" — read BEFORE stokEkle
+    // mutates it, so the Hasta İletişimi "Bekleyen ailelere bildir" action knows to offer itself.
+    // Non-invasive: stokEkle's own return type/behaviour (NOTYA-ASI-STOK-BARKOD-01) is untouched.
+    const { data: oncekiLot } = await supabase.from('asi_stok_lotlari').select('miktar').eq('doktor_id', doktorId).eq('barkod', barkod).maybeSingle()
+    const sifirdanGeldi = !!oncekiLot && oncekiLot.miktar === 0
+
     const lot = await stokEkle(supabase, doktorId, {
-      asiAdi: String(body.asiAdi || ''),
-      barkod: String(body.barkod || ''),
+      asiAdi,
+      barkod,
       lotNo: body.lotNo != null ? String(body.lotNo) : null,
       miktar: Number(body.miktar),
       sonKullanmaTarihi: body.sonKullanmaTarihi != null ? String(body.sonKullanmaTarihi) : null,
@@ -52,7 +61,12 @@ export async function POST(req: NextRequest) {
       varsayilanUygulamaBolgesi: body.varsayilanUygulamaBolgesi != null ? String(body.varsayilanUygulamaBolgesi) : null,
       notlar: body.notlar != null ? String(body.notlar) : null,
     })
-    return NextResponse.json({ lot })
+
+    let bekleyenSayisi = 0
+    if (sifirdanGeldi) {
+      try { bekleyenSayisi = (await asiBekleyenHastaIdleri(supabase, doktorId, asiAdi)).size } catch { bekleyenSayisi = 0 }
+    }
+    return NextResponse.json({ lot, sifirdanGeldi, bekleyenSayisi })
   } catch (e) {
     if (e instanceof AsiStokHatasi) return NextResponse.json({ error: e.message }, { status: 400 })
     console.error('[asi-stok] ekleme', e instanceof Error ? e.message : e)

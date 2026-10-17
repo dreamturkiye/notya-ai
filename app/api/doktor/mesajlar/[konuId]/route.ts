@@ -108,7 +108,7 @@ export async function POST(
   const now = new Date().toISOString()
   const { error } = await supabase.from('hasta_mesajlar').insert({
     konu_id: konu.id,
-    taraf: rol === 'sekreter' ? 'klinik' : 'doktor',
+    taraf: rol === 'doktor' ? 'doktor' : 'klinik',
     yazar_user_id: user.id,
     metin,
   })

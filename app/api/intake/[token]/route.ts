@@ -121,17 +121,19 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
         await intakeYanitlariniHastayaAktar(supabase, form.doktor_id, form.patient_id, kayitYanitlari)
       } catch (e) { console.error('[intake→hasta]', e) }
     }
-    // NOTYA-ILETISIM-01: the patient's WhatsApp / e-posta consent from the two Onay lines (unticked = no).
-    // Scoped by the form row's own patient_id AND doktor_id; fails soft before migration 095.
+    // NOTYA-ILETISIM-01 / NOTYA-HASTA-ILETISIMI-01: the patient's WhatsApp / e-posta / SMS consent
+    // from the three Onay lines (unticked = no) — SMS added 2026-10-16 so every new patient is
+    // asked at intake, not only at bulk-send time. Scoped by the form row's own patient_id AND
+    // doktor_id; fails soft before migration 095/166.
     if (form.doktor_id) {
       try {
         const izin = intakeIzinleri(kayitYanitlari)
         const simdi = new Date().toISOString()
         const { error: izinHata } = await supabase.from('patients')
-          .update({ iletisim_izni_whatsapp: izin.whatsapp, iletisim_izni_eposta: izin.eposta, iletisim_izni_guncelleme: simdi, iletisim_izni_guncelleyen: null })
+          .update({ iletisim_izni_whatsapp: izin.whatsapp, iletisim_izni_eposta: izin.eposta, iletisim_izni_sms: izin.sms, iletisim_izni_guncelleme: simdi, iletisim_izni_guncelleyen: null })
           .eq('id', form.patient_id).eq('doctor_id', form.doktor_id)
         if (!izinHata) {
-          await supabase.from('iletisim_izin_kayitlari').insert((['whatsapp', 'eposta'] as const).map((kanal) => ({
+          await supabase.from('iletisim_izin_kayitlari').insert((['whatsapp', 'eposta', 'sms'] as const).map((kanal) => ({
             doctor_id: form.doktor_id, patient_id: form.patient_id, kanal, izin: izin[kanal], kaynak: 'bilgi_formu',
             kaydeden_user_id: null, kaydeden_personel_id: null,
           })))

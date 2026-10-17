@@ -11,6 +11,7 @@ import { EPOSTA_ACILIS_ETIKETI, epostaLinki, whatsappLinki } from '@/lib/iletisi
 import { baglantiyiAc, cihazEpostaAcilisi, cihazEpostaAcilisiniKaydet, iletisimIstek } from '@/lib/iletisim/istemci'
 import type { EpostaAcilis } from '@/lib/iletisim/tipler'
 import OtomatikSlotlari from './OtomatikSlotlari'
+import SmsAyarKarti from './SmsAyarKarti'
 
 const R = CHROME_RENK
 const DENEME_METNI = 'Merhaba, bu bir Notya deneme mesajıdır. Hastalarınıza giden mesajlar da böyle, sizin hesabınızdan açılacak.'
@@ -223,6 +224,8 @@ export default function IletisimAyarKarti() {
         <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 10 }}>Otomatik gönderim</div>
         <OtomatikSlotlari />
       </div>
+
+      <SmsAyarKarti />
     </div>
   )
 }

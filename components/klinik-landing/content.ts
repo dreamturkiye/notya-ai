@@ -14,6 +14,10 @@ export const LINKS = {
   kvkk: "/kvkk",
   home: "/home",
   doktor: "/doktor",
+  // HUKUK-01: yasal metinler
+  kosullar: "/kullanim-kosullari",
+  gizlilik: "/gizlilik",
+  yasal: "/yasal",
 } as const;
 
 export const NAV = [

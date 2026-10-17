@@ -326,7 +326,10 @@ describe('adaptörler (iş B ve C) ve şablon eşlemesi', () => {
     assert.deepEqual(await a.gonder(temel), { ok: false, hata: 'Bu mesaj için onaylı WhatsApp şablonu yok.' })
     assert.equal(giden.length, 0)
     assert.deepEqual(await a.gonder({ ...temel, sablon: { kod: 'randevu_hatirlatma', degiskenler: ['A', 'B', 'C', 'D'] } }), { ok: true, saglayiciMesajId: 'wamid.1' })
-    assert.deepEqual(giden[0], { doktorId: 'D', alici: '+905321112233', metin: '', sablonKodu: 'randevu_hatirlatma', degiskenler: ['A', 'B', 'C', 'D'] })
+    // WHATSAPP-API-01: patient + type travel to the audit log; the idempotency key only exists for a queued item (kuyrukId).
+    assert.deepEqual(giden[0], { doktorId: 'D', alici: '+905321112233', metin: '', sablonKodu: 'randevu_hatirlatma', degiskenler: ['A', 'B', 'C', 'D'], hastaId: 'P', tur: 'randevu_hatirlatma' })
+    await a.gonder({ ...temel, kuyrukId: 'K1', sablon: { kod: 'randevu_hatirlatma', degiskenler: ['A', 'B', 'C', 'D'] } })
+    assert.equal((giden[1] as { idemAnahtar?: string }).idemAnahtar, 'kuyruk:K1')
   })
 
   it('e-posta adaptörü: hazırlanan metni olduğu gibi yollar; google → gmail, microsoft → outlook; fırlatma → ok:false', async () => {

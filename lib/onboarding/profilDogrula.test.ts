@@ -144,8 +144,8 @@ describe('KVKK decision: the server decides; consent that was not ticked is neve
   })
   it('stamp: the same metadata keys and version string as /kayit; the row gets the same instant and version', () => {
     const an = '2026-10-09T08:00:00.000Z'
-    assert.deepEqual(kvkkMetaDamgasi(an), { kvkk_onay: true, kvkk_onay_tarihi: an, kvkk_metin_versiyonu: '2026-08-25-v2' })
-    assert.deepEqual(kvkkSatirDamgasi(an), { kvkk_consent_at: an, kvkk_consent_version: '2026-08-25-v2' })
+    assert.deepEqual(kvkkMetaDamgasi(an), { kvkk_onay: true, kvkk_onay_tarihi: an, kvkk_metin_versiyonu: '2026-10-17-v6' })
+    assert.deepEqual(kvkkSatirDamgasi(an), { kvkk_consent_at: an, kvkk_consent_version: '2026-10-17-v6' })
     const kayit = oku('app/kayit/page.tsx')
     assert.ok(kayit.includes(`kvkk_metin_versiyonu: '${KVKK_METIN_VERSIYONU}'`), 'the version string must be the same as in /kayit')
     assert.ok(kayit.includes('kvkk_onay: true') && kayit.includes('kvkk_onay_tarihi:'))

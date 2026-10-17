@@ -1,11 +1,14 @@
 /**
  * NOTYA-RANDEVU-01 / NOTYA-SEKRETER-01 — personel (sekreter) yönetimi.
- * POST: ad + soyad (zorunlu) + e-posta → davet. ad_soyad görünen alan olarak tutulur.
+ * POST: ad + soyad (zorunlu) + e-posta + rol (sekreter | asistan | hasta_danismani) → davet. ad_soyad görünen alan olarak tutulur.
+ * MOBIL-PERSONEL-01: üç personel rolü; rol matrisi lib/doktor/personelYetki.ts. Yalnız doktor davet eder.
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { randomBytes, createHash } from 'crypto'
 import { pratikOturum, sadeceDoktor } from '@/lib/doktor/pratikOturum'
 import { personelAdSoyadAyir, personelAdSoyadBirlesik, personelGorunenAd } from '@/lib/doktor/personelAd'
+import { personelRoluMu } from '@/lib/doktor/personelYetki'
+import { personelGunlugeYaz } from '@/lib/doktor/personelGunluk'
 
 export const dynamic = 'force-dynamic'
 
@@ -73,6 +76,12 @@ export async function POST(req: NextRequest) {
     soyad?: string
     adSoyad?: string
     email?: string
+    rol?: string
+  }
+  // Omitted rol = 'sekreter' (the pre-MOBIL-PERSONEL-01 behaviour); an unknown value is a 400, never a silent default.
+  const rol = body.rol === undefined ? 'sekreter' : body.rol
+  if (!personelRoluMu(rol)) {
+    return NextResponse.json({ error: 'Geçersiz personel rolü.' }, { status: 400 })
   }
   const email = body.email
   let ad = String(body.ad || '').trim()
@@ -103,6 +112,7 @@ export async function POST(req: NextRequest) {
       soyad,
       ad_soyad: adSoyad,
       email: temizEmail,
+      rol,
       davet_token_hash: tokenHash,
       davet_expires_at: expiresAt,
     })
@@ -120,6 +130,7 @@ export async function POST(req: NextRequest) {
         doktor_id: doktorId,
         ad_soyad: adSoyad,
         email: temizEmail,
+        rol,
         davet_token_hash: tokenHash,
         davet_expires_at: expiresAt,
       })
@@ -130,15 +141,19 @@ export async function POST(req: NextRequest) {
   }
 
   if (error) {
-    const mesaj = String(error.message || '').includes('duplicate')
+    const hamMesaj = String(error.message || '')
+    const mesaj = hamMesaj.includes('duplicate')
       ? 'Bu e-posta için zaten bir davet var.'
-      : 'Personel eklenemedi.'
+      : /personel_rol_check|check constraint/i.test(hamMesaj)
+        ? 'Bu rol için veritabanı güncellemesi henüz uygulanmadı. Notya ekibine bildirin.'
+        : 'Personel eklenemedi.'
     return NextResponse.json({ error: mesaj }, { status: 400 })
   }
+  await personelGunlugeYaz(supabase, { doktorId, personelId: String(data!.id), email: temizEmail, olay: 'davet', yeniRol: rol, yeniAktif: true, yapanId: oturum.user.id })
 
   const site = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.notya.io'
   return NextResponse.json({
-    personel: { id: data!.id, ad, soyad, adSoyad: data!.ad_soyad, email: data!.email },
+    personel: { id: data!.id, ad, soyad, adSoyad: data!.ad_soyad, email: data!.email, rol },
     davetLinki: `${site}/davet/personel/${token}`,
   })
 }

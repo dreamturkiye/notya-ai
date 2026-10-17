@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation'
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth'
 import { toolsCard, toolsPrimaryBtn } from '@/lib/doktor/toolsUi'
 import { CHROME_FONT, CHROME_RENK } from '@/lib/doktor/chromeTheme'
+import IpucuBaloncugu from '@/components/doktor/IpucuBaloncugu'
 import { ENABIZ_PORTAL, MASA_KISA_REHBER, type EnabizMasaTur } from '@/lib/enabiz/masa'
 
 type Alan = { id: string; etiket: string; deger: string; eksik: boolean }
@@ -106,7 +107,10 @@ export default function EnabizMasa({ gizliBaslik }: { gizliBaslik?: boolean }) {
       {!gizliBaslik && (
         <>
           <div style={{ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', fontSize: 15, color: '#6d6055', marginBottom: 4 }}>Araçlar</div>
-          <h1 style={{ margin: 0, fontFamily: CHROME_FONT.serif, fontWeight: 500, fontSize: 30, color: '#2e251d', lineHeight: 1.2 }}>e-Nabız</h1>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+            <h1 style={{ margin: 0, fontFamily: CHROME_FONT.serif, fontWeight: 500, fontSize: 30, color: '#2e251d', lineHeight: 1.2 }}>e-Nabız</h1>
+            <IpucuBaloncugu bolum="enabiz" />
+          </span>
         </>
       )}
       <p style={{ marginTop: gizliBaslik ? 0 : 8, color: CHROME_RENK.muted, fontSize: 14, lineHeight: 1.5 }}>{MASA_KISA_REHBER}</p>

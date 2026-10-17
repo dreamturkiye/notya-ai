@@ -5,6 +5,7 @@ import { getDoctorAccessToken, ensureDoctorAccessToken } from '@/lib/doktor/clie
 import { hekimProfilOturumSil } from '@/lib/doktor/hekimProfilIstemci';
 import BransDegistir from './BransDegistir';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
+import { izinVarMi, type PratikRol, type Yetki } from '@/lib/doktor/personelYetki';
 
 interface NavItem {
   label: string;
@@ -13,6 +14,8 @@ interface NavItem {
   hideOnMobile?: boolean;
   /** Clinical/staff-only items a sekreter account must never see, even by direct link. */
   sadeceDoktor?: boolean;
+  /** MOBIL-PERSONEL-01: capability a new staff role needs to see this item (none = hidden for them). */
+  yetki?: Yetki;
 }
 
 // NOTYA-SADE-01 (Ö1-Ö5, Kaan onayı "hepsi" 2026-09-02): üst menü 14 → 5 kaleme indi.
@@ -26,10 +29,10 @@ interface NavItem {
 // that access at all, so it is doctor-only by the same rule.
 const navItems: NavItem[] = [
   { label: "Asistan", route: "/asistan", color: "linear-gradient(90deg, #3B82F6, #7C3AED)", sadeceDoktor: true },
-  { label: "Ana Sayfa", route: "/dashboard/doktor", color: "#0F9B8E", hideOnMobile: true },
-  { label: "Randevular", route: "/dashboard/doktor/randevular", color: "#0F9B8E" },
-  { label: "Hastalar", route: "/dashboard/doktor/hastalar", color: "#14B8A6" },
-  { label: "Mesajlar", route: "/dashboard/doktor/mesajlar", color: "#0D9488" },
+  { label: "Ana Sayfa", route: "/dashboard/doktor", color: "#0F9B8E", hideOnMobile: true, yetki: "hesap.kendi" },
+  { label: "Randevular", route: "/dashboard/doktor/randevular", color: "#0F9B8E", yetki: "randevu.gor" },
+  { label: "Hastalar", route: "/dashboard/doktor/hastalar", color: "#14B8A6", yetki: "hasta.liste" },
+  { label: "Mesajlar", route: "/dashboard/doktor/mesajlar", color: "#0D9488", yetki: "mesaj" },
   { label: "Raporlar", route: "/dashboard/doktor/raporlar", color: "#334155", sadeceDoktor: true },
   { label: "e-Nabız", route: "/doktor-tools/enabiz", color: "#0F9B8E" },
   { label: "Araçlar", route: "/doktor-tools", color: "#166534", sadeceDoktor: true },
@@ -42,7 +45,7 @@ export default function DoktorNav() {
   // NOTYA-RANDEVU-01: default to 'doktor' so the nav renders immediately and only narrows once
   // /api/personel/me confirms a sekreter session — never the other way around, which would
   // flash clinical items before hiding them.
-  const [rol, setRol] = useState<'doktor' | 'sekreter'>('doktor');
+  const [rol, setRol] = useState<PratikRol>('doktor');
   const [mesajUnread, setMesajUnread] = useState(0);
 
   useEffect(() => {
@@ -58,7 +61,7 @@ export default function DoktorNav() {
       if (!t) return;
       try {
         const r = await fetch('/api/personel/me', { headers: { Authorization: `Bearer ${t}` } });
-        if (r.ok) { const d = await r.json(); if (d.rol === 'sekreter') setRol('sekreter'); }
+        if (r.ok) { const d = await r.json(); if (d.rol && d.rol !== 'doktor') setRol(d.rol); }
       } catch { /* stays 'doktor' on failure — least surprising default */ }
       try {
         const r = await fetch('/api/doktor/mesajlar/unread-count', { headers: { Authorization: `Bearer ${t}` } });
@@ -101,7 +104,10 @@ export default function DoktorNav() {
     checkAuth();
   }, []);
 
-  const gorunurItems = navItems.filter(i => !(i.sadeceDoktor && rol === 'sekreter'))
+  const gorunurItems = navItems.filter(i =>
+    rol === 'asistan' || rol === 'hasta_danismani'
+      ? !!i.yetki && !i.sadeceDoktor && izinVarMi(rol, i.yetki)
+      : !(i.sadeceDoktor && rol === 'sekreter'))
   const mobileItems = gorunurItems.filter(i => !(i.hideOnMobile && isMobile))
 
   return (

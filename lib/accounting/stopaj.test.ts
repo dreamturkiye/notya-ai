@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
-import { computeStopaj, GVK_94_STOPAJ_RATE_BP_SERBEST_MESLEK } from './stopaj'
+import { computeStopaj, GVK_94_STOPAJ_RATE_BP_SERBEST_MESLEK, STOPAJ_YOK_GERCEK_KISI_NOTU } from './stopaj'
 
 describe('accounting/stopaj', () => {
   it('never applies to efatura/earsiv (şirket sales), regardless of buyer type', () => {
@@ -46,5 +46,31 @@ describe('accounting/stopaj', () => {
     assert.equal(r1.rateBp, GVK_94_STOPAJ_RATE_BP_SERBEST_MESLEK)
     const r2 = computeStopaj({ docType: 'esmm', matrahKurus: 100000, kdvKurus: 10000, totalKurus: 110000, buyerIsKurumsal: true, rateBpOverride: 12.5 })
     assert.equal(r2.rateBp, GVK_94_STOPAJ_RATE_BP_SERBEST_MESLEK)
+  })
+
+  it('pins the statutory serbest meslek rate to %20 (GVK md. 94/2-b) in one constant', () => {
+    assert.equal(GVK_94_STOPAJ_RATE_BP_SERBEST_MESLEK, 2000)
+  })
+
+  it('states plainly when stopaj is NOT withheld and keeps KDV in the net amount', () => {
+    const r = computeStopaj({ docType: 'esmm', matrahKurus: 100000, kdvKurus: 10000, totalKurus: 110000, buyerIsKurumsal: false })
+    assert.equal(r.note, STOPAJ_YOK_GERCEK_KISI_NOTU)
+    assert.match(r.note, /Stopaj .* kesilmedi/)
+    assert.match(r.note, /gerçek kişi/)
+    assert.match(r.note, /yalnızca KDV/)
+    assert.equal(r.netKurus, 110000)
+  })
+
+  it('computes stopaj on the KDV-exclusive matrah, never on the KDV-inclusive total', () => {
+    const r = computeStopaj({ docType: 'esmm', matrahKurus: 100000, kdvKurus: 20000, totalKurus: 120000, buyerIsKurumsal: true })
+    assert.equal(r.stopajKurus, 20000)
+    assert.equal(r.netKurus, 100000)
+  })
+
+  it('does not apply stopaj to a zero matrah and notes a manual override', () => {
+    const r0 = computeStopaj({ docType: 'esmm', matrahKurus: 0, kdvKurus: 0, totalKurus: 0, buyerIsKurumsal: true })
+    assert.equal(r0.stopajKurus, 0)
+    const r = computeStopaj({ docType: 'esmm', matrahKurus: 100000, kdvKurus: 0, totalKurus: 100000, buyerIsKurumsal: true, rateBpOverride: 1500 })
+    assert.match(r.note, /elle verilen/)
   })
 })

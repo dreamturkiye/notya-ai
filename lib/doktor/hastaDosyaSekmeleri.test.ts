@@ -85,11 +85,15 @@ describe('hastaDosyaSekmeleri', () => {
       const ids = hastaDosyaSekmeleri(k).map((t) => t.id)
       assert.equal(ids.filter((x) => x === 'konsultasyon').length, 1, JSON.stringify(k))
       assert.equal(ids[ids.indexOf('belgeler') + 1], 'konsultasyon')
+      // FOTO-ARSIV-01: evrensel Fotoğraflar sekmesi — her branş ve yaş, Konsültasyonlar'dan hemen sonra, tek kez
+      assert.equal(ids.filter((x) => x === 'fotograflar').length, 1, JSON.stringify(k))
+      assert.equal(ids[ids.indexOf('konsultasyon') + 1], 'fotograflar')
       const goruntu = hastaDosyaSekmeleri(k).find((t) => t.id === 'goruntuleme')
       assert.equal(goruntu?.label, 'Görüntüleme')
     }
     const etiket = hastaDosyaSekmeleri({ pediatriUygun: false, gebelikUygun: false }).find((t) => t.id === 'konsultasyon')!.label
     assert.equal(etiket, 'Konsültasyonlar')
+    assert.equal(hastaDosyaSekmeleri({ pediatriUygun: false, gebelikUygun: false }).find((t) => t.id === 'fotograflar')!.label, 'Fotoğraflar')
     assert.doesNotMatch(etiket, /sevk/i, 'SGK sevki ayrı belgedir — sekme "sevk" demez')
   })
 

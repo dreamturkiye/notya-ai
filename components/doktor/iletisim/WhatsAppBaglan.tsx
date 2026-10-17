@@ -6,20 +6,39 @@
  * Doktor bir kez WhatsApp'ı bağlar (Meta Embedded Signup, WhatsApp Business uygulaması kullanıcıları
  * için "coexistence"); Notya randevu hatırlatmalarını onun kendi numarasından gönderir, o da telefonundaki
  * uygulamayı kullanmaya devam eder. Facebook JS SDK YALNIZ bu bileşende, yalnız bağlı değilken yüklenir.
- * Ortam değişkenleri yoksa /status 503 döner → sakin bir "Yakında" satırı.
+ * Ortam değişkenleri yoksa /status 503 döner → sakin bir "kurulum bekleniyor" satırı (asla sahte "bağlı").
+ * WHATSAPP-API-01: adım adım Türkçe rehber + KVKK onayı (WhatsAppRehber), durum kartı, kullanım ve Gelen Yanıtlar.
  */
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth'
+import { waIstek } from '@/lib/iletisim/whatsapp/istemci'
+import WhatsAppRehber from './WhatsAppRehber'
+import GelenYanitlar from './GelenYanitlar'
 import { CHROME_FONT, CHROME_RENK } from '@/lib/doktor/chromeTheme'
 
 type SablonOzeti = 'hazir' | 'bekliyor' | 'sorun'
 type Kurulum = { appId: string; configId: string; graphSurum: string }
+export type SablonSatiri = { kod: string; ad: string; durum: string }
 
 export type WhatsAppGorunumu =
   | { tur: 'yukleniyor' }
-  | { tur: 'yakinda' }
-  | { tur: 'bagli-degil'; kurulum: Kurulum }
-  | { tur: 'bagli'; numara: string | null; sablon: SablonOzeti }
+  | { tur: 'kurulum-bekliyor' }
+  | { tur: 'bagli-degil'; kurulum: Kurulum; sorun?: string }
+  | {
+      tur: 'bagli'
+      numara: string | null
+      sablon: SablonOzeti
+      ad?: string | null
+      sablonlar?: SablonSatiri[]
+      kalite?: string | null
+      limit?: number
+      limitEtiketi?: string
+      kullanim?: { son24Saat: number; buAy?: number; tahminiUsd?: number }
+      yeniYanit?: number
+      sonucBildirimi?: boolean
+    }
+
+const SABLON_DURUMU: Record<string, string> = { APPROVED: 'Hazır', PENDING: 'Onay bekliyor', IN_APPEAL: 'Onay bekliyor', REJECTED: 'Onaylanmadı', YOK: 'Gönderilecek' }
+const KALITE: Record<string, string> = { GREEN: 'Yüksek', YELLOW: 'Orta', RED: 'Düşük' }
 
 const SABLON_METNI: Record<SablonOzeti, string> = {
   hazir: 'Hazır',
@@ -71,13 +90,17 @@ export function WhatsAppBaglanKarti(props: {
   hata?: string | null
   onBagla?: () => void
   onKaldir?: () => void
+  onSonucBildirimi?: (acik: boolean) => void
+  kvkkOnay?: boolean
+  onKvkkOnay?: (v: boolean) => void
+  yanitlar?: React.ReactNode
 }) {
   const { g, mesgul, hata } = props
   if (g.tur === 'yukleniyor') return null
-  if (g.tur === 'yakinda') {
+  if (g.tur === 'kurulum-bekliyor') {
     return (
-      <div data-whatsapp-baglan="yakinda" style={{ ...kart, color: CHROME_RENK.muted, fontSize: 14 }}>
-        WhatsApp ile otomatik gönderim yakında.
+      <div data-whatsapp-baglan="kurulum-bekliyor" style={{ ...kart, color: CHROME_RENK.muted, fontSize: 14 }}>
+        WhatsApp otomatik gönderimi için kurulum bekleniyor.
       </div>
     )
   }
@@ -86,33 +109,67 @@ export function WhatsAppBaglanKarti(props: {
   ) : null
 
   if (g.tur === 'bagli-degil') {
+    const onayli = !!props.kvkkOnay
     return (
       <div data-whatsapp-baglan="bagli-degil" style={kart}>
         <h3 style={{ margin: 0, fontFamily: CHROME_FONT.serif, fontWeight: 560, fontSize: 19 }}>
           WhatsApp mesajları kendiliğinden gitsin
         </h3>
+        {g.sorun && <p role="alert" style={{ margin: '10px 0 0', fontSize: 14, color: CHROME_RENK.warn }}>{g.sorun}</p>}
+        <WhatsAppRehber onay={onayli} onOnay={props.onKvkkOnay || (() => {})} mesgul={mesgul} />
         <div style={{ marginTop: 14 }}>
-          <button type="button" onClick={props.onBagla} disabled={mesgul} style={{ ...birincilDugme, opacity: mesgul ? 0.6 : 1 }}>
+          <button
+            type="button"
+            onClick={props.onBagla}
+            disabled={mesgul || !onayli}
+            style={{ ...birincilDugme, opacity: mesgul || !onayli ? 0.55 : 1, cursor: mesgul || !onayli ? 'not-allowed' : 'pointer' }}
+          >
             {mesgul ? 'Bağlanıyor…' : 'WhatsApp’ı bağla'}
           </button>
         </div>
-        <p style={{ margin: '10px 0 0', fontSize: 13, color: CHROME_RENK.muted, lineHeight: 1.45 }}>
-          WhatsApp Business uygulaması gerekir — ücretsizdir, numaranız ve sohbetleriniz aynen kalır.
-        </p>
         {hataSatiri}
       </div>
     )
   }
 
+  const sablonlar = g.sablonlar || []
   return (
     <div data-whatsapp-baglan="bagli" style={kart}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
         <span aria-hidden style={{ display: 'inline-flex', width: 24, height: 24, borderRadius: 12, background: CHROME_RENK.pine, color: CHROME_RENK.cream, alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700 }}>✓</span>
         <span style={{ fontSize: 16, fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>{g.numara || 'WhatsApp bağlı'}</span>
+        {g.ad && <span style={{ fontSize: 14, color: CHROME_RENK.muted }}>{g.ad}</span>}
       </div>
       <p style={{ margin: '8px 0 0', fontSize: 14, color: CHROME_RENK.ink }}>
         Mesaj şablonları: <strong style={{ color: g.sablon === 'sorun' ? CHROME_RENK.warn : g.sablon === 'hazir' ? CHROME_RENK.pine : CHROME_RENK.muted }}>{SABLON_METNI[g.sablon]}</strong>
       </p>
+      {sablonlar.length > 0 && (
+        <ul style={{ margin: '6px 0 0', paddingLeft: 20, fontSize: 13, color: CHROME_RENK.muted, lineHeight: 1.5 }}>
+          {sablonlar.map((x) => <li key={x.kod}>{x.ad}: {SABLON_DURUMU[x.durum] || x.durum}</li>)}
+        </ul>
+      )}
+      {(g.kalite || g.limitEtiketi || g.kullanim) && (
+        <dl data-whatsapp-kullanim style={{ margin: '12px 0 0', display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '4px 14px', fontSize: 14 }}>
+          {g.kalite && (<><dt style={{ color: CHROME_RENK.muted }}>Numara kalitesi</dt><dd style={{ margin: 0 }}>{KALITE[g.kalite] || g.kalite}</dd></>)}
+          {g.limitEtiketi && (<><dt style={{ color: CHROME_RENK.muted }}>Günlük sınır</dt><dd style={{ margin: 0 }}>{g.limitEtiketi}</dd></>)}
+          {g.kullanim && (<><dt style={{ color: CHROME_RENK.muted }}>Son 24 saat</dt><dd style={{ margin: 0, fontVariantNumeric: 'tabular-nums' }}>{g.kullanim.son24Saat}{g.limit ? ` / ${g.limit}` : ''} mesaj</dd></>)}
+          {g.kullanim?.buAy != null && (<><dt style={{ color: CHROME_RENK.muted }}>Bu ay</dt><dd style={{ margin: 0, fontVariantNumeric: 'tabular-nums' }}>{g.kullanim.buAy} mesaj{g.kullanim.tahminiUsd != null ? ` · tahmini Meta ücreti ≈ $${g.kullanim.tahminiUsd.toFixed(2)}` : ''}</dd></>)}
+        </dl>
+      )}
+      <label data-whatsapp-sonuc-bildirimi style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginTop: 14, fontSize: 14, color: CHROME_RENK.ink, cursor: 'pointer' }}>
+        <input
+          type="checkbox" checked={!!g.sonucBildirimi} disabled={mesgul}
+          onChange={(e) => props.onSonucBildirimi?.(e.target.checked)}
+          style={{ width: 20, height: 20, marginTop: 1, flexShrink: 0 }}
+        />
+        <span>
+          “Bildiriminiz hazır” mesajı (Sağlığım bağlantılı)
+          <span style={{ display: 'block', fontSize: 13, color: CHROME_RENK.muted, marginTop: 2, lineHeight: 1.4 }}>
+            Varsayılan kapalı. Bu mesaj şu an hastalara kendiliğinden gönderilmiyor; bu anahtarı açmak yalnızca tercihinizi kaydeder. Otomatik gönderim eklendiğinde yalnızca açık olan hekimler için çalışacaktır.
+          </span>
+        </span>
+      </label>
+      {props.yanitlar}
       <button type="button" onClick={props.onKaldir} disabled={mesgul} style={{ ...sessizDugme, marginTop: 6 }}>
         Bağlantıyı kaldır
       </button>
@@ -178,31 +235,30 @@ export function oturumBilgisiCoz(origin: string, veri: unknown): ({ tur: 'bitti'
   return null
 }
 
-async function istek(yol: string, init?: RequestInit): Promise<Response | null> {
-  const t = await ensureDoctorAccessToken()
-  if (!t) return null
-  return fetch(yol, { ...init, cache: 'no-store', headers: { ...(init?.headers || {}), Authorization: `Bearer ${t}` } })
-}
-
-export default function WhatsAppBaglan() {
+export default function WhatsAppBaglan(props: { onDegisti?: () => void } = {}) {
   const [g, setG] = useState<WhatsAppGorunumu>({ tur: 'yukleniyor' })
   const [mesgul, setMesgul] = useState(false)
   const [hata, setHata] = useState<string | null>(null)
+  const [kvkkOnay, setKvkkOnay] = useState(false)
   const kod = useRef<string | null>(null)
   const oturum = useRef<OturumBilgisi | null>(null)
   const sdk = useRef<FbSdk | null>(null)
 
   const yenile = useCallback(async () => {
     try {
-      const r = await istek('/api/iletisim/whatsapp/status')
+      const r = await waIstek('/api/iletisim/whatsapp/status')
       if (!r) return
-      if (r.status === 503) return setG({ tur: 'yakinda' })
+      if (r.status === 503) return setG({ tur: 'kurulum-bekliyor' })
       const j = await r.json().catch(() => null)
-      if (!r.ok || !j) return setG({ tur: 'yakinda' })
-      if (j.bagli) setG({ tur: 'bagli', numara: j.numara ?? null, sablon: j.sablon || 'bekliyor' })
-      else setG({ tur: 'bagli-degil', kurulum: j.kurulum })
+      if (!r.ok || !j) return setG({ tur: 'kurulum-bekliyor' })
+      if (j.bagli) {
+        setG({
+          tur: 'bagli', numara: j.numara ?? null, sablon: j.sablon || 'bekliyor', ad: j.ad ?? null, sablonlar: j.sablonlar,
+          kalite: j.kalite ?? null, limit: j.limit, limitEtiketi: j.limitEtiketi, kullanim: j.kullanim, yeniYanit: j.yeniYanit, sonucBildirimi: !!j.sonucBildirimi,
+        })
+      } else setG({ tur: 'bagli-degil', kurulum: j.kurulum, sorun: j.sorun })
     } catch {
-      setG({ tur: 'yakinda' })
+      setG({ tur: 'kurulum-bekliyor' })
     }
   }, [])
 
@@ -219,11 +275,11 @@ export default function WhatsAppBaglan() {
 
   const tamamla = useCallback(async () => {
     if (!kod.current || !oturum.current) return
-    const govde = { code: kod.current, ...oturum.current }
+    const govde = { code: kod.current, ...oturum.current, kvkkOnay: true }
     kod.current = null
     oturum.current = null
     try {
-      const r = await istek('/api/iletisim/whatsapp/complete-signup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(govde) })
+      const r = await waIstek('/api/iletisim/whatsapp/complete-signup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(govde) })
       const j = r ? await r.json().catch(() => ({})) : {}
       if (!r?.ok) setHata(j.error || 'WhatsApp bağlantısı tamamlanamadı. Lütfen yeniden deneyin.')
       else setHata(null)
@@ -232,7 +288,8 @@ export default function WhatsAppBaglan() {
     }
     setMesgul(false)
     yenile()
-  }, [yenile])
+    props.onDegisti?.()
+  }, [yenile, props])
 
   useEffect(() => {
     const dinle = (e: MessageEvent) => {
@@ -251,6 +308,10 @@ export default function WhatsAppBaglan() {
   }, [tamamla])
 
   const bagla = () => {
+    if (!kvkkOnay) {
+      setHata('Devam etmek için KVKK onayını işaretleyin.')
+      return
+    }
     if (!kurulum || !sdk.current) {
       setHata('Facebook bağlantısı henüz hazır değil. Birkaç saniye sonra yeniden deneyin.')
       return
@@ -281,11 +342,23 @@ export default function WhatsAppBaglan() {
     )
   }
 
+  const sonucBildirimiKaydet = async (acik: boolean) => {
+    setMesgul(true)
+    try {
+      const r = await waIstek('/api/iletisim/whatsapp/sonuc-bildirimi', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ acik }) })
+      setHata(r?.ok ? null : 'Ayar şu an kaydedilemedi. Lütfen yeniden deneyin.')
+    } catch {
+      setHata('Ayar şu an kaydedilemedi. Lütfen yeniden deneyin.')
+    }
+    setMesgul(false)
+    yenile()
+  }
+
   const kaldir = async () => {
     if (!window.confirm('WhatsApp bağlantısı kaldırılsın mı? Telefonunuzdaki uygulama ve sohbetleriniz etkilenmez.')) return
     setMesgul(true)
     try {
-      const r = await istek('/api/iletisim/whatsapp/disconnect', { method: 'POST' })
+      const r = await waIstek('/api/iletisim/whatsapp/disconnect', { method: 'POST' })
       if (!r?.ok) setHata('Bağlantı kaldırılamadı. Lütfen yeniden deneyin.')
       else setHata(null)
     } catch {
@@ -293,7 +366,14 @@ export default function WhatsAppBaglan() {
     }
     setMesgul(false)
     yenile()
+    props.onDegisti?.()
   }
 
-  return <WhatsAppBaglanKarti g={g} mesgul={mesgul} hata={hata} onBagla={bagla} onKaldir={kaldir} />
+  return (
+    <WhatsAppBaglanKarti
+      g={g} mesgul={mesgul} hata={hata} onBagla={bagla} onKaldir={kaldir} onSonucBildirimi={sonucBildirimiKaydet}
+      kvkkOnay={kvkkOnay} onKvkkOnay={setKvkkOnay}
+      yanitlar={g.tur === 'bagli' ? <GelenYanitlar yeni={g.yeniYanit || 0} /> : undefined}
+    />
+  )
 }

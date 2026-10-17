@@ -8,6 +8,7 @@ import DoktorAvatar from '@/components/doktor/DoktorAvatar';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import { AVATAR_IZINLI_MIME, AVATAR_MAX_BYTES, avatarDogrula, AvatarGecersizError } from '@/lib/doktor/avatar';
 import { CHROME_RENK, CHROME_FONT } from '@/lib/doktor/chromeTheme';
+import OturumKarti from '@/components/doktor/OturumKarti';
 
 const AVATAR_ONBELLEK = 'notya_doktor_avatar';
 const AVATAR_OLAY = 'notya-avatar-guncellendi';
@@ -39,7 +40,7 @@ export default function HesabimPage() {
         const pm = personelRes.ok
           ? await personelRes.json().catch(() => ({} as { rol?: string; personelAdi?: string; personelKisaAdi?: string }))
           : null;
-        const sekreter = pm?.rol === 'sekreter';
+        const sekreter = !!pm?.rol && pm.rol !== 'doktor';
         setSekreterMi(sekreter);
 
         if (sekreter) {
@@ -154,9 +155,11 @@ export default function HesabimPage() {
 
   return (
     <div>
-      <div style={{ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', fontSize: 15, color: '#6d6055', marginBottom: 4 }}>
-        {sekreterMi ? 'Ön büro' : 'Ayarlar'}
-      </div>
+      {sekreterMi ? (
+        <div style={{ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', fontSize: 15, color: '#6d6055', marginBottom: 4 }}>Ön büro</div>
+      ) : (
+        <a href="/dashboard/doktor/ayarlar" style={{ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', fontSize: 15, color: '#6d6055', marginBottom: 4, display: 'inline-block', textDecoration: 'none' }}>‹ Ayarlar</a>
+      )}
       <h1 style={{ fontFamily: CHROME_FONT.serif, fontWeight: 500, fontSize: 30, margin: '0 0 6px', color: '#2e251d', letterSpacing: '-0.02em' }}>Hesabım</h1>
       <p style={{ fontSize: 14, color: CHROME_RENK.muted, marginBottom: 24 }}>
         {sekreterMi
@@ -211,6 +214,7 @@ export default function HesabimPage() {
             {durum === 'kaydediyor' ? 'Kaydediliyor…' : durum === 'kaydedildi' ? '✓ Şifre değiştirildi' : 'Şifreyi Kaydet'}
           </button>
         </div>
+        <OturumKarti />
         <button
           type="button"
           onClick={() => {

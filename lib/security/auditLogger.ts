@@ -185,6 +185,29 @@ export async function logKimlikAlani(
   }
 }
 
+/**
+ * FOTO-ARSIV-01 / FOTO-AI-01 — a clinical photo was opened, exported, or evaluated by the AI. The record carries ids,
+ * the kind of event and (for AI) the model + prompt version that produced the answer — never image bytes or clinical text.
+ */
+export async function logFotoOlayi(
+  userId: string,
+  olay: 'ac' | 'rapor' | 'ai_degerlendirme' | 'ai_karsilastirma' | 'ai_kalite' | 'geri_bildirim' | 'duzenle',
+  belgeId: string,
+  ayrinti: { patientId?: string; surum?: string; model?: string | null; kaynak?: 'model' | 'onbellek'; adet?: number } = {},
+  request?: Request
+): Promise<void> {
+  await writeAuditLog({
+    user_id: userId,
+    action: olay === 'duzenle' || olay === 'geri_bildirim' ? 'update' : olay === 'rapor' ? 'export' : 'view',
+    resource_type: olay.startsWith('ai_') ? 'hasta_foto_ai' : 'hasta_foto',
+    resource_id: belgeId,
+    new_values: { olay, ...ayrinti },
+    ip_address: getClientIP(request),
+    user_agent: request?.headers.get('user-agent') || undefined,
+    success: true,
+  })
+}
+
 // ============================================================
 // İÇ YARDIMCILAR
 // ============================================================

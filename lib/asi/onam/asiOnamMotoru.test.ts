@@ -5,7 +5,7 @@
  */
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
-import { ASI_ONAM_ICERIGI, ASI_ONAM_ICERIGI_ADLARI, asiOnamIcerigiBul } from './asiOnamIcerigi'
+import { ASI_ONAM_ICERIGI, ASI_ONAM_ICERIGI_ADLARI, ASI_ONAM_KLINIK_ONAYI, asiOnamIcerigiBul, asiOnamKlinikOnayliMi } from './asiOnamIcerigi'
 import {
   ASI_ONAM_DURUMLARI,
   ASI_ONAM_YONTEMLERI,
@@ -124,5 +124,15 @@ describe('NOTYA-ASI-ONAM-01 · asiOnamOzetMetni', () => {
     const sonuc = asiOnamIstegiHazirla([BIR_ASI, IKI_ASI])
     assert.equal(sonuc.ok, true)
     if (sonuc.ok) assert.equal(asiOnamOzetMetni(sonuc.icerikAnlikGoruntu), `${BIR_ASI}, ${IKI_ASI}`)
+  })
+})
+
+describe('NOTYA-ASI-ONAM-02 · klinik onay bayrağı', () => {
+  it('Dr. Gökhan onayı alındı (2026-10-17) — bayrak dolu ve tutarlı; yapay zekâ bu bayrağı kendisi çeviremez', () => {
+    assert.equal(ASI_ONAM_KLINIK_ONAYI.onayli, true)
+    assert.equal(ASI_ONAM_KLINIK_ONAYI.onaylayan, 'Dr. Gökhan Mamur')
+    assert.equal(ASI_ONAM_KLINIK_ONAYI.tarih, '2026-10-17')
+    assert.ok(ASI_ONAM_KLINIK_ONAYI.surum)
+    assert.equal(asiOnamKlinikOnayliMi(), true)
   })
 })

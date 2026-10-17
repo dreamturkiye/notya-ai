@@ -23,7 +23,7 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
   const o = await gelenBelgeOturum(req)
   if ('hata' in o) return o.hata
   const b = (await req.json().catch(() => null)) as Record<string, unknown> | null
-  const isleyen = { userId: o.user.id, personelId: o.rol === 'sekreter' ? o.personelId ?? null : null, rol: o.rol }
+  const isleyen = { userId: o.user.id, personelId: o.rol !== 'doktor' ? o.personelId ?? null : null, rol: o.rol }
 
   if (b?.islem === 'sil') {
     const s = await sil(o.supabase, { doktorId: o.doktorId, id: params.id, isleyen })

@@ -13,6 +13,7 @@
  */
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { CHROME_FONT, CHROME_RENK } from '@/lib/doktor/chromeTheme'
+import IpucuBaloncugu from '@/components/doktor/IpucuBaloncugu'
 import { dosyaGonder, gelenIstek, gelenDegisti, gelenSayiDegisti, GELEN_OLAY, GELEN_BEKLEYEN_OLAY, bekleyenSayisi, GelenHatasi } from '@/lib/gelenBelgeler/istemci'
 import { KABUL_EDILEN } from '@/lib/gelenBelgeler/bicim'
 import { KAYNAK_ETIKETI, KESINLIK_ETIKETI, type GelenKaynak, type GelenOge, type Kesinlik } from '@/lib/gelenBelgeler/tipler'
@@ -369,7 +370,10 @@ export default function GelenKutusu() {
   return (
     <div style={{ fontFamily: CHROME_FONT.sans, maxWidth: 820 }}>
       <div style={{ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', fontSize: 15, color: '#6d6055', marginBottom: 4 }}>Doktor</div>
-      <h1 style={{ fontFamily: CHROME_FONT.serif, fontWeight: 500, fontSize: 32, margin: '0 0 6px', color: '#2e251d', letterSpacing: '-0.02em' }}>Gelen Belgeler</h1>
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+        <h1 style={{ fontFamily: CHROME_FONT.serif, fontWeight: 500, fontSize: 32, margin: '0 0 6px', color: '#2e251d', letterSpacing: '-0.02em' }}>Gelen Belgeler</h1>
+        <IpucuBaloncugu bolum="gelen-belgeler" />
+      </span>
       <p style={{ fontSize: 15, color: R.muted, margin: '0 0 18px', lineHeight: 1.5 }}>
         Tahlil sonuçları, röntgen ve EKG fotoğrafları, konsültasyon yanıtları, sesli mesajlar — hepsi burada.
         Notya okur ve hastayı önerir; siz tek dokunuşla dosyaya eklersiniz.

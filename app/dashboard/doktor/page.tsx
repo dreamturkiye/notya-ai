@@ -33,6 +33,8 @@ import { PERSONAS, varsayilanPersonaId } from '@/lib/asistan/personaEngine'
 import { bransEtiketi } from '@/lib/doktor/bransAdlari'
 import { muayeneFormuYolu } from '@/lib/doktor/muayeneFormuYolu'
 import { IlkHastaAdimi } from '@/components/doktor/SonrakiAdim'
+import IlkAdimlarKarti from '@/components/doktor/IlkAdimlarKarti'
+import IpucuBaloncugu from '@/components/doktor/IpucuBaloncugu'
 import { useRutinPaket } from '@/lib/doktor/ogrenme/rutinIstemci'
 import { tarayiciSaatDilimi } from '@/lib/doktor/selam'
 
@@ -171,7 +173,7 @@ export default function DoktorDashboard() {
         const r = await fetch('/api/personel/me', { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' })
         if (r.ok) {
           const d = await r.json()
-          if (!iptal && d.rol === 'sekreter') { setSekreterMi(true); setRolHazir(true); setLoading(false); return }
+          if (!iptal && d.rol && d.rol !== 'doktor') { setSekreterMi(true); setRolHazir(true); setLoading(false); return }
         }
       } catch { /* doktor varsayılanı */ }
       if (!iptal) setRolHazir(true)
@@ -315,9 +317,12 @@ export default function DoktorDashboard() {
       {/* Kicker + title */}
       <div>
         <div style={S({ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', fontSize: 18, color: '#6d6055', marginBottom: 2 })}>{gunKickerTRT(new Date(), tarayiciSaatDilimi())}, {todayFull}</div>
-        <h1 style={S({ fontFamily: CHROME_FONT.serif, fontWeight: 500, fontSize: 'clamp(28px, 8vw, 48px)', letterSpacing: '-0.03em', lineHeight: 1.05, color: '#2e251d', margin: 0 })}>
-          Hoş geldiniz, Dr. {doktorAdi}
-        </h1>
+        <div style={S({ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' })}>
+          <h1 style={S({ fontFamily: CHROME_FONT.serif, fontWeight: 500, fontSize: 'clamp(28px, 8vw, 48px)', letterSpacing: '-0.03em', lineHeight: 1.05, color: '#2e251d', margin: 0 })}>
+            Hoş geldiniz, Dr. {doktorAdi}
+          </h1>
+          <IpucuBaloncugu bolum="ana-sayfa" />
+        </div>
         {ayseAcilis && (
           <div style={S({ marginTop: 12, fontSize: 15, color: CHROME_RENK.ink, lineHeight: 1.55, maxWidth: 720 })}>
             <span style={S({ color: CHROME_RENK.pine, fontWeight: 700 })}>{asistanKisaAd}:</span> {ayseAcilis}
@@ -328,6 +333,9 @@ export default function DoktorDashboard() {
           return ilk?.patientId ? <IlkHastaAdimi hastaAdi={ilk.hastaAdi} patientId={ilk.patientId} /> : null
         })()}
       </div>
+
+      {/* YENI-DOKTOR-UX-2026-10: yeni hesapta kurulum listesi — her satır ilgili ekrana götürür. */}
+      <IlkAdimlarKarti />
 
       <PaketSayacSeridi />
 
@@ -474,6 +482,8 @@ export default function DoktorDashboard() {
             ) : (
               <div style={S({ padding: '16px 0', fontSize: 14, color: CHROME_RENK.muted })}>
                 {kpi.bugunkuMuayene > 0 ? `Bugün ${kpi.bugunkuMuayene} muayene yapıldı, planlı randevu yok` : 'Bugün için randevu yok'}
+                {' · '}
+                <span onClick={() => router.push('/dashboard/doktor/randevular')} style={S({ color: CHROME_RENK.pine, fontWeight: 700, cursor: 'pointer' })}>Randevu ekle ›</span>
               </div>
             )
           ) : haftalikRandevular.length === 0 ? (

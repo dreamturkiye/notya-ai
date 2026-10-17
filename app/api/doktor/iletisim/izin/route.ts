@@ -19,6 +19,14 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { pratikOturum } from '@/lib/doktor/pratikOturum'
 import { hastaSahibiMi } from '@/lib/doktor/hastaSahipligi'
 import { kanalMi } from '@/lib/iletisim/tipler'
+import type { IletisimKanali } from '@/lib/iletisim/tipler'
+
+/** NOTYA-HASTA-ILETISIMI-01: this consent-editing route (hasta profili) also accepts 'sms', unlike
+ * kanalMi (which stays scoped to the original one-tap/automatic whatsapp/eposta flow). */
+function izinKanaliMi(x: unknown): x is IletisimKanali {
+  return kanalMi(x) || x === 'sms'
+}
+const IZIN_SUTUNU: Record<IletisimKanali, string> = { whatsapp: 'iletisim_izni_whatsapp', eposta: 'iletisim_izni_eposta', sms: 'iletisim_izni_sms' }
 import { decrypt } from '@/lib/security/encryption'
 
 export const dynamic = 'force-dynamic'
@@ -48,15 +56,16 @@ export async function GET(req: NextRequest) {
   try { emailAdres = iletisim?.email_encrypted ? decrypt(String(iletisim.email_encrypted)) : '' } catch { emailAdres = '' }
   const [{ data, error }, gelen] = await Promise.all([
     supabase.from('patients')
-      .select('iletisim_izni_whatsapp, iletisim_izni_eposta, iletisim_izni_guncelleme')
+      .select('iletisim_izni_whatsapp, iletisim_izni_eposta, iletisim_izni_sms, iletisim_izni_guncelleme')
       .eq('id', String(patientId)).eq('doctor_id', doktorId).maybeSingle(),
     gelenBelgeIzni(supabase, doktorId, String(patientId)),
   ])
-  if (error) return NextResponse.json({ whatsapp: null, eposta: null, guncelleme: null, kaydedilebilir: false, telefon, emailAdres, ...gelen })
+  if (error) return NextResponse.json({ whatsapp: null, eposta: null, sms: null, guncelleme: null, kaydedilebilir: false, telefon, emailAdres, ...gelen })
   const deger = (v: unknown) => (typeof v === 'boolean' ? v : null)
   return NextResponse.json({
     whatsapp: deger(data?.iletisim_izni_whatsapp),
     eposta: deger(data?.iletisim_izni_eposta),
+    sms: deger(data?.iletisim_izni_sms),
     guncelleme: data?.iletisim_izni_guncelleme ?? null,
     kaydedilebilir: true,
     telefon,
@@ -75,13 +84,13 @@ export async function POST(req: NextRequest) {
   const gelenBelge = kanal === 'gelen_belge'
   const izin = b?.izin
   const kaynak = b?.kaynak === 'hasta_profili' ? 'hasta_profili' : 'gonder_dugmesi'
-  if (!patientId || !(kanalMi(kanal) || gelenBelge) || typeof izin !== 'boolean') return NextResponse.json({ error: 'Eksik bilgi.' }, { status: 400 })
+  if (!patientId || !(izinKanaliMi(kanal) || gelenBelge) || typeof izin !== 'boolean') return NextResponse.json({ error: 'Eksik bilgi.' }, { status: 400 })
   if (!(await hastaSahibiMi(supabase, doktorId, patientId))) return NextResponse.json({ error: 'Hasta bulunamadı.' }, { status: 404 })
 
   const simdi = new Date().toISOString()
   const guncelleme = gelenBelge
     ? { gelen_belge_izni: izin, gelen_belge_izni_guncelleme: simdi, gelen_belge_izni_guncelleyen: user.id }
-    : { [kanal === 'whatsapp' ? 'iletisim_izni_whatsapp' : 'iletisim_izni_eposta']: izin, iletisim_izni_guncelleme: simdi, iletisim_izni_guncelleyen: user.id }
+    : { [IZIN_SUTUNU[kanal as IletisimKanali]]: izin, iletisim_izni_guncelleme: simdi, iletisim_izni_guncelleyen: user.id }
   const { error } = await supabase.from('patients')
     .update(guncelleme)
     .eq('id', patientId).eq('doctor_id', doktorId)
@@ -94,7 +103,7 @@ export async function POST(req: NextRequest) {
     izin,
     kaynak,
     kaydeden_user_id: user.id,
-    kaydeden_personel_id: rol === 'sekreter' ? personelId ?? null : null,
+    kaydeden_personel_id: rol !== 'doktor' ? personelId ?? null : null,
   })
   return NextResponse.json({ ok: true, kanal, izin, guncelleme: simdi })
 }
