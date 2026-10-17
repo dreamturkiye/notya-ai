@@ -315,7 +315,58 @@ export type UygulamaMetni = {
     /** Above the buttons of a form that was asked to send while one of its fields holds something that could not be read. */
     readonly duzelt: string
   }
+  /**
+   * YENI-DOKTOR-UX-2026-10 — IN-PLACE TIPS: a small "?" beside each screen's heading opens a two-to-four sentence
+   * brief of what the screen is for and the one next action; the first visit to a screen opens it once by itself.
+   * OPTIONAL: a pack that has not filled it shows no trigger and no tip anywhere. A screen key the pack leaves out
+   * shows no tip on that screen. Seen/dismissed state and the Settings switch live in the browser (per device).
+   */
+  readonly ipuclari?: {
+    /** The small badge inside the tip ("TIP"). */
+    readonly rozet: string
+    /** The closing button ("Got it"). */
+    readonly anladim: string
+    /** The second closing button; also marks the screen's tip as seen ("Don't show this again"). */
+    readonly birDaha: string
+    /** Accessible name of the "?" trigger; % is the tip's heading. */
+    readonly ac: string
+    /** The Settings switch row: its label and the line under it. */
+    readonly ayarEtiket: string
+    readonly ayarIzoh: string
+    /** One tip per screen of the signed-in application; a missing key = no tip on that screen. */
+    readonly bolumler: Readonly<Partial<Record<UlkeIpucuBolumu, { readonly baslik: string; readonly satirlar: readonly string[] }>>>
+  }
+  /**
+   * YENI-DOKTOR-UX-2026-10 — FIRST-RUN CHECKLIST on the home: a new account's setup steps (specialty, first
+   * patient, first appointment, first visit), each a link to the right screen, with a tick once done. OPTIONAL:
+   * a pack that has not filled it shows no card. The card hides itself when every step is done, when the account
+   * stops being new, and when the doctor dismisses it (per device).
+   */
+  readonly ilkAdimlar?: {
+    readonly baslik: string
+    readonly aciklama: string
+    /** The dismiss control ("Hide"). */
+    readonly gizle: string
+    /** "%1 of %2 done". */
+    readonly tamamOrani: string
+    /** The steps; `randevu` is read only where the pack's `randevu` feature is on. */
+    readonly adimlar: Readonly<Record<'rol' | 'hasta' | 'randevu' | 'muayene', { readonly etiket: string; readonly aciklama: string }>>
+  }
 }
+
+/**
+ * YENI-DOKTOR-UX-2026-10 — the screens of the signed-in application a tip can stand on. The patient file and the
+ * new-patient form share the patient list's tip ('hastalar'): they are one area to a new doctor.
+ */
+export type UlkeIpucuBolumu =
+  | 'bugun'
+  | 'takvim'
+  | 'hastalar'
+  | 'muayene'
+  | 'araclar'
+  | 'klinik'
+  | 'onBuro'
+  | 'ayarlar'
 
 /** The words of the kit's own entry fields, in one language form. */
 export type GirdiMetni = UygulamaMetni['girdi']
