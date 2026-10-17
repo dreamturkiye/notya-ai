@@ -10,6 +10,9 @@ export const UZ_YASAL_LATN = [
   'Foydalanish qulayligi',
   'Tibbiy ogohlantirish',
   'Xavfsizlik',
+  // HUKUK-01 (2026-10-17): Turkiya toʻplamiga mos ikki yangi sahifa.
+  'Toʻlovni qaytarish',
+  'Mualliflik huquqi',
 ] as const
 
 export const UZ_YASAL_CYRL = [
@@ -20,6 +23,8 @@ export const UZ_YASAL_CYRL = [
   'Фойдаланиш қулайлиги',
   'Тиббий огоҳлантириш',
   'Хавфсизлик',
+  'Тўловни қайтариш',
+  'Муаллифлик ҳуқуқи',
 ] as const
 
 export const UZ_YASAL_RU = [
@@ -30,4 +35,6 @@ export const UZ_YASAL_RU = [
   'Доступность',
   'Медицинское предупреждение',
   'Безопасность',
+  'Возврат платежа',
+  'Авторское право',
 ] as const
