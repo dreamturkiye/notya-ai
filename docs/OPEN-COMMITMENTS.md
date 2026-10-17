@@ -1,6 +1,24 @@
 # OPEN COMMITMENTS — Notya AI
 
 
+## PERF-SAGLAMLIK-COUNTRY-CORRECTION-01 — correction: the app-layer gains in PERF-SAGLAMLIK-2026-10 did not reach any country build (Claude, 2026-10-17, found while verifying `COUNTRY-BUILD-ROUTING-01` above)
+
+**Corrects a status I reported as "Shipped" for all six countries. It was not — stated plainly, no softening.**
+
+`COUNTRY-BUILD-ROUTING-01` (this file) establishes that `app/dashboard/doktor/**` and `app/api/doktor/**` are not reachable by any doctor on a country build — only `app/*.ulke.tsx` + `app/api/ulke/**/route.ulke.ts` + `components/ulke/uygulama/*` are. Checked what that means for PERF-SAGLAMLIK-2026-10's three app-layer fixes specifically, independently of that job:
+
+- **Patient-file bundle size (−94.3% JS)**: the fixed file is `app/dashboard/doktor/hastalar/[id]/page.tsx`. No `.ulke` equivalent of this page exists at all (confirmed: no file matching `hastaDosyaSekmeleri` anywhere under `app/api/ulke`, `lib/ulke`, or `components/ulke`). The country build's own patient-record implementation is a separate, much smaller one (`lib/ulke/uygulama/hastalar.ts`, `components/ulke/uygulama/Hastalar.tsx`). The bundle fix never applied there because there is nothing there to apply it to — not a missing port, a different and far less deep feature.
+- **Portal GET latency (−85.7%)**: the fixed file is `app/api/portal/hasta/[token]/route.ts` (1,678 lines, 28 `Promise.all` call sites). The country build's real portal route is `app/api/ulke/hasta-portali/route.ulke.ts` — 61 lines, zero `Promise.all`, confirmed a structurally separate, far smaller implementation. The fix never reached it.
+- **Task-sync round trips (gorevEkle/gorevSenkron, −80%)**: confirmed zero references to either function anywhere under `app/api/ulke`, `lib/ulke`, or `components/ulke` (33 references exist under `app/api/doktor`, all unreachable on a country build). The feature this fixed does not exist in the country tree at all yet.
+
+**What did ship for real, everywhere**: the Supabase index migration (`175_perf_sicak_yol_indeksleri.sql`) — pure schema, applied and verified present on all 7 projects (TR + 6 countries) independent of which app code queries it. That part of the "Shipped" status stands.
+
+**Net correction**: of PERF-SAGLAMLIK-2026-10's five headline numbers, only the DB-index item actually reached the six country builds. The other four (bundle size, portal latency, round-trip batching, and by extension the robustness timeouts added to `app/api/doktor/**` handlers) are real and live for Turkey/`main` only. The Dashboard artifact (`https://claude.ai/artifact/3XSF7HUyh5rJarztiFpAXG`) is being corrected to reflect this rather than showing "Shipped" for all six.
+
+**Not yet known, not claimed either way**: whether the robustness timeouts (external-call timeouts on Gmail/WhatsApp/Calendar/ElevenLabs) are hit via shared `lib/` code reachable from both trees, or only from the unreachable `app/api/doktor/**` handlers. Needs its own check before stating a status; flagged here rather than guessed.
+
+Waits on: a decision on whether/when to build the country-build equivalents of these optimizations (same decision as `COUNTRY-BUILD-ROUTING-01`'s Task 1/2, since it's the same tree) | OPEN
+
 ## COUNTRY-BUILD-ROUTING-01 — critical finding: `app/api/doktor/**` and `app/dashboard/doktor/**` are NOT reachable in this (or any) country build; several "ported/live" features are not actually live (Claude, 2026-10-17, found while scoping Kaan's "proceed with all 3" job on FOTO-ARSIV-01/02 + MUAYENE-EKLERI-07)
 
 **Found before writing any port code for that job's Task 1/2 — nothing below was caused by this job, but this job would have repeated it at ~10x scale if it had proceeded as briefed. No code was changed to produce this finding; it is read-only verification. Full finding (with the exact `next.config.mjs`/`derleme.mjs` evidence) is recorded once, in `main`'s `docs/OPEN-COMMITMENTS.md` under this same heading `COUNTRY-BUILD-ROUTING-01` — not repeated in full on every branch — but the branch-specific consequence is recorded here because it directly affects what this branch's `FEATURE-PORT-BACKLOG-01` entry below actually shipped.**
