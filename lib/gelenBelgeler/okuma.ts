@@ -14,7 +14,7 @@
  * branch-only type, so nothing specialty-specific can leak into another branş (brans-alan-sizmasi).
  */
 import { aiCagir, yanitMetni, type AiIstemci, type AiMesaj } from '@/lib/ai/cagir'
-import { ORTAK_BELGE_TURLERI } from '@/lib/doktor/belgeTurleri'
+import { EKOKARDIYOGRAFI, ORTAK_BELGE_TURLERI } from '@/lib/doktor/belgeTurleri'
 import { tarihNormalle } from './eslesme'
 import type { Bicim, Okuma } from './tipler'
 
@@ -25,9 +25,11 @@ export function turEsle(ham: string | null | undefined, bicim?: Bicim): string {
   if (tam) return tam
   if (/konsült|konsult|görüş raporu|gorus raporu|consult/.test(t)) return 'Konsültasyon raporu'
   if (/\bekg\b|elektrokardiyo|ecg|ritim şeridi/.test(t)) return 'EKG'
+  // "ekokardiyografi" contains "grafi". This runs before the röntgen rule so a TTE report is not filed as a chest film.
+  if (/ekokardiyograf|eko\s*kardiyo|transtorasik|trans[öo]zofaj|\btte\b|\btee\b|echocardiogra|\becho\b|\beko\b/.test(t)) return EKOKARDIYOGRAFI
   if (/röntgen|rontgen|x-?ray|grafi|\bcxr\b/.test(t)) return 'Röntgen'
   if (/işitme|isitme|hearing|odyometri|odiyometri|\boae\b|\babr\b|işitsel|isitsel|yenidoğan.*tarama.*işit|yenidogan.*tarama.*isit/.test(t)) return 'İşitme testi'
-  if (/\bmr\b|\bmri\b|\bbt\b|tomografi|ultrason|\busg\b|\bus\b|mamograf|görüntüleme|goruntuleme|radyoloji|ekokardiyo|\beko\b|doppler/.test(t)) return 'Görüntüleme Raporu'
+  if (/\bmr\b|\bmri\b|\bbt\b|tomografi|ultrason|\busg\b|\bus\b|mamograf|görüntüleme|goruntuleme|radyoloji|doppler/.test(t)) return 'Görüntüleme Raporu'
   // Pathology is not a lab table (the lab reader would find no rows) — it stays a plain document.
   if (/patoloji|biyopsi|sitoloji/.test(t)) return 'Diğer'
   if (/lab|tahlil|hemogram|biyokimya|kan sayımı|idrar|hormon|tiroid|lipid|hba1c|ferritin|vitamin|kültür|kultur|serolo/.test(t)) return 'Lab Sonucu'
@@ -44,7 +46,7 @@ const TURLER_METNI = ORTAK_BELGE_TURLERI.join(' | ')
 
 /** Fixed, cacheable instructions — no patient data in here. */
 export const OKUMA_TALIMATI = [
-  'Bir hekimin muayenehanesine gelen tek bir belgeyi okuyorsun: laboratuvar sonucu, röntgen/EKG fotoğrafı, görüntüleme raporu,',
+  'Bir hekimin muayenehanesine gelen tek bir belgeyi okuyorsun: laboratuvar sonucu, röntgen/EKG fotoğrafı, ekokardiyografi raporu, görüntüleme raporu,',
   'konsültasyon yanıtı, epikriz, reçete, sevk ya da bir hastanın sesli mesajının yazıya dökülmüş hali olabilir.',
   'Görevin yalnızca belgeyi TANIMAK: ne olduğunu, kime ait olduğunu ve bir satırlık özetini çıkar. Tanı koyma, tedavi önerme.',
   '',
