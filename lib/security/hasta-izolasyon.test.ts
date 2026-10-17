@@ -903,9 +903,13 @@ describe('HASTA-İZOLASYON: doktor A ve doktor B birbirinin hastasına hiçbir r
       }
     }
     const SORU = `${AD}’nın alerjisi neydi, annesinin adı ne ve bugün kimler geliyor?`
-    const cagrilar: { ad: string; cagir: (x: Hekim) => Promise<Yanit> }[] = [
-      { ad: 'POST /api/asistan/chat', cagir: (x) => coz(R.asistanChat.POST(iste('POST', '/api/asistan/chat', { token: x.token, govde: { message: SORU, specialty: 'pediatri', saatDilimi: 'Europe/Istanbul' } }))) },
-      { ad: 'POST /api/asistan/fish-tur', cagir: (x) => coz(R.fishTur.POST(iste('POST', '/api/asistan/fish-tur', { token: x.token, govde: { mesaj: SORU, asistanSessionId: x.asistanOturum, specialty: 'pediatri', personaId: 'aysekaya', saatDilimi: 'Europe/Istanbul' } }))) },
+    // The second turn of each case is a DIFFERENT sentence. Since NOTYA-SES-ARKA-01 / NOTYA-SES-TEK-CEVAP-01
+    // (0f97c058, 79c503fd) the voice route answers a question once: the same sentence sent again in the same session
+    // closes the turn before the model, so no tool would run and the case would test nothing.
+    const SORU_2 = `${AD} dosyasında ilaç kaydı, eksikler ve velisinin telefonu nedir, takvimde kim var?`
+    const cagrilar: { ad: string; cagir: (x: Hekim, soru?: string) => Promise<Yanit> }[] = [
+      { ad: 'POST /api/asistan/chat', cagir: (x, soru = SORU) => coz(R.asistanChat.POST(iste('POST', '/api/asistan/chat', { token: x.token, govde: { message: soru, specialty: 'pediatri', saatDilimi: 'Europe/Istanbul' } }))) },
+      { ad: 'POST /api/asistan/fish-tur', cagir: (x, soru = SORU) => coz(R.fishTur.POST(iste('POST', '/api/asistan/fish-tur', { token: x.token, govde: { mesaj: soru, asistanSessionId: x.asistanOturum, specialty: 'pediatri', personaId: 'aysekaya', saatDilimi: 'Europe/Istanbul' } }))) },
     ]
     async function okumaTuru<T>(is: () => Promise<T>): Promise<T> {
       process.env.NOTYA_HIZLI_YOL_KAPALI = '1'
@@ -935,7 +939,7 @@ describe('HASTA-İZOLASYON: doktor A ve doktor B birbirinin hastasına hiçbir r
           ]
         }
         modelIstekleri.length = 0
-        const y2 = await okumaTuru(() => c.cagir(A))
+        const y2 = await okumaTuru(() => c.cagir(A, SORU_2))
         const sonIstek = modelIstekleri[modelIstekleri.length - 1]
         assert.ok(sonIstek.includes('tool_result'), 'araç sonucu modele dönmedi — vaka boşa koştu')
         assert.ok(sonIstek.includes(`Alerji ${isaret('A')}`), 'kendi hastasının alerjisi araç sonucunda yok')
@@ -979,7 +983,7 @@ describe('HASTA-İZOLASYON: doktor A ve doktor B birbirinin hastasına hiçbir r
               { type: 'tool_use', id: 'toolu_h', name: 'eksikler', input: { hasta_adi: AD } },
             ]
           }
-          const y2 = await okumaTuru(() => c.cagir(arayan))
+          const y2 = await okumaTuru(() => c.cagir(arayan, SORU_2))
           assert.ok(modelIstekleri.some((m) => m.includes('tool_result')), 'araç turu koşmadı — vaka boşa koştu')
           for (const y of [y1, y2]) {
             assert.equal(y.status, 200, y.metin.slice(0, 300))
