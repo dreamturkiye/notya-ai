@@ -4008,4 +4008,18 @@ Source: `main` (`feat(ux): new-doctor UX pass — ipucu help system, first-run c
 
 **Parity maintenance done alongside the port (applies to all six release branches):** the shared English set's new text changed the text count every English-set country's pack reports, so each of the five English countries' `docs/COUNTRY-PACK-*.md` and the shared `scripts/ulke-sablon/sekil.json` scaffold-shape file (committed on every release branch, including this one) were regenerated so their "status — machine-written, unread" / "every pack is complete" tests stay green (NOTYA-ULKE-EN-01, NOTYA-ULKE-SABLON-01).
 
-**Verified on this branch:** `npm run typecheck` clean; targeted `countries/{us,gb,ca,au,nz}/*.test.ts`, `countries/_dil/en/ipucu.test.ts` and `lib/ulke/paket.paket.test.ts` green. Not re-verified: a real screen in a browser.
+**Verified on this branch:** `npm run typecheck` clean; targeted `countries/{us,gb,ca,au,nz}/*.test.ts`, `countries/_dil/en/ipucu.test.ts` and `lib/ulke/paket.paket.test.ts` green. Not re-verified: a real screen in a browser.## HUKUK-01 (country parity, us) — legal/policy suite: refund/cancellation + copyright added to match TR (2026-10-17, owner Claude, branch `feat/hukuk-suite-us`)
+
+CEO order HUKUK-01 (`main`, 2026-10-17) drafted the full legal/policy suite for TR and all six country builds. This pack already had a tested 7-document framework (`lib/ulke/yasal/`, NOTYA-ULKE-YASAL-01: privacy, terms, cookies, data-request, accessibility, medical disclaimer, security) — the only two document types missing to match TR's set were refund/cancellation and copyright. Both added in American English, new routes `/refund` + `/copyright` (`countries/us/index.ts`); shared factory `lib/ulke/yasal/ingilizce.ts` and `lib/ulke/yasal/tipler.ts` extended (the same change necessarily landed in every one of the 6 country packs this branch's tree carries, verified identical via `diff`, and re-typechecked clean). Citations drafted: state auto-renewal/negative-option statutes + FTC guidance for cancellation; DMCA 17 U.S.C. §512 notice-and-takedown pattern for copyright — none of these are a claim that Notya has been reviewed by a lawyer yet.
+
+No Turkish text added: `countries/turkce-tavan.json` ceiling re-checked before and after this change on this branch, identical count both times (the 1700-vs-1698 ceiling breach on this branch is **pre-existing**, confirmed unrelated — see below).
+
+Master English copy of both new documents (plus the 7 pre-existing ones) lives in `docs/hukuk/us/*.md` on `main`; the full lawyer checklist is `docs/hukuk/REVIEW-CHECKLIST.md` on `main` → United States section.
+
+**Two pre-existing, unrelated findings surfaced while running this branch's quality gates (neither caused by this change — both confirmed via stash-test: identical result with HUKUK-01's edits in the tree and with them removed):**
+- `lib/ulke/turkceTavan.test.ts` fails: 1700 files carry user-visible Turkish text outside `countries/tr`, ceiling recorded 2026-10-14 is 1698. Pre-existing drift, not from this change.
+- `countries/au/au.test.ts(518,18)`: `'bildirim.metin.uyarilar' is possibly 'undefined'` (`tsc`). Pre-existing on this branch's own copy of the AU pack (every release branch carries all 7 packs); unrelated to HUKUK-01.
+
+| Date | Item | Owner | Status / what is needed |
+|------|------|-------|-------------------------|
+| 2026-10-17 | **HUKUK-01-US — refund and copyright pages need a lawyer licensed in the United States.** Confirm which state's law governs by default (none chosen yet — the draft deliberately names no single state), auto-renewal/negative-option disclosure wording against that state's statute, FTC "click to cancel" rule applicability, and the DMCA agent-designation requirement (17 U.S.C. §512(c)(2) — Notya has not registered a DMCA agent; the draft's takedown address is `legal@notya.io`, not a registered agent) | Kaan (engage lawyer) | OPEN |
