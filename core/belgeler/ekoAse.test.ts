@@ -37,6 +37,10 @@ describe('eko-ase ölçüm dökümü', () => {
     assert.deepEqual(kod, ['ECHO.AS_SEVERE', 'ECHO.DIASTOLIK', 'ECHO.LAE', 'ECHO.LVH', 'ECHO.PH', 'ECHO.TAPSE_LOW', 'ECHO.TR_SEVERE'])
     assert.equal(m.dogrulanmis, true)
     assert.ok(ekoOlcumSatirlari(m).some((s) => s.includes('55-60') && s.includes('korunmuş')))
+    assert.match(m.rapor || '', /ölçütleri birbiriyle uyumlu/)
+    assert.match(m.rapor || '', /doluş basıncı/)
+    assert.match(m.rapor || '', /TAPSE azalmış ve pulmoner basınç yüksek/)
+    assert.match(m.rapor || '', /Mitral yetmezlik: hafif/)
     assert.equal(m.labels.some((l) => l.kod === 'ECHO.EF_LOW' || l.kod === 'ECHO.MR_SEVERE' || l.kod === 'ECHO.EFF'), false)
   })
 
@@ -121,6 +125,40 @@ describe('eko-ase ölçüm dökümü', () => {
     assert.equal(rapor.tanilar[0]?.ad, 'Düşük EF izlenimi')
     assert.ok(rapor.tanilar[0]!.guven_pct <= 85)
     assert.equal(rapor.tanilar[0]?.destek.join(' '), 'rapor metnindeki ölçüm')
+  })
+
+  it('uyumlu ileri darlık ile düşük gradyanlı darlık ayrı koddur', () => {
+    const uyumsuz = kodlar('Ekokardiyografi. EF %35. Aort kapak darlığı. Kapak alanı 0.8 cm2. Ortalama gradyan 28 mmHg. Vmax 3.2 m/s.', 'E')
+    assert.ok(uyumsuz.labels.some((l) => l.kod === 'ECHO.AS_LOWFLOW'))
+    assert.equal(uyumsuz.labels.some((l) => l.kod === 'ECHO.AS_SEVERE'), false)
+    assert.ok(uyumsuz.labels.some((l) => l.kod === 'ECHO.EF_LOW'))
+    assert.match(uyumsuz.rapor || '', /ileri darlık denmez/)
+    const paradoks = kodlar('Ekokardiyografi. EF %60. Aort kapak darlığı. Alan 0.9 cm2. Ortalama gradyan 30 mmHg. Vmax 3.4 m/s.', 'E')
+    assert.ok(paradoks.labels.some((l) => l.kod === 'ECHO.AS_LOWFLOW'))
+    assert.equal(paradoks.labels.some((l) => l.kod === 'ECHO.EF_LOW' || l.kod === 'ECHO.AS_SEVERE'), false)
+  })
+
+  it('mitral darlık, aort çapı, duvar hareketi, vejetasyon ve çökme', () => {
+    assert.ok(kodlar('Ekokardiyografi. Mitral darlık. MVA 1.2 cm2.', 'E').labels.some((l) => l.kod === 'ECHO.MS_SEVERE'))
+    assert.equal(kodlar('Ekokardiyografi. Mitral darlık. MVA 1.8 cm2.', 'E').labels.some((l) => l.kod === 'ECHO.MS_SEVERE'), false)
+    assert.ok(kodlar('Ekokardiyografi. Çıkan aorta 42 mm.', 'E').labels.some((l) => l.kod === 'ECHO.AORTA'))
+    assert.equal(kodlar('Ekokardiyografi. Çıkan aorta 36 mm.', 'E').labels.some((l) => l.kod === 'ECHO.AORTA'), false)
+    assert.ok(kodlar('Ekokardiyografi. Apikal akinezi.', 'E').labels.some((l) => l.kod === 'ECHO.WMA'))
+    assert.equal(kodlar('Ekokardiyografi. Duvar hareketleri normal.', 'E').labels.some((l) => l.kod === 'ECHO.WMA'), false)
+    assert.ok(kodlar('Ekokardiyografi. Mitral kapakta vejetasyon.', 'E').labels.some((l) => l.kod === 'ECHO.VEG'))
+    assert.equal(kodlar('Ekokardiyografi. Mitral vejetasyon izlenmedi.', 'E').labels.some((l) => l.kod === 'ECHO.VEG'), false)
+    assert.ok(kodlar('Ekokardiyografi. Apikal trombus.', 'E').labels.some((l) => l.kod === 'ECHO.THROMBUS'))
+    assert.equal(kodlar('Ekokardiyografi. Trombus izlenmedi.', 'E').labels.some((l) => l.kod === 'ECHO.THROMBUS'), false)
+    const cokme = kodlar('Ekokardiyografi. Yaygın perikardiyal efüzyon. Sağ atriyum sistolik çökmesi.', 'E')
+    assert.ok(cokme.labels.some((l) => l.kod === 'ECHO.TAMPONAD'))
+    assert.ok(cokme.labels.some((l) => l.kod === 'ECHO.EFF'))
+    assert.equal(fusionYap([cokme], { modalite: 'eko', yasAy: 50 * 12, kalite: 'iyi' }).acilBayrak, true)
+  })
+
+  it('eksik ölçüm satırı raporda olmayanı söyler', () => {
+    const ince = kodlar('Ekokardiyografi. EF %60.', 'E')
+    assert.match(ince.rapor || '', /Eksik: .*TAPSE/)
+    assert.match(ince.rapor || '', /duvar kalınlığı/)
   })
 
   it('yazar düşünce ölçüm dökümü taslak olur', () => {
