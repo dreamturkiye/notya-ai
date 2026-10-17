@@ -26,6 +26,9 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   'app/api/doktor/hastalar/[id]/buyume-egrileri/route.ts': T,
   'app/api/doktor/hastalar/[id]/hedef-boy/route.ts': T,
   'app/api/doktor/hastalar/[id]/klinik-ozet/route.ts': I('hastaKlinikOzetleriGuncelle: reads/writes scoped doctor_id+patient_id; foreign patient → fail'),
+  // MUAYENE-EKLERI-07 — "Yüklenen dosyalar": list + byte stream of a visit's vault documents (pratikOturum: doctor or staff)
+  'app/api/doktor/muayene-ekleri/yuklenenler/route.ts': T,
+  'app/api/doktor/muayene-ekleri/yuklenenler/[belgeId]/route.ts': T,
   // ── Notlar / seanslar ──
   'app/api/notes/route.ts': T,
   'app/api/notes/[id]/route.ts': T,
@@ -57,6 +60,9 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   'app/api/doktor/belgeler/ingest/route.ts': T,
   // KONSULTASYON-01 — kapalı döngü konsültasyon (sevkler + Kasa belgesi + bugünkü not + Sağlığım hatırlatması)
   'app/api/doktor/konsultasyon/route.ts': T,
+  // KONSULTASYONLAR-01 — konsültan defteri (no patient data) + hesapsız konsültan portalı (signed link names ONE sevk)
+  'app/api/doktor/konsultasyon/defter/route.ts': T,
+  'app/api/konsultan/route.ts': T,
   // NOTYA-EYLEM — Ayşe hazırlar, hekim onaylar (core/eylemler/*)
   'app/api/doktor/eylem/route.ts': T,
   'app/api/doktor/documents/route.ts': I('vault listDocuments/uploadDocument — doctor-scoped, assertPatientOwned (lib/vault/service.acl.test.ts)'),
@@ -125,6 +131,9 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   'app/api/doktor/fisilti/route.ts': I('via lib/doktor/fisiltiTopla: proxies exactly one branş kohort route (+ mesajlar?unread=1) via an internal same-origin fetch, forwarding the SAME caller bearer token unchanged -- that downstream route re-runs doktorOturum + its own doctor_id scoping independently (see its own entry above/below); its own Supabase reads (users by id = user.id, fisilti_sessizler and fisilti_gizlenen) are all .eq(doctor_id, user.id); takes no patient id from request input and identifies the target branş only from users.specialty of the AUTHENTICATED doctor'),
   'app/api/doktor/fisilti/gizle/route.ts': I('NOTYA-FISILTI-GIZLE-01: POST hides only an item found in the doctor\'s OWN freshly-built fisiltiOgeleri list (patient_id + facts hash taken from that item, never from the body) and inserts with doctor_id = user.id; GET lists only those items filtered by fisilti_gizlenen .eq(doctor_id, user.id); PATCH restores by id AND doctor_id = user.id (404 for a foreign row)'),
   'app/api/doktor/fisilti/kalkan/route.ts': T,
+  // NOTYA-TAKIP-01 — durable follow-up cases (kontrol / gelmedi / konsültasyon)
+  'app/api/doktor/takip/route.ts': T,
+  'app/api/doktor/on-buro-fisilti/route.ts': I('pratikOturum, GET only, takes no id from the request. Every source is read by the practice doctor id: randevular (doktor_id), patients (doctor_id), intake forms (doktor_id), gelen_belgeler (doktor_id), takip (takipSenkronize + takipAcikListe by doktor_id, names from patients.doctor_id); unread messages come from /api/doktor/mesajlar called with the caller\'s own authorization header'),
   'app/api/doktor/seans-paketi/route.ts': T,
   'app/api/doktor/seans-paketi/bugun/route.ts': T,
   'app/api/doktor/pediatri/_kohort.ts': I('kohort: patients .eq(doctor_id) → ids; every source query .eq(doctor_id|doktor_id).in(patient_id, ids) (read-only — pediHatirlatmaGonder lives in _kohortHatirlatma.ts, NOTYA-EYLEM-24)'),
@@ -290,6 +299,7 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   'app/api/asistan/mali-signed-url/route.ts': I('accountant product; no patient data'),
   // ── Sağlığım portalı / intake (token = kimlik) ──
   'app/api/portal/hasta/[token]/route.ts': T,
+  'app/api/portal/hasta/[token]/belge/[id]/route.ts': T,
   'app/api/portal/hasta/[token]/goruntu/route.ts': I('410 — patient cannot upload to belgeler; redirects to Mesajlar (no vault write)'),
   'app/api/portal/hasta/[token]/goruntu/[id]/route.ts': I('token unlock; jacket id+patient_id+doctor_id; portaldaGorunurMu else 404; vault download doctor-scoped'),
   'app/api/portal/hasta/[token]/mesajlar/route.ts': T,
@@ -310,6 +320,7 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   'app/api/cron/kvkk-imha/route.ts': I('cron-secret gated retention job; no cross-doctor read path (NOTYA-GELEN-BELGELER: deletes unfiled inbox rows + their files by age only, returns counts)'),
   'app/api/cron/meslektas-rutin/route.ts': I('cron-secret gated; 30-day usage purge + per-doctor rutinTuret on that doctor_id only; no patient ids'),
   'app/api/cron/meslektas-onbellek/route.ts': I('cron-secret gated; builds hasta_dosya_onbellek per randevu row doctor_id+patient_id; no cross-doctor key'),
+  'app/api/cron/takip-hatirlatma/route.ts': I('cron-secret gated (cronYetkiliMi); takes no id from the request. For each doctor that has an open kontrol case: takipSenkronize + takipHatirlatmalariHazirla, every read and write scoped by that doktor_id; a case is opened and a reminder queued only for a patient re-checked as that doctor\'s own (patients.doctor_id) — nothing is sent, the item waits in that doctor\'s Hazır mesajlar'),
   // ── NOTYA-UZ-MUAYENE-01: routes of a country build (*.ulke.*). Not part of a Türkiye build. Their cross-doctor
   //    tests (positive control, A→B, B→A, "every query carries the doctor") live with the country pack, on its own
   //    stand-in database: countries/uz/uygulama/uygulama.test.ts and countries/uz/uygulama/muayene.test.ts. ──

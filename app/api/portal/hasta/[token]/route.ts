@@ -239,6 +239,7 @@ import {
 } from '@/specialties/aile-hekimligi/engines/portal-saglik-paketim'
 import { decrypt } from '@/lib/security/encryption'
 import { hastaAdSoyad } from '@/lib/portal/hastaAdi'
+import { konsultasyonBelgeIdleri, konsultasyonBelgesiMi } from '@/lib/portal/konsultasyonBelgeleri'
 import { arsivsizIlaclar, arsivsizNotlar, arsivsizSeanslar } from '@/lib/doktor/arsiv'
 import type {
   PortalBundle,
@@ -386,14 +387,7 @@ export async function GET(
     .eq('doctor_id', doctorId)
     .not('belge_id', 'is', null)
     .limit(80))
-  const belgelerP = Promise.resolve(sb
-    .from('medical_documents')
-    .select('id, file_name, file_type, category, created_at')
-    .eq('patient_id', patientId)
-    .eq('doctor_id', doctorId)
-    .is('deleted_at', null)
-    .order('created_at', { ascending: false })
-    .limit(40))
+  const konsBelgeP = sar(konsultasyonBelgeIdleri(sb, doctorId, patientId))
   const ceketP = Promise.resolve(sb
     .from('goruntu_calisma')
     .select('id, tip, modalite, bolge, tarih, onay_durum, hekim_yorum, created_at')
@@ -607,9 +601,22 @@ export async function GET(
     }
   } catch { /* soft */ }
   try {
-    const { data: belgeler } = await belgelerP
+    // KONSULTASYON-01: the consultant's report never reaches Sağlığım — the patient sees only "yönlendirildiniz ·
+    // sonuç alındı". If the consultation links cannot be read, no vault document is listed (fail closed).
+    const konsBelgeSonuc = await konsBelgeP
+    if (!konsBelgeSonuc.ok) throw konsBelgeSonuc.e
+    const konsultasyonBelgeleri = konsBelgeSonuc.v
+    const { data: belgeler } = konsultasyonBelgeleri ? await sb
+      .from('medical_documents')
+      .select('id, file_name, file_type, category, created_at')
+      .eq('patient_id', patientId)
+      .eq('doctor_id', doctorId)
+      .is('deleted_at', null)
+      .order('created_at', { ascending: false })
+      .limit(40) : { data: [] }
     for (const b of belgeler || []) {
       const id = String(b.id)
+      if (konsultasyonBelgeleri?.has(id) || konsultasyonBelgesiMi(b.category)) continue
       if (labBelgeIds.has(id)) continue // lab paneli zaten results'ta
       if (results.some((r) => r.id === id)) continue
       const cat = String(b.category || '')
