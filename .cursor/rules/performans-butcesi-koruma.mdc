@@ -1,0 +1,75 @@
+---
+description: >-
+  Standing performance budget, set from PERF-SAGLAMLIK-2026-10's measured
+  numbers: any change touching the patient-file page, a portal/API hot path,
+  task-sync, a hot-path query, or any new external call must be checked
+  against these hard ceilings before it closes — not rediscovered by a fresh
+  audit next month. A breach blocks merge unless Kaan explicitly accepts it
+  with a stated reason, logged in docs/audits/PERF-BUTCE-LOG.md.
+alwaysApply: true
+---
+
+# Performans bütçesi — kazanılanı ayda bir değil, her değişiklikte koru
+
+Boss rule (Kaan, 2026-10-17, after PERF-SAGLAMLIK-2026-10): these numbers are not a
+one-time trophy. The job is to never need a full re-audit to notice they slipped.
+**Read and follow** `.cursor/skills/performans-butcesi-koruma/SKILL.md` before closing
+any change in scope below.
+
+## Trigger
+
+Any change touching: `app/dashboard/doktor/hastalar/[id]/**` (patient file), any
+`app/api/**` route on a path a doctor or patient waits on synchronously (portal,
+session, note, task sync), `gorevEkle`/`gorevSenkron` or any similar per-item sync
+loop, a query against `hasta_lab_sonuclari` / `hasta_goruntulemeler` / `hasta_belgeler`
+/ `kontrasepsiyon` or any other hot patient-file table, or any new call to an external
+service (email, WhatsApp, calendar, ElevenLabs, a new provider).
+
+## Hard ceilings (measured baseline → budget, not the goal to re-hit)
+
+| Metric | 2026-10-17 measured | Warn above | Fail above |
+|---|---|---|---|
+| `hastalar/[id]` page JS (`next build`) | 18.6 kB | 30 kB | 60 kB |
+| `hastalar/[id]` First Load JS | 214 kB | 260 kB | 350 kB |
+| Shared JS bundle (all routes) | 88.9 kB | — | any route's own First Load JS moves >10 kB vs. its last recorded number |
+| Portal/API GET hot-path latency, `SahteVeritabani` harness median | 62.3 ms | 100 ms | 200 ms |
+| Per-item sync round trips (`gorevEkle`/`gorevSenkron` pattern) | 2 (batched, independent of N) | — | **fail**: any code path doing one round trip per item again (O(N) instead of O(1)/batched) |
+| Hot-path query plan, `EXPLAIN (ANALYZE, COSTS)` on the four tables above | Index Scan, cost 2.37 | — | **fail**: plan reverts to Seq Scan (cost ≈17+) — means the covering index was dropped, renamed, or the query shape no longer matches it |
+| External call timeout coverage | 100% (every external fetch has one) | — | **fail**: any new or touched external call ships with no explicit timeout |
+
+These are ceilings, not targets — getting faster than the measured baseline is fine and
+is not a regression to explain.
+
+## What closing a change in scope requires
+
+1. Bundle: `next build` output for the touched route(s), compared to the ceiling above.
+2. Latency: run the existing `SahteVeritabani` harness on the touched route if it's a
+   hot API path; compare to the ceiling.
+3. Round trips: if the change touches a per-item sync/loop, count round trips for
+   N=1 and N=5; it must stay flat (batched), not scale with N.
+4. Query plan: if the change touches a query against one of the four hot tables (or
+   adds a new hot-read path), run `EXPLAIN (ANALYZE, COSTS)` and confirm an Index Scan.
+5. Timeouts: any new external call gets an explicit timeout and a fallback path before
+   merge — no exceptions, no "add it later" entry.
+6. Country parity: per `ulke-paritesi-duzeltme`, the same check runs wherever the
+   touched code is shared with the six country branches, not just on `main`.
+7. Append one line to `docs/audits/PERF-BUTCE-LOG.md` — date, change, metric(s)
+   touched, measured number, pass/warn/fail. A warn can close with a one-line reason;
+   a fail cannot close without either a fix or Kaan's explicit written acceptance of
+   the regression (with his reason) in the same log line.
+
+## Why a log, not a monthly audit
+
+A full audit (bundle analyzer across all routes, harness across all hot paths, EXPLAIN
+on every table, grep for every external call) is the right way to *establish* a
+baseline, not to *maintain* one. Re-running it monthly means regressions sit live for
+weeks before anyone notices. This rule moves the check to the one moment it's cheap:
+the change that could have caused it, while the diff is still in hand.
+
+## Related
+
+- `.cursor/skills/performans-butcesi-koruma/SKILL.md` — how to run each check.
+- `docs/audits/PERF-SAGLAMLIK-2026-10.md` — where these numbers came from.
+- `docs/audits/PERF-BUTCE-LOG.md` — the running log; append, never rewrite history.
+- `.cursor/rules/ulke-paritesi-duzeltme.mdc` — the budget applies on every country
+  branch the touched code reaches, not just `main`.
