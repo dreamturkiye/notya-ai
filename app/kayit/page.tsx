@@ -34,7 +34,7 @@ export default function KayitPage() {
     }
 
     if (!kvkkOnay) {
-      setError('Devam edebilmek için KVKK Aydınlatma Metni\'ni okuyup onaylamanız gerekmektedir.');
+      setError('Devam edebilmek için Kullanım Koşulları\'nı ve KVKK Aydınlatma Metni\'ni okuyup onaylamanız gerekmektedir.');
       return;
     }
 
@@ -47,10 +47,15 @@ export default function KayitPage() {
         options: {
           // Consent must be PROVABLE, not merely collected: the moment and the text version mean a
           // later dispute can be answered with what was actually agreed to.
+          // HUKUK-01: the same checkbox now covers the Kullanım Koşulları too; both acceptances are
+          // stored with their own timestamp + text version in auth metadata (additive — no migration).
           data: {
             kvkk_onay: true,
             kvkk_onay_tarihi: new Date().toISOString(),
-            kvkk_metin_versiyonu: '2026-08-25-v2',
+            kvkk_metin_versiyonu: '2026-10-17-v6',
+            kosullar_onay: true,
+            kosullar_onay_tarihi: new Date().toISOString(),
+            kosullar_metin_versiyonu: '2026-10-17-v1',
           },
         },
       });
@@ -174,12 +179,16 @@ export default function KayitPage() {
               style={{ marginTop: 3, width: 16, height: 16, flexShrink: 0, cursor: 'pointer', accentColor: R.pine }}
             />
             <span>
+              <a href="/kullanim-kosullari" target="_blank" rel="noopener noreferrer" style={{ color: R.pine, fontWeight: 600 }}>
+                Kullanım Koşulları
+              </a>
+              &apos;nı ve{' '}
               <a href="/kvkk" target="_blank" rel="noopener noreferrer" style={{ color: R.pine, fontWeight: 600 }}>
                 KVKK Aydınlatma Metni
               </a>
-              &apos;ni okudum. Kişisel verilerimin ve hastalarıma ait sağlık verilerinin metinde
-              açıklanan amaçlarla işlenmesini ve belirtilen hizmet sağlayıcılara aktarılmasını kabul
-              ediyorum.
+              &apos;ni okudum, kabul ediyorum. Kişisel verilerimin ve hastalarıma ait sağlık verilerinin
+              metinde açıklanan amaçlarla işlenmesini ve belirtilen hizmet sağlayıcılara aktarılmasını
+              kabul ediyorum.
             </span>
           </label>
 

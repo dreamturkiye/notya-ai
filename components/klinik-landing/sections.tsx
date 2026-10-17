@@ -162,6 +162,10 @@ export function KlinikFooter() {
         </a>
         <nav className="flex flex-wrap gap-x-6 gap-y-2 font-outfit text-sm text-ink-2" aria-label="Alt bağlantılar">
           <a href={LINKS.kvkk} className="hover:text-ink">KVKK</a>
+          {/* HUKUK-01: yasal metinler */}
+          <a href={LINKS.kosullar} className="hover:text-ink">Kullanım Koşulları</a>
+          <a href={LINKS.gizlilik} className="hover:text-ink">Gizlilik</a>
+          <a href={LINKS.yasal} className="hover:text-ink">Tüm yasal metinler</a>
           <a href={LINKS.doktor} className="hover:text-ink">Notya Doktor</a>
           <a href={LINKS.home} className="hover:text-ink">Notya</a>
           <a href={LINKS.login} className="hover:text-ink">Giriş</a>

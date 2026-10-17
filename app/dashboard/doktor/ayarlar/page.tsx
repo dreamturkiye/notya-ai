@@ -21,6 +21,8 @@ const BOLUMLER = [
   { baslik: 'e-Reçete', aciklama: 'SGK hekim şifresi, tesis kodu, e-imza — bir kez girin, reçeteyi Notya\'dan gönderin', rota: '/dashboard/doktor/ayarlar/erecete', ikon: '💊' },
   { baslik: 'SGK Medula', aciklama: 'SGK Medula işlemleri', rota: '/doktor-tools/sgk-medula', ikon: '🏥' },
   { baslik: 'Araçlar', aciklama: 'ICD-10, e-reçete, epikriz ve diğer yardımcı araçlar', rota: '/doktor-tools', ikon: '🧰' },
+  // HUKUK-01: yasal metinlerin uygulama içi kapısı.
+  { baslik: 'Yasal metinler', aciklama: 'Kullanım koşulları, gizlilik, KVKK, iade ve iptal, telif', rota: '/yasal', ikon: '📜' },
 ];
 
 export default function AyarlarPage() {

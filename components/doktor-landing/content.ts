@@ -4,6 +4,10 @@ export const LINKS = {
   assistant: "/asistan",
   kvkk: "/kvkk",
   home: "/home",
+  // HUKUK-01: yasal metinler — kullanım koşulları, gizlilik ve tüm metinlerin merkez sayfası.
+  kosullar: "/kullanim-kosullari",
+  gizlilik: "/gizlilik",
+  yasal: "/yasal",
   // NOTYA-DEMO-01: shown only when NEXT_PUBLIC_DEMO_BOOKING_URL holds a Cal.com link (lib/demo/demoBaglantisi.ts).
   demo: "/demo",
 } as const;

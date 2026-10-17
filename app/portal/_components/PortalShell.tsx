@@ -81,7 +81,9 @@ export function PortalShell({
           (sekreter / asistan / hemşire) arasında, yalnızca görevleri gereği ve KVKK sınırları
           içinde paylaşılabilir; gerekli hallerde sizinle ilgili diğer hekimlere de aktarılabilir.
           Detay:{' '}
-          <a href="/kvkk">KVKK Aydınlatma Metni</a>.
+          <a href="/kvkk">KVKK Aydınlatma Metni</a> ·{' '}
+          <a href="/gizlilik">Gizlilik Politikası</a> ·{' '}
+          <a href="/klinik-karar-destegi">Yapay Zekâ Açıklaması</a>.
         </p>
         <p style={{ margin: 0, opacity: 0.85 }}>Bu bağlantı size özeldir; başkalarıyla paylaşmayın.</p>
       </footer>

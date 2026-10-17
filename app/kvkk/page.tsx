@@ -27,7 +27,7 @@ export default function KvkkPage() {
     <div style={S.page}>
       <Link href="/doktor" style={{ fontSize: '13px', color: '#2f4334', textDecoration: 'none' }}>← Notya AI</Link>
       <h1 style={S.h1}>Kişisel Verilerin Korunması ve İşlenmesi Aydınlatma Metni</h1>
-      <p style={S.meta}>6698 sayılı Kişisel Verilerin Korunması Kanunu (&quot;KVKK&quot;) madde 10 uyarınca · Son güncelleme: 26 Eylül 2026 (v5)</p>
+      <p style={S.meta}>6698 sayılı Kişisel Verilerin Korunması Kanunu (&quot;KVKK&quot;) madde 10 uyarınca · Son güncelleme: 2026-10-17 (v6)</p>
 
       <div style={S.box}>
         Bu metin, Notya AI hizmetini kullanan sağlık profesyonellerini ve onların hastalarına ait
@@ -36,8 +36,12 @@ export default function KvkkPage() {
       </div>
 
       <h2 style={S.h2}>1. Veri Sorumlusu</h2>
+      {/* HUKUK-01 dürüstlük kuralı: şirket henüz kurulmadı — unvan/adres/MERSİS uydurulmaz, yer tutucu
+          şirket kuruluşunda doldurulur. "Dream Türkiye" bir tüzel kişilik değil, marka çatısıdır. */}
       <p style={S.p}>
-        Veri sorumlusu: <strong>Dream Türkiye</strong> (&quot;Notya AI&quot;). İletişim:
+        Veri sorumlusu: Notya&apos;yı işleten teşebbüs — <strong>[ŞİRKET UNVANI VE ADRESİ — şirket kuruluşunda
+        doldurulacak]</strong> (&quot;Notya&quot;). Şirket kuruluşu tamamlandığında unvan, adres ve MERSİS bilgisi
+        bu bölümde ilan edilecektir. İletişim:
         <a href="mailto:kvkk@notya.ai" style={{ color: '#2f4334' }}> kvkk@notya.ai</a>
       </p>
       <p style={S.p}>
@@ -222,8 +226,13 @@ export default function KvkkPage() {
         {RIZA_TAM_MADDELER.map((m) => <li key={m} style={S.li}>{m}</li>)}
       </ol>
 
-      <p style={{ ...S.meta, marginTop: '48px' }}>
-        Bu metin bilgilendirme amaçlıdır ve hukuki danışmanlık yerine geçmez.
+      <p style={{ ...S.meta, marginTop: '48px', marginBottom: '8px' }}>
+        Son güncelleme: 2026-10-17 · Bu metin hukuki incelemeden geçmektedir; avukat incelemesi
+        tamamlandığında güncellenebilir.
+      </p>
+      <p style={S.meta}>
+        Bu metin bilgilendirme amaçlıdır ve hukuki danışmanlık yerine geçmez. Diğer yasal metinler:{' '}
+        <Link href="/yasal" style={{ color: '#2f4334' }}>Yasal Metinler</Link>.
       </p>
     </div>
     </div>

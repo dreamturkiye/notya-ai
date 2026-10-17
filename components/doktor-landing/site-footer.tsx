@@ -20,6 +20,16 @@ export function SiteFooter() {
           <a href={LINKS.kvkk} className="text-ink-2 hover:text-ink">
             KVKK
           </a>
+          {/* HUKUK-01: yasal metinler */}
+          <a href={LINKS.kosullar} className="text-ink-2 hover:text-ink">
+            Kullanım Koşulları
+          </a>
+          <a href={LINKS.gizlilik} className="text-ink-2 hover:text-ink">
+            Gizlilik
+          </a>
+          <a href={LINKS.yasal} className="text-ink-2 hover:text-ink">
+            Tüm yasal metinler
+          </a>
         </nav>
       </div>
       <div className="mx-auto flex max-w-7xl flex-col gap-2 border-t border-line px-5 py-6 font-outfit text-xs uppercase tracking-[0.14em] text-ink-muted sm:flex-row sm:justify-between sm:px-8">
