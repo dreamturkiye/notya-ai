@@ -58,10 +58,21 @@ export const BULGULAR = {
   'ECG.BRADY': { tr: 'Bradikardi', icd10: 'R00.1', modalite: ['ekg'] },
   'ECG.TACHY': { tr: 'Taşikardi', icd10: 'R00.0', modalite: ['ekg'] },
   'ECG.QTC': { tr: 'QTc uzaması', icd10: 'I45.8', acilEsik: 0.7, modalite: ['ekg'] },
-  // Echo (metrics only in V1)
+  // Echo — erişkin ASE/EACVI eşikleri (eko-ase). Çocuk ve fetal ekoda bant uygulanmaz.
   'ECHO.LVH': { tr: 'Sol ventrikül hipertrofisi', icd10: 'I51.7', modalite: ['eko'] },
   'ECHO.EF_LOW': { tr: 'Düşük EF izlenimi', icd10: 'I50', modalite: ['eko'] },
+  'ECHO.EF_SEVERE': { tr: 'İleri düşük ejeksiyon fraksiyonu', icd10: 'I50', modalite: ['eko'] },
+  'ECHO.LAE': { tr: 'Sol atriyum genişlemesi', modalite: ['eko'] },
+  'ECHO.DIASTOLIK': { tr: 'Yüksek ortalama E/e′', modalite: ['eko'] },
+  'ECHO.TAPSE_LOW': { tr: 'Azalmış TAPSE', modalite: ['eko'] },
+  'ECHO.PH': { tr: 'Pulmoner basınç yüksek', icd10: 'I27.2', modalite: ['eko'] },
+  'ECHO.AS_SEVERE': { tr: 'İleri aort darlığı ölçütü', icd10: 'I35.0', modalite: ['eko'] },
+  'ECHO.MR_SEVERE': { tr: 'İleri mitral yetmezlik', icd10: 'I34.0', modalite: ['eko'] },
+  'ECHO.AR_SEVERE': { tr: 'İleri aort yetmezliği', icd10: 'I35.1', modalite: ['eko'] },
+  'ECHO.TR_SEVERE': { tr: 'İleri triküspid yetmezlik', icd10: 'I36.1', modalite: ['eko'] },
   'ECHO.EFF': { tr: 'Perikardiyal efüzyon', icd10: 'I31.3', modalite: ['eko'] },
+  'ECHO.TAMPONAD': { tr: 'Tamponad ifadesi', icd10: 'I31.4', acilEsik: 0.6, modalite: ['eko'] },
+  'ECHO.NORM': { tr: 'Belirgin eko patolojisi izlenmedi', modalite: ['eko'] },
   // Dermatology
   'DERM.MEL': { tr: 'Melanom şüphesi', icd10: 'C43', acilEsik: 0.75, modalite: ['derm', 'dermatoskopi'] },
   'DERM.BCC': { tr: 'Bazal hücreli karsinom şüphesi', icd10: 'C44', modalite: ['derm', 'dermatoskopi'] },
