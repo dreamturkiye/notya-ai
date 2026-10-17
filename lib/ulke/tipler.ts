@@ -103,6 +103,16 @@ export type Ozellik =
   | 'sesProfili'
   /** Image / document evaluation by the model (may be regulated as a medical device — checklist A4). */
   | 'goruntuDegerlendirme'
+  /**
+   * MUAYENE-EKLERI-07 — "Yüklenen dosyalar": a file (lab report, scanned referral, photographed document) attached
+   * to one visit. Storage and listing only; no evaluation of any kind. Needs `cekirdekMuayene`.
+   */
+  | 'muayeneEkleri'
+  /**
+   * FOTO-ARSIV-01 — the patient photo archive: upload, a viewer and a two-up compare. Storage and viewing only — NO
+   * model reads a photo kept here (that is FOTO-ARSIV-02, a separate, not-yet-authorized item). Needs `cekirdekMuayene`.
+   */
+  | 'fotoArsivi'
 
 export type ParaBirimi = {
   /** ISO 4217. */
@@ -474,6 +484,25 @@ export type UlkeSayfalari = {
  * and, below that, per account: `<country>/<account id>/<file>` (migration 132; lib/ulke/uygulama/tablolar.ts).
  */
 export const MUAYENE_SES_KOVASI = 'muayene-sesleri'
+
+/**
+ * MUAYENE-EKLERI-07 — private bucket for exam-visit attachments, same two-folder shape as the recordings bucket
+ * above: `<country>/<account id>/<file>` (migration 148; lib/ulke/muayeneEki/muayeneEki.ts).
+ */
+export const MUAYENE_EKLERI_KOVASI = 'muayene-ekleri'
+/** Any one attachment, v1 ceiling (matches the database CHECK in migration 148). */
+export const MUAYENE_EKI_DOSYA_AZAMI = 10_485_760
+/** Mime types MUAYENE-EKLERI-07 accepts — common lab/referral/scan shapes. A type not on this list is refused. */
+export const MUAYENE_EKI_MIME_TURLERI = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp', 'image/heic'] as const
+
+/**
+ * FOTO-ARSIV-01 — private bucket for the patient photo archive, same two-folder shape (migration 148;
+ * lib/ulke/fotoArsivi/fotoArsivi.ts). Images only — a document belongs in MUAYENE-EKLERI-07, not here.
+ */
+export const HASTA_FOTO_KOVASI = 'hasta-fotograflari'
+/** Any one photo, v1 ceiling (matches the database CHECK in migration 148). */
+export const HASTA_FOTO_DOSYA_AZAMI = 12_582_912
+export const HASTA_FOTO_MIME_TURLERI = ['image/jpeg', 'image/png', 'image/webp', 'image/heic'] as const
 
 /**
  * Speech recognition for a visit (checklist E5). The ENGINE is core (lib/ulke/uygulama/konusmaTanima.ts); every

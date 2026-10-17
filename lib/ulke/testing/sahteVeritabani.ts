@@ -702,6 +702,18 @@ export function sahteVeritabani() {
           return b ? { data: b, error: null } : { data: null, error: { message: 'not found' } }
         },
         remove: async (yollar: string[]) => { for (const y of yollar) depo.delete(`${kova}/${y}`); return { data: null, error: null } },
+        // MUAYENE-EKLERI-07 / FOTO-ARSIV-01: a cheap existence-and-size check that does not read the bytes
+        // (lib/ulke/muayeneEki/muayeneEki.ts, lib/ulke/fotoArsivi/fotoArsivi.ts). A test puts the object in `depo`
+        // directly first, exactly as it does before a `download`.
+        info: async (yol: string) => {
+          const b = depo.get(`${kova}/${yol}`)
+          return b ? { data: { size: b.size }, error: null } : { data: null, error: { message: 'not found' } }
+        },
+        // A deterministic, fake signed URL — never a real one, and never usable outside this process.
+        createSignedUrl: async (yol: string) => {
+          const b = depo.get(`${kova}/${yol}`)
+          return b ? { data: { signedUrl: `https://sahte.supabase.test/storage/signed/${kova}/${yol}` }, error: null } : { data: null, error: { message: 'not found' } }
+        },
       }),
     },
   })

@@ -73,6 +73,13 @@ export const AU_PAKETI: UlkePaketi = {
     hastaMesajlari: true,
     klinikHesaplari: true,
     konsultasyon: true,
+    // MUAYENE-EKLERI-07 (2026-10-17): "uploaded files" — a lab report, a scanned referral or a photographed document
+    // attached to one visit. Storage and listing only; no evaluation of any kind (lib/ulke/muayeneEki/muayeneEki.ts).
+    muayeneEkleri: true,
+    // FOTO-ARSIV-01 (2026-10-17): the patient photo archive — upload, a viewer, a basic two-up compare. Storage and
+    // viewing only: NO model reads a photo kept here (lib/ulke/fotoArsivi/fotoArsivi.ts). FOTO-ARSIV-02 (AI photo
+    // evaluation) stays a separate, not-yet-authorized item and is untouched.
+    fotoArsivi: true,
   },
   araclar: [],
   // The ONLY paths that exist in this country's deployment; every other path answers 404 in the middleware.
