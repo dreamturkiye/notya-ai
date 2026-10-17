@@ -15,7 +15,13 @@ const bugun = () => new Date().toISOString().slice(0, 10)
 type Sb = Awaited<ReturnType<typeof doktorOturum>> extends infer T ? (T extends { supabase: infer S } ? S : never) : never
 
 async function gorevEkle(sb: Sb, doctorId: string, patientId: string, g: { kod: string; ad: string; due?: string | null; kaynak: string }[]) {
-  for (const x of g) { const { data } = await sb.from('derm_gorevleri').select('id').eq('patient_id', patientId).eq('kod', x.kod).eq('durum', 'acik').maybeSingle(); if (!data) await sb.from('derm_gorevleri').insert({ patient_id: patientId, doctor_id: doctorId, kod: x.kod, ad: x.ad, due: x.due || null, kaynak: x.kaynak }) }
+  // PERF-2026-10: N×(select+insert) yerine 1 select + 1 toplu insert — davranış birebir (select filtresi aynı: doctor_id yok).
+  const adaylar = g.filter((x, i) => g.findIndex((y) => y.kod === x.kod) === i)
+  if (!adaylar.length) return
+  const { data: acik } = await sb.from('derm_gorevleri').select('kod').eq('patient_id', patientId).in('kod', adaylar.map((x) => x.kod)).eq('durum', 'acik')
+  const mevcut = new Set(((acik || []) as { kod: string | null }[]).map((r) => String(r.kod)))
+  const yeni = adaylar.filter((x) => !mevcut.has(x.kod))
+  if (yeni.length) await sb.from('derm_gorevleri').insert(yeni.map((x) => ({ patient_id: patientId, doctor_id: doctorId, kod: x.kod, ad: x.ad, due: x.due || null, kaynak: x.kaynak })))
 }
 async function onamOlustur(sb: Sb, doctorId: string, patientId: string, kod: string, onayli: boolean): Promise<string | null> {
   const s = DERM_ONAMLAR.find((o) => o.kod === kod); if (!s) return null

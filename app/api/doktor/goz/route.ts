@@ -54,10 +54,13 @@ async function hasta(sb: Sb, doktorId: string, patientId: string) {
 }
 
 async function gorevSenkron(sb: Sb, doktorId: string, patientId: string, gorevler: { kod: string; ad: string; due: string | null }[], kaynak: string) {
-  for (const g of gorevler) {
-    const { data } = await sb.from('goz_gorevler').select('id').eq('patient_id', patientId).eq('kod', g.kod).eq('durum', 'acik').maybeSingle()
-    if (!data) await sb.from('goz_gorevler').insert({ patient_id: patientId, doctor_id: doktorId, kod: g.kod, ad: g.ad, due: g.due, kaynak })
-  }
+  // PERF-2026-10: N×(select+insert) yerine 1 select + 1 toplu insert — davranış birebir (select filtresi aynı: doctor_id yok).
+  const adaylar = gorevler.filter((x, i) => gorevler.findIndex((y) => y.kod === x.kod) === i)
+  if (!adaylar.length) return
+  const { data: acik } = await sb.from('goz_gorevler').select('kod').eq('patient_id', patientId).in('kod', adaylar.map((x) => x.kod)).eq('durum', 'acik')
+  const mevcut = new Set(((acik || []) as { kod: string | null }[]).map((r) => String(r.kod)))
+  const yeni = adaylar.filter((x) => !mevcut.has(x.kod))
+  if (yeni.length) await sb.from('goz_gorevler').insert(yeni.map((x) => ({ patient_id: patientId, doctor_id: doktorId, kod: x.kod, ad: x.ad, due: x.due, kaynak })))
 }
 
 async function sonIntake(sb: Sb, doktorId: string, patientId: string): Promise<Record<string, unknown> | null> {
