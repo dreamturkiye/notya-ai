@@ -26,11 +26,14 @@ export async function graph<T = Record<string, unknown>>(yol: string, istek: Gra
   const basliklar: Record<string, string> = {}
   if (istek.token) basliklar.Authorization = `Bearer ${istek.token}`
   if (istek.body !== undefined) basliklar['Content-Type'] = 'application/json'
+  // SAGLAMLIK-2026-10: zaman aşımı — asılı kalan Graph ucu isteği fonksiyon ömrü boyunca kilitlemesin.
+  // Aşım fetch reddi olarak mevcut GraphHatasi/ağ hatası yollarına düşer (yeni hata sınıfı yok).
   const r = await f(url.toString(), {
     method: istek.method || 'GET',
     headers: basliklar,
     body: istek.body === undefined ? undefined : JSON.stringify(istek.body),
     cache: 'no-store',
+    signal: AbortSignal.timeout(30_000),
   })
   const j = (await r.json().catch(() => ({}))) as { error?: { message?: string; code?: number } } & T
   if (!r.ok || j?.error) {

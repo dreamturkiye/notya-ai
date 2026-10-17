@@ -83,9 +83,10 @@ export async function GET(req: NextRequest) {
       .update({ onboarding_completed: true, updated_at: new Date().toISOString() })
       .eq('id', user.id)
     if (!meta.onboarding_completed) {
+      // SAGLAMLIK-2026-10: ateşle-unut kalır; yakalanmamış reddi süreci düşürmesin diye catch eklendi.
       void getSupabase().auth.admin.updateUserById(user.id, {
         user_metadata: { ...meta, onboarding_completed: true, profession_type: profile.profession_type || meta.profession_type },
-      })
+      }).catch((e) => console.error('[users/me] meta self-heal:', e instanceof Error ? e.message : e))
     }
   }
 

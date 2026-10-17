@@ -46,10 +46,13 @@ async function aktifGebeMi(sb: Sb, patientId: string): Promise<boolean> {
   return (data || []).some((g) => aktifGebelikDurumu(g.durum))
 }
 async function gorevEkle(sb: Sb, doctorId: string, patientId: string, gorevler: { kod: string; ad: string; due?: string | null; kaynak: string }[]) {
-  for (const g of gorevler) {
-    const { data: var_ } = await sb.from('jine_gorevleri').select('id').eq('patient_id', patientId).eq('kod', g.kod).eq('durum', 'acik').maybeSingle()
-    if (!var_) await sb.from('jine_gorevleri').insert({ patient_id: patientId, doctor_id: doctorId, kod: g.kod, ad: g.ad, due: g.due || null, kaynak: g.kaynak })
-  }
+  // PERF-2026-10: N×(select+insert) yerine 1 select + 1 toplu insert — davranış birebir (select filtresi aynı: doctor_id yok).
+  const adaylar = gorevler.filter((x, i) => gorevler.findIndex((y) => y.kod === x.kod) === i)
+  if (!adaylar.length) return
+  const { data: acik } = await sb.from('jine_gorevleri').select('kod').eq('patient_id', patientId).in('kod', adaylar.map((x) => x.kod)).eq('durum', 'acik')
+  const mevcut = new Set(((acik || []) as { kod: string | null }[]).map((r) => String(r.kod)))
+  const yeni = adaylar.filter((x) => !mevcut.has(x.kod))
+  if (yeni.length) await sb.from('jine_gorevleri').insert(yeni.map((x) => ({ patient_id: patientId, doctor_id: doctorId, kod: x.kod, ad: x.ad, due: x.due || null, kaynak: x.kaynak })))
 }
 
 export async function POST(req: NextRequest) {
