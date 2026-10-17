@@ -48,6 +48,7 @@ import AcilTipHome from '@/specialties/acil-tip/ui/AcilTipHome';
 import PatientDocumentVault from '@/components/doktor/PatientDocumentVault';
 import HastaGoruntuler from '@/components/doktor/HastaGoruntuler';
 import HastaKonsultasyonlar from '@/components/doktor/HastaKonsultasyonlar';
+import FotoArsivi from '@/components/doktor/fotoArsivi/FotoArsivi';
 import HastaOzetDuzenlenebilir from '@/components/doktor/HastaOzetDuzenlenebilir';
 import HastaKlinikOzetler from '@/components/doktor/HastaKlinikOzetler';
 import HastaIletisim from '@/components/doktor/iletisim/HastaIletisim';
@@ -255,7 +256,7 @@ export default function HastaProfilPage() {
     const bilinen: HastaDosyaSekmeId[] = [
       'ozet', 'muayene', 'buyume', 'belgeler', 'goruntuleme', 'ilaclar', 'formu', 'asilar',
       'mchat', 'gelisim', 'ayse', 'gebelik', 'deri', 'dahiliye', 'goz',
-      'psikiyatri', 'kbb', 'kardiyoloji', 'gogus', 'noroloji', 'uroloji', 'spor-hekimligi', 'ortopedi', 'fizik-tedavi', 'aile', 'endokrinoloji', 'enfeksiyon', 'gastroenteroloji', 'nefroloji', 'romatoloji', 'onkoloji', 'genel-cerrahi', 'plastik', 'beyin', 'gogus-cerrahisi', 'cocuk-cerrahisi', 'konsultasyon',
+      'psikiyatri', 'kbb', 'kardiyoloji', 'gogus', 'noroloji', 'uroloji', 'spor-hekimligi', 'ortopedi', 'fizik-tedavi', 'aile', 'endokrinoloji', 'enfeksiyon', 'gastroenteroloji', 'nefroloji', 'romatoloji', 'onkoloji', 'genel-cerrahi', 'plastik', 'beyin', 'gogus-cerrahisi', 'cocuk-cerrahisi', 'konsultasyon', 'fotograflar',
     ];
     if (!bilinen.includes(tabParam as HastaDosyaSekmeId)) return;
     if (tabParam === 'gebelik') {
@@ -745,6 +746,13 @@ export default function HastaProfilPage() {
           <PatientDocumentVault patientId={patientId} specialtyGeri={vaultSpecialtyGeri} />
         )}
         {!loading && !error && activeTab === 'konsultasyon' && <HastaKonsultasyonlar patientId={patientId} yanitAc={searchParams?.get('yanit') || undefined} />}
+        {!loading && !error && activeTab === 'fotograflar' && (
+          <FotoArsivi
+            patientId={patientId}
+            veliDili={veliDiliMi({ doktorBransi, hastaDogumIso: patient?.dogum_tarihi })}
+            hastaAdi={patient?.ad_soyad}
+          />
+        )}
         {!loading && !error && activeTab === 'goruntuleme' && (
           <HastaGoruntuler patientId={patientId} />
         )}

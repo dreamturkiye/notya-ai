@@ -12,6 +12,7 @@
 import { Component, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react"
 import { CHROME_FONT, CHROME_RENK } from "@/lib/doktor/chromeTheme"
 import { ensureDoctorAccessToken } from "@/lib/doktor/clientAuth"
+import { bitmapKalitesi } from "@/components/doktor/fotoArsivi/istemciGorsel"
 import { ekHatirlaticilar, eksikHatirlaticilar, type Hatirlatici } from "@/lib/doktor/muayeneEk/hatirlatici"
 import { EK_DEGERLENDIRME_SURUMU, EK_TURLERI, EK_TUR_ETIKETI, type EkAsiSatiri, type EkSonuc, type EkTuru } from "@/lib/doktor/muayeneEk/tipler"
 
@@ -150,6 +151,17 @@ function Ic({ sessionId, patientId, transcript, pediatrik, hata, onDevam }: Prop
     const key = `o${++sayac}`
     setOgeler((l) => [...l, { key, ad: f.name || "belge", kaynak, durum: "yukleniyor", yuzde: 0, ipucu }])
     const k = await kucult(f)
+    // FOTO-ARSIV-01: kayıttan ÖNCE çekim kalitesi kapısı (yalnız kamera çekimleri; ağır bulanıklık / karanlık). Engellemez: hekim "yine de kaydet" diyebilir.
+    if (kaynak === "kamera" && k.blob.type.startsWith("image/")) {
+      try {
+        const bmp = await createImageBitmap(k.blob)
+        const q = bitmapKalitesi(bmp); bmp.close()
+        if (q.sorunlar.some((s) => s.agir && (s.kod === "bulanik" || s.kod === "karanlik"))
+          && !window.confirm(`Çekimi yenileyin: ${q.oneri ?? "Fotoğraf yeterince net veya aydınlık değil."}\n\nYine de kaydedilsin mi? (İptal: kaydetme, yeniden çekin)`)) {
+          setOgeler((l) => l.filter((o) => o.key !== key)); return
+        }
+      } catch { /* kalite kapısı yardımcıdır; hata kaydı engellemez */ }
+    }
     guncelle(key, { dosya: k.blob, gorselB64: k.b64, gorselMime: k.mime })
     if (k.blob.size > 4 * 1024 * 1024) { guncelle(key, { durum: "yukleme_hata", hata: "Dosya 4 MB sınırını aşıyor." }); return }
     const tok = await token()
