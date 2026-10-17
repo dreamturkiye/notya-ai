@@ -45,6 +45,7 @@ import { roundKurus } from './ledger/money'
 /** GVK md. 94/2-b — serbest meslek kazancı tevkifat (stopaj) oranı. 2000 bp = %20.00. See this
  *  file's header for legal basis and verification status; this constant is the single source of
  *  truth, never re-duplicated as a literal elsewhere. */
+// Mali müşavir teyidi 2026-10-17 (Kaan aracılığıyla): %20 oranı, tevkifat yükümlüsü kapsamı ve KDV tevkifatı olmadığı doğrulandı (ACCOUNTING-GIB-04c kapalı).
 export const GVK_94_STOPAJ_RATE_BP_SERBEST_MESLEK = 2000
 
 export interface StopajInput {
