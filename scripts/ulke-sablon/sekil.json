@@ -340,6 +340,98 @@
    "saatGecersiz": "$m",
    "sayiOkunamadi": "$m:%1,%2",
    "duzelt": "$m"
+  },
+  "ipuclari": {
+   "rozet": "$m",
+   "anladim": "$m",
+   "birDaha": "$m",
+   "ac": "$m:%",
+   "ayarEtiket": "$m",
+   "ayarIzoh": "$m",
+   "bolumler": {
+    "bugun": {
+     "baslik": "$m",
+     "satirlar": [
+      "$m",
+      "$m"
+     ]
+    },
+    "takvim": {
+     "baslik": "$m",
+     "satirlar": [
+      "$m",
+      "$m"
+     ]
+    },
+    "hastalar": {
+     "baslik": "$m",
+     "satirlar": [
+      "$m",
+      "$m",
+      "$m"
+     ]
+    },
+    "muayene": {
+     "baslik": "$m",
+     "satirlar": [
+      "$m",
+      "$m",
+      "$m"
+     ]
+    },
+    "araclar": {
+     "baslik": "$m",
+     "satirlar": [
+      "$m",
+      "$m"
+     ]
+    },
+    "klinik": {
+     "baslik": "$m",
+     "satirlar": [
+      "$m",
+      "$m"
+     ]
+    },
+    "onBuro": {
+     "baslik": "$m",
+     "satirlar": [
+      "$m",
+      "$m"
+     ]
+    },
+    "ayarlar": {
+     "baslik": "$m",
+     "satirlar": [
+      "$m",
+      "$m"
+     ]
+    }
+   }
+  },
+  "ilkAdimlar": {
+   "baslik": "$m",
+   "aciklama": "$m",
+   "gizle": "$m",
+   "tamamOrani": "$m:%1,%2",
+   "adimlar": {
+    "rol": {
+     "etiket": "$m",
+     "aciklama": "$m"
+    },
+    "hasta": {
+     "etiket": "$m",
+     "aciklama": "$m"
+    },
+    "randevu": {
+     "etiket": "$m",
+     "aciklama": "$m"
+    },
+    "muayene": {
+     "etiket": "$m",
+     "aciklama": "$m"
+    }
+   }
   }
  },
  "randevu": {
