@@ -148,6 +148,12 @@ export const ROTA_YETKILERI: readonly Kural[] = [
   // deleting an attachment is not part of the assistant's remit
   K('/api/doktor/documents/[id]', 'ek.ekle', null, { sekreterKapali: true }),
   K('/api/doktor/konsultasyon', 'hasta.dosya.oku', 'hasta.dosya.yaz'),
+  // FOTO-ARSIV-01: clinical photo archive. The sekreter never viewed clinical photos -> closed to her. asistan: read-only plus
+  // the derived thumbnail upload; hasta_danismani has no 'hasta.dosya.oku' -> closed. The AI routes are doctor-only.
+  K('/api/doktor/hasta-foto', 'hasta.dosya.oku', null, { sekreterKapali: true }),
+  K('/api/doktor/hasta-foto/[id]/[id]/kucuk', 'hasta.dosya.oku', 'ek.ekle', { sekreterKapali: true }),
+  { yol: '/api/doktor/hasta-foto/[id]/[id]/ai', okuKapali: true, yaz: null, sekreterKapali: true },
+  { yol: '/api/doktor/hasta-foto/[id]/kalite', okuKapali: true, yaz: null, sekreterKapali: true },
 
   // ── intake + portal
   K('/api/doktor/intake-formlari', 'intake.oku', 'intake.yonet'),

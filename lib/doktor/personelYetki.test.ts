@@ -182,7 +182,8 @@ describe('pratikOturum kullanan her rota sınıflandırılmış', () => {
     // MOBIL-PERSONEL-04: the only deliberate secretary loss — clinical note content (read) and note deletion.
     const NOT_KAPALI = (y: string) => y === '/api/doktor/son-notlar' || y === '/api/notes' || y.startsWith('/api/notes/')
     for (const yol of PRATIK_ROTALAR) {
-      if (YENI_ROTALAR.has(yol) || NOT_KAPALI(yol)) continue
+      // FOTO-ARSIV-01: the clinical photo archive never served the secretary (closed to her on purpose).
+      if (YENI_ROTALAR.has(yol) || NOT_KAPALI(yol) || yol.startsWith('/api/doktor/hasta-foto')) continue
       for (const m of ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']) {
         assert.equal(yolIzniVarMi('sekreter', yol, m).izin, true, `sekreter ${m} ${yol}`)
       }
@@ -217,7 +218,33 @@ describe('pratikOturum kullanan her rota sınıflandırılmış', () => {
     }
     assert.deepEqual(
       [...yazilabilen].sort(),
-      ['/api/doktor/documents', '/api/doktor/hastalar/[id]/olcumler', '/api/doktor/hesap/oturum', '/api/doktor/hesap/sifre-degistir', '/api/personel/avatar', '/api/personel/me'],
+      ['/api/doktor/documents', '/api/doktor/hasta-foto/[id]/[id]/kucuk', '/api/doktor/hastalar/[id]/olcumler', '/api/doktor/hesap/oturum', '/api/doktor/hesap/sifre-degistir', '/api/personel/avatar', '/api/personel/me'],
     )
+  })
+})
+
+describe('FOTO-ARSIV-01: klinik fotoğraf arşivi rol kapıları', () => {
+  const ARSIV = ['/api/doktor/hasta-foto/p1', '/api/doktor/hasta-foto/p1/b1', '/api/doktor/hasta-foto/p1/b1/dosya', '/api/doktor/hasta-foto/p1/toplu', '/api/doktor/hasta-foto/p1/rapor', '/api/doktor/hasta-foto/p1/b1/kucuk']
+  const AI = ['/api/doktor/hasta-foto/p1/b1/ai', '/api/doktor/hasta-foto/p1/b1/ai/karsilastir', '/api/doktor/hasta-foto/p1/b1/ai/geri-bildirim', '/api/doktor/hasta-foto/p1/kalite']
+  it('sekreter klinik fotoğrafı göremez (hiçbir yöntem)', () => {
+    for (const y of [...ARSIV, ...AI]) for (const m of ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']) assert.equal(yolIzniVarMi('sekreter', y, m).izin, false, `sekreter ${m} ${y}`)
+  })
+  it('hasta danışmanı klinik fotoğrafı göremez', () => {
+    for (const y of [...ARSIV, ...AI]) for (const m of ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']) assert.equal(yolIzniVarMi('hasta_danismani', y, m).izin, false, `danisman ${m} ${y}`)
+  })
+  it('asistan arşivi okur, yalnız küçük resim yükler; düzenleyemez, dışa aktaramaz, AI çağıramaz', () => {
+    const a = (y: string, m: string) => yolIzniVarMi('asistan', y, m).izin
+    assert.equal(a('/api/doktor/hasta-foto/p1', 'GET'), true)
+    assert.equal(a('/api/doktor/hasta-foto/p1/b1', 'GET'), true)
+    assert.equal(a('/api/doktor/hasta-foto/p1/b1/dosya', 'GET'), true)
+    assert.equal(a('/api/doktor/hasta-foto/p1/b1/kucuk', 'GET'), true)
+    assert.equal(a('/api/doktor/hasta-foto/p1/b1/kucuk', 'PUT'), true)
+    assert.equal(a('/api/doktor/hasta-foto/p1/b1', 'PATCH'), false)
+    assert.equal(a('/api/doktor/hasta-foto/p1/toplu', 'POST'), false)
+    assert.equal(a('/api/doktor/hasta-foto/p1/rapor', 'POST'), false)
+    for (const y of AI) for (const m of ['GET', 'POST']) assert.equal(a(y, m), false, `asistan ${m} ${y}`)
+  })
+  it('doktor hepsine girer', () => {
+    for (const y of [...ARSIV, ...AI]) assert.equal(yolIzniVarMi('doktor', y, 'POST').izin, true)
   })
 })

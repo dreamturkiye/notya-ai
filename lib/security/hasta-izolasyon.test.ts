@@ -153,11 +153,14 @@ type Hekim = {
   defter: string
   /** MUAYENE-EKLERI-07: a file uploaded during THIS doctor's completed visit (`seans`), bytes encrypted in the vault */
   yuklenenBelge: string
+  /** FOTO-ARSIV-01: two clinical photos of the doctor's patient (older + newer, same region), with archive metadata + a stored thumbnail */
+  fotoBelge: string; fotoOnceki: string; fotoSeans: string
   /** Rows THIS doctor filed under the OTHER doctor's patient — the contamination a pre-fix IDOR left behind. */
   hileliSeans: string; hileliNot: string
 }
 const isaret = (h: Harf) => `GIZLI-${h}-7Q`
 
+let fotoGorsel: typeof import('../doktor/fotoArsiv/testGorselleri')
 let encrypt: (s: string) => string
 let encryptBytes: (b: Buffer) => Buffer
 let decrypt: (s: string) => string
@@ -268,7 +271,19 @@ function hekimKur(harf: Harf): Hekim {
   const yuklenenBelge = db.ekle('medical_documents', { doctor_id: id, patient_id: hasta, visit_id: seans, file_name: `yuklenen-${m}.pdf`, file_type: 'application/pdf', file_size: 40, category: 'Lab Sonucu', uploaded_by: id, storage_backend: 'db', storage_key: 'db:pending', deleted_at: null }).id
   db.tablo('medical_documents').find((r) => r.id === yuklenenBelge)!.storage_key = `db:${yuklenenBelge}`
   db.bloblar.set(yuklenenBelge, encryptBytes(Buffer.from(`%PDF-1.4 icerik ${m}`)).toString('base64'))
-  return { yuklenenBelge, takip, defter, harf, id, token, hasta, seans, not, bekleyenNot, ilac, panel, belge, randevu, serbestRandevu, talep, hastaDerm, lezyon, dogum, bebekKart, portalToken, konu, asistanEylem, gozGoruntu, belgeAnaliz, dermAnaliz, konsultasyon, konsultasyonYanitli, kasaBelge, asiHatirlatma, eylemOneri, eylemKayit, sonlanmisIlac, kuyruk, gelenBelge, asistanOturum, hileliSeans: '', hileliNot: '' }
+  // FOTO-ARSIV-01: an older and a newer clinical photo of the same region. The scan bytes carry the marker; the EXIF carries GPS text that must never be served.
+  const fotoSeans = db.ekle('sessions', { doctor_id: id, patient_id: hasta, specialty: 'pediatri', status: 'completed', created_at: dun }).id as string
+  const fotoEkle = (ad: string, gunOnce: number, tarih: string) => {
+    const bid = db.ekle('medical_documents', { doctor_id: id, patient_id: hasta, visit_id: fotoSeans, file_name: `${ad}-${m}.jpg`, file_type: 'image/jpeg', file_size: 400, category: 'Klinik fotoğraf', uploaded_by: id, storage_backend: 'db', storage_key: 'db:pending', deleted_at: null, created_at: new Date(Date.now() - gunOnce * 86400e3).toISOString() }).id
+    db.tablo('medical_documents').find((r) => r.id === bid)!.storage_key = `db:${bid}`
+    db.bloblar.set(bid, encryptBytes(fotoGorsel.sentetikJpeg(`pikseller ${m}`)).toString('base64'))
+    db.ekle('hasta_foto_meta', { doctor_id: id, patient_id: hasta, belge_id: bid, bolge: 'kol-sag', bolge_kaynagi: 'hekim', favori: false, yildiz: 0, anahtar: false, cekim_tarihi: tarih, gizli: false, ozel_encrypted: encrypt(JSON.stringify({ v: 1, etiketler: ['kontrol'], not: `Foto notu ${m}`, ayarlar: {}, notasyonlar: [] })) })
+    return bid
+  }
+  const fotoOnceki = fotoEkle('onceki', 47, trGun(-47, 12).slice(0, 10))
+  const fotoBelge = fotoEkle('yeni', 0, trGun(0, 12).slice(0, 10))
+  db.ekle('hasta_foto_kucuk', { doctor_id: id, patient_id: hasta, belge_id: fotoBelge, mime: 'image/jpeg', genislik: 64, yukseklik: 48, veri_encrypted: encryptBytes(fotoGorsel.sentetikJpeg(`kucuk ${m}`)).toString('base64') })
+  return { fotoBelge, fotoOnceki, fotoSeans, yuklenenBelge, takip, defter, harf, id, token, hasta, seans, not, bekleyenNot, ilac, panel, belge, randevu, serbestRandevu, talep, hastaDerm, lezyon, dogum, bebekKart, portalToken, konu, asistanEylem, gozGoruntu, belgeAnaliz, dermAnaliz, konsultasyon, konsultasyonYanitli, kasaBelge, asiHatirlatma, eylemOneri, eylemKayit, sonlanmisIlac, kuyruk, gelenBelge, asistanOturum, hileliSeans: '', hileliNot: '' }
 }
 
 /** Contamination X planted under Y's patient before the fixes (anon-key session insert, unchecked POSTs). */
@@ -376,6 +391,16 @@ type Vaka = {
 const tablo = (ad: string) => db.tablo(ad)
 const trAralik = `baslangic=${encodeURIComponent(trGun(-1, 0))}&bitis=${encodeURIComponent(trGun(3, 0))}`
 
+// ─── FOTO-ARSIV-01 / FOTO-AI-01 yardımcıları ─────────────────────────────────────────────────────
+const fotoUrl = (h: { hasta: string }, ek = '') => `/api/doktor/hasta-foto/${h.hasta}${ek}`
+const fotoPrm = (h: { hasta: string }, belge: string) => prm({ patientId: h.hasta, belgeId: belge })
+/** Scripts the (mocked) model for the next photo-AI call. */
+const fotoModeli = (yanit: string) => { modelYaniti = () => [{ type: 'text', text: yanit }] }
+const fotoAiGonder = (r: Rotalar, a: Hekim, h: Hekim, govde: Record<string, unknown> = {}, belge = h.fotoBelge) =>
+  coz(r.fotoAi.POST(iste('POST', fotoUrl(h, `/${belge}/ai`), { token: a.token, govde: { gorsel: fotoGorsel.dataUrl(fotoGorsel.sentetikPng()), ...govde } }), fotoPrm(h, belge)))
+const hamIste = (yontem: string, yol: string, token: string, govde: Buffer, tur: string) =>
+  new NextRequestSinifi(`http://localhost${yol}`, { method: yontem, headers: { authorization: `Bearer ${token}`, 'content-type': tur }, body: new Uint8Array(govde) } as ConstructorParameters<typeof NextRequestSinifi>[1])
+
 const VAKALAR: Vaka[] = [
   // Hasta kaydı
   { ad: 'GET /api/doktor/hastalar/[id] (hasta detayı)', red: 404, okur: true,
@@ -390,6 +415,45 @@ const VAKALAR: Vaka[] = [
     cagir: (r, a, h) => coz(r.yuklenenDosya.GET(iste('GET', `/api/doktor/muayene-ekleri/yuklenenler/${h.yuklenenBelge}?sessionId=${h.seans}`, { token: a.token }), prm({ belgeId: h.yuklenenBelge }))) },
   { ad: 'GET /api/doktor/muayene-ekleri/yuklenenler/[belgeId] (kendi seansı + yabancı belge)', red: 404,
     cagir: (r, a, h) => coz(r.yuklenenDosya.GET(iste('GET', `/api/doktor/muayene-ekleri/yuklenenler/${h.yuklenenBelge}?sessionId=${a.seans}`, { token: a.token }), prm({ belgeId: h.yuklenenBelge }))) },
+  // FOTO-ARSIV-01 — clinical photo archive. A foreign patient id or photo id is 404; reads carry only the caller's own marker.
+  { ad: 'GET /api/doktor/hasta-foto/[patientId] (fotoğraf arşivi listesi)', red: 404, okur: true,
+    cagir: (r, a, h) => coz(r.fotoListe.GET(iste('GET', fotoUrl(h), { token: a.token }), prm({ patientId: h.hasta }))) },
+  { ad: 'GET /api/doktor/hasta-foto/[patientId]/[belgeId] (fotoğraf ayrıntısı, not + düzenleme)', red: 404, okur: true,
+    cagir: (r, a, h) => coz(r.fotoDetay.GET(iste('GET', fotoUrl(h, `/${h.fotoBelge}`), { token: a.token }), fotoPrm(h, h.fotoBelge))) },
+  { ad: 'PATCH /api/doktor/hasta-foto/[patientId]/[belgeId] (favori, etiket)', red: 404,
+    yazdi: (a) => tablo('hasta_foto_meta').some((m) => m.doctor_id === a.id && m.belge_id === a.fotoBelge && m.favori === true),
+    cagir: (r, a, h) => coz(r.fotoDetay.PATCH(iste('PATCH', fotoUrl(h, `/${h.fotoBelge}`), { token: a.token, govde: { favori: true } }), fotoPrm(h, h.fotoBelge))) },
+  { ad: 'GET /api/doktor/hasta-foto/[patientId]/[belgeId]/dosya (görüntü akışı)', red: 404, okur: true,
+    cagir: (r, a, h) => coz(r.fotoDosya.GET(iste('GET', fotoUrl(h, `/${h.fotoBelge}/dosya`), { token: a.token }), fotoPrm(h, h.fotoBelge))) },
+  { ad: 'GET /api/doktor/hasta-foto/[patientId]/[belgeId]/kucuk (küçük resim)', red: 404, okur: true,
+    cagir: (r, a, h) => coz(r.fotoKucuk.GET(iste('GET', fotoUrl(h, `/${h.fotoBelge}/kucuk`), { token: a.token }), fotoPrm(h, h.fotoBelge))) },
+  { ad: 'PUT /api/doktor/hasta-foto/[patientId]/[belgeId]/kucuk (küçük resim yaz)', red: 404,
+    yazdi: (a) => tablo('hasta_foto_kucuk').some((k) => k.doctor_id === a.id && k.belge_id === a.fotoBelge && k.genislik === 80),
+    cagir: (r, a, h) => coz(r.fotoKucuk.PUT(hamIste('PUT', fotoUrl(h, `/${h.fotoBelge}/kucuk?w=80&h=60`), a.token, fotoGorsel.sentetikJpeg('yeni kucuk'), 'image/jpeg'), fotoPrm(h, h.fotoBelge))) },
+  { ad: 'POST /api/doktor/hasta-foto/[patientId]/toplu (toplu favori)', red: 404,
+    yazdi: (a) => tablo('hasta_foto_meta').some((m) => m.doctor_id === a.id && m.belge_id === a.fotoOnceki && m.favori === true),
+    cagir: (r, a, h) => coz(r.fotoToplu.POST(iste('POST', fotoUrl(h, '/toplu'), { token: a.token, govde: { islem: 'favori', belgeIds: [h.fotoOnceki], deger: true } }), prm({ patientId: h.hasta }))) },
+  { ad: 'POST /api/doktor/hasta-foto/[patientId]/rapor (PDF fotoğraf raporu)', red: 404,
+    cagir: (r, a, h) => coz(r.fotoRapor.POST(iste('POST', fotoUrl(h, '/rapor'), { token: a.token, govde: { duzen: 'tek', ogeler: [{ belgeId: h.fotoBelge, gorsel: fotoGorsel.dataUrl(fotoGorsel.sentetikPng(48, 36)) }] } }), prm({ patientId: h.hasta }))) },
+  { ad: 'GET /api/doktor/hasta-foto/[patientId]/[belgeId]/ai (kayıtlı değerlendirme)', red: 404,
+    cagir: (r, a, h) => coz(r.fotoAi.GET(iste('GET', fotoUrl(h, `/${h.fotoBelge}/ai`), { token: a.token }), fotoPrm(h, h.fotoBelge))) },
+  { ad: 'POST /api/doktor/hasta-foto/[patientId]/[belgeId]/ai (yapay zekâ değerlendirme)', red: 404, okur: true,
+    cagir: (r, a, h) => { fotoModeli(fotoGorsel.sahteFotoAiYaniti(isaret(a.harf))); return fotoAiGonder(r, a, h) } },
+  { ad: 'POST /api/doktor/hasta-foto/[patientId]/[belgeId]/ai/karsilastir (değişim analizi)', red: 404, okur: true,
+    cagir: (r, a, h) => {
+      fotoModeli(fotoGorsel.sahteKarsilastirmaYaniti(isaret(a.harf)))
+      const g = fotoGorsel.dataUrl(fotoGorsel.sentetikPng())
+      return coz(r.fotoKarsilastir.POST(iste('POST', fotoUrl(h, `/${h.fotoBelge}/ai/karsilastir`), { token: a.token, govde: { onceki: h.fotoOnceki, gorsel: g, oncekiGorsel: g } }), fotoPrm(h, h.fotoBelge)))
+    } },
+  { ad: 'POST /api/doktor/hasta-foto/[patientId]/[belgeId]/ai/geri-bildirim (Kabul/Düzelt/Reddet)', red: 404,
+    yazdi: (a) => tablo('hasta_foto_geri_bildirim').some((g) => g.doctor_id === a.id && g.belge_id === a.fotoBelge && g.karar === 'kabul') && tablo('hasta_foto_ogrenme').some((g) => g.doctor_id === a.id),
+    cagir: async (r, a, h) => {
+      fotoModeli(fotoGorsel.sahteFotoAiYaniti(isaret(a.harf)))
+      await fotoAiGonder(r, a, h) // own photo: stores the evaluation the feedback refers to; foreign: 404, nothing stored
+      return coz(r.fotoGeriBildirim.POST(iste('POST', fotoUrl(h, `/${h.fotoBelge}/ai/geri-bildirim`), { token: a.token, govde: { gozlemAnahtari: 'morfoloji', karar: 'kabul' } }), fotoPrm(h, h.fotoBelge)))
+    } },
+  { ad: 'POST /api/doktor/hasta-foto/[patientId]/kalite (çekim öncesi kalite kapısı)', red: 404,
+    cagir: (r, a, h) => { fotoModeli(fotoGorsel.sahteKaliteYaniti()); return coz(r.fotoKalite.POST(iste('POST', fotoUrl(h, '/kalite'), { token: a.token, govde: { gorsel: fotoGorsel.dataUrl(fotoGorsel.sentetikPng()) } }), prm({ patientId: h.hasta }))) } },
   { ad: 'GET /api/doktor/hastalar (hasta listesi)', okur: true,
     cagir: (r, a) => coz(r.hastalar.GET(iste('GET', '/api/doktor/hastalar', { token: a.token }))) },
   { ad: 'GET /api/doktor/hastalar/[id]/sessions (muayene geçmişi)', okur: true,
@@ -756,6 +820,7 @@ describe('HASTA-İZOLASYON: doktor A ve doktor B birbirinin hastasına hiçbir r
     ;({ encrypt, decrypt } = await import('../security/encryption'))
     ;({ encryptBytes } = await import('../vault/crypto'))
     NextRequestSinifi = (await import('next/server')).NextRequest
+    fotoGorsel = await import('../doktor/fotoArsiv/testGorselleri')
     const ice = (y: string) => import(`../../${y}`)
     R = {
       hastalar: await ice('app/api/doktor/hastalar/route'),
@@ -832,6 +897,16 @@ describe('HASTA-İZOLASYON: doktor A ve doktor B birbirinin hastasına hiçbir r
       portalBelge: await ice('app/api/portal/hasta/[token]/belge/[id]/route'),
       yuklenenler: await ice('app/api/doktor/muayene-ekleri/yuklenenler/route'),
       yuklenenDosya: await ice('app/api/doktor/muayene-ekleri/yuklenenler/[belgeId]/route'),
+      fotoListe: await ice('app/api/doktor/hasta-foto/[patientId]/route'),
+      fotoToplu: await ice('app/api/doktor/hasta-foto/[patientId]/toplu/route'),
+      fotoRapor: await ice('app/api/doktor/hasta-foto/[patientId]/rapor/route'),
+      fotoKalite: await ice('app/api/doktor/hasta-foto/[patientId]/kalite/route'),
+      fotoDetay: await ice('app/api/doktor/hasta-foto/[patientId]/[belgeId]/route'),
+      fotoDosya: await ice('app/api/doktor/hasta-foto/[patientId]/[belgeId]/dosya/route'),
+      fotoKucuk: await ice('app/api/doktor/hasta-foto/[patientId]/[belgeId]/kucuk/route'),
+      fotoAi: await ice('app/api/doktor/hasta-foto/[patientId]/[belgeId]/ai/route'),
+      fotoKarsilastir: await ice('app/api/doktor/hasta-foto/[patientId]/[belgeId]/ai/karsilastir/route'),
+      fotoGeriBildirim: await ice('app/api/doktor/hasta-foto/[patientId]/[belgeId]/ai/geri-bildirim/route'),
       takip: await ice('app/api/doktor/takip/route'),
       konsultasyonDefter: await ice('app/api/doktor/konsultasyon/defter/route'),
       konsultan: await ice('app/api/konsultan/route'),
@@ -1518,6 +1593,267 @@ describe('HASTA-İZOLASYON: doktor A ve doktor B birbirinin hastasına hiçbir r
         if (onceki === undefined) delete process.env.NOTYA_MUAYENE_EKLERI
         else process.env.NOTYA_MUAYENE_EKLERI = onceki
       }
+    })
+  })
+
+  describe('FOTO-ARSIV-01 Fotoğraf arşivi: personel rolleri, tahmin edilen kimlikler, EXIF, önbellek, kapalı anahtarlar', () => {
+    const personel = (x: Hekim, rol: string) => {
+      const token = `qa-foto-${rol}-${x.harf}`
+      db.kullanicilar.set(token, { id: randomUUID() })
+      db.ekle('personel', { user_id: db.kullanicilar.get(token)!.id, doktor_id: x.id, aktif: true, rol })
+      return token
+    }
+    const liste = (token: string, h: { hasta: string }) => coz(R.fotoListe.GET(iste('GET', fotoUrl(h), { token }), prm({ patientId: h.hasta })))
+    const dosya = (token: string, h: { hasta: string; fotoBelge: string }, belge = h.fotoBelge) => R.fotoDosya.GET(iste('GET', fotoUrl(h, `/${belge}/dosya`), { token }), fotoPrm(h, belge))
+
+    for (const harf of ['A', 'B'] as const) {
+      it(`${harf}: sekreter ve hasta danışmanı klinik fotoğrafı GÖREMEZ; asistan arşivi okur ama düzenleyemez, dışa aktaramaz, AI çağıramaz`, async () => {
+        const s = sahneKur()
+        const x = s[harf]
+        const sek = personel(x, 'sekreter'), dan = personel(x, 'hasta_danismani'), asi = personel(x, 'asistan')
+        for (const token of [sek, dan]) {
+          assert.equal((await liste(token, x)).status, 403)
+          assert.equal((await dosya(token, x)).status, 403)
+          assert.equal((await coz(R.fotoToplu.POST(iste('POST', fotoUrl(x, '/toplu'), { token, govde: { islem: 'favori', belgeIds: [x.fotoBelge], deger: true } }), prm({ patientId: x.hasta })))).status, 403)
+          assert.equal((await fotoAiGonder(R, { ...x, token }, x)).status, 403)
+        }
+        const l = await liste(asi, x)
+        assert.equal(l.status, 200)
+        assert.ok(l.metin.includes(isaret(harf)))
+        assert.equal((await dosya(asi, x)).status, 200)
+        assert.equal((await coz(R.fotoKucuk.PUT(hamIste('PUT', fotoUrl(x, `/${x.fotoBelge}/kucuk?w=80&h=60`), asi, fotoGorsel.sentetikJpeg('asistan'), 'image/jpeg'), fotoPrm(x, x.fotoBelge)))).status, 200)
+        assert.equal((await coz(R.fotoDetay.PATCH(iste('PATCH', fotoUrl(x, `/${x.fotoBelge}`), { token: asi, govde: { favori: true } }), fotoPrm(x, x.fotoBelge)))).status, 403)
+        assert.equal((await coz(R.fotoToplu.POST(iste('POST', fotoUrl(x, '/toplu'), { token: asi, govde: { islem: 'favori', belgeIds: [x.fotoBelge], deger: true } }), prm({ patientId: x.hasta })))).status, 403)
+        assert.equal((await coz(R.fotoRapor.POST(iste('POST', fotoUrl(x, '/rapor'), { token: asi, govde: { duzen: 'tek', ogeler: [] } }), prm({ patientId: x.hasta })))).status, 403)
+        assert.equal((await fotoAiGonder(R, { ...x, token: asi }, x)).status, 403)
+        assert.equal((await coz(R.fotoAi.GET(iste('GET', fotoUrl(x, `/${x.fotoBelge}/ai`), { token: asi }), fotoPrm(x, x.fotoBelge)))).status, 403)
+        assert.equal(modelIstekleri.length, 0, 'personel rolleri modeli çağıramaz')
+        const y = s[harf === 'A' ? 'B' : 'A']
+        assert.equal((await liste(asi, y)).status, 404)
+        const yd = await dosya(asi, y)
+        assert.equal(yd.status, 404)
+        assert.ok(!(await yd.text()).includes(isaret(y.harf)))
+      })
+    }
+
+    it('tahmin edilen / uydurma / başka hastaya ait kimlikler 404; kimliksiz 401', async () => {
+      const { A, B } = sahneKur()
+      assert.equal((await dosya(A.token, A, randomUUID())).status, 404)
+      assert.equal((await dosya(A.token, { ...A, hasta: randomUUID() })).status, 404)
+      assert.equal((await dosya(A.token, A, 'not-a-uuid')).status, 404)
+      assert.equal((await dosya(A.token, A, "x' or '1'='1")).status, 404)
+      assert.equal((await liste(A.token, { hasta: 'x/../y' })).status, 404)
+      assert.equal((await dosya('gecersiz-token', A)).status, 401)
+      assert.equal((await dosya(A.token, A, B.fotoBelge)).status, 404)
+      assert.equal((await dosya(A.token, { ...A, hasta: B.hasta }, A.fotoBelge)).status, 404)
+      const baskaHasta = db.ekle('patients', { doctor_id: A.id, is_active: true, name_encrypted: encrypt(JSON.stringify({ ad: 'Baska' })), dob_encrypted: encrypt('2020-01-01'), gender_encrypted: encrypt('male') }).id as string
+      assert.equal((await dosya(A.token, { ...A, hasta: baskaHasta })).status, 404)
+      const g = fotoGorsel.dataUrl(fotoGorsel.sentetikPng())
+      fotoModeli(fotoGorsel.sahteKarsilastirmaYaniti('x'))
+      const modelOnce = modelIstekleri.length
+      const k = await coz(R.fotoKarsilastir.POST(iste('POST', fotoUrl(A, `/${A.fotoBelge}/ai/karsilastir`), { token: A.token, govde: { onceki: B.fotoBelge, gorsel: g, oncekiGorsel: g } }), fotoPrm(A, A.fotoBelge)))
+      assert.equal(k.status, 404)
+      assert.equal(modelIstekleri.length, modelOnce, 'yabancı foto için model çağrılmamalı')
+    })
+
+    it('toplu işlem: karışık kimliklerde yabancı/silinmiş olanlar atlanır ve dokunulmaz', async () => {
+      const { A, B } = sahneKur()
+      db.tablo('medical_documents').find((r) => r.id === A.fotoOnceki)!.deleted_at = new Date().toISOString()
+      const y = await coz(R.fotoToplu.POST(iste('POST', fotoUrl(A, '/toplu'), { token: A.token, govde: { islem: 'favori', belgeIds: [A.fotoBelge, B.fotoBelge, A.fotoOnceki], deger: true } }), prm({ patientId: A.hasta })))
+      assert.equal(y.status, 200)
+      const j = JSON.parse(y.metin)
+      assert.deepEqual(j.guncellenen, [A.fotoBelge])
+      assert.deepEqual([...j.atlanan].sort(), [B.fotoBelge, A.fotoOnceki].sort())
+      assert.ok(!tablo('hasta_foto_meta').find((m) => m.belge_id === B.fotoBelge)!.favori)
+      assert.ok(!tablo('hasta_foto_meta').find((m) => m.belge_id === A.fotoOnceki)!.favori)
+      assert.equal((await coz(R.fotoToplu.POST(iste('POST', fotoUrl(A, '/toplu'), { token: A.token, govde: { islem: 'favori', belgeIds: Array.from({ length: 101 }, () => randomUUID()), deger: true } }), prm({ patientId: A.hasta })))).status, 400)
+      assert.equal((await coz(R.fotoToplu.POST(iste('POST', fotoUrl(A, '/toplu'), { token: A.token, govde: { islem: 'favori', belgeIds: ['x'], deger: true } }), prm({ patientId: A.hasta })))).status, 400)
+    })
+
+    it('rapor: tek bir yabancı kimlik tüm raporu reddeder (kısmi dışa aktarım yok); geçerli rapor PDF, no-store, denetim kaydı', async () => {
+      const { A, B } = sahneKur()
+      const gorsel = fotoGorsel.dataUrl(fotoGorsel.sentetikPng(48, 36))
+      const y = await coz(R.fotoRapor.POST(iste('POST', fotoUrl(A, '/rapor'), { token: A.token, govde: { duzen: 'kolaj', ogeler: [{ belgeId: A.fotoBelge, gorsel }, { belgeId: B.fotoBelge, gorsel }] } }), prm({ patientId: A.hasta })))
+      assert.equal(y.status, 404)
+      const ok = await R.fotoRapor.POST(iste('POST', fotoUrl(A, '/rapor'), { token: A.token, govde: { duzen: 'karsilastirma', ogeler: [{ belgeId: A.fotoOnceki, gorsel }, { belgeId: A.fotoBelge, gorsel }] } }), prm({ patientId: A.hasta }))
+      assert.equal(ok.status, 200)
+      assert.equal(ok.headers.get('content-type'), 'application/pdf')
+      assert.equal(ok.headers.get('cache-control'), 'private, no-store')
+      assert.equal(Buffer.from(await ok.arrayBuffer()).subarray(0, 5).toString(), '%PDF-')
+      assert.ok(db.tablo('audit_logs').some((r) => r.user_id === A.id && r.resource_type === 'hasta_foto' && r.action === 'export'), 'rapor dışa aktarımı denetim kaydına yazılmadı')
+    })
+
+    it('dosya akışı: EXIF/GPS/yorum çıkarılmış, piksel verisi aynı, no-store, açılış denetim kaydında; kasadaki orijinal değişmez', async () => {
+      const { A } = sahneKur()
+      const orijinalBlob = db.bloblar.get(A.fotoBelge)
+      const y = await dosya(A.token, A)
+      assert.equal(y.status, 200)
+      assert.equal(y.headers.get('content-type'), 'image/jpeg')
+      assert.equal(y.headers.get('cache-control'), 'private, no-store')
+      assert.equal(y.headers.get('x-foto-meta'), 'temizlendi')
+      const metin = Buffer.from(await y.arrayBuffer()).toString('latin1')
+      assert.ok(metin.includes(isaret('A')), 'piksel/tarama verisi korunmalı')
+      assert.ok(!metin.includes('GPS 41.0082N') && !metin.includes('Samsung') && !metin.includes('Exif'), 'EXIF/GPS/yorum sunulan görüntüden çıkarılmalı')
+      assert.equal(db.bloblar.get(A.fotoBelge), orijinalBlob, 'kasadaki orijinal bayt değişmemeli')
+      assert.ok(db.tablo('audit_logs').some((r) => r.user_id === A.id && r.resource_type === 'hasta_foto' && r.resource_id === A.fotoBelge), 'açılış denetim kaydına yazılmadı')
+    })
+
+    it('düzenleme/notasyon yalnız parametre olarak saklanır; şifreli; orijinal bayt değişmez; geçersiz girdi 400', async () => {
+      const { A } = sahneKur()
+      const orijinalBlob = db.bloblar.get(A.fotoBelge)
+      const gonder = (govde: unknown) => coz(R.fotoDetay.PATCH(iste('PATCH', fotoUrl(A, `/${A.fotoBelge}`), { token: A.token, govde }), fotoPrm(A, A.fotoBelge)))
+      const y = await gonder({ ayarlar: { parlaklik: 20, dondur: 90 }, notasyonlar: [{ t: 'ok', a: { x: 0.1, y: 0.1 }, b: { x: 0.5, y: 0.5 }, renk: 'kirmizi' }], etiketler: ['Kontrol', 'kontrol', 'x'.repeat(60)], not: 'Gizli klinik not 123' })
+      assert.equal(y.status, 200, y.metin.slice(0, 300))
+      const m = JSON.parse(y.metin).meta
+      assert.equal(m.ozel.ayarlar.parlaklik, 20)
+      assert.equal(m.ozel.ayarlar.dondur, 90)
+      assert.ok(m.ozel.etiketler.length <= 2 && m.ozel.etiketler.every((t: string) => t.length <= 24))
+      const satir = tablo('hasta_foto_meta').find((r) => r.belge_id === A.fotoBelge)!
+      assert.ok(!JSON.stringify(satir).includes('Gizli klinik not 123'), 'not düz metin saklanmamalı')
+      assert.equal(db.bloblar.get(A.fotoBelge), orijinalBlob)
+      assert.equal((await gonder({ yildiz: 9 })).status, 400)
+      assert.equal((await gonder({ bolge: 'baska-bir-yer' })).status, 400)
+      assert.equal((await gonder({})).status, 400)
+      assert.equal((await gonder({ cekimTarihi: '2026-13-45' })).status, 400)
+    })
+
+    it('küçük resim: yalnız JPEG/WebP ve ≤150 KB; şifreli saklanır', async () => {
+      const { A } = sahneKur()
+      const yaz = (b: Buffer, q = 'w=80&h=60') => coz(R.fotoKucuk.PUT(hamIste('PUT', fotoUrl(A, `/${A.fotoBelge}/kucuk?${q}`), A.token, b, 'image/jpeg'), fotoPrm(A, A.fotoBelge)))
+      assert.equal((await yaz(fotoGorsel.sentetikPng())).status, 400, 'PNG küçük resim olarak kabul edilmez')
+      assert.equal((await yaz(Buffer.concat([fotoGorsel.sentetikJpeg('x'), Buffer.alloc(160 * 1024)]))).status, 400)
+      assert.equal((await yaz(fotoGorsel.sentetikJpeg('x'), 'w=5000&h=60')).status, 400)
+      assert.equal((await yaz(fotoGorsel.sentetikJpeg('GIZLI-KUCUK-ABC'))).status, 200)
+      assert.ok(!JSON.stringify(tablo('hasta_foto_kucuk')).includes('GIZLI-KUCUK-ABC'), 'küçük resim düz saklanmamalı')
+    })
+
+    it('AI: model yalnız küçültülmüş, metasız görseli görür; kimlik/dosya adı gitmez; ikinci çağrı önbellekten; yenile=true yeniden üretir', async () => {
+      const { A } = sahneKur()
+      fotoModeli(fotoGorsel.sahteFotoAiYaniti('birinci'))
+      const metali = fotoGorsel.dataUrl(fotoGorsel.metaliPng('GPS-SIZINTI-TEST'))
+      const bir = await fotoAiGonder(R, A, A, { gorsel: metali })
+      assert.equal(bir.status, 200, bir.metin.slice(0, 300))
+      const j = JSON.parse(bir.metin)
+      assert.equal(j.durum, 'tamam')
+      assert.equal(j.gorunum.uretim.kaynak, 'model')
+      assert.ok(j.gorunum.uretim.surum, 'sürüm kayda girmeli')
+      assert.equal(modelIstekleri.length, 1)
+      const istek = modelIstekleri[0]
+      assert.ok(!istek.includes('GPS-SIZINTI-TEST'), 'EXIF/metin parçası modele gitti')
+      assert.ok(!istek.includes(A.hasta) && !istek.includes(`yeni-${isaret('A')}`) && !istek.includes('QA Hasta'), 'kimlik / dosya adı modele gitti')
+      const iki = JSON.parse((await fotoAiGonder(R, A, A, { gorsel: metali })).metin)
+      assert.equal(iki.gorunum.uretim.kaynak, 'onbellek')
+      assert.equal(modelIstekleri.length, 1, 'değişmeyen görüntü yeniden değerlendirilmemeli')
+      const kaynak = db.tablo('medical_documents').find((r) => r.id === A.fotoBelge)!
+      const kopya = db.ekle('medical_documents', { ...kaynak, id: randomUUID(), file_name: 'kopya.jpg' })
+      db.bloblar.set(kopya.id as string, db.bloblar.get(A.fotoBelge)!)
+      kopya.storage_key = `db:${kopya.id}`
+      const uc = JSON.parse((await fotoAiGonder(R, A, A, { gorsel: metali }, kopya.id as string)).metin)
+      assert.equal(uc.durum, 'tamam')
+      assert.equal(modelIstekleri.length, 1, 'aynı bayt → aynı hekimin önbelleği')
+      const dort = JSON.parse((await fotoAiGonder(R, A, A, { gorsel: metali, yenile: true })).metin)
+      assert.equal(dort.gorunum.uretim.kaynak, 'model')
+      assert.equal(modelIstekleri.length, 2)
+      assert.ok(!JSON.stringify(tablo('hasta_foto_degerlendirme')).includes('eritemli'), 'sonuç düz metin saklanmamalı')
+      const kayit = db.tablo('audit_logs').filter((r) => r.user_id === A.id && r.resource_type === 'hasta_foto_ai')
+      assert.ok(kayit.length >= 2 && kayit.every((r) => (r.new_values as any)?.surum), 'denetim kaydı sürümü taşımalı')
+    })
+
+    it('AI önbelleği hekimler arasında paylaşılmaz: B aynı baytı yüklese de A\'nın cevabını almaz', async () => {
+      const { A, B } = sahneKur()
+      fotoModeli(fotoGorsel.sahteFotoAiYaniti('A-icin'))
+      await fotoAiGonder(R, A, A)
+      const once = modelIstekleri.length
+      fotoModeli(fotoGorsel.sahteFotoAiYaniti('B-icin'))
+      const b = JSON.parse((await fotoAiGonder(R, B, B)).metin)
+      assert.equal(b.gorunum.uretim.kaynak, 'model')
+      assert.equal(modelIstekleri.length, once + 1)
+      assert.ok(!JSON.stringify(b).includes('A-icin'))
+    })
+
+    it('AI: bozuk model çıktısı → tek onarım denemesi → 502; hiçbir şey saklanmaz', async () => {
+      const { A } = sahneKur()
+      modelYaniti = () => [{ type: 'text', text: 'bu bir json değil' }]
+      const y = await fotoAiGonder(R, A, A)
+      assert.equal(y.status, 502)
+      assert.equal(modelIstekleri.length, 2, 'ilk çağrı + tek onarım')
+      assert.equal(tablo('hasta_foto_degerlendirme').filter((r) => r.doctor_id === A.id).length, 0)
+    })
+
+    it('AI: psikiyatri branşında kapalı (model çağrılmaz); pediatrik kontrol yalnız pediatri/çocuk cerrahisinde isteme girer', async () => {
+      const { A } = sahneKur()
+      const hekim = db.tablo('users').find((u) => u.id === A.id)!
+      fotoModeli(fotoGorsel.sahteFotoAiYaniti('x', 'pediatrik'))
+      assert.equal((await fotoAiGonder(R, A, A)).status, 200)
+      assert.ok(modelIstekleri[0].includes('sarilik-yasa-duyarli'), 'pediatri: pediatrik denetim istemde')
+      hekim.specialty = 'Kardiyoloji'
+      fotoModeli(fotoGorsel.sahteFotoAiYaniti('x'))
+      assert.equal((await fotoAiGonder(R, A, A, { yenile: true })).status, 200)
+      const genel = modelIstekleri[modelIstekleri.length - 1]
+      assert.ok(!genel.includes('sarilik-yasa-duyarli') && !genel.includes('hemanjiyom'), 'kardiyoloji: pediatrik alan sızmamalı')
+      hekim.specialty = 'Psikiyatri'
+      const once = modelIstekleri.length
+      const p = JSON.parse((await fotoAiGonder(R, A, A, { yenile: true })).metin)
+      assert.equal(p.durum, 'kapali')
+      assert.equal(modelIstekleri.length, once)
+    })
+
+    it('geri bildirim: yalnız değerlendirmede bulunan madde; sayaçlar karar değişince taşınır; tahmin edilen anahtar 400', async () => {
+      const { A } = sahneKur()
+      fotoModeli(fotoGorsel.sahteFotoAiYaniti('x'))
+      await fotoAiGonder(R, A, A)
+      const gb = (govde: unknown) => coz(R.fotoGeriBildirim.POST(iste('POST', fotoUrl(A, `/${A.fotoBelge}/ai/geri-bildirim`), { token: A.token, govde }), fotoPrm(A, A.fotoBelge)))
+      assert.equal((await gb({ gozlemAnahtari: 'ayirici:yok-boyle-bir-sey', karar: 'kabul' })).status, 400)
+      assert.equal((await gb({ gozlemAnahtari: 'morfoloji', karar: 'belki' })).status, 400)
+      assert.equal((await gb({ gozlemAnahtari: 'morfoloji', karar: 'duzelt' })).status, 400, 'düzeltme metni zorunlu')
+      assert.equal((await gb({ gozlemAnahtari: 'morfoloji', karar: 'kabul' })).status, 200)
+      assert.equal((await gb({ gozlemAnahtari: 'morfoloji', karar: 'duzelt', duzeltme: 'Hekim düzeltmesi GIZLI-DUZELTME' })).status, 200)
+      const sayac = tablo('hasta_foto_ogrenme').find((r) => r.doctor_id === A.id && r.ozellik === 'morfoloji')!
+      assert.deepEqual([sayac.kabul, sayac.duzelt, sayac.reddet], [0, 1, 0], 'kabul → düzelt değişince sayaç taşınmalı')
+      assert.ok(!JSON.stringify(tablo('hasta_foto_geri_bildirim')).includes('GIZLI-DUZELTME'), 'düzeltme metni düz saklanmamalı')
+      assert.ok(!JSON.stringify(tablo('hasta_foto_ogrenme')).includes('GIZLI-DUZELTME'), 'öğrenme tablosu serbest metin tutmaz')
+    })
+
+    it('kalite kapısı: kaydetmeden önce çalışır, hiçbir şey saklanmaz; kötü kalitede "Çekimi yenileyin" önerisi gelir', async () => {
+      const { A } = sahneKur()
+      fotoModeli(fotoGorsel.sahteKaliteYaniti(true))
+      const y = await coz(R.fotoKalite.POST(iste('POST', fotoUrl(A, '/kalite'), { token: A.token, govde: { gorsel: fotoGorsel.dataUrl(fotoGorsel.sentetikPng()) } }), prm({ patientId: A.hasta })))
+      assert.equal(y.status, 200)
+      const j = JSON.parse(y.metin)
+      assert.equal(j.durum, 'tamam')
+      assert.equal(j.sonuc.yenile, true)
+      assert.ok(String(j.sonuc.kalite.yenidenCekim).length > 5)
+      assert.equal(tablo('hasta_foto_degerlendirme').filter((r) => r.doctor_id === A.id).length, 0)
+    })
+
+    it('kapalı anahtarlar: NOTYA_FOTO_ARSIVI=off her rotayı kapatır; NOTYA_FOTO_AI=off yalnız AI rotalarını (arşiv çalışır)', async () => {
+      const { A } = sahneKur()
+      const eskiArsiv = process.env.NOTYA_FOTO_ARSIVI, eskiAi = process.env.NOTYA_FOTO_AI
+      try {
+        process.env.NOTYA_FOTO_AI = 'off'
+        assert.equal((await liste(A.token, A)).status, 200)
+        assert.equal((await fotoAiGonder(R, A, A)).status, 404)
+        assert.equal((await coz(R.fotoAi.GET(iste('GET', fotoUrl(A, `/${A.fotoBelge}/ai`), { token: A.token }), fotoPrm(A, A.fotoBelge)))).status, 404)
+        delete process.env.NOTYA_FOTO_AI
+        process.env.NOTYA_FOTO_ARSIVI = 'off'
+        assert.equal((await liste(A.token, A)).status, 404)
+        assert.equal((await dosya(A.token, A)).status, 404)
+        assert.equal((await fotoAiGonder(R, A, A)).status, 404)
+        delete process.env.NOTYA_FOTO_ARSIVI
+        assert.equal((await liste(A.token, A)).status, 200)
+      } finally {
+        if (eskiArsiv === undefined) delete process.env.NOTYA_FOTO_ARSIVI; else process.env.NOTYA_FOTO_ARSIVI = eskiArsiv
+        if (eskiAi === undefined) delete process.env.NOTYA_FOTO_AI; else process.env.NOTYA_FOTO_AI = eskiAi
+      }
+    })
+
+    it('"Yüklenen dosyalar" bölümü gerilemedi: arşivdeki fotoğraf muayenenin yüklenen dosyaları listesinde de durur', async () => {
+      const { A } = sahneKur()
+      const l = await coz(R.yuklenenler.GET(iste('GET', `/api/doktor/muayene-ekleri/yuklenenler?sessionId=${A.fotoSeans}`, { token: A.token })))
+      assert.equal(l.status, 200)
+      assert.ok(l.metin.includes(`yeni-${isaret('A')}.jpg`), 'arşivdeki fotoğraf muayenenin Yüklenen dosyalar listesinden düşmüş')
+      const d = await R.yuklenenDosya.GET(iste('GET', `/api/doktor/muayene-ekleri/yuklenenler/${A.fotoBelge}?sessionId=${A.fotoSeans}`, { token: A.token }), prm({ belgeId: A.fotoBelge }))
+      assert.equal(d.status, 200)
     })
   })
 })

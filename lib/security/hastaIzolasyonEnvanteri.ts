@@ -25,6 +25,17 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   // MUAYENE-EKLERI-07 — "Yüklenen dosyalar": list + byte stream of a visit's vault documents (pratikOturum: doctor or staff)
   'app/api/doktor/muayene-ekleri/yuklenenler/route.ts': T,
   'app/api/doktor/muayene-ekleri/yuklenenler/[belgeId]/route.ts': T,
+  // ── FOTO-ARSIV-01 / FOTO-AI-01: hasta fotoğraf arşivi + yapay zekâ değerlendirme (patient proved by hastaSahibiMi, photo by fotoBaglami; sekreter/danışman closed in personelYetki) ──
+  'app/api/doktor/hasta-foto/[patientId]/route.ts': T,
+  'app/api/doktor/hasta-foto/[patientId]/toplu/route.ts': T,
+  'app/api/doktor/hasta-foto/[patientId]/rapor/route.ts': T,
+  'app/api/doktor/hasta-foto/[patientId]/kalite/route.ts': T,
+  'app/api/doktor/hasta-foto/[patientId]/[belgeId]/route.ts': T,
+  'app/api/doktor/hasta-foto/[patientId]/[belgeId]/dosya/route.ts': T,
+  'app/api/doktor/hasta-foto/[patientId]/[belgeId]/kucuk/route.ts': T,
+  'app/api/doktor/hasta-foto/[patientId]/[belgeId]/ai/route.ts': T,
+  'app/api/doktor/hasta-foto/[patientId]/[belgeId]/ai/karsilastir/route.ts': T,
+  'app/api/doktor/hasta-foto/[patientId]/[belgeId]/ai/geri-bildirim/route.ts': T,
   // ── Hasta kaydı ──
   'app/api/doktor/hastalar/route.ts': T,
   'app/api/doktor/hastalar/[id]/route.ts': T,
