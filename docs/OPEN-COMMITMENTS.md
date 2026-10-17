@@ -14,7 +14,7 @@ Closes this branch's share of the 4th pre-existing failure logged in `NOTYA-ULKE
 
 **Migration:** `174_hasta_foto_arsivi.sql` applied to this country's Supabase project and verified (5 tables present, no new security-advisor finding) — see `main`'s `FEATURE-PORT-BACKLOG-01` entry for all 6 project ids and the verification method.
 
-**Commit:** `release/us@PENDING` (port) (docs commit: this one)
+**Commit:** `release/us@81708942`
 
 **Decision points for Kaan:** same three as `main`'s `FEATURE-PORT-BACKLOG-01` entry — FOTO-ARSIV-01's country UI/translation port, FOTO-ARSIV-02's per-country regulatory sign-off, and MUAYENE-EKLERI-07's Turkish-UI-text localization. | Claude (ported + migrated); waits on Kaan |
 
