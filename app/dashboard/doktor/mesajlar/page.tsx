@@ -10,7 +10,8 @@ import Link from 'next/link'
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth'
 import { CHROME_RENK, CHROME_FONT } from '@/lib/doktor/chromeTheme'
 import MesajEkViewer from '@/components/doktor/MesajEkViewer'
-import { ORTAK_BELGE_TURLERI } from '@/lib/doktor/belgeTurleri'
+import { EKOKARDIYOGRAFI, ORTAK_BELGE_TURLERI } from '@/lib/doktor/belgeTurleri'
+import { belgeEkoMi } from '@/lib/doktor/belgeTur'
 import { hastaDosyaHref } from '@/lib/doktor/geriNavigasyon'
 
 type Ek = {
@@ -473,6 +474,7 @@ function ekBtn(hasta: boolean): React.CSSProperties {
 
 function tahminKategori(fileName: string, fileType: string): string {
   const n = `${fileName} ${fileType}`.toLocaleLowerCase('tr-TR')
+  if (belgeEkoMi({ fileName, category: null })) return EKOKARDIYOGRAFI
   if (/ekg|ecg/.test(n)) return 'EKG'
   if (/rontgen|röntgen|x-?ray|xr|akci[gğ]er/.test(n)) return 'Röntgen'
   if (/lab|hemogram|kan|sonu[cç]/.test(n)) return 'Lab Sonucu'

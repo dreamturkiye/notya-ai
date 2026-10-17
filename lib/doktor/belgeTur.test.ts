@@ -59,6 +59,14 @@ describe('belgeTur', () => {
     })
     assert.deepEqual(ctas.map((c) => c.tur), ['eko'])
     assert.equal(belgeKategoriEtiket({ fileName: 'echo_study.pdf', category: null }), 'Ekokardiyografi')
+    assert.equal(belgeEkoMi({ fileName: 'rapor.pdf', category: 'Ekokardiyografi' }), true)
+    const kasadan = belgeDegerlendirmeCtalari({
+      fileName: 'rapor.pdf',
+      category: 'Ekokardiyografi',
+      fileType: 'application/pdf',
+    })
+    assert.deepEqual(kasadan.map((c) => c.tur), ['eko'])
+    assert.equal(belgeKategoriEtiket({ fileName: 'rapor.pdf', category: 'Ekokardiyografi' }), 'Ekokardiyografi')
   })
   it('maps X-Ray category label to Röntgen', () => {
     assert.equal(belgeKategoriEtiket({ fileName: 'chest.jpg', category: 'X-Ray' }), 'Röntgen')
