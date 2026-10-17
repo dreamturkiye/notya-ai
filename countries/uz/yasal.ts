@@ -123,6 +123,30 @@ const latn: YasalDilPaketi = {
         LATN_POSTA,
       ],
     },
+    // HUKUK-01 (2026-10-17): toʻlovni qaytarish/bekor qilish va mualliflik huquqi — Turkiya toʻplamiga mos.
+    {
+      anahtar: 'refund',
+      baslik: 'Toʻlovni qaytarish va bekor qilish',
+      inceleme: 'Bu matnni huquqshunos oʻqimagan. U koʻrib chiqish uchun yozilgan. Xizmat biror qonunga mos ekanini bildirmaydi.',
+      bolumler: [
+        { baslik: 'Bekor qilish', paragraflar: ['Shifokor istalgan vaqtda bekor qilishi mumkin. Toʻlangan davr oxirigacha davom etadi; undan keyin yangi davr boshlanmaydi.'] },
+        { baslik: 'Huquqshunos uchun', paragraflar: ['Ushbu qoralama 221-I-son 26.04.1996 "Isteʼmolchilar huquqlarini himoya qilish toʻgʻrisida"gi Qonun boʻyicha koʻrib chiqilsin. Qoralama xizmat shu qonunga mos ekanini bildirmaydi.'] },
+        { baslik: 'Toʻlov', paragraflar: [`Toʻlov boʻyicha savollar: ${E.billing}.`] },
+        LATN_POSTA,
+      ],
+    },
+    {
+      anahtar: 'copyright',
+      baslik: 'Mualliflik huquqi',
+      inceleme: 'Bu matnni huquqshunos oʻqimagan. U koʻrib chiqish uchun yozilgan. Xizmat biror qonunga mos ekanini bildirmaydi.',
+      bolumler: [
+        { baslik: 'Dastur', paragraflar: ['Dastur, uning koʻrinishi va Notya nomi Notyaga tegishli. Obuna foydalanish huquqini beradi, dasturni oʻzini bermaydi.'] },
+        { baslik: 'Shifokorning oʻz yozuvi', paragraflar: ['Shifokor oʻz bemori haqida yozgan yoki yozib olgan narsa shifokorga tegishli. Notya buni talab qilmaydi, sotmaydi va model oʻqitish uchun ishlatmaydi.'] },
+        { baslik: 'Huquqshunos uchun', paragraflar: ['Ushbu qoralama 42-son 20.07.2006 "Mualliflik huquqi va unga turdosh huquqlar toʻgʻrisida"gi Qonun boʻyicha koʻrib chiqilsin.'] },
+        { baslik: 'Buzilish haqida xabar', paragraflar: [`${E.legal} ga kim ekaningizni, nimani oʻzingizniki deb bilishingizni va qayerda koʻrganingizni yozing.`] },
+        LATN_POSTA,
+      ],
+    },
   ],
 }
 
@@ -202,6 +226,30 @@ const cyrl: YasalDilPaketi = {
         CYRL_POSTA,
       ],
     },
+    // HUKUK-01 (2026-10-17): тўловни қайтариш/бекор қилиш ва муаллифлик ҳуқуқи.
+    {
+      anahtar: 'refund',
+      baslik: 'Тўловни қайтариш ва бекор қилиш',
+      inceleme: CYRL_INCELEME,
+      bolumler: [
+        { baslik: 'Бекор қилиш', paragraflar: ['Шифокор истаган вақтда бекор қилиши мумкин. Тўланган давр охиригача давом этади; ундан кейин янги давр бошланмайди.'] },
+        { baslik: 'Ҳуқуқшунос учун', paragraflar: ['Ушбу қоралама 221-I-сон 26.04.1996 "Истеъмолчилар ҳуқуқларини ҳимоя қилиш тўғрисида"ги Қонун бўйича кўриб чиқилсин. Қоралама хизмат шу қонунга мос эканини билдирмайди.'] },
+        { baslik: 'Тўлов', paragraflar: [`Тўлов бўйича саволлар: ${E.billing}.`] },
+        CYRL_POSTA,
+      ],
+    },
+    {
+      anahtar: 'copyright',
+      baslik: 'Муаллифлик ҳуқуқи',
+      inceleme: CYRL_INCELEME,
+      bolumler: [
+        { baslik: 'Дастур', paragraflar: ['Дастур, унинг кўриниши ва Notya номи Notyaга тегишли. Обуна фойдаланиш ҳуқуқини беради, дастурни ўзини бермайди.'] },
+        { baslik: 'Шифокорнинг ўз ёзуви', paragraflar: ['Шифокор ўз бемори ҳақида ёзган ёки ёзиб олган нарса шифокорга тегишли. Notya буни талаб қилмайди, сотмайди ва модель ўқитиш учун ишлатмайди.'] },
+        { baslik: 'Ҳуқуқшунос учун', paragraflar: ['Ушбу қоралама 42-сон 20.07.2006 "Муаллифлик ҳуқуқи ва унга турдош ҳуқуқлар тўғрисида"ги Қонун бўйича кўриб чиқилсин.'] },
+        { baslik: 'Бузилиш ҳақида хабар', paragraflar: [`${E.legal} га ким эканингизни, нимани ўзингизники деб билишингизни ва қаерда кўрганингизни ёзинг.`] },
+        CYRL_POSTA,
+      ],
+    },
   ],
 }
 
@@ -276,6 +324,30 @@ const ru: YasalDilPaketi = {
       inceleme: 'Этот текст не читал юрист. Он написан для проверки. Он не утверждает, что сервис соответствует какому-либо закону.',
       bolumler: [
         { baslik: 'Сообщение', paragraflar: [`На ${E.security} напишите, что вы видели, страницу и время. Имя пациента и текст записи не включайте, если без них можно описать сбой. Тот же адрес есть в /.well-known/security.txt. Оплаты за сообщение черновик не обещает.`] },
+        RU_POSTA,
+      ],
+    },
+    // HUKUK-01 (2026-10-17): возврат/отмена и авторское право.
+    {
+      anahtar: 'refund',
+      baslik: 'Возврат и отмена',
+      inceleme: 'Этот текст не читал юрист. Он написан для проверки. Он не утверждает, что сервис соответствует какому-либо закону.',
+      bolumler: [
+        { baslik: 'Отмена', paragraflar: ['Врач может отменить в любой момент. Уже оплаченный период продолжается до конца; после него новый период не начинается.'] },
+        { baslik: 'Для юриста', paragraflar: ['Черновик следует проверить по Закону № 221-I от 26.04.1996 "О защите прав потребителей". Черновик не утверждает, что сервис соответствует этому закону.'] },
+        { baslik: 'Оплата', paragraflar: [`Вопросы об оплате: ${E.billing}.`] },
+        RU_POSTA,
+      ],
+    },
+    {
+      anahtar: 'copyright',
+      baslik: 'Авторское право',
+      inceleme: 'Этот текст не читал юрист. Он написан для проверки. Он не утверждает, что сервис соответствует какому-либо закону.',
+      bolumler: [
+        { baslik: 'Программа', paragraflar: ['Программа, её интерфейс и имя Notya принадлежат Notya. Подписка даёт право пользования, а не передаёт программу.'] },
+        { baslik: 'Собственная запись врача', paragraflar: ['То, что врач пишет или записывает о своём пациенте, принадлежит врачу. Notya не претендует на это, не продаёт это и не использует это для обучения модели.'] },
+        { baslik: 'Для юриста', paragraflar: ['Черновик следует проверить по Закону № 42 от 20.07.2006 "Об авторском праве и смежных правах".'] },
+        { baslik: 'Сообщение о нарушении', paragraflar: [`Напишите на ${E.legal}: кто вы, что считаете своим, и где это увидели.`] },
         RU_POSTA,
       ],
     },
