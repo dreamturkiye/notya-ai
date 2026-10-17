@@ -2,7 +2,7 @@
  * NOTYA-ULKE-YASAL-01 — policy pages of a country build. Text is the country's; this file is the shape.
  * Every document is a draft for a lawyer. Nothing here is a statement that the service meets a statute.
  */
-export const YASAL_ANAHTARLARI = ['privacy', 'terms', 'cookies', 'data-request', 'accessibility', 'medical', 'security'] as const
+export const YASAL_ANAHTARLARI = ['privacy', 'terms', 'cookies', 'data-request', 'accessibility', 'medical', 'security', 'refund', 'copyright'] as const
 export type YasalAnahtar = (typeof YASAL_ANAHTARLARI)[number]
 
 /** Routes. The same path in every country build; the middleware lists each one. */
@@ -14,6 +14,9 @@ export const YASAL_YOLLAR: Readonly<Record<YasalAnahtar, string>> = {
   accessibility: '/accessibility',
   medical: '/medical-disclaimer',
   security: '/security',
+  // HUKUK-01 (2026-10-17): refund/cancellation and copyright, added to match the Türkiye suite's document set.
+  refund: '/refund',
+  copyright: '/copyright',
 }
 
 export type YasalBelge = {

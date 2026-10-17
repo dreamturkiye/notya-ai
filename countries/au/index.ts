@@ -53,7 +53,13 @@ export const AU_PAKETI: UlkePaketi = {
   ulusalKimlik: { ad: 'Medicare card number', hane: 0, gecerliMi: (ham) => String(ham ?? '').trim().length > 0 },
   // Fail closed. Messages stay on the patient's page (no outbound channel). Clinic accounts are on, with starting
   // values a lawyer has not read. Still off: the assistant in text and voice, the voice profile, image evaluation,
-  // consultation between doctors, and a doctor's own templates.
+  // and a doctor's own templates.
+  // CONSULTATION BETWEEN DOCTORS (`konsultasyon`) is ON from NOTYA-ARACLAR-DENETIM-02-AU, 2026-10-13. The audit of
+  // 2026-10-10 found it was left off only because its consent sentence was never drafted (docs/araclar-denetim/AU.md,
+  // "Still unverified, and why": "a lawyer, not a web page" — true of the sentence, but nobody had been asked to
+  // draft one for a lawyer to start from). The owner's instruction: draft a sensible sentence, switch it on, flag it
+  // for an actual lawyer's review before the business relies on it. The sentence is ./araclar/konsultasyonMetinleri.ts
+  // (`iste.riza`); the lawyer flag is ./klinik/index.ts (`konsultasyonRizasi.hukukcuInceledi: false`).
   ozellikler: {
     acilisSayfasi: true,
     cekirdekGiris: true,
@@ -66,12 +72,12 @@ export const AU_PAKETI: UlkePaketi = {
     araclar: true,
     hastaMesajlari: true,
     klinikHesaplari: true,
+    konsultasyon: true,
   },
   araclar: [],
   // The ONLY paths that exist in this country's deployment; every other path answers 404 in the middleware.
   rotalar: {
-    sayfalar: ['/', '/for-clinics', '/login', '/signup', '/welcome', '/start', '/today', '/settings', '/patients', '/patients/new', '/patient', '/visit', '/calendar', '/portal', '/tools', '/medical', '/clinic', '/desk', '/privacy', '/terms', '/cookies', '/data-request', '/accessibility', '/medical-disclaimer', '/security', '/demo'],
-    apiOnEkleri: ['/api/ulke/'],
+    sayfalar: ['/', '/for-clinics', '/login', '/signup', '/welcome', '/start', '/today', '/settings', '/patients', '/patients/new', '/patient', '/visit', '/calendar', '/portal', '/tools', '/medical', '/clinic', '/desk', '/privacy', '/terms', '/cookies', '/data-request', '/accessibility', '/medical-disclaimer', '/security', '/refund', '/copyright', '/demo'],    apiOnEkleri: ['/api/ulke/'],
   },
   // The path of the main site this country is served under.
   yolOnEki: '/au',
@@ -104,6 +110,13 @@ export const AU_PAKETI: UlkePaketi = {
     // Not yet confirmed by a person of the country. The national health advice line is NOT named: the patient's page
     // has one place for one number. null here = the patient's page names no number.
     portal: { baglantiGecerlilikGun: 30, acilNumara: '000' },
+    // CONSULTATION BETWEEN DOCTORS: how long one stays open to answer, and how long the consulted colleague may
+    // still read it after it is closed. STARTING VALUES, unverified by a lawyer (checklist I9, same as the consent
+    // sentence): no Australian source sets either period (docs/araclar-denetim/AU.md names this a question for a
+    // lawyer, not a web page). Two weeks to answer is the pattern of a routine written referral reply; one week's
+    // grace after closing lets the asking doctor re-open a thread briefly without the colleague losing read access
+    // mid-conversation. The owner confirms both before the business relies on this feature.
+    konsultasyon: { acikGun: 14, kapanisSonrasiGun: 7 },
     mesaj: enMesajAyarlari('Australia'),
     klinikHesaplari: enKlinikHesaplari(AU_ROL_LISTESI),
     // One language in one script: no account is asked a language question.
