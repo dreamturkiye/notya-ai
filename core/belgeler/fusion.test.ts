@@ -92,7 +92,8 @@ describe('acil rule and validator', () => {
 describe('router', () => {
   it('maps free-text specialties', () => {
     assert.equal(bransAnahtari('Çocuk Sağlığı ve Hastalıkları'), 'pediatri')
-    assert.equal(bransAnahtari('Kardiyoloji'), 'kardiyoloji'); assert.equal(bransAnahtari('Göğüs Cerrahisi'), 'gogus_cerrahisi')
+    assert.equal(bransAnahtari('Kardiyoloji'), 'kardiyoloji'); assert.equal(bransAnahtari('Kalp ve Damar Cerrahisi'), 'kalp_damar')
+    assert.equal(bransAnahtari('Göğüs Cerrahisi'), 'gogus_cerrahisi')
     assert.equal(bransAnahtari('Göğüs Hastalıkları'), 'gogus'); assert.equal(bransAnahtari(null), 'genel')
   })
   it('unlisted modality → serbest; listed → itself; psikiyatri has no engines', () => {
@@ -100,6 +101,11 @@ describe('router', () => {
     assert.equal(etkinModalite('pediatri', 'ses_akciger').modalite, 'ses_akciger')
     assert.deepEqual(tierBMotorlari('psikiyatri', 'ses_konusma'), [])
     assert.deepEqual(tierBMotorlari('pediatri', 'cxr'), ['txrv-densenet121'])
+    assert.equal(etkinModalite('kardiyoloji', 'eko').modalite, 'eko')
+    assert.equal(etkinModalite('kalp_damar', 'eko').modalite, 'eko')
+    assert.equal(etkinModalite('goz', 'eko').modalite, 'serbest')
+    assert.equal(etkinModalite('dahiliye', 'eko').modalite, 'serbest')
+    assert.deepEqual(tierBMotorlari('kardiyoloji', 'eko'), [])
   })
 })
 

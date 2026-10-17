@@ -15,8 +15,10 @@ import { getDocumentMeta } from '@/lib/vault/service'
 import { decrypt } from '@/lib/security/encryption'
 import { bransAnahtari, bransKurali, etkinModalite, SES_MODALITELERI } from '@/core/belgeler/router'
 import { tierAYazVeFuzyonla } from '@/core/belgeler/tierA'
+import { fusionYap } from '@/core/belgeler/fusion'
 import { MODALITE_TR, type Modalite } from '@/core/belgeler/ontoloji'
-import type { MotorCiktisi } from '@/core/belgeler/types'
+import { ekoAseDegerlendir, ekoDogrulamayiUygula, ekoMetniMi, ekoMotorRaporu, ekoRaporunuZenginlestir, EKO_ASE_MOTOR } from '@/core/belgeler/ekoAse'
+import type { BelgeRaporu, FusionSonuc, MotorCiktisi } from '@/core/belgeler/types'
 import type { ClaudeGorselGirdi } from '@/core/belgeler/yazar'
 
 export const dynamic = 'force-dynamic'
@@ -60,16 +62,18 @@ export async function POST(req: NextRequest) {
   try { if (hasta.gender_encrypted) { const g = decrypt(String(hasta.gender_encrypted)).toLocaleLowerCase('tr-TR'); cinsiyet = g.startsWith('k') || g.startsWith('f') ? 'K' : g.startsWith('e') || g.startsWith('m') ? 'E' : null } } catch { cinsiyet = null }
   const yasAy = yasAyHesapla(dobIso)
 
-  const { modalite, serbest } = etkinModalite(bransKey, body.modalityFinal)
+  let { modalite, serbest } = etkinModalite(bransKey, body.modalityFinal)
   const sesMi = SES_MODALITELERI.includes(modalite)
   const pdfMi = meta.fileType === 'application/pdf'
 
   // What the writer sees: de-identified image / spectrogram PNG / PDF bytes. PDF goes as-is (vault-decrypted, doctor-scoped).
   let gorsel: ClaudeGorselGirdi | null = null
   let deIdHash = ''
+  let pdfBytes: Buffer | null = null
   if (pdfMi) {
     const { downloadDocument } = await import('@/lib/vault/service')
     const { bytes } = await downloadDocument({ supabase }, user.id, body.documentId)
+    pdfBytes = bytes
     gorsel = { tip: 'pdf', base64: bytes.toString('base64') }
     deIdHash = createHash('sha256').update(bytes).digest('hex')
   } else if (body.deid?.base64) {
@@ -80,24 +84,59 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Kimliksizleştirilmiş görüntü (deid) gerekli' }, { status: 400 })
   }
 
-  const tierB: MotorCiktisi[] = Array.isArray(body.tierB) ? body.tierB.filter((m) => m && typeof m.motor === 'string' && Array.isArray(m.labels)).map((m) => ({ ...m, tier: 'B' as const })) : []
+  const tierB: MotorCiktisi[] = Array.isArray(body.tierB) ? body.tierB.filter((m) => m && typeof m.motor === 'string' && m.motor !== EKO_ASE_MOTOR && Array.isArray(m.labels)).map((m) => ({ ...m, tier: 'B' as const })) : []
   // Only registry-active engines count as validated, whatever the client claims.
   const { data: aktifMotorlar } = await supabase.from('motor_kayit').select('motor, aktif, ticari_kullanim').eq('tier', 'B')
   const aktifSet = new Set((aktifMotorlar || []).filter((m) => m.aktif && m.ticari_kullanim).map((m) => m.motor))
   for (const m of tierB) m.dogrulanmis = aktifSet.has(m.motor)
 
+  // Eko: metin katmanı varsa ölç. Dosya adı “rapor.pdf” olsa bile kardiyoloji / kalp damar
+  // metni ekokardiyografi ise modalite eko olur. Göz ve diğer branşlarda eko listede olmadığı
+  // için etkinModalite serbest kalır; erişkin bant oraya sızmaz.
+  let ekoMetin: string | null = null
+  if (pdfBytes && kural.modaliteler.includes('eko') && (modalite === 'eko' || modalite === 'pdf_rapor')) {
+    try {
+      const { pdfMetinCoz } = await import('@/core/lab/cikarim')
+      ekoMetin = (await pdfMetinCoz(pdfBytes)).metin
+    } catch { ekoMetin = '' }
+    if (modalite === 'pdf_rapor' && ekoMetniMi(ekoMetin)) {
+      modalite = 'eko'
+      serbest = false
+    }
+  }
+  if (modalite === 'eko') {
+    const ekoMotor = ekoAseDegerlendir({ metin: ekoMetin, yasAy, cinsiyet, girdi: pdfMi ? 'pdf' : 'goruntu' })
+    ekoDogrulamayiUygula(ekoMotor)
+    tierB.push(ekoMotor)
+  }
+
   const girdi = { brans: kural.ad, modality_final: modalite, yasAy, cinsiyet, klinikNot: body.klinikNot || null }
 
   // Tier A: one shared path (core/belgeler/tierA) — also used by Göz › Görüntü › Asistana raporla.
-  let sonucA
+  let sonucA: { rapor: BelgeRaporu; fusion: FusionSonuc; motorlar: MotorCiktisi[]; duzeltmeler: string[]; ham: string }
   try {
     sonucA = await tierAYazVeFuzyonla({ persona: kural.persona, girdi, gorsel, tierB, modalite, yasAy, fitzpatrickBilinmiyor: body.fitzpatrickBilinmiyor, tekAlanFundus: body.tekAlanFundus, serbest, sesMetrikleri: sesMi ? body.sesMetrikleri || null : null, doctorId: user.id })
   } catch (e) {
-    const msg = e instanceof Error ? e.message : 'yazar hatası'
-    await supabase.from('belge_analizleri').insert({ belge_id: body.documentId, doctor_id: user.id, patient_id: meta.patientId, brans: bransKey, modality_final: modalite, yas_ay: yasAy, cinsiyet, de_id_hash: deIdHash, engine_set: 'tierA-v1', durum: 'hata', motor_ciktilari: tierB, sonuc: { hata: msg.slice(0, 300) } })
-    return NextResponse.json({ error: 'Taslak üretilemedi. Lütfen tekrar deneyin.' }, { status: 502 })
+    const ekoMotor = tierB.find((m) => m.motor === EKO_ASE_MOTOR)
+    const olcum = Number(ekoMotor?.metrikler?.olcumSayisi || 0)
+    if (ekoMotor && (olcum > 0 || ekoMotor.labels.length > 0)) {
+      const fusion = fusionYap([ekoMotor], { modalite, yasAy, kalite: 'orta' })
+      const rapor = ekoMotorRaporu(ekoMotor, fusion.capPct)
+      rapor.acil_bayrak = rapor.acil_bayrak || fusion.acilBayrak
+      sonucA = { rapor, fusion, motorlar: [ekoMotor], duzeltmeler: ['Yazar yanıt vermedi; ölçüm dökümü kaydedildi'], ham: '' }
+    } else {
+      const msg = e instanceof Error ? e.message : 'yazar hatası'
+      await supabase.from('belge_analizleri').insert({ belge_id: body.documentId, doctor_id: user.id, patient_id: meta.patientId, brans: bransKey, modality_final: modalite, yas_ay: yasAy, cinsiyet, de_id_hash: deIdHash, engine_set: 'tierA-v1', durum: 'hata', motor_ciktilari: tierB, sonuc: { hata: msg.slice(0, 300) } })
+      return NextResponse.json({ error: 'Taslak üretilemedi. Lütfen tekrar deneyin.' }, { status: 502 })
+    }
   }
-  const { rapor, fusion, motorlar, duzeltmeler } = sonucA
+  let { rapor, fusion, motorlar, duzeltmeler } = sonucA
+  const ekoKaydi = motorlar.find((m) => m.motor === EKO_ASE_MOTOR)
+  if (ekoKaydi) {
+    const once = rapor.kalite
+    rapor = ekoRaporunuZenginlestir(rapor, ekoKaydi, yasAy)
+    if (once === 'dusuk' && rapor.kalite !== 'dusuk') duzeltmeler = [...duzeltmeler, 'Ölçüm varken düşük kalite tanıları silinmedi']
+  }
   const yazim = { ham: sonucA.ham }
 
   // Modality mismatch: the writer saw something else than the doctor chose
