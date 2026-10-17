@@ -16,6 +16,9 @@ import { Istekler } from './PortalIstekleri'
 import { saatAraligi, DurumRozeti, muayeneBaslatilabilir, muayeneBaslatYolu, takvimYolu, type RandevuKaydi } from './randevuOrtak'
 import { araclarMetni, metninDili, randevuMetni, rolAdi, type UygulamaMetni } from '@/lib/ulke/arayuz'
 import { ozellikAcik, ulkePaketi } from '@/lib/ulke/ulke'
+import { roller } from '@/lib/ulke/arayuz'
+import { Ipucu } from './Ipucu'
+import { IlkAdimlarKarti } from './IlkAdimlar'
 
 export type BugunMuayenesi = { seansId: string; notId: string | null; hastaId: string | null; hastaAdi: string; baslangic: string; durum: 'taslak' | 'onayli' | 'notsuz' }
 
@@ -100,7 +103,7 @@ function KaroIkon({ ad }: { ad: string }) {
   }
 }
 
-export function BugunGorunumu({ m, ad, muayeneler, hata, rol, randevular, mesajlar, konsultasyon, istekler }: {
+export function BugunGorunumu({ m, ad, muayeneler, hata, rol, randevular, mesajlar, konsultasyon, istekler, ilkAdimlar }: {
   m: UygulamaMetni; ad: string; muayeneler: BugunMuayenesi[] | null; hata: boolean
   /** NOTYA-UZ-RANDEVU-01: today's appointments. Absent or null = not loaded, or the country has none: no list is drawn. */
   randevular?: RandevuKaydi[] | null
@@ -112,6 +115,8 @@ export function BugunGorunumu({ m, ad, muayeneler, hata, rol, randevular, mesajl
   konsultasyon?: React.ReactNode
   /** Appointment requests from the patient's page. Draws nothing while there is none. */
   istekler?: React.ReactNode
+  /** YENI-DOKTOR-UX-2026-10: the first-run checklist of a new account. Draws nothing once set up. */
+  ilkAdimlar?: React.ReactNode
 }) {
   const p = m.pano
   const tz = hesapSaatDilimi()
@@ -139,12 +144,17 @@ export function BugunGorunumu({ m, ad, muayeneler, hata, rol, randevular, mesajl
     <div className="yg-ana" style={S({ display: 'flex', flexDirection: 'column', gap: 22 })}>
       <section className="uza-karsilama">
         <p className="uza-ust-yazi">{p ? `${gunSelami(p, tz)}, ${uzunGun(tz)}` : m.bugun.selam}</p>
-        <h1 className="uza-h1">{m.bugun.selam}, {ad}</h1>
+        <div style={S({ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' })}>
+          <h1 className="uza-h1" style={S({ margin: 0 })}>{m.bugun.selam}, {ad}</h1>
+          <Ipucu m={m} bolum="bugun" />
+        </div>
         <div className="uza-ekran-disi">
           <span data-alan="asistan-ad">{asistan}</span>
           {satir ? <span data-alan="asistan-satir">{`: ${satir}`}</span> : null}
         </div>
       </section>
+
+      {ilkAdimlar ?? null}
 
       {p ? (
         <div className="yg-fisilti">
@@ -337,7 +347,7 @@ export default function Bugun() {
   if (!hesap) return <Yukleniyor m={u.m} dil={u.dil} />
   return (
     <Cerceve dil={u.dil} m={u.m} ad={hesap.ad} unvan={rolAdi(hesap.rol, u.dil) ?? undefined} aktif="bugun" cikis={u.cikis}>
-      <BugunGorunumu m={u.m} ad={hesap.ad} muayeneler={muayeneler} hata={hata} rol={hesap.rol} randevular={randevular} mesajlar={ozellikAcik('hastaPortali') && ozellikAcik('hastaMesajlari') ? <OkunmamisMesajlarKarti u={u} /> : null} konsultasyon={ozellikAcik('konsultasyon') && ozellikAcik('araclar') ? <BekleyenKonsultasyonlarKarti u={u} /> : null} istekler={ozellikAcik('hastaPortali') && ozellikAcik('randevu') ? <Istekler u={u} r={randevuMetni(u.dil)} /> : null} />
+      <BugunGorunumu m={u.m} ad={hesap.ad} muayeneler={muayeneler} hata={hata} rol={hesap.rol} randevular={randevular} mesajlar={ozellikAcik('hastaPortali') && ozellikAcik('hastaMesajlari') ? <OkunmamisMesajlarKarti u={u} /> : null} konsultasyon={ozellikAcik('konsultasyon') && ozellikAcik('araclar') ? <BekleyenKonsultasyonlarKarti u={u} /> : null} istekler={ozellikAcik('hastaPortali') && ozellikAcik('randevu') ? <Istekler u={u} r={randevuMetni(u.dil)} /> : null} ilkAdimlar={<IlkAdimlarKarti m={u.m} api={api} rolTamam={Boolean(hesap.rol) || roller().length === 0} />} />
     </Cerceve>
   )
 }
