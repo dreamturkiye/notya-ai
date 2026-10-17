@@ -419,7 +419,8 @@ export async function POST(req: NextRequest) {
         gonder({ t: 'bit' })
       } finally {
         kapali = true
-        void wsHazir.then(() => wsOturum?.kapat())
+        // SAGLAMLIK-2026-10: ws kurulmadan reddedilirse yakalanmamış ret süreci düşürmesin.
+        void wsHazir.then(() => wsOturum?.kapat()).catch(() => { /* ws hiç kurulamadı */ })
         // NOTYA-FISH-HAVUZ-01: the next sentence's socket opens while the doctor listens.
         if (wsIstendi) fishWsHavuzu().hazirla(anahtar)
         try { controller.close() } catch { /* */ }
