@@ -4088,3 +4088,5 @@ Audit: `docs/audits/ITEM2-MOBIL-PERSONEL.md`. Verified only with headless Chromi
 | 2026-10-16 | **MOBIL-PERSONEL-10 — country kit phone fix not rendered.** The 44px tap-target block in `components/ulke/uygulama/uygulama.css` is on the six country branches but was never viewed in a browser (no country harness) | Claude | OPEN |
 | 2026-10-16 | **MOBIL-PERSONEL-11 — `app/session/new` phone fixes** (another agent owns the file): see the last section of the audit | the session/new owner | OPEN |
 | 2026-10-16 | **MOBIL-PERSONEL-12 — `release/us` Turkish-text ceiling is already breached** (1700 against 1698 on `origin/release/us` before this work). Not caused by this change; found while measuring | Claude | OPEN |
+
+| NOTYA-AYSE-OGRENME-METRIK-01 | OPEN, deferred by Kaan 2026-10-17 | Per-doctor weekly "edit rate" (share of each AI note changed before approval, from existing correction data, no patient text) to prove the Meslektas V2 learning works for new doctors. Build when Notya has actual daily users. | Waits on Kaan: go-ahead once daily usage exists |
