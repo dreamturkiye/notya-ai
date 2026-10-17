@@ -1,5 +1,34 @@
 # OPEN COMMITMENTS — Notya AI
 
+## NOTYA-ULKE-ARACLAR-AU-07 — 6 of 7 briefed clinical-tool mechanisms built for AU; ICD-10 and drug-interaction NOT built, flagged as architecturally incompatible (Claude, 2026-10-17)
+
+Task: port/build 7 Tier-1 clinical tools for the AU kit (`release/au`) — ICD-10 coder, drug-interaction checker, IPSS, PHQ-9 + GAD-7, MIDAS, Oswestry Disability Index + home-exercise, WHO/Neyzi growth percentiles — each proven equivalent to the real TR specialty engine it mirrors, each with a reachability proof beyond unit tests, per the task's own "reachability-proof standard."
+
+**Built and proven (6 of 7), all held off pending clinician sign-off:**
+
+| Tool | TR engine mirrored | Kit key | Equivalence row | Reachability proof |
+|------|--------------------|---------|-------------------|---------------------|
+| IPSS (urology) | `specialties/uroloji/engines/ipss.ts` → `skorla` | `ipss` | `lib/ulke/araclar/esdegerlik.test.ts` | (a) `NOTYA_COUNTRY=au npm run build:ulke` green; (b) kit-level unit + equivalence tests green |
+| PHQ-9 (psychiatry) | `specialties/psikiyatri/engines/phq9.ts` → `skorla` | `phq9` | same file | same |
+| GAD-7 (psychiatry) | `specialties/psikiyatri/engines/gad7.ts` → `skorla` | `gad7` | same file | same |
+| MIDAS (neurology) | `specialties/noroloji/engines/migren.ts` → `skorla` | `midas` | same file | same |
+| Pain VAS + Oswestry Disability Index (physiotherapy/rehab) | `specialties/fizik-tedavi/engines/vasOdi.ts` → `skorlaVas`, `skorlaOdi` | `vas-agri`, `odi` | same file | same |
+| WHO growth percentiles (paediatrics) | `specialties/pediatri/engines/buyume.ts` → `degerlendir('who', …)` | `buyume-persentili` | same file | same |
+
+Method (a) was used for all 6: `NOTYA_COUNTRY=au npm run build:ulke` ran the real `next build` plus `scripts/ulke-derleme-kaniti.mjs`'s output-isolation proof, and completed clean (282 output files, AU pack present, no other country's pack). Method (b) (a live server response) was not attempted — not needed once (a) succeeded, and none of the 6 is switched on for any doctor to hit yet (see below), so a live-server check would show nothing different from the build proof.
+
+**Why none of the 6 is visible to an AU doctor yet — on purpose:** this pack's own standing rule (`EMIR_KBH` precedent, `countries/au/ayarlar.ts`) is that a brand-new kit tool ships off by default until a named clinician signs off, unless Kaan gives an explicit order to switch it on — no such order existed for this job. Each tool is registered as an `AracYuvasi` slot (`mekanizmaHazir: true` — the kit mechanism is built and proven; only the sign-off is missing): `ipss`, `midas` and `odi` update the shared English-pack slot list's own pre-existing entries (which already named the exact same questionnaire-licence gap before this job), rather than duplicating them; `phq9`, `gad7` and the pain VAS (no licence question at all — it's a plain 0–10 line, not a copyrighted form) are new AU-only slots (`countries/au/araclar/yuvalarim.ts`). `docs/COUNTRY-PACK-*.md` regenerated for au/ca/gb/nz/us to match.
+
+Item-based instruments (IPSS, PHQ-9, GAD-7, MIDAS, ODI) never hold the published questionnaire's own item wording — fields are `numarali: true` ("Item 1" … "Item N"); the doctor reads the item from the instrument's own authorised form. This is the same mechanism the kit already uses for BASDAI, CAT/mMRC, M-CHAT-R/F and others, so it does not raise a new licence question of its own.
+
+**NOT built — ICD-10 coder and drug-interaction checker:** both of TR's real tools (`app/api/doktor/araclar/icd10/route.ts`, `app/api/doktor/araclar/ilac-interaksiyon/route.ts`) are free-text Groq/xAI LLM calls, not deterministic engines. The kit's `AracTanimi` architecture is pure-function, no-LLM, no-reference-content by design (`lib/ulke/araclar/tipler.ts`) — there is no TR engine of this kind to mirror, and "porting" an LLM call into it is not a mechanical port but a new build decision (which model, what prompt, what guardrails, whether the AU-specific drug-interaction data source is even usable outside Turkey — TR's own drug list is itself Turkey-market-specific, so it would need an AU/international drug database regardless of the LLM question). Flagged for Kaan rather than invented, per the task's own fallback instruction.
+
+**Verification before push:** `node scripts/ulke-test.mjs` (the AU equivalence suite, and the pack-completeness/catalogue suites for au/ca/gb/nz/us/tr) are green, confirmed via direct foreground runs of exactly the touched test files. The only remaining red items are confirmed pre-existing and outside this diff (verified by `git diff`/`git stash` showing zero files touched in either case): the `countries/uz` landing-page/scaffold-shape cluster (`scripts/ulke-sablon/sekil.json` stale for an unrelated "ilkAdimlar" onboarding feature) and AU's own `ozellikler` feature-flag drift (`fotoArsivi`/`muayeneEkleri` not yet in the shared EN testing harness's expected list) — neither belongs to this job. `NOTYA_COUNTRY=au npm run build:ulke` is green. `node scripts/ulke-turkce-tavan.mjs` reports 1707 files vs the recorded ceiling of 1698 — confirmed via a `git stash` A/B test to be **identical with and without this diff** (pre-existing drift on `release/au`, up from the 1700 recorded on 2026-10-14/16; not caused by this job, but the branch's drift has grown since the last recorded number and may be worth a look on its own). `node scripts/ulke-duvarlari.mjs` reports all walls hold.
+
+**Commit:** `release/au@7f9b2529` ("Add 6 Tier-1 clinical-tool mechanisms to the AU kit: IPSS, PHQ-9, GAD-7, MIDAS, pain VAS + ODI, WHO growth percentiles"), pushed.
+
+**Waits on Kaan:** (1) a named clinical lead to sign off on each of the 6 tools before any is switched on; (2) a licensing decision for IPSS/MIDAS/ODI's published item wording (PHQ-9/GAD-7 similarly, via Pfizer) — the kit mechanism no longer blocks this, only the licence does; (3) whether/how to build ICD-10 and drug-interaction checking for AU at all, given neither has a deterministic TR engine to mirror and the drug-interaction data source question is open regardless of the LLM question. | Claude (6 of 7 built + proven, held off pending sign-off; ICD-10/drug-interaction flagged, not built) | OPEN — pending clinician sign-off and Kaan's decision on ICD-10/drug-interaction
+
 ## PERF-SAGLAMLIK-COUNTRY-CORRECTION-01 — correction: the app-layer gains in PERF-SAGLAMLIK-2026-10 did not reach any country build (Claude, 2026-10-17, found while verifying `COUNTRY-BUILD-ROUTING-01` above)
 
 **Corrects a status I reported as "Shipped" for all six countries. It was not — stated plainly, no softening.**
