@@ -172,6 +172,8 @@ function kurallar(paket: UlkePaketi, arayuz: UlkeArayuzu | null, klinik: UlkeKli
   if (paket.ozellikler.hastaMesajlari && !paket.ozellikler.hastaPortali) ekle('ozellikler.hastaMesajlari', 'messages between a doctor and a patient need the patient portal (hastaPortali): a patient reads and answers on their own page')
   if (paket.ozellikler.konsultasyon && !paket.ozellikler.cekirdekMuayene) ekle('ozellikler.konsultasyon', 'consultation between doctors needs the signed-in application (cekirdekMuayene)')
   if (paket.ozellikler.hekimSablonlari && !paket.ozellikler.cekirdekMuayene) ekle('ozellikler.hekimSablonlari', '"my templates" need the signed-in application (cekirdekMuayene)')
+  if (paket.ozellikler.muayeneEkleri && !paket.ozellikler.cekirdekMuayene) ekle('ozellikler.muayeneEkleri', 'exam-visit attachments need the signed-in application (cekirdekMuayene): a file is attached from one recorded visit')
+  if (paket.ozellikler.fotoArsivi && !paket.ozellikler.cekirdekMuayene) ekle('ozellikler.fotoArsivi', 'the photo archive needs the signed-in application (cekirdekMuayene): a photo is filed from a patient\'s file')
   if (!paket.ozellikler.cekirdekMuayene) return s
   const u = paket.uygulama
   if (!u) { ekle('uygulama', 'the application is switched on and the pack has no settings for it'); return s }

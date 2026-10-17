@@ -16,6 +16,7 @@ import { HastaFormuKarti } from './HastaFormuKarti'
 import { HastaAracKayitlariKarti } from './AracKayitlari'
 import { HastaMesajKarti } from './HastaMesajlari'
 import { KonsultasyonKarti } from './Konsultasyonlar'
+import { FotoArsivKarti } from './FotoArsivi'
 import type { DilKodu } from '@/lib/ulke/tipler'
 import { GIRDI_GECERSIZ } from '@/lib/ulke/arayuz/zamanGirdisi'
 import { TarihGirisi } from '../girdi/TarihGirisi'
@@ -199,7 +200,7 @@ export function YeniHasta() {
 
 // ───────────────────────── one patient's file ─────────────────────────
 
-export function HastaDosyasiGorunumu({ m, hasta, muayeneler, bugun, randevular, portal, form, araclar, mesajlar, konsultasyon, duzenle }: {
+export function HastaDosyasiGorunumu({ m, hasta, muayeneler, bugun, randevular, portal, form, araclar, mesajlar, konsultasyon, fotograflar, duzenle }: {
   m: UygulamaMetni; hasta: HastaKaydi; muayeneler: DosyaMuayenesi[]; bugun?: Date
   /** NOTYA-UZ-RANDEVU-01: this patient's appointments from today on. Absent = not loaded: no list is drawn. */
   randevular?: RandevuKaydi[] | null
@@ -213,6 +214,8 @@ export function HastaDosyasiGorunumu({ m, hasta, muayeneler, bugun, randevular, 
   mesajlar?: ReactNode
   /** NOTYA-ULKE-MESAJ-01: asking a colleague for an opinion on this patient, and this patient's consultations, where the country has consultation. */
   konsultasyon?: ReactNode
+  /** FOTO-ARSIV-01: the patient photo archive's card, where the country has it. */
+  fotograflar?: ReactNode
   /** Opens the editor for this patient's identity fields. */
   duzenle?: () => void
 }) {
@@ -274,6 +277,7 @@ export function HastaDosyasiGorunumu({ m, hasta, muayeneler, bugun, randevular, 
       {mesajlar ?? null}
       {araclar ?? null}
       {konsultasyon ?? null}
+      {fotograflar ?? null}
       {taslak.length ? (
         <section className="uza-kart">
           <h2 className="uza-h2">{m.hasta.taslaklar}</h2>
@@ -359,7 +363,7 @@ export function HastaDosyasi() {
       {durum === 'tamam' && veri ? <>
         <Bilgi>{kaydedildi ? u.m.hasta.duzenlendi : null}</Bilgi>
         {duzenleme ? <YeniHastaGorunumu m={u.m} dil={u.dil} a={alanlar} set={(yeni) => { setAlanlar(yeni); setHata(null) }} gonder={duzenleKaydet} bekliyor={bekliyor} hata={hata} telefonOrnek={ulkePaketi().telefon.ornek} baslik={u.m.hasta.duzenle} iptal={() => { setDuzenleme(false); setHata(null) }} /> : null}
-        <HastaDosyasiGorunumu m={u.m} hasta={veri.hasta} muayeneler={veri.muayeneler} randevular={randevular} duzenle={duzenleAc} portal={ozellikAcik('hastaPortali') ? <PortalErisimKarti u={u} hastaId={veri.hasta.id} /> : null} form={ozellikAcik('hastaPortali') && ozellikAcik('hastaFormu') ? <HastaFormuKarti u={u} hastaId={veri.hasta.id} /> : null} araclar={ozellikAcik('araclar') ? <HastaAracKayitlariKarti u={u} hastaId={veri.hasta.id} /> : null} mesajlar={ozellikAcik('hastaPortali') && ozellikAcik('hastaMesajlari') ? <HastaMesajKarti u={u} hastaId={veri.hasta.id} sablonlar={ozellikAcik('hekimSablonlari')} /> : null} konsultasyon={ozellikAcik('konsultasyon') ? <KonsultasyonKarti u={u} hastaId={veri.hasta.id} /> : null} />
+        <HastaDosyasiGorunumu m={u.m} hasta={veri.hasta} muayeneler={veri.muayeneler} randevular={randevular} duzenle={duzenleAc} portal={ozellikAcik('hastaPortali') ? <PortalErisimKarti u={u} hastaId={veri.hasta.id} /> : null} form={ozellikAcik('hastaPortali') && ozellikAcik('hastaFormu') ? <HastaFormuKarti u={u} hastaId={veri.hasta.id} /> : null} araclar={ozellikAcik('araclar') ? <HastaAracKayitlariKarti u={u} hastaId={veri.hasta.id} /> : null} mesajlar={ozellikAcik('hastaPortali') && ozellikAcik('hastaMesajlari') ? <HastaMesajKarti u={u} hastaId={veri.hasta.id} sablonlar={ozellikAcik('hekimSablonlari')} /> : null} konsultasyon={ozellikAcik('konsultasyon') ? <KonsultasyonKarti u={u} hastaId={veri.hasta.id} /> : null} fotograflar={ozellikAcik('fotoArsivi') ? <FotoArsivKarti u={u} hastaId={veri.hasta.id} /> : null} />
       </> : (
         <section className="uza-kart">
           {durum === 'yukleniyor' ? <p className="uza-bos" role="status">{u.m.kabuk.yukleniyor}</p> : <Hata>{durum === 'yok' ? u.m.hasta.bulunamadi : u.m.kabuk.hata}</Hata>}

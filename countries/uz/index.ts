@@ -98,6 +98,15 @@ export const UZ_PAKETI: UlkePaketi = {
     // belongs to one doctor, a position alone opens no patient, and every use of a permission is recorded for the
     // doctor. The texts are machine-written; the legal answers below are unverified (./uygulama/klinikMetinleri.ts).
     klinikHesaplari: true,
+    // MUAYENE-EKLERI-07 (2026-10-17): "uploaded files" — a lab report, a scanned referral or a photographed document
+    // attached to one visit. Storage and listing only; no evaluation of any kind (lib/ulke/muayeneEki/muayeneEki.ts).
+    // The texts are machine-written and await native review (see countries/uz/uygulama/metinler.ts).
+    muayeneEkleri: true,
+    // FOTO-ARSIV-01 (2026-10-17): the patient photo archive — upload, a viewer, a basic two-up compare. Storage and
+    // viewing only: NO model reads a photo kept here (lib/ulke/fotoArsivi/fotoArsivi.ts). FOTO-ARSIV-02 (AI photo
+    // evaluation) stays a separate, not-yet-authorized item and is untouched. The texts are machine-written and await
+    // native review (see countries/uz/uygulama/metinler.ts).
+    fotoArsivi: true,
   },
   // Routes of the PRE-SPLIT application's tool registry valid here: none, and it stays so. The country build has its own
   // tools area (/tools, feature `araclar`; ./uygulama/araclar/), which shares no route and no screen with that registry.
