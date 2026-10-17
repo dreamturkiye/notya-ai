@@ -36,6 +36,33 @@ export interface AsiOnamIcerigi {
   kaynak: string
 }
 
+/**
+ * KLİNİK ONAY BAYRAĞI (tek nokta) — bu veri setinin Dr. Gökhan Mamur tarafından klinik olarak
+ * onaylanıp onaylanmadığı. VARSAYILAN: ONAYSIZ. Yapay zekâ bu bayrağı asla kendisi çevirmez;
+ * Dr. Gökhan docs/audits/ASI-ONAM-ICERIK-INCELEME.md formunu imzaladıktan sonra tek değişiklik
+ * `onayli: true` + `onaylayan` + `tarih` (ISO, YYYY-MM-DD) + `surum` olmalıdır.
+ * Not: bu bayrak şu an hiçbir erişim kapısını AÇMAZ ya da KAPATMAZ (mevcut branş kapısı
+ * asiOnamBransKapisi.ts aynen geçerli); yalnızca onay durumunu tek yerde kayıt altına alır.
+ */
+export interface AsiOnamKlinikOnayi {
+  onayli: boolean
+  onaylayan: string | null
+  tarih: string | null
+  /** Onaylanan içeriğin sürüm etiketi (değiştiği zaman onay yeniden alınmalı). */
+  surum: string | null
+}
+
+export const ASI_ONAM_KLINIK_ONAYI: AsiOnamKlinikOnayi = {
+  onayli: false,
+  onaylayan: null,
+  tarih: null,
+  surum: null,
+}
+
+export function asiOnamKlinikOnayliMi(): boolean {
+  return ASI_ONAM_KLINIK_ONAYI.onayli === true && !!ASI_ONAM_KLINIK_ONAYI.onaylayan && !!ASI_ONAM_KLINIK_ONAYI.tarih
+}
+
 const TR = (tr: string): Ceviri => ({ tr })
 const TRL = (...items: string[]): Ceviri[] => items.map((t) => ({ tr: t }))
 

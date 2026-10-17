@@ -3,44 +3,48 @@
  * meslek kazancı, computed for the GİB Portalı prepare-and-copy flow
  * (lib/accounting/ebelge/gibPortal.ts).
  *
- * RULE, VERIFIED THIS PASS (not assumed from training data, per instruction): GVK md. 94 makes
- * withholding the **payer's** obligation, and only vergi mükellefi kurumlar/şirketler/dernekler/
- * vakıflar/ticari işletmeler (institutional payers) are withholding agents — an ordinary gerçek
- * kişi (individual) payer never withholds. This exact rule was already independently documented
- * in this codebase before this pass (`lib/accounting/reports/monthly.ts`'s `STOPAJ_NOTU`,
- * `docs/ARCH-NOTYA-ACCOUNTING.md` §4.6.1/§4.6.2) — re-checked here via WebSearch/WebFetch against
- * three independent current (2026) secondary sources that agree with each other:
- *   - https://www.hukukihaber.net/avukatlarda-serbest-meslek-makbuzu-ve-20-stopaj (serbest meslek
- *     stopaj oranı %20, GVK md. 94 kapsamında kurumsal ödeyiciler için)
- *   - https://www.hukukihaber.net/serbest-meslek-makbuzu-ve-20-vergi-stopaji/amp (same rate,
- *     same applicability rule)
- *   - https://faturaport.com/blog/e-fatura/serbest-meslek-makbuzu-nasil-hesaplanir-2026-detayli-rehber
- *     (2026-dated guide; states the %20 rate AND explicitly that an individual/non-mükellef buyer
- *     triggers no stopaj, only KDV)
- * **Confidence: MODERATE** — these are secondary tax-advisory/vendor-blog sources, consistent
- * with each other and with this codebase's own pre-existing determination, but this session
- * could not reach gib.gov.tr's own primary rate table directly (same tool-level provenance limit
- * already recorded for the KDV rate in `lib/accounting/types.ts`'s
- * `KDV_RATE_BP_HEALTH_DEFAULT` doc comment and the ARCH doc §4.6.1). **Flagged for Kaan's own
- * confirmation before being treated as final** — see `docs/OPEN-COMMITMENTS.md`.
+ * LEGAL BASIS (193 sayılı Gelir Vergisi Kanunu md. 94 — "Tevkifat yoluyla vergi kesintisi"):
+ *   - md. 94/1: the duty to withhold lies on the PAYER, and only on the payers the article lists:
+ *     kamu idare ve müesseseleri, iktisadi kamu müesseseleri, kurumlar vergisi mükellefleri
+ *     (şirketler, dernekler, vakıflar ...), iş ortaklıkları/ortaklıklar, kooperatifler, yatırım
+ *     fon yöneticileri, "gerçek gelirlerini beyan etmeye mecbur olan ticaret ve serbest meslek
+ *     erbabı" (gerçek usulde defter tutan tacir / serbest meslek erbabı) and bilanço/işletme
+ *     hesabı esasında defter tutan çiftçiler. A patient who is an ordinary gerçek kişi and not
+ *     one of those is NOT a withholding agent -> no stopaj; only KDV (if any) is charged.
+ *   - md. 94/2-b: serbest meslek kazançlarında tevkifat oranı %20 (matrah = KDV hariç brüt tutar).
  *
- * Because this module bills **hekim -> hasta (gerçek kişi)** almost exclusively, stopaj is
- * `applicable: false` in the overwhelming common case — this computation exists for the rare
- * case a doctor is paid by an institution (a kurum/şirket settling on a patient's behalf), which
- * the doctor must mark explicitly (`buyerIsKurumsal`); Notya never infers it from a name or
- * guesses it silently.
+ * VERIFICATION STATUS (2026-10-17, be precise):
+ *   - The payer list of md. 94/1 was re-read in a PRIMARY source: GİB Gelir Vergisi Genel Tebliği
+ *     Seri No: 330 (www.gib.gov.tr/sites/default/files/fileadmin/user_upload/Tebligler/Taslaklar/
+ *     gelir/330_serno_gelverteb_taslak.pdf), which reproduces the md. 94 preamble verbatim,
+ *     including "gerçek gelirlerini beyan etmeye mecbur olan ticaret ve serbest meslek erbabı".
+ *   - The %20 figure for md. 94/2-b could NOT be re-fetched from a primary page in this
+ *     environment (mevzuat.gov.tr, resmigazete.gov.tr and the GİB rehber PDFs are blocked for the
+ *     tool; the Seri 330 excerpt elides item 2). It rests on the long-standing statutory text,
+ *     the GİB Serbest Meslek Vergi Rehberi, and three consistent 2026 secondary sources
+ *     (hukukihaber.net, faturaport.com). Nothing in Seri 330 / Law 7524 (2024) changes the
+ *     serbest meslek rate (they concern items 19/20, e-ticaret %1/%25).
+ *   - Residual question for a mali müşavir (docs/OPEN-COMMITMENTS.md): confirm the %20 on the
+ *     current mevzuat.gov.tr text of md. 94/2-b, and whether a given institutional payer of a
+ *     hekim (e.g. özel sigorta şirketi, anlaşmalı kurum) is treated as a withholding agent.
  *
- * NOT hardcoded with no update path, per instruction: `GVK_94_STOPAJ_RATE_BP_SERBEST_MESLEK` is a
- * single named constant (same convention as `KDV_RATE_BP_HEALTH_DEFAULT`), and
- * `computeStopaj()`'s `rateBpOverride` lets a specific invoice use a different rate if a mali
- * müşavir advises one, without a code change.
+ * Because this module bills hekim -> hasta (gerçek kişi) almost exclusively, stopaj is
+ * `applicable: false` in the overwhelming common case. It applies only when the doctor marks the
+ * payer as a withholding agent (`buyerIsKurumsal`); Notya never infers it from a name.
+ *
+ * KDV is independent of stopaj: stopaj is computed on the KDV-exclusive matrah and never reduces
+ * the KDV base. KDV tevkifatı (KDVK md. 9) is a separate regime that applies only to the services
+ * listed in the KDV Genel Uygulama Tebliği; it is not modelled here.
+ *
+ * `GVK_94_STOPAJ_RATE_BP_SERBEST_MESLEK` is the single named constant for the rate; `computeStopaj()`'s
+ * `rateBpOverride` lets one invoice use a different rate on a mali müşavir's advice.
  */
 import type { EbelgeDocType, Money } from './types'
 import { roundKurus } from './ledger/money'
 
-/** GVK md. 94/2-b — serbest meslek kazancı stopaj oranı. 2000 bp = %20.00. MODERATE CONFIDENCE
- *  (see this file's header) — update here (and re-verify against GİB/Resmî Gazete) if it changes;
- *  this constant is the single source of truth, never re-duplicated as a literal elsewhere. */
+/** GVK md. 94/2-b — serbest meslek kazancı tevkifat (stopaj) oranı. 2000 bp = %20.00. See this
+ *  file's header for legal basis and verification status; this constant is the single source of
+ *  truth, never re-duplicated as a literal elsewhere. */
 export const GVK_94_STOPAJ_RATE_BP_SERBEST_MESLEK = 2000
 
 export interface StopajInput {
@@ -50,8 +54,9 @@ export interface StopajInput {
   kdvKurus: Money
   totalKurus: Money
   /**
-   * True only when the PAYER is a kurumsal/tüzel ödeyici (şirket, dernek, vakıf, kamu kurumu) —
-   * GVK md. 94. Defaults to false (a gerçek kişi hasta paying directly, the normal case for this
+   * True only when the PAYER is a withholding agent under GVK md. 94/1: kurumsal/tüzel ödeyici
+   * (şirket, dernek, vakıf, kamu kurumu) or a gerçek usulde defter tutan tacir/serbest meslek
+   * erbabı. Defaults to false (a gerçek kişi hasta paying directly, the normal case for this
    * module) — the doctor marks this explicitly for the rare institutional-payer invoice rather
    * than Notya inferring it from the buyer's name or any other heuristic.
    */
@@ -75,8 +80,8 @@ export interface StopajResult {
 const NOT_APPLICABLE_NON_ESMM =
   'Stopaj/tevkifat bu belge türünde (e-Fatura/e-Arşiv — şirket satışı) uygulanmaz; GVK md. 94 stopajı serbest meslek kazancına (e-SMM) özgüdür.'
 
-const NOT_APPLICABLE_GERCEK_KISI =
-  "Stopaj/tevkifat uygulanmadı: alıcı gerçek kişi olarak işaretli (GVK md. 94 stopajı yalnızca ödeyici kurumsal/tüzel kişi olduğunda devreye girer). Ödemeyi bir kurum/şirket yapıyorsa, hazırlamadan önce 'Alıcı kurumsal' kutusunu işaretleyin."
+export const STOPAJ_YOK_GERCEK_KISI_NOTU =
+  'Stopaj (gelir vergisi tevkifatı) kesilmedi: hasta gerçek kişi olduğu için GVK md. 94 kapsamında tevkifat yapmak zorunda değildir; belge tutarı üzerinden yalnızca KDV (varsa) hesaplanır. Ödemeyi bir kurum/şirket veya defter tutan bir tacir/serbest meslek erbabı yapıyorsa, hazırlamadan önce "Alıcı tevkifat yapmak zorunda (kurumsal)" kutusunu işaretleyin.'
 
 /** Pure, side-effect-free — the invoice engine (lib/accounting/invoices/engine.ts) and the GİB
  *  Portalı field builder (lib/accounting/ebelge/gibPortal.ts) are the only callers. */
@@ -85,12 +90,10 @@ export function computeStopaj(input: StopajInput): StopajResult {
     return { applicable: false, rateBp: 0, stopajKurus: 0, netKurus: input.totalKurus, note: NOT_APPLICABLE_NON_ESMM }
   }
   if (!input.buyerIsKurumsal) {
-    return { applicable: false, rateBp: 0, stopajKurus: 0, netKurus: input.totalKurus, note: NOT_APPLICABLE_GERCEK_KISI }
+    return { applicable: false, rateBp: 0, stopajKurus: 0, netKurus: input.totalKurus, note: STOPAJ_YOK_GERCEK_KISI_NOTU }
   }
-  const rateBp =
-    Number.isInteger(input.rateBpOverride) && (input.rateBpOverride as number) >= 0
-      ? (input.rateBpOverride as number)
-      : GVK_94_STOPAJ_RATE_BP_SERBEST_MESLEK
+  const usedOverride = Number.isInteger(input.rateBpOverride) && (input.rateBpOverride as number) >= 0
+  const rateBp = usedOverride ? (input.rateBpOverride as number) : GVK_94_STOPAJ_RATE_BP_SERBEST_MESLEK
   const stopajKurus = roundKurus((input.matrahKurus * rateBp) / 10000)
   const netKurus = input.matrahKurus + input.kdvKurus - stopajKurus
   return {
@@ -99,7 +102,7 @@ export function computeStopaj(input: StopajInput): StopajResult {
     stopajKurus,
     netKurus,
     note:
-      `Stopaj uygulandı: alıcı kurumsal/tüzel ödeyici olarak işaretlendi (GVK md. 94/2-b, %${(rateBp / 100).toFixed(0)} — ` +
-      'MODERATE CONFIDENCE, bkz. lib/accounting/stopaj.ts dosya başlığı; oranı mali müşavirinizle doğrulayın).',
+      `Stopaj uygulandı: alıcı tevkifat yapmak zorunda olan ödeyici olarak işaretlendi (GVK md. 94/2-b, %${(rateBp / 100).toFixed(0)}, KDV hariç matrah üzerinden). ` +
+      (usedOverride ? 'Oran, elle verilen değerle uygulandı; mali müşavirinizle doğrulayın.' : 'Kesinti, ödemeyi yapan tarafından muhtasar beyannameyle bildirilir.'),
   }
 }
