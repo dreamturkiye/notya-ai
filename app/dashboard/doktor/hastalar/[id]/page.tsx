@@ -505,7 +505,8 @@ export default function HastaProfilPage() {
           )}
         </div>
 
-        <div style={{ margin: '10px 0 0' }}>
+        <div className="hasta-geri-masaustu" style={{ margin: '10px 0 0' }}>
+          <style>{`@media (max-width: 899px){.hasta-geri-masaustu{display:none}}`}</style>
           <DoktorGeriLink href="/dashboard/doktor/hastalar">← Hastalar</DoktorGeriLink>
         </div>
 
