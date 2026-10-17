@@ -538,7 +538,7 @@ function NewSessionInner() {
               </label>
               <input type="datetime-local" value={gecmisTarih} max={new Date(Date.now() - 60000).toISOString().slice(0,16)}
                 onChange={e=>setGecmisTarih(e.target.value)}
-                style={S({width:"100%",padding:"8px 10px",border:"1.5px solid #e5ddd0",borderRadius:"8px",fontSize:"13px",color:"#3b2e24",boxSizing:"border-box"})} />
+                style={S({display:"block",width:"100%",minWidth:0,maxWidth:"100%",minHeight:"40px",padding:"8px 10px",border:"1.5px solid #e5ddd0",borderRadius:"8px",fontSize:"13px",color:"#3b2e24",background:"#fff",boxSizing:"border-box",WebkitAppearance:"none",appearance:"none"})} />
               {gecmisTarih && (
                 <div style={S({fontSize:"11px",color:"#2f4334",marginTop:"6px"})}>
                   Bu muayene {new Date(gecmisTarih).toLocaleDateString("tr-TR")} tarihiyle kaydedilecek — 
