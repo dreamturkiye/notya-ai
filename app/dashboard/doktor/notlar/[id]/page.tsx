@@ -51,6 +51,7 @@ import { CHROME_RENK } from '@/lib/doktor/chromeTheme'
 import { motorAfisiTemizle } from '@/core/belgeler/yazar'
 import SizinTarzinizChip from '@/components/doktor/SizinTarzinizChip'
 import SonrakiAdim from '@/components/doktor/SonrakiAdim'
+import YuklenenDosyalar from '@/components/doktor/YuklenenDosyalar'
 import { useRutinPaket } from '@/lib/doktor/ogrenme/rutinIstemci'
 import { kullanimEylem } from '@/lib/telemetri/kullanim'
 import { oneriGeldiMi, oneriYoklamasiGerekli, oneriyiYokla } from '@/lib/doktor/oneriBekle';
@@ -485,7 +486,7 @@ export default function NotSayfasi() {
   const oncekiler = (cekCanli || []).filter((s) => s.durum === 'onceki').map((s) => s.etiket);
 
   return (
-    <div style={{ minHeight: '100vh', background: 'transparent', color: CHROME_RENK.ink, fontFamily: 'system-ui' }}>
+    <div style={{ minHeight: '100vh', background: 'transparent', color: CHROME_RENK.ink, fontFamily: 'system-ui', paddingRight: 'var(--yd-sag, 0px)', transition: 'padding-right .15s ease' }}>
       {uyum ? (
         <IlacUyumKarti durum={uyum} onGuncelleOnayla={(m) => { void kaydetVeOnayla(m) }} onMevcutlaOnayla={() => { void kaydetVeOnayla(ilac) }} onVazgec={() => setUyum(null)} />
       ) : null}
@@ -669,6 +670,8 @@ export default function NotSayfasi() {
           <div style={etiket}>{kapsam.hitap.ozetEtiketi} <span style={{ fontWeight: 400, color: CHROME_RENK.muted }}>(portala gider)</span></div>
           <textarea value={ozet} onChange={(e) => isaretle(setOzet)(e.target.value)} rows={4} style={kutu} />
         </div>
+        {/* MUAYENE-EKLERI-07: visit uploads as links; the viewer opens beside the report (no navigation, no unmount). */}
+        <YuklenenDosyalar sessionId={not.sessionId} />
       </div>
       {cekVar ? (
         <aside style={{ background: 'rgba(180,131,47,0.08)', border: '1px solid rgba(180,131,47,0.30)', borderRadius: 12, padding: '12px 14px' }}>
