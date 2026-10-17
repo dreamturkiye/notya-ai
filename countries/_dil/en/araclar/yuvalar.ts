@@ -92,7 +92,7 @@ export function enAracYuvalari(ulke: string): readonly AracYuvasi[] {
 
     // ── neurology ──
     yuva('stroke-red-flags', ['neurology'], `Stroke and TIA red flags: the emergency number confirmed by a local source and the stroke pathway of the region (where a patient is sent, within which time window).`),
-    yuva('midas', ['neurology'], 'MIDAS (Migraine Disability Assessment): a published patient questionnaire. THE LICENCE QUESTION: whether and on which terms its English wording may be shown. No item is reproduced here; the scoring is not switched on without it.', ANKET),
+    yuva('midas', ['neurology'], 'MIDAS (Migraine Disability Assessment): a published patient questionnaire. THE LICENCE QUESTION: whether and on which terms its English wording may be shown. No item is reproduced here; the scoring is not switched on without it. NOTYA-ULKE-ARACLAR-AU-07, 2026-10-17: the kit now holds the scoring mechanism (five numbered items, no item wording shown — the doctor reads from the instrument\'s own authorised form), proven against the equivalence suite; the licence question above is the only thing still missing.', ANKET, true),
     yuva('antiseizure-monitoring', ['neurology'], `Laboratory monitoring of antiseizure medicines: which tests, how soon after starting and how often, from the guidance followed in ${ulke}, and the register of medicines sold there to recognise each by name.`),
 
     // ── paediatrics ──
@@ -114,7 +114,7 @@ export function enAracYuvalari(ulke: string): readonly AracYuvasi[] {
     yuva('critical-finding-notice', ['radiology'], `Critical-finding notice: who must be told, how fast, by which channel, under the rules of the institution and of ${ulke}.`),
 
     // ── urology ──
-    yuva('ipss', ['urology'], 'IPSS (International Prostate Symptom Score): a published patient questionnaire. THE LICENCE QUESTION: whether and on which terms its English wording may be shown. No item is reproduced here; the scoring is not switched on without it.', ANKET),
+    yuva('ipss', ['urology'], 'IPSS (International Prostate Symptom Score): a published patient questionnaire. THE LICENCE QUESTION: whether and on which terms its English wording may be shown. No item is reproduced here; the scoring is not switched on without it. NOTYA-ULKE-ARACLAR-AU-07, 2026-10-17: the kit now holds the scoring mechanism (seven numbered items plus the optional quality-of-life item, no item wording shown — the doctor reads from the instrument\'s own authorised form), proven against the equivalence suite; the licence question above is the only thing still missing.', ANKET, true),
     yuva('urology-emergency-triage', ['urology'], 'Haematuria and stone emergency triage: the emergency number confirmed by a local source and the referral path.'),
 
     // ── rehabilitation medicine ──

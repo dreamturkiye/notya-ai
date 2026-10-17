@@ -95,4 +95,71 @@ export const AU_EK_YUVALAR: readonly AracYuvasi[] = [
     roller: ['endocrinology'],
     lisans: { durum: 'belirsiz', hakSahibi: 'University of Sheffield (FRAX) and the Garvan Institute of Medical Research (Garvan Fracture Risk Calculator)', kaynak: 'https://www.racgp.org.au/clinical-resources/clinical-guidelines/key-racgp-guidelines/view-all-racgp-guidelines/osteoporosis/risk-factors/assessment-of-absolute-fracture-risk (read 2026-10-13); neither calculator\'s own embedding terms were read this session.' },
   },
+  // ── NOTYA-ULKE-ARACLAR-AU-07, 2026-10-17: four kit mechanisms built and proven this pass (katalog.ts,
+  // esdegerlik.test.ts), each held here as a slot rather than switched on, per this pack's own standing rule for a
+  // brand-new tool (EMIR_KBH, above in ../ayarlar.ts: ships off until a named clinician signs off) ──
+  // ── psychiatry: PHQ-9 and GAD-7, held as two separate kit keys (the shared set's own `phq9-gad7` slot, above in
+  // countries/_dil/en/araclar/yuvalar.ts, already finds the same licence gap for the combined pair) ──
+  {
+    anahtar: 'phq9',
+    acik: false,
+    icerik: null,
+    mekanizmaHazir: true,
+    eksik:
+      'PHQ-9 (Patient Health Questionnaire-9): the kit holds the scoring mechanism (nine numbered items, no item wording shown, with the ninth item\'s safety flag) under this key, proven against the real psychiatry engine\'s arithmetic in the equivalence suite. THE LICENCE QUESTION is the same one the shared set\'s own `phq9-gad7` slot already names: Pfizer\'s terms for showing the instrument\'s original English wording inside a commercial product were not read this session. Awaits a clinical lead\'s sign-off on top of the licence question.',
+    kimden: KLINISYEN,
+    roller: ['psychiatry', 'clinical-psychology'],
+    lisans: { durum: 'belirsiz', hakSahibi: 'Pfizer Inc. (PHQ-9, developed by Robert L. Spitzer, Janet B.W. Williams, Kurt Kroenke)', kaynak: 'Kroenke K, Spitzer RL, Williams JBW. J Gen Intern Med. 2001;16(9):606-613; Pfizer\'s own terms for commercial-product use were not read this session — the same gap the shared set\'s phq9-gad7 slot already names.' },
+  },
+  {
+    anahtar: 'gad7',
+    acik: false,
+    icerik: null,
+    mekanizmaHazir: true,
+    eksik:
+      'GAD-7 (Generalized Anxiety Disorder-7): the kit holds the scoring mechanism (seven numbered items, no item wording shown) under this key, proven against the real psychiatry engine\'s arithmetic in the equivalence suite. THE LICENCE QUESTION is the same one the shared set\'s own `phq9-gad7` slot already names. Awaits a clinical lead\'s sign-off on top of the licence question.',
+    kimden: KLINISYEN,
+    roller: ['psychiatry', 'clinical-psychology'],
+    lisans: { durum: 'belirsiz', hakSahibi: 'Pfizer Inc. (GAD-7, developed by Robert L. Spitzer, Kurt Kroenke, Janet B.W. Williams, Bernd Lowe)', kaynak: 'Spitzer RL, Kroenke K, Williams JBW, Lowe B. Arch Intern Med. 2006;166(10):1092-1097; Pfizer\'s own terms for commercial-product use were not read this session — the same gap the shared set\'s phq9-gad7 slot already names.' },
+  },
+  // ── physiotherapy / rehabilitation medicine: the shared set's own `pain-odi` slot (countries/_dil/en/araclar/
+  // yuvalar.ts) names the same licence gap for ODI under a different, combined key; these two are the pack's own
+  // slots for the actual kit keys the mechanism was built under ──
+  {
+    anahtar: 'odi',
+    acik: false,
+    icerik: null,
+    mekanizmaHazir: true,
+    eksik:
+      'ODI (Oswestry Disability Index): the kit holds the scoring mechanism (ten numbered items, no item wording shown) under this key, proven against the real physiotherapy engine\'s arithmetic in the equivalence suite. THE LICENCE QUESTION is the same one the shared set\'s own `pain-odi` slot already names: ODI is a published, licensed questionnaire and its rights holder\'s terms for showing the English wording inside a commercial product were not read this session. Awaits a clinical lead\'s sign-off on top of the licence question.',
+    kimden: KLINISYEN,
+    roller: ['physiotherapy', 'rehabilitation-medicine', 'occupational-therapy'],
+    lisans: { durum: 'belirsiz', hakSahibi: 'Fairbank JCT and the Oswestry Disability Index\'s rights holder', kaynak: 'Fairbank JCT, Pynsent PB. Spine. 2000;25(22):2940-2952; the instrument\'s own licensing terms were not read this session — the same gap the shared set\'s pain-odi slot already names.' },
+  },
+  {
+    anahtar: 'vas-agri',
+    acik: false,
+    icerik: null,
+    mekanizmaHazir: true,
+    eksik:
+      'A 0–10 pain visual analogue scale: the kit holds the mechanism under this key, proven against the real physiotherapy engine\'s arithmetic in the equivalence suite. No published item text is involved (a VAS is a single numbered line, not a copyrighted questionnaire), so there is no licence question here — only a clinical lead\'s sign-off, per this pack\'s standing rule for a brand-new tool.',
+    kimden: KLINISYEN,
+    roller: ['physiotherapy', 'rehabilitation-medicine', 'occupational-therapy'],
+  },
+  // ── paediatrics: WHO growth percentiles, reusing this pack's own already-built WHO LMS tables and math
+  // (lib/clinical/whoBuyumeLms.ts, lib/clinical/buyumeEgrisi.ts — byte-identical to the Turkiye build, so there is
+  // no second source to drift from) — distinct from the shared set's own `growth-percentiles` slot (above in
+  // countries/_dil/en/araclar/yuvalar.ts), which asks the broader, still-open clinical question of which chart
+  // standard this country's paediatricians actually want; this slot answers only "is the WHO-standard mechanism
+  // ready", not that broader question ──
+  {
+    anahtar: 'buyume-persentili',
+    acik: false,
+    icerik: null,
+    mekanizmaHazir: true,
+    eksik:
+      'Weight-for-age, height-for-age and head-circumference-for-age percentiles against the WHO Child Growth Standards (2006, 0–60 months) and WHO Growth Reference (2007, 61+ months): the kit holds the mechanism under this key, reusing the pack\'s own existing WHO LMS tables and z-score math rather than a second copy, proven against the real paediatrics engine\'s arithmetic in the equivalence suite. Awaits a clinical lead\'s sign-off that the WHO standard (rather than, e.g., a locally-preferred alternative — the open question of the shared set\'s own growth-percentiles slot) is the right one to show Australian doctors, consistent with this pack\'s standing rule for a brand-new tool.',
+    kimden: KLINISYEN,
+    roller: ['paediatrics'],
+  },
 ]

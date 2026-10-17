@@ -21,7 +21,7 @@ import assert from 'node:assert/strict'
 import { ORNEK_BUGUN, ORNEK_PARAMETRELER, ornekGirdiler, ornekOrtam } from '../testing/aracOrnekleri'
 import { KIT_ARACLARI, kitAraci } from './katalog'
 import type { AracGirdisi, AracSonucu } from './tipler'
-import { isaretliler } from './yardimci'
+import { isaretliler, sayiMi } from './yardimci'
 import * as K1 from './tanimlar/acilAnesteziBeyin'
 import { ESI_KAYNAKLAR, esiSkorla } from '@/specialties/acil-tip/engines/esi'
 import { KRITIK_MADDELER, KRITIK_YOLLAR, kritikYolSkorla } from '@/specialties/acil-tip/engines/kritikYol'
@@ -79,6 +79,12 @@ import { labSkorla as romaLabSkorla, sonrakiIzlemTarihi as romaSonrakiTarih } fr
 import { rtpDegerlendir } from '@/specialties/spor-hekimligi/engines/rtp'
 import { BOLGELER as TR_SAKATLIK_BOLGELER, MEKANIZMALAR as TR_MEKANIZMALAR, sakatlikDegerlendir, yuklenmeUyariHesapla } from '@/specialties/spor-hekimligi/engines/sakatlik'
 import { bantBul as psaBantBul, skorlaSeri as psaSkorlaSeri } from '@/specialties/uroloji/engines/psa'
+import { skorla as ipssSkorla } from '@/specialties/uroloji/engines/ipss'
+import { skorla as phq9Skorla } from '@/specialties/psikiyatri/engines/phq9'
+import { skorla as gad7Skorla } from '@/specialties/psikiyatri/engines/gad7'
+import { skorla as migrenSkorla } from '@/specialties/noroloji/engines/migren'
+import { skorlaVas as vasSkorlaAgri, skorlaOdi } from '@/specialties/fizik-tedavi/engines/vasOdi'
+import { degerlendir as buyumeDegerlendir } from '@/specialties/pediatri/engines/buyume'
 
 const BUGUN = ORNEK_BUGUN
 /** What both sides are reduced to before they are compared. */
@@ -420,6 +426,79 @@ SATIRLAR_5: {
         if ([g.onceki_deger, g.son_deger, g.onceki_tarih, g.son_tarih].some((x) => x === null) || (g.onceki_tarih as string) >= (g.son_tarih as string)) return { tamam: false }
         const r = psaSkorlaSeri([{ tarih: g.onceki_tarih as string, deger: g.onceki_deger as number }, { tarih: g.son_tarih as string, deger: g.son_deger as number }])
         return r.hizNgMlYil === null ? { tamam: false } : { tamam: true, sayilar: { hiz: r.hizNgMlYil + 0 }, uyarilar: /tercih edilen/.test(r.hizNot) ? ['kisa_aralik'] : [] }
+      },
+    },
+  )
+  // NOTYA-ULKE-ARACLAR-AU-07, 2026-10-17 — six validated, published, international scored instruments.
+  const IPSS_M = ['m1', 'm2', 'm3', 'm4', 'm5', 'm6', 'm7'] as const
+  const PHQ9_M = ['m1', 'm2', 'm3', 'm4', 'm5', 'm6', 'm7', 'm8', 'm9'] as const
+  const GAD7_M = ['m1', 'm2', 'm3', 'm4', 'm5', 'm6', 'm7'] as const
+  const MIDAS_M = ['m1', 'm2', 'm3', 'm4', 'm5'] as const
+  const ODI_M = ['m1', 'm2', 'm3', 'm4', 'm5', 'm6', 'm7', 'm8', 'm9', 'm10'] as const
+  SATIRLAR.push(
+    {
+      arac: 'ipss', karsilik: 'specialties/uroloji/engines/ipss.ts → skorla', listeler: [], sayilar: ['toplam'],
+      onlar: (g) => {
+        const m = IPSS_M.map((k) => g[k] as number | null)
+        const r = ipssSkorla(m, g.qol as number | null)
+        return r.tamamMi ? { tamam: true, bant: r.bant, sayilar: { toplam: r.toplam as number } } : { tamam: false }
+      },
+    },
+    {
+      arac: 'phq9', karsilik: 'specialties/psikiyatri/engines/phq9.ts → skorla', listeler: [], sayilar: ['toplam'],
+      onlar: (g) => {
+        const m = PHQ9_M.map((k) => g[k] as number | null)
+        if (!m.every((x) => sayiMi(x))) return { tamam: false }
+        const r = phq9Skorla(m)
+        return { tamam: true, bant: r.bant, sayilar: { toplam: r.toplam }, uyarilar: r.ozkıyımMadde9 ? ['madde9_pozitif'] : [] }
+      },
+    },
+    {
+      arac: 'gad7', karsilik: 'specialties/psikiyatri/engines/gad7.ts → skorla', listeler: [], sayilar: ['toplam'],
+      onlar: (g) => {
+        const m = GAD7_M.map((k) => g[k] as number | null)
+        if (!m.every((x) => sayiMi(x))) return { tamam: false }
+        const r = gad7Skorla(m)
+        return { tamam: true, bant: r.bant, sayilar: { toplam: r.toplam }, uyarilar: r.esikUstu ? ['esik_ustu'] : [] }
+      },
+    },
+    {
+      arac: 'midas', karsilik: 'specialties/noroloji/engines/migren.ts → skorla', listeler: [], sayilar: ['toplam'],
+      onlar: (g) => {
+        const m = MIDAS_M.map((k) => g[k] as number | null)
+        const r = migrenSkorla(m)
+        return r.tamamMi ? { tamam: true, bant: r.bant, sayilar: { toplam: r.toplam as number } } : { tamam: false }
+      },
+    },
+    {
+      arac: 'vas-agri', karsilik: 'specialties/fizik-tedavi/engines/vasOdi.ts → skorlaVas', listeler: [], sayilar: ['deger'],
+      onlar: (g) => {
+        const r = vasSkorlaAgri(g.deger as number | null)
+        return r.tamamMi ? { tamam: true, bant: r.bant, sayilar: { deger: r.deger as number } } : { tamam: false }
+      },
+    },
+    {
+      arac: 'odi', karsilik: 'specialties/fizik-tedavi/engines/vasOdi.ts → skorlaOdi', listeler: [], sayilar: ['toplam', 'yuzde'],
+      onlar: (g) => {
+        const m = ODI_M.map((k) => g[k] as number | null)
+        const r = skorlaOdi(m)
+        return r.tamamMi ? { tamam: true, bant: r.bant, sayilar: { toplam: r.toplam as number, yuzde: r.yuzde as number } } : { tamam: false }
+      },
+    },
+    {
+      arac: 'buyume-persentili', karsilik: 'specialties/pediatri/engines/buyume.ts → degerlendir(\'who\', …)', listeler: [], sayilar: ['persentil', 'z', 'ay'],
+      onlar: (g) => {
+        if (g.cinsiyet !== 'male' && g.cinsiyet !== 'female') return { tamam: false }
+        const param = g.parametre as 'kilo' | 'boy' | 'basCevresi' | null
+        if (!param) return { tamam: false }
+        const deger = param === 'kilo' ? g.deger_kilo : param === 'boy' ? g.deger_boy : g.deger_bas
+        if (typeof g.dogum_tarihi !== 'string' || typeof g.olcum_tarihi !== 'string' || !sayiMi(deger)) return { tamam: false }
+        const gun = Math.round((Date.parse(`${g.olcum_tarihi}T12:00:00Z`) - Date.parse(`${g.dogum_tarihi}T12:00:00Z`)) / 86400000)
+        if (gun < 0) return { tamam: false }
+        const ay = gun / 30.4375
+        const r = buyumeDegerlendir('who', param, g.cinsiyet, ay, deger as number)
+        if (!r) return { tamam: false }
+        return { tamam: true, sayilar: { persentil: Math.round(r.persentil * 10) / 10, z: Math.round(r.z * 100) / 100, ay: Math.round(ay * 100) / 100 } }
       },
     },
   )
