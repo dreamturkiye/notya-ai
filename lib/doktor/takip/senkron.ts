@@ -17,6 +17,18 @@ type Sb = SupabaseClient
 
 const GELMEDI_GERI_GUN = 14
 
+/**
+ * HASTA-IZOLASYON (defence in depth): of these patient ids, the ones that are THIS doctor's patients. A follow-up
+ * case is opened only for those — an appointment or consultation row that points at another doctor's patient (a
+ * row left by an old unchecked write) never becomes a case, a reminder or a line on the desk.
+ */
+async function sahipHastalar(sb: Sb, doktorId: string, idler: string[]): Promise<Set<string>> {
+  const tekil = [...new Set(idler.filter(Boolean))]
+  if (!tekil.length) return new Set()
+  const { data } = await sb.from('patients').select('id').eq('doctor_id', doktorId).in('id', tekil)
+  return new Set((data || []).map((p) => String(p.id)))
+}
+
 export async function takipSenkronize(sb: Sb, doktorId: string): Promise<{ acilan: number; kapanan: number }> {
   let acilan = 0
   let kapanan = 0
@@ -45,7 +57,9 @@ export async function takipSenkronize(sb: Sb, doktorId: string): Promise<{ acila
       .gte('baslangic', geri)
       .order('baslangic', { ascending: false })
       .limit(40)
+    const gelmediSahip = await sahipHastalar(sb, doktorId, (gelmediler || []).map((r) => String(r.patient_id)))
     for (const r of gelmediler || []) {
+      if (!gelmediSahip.has(String(r.patient_id))) continue
       const id = await takipAc(sb, {
         doktorId,
         patientId: String(r.patient_id),
@@ -65,7 +79,9 @@ export async function takipSenkronize(sb: Sb, doktorId: string): Promise<{ acila
       .order('istem_tarihi', { ascending: true })
       .limit(40)
     if (!se && sevkler) {
+      const sevkSahip = await sahipHastalar(sb, doktorId, sevkler.map((s) => String(s.patient_id)))
       for (const s of sevkler) {
+        if (!sevkSahip.has(String(s.patient_id))) continue
         const hedef = String(s.hedef_brans || s.hedef || 'konsültasyon')
         const id = await takipAc(sb, {
           doktorId,

@@ -70,6 +70,8 @@ export class SahteVeritabani {
   depolamaOkumalari: string[] = []
   kullanicilar = new Map<string, { id: string; email?: string }>()
   bloblar = new Map<string, string>()
+  /** NOTYA-PROTOKOL-NO-01: protokol_no_ata() in-memory stand-in state — key "scope_type:scope_id:yil" -> last number. */
+  protokolSayaclari = new Map<string, number>()
 
   tablo(ad: string): Satir[] {
     if (!this.tablolar.has(ad)) this.tablolar.set(ad, [])
@@ -113,9 +115,50 @@ export class SahteVeritabani {
           createSignedUrl: async (yol: string, sn: number) => ({ data: { signedUrl: `https://sahte.supabase.test/storage/v1/object/sign/${kova}/${yol}?token=sahte&expiresIn=${sn}` }, error: null }),
         }),
       },
-      rpc: async (ad: string, args: Record<string, string>) => {
-        if (ad === 'vault_put_blob') { db.bloblar.set(args.p_document_id, args.p_ciphertext_b64); return { data: null, error: null } }
-        if (ad === 'vault_get_blob') { const v = db.bloblar.get(args.p_document_id); return { data: v ?? null, error: v ? null : { message: 'missing' } } }
+      rpc: async (ad: string, args: Record<string, unknown>) => {
+        if (ad === 'vault_put_blob') { db.bloblar.set(args.p_document_id as string, args.p_ciphertext_b64 as string); return { data: null, error: null } }
+        if (ad === 'vault_get_blob') { const v = db.bloblar.get(args.p_document_id as string); return { data: v ?? null, error: v ? null : { message: 'missing' } } }
+        // NOTYA-PROTOKOL-NO-01: mirrors protokol_no_ata() (lib/db/migrations/159_*) — an
+        // in-memory counter keyed the same way (scope_type, scope_id, yil). The real atomicity
+        // guarantee is Postgres's, proven separately against a live instance
+        // (lib/doktor/protokolNo.test.ts); this fake only needs to return the right NEXT
+        // number for each key so route-level tests exercise the real call shape.
+        if (ad === 'protokol_no_ata') {
+          const anahtar = `${args.p_scope_type}:${args.p_scope_id}:${args.p_yil}`
+          const simdiki = (db.protokolSayaclari.get(anahtar) || 0) + 1
+          db.protokolSayaclari.set(anahtar, simdiki)
+          return { data: `${args.p_yil}-${String(simdiki).padStart(6, '0')}`, error: null }
+        }
+        // NOTYA-ASI-STOK-BARKOD-01: mirrors asi_stok_dekrement() (165_asi_stok_barkod.sql) — a single
+        // UPDATE ... WHERE miktar > 0 RETURNING. The real concurrency guarantee is Postgres's row
+        // lock on that statement; this fake only needs the same "never goes below 0, 0 rows if
+        // already 0 or foreign doktor_id" shape so route-level tests exercise the real call.
+        if (ad === 'asi_stok_dekrement') {
+          const lot = db.tablo('asi_stok_lotlari').find((r) => r.id === args.p_lot_id && r.doktor_id === args.p_doktor_id && Number(r.miktar) > 0)
+          if (!lot) return { data: [], error: null }
+          lot.miktar = Number(lot.miktar) - 1
+          lot.updated_at = new Date().toISOString()
+          return { data: [lot], error: null }
+        }
+        // WHATSAPP-API-01: mirrors whatsapp_kota_al / whatsapp_kota_iade (169_whatsapp_cloud_api.sql) — hourly buckets
+        // per doctor, a rolling 24h window (a bucket counts while its END is inside the last 24h). The real atomicity is
+        // Postgres's advisory lock; this fake is single-threaded and only needs the same ok/kullanilan answer.
+        if (ad === 'whatsapp_kota_al') {
+          const simdi = Date.now()
+          const saat = new Date(Math.floor(simdi / 3600000) * 3600000).toISOString()
+          const satirlar = db.tablo('whatsapp_kota_saatlik').filter((r) => r.doctor_id === args.p_doctor && Date.parse(String(r.saat)) + 3600000 > simdi - 24 * 3600000)
+          const toplam = satirlar.reduce((n, r) => n + Number(r.adet), 0)
+          if (toplam >= Number(args.p_limit)) return { data: { ok: false, kullanilan: toplam }, error: null }
+          const var_ = satirlar.find((r) => r.saat === saat)
+          if (var_) var_.adet = Number(var_.adet) + 1
+          else db.tablo('whatsapp_kota_saatlik').push({ doctor_id: args.p_doctor, saat, adet: 1 })
+          return { data: { ok: true, kullanilan: toplam + 1 }, error: null }
+        }
+        if (ad === 'whatsapp_kota_iade') {
+          const dolu = db.tablo('whatsapp_kota_saatlik').filter((r) => r.doctor_id === args.p_doctor && Number(r.adet) > 0).sort((a, b) => String(b.saat).localeCompare(String(a.saat)))[0]
+          if (dolu) dolu.adet = Number(dolu.adet) - 1
+          return { data: null, error: null }
+        }
         throw new Error(`[sahteSupabase] desteklenmeyen rpc: ${ad}`)
       },
     }
@@ -127,6 +170,7 @@ class Sorgu {
   private dondur = false
   private secim = '*'
   private sayim: { head: boolean } | null = null
+  private yazmaSayimi = false
   private yuk: Satir[] = []
   private guncelleme: Satir = {}
   private cakisma: string[] = ['id']
@@ -164,8 +208,9 @@ class Sorgu {
     if (o?.onConflict) this.cakisma = o.onConflict.split(',').map((s) => s.trim())
     return this
   }
-  update(g: Satir) { this.islem = 'update'; this.guncelleme = g; return this }
-  delete() { this.islem = 'delete'; return this }
+  /** `{ count: 'exact' }` on a write answers the number of rows it touched (PostgREST `Prefer: count=exact`). */
+  update(g: Satir, o?: { count?: string }) { this.islem = 'update'; this.guncelleme = g; this.yazmaSayimi = !!o?.count; return this }
+  delete(o?: { count?: string }) { this.islem = 'delete'; this.yazmaSayimi = !!o?.count; return this }
 
   private kosul(kolon: string, test: (v: unknown) => boolean) { this.kosullar.push({ kolon, test }); return this }
   eq(k: string, d: unknown) { return this.kosul(k, (v) => esit(v, d)) }
@@ -274,11 +319,13 @@ class Sorgu {
     const eslesen = tablo.filter((r) => this.eslesir(this.gommeleriUygula(this.ad, { ...r }, gommeler), gommeler))
     if (this.islem === 'update') {
       for (const r of eslesen) Object.assign(r, this.guncelleme)
-      return this.sonuc(this.dondur ? eslesen.map((r) => ({ ...r })) : null)
+      const y = this.sonuc(this.dondur ? eslesen.map((r) => ({ ...r })) : null)
+      return this.yazmaSayimi ? { ...y, count: eslesen.length } : y
     }
     if (this.islem === 'delete') {
       for (const r of eslesen) tablo.splice(tablo.indexOf(r), 1)
-      return this.sonuc(this.dondur ? eslesen : null)
+      const y = this.sonuc(this.dondur ? eslesen : null)
+      return this.yazmaSayimi ? { ...y, count: eslesen.length } : y
     }
 
     let satirlar = tablo
