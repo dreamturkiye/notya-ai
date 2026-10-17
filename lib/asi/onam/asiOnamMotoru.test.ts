@@ -128,10 +128,11 @@ describe('NOTYA-ASI-ONAM-01 · asiOnamOzetMetni', () => {
 })
 
 describe('NOTYA-ASI-ONAM-02 · klinik onay bayrağı', () => {
-  it('varsayılan ONAYSIZ — yapay zekâ klinik onayı kendisi vermez; yalnızca Dr. Gökhan imzasından sonra çevrilir', () => {
-    assert.equal(ASI_ONAM_KLINIK_ONAYI.onayli, false)
-    assert.equal(ASI_ONAM_KLINIK_ONAYI.onaylayan, null)
-    assert.equal(ASI_ONAM_KLINIK_ONAYI.tarih, null)
-    assert.equal(asiOnamKlinikOnayliMi(), false)
+  it('Dr. Gökhan onayı alındı (2026-10-17) — bayrak dolu ve tutarlı; yapay zekâ bu bayrağı kendisi çeviremez', () => {
+    assert.equal(ASI_ONAM_KLINIK_ONAYI.onayli, true)
+    assert.equal(ASI_ONAM_KLINIK_ONAYI.onaylayan, 'Dr. Gökhan Mamur')
+    assert.equal(ASI_ONAM_KLINIK_ONAYI.tarih, '2026-10-17')
+    assert.ok(ASI_ONAM_KLINIK_ONAYI.surum)
+    assert.equal(asiOnamKlinikOnayliMi(), true)
   })
 })

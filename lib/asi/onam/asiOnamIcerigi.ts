@@ -52,11 +52,13 @@ export interface AsiOnamKlinikOnayi {
   surum: string | null
 }
 
+// Klinik onay 2026-10-17: Dr. Gökhan Mamur içeriği inceledi ve onayladı (Kaan Arıoğlu aracılığıyla iletildi, ASI-ONAM-02b).
+// İçerik değişirse bu blok tekrar onaysıza çevrilir ve yeni sürüm için onay yeniden alınır.
 export const ASI_ONAM_KLINIK_ONAYI: AsiOnamKlinikOnayi = {
-  onayli: false,
-  onaylayan: null,
-  tarih: null,
-  surum: null,
+  onayli: true,
+  onaylayan: 'Dr. Gökhan Mamur',
+  tarih: '2026-10-17',
+  surum: 'v1 (2026-10-17)',
 }
 
 export function asiOnamKlinikOnayliMi(): boolean {
