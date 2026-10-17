@@ -20,6 +20,7 @@ import React, { useCallback, useEffect, useState } from 'react'
 import { Bilgi, Cerceve, Hata, tarihYaz, useUygulama, Yukleniyor } from './Kabuk'
 import { tamAd } from './Hastalar'
 import { panoyaKopyala } from './pano'
+import { Ipucu } from './Ipucu'
 import { portalAdresi } from './PortalErisimi'
 import { DurumRozeti, gunBasligi, saatAraligi, type RandevuDurumu } from './randevuOrtak'
 import { dilAdi, klinikMetni, randevuMetni, type GirdiMetni, type KlinikMetni, type RandevuMetni, type UygulamaMetni } from '@/lib/ulke/arayuz'
@@ -303,6 +304,7 @@ export default function OnBuro() {
   const kotu = bildirim === 'dolu' ? r.form.dolu : bildirim === 'mesai-disi' ? r.form.mesaiDisi : bildirim === 'gecersiz' ? r.form.tarihGecersiz : bildirim === 'gecis-yok' ? r.randevu.gecisYok : bildirim === 'yetki-yok' ? o.yetkiYok : bildirim === 'yapilamadi' ? o.yapilamadi : bildirim === 'kopyalanamadi' ? o.kopyalanamadi : kopuk ? u.m.kabuk.hata : null
   return (
     <Cerceve dil={u.dil} m={u.m} ad={hesap.ad} aktif="onBuro" cikis={u.cikis} onBuro={hesap.onBuro}>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', margin: '0 0 8px' }}><Ipucu m={u.m} bolum="onBuro" /></div>
       {hekimler === null ? (kopuk ? <Hata>{u.m.kabuk.hata}</Hata> : <p className="uza-bos" role="status">{u.m.kabuk.yukleniyor}</p>) : (
         <>
           <HekimSecimiGorunumu k={k} hekimler={hekimler} hekimId={hekimId} sec={setHekimId} />

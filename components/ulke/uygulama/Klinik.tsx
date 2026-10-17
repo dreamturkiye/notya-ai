@@ -19,6 +19,7 @@ import { panoyaKopyala } from './pano'
 import { DurumRozeti, gunBasligi, saatAraligi, type RandevuDurumu } from './randevuOrtak'
 import { KlinikYetkiler } from './KlinikYetkiler'
 import { KlinikPaylasilan } from './KlinikPaylasilan'
+import { Ipucu } from './Ipucu'
 import { klinikMetni, randevuMetni, rolAdi, type KlinikMetni, type RandevuMetni } from '@/lib/ulke/arayuz'
 import { yerine } from '@/lib/ulke/arayuz/yerTutucu'
 import { DAVET_KONUMLARI, yonetebilir, yoneticiMi, type KlinikDaveti, type KlinikGorunumu, type KlinikKonumu, type KlinikTakvimDilimi, type KlinikUyesi, type KlinikYetkiTuru } from '@/lib/ulke/klinikHesabi/tipler'
@@ -346,6 +347,7 @@ export default function Klinik() {
   const altGorunum = veri?.klinik && veri.klinik.konum !== 'on-buro' ? gorunum : 'ana'
   return (
     <Cerceve dil={u.dil} m={u.m} ad={hesap.ad} aktif="klinik" cikis={u.cikis} onBuro={hesap.onBuro}>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', margin: '0 0 8px' }}><Ipucu m={u.m} bolum="klinik" /></div>
       <Hata>{kopuk ? u.m.kabuk.hata : null}</Hata>
       {!veri ? (kopuk ? null : <p className="uza-bos" role="status">{u.m.kabuk.yukleniyor}</p>) : altGorunum === 'yetkiler' && veri.klinik ? (
         <><p className="uza-ipucu"><a className="uza-baglanti" href={klinikYolu()}>{k.klinik.geri}</a></p><KlinikYetkiler u={u} klinik={veri.klinik} ayarlar={veri.ayarlar} ben={veri.ben} /></>
