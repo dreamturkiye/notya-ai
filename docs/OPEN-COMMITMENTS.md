@@ -1,5 +1,23 @@
 # OPEN COMMITMENTS — Notya AI
 
+## FEATURE-PORT-BACKLOG-01 — NOTYA-TAKIP-01 / KONSULTASYONLAR-01 / MUAYENE-EKLERI-07 ported here; FOTO-ARSIV-01 migration applied, UI port stopped on a real decision (Kaan, "fix this for good now", Claude, 2026-10-17)
+
+Closes this branch's share of the 4th pre-existing failure logged in `NOTYA-ULKE-IZOLASYON-FISH-TUR-01` below (`hasta verisine dokunan her API dosyası envanterde`). Full reasoning, file list and decision points: `main`'s `docs/OPEN-COMMITMENTS.md`, entry `FEATURE-PORT-BACKLOG-01` (2026-10-17) — this entry carries only this branch's own raw evidence.
+
+**Ported to this branch**, byte-identical to the other 5 country branches (verified by checksum against a shared source): NOTYA-TAKIP-01 and KONSULTASYONLAR-01 defense-in-depth fixes (`lib/doktor/takip/senkron.ts` ownership re-check, Sağlığım portal's KONSULTASYONLAR-01 document exclusion, `app/api/doktor/konsultasyon/route.ts`'s `kaynak_not_id` ownership check, new files `lib/doktor/konsultasyonKaynakNot.ts` + `lib/portal/konsultasyonBelgeleri.ts`); MUAYENE-EKLERI-07 ("Yüklenen dosyalar") standalone — `components/doktor/YuklenenDosyalar.tsx`, `lib/doktor/muayeneEk/*`, routes `app/api/doktor/muayene-ekleri/yuklenenler/**`, mounted at the two `notlar/[id]` pages (only the MUAYENE-EKLERI-07 lines, unrelated drift in those files left untouched); hasta-izolasyon envanter entries + new test coverage (fixtures, VAKALAR cases, dedicated describe blocks) in `lib/security/hasta-izolasyon.test.ts`; `lib/security/testing/sahteSupabase.ts` replaced wholesale with `main`'s current mock DB (test infra only). **NOT ported:** FOTO-ARSIV-01's UI/viewer code (migration only — see below); MUAYENE-EKLERI-02's AI classification sub-chapter and its "ek adımı" capture step.
+
+**Verification (raw):**
+- Targeted suite (`hasta-izolasyon.test.ts` + `hasta-izolasyon-envanter.test.ts` + `lib/doktor/muayeneEk/yuklenenDosyalar.test.ts`): `# tests 460 / # pass 460 / # fail 0`. The envanter test (this branch's share of the 4th pre-existing failure) passes.
+- `npx tsc --noEmit`: clean
+- Full `npm run test`, this exact branch, before vs after this job (same tip, stash-isolated baseline so new untracked files could not contaminate the "before" run): before `# tests 5910 / # pass 5876 / # fail 30`; after `# tests 5946 / # pass 5912 / # fail 30`. Every pre-existing failure this job did not touch is unchanged before/after (checked by failing-test-name diff, not just counts).
+- Pre-existing, unrelated, NOT fixed here: this branch was already 2 files over the `lib/ulke/turkceTavan.test.ts` Turkish-text ratchet before this job (`1700` vs recorded ceiling `1698`, confirmed on a stashed-pristine copy) — this job's own changes do not move that count.
+
+**Migration:** `174_hasta_foto_arsivi.sql` applied to this country's Supabase project and verified (5 tables present, no new security-advisor finding) — see `main`'s `FEATURE-PORT-BACKLOG-01` entry for all 6 project ids and the verification method.
+
+**Commit:** `release/us@PENDING` (port) (docs commit: this one)
+
+**Decision points for Kaan:** same three as `main`'s `FEATURE-PORT-BACKLOG-01` entry — FOTO-ARSIV-01's country UI/translation port, FOTO-ARSIV-02's per-country regulatory sign-off, and MUAYENE-EKLERI-07's Turkish-UI-text localization. | Claude (ported + migrated); waits on Kaan |
+
 ## NOTYA-ULKE-IZOLASYON-FISH-TUR-01 — pre-existing isolation-suite gap on the country branches, found while porting PERF-SAGLAMLIK-2026-10 (Claude, 2026-10-17)
 
 **Not caused by, and not fixed by, the performance/robustness job that found it.** While porting the PERF-SAGLAMLIK-2026-10 fixes (dreamturkiye/notya-ai@3c18a116 on `main`) to this branch, `npm run test:izolasyon` showed 4 failures that also reproduce on this branch's **unmodified** tip (checked by running the same suite against the pre-port commit directly, before applying any perf change) — so this is pre-existing on the branch, unrelated to the perf port. The same 4 tests pass on `main` (confirmed in `main`'s own full `npm test` run the same day: 6964/6964 pass). Directly verified test-for-test identical on `release/us` and `release/gb` (same 4 failing test names, same error text); `release/ca`, `release/au`, `release/nz`, `release/uz` were not individually inspected test-by-test in this job (time), but share byte-identical content with `us`/`gb` on every file this job touched or compared, so the same gap is likely present on all six — **this should be confirmed, not assumed, before anyone treats it as scoped to us/gb only.**

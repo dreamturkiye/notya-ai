@@ -48,6 +48,7 @@ import { doktorOturum } from '@/lib/doktor/serverAuth'
 import { hastaSahibiMi } from '@/lib/doktor/hastaSahipligi'
 import { arsivsizIlaclar, arsivsizNotlar, arsivsizSeanslar } from '@/lib/doktor/arsiv'
 import { gununNotunaEkle } from '@/lib/doktor/gununNotunaEkle'
+import { konsultasyonKaynakNotu } from '@/lib/doktor/konsultasyonKaynakNot'
 import { hekimAdi, hekimBransi } from '@/lib/doktor/hekimAdi'
 import { decrypt } from '@/lib/security/encryption'
 import { specialtyProfile } from '@/lib/specialties/registry'
@@ -461,6 +462,11 @@ export async function POST(req: NextRequest) {
   if (!(await hastaSahibiMi(sb, user.id, patientId))) return yok(HASTA_YOK)
   const d = istemDogrula(b)
   if ('hata' in d) return NextResponse.json({ error: d.hata }, { status: 400 })
+  // HASTA-IZOLASYON: the source muayene note comes from the body, and the consultant portal later shows sentences of
+  // it to someone outside the practice. It must be this doctor's note of THIS patient — a foreign id is "not found".
+  if (d.girdi.kaynak_not_id && !(await konsultasyonKaynakNotu(sb, user.id, patientId, d.girdi.kaynak_not_id))) {
+    return NextResponse.json({ error: 'Muayene notu bulunamadı.' }, { status: 404 })
+  }
 
   // Defter kaydı hekime ait olmalı; hedef hekim/branş defterden doldurulabilir.
   let defterEposta: string | null = null
