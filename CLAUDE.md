@@ -8,6 +8,7 @@ This repo is a **commercial** multi-specialty product (~30 branşlar). Skills an
 |------|------|
 | Doktor Araçları classify-before-add | `.cursor/rules/specialty-doktor-araclari.mdc` |
 | Branş alan sızması (specialty fields must not leak) | `.cursor/rules/brans-alan-sizmasi.mdc` |
+| Ülke paritesi (every fix checked across us/gb/ca/au/nz/uz) | `.cursor/rules/ulke-paritesi-duzeltme.mdc` |
 | Performans bütçesi (hard ceilings from PERF-SAGLAMLIK-2026-10 — checked per change, not per month) | `.cursor/rules/performans-butcesi-koruma.mdc` |
 
 ## Skills (open before the matching work)
@@ -22,6 +23,8 @@ This repo is a **commercial** multi-specialty product (~30 branşlar). Skills an
 | Specialty audit HTML / depth pills | `.cursor/skills/specialty-audit-report/SKILL.md` |
 | Any API route/helper taking a patient, note, session or other patient-derived id | `.cursor/skills/hasta-izolasyon/SKILL.md` |
 | Any Anthropic/Claude call (new route, new chapter, prompt change) | `.cursor/skills/ai-model-politikasi/SKILL.md` |
+| Any report/form/identity field for a non-Turkey country module | `.cursor/skills/international-data-model-dogrulama/SKILL.md` |
+| Any bug fix or UX fix — before closing it (six-country check + per-country status line) | `.cursor/skills/ulke-paritesi-duzeltme/SKILL.md` |
 | Patient-file page, a portal/API hot path, task-sync, a hot-table query, or any new external call | `.cursor/skills/performans-butcesi-koruma/SKILL.md` |
 
 ## Branş alan sızması (short)

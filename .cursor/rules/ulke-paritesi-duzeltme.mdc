@@ -1,0 +1,19 @@
+---
+description: >-
+  Every bug fix or UX fix to shared/Turkey code must be checked and applied across
+  the six country versions (us, gb, ca, au, nz, uz) in the same change set; the
+  fix report carries a per-country status line. Mirror of cross-specialty-parity.
+alwaysApply: true
+---
+
+# Ülke paritesi — fix once, check six countries
+
+**Read and follow** `.cursor/skills/ulke-paritesi-duzeltme/SKILL.md` before closing any bug fix or UX fix.
+
+Boss rule (Kaan, 2026-10-16): a fix found in the Turkish/shared product is not done until it is checked, and applied where it applies, in **us, gb, ca, au, nz, uz** (`release/<cc>` builds) in the same change set.
+
+1. Per country: shared code / forked copy / not applicable / exempt (Turkey-only: MBYS, SGK/SUT/Medula, e-Nabız, e-Reçete, NVI, e-Fatura/GİB).
+2. Localized strings per country — never Turkish strings in a country build; Turkish stays untouched unless the code is genuinely shared.
+3. Each country's own data model (`international-data-model-dogrulama`) — never Turkish field keys/validators as placeholders.
+4. Tests with non-Turkish keys/copy; unported gaps go in `docs/OPEN-COMMITMENTS.md` with date and owner.
+5. The commit/PR report must contain one status line per country.
