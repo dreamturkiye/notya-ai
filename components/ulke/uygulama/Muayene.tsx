@@ -32,6 +32,7 @@ import { Not } from './Not'
 import { asistanAdi } from './Asistan'
 import { HastaFormuKarti } from './HastaFormuKarti'
 import { ozellikAcik } from '@/lib/ulke/ulke'
+import { Ipucu } from './Ipucu'
 import { gunBasligi, muayeneBaslatilabilir, takvimYolu, type RandevuKaydi } from './randevuOrtak'
 import { metninDili, randevuMetni, rolAdi, genelSablon, sablonMu, type UygulamaMetni } from '@/lib/ulke/arayuz'
 
@@ -78,7 +79,10 @@ export function HastaSecGorunumu({ m, q, hastalar, hata }: { m: UygulamaMetni; q
   return (
     <section className="uza-kart">
       <div className="uza-baslik-satiri">
-        <h1 className="uza-h1">{m.muayene.baslik}</h1>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+          <h1 className="uza-h1">{m.muayene.baslik}</h1>
+          <Ipucu m={m} bolum="muayene" />
+        </span>
         <a className="uza-dugme uza-dugme-cizgi" href={YOL.yeniHasta}>{m.muayene.yeniHasta}</a>
       </div>
       <p className="uza-aciklama" style={{ marginBottom: 14 }}>{m.muayene.hastaSec}</p>

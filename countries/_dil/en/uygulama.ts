@@ -287,6 +287,89 @@ export const EN_UYGULAMA_TEMEL: Temel = {
     sayiOkunamadi: 'This number could not be read. Type it again, for example %1 or %2.',
     duzelt: 'Something you typed could not be read. Correct the marked fields, or clear them, and try again.',
   },
+  // YENI-DOKTOR-UX-2026-10 — in-place tips: what each screen is for and the one next action, in two to four short
+  // sentences. The screens that exist in a country build only; a screen a pack does not bring never shows its tip.
+  ipuclari: {
+    rozet: 'TIP',
+    anladim: 'Got it',
+    birDaha: 'Don’t show this again',
+    ac: 'Tip: %',
+    ayarEtiket: 'Show tips',
+    ayarIzoh: 'The small “?” briefs on each screen, and a one-time introduction the first time a screen opens.',
+    bolumler: {
+      bugun: {
+        baslik: 'Today',
+        satirlar: [
+          'Your day starts here: today’s appointments and visits in one place.',
+          'Open Patients to work with a patient; the calendar plans your day.',
+        ],
+      },
+      takvim: {
+        baslik: 'Calendar',
+        satirlar: [
+          'Your appointment book, by day and by week.',
+          'Book a new appointment here; when the patient arrives, start the visit from the appointment itself.',
+        ],
+      },
+      hastalar: {
+        baslik: 'Patients',
+        satirlar: [
+          'Every patient you have recorded — visible to you alone.',
+          'Search by name or phone number.',
+          'A patient’s row opens their file; a visit starts from the file.',
+        ],
+      },
+      muayene: {
+        baslik: 'Visit',
+        satirlar: [
+          'Speak with the patient as you always do — the recording becomes a draft visit note.',
+          'Read the draft and correct it where needed.',
+          'Nothing is final until you approve it.',
+        ],
+      },
+      araclar: {
+        baslik: 'Tools',
+        satirlar: [
+          'Small helpers for the day’s work, each on its own screen.',
+          'A tool never changes a patient file by itself: what it keeps, you save.',
+        ],
+      },
+      klinik: {
+        baslik: 'Clinic',
+        satirlar: [
+          'Your clinic lives here: members, invitations and positions.',
+          'Who can help with your patients is granted here — and can be taken back at any time.',
+        ],
+      },
+      onBuro: {
+        baslik: 'Front desk',
+        satirlar: [
+          'The appointments of the doctors who gave this account a grant, in one workspace.',
+          'Book and manage appointments here; the clinical record stays the doctor’s.',
+        ],
+      },
+      ayarlar: {
+        baslik: 'Settings',
+        satirlar: [
+          'Setup lives here: language, specialty and your registration number.',
+          'Set it once and come back when something changes.',
+        ],
+      },
+    },
+  },
+  // YENI-DOKTOR-UX-2026-10 — the first-run checklist on the home of a new account.
+  ilkAdimlar: {
+    baslik: 'Welcome — your setup',
+    aciklama: 'A few steps and you are ready to work. Each row takes you to the right place.',
+    gizle: 'Hide',
+    tamamOrani: '%1 of %2 done',
+    adimlar: {
+      rol: { etiket: 'Choose your specialty', aciklama: 'Your assistant and your visit notes follow it' },
+      hasta: { etiket: 'Add your first patient', aciklama: 'Their file and visits are kept in one place' },
+      randevu: { etiket: 'Book your first appointment', aciklama: 'From the calendar' },
+      muayene: { etiket: 'Record your first visit', aciklama: 'Start it from the patient’s file or from an appointment' },
+    },
+  },
 }
 
 /** Shared by the multi-zone countries: the label of the account's time zone in Settings, and the line under it. */
