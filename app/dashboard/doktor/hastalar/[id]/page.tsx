@@ -96,6 +96,7 @@ import {
 } from '@/lib/doktor/hastaDosyaSekmeleri';
 import { cocukHastaMi, pediatrikBaglamMi, veliDiliMi } from '@/lib/specialties/kapsam';
 import DoktorGeriLink from '@/components/doktor/DoktorGeriLink';
+import IpucuBaloncugu from '@/components/doktor/IpucuBaloncugu';
 import { hastaDosyaHref } from '@/lib/doktor/geriNavigasyon';
 import { CHROME_RENK, CHROME_FONT } from '@/lib/doktor/chromeTheme';
 
@@ -485,7 +486,10 @@ export default function HastaProfilPage() {
             {loading ? '·' : basHarfler(patient?.ad_soyad || 'H')}
           </div>
           <div style={{ flex: 1, minWidth: 200 }}>
-            <div style={{ fontFamily: CHROME_FONT.serif, fontSize: 26, fontWeight: 500, letterSpacing: '-0.02em', color: '#2e251d' }}>{loading ? 'Hasta Dosyası' : patient?.ad_soyad || 'Hasta Dosyası'}</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+              <div style={{ fontFamily: CHROME_FONT.serif, fontSize: 26, fontWeight: 500, letterSpacing: '-0.02em', color: '#2e251d' }}>{loading ? 'Hasta Dosyası' : patient?.ad_soyad || 'Hasta Dosyası'}</div>
+              <IpucuBaloncugu bolum="hasta-dosyasi" />
+            </div>
             {kimlikCipleri.length > 0 && (
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 7 }}>
                 {kimlikCipleri.map((c, i) => (

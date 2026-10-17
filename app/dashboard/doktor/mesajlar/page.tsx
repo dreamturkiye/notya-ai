@@ -9,6 +9,7 @@ import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth'
 import { CHROME_RENK, CHROME_FONT } from '@/lib/doktor/chromeTheme'
+import IpucuBaloncugu from '@/components/doktor/IpucuBaloncugu'
 import MesajEkViewer from '@/components/doktor/MesajEkViewer'
 import { ORTAK_BELGE_TURLERI } from '@/lib/doktor/belgeTurleri'
 import { hastaDosyaHref } from '@/lib/doktor/geriNavigasyon'
@@ -193,9 +194,12 @@ function DoktorMesajlarIcerik() {
   return (
     <div>
       <div style={{ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', fontSize: 15, color: '#6d6055', marginBottom: 4 }}>Doktor</div>
-      <h1 style={{ fontFamily: CHROME_FONT.serif, fontWeight: 500, fontSize: 32, margin: '0 0 6px', color: '#2e251d', letterSpacing: '-0.02em' }}>
-        Mesajlar {unreadCount > 0 ? <span style={{ color: CHROME_RENK.pine }}>({unreadCount})</span> : null}
-      </h1>
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+        <h1 style={{ fontFamily: CHROME_FONT.serif, fontWeight: 500, fontSize: 32, margin: '0 0 6px', color: '#2e251d', letterSpacing: '-0.02em' }}>
+          Mesajlar {unreadCount > 0 ? <span style={{ color: CHROME_RENK.pine }}>({unreadCount})</span> : null}
+        </h1>
+        <IpucuBaloncugu bolum="mesajlar" />
+      </span>
       <p style={{ margin: '0 0 18px', color: CHROME_RENK.muted, fontSize: 14 }}>
         Hasta portalı (Sağlığım) gelen kutusu — ekleri gözlemleyin, belgelere kaydedin veya mesajla silin.
       </p>
@@ -220,7 +224,14 @@ function DoktorMesajlarIcerik() {
           }}
         >
           {!threads.length && !loading ? (
-            <p style={{ margin: 0, padding: 16, color: CHROME_RENK.muted, fontSize: 14 }}>Henüz mesaj yok.</p>
+            /* YENI-DOKTOR-UX-2026-10: boş ekran bölümün ne olduğunu ve ilk adımı söyler. */
+            <div style={{ padding: '22px 18px' }}>
+              <p style={{ margin: 0, color: CHROME_RENK.ink, fontSize: 14.5, fontWeight: 600 }}>Henüz mesaj yok</p>
+              <p style={{ margin: '6px 0 0', color: CHROME_RENK.muted, fontSize: 13.5, lineHeight: 1.5 }}>
+                Hastalarınız Sağlığım portalından yazdığında mesajları burada görürsünüz. Bir hastaya portal erişimi vermek için{' '}
+                <a href="/doktor-tools/hasta-portali" style={{ color: CHROME_RENK.pine, fontWeight: 700, textDecoration: 'none' }}>Araçlar › Hasta Portalı</a>'nı kullanın.
+              </p>
+            </div>
           ) : (
             threads.map((t) => (
               <button

@@ -21,6 +21,7 @@ import VucutHaritasi from './VucutHaritasi'
 import { bitmapKalitesi, blobaCevir, disaAktarGorseli, kucukResimUret, tuval, turevUret } from './istemciGorsel'
 import { baslikKucuk, birincil, dugme, girdi, kart, R, rozet, tehlike } from './stil'
 import { calismaBoyutu } from '@/lib/doktor/fotoArsiv/piksel'
+import IpucuBaloncugu from '@/components/doktor/IpucuBaloncugu'
 
 type Durum = 'yukleniyor' | 'hazir' | 'yetkisiz' | 'etkin-degil' | 'kapali' | 'hata'
 
@@ -295,7 +296,10 @@ export default function FotoArsivi({ patientId, veliDili, hastaAdi }: { patientI
 
       <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
         <div style={{ flex: 1, minWidth: 160 }}>
-          <h2 style={{ margin: 0, fontSize: 18, color: R.ink }}>Fotoğraflar <span style={{ color: R.muted, fontWeight: 400, fontSize: 14 }}>({ogeler.length}{aktifFiltre ? `, ${gorunen.length} gösteriliyor` : ''})</span></h2>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+            <h2 style={{ margin: 0, fontSize: 18, color: R.ink }}>Fotoğraflar <span style={{ color: R.muted, fontWeight: 400, fontSize: 14 }}>({ogeler.length}{aktifFiltre ? `, ${gorunen.length} gösteriliyor` : ''})</span></h2>
+            <IpucuBaloncugu bolum="fotograflar" />
+          </span>
           {hastaAdi && <div style={{ fontSize: 12, color: R.muted }}>{hastaAdi}</div>}
         </div>
         <button style={birincil} onClick={() => dosyaRef.current?.click()} data-testid="foto-ekle">Fotoğraf ekle</button>

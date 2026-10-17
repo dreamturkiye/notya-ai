@@ -7,6 +7,8 @@
  */
 'use client';
 import { CHROME_RENK, CHROME_FONT } from '@/lib/doktor/chromeTheme';
+import IpucuAyari from '@/components/doktor/IpucuAyari';
+import IpucuBaloncugu from '@/components/doktor/IpucuBaloncugu';
 
 const BOLUMLER = [
   { baslik: 'Entegrasyonlar', aciklama: 'Takvim, e-posta ve dış sistem bağlantıları', rota: '/dashboard/doktor/entegrasyonlar', ikon: '🔌' },
@@ -25,7 +27,10 @@ export default function AyarlarPage() {
   return (
     <div>
       <div style={{ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', fontSize: 15, color: '#6d6055', marginBottom: 4 }}>Doktor</div>
-      <h1 style={{ fontFamily: CHROME_FONT.serif, fontWeight: 500, fontSize: 32, margin: '0 0 6px', color: '#2e251d', letterSpacing: '-0.02em' }}>Ayarlar</h1>
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+        <h1 style={{ fontFamily: CHROME_FONT.serif, fontWeight: 500, fontSize: 32, margin: '0 0 6px', color: '#2e251d', letterSpacing: '-0.02em' }}>Ayarlar</h1>
+        <IpucuBaloncugu bolum="ayarlar" />
+      </span>
       <p style={{ fontSize: 14, color: CHROME_RENK.muted, marginBottom: 22 }}>Kurulum ve yönetim işlemleri — günlük akışınızı kalabalıklaştırmasın diye burada.</p>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxWidth: 640 }}>
         {BOLUMLER.map((b) => (
@@ -42,6 +47,8 @@ export default function AyarlarPage() {
             <span style={{ color: '#C9BEA9', fontSize: 18 }}>›</span>
           </a>
         ))}
+        {/* YENI-DOKTOR-UX-2026-10: ipucu balonları için global anahtar — varsayılan açık. */}
+        <IpucuAyari />
       </div>
     </div>
   );

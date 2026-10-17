@@ -22,6 +22,7 @@ import { izinVarMi, ROL_KISA_ETIKETI_TR, type PratikRol } from '@/lib/doktor/per
 import { randevuAksiyonlari, REAKTIVASYON_DURUMU } from '@/lib/randevu/randevuDurum';
 import { trAramaNormalize, trIcerir } from '@/lib/utils/turkceArama';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
+import IpucuBaloncugu from '@/components/doktor/IpucuBaloncugu';
 import RandevuMesaji from '@/components/doktor/iletisim/RandevuMesaji';
 import HazirMesajlar from '@/components/doktor/iletisim/HazirMesajlar';
 import RandevuTalepleri from '@/components/doktor/randevu/RandevuTalepleri';
@@ -916,7 +917,10 @@ export default function RandevularPage() {
       `}</style>
       <div className="fv-wrap" style={{ maxWidth: '100%', margin: '0 auto', padding: '12px 4px 24px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 14 }}>
-          <h1 style={{ fontSize: 22, margin: 0 }}>Randevular</h1>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+            <h1 style={{ fontSize: 22, margin: 0 }}>Randevular</h1>
+            <IpucuBaloncugu bolum="randevular" />
+          </span>
           {rol && rol !== 'doktor' && (
             <span style={{ fontSize: 12, padding: '4px 10px', borderRadius: 999, background: '#E4F3F1', color: CHROME_RENK.pine }}>
               {ROL_KISA_ETIKETI_TR[rol]} olarak bağlısınız{yonet ? '' : ' · yalnızca görüntüleme'}

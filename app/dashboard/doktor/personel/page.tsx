@@ -139,7 +139,7 @@ export default function PersonelPage() {
 
   return (
     <div>
-      <div style={{ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', fontSize: 15, color: '#6d6055', marginBottom: 4 }}>Ayarlar</div>
+      <a href="/dashboard/doktor/ayarlar" style={{ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', fontSize: 15, color: '#6d6055', marginBottom: 4, display: 'inline-block', textDecoration: 'none' }}>‹ Ayarlar</a>
       <h1 style={{ fontFamily: CHROME_FONT.serif, fontWeight: 500, fontSize: 32, margin: '0 0 4px', color: '#2e251d', letterSpacing: '-0.02em' }}>Personel</h1>
       <p style={{ color: CHROME_RENK.muted, fontSize: 14, marginBottom: 20, maxWidth: 560 }}>
         Ekip arkadaşlarınızı ad, soyad ve rolleriyle davet edin. Her rol yalnızca kendi işine yetecek kadar erişir;

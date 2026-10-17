@@ -13,6 +13,7 @@ import { seansGeriHref } from "@/lib/doktor/geriNavigasyon"
 import { CHROME_FONT, CHROME_FONT_HREF } from "@/lib/doktor/chromeTheme"
 import { turkceHataMesaji } from "@/lib/turkce/dogrulamaMesaji"
 import MuayeneCekListesi from "@/components/doktor/MuayeneCekListesi"
+import IpucuBaloncugu from "@/components/doktor/IpucuBaloncugu"
 import MuayeneEklerAdimi, { type EkPayload } from "@/components/doktor/MuayeneEklerAdimi"
 import SinavHastaBilgisi from "@/components/doktor/SinavHastaBilgisi"
 import { sinavHastaBilgisi } from "@/lib/doktor/sinavHastaBilgisi"
@@ -550,6 +551,7 @@ function NewSessionInner() {
         <div style={S({display:"flex",alignItems:"center",gap:"12px",marginBottom:"24px"})}>
           <div onClick={()=>router.push(seansGeriHref(patientId))} style={S({color:"#8b7d70",cursor:"pointer",fontSize:"14px"})}>← Geri</div>
           <div style={S({fontSize:"18px",fontWeight:"600",color:"#3b2e24"})}>Yeni Seans</div>
+          <IpucuBaloncugu bolum="yeni-muayene" />
         </div>
 
         {error && <div style={S({background:"#FCEBEB",border:"1px solid #F09595",borderRadius:"12px",padding:"14px",fontSize:"13px",color:"#A32D2D",marginBottom:"16px"})}>{error}</div>}

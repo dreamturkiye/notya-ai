@@ -10,6 +10,7 @@ import {
 } from '@/lib/doktor/toolsUi'
 import React, { useState } from 'react'
 import { CHROME_RENK, CHROME_FONT } from '@/lib/doktor/chromeTheme'
+import IpucuBaloncugu from '@/components/doktor/IpucuBaloncugu'
 import GonderDugmesi from '@/components/doktor/iletisim/GonderDugmesi'
 
 type PortalPaylasim = {
@@ -114,7 +115,10 @@ export default function HastaPortaliPage() {
         <div style={{ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', fontSize: 15, color: '#6d6055', marginBottom: 4 }}>
           Araçlar
         </div>
-        <h1 style={{ margin: 0, fontFamily: CHROME_FONT.serif, fontWeight: 500, fontSize: 32, color: '#2e251d', letterSpacing: '-0.02em' }}>Hasta Portalı</h1>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+          <h1 style={{ margin: 0, fontFamily: CHROME_FONT.serif, fontWeight: 500, fontSize: 32, color: '#2e251d', letterSpacing: '-0.02em' }}>Hasta Portalı</h1>
+          <IpucuBaloncugu bolum="hasta-portali" />
+        </span>
         <p style={{ marginTop: 8, color: CHROME_RENK.muted, fontSize: 14, lineHeight: 1.5 }}>
           30 gün geçerli Sağlığım linki + 6 haneli PIN oluşturun. PIN yalnızca bu ekranda bir kez
           gösterilir — hastaya link ile birlikte iletin.

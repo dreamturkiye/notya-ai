@@ -178,7 +178,7 @@ describe('pratikOturum kullanan her rota sınıflandırılmış', () => {
     })
   }
   it('sekreter, sekreterKapali olmayan her mevcut rotada eskisi gibi girer (hiçbir yetki kaybı yok)', () => {
-    const YENI_ROTALAR = new Set(['/api/doktor/hastalar/[id]/olcumler', '/api/doktor/documents', '/api/doktor/documents/[id]', '/api/doktor/documents/[id]/download', '/api/doktor/hesap/oturum'])
+    const YENI_ROTALAR = new Set(['/api/doktor/hastalar/[id]/olcumler', '/api/doktor/documents', '/api/doktor/documents/[id]', '/api/doktor/documents/[id]/download', '/api/doktor/hesap/oturum', '/api/doktor/ilk-adimlar'])
     // MOBIL-PERSONEL-04: the only deliberate secretary loss — clinical note content (read) and note deletion.
     const NOT_KAPALI = (y: string) => y === '/api/doktor/son-notlar' || y === '/api/notes' || y.startsWith('/api/notes/')
     for (const yol of PRATIK_ROTALAR) {

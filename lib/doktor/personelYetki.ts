@@ -133,6 +133,8 @@ export const ROTA_YETKILERI: readonly Kural[] = [
   K('/api/doktor/hastalar/[id]/olcumler', 'olcum.ekle', 'olcum.ekle', { sekreterKapali: true }),
   // MOBIL-PERSONEL-04 (Kaan, 2026-10-16): a sekreter never reads clinical note content and never deletes a note.
   K('/api/doktor/son-notlar', 'not.oku', null, { sekreterKapali: true }),
+  // YENI-DOKTOR-UX-2026-10: first-run checklist — the doctor's own setup state; staff have no setup card.
+  K('/api/doktor/ilk-adimlar', 'hesap.kendi', null, { sekreterKapali: true }),
   K('/api/notes', 'not.oku', 'not.yaz', { sekreterKapali: true }),
   K('/api/doktor/asilar', 'hasta.dosya.oku', 'hasta.dosya.yaz'),
   K('/api/doktor/asi-onam', 'hasta.dosya.oku', 'hasta.dosya.yaz'),

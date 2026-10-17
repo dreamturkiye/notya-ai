@@ -15,6 +15,7 @@ import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth'
 import { doktorAraclariGruplu, type AracGrubu } from '@/lib/doktor/doktorAraclari'
 import { hekimProfilOturumOku, hekimProfilOturumYaz, hekimProfilTazeleBasligi, hekimProfilTazeleBitti } from '@/lib/doktor/hekimProfilIstemci'
 import { CHROME_RENK, CHROME_FONT } from '@/lib/doktor/chromeTheme'
+import IpucuBaloncugu from '@/components/doktor/IpucuBaloncugu'
 
 export const dynamic = 'force-dynamic';
 
@@ -86,7 +87,10 @@ export default function DoktorToolsPage() {
   return (
     <div>
       <div style={{ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', fontSize: 18, color: '#6d6055', marginBottom: 2 }}>Araçlar</div>
-      <h1 style={{ fontFamily: CHROME_FONT.serif, fontWeight: 500, fontSize: dar ? 30 : 40, margin: 0, letterSpacing: '-0.03em', color: '#2e251d' }}>Doktor Araçları</h1>
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+        <h1 style={{ fontFamily: CHROME_FONT.serif, fontWeight: 500, fontSize: dar ? 30 : 40, margin: 0, letterSpacing: '-0.03em', color: '#2e251d' }}>Doktor Araçları</h1>
+        <IpucuBaloncugu bolum="araclar" />
+      </span>
       {toplam > 0 && (
         <div style={{ fontSize: 14, color: CHROME_RENK.muted, marginTop: 8 }}>
           {bransAdi ? `${bransAdi} · ` : ''}{toplam} araç
