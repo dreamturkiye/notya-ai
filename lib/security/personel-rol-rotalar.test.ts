@@ -240,12 +240,13 @@ describe('personel rolleri — gerçek route handler\'ları', () => {
       assert.notEqual(r.status, 200)
       assert.equal(db.tablo('notes').find((n) => n.id === A.taslakNot)!.approved_at, null)
     })
-    it('taslak notu SİLEMEZ (403); sekreter eskisi gibi silebilir (değişmedi)', async () => {
+    it('taslak notu SİLEMEZ (403); sekreter de silemez (MOBIL-PERSONEL-04)', async () => {
       const r = await coz(R.notDetay.DELETE(iste('DELETE', `/api/notes/${A.taslakNot}`, { token: asistanA.token }), prm({ id: A.taslakNot })))
       assert.equal(r.status, 403)
       assert.ok(db.tablo('notes').some((n) => n.id === A.taslakNot))
       const s = await coz(R.notDetay.DELETE(iste('DELETE', `/api/notes/${A.taslakNot}`, { token: sekreterA.token }), prm({ id: A.taslakNot })))
-      assert.equal(s.status, 200, 'sekreter yetkisi bu değişiklikle ne arttı ne azaldı')
+      assert.equal(s.status, 403, 'MOBIL-PERSONEL-04: sekreter hiçbir notu silemez')
+      assert.ok(db.tablo('notes').some((n) => n.id === A.taslakNot), 'not silinmemiş olmalı')
     })
     it('hasta kaydını / randevuyu değiştiremez, fatura ve personele erişemez', async () => {
       const once = JSON.stringify(db.tablo('randevular'))
@@ -292,10 +293,10 @@ describe('personel rolleri — gerçek route handler\'ları', () => {
   })
 
   describe('sekreter — değişmedi', () => {
-    it('hasta, not, randevu okur; hasta düzenler; randevu oluşturur', async () => {
+    it('hasta, randevu okur; muayene notunu OKUYAMAZ (403); hasta düzenler; randevu oluşturur', async () => {
       const t = sekreterA.token
       assert.equal((await coz(R.hasta.GET(iste('GET', `/api/doktor/hastalar/${A.hasta}`, { token: t }), prm({ id: A.hasta })))).status, 200)
-      assert.equal((await coz(R.notDetay.GET(iste('GET', `/api/notes/${A.not}`, { token: t }), prm({ id: A.not })))).status, 200)
+      assert.equal((await coz(R.notDetay.GET(iste('GET', `/api/notes/${A.not}`, { token: t }), prm({ id: A.not })))).status, 403)
       assert.equal((await coz(R.randevular.GET(iste('GET', `/api/doktor/randevular?${ARALIK}`, { token: t })))).status, 200)
       assert.equal((await coz(R.hasta.PUT(iste('PUT', `/api/doktor/hastalar/${A.hasta}`, { token: t, govde: { sehir: 'Ankara' } }), prm({ id: A.hasta })))).status, 200)
     })
