@@ -298,8 +298,8 @@ describe('POST /api/users/profile: KVKK consent', () => {
     const s = satir(h.id)!
     const m = metalar.get(h.id)!
     assert.equal(m.kvkk_onay, true)
-    assert.equal(m.kvkk_metin_versiyonu, '2026-08-25-v2')
-    assert.equal(s.kvkk_consent_version, '2026-08-25-v2')
+    assert.equal(m.kvkk_metin_versiyonu, '2026-10-17-v6')
+    assert.equal(s.kvkk_consent_version, '2026-10-17-v6')
     assert.equal(s.kvkk_consent_at, m.kvkk_onay_tarihi)
     const an = Date.parse(String(s.kvkk_consent_at))
     assert.ok(an >= once - 1000 && an <= Date.now() + 1000, 'stamped with the server clock')

@@ -12,7 +12,7 @@
  */
 
 /** The same string as `kvkk_metin_versiyonu` in app/kayit/page.tsx. */
-export const KVKK_METIN_VERSIYONU = '2026-08-25-v2'
+export const KVKK_METIN_VERSIYONU = '2026-10-17-v6'
 
 /** The same sentence as the error in app/kayit/page.tsx. */
 export const KVKK_ONAY_HATASI = "Devam edebilmek için KVKK Aydınlatma Metni'ni okuyup onaylamanız gerekmektedir."

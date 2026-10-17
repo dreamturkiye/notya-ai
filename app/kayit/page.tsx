@@ -21,6 +21,12 @@ export default function KayitPage() {
   // the aydınlatma metni at COLLECTION — not linked from a footer afterwards. Never
   // pre-checked: consent must be 'özgür iradeyle açıklanan'.
   const [kvkkOnay, setKvkkOnay] = useState(false);
+  // HUKUK-01: a second, independent checkbox — kept separate from the KVKK box above rather than
+  // merged into its text, because lib/onboarding/kvkkOnay.ts and the onboarding step-3 mirror of
+  // this exact KVKK box (lib/onboarding/adimUi.test.ts, profilDogrula.test.ts, NOTYA-ONBOARDING-01)
+  // depend on that box's wording being byte-identical to /kayit's. Merging the two would have broken
+  // that synchronization for no real benefit — two short checkboxes is no heavier for the doctor.
+  const [kosullarOnay, setKosullarOnay] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -33,8 +39,13 @@ export default function KayitPage() {
       return;
     }
 
+    if (!kosullarOnay) {
+      setError('Devam edebilmek için Kullanım Koşulları\'nı okuyup onaylamanız gerekmektedir.');
+      return;
+    }
+
     if (!kvkkOnay) {
-      setError('Devam edebilmek için Kullanım Koşulları\'nı ve KVKK Aydınlatma Metni\'ni okuyup onaylamanız gerekmektedir.');
+      setError('Devam edebilmek için KVKK Aydınlatma Metni\'ni okuyup onaylamanız gerekmektedir.');
       return;
     }
 
@@ -169,7 +180,7 @@ export default function KayitPage() {
           )}
 
           <label style={{
-            display: 'flex', alignItems: 'flex-start', gap: 10, fontSize: 13, lineHeight: 1.55, marginBottom: 18,
+            display: 'flex', alignItems: 'flex-start', gap: 10, fontSize: 13, lineHeight: 1.55, marginBottom: 12,
             color: R.ink, cursor: 'pointer',
           }}>
             <input
@@ -179,16 +190,31 @@ export default function KayitPage() {
               style={{ marginTop: 3, width: 16, height: 16, flexShrink: 0, cursor: 'pointer', accentColor: R.pine }}
             />
             <span>
-              <a href="/kullanim-kosullari" target="_blank" rel="noopener noreferrer" style={{ color: R.pine, fontWeight: 600 }}>
-                Kullanım Koşulları
-              </a>
-              &apos;nı ve{' '}
               <a href="/kvkk" target="_blank" rel="noopener noreferrer" style={{ color: R.pine, fontWeight: 600 }}>
                 KVKK Aydınlatma Metni
               </a>
-              &apos;ni okudum, kabul ediyorum. Kişisel verilerimin ve hastalarıma ait sağlık verilerinin
-              metinde açıklanan amaçlarla işlenmesini ve belirtilen hizmet sağlayıcılara aktarılmasını
-              kabul ediyorum.
+              &apos;ni okudum. Kişisel verilerimin ve hastalarıma ait sağlık verilerinin metinde
+              açıklanan amaçlarla işlenmesini ve belirtilen hizmet sağlayıcılara aktarılmasını kabul
+              ediyorum.
+            </span>
+          </label>
+
+          {/* HUKUK-01: separate checkbox, kept out of the KVKK box above — see the state comment. */}
+          <label style={{
+            display: 'flex', alignItems: 'flex-start', gap: 10, fontSize: 13, lineHeight: 1.55, marginBottom: 18,
+            color: R.ink, cursor: 'pointer',
+          }}>
+            <input
+              type="checkbox"
+              checked={kosullarOnay}
+              onChange={(e) => setKosullarOnay(e.target.checked)}
+              style={{ marginTop: 3, width: 16, height: 16, flexShrink: 0, cursor: 'pointer', accentColor: R.pine }}
+            />
+            <span>
+              <a href="/kullanim-kosullari" target="_blank" rel="noopener noreferrer" style={{ color: R.pine, fontWeight: 600 }}>
+                Kullanım Koşulları
+              </a>
+              &apos;nı okudum, kabul ediyorum.
             </span>
           </label>
 
