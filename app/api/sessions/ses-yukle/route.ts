@@ -75,6 +75,9 @@ export async function POST(req: NextRequest) {
       method: 'POST',
       headers: { 'xi-api-key': process.env.ELEVENLABS_API_KEY! },
       body: fd,
+      // SAGLAMLIK-2026-10: asılı kalan STT, maxDuration (300 sn) boyunca fonksiyonu kilitlemesin;
+      // aşım mevcut ağ-hatası yoluna düşer (502 + ham ses finally'de yine silinir).
+      signal: AbortSignal.timeout(240_000),
     })
     const veri = await r.json()
     if (!r.ok) {

@@ -187,57 +187,62 @@ SADECE geçerli JSON döndür, başka hiçbir şey yazma:
     const { soapNotuUret, stilOrnekleriDerle } = await import('@/lib/doktor/soapUret')
 
     let klinikBaglam = ''
-    try {
-      const seansSatiri = seans
-      if (seansSatiri.patient_id) {
-        const { hastaDosyasiniDerle } = await import('@/lib/doktor/hastaDosyaDerleyici')
-        const dosya = await hastaDosyasiniDerle(getSupabase(), user.id, String(seansSatiri.patient_id))
-        if (dosya) klinikBaglam = dosya.split('## VİZİT GEÇMİŞİ')[0].slice(0, 4000)
-        // NOTYA-SOAP-03: plan sürekliliği — son onaylı vizitin planı/tanısı bağlama eklenir,
-        // yeni not önceki planın akıbetini değerlendirerek yazılır (izole not yerine devamlılık).
-        // NOTYA-ARSIV-01: arşivlenmiş muayenenin planı "önceki vizit" olarak bağlama girmez.
-        const { data: oncekiVizit } = await arsivsizNotlar(getSupabase(), 'content_plan, content_tani, created_at, sessions!inner(patient_id)')
-          .eq('sessions.patient_id', seansSatiri.patient_id)
-          .eq('doctor_id', user.id)
-          .not('approved_at', 'is', null)
-          .order('created_at', { ascending: false })
-          .limit(1)
-        const ov = oncekiVizit?.[0]
-        if (ov?.content_plan) {
-          const ovTarih = new Date(String(ov.created_at)).toLocaleDateString('tr-TR', { timeZone: 'Europe/Istanbul' })
-          klinikBaglam += `\n\nÖNCEKİ VİZİT PLANI (${ovTarih}${ov.content_tani ? ` — tanı: ${String(ov.content_tani).slice(0, 200)}` : ''}):\n${String(ov.content_plan).slice(0, 1200)}`
-        }
-      }
-    } catch { /* bağlam kritik değil — bağlamsız da not üretilir */ }
-
     let stilOrnekleri = ''
-    try {
-      const { data: oncekiNotlar } = await arsivsizNotlar(getSupabase(), 'content_subjektif, content_plan')
-        .eq('doctor_id', user.id)
-        .not('approved_at', 'is', null)
-        .order('created_at', { ascending: false })
-        .limit(2)
-      if (oncekiNotlar?.length) stilOrnekleri = stilOrnekleriDerle(oncekiNotlar)
-    } catch { /* stil örneği kritik değil */ }
-
     // NOTYA-OGRENME-03: meslektaş hafızası — stil profili + kesin klinik/üslup kayıtları tek metinde
     let stilProfili = ''
     let doktorKurallari: { slug: string; satir: string }[] = []
-    try {
-      const { hafizaYukle, hafizaBloguNot } = await import('@/lib/doktor/hafiza')
-      stilProfili = hafizaBloguNot(await hafizaYukle(getSupabase(), user.id))
-      const { uygulanirKurallariYukle } = await import('@/lib/doktor/ogrenme/kuralKaydet')
-      doktorKurallari = await uygulanirKurallariYukle(getSupabase(), user.id)
-    } catch { /* profil kritik değil */ }
-
     // BRANS-ALAN-SIZMASI: hasta doğum tarihi yalnız karma-yaş branşında (aile/genel) pediatrik bağlam kararı için
     const { hastaCinsiyet, hastaDogumIso } = await import('@/lib/specialties/kapsamSunucu')
     const hastaId = seans.patient_id ? String(seans.patient_id) : null
+    // PERF-2026-10: dört bağımsız ön-yük bloğu eş zamanlı koşar (bu ülke sürümünde muayene-ekleri yok); her blok
+    // KENDİ try/catch'ini ve kısmi atama davranışını aynen korur — davranış birebir, yalnız toplam bekleme kısalır.
     const [doktorAdi, doktorBransi, dogumIso, cinsiyet] = await Promise.all([
       hekimAdi(getSupabase(), user.id),
       hekimBransi(getSupabase(), user.id),
       hastaDogumIso(getSupabase(), user.id, hastaId),
       hastaCinsiyet(getSupabase(), user.id, hastaId),
+      (async () => {
+        try {
+          const seansSatiri = seans
+          if (seansSatiri.patient_id) {
+            const { hastaDosyasiniDerle } = await import('@/lib/doktor/hastaDosyaDerleyici')
+            const dosya = await hastaDosyasiniDerle(getSupabase(), user.id, String(seansSatiri.patient_id))
+            if (dosya) klinikBaglam = dosya.split('## VİZİT GEÇMİŞİ')[0].slice(0, 4000)
+            // NOTYA-SOAP-03: plan sürekliliği — son onaylı vizitin planı/tanısı bağlama eklenir,
+            // yeni not önceki planın akıbetini değerlendirerek yazılır (izole not yerine devamlılık).
+            // NOTYA-ARSIV-01: arşivlenmiş muayenenin planı "önceki vizit" olarak bağlama girmez.
+            const { data: oncekiVizit } = await arsivsizNotlar(getSupabase(), 'content_plan, content_tani, created_at, sessions!inner(patient_id)')
+              .eq('sessions.patient_id', seansSatiri.patient_id)
+              .eq('doctor_id', user.id)
+              .not('approved_at', 'is', null)
+              .order('created_at', { ascending: false })
+              .limit(1)
+            const ov = oncekiVizit?.[0]
+            if (ov?.content_plan) {
+              const ovTarih = new Date(String(ov.created_at)).toLocaleDateString('tr-TR', { timeZone: 'Europe/Istanbul' })
+              klinikBaglam += `\n\nÖNCEKİ VİZİT PLANI (${ovTarih}${ov.content_tani ? ` — tanı: ${String(ov.content_tani).slice(0, 200)}` : ''}):\n${String(ov.content_plan).slice(0, 1200)}`
+            }
+          }
+        } catch { /* bağlam kritik değil — bağlamsız da not üretilir */ }
+      })(),
+      (async () => {
+        try {
+          const { data: oncekiNotlar } = await arsivsizNotlar(getSupabase(), 'content_subjektif, content_plan')
+            .eq('doctor_id', user.id)
+            .not('approved_at', 'is', null)
+            .order('created_at', { ascending: false })
+            .limit(2)
+          if (oncekiNotlar?.length) stilOrnekleri = stilOrnekleriDerle(oncekiNotlar)
+        } catch { /* stil örneği kritik değil */ }
+      })(),
+      (async () => {
+        try {
+          const { hafizaYukle, hafizaBloguNot } = await import('@/lib/doktor/hafiza')
+          stilProfili = hafizaBloguNot(await hafizaYukle(getSupabase(), user.id))
+          const { uygulanirKurallariYukle } = await import('@/lib/doktor/ogrenme/kuralKaydet')
+          doktorKurallari = await uygulanirKurallariYukle(getSupabase(), user.id)
+        } catch { /* profil kritik değil */ }
+      })(),
     ])
     const { cekBlokSil, cekListePromptBlogu, cekNotMetni } = await import('@/lib/doktor/muayeneCekListesi')
     const { cekListeHesapla, cekListeVerisiYukle } = await import('@/lib/doktor/cekListeSunucu')
