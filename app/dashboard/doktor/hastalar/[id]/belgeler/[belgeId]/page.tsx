@@ -289,7 +289,7 @@ export default function BelgeAnalizPage() {
               </div>
               {modalite === 'eko' && (
                 <div style={{ marginTop: 8, fontSize: 12, color: CHROME_RENK.muted }}>
-                  Metin katmanı olan eko raporu PDF’i okunur. Durağan kare ve sine döngüsünden EF yeniden ölçülmez. Onayladığınız taslak son muayenenin Objektif bölümüne yazılır.
+                  Metin katmanı olan eko raporu PDF’i okunur. Taslak ölçümleri bölümler; uyumlu ileri darlığı düşük gradyanlı darlıktan ayırır ve raporda olmayan ölçümü listeler. Durağan kare ve sineden EF ölçülmez. Onay, son muayenenin Objektif bölümüne yazılır.
                 </div>
               )}
               {modalite === 'fundus' && (
