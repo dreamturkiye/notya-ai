@@ -61,6 +61,8 @@ export async function synthesizeSpeech(text: string): Promise<ArrayBuffer> {
         use_speaker_boost: true,
       },
     }),
+    // SAGLAMLIK-2026-10: asılı kalan TTS ucu isteği kilitlemesin; aşım mevcut hata yoluna düşer.
+    signal: AbortSignal.timeout(45_000),
   })
 
   if (!resp.ok) {

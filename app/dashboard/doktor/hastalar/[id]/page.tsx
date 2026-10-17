@@ -9,45 +9,57 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import HastaIlaclar from '@/components/doktor/HastaIlaclar';
-import HastaIntake from '@/components/doktor/HastaIntake';
-import HastaAsilar from '@/components/doktor/HastaAsilar';
+import dinamikYukle from 'next/dynamic';
 import HastaKonsult from '@/components/doktor/HastaKonsult';
-import HastaBuyumeEgrileri from '@/components/doktor/HastaBuyumeEgrileri';
-import HastaMchat from '@/components/doktor/HastaMchat';
-import HastaGelisimTaramasi from '@/components/doktor/HastaGelisimTaramasi';
-import HastaGebelik from '@/components/doktor/HastaGebelik';
-import HastaDermatoloji from '@/components/doktor/HastaDermatoloji';
-import DahiliyeHome from '@/specialties/dahiliye/ui/DahiliyeHome';
-import GozHome from '@/specialties/goz-hastaliklari/ui/GozHome';
-import PsikiyatriHome from '@/specialties/psikiyatri/ui/PsikiyatriHome';
-import KbbHome from '@/specialties/kulak-burun-bogaz/ui/KbbHome';
-import KardioHome from '@/specialties/kardiyoloji/ui/KardioHome';
-import GogusHome from '@/specialties/gogus-hastaliklari/ui/GogusHome';
-import NorolojiHome from '@/specialties/noroloji/ui/NorolojiHome';
-import UrolojiHome from '@/specialties/uroloji/ui/UrolojiHome';
-import SporHekimligiHome from '@/specialties/spor-hekimligi/ui/SporHekimligiHome';
-import OrtopediHome from '@/specialties/ortopedi/ui/OrtopediHome';
-import FtrHome from '@/specialties/fizik-tedavi/ui/FtrHome';
-import AileHome from '@/specialties/aile-hekimligi/ui/AileHome';
-import EndokrinolojiHome from '@/specialties/endokrinoloji/ui/EndokrinolojiHome';
-import RomatolojiHome from '@/specialties/romatoloji/ui/RomatolojiHome';
-import EnfeksiyonHome from '@/specialties/enfeksiyon-hastaliklari/ui/EnfeksiyonHome';
-import GastroenterolojiHome from '@/specialties/gastroenteroloji/ui/GastroenterolojiHome';
-import NefrolojiHome from '@/specialties/nefroloji/ui/NefrolojiHome';
-import OnkolojiHome from '@/specialties/onkoloji/ui/OnkolojiHome'
-import GogusCerrahiHome from '@/specialties/gogus-cerrahisi/ui/GogusCerrahiHome';
-import GenelCerrahiHome from '@/specialties/genel-cerrahi/ui/GenelCerrahiHome';
-import PlastikHome from '@/specialties/plastik-cerrahi/ui/PlastikHome'
-import BeyinCerrahisiHome from '@/specialties/beyin-cerrahisi/ui/BeyinCerrahisiHome';
-import RadyolojiHome from '@/specialties/radyoloji/ui/RadyolojiHome';
-import CocukCerrahisiHome from '@/specialties/cocuk-cerrahisi/ui/CocukCerrahisiHome';
-import AnesteziHome from '@/specialties/anestezi/ui/AnesteziHome';
-import KalpDamarHome from '@/specialties/kalp-damar-cerrahisi/ui/KalpDamarHome';
-import AcilTipHome from '@/specialties/acil-tip/ui/AcilTipHome';
-import PatientDocumentVault from '@/components/doktor/PatientDocumentVault';
-import HastaGoruntuler from '@/components/doktor/HastaGoruntuler';
-import HastaKonsultasyonlar from '@/components/doktor/HastaKonsultasyonlar';
+
+/**
+ * PERF-2026-10 — sekme kapılı ağır bileşenler tembel yüklenir (next/dynamic):
+ * her doktor en çok BİR branş Home'u görür; 27 branş Home'u + sekmeye özel panelleri
+ * ilk yüke koymak sayfanın first-load JS'ini katlıyordu. Davranış aynı: bileşen,
+ * sekmesi açıldığında aynı prop'larla aynı şekilde render edilir (ilk açılışta kısa
+ * "Yükleniyor…" satırı ile). Varsayılan 'ozet' sekmesinin bileşenleri statik kalır.
+ */
+const SekmeYukleniyor = () => (
+  <div style={{ padding: '24px 4px', color: '#6B7280', fontSize: 14 }}>Yükleniyor…</div>
+);
+const HastaIlaclar = dinamikYukle(() => import('@/components/doktor/HastaIlaclar'), { loading: SekmeYukleniyor });
+const HastaIntake = dinamikYukle(() => import('@/components/doktor/HastaIntake'), { loading: SekmeYukleniyor });
+const HastaAsilar = dinamikYukle(() => import('@/components/doktor/HastaAsilar'), { loading: SekmeYukleniyor });
+const HastaBuyumeEgrileri = dinamikYukle(() => import('@/components/doktor/HastaBuyumeEgrileri'), { loading: SekmeYukleniyor });
+const HastaMchat = dinamikYukle(() => import('@/components/doktor/HastaMchat'), { loading: SekmeYukleniyor });
+const HastaGelisimTaramasi = dinamikYukle(() => import('@/components/doktor/HastaGelisimTaramasi'), { loading: SekmeYukleniyor });
+const HastaGebelik = dinamikYukle(() => import('@/components/doktor/HastaGebelik'), { loading: SekmeYukleniyor });
+const HastaDermatoloji = dinamikYukle(() => import('@/components/doktor/HastaDermatoloji'), { loading: SekmeYukleniyor });
+const DahiliyeHome = dinamikYukle(() => import('@/specialties/dahiliye/ui/DahiliyeHome'), { loading: SekmeYukleniyor });
+const GozHome = dinamikYukle(() => import('@/specialties/goz-hastaliklari/ui/GozHome'), { loading: SekmeYukleniyor });
+const PsikiyatriHome = dinamikYukle(() => import('@/specialties/psikiyatri/ui/PsikiyatriHome'), { loading: SekmeYukleniyor });
+const KbbHome = dinamikYukle(() => import('@/specialties/kulak-burun-bogaz/ui/KbbHome'), { loading: SekmeYukleniyor });
+const KardioHome = dinamikYukle(() => import('@/specialties/kardiyoloji/ui/KardioHome'), { loading: SekmeYukleniyor });
+const GogusHome = dinamikYukle(() => import('@/specialties/gogus-hastaliklari/ui/GogusHome'), { loading: SekmeYukleniyor });
+const NorolojiHome = dinamikYukle(() => import('@/specialties/noroloji/ui/NorolojiHome'), { loading: SekmeYukleniyor });
+const UrolojiHome = dinamikYukle(() => import('@/specialties/uroloji/ui/UrolojiHome'), { loading: SekmeYukleniyor });
+const SporHekimligiHome = dinamikYukle(() => import('@/specialties/spor-hekimligi/ui/SporHekimligiHome'), { loading: SekmeYukleniyor });
+const OrtopediHome = dinamikYukle(() => import('@/specialties/ortopedi/ui/OrtopediHome'), { loading: SekmeYukleniyor });
+const FtrHome = dinamikYukle(() => import('@/specialties/fizik-tedavi/ui/FtrHome'), { loading: SekmeYukleniyor });
+const AileHome = dinamikYukle(() => import('@/specialties/aile-hekimligi/ui/AileHome'), { loading: SekmeYukleniyor });
+const EndokrinolojiHome = dinamikYukle(() => import('@/specialties/endokrinoloji/ui/EndokrinolojiHome'), { loading: SekmeYukleniyor });
+const RomatolojiHome = dinamikYukle(() => import('@/specialties/romatoloji/ui/RomatolojiHome'), { loading: SekmeYukleniyor });
+const EnfeksiyonHome = dinamikYukle(() => import('@/specialties/enfeksiyon-hastaliklari/ui/EnfeksiyonHome'), { loading: SekmeYukleniyor });
+const GastroenterolojiHome = dinamikYukle(() => import('@/specialties/gastroenteroloji/ui/GastroenterolojiHome'), { loading: SekmeYukleniyor });
+const NefrolojiHome = dinamikYukle(() => import('@/specialties/nefroloji/ui/NefrolojiHome'), { loading: SekmeYukleniyor });
+const OnkolojiHome = dinamikYukle(() => import('@/specialties/onkoloji/ui/OnkolojiHome'), { loading: SekmeYukleniyor });
+const GogusCerrahiHome = dinamikYukle(() => import('@/specialties/gogus-cerrahisi/ui/GogusCerrahiHome'), { loading: SekmeYukleniyor });
+const GenelCerrahiHome = dinamikYukle(() => import('@/specialties/genel-cerrahi/ui/GenelCerrahiHome'), { loading: SekmeYukleniyor });
+const PlastikHome = dinamikYukle(() => import('@/specialties/plastik-cerrahi/ui/PlastikHome'), { loading: SekmeYukleniyor });
+const BeyinCerrahisiHome = dinamikYukle(() => import('@/specialties/beyin-cerrahisi/ui/BeyinCerrahisiHome'), { loading: SekmeYukleniyor });
+const RadyolojiHome = dinamikYukle(() => import('@/specialties/radyoloji/ui/RadyolojiHome'), { loading: SekmeYukleniyor });
+const CocukCerrahisiHome = dinamikYukle(() => import('@/specialties/cocuk-cerrahisi/ui/CocukCerrahisiHome'), { loading: SekmeYukleniyor });
+const AnesteziHome = dinamikYukle(() => import('@/specialties/anestezi/ui/AnesteziHome'), { loading: SekmeYukleniyor });
+const KalpDamarHome = dinamikYukle(() => import('@/specialties/kalp-damar-cerrahisi/ui/KalpDamarHome'), { loading: SekmeYukleniyor });
+const AcilTipHome = dinamikYukle(() => import('@/specialties/acil-tip/ui/AcilTipHome'), { loading: SekmeYukleniyor });
+const PatientDocumentVault = dinamikYukle(() => import('@/components/doktor/PatientDocumentVault'), { loading: SekmeYukleniyor });
+const HastaGoruntuler = dinamikYukle(() => import('@/components/doktor/HastaGoruntuler'), { loading: SekmeYukleniyor });
+const HastaKonsultasyonlar = dinamikYukle(() => import('@/components/doktor/HastaKonsultasyonlar'), { loading: SekmeYukleniyor });
 import HastaOzetDuzenlenebilir from '@/components/doktor/HastaOzetDuzenlenebilir';
 import HastaKlinikOzetler from '@/components/doktor/HastaKlinikOzetler';
 import HastaIletisim from '@/components/doktor/iletisim/HastaIletisim';

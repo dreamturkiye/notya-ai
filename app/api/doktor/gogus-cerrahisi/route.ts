@@ -26,14 +26,15 @@ const bugun = () => new Date().toISOString().slice(0, 10)
 type Sb = Awaited<ReturnType<typeof doktorOturum>> extends infer T ? (T extends { supabase: infer S } ? S : never) : never
 
 async function gorevEkle(sb: Sb, doctorId: string, patientId: string, g: Array<{ kod: string; ad: string; due?: string | null; kaynak: string }>) {
-  let eklenen = 0
-  for (const x of g) {
-    const { data } = await sb.from('goc_gorevleri').select('id').eq('patient_id', patientId).eq('doctor_id', doctorId).eq('kod', x.kod).eq('durum', 'acik').maybeSingle()
-    if (data) continue
-    await sb.from('goc_gorevleri').insert({ patient_id: patientId, doctor_id: doctorId, kod: x.kod, ad: x.ad, due: x.due || null, kaynak: x.kaynak })
-    eklenen++
-  }
-  return eklenen
+  // PERF-2026-10: N×(select+insert) yerine 1 select + 1 toplu insert — davranış birebir
+  // (girdi içi yinelenen kod, sıralı döngüdeki gibi ilk görünüşüyle teklenir).
+  const adaylar = g.filter((x, i) => g.findIndex((y) => y.kod === x.kod) === i)
+  if (!adaylar.length) return 0
+  const { data: acik } = await sb.from('goc_gorevleri').select('kod').eq('patient_id', patientId).eq('doctor_id', doctorId).in('kod', adaylar.map((x) => x.kod)).eq('durum', 'acik')
+  const mevcut = new Set(((acik || []) as { kod: string | null }[]).map((r) => String(r.kod)))
+  const yeni = adaylar.filter((x) => !mevcut.has(x.kod))
+  if (yeni.length) await sb.from('goc_gorevleri').insert(yeni.map((x) => ({ patient_id: patientId, doctor_id: doctorId, kod: x.kod, ad: x.ad, due: x.due || null, kaynak: x.kaynak })))
+  return yeni.length
 }
 
 async function bolumKaydi(sb: Sb, doctorId: string, patientId: string) {

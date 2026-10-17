@@ -37,7 +37,8 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    const resp = await fetch(`https://api.elevenlabs.io/v1/convai/conversation/token?agent_id=${AGENT_ID}`, { headers: { "xi-api-key": elKey } })
+    // SAGLAMLIK-2026-10: asılı kalan jeton ucu fonksiyonu kilitlemesin; aşım mevcut 502 yoluna düşer.
+    const resp = await fetch(`https://api.elevenlabs.io/v1/convai/conversation/token?agent_id=${AGENT_ID}`, { headers: { "xi-api-key": elKey }, signal: AbortSignal.timeout(15_000) })
     if (!resp.ok) { const err = await resp.text(); return NextResponse.json({ error: `ElevenLabs ${resp.status}: ${err}` }, { status: 502 }) }
     const body = await resp.json()
     let wssUrl: string
