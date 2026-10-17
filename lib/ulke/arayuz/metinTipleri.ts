@@ -352,6 +352,56 @@ export type UygulamaMetni = {
     /** The steps; `randevu` is read only where the pack's `randevu` feature is on. */
     readonly adimlar: Readonly<Record<'rol' | 'hasta' | 'randevu' | 'muayene', { readonly etiket: string; readonly aciklama: string }>>
   }
+  /** MUAYENE-EKLERI-07 — "Yüklenen dosyalar": a file (lab report, scanned referral, photographed document) attached to one visit. */
+  readonly muayeneEkleri: {
+    readonly baslik: string
+    readonly aciklama: string
+    readonly bos: string
+    readonly ad: string
+    readonly yukle: string
+    readonly yukleniyor: string
+    readonly adGerekli: string
+    readonly dosyaTuru: string
+    readonly buyuk: string
+    readonly indir: string
+    readonly indirilemedi: string
+    readonly sil: string
+    readonly silOnay: string
+    readonly silindi: string
+    readonly silinemedi: string
+    readonly okunamadi: string
+    readonly iptal: string
+  }
+  /** FOTO-ARSIV-01 — the patient photo archive: upload, a viewer and a two-up compare. Storage and viewing only. */
+  readonly fotoArsivi: {
+    readonly baslik: string
+    readonly aciklama: string
+    readonly bos: string
+    readonly tarih: string
+    readonly etiket: string
+    readonly etiketYokYazi: string
+    readonly goster: string
+    readonly kapat: string
+    readonly yukle: string
+    readonly yukleniyor: string
+    readonly dosyaTuru: string
+    readonly buyuk: string
+    readonly tarihGecersiz: string
+    readonly karsilastir: string
+    readonly karsilastirSec: string
+    readonly karsilastirKapat: string
+    readonly duzenle: string
+    readonly kaydet: string
+    readonly kaydedildi: string
+    readonly kaydedilemedi: string
+    readonly sil: string
+    readonly silOnay: string
+    readonly silindi: string
+    readonly silinemedi: string
+    readonly okunamadi: string
+    readonly indirilemedi: string
+    readonly iptal: string
+  }
 }
 
 /**

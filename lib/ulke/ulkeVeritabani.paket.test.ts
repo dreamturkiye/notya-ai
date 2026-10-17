@@ -367,8 +367,12 @@ describe('shared database — the migrations hold the same rules in SQL', () => 
     // The only references to objects Türkiye uses, by name: one foreign key to auth.users, one bucket row, one storage policy.
     const hepsi = dosyalar().map((f) => yorumsuz(oku(f))).join('\n')
     assert.equal(hepsi.match(/references auth\.users/g)?.length, 1)
-    assert.equal(hepsi.match(/on storage\.objects/g)?.length, 1)
-    assert.equal(hepsi.match(/insert into storage\.buckets/g)?.length, 1)
+    // 148 added two more private buckets (muayene-ekleri, hasta-fotograflari), each with its own upload-only
+    // policy on storage.objects, in the same country-and-account-folder shape as 132's muayene-sesleri policy —
+    // so the count below moved from 1 to 3 (one existing + two new), and the bucket-insert count from 1 to 2
+    // (one existing statement + 148's own, which inserts both new bucket rows in a single statement).
+    assert.equal(hepsi.match(/on storage\.objects/g)?.length, 3)
+    assert.equal(hepsi.match(/insert into storage\.buckets/g)?.length, 2)
   })
 
   it('128 is the one migration that changes a table of Türkiye, and no country code depends on it', () => {

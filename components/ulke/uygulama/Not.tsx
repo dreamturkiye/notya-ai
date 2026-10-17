@@ -29,6 +29,7 @@ import { asistanAdi } from './Asistan'
 import { dilAdi, temelDil, metninDili, sablonAlanlari, alanTanimi, alanAdi, bolumAdi, NOT_BOLUMLERI, sablonMetni, type UygulamaMetni, type NotBolumu } from '@/lib/ulke/arayuz'
 import { ozellikAcik, ulkePaketi } from '@/lib/ulke/ulke'
 import { DosyaEk } from './DosyaEk'
+import { MuayeneEkleri } from './MuayeneEkleri'
 import { PortalOzetKarti } from './PortalOzeti'
 import { HastaFormuKarti } from './HastaFormuKarti'
 import { SablonSecici, useSablonlar } from './Sablonlarim'
@@ -259,6 +260,8 @@ export function Not({ u, notId }: { u: Uygulama; notId: string }) {
           still theirs to change. Read-only, marked as the patient's own words; it was never given to the model. */}
       {!not.onayli && not.muayene.hasta && ozellikAcik('hastaPortali') && ozellikAcik('hastaFormu') ? <HastaFormuKarti u={u} hastaId={not.muayene.hasta.id} mod="muayene" /> : null}
       {not.onayli && not.muayene.hasta && ozellikAcik('hastaPortali') ? <PortalOzetKarti key={`${not.notId}-${not.onayTarihi ?? ''}`} u={u} notId={not.notId} /> : null}
+      {/* MUAYENE-EKLERI-07: files attached to this visit (a lab PDF, a scanned referral, a photographed document). */}
+      {ozellikAcik('muayeneEkleri') ? <MuayeneEkleri m={u.m} seansId={not.seansId} api={api} /> : null}
       <DosyaEk m={u.m} not={not} api={api} yenile={() => yukle()} />
     </>
   )
