@@ -59,12 +59,19 @@ function ayarZorunlu(s: Saglayici) {
   return a
 }
 
+/** SAGLAMLIK-2026-10: zaman aşımı — asılı kalan sağlayıcı, isteği fonksiyon ömrü boyunca kilitlemesin.
+ * Aşım, bugün zaten ele alınan ağ hatası yoluna düşer (yeni hata sınıfı yok). Jeton/profil 15 sn,
+ * gönderim 30 sn (ek yüklemeleri için pay). */
+const JETON_ZAMAN_ASIMI_MS = 15_000
+const GONDERIM_ZAMAN_ASIMI_MS = 30_000
+
 async function jetonIstegi(url: string, alanlar: Record<string, string>): Promise<{ durum: number; veri: Record<string, unknown> }> {
   const yanit = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded', Accept: 'application/json' },
     body: new URLSearchParams(alanlar).toString(),
     cache: 'no-store',
+    signal: AbortSignal.timeout(JETON_ZAMAN_ASIMI_MS),
   })
   const veri = (await yanit.json().catch(() => ({}))) as Record<string, unknown>
   return { durum: yanit.status, veri }
@@ -99,6 +106,7 @@ async function microsoftProfilAdresi(erisimJetonu: unknown): Promise<string | nu
     const yanit = await fetch(MICROSOFT.profil, {
       headers: { Authorization: `Bearer ${erisimJetonu}`, Accept: 'application/json' },
       cache: 'no-store',
+      signal: AbortSignal.timeout(JETON_ZAMAN_ASIMI_MS),
     })
     if (!yanit.ok) return null
     const veri = (await yanit.json().catch(() => ({}))) as { mail?: unknown; userPrincipalName?: unknown }
@@ -209,6 +217,7 @@ export async function gonder(s: Saglayici, erisimJetonu: string, m: Mesaj): Prom
         headers: { Authorization: `Bearer ${erisimJetonu}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ raw }),
         cache: 'no-store',
+        signal: AbortSignal.timeout(GONDERIM_ZAMAN_ASIMI_MS),
       })
     } else if (htmlGecerliMi(m.html)) {
       // NOTYA-INTAKE-EPOSTA: Graph's JSON body holds one content type, so a text + HTML mail goes as MIME
@@ -218,6 +227,7 @@ export async function gonder(s: Saglayici, erisimJetonu: string, m: Mesaj): Prom
         headers: { Authorization: `Bearer ${erisimJetonu}`, 'Content-Type': 'text/plain' },
         body: Buffer.from(epostaMesaji(m), 'utf8').toString('base64'),
         cache: 'no-store',
+        signal: AbortSignal.timeout(GONDERIM_ZAMAN_ASIMI_MS),
       })
     } else {
       yanit = await fetch(MICROSOFT.gonder, {
@@ -242,6 +252,7 @@ export async function gonder(s: Saglayici, erisimJetonu: string, m: Mesaj): Prom
           saveToSentItems: true,
         }),
         cache: 'no-store',
+        signal: AbortSignal.timeout(GONDERIM_ZAMAN_ASIMI_MS),
       })
     }
   } catch (e) {
@@ -276,6 +287,7 @@ export async function iptalEt(s: Saglayici, yenilemeJetonu: string): Promise<boo
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({ token: yenilemeJetonu }).toString(),
       cache: 'no-store',
+      signal: AbortSignal.timeout(JETON_ZAMAN_ASIMI_MS),
     })
     // 400 invalid_token = already revoked/expired: the goal is met.
     return yanit.ok || yanit.status === 400

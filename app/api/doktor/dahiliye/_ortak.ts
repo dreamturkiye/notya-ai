@@ -15,7 +15,13 @@ export async function labSerisi(sb: Sb, patientId: string): Promise<Map<string, 
 export const son = (m: Map<string, LabSatir[]>, k: string) => m.get(k)?.[0] ?? null
 export const sonDeger = (m: Map<string, LabSatir[]>, k: string) => son(m, k)?.kanonik_deger ?? null
 export async function gorevEkle(sb: Sb, doctorId: string, patientId: string, g: { kod: string; ad: string; due?: string | null; kaynak: string }[]) {
-  for (const x of g) { const { data } = await sb.from('dahiliye_gorevleri').select('id').eq('patient_id', patientId).eq('kod', x.kod).eq('durum', 'acik').maybeSingle(); if (!data) await sb.from('dahiliye_gorevleri').insert({ patient_id: patientId, doctor_id: doctorId, kod: x.kod, ad: x.ad, due: x.due || null, kaynak: x.kaynak }) }
+  // PERF-2026-10: N×(select+insert) yerine 1 select + 1 toplu insert — davranış birebir (select filtresi aynı: doctor_id yok).
+  const adaylar = g.filter((x, i) => g.findIndex((y) => y.kod === x.kod) === i)
+  if (!adaylar.length) return
+  const { data: acik } = await sb.from('dahiliye_gorevleri').select('kod').eq('patient_id', patientId).in('kod', adaylar.map((x) => x.kod)).eq('durum', 'acik')
+  const mevcut = new Set(((acik || []) as { kod: string | null }[]).map((r) => String(r.kod)))
+  const yeni = adaylar.filter((x) => !mevcut.has(x.kod))
+  if (yeni.length) await sb.from('dahiliye_gorevleri').insert(yeni.map((x) => ({ patient_id: patientId, doctor_id: doctorId, kod: x.kod, ad: x.ad, due: x.due || null, kaynak: x.kaynak })))
 }
 export async function hastaBilgi(sb: Sb, doctorId: string, patientId: string) {
   const { data } = await sb.from('patients').select('id, dob_encrypted, gender_encrypted').eq('id', patientId).eq('doctor_id', doctorId).maybeSingle()
