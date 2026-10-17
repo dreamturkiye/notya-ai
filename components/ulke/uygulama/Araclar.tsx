@@ -33,6 +33,7 @@ import { AramaFormu } from './Bugun'
 import { arayuz, araclarMetni, girdiMetni, rolAdi, type AraclarMetni, type GirdiMetni, type UygulamaMetni } from '@/lib/ulke/arayuz'
 import { yerine } from '@/lib/ulke/arayuz/yerTutucu'
 import { hesapSaatDilimi } from '@/lib/ulke/arayuz/bicim'
+import { Ipucu } from './Ipucu'
 import { ulkeGunu } from '@/lib/ulke/uygulama/gun'
 import { ulkePaketi } from '@/lib/ulke/ulke'
 import { alanAraligi, alanBirimi, alanBirimleri, birimAnahtari, type BirimOrtami } from '@/lib/ulke/araclar/birimler'
@@ -365,6 +366,7 @@ export default function Araclar() {
   const x = adres.arac ? hesabinAraci(icerik, u.hesap.rol, adres.arac) : null
   return (
     <Cerceve dil={u.dil} m={u.m} ad={u.hesap.ad} aktif="araclar" cikis={u.cikis}>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', margin: '0 0 8px' }}><Ipucu m={u.m} bolum="araclar" /></div>
       <Hata>{h.durum === 'bulunamadi' ? a.kayit.hastaBulunamadi : null}</Hata>
       {x ? <AracEkrani x={x} a={a} u={u} dil={u.dil} notDili={u.hesap.notDili} icerik={icerik} hasta={h.hasta} /> : (
         <>

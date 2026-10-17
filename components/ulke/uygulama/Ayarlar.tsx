@@ -14,6 +14,7 @@ import { Bilgi, Cerceve, Hata, useUygulama, YOL, Yukleniyor, type Hesap } from '
 import { DilSecimi, YaziSecimi } from './DilFormu'
 import { RolSecimi } from './RolFormu'
 import { asistanAdi } from './Asistan'
+import { Ipucu, IpucuAyarKarti } from './Ipucu'
 import { araclarMetni, dilBirlestir, dilSecimiVarMi, rolAdi, rolMu, roller, temelDil, varsayilanYazi, yaziSec, yaziSorulurMu, type UygulamaMetni } from '@/lib/ulke/arayuz'
 import { hesapSaatDilimiAyarla } from '@/lib/ulke/arayuz/bicim'
 import { ozellikAcik, ulkePaketi } from '@/lib/ulke/ulke'
@@ -225,7 +226,10 @@ export default function Ayarlar() {
     <Cerceve dil={u.dil} m={u.m} ad={u.hesap.ad} unvan={rolAdi(u.hesap.rol, u.dil) ?? undefined} aktif="ayarlar" cikis={u.cikis} onBuro={u.hesap.onBuro}>
       <div className="yg-ayarlar">
         {pano ? <div className="yg-kicker">{pano.ayarKas}</div> : null}
-        <h1 className="uza-h1">{u.m.ayarlar.baslik}</h1>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+          <h1 className="uza-h1">{u.m.ayarlar.baslik}</h1>
+          <Ipucu m={u.m} bolum="ayarlar" />
+        </span>
         {pano ? <p className="uza-aciklama">{pano.ayarAciklama}</p> : null}
         <div className="yg-ayar-liste">
           {dilSecimiVarMi() ? <AyarlarGorunumu kart m={u.m} d={d} set={(yeni) => { setD(yeni); setSonuc(null) }} gonder={gonder} bekliyor={bekliyor} sonuc={sonuc} /> : null}
@@ -246,6 +250,8 @@ export default function Ayarlar() {
               <span className="yg-satir-ok" aria-hidden="true">{'\u203A'}</span>
             </a>
           ) : null}
+          {/* YENI-DOKTOR-UX-2026-10: the switch for the in-place tips (default ON). */}
+          <IpucuAyarKarti m={u.m} />
         </div>
       </div>
     </Cerceve>

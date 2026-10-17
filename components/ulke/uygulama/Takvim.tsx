@@ -36,6 +36,7 @@ import { bitisSaati, saatAraligi, DurumRozeti, gunBasligi, muayeneBaslatilabilir
 type SayfaGorunumu = Gorunum | 'ay'
 import { temelDil, randevuMetni, gunAdi, type GirdiMetni, type UygulamaMetni, type RandevuMetni } from '@/lib/ulke/arayuz'
 import { SaatGirisi } from '../girdi/SaatGirisi'
+import { Ipucu } from './Ipucu'
 import { TarihGirisi } from '../girdi/TarihGirisi'
 import type { DilKodu } from '@/lib/ulke/tipler'
 import { hatirlatmaMetni, tarihDeseni } from '@/lib/ulke/arayuz/hatirlatma'
@@ -905,6 +906,7 @@ export default function Takvim() {
   const portal = ozellikAcik('hastaPortali')
   return (
     <Cerceve dil={u.dil} m={u.m} ad={u.hesap.ad} aktif="takvim" cikis={u.cikis}>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', margin: '0 0 8px' }}><Ipucu m={u.m} bolum="takvim" /></div>
       {p.randevu ? <RandevuDetay u={u} r={r} id={p.randevu} />
         : p.duzen ? <Duzen u={u} r={r} />
           : p.istek && portal ? <IstekCevabi u={u} r={r} id={p.istek} />

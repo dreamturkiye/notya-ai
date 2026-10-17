@@ -16,7 +16,7 @@ import * as S from './notSablonu'
 import type { AcilisCapasi, UlkeAcilisi } from './acilisTipleri'
 import type { AsistanKimligi, NotAlani, NotBolumu, RolTanimi, RolTarafi, UlkeArayuzu } from './tipler'
 
-export type { AraclarMetni, FormMetni, GirdiMetni, KlinikMetni, KonsultasyonMetni, MesajMetni, PortalMetni, RandevuMetni, SablonMetni, UygulamaMetni } from './metinTipleri'
+export type { AraclarMetni, FormMetni, GirdiMetni, KlinikMetni, KonsultasyonMetni, MesajMetni, PortalMetni, RandevuMetni, SablonMetni, UlkeIpucuBolumu, UygulamaMetni } from './metinTipleri'
 export { NOT_BOLUMLERI, ROL_TARAFLARI, type AsistanKimligi, type NotBolumu, type RolTanimi, type RolTarafi } from './tipler'
 
 /** What the active pack brings for the shared screens. A country that brings none has no shared screens. */

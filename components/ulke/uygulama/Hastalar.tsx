@@ -19,6 +19,7 @@ import { KonsultasyonKarti } from './Konsultasyonlar'
 import type { DilKodu } from '@/lib/ulke/tipler'
 import { GIRDI_GECERSIZ } from '@/lib/ulke/arayuz/zamanGirdisi'
 import { TarihGirisi } from '../girdi/TarihGirisi'
+import { Ipucu } from './Ipucu'
 
 export type HastaKaydi = { id: string; ad: string; otaIsmi: string; dogumTarihi: string; cinsiyet: 'male' | 'female' | ''; telefon: string; dil: string; ulusalKimlik: string }
 export type DosyaMuayenesi = { seansId: string; notId: string | null; baslangic: string; durum: 'taslak' | 'onayli' | 'notsuz' }
@@ -47,13 +48,20 @@ export function HastalarGorunumu({ m, q, hastalar, hata }: { m: UygulamaMetni; q
   return (
     <div className="yg-sayfa">
       <div className="uza-baslik-satiri">
-        <h1 className="uza-h1">{m.hastalar.baslik}</h1>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+          <h1 className="uza-h1">{m.hastalar.baslik}</h1>
+          <Ipucu m={m} bolum="hastalar" />
+        </span>
         <a className="uza-dugme" href={YOL.yeniHasta} style={{ borderRadius: 999, background: 'var(--uza-cam)', color: '#FAF8F4', padding: '10px 18px', minHeight: 0 }}>+ {m.bugun.yeniHasta}</a>
       </div>
       <div className="yg-arama-sade"><AramaFormu m={m} q={q} /></div>
       <Hata>{hata ? m.kabuk.hata : null}</Hata>
       {hastalar === null ? (hata ? null : <p className="uza-bos" role="status">{m.kabuk.yukleniyor}</p>) : hastalar.length === 0 ? (
-        <p className="uza-bos">{q ? m.arama.sonucYok : m.hastalar.bos}</p>
+        <div data-alan="hastalar-bos">
+          <p className="uza-bos">{q ? m.arama.sonucYok : m.hastalar.bos}</p>
+          {/* YENI-DOKTOR-UX-2026-10: the empty list carries its first action. */}
+          {!q && <a className="uza-dugme" href={YOL.yeniHasta} data-eylem="ilk-hasta" style={{ borderRadius: 999 }}>+ {m.bugun.yeniHasta}</a>}
+        </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {hastalar.map((h) => (
