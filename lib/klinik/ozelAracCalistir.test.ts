@@ -8,6 +8,8 @@ import { klinikAraciDalaUygun, klinikAraclariListesi } from '@/lib/klinik/klinik
 import { OZEL_ARACLAR, portalSatirlari } from '@/lib/klinik/ozelAracCalistir'
 import { ozelAracDogrula } from '@/lib/klinik/ozelAracDogrula'
 import { kohortAcilBirlestir } from '@/lib/klinik/kohortAcil'
+import { ozelSonucDuzeni } from '@/lib/klinik/ozelSonucDuzeni'
+import { STUDYO_KOPYA } from '@/lib/klinik/ozelStudyoKopya'
 
 const CEKIRDEK = new Set(['/ozel-branslar/hasta-portali', '/ozel-branslar/kayit-kvkk', '/ozel-branslar/enabiz'])
 
@@ -59,6 +61,19 @@ describe('Özel Branş araçları — her dalın kendi motoru', () => {
     assert.match(kaynak, /hastaSahibiMi/)
     assert.match(kaynak, /klinikSlugCoz/)
     assert.doesNotMatch(kaynak, /status: 403/)
+  })
+
+  it('her aracın sonuç düzeni var; her dal en az iki düzen kullanır', () => {
+    const kopya = new Set<string>()
+    for (const slug of KLINIK_YENI_SLUGS) {
+      const duzen = new Set(OZEL_ARACLAR.filter((a) => a.slug === slug).map((a) => ozelSonucDuzeni(a.route)))
+      assert.ok(duzen.size >= 2, slug)
+      assert.equal(duzen.has(null), false, slug)
+      assert.ok(STUDYO_KOPYA[slug].length > 20, slug)
+      kopya.add(STUDYO_KOPYA[slug])
+    }
+    assert.equal(kopya.size, 10)
+    for (const a of OZEL_ARACLAR) assert.ok(ozelSonucDuzeni(a.route), a.route)
   })
 
   it('kohort, sunucu acil bandını 112 satırına alır ve çiftlemez', () => {

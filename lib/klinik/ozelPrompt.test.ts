@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import fs from 'node:fs'
 import path from 'node:path'
 import { KLINIK_YENI_SLUGS } from '@/lib/specialties/klinikDikey'
-import { ozelBransKilidi, ozelBransSlug, ozelPromptMetni } from '@/lib/klinik/ozelPrompt'
+import { ozelBransKilidi, ozelBransSlug, ozelBransSoapKilidi, ozelPromptMetni, ozelSoapMetni } from '@/lib/klinik/ozelPrompt'
 import { dermatolojiMi } from '@/specialties/dermatoloji/prompts'
 import { dozKilitliBrans, soapSistemPromptu } from '@/lib/doktor/soapUret'
 
@@ -45,6 +45,10 @@ describe('Özel Branş prompt kilidi', () => {
       const d = soapSistemPromptu({ transcript: '', specialty: slug })
       assert.match(d, /ÖZEL BRANŞ KİLİDİ/, slug)
       assert.match(d, /Doz yazılmaz/, slug)
+      assert.match(d, /SOAP — /, slug)
+      assert.match(ozelSoapMetni(slug), /^SOAP — /, slug)
+      assert.doesNotMatch(ozelBransKilidi(slug), /SOAP — /, slug)
+      assert.match(ozelBransSoapKilidi(slug), /SOAP — /, slug)
       assert.doesNotMatch(d, /Baş çevresi/, slug)
       assert.doesNotMatch(d, /Neyzi standart/, slug)
       assert.doesNotMatch(d, /DERMATOLOJİ SİSTEM KİLİDİ/, slug)

@@ -6,15 +6,24 @@ import fs from 'fs'
 import path from 'path'
 import { klinikSlugCoz, type KlinikYeniSlug } from '@/lib/specialties/klinikDikey'
 
-const onbellek = new Map<KlinikYeniSlug, string>()
+const onbellek = new Map<string, string>()
+
+function oku(slug: KlinikYeniSlug, dosya: 'system.md' | 'soap.md'): string {
+  const anahtar = `${slug}:${dosya}`
+  const varOlan = onbellek.get(anahtar)
+  if (varOlan) return varOlan
+  const metin = fs.readFileSync(path.join(process.cwd(), 'specialties', slug, 'prompts', dosya), 'utf8').trim()
+  if (!metin) throw new Error(`özel branş prompt boş: ${slug}/${dosya}`)
+  onbellek.set(anahtar, metin)
+  return metin
+}
 
 export function ozelPromptMetni(slug: KlinikYeniSlug): string {
-  const varOlan = onbellek.get(slug)
-  if (varOlan) return varOlan
-  const metin = fs.readFileSync(path.join(process.cwd(), 'specialties', slug, 'prompts', 'system.md'), 'utf8').trim()
-  if (!metin) throw new Error(`özel branş prompt boş: ${slug}`)
-  onbellek.set(slug, metin)
-  return metin
+  return oku(slug, 'system.md')
+}
+
+export function ozelSoapMetni(slug: KlinikYeniSlug): string {
+  return oku(slug, 'soap.md')
 }
 
 /** İlk çözülen Özel Branş. Çıplak `dermatoloji` TUS’tur — klinikSlugCoz null döner. */
@@ -30,4 +39,12 @@ export function ozelBransKilidi(...branslar: (string | null | undefined)[]): str
   const s = ozelBransSlug(...branslar)
   if (!s) return ''
   return `=== ÖZEL BRANŞ KİLİDİ ===\nBu kilit, yukarıdaki genel talimatlarla çeliştiğinde ÖNCELİKLİDİR. Tanı kilitlemez. Doz yazılmaz.\n${ozelPromptMetni(s)}`
+}
+
+/** SOAP notu. Ses ve hafıza kısa system.md ile kalır. */
+export function ozelBransSoapKilidi(...branslar: (string | null | undefined)[]): string {
+  const s = ozelBransSlug(...branslar)
+  const kisa = ozelBransKilidi(...branslar)
+  if (!s || !kisa) return ''
+  return `${kisa}\n\n${ozelSoapMetni(s)}`
 }

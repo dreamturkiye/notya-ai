@@ -30,7 +30,7 @@ import { kadinDogumKilidi, kadinDogumMi } from '@/specialties/kadin-dogum/prompt
 import { dermatolojiKilidi, dermatolojiMi } from '@/specialties/dermatoloji/prompts'
 import { gozKilidi, gozMi } from '@/specialties/goz-hastaliklari/prompts'
 import { KLINIK_ETIKET } from '@/lib/specialties/klinikDikey'
-import { ozelBransKilidi, ozelBransSlug } from '@/lib/klinik/ozelPrompt'
+import { ozelBransKilidi, ozelBransSlug, ozelBransSoapKilidi } from '@/lib/klinik/ozelPrompt'
 import { bransKapsami, pediatrikBaglamMi, veliDiliMi, vitalleriKapsamaGoreSuz } from '@/lib/specialties/kapsam'
 import { vitalOlcumleriniNormallestir } from '@/lib/clinical/olcumCoz'
 
@@ -296,7 +296,7 @@ export function uygulananKurallariSuz(
 export function soapSistemBloklari(girdi: SoapGirdi): SistemBlogu[] {
   const personaAnahtari = soapPersonaAnahtari(girdi)
   const ozelSlug = ozelNotSlug(girdi)
-  const ozelKilit = ozelSlug ? ozelBransKilidi(ozelSlug) : ''
+  const ozelKilit = ozelSlug ? ozelBransSoapKilidi(ozelSlug) : ''
   const tusKilit = ozelKilit
     ? ''
     : dahiliyeMi(girdi.specialty, girdi.doktorBransi) ? dahiliyeKilidi('soap') : kadinDogumMi(girdi.specialty, girdi.doktorBransi) ? kadinDogumKilidi('soap') : dermatolojiMi(girdi.specialty, girdi.doktorBransi) ? dermatolojiKilidi('soap') : gozMi(girdi.specialty, girdi.doktorBransi) ? gozKilidi('soap') : ''
