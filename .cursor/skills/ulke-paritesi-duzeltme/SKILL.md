@@ -49,6 +49,49 @@ in the same change set wherever feasible. When the two-axis work cannot land in 
 set, it is logged as an explicit, dated follow-up in `docs/OPEN-COMMITMENTS.md` with a
 named owner (Kaan vs Claude) — never a silent deferral.
 
+## Branş-specific changes — same bar, gated by depth (clarified 2026-10-18)
+
+Kaan, verbatim: "going forward if we change something in a specific branch in turkiye
+then the other 6 countries specific branc gets updated the same. If we make a chnage to
+the core system in turkiye then the same rule is the case... This way once each country
+is caught up to the golden referrence of turkey they will then stary in sync."
+
+The "applied, no exceptions" bar above is written in terms of core/shared changes. It
+applies with equal force to **branş-specific** changes: a fix or feature made to one
+specific branş in Türkiye must reach that same branş's implementation in each of the six
+countries too, country-adapted — not just core/shared work.
+
+**The activation gate.** This obligation only comes into force for a given country once
+that country **actually has that branş built at some depth** — i.e. once there is a real
+country-side implementation of that branş for the fix to land in. Until then it is
+**latent**, not skipped: it is recorded as a standing rule, not as an open gap to close
+today, because there is nothing on the country side yet to apply it to.
+
+**Current state (2026-10-18), confirmed architecturally, not assumed:** no country has
+branş-level depth today. This was independently confirmed from two directions this week:
+`NOTYA-ULKE-ARACLAR-AU-07`'s AU clinical-tools audit found the country kit's `AracTanimi`
+architecture (`lib/ulke/araclar`) is a single generic, pure-function tool mechanism shared
+across all specialties via `AracYuvasi` slots — not a per-branş implementation; and
+`NOTYA-KLINIK-ISIMLENDIRME-01`'s Özel Branşlar audit separately found every one of the 10
+Özel Branşlar uniformly thin at the chapter-folder level on the Turkish side itself. Put
+together: **this obligation is currently latent for nearly every branş, in every
+country** — it is not a retroactive backlog against branches that don't exist anywhere
+outside Türkiye yet. It **activates branş-by-branş** as each country's own depth-closeout
+work (tracked separately, e.g. the AU Tier-1 clinical-tools line of work) reaches that
+particular branş.
+
+**Why this matters once it does activate.** Kaan's own framing of the end state: once a
+country catches up to the Turkish golden reference for a given branş, this rule is what
+keeps that country's branş implementation **in sync with Türkiye's going forward** —
+preventing re-drift after the catch-up work is done, the same way the core/shared
+two-axis rule already does for shared-spine changes.
+
+**What this does not change:** the exemption list (Turkey-only regulatory mechanics) and
+the mandatory checklist below apply exactly the same way to a branş-specific change as to
+a core/shared one — the only difference is the added depth gate above, which has no
+equivalent for core/shared work (core/shared code always exists on the country side by
+definition; a branş's country-side depth may not yet).
+
 ## Trigger
 
 Any core/shared change, revision, or new feature to shared code or Turkey-facing UI / API
