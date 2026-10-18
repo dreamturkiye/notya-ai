@@ -8,7 +8,7 @@ import { klinikSlugCoz, type KlinikYeniSlug } from '@/lib/specialties/klinikDike
 
 const onbellek = new Map<string, string>()
 
-function oku(slug: KlinikYeniSlug, dosya: 'system.md' | 'soap.md'): string {
+function oku(slug: KlinikYeniSlug, dosya: 'system.md' | 'soap.md' | 'voice.md'): string {
   const anahtar = `${slug}:${dosya}`
   const varOlan = onbellek.get(anahtar)
   if (varOlan) return varOlan
@@ -26,6 +26,10 @@ export function ozelSoapMetni(slug: KlinikYeniSlug): string {
   return oku(slug, 'soap.md')
 }
 
+export function ozelSesMetni(slug: KlinikYeniSlug): string {
+  return oku(slug, 'voice.md')
+}
+
 /** İlk çözülen Özel Branş. Çıplak `dermatoloji` TUS’tur — klinikSlugCoz null döner. */
 export function ozelBransSlug(...branslar: (string | null | undefined)[]): KlinikYeniSlug | null {
   for (const b of branslar) {
@@ -39,6 +43,13 @@ export function ozelBransKilidi(...branslar: (string | null | undefined)[]): str
   const s = ozelBransSlug(...branslar)
   if (!s) return ''
   return `=== ÖZEL BRANŞ KİLİDİ ===\nBu kilit, yukarıdaki genel talimatlarla çeliştiğinde ÖNCELİKLİDİR. Tanı kilitlemez. Doz yazılmaz.\n${ozelPromptMetni(s)}`
+}
+
+/** Sesli uzman. SOAP notuna ve hafızaya girmez. */
+export function ozelBransSesKilidi(...branslar: (string | null | undefined)[]): string {
+  const s = ozelBransSlug(...branslar)
+  if (!s) return ''
+  return ozelSesMetni(s)
 }
 
 /** SOAP notu. Ses ve hafıza kısa system.md ile kalır. */

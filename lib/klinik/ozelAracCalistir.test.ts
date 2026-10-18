@@ -74,6 +74,13 @@ describe('Özel Branş araçları — her dalın kendi motoru', () => {
     }
     assert.equal(kopya.size, 10)
     for (const a of OZEL_ARACLAR) assert.ok(ozelSonucDuzeni(a.route), a.route)
+    const tuvaller = new Set<string>()
+    for (const slug of KLINIK_YENI_SLUGS) {
+      const dosya = fs.readFileSync(path.join(process.cwd(), 'specialties', slug, 'ui', 'Tuval.tsx'), 'utf8')
+      assert.match(dosya, new RegExp(`data-tuval="${slug}"`), slug)
+      tuvaller.add(dosya)
+    }
+    assert.equal(tuvaller.size, 10)
   })
 
   it('kohort, sunucu acil bandını 112 satırına alır ve çiftlemez', () => {

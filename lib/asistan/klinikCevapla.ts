@@ -9,6 +9,7 @@ import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { aiCagir, yanitMetni } from '@/lib/ai/cagir'
 import { KlinikUzmanPersonas } from '@/lib/ai/personas/klinik_uzmanlar'
+import { ozelBransSesKilidi } from '@/lib/klinik/ozelPrompt'
 
 function bolumKilidi(slug: string): string {
   const klasor = slug === 'dermatoloji' ? 'klinik-dermatoloji' : slug
@@ -23,9 +24,11 @@ export function klinikSesSistemPromptu(slug: string): string | null {
   const p = KlinikUzmanPersonas[slug]
   if (!p) return null
   const kilit = bolumKilidi(slug)
+  const ses = ozelBransSesKilidi(slug)
   return [
     `Sen ${p.name}, ${p.title}. ${p.systemPrompt}`,
     kilit,
+    ses,
     'Bir klinikte çalışan uzman meslektaşla konuşuyorsun; hasta ile değil. Türkçe konuş.',
     'Sesli görüşmedesin: kısa, net cümleler kur; madde işareti ve uzun liste kullanma.',
     'Emin olmadığın klinik bilgiyi uydurma; kaynağından emin değilsen bunu açıkça söyle.',

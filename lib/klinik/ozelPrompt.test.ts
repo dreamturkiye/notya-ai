@@ -3,7 +3,8 @@ import assert from 'node:assert/strict'
 import fs from 'node:fs'
 import path from 'node:path'
 import { KLINIK_YENI_SLUGS } from '@/lib/specialties/klinikDikey'
-import { ozelBransKilidi, ozelBransSlug, ozelBransSoapKilidi, ozelPromptMetni, ozelSoapMetni } from '@/lib/klinik/ozelPrompt'
+import { ozelBransKilidi, ozelBransSesKilidi, ozelBransSlug, ozelBransSoapKilidi, ozelPromptMetni, ozelSesMetni, ozelSoapMetni } from '@/lib/klinik/ozelPrompt'
+import { klinikSesSistemPromptu } from '@/lib/asistan/klinikCevapla'
 import { dermatolojiMi } from '@/specialties/dermatoloji/prompts'
 import { dozKilitliBrans, soapSistemPromptu } from '@/lib/doktor/soapUret'
 
@@ -49,6 +50,13 @@ describe('Özel Branş prompt kilidi', () => {
       assert.match(ozelSoapMetni(slug), /^SOAP — /, slug)
       assert.doesNotMatch(ozelBransKilidi(slug), /SOAP — /, slug)
       assert.match(ozelBransSoapKilidi(slug), /SOAP — /, slug)
+      assert.match(ozelSesMetni(slug), /^SES — /, slug)
+      assert.doesNotMatch(ozelBransSoapKilidi(slug), /SES — /, slug)
+      assert.doesNotMatch(ozelBransKilidi(slug), /SES — /, slug)
+      const ses = klinikSesSistemPromptu(slug)
+      assert.ok(ses, slug)
+      assert.match(ses, /SES — /, slug)
+      assert.doesNotMatch(ses, /SOAP — /, slug)
       assert.doesNotMatch(d, /Baş çevresi/, slug)
       assert.doesNotMatch(d, /Neyzi standart/, slug)
       assert.doesNotMatch(d, /DERMATOLOJİ SİSTEM KİLİDİ/, slug)
@@ -57,8 +65,11 @@ describe('Özel Branş prompt kilidi', () => {
       const yaban = soapSistemPromptu({ transcript: '', specialty: 'pediatri' })
       assert.doesNotMatch(yaban, new RegExp(ozelPromptMetni(slug).slice(0, 24)))
     }
-    const ses = fs.readFileSync(path.join(process.cwd(), 'lib/asistan/klinikCevapla.ts'), 'utf8')
-    assert.match(ses, /system\.md/)
+    const sesDosya = fs.readFileSync(path.join(process.cwd(), 'lib/asistan/klinikCevapla.ts'), 'utf8')
+    assert.match(sesDosya, /system\.md/)
+    assert.match(sesDosya, /ozelBransSesKilidi/)
+    const tusSes = klinikSesSistemPromptu('dermatoloji') || ''
+    assert.doesNotMatch(tusSes, /SES — klinik dermatoloji/)
     const hafiza = fs.readFileSync(path.join(process.cwd(), 'app/api/doktor/hafiza/route.ts'), 'utf8')
     assert.match(hafiza, /ozelBransKilidi/)
   })

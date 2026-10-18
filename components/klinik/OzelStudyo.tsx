@@ -2,8 +2,8 @@
 import { useMemo, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth'
-import { portalSatirlari, type AracCikti, type AracTanim } from '@/lib/klinik/ozelAracCalistir'
-import { ozelSonucDuzeni } from '@/lib/klinik/ozelSonucDuzeni'
+import type { AracTanim } from '@/lib/klinik/ozelAracCalistir'
+import { OZEL_TUVAL } from '@/lib/klinik/ozelTuvalKaydi'
 import { STUDYO_KOPYA } from '@/lib/klinik/ozelStudyoKopya'
 
 export default function OzelStudyo({ tanim }: { tanim: AracTanim }) {
@@ -13,6 +13,7 @@ export default function OzelStudyo({ tanim }: { tanim: AracTanim }) {
   const bugun = useMemo(() => new Date().toISOString().slice(0, 10), [])
   const sonuc = useMemo(() => tanim.calistir(girdi, bugun), [tanim, girdi, bugun])
   const hazir = !('hata' in sonuc)
+  const Tuval = OZEL_TUVAL[tanim.slug]
 
   function yaz(id: string, deger: string) {
     setGirdi((o) => ({ ...o, [id]: deger }))
@@ -75,52 +76,12 @@ export default function OzelStudyo({ tanim }: { tanim: AracTanim }) {
       {'hata' in sonuc ? (
         <p style={{ color: '#a45b3e', margin: 0 }}>{sonuc.hata}</p>
       ) : (
-        <SonucKart tanim={tanim} sonuc={sonuc} bugun={bugun} />
+        <Tuval tanim={tanim} sonuc={sonuc} bugun={bugun} />
       )}
       <button type="button" onClick={kaydet} disabled={!hazir} style={{ justifySelf: 'start', padding: '10px 14px', borderRadius: 8, border: 'none', background: '#2f4334', color: '#fff', fontWeight: 700, cursor: hazir ? 'pointer' : 'default' }}>
         Hasta dosyasına yaz
       </button>
       {kayit && <p style={{ margin: 0, fontSize: 13, color: '#3b2e24' }}>{kayit}</p>}
-    </div>
-  )
-}
-
-function SonucKart({ tanim, sonuc, bugun }: { tanim: AracTanim; sonuc: AracCikti; bugun: string }) {
-  const duzen = ozelSonucDuzeni(tanim.route)
-  const satirlar = portalSatirlari(sonuc.vadeler, bugun)
-  if (duzen === 'acil') {
-    return (
-      <div style={{ borderRadius: 12, padding: 14, background: sonuc.acil ? '#a45b3e' : '#faf6ee', color: sonuc.acil ? '#fff' : '#3b2e24' }}>
-        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.06em' }}>{sonuc.acil ? '112' : 'BAND'}</div>
-        <p style={{ margin: '6px 0 0' }}>{sonuc.acil || sonuc.ozet}</p>
-      </div>
-    )
-  }
-  if (duzen === 'seri') {
-    return (
-      <div style={{ display: 'grid', gap: 8 }}>
-        <p style={{ margin: 0 }}>{sonuc.ozet}</p>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-          {satirlar.map((s) => (
-            <span key={s.ad} style={{ background: '#faf6ee', border: '1px solid rgba(58,44,34,0.08)', borderRadius: 999, padding: '6px 10px', fontSize: 12 }}>{s.ad} · {s.durum}</span>
-          ))}
-        </div>
-      </div>
-    )
-  }
-  if (duzen === 'olcu') {
-    return (
-      <div style={{ background: '#faf6ee', borderLeft: `4px solid ${tanim.renk}`, borderRadius: 8, padding: 12 }}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: tanim.renk }}>KARAR DESTEĞİ</div>
-        <p style={{ margin: '6px 0 0' }}>{sonuc.ozet}</p>
-      </div>
-    )
-  }
-  return (
-    <div style={{ background: '#faf6ee', borderRadius: 12, padding: 12 }}>
-      {sonuc.ozet.split(/(?<=\.)\s+/).filter(Boolean).map((satir) => (
-        <p key={satir} style={{ margin: '0 0 6px' }}>{satir}</p>
-      ))}
     </div>
   )
 }
