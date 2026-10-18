@@ -44,17 +44,28 @@ branc gets updated the same... This way once each country is caught up to the go
 referrence of turkey they will then stary in sync."** The "applied, no exceptions" bar is
 not limited to core/shared changes — a **branş-specific** fix or feature made to one
 branş in Türkiye carries the same obligation to that same branş in each of the six
-countries, country-adapted. The gate: this only activates for a given country once that
-country actually has that branş **built at some depth** — porting a branş-specific
-Turkish fix into a country that runs the branş generically, with no equivalent depth to
-receive it, is not meaningful work. As of 2026-10-18, confirmed architecturally (this
-week's AU audit, `NOTYA-ULKE-ARACLAR-AU-07`): no country has branş-level depth yet — all
-six run one generic clinical-tools kit (`lib/ulke/araclar`), not per-branş implementations
-— so this obligation is currently **latent** for nearly every branş and activates
-branş-by-branş only as each country's own depth-closeout work reaches that branş; it is
-not a retroactive backlog against branches that don't exist outside Türkiye yet. End
-state, in Kaan's own framing: once a country catches up to the Turkish golden reference for
-a branş, this rule is what keeps the two in sync afterward, preventing re-drift.
+countries, country-adapted, in the **same change set, no deferral**.
+
+**No depth gate — build the scaffold, don't wait for it (correction, 2026-10-18, Kaan,
+verbatim): "Even if the 6 countries do not match the golden standard of turkiye, you still
+go ahead and add the new features to the 6 countries as we go. If the underlying infra is
+not there then you build that only so that you can still update the change across the
+board to all 6."** A country not yet having that branş's infrastructure is **not** a reason
+to defer. When a Türkiye branş-specific change needs to land in a country that doesn't yet
+have that branş's infrastructure, build the **minimal real scaffold** needed to host that
+specific change now — following the existing `.ulke`-tree/kit pattern already proven for
+AU's Tier-1 clinical tools (`NOTYA-ULKE-ARACLAR-AU-07`): a real, working addition, never a
+stub that fakes it — so the change ships across all 6 countries in the same cycle.
+
+**Scope boundary (non-negotiable):** "minimal scaffold" means just enough to carry **this
+specific change** — not backfilling that branş's full depth to the Turkish golden-reference
+level in one shot. Full-depth closeout for a branş in a country is its **own larger,
+separately-sequenced job** (the same AU-first pattern already running, per
+`NOTYA-ULKE-ARACLAR-AU-07`). Minimal-scaffold-as-you-go and full-depth-closeout are two
+different, complementary efforts — never collapse one into the other, and never use "we'll
+do the real depth work later" as a reason to skip shipping this change now. End state, in
+Kaan's own framing: once a country catches up to the Turkish golden reference for a branş,
+this rule is what keeps the two in sync afterward, preventing re-drift.
 
 1. Per country: shared code / forked copy / not applicable / exempt (Turkey-only: MBYS, SGK/SUT/Medula, e-Nabız, e-Reçete, NVI, e-Fatura/GİB).
 2. Localized strings per country — never Turkish strings in a country build; Turkish stays untouched unless the code is genuinely shared.
