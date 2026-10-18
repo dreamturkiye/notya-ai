@@ -57,7 +57,9 @@ branches AND all 6 countries, country-adapted — not either one alone. Exempt (
 Turkey-only regulatory mechanics — MBYS, SGK/SUT/Medula, e-Nabız, e-Reçete, NVI, e-Fatura/
 GİB, KVKK-specific mechanics. When the two-axis work can't land in one change set, it is
 logged as a dated, owned entry in `docs/OPEN-COMMITMENTS.md` — never a silent deferral.
-Full text: `.cursor/skills/ulke-paritesi-duzeltme/SKILL.md`.
+The same bar applies to a **branş-specific** Türkiye change too (that branş's own
+implementation in each country, once that country has the branş built at some depth —
+latent until then, not skipped). Full text: `.cursor/skills/ulke-paritesi-duzeltme/SKILL.md`.
 
 ## Doktor Araçları (short)
 
