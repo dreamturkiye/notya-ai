@@ -90,7 +90,7 @@ export default function LoginPage() {
         <div style={{ marginTop: 22, paddingTop: 16, borderTop: `1px solid ${R.borderSoft}`, fontSize: 12.5, color: R.muted, textAlign: "center", display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
           <span>Profesyonel giriş:</span>
           <a href="/giris/doktor" style={{ color: R.pine, fontWeight: 600, textDecoration: "none" }}>Doktor</a>
-          <a href="/giris/klinik" style={{ color: R.pine, fontWeight: 600, textDecoration: "none" }}>Klinik</a>
+          <a href="/giris/notya-klinik" style={{ color: R.pine, fontWeight: 600, textDecoration: "none" }}>Notya Klinik</a>
           <a href="/giris/mali" style={{ color: R.pine, fontWeight: 600, textDecoration: "none" }}>Mali Müşavir</a>
           <a href="/giris/avukat" style={{ color: R.pine, fontWeight: 600, textDecoration: "none" }}>Avukat</a>
         </div>

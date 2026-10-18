@@ -47,7 +47,7 @@ export default function KlinikHastalarPage() {
     if (!r.ok) { setHata(j.error || 'Hasta eklenemedi.'); return }
     setAd('')
     await yukle()
-    if (j.patient?.id) router.push(`/dashboard/klinik/hastalar/${j.patient.id}`)
+    if (j.patient?.id) router.push(`/dashboard/notya-klinik/hastalar/${j.patient.id}`)
   }
 
   const filtre = q.trim()
@@ -78,7 +78,7 @@ export default function KlinikHastalarPage() {
             <button
               key={h.id}
               type="button"
-              onClick={() => router.push(`/dashboard/klinik/hastalar/${h.id}`)}
+              onClick={() => router.push(`/dashboard/notya-klinik/hastalar/${h.id}`)}
               style={{ display: 'block', width: '100%', textAlign: 'left', padding: '14px 18px', border: 'none', borderBottom: '1px solid rgba(58,44,34,0.08)', background: '#faf6ee', cursor: 'pointer' }}
             >
               <div style={{ fontWeight: 600, color: '#3b2e24' }}>{h.name}</div>

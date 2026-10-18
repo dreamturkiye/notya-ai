@@ -6,8 +6,8 @@ import { NOTYA_KLINIK_AD } from '@/lib/specialties/klinikDikey'
 import { cn } from '@/components/doktor-landing/cn'
 
 const LINKS = [
-  { href: '/klinik/ayarlar', ad: 'Kurulum' },
-  { href: '/klinik/takvim', ad: 'Takvim' },
+  { href: '/notya-klinik/ayarlar', ad: 'Kurulum' },
+  { href: '/notya-klinik/takvim', ad: 'Takvim' },
 ]
 
 /** Anasayfadaki hero ızgarası. Kurulum, takvim ve davet aynı sahneyi kullanır. */
@@ -48,9 +48,8 @@ export default function KlinikKabuk({ children }: { children: React.ReactNode })
     <div className="min-h-screen bg-paper text-ink">
       <header className="fixed inset-x-0 top-0 z-40 border-b border-line bg-paper/92">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-5 sm:px-8">
-          <Link href="/klinik" className="flex items-baseline gap-2 font-display text-2xl italic leading-none tracking-tight" aria-label={NOTYA_KLINIK_AD}>
-            notya
-            <span className="font-outfit text-[11px] not-italic uppercase tracking-[0.3em] text-pine">Klinik</span>
+          <Link href="/notya-klinik" className="font-display text-2xl italic leading-none tracking-tight" aria-label={NOTYA_KLINIK_AD}>
+            Notya Klinik
           </Link>
           <nav className="flex items-center gap-6" aria-label="Notya Klinik">
             {LINKS.map((l) => (

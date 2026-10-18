@@ -1,14 +1,14 @@
-/** Isolated compile for /doktor and /klinik — Next production was shipping raw @tailwind. */
+/** Isolated compile for /doktor and /notya-klinik — Next production was shipping raw @tailwind. */
 module.exports = {
   important: ".doktor-lp",
   corePlugins: { preflight: false },
   content: [
     "./app/doktor/**/*.{js,ts,jsx,tsx}",
     "./components/doktor-landing/**/*.{js,ts,jsx,tsx}",
-    // NOTYA-KLINIK-01: /klinik shares the compiled stylesheet (same .doktor-lp scope). Any page
+    // NOTYA-KLINIK-01: /notya-klinik shares the compiled stylesheet (same .doktor-lp scope). Any page
     // importing app/doktor/utilities.css MUST be listed here, or its classes silently vanish
     // from the compiled output and the page ships half-styled — the exact bug this file fixed.
-    "./app/klinik/**/*.{js,ts,jsx,tsx}",
+    "./app/notya-klinik/**/*.{js,ts,jsx,tsx}",
     "./components/klinik-landing/**/*.{js,ts,jsx,tsx}",
     "./components/klinik/katman/**/*.{js,ts,jsx,tsx}",
     // NOTYA-DEMO-01: /demo imports the same stylesheet.

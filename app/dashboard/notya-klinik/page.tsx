@@ -48,11 +48,11 @@ export default function KlinikDashboard() {
           }
         }
       } catch {}
-      if (!token) { router.push('/giris/klinik'); return }
+      if (!token) { router.push('/giris/notya-klinik'); return }
 
       try {
         const res = await fetch('/api/klinik/me', { headers: { Authorization: `Bearer ${token}` } })
-        if (res.status === 401 || res.status === 403) { router.push('/giris/klinik'); return }
+        if (res.status === 401 || res.status === 403) { router.push('/giris/notya-klinik'); return }
         const data = await res.json()
         if (data.success) {
           setClinic(data.data.clinic)
@@ -132,7 +132,7 @@ export default function KlinikDashboard() {
 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
           <h2 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: '20px', fontWeight: 400, color: '#3b2e24' }}>Kullanıcılar</h2>
-          <button onClick={() => router.push('/dashboard/klinik/kullanicilar')} style={{
+          <button onClick={() => router.push('/dashboard/notya-klinik/kullanicilar')} style={{
             padding: '10px 20px', background: '#2f4334', border: 'none', borderRadius: '8px',
             color: '#fff', fontSize: '13px', fontWeight: 500, cursor: 'pointer'
           }}>

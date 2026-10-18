@@ -82,7 +82,7 @@ export default function KlinikKohortPanel() {
         <button
           key={`${s.patientId}-${s.durum}-${s.vade || ''}`}
           type="button"
-          onClick={() => s.patientId.startsWith('rv-') ? undefined : router.push(`/dashboard/klinik/hastalar/${s.patientId}`)}
+          onClick={() => s.patientId.startsWith('rv-') ? undefined : router.push(`/dashboard/notya-klinik/hastalar/${s.patientId}`)}
           style={{ width: '100%', textAlign: 'left', padding: '14px 16px', border: 'none', borderBottom: '1px solid rgba(58,44,34,0.08)', background: '#faf6ee', cursor: 'pointer' }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10 }}>

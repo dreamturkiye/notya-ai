@@ -92,7 +92,7 @@ function SeansIc() {
     <div style={{ minHeight: '100vh', background: '#f4eee3', fontFamily: "'Source Sans 3', system-ui, sans-serif" }}>
       <KlinikNav clinicName="Notya Klinik" />
       <div style={{ maxWidth: 720, margin: '0 auto', padding: '32px 24px 72px' }}>
-        <Link href={patientId ? `/dashboard/klinik/hastalar/${patientId}` : '/dashboard/klinik/hastalar'} style={{ fontSize: 13, color: '#2f4334' }}>← Dosya</Link>
+        <Link href={patientId ? `/dashboard/notya-klinik/hastalar/${patientId}` : '/dashboard/notya-klinik/hastalar'} style={{ fontSize: 13, color: '#2f4334' }}>← Dosya</Link>
         <h1 style={{ fontFamily: "'Fraunces', Georgia, serif", margin: '12px 0 8px', fontSize: 26, color: '#3b2e24' }}>Klinik seans</h1>
         <p style={{ fontSize: 13, color: '#8b7d70' }}>{muttefik ? MUTTEFIK_TANI_KILIT : KLINIK_HEKIM_KILIT}</p>
         <ul style={{ fontSize: 12, color: '#8b7d70', paddingLeft: 18 }}>
@@ -106,7 +106,7 @@ function SeansIc() {
         <label style={chk}><input type="checkbox" checked={kriz} onChange={(e) => setKriz(e.target.checked)} /> 112 / acil bayrağı</label>
         <div style={{ marginTop: 12, display: 'flex', gap: 10 }}>
           <button type="button" onClick={kaydet} style={{ padding: '10px 16px', borderRadius: 8, border: 'none', background: '#2f4334', color: '#fff', fontWeight: 600, cursor: 'pointer' }}>Dosyaya kaydet</button>
-          <button type="button" onClick={() => router.push('/klinik-tools')} style={{ padding: '10px 16px', borderRadius: 8, border: '1px solid #2f4334', background: '#faf6ee', color: '#2f4334', fontWeight: 600, cursor: 'pointer' }}>Araçlar</button>
+          <button type="button" onClick={() => router.push('/ozel-branslar')} style={{ padding: '10px 16px', borderRadius: 8, border: '1px solid #2f4334', background: '#faf6ee', color: '#2f4334', fontWeight: 600, cursor: 'pointer' }}>Araçlar</button>
         </div>
         {kayit && <p style={{ marginTop: 12, fontSize: 13, color: '#065F46' }}>{kayit}</p>}
         {onceki.length > 0 && (

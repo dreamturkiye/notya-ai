@@ -3,7 +3,7 @@
 export const dynamic = 'force-dynamic'
 
 /**
- * NOTYA-PABAU-01 — /dashboard/klinik/pabau: the Pabau connection page.
+ * NOTYA-PABAU-01 — /dashboard/notya-klinik/pabau: the Pabau connection page.
  *
  * The KlinikNav has linked here since the nav shipped; the page never existed (404), and the
  * landing page's "Pabau ile çalışır" claim had no surface behind it. This is that surface:
@@ -101,7 +101,7 @@ function KlinikPabauInner() {
     <div style={{ minHeight: '100dvh', background: '#f4eee3' }}>
       <KlinikNav />
       <div style={{ maxWidth: 760, margin: '0 auto', padding: '24px 16px 64px', fontFamily: "'Source Sans 3', system-ui, sans-serif", color: '#3b2e24' }}>
-        <a href="/dashboard/klinik" style={{ color: '#8b7d70', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>← Klinik</a>
+        <a href="/dashboard/notya-klinik" style={{ color: '#8b7d70', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>← Notya Klinik</a>
         <h1 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 22, fontWeight: 700, margin: '10px 0 4px' }}>Pabau bağlantısı</h1>
         <p style={{ fontSize: 14, color: '#8b7d70', margin: '0 0 24px', lineHeight: 1.6 }}>
           Kliniğiniz randevu ve hasta yönetimi için Pabau kullanıyorsa hesabınızı bağlayın: hastalarınız ve

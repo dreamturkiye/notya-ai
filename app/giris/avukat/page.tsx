@@ -68,7 +68,7 @@ export default function Giris() {
         <div style={{textAlign:'center',marginTop:'20px',fontSize:'12px',color:'#64748b'}}>
           <a href='/giris/doktor' style={{color:'#2563EB'}}>Doktor</a>
           {' | '}
-          <a href='/giris/klinik' style={{color:'#E91E8C'}}>Klinik</a>
+          <a href='/giris/notya-klinik' style={{color:'#E91E8C'}}>Notya Klinik</a>
         </div>
       </div>
     </div>

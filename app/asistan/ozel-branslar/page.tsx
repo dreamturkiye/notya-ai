@@ -3,10 +3,10 @@
 export const dynamic = "force-dynamic"
 
 /**
- * NOTYA-KLINIK-02 — /asistan/klinik: one voice expert per clinic discipline.
+ * NOTYA-KLINIK-02 — /asistan/ozel-branslar: one voice expert per Özel Branş.
  *
  * Same voice UX as /asistan/mali (tap to talk, live transcript) plus what mali doesn't need:
- * a persona picker, because a clinic has ten disciplines and the doctor in the chair changes.
+ * a persona picker, because Özel Branşlar has ten disciplines and the person in the chair changes.
  * Personas come from lib/ai/personas/klinik_uzmanlar; prompt/voice/first message are applied as
  * ConvAI overrides on the shared base agents, so no ElevenLabs setup is needed per persona.
  */
@@ -145,8 +145,9 @@ function KlinikAsistanInner() {
       <style>{'@keyframes bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}'}</style>
 
       <div style={{padding:'12px 16px',display:'flex',alignItems:'center',gap:'12px',borderBottom:'1px solid rgba(58,44,34,0.08)',background:CHROME_RENK.paper}}>
-        <div onClick={() => { void endConv(); router.push('/dashboard/klinik') }} style={{color:CHROME_RENK.muted,cursor:'pointer',fontSize:'24px',padding:'4px'}}>&#8249;</div>
+        <div onClick={() => { void endConv(); router.push('/ozel-branslar') }} style={{color:CHROME_RENK.muted,cursor:'pointer',fontSize:'24px',padding:'4px'}}>&#8249;</div>
         <div style={{flex:1}}>
+          <div style={{fontSize:'11px',letterSpacing:'0.08em',textTransform:'uppercase',color:CHROME_RENK.muted}}>Özel Branşlar</div>
           <div style={{fontSize:'15px',fontWeight:600,color:CHROME_RENK.ink,fontFamily:CHROME_FONT.serif}}>{p.name}</div>
           <div style={{fontSize:'11px',color:CHROME_RENK.muted}}>{p.title}</div>
         </div>

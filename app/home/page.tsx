@@ -33,12 +33,20 @@ const PROFESSIONS: Profession[] = [
     detail: ['Akıllı beyan takvimi', 'Telegram uyarıları', 'HMAC imzalı müşteri linki', 'E-Devlet rehberi'],
   },
   {
-    id: 'klinik', href: '/klinik', label: 'Özel Branşlar', accent: '#E91E8C',
+    id: 'ozel-branslar', href: '/ozel-branslar', label: 'Özel Branşlar', accent: '#E91E8C',
     img: '/landing/corridor.jpg', imgPosition: 'center 60%',
-    highlights: ['10 özel branşta uzman persona', 'Saç ekimi, estetik, fizyoterapi', 'Ekip koltukları ve yönetim paneli', 'Pabau entegrasyonu'],
+    highlights: ['10 özel branşta uzman persona', 'Saç ekimi, estetik, fizyoterapi', 'Kayıt ve onam listesi', 'Hasta portalı'],
     headline: 'Her koltuğa bir uzman.',
-    body: 'Saç ekiminden fizyoterapiye 10 özel branşta Türkçe yapay zekâ uzmanı. Ekip koltukları, müşteri portalı, KVKK\'ya uygun kayıt.',
-    detail: ['29.03.2025 yönetmeliği meslekleri', 'Takım yönetim paneli', 'Müşteri portalı', 'Pabau bağlantısı'],
+    body: 'Saç ekiminden fizyoterapiye 10 özel branşta Türkçe yapay zekâ uzmanı. Kayıt, onam ve hasta sayfası bu branşlara özeldir.',
+    detail: ['29.03.2025 yönetmeliği meslekleri', 'Dalına göre araçlar', 'Hasta portalı', 'Sesli uzman'],
+  },
+  {
+    id: 'notya-klinik', href: '/notya-klinik', label: 'Notya Klinik', accent: '#0E6B66',
+    img: '/landing/hero-clinic.jpg', imgPosition: 'center 40%',
+    highlights: ['2–10 hekim, tek masa', 'Ortak takvim', 'Kurulum ve koltuklar', 'Üye daveti'],
+    headline: 'Birden fazla hekim, tek masa.',
+    body: 'Notya Klinik, tek hekimlik Notya’nın üzerine eklenen çok hekimli katmandır. Özel Branşlar ayrı bir menüdür.',
+    detail: ['Ortak takvim', 'Klinik hafızası', 'Koltuk ve oda', 'Yalnız sahip ve yönetici kurar'],
   },
 ]
 
@@ -122,11 +130,9 @@ export default function HomePage() {
             Genel amaçlı bir asistan değil.
           </h1>
         </div>
-        {/* NOTYA-KLINIK-01: four verticals now. 2×2, not 4-across — four columns shrink the flip
-            card back face below what its 19px type needs, and any auto-fit allowing 3 columns
-            orphans the fourth card at tablet widths. minmax floor 380px inside a 1120px container
-            can never fit 3 columns (3×380 > 1120), so this is 2×2 on desktop and a single column
-            on phones — which also fixes the old mobile rendering of three sliver columns. */}
+        {/* Doktor, Avukat, Mali, Özel Branşlar, Notya Klinik. minmax floor 380px inside a
+            1120px container never fits 3 columns (3×380 > 1120), so this is two columns on
+            desktop and one column on phones. The fifth card sits alone on the last row. */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 380px), 1fr))', gap: '2px', maxWidth: '1120px', margin: '0 auto' }}>
           {PROFESSIONS.map(p => <FlipCard key={p.id} p={p} />)}
         </div>

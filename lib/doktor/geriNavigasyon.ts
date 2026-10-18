@@ -25,7 +25,7 @@ export const HASTA_LISTESI = '/dashboard/doktor/hastalar'
 export const AYARLAR = '/dashboard/doktor/ayarlar'
 export const MALI_PANEL = '/dashboard/mali'
 export const AVUKAT_PANEL = '/dashboard/avukat'
-export const KLINIK_PANEL = '/dashboard/klinik'
+export const KLINIK_PANEL = '/dashboard/notya-klinik'
 
 export function hastaDosyaHref(patientId: string, tab?: HastaDosyaSekmeId | null): string {
   const base = `${HASTA_LISTESI}/${encodeURIComponent(patientId)}`

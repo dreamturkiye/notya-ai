@@ -2,5 +2,5 @@
 import KlinikAracSayfa from '@/components/klinik/KlinikAracSayfa'
 export const dynamic = 'force-dynamic'
 export default function Page() {
-  return <KlinikAracSayfa route="/klinik-tools/long-guvenlik" />
+  return <KlinikAracSayfa route="/ozel-branslar/long-guvenlik" />
 }

@@ -26,16 +26,16 @@ describe('KLINIK-10-EXCEPTIONAL — 10 dal Klinik kategorisi', () => {
     assert.equal(KLINIK_YENI_SLUGS.length, 10)
     for (const k of KLINIK_YENI_SLUGS) {
       const arac = klinikAraclariListesi(k)
-      assert.ok(arac.some((a) => a.route === '/klinik-tools/kayit-kvkk'), `${k} kayit-kvkk`)
-      assert.ok(arac.some((a) => a.route === '/klinik-tools/hasta-portali'), `${k} hasta-portali`)
-      assert.ok(arac.some((a) => a.route === '/klinik-tools/enabiz'), `${k} enabiz`)
+      assert.ok(arac.some((a) => a.route === '/ozel-branslar/kayit-kvkk'), `${k} kayit-kvkk`)
+      assert.ok(arac.some((a) => a.route === '/ozel-branslar/hasta-portali'), `${k} hasta-portali`)
+      assert.ok(arac.some((a) => a.route === '/ozel-branslar/enabiz'), `${k} enabiz`)
       assert.ok(arac.some((a) => a.dallar.includes(k)), k)
-      assert.ok(arac.some((a) => a.route.startsWith('/klinik-tools/')), k)
+      assert.ok(arac.some((a) => a.route.startsWith('/ozel-branslar/')), k)
       assert.ok(arac.some((a) => a.route.endsWith('-kohort')), `${k} kohort`)
-      assert.equal(doktorAraclariListesi(k).some((a) => a.route.startsWith('/klinik-tools/')), false, k)
+      assert.equal(doktorAraclariListesi(k).some((a) => a.route.startsWith('/ozel-branslar/')), false, k)
     }
     for (const tus of ['kardiyoloji', 'fizik-tedavi', 'psikiyatri', 'kulak-burun-bogaz', 'dermatoloji', 'plastik-cerrahi'] as const) {
-      assert.equal(doktorAraclariListesi(tus).some((a) => a.route.startsWith('/klinik-tools/')), false, tus)
+      assert.equal(doktorAraclariListesi(tus).some((a) => a.route.startsWith('/ozel-branslar/')), false, tus)
     }
   })
 
@@ -88,12 +88,12 @@ describe('KLINIK-10-EXCEPTIONAL — 10 dal Klinik kategorisi', () => {
   it('müttefik Klinik’te e-reçete görmez', () => {
     const fizyo = klinikAraclariListesi('fizyoterapi')
     assert.equal(fizyo.some((a) => a.route.includes('erecete')), false)
-    assert.ok(klinikAraclariListesi('klinik-dermatoloji').some((a) => a.route === '/klinik-tools/derm-lazer'))
-    assert.ok(klinikAraclariListesi('estetik-cerrahi').some((a) => a.route === '/klinik-tools/cerrahi-onam'))
-    assert.ok(klinikAraclariListesi('longevity').some((a) => a.route === '/klinik-tools/long-guvenlik'))
-    assert.ok(klinikAraclariListesi('klinik-psikolog').some((a) => a.route === '/klinik-tools/psikolog-vade'))
-    assert.ok(klinikAraclariListesi('diyetisyen').some((a) => a.route === '/klinik-tools/diyet-takvim'))
-    assert.ok(klinikAraclariListesi('ergoterapi').some((a) => a.route === '/klinik-tools/ergo-seans'))
-    assert.ok(klinikAraclariListesi('odyoloji').some((a) => a.route === '/klinik-tools/odyo-oda'))
+    assert.ok(klinikAraclariListesi('klinik-dermatoloji').some((a) => a.route === '/ozel-branslar/derm-lazer'))
+    assert.ok(klinikAraclariListesi('estetik-cerrahi').some((a) => a.route === '/ozel-branslar/cerrahi-onam'))
+    assert.ok(klinikAraclariListesi('longevity').some((a) => a.route === '/ozel-branslar/long-guvenlik'))
+    assert.ok(klinikAraclariListesi('klinik-psikolog').some((a) => a.route === '/ozel-branslar/psikolog-vade'))
+    assert.ok(klinikAraclariListesi('diyetisyen').some((a) => a.route === '/ozel-branslar/diyet-takvim'))
+    assert.ok(klinikAraclariListesi('ergoterapi').some((a) => a.route === '/ozel-branslar/ergo-seans'))
+    assert.ok(klinikAraclariListesi('odyoloji').some((a) => a.route === '/ozel-branslar/odyo-oda'))
   })
 })

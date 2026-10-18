@@ -58,15 +58,15 @@ export default function KlinikHastaDosyaPage() {
     <div style={{ minHeight: '100vh', background: '#f4eee3', fontFamily: "'Source Sans 3', system-ui, sans-serif" }}>
       <KlinikNav clinicName="Notya Klinik" />
       <div style={{ maxWidth: 880, margin: '0 auto', padding: '32px 24px 72px' }}>
-        <Link href="/dashboard/klinik/hastalar" style={{ fontSize: 13, color: '#2f4334' }}>← Hastalar</Link>
+        <Link href="/dashboard/notya-klinik/hastalar" style={{ fontSize: 13, color: '#2f4334' }}>← Hastalar</Link>
         <h1 style={{ fontFamily: "'Fraunces', Georgia, serif", margin: '12px 0 8px', fontSize: 26, color: '#3b2e24' }}>{ad}</h1>
         {hata && <p style={{ color: '#a45b3e' }}>{hata}</p>}
         <p style={{ color: '#8b7d70', fontSize: 14 }}>Klinik dosya — Doktor TUS sekmeleri yok. Seans kaydı yerelde tutulur; SBİYS iddia edilmez.</p>
         {vade && <p style={{ fontSize: 13, color: '#065F46' }}>Sonraki vade: {vade}</p>}
         <div style={{ marginTop: 20, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-          <button type="button" onClick={() => router.push(`/dashboard/klinik/seans?patientId=${id}`)} style={btn}>Seansı başlat</button>
-          <button type="button" onClick={() => router.push(`/klinik-tools/hasta-portali?patientId=${id}`)} style={{ ...btn, background: '#2f4334' }}>Portal ver</button>
-          <button type="button" onClick={() => router.push('/dashboard/klinik/randevular')} style={{ ...btn, background: '#faf6ee', color: '#2f4334', border: '1px solid #2f4334' }}>Randevular</button>
+          <button type="button" onClick={() => router.push(`/dashboard/notya-klinik/seans?patientId=${id}`)} style={btn}>Seansı başlat</button>
+          <button type="button" onClick={() => router.push(`/ozel-branslar/hasta-portali?patientId=${id}`)} style={{ ...btn, background: '#2f4334' }}>Portal ver</button>
+          <button type="button" onClick={() => router.push('/dashboard/notya-klinik/randevular')} style={{ ...btn, background: '#faf6ee', color: '#2f4334', border: '1px solid #2f4334' }}>Randevular</button>
         </div>
         {seanslar.length > 0 && (
           <>

@@ -20,7 +20,7 @@ interface Profession {
 
 const professions: Profession[] = [
   { id: 'doktor', label: 'Doktor/Hekim', emoji: '🩺', desc: 'Tıbbi uzmanlık alanınız' },
-  { id: 'klinik-uzman', label: 'Klinik Uzman', emoji: '💉', desc: 'Estetik, saç ekimi, dermatoloji' },
+  { id: 'klinik-uzman', label: 'Özel Branşlar', emoji: '💉', desc: 'Estetik, saç ekimi, dermatoloji' },
   { id: 'saglik-uzmani', label: 'Sağlık Uzmanı', emoji: '🩺', desc: 'Fizyoterapi, psikoloji, diyetisyen' },
   { id: 'mali', label: 'Mali Müşavir/SMMM', emoji: '💰', desc: 'Finansal danışmanlık' },
   { id: 'avukat', label: 'Avukat', emoji: '⚖️', desc: 'Hukuki danışmanlık' },
@@ -146,7 +146,7 @@ function OnboardingInner() {
           const type = profile?.profession_type || validPreset || 'doktor'
           if (type === 'mali' || type === 'mali_musavirlik') router.replace('/dashboard/mali')
           else if (type === 'avukat') router.replace('/dashboard/avukat')
-          else if (type === 'klinik-uzman' || type === 'saglik-uzmani') router.replace('/dashboard/klinik')
+          else if (type === 'klinik-uzman' || type === 'saglik-uzmani') router.replace('/dashboard/notya-klinik')
           else router.replace('/dashboard/doktor')
           return
         }
@@ -259,8 +259,8 @@ function OnboardingInner() {
     if (profession === 'doktor') return '/dashboard/doktor';
     if (profession === 'mali') return '/dashboard/mali';
     if (profession === 'avukat') return '/dashboard/avukat';
-    if (profession === 'klinik-uzman') return '/dashboard/klinik';
-    if (profession === 'saglik-uzmani') return '/dashboard/klinik';
+    if (profession === 'klinik-uzman') return '/dashboard/notya-klinik';
+    if (profession === 'saglik-uzmani') return '/dashboard/notya-klinik';
     return '/dashboard';
   };
 

@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import KlinikNav from '@/components/klinik/KlinikNav'
+import OzelBranslarBaslik from '@/components/klinik/OzelBranslarBaslik'
 import { klinikAraclariHepsi, klinikAraclariListesi, type KlinikArac } from '@/lib/klinik/klinikAraclari'
 import { klinikSlugCoz, KLINIK_ETIKET } from '@/lib/specialties/klinikDikey'
 import { hekimProfilOturumOku, hekimProfilOturumYaz, hekimProfilTazeleBasligi, hekimProfilTazeleBitti } from '@/lib/doktor/hekimProfilIstemci'
@@ -36,7 +36,7 @@ export default function KlinikToolsPage() {
         if (r.ok) hekimProfilTazeleBitti()
         const tip = String(j?.data?.profession_type || '')
         const onizleme = Boolean(j?.data?.klinik_erisim)
-        if (!onizleme && tip !== 'klinik-uzman' && tip !== 'saglik-uzmani') { router.replace('/dashboard/klinik'); return }
+        if (!onizleme && tip !== 'klinik-uzman' && tip !== 'saglik-uzmani') { router.replace('/dashboard/notya-klinik'); return }
         if (!iptal) {
           // KURAL — TÜRKÇE: profilde slug ('sac-ekimi') saklanır; ekranda Türkçe etiket ('Saç Ekimi').
           if (onizleme) {
@@ -58,7 +58,7 @@ export default function KlinikToolsPage() {
 
   return (
     <div style={{ minHeight: '100vh', background: '#f4eee3', fontFamily: "'Source Sans 3', system-ui, sans-serif" }}>
-      <KlinikNav clinicName="Notya Klinik" adminName="" />
+      <OzelBranslarBaslik />
       <div style={{ maxWidth: 1100, margin: '0 auto', padding: '32px 24px 72px' }}>
         <h1 style={{ fontFamily: "'Fraunces', Georgia, serif", margin: '0 0 8px', fontSize: 26, color: '#3b2e24' }}>Özel Branşlar</h1>
         <p style={{ margin: '0 0 22px', color: '#8b7d70', fontSize: 14 }}>

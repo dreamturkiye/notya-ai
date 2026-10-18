@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { cn } from "./cn";
 
 /**
- * NOTYA-LANDING-2026-10 — one section pattern for every capability block on /doktor and /klinik:
+ * NOTYA-LANDING-2026-10 — one section pattern for every capability block on /doktor and /notya-klinik:
  * eyebrow, display heading (second line italic pine), lede, up to three bullets, and a
  * typographic card. No screenshots: the card is set in type so the page never shows real product UI.
  */

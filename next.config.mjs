@@ -56,6 +56,16 @@ const nextConfig = {
       { source: '/signin', destination: '/giris', permanent: true },
       // KONSULTASYONLAR-01 — eski "Bekleyen Konsültasyonlar" kapısı yeni araca (308 kalıcı).
       { source: '/doktor-tools/bekleyen-konsultasyonlar', destination: '/doktor-tools/konsultasyonlar', permanent: true },
+      // Notya Klinik (çok hekim) ve Özel Branşlar (10 dal) ayrı yollar. Eski adresler kalıcı.
+      { source: '/klinik-tools', destination: '/ozel-branslar', permanent: true },
+      { source: '/klinik-tools/:path*', destination: '/ozel-branslar/:path*', permanent: true },
+      { source: '/dashboard/klinik', destination: '/dashboard/notya-klinik', permanent: true },
+      { source: '/dashboard/klinik/:path*', destination: '/dashboard/notya-klinik/:path*', permanent: true },
+      { source: '/giris/klinik', destination: '/giris/notya-klinik', permanent: true },
+      { source: '/asistan/klinik', destination: '/asistan/ozel-branslar', permanent: true },
+      { source: '/asistan/klinik/:path*', destination: '/asistan/ozel-branslar/:path*', permanent: true },
+      { source: '/klinik', destination: '/notya-klinik', permanent: true },
+      { source: '/klinik/:path*', destination: '/notya-klinik/:path*', permanent: true },
     ]
   },
 

@@ -95,7 +95,7 @@ export default function KlinikAyarlar() {
   }
   if (oturum === 'yok') {
     return (
-      <MasaSahne kas={NOTYA_KLINIK_AD} baslik="Klinik kurulumu" italik="hekim oturumu ister." govde="Bu masa hekim oturumu ister. Doktor ekranları aynı yerinde durur.">
+      <MasaSahne kas={NOTYA_KLINIK_AD} baslik="Kurulum" italik="hekim oturumu ister." govde="Notya Klinik kurulumu hekim oturumu ister. Doktor ekranları aynı yerinde durur.">
         <Button href="/giris/doktor" variant="pine" size="lg">Hekim girişi</Button>
       </MasaSahne>
     )
@@ -103,7 +103,7 @@ export default function KlinikAyarlar() {
   if (!veri?.klinik) {
     return (
       <MasaSahne kas={NOTYA_KLINIK_AD} baslik="Notya Klinik" italik="açın." govde="Ad, adres ve vergi numarası kliniğin kendi kaydıdır. Hekimin muayene ekranı değişmez.">
-        <label className="block font-outfit text-sm text-ink-2">Klinik adı
+        <label className="block font-outfit text-sm text-ink-2">Kurum adı
           <input className={alan} value={yeniAd} onChange={(e) => setYeniAd(e.target.value)} />
         </label>
         {hata && <p className="mt-3 font-outfit text-sm text-warn">{hata}</p>}
@@ -127,7 +127,7 @@ export default function KlinikAyarlar() {
       <MasaSahne kas={NOTYA_KLINIK_AD} baslik={k.ad || NOTYA_KLINIK_AD} italik="kurulumu." govde="Odalar, yetkiler, randevu kuralı ve koltuklar bu masada durur. Hekim muayene ekranı aynı kalır." />
       {salt && <p className="mx-auto max-w-7xl px-5 font-outfit text-sm text-ink-muted sm:px-8">Bu Notya Klinik kaydını görüntülüyorsunuz. Ayarları yalnız sahip veya yönetici değiştirir.</p>}
       {hata && <p className="font-outfit text-sm text-warn">{hata}</p>}
-      <Kart baslik="Klinik kimliği">
+      <Kart baslik="Kurum kaydı">
         <label>Ad<input className={alan} disabled={salt} value={k.ad} onChange={(e) => setVeri({ ...veri, klinik: { ...k, ad: e.target.value } })} /></label>
         <label>Telefon<input className={alan} disabled={salt} value={k.telefon} onChange={(e) => setVeri({ ...veri, klinik: { ...k, telefon: e.target.value } })} /></label>
         <label>Adres<input className={alan} disabled={salt} value={k.adres} onChange={(e) => setVeri({ ...veri, klinik: { ...k, adres: e.target.value } })} /></label>

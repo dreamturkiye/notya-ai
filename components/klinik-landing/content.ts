@@ -1,5 +1,5 @@
 /**
- * NOTYA-KLINIK-01 — /klinik landing copy and data, in one place like doktor-landing/content.ts.
+ * NOTYA-KLINIK-01 — /notya-klinik landing copy and data, in one place like doktor-landing/content.ts.
  *
  * NOTYA-LANDING-2026-10 (Kaan, 2026-10-05): no integration claims, no demos, outcomes not
  * mechanisms, and only capabilities confirmed on main. Lines from the brief that main could not
@@ -22,7 +22,7 @@ export const LINKS = {
 
 export const NAV = [
   { href: "#portal", label: "Hasta portalı", index: "01" },
-  { href: "#dallar", label: "Özel Branşlar", index: "02" },
+  { href: "/ozel-branslar", label: "Özel Branşlar", index: "02" },
   { href: "#fiyat", label: "Fiyat", index: "04" },
 ] as const;
 

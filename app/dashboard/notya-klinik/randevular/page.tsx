@@ -86,7 +86,7 @@ export default function KlinikRandevularPage() {
                 <div style={{ fontSize: 12, color: '#8b7d70' }}>{new Date(rv.baslangic).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })} · {DURUM_ETIKET[rv.durum] || rv.durum}</div>
               </div>
               {rv.patientId && (
-                <button type="button" onClick={() => router.push(`/dashboard/klinik/seans?patientId=${rv.patientId}`)} style={btn}>Seansı başlat</button>
+                <button type="button" onClick={() => router.push(`/dashboard/notya-klinik/seans?patientId=${rv.patientId}`)} style={btn}>Seansı başlat</button>
               )}
             </div>
           ))}

@@ -1,5 +1,5 @@
 /**
- * NOTYA-KLINIK-01 — all static sections of /klinik in one file. Everything here is a server
+ * NOTYA-KLINIK-01 — all static sections of /notya-klinik in one file. Everything here is a server
  * component; only the nav needs the client.
  *
  * NOTYA-LANDING-2026-10: repositioned from "AI uzman per koltuk" to the practice system. Capability
@@ -156,9 +156,8 @@ export function KlinikFooter() {
   return (
     <footer className="border-t border-line bg-paper">
       <div className="mx-auto flex max-w-7xl flex-col gap-6 px-5 py-10 sm:px-8 lg:flex-row lg:items-center lg:justify-between">
-        <a href="#top" className="flex items-baseline gap-2 font-display text-2xl italic leading-none tracking-tight">
-          notya
-          <span className="font-outfit text-[11px] not-italic uppercase tracking-[0.3em] text-pine">Klinik</span>
+        <a href="#top" className="font-display text-2xl italic leading-none tracking-tight">
+          Notya Klinik
         </a>
         <nav className="flex flex-wrap gap-x-6 gap-y-2 font-outfit text-sm text-ink-2" aria-label="Alt bağlantılar">
           <a href={LINKS.kvkk} className="hover:text-ink">KVKK</a>
@@ -166,6 +165,7 @@ export function KlinikFooter() {
           <a href={LINKS.kosullar} className="hover:text-ink">Kullanım Koşulları</a>
           <a href={LINKS.gizlilik} className="hover:text-ink">Gizlilik</a>
           <a href={LINKS.yasal} className="hover:text-ink">Tüm yasal metinler</a>
+          <a href="/ozel-branslar" className="hover:text-ink">Özel Branşlar</a>
           <a href={LINKS.doktor} className="hover:text-ink">Notya Doktor</a>
           <a href={LINKS.home} className="hover:text-ink">Notya</a>
           <a href={LINKS.login} className="hover:text-ink">Giriş</a>

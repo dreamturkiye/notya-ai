@@ -15,7 +15,7 @@ Section order now: Hero → Konuşma (Ayşe) → Muayene sonu → Hasta portalı
 - Footer tagline is "Hekimler için yapay zekâ klinik asistanı"; the bottom line reads "KVKK · AES-256 · Türkçe".
 - Pricing and CTA: layout and prices unchanged. The Pabau items were removed from the plans (rule 1 overrides "unchanged"). Fiyat eyebrow renumbered to 10.
 
-## /klinik — what changed
+## /notya-klinik — what changed
 Order now: Hero → Hasta portalı → Dallar → trust line → Fiyat → CTA.
 - Removed sections: the old hero facts strip, the Branşlar index (descriptions full of method names: FUE/DHI/ICD-10/DSM-5/ICF, and the 29.03.2025 tag), İşleyiş, Güvenlik (model and pseudonymisation mechanism), and Entegrasyonlar (Pabau + trademark note).
 - Dallar: names only, in the brief's order.

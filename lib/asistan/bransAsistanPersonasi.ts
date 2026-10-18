@@ -67,7 +67,7 @@ export function bransPersonasiBulunamadiMi(brans: string | null | undefined): bo
 /**
  * TEK genel arama noktası. Önce Doktor'un 30 branşlık rosterini dener (kanonik anahtara çözerek —
  * `kadin-dogum` ↔ `kadin-hastaliklari-dogum` gibi takma adlar `bransAnahtari()` ile dahil), sonra
- * Klinik'in 10 dalını (ham slug ile — `/asistan/klinik` ve `klinik-signed-url` rotalarının
+ * Özel Branşlar’ın 10 dalını (ham slug ile — `/asistan/ozel-branslar` ve `klinik-signed-url` rotalarının
  * KlinikUzmanPersonas'ı okuduğu AYNI anahtar biçimiyle). İkisinde de yoksa bayrak gemisi
  * (pediatri/Ayşe) döner — asla çöker, asla isim üretmez.
  */

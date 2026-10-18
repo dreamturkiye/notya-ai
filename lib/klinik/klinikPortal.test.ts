@@ -16,7 +16,7 @@ describe('KLINIK-PORTAL — aynı Sağlığım kabuğu, 10 dal', () => {
   it('10 dalın portal modülü ve mint aracı var; Doktor gridine sızmaz', () => {
     assert.equal(klinikPortalDallariTam(), true)
     for (const slug of KLINIK_YENI_SLUGS) {
-      assert.ok(klinikAraclariListesi(slug).some((a) => a.route === '/klinik-tools/hasta-portali'), slug)
+      assert.ok(klinikAraclariListesi(slug).some((a) => a.route === '/ozel-branslar/hasta-portali'), slug)
       const p = portalModulleri({ doktorBransi: slug, ...bos })
       assert.deepEqual(p.moduller, [KLINIK_PORTAL_MODUL[slug], 'asi-karnesi'], slug)
       assert.equal(p.nav.length, 2, slug)
@@ -27,8 +27,8 @@ describe('KLINIK-PORTAL — aynı Sağlığım kabuğu, 10 dal', () => {
       assert.ok(!digerDalModulleri.includes('ftrm'), slug)
       assert.ok(!digerDalModulleri.includes('psikiyatri'), slug)
     }
-    assert.equal(doktorAraclariListesi('kardiyoloji').some((a) => a.route === '/klinik-tools/hasta-portali'), false)
-    assert.equal(doktorAraclariListesi('dermatoloji').some((a) => a.route.startsWith('/klinik-tools/')), false)
+    assert.equal(doktorAraclariListesi('kardiyoloji').some((a) => a.route === '/ozel-branslar/hasta-portali'), false)
+    assert.equal(doktorAraclariListesi('dermatoloji').some((a) => a.route.startsWith('/ozel-branslar/')), false)
   })
 
   it('hekim klinik ve müttefik aynı kabuk; TUS eşleniği sızmaz', () => {

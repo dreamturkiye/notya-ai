@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * NOTYA-KLINIK-01 — /klinik landing, the klinik vertical's front door. Pricing reuses CLINIC_PLANS
+ * NOTYA-KLINIK-01 — /notya-klinik landing, the klinik vertical's front door. Pricing reuses CLINIC_PLANS
  * from the doktor landing — one source of truth for seat prices, no invented numbers.
  * NOTYA-LANDING-2026-10: section order and copy per Kaan's 2026-10-05 brief; see
  * docs/LANDING-REFRESH-2026-10.md.
@@ -77,7 +77,7 @@ function Fiyat() {
 
 export default function KlinikLandingPage() {
   // Anchor targets sit behind a fixed header; scroll-mt handles in-page clicks, this handles
-  // arriving from outside with a #hash (e.g. /klinik#dallar from an ad).
+  // arriving from outside with a #hash (e.g. /notya-klinik#dallar from an ad).
   useEffect(() => {
     if (window.location.hash) {
       document.querySelector(window.location.hash)?.scrollIntoView();

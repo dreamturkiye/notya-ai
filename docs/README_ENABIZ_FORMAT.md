@@ -1,7 +1,7 @@
 # e-Nabız — yapıştırma masası + format paketleri
 
 **Ürün (2026-09-27):** hekim veya sekreter `enabiz.gov.tr`’ye kendi girer. Notya alanı
-kopyalar. Masa: `/doktor-tools/enabiz` (30 branş), `/klinik-tools/enabiz` (10 dal).
+kopyalar. Masa: `/doktor-tools/enabiz` (30 branş), `/ozel-branslar/enabiz` (10 dal).
 Bakanlık HTTP yok.
 
 **Kural (CEO 2026-09-16):** doğrudan bağlantı yok; reçete, rapor, epikriz, USG,

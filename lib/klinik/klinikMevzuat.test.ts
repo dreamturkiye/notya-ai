@@ -50,10 +50,10 @@ describe('KLINIK_MEVZUAT — SB / KVKK / kayıt', () => {
 
   it('kayıt-kvkk aracı 10 dalda; Doktor gridine sızmaz', () => {
     for (const slug of KLINIK_YENI_SLUGS) {
-      assert.ok(klinikAraclariListesi(slug).some((a) => a.route === '/klinik-tools/kayit-kvkk'), slug)
-      assert.ok(klinikAraclariListesi(slug).some((a) => a.route === '/klinik-tools/hasta-portali'), slug)
+      assert.ok(klinikAraclariListesi(slug).some((a) => a.route === '/ozel-branslar/kayit-kvkk'), slug)
+      assert.ok(klinikAraclariListesi(slug).some((a) => a.route === '/ozel-branslar/hasta-portali'), slug)
     }
     assert.equal(doktorAraclariListesi('kardiyoloji').some((a) => a.route.includes('kayit-kvkk')), false)
-    assert.equal(doktorAraclariListesi('dermatoloji').some((a) => a.route.startsWith('/klinik-tools/')), false)
+    assert.equal(doktorAraclariListesi('dermatoloji').some((a) => a.route.startsWith('/ozel-branslar/')), false)
   })
 })

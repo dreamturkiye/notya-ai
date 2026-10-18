@@ -3566,7 +3566,7 @@ Source: yeni gorunum sweep. Klinik pages now use the cream/pine colors and fonts
 
 | ID | Date | Status | What | Owner / waiting on |
 |----|------|--------|------|--------------------|
-| NOTYA-KLINIK-SHELL-01 | 2026-10-04 | OPEN | `KlinikNav` is a top bar with 8 buttons (Genel Bakış, Hastalar, Randevular, Araçlar, Uzmanlar, Kullanıcılar, Klinik Ayarları, Pabau); doktor uses `DoktorChrome` (header + dock, Sidebar B) through `app/dashboard/doktor/layout.tsx` and `app/doktor-tools/layout.tsx`. There is no layout for `app/dashboard/klinik/*`, `app/klinik-tools/*` or `app/giris/klinik`; each page wraps itself in `KlinikNav` plus its own cream background. `app/klinik-tools/*` has no `doktorViewport` themeColor (cream status bar in the installed app) and no layout-level font link (`KlinikNav` carries the link for now). Klinik tool panels use hand-rolled card/button styles (`inp`/`btn` in `KlinikBolumHome`) instead of the shared `aracStil` / `toolsUi` helpers. | Kaan: decide whether klinik moves to DoktorChrome / Sidebar B |
+| NOTYA-KLINIK-SHELL-01 | 2026-10-04 | OPEN | Notya Klinik `KlinikNav` is Genel Bakış, Hastalar, Randevular, Kullanıcılar, Ayarlar, Pabau, plus a separated Özel Branşlar link. Özel Branşlar pages use `OzelBranslarBaslik`. Doktor uses `DoktorChrome`. There is still no shared layout for `app/dashboard/notya-klinik/*` or `app/ozel-branslar/*`. Tool panels still use hand-rolled card styles. | Kaan: decide whether these shells move to DoktorChrome / Sidebar B |
 
 ## 2026-10-05 - NOTYA-LANDING-2026-10: doktor + klinik landing refresh follow-ups
 Source: Kaan's 2026-10-05 landing brief (branch `claude/landing-page-refresh-2026-urhwhg`). Details in `docs/LANDING-REFRESH-2026-10.md`.
@@ -3575,7 +3575,7 @@ Source: Kaan's 2026-10-05 landing brief (branch `claude/landing-page-refresh-202
 |----|------|--------|------|--------------------|
 | NOTYA-LANDING-2026-10a | 2026-10-05 | OPEN | Legal review of the health-advertising wording on `/doktor` and `/klinik` by a Turkish lawyer. | Kaan |
 | NOTYA-LANDING-2026-10b | 2026-10-05 | OPEN | Add integration claims back to the landings once Kaan confirms which integrations are live. All were removed in this refresh. | Kaan |
-| NOTYA-LANDING-2026-10c | 2026-10-05 | OPEN | Klinik product visuals on `/klinik` after NOTYA-KLINIK-SHELL-01 lands. | Kaan |
+| NOTYA-LANDING-2026-10c | 2026-10-05 | OPEN | Notya Klinik product visuals on `/notya-klinik` after NOTYA-KLINIK-SHELL-01 lands. | Kaan |
 
 - 2026-10-05 NOTYA-FIYAT-01: landing prices raised (Baslangic 1.490 / Pro 3.490 / Muayenehane 5.990 TRY per month, klinik by quote only, founding-doctor 40 percent off for the first 50 doctors for 12 months, annual prepay 2 months free). The app does NOT enforce these tiers yet: no plan limits, no tier feature gating, no billing for them. Waits on: Kaan (decide when to build).
 - 2026-10-05 NOTYA-FIYAT-02: measure the real cost per voice session and define the fair-use limit behind the Pro promise of unlimited sessions (fair use). Waits on: Kaan (say olc).

@@ -29,8 +29,8 @@ export default function KlinikGiris() {
       refresh_token: data.session.refresh_token,
       expires_at: data.session.expires_at,
     }))
-    // Aynı hesap Doktor / Klinik / Avukat yüzlerini açar — meslek tipi buradan geri çevirmez.
-    router.replace('/dashboard/klinik')
+    // Aynı hesap Doktor / Notya Klinik / Avukat yüzlerini açar — meslek tipi buradan geri çevirmez.
+    router.replace('/dashboard/notya-klinik')
   }
 
   // NOTYA-GIRIS-GORUNUM-01 (Kaan, 2026-09-27): klinik girişi de doktor arayüzünün krem/çam görünümünde (pembe vurgu bırakıldı).
@@ -45,7 +45,7 @@ export default function KlinikGiris() {
       <div style={{ background: R.paper, borderRadius: 24, padding: 'clamp(28px, 6vw, 44px)', maxWidth: 420, width: '100%', border: `1px solid ${R.border}`, boxSizing: 'border-box', boxShadow: '0 18px 50px rgba(58,44,34,0.08)' }}>
         <div style={{ textAlign: 'center', marginBottom: 26 }}>
           <div style={{ fontFamily: CHROME_FONT.serif, fontSize: 34, fontWeight: 560, letterSpacing: -0.5, color: R.pine, lineHeight: 1.1 }}>Notya</div>
-          <div style={{ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', fontSize: 16, color: R.muted, marginTop: 6 }}>Klinik girişi</div>
+          <div style={{ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', fontSize: 16, color: R.muted, marginTop: 6 }}>Notya Klinik girişi</div>
         </div>
         <form onSubmit={handleLogin} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           <div>

@@ -82,7 +82,7 @@ export default function KullanicilarPage() {
     <div style={{ minHeight: '100vh', background: '#f4eee3', fontFamily: "'Source Sans 3', system-ui, sans-serif" }}>
       <KlinikNav clinicName={clinicName} adminName={adminName} />
       <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '48px' }}>
-        <a href="/dashboard/klinik" style={{ color: '#8b7d70', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>← Klinik</a>
+        <a href="/dashboard/notya-klinik" style={{ color: '#8b7d70', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>← Notya Klinik</a>
         <h1 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: '28px', fontWeight: 400, color: '#3b2e24', margin: '12px 0 32px', letterSpacing: '-0.02em' }}>Kullanıcı Yönetimi</h1>
 
         <div style={{ background: '#faf6ee', border: '1px solid rgba(58,44,34,0.08)', borderRadius: '12px', overflow: 'hidden', marginBottom: '32px' }}>

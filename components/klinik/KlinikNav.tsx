@@ -9,15 +9,16 @@ interface KlinikNavProps {
 }
 
 const navItems = [
-  { label: 'Genel Bakış', href: '/dashboard/klinik' },
-  { label: 'Hastalar', href: '/dashboard/klinik/hastalar' },
-  { label: 'Randevular', href: '/dashboard/klinik/randevular' },
-  { label: 'Araçlar', href: '/klinik-tools' },
-  { label: 'Uzmanlar', href: '/asistan/klinik' },
-  { label: 'Kullanıcılar', href: '/dashboard/klinik/kullanicilar' },
-  { label: 'Klinik Ayarları', href: '/dashboard/klinik/ayarlar' },
-  { label: 'Pabau', href: '/dashboard/klinik/pabau' },
+  { label: 'Genel Bakış', href: '/dashboard/notya-klinik' },
+  { label: 'Hastalar', href: '/dashboard/notya-klinik/hastalar' },
+  { label: 'Randevular', href: '/dashboard/notya-klinik/randevular' },
+  { label: 'Kullanıcılar', href: '/dashboard/notya-klinik/kullanicilar' },
+  { label: 'Ayarlar', href: '/dashboard/notya-klinik/ayarlar' },
+  { label: 'Pabau', href: '/dashboard/notya-klinik/pabau' },
 ]
+
+/** Ayrı ürün. Menüde “Klinik” diye kısaltılmaz. */
+const ozelBranslar = { label: 'Özel Branşlar', href: '/ozel-branslar' }
 
 export default function KlinikNav({ clinicName, adminName }: KlinikNavProps) {
   const router = useRouter()
@@ -44,7 +45,7 @@ export default function KlinikNav({ clinicName, adminName }: KlinikNavProps) {
       <span style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: '16px', fontWeight: 400, color: '#3b2e24', letterSpacing: '-0.01em' }}>
         {clinicName}
       </span>
-      <div style={{ display: 'flex', gap: '4px' }}>
+      <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
         {navItems.map(item => {
           const active = pathname === item.href
           return (
@@ -59,6 +60,16 @@ export default function KlinikNav({ clinicName, adminName }: KlinikNavProps) {
             </button>
           )
         })}
+        <span aria-hidden="true" style={{ width: 1, height: 18, background: 'rgba(58,44,34,0.16)', margin: '0 8px' }} />
+        <button onClick={() => router.push(ozelBranslar.href)} style={{
+          border: 'none', cursor: 'pointer', fontFamily: 'inherit',
+          padding: '6px 14px', borderRadius: '6px', fontSize: '13px',
+          color: pathname.startsWith('/ozel-branslar') ? '#3b2e24' : '#2f4334',
+          fontWeight: 600,
+          background: pathname.startsWith('/ozel-branslar') ? 'rgba(58,44,34,0.045)' : 'none'
+        }}>
+          {ozelBranslar.label}
+        </button>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
         <span style={{ fontSize: '13px', color: '#8b7d70' }}>{adminName}</span>

@@ -42,5 +42,5 @@ export async function POST(req: NextRequest) {
     expires_at: expires,
   })
   if (error) return NextResponse.json({ error: 'Davet yazılamadı.' }, { status: 500 })
-  return NextResponse.json({ email, baglanti: `/klinik/davet?t=${ham}`, expiresAt: expires })
+  return NextResponse.json({ email, baglanti: `/notya-klinik/davet?t=${ham}`, expiresAt: expires })
 }

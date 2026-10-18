@@ -42,7 +42,7 @@ Kill switch: `AYSE_IKI_BEYIN_BIRDE_KAPALI=1` (pre-gate behaviour).
 Pediatri Ayşe is the **reference**, not a special case. The same thin mouth + strong brain is core for:
 
 - all **30** doktor specialists (`lib/asistan/specialistsCatalog.ts` → same 3 Custom-LLM agent copies)
-- **klinik** experts (`/asistan/klinik` → same copies; brain = `klinikCevapla`, no chart tools)
+- **klinik** experts (`/asistan/ozel-branslar` → same copies; brain = `klinikCevapla`, no chart tools)
 
 `tekBeyinAcikMi` defaults **ON**. Kill switch: `NOTYA_TEK_BEYIN_DOKTORLAR=off`. Optional allowlist: `only:id1,id2`.
 

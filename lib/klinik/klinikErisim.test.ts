@@ -12,12 +12,12 @@ test('Klinik yüzü yalnız süper kullanıcı listesi — Doktor hesabı clinic
   for (const id of SUPERUSER_BRANS_IDS) assert.equal(klinikYuzuAcikMi(id), bransDegistirebilir(id))
 })
 
-test('Profesyonel giriş listesinde Klinik var; /giris/klinik aynı oturumla /dashboard/klinik açar', () => {
+test('Profesyonel giriş listesinde Notya Klinik var; /giris/notya-klinik aynı oturumla /dashboard/notya-klinik açar', () => {
   const chooser = readFileSync('app/giris/page.tsx', 'utf8')
-  assert.match(chooser, /href="\/giris\/klinik"/)
-  assert.match(chooser, />Klinik</)
-  const sayfa = readFileSync('app/giris/klinik/page.tsx', 'utf8')
-  assert.match(sayfa, /\/dashboard\/klinik/)
+  assert.match(chooser, /href="\/giris\/notya-klinik"/)
+  assert.match(chooser, />Notya Klinik</)
+  const sayfa = readFileSync('app/giris/notya-klinik/page.tsx', 'utf8')
+  assert.match(sayfa, /\/dashboard\/notya-klinik/)
   assert.match(sayfa, /auth-token/)
   assert.doesNotMatch(sayfa, /profession_type\s*!==\s*'klinik/)
   const me = readFileSync('app/api/klinik/me/route.ts', 'utf8')
