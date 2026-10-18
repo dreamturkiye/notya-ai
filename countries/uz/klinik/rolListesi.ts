@@ -40,8 +40,15 @@
  *                               recognised specialty in the order read", not that a clinic may not offer the
  *                               service; under which licensed specialty it may, and what it may call it, is a
  *                               lawyer's question. And diyetisyen and odyoloji, replaced as said above.
- *   NOT DECIDED (left as it was) fizyoterapi: whether a non-doctor rehabilitation profession is recognised, and under
- *                               which name, was not found. A local clinician and a lawyer.
+ *                               CONFIRMED INDEPENDENTLY, 2026-10-18 (docs/OPEN-COMMITMENTS.md, same date): web
+ *                               research found real, substantial clinic demand in Uzbekistan for hair transplant
+ *                               (sac-ekimi) — it is simply practised under the "Plastik xirurgiya" licence this pack
+ *                               already offers as estetik-cerrahi, exactly as ./eskiRoller.ts already assumed.
+ *                               Longevity/anti-ageing medicine as a distinct category and ergoterapi (occupational
+ *                               therapy) as a distinct profession turned up no licensed category AND no real market
+ *                               presence of their own in Uzbekistan (searched by name in Uzbek and Russian): kept
+ *                               removed. Decision owner: Claude, 2026-10-18; full sourcing in OPEN-COMMITMENTS.md.
+ *   RESOLVED 2026-10-18         fizyoterapi (was "not decided", below): changed to `keep`. See its row.
  *   OUT OF SCOPE                dentistry ("Stomatologiya", section IV of the order, a whole direction) and
  *                               traditional medicine ("Xalq tabobati", section VIII): each needs a note template,
  *                               an intake set and tools of its own, and whether the product wants the field at all
@@ -141,7 +148,18 @@ export const UZ_ROL_SATIRLARI: readonly UzRolSatiri[] = [
   r('medikal-estetik', 'klinik-hekim', 'rename', 'Tibbiy kosmetologiya', 'row 5, an additional specialty under "Dermatovenerologiya"'),
   r('klinik-dermatoloji', 'klinik-hekim', 'rename', 'Dermatovenerologiya', 'row 5'),
   // ── clinic allied professions (2)
-  r('fizyoterapi', 'klinik-muttefik', 'unverified', null, null),
+  // RESOLVED 2026-10-18 (was `unverified`; docs/OPEN-COMMITMENTS.md, same date, has the full sourcing). The order
+  // names no separate non-doctor "fizioterapevt" profession, but it does name the FIELD, bundled into a doctor
+  // specialty: row 3's "Reabilitologiya (davolash fizkulturasi, kurortologiya, fizioterapiya)" (./fizik-tedavi,
+  // above). Independent reading: Uzbekistan has no official certification system yet for a non-doctor
+  // physiotherapist (world.physio and JICA, both 2026, on a university's first-ever bachelor's programme being
+  // built for exactly this); real clinics in Tashkent already advertise LFK (exercise-therapy) doctors and manual
+  // therapy/massage under this umbrella (med24.uz). Net call: the discipline IS recognised, just not yet as an
+  // independent licence a non-doctor can hold on its own — closer to "practised under medical supervision" than
+  // "not recognised". KEEP, with a caveat a local lawyer should close: whether this clinic role needs pairing with
+  // a supervising fizik-tedavi doctor account, or stands alone. Confidence: medium — revisit when Uzbekistan's own
+  // certification track (in progress as of the sources above) lands.
+  r('fizyoterapi', 'klinik-muttefik', 'keep', null, null),
   // The order names the field, "Klinik psixologiya" (section VII); the pack names the profession, as for every allied role.
   r('klinik-psikolog', 'klinik-muttefik', 'keep', 'Klinik psixologiya', 'section VII, row 56'),
 ]

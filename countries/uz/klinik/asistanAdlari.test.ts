@@ -159,3 +159,22 @@ test('lookup: known key answers, unknown key is null (no fallback to another spe
   assert.equal(uzAsistanAdi('yok-boyle-brans'), null)
   for (const f of FORMLAR) assert.equal(uzAsistanKimligi('yok-boyle-brans', f), null)
 })
+
+/**
+ * RECONCILED 2026-10-18 (docs/OPEN-COMMITMENTS.md) — diyetoloji and surdoloji are diyetisyen and odyoloji, renamed
+ * onto the doctor side by the 2026-10-10 audit; they now show on screen under the owner's existing names, unlike a
+ * role the audit merely added. A role the audit added (narkoloji, say) still shows nobody: not a stale key, a
+ * genuinely new one the owner has not named.
+ */
+test('a renamed key carries the identity the owner already gave it; an added key still shows nobody', () => {
+  assert.equal(uzAsistanAdi('diyetoloji')?.meslekUnvani, 'Diyetolog')
+  assert.equal(uzAsistanAdi('diyetoloji')?.kisaAd, 'Mahliyo')
+  assert.equal(uzAsistanAdi('surdoloji')?.meslekUnvani, 'Audiolog')
+  assert.equal(uzAsistanAdi('surdoloji')?.kisaAd, 'Rayhon')
+  assert.equal(uzAsistanKimligi('diyetoloji', 'uz-Latn')!.tamAd, 'Diyetolog Mahliyo Tursunova')
+  assert.equal(uzAsistanKimligi('surdoloji', 'uz-Latn')!.tamAd, 'Audiolog Rayhon Alimova')
+  // the renamed key answers with the exact same underlying record as its old key (uzAsistanAdi has no role gate)
+  assert.deepEqual(uzAsistanAdi('diyetoloji'), uzAsistanAdi('diyetisyen'))
+  assert.deepEqual(uzAsistanAdi('surdoloji'), uzAsistanAdi('odyoloji'))
+  for (const f of FORMLAR) assert.equal(uzAsistanKimligi('narkoloji', f), null)
+})

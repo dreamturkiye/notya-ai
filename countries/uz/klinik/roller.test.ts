@@ -155,11 +155,14 @@ describe('42 roles: the decisions of the audit of 2026-10-10, as applied (./rolL
     assert.deepEqual(R.UZ_ROL_TANIMLARI.filter((t) => t.gibi !== undefined).map((t) => t.anahtar), UZ_ROL_SATIRLARI.filter((x) => x.gibi).map((x) => x.anahtar))
   })
 
-  it('KEPT, with the name the pack had: 25 roles; one could not be decided and was left as it was; dentistry and traditional medicine are not here', () => {
-    assert.equal(UZ_ROL_SATIRLARI.filter((x) => x.karar === 'keep').length, 25)
-    assert.deepEqual(UZ_ROL_SATIRLARI.filter((x) => x.karar === 'unverified').map((x) => [x.anahtar, x.resmiAd, x.yer]), [['fizyoterapi', null, null]])
-    // every decided role names where it stands in the order
-    for (const x of UZ_ROL_SATIRLARI) if (x.karar !== 'unverified') assert.ok(x.resmiAd && x.yer && /^(row|section) /.test(x.yer), x.anahtar)
+  it('KEPT, with the name the pack had: 26 roles (resolved 2026-10-18: fizyoterapi too, docs/OPEN-COMMITMENTS.md); none left undecided; dentistry and traditional medicine are not here', () => {
+    assert.equal(UZ_ROL_SATIRLARI.filter((x) => x.karar === 'keep').length, 26)
+    assert.deepEqual(UZ_ROL_SATIRLARI.filter((x) => x.karar === 'unverified'), [])
+    // fizyoterapi is recognised (named inside row 3's Reabilitologiya, not on a line of its own): the one `keep`
+    // role with no citation of its own, by design (./rolListesi.ts says why, 2026-10-18).
+    assert.deepEqual(UZ_ROL_SATIRLARI.filter((x) => x.karar === 'keep' && !x.resmiAd).map((x) => x.anahtar), ['fizyoterapi'])
+    // every other decided role names where it stands in the order
+    for (const x of UZ_ROL_SATIRLARI) if (x.anahtar !== 'fizyoterapi') assert.ok(x.resmiAd && x.yer && /^(row|section) /.test(x.yer), x.anahtar)
     // three kept names are the pack's shorter or longer form of the order's, and the file says so beside each
     const kaynak = readFileSync(join(KOK, 'countries/uz/klinik/rolListesi.ts'), 'utf8')
     for (const [k, ad] of [['kulak-burun-bogaz', 'Otorinolaringologiya (LOR)'], ['nefroloji', 'Nefrologiya'], ['onkoloji', 'Onkologiya']] as const) { assert.equal(R.UZ_ROL_ADLARI[k]['uz-Latn'], ad); assert.notEqual(satir(k).resmiAd, ad) }
@@ -307,22 +310,30 @@ describe('42 roles: the assistant\'s identity', () => {
       // swapped, and an allied role without a doctor's title keeps the profession's own.
       const baslik = (k: { tamAd: string }) => k.tamAd.split(' ').slice(0, -2).join(' ')
       assert.deepEqual([baslik(lat), baslik(kir), baslik(ru)], unvan === 'prof-dr' ? ['Prof. Dr.', 'Проф. д-р', 'Проф. д-р'] : unvan === 'dr' ? ['Dr.', 'Д-р', 'Д-р'] : [baslik(lat), Y.uzKirillga(baslik(lat)), Y.uzRuschaYozuvga(Y.uzKirillga(baslik(lat)))])
-      if (taraf === 'doktor') assert.equal(unvan, 'prof-dr', 'every doctor specialty carries the professor\'s title, as in the Turkish product')
-      if (unvan === 'meslek') assert.equal(taraf, 'klinik-muttefik')
+      // RECONCILED 2026-10-18: diyetoloji and surdoloji are not a new doctor specialty with a professor's title of
+      // its own — they are diyetisyen and odyoloji, renamed onto the doctor side, and carry the exact identity
+      // (and so the exact title) the owner already gave that profession (docs/OPEN-COMMITMENTS.md, same date).
+      const YENIDEN_ADLANDIRILAN = ['diyetoloji', 'surdoloji']
+      if (taraf === 'doktor' && !YENIDEN_ADLANDIRILAN.includes(rol)) assert.equal(unvan, 'prof-dr', 'every doctor specialty but a renamed allied role carries the professor\'s title, as in the Turkish product')
+      if (unvan === 'meslek') assert.ok(taraf === 'klinik-muttefik' || YENIDEN_ADLANDIRILAN.includes(rol))
     })
   }
 
   it('no entry → no name. Never another role\'s name, never a persona of another country', () => {
     for (const ham of ['genel', 'kadin-dogum', 'yok-boyle-rol', '', null, undefined, 'Kardiyoloji']) for (const f of FORMLAR) assert.equal(K.uzAsistanKimligi(ham, f), null, `${String(ham)}/${f}`)
-    assert.equal(ADLI.length, 35)
-    assert.equal(new Set(ADLI.map((r) => K.uzAsistanKimligi(r.rol, 'uz-Cyrl')!.tamAd)).size, 35)
+    // 35 of the owner's original list, plus diyetoloji and surdoloji (resolved 2026-10-18 to the identity the owner
+    // already gave the profession under its old key: diyetisyen, odyoloji).
+    assert.equal(ADLI.length, 37)
+    assert.equal(new Set(ADLI.map((r) => K.uzAsistanKimligi(r.rol, 'uz-Cyrl')!.tamAd)).size, 37)
   })
 
-  it('THE SEVEN ROLES THE AUDIT ADDED HAVE NO ASSISTANT YET: no name in any form — not the name of the role they behave like, not a made-up one', () => {
-    assert.deepEqual(ADSIZ.map((r) => r.rol), ['damar-cerrahisi', 'alerji-immunoloji', 'reproduktoloji', 'cocuk-norolojisi', 'narkoloji', 'diyetoloji', 'surdoloji'])
+  it('FIVE ROLES THE AUDIT ADDED HAVE NO ASSISTANT YET: no name in any form — not the name of the role they behave like, not a made-up one. TWO MORE WERE RENAMED, NOT ADDED, AND DO carry a name on (resolved 2026-10-18)', () => {
+    assert.deepEqual(ADSIZ.map((r) => r.rol), ['damar-cerrahisi', 'alerji-immunoloji', 'reproduktoloji', 'cocuk-norolojisi', 'narkoloji'])
     for (const { rol } of ADSIZ) for (const f of FORMLAR) assert.equal(K.uzAsistanKimligi(rol, f), null, `${rol}/${f}`)
-    // the role each behaves like has (or had) a name in the owner's list — and it is NOT handed on
-    for (const x of UZ_ROL_SATIRLARI.filter((y) => y.gibi)) assert.ok(uzAsistanAdi(x.gibi!), x.anahtar)
+    // the role each ADDED role behaves like has (or had) a name in the owner's list — and it is NOT handed on
+    for (const x of UZ_ROL_SATIRLARI.filter((y) => y.gibi && y.karar === 'add')) assert.ok(uzAsistanAdi(x.gibi!), x.anahtar)
+    // the two MOVED roles behave like a role that IS handed on: that is the whole reconciliation
+    for (const x of UZ_ROL_SATIRLARI.filter((y) => y.gibi && y.karar === 'moved')) assert.deepEqual(uzAsistanAdi(x.anahtar), uzAsistanAdi(x.gibi!), x.anahtar)
     assert.match(readFileSync(join(KOK, 'countries/uz/klinik/asistanKimligi.ts'), 'utf8'), /does NOT take that role's assistant/)
   })
 

@@ -29,11 +29,16 @@
  * no assistant: `null`, and the screen shows the neutral "Notya assistant". Never another role's name, never a
  * persona of another country.
  *
- * NOTYA-ULKE-UYGULA-UZ (2026-10-10) — THE SEVEN ROLES THE AUDIT ADDED HAVE NO NAME YET, and show the neutral
- * assistant: vascular surgery, allergology and clinical immunology, reproductology, paediatric neurology, narcology,
- * dietology and surdology (./rolListesi.ts). A name is the owner's to give: no machine invents one, and a role that
- * behaves like another does NOT take that role's assistant. The names the owner gave the five roles that were taken
- * out stay in his list (./asistanAdlari.ts), unused: a key that is no role of the pack has no assistant.
+ * NOTYA-ULKE-UYGULA-UZ (2026-10-10) — FIVE OF THE SEVEN ROLES THE AUDIT ADDED HAVE NO NAME YET, and show the
+ * neutral assistant: vascular surgery, allergology and clinical immunology, reproductology, paediatric neurology,
+ * narcology (./rolListesi.ts). A name is the owner's to give: no machine invents one for these, and a role that
+ * merely BEHAVES LIKE another (`gibi`, an "add") does NOT take that role's assistant.
+ * RECONCILED 2026-10-18 (docs/OPEN-COMMITMENTS.md) — the other two of the seven, dietology and surdology, are
+ * different in kind: the audit did not add a new profession for them, it MOVED an existing, owner-named one
+ * (diyetisyen, odyoloji) onto the doctor side under a new key (`karar: 'moved'`, not `'add'`). ./asistanAdlari.ts
+ * resolves exactly these two keys to the owner's existing identity for the role they continue; no other key does.
+ * The names the owner gave the three roles the audit removed outright (hair transplant, longevity, occupational
+ * therapy) stay in his list (./asistanAdlari.ts), unused: a key that is no role of the pack has no assistant.
  */
 import { uzKirillga, uzRuschaYozuvga } from '../yozuv'
 import { uzAsistanAdi } from './asistanAdlari'

@@ -43,7 +43,11 @@ branches AND all 6 countries, country-adapted — not either one alone. Exempt (
 Turkey-only regulatory mechanics — MBYS, SGK/SUT/Medula, e-Nabız, e-Reçete, NVI, e-Fatura/
 GİB, KVKK-specific mechanics. When the two-axis work can't land in one change set, it is
 logged as a dated, owned entry in `docs/OPEN-COMMITMENTS.md` — never a silent deferral.
-Full text: `.cursor/skills/ulke-paritesi-duzeltme/SKILL.md`.
+**Regulatory recognition gate (new 2026-10-18):** a branş a country's own health
+regulator does not recognise or permit is never offered in that country's build, no
+matter what Türkiye or another country offers — checked against a real, cited regulatory
+source, with real market research alongside it (a branş can be practised there under a
+*different, broader* licence). Full text: `.cursor/skills/ulke-paritesi-duzeltme/SKILL.md`.
 
 ## Doktor Araçları (short)
 

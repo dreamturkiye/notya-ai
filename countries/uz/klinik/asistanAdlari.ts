@@ -11,6 +11,16 @@
  * NAMES: the owner's list (Kaan, 2026-10-08). Given name and family name exactly as he wrote them, in Uzbek Latin.
  * `bransAnahtari` is the product's internal specialty key: an identifier, never shown on a screen.
  *
+ * RECONCILED 2026-10-18 (docs/OPEN-COMMITMENTS.md, same date): diyetisyen and odyoloji are not new keys that lost
+ * their name — they are the SAME two professions, carried to the doctor side under new keys by the audit of
+ * 2026-10-10 (./rolListesi.ts, "MOVED TO THE DOCTOR SIDE": `diyetoloji` behaves like `diyetisyen`, `surdoloji` like
+ * `odyoloji`). The owner never typed "diyetoloji" or "surdoloji" himself, so this file's frozen list below is NOT
+ * touched or re-fingerprinted; `uzAsistanAdi()` instead looks a renamed key up under its old one (`UZ_YENIDEN_ADLANDIRILAN`,
+ * at the bottom). This is reconciliation, not invention: the exact names the owner already gave diyetisyen and
+ * odyoloji now also answer for diyetoloji and surdoloji. It does NOT extend to a role the audit merely ADDED
+ * (alerji-immunoloji, reproduktoloji, cocuk-norolojisi, narkoloji): those stay nameless until the owner names them,
+ * per ./asistanKimligi.ts.
+ *
  * TITLES: the owner, 2026-10-09: "If prof. is used then follow the same turkish naming convention." So the title of a
  * role is the title its counterpart carries in the Turkish product, role by role (read there, never imported:
  * lib/asistan/specialistsCatalog.ts for the 30 doctor specialties, lib/ai/personas/klinik_uzmanlar.ts for the 10
@@ -94,7 +104,23 @@ export const UZ_ASISTAN_ADLARI: readonly AsistanAdi[] = [
 
 const ANAHTARA_GORE: ReadonlyMap<string, AsistanAdi> = new Map(UZ_ASISTAN_ADLARI.map((a) => [a.bransAnahtari, a]))
 
-/** The assistant for a specialty key, or null. Never falls back to another specialty or another country. */
+/**
+ * A key the audit of 2026-10-10 renamed onto the doctor side → the owner's own key for the same profession
+ * (./rolListesi.ts, karar `moved`). Reconciliation only: no other key of the pack is in here.
+ */
+const UZ_YENIDEN_ADLANDIRILAN: ReadonlyMap<string, string> = new Map([
+  ['diyetoloji', 'diyetisyen'],
+  ['surdoloji', 'odyoloji'],
+])
+
+/**
+ * The assistant for a specialty key, or null. Never falls back to another specialty or another country — except
+ * the two keys above, which are not "another" specialty: they are the one the owner named, under the name the
+ * 2026-10-10 audit gave it.
+ */
 export function uzAsistanAdi(bransAnahtari: string): AsistanAdi | null {
-  return ANAHTARA_GORE.get(bransAnahtari) ?? null
+  const dogrudan = ANAHTARA_GORE.get(bransAnahtari)
+  if (dogrudan) return dogrudan
+  const eskiAnahtar = UZ_YENIDEN_ADLANDIRILAN.get(bransAnahtari)
+  return eskiAnahtar ? ANAHTARA_GORE.get(eskiAnahtar) ?? null : null
 }
