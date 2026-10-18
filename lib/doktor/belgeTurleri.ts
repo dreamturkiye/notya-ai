@@ -29,10 +29,18 @@ export const COCUK_HASTA_RAPORU_TURLERI = [
   COCUK_OKUL_RAPORU,
 ] as const
 
+/**
+ * Ortak kasa türü — EKG ve Röntgen ile aynı yer.
+ * Her branş hastanın getirdiği eko raporunu dosyalar. Erişkin ASE okuması bu listede değil;
+ * o kapı `etkinModalite` (yalnız kardiyoloji ve kalp damar cerrahisi).
+ */
+export const EKOKARDIYOGRAFI = 'Ekokardiyografi' as const
+
 export const ORTAK_BELGE_TURLERI = [
   'Lab Sonucu',
   'Görüntüleme Raporu',
   'EKG',
+  EKOKARDIYOGRAFI,
   'Röntgen',
   'İşitme testi',
   'Epikriz',

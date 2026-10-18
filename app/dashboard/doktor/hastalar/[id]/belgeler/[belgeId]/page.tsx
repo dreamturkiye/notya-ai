@@ -18,7 +18,7 @@ import { dicomMi, dicomCoz } from '@/core/belgeler/dicom';
 import '@/core/belgeler/motorlar/txrv'; // NOTYA-BELGE-02: registers the browser CXR engine
 import { UYARI_SERIDI } from '@/core/belgeler/yazar';
 import type { BelgeRaporu, MotorCiktisi } from '@/core/belgeler/types';
-import { belgeLabMi, belgeRontgenMi } from '@/lib/doktor/belgeTur';
+import { belgeEkoMi, belgeLabMi, belgeRontgenMi } from '@/lib/doktor/belgeTur';
 import { hastaBelgelerHref, hastaDosyaHref } from '@/lib/doktor/geriNavigasyon';
 import type { HastaDosyaSekmeId } from '@/lib/doktor/hastaDosyaSekmeleri';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
@@ -76,7 +76,7 @@ export default function BelgeAnalizPage() {
       fetch(`/api/doktor/belgeler/analiz?documentId=${encodeURIComponent(belgeId)}`, { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' }),
     ]);
     if (dr.ok) { const j = await dr.json(); const list: Doc[] = j.documents || j.docs || j || []; setDoc(Array.isArray(list) ? list.find((d) => d.id === belgeId) || null : null); }
-    if (ar.ok) { const j = await ar.json(); setAnaliz(j.analiz || null); setBransKey(j.bransKey || 'genel'); if (j.analiz?.hekim_tanisi?.length) setTaniTaslak(j.analiz.hekim_tanisi.map((t: { ad: string; icd10?: string | null }) => t.icd10 ? `${t.ad} (${t.icd10})` : t.ad).join('\n')); setOzetTaslak(j.analiz?.hekim_ozet || j.analiz?.sonuc?.ozet || ''); }
+    if (ar.ok) { const j = await ar.json(); setAnaliz(j.analiz || null); setBransKey(j.bransKey || 'genel'); if (j.analiz?.modality_final === 'eko') { setModalite('eko'); setModaliteGuvenli(true) } if (j.analiz?.hekim_tanisi?.length) setTaniTaslak(j.analiz.hekim_tanisi.map((t: { ad: string; icd10?: string | null }) => t.icd10 ? `${t.ad} (${t.icd10})` : t.ad).join('\n')); setOzetTaslak(j.analiz?.hekim_ozet || j.analiz?.sonuc?.ozet || ''); }
   }, [patientId, belgeId]);
   useEffect(() => { yukle(); }, [yukle]);
 
@@ -101,13 +101,16 @@ export default function BelgeAnalizPage() {
     }
     if (!doc) return;
     if (doc.fileType.startsWith('audio/')) { setModalite(kural.modaliteler.includes('ses_kalp') ? 'ses_kalp' : kural.modaliteler.includes('ses_akciger') ? 'ses_akciger' : 'ses_kalp'); setModaliteGuvenli(false) }
+    else if (belgeEkoMi(doc) && kural.modaliteler.includes('eko')) { setModalite('eko'); setModaliteGuvenli(true) }
     else if (belgeRontgenMi(doc) && kural.modaliteler.includes('cxr')) { setModalite('cxr'); setModaliteGuvenli(false) }
     else if (doc.fileType === 'application/pdf') { setModalite('pdf_rapor'); setModaliteGuvenli(true) } // file type alone is deterministic here
     else { setModalite(kural.modaliteler.find((m) => !m.startsWith('ses') && m !== 'pdf_rapor') || 'serbest'); setModaliteGuvenli(false) }
   }, [doc, kural, modalite, searchParams]);
 
+  const videoMu = !!doc && (doc.fileType.startsWith('video/') || /\.(mp4|avi|mov|mkv|webm)$/i.test(doc.fileName));
   const raporla = async () => {
     if (!doc || !modalite) return;
+    if (videoMu) { setDurum('hata'); setMesaj(modalite === 'eko' ? 'Sine döngüsünden EF ölçülmez. Metin katmanı olan eko raporu PDF’ini veya bir JPEG kare ekleyin.' : 'Video dosyası bu değerlendirmede çözülmez. PDF rapor veya JPEG/PNG kare ekleyin.'); return; }
     if (!pdfMi && !kimlikYok) { setMesaj('Göndermeden önce görüntüde hasta adı / TC / tarih bulunmadığını onaylayın (KVKK).'); return; }
     setMesaj(''); setUyusmazlik(null); setDurum('hazirlaniyor');
     const token = await getAccessTokenAsync();
@@ -284,6 +287,11 @@ export default function BelgeAnalizPage() {
                 )}
                 <input value={klinikNot} onChange={(e) => setKlinikNot(e.target.value)} placeholder={modalite === 'fundus' ? 'Klinik not: dilate mi, DM/HT…' : 'Klinik not (isteğe bağlı): 3 gündür ateş, öksürük'} style={{ ...toolsInput, flex: 1, minWidth: 220 }} />
               </div>
+              {modalite === 'eko' && (
+                <div style={{ marginTop: 8, fontSize: 12, color: CHROME_RENK.muted }}>
+                  Metin katmanı olan eko raporu PDF’i okunur. Taslak ölçümleri bölümler; uyumlu ileri darlığı düşük gradyanlı darlıktan ayırır ve raporda olmayan ölçümü listeler. Durağan kare ve sineden EF ölçülmez. Onay, son muayenenin Objektif bölümüne yazılır.
+                </div>
+              )}
               {modalite === 'fundus' && (
                 <label style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginTop: 8, fontSize: 12, color: CHROME_RENK.muted, cursor: 'pointer' }}>
                   <input type="checkbox" checked={tekAlanFundus} onChange={(e) => setTekAlanFundus(e.target.checked)} />
@@ -299,7 +307,7 @@ export default function BelgeAnalizPage() {
               {yetenek?.not && <div style={{ fontSize: 11, color: CHROME_RENK.muted, marginTop: 6 }}>{yetenek.not}</div>}
               <div style={{ marginTop: 10, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                 <button type="button" onClick={raporla} disabled={durum !== 'hazir' && durum !== 'hata' || !modalite} style={{ ...btn, opacity: durum === 'hazir' || durum === 'hata' ? 1 : 0.6 }}>
-                  {durum === 'hazirlaniyor' ? 'Kimliksizleştiriliyor…' : durum === 'motorlar' ? 'Değerlendiriliyor…' : durum === 'yaziyor' ? `${personaAd} yazıyor…` : analiz ? 'Yeniden raporla' : modalite === 'cxr' || String(modalite).startsWith('xr_') ? `${personaAd} ile röntgeni değerlendir` : `${personaAd} ile değerlendir`}
+                  {durum === 'hazirlaniyor' ? 'Kimliksizleştiriliyor…' : durum === 'motorlar' ? 'Değerlendiriliyor…' : durum === 'yaziyor' ? `${personaAd} yazıyor…` : analiz ? 'Yeniden raporla' : modalite === 'eko' ? `${personaAd} ile ekoyu değerlendir` : modalite === 'cxr' || String(modalite).startsWith('xr_') ? `${personaAd} ile röntgeni değerlendir` : `${personaAd} ile değerlendir`}
                 </button>
                 {doc && belgeLabMi(doc) && (
                   <a href={`/dashboard/doktor/hastalar/${patientId}/belgeler/${belgeId}/lab${geriTab ? `?geriTab=${geriTab}` : ''}`} style={{ fontSize: 12, fontWeight: 700, color: '#B4832F' }}>Laboratuvarı değerlendir →</a>
@@ -316,7 +324,9 @@ export default function BelgeAnalizPage() {
           <div>
             {!rapor && <div style={{ ...toolsCard, color: CHROME_RENK.muted, fontSize: 13 }}>
               <div style={{ fontWeight: 700, color: CHROME_RENK.ink, marginBottom: 6 }}>Henüz taslak yok</div>
-              Solda modaliteyi seçin (röntgen için <b>Röntgen (akciğer grafisi)</b>) ve <b>{personaAd} ile değerlendir</b>e basın. Lab PDF ise <b>Laboratuvarı değerlendir</b> yolunu kullanın.
+              {modalite === 'eko'
+                ? <>Ekokardiyografi olarak tanındı. <b>{personaAd} ile ekoyu değerlendir</b>e basın. Onay, taslağı son muayenenin Objektif bölümüne yazar.</>
+                : <>Solda modaliteyi seçin (röntgen için <b>Röntgen (akciğer grafisi)</b>) ve <b>{personaAd} ile değerlendir</b>e basın. Lab PDF ise <b>Laboratuvarı değerlendir</b> yolunu kullanın.</>}
             </div>}
             {rapor && analiz && (
               <>

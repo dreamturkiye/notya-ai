@@ -1,6 +1,7 @@
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 import {
+  belgeEkoMi,
   belgeLabMi,
   belgeRontgenMi,
   belgeDegerlendirmeCtalari,
@@ -43,6 +44,29 @@ describe('belgeTur', () => {
     })
     assert.deepEqual(ctas.map((c) => c.label), ['Değerlendir'])
     assert.equal(ctas[0]?.tur, 'lab')
+  })
+  it('ekokardiyografi PDF is Değerlendir, not a lab button', () => {
+    assert.equal(belgeEkoMi({ fileName: 'TTE_rapor.pdf', category: null }), true)
+    assert.equal(belgeEkoMi({ fileName: 'eko_rapor.pdf', category: 'Rapor' }), true)
+    assert.equal(belgeEkoMi({ fileName: 'transozofageal_eko.pdf', category: null }), true)
+    assert.equal(belgeEkoMi({ fileName: 'ekonomik_rapor.pdf', category: null }), false)
+    assert.equal(belgeEkoMi({ fileName: 'hasta_ekg.pdf', category: 'EKG' }), false)
+    assert.equal(belgeEkoMi({ fileName: 'chest_xray_pa.jpg', category: 'Röntgen' }), false)
+    const ctas = belgeDegerlendirmeCtalari({
+      fileName: 'ekokardiyografi.pdf',
+      category: 'Rapor',
+      fileType: 'application/pdf',
+    })
+    assert.deepEqual(ctas.map((c) => c.tur), ['eko'])
+    assert.equal(belgeKategoriEtiket({ fileName: 'echo_study.pdf', category: null }), 'Ekokardiyografi')
+    assert.equal(belgeEkoMi({ fileName: 'rapor.pdf', category: 'Ekokardiyografi' }), true)
+    const kasadan = belgeDegerlendirmeCtalari({
+      fileName: 'rapor.pdf',
+      category: 'Ekokardiyografi',
+      fileType: 'application/pdf',
+    })
+    assert.deepEqual(kasadan.map((c) => c.tur), ['eko'])
+    assert.equal(belgeKategoriEtiket({ fileName: 'rapor.pdf', category: 'Ekokardiyografi' }), 'Ekokardiyografi')
   })
   it('maps X-Ray category label to Röntgen', () => {
     assert.equal(belgeKategoriEtiket({ fileName: 'chest.jpg', category: 'X-Ray' }), 'Röntgen')

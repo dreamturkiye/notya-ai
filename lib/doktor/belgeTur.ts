@@ -2,7 +2,7 @@
  * Belge routing helpers — lab PDFs use NOTYA-LAB-01 (/lab);
  * röntgen / imaging use NOTYA-BELGE-01 (Asistana raporla + CXR engine).
  */
-import { YENIDOGAN_TABURCULUK_EPIKRIZI } from '@/lib/doktor/belgeTurleri'
+import { EKOKARDIYOGRAFI, YENIDOGAN_TABURCULUK_EPIKRIZI } from '@/lib/doktor/belgeTurleri'
 
 export function belgeYenidoganTaburcuEpikriziMi(doc: {
   fileName?: string | null
@@ -27,6 +27,13 @@ export function belgeLabMi(doc: { fileName?: string | null; category?: string | 
   return false
 }
 
+/** Dosya adı / kategori ekokardiyografi mi. EKG ve “ekonomik” eşleşmez. */
+export function belgeEkoMi(doc: { fileName?: string | null; category?: string | null }): boolean {
+  const ham = `${doc.category || ''} ${doc.fileName || ''}`.toLocaleLowerCase('tr-TR')
+  const y = ham.replace(/[_./\\-]+/g, ' ')
+  return /ekokardiyograf|eko\s*kardiyo|transtorasik|trans[öo]zofaj|\btte\b|\btee\b|echocardiogra|\becho\b|\beko\b/.test(y)
+}
+
 export function belgeRontgenMi(doc: { fileName?: string | null; category?: string | null }): boolean {
   const cat = String(doc.category || '').toLocaleLowerCase('tr-TR')
   const ad = String(doc.fileName || '').toLocaleLowerCase('tr-TR')
@@ -34,7 +41,7 @@ export function belgeRontgenMi(doc: { fileName?: string | null; category?: strin
 }
 
 export type BelgeDegerlendirmeCta = {
-  tur: 'lab' | 'rontgen' | 'asistan'
+  tur: 'lab' | 'rontgen' | 'eko' | 'asistan'
   label: string
   yol: 'lab' | 'analiz'
   /** true → zaten çıkarılmış / raporlanmış; buton “yapılmamış” gibi görünmez. */
@@ -43,7 +50,7 @@ export type BelgeDegerlendirmeCta = {
 
 /** Epikriz / reçete / konsültasyon PDF’lerine lab paneli CTA’sı sızmasın. */
 function belgeIkincilLabCtaUygunMu(doc: { fileName?: string | null; category?: string | null }): boolean {
-  if (belgeYenidoganTaburcuEpikriziMi(doc) || belgeRontgenMi(doc)) return false
+  if (belgeYenidoganTaburcuEpikriziMi(doc) || belgeRontgenMi(doc) || belgeEkoMi(doc)) return false
   const cat = String(doc.category || '').toLocaleLowerCase('tr-TR')
   if (/epikriz|konsültasyon|konsultasyon|reçete|recete|\bsevk\b/.test(cat)) return false
   return true
@@ -87,9 +94,15 @@ export function belgeDegerlendirmeCtalari(doc: {
   const rontgen = (yapildi: boolean): BelgeDegerlendirmeCta => ({
     tur: 'rontgen', label: yapildi ? 'Değerlendirildi' : 'Değerlendir', yol: 'analiz', yapildi,
   })
+  const eko = (yapildi: boolean): BelgeDegerlendirmeCta => ({
+    tur: 'eko', label: yapildi ? 'Değerlendirildi' : 'Değerlendir', yol: 'analiz', yapildi,
+  })
 
   if (belgeYenidoganTaburcuEpikriziMi(doc)) {
     return [asistan(analizYapildi)]
+  }
+  if (belgeEkoMi(doc)) {
+    return [eko(analizYapildi)]
   }
   if (belgeLabMi(doc)) {
     return [lab(labYapildi)]
@@ -108,6 +121,7 @@ export function belgeDegerlendirmeCtalari(doc: {
 /** Vault / list display: prefer Turkish “Röntgen” over raw “X-Ray”. */
 export function belgeKategoriEtiket(doc: { fileName?: string | null; category?: string | null; fileType?: string | null }): string {
   if (belgeYenidoganTaburcuEpikriziMi(doc)) return YENIDOGAN_TABURCULUK_EPIKRIZI
+  if (belgeEkoMi(doc)) return EKOKARDIYOGRAFI
   if (belgeRontgenMi(doc)) return 'Röntgen'
   if (belgeLabMi(doc)) return doc.category || 'Lab Sonucu'
   return doc.category || doc.fileType || 'Belge'

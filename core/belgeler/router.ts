@@ -43,6 +43,8 @@ export const BRANS_KURALLARI: Record<string, BransKurali> = {
   dahiliye: { ad: 'İç Hastalıkları', persona: 'elif', modaliteler: ['cxr', 'ekg', 'fundus', 'us', 'pdf_rapor'], motorlar: { cxr: CXR_B, ekg: EKG_B } },
   kadin_dogum: { ad: KADIN_HASTALIKLARI_DOGUM_ETIKETI, persona: 'genel', modaliteler: ['us', 'nst', 'mamografi', 'pdf_rapor'], motorlar: {} },
   kardiyoloji: { ad: 'Kardiyoloji', persona: 'mehmet', modaliteler: ['ekg', 'eko', 'ses_kalp', 'cxr', 'pdf_rapor'], motorlar: { ekg: EKG_B, ses_kalp: KALP_SES_B, cxr: CXR_B } },
+  // Eko metin motoru (eko-ase) tarayıcı ONNX değildir; motorlar dizisine yazılmaz.
+  kalp_damar: { ad: 'Kalp ve Damar Cerrahisi', persona: 'genel', modaliteler: ['eko', 'ekg', 'cxr', 'ct', 'pdf_rapor'], motorlar: { ekg: EKG_B, cxr: CXR_B } },
   kbb: { ad: 'Kulak Burun Boğaz', persona: 'genel', modaliteler: ['otoskopi', 'endoskopi', 'ses_konusma', 'pdf_rapor'], motorlar: {} },
   nefroloji: { ad: 'Nefroloji', persona: 'elif', modaliteler: ['us', 'xr_batin', 'pdf_rapor'], motorlar: {} },
   noroloji: { ad: 'Nöroloji', persona: 'elif', modaliteler: ['ct', 'mr', 'fundus', 'eeg', 'pdf_rapor'], motorlar: {} },
@@ -65,7 +67,8 @@ export const BRANS_KURALLARI: Record<string, BransKurali> = {
 export function bransAnahtari(specialty: string | null | undefined): string {
   const s = (specialty || '').toLocaleLowerCase('tr-TR')
   const eslesme: [RegExp, string][] = [
-    [/pediatri|çocuk sağ|cocuk sag/, 'pediatri'], [/çocuk cer|cocuk cer/, 'cocuk_cerrahisi'], [/kardiyo/, 'kardiyoloji'],
+    [/pediatri|çocuk sağ|cocuk sag/, 'pediatri'], [/çocuk cer|cocuk cer/, 'cocuk_cerrahisi'],
+    [/kalp\s*(ve\s*)?damar|damar\s*cerrah/, 'kalp_damar'], [/kardiyo/, 'kardiyoloji'],
     [/nöro|noro/, 'noroloji'], [/beyin/, 'beyin_cerrahisi'], [/dahiliye|iç hast|ic hast/, 'dahiliye'], [/aile/, 'aile'],
     [/acil/, 'acil'], [/anestez/, 'anestezi'], [/derma/, 'dermatoloji'], [/enfeksiyon/, 'enfeksiyon'], [/fizik|ftr/, 'ftr'],
     [/genel cer/, 'genel_cerrahi'], [/göğüs cer|gogus cer/, 'gogus_cerrahisi'], [/göğüs|gogus/, 'gogus'], [/göz|goz/, 'goz'],

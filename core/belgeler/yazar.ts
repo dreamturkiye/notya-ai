@@ -42,7 +42,7 @@ KURALLAR
 - Görüntünün modalitesi doktorun seçtiğiyle uyuşmuyorsa "modalite" alanına gördüğünü yaz; uydurma.
 - Motor çıktıları (fused) verilmişse onları kaynak olarak kullan, "destek"/"karsi" alanlarında motor adlarını an. Motorların bulmadığı bir tanıyı %70'in üstünde önerme.
 - guven_pct 0–95 arası tam sayı. Sistem üst sınırları ayrıca uygular; sen dürüst tahmin yaz.
-- acil_bayrak: hayatı tehdit eden bulgu (pnömotoraks, intrakraniyal kanama, STEMI, stridor, papilödem, melanom şüphesi yüksek) varsa true.
+- acil_bayrak: hayatı tehdit eden bulgu (pnömotoraks, intrakraniyal kanama, STEMI, stridor, papilödem, melanom şüphesi yüksek, kardiyak tamponad) varsa true.
 - "sinirlar": bu değerlendirmenin sınırlarını 1–4 madde ile yaz (tek görüntü, klinik bilgi yok, motor yok, çocuk hasta vb.).
 - Hasta adı, TC, tarih gibi kimlik bilgisi görsen bile ASLA yazma.
 - Hiçbir motorun veya modelin uzmandan üstün olduğunu ima etme.
@@ -66,7 +66,7 @@ ONTOLOJİ KODLARI: ${BULGU_KODLARI.map((k) => `${k}=${bulguTr(k)}`).join('; ')}`
 }
 
 /** Fundus / OCT: Türk göz hekimi okuma sırası — Tier A yazara sistematik madde listesi. */
-function gozGoruntuRehberi(modalite: Modalite): string | null {
+function modaliteRehberi(modalite: Modalite): string | null {
   if (modalite === 'fundus') {
     return `FUNDUS (göz dibi) — "bulgular" dizisini şu sırayla yaz (TR poliklinik):
 1) Kalite / alan (tek alan mı, dilate izlenimi, artefakt)
@@ -87,6 +87,13 @@ Tanı kesinliği yok; "…düşündürür" dili.`
   if (modalite === 'dis_goz') {
     return `Dış göz fotoğrafı — kapak, konjonktiva, kornea yüzey, kızarıklık dağılımı; fundus yorumu yapma.`
   }
+  if (modalite === 'eko') {
+    return `EKOKARDİYOGRAFİ — taslağı şu sırayla yaz: Yorum, LV/EF, sol atriyum ve diyastol, sağ kalp, kapaklar, perikard/aort, eksik ölçüm.
+Ölçüm dökümündeki sayıları AYNEN alıntıla. Farklı bir EF, alan veya gradyan uydurma. Eksik satırındaki ölçümü üretme.
+"Düşük gradyanlı" aort darlığını ileri darlık diye yükseltme. Kalp yetersizliği veya HFpEF tanısı koyma; doluş basıncını "açısından" diye yaz.
+Durağan kare ve sineden sayısal EF üretme. 16 yaş altı ve fetal ekoda erişkin bantlarını tanıya çevirme.
+Tamponad veya çökme/kollaps ifadesi varsa acil_bayrak true. Destek alanına motor adı yazma; "rapor metnindeki ölçüm" de.`
+  }
   return null
 }
 
@@ -95,8 +102,10 @@ export function kullaniciPromptu(g: AnalizGirdi, f: FusionSonuc | null, motorlar
   parcalar.push(`Branş: ${g.brans}. Doktorun seçtiği modalite: ${MODALITE_TR[g.modality_final] || g.modality_final}.`)
   if (typeof g.yasAy === 'number') parcalar.push(`Hasta yaşı: ${g.yasAy < 24 ? `${g.yasAy} ay` : `${Math.floor(g.yasAy / 12)} yaş`}${g.cinsiyet ? `, cinsiyet ${g.cinsiyet}` : ''}.`)
   if (g.klinikNot) parcalar.push(`Klinik not: ${g.klinikNot.slice(0, 400)}`)
-  const gozRehber = gozGoruntuRehberi(g.modality_final)
-  if (gozRehber) parcalar.push(gozRehber)
+  const rehber = modaliteRehberi(g.modality_final)
+  if (rehber) parcalar.push(rehber)
+  const ekoDokum = motorlar.find((m) => m.motor === 'eko-ase' && m.rapor)
+  if (ekoDokum?.rapor) parcalar.push(`Ekokardiyografi ölçüm dökümü (sayıları değiştirme):\n${ekoDokum.rapor}`)
   if (SES_MODALITELERI.includes(g.modality_final)) {
     parcalar.push('Girdi bir SES kaydıdır; ekte kaydın spektrogramı var. Spektrogram ve metrikler üzerinden yalnız kalite ve kaba patern değerlendirmesi yap; özgül tanı verme.')
     if (sesMetrikleri) parcalar.push(`Ses metrikleri: ${JSON.stringify(sesMetrikleri)}`)

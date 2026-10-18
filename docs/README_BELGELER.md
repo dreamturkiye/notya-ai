@@ -13,7 +13,13 @@ Rule (Kaan 2026-09-15): an engine is registered in `motor_kayit` with `aktif=tru
 | rsna-boneage | B | RSNA Pediatric Bone Age (dataset open; weights source to pick) | verify | _pending_ | _pending_ | RSNA val | _pending_ | ❌ |
 | fracatlas-yolo | B | own YOLO head on FracAtlas (CC BY 4.0 data) | CC BY 4.0 data; our weights | _pending_ | _pending_ | FracAtlas val | _pending_ | ❌ |
 
-Blocked for commercial use (eval harness only): RETFound (CC BY-NC 4.0), UNI / CONCH (CC BY-NC-ND), HAM10000-trained heads (CC BY-NC-SA data), EchoNet-Dynamic (non-commercial data use agreement — write to Stanford), MURA-derived weights (research-only dataset — grey, treat as blocked).
+Blocked for commercial use (eval harness only): RETFound (CC BY-NC 4.0), UNI / CONCH (CC BY-NC-ND), HAM10000-trained heads (CC BY-NC-SA data), EchoNet-Dynamic (non-commercial data use agreement — write to Stanford), PanEcho (weights CC BY-NC-SA 4.0, code AGPL-3.0), EchoCLIP (inference code academic / non-profit), EchoJEPA (Apache-2.0 code but ViT-Large, not ONNX, trained on credentialed MIMIC-IV-Echo), MURA-derived weights (research-only dataset — grey, treat as blocked).
+
+## Eko (`eko-ase`) — rule engine, no weights
+
+Not a `motor_kayit` row. There is no ONNX file, sha256, or model URL. `core/belgeler/ekoAse.ts` reads the text layer of a signed TTE/TEE PDF and applies published adult ASE/EACVI cutoffs (Lang 2015 chamber quantification, TAPSE &lt;17 mm, Nagueh 2016 average E/e′ &gt;14, PASP ≥40 mmHg, ESC severe aortic stenosis). Concordant severe AS (at least two of area, mean gradient, Vmax) is separated from low-gradient / discordant AS, which is not upgraded to severe. The draft is a sectioned note (LV, diastolic, right heart, valves, pericardium) plus a short impression and a list of missing measurements. It runs only when the belge router’s effective modality is `eko` (kardiyoloji and kalp damar cerrahisi). Other branşlar stay on `serbest` / describe-only. Stills and cine are not re-measured. The draft is stored on the document; the visit note (`content_objektif`) changes only when the doctor presses Onayla.
+
+The vault type is `Ekokardiyografi` in `ORTAK_BELGE_TURLERI`, beside EKG and Röntgen. Every specialty can file the signed report the same way as those types (upload, visit link, Değerlendir, Onayla). Incoming mail maps echo wording onto that type; “grafi” inside ekokardiyografi is not a chest film. Filing the PDF is not the ASE reader.
 
 ## Runtime
 
