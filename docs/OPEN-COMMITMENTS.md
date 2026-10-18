@@ -22,6 +22,28 @@ Task: Kaan said "Go ahead and proceed to deploy the previews to the main," refer
 
 No domain, alias or production assignment was changed by this job — the 6 subdomains keep serving exactly what they were already serving. Nothing was made worse; nothing was advanced either. Unblocking: trigger a fresh deployment on each of the 6 `-preview` projects from its release branch's current HEAD (a normal redeploy, no domain work needed since the domain/target wiring is already correct), then re-check freshness before promoting. Flagged, not actioned, since triggering 6 production builds blind was outside what "promote the existing preview" authorized.
 
+## NOTYA-VERCEL-COUNTRY-PREVIEW-REDEPLOY-01 — 5 of 6 country Vercel projects redeployed to current branch HEAD; UZ build failed (Claude, 2026-10-18)
+
+Follow-up/closure to NOTYA-VERCEL-COUNTRY-PREVIEW-PROMOTE-01 above, which flagged all 6 country projects as stale and recommended exactly this: a fresh redeploy from each release branch's current HEAD before promoting. This job did that — a plain production redeploy per project via Vercel's `create_deployment` (gitSource: `dreamturkiye/notya-ai` @ `release/<cc>` @ that branch's HEAD sha), no domain/alias/promotion change, since the domain wiring from PROMOTE-01 was already correct and verified.
+
+**Done — 5/6 now live and current, confirmed via `get_deployment` (`readyState: "READY"`, `target: "production"`, deployed `githubCommitSha` matching the branch HEAD captured before deploying, country domain present in `alias`):**
+| Country | Project | Domain | Deployed commit SHA | Deployment ID |
+|---|---|---|---|---|
+| US | notya-us-preview | us.notya.io | `29c7cd632f4e64bd9f748b35fcfd518fa8f931cf` | dpl_57w95ahKkwDN5P6caVRWB2J4xwMd |
+| GB | notya-uk-preview | uk.notya.io | `4460ee07a6109ee6ae59cbc62ddda9e92daead13` | dpl_E83trbS5xbrzEm65vipsYFWZ4XYT |
+| CA | notya-ca-preview | ca.notya.io | `5cd9ea051988e754bc54deb9437dae12dd6bdd03` | dpl_H7CUNaNUEPwoTGFT5ocSrEJAd43N |
+| AU | notya-au-preview | au.notya.io | `d5a219fdcf9abe62599589be359d779bb9ff16b9` | dpl_nn8L3ZpJRAMLpCQ114NN7c7j9JNt |
+| NZ | notya-nz-preview | nz.notya.io | `a5f7ca89c9067fab7dcc42e0035ed1af90125ce3` | dpl_FYEpm7bc9tHBbFh2toniYdtYBdUM |
+
+AU note: this redeploy ships today's AU clinical-tools work, but behind the `mekanizmaHazir` off-by-default gate pending clinician sign-off — au.notya.io is expected to look unchanged to a doctor from this redeploy alone.
+
+**Failed — 1/6, left for a follow-up session:**
+| Country | Project | Attempted commit SHA | Deployment ID | Failure |
+|---|---|---|---|---|
+| UZ | notya-uz-preview | `8716c022eb3e984e45f1a345f1c51e6f21d1af0b` | dpl_3QU8j35RzxtTNQrPmJdSFGKorgEt | `BUILD_UTILS_SPAWN_1`: `Command "node scripts/vercel-ulke-derle.mjs" exited with 1` (buildStep) |
+
+That wrapper (`scripts/vercel-ulke-derle.mjs`) runs `npm run build:ulke` → `scripts/ulke-derle.mjs`, which for `NOTYA_COUNTRY=uz` runs the ordinary Next build under `countries/uz/` and then the country-pack proof script (`scripts/ulke-derleme-kaniti.mjs`); the spawned command returned non-zero but which of those two steps actually failed, and why, is not known — Vercel's `list_deployment_events` MCP tool 404'd on this deployment (tried with and without `teamId`), so the real build stdout/stderr was not retrievable through MCP. Not retried a second time per instruction; no domain/alias config touched — `uz.notya.io` keeps serving its prior (stale, `d5427426`, 2026-10-14) deployment untouched. Waits on: Claude, next session — open the build log directly in the Vercel dashboard (Deployments → notya-uz-preview → `dpl_3QU8j35RzxtTNQrPmJdSFGKorgEt`) to see the actual failing step, fix it, and redeploy.
+
 ## NOTYA-ULKE-PARITESI-SERTLESTIRME-01 — ülke paritesi rule hardened to "applied, no exceptions" + two-axis propagation, ported to all 6 country branches (Claude, 2026-10-18)
 
 Task: Kaan's exact instruction, verbatim: "Also is the same rule for all the 6 countries going forward. Any change in turkiye must be applied to all 6 country from now on based on that specific countries, language, rules, regulations, government and medical institutions directives and rules. no exceptions here any longer as well." Rule-text hardening + 6-branch propagation only — no feature/clinical build work; Özel Branşlar/Notya Klinik depth and the AU clinical-tools/gap-closure work were left untouched.
