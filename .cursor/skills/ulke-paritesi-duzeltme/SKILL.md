@@ -49,7 +49,7 @@ in the same change set wherever feasible. When the two-axis work cannot land in 
 set, it is logged as an explicit, dated follow-up in `docs/OPEN-COMMITMENTS.md` with a
 named owner (Kaan vs Claude) — never a silent deferral.
 
-## Branş-specific changes — same bar, gated by depth (clarified 2026-10-18)
+## Branş-specific changes — same bar, no depth gate (clarified 2026-10-18, corrected same day)
 
 Kaan, verbatim: "going forward if we change something in a specific branch in turkiye
 then the other 6 countries specific branc gets updated the same. If we make a chnage to
@@ -59,38 +59,51 @@ is caught up to the golden referrence of turkey they will then stary in sync."
 The "applied, no exceptions" bar above is written in terms of core/shared changes. It
 applies with equal force to **branş-specific** changes: a fix or feature made to one
 specific branş in Türkiye must reach that same branş's implementation in each of the six
-countries too, country-adapted — not just core/shared work.
+countries too, country-adapted, in the **same change set** — not just core/shared work,
+and not deferred.
 
-**The activation gate.** This obligation only comes into force for a given country once
-that country **actually has that branş built at some depth** — i.e. once there is a real
-country-side implementation of that branş for the fix to land in. Until then it is
-**latent**, not skipped: it is recorded as a standing rule, not as an open gap to close
-today, because there is nothing on the country side yet to apply it to.
+**No depth gate — correction, same day, Kaan direct, verbatim, overrides an earlier draft
+of this rule:** "Even if the 6 countries do not match the golden standard of turkiye, you
+still go ahead and add the new features to the 6 countries as we go. If the underlying
+infra is not there then you build that only so that you can still update the change across
+the board to all 6." A country not yet having that branş built at depth is **not** grounds
+to defer the change. (An earlier version of this section said this obligation was "latent"
+until a country's depth-closeout work reached that branş. That framing is wrong and is
+corrected here — do not follow it if you see it referenced elsewhere.)
 
-**Current state (2026-10-18), confirmed architecturally, not assumed:** no country has
-branş-level depth today. This was independently confirmed from two directions this week:
-`NOTYA-ULKE-ARACLAR-AU-07`'s AU clinical-tools audit found the country kit's `AracTanimi`
-architecture (`lib/ulke/araclar`) is a single generic, pure-function tool mechanism shared
-across all specialties via `AracYuvasi` slots — not a per-branş implementation; and
-`NOTYA-KLINIK-ISIMLENDIRME-01`'s Özel Branşlar audit separately found every one of the 10
-Özel Branşlar uniformly thin at the chapter-folder level on the Turkish side itself. Put
-together: **this obligation is currently latent for nearly every branş, in every
-country** — it is not a retroactive backlog against branches that don't exist anywhere
-outside Türkiye yet. It **activates branş-by-branş** as each country's own depth-closeout
-work (tracked separately, e.g. the AU Tier-1 clinical-tools line of work) reaches that
-particular branş.
+**What to do instead: build the minimal real scaffold, same cycle.** When a Türkiye
+branş-specific change needs to land in a country with no existing infrastructure for that
+branş, build **just enough real, working scaffold** to host that specific change — follow
+the existing `.ulke`-tree/kit pattern already proven for AU's Tier-1 clinical tools
+(`NOTYA-ULKE-ARACLAR-AU-07`: `AracTanimi`/`AracYuvasi` mechanism, `lib/ulke/araclar`,
+country-pack wiring) as the template for "what a real minimal addition looks like" — never
+a stub, a mock, or a UI element that doesn't actually work. The change ships to all 6
+countries in the same change set as the Turkish version; "the infra wasn't there" is a
+reason to build the infra now, not a reason to log a gap and move on.
 
-**Why this matters once it does activate.** Kaan's own framing of the end state: once a
-country catches up to the Turkish golden reference for a given branş, this rule is what
-keeps that country's branş implementation **in sync with Türkiye's going forward** —
-preventing re-drift after the catch-up work is done, the same way the core/shared
-two-axis rule already does for shared-spine changes.
+**Scope boundary — minimal scaffold ≠ full-depth closeout (non-negotiable).** Building the
+scaffold for this one change does not mean backfilling that branş's entire depth to the
+Turkish golden-reference level. Keep the two efforts explicitly separate:
+
+| | Minimal scaffold-as-you-go (this rule) | Full-depth closeout (separate job) |
+|---|---|---|
+| Trigger | A specific Türkiye branş change needs a home in a country | Scheduled, prioritized catch-up work for a branş in a country |
+| Scope | Just what the current change needs — real and working, not more | The branş's complete feature set, matching Türkiye |
+| Timing | Same change set / same cycle as the Türkiye change — no deferral | Its own larger, separately-sequenced job (the AU-first pattern already running) |
+| Example | Adding one new tool's `AracYuvasi` slot to carry today's change | `NOTYA-ULKE-ARACLAR-AU-07`'s full Tier-1 clinical-tools build-out |
+
+Never use "the real depth work is a separate job" as an excuse to skip shipping today's
+change with its minimal scaffold now — the two run in parallel, not in sequence.
+
+**Why this matters once a country is caught up.** Kaan's own framing of the end state:
+once a country catches up to the Turkish golden reference for a given branş (via its own
+full-depth closeout job), this rule is what keeps that country's branş implementation
+**in sync with Türkiye's going forward** — preventing re-drift after the catch-up work is
+done, the same way the core/shared two-axis rule already does for shared-spine changes.
 
 **What this does not change:** the exemption list (Turkey-only regulatory mechanics) and
 the mandatory checklist below apply exactly the same way to a branş-specific change as to
-a core/shared one — the only difference is the added depth gate above, which has no
-equivalent for core/shared work (core/shared code always exists on the country side by
-definition; a branş's country-side depth may not yet).
+a core/shared one.
 
 ## Trigger
 
