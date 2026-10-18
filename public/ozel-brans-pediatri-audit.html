@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Özel Branşlar — Pediatri gold audit · Notya</title>
-  <meta name="description" content="2026-10-18 post-sprint: 10 Özel Branş vs pediatri gold. 0 Strong, 10 Partial, mean wow 60. Hasta portalı Partial. Migration 177 not applied. No PHI." />
+  <meta name="description" content="2026-10-18 pass 3: 10 Özel Branş vs pediatri gold. 0 Strong, 10 Partial, mean wow 62. SOAP 72, UI 62, tests 74. Hasta portalı Partial. Migration 177 not applied. No PHI." />
 <style>
     :root {
       --bg:#060C18; --surface:#0D1526; --surface2:#121C30; --stroke:rgba(255,255,255,0.10);
@@ -76,34 +76,45 @@
 <body>
 <div class="wrap">
   <div class="brand">
-    <span class="tag">Notya · Post-sprint specialty audit</span>
+    <span class="tag">Notya · Pass 3 specialty audit</span>
     <span>
       <a href="/klinik-exceptional-audit.html">September 2026 hub (card presence, not this bar) →</a>
     </span>
   </div>
 
-  <div class="banner"><b>Post-sprint OZEL-BRANS-PEDIATRI-02</b> — 2026-10-18 · measured after the depth build. Pediatri gold stays 100. This page does not claim Strong. No PHI. Migration 177 is written and not applied. Six-country packs are not in this change.</div>
+  <div class="banner"><b>Pass 3 · OZEL-BRANS-PEDIATRI-03</b> — 2026-10-18 · SOAP note lock and four result layouts. Mean wow 31 → 60 → 62. Pediatri gold stays 100. This page does not claim Strong. No PHI. Migration 177 is written and not applied. Six-country packs are not in this change.</div>
 
   <h1>Özel Branşlar — standings against pediatri gold</h1>
-  <p class="lede">Each of the ten branches now has four instruments of its own, on top of the shared Hasta Portalı, Kayıt·rıza·KVKK and e-Nabız cards. The instruments compute on the server from the doctor’s inputs, refuse a bad entry, and send Sağlığım only a date label. <b>They are Partial. Mean wow is 60. Pediatri gold is still 100.</b> The chapter folders are 40 files and 745 lines. Pediatri is 24 files and 4,268 lines, with eight engines and six studios. Line count is cited. It is not the score.</p>
+  <p class="lede">Each of the ten branches has four instruments of its own, on top of the shared Hasta Portalı, Kayıt·rıza·KVKK and e-Nabız cards. This pass adds a short SOAP note lock and four result layouts (ölçü, seri, acil, liste) inside the same studio shell. <b>They are Partial. Mean wow is 62. Pediatri gold is still 100.</b> The chapter folders are 70 files and 1,025 lines. Pediatri is 24 files and 4,268 lines, with eight engines and six studios. Line count is cited. It is not the score.</p>
 
   <div class="pills">
     <span class="pill warning">0 / 10 overall Strong</span>
     <span class="pill warning">10 / 10 overall Partial</span>
     <span class="pill info">Hasta portalı Partial on all 10</span>
-    <span class="pill warning">Mean wow 60 · pediatri gold 100</span>
+    <span class="pill warning">Mean wow 62 · pediatri gold 100</span>
   </div>
 
   <div class="stats">
     <div class="stat"><div class="v warning">0</div><div class="l">Branches at pediatri gold</div></div>
-    <div class="stat"><div class="v warning">60</div><div class="l">Mean wow (10 equal slices)</div></div>
-    <div class="stat"><div class="v info">745</div><div class="l">Chapter lines · pediatri 4,268</div></div>
-    <div class="stat"><div class="v info">40</div><div class="l">Chapter files · 4 per branch</div></div>
+    <div class="stat"><div class="v warning">62</div><div class="l">Mean wow (10 equal slices)</div></div>
+    <div class="stat"><div class="v info">1,025</div><div class="l">Chapter lines · pediatri 4,268</div></div>
+    <div class="stat"><div class="v info">70</div><div class="l">Chapter files · 7 per branch</div></div>
   </div>
+
+  <h2>Pass log</h2>
+  <p class="cap">Same formula each time. A later pass does not rewrite an earlier row.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Pass</th><th>What moved</th><th>Mean wow</th><th>Standing</th></tr></thead>
+    <tbody>
+      <tr><td class="num">1</td><td class="note">Pre-sprint. Card presence and short engines. Chapter folders 438 lines / 20 files.</td><td class="num">31</td><td><span class="pill danger">Thin</span></td></tr>
+      <tr><td class="num">2</td><td class="note">Four instruments per branch, server recompute, portal date labels, system.md lock. 745 lines / 40 files.</td><td class="num">60</td><td><span class="pill info">Partial</span></td></tr>
+      <tr><td class="num">3</td><td class="note">SOAP note lock (voice unchanged) and four result layouts in the shared studio. Tests 74, UI 62, SOAP 72. 1,025 lines / 70 files.</td><td class="num">62</td><td><span class="pill info">Partial</span></td></tr>
+    </tbody>
+  </table></div>
 
   <div class="callout warning">
     <h2>Executive verdict</h2>
-    <p>A clinician in Saç Ekimi, Estetik Cerrahi, Medikal Estetik, Klinik Dermatoloji, Longevity, Fizyoterapi, Klinik Psikoloji, Diyetisyen, Ergoterapi or Odyoloji now opens instruments that belong to that branch: çizgi and foto seri, emboli bandı, vasküler band and lot, güneş ritmi, IV sınıfı, ev programı, kriz bandı, öğün iskeleti, günlük blok, cihaz izlemi. Tests cover a happy path and a refusal for every route, and they prove kardiyoloji, pediatri and the TUS twins do not list these routes. The note prompt for each branch carries “Doz yazılmaz” and “Tanı kilitlemez”. Klinik dermatoloji no longer inherits the TUS Derim lock. What is still short of gold: one shared studio shell rather than six canvases, a plan table that is not applied yet (save returns “Plan yazılamadı” until migration 177), and no six-country pack. Pre-sprint mean was 31. This snapshot is 60. It is not 90, and it is not the September card-presence hub.</p>
+    <p>A clinician in Saç Ekimi, Estetik Cerrahi, Medikal Estetik, Klinik Dermatoloji, Longevity, Fizyoterapi, Klinik Psikoloji, Diyetisyen, Ergoterapi or Odyoloji opens instruments that belong to that branch. This pass writes a five-line SOAP lock into the visit note only, and the studio paints the result as ölçü, seri, acil or liste. Voice, hafıza and the learning profile still use the short system lock. Tests cover a happy path and a refusal for every route, a prompt-lock file per branch, and the proof that kardiyoloji, pediatri and the TUS twins do not list these routes. What is still short of gold: one shared studio shell rather than six canvases, a plan table that is not applied yet (save returns “Plan yazılamadı” until migration 177), and no six-country pack. Pass 1 was 31 (Thin). Pass 2 was 60 (Partial). This snapshot is 62. It is not 90, and it is not the September card-presence hub.</p>
   </div>
 
   <h2>Standings</h2>
@@ -111,16 +122,16 @@
   <div class="table-wrap"><table>
     <thead><tr><th>#</th><th>Özel Branş</th><th>Wow</th><th>Standing</th><th>Own instruments, above the three core cards</th><th>Gap to pediatri gold</th></tr></thead>
     <tbody>
-      <tr><td class="num">1</td><td class="domain">Saç ekimi</td><td class="num">61</td><td><span class="pill info">Partial</span></td><td class="note">Greft bandı, yıkama 1/3/10/14, çizgi çerçevesi, foto seri 0/10/30/90. Foto without KVKK rıza is refused. Portal lines drop the word greft.</td><td class="gap">A donor studio on the chart, and a saved plan once migration 177 is applied</td></tr>
-      <tr><td class="num">2</td><td class="domain">Estetik cerrahi</td><td class="num">61</td><td><span class="pill info">Partial</span></td><td class="note">Soğuma, 1/7/14/42, iki nüsha rıza, emboli/kanama bandı. Single-copy consent is refused. Not Yaram.</td><td class="gap">The two copies stored on the visit, not only computed</td></tr>
-      <tr><td class="num">3</td><td class="domain">Medikal estetik</td><td class="num">61</td><td><span class="pill info">Partial</span></td><td class="note">Soğuma, 1/14/28, vasküler band (görme, livedo, ağrı, nefes → 112), lot. A lot field that contains mL or ünite is refused.</td><td class="gap">The 112 row on a live chart. The band is computed and the table is not applied</td></tr>
-      <tr><td class="num">4</td><td class="domain">Klinik psikolog</td><td class="num">60</td><td><span class="pill info">Partial</span></td><td class="note">Seans çerçevesi, 3–60 gün, sıklık (haftalık / iki hafta / aylık), kriz bandı. Not psikiyatri. No DSM and no scale interpretation.</td><td class="gap">The frame written into the visit note</td></tr>
-      <tr><td class="num">5</td><td class="domain">Odyoloji</td><td class="num">60</td><td><span class="pill info">Partial</span></td><td class="note">Eşik bandı, sessiz oda ≥3 m², cihaz izlemi (hekim raporu şart), ani işitme bandı. dB does not reach Sağlığım. Not KBB.</td><td class="gap">A threshold trend on the chart</td></tr>
-      <tr><td class="num">6</td><td class="domain">Klinik dermatoloji</td><td class="num">60</td><td><span class="pill info">Partial</span></td><td class="note">Lazer 14–90, akne 2/6/12, güneş 1/4/8, lazer acil bandı. Voice picker uses <code>klinik-dermatoloji</code>. TUS <code>dermatoloji</code> still belongs to Derim.</td><td class="gap">A care canvas. PASI and GÖP stay out</td></tr>
-      <tr><td class="num">7</td><td class="domain">Longevity</td><td class="num">60</td><td><span class="pill info">Partial</span></td><td class="note">Sonraki seans, üç güvenlik maddesi, sınıf listesi, IV reaksiyon bandı. A free-text class and a one-item checklist are refused. No mixture and no mL.</td><td class="gap">The safety record attached to the visit</td></tr>
-      <tr><td class="num">8</td><td class="domain">Diyetisyen</td><td class="num">60</td><td><span class="pill info">Partial</span></td><td class="note">Makro bandı only with a physician diagnosis, kontrol 2/4/8, öğün iskeleti, beslenme acil bandı. An öğün label that contains kcal is refused. kcal stays off Sağlığım.</td><td class="gap">The control weeks on that patient’s plan row</td></tr>
-      <tr><td class="num">9</td><td class="domain">Fizyoterapi</td><td class="num">60</td><td><span class="pill info">Partial</span></td><td class="note">ICF (physician diagnosis required), seans vadesi, ev programı (max 4 lines, enjeksiyon refused), kırmızı bayrak. Not FTR.</td><td class="gap">The home program as its own canvas</td></tr>
-      <tr><td class="num">10</td><td class="domain">Ergoterapi</td><td class="num">59</td><td><span class="pill info">Partial</span></td><td class="note">GYA, 3–42 gün, sabah/öğlen/akşam blok, düşme bandı. Neyzi is named in the lock as forbidden. Shortest motor, still four instruments.</td><td class="gap">A GYA worksheet with the same depth as the pediatri growth studio</td></tr>
+      <tr><td class="num">1</td><td class="domain">Saç ekimi</td><td class="num">63</td><td><span class="pill info">Partial</span></td><td class="note">Greft bandı, yıkama 1/3/10/14, çizgi çerçevesi, foto seri 0/10/30/90. Foto without KVKK rıza is refused. Portal lines drop the word greft.</td><td class="gap">A donor studio on the chart, and a saved plan once migration 177 is applied</td></tr>
+      <tr><td class="num">2</td><td class="domain">Estetik cerrahi</td><td class="num">63</td><td><span class="pill info">Partial</span></td><td class="note">Soğuma, 1/7/14/42, iki nüsha rıza, emboli/kanama bandı. Single-copy consent is refused. Not Yaram.</td><td class="gap">The two copies stored on the visit, not only computed</td></tr>
+      <tr><td class="num">3</td><td class="domain">Medikal estetik</td><td class="num">63</td><td><span class="pill info">Partial</span></td><td class="note">Soğuma, 1/14/28, vasküler band (görme, livedo, ağrı, nefes → 112), lot. A lot field that contains mL or ünite is refused.</td><td class="gap">The 112 row on a live chart. The band is computed and the table is not applied</td></tr>
+      <tr><td class="num">4</td><td class="domain">Klinik psikolog</td><td class="num">62</td><td><span class="pill info">Partial</span></td><td class="note">Seans çerçevesi, 3–60 gün, sıklık (haftalık / iki hafta / aylık), kriz bandı. Not psikiyatri. No DSM and no scale interpretation.</td><td class="gap">The frame written into the visit note</td></tr>
+      <tr><td class="num">5</td><td class="domain">Odyoloji</td><td class="num">62</td><td><span class="pill info">Partial</span></td><td class="note">Eşik bandı, sessiz oda ≥3 m², cihaz izlemi (hekim raporu şart), ani işitme bandı. dB does not reach Sağlığım. Not KBB.</td><td class="gap">A threshold trend on the chart</td></tr>
+      <tr><td class="num">6</td><td class="domain">Klinik dermatoloji</td><td class="num">62</td><td><span class="pill info">Partial</span></td><td class="note">Lazer 14–90, akne 2/6/12, güneş 1/4/8, lazer acil bandı. Voice picker uses <code>klinik-dermatoloji</code>. TUS <code>dermatoloji</code> still belongs to Derim.</td><td class="gap">A care canvas. PASI and GÖP stay out</td></tr>
+      <tr><td class="num">7</td><td class="domain">Longevity</td><td class="num">62</td><td><span class="pill info">Partial</span></td><td class="note">Sonraki seans, üç güvenlik maddesi, sınıf listesi, IV reaksiyon bandı. A free-text class and a one-item checklist are refused. No mixture and no mL.</td><td class="gap">The safety record attached to the visit</td></tr>
+      <tr><td class="num">8</td><td class="domain">Diyetisyen</td><td class="num">62</td><td><span class="pill info">Partial</span></td><td class="note">Makro bandı only with a physician diagnosis, kontrol 2/4/8, öğün iskeleti, beslenme acil bandı. An öğün label that contains kcal is refused. kcal stays off Sağlığım.</td><td class="gap">The control weeks on that patient’s plan row</td></tr>
+      <tr><td class="num">9</td><td class="domain">Fizyoterapi</td><td class="num">62</td><td><span class="pill info">Partial</span></td><td class="note">ICF (physician diagnosis required), seans vadesi, ev programı (max 4 lines, enjeksiyon refused), kırmızı bayrak. Not FTR.</td><td class="gap">The home program as its own canvas</td></tr>
+      <tr><td class="num">10</td><td class="domain">Ergoterapi</td><td class="num">61</td><td><span class="pill info">Partial</span></td><td class="note">GYA, 3–42 gün, sabah/öğlen/akşam blok, düşme bandı. Neyzi is named in the lock as forbidden. Shortest motor, still four instruments.</td><td class="gap">A GYA worksheet with the same depth as the pediatri growth studio</td></tr>
     </tbody>
   </table></div>
 
@@ -130,12 +141,12 @@
     <thead><tr><th>Slice</th><th>Pediatri gold</th><th>All 10 today</th><th>Score</th><th>Note</th></tr></thead>
     <tbody>
       <tr><td class="domain">Motor</td><td class="note">8 engines, named references</td><td><span class="pill info">Partial</span></td><td class="num">58–68</td><td class="note">Four instruments per branch, each with a refusal. One engine file, not eight. Saç 68, ergo 58.</td></tr>
-      <tr><td class="domain">Tests</td><td class="note">8 files under the chapter</td><td><span class="pill info">Partial</span></td><td class="num">68</td><td class="note">One <code>araclar.test.ts</code> per branch plus <code>ozelAracCalistir.test.ts</code> and <code>ozelPrompt.test.ts</code>. Happy path and refusal for all 40 routes. Foreign branş lists omit them.</td></tr>
-      <tr><td class="domain">Tool UI</td><td class="note">Dedicated studios</td><td><span class="pill info">Partial</span></td><td class="num">56</td><td class="note"><code>OzelStudyo</code> renders that instrument’s fields and result. It is one shell, not six canvases. Routes stay cards you open.</td></tr>
+      <tr><td class="domain">Tests</td><td class="note">8 files under the chapter</td><td><span class="pill info">Partial</span></td><td class="num">74</td><td class="note">Each branch now has <code>araclar.test.ts</code> and <code>promptsLock.test.ts</code>. Shared runner tests still cover the happy path, the refusal, the four result layouts, and the foreign-branş omit. Pediatri’s eight test files are still the gold count.</td></tr>
+      <tr><td class="domain">Tool UI</td><td class="note">Dedicated studios</td><td><span class="pill info">Partial</span></td><td class="num">62</td><td class="note">The same <code>OzelStudyo</code> shell now paints ölçü, seri, acil or liste, and shows that branch’s kilit sentence. It is still one shell, not six canvases. Routes stay cards you open.</td></tr>
       <tr><td class="domain">Hasta dosyası</td><td class="note">Chart tab uses the engines</td><td><span class="pill info">Partial</span></td><td class="num">52</td><td class="note">The hasta page loads <code>/api/ozel-brans/plan?patientId=</code> and tool links carry <code>patientId</code>. The API checks <code>hastaSahibiMi</code> and the doctor’s slug, then returns 404 for a foreign branch. The table is not applied, so save is 503.</td></tr>
       <tr><td class="domain">Kohort</td><td class="note"><code>kohort.ts</code> + studio</td><td><span class="pill info">Partial</span></td><td class="num">64</td><td class="note">Local defter plus <code>kohortAcilBirlestir</code>: a stored acil becomes a 112 row and is not duplicated. Unknown specialty no longer falls through to saç.</td></tr>
       <tr><td class="domain">Hasta portalı (Sağlığım)</td><td class="note">Gated module, patient-safe, fixture</td><td><span class="pill info">Partial</span></td><td class="num">58</td><td class="note">Each page prefers <code>ozelPlan.satirlar</code> and hides the fixed rhythm when dates exist. Lines matching kcal, mL, ünite, doz, tanı, greft or dB are dropped. Empty until a plan row exists. Not Strong.</td></tr>
-      <tr><td class="domain">SOAP / prompt lock</td><td class="note">Chapter prompts + lock tests</td><td><span class="pill info">Partial</span></td><td class="num">62</td><td class="note">Each branch has <code>prompts/system.md</code>. SOAP, Ayşe chat, hafıza and the Özel Branş voice prompt load it. TUS dermatoloji still gets the Derim lock. There is no soap-*.md template set.</td></tr>
+      <tr><td class="domain">SOAP / prompt lock</td><td class="note">Chapter prompts + lock tests</td><td><span class="pill info">Partial</span></td><td class="num">72</td><td class="note">Each branch has <code>prompts/soap.md</code> (S/O/A/P, “Doz yazılmaz”). The visit note loads it through <code>ozelBransSoapKilidi</code>. Voice, hafıza and the learning profile stay on the short <code>system.md</code> lock. TUS dermatoloji still gets the Derim lock.</td></tr>
       <tr><td class="domain">Acil</td><td class="note">Chart band from intake</td><td><span class="pill info">Partial</span></td><td class="num">68–74</td><td class="note">Every branch has an acil instrument that returns the branch 112 sentence. Kohort can surface it. It is not on a live chart until the table exists.</td></tr>
       <tr><td class="domain">Kayıt / KVKK</td><td class="note">Consent locked to the visit</td><td><span class="pill info">Partial</span></td><td class="num">48–52</td><td class="note">Shared checklist unchanged. Saç photo refusal and cerrahi two-copy refusal score 52.</td></tr>
       <tr><td class="domain">Voice</td><td class="note">Locked chapter prompt</td><td><span class="pill info">Partial</span></td><td class="num">58</td><td class="note">Picker lists <code>KLINIK_YENI_SLUGS</code>, including <code>klinik-dermatoloji</code>. The TUS key <code>dermatoloji</code> still resolves to Selin Aksoy. The voice system prompt appends the chapter lock.</td></tr>
@@ -143,38 +154,38 @@
   </table></div>
 
   <h2>Slice scores (the mean)</h2>
-  <p class="cap">Wow = (motor + tests + UI + dosya + kohort + portal + SOAP + acil + kayıt + voice) / 10, rounded. Mean of those ten wow numbers is 60. Pediatri gold is 100 on every slice by definition of this bar.</p>
+  <p class="cap">Wow = (motor + tests + UI + dosya + kohort + portal + SOAP + acil + kayıt + voice) / 10, rounded. This pass moved only tests 68→74, UI 56→62 and SOAP 62→72. The other seven slices are unchanged. Mean of the ten rounded wow numbers is 62.2, reported as 62. Pediatri gold is 100 on every slice by definition of this bar.</p>
   <div class="table-wrap"><table>
     <thead><tr><th>Branş</th><th>Motor</th><th>Test</th><th>UI</th><th>Dosya</th><th>Kohort</th><th>Portal</th><th>SOAP</th><th>Acil</th><th>Kayıt</th><th>Ses</th><th>Wow</th></tr></thead>
     <tbody>
-      <tr><td class="domain">Saç ekimi</td><td class="num">68</td><td class="num">68</td><td class="num">56</td><td class="num">52</td><td class="num">64</td><td class="num">58</td><td class="num">62</td><td class="num">70</td><td class="num">52</td><td class="num">58</td><td class="num">61</td></tr>
-      <tr><td class="domain">Estetik cerrahi</td><td class="num">66</td><td class="num">68</td><td class="num">56</td><td class="num">52</td><td class="num">64</td><td class="num">58</td><td class="num">62</td><td class="num">72</td><td class="num">52</td><td class="num">58</td><td class="num">61</td></tr>
-      <tr><td class="domain">Medikal estetik</td><td class="num">66</td><td class="num">68</td><td class="num">56</td><td class="num">52</td><td class="num">64</td><td class="num">58</td><td class="num">62</td><td class="num">74</td><td class="num">48</td><td class="num">58</td><td class="num">61</td></tr>
-      <tr><td class="domain">Klinik psikolog</td><td class="num">62</td><td class="num">68</td><td class="num">56</td><td class="num">52</td><td class="num">64</td><td class="num">58</td><td class="num">62</td><td class="num">74</td><td class="num">48</td><td class="num">58</td><td class="num">60</td></tr>
-      <tr><td class="domain">Odyoloji</td><td class="num">62</td><td class="num">68</td><td class="num">56</td><td class="num">52</td><td class="num">64</td><td class="num">58</td><td class="num">62</td><td class="num">72</td><td class="num">48</td><td class="num">58</td><td class="num">60</td></tr>
-      <tr><td class="domain">Klinik dermatoloji</td><td class="num">64</td><td class="num">68</td><td class="num">56</td><td class="num">52</td><td class="num">64</td><td class="num">58</td><td class="num">62</td><td class="num">72</td><td class="num">48</td><td class="num">58</td><td class="num">60</td></tr>
-      <tr><td class="domain">Longevity</td><td class="num">60</td><td class="num">68</td><td class="num">56</td><td class="num">52</td><td class="num">64</td><td class="num">58</td><td class="num">62</td><td class="num">70</td><td class="num">48</td><td class="num">58</td><td class="num">60</td></tr>
-      <tr><td class="domain">Diyetisyen</td><td class="num">62</td><td class="num">68</td><td class="num">56</td><td class="num">52</td><td class="num">64</td><td class="num">58</td><td class="num">62</td><td class="num">68</td><td class="num">48</td><td class="num">58</td><td class="num">60</td></tr>
-      <tr><td class="domain">Fizyoterapi</td><td class="num">60</td><td class="num">68</td><td class="num">56</td><td class="num">52</td><td class="num">64</td><td class="num">58</td><td class="num">62</td><td class="num">70</td><td class="num">48</td><td class="num">58</td><td class="num">60</td></tr>
-      <tr><td class="domain">Ergoterapi</td><td class="num">58</td><td class="num">68</td><td class="num">56</td><td class="num">52</td><td class="num">64</td><td class="num">58</td><td class="num">62</td><td class="num">68</td><td class="num">48</td><td class="num">58</td><td class="num">59</td></tr>
+      <tr><td class="domain">Saç ekimi</td><td class="num">68</td><td class="num">74</td><td class="num">62</td><td class="num">52</td><td class="num">64</td><td class="num">58</td><td class="num">72</td><td class="num">70</td><td class="num">52</td><td class="num">58</td><td class="num">63</td></tr>
+      <tr><td class="domain">Estetik cerrahi</td><td class="num">66</td><td class="num">74</td><td class="num">62</td><td class="num">52</td><td class="num">64</td><td class="num">58</td><td class="num">72</td><td class="num">72</td><td class="num">52</td><td class="num">58</td><td class="num">63</td></tr>
+      <tr><td class="domain">Medikal estetik</td><td class="num">66</td><td class="num">74</td><td class="num">62</td><td class="num">52</td><td class="num">64</td><td class="num">58</td><td class="num">72</td><td class="num">74</td><td class="num">48</td><td class="num">58</td><td class="num">63</td></tr>
+      <tr><td class="domain">Klinik psikolog</td><td class="num">62</td><td class="num">74</td><td class="num">62</td><td class="num">52</td><td class="num">64</td><td class="num">58</td><td class="num">72</td><td class="num">74</td><td class="num">48</td><td class="num">58</td><td class="num">62</td></tr>
+      <tr><td class="domain">Odyoloji</td><td class="num">62</td><td class="num">74</td><td class="num">62</td><td class="num">52</td><td class="num">64</td><td class="num">58</td><td class="num">72</td><td class="num">72</td><td class="num">48</td><td class="num">58</td><td class="num">62</td></tr>
+      <tr><td class="domain">Klinik dermatoloji</td><td class="num">64</td><td class="num">74</td><td class="num">62</td><td class="num">52</td><td class="num">64</td><td class="num">58</td><td class="num">72</td><td class="num">72</td><td class="num">48</td><td class="num">58</td><td class="num">62</td></tr>
+      <tr><td class="domain">Longevity</td><td class="num">60</td><td class="num">74</td><td class="num">62</td><td class="num">52</td><td class="num">64</td><td class="num">58</td><td class="num">72</td><td class="num">70</td><td class="num">48</td><td class="num">58</td><td class="num">62</td></tr>
+      <tr><td class="domain">Diyetisyen</td><td class="num">62</td><td class="num">74</td><td class="num">62</td><td class="num">52</td><td class="num">64</td><td class="num">58</td><td class="num">72</td><td class="num">68</td><td class="num">48</td><td class="num">58</td><td class="num">62</td></tr>
+      <tr><td class="domain">Fizyoterapi</td><td class="num">60</td><td class="num">74</td><td class="num">62</td><td class="num">52</td><td class="num">64</td><td class="num">58</td><td class="num">72</td><td class="num">70</td><td class="num">48</td><td class="num">58</td><td class="num">62</td></tr>
+      <tr><td class="domain">Ergoterapi</td><td class="num">58</td><td class="num">74</td><td class="num">62</td><td class="num">52</td><td class="num">64</td><td class="num">58</td><td class="num">72</td><td class="num">68</td><td class="num">48</td><td class="num">58</td><td class="num">61</td></tr>
       <tr><td class="domain">Pediatri gold</td><td class="num">100</td><td class="num">100</td><td class="num">100</td><td class="num">100</td><td class="num">100</td><td class="num">100</td><td class="num">100</td><td class="num">100</td><td class="num">100</td><td class="num">100</td><td class="num">100</td></tr>
     </tbody>
   </table></div>
 
   <h2>Wow bar</h2>
-  <p class="cap">0–100 completeness versus the pediatri gold chapter. Amber is this post-sprint. Teal is the reference.</p>
+  <p class="cap">0–100 completeness versus the pediatri gold chapter. Amber is pass 3. Teal is the reference.</p>
   <div class="bars">
     <div class="bar-row"><div class="bar-label">Pediatri gold (reference)</div><div class="bar-track"><div class="bar-fill gold" style="width:100%"></div></div><div class="bar-val">100</div></div>
-    <div class="bar-row"><div class="bar-label">Saç ekimi</div><div class="bar-track"><div class="bar-fill" style="width:61%"></div></div><div class="bar-val">61</div></div>
-    <div class="bar-row"><div class="bar-label">Estetik cerrahi</div><div class="bar-track"><div class="bar-fill" style="width:61%"></div></div><div class="bar-val">61</div></div>
-    <div class="bar-row"><div class="bar-label">Medikal estetik</div><div class="bar-track"><div class="bar-fill" style="width:61%"></div></div><div class="bar-val">61</div></div>
-    <div class="bar-row"><div class="bar-label">Klinik psikolog</div><div class="bar-track"><div class="bar-fill" style="width:60%"></div></div><div class="bar-val">60</div></div>
-    <div class="bar-row"><div class="bar-label">Odyoloji</div><div class="bar-track"><div class="bar-fill" style="width:60%"></div></div><div class="bar-val">60</div></div>
-    <div class="bar-row"><div class="bar-label">Klinik dermatoloji</div><div class="bar-track"><div class="bar-fill" style="width:60%"></div></div><div class="bar-val">60</div></div>
-    <div class="bar-row"><div class="bar-label">Longevity</div><div class="bar-track"><div class="bar-fill" style="width:60%"></div></div><div class="bar-val">60</div></div>
-    <div class="bar-row"><div class="bar-label">Diyetisyen</div><div class="bar-track"><div class="bar-fill" style="width:60%"></div></div><div class="bar-val">60</div></div>
-    <div class="bar-row"><div class="bar-label">Fizyoterapi</div><div class="bar-track"><div class="bar-fill" style="width:60%"></div></div><div class="bar-val">60</div></div>
-    <div class="bar-row"><div class="bar-label">Ergoterapi</div><div class="bar-track"><div class="bar-fill" style="width:59%"></div></div><div class="bar-val">59</div></div>
+    <div class="bar-row"><div class="bar-label">Saç ekimi</div><div class="bar-track"><div class="bar-fill" style="width:63%"></div></div><div class="bar-val">63</div></div>
+    <div class="bar-row"><div class="bar-label">Estetik cerrahi</div><div class="bar-track"><div class="bar-fill" style="width:63%"></div></div><div class="bar-val">63</div></div>
+    <div class="bar-row"><div class="bar-label">Medikal estetik</div><div class="bar-track"><div class="bar-fill" style="width:63%"></div></div><div class="bar-val">63</div></div>
+    <div class="bar-row"><div class="bar-label">Klinik psikolog</div><div class="bar-track"><div class="bar-fill" style="width:62%"></div></div><div class="bar-val">62</div></div>
+    <div class="bar-row"><div class="bar-label">Odyoloji</div><div class="bar-track"><div class="bar-fill" style="width:62%"></div></div><div class="bar-val">62</div></div>
+    <div class="bar-row"><div class="bar-label">Klinik dermatoloji</div><div class="bar-track"><div class="bar-fill" style="width:62%"></div></div><div class="bar-val">62</div></div>
+    <div class="bar-row"><div class="bar-label">Longevity</div><div class="bar-track"><div class="bar-fill" style="width:62%"></div></div><div class="bar-val">62</div></div>
+    <div class="bar-row"><div class="bar-label">Diyetisyen</div><div class="bar-track"><div class="bar-fill" style="width:62%"></div></div><div class="bar-val">62</div></div>
+    <div class="bar-row"><div class="bar-label">Fizyoterapi</div><div class="bar-track"><div class="bar-fill" style="width:62%"></div></div><div class="bar-val">62</div></div>
+    <div class="bar-row"><div class="bar-label">Ergoterapi</div><div class="bar-track"><div class="bar-fill" style="width:61%"></div></div><div class="bar-val">61</div></div>
   </div>
 
   <h2>Hasta portalı, branch by branch</h2>
@@ -211,7 +222,7 @@
   <h2>What a clinic day still costs</h2>
   <div class="cards">
     <div class="card"><div class="title">The plan table is not applied <span class="pill warning">record</span></div><div class="body">Migration 177 creates <code>ozel_brans_plan</code>. Until it runs, save answers “Plan yazılamadı.” The instrument still computes on the open page. A second device does not see the result.</div></div>
-    <div class="card"><div class="title">One studio shell <span class="pill info">UI</span></div><div class="body">Fields and refusals are unique. The canvas is shared. Pediatri’s six studios are still the gold shape for this slice, which is why UI stays at 56.</div></div>
+    <div class="card"><div class="title">One studio shell <span class="pill info">UI 62</span></div><div class="body">Fields, refusals and four result layouts are unique. The canvas is still shared. Pediatri’s six studios remain the gold shape for this slice.</div></div>
     <div class="card"><div class="title">Sağlığım waits for a row <span class="pill info">portal</span></div><div class="body">The page is gated and patient-safe, and it will print that patient’s dates when a plan exists. Today the rhythm string is what the patient sees.</div></div>
     <div class="card"><div class="title">112 is computed, not yet on the live chart <span class="pill warning">safety</span></div><div class="body">Every branch can raise its own 112 sentence. Kohort merges a stored flag. With no table, the cohort 112 row from the server does not appear.</div></div>
   </div>
@@ -227,10 +238,10 @@
   </table></div>
 
   <h2>Sources</h2>
-  <p class="lede">Chapter folders under <code>specialties/</code> for the ten slugs — 4 files each, 745 lines together (engine, prompt, test). Shared runner: <code>lib/klinik/ozelAracCalistir.ts</code> (40 instruments), <code>components/klinik/OzelStudyo.tsx</code>, <code>app/api/ozel-brans/plan/route.ts</code>, <code>lib/db/migrations/177_ozel_brans_plan.sql</code> (not applied). Gold: <code>specialties/pediatri</code> — 24 files, 4,268 lines. Tests run: 57 passed, including dermatoloji promptsLock, klinik chapters, and persona collision. Intentionally out of this bar: live e-Nabız write, SBİYS, Medula, and the six country packs. September hub <a href="/klinik-exceptional-audit.html" style="color:var(--teal)">/klinik-exceptional-audit.html</a> stays as the card-presence snapshot.</p>
+  <p class="lede">Chapter folders under <code>specialties/</code> for the ten slugs — 7 files each, 1,025 lines together (engine, portal engine, system.md, soap.md, two tests, studio kilit). Shared runner: <code>lib/klinik/ozelAracCalistir.ts</code> (40 instruments), <code>lib/klinik/ozelSonucDuzeni.ts</code>, <code>components/klinik/OzelStudyo.tsx</code>, <code>app/api/ozel-brans/plan/route.ts</code>, <code>lib/db/migrations/177_ozel_brans_plan.sql</code> (not applied). Gold: <code>specialties/pediatri</code> — 24 files, 4,268 lines. Tests run this pass: 62 passed, 0 failed, including the ten prompt locks, dermatoloji promptsLock, chapter araç tests, klinik chapters, and persona collision. Intentionally out of this bar: live e-Nabız write, SBİYS, Medula, and the six country packs. September hub <a href="/klinik-exceptional-audit.html" style="color:var(--teal)">/klinik-exceptional-audit.html</a> stays as the card-presence snapshot.</p>
 
   <div class="foot">
-    <span>OZEL-BRANS-PEDIATRI-02 · 2026-10-18 · post-sprint · no patient data</span>
+    <span>OZEL-BRANS-PEDIATRI-03 · 2026-10-18 · pass 3 · no patient data</span>
     <span>Strong = clinic-ready · Partial = real, missing the wow layer · Thin = stub · Missing = absent</span>
   </div>
 </div>
