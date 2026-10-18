@@ -15,5 +15,6 @@ export default function Page() {
       </div>
     )
   }
-  return <KlinikHatirlatmaView title="Saçım" subtitle="Yıkama ve kontrol tarihleri. Greft, tanı ve ilaç yoktur." acil="Kızarıklık+ateş veya nefes darlığında 112." basePath={basePath} ritim={['1. gün ilk pansuman', '3. gün nazik yıkama', '10. gün kabuk kontrolü', '14. gün kontrol']} />
+  const plan = data.ozelPlan
+  return <KlinikHatirlatmaView satirlar={plan?.satirlar} title="Saçım" subtitle="Yıkama ve kontrol tarihleri. Greft, tanı ve ilaç yoktur." acil={plan?.acil || "Kızarıklık+ateş veya nefes darlığında 112."} basePath={basePath} ritim={plan?.satirlar?.length ? undefined : ['1. gün ilk pansuman', '3. gün nazik yıkama', '10. gün kabuk kontrolü', '14. gün kontrol'] } />
 }

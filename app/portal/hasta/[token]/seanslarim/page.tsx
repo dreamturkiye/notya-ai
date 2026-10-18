@@ -15,5 +15,6 @@ export default function Page() {
       </div>
     )
   }
-  return <KlinikHatirlatmaView title="Görüşmelerim" subtitle="Sonraki görüşme tarihi. Tanı ve ilaç yoktur." acil="Krizde 112 veya en yakın acil." basePath={basePath} ritim={['Sonraki görüşme tarihi uzmanın kaydıyladır', 'Ölçek skoru burada yorumlanmaz']} />
+  const plan = data.ozelPlan
+  return <KlinikHatirlatmaView satirlar={plan?.satirlar} title="Görüşmelerim" subtitle="Sonraki görüşme tarihi. Tanı ve ilaç yoktur." acil={plan?.acil || "Krizde 112 veya en yakın acil."} basePath={basePath} ritim={plan?.satirlar?.length ? undefined : ['Sonraki görüşme tarihi uzmanın kaydıyladır', 'Ölçek skoru burada yorumlanmaz'] } />
 }

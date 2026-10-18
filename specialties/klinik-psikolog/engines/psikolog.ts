@@ -21,6 +21,17 @@ export function seansVadesi(sonIso: string, aralikGun: number, bugun: string): {
   return { due, ozet: `Sonraki seans ${due} (${durum}). Ölçek yorumu / tanı yok.` }
 }
 
+export function krizBand(kendine: boolean, baskasina: boolean, gercek: boolean): { ozet: string; acil: boolean } {
+  const acil = kendine || baskasina || gercek
+  return { acil, ozet: acil ? ACIL_METIN : 'Kriz bandı boş. Seans çerçevesi sürer.' }
+}
+
+export function siklikKaydi(siklik: string, yaklasim: string): { ozet: string } | { hata: string } {
+  if (!yaklasim.trim()) return { hata: 'Yaklaşım yazın. Tanı ve skor yorumu yok.' }
+  if (!['haftalık', 'iki haftada bir', 'aylık'].includes(siklik)) return { hata: 'Sıklık: haftalık, iki haftada bir veya aylık.' }
+  return { ozet: `Çerçeve: ${yaklasim.trim()} · ${siklik}. Ölçek yorumu ve ilaç yok.` }
+}
+
 export const INTAKE_ACIL = [
   'Kendine zarar verme veya intihar düşüncesi',
   'Başkasına zarar verme düşüncesi',

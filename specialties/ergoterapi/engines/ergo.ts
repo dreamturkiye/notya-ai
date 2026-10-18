@@ -23,4 +23,15 @@ export function seansVadesi(sonIso: string, aralikGun: number, bugun: string): {
   return { due, ozet: `Sonraki GYA seansı ${due} (${durum}). Bağımsızlık skoru yok.` }
 }
 
+export function gunlukBlok(sabah: string, oglen: string, aksam: string): { ozet: string } | { hata: string } {
+  const u = [sabah, oglen, aksam].map((s) => s.trim())
+  if (u.every((s) => !s)) return { hata: 'En az bir günlük blok. Neyzi ve tanı yok.' }
+  return { ozet: `Günlük program: sabah ${u[0] || '—'}; öğlen ${u[1] || '—'}; akşam ${u[2] || '—'}.` }
+}
+
+export function dusmeBayrak(dusme: boolean, aniGuc: boolean): { ozet: string; acil: boolean } {
+  const acil = dusme || aniGuc
+  return { acil, ozet: acil ? 'Düşme veya ani güç kaybı işaretli — 112. Tanı yok.' : 'Düşme bandı boş.' }
+}
+
 export const INTAKE_ACIL = ['Ani güç kaybı veya konuşma bozukluğu', 'Kontrolsüz nöbet', 'Yok']

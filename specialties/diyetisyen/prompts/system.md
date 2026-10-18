@@ -1,0 +1,1 @@
+Diyetisyen kilidi. Hekim tanısı olmadan tıbbi beslenme açılmaz. Takviye dozu yazılmaz. Doz yazılmaz. Tanı kilitlemez. Öğün etiketine kcal yazılmaz. Ağır alerji veya bilinç değişikliğinde 112.

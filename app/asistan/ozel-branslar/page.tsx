@@ -16,6 +16,7 @@ import { Conversation } from '@/components/AsistanConversation'
 import { isAndroid, connectionErrorHelp, micPermissionHelp } from '@/lib/asistan/platform'
 import { ensureDoctorAccessToken, DOKTOR_GIRIS } from '@/lib/doktor/clientAuth'
 import { KlinikUzmanPersonas, type KlinikUzmanPersona } from '@/lib/ai/personas/klinik_uzmanlar'
+import { KLINIK_YENI_SLUGS } from '@/lib/specialties/klinikDikey'
 import { SES_CALAR } from '@/lib/asistan/sesCalar'
 import { CHROME_RENK, CHROME_FONT, CHROME_FONT_HREF } from '@/lib/doktor/chromeTheme'
 
@@ -23,7 +24,7 @@ type CS = 'idle'|'connecting'|'listening'|'speaking'|'error'
 type Msg = { id: string; role: 'user'|'ai'; text: string }
 type AC = Awaited<ReturnType<typeof Conversation.startSession>>
 
-const SLUGS = Object.keys(KlinikUzmanPersonas)
+const SLUGS = KLINIK_YENI_SLUGS.filter((s) => KlinikUzmanPersonas[s])
 
 /** KURAL — TÜRKÇE: ses SDK'sının / tarayıcının İngilizce hata metni ekrana çıkmaz; Türkçe mesajlar olduğu gibi kalır. */
 function sesHataMesaji(m?: string): string {

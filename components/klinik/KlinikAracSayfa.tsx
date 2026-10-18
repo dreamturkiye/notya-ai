@@ -8,6 +8,8 @@ import EnabizMasa from '@/components/doktor/EnabizMasa'
 import type { AracVurgu } from '@/lib/doktor/aracUi'
 import { klinikMevzuat, klinikMevzuatOzet, KLINIK_ORTAK_KANUNLAR, KLINIK_ORTAK_KAYIT } from '@/lib/klinik/klinikMevzuat'
 import { KLINIK_ETIKET } from '@/lib/specialties/klinikDikey'
+import { ozelAracBul } from '@/lib/klinik/ozelAracCalistir'
+import OzelStudyo from './OzelStudyo'
 
 const V: Record<string, AracVurgu> = {
   sac: { ana: '#2563EB', anaMetin: '#EFF6FF', yumusak: '#2563EB', baslik: '#2563EB' },
@@ -56,6 +58,19 @@ const META: Record<string, { slug: string; etiket: string; baslik: string; acikl
   '/ozel-branslar/odyo-esik': { slug: 'odyoloji', etiket: 'Odyoloji', baslik: 'Eşik kaydı', aciklama: 'İşitme kaybı tanısı değil.', vurgu: V.ody },
   '/ozel-branslar/odyo-oda': { slug: 'odyoloji', etiket: 'Odyoloji', baslik: 'Sessiz oda kaydı', aciklama: 'md.11 ≥3 m².', vurgu: V.ody },
   '/ozel-branslar/odyo-kohort': { slug: 'odyoloji', etiket: 'Odyoloji', baslik: 'Odyoloji kohort', aciklama: 'Eşik, cihaz ve ani işitme.', vurgu: V.ody },
+}
+
+const VURGU_SLUG: Record<string, AracVurgu> = {
+  'sac-ekimi': V.sac,
+  'estetik-cerrahi': V.cer,
+  'medikal-estetik': V.est,
+  'klinik-dermatoloji': V.derm,
+  longevity: V.long,
+  fizyoterapi: V.fiz,
+  'klinik-psikolog': V.psi,
+  diyetisyen: V.diy,
+  ergoterapi: V.erg,
+  odyoloji: V.ody,
 }
 
 const PANEL: Record<string, string> = {
@@ -123,11 +138,29 @@ function KayitKvkkPanel() {
 }
 
 export default function KlinikAracSayfa({ route }: { route: string }) {
-  const m = META[route]
+  const tanim = ozelAracBul(route)
+  const m = META[route] || (tanim ? {
+    slug: tanim.slug,
+    etiket: KLINIK_ETIKET[tanim.slug],
+    baslik: tanim.baslik,
+    aciklama: tanim.aciklama,
+    vurgu: VURGU_SLUG[tanim.slug] || V.sac,
+  } : null)
   if (!m) return null
+  const govde = route === '/ozel-branslar/hasta-portali'
+    ? <KlinikHastaPortaliPaneli />
+    : route === '/ozel-branslar/enabiz'
+      ? <Suspense fallback={null}><EnabizMasa gizliBaslik /></Suspense>
+      : route === '/ozel-branslar/kayit-kvkk'
+        ? <KayitKvkkPanel />
+        : route.endsWith('-kohort')
+          ? <KlinikKohortPanel />
+          : tanim
+            ? <Suspense fallback={null}><OzelStudyo tanim={tanim} /></Suspense>
+            : <KlinikBolumHome slug={m.slug} panel={PANEL[route]} />
   return (
     <KlinikAracKabugu route={route} baslik={m.baslik} aciklama={m.aciklama} etiket={m.etiket} vurgu={m.vurgu}>
-      {route === '/ozel-branslar/hasta-portali' ? <KlinikHastaPortaliPaneli /> : route === '/ozel-branslar/enabiz' ? <Suspense fallback={null}><EnabizMasa gizliBaslik /></Suspense> : route === '/ozel-branslar/kayit-kvkk' ? <KayitKvkkPanel /> : route.endsWith('-kohort') ? <KlinikKohortPanel /> : <KlinikBolumHome slug={m.slug} panel={PANEL[route]} />}
+      {govde}
     </KlinikAracKabugu>
   )
 }

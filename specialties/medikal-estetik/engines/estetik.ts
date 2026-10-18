@@ -39,6 +39,22 @@ export function vaskulerBayrak(belirti: boolean): { ozet: string } {
   }
 }
 
+export function vaskulerAyrinti(gorme: boolean, livedo: boolean, agri: boolean, nefes: boolean): { ozet: string; acil: boolean } {
+  const n = [gorme, livedo, agri, nefes].filter(Boolean).length
+  return {
+    acil: n > 0,
+    ozet: n > 0
+      ? `${n} vasküler belirti işaretli — 112. Hyaluronidaz dozu yazılmaz.`
+      : 'Vasküler belirti yok. Ünite ve mL hekimde.',
+  }
+}
+
+export function lotKaydi(lot: string, bolge: string): { ozet: string } | { hata: string } {
+  if (!lot.trim() || !bolge.trim()) return { hata: 'Lot ve bölge yazın. Ünite ve mL yazılmaz.' }
+  if (/\d+\s*(ml|mL|ünite|unite)/i.test(lot)) return { hata: 'Lot alanına ünite veya mL yazılmaz.' }
+  return { ozet: `Lot kaydı: ${lot.trim()} · bölge ${bolge.trim()}. Doz yok.` }
+}
+
 export const INTAKE_ACIL = [
   'İşlem sonrası görme kaybı veya ani şiddetli ağrı (dolgu)',
   'Yüzde solukluk / livedo (vasküler oklüzyon şüphesi)',

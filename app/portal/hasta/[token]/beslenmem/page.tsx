@@ -15,5 +15,6 @@ export default function Page() {
       </div>
     )
   }
-  return <KlinikHatirlatmaView title="Beslenmem" subtitle="Kontrol tarihi. Kalori yorumu ve tanı yoktur." acil="Ağır alerji veya bilinç değişikliği: 112." basePath={basePath} ritim={['2 / 4 / 8. hafta kontrol ritmi', 'Kalori hedefi burada kilitlenmez']} />
+  const plan = data.ozelPlan
+  return <KlinikHatirlatmaView satirlar={plan?.satirlar} title="Beslenmem" subtitle="Kontrol tarihi. Kalori yorumu ve tanı yoktur." acil={plan?.acil || "Ağır alerji veya bilinç değişikliği: 112."} basePath={basePath} ritim={plan?.satirlar?.length ? undefined : ['2 / 4 / 8. hafta kontrol ritmi', 'Kalori hedefi burada kilitlenmez'] } />
 }

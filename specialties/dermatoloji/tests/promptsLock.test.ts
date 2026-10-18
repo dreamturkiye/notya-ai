@@ -56,6 +56,7 @@ describe('(c) wired into the runtime call paths', () => {
   it('dermatolojiMi matches router bransAnahtari (derma) + resmi unvan only', () => {
     assert.ok(dermatolojiMi('dermatoloji')); assert.ok(dermatolojiMi(null, 'Deri ve Zührevi Hastalıklar')); assert.ok(dermatolojiMi('Dermatology'))
     assert.ok(!dermatolojiMi('pediatri')); assert.ok(!dermatolojiMi('kadin-dogum')); assert.ok(!dermatolojiMi('dahiliye')); assert.ok(!dermatolojiMi('plastik-cerrahi', null, undefined))
+    assert.ok(!dermatolojiMi('klinik-dermatoloji')); assert.ok(!dermatolojiMi('Klinik Dermatoloji')); assert.ok(!dermatolojiMi('Dermatoloji (Klinik)'))
   })
   it('asistan / ses / ogrenme blocks', () => {
     const a = dermatolojiKilidi('asistan'); assert.ok(a.includes('ÖNCELİKLİDİR') && a.includes(dermatolojiAracHaritasi()) && a.includes('derm.analyze_image') && !a.includes('SOAP — fototerapi'))

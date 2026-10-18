@@ -40,6 +40,16 @@ export function rizaIkiNusha(onamVar: boolean, hastaNusha: boolean): { ozet: str
   return { ozet: 'İki nüsha rıza kaydı var (dosya + hasta). E-imza iddia edilmez.' }
 }
 
+export function emboliBandi(nefes: boolean, bacak: boolean, gogus: boolean, kanama: boolean): { ozet: string; acil: boolean } {
+  const acil = nefes || bacak || gogus || kanama
+  return {
+    acil,
+    ozet: acil
+      ? 'Nefes, bacak, göğüs veya kanama işaretli — 112. Tanı yazılmaz.'
+      : 'Emboli / kanama bandı boş. İzlem takvimi sürer.',
+  }
+}
+
 export const INTAKE_ACIL = [
   'Kontrolsüz kanama veya yara açılması',
   'Ani nefes darlığı / göğüs ağrısı (emboli şüphesi)',

@@ -26,6 +26,21 @@ export function hekimPlaniKayit(tani: string, planTarih: string): { ozet: string
   return { ozet: `Hekim planı referansı ${planTarih}: ${tani.trim()}. Tanı fizyoterapiste ait değil.` }
 }
 
+export function evProgrami(satirlar: string): { ozet: string; maddeler: string[] } | { hata: string } {
+  const m = satirlar.split('\n').map((s) => s.trim()).filter(Boolean).slice(0, 4)
+  if (!m.length) return { hata: 'En az bir ev programı satırı. Tanı ve enjeksiyon yazılmaz.' }
+  if (m.some((s) => /enjeksiyon|iğne|doz/i.test(s))) return { hata: 'Ev programına enjeksiyon veya doz yazılmaz.' }
+  return { ozet: `Ev programı: ${m.join(' · ')}. Reçete değildir.`, maddeler: m }
+}
+
+export function kirmiziBayrak(eyer: boolean, gogus: boolean, guc: boolean): { ozet: string; acil: boolean } {
+  const acil = eyer || gogus || guc
+  return {
+    acil,
+    ozet: acil ? 'Eyer, göğüs veya güç kaybı işaretli — 112 veya hekime acil iade. Tanı yok.' : 'Kırmızı bayrak yok.',
+  }
+}
+
 export const INTAKE_ACIL = [
   'Eyer tarzı uyuşukluk veya idrar / gaita kaçırma (cauda şüphesi)',
   'Egzersiz sırasında göğüs ağrısı veya bayılma',

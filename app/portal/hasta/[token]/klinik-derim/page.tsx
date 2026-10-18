@@ -15,5 +15,6 @@ export default function Page() {
       </div>
     )
   }
-  return <KlinikHatirlatmaView title="Bakımım" subtitle="Seans ve bakım tarihleri. Tanı, skor ve fluence yoktur." acil="Kabarcık, görme kaybı veya nefes darlığında 112." basePath={basePath} ritim={['Lazer aralığı 14–90 gün (hekim)', 'Akne bakım 2 / 6 / 12. hafta']} />
+  const plan = data.ozelPlan
+  return <KlinikHatirlatmaView satirlar={plan?.satirlar} title="Bakımım" subtitle="Seans ve bakım tarihleri. Tanı, skor ve fluence yoktur." acil={plan?.acil || "Kabarcık, görme kaybı veya nefes darlığında 112."} basePath={basePath} ritim={plan?.satirlar?.length ? undefined : ['Lazer aralığı 14–90 gün (hekim)', 'Akne bakım 2 / 6 / 12. hafta'] } />
 }

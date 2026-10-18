@@ -26,6 +26,18 @@ export function sessizOdaKayit(metrekare: number, tarama: boolean): { ozet: stri
   }
 }
 
+export function aniIsitmeBand(saatler: boolean, yuz: boolean): { ozet: string; acil: boolean } {
+  const acil = saatler || yuz
+  return { acil, ozet: acil ? ACIL_METIN : 'Ani işitme bandı boş. Eşik kaydı tanı değildir.' }
+}
+
+export function cihazIzlem(rapor: boolean, kontrolIso: string, bugun: string): { ozet: string; due: string | null } | { hata: string } {
+  const c = cihazListe(rapor)
+  if (!rapor) return { ozet: c.ozet, due: null }
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(kontrolIso) || !/^\d{4}-\d{2}-\d{2}$/.test(bugun)) return { hata: 'Kontrol tarihi YYYY-MM-DD. Marka ve bedel yok.' }
+  return { ozet: `${c.ozet} Kontrol ${kontrolIso}.`, due: kontrolIso }
+}
+
 export const INTAKE_ACIL = [
   'Saatler / günler içinde ani işitme kaybı',
   'Yüz felci ile birlikte işitme kaybı',

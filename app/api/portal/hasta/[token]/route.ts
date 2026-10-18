@@ -1602,6 +1602,29 @@ export async function GET(
     }
   } catch (e) { console.error('[portal] saglik-paketim:', e) }
 
+  // Özel Branş planı — hasta-güvenli tarih satırı. Tanı / doz / greft / dB kolonu okunmaz.
+  try {
+    const { data: planlar } = await sb
+      .from('ozel_brans_plan')
+      .select('portal_satir, acil')
+      .eq('patient_id', patientId)
+      .eq('doctor_id', doctorId)
+      .order('updated_at', { ascending: false })
+      .limit(20)
+    const satirlar: Array<{ ad: string; durum: 'gecikti' | 'bugun' | 'planli' }> = []
+    let acil: string | null = null
+    for (const p of planlar || []) {
+      if (!acil && typeof p.acil === 'string' && p.acil.trim()) acil = p.acil
+      const liste = Array.isArray(p.portal_satir) ? p.portal_satir : []
+      for (const s of liste) {
+        if (s && typeof s.ad === 'string' && (s.durum === 'gecikti' || s.durum === 'bugun' || s.durum === 'planli')) {
+          satirlar.push({ ad: s.ad, durum: s.durum })
+        }
+      }
+    }
+    if (satirlar.length || acil) bundle.ozelPlan = { satirlar, acil }
+  } catch { /* tablo yoksa portal çekirdeği durur */ }
+
   // Messages from DB
   const mesajlarSonuc = await mesajlarP
   if (!mesajlarSonuc.ok) throw mesajlarSonuc.e

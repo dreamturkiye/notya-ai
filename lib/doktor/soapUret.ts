@@ -29,6 +29,8 @@ import { soapNumaraliAlanlariDuzenle } from '@/lib/doktor/satirBasiNumarala'
 import { kadinDogumKilidi, kadinDogumMi } from '@/specialties/kadin-dogum/prompts'
 import { dermatolojiKilidi, dermatolojiMi } from '@/specialties/dermatoloji/prompts'
 import { gozKilidi, gozMi } from '@/specialties/goz-hastaliklari/prompts'
+import { KLINIK_ETIKET } from '@/lib/specialties/klinikDikey'
+import { ozelBransKilidi, ozelBransSlug } from '@/lib/klinik/ozelPrompt'
 import { bransKapsami, pediatrikBaglamMi, veliDiliMi, vitalleriKapsamaGoreSuz } from '@/lib/specialties/kapsam'
 import { vitalOlcumleriniNormallestir } from '@/lib/clinical/olcumCoz'
 
@@ -262,7 +264,13 @@ export function soapPersonaAnahtari(girdi: Pick<SoapGirdi, 'specialty' | 'doktor
 /** Branches whose prompts/ lock says "Doz yazma" (dahiliye, kadın doğum, dermatoloji, göz) — they get the FULL dose lock.
  * Not a gate on the invention backstop: soapDozUydurmaKilidi / the chat cleaner run for every branch (CROSS-SPECIALTY-PARITY). */
 export function dozKilitliBrans(...branslar: (string | null | undefined)[]): boolean {
-  return dahiliyeMi(...branslar) || kadinDogumMi(...branslar) || dermatolojiMi(...branslar) || gozMi(...branslar)
+  return dahiliyeMi(...branslar) || kadinDogumMi(...branslar) || dermatolojiMi(...branslar) || gozMi(...branslar) || !!ozelBransSlug(...branslar)
+}
+
+/** Seans branşı bir TUS anahtarıysa Özel Branş kilidi uygulanmaz. */
+export function ozelNotSlug(girdi: Pick<SoapGirdi, 'specialty' | 'doktorBransi'>): ReturnType<typeof ozelBransSlug> {
+  if (SPECIALTIES.some((x) => x.key === girdi.specialty)) return null
+  return ozelBransSlug(girdi.specialty, girdi.doktorBransi)
 }
 
 export function doktorKurallariBlogu(kurallar: { slug: string; satir: string }[] | undefined): string {
@@ -287,10 +295,18 @@ export function uygulananKurallariSuz(
  * the same branch. Patient context, style examples, hafıza profile, hekim adı and çek listesi stay in the second, uncached block. */
 export function soapSistemBloklari(girdi: SoapGirdi): SistemBlogu[] {
   const personaAnahtari = soapPersonaAnahtari(girdi)
+  const ozelSlug = ozelNotSlug(girdi)
+  const ozelKilit = ozelSlug ? ozelBransKilidi(ozelSlug) : ''
+  const tusKilit = ozelKilit
+    ? ''
+    : dahiliyeMi(girdi.specialty, girdi.doktorBransi) ? dahiliyeKilidi('soap') : kadinDogumMi(girdi.specialty, girdi.doktorBransi) ? kadinDogumKilidi('soap') : dermatolojiMi(girdi.specialty, girdi.doktorBransi) ? dermatolojiKilidi('soap') : gozMi(girdi.specialty, girdi.doktorBransi) ? gozKilidi('soap') : ''
+  const persona = ozelSlug
+    ? `Sen Notya kayıt asistanısın. Branş: ${KLINIK_ETIKET[ozelSlug]}. Tanı kilitlemezsin. Doz, greft sayısı, ünite, mL ve skor yazmazsın.`
+    : aysePersona(personaAnahtari)
   const sabit = [
-    aysePersona(personaAnahtari),
+    persona,
     soapKurallari(pediatrikKapsam(girdi.specialty, girdi.doktorBransi, girdi.hastaDogumIso), veliDiliMi({ seansBransi: girdi.specialty, doktorBransi: girdi.doktorBransi, hastaDogumIso: girdi.hastaDogumIso })),
-    dahiliyeMi(girdi.specialty, girdi.doktorBransi) ? dahiliyeKilidi('soap') : kadinDogumMi(girdi.specialty, girdi.doktorBransi) ? kadinDogumKilidi('soap') : dermatolojiMi(girdi.specialty, girdi.doktorBransi) ? dermatolojiKilidi('soap') : gozMi(girdi.specialty, girdi.doktorBransi) ? gozKilidi('soap') : '',
+    ozelKilit || tusKilit,
   ]
   const degisken = [
     girdi.klinikBaglam ? `\nHASTANIN BİLİNEN KLİNİK BAĞLAMI (kimliksiz — alerji ve sürekli ilaçlara reçete önerirken MUTLAKA dikkat et):\n${girdi.klinikBaglam}` : '',
@@ -307,7 +323,7 @@ export function soapSistemBloklari(girdi: SoapGirdi): SistemBlogu[] {
   ]
 }
 
-/** System prompt for SOAP generation as one string. Dahiliye / kadın doğum / dermatoloji / göz doctors get their prompts/ lock. */
+/** System prompt for SOAP generation as one string. Dahiliye / kadın doğum / dermatoloji / göz and each Özel Branş get their prompts/ lock. */
 export function soapSistemPromptu(girdi: SoapGirdi): string {
   return soapSistemBloklari(girdi).map((b) => b.metin).filter(Boolean).join('\n')
 }
@@ -514,7 +530,7 @@ export async function stilProfiliDamit(
 - ÜSLÜP tercihleri (terminoloji, format, uzunluk/ayrıntı düzeyi, yapı, hangi öğe türlerini siler/ekler): DÜŞÜK RİSK, tek örnekten bile kural çıkarabilirsin.
 - KLİNİK tercihler (belirli bir ilaç seçimi, doz şeması, tedavi planı değişikliği): YÜKSEK RİSK — hastaya özgü bir sebep olabilir (başka ilaç kullanımı, alerji, tolerans). SADECE aynı veya açıkça benzer değişikliğin aşağıdaki YENİ DÜZELTMELER listesinde EN AZ 2 FARKLI ÖRNEKTE tekrarlandığını gördüğünde bir klinik kural olarak yaz. Tek örnekte gördüğün bir ilaç/doz değişikliğini profile YAZMA (ne mevcut listeye ekle ne yeni madde aç) — profil "MUTLAKA uy" olduğu için tek vakadan genelleme riskli; o vakada başka bir klinik sebep olabilir. Liste son 20 düzeltmeyi içerir, yani aynı tercih birden fazla vizitte tekrarlanmışsa hepsi burada görünür — sayıp karar ver.
 
-Hastaya özgü klinik içerikten (o hastanın adı, o vizidin detayları) kural üretme — yalnız GENELLENEBİLİR kalıplar. Mevcut profil varsa güncelleyip birleştir, çelişenlerde yeni düzeltmeyi esas al. SADECE madde listesini döndür.${dahiliyeMi(doktorBransi) ? dahiliyeKilidi('ogrenme') : kadinDogumMi(doktorBransi) ? kadinDogumKilidi('ogrenme') : dermatolojiMi(doktorBransi) ? dermatolojiKilidi('ogrenme') : gozMi(doktorBransi) ? gozKilidi('ogrenme') : ''}`,
+Hastaya özgü klinik içerikten (o hastanın adı, o vizidin detayları) kural üretme — yalnız GENELLENEBİLİR kalıplar. Mevcut profil varsa güncelleyip birleştir, çelişenlerde yeni düzeltmeyi esas al. SADECE madde listesini döndür.${ozelBransKilidi(doktorBransi) || (dahiliyeMi(doktorBransi) ? dahiliyeKilidi('ogrenme') : kadinDogumMi(doktorBransi) ? kadinDogumKilidi('ogrenme') : dermatolojiMi(doktorBransi) ? dermatolojiKilidi('ogrenme') : gozMi(doktorBransi) ? gozKilidi('ogrenme') : '')}`,
     messages: [{ role: 'user', content: `MEVCUT PROFİL:\n${mevcutProfil || '(yok)'}\n\nYENİ DÜZELTMELER:\n${ornekler}` }],
   })
   const metin = yanit.content[0]?.type === 'text' ? yanit.content[0].text.trim() : ''

@@ -76,6 +76,7 @@ const ETIKET_SLUG: Record<string, KlinikYeniSlug> = {
   'klinik-dermatoloji': 'klinik-dermatoloji',
   'klinik dermatoloji': 'klinik-dermatoloji',
   'klinik dermatolojisi': 'klinik-dermatoloji',
+  'dermatoloji (klinik)': 'klinik-dermatoloji',
   longevity: 'longevity',
   'longevity & wellness': 'longevity',
   'longevity ve wellness': 'longevity',

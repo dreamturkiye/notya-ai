@@ -27,6 +27,21 @@ export function kontrolTakvimi(baslangicIso: string, bugun: string): Array<{ haf
   })
 }
 
+export function planKapisi(hekimTani: string, kiloKg: number, hedef: 'kilo' | 'koruma' | 'spor'): { ozet: string } | { hata: string } {
+  const t = taniReferansi(hekimTani)
+  if ('hata' in t) return t
+  const m = makroBand(kiloKg, hedef)
+  if ('hata' in m) return m
+  return { ozet: `${t.ozet} ${m.ozet}` }
+}
+
+export function ogunIskeleti(kahvalti: string, ogle: string, aksam: string): { ozet: string } | { hata: string } {
+  const u = [kahvalti, ogle, aksam].map((s) => s.trim())
+  if (u.some((s) => !s)) return { hata: 'Kahvaltı, öğle ve akşam için birer etiket. Kalori yazılmaz.' }
+  if (u.some((s) => /\d+\s*kcal/i.test(s))) return { hata: 'Öğün etiketine kcal yazılmaz.' }
+  return { ozet: `Öğün iskeleti: kahvaltı ${u[0]}; öğle ${u[1]}; akşam ${u[2]}. Tanı ve doz yok.` }
+}
+
 export const INTAKE_ACIL = [
   'Kontrolsüz kusma veya bilinç değişikliği (diyabet şüphesi)',
   'Ağır alerjik reaksiyon',

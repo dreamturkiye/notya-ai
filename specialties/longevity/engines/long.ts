@@ -28,6 +28,19 @@ export function ivGuvenlik(isaret: string[]): { ozet: string } | { hata: string 
   return { ozet: `IV güvenlik kaydı: ${s.join(' · ')}. Karışım ve mL hekimde.` }
 }
 
+export function reaksiyonBand(nefes: boolean, kasinti: boolean, tansiyon: boolean): { ozet: string; acil: boolean } {
+  const acil = nefes || kasinti || tansiyon
+  return {
+    acil,
+    ozet: acil ? 'IV reaksiyon işaretli — infüzyonu durdur, 112. Karışım yazılmaz.' : 'IV reaksiyon bandı boş.',
+  }
+}
+
+export function sinifUygun(sinif: string): { ozet: string } | { hata: string } {
+  if (!SINIFLAR.includes(sinif as (typeof SINIFLAR)[number])) return { hata: 'Sınıf listeden seçilir. Karışım ve doz yazılmaz.' }
+  return { ozet: `İzlem sınıfı: ${sinif}. İçerik ve mL hekimde.` }
+}
+
 export const INTAKE_ACIL = [
   'IV sırasında nefes darlığı, yaygın kaşıntı veya tansiyon düşmesi',
   'Göğüs ağrısı',

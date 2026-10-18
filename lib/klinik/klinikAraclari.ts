@@ -4,6 +4,7 @@
  */
 import type { KlinikYeniSlug } from '@/lib/specialties/klinikDikey'
 import { klinikSlugCoz, muttefikAracGizliMi, muttefikMeslekMi } from '@/lib/specialties/klinikDikey'
+import { OZEL_ARACLAR } from '@/lib/klinik/ozelAracCalistir'
 
 export type KlinikArac = {
   circleColor: string
@@ -50,6 +51,25 @@ export const KLINIK_ARACLARI: readonly KlinikArac[] = [
   { circleColor: '#F97316', icon: 'PT', title: 'Eşik kaydı', desc: 'Saf ses ortalaması bandı — işitme kaybı tanısı değil', route: '/ozel-branslar/odyo-esik', dallar: ['odyoloji'] },
   { circleColor: '#FB923C', icon: 'OD', title: 'Sessiz oda kaydı', desc: 'md.11 ≥3 m² — kayıp tanısı yok', route: '/ozel-branslar/odyo-oda', dallar: ['odyoloji'] },
   { circleColor: '#EA580C', icon: 'OK', title: 'Odyoloji kohort', desc: 'Geciken eşik · ani işitme 112', route: '/ozel-branslar/odyo-kohort', dallar: ['odyoloji'] },
+  ...OZEL_ARACLAR.filter((a) => !a.route.endsWith('-kohort')).filter((a) => ![
+    '/ozel-branslar/sac-greft', '/ozel-branslar/sac-takvim',
+    '/ozel-branslar/cerrahi-onam', '/ozel-branslar/cerrahi-takvim',
+    '/ozel-branslar/estetik-soguma', '/ozel-branslar/estetik-takvim',
+    '/ozel-branslar/derm-lazer', '/ozel-branslar/derm-takvim',
+    '/ozel-branslar/long-vade', '/ozel-branslar/long-guvenlik',
+    '/ozel-branslar/fizyo-icf', '/ozel-branslar/fizyo-seans',
+    '/ozel-branslar/psikolog-seans', '/ozel-branslar/psikolog-vade',
+    '/ozel-branslar/diyet-makro', '/ozel-branslar/diyet-takvim',
+    '/ozel-branslar/ergo-gya', '/ozel-branslar/ergo-seans',
+    '/ozel-branslar/odyo-esik', '/ozel-branslar/odyo-oda',
+  ].includes(a.route)).map((a) => ({
+    circleColor: a.renk,
+    icon: a.baslik.slice(0, 2).toLocaleUpperCase('tr'),
+    title: a.baslik,
+    desc: a.aciklama,
+    route: a.route,
+    dallar: [a.slug] as KlinikYeniSlug[],
+  })),
 ]
 
 export function klinikAraciDalaUygun(route: string, uzmanlik: string | null | undefined): boolean {

@@ -15,10 +15,13 @@ import { dahiliyeKilidi, dahiliyeMi } from '@/specialties/dahiliye/prompts'
 import { kadinDogumKilidi, kadinDogumMi } from '@/specialties/kadin-dogum/prompts'
 import { dermatolojiKilidi, dermatolojiMi } from '@/specialties/dermatoloji/prompts'
 import { gozKilidi, gozMi } from '@/specialties/goz-hastaliklari/prompts'
+import { ozelBransKilidi } from '@/lib/klinik/ozelPrompt'
 
 export const dynamic = 'force-dynamic'
 
 function sesKilidi(brans: string | null | undefined): string {
+  const ozel = ozelBransKilidi(brans)
+  if (ozel) return ozel
   if (dahiliyeMi(brans)) return dahiliyeKilidi('ses')
   if (kadinDogumMi(brans)) return kadinDogumKilidi('ses')
   if (dermatolojiMi(brans)) return dermatolojiKilidi('ses')

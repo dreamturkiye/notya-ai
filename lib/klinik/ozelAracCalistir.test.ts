@@ -1,0 +1,75 @@
+import { describe, it } from 'node:test'
+import assert from 'node:assert/strict'
+import fs from 'node:fs'
+import path from 'node:path'
+import { KLINIK_YENI_SLUGS } from '@/lib/specialties/klinikDikey'
+import { doktorAraclariListesi } from '@/lib/doktor/doktorAraclari'
+import { klinikAraciDalaUygun, klinikAraclariListesi } from '@/lib/klinik/klinikAraclari'
+import { OZEL_ARACLAR, portalSatirlari } from '@/lib/klinik/ozelAracCalistir'
+import { ozelAracDogrula } from '@/lib/klinik/ozelAracDogrula'
+import { kohortAcilBirlestir } from '@/lib/klinik/kohortAcil'
+
+const CEKIRDEK = new Set(['/ozel-branslar/hasta-portali', '/ozel-branslar/kayit-kvkk', '/ozel-branslar/enabiz'])
+
+describe('Özel Branş araçları — her dalın kendi motoru', () => {
+  it('40 araç, dal başına 4, mutlu yol ve ret', () => {
+    assert.equal(OZEL_ARACLAR.length, 40)
+    assert.deepEqual(ozelAracDogrula(), [])
+    for (const slug of KLINIK_YENI_SLUGS) {
+      assert.equal(OZEL_ARACLAR.filter((a) => a.slug === slug).length, 4, slug)
+      assert.deepEqual(ozelAracDogrula(slug), [], slug)
+    }
+  })
+
+  it('portal satırı greft, doz, tanı, dB ve kcal taşımaz', () => {
+    const s = portalSatirlari([
+      { iso: '2026-10-20', ad: '3200 greft' },
+      { iso: '2026-10-21', ad: '2 mL doz' },
+      { iso: '2026-10-22', ad: 'tanı notu' },
+      { iso: '2026-10-23', ad: '40 dB' },
+      { iso: '2026-10-24', ad: '1800 kcal' },
+      { iso: '2026-10-25', ad: 'Kontrol' },
+    ], '2026-10-18')
+    assert.deepEqual(s.map((x) => x.ad), ['Kontrol · 2026-10-25'])
+  })
+
+  it('yabancı branş bu araçları görmez; sahip branş görür', () => {
+    for (const yaban of ['kardiyoloji', 'pediatri', 'dermatoloji', 'fizik-tedavi', 'psikiyatri', 'kulak-burun-bogaz', 'plastik-cerrahi'] as const) {
+      assert.equal(doktorAraclariListesi(yaban).some((a) => a.route.startsWith('/ozel-branslar/')), false, yaban)
+      assert.equal(klinikAraciDalaUygun('/ozel-branslar/sac-cizgi', yaban), false, yaban)
+    }
+    assert.equal(klinikAraciDalaUygun('/ozel-branslar/sac-cizgi', 'sac-ekimi'), true)
+    assert.equal(klinikAraciDalaUygun('/ozel-branslar/sac-cizgi', 'estetik-cerrahi'), false)
+    assert.equal(klinikAraciDalaUygun('/ozel-branslar/estetik-vaskuler', 'medikal-estetik'), true)
+    assert.equal(klinikAraciDalaUygun('/ozel-branslar/estetik-vaskuler', 'klinik-dermatoloji'), false)
+    for (const slug of KLINIK_YENI_SLUGS) {
+      const liste = klinikAraclariListesi(slug)
+      const ozel = liste.filter((a) => !CEKIRDEK.has(a.route) && !a.route.endsWith('-kohort'))
+      assert.ok(ozel.length >= 4, `${slug} ${ozel.length}`)
+      assert.ok(ozel.every((a) => a.dallar.length === 1 && a.dallar[0] === slug), slug)
+      for (const diger of KLINIK_YENI_SLUGS) {
+        if (diger === slug) continue
+        assert.equal(liste.some((a) => a.route === `/ozel-branslar/${OZEL_ARACLAR.find((x) => x.slug === diger)!.route.split('/').pop()}`), false, `${diger} → ${slug}`)
+      }
+    }
+  })
+
+  it('plan rotası hasta sahipliğini sorar', () => {
+    const kaynak = fs.readFileSync(path.join(process.cwd(), 'app/api/ozel-brans/plan/route.ts'), 'utf8')
+    assert.match(kaynak, /hastaSahibiMi/)
+    assert.match(kaynak, /klinikSlugCoz/)
+    assert.doesNotMatch(kaynak, /status: 403/)
+  })
+
+  it('kohort, sunucu acil bandını 112 satırına alır ve çiftlemez', () => {
+    const once = kohortAcilBirlestir(
+      [{ patientId: 'a', ad: 'A', durum: 'gecikti', ozet: 'vade' }],
+      [{ patient_id: 'b', acil: '112 bandı' }, { patient_id: 'a', acil: 'ikinci' }, { patient_id: '', acil: 'yok' }],
+      new Map([['b', 'B']]),
+    )
+    assert.equal(once.filter((s) => s.durum === '112').length, 2)
+    assert.equal(once.find((s) => s.patientId === 'b')?.ad, 'B')
+    const tekrar = kohortAcilBirlestir(once, [{ patient_id: 'b', acil: 'yine' }], new Map())
+    assert.equal(tekrar.filter((s) => s.patientId === 'b' && s.durum === '112').length, 1)
+  })
+})

@@ -38,6 +38,19 @@ export function fotoKvkkRiza(onamVar: boolean, ameliyatIso: string): { ozet: str
   return { ozet: `Foto KVKK rızası kayıtlı (${ameliyatIso}). Yayın / sosyal medya izni bu kutudan doğmaz.` }
 }
 
+/** Ön çizgi / temporal / verteks — hekim notu. Norwood skoru kilitlemez. */
+export function cizgiCercevesi(on: string, temporal: string, verteks: string): { ozet: string } | { hata: string } {
+  if (!on.trim() || !temporal.trim()) return { hata: 'Ön çizgi ve temporal sınır hekim notu ister. Tanı yazılmaz.' }
+  return { ozet: `Çizgi çerçevesi (hekim notu): ön ${on.trim()}; temporal ${temporal.trim()}; verteks ${verteks.trim() || 'belirtilmedi'}. Norwood kilidi değildir.` }
+}
+
+export const FOTO_SERI = [
+  { gun: 0, ad: 'İşlem günü foto' },
+  { gun: 10, ad: 'Kabuk günü foto' },
+  { gun: 30, ad: 'Birinci ay foto' },
+  { gun: 90, ad: 'Üçüncü ay foto' },
+] as const
+
 export const INTAKE_ACIL = [
   'Yeni ekim alanında hızla yayılan kızarıklık, ateş veya irin',
   'Ani yüz şişmesi veya nefes darlığı (ilaç / anestezi sonrası)',

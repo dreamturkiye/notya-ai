@@ -269,6 +269,11 @@ export interface PortalBundle {
    * Modül her token'da her zaman açık; kayıt yoksa null (boş durum — grip/COVID/zona keşfi).
    */
   asiKarnesi: PortalAsiKarnesi | null
+  /** Özel Branş planı — yalnız o dalın token'ında. Tarih satırı. Tanı, doz, greft, dB yok. */
+  ozelPlan: {
+    satirlar: Array<{ ad: string; durum: 'gecikti' | 'bugun' | 'planli' }>
+    acil: string | null
+  } | null
 }
 
 /** ASI-KARNESI-01 — ekran, yazdırma ve PDF'in ortak modeli (lib/asi/karneBelgesi.ts). */

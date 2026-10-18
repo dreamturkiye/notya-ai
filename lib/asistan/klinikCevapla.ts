@@ -5,14 +5,27 @@
  * Pediatri Ayşe (Custom LLM + SES-KILIT / SES-SLUR via ses-llm), different brain: Luna with the
  * klinik persona prompt from `lib/ai/personas/klinik_uzmanlar`.
  */
+import { readFileSync } from 'node:fs'
+import path from 'node:path'
 import { aiCagir, yanitMetni } from '@/lib/ai/cagir'
 import { KlinikUzmanPersonas } from '@/lib/ai/personas/klinik_uzmanlar'
+
+function bolumKilidi(slug: string): string {
+  const klasor = slug === 'dermatoloji' ? 'klinik-dermatoloji' : slug
+  try {
+    return readFileSync(path.join(process.cwd(), 'specialties', klasor, 'prompts', 'system.md'), 'utf8').trim()
+  } catch {
+    return ''
+  }
+}
 
 export function klinikSesSistemPromptu(slug: string): string | null {
   const p = KlinikUzmanPersonas[slug]
   if (!p) return null
+  const kilit = bolumKilidi(slug)
   return [
     `Sen ${p.name}, ${p.title}. ${p.systemPrompt}`,
+    kilit,
     'Bir klinikte çalışan uzman meslektaşla konuşuyorsun; hasta ile değil. Türkçe konuş.',
     'Sesli görüşmedesin: kısa, net cümleler kur; madde işareti ve uzun liste kullanma.',
     'Emin olmadığın klinik bilgiyi uydurma; kaynağından emin değilsen bunu açıkça söyle.',

@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { klinikKohortDerle, type KlinikKohortSatir } from '@/lib/klinik/klinikKayit'
 import { klinikDefterOku } from '@/lib/klinik/klinikKayitIstemci'
+import { kohortAcilBirlestir } from '@/lib/klinik/kohortAcil'
 import { klinikSlugCoz } from '@/lib/specialties/klinikDikey'
 
 function token(): string {
@@ -41,18 +42,21 @@ export default function KlinikKohortPanel() {
       const bugun = new Date().toISOString().slice(0, 10)
       const bas = new Date(); bas.setDate(bas.getDate() - 21)
       const bit = new Date(); bit.setDate(bit.getDate() + 14)
-      const [me, p, rv] = await Promise.all([
+      const [me, p, rv, plan] = await Promise.all([
         fetch('/api/users/me', { headers: { Authorization: `Bearer ${t}` } }),
         fetch('/api/doktor/hastalar', { headers: { Authorization: `Bearer ${t}` } }),
         fetch(`/api/doktor/randevular?baslangic=${encodeURIComponent(bas.toISOString())}&bitis=${encodeURIComponent(bit.toISOString())}`, {
           headers: { Authorization: `Bearer ${t}` },
         }),
+        fetch('/api/ozel-brans/plan', { headers: { Authorization: `Bearer ${t}` } }),
       ])
       const mj = me.ok ? await me.json() : null
       const pj = p.ok ? await p.json() : null
       const rj = rv.ok ? await rv.json() : null
+      const planj = plan.ok ? await plan.json() : null
       const userId = String(mj?.data?.id || mj?.data?.user_id || '')
-      const dal = klinikSlugCoz(mj?.data?.specialty) || 'sac-ekimi'
+      const dal = klinikSlugCoz(mj?.data?.specialty)
+      if (!dal) { if (!iptal) { setSatir([]); setYukleniyor(false) }; return }
       const hastalar = (pj?.patients || []).map((h: { id: string; name?: string; ad_soyad?: string; last_visit?: string }) => ({
         id: h.id,
         name: h.name || h.ad_soyad || 'Hasta',
@@ -63,7 +67,11 @@ export default function KlinikKohortPanel() {
         hastaAdi: x.hastaAdi || 'Hasta',
         baslangic: x.baslangic || '',
       }))
-      const derlenen = klinikKohortDerle({ dal, bugun, hastalar, randevular, defter: klinikDefterOku(userId) })
+      const derlenen = kohortAcilBirlestir(
+        klinikKohortDerle({ dal, bugun, hastalar, randevular, defter: klinikDefterOku(userId) }),
+        planj?.planlar || [],
+        new Map(hastalar.map((h) => [h.id, h.name])),
+      )
       if (!iptal) {
         setSatir(derlenen)
         setYukleniyor(false)

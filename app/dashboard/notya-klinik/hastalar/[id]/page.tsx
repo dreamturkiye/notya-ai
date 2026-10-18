@@ -26,15 +26,18 @@ export default function KlinikHastaDosyaPage() {
   const [hata, setHata] = useState('')
   const [seanslar, setSeanslar] = useState<KlinikSeansKayit[]>([])
   const [vade, setVade] = useState('')
+  const [planOzet, setPlanOzet] = useState<string[]>([])
+  const [planAcil, setPlanAcil] = useState('')
 
   useEffect(() => {
     let iptal = false
     ;(async () => {
       const t = token()
       if (!t) { router.push('/giris'); return }
-      const [p, me] = await Promise.all([
+      const [p, me, plan] = await Promise.all([
         fetch(`/api/doktor/hastalar/${id}`, { headers: { Authorization: `Bearer ${t}` } }),
         fetch('/api/users/me', { headers: { Authorization: `Bearer ${t}` } }),
+        fetch(`/api/ozel-brans/plan?patientId=${encodeURIComponent(id)}`, { headers: { Authorization: `Bearer ${t}` } }),
       ])
       if (p.status === 404) { if (!iptal) setHata('Hasta bulunamadı.'); return }
       const pj = p.ok ? await p.json() : null
@@ -46,6 +49,10 @@ export default function KlinikHastaDosyaPage() {
         setDal(mj?.data?.specialty || '')
         setSeanslar(kayit?.seanslar || [])
         setVade(kayit?.sonrakiVade ? `${kayit.vadeEtiket || 'İzlem'} · ${kayit.sonrakiVade}` : '')
+        const pjPlan = plan.ok ? await plan.json() : null
+        const planlar = (pjPlan?.planlar || []) as Array<{ ozet?: string; acil?: string | null }>
+        setPlanOzet(planlar.map((x) => String(x.ozet || '')).filter(Boolean).slice(0, 4))
+        setPlanAcil(planlar.find((x) => x.acil)?.acil || '')
       }
     })()
     return () => { iptal = true }
@@ -63,6 +70,10 @@ export default function KlinikHastaDosyaPage() {
         {hata && <p style={{ color: '#a45b3e' }}>{hata}</p>}
         <p style={{ color: '#8b7d70', fontSize: 14 }}>Klinik dosya — Doktor TUS sekmeleri yok. Seans kaydı yerelde tutulur; SBİYS iddia edilmez.</p>
         {vade && <p style={{ fontSize: 13, color: '#065F46' }}>Sonraki vade: {vade}</p>}
+        {planAcil && <p style={{ fontSize: 13, color: '#a45b3e', fontWeight: 700 }}>{planAcil}</p>}
+        {planOzet.length > 0 && (
+          <ul style={{ fontSize: 13, color: '#3b2e24' }}>{planOzet.map((s) => <li key={s}>{s}</li>)}</ul>
+        )}
         <div style={{ marginTop: 20, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
           <button type="button" onClick={() => router.push(`/dashboard/notya-klinik/seans?patientId=${id}`)} style={btn}>Seansı başlat</button>
           <button type="button" onClick={() => router.push(`/ozel-branslar/hasta-portali?patientId=${id}`)} style={{ ...btn, background: '#2f4334' }}>Portal ver</button>
@@ -89,7 +100,7 @@ export default function KlinikHastaDosyaPage() {
         <h2 style={{ fontFamily: "'Fraunces', Georgia, serif", margin: '28px 0 12px', fontSize: 16, color: '#3b2e24' }}>Dal araçları</h2>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 12 }}>
           {araclar.map((a) => (
-            <button key={a.route} type="button" onClick={() => router.push(a.route)} style={kart}>
+            <button key={a.route} type="button" onClick={() => router.push(`${a.route}?patientId=${id}`)} style={kart}>
               <div style={{ fontWeight: 700, color: '#3b2e24' }}>{a.title}</div>
               <div style={{ fontSize: 12, color: '#8b7d70', marginTop: 6 }}>{a.desc}</div>
             </button>

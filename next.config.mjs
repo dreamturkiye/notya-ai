@@ -37,7 +37,7 @@ const nextConfig = {
       'ws', 'undici'],
     // ASI-KARNESI-01: aşı karnesi PDF'i Türkçe glifler için gömülü Liberation Sans okur (lib/asi/karnePdf.tsx) — yalnız iki PDF rotası.
     outputFileTracingIncludes: {
-      '/api/**/*': ['./specialties/dahiliye/prompts/*.md', './specialties/kadin-dogum/prompts/*.md', './specialties/dermatoloji/prompts/*.md', './specialties/goz-hastaliklari/prompts/*.md'],
+      '/api/**/*': ['./specialties/dahiliye/prompts/*.md', './specialties/kadin-dogum/prompts/*.md', './specialties/dermatoloji/prompts/*.md', './specialties/goz-hastaliklari/prompts/*.md', './specialties/sac-ekimi/prompts/*.md', './specialties/estetik-cerrahi/prompts/*.md', './specialties/medikal-estetik/prompts/*.md', './specialties/klinik-dermatoloji/prompts/*.md', './specialties/longevity/prompts/*.md', './specialties/fizyoterapi/prompts/*.md', './specialties/klinik-psikolog/prompts/*.md', './specialties/diyetisyen/prompts/*.md', './specialties/ergoterapi/prompts/*.md', './specialties/odyoloji/prompts/*.md'],
       '/api/portal/hasta/*/asi-karnesi/pdf': ['./node_modules/pdfjs-dist/standard_fonts/LiberationSans-Regular.ttf', './node_modules/pdfjs-dist/standard_fonts/LiberationSans-Bold.ttf'],
       '/api/doktor/asilar/karne/pdf': ['./node_modules/pdfjs-dist/standard_fonts/LiberationSans-Regular.ttf', './node_modules/pdfjs-dist/standard_fonts/LiberationSans-Bold.ttf'],
       '/api/doktor/raporlar/pdf': ['./node_modules/pdfjs-dist/standard_fonts/LiberationSans-Regular.ttf', './node_modules/pdfjs-dist/standard_fonts/LiberationSans-Bold.ttf'],

@@ -15,5 +15,6 @@ export default function Page() {
       </div>
     )
   }
-  return <KlinikHatirlatmaView title="Bakımım" subtitle="İşlem sonrası bakım tarihleri. Ünite, ürün ve tanı yoktur." acil="Görme kaybı veya livedo: 112." basePath={basePath} ritim={['1. gün erken kontrol', '14. gün botoks etki kontrolü', '28. gün dolgu oturma']} />
+  const plan = data.ozelPlan
+  return <KlinikHatirlatmaView satirlar={plan?.satirlar} title="Bakımım" subtitle="İşlem sonrası bakım tarihleri. Ünite, ürün ve tanı yoktur." acil={plan?.acil || "Görme kaybı veya livedo: 112."} basePath={basePath} ritim={plan?.satirlar?.length ? undefined : ['1. gün erken kontrol', '14. gün botoks etki kontrolü', '28. gün dolgu oturma'] } />
 }

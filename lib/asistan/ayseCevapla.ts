@@ -38,6 +38,8 @@ import { dahiliyeKilidi, dahiliyeMi } from "@/specialties/dahiliye/prompts"
 import { kadinDogumKilidi, kadinDogumMi } from "@/specialties/kadin-dogum/prompts"
 import { dermatolojiKilidi, dermatolojiMi } from "@/specialties/dermatoloji/prompts"
 import { gozKilidi, gozMi } from "@/specialties/goz-hastaliklari/prompts"
+import { ozelBransKilidi } from "@/lib/klinik/ozelPrompt"
+import { SPECIALTIES } from "@/lib/doktor/specialties"
 import { dozKilitliBrans } from "@/lib/doktor/soapUret"
 import { kaynakSayilari, uydurmaDozTemizle } from "@/lib/doktor/dozKilidi"
 import { uydurmaKaynakTemizle } from "@/lib/doktor/kaynakKilidi"
@@ -879,7 +881,9 @@ ${ilacBaglamMetni(drugs[0])}`
 
   // Build system prompt with learning context
   // DAH-/KD-/DERM-PROMPTS-LOCK: branş hekimi (users.specialty) → specialties/<branş>/prompts kilidi (system.md + tools.ts)
-  const bransKilidi = dahiliyeMi(hekimBransi, specialty) ? dahiliyeKilidi("asistan") : kadinDogumMi(hekimBransi, specialty) ? kadinDogumKilidi("asistan") : dermatolojiMi(hekimBransi, specialty) ? dermatolojiKilidi("asistan") : gozMi(hekimBransi, specialty) ? gozKilidi("asistan") : ""
+  const tusSeans = SPECIALTIES.some((x) => x.key === specialty)
+  const ozelKilit = tusSeans ? "" : ozelBransKilidi(hekimBransi, specialty)
+  const bransKilidi = ozelKilit || (dahiliyeMi(hekimBransi, specialty) ? dahiliyeKilidi("asistan") : kadinDogumMi(hekimBransi, specialty) ? kadinDogumKilidi("asistan") : dermatolojiMi(hekimBransi, specialty) ? dermatolojiKilidi("asistan") : gozMi(hekimBransi, specialty) ? gozKilidi("asistan") : "")
   // NOTYA-ONBELLEK-SICAK-YOL: global ve hekim önbellekte (sabit). Hafıza, hasta satırı, branş kilidi
   // ve dosya gövdesi kuyrukla birlikte önbelleksiz — seans sayacı ve hasta satırı her tur değişir,
   // önbelleğe yazmak cevabı yazma bitene kadar bekletir.

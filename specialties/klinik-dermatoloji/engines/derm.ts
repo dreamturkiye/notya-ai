@@ -41,6 +41,27 @@ export function fotoRizaKayit(onamVar: boolean): { ozet: string } | { hata: stri
   return { ozet: 'Foto KVKK rızası kayıtlı. Morfoloji, skor ve fluence yazılmaz.' }
 }
 
+export function gunesRitmi(baslangicIso: string, bugun: string): Array<{ hafta: number; ad: string; durum: 'gecikti' | 'bugun' | 'planli' }> {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(baslangicIso) || !/^\d{4}-\d{2}-\d{2}$/.test(bugun)) return []
+  const gecen = Math.round((Date.parse(bugun + 'T12:00:00Z') - Date.parse(baslangicIso + 'T12:00:00Z')) / 86400000)
+  return [
+    { hafta: 1, ad: 'Erken güneş / bakım kontrolü' },
+    { hafta: 4, ad: 'Bakım ritmi kontrolü' },
+    { hafta: 8, ad: 'Plan gözden geçirme' },
+  ].map((x) => {
+    const gun = x.hafta * 7
+    return { ...x, durum: gecen > gun ? 'gecikti' as const : gecen === gun ? 'bugun' as const : 'planli' as const }
+  })
+}
+
+export function lazerAcilBand(kabarcik: boolean, gorme: boolean, nefes: boolean): { ozet: string; acil: boolean } {
+  const acil = kabarcik || gorme || nefes
+  return {
+    acil,
+    ozet: acil ? 'Kabarcık, görme veya nefes işaretli — 112. Fluence yazılmaz.' : 'Lazer acil bandı boş.',
+  }
+}
+
 export const INTAKE_ACIL = [
   'Lazer sonrası yaygın kabarcık veya görme kaybı',
   'Nefes darlığı / yaygın kurdeşen',
