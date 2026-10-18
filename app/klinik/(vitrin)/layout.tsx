@@ -4,8 +4,10 @@ import { Fraunces, Outfit } from "next/font/google";
 // NOTYA-KLINIK-01: /klinik intentionally shares the doktor landing's visual system — same fonts,
 // same tokens, same scope class — so the two pages read as one brand. The `doktor-lp` class is a
 // style scope, not a semantic claim; renaming it product-wide is not worth the churn.
-import "../doktor/utilities.css";
-import "../doktor/landing.css";
+// Route group (vitrin) keeps this chrome on the public landing only. Kurulum and takvim live in
+// (masa) and must not inherit doktor-lp.
+import "../../doktor/utilities.css";
+import "../../doktor/landing.css";
 
 const fraunces = Fraunces({
   subsets: ["latin", "latin-ext"],
@@ -25,7 +27,7 @@ export const metadata: Metadata = {
     "Saç ekimi, estetik, fizyoterapi ve sağlık klinikleri için: kliniğinizin dalına göre kurulan çalışma alanı ve her hastaya uygulama gerektirmeyen, şifreli bir sayfa.",
 };
 
-export default function KlinikLayout({ children }: { children: ReactNode }) {
+export default function KlinikVitrinLayout({ children }: { children: ReactNode }) {
   return (
     <div className={`doktor-lp ${fraunces.variable} ${outfit.variable}`}>
       {children}
