@@ -9,7 +9,7 @@ This repo is a **commercial** multi-specialty product (~30 branşlar). Skills an
 | Doktor Araçları classify-before-add | `.cursor/rules/specialty-doktor-araclari.mdc` |
 | Branş alan sızması (specialty fields must not leak) | `.cursor/rules/brans-alan-sizmasi.mdc` |
 | Cross-specialty parity (core changes reach all 30 + 10 Özel Branşlar = 40, no exceptions) | `.cursor/rules/cross-specialty-parity.mdc` |
-| Ülke paritesi (every fix checked across us/gb/ca/au/nz/uz) | `.cursor/rules/ulke-paritesi-duzeltme.mdc` |
+| Ülke paritesi (core/shared changes & features applied, country-adapted, across all 6 countries — no exceptions) | `.cursor/rules/ulke-paritesi-duzeltme.mdc` |
 | Performans bütçesi (hard ceilings from PERF-SAGLAMLIK-2026-10 — checked per change, not per month) | `.cursor/rules/performans-butcesi-koruma.mdc` |
 
 ## Skills (open before the matching work)
@@ -25,7 +25,7 @@ This repo is a **commercial** multi-specialty product (~30 branşlar). Skills an
 | Any API route/helper taking a patient, note, session or other patient-derived id | `.cursor/skills/hasta-izolasyon/SKILL.md` |
 | Any Anthropic/Claude call (new route, new chapter, prompt change) | `.cursor/skills/ai-model-politikasi/SKILL.md` |
 | Any report/form/identity field for a non-Turkey country module | `.cursor/skills/international-data-model-dogrulama/SKILL.md` |
-| Any bug fix or UX fix — before closing it (six-country check + per-country status line) | `.cursor/skills/ulke-paritesi-duzeltme/SKILL.md` |
+| Any core/shared change, revision, or new feature not Turkey-only by law — before closing it (six-country application, country-adapted, + per-country status line) | `.cursor/skills/ulke-paritesi-duzeltme/SKILL.md` |
 | Patient-file page, a portal/API hot path, task-sync, a hot-table query, or any new external call | `.cursor/skills/performans-butcesi-koruma/SKILL.md` |
 
 ## Branş alan sızması (short)
@@ -44,6 +44,20 @@ multi-doctor umbrella product is **"Notya Klinik"** (not bare "Klinik"). One pro
 codebase — never a forked doctor experience. State up front, for every change, whether it
 is core (must propagate to all 40) or specialty-specific (stays local). Full text:
 `.cursor/skills/cross-specialty-parity/SKILL.md` (see "40-branş propagation" section).
+
+## Ülke paritesi — six countries, applied, no exceptions (short)
+
+Hardened 2026-10-18 (Kaan, verbatim intent): any core/shared change, revision, or new
+feature that is not Turkey-only by law must be **applied** — built and shipped,
+country-adapted — across **all six country versions (us, gb, ca, au, nz, uz)**, in the
+same change set wherever feasible. Checking and logging a gap is no longer sufficient on
+its own. This operates together with cross-specialty-parity's 40-branch rule above as a
+**two-axis propagation requirement**: a core/shared Türkiye change must reach all 40
+branches AND all 6 countries, country-adapted — not either one alone. Exempt (unchanged):
+Turkey-only regulatory mechanics — MBYS, SGK/SUT/Medula, e-Nabız, e-Reçete, NVI, e-Fatura/
+GİB, KVKK-specific mechanics. When the two-axis work can't land in one change set, it is
+logged as a dated, owned entry in `docs/OPEN-COMMITMENTS.md` — never a silent deferral.
+Full text: `.cursor/skills/ulke-paritesi-duzeltme/SKILL.md`.
 
 ## Doktor Araçları (short)
 
