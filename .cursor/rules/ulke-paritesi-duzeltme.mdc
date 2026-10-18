@@ -1,21 +1,76 @@
 ---
 description: >-
-  Any change in the Turkish doctor product must be applied, in the same change,
-  to all six countries (us, gb, ca, au, nz, uz), each in that country's language
-  and under that country's own laws, government, and medical institutions.
-  No deferred country. No Turkey-only close.
+  Standing rule, hardened 2026-10-18: any core/shared change, revision, or new
+  feature that is not Turkey-only by law must be APPLIED — built and shipped,
+  country-adapted, not just checked — across all six country versions (us, gb,
+  ca, au, nz, uz) in the same change set wherever feasible, with no exceptions.
+  Operates together with cross-specialty-parity's 40-branch rule as a two-axis
+  propagation requirement. Mirror of cross-specialty-parity.
 alwaysApply: true
 ---
 
-# Ülke paritesi — Türkiye’de yapılan, altı ülkede de yapılır
+# Ülke paritesi — one change, six countries, applied (no exceptions)
 
-**Read and follow** `.cursor/skills/ulke-paritesi-duzeltme/SKILL.md` before closing any change that touches the Turkish doctor product.
+**Read and follow** `.cursor/skills/ulke-paritesi-duzeltme/SKILL.md` before closing any
+core/shared change, revision, or new feature that is not Turkey-only by law.
 
-Boss rule (Kaan, 2026-10-18): any change made in Türkiye is applied to **us, gb, ca, au, nz, uz** in the **same change**. No exceptions. No “next PR”. No OPEN-COMMITMENTS substitute. Logging a gap does not finish the work.
+Boss rule (Kaan, 2026-10-16, hardened 2026-10-18 — verbatim): "Also is the same rule for
+all the 6 countries going forward. Any change in turkiye must be applied to all 6 country
+from now on based on that specific countries, language, rules, regulations, government and
+medical institutions directives and rules. no exceptions here any longer as well."
 
-Each country gets that change in **its own** language and under **its own** rules, regulations, government, and medical-institution directives. Do not paste Turkish copy, Turkish identifiers, or Turkish institutions (SGK, Medula, e-Nabız, KVKK, NVI, GİB) into another country. Build that country’s equivalent from that country’s own authorities.
+**Hardening, 2026-10-18.** Scope widens from "bug fix or UX fix" to **any core/shared
+change, revision, or new feature that is not Turkey-only by law** (mirrors
+`cross-specialty-parity`'s own scope language; the exemption list below is unchanged).
+Strength widens from "checked" to **"applied"**: checking the six countries and logging a
+gap is no longer sufficient on its own for in-scope work — the country-adapted equivalent
+must actually be **built and shipped**, each adapted to that country's own language,
+laws/regulations, and government/medical-institution directives — never a translated copy
+of the Turkish version. This is the same standard already proven on the AU Tier-1
+clinical-tools work: mechanical ports of non-Turkey-specific content travel directly;
+content with Turkey-specific regulatory/legal substance needs real per-country research
+(see `international-data-model-dogrulama` for how identity/report fields adapt).
 
-1. Core doctor behavior is already 1:1 across the 30 branches and the 10 Özel Branşlar (`.cursor/rules/ortak-omurga-paritesi.mdc`). Inside every country, that same 1:1 holds.
-2. A specialty-only screen stays in that specialty, and that specialty’s version in each country is sourced from that country. It does not leak into the other specialties.
-3. The commit/PR report has one status line per country saying what landed there and which authority the local wording follows.
-4. `main` does not contain `countries/`. Country builds are `release/<cc>`. A fix on `main` has not reached a country until that branch has the adapted change. Do not check a release branch out into this worktree; port it in its own worktree.
+**Two-axis propagation — operates together, not as alternatives.** A core/shared Türkiye
+change must reach **both** (a) all 30 medical branches + 10 Özel Branşlar (40 total, per
+`cross-specialty-parity`) **and** (b) all six countries, country-adapted (per this rule) —
+in the same change set wherever feasible. When not feasible in the same change set, it is
+logged as an explicit, dated follow-up in `docs/OPEN-COMMITMENTS.md` with a named owner
+(Kaan vs Claude) — never a silent deferral.
+
+**Branş-specific changes (clarified 2026-10-18, Kaan, verbatim intent): "going forward if
+we change something in a specific branch in turkiye then the other 6 countries specific
+branc gets updated the same... This way once each country is caught up to the golden
+referrence of turkey they will then stary in sync."** The "applied, no exceptions" bar is
+not limited to core/shared changes — a **branş-specific** fix or feature made to one
+branş in Türkiye carries the same obligation to that same branş in each of the six
+countries, country-adapted, in the **same change set, no deferral**.
+
+**No depth gate — build the scaffold, don't wait for it (correction, 2026-10-18, Kaan,
+verbatim): "Even if the 6 countries do not match the golden standard of turkiye, you still
+go ahead and add the new features to the 6 countries as we go. If the underlying infra is
+not there then you build that only so that you can still update the change across the
+board to all 6."** A country not yet having that branş's infrastructure is **not** a reason
+to defer. When a Türkiye branş-specific change needs to land in a country that doesn't yet
+have that branş's infrastructure, build the **minimal real scaffold** needed to host that
+specific change now — following the existing `.ulke`-tree/kit pattern already proven for
+AU's Tier-1 clinical tools (`NOTYA-ULKE-ARACLAR-AU-07`): a real, working addition, never a
+stub that fakes it — so the change ships across all 6 countries in the same cycle.
+
+**Scope boundary (non-negotiable):** "minimal scaffold" means just enough to carry **this
+specific change** — not backfilling that branş's full depth to the Turkish golden-reference
+level in one shot. Full-depth closeout for a branş in a country is its **own larger,
+separately-sequenced job** (the same AU-first pattern already running, per
+`NOTYA-ULKE-ARACLAR-AU-07`). Minimal-scaffold-as-you-go and full-depth-closeout are two
+different, complementary efforts — never collapse one into the other, and never use "we'll
+do the real depth work later" as a reason to skip shipping this change now. End state, in
+Kaan's own framing: once a country catches up to the Turkish golden reference for a branş,
+this rule is what keeps the two in sync afterward, preventing re-drift.
+
+1. Per country: shared code / forked copy / not applicable / exempt (Turkey-only: MBYS, SGK/SUT/Medula, e-Nabız, e-Reçete, NVI, e-Fatura/GİB).
+2. Localized strings per country — never Turkish strings in a country build; Turkish stays untouched unless the code is genuinely shared.
+3. Each country's own data model (`international-data-model-dogrulama`) — never Turkish field keys/validators as placeholders.
+4. Tests with non-Turkish keys/copy; unported gaps go in `docs/OPEN-COMMITMENTS.md` with date and owner.
+5. The commit/PR report must contain one status line per country, each stating **APPLIED**
+   (built + shipped), **N/A**, **EXEMPT**, or **OPEN GAP** (logged with date + owner) —
+   "checked only" is no longer a valid status on its own for in-scope work.

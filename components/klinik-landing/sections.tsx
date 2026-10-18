@@ -82,7 +82,9 @@ export function Dallar() {
           On özel branş.
           <span className="block italic font-normal text-pine">Aynı Notya Klinik.</span>
         </h2>
-        <ul className="mt-12 flex flex-wrap gap-x-6 gap-y-3 border-t border-line pt-8 font-display text-title italic leading-snug text-ink-2">
+        {/* NOTYA-KLINIK-ISIMLENDIRME-01 (Kaan 2026-10-18): bu 10 modül literal olarak "Özel Branşlar" etiketiyle gruplanır. */}
+        <p className="mt-10 font-outfit text-xs font-semibold uppercase tracking-[0.18em] text-pine">Özel Branşlar</p>
+        <ul className="mt-4 flex flex-wrap gap-x-6 gap-y-3 border-t border-line pt-8 font-display text-title italic leading-snug text-ink-2">
           {DALLAR.map((d) => (
             <li key={d}>{d}</li>
           ))}

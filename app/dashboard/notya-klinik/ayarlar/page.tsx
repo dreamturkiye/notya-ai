@@ -3,7 +3,11 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import KlinikNav from '@/components/klinik/KlinikNav'
 
-const SPECIALTIES = ['Estetik & Plastik Cerrahi','Dermatoloji','Sac Ekimi','Medikal Estetik','Longevity & Wellness','Fizyoterapi','Klinik Psikoloji','Diyetisyen','Ergoterapi','Odyoloji','Kardiyoloji','Pediatri','Noroloji','Dahiliye']
+// NOTYA-KLINIK-ISIMLENDIRME-01 (Kaan 2026-10-18): Özel Branşlar (10 modül) ayrı grup başlığı
+// altında gösterilir — tek, ayrışmamış düz liste değil. Değerler DB'de saklanıyor
+// (klinikUzmanlikNorm eşler) — grup değişikliği sadece ekran; değer stringleri aynı.
+const OZEL_BRANSLAR = ['Estetik & Plastik Cerrahi','Dermatoloji','Sac Ekimi','Medikal Estetik','Longevity & Wellness','Fizyoterapi','Klinik Psikoloji','Diyetisyen','Ergoterapi','Odyoloji']
+const DIGER_BRANSLAR = ['Kardiyoloji','Pediatri','Noroloji','Dahiliye']
 
 // Değerler DB'de saklanıyor (klinikUzmanlikNorm eşler) — yalnız ekranda Türkçe karakterli etiket.
 const UZMANLIK_ETIKET: Record<string, string> = { 'Sac Ekimi': 'Saç Ekimi', 'Noroloji': 'Nöroloji' }
@@ -98,8 +102,23 @@ export default function AyarlarPage() {
             </div>
             <div>
               <label style={{ fontSize: '13px', color: '#8b7d70', display: 'block', marginBottom: '10px' }}>Uzmanlık Alanları</label>
+              <p style={{ fontSize: '11px', letterSpacing: '0.06em', textTransform: 'uppercase', color: '#8b7d70', margin: '0 0 8px' }}>Özel Branşlar</p>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '16px' }}>
+                {OZEL_BRANSLAR.map(s => (
+                  <button key={s} type='button' onClick={() => toggleSpecialty(s)} style={{
+                    padding: '6px 14px', borderRadius: '20px', fontSize: '12px', cursor: 'pointer',
+                    border: `1px solid ${selectedSpecialties.includes(s) ? '#2f4334' : 'rgba(58,44,34,0.14)'}`,
+                    background: selectedSpecialties.includes(s) ? 'rgba(47,67,52,0.08)' : '#faf6ee',
+                    color: selectedSpecialties.includes(s) ? '#2f4334' : '#8b7d70',
+                    fontFamily: "'Source Sans 3', system-ui, sans-serif"
+                  }}>
+                    {UZMANLIK_ETIKET[s] || s}
+                  </button>
+                ))}
+              </div>
+              <p style={{ fontSize: '11px', letterSpacing: '0.06em', textTransform: 'uppercase', color: '#8b7d70', margin: '0 0 8px' }}>Diğer Branşlar</p>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                {SPECIALTIES.map(s => (
+                {DIGER_BRANSLAR.map(s => (
                   <button key={s} type='button' onClick={() => toggleSpecialty(s)} style={{
                     padding: '6px 14px', borderRadius: '20px', fontSize: '12px', cursor: 'pointer',
                     border: `1px solid ${selectedSpecialties.includes(s) ? '#2f4334' : 'rgba(58,44,34,0.14)'}`,

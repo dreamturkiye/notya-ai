@@ -1,0 +1,68 @@
+---
+description: >-
+  Standing rule: any core update, revision or new feature that is not
+  specialty-specific must reach all 30 medical branches AND the 10 Özel
+  Branşlar (40 total) in the same change — no exceptions. Read before closing
+  any change to a shared-spine component or before writing its PR
+  description. Mirror of brans-alan-sizmasi (that rule keeps specialty
+  content OUT of the spine; this rule keeps spine fixes IN every branch).
+alwaysApply: true
+---
+
+# Cross-specialty parity — 40 branches, no exceptions
+
+**Read and follow** `.cursor/skills/cross-specialty-parity/SKILL.md` before closing any
+change that touches a shared/baseline-spine component.
+
+Boss rule (Kaan, 2026-10-18, verbatim intent): **any core update, revision, or new
+feature that is not specialty-specific must be applied to all 30 medical branches and
+the 10 Özel Branşlar at the same time. No exceptions.**
+
+Core items that must propagate (verbatim list): Muayene ekranı, Reçete, Randevu, Hasta
+kaydı, MBYS packages, Hasta portalı, Faturalama / tahsilat, Shared consent flows, Any
+shared data model or workflow — in addition to the shared-spine list the skill already
+names (SOAP, İnceleme/onay, Belge Kasası, epikriz, Asistan sohbet, Sağlığım portal
+shell, intake, doz kilidi, kaynak kilidi).
+
+**The 40-branch universe**: the 30 medical branches (`lib/doktor/specialties.ts`) **plus**
+the 10 Özel Branşlar — saç ekimi, estetik & plastik cerrahi, medikal estetik, dermatoloji
+klinik, longevity, fizyoterapi, klinik psikoloji, diyetisyen, ergoterapi, odyoloji
+(slugs: `sac-ekimi`, `estetik-cerrahi`, `medikal-estetik`, `klinik-dermatoloji`,
+`longevity`, `fizyoterapi`, `klinik-psikolog`, `diyetisyen`, `ergoterapi`, `odyoloji`).
+A fix or feature that reaches one half but not the other is **not done** — log the gap
+in `docs/OPEN-COMMITMENTS.md`, don't ship it as finished.
+
+**One product, never forked**: the doctor application is one product, one codebase.
+Propagation means the shared mechanism/data model/workflow is wired for all 40 — never
+a separate app shell or a forked copy of the feature for Notya Klinik / Özel Branşlar.
+Specialty-specific screens and tools stay local to their own branş.
+
+**Naming**: the multi-doctor umbrella is **"Notya Klinik"** (not bare "Klinik"). The 10
+modules above are collectively **"Özel Branşlar"**. The 30 medical branches keep their
+current names, untouched. Any menu, nav or specialty selector keeps these as
+visually/structurally distinct sections — never one flat, undifferentiated list.
+
+Before closing any change in scope:
+
+1. Name the shared file(s) touched (same step as `cross-specialty-parity` skill §1).
+2. State explicitly: is this change **core** (must propagate to all 40) or
+   **specialty-specific** (stays local)? Write that classification down — in the
+   commit/PR body, not just in your head.
+3. If core: confirm it reaches both the 30 (via the shared spine / `registry.ts`
+   `CHAPTERS`) and the 10 Özel Branşlar (via `components/klinik/*`, `app/klinik-tools`,
+   `lib/specialties/<slug>.ts` for the Özel Branşlar that have no `CHAPTERS` entry yet).
+   A gap is a valid finding — write it down, don't guess a fix into existence.
+4. If specialty-specific: confirm it is gated (`SpecialtyProfile` / `specialties/<slug>/`
+   / branch-keyed catalog) and does not leak — see `brans-alan-sizmasi.mdc`.
+
+PR/commit must state the core-vs-specialty-specific classification and, if core, which
+of the 40 branches were checked and which are an open gap.
+
+## Related
+
+- `.cursor/skills/cross-specialty-parity/SKILL.md` — full propagation method, the
+  "40-branş propagation" section, and the six-country layer underneath this one.
+- `.cursor/rules/brans-alan-sizmasi.mdc` — mirror: specialty-specific content must
+  **not** leak into the spine or another branş.
+- `.cursor/rules/ulke-paritesi-duzeltme.mdc` — the country layer sits beside this one;
+  classify by branş first, then by country.
