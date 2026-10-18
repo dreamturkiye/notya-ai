@@ -183,6 +183,43 @@ e-Reçete, NVI / T.C. Kimlik doğrulama (`lib/nvi`), e-Fatura / e-Arşiv / GİB 
 (`lib/accounting/ebelge`), KVKK-specific copy, Türkiye mevzuat takibi. Country equivalents
 (AIR, NHS number, NPI, etc.) are separate features governed by their own research docs.
 
+## Regulatory recognition gate — a branş a country's own regulator doesn't recognise is not offered there
+
+New 2026-10-18, Kaan (verbatim intent): "We must obey by each countries ministry of
+health, health department, FDA etc. If these ozel branslar are not be be offered in that
+country than we do not offer it in turn." This is a **gate on this rule**, not an
+exception to it: parity says a branş-level change reaches all 6 countries, country-adapted
+— this says a branş that country's own regulator does not recognise or permit is never
+"adapted" into that country's build, no matter what Türkiye or another country offers.
+
+**Before any branş (medical specialty or Özel Branş) is offered in a given country's
+build**, verify it is a recognised/legal practice area under that country's own health
+regulator — Ministry of Health, health department, FDA-equivalent, or medical licensing
+board — real, checkable, externally-sourced (a cited regulation, order, or licensing
+document — never an internal list edit that merely asserts regulatory backing). If that
+country's regulator does not recognise or permit the branş, it is **not offered in that
+country's build, full stop** — not a placeholder, not a stub, not "built but hidden."
+This sits alongside real market research: a branş can be genuinely practised in a country
+under a *different, broader* licence than its own name (see the worked example), which
+changes the right answer from "drop the functionality" to "fold it into the licence that
+actually covers it" — so check both the regulatory question and the market question before
+deciding, and decide per branş, not by analogy to another branş in the same country.
+
+**Worked example (Uzbekistan, 2026-10-18, full sourcing in `docs/OPEN-COMMITMENTS.md` on
+`release/uz`, entry `UZ-OZEL-BRANS-REGULATORY-01`).** Uzbekistan's Ministry of Health
+nomenclature order (No. 6 of 12.05.2021, registration No. 3303, lex.uz) does not name saç
+ekimi (hair transplantation), longevity/anti-ageing medicine, or ergoterapi (occupational
+therapy) as licensed specialties. Hair transplantation nonetheless has real, substantial
+market presence in Uzbekistan — it is simply practised under the "Plastik xirurgiya"
+(plastic surgery) licence this pack already offers (`estetik-cerrahi`): dropped as a
+standalone branş, folded into the licence that actually covers it, nothing lost for
+patients. Longevity and ergoterapi had neither a licence nor real market presence of
+their own: dropped outright. Fizyoterapi (physiotherapy) was the hard case: the order
+names the *field*, bundled into a doctor specialty ("Reabilitologiya …, fizioterapiya"),
+but no independent non-doctor physiotherapist certification exists yet — real, but not
+yet independently licensed. Judgment call: keep, flagged medium-confidence, with the open
+supervision question handed to a local lawyer rather than guessed at.
+
 ## Standing rule: Turkish untouched
 
 The Turkish version stays exactly as it is unless the fix is genuinely shared code. Country

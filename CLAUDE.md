@@ -65,7 +65,12 @@ logged as a dated, owned entry in `docs/OPEN-COMMITMENTS.md` — never a silent 
 The same bar applies to a **branş-specific** Türkiye change too (that branş's own
 implementation in each country, same change set, no deferral — if the country has no
 infra for that branş yet, build the minimal real scaffold to carry the change now; full
-branş-depth closeout stays a separate job). Full text: `.cursor/skills/ulke-paritesi-duzeltme/SKILL.md`.
+branş-depth closeout stays a separate job). **Regulatory recognition gate (new
+2026-10-18):** a branş a country's own health regulator does not recognise or permit is
+never offered in that country's build, no matter what Türkiye or another country offers
+— checked against a real, cited regulatory source, with real market research alongside
+it (a branş can be practised there under a *different, broader* licence). Full text:
+`.cursor/skills/ulke-paritesi-duzeltme/SKILL.md`.
 
 ## Doktor Araçları (short)
 
