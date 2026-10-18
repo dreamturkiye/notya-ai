@@ -70,7 +70,7 @@ export default function KlinikKohortPanel() {
       const derlenen = kohortAcilBirlestir(
         klinikKohortDerle({ dal, bugun, hastalar, randevular, defter: klinikDefterOku(userId) }),
         planj?.planlar || [],
-        new Map(hastalar.map((h) => [h.id, h.name])),
+        new Map(hastalar.map((h: { id: string; name: string }) => [h.id, h.name])),
       )
       if (!iptal) {
         setSatir(derlenen)

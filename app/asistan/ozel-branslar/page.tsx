@@ -49,7 +49,7 @@ function KlinikAsistanInner() {
   const router = useRouter()
   const search = useSearchParams()
   const istenen = search.get('uzman') || ''
-  const [slug, setSlug] = useState<string>(SLUGS.includes(istenen) ? istenen : 'sac-ekimi')
+  const [slug, setSlug] = useState<string>((SLUGS as readonly string[]).includes(istenen) ? istenen : 'sac-ekimi')
   const [status, setStatus] = useState<CS>('idle')
   const [messages, setMessages] = useState<Msg[]>([])
   const [errorMsg, setErrorMsg] = useState('')

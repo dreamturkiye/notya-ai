@@ -59,6 +59,7 @@ export const SAGLIGIM_DEMO: PortalBundle = {
     siradakiler: [{ ad: 'İnfluenza (grip)', tarih: '2026-10-05' }],
     uyari: { baslik: E_NABIZ_BASLIK, metin: E_NABIZ_UYARISI },
   },
+  ozelPlan: null,
   // KONSULTASYON-01 — çekirdek: yalnız branş + tarih + durum (klinik içerik yok)
   yonlendirmeler: [{ id: 'dy1', brans: 'Kardiyoloji', tarih: '2026-08-20', durum: 'sonuc_alindi', sonucTarihi: '2026-09-02' }],
   buyume: null, // demo hastası yetişkin (71.4 kg) — büyüme eğrileri yalnız çocuk hastalarda anlamlı
