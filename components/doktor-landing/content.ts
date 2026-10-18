@@ -147,7 +147,7 @@ export const INDIVIDUAL_PLANS = [
 
 export const CLINIC_PLANS = [
   {
-    name: "Klinik 5",
+    name: "Notya Klinik 5",
     price: "Fiyat alın",
     unit: "",
     highlight: false,
@@ -164,13 +164,13 @@ export const CLINIC_PLANS = [
     href: `${LINKS.signup}?plan=klinik`,
   },
   {
-    name: "Klinik 10",
+    name: "Notya Klinik 10",
     price: "Fiyat alın",
     unit: "",
     highlight: true,
     items: [
       "10 kullanıcıya kadar",
-      "Klinik 5'teki her şey",
+      "Notya Klinik 5'teki her şey",
       "Marka ayarları",
       "Kurulum desteği",
       "Öncelikli destek",
@@ -178,13 +178,13 @@ export const CLINIC_PLANS = [
     href: `${LINKS.signup}?plan=klinik`,
   },
   {
-    name: "Klinik 20",
+    name: "Notya Klinik 20",
     price: "Fiyat alın",
     unit: "",
     highlight: false,
     items: [
       "20 kullanıcıya kadar",
-      "Klinik 10'daki her şey",
+      "Notya Klinik 10'daki her şey",
       "Ekip eğitimi",
       "Özel destek",
     ],

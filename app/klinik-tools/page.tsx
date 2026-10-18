@@ -11,18 +11,18 @@ export const dynamic = 'force-dynamic'
 export default function KlinikToolsPage() {
   const router = useRouter()
   const [araclar, setAraclar] = useState<KlinikArac[] | null>(null)
-  const [etiket, setEtiket] = useState('Klinik')
+  const [etiket, setEtiket] = useState('Özel Branşlar')
 
   useEffect(() => {
     const onbellek = hekimProfilOturumOku()
     const tazele = hekimProfilTazeleBasligi()
     const tipOnbellek = String(onbellek?.profession_type || '')
     if (onbellek?.klinik_erisim) {
-      setEtiket('Klinik')
+      setEtiket('Özel Branşlar')
       setAraclar(klinikAraclariHepsi())
     } else if (onbellek && (tipOnbellek === 'klinik-uzman' || tipOnbellek === 'saglik-uzmani')) {
       const slug = klinikSlugCoz(onbellek.specialty)
-      setEtiket(slug ? KLINIK_ETIKET[slug] : (onbellek.specialty || 'Klinik'))
+      setEtiket(slug ? KLINIK_ETIKET[slug] : (onbellek.specialty || 'Özel Branşlar'))
       setAraclar(klinikAraclariListesi(onbellek.specialty))
     }
     let iptal = false
@@ -40,11 +40,11 @@ export default function KlinikToolsPage() {
         if (!iptal) {
           // KURAL — TÜRKÇE: profilde slug ('sac-ekimi') saklanır; ekranda Türkçe etiket ('Saç Ekimi').
           if (onizleme) {
-            setEtiket('Klinik')
+            setEtiket('Özel Branşlar')
             setAraclar(klinikAraclariHepsi())
           } else {
             const slug = klinikSlugCoz(j?.data?.specialty)
-            setEtiket(slug ? KLINIK_ETIKET[slug] : (j?.data?.specialty || 'Klinik'))
+            setEtiket(slug ? KLINIK_ETIKET[slug] : (j?.data?.specialty || 'Özel Branşlar'))
             setAraclar(klinikAraclariListesi(j?.data?.specialty))
           }
           hekimProfilOturumYaz({ specialty: j?.data?.specialty, profession_type: j?.data?.profession_type, full_name: j?.data?.full_name, klinik_erisim: onizleme })
@@ -60,9 +60,9 @@ export default function KlinikToolsPage() {
     <div style={{ minHeight: '100vh', background: '#f4eee3', fontFamily: "'Source Sans 3', system-ui, sans-serif" }}>
       <KlinikNav clinicName="Notya Klinik" adminName="" />
       <div style={{ maxWidth: 1100, margin: '0 auto', padding: '32px 24px 72px' }}>
-        <h1 style={{ fontFamily: "'Fraunces', Georgia, serif", margin: '0 0 8px', fontSize: 26, color: '#3b2e24' }}>Klinik Araçlar</h1>
+        <h1 style={{ fontFamily: "'Fraunces', Georgia, serif", margin: '0 0 8px', fontSize: 26, color: '#3b2e24' }}>Özel Branşlar</h1>
         <p style={{ margin: '0 0 22px', color: '#8b7d70', fontSize: 14 }}>
-          {etiket} — Doktor Araçlar’dan ayrı. Yalnız bu klinik dalının araçları.
+          {etiket} — Doktor Araçlar’dan ayrı. Yalnız bu özel branşın araçları.
         </p>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 14 }}>
           {(araclar || []).map((a) => (

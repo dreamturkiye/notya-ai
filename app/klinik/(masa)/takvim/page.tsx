@@ -1,9 +1,10 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import Link from 'next/link'
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth'
-import { CHROME_FONT, CHROME_RENK } from '@/lib/doktor/chromeTheme'
+import { NOTYA_KLINIK_AD } from '@/lib/specialties/klinikDikey'
+import { MasaSahne } from '@/components/klinik/katman/KlinikKabuk'
+import { Button } from '@/components/doktor-landing/button'
 import { dakikaSaat, istanbulAn } from '@/lib/randevu/v2/zaman'
 
 type Satir = { id: string; doktorId: string; doktorAd: string; odaId: string | null; bas: string; son: string; tur: string; durum: string; hasta: string }
@@ -58,51 +59,59 @@ export default function KlinikTakvim() {
     else hafiza(secili)
   }
 
-  if (oturumYok) return <p>Takvim hekim oturumu ister. <Link href="/giris/doktor">Giriş</Link></p>
+  if (oturumYok) {
+    return (
+      <MasaSahne kas={NOTYA_KLINIK_AD} baslik="Ortak takvim" italik="hekim oturumu ister." govde="Notya Klinik takvimi hekim oturumu ister. Doktorun kendi randevu ekranı aynı yerinde durur.">
+        <Button href="/giris/doktor" variant="pine" size="lg">Hekim girişi</Button>
+      </MasaSahne>
+    )
+  }
 
   const hekimler = Array.from(new Map(randevular.map((r) => [r.doktorId, r.doktorAd])))
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-        <h1 style={{ fontFamily: CHROME_FONT.serif, fontWeight: 480 }}>Ortak takvim</h1>
-        <input type="date" value={gun} onChange={(e) => { setGun(e.target.value); yukle(e.target.value) }} />
-      </div>
-      <p style={{ color: CHROME_RENK.muted }}>
-        Odada {akis.odada.length} · sıradaki {akis.siradaki ? 'var' : 'yok'} · geciken {akis.geciken.length}
-      </p>
-      {hata && <p style={{ color: CHROME_RENK.warn }}>{hata}</p>}
-      {randevular.length === 0 && <p>Bu günde klinik hekimlerinin randevusu yok.</p>}
-      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.max(hekimler.length, 1)}, minmax(180px, 1fr))`, gap: 12 }}>
-        {hekimler.map(([id, ad]) => (
-          <section key={id} style={{ background: CHROME_RENK.paper, borderRadius: 16, padding: 12 }}>
-            <h2 style={{ fontSize: 16 }}>{ad}</h2>
-            {randevular.filter((r) => r.doktorId === id).map((r) => (
-              <button key={r.id} onClick={() => { if (yonetici || r.doktorId === ben) hafiza(r.id) }} style={{ display: 'block', width: '100%', textAlign: 'left', marginBottom: 8, padding: 8, borderRadius: 10, border: `1px solid ${secili === r.id ? CHROME_RENK.pine : CHROME_RENK.border}`, background: '#fff' }}>
-                <strong>{dakikaSaat(istanbulAn(r.bas).dakika)}–{dakikaSaat(istanbulAn(r.son).dakika)}</strong>
-                <div>{r.hasta}</div>
-                <div style={{ color: CHROME_RENK.muted }}>{r.tur}{r.odaId ? ` · ${odalar.find((o) => o.id === r.odaId)?.ad || 'oda'}` : ''}</div>
-              </button>
+      <MasaSahne kas={NOTYA_KLINIK_AD} baslik="Ortak takvim" italik="hekim ve oda." govde={`Odada ${akis.odada.length} · sıradaki ${akis.siradaki ? 'var' : 'yok'} · geciken ${akis.geciken.length}`}>
+        <label className="font-outfit text-sm text-ink-2">Gün
+          <input className="mt-1.5 block rounded-xl border border-line bg-cream px-3 py-2 font-outfit text-sm" type="date" value={gun} onChange={(e) => { setGun(e.target.value); yukle(e.target.value) }} />
+        </label>
+      </MasaSahne>
+      <section className="border-t border-line bg-paper py-12">
+        <div className="mx-auto max-w-7xl px-5 sm:px-8">
+          {hata && <p className="mb-4 font-outfit text-sm text-warn">{hata}</p>}
+          {randevular.length === 0 && <p className="font-outfit text-ink-2">Bu günde Notya Klinik hekimlerinin randevusu yok.</p>}
+          <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${Math.max(hekimler.length, 1)}, minmax(180px, 1fr))` }}>
+            {hekimler.map(([id, ad]) => (
+              <section key={id} className="rounded-xl bg-cream p-4">
+                <h2 className="font-display text-xl italic">{ad}</h2>
+                {randevular.filter((r) => r.doktorId === id).map((r) => (
+                  <button key={r.id} onClick={() => { if (yonetici || r.doktorId === ben) hafiza(r.id) }} className={`mt-2 block w-full rounded-xl border bg-paper p-3 text-left font-outfit text-sm ${secili === r.id ? 'border-pine' : 'border-line'}`}>
+                    <strong>{dakikaSaat(istanbulAn(r.bas).dakika)}–{dakikaSaat(istanbulAn(r.son).dakika)}</strong>
+                    <div>{r.hasta}</div>
+                    <div className="text-ink-muted">{r.tur}{r.odaId ? ` · ${odalar.find((o) => o.id === r.odaId)?.ad || 'oda'}` : ''}</div>
+                  </button>
+                ))}
+              </section>
             ))}
-          </section>
-        ))}
-      </div>
-      {kart && (
-        <aside style={{ marginTop: 20, background: CHROME_RENK.paper, borderRadius: 16, padding: 16 }}>
-          <h2 style={{ fontFamily: CHROME_FONT.serif }}>Klinik hafızası</h2>
-          <p>Gelmedi riski: {kart.gelmediRiski}</p>
-          <ul>{kart.sonZiyaretler.map((z, i) => <li key={i}>{z.tarih} · {z.ozet}</li>)}</ul>
-          {kart.acikTakipler.map((t, i) => <p key={i}>Takip · {t.sahip}: {t.metin}</p>)}
-          {!kart.paket && <p style={{ color: CHROME_RENK.muted }}>Bu kart seans bakiyesi tutmaz. Paket tanımı kurulumdadır.</p>}
-          {yonetici && (
-            <>
-              <button onClick={() => kapat(true)}>Ziyareti geldi olarak kapat</button>
-              <button onClick={() => kapat(false)} style={{ marginLeft: 8 }}>Gelmedi olarak kapat</button>
-            </>
+          </div>
+          {kart && (
+            <aside className="mt-8 max-w-xl rounded-xl bg-cream p-6">
+              <h2 className="font-display text-2xl italic">Notya Klinik hafızası</h2>
+              <p className="mt-3 font-outfit text-sm">Gelmedi riski: {kart.gelmediRiski}</p>
+              <ul className="mt-3 font-outfit text-sm">{kart.sonZiyaretler.map((z, i) => <li key={i}>{z.tarih} · {z.ozet}</li>)}</ul>
+              {kart.acikTakipler.map((t, i) => <p key={i} className="mt-2 font-outfit text-sm">Takip · {t.sahip}: {t.metin}</p>)}
+              {!kart.paket && <p className="mt-3 font-outfit text-sm text-ink-muted">Bu kart seans bakiyesi tutmaz. Paket tanımı kurulumdadır.</p>}
+              {yonetici && (
+                <div className="mt-4 flex gap-2">
+                  <button className="inline-flex h-10 items-center rounded-full bg-pine px-4 font-outfit text-sm text-cream" onClick={() => kapat(true)}>Ziyareti geldi olarak kapat</button>
+                  <button className="inline-flex h-10 items-center rounded-full bg-paper px-4 font-outfit text-sm ring-1 ring-line" onClick={() => kapat(false)}>Gelmedi olarak kapat</button>
+                </div>
+              )}
+              <p className="mt-3 font-outfit text-sm text-ink-muted">Kapanış hekimin notuna yazılmaz.</p>
+            </aside>
           )}
-          <p style={{ color: CHROME_RENK.muted }}>Kapanış hekimin notuna yazılmaz.</p>
-        </aside>
-      )}
+        </div>
+      </section>
     </div>
   )
 }

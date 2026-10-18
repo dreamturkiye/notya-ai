@@ -22,12 +22,12 @@ export const LINKS = {
 
 export const NAV = [
   { href: "#portal", label: "Hasta portalı", index: "01" },
-  { href: "#dallar", label: "Dallar", index: "02" },
+  { href: "#dallar", label: "Özel Branşlar", index: "02" },
   { href: "#fiyat", label: "Fiyat", index: "04" },
 ] as const;
 
 export const HERO = {
-  eyebrow: "Klinikler için",
+  eyebrow: "Notya Klinik",
   title: "Kliniğiniz ve hastanız",
   titleItalic: "aynı sayfada.",
   lede:

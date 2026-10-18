@@ -65,7 +65,7 @@ export default function AyarlarPage() {
 
   return (
     <div style={{ minHeight: '100vh', background: '#f4eee3', fontFamily: "'Source Sans 3', system-ui, sans-serif" }}>
-      <KlinikNav clinicName={name || 'Klinik'} adminName={adminName} />
+      <KlinikNav clinicName={name || 'Notya Klinik'} adminName={adminName} />
       <div style={{ maxWidth: '800px', margin: '0 auto', padding: '48px' }}>
         <a href="/dashboard/klinik" style={{ color: '#8b7d70', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>← Klinik</a>
         <h1 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: '28px', fontWeight: 400, color: '#3b2e24', margin: '12px 0 32px', letterSpacing: '-0.02em' }}>Klinik Ayarları</h1>

@@ -1,9 +1,10 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import Link from 'next/link'
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth'
-import { CHROME_FONT, CHROME_RENK } from '@/lib/doktor/chromeTheme'
+import { NOTYA_KLINIK_AD } from '@/lib/specialties/klinikDikey'
+import { MasaSahne } from '@/components/klinik/katman/KlinikKabuk'
+import { Button } from '@/components/doktor-landing/button'
 import { varsayilanHafta, varsayilanRezervasyon } from '@/lib/klinik/katman/kurulum'
 import { KLINIK_MODULLERI, KLINIK_ROLLERI, varsayilanYetkiler, type YetkiSatiri } from '@/lib/klinik/katman/yetki'
 
@@ -53,14 +54,16 @@ async function iste(yol: string, method: string, govde?: unknown) {
 
 function Kart(props: { baslik: string; children: React.ReactNode }) {
   return (
-    <section style={{ background: CHROME_RENK.paper, border: `1px solid ${CHROME_RENK.border}`, borderRadius: 18, padding: 20, marginBottom: 16 }}>
-      <h2 style={{ fontFamily: CHROME_FONT.serif, fontSize: 22, margin: '0 0 12px' }}>{props.baslik}</h2>
-      {props.children}
+    <section className="border-t border-line bg-paper py-12 sm:py-16">
+      <div className="mx-auto max-w-7xl px-5 sm:px-8">
+        <h2 className="font-display text-3xl font-medium tracking-tight">{props.baslik}</h2>
+        <div className="mt-6 max-w-3xl font-outfit text-sm leading-relaxed text-ink-2">{props.children}</div>
+      </div>
     </section>
   )
 }
 
-const alan: React.CSSProperties = { display: 'block', width: '100%', marginTop: 6, padding: '8px 10px', borderRadius: 10, border: `1px solid ${CHROME_RENK.border}`, background: '#fff', font: 'inherit' }
+const alan = 'mt-1.5 block w-full rounded-xl border border-line bg-cream px-3 py-2 font-outfit text-sm text-ink'
 
 export default function KlinikAyarlar() {
   const [oturum, setOturum] = useState<'bak' | 'yok' | 'var'>('bak')
@@ -87,23 +90,25 @@ export default function KlinikAyarlar() {
 
   useEffect(() => { yukle().catch((e) => setHata(String(e.message || e))) }, [])
 
-  if (oturum === 'bak') return <p>Klinik kurulumu açılıyor.</p>
+  if (oturum === 'bak') {
+    return <MasaSahne kas={NOTYA_KLINIK_AD} baslik="Kurulum" italik="açılıyor." govde="Notya Klinik masası hazırlanıyor." />
+  }
   if (oturum === 'yok') {
     return (
-      <Kart baslik="Klinik kurulumu">
-        <p>Bu masa hekim oturumu ister. Doktor ekranları aynı yerinde durur.</p>
-        <Link href="/giris/doktor">Hekim girişi</Link>
-      </Kart>
+      <MasaSahne kas={NOTYA_KLINIK_AD} baslik="Klinik kurulumu" italik="hekim oturumu ister." govde="Bu masa hekim oturumu ister. Doktor ekranları aynı yerinde durur.">
+        <Button href="/giris/doktor" variant="pine" size="lg">Hekim girişi</Button>
+      </MasaSahne>
     )
   }
   if (!veri?.klinik) {
     return (
-      <Kart baslik="Klinik aç">
-        <p>Ad, adres ve vergi numarası kliniğin kendi kaydıdır. Hekimin muayene ekranı değişmez.</p>
-        <label>Klinik adı<input style={alan} value={yeniAd} onChange={(e) => setYeniAd(e.target.value)} /></label>
-        {hata && <p style={{ color: CHROME_RENK.warn }}>{hata}</p>}
-        <button style={{ marginTop: 12 }} onClick={() => iste('/api/klinik/kurulum', 'POST', { ad: yeniAd }).then(yukle).catch((e) => setHata(e.message))}>Kliniği oluştur</button>
-      </Kart>
+      <MasaSahne kas={NOTYA_KLINIK_AD} baslik="Notya Klinik" italik="açın." govde="Ad, adres ve vergi numarası kliniğin kendi kaydıdır. Hekimin muayene ekranı değişmez.">
+        <label className="block font-outfit text-sm text-ink-2">Klinik adı
+          <input className={alan} value={yeniAd} onChange={(e) => setYeniAd(e.target.value)} />
+        </label>
+        {hata && <p className="mt-3 font-outfit text-sm text-warn">{hata}</p>}
+        <button type="button" className="mt-4 inline-flex h-12 items-center rounded-full bg-pine px-6 font-outfit text-sm font-medium text-cream" onClick={() => iste('/api/klinik/kurulum', 'POST', { ad: yeniAd }).then(yukle).catch((e) => setHata(e.message))}>Notya Klinik’i oluştur</button>
+      </MasaSahne>
     )
   }
 
@@ -119,14 +124,15 @@ export default function KlinikAyarlar() {
 
   return (
     <div>
-      {salt && <p>Bu kliniği görüntülüyorsunuz. Ayarları yalnız sahip veya yönetici değiştirir.</p>}
-      {hata && <p style={{ color: CHROME_RENK.warn }}>{hata}</p>}
+      <MasaSahne kas={NOTYA_KLINIK_AD} baslik={k.ad || NOTYA_KLINIK_AD} italik="kurulumu." govde="Odalar, yetkiler, randevu kuralı ve koltuklar bu masada durur. Hekim muayene ekranı aynı kalır." />
+      {salt && <p className="mx-auto max-w-7xl px-5 font-outfit text-sm text-ink-muted sm:px-8">Bu Notya Klinik kaydını görüntülüyorsunuz. Ayarları yalnız sahip veya yönetici değiştirir.</p>}
+      {hata && <p className="font-outfit text-sm text-warn">{hata}</p>}
       <Kart baslik="Klinik kimliği">
-        <label>Ad<input style={alan} disabled={salt} value={k.ad} onChange={(e) => setVeri({ ...veri, klinik: { ...k, ad: e.target.value } })} /></label>
-        <label>Telefon<input style={alan} disabled={salt} value={k.telefon} onChange={(e) => setVeri({ ...veri, klinik: { ...k, telefon: e.target.value } })} /></label>
-        <label>Adres<input style={alan} disabled={salt} value={k.adres} onChange={(e) => setVeri({ ...veri, klinik: { ...k, adres: e.target.value } })} /></label>
-        <label>Vergi no<input style={alan} disabled={salt} value={k.vergiNo} onChange={(e) => setVeri({ ...veri, klinik: { ...k, vergiNo: e.target.value } })} /></label>
-        <label>Logo bağlantısı<input style={alan} disabled={salt} value={k.logo} onChange={(e) => setVeri({ ...veri, klinik: { ...k, logo: e.target.value } })} /></label>
+        <label>Ad<input className={alan} disabled={salt} value={k.ad} onChange={(e) => setVeri({ ...veri, klinik: { ...k, ad: e.target.value } })} /></label>
+        <label>Telefon<input className={alan} disabled={salt} value={k.telefon} onChange={(e) => setVeri({ ...veri, klinik: { ...k, telefon: e.target.value } })} /></label>
+        <label>Adres<input className={alan} disabled={salt} value={k.adres} onChange={(e) => setVeri({ ...veri, klinik: { ...k, adres: e.target.value } })} /></label>
+        <label>Vergi no<input className={alan} disabled={salt} value={k.vergiNo} onChange={(e) => setVeri({ ...veri, klinik: { ...k, vergiNo: e.target.value } })} /></label>
+        <label>Logo bağlantısı<input className={alan} disabled={salt} value={k.logo} onChange={(e) => setVeri({ ...veri, klinik: { ...k, logo: e.target.value } })} /></label>
       </Kart>
       <Kart baslik="Çalışma saatleri">
         {GUNLER.map((ad, i) => {
@@ -135,23 +141,23 @@ export default function KlinikAyarlar() {
             <div key={ad} style={{ display: 'grid', gridTemplateColumns: '140px 80px 1fr 1fr', gap: 8, alignItems: 'center', marginBottom: 6 }}>
               <span>{ad}</span>
               <input type="checkbox" disabled={salt} checked={g.acik} onChange={(e) => setVeri({ ...veri, klinik: { ...k, calisma: { ...k.calisma, [i]: { ...g, acik: e.target.checked } } } })} />
-              <input style={alan} disabled={salt || !g.acik} value={g.baslangic} onChange={(e) => setVeri({ ...veri, klinik: { ...k, calisma: { ...k.calisma, [i]: { ...g, baslangic: e.target.value } } } })} />
-              <input style={alan} disabled={salt || !g.acik} value={g.bitis} onChange={(e) => setVeri({ ...veri, klinik: { ...k, calisma: { ...k.calisma, [i]: { ...g, bitis: e.target.value } } } })} />
+              <input className={alan} disabled={salt || !g.acik} value={g.baslangic} onChange={(e) => setVeri({ ...veri, klinik: { ...k, calisma: { ...k.calisma, [i]: { ...g, baslangic: e.target.value } } } })} />
+              <input className={alan} disabled={salt || !g.acik} value={g.bitis} onChange={(e) => setVeri({ ...veri, klinik: { ...k, calisma: { ...k.calisma, [i]: { ...g, bitis: e.target.value } } } })} />
             </div>
           )
         })}
       </Kart>
       <Kart baslik="Odalar">
-        <ul>{(veri.odalar || []).map((o) => <li key={o.id}>{o.ad} · {o.tur} {!salt && <button onClick={() => iste(`/api/klinik/odalar?id=${o.id}`, 'DELETE').then(yukle).catch((e) => setHata(e.message))}>Kaldır</button>}</li>)}</ul>
+        <ul>{(veri.odalar || []).map((o) => <li key={o.id}>{o.ad} · {o.tur} {!salt && <button className="mt-3 mr-2 inline-flex h-10 items-center rounded-full bg-pine px-4 font-outfit text-sm text-cream" onClick={() => iste(`/api/klinik/odalar?id=${o.id}`, 'DELETE').then(yukle).catch((e) => setHata(e.message))}>Kaldır</button>}</li>)}</ul>
         {!salt && (
           <div>
-            <input style={alan} value={oda} placeholder="Oda adı" onChange={(e) => setOda(e.target.value)} />
-            <button onClick={() => iste('/api/klinik/odalar', 'POST', { ad: oda, tur: 'muayene' }).then(() => { setOda(''); return yukle() }).catch((e) => setHata(e.message))}>Oda ekle</button>
+            <input className={alan} value={oda} placeholder="Oda adı" onChange={(e) => setOda(e.target.value)} />
+            <button className="mt-3 mr-2 inline-flex h-10 items-center rounded-full bg-pine px-4 font-outfit text-sm text-cream" onClick={() => iste('/api/klinik/odalar', 'POST', { ad: oda, tur: 'muayene' }).then(() => { setOda(''); return yukle() }).catch((e) => setHata(e.message))}>Oda ekle</button>
           </div>
         )}
       </Kart>
       <Kart baslik="Personel yetkisi">
-        <p style={{ color: CHROME_RENK.muted }}>Sekreter, asistan ve hasta danışmanı için okuma, yazma ve silme. Bu tablo doktor uygulamasındaki mevcut yetkilerin yerine geçmez.</p>
+        <p className="text-ink-muted">Sekreter, asistan ve hasta danışmanı için okuma, yazma ve silme. Bu tablo doktor uygulamasındaki mevcut yetkilerin yerine geçmez.</p>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead><tr><th></th>{KLINIK_ROLLERI.map((r) => <th key={r}>{ROL_AD[r]}</th>)}</tr></thead>
           <tbody>
@@ -175,17 +181,17 @@ export default function KlinikAyarlar() {
             ))}
           </tbody>
         </table>
-        {!salt && <button onClick={() => iste('/api/klinik/yetkiler', 'PUT', { satirlar: yetkiler }).then(yukle).catch((e) => setHata(e.message))}>Yetkiyi kaydet</button>}
+        {!salt && <button className="mt-3 mr-2 inline-flex h-10 items-center rounded-full bg-pine px-4 font-outfit text-sm text-cream" onClick={() => iste('/api/klinik/yetkiler', 'PUT', { satirlar: yetkiler }).then(yukle).catch((e) => setHata(e.message))}>Yetkiyi kaydet</button>}
       </Kart>
       <Kart baslik="Randevu kuralı ve widget">
-        <label>Slot dakika<input style={alan} type="number" disabled={salt} value={k.rezervasyon.slotDakika} onChange={(e) => setVeri({ ...veri, klinik: { ...k, rezervasyon: { ...k.rezervasyon, slotDakika: Number(e.target.value) } } })} /></label>
-        <label>Tampon<input style={alan} type="number" disabled={salt} value={k.rezervasyon.tamponDk} onChange={(e) => setVeri({ ...veri, klinik: { ...k, rezervasyon: { ...k.rezervasyon, tamponDk: Number(e.target.value) } } })} /></label>
-        <label>Widget başlığı<input style={alan} disabled={salt} value={k.widget.baslik} onChange={(e) => setVeri({ ...veri, klinik: { ...k, widget: { ...k.widget, baslik: e.target.value } } })} /></label>
+        <label>Slot dakika<input className={alan} type="number" disabled={salt} value={k.rezervasyon.slotDakika} onChange={(e) => setVeri({ ...veri, klinik: { ...k, rezervasyon: { ...k.rezervasyon, slotDakika: Number(e.target.value) } } })} /></label>
+        <label>Tampon<input className={alan} type="number" disabled={salt} value={k.rezervasyon.tamponDk} onChange={(e) => setVeri({ ...veri, klinik: { ...k, rezervasyon: { ...k.rezervasyon, tamponDk: Number(e.target.value) } } })} /></label>
+        <label>Widget başlığı<input className={alan} disabled={salt} value={k.widget.baslik} onChange={(e) => setVeri({ ...veri, klinik: { ...k, widget: { ...k.widget, baslik: e.target.value } } })} /></label>
         <label><input type="checkbox" disabled={salt} checked={k.widget.acik} onChange={(e) => setVeri({ ...veri, klinik: { ...k, widget: { ...k.widget, acik: e.target.checked } } })} /> Çevrimiçi widget açık</label>
       </Kart>
       <Kart baslik="Mesaj ve AI Resepsiyon">
         <label><input type="checkbox" disabled={salt} checked={k.mesaj.hatirlatma} onChange={(e) => setVeri({ ...veri, klinik: { ...k, mesaj: { hatirlatma: e.target.checked } } })} /> Klinik hatırlatması açık</label>
-        <p style={{ color: CHROME_RENK.muted }}>AI Resepsiyon ayrı bir eklentidir. Kapalıyken hiç çağrılmaz. Hekimin Luna kullanımı burada değişmez.</p>
+        <p className="text-ink-muted">AI Resepsiyon ayrı bir eklentidir. Kapalıyken hiç çağrılmaz. Hekimin Luna kullanımı burada değişmez.</p>
         <label><input type="checkbox" disabled={salt} checked={k.resepsiyonAcik} onChange={(e) => setVeri({ ...veri, klinik: { ...k, resepsiyonAcik: e.target.checked } })} /> AI Resepsiyon eklentisine izin ver</label>
       </Kart>
       <Kart baslik="Paket ve ödeme planı">
@@ -193,10 +199,10 @@ export default function KlinikAyarlar() {
         <ul>{(veri.planlar || []).map((p) => <li key={p.id}>{p.ad} · {p.taksit} taksit</li>)}</ul>
         {!salt && (
           <div>
-            <input style={alan} value={paketAd} placeholder="Paket adı" onChange={(e) => setPaketAd(e.target.value)} />
-            <input style={alan} type="number" value={paketSeans} onChange={(e) => setPaketSeans(e.target.value)} />
-            <button onClick={() => iste('/api/klinik/paketler', 'POST', { ad: paketAd, seans: Number(paketSeans), ucretKurus: 0 }).then(() => { setPaketAd(''); return yukle() }).catch((e) => setHata(e.message))}>Paket ekle</button>
-            <button onClick={() => iste('/api/klinik/paketler', 'POST', { tur: 'plan', ad: paketAd || 'Peşin', taksit: 1, pesinatKurus: 0 }).then(() => { setPaketAd(''); return yukle() }).catch((e) => setHata(e.message))}>Ödeme planı ekle</button>
+            <input className={alan} value={paketAd} placeholder="Paket adı" onChange={(e) => setPaketAd(e.target.value)} />
+            <input className={alan} type="number" value={paketSeans} onChange={(e) => setPaketSeans(e.target.value)} />
+            <button className="mt-3 mr-2 inline-flex h-10 items-center rounded-full bg-pine px-4 font-outfit text-sm text-cream" onClick={() => iste('/api/klinik/paketler', 'POST', { ad: paketAd, seans: Number(paketSeans), ucretKurus: 0 }).then(() => { setPaketAd(''); return yukle() }).catch((e) => setHata(e.message))}>Paket ekle</button>
+            <button className="mt-3 mr-2 inline-flex h-10 items-center rounded-full bg-pine px-4 font-outfit text-sm text-cream" onClick={() => iste('/api/klinik/paketler', 'POST', { tur: 'plan', ad: paketAd || 'Peşin', taksit: 1, pesinatKurus: 0 }).then(() => { setPaketAd(''); return yukle() }).catch((e) => setHata(e.message))}>Ödeme planı ekle</button>
           </div>
         )}
       </Kart>
@@ -206,13 +212,13 @@ export default function KlinikAyarlar() {
         <ul>{(veri.davetler || []).map((d) => <li key={d.id}>{d.email} · davet açık</li>)}</ul>
         {!salt && (
           <div>
-            <input style={alan} value={eposta} placeholder="hekim@ornek.com" onChange={(e) => setEposta(e.target.value)} />
-            <button onClick={() => iste('/api/klinik/koltuklar', 'POST', { email: eposta }).then((j) => { setBaglanti(j.baglanti); setEposta(''); return yukle() }).catch((e) => setHata(e.message))}>Hekim davet et</button>
+            <input className={alan} value={eposta} placeholder="hekim@ornek.com" onChange={(e) => setEposta(e.target.value)} />
+            <button className="mt-3 mr-2 inline-flex h-10 items-center rounded-full bg-pine px-4 font-outfit text-sm text-cream" onClick={() => iste('/api/klinik/koltuklar', 'POST', { email: eposta }).then((j) => { setBaglanti(j.baglanti); setEposta(''); return yukle() }).catch((e) => setHata(e.message))}>Hekim davet et</button>
             {baglanti && <p>Davet bağlantısı bir kez gösterilir: {baglanti}</p>}
           </div>
         )}
       </Kart>
-      {!salt && <button onClick={() => iste('/api/klinik/kurulum', 'PUT', k).catch((e) => setHata(e.message))}>Kurulumu kaydet</button>}
+      {!salt && <button className="mt-3 mr-2 inline-flex h-10 items-center rounded-full bg-pine px-4 font-outfit text-sm text-cream" onClick={() => iste('/api/klinik/kurulum', 'PUT', k).catch((e) => setHata(e.message))}>Kurulumu kaydet</button>}
     </div>
   )
 }

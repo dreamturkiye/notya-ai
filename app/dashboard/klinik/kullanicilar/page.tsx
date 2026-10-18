@@ -12,7 +12,7 @@ const ROL_ETIKET: Record<string, string> = { member: 'Üye', admin: 'Yönetici' 
 export default function KullanicilarPage() {
   const router = useRouter()
   const [token, setToken] = useState('')
-  const [clinicName, setClinicName] = useState('Klinik')
+  const [clinicName, setClinicName] = useState('Notya Klinik')
   const [adminName, setAdminName] = useState('')
   const [members, setMembers] = useState<any[]>([])
   const [invitations, setInvitations] = useState<any[]>([])
@@ -41,7 +41,7 @@ export default function KullanicilarPage() {
       ])
       const me = await meRes.json()
       const mem = await membersRes.json()
-      if (me.success) { setClinicName(me.data.clinic?.name || 'Klinik'); setAdminName(me.data.adminName || '') }
+      if (me.success) { setClinicName(me.data.clinic?.name || 'Notya Klinik'); setAdminName(me.data.adminName || '') }
       if (mem.success) { setMembers(mem.data.members || []); setInvitations(mem.data.pendingInvitations || []) }
     } catch {} finally { setLoading(false) }
   }

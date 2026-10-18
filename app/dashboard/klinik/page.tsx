@@ -93,7 +93,7 @@ export default function KlinikDashboard() {
 
   return (
     <div style={{ minHeight: '100vh', background: '#f4eee3', fontFamily: "'Source Sans 3', system-ui, sans-serif" }}>
-      <KlinikNav clinicName={clinic?.name || 'Klinik'} adminName={adminName} />
+      <KlinikNav clinicName={clinic?.name || 'Notya Klinik'} adminName={adminName} />
       <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '48px 48px' }}>
         <h1 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: '32px', fontWeight: 400, color: '#3b2e24', marginBottom: '8px', letterSpacing: '-0.025em' }}>
           Hoş geldiniz, {clinic?.name}

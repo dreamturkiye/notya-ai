@@ -43,7 +43,7 @@ export function Pricing() {
                 clinic ? "bg-ink text-cream" : "text-ink-2",
               )}
             >
-              Klinik
+              Notya Klinik
             </button>
           </div>
         </div>

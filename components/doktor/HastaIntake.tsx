@@ -189,7 +189,7 @@ export default function HastaIntake({ patientId }: { patientId: string }) {
                 <optgroup label="Hekim branşları">
                   {branslar.filter((b) => !b.klinik).map((b) => <option key={b.anahtar} value={b.anahtar}>{b.etiket}</option>)}
                 </optgroup>
-                <optgroup label="Klinik">
+                <optgroup label="Özel Branşlar">
                   {branslar.filter((b) => b.klinik).map((b) => <option key={b.anahtar} value={b.anahtar}>{b.etiket}</option>)}
                 </optgroup>
               </select>

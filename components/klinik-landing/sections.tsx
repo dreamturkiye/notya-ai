@@ -31,7 +31,7 @@ export function Hero() {
               <ArrowUpRight className="size-4" />
             </Button>
             <Button href="#dallar" variant="outline" size="lg" className="w-full sm:w-auto">
-              Dalınızı bulun
+              Özel branşınızı bulun
             </Button>
           </div>
         </div>
@@ -42,7 +42,7 @@ export function Hero() {
             className="aspect-[16/10] w-full rounded-xl object-cover object-center lg:aspect-[5/4]"
           />
           <figcaption className="mt-3 font-outfit text-xs uppercase tracking-[0.18em] text-ink-muted">
-            Klinik · görsel referans
+            Notya Klinik · görsel referans
           </figcaption>
         </figure>
       </div>
@@ -77,10 +77,10 @@ export function Dallar() {
   return (
     <section id="dallar" className="scroll-mt-16 bg-paper py-20 sm:py-28">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
-        <p className="font-outfit text-xs uppercase tracking-[0.22em] text-ink-muted">02 — Dallar</p>
+        <p className="font-outfit text-xs uppercase tracking-[0.22em] text-ink-muted">02 — Özel Branşlar</p>
         <h2 className="mt-4 max-w-3xl font-display text-display font-medium leading-display tracking-display">
-          Kliniğinizin dalına göre
-          <span className="block italic font-normal text-pine">kurulur.</span>
+          On özel branş.
+          <span className="block italic font-normal text-pine">Aynı Notya Klinik.</span>
         </h2>
         <ul className="mt-12 flex flex-wrap gap-x-6 gap-y-3 border-t border-line pt-8 font-display text-title italic leading-snug text-ink-2">
           {DALLAR.map((d) => (
@@ -158,7 +158,7 @@ export function KlinikFooter() {
       <div className="mx-auto flex max-w-7xl flex-col gap-6 px-5 py-10 sm:px-8 lg:flex-row lg:items-center lg:justify-between">
         <a href="#top" className="flex items-baseline gap-2 font-display text-2xl italic leading-none tracking-tight">
           notya
-          <span className="font-outfit text-[11px] not-italic uppercase tracking-[0.3em] text-pine">klinik</span>
+          <span className="font-outfit text-[11px] not-italic uppercase tracking-[0.3em] text-pine">Klinik</span>
         </a>
         <nav className="flex flex-wrap gap-x-6 gap-y-2 font-outfit text-sm text-ink-2" aria-label="Alt bağlantılar">
           <a href={LINKS.kvkk} className="hover:text-ink">KVKK</a>

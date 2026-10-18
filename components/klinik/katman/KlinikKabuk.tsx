@@ -2,32 +2,73 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { CHROME_FONT, CHROME_RENK } from '@/lib/doktor/chromeTheme'
+import { NOTYA_KLINIK_AD } from '@/lib/specialties/klinikDikey'
+import { cn } from '@/components/doktor-landing/cn'
 
 const LINKS = [
   { href: '/klinik/ayarlar', ad: 'Kurulum' },
   { href: '/klinik/takvim', ad: 'Takvim' },
 ]
 
+/** Anasayfadaki hero ızgarası. Kurulum, takvim ve davet aynı sahneyi kullanır. */
+export function MasaSahne(props: { kas: string; baslik: string; italik: string; govde: string; children?: React.ReactNode }) {
+  return (
+    <section className="bg-paper">
+      <div className="mx-auto grid max-w-7xl items-center gap-10 px-5 py-12 sm:px-8 lg:grid-cols-2 lg:gap-14 lg:py-16">
+        <div className="min-w-0">
+          <p className="flex items-center gap-3 font-outfit text-xs uppercase tracking-[0.28em] text-ink-muted">
+            <span className="inline-block size-1.5 bg-pine" aria-hidden="true" />
+            {props.kas}
+          </p>
+          <h1 className="mt-5 font-display text-hero font-medium leading-hero tracking-hero">
+            {props.baslik}
+            <span className="mt-1 block italic font-normal text-pine">{props.italik}</span>
+          </h1>
+          <p className="mt-6 max-w-md font-outfit text-lede font-light leading-relaxed text-ink-2">{props.govde}</p>
+          {props.children ? <div className="mt-8">{props.children}</div> : null}
+        </div>
+        <figure className="order-first min-w-0 lg:order-none">
+          <img
+            src="/landing/corridor.jpg"
+            alt="Gün ışığında bir klinik koridoru: muayene odası kapıları ve bekleme sediri"
+            className="aspect-[16/10] w-full rounded-xl object-cover object-center lg:aspect-[5/4]"
+          />
+          <figcaption className="mt-3 font-outfit text-xs uppercase tracking-[0.18em] text-ink-muted">
+            Notya Klinik · görsel referans
+          </figcaption>
+        </figure>
+      </div>
+    </section>
+  )
+}
+
 export default function KlinikKabuk({ children }: { children: React.ReactNode }) {
   const yol = usePathname()
   return (
-    <div style={{ minHeight: '100vh', background: CHROME_RENK.cream, color: CHROME_RENK.ink, fontFamily: CHROME_FONT.sans }}>
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '18px 28px', borderBottom: `1px solid ${CHROME_RENK.border}` }}>
-        <div>
-          <div style={{ fontFamily: CHROME_FONT.serif, fontSize: 22 }}>Notya Klinik</div>
-          <div style={{ color: CHROME_RENK.muted, fontSize: 13 }}>Hekimler kendi Notya’sında kalır. Klinik, onların üstündeki ortak masadır.</div>
+    <div className="min-h-screen bg-paper text-ink">
+      <header className="fixed inset-x-0 top-0 z-40 border-b border-line bg-paper/92">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-5 sm:px-8">
+          <Link href="/klinik" className="flex items-baseline gap-2 font-display text-2xl italic leading-none tracking-tight" aria-label={NOTYA_KLINIK_AD}>
+            notya
+            <span className="font-outfit text-[11px] not-italic uppercase tracking-[0.3em] text-pine">Klinik</span>
+          </Link>
+          <nav className="flex items-center gap-6" aria-label="Notya Klinik">
+            {LINKS.map((l) => (
+              <Link
+                key={l.href}
+                href={l.href}
+                className={cn(
+                  'font-outfit text-sm',
+                  yol === l.href ? 'border-b border-pine text-ink' : 'text-ink-2 hover:text-ink',
+                )}
+              >
+                {l.ad}
+              </Link>
+            ))}
+          </nav>
         </div>
-        <nav style={{ display: 'flex', gap: 8 }}>
-          {LINKS.map((l) => (
-            <Link key={l.href} href={l.href} style={{
-              textDecoration: 'none', color: CHROME_RENK.ink, padding: '8px 12px', borderRadius: 999,
-              background: yol === l.href ? CHROME_RENK.gold : 'transparent',
-            }}>{l.ad}</Link>
-          ))}
-        </nav>
       </header>
-      <main style={{ maxWidth: 1080, margin: '0 auto', padding: '28px 20px 64px' }}>{children}</main>
+      <main className="pt-16">{children}</main>
     </div>
   )
 }

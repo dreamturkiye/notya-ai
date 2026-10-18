@@ -1,6 +1,8 @@
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 import {
+  NOTYA_KLINIK_AD,
+  OZEL_BRANS_KATEGORI,
   klinikSlugCoz,
   klinikLandingSlugCoz,
   klinikUzmanlikNorm,
@@ -11,6 +13,12 @@ import {
 } from './klinikDikey'
 
 describe('KLINIK-10-EXCEPTIONAL dikey', () => {
+  it('ürün Notya Klinik, on dal Özel Branşlar diye adlandırılır', () => {
+    assert.equal(NOTYA_KLINIK_AD, 'Notya Klinik')
+    assert.equal(OZEL_BRANS_KATEGORI, 'Özel Branşlar')
+    assert.equal(KLINIK_YENI_SLUGS.length, 10)
+  })
+
   it('landing 10 dal kanonik Klinik slug olur', () => {
     assert.equal(klinikSlugCoz('Sac Ekimi'), 'sac-ekimi')
     assert.equal(klinikSlugCoz('Estetik & Plastik Cerrahi'), 'estetik-cerrahi')

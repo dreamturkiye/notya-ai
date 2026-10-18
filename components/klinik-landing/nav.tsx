@@ -40,7 +40,7 @@ export function KlinikNav() {
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-5 sm:px-8">
           <a href="#top" className="flex items-baseline gap-2 font-display text-2xl italic leading-none tracking-tight">
             notya
-            <span className="font-outfit text-[11px] not-italic uppercase tracking-[0.3em] text-pine">klinik</span>
+            <span className="font-outfit text-[11px] not-italic uppercase tracking-[0.3em] text-pine">Klinik</span>
           </a>
           <nav className="hidden items-center gap-7 lg:flex" aria-label="Bölümler">
             {NAV.map((item) => (
