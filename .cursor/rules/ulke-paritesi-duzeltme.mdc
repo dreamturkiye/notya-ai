@@ -38,6 +38,24 @@ in the same change set wherever feasible. When not feasible in the same change s
 logged as an explicit, dated follow-up in `docs/OPEN-COMMITMENTS.md` with a named owner
 (Kaan vs Claude) — never a silent deferral.
 
+**Branş-specific changes (clarified 2026-10-18, Kaan, verbatim intent): "going forward if
+we change something in a specific branch in turkiye then the other 6 countries specific
+branc gets updated the same... This way once each country is caught up to the golden
+referrence of turkey they will then stary in sync."** The "applied, no exceptions" bar is
+not limited to core/shared changes — a **branş-specific** fix or feature made to one
+branş in Türkiye carries the same obligation to that same branş in each of the six
+countries, country-adapted. The gate: this only activates for a given country once that
+country actually has that branş **built at some depth** — porting a branş-specific
+Turkish fix into a country that runs the branş generically, with no equivalent depth to
+receive it, is not meaningful work. As of 2026-10-18, confirmed architecturally (this
+week's AU audit, `NOTYA-ULKE-ARACLAR-AU-07`): no country has branş-level depth yet — all
+six run one generic clinical-tools kit (`lib/ulke/araclar`), not per-branş implementations
+— so this obligation is currently **latent** for nearly every branş and activates
+branş-by-branş only as each country's own depth-closeout work reaches that branş; it is
+not a retroactive backlog against branches that don't exist outside Türkiye yet. End
+state, in Kaan's own framing: once a country catches up to the Turkish golden reference for
+a branş, this rule is what keeps the two in sync afterward, preventing re-drift.
+
 1. Per country: shared code / forked copy / not applicable / exempt (Turkey-only: MBYS, SGK/SUT/Medula, e-Nabız, e-Reçete, NVI, e-Fatura/GİB).
 2. Localized strings per country — never Turkish strings in a country build; Turkish stays untouched unless the code is genuinely shared.
 3. Each country's own data model (`international-data-model-dogrulama`) — never Turkish field keys/validators as placeholders.
