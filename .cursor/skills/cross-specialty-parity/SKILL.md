@@ -186,6 +186,60 @@ A change scoped entirely to Türkiye's own clinical/legal content (Medula, SUT,
 KVKK text, a Turkish-only form) states plainly that it is Türkiye-only and why
 — that is a valid, expected outcome, not a gap.
 
+## 40-branş propagation — Notya Klinik / Özel Branşlar (Kaan, 2026-10-18, standing rule, no exceptions)
+
+Boss rule (verbatim intent): **any core update, revision, or new feature that is not
+specialty-specific must be applied to all 30 medical branches and the 10 Özel Branşlar
+at the same time. No exceptions.**
+
+**Core items that must propagate** (verbatim list — treat each as shared spine for this
+rule's purposes, in addition to the shared-spine list in the table above):
+
+- Muayene ekranı
+- Reçete
+- Randevu
+- Hasta kaydı
+- MBYS packages
+- Hasta portalı
+- Faturalama / tahsilat
+- Shared consent flows
+- Any shared data model or workflow
+
+**"All 40, no exceptions"**: the 30 medical branches (`lib/doktor/specialties.ts`) **and**
+the 10 Özel Branşlar (saç ekimi, estetik & plastik cerrahi, medikal estetik, dermatoloji
+klinik, longevity, fizyoterapi, klinik psikoloji, diyetisyen, ergoterapi, odyoloji — today's
+slugs: `sac-ekimi`, `estetik-cerrahi`, `medikal-estetik`, `klinik-dermatoloji`, `longevity`,
+`fizyoterapi`, `klinik-psikolog`, `diyetisyen`, `ergoterapi`, `odyoloji`) together form the
+**40-branch universe** for this rule. A core/universal change that reaches the 30 but not
+the 10 (or vice versa) is **not finished** — it is a gap, write it down in
+`docs/OPEN-COMMITMENTS.md`, don't ship it as done.
+
+**One product, never forked**: the doctor application stays **one product, one codebase**.
+"Reaches all 40" means the shared mechanism/data model/workflow is wired for all 40 —
+never a separate app shell, a forked doctor experience, or a parallel copy of the feature
+for Notya Klinik / Özel Branşlar. Specialty-specific screens and tools (the clinical content
+unique to one branş) stay local to their own branş/chapter, exactly as the shared-spine
+table above already says.
+
+**Naming (2026-10-18, apply wherever referenced)**: the multi-doctor umbrella is **"Notya
+Klinik"** (not bare "Klinik"). The 10 specialty modules above are collectively **"Özel
+Branşlar"**. The 30 medical branches keep their current individual names, untouched. Menus,
+navigation and specialty selectors must keep "Notya Klinik" / "Özel Branşlar" and the 30
+medical branches as visually/structurally distinct sections — never one flat, undifferentiated
+list.
+
+**Explicit classification habit (non-negotiable)**: when making any change in scope, state
+up front — in the commit/PR and out loud in the work — whether it is **core** (must propagate
+to all 40) or **specialty-specific** (stays local to its own branş). "I didn't think about it"
+is not an acceptable answer to "which is this."
+
+**Architecture note**: today the 10 Özel Branşlar run on a separate registry from the 30
+(`lib/specialties/<slug>.ts` outside `registry.ts`'s `CHAPTERS` map, wired through
+`components/klinik/*` / `app/klinik-tools` / `app/asistan/klinik` rather than through
+`specialtyProfile()`). That is an existing implementation detail, not a license to treat the
+10 as a separate product for propagation purposes — this rule's "all 40, no exceptions"
+applies regardless of which registry currently wires a given branch.
+
 ## Anti-patterns
 
 - Fixing the bug inside `specialties/<slug>/` when the broken code is in

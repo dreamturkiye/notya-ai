@@ -30,15 +30,19 @@ const professions: Profession[] = [
 const unvanOptions = ['Dr.', 'Uzm.Dr.', 'Doç.Dr.', 'Prof.Dr.'];
 
 // Full 30 medical specialties (+ a few klinik aesthetic extras)
-const doctorSpecialties = [
+// NOTYA-KLINIK-ISIMLENDIRME-01 (Kaan 2026-10-18): aynı "Uzmanlık Alanı" dropdown'ı 30 tıbbi branş
+// ile Özel Branşlar'ı (buradaki 4'ü) tek, ayrışmamış düz liste olarak gösteriyordu — artık
+// render tarafında optgroup ile ayrılıyor (bkz. doctorSpecialtyGroups). Değerler/agentMapping aynı.
+const doctorMedicalSpecialties = [
   'Pediatri', 'Kardiyoloji', 'Nöroloji', 'Dahiliye', 'Psikiyatri',
   'Genel Cerrahi', 'Ortopedi', 'Dermatoloji', 'Kulak Burun Boğaz', 'Göz Hastalıkları',
   'Kadın Hastalıkları ve Doğum', 'Üroloji', 'Radyoloji', 'Anestezi', 'Acil Tıp',
   'Fizik Tedavi', 'Enfeksiyon Hastalıkları', 'Endokrinoloji', 'Gastroenteroloji', 'Nefroloji',
   'Romatoloji', 'Onkoloji', 'Göğüs Hastalıkları', 'Göğüs Cerrahisi', 'Plastik Cerrahi',
   'Beyin Cerrahisi', 'Kalp Damar Cerrahisi', 'Çocuk Cerrahisi', 'Aile Hekimliği', 'Spor Hekimliği',
-  'Estetik & Plastik Cerrahi', 'Sac Ekimi', 'Medikal Estetik', 'Longevity & Wellness', 'Diğer',
 ];
+const doctorOzelBranslar = ['Estetik & Plastik Cerrahi', 'Sac Ekimi', 'Medikal Estetik', 'Longevity & Wellness'];
+const doctorSpecialties = [...doctorMedicalSpecialties, ...doctorOzelBranslar, 'Diğer'];
 const klinikUzmanSpecialties = ['Estetik & Plastik Cerrahi', 'Sac Ekimi', 'Dermatoloji', 'Medikal Estetik', 'Longevity & Wellness'];
 const saglikUzmaniSpecialties = ['Fizyoterapi', 'Klinik Psikoloji', 'Diyetisyen', 'Ergoterapi', 'Odyoloji'];
 // KURAL — TÜRKÇE: 'Sac Ekimi' kayıtlı değer / eşleme anahtarıdır (klinikSlugCoz, personalar) — değişmez; yalnız ekranda doğru yazılır.
@@ -391,7 +395,13 @@ function OnboardingInner() {
               style={{ width: '100%', backgroundColor: CHROME_RENK.paper, color: CHROME_RENK.ink, border: '1px solid ' + CHROME_RENK.border, borderRadius: '8px', padding: '12px', fontSize: '15px' }}
             >
               <option value="">Seçiniz</option>
-              {doctorSpecialties.map(s => <option key={s} value={s}>{uzmanlikGorunen(s)}</option>)}
+              <optgroup label="Tıbbi Branşlar">
+                {doctorMedicalSpecialties.map(s => <option key={s} value={s}>{uzmanlikGorunen(s)}</option>)}
+              </optgroup>
+              <optgroup label="Özel Branşlar">
+                {doctorOzelBranslar.map(s => <option key={s} value={s}>{uzmanlikGorunen(s)}</option>)}
+              </optgroup>
+              <option value="Diğer">Diğer</option>
             </select>
           </div>
 

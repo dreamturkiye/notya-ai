@@ -3,7 +3,12 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import KlinikNav from '@/components/klinik/KlinikNav'
 
-const SPECIALTIES = ['Estetik & Plastik Cerrahi','Dermatoloji','Sac Ekimi','Medikal Estetik','Longevity & Wellness','Fizyoterapi','Klinik Psikoloji','Diyetisyen','Ergoterapi','Odyoloji','Kardiyoloji','Pediatri','Noroloji','Dahiliye','Diger']
+// NOTYA-KLINIK-ISIMLENDIRME-01 (Kaan 2026-10-18): Özel Branşlar (10 modül) ve diğer branşlar
+// aynı dropdown'da ama artık ayrı optgroup altında — tek, ayrışmamış düz liste değil. Değerler
+// DB'de saklanıyor (klinikUzmanlikNorm eşler) — grup değişikliği sadece ekran; değer stringleri aynı.
+const OZEL_BRANSLAR = ['Estetik & Plastik Cerrahi','Dermatoloji','Sac Ekimi','Medikal Estetik','Longevity & Wellness','Fizyoterapi','Klinik Psikoloji','Diyetisyen','Ergoterapi','Odyoloji']
+const DIGER_BRANSLAR = ['Kardiyoloji','Pediatri','Noroloji','Dahiliye','Diger']
+const SPECIALTIES = [...OZEL_BRANSLAR, ...DIGER_BRANSLAR]
 // Değerler DB'de saklanıyor (klinikUzmanlikNorm eşler) — yalnız ekranda Türkçe karakterli etiket.
 const UZMANLIK_ETIKET: Record<string, string> = { 'Sac Ekimi': 'Saç Ekimi', 'Noroloji': 'Nöroloji', 'Diger': 'Diğer' }
 const uzmanlikEtiket = (s: string) => UZMANLIK_ETIKET[s] || s
@@ -131,7 +136,12 @@ export default function KullanicilarPage() {
                 <label style={{ fontSize: '13px', color: '#8b7d70', display: 'block', marginBottom: '6px' }}>Uzmanlık</label>
                 <select value={specialty} onChange={e => setSpecialty(e.target.value)} style={inp}>
                   <option value=''>Seçin</option>
-                  {SPECIALTIES.map(s => <option key={s} value={s}>{uzmanlikEtiket(s)}</option>)}
+                  <optgroup label="Özel Branşlar">
+                    {OZEL_BRANSLAR.map(s => <option key={s} value={s}>{uzmanlikEtiket(s)}</option>)}
+                  </optgroup>
+                  <optgroup label="Diğer Branşlar">
+                    {DIGER_BRANSLAR.map(s => <option key={s} value={s}>{uzmanlikEtiket(s)}</option>)}
+                  </optgroup>
                 </select>
               </div>
               <div>

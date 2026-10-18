@@ -8,6 +8,7 @@ This repo is a **commercial** multi-specialty product (~30 branşlar). Skills an
 |------|------|
 | Doktor Araçları classify-before-add | `.cursor/rules/specialty-doktor-araclari.mdc` |
 | Branş alan sızması (specialty fields must not leak) | `.cursor/rules/brans-alan-sizmasi.mdc` |
+| Cross-specialty parity (core changes reach all 30 + 10 Özel Branşlar = 40, no exceptions) | `.cursor/rules/cross-specialty-parity.mdc` |
 | Ülke paritesi (every fix checked across us/gb/ca/au/nz/uz) | `.cursor/rules/ulke-paritesi-duzeltme.mdc` |
 | Performans bütçesi (hard ceilings from PERF-SAGLAMLIK-2026-10 — checked per change, not per month) | `.cursor/rules/performans-butcesi-koruma.mdc` |
 
@@ -30,6 +31,19 @@ This repo is a **commercial** multi-specialty product (~30 branşlar). Skills an
 ## Branş alan sızması (short)
 
 Something specific to **one** specialty must never render for another (Baş Çevresi / “veli” on KD = leak). Exception by law: “veli” wording follows the patient's **age** — every patient under 18 gets it in every branş (`veliDiliMi`); an adult never does. Gate chapter content; leave only truly universal fields in the shared spine. Full text: `.cursor/skills/brans-alan-sizmasi/SKILL.md`.
+
+## Cross-specialty parity — 40 branches, no exceptions (short)
+
+Any core update/feature that is not specialty-specific (Muayene ekranı, Reçete, Randevu,
+Hasta kaydı, MBYS packages, Hasta portalı, Faturalama/tahsilat, shared consent flows, any
+shared data model or workflow) must reach **all 30 medical branches and the 10 Özel
+Branşlar at the same time — no exceptions**. The 10 Özel Branşlar (saç ekimi, estetik &
+plastik cerrahi, medikal estetik, dermatoloji klinik, longevity, fizyoterapi, klinik
+psikoloji, diyetisyen, ergoterapi, odyoloji) are collectively **"Özel Branşlar"**; the
+multi-doctor umbrella product is **"Notya Klinik"** (not bare "Klinik"). One product, one
+codebase — never a forked doctor experience. State up front, for every change, whether it
+is core (must propagate to all 40) or specialty-specific (stays local). Full text:
+`.cursor/skills/cross-specialty-parity/SKILL.md` (see "40-branş propagation" section).
 
 ## Doktor Araçları (short)
 

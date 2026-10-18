@@ -33,7 +33,7 @@ const PROFESSIONS: Profession[] = [
     detail: ['Akıllı beyan takvimi', 'Telegram uyarıları', 'HMAC imzalı müşteri linki', 'E-Devlet rehberi'],
   },
   {
-    id: 'klinik', href: '/klinik', label: 'Klinik', accent: '#E91E8C',
+    id: 'klinik', href: '/klinik', label: 'Notya Klinik', accent: '#E91E8C',
     img: '/landing/corridor.jpg', imgPosition: 'center 60%',
     highlights: ['10 klinik dalında uzman persona', 'Saç ekimi, estetik, fizyoterapi', 'Ekip koltukları ve yönetim paneli', 'Pabau entegrasyonu'],
     headline: 'Her koltuğa bir uzman.',
