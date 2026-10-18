@@ -1,19 +1,47 @@
 ---
 description: >-
-  Every bug fix or UX fix to shared/Turkey code must be checked and applied across
-  the six country versions (us, gb, ca, au, nz, uz) in the same change set; the
-  fix report carries a per-country status line. Mirror of cross-specialty-parity.
+  Standing rule, hardened 2026-10-18: any core/shared change, revision, or new
+  feature that is not Turkey-only by law must be APPLIED — built and shipped,
+  country-adapted, not just checked — across all six country versions (us, gb,
+  ca, au, nz, uz) in the same change set wherever feasible, with no exceptions.
+  Operates together with cross-specialty-parity's 40-branch rule as a two-axis
+  propagation requirement. Mirror of cross-specialty-parity.
 alwaysApply: true
 ---
 
-# Ülke paritesi — fix once, check six countries
+# Ülke paritesi — one change, six countries, applied (no exceptions)
 
-**Read and follow** `.cursor/skills/ulke-paritesi-duzeltme/SKILL.md` before closing any bug fix or UX fix.
+**Read and follow** `.cursor/skills/ulke-paritesi-duzeltme/SKILL.md` before closing any
+core/shared change, revision, or new feature that is not Turkey-only by law.
 
-Boss rule (Kaan, 2026-10-16): a fix found in the Turkish/shared product is not done until it is checked, and applied where it applies, in **us, gb, ca, au, nz, uz** (`release/<cc>` builds) in the same change set.
+Boss rule (Kaan, 2026-10-16, hardened 2026-10-18 — verbatim): "Also is the same rule for
+all the 6 countries going forward. Any change in turkiye must be applied to all 6 country
+from now on based on that specific countries, language, rules, regulations, government and
+medical institutions directives and rules. no exceptions here any longer as well."
+
+**Hardening, 2026-10-18.** Scope widens from "bug fix or UX fix" to **any core/shared
+change, revision, or new feature that is not Turkey-only by law** (mirrors
+`cross-specialty-parity`'s own scope language; the exemption list below is unchanged).
+Strength widens from "checked" to **"applied"**: checking the six countries and logging a
+gap is no longer sufficient on its own for in-scope work — the country-adapted equivalent
+must actually be **built and shipped**, each adapted to that country's own language,
+laws/regulations, and government/medical-institution directives — never a translated copy
+of the Turkish version. This is the same standard already proven on the AU Tier-1
+clinical-tools work: mechanical ports of non-Turkey-specific content travel directly;
+content with Turkey-specific regulatory/legal substance needs real per-country research
+(see `international-data-model-dogrulama` for how identity/report fields adapt).
+
+**Two-axis propagation — operates together, not as alternatives.** A core/shared Türkiye
+change must reach **both** (a) all 30 medical branches + 10 Özel Branşlar (40 total, per
+`cross-specialty-parity`) **and** (b) all six countries, country-adapted (per this rule) —
+in the same change set wherever feasible. When not feasible in the same change set, it is
+logged as an explicit, dated follow-up in `docs/OPEN-COMMITMENTS.md` with a named owner
+(Kaan vs Claude) — never a silent deferral.
 
 1. Per country: shared code / forked copy / not applicable / exempt (Turkey-only: MBYS, SGK/SUT/Medula, e-Nabız, e-Reçete, NVI, e-Fatura/GİB).
 2. Localized strings per country — never Turkish strings in a country build; Turkish stays untouched unless the code is genuinely shared.
 3. Each country's own data model (`international-data-model-dogrulama`) — never Turkish field keys/validators as placeholders.
 4. Tests with non-Turkish keys/copy; unported gaps go in `docs/OPEN-COMMITMENTS.md` with date and owner.
-5. The commit/PR report must contain one status line per country.
+5. The commit/PR report must contain one status line per country, each stating **APPLIED**
+   (built + shipped), **N/A**, **EXEMPT**, or **OPEN GAP** (logged with date + owner) —
+   "checked only" is no longer a valid status on its own for in-scope work.
