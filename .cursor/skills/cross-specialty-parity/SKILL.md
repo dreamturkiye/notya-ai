@@ -146,13 +146,14 @@ Reviewers should reject a shared-spine PR that omits it.
 
 ## Six-country propagation (Türkiye golden reference → ülke paketleri)
 
-Boss rule (verbatim intent, 2026-10): **notya.io (Türkiye, `main`) is the golden
-reference.** When a change there is *core/universal* — not one branş's own
-clinical content — it is not finished until it has also reached the other six
-countries (us, gb, ca, au, nz, uz; `release/<code>` branches, `countries/<code>/`
-packs), each with **its own** language, legal text and clinical sourcing. This
-rule sits beside — does not replace — the branş-parity check above: classify
-by branş first, then by country.
+Boss rule (Kaan, 2026-10-18): **notya.io (Türkiye, `main`) is the golden
+reference.** Any change there is not finished until it has also reached the
+other six countries (us, gb, ca, au, nz, uz; `release/<code>` branches,
+`countries/<code>/` packs) in the **same change**, each in **its own** language
+and under **its own** government, regulator, and medical institutions. No
+country is deferred. This sits beside the branş rule above: a core doctor
+change is 1:1 across the 30 branches and the 10 Özel Branşlar, then the same
+change is adapted per country. Classify by branş first, then by country.
 
 ### 1. Classify what actually changed
 
@@ -160,7 +161,7 @@ by branş first, then by country.
 |------|-------------------------|---------------------------------|
 | **Universal mechanism** — chapter-agnostic, carries no clinical content | `GorselYakalaPaneli` (camera/file capture, downscale, PDF attach, generic visit-linked upload) | **Yes** — same mechanism, wired per country |
 | **Specialty clinical content, universally relevant to that branş** | Dermatoloji body map / lesion cards / PASI-EASI; KBB otoskopi/nazoendoskopi dual-sign; plastik cerrahi standardized views; göz fundus/OCT rule-based taslak | **Yes, to that same branş in each country that has it** — but **independently sourced per country** (own clinical references, own language), never copied verbatim from the Turkish version |
-| **Turkish-only legal/regulatory content** | KVKK consent wording, Medula/SUT report text, Form 014, Turkish MoH circulars | **No** — each country has its own regulator and its own equivalent, sourced separately (e.g. Uzbekistan's KDIGO rollout was sourced from its own MOH order, not copied from the English roster) |
+| **Turkish legal/regulatory content** | KVKK consent wording, Medula/SUT report text, Form 014, Turkish MoH circulars | **Yes, as that country's own equivalent, in the same change** — sourced from that country's government and medical institutions, in that country's language. The Turkish text stays in Türkiye. Leaving the country for later is not allowed |
 | **One branş's content unrelated to the change's purpose** | Derm's PASI/EASI fields appearing on kardiyoloji | **No, never** — this is branş-alan-sızması, not a propagation gap |
 
 If a change doesn't fit cleanly, default to the narrower reading: propagate the
@@ -193,16 +194,18 @@ countries were updated, which were N/A, and why — alongside the existing
 
 ```markdown
 ### Ülke kapsamı
-- **Mekanizma (evrensel):** aynı `GorselYakalaPaneli` sözleşmesi altı ülkede de kullanılacak.
-- **Bu PR'da yapılan:** Türkiye (main) — golden reference, bu PR'da tamamlandı.
-- **Sıradaki iş (ayrı PR/iş):** us/gb/ca/au/nz/uz — her ülkenin kendi branş paketine,
-  kendi dili ve kendi yasal gereksinimleriyle kablolanacak; klinik içerik (varsa) o
-  ülke için ayrıca kaynaklanacak, Türkçe sürümden kopyalanmayacak.
+- **Mekanizma:** aynı sözleşme, her ülkede o ülkenin dili ve o ülkenin kurumu.
+- **us:** ported — English, own regulator (name the authority).
+- **gb:** ported — English, own regulator.
+- **ca:** ported — English or French as that pack requires, own regulator.
+- **au:** ported — own regulator.
+- **nz:** ported — own regulator.
+- **uz:** ported — Uzbek, own MOH / institution source.
 ```
 
-A change scoped entirely to Türkiye's own clinical/legal content (Medula, SUT,
-KVKK text, a Turkish-only form) states plainly that it is Türkiye-only and why
-— that is a valid, expected outcome, not a gap.
+A Turkey change that lists any of the six as “sıradaki iş”, “follow-up”, or “Türkiye-only”
+is not finished. Turkish institution text is not copied across; the country’s own text
+lands in the same change.
 
 ## Anti-patterns
 
@@ -222,9 +225,9 @@ KVKK text, a Turkish-only form) states plainly that it is Türkiye-only and why
   copy Turkish clinical content, Turkish legal text, or Turkish UI strings
   verbatim into a country pack — propagate the mechanism, re-source the
   content, per country.
-- Silently leaving the six-country propagation undone with no PR note —
-  "Türkiye only, countries are a separate follow-up" is fine when stated; an
-  unstated gap is not.
+- Leaving any of the six countries for a later PR, an OPEN-COMMITMENTS line, or a
+  “Türkiye-only” note. Stating the gap does not close it. The adapted change has to
+  be in that country’s build in the same change.
 
 ## Quick checklist
 
@@ -238,9 +241,11 @@ KVKK text, a Turkish-only form) states plainly that it is Türkiye-only and why
 - [ ] PR body carries the "Branş kapsamı" block
 - [ ] No invented changes in chapters that already inherit
 - [ ] Change classified: universal mechanism / branş clinical content /
-      Türkiye-only legal content — table in "Six-country propagation" above
-- [ ] If universal or branş-clinical: PR body carries the "Ülke kapsamı" block,
-      stating which of the six countries are done, deferred, or N/A and why
+      Turkish legal content that needs each country's own equivalent —
+      table in "Six-country propagation" above
+- [ ] PR body carries the "Ülke kapsamı" block with us, gb, ca, au, nz, and uz
+      each done in this change, in that country's language and under that
+      country's own institutions. None deferred.
 ```
 
 ## When this skill applies

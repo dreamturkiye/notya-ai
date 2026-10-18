@@ -1,29 +1,28 @@
 ---
 name: ulke-paritesi-duzeltme
 description: >-
-  Standing rule for every bug fix or UX fix to shared or Turkey UI/API/logic in
-  Notya: a fix found and made in the Turkish product must be checked and, where
-  it applies, landed in all six country versions (US, GB, CA, AU, NZ, UZ) in the
-  same change set, with localized strings and each country's own data model.
-  Use before closing ANY bug fix or UX fix, and when writing its commit/PR
-  report (the report must carry a per-country status line). Answers "which of the
-  six countries run this code, and does each one actually get the fix?"
+  Standing rule for every change to the Turkish doctor product in Notya: the
+  same change is applied to all six countries (US, GB, CA, AU, NZ, UZ) in the
+  same change, in that country's language and under that country's own laws,
+  government, and medical institutions. No deferred country and no Turkey-only
+  close. Use before closing any such change, and when writing its commit/PR
+  report (one status line per country).
 ---
 
 # Ülke paritesi (Türkiye'de düzelttim ≠ altı ülkede düzeldi)
 
-Boss rule (Kaan, 2026-10-16, after the Selin "İlaç ekle" batch-card fix): when we find
-and fix a bug, **the same fix must be checked and applied across the six other country
-versions in the same change set.** Sibling of `cross-specialty-parity` (fix reaches every
-branş) — this one is the country axis. Verify against
+Boss rule (Kaan, 2026-10-16, tightened 2026-10-18): a change made in Türkiye is not
+done until **the same change has been applied in all six countries in the same change**.
+Sibling of `cross-specialty-parity` (a core doctor change is 1:1 across every branş and
+the 10 Özel Branşlar) — this one is the country axis. Verify against
 `.cursor/skills/international-data-model-dogrulama/SKILL.md` for anything touching reports,
 identity or legal fields.
 
 ## Trigger
 
-Any bug fix or UX fix to shared code or Turkey-facing UI / API / logic: `components/`,
-`core/`, `lib/`, `app/`. Run it before closing the fix. Feature work follows the country
-packs' own tracks; **bug and UX fixes never get to skip this check.**
+Any change to shared code or Turkey-facing UI / API / logic: `components/`, `core/`,
+`lib/`, `app/`. Features, revisions, and bug fixes all follow this. Run it before closing
+the change. There is no track where a Turkey change waits for a later country pass.
 
 ## The six countries (real identifiers, confirmed from the repo)
 
@@ -54,34 +53,35 @@ shared worktree.
 
 ```
 For each of us, gb, ca, au, nz, uz:
-- [ ] Status: SHARED CODE (same file runs, fix applies once ported) | FORKED COPY (its own
-      equivalent has the same defect → fix it there) | NOT APPLICABLE (feature absent) | EXEMPT (Turkey-only)
-- [ ] Strings: every user-visible string the fix adds or touches comes from a localized source
-      (country pack / injected copy object), never hardcoded Turkish. Turkish copy stays Turkish.
-- [ ] Data model: required fields, identifiers, formats use THAT country's model (drug/dose/
-      frequency keys, doctor ID, patient ID, dates/numbers). Never reuse Turkish keys, validators
-      or formats as a placeholder (see international-data-model-dogrulama).
-- [ ] Tests: the shared/pure logic is tested with non-Turkish keys and non-Turkish copy.
-- [ ] Landing: the fix is in the same change set — or the gap is written into
-      docs/OPEN-COMMITMENTS.md (date, waits on Kaan vs Claude). "Later" without an entry is forbidden.
+- [ ] The change is in that country's build in this same change. Status is SHARED CODE
+      (ported) or FORKED COPY (its own file now has the equivalent). "Later" is not a status.
+- [ ] Strings: every user-visible string comes from that country's language. Never hardcoded
+      Turkish in a country build. Turkish copy on main stays Turkish.
+- [ ] Law and institutions: wording, identifiers, and workflows follow THAT country's
+      government, regulator, and medical institutions. Never reuse SGK, Medula, e-Nabız,
+      KVKK, NVI, GİB, or Turkish field keys as a placeholder
+      (see international-data-model-dogrulama).
+- [ ] Tests: the shared logic is tested with that country's keys and copy.
 ```
 
-If a fix cannot land in a country build in the same change set (separate branch), say so
-explicitly and log it; do not report the fix as "done for all countries".
+A country line that says "follow-up", "exempt", or "see OPEN-COMMITMENTS" means the change
+is not finished. Do not report it as done.
 
 ## Report rule
 
 The commit/PR report **must include one status line per country**, e.g.
-`us: shared (ported via cherry-pick, strings via pack) · gb: forked-and-fixed · ca: n/a (feature absent) · au: … · nz: … · uz: …`.
-A report without it is incomplete.
+`us: ported, English, own payer rail · gb: forked-and-fixed, NHS wording · ca: ported · au: ported · nz: ported · uz: ported, own MOH source`.
+A report that leaves any country as follow-up, exempt, or n/a is incomplete. The change is not done.
 
-## Exempt (Turkey-only regulatory features)
+## Turkish institutions are not copied — the country's own are required
 
-State "exempt" explicitly on the country lines; do not port or stub these:
-MBYS / Muayeneyi Bildir, SGK / SUT / Medula (`lib/medula`, `lib/sgk`), e-Nabız (`lib/enabiz`),
-e-Reçete, NVI / T.C. Kimlik doğrulama (`lib/nvi`), e-Fatura / e-Arşiv / GİB Portal
-(`lib/accounting/ebelge`), KVKK-specific copy, Türkiye mevzuat takibi. Country equivalents
-(AIR, NHS number, NPI, etc.) are separate features governed by their own research docs.
+MBYS, SGK / SUT / Medula, e-Nabız, e-Reçete, NVI, e-Fatura / GİB, and KVKK text stay in
+Türkiye. They are not an excuse to skip a country. In the same change, each country gets
+the equivalent step under its own authority (its health-record system, its payer, its
+prescribing rail, its identity check, its invoice regime, its privacy law), written in
+its language and sourced from that authority. If the Turkish change was the mechanism
+around one of those rails, the country pack gets that mechanism on its rail, not a stub
+of the Turkish rail and not a blank "exempt".
 
 ## Standing rule: Turkish untouched
 
@@ -94,4 +94,4 @@ the default value and Turkish behavior must not change (test it).
 
 - `.cursor/skills/cross-specialty-parity/SKILL.md` — same discipline across branşlar.
 - `.cursor/skills/international-data-model-dogrulama/SKILL.md` — country data models.
-- `docs/OPEN-COMMITMENTS.md` — where unported items are recorded.
+- `docs/OPEN-COMMITMENTS.md` — not a place to park a country that this rule required in the same change.

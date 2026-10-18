@@ -9,7 +9,7 @@ alwaysApply: true
 
 **Read and follow** `.cursor/skills/cross-specialty-parity/SKILL.md` and `.cursor/skills/specialty-universal-vs-chapter/SKILL.md` before closing a shared-spine change.
 
-Boss rule: any core feature update, revision, or new feature that is **not** specialty-specific applies to all **30 medical branches** and the **10 Özel Branşlar** at the same time. No exceptions.
+Boss rule (Kaan, 2026-10-18): any change to the doctor application that is **core** — not one specialty’s own screen — goes **1:1** to all **30 medical branches** and the **10 Özel Branşlar** in the same change. No exceptions. No second pass. No “the others inherit it later.”
 
 Lists, read live, never hardcoded:
 
@@ -20,6 +20,7 @@ Core items that must propagate: muayene ekranı, reçete, randevu, hasta kaydı,
 
 1. The doctor application stays **one product**. Do not create a separate doctor version for Özel Branşlar or for Notya Klinik.
 2. Specialty-specific screens and tools stay only in their own branch (`brans-alan-sizmasi`).
-3. A shared-infrastructure update reaches both sets in the **same change**. If Özel Branşlar has its own copy of that screen, patch that copy too.
+3. A shared-infrastructure update reaches both sets **1:1 in the same change**. If Özel Branşlar has its own copy of that screen, that copy gets the same behavior in this change, not a follow-up.
 4. Notya Klinik is the multi-doctor layer (2–10 doctors). Özel Branşlar is the 10-discipline catalog. They do not share the bare label “Klinik”.
 5. Profession names that are real titles stay (`Klinik Psikoloji`). Stored slugs and `profession_type` values stay (`klinik-dermatoloji`, `klinik-psikolog`, `klinik-uzman`, `saglik-uzmani`).
+6. The same change then goes to all six countries under `.cursor/rules/ulke-paritesi-duzeltme.mdc`. A Turkey core change is not finished while us, gb, ca, au, nz, or uz is still waiting.

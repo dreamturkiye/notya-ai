@@ -1,19 +1,21 @@
 ---
 description: >-
-  Every bug fix or UX fix to shared/Turkey code must be checked and applied across
-  the six country versions (us, gb, ca, au, nz, uz) in the same change set; the
-  fix report carries a per-country status line. Mirror of cross-specialty-parity.
+  Any change in the Turkish doctor product must be applied, in the same change,
+  to all six countries (us, gb, ca, au, nz, uz), each in that country's language
+  and under that country's own laws, government, and medical institutions.
+  No deferred country. No Turkey-only close.
 alwaysApply: true
 ---
 
-# Ülke paritesi — fix once, check six countries
+# Ülke paritesi — Türkiye’de yapılan, altı ülkede de yapılır
 
-**Read and follow** `.cursor/skills/ulke-paritesi-duzeltme/SKILL.md` before closing any bug fix or UX fix.
+**Read and follow** `.cursor/skills/ulke-paritesi-duzeltme/SKILL.md` before closing any change that touches the Turkish doctor product.
 
-Boss rule (Kaan, 2026-10-16): a fix found in the Turkish/shared product is not done until it is checked, and applied where it applies, in **us, gb, ca, au, nz, uz** (`release/<cc>` builds) in the same change set.
+Boss rule (Kaan, 2026-10-18): any change made in Türkiye is applied to **us, gb, ca, au, nz, uz** in the **same change**. No exceptions. No “next PR”. No OPEN-COMMITMENTS substitute. Logging a gap does not finish the work.
 
-1. Per country: shared code / forked copy / not applicable / exempt (Turkey-only: MBYS, SGK/SUT/Medula, e-Nabız, e-Reçete, NVI, e-Fatura/GİB).
-2. Localized strings per country — never Turkish strings in a country build; Turkish stays untouched unless the code is genuinely shared.
-3. Each country's own data model (`international-data-model-dogrulama`) — never Turkish field keys/validators as placeholders.
-4. Tests with non-Turkish keys/copy; unported gaps go in `docs/OPEN-COMMITMENTS.md` with date and owner.
-5. The commit/PR report must contain one status line per country.
+Each country gets that change in **its own** language and under **its own** rules, regulations, government, and medical-institution directives. Do not paste Turkish copy, Turkish identifiers, or Turkish institutions (SGK, Medula, e-Nabız, KVKK, NVI, GİB) into another country. Build that country’s equivalent from that country’s own authorities.
+
+1. Core doctor behavior is already 1:1 across the 30 branches and the 10 Özel Branşlar (`.cursor/rules/ortak-omurga-paritesi.mdc`). Inside every country, that same 1:1 holds.
+2. A specialty-only screen stays in that specialty, and that specialty’s version in each country is sourced from that country. It does not leak into the other specialties.
+3. The commit/PR report has one status line per country saying what landed there and which authority the local wording follows.
+4. `main` does not contain `countries/`. Country builds are `release/<cc>`. A fix on `main` has not reached a country until that branch has the adapted change. Do not check a release branch out into this worktree; port it in its own worktree.
