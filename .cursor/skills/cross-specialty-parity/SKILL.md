@@ -33,9 +33,25 @@ Notya is **one shared baseline spine + a few specialty deltas on top.**
 | **Chapter delta** | `specialties/<slug>/` — own `prompts/`, `engines/`, `ui/`, `tests/` | Only the specialties that have a folder |
 | **Profile registry** | `lib/specialties/<key>.ts` + `registry.ts` | Chapters with a `SpecialtyProfile`; everything else falls back to `baselineProfile(...)` |
 
-`lib/doktor/specialties.ts` is the full branch list (**30 entries today**).
+`lib/doktor/specialties.ts` is the medical branch list (**30 entries today**).
 Most of them have **no** `specialties/<slug>/` folder and **no** profile —
 they run the shared spine as-is.
+
+The same spine also covers the **10 Özel Branşlar** in
+`lib/specialties/klinikDikey.ts` (`KLINIK_YENI_SLUGS`: saç ekimi, estetik
+cerrahi, medikal estetik, klinik dermatoloji, longevity, fizyoterapi, klinik
+psikoloji, diyetisyen, ergoterapi, odyoloji). Read that list live too. Do not
+hardcode it.
+
+Boss rule (2026-10-18): a core feature that is **not** one branş's own screen
+lands for **all 30 medical branches and all 10 Özel Branşlar in the same
+change**. No exceptions. Examples: muayene ekranı, reçete, randevu, hasta
+kaydı, MBYS paketi, hasta portalı shell, faturalama / tahsilat, aşı onam once
+it is general, and any shared workflow or data model. The doctor application
+stays **one product** — do not ship a second doctor app for Özel Branşlar or
+for Notya Klinik. Specialty screens and tools stay in their own branch
+(`brans-alan-sizmasi`). Notya Klinik (2–10 doctors) is a shared layer on that
+same product, not a thirty-first branş and not a rename of Özel Branşlar.
 
 > **Never hardcode the chapter list in your head or in a doc.**
 > Read it live every time:
@@ -56,10 +72,12 @@ it is spine code.
 
 ### 2. Baseline-only specialties — covered automatically
 
-For every branch in `lib/doktor/specialties.ts` **without** a
-`specialties/<slug>/` folder, a properly-scoped spine fix applies **by
-construction**. No per-specialty verification, no per-specialty test, no
-"let me check kardiyoloji too" busywork.
+For every branch in `lib/doktor/specialties.ts` **and** every slug in
+`KLINIK_YENI_SLUGS` **without** a `specialties/<slug>/` folder, a
+properly-scoped spine fix applies **by construction**. No per-specialty
+verification, no per-specialty test, no "let me check kardiyoloji too"
+busywork. If Özel Branşlar has its own copy of the screen (portal module,
+tool page, prompt), that copy gets the same fix in this change.
 
 "Properly scoped" means: the fix went into the shared component itself and was
 **not** duplicated into a chapter fork instead.

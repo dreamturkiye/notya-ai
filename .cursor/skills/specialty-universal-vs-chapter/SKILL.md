@@ -1,19 +1,20 @@
 ---
 name: specialty-universal-vs-chapter
 description: >-
-  Distinguishes universal product changes (apply to all ~29 medical specialties)
-  from chapter-specific work (stay inside one branş like Göz). Use when editing
+  Distinguishes universal product changes (apply to all 30 medical branches
+  plus the 10 Özel Branşlar) from chapter-specific work (stay inside one
+  branş like Göz). Use when editing
   hasta dosyası tabs, Sağlığım portal, registry, imaging modalities, SOAP/spine
   chrome, or when closing specialty gaps so shared fixes are not left göz-only.
 ---
 
-# Universal vs chapter-specific (all ~29 specialties)
+# Universal vs chapter-specific (30 medical branches + 10 Özel Branşlar)
 
-Boss rule (2026-09-17): Changes that are **universal** must be done **across the board** for every medical specialty in Notya (~29 branşlar in `lib/doktor/specialties.ts` / `SpecialtyKey`). Anything that is **for Göz** (or KD, derm, dahiliye, pediatri, …) stays inside that practice’s chapter.
+Boss rule (2026-09-17, extended 2026-10-18): Changes that are **universal** must be done **across the board** for every medical specialty in Notya (30 branşlar in `lib/doktor/specialties.ts` / `SpecialtyKey`) **and** the 10 Özel Branşlar in `lib/specialties/klinikDikey.ts` (`KLINIK_YENI_SLUGS`). Anything that is **for Göz** (or KD, derm, dahiliye, pediatri, saç ekimi, …) stays inside that practice’s chapter. One doctor application — do not fork a second doctor product for Özel Branşlar or for Notya Klinik.
 
 ## One-line rule
 
-**Shared spine → every branş. Specialty clinical content → that chapter only.**
+**Shared spine → 30 medical branches and 10 Özel Branşlar. Specialty clinical content → that chapter only.**
 
 ## Universal (do once, every specialty benefits)
 
@@ -26,7 +27,7 @@ Apply via registry / shared libs — never hardcode only `goz-hastaliklari`:
 | Hasta dosyası **tab chrome** | `lib/doktor/hastaDosyaSekmeleri.ts` | Exclusive chapter tabs only for that doctor’s specialty; baseline/aile may use age/sex mixed-care rules |
 | Imaging modality catalog | `lib/doktor/imagingModalities.ts` | Add codes once (oct/fundus/dermatoskopi…); chapters opt in via `goruntu.modaliteler` |
 | Baseline SOAP / İnceleme / reçete / epikriz / randevu | core doctor app | Never fork per branş |
-| Doktor Araçları **shared** tiles | `lib/doktor/doktorAraclari.ts` (`ORTAK_…`) | e-reçete / ICD-10 / epikriz / ilaç etkileşimi / … identical for all ~30 branşlar — classify before add (`specialty-doktor-araclari`) |
+| Doktor Araçları **shared** tiles | `lib/doktor/doktorAraclari.ts` (`ORTAK_…`) | e-reçete / ICD-10 / epikriz / ilaç etkileşimi / … identical for all 30 branşlar and, when the tool is core, the 10 Özel Branşlar — classify before add (`specialty-doktor-araclari`) |
 | Dose-lock / no invented form names / no internal field leak | `lib/doktor/*` | Specialty locks may extend; universal guards stay global |
 | Audit vocabulary | `specialty-audit-report` | Strong/Partial/Thin/Missing + **Hasta portalı** row on every chapter audit |
 

@@ -1,11 +1,12 @@
 # Notya AI — agent instructions (Cursor + Claude)
 
-This repo is a **commercial** multi-specialty product (~30 branşlar). Skills and rules under `.cursor/` are the standing source of truth for both Cursor agents and Claude. **Read the relevant skill before starting work on a section** — do not improvise product scope.
+This repo is a **commercial** multi-specialty product: **30 medical branches** (`lib/doktor/specialties.ts`) plus **10 Özel Branşlar** (`lib/specialties/klinikDikey.ts`). Skills and rules under `.cursor/` are the standing source of truth for both Cursor agents and Claude. **Read the relevant skill before starting work on a section** — do not improvise product scope.
 
 ## Always-on rules
 
 | Rule | Path |
 |------|------|
+| Ortak omurga (30 branş + 10 Özel Branşlar, tek hekim uygulaması) | `.cursor/rules/ortak-omurga-paritesi.mdc` |
 | Doktor Araçları classify-before-add | `.cursor/rules/specialty-doktor-araclari.mdc` |
 | Branş alan sızması (specialty fields must not leak) | `.cursor/rules/brans-alan-sizmasi.mdc` |
 | Ülke paritesi (every fix checked across us/gb/ca/au/nz/uz) | `.cursor/rules/ulke-paritesi-duzeltme.mdc` |
@@ -26,6 +27,10 @@ This repo is a **commercial** multi-specialty product (~30 branşlar). Skills an
 | Any report/form/identity field for a non-Turkey country module | `.cursor/skills/international-data-model-dogrulama/SKILL.md` |
 | Any bug fix or UX fix — before closing it (six-country check + per-country status line) | `.cursor/skills/ulke-paritesi-duzeltme/SKILL.md` |
 | Patient-file page, a portal/API hot path, task-sync, a hot-table query, or any new external call | `.cursor/skills/performans-butcesi-koruma/SKILL.md` |
+
+## Ortak omurga (short)
+
+A core change that is not one branş's own screen — muayene, reçete, randevu, hasta kaydı, MBYS, hasta portalı shell, faturalama / tahsilat, a general aşı onam, any shared workflow or data model — lands for all 30 medical branches and all 10 Özel Branşlar in the same change. The doctor application stays one product. Specialty screens stay in their branch. Notya Klinik is the multi-doctor layer; it is not a rename of Özel Branşlar. Full text: `.cursor/rules/ortak-omurga-paritesi.mdc`.
 
 ## Branş alan sızması (short)
 
