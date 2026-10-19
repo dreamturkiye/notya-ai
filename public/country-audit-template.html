@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{{COUNTRY}} against Turkey — country audit template · Notya</title>
+  <meta name="description" content="Blank country audit. Copy this file, replace every {{PLACEHOLDER}}, and score one country against Turkey. Strong at least 85. Partial 45 to 84. Thin 15 to 44. Missing under 15." />
+<style>
+    :root {
+      --bg:#060C18; --surface:#0D1526; --surface2:#121C30; --stroke:rgba(255,255,255,0.10);
+      --text:#EDF1F7; --muted:#8FA0B5; --dim:#64748B; --teal:#14B8A6; --teal-soft:rgba(20,184,166,0.14);
+      --blue:#60A5FA; --blue-soft:rgba(96,165,250,0.14); --amber:#F59E0B; --amber-soft:rgba(245,158,11,0.14);
+      --red:#F87171; --red-soft:rgba(248,113,113,0.14); --green:#2DD4BF;
+    }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; background:var(--bg); color:var(--text); line-height:1.45; -webkit-font-smoothing:antialiased; }
+    .wrap { max-width:1100px; margin:0 auto; padding:32px 20px 72px; }
+    .brand { display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:24px; align-items:center; }
+    .brand .tag { font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--dim); font-weight:700; }
+    h1 { margin:0 0 8px; font-size:28px; font-weight:700; letter-spacing:-.02em; line-height:1.2; }
+    h2 { margin:28px 0 12px; font-size:18px; font-weight:700; }
+    .lede { margin:0 0 14px; color:var(--muted); font-size:15px; max-width:920px; }
+    .pills { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:22px; }
+    .pill { display:inline-flex; align-items:center; padding:3px 10px; border-radius:999px; font-size:12px; font-weight:600; border:1px solid transparent; white-space:nowrap; }
+    .pill.success { background:var(--teal-soft); color:var(--green); border-color:rgba(45,212,191,.25); }
+    .pill.warning { background:var(--amber-soft); color:var(--amber); border-color:rgba(245,158,11,.28); }
+    .pill.danger { background:var(--red-soft); color:var(--red); border-color:rgba(248,113,113,.3); }
+    .pill.info { background:var(--blue-soft); color:var(--blue); border-color:rgba(96,165,250,.25); }
+    .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:18px; }
+    .stat { background:var(--surface); border:1px solid var(--stroke); border-radius:12px; padding:16px 14px; }
+    .stat .v { font-size:24px; font-weight:700; letter-spacing:-.03em; margin-bottom:4px; }
+    .stat .v.success { color:var(--green); } .stat .v.warning { color:var(--amber); } .stat .v.danger { color:var(--red); } .stat .v.info { color:var(--blue); }
+    .stat .l { font-size:12px; color:var(--muted); }
+    .callout { border-radius:12px; padding:16px 18px; margin:14px 0 22px; border:1px solid; }
+    .callout.info { background:var(--blue-soft); border-color:rgba(96,165,250,.28); }
+    .callout.warning { background:var(--amber-soft); border-color:rgba(245,158,11,.3); }
+    .callout h2 { margin:0 0 6px; font-size:12px; text-transform:uppercase; letter-spacing:.04em; }
+    .callout.info h2 { color:var(--blue); } .callout.warning h2 { color:var(--amber); }
+    .callout p, .callout li { margin:0; font-size:14px; }
+    .callout ol { margin:8px 0 0; padding-left:18px; }
+    .callout li { margin:6px 0; }
+    .table-wrap { border:1px solid var(--stroke); border-radius:12px; overflow:auto; margin-bottom:22px; background:var(--surface); }
+    table { width:100%; border-collapse:collapse; font-size:13px; min-width:720px; }
+    th,td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--stroke); vertical-align:top; }
+    th { background:var(--surface2); color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.05em; font-weight:700; }
+    tr:last-child td { border-bottom:none; }
+    td.domain { font-weight:600; }
+    td.note { color:var(--muted); }
+    td.gap { color:#FBBF24; }
+    td.num { font-variant-numeric:tabular-nums; font-weight:700; }
+    .bars { background:var(--surface); border:1px solid var(--stroke); border-radius:12px; padding:16px; margin-bottom:22px; }
+    .bar-row { display:grid; grid-template-columns:minmax(180px,280px) 1fr 40px; gap:10px; align-items:center; margin:8px 0; }
+    .bar-label { font-size:12px; color:var(--muted); }
+    .bar-track { height:10px; background:rgba(255,255,255,.06); border-radius:999px; overflow:hidden; }
+    .bar-fill { height:100%; background:var(--amber); border-radius:999px; }
+    .bar-fill.strong { background:var(--teal); }
+    .bar-fill.thin { background:var(--red); }
+    .bar-fill.gold { background:var(--teal); }
+    .bar-val { font-size:12px; font-weight:700; text-align:right; }
+    .cards { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin-bottom:22px; }
+    .cards.three { grid-template-columns:repeat(3,1fr); }
+    .card { background:var(--surface); border:1px solid var(--stroke); border-radius:12px; padding:14px; }
+    .card .title { font-size:14px; font-weight:650; margin-bottom:6px; }
+    .card .body { font-size:12px; color:var(--muted); }
+    .cap { font-size:12px; color:var(--dim); margin:-6px 0 14px; }
+    .foot { margin-top:36px; padding-top:16px; border-top:1px solid var(--stroke); font-size:12px; color:var(--dim); display:flex; flex-wrap:wrap; gap:8px 16px; justify-content:space-between; }
+    .banner { background:rgba(245,158,11,.1); border:1px solid rgba(245,158,11,.35); color:var(--amber); border-radius:10px; padding:10px 14px; font-size:13px; margin-bottom:18px; }
+    code { font-size:12px; }
+    @media (max-width:900px) {
+      .stats { grid-template-columns:repeat(2,1fr); }
+      .cards, .cards.three { grid-template-columns:1fr; }
+      h1 { font-size:22px; }
+      .bar-row { grid-template-columns:1fr; gap:4px; }
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">
+    <span class="tag">Notya · country audit template</span>
+    <span class="tag">{{AUDIT_ID}}</span>
+  </div>
+  <h1>{{COUNTRY}} against the Turkey reference</h1>
+  <p class="lede">One country. Score what a doctor in {{COUNTRY}} can open on <code>release/{{CODE}}</code> against Turkey on <code>main</code>. Do not score the other countries in this file.</p>
+  <div class="pills">
+    <span class="pill warning">Mean {{MEAN}}</span>
+    <span class="pill success">Strong {{STRONG_COUNT}}</span>
+    <span class="pill warning">Partial {{PARTIAL_COUNT}}</span>
+    <span class="pill danger">Thin {{THIN_COUNT}}</span>
+    <span class="pill danger">Missing {{MISSING_COUNT}}</span>
+  </div>
+  <div class="banner"><b>{{PHASE}} · {{AUDIT_ID}}</b> — {{DATE}}. {{COUNTRY}} only. No patient data. No person is named.</div>
+
+  <div class="callout info">
+    <h2>How to fill this file</h2>
+    <ol>
+      <li>Copy this file to <code>public/{{CODE}}-turkiye-audit.html</code>. Leave this template in place.</li>
+      <li>Replace every <code>{{PLACEHOLDER}}</code>. Delete a row only when the slice does not exist for this country, and say why.</li>
+      <li>Read <code>origin/main</code> and <code>origin/release/{{CODE}}</code> at the SHAs you write under Sources. Score the routes a doctor opens, not folders that the country build never mounts.</li>
+      <li>Turkey is 100 on each row because it is the reference. Strong is at least 85. Partial is 45 to 84. Thin is 15 to 44. Missing is under 15. The mean is the sum of the 17 scores divided by 17. Do not round a mean up to Strong.</li>
+      <li>Medula, e-Nabız, e-Reçete, SGK, MBYS, NVI, e-Fatura, GİB and KVKK are Turkey-only. Do not translate them. Their absence is not a deduction. A missing local equivalent is.</li>
+      <li>Fill the equivalents table from pages you opened. Write the URL and the date. If a page did not open, write that, and do not invent the rule.</li>
+      <li>Recognition gate: a specialty the regulator does not recognise is not offered. A specialty practised under a broader licence is folded into that licence. Cite the regulator page.</li>
+      <li>Classify every new tool before it is added: base for every role, one specialty, or a new universal tool. A child tool stays off adult specialties that do not use it.</li>
+      <li>Do not store an identifier the pack test forbids. If this country has no second patient number, write confirmed-none.</li>
+      <li>Publish the filled file. Do not overwrite the Australia pre-work report.</li>
+    </ol>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="v warning">{{MEAN}}</div><div class="l">Mean of 17 slices</div></div>
+    <div class="stat"><div class="v success">{{STRONG_COUNT}}</div><div class="l">Strong</div></div>
+    <div class="stat"><div class="v warning">{{PARTIAL_COUNT}}</div><div class="l">Partial</div></div>
+    <div class="stat"><div class="v danger">{{THIN_COUNT}}</div><div class="l">Thin or Missing</div></div>
+  </div>
+
+  <h2>Executive verdict</h2>
+  <p class="lede">{{VERDICT}}</p>
+
+  <div class="callout warning">
+    <h2>Recognition gate, not a score</h2>
+    <p>{{RECOGNITION_GATE}}</p>
+  </div>
+
+  <h2>How this was scored</h2>
+  <p class="cap">Turkey is 100 on each row as the reference that exists, including slices that are Turkey-only by law. {{COUNTRY}} is scored on the country-adapted equivalent a doctor can actually open. Strong is at least 85. Partial is 45 to 84. Thin is 15 to 44. Missing is under 15. Turkey-only mechanics are exempt. Their absence is not a deduction. The missing local equivalent is.</p>
+
+  <h2>Coverage</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Slice</th><th>Turkey reference</th><th>{{COUNTRY}} today</th><th>Depth</th><th>Score</th></tr></thead>
+    <tbody>
+      <tr><td class="domain">Clinic day</td><td class="note">{{TR_CLINIC_DAY}}</td><td class="note">{{LOCAL_CLINIC_DAY}}</td><td><span class="pill warning">{{DEPTH_CLINIC_DAY}}</span></td><td class="num">{{SCORE_CLINIC_DAY}}</td></tr>
+      <tr><td class="domain">30 medical specialties</td><td class="note">{{TR_SPECIALTIES}}</td><td class="note">{{LOCAL_SPECIALTIES}}</td><td><span class="pill warning">{{DEPTH_SPECIALTIES}}</span></td><td class="num">{{SCORE_SPECIALTIES}}</td></tr>
+      <tr><td class="domain">10 Özel Branşlar</td><td class="note">{{TR_OZEL}}</td><td class="note">{{LOCAL_OZEL}}</td><td><span class="pill danger">{{DEPTH_OZEL}}</span></td><td class="num">{{SCORE_OZEL}}</td></tr>
+      <tr><td class="domain">Hasta portalı</td><td class="note">{{TR_PORTAL}}</td><td class="note">{{LOCAL_PORTAL}}</td><td><span class="pill warning">{{DEPTH_PORTAL}}</span></td><td class="num">{{SCORE_PORTAL}}</td></tr>
+      <tr><td class="domain">Visit note</td><td class="note">{{TR_NOTE}}</td><td class="note">{{LOCAL_NOTE}}</td><td><span class="pill warning">{{DEPTH_NOTE}}</span></td><td class="num">{{SCORE_NOTE}}</td></tr>
+      <tr><td class="domain">Prescription</td><td class="note">{{TR_RX}}</td><td class="note">{{LOCAL_RX}}</td><td><span class="pill danger">{{DEPTH_RX}}</span></td><td class="num">{{SCORE_RX}}</td></tr>
+      <tr><td class="domain">Appointments</td><td class="note">{{TR_APPT}}</td><td class="note">{{LOCAL_APPT}}</td><td><span class="pill warning">{{DEPTH_APPT}}</span></td><td class="num">{{SCORE_APPT}}</td></tr>
+      <tr><td class="domain">Patient identity</td><td class="note">{{TR_PATIENT_ID}}</td><td class="note">{{LOCAL_PATIENT_ID}}</td><td><span class="pill danger">{{DEPTH_PATIENT_ID}}</span></td><td class="num">{{SCORE_PATIENT_ID}}</td></tr>
+      <tr><td class="domain">Doctor identity</td><td class="note">{{TR_DOCTOR_ID}}</td><td class="note">{{LOCAL_DOCTOR_ID}}</td><td><span class="pill warning">{{DEPTH_DOCTOR_ID}}</span></td><td class="num">{{SCORE_DOCTOR_ID}}</td></tr>
+      <tr><td class="domain">Billing</td><td class="note">{{TR_BILLING}}</td><td class="note">{{LOCAL_BILLING}}</td><td><span class="pill danger">{{DEPTH_BILLING}}</span></td><td class="num">{{SCORE_BILLING}}</td></tr>
+      <tr><td class="domain">Privacy and consent</td><td class="note">{{TR_PRIVACY}}</td><td class="note">{{LOCAL_PRIVACY}}</td><td><span class="pill danger">{{DEPTH_PRIVACY}}</span></td><td class="num">{{SCORE_PRIVACY}}</td></tr>
+      <tr><td class="domain">Immunisation</td><td class="note">{{TR_IMMUNE}}</td><td class="note">{{LOCAL_IMMUNE}}</td><td><span class="pill warning">{{DEPTH_IMMUNE}}</span></td><td class="num">{{SCORE_IMMUNE}}</td></tr>
+      <tr><td class="domain">Assistant and voice</td><td class="note">{{TR_ASSISTANT}}</td><td class="note">{{LOCAL_ASSISTANT}}</td><td><span class="pill danger">{{DEPTH_ASSISTANT}}</span></td><td class="num">{{SCORE_ASSISTANT}}</td></tr>
+      <tr><td class="domain">Documents and photos</td><td class="note">{{TR_DOCS}}</td><td class="note">{{LOCAL_DOCS}}</td><td><span class="pill warning">{{DEPTH_DOCS}}</span></td><td class="num">{{SCORE_DOCS}}</td></tr>
+      <tr><td class="domain">Clinical instruments</td><td class="note">{{TR_TOOLS}}</td><td class="note">{{LOCAL_TOOLS}}</td><td><span class="pill warning">{{DEPTH_TOOLS}}</span></td><td class="num">{{SCORE_TOOLS}}</td></tr>
+      <tr><td class="domain">Language on the routes a doctor opens</td><td class="note">{{TR_LANGUAGE}}</td><td class="note">{{LOCAL_LANGUAGE}}</td><td><span class="pill warning">{{DEPTH_LANGUAGE}}</span></td><td class="num">{{SCORE_LANGUAGE}}</td></tr>
+      <tr><td class="domain">Multi-doctor clinic</td><td class="note">{{TR_CLINIC}}</td><td class="note">{{LOCAL_CLINIC}}</td><td><span class="pill warning">{{DEPTH_CLINIC}}</span></td><td class="num">{{SCORE_CLINIC}}</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>Wow bar</h2>
+  <p class="cap">One bar per slice, width equal to the score. Teal at or above 45. Red below 45. Turkey stays at 100. Mean is {{SUM}}/17 = {{MEAN}}.</p>
+  <div class="bars">
+    <div class="bar-row"><div class="bar-label">Turkey reference</div><div class="bar-track"><div class="bar-fill gold" style="width:100%"></div></div><div class="bar-val">100</div></div>
+    <div class="bar-row"><div class="bar-label">{{BAR_1_LABEL}}</div><div class="bar-track"><div class="bar-fill strong" style="width:{{BAR_1_WIDTH}}%"></div></div><div class="bar-val">{{BAR_1_SCORE}}</div></div>
+    <div class="bar-row"><div class="bar-label">{{BAR_2_LABEL}}</div><div class="bar-track"><div class="bar-fill strong" style="width:{{BAR_2_WIDTH}}%"></div></div><div class="bar-val">{{BAR_2_SCORE}}</div></div>
+    <div class="bar-row"><div class="bar-label">{{BAR_3_LABEL}}</div><div class="bar-track"><div class="bar-fill" style="width:{{BAR_3_WIDTH}}%"></div></div><div class="bar-val">{{BAR_3_SCORE}}</div></div>
+  </div>
+
+  <h2>What a doctor can open</h2>
+  <p class="cap">From <code>countries/{{CODE}}/index.ts</code>. If <code>bolunmemisUygulama</code> is false, only the country routes and <code>/api/ulke/</code> mount.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Surface</th><th>Flag</th><th>What it is</th></tr></thead>
+    <tbody>
+      <tr><td class="domain">{{SURFACE_1}}</td><td><span class="pill success">{{FLAG_1}}</span></td><td class="note">{{SURFACE_1_NOTE}}</td></tr>
+      <tr><td class="domain">{{SURFACE_2}}</td><td><span class="pill danger">{{FLAG_2}}</span></td><td class="note">{{SURFACE_2_NOTE}}</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>Turkish element to local equivalent</h2>
+  <p class="cap">The left column is fixed. The middle column is this country. Write the page you opened. Do not copy a Turkish mechanic into the middle column.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Turkish element</th><th>{{COUNTRY}} equivalent</th><th>Notes</th><th>Page opened</th></tr></thead>
+    <tbody>
+      <tr><td class="domain">Sağlık Bakanlığı</td><td class="note">{{EQ_HEALTH_MINISTRY}}</td><td class="note">{{EQ_HEALTH_MINISTRY_NOTE}}</td><td class="note">{{EQ_HEALTH_MINISTRY_SRC}}</td></tr>
+      <tr><td class="domain">Medical regulator</td><td class="note">{{EQ_REGULATOR}}</td><td class="note">{{EQ_REGULATOR_NOTE}}</td><td class="note">{{EQ_REGULATOR_SRC}}</td></tr>
+      <tr><td class="domain">KVKK</td><td class="note">{{EQ_PRIVACY}}</td><td class="note">{{EQ_PRIVACY_NOTE}}</td><td class="note">{{EQ_PRIVACY_SRC}}</td></tr>
+      <tr><td class="domain">e-Nabız</td><td class="note">{{EQ_SHARED_RECORD}}</td><td class="note">{{EQ_SHARED_RECORD_NOTE}}</td><td class="note">{{EQ_SHARED_RECORD_SRC}}</td></tr>
+      <tr><td class="domain">İlaç listesi</td><td class="note">{{EQ_DRUGS}}</td><td class="note">{{EQ_DRUGS_NOTE}}</td><td class="note">{{EQ_DRUGS_SRC}}</td></tr>
+      <tr><td class="domain">e-Reçete / Medula</td><td class="note">{{EQ_ERX}}</td><td class="note">{{EQ_ERX_NOTE}}</td><td class="note">{{EQ_ERX_SRC}}</td></tr>
+      <tr><td class="domain">e-Fatura / GİB</td><td class="note">{{EQ_INVOICE}}</td><td class="note">{{EQ_INVOICE_NOTE}}</td><td class="note">{{EQ_INVOICE_SRC}}</td></tr>
+      <tr><td class="domain">Card payment</td><td class="note">{{EQ_PAY}}</td><td class="note">{{EQ_PAY_NOTE}}</td><td class="note">{{EQ_PAY_SRC}}</td></tr>
+      <tr><td class="domain">Protokol numarası</td><td class="note">{{EQ_EPISODE}}</td><td class="note">{{EQ_EPISODE_NOTE}}</td><td class="note">{{EQ_EPISODE_SRC}}</td></tr>
+      <tr><td class="domain">SGK</td><td class="note">{{EQ_PAYER}}</td><td class="note">{{EQ_PAYER_NOTE}}</td><td class="note">{{EQ_PAYER_SRC}}</td></tr>
+      <tr><td class="domain">Hasta portalı</td><td class="note">{{EQ_PORTAL}}</td><td class="note">{{EQ_PORTAL_NOTE}}</td><td class="note">{{EQ_PORTAL_SRC}}</td></tr>
+      <tr><td class="domain">Aşı takvimi</td><td class="note">{{EQ_IMMUNE}}</td><td class="note">{{EQ_IMMUNE_NOTE}}</td><td class="note">{{EQ_IMMUNE_SRC}}</td></tr>
+      <tr><td class="domain">Diploma / hekim kimlik</td><td class="note">{{EQ_DOCTOR_ID}}</td><td class="note">{{EQ_DOCTOR_ID_NOTE}}</td><td class="note">{{EQ_DOCTOR_ID_SRC}}</td></tr>
+      <tr><td class="domain">Tesis kodu</td><td class="note">{{EQ_FACILITY}}</td><td class="note">{{EQ_FACILITY_NOTE}}</td><td class="note">{{EQ_FACILITY_SRC}}</td></tr>
+      <tr><td class="domain">Clinical guidelines</td><td class="note">{{EQ_GUIDELINES}}</td><td class="note">One reference per offered specialty. {{EQ_GUIDELINES_NOTE}}</td><td class="note">{{EQ_GUIDELINES_SRC}}</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>Mandate matrix</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Mandate</th><th>Level</th><th>In the pack</th><th>Gap</th></tr></thead>
+    <tbody>
+      <tr><td class="domain">{{MANDATE_1}}</td><td><span class="pill info">{{MANDATE_1_LEVEL}}</span></td><td class="note">{{MANDATE_1_PACK}}</td><td class="gap">{{MANDATE_1_GAP}}</td></tr>
+      <tr><td class="domain">Medula, e-Nabız, SGK, KVKK, e-Fatura</td><td><span class="pill info">Turkey only</span></td><td class="note">Exempt. Not translated.</td><td class="gap">Keep them off this country</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>Specialty references</h2>
+  <p class="cap">One row per role the pack still offers. A role the regulator does not recognise is absent, not a blank specialty.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Role</th><th>Local reference</th><th>Tool key</th><th>Page opened</th></tr></thead>
+    <tbody>
+      <tr><td class="domain">{{ROLE_1}}</td><td class="note">{{ROLE_1_REF}}</td><td class="note"><code>{{ROLE_1_KEY}}</code></td><td class="note">{{ROLE_1_SRC}}</td></tr>
+      <tr><td class="domain">{{ROLE_2}}</td><td class="note">{{ROLE_2_REF}}</td><td class="note"><code>{{ROLE_2_KEY}}</code></td><td class="note">{{ROLE_2_SRC}}</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>Tools</h2>
+  <div class="cards">
+    <div class="card"><div class="title">Base, every role</div><div class="body">{{BASE_TOOLS}}</div></div>
+    <div class="card"><div class="title">Specialty-only</div><div class="body">{{SPECIALTY_TOOLS}}</div></div>
+    <div class="card"><div class="title">Turkey-only, kept off</div><div class="body">{{TURKEY_ONLY_OFF}}</div></div>
+    <div class="card"><div class="title">Not built, and why</div><div class="body">{{NOT_BUILT}}</div></div>
+  </div>
+
+  <h2>Game changers, in order</h2>
+  <div class="cards three">
+    <div class="card"><div class="title">1 · {{NEXT_1}}</div><div class="body">{{NEXT_1_NOTE}}</div></div>
+    <div class="card"><div class="title">2 · {{NEXT_2}}</div><div class="body">{{NEXT_2_NOTE}}</div></div>
+    <div class="card"><div class="title">3 · {{NEXT_3}}</div><div class="body">{{NEXT_3_NOTE}}</div></div>
+  </div>
+
+  <h2>Sources</h2>
+  <p class="cap"><code>origin/main</code> {{MAIN_SHA}} · <code>origin/release/{{CODE}}</code> {{RELEASE_SHA}} · live check {{LIVE_CHECK}}</p>
+
+  <div class="foot">
+    <span>{{AUDIT_ID}} · {{DATE}} · {{COUNTRY}} only · no patient data</span>
+    <span>Template COUNTRY-AUDIT-TEMPLATE-01</span>
+  </div>
+</div>
+</body>
+</html>

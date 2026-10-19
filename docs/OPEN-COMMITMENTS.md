@@ -1,5 +1,11 @@
 # OPEN COMMITMENTS — Notya AI
 
+## ULKE-ALTIN-AU-01 — Australia closeout, then the United States (2026-10-19)
+
+Australia is the first country brought toward the Turkey reference, on its own pack (`release/au`), with Australian sources. The other five countries are not in that change.
+
+**Status:** au: APPLIED on the Australia pack (Medicare card checksum, provider-number checksum, Privacy Act record, My Health Record guidance link, GST tax-invoice link, one college or regulator link per offered role, National Immunisation Program tick does not claim an AIR report). Hair transplantation is folded into cosmetic surgery. Preventive and longevity medicine is not offered. OPEN GAP — us, gb, ca, nz, uz. Owner: Kaan. Date: 2026-10-19. Next country is the United States. Use `public/country-audit-template.html`. Do not start the United States, the United Kingdom, Canada, New Zealand or Uzbekistan in the Australia closeout. Turkey-only mechanics stay EXEMPT: Medula, e-Nabız, e-Reçete, SGK, MBYS, NVI, e-Fatura, GİB, KVKK.
+
 ## OZEL-BRANS-ULKE-01 — Özel Branş canvas and plan save are Türkiye-only (2026-10-19)
 
 The ten Özel Branş canvases, `TuvalAlanlari`, and `ozel_brans_plan` (migration 177) are on `main`. `git grep` of `OzelStudyo` and `ozel-brans` on `origin/release/{us,gb,ca,au,nz,uz}` returns nothing. This chapter is not a Turkey-only mechanic in full (the clinical calendars are not SGK/Medula), but KVKK, e-Nabız, 112, and Hasta Hakları iki nüsha are Turkey-only and must not be copied. A country-adapted scaffold does not exist yet, and a translated copy is not allowed.
