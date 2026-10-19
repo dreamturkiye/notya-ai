@@ -79,6 +79,7 @@ describe('Özel Branş araçları — her dalın kendi motoru', () => {
     for (const slug of KLINIK_YENI_SLUGS) {
       const dosya = fs.readFileSync(path.join(process.cwd(), 'specialties', slug, 'ui', 'Tuval.tsx'), 'utf8')
       assert.match(dosya, new RegExp(`data-tuval="${slug}"`), slug)
+      assert.match(dosya, /TuvalAlanlari/, slug)
       tuvaller.add(dosya)
     }
     assert.equal(tuvaller.size, 10)

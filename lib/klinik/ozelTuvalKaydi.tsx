@@ -13,7 +13,13 @@ import { DiyetTuval } from '@/specialties/diyetisyen/ui/Tuval'
 import { ErgoTuval } from '@/specialties/ergoterapi/ui/Tuval'
 import { OdyoTuval } from '@/specialties/odyoloji/ui/Tuval'
 
-export type OzelTuvalProps = { tanim: AracTanim; sonuc: AracCikti; bugun: string }
+export type OzelTuvalProps = {
+  tanim: AracTanim
+  sonuc: AracCikti
+  bugun: string
+  girdi?: Record<string, string>
+  yaz?: (id: string, deger: string) => void
+}
 
 export const OZEL_TUVAL: Record<KlinikYeniSlug, (p: OzelTuvalProps) => ReactElement> = {
   'sac-ekimi': SacTuval,
