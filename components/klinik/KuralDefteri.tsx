@@ -1,6 +1,6 @@
 'use client'
 import type { CSSProperties } from 'react'
-import { kuralBagla, kuralDosyaSatirlari, kuralYasaklari } from '@/lib/klinik/kuralBag'
+import { kuralBagla, kuralDosyaSatirlari, kuralVitrin, kuralYasaklari, ULUSAL_TAKVIM_YOK } from '@/lib/klinik/kuralBag'
 
 const kutu: CSSProperties = {
   background: '#faf6ee',
@@ -13,14 +13,14 @@ const kutu: CSSProperties = {
 
 export function KuralDefteri({ slug }: { slug: string }) {
   const bag = kuralBagla(slug)
-  if (!bag) return null
-  const kanun = bag.filter((k) => k.dogrulandi).slice(0, 4)
+  const kanun = kuralVitrin(slug, 4)
+  if (!bag || !kanun.length) return null
   const oneri = bag.filter((k) => !k.dogrulandi).length
   const yasak = kuralYasaklari(slug)
   return (
     <section data-kural={slug} style={kutu}>
       <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', color: '#2f4334' }}>KAYNAK BAĞI</div>
-      <p style={{ margin: 0, fontSize: 13, color: '#3b2e24' }}>Takvim kopyalanmaz, bağlanır. Gün sayıları resmi takvim değildir.</p>
+      <p style={{ margin: 0, fontSize: 13, color: '#3b2e24' }}>{ULUSAL_TAKVIM_YOK}</p>
       <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13, color: '#3b2e24' }}>
         {kanun.map((k) => (
           <li key={k.id}>
@@ -51,7 +51,7 @@ export function KuralDosya({ slug }: { slug: string }) {
           </li>
         ))}
       </ul>
-      <p style={{ margin: 0, fontSize: 12, color: '#8b7d70' }}>Gün sayıları öneridir — hekim kilitler. E-imza ve SBİYS iddia edilmez.</p>
+      <p style={{ margin: 0, fontSize: 12, color: '#8b7d70' }}>{ULUSAL_TAKVIM_YOK} E-imza ve SBİYS iddia edilmez. İmzalı nüsha ve görüntü dosyası saklanmaz.</p>
     </section>
   )
 }

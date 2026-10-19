@@ -44,6 +44,10 @@ describe('KLINIK_MEVZUAT — SB / KVKK / kayıt', () => {
       assert.ok(KLINIK_MEVZUAT[slug].kayit.some((k) => k.includes('md.24') || k.includes('elektronik')))
     }
     assert.ok(KLINIK_MEVZUAT['sac-ekimi'].kvkk.some((k) => k.includes('foto')))
+    assert.ok(KLINIK_MEVZUAT['sac-ekimi'].kanunlar.some((k) => k.includes('40176')))
+    assert.ok(KLINIK_MEVZUAT['sac-ekimi'].qos.some((k) => k.includes('16 m²')))
+    assert.equal(KLINIK_MEVZUAT.fizyoterapi.qos.some((k) => k.includes('16 m²')), false)
+    assert.equal(KLINIK_MEVZUAT['klinik-dermatoloji'].kayit.some((k) => k.includes('72 saat')), false)
     assert.equal(klinikMevzuat('kardiyoloji'), null)
     assert.ok(klinikMevzuatOzet('fizyoterapi').includes('29.03.2025'))
   })

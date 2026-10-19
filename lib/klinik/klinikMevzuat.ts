@@ -101,9 +101,16 @@ function muttefik(slug: KlinikYeniSlug, extra: Omit<KlinikMevzuat, 'slug' | 'rej
 
 export const KLINIK_MEVZUAT: Record<KlinikYeniSlug, KlinikMevzuat> = {
   'sac-ekimi': hekim('sac-ekimi', {
+    kanunlar: [
+      'Saç Ekimi Birimleri Hakkında Yönetmelik (Mevzuat No 40176, RG 06.05.2023/32182; değişiklik RG 03.11.2023/32358 ve RG 12.09.2025/33015)',
+    ],
     qos: [
       ...KLINIK_ORTAK_QOS,
-      'SB saç ekimi uygulayıcı sertifikası / tıbbi estetik yetkinlik — sertifikasız işlem yok',
+      'md.6/5-c: uygulama odası en az 16 m²',
+      'md.6/5-d: uygulama odası dışında fotoğraf çekme alanı',
+      'md.9/1: yalnız Bakanlıkça tescilli sertifikalı personel; md.9/3 kanal açılması hekimde',
+      'md.10/4: aynı anda bir odada bir hasta',
+      'md.6/5-f ve md.6/5-g: Ek-1 donanım ve Ek-2 acil ilaç birimde bulunur — kalem listesi kopyalanmaz',
       'TPRECD / EPCD etik: sonuç vaadi ve greft sayısı reklamı yok',
     ],
     kvkk: [
@@ -114,10 +121,12 @@ export const KLINIK_MEVZUAT: Record<KlinikYeniSlug, KlinikMevzuat> = {
       ...HEKIM_KAYIT_OMURGA,
       'Onam tarihi, işlem tarihi, greft bandı (karar desteği — nihai sayı hekimde), yıkama 1/3/10/14 vadeleri',
       'Önce/sonra foto: KVKK rızası işaretli değilse arşive konmaz',
+      'md.10/3 ve md.12/1: Ek-4’te teknik adı, ekilen kök sayısı ve bölgesi, ekip ve donör ile alıcı fotoğrafları işlemden önce ve ilk 72 saat içinde kayıt edilir',
     ],
     riza: [
       'Hasta Hakları m.15–26: işlem, alternatif, komplikasyon (nekroz, şok, anestezi), red sonucu',
       'Aynı gün onam zayıf kabul — makul değerlendirme süresi (yargı / Hasta Hakları; yönetmelikte sabit gün yok)',
+      'md.10/2-ç: aydınlatılmış rıza formuna donör ve alıcı alanının önce ve sonra fotoğrafları eklenir ve taraflarca imzalanır',
     ],
     yasak: ['Uydurma greft / SGK FUE paket iddiası', 'Hairline AI tanı', 'Sertifikasız uygulayıcı'],
     sorumluluk: ['Aydınlatma doğruluğu hekimde', '112: donor nekroz, anafilaksi'],

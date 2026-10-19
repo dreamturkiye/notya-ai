@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import fs from 'node:fs'
 import path from 'node:path'
 import { KLINIK_YENI_SLUGS } from '@/lib/specialties/klinikDikey'
-import { kanunSatiriMi, kuralBagla, kuralDosyaSatirlari, kuralYasaklari } from '@/lib/klinik/kuralBag'
+import { kanunSatiriMi, kuralBagla, kuralDosyaSatirlari, kuralVitrin, kuralYasaklari, ULUSAL_TAKVIM_YOK } from '@/lib/klinik/kuralBag'
 
 const IZ = {
   'sac-ekimi': 'Hairline',
@@ -56,5 +56,21 @@ describe('kural bağı', () => {
     assert.match(kuralYasaklari('ergoterapi').join(' '), /Neyzi/)
     assert.match(kuralBagla('odyoloji')!.map((k) => k.metin).join(' '), /md\.11/)
     assert.equal(kuralBagla('odyoloji')!.some((k) => /greft/.test(k.metin)), false)
+  })
+
+  it('saç 40176 bağlanır; 16 m² ve 72 saat başka branşa sızmaz', () => {
+    assert.doesNotMatch(ULUSAL_TAKVIM_YOK, /Neyzi|aşı takvimi/i)
+    const sac = kuralBagla('sac-ekimi')!
+    const oda = sac.find((k) => /16 m²/.test(k.metin))
+    const saat = sac.find((k) => /72 saat/.test(k.metin))
+    assert.ok(oda && oda.dogrulandi)
+    assert.ok(saat && saat.dogrulandi)
+    assert.match(kuralVitrin('sac-ekimi').map((k) => k.metin).join(' '), /16 m²/)
+    assert.match(kuralDosyaSatirlari('sac-ekimi').map((k) => k.metin).join(' '), /72 saat/)
+    for (const yaban of ['pediatri', 'kardiyoloji', 'dermatoloji', 'fizik-tedavi', 'estetik-cerrahi', 'klinik-dermatoloji', 'fizyoterapi', 'odyoloji', 'ergoterapi']) {
+      assert.equal(kuralVitrin(yaban).some((k) => /16 m²|72 saat|40176/.test(k.metin)), false, yaban)
+    }
+    assert.match(kuralVitrin('odyoloji').map((k) => k.metin).join(' '), /3 m²/)
+    assert.match(kuralVitrin('fizyoterapi').map((k) => k.metin).join(' '), /10 m²/)
   })
 })

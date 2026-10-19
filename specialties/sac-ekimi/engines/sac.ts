@@ -1,9 +1,16 @@
 /**
  * SAC-EKIMI-EXCEPTIONAL-01 — ayaktan saç ekimi kliniği. Tanı/greft auto-lock yok.
  * Plastik / derm araç gridine sızmaz. Yıkama günleri ürün kararıdır; resmi takvim değildir.
+ * Saç Ekimi Birimleri Hakkında Yönetmelik (40176) oda ve 72 saat kayıt görevini bağlar.
+ * Ulusal yıkama veya greft takvimi yoktur.
  */
+import { isoEkleGun, isoMu } from '@/lib/klinik/isoGun'
 import { kontrolDurumu } from '@/lib/klinik/telafi'
 export const HEKIM_KILIT = 'Greft bandı karar desteğidir. Nihai greft, çizgi ve tanı hekimindir; Notya doz/greft kilitlemez.'
+/** md.6/5-c. Tesis standardıdır. Greft kilidi değildir. */
+export const UYGULAMA_ODASI_M2 = 16
+/** md.10/3. Takvim günü olarak 72 saat = 3 gün. Saat kliniğin kaydındadır. */
+export const FOTO_72_GUN = 3
 export const ACIL_METIN = 'Yaygın kızarıklık+ateş, kontrolsüz kanama veya anestezi sonrası nefes darlığı: 112 veya kliniği acil arayın.'
 
 export const NORWOOD = ['I', 'II', 'III', 'III-vertex', 'IV', 'V', 'VI', 'VII'] as const
@@ -28,6 +35,23 @@ export function yikamaTakvimi(ameliyatIso: string, bugunIso: string): Array<{ gu
     ...x,
     durum: kontrolDurumu(ameliyatIso, x.gun, bugunIso) || 'planli',
   }))
+}
+
+export function uygulamaOdasi(m2: number): { ozet: string; dogrulandi: true } | { hata: string } {
+  if (!(m2 > 0)) return { hata: 'Oda ölçüsünü girin.' }
+  if (m2 < UYGULAMA_ODASI_M2) return { hata: `md.6/5-c: uygulama odası en az ${UYGULAMA_ODASI_M2} m². Bu ölçü standardın altında.` }
+  return { ozet: `md.6/5-c: uygulama odası ${m2} m² — en az ${UYGULAMA_ODASI_M2} m². Tesis standardıdır, greft kilidi değildir.`, dogrulandi: true }
+}
+
+/** Kayıt görevi. Görüntü baytı saklanmaz. Bakanlık Ek-4 yazımı iddia edilmez. */
+export function foto72Kaydi(islemIso: string): { ozet: string; bitis: string; dogrulandi: true } | { hata: string } {
+  if (!isoMu(islemIso)) return { hata: 'İşlem gününü girin.' }
+  const bitis = isoEkleGun(islemIso, FOTO_72_GUN)
+  return {
+    bitis,
+    dogrulandi: true,
+    ozet: `md.10/3: donör ve alıcı fotoğrafı işlemden önce ve ${bitis} tarihine kadar (ilk 72 saat) kaydedilir. Görüntü dosyası saklanmaz. Bakanlık Ek-4 yazımı iddia edilmez.`,
+  }
 }
 
 export function fotoKvkkRiza(onamVar: boolean, ameliyatIso: string): { ozet: string } | { hata: string } {

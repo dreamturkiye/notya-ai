@@ -5,7 +5,7 @@
 import type { KlinikYeniSlug } from '@/lib/specialties/klinikDikey'
 import { vadeDurumu } from '@/lib/klinik/isoGun'
 import { telafiIzlem } from '@/lib/klinik/telafi'
-import { greftBandi, yikamaTakvimi, fotoKvkkRiza, cizgiCercevesi, FOTO_SERI } from '@/specialties/sac-ekimi/engines/sac'
+import { greftBandi, yikamaTakvimi, fotoKvkkRiza, foto72Kaydi, cizgiCercevesi, FOTO_SERI } from '@/specialties/sac-ekimi/engines/sac'
 import { dokulmePenceresi, sonucIzlemi } from '@/specialties/sac-ekimi/engines/izlem'
 import { fotoSaklama as sacFotoSaklama } from '@/specialties/sac-ekimi/engines/kayit'
 import { gecDonem } from '@/specialties/estetik-cerrahi/engines/izlem'
@@ -135,7 +135,7 @@ export const OZEL_ARACLAR: readonly AracTanim[] = [
     const r = cizgiCercevesi(g.on || '', g.temporal || '', g.verteks || '')
     return 'hata' in r ? r : cikti(r.ozet, [], null)
   }),
-  T('/ozel-branslar/sac-foto', 'sac-ekimi', 'Foto seri günleri', '0 / 10 / 30 / 90. Ayrı KVKK rızası şart.', '#1E40AF', [
+  T('/ozel-branslar/sac-foto', 'sac-ekimi', 'Foto seri günleri', '0 / 10 / 30 / 90 öneridir. md.10/3 ilk 72 saat kayıt görevidir. Görüntü dosyası saklanmaz.', '#1E40AF', [
     { id: 'ameliyat', etiket: 'İşlem günü', tur: 'tarih' },
     { id: 'riza', etiket: 'Foto KVKK rızası var', tur: 'onay' },
     { id: 'ay', etiket: 'Saklama (ay: 6, 12 veya 24)', tur: 'sayi' },
@@ -144,9 +144,11 @@ export const OZEL_ARACLAR: readonly AracTanim[] = [
     if ('hata' in r) return r
     const sak = sacFotoSaklama(true, g.ameliyat || '', g.ay || '')
     if ('hata' in sak) return sak
+    const kayit72 = foto72Kaydi(g.ameliyat || '')
+    if ('hata' in kayit72) return kayit72
     const vadeler: Array<{ iso: string; ad: string }> = FOTO_SERI.map((x) => ({ iso: isoEkle(g.ameliyat, x.gun), ad: x.ad }))
     if (sak.bitis) vadeler.push({ iso: sak.bitis, ad: 'Foto saklama bitişi' })
-    return izlemCikti([r.ozet, sak.ozet].filter(Boolean).join(' '), vadeler, bugun, null, true)
+    return izlemCikti([r.ozet, sak.ozet, kayit72.ozet].filter(Boolean).join(' '), vadeler, bugun, null, true)
   }),
 
   T('/ozel-branslar/cerrahi-onam', 'estetik-cerrahi', 'Elektif onam / soğuma', 'Onam ile ameliyat arası. Kesi yok.', '#E91E8C', [
