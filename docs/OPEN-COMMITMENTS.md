@@ -4238,6 +4238,7 @@ Kayıt kesintisiz -> durdur -> **Ekleri Ekle** (sürükle-bırak / dosya / kamer
 - Standing rules for Claude: batch changes into one push to `main`; docs-only commits use `[skip ci]` in the message; no per-agent pushes to `main`; do not re-enable branch previews without Kaan.
 - Weekly check (scheduled task, Mondays): compare daily spend with the $2/day target; flag anything above $5/day or any new product line.
 - Open: build machine size unknown (Settings > Build and Deployment); Observability Events $4.46/mo (consider off during beta); fallback if builds stay costly = build in GitHub Actions + `vercel deploy --prebuilt`. Waits on: Claude (check after one week of data, ~2026-10-23).
+- Weekly check 2026-10-19 (Claude): PT-day spend Oct 12–18 = $2.49, 12.89, 11.52, 5.56, 10.68, 5.38, 2.63 (total $51.15; Build CPU $43.34; non-build floor ≈ $1.1/day). Target $2/day met on 0 of 7 days; >$5/day on 5 of 7 (Oct 13–17). No new product lines. Since Oct 17 no feature/fix/cursor/dev branch has built (all CANCELED); main + release/* still build (Oct 17: 74 READY, Oct 18: 17 READY). Ignore-step value not readable via MCP get_project — not re-verified directly. Next: batch release/* pushes.
 
 ## MOBIL-PERSONEL — Pediatri Beta Audit item 2: phone use and staff roles (2026-10-16, branch `feature/mobil-personel-erisimi`, owner Claude)
 
