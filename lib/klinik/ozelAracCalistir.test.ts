@@ -8,6 +8,7 @@ import { klinikAraciDalaUygun, klinikAraclariListesi } from '@/lib/klinik/klinik
 import { OZEL_ARACLAR, portalSatirlari } from '@/lib/klinik/ozelAracCalistir'
 import { ozelAracDogrula } from '@/lib/klinik/ozelAracDogrula'
 import { kohortAcilBirlestir } from '@/lib/klinik/kohortAcil'
+import { ozelKohortBirlestir } from '@/lib/klinik/ozelKohort'
 import { ozelSonucDuzeni } from '@/lib/klinik/ozelSonucDuzeni'
 import { STUDYO_KOPYA } from '@/lib/klinik/ozelStudyoKopya'
 
@@ -98,5 +99,14 @@ describe('Özel Branş araçları — her dalın kendi motoru', () => {
     assert.equal(once.find((s) => s.patientId === 'b')?.ad, 'B')
     const tekrar = kohortAcilBirlestir(once, [{ patient_id: 'b', acil: 'yine' }], new Map())
     assert.equal(tekrar.filter((s) => s.patientId === 'b' && s.durum === '112').length, 1)
+    const dal = ozelKohortBirlestir([], [{
+      patient_id: 'a', slug: 'sac-ekimi', riza: false,
+      vadeler: [{ iso: '2026-10-01', ad: 'Kontrol' }, { iso: '2026-10-02', ad: '40 dB' }],
+    }], new Map([['a', 'Ayşe']]), '2026-10-19')
+    assert.equal(dal.filter((s) => s.durum === 'gecikti').length, 1)
+    assert.match(dal.find((s) => s.durum === 'gecikti')?.ozet || '', /Saç izlemi/)
+    assert.equal(dal.some((s) => s.durum === 'riza-eksik'), true)
+    const yaban = ozelKohortBirlestir([], [{ patient_id: 'b', slug: 'pediatri', vadeler: [{ iso: '2026-10-01', ad: 'Kontrol' }] }], new Map(), '2026-10-19')
+    assert.equal(yaban.length, 0)
   })
 })

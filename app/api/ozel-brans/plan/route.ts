@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
   const patientId = req.nextUrl.searchParams.get('patientId')
   let sorgu = supabase
     .from('ozel_brans_plan')
-    .select('patient_id, arac, ozet, portal_satir, acil, riza, girdi, updated_at')
+    .select('patient_id, slug, arac, ozet, portal_satir, vadeler, acil, riza, girdi, updated_at')
     .eq('doctor_id', user.id)
   if (patientId) {
     if (!(await hastaSahibiMi(supabase, user.id, patientId))) {

@@ -1,4 +1,5 @@
 'use client'
+import { ergoRitim } from '@/specialties/ergoterapi/engines/portal-ergo'
 import { KlinikHatirlatmaView } from '../../../_components/KlinikHatirlatmaView'
 import { usePortalLive } from '../../../_components/PortalLiveProvider'
 import { portalModulAktif } from '@/lib/portal/moduller'
@@ -16,5 +17,5 @@ export default function Page() {
     )
   }
   const plan = data.ozelPlan
-  return <KlinikHatirlatmaView satirlar={plan?.satirlar} title="Günlük programım" subtitle="Seans / ev programı. Tanı yoktur." acil={plan?.acil || "Ani güç kaybı: 112."} basePath={basePath} ritim={plan?.satirlar?.length ? undefined : ['GYA seans tarihi uzmanın kaydıyladır', 'Bağımsızlık skoru yoktur'] } />
+  return <KlinikHatirlatmaView satirlar={plan?.satirlar} title="Günlük programım" subtitle="Seans / ev programı. Tanı yoktur." acil={plan?.acil || "Ani güç kaybı: 112."} basePath={basePath} ritim={plan?.satirlar?.length ? undefined : ergoRitim() } />
 }

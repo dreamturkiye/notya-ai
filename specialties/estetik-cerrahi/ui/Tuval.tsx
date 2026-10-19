@@ -39,9 +39,10 @@ export function CerrahiTuval({ tanim, sonuc, bugun, girdi = {}, yaz }: { tanim: 
     )
   }
   return (
-    <section data-tuval="estetik-cerrahi" style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+    <section data-tuval="estetik-cerrahi" style={{ display: 'grid', gap: 8 }}>
       {alan}
-      {gunler.map((s) => <span key={s.ad} style={{ background: '#fce7f3', borderRadius: 999, padding: '6px 10px', fontSize: 12 }}>{s.ad} · {s.durum}</span>)}
+      <div style={{ fontSize: 11, fontWeight: 700, color: '#9d174d' }}>AMELİYAT SONRASI İZLEM</div>
+      {gunler.map((s) => <div key={s.ad} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, background: '#fdf2f8', borderRadius: 8, padding: '8px 10px', fontSize: 13 }}><span>{s.ad}</span><b>{s.durum}</b></div>)}
     </section>
   )
 }

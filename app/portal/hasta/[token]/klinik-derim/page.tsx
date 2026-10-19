@@ -1,4 +1,5 @@
 'use client'
+import { dermRitim } from '@/specialties/klinik-dermatoloji/engines/portal-derm'
 import { KlinikHatirlatmaView } from '../../../_components/KlinikHatirlatmaView'
 import { usePortalLive } from '../../../_components/PortalLiveProvider'
 import { portalModulAktif } from '@/lib/portal/moduller'
@@ -16,5 +17,5 @@ export default function Page() {
     )
   }
   const plan = data.ozelPlan
-  return <KlinikHatirlatmaView satirlar={plan?.satirlar} title="Bakımım" subtitle="Seans ve bakım tarihleri. Tanı, skor ve fluence yoktur." acil={plan?.acil || "Kabarcık, görme kaybı veya nefes darlığında 112."} basePath={basePath} ritim={plan?.satirlar?.length ? undefined : ['Lazer aralığı 14–90 gün (hekim)', 'Akne bakım 2 / 6 / 12. hafta'] } />
+  return <KlinikHatirlatmaView satirlar={plan?.satirlar} title="Bakımım" subtitle="Seans ve bakım tarihleri. Tanı, skor ve fluence yoktur." acil={plan?.acil || "Kabarcık, görme kaybı veya nefes darlığında 112."} basePath={basePath} ritim={plan?.satirlar?.length ? undefined : dermRitim() } />
 }

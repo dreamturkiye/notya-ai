@@ -4,6 +4,22 @@
  */
 import type { KlinikYeniSlug } from '@/lib/specialties/klinikDikey'
 import { greftBandi, yikamaTakvimi, fotoKvkkRiza, cizgiCercevesi, FOTO_SERI } from '@/specialties/sac-ekimi/engines/sac'
+import { dokulmePenceresi, sonucIzlemi } from '@/specialties/sac-ekimi/engines/izlem'
+import { fotoSaklama as sacFotoSaklama } from '@/specialties/sac-ekimi/engines/kayit'
+import { gecDonem } from '@/specialties/estetik-cerrahi/engines/izlem'
+import { ucuncuAyKontrol } from '@/specialties/medikal-estetik/engines/izlem'
+import { lazerAralik } from '@/specialties/klinik-dermatoloji/engines/girdi'
+import { fotoSaklama as dermFotoSaklama } from '@/specialties/klinik-dermatoloji/engines/kayit'
+import { reaksiyonSonrasiAralik } from '@/specialties/longevity/engines/izlem'
+import { hekimGirdi } from '@/specialties/fizyoterapi/engines/girdi'
+import { evKontrolGunu } from '@/specialties/fizyoterapi/engines/izlem'
+import { taniKacagi } from '@/specialties/klinik-psikolog/engines/girdi'
+import { kiloGirdi } from '@/specialties/diyetisyen/engines/girdi'
+import { gecKontrol } from '@/specialties/diyetisyen/engines/izlem'
+import { neyziRed } from '@/specialties/ergoterapi/engines/girdi'
+import { blokKontrol } from '@/specialties/ergoterapi/engines/izlem'
+import { dbGirdi } from '@/specialties/odyoloji/engines/girdi'
+import { esikEgimi } from '@/specialties/odyoloji/engines/izlem'
 import { cerrahiSoguma, postOpTakvim, rizaIkiNusha, emboliBandi, ACIL_METIN as CER_A, ISLEMLER } from '@/specialties/estetik-cerrahi/engines/cerrahi'
 import { sogumaUygun, islemTakvimi, vaskulerAyrinti, lotKaydi, ACIL_METIN as EST_A, BOLGELER } from '@/specialties/medikal-estetik/engines/estetik'
 import { lazerSeansVadesi, akneBakimTakvimi, fotoRizaKayit, gunesRitmi, lazerAcilBand, ACIL_METIN as DERM_A } from '@/specialties/klinik-dermatoloji/engines/derm'
@@ -84,12 +100,20 @@ export const OZEL_ARACLAR: readonly AracTanim[] = [
     const r = greftBandi(sayi(g, 'cm2'), sayi(g, 'yogunluk'))
     return 'hata' in r ? r : cikti(r.ozet, [], null)
   }),
-  T('/ozel-branslar/sac-takvim', 'sac-ekimi', 'Yıkama takvimi', '1 / 3 / 10 / 14. gün. Greft sayısı yazılmaz.', '#1D4ED8', [
+  T('/ozel-branslar/sac-takvim', 'sac-ekimi', 'Yıkama takvimi', '1 / 3 / 10 / 14. gün, dökülme penceresi, 6 ve 12. ay. Greft sayısı yazılmaz.', '#1D4ED8', [
     { id: 'ameliyat', etiket: 'İşlem günü', tur: 'tarih' },
   ], (g, bugun) => {
     const t = yikamaTakvimi(g.ameliyat || '', bugun)
     if (!t.length) return hata('İşlem gününü girin.')
-    return cikti('Yıkama vadeleri hesaplandı.', t.map((x) => ({ iso: isoEkle(g.ameliyat, x.gun), ad: x.ad })), null)
+    const d = dokulmePenceresi(g.ameliyat || '')
+    if ('hata' in d) return d
+    const s = sonucIzlemi(g.ameliyat || '')
+    if ('hata' in s) return s
+    return cikti('Yıkama vadeleri hesaplandı.', [
+      ...t.map((x) => ({ iso: isoEkle(g.ameliyat, x.gun), ad: x.ad })),
+      ...d.map((x) => ({ iso: isoEkle(g.ameliyat, x.gun), ad: x.ad })),
+      ...s.map((x) => ({ iso: isoEkle(g.ameliyat, x.gun), ad: x.ad })),
+    ], null)
   }),
   T('/ozel-branslar/sac-cizgi', 'sac-ekimi', 'Çizgi çerçevesi', 'Ön, temporal, verteks. Norwood skoru kilitlenmez.', '#1E3A8A', [
     { id: 'on', etiket: 'Ön çizgi notu', tur: 'metin' },
@@ -102,10 +126,15 @@ export const OZEL_ARACLAR: readonly AracTanim[] = [
   T('/ozel-branslar/sac-foto', 'sac-ekimi', 'Foto seri günleri', '0 / 10 / 30 / 90. Ayrı KVKK rızası şart.', '#1E40AF', [
     { id: 'ameliyat', etiket: 'İşlem günü', tur: 'tarih' },
     { id: 'riza', etiket: 'Foto KVKK rızası var', tur: 'onay' },
+    { id: 'ay', etiket: 'Saklama (ay: 6, 12 veya 24)', tur: 'sayi' },
   ], (g) => {
     const r = fotoKvkkRiza(onay(g, 'riza'), g.ameliyat || '')
     if ('hata' in r) return r
-    return cikti(r.ozet, FOTO_SERI.map((x) => ({ iso: isoEkle(g.ameliyat, x.gun), ad: x.ad })), null, true)
+    const sak = sacFotoSaklama(true, g.ameliyat || '', g.ay || '')
+    if ('hata' in sak) return sak
+    const vadeler: Array<{ iso: string; ad: string }> = FOTO_SERI.map((x) => ({ iso: isoEkle(g.ameliyat, x.gun), ad: x.ad }))
+    if (sak.bitis) vadeler.push({ iso: sak.bitis, ad: 'Foto saklama bitişi' })
+    return cikti([r.ozet, sak.ozet].filter(Boolean).join(' '), vadeler, null, true)
   }),
 
   T('/ozel-branslar/cerrahi-onam', 'estetik-cerrahi', 'Elektif onam / soğuma', 'Onam ile ameliyat arası. Kesi yok.', '#E91E8C', [
@@ -115,12 +144,17 @@ export const OZEL_ARACLAR: readonly AracTanim[] = [
     const r = cerrahiSoguma(g.onam || '', g.ameliyat || '')
     return cikti(r.ozet, [], null, r.uygun)
   }),
-  T('/ozel-branslar/cerrahi-takvim', 'estetik-cerrahi', 'Ameliyat sonrası takvim', '1 / 7 / 14 / 42. gün.', '#DB2777', [
+  T('/ozel-branslar/cerrahi-takvim', 'estetik-cerrahi', 'Ameliyat sonrası takvim', '1 / 7 / 14 / 42. gün, sonra 3 / 6 / 12. ay.', '#DB2777', [
     { id: 'ameliyat', etiket: 'Ameliyat günü', tur: 'tarih' },
   ], (g, bugun) => {
     const t = postOpTakvim(g.ameliyat || '', bugun)
     if (!t.length) return hata('Ameliyat gününü girin.')
-    return cikti('Ameliyat sonrası vadeler.', t.map((x) => ({ iso: isoEkle(g.ameliyat, x.gun), ad: x.ad })), null)
+    const u = gecDonem(g.ameliyat || '')
+    if ('hata' in u) return u
+    return cikti('Ameliyat sonrası vadeler.', [
+      ...t.map((x) => ({ iso: isoEkle(g.ameliyat, x.gun), ad: x.ad })),
+      ...u.map((x) => ({ iso: isoEkle(g.ameliyat, x.gun), ad: x.ad })),
+    ], null)
   }),
   T('/ozel-branslar/cerrahi-riza', 'estetik-cerrahi', 'İki nüsha rıza', 'Hasta Hakları m.26. Dosya + hasta nüshası.', '#BE185D', [
     { id: 'islem', etiket: 'İşlem sınıfı', tur: 'secim', secenekler: ISLEMLER },
@@ -153,7 +187,12 @@ export const OZEL_ARACLAR: readonly AracTanim[] = [
   ], (g, bugun) => {
     const t = islemTakvimi(g.islem || '', bugun)
     if (!t.length) return hata('İşlem gününü girin.')
-    return cikti('Bakım vadeleri.', t.map((x) => ({ iso: isoEkle(g.islem, x.gun), ad: x.ad })), null)
+    const u = ucuncuAyKontrol(g.islem || '')
+    if ('hata' in u) return u
+    return cikti('Bakım vadeleri.', [
+      ...t.map((x) => ({ iso: isoEkle(g.islem, x.gun), ad: x.ad })),
+      { iso: isoEkle(g.islem, u.gun), ad: u.ad },
+    ], null)
   }),
   T('/ozel-branslar/estetik-vaskuler', 'medikal-estetik', 'Vasküler acil bandı', 'Görme, livedo, ağrı, nefes. Doz yok.', '#6B21A8', [
     { id: 'gorme', etiket: 'Görme kaybı', tur: 'onay' },
@@ -176,7 +215,9 @@ export const OZEL_ARACLAR: readonly AracTanim[] = [
     { id: 'son', etiket: 'Son seans', tur: 'tarih' },
     { id: 'aralik', etiket: 'Aralık (gün)', tur: 'sayi' },
   ], (g, bugun) => {
-    const r = lazerSeansVadesi(g.son || '', sayi(g, 'aralik'), bugun)
+    const ar = lazerAralik(sayi(g, 'aralik'))
+    if ('hata' in ar) return ar
+    const r = lazerSeansVadesi(g.son || '', ar.gun, bugun)
     return 'hata' in r ? r : cikti(r.ozet, [{ iso: r.due, ad: 'Sonraki lazer seansı' }], null)
   }),
   T('/ozel-branslar/derm-takvim', 'klinik-dermatoloji', 'Akne bakım takvimi', '2 / 6 / 12. hafta. Skor yok.', '#D97706', [
@@ -189,12 +230,17 @@ export const OZEL_ARACLAR: readonly AracTanim[] = [
   T('/ozel-branslar/derm-gunes', 'klinik-dermatoloji', 'Güneş ve bakım ritmi', '1 / 4 / 8. hafta. PASI yok.', '#B45309', [
     { id: 'bas', etiket: 'Başlangıç', tur: 'tarih' },
     { id: 'foto', etiket: 'Foto KVKK rızası var', tur: 'onay' },
+    { id: 'ay', etiket: 'Saklama (ay: 6, 12 veya 24)', tur: 'sayi' },
   ], (g, bugun) => {
     const f = fotoRizaKayit(onay(g, 'foto'))
     if ('hata' in f) return f
+    const sak = dermFotoSaklama(true, g.bas || '', g.ay || '')
+    if ('hata' in sak) return sak
     const t = gunesRitmi(g.bas || '', bugun)
     if (!t.length) return hata('Başlangıç gününü girin.')
-    return cikti(f.ozet, t.map((x) => ({ iso: isoEkle(g.bas, x.hafta * 7), ad: x.ad })), null)
+    const vadeler = t.map((x) => ({ iso: isoEkle(g.bas, x.hafta * 7), ad: x.ad }))
+    if (sak.bitis) vadeler.push({ iso: sak.bitis, ad: 'Foto saklama bitişi' })
+    return cikti([f.ozet, sak.ozet].filter(Boolean).join(' '), vadeler, null)
   }),
   T('/ozel-branslar/derm-acil', 'klinik-dermatoloji', 'Lazer acil bandı', 'Kabarcık, görme, nefes. Fluence yok.', '#92400E', [
     { id: 'kabarcik', etiket: 'Yaygın kabarcık', tur: 'onay' },
@@ -208,7 +254,10 @@ export const OZEL_ARACLAR: readonly AracTanim[] = [
   T('/ozel-branslar/long-vade', 'longevity', 'Sonraki seans vadesi', 'Aralık. Karışım yok.', '#059669', [
     { id: 'son', etiket: 'Son seans', tur: 'tarih' },
     { id: 'aralik', etiket: 'Aralık (gün)', tur: 'sayi' },
+    { id: 'reaksiyon', etiket: 'Son seansta reaksiyon oldu', tur: 'onay' },
   ], (g, bugun) => {
+    const engel = reaksiyonSonrasiAralik(onay(g, 'reaksiyon'), sayi(g, 'aralik'))
+    if (engel) return engel
     const r = sonrakiInfuzon(g.son || '', sayi(g, 'aralik'), bugun)
     return 'hata' in r ? r : cikti(`Sonraki seans ${r.due} · ${r.durum}.`, [{ iso: r.due, ad: 'Sonraki seans' }], null)
   }),
@@ -238,7 +287,9 @@ export const OZEL_ARACLAR: readonly AracTanim[] = [
     { id: 'aktivite', etiket: 'Aktivite', tur: 'metin' },
     { id: 'katilim', etiket: 'Katılım', tur: 'metin' },
   ], (g) => {
-    const r = icfOzet(g.aktivite || '', g.katilim || '', g.tani || '')
+    const kap = hekimGirdi(g.tani || '')
+    if ('hata' in kap) return kap
+    const r = icfOzet(g.aktivite || '', g.katilim || '', kap.tani)
     return 'hata' in r ? r : cikti(r.ozet, [], null)
   }),
   T('/ozel-branslar/fizyo-seans', 'fizyoterapi', 'Seans vadesi', 'Aralık. SGK hak iddiası yok.', '#0284C7', [
@@ -256,8 +307,9 @@ export const OZEL_ARACLAR: readonly AracTanim[] = [
   ], (g) => {
     const r = evProgrami(g.satir || '')
     if ('hata' in r) return r
-    if (!iso(g.bas || '')) return hata('Başlangıç gününü girin.')
-    return cikti(r.ozet, [{ iso: isoEkle(g.bas, 7), ad: 'Ev programı kontrolü' }], null)
+    const ev = evKontrolGunu(g.bas || '')
+    if ('hata' in ev) return ev
+    return cikti(r.ozet, [{ iso: isoEkle(g.bas, ev.gun), ad: ev.ad }], null)
   }),
   T('/ozel-branslar/fizyo-bayrak', 'fizyoterapi', 'Kırmızı bayrak', 'Eyer, göğüs, güç kaybı. Tanı yok.', '#075985', [
     { id: 'eyer', etiket: 'Eyer uyuşukluğu', tur: 'onay' },
@@ -273,6 +325,8 @@ export const OZEL_ARACLAR: readonly AracTanim[] = [
     { id: 'olcek', etiket: 'Ölçek adı (yorum yok)', tur: 'metin' },
     { id: 'kriz', etiket: 'Kriz var', tur: 'onay' },
   ], (g) => {
+    const k = taniKacagi(`${g.yaklasim || ''} ${g.olcek || ''}`)
+    if (k) return k
     const r = seansCercevesi(g.yaklasim || '', g.olcek || null, onay(g, 'kriz'))
     if ('hata' in r) return r
     return cikti(r.ozet, [], onay(g, 'kriz') ? PSI_A : null)
@@ -288,6 +342,8 @@ export const OZEL_ARACLAR: readonly AracTanim[] = [
     { id: 'siklik', etiket: 'Sıklık', tur: 'secim', secenekler: ['haftalık', 'iki haftada bir', 'aylık'] },
     { id: 'yaklasim', etiket: 'Yaklaşım', tur: 'metin' },
   ], (g) => {
+    const k = taniKacagi(g.yaklasim || '')
+    if (k) return k
     const r = siklikKaydi(g.siklik || '', g.yaklasim || '')
     return 'hata' in r ? r : cikti(r.ozet, [], null)
   }),
@@ -305,8 +361,10 @@ export const OZEL_ARACLAR: readonly AracTanim[] = [
     { id: 'kilo', etiket: 'Kilo (kg)', tur: 'sayi' },
     { id: 'hedef', etiket: 'Hedef', tur: 'secim', secenekler: ['kilo', 'koruma', 'spor'] },
   ], (g) => {
+    const kilo = kiloGirdi(sayi(g, 'kilo'))
+    if ('hata' in kilo) return kilo
     const hedef = g.hedef === 'kilo' || g.hedef === 'spor' ? g.hedef : 'koruma'
-    const r = planKapisi(g.tani || '', sayi(g, 'kilo'), hedef)
+    const r = planKapisi(g.tani || '', kilo.kiloKg, hedef)
     return 'hata' in r ? r : cikti(r.ozet, [], null)
   }),
   T('/ozel-branslar/diyet-takvim', 'diyetisyen', 'Kontrol takvimi', '2 / 4 / 8. hafta.', '#34D399', [
@@ -314,7 +372,12 @@ export const OZEL_ARACLAR: readonly AracTanim[] = [
   ], (g, bugun) => {
     const t = kontrolTakvimi(g.bas || '', bugun)
     if (!t.length) return hata('Başlangıç gününü girin.')
-    return cikti('Kontrol vadeleri.', t.map((x) => ({ iso: isoEkle(g.bas, x.hafta * 7), ad: x.ad })), null)
+    const gec = gecKontrol(g.bas || '')
+    if ('hata' in gec) return gec
+    return cikti('Kontrol vadeleri.', [
+      ...t.map((x) => ({ iso: isoEkle(g.bas, x.hafta * 7), ad: x.ad })),
+      { iso: isoEkle(g.bas, gec.hafta * 7), ad: gec.ad },
+    ], null)
   }),
   T('/ozel-branslar/diyet-ogun', 'diyetisyen', 'Öğün iskeleti', 'Üç etiket. kcal yazılmaz.', '#047857', [
     { id: 'kahvalti', etiket: 'Kahvaltı', tur: 'metin' },
@@ -336,6 +399,8 @@ export const OZEL_ARACLAR: readonly AracTanim[] = [
     { id: 'tani', etiket: 'Hekim tanısı (referans)', tur: 'metin' },
     { id: 'gya', etiket: 'GYA alanları', tur: 'coklu', secenekler: GYA },
   ], (g) => {
+    const red = neyziRed(`${g.tani || ''} ${(g.gya || '')}`)
+    if (red) return red
     const r = gyaOzet(g.tani || '', (g.gya || '').split('|'))
     return 'hata' in r ? r : cikti(r.ozet, [], null)
   }),
@@ -352,10 +417,16 @@ export const OZEL_ARACLAR: readonly AracTanim[] = [
     { id: 'aksam', etiket: 'Akşam', tur: 'metin' },
     { id: 'bas', etiket: 'Başlangıç', tur: 'tarih' },
   ], (g) => {
+    const red = neyziRed(`${g.sabah || ''} ${g.oglen || ''} ${g.aksam || ''}`)
+    if (red) return red
     const r = gunlukBlok(g.sabah || '', g.oglen || '', g.aksam || '')
     if ('hata' in r) return r
-    if (!iso(g.bas || '')) return hata('Başlangıç gününü girin.')
-    return cikti(r.ozet, [{ iso: isoEkle(g.bas, 7), ad: 'Günlük program kontrolü' }], null)
+    const blok = blokKontrol(g.bas || '')
+    if ('hata' in blok) return blok
+    return cikti(r.ozet, [
+      { iso: isoEkle(g.bas, 7), ad: 'Günlük program kontrolü' },
+      { iso: isoEkle(g.bas, blok.gun), ad: blok.ad },
+    ], null)
   }),
   T('/ozel-branslar/ergo-dusme', 'ergoterapi', 'Düşme bandı', 'Düşme veya ani güç kaybı. Tanı yok.', '#5B21B6', [
     { id: 'dusme', etiket: 'Yeni düşme', tur: 'onay' },
@@ -367,8 +438,15 @@ export const OZEL_ARACLAR: readonly AracTanim[] = [
 
   T('/ozel-branslar/odyo-esik', 'odyoloji', 'Eşik kaydı', 'dB bandı. İşitme kaybı tanısı değil.', '#F97316', [
     { id: 'db', etiket: 'Saf ses ortalaması (dB)', tur: 'sayi' },
+    { id: 'onceki', etiket: 'Önceki kayıt (dB, boş kalabilir)', tur: 'sayi' },
   ], (g) => {
-    const r = ptaKayit(sayi(g, 'db'))
+    const db = dbGirdi(sayi(g, 'db'))
+    if ('hata' in db) return db
+    if ((g.onceki || '').trim()) {
+      const e = esikEgimi(sayi(g, 'onceki'), db.db)
+      return 'hata' in e ? e : cikti(e.ozet, [], null)
+    }
+    const r = ptaKayit(db.db)
     return 'hata' in r ? r : cikti(r.ozet, [], null)
   }),
   T('/ozel-branslar/odyo-oda', 'odyoloji', 'Sessiz oda kaydı', 'md.11 ≥3 m².', '#FB923C', [

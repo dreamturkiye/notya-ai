@@ -46,7 +46,7 @@ export function SacTuval({ tanim, sonuc, bugun, girdi = {}, yaz }: { tanim: Arac
   return (
     <section data-tuval="sac-ekimi" style={{ display: 'grid', gap: 8 }}>
       {alan}
-      <div style={{ fontSize: 11, fontWeight: 700, color: '#1d4ed8' }}>YIKAMA 1 / 3 / 10 / 14</div>
+      <div style={{ fontSize: 11, fontWeight: 700, color: '#1d4ed8' }}>YIKAMA VE SONUÇ İZLEMİ</div>
       {gunler.map((s) => <div key={s.ad} style={{ display: 'flex', justifyContent: 'space-between', background: '#f8fafc', borderRadius: 8, padding: '8px 10px', fontSize: 13 }}><span>{s.ad}</span><b>{s.durum}</b></div>)}
     </section>
   )

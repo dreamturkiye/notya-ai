@@ -1,4 +1,5 @@
 'use client'
+import { odyoRitim } from '@/specialties/odyoloji/engines/portal-odyo'
 import { KlinikHatirlatmaView } from '../../../_components/KlinikHatirlatmaView'
 import { usePortalLive } from '../../../_components/PortalLiveProvider'
 import { portalModulAktif } from '@/lib/portal/moduller'
@@ -16,5 +17,5 @@ export default function Page() {
     )
   }
   const plan = data.ozelPlan
-  return <KlinikHatirlatmaView satirlar={plan?.satirlar} title="İşitme takibim" subtitle="Kontrol tarihi. dB yorumu ve tanı yoktur." acil={plan?.acil || "Ani işitme kaybı: KBB / 112."} basePath={basePath} ritim={plan?.satirlar?.length ? undefined : ['Kontrol tarihi uzmanın kaydıyladır', 'dB yorumu ve cihaz raporu yoktur'] } />
+  return <KlinikHatirlatmaView satirlar={plan?.satirlar} title="İşitme takibim" subtitle="Kontrol tarihi. dB yorumu ve tanı yoktur." acil={plan?.acil || "Ani işitme kaybı: KBB / 112."} basePath={basePath} ritim={plan?.satirlar?.length ? undefined : odyoRitim() } />
 }

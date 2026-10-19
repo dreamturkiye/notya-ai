@@ -1,4 +1,5 @@
 'use client'
+import { seansRitim } from '@/specialties/klinik-psikolog/engines/portal-seans'
 import { KlinikHatirlatmaView } from '../../../_components/KlinikHatirlatmaView'
 import { usePortalLive } from '../../../_components/PortalLiveProvider'
 import { portalModulAktif } from '@/lib/portal/moduller'
@@ -16,5 +17,5 @@ export default function Page() {
     )
   }
   const plan = data.ozelPlan
-  return <KlinikHatirlatmaView satirlar={plan?.satirlar} title="Görüşmelerim" subtitle="Sonraki görüşme tarihi. Tanı ve ilaç yoktur." acil={plan?.acil || "Krizde 112 veya en yakın acil."} basePath={basePath} ritim={plan?.satirlar?.length ? undefined : ['Sonraki görüşme tarihi uzmanın kaydıyladır', 'Ölçek skoru burada yorumlanmaz'] } />
+  return <KlinikHatirlatmaView satirlar={plan?.satirlar} title="Görüşmelerim" subtitle="Sonraki görüşme tarihi. Tanı ve ilaç yoktur." acil={plan?.acil || "Krizde 112 veya en yakın acil."} basePath={basePath} ritim={plan?.satirlar?.length ? undefined : seansRitim() } />
 }

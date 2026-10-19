@@ -6,6 +6,7 @@ import type { AracTanim } from '@/lib/klinik/ozelAracCalistir'
 import { OZEL_TUVAL } from '@/lib/klinik/ozelTuvalKaydi'
 import { STUDYO_KOPYA } from '@/lib/klinik/ozelStudyoKopya'
 import { TuvalAlanlari } from '@/components/klinik/TuvalAlanlari'
+import { OZEL_STUDYO } from '@/lib/klinik/ozelStudyoKaydi'
 
 export default function OzelStudyo({ tanim }: { tanim: AracTanim }) {
   const hasta = useSearchParams().get('patientId') || ''
@@ -15,6 +16,7 @@ export default function OzelStudyo({ tanim }: { tanim: AracTanim }) {
   const sonuc = useMemo(() => tanim.calistir(girdi, bugun), [tanim, girdi, bugun])
   const hazir = !('hata' in sonuc)
   const Tuval = OZEL_TUVAL[tanim.slug]
+  const Cerceve = OZEL_STUDYO[tanim.slug]
 
   useEffect(() => {
     if (!hasta) return
@@ -51,6 +53,7 @@ export default function OzelStudyo({ tanim }: { tanim: AracTanim }) {
   }
 
   return (
+    <Cerceve route={tanim.route}>
     <div style={{ display: 'grid', gap: 12 }}>
       <p style={{ margin: 0, fontSize: 12, color: '#8b7d70' }}>{STUDYO_KOPYA[tanim.slug]}</p>
       {'hata' in sonuc ? (
@@ -66,5 +69,6 @@ export default function OzelStudyo({ tanim }: { tanim: AracTanim }) {
       </button>
       {kayit && <p style={{ margin: 0, fontSize: 13, color: '#3b2e24' }}>{kayit}</p>}
     </div>
+    </Cerceve>
   )
 }

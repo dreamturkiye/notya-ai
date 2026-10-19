@@ -1,4 +1,5 @@
 'use client'
+import { fizyoRitim } from '@/specialties/fizyoterapi/engines/portal-fizyo'
 import { KlinikHatirlatmaView } from '../../../_components/KlinikHatirlatmaView'
 import { usePortalLive } from '../../../_components/PortalLiveProvider'
 import { portalModulAktif } from '@/lib/portal/moduller'
@@ -16,5 +17,5 @@ export default function Page() {
     )
   }
   const plan = data.ozelPlan
-  return <KlinikHatirlatmaView satirlar={plan?.satirlar} title="Egzersizim" subtitle="Seans ve ev programı tarihleri. Tanı yoktur." acil={plan?.acil || "Eyer uyuşukluğu veya göğüs ağrısı: 112."} basePath={basePath} ritim={plan?.satirlar?.length ? undefined : ['Seans tarihi uzmanın kaydıyladır', 'Ev programı reçete değildir'] } />
+  return <KlinikHatirlatmaView satirlar={plan?.satirlar} title="Egzersizim" subtitle="Seans ve ev programı tarihleri. Tanı yoktur." acil={plan?.acil || "Eyer uyuşukluğu veya göğüs ağrısı: 112."} basePath={basePath} ritim={plan?.satirlar?.length ? undefined : fizyoRitim() } />
 }

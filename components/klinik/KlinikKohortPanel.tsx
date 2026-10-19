@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { klinikKohortDerle, type KlinikKohortSatir } from '@/lib/klinik/klinikKayit'
 import { klinikDefterOku } from '@/lib/klinik/klinikKayitIstemci'
-import { kohortAcilBirlestir } from '@/lib/klinik/kohortAcil'
+import { ozelKohortBirlestir } from '@/lib/klinik/ozelKohort'
 import { klinikSlugCoz } from '@/lib/specialties/klinikDikey'
 
 function token(): string {
@@ -67,10 +67,11 @@ export default function KlinikKohortPanel() {
         hastaAdi: x.hastaAdi || 'Hasta',
         baslangic: x.baslangic || '',
       }))
-      const derlenen = kohortAcilBirlestir(
+      const derlenen = ozelKohortBirlestir(
         klinikKohortDerle({ dal, bugun, hastalar, randevular, defter: klinikDefterOku(userId) }),
         planj?.planlar || [],
         new Map(hastalar.map((h: { id: string; name: string }) => [h.id, h.name])),
+        bugun,
       )
       if (!iptal) {
         setSatir(derlenen)

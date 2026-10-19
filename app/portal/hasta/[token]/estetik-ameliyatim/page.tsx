@@ -1,4 +1,5 @@
 'use client'
+import { ameliyatRitim } from '@/specialties/estetik-cerrahi/engines/portal-cerrahi'
 import { KlinikHatirlatmaView } from '../../../_components/KlinikHatirlatmaView'
 import { usePortalLive } from '../../../_components/PortalLiveProvider'
 import { portalModulAktif } from '@/lib/portal/moduller'
@@ -16,5 +17,5 @@ export default function Page() {
     )
   }
   const plan = data.ozelPlan
-  return <KlinikHatirlatmaView satirlar={plan?.satirlar} title="Ameliyat bakımım" subtitle="Pansuman ve kontrol tarihleri. Kesi, implant ve tanı yoktur." acil={plan?.acil || "Nefes darlığı, kontrolsüz kanama veya tek taraflı bacak şişliğinde 112."} basePath={basePath} ritim={plan?.satirlar?.length ? undefined : ['1. gün pansuman', '7. gün dikiş kontrolü', '14. gün yara bakımı', '42. gün geç izlem'] } />
+  return <KlinikHatirlatmaView satirlar={plan?.satirlar} title="Ameliyat bakımım" subtitle="Pansuman ve kontrol tarihleri. Kesi, implant ve tanı yoktur." acil={plan?.acil || "Nefes darlığı, kontrolsüz kanama veya tek taraflı bacak şişliğinde 112."} basePath={basePath} ritim={plan?.satirlar?.length ? undefined : ameliyatRitim() } />
 }

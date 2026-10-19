@@ -2,3 +2,6 @@ export function fizyomHatirlatmalari(due: string | null): Array<{ ad: string; du
   if (!due) return [{ ad: 'Ev egzersizi / seans tarihi kaydedilince görünür', durum: 'planli' }]
   return [{ ad: 'Sonraki fizyoterapi seansı', durum: 'planli' }, { ad: `Tarih: ${due}`, durum: 'planli' }]
 }
+export function fizyoRitim(): string[] {
+  return ['Seans tarihi uzmanın kaydıyladır', 'Ev programı reçete değildir']
+}

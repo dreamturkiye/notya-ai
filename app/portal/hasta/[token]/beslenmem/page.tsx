@@ -1,4 +1,5 @@
 'use client'
+import { beslenRitim } from '@/specialties/diyetisyen/engines/portal-beslen'
 import { KlinikHatirlatmaView } from '../../../_components/KlinikHatirlatmaView'
 import { usePortalLive } from '../../../_components/PortalLiveProvider'
 import { portalModulAktif } from '@/lib/portal/moduller'
@@ -16,5 +17,5 @@ export default function Page() {
     )
   }
   const plan = data.ozelPlan
-  return <KlinikHatirlatmaView satirlar={plan?.satirlar} title="Beslenmem" subtitle="Kontrol tarihi. Kalori yorumu ve tanı yoktur." acil={plan?.acil || "Ağır alerji veya bilinç değişikliği: 112."} basePath={basePath} ritim={plan?.satirlar?.length ? undefined : ['2 / 4 / 8. hafta kontrol ritmi', 'Kalori hedefi burada kilitlenmez'] } />
+  return <KlinikHatirlatmaView satirlar={plan?.satirlar} title="Beslenmem" subtitle="Kontrol tarihi. Kalori yorumu ve tanı yoktur." acil={plan?.acil || "Ağır alerji veya bilinç değişikliği: 112."} basePath={basePath} ritim={plan?.satirlar?.length ? undefined : beslenRitim() } />
 }

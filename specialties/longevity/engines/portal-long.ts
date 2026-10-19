@@ -6,3 +6,6 @@ export function longevitimHatirlatmalari(sonIso: string | null, aralikGun: numbe
   if ('hata' in s) return [{ ad: s.hata, durum: 'planli' }]
   return [{ ad: `Sonraki seans ${s.due}`, durum: s.durum }]
 }
+export function planRitim(): string[] {
+  return ['Sonraki seans hekim kaydınca', 'IV sırasında yalnız bırakılmayın']
+}

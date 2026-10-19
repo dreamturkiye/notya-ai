@@ -1,4 +1,5 @@
 'use client'
+import { sacimRitim } from '@/specialties/sac-ekimi/engines/portal-sacim'
 import { KlinikHatirlatmaView } from '../../../_components/KlinikHatirlatmaView'
 import { usePortalLive } from '../../../_components/PortalLiveProvider'
 import { portalModulAktif } from '@/lib/portal/moduller'
@@ -16,5 +17,5 @@ export default function Page() {
     )
   }
   const plan = data.ozelPlan
-  return <KlinikHatirlatmaView satirlar={plan?.satirlar} title="Saçım" subtitle="Yıkama ve kontrol tarihleri. Greft, tanı ve ilaç yoktur." acil={plan?.acil || "Kızarıklık+ateş veya nefes darlığında 112."} basePath={basePath} ritim={plan?.satirlar?.length ? undefined : ['1. gün ilk pansuman', '3. gün nazik yıkama', '10. gün kabuk kontrolü', '14. gün kontrol'] } />
+  return <KlinikHatirlatmaView satirlar={plan?.satirlar} title="Saçım" subtitle="Yıkama ve kontrol tarihleri. Greft, tanı ve ilaç yoktur." acil={plan?.acil || "Kızarıklık+ateş veya nefes darlığında 112."} basePath={basePath} ritim={plan?.satirlar?.length ? undefined : sacimRitim() } />
 }
