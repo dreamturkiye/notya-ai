@@ -1,6 +1,7 @@
 'use client'
 import { portalSatirlari, type AracCikti, type AracTanim } from '@/lib/klinik/ozelAracCalistir'
 import { TuvalAlanlari } from '@/components/klinik/TuvalAlanlari'
+import { VadeListesi } from '@/components/klinik/VadeListesi'
 
 export function FizyoTuval({ tanim, sonuc, bugun, girdi = {}, yaz }: { tanim: AracTanim; sonuc: AracCikti; bugun: string; girdi?: Record<string, string>; yaz?: (id: string, deger: string) => void }) {
   const gunler = portalSatirlari(sonuc.vadeler, bugun)
@@ -32,14 +33,14 @@ export function FizyoTuval({ tanim, sonuc, bugun, girdi = {}, yaz }: { tanim: Ar
         {alan}
         <div style={{ fontSize: 11, fontWeight: 700, color: '#166534' }}>EV PROGRAMI · EN FAZLA 4</div>
         {satirlar.map((satir) => <div key={satir} style={{ background: '#f0fdf4', borderRadius: 8, padding: '8px 10px', fontSize: 13 }}>{satir}</div>)}
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>{gunler.map((s) => <span key={s.ad} style={{ fontSize: 12 }}>{s.ad}</span>)}</div>
+        <VadeListesi baslik="EV KONTROLÜ" renk="#166534" zemin="#dcfce7" gunler={gunler} />
       </section>
     )
   }
   return (
-    <section data-tuval="fizyoterapi" style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+    <section data-tuval="fizyoterapi" style={{ display: 'grid', gap: 8 }}>
       {alan}
-      {gunler.map((s) => <span key={s.ad} style={{ background: '#dcfce7', borderRadius: 999, padding: '6px 10px', fontSize: 12 }}>{s.ad} · {s.durum}</span>)}
+      <VadeListesi baslik="SEANS İZLEMİ" renk="#166534" zemin="#dcfce7" gunler={gunler} />
     </section>
   )
 }

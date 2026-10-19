@@ -3,5 +3,5 @@ export function seanslarimHatirlatmalari(due: string | null): Array<{ ad: string
   return [{ ad: 'Sonraki görüşme', durum: 'planli' }, { ad: `Tarih: ${due}`, durum: 'planli' }]
 }
 export function seansRitim(): string[] {
-  return ['Sonraki görüşme tarihi uzmanın kaydıyladır', 'Ölçek skoru burada yorumlanmaz']
+  return ['Sonraki görüşme tarihi uzmanın kaydıyladır', 'Çerçeve gözden geçirme', 'Ölçek skoru burada yorumlanmaz']
 }

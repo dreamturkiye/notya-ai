@@ -3,5 +3,5 @@ export function isitmemHatirlatmalari(due: string | null): Array<{ ad: string; d
   return [{ ad: 'Odyoloji kontrolü', durum: 'planli' }, { ad: `Tarih: ${due}`, durum: 'planli' }]
 }
 export function odyoRitim(): string[] {
-  return ['Kontrol tarihi uzmanın kaydıyladır', 'Eşik sayısı ve cihaz raporu yoktur']
+  return ['Kontrol tarihi uzmanın kaydıyladır', 'Altıncı ay cihaz kontrolü', 'Eşik sayısı ve cihaz raporu yoktur']
 }

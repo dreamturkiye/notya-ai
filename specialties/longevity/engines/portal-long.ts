@@ -7,5 +7,5 @@ export function longevitimHatirlatmalari(sonIso: string | null, aralikGun: numbe
   return [{ ad: `Sonraki seans ${s.due}`, durum: s.durum }]
 }
 export function planRitim(): string[] {
-  return ['Sonraki seans hekim kaydınca', 'IV sırasında yalnız bırakılmayın']
+  return ['Sonraki seans hekim kaydınca', 'Reaksiyon bekleme bitişi', 'IV sırasında yalnız bırakılmayın']
 }

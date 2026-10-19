@@ -6,5 +6,5 @@ export function klinikDermHatirlatmalari(baslangicIso: string | null, bugun: str
   return akneBakimTakvimi(baslangicIso, bugun).map((x) => ({ ad: x.ad, durum: x.durum }))
 }
 export function dermRitim(): string[] {
-  return ['Lazer aralığı 14–90 gün (hekim)', 'Akne bakım 2 / 6 / 12. hafta']
+  return ['Lazer aralığı 14–90 gün (hekim)', 'Ertesi gün cilt kontrolü', 'Bir hafta cilt kontrolü', 'Akne bakım 2 / 6 / 12. hafta']
 }

@@ -2,4 +2,4 @@ SOAP — ergoterapi
 S: hekim tanısı referansı zorunlu. Neyzi yazılmaz.
 O: GYA alanları.
 A: tanı yazılmaz.
-P: günlük blok ve seans. Düşmede 112. Doz yazılmaz.
+P: günlük blok, seans ve altı hafta GYA gözden geçirme. Düşmede 112. Doz yazılmaz.

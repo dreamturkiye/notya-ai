@@ -1,6 +1,7 @@
 'use client'
 import { portalSatirlari, type AracCikti, type AracTanim } from '@/lib/klinik/ozelAracCalistir'
 import { TuvalAlanlari } from '@/components/klinik/TuvalAlanlari'
+import { VadeListesi } from '@/components/klinik/VadeListesi'
 
 export function PsikTuval({ tanim, sonuc, bugun, girdi = {}, yaz }: { tanim: AracTanim; sonuc: AracCikti; bugun: string; girdi?: Record<string, string>; yaz?: (id: string, deger: string) => void }) {
   const gunler = portalSatirlari(sonuc.vadeler, bugun)
@@ -37,9 +38,9 @@ export function PsikTuval({ tanim, sonuc, bugun, girdi = {}, yaz }: { tanim: Ara
     )
   }
   return (
-    <section data-tuval="klinik-psikolog" style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+    <section data-tuval="klinik-psikolog" style={{ display: 'grid', gap: 8 }}>
       {alan}
-      {gunler.map((s) => <span key={s.ad} style={{ background: '#e0e7ff', borderRadius: 999, padding: '6px 10px', fontSize: 12 }}>{s.ad} · {s.durum}</span>)}
+      <VadeListesi baslik="GÖRÜŞME İZLEMİ" renk="#3730a3" zemin="#e0e7ff" gunler={gunler} />
     </section>
   )
 }

@@ -7,19 +7,21 @@ import { greftBandi, yikamaTakvimi, fotoKvkkRiza, cizgiCercevesi, FOTO_SERI } fr
 import { dokulmePenceresi, sonucIzlemi } from '@/specialties/sac-ekimi/engines/izlem'
 import { fotoSaklama as sacFotoSaklama } from '@/specialties/sac-ekimi/engines/kayit'
 import { gecDonem } from '@/specialties/estetik-cerrahi/engines/izlem'
-import { ucuncuAyKontrol } from '@/specialties/medikal-estetik/engines/izlem'
+import { bakimAylari } from '@/specialties/medikal-estetik/engines/izlem'
+import { lazerSonrasi } from '@/specialties/klinik-dermatoloji/engines/izlem'
 import { lazerAralik } from '@/specialties/klinik-dermatoloji/engines/girdi'
 import { fotoSaklama as dermFotoSaklama } from '@/specialties/klinik-dermatoloji/engines/kayit'
-import { reaksiyonSonrasiAralik } from '@/specialties/longevity/engines/izlem'
+import { beklemeBitisi, reaksiyonSonrasiAralik } from '@/specialties/longevity/engines/izlem'
 import { hekimGirdi } from '@/specialties/fizyoterapi/engines/girdi'
-import { evKontrolGunu } from '@/specialties/fizyoterapi/engines/izlem'
+import { evIzlem } from '@/specialties/fizyoterapi/engines/izlem'
+import { cerceveGozden } from '@/specialties/klinik-psikolog/engines/izlem'
 import { taniKacagi } from '@/specialties/klinik-psikolog/engines/girdi'
 import { kiloGirdi } from '@/specialties/diyetisyen/engines/girdi'
 import { gecKontrol } from '@/specialties/diyetisyen/engines/izlem'
 import { neyziRed } from '@/specialties/ergoterapi/engines/girdi'
-import { blokKontrol } from '@/specialties/ergoterapi/engines/izlem'
+import { altiHafta, blokKontrol } from '@/specialties/ergoterapi/engines/izlem'
 import { dbGirdi } from '@/specialties/odyoloji/engines/girdi'
-import { esikEgimi } from '@/specialties/odyoloji/engines/izlem'
+import { altiAyCihaz, esikEgimi } from '@/specialties/odyoloji/engines/izlem'
 import { cerrahiSoguma, postOpTakvim, rizaIkiNusha, emboliBandi, ACIL_METIN as CER_A, ISLEMLER } from '@/specialties/estetik-cerrahi/engines/cerrahi'
 import { sogumaUygun, islemTakvimi, vaskulerAyrinti, lotKaydi, ACIL_METIN as EST_A, BOLGELER } from '@/specialties/medikal-estetik/engines/estetik'
 import { lazerSeansVadesi, akneBakimTakvimi, fotoRizaKayit, gunesRitmi, lazerAcilBand, ACIL_METIN as DERM_A } from '@/specialties/klinik-dermatoloji/engines/derm'
@@ -182,16 +184,16 @@ export const OZEL_ARACLAR: readonly AracTanim[] = [
     const r = sogumaUygun(g.onam || '', g.islem || '')
     return cikti(r.ozet, [], null, r.uygun)
   }),
-  T('/ozel-branslar/estetik-takvim', 'medikal-estetik', 'İşlem bakım takvimi', '1 / 14 / 28. gün. Ünite yok.', '#7E22CE', [
+  T('/ozel-branslar/estetik-takvim', 'medikal-estetik', 'İşlem bakım takvimi', '1 / 14 / 28. gün, sonra 3 ve 4. ay. Ünite yok.', '#7E22CE', [
     { id: 'islem', etiket: 'İşlem günü', tur: 'tarih' },
   ], (g, bugun) => {
     const t = islemTakvimi(g.islem || '', bugun)
     if (!t.length) return hata('İşlem gününü girin.')
-    const u = ucuncuAyKontrol(g.islem || '')
+    const u = bakimAylari(g.islem || '')
     if ('hata' in u) return u
     return cikti('Bakım vadeleri.', [
       ...t.map((x) => ({ iso: isoEkle(g.islem, x.gun), ad: x.ad })),
-      { iso: isoEkle(g.islem, u.gun), ad: u.ad },
+      ...u.map((x) => ({ iso: isoEkle(g.islem, x.gun), ad: x.ad })),
     ], null)
   }),
   T('/ozel-branslar/estetik-vaskuler', 'medikal-estetik', 'Vasküler acil bandı', 'Görme, livedo, ağrı, nefes. Doz yok.', '#6B21A8', [
@@ -218,7 +220,13 @@ export const OZEL_ARACLAR: readonly AracTanim[] = [
     const ar = lazerAralik(sayi(g, 'aralik'))
     if ('hata' in ar) return ar
     const r = lazerSeansVadesi(g.son || '', ar.gun, bugun)
-    return 'hata' in r ? r : cikti(r.ozet, [{ iso: r.due, ad: 'Sonraki lazer seansı' }], null)
+    if ('hata' in r) return r
+    const sonra = lazerSonrasi(g.son || '')
+    if ('hata' in sonra) return sonra
+    return cikti(r.ozet, [
+      { iso: r.due, ad: 'Sonraki lazer seansı' },
+      ...sonra.map((x) => ({ iso: isoEkle(g.son, x.gun), ad: x.ad })),
+    ], null)
   }),
   T('/ozel-branslar/derm-takvim', 'klinik-dermatoloji', 'Akne bakım takvimi', '2 / 6 / 12. hafta. Skor yok.', '#D97706', [
     { id: 'bas', etiket: 'Başlangıç', tur: 'tarih' },
@@ -259,7 +267,12 @@ export const OZEL_ARACLAR: readonly AracTanim[] = [
     const engel = reaksiyonSonrasiAralik(onay(g, 'reaksiyon'), sayi(g, 'aralik'))
     if (engel) return engel
     const r = sonrakiInfuzon(g.son || '', sayi(g, 'aralik'), bugun)
-    return 'hata' in r ? r : cikti(`Sonraki seans ${r.due} · ${r.durum}.`, [{ iso: r.due, ad: 'Sonraki seans' }], null)
+    if ('hata' in r) return r
+    const bek = beklemeBitisi(onay(g, 'reaksiyon'), g.son || '')
+    if (bek && 'hata' in bek) return bek
+    const vadeler: Array<{ iso: string; ad: string }> = [{ iso: r.due, ad: 'Sonraki seans' }]
+    if (bek && 'gun' in bek) vadeler.push({ iso: isoEkle(g.son, bek.gun), ad: bek.ad })
+    return cikti(`Sonraki seans ${r.due} · ${r.durum}.`, vadeler, null)
   }),
   T('/ozel-branslar/long-guvenlik', 'longevity', 'IV güvenlik kaydı', 'En az 3 madde. Doz yok.', '#10B981', [
     { id: 'madde', etiket: 'Güvenlik maddeleri', tur: 'coklu', secenekler: GUVENLIK_MADDELERI },
@@ -307,9 +320,9 @@ export const OZEL_ARACLAR: readonly AracTanim[] = [
   ], (g) => {
     const r = evProgrami(g.satir || '')
     if ('hata' in r) return r
-    const ev = evKontrolGunu(g.bas || '')
+    const ev = evIzlem(g.bas || '')
     if ('hata' in ev) return ev
-    return cikti(r.ozet, [{ iso: isoEkle(g.bas, ev.gun), ad: ev.ad }], null)
+    return cikti(r.ozet, ev.map((x) => ({ iso: isoEkle(g.bas, x.gun), ad: x.ad })), null)
   }),
   T('/ozel-branslar/fizyo-bayrak', 'fizyoterapi', 'Kırmızı bayrak', 'Eyer, göğüs, güç kaybı. Tanı yok.', '#075985', [
     { id: 'eyer', etiket: 'Eyer uyuşukluğu', tur: 'onay' },
@@ -336,7 +349,13 @@ export const OZEL_ARACLAR: readonly AracTanim[] = [
     { id: 'aralik', etiket: 'Aralık (gün)', tur: 'sayi' },
   ], (g, bugun) => {
     const r = psikVade(g.son || '', sayi(g, 'aralik'), bugun)
-    return 'hata' in r ? r : cikti(r.ozet, [{ iso: r.due, ad: 'Sonraki görüşme' }], null)
+    if ('hata' in r) return r
+    const c = cerceveGozden(g.son || '')
+    if ('hata' in c) return c
+    return cikti(r.ozet, [
+      { iso: r.due, ad: 'Sonraki görüşme' },
+      { iso: isoEkle(g.son, c.gun), ad: c.ad },
+    ], null)
   }),
   T('/ozel-branslar/psikolog-siklik', 'klinik-psikolog', 'Çerçeve sıklığı', 'Haftalık / iki hafta / aylık.', '#4F46E5', [
     { id: 'siklik', etiket: 'Sıklık', tur: 'secim', secenekler: ['haftalık', 'iki haftada bir', 'aylık'] },
@@ -409,7 +428,13 @@ export const OZEL_ARACLAR: readonly AracTanim[] = [
     { id: 'aralik', etiket: 'Aralık (gün)', tur: 'sayi' },
   ], (g, bugun) => {
     const r = ergoVade(g.son || '', sayi(g, 'aralik'), bugun)
-    return 'hata' in r ? r : cikti(r.ozet, [{ iso: r.due, ad: 'Sonraki GYA seansı' }], null)
+    if ('hata' in r) return r
+    const a = altiHafta(g.son || '')
+    if ('hata' in a) return a
+    return cikti(r.ozet, [
+      { iso: r.due, ad: 'Sonraki GYA seansı' },
+      { iso: isoEkle(g.son, a.gun), ad: a.ad },
+    ], null)
   }),
   T('/ozel-branslar/ergo-blok', 'ergoterapi', 'Günlük program', 'Sabah, öğlen, akşam blokları.', '#7C3AED', [
     { id: 'sabah', etiket: 'Sabah', tur: 'metin' },
@@ -462,7 +487,11 @@ export const OZEL_ARACLAR: readonly AracTanim[] = [
   ], (g, bugun) => {
     const r = cihazIzlem(onay(g, 'rapor'), g.kontrol || '', bugun)
     if ('hata' in r) return r
-    return cikti(r.ozet, r.due ? [{ iso: r.due, ad: 'Cihaz kontrolü' }] : [], null)
+    const ay = altiAyCihaz(onay(g, 'rapor'), g.kontrol || '')
+    if (ay && 'hata' in ay) return ay
+    const vadeler: Array<{ iso: string; ad: string }> = r.due ? [{ iso: r.due, ad: 'Cihaz kontrolü' }] : []
+    if (ay && 'gun' in ay && r.due) vadeler.push({ iso: isoEkle(g.kontrol, ay.gun), ad: ay.ad })
+    return cikti(r.ozet, vadeler, null)
   }),
   T('/ozel-branslar/odyo-ani', 'odyoloji', 'Ani işitme bandı', 'Saatler içinde kayıp veya yüz felci. Tanı yok.', '#C2410C', [
     { id: 'saatler', etiket: 'Saatler / günler içinde kayıp', tur: 'onay' },

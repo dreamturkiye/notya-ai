@@ -3,5 +3,5 @@ export function ergomHatirlatmalari(due: string | null): Array<{ ad: string; dur
   return [{ ad: 'Ergoterapi seansı', durum: 'planli' }, { ad: `Tarih: ${due}`, durum: 'planli' }]
 }
 export function ergoRitim(): string[] {
-  return ['GYA seans tarihi uzmanın kaydıyladır', 'Bağımsızlık skoru yoktur']
+  return ['GYA seans tarihi uzmanın kaydıyladır', 'Altı hafta GYA gözden geçirme', 'Bağımsızlık skoru yoktur']
 }

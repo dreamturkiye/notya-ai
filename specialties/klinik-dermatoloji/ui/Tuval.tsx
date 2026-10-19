@@ -1,6 +1,7 @@
 'use client'
 import { portalSatirlari, type AracCikti, type AracTanim } from '@/lib/klinik/ozelAracCalistir'
 import { TuvalAlanlari } from '@/components/klinik/TuvalAlanlari'
+import { VadeListesi } from '@/components/klinik/VadeListesi'
 
 export function DermTuval({ tanim, sonuc, bugun, girdi = {}, yaz }: { tanim: AracTanim; sonuc: AracCikti; bugun: string; girdi?: Record<string, string>; yaz?: (id: string, deger: string) => void }) {
   const gunler = portalSatirlari(sonuc.vadeler, bugun)
@@ -19,11 +20,8 @@ export function DermTuval({ tanim, sonuc, bugun, girdi = {}, yaz }: { tanim: Ara
   return (
     <section data-tuval="klinik-dermatoloji" style={{ background: '#f0fdfa', borderRadius: 14, padding: 14 }}>
       {alan}
-      <div style={{ fontSize: 11, fontWeight: 700, color: '#0f766e' }}>{baslik}</div>
       <p style={{ margin: '8px 0' }}>{sonuc.ozet}</p>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-        {gunler.map((s) => <span key={s.ad} style={{ background: '#ccfbf1', borderRadius: 999, padding: '6px 10px', fontSize: 12 }}>{s.ad} · {s.durum}</span>)}
-      </div>
+      <VadeListesi baslik={baslik} renk="#0f766e" zemin="#ccfbf1" gunler={gunler} />
       <p style={{ margin: '8px 0 0', fontSize: 12, color: '#0f766e' }}>PASI ve GÖP bu tuvalde yok.</p>
     </section>
   )

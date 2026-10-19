@@ -1,6 +1,7 @@
 'use client'
 import { portalSatirlari, type AracCikti, type AracTanim } from '@/lib/klinik/ozelAracCalistir'
 import { TuvalAlanlari } from '@/components/klinik/TuvalAlanlari'
+import { VadeListesi } from '@/components/klinik/VadeListesi'
 
 export function MedikalTuval({ tanim, sonuc, bugun, girdi = {}, yaz }: { tanim: AracTanim; sonuc: AracCikti; bugun: string; girdi?: Record<string, string>; yaz?: (id: string, deger: string) => void }) {
   const gunler = portalSatirlari(sonuc.vadeler, bugun)
@@ -35,9 +36,9 @@ export function MedikalTuval({ tanim, sonuc, bugun, girdi = {}, yaz }: { tanim: 
     )
   }
   return (
-    <section data-tuval="medikal-estetik" style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+    <section data-tuval="medikal-estetik" style={{ display: 'grid', gap: 8 }}>
       {alan}
-      {gunler.map((s) => <span key={s.ad} style={{ background: '#ffedd5', borderRadius: 999, padding: '6px 10px', fontSize: 12 }}>{s.ad} · {s.durum}</span>)}
+      <VadeListesi baslik="BAKIM TAKVİMİ" renk="#9a3412" zemin="#ffedd5" gunler={gunler} />
     </section>
   )
 }
