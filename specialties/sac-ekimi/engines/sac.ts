@@ -43,14 +43,14 @@ export function uygulamaOdasi(m2: number): { ozet: string; dogrulandi: true } | 
   return { ozet: `md.6/5-c: uygulama odası ${m2} m² — en az ${UYGULAMA_ODASI_M2} m². Tesis standardıdır, greft kilidi değildir.`, dogrulandi: true }
 }
 
-/** Kayıt görevi. Görüntü baytı saklanmaz. Bakanlık Ek-4 yazımı iddia edilmez. */
+/** Kayıt görevi. Görüntü baytı belge kasasına yazılır. Bakanlık Ek-4 yazımı iddia edilmez. */
 export function foto72Kaydi(islemIso: string): { ozet: string; bitis: string; dogrulandi: true } | { hata: string } {
   if (!isoMu(islemIso)) return { hata: 'İşlem gününü girin.' }
   const bitis = isoEkleGun(islemIso, FOTO_72_GUN)
   return {
     bitis,
     dogrulandi: true,
-    ozet: `md.10/3: donör ve alıcı fotoğrafı işlemden önce ve ${bitis} tarihine kadar (ilk 72 saat) kaydedilir. Görüntü dosyası saklanmaz. Bakanlık Ek-4 yazımı iddia edilmez.`,
+    ozet: `md.10/3: donör ve alıcı fotoğrafı işlemden önce ve ${bitis} tarihine kadar (ilk 72 saat) dosyaya yazılır. Bakanlık Ek-4 yazımı iddia edilmez.`,
   }
 }
 

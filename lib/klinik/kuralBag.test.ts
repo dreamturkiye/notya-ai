@@ -65,12 +65,14 @@ describe('kural bağı', () => {
     const saat = sac.find((k) => /72 saat/.test(k.metin))
     assert.ok(oda && oda.dogrulandi)
     assert.ok(saat && saat.dogrulandi)
-    assert.match(kuralVitrin('sac-ekimi').map((k) => k.metin).join(' '), /16 m²/)
+    assert.equal(kuralVitrin('sac-ekimi').some((k) => /m²/.test(k.metin)), false)
+    assert.match(kuralVitrin('sac-ekimi').map((k) => k.metin).join(' '), /72 saat/)
     assert.match(kuralDosyaSatirlari('sac-ekimi').map((k) => k.metin).join(' '), /72 saat/)
     for (const yaban of ['pediatri', 'kardiyoloji', 'dermatoloji', 'fizik-tedavi', 'estetik-cerrahi', 'klinik-dermatoloji', 'fizyoterapi', 'odyoloji', 'ergoterapi']) {
       assert.equal(kuralVitrin(yaban).some((k) => /16 m²|72 saat|40176/.test(k.metin)), false, yaban)
     }
-    assert.match(kuralVitrin('odyoloji').map((k) => k.metin).join(' '), /3 m²/)
-    assert.match(kuralVitrin('fizyoterapi').map((k) => k.metin).join(' '), /10 m²/)
+    assert.equal(kuralVitrin('odyoloji').some((k) => /m²/.test(k.metin)), false)
+    assert.equal(kuralVitrin('fizyoterapi').some((k) => /m²/.test(k.metin)), false)
+    assert.match(kuralVitrin('fizyoterapi').map((k) => k.metin).join(' '), /md\.16/)
   })
 })

@@ -8,6 +8,7 @@ import { STUDYO_KOPYA } from '@/lib/klinik/ozelStudyoKopya'
 import { TuvalAlanlari } from '@/components/klinik/TuvalAlanlari'
 import { OZEL_STUDYO } from '@/lib/klinik/ozelStudyoKaydi'
 import { KuralDefteri } from '@/components/klinik/KuralDefteri'
+import { SacFotoDosya } from '@/components/klinik/SacFotoDosya'
 
 export default function OzelStudyo({ tanim }: { tanim: AracTanim }) {
   const hasta = useSearchParams().get('patientId') || ''
@@ -65,6 +66,9 @@ export default function OzelStudyo({ tanim }: { tanim: AracTanim }) {
         </>
       ) : (
         <Tuval tanim={tanim} sonuc={sonuc} bugun={bugun} girdi={girdi} yaz={yaz} />
+      )}
+      {tanim.slug === 'sac-ekimi' && tanim.route.endsWith('sac-foto') && hasta && (
+        <SacFotoDosya patientId={hasta} islemBaslangic={girdi.ameliyat || ''} />
       )}
       <button type="button" onClick={kaydet} disabled={!hazir} style={{ justifySelf: 'start', padding: '10px 14px', borderRadius: 8, border: 'none', background: '#2f4334', color: '#fff', fontWeight: 700, cursor: hazir ? 'pointer' : 'default' }}>
         Hasta dosyasına yaz

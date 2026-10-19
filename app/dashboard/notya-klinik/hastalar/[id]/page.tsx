@@ -11,6 +11,8 @@ import { SEANS_ARAC, seansListesiCoz } from '@/lib/klinik/seansDefter'
 import type { KlinikSeansKayit } from '@/lib/klinik/klinikKayit'
 import { KayitliPlanlar, type KayitliPlan } from '@/components/klinik/KayitliPlanlar'
 import { KuralDosya } from '@/components/klinik/KuralDefteri'
+import { SacFotoDosya } from '@/components/klinik/SacFotoDosya'
+import { SAC_FOTO_ARAC } from '@/specialties/sac-ekimi/engines/fotoDosya'
 
 export const dynamic = 'force-dynamic'
 
@@ -56,7 +58,7 @@ export default function KlinikHastaDosyaPage() {
         const gelen = (plan.ok ? (pjPlan?.planlar || []) : []) as KayitliPlan[]
         const sunucu = seansListesiCoz(gelen.find((x) => x.arac === SEANS_ARAC)?.girdi)
         setSeanslar(sunucu.length ? sunucu : (kayit?.seanslar || []))
-        setPlanlar(gelen.filter((x) => x.arac !== SEANS_ARAC))
+        setPlanlar(gelen.filter((x) => x.arac !== SEANS_ARAC && x.arac !== SAC_FOTO_ARAC))
         setPlanAcil(gelen.find((x) => x.acil)?.acil || '')
         setPlanHata(plan.ok ? '' : (pjPlan?.error || 'Plan okunamadı.'))
       }
@@ -76,6 +78,7 @@ export default function KlinikHastaDosyaPage() {
         {hata && <p style={{ color: '#a45b3e' }}>{hata}</p>}
         <p style={{ color: '#8b7d70', fontSize: 14 }}>Klinik dosya — Doktor TUS sekmeleri yok. Seans kaydı bu dosyada durur; SBİYS iddia edilmez.</p>
         {slug && <KuralDosya slug={slug} />}
+        {slug === 'sac-ekimi' && <SacFotoDosya patientId={id} />}
         {vade && <p style={{ fontSize: 13, color: '#065F46' }}>Sonraki vade: {vade}</p>}
         {planAcil && <p style={{ fontSize: 13, color: '#a45b3e', fontWeight: 700 }}>{planAcil}</p>}
         {planHata && <p style={{ fontSize: 13, color: '#a45b3e' }}>{planHata}</p>}

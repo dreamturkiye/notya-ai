@@ -35,7 +35,7 @@ export function kuralVitrin(ham: string | null | undefined, n = 4): BagliKural[]
   const bag = kuralBagla(ham)
   if (!bag) return []
   const dogru = bag.filter((k) => k.dogrulandi)
-  const ozel = dogru.filter((k) => /16 m²|10 m²|3 m²|72 saat|40176|md\.6|md\.9|md\.10|md\.11|md\.12|md\.16|md\.18|md\.24/.test(k.metin))
+  const ozel = dogru.filter((k) => /72 saat|40176|md\.10|md\.16|md\.18|md\.24/.test(k.metin) && !/m²/.test(k.metin))
   const geri = dogru.filter((k) => !ozel.includes(k))
   return [...ozel, ...geri].slice(0, n)
 }

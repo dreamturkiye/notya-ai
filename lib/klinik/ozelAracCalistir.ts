@@ -135,7 +135,7 @@ export const OZEL_ARACLAR: readonly AracTanim[] = [
     const r = cizgiCercevesi(g.on || '', g.temporal || '', g.verteks || '')
     return 'hata' in r ? r : cikti(r.ozet, [], null)
   }),
-  T('/ozel-branslar/sac-foto', 'sac-ekimi', 'Foto seri günleri', '0 / 10 / 30 / 90 öneridir. md.10/3 ilk 72 saat kayıt görevidir. Görüntü dosyası saklanmaz.', '#1E40AF', [
+  T('/ozel-branslar/sac-foto', 'sac-ekimi', 'Foto seri günleri', '0 / 10 / 30 / 90 öneridir. md.10/3 ilk 72 saat kayıt görevidir. Donör ve alıcı görüntüsü dosyaya yazılır. Bakanlık Ek-4 yazımı iddia edilmez.', '#1E40AF', [
     { id: 'ameliyat', etiket: 'İşlem günü', tur: 'tarih' },
     { id: 'riza', etiket: 'Foto KVKK rızası var', tur: 'onay' },
     { id: 'ay', etiket: 'Saklama (ay: 6, 12 veya 24)', tur: 'sayi' },

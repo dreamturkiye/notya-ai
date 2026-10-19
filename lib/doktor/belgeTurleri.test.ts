@@ -4,6 +4,7 @@ import { etkinModalite } from '../../core/belgeler/router'
 import {
   belgeTurleriIcinBrans,
   belgeTuruIzinliMi,
+  SAC_FOTO_KATEGORI,
   yenidoganTaburcuEpikriziBransiMi,
   YENIDOGAN_TABURCULUK_EPIKRIZI,
   EKOKARDIYOGRAFI,
@@ -117,5 +118,18 @@ describe('belgeTurleri — Çocuk Hasta Raporları (brans-alan-sızması)', () =
     assert.equal(cocukHastaRaporuBransiMi('kardiyoloji'), false)
     assert.equal(cocukHastaRaporuBransiMi(null), false)
     assert.equal(cocukHastaRaporuBransiMi(undefined), false)
+  })
+})
+
+describe('belgeTurleri — saç ekimi fotoğrafı yalnız sac-ekimi', () => {
+  it('kardiyoloji ve pediatri yükleyemez; ortak select göstermez', () => {
+    assert.equal(belgeTuruIzinliMi(SAC_FOTO_KATEGORI, 'sac-ekimi'), true)
+    assert.equal(belgeTuruIzinliMi(SAC_FOTO_KATEGORI, 'kardiyoloji'), false)
+    assert.equal(belgeTuruIzinliMi(SAC_FOTO_KATEGORI, 'pediatri'), false)
+    assert.equal(belgeTuruIzinliMi(SAC_FOTO_KATEGORI, 'fizyoterapi'), false)
+    assert.equal(belgeTuruIzinliMi(SAC_FOTO_KATEGORI, 'dermatoloji'), false)
+    assert.equal(belgeTurleriIcinBrans('sac-ekimi').includes(SAC_FOTO_KATEGORI), false)
+    assert.equal(belgeTurleriIcinBrans('kardiyoloji').includes(SAC_FOTO_KATEGORI), false)
+    assert.equal(belgeTurleriIcinBrans('pediatri').includes(SAC_FOTO_KATEGORI), false)
   })
 })

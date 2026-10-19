@@ -22,7 +22,7 @@ describe('sac motor', () => {
     assert.equal('hata' in fotoSaklama(false, '2026-10-01', ''), true)
   })
 
-  it('40176 oda ve 72 saat kayıt görevi; görüntü dosyası yok', () => {
+  it('40176 kayıt görevi dosyaya yazılır; portal 72 saat taşımaz', () => {
     assert.equal(UYGULAMA_ODASI_M2, 16)
     assert.equal('hata' in uygulamaOdasi(15), true)
     const oda = uygulamaOdasi(16)
@@ -31,13 +31,14 @@ describe('sac motor', () => {
     const foto = foto72Kaydi('2026-10-01')
     assert.equal('bitis' in foto && foto.bitis, '2026-10-04')
     assert.match('ozet' in foto ? foto.ozet : '', /72 saat/)
-    assert.match('ozet' in foto ? foto.ozet : '', /saklanmaz/)
+    assert.match('ozet' in foto ? foto.ozet : '', /dosyaya yazılır/)
     assert.equal('ozet' in foto && foto.dogrulandi, true)
     const cal = ozelAracCalistir('/ozel-branslar/sac-foto', { ameliyat: '2026-10-01', riza: '1', ay: '12' }, '2026-10-19')
     assert.equal('ozet' in cal, true)
     if ('ozet' in cal) {
       assert.match(cal.ozet, /72 saat/)
-      assert.match(cal.ozet, /saklanmaz/)
+      assert.match(cal.ozet, /dosyaya yazılır/)
+      assert.doesNotMatch(cal.ozet, /saklanmaz/)
       const portal = portalSatirlari(cal.vadeler, '2026-10-19').map((s) => s.ad).join(' ')
       assert.doesNotMatch(portal, /kök|greft|72/)
     }

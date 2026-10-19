@@ -7,9 +7,13 @@
  */
 import type { SpecialtyKey } from '@/lib/asistan/turkishSpecialtyRefs'
 import { bransAnahtari } from '@/lib/specialties/bransAnahtari'
+import { klinikSlugCoz } from '@/lib/specialties/klinikDikey'
 
 /** Sabit etiket — vault category ve yükleme select ile aynı string. */
 export const YENIDOGAN_TABURCULUK_EPIKRIZI = 'Yenidoğan Taburculuk Epikrizi'
+
+/** Saç ekimi donör / alıcı görüntüsü. Yalnız sac-ekimi yükler. Kardiyoloji ve pediatri görmez. */
+export const SAC_FOTO_KATEGORI = 'Saç ekimi fotoğrafı'
 
 /**
  * NOTYA-HASTA-RAPORLARI-UNIFIED-01 — Çocuk Hasta Raporları (Araçlar → Hasta Raporları alt bölümü).
@@ -110,6 +114,7 @@ export function belgeTuruIzinliMi(
   hamBrans: string | SpecialtyKey | null | undefined,
 ): boolean {
   const ad = String(tur || '').trim()
+  if (ad === SAC_FOTO_KATEGORI) return klinikSlugCoz(typeof hamBrans === 'string' ? hamBrans : '') === 'sac-ekimi'
   if (!ad) return true
   if ((ORTAK_BELGE_TURLERI as readonly string[]).includes(ad)) return true
   const ozel = BRANS_BELGE_TURLERI.find((t) => t.ad === ad)
