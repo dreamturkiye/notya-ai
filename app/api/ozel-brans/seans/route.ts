@@ -10,6 +10,8 @@ import {
   seansPortalYuku,
   yasKucukMu,
 } from '@/lib/klinik/seansDefter'
+import { ikiNushaYaz } from '@/lib/klinik/ikiNushaYaz'
+import { NUSHA_ROLLERI } from '@/lib/klinik/ikiNusha'
 
 export async function POST(req: NextRequest) {
   const oturum = await doktorOturum(req)
@@ -50,6 +52,13 @@ export async function POST(req: NextRequest) {
     iso: new Date().toISOString().slice(0, 10),
   })
   if ('hata' in kapali) return NextResponse.json({ error: kapali.hata }, { status: 400 })
+  let nusha: { dosyaId: string; hastaId: string }
+  try {
+    nusha = await ikiNushaYaz(supabase, user.id, patientId, kapali.seans.iso, kapali.seans.id)
+  } catch {
+    return NextResponse.json({ error: 'İki nüsha yazılamadı.' }, { status: 503 })
+  }
+  const seans = { ...kapali.seans, dosyaNushaId: nusha.dosyaId, hastaNushaId: nusha.hastaId }
   const { data: mevcut } = await supabase
     .from('ozel_brans_plan')
     .select('girdi')
@@ -58,7 +67,7 @@ export async function POST(req: NextRequest) {
     .eq('arac', SEANS_ARAC)
     .maybeSingle()
   const sunucu = seansListesiCoz(mevcut?.girdi)
-  const seanslar = seansBasaEkle(sunucu, kapali.seans, sunucu.length ? [] : seansListesiCoz(body?.eski))
+  const seanslar = seansBasaEkle(sunucu, seans, sunucu.length ? [] : seansListesiCoz(body?.eski))
   const portal = seansPortalYuku()
   const { error } = await supabase.from('ozel_brans_plan').upsert({
     patient_id: patientId,
@@ -74,5 +83,10 @@ export async function POST(req: NextRequest) {
     updated_at: new Date().toISOString(),
   }, { onConflict: 'doctor_id,patient_id,arac' })
   if (error) return NextResponse.json({ error: 'Seans yazılamadı.' }, { status: 503 })
-  return NextResponse.json({ ok: true, seanslar })
+  const nushalar = NUSHA_ROLLERI.map((r) => ({
+    rol: r.id,
+    ad: r.ad,
+    id: r.id === 'dosya' ? nusha.dosyaId : nusha.hastaId,
+  }))
+  return NextResponse.json({ ok: true, seanslar, nushalar })
 }

@@ -38,7 +38,7 @@ export function postOpTakvim(ameliyatIso: string, bugun: string): Array<{ gun: n
 
 export function rizaIkiNusha(onamVar: boolean, hastaNusha: boolean): { ozet: string } | { hata: string } {
   if (!onamVar || !hastaNusha) return { hata: 'Hasta Hakları m.26: iki nüsha — dosya + hasta. Eksik nüsha belgelenmeden işlem yok.' }
-  return { ozet: 'İki nüsha rıza kaydı var (dosya + hasta). E-imza iddia edilmez.' }
+  return { ozet: 'İki nüsha dosyaya yazılır: biri hasta dosyasında kalır, biri hastaya verilir. E-imza iddia edilmez.' }
 }
 
 export function emboliBandi(nefes: boolean, bacak: boolean, gogus: boolean, kanama: boolean): { ozet: string; acil: boolean } {

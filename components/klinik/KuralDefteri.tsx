@@ -51,7 +51,7 @@ export function KuralDosya({ slug }: { slug: string }) {
           </li>
         ))}
       </ul>
-      <p style={{ margin: 0, fontSize: 12, color: '#8b7d70' }}>{ULUSAL_TAKVIM_YOK} E-imza ve SBİYS iddia edilmez. İmzalı nüsha saklanmaz.{slug === 'sac-ekimi' ? ' Donör ve alıcı görüntüsü bu dosyaya yazılır.' : ''}</p>
+      <p style={{ margin: 0, fontSize: 12, color: '#8b7d70' }}>{ULUSAL_TAKVIM_YOK} E-imza ve SBİYS iddia edilmez. İki nüsha dosyaya yazılır: dosya ve hasta.{slug === 'sac-ekimi' ? ' Donör ve alıcı görüntüsü bu dosyaya yazılır.' : ''}</p>
     </section>
   )
 }

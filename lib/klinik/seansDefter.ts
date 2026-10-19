@@ -68,6 +68,8 @@ export function seansListesiCoz(girdi: unknown): KlinikSeansKayit[] {
       iso,
       metin,
       rizaIkiNusha: r.rizaIkiNusha === true,
+      dosyaNushaId: typeof r.dosyaNushaId === 'string' ? r.dosyaNushaId : undefined,
+      hastaNushaId: typeof r.hastaNushaId === 'string' ? r.hastaNushaId : undefined,
       veliOnam: r.veliOnam === true ? true : r.veliOnam === false ? false : null,
       fotoKvkk: r.fotoKvkk === true,
       hekimPlani: r.hekimPlani === true,

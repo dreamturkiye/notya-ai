@@ -9,6 +9,8 @@ export type KlinikSeansKayit = {
   iso: string
   metin: string
   rizaIkiNusha: boolean
+  dosyaNushaId?: string
+  hastaNushaId?: string
   veliOnam: boolean | null
   fotoKvkk: boolean
   hekimPlani: boolean

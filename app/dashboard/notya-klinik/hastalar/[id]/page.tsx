@@ -12,6 +12,7 @@ import type { KlinikSeansKayit } from '@/lib/klinik/klinikKayit'
 import { KayitliPlanlar, type KayitliPlan } from '@/components/klinik/KayitliPlanlar'
 import { KuralDosya } from '@/components/klinik/KuralDefteri'
 import { SacFotoDosya } from '@/components/klinik/SacFotoDosya'
+import { IkiNushaDosya } from '@/components/klinik/IkiNushaDosya'
 import { SAC_FOTO_ARAC } from '@/specialties/sac-ekimi/engines/fotoDosya'
 
 export const dynamic = 'force-dynamic'
@@ -78,6 +79,7 @@ export default function KlinikHastaDosyaPage() {
         {hata && <p style={{ color: '#a45b3e' }}>{hata}</p>}
         <p style={{ color: '#8b7d70', fontSize: 14 }}>Klinik dosya — Doktor TUS sekmeleri yok. Seans kaydı bu dosyada durur; SBİYS iddia edilmez.</p>
         {slug && <KuralDosya slug={slug} />}
+        {slug && <IkiNushaDosya patientId={id} />}
         {slug === 'sac-ekimi' && <SacFotoDosya patientId={id} />}
         {vade && <p style={{ fontSize: 13, color: '#065F46' }}>Sonraki vade: {vade}</p>}
         {planAcil && <p style={{ fontSize: 13, color: '#a45b3e', fontWeight: 700 }}>{planAcil}</p>}
@@ -95,7 +97,7 @@ export default function KlinikHastaDosyaPage() {
               <div key={s.id} style={{ background: '#faf6ee', border: '1px solid rgba(58,44,34,0.08)', borderRadius: 10, padding: 12, marginBottom: 8, fontSize: 13 }}>
                 <b>{s.iso}</b> · {s.metin}
                 <div style={{ color: '#8b7d70', fontSize: 12, marginTop: 4 }}>
-                  {s.rizaIkiNusha ? 'iki nüsha rıza' : 'rıza eksik'}{s.kriz112 ? ' · 112' : ''}
+                  {s.dosyaNushaId && s.hastaNushaId ? 'Dosya nüshası · Hasta nüshası' : s.rizaIkiNusha ? 'iki nüsha rıza' : 'rıza eksik'}{s.kriz112 ? ' · 112' : ''}
                 </div>
               </div>
             ))}

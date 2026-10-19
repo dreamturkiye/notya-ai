@@ -11,6 +11,8 @@ import { KLINIK_ORTAK_KAYIT } from '@/lib/klinik/klinikMevzuat'
 import { seansEkle, type KlinikSeansKayit } from '@/lib/klinik/klinikKayit'
 import { klinikDefterOku, klinikDefterYaz } from '@/lib/klinik/klinikKayitIstemci'
 import { SEANS_ARAC, seansListesiCoz } from '@/lib/klinik/seansDefter'
+import { IkiNushaDosya } from '@/components/klinik/IkiNushaDosya'
+import type { NushaRol } from '@/lib/klinik/ikiNusha'
 
 export const dynamic = 'force-dynamic'
 
@@ -37,6 +39,8 @@ function SeansIc() {
   const [plan, setPlan] = useState(false)
   const [kriz, setKriz] = useState(false)
   const [onceki, setOnceki] = useState<KlinikSeansKayit[]>([])
+  const [nushalar, setNushalar] = useState<{ id: string; rol: NushaRol; iso: string }[]>([])
+  const [yenile, setYenile] = useState(0)
 
   useEffect(() => {
     let iptal = false
@@ -98,7 +102,7 @@ function SeansIc() {
         eski: yerel,
       }),
     })
-    const j = await yanit.json().catch(() => null) as { seanslar?: KlinikSeansKayit[]; error?: string } | null
+    const j = await yanit.json().catch(() => null) as { seanslar?: KlinikSeansKayit[]; nushalar?: { id: string; rol: NushaRol; iso: string }[]; error?: string } | null
     const defter = seansEkle(klinikDefterOku(userId), {
       patientId,
       dal,
@@ -120,9 +124,12 @@ function SeansIc() {
       return
     }
     setOnceki(j.seanslar)
+    const iso = j.seanslar[0]?.iso || new Date().toISOString().slice(0, 10)
+    setNushalar((j.nushalar || []).map((n) => ({ id: n.id, rol: n.rol, iso })))
+    setYenile((n) => n + 1)
     setNot('')
     setKayitHata(false)
-    setKayit('Seans hastanın dosyasına yazıldı. Canlı SBİYS / e-imza iddia edilmez.')
+    setKayit('İki nüsha dosyaya yazıldı: dosya ve hasta. E-imza iddia edilmez.')
   }
 
   return (
@@ -136,7 +143,7 @@ function SeansIc() {
           {KLINIK_ORTAK_KAYIT.slice(0, 4).map((k) => <li key={k}>{k}</li>)}
         </ul>
         <textarea value={not} onChange={(e) => setNot(e.target.value)} rows={8} placeholder="Yapılan uygulama, vade, 112 bayrağı. Tanı ve doz yok." style={{ width: '100%', marginTop: 16, padding: 12, borderRadius: 10, border: '1px solid rgba(58,44,34,0.14)', fontSize: 14 }} />
-        <label style={chk}><input type="checkbox" checked={riza} onChange={(e) => setRiza(e.target.checked)} /> İki nüsha rıza (dosya + hasta)</label>
+        <label style={chk}><input type="checkbox" checked={riza} onChange={(e) => setRiza(e.target.checked)} /> İki nüshayı dosyaya yaz (dosya + hasta)</label>
         {kucuk && <label style={chk}><input type="checkbox" checked={veli} onChange={(e) => setVeli(e.target.checked)} /> Veli / yasal temsilci onamı (18 yaş altı)</label>}
         {!muttefik && <label style={chk}><input type="checkbox" checked={foto} onChange={(e) => setFoto(e.target.checked)} /> Klinik foto için ayrı KVKK rızası</label>}
         {muttefik && <label style={chk}><input type="checkbox" checked={plan} onChange={(e) => setPlan(e.target.checked)} /> Hekim tanısı + tedavi planı mevcut</label>}
@@ -146,6 +153,7 @@ function SeansIc() {
           <button type="button" onClick={() => router.push('/ozel-branslar')} style={{ padding: '10px 16px', borderRadius: 8, border: '1px solid #2f4334', background: '#faf6ee', color: '#2f4334', fontWeight: 600, cursor: 'pointer' }}>Araçlar</button>
         </div>
         {kayit && <p style={{ marginTop: 12, fontSize: 13, color: kayitHata ? '#a45b3e' : '#065F46' }}>{kayit}</p>}
+        {patientId && <IkiNushaDosya patientId={patientId} baslangic={nushalar} yenile={yenile} />}
         {onceki.length > 0 && (
           <>
             <h2 style={{ fontFamily: "'Fraunces', Georgia, serif", margin: '28px 0 10px', fontSize: 16 }}>Kayıtlı seanslar</h2>
@@ -153,7 +161,7 @@ function SeansIc() {
               <div key={s.id} style={{ padding: '10px 12px', border: '1px solid rgba(58,44,34,0.08)', borderRadius: 8, marginBottom: 8, fontSize: 13 }}>
                 <b>{s.iso}</b> · {s.metin}
                 <div style={{ color: '#8b7d70', fontSize: 12, marginTop: 4 }}>
-                  {s.rizaIkiNusha ? 'rıza ✓' : 'rıza eksik'} · {s.kriz112 ? '112' : '112 yok'}
+                  {s.dosyaNushaId && s.hastaNushaId ? 'Dosya nüshası · Hasta nüshası' : s.rizaIkiNusha ? 'rıza ✓' : 'rıza eksik'} · {s.kriz112 ? '112' : '112 yok'}
                 </div>
               </div>
             ))}
