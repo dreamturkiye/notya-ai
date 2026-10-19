@@ -3,6 +3,7 @@
  * TUS dermatoloji / FTR / psikiyatri / KBB / plastik Yaram bu listeye girmez.
  */
 import type { KlinikYeniSlug } from '@/lib/specialties/klinikDikey'
+import { vadeDurumu } from '@/lib/klinik/isoGun'
 import { greftBandi, yikamaTakvimi, fotoKvkkRiza, cizgiCercevesi, FOTO_SERI } from '@/specialties/sac-ekimi/engines/sac'
 import { dokulmePenceresi, sonucIzlemi } from '@/specialties/sac-ekimi/engines/izlem'
 import { fotoSaklama as sacFotoSaklama } from '@/specialties/sac-ekimi/engines/kayit'
@@ -74,14 +75,15 @@ function cikti(ozet: string, vadeler: AracVade[], acil: string | null, riza = tr
   return { ozet, vadeler, acil, riza }
 }
 
-export function portalSatirlari(vadeler: AracVade[], bugun: string): Array<{ ad: string; durum: 'gecikti' | 'bugun' | 'planli' }> {
-  return vadeler
-    .filter((v) => iso(v.iso) && v.ad.trim() && !/kcal|mL|ünite|doz|tanı|greft|dB/i.test(v.ad))
-    .map((v) => {
-      const fark = Math.round((Date.parse(v.iso + 'T12:00:00Z') - Date.parse(bugun + 'T12:00:00Z')) / 86400000)
-      const durum = fark < 0 ? 'gecikti' as const : fark === 0 ? 'bugun' as const : 'planli' as const
-      return { ad: `${v.ad} · ${v.iso}`, durum }
-    })
+export function portalSatirlari(vadeler: AracVade[], bugun: string): Array<{ ad: string; durum: 'gecikti' | 'bugun' | 'yaklasiyor' | 'planli' }> {
+  const out: Array<{ ad: string; durum: 'gecikti' | 'bugun' | 'yaklasiyor' | 'planli' }> = []
+  for (const v of vadeler) {
+    if (!iso(v.iso) || !v.ad.trim() || /kcal|mL|ünite|doz|tanı|greft|dB/i.test(v.ad)) continue
+    const durum = vadeDurumu(bugun, v.iso)
+    if (!durum) continue
+    out.push({ ad: `${v.ad} · ${v.iso}`, durum })
+  }
+  return out
 }
 
 const T = (

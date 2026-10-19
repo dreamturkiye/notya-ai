@@ -1611,13 +1611,13 @@ export async function GET(
       .eq('doctor_id', doctorId)
       .order('updated_at', { ascending: false })
       .limit(20)
-    const satirlar: Array<{ ad: string; durum: 'gecikti' | 'bugun' | 'planli' }> = []
+    const satirlar: Array<{ ad: string; durum: 'gecikti' | 'bugun' | 'yaklasiyor' | 'planli' }> = []
     let acil: string | null = null
     for (const p of planlar || []) {
       if (!acil && typeof p.acil === 'string' && p.acil.trim()) acil = p.acil
       const liste = Array.isArray(p.portal_satir) ? p.portal_satir : []
       for (const s of liste) {
-        if (s && typeof s.ad === 'string' && (s.durum === 'gecikti' || s.durum === 'bugun' || s.durum === 'planli')) {
+        if (s && typeof s.ad === 'string' && (s.durum === 'gecikti' || s.durum === 'bugun' || s.durum === 'yaklasiyor' || s.durum === 'planli')) {
           satirlar.push({ ad: s.ad, durum: s.durum })
         }
       }

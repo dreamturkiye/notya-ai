@@ -34,6 +34,11 @@ describe('Özel Branş araçları — her dalın kendi motoru', () => {
       { iso: '2026-10-25', ad: 'Kontrol' },
     ], '2026-10-18')
     assert.deepEqual(s.map((x) => x.ad), ['Kontrol · 2026-10-25'])
+    assert.equal(s[0].durum, 'yaklasiyor')
+    const uzak = portalSatirlari([{ iso: '2026-12-01', ad: 'Kontrol' }], '2026-10-18')
+    assert.equal(uzak[0].durum, 'planli')
+    const bugun = portalSatirlari([{ iso: '2026-10-18', ad: 'Kontrol' }], '2026-10-18')
+    assert.equal(bugun[0].durum, 'bugun')
   })
 
   it('yabancı branş bu araçları görmez; sahip branş görür', () => {

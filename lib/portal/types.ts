@@ -271,7 +271,7 @@ export interface PortalBundle {
   asiKarnesi: PortalAsiKarnesi | null
   /** Özel Branş planı — yalnız o dalın token'ında. Tarih satırı. Tanı, doz, greft, dB yok. */
   ozelPlan: {
-    satirlar: Array<{ ad: string; durum: 'gecikti' | 'bugun' | 'planli' }>
+    satirlar: Array<{ ad: string; durum: 'gecikti' | 'bugun' | 'yaklasiyor' | 'planli' }>
     acil: string | null
   } | null
 }
