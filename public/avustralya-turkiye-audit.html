@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Australia against Turkey — country audit · Notya</title>
+  <meta name="description" content="2026-10-19 pre-work audit. Australia (release/au) scored against Turkey on main. Overall Partial, mean 48. No work started. No PHI." />
+<style>
+    :root {
+      --bg:#060C18; --surface:#0D1526; --surface2:#121C30; --stroke:rgba(255,255,255,0.10);
+      --text:#EDF1F7; --muted:#8FA0B5; --dim:#64748B; --teal:#14B8A6; --teal-soft:rgba(20,184,166,0.14);
+      --blue:#60A5FA; --blue-soft:rgba(96,165,250,0.14); --amber:#F59E0B; --amber-soft:rgba(245,158,11,0.14);
+      --red:#F87171; --red-soft:rgba(248,113,113,0.14); --green:#2DD4BF;
+    }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; background:var(--bg); color:var(--text); line-height:1.45; -webkit-font-smoothing:antialiased; }
+    .wrap { max-width:1100px; margin:0 auto; padding:32px 20px 72px; }
+    .brand { display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:24px; align-items:center; }
+    .brand .tag { font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--dim); font-weight:700; }
+    .brand a { color:var(--teal); text-decoration:none; font-size:13px; font-weight:600; }
+    h1 { margin:0 0 8px; font-size:28px; font-weight:700; letter-spacing:-.02em; line-height:1.2; }
+    h2 { margin:28px 0 12px; font-size:18px; font-weight:700; }
+    .lede { margin:0 0 14px; color:var(--muted); font-size:15px; max-width:920px; }
+    .pills { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:22px; }
+    .pill { display:inline-flex; align-items:center; padding:3px 10px; border-radius:999px; font-size:12px; font-weight:600; border:1px solid transparent; white-space:nowrap; }
+    .pill.success { background:var(--teal-soft); color:var(--green); border-color:rgba(45,212,191,.25); }
+    .pill.warning { background:var(--amber-soft); color:var(--amber); border-color:rgba(245,158,11,.28); }
+    .pill.danger { background:var(--red-soft); color:var(--red); border-color:rgba(248,113,113,.3); }
+    .pill.info { background:var(--blue-soft); color:var(--blue); border-color:rgba(96,165,250,.25); }
+    .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:18px; }
+    .stat { background:var(--surface); border:1px solid var(--stroke); border-radius:12px; padding:16px 14px; }
+    .stat .v { font-size:24px; font-weight:700; letter-spacing:-.03em; margin-bottom:4px; }
+    .stat .v.success { color:var(--green); } .stat .v.warning { color:var(--amber); } .stat .v.danger { color:var(--red); } .stat .v.info { color:var(--blue); }
+    .stat .l { font-size:12px; color:var(--muted); }
+    .callout { border-radius:12px; padding:16px 18px; margin:14px 0 22px; border:1px solid; }
+    .callout.info { background:var(--blue-soft); border-color:rgba(96,165,250,.28); }
+    .callout.warning { background:var(--amber-soft); border-color:rgba(245,158,11,.3); }
+    .callout h2 { margin:0 0 6px; font-size:12px; text-transform:uppercase; letter-spacing:.04em; }
+    .callout.info h2 { color:var(--blue); } .callout.warning h2 { color:var(--amber); }
+    .callout p { margin:0; font-size:14px; }
+    .table-wrap { border:1px solid var(--stroke); border-radius:12px; overflow:auto; margin-bottom:22px; background:var(--surface); }
+    table { width:100%; border-collapse:collapse; font-size:13px; min-width:720px; }
+    th,td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--stroke); vertical-align:top; }
+    th { background:var(--surface2); color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.05em; font-weight:700; }
+    tr:last-child td { border-bottom:none; }
+    td.domain { font-weight:600; }
+    td.note { color:var(--muted); }
+    td.gap { color:#FBBF24; }
+    td.num { font-variant-numeric:tabular-nums; font-weight:700; }
+    .bars { background:var(--surface); border:1px solid var(--stroke); border-radius:12px; padding:16px; margin-bottom:22px; }
+    .bar-row { display:grid; grid-template-columns:minmax(180px,280px) 1fr 40px; gap:10px; align-items:center; margin:8px 0; }
+    .bar-label { font-size:12px; color:var(--muted); }
+    .bar-track { height:10px; background:rgba(255,255,255,.06); border-radius:999px; overflow:hidden; }
+    .bar-fill { height:100%; background:var(--amber); border-radius:999px; }
+    .bar-fill.strong { background:var(--teal); }
+    .bar-fill.thin { background:var(--red); }
+    .bar-fill.gold { background:var(--teal); }
+    .bar-val { font-size:12px; font-weight:700; text-align:right; }
+    .cards { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin-bottom:22px; }
+    .cards.three { grid-template-columns:repeat(3,1fr); }
+    .card { background:var(--surface); border:1px solid var(--stroke); border-radius:12px; padding:14px; }
+    .card .title { font-size:14px; font-weight:650; margin-bottom:6px; }
+    .card .body { font-size:12px; color:var(--muted); }
+    .cap { font-size:12px; color:var(--dim); margin:-6px 0 14px; }
+    .foot { margin-top:36px; padding-top:16px; border-top:1px solid var(--stroke); font-size:12px; color:var(--dim); display:flex; flex-wrap:wrap; gap:8px 16px; justify-content:space-between; }
+    .banner { background:rgba(245,158,11,.1); border:1px solid rgba(245,158,11,.35); color:var(--amber); border-radius:10px; padding:10px 14px; font-size:13px; margin-bottom:18px; }
+    code { font-size:12px; }
+    @media (max-width:900px) {
+      .stats { grid-template-columns:repeat(2,1fr); }
+      .cards, .cards.three { grid-template-columns:1fr; }
+      h1 { font-size:22px; }
+      .bar-row { grid-template-columns:1fr; gap:4px; }
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">
+    <span class="tag">Notya · Australia vs Turkey · pre-work</span>
+    <span>
+      <a href="/ozel-brans-pediatri-audit.html">Turkey Özel Branşlar pass 14 →</a>
+    </span>
+  </div>
+
+  <div class="banner"><b>Pre-work · AU-TR-AUDIT-01</b> — 2026-10-19. Australia only. The other five countries are not scored here. No product change was made for this report.</div>
+
+  <h1>Australia against the Turkey golden reference</h1>
+  <p class="lede">Turkey on <code>main</code> (<code>19e514e6</code>) is the clinic a Turkish doctor runs today. Australia on <code>release/au</code> (<code>d5a219fd</code>) is a separate English kit, live at <a href="https://au.notya.io/au" style="color:var(--teal)">au.notya.io/au</a>. The Turkish doctor dashboard is in that git tree and is not a route a doctor can open. <b>Overall Partial. Mean of 17 slices is 48. 0 Strong. 0 Missing. 11 Partial. 6 Thin.</b></p>
+
+  <div class="pills">
+    <span class="pill warning">Overall Partial · mean 48</span>
+    <span class="pill danger">0 / 17 Strong</span>
+    <span class="pill warning">11 Partial</span>
+    <span class="pill danger">6 Thin</span>
+    <span class="pill info">Turkey-only law is not copied</span>
+    <span class="pill info">US, GB, CA, NZ, UZ not in this report</span>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="v warning">48</div><div class="l">Mean of 17 Australia slices</div></div>
+    <div class="stat"><div class="v info">157</div><div class="l">Turkey commits not on release/au</div></div>
+    <div class="stat"><div class="v warning">22</div><div class="l">Özel Branşlar slice · Thin</div></div>
+    <div class="stat"><div class="v danger">16</div><div class="l">Assistant and voice · Thin</div></div>
+  </div>
+
+  <div class="callout warning">
+    <h2>Executive verdict</h2>
+    <p>An Australian doctor can sign in, keep a calendar, open a patient, record a visit, and approve a note. That shell is real and it is in English. It is not the Turkey product with the labels translated. The 30 specialty chapters and the 10 Özel Branşlar that make Turkey the reference sit in the Australia repository and do not open from <code>/visit</code>. The assistant is off. Medicare is a free-text label, not an Individual Healthcare Identifier. PBS and Medicare are checklists, not claims. Nothing in this pack has been read by an Australian clinician or lawyer. That is why the mean stays at 48.</p>
+  </div>
+
+  <h2>How this was scored</h2>
+  <p class="cap">Turkey is 100 on each row as the reference that exists, including slices that are Turkey-only by law. Australia is scored on the country-adapted equivalent a doctor can actually open, not on files that the country build never mounts. Strong ≥85, Partial 45–84, Thin 15–44, Missing &lt;15. Medula, e-Nabız, e-Reçete, SGK, MBYS, NVI, e-Fatura and KVKK wording are exempt: they must not be translated. Their absence is not a deduction. The missing Australian equivalent is.</p>
+
+  <h2>Coverage</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Slice</th><th>Turkey reference</th><th>Australia today</th><th>Depth</th><th>Score</th></tr></thead>
+    <tbody>
+      <tr><td class="domain">Clinic day</td><td class="note">Doctor dashboard: today, patients, visit, note, calendar</td><td class="note">English kit is on: <code>/today</code>, <code>/patients</code>, <code>/visit</code>, <code>/calendar</code>. Live landing says the note is drafted and the doctor approves it.</td><td><span class="pill warning">Partial</span></td><td class="num">64</td></tr>
+      <tr><td class="domain">30 medical specialties</td><td class="note">Chapter folders a doctor opens from the dashboard. Pediatri, göz, kadın doğum, dermatoloji and KBB are deep.</td><td class="note">The same folder names are in git. Pediatri is byte-identical to Turkey (281,427 bytes) and is not a route. The doctor sees kit checklists, not those chapters.</td><td><span class="pill warning">Partial</span></td><td class="num">46</td></tr>
+      <tr><td class="domain">10 Özel Branşlar</td><td class="note">Strong. Mean wow 95. Studios, saved plans, saç photos, two consent copies.</td><td class="note">Each of the ten folders is 2 files and about 2–3 KB. No <code>/ozel-branslar</code> and no <code>/notya-klinik</code>. Clinic dermatology is not a role, so acne and laser reminders stay off.</td><td><span class="pill danger">Thin</span></td><td class="num">22</td></tr>
+      <tr><td class="domain">Hasta portalı</td><td class="note">Sağlığım, one module per specialty, gated.</td><td class="note"><code>hastaPortali</code> is on. One patient page, a summary, and requests. Not a chapter per specialty.</td><td><span class="pill warning">Partial</span></td><td class="num">58</td></tr>
+      <tr><td class="domain">Visit note</td><td class="note">SOAP with a lock per specialty. The doctor approves.</td><td class="note">Note screen exists. Recording-consent sentence is stamp <code>au-draft-2026-10-11</code> and has not been read by a lawyer.</td><td><span class="pill warning">Partial</span></td><td class="num">60</td></tr>
+      <tr><td class="domain">Prescription</td><td class="note">Paper reçete plus Medula. The live ministry write is Turkey-only.</td><td class="note">PBS particulars checklist, cited to the Pharmaceutical Benefits Regulations compilation of 15 August 2026. No medicine name, no price, no ARTG register. The prescription slot is empty. Nothing is sent.</td><td><span class="pill danger">Thin</span></td><td class="num">44</td></tr>
+      <tr><td class="domain">Appointments</td><td class="note">Randevu on the doctor dashboard.</td><td class="note">Calendar is on. Default 09:00–17:00, 30 minutes. National holidays follow the Fair Work NES list read 2026-10-13. State labour days and show days are omitted.</td><td><span class="pill warning">Partial</span></td><td class="num">70</td></tr>
+      <tr><td class="domain">Patient identity</td><td class="note">T.C. Kimlik No, validated.</td><td class="note">Optional free text labelled “Medicare card number”. No length, no check digit. The pack test rejects the words IHI and healthcare identifier.</td><td><span class="pill danger">Thin</span></td><td class="num">34</td></tr>
+      <tr><td class="domain">Doctor identity</td><td class="note">Diploma tescil and uzmanlık belge.</td><td class="note">Label “AHPRA registration number”, optional, not checked against the register. Provider number and PBS prescriber number are sentences inside checklists, not stored fields.</td><td><span class="pill warning">Partial</span></td><td class="num">48</td></tr>
+      <tr><td class="domain">Billing</td><td class="note">e-Fatura / GİB. Turkey-only. Not copied.</td><td class="note">Medicare account particulars and a link to MBS Online. The tool stores no item number, no fee, and no provider number. No claim is sent.</td><td><span class="pill danger">Thin</span></td><td class="num">36</td></tr>
+      <tr><td class="domain">Privacy and consent</td><td class="note">KVKK copy on the Turkish product. Not copied.</td><td class="note">Privacy, terms, cookies, security, refund, copyright and data-request pages exist. The pack says every line is unread by a lawyer. State and territory health-records laws are an open question.</td><td><span class="pill danger">Thin</span></td><td class="num">42</td></tr>
+      <tr><td class="domain">Immunisation</td><td class="note">Ulusal Aşı Takvimi is bound for pediatri. AIR has no Turkish twin; e-Nabız is exempt.</td><td class="note">Twelve age ticks: birth, 6 weeks, 4, 6, 12 and 18 months, 4 years, year 7, year 10, pregnancy, 65, 75. No antigen, no brand, no catch-up, no AIR report. Source read was NSW Health’s rendering of the NIP, 1 October 2026, not the Department PDF.</td><td><span class="pill warning">Partial</span></td><td class="num">50</td></tr>
+      <tr><td class="domain">Assistant and voice</td><td class="note">Ayşe, on the Turkish product.</td><td class="note">The pack states the assistant, voice, voice profile and image evaluation are still off. <code>Asistan.tsx</code> is 1.8 KB.</td><td><span class="pill danger">Thin</span></td><td class="num">16</td></tr>
+      <tr><td class="domain">Documents and photos</td><td class="note">Belge Kasası, lab extract, saç donor and recipient files.</td><td class="note">Visit attachments and a photo archive are on. Storage and a two-up compare. No model reads a photo. No saç 72-hour series.</td><td><span class="pill warning">Partial</span></td><td class="num">54</td></tr>
+      <tr><td class="domain">Clinical instruments</td><td class="note">Chapter engines the doctor runs.</td><td class="note">Eleven Australia mechanisms are in the pack: body size, K10, ECOG, NIP ticks, notifiable diseases, poisons schedules, Schedule 8, dispensing label, Ahpra notifications, PBS particulars, Medicare particulars. ICD-10, medicine interactions, IPSS, PHQ-9, GAD-7, MIDAS and ODI stay off.</td><td><span class="pill warning">Partial</span></td><td class="num">47</td></tr>
+      <tr><td class="domain">Language on the routes a doctor opens</td><td class="note">Turkish.</td><td class="note">The middleware allow-list is English: <code>/visit</code>, <code>/patients</code>, <code>/tools</code>, and the legal pages. API prefix is <code>/api/ulke/</code>. Turkish dashboard routes are not mounted.</td><td><span class="pill warning">Partial</span></td><td class="num">72</td></tr>
+      <tr><td class="domain">Multi-doctor clinic</td><td class="note">Notya Klinik, separate from the 10 Özel Branşlar.</td><td class="note"><code>/clinic</code> and <code>/desk</code> are on, with invites and shared records. This is the older kit clinic. It is not the Turkey gold layer from 19 October.</td><td><span class="pill warning">Partial</span></td><td class="num">55</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>Wow bar</h2>
+  <p class="cap">0–100 against the Turkey reference for that slice. Teal is Partial at or above 45. Red is Thin. Turkey stays at 100 because it is the reference, not because every Turkish slice is finished for Australia. Mean of the 17 Australia scores is 818/17 = 48.1, reported as 48.</p>
+  <div class="bars">
+    <div class="bar-row"><div class="bar-label">Turkey reference</div><div class="bar-track"><div class="bar-fill gold" style="width:100%"></div></div><div class="bar-val">100</div></div>
+    <div class="bar-row"><div class="bar-label">Language on open routes</div><div class="bar-track"><div class="bar-fill strong" style="width:72%"></div></div><div class="bar-val">72</div></div>
+    <div class="bar-row"><div class="bar-label">Appointments</div><div class="bar-track"><div class="bar-fill strong" style="width:70%"></div></div><div class="bar-val">70</div></div>
+    <div class="bar-row"><div class="bar-label">Clinic day</div><div class="bar-track"><div class="bar-fill strong" style="width:64%"></div></div><div class="bar-val">64</div></div>
+    <div class="bar-row"><div class="bar-label">Visit note</div><div class="bar-track"><div class="bar-fill strong" style="width:60%"></div></div><div class="bar-val">60</div></div>
+    <div class="bar-row"><div class="bar-label">Hasta portalı</div><div class="bar-track"><div class="bar-fill strong" style="width:58%"></div></div><div class="bar-val">58</div></div>
+    <div class="bar-row"><div class="bar-label">Multi-doctor clinic</div><div class="bar-track"><div class="bar-fill strong" style="width:55%"></div></div><div class="bar-val">55</div></div>
+    <div class="bar-row"><div class="bar-label">Documents and photos</div><div class="bar-track"><div class="bar-fill strong" style="width:54%"></div></div><div class="bar-val">54</div></div>
+    <div class="bar-row"><div class="bar-label">Immunisation</div><div class="bar-track"><div class="bar-fill strong" style="width:50%"></div></div><div class="bar-val">50</div></div>
+    <div class="bar-row"><div class="bar-label">Doctor identity</div><div class="bar-track"><div class="bar-fill strong" style="width:48%"></div></div><div class="bar-val">48</div></div>
+    <div class="bar-row"><div class="bar-label">Clinical instruments</div><div class="bar-track"><div class="bar-fill strong" style="width:47%"></div></div><div class="bar-val">47</div></div>
+    <div class="bar-row"><div class="bar-label">30 medical specialties</div><div class="bar-track"><div class="bar-fill strong" style="width:46%"></div></div><div class="bar-val">46</div></div>
+    <div class="bar-row"><div class="bar-label">Prescription</div><div class="bar-track"><div class="bar-fill thin" style="width:44%"></div></div><div class="bar-val">44</div></div>
+    <div class="bar-row"><div class="bar-label">Privacy and consent</div><div class="bar-track"><div class="bar-fill thin" style="width:42%"></div></div><div class="bar-val">42</div></div>
+    <div class="bar-row"><div class="bar-label">Billing</div><div class="bar-track"><div class="bar-fill thin" style="width:36%"></div></div><div class="bar-val">36</div></div>
+    <div class="bar-row"><div class="bar-label">Patient identity</div><div class="bar-track"><div class="bar-fill thin" style="width:34%"></div></div><div class="bar-val">34</div></div>
+    <div class="bar-row"><div class="bar-label">10 Özel Branşlar</div><div class="bar-track"><div class="bar-fill thin" style="width:22%"></div></div><div class="bar-val">22</div></div>
+    <div class="bar-row"><div class="bar-label">Assistant and voice</div><div class="bar-track"><div class="bar-fill thin" style="width:16%"></div></div><div class="bar-val">16</div></div>
+  </div>
+
+  <h2>What a doctor can open</h2>
+  <p class="cap">Country build, from <code>countries/au/index.ts</code>. <code>bolunmemisUygulama</code> is false, so only <code>*.ulke.tsx</code> routes and <code>/api/ulke/</code> mount. Confirmed again in <code>COUNTRY-BUILD-ROUTING-01</code> on <code>release/au</code>.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Surface</th><th>Flag</th><th>What it is</th></tr></thead>
+    <tbody>
+      <tr><td class="domain">Landing, sign-in, invite signup</td><td><span class="pill success">On</span></td><td class="note">Hidden from search. Invitation only. Live HTTP 200 at <code>/au</code>.</td></tr>
+      <tr><td class="domain">Visit, patients, calendar, tools, clinic, desk</td><td><span class="pill success">On</span></td><td class="note">The English shell. Calendar file is 56 KB. Patients list is 22 KB.</td></tr>
+      <tr><td class="domain">Patient page, intake, messages, consults</td><td><span class="pill success">On</span></td><td class="note">Consult consent is drafted and flagged <code>hukukcuInceledi: false</code>.</td></tr>
+      <tr><td class="domain">Visit files and photo archive</td><td><span class="pill success">On</span></td><td class="note">Storage only. No model evaluation.</td></tr>
+      <tr><td class="domain">Assistant, voice, image evaluation, own templates</td><td><span class="pill danger">Off</span></td><td class="note">Stated in the pack. Not a hidden switch.</td></tr>
+      <tr><td class="domain"><code>/dashboard/doktor</code> and <code>/api/doktor</code></td><td><span class="pill danger">Not a route</span></td><td class="note">Present in git. A doctor on this build receives 404.</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>Mandate matrix</h2>
+  <p class="cap">Australian institutions, not a translation of the Turkish ones. “In the pack” means the code cites it. “A doctor can use it” is a separate column.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Mandate</th><th>Level</th><th>In the pack</th><th>Gap</th></tr></thead>
+    <tbody>
+      <tr><td class="domain">Ahpra registration</td><td><span class="pill info">Registration</span></td><td class="note">Label on the account. Not checked against the public register.</td><td class="gap">Store it, validate the shape, and keep provider number separate</td></tr>
+      <tr><td class="domain">Medicare provider number and PBS prescriber number</td><td><span class="pill info">Services Australia</span></td><td class="note">Named inside the Medicare and PBS checklists. Not fields.</td><td class="gap">They are not the Ahpra number. Add them as their own fields</td></tr>
+      <tr><td class="domain">Individual Healthcare Identifier</td><td><span class="pill info">HI Service</span></td><td class="note">The pack test forbids the words IHI and healthcare identifier.</td><td class="gap">The clinical identifier is missing. Medicare card number is the billing card</td></tr>
+      <tr><td class="domain">Medicare card number</td><td><span class="pill info">Billing</span></td><td class="note">Optional free text. No 10-digit card plus IRN check.</td><td class="gap">Validate the card, or say confirmed-none for the clinical record and keep it on the account</td></tr>
+      <tr><td class="domain">Privacy Act and the APPs</td><td><span class="pill info">Law</span></td><td class="note">Named as a question for a lawyer. Pages are generated and unread.</td><td class="gap">A lawyer reads the pages before a patient relies on them. State health-records Acts differ</td></tr>
+      <tr><td class="domain">My Health Record and AIR</td><td><span class="pill warning">National record</span></td><td class="note">The pack claims no connection. NIP tool does not report a dose.</td><td class="gap">Leave the live write unclaimed until a real AIR package exists</td></tr>
+      <tr><td class="domain">National Immunisation Program</td><td><span class="pill info">Schedule</span></td><td class="note">Age milestones from NSW Health’s 1 October 2026 rendering.</td><td class="gap">Antigens, brands, catch-up and the Aboriginal and Torres Strait Islander additions are not in the tool</td></tr>
+      <tr><td class="domain">PBS prescription particulars</td><td><span class="pill info">Regulation</span></td><td class="note">Checklist from the 15 August 2026 compilation, sections 40, 41A and 42. Creative Commons attribution is in the file.</td><td class="gap">No medicine register, so a prescription still cannot be written</td></tr>
+      <tr><td class="domain">MBS</td><td><span class="pill info">Schedule</span></td><td class="note">Link to MBS Online. No item and no fee copied.</td><td class="gap">A link is not an account</td></tr>
+      <tr><td class="domain">Triple Zero</td><td><span class="pill success">000</span></td><td class="note">On the patient page as digits. The pack still says a person in Australia has not confirmed it.</td><td class="gap">The number is the national one. The unread stamp can be closed by a local confirmation</td></tr>
+      <tr><td class="domain">Medula, e-Nabız, SGK, KVKK, e-Fatura</td><td><span class="pill info">Turkey only</span></td><td class="note">Exempt. Not translated into this pack.</td><td class="gap">Keep them off Australia</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>Specialty folders versus what the visit shows</h2>
+  <p class="cap">Bytes on <code>origin/main</code> versus <code>origin/release/au</code> at the tips above. Equal bytes do not mean an Australian doctor sees the chapter.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Folder</th><th>Turkey</th><th>Australia git</th><th>What the doctor gets</th></tr></thead>
+    <tbody>
+      <tr><td class="domain">Pediatri</td><td class="note">24 files · 281,427 bytes</td><td class="note">Same bytes</td><td class="gap">Not routed. NIP ticks replace the bound Turkish schedule. Neyzi is not an Australian chart</td></tr>
+      <tr><td class="domain">Kadın doğum, göz, dermatoloji, KBB</td><td class="note">Deep chapters, same bytes on both tips</td><td class="note">Same bytes</td><td class="gap">Not routed. Kit checklists only</td></tr>
+      <tr><td class="domain">Dahiliye, kardiyoloji, üroloji, onkoloji</td><td class="note">Turkey is ahead by roughly 6–19 KB</td><td class="note">Older copy</td><td class="gap">Not routed, and already behind</td></tr>
+      <tr><td class="domain">Ten Özel Branşlar</td><td class="note">22–24 files each</td><td class="note">2 files each</td><td class="gap">Thin on both the route and the folder</td></tr>
+      <tr><td class="domain"><code>lib/klinik</code></td><td class="note">43 files · 184 KB</td><td class="note">14 files · 66 KB</td><td class="gap">The 19 October plan, photo and two-copy work is not on this branch</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>Roles are not a translation of the Turkish 40</h2>
+  <p class="lede">The landing says “40 specialties”. The pack’s own role list is a different forty. It adds cardio-thoracic as its own line, vascular surgery, radiation oncology, geriatric medicine, immunology and allergy, haematology, pain medicine, podiatry and speech pathology. It does not have a clinic-dermatology role. Hair transplantation, cosmetic surgery, non-surgical cosmetic procedures, longevity, physiotherapy, psychology, dietetics, occupational therapy and audiology are names on that list. They are not the Turkey studios.</p>
+
+  <h2>What a clinic day still costs</h2>
+  <div class="cards">
+    <div class="card"><div class="title">The deep chapters never open <span class="pill warning">Specialties 46</span></div><div class="body">Pediatri on this branch is the Turkish chapter, byte for byte, and the country build does not mount it. Copying it onto <code>/visit</code> would show Neyzi and Turkish locks to an Australian paediatrician. That is the wrong fix.</div></div>
+    <div class="card"><div class="title">The assistant is off <span class="pill danger">16</span></div><div class="body">Turkey’s daily loop is a drafted note the doctor approves, with Ayşe in the room. Australia’s landing promises the drafted note. The assistant flag is off.</div></div>
+    <div class="card"><div class="title">Identity is a label <span class="pill danger">Patient 34</span></div><div class="body">Medicare card number as free text is the billing card used as the only identifier. The Individual Healthcare Identifier is refused by the pack test. Ahpra is not checked. Provider number is not stored.</div></div>
+    <div class="card"><div class="title">Özel Branşlar are two files <span class="pill danger">22</span></div><div class="body">Turkey’s ten are Strong at mean 95, including two stored consent copies and saç photos. Australia’s ten folders were not brought forward with the 157 Turkey commits this branch does not contain.</div></div>
+  </div>
+
+  <h2>Game changers, in order</h2>
+  <p class="cap">Not started. This table is the queue after the report.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>#</th><th>Move</th><th>Why a clinic will feel it</th><th>Size</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td class="domain">Identifiers a clinic can store</td><td class="note">Ahpra number, Medicare provider number, PBS prescriber number, and the patient IHI, each with its own check. Medicare card number stays the billing card.</td><td><span class="pill info">M</span></td></tr>
+      <tr><td>2</td><td class="domain">A note the assistant actually drafts</td><td class="note">Turn the assistant on in Australian English, against Australian institutions, or take the promise off the landing.</td><td><span class="pill warning">L</span></td></tr>
+      <tr><td>3</td><td class="domain">One specialty a doctor can open</td><td class="note">Pick one branş and build its Australia chapter on the kit, from Australian sources. Do not mount the Turkish folder.</td><td><span class="pill warning">L</span></td></tr>
+      <tr><td>4</td><td class="domain">PBS prescription that names a medicine</td><td class="note">The particulars checklist is the frame. The empty prescription slot is the missing register.</td><td><span class="pill warning">L</span></td></tr>
+      <tr><td>5</td><td class="domain">NIP antigens, still not an AIR write</td><td class="note">The age ticks exist. The vaccines at each age, and catch-up, do not. A live AIR send stays unclaimed.</td><td><span class="pill info">M</span></td></tr>
+      <tr><td>6</td><td class="domain">A lawyer reads the consent pages</td><td class="note">Privacy, recording, minors and consult consent are drafted and stamped unread. State law is not one sentence.</td><td><span class="pill info">M</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>Recommended next ships</h2>
+  <div class="cards three">
+    <div class="card"><div class="title">1 · Identity</div><div class="body">The smallest mandate gap. Four identifiers, four checks, no Turkish field reused. Do this before any specialty port.</div></div>
+    <div class="card"><div class="title">2 · One branş on the kit</div><div class="body">General practice or paediatrics, sourced here. The Turkish chapter stays the reference for shape, not for text.</div></div>
+    <div class="card"><div class="title">3 · Then the other five countries</div><div class="body">Same audit, one country at a time. United States, United Kingdom, Canada, New Zealand, Uzbekistan. Not in this score.</div></div>
+  </div>
+
+  <h2>Sources</h2>
+  <p class="lede">Turkey tip <code>origin/main</code> <code>19e514e6</code> (19 Oct 2026). Australia tip <code>origin/release/au</code> <code>d5a219fd</code> (18 Oct 2026). Merge base <code>9891987</code>. Australia is 248 commits off that base that Turkey does not have. Turkey is 157 commits Australia does not have. Live check: <code>https://au.notya.io/au</code> returned HTTP 200 and the English landing. Pack: <code>countries/au/index.ts</code>, <code>countries/au/ayarlar.ts</code>, <code>countries/au/araclar/tanimlar.ts</code>, <code>countries/au/araclar/pbsPrescription.ts</code>, <code>countries/au/resmiGunler.ts</code>. Routing finding: <code>COUNTRY-BUILD-ROUTING-01</code> on that branch. This audit did not re-fetch the Department of Health PDF. The NIP row follows the pack’s own citation of NSW Health, current as at 1 October 2026. No patient data.</p>
+
+  <div class="foot">
+    <span>AU-TR-AUDIT-01 · 2026-10-19 · pre-work · Australia only · no patient data</span>
+    <span>Strong ≥85 · Partial 45–84 · Thin 15–44 · Missing &lt;15</span>
+  </div>
+</div>
+</body>
+</html>
