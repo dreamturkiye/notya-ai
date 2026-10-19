@@ -48,6 +48,11 @@
  *                               therapy) as a distinct profession turned up no licensed category AND no real market
  *                               presence of their own in Uzbekistan (searched by name in Uzbek and Russian): kept
  *                               removed. Decision owner: Claude, 2026-10-18; full sourcing in OPEN-COMMITMENTS.md.
+ *                               NAMING CLOSED 2026-10-19 (Claude, decision owner, per Kaan's instruction to decide
+ *                               and close): the three owner-given names for these removed roles (sac-ekimi/Shohruh
+ *                               Karimov, longevity/Asal Qodirova, ergoterapi/Oybek Holmatov) are RETIRED, not
+ *                               reassigned or re-keyed — see ./asistanAdlari.ts, top of file, for why that is the
+ *                               only outcome consistent with this gate and with the owner's frozen name list.
  *   RESOLVED 2026-10-18         fizyoterapi (was "not decided", below): changed to `keep`. See its row.
  *   OUT OF SCOPE                dentistry ("Stomatologiya", section IV of the order, a whole direction) and
  *                               traditional medicine ("Xalq tabobati", section VIII): each needs a note template,

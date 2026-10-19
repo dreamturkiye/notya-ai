@@ -8,6 +8,18 @@
  * pack have no entry here and show the neutral assistant until the owner names them. Every form a screen shows
  * (with the title, without it, in Cyrillic, in Russian) is made from an entry here by ./asistanKimligi.ts.
  *
+ * CLOSED 2026-10-19 (docs/OPEN-COMMITMENTS.md, same date; decision owner Claude, per Kaan's "close all the open
+ * items... decide this yourself"): of the five removed-role entries above, sac-ekimi, longevity and ergoterapi are
+ * RETIRED — final, not a pending choice. Reassigning Shohruh Karimov, Asal Qodirova or Oybek Holmatov to a
+ * different branş key, or giving the role a new name, would both violate the regulatory-recognition gate
+ * (`.cursor/rules/ulke-paritesi-duzeltme.mdc`: a branş Uzbekistan's regulator does not recognise is never offered
+ * there — and sac-ekimi/longevity/ergoterapi are exactly that, per ./rolListesi.ts's own sourcing) and break
+ * ./asistanAdlari.test.ts's sha256 fingerprint of the owner's frozen 40-name list, which no job may edit around.
+ * The only correct, consistent outcome is what the code already does: the three names stay in this file as a
+ * historical record of the owner's original 2026-10-08 list, unused by any screen, with no successor branş and no
+ * new name. (The other two removed-role entries, diyetisyen and odyoloji, are a different case — not retired, they
+ * were already reconciled onto `diyetoloji`/`surdoloji` below, same owner, same identity, new key.)
+ *
  * NAMES: the owner's list (Kaan, 2026-10-08). Given name and family name exactly as he wrote them, in Uzbek Latin.
  * `bransAnahtari` is the product's internal specialty key: an identifier, never shown on a screen.
  *
