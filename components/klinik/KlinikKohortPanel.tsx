@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { klinikKohortDerle, type KlinikKohortSatir } from '@/lib/klinik/klinikKayit'
 import { klinikDefterOku } from '@/lib/klinik/klinikKayitIstemci'
+import { defterSunucuIle } from '@/lib/klinik/seansDefter'
 import { ozelKohortBirlestir } from '@/lib/klinik/ozelKohort'
 import { klinikSlugCoz } from '@/lib/specialties/klinikDikey'
 
@@ -68,7 +69,7 @@ export default function KlinikKohortPanel() {
         baslangic: x.baslangic || '',
       }))
       const derlenen = ozelKohortBirlestir(
-        klinikKohortDerle({ dal, bugun, hastalar, randevular, defter: klinikDefterOku(userId) }),
+        klinikKohortDerle({ dal, bugun, hastalar, randevular, defter: defterSunucuIle(klinikDefterOku(userId), planj?.planlar || [], dal) }),
         planj?.planlar || [],
         new Map(hastalar.map((h: { id: string; name: string }) => [h.id, h.name])),
         bugun,
@@ -83,7 +84,7 @@ export default function KlinikKohortPanel() {
 
   if (yukleniyor) return <p style={{ color: '#8b7d70' }}>Kohort yükleniyor…</p>
   if (!satir.length) {
-    return <p style={{ color: '#8b7d70', fontSize: 14 }}>Geciken izlem, eksik rıza veya 112 bayrağı yok. Seans kaydı dosyada tutulur — SBİYS iddia edilmez.</p>
+    return <p style={{ color: '#8b7d70', fontSize: 14 }}>Geciken izlem, eksik rıza veya 112 bayrağı yok. Seans kaydı hastanın dosyasında durur — SBİYS iddia edilmez.</p>
   }
   return (
     <div style={{ background: '#faf6ee', border: '1px solid rgba(58,44,34,0.08)', borderRadius: 12 }}>

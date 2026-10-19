@@ -1,4 +1,5 @@
 import type { KlinikYeniSlug } from '@/lib/specialties/klinikDikey'
+import { seansAracMi } from '@/lib/klinik/seansDefter'
 import type { KlinikKohortSatir } from '@/lib/klinik/klinikKayit'
 import { kohortAcilBirlestir, type PlanAcilSatiri } from '@/lib/klinik/kohortAcil'
 import { vadeKohort as sacVade } from '@/specialties/sac-ekimi/engines/kohort'
@@ -53,6 +54,7 @@ const DOSYA: Record<KlinikYeniSlug, DosyaFn> = {
 
 export type PlanKohortSatiri = PlanAcilSatiri & {
   slug?: string | null
+  arac?: string | null
   riza?: boolean | null
   vadeler?: Array<{ iso?: string; ad?: string }> | null
 }
@@ -68,10 +70,11 @@ export function ozelKohortBirlestir(
   adlar: ReadonlyMap<string, string>,
   bugun: string,
 ): KlinikKohortSatir[] {
-  const out = kohortAcilBirlestir(satirlar, planlar, adlar)
+  const planlarArac = planlar.filter((p) => !seansAracMi(p.arac))
+  const out = kohortAcilBirlestir(satirlar, planlarArac, adlar)
   const rizaVar = new Set(out.filter((s) => s.durum === 'riza-eksik').map((s) => s.patientId))
   const vadeVar = new Set(out.filter((s) => s.vade).map((s) => `${s.patientId}|${s.vade}`))
-  for (const p of planlar) {
+  for (const p of planlarArac) {
     const id = String(p.patient_id || '')
     const slug = String(p.slug || '')
     if (!id || !slugMu(slug)) continue

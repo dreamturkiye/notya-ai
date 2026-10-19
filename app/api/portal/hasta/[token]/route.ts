@@ -1606,7 +1606,7 @@ export async function GET(
   try {
     const { data: planlar } = await sb
       .from('ozel_brans_plan')
-      .select('portal_satir, acil')
+      .select('arac, portal_satir, acil')
       .eq('patient_id', patientId)
       .eq('doctor_id', doctorId)
       .order('updated_at', { ascending: false })
@@ -1614,6 +1614,7 @@ export async function GET(
     const satirlar: Array<{ ad: string; durum: 'gecikti' | 'bugun' | 'yaklasiyor' | 'planli' }> = []
     let acil: string | null = null
     for (const p of planlar || []) {
+      if (p.arac === 'seans-defter') continue
       if (!acil && typeof p.acil === 'string' && p.acil.trim()) acil = p.acil
       const liste = Array.isArray(p.portal_satir) ? p.portal_satir : []
       for (const s of liste) {

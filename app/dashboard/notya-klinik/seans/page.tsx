@@ -10,6 +10,7 @@ import { MUTTEFIK_TANI_KILIT, KLINIK_HEKIM_KILIT, klinikSlugCoz, muttefikMeslekM
 import { KLINIK_ORTAK_KAYIT } from '@/lib/klinik/klinikMevzuat'
 import { seansEkle, type KlinikSeansKayit } from '@/lib/klinik/klinikKayit'
 import { klinikDefterOku, klinikDefterYaz } from '@/lib/klinik/klinikKayitIstemci'
+import { SEANS_ARAC, seansListesiCoz } from '@/lib/klinik/seansDefter'
 
 export const dynamic = 'force-dynamic'
 
@@ -28,6 +29,7 @@ function SeansIc() {
   const [dal, setDal] = useState<KlinikYeniSlug | null>(null)
   const [not, setNot] = useState('')
   const [kayit, setKayit] = useState('')
+  const [kayitHata, setKayitHata] = useState(false)
   const [riza, setRiza] = useState(false)
   const [veli, setVeli] = useState(false)
   const [kucuk, setKucuk] = useState(false)
@@ -41,9 +43,10 @@ function SeansIc() {
     ;(async () => {
       const t = token()
       if (!t) { router.push('/giris'); return }
-      const [me, p] = await Promise.all([
+      const [me, p, plan] = await Promise.all([
         fetch('/api/users/me', { headers: { Authorization: `Bearer ${t}` } }),
         patientId ? fetch(`/api/doktor/hastalar/${patientId}`, { headers: { Authorization: `Bearer ${t}` } }) : Promise.resolve(null),
+        patientId ? fetch(`/api/ozel-brans/plan?patientId=${encodeURIComponent(patientId)}`, { headers: { Authorization: `Bearer ${t}` } }) : Promise.resolve(null),
       ])
       const mj = me.ok ? await me.json() : null
       const uid = String(mj?.data?.id || mj?.data?.user_id || '')
@@ -54,7 +57,10 @@ function SeansIc() {
         setUserId(uid)
         setDal(d)
         setKucuk(yas !== null && yas < 18)
-        if (uid && patientId) setOnceki(klinikDefterOku(uid)[patientId]?.seanslar || [])
+        const planj = plan && plan.ok ? await plan.json() : null
+        const sunucu = seansListesiCoz((planj?.planlar || []).find((x: { arac?: string }) => x.arac === SEANS_ARAC)?.girdi)
+        const yerel = uid && patientId ? (klinikDefterOku(uid)[patientId]?.seanslar || []) : []
+        if (uid && patientId) setOnceki(sunucu.length ? sunucu : yerel)
       }
     })()
     return () => { iptal = true }
@@ -62,13 +68,37 @@ function SeansIc() {
 
   const muttefik = muttefikMeslekMi(dal)
 
-  function kaydet() {
-    if (!patientId) { setKayit('Hasta dosyasından seans açın — kayıt hastaya bağlanır.'); return }
-    if (!dal || !userId) { setKayit('Dal / oturum çözülemedi.'); return }
-    if (!not.trim()) { setKayit('Seans notu boş olamaz.'); return }
-    if (!riza) { setKayit('Hasta Hakları m.26: iki nüsha rıza işaretlenmeden kayıt yok.'); return }
-    if (kucuk && !veli) { setKayit('18 yaş altı: veli / yasal temsilci onamı zorunlu.'); return }
-    if (muttefik && !plan) { setKayit('29.03.2025 md.16: hekim tanısı + plan olmadan uygulama yok.'); return }
+  async function kaydet() {
+    const sorun = !patientId
+      ? 'Hasta dosyasından seans açın — kayıt hastaya bağlanır.'
+      : !dal || !userId
+        ? 'Dal / oturum çözülemedi.'
+        : !not.trim()
+          ? 'Seans notu boş olamaz.'
+          : !riza
+            ? 'Hasta Hakları m.26: iki nüsha rıza işaretlenmeden kayıt yok.'
+            : kucuk && !veli
+              ? '18 yaş altı: veli / yasal temsilci onamı zorunlu.'
+              : muttefik && !plan
+                ? '29.03.2025 md.16: hekim tanısı + plan olmadan uygulama yok.'
+                : ''
+    if (sorun || !dal) { setKayitHata(true); setKayit(sorun || 'Dal / oturum çözülemedi.'); return }
+    const yerel = klinikDefterOku(userId)[patientId]?.seanslar || []
+    const yanit = await fetch('/api/ozel-brans/seans', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token()}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        patientId,
+        metin: not.trim(),
+        rizaIkiNusha: true,
+        veliOnam: kucuk ? veli : null,
+        fotoKvkk: foto,
+        hekimPlani: plan,
+        kriz112: kriz,
+        eski: yerel,
+      }),
+    })
+    const j = await yanit.json().catch(() => null) as { seanslar?: KlinikSeansKayit[]; error?: string } | null
     const defter = seansEkle(klinikDefterOku(userId), {
       patientId,
       dal,
@@ -83,9 +113,16 @@ function SeansIc() {
       },
     })
     klinikDefterYaz(userId, defter)
-    setOnceki(defter[patientId]?.seanslar || [])
+    if (!yanit.ok || !j?.seanslar) {
+      setOnceki(defter[patientId]?.seanslar || [])
+      setKayitHata(true)
+      setKayit(j?.error || 'Seans yazılamadı. Bu cihazdaki kayıt duruyor.')
+      return
+    }
+    setOnceki(j.seanslar)
     setNot('')
-    setKayit('Seans elektronik dosyaya yazıldı (cihaz kaydı). 29.03.2025 md.18 / Ayakta Teşhis md.24 belgelendi — canlı SBİYS / e-imza iddia edilmez.')
+    setKayitHata(false)
+    setKayit('Seans hastanın dosyasına yazıldı. Canlı SBİYS / e-imza iddia edilmez.')
   }
 
   return (
@@ -108,7 +145,7 @@ function SeansIc() {
           <button type="button" onClick={kaydet} style={{ padding: '10px 16px', borderRadius: 8, border: 'none', background: '#2f4334', color: '#fff', fontWeight: 600, cursor: 'pointer' }}>Dosyaya kaydet</button>
           <button type="button" onClick={() => router.push('/ozel-branslar')} style={{ padding: '10px 16px', borderRadius: 8, border: '1px solid #2f4334', background: '#faf6ee', color: '#2f4334', fontWeight: 600, cursor: 'pointer' }}>Araçlar</button>
         </div>
-        {kayit && <p style={{ marginTop: 12, fontSize: 13, color: '#065F46' }}>{kayit}</p>}
+        {kayit && <p style={{ marginTop: 12, fontSize: 13, color: kayitHata ? '#a45b3e' : '#065F46' }}>{kayit}</p>}
         {onceki.length > 0 && (
           <>
             <h2 style={{ fontFamily: "'Fraunces', Georgia, serif", margin: '28px 0 10px', fontSize: 16 }}>Kayıtlı seanslar</h2>
