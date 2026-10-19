@@ -45,7 +45,7 @@
   "ulkeyeOzel": {
     "au": {
       "sutun": "en",
-      "cikar": ["thoracic-surgery", "cardiovascular-surgery", "clinic-dermatology"],
+      "cikar": ["thoracic-surgery", "cardiovascular-surgery", "clinic-dermatology", "hair-transplant", "longevity"],
       "ekle": [
         { "anahtar": "cardio-thoracic-surgery", "taraf": "doktor", "gibi": "thoracic-surgery" },
         { "anahtar": "vascular-surgery", "taraf": "doktor", "gibi": "cardiovascular-surgery" },

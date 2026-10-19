@@ -38,8 +38,14 @@ import type { RolTarafi } from '@/lib/ulke/arayuz/tipler'
 /** A role only Australia has, as the light list states it. */
 export type AuEkRol = { anahtar: string; taraf: RolTarafi; ad: string; gibi: EnRol; once?: EnRol }
 
-/** Shared roles Australia does not have: the two it splits along the Medical Board's line, and the one it removes. */
-export const AU_CIKAN_ROLLER = ['thoracic-surgery', 'cardiovascular-surgery', 'clinic-dermatology'] as const satisfies readonly EnRol[]
+/**
+ * Shared roles Australia does not have.
+ * The two surgical roles are split along the Medical Board's line.
+ * Clinic dermatology is removed.
+ * Hair transplantation is not a Medical Board specialty: stored accounts fold into cosmetic surgery.
+ * Preventive and longevity medicine is not a recognised specialty and is not offered.
+ */
+export const AU_CIKAN_ROLLER = ['thoracic-surgery', 'cardiovascular-surgery', 'clinic-dermatology', 'hair-transplant', 'longevity'] as const satisfies readonly EnRol[]
 
 /** Roles only Australia has, in the order they are added. Names exactly as the source above writes them. */
 export const AU_EK_ROLLER = [
@@ -73,9 +79,13 @@ export const AU_ROL_LISTESI = { cikar: AU_CIKAN_ROLLER, ekle: AU_EK_ROLLER } as 
  *                                                        belongs in cardio-thoracic-surgery and chooses it)
  *   clinic-dermatology      → null                      (no remaining role is a safe guess: "Dermatology" is a
  *                                                        specialist's field. The account chooses again.)
+ *   hair-transplant         → aesthetic-surgery         (cosmetic surgery, the clinic role that remains)
+ *   longevity               → null                      (not a recognised specialty. The account chooses again.)
  */
-export const AU_ESKI_ROL_ESLEMESI: Readonly<Record<(typeof AU_CIKAN_ROLLER)[number], AuEkRolAnahtari | null>> = {
+export const AU_ESKI_ROL_ESLEMESI: Readonly<Record<(typeof AU_CIKAN_ROLLER)[number], AuEkRolAnahtari | 'aesthetic-surgery' | null>> = {
   'thoracic-surgery': 'cardio-thoracic-surgery',
   'cardiovascular-surgery': 'vascular-surgery',
   'clinic-dermatology': null,
+  'hair-transplant': 'aesthetic-surgery',
+  longevity: null,
 }

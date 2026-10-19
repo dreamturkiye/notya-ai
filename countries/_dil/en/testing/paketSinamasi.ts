@@ -70,6 +70,10 @@ export type EnPaketSinamasi = {
   sayiliAraclar?: readonly string[]
   /** NOTYA-ULKE-OZEL-01 — whether this country has switched consultation between doctors on, as its record states (docs/COUNTRY-PACK-HOWTO.md). Absent/false = off, as the set: no country had built it until one states so here. */
   konsultasyonAcik?: boolean
+  /** Feature keys this pack has switched on beyond the shared English set (for example a photo archive). Absent = none. */
+  ekOzellikler?: readonly string[]
+  /** True when a non-empty patient identifier is checked. Absent = the field is stored as typed. Empty stays accepted either way. */
+  kimlikDogrulanir?: boolean
   /** The country's emergency sentence, written into every red-flag help line. Includes that country's number. */
   acilCumle: string
   /** Emergency numbers that belong to other countries. None may appear in this pack's form. */
@@ -193,14 +197,14 @@ export function ingilizcePaketSinamasi(s: EnPaketSinamasi): void {
       assert.equal(paket.uygulama!.kayitAcik, false)
     })
     it('only what the country kit has built is switched on', () => {
-      assert.deepEqual(Object.keys(paket.ozellikler).sort(), ['acilisSayfasi', 'araclar', 'bekletmeSayfasi', 'cekirdekGiris', 'cekirdekMuayene', 'davetliKayit', 'hastaFormu', 'hastaMesajlari', 'hastaPortali', 'klinikHesaplari', ...(s.konsultasyonAcik ? ['konsultasyon'] : []), 'randevu'].sort())
+      assert.deepEqual(Object.keys(paket.ozellikler).sort(), ['acilisSayfasi', 'araclar', 'bekletmeSayfasi', 'cekirdekGiris', 'cekirdekMuayene', 'davetliKayit', ...(s.ekOzellikler ?? []), 'hastaFormu', 'hastaMesajlari', 'hastaPortali', 'klinikHesaplari', ...(s.konsultasyonAcik ? ['konsultasyon'] : []), 'randevu'].sort())
       assert.deepEqual([...paket.araclar], [])
     })
   })
 
   describe(`${kod}: the patient identifier`, () => {
-    it('optional free text, never validated; nothing asks for a Social Security number', () => {
-      assert.equal(paket.uygulama!.kimlikNumarasi.dogrula, false)
+    it('optional free text; a checksum only where the pack says so; nothing asks for a Social Security number', () => {
+      assert.equal(paket.uygulama!.kimlikNumarasi.dogrula, s.kimlikDogrulanir === true)
       assert.deepEqual(metinler.filter((x) => KIMLIK.test(x.metin)).map((x) => x.yer), [])
       if (paket.ulusalKimlik) {
         assert.equal(paket.ulusalKimlik.hane, 0, 'no length is assumed')

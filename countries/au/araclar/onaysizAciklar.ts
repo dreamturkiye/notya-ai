@@ -13,6 +13,8 @@
  *
  * Plain data: tests and documents read it; no screen does.
  */
+import { AU_BAGLANTI_KAYITLARI } from './referanslar'
+
 export type OnaysizAcikArac = {
   anahtar: string
   /** The proposal of the audit it was built from (docs/araclar-denetim/au-kararlar.json → addTools). */
@@ -62,7 +64,7 @@ export const AU_ONAYSIZ_ACIK_ARACLAR: readonly OnaysizAcikArac[] = [
   },
   {
     anahtar: 'au-immunisation-schedule', oneri: 'NOTYA-ARACLAR-DENETIM-02-AU (founder\'s question #2, 2026-10-13)', klinisyen: null,
-    bakilacak: 'Built CORE and switched on by the owner\'s explicit instruction, not waiting on this list — but still machine-written and unread by a clinician of Australia. It is a record only: no catch-up schedule, no eligibility test and no brand name. Sourced to NSW Health\'s published rendering of the National Immunisation Program Schedule (the Department\'s own PDF was robots-blocked this session): a clinician of Australia should confirm that rendering is still a faithful, current copy of the national schedule, and that the twelve milestones chosen are the right set to show (no risk-based or Aboriginal-and-Torres-Strait-Islander-specific additions beyond the one line that names them).',
+    bakilacak: 'Built CORE and switched on by the owner\'s explicit instruction, not waiting on this list — but still machine-written and unread by a clinician of Australia. It is a record only: no catch-up schedule, no eligibility test and no brand name. A tick does not send a dose to the Australian Immunisation Register. Sourced to NSW Health\'s published rendering of the National Immunisation Program Schedule (the Department\'s own PDF was robots-blocked this session): a clinician of Australia should confirm that rendering is still a faithful, current copy of the national schedule, and that the twelve milestones chosen are the right set to show (no risk-based or Aboriginal-and-Torres-Strait-Islander-specific additions beyond the one line that names them).',
   },
   {
     anahtar: 'au-mandatory-notifications', oneri: 'National Law sections 140 to 142, Queensland Act, 2026-10-15', klinisyen: null,
@@ -88,6 +90,20 @@ export const AU_ONAYSIZ_ACIK_ARACLAR: readonly OnaysizAcikArac[] = [
     anahtar: 'au-cvd-risk-link', oneri: 'Australian CVD risk calculator, 2026-10-15', klinisyen: null,
     bakilacak: 'The tile only opens the calculator. No equation, coefficient or age band was copied. The copyright page did not return a reuse grant. It is not the shared cardiovascular-risk slot, which stays empty. A clinician should say which roles should see the link.',
   },
+  {
+    anahtar: 'au-identifier-check', oneri: 'Medicare card and provider-number checksums, 2026-10-19', klinisyen: null,
+    bakilacak: 'The card checksum and the provider-number checksum were read from clearwater.com.au on 19 October 2026, not from a Services Australia page. A match is not a register lookup. No Ahpra character pattern was on the page that was opened, so the registration number is not checked here.',
+  },
+  {
+    anahtar: 'au-privacy-principles', oneri: 'OAIC Australian Privacy Principles index, 2026-10-19', klinisyen: null,
+    bakilacak: 'The four ticks are the four subjects named on the OAIC index page. They are not the text of the 13 principles. A tick is not a legal finding. A lawyer should say whether a practice record of this kind is the right screen.',
+  },
+  ...AU_BAGLANTI_KAYITLARI.map((k) => ({
+    anahtar: k.anahtar,
+    oneri: k.anahtar,
+    klinisyen: null,
+    bakilacak: k.bakilacak,
+  })),
 ]
 
 /** The keys alone, sorted. */

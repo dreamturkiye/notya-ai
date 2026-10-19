@@ -23,6 +23,7 @@ import { EN_ROLLER, enRolAnahtarlari } from '../_dil/en/klinik/roller'
 import { ingilizcePaketSinamasi, kaynakOku } from '../_dil/en/testing/paketSinamasi'
 import { enYaz } from '../_dil/en/varyant'
 import { AU_ONAYSIZ_ACIK_ANAHTARLAR, AU_ONAYSIZ_ACIK_ARACLAR } from './araclar/onaysizAciklar'
+import { AU_BAGLANTI_ANAHTARLARI } from './araclar/referanslar'
 import { AU_ARAYUZ } from './arayuz'
 import { AU_GIRDI } from './ayarlar'
 import derleme from './derleme.mjs'
@@ -35,10 +36,10 @@ import { AU_SIZINTI_TERIMLERI } from './sizintiTerimleri'
 
 const D = 'en-AU'
 const LAB = { albuminKreatinin: 'mg/mmol', hemoglobin: 'g/L', kreatinin: 'umol/L', glukoz: 'mmol/L', kolesterol: 'mmol/L', crp: 'mg/L', psa: 'ug/L', hba1c: ['%', 'mmol/mol'] } as const
-/** The tools with a MECHANISM only Australia has (./araclar/tanimlar.ts): switched on 2026-10-10 and 2026-10-13. */
-const KENDI_MEKANIZMALI = ['au-body-size', 'au-mental-health-screen', 'au-oncology-grading', 'au-immunisation-schedule', 'au-notifiable-diseases', 'au-poisons-schedules', 'au-schedule-8', 'au-dispensing-label', 'au-mandatory-notifications', 'au-pbs-prescription', 'au-medicare-particulars']
-/** Link-out tiles only Australia has: no mechanism, no arithmetic (./araclar/baglantilar.ts). */
-const KENDI_BAGLANTILARI = ['au-growth-chart-reference', 'au-pbs-report-link', 'au-pbs-schedule-link', 'au-mbs-online-link', 'au-cvd-risk-link']
+/** The tools with a MECHANISM only Australia has (./araclar/tanimlar.ts). */
+const KENDI_MEKANIZMALI = ['au-body-size', 'au-mental-health-screen', 'au-oncology-grading', 'au-immunisation-schedule', 'au-notifiable-diseases', 'au-poisons-schedules', 'au-schedule-8', 'au-dispensing-label', 'au-mandatory-notifications', 'au-pbs-prescription', 'au-medicare-particulars', 'au-identifier-check', 'au-privacy-principles']
+/** Link-out tiles only Australia has: no mechanism, no arithmetic. College tiles are AU_BAGLANTI_ANAHTARLARI. */
+const KENDI_BAGLANTILARI = ['au-growth-chart-reference', 'au-pbs-report-link', 'au-pbs-schedule-link', 'au-mbs-online-link', 'au-cvd-risk-link', ...AU_BAGLANTI_ANAHTARLARI]
 /** Every tool that carries Australia's own code, switched on by the owner's order of 2026-10-10 or 2026-10-13. */
 const KENDI_ARACLARI = [...KENDI_MEKANIZMALI, ...KENDI_BAGLANTILARI]
 /** Every tool Australia has added beyond the shared set, mechanism or not: fed to the shared harness's count check. */
@@ -59,7 +60,7 @@ ingilizcePaketSinamasi({
   // off by Kaan's order of 2026-10-10 (NOTYA-ULKE-ARAC-01b): these four. The dose calculator is ON AGAIN by his later
   // order of the same day (its fault was corrected in the kit; the guard list no longer holds it). A third kidney
   // tool, added later, is off for an unrelated reason: a brand-new tool pending a clinician's sign-off.
-  kapaliAraclar: ['akne-vade', 'esi-triyaj', 'kbh-risk-kategorisi', 'kdigo-evre', 'kdigo-serit', 'lazer-vade', 'rapor-taslagi'],
+  kapaliAraclar: ['akne-vade', 'esi-triyaj', 'greft-tahmini', 'infuzyon-guvenlik', 'kbh-risk-kategorisi', 'kdigo-evre', 'kdigo-serit', 'lazer-vade', 'rapor-taslagi', 'sac-bakim-vade'],
   birimler: { agirlik: 'kg', boy: 'cm', sicaklik: 'C' },
   labBirimleri: LAB,
   kidemliHekim: 'specialist',
@@ -70,6 +71,8 @@ ingilizcePaketSinamasi({
   ekAraclar: EK_ARACLAR,
   // switched on by the owner's explicit instruction of 2026-10-13 (NOTYA-ARACLAR-DENETIM-02-AU, founder's question #1)
   konsultasyonAcik: true,
+  ekOzellikler: ['fotoArsivi', 'muayeneEkleri'],
+  kimlikDogrulanir: true,
   acilCumle: AU_ACIL_CUMLE,
   yasakAcil: /\b(911|999|111|112|103)\b/,
   idIpucu: /\bMedicare\b/,
@@ -125,6 +128,10 @@ describe('au: what is Australia\'s', () => {
     assert.equal(AU_ARAYUZ.metinler[D]!.yeniHasta.ulusalKimlik, 'Medicare card number')
     assert.equal(AU_PAKETI.uygulama!.veliYasi, AU_GIRDI.veliYasi)
     assert.equal(AU_PAKETI.uygulama!.veliYasi, 16)
+    assert.equal(AU_PAKETI.uygulama!.kimlikNumarasi.dogrula, true)
+    assert.equal(AU_PAKETI.ulusalKimlik?.gecerliMi('2123456701'), true)
+    assert.equal(AU_PAKETI.ulusalKimlik?.gecerliMi('2123456711'), false)
+    assert.equal(AU_PAKETI.ulusalKimlik?.gecerliMi(''), false)
   })
 
   it('prostate-specific antigen is written in µg/L; the consent stamp is Australia\'s own draft', () => {
@@ -201,14 +208,14 @@ describe('au: held by the localisation audit against Australian sources', () => 
  * https://www.ahpra.gov.au/documents/default.aspx?record=WD10%2f106&dbid=AP&chksum=07LyDUkqqYa5O5LXuqbSzg%3d%3d
  */
 describe('au: its own role list — the Medical Board\'s wording, a split, one removal, seven additions', () => {
-  it('46 roles: the shared forty without three, with nine of its own — 35 doctor specialties, 4 clinic doctors, 7 allied professions', () => {
-    assert.equal(ROLLER.length, 40 - 3 + 9)
+  it('44 roles: the shared forty without five, with nine of its own — 35 doctor specialties, 2 clinic doctors, 7 allied professions', () => {
+    assert.equal(ROLLER.length, 40 - 5 + 9)
     assert.deepEqual([...ROLLER], [...enRolAnahtarlari(AU_ROLLER)])
     // the light list the settings file reads and the full list the two halves read name the same roles in the same order
     assert.deepEqual([...enRolAnahtarlari(AU_ROL_LISTESI)], [...enRolAnahtarlari(AU_ROLLER)])
     assert.deepEqual(AU_ARAYUZ.roller.map((r) => r.anahtar), [...ROLLER])
     const say = (taraf: string) => AU_ARAYUZ.roller.filter((r) => r.taraf === taraf).length
-    assert.deepEqual([say('doktor'), say('klinik-hekim'), say('klinik-muttefik')], [35, 4, 7])
+    assert.deepEqual([say('doktor'), say('klinik-hekim'), say('klinik-muttefik')], [35, 2, 7])
     for (const k of AU_CIKAN_ROLLER) assert.ok(!ROLLER.includes(k), `${k} was taken out`)
     for (const r of AU_EK_ROLLER) assert.ok(ROLLER.includes(r.anahtar), `${r.anahtar} was added`)
     // every other shared role is still there
@@ -236,7 +243,7 @@ describe('au: its own role list — the Medical Board\'s wording, a split, one r
 
   it('the clinic roles: an area of work in the regulator\'s words, never a specialty; the allied professions named as the profession', () => {
     assert.deepEqual(AU_ARAYUZ.roller.filter((r) => r.taraf === 'klinik-hekim').map((r) => [r.anahtar, r.ad[D]]), [
-      ['hair-transplant', 'Hair transplantation'], ['aesthetic-surgery', 'Cosmetic surgery'], ['aesthetic-medicine', 'Non-surgical cosmetic procedures'], ['longevity', 'Preventive and longevity medicine'],
+      ['aesthetic-surgery', 'Cosmetic surgery'], ['aesthetic-medicine', 'Non-surgical cosmetic procedures'],
     ])
     assert.deepEqual(AU_ARAYUZ.roller.filter((r) => r.taraf === 'klinik-muttefik').map((r) => [r.anahtar, r.ad[D]]), [
       ['physiotherapy', 'Physiotherapist'], ['clinical-psychology', 'Psychologist'], ['dietetics', 'Dietitian'], ['occupational-therapy', 'Occupational therapist'],
@@ -316,9 +323,12 @@ describe('au: its own role list — the Medical Board\'s wording, a split, one r
       assert.equal(AU_ARAYUZ.asistan(eski, D), null)
       // THE NEAREST REMAINING ROLE: a role of the pack, of the same kind, or — said out loud — none
       const yeni = AU_ESKI_ROL_ESLEMESI[eski]
-      if (yeni !== null) { assert.ok(ROLLER.includes(yeni), `${eski} → ${yeni}`); assert.equal(tanim(yeni)!.taraf, 'doktor') }
+      if (yeni !== null) {
+        assert.ok(ROLLER.includes(yeni), `${eski} → ${yeni}`)
+        assert.equal(tanim(yeni)!.taraf, eski === 'hair-transplant' ? 'klinik-hekim' : 'doktor')
+      }
     }
-    assert.deepEqual(AU_ESKI_ROL_ESLEMESI, { 'thoracic-surgery': 'cardio-thoracic-surgery', 'cardiovascular-surgery': 'vascular-surgery', 'clinic-dermatology': null })
+    assert.deepEqual(AU_ESKI_ROL_ESLEMESI, { 'thoracic-surgery': 'cardio-thoracic-surgery', 'cardiovascular-surgery': 'vascular-surgery', 'clinic-dermatology': null, 'hair-transplant': 'aesthetic-surgery', longevity: null })
     // each half of the split behaves like the role its stored accounts are mapped from
     assert.equal(tanim('cardio-thoracic-surgery')!.gibi, 'thoracic-surgery')
     assert.equal(tanim('vascular-surgery')!.gibi, 'cardiovascular-surgery')
@@ -452,7 +462,7 @@ describe('au: the tools only Australia has — switched on by the owner\'s order
     for (const k of KENDI_MEKANIZMALI) {
       const l = A.araclar.find((p) => p.anahtar === k)!.lisans!
       assert.equal(l.durum, 'serbest', k)
-      assert.match(l.kaynak ?? '', /^https:\/\/\S+ \(read 2026-10-(10|13|14|15)\): /, k)
+      assert.match(l.kaynak ?? '', /^https:\/\/\S+ \(read 2026-10-(10|13|14|15|19)\): /, k)
       assert.ok((l.bildirim?.[D] ?? '').length > 20, `${k}: the rights holder's notice`)
     }
     // the link-out tile: free, but no reproduced notice is shown under a result it never gives
@@ -517,6 +527,20 @@ describe('au: the tools only Australia has — switched on by the owner\'s order
     assert.match(bildirim.metin.not?.[D] ?? '', /Queensland Act/)
     assert.match(bildirim.metin.uyarilar.gonderilmedi[D], /Nothing was sent/)
   })
+
+  it('each offered role has its own reference tile, and a reference does not open for another role', () => {
+    for (const rol of ROLLER) assert.deepEqual(goren(`au-ref-${rol}`), [rol], rol)
+    assert.deepEqual(goren('au-gp-red-book'), ['family-medicine'])
+    assert.deepEqual(goren('au-rch-clinical-guide').sort(), ['family-medicine', 'paediatric-surgery', 'paediatrics'])
+    assert.equal(goren('au-rch-clinical-guide').includes('cardiology'), false)
+    const kayitli = [...hekimRolleri(AU_ARAYUZ.roller), 'physiotherapy', 'occupational-therapy', 'clinical-psychology', 'podiatry']
+    assert.deepEqual(goren('au-ahpra-registration').sort(), [...kayitli].sort())
+    for (const r of ['dietetics', 'audiology', 'speech-pathology', '(no role)']) assert.equal(goren('au-ahpra-registration').includes(r), false, r)
+    for (const k of ['au-identifier-check', 'au-privacy-principles', 'au-tax-invoice', 'au-my-health-record']) assert.deepEqual(goren(k), ['(no role)', ...ROLLER], k)
+    assert.equal(goren('greft-tahmini').length, 0)
+    assert.equal(goren('sac-bakim-vade').length, 0)
+    assert.equal(goren('infuzyon-guvenlik').length, 0)
+  })
 })
 
 describe('au: the proposed slots this pass found but did not build (NOTYA-ARACLAR-DENETIM-03-AU, 2026-10-14)', () => {
@@ -530,8 +554,8 @@ describe('au: the proposed slots this pass found but did not build (NOTYA-ARACLA
       assert.ok(!anahtarlar.includes(y.anahtar), `${y.anahtar}: must not also be switched on`)
       assert.ok(y.eksik.trim().length > 40 && y.kimden.trim(), y.anahtar)
     }
-    // my-health-record was built, then removed on reconsideration: it is neither a live tool nor a proposed slot
-    assert.ok(!anahtarlar.includes('au-my-health-record'))
+    // My Health Record is a live link. It sends nothing. It is not one of the empty slots above.
+    assert.ok(anahtarlar.includes('au-my-health-record'))
     assert.ok(!A.yuvalar.some((y) => y.anahtar === 'au-my-health-record'))
   })
   it('the two with a confirmed rights-holder question say so (ACEM for the triage scale, UDSMR for the rehabilitation outcome measure); nothing claims "free" without having read a notice', () => {

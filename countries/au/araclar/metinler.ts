@@ -79,7 +79,8 @@ export const AU_ASI_TAKVIMI_ARACI: PaketAraci = {
     // `alanlar` above, which labels the typed field itself (lib/ulke/araclar/tipler.ts, `AracMetni.tarihler`).
     tarihler: Object.fromEntries(AU_ASI_TAKVIMI_MADDELERI.map((k) => [`${k}_tarih`, m(`Date given (${AU_ASI_SATIRLARI[k].etiket.toLowerCase()})`)])),
     sayilar: { isaretli: m('Milestones recorded') },
-    not: m('A record of the national schedule’s milestones, kept by this product; it is not a reminder service and sends nothing to the patient. Source: Australian Government Department of Health, Disability and Ageing, National Immunisation Program Schedule.'),
+    uyarilar: { air_yok: m('Nothing is sent to the Australian Immunisation Register. A tick is a note in this product only.') },
+    not: m('A record of the national schedule’s milestones, kept by this product. It is not a reminder service, it does not report a dose to the Australian Immunisation Register, and it sends nothing to the patient. Source: Australian Government Department of Health, Disability and Ageing, National Immunisation Program Schedule.'),
   },
   lisans: {
     durum: 'serbest',

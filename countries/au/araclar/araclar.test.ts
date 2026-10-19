@@ -120,9 +120,9 @@ describe('au-immunisation-schedule — the National Immunisation Program schedul
     assert.deepEqual([...AU_ASI_TAKVIMI_MADDELERI], ['dogum', 'hafta6', 'ay4', 'ay6', 'ay12', 'ay18', 'yas4', 'yil7', 'yil10', 'gebelik', 'yas65', 'yas75'])
   })
 
-  it('a tick alone, with no date, is still a complete record (the date is optional)', () => {
+  it('a tick alone, with no date, is still a complete record (the date is optional), and it does not claim an AIR report', () => {
     const r = kosAsi({ dogum: true })
-    assert.deepEqual([r.tamam, sayi(r, 'isaretli'), r.tarihler], [true, 1, []])
+    assert.deepEqual([r.tamam, sayi(r, 'isaretli'), r.tarihler, r.uyarilar], [true, 1, [], ['air_yok']])
   })
 
   it('a tick with its date is recorded under that milestone\'s own date key', () => {
@@ -149,7 +149,7 @@ describe('au-immunisation-schedule — the National Immunisation Program schedul
 
 describe('the mechanisms only Australia has', () => {
   it('each key carries the country\'s code, each names the source of its arithmetic, and none asks the country for a number of its own', () => {
-    assert.deepEqual(AU_TANIMLAR.map((t) => t.anahtar), ['au-body-size', 'au-mental-health-screen', 'au-oncology-grading', 'au-immunisation-schedule', 'au-notifiable-diseases', 'au-poisons-schedules', 'au-schedule-8', 'au-dispensing-label', 'au-mandatory-notifications', 'au-pbs-prescription', 'au-medicare-particulars'])
+    assert.deepEqual(AU_TANIMLAR.map((t) => t.anahtar), ['au-body-size', 'au-mental-health-screen', 'au-oncology-grading', 'au-immunisation-schedule', 'au-notifiable-diseases', 'au-poisons-schedules', 'au-schedule-8', 'au-dispensing-label', 'au-mandatory-notifications', 'au-pbs-prescription', 'au-medicare-particulars', 'au-identifier-check', 'au-privacy-principles'])
     for (const t of AU_TANIMLAR) {
       assert.match(t.anahtar, /^au-[a-z0-9]+(-[a-z0-9]+)*$/)
       assert.ok((t.kaynak ?? '').length > 20, t.anahtar)

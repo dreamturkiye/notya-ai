@@ -19,6 +19,8 @@
 import type { AracSayisi, AracTanimi } from '@/lib/ulke/araclar/tipler'
 import { BOS_SONUC, kontrolListesi, puan, sayi, sayiMi, secim, tarih } from '@/lib/ulke/araclar/yardimci'
 import { AU_BILDIRIM } from './bildirim'
+import { AU_GIZLILIK } from './gizlilik'
+import { AU_KIMLIK_KONTROL } from './kimlikKontrol'
 import { AU_MEDICARE } from './medicareParticulars'
 import { AU_ZORUNLU_BILDIRIM } from './notifications'
 import { AU_PBS_RECETE } from './pbsPrescription'
@@ -208,8 +210,10 @@ export const AU_ASI_TAKVIMI: AracTanimi = kontrolListesi({
   maddeler: AU_ASI_TAKVIMI_MADDELERI,
   ek: AU_ASI_TAKVIMI_MADDELERI.map(asiTarihAlani),
   tarihler: AU_ASI_TAKVIMI_MADDELERI.map((k) => `${k}_tarih`),
-  kaynak: 'Australian Government Department of Health, Disability and Ageing, National Immunisation Program (NIP) Schedule; read 2026-10-13 via NSW Health, "NSW immunisation schedule (children and adults)", https://www.health.nsw.gov.au/schedule, current as at 1 October 2026.',
+  uyarilar: ['air_yok'],
+  uyari: () => ['air_yok'],
+  kaynak: 'Australian Government Department of Health, Disability and Ageing, National Immunisation Program (NIP) Schedule; read 2026-10-13 via NSW Health, "NSW immunisation schedule (children and adults)", https://www.health.nsw.gov.au/schedule, current as at 1 October 2026. A tick is not a report to the Australian Immunisation Register.',
 })
 
 /** The mechanisms only Australia has, in the order the grid shows their tools. */
-export const AU_TANIMLAR: readonly AracTanimi[] = [AU_BEDEN, AU_K10, AU_ECOG, AU_ASI_TAKVIMI, AU_BILDIRIM, AU_ZEHIR_SINIFI, AU_SCHEDULE_8_TANIMI, AU_ETIKET, AU_ZORUNLU_BILDIRIM, AU_PBS_RECETE, AU_MEDICARE]
+export const AU_TANIMLAR: readonly AracTanimi[] = [AU_BEDEN, AU_K10, AU_ECOG, AU_ASI_TAKVIMI, AU_BILDIRIM, AU_ZEHIR_SINIFI, AU_SCHEDULE_8_TANIMI, AU_ETIKET, AU_ZORUNLU_BILDIRIM, AU_PBS_RECETE, AU_MEDICARE, AU_KIMLIK_KONTROL, AU_GIZLILIK]

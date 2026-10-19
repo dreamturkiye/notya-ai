@@ -14,6 +14,7 @@ import { enCekirdek } from '../_dil/en/cekirdek'
 import { enKlinikHesaplari } from '../_dil/en/klinikHesaplari'
 import { enRolAnahtarlari } from '../_dil/en/klinik/roller'
 import { enMesajAyarlari } from '../_dil/en/mesaj'
+import { medicareKartGecerli } from './kimlik'
 import { AU_ROL_LISTESI } from './klinik/rolListesi'
 import { AU_RESMI_GUNLER } from './resmiGunler'
 import { AU_BIRIMLER, AU_VELI_YASI } from './temel'
@@ -48,9 +49,9 @@ export const AU_PAKETI: UlkePaketi = {
   saatDilimi: 'Australia/Sydney',
   bicim: { yerel: 'en-AU', tarihDeseni: 'DD/MM/YYYY', ondalikAyraci: '.', binlikAyraci: ',', haftaBasi: 1 },
   telefon: { ulkeOnEki: '+61', ulusalHane: 9, ornek: '+61 491 570 006', cepGecerliMi: auCepGecerliMi },
-  // THE PATIENT IDENTIFIER: an OPTIONAL FREE-TEXT field, stored encrypted and never validated (`dogrula: false`
-  // below). `hane: 0` = no length is assumed. The label is the national data element's name (./ayarlar.ts).
-  ulusalKimlik: { ad: 'Medicare card number', hane: 0, gecerliMi: (ham) => String(ham ?? '').trim().length > 0 },
+  // THE PATIENT IDENTIFIER: optional. Empty is still accepted. A non-empty value must pass the Medicare
+  // card checksum (./kimlik.ts). `hane: 0` = both the 10-digit card and the 11-digit card-plus-reference are valid.
+  ulusalKimlik: { ad: 'Medicare card number', hane: 0, gecerliMi: medicareKartGecerli },
   // Fail closed. Messages stay on the patient's page (no outbound channel). Clinic accounts are on, with starting
   // values a lawyer has not read. Still off: the assistant in text and voice, the voice profile, image evaluation,
   // and a doctor's own templates.
@@ -103,7 +104,8 @@ export const AU_PAKETI: UlkePaketi = {
     diller: ['en-AU'],
     hastaDilleri: ['en'],
     // AUSTRALIA'S OWN ROLE LIST: the shared forty with this country's differences (./klinik/rolListesi.ts): the two
-    // surgical roles split along the Medical Board's line, one clinic role removed, seven roles added.
+    // surgical roles split along the Medical Board's line, clinic dermatology removed, hair transplantation folded
+    // into cosmetic surgery, preventive and longevity medicine not offered, nine roles added.
     roller: enRolAnahtarlari(AU_ROL_LISTESI),
     // STARTING VALUES, to verify with a local clinical lead (checklist J4). An account changes all of it for itself.
     // The working pattern does not close a public day. National days and the state selector are `resmiGunler` on this pack.
@@ -141,7 +143,7 @@ export const AU_PAKETI: UlkePaketi = {
     saatBicimi: 12,
     birimler: AU_BIRIMLER,
     adAlanlari: { ikinciAd: false },
-    kimlikNumarasi: { dogrula: false },
+    kimlikNumarasi: { dogrula: true },
     veliYasi: AU_VELI_YASI,
     // SIGN-UP IS CLOSED: invitation code only. Only the owner opens it, after section A of the checklist passes.
     kayitAcik: false,

@@ -27,6 +27,9 @@ import { enRolSatirlari } from '../_dil/en/klinik/roller'
 import { auBildirimAraci } from './araclar/bildirim'
 import { auEtiketAraci, auSchedule8Araci, auZehirSinifiAraci } from './araclar/poisons'
 import { AU_GROWTH_CHART_REFERENCE, auCvdBaglantisi, auMbsBaglantisi, auPbsListesi, auPbsRaporu } from './araclar/baglantilar'
+import { AU_GIZLILIK_ARACI } from './araclar/gizlilik'
+import { AU_KIMLIK_KONTROL_ARACI } from './araclar/kimlikKontrol'
+import { auBaglantiAraclari } from './araclar/referanslar'
 import { auMedicare } from './araclar/medicareParticulars'
 import { auZorunluBildirim } from './araclar/notifications'
 import { auPbsRecete } from './araclar/pbsPrescription'
@@ -74,9 +77,9 @@ export const AU_GIRDI: EnUlkeGirdisi = {
     // the localisation audit of 2026-10-09, branch audit/au, docs/COUNTRY-AUDIT-AUSTRALIA.md, A12). One card may list
     // several people, so the number printed on a card is not, alone, one person. It is a government related
     // identifier (Privacy Act 1988, APP 9: an organisation must not adopt one as its own identifier of a person).
-    // FOR A LAWYER: whether this product may hold it at all. An optional free-text field, stored encrypted, never
-    // validated, never required and never searched by. NEVER ADD a field for the Individual Healthcare Identifier or
-    // for a tax file number.
+    // FOR A LAWYER: whether this product may hold it at all. Optional, stored encrypted, never required and never
+    // searched by. A non-empty value must pass the card checksum (../kimlik.ts, read 2026-10-19). Empty stays valid.
+    // NEVER ADD a field for a tax file number, and do not store a second national health number beside this card.
     kimlikEtiketi: 'Medicare card number',
     cokSaatDilimi: true,
     saatDilimiCumlesi: 'Times are shown in the time zone set for your account.',
@@ -100,8 +103,9 @@ export const AU_GIRDI: EnUlkeGirdisi = {
   //   - THE CLINIC ROLES ARE NOT SPECIALTIES OF THE LIST. 'aesthetic-medicine' is named by the regulator's own words
   //     for the area of work, "non-surgical cosmetic procedures" (Ahpra, "New cosmetic procedure guidelines", 3 June
   //     2025, https://www.ahpra.gov.au/News/2025-06-03-New-cosmetic-procedure-guidelines, opened 2026-10-10). A role
-  //     name is an area of work, never a title: the title "surgeon" is protected by law here. "Hair transplantation"
-  //     and "Preventive and longevity medicine" keep the set's names: UNVERIFIED, for a lawyer and the owner.
+  //     name is an area of work, never a title: the title "surgeon" is protected by law here. Hair transplantation
+  //     is not offered as its own role: it is folded into cosmetic surgery. Preventive and longevity medicine is
+  //     not a specialty on the Medical Board list and is not offered.
   //   - 'clinical-psychology' is "Psychologist": that is the regulated profession (Ahpra, "Professions and divisions",
   //     page reviewed 11/04/2025, opened 2026-10-10); the narrower title depends on an endorsement.
   rolAdlari: {
@@ -179,6 +183,11 @@ export const AU_GIRDI: EnUlkeGirdisi = {
       // This pack has no clinic-dermatology role. The two reminder calendars are for that role only.
       'akne-vade': { eksik: 'This country has no clinic-dermatology role, so this reminder calendar stays off. It is a product reminder for that role, not a national schedule.', kimden: KLINISYEN },
       'lazer-vade': { eksik: 'This country has no clinic-dermatology role, so this interval record stays off. The interval is one the clinician chooses, and the role is not in this pack.', kimden: KLINISYEN },
+      // Hair transplantation is not a Medical Board specialty. The work is folded into cosmetic surgery.
+      // The graft estimate and the hair-care reminders stay off: they are not an Australian college tool.
+      'greft-tahmini': { eksik: 'Hair transplantation is not offered as its own role. The Medical Board list has no such specialty. Cosmetic surgery remains. This graft estimate stays off.', kimden: KLINISYEN },
+      'sac-bakim-vade': { eksik: 'Hair transplantation is not offered as its own role, so these hair-care reminders stay off. They are a product calendar, not a national schedule.', kimden: KLINISYEN },
+      'infuzyon-guvenlik': { eksik: 'Preventive and longevity medicine is not a specialty on the Medical Board list, so it is not offered. This infusion checklist stays off. Nothing is sent.', kimden: KLINISYEN },
     },
     // WORDS OF A SHARED TOOL THIS COUNTRY WRITES DIFFERENTLY.
     degisen: {
@@ -267,12 +276,11 @@ export const AU_GIRDI: EnUlkeGirdisi = {
         // NOTYA-ARACLAR-DENETIM-02-AU, 2026-10-13 — the National Immunisation Program schedule, CORE (every role).
         AU_ASI_TAKVIMI_ARACI,
         // NOTYA-ARACLAR-DENETIM-02-AU, 2026-10-13 — the growth-chart link-out tile (founder's question #3).
-        // My Health Record was REMOVED from this list on reconsideration (NOTYA-ARACLAR-DENETIM-03-AU,
-        // 2026-10-14): a government link-out reference is not the kind of thing that belongs in a core,
-        // every-role workflow set just because Türkiye's e-Nabız tile does — see docs/COUNTRY-PACK-AUSTRALIA.md
-        // and the audit report for the reasoning. The research finding itself stands (My Health Record is
-        // confirmed as Australia's name for this), it is simply not shipped as a tool.
+        // My Health Record was removed on 2026-10-14 and put back on 2026-10-19 as a guidance link only,
+        // after the OAIC index page was opened. The tile sends nothing.
         AU_GROWTH_CHART_REFERENCE,
+        AU_KIMLIK_KONTROL_ARACI,
+        AU_GIZLILIK_ARACI,
         // The PBS top-drugs tables are not copied. The copyright page reserves rights beyond personal
         // reference (docs/medicines/AUSTRALIA.md). This tile only opens the report index. Doctors only.
         auPbsRaporu(hekimRolleri(SATIRLAR)),
@@ -302,6 +310,14 @@ export const AU_GIRDI: EnUlkeGirdisi = {
         auMedicare(hekimRolleri(SATIRLAR)),
         // CVD calculator link. No equation copied. Not the shared cardiovascular-risk slot.
         auCvdBaglantisi(['family-medicine', 'internal-medicine', 'cardiology', 'endocrinology', 'geriatric-medicine']),
+        // College, regulator and statute links opened 2026-10-19. One reference tile per role still offered.
+        ...auBaglantiAraclari([
+          ...hekimRolleri(SATIRLAR),
+          'physiotherapy',
+          'occupational-therapy',
+          'clinical-psychology',
+          'podiatry',
+        ]),
       ],
       tanimlar: AU_TANIMLAR,
       // NOTYA-ARACLAR-DENETIM-03-AU, 2026-10-14 — Australia's OWN proposed slots: distinctive Australian practice
