@@ -29,6 +29,7 @@ export default function KlinikHastaDosyaPage() {
   const [vade, setVade] = useState('')
   const [planlar, setPlanlar] = useState<KayitliPlan[]>([])
   const [planAcil, setPlanAcil] = useState('')
+  const [planHata, setPlanHata] = useState('')
 
   useEffect(() => {
     let iptal = false
@@ -50,10 +51,11 @@ export default function KlinikHastaDosyaPage() {
         setDal(mj?.data?.specialty || '')
         setSeanslar(kayit?.seanslar || [])
         setVade(kayit?.sonrakiVade ? `${kayit.vadeEtiket || 'İzlem'} · ${kayit.sonrakiVade}` : '')
-        const pjPlan = plan.ok ? await plan.json() : null
-        const gelen = (pjPlan?.planlar || []) as KayitliPlan[]
+        const pjPlan = await plan.json().catch(() => null)
+        const gelen = (plan.ok ? (pjPlan?.planlar || []) : []) as KayitliPlan[]
         setPlanlar(gelen)
         setPlanAcil(gelen.find((x) => x.acil)?.acil || '')
+        setPlanHata(plan.ok ? '' : (pjPlan?.error || 'Plan okunamadı.'))
       }
     })()
     return () => { iptal = true }
@@ -72,6 +74,7 @@ export default function KlinikHastaDosyaPage() {
         <p style={{ color: '#8b7d70', fontSize: 14 }}>Klinik dosya — Doktor TUS sekmeleri yok. Seans kaydı yerelde tutulur; SBİYS iddia edilmez.</p>
         {vade && <p style={{ fontSize: 13, color: '#065F46' }}>Sonraki vade: {vade}</p>}
         {planAcil && <p style={{ fontSize: 13, color: '#a45b3e', fontWeight: 700 }}>{planAcil}</p>}
+        {planHata && <p style={{ fontSize: 13, color: '#a45b3e' }}>{planHata}</p>}
         <KayitliPlanlar planlar={planlar} bugun={new Date().toISOString().slice(0, 10)} />
         <div style={{ marginTop: 20, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
           <button type="button" onClick={() => router.push(`/dashboard/notya-klinik/seans?patientId=${id}`)} style={btn}>Seansı başlat</button>

@@ -1,5 +1,11 @@
 # OPEN COMMITMENTS — Notya AI
 
+## OZEL-BRANS-ULKE-01 — Özel Branş canvas and plan save are Türkiye-only (2026-10-19)
+
+The ten Özel Branş canvases, `TuvalAlanlari`, and `ozel_brans_plan` (migration 177) are on `main`. `git grep` of `OzelStudyo` and `ozel-brans` on `origin/release/{us,gb,ca,au,nz,uz}` returns nothing. This chapter is not a Turkey-only mechanic in full (the clinical calendars are not SGK/Medula), but KVKK, e-Nabız, 112, and Hasta Hakları iki nüsha are Turkey-only and must not be copied. A country-adapted scaffold does not exist yet, and a translated copy is not allowed.
+
+**Status:** OPEN GAP — us, gb, ca, au, nz, uz. Owner: Kaan. Next step is a minimal real scaffold per country, in that country's language and rules, not a translation of the Turkish canvases. Migration 177 is also still unapplied on the Türkiye database: this environment has no `DATABASE_URL`.
+
 ## NOTYA-VERCEL-COUNTRY-PREVIEW-PROMOTE-01 — 6 country Vercel preview projects investigated per Kaan's "proceed to deploy the previews to main" instruction; held, not promoted (Claude, 2026-10-18)
 
 Task: Kaan said "Go ahead and proceed to deploy the previews to the main," referring to 6 Vercel projects (`notya-us-preview`, `notya-uk-preview`, `notya-ca-preview`, `notya-au-preview`, `notya-nz-preview`, `notya-uz-preview`) that a prior job could not inspect (404 on every `get_project` lookup). Read as: promote whatever each project has built/preview to be that country's real live production.

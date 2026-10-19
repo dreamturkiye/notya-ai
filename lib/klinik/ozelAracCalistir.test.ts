@@ -62,6 +62,9 @@ describe('Özel Branş araçları — her dalın kendi motoru', () => {
     assert.match(kaynak, /klinikSlugCoz/)
     assert.match(kaynak, /girdi/)
     assert.doesNotMatch(kaynak, /status: 403/)
+    const dosya = fs.readFileSync(path.join(process.cwd(), 'app/dashboard/notya-klinik/hastalar/[id]/page.tsx'), 'utf8')
+    assert.match(dosya, /planHata/)
+    assert.match(dosya, /Plan okunamadı/)
   })
 
   it('her aracın sonuç düzeni var; her dal en az iki düzen kullanır', () => {
