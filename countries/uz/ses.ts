@@ -35,6 +35,26 @@
  *
  * dilKodu is `ru` (the provider's Flash v2.5 language code), not `uz` — the pack's text is NOT being spoken in
  * Uzbek by this voice pair; callers that assumed otherwise must be updated when the UI surfaces this.
+ *
+ * RE-CHECKED 2026-10-19 (Claude), because Kaan caught that the note above already said v4 lists Uzbek and asked
+ * "did you check?" — fair catch; re-verified for real instead of repeating the inference, via two fresh,
+ * independent fetches of ElevenLabs' own current docs (not web-search snippets): `eleven_v4` (and `eleven_v4_turbo`)
+ * DOES explicitly list Uzbek ("UZB Uzbek") among its 90+ languages — confirmed on ElevenLabs' models-overview page
+ * and its model-differences help article, same day. Kaan's catch is correct: v4 genuinely supports Uzbek, a real
+ * and materially different claim from Flash's "not at all." STILL NOT SWAPPED IN, for three concrete reasons, not
+ * a repeat dismissal:
+ *   1. Still zero dedicated native-Uzbek ElevenLabs voices exist (re-checked the same third-party aggregator
+ *      today — still 0 ElevenLabs results for Uzbek, only 2 unrelated Azure ones). v4's Uzbek "support" is
+ *      cross-lingual synthesis — any voice reading Uzbek text — by the model's own design, not a native speaker.
+ *   2. This is not a per-country file edit: `lib/ulke/tipler.ts`'s `UlkeSesCikisi.model` type and
+ *      `lib/ulke/uygulama/sesSentez.ts`'s `SES_MODEL_ID` hard-lock EVERY country to `eleven_flash_v2_5` — proven
+ *      by `sesSentez.test.ts`'s own existing test, which asserts `eleven_v4_turbo` is REJECTED with `kod: 'MODEL'`.
+ *      Swapping UZ to v4 is a core/shared-engine change (type + validation), not a `countries/uz/ses.ts` edit.
+ *   3. `voice_settings` request-body compatibility with v4, and actual synthesized Uzbek audio quality, are
+ *      unverifiable from here: this sandbox's egress to `api.elevenlabs.io` is still policy-blocked (403,
+ *      re-confirmed the same day in `docs/OPEN-COMMITMENTS.md`), so no real v4 call can be made or heard before
+ *      this would ship to a live clinical product. Full finding and what actually closes this:
+ *      `docs/OPEN-COMMITMENTS.md` on `main`, NOTYA-UZ-ASISTAN-SES-01 → item 3 → "v4 re-check, 2026-10-19."
  */
 import type { UlkeSesCikisi } from '@/lib/ulke/tipler'
 
