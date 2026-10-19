@@ -21,15 +21,29 @@
  * seviyesinde `lib/asistan/sesliGirisYardimci.test.ts`'te kanıtlanmıştır; burası o paylaşılan
  * mekanizmanın panelden GERÇEKTEN çağrıldığını (kaynak metninde) ve düğmenin her bağlamda var
  * olduğunu doğrular.
+ *
+ * NOTYA-ASISTAN-PERSONA-SES-01 (2026-10-18): aynı sebep ve çözüm — lib/asistan/bransAsistanPersonasi.test.ts'in
+ * başındaki not. ES modülleri `import` satırlarını dosyadaki konumdan bağımsız en üste taşıdığı (hoisting) için
+ * düz bir `process.env.NOTYA_COUNTRY = 'uz'` satırı importlardan "önce" yazılsa da GERÇEKTE onlardan sonra
+ * çalışır ve işe yaramaz; bu yüzden HastaKonsult (ve ona bağlı turkceYonelmeHali) STATİK değil, ortam
+ * değişkeni sabitlendikten SONRA ÇALIŞAN bir `before()` içinde dinamik `import()` ile yüklenir
+ * (lib/ulke/ulke.uz.test.ts'teki desenin aynısı).
  */
-import { describe, it } from 'node:test'
+import { before, describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import React, { createElement } from 'react'
+import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
-import HastaKonsult from '../../components/doktor/HastaKonsult'
-import { turkceYonelmeHali } from '../colleagueAddress'
+
+let HastaKonsult: (typeof import('../../components/doktor/HastaKonsult'))['default']
+let turkceYonelmeHali: typeof import('../colleagueAddress').turkceYonelmeHali
+
+before(async () => {
+  process.env.NOTYA_COUNTRY = 'uz'
+  ;({ default: HastaKonsult } = await import('../../components/doktor/HastaKonsult'))
+  ;({ turkceYonelmeHali } = await import('../colleagueAddress'))
+})
 
 const sar = (branş: string | null) =>
   renderToStaticMarkup(

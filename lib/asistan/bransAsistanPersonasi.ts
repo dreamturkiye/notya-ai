@@ -48,7 +48,7 @@ import { bransAnahtari } from '@/lib/specialties/bransAnahtari'
 import { getSpecialistForSpecialty, SPECIALIST_BY_SPECIALTY, type SpecialtyKey } from '@/lib/asistan/specialistsCatalog'
 import { KlinikUzmanPersonas } from '@/lib/ai/personas/klinik_uzmanlar'
 import { formatColleagueDisplayName } from '@/lib/colleagueAddress'
-import { uzAsistanAdi } from '@/countries/uz/klinik/asistanAdlari'
+import { AKTIF_PAKET } from '@/countries/active'
 import { uzDoktorPersonaSesi } from '@/lib/asistan/uzDoktorPersonaSesi'
 
 export type BransPersonaKaynagi = 'doktor-brans' | 'doktor-brans-uz' | 'klinik-dali' | 'varsayilan'
@@ -84,10 +84,13 @@ export function bransPersonasiBulunamadiMi(brans: string | null | undefined): bo
  */
 export function bransAsistanPersonasiBul(brans: string | null | undefined): BransAsistanPersonasi {
   const anahtar = brans ? bransAnahtari(brans) : null
-  // UZ Doktor roster first (release/uz only) — see NOTYA-UZ-ASISTAN-PERSONA-DOKTOR-01 above.
+  // UZ Doktor roster first (release/uz only) — see NOTYA-UZ-ASISTAN-PERSONA-DOKTOR-01 above. Read through
+  // countries/active (AKTIF_PAKET.asistanAdlariBransaGore), never a direct countries/uz/... import — D1
+  // (scripts/ulke-duvarlari.mjs); the door is populated from the owner's unchanged list, see
+  // countries/uz/index.ts and lib/ulke/tipler.ts's AsistanAdlariBransaGore doc.
   if (anahtar) {
-    const uzAdi = uzAsistanAdi(anahtar)
-    if (uzAdi && uzAdi.taraf === 'doktor') {
+    const uzAdi = AKTIF_PAKET.asistanAdlariBransaGore?.[anahtar]
+    if (uzAdi) {
       const ses = uzDoktorPersonaSesi(anahtar)
       if (ses) {
         // All 30 UZ Doktor entries carry unvan 'prof-dr' today (countries/uz/klinik/asistanAdlari.ts) —

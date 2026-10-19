@@ -16,6 +16,8 @@ import { uzAramaKatla } from './arama'
 import { UZ_ROLLER } from './klinik/rolAdlari'
 import { UZ_VELI_YASI } from './ayarlar'
 import { UZ_RESMI_GUNLER } from './resmiGunler'
+import { UZ_ASISTAN_SESLERI } from './klinik/asistanSesi'
+import { UZ_ASISTAN_ADLARI } from './klinik/asistanAdlari'
 
 const metin = paketMetinleri({
   acikDiller: ['uz-Latn', 'ru'],
@@ -129,6 +131,17 @@ export const UZ_PAKETI: UlkePaketi = {
   metinler: metin.metinler,
   dilAdlari: { 'uz-Latn': 'Oʻzbekcha', 'uz-Cyrl': 'Ўзбекча', ru: 'Русский' },
   resmiGunler: UZ_RESMI_GUNLER,
+  // NOTYA-ASISTAN-PERSONA-SES-01 (2026-10-18): the Doktor "Ayşe'ye Danış" panel's gender/voice data for this
+  // country's 30 Doktor branşlar. INFERRED, pending Kaan/Dr. Gökhan review (./klinik/asistanSesi.ts header) —
+  // unchanged data, moved here from a direct lib/asistan import that broke the D1 wall.
+  asistanSesleri: UZ_ASISTAN_SESLERI,
+  // NOTYA-ASISTAN-PERSONA-SES-01 (2026-10-18): the SAME panel's NAMES — the owner's own list
+  // (./klinik/asistanAdlari.ts), Doktor-side entries only, unchanged, re-exposed here so
+  // lib/asistan/bransAsistanPersonasi.ts stops importing countries/uz/klinik/asistanAdlari directly (D1 —
+  // that direct import was a second, separate wall violation found alongside the one Part 1 named).
+  asistanAdlariBransaGore: Object.fromEntries(
+    UZ_ASISTAN_ADLARI.filter((a) => a.taraf === 'doktor').map((a) => [a.bransAnahtari, { unvan: a.unvan, kisaAd: a.kisaAd, soyad: a.soyad }])
+  ),
   uygulama: {
     // Inside the signed-in application an account may also choose Uzbek in Cyrillic script: those screens are written
     // in all three forms (countries/uz/uygulama/metinler.ts). The public pages above stay in the two `acikDiller`.

@@ -224,7 +224,67 @@ export type UlkePaketi = {
    * set this. It is not inside `uygulama.randevu`: the working pattern still treats a weekday as open.
    */
   resmiGunler?: ResmiGunKaynagi
+  /**
+   * NOTYA-ASISTAN-PERSONA-SES-01 (2026-10-18) — the assistant's GENDER and VOICE for this country, for the
+   * Doktor "Ayşe'ye Danış" panel and any future TTS use. Deliberately on `UlkePaketi`, not on `UlkeKlinigi`:
+   * `UlkeKlinigi` is server-only and already carries heavy per-template model-instruction text
+   * (lib/ulke/tipler.ts, `UlkeKlinigi`'s own doc comment; countries/uz/klinik/index.ts says the same of its
+   * own file). The caller that needs this slot today (components/doktor/HastaKonsult.tsx) is a 'use client'
+   * component eagerly loaded on the patient-file page — exactly the bundle `.cursor/skills/
+   * performans-butcesi-koruma/SKILL.md` puts a hard ceiling on — so this slot stays on the light pack object
+   * every build already loads into the browser (countries/uz/index.ts: "the middleware and the browser bundle
+   * load it"), never on the heavy clinical one. Omitted = the country has no persona voice data yet.
+   */
+  asistanSesleri?: AsistanPersonaSesleri
+  /** Doktor-side per-branş assistant names, owner-authored, unchanged — see `AsistanAdlariBransaGore`'s own doc. */
+  asistanAdlariBransaGore?: AsistanAdlariBransaGore
 }
+
+/** One assistant's gender and ElevenLabs voice id. `voiceId: null` = a voice is picked but not yet assigned. */
+export type AsistanSesKimligi = { gender: 'female' | 'male'; voiceId: string | null }
+
+/**
+ * NOTYA-ASISTAN-PERSONA-SES-01 — gender + voice for the country's assistant persona(s). Never a NAME: a pack's
+ * own name data (e.g. countries/uz/klinik/asistanAdlari.ts) stays exactly where it is; this slot only adds the
+ * two fields that data is not responsible for (see that file's own header).
+ */
+export type AsistanPersonaSesleri = {
+  /**
+   * Per-branş gender + voice, keyed by the SAME branş key the pack's own per-branş name data uses
+   * (bransAnahtari) — e.g. Uzbekistan's 30 Doktor branşlar, today reusing already-provisioned TR ElevenLabs
+   * voices (countries/uz/klinik/asistanSesi.ts says so, and is INFERRED data pending owner review, exactly as
+   * before this slot existed — this slot changes WHERE the data lives, never what it says). Omitted = the
+   * country names no persona per branş.
+   */
+  bransaGore?: Readonly<Record<string, AsistanSesKimligi>>
+  /**
+   * One male + one female persona for a country that does not name a persona per branş (NOTYA-ULKE-ASISTAN-
+   * ISIM-05, 2026-10-18 — the simplification Kaan asked for US/GB/CA/AU/NZ; also used for Uzbekistan's REAL
+   * Uzbek-accented ElevenLabs voice pick, distinct from `bransaGore`'s TR-voice reuse). `ad` is the assistant's
+   * given name where the country needs one assigned (US/GB/CA/AU/NZ); omitted where a name already exists
+   * elsewhere (Uzbekistan's per-branş names). `hazirMi: false` = brand new, not yet shown to a real doctor —
+   * same gating pattern as NOTYA-ULKE-ARACLAR-AU-07's `mekanizmaHazir`: a caller must check it before using
+   * this for a live persona identity.
+   */
+  cift?: {
+    erkek: AsistanSesKimligi & { ad?: string }
+    kadin: AsistanSesKimligi & { ad?: string }
+    hazirMi: boolean
+  }
+}
+
+/** One Doktor assistant's given name, family name and title (lib/asistan/specialistsCatalog.ts's three forms). */
+export type AsistanAdBilgisi = { unvan: 'prof-dr' | 'dr' | 'meslek'; kisaAd: string; soyad: string }
+
+/**
+ * NOTYA-ASISTAN-PERSONA-SES-01 (2026-10-18) — re-exposes a country's OWN per-branş Doktor assistant NAMES
+ * (owner-authored, e.g. countries/uz/klinik/asistanAdlari.ts — unchanged data, never merged or altered)
+ * through `UlkePaketi`, so that core (lib/asistan/bransAsistanPersonasi.ts) can read a name without a direct
+ * `@/countries/<kod>/...` import (another D1 fix alongside `asistanSesleri`, same reason: scripts/
+ * ulke-duvarlari.mjs rule D1). Doktor-side entries ONLY — a pack filters out any Klinik-side entry before
+ * populating this. Keyed by `bransAnahtari`. Omitted = the country names no persona per branş.
+ */
+export type AsistanAdlariBransaGore = Readonly<Record<string, AsistanAdBilgisi>>
 
 /** What a pack says about the signed-in application (feature `cekirdekMuayene`). */
 export type UygulamaAyarlari = {

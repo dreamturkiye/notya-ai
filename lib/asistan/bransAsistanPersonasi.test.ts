@@ -11,11 +11,29 @@
  * DEĞİL, Kaan'ın 2026-10-08/09 UZ adlarını bekler; kaynak 'doktor-brans-uz' olur. TR roster
  * testi (aşağıda, ayrı describe) `getSpecialistForSpecialty`'yi DOĞRUDAN çağırarak TR katalogun
  * kendisinin bozulmadığını ayrıca doğrular — bu dal release/AU/CA/GB/NZ/US/TR'de hâlâ canlı yol.
+ *
+ * NOTYA-ASISTAN-PERSONA-SES-01 (2026-10-18): `uzDoktorPersonaSesi()` artık `AKTIF_PAKET.asistanSesleri`
+ * (countries/active) üzerinden okuyor — release/uz'un GERÇEK dağıtımı `NOTYA_COUNTRY=uz` ile çalıştığı için
+ * production davranışı aynı. Bu test dosyası eskiden ortam değişkenine bağımlı değildi (`uzDoktorPersonaSesi.ts`
+ * doğrudan countries/uz'u koşulsuz import ediyordu); artık öyle, ve ES modülleri `import` satırlarını dosyadaki
+ * konumlarından bağımsız olarak HEPSİNİ en üste taşır (hoisting) — düz `process.env.NOTYA_COUNTRY = 'uz'` satırı
+ * metinde importlardan önce görünse de GERÇEKTE onlardan SONRA çalışır ve işe yaramaz (doğrulanmış: önce bu
+ * şekilde denendi, "pediatri → Ayşe geldi" ile kırıldı). lib/ulke/ulke.uz.test.ts'teki gerçek çözüm — altındaki
+ * modülü STATİK değil, ortam değişkeni sabitlendikten SONRA ÇALIŞAN bir `before()` içinde dinamik `import()` ile
+ * yüklemek — burada da aynen uygulanır.
  */
-import { describe, it } from 'node:test'
+import { before, describe, it } from 'node:test'
 import assert from 'node:assert/strict'
-import { bransAsistanPersonasiBul, bransPersonasiBulunamadiMi } from './bransAsistanPersonasi'
-import { getSpecialistForSpecialty } from './specialistsCatalog'
+
+let bransAsistanPersonasiBul: typeof import('./bransAsistanPersonasi').bransAsistanPersonasiBul
+let bransPersonasiBulunamadiMi: typeof import('./bransAsistanPersonasi').bransPersonasiBulunamadiMi
+let getSpecialistForSpecialty: typeof import('./specialistsCatalog').getSpecialistForSpecialty
+
+before(async () => {
+  process.env.NOTYA_COUNTRY = 'uz'
+  ;({ bransAsistanPersonasiBul, bransPersonasiBulunamadiMi } = await import('./bransAsistanPersonasi'))
+  ;({ getSpecialistForSpecialty } = await import('./specialistsCatalog'))
+})
 
 describe('bransAsistanPersonasiBul — Doktor rosteri (release/uz: 30/30 branş → UZ adı, "doktor-brans-uz")', () => {
   // Kaan'ın 2026-10-08/09 UZ Doktor listesi (countries/uz/klinik/asistanAdlari.ts) — tam 30/30,

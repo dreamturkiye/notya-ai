@@ -181,7 +181,12 @@ describe('every country pack: same shape, complete text, own content only', () =
     // feature is on (NOTYA-UZ-MUAYENE-01) — Türkiye's pack does not gain a field for a screen it does not have.
     // `yolOnEki` (path prefix) is the other: present only for a country served under a path of the main site.
     // `resmiGunler` is the calendar's public-day list. Türkiye keeps its own list and does not gain the field.
-    const anahtarlar = (p: UlkePaketi) => Object.keys(p).filter((k) => k !== 'uygulama' && k !== 'yolOnEki' && k !== 'resmiGunler').sort()
+    // `asistanSesleri`/`asistanAdlariBransaGore` (NOTYA-ULKE-ASISTAN-ISIM-05/NOTYA-ASISTAN-PERSONA-SES-01,
+    // 2026-10-18): the Doktor "Ayşe'ye Danış" panel's persona voice/name data — present only for a country
+    // that actually names a persona (today: only Uzbekistan's per-branş roster; a bare pair for the other
+    // five is pending Kaan's sign-off, NOTYA-ASISTAN-PERSONA-SES-01's `cift.hazirMi`). Same "optional part,
+    // present where the feature is on" shape as `uygulama` above — no pack gains an empty slot it has no data for.
+    const anahtarlar = (p: UlkePaketi) => Object.keys(p).filter((k) => k !== 'uygulama' && k !== 'yolOnEki' && k !== 'resmiGunler' && k !== 'asistanSesleri' && k !== 'asistanAdlariBransaGore').sort()
     for (const [kod, p] of paketler) {
       assert.equal(p.kod, kod)
       assert.deepEqual(anahtarlar(p), anahtarlar(TUM_ULKELER.tr.paket), kod)
