@@ -108,6 +108,11 @@
     <p>An Australian doctor can sign in, keep a calendar, open a patient, record a visit, and approve a note. That shell is real and it is in English. It is not the Turkey product with the labels translated. The 30 specialty chapters and the 10 Özel Branşlar that make Turkey the reference sit in the Australia repository and do not open from <code>/visit</code>. The assistant is off. Medicare is a free-text label, not an Individual Healthcare Identifier. PBS and Medicare are checklists, not claims. Nothing in this pack has been read by an Australian clinician or lawyer. That is why the mean stays at 48.</p>
   </div>
 
+  <div class="callout info">
+    <h2>Recognition gate, not a score</h2>
+    <p>A branş that Australia’s own regulator does not recognise is not offered here, and that absence is not a deduction. This report did not finish a cited check of the ten Özel Branşlar against Ahpra or the Medical Board of Australia. The score 22 is the state of the folders and the routes. It is not an instruction to copy the ten. If a specialty is built next, it is one Australia already licences. That check is still open. The gate is on <code>main</code> at <code>cc5bc99e</code>. The clinic being scored is still <code>19e514e6</code>.</p>
+  </div>
+
   <h2>How this was scored</h2>
   <p class="cap">Turkey is 100 on each row as the reference that exists, including slices that are Turkey-only by law. Australia is scored on the country-adapted equivalent a doctor can actually open, not on files that the country build never mounts. Strong ≥85, Partial 45–84, Thin 15–44, Missing &lt;15. Medula, e-Nabız, e-Reçete, SGK, MBYS, NVI, e-Fatura and KVKK wording are exempt: they must not be translated. Their absence is not a deduction. The missing Australian equivalent is.</p>
 
@@ -212,7 +217,7 @@
     <div class="card"><div class="title">The deep chapters never open <span class="pill warning">Specialties 46</span></div><div class="body">Pediatri on this branch is the Turkish chapter, byte for byte, and the country build does not mount it. Copying it onto <code>/visit</code> would show Neyzi and Turkish locks to an Australian paediatrician. That is the wrong fix.</div></div>
     <div class="card"><div class="title">The assistant is off <span class="pill danger">16</span></div><div class="body">Turkey’s daily loop is a drafted note the doctor approves, with Ayşe in the room. Australia’s landing promises the drafted note. The assistant flag is off.</div></div>
     <div class="card"><div class="title">Identity is a label <span class="pill danger">Patient 34</span></div><div class="body">Medicare card number as free text is the billing card used as the only identifier. The Individual Healthcare Identifier is refused by the pack test. Ahpra is not checked. Provider number is not stored.</div></div>
-    <div class="card"><div class="title">Özel Branşlar are two files <span class="pill danger">22</span></div><div class="body">Turkey’s ten are Strong at mean 95, including two stored consent copies and saç photos. Australia’s ten folders were not brought forward with the 157 Turkey commits this branch does not contain.</div></div>
+    <div class="card"><div class="title">Özel Branşlar are two files <span class="pill danger">22</span></div><div class="body">Turkey’s ten are Strong at mean 95, including two stored consent copies and saç photos. Australia’s ten folders were not brought forward with the 157 Turkey commits this branch does not contain. That score describes the folders. It does not order the ten to be copied before a regulator check.</div></div>
   </div>
 
   <h2>Game changers, in order</h2>
@@ -222,7 +227,7 @@
     <tbody>
       <tr><td>1</td><td class="domain">Identifiers a clinic can store</td><td class="note">Ahpra number, Medicare provider number, PBS prescriber number, and the patient IHI, each with its own check. Medicare card number stays the billing card.</td><td><span class="pill info">M</span></td></tr>
       <tr><td>2</td><td class="domain">A note the assistant actually drafts</td><td class="note">Turn the assistant on in Australian English, against Australian institutions, or take the promise off the landing.</td><td><span class="pill warning">L</span></td></tr>
-      <tr><td>3</td><td class="domain">One specialty a doctor can open</td><td class="note">Pick one branş and build its Australia chapter on the kit, from Australian sources. Do not mount the Turkish folder.</td><td><span class="pill warning">L</span></td></tr>
+      <tr><td>3</td><td class="domain">One licensed specialty a doctor can open</td><td class="note">Build one branş Australia already licences, from Australian sources. Do not mount the Turkish folder. An unrecognised branş is not offered.</td><td><span class="pill warning">L</span></td></tr>
       <tr><td>4</td><td class="domain">PBS prescription that names a medicine</td><td class="note">The particulars checklist is the frame. The empty prescription slot is the missing register.</td><td><span class="pill warning">L</span></td></tr>
       <tr><td>5</td><td class="domain">NIP antigens, still not an AIR write</td><td class="note">The age ticks exist. The vaccines at each age, and catch-up, do not. A live AIR send stays unclaimed.</td><td><span class="pill info">M</span></td></tr>
       <tr><td>6</td><td class="domain">A lawyer reads the consent pages</td><td class="note">Privacy, recording, minors and consult consent are drafted and stamped unread. State law is not one sentence.</td><td><span class="pill info">M</span></td></tr>
@@ -232,12 +237,12 @@
   <h2>Recommended next ships</h2>
   <div class="cards three">
     <div class="card"><div class="title">1 · Identity</div><div class="body">The smallest mandate gap. Four identifiers, four checks, no Turkish field reused. Do this before any specialty port.</div></div>
-    <div class="card"><div class="title">2 · One branş on the kit</div><div class="body">General practice or paediatrics, sourced here. The Turkish chapter stays the reference for shape, not for text.</div></div>
+    <div class="card"><div class="title">2 · One licensed branş on the kit</div><div class="body">General practice or paediatrics only after a cited Australian licence check. The Turkish chapter stays the reference for shape, not for text. An unrecognised branş is not offered.</div></div>
     <div class="card"><div class="title">3 · Then the other five countries</div><div class="body">Same audit, one country at a time. United States, United Kingdom, Canada, New Zealand, Uzbekistan. Not in this score.</div></div>
   </div>
 
   <h2>Sources</h2>
-  <p class="lede">Turkey tip <code>origin/main</code> <code>19e514e6</code> (19 Oct 2026). Australia tip <code>origin/release/au</code> <code>d5a219fd</code> (18 Oct 2026). Merge base <code>9891987</code>. Australia is 248 commits off that base that Turkey does not have. Turkey is 157 commits Australia does not have. Live check: <code>https://au.notya.io/au</code> returned HTTP 200 and the English landing. Pack: <code>countries/au/index.ts</code>, <code>countries/au/ayarlar.ts</code>, <code>countries/au/araclar/tanimlar.ts</code>, <code>countries/au/araclar/pbsPrescription.ts</code>, <code>countries/au/resmiGunler.ts</code>. Routing finding: <code>COUNTRY-BUILD-ROUTING-01</code> on that branch. This audit did not re-fetch the Department of Health PDF. The NIP row follows the pack’s own citation of NSW Health, current as at 1 October 2026. No patient data.</p>
+  <p class="lede">Clinic reference <code>19e514e6</code> (19 Oct 2026). Recognition gate on <code>main</code> at <code>cc5bc99e</code>. Australia tip <code>origin/release/au</code> <code>d5a219fd</code> (18 Oct 2026). Merge base <code>9891987</code>. Australia is 248 commits off that base that Turkey does not have. Turkey is 157 commits Australia does not have, counted before the later docs commits. Live check: <code>https://au.notya.io/au</code> returned HTTP 200 and the English landing. Pack: <code>countries/au/index.ts</code>, <code>countries/au/ayarlar.ts</code>, <code>countries/au/araclar/tanimlar.ts</code>, <code>countries/au/araclar/pbsPrescription.ts</code>, <code>countries/au/resmiGunler.ts</code>. Routing finding: <code>COUNTRY-BUILD-ROUTING-01</code> on that branch. This audit did not re-fetch the Department of Health PDF and did not finish the ten-branş licence check. The NIP row follows the pack’s own citation of NSW Health, current as at 1 October 2026. No patient data.</p>
 
   <div class="foot">
     <span>AU-TR-AUDIT-01 · 2026-10-19 · pre-work · Australia only · no patient data</span>
