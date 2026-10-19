@@ -41,25 +41,48 @@ describe('country speaker', () => {
     assert.deepEqual(cagrilar, ['https://api.elevenlabs.io/v1/text-to-speech/Xb7hH8MSUJpSbSDYk0k2'])
   })
 
-  it('does not call the provider without voices, a key, or a Flash model', async () => {
+  it('does not call the provider without voices, a key, or a model on the valid list', async () => {
     const patlama: typeof fetch = async () => { throw new Error('called') }
     assert.deepEqual(await sesSentezle('Hello.', 'kadin', { ses: null, anahtar: 'anahtar', fetchFn: patlama }), { durum: 'yok' })
     assert.deepEqual(await sesSentezle('Hello.', 'erkek', { ses: ornek, anahtar: '', fetchFn: patlama }), { durum: 'hazir-degil' })
     assert.deepEqual(sesIstegi(ornek, '  ', 'erkek'), { tamam: false, kod: 'BOS' })
-    const bozuk = { ...ornek, model: 'eleven_v4_turbo' as UlkeSesCikisi['model'] }
+    // Genuinely unsupported — eleven_v4_turbo was never added to SES_GECERLI_MODELLER (only eleven_v4 was,
+    // for Uzbekistan's cross-lingual attempt below) — still correctly rejected, cast past the type since the
+    // union no longer includes this literal at all.
+    const bozuk = { ...ornek, model: 'eleven_v4_turbo' as unknown as UlkeSesCikisi['model'] }
     assert.deepEqual(await sesSentezle('Hello.', 'erkek', { ses: bozuk, anahtar: 'anahtar', fetchFn: patlama }), { durum: 'red', kod: 'MODEL' })
   })
 
-  it('Uzbekistan speaks a Russian fallback, not native Uzbek (this pack\'s own view — see file header)', () => {
-    // NOTYA-ULKE-ASISTAN-SES-US-NZ-UZ-01 (2026-10-19): this checkout (release/uz) can verify only its OWN
-    // countries/ copy. Checked directly on the sibling release/us checkout: a branch's own copies of OTHER
-    // countries' folders can be stale relative to their real release branches (no ses.ts at all, in that
-    // case, despite it being live and shipped there) — so this test does not assert anything about another
-    // country's files, only this pack's own, which is what this job actually changed and can verify from here.
+  it('admits eleven_v4 (Uzbekistan\'s cross-lingual attempt), not just Flash v2.5', async () => {
+    const uzOrnek: UlkeSesCikisi = { ...ornek, model: 'eleven_v4', dilKodu: 'uz', yerel: 'uz-Latn-UZ' }
+    const istek = sesIstegi(uzOrnek, 'Salom.', 'erkek')
+    assert.equal(istek.tamam, true)
+    if (!istek.tamam) return
+    assert.equal(istek.govde.model_id, 'eleven_v4')
+    assert.equal(istek.govde.language_code, 'uz')
+    const cagrilar: { body: unknown }[] = []
+    const fetchFn: typeof fetch = async (_adres, secenek) => {
+      cagrilar.push({ body: JSON.parse(String(secenek?.body)) })
+      return new Response(new Uint8Array([1]), { status: 200 })
+    }
+    const tamam = await sesSentezle('Salom.', 'erkek', { ses: uzOrnek, anahtar: 'anahtar', fetchFn })
+    assert.equal(tamam.durum, 'tamam')
+    assert.equal((cagrilar[0].body as { model_id: string }).model_id, 'eleven_v4')
+  })
+
+  it('Uzbekistan speaks eleven_v4\'s cross-lingual Uzbek attempt, not native Uzbek (this pack\'s own view — see file header)', () => {
+    // NOTYA-ULKE-ASISTAN-SES-US-NZ-UZ-01 / NOTYA-UZ-ASISTAN-SES-01 (2026-10-19): this checkout (release/uz) can
+    // verify only its OWN countries/ copy. Checked directly on the sibling release/us checkout: a branch's own
+    // copies of OTHER countries' folders can be stale relative to their real release branches (no ses.ts at all,
+    // in that case, despite it being live and shipped there) — so this test does not assert anything about
+    // another country's files, only this pack's own, which is what this job actually changed and can verify
+    // from here.
     const oku = (yol: string) => readFileSync(join(KOK, yol), 'utf8')
     assert.match(oku('countries/uz/klinik/index.ts'), /ses: UZ_SES/)
-    assert.match(oku('countries/uz/ses.ts'), /eleven_flash_v2_5/)
-    // Deliberately 'ru', not 'uz' — this is a RUSSIAN FALLBACK pair, not a native Uzbek voice. See countries/uz/ses.ts.
-    assert.match(oku('countries/uz/ses.ts'), /dilKodu: 'ru'/)
+    assert.match(oku('countries/uz/ses.ts'), /model: 'eleven_v4'/)
+    // Deliberately 'uz' now — eleven_v4 (unlike every sibling country's eleven_flash_v2_5) actually lists
+    // Uzbek. Still not a native voice: see countries/uz/ses.ts for the cross-lingual caveat and the pending
+    // real-speaker quality confirmation.
+    assert.match(oku('countries/uz/ses.ts'), /dilKodu: 'uz'/)
   })
 })

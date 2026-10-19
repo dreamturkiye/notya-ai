@@ -611,10 +611,17 @@ export type UlkeSesi = { ad: string; id: string }
  * Text to speech for a pack (lib/ulke/uygulama/sesSentez.ts). `dilKodu` is the ISO 639-1 code sent as
  * `language_code` (English is `en`). `yerel` is the BCP 47 locale the voices were verified for, and it is the
  * pack's own default language. The accent is the voice, not a second language code.
+ *
+ * NOTYA-UZ-ASISTAN-SES-01 (2026-10-19, Kaan — ships the eleven_v4 attempt, quality confirmation pending his own
+ * review with real Uzbek speakers): `model` admits `eleven_v4` alongside `eleven_flash_v2_5` SPECIFICALLY so
+ * Uzbekistan can attempt cross-lingual Uzbek synthesis — Flash v2.5 does not support Uzbek at all; `eleven_v4`
+ * explicitly lists Uzbek among its 90+ languages (confirmed on ElevenLabs' own models-overview page, 2026-10-19).
+ * Every other country stays on `eleven_flash_v2_5`; this is not a general model upgrade. The valid-model list
+ * lives once, in `lib/ulke/uygulama/sesSentez.ts`'s `SES_GECERLI_MODELLER` — this type must keep matching it.
  */
 export type UlkeSesCikisi = {
   saglayici: 'elevenlabs'
-  model: 'eleven_flash_v2_5'
+  model: 'eleven_flash_v2_5' | 'eleven_v4'
   dilKodu: string
   yerel: string
   sesler: { erkek: UlkeSesi; kadin: UlkeSesi }
