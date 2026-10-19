@@ -1,5 +1,5 @@
 'use client'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth'
 import type { AracTanim } from '@/lib/klinik/ozelAracCalistir'
@@ -14,6 +14,21 @@ export default function OzelStudyo({ tanim }: { tanim: AracTanim }) {
   const sonuc = useMemo(() => tanim.calistir(girdi, bugun), [tanim, girdi, bugun])
   const hazir = !('hata' in sonuc)
   const Tuval = OZEL_TUVAL[tanim.slug]
+
+  useEffect(() => {
+    if (!hasta) return
+    let iptal = false
+    ;(async () => {
+      const t = await ensureDoctorAccessToken()
+      if (!t) return
+      const r = await fetch(`/api/ozel-brans/plan?patientId=${encodeURIComponent(hasta)}`, { headers: { Authorization: `Bearer ${t}` } })
+      if (!r.ok) return
+      const j = await r.json().catch(() => ({}))
+      const satir = (j.planlar || []).find((p: { arac?: string }) => p.arac === tanim.route)
+      if (!iptal && satir?.girdi && typeof satir.girdi === 'object') setGirdi(satir.girdi)
+    })()
+    return () => { iptal = true }
+  }, [hasta, tanim.route])
 
   function yaz(id: string, deger: string) {
     setGirdi((o) => ({ ...o, [id]: deger }))

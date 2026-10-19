@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
   const patientId = req.nextUrl.searchParams.get('patientId')
   let sorgu = supabase
     .from('ozel_brans_plan')
-    .select('patient_id, arac, ozet, portal_satir, acil, riza, updated_at')
+    .select('patient_id, arac, ozet, portal_satir, acil, riza, girdi, updated_at')
     .eq('doctor_id', user.id)
   if (patientId) {
     if (!(await hastaSahibiMi(supabase, user.id, patientId))) {
@@ -58,6 +58,7 @@ export async function POST(req: NextRequest) {
     vadeler: sonuc.vadeler,
     acil: sonuc.acil,
     riza: sonuc.riza,
+    girdi,
     updated_at: new Date().toISOString(),
   }, { onConflict: 'doctor_id,patient_id,arac' })
   if (error) return NextResponse.json({ error: 'Plan yazılamadı.' }, { status: 503 })

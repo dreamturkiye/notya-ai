@@ -8,6 +8,7 @@ import { klinikAraclariListesi } from '@/lib/klinik/klinikAraclari'
 import { klinikSlugCoz } from '@/lib/specialties/klinikDikey'
 import { klinikDefterOku } from '@/lib/klinik/klinikKayitIstemci'
 import type { KlinikSeansKayit } from '@/lib/klinik/klinikKayit'
+import { KayitliPlanlar, type KayitliPlan } from '@/components/klinik/KayitliPlanlar'
 
 export const dynamic = 'force-dynamic'
 
@@ -26,7 +27,7 @@ export default function KlinikHastaDosyaPage() {
   const [hata, setHata] = useState('')
   const [seanslar, setSeanslar] = useState<KlinikSeansKayit[]>([])
   const [vade, setVade] = useState('')
-  const [planOzet, setPlanOzet] = useState<string[]>([])
+  const [planlar, setPlanlar] = useState<KayitliPlan[]>([])
   const [planAcil, setPlanAcil] = useState('')
 
   useEffect(() => {
@@ -50,9 +51,9 @@ export default function KlinikHastaDosyaPage() {
         setSeanslar(kayit?.seanslar || [])
         setVade(kayit?.sonrakiVade ? `${kayit.vadeEtiket || 'İzlem'} · ${kayit.sonrakiVade}` : '')
         const pjPlan = plan.ok ? await plan.json() : null
-        const planlar = (pjPlan?.planlar || []) as Array<{ ozet?: string; acil?: string | null }>
-        setPlanOzet(planlar.map((x) => String(x.ozet || '')).filter(Boolean).slice(0, 4))
-        setPlanAcil(planlar.find((x) => x.acil)?.acil || '')
+        const gelen = (pjPlan?.planlar || []) as KayitliPlan[]
+        setPlanlar(gelen)
+        setPlanAcil(gelen.find((x) => x.acil)?.acil || '')
       }
     })()
     return () => { iptal = true }
@@ -71,9 +72,7 @@ export default function KlinikHastaDosyaPage() {
         <p style={{ color: '#8b7d70', fontSize: 14 }}>Klinik dosya — Doktor TUS sekmeleri yok. Seans kaydı yerelde tutulur; SBİYS iddia edilmez.</p>
         {vade && <p style={{ fontSize: 13, color: '#065F46' }}>Sonraki vade: {vade}</p>}
         {planAcil && <p style={{ fontSize: 13, color: '#a45b3e', fontWeight: 700 }}>{planAcil}</p>}
-        {planOzet.length > 0 && (
-          <ul style={{ fontSize: 13, color: '#3b2e24' }}>{planOzet.map((s) => <li key={s}>{s}</li>)}</ul>
-        )}
+        <KayitliPlanlar planlar={planlar} bugun={new Date().toISOString().slice(0, 10)} />
         <div style={{ marginTop: 20, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
           <button type="button" onClick={() => router.push(`/dashboard/notya-klinik/seans?patientId=${id}`)} style={btn}>Seansı başlat</button>
           <button type="button" onClick={() => router.push(`/ozel-branslar/hasta-portali?patientId=${id}`)} style={{ ...btn, background: '#2f4334' }}>Portal ver</button>

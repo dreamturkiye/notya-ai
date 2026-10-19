@@ -60,6 +60,7 @@ describe('Özel Branş araçları — her dalın kendi motoru', () => {
     const kaynak = fs.readFileSync(path.join(process.cwd(), 'app/api/ozel-brans/plan/route.ts'), 'utf8')
     assert.match(kaynak, /hastaSahibiMi/)
     assert.match(kaynak, /klinikSlugCoz/)
+    assert.match(kaynak, /girdi/)
     assert.doesNotMatch(kaynak, /status: 403/)
   })
 

@@ -12,12 +12,14 @@ create table if not exists ozel_brans_plan (
   vadeler jsonb not null default '[]'::jsonb,
   acil text,
   riza boolean not null default false,
+  girdi jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   constraint ozel_brans_plan_hekim_hasta_arac unique (doctor_id, patient_id, arac)
 );
 create index if not exists ozel_brans_plan_doktor_idx on ozel_brans_plan (doctor_id, updated_at desc);
 create index if not exists ozel_brans_plan_hasta_idx on ozel_brans_plan (patient_id, doctor_id);
+alter table public.ozel_brans_plan add column if not exists girdi jsonb not null default '{}'::jsonb;
 
 alter table public.ozel_brans_plan enable row level security;
 do $$
