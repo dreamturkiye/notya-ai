@@ -7,6 +7,7 @@
  * (A3, I1); the specialty list has no local reviewer yet (C1, C14).
  */
 import type { UlkeKlinigi } from '@/lib/ulke/tipler'
+import { UZ_SES } from '../ses'
 import { UZ_ACIK_SABLONLAR } from './branslar'
 import { UZ_HASTA_FORMU } from './hastaFormu'
 import { uzHastaOzetiGirdisi, uzHastaOzetiTalimati } from './hastaOzeti'
@@ -58,4 +59,7 @@ export const UZ_KLINIK: UlkeKlinigi = {
   // with every consultation, so it is always known which wording was ticked: CHANGE IT WHENEVER THE SENTENCE CHANGES.
   // A DRAFT: no lawyer of the country has read the sentence, nor whether a consent recorded this way is enough.
   konsultasyonRizasi: { surum: 'uz-konsultatsiya-taslak-2026-10-09', hukukcuInceledi: false },
+  // NOTYA-ULKE-ASISTAN-SES-US-NZ-UZ-01 (2026-10-19): a RUSSIAN FALLBACK pair, not native Uzbek — see
+  // ../ses.ts header for why (eleven_flash_v2_5 does not support Uzbek as a TTS language at all).
+  ses: UZ_SES,
 }
