@@ -10,6 +10,7 @@ import { klinikDefterOku } from '@/lib/klinik/klinikKayitIstemci'
 import { SEANS_ARAC, seansListesiCoz } from '@/lib/klinik/seansDefter'
 import type { KlinikSeansKayit } from '@/lib/klinik/klinikKayit'
 import { KayitliPlanlar, type KayitliPlan } from '@/components/klinik/KayitliPlanlar'
+import { KuralDosya } from '@/components/klinik/KuralDefteri'
 
 export const dynamic = 'force-dynamic'
 
@@ -74,6 +75,7 @@ export default function KlinikHastaDosyaPage() {
         <h1 style={{ fontFamily: "'Fraunces', Georgia, serif", margin: '12px 0 8px', fontSize: 26, color: '#3b2e24' }}>{ad}</h1>
         {hata && <p style={{ color: '#a45b3e' }}>{hata}</p>}
         <p style={{ color: '#8b7d70', fontSize: 14 }}>Klinik dosya — Doktor TUS sekmeleri yok. Seans kaydı bu dosyada durur; SBİYS iddia edilmez.</p>
+        {slug && <KuralDosya slug={slug} />}
         {vade && <p style={{ fontSize: 13, color: '#065F46' }}>Sonraki vade: {vade}</p>}
         {planAcil && <p style={{ fontSize: 13, color: '#a45b3e', fontWeight: 700 }}>{planAcil}</p>}
         {planHata && <p style={{ fontSize: 13, color: '#a45b3e' }}>{planHata}</p>}

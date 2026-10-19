@@ -1,7 +1,11 @@
 /**
  * KLINIK-DERM-EXCEPTIONAL-01 — ayaktan lazer / akne bakım kliniği.
  * TUS dermatoloji (Derim, lezyon, morfoloji, skor) DEĞİLDİR. Tanı yok.
+ * Gün sayıları ürün kararıdır; resmi takvim değildir.
  */
+import { kontrolDurumu } from '@/lib/klinik/telafi'
+import { vadeDurumu } from '@/lib/klinik/isoGun'
+
 export const HEKIM_KILIT = 'Lazer parametresi, fluence ve tanı hekimindir. Notya doz/skor yazmaz.'
 export const ACIL_METIN = 'Yaygın kabarcık, görme kaybı, nefes darlığı veya hızla yayılan kızarıklık+ateş: 112.'
 
@@ -11,29 +15,27 @@ export function lazerSeansVadesi(
   sonIso: string,
   aralikGun: number,
   bugun: string,
-): { due: string; durum: 'gecikti' | 'bugun' | 'planli'; ozet: string } | { hata: string } {
+): { due: string; durum: 'gecikti' | 'bugun' | 'yaklasiyor' | 'planli'; ozet: string } | { hata: string } {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(sonIso) || !/^\d{4}-\d{2}-\d{2}$/.test(bugun)) {
     return { hata: 'Son seans ve bugün YYYY-MM-DD olmalı.' }
   }
   if (!(aralikGun >= 14 && aralikGun <= 90)) return { hata: 'Aralık 14–90 gün (hekim protokolü). Fluence yok.' }
   const dueMs = Date.parse(sonIso + 'T12:00:00Z') + aralikGun * 86400000
   const due = new Date(dueMs).toISOString().slice(0, 10)
-  const gecen = Math.round((Date.parse(bugun + 'T12:00:00Z') - dueMs) / 86400000)
-  const durum = gecen > 0 ? 'gecikti' as const : gecen === 0 ? 'bugun' as const : 'planli' as const
-  return { due, durum, ozet: `Sonraki seans ${due} · ${durum}. Parametre hekimde.` }
+  const durum = vadeDurumu(bugun, due) || 'planli'
+  return { due, durum, ozet: `Sonraki seans ${due} · ${durum}. Parametre hekimde. Öneri — hekim kilitler.` }
 }
 
-export function akneBakimTakvimi(baslangicIso: string, bugun: string): Array<{ hafta: number; ad: string; durum: 'gecikti' | 'bugun' | 'planli' }> {
+export function akneBakimTakvimi(baslangicIso: string, bugun: string): Array<{ hafta: number; ad: string; durum: 'gecikti' | 'bugun' | 'yaklasiyor' | 'planli' }> {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(baslangicIso) || !/^\d{4}-\d{2}-\d{2}$/.test(bugun)) return []
-  const gecen = Math.round((Date.parse(bugun + 'T12:00:00Z') - Date.parse(baslangicIso + 'T12:00:00Z')) / 86400000)
   return [
     { hafta: 2, ad: 'Erken tahammül kontrolü (yorum yok)' },
     { hafta: 6, ad: 'Bakım uyum kontrolü (hekim)' },
     { hafta: 12, ad: 'Plan gözden geçirme (hekim)' },
-  ].map((x) => {
-    const gun = x.hafta * 7
-    return { ...x, durum: gecen > gun ? 'gecikti' as const : gecen === gun ? 'bugun' as const : 'planli' as const }
-  })
+  ].map((x) => ({
+    ...x,
+    durum: kontrolDurumu(baslangicIso, x.hafta * 7, bugun) || 'planli',
+  }))
 }
 
 export function fotoRizaKayit(onamVar: boolean): { ozet: string } | { hata: string } {
@@ -41,17 +43,16 @@ export function fotoRizaKayit(onamVar: boolean): { ozet: string } | { hata: stri
   return { ozet: 'Foto KVKK rızası kayıtlı. Morfoloji, skor ve fluence yazılmaz.' }
 }
 
-export function gunesRitmi(baslangicIso: string, bugun: string): Array<{ hafta: number; ad: string; durum: 'gecikti' | 'bugun' | 'planli' }> {
+export function gunesRitmi(baslangicIso: string, bugun: string): Array<{ hafta: number; ad: string; durum: 'gecikti' | 'bugun' | 'yaklasiyor' | 'planli' }> {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(baslangicIso) || !/^\d{4}-\d{2}-\d{2}$/.test(bugun)) return []
-  const gecen = Math.round((Date.parse(bugun + 'T12:00:00Z') - Date.parse(baslangicIso + 'T12:00:00Z')) / 86400000)
   return [
     { hafta: 1, ad: 'Erken güneş / bakım kontrolü' },
     { hafta: 4, ad: 'Bakım ritmi kontrolü' },
     { hafta: 8, ad: 'Plan gözden geçirme' },
-  ].map((x) => {
-    const gun = x.hafta * 7
-    return { ...x, durum: gecen > gun ? 'gecikti' as const : gecen === gun ? 'bugun' as const : 'planli' as const }
-  })
+  ].map((x) => ({
+    ...x,
+    durum: kontrolDurumu(baslangicIso, x.hafta * 7, bugun) || 'planli',
+  }))
 }
 
 export function lazerAcilBand(kabarcik: boolean, gorme: boolean, nefes: boolean): { ozet: string; acil: boolean } {

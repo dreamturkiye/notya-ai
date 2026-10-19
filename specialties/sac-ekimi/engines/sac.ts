@@ -1,7 +1,8 @@
 /**
  * SAC-EKIMI-EXCEPTIONAL-01 — ayaktan saç ekimi kliniği. Tanı/greft auto-lock yok.
- * Plastik / derm araç gridine sızmaz.
+ * Plastik / derm araç gridine sızmaz. Yıkama günleri ürün kararıdır; resmi takvim değildir.
  */
+import { kontrolDurumu } from '@/lib/klinik/telafi'
 export const HEKIM_KILIT = 'Greft bandı karar desteğidir. Nihai greft, çizgi ve tanı hekimindir; Notya doz/greft kilitlemez.'
 export const ACIL_METIN = 'Yaygın kızarıklık+ateş, kontrolsüz kanama veya anestezi sonrası nefes darlığı: 112 veya kliniği acil arayın.'
 
@@ -16,11 +17,8 @@ export function greftBandi(donorCm2: number, yogunlukCm2: number): { band: strin
   return { band, ozet: `Karar desteği: ~${tahmini} greft bandı (${band}). Nihai sayı hekimindir.` }
 }
 
-export function yikamaTakvimi(ameliyatIso: string, bugunIso: string): Array<{ gun: number; ad: string; durum: 'gecikti' | 'bugun' | 'planli' }> {
+export function yikamaTakvimi(ameliyatIso: string, bugunIso: string): Array<{ gun: number; ad: string; durum: 'gecikti' | 'bugun' | 'yaklasiyor' | 'planli' }> {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(ameliyatIso) || !/^\d{4}-\d{2}-\d{2}$/.test(bugunIso)) return []
-  const a = Date.parse(ameliyatIso + 'T12:00:00Z')
-  const b = Date.parse(bugunIso + 'T12:00:00Z')
-  const gecen = Math.round((b - a) / 86400000)
   return [
     { gun: 1, ad: 'İlk pansuman / yüz yıkama tarifi' },
     { gun: 3, ad: 'Nazik yıkama (hekim protokolü)' },
@@ -28,7 +26,7 @@ export function yikamaTakvimi(ameliyatIso: string, bugunIso: string): Array<{ gu
     { gun: 14, ad: 'Kontrol muayenesi' },
   ].map((x) => ({
     ...x,
-    durum: gecen > x.gun ? 'gecikti' as const : gecen === x.gun ? 'bugun' as const : 'planli' as const,
+    durum: kontrolDurumu(ameliyatIso, x.gun, bugunIso) || 'planli',
   }))
 }
 

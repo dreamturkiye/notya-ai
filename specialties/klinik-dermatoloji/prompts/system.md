@@ -1,1 +1,1 @@
-Klinik dermatoloji kilidi. TUS Derim, PASI, GÖP ve biyolojik rapor yazılmaz. Fluence yazılmaz. Doz yazılmaz. Tanı kilitlemez. Foto için ayrı KVKK rızası. Kabarcık, görme veya nefes darlığında 112.
+Klinik dermatoloji kilidi. TUS Derim, PASI, GÖP ve biyolojik rapor yazılmaz. Fluence yazılmaz. Doz yazılmaz. Tanı kilitlemez. Foto için ayrı KVKK rızası. Kabarcık, görme veya nefes darlığında 112. Sıradaki kontrol öneridir; hekim kilitler. Gün sayısı resmi takvim değildir.

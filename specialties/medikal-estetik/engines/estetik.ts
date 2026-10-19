@@ -1,4 +1,5 @@
-/** MEDIKAL-ESTETIK-EXCEPTIONAL-01 — botoks/dolgu/PRP. Doz hekimde. Plastik/derm gridine sızmaz. */
+/** MEDIKAL-ESTETIK-EXCEPTIONAL-01 — botoks/dolgu/PRP. Doz hekimde. Plastik/derm gridine sızmaz. Gün sayıları ürün kararıdır. */
+import { kontrolDurumu } from '@/lib/klinik/telafi'
 export const HEKIM_KILIT = 'Ünite ve mL karar desteği bandıdır. Doz, ürün ve tanı hekimindir.'
 export const ACIL_METIN = 'Dolgu sonrası görme kaybı, livedo veya ani şiddetli ağrı = vasküler oklüzyon şüphesi: 112. Hyaluronidaz kararı hekimindir; Notya doz yazmaz.'
 
@@ -18,16 +19,15 @@ export function sogumaUygun(onamIso: string, islemIso: string): { uygun: boolean
   }
 }
 
-export function islemTakvimi(islemIso: string, bugun: string): Array<{ gun: number; ad: string; durum: 'gecikti' | 'bugun' | 'planli' }> {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(islemIso)) return []
-  const gecen = Math.round((Date.parse(bugun + 'T12:00:00Z') - Date.parse(islemIso + 'T12:00:00Z')) / 86400000)
+export function islemTakvimi(islemIso: string, bugun: string): Array<{ gun: number; ad: string; durum: 'gecikti' | 'bugun' | 'yaklasiyor' | 'planli' }> {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(islemIso) || !/^\d{4}-\d{2}-\d{2}$/.test(bugun)) return []
   return [
     { gun: 1, ad: 'Erken kontrol (şişlik / asimetri — yorum yok)' },
     { gun: 14, ad: 'Botoks etki kontrolü (hekim)' },
     { gun: 28, ad: 'Dolgu oturma kontrolü (hekim)' },
   ].map((x) => ({
     ...x,
-    durum: gecen > x.gun ? 'gecikti' as const : gecen === x.gun ? 'bugun' as const : 'planli' as const,
+    durum: kontrolDurumu(islemIso, x.gun, bugun) || 'planli',
   }))
 }
 

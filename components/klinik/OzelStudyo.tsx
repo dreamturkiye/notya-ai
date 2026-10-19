@@ -7,6 +7,7 @@ import { OZEL_TUVAL } from '@/lib/klinik/ozelTuvalKaydi'
 import { STUDYO_KOPYA } from '@/lib/klinik/ozelStudyoKopya'
 import { TuvalAlanlari } from '@/components/klinik/TuvalAlanlari'
 import { OZEL_STUDYO } from '@/lib/klinik/ozelStudyoKaydi'
+import { KuralDefteri } from '@/components/klinik/KuralDefteri'
 
 export default function OzelStudyo({ tanim }: { tanim: AracTanim }) {
   const hasta = useSearchParams().get('patientId') || ''
@@ -56,6 +57,7 @@ export default function OzelStudyo({ tanim }: { tanim: AracTanim }) {
     <Cerceve route={tanim.route}>
     <div style={{ display: 'grid', gap: 12 }}>
       <p style={{ margin: 0, fontSize: 12, color: '#8b7d70' }}>{STUDYO_KOPYA[tanim.slug]}</p>
+      <KuralDefteri slug={tanim.slug} />
       {'hata' in sonuc ? (
         <>
           <TuvalAlanlari tanim={tanim} girdi={girdi} yaz={yaz} />

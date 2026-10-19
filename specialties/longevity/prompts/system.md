@@ -1,1 +1,1 @@
-Longevity kilidi. Karışım, mL ve hormon dozu yazılmaz. Doz yazılmaz. Tanı kilitlemez. IV reaksiyonda infüzyon durur ve 112. NAD protokolü uydurulmaz.
+Longevity kilidi. Karışım, mL ve hormon dozu yazılmaz. Doz yazılmaz. Tanı kilitlemez. IV reaksiyonda infüzyon durur ve 112. NAD protokolü uydurulmaz. Sıradaki kontrol öneridir; hekim kilitler. Gün sayısı resmi takvim değildir.

@@ -1,7 +1,9 @@
 /**
  * ESTETIK-CERRAHI-EXCEPTIONAL-01 — ayaktan estetik cerrahi kliniği.
  * TUS plastik-cerrahi (Yaram, OR HIS, rekonstrüksiyon) DEĞİLDİR.
+ * Gün sayıları ürün kararıdır; resmi takvim değildir.
  */
+import { kontrolDurumu } from '@/lib/klinik/telafi'
 export const HEKIM_KILIT = 'Ameliyat endikasyonu, teknik ve tanı hekimindir. Notya kesi / implant seçmez.'
 export const ACIL_METIN = 'Ani nefes darlığı, tek taraflı bacak şişliği, kontrolsüz kanama veya yüksek ateş: 112.'
 
@@ -21,9 +23,8 @@ export function cerrahiSoguma(onamIso: string, ameliyatIso: string): { uygun: bo
   }
 }
 
-export function postOpTakvim(ameliyatIso: string, bugun: string): Array<{ gun: number; ad: string; durum: 'gecikti' | 'bugun' | 'planli' }> {
+export function postOpTakvim(ameliyatIso: string, bugun: string): Array<{ gun: number; ad: string; durum: 'gecikti' | 'bugun' | 'yaklasiyor' | 'planli' }> {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(ameliyatIso) || !/^\d{4}-\d{2}-\d{2}$/.test(bugun)) return []
-  const gecen = Math.round((Date.parse(bugun + 'T12:00:00Z') - Date.parse(ameliyatIso + 'T12:00:00Z')) / 86400000)
   return [
     { gun: 1, ad: 'Erken pansuman / dren kontrolü' },
     { gun: 7, ad: 'Dikiş / şişlik kontrolü (hekim)' },
@@ -31,7 +32,7 @@ export function postOpTakvim(ameliyatIso: string, bugun: string): Array<{ gun: n
     { gun: 42, ad: 'Geç dönem izlem (hekim)' },
   ].map((x) => ({
     ...x,
-    durum: gecen > x.gun ? 'gecikti' as const : gecen === x.gun ? 'bugun' as const : 'planli' as const,
+    durum: kontrolDurumu(ameliyatIso, x.gun, bugun) || 'planli',
   }))
 }
 

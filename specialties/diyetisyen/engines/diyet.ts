@@ -1,4 +1,5 @@
-/** DIYETISYEN-EXCEPTIONAL-01 — makro karar desteği; tıbbi tanı hekimde. */
+/** DIYETISYEN-EXCEPTIONAL-01 — makro karar desteği; tıbbi tanı hekimde. Haftalar ürün kararıdır. */
+import { kontrolDurumu } from '@/lib/klinik/telafi'
 export const HEKIM_KILIT = 'Makro bandı karar desteğidir. Tıbbi tanı, ilaç ve takviye dozu yazılmaz.'
 export const ACIL_METIN = 'Kontrolsüz kusma + bilinç değişikliği veya ağır alerji: 112.'
 
@@ -14,17 +15,16 @@ export function taniReferansi(hekimTani: string): { ozet: string } | { hata: str
   return { ozet: `Hekim tanısı (referans): ${hekimTani.trim()}. Plan buna bağlı; ICD kilidi yok.` }
 }
 
-export function kontrolTakvimi(baslangicIso: string, bugun: string): Array<{ hafta: number; ad: string; durum: 'gecikti' | 'bugun' | 'planli' }> {
+export function kontrolTakvimi(baslangicIso: string, bugun: string): Array<{ hafta: number; ad: string; durum: 'gecikti' | 'bugun' | 'yaklasiyor' | 'planli' }> {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(baslangicIso) || !/^\d{4}-\d{2}-\d{2}$/.test(bugun)) return []
-  const gecen = Math.round((Date.parse(bugun + 'T12:00:00Z') - Date.parse(baslangicIso + 'T12:00:00Z')) / 86400000)
   return [
     { hafta: 2, ad: 'Erken uyum kontrolü (öğün şablonu yok)' },
     { hafta: 4, ad: 'Kilo / semptom kaydı (yorum hekimde)' },
     { hafta: 8, ad: 'Plan gözden geçirme' },
-  ].map((x) => {
-    const gun = x.hafta * 7
-    return { ...x, durum: gecen > gun ? 'gecikti' as const : gecen === gun ? 'bugun' as const : 'planli' as const }
-  })
+  ].map((x) => ({
+    ...x,
+    durum: kontrolDurumu(baslangicIso, x.hafta * 7, bugun) || 'planli',
+  }))
 }
 
 export function planKapisi(hekimTani: string, kiloKg: number, hedef: 'kilo' | 'koruma' | 'spor'): { ozet: string } | { hata: string } {

@@ -1,5 +1,6 @@
 'use client'
 import Link from 'next/link'
+import { durumSozcugu } from '@/lib/klinik/telafi'
 import { EmptyState, SectionHeader } from './ui'
 
 export function KlinikHatirlatmaView({
@@ -20,7 +21,15 @@ export function KlinikHatirlatmaView({
         <EmptyState art="takip" title="Henüz paylaşılan tarih yok" body="Uzmanınız kontrol tarihi kaydettiğinde burada görünür. Tanı ve doz yoktur." />
       ) : (
         <ul style={{ margin: '0 20px 16px', paddingLeft: 18, color: '#1e293b' }}>
-          {dolu.map((s) => <li key={s.ad}>{s.ad}</li>)}
+          {dolu.map((s) => {
+            const soz = durumSozcugu(s.durum)
+            return (
+              <li key={s.ad} data-durum={s.durum} style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
+                <span>{s.ad}</span>
+                {soz && <b>{soz}</b>}
+              </li>
+            )
+          })}
         </ul>
       )}
       {ritim && ritim.length > 0 && (
