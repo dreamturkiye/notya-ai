@@ -4,7 +4,7 @@ import { getAccessTokenAsync } from '@/lib/doktor/toolsUi'
 import { anesteziStil, AnesteziHastaSecici, KopyalaButonu, Istatistik, TaslakNotu, useUrlHasta } from './AnesteziAracKabugu'
 import { asaSkorla, ASA_MADDELER, type AsaKod, type AsaSinif } from '../../engines/asa'
 
-const ASA_SINIFLAR: AsaSinif[] = ['I', 'II', 'III', 'IV', 'V', 'E']
+const ASA_SINIFLAR: AsaSinif[] = ['I', 'II', 'III', 'IV', 'V', 'VI']
 
 export default function AnesteziAsaAraci() {
   const [secilen, setSecilen] = useState<AsaKod[]>([])

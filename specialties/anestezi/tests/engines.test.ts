@@ -21,6 +21,25 @@ describe('anestezi asa', () => {
   it('eksik madde', () => {
     assert.equal(asaSkorla([]).tamamMi, false)
   })
+  it('ASA VI kabul edilir (ANESTEZI-ASA-SINIF-06 — ASA standardı altı sınıf, VI dahil)', () => {
+    const s = asaSkorla(['anamnez_tamam'], 'VI')
+    assert.equal(s.asaSinif, 'VI')
+    assert.match(s.ozet, /ASA VI\b/)
+  })
+  it('"E" bir sınıf değildir — geçersiz sınıf olarak reddedilir', () => {
+    const s = asaSkorla(['anamnez_tamam'], 'E')
+    assert.equal(s.asaSinif, null)
+  })
+  it('"E" sınıfa eklenen bir işarettir: asa_acil + sınıf → "ASA IIIE"', () => {
+    const s = asaSkorla(['anamnez_tamam', 'asa_acil'], 'III')
+    assert.match(s.ozet, /ASA IIIE\b/)
+  })
+  it('sınıf seçilmeden asa_acil tek başına "E" yazdırmaz', () => {
+    const s = asaSkorla(['anamnez_tamam', 'asa_acil'])
+    assert.equal(s.asaSinif, null)
+    // sınıf yoksa "· ASA …" eki hiç basılmaz (madde adının kendi metnindeki "ASA"/"E" kelimeleri ayrıdır).
+    assert.doesNotMatch(s.ozet, /· ASA/)
+  })
 })
 
 describe('anestezi hava yolu', () => {

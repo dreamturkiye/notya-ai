@@ -45,7 +45,7 @@ const satir: React.CSSProperties = { display: 'flex', gap: 8, flexWrap: 'wrap', 
 const SEKMELER = ['Özet', 'ASA/Pre-op', 'Hava yolu', 'Ağrı', 'Acil', 'Görevler'] as const
 type Sekme = (typeof SEKMELER)[number]
 const RENK: Record<string, string> = { iyi: '#047857', dikkat: '#B45309', kotu: '#B42318', yok: CHROME_RENK.muted }
-const ASA_SINIFLAR: AsaSinif[] = ['I', 'II', 'III', 'IV', 'V', 'E']
+const ASA_SINIFLAR: AsaSinif[] = ['I', 'II', 'III', 'IV', 'V', 'VI']
 
 function Cip({ ad, deger, durum, alt }: { ad: string; deger: string; durum: string; alt?: string }) {
   return (
