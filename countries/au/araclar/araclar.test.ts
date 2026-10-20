@@ -13,7 +13,7 @@ import { kosullariUygula } from '@/lib/ulke/araclar/yardimci'
 import { alanVarMi } from '@/lib/ulke/araclar/yardimci'
 import { AU_ASI_TAKVIMI, AU_ASI_TAKVIMI_MADDELERI, AU_BEDEN, AU_ECOG, AU_K10, AU_TANIMLAR, BEL_SINIRLARI, bmiSinifi, ECOG_DERECELERI, k10Grubu, K10_MADDELERI } from './tanimlar'
 import { AU_NONSURGICAL } from './nonsurgicalPlan'
-import { AU_COSMETIC, AU_PHYSIO } from './privatePlans'
+import { AU_AUDIOLOGY, AU_COSMETIC, AU_DIETETICS, AU_OT, AU_PHYSIO, AU_PSYCHOLOGY } from './privatePlans'
 import { AU_WELLNESS } from './wellnessPlan'
 import { AU_GST } from './gstInvoice'
 import { AU_AIR } from './immunisationReport'
@@ -294,31 +294,56 @@ describe('general-practice wellness plan and the non-surgical cosmetic plan', ()
     assert.equal(AU_NONSURGICAL.dozYazar, undefined)
   })
 
-  it('cosmetic surgery hides the adult cooling-off line for a patient under 18, and shows the three-month line', () => {
-    assert.equal(kos(AU_COSMETIC, { gorusme: true }).tamam, false)
-    assert.equal(gorunen(AU_COSMETIC, { yas: 'yetiskin' }).includes('ucay'), false)
-    assert.equal(gorunen(AU_COSMETIC, { yas: 'yetiskin' }).includes('bagimsiz'), false)
-    assert.ok(gorunen(AU_COSMETIC, { yas: 'yetiskin' }).includes('yedi'))
-    assert.equal(gorunen(AU_COSMETIC, { yas: 'onsekiz' }).includes('yedi'), false)
-    assert.ok(gorunen(AU_COSMETIC, { yas: 'onsekiz' }).includes('ucay'))
-    assert.ok(gorunen(AU_COSMETIC, { yas: 'onsekiz' }).includes('foto'))
-    const yetiskin = kos(AU_COSMETIC, { yas: 'yetiskin', gorusme: true, yedi: true, kopya: true, foto: true })
+  const tarih = (r: AracSonucu, k: string) => r.tarihler.find((x) => x.anahtar === k)?.tarih
+
+  it('cosmetic surgery works out the cooling-off day from the consent date, and keeps both consent copies', () => {
+    assert.equal(kos(AU_COSMETIC, { yas: 'yetiskin', ilk: '2026-01-01' }).tamam, false)
+    assert.equal(gorunen(AU_COSMETIC, { yas: 'yetiskin', goruntu: 'yok' }).includes('bagimsiz'), false)
+    assert.equal(gorunen(AU_COSMETIC, { yas: 'yetiskin', goruntu: 'yok' }).includes('foto'), false)
+    assert.ok(gorunen(AU_COSMETIC, { yas: 'onsekiz', goruntu: 'yok' }).includes('bagimsiz'))
+    assert.ok(gorunen(AU_COSMETIC, { yas: 'yetiskin', goruntu: 'var' }).includes('foto'))
+    const tam = { gorusme: true, dosya: true, hasta: true, goruntu: 'yok' as const }
+    const yetiskin = kos(AU_COSMETIC, { yas: 'yetiskin', ilk: '2026-01-01', onam: '2026-01-08', ...tam })
     assert.equal(yetiskin.tamam, true)
-    assert.equal(sayi(yetiskin, 'isaretli'), 4)
-    assert.equal(yetiskin.sayilar[0].enCok, 4)
+    assert.equal(tarih(yetiskin, 'rezervasyon'), '2026-01-15')
+    assert.equal(tarih(yetiskin, 'ameliyatSiniri'), undefined)
     assert.deepEqual(yetiskin.uyarilar, ['gonderilmedi'])
-    const genc = kos(AU_COSMETIC, { yas: 'onsekiz', ucay: true, bagimsiz: true, kopya: true })
-    assert.equal(genc.tamam, true)
-    assert.equal(sayi(genc, 'isaretli'), 3)
-    assert.equal(genc.sayilar[0].enCok, 5)
+    const erken = kos(AU_COSMETIC, { yas: 'yetiskin', ilk: '2026-01-01', onam: '2026-01-01', ameliyat: '2026-01-05', ...tam })
+    assert.equal(tarih(erken, 'rezervasyon'), '2026-01-08')
+    assert.equal(tarih(erken, 'teyit'), '2026-01-05')
+    assert.equal(tarih(erken, 'yirmiDort'), '2026-01-06')
+    assert.ok(erken.uyarilar.includes('ilkGun'))
+    assert.ok(erken.uyarilar.includes('soguma'))
+    const gorsel = kos(AU_COSMETIC, { yas: 'yetiskin', ilk: '2026-01-01', onam: '2026-01-08', ameliyat: '2026-01-20', gorusme: true, dosya: true, goruntu: 'var' })
+    assert.ok(gorsel.uyarilar.includes('nusha'))
+    assert.ok(gorsel.uyarilar.includes('gorsel'))
+    assert.equal(gorsel.uyarilar.includes('soguma'), false)
+    const genc = kos(AU_COSMETIC, { yas: 'onsekiz', ilk: '2026-01-01', onam: '2026-01-15', goruntu: 'yok', gorusme: true, dosya: true, hasta: true })
+    assert.equal(tarih(genc, 'ameliyatSiniri'), '2026-04-15')
+    assert.equal(tarih(genc, 'rezervasyon'), undefined)
+    assert.ok(genc.uyarilar.includes('bagimsiz'))
+    assert.equal(AU_COSMETIC.dozYazar, undefined)
   })
 
-  it('a physiotherapy plan stores the consent ticks and no dose', () => {
+  it('each allied studio works out the next review, and psychology has no image line', () => {
     assert.equal(kos(AU_PHYSIO, {}).tamam, false)
-    const plan = kos(AU_PHYSIO, { onam: true, kopya: true })
+    const plan = kos(AU_PHYSIO, { seans: '2026-10-20', aralik: 14, dosya: true, hasta: true, goruntu: 'yok' })
     assert.equal(plan.tamam, true)
-    assert.equal(sayi(plan, 'isaretli'), 2)
-    assert.equal(plan.sayilar[0].enCok, 3)
+    assert.equal(tarih(plan, 'sonraki'), '2026-11-03')
+    assert.deepEqual(plan.uyarilar, ['gonderilmedi'])
+    assert.equal(gorunen(AU_PHYSIO, { goruntu: 'yok' }).includes('foto'), false)
+    assert.ok(gorunen(AU_PHYSIO, { goruntu: 'var' }).includes('foto'))
+    const eksik = kos(AU_PHYSIO, { seans: '2026-10-20', aralik: 14, dosya: true, goruntu: 'var' })
+    assert.ok(eksik.uyarilar.includes('nusha'))
+    assert.ok(eksik.uyarilar.includes('gorsel'))
     assert.equal(AU_PHYSIO.dozYazar, undefined)
+    assert.equal(AU_PSYCHOLOGY.alanlar.some((a) => a.anahtar === 'foto' || a.anahtar === 'goruntu'), false)
+    const psik = kos(AU_PSYCHOLOGY, { seans: '2026-10-01', aralik: 28, dosya: true, hasta: true })
+    assert.equal(tarih(psik, 'sonraki'), '2026-10-29')
+    for (const t of [AU_DIETETICS, AU_OT, AU_AUDIOLOGY]) {
+      const r = kos(t, { seans: '2026-02-01', aralik: 7, dosya: true, hasta: true, goruntu: 'yok' })
+      assert.equal(tarih(r, 'sonraki'), '2026-02-08', t.anahtar)
+      assert.equal(t.dozYazar, undefined, t.anahtar)
+    }
   })
 })
