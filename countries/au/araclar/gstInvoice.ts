@@ -12,8 +12,8 @@
  * NOT IN THE TOOL: an amount, a payment, a card, or a document the practice can hand over. Nothing is sent.
  * WHO SEES IT: every role. A tax invoice is the practice's, not one specialty's.
  */
-import type { PaketAraci } from '@/lib/ulke/araclar/tipler'
-import { isaret, secim } from '@/lib/ulke/araclar/yardimci'
+import type { AracTanimi, PaketAraci } from '@/lib/ulke/araclar/tipler'
+import { gunEkle, gunMu, isaret, secim, tarih } from '@/lib/ulke/araclar/yardimci'
 import { kosulluListe } from './kosulluListe'
 
 const D = 'en-AU'
@@ -25,7 +25,7 @@ const kutu = (anahtar: string, degerler: readonly string[] = SINIF) => ({ ...isa
 const KAYNAK = 'https://www.legislation.gov.au/C2004A00446/2026-01-01/2026-01-01/text/original/epub/OEBPS/document_1/document_1.html (read 2026-10-20): compilation of A New Tax System (Goods and Services Tax) Act 1999 in force on 1 January 2026, section 29-70. Creative Commons Attribution 4.0 International, https://www.legislation.gov.au/terms-of-use (read 2026-10-15).'
 const BILDIRIM = 'Based on content from the Federal Register of Legislation at 20 October 2026. For the latest information on Australian Government legislation please go to https://www.legislation.gov.au. Creative Commons Attribution 4.0 International.'
 
-export const AU_GST = kosulluListe({
+const AU_GST_LISTE = kosulluListe({
   anahtar: 'au-tax-invoice',
   alanlar: [
     secim('sinif', SINIF),
@@ -38,11 +38,24 @@ export const AU_GST = kosulluListe({
     kutu('kapsam'),
     kutu('alici_kim', ['bin', 'alici']),
     kutu('alici_gst', ['alici']),
+    { ...tarih('istendi', true), ...sinif(['alti', 'bin']) },
   ],
   uyarilar: ['gonderilmedi'],
   uyari: () => ['gonderilmedi'],
   kaynak: KAYNAK,
 })
+
+/** Subsection 29-70(2): 28 days after the recipient asks, for a document the supplier issues. */
+export const AU_GST: AracTanimi = {
+  ...AU_GST_LISTE,
+  tur: 'takvim',
+  cikti: { ...AU_GST_LISTE.cikti, tarihler: ['sonGun'] },
+  hesapla: (g, ortam) => {
+    const sonuc = AU_GST_LISTE.hesapla(g, ortam)
+    if (!sonuc.tamam || !gunMu(g.istendi)) return sonuc
+    return { ...sonuc, tarihler: [{ anahtar: 'sonGun', tarih: gunEkle(g.istendi, 28) }] }
+  },
+}
 
 /** Every role. Particulars for a tax invoice. Not an invoice and not a payment. */
 export function auGstFatura(): PaketAraci {
@@ -63,6 +76,7 @@ export function auGstFatura(): PaketAraci {
         kapsam: m('The extent to which each supply is a taxable supply'),
         alici_kim: m('The recipient\'s identity or the recipient\'s ABN'),
         alici_gst: m('If GST is payable, that the GST is payable by the supplier'),
+        istendi: m('The day the recipient asked for the tax invoice, if they have asked'),
       },
       secenekler: {
         sinif: {
@@ -71,6 +85,7 @@ export function auGstFatura(): PaketAraci {
           alici: m('Issued by the recipient'),
         },
       },
+      tarihler: { sonGun: m('Last day to give the tax invoice') },
       sayilar: { isaretli: m('Particulars noted') },
       uyarilar: {
         gonderilmedi: m('A tick is a note in this product. Nothing is sent. This is not a payment, and it is not a finding that the document is a tax invoice.'),

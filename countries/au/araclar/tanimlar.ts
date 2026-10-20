@@ -16,8 +16,8 @@
  *   au-body-size              body mass index of an adult, and the waist measurement against two limits
  *   au-oncology-grading       a record of the ECOG performance status grade the doctor assessed
  */
-import type { AracSayisi, AracTanimi } from '@/lib/ulke/araclar/tipler'
-import { BOS_SONUC, kontrolListesi, puan, sayi, sayiMi, secim, tarih } from '@/lib/ulke/araclar/yardimci'
+import type { AracGirdisi, AracSayisi, AracSonucu, AracTanimi } from '@/lib/ulke/araclar/tipler'
+import { BOS_SONUC, ayEkle, gunEkle, gunMu, isaretliler, puan, sayi, sayiMi, secim, tarih } from '@/lib/ulke/araclar/yardimci'
 import { AU_BILDIRIM } from './bildirim'
 import { AU_GST } from './gstInvoice'
 import { AU_AIR } from './immunisationReport'
@@ -175,7 +175,9 @@ export const AU_ECOG: AracTanimi = {
 
 /**
  * THE NATIONAL IMMUNISATION PROGRAM (NIP) SCHEDULE: a tick and an optional date for each of its milestones. The
- * tool works nothing out and holds no dose, no catch-up rule and no eligibility test — it is a record, exactly like
+ * tool holds no dose, no catch-up rule and no eligibility test. A birth date works out the due day of each
+ * milestone the schedule states as an age. School Year 7, School Year 10 and pregnancy are not ages, so they
+ * stay ticks. It is a record, exactly like
  * the many other checklists of this product that the audit kept as "record lists, no formula, no guideline needed
  * to confirm or contradict them" (docs/araclar-denetim/AU.md, part (a)). CORE: every doctor role, not specialty-
  * gated, per the owner's instruction of 2026-10-13 (NOTYA-ARACLAR-DENETIM-02) — every doctor who sees a child, and
@@ -211,15 +213,60 @@ export const AU_ASI_TAKVIMI_MADDELERI = [
   'dogum', 'hafta6', 'ay4', 'ay6', 'ay12', 'ay18', 'yas4', 'yil7', 'yil10', 'gebelik', 'yas65', 'yas75',
 ] as const
 const asiTarihAlani = (k: string) => tarih(`${k}_tarih`, true)
-export const AU_ASI_TAKVIMI: AracTanimi = kontrolListesi({
+/** Ages the schedule names, counted from the birth date. Six weeks is 42 days. A year is 12 calendar months. */
+const ASI_VADESI: Readonly<Record<string, { gun?: number; ay?: number }>> = {
+  dogum: { gun: 0 },
+  hafta6: { gun: 42 },
+  ay4: { ay: 4 },
+  ay6: { ay: 6 },
+  ay12: { ay: 12 },
+  ay18: { ay: 18 },
+  yas4: { ay: 48 },
+  yas65: { ay: 65 * 12 },
+  yas75: { ay: 75 * 12 },
+}
+export const AU_ASI_VADE_ANAHTARLARI = [...Object.keys(ASI_VADESI).map((k) => `vade_${k}`), 'dogum_son'] as const
+
+function asiVade(dogumGunu: string, ofset: { gun?: number; ay?: number }): string {
+  if (ofset.gun !== undefined) return gunEkle(dogumGunu, ofset.gun)
+  return ayEkle(dogumGunu, ofset.ay ?? 0)
+}
+
+function asiHesapla(g: AracGirdisi): AracSonucu {
+  const secili = isaretliler(g, AU_ASI_TAKVIMI_MADDELERI)
+  const dogumGunu = gunMu(g.dogumGunu) ? g.dogumGunu : null
+  if (!secili.length && !dogumGunu) return BOS_SONUC
+  const tarihler = [
+    ...AU_ASI_TAKVIMI_MADDELERI.flatMap((k) => { const v = g[`${k}_tarih`]; return gunMu(v) ? [{ anahtar: `${k}_tarih`, tarih: v }] : [] }),
+    ...(dogumGunu
+      ? [
+          ...Object.entries(ASI_VADESI).map(([k, ofset]) => ({ anahtar: `vade_${k}`, tarih: asiVade(dogumGunu, ofset) })),
+          { anahtar: 'dogum_son', tarih: gunEkle(dogumGunu, 7) },
+        ]
+      : []),
+  ]
+  return {
+    tamam: true,
+    sayilar: [{ anahtar: 'isaretli', deger: secili.length, ondalik: 0, enCok: AU_ASI_TAKVIMI_MADDELERI.length }],
+    bant: null,
+    uyarilar: ['air_yok'],
+    tarihler,
+  }
+}
+
+export const AU_ASI_TAKVIMI: AracTanimi = {
   anahtar: 'au-immunisation-schedule',
-  maddeler: AU_ASI_TAKVIMI_MADDELERI,
-  ek: AU_ASI_TAKVIMI_MADDELERI.map(asiTarihAlani),
-  tarihler: AU_ASI_TAKVIMI_MADDELERI.map((k) => `${k}_tarih`),
-  uyarilar: ['air_yok'],
-  uyari: () => ['air_yok'],
-  kaynak: 'Australian Government Department of Health, Disability and Ageing, National Immunisation Program (NIP) Schedule; read 2026-10-13 via NSW Health, "NSW immunisation schedule (children and adults)", https://www.health.nsw.gov.au/schedule, current as at 1 October 2026. A tick is not a report to the Australian Immunisation Register.',
-})
+  tur: 'takvim',
+  alanlar: [tarih('dogumGunu', true), ...AU_ASI_TAKVIMI_MADDELERI.map((k) => ({ anahtar: k, tur: 'isaret' as const })), ...AU_ASI_TAKVIMI_MADDELERI.map(asiTarihAlani)],
+  cikti: {
+    sayilar: ['isaretli'],
+    bantlar: [],
+    uyarilar: ['air_yok'],
+    tarihler: [...AU_ASI_TAKVIMI_MADDELERI.map((k) => `${k}_tarih`), ...AU_ASI_VADE_ANAHTARLARI],
+  },
+  kaynak: 'Australian Government Department of Health, Disability and Ageing, National Immunisation Program (NIP) Schedule; read 2026-10-13 via NSW Health, "NSW immunisation schedule (children and adults)", https://www.health.nsw.gov.au/schedule, current as at 1 October 2026. A due day is that age counted from the birth date. A tick is not a report to the Australian Immunisation Register.',
+  hesapla: asiHesapla,
+}
 
 /** The mechanisms only Australia has, in the order the grid shows their tools. */
 export const AU_TANIMLAR: readonly AracTanimi[] = [AU_BEDEN, AU_K10, AU_ECOG, AU_ASI_TAKVIMI, AU_AIR, AU_BILDIRIM, AU_ZEHIR_SINIFI, AU_SCHEDULE_8_TANIMI, AU_ETIKET, AU_ZORUNLU_BILDIRIM, AU_PBS_RECETE, AU_MEDICARE, AU_KIMLIK_KONTROL, AU_GIZLILIK, AU_GST, AU_MHR, AU_WELLNESS, AU_NONSURGICAL, ...AU_OZEL_TANIMLAR]
