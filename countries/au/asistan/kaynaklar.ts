@@ -2,9 +2,14 @@
  * Practice authority for each role this pack offers.
  *
  * The shape follows the specialist catalogues: national sources first, then book titles.
- * A title is a name. The book is not stored and none of it is copied. Charlie and Clara do not
- * answer a question from these names. Hair transplantation is not its own role: it is named on
- * non-surgical cosmetic procedures. Longevity is not a role: wellness is named on general practice.
+ * A title is a name. The book is not stored and none of it is copied. The assistant named for a role
+ * (./asistanAdlari.ts, read through ../arayuz.ts) does not answer a question from these names — they are a
+ * reading list shown beside the name, not a source it quotes. Hair transplantation is not its own role: it is
+ * named on non-surgical cosmetic procedures. Longevity is not a role: wellness is named on general practice.
+ *
+ * FIXED 2026-10-20 (NOTYA-AU-ASISTAN-ISIM-01): the `not` caption used to be a developer-facing compliance
+ * sentence ("Practice authority for this role. A book is named...") rendered verbatim on the live "Your
+ * assistant" card. That was never intended as UI copy; it is replaced with one short, plain sentence.
  *
  * College names are the ones already opened for the link tiles on 2026-10-19 (./araclar/referanslar.ts).
  * Book titles are the published names of texts named on a college reading list, an Australian hospital
@@ -16,9 +21,12 @@ import type { AsistanKaynaklari } from '@/lib/ulke/arayuz/tipler'
 import type { AuEkRolAnahtari } from '../klinik/rolListesi'
 import type { EnRol } from '../../_dil/en/klinik/roller'
 
-type Sunulan = Exclude<EnRol, 'thoracic-surgery' | 'cardiovascular-surgery' | 'clinic-dermatology' | 'hair-transplant' | 'longevity'> | AuEkRolAnahtari
+/** The 44 roles this pack offers an assistant for. Shared by ./asistanAdlari.ts (the names) and this file (the sources). */
+export type Sunulan = Exclude<EnRol, 'thoracic-surgery' | 'cardiovascular-surgery' | 'clinic-dermatology' | 'hair-transplant' | 'longevity'> | AuEkRolAnahtari
 
-const NOT = 'Practice authority for this role. A book is named. It is not stored here, and none of it is copied. These names are not an answer to a question.'
+// Short, plain caption text — never developer/compliance jargon rendered to a doctor. States the one fact that
+// matters: these names are a reading list, not a source Ayşe/the assistant quotes from or that this app stores.
+const NOT = 'For reference only. Not used to answer questions, and not stored.'
 const YETKI = 'Australian practice sources'
 const KITAP = 'Books named for this role'
 const KURUL = 'Medical Board of Australia codes and guidelines'

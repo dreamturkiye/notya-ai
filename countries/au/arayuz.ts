@@ -10,6 +10,7 @@ import type { AsistanKimligi, UlkeArayuzu } from '@/lib/ulke/arayuz/tipler'
 import { enArayuz } from '../_dil/en/arayuz'
 import { AU_KONSULTASYON_METNI } from './araclar/konsultasyonMetinleri'
 import { AU_GIRDI } from './ayarlar'
+import { auAsistanAdi } from './klinik/asistanAdlari'
 import { auAsistanKaynaklari } from './asistan/kaynaklar'
 import { AU_SES } from './ses'
 
@@ -17,15 +18,22 @@ const temel = enArayuz(AU_GIRDI)
 const sunulan = new Set(temel.roller.map((r) => r.anahtar))
 
 /**
- * Both Australian English voices, for every role this pack offers.
- * Charlie (male) and Clara (female) are the voices in ./ses.ts. A role the pack no longer offers has none.
+ * WHO the assistant is for a role this pack offers: one invented name per role (./klinik/asistanAdlari.ts),
+ * the same structure the Turkish product and the Uzbek pack use — never one shared identity across every role.
+ *
+ * FIXED 2026-10-20 (NOTYA-AU-ASISTAN-ISIM-01): a Cursor change had this return the glued string
+ * "Charlie and Clara" — both voice names — as a single "identity" for every one of the 44 roles. Charlie and
+ * Clara are ../ses.ts's two VOICES, never identities. A role's persona now carries its own name; the pack still
+ * speaks with only those two voices (./ses.ts), by gender, never a third.
  */
 export function auAsistanKimligi(rol: unknown): AsistanKimligi | null {
   if (typeof rol !== 'string' || !sunulan.has(rol)) return null
+  const ad = auAsistanAdi(rol)
+  if (!ad) return null
   const kaynaklar = auAsistanKaynaklari(rol)
   return {
-    tamAd: `${AU_SES.sesler.erkek.ad} and ${AU_SES.sesler.kadin.ad}`,
-    kisaAd: AU_SES.sesler.kadin.ad,
+    tamAd: ad.tamAd,
+    kisaAd: ad.kisaAd,
     makineTuretimi: false,
     ...(kaynaklar ? { kaynaklar } : {}),
   }

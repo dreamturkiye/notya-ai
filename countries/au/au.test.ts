@@ -36,6 +36,7 @@ import { AU_GIRDI } from './ayarlar'
 import derleme from './derleme.mjs'
 import { AU_PAKETI } from './index'
 import { AU_KLINIK } from './klinik'
+import { AU_ASISTAN_ADLARI } from './klinik/asistanAdlari'
 import { AU_ACIL_CUMLE } from './klinik/formEk'
 import { AU_KENDI_FORMLU_ROLLER, AU_ROLLER } from './klinik/roller'
 import { AU_CIKAN_ROLLER, AU_EK_ROLLER, AU_ESKI_ROL_ESLEMESI, AU_ROL_LISTESI } from './klinik/rolListesi'
@@ -343,7 +344,7 @@ describe('au: its own role list — the Medical Board\'s wording, a split, one r
     assert.equal(tanim('vascular-surgery')!.gibi, 'cardiovascular-surgery')
   })
 
-  it('every offered role speaks with Charlie and Clara, the Australian English voices', async () => {
+  it('every offered role has its own named assistant, and the pack still speaks with only Charlie and Clara', async () => {
     assert.equal(AU_KLINIK.ses, AU_SES)
     assert.deepEqual(AU_SES.sesler, {
       erkek: { ad: 'Charlie', id: 'IKne3meq5aSn9XLyUdCD' },
@@ -356,8 +357,10 @@ describe('au: its own role list — the Medical Board\'s wording, a split, one r
     }
     for (const rol of ROLLER) {
       const kim = AU_ARAYUZ.asistan(rol, D)
-      assert.equal(kim?.tamAd, 'Charlie and Clara', rol)
-      assert.equal(kim?.kisaAd, 'Clara', rol)
+      const beklenen = AU_ASISTAN_ADLARI[rol as keyof typeof AU_ASISTAN_ADLARI]
+      assert.equal(kim?.tamAd, beklenen.tamAd, rol)
+      assert.equal(kim?.kisaAd, beklenen.kisaAd, rol)
+      assert.notEqual(kim?.tamAd, 'Charlie and Clara', rol)
       assert.equal(kim?.makineTuretimi, false, rol)
       const k = kim?.kaynaklar
       assert.ok(k && k.yetki.length >= 4 && k.kitaplar.length >= 2, rol)
@@ -370,6 +373,8 @@ describe('au: its own role list — the Medical Board\'s wording, a split, one r
     }
     const imza = ROLLER.map((rol) => AU_ARAYUZ.asistan(rol, D)!.kaynaklar!.yetki.join('|'))
     assert.equal(new Set(imza).size, ROLLER.length)
+    const isimler = ROLLER.map((rol) => AU_ARAYUZ.asistan(rol, D)!.tamAd)
+    assert.equal(new Set(isimler).size, ROLLER.length, 'every role has its own distinct name, never a shared or combined one')
     assert.equal(AU_ARAYUZ.asistan('no-such-role', D), null)
     assert.deepEqual(AU_ARAYUZ.sesAdlari, { erkek: 'Charlie', kadin: 'Clara' })
     for (const rol of ROLLER) {
@@ -382,7 +387,7 @@ describe('au: its own role list — the Medical Board\'s wording, a split, one r
     const html = renderToStaticMarkup(React.createElement(BugunGorunumu, { m: AU_ARAYUZ.metinler[D]!, ad: 'QA', muayeneler: [], hata: false, rol: 'cardiology' }))
     assert.match(html, /id="asistan"/)
     assert.match(html, /data-alan="asistan-kart" data-rol="cardiology"/)
-    assert.match(html, /data-alan="asistan-kart-ad">Charlie and Clara</)
+    assert.match(html, new RegExp(`data-alan="asistan-kart-ad">${AU_ASISTAN_ADLARI.cardiology.tamAd}<`))
     assert.match(html, /data-alan="asistan-kart-satir">Your senior colleague · Cardiology</)
     assert.match(html, /data-alan="asistan-yetki"[\s\S]*CSANZ, the cardiac society/)
     assert.match(html, /data-alan="asistan-kitap"[\s\S]*Braunwald(?:&#x27;|')s Heart Disease/)
