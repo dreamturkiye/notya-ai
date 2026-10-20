@@ -186,6 +186,9 @@ describe('statutory checklists read on 2026-10-15 — a tick on the wrong path d
     assert.equal(gorunen(AU_PBS_RECETE, { bicim: 'elektronik' }).includes('olcu'), false)
     assert.equal(kagit.sayilar[0].enCok, gorunen(AU_PBS_RECETE, { bicim: 'kagit' }).length)
     assert.deepEqual(kagit.uyarilar, ['gonderilmedi'])
+    const yazilan = AU_PBS_RECETE.alanlar.find((a) => a.anahtar === 'yazilan')
+    assert.equal(yazilan?.tur, 'metin')
+    assert.equal(kos(AU_PBS_RECETE, { bicim: 'kagit', yazilan: 'the benefit as written' }).tamam, false)
   })
 
   it('Medicare particulars: a general medical service does not show the pathology lines', () => {

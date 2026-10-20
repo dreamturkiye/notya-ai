@@ -72,7 +72,7 @@ export const AU_ONAYSIZ_ACIK_ARACLAR: readonly OnaysizAcikArac[] = [
   },
   {
     anahtar: 'au-pbs-prescription', oneri: 'Pharmaceutical Benefits Regulations, compilation of 15 August 2026', klinisyen: null,
-    bakilacak: 'Section 40 particulars for a prescription that is not a medication chart. A tick is a note, not a decision that the prescription is valid. No medicine name is stored. Nothing is sent and there is no prescription-exchange connection. A clinician should confirm the compilation is still in force.',
+    bakilacak: 'Section 40 particulars for a prescription that is not a medication chart. A tick is a note, not a decision that the prescription is valid. The benefit, quantity and repeats can be typed in the doctor\'s own words and are stored with that note. They are not checked against the Schedule of Pharmaceutical Benefits. Nothing is sent and there is no prescription-exchange connection. A clinician should confirm the compilation is still in force.',
   },
   {
     anahtar: 'au-medicare-particulars', oneri: 'Health Insurance Regulations 2018, compilation of 1 March 2026', klinisyen: null,

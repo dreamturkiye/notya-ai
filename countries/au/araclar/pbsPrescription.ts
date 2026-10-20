@@ -6,13 +6,14 @@
  *   sections 39, 40, 41A and 42. Section 41 (medication charts) was read and is not this list.
  * LICENCE, read 2026-10-15 — https://www.legislation.gov.au/terms-of-use : Creative Commons Attribution 4.0
  *   International, including commercial use. The checklist is a shortening, so the attribution is the "changed" form.
- * NOT IN THE TOOL: a medicine name, a price, a restriction, or any identifier the doctor would type. Section 41A's
- *   metadata is named only as the prescribing software's own. Nothing is sent. This is not a State or Territory
- *   prescription form.
+ * THE DOCTOR'S OWN WORDS: once a preparation method is chosen, three lines take the benefit, the quantity and the
+ *   repeats as the doctor wrote them. Those words are stored with the note. They are not checked against the
+ *   Schedule of Pharmaceutical Benefits, and a price is not asked. Section 41A's metadata is named only as the
+ *   prescribing software's own. Nothing is sent. This is not a State or Territory prescription form.
  * WHO SEES IT: doctors only. Prescribing under this instrument is not a dietitian's or a physiotherapist's screen.
  */
 import type { PaketAraci } from '@/lib/ulke/araclar/tipler'
-import { isaret, secim } from '@/lib/ulke/araclar/yardimci'
+import { isaret, metin, secim } from '@/lib/ulke/araclar/yardimci'
 import { kosulluListe } from './kosulluListe'
 
 const D = 'en-AU'
@@ -28,6 +29,9 @@ export const AU_PBS_RECETE = kosulluListe({
   anahtar: 'au-pbs-prescription',
   alanlar: [
     secim('bicim', BICIM),
+    { ...metin('yazilan'), ...form(BICIM) },
+    { ...metin('yazilan_miktar'), ...form(BICIM) },
+    { ...metin('yazilan_tekrar'), ...form(BICIM) },
     kutu('ad'),
     kutu('adres'),
     kutu('yarar'),
@@ -60,9 +64,12 @@ export function auPbsRecete(hekimler: readonly string[]): PaketAraci {
     sinif: 'hekimler',
     metin: {
       ad: m('PBS prescription particulars'),
-      aciklama: m('Tick a particular section 40 asks for on a pharmaceutical-benefits prescription that is not a medication-chart prescription. The compilation read was in force on 15 August 2026. Choose how the prescription is prepared first. A tick is your note. It does not decide that the prescription is valid.'),
+      aciklama: m('Tick a particular section 40 asks for on a pharmaceutical-benefits prescription that is not a medication-chart prescription. The compilation read was in force on 15 August 2026. Choose how the prescription is prepared first. You may then type the benefit, the quantity and the repeats in the words you wrote. Those words are not checked against the Schedule of Pharmaceutical Benefits. A tick is your note. It does not decide that the prescription is valid, and this screen does not create a prescription.'),
       alanlar: {
         bicim: m('How the prescription is prepared'),
+        yazilan: m('The pharmaceutical benefit, in the words you wrote'),
+        yazilan_miktar: m('The quantity or number of units, as you wrote it'),
+        yazilan_tekrar: m('The number of repeats, as you wrote it. Leave this blank when supply is not repeated'),
         ad: m('The name of the person the pharmaceutical benefit is prescribed for'),
         adres: m('That person\'s residential address'),
         yarar: m('The pharmaceutical benefit is identified: each drug, and a brand only where you consider it necessary for treatment. A brand is not inserted by default'),
