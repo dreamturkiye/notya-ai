@@ -99,6 +99,10 @@ export const AU_ONAYSIZ_ACIK_ARACLAR: readonly OnaysizAcikArac[] = [
     bakilacak: 'The particulars in subsection 29-70(1), read 20 October 2026 from the compilation in force on 1 January 2026. A tick is a note. The approved form is not produced. Nothing is sent and no payment is taken. A clinician should confirm the compilation is still in force.',
   },
   {
+    anahtar: 'au-my-health-record', oneri: 'My Health Records Act 2012, compilation of 5 December 2025', klinisyen: null,
+    bakilacak: 'Sections 45, 45A, 45B and 46, and Schedule 1 clause 9, read 20 October 2026 from the compilation in force on 5 December 2025. A tick is a note. Nothing is uploaded. The My Health Records Rules were not read. Prescribed State or Territory laws were not copied. A clinician should confirm the compilation is still in force.',
+  },
+  {
     anahtar: 'au-privacy-principles', oneri: 'Privacy Act 1988 Schedule 1, compilation of 4 June 2026', klinisyen: null,
     bakilacak: 'The 13 headings in Schedule 1, read 20 October 2026 from the compilation in force on 4 June 2026. The operative subclauses are not set out. A tick is a note. It is not a finding that the Act is met. State and territory health-records laws are not on this screen. A lawyer should still read the consent pages.',
   },

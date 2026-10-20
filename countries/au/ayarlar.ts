@@ -29,6 +29,7 @@ import { auEtiketAraci, auSchedule8Araci, auZehirSinifiAraci } from './araclar/p
 import { AU_GROWTH_CHART_REFERENCE, auCvdBaglantisi, auMbsBaglantisi, auPbsListesi, auPbsRaporu } from './araclar/baglantilar'
 import { AU_GIZLILIK_ARACI } from './araclar/gizlilik'
 import { auGstFatura } from './araclar/gstInvoice'
+import { auMyHealthRecord } from './araclar/myHealthRecord'
 import { AU_KIMLIK_KONTROL_ARACI } from './araclar/kimlikKontrol'
 import { auBaglantiAraclari } from './araclar/referanslar'
 import { auMedicare } from './araclar/medicareParticulars'
@@ -277,8 +278,9 @@ export const AU_GIRDI: EnUlkeGirdisi = {
         // NOTYA-ARACLAR-DENETIM-02-AU, 2026-10-13 — the National Immunisation Program schedule, CORE (every role).
         AU_ASI_TAKVIMI_ARACI,
         // NOTYA-ARACLAR-DENETIM-02-AU, 2026-10-13 — the growth-chart link-out tile (founder's question #3).
-        // My Health Record was removed on 2026-10-14 and put back on 2026-10-19 as a guidance link only,
-        // after the OAIC index page was opened. The tile sends nothing.
+        // My Health Record upload conditions, sections 45 to 46 and Schedule 1 clause 9, compilation of
+        // 5 December 2025. Every role. A tick is a note. Nothing is uploaded.
+        auMyHealthRecord(),
         AU_GROWTH_CHART_REFERENCE,
         AU_KIMLIK_KONTROL_ARACI,
         AU_GIZLILIK_ARACI,

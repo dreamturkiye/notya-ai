@@ -4,7 +4,7 @@
  *
  * One college or regulator page for every role this pack still offers, plus two
  * specialty pages (the RACGP Red Book, and the Royal Children's Hospital guidelines)
- * and two core pages (My Health Record guidance, Ahpra registration). The tax-invoice particulars are a checklist, not a link.
+ * and one core page (Ahpra registration). The tax-invoice particulars and the My Health Record upload conditions are checklists, not links.
  */
 import type { PaketAraci } from '@/lib/ulke/araclar/tipler'
 
@@ -56,15 +56,6 @@ const racpYetiskin = (rol: string, ad: string) =>
   )
 
 export const AU_BAGLANTI_KAYITLARI: readonly AuBaglantiKaydi[] = [
-  kayit({
-    anahtar: 'au-my-health-record',
-    roller: null,
-    ad: 'My Health Record guidance (link)',
-    aciklama: 'Opens the Office of the Australian Information Commissioner\'s My Health Record guidance index. This is the national shared-record guidance a practice reads. This screen does not send a record.',
-    adres: 'https://www.oaic.gov.au/privacy/privacy-guidance-for-organisations-and-government-agencies/health-service-providers/my-health-record',
-    kaynak: `https://www.oaic.gov.au/privacy/privacy-guidance-for-organisations-and-government-agencies/health-service-providers/my-health-record${OK}`,
-    bakilacak: 'Confirm this index is still the right page, and that a link which sends nothing is what the practice should see. The national system\'s own upload page did not open in the session that added this tile.',
-  }),
   kayit({
     anahtar: 'au-ahpra-registration',
     roller: null,
