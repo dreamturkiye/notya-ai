@@ -13,8 +13,10 @@ import { useState, type FormEvent } from 'react'
 import { ulkeIstemciSupabase } from '@/lib/ulke/istemciSupabase'
 import { hesapBuUlkedeMi } from '@/lib/ulke/hesapUlkesi'
 import { ulkeYolu } from '@/lib/ulke/yol'
+import { dilliYol } from '@/lib/ulke/sayfaDili'
 import type { DilKodu, YuzeyMetinleri } from '@/lib/ulke/tipler'
 import { ULKE_STIL as S, UlkeKart, type DilSecenegi } from './UlkeKart'
+import { sifreSifirlaMetni } from './sifreSifirlaMetinleri'
 
 export type GirisFormuProps = {
   dil: DilKodu
@@ -35,6 +37,19 @@ export default function GirisFormu({ dil, metin, ret, diller, anaSayfa, kayit, s
   const [bekliyor, setBekliyor] = useState(false)
   const [hata, setHata] = useState('')
   const supabase = ulkeIstemciSupabase()
+  // NOTYA-SIFRE-SIFIRLA-01 (Kaan, 2026-10-20): real forgot-password — this country build had none at all.
+  const [fpAcik, setFpAcik] = useState(false)
+  const [fpDurum, setFpDurum] = useState<'bos' | 'gonderiliyor' | 'gonderildi' | 'hata'>('bos')
+  const m = sifreSifirlaMetni(dil)
+
+  async function sifreSifirlaGonder() {
+    if (!supabase || !eposta.trim()) return
+    setFpDurum('gonderiliyor')
+    const { error } = await supabase.auth.resetPasswordForEmail(eposta.toLowerCase().trim(), {
+      redirectTo: `${window.location.origin}${dilliYol('/password-reset', dil)}`,
+    })
+    setFpDurum(error ? 'hata' : 'gonderildi')
+  }
 
   async function gonder(e: FormEvent) {
     e.preventDefault()
@@ -70,6 +85,22 @@ export default function GirisFormu({ dil, metin, ret, diller, anaSayfa, kayit, s
         <div>
           <label style={S.etiket} htmlFor="ulke-giris-sifre">{metin.sifre}</label>
           <input id="ulke-giris-sifre" type="password" value={sifre} onChange={(e) => setSifre(e.target.value)} placeholder={metin.sifreOrnek} autoComplete="current-password" style={S.girdi} />
+          <button type="button" onClick={() => setFpAcik((v) => !v)} style={{ background: 'transparent', border: 'none', color: S.baglanti.color, fontSize: 12.5, cursor: 'pointer', padding: '8px 0 0', textAlign: 'left', fontFamily: S.girdi.fontFamily, fontWeight: 600 }}>{m.forgotLink}</button>
+          {fpAcik && (
+            <div style={{ ...S.bilgi, marginTop: 6, padding: '10px 12px', fontSize: 13 }}>
+              {fpDurum === 'gonderildi' ? (
+                <span style={{ fontWeight: 600 }}>{m.sent}</span>
+              ) : (
+                <>
+                  <div style={{ marginBottom: 8 }}>{m.emailPlaceholder}: <strong>{eposta || '—'}</strong></div>
+                  <button type="button" disabled={fpDurum === 'gonderiliyor' || !eposta.trim()} onClick={sifreSifirlaGonder} style={{ ...S.cizgiDugme, padding: '8px 14px', fontSize: 12.5, cursor: fpDurum === 'gonderiliyor' ? 'not-allowed' : 'pointer', opacity: fpDurum === 'gonderiliyor' ? 0.6 : 1 }}>
+                    {fpDurum === 'gonderiliyor' ? m.sending : m.send}
+                  </button>
+                  {fpDurum === 'hata' && <div style={{ marginTop: 6 }}>{m.sendError}</div>}
+                </>
+              )}
+            </div>
+          )}
         </div>
         {!supabase ? <div role="alert" style={S.hata}>{metin.hazirDegil}</div> : hata ? <div role="alert" style={S.hata}>{hata}</div> : null}
         <button type="submit" disabled={bekliyor || !supabase} style={{ ...S.dugme, opacity: bekliyor || !supabase ? 0.6 : 1 }}>
