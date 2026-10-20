@@ -33,6 +33,7 @@ import type { PortalOturumu } from './giris'
 import { hastaninSonIstegi, istekAcik, istekGunleri } from './istek'
 import { hastaFormuOzeti } from '../intake/form'
 import { formAcik } from '../intake/icerik'
+import { portalBolumu } from './bolum'
 import type { PortalIcerigi } from './tipler'
 
 export type { PortalIcerigi } from './tipler'
@@ -96,10 +97,18 @@ export async function portalIcerigi(o: PortalOturumu, simdi = Date.now()): Promi
   }
 
   const rol = await hekimRolunuOku(supabase, doktorId)
+  const bugun = yerelAn(simdi, dilim).gun
+  let takipler: string[] = []
+  if (rol && paket.uygulama?.portal?.bolumler?.[rol]) {
+    const { data } = await ulkeTablosu(supabase, 'ulke_arac_kayitlari').select('takip_tarihi').eq('doctor_id', doktorId).eq('patient_id', hastaId).is('kapandi_at', null).not('takip_tarihi', 'is', null)
+    takipler = ((data as { takip_tarihi: string | null }[] | null) ?? []).flatMap((s) => (typeof s.takip_tarihi === 'string' ? [s.takip_tarihi] : []))
+  }
+  const bolum = portalBolumu(rol, bugun, takipler)
   return {
     dil: uygulamaDiliMi(dil) ? dil : paket.varsayilanDil,
     hasta: { ad: [hasta.ad, hasta.otaIsmi].filter(Boolean).join(' ') },
     hekim: { ad: String((hesap as { full_name?: unknown }).full_name ?? ''), rol: (rol ? rolAdi(rol, dil) : null) ?? '' },
+    ...(bolum ? { bolum } : {}),
     randevular,
     saatDilimi: (paket.uygulama?.saatDilimleri.length ?? 1) > 1 ? dilim : null,
     ozetler,
