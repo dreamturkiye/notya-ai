@@ -7,7 +7,9 @@
  * longevity) has no entry.
  *
  * College names are the ones already opened for the link tiles on 2026-10-19 (./araclar/referanslar.ts).
- * Book titles are the published names of texts used in that role's training. No page was copied.
+ * Book titles are the published names of texts named on a college reading list, an Australian hospital
+ * library list, or an Australian course list opened on 2026-10-20. Where that role has an Australian
+ * textbook, that title is the one named. No page was copied.
  * Binational college names stay abbreviated, the same way the tiles write them.
  */
 import type { AsistanKaynaklari } from '@/lib/ulke/arayuz/tipler'
@@ -45,7 +47,7 @@ export const AU_ASISTAN_KAYNAKLARI: Record<Sunulan, AsistanKaynaklari> = {
   ),
   anaesthesia: y(
     ['ANZCA, the college for anaesthesia', 'ANZCA professional documents', 'ANZCA acute pain management: scientific evidence', pbs('anaesthesia')],
-    ["Miller's Anesthesia", 'Clinical Anesthesia (Barash)'],
+    ["Miller's Anesthesia", 'Pharmacology and Physiology for Anesthesia (Hemmings and Egan)'],
   ),
   neurosurgery: y(
     ['Royal Australasian College of Surgeons — neurosurgery', 'Neurosurgical Society of Australasia', KURUL, mbs('neurosurgery')],
@@ -53,11 +55,11 @@ export const AU_ASISTAN_KAYNAKLARI: Record<Sunulan, AsistanKaynaklari> = {
   ),
   'paediatric-surgery': y(
     ['Royal Australasian College of Surgeons — paediatric surgery', "Royal Children's Hospital clinical practice guidelines", KURUL, mbs('paediatric surgery')],
-    ["Ashcraft's Pediatric Surgery", "Holcomb and Ashcraft's Pediatric Surgery"],
+    ["Jones' Clinical Paediatric Surgery", "Ashcraft's Pediatric Surgery"],
   ),
   'internal-medicine': y(
     [RACP, 'Therapeutic Guidelines', 'Australian Medicines Handbook', pbs('internal medicine')],
-    ["Talley and O'Connor's Clinical Examination", "Harrison's Principles of Internal Medicine"],
+    ["Talley and O'Connor's Examination Medicine", "Harrison's Principles of Internal Medicine"],
   ),
   dermatology: y(
     ['Australasian College of Dermatologists', 'Therapeutic Guidelines: Dermatology', KURUL, pbs('dermatology')],
@@ -77,7 +79,7 @@ export const AU_ASISTAN_KAYNAKLARI: Record<Sunulan, AsistanKaynaklari> = {
   ),
   'general-surgery': y(
     ['Royal Australasian College of Surgeons — general surgery', 'General Surgeons Australia', KURUL, mbs('general surgery')],
-    ["Schwartz's Principles of Surgery", 'Sabiston Textbook of Surgery'],
+    ["Bailey and Love's Short Practice of Surgery", 'Fundamental Skills for Surgery (RACS)'],
   ),
   'respiratory-medicine': y(
     ['TSANZ', 'Australian Asthma Handbook', 'Lung Foundation Australia', RACP],
@@ -85,23 +87,23 @@ export const AU_ASISTAN_KAYNAKLARI: Record<Sunulan, AsistanKaynaklari> = {
   ),
   ophthalmology: y(
     ['RANZCO', 'RANZCO clinical statements', KURUL, mbs('ophthalmology')],
-    ["Kanski's Clinical Ophthalmology", 'American Academy of Ophthalmology Basic and Clinical Science Course'],
+    ["Kanski's Clinical Ophthalmology", 'The Wills Eye Manual'],
   ),
   'obstetrics-gynaecology': y(
     ['RANZCOG', 'RANZCOG statements and guidelines', 'Department of Health and Aged Care pregnancy care guidelines', pbs('obstetrics and gynaecology')],
-    ['Llewellyn-Jones Fundamentals of Obstetrics and Gynaecology', 'Williams Obstetrics'],
+    ["Beischer and MacKay's Obstetrics, Gynaecology and the Newborn", 'Llewellyn-Jones Fundamentals of Obstetrics and Gynaecology'],
   ),
   cardiology: y(
     ['CSANZ, the cardiac society', 'CSANZ guidelines and position statements', 'National Heart Foundation of Australia', 'Australian guideline for assessing and managing cardiovascular disease risk'],
-    ["Braunwald's Heart Disease", "Hurst's the Heart"],
+    ["Braunwald's Heart Disease", 'The ESC Textbook of Cardiovascular Medicine'],
   ),
   otolaryngology: y(
     ['Australian Society of Otolaryngology Head and Neck Surgery', 'Royal Australasian College of Surgeons', 'Therapeutic Guidelines: Antibiotic', mbs('otolaryngology')],
-    ['Cummings Otolaryngology', "Bailey's Head and Neck Surgery"],
+    ["Scott-Brown's Otorhinolaryngology and Head and Neck Surgery", 'Cummings Otolaryngology'],
   ),
   nephrology: y(
     ['ANZSN', 'CARI Guidelines', 'Kidney Health Australia', RACP],
-    ["Brenner and Rector's The Kidney", 'Comprehensive Clinical Nephrology'],
+    ["Brenner and Rector's The Kidney", 'Handbook of Dialysis (Daugirdas)'],
   ),
   neurology: y(
     ['ANZAN', 'Stroke Foundation living clinical guidelines', 'Therapeutic Guidelines: Neurology', RACP],
@@ -117,7 +119,7 @@ export const AU_ASISTAN_KAYNAKLARI: Record<Sunulan, AsistanKaynaklari> = {
   ),
   paediatrics: y(
     ['Royal Australasian College of Physicians', "Royal Children's Hospital clinical practice guidelines", 'Australian Immunisation Handbook', "Australian Medicines Handbook Children's Dosing Companion"],
-    ["Paediatric Handbook (Royal Children's Hospital Melbourne)", 'Nelson Textbook of Pediatrics'],
+    ['Practical Paediatrics (South and Isaacs)', "Paediatric Handbook (Royal Children's Hospital Melbourne)"],
   ),
   'plastic-surgery': y(
     ['Australian Society of Plastic Surgeons', 'Royal Australasian College of Surgeons', KURUL, mbs('plastic surgery')],
@@ -129,7 +131,7 @@ export const AU_ASISTAN_KAYNAKLARI: Record<Sunulan, AsistanKaynaklari> = {
   ),
   radiology: y(
     ['RANZCR — radiology', 'RANZCR standards of practice', 'ARPANSA codes of practice', mbs('diagnostic imaging')],
-    ["Grainger and Allison's Diagnostic Radiology", "Brant and Helms' Fundamentals of Diagnostic Radiology"],
+    ["Grainger and Allison's Diagnostic Radiology", "Chapman and Nakielny's Guide to Radiological Procedures"],
   ),
   rheumatology: y(
     ['Australian Rheumatology Association', 'Australian Rheumatology Association position statements', RACP, pbs('rheumatology')],
@@ -165,7 +167,7 @@ export const AU_ASISTAN_KAYNAKLARI: Record<Sunulan, AsistanKaynaklari> = {
   ),
   'immunology-and-allergy': y(
     ['Australasian Society of Clinical Immunology and Allergy', 'ASCIA anaphylaxis guidelines and action plans', 'Australian Immunisation Handbook', RACP],
-    ["Middleton's Allergy", "Abbas' Cellular and Molecular Immunology"],
+    ["Middleton's Allergy", "Rich's Clinical Immunology"],
   ),
   haematology: y(
     ['HSANZ, the haematology society', 'eviQ cancer treatment protocols', 'Australian Red Cross Lifeblood transfusion guidance', RACP],
@@ -177,7 +179,7 @@ export const AU_ASISTAN_KAYNAKLARI: Record<Sunulan, AsistanKaynaklari> = {
   ),
   'aesthetic-surgery': y(
     ['Medical Board of Australia — cosmetic surgery', 'Australian Society of Plastic Surgeons', 'Ahpra guidelines for advertising a regulated health service', 'Royal Australasian College of Surgeons'],
-    ['The Art of Aesthetic Surgery (Nahai)', 'Aesthetic Plastic Surgery (Aston)'],
+    ["Grabb and Smith's Plastic Surgery", 'The Art of Aesthetic Surgery (Nahai)'],
   ),
   'aesthetic-medicine': y(
     ['Medical Board of Australia — non-surgical cosmetic procedures', 'Ahpra guidelines for advertising a regulated health service', 'Australian Medicines Handbook', KURUL],
@@ -189,15 +191,15 @@ export const AU_ASISTAN_KAYNAKLARI: Record<Sunulan, AsistanKaynaklari> = {
   ),
   'clinical-psychology': y(
     ['Australian Psychological Society', 'Psychology Board of Australia', 'Australian Psychological Society ethical guidelines', 'Ahpra registration standards for psychology'],
-    ["Barlow's Clinical Handbook of Psychological Disorders", "Beck's Cognitive Therapy of Depression"],
+    ["Barlow's Clinical Handbook of Psychological Disorders", 'Cognitive Behavior Therapy: Basics and Beyond (Beck)'],
   ),
   dietetics: y(
-    ['Dietitians Australia', 'Dietitians Australia National Competency Standards', 'National Health and Medical Research Council', OZ],
-    ['Australian Dietary Guidelines', "Krause and Mahan's Food and the Nutrition Care Process"],
+    ['Dietitians Australia', 'Dietitians Australia National Competency Standards', 'Australian Dietary Guidelines', OZ],
+    ['Food and Nutrition: Sustainable Food and Health Systems', "Krause and Mahan's Food and the Nutrition Care Process"],
   ),
   'occupational-therapy': y(
     ['Occupational Therapy Australia', 'Occupational Therapy Board of Australia', 'Occupational Therapy Australia professional standards', 'Ahpra registration standards for occupational therapy'],
-    ["Willard and Spackman's Occupational Therapy", "Creek's Occupational Therapy and Mental Health"],
+    ["Willard and Spackman's Occupational Therapy", 'Occupational Therapy in Australia: Professional and Practice Issues'],
   ),
   audiology: y(
     ['Audiology Australia', 'Audiology Australia professional practice standards', 'National Acoustic Laboratories', OZ],
@@ -209,7 +211,7 @@ export const AU_ASISTAN_KAYNAKLARI: Record<Sunulan, AsistanKaynaklari> = {
   ),
   'speech-pathology': y(
     ['Speech Pathology Australia', 'Speech Pathology Australia practice guidelines', 'Speech Pathology Australia Code of Ethics', OZ],
-    ["Duffy's Motor Speech Disorders", "Shipley's Assessment in Speech-Language Pathology"],
+    ["Duffy's Motor Speech Disorders", 'Dysphagia: Clinical Management in Adults and Children (Groher and Crary)'],
   ),
 }
 
