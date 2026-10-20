@@ -14,6 +14,22 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const [mode, setMode] = useState<"login"|"register">("login")
+  const [fpAcik, setFpAcik] = useState(false)
+  const [fpEmail, setFpEmail] = useState("")
+  const [fpDurum, setFpDurum] = useState<"bos"|"gonderiliyor"|"gonderildi"|"hata">("bos")
+
+  // NOTYA-SIFRE-SIFIRLA-01 (Kaan, 2026-10-20): real Supabase recovery email.
+  async function sifreSifirlaGonder() {
+    setFpDurum("gonderiliyor")
+    try {
+      const resp = await fetch(SUPA_URL + "/auth/v1/recover?redirect_to=" + encodeURIComponent(`${window.location.origin}${window.location.pathname.replace(/\/giris.*$/, "")}/sifre-sifirla`), {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "apikey": SUPA_ANON },
+        body: JSON.stringify({ email: fpEmail.toLowerCase().trim() })
+      })
+      setFpDurum(resp.ok ? "gonderildi" : "hata")
+    } catch { setFpDurum("hata") }
+  }
 
   async function handleAuth() {
     if (!email || !password) { setError("E-posta ve şifre gerekli"); return }
@@ -74,6 +90,26 @@ export default function LoginPage() {
           <div>
             <label style={etiket}>Şifre</label>
             <input type="password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="Şifreniz" autoComplete="current-password" style={inp} onKeyDown={e => { if (e.key === "Enter" && hazir) void handleAuth() }} />
+            {mode === "login" && (
+              <>
+                <button type="button" onClick={() => { setFpAcik(v => !v); setFpEmail(email) }} style={{ background: "transparent", border: "none", color: R.pine, fontSize: 12.5, cursor: "pointer", padding: "8px 0 0", textAlign: "left", fontFamily: CHROME_FONT.sans, fontWeight: 600 }}>Şifremi unuttum</button>
+                {fpAcik && (
+                  <div style={{ marginTop: 6, fontSize: 12.5, color: R.muted, background: R.cream, border: `1px solid ${R.border}`, borderRadius: 10, padding: "10px 12px" }}>
+                    {fpDurum === "gonderildi" ? (
+                      <span style={{ color: R.pine, fontWeight: 600 }}>Sıfırlama bağlantısı e-postanıza gönderildi.</span>
+                    ) : (
+                      <>
+                        <input type="email" value={fpEmail} onChange={(e) => setFpEmail(e.target.value)} placeholder="E-posta adresiniz" autoCapitalize="none" autoCorrect="off" spellCheck={false} style={{ ...inp, marginBottom: 8, padding: "9px 10px", fontSize: 13.5 }} />
+                        <button type="button" disabled={fpDurum === "gonderiliyor" || !fpEmail.trim()} onClick={sifreSifirlaGonder} style={{ padding: "8px 12px", background: R.pine, border: "none", borderRadius: 8, color: "#fff", fontSize: 12.5, fontWeight: 600, cursor: fpDurum === "gonderiliyor" ? "not-allowed" : "pointer", opacity: fpDurum === "gonderiliyor" ? 0.7 : 1, fontFamily: CHROME_FONT.sans }}>
+                          {fpDurum === "gonderiliyor" ? "Gönderiliyor…" : "Sıfırlama bağlantısı gönder"}
+                        </button>
+                        {fpDurum === "hata" && <div style={{ marginTop: 6, color: R.warn }}>Gönderilemedi. E-postayı kontrol edip tekrar deneyin.</div>}
+                      </>
+                    )}
+                  </div>
+                )}
+              </>
+            )}
           </div>
           {error && <div style={{ background: "rgba(164,91,62,0.08)", border: `1px solid rgba(164,91,62,0.25)`, borderRadius: 10, padding: "10px 12px", fontSize: 13, color: R.warn }}>{error}</div>}
           <button type="submit" onClick={handleAuth} disabled={!hazir}

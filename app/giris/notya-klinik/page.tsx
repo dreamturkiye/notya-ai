@@ -12,6 +12,18 @@ export default function KlinikGiris() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [sifremiUnuttum, setSifremiUnuttum] = useState(false)
+  const [fpEmail, setFpEmail] = useState('')
+  const [fpDurum, setFpDurum] = useState<'bos'|'gonderiliyor'|'gonderildi'|'hata'>('bos')
+
+  // NOTYA-SIFRE-SIFIRLA-01 (Kaan, 2026-10-20): real Supabase recovery email, not the old static message.
+  async function sifreSifirlaGonder() {
+    setFpDurum('gonderiliyor')
+    const istemci = createClient('https://anjayzospuurymjmmtim.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFuamF5em9zcHV1cnltam1tdGltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA2NDc5NzIsImV4cCI6MjA5NjIyMzk3Mn0.J4qRde2QJxxErFIWsO6Zb2TPN8GEIFXloLRpdac4GxE')
+    const { error } = await istemci.auth.resetPasswordForEmail(fpEmail.toLowerCase().trim(), {
+      redirectTo: `${window.location.origin}${window.location.pathname.replace(/\/giris.*$/, '')}/sifre-sifirla`,
+    })
+    setFpDurum(error ? 'hata' : 'gonderildi')
+  }
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
@@ -55,10 +67,20 @@ export default function KlinikGiris() {
           <div>
             <label style={etiket}>Şifre</label>
             <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Şifrenizi girin" autoComplete="current-password" style={inp} />
-            <button type="button" onClick={() => setSifremiUnuttum((v) => !v)} style={{ background: 'transparent', border: 'none', color: R.pine, fontSize: 12.5, cursor: 'pointer', padding: '8px 0 0', textAlign: 'left', fontFamily: CHROME_FONT.sans, fontWeight: 600 }}>Şifremi unuttum</button>
+            <button type="button" onClick={() => { setSifremiUnuttum((v) => !v); setFpEmail(email) }} style={{ background: 'transparent', border: 'none', color: R.pine, fontSize: 12.5, cursor: 'pointer', padding: '8px 0 0', textAlign: 'left', fontFamily: CHROME_FONT.sans, fontWeight: 600 }}>Şifremi unuttum</button>
             {sifremiUnuttum && (
               <div style={{ marginTop: 6, fontSize: 12.5, color: R.muted, background: R.cream, border: `1px solid ${R.border}`, borderRadius: 10, padding: '10px 12px' }}>
-                Şifre sıfırlama şu an otomatik değil — Notya ekibinizle iletişime geçin, sizin için sıfırlansın.
+                {fpDurum === 'gonderildi' ? (
+                  <span style={{ color: R.pine, fontWeight: 600 }}>Sıfırlama bağlantısı e-postanıza gönderildi.</span>
+                ) : (
+                  <>
+                    <input type="email" value={fpEmail} onChange={(e) => setFpEmail(e.target.value)} placeholder="E-posta adresiniz" autoCapitalize="none" autoCorrect="off" spellCheck={false} style={{ ...inp, marginBottom: 8, padding: '9px 10px', fontSize: 13.5 }} />
+                    <button type="button" disabled={fpDurum === 'gonderiliyor' || !fpEmail.trim()} onClick={sifreSifirlaGonder} style={{ padding: '8px 12px', background: R.pine, border: 'none', borderRadius: 8, color: '#fff', fontSize: 12.5, fontWeight: 600, cursor: fpDurum === 'gonderiliyor' ? 'not-allowed' : 'pointer', opacity: fpDurum === 'gonderiliyor' ? 0.7 : 1, fontFamily: CHROME_FONT.sans }}>
+                      {fpDurum === 'gonderiliyor' ? 'Gönderiliyor…' : 'Sıfırlama bağlantısı gönder'}
+                    </button>
+                    {fpDurum === 'hata' && <div style={{ marginTop: 6, color: R.warn }}>Gönderilemedi. E-postayı kontrol edip tekrar deneyin.</div>}
+                  </>
+                )}
               </div>
             )}
           </div>

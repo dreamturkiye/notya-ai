@@ -14,6 +14,18 @@ export default function MaliGiris() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [fpAcik, setFpAcik] = useState(false)
+  const [fpEmail, setFpEmail] = useState('')
+  const [fpDurum, setFpDurum] = useState<'bos'|'gonderiliyor'|'gonderildi'|'hata'>('bos')
+
+  // NOTYA-SIFRE-SIFIRLA-01 (Kaan, 2026-10-20): real Supabase recovery email.
+  async function sifreSifirlaGonder() {
+    setFpDurum('gonderiliyor')
+    const { error: fpErr } = await supabase.auth.resetPasswordForEmail(fpEmail.toLowerCase().trim(), {
+      redirectTo: `${window.location.origin}${window.location.pathname.replace(/\/giris.*$/, '')}/sifre-sifirla`,
+    })
+    setFpDurum(fpErr ? 'hata' : 'gonderildi')
+  }
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
@@ -51,6 +63,22 @@ export default function MaliGiris() {
           <div>
             <label style={{fontSize:'13px',color:'#94a3b8',marginBottom:'6px',display:'block'}}>Şifre</label>
             <input type='password' value={password} onChange={e=>setPassword(e.target.value)} placeholder='Şifrenizi girin' autoComplete='current-password' style={inp} />
+            <button type='button' onClick={() => { setFpAcik(v => !v); setFpEmail(email) }} style={{background:'transparent',border:'none',color:'#60A5FA',fontSize:'12px',cursor:'pointer',padding:'8px 0 0',textAlign:'left'}}>Şifremi unuttum</button>
+            {fpAcik && (
+              <div style={{marginTop:8,padding:'12px',background:'#1e293b',border:'1px solid rgba(255,255,255,0.08)',borderRadius:10}}>
+                {fpDurum==='gonderildi' ? (
+                  <div style={{fontSize:12.5,color:'#86efac'}}>Sıfırlama bağlantısı e-postanıza gönderildi.</div>
+                ) : (
+                  <>
+                    <input type='email' value={fpEmail} onChange={e=>setFpEmail(e.target.value)} placeholder='E-posta adresiniz' autoCapitalize='none' autoCorrect='off' spellCheck={false} style={{...inp, marginBottom:8}} />
+                    <button type='button' disabled={fpDurum==='gonderiliyor' || !fpEmail.trim()} onClick={sifreSifirlaGonder} style={{padding:'9px 14px',background:'#2563EB',border:'none',borderRadius:8,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',opacity:fpDurum==='gonderiliyor'?0.7:1}}>
+                      {fpDurum==='gonderiliyor' ? 'Gönderiliyor…' : 'Sıfırlama bağlantısı gönder'}
+                    </button>
+                    {fpDurum==='hata' && <div style={{marginTop:6,fontSize:12,color:'#fca5a5'}}>Gönderilemedi. Tekrar deneyin.</div>}
+                  </>
+                )}
+              </div>
+            )}
           </div>
           {error && (
             <div style={{background:'rgba(220,38,38,0.1)',border:'1px solid rgba(220,38,38,0.3)',borderRadius:'8px',padding:'10px',color:'#fca5a5',fontSize:'13px'}}>{error}</div>
