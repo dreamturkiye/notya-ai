@@ -10,6 +10,7 @@ import type { AsistanKimligi, UlkeArayuzu } from '@/lib/ulke/arayuz/tipler'
 import { enArayuz } from '../_dil/en/arayuz'
 import { AU_KONSULTASYON_METNI } from './araclar/konsultasyonMetinleri'
 import { AU_GIRDI } from './ayarlar'
+import { auAsistanKaynaklari } from './asistan/kaynaklar'
 import { AU_SES } from './ses'
 
 const temel = enArayuz(AU_GIRDI)
@@ -21,10 +22,12 @@ const sunulan = new Set(temel.roller.map((r) => r.anahtar))
  */
 export function auAsistanKimligi(rol: unknown): AsistanKimligi | null {
   if (typeof rol !== 'string' || !sunulan.has(rol)) return null
+  const kaynaklar = auAsistanKaynaklari(rol)
   return {
     tamAd: `${AU_SES.sesler.erkek.ad} and ${AU_SES.sesler.kadin.ad}`,
     kisaAd: AU_SES.sesler.kadin.ad,
     makineTuretimi: false,
+    ...(kaynaklar ? { kaynaklar } : {}),
   }
 }
 

@@ -15,7 +15,7 @@ import { OkunmamisMesajlarKarti } from './HastaMesajlari'
 import { BekleyenKonsultasyonlarKarti } from './Konsultasyonlar'
 import { Istekler } from './PortalIstekleri'
 import { saatAraligi, DurumRozeti, muayeneBaslatilabilir, muayeneBaslatYolu, takvimYolu, type RandevuKaydi } from './randevuOrtak'
-import { araclarMetni, asistanSesAdlari, metninDili, randevuMetni, rolAdi, type UygulamaMetni } from '@/lib/ulke/arayuz'
+import { araclarMetni, asistanKimligi, asistanSesAdlari, metninDili, randevuMetni, rolAdi, type UygulamaMetni } from '@/lib/ulke/arayuz'
 import { ozellikAcik, ulkePaketi } from '@/lib/ulke/ulke'
 import { roller } from '@/lib/ulke/arayuz'
 import { Ipucu } from './Ipucu'
@@ -134,6 +134,7 @@ export function BugunGorunumu({ m, ad, muayeneler, hata, rol, randevular, mesajl
   const asistan = asistanAdi(m, rol)
   const satir = asistanSatiri(m, rol)
   const sesler = satir ? asistanSesAdlari() : null
+  const kaynaklar = sesler ? asistanKimligi(rol, dil)?.kaynaklar : undefined
   const karo = (href: string | null, text: string, not?: string) => {
     const ic = (
       <>
@@ -161,6 +162,15 @@ export function BugunGorunumu({ m, ad, muayeneler, hata, rol, randevular, mesajl
             <p className="uza-ust-yazi">{m.asistan.etiket}</p>
             <p className="uza-asistan-ad" data-alan="asistan-kart-ad">{asistan}</p>
             <p className="uza-ipucu" data-alan="asistan-kart-satir">{satir}</p>
+            {kaynaklar ? (
+              <>
+                <p className="uza-ipucu" data-alan="asistan-kaynak-not">{kaynaklar.not}</p>
+                <p className="uza-ust-yazi uza-asistan-baslik" data-alan="asistan-yetki-baslik">{kaynaklar.yetkiBaslik}</p>
+                <ul className="uza-asistan-kaynak" data-alan="asistan-yetki">{kaynaklar.yetki.map((sat) => <li key={sat}>{sat}</li>)}</ul>
+                <p className="uza-ust-yazi uza-asistan-baslik" data-alan="asistan-kitap-baslik">{kaynaklar.kitapBaslik}</p>
+                <ul className="uza-asistan-kaynak" data-alan="asistan-kitap">{kaynaklar.kitaplar.map((sat) => <li key={sat}>{sat}</li>)}</ul>
+              </>
+            ) : null}
             <AsistanSesKontrol m={m} api={api} sesler={sesler} />
           </section>
         ) : null}

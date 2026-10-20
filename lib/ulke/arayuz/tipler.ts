@@ -42,6 +42,15 @@ export type RolTanimi = {
 }
 
 /** The assistant a role works with, as a screen names it. */
+/** Named practice sources for one role. Titles only. A book is not stored. */
+export type AsistanKaynaklari = {
+  yetkiBaslik: string
+  kitapBaslik: string
+  not: string
+  yetki: readonly string[]
+  kitaplar: readonly string[]
+}
+
 export type AsistanKimligi = {
   /** Full name with its title, in the form asked for. */
   tamAd: string
@@ -49,6 +58,8 @@ export type AsistanKimligi = {
   kisaAd: string
   /** true = this form was derived by rule from another spelling and has not been read by a native reader. */
   makineTuretimi: boolean
+  /** Absent = this assistant names no practice source. Present = this role's own list, never another role's. */
+  kaynaklar?: AsistanKaynaklari
 }
 
 /** One field a note can have beside the four sections: which section it sits under, and its label in every form. */

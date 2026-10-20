@@ -652,6 +652,9 @@ a.uza-satir:hover { background: rgba(47, 67, 52, 0.04); border-radius: 10px; }
 .uza-transkript p { white-space: pre-wrap; margin-top: 8px; }
 /* NOTYA-UZ-BRANSLAR-01 — the assistant's name on the home screen; the role picker is a plain select. */
 .uza-asistan-ad { font-family: var(--uza-serif); font-weight: 560; font-size: 1.25rem; line-height: 1.25; }
+.uza-asistan-baslik { margin-top: 14px; }
+.uza-asistan-kaynak { margin-top: 6px; display: flex; flex-direction: column; gap: 6px; font-size: 14.5px; line-height: 1.35; }
+.uza-asistan-kaynak > li { padding-left: 12px; border-left: 2px solid var(--uza-altin); }
 select.uza-girdi { appearance: auto; }
 /* NOTYA-UZ-BRANSLAR-01 — a role's fields under the section they belong to. */
 .uza-alt-alan { margin-top: 10px; padding-left: 12px; border-left: 2px solid var(--uza-cizgi); }
