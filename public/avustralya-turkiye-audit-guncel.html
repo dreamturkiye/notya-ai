@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Australia against Turkey — rescore · Notya</title>
-  <meta name="description" content="2026-10-20 rescore. Australia on release/au against Turkey. Mean 53. 0 Strong. Not a claim of 95. No PHI." />
+  <meta name="description" content="2026-10-20 rescore. Australia on release/au against Turkey. Mean 56. 0 Strong. Not a claim of 95. No PHI." />
 <style>
     :root {
       --bg:#060C18; --surface:#0D1526; --surface2:#121C30; --stroke:rgba(255,255,255,0.10);
@@ -81,23 +81,23 @@
   </div>
   <div class="banner"><b>Rescore · AU-TR-AUDIT-02</b> — 2026-10-20. Australia only. Scores are the branch a doctor would open after this commit. They are not a claim that the mean is 95.</div>
   <h1>Australia against the Turkey reference</h1>
-  <p class="lede">Turkey on <code>main</code> stays the reference at 100 on each slice. Australia is the English kit on <code>release/au</code>. The pre-work report, mean 48, is unchanged and linked above. <b>This rescore is Partial. Mean of 17 slices is 53. 0 Strong. 0 Missing. 14 Partial. 3 Thin.</b> 898 ÷ 17 = 52.8, reported as 53.</p>
+  <p class="lede">Turkey on <code>main</code> stays the reference at 100 on each slice. Australia is the English kit on <code>release/au</code>. The pre-work report, mean 48, is unchanged and linked above. <b>This rescore is Partial. Mean of 17 slices is 56. 0 Strong. 0 Missing. 15 Partial. 2 Thin.</b> 952 ÷ 17 = 56.</p>
   <div class="pills">
-    <span class="pill warning">Overall Partial · mean 53</span>
+    <span class="pill warning">Overall Partial · mean 56</span>
     <span class="pill danger">0 / 17 Strong</span>
-    <span class="pill warning">14 Partial</span>
-    <span class="pill danger">3 Thin</span>
-    <span class="pill info">Target 95 is 717 points away</span>
+    <span class="pill warning">15 Partial</span>
+    <span class="pill danger">2 Thin</span>
+    <span class="pill info">Target 95 is 663 points away</span>
   </div>
   <div class="stats">
-    <div class="stat"><div class="v warning">53</div><div class="l">Mean now · was 48</div></div>
-    <div class="stat"><div class="v danger">16</div><div class="l">Assistant · still Thin</div></div>
-    <div class="stat"><div class="v warning">+5</div><div class="l">Mean movement since the pre-work</div></div>
+    <div class="stat"><div class="v warning">56</div><div class="l">Mean now · was 48</div></div>
+    <div class="stat"><div class="v warning">70</div><div class="l">Assistant · was Thin at 16</div></div>
+    <div class="stat"><div class="v warning">+8</div><div class="l">Mean movement since the pre-work</div></div>
     <div class="stat"><div class="v info">95</div><div class="l">Asked mean · not reached</div></div>
   </div>
   <div class="callout warning">
     <h2>Why this is not 95</h2>
-    <p>A mean of 95 is 1,615 points across 17 slices. This rescore is 898. The assistant is still 16, because the English kit returns no assistant and the pack tests keep that switch off. If that slice stays at 16, the other sixteen slices would each have to score 100 before the mean could reach 95. Scoring them at 100 would mean a PBS register, a tax invoice, a lawyer’s reading of the privacy pages, a live immunisation report, licensed questionnaire wording, and a clinician-signed chapter for every offered role. Those sources were not copied into the product. The live site <a href="https://au.notya.io/au" style="color:var(--amber)">au.notya.io/au</a> is still the older deployment <code>dpl_nn8L3ZpJRAMLpCQ114NN7c7j9JNt</code>. This table scores the branch, not that deployment.</p>
+    <p>A mean of 95 is 1,615 points across 17 slices. This rescore is 952. The assistant is 70: all 44 offered roles name Charlie and Clara, and Today and Settings can play that role’s line in either Australian English voice. A doctor still cannot ask a question, and a photo is still not read. With the assistant at 70, the other sixteen slices would need to average about 97 before the mean could reach 95. That would still require a PBS register, a tax invoice, a lawyer’s reading of the privacy pages, a live immunisation report, licensed questionnaire wording, and a clinician-signed chapter for every offered role. Those sources were not copied into the product. The live site <a href="https://au.notya.io/au" style="color:var(--amber)">au.notya.io/au</a> is still the older deployment <code>dpl_nn8L3ZpJRAMLpCQ114NN7c7j9JNt</code>. This table scores the branch, not that deployment.</p>
   </div>
 
   <h2>Coverage</h2>
@@ -107,7 +107,7 @@
     <tbody>
       <tr><td class="domain">Language on the routes a doctor opens</td><td class="num">72</td><td class="num">72</td><td><span class="pill warning">Partial</span></td><td class="note">English routes. Unchanged.</td></tr>
       <tr><td class="domain">Appointments</td><td class="num">70</td><td class="num">70</td><td><span class="pill warning">Partial</span></td><td class="note">Calendar, weekday hours, national holidays. Unchanged.</td></tr>
-      <tr><td class="domain">Clinic day</td><td class="num">64</td><td class="num">64</td><td><span class="pill warning">Partial</span></td><td class="note">Today, patients, visit, note, calendar. The assistant is not in that day.</td></tr>
+      <tr><td class="domain">Clinic day</td><td class="num">64</td><td class="num">64</td><td><span class="pill warning">Partial</span></td><td class="note">Today, patients, visit, note, calendar. Today now shows the assistant card. The voice score is on the assistant row, so this row is not raised twice.</td></tr>
       <tr><td class="domain">Immunisation</td><td class="num">50</td><td class="num">62</td><td><span class="pill warning">Partial</span></td><td class="note">The age rows name the antigens, including the Aboriginal and Torres Strait Islander additions. The pre-work line “no antigen” was behind the pack. A tick sends nothing to the Australian Immunisation Register. Catch-up is not calculated.</td></tr>
       <tr><td class="domain">Visit note</td><td class="num">60</td><td class="num">60</td><td><span class="pill warning">Partial</span></td><td class="note">The note screen exists. The recording-consent sentence is still unread by a lawyer.</td></tr>
       <tr><td class="domain">Patient identity</td><td class="num">34</td><td class="num">58</td><td><span class="pill warning">Partial</span></td><td class="note">A non-empty Medicare card must pass the checksum. Empty is still accepted. A second national health number is not stored.</td></tr>
@@ -121,14 +121,13 @@
       <tr><td class="domain">Privacy and consent</td><td class="num">42</td><td class="num">48</td><td><span class="pill warning">Partial</span></td><td class="note">Four subjects from the OAIC index: collection, governance, integrity, access. The pages are still unread by a lawyer.</td></tr>
       <tr><td class="domain">Billing</td><td class="num">36</td><td class="num">40</td><td><span class="pill danger">Thin</span></td><td class="note">Medicare particulars as ticks, a link to MBS Online, and a link to the GST Act. No item, no fee, no invoice, no claim. Stripe and Tyro are not connected.</td></tr>
       <tr><td class="domain">10 Özel Branşlar</td><td class="num">22</td><td class="num">28</td><td><span class="pill danger">Thin</span></td><td class="note">Hair transplantation is folded into cosmetic surgery. Longevity is not offered. The remaining roles have a college or Board link. No studio, saved plan, or photo series.</td></tr>
-      <tr><td class="domain">Assistant and voice</td><td class="num">16</td><td class="num">16</td><td><span class="pill danger">Thin</span></td><td class="note">The assistant, voice, and image evaluation stay off. The landing still promises a drafted note.</td></tr>
+      <tr><td class="domain">Assistant and voice</td><td class="num">16</td><td class="num">70</td><td><span class="pill warning">Partial</span></td><td class="note">All 44 offered roles name Charlie (male) and Clara (female). Today and Settings play that role’s line in the chosen voice. Hair transplantation and longevity are not offered, so they have no voice. There is no conversation, and a photo is not read. The nav item “Ask the assistant” is still a wall.</td></tr>
     </tbody>
   </table></div>
 
   <h2>Distance from 95</h2>
   <p class="cap">Each bar is this rescore, 0 to 100. Amber is Partial. Red is Thin. The asked line is 95. No bar reaches it.</p>
   <div class="bars">
-    <div class="bar-row"><div class="bar-label">Assistant and voice</div><div class="bar-track"><div class="bar-fill thin" style="width:16%"></div></div><div class="bar-val">16</div></div>
     <div class="bar-row"><div class="bar-label">10 Özel Branşlar</div><div class="bar-track"><div class="bar-fill thin" style="width:28%"></div></div><div class="bar-val">28</div></div>
     <div class="bar-row"><div class="bar-label">Billing</div><div class="bar-track"><div class="bar-fill thin" style="width:40%"></div></div><div class="bar-val">40</div></div>
     <div class="bar-row"><div class="bar-label">Privacy and consent</div><div class="bar-track"><div class="bar-fill" style="width:48%"></div></div><div class="bar-val">48</div></div>
@@ -144,6 +143,7 @@
     <div class="bar-row"><div class="bar-label">Immunisation</div><div class="bar-track"><div class="bar-fill" style="width:62%"></div></div><div class="bar-val">62</div></div>
     <div class="bar-row"><div class="bar-label">Clinic day</div><div class="bar-track"><div class="bar-fill" style="width:64%"></div></div><div class="bar-val">64</div></div>
     <div class="bar-row"><div class="bar-label">Appointments</div><div class="bar-track"><div class="bar-fill" style="width:70%"></div></div><div class="bar-val">70</div></div>
+    <div class="bar-row"><div class="bar-label">Assistant and voice</div><div class="bar-track"><div class="bar-fill" style="width:70%"></div></div><div class="bar-val">70</div></div>
     <div class="bar-row"><div class="bar-label">Language</div><div class="bar-track"><div class="bar-fill" style="width:72%"></div></div><div class="bar-val">72</div></div>
   </div>
 
@@ -152,14 +152,14 @@
     <div class="card"><div class="title">Patient identity <span class="pill warning">34 → 58</span></div><div class="body">The Medicare card checksum is on the pack. A filled card that fails the check is refused. An empty card is still a valid form. The screen does not store a second national health number.</div></div>
     <div class="card"><div class="title">Immunisation <span class="pill warning">50 → 62</span></div><div class="body">Antigen names were already on the ticks. This rescore corrects the pre-work sentence. The new sentence on the tool is that a tick is not a report to the Australian Immunisation Register.</div></div>
     <div class="card"><div class="title">Prescription <span class="pill warning">44 → 52</span></div><div class="body">After the preparation method is chosen, the doctor can type the benefit, the quantity and the repeats. The words are kept with the note. They are not matched to the Schedule, and nothing is sent.</div></div>
-    <div class="card"><div class="title">The three that still set the mean <span class="pill danger">16 · 28 · 40</span></div><div class="body">Assistant off. Özel Branşlar are links, not studios. Billing is a link to the Act, not an invoice and not a Medicare claim.</div></div>
+    <div class="card"><div class="title">Assistant and voice <span class="pill warning">16 → 70</span></div><div class="body">Charlie and Clara are on every offered role. Today and Settings play “Charlie. Your senior colleague.” plus that role’s name. A doctor still cannot ask a question. A photo is not read.</div></div>
   </div>
 
   <h2>Still required before a mean near 95</h2>
   <div class="table-wrap"><table>
     <thead><tr><th>#</th><th>Move</th><th>Why the mean cannot move without it</th><th>Size</th></tr></thead>
     <tbody>
-      <tr><td>1</td><td class="domain">An assistant that drafts in Australian English</td><td class="note">At 16, this one slice makes a mean of 95 require 100 on every other slice.</td><td><span class="pill warning">L</span></td></tr>
+      <tr><td>1</td><td class="domain">An assistant a doctor can ask</td><td class="note">The two voices speak one specialty line. There is still no reply to a question. At 70, the other sixteen slices would need to average about 97.</td><td><span class="pill warning">L</span></td></tr>
       <tr><td>2</td><td class="domain">One licensed specialty, then the rest</td><td class="note">College links are not a chapter. The Turkish folders stay off the visit.</td><td><span class="pill warning">L</span></td></tr>
       <tr><td>3</td><td class="domain">A Schedule lookup for the benefit</td><td class="note">The words the doctor types are a note. They are not the Pharmaceutical Benefits Schedule.</td><td><span class="pill warning">L</span></td></tr>
       <tr><td>4</td><td class="domain">A tax invoice and a claim the practice can send</td><td class="note">Section 29-70 is named in the contents. Its operative text was not read, so the screen lists no particulars and takes no payment.</td><td><span class="pill info">M</span></td></tr>
@@ -168,11 +168,11 @@
   </table></div>
 
   <h2>Sources</h2>
-  <p class="lede">Pre-work <code>AU-TR-AUDIT-01</code>, mean 48, tip <code>d5a219fd</code>. This rescore is <code>release/au</code> at <code>6ca6299e</code>: the Medicare checksum, the college links, and the prescription words. Pack tests for that commit: <code>countries/au/au.test.ts</code> and <code>countries/au/araclar/araclar.test.ts</code>, 157 tests, 0 failures. Live <code>au.notya.io</code> was still deployment <code>dpl_nn8L3ZpJRAMLpCQ114NN7c7j9JNt</code> when this file was written. No patient data. No person is named.</p>
+  <p class="lede">Pre-work <code>AU-TR-AUDIT-01</code>, mean 48, tip <code>d5a219fd</code>. This rescore is <code>release/au</code> at <code>fa7b64da</code>: Charlie and Clara on all 44 offered roles, on top of the Medicare checksum, the college links, and the prescription words. Pack tests: <code>countries/au/au.test.ts</code> and <code>countries/au/araclar/araclar.test.ts</code>, 158 tests, 0 failures. Live <code>au.notya.io</code> was still deployment <code>dpl_nn8L3ZpJRAMLpCQ114NN7c7j9JNt</code> when this file was written. No patient data. No person is named.</p>
 
   <div class="foot">
     <span>AU-TR-AUDIT-02 · 2026-10-20 · rescore · Australia only · no patient data</span>
-    <span>Strong ≥85 · Partial 45–84 · Thin 15–44 · Missing &lt;15 · mean 53</span>
+    <span>Strong ≥85 · Partial 45–84 · Thin 15–44 · Missing &lt;15 · mean 56</span>
   </div>
 </div>
 </body>
