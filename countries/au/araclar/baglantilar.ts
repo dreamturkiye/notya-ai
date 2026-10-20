@@ -14,11 +14,8 @@
  * MACHINE-WRITTEN, UNREAD BY A CLINICIAN OF AUSTRALIA: on the worklist of the local clinical lead
  * (./onaysizAciklar.ts), the same as the other tools only this country has.
  *
- * NOTE (NOTYA-ARACLAR-DENETIM-03-AU, 2026-10-14): a My Health Record link-out tile (au-my-health-record) was built
- * here and then REMOVED on reconsideration, after confirming it answers question #4 — My Health Record is indeed
- * Australia's name for the e-Nabız equivalent — but a government link-out reference is not the kind of thing that
- * belongs in a core, every-role workflow tool set just because Türkiye's e-Nabız tile does. See the audit report for
- * the reasoning; the research finding stands, the tool does not.
+ * NOTE: au-my-health-record is not a link in this file. It is the upload-conditions checklist in
+ * ./myHealthRecord.ts. A tick is a note. Nothing is uploaded.
  */
 import type { PaketAraci } from '@/lib/ulke/araclar/tipler'
 
