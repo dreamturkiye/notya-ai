@@ -13,6 +13,7 @@ import { kosullariUygula } from '@/lib/ulke/araclar/yardimci'
 import { alanVarMi } from '@/lib/ulke/araclar/yardimci'
 import { AU_ASI_TAKVIMI, AU_ASI_TAKVIMI_MADDELERI, AU_BEDEN, AU_ECOG, AU_K10, AU_TANIMLAR, BEL_SINIRLARI, bmiSinifi, ECOG_DERECELERI, k10Grubu, K10_MADDELERI } from './tanimlar'
 import { AU_GST } from './gstInvoice'
+import { AU_AIR } from './immunisationReport'
 import { AU_MHR, AU_MHR_MADDELERI } from './myHealthRecord'
 import { AU_GIZLILIK, AU_GIZLILIK_MADDELERI } from './gizlilik'
 import { AU_MEDICARE } from './medicareParticulars'
@@ -152,7 +153,7 @@ describe('au-immunisation-schedule — the National Immunisation Program schedul
 
 describe('the mechanisms only Australia has', () => {
   it('each key carries the country\'s code, each names the source of its arithmetic, and none asks the country for a number of its own', () => {
-    assert.deepEqual(AU_TANIMLAR.map((t) => t.anahtar), ['au-body-size', 'au-mental-health-screen', 'au-oncology-grading', 'au-immunisation-schedule', 'au-notifiable-diseases', 'au-poisons-schedules', 'au-schedule-8', 'au-dispensing-label', 'au-mandatory-notifications', 'au-pbs-prescription', 'au-medicare-particulars', 'au-identifier-check', 'au-privacy-principles', 'au-tax-invoice', 'au-my-health-record'])
+    assert.deepEqual(AU_TANIMLAR.map((t) => t.anahtar), ['au-body-size', 'au-mental-health-screen', 'au-oncology-grading', 'au-immunisation-schedule', 'au-immunisation-report', 'au-notifiable-diseases', 'au-poisons-schedules', 'au-schedule-8', 'au-dispensing-label', 'au-mandatory-notifications', 'au-pbs-prescription', 'au-medicare-particulars', 'au-identifier-check', 'au-privacy-principles', 'au-tax-invoice', 'au-my-health-record'])
     for (const t of AU_TANIMLAR) {
       assert.match(t.anahtar, /^au-[a-z0-9]+(-[a-z0-9]+)*$/)
       assert.ok((t.kaynak ?? '').length > 20, t.anahtar)
@@ -206,13 +207,30 @@ describe('statutory checklists read on 2026-10-15 — a tick on the wrong path d
     assert.deepEqual(genel.uyarilar, ['gonderilmedi'])
   })
 
+  it('Immunisation register: a prescribed kind shows the report particulars, and another kind shows none', () => {
+    assert.equal(kos(AU_AIR, {}).tamam, false)
+    assert.equal(kos(AU_AIR, { tur: 'diger', kisi: true }).tamam, false)
+    assert.deepEqual(gorunen(AU_AIR, { tur: 'diger' }), [])
+    const covid = kos(AU_AIR, { tur: 'covid', kisi: true, yol: true })
+    assert.equal(covid.tamam, true)
+    assert.equal(sayi(covid, 'isaretli'), 1)
+    assert.equal(covid.sayilar[0].enCok, 11)
+    assert.deepEqual(covid.uyarilar, ['air_yok'])
+    assert.equal(gorunen(AU_AIR, { tur: 'covid' }).includes('yol'), false)
+    assert.equal(gorunen(AU_AIR, { tur: 'influenza' }).length, 11)
+    assert.equal(gorunen(AU_AIR, { tur: 'program' }).includes('yol'), false)
+    const jev = gorunen(AU_AIR, { tur: 'ensefalit' })
+    assert.equal(jev.length, 12)
+    assert.ok(jev.includes('yol'))
+  })
+
   it('My Health Record: a tick notes an upload condition, and nothing is uploaded', () => {
-    assert.equal(AU_MHR_MADDELERI.length, 7)
+    assert.equal(AU_MHR_MADDELERI.length, 8)
     assert.equal(kos(AU_MHR, {}).tamam, false)
     const bir = kos(AU_MHR, { istemedi: true, ayrim: true })
     assert.equal(bir.tamam, true)
     assert.equal(sayi(bir, 'isaretli'), 2)
-    assert.equal(bir.sayilar[0].enCok, 7)
+    assert.equal(bir.sayilar[0].enCok, 8)
     assert.deepEqual(bir.uyarilar, ['gonderilmedi'])
     assert.deepEqual(gorunen(AU_MHR, {}), [...AU_MHR_MADDELERI])
   })

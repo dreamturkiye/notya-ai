@@ -99,8 +99,12 @@ export const AU_ONAYSIZ_ACIK_ARACLAR: readonly OnaysizAcikArac[] = [
     bakilacak: 'The particulars in subsection 29-70(1), read 20 October 2026 from the compilation in force on 1 January 2026. A tick is a note. The approved form is not produced. Nothing is sent and no payment is taken. A clinician should confirm the compilation is still in force.',
   },
   {
-    anahtar: 'au-my-health-record', oneri: 'My Health Records Act 2012, compilation of 5 December 2025', klinisyen: null,
-    bakilacak: 'Sections 45, 45A, 45B and 46, and Schedule 1 clause 9, read 20 October 2026 from the compilation in force on 5 December 2025. A tick is a note. Nothing is uploaded. The My Health Records Rules were not read. Prescribed State or Territory laws were not copied. A clinician should confirm the compilation is still in force.',
+    anahtar: 'au-immunisation-report', oneri: 'Australian Immunisation Register Rules 2026, section 10', klinisyen: null,
+    bakilacak: 'Section 10 of the rules, as made on 12 March 2026 and commenced on 1 April 2026, and sections 4, 10A and 10B of the Act, compilation in force on 5 December 2025, read 20 October 2026. A tick is a note. Nothing is reported. The designated-vaccines determination was not read. A clinician should confirm the rules are still in force.',
+  },
+  {
+    anahtar: 'au-my-health-record', oneri: 'My Health Records Act 2012, compilation of 1 July 2026', klinisyen: null,
+    bakilacak: 'Sections 45, 45A, 45B and 46, and Schedule 1 clause 9, read 20 October 2026 from the compilation in force on 1 July 2026. Sections 23 and 24 of the My Health Records Rules 2026 were read from the instrument as made on 31 March 2026. A tick is a note. Nothing is uploaded. Prescribed State or Territory laws were not copied. A clinician should confirm both instruments are still in force.',
   },
   {
     anahtar: 'au-privacy-principles', oneri: 'Privacy Act 1988 Schedule 1, compilation of 4 June 2026', klinisyen: null,
