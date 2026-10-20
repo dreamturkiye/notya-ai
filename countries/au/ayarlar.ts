@@ -28,6 +28,7 @@ import { auBildirimAraci } from './araclar/bildirim'
 import { auEtiketAraci, auSchedule8Araci, auZehirSinifiAraci } from './araclar/poisons'
 import { AU_GROWTH_CHART_REFERENCE, auCvdBaglantisi, auMbsBaglantisi, auPbsListesi, auPbsRaporu } from './araclar/baglantilar'
 import { AU_GIZLILIK_ARACI } from './araclar/gizlilik'
+import { auGstFatura } from './araclar/gstInvoice'
 import { AU_KIMLIK_KONTROL_ARACI } from './araclar/kimlikKontrol'
 import { auBaglantiAraclari } from './araclar/referanslar'
 import { auMedicare } from './araclar/medicareParticulars'
@@ -281,6 +282,7 @@ export const AU_GIRDI: EnUlkeGirdisi = {
         AU_GROWTH_CHART_REFERENCE,
         AU_KIMLIK_KONTROL_ARACI,
         AU_GIZLILIK_ARACI,
+        auGstFatura(),
         // The PBS top-drugs tables are not copied. The copyright page reserves rights beyond personal
         // reference (docs/medicines/AUSTRALIA.md). This tile only opens the report index. Doctors only.
         auPbsRaporu(hekimRolleri(SATIRLAR)),

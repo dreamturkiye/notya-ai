@@ -22,6 +22,7 @@ import { rolSablonAlanlari, sablonMu } from '@/lib/ulke/arayuz/notSablonu'
 import { sesIstegi } from '@/lib/ulke/uygulama/sesSentez'
 import { asistanKonusmaMetni, asistanSesCevabi } from '@/lib/ulke/uygulama/asistanSes'
 import { BugunGorunumu } from '@/components/ulke/uygulama/Bugun'
+import { Cerceve, YOL } from '@/components/ulke/uygulama/Kabuk'
 import { icerikAnahtari } from '@/lib/ulke/arayuz/rolIcerigi'
 import { EN_ROL_ALANLARI } from '../_dil/en/klinik/notSablonlari'
 import { EN_ROLLER, enRolAnahtarlari } from '../_dil/en/klinik/roller'
@@ -43,7 +44,7 @@ import { AU_SIZINTI_TERIMLERI } from './sizintiTerimleri'
 const D = 'en-AU'
 const LAB = { albuminKreatinin: 'mg/mmol', hemoglobin: 'g/L', kreatinin: 'umol/L', glukoz: 'mmol/L', kolesterol: 'mmol/L', crp: 'mg/L', psa: 'ug/L', hba1c: ['%', 'mmol/mol'] } as const
 /** The tools with a MECHANISM only Australia has (./araclar/tanimlar.ts). */
-const KENDI_MEKANIZMALI = ['au-body-size', 'au-mental-health-screen', 'au-oncology-grading', 'au-immunisation-schedule', 'au-notifiable-diseases', 'au-poisons-schedules', 'au-schedule-8', 'au-dispensing-label', 'au-mandatory-notifications', 'au-pbs-prescription', 'au-medicare-particulars', 'au-identifier-check', 'au-privacy-principles']
+const KENDI_MEKANIZMALI = ['au-body-size', 'au-mental-health-screen', 'au-oncology-grading', 'au-immunisation-schedule', 'au-notifiable-diseases', 'au-poisons-schedules', 'au-schedule-8', 'au-dispensing-label', 'au-mandatory-notifications', 'au-pbs-prescription', 'au-medicare-particulars', 'au-identifier-check', 'au-privacy-principles', 'au-tax-invoice']
 /** Link-out tiles only Australia has: no mechanism, no arithmetic. College tiles are AU_BAGLANTI_ANAHTARLARI. */
 const KENDI_BAGLANTILARI = ['au-growth-chart-reference', 'au-pbs-report-link', 'au-pbs-schedule-link', 'au-mbs-online-link', 'au-cvd-risk-link', ...AU_BAGLANTI_ANAHTARLARI]
 /** Every tool that carries Australia's own code, switched on by the owner's order of 2026-10-10 or 2026-10-13. */
@@ -368,6 +369,7 @@ describe('au: its own role list — the Medical Board\'s wording, a split, one r
     for (const eski of AU_CIKAN_ROLLER) assert.equal(asistanKonusmaMetni(eski, 'kadin'), null, eski)
     assert.equal(asistanKonusmaMetni(null, 'erkek'), null)
     const html = renderToStaticMarkup(React.createElement(BugunGorunumu, { m: AU_ARAYUZ.metinler[D]!, ad: 'QA', muayeneler: [], hata: false, rol: 'cardiology' }))
+    assert.match(html, /id="asistan"/)
     assert.match(html, /data-alan="asistan-kart" data-rol="cardiology"/)
     assert.match(html, /data-alan="asistan-kart-ad">Charlie and Clara</)
     assert.match(html, /data-alan="asistan-kart-satir">Your senior colleague · Cardiology</)
@@ -375,6 +377,14 @@ describe('au: its own role list — the Medical Board\'s wording, a split, one r
     assert.match(html, /data-ses="kadin">Clara</)
     const rolsuz = renderToStaticMarkup(React.createElement(BugunGorunumu, { m: AU_ARAYUZ.metinler[D]!, ad: 'QA', muayeneler: [], hata: false, rol: null }))
     assert.doesNotMatch(rolsuz, /data-alan="asistan-kart"/)
+    const nav = renderToStaticMarkup(React.createElement(Cerceve, { dil: D, m: AU_ARAYUZ.metinler[D]!, ad: 'QA', aktif: 'bugun', cikis: () => {}, children: null }))
+    assert.match(nav, new RegExp(`href="${YOL.bugun}#asistan"`))
+    assert.match(nav, /Ask the assistant/)
+    assert.match(nav, new RegExp(`href="${YOL.bugun}#mesajlar"`))
+    assert.match(nav, /data-duvar="rapor"/)
+    assert.match(nav, /data-duvar="odeme"/)
+    assert.doesNotMatch(nav, /data-duvar="asistan"/)
+    assert.doesNotMatch(nav, /data-duvar="mesaj"/)
     const cagrilan: string[] = []
     const fetchFn: typeof fetch = async (_adres, init) => {
       cagrilan.push(String(init?.body ?? ''))
@@ -524,7 +534,7 @@ describe('au: the tools only Australia has — switched on by the owner\'s order
     for (const k of KENDI_MEKANIZMALI) {
       const l = A.araclar.find((p) => p.anahtar === k)!.lisans!
       assert.equal(l.durum, 'serbest', k)
-      assert.match(l.kaynak ?? '', /^https:\/\/\S+ \(read 2026-10-(10|13|14|15|19)\): /, k)
+      assert.match(l.kaynak ?? '', /^https:\/\/\S+ \(read 2026-10-(10|13|14|15|19|20)\): /, k)
       assert.ok((l.bildirim?.[D] ?? '').length > 20, `${k}: the rights holder's notice`)
     }
     // the link-out tile: free, but no reproduced notice is shown under a result it never gives

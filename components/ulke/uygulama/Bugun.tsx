@@ -157,7 +157,7 @@ export function BugunGorunumu({ m, ad, muayeneler, hata, rol, randevular, mesajl
           {satir ? <span data-alan="asistan-satir">{`: ${satir}`}</span> : null}
         </div>
         {sesler && satir ? (
-          <section className="uza-kart" data-alan="asistan-kart" data-rol={rol ?? undefined}>
+          <section id="asistan" className="uza-kart" data-alan="asistan-kart" data-rol={rol ?? undefined}>
             <p className="uza-ust-yazi">{m.asistan.etiket}</p>
             <p className="uza-asistan-ad" data-alan="asistan-kart-ad">{asistan}</p>
             <p className="uza-ipucu" data-alan="asistan-kart-satir">{satir}</p>
@@ -224,7 +224,7 @@ export function BugunGorunumu({ m, ad, muayeneler, hata, rol, randevular, mesajl
         </div>
       </div>
 
-      {mesajlar ?? null}
+      {mesajlar ? <div id="mesajlar">{mesajlar}</div> : null}
       {konsultasyon ?? null}
       {istekler ?? null}
 

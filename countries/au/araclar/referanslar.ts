@@ -4,7 +4,7 @@
  *
  * One college or regulator page for every role this pack still offers, plus two
  * specialty pages (the RACGP Red Book, and the Royal Children's Hospital guidelines)
- * and three core pages (tax invoices, My Health Record guidance, Ahpra registration).
+ * and two core pages (My Health Record guidance, Ahpra registration). The tax-invoice particulars are a checklist, not a link.
  */
 import type { PaketAraci } from '@/lib/ulke/araclar/tipler'
 
@@ -56,16 +56,6 @@ const racpYetiskin = (rol: string, ad: string) =>
   )
 
 export const AU_BAGLANTI_KAYITLARI: readonly AuBaglantiKaydi[] = [
-  kayit({
-    anahtar: 'au-tax-invoice',
-    roller: null,
-    ad: 'GST tax invoice (link)',
-    aciklama: 'Opens the compilation of A New Tax System (Goods and Services Tax) Act 1999. Section 29-70, Tax invoices, is named in that compilation\'s contents. The section text was not copied.',
-    not: 'This screen does not take a card and does not issue an invoice. Stripe and Tyro are not connected.',
-    adres: 'https://www.legislation.gov.au/C2004A00446/latest',
-    kaynak: `https://www.legislation.gov.au/C2004A00446/latest${OK} The contents name section 29-70 Tax invoices. The operative words of that section were not read.`,
-    bakilacak: 'A lawyer should say which particulars an invoice from this practice must show. This tile does not list them, because the section text was not read.',
-  }),
   kayit({
     anahtar: 'au-my-health-record',
     roller: null,

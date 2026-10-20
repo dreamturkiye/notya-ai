@@ -12,6 +12,7 @@ import type { AracGirdisi, AracSonucu, AracTanimi } from '@/lib/ulke/araclar/tip
 import { kosullariUygula } from '@/lib/ulke/araclar/yardimci'
 import { alanVarMi } from '@/lib/ulke/araclar/yardimci'
 import { AU_ASI_TAKVIMI, AU_ASI_TAKVIMI_MADDELERI, AU_BEDEN, AU_ECOG, AU_K10, AU_TANIMLAR, BEL_SINIRLARI, bmiSinifi, ECOG_DERECELERI, k10Grubu, K10_MADDELERI } from './tanimlar'
+import { AU_GST } from './gstInvoice'
 import { AU_MEDICARE } from './medicareParticulars'
 import { AU_ZORUNLU_BILDIRIM } from './notifications'
 import { AU_PBS_RECETE } from './pbsPrescription'
@@ -149,7 +150,7 @@ describe('au-immunisation-schedule — the National Immunisation Program schedul
 
 describe('the mechanisms only Australia has', () => {
   it('each key carries the country\'s code, each names the source of its arithmetic, and none asks the country for a number of its own', () => {
-    assert.deepEqual(AU_TANIMLAR.map((t) => t.anahtar), ['au-body-size', 'au-mental-health-screen', 'au-oncology-grading', 'au-immunisation-schedule', 'au-notifiable-diseases', 'au-poisons-schedules', 'au-schedule-8', 'au-dispensing-label', 'au-mandatory-notifications', 'au-pbs-prescription', 'au-medicare-particulars', 'au-identifier-check', 'au-privacy-principles'])
+    assert.deepEqual(AU_TANIMLAR.map((t) => t.anahtar), ['au-body-size', 'au-mental-health-screen', 'au-oncology-grading', 'au-immunisation-schedule', 'au-notifiable-diseases', 'au-poisons-schedules', 'au-schedule-8', 'au-dispensing-label', 'au-mandatory-notifications', 'au-pbs-prescription', 'au-medicare-particulars', 'au-identifier-check', 'au-privacy-principles', 'au-tax-invoice'])
     for (const t of AU_TANIMLAR) {
       assert.match(t.anahtar, /^au-[a-z0-9]+(-[a-z0-9]+)*$/)
       assert.ok((t.kaynak ?? '').length > 20, t.anahtar)
@@ -201,5 +202,22 @@ describe('statutory checklists read on 2026-10-15 — a tick on the wrong path d
     assert.ok(gorunen(AU_MEDICARE, { sinif: 'patoloji' }).includes('pat_kim'))
     assert.equal(gorunen(AU_MEDICARE, { sinif: 'goruntuleme' }).includes('kim'), false)
     assert.deepEqual(genel.uyarilar, ['gonderilmedi'])
+  })
+
+  it('GST tax invoice: a supplier invoice under 1,000 hides the recipient line, and a recipient-issued invoice shows who pays the GST', () => {
+    assert.equal(kos(AU_GST, { niyet: true }).tamam, false)
+    const alti = kos(AU_GST, { sinif: 'alti', niyet: true, alici_kim: true, alici_gst: true })
+    assert.equal(alti.tamam, true)
+    assert.equal(sayi(alti, 'isaretli'), 1)
+    assert.equal(alti.sayilar[0].enCok, 7)
+    assert.equal(gorunen(AU_GST, { sinif: 'alti' }).includes('alici_kim'), false)
+    assert.equal(gorunen(AU_GST, { sinif: 'alti' }).includes('alici_gst'), false)
+    assert.ok(gorunen(AU_GST, { sinif: 'bin' }).includes('alici_kim'))
+    assert.equal(gorunen(AU_GST, { sinif: 'bin' }).includes('alici_gst'), false)
+    const alici = kos(AU_GST, { sinif: 'alici', alici_gst: true })
+    assert.equal(alici.tamam, true)
+    assert.ok(gorunen(AU_GST, { sinif: 'alici' }).includes('alici_gst'))
+    assert.equal(alici.sayilar[0].enCok, 9)
+    assert.deepEqual(alti.uyarilar, ['gonderilmedi'])
   })
 })

@@ -19,6 +19,7 @@
 import type { AracSayisi, AracTanimi } from '@/lib/ulke/araclar/tipler'
 import { BOS_SONUC, kontrolListesi, puan, sayi, sayiMi, secim, tarih } from '@/lib/ulke/araclar/yardimci'
 import { AU_BILDIRIM } from './bildirim'
+import { AU_GST } from './gstInvoice'
 import { AU_GIZLILIK } from './gizlilik'
 import { AU_KIMLIK_KONTROL } from './kimlikKontrol'
 import { AU_MEDICARE } from './medicareParticulars'
@@ -216,4 +217,4 @@ export const AU_ASI_TAKVIMI: AracTanimi = kontrolListesi({
 })
 
 /** The mechanisms only Australia has, in the order the grid shows their tools. */
-export const AU_TANIMLAR: readonly AracTanimi[] = [AU_BEDEN, AU_K10, AU_ECOG, AU_ASI_TAKVIMI, AU_BILDIRIM, AU_ZEHIR_SINIFI, AU_SCHEDULE_8_TANIMI, AU_ETIKET, AU_ZORUNLU_BILDIRIM, AU_PBS_RECETE, AU_MEDICARE, AU_KIMLIK_KONTROL, AU_GIZLILIK]
+export const AU_TANIMLAR: readonly AracTanimi[] = [AU_BEDEN, AU_K10, AU_ECOG, AU_ASI_TAKVIMI, AU_BILDIRIM, AU_ZEHIR_SINIFI, AU_SCHEDULE_8_TANIMI, AU_ETIKET, AU_ZORUNLU_BILDIRIM, AU_PBS_RECETE, AU_MEDICARE, AU_KIMLIK_KONTROL, AU_GIZLILIK, AU_GST]

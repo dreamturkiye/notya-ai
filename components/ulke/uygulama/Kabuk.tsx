@@ -22,7 +22,7 @@ import { UYGULAMA_EKRANLARI, type UygulamaEkrani } from '@/lib/ulke/tipler'
 import { ulkeYolu } from '@/lib/ulke/yol'
 import { useBitki } from './bitki'
 import { CHROME_FONT, CHROME_FONT_HREF, CHROME_RENK as R } from '@/lib/doktor/chromeRenk'
-import { araclarMetni, klinikMetni, marka, randevuMetni, roller, rolMu, uygulamaDili, uygulamaMetni, type UygulamaMetni } from '@/lib/ulke/arayuz'
+import { araclarMetni, asistanSesAdlari, klinikMetni, marka, randevuMetni, roller, rolMu, uygulamaDili, uygulamaMetni, type UygulamaMetni } from '@/lib/ulke/arayuz'
 import { hesapSaatDilimi, hesapSaatDilimiAyarla, saatBicimi } from '@/lib/ulke/arayuz/bicim'
 import { ozellikAcik, ulkePaketi } from '@/lib/ulke/ulke'
 import type { DilKodu } from '@/lib/ulke/tipler'
@@ -264,13 +264,13 @@ export function Cerceve({ dil, m, ad, unvan, aktif, cikis, sade, onBuro, childre
             </nav>
           ) : (
             <nav className="uza-nav" aria-label={m.kabuk.menu}>
-              {m.pano ? <span className="uza-duvar uza-asistan" data-duvar="asistan">{m.pano.asistanaSor}</span> : null}
+              {m.pano ? (asistanSesAdlari() ? <a href={`${YOL.bugun}#asistan`} className="uza-sekme">{m.pano.asistanaSor}</a> : <span className="uza-duvar uza-asistan" data-duvar="asistan">{m.pano.asistanaSor}</span>) : null}
               {m.kabuk.calismaAlani ? <div className="uza-grup">{m.kabuk.calismaAlani}</div> : null}
               {baglanti('bugun', YOL.bugun, m.kabuk.bugun)}
               {/* NOTYA-UZ-RANDEVU-01: the calendar. Its name is in the appointment catalogue, in the same form. */}
               {HAZIR.takvim ? baglanti('takvim', YOL.takvim, randevuMetni(dil).kabuk.takvim) : null}
               {baglanti('hastalar', YOL.hastalar, m.kabuk.hastalar)}
-              {m.pano ? <span className="uza-duvar" data-duvar="mesaj">{m.pano.mesajlar}</span> : null}
+              {m.pano ? (ozellikAcik('hastaMesajlari') ? <a href={`${YOL.bugun}#mesajlar`} className="uza-sekme">{m.pano.mesajlar}</a> : <span className="uza-duvar" data-duvar="mesaj">{m.pano.mesajlar}</span>) : null}
               {m.kabuk.diger ? <><div className="uza-ayrac" /><div className="uza-grup">{m.kabuk.diger}</div></> : null}
               {m.pano ? <span className="uza-duvar" data-duvar="rapor">{m.pano.raporlar}</span> : null}
               {m.pano ? <span className="uza-duvar" data-duvar="odeme">{m.pano.odeme}</span> : null}

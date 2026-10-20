@@ -95,6 +95,10 @@ export const AU_ONAYSIZ_ACIK_ARACLAR: readonly OnaysizAcikArac[] = [
     bakilacak: 'The card checksum and the provider-number checksum were read from clearwater.com.au on 19 October 2026, not from a Services Australia page. A match is not a register lookup. No Ahpra character pattern was on the page that was opened, so the registration number is not checked here.',
   },
   {
+    anahtar: 'au-tax-invoice', oneri: 'GST Act section 29-70, compilation of 1 January 2026', klinisyen: null,
+    bakilacak: 'The particulars in subsection 29-70(1), read 20 October 2026 from the compilation in force on 1 January 2026. A tick is a note. The approved form is not produced. Nothing is sent and no payment is taken. A clinician should confirm the compilation is still in force.',
+  },
+  {
     anahtar: 'au-privacy-principles', oneri: 'OAIC Australian Privacy Principles index, 2026-10-19', klinisyen: null,
     bakilacak: 'The four ticks are the four subjects named on the OAIC index page. They are not the text of the 13 principles. A tick is not a legal finding. A lawyer should say whether a practice record of this kind is the right screen.',
   },
