@@ -53,8 +53,9 @@ export const AU_PAKETI: UlkePaketi = {
   // card checksum (./kimlik.ts). `hane: 0` = both the 10-digit card and the 11-digit card-plus-reference are valid.
   ulusalKimlik: { ad: 'Medicare card number', hane: 0, gecerliMi: medicareKartGecerli },
   // Fail closed. Messages stay on the patient's page (no outbound channel). Clinic accounts are on, with starting
-  // values a lawyer has not read. Still off: the assistant in text and voice, the voice profile, image evaluation,
-  // and a doctor's own templates.
+  // values a lawyer has not read. Every offered role names the two Australian English voices (./ses.ts, Charlie and
+  // Clara). Today and Settings can play each voice saying that role's line. Still off: a conversation, the voice
+  // profile, image evaluation, and a doctor's own templates.
   // CONSULTATION BETWEEN DOCTORS (`konsultasyon`) is ON from NOTYA-ARACLAR-DENETIM-02-AU, 2026-10-13. The audit of
   // 2026-10-10 found it was left off only because its consent sentence was never drafted (docs/araclar-denetim/AU.md,
   // "Still unverified, and why": "a lawyer, not a web page" — true of the sentence, but nobody had been asked to

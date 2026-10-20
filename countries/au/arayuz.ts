@@ -6,14 +6,33 @@
  * names, the note templates, the tools and the landing copy in Australian spelling (en-AU) from what this country states in
  * ./ayarlar.ts.
  */
-import type { UlkeArayuzu } from '@/lib/ulke/arayuz/tipler'
+import type { AsistanKimligi, UlkeArayuzu } from '@/lib/ulke/arayuz/tipler'
 import { enArayuz } from '../_dil/en/arayuz'
 import { AU_KONSULTASYON_METNI } from './araclar/konsultasyonMetinleri'
 import { AU_GIRDI } from './ayarlar'
+import { AU_SES } from './ses'
+
+const temel = enArayuz(AU_GIRDI)
+const sunulan = new Set(temel.roller.map((r) => r.anahtar))
+
+/**
+ * Both Australian English voices, for every role this pack offers.
+ * Charlie (male) and Clara (female) are the voices in ./ses.ts. A role the pack no longer offers has none.
+ */
+export function auAsistanKimligi(rol: unknown): AsistanKimligi | null {
+  if (typeof rol !== 'string' || !sunulan.has(rol)) return null
+  return {
+    tamAd: `${AU_SES.sesler.erkek.ad} and ${AU_SES.sesler.kadin.ad}`,
+    kisaAd: AU_SES.sesler.kadin.ad,
+    makineTuretimi: false,
+  }
+}
 
 export const AU_ARAYUZ: UlkeArayuzu = {
-  ...enArayuz(AU_GIRDI),
+  ...temel,
   // NOTYA-ARACLAR-DENETIM-02-AU, 2026-10-13 — the English language set has not written consultation between doctors
   // for any of the five English-speaking countries; Australia's own words are here, not in countries/_dil/en/.
   konsultasyonMetinleri: { 'en-AU': AU_KONSULTASYON_METNI },
+  asistan: (rol) => auAsistanKimligi(rol),
+  sesAdlari: { erkek: AU_SES.sesler.erkek.ad, kadin: AU_SES.sesler.kadin.ad },
 }

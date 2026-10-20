@@ -107,6 +107,11 @@ export type UlkeArayuzu = {
   roller: readonly RolTanimi[]
   /** The assistant of a role in a form, or null where the role has none: the screens then show the neutral line. */
   asistan: (rol: string, dil: DilKodu) => AsistanKimligi | null
+  /**
+   * Display names of the two voices the assistant can speak with. Absent = the assistant card does not speak.
+   * The provider ids stay on the clinical half (`klinik.ses`); a screen never needs them.
+   */
+  sesAdlari?: { readonly erkek: string; readonly kadin: string }
   notSablonlari: NotSablonVerisi
   /** The landing page's content. null = the country has no landing page of its own (feature `acilisSayfasi` off). */
   acilis: UlkeAcilisi | null

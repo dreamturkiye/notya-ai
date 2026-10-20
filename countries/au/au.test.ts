@@ -11,12 +11,17 @@
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 import { join } from 'node:path'
+import React from 'react'
+import { renderToStaticMarkup } from 'react-dom/server'
 import { girdiyiCoz } from '@/lib/ulke/araclar/girdi'
 import type { BirimOrtami } from '@/lib/ulke/araclar/birimler'
 import { aracCalistir, hekimRolleri, hesabinAraci, hesabinAraclari, paketinAraci } from '@/lib/ulke/araclar/paket'
 import type { UlkeAraclari } from '@/lib/ulke/araclar/tipler'
 import { ulkeyeOzelAnahtarlar } from '@/lib/ulke/araclar/ulkeyeOzel'
 import { rolSablonAlanlari, sablonMu } from '@/lib/ulke/arayuz/notSablonu'
+import { sesIstegi } from '@/lib/ulke/uygulama/sesSentez'
+import { asistanKonusmaMetni, asistanSesCevabi } from '@/lib/ulke/uygulama/asistanSes'
+import { BugunGorunumu } from '@/components/ulke/uygulama/Bugun'
 import { icerikAnahtari } from '@/lib/ulke/arayuz/rolIcerigi'
 import { EN_ROL_ALANLARI } from '../_dil/en/klinik/notSablonlari'
 import { EN_ROLLER, enRolAnahtarlari } from '../_dil/en/klinik/roller'
@@ -32,6 +37,7 @@ import { AU_KLINIK } from './klinik'
 import { AU_ACIL_CUMLE } from './klinik/formEk'
 import { AU_KENDI_FORMLU_ROLLER, AU_ROLLER } from './klinik/roller'
 import { AU_CIKAN_ROLLER, AU_EK_ROLLER, AU_ESKI_ROL_ESLEMESI, AU_ROL_LISTESI } from './klinik/rolListesi'
+import { AU_SES } from './ses'
 import { AU_SIZINTI_TERIMLERI } from './sizintiTerimleri'
 
 const D = 'en-AU'
@@ -73,6 +79,7 @@ ingilizcePaketSinamasi({
   konsultasyonAcik: true,
   ekOzellikler: ['fotoArsivi', 'muayeneEkleri'],
   kimlikDogrulanir: true,
+  asistanVar: true,
   acilCumle: AU_ACIL_CUMLE,
   yasakAcil: /\b(911|999|111|112|103)\b/,
   idIpucu: /\bMedicare\b/,
@@ -332,6 +339,61 @@ describe('au: its own role list — the Medical Board\'s wording, a split, one r
     // each half of the split behaves like the role its stored accounts are mapped from
     assert.equal(tanim('cardio-thoracic-surgery')!.gibi, 'thoracic-surgery')
     assert.equal(tanim('vascular-surgery')!.gibi, 'cardiovascular-surgery')
+  })
+
+  it('every offered role speaks with Charlie and Clara, the Australian English voices', async () => {
+    assert.equal(AU_KLINIK.ses, AU_SES)
+    assert.deepEqual(AU_SES.sesler, {
+      erkek: { ad: 'Charlie', id: 'IKne3meq5aSn9XLyUdCD' },
+      kadin: { ad: 'Clara', id: 'tyepWYJJwJM9TTFIg5U7' },
+    })
+    for (const cins of ['erkek', 'kadin'] as const) {
+      const istek = sesIstegi(AU_SES, 'Good morning.', cins)
+      assert.equal(istek.tamam, true)
+      if (istek.tamam) assert.equal(istek.govde.language_code, 'en')
+    }
+    for (const rol of ROLLER) {
+      const kim = AU_ARAYUZ.asistan(rol, D)
+      assert.equal(kim?.tamAd, 'Charlie and Clara', rol)
+      assert.equal(kim?.kisaAd, 'Clara', rol)
+      assert.equal(kim?.makineTuretimi, false, rol)
+    }
+    assert.equal(AU_ARAYUZ.asistan('no-such-role', D), null)
+    assert.deepEqual(AU_ARAYUZ.sesAdlari, { erkek: 'Charlie', kadin: 'Clara' })
+    for (const rol of ROLLER) {
+      const adRol = ad(rol)
+      assert.equal(asistanKonusmaMetni(rol, 'erkek'), `Charlie. Your senior colleague. ${adRol}.`, rol)
+      assert.equal(asistanKonusmaMetni(rol, 'kadin'), `Clara. Your senior colleague. ${adRol}.`, rol)
+    }
+    for (const eski of AU_CIKAN_ROLLER) assert.equal(asistanKonusmaMetni(eski, 'kadin'), null, eski)
+    assert.equal(asistanKonusmaMetni(null, 'erkek'), null)
+    const html = renderToStaticMarkup(React.createElement(BugunGorunumu, { m: AU_ARAYUZ.metinler[D]!, ad: 'QA', muayeneler: [], hata: false, rol: 'cardiology' }))
+    assert.match(html, /data-alan="asistan-kart" data-rol="cardiology"/)
+    assert.match(html, /data-alan="asistan-kart-ad">Charlie and Clara</)
+    assert.match(html, /data-alan="asistan-kart-satir">Your senior colleague · Cardiology</)
+    assert.match(html, /data-ses="erkek">Charlie</)
+    assert.match(html, /data-ses="kadin">Clara</)
+    const rolsuz = renderToStaticMarkup(React.createElement(BugunGorunumu, { m: AU_ARAYUZ.metinler[D]!, ad: 'QA', muayeneler: [], hata: false, rol: null }))
+    assert.doesNotMatch(rolsuz, /data-alan="asistan-kart"/)
+    const cagrilan: string[] = []
+    const fetchFn: typeof fetch = async (_adres, init) => {
+      cagrilan.push(String(init?.body ?? ''))
+      return new Response(Uint8Array.from([1, 2, 3]), { status: 200 })
+    }
+    const cevap = await asistanSesCevabi('cardiology', 'kadin', { ses: AU_SES, anahtar: 'anahtar', fetchFn })
+    assert.equal(cevap.status, 200)
+    const govde = await cevap.json() as { ok: boolean; ses: string; cinsiyet: string }
+    assert.equal(govde.ok, true)
+    assert.equal(govde.cinsiyet, 'kadin')
+    assert.equal(Buffer.from(govde.ses, 'base64').length, 3)
+    assert.match(cagrilan[0] ?? '', /Clara\. Your senior colleague\. Cardiology\./)
+    assert.equal((await asistanSesCevabi('hair-transplant', 'erkek', { ses: AU_SES, anahtar: 'anahtar', fetchFn })).status, 404)
+    assert.equal((await asistanSesCevabi('cardiology', 'erkek', { ses: AU_SES, anahtar: '' })).status, 503)
+    assert.equal((await asistanSesCevabi('cardiology', 'other', { ses: AU_SES, anahtar: 'anahtar', fetchFn })).status, 400)
+    const rota = kaynakOku(join(__dirname, '../../app/api/ulke/asistan-ses/route.ulke.ts'))
+    assert.match(rota, /ulkeOturum\(req\)/)
+    assert.match(rota, /hekimRolunuOku\(/)
+    assert.doesNotMatch(rota, /hasta|patient|g\.metin|searchParams/)
   })
 })
 

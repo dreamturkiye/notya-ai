@@ -10,12 +10,13 @@
  * keep the structure they were written with.
  */
 import React, { useEffect, useState } from 'react'
-import { Bilgi, Cerceve, Hata, useUygulama, YOL, Yukleniyor, type Hesap } from './Kabuk'
+import { Bilgi, Cerceve, Hata, useUygulama, YOL, Yukleniyor, type Api, type Hesap } from './Kabuk'
 import { DilSecimi, YaziSecimi } from './DilFormu'
 import { RolSecimi } from './RolFormu'
-import { asistanAdi } from './Asistan'
+import { asistanAdi, asistanSatiri } from './Asistan'
+import { AsistanSesKontrol } from './AsistanSes'
 import { Ipucu, IpucuAyarKarti } from './Ipucu'
-import { araclarMetni, dilBirlestir, dilSecimiVarMi, rolAdi, rolMu, roller, temelDil, varsayilanYazi, yaziSec, yaziSorulurMu, type UygulamaMetni } from '@/lib/ulke/arayuz'
+import { araclarMetni, asistanSesAdlari, dilBirlestir, dilSecimiVarMi, rolAdi, rolMu, roller, temelDil, varsayilanYazi, yaziSec, yaziSorulurMu, type UygulamaMetni } from '@/lib/ulke/arayuz'
 import { hesapSaatDilimiAyarla } from '@/lib/ulke/arayuz/bicim'
 import { ozellikAcik, ulkePaketi } from '@/lib/ulke/ulke'
 import type { DilKodu } from '@/lib/ulke/tipler'
@@ -69,10 +70,12 @@ export function AyarlarGorunumu({ m, d, set, gonder, bekliyor, sonuc, kart }: {
   )
 }
 
-export function RolAyariGorunumu({ m, rol, kayitliRol, setRol, gonder, bekliyor, sonuc }: {
+export function RolAyariGorunumu({ m, rol, kayitliRol, setRol, gonder, bekliyor, sonuc, api }: {
   m: UygulamaMetni; rol: string; /** The role as saved: its assistant is the one named. */ kayitliRol: string | null
   setRol: (r: string) => void; gonder: () => void; bekliyor: boolean; sonuc: 'tamam' | 'hata' | 'gerekli' | null
+  api?: Api
 }) {
+  const sesler = asistanSatiri(m, kayitliRol) ? asistanSesAdlari() : null
   return (
     <section className="yg-satir yg-ayar-kart" data-alan="rol-ayari">
       <span className="yg-satir-emoji" aria-hidden="true">{'\u2695'}</span>
@@ -81,6 +84,7 @@ export function RolAyariGorunumu({ m, rol, kayitliRol, setRol, gonder, bekliyor,
       <form className="uza-form" onSubmit={(e) => { e.preventDefault(); gonder() }}>
         <RolSecimi m={m} deger={rol} sec={setRol} kimlik="uza-rol-ayar" />
         <p className="uza-ipucu">{m.asistan.etiket}: <span data-alan="asistan-ad">{asistanAdi(m, kayitliRol)}</span></p>
+        {sesler ? <AsistanSesKontrol m={m} api={api} sesler={sesler} /> : null}
         <p className="uza-ipucu">{m.rol.ayarIzoh}</p>
         <Hata>{sonuc === 'hata' ? m.rol.kaydedilemedi : sonuc === 'gerekli' ? m.rol.gerekli : null}</Hata>
         <Bilgi>{sonuc === 'tamam' ? m.rol.kaydedildi : null}</Bilgi>
@@ -234,7 +238,7 @@ export default function Ayarlar() {
         <div className="yg-ayar-liste">
           {dilSecimiVarMi() ? <AyarlarGorunumu kart m={u.m} d={d} set={(yeni) => { setD(yeni); setSonuc(null) }} gonder={gonder} bekliyor={bekliyor} sonuc={sonuc} /> : null}
           {u.hesap.saatDilimleri && u.hesap.saatDilimleri.length > 1 ? <SaatDilimiGorunumu m={u.m} dilim={dilim} dilimler={u.hesap.saatDilimleri} sec={(z) => { setDilim(z); setDilimSonucu(null) }} gonder={dilimGonder} bekliyor={dilimBekliyor} sonuc={dilimSonucu} /> : null}
-          {roller().length ? <RolAyariGorunumu m={u.m} rol={rol} kayitliRol={u.hesap.rol} setRol={(r) => { setRol(r); setRolSonucu(null) }} gonder={rolGonder} bekliyor={rolBekliyor} sonuc={rolSonucu} /> : null}
+          {roller().length ? <RolAyariGorunumu m={u.m} rol={rol} kayitliRol={u.hesap.rol} api={u.api} setRol={(r) => { setRol(r); setRolSonucu(null) }} gonder={rolGonder} bekliyor={rolBekliyor} sonuc={rolSonucu} /> : null}
           <MeslekKaydiGorunumu m={u.m} deger={meslek} set={(v) => { setMeslek(v); setMeslekSonucu(null) }} gonder={meslekGonder} bekliyor={meslekBekliyor} sonuc={meslekSonucu} />
           {pano ? duvar('\u{1F4E5}', pano.belgeler, pano.belgeYukle) : null}
           {pano ? duvar('\u{1F4C4}', pano.raporlar, pano.epikriz) : null}

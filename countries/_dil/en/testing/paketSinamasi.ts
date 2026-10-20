@@ -74,6 +74,8 @@ export type EnPaketSinamasi = {
   ekOzellikler?: readonly string[]
   /** True when a non-empty patient identifier is checked. Absent = the field is stored as typed. Empty stays accepted either way. */
   kimlikDogrulanir?: boolean
+  /** True when every offered role names an assistant. Absent = every role shows the neutral line. */
+  asistanVar?: boolean
   /** The country's emergency sentence, written into every red-flag help line. Includes that country's number. */
   acilCumle: string
   /** Emergency numbers that belong to other countries. None may appear in this pack's form. */
@@ -190,7 +192,15 @@ export function ingilizcePaketSinamasi(s: EnPaketSinamasi): void {
       assert.deepEqual(n.gruplar.flatMap((g) => g.rejalar.map((r) => r.id)).sort(), Object.keys(f).sort())
     })
     it('no assistant is named: every role shows the neutral line', () => {
-      for (const r of ROLLER) assert.equal(arayuz.asistan(r, bicim), null, r)
+      if (s.asistanVar === true) {
+        for (const r of ROLLER) {
+          const kim = arayuz.asistan(r, bicim)
+          assert.ok(kim?.tamAd.trim() && kim.kisaAd.trim(), r)
+        }
+        assert.equal(arayuz.asistan('no-such-role', bicim), null)
+      } else {
+        for (const r of ROLLER) assert.equal(arayuz.asistan(r, bicim), null, r)
+      }
     })
     it('hidden from search; sign-up by invitation code only', () => {
       assert.equal(paket.aramaMotorlarinaGizli, true)
