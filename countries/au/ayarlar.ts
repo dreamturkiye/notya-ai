@@ -28,6 +28,8 @@ import { auBildirimAraci } from './araclar/bildirim'
 import { auEtiketAraci, auSchedule8Araci, auZehirSinifiAraci } from './araclar/poisons'
 import { AU_GROWTH_CHART_REFERENCE, auCvdBaglantisi, auMbsBaglantisi, auPbsListesi, auPbsRaporu } from './araclar/baglantilar'
 import { AU_GIZLILIK_ARACI } from './araclar/gizlilik'
+import { auNonsurgicalPlan } from './araclar/nonsurgicalPlan'
+import { auWellnessPlan } from './araclar/wellnessPlan'
 import { auGstFatura } from './araclar/gstInvoice'
 import { auImmunisationReport } from './araclar/immunisationReport'
 import { auMyHealthRecord } from './araclar/myHealthRecord'
@@ -107,8 +109,9 @@ export const AU_GIRDI: EnUlkeGirdisi = {
   //     for the area of work, "non-surgical cosmetic procedures" (Ahpra, "New cosmetic procedure guidelines", 3 June
   //     2025, https://www.ahpra.gov.au/News/2025-06-03-New-cosmetic-procedure-guidelines, opened 2026-10-10). A role
   //     name is an area of work, never a title: the title "surgeon" is protected by law here. Hair transplantation
-  //     is not offered as its own role: it is folded into cosmetic surgery. Preventive and longevity medicine is
-  //     not a specialty on the Medical Board list and is not offered.
+  //     is not offered as its own role. The Board's cosmetic-procedure guideline lists hair transplants with
+  //     non-surgical cosmetic procedures, so that is the role that names them. Wellness and longevity are not a
+  //     specialist title. A plan for that work sits inside general practice. Clinic dermatology stays off.
   //   - 'clinical-psychology' is "Psychologist": that is the regulated profession (Ahpra, "Professions and divisions",
   //     page reviewed 11/04/2025, opened 2026-10-10); the narrower title depends on an endorsement.
   rolAdlari: {
@@ -186,11 +189,11 @@ export const AU_GIRDI: EnUlkeGirdisi = {
       // This pack has no clinic-dermatology role. The two reminder calendars are for that role only.
       'akne-vade': { eksik: 'This country has no clinic-dermatology role, so this reminder calendar stays off. It is a product reminder for that role, not a national schedule.', kimden: KLINISYEN },
       'lazer-vade': { eksik: 'This country has no clinic-dermatology role, so this interval record stays off. The interval is one the clinician chooses, and the role is not in this pack.', kimden: KLINISYEN },
-      // Hair transplantation is not a Medical Board specialty. The work is folded into cosmetic surgery.
-      // The graft estimate and the hair-care reminders stay off: they are not an Australian college tool.
-      'greft-tahmini': { eksik: 'Hair transplantation is not offered as its own role. The Medical Board list has no such specialty. Cosmetic surgery remains. This graft estimate stays off.', kimden: KLINISYEN },
-      'sac-bakim-vade': { eksik: 'Hair transplantation is not offered as its own role, so these hair-care reminders stay off. They are a product calendar, not a national schedule.', kimden: KLINISYEN },
-      'infuzyon-guvenlik': { eksik: 'Preventive and longevity medicine is not a specialty on the Medical Board list, so it is not offered. This infusion checklist stays off. Nothing is sent.', kimden: KLINISYEN },
+      // Hair transplantation is not a Medical Board specialty. The guideline lists it with non-surgical
+      // cosmetic procedures. The graft estimate and the hair-care reminders stay off: no graft count is stored.
+      'greft-tahmini': { eksik: 'Hair transplantation is not offered as its own role. The Medical Board guideline lists hair transplants with non-surgical cosmetic procedures. This graft estimate stays off. No graft count is stored.', kimden: KLINISYEN },
+      'sac-bakim-vade': { eksik: 'Hair transplantation is not offered as its own role. It is listed with non-surgical cosmetic procedures. These hair-care reminders stay off. They are a product calendar, not a national schedule.', kimden: KLINISYEN },
+      'infuzyon-guvenlik': { eksik: 'Wellness and longevity are not a specialist title on the Medical Board list. A general-practice plan is the screen for that work. This infusion checklist stays off. Nothing is sent.', kimden: KLINISYEN },
     },
     // WORDS OF A SHARED TOOL THIS COUNTRY WRITES DIFFERENTLY.
     degisen: {
@@ -284,6 +287,10 @@ export const AU_GIRDI: EnUlkeGirdisi = {
         // My Health Record upload conditions, sections 45 to 46 and Schedule 1 clause 9, compilation of
         // 1 July 2026, and rules sections 23 and 24. Every role. A tick is a note. Nothing is uploaded.
         auMyHealthRecord(),
+        // Wellness and longevity inside general practice. Not a specialist title. A tick is a note.
+        auWellnessPlan(),
+        // Hair transplants, listed with non-surgical cosmetic procedures. Not a role of their own.
+        auNonsurgicalPlan(),
         AU_GROWTH_CHART_REFERENCE,
         AU_KIMLIK_KONTROL_ARACI,
         AU_GIZLILIK_ARACI,

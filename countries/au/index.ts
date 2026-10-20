@@ -105,8 +105,8 @@ export const AU_PAKETI: UlkePaketi = {
     diller: ['en-AU'],
     hastaDilleri: ['en'],
     // AUSTRALIA'S OWN ROLE LIST: the shared forty with this country's differences (./klinik/rolListesi.ts): the two
-    // surgical roles split along the Medical Board's line, clinic dermatology removed, hair transplantation folded
-    // into cosmetic surgery, preventive and longevity medicine not offered, nine roles added.
+    // surgical roles split along the Medical Board's line, clinic dermatology removed, hair transplantation
+    // listed with non-surgical cosmetic procedures, wellness kept inside general practice, nine roles added.
     roller: enRolAnahtarlari(AU_ROL_LISTESI),
     // STARTING VALUES, to verify with a local clinical lead (checklist J4). An account changes all of it for itself.
     // The working pattern does not close a public day. National days and the state selector are `resmiGunler` on this pack.

@@ -240,7 +240,16 @@ export default function Ayarlar() {
           {u.hesap.saatDilimleri && u.hesap.saatDilimleri.length > 1 ? <SaatDilimiGorunumu m={u.m} dilim={dilim} dilimler={u.hesap.saatDilimleri} sec={(z) => { setDilim(z); setDilimSonucu(null) }} gonder={dilimGonder} bekliyor={dilimBekliyor} sonuc={dilimSonucu} /> : null}
           {roller().length ? <RolAyariGorunumu m={u.m} rol={rol} kayitliRol={u.hesap.rol} api={u.api} setRol={(r) => { setRol(r); setRolSonucu(null) }} gonder={rolGonder} bekliyor={rolBekliyor} sonuc={rolSonucu} /> : null}
           <MeslekKaydiGorunumu m={u.m} deger={meslek} set={(v) => { setMeslek(v); setMeslekSonucu(null) }} gonder={meslekGonder} bekliyor={meslekBekliyor} sonuc={meslekSonucu} />
-          {pano ? duvar('\u{1F4E5}', pano.belgeler, pano.belgeYukle) : null}
+          {pano && ozellikAcik('fotoArsivi') ? (
+            <a className="yg-satir" href={YOL.hastalar} data-alan="belgeler">
+              <span className="yg-satir-emoji" aria-hidden="true">{'\u{1F4E5}'}</span>
+              <span className="yg-satir-metin">
+                <span className="yg-satir-ad">{pano.belgeler}</span>
+                <span className="yg-satir-alt">{pano.belgeYukle}</span>
+              </span>
+              <span className="yg-satir-ok" aria-hidden="true">{'\u203A'}</span>
+            </a>
+          ) : pano ? duvar('\u{1F4E5}', pano.belgeler, pano.belgeYukle) : null}
           {pano ? duvar('\u{1F4C4}', pano.raporlar, pano.epikriz) : null}
           {pano ? duvar('\u2713', pano.inceleme, pano.onayBekleyen) : null}
           {pano ? duvar('\u{1F3E5}', pano.odeme) : null}

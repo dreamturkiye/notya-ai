@@ -42,8 +42,10 @@ export type AuEkRol = { anahtar: string; taraf: RolTarafi; ad: string; gibi: EnR
  * Shared roles Australia does not have.
  * The two surgical roles are split along the Medical Board's line.
  * Clinic dermatology is removed.
- * Hair transplantation is not a Medical Board specialty: stored accounts fold into cosmetic surgery.
- * Preventive and longevity medicine is not a recognised specialty and is not offered.
+ * Hair transplantation is not a Medical Board specialty. The Board's cosmetic-procedure guideline lists
+ * hair transplants with non-surgical cosmetic procedures, so a stored account's nearest role is that one.
+ * Preventive and longevity medicine is not a recognised specialty and is not offered as a role.
+ * A wellness plan lives inside general practice (family-medicine), not as a title of its own.
  */
 export const AU_CIKAN_ROLLER = ['thoracic-surgery', 'cardiovascular-surgery', 'clinic-dermatology', 'hair-transplant', 'longevity'] as const satisfies readonly EnRol[]
 
@@ -79,13 +81,15 @@ export const AU_ROL_LISTESI = { cikar: AU_CIKAN_ROLLER, ekle: AU_EK_ROLLER } as 
  *                                                        belongs in cardio-thoracic-surgery and chooses it)
  *   clinic-dermatology      → null                      (no remaining role is a safe guess: "Dermatology" is a
  *                                                        specialist's field. The account chooses again.)
- *   hair-transplant         → aesthetic-surgery         (cosmetic surgery, the clinic role that remains)
- *   longevity               → null                      (not a recognised specialty. The account chooses again.)
+ *   hair-transplant         → aesthetic-medicine        (the Board lists hair transplants with non-surgical
+ *                                                        cosmetic procedures, not with cosmetic surgery)
+ *   longevity               → null                      (not a recognised specialty. A wellness plan is inside
+ *                                                        general practice. The account chooses again.)
  */
-export const AU_ESKI_ROL_ESLEMESI: Readonly<Record<(typeof AU_CIKAN_ROLLER)[number], AuEkRolAnahtari | 'aesthetic-surgery' | null>> = {
+export const AU_ESKI_ROL_ESLEMESI: Readonly<Record<(typeof AU_CIKAN_ROLLER)[number], AuEkRolAnahtari | 'aesthetic-medicine' | null>> = {
   'thoracic-surgery': 'cardio-thoracic-surgery',
   'cardiovascular-surgery': 'vascular-surgery',
   'clinic-dermatology': null,
-  'hair-transplant': 'aesthetic-surgery',
+  'hair-transplant': 'aesthetic-medicine',
   longevity: null,
 }

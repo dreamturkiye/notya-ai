@@ -206,7 +206,7 @@ export function BugunGorunumu({ m, ad, muayeneler, hata, rol, randevular, mesajl
             {karo(YOL.yeniHasta, m.bugun.yeniHasta)}
             {karo(null, p.epikriz, p.kodlama)}
             {karo(null, p.mesajlar)}
-            {karo(null, p.belgeler)}
+            {karo(ozellikAcik('fotoArsivi') ? YOL.hastalar : null, p.belgeler)}
             {karo(null, p.raporlar)}
             {arac ? karo(YOL.araclar, arac.izgara.baslik) : karo(null, p.inceleme)}
           </div>
@@ -268,7 +268,7 @@ export function BugunGorunumu({ m, ad, muayeneler, hata, rol, randevular, mesajl
               { href: null, text: p.asistanAc, ikon: 'asistan' },
               { href: YOL.yeniHasta, text: m.bugun.yeniHasta, ikon: 'hastaEkle' },
               arac ? { href: YOL.araclar, text: arac.izgara.baslik, ikon: 'araclar' } : null,
-              { href: null, text: p.belgeYukle, ikon: 'belge' },
+              { href: ozellikAcik('fotoArsivi') ? YOL.hastalar : null, text: p.belgeYukle, ikon: 'belge' },
               { href: null, text: p.inceleme, ikon: 'inceleme' },
               { href: null, text: p.raporlar, ikon: 'raporlar' },
             ].filter((x): x is { href: string | null; text: string; ikon: string } => Boolean(x)).map((k) => {

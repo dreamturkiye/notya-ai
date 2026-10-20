@@ -22,6 +22,7 @@ import { rolSablonAlanlari, sablonMu } from '@/lib/ulke/arayuz/notSablonu'
 import { sesIstegi } from '@/lib/ulke/uygulama/sesSentez'
 import { asistanKonusmaMetni, asistanSesCevabi } from '@/lib/ulke/uygulama/asistanSes'
 import { BugunGorunumu } from '@/components/ulke/uygulama/Bugun'
+import { FotoArsivKarti } from '@/components/ulke/uygulama/FotoArsivi'
 import { Cerceve, YOL } from '@/components/ulke/uygulama/Kabuk'
 import { icerikAnahtari } from '@/lib/ulke/arayuz/rolIcerigi'
 import { EN_ROL_ALANLARI } from '../_dil/en/klinik/notSablonlari'
@@ -44,7 +45,7 @@ import { AU_SIZINTI_TERIMLERI } from './sizintiTerimleri'
 const D = 'en-AU'
 const LAB = { albuminKreatinin: 'mg/mmol', hemoglobin: 'g/L', kreatinin: 'umol/L', glukoz: 'mmol/L', kolesterol: 'mmol/L', crp: 'mg/L', psa: 'ug/L', hba1c: ['%', 'mmol/mol'] } as const
 /** The tools with a MECHANISM only Australia has (./araclar/tanimlar.ts). */
-const KENDI_MEKANIZMALI = ['au-body-size', 'au-mental-health-screen', 'au-oncology-grading', 'au-immunisation-schedule', 'au-immunisation-report', 'au-notifiable-diseases', 'au-poisons-schedules', 'au-schedule-8', 'au-dispensing-label', 'au-mandatory-notifications', 'au-pbs-prescription', 'au-medicare-particulars', 'au-identifier-check', 'au-privacy-principles', 'au-tax-invoice', 'au-my-health-record']
+const KENDI_MEKANIZMALI = ['au-body-size', 'au-mental-health-screen', 'au-oncology-grading', 'au-immunisation-schedule', 'au-immunisation-report', 'au-notifiable-diseases', 'au-poisons-schedules', 'au-schedule-8', 'au-dispensing-label', 'au-mandatory-notifications', 'au-pbs-prescription', 'au-medicare-particulars', 'au-identifier-check', 'au-privacy-principles', 'au-tax-invoice', 'au-my-health-record', 'au-wellness-plan', 'au-nonsurgical-plan']
 /** Link-out tiles only Australia has: no mechanism, no arithmetic. College tiles are AU_BAGLANTI_ANAHTARLARI. */
 const KENDI_BAGLANTILARI = ['au-growth-chart-reference', 'au-pbs-report-link', 'au-pbs-schedule-link', 'au-mbs-online-link', 'au-cvd-risk-link', ...AU_BAGLANTI_ANAHTARLARI]
 /** Every tool that carries Australia's own code, switched on by the owner's order of 2026-10-10 or 2026-10-13. */
@@ -336,7 +337,7 @@ describe('au: its own role list — the Medical Board\'s wording, a split, one r
         assert.equal(tanim(yeni)!.taraf, eski === 'hair-transplant' ? 'klinik-hekim' : 'doktor')
       }
     }
-    assert.deepEqual(AU_ESKI_ROL_ESLEMESI, { 'thoracic-surgery': 'cardio-thoracic-surgery', 'cardiovascular-surgery': 'vascular-surgery', 'clinic-dermatology': null, 'hair-transplant': 'aesthetic-surgery', longevity: null })
+    assert.deepEqual(AU_ESKI_ROL_ESLEMESI, { 'thoracic-surgery': 'cardio-thoracic-surgery', 'cardiovascular-surgery': 'vascular-surgery', 'clinic-dermatology': null, 'hair-transplant': 'aesthetic-medicine', longevity: null })
     // each half of the split behaves like the role its stored accounts are mapped from
     assert.equal(tanim('cardio-thoracic-surgery')!.gibi, 'thoracic-surgery')
     assert.equal(tanim('vascular-surgery')!.gibi, 'cardiovascular-surgery')
@@ -387,6 +388,24 @@ describe('au: its own role list — the Medical Board\'s wording, a split, one r
     assert.match(html, /data-alan="asistan-kitap"[\s\S]*Braunwald(?:&#x27;|')s Heart Disease/)
     assert.match(html, /National Heart Foundation of Australia/)
     assert.doesNotMatch(html, /Nelson Textbook of Pediatrics/)
+    assert.match(html, /<a href="\/au\/patients"[^>]*>\s*<span[^>]*>Documents<\/span><\/a>/)
+    assert.match(html, /class="uza-duvar"[^>]*>\s*<span[^>]*>Reports<\/span>/)
+    const belgeler = renderToStaticMarkup(React.createElement(FotoArsivKarti, {
+      u: { hesap: null, m: AU_ARAYUZ.metinler[D]!, dil: D, api: async () => ({ ok: false, durum: 0, j: {} }), hesabiGuncelle: () => undefined, cikis: () => undefined },
+      hastaId: 'qa-hasta',
+    }))
+    assert.match(belgeler, /id="belgeler"/)
+    assert.match(belgeler, /data-alan="belgeler"/)
+    assert.match(belgeler, />Documents</)
+    assert.match(belgeler, /data-alan="foto-arsivi"/)
+    const gp = AU_ARAYUZ.asistan('family-medicine', D)!.kaynaklar!.yetki.join('\n')
+    const kozmetik = AU_ARAYUZ.asistan('aesthetic-medicine', D)!.kaynaklar!.yetki.join('\n')
+    const cerrahi = AU_ARAYUZ.asistan('aesthetic-surgery', D)!.kaynaklar!.yetki.join('\n')
+    const kalp = AU_ARAYUZ.asistan('cardiology', D)!.kaynaklar!.yetki.join('\n')
+    assert.match(gp, /Wellness and healthspan reviews are general practice/)
+    assert.match(kozmetik, /lists hair transplants with non-surgical cosmetic procedures/)
+    assert.doesNotMatch(cerrahi, /hair transplant/i)
+    assert.doesNotMatch(kalp, /hair transplant|Wellness and healthspan/i)
     const cocuk = renderToStaticMarkup(React.createElement(BugunGorunumu, { m: AU_ARAYUZ.metinler[D]!, ad: 'QA', muayeneler: [], hata: false, rol: 'paediatrics' }))
     assert.match(cocuk, /Practical Paediatrics/)
     assert.match(cocuk, /Paediatric Handbook/)
@@ -623,6 +642,14 @@ describe('au: the tools only Australia has — switched on by the owner\'s order
   it('each offered role has its own reference tile, and a reference does not open for another role', () => {
     for (const rol of ROLLER) assert.deepEqual(goren(`au-ref-${rol}`), [rol], rol)
     assert.deepEqual(goren('au-gp-red-book'), ['family-medicine'])
+    assert.deepEqual(goren('au-wellness-plan'), ['family-medicine'])
+    assert.deepEqual(goren('au-nonsurgical-plan'), ['aesthetic-medicine'])
+    for (const r of ['cardiology', 'dermatology', 'aesthetic-surgery', 'plastic-surgery', 'physiotherapy', 'podiatry', 'clinical-psychology']) {
+      assert.ok(!goren('au-wellness-plan').includes(r), r)
+      assert.ok(!goren('au-nonsurgical-plan').includes(r), r)
+    }
+    assert.equal(AU_ESKI_ROL_ESLEMESI['clinic-dermatology'], null)
+    assert.equal(AU_ESKI_ROL_ESLEMESI.longevity, null)
     assert.deepEqual(goren('au-rch-clinical-guide').sort(), ['family-medicine', 'paediatric-surgery', 'paediatrics'])
     assert.equal(goren('au-rch-clinical-guide').includes('cardiology'), false)
     const kayitli = [...hekimRolleri(AU_ARAYUZ.roller), 'physiotherapy', 'occupational-therapy', 'clinical-psychology', 'podiatry']

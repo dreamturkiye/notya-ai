@@ -12,6 +12,8 @@ import type { AracGirdisi, AracSonucu, AracTanimi } from '@/lib/ulke/araclar/tip
 import { kosullariUygula } from '@/lib/ulke/araclar/yardimci'
 import { alanVarMi } from '@/lib/ulke/araclar/yardimci'
 import { AU_ASI_TAKVIMI, AU_ASI_TAKVIMI_MADDELERI, AU_BEDEN, AU_ECOG, AU_K10, AU_TANIMLAR, BEL_SINIRLARI, bmiSinifi, ECOG_DERECELERI, k10Grubu, K10_MADDELERI } from './tanimlar'
+import { AU_NONSURGICAL } from './nonsurgicalPlan'
+import { AU_WELLNESS } from './wellnessPlan'
 import { AU_GST } from './gstInvoice'
 import { AU_AIR } from './immunisationReport'
 import { AU_MHR, AU_MHR_MADDELERI } from './myHealthRecord'
@@ -153,7 +155,7 @@ describe('au-immunisation-schedule — the National Immunisation Program schedul
 
 describe('the mechanisms only Australia has', () => {
   it('each key carries the country\'s code, each names the source of its arithmetic, and none asks the country for a number of its own', () => {
-    assert.deepEqual(AU_TANIMLAR.map((t) => t.anahtar), ['au-body-size', 'au-mental-health-screen', 'au-oncology-grading', 'au-immunisation-schedule', 'au-immunisation-report', 'au-notifiable-diseases', 'au-poisons-schedules', 'au-schedule-8', 'au-dispensing-label', 'au-mandatory-notifications', 'au-pbs-prescription', 'au-medicare-particulars', 'au-identifier-check', 'au-privacy-principles', 'au-tax-invoice', 'au-my-health-record'])
+    assert.deepEqual(AU_TANIMLAR.map((t) => t.anahtar), ['au-body-size', 'au-mental-health-screen', 'au-oncology-grading', 'au-immunisation-schedule', 'au-immunisation-report', 'au-notifiable-diseases', 'au-poisons-schedules', 'au-schedule-8', 'au-dispensing-label', 'au-mandatory-notifications', 'au-pbs-prescription', 'au-medicare-particulars', 'au-identifier-check', 'au-privacy-principles', 'au-tax-invoice', 'au-my-health-record', 'au-wellness-plan', 'au-nonsurgical-plan'])
     for (const t of AU_TANIMLAR) {
       assert.match(t.anahtar, /^au-[a-z0-9]+(-[a-z0-9]+)*$/)
       assert.ok((t.kaynak ?? '').length > 20, t.anahtar)
@@ -261,5 +263,33 @@ describe('statutory checklists read on 2026-10-15 — a tick on the wrong path d
     assert.ok(gorunen(AU_GST, { sinif: 'alici' }).includes('alici_gst'))
     assert.equal(alici.sayilar[0].enCok, 9)
     assert.deepEqual(alti.uyarilar, ['gonderilmedi'])
+  })
+})
+
+describe('general-practice wellness plan and the non-surgical cosmetic plan', () => {
+  it('a wellness review stores a tick only after the kind is chosen, and it stores no dose', () => {
+    assert.equal(kos(AU_WELLNESS, { yer: true }).tamam, false)
+    assert.deepEqual(gorunen(AU_WELLNESS, {}), [])
+    const plan = kos(AU_WELLNESS, { konu: 'saglik', yer: true, yazildi: true })
+    assert.equal(plan.tamam, true)
+    assert.equal(sayi(plan, 'isaretli'), 2)
+    assert.equal(plan.sayilar[0].enCok, 3)
+    assert.deepEqual(plan.uyarilar, ['gonderilmedi'])
+    assert.equal(AU_WELLNESS.dozYazar, undefined)
+    assert.equal(gorunen(AU_WELLNESS, { konu: 'onleme' }).includes('dosya'), true)
+  })
+
+  it('a hair-transplant note shows the listing line, and another non-surgical procedure does not', () => {
+    assert.equal(kos(AU_NONSURGICAL, { listede: true }).tamam, false)
+    assert.equal(gorunen(AU_NONSURGICAL, { islem: 'diger' }).includes('listede'), false)
+    assert.ok(gorunen(AU_NONSURGICAL, { islem: 'sac' }).includes('listede'))
+    assert.ok(gorunen(AU_NONSURGICAL, { islem: 'diger' }).includes('foto'))
+    assert.ok(gorunen(AU_NONSURGICAL, { islem: 'diger' }).includes('onsekiz'))
+    const sac = kos(AU_NONSURGICAL, { islem: 'sac', listede: true, foto: true })
+    assert.equal(sac.tamam, true)
+    assert.equal(sayi(sac, 'isaretli'), 2)
+    assert.equal(sac.sayilar[0].enCok, 3)
+    assert.deepEqual(sac.uyarilar, ['gonderilmedi'])
+    assert.equal(AU_NONSURGICAL.dozYazar, undefined)
   })
 })

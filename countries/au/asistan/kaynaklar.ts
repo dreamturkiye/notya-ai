@@ -3,8 +3,8 @@
  *
  * The shape follows the specialist catalogues: national sources first, then book titles.
  * A title is a name. The book is not stored and none of it is copied. Charlie and Clara do not
- * answer a question from these names. A role this pack does not offer (hair transplantation,
- * longevity) has no entry.
+ * answer a question from these names. Hair transplantation is not its own role: it is named on
+ * non-surgical cosmetic procedures. Longevity is not a role: wellness is named on general practice.
  *
  * College names are the ones already opened for the link tiles on 2026-10-19 (./araclar/referanslar.ts).
  * Book titles are the published names of texts named on a college reading list, an Australian hospital
@@ -42,7 +42,7 @@ export const AU_ASISTAN_KAYNAKLARI: Record<Sunulan, AsistanKaynaklari> = {
     ['Textbook of Adult Emergency Medicine (Cameron)', "Tintinalli's Emergency Medicine"],
   ),
   'family-medicine': y(
-    ['Royal Australian College of General Practitioners', 'RACGP Guidelines for preventive activities in general practice', 'Australian Medicines Handbook', pbs('general practice')],
+    ['Royal Australian College of General Practitioners', 'RACGP Guidelines for preventive activities in general practice', 'Wellness and healthspan reviews are general practice, not a specialist title', 'Australian Medicines Handbook', pbs('general practice')],
     ["Murtagh's General Practice", 'Therapeutic Guidelines'],
   ),
   anaesthesia: y(
@@ -182,7 +182,7 @@ export const AU_ASISTAN_KAYNAKLARI: Record<Sunulan, AsistanKaynaklari> = {
     ["Grabb and Smith's Plastic Surgery", 'The Art of Aesthetic Surgery (Nahai)'],
   ),
   'aesthetic-medicine': y(
-    ['Medical Board of Australia — non-surgical cosmetic procedures', 'Ahpra guidelines for advertising a regulated health service', 'Australian Medicines Handbook', KURUL],
+    ['Medical Board of Australia — non-surgical cosmetic procedures', 'Medical Board of Australia lists hair transplants with non-surgical cosmetic procedures', 'Ahpra guidelines for advertising a regulated health service', 'Australian Medicines Handbook', KURUL],
     ["Baumann's Cosmetic Dermatology", 'Procedures in Cosmetic Dermatology (Carruthers)'],
   ),
   physiotherapy: y(

@@ -146,8 +146,9 @@ export function FotoArsivKarti({ u, hastaId }: { u: Uygulama; hastaId: string })
   }
 
   return (
-    <section className="uza-kart" data-alan="foto-arsivi">
-      <h2 className="uza-h2">{n.baslik}</h2>
+    <section className="uza-kart" id="belgeler" data-alan="belgeler">
+      <h2 className="uza-h2">{m.pano?.belgeler ?? n.baslik}</h2>
+      <p className="uza-ust-yazi" data-alan="foto-arsivi">{n.baslik}</p>
       <p className="uza-ipucu" style={{ marginTop: 0 }}>{n.aciklama}</p>
 
       {okumaHatasi ? <Hata>{n.okunamadi}</Hata> : !fotolar ? <p className="uza-bos" role="status">{m.kabuk.yukleniyor}</p> : !fotolar.length ? <p className="uza-bos">{n.bos}</p> : (

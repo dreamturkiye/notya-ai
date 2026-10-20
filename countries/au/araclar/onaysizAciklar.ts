@@ -107,6 +107,14 @@ export const AU_ONAYSIZ_ACIK_ARACLAR: readonly OnaysizAcikArac[] = [
     bakilacak: 'Sections 45, 45A, 45B and 46, and Schedule 1 clause 9, read 20 October 2026 from the compilation in force on 1 July 2026. Sections 23 and 24 of the My Health Records Rules 2026 were read from the instrument as made on 31 March 2026. A tick is a note. Nothing is uploaded. Prescribed State or Territory laws were not copied. A clinician should confirm both instruments are still in force.',
   },
   {
+    anahtar: 'au-wellness-plan', oneri: 'Wellness and longevity inside general practice, 2026-10-20', klinisyen: null,
+    bakilacak: 'General practice only. The Medical Board list has no longevity title. The ticks are the doctor\'s notes. No recommendation from the RACGP preventive-activities page is copied, and no dose or laboratory panel is stored. A clinician should say whether the two review names are the right pair.',
+  },
+  {
+    anahtar: 'au-nonsurgical-plan', oneri: 'Hair transplants listed with non-surgical cosmetic procedures, 2026-10-20', klinisyen: null,
+    bakilacak: 'Non-surgical cosmetic procedures only. Hair transplants are named there because the Medical Board guideline lists them in that group. The seven-day note is for a patient under 18. No graft count is stored. A lawyer should confirm that shortening the cooling-off rule into a tick is acceptable. Nothing is booked.',
+  },
+  {
     anahtar: 'au-privacy-principles', oneri: 'Privacy Act 1988 Schedule 1, compilation of 4 June 2026', klinisyen: null,
     bakilacak: 'The 13 headings in Schedule 1, read 20 October 2026 from the compilation in force on 4 June 2026. The operative subclauses are not set out. A tick is a note. It is not a finding that the Act is met. State and territory health-records laws are not on this screen. A lawyer should still read the consent pages.',
   },
