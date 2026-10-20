@@ -216,6 +216,8 @@ export default function RandevularPage() {
   const [formLinkiHazirlaniyor, setFormLinkiHazirlaniyor] = useState(false);
   const [formLinkiHata, setFormLinkiHata] = useState('');
   const [kaydediliyor, setKaydediyor] = useState(false);
+  /** NOTYA-RANDEVU-INTAKE-01: "Hasta kaydı oluştur ve bağla" düğmesinin yükleniyor durumu. */
+  const [hastaKaydiOlusturuluyor, setHastaKaydiOlusturuluyor] = useState(false);
   const [iptalId, setIptalId] = useState<string | null>(null);
   const [iptalNedeni, setIptalNedeni] = useState('');
   const [modalIptalAcik, setModalIptalAcik] = useState(false);
@@ -769,6 +771,52 @@ export default function RandevularPage() {
     const oldu = await aktifEt(duzenlenenId);
     if (!oldu) return;
     setDuzenlenenRandevu((r) => (r ? { ...r, durum: REAKTIVASYON_DURUMU, iptalNedeni: null } : r));
+  }
+
+  /** NOTYA-RANDEVU-INTAKE-01 (Dr. Gökhan canlı test, 2026-10-20) — "Kayıtsız randevu" olarak
+   * alınmış, hiç hasta kaydı olmayan biri (örn. Elif Demir) için modal yalnız "Hastaya mesaj
+   * göndermek için randevuyu bir hasta kaydına bağlayın" diyordu ama bunu yapacak gerçek bir
+   * düğme yoktu — "Hasta ara" yalnız ZATEN KAYITLI hastaları bulur, yoktan birini bulamaz.
+   * Bu düğme randevudaki serbest ad/telefon/e-postayı (zaten yazılı) gerçek bir hasta kaydına
+   * yükseltir ve randevuyu ona bağlar — durum onaylandı/tamamlandı/gelmedi olmasını beklemeden,
+   * tam da form ziyaret ÖNCESİ gönderilsin diye. Modal açık kalır; "Muayeneyi Başlat / Hasta
+   * Dosyasını Aç / Hasta Formu" düğmeleri ve "Hastaya mesaj" aynı anda görünür hale gelir.
+   */
+  async function hastaKaydiOlusturVeBagla() {
+    if (!duzenlenenId || !duzenlenenRandevu) return;
+    setHastaKaydiOlusturuluyor(true);
+    setHata('');
+    try {
+      const t = await token();
+      if (!t) { setHata('Oturum bulunamadı. Lütfen tekrar giriş yapın.'); return; }
+      const r = await fetch(`/api/doktor/randevular/${duzenlenenId}`, {
+        method: 'PATCH',
+        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ hastaKaydiOlustur: true }),
+      });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok || !j?.yeniHasta?.id) {
+        setHata(j?.error || 'Hasta kaydı oluşturulamadı.');
+        return;
+      }
+      const yeniPatientId = String(j.yeniHasta.id);
+      const yeniAd = String(j.yeniHasta.ad || duzenlenenRandevu.hastaAdi);
+      setDuzenlenenRandevu((r) => (r ? { ...r, patientId: yeniPatientId, hastaAdi: yeniAd, kayitliHasta: true } : r));
+      setBasariMesaji(`${yeniAd} için hasta kaydı oluşturuldu ve randevuya bağlandı.`);
+      setTimeout(() => setBasariMesaji(''), 6000);
+      // Yeni bağlanan hasta formu henüz doldurmadı — aynı "form gönderilsin mi?" sorusu, randevu
+      // kaydından sonraki akışla birebir aynı.
+      setFormLinki(null);
+      setFormLinkiHata('');
+      if (!(await formDolduMu(yeniPatientId))) {
+        setFormSorusu({ patientId: yeniPatientId, randevuId: duzenlenenId, ad: yeniAd });
+      }
+      await yenile();
+    } catch {
+      setHata('Hasta kaydı oluşturulamadı. Bağlantınızı kontrol edin.');
+    } finally {
+      setHastaKaydiOlusturuluyor(false);
+    }
   }
 
   async function modalSil() {
@@ -1389,6 +1437,16 @@ export default function RandevularPage() {
                             )}
                             {duzenlenenRandevu.patientId && (
                               <button type="button" onClick={() => router.push(`/dashboard/doktor/hastalar/${duzenlenenRandevu.patientId}?tab=formu`)} style={{ ...modalAksiyonBtn, color: CHROME_RENK.pine, borderColor: CHROME_RENK.pine }}>Hasta Formu</button>
+                            )}
+                            {!duzenlenenRandevu.patientId && duzenlenenRandevu.hastaAdi && duzenlenenRandevu.hastaAdi !== 'İsimsiz' && (
+                              <button
+                                type="button"
+                                onClick={() => void hastaKaydiOlusturVeBagla()}
+                                disabled={hastaKaydiOlusturuluyor}
+                                style={{ ...modalAksiyonBtn, background: CHROME_RENK.pine, color: 'white', borderColor: CHROME_RENK.pine, fontWeight: 700, opacity: hastaKaydiOlusturuluyor ? 0.6 : 1 }}
+                              >
+                                {hastaKaydiOlusturuluyor ? 'Oluşturuluyor…' : '+ Hasta kaydı oluştur ve bağla'}
+                              </button>
                             )}
                             {aks.gelmedi && (
                               <button type="button" onClick={() => modalDurumDegistir('gelmedi')} style={{ ...modalAksiyonBtn, color: '#F59E0B', borderColor: '#F59E0B' }}>Gelmedi</button>

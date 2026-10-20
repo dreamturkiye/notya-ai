@@ -38,7 +38,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   if (!mevcut) return NextResponse.json({ error: 'Randevu bulunamadı.' }, { status: 404 })
 
   const body = await req.json().catch(() => ({}))
-  const { baslangic, bitis, durum, iptalNedeni, tur, notlar, patientId, hastaAdiSerbest, hastaEmailSerbest, hastaDurumu, hastaTelefon, whatsappIzni } = body as {
+  const { baslangic, bitis, durum, iptalNedeni, tur, notlar, patientId, hastaAdiSerbest, hastaEmailSerbest, hastaDurumu, hastaTelefon, whatsappIzni, hastaKaydiOlustur } = body as {
     baslangic?: string
     bitis?: string
     durum?: string
@@ -50,6 +50,11 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     hastaAdiSerbest?: string
     hastaTelefonSerbest?: string
     hastaEmailSerbest?: string
+    /** NOTYA-RANDEVU-INTAKE-01: Hasta ara ile bulunamayan, HİÇ kayıtlı olmayan bir hasta için
+     * doktorun "Hasta kaydı oluştur ve bağla" düğmesine BİLEREK bastığı açık eylem — durum
+     * onaylandı/tamamlandı/gelmedi olana kadar beklemez. Yalnızca mevcut serbest ad/telefon/
+     * e-postayı (randevuda zaten kayıtlı) gerçek bir patients satırına yükseltir. */
+    hastaKaydiOlustur?: boolean
     /** NOTYA-BETA-0925: kayıtlı hastanın cep telefonu — hasta kaydına yazılır. */
     hastaTelefon?: string
     /** NOTYA-INTAKE-EMAIL-01: kayıtlı hastanın e-postası — hasta kaydına yazılır. */
@@ -102,8 +107,13 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   //   4. Hiçbir yaratım koşulu oluşmadıysa (hala planlandi, serbest isim düzenleniyor) sadece
   //      serbest metni güncel tut — henüz dosya yok, olmamalı.
   const doktorGercektenIlgilendi = !!durum && ['onaylandi', 'tamamlandi', 'gelmedi'].includes(durum);
+  // NOTYA-RANDEVU-INTAKE-01 (Kaan, canlı test — Dr. Gökhan, 2026-10-20): "Kayıtsız randevu" olarak
+  // alınmış, HİÇ hasta kaydı olmayan biri için (örn. Elif Demir) doktorun forma/mesaja giden tek
+  // yolu durumu onaylandı/tamamlandı/gelmedi yapmasını BEKLEMEKTİ — ama hasta formu tam da ziyaret
+  // ÖNCESİ gönderilmesi gereken şey. `hastaKaydiOlustur` doktorun modal'daki "Hasta kaydı oluştur
+  // ve bağla" düğmesiyle AÇIKÇA istediği an aynı yükseltmeyi şimdi yapar.
   const yeniKayitGerekli =
-    !patientId && !mevcut.patient_id && doktorGercektenIlgilendi &&
+    !patientId && !mevcut.patient_id && (doktorGercektenIlgilendi || hastaKaydiOlustur === true) &&
     (hastaAdiSerbest?.trim() || mevcut.hasta_adi_serbest);
 
   let yeniHasta: { id: string; ad: string } | null = null
