@@ -13,6 +13,7 @@ import { kosullariUygula } from '@/lib/ulke/araclar/yardimci'
 import { alanVarMi } from '@/lib/ulke/araclar/yardimci'
 import { AU_ASI_TAKVIMI, AU_ASI_TAKVIMI_MADDELERI, AU_BEDEN, AU_ECOG, AU_K10, AU_TANIMLAR, BEL_SINIRLARI, bmiSinifi, ECOG_DERECELERI, k10Grubu, K10_MADDELERI } from './tanimlar'
 import { AU_NONSURGICAL } from './nonsurgicalPlan'
+import { AU_COSMETIC, AU_PHYSIO } from './privatePlans'
 import { AU_WELLNESS } from './wellnessPlan'
 import { AU_GST } from './gstInvoice'
 import { AU_AIR } from './immunisationReport'
@@ -155,7 +156,7 @@ describe('au-immunisation-schedule — the National Immunisation Program schedul
 
 describe('the mechanisms only Australia has', () => {
   it('each key carries the country\'s code, each names the source of its arithmetic, and none asks the country for a number of its own', () => {
-    assert.deepEqual(AU_TANIMLAR.map((t) => t.anahtar), ['au-body-size', 'au-mental-health-screen', 'au-oncology-grading', 'au-immunisation-schedule', 'au-immunisation-report', 'au-notifiable-diseases', 'au-poisons-schedules', 'au-schedule-8', 'au-dispensing-label', 'au-mandatory-notifications', 'au-pbs-prescription', 'au-medicare-particulars', 'au-identifier-check', 'au-privacy-principles', 'au-tax-invoice', 'au-my-health-record', 'au-wellness-plan', 'au-nonsurgical-plan'])
+    assert.deepEqual(AU_TANIMLAR.map((t) => t.anahtar), ['au-body-size', 'au-mental-health-screen', 'au-oncology-grading', 'au-immunisation-schedule', 'au-immunisation-report', 'au-notifiable-diseases', 'au-poisons-schedules', 'au-schedule-8', 'au-dispensing-label', 'au-mandatory-notifications', 'au-pbs-prescription', 'au-medicare-particulars', 'au-identifier-check', 'au-privacy-principles', 'au-tax-invoice', 'au-my-health-record', 'au-wellness-plan', 'au-nonsurgical-plan', 'au-cosmetic-surgery-plan', 'au-physio-plan', 'au-psychology-plan', 'au-dietetics-plan', 'au-ot-plan', 'au-audiology-plan'])
     for (const t of AU_TANIMLAR) {
       assert.match(t.anahtar, /^au-[a-z0-9]+(-[a-z0-9]+)*$/)
       assert.ok((t.kaynak ?? '').length > 20, t.anahtar)
@@ -291,5 +292,33 @@ describe('general-practice wellness plan and the non-surgical cosmetic plan', ()
     assert.equal(sac.sayilar[0].enCok, 3)
     assert.deepEqual(sac.uyarilar, ['gonderilmedi'])
     assert.equal(AU_NONSURGICAL.dozYazar, undefined)
+  })
+
+  it('cosmetic surgery hides the adult cooling-off line for a patient under 18, and shows the three-month line', () => {
+    assert.equal(kos(AU_COSMETIC, { gorusme: true }).tamam, false)
+    assert.equal(gorunen(AU_COSMETIC, { yas: 'yetiskin' }).includes('ucay'), false)
+    assert.equal(gorunen(AU_COSMETIC, { yas: 'yetiskin' }).includes('bagimsiz'), false)
+    assert.ok(gorunen(AU_COSMETIC, { yas: 'yetiskin' }).includes('yedi'))
+    assert.equal(gorunen(AU_COSMETIC, { yas: 'onsekiz' }).includes('yedi'), false)
+    assert.ok(gorunen(AU_COSMETIC, { yas: 'onsekiz' }).includes('ucay'))
+    assert.ok(gorunen(AU_COSMETIC, { yas: 'onsekiz' }).includes('foto'))
+    const yetiskin = kos(AU_COSMETIC, { yas: 'yetiskin', gorusme: true, yedi: true, kopya: true, foto: true })
+    assert.equal(yetiskin.tamam, true)
+    assert.equal(sayi(yetiskin, 'isaretli'), 4)
+    assert.equal(yetiskin.sayilar[0].enCok, 4)
+    assert.deepEqual(yetiskin.uyarilar, ['gonderilmedi'])
+    const genc = kos(AU_COSMETIC, { yas: 'onsekiz', ucay: true, bagimsiz: true, kopya: true })
+    assert.equal(genc.tamam, true)
+    assert.equal(sayi(genc, 'isaretli'), 3)
+    assert.equal(genc.sayilar[0].enCok, 5)
+  })
+
+  it('a physiotherapy plan stores the consent ticks and no dose', () => {
+    assert.equal(kos(AU_PHYSIO, {}).tamam, false)
+    const plan = kos(AU_PHYSIO, { onam: true, kopya: true })
+    assert.equal(plan.tamam, true)
+    assert.equal(sayi(plan, 'isaretli'), 2)
+    assert.equal(plan.sayilar[0].enCok, 3)
+    assert.equal(AU_PHYSIO.dozYazar, undefined)
   })
 })

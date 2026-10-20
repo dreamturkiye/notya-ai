@@ -29,6 +29,7 @@ import { auEtiketAraci, auSchedule8Araci, auZehirSinifiAraci } from './araclar/p
 import { AU_GROWTH_CHART_REFERENCE, auCvdBaglantisi, auMbsBaglantisi, auPbsListesi, auPbsRaporu } from './araclar/baglantilar'
 import { AU_GIZLILIK_ARACI } from './araclar/gizlilik'
 import { auNonsurgicalPlan } from './araclar/nonsurgicalPlan'
+import { auOzelPlanlar } from './araclar/privatePlans'
 import { auWellnessPlan } from './araclar/wellnessPlan'
 import { auGstFatura } from './araclar/gstInvoice'
 import { auImmunisationReport } from './araclar/immunisationReport'
@@ -291,6 +292,9 @@ export const AU_GIRDI: EnUlkeGirdisi = {
         auWellnessPlan(),
         // Hair transplants, listed with non-surgical cosmetic procedures. Not a role of their own.
         auNonsurgicalPlan(),
+        // One saved plan each for the private roles that still had none: cosmetic surgery,
+        // physiotherapy, psychology, dietetics, occupational therapy, audiology.
+        ...auOzelPlanlar(),
         AU_GROWTH_CHART_REFERENCE,
         AU_KIMLIK_KONTROL_ARACI,
         AU_GIZLILIK_ARACI,

@@ -13,6 +13,8 @@ import assert from 'node:assert/strict'
 import { sahteVeritabani } from '@/lib/ulke/testing/sahteVeritabani'
 import { encrypt } from '@/lib/security/encryption'
 import { aktifAracIcerigi, aracKaydet } from '@/lib/ulke/araclar/kayit'
+import { gunEkle } from '@/lib/ulke/araclar/yardimci'
+import { yerelAn } from '@/lib/ulke/uygulama/zaman'
 
 const vt = sahteVeritabani()
 const sb = () => vt.createClient() as never
@@ -68,5 +70,35 @@ describe('Australia plan rows on ulke_arac_kayitlari', () => {
     const satirlar = vt.tablo('ulke_arac_kayitlari').filter((s) => s.doctor_id === DA && s.patient_id === H1)
     assert.deepEqual(satirlar.map((s) => s.arac).sort(), ['au-nonsurgical-plan', 'au-wellness-plan'])
     assert.ok(satirlar.every((s) => s.ulke === 'au' && typeof s.kayit_encrypted === 'string' && String(s.kayit_encrypted).length > 20))
+  })
+
+  it('each remaining private role can keep its own plan with a follow-up day, and cardiology cannot', async () => {
+    const icerik = aktifAracIcerigi()
+    assert.ok(icerik)
+    const simdi = Date.parse('2026-10-20T01:00:00.000Z')
+    const bugun = yerelAn(simdi, 'Australia/Sydney').gun
+    const takip = gunEkle(bugun, 14)
+    const planlar: { rol: string; arac: string; ham: Record<string, unknown> }[] = [
+      { rol: 'aesthetic-surgery', arac: 'au-cosmetic-surgery-plan', ham: { yas: 'yetiskin', gorusme: true, yedi: true, kopya: true, foto: true } },
+      { rol: 'physiotherapy', arac: 'au-physio-plan', ham: { onam: true, kopya: true, foto: true } },
+      { rol: 'clinical-psychology', arac: 'au-psychology-plan', ham: { onam: true, kopya: true } },
+      { rol: 'dietetics', arac: 'au-dietetics-plan', ham: { onam: true, kopya: true } },
+      { rol: 'occupational-therapy', arac: 'au-ot-plan', ham: { onam: true, kopya: true, foto: true } },
+      { rol: 'audiology', arac: 'au-audiology-plan', ham: { onam: true, kopya: true } },
+    ]
+    for (const plan of planlar) {
+      rolYaz(DA, plan.rol)
+      const yazilan = await aracKaydet(sb(), DA, { hastaId: H1, arac: plan.arac, ham: plan.ham, takipTarihi: takip }, icerik, simdi)
+      assert.equal(yazilan.tamam, true, `${plan.arac} ${JSON.stringify(yazilan)}`)
+      rolYaz(DA, 'cardiology')
+      const kalp = await aracKaydet(sb(), DA, { hastaId: H1, arac: plan.arac, ham: plan.ham, takipTarihi: takip }, icerik, simdi)
+      assert.deepEqual(kalp, { tamam: false, kod: 'ARAC_YOK' }, plan.arac)
+    }
+    const satirlar = vt.tablo('ulke_arac_kayitlari').filter((s) => s.doctor_id === DA && s.patient_id === H1)
+    assert.deepEqual(satirlar.map((s) => s.arac).sort(), planlar.map((p) => p.arac).sort())
+    assert.ok(satirlar.every((s) => s.takip_tarihi === takip && s.ulke === 'au'))
+    rolYaz(DB, 'physiotherapy')
+    const yabanci = await aracKaydet(sb(), DB, { hastaId: H1, arac: 'au-physio-plan', ham: { onam: true }, takipTarihi: takip }, icerik, simdi)
+    assert.deepEqual(yabanci, { tamam: false, kod: 'NOT_FOUND' })
   })
 })
