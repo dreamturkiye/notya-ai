@@ -64,7 +64,7 @@ export const AU_ONAYSIZ_ACIK_ARACLAR: readonly OnaysizAcikArac[] = [
   },
   {
     anahtar: 'au-immunisation-schedule', oneri: 'NOTYA-ARACLAR-DENETIM-02-AU (founder\'s question #2, 2026-10-13)', klinisyen: null,
-    bakilacak: 'Built CORE and switched on by the owner\'s explicit instruction, not waiting on this list — but still machine-written and unread by a clinician of Australia. It is a record only: no catch-up schedule, no eligibility test and no brand name. A tick does not send a dose to the Australian Immunisation Register. Sourced to NSW Health\'s published rendering of the National Immunisation Program Schedule (the Department\'s own PDF was robots-blocked this session): a clinician of Australia should confirm that rendering is still a faithful, current copy of the national schedule, and that the twelve milestones chosen are the right set to show (no risk-based or Aboriginal-and-Torres-Strait-Islander-specific additions beyond the one line that names them).',
+    bakilacak: 'Built CORE for every role, and still unread by a clinician of Australia. Milestone due days come from NSW Health\'s rendering of the National Immunisation Program Schedule (current as at 1 October 2026). Catch-up dose counts and minimum intervals come from the Australian Immunisation Handbook catch-up page (last updated 30 September 2026): a vaccine-interval month is 4 weeks. Hib-by-age, hepatitis A, meningococcal B, extra pneumococcal doses, HPV, zoster and the brand limits on later rotavirus doses are not calculated. Nothing is sent to the Australian Immunisation Register.',
   },
   {
     anahtar: 'au-mandatory-notifications', oneri: 'National Law sections 140 to 142, Queensland Act, 2026-10-15', klinisyen: null,
