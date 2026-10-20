@@ -13,6 +13,7 @@ import { kosullariUygula } from '@/lib/ulke/araclar/yardimci'
 import { alanVarMi } from '@/lib/ulke/araclar/yardimci'
 import { AU_ASI_TAKVIMI, AU_ASI_TAKVIMI_MADDELERI, AU_BEDEN, AU_ECOG, AU_K10, AU_TANIMLAR, BEL_SINIRLARI, bmiSinifi, ECOG_DERECELERI, k10Grubu, K10_MADDELERI } from './tanimlar'
 import { AU_GST } from './gstInvoice'
+import { AU_GIZLILIK, AU_GIZLILIK_MADDELERI } from './gizlilik'
 import { AU_MEDICARE } from './medicareParticulars'
 import { AU_ZORUNLU_BILDIRIM } from './notifications'
 import { AU_PBS_RECETE } from './pbsPrescription'
@@ -202,6 +203,17 @@ describe('statutory checklists read on 2026-10-15 — a tick on the wrong path d
     assert.ok(gorunen(AU_MEDICARE, { sinif: 'patoloji' }).includes('pat_kim'))
     assert.equal(gorunen(AU_MEDICARE, { sinif: 'goruntuleme' }).includes('kim'), false)
     assert.deepEqual(genel.uyarilar, ['gonderilmedi'])
+  })
+
+  it('Privacy Act: Schedule 1 names 13 principles, and a tick is not a finding that the Act is met', () => {
+    assert.equal(AU_GIZLILIK_MADDELERI.length, 13)
+    assert.equal(kos(AU_GIZLILIK, {}).tamam, false)
+    const bir = kos(AU_GIZLILIK, { app1: true, app9: true })
+    assert.equal(bir.tamam, true)
+    assert.equal(sayi(bir, 'isaretli'), 2)
+    assert.equal(bir.sayilar[0].enCok, 13)
+    assert.deepEqual(bir.uyarilar, ['hukuki_degil'])
+    assert.deepEqual(gorunen(AU_GIZLILIK, {}), [...AU_GIZLILIK_MADDELERI])
   })
 
   it('GST tax invoice: a supplier invoice under 1,000 hides the recipient line, and a recipient-issued invoice shows who pays the GST', () => {

@@ -99,8 +99,8 @@ export const AU_ONAYSIZ_ACIK_ARACLAR: readonly OnaysizAcikArac[] = [
     bakilacak: 'The particulars in subsection 29-70(1), read 20 October 2026 from the compilation in force on 1 January 2026. A tick is a note. The approved form is not produced. Nothing is sent and no payment is taken. A clinician should confirm the compilation is still in force.',
   },
   {
-    anahtar: 'au-privacy-principles', oneri: 'OAIC Australian Privacy Principles index, 2026-10-19', klinisyen: null,
-    bakilacak: 'The four ticks are the four subjects named on the OAIC index page. They are not the text of the 13 principles. A tick is not a legal finding. A lawyer should say whether a practice record of this kind is the right screen.',
+    anahtar: 'au-privacy-principles', oneri: 'Privacy Act 1988 Schedule 1, compilation of 4 June 2026', klinisyen: null,
+    bakilacak: 'The 13 headings in Schedule 1, read 20 October 2026 from the compilation in force on 4 June 2026. The operative subclauses are not set out. A tick is a note. It is not a finding that the Act is met. State and territory health-records laws are not on this screen. A lawyer should still read the consent pages.',
   },
   ...AU_BAGLANTI_KAYITLARI.map((k) => ({
     anahtar: k.anahtar,
