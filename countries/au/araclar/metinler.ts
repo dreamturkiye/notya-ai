@@ -73,14 +73,29 @@ export const AU_ASI_TAKVIMI_ARACI: PaketAraci = {
   roller: null,
   metin: {
     ad: m('National Immunisation Program schedule'),
-    aciklama: m('A record of the National Immunisation Program (NIP) schedule’s milestones, from birth to the recommended vaccines of later life. Tick a milestone once it is done and, if you wish, the date. This is a record, not a reminder: it works out no catch-up schedule and no eligibility, and it does not name which brand or exact risk-based addition was given — read those from the schedule itself.'),
-    alanlar: Object.fromEntries(AU_ASI_TAKVIMI_MADDELERI.flatMap((k) => [[k, m(`${AU_ASI_SATIRLARI[k].etiket} — ${AU_ASI_SATIRLARI[k].icerik}`)], [`${k}_tarih`, m(`Date given (${AU_ASI_SATIRLARI[k].etiket.toLowerCase()})`)]])),
+    aciklama: m('A record of the National Immunisation Program (NIP) schedule’s milestones, from birth to the recommended vaccines of later life. Enter the date of birth and the screen works out the due day of each milestone the schedule states as an age. Tick a milestone once it is done and, if you wish, the date it was given. School Year 7, School Year 10 and pregnancy are not worked out from the birth date. This is not a catch-up schedule and it does not name which brand or exact risk-based addition was given — read those from the schedule itself.'),
+    alanlar: {
+      dogumGunu: m('Date of birth'),
+      ...Object.fromEntries(AU_ASI_TAKVIMI_MADDELERI.flatMap((k) => [[k, m(`${AU_ASI_SATIRLARI[k].etiket} — ${AU_ASI_SATIRLARI[k].icerik}`)], [`${k}_tarih`, m(`Date given (${AU_ASI_SATIRLARI[k].etiket.toLowerCase()})`)]])),
+    },
     // One label per milestone's date, for the RESULT line once it is kept (./tanimlar.ts `tarihler`) — distinct from
     // `alanlar` above, which labels the typed field itself (lib/ulke/araclar/tipler.ts, `AracMetni.tarihler`).
-    tarihler: Object.fromEntries(AU_ASI_TAKVIMI_MADDELERI.map((k) => [`${k}_tarih`, m(`Date given (${AU_ASI_SATIRLARI[k].etiket.toLowerCase()})`)])),
+    tarihler: {
+      ...Object.fromEntries(AU_ASI_TAKVIMI_MADDELERI.map((k) => [`${k}_tarih`, m(`Date given (${AU_ASI_SATIRLARI[k].etiket.toLowerCase()})`)])),
+      vade_dogum: m('Due day (birth)'),
+      dogum_son: m('Last day of the birth dose window'),
+      vade_hafta6: m('Due day (6 weeks)'),
+      vade_ay4: m('Due day (4 months)'),
+      vade_ay6: m('Due day (6 months)'),
+      vade_ay12: m('Due day (12 months)'),
+      vade_ay18: m('Due day (18 months)'),
+      vade_yas4: m('Due day (4 years)'),
+      vade_yas65: m('Due day (65 years)'),
+      vade_yas75: m('Due day (75 years)'),
+    },
     sayilar: { isaretli: m('Milestones recorded') },
     uyarilar: { air_yok: m('Nothing is sent to the Australian Immunisation Register. A tick is a note in this product only.') },
-    not: m('A record of the national schedule’s milestones, kept by this product. It is not a reminder service, it does not report a dose to the Australian Immunisation Register, and it sends nothing to the patient. Source: Australian Government Department of Health, Disability and Ageing, National Immunisation Program Schedule.'),
+    not: m('The due days are the ages on the national schedule, counted from the date of birth. The birth dose window is the 7 days named beside that dose. School Year 7, School Year 10 and pregnancy are not counted from the birth date. This is not the Department’s catch-up calculator. Nothing is sent to the Australian Immunisation Register.'),
   },
   lisans: {
     durum: 'serbest',

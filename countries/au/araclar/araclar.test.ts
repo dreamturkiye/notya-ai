@@ -143,8 +143,29 @@ describe('au-immunisation-schedule — the National Immunisation Program schedul
     assert.deepEqual([r.tamam, sayi(r, 'isaretli')], [true, 12])
   })
 
-  it('nothing ticked gives no result: the tool works nothing out and holds no default', () => {
+  it('nothing ticked and no birth date gives no result', () => {
     assert.equal(kosAsi({}).tamam, false)
+  })
+
+  it('a birth date works out the due day of each age on the schedule, and not the school years or pregnancy', () => {
+    const r = kosAsi({ dogumGunu: '2020-01-15' })
+    const gun = (k: string) => r.tarihler.find((d) => d.anahtar === k)?.tarih
+    assert.equal(r.tamam, true)
+    assert.equal(sayi(r, 'isaretli'), 0)
+    assert.equal(gun('vade_dogum'), '2020-01-15')
+    assert.equal(gun('dogum_son'), '2020-01-22')
+    assert.equal(gun('vade_hafta6'), '2020-02-26')
+    assert.equal(gun('vade_ay4'), '2020-05-15')
+    assert.equal(gun('vade_ay6'), '2020-07-15')
+    assert.equal(gun('vade_ay12'), '2021-01-15')
+    assert.equal(gun('vade_ay18'), '2021-07-15')
+    assert.equal(gun('vade_yas4'), '2024-01-15')
+    assert.equal(gun('vade_yas65'), '2085-01-15')
+    assert.equal(gun('vade_yas75'), '2095-01-15')
+    assert.equal(gun('vade_yil7'), undefined)
+    assert.equal(gun('vade_yil10'), undefined)
+    assert.equal(gun('vade_gebelik'), undefined)
+    assert.deepEqual(r.uyarilar, ['air_yok'])
   })
 
   it('the tool has no dose, no catch-up rule and no eligibility test: it carries no parameter and no table', () => {
@@ -264,6 +285,10 @@ describe('statutory checklists read on 2026-10-15 — a tick on the wrong path d
     assert.ok(gorunen(AU_GST, { sinif: 'alici' }).includes('alici_gst'))
     assert.equal(alici.sayilar[0].enCok, 9)
     assert.deepEqual(alti.uyarilar, ['gonderilmedi'])
+    const soruldu = kos(AU_GST, { sinif: 'alti', niyet: true, istendi: '2026-10-01' })
+    assert.equal(soruldu.tarihler.find((d) => d.anahtar === 'sonGun')?.tarih, '2026-10-29')
+    const aliciTarihli = kos(AU_GST, { sinif: 'alici', alici_gst: true, istendi: '2026-10-01' })
+    assert.equal(aliciTarihli.tarihler.length, 0)
   })
 })
 
