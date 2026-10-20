@@ -29,6 +29,18 @@ export type PortalIcerigi = {
    * Absent = the country has no intake form. No question and no answer is here: the form is read by itself.
    */
   form?: { durum: 'bekliyor' | 'taslak' | 'gonderildi'; veli: boolean; gonderildi: string | null; yenidenAcildi: boolean } | null
+  /**
+   * The chapter for this doctor's role. Absent when the pack declares none for that role.
+   * Dates are follow-up days the clinician kept for this patient. No note text.
+   */
+  bolum?: {
+    anahtar: string
+    baslik: string
+    satirlar: readonly string[]
+    tarihEtiket: string
+    durumEtiket: Readonly<Record<'gecikti' | 'bugun' | 'yaklasiyor' | 'planli', string>>
+    tarihler: readonly { gun: string; durum: 'gecikti' | 'bugun' | 'yaklasiyor' | 'planli' }[]
+  }
   /** When this session ends. */
   bitis: string
 }
