@@ -11,7 +11,7 @@ process.env.NOTYA_COUNTRY = 'au'
 import { describe, it, beforeEach } from 'node:test'
 import assert from 'node:assert/strict'
 import { sahteVeritabani } from '@/lib/ulke/testing/sahteVeritabani'
-import { encrypt } from '@/lib/security/encryption'
+import { decrypt, encrypt } from '@/lib/security/encryption'
 import { aktifAracIcerigi, aracKaydet } from '@/lib/ulke/araclar/kayit'
 import { gunEkle } from '@/lib/ulke/araclar/yardimci'
 import { yerelAn } from '@/lib/ulke/uygulama/zaman'
@@ -78,13 +78,14 @@ describe('Australia plan rows on ulke_arac_kayitlari', () => {
     const simdi = Date.parse('2026-10-20T01:00:00.000Z')
     const bugun = yerelAn(simdi, 'Australia/Sydney').gun
     const takip = gunEkle(bugun, 14)
+    const seans = { seans: '2026-10-06', aralik: '14', dosya: true, hasta: true, goruntu: 'yok' }
     const planlar: { rol: string; arac: string; ham: Record<string, unknown> }[] = [
-      { rol: 'aesthetic-surgery', arac: 'au-cosmetic-surgery-plan', ham: { yas: 'yetiskin', gorusme: true, yedi: true, kopya: true, foto: true } },
-      { rol: 'physiotherapy', arac: 'au-physio-plan', ham: { onam: true, kopya: true, foto: true } },
-      { rol: 'clinical-psychology', arac: 'au-psychology-plan', ham: { onam: true, kopya: true } },
-      { rol: 'dietetics', arac: 'au-dietetics-plan', ham: { onam: true, kopya: true } },
-      { rol: 'occupational-therapy', arac: 'au-ot-plan', ham: { onam: true, kopya: true, foto: true } },
-      { rol: 'audiology', arac: 'au-audiology-plan', ham: { onam: true, kopya: true } },
+      { rol: 'aesthetic-surgery', arac: 'au-cosmetic-surgery-plan', ham: { yas: 'yetiskin', ilk: '2026-10-01', onam: '2026-10-08', ameliyat: '2026-10-20', gorusme: true, dosya: true, hasta: true, goruntu: 'yok' } },
+      { rol: 'physiotherapy', arac: 'au-physio-plan', ham: seans },
+      { rol: 'clinical-psychology', arac: 'au-psychology-plan', ham: { seans: '2026-10-06', aralik: '14', dosya: true, hasta: true } },
+      { rol: 'dietetics', arac: 'au-dietetics-plan', ham: seans },
+      { rol: 'occupational-therapy', arac: 'au-ot-plan', ham: seans },
+      { rol: 'audiology', arac: 'au-audiology-plan', ham: seans },
     ]
     for (const plan of planlar) {
       rolYaz(DA, plan.rol)
@@ -97,6 +98,13 @@ describe('Australia plan rows on ulke_arac_kayitlari', () => {
     const satirlar = vt.tablo('ulke_arac_kayitlari').filter((s) => s.doctor_id === DA && s.patient_id === H1)
     assert.deepEqual(satirlar.map((s) => s.arac).sort(), planlar.map((p) => p.arac).sort())
     assert.ok(satirlar.every((s) => s.takip_tarihi === takip && s.ulke === 'au'))
+    const coz = (arac: string) => JSON.parse(decrypt(String(satirlar.find((s) => s.arac === arac)!.kayit_encrypted))) as { s: { tarihler: { anahtar: string; tarih: string }[] } }
+    const gun = (arac: string, anahtar: string) => coz(arac).s.tarihler.find((d) => d.anahtar === anahtar)?.tarih
+    assert.equal(gun('au-cosmetic-surgery-plan', 'rezervasyon'), '2026-10-15')
+    assert.equal(gun('au-cosmetic-surgery-plan', 'yirmiDort'), '2026-10-21')
+    for (const arac of ['au-physio-plan', 'au-psychology-plan', 'au-dietetics-plan', 'au-ot-plan', 'au-audiology-plan']) {
+      assert.equal(gun(arac, 'sonraki'), '2026-10-20', arac)
+    }
     rolYaz(DB, 'physiotherapy')
     const yabanci = await aracKaydet(sb(), DB, { hastaId: H1, arac: 'au-physio-plan', ham: { onam: true }, takipTarihi: takip }, icerik, simdi)
     assert.deepEqual(yabanci, { tamam: false, kod: 'NOT_FOUND' })
