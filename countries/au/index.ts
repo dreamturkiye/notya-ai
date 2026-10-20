@@ -17,6 +17,7 @@ import { enMesajAyarlari } from '../_dil/en/mesaj'
 import { medicareKartGecerli } from './kimlik'
 import { AU_ROL_LISTESI } from './klinik/rolListesi'
 import { AU_RESMI_GUNLER } from './resmiGunler'
+import { AU_PORTAL_BOLUMLERI } from './portalBolumleri'
 import { AU_BIRIMLER, AU_VELI_YASI } from './temel'
 
 const cekirdek = enCekirdek('en-AU')
@@ -123,7 +124,13 @@ export const AU_PAKETI: UlkePaketi = {
     // for the localisation audit of 2026-10-09, branch audit/au). Written as it is dialled: the kit takes digits only.
     // Not yet confirmed by a person of the country. The national health advice line is NOT named: the patient's page
     // has one place for one number. null here = the patient's page names no number.
-    portal: { baglantiGecerlilikGun: 30, acilNumara: '000' },
+    portal: {
+      baglantiGecerlilikGun: 30,
+      acilNumara: '000',
+      bolumler: AU_PORTAL_BOLUMLERI,
+      tarihEtiket: 'Next review',
+      durumEtiket: { gecikti: 'Overdue', bugun: 'Today', yaklasiyor: 'Coming up', planli: 'Planned' },
+    },
     // CONSULTATION BETWEEN DOCTORS: how long one stays open to answer, and how long the consulted colleague may
     // still read it after it is closed. STARTING VALUES, unverified by a lawyer (checklist I9, same as the consent
     // sentence): no Australian source sets either period (docs/araclar-denetim/AU.md names this a question for a

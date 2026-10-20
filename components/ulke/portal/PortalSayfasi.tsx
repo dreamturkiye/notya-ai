@@ -156,6 +156,25 @@ export function PortalSayfaGorunumu({ p, r, icerik, acilNumara, form, setForm, i
         <p className="uza-ipucu">{s.yalniz}</p>
       </section>
 
+      {i.bolum ? (
+        <section className="uza-kart" data-alan="portal-bolum" data-bolum={i.bolum.anahtar}>
+          <h2 className="uza-h2">{i.bolum.baslik}</h2>
+          <ul className="uza-liste">
+            {i.bolum.satirlar.map((satir) => <li key={satir}>{satir}</li>)}
+          </ul>
+          {i.bolum.tarihler.length ? (
+            <ul className="uza-liste">
+              {i.bolum.tarihler.map((t) => (
+                <li key={t.gun} data-bolum-tarih={t.gun} data-durum={t.durum}>
+                  <span className="uza-liste-ad">{i.bolum!.tarihEtiket}</span>
+                  <span className="uza-liste-alt">{i.bolum!.durumEtiket[t.durum]} {r ? portalGunu(r, t.gun) : gunYaz(t.gun)}</span>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </section>
+      ) : null}
+
       {formKarti ?? null}
       {mesajlar ?? null}
 

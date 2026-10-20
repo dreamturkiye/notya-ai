@@ -64,7 +64,7 @@ export const AU_ONAYSIZ_ACIK_ARACLAR: readonly OnaysizAcikArac[] = [
   },
   {
     anahtar: 'au-immunisation-schedule', oneri: 'NOTYA-ARACLAR-DENETIM-02-AU (founder\'s question #2, 2026-10-13)', klinisyen: null,
-    bakilacak: 'Built CORE and switched on by the owner\'s explicit instruction, not waiting on this list — but still machine-written and unread by a clinician of Australia. It is a record only: no catch-up schedule, no eligibility test and no brand name. A tick does not send a dose to the Australian Immunisation Register. Sourced to NSW Health\'s published rendering of the National Immunisation Program Schedule (the Department\'s own PDF was robots-blocked this session): a clinician of Australia should confirm that rendering is still a faithful, current copy of the national schedule, and that the twelve milestones chosen are the right set to show (no risk-based or Aboriginal-and-Torres-Strait-Islander-specific additions beyond the one line that names them).',
+    bakilacak: 'Built CORE for every role, and still unread by a clinician of Australia. Milestone due days come from NSW Health\'s rendering of the National Immunisation Program Schedule (current as at 1 October 2026). Catch-up dose counts and minimum intervals come from the Australian Immunisation Handbook catch-up page (last updated 30 September 2026): a vaccine-interval month is 4 weeks. Hib-by-age, hepatitis A, meningococcal B, extra pneumococcal doses, HPV, zoster and the brand limits on later rotavirus doses are not calculated. Nothing is sent to the Australian Immunisation Register.',
   },
   {
     anahtar: 'au-mandatory-notifications', oneri: 'National Law sections 140 to 142, Queensland Act, 2026-10-15', klinisyen: null,
@@ -113,6 +113,30 @@ export const AU_ONAYSIZ_ACIK_ARACLAR: readonly OnaysizAcikArac[] = [
   {
     anahtar: 'au-nonsurgical-plan', oneri: 'Hair transplants listed with non-surgical cosmetic procedures, 2026-10-20', klinisyen: null,
     bakilacak: 'Non-surgical cosmetic procedures only. Hair transplants are named there because the Medical Board guideline lists them in that group. The seven-day note is for a patient under 18. No graft count is stored. A lawyer should confirm that shortening the cooling-off rule into a tick is acceptable. Nothing is booked.',
+  },
+  {
+    anahtar: 'au-cosmetic-surgery-plan', oneri: 'Cosmetic surgery plan, Medical Board guideline, 2026-10-20', klinisyen: null,
+    bakilacak: 'Cosmetic surgery only. The seven-day note is for a patient 18 or older. The three-month note and the independent evaluation are for a patient under 18. A lawyer should confirm that shortening those rules into ticks is acceptable. Nothing is booked. Images stay under Documents.',
+  },
+  {
+    anahtar: 'au-physio-plan', oneri: 'Physiotherapy plan, 2026-10-20', klinisyen: null,
+    bakilacak: 'Physiotherapy only. The ticks are the practitioner\'s notes. No exercise protocol is copied. A clinician should say whether consent, a copy, and an optional photograph are the right three lines.',
+  },
+  {
+    anahtar: 'au-psychology-plan', oneri: 'Psychology plan, 2026-10-20', klinisyen: null,
+    bakilacak: 'Psychology only. A photograph is not part of an ordinary consultation. A clinician should say whether the consent lines are enough until a lawyer reads them.',
+  },
+  {
+    anahtar: 'au-dietetics-plan', oneri: 'Dietetics plan, 2026-10-20', klinisyen: null,
+    bakilacak: 'Dietetics only. No meal plan and no dose is stored. A clinician should say whether that omission is right.',
+  },
+  {
+    anahtar: 'au-ot-plan', oneri: 'Occupational therapy plan, 2026-10-20', klinisyen: null,
+    bakilacak: 'Occupational therapy only. No activity protocol is copied. A clinician should say whether consent, a copy, and an optional photograph are the right three lines.',
+  },
+  {
+    anahtar: 'au-audiology-plan', oneri: 'Audiology plan, 2026-10-20', klinisyen: null,
+    bakilacak: 'Audiology only. Hearing figures stay in the hearing tool. A clinician should say whether this note should also name a device review.',
   },
   {
     anahtar: 'au-privacy-principles', oneri: 'Privacy Act 1988 Schedule 1, compilation of 4 June 2026', klinisyen: null,

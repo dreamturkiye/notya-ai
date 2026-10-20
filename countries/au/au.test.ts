@@ -45,7 +45,7 @@ import { AU_SIZINTI_TERIMLERI } from './sizintiTerimleri'
 const D = 'en-AU'
 const LAB = { albuminKreatinin: 'mg/mmol', hemoglobin: 'g/L', kreatinin: 'umol/L', glukoz: 'mmol/L', kolesterol: 'mmol/L', crp: 'mg/L', psa: 'ug/L', hba1c: ['%', 'mmol/mol'] } as const
 /** The tools with a MECHANISM only Australia has (./araclar/tanimlar.ts). */
-const KENDI_MEKANIZMALI = ['au-body-size', 'au-mental-health-screen', 'au-oncology-grading', 'au-immunisation-schedule', 'au-immunisation-report', 'au-notifiable-diseases', 'au-poisons-schedules', 'au-schedule-8', 'au-dispensing-label', 'au-mandatory-notifications', 'au-pbs-prescription', 'au-medicare-particulars', 'au-identifier-check', 'au-privacy-principles', 'au-tax-invoice', 'au-my-health-record', 'au-wellness-plan', 'au-nonsurgical-plan']
+const KENDI_MEKANIZMALI = ['au-body-size', 'au-mental-health-screen', 'au-oncology-grading', 'au-immunisation-schedule', 'au-immunisation-report', 'au-notifiable-diseases', 'au-poisons-schedules', 'au-schedule-8', 'au-dispensing-label', 'au-mandatory-notifications', 'au-pbs-prescription', 'au-medicare-particulars', 'au-identifier-check', 'au-privacy-principles', 'au-tax-invoice', 'au-my-health-record', 'au-wellness-plan', 'au-nonsurgical-plan', 'au-cosmetic-surgery-plan', 'au-physio-plan', 'au-psychology-plan', 'au-dietetics-plan', 'au-ot-plan', 'au-audiology-plan']
 /** Link-out tiles only Australia has: no mechanism, no arithmetic. College tiles are AU_BAGLANTI_ANAHTARLARI. */
 const KENDI_BAGLANTILARI = ['au-growth-chart-reference', 'au-pbs-report-link', 'au-pbs-schedule-link', 'au-mbs-online-link', 'au-cvd-risk-link', ...AU_BAGLANTI_ANAHTARLARI]
 /** Every tool that carries Australia's own code, switched on by the owner's order of 2026-10-10 or 2026-10-13. */
@@ -644,9 +644,23 @@ describe('au: the tools only Australia has — switched on by the owner\'s order
     assert.deepEqual(goren('au-gp-red-book'), ['family-medicine'])
     assert.deepEqual(goren('au-wellness-plan'), ['family-medicine'])
     assert.deepEqual(goren('au-nonsurgical-plan'), ['aesthetic-medicine'])
+    assert.deepEqual(goren('au-cosmetic-surgery-plan'), ['aesthetic-surgery'])
+    assert.deepEqual(goren('au-physio-plan'), ['physiotherapy'])
+    assert.deepEqual(goren('au-psychology-plan'), ['clinical-psychology'])
+    assert.deepEqual(goren('au-dietetics-plan'), ['dietetics'])
+    assert.deepEqual(goren('au-ot-plan'), ['occupational-therapy'])
+    assert.deepEqual(goren('au-audiology-plan'), ['audiology'])
     for (const r of ['cardiology', 'dermatology', 'aesthetic-surgery', 'plastic-surgery', 'physiotherapy', 'podiatry', 'clinical-psychology']) {
       assert.ok(!goren('au-wellness-plan').includes(r), r)
       assert.ok(!goren('au-nonsurgical-plan').includes(r), r)
+    }
+    for (const r of ['cardiology', 'dermatology', 'family-medicine', 'aesthetic-medicine', 'plastic-surgery']) {
+      assert.ok(!goren('au-cosmetic-surgery-plan').includes(r), r)
+      assert.ok(!goren('au-physio-plan').includes(r), r)
+      assert.ok(!goren('au-psychology-plan').includes(r), r)
+      assert.ok(!goren('au-dietetics-plan').includes(r), r)
+      assert.ok(!goren('au-ot-plan').includes(r), r)
+      assert.ok(!goren('au-audiology-plan').includes(r), r)
     }
     assert.equal(AU_ESKI_ROL_ESLEMESI['clinic-dermatology'], null)
     assert.equal(AU_ESKI_ROL_ESLEMESI.longevity, null)

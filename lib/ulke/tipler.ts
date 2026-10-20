@@ -325,6 +325,15 @@ export type PortalAyarlari = {
    * is not for emergencies and names NO number. The catalogue holds the sentence, never the number.
    */
   acilNumara?: string | null
+  /**
+   * One patient chapter per role. Absent = the patient's page has no specialty chapter.
+   * The words are the pack's. The kit shows the chapter of the doctor's role and no other.
+   */
+  bolumler?: Readonly<Record<string, { baslik: string; satirlar: readonly string[] }>>
+  /** The label beside a follow-up day the clinician kept. Required when `bolumler` is set. */
+  tarihEtiket?: string
+  /** Overdue, today, within 7 days, later. Required when `bolumler` is set. */
+  durumEtiket?: Readonly<Record<'gecikti' | 'bugun' | 'yaklasiyor' | 'planli', string>>
 }
 
 /**
