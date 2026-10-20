@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Australia against Turkey — rescore · Notya</title>
+  <meta name="description" content="2026-10-20 rescore. Australia on release/au against Turkey. Mean 53. 0 Strong. Not a claim of 95. No PHI." />
+<style>
+    :root {
+      --bg:#060C18; --surface:#0D1526; --surface2:#121C30; --stroke:rgba(255,255,255,0.10);
+      --text:#EDF1F7; --muted:#8FA0B5; --dim:#64748B; --teal:#14B8A6; --teal-soft:rgba(20,184,166,0.14);
+      --blue:#60A5FA; --blue-soft:rgba(96,165,250,0.14); --amber:#F59E0B; --amber-soft:rgba(245,158,11,0.14);
+      --red:#F87171; --red-soft:rgba(248,113,113,0.14); --green:#2DD4BF;
+    }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; background:var(--bg); color:var(--text); line-height:1.45; -webkit-font-smoothing:antialiased; }
+    .wrap { max-width:1100px; margin:0 auto; padding:32px 20px 72px; }
+    .brand { display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:24px; align-items:center; }
+    .brand .tag { font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--dim); font-weight:700; }
+    .brand a { color:var(--teal); text-decoration:none; font-size:13px; font-weight:600; }
+    h1 { margin:0 0 8px; font-size:28px; font-weight:700; letter-spacing:-.02em; line-height:1.2; }
+    h2 { margin:28px 0 12px; font-size:18px; font-weight:700; }
+    .lede { margin:0 0 14px; color:var(--muted); font-size:15px; max-width:920px; }
+    .pills { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:22px; }
+    .pill { display:inline-flex; align-items:center; padding:3px 10px; border-radius:999px; font-size:12px; font-weight:600; border:1px solid transparent; white-space:nowrap; }
+    .pill.success { background:var(--teal-soft); color:var(--green); border-color:rgba(45,212,191,.25); }
+    .pill.warning { background:var(--amber-soft); color:var(--amber); border-color:rgba(245,158,11,.28); }
+    .pill.danger { background:var(--red-soft); color:var(--red); border-color:rgba(248,113,113,.3); }
+    .pill.info { background:var(--blue-soft); color:var(--blue); border-color:rgba(96,165,250,.25); }
+    .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:18px; }
+    .stat { background:var(--surface); border:1px solid var(--stroke); border-radius:12px; padding:16px 14px; }
+    .stat .v { font-size:24px; font-weight:700; letter-spacing:-.03em; margin-bottom:4px; }
+    .stat .v.success { color:var(--green); } .stat .v.warning { color:var(--amber); } .stat .v.danger { color:var(--red); } .stat .v.info { color:var(--blue); }
+    .stat .l { font-size:12px; color:var(--muted); }
+    .callout { border-radius:12px; padding:16px 18px; margin:14px 0 22px; border:1px solid; }
+    .callout.info { background:var(--blue-soft); border-color:rgba(96,165,250,.28); }
+    .callout.warning { background:var(--amber-soft); border-color:rgba(245,158,11,.3); }
+    .callout h2 { margin:0 0 6px; font-size:12px; text-transform:uppercase; letter-spacing:.04em; }
+    .callout.info h2 { color:var(--blue); } .callout.warning h2 { color:var(--amber); }
+    .callout p { margin:0; font-size:14px; }
+    .table-wrap { border:1px solid var(--stroke); border-radius:12px; overflow:auto; margin-bottom:22px; background:var(--surface); }
+    table { width:100%; border-collapse:collapse; font-size:13px; min-width:760px; }
+    th,td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--stroke); vertical-align:top; }
+    th { background:var(--surface2); color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.05em; font-weight:700; }
+    tr:last-child td { border-bottom:none; }
+    td.domain { font-weight:600; }
+    td.note { color:var(--muted); }
+    td.gap { color:#FBBF24; }
+    td.num { font-variant-numeric:tabular-nums; font-weight:700; }
+    .bars { background:var(--surface); border:1px solid var(--stroke); border-radius:12px; padding:16px; margin-bottom:22px; }
+    .bar-row { display:grid; grid-template-columns:minmax(180px,280px) 1fr 40px; gap:10px; align-items:center; margin:8px 0; }
+    .bar-label { font-size:12px; color:var(--muted); }
+    .bar-track { height:10px; background:rgba(255,255,255,.06); border-radius:999px; overflow:hidden; }
+    .bar-fill { height:100%; background:var(--amber); border-radius:999px; }
+    .bar-fill.thin { background:var(--red); }
+    .bar-val { font-size:12px; font-weight:700; text-align:right; }
+    .cards { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin-bottom:22px; }
+    .cards.three { grid-template-columns:repeat(3,1fr); }
+    .card { background:var(--surface); border:1px solid var(--stroke); border-radius:12px; padding:14px; }
+    .card .title { font-size:14px; font-weight:650; margin-bottom:6px; }
+    .card .body { font-size:12px; color:var(--muted); }
+    .cap { font-size:12px; color:var(--dim); margin:-6px 0 14px; }
+    .foot { margin-top:36px; padding-top:16px; border-top:1px solid var(--stroke); font-size:12px; color:var(--dim); display:flex; flex-wrap:wrap; gap:8px 16px; justify-content:space-between; }
+    .banner { background:rgba(245,158,11,.1); border:1px solid rgba(245,158,11,.35); color:var(--amber); border-radius:10px; padding:10px 14px; font-size:13px; margin-bottom:18px; }
+    code { font-size:12px; }
+    @media (max-width:900px) {
+      .stats { grid-template-columns:repeat(2,1fr); }
+      .cards, .cards.three { grid-template-columns:1fr; }
+      h1 { font-size:22px; }
+      .bar-row { grid-template-columns:1fr; gap:4px; }
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">
+    <span class="tag">Notya · Australia vs Turkey · rescore</span>
+    <span>
+      <a href="/avustralya-turkiye-audit.html">Pre-work audit</a>
+    </span>
+  </div>
+  <div class="banner"><b>Rescore · AU-TR-AUDIT-02</b> — 2026-10-20. Australia only. Scores are the branch a doctor would open after this commit. They are not a claim that the mean is 95.</div>
+  <h1>Australia against the Turkey reference</h1>
+  <p class="lede">Turkey on <code>main</code> stays the reference at 100 on each slice. Australia is the English kit on <code>release/au</code>. The pre-work report, mean 48, is unchanged and linked above. <b>This rescore is Partial. Mean of 17 slices is 53. 0 Strong. 0 Missing. 14 Partial. 3 Thin.</b> 898 ÷ 17 = 52.8, reported as 53.</p>
+  <div class="pills">
+    <span class="pill warning">Overall Partial · mean 53</span>
+    <span class="pill danger">0 / 17 Strong</span>
+    <span class="pill warning">14 Partial</span>
+    <span class="pill danger">3 Thin</span>
+    <span class="pill info">Target 95 is 717 points away</span>
+  </div>
+  <div class="stats">
+    <div class="stat"><div class="v warning">53</div><div class="l">Mean now · was 48</div></div>
+    <div class="stat"><div class="v danger">16</div><div class="l">Assistant · still Thin</div></div>
+    <div class="stat"><div class="v warning">+5</div><div class="l">Mean movement since the pre-work</div></div>
+    <div class="stat"><div class="v info">95</div><div class="l">Asked mean · not reached</div></div>
+  </div>
+  <div class="callout warning">
+    <h2>Why this is not 95</h2>
+    <p>A mean of 95 is 1,615 points across 17 slices. This rescore is 898. The assistant is still 16, because the English kit returns no assistant and the pack tests keep that switch off. If that slice stays at 16, the other sixteen slices would each have to score 100 before the mean could reach 95. Scoring them at 100 would mean a PBS register, a tax invoice, a lawyer’s reading of the privacy pages, a live immunisation report, licensed questionnaire wording, and a clinician-signed chapter for every offered role. Those sources were not copied into the product. The live site <a href="https://au.notya.io/au" style="color:var(--amber)">au.notya.io/au</a> is still the older deployment <code>dpl_nn8L3ZpJRAMLpCQ114NN7c7j9JNt</code>. This table scores the branch, not that deployment.</p>
+  </div>
+
+  <h2>Coverage</h2>
+  <p class="cap">Turkey is 100 on each row as the reference. Strong is at least 85. Partial is 45 to 84. Thin is 15 to 44. Missing is under 15. Turkey-only mechanics are exempt. Movement is only what changed after the pre-work, plus one correction: the immunisation ticks already named the antigens when the pre-work said they did not.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Slice</th><th>Pre-work</th><th>Now</th><th>Depth</th><th>What a doctor can open</th></tr></thead>
+    <tbody>
+      <tr><td class="domain">Language on the routes a doctor opens</td><td class="num">72</td><td class="num">72</td><td><span class="pill warning">Partial</span></td><td class="note">English routes. Unchanged.</td></tr>
+      <tr><td class="domain">Appointments</td><td class="num">70</td><td class="num">70</td><td><span class="pill warning">Partial</span></td><td class="note">Calendar, weekday hours, national holidays. Unchanged.</td></tr>
+      <tr><td class="domain">Clinic day</td><td class="num">64</td><td class="num">64</td><td><span class="pill warning">Partial</span></td><td class="note">Today, patients, visit, note, calendar. The assistant is not in that day.</td></tr>
+      <tr><td class="domain">Immunisation</td><td class="num">50</td><td class="num">62</td><td><span class="pill warning">Partial</span></td><td class="note">The age rows name the antigens, including the Aboriginal and Torres Strait Islander additions. The pre-work line “no antigen” was behind the pack. A tick sends nothing to the Australian Immunisation Register. Catch-up is not calculated.</td></tr>
+      <tr><td class="domain">Visit note</td><td class="num">60</td><td class="num">60</td><td><span class="pill warning">Partial</span></td><td class="note">The note screen exists. The recording-consent sentence is still unread by a lawyer.</td></tr>
+      <tr><td class="domain">Patient identity</td><td class="num">34</td><td class="num">58</td><td><span class="pill warning">Partial</span></td><td class="note">A non-empty Medicare card must pass the checksum. Empty is still accepted. A second national health number is not stored.</td></tr>
+      <tr><td class="domain">Hasta portalı</td><td class="num">58</td><td class="num">58</td><td><span class="pill warning">Partial</span></td><td class="note">One patient page. No chapter per specialty.</td></tr>
+      <tr><td class="domain">Doctor identity</td><td class="num">48</td><td class="num">55</td><td><span class="pill warning">Partial</span></td><td class="note">AHPRA registration is a label and a link for registered professions. The provider number has a checksum in a tool. Neither is a register lookup.</td></tr>
+      <tr><td class="domain">Multi-doctor clinic</td><td class="num">55</td><td class="num">55</td><td><span class="pill warning">Partial</span></td><td class="note"><code>/clinic</code> and <code>/desk</code>. The older kit, not the 19 October Turkey clinic layer.</td></tr>
+      <tr><td class="domain">Documents and photos</td><td class="num">54</td><td class="num">54</td><td><span class="pill warning">Partial</span></td><td class="note">Visit files and a photo archive. Storage and a two-up compare. No model reads a photo.</td></tr>
+      <tr><td class="domain">Clinical instruments</td><td class="num">47</td><td class="num">54</td><td><span class="pill warning">Partial</span></td><td class="note">Thirteen Australia mechanisms, including the card check and the privacy ticks. Licensed questionnaires stay off.</td></tr>
+      <tr><td class="domain">30 medical specialties</td><td class="num">46</td><td class="num">52</td><td><span class="pill warning">Partial</span></td><td class="note">Each offered role has a college or regulator link. The visit still uses the shared English note shape. The Turkish chapters stay off <code>/visit</code>.</td></tr>
+      <tr><td class="domain">Prescription</td><td class="num">44</td><td class="num">52</td><td><span class="pill warning">Partial</span></td><td class="note">Section 40 ticks, plus the benefit, quantity and repeats in the doctor’s own words. Those words are not checked against the Schedule. Nothing is sent.</td></tr>
+      <tr><td class="domain">Privacy and consent</td><td class="num">42</td><td class="num">48</td><td><span class="pill warning">Partial</span></td><td class="note">Four subjects from the OAIC index: collection, governance, integrity, access. The pages are still unread by a lawyer.</td></tr>
+      <tr><td class="domain">Billing</td><td class="num">36</td><td class="num">40</td><td><span class="pill danger">Thin</span></td><td class="note">Medicare particulars as ticks, a link to MBS Online, and a link to the GST Act. No item, no fee, no invoice, no claim. Stripe and Tyro are not connected.</td></tr>
+      <tr><td class="domain">10 Özel Branşlar</td><td class="num">22</td><td class="num">28</td><td><span class="pill danger">Thin</span></td><td class="note">Hair transplantation is folded into cosmetic surgery. Longevity is not offered. The remaining roles have a college or Board link. No studio, saved plan, or photo series.</td></tr>
+      <tr><td class="domain">Assistant and voice</td><td class="num">16</td><td class="num">16</td><td><span class="pill danger">Thin</span></td><td class="note">The assistant, voice, and image evaluation stay off. The landing still promises a drafted note.</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>Distance from 95</h2>
+  <p class="cap">Each bar is this rescore, 0 to 100. Amber is Partial. Red is Thin. The asked line is 95. No bar reaches it.</p>
+  <div class="bars">
+    <div class="bar-row"><div class="bar-label">Assistant and voice</div><div class="bar-track"><div class="bar-fill thin" style="width:16%"></div></div><div class="bar-val">16</div></div>
+    <div class="bar-row"><div class="bar-label">10 Özel Branşlar</div><div class="bar-track"><div class="bar-fill thin" style="width:28%"></div></div><div class="bar-val">28</div></div>
+    <div class="bar-row"><div class="bar-label">Billing</div><div class="bar-track"><div class="bar-fill thin" style="width:40%"></div></div><div class="bar-val">40</div></div>
+    <div class="bar-row"><div class="bar-label">Privacy and consent</div><div class="bar-track"><div class="bar-fill" style="width:48%"></div></div><div class="bar-val">48</div></div>
+    <div class="bar-row"><div class="bar-label">30 medical specialties</div><div class="bar-track"><div class="bar-fill" style="width:52%"></div></div><div class="bar-val">52</div></div>
+    <div class="bar-row"><div class="bar-label">Prescription</div><div class="bar-track"><div class="bar-fill" style="width:52%"></div></div><div class="bar-val">52</div></div>
+    <div class="bar-row"><div class="bar-label">Documents and photos</div><div class="bar-track"><div class="bar-fill" style="width:54%"></div></div><div class="bar-val">54</div></div>
+    <div class="bar-row"><div class="bar-label">Clinical instruments</div><div class="bar-track"><div class="bar-fill" style="width:54%"></div></div><div class="bar-val">54</div></div>
+    <div class="bar-row"><div class="bar-label">Doctor identity</div><div class="bar-track"><div class="bar-fill" style="width:55%"></div></div><div class="bar-val">55</div></div>
+    <div class="bar-row"><div class="bar-label">Multi-doctor clinic</div><div class="bar-track"><div class="bar-fill" style="width:55%"></div></div><div class="bar-val">55</div></div>
+    <div class="bar-row"><div class="bar-label">Hasta portalı</div><div class="bar-track"><div class="bar-fill" style="width:58%"></div></div><div class="bar-val">58</div></div>
+    <div class="bar-row"><div class="bar-label">Patient identity</div><div class="bar-track"><div class="bar-fill" style="width:58%"></div></div><div class="bar-val">58</div></div>
+    <div class="bar-row"><div class="bar-label">Visit note</div><div class="bar-track"><div class="bar-fill" style="width:60%"></div></div><div class="bar-val">60</div></div>
+    <div class="bar-row"><div class="bar-label">Immunisation</div><div class="bar-track"><div class="bar-fill" style="width:62%"></div></div><div class="bar-val">62</div></div>
+    <div class="bar-row"><div class="bar-label">Clinic day</div><div class="bar-track"><div class="bar-fill" style="width:64%"></div></div><div class="bar-val">64</div></div>
+    <div class="bar-row"><div class="bar-label">Appointments</div><div class="bar-track"><div class="bar-fill" style="width:70%"></div></div><div class="bar-val">70</div></div>
+    <div class="bar-row"><div class="bar-label">Language</div><div class="bar-track"><div class="bar-fill" style="width:72%"></div></div><div class="bar-val">72</div></div>
+  </div>
+
+  <h2>What moved</h2>
+  <div class="cards">
+    <div class="card"><div class="title">Patient identity <span class="pill warning">34 → 58</span></div><div class="body">The Medicare card checksum is on the pack. A filled card that fails the check is refused. An empty card is still a valid form. The screen does not store a second national health number.</div></div>
+    <div class="card"><div class="title">Immunisation <span class="pill warning">50 → 62</span></div><div class="body">Antigen names were already on the ticks. This rescore corrects the pre-work sentence. The new sentence on the tool is that a tick is not a report to the Australian Immunisation Register.</div></div>
+    <div class="card"><div class="title">Prescription <span class="pill warning">44 → 52</span></div><div class="body">After the preparation method is chosen, the doctor can type the benefit, the quantity and the repeats. The words are kept with the note. They are not matched to the Schedule, and nothing is sent.</div></div>
+    <div class="card"><div class="title">The three that still set the mean <span class="pill danger">16 · 28 · 40</span></div><div class="body">Assistant off. Özel Branşlar are links, not studios. Billing is a link to the Act, not an invoice and not a Medicare claim.</div></div>
+  </div>
+
+  <h2>Still required before a mean near 95</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>#</th><th>Move</th><th>Why the mean cannot move without it</th><th>Size</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td class="domain">An assistant that drafts in Australian English</td><td class="note">At 16, this one slice makes a mean of 95 require 100 on every other slice.</td><td><span class="pill warning">L</span></td></tr>
+      <tr><td>2</td><td class="domain">One licensed specialty, then the rest</td><td class="note">College links are not a chapter. The Turkish folders stay off the visit.</td><td><span class="pill warning">L</span></td></tr>
+      <tr><td>3</td><td class="domain">A Schedule lookup for the benefit</td><td class="note">The words the doctor types are a note. They are not the Pharmaceutical Benefits Schedule.</td><td><span class="pill warning">L</span></td></tr>
+      <tr><td>4</td><td class="domain">A tax invoice and a claim the practice can send</td><td class="note">Section 29-70 is named in the contents. Its operative text was not read, so the screen lists no particulars and takes no payment.</td><td><span class="pill info">M</span></td></tr>
+      <tr><td>5</td><td class="domain">A lawyer reads the consent pages</td><td class="note">Privacy, recording, and consult consent are drafted and stamped unread.</td><td><span class="pill info">M</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>Sources</h2>
+  <p class="lede">Pre-work <code>AU-TR-AUDIT-01</code>, mean 48, tip <code>d5a219fd</code>. This rescore is <code>release/au</code> at <code>6ca6299e</code>: the Medicare checksum, the college links, and the prescription words. Pack tests for that commit: <code>countries/au/au.test.ts</code> and <code>countries/au/araclar/araclar.test.ts</code>, 157 tests, 0 failures. Live <code>au.notya.io</code> was still deployment <code>dpl_nn8L3ZpJRAMLpCQ114NN7c7j9JNt</code> when this file was written. No patient data. No person is named.</p>
+
+  <div class="foot">
+    <span>AU-TR-AUDIT-02 · 2026-10-20 · rescore · Australia only · no patient data</span>
+    <span>Strong ≥85 · Partial 45–84 · Thin 15–44 · Missing &lt;15 · mean 53</span>
+  </div>
+</div>
+</body>
+</html>
