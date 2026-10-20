@@ -16,8 +16,9 @@
  *   au-body-size              body mass index of an adult, and the waist measurement against two limits
  *   au-oncology-grading       a record of the ECOG performance status grade the doctor assessed
  */
-import type { AracGirdisi, AracSayisi, AracSonucu, AracTanimi } from '@/lib/ulke/araclar/tipler'
+import type { AracGirdisi, AracOrtami, AracSayisi, AracSonucu, AracTanimi } from '@/lib/ulke/araclar/tipler'
 import { BOS_SONUC, ayEkle, gunEkle, gunMu, isaretliler, puan, sayi, sayiMi, secim, tarih } from '@/lib/ulke/araclar/yardimci'
+import { ASI_BANT, YAKALAMA_SAYILAR, YAKALAMA_TARIHLER, YAKALAMA_UYARILAR, yakalamaAlanlari, yakalamaSonuc } from './asiYakalama'
 import { AU_BILDIRIM } from './bildirim'
 import { AU_GST } from './gstInvoice'
 import { AU_AIR } from './immunisationReport'
@@ -174,8 +175,8 @@ export const AU_ECOG: AracTanimi = {
 // ───────────────────────── 4. The National Immunisation Program schedule: a record of what was given ─────────────────────────
 
 /**
- * THE NATIONAL IMMUNISATION PROGRAM (NIP) SCHEDULE: a tick and an optional date for each of its milestones. The
- * tool holds no dose, no catch-up rule and no eligibility test. A birth date works out the due day of each
+ * THE NATIONAL IMMUNISATION PROGRAM (NIP) SCHEDULE: a tick and an optional date for each of its milestones, plus
+ * the Handbook catch-up for one missed dose. A birth date works out the due day of each
  * milestone the schedule states as an age. School Year 7, School Year 10 and pregnancy are not ages, so they
  * stay ticks. It is a record, exactly like
  * the many other checklists of this product that the audit kept as "record lists, no formula, no guideline needed
@@ -193,18 +194,15 @@ export const AU_ECOG: AracTanimi = {
  *   milestone and every vaccine named below is exactly as that page printed it on 2026-10-13. NOT A STATE SCHEDULE
  *   OF ITS OWN: NSW Health's page is this country's own window onto the ONE national schedule; no state-specific
  *   content (NSW program names, NSW-only funding) is carried into this tool.
- * NOT IN THIS TOOL, because the national schedule itself does not reduce them to a tick-box, or because the audit
- *   already named the right place for them:
- *   - WHICH BRAND is given at an age (the schedule names a specific brand for most doses; a clinician reads it from
- *     the schedule itself, same as a drug name is never invented by this product);
- *   - CATCH-UP SCHEDULES for a child or adult who has missed a dose (the Department publishes a separate catch-up
- *     calculator for people under 20, already named by the audit as part of the `vaccination-schedule` slot:
- *     docs/araclar-denetim/au-kararlar.json, slot `vaccination-schedule`);
- *   - RISK-BASED AND ABORIGINAL-AND-TORRES-STRAIT-ISLANDER-SPECIFIC ADDITIONS the page lists beside several ages
- *     (extra pneumococcal and meningococcal B doses, earlier Aboriginal adult schedules): read by the clinician from
- *     the page itself; a tick here only records that the AGE MILESTONE's visit happened, not which of its variants
- *     was given;
- *   - DOSE INTERVALS AND ELIGIBILITY (who may have a free dose under the NIP and when): the schedule's own text.
+ * CATCH-UP is in this tool (./asiYakalama.ts), from the Handbook tables read on 2026-10-20. It counts the doses
+ *   an all-children row says the child should already have had, and it dates the next dose from the minimum
+ *   interval. A vaccine-interval month is 4 weeks.
+ * NOT IN THIS TOOL:
+ *   - WHICH BRAND was given, except the one sentence that Nimenrix and MenQuadfi are a single MenACWY dose and the
+ *     8-week step is Menveo;
+ *   - Hib doses by age, hepatitis A, meningococcal B, extra pneumococcal doses, HPV, zoster, and the brand limits
+ *     on later rotavirus doses — the Handbook points each of those at another table;
+ *   - who may have a free dose under the NIP. A tick still only records the milestone. Nothing is sent to the Register.
  * A later pass that reaches the Department's own PDF (through a browser, not this session's blocked reader) should
  * confirm nothing on NSW Health's page has drifted from the national document; neither has been read by an
  * Australian clinician or immunisation nurse (the worklist this tool should join once one is kept for CORE tools).
@@ -232,10 +230,17 @@ function asiVade(dogumGunu: string, ofset: { gun?: number; ay?: number }): strin
   return ayEkle(dogumGunu, ofset.ay ?? 0)
 }
 
-function asiHesapla(g: AracGirdisi): AracSonucu {
+const UYARI_SIRA = ['air_yok', ...YAKALAMA_UYARILAR] as const
+function uyarilariSirala(uyarilar: readonly string[]): string[] {
+  const kume = new Set(uyarilar)
+  return UYARI_SIRA.filter((k) => kume.has(k))
+}
+
+function asiHesapla(g: AracGirdisi, ortam: AracOrtami): AracSonucu {
   const secili = isaretliler(g, AU_ASI_TAKVIMI_MADDELERI)
   const dogumGunu = gunMu(g.dogumGunu) ? g.dogumGunu : null
-  if (!secili.length && !dogumGunu) return BOS_SONUC
+  const yak = yakalamaSonuc(g, ortam.bugun, dogumGunu)
+  if (!secili.length && !dogumGunu && !yak.istendi && !yak.sayilar.length) return BOS_SONUC
   const tarihler = [
     ...AU_ASI_TAKVIMI_MADDELERI.flatMap((k) => { const v = g[`${k}_tarih`]; return gunMu(v) ? [{ anahtar: `${k}_tarih`, tarih: v }] : [] }),
     ...(dogumGunu
@@ -244,12 +249,13 @@ function asiHesapla(g: AracGirdisi): AracSonucu {
           { anahtar: 'dogum_son', tarih: gunEkle(dogumGunu, 7) },
         ]
       : []),
+    ...yak.tarihler,
   ]
   return {
     tamam: true,
-    sayilar: [{ anahtar: 'isaretli', deger: secili.length, ondalik: 0, enCok: AU_ASI_TAKVIMI_MADDELERI.length }],
-    bant: null,
-    uyarilar: ['air_yok'],
+    sayilar: [{ anahtar: 'isaretli', deger: secili.length, ondalik: 0, enCok: AU_ASI_TAKVIMI_MADDELERI.length }, ...yak.sayilar],
+    bant: yak.bant,
+    uyarilar: uyarilariSirala(['air_yok', ...yak.uyarilar]),
     tarihler,
   }
 }
@@ -257,14 +263,14 @@ function asiHesapla(g: AracGirdisi): AracSonucu {
 export const AU_ASI_TAKVIMI: AracTanimi = {
   anahtar: 'au-immunisation-schedule',
   tur: 'takvim',
-  alanlar: [tarih('dogumGunu', true), ...AU_ASI_TAKVIMI_MADDELERI.map((k) => ({ anahtar: k, tur: 'isaret' as const })), ...AU_ASI_TAKVIMI_MADDELERI.map(asiTarihAlani)],
+  alanlar: [tarih('dogumGunu', true), ...yakalamaAlanlari(), ...AU_ASI_TAKVIMI_MADDELERI.map((k) => ({ anahtar: k, tur: 'isaret' as const })), ...AU_ASI_TAKVIMI_MADDELERI.map(asiTarihAlani)],
   cikti: {
-    sayilar: ['isaretli'],
-    bantlar: [],
-    uyarilar: ['air_yok'],
-    tarihler: [...AU_ASI_TAKVIMI_MADDELERI.map((k) => `${k}_tarih`), ...AU_ASI_VADE_ANAHTARLARI],
+    sayilar: ['isaretli', ...YAKALAMA_SAYILAR],
+    bantlar: [...ASI_BANT],
+    uyarilar: [...UYARI_SIRA],
+    tarihler: [...AU_ASI_TAKVIMI_MADDELERI.map((k) => `${k}_tarih`), ...AU_ASI_VADE_ANAHTARLARI, ...YAKALAMA_TARIHLER],
   },
-  kaynak: 'Australian Government Department of Health, Disability and Ageing, National Immunisation Program (NIP) Schedule; read 2026-10-13 via NSW Health, "NSW immunisation schedule (children and adults)", https://www.health.nsw.gov.au/schedule, current as at 1 October 2026. A due day is that age counted from the birth date. A tick is not a report to the Australian Immunisation Register.',
+  kaynak: 'Australian Immunisation Handbook, Catch-up vaccination, https://immunisationhandbook.health.gov.au/contents/catch-up-vaccination, last updated 30 September 2026, read 2026-10-20. A month in a vaccine interval is 4 weeks. Milestone due days: National Immunisation Program Schedule, read 2026-10-13 via NSW Health, https://www.health.nsw.gov.au/schedule, current as at 1 October 2026. Nothing is sent to the Australian Immunisation Register.',
   hesapla: asiHesapla,
 }
 

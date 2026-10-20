@@ -31,6 +31,23 @@ function ciz(rol: string, arac: string, ham: HamGirdi): string {
   }))
 }
 
+describe('immunisation catch-up on the tools screen', () => {
+  it('a cardiologist sees the same catch-up day as every other role', () => {
+    const html = ciz('cardiology', 'au-immunisation-schedule', {
+      dogumGunu: '2020-01-15', asisi: 'dtpa', adim: 'd12', sonDoz: '2026-01-01',
+    })
+    assert.match(html, /data-tarih="enErken"/)
+    assert.match(html, /data-sayi="dtpa"/)
+    assert.match(html, /29\/01\/2026|29 Jan 2026|2026-01-29/)
+    assert.match(html, /data-alan="asisi"/)
+    assert.ok(hesabinAraci(icerik, 'paediatrics', 'au-immunisation-schedule'))
+    assert.ok(hesabinAraci(icerik, 'family-medicine', 'au-immunisation-schedule'))
+    const bos = ciz('cardiology', 'au-immunisation-schedule', {})
+    assert.doesNotMatch(bos, /data-alan="adim"/)
+    assert.doesNotMatch(bos, /data-alan="ilkDoz"/)
+  })
+})
+
 describe('private-role studios on the tools screen', () => {
   it('cosmetic surgery shows the earliest booking day, both consent lines, and no image line until one is kept', () => {
     const html = ciz('aesthetic-surgery', 'au-cosmetic-surgery-plan', {

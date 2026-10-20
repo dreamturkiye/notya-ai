@@ -120,8 +120,11 @@ describe('au-oncology-grading — a record of the ECOG grade (ECOG-ACRIN, "ECOG 
   })
 })
 
-describe('au-immunisation-schedule — the National Immunisation Program schedule (read via NSW Health\'s published rendering, health.nsw.gov.au/schedule, current as at 1 October 2026, read 2026-10-13)', () => {
-  const kosAsi = (g: AracGirdisi) => AU_ASI_TAKVIMI.hesapla(kosullariUygula(AU_ASI_TAKVIMI.alanlar, g), { bugun: BUGUN, p: {} })
+describe('au-immunisation-schedule — NIP milestones (NSW Health schedule, current as at 1 October 2026, read 2026-10-13) and Handbook catch-up (last updated 30 September 2026, read 2026-10-20)', () => {
+  const kosGun = (g: AracGirdisi, bugun: string) => AU_ASI_TAKVIMI.hesapla(kosullariUygula(AU_ASI_TAKVIMI.alanlar, g), { bugun, p: {} })
+  const kosAsi = (g: AracGirdisi) => kosGun(g, BUGUN)
+  const doz = (r: AracSonucu) => Object.fromEntries(r.sayilar.filter((s) => s.anahtar !== 'isaretli').map((s) => [s.anahtar, s.deger]))
+  const gunu = (r: AracSonucu, k: string) => r.tarihler.find((d) => d.anahtar === k)?.tarih
 
   it('twelve milestones, birth to 75 years and over, exactly as the page lists them, in order', () => {
     assert.deepEqual([...AU_ASI_TAKVIMI_MADDELERI], ['dogum', 'hafta6', 'ay4', 'ay6', 'ay12', 'ay18', 'yas4', 'yil7', 'yil10', 'gebelik', 'yas65', 'yas75'])
@@ -165,13 +168,137 @@ describe('au-immunisation-schedule — the National Immunisation Program schedul
     assert.equal(gun('vade_yil7'), undefined)
     assert.equal(gun('vade_yil10'), undefined)
     assert.equal(gun('vade_gebelik'), undefined)
-    assert.deepEqual(r.uyarilar, ['air_yok'])
+    assert.equal(gun('enErken'), undefined)
+    assert.equal(r.bant, 'yas4')
+    assert.deepEqual(doz(r), { dtpa: 5, hepb: 3, menacwy: 1, mmr: 2, pcv: 3, ipv: 4, varicella: 1 })
+    assert.deepEqual(r.uyarilar, ['air_yok', 'ozel', 'istisna', 'rota'])
   })
 
-  it('the tool has no dose, no catch-up rule and no eligibility test: it carries no parameter and no table', () => {
+  it('the Handbook age columns, including the 18-month birthday and the day a child turns 10', () => {
+    const ucAy = kosGun({ dogumGunu: '2020-01-15' }, '2020-04-15')
+    assert.equal(ucAy.bant, 'ay2')
+    assert.deepEqual(doz(ucAy), { dtpa: 1, hepb: 1, menacwy: 0, mmr: 0, pcv: 1, ipv: 1, varicella: 0, rota: 1 })
+    assert.deepEqual(ucAy.uyarilar, ['air_yok', 'ozel'])
+
+    const onSekiz = kosGun({ dogumGunu: '2020-01-15' }, '2021-07-15')
+    assert.equal(onSekiz.bant, 'ay12')
+    assert.equal(sayi(onSekiz, 'dtpa'), 3)
+    assert.equal(sayi(onSekiz, 'mmr'), 1)
+    assert.equal(sayi(onSekiz, 'varicella'), 0)
+    assert.equal(sayi(onSekiz, 'rota'), undefined)
+
+    const onSekizdenSonra = kosGun({ dogumGunu: '2020-01-15' }, '2021-07-16')
+    assert.equal(onSekizdenSonra.bant, 'ay18')
+    assert.equal(sayi(onSekizdenSonra, 'dtpa'), 4)
+    assert.equal(sayi(onSekizdenSonra, 'mmr'), 2)
+    assert.equal(sayi(onSekizdenSonra, 'varicella'), 1)
+
+    const altiAy = kosGun({ dogumGunu: '2026-04-10' }, '2026-10-10')
+    assert.equal(altiAy.bant, 'ay6')
+    assert.equal(sayi(altiAy, 'rota'), undefined)
+    assert.ok(altiAy.uyarilar.includes('rota'))
+
+    const onYas = kosGun({ dogumGunu: '2016-10-10' }, '2026-10-10')
+    assert.equal(onYas.bant, 'yas10')
+    assert.deepEqual(doz(onYas), {})
+    assert.deepEqual(onYas.uyarilar, ['air_yok', 'onYas'])
+  })
+
+  it('a missed DTPa dose uses 4 weeks, and the 6-month step uses 24 weeks', () => {
+    const ilk = kosAsi({ asisi: 'dtpa', adim: 'd12', sonDoz: '2026-01-01' })
+    assert.equal(gunu(ilk, 'enErken'), '2026-01-29')
+    assert.equal(gunu(ilk, 'planBitis'), undefined)
+    assert.ok(ilk.uyarilar.includes('kombinasyon'))
+
+    const ucuncu = kosAsi({ asisi: 'dtpa', adim: 'd34', sonDoz: '2026-01-01', dogumGunu: '2020-01-15' })
+    assert.equal(gunu(ucuncu, 'enErken'), '2026-06-18')
+    assert.equal(gunu(ucuncu, 'planBitis'), '2027-04-10')
+  })
+
+  it('hepatitis B dose 3 waits for both 8 weeks and 16 weeks from dose 1', () => {
+    const r = kosAsi({ asisi: 'hepb', adim: 'd23', sonDoz: '2026-01-01', ilkDoz: '2025-12-01', dogumGunu: '2020-01-15' })
+    assert.equal(gunu(r, 'enErken'), '2026-03-23')
+    assert.equal(r.uyarilar.includes('hepb16'), false)
+
+    const eksik = kosAsi({ asisi: 'hepb', adim: 'd23', sonDoz: '2026-01-01', dogumGunu: '2020-01-15' })
+    assert.equal(gunu(eksik, 'enErken'), '2026-02-26')
+    assert.ok(eksik.uyarilar.includes('hepb16'))
+
+    const yalnizcaIki = kosAsi({ asisi: 'hepb', adim: 'd12', sonDoz: '2026-01-01', ilkDoz: '2025-01-01', dogumGunu: '2020-01-15' })
+    assert.equal(gunu(yalnizcaIki, 'enErken'), '2026-01-29')
+  })
+
+  it('a pneumococcal booster waits until 12 months of age as well as 8 weeks', () => {
+    const r = kosGun({ asisi: 'pcv', adim: 'd23', sonDoz: '2020-03-01', dogumGunu: '2020-01-15' }, '2020-06-01')
+    assert.equal(gunu(r, 'enErken'), '2021-01-15')
+    assert.equal(r.uyarilar.includes('pcvYas'), false)
+    assert.equal(gunu(r, 'planBitis'), '2020-12-01')
+  })
+
+  it('from 10 years the childhood 6-month DTPa step is not used, and a planned catch-up ends at 20', () => {
+    const buyuk = kosAsi({ dogumGunu: '2010-01-01', asisi: 'dtpa', adim: 'd34', sonDoz: '2026-01-01' })
+    assert.equal(buyuk.bant, 'yas10')
+    assert.equal(gunu(buyuk, 'enErken'), undefined)
+    assert.ok(buyuk.uyarilar.includes('onYas'))
+    assert.ok(buyuk.uyarilar.includes('onYasAralik'))
+
+    const aralik = kosAsi({ dogumGunu: '2010-01-01', asisi: 'dtpa', adim: 'd12', sonDoz: '2026-01-01' })
+    assert.equal(gunu(aralik, 'enErken'), '2026-01-29')
+    assert.equal(gunu(aralik, 'planBitis'), '2027-04-10', '16 is still under 20, so the Register window is open')
+
+    const onDokuz = kosGun({ dogumGunu: '2007-10-10', asisi: 'mmr', adim: 'd12', sonDoz: '2026-01-01' }, '2026-10-10')
+    assert.equal(gunu(onDokuz, 'planBitis'), '2027-04-10')
+    const yirmi = kosGun({ dogumGunu: '2006-10-10', asisi: 'mmr', adim: 'd12', sonDoz: '2026-01-01' }, '2026-10-10')
+    assert.equal(gunu(yirmi, 'planBitis'), undefined)
+
+    const onBes = kosGun({ dogumGunu: '2011-10-10', asisi: 'hepb', adim: 'd12', sonDoz: '2026-01-01' }, '2026-10-10')
+    assert.equal(gunu(onBes, 'enErken'), '2026-01-29')
+    assert.ok(onBes.uyarilar.includes('hepbIki'))
+    assert.equal(gunu(onBes, 'planBitis'), '2027-04-10')
+  })
+
+  it('rotavirus catch-up stops at 6 months, and the step is hidden until a vaccine is chosen', () => {
+    const bebek = kosGun({ dogumGunu: '2026-08-01', asisi: 'rota', adim: 'd12', sonDoz: '2026-09-15' }, '2026-10-01')
+    assert.equal(bebek.bant, 'ay2')
+    assert.equal(gunu(bebek, 'enErken'), '2026-10-13')
+    assert.ok(bebek.uyarilar.includes('rotaSinir'))
+
+    const altmis = kosGun({ dogumGunu: '2026-04-01', asisi: 'rota', adim: 'd12', sonDoz: '2026-06-01' }, '2026-10-10')
+    assert.equal(gunu(altmis, 'enErken'), undefined)
+    assert.ok(altmis.uyarilar.includes('rota'))
+
+    assert.equal(kosAsi({ asisi: 'dtpa' }).tamam, false)
+    assert.equal(kosAsi({ adim: 'd45', sonDoz: '2026-01-01' }).tamam, false)
+    const yasYok = kosAsi({ asisi: 'dtpa', adim: 'd45', sonDoz: '2026-01-01' })
+    assert.equal(yasYok.tamam, true)
+    assert.equal(gunu(yasYok, 'enErken'), undefined)
+    assert.deepEqual(yasYok.uyarilar, ['air_yok', 'yasGerek'])
+
+    const adim = AU_ASI_TAKVIMI.alanlar.find((a) => a.anahtar === 'adim')!
+    const ilk = AU_ASI_TAKVIMI.alanlar.find((a) => a.anahtar === 'ilkDoz')!
+    assert.equal(alanVarMi(adim, {}), false)
+    assert.equal(alanVarMi(adim, { asisi: 'dtpa' }), true)
+    assert.equal(alanVarMi(ilk, { asisi: 'dtpa' }), false)
+    assert.equal(alanVarMi(ilk, { asisi: 'hepb' }), true)
+  })
+
+  it('Hib keeps the summary intervals, and MenACWY names the single-dose brands', () => {
+    const hib = kosAsi({ dogumGunu: '2020-01-15', asisi: 'hib', adim: 'd34', sonDoz: '2026-01-01' })
+    assert.equal(gunu(hib, 'enErken'), '2026-02-26')
+    assert.ok(hib.uyarilar.includes('hib'))
+    const men = kosAsi({ dogumGunu: '2020-01-15', asisi: 'menacwy', adim: 'd12', sonDoz: '2026-01-01' })
+    assert.equal(gunu(men, 'enErken'), '2026-02-26')
+    assert.ok(men.uyarilar.includes('menTek'))
+    const buyuk = kosAsi({ dogumGunu: '2010-01-01', asisi: 'menacwy', adim: 'd12', sonDoz: '2026-01-01' })
+    assert.equal(gunu(buyuk, 'enErken'), undefined)
+    assert.ok(buyuk.uyarilar.includes('onYasAralik'))
+  })
+
+  it('the catch-up numbers are the Handbook\'s, not a pack parameter or a pack table', () => {
     assert.equal(AU_ASI_TAKVIMI.parametreler, undefined)
     assert.equal(AU_ASI_TAKVIMI.tablolar, undefined)
-    assert.ok((AU_ASI_TAKVIMI.kaynak ?? '').includes('National Immunisation Program'))
+    assert.match(AU_ASI_TAKVIMI.kaynak ?? '', /immunisationhandbook\.health\.gov\.au/)
+    assert.match(AU_ASI_TAKVIMI.kaynak ?? '', /4 weeks/)
   })
 })
 
