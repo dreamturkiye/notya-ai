@@ -235,3 +235,145 @@ and `docs/OPEN-COMMITMENTS.md`. No tsc/test run — no code changed.
 3. Name an AU clinician (and, per the existing `HUKUK-01-AU` entry, a lawyer) per branch —
    `AU-DEPTH-PARITY-02`, still fully OPEN, still the dominant remaining cost regardless of
    1-2 above.
+
+## 7. Continuation (Claude, 2026-10-21, same day) — Kaan picked Option A; §1 and §6's "AU has
+no SOAP-chapter/engine structure at all" is WRONG; corrected after reading the actual code
+
+Kaan's latest instruction: Option A — hand-port each branch's depth into AU-native files,
+AU's existing flat `.ulke` routing, no shared-mount. Before writing any branch content, this
+pass re-read AU's own tree end to end (not just the two route files the first two passes
+read) and found that §1 and §6 above are **factually wrong** about the starting point. No
+`app/dashboard/doktor/**`, `next.config.mjs`, or `/home/claude/notya-ai` file was touched;
+this section corrects the record from what is already in `/home/claude/notya-au` today.
+
+### 7.1 The convention already exists and is NOT a new chapter-tabs UI
+
+AU does not need, and this pass did NOT build, a TR-style tabbed patient-file chapter.
+AU already has its own equivalent mechanism, shipped and tested, that plays the same role:
+
+- **The kit/pack split** (`lib/ulke/araclar/tipler.ts`, `katalog.ts`, `paket.ts`,
+  `uyarlama.ts`): a branch's clinical arithmetic lives once, country-neutral, as a pure
+  function with its own cited source, in `lib/ulke/araclar/tanimlar/<group>.ts`
+  ("the kit"). A country pack (`countries/au/ayarlar.ts` → `araclar`) turns a kit tool on
+  for named roles, supplies the country's own numbers/units/bands where the kit leaves
+  them open (`uyarlama`, `parametreler`, `tablolar`), or logs why it stays off
+  (`kapali[key].eksik`, with a named owner — clinician or rights-holder).
+- **Opened from, and kept on, the patient** (`components/ulke/uygulama/AracKayitlari.tsx`,
+  migration 139, `ARAC_KAYDI_API`): any tool opens from a patient's file
+  (`aracYolu(key, hastaId)`), the SERVER re-computes and keeps the result against that
+  patient (never the client's number), with an optional follow-up day, and the patient's
+  file shows every kept result for that patient, newest first
+  (`HastaAracKayitlariKarti`); a cross-patient follow-up list (`TakipPaneli`) shows every
+  open follow-up, overdue ones marked. This is AU's per-branch "chapter history" —
+  structurally real, isolation-reviewed (server-side re-check, RLS via the doctor's own
+  account), already shipped.
+
+**This is the file/routing convention for AU's branch depth, and it is already in use for
+most of the 40 branches** (below) — not a convention to invent, a fact to record. Write a
+branch's TR-engine port as a new kit tool in `lib/ulke/araclar/tanimlar/<group>.ts` (pure
+function, cited international source, no national-authority content), wire it into the AU
+pack in `countries/au/ayarlar.ts` (`araclar.gorenler` for who sees it, `kapali` with a named
+owner for what cannot be built yet), and it is reachable, patient-scoped, and
+follow-up-tracked for free through the two mechanisms above. **A new per-branch page is
+not the unit of work here — a new tool definition is.**
+
+### 7.2 What already exists is far larger than §1's "Muayene" row claimed
+
+§1 said pediatri's `buyume.ts`/`doz.ts`/`asiPlan.ts`-class engines "do not exist on AU at
+all" and OPEN-COMMITMENTS' `AU-DEPTH-PARITY-02` (2026-10-20) says the 40-branch port "is
+unstarted regardless of the Option A/B decision". Both are wrong as of today. This repo
+already has:
+
+- `lib/ulke/araclar/tanimlar/{acilAnesteziBeyin,cerrahiDahiliyeDerm,cerrahiGogusGoz,
+  endoEnfeksiyonGastro,kalpKbb,nefroOnko,ortoPediRadyoRoma,skorluOlcekler,
+  buyumePersentili}.ts` — 2,115+ lines of real, cited, tested clinical arithmetic, each
+  function's docstring naming the exact TR engine it "stands beside" and comparing input
+  for input in `lib/ulke/araclar/esdegerlik.test.ts`. Confirmed present and already
+  correct (re-checked in this pass, no edit needed): ASA six classes with "E" as a
+  modifier (not a class — the exact TR fault TR commit `edfac868` just fixed was already
+  independently fixed here first), EASI's under-8 region-weight multiplier
+  (`EASI_YAS`/`AGIRLIK_SEKIZ_ALTI`), the antibiotic-course off-by-one
+  (`bitis = gunEkle(baslangic, sure_gun - 1)`), dose arithmetic with no trailing zero
+  (`dozYazimi: { sondaSifir: false }` in `countries/au/ayarlar.ts`, per the national
+  medicines-terminology recommendation).
+- `docs/araclar-denetim/AU.md` + `au-kararlar.json` (2026-10-10, ~95 live web searches
+  against real Australian sources: RACGP, ANZCA, Medicare, PBS, Kidney Health Australia,
+  the Hearing Services Program, the Prostate Cancer Foundation's 2026 guideline, etc.) —
+  an exhaustive, per-tool, sourced audit of exactly what is right, what is wrong, and what
+  is an open slot pending a named AU clinician or a rights-holder's permission. This is
+  the authoritative placeholder list for AU — not a new one to write from scratch.
+- A grep of `Stands beside specialties/` across the kit shows at least one real,
+  country-neutral clinical-calculator port already standing beside the TR engine of these
+  26 branches: acil-tip, anestezi, beyin-cerrahisi, cocuk-cerrahisi, dahiliye, dermatoloji,
+  endokrinoloji, enfeksiyon-hastaliklari, gastroenteroloji, genel-cerrahi,
+  gogus-cerrahisi, gogus-hastaliklari, goz-hastaliklari, kalp-damar-cerrahisi,
+  kardiyoloji, kulak-burun-bogaz, nefroloji, onkoloji, ortopedi, pediatri,
+  plastik-cerrahi, psikiyatri, radyoloji, romatoloji, spor-hekimligi, uroloji. Plus, via
+  `skorluOlcekler.ts` (IPSS, PHQ-9, GAD-7, MIDAS, pain VAS, ODI): uroloji, psikiyatri,
+  noroloji, fizik-tedavi again. That is **≈28 of 40 branches with at least one real,
+  cited, tested clinical tool already standing beside its TR engine**, wired to a role in
+  `countries/au/ayarlar.ts`, reachable and patient-scoped via §7.1's mechanism.
+
+**What this is NOT**: TR's full per-branch depth (every engine, every chapter section,
+narrative note templates) — only the calculator/scoring layer. It is also not evenly
+deep: several "keep" verdicts in `AU.md` are record-only tools (dates/counts/ticks, no
+clinical judgment) rather than scored instruments. And one near-miss this pass is worth
+recording precisely so it is not repeated: `odyometri-pta`'s kit mechanism supports a
+country stating its own averaged frequencies and threshold (`uyarlama.alanlar.frekans`,
+`secimlikParametreler.asimetri_ustu`) — the Australian Hearing Services Program's 3-frequency,
+23.3 dB figure looked like an easy win to wire in. `countries/au/ayarlar.ts`'s own comment
+block (just above `gorenler`) already explains, correctly, why it is deliberately NOT
+wired: the Government program's figure is a **funding-eligibility threshold**, not a
+clinical severity grade, and applying it as a band would misstate it. Left as-is, not
+touched. The lesson for whoever continues this: read the pack's own "NOT SUPPLIED,
+because…" comments before "closing" anything that looks open — several apparent gaps in
+`AU.md`'s slot list are deliberate, reasoned, and correct as they stand.
+
+### 7.3 Branch-by-branch status (corrects §1's table; supersedes `AU-DEPTH-PARITY-02`'s
+"unstarted" framing — the per-tool detail for every row below is `docs/araclar-denetim/AU.md`,
+not repeated here)
+
+| Status | Branches | Basis |
+|---|---|---|
+| **Real calculator depth already shipped, cited, tested, role-wired** (≈26) | acil-tip, anestezi, beyin-cerrahisi, cocuk-cerrahisi, dahiliye, dermatoloji, endokrinoloji, enfeksiyon-hastaliklari, gastroenteroloji, genel-cerrahi, gogus-cerrahisi, gogus-hastaliklari, goz-hastaliklari, kalp-damar-cerrahisi, kardiyoloji, kulak-burun-bogaz, nefroloji, onkoloji, ortopedi, pediatri (growth percentile only, see below), plastik-cerrahi, psikiyatri, radyoloji, romatoloji, spor-hekimligi, uroloji | `lib/ulke/araclar/tanimlar/*.ts`, `esdegerlik.test.ts`, `AU.md` |
+| **Scored-instrument depth shipped via `skorluOlcekler.ts`** (adds to the above) | uroloji (IPSS), psikiyatri (PHQ-9, GAD-7), noroloji, fizik-tedavi (VAS, ODI) | same |
+| **Structural/record-only tools only — no scored clinical content yet** (≈12, thin) | aile-hekimligi, diyetisyen, ergoterapi, estetik-cerrahi, fizyoterapi, kadin-dogum, klinik-dermatoloji, klinik-psikolog, longevity, medikal-estetik, odyoloji (PTA/otoscopy/vertigo exist but gated to otolaryngology+audiology roles only — audiology-specific framing not separately built), sac-ekimi | `bosluklar.ts`, role map in `countries/au/ayarlar.ts` |
+| **Named open slots pending a clinician/lawyer/licence, per tool, already specified** | all 40, to varying degrees — the exact list is `AU.md`'s "29 slots" table and `au-kararlar.json`, cross-referenced below in OPEN-COMMITMENTS | `AU.md` Part (c) |
+| **Pediatri specifically** | growth-percentile (WHO LMS) is real and shipped (`buyumePersentili.ts`); immunisation schedule, dose-by-weight presentation beyond the trailing-zero rule, and developmental screening (M-CHAT-R/F) are named, sourced slots in `AU.md`, pending licence (M-CHAT) or are already covered by AU's own `countries/au/araclar/immunisationReport.ts` (reporting, not a schedule engine) | `AU.md` rows for `vaccination-schedule`, `mchat-rf` |
+
+### 7.4 What this pass did and did not do
+
+Did: read `lib/ulke/araclar/{tipler,katalog,paket,uyarlama,yardimci}.ts`,
+`countries/au/ayarlar.ts`, `countries/au/araclar/*`, `components/ulke/uygulama/
+{Araclar,AracKayitlari,Muayene,Hastalar}.tsx`, `docs/araclar-denetim/AU.md`, and every
+`lib/ulke/araclar/tanimlar/*.ts` file; cross-checked against TR's `specialties/*/engines/`
+roster (40 directories, confirmed); ran `npx tsc --noEmit -p .` as a baseline (two
+PRE-EXISTING errors in `countries/au/au.test.ts`, lines 399 and 644 — present before this
+pass touched anything, not caused by this pass: `ApiCevabi` missing `status` in a test
+helper's return type, and a possibly-undefined `bildirim.metin.uyarilar` read without a
+guard). Did not: write any new kit tool, pack wiring, or application code — see §7.2's
+near-miss for why a rushed addition here is worse than none, and because every actually
+safe, uncontroversial fix this pass could find (ASA six classes, EASI age multiplier,
+antibiotic off-by-one, dose trailing zero) turns out to already be shipped. Did not touch
+`/home/claude/notya-ai` or any other country pack.
+
+### 7.5 Concrete, low-risk next steps (none executed this pass — each needs either a decision
+already within Kaan's remit, or more research time than this pass had)
+
+1. **`takip-paneli` (the follow-up list) is specialty-gated today; `AU.md` itself
+   recommends making it a base tool** so the ~18 roles without a tool of their own
+   (general practice included) also get it. Pure product/UX change, not clinical content
+   — but this pass could not find where the base/specialty role list for it is actually
+   assembled in time to change it safely (it is not a literal entry in
+   `countries/au/ayarlar.ts`'s `gorenler` map the way other tools are) and declined to
+   guess. Worth a short, dedicated follow-up.
+2. **Name an AU clinician and lawyer per branch** — `AU-DEPTH-PARITY-02`, still the
+   dominant real cost; `AU.md`'s "29 slots" table is the ready-made brief for each
+   reviewer, already sourced, already short-listed. This is the one item that actually
+   blocks the ≈12 "thin" branches in §7.3 and the slots inside the ≈28 "real depth"
+   branches.
+3. **Visual, over-time views TR has that AU's generic kept-results list does not**: a
+   plotted growth chart (vs. a list of past WHO-percentile results), a vaccination
+   calendar (vs. a reporting tool), a wound/graft photo timeline. These are real,
+   named, not-yet-built UI gaps — distinct from clinical-content gaps, buildable without
+   a clinician once scoped, and a reasonable unit for the next branch-depth pass.
