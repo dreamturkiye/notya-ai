@@ -180,6 +180,15 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
   /** NOTYA-SILERO-01: Silero VAD bound to the mic stream; null → RMS gate. */
   const fishSileroRef = useRef<SileroKapi | null>(null)
   const fishDinleNesilRef = useRef(0)
+  /**
+   * NOTYA-SES-ZOMBI-01 (Kaan canlı vaka, 2026-10-21): "Kapat"tan / yeni bir startConversation()'dan sonra
+   * ElevenLabs tarafında gecikmiş bir ilk-mesaj yeniden deneme (scheduleRetryWithoutFirst) hâlâ sonuçlanıp
+   * conversationRef'i YENİ, kimsenin bilmediği canlı bir oturumla değiştirebiliyordu — mikrofon kapanmıyor,
+   * ses durmuyordu (sayfa yenilenene kadar). Fish yolundaki fishDinleNesilRef deseni ile aynı: bu oturum
+   * denemesinin nesli; endConversation() her çağrıldığında artar — o anki tüm devam eden ElevenLabs
+   * başlatma denemeleri kendilerini bayat görür ve ref'e dokunmadan kapanır.
+   */
+  const elevenNesilRef = useRef(0)
   const fishTurAbortRef = useRef<AbortController | null>(null)
   /** NOTYA-SES-TUR-01: the live listen loop's turn sequencer — the player reports "answer audio started" here. */
   const fishSiraRef = useRef<{ sesBasladi: () => void } | null>(null)
@@ -594,6 +603,8 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
     sesProfiliBirak()
     kesintiRef.current = kesintiBaslat()
     sonDuzeltmeRef.current = null
+    // NOTYA-SES-ZOMBI-01: invalidate any in-flight ElevenLabs start/retry attempt from this point on.
+    elevenNesilRef.current += 1
     fishDinleNesilRef.current += 1
     fishTurAbortRef.current?.abort()
     fishTurAbortRef.current = null
@@ -1293,6 +1304,11 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
     let retriedWithoutFirst = false
     let retryInFlight = false
     let activeSignedUrl = signedUrl
+    // NOTYA-SES-ZOMBI-01: this attempt's generation. A close (endConversation) or a newer startConversation()
+    // bumps elevenNesilRef — any async continuation below (onConversationCreated, the retry, begin() itself)
+    // that lands after that must never take over conversationRef; it ends the session it just opened instead.
+    const nesilBu = elevenNesilRef.current
+    const bayatMi = () => elevenNesilRef.current !== nesilBu
 
     const endCurrentSession = async () => {
       elevenKapiKapat()
@@ -1304,7 +1320,7 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
     }
 
     const scheduleRetryWithoutFirst = async () => {
-      if (retriedWithoutFirst || retryInFlight) return
+      if (retriedWithoutFirst || retryInFlight || bayatMi()) return
       retriedWithoutFirst = true
       retryInFlight = true
       try {
@@ -1327,6 +1343,7 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
     }
 
     const begin = async (includeFirstMessage: boolean) => {
+      if (bayatMi()) return
       usedFirstMessage = includeFirstMessage
       // Fallback seeds UI greeting; skip the agent's own default transcript once.
       let skipNextAgentTranscript = !includeFirstMessage
@@ -1336,6 +1353,9 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
         connectionType: "websocket",
         ...SES_CALAR,
         onConversationCreated: (c) => {
+          // NOTYA-SES-ZOMBI-01: a close / newer session landed before the SDK handed this one back —
+          // end it immediately instead of handing a now-orphaned mic + audio session to conversationRef.
+          if (bayatMi()) { c.endSession().catch(() => undefined); return }
           conversationRef.current = c
         },
         overrides: {
@@ -1479,6 +1499,8 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
           },
         },
         onConnect: () => {
+          // NOTYA-SES-ZOMBI-01: a stale/superseded attempt connecting after the fact must not resurrect UI state.
+          if (bayatMi()) return
           setStatus("listening")
           setErrorMsg("")
           sureTimerlariBaslat(address(doctorProfile || { firstName: 'Hocam' }, 'named'))
@@ -1488,6 +1510,9 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
           if (tekBeyin) yoklamayiBaslat()
         },
         onDisconnect: (details) => {
+          // NOTYA-SES-ZOMBI-01: this fires for OUR OWN endSession() call on a stale conversation too (the
+          // bayatMi() cleanups above) — it must not touch conversationRef/timers/the gate of a newer live session.
+          if (bayatMi()) return
           elevenKapiKapat()
           kesintiRef.current = kesintiBaslat()
           if (fishAcikRef.current) fishRef.current?.kes()
@@ -1509,6 +1534,7 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
           }
         },
         onError: (message) => {
+          if (bayatMi()) return
           if (usedFirstMessage && !retriedWithoutFirst && isFirstMessageOverrideError(message || "")) {
             void scheduleRetryWithoutFirst()
             return
@@ -1614,6 +1640,9 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
           if (sdkStatus === "connected" && !(fishAcikRef.current && fishRef.current?.caliyorMu())) setStatus("listening")
         },
       })
+      // NOTYA-SES-ZOMBI-01: the session was closed (or superseded) while Conversation.startSession() was
+      // awaiting — this object must not become the live conversation; close it and stop, mic and all.
+      if (bayatMi()) { try { await conversation.endSession() } catch { /* ignore */ }; return }
       conversationRef.current = conversation
       elevenKapiBagla(conversation)
     }
@@ -1626,6 +1655,9 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
         await scheduleRetryWithoutFirst()
         return
       }
+      // NOTYA-SES-ZOMBI-01: a close / newer session already moved on — this attempt's failure is stale,
+      // must not touch the (possibly already-live) current session's ref, status or error message.
+      if (bayatMi()) return
       setErrorMsg(connectionErrorHelp(raw))
       setStatus("error")
       conversationRef.current = null
