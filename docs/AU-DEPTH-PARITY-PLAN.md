@@ -166,3 +166,72 @@ check (not expected to differ from the branch's existing state — see run log i
 commit message). Full `npm test` not run: no code changed that any test could regress,
 and the suite is large enough that running it against an unmodified baseline would spend
 budget without checking anything this job touched.
+
+## 6. Continuation (Claude, 2026-10-21) — Kaan picked Option B; two new blockers found before any code was written; still no code touched
+
+Kaan's instruction this round: "B is fine. I want all 40 specialties in au to be equivalent
+or better than the gold turkish standard." That resolves `AU-DEPTH-PARITY-01`'s top-line
+A-vs-B question. It does **not** resolve the sub-decisions §2 already flagged as needed
+before writing code (flag/gate design, URL shape), and this pass found the flag/gate design
+sub-decision is harder than either the brief or §2 assumed. Re-verified against this repo's
+actual files before writing anything:
+
+**New blocker 1 — the build-flip is not a flag change, it's a new build mechanism.**
+`next.config.mjs` line 28: `pageExtensions` is either Türkiye's default (unset, so `tsx`,
+`ts`, … apply) or, for every country pack, exactly `['ulke.tsx', 'ulke.ts', 'mjs']` — one
+global list for the whole build, not per-route. Confirmed live in this repo: `app/page.tsx`
+*and* `app/page.ulke.tsx` both exist, same route. If AU's `pageExtensions` were widened to
+also accept plain `tsx`/`ts` (the literal reading of "give AU access to
+`app/dashboard/doktor/**`" via this flag), Next would resolve **two** pages for `/` and for
+every other path that has both a plain and a `.ulke` file — not a clean unlock of one
+subtree, a build-breaking collision across the entire app. A real fix needs a third,
+AU-only extension namespace (or an equivalent mechanism — route groups, a build-time
+file-copy step, etc.) that resolves *only* `app/dashboard/doktor/**` and nothing else that
+already has a `.ulke` twin — i.e. a new, named build mechanism, not the one-line
+`derleme.mjs` edit the brief describes. This is exactly the class of decision §2 said needs
+sign-off before code is written, now more concretely specified; picking a default
+resolution here and shipping it unreviewed on a commercial medical product's build pipeline
+is not something this pass will do silently.
+
+**New blocker 2 — the brief's assumed reusable helper doesn't exist.** The brief says to
+gate the Turkey-only regulatory blocks behind "a shared helper (e.g. a `turkiyeMi()`/
+`ulkeKodu()` check already used elsewhere in `lib/ulke/`) — find and reuse the existing
+pattern." Searched `lib/ulke/**` this pass: no `turkiyeMi` or `ulkeKodu` function exists
+anywhere in this tree (confirmed by grep, zero hits). `lib/ulke/hesapUlkesi.ts` has
+`hesapBuUlkedeMi(user)` — account-country-membership, not a build/render-time Türkiye-only
+check — the nearest relative, not the same thing. Phase A's "reuse, don't invent" premise
+is therefore false as stated; a working Türkiye-only content gate for the 16 mixed
+`app/dashboard/doktor/**` files would be new code, which changes Phase A's own promised
+"zero behavior change, proven pattern" risk profile — another reason not to cut it in
+unreviewed in this pass.
+
+**AU-DEPTH-PARITY-02 is unchanged and is the binding constraint regardless of the above.**
+Re-confirmed this pass: zero of the 40 branches have a named AU clinician on file. Per the
+job's own hard boundary (no invented AU drug names/doses/thresholds/consent text), Phase C
+cannot write real clinical content for any branch yet — only structural scaffolding, which
+without the Phase A/B tree being reachable has nowhere real to live (AU's `.ulke` tree has
+no SOAP-chapter/engine structure at all today; see §1 "Muayene" row). Writing 40 branches'
+worth of scaffold now, before the Phase A/B architecture is settled, risks building it
+twice.
+
+**What this pass did:** verified the two blockers above (read-only; no
+`app/dashboard/doktor/**`, `next.config.mjs`, `middleware.ulke.ts`,
+`countries/au/index.ts`, or any `/home/claude/notya-ai` file touched), updated this plan
+and `docs/OPEN-COMMITMENTS.md`. No tsc/test run — no code changed.
+
+**What Kaan needs to decide next, specifically (not just A-vs-B, already decided):**
+1. The build-mechanism design for blocker 1 (proposal: a third extension namespace, e.g.
+   `*.au.tsx`/`*.au.ts`, added to AU's `pageExtensions` alongside `ulke.tsx`/`ulke.ts`,
+   populated by copying/adapting `app/dashboard/doktor/**` file-by-file rather than a
+   literal shared mount — functionally close to Option A's per-file porting, just living
+   under the nested URL shape instead of a new flat one; an actual shared-render unlock
+   with no duplication would need route groups or a build-time composition step, bigger
+   still). Needs sign-off before the first file moves.
+2. URL shape: recommend keeping AU's current flat URLs and NOT moving to TR's nested
+   `/dashboard/doktor/hastalar/[id]` shape, specifically because every existing AU
+   bookmark/link/test already targets the flat shape and the nested shape's only benefit
+   (code reuse) is already lost once blocker 1 forces a copy/adapt approach rather than a
+   true shared mount. Kaan should confirm or override this.
+3. Name an AU clinician (and, per the existing `HUKUK-01-AU` entry, a lawyer) per branch —
+   `AU-DEPTH-PARITY-02`, still fully OPEN, still the dominant remaining cost regardless of
+   1-2 above.
