@@ -48,5 +48,4 @@ test('static check: every entry point uses the shared core, not its own copy', (
   assert.match(oku('lib/doktor/belgeNotaYaz.ts'), /notaBloklariUygula/)
   assert.match(oku('app/api/doktor/belgeler/analiz/onayla/route.ts'), /notaBloklariUygula/)
   assert.ok(!/maskeOnizleme|onizlemeUrl/.test(oku('app/dashboard/doktor/hastalar/[id]/belgeler/[belgeId]/page.tsx')), 'doctor must see the original, not a blacked-out preview')
-  assert.ok(!/kimliksiz/i.test(oku('components/doktor/MuayeneEklerAdimi.tsx').replace(/kimliksiz/gi, (m, i, str) => (str.slice(i - 20, i).includes('//') ? '' : m))) || true)
 })
