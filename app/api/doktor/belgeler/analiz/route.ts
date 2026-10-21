@@ -13,6 +13,7 @@ import { createHash } from 'crypto'
 import { doktorOturum } from '@/lib/doktor/serverAuth'
 import { getDocumentMeta } from '@/lib/vault/service'
 import { decrypt } from '@/lib/security/encryption'
+import { varsayilanGoruntuModalitesi } from '@/core/belgeler/belgeAkisi'
 import { bransAnahtari, bransKurali, etkinModalite, SES_MODALITELERI } from '@/core/belgeler/router'
 import { tierAYazVeFuzyonla } from '@/core/belgeler/tierA'
 import { fusionYap } from '@/core/belgeler/fusion'
@@ -36,7 +37,7 @@ export async function POST(req: NextRequest) {
   if ('hata' in oturum) return oturum.hata
   const { user, supabase } = oturum
   const body = (await req.json().catch(() => null)) as {
-    documentId?: string; modalityFinal?: Modalite; klinikNot?: string
+    documentId?: string; modalityFinal?: Modalite | 'auto'; klinikNot?: string
     deid?: { mime: string; base64: string; hash: string } | null
     sesMetrikleri?: Record<string, number | string> | null
     tierB?: MotorCiktisi[]
@@ -62,7 +63,8 @@ export async function POST(req: NextRequest) {
   try { if (hasta.gender_encrypted) { const g = decrypt(String(hasta.gender_encrypted)).toLocaleLowerCase('tr-TR'); cinsiyet = g.startsWith('k') || g.startsWith('f') ? 'K' : g.startsWith('e') || g.startsWith('m') ? 'E' : null } } catch { cinsiyet = null }
   const yasAy = yasAyHesapla(dobIso)
 
-  let { modalite, serbest } = etkinModalite(bransKey, body.modalityFinal)
+  // NOTYA-BELGE-OTO-01: 'auto' = unclassified upload in the automatic flow -> the branch's default image modality (config in belgeAkisi)
+  let { modalite, serbest } = etkinModalite(bransKey, body.modalityFinal === 'auto' ? varsayilanGoruntuModalitesi(bransKey) : body.modalityFinal)
   const sesMi = SES_MODALITELERI.includes(modalite)
   const pdfMi = meta.fileType === 'application/pdf'
 
