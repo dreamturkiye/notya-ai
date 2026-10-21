@@ -27,6 +27,7 @@ This repo is a **commercial** multi-specialty product: **30 medical branches** (
 | Any Anthropic/Claude call (new route, new chapter, prompt change) | `.cursor/skills/ai-model-politikasi/SKILL.md` |
 | Any report/form/identity field for a non-Turkey country module | `.cursor/skills/international-data-model-dogrulama/SKILL.md` |
 | Any core/shared change, revision, or new feature not Turkey-only by law — before closing it (six-country application, country-adapted, + per-country status line) | `.cursor/skills/ulke-paritesi-duzeltme/SKILL.md` |
+| Documents in the muayene flow (belgeleri ekle, Belgeler upload, Asistan image evaluation, note insertion) | `.cursor/skills/belge-otomatik-akis/SKILL.md` |
 | Patient-file page, a portal/API hot path, task-sync, a hot-table query, or any new external call | `.cursor/skills/performans-butcesi-koruma/SKILL.md` |
 
 ## Ortak omurga (short)

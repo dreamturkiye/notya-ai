@@ -8,11 +8,12 @@
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { doktorOturum } from '@/lib/doktor/serverAuth'
-import { UYARI_SERIDI } from '@/core/belgeler/yazar'
 import { MODALITE_TR, type Modalite } from '@/core/belgeler/ontoloji'
 import type { BelgeRaporu } from '@/core/belgeler/types'
 import { arsivsizNotlar, arsivsizSeanslar } from '@/lib/doktor/arsiv'
 import { protokolNumarasiAta } from '@/lib/doktor/protokolNo'
+import { notaBloklariUygula, afisTemizle } from '@/core/belgeler/notaBlok'
+import { ulkeDili } from '@/lib/doktor/belgeNotaYaz'
 
 export const dynamic = 'force-dynamic'
 
@@ -31,23 +32,7 @@ function labBlogu(a: { sonuc: BelgeRaporu & { lab?: { kritik?: string[]; yeni_bo
   ]
   if (ntp) satirlarMetin.push('Tarama pozitif tanı değildir. Konfirmasyon ve klinik değerlendirme gerekir.')
   if (r.acil_bayrak) satirlarMetin.push('⚠ Kritik değer işaretlendi — hekim değerlendirdi.')
-  satirlarMetin.push(`AI taslağı arşivde. ${UYARI_SERIDI}`)
-  return satirlarMetin.join('\n')
-}
-
-function raporBlogu(a: { sonuc: BelgeRaporu; hekim_tanisi: { ad: string; icd10?: string | null }[]; hekim_ozet: string | null; modality_final: string; olusturuldu: string }): string {
-  const r = a.sonuc
-  const tarih = new Date(a.olusturuldu).toLocaleDateString('tr-TR')
-  const satirlar = [
-    `— Belge değerlendirmesi (${MODALITE_TR[a.modality_final as Modalite] || a.modality_final}, ${tarih}) —`,
-    (a.hekim_ozet || r.ozet || '').trim(),
-  ]
-  if (r.bulgular?.length) satirlar.push('Bulgular: ' + r.bulgular.join('; '))
-  if (a.hekim_tanisi?.length) satirlar.push('Hekim tanısı: ' + a.hekim_tanisi.map((t) => t.icd10 ? `${t.ad} (${t.icd10})` : t.ad).join(', '))
-  if (r.acil_bayrak) satirlar.push('⚠ Acil bayrak: değerlendirmede kırmızı bayrak bulgu işaretlendi.')
-  // Motor / kaynak adı nota yazılmaz — hekime yalnız klinik uyarı (Kaan: afişe etme).
-  satirlar.push(UYARI_SERIDI)
-  return satirlar.filter(Boolean).join('\n')
+  return afisTemizle(satirlarMetin.join('\n')).replace(/[ \t]+\n/g, '\n')
 }
 
 export async function POST(req: NextRequest) {
@@ -120,10 +105,25 @@ export async function POST(req: NextRequest) {
         supabase.from('lab_satirlar').update({ onayli: true }).eq('panel_id', panel.id),
         supabase.from('lab_paneller').update({ durum: 'onaylandi', updated_at: new Date().toISOString() }).eq('id', panel.id),
       ])
-    } else blok = raporBlogu(a as never)
+    } else blok = ''
     const onceki = not.content_objektif || ''
-    if (onceki.includes(blok.split('\n')[0])) return NextResponse.json({ ok: true, noteId, zaten: true })
-    const sonraki = onceki ? `${onceki.trimEnd()}\n\n${blok}` : blok
+    let sonraki: string
+    if (a.modality_final === 'lab') {
+      if (onceki.includes(blok.split('\n')[0])) return NextResponse.json({ ok: true, noteId, zaten: true })
+      sonraki = onceki ? `${onceki.trimEnd()}\n\n${blok}` : blok
+    } else {
+      // Shared block logic (banner never inserted, clean joins, ICD codes intact, replace-by-document-id, discrepancy line).
+      const r = a.sonuc as BelgeRaporu
+      const dil = ulkeDili()
+      const uy = notaBloklariUygula(onceki, [{
+        belgeId: a.belge_id || a.id, etiket: MODALITE_TR[a.modality_final as Modalite] || a.modality_final,
+        tarih: new Date(a.olusturuldu).toLocaleDateString(dil === 'tr' ? 'tr-TR' : dil === 'ru' ? 'ru-RU' : 'en-GB'), yuklemeSirasi: 0,
+        ozet: a.hekim_ozet || r.ozet, bulgular: r.bulgular || [],
+        hekimTanisi: (a.hekim_tanisi || []).map((t: { ad: string; icd10?: string | null }) => (t.icd10 ? `${t.ad} (${t.icd10})` : t.ad)), acil: !!r.acil_bayrak,
+      }], dil)
+      if (!uy.degisti) return NextResponse.json({ ok: true, noteId, zaten: true })
+      sonraki = uy.metin
+    }
     const { error } = await supabase.from('notes').update({ content_objektif: sonraki }).eq('id', noteId)
     if (error) return NextResponse.json({ error: 'Nota yazılamadı' }, { status: 500 })
     await Promise.all([

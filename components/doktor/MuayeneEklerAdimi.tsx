@@ -12,6 +12,9 @@
 import { Component, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react"
 import { CHROME_FONT, CHROME_RENK } from "@/lib/doktor/chromeTheme"
 import { ensureDoctorAccessToken } from "@/lib/doktor/clientAuth"
+import { gorseliOtomatikKimliksizlestir } from "@/core/belgeler/deid"
+import { deIdMetin } from "@/core/belgeler/deidMetin"
+import { KIMLIK_GIZLENEMEDI, sinirliKuyruk } from "@/core/belgeler/otoBatch"
 import { bitmapKalitesi } from "@/components/doktor/fotoArsivi/istemciGorsel"
 import { ekHatirlaticilar, eksikHatirlaticilar, type Hatirlatici } from "@/lib/doktor/muayeneEk/hatirlatici"
 import { EK_DEGERLENDIRME_SURUMU, EK_TURLERI, EK_TUR_ETIKETI, type EkAsiSatiri, type EkSonuc, type EkTuru } from "@/lib/doktor/muayeneEk/tipler"
@@ -21,7 +24,7 @@ export interface EkPayload {
   asiOnay: { belgeId: string; satirlar: { asiAdi: string; dozNo: number | null; uygulamaTarihi: string | null; lotNo: string | null; kaynakTuru: "bu_muayene" | "karne" }[] }[]
 }
 
-type Durum = "yukleniyor" | "yukleme_hata" | "siniflaniyor" | "tur_sor" | "hazir" | "degerlendiriliyor" | "tamam" | "hata" | "atlandi"
+type Durum = "yukleniyor" | "yukleme_hata" | "siniflaniyor" | "tur_sor" | "hazir" | "maskeleniyor" | "degerlendiriliyor" | "tamam" | "hata" | "atlandi"
 interface Oge {
   key: string; ad: string; kaynak: "dosya" | "kamera" | "barkod"; durum: Durum; yuzde: number
   belgeId?: string; tur?: EkTuru; adaylar?: { tur: EkTuru; guven: number }[]; sonuc?: EkSonuc; hata?: string
@@ -61,11 +64,10 @@ async function kucult(f: File): Promise<{ blob: Blob; ad: string; b64?: string; 
       return await new Promise<Blob | null>((res) => c.toBlob((b) => res(b), "image/jpeg", kalite))
     } catch { return null }
   }
-  const turev = await tara(1600, 0.82) // kimliksiz değerlendirme türevi (yalnız belleğe)
-  const b64 = turev ? await new Promise<string>((res) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(",")[1] || ""); r.readAsDataURL(turev) }) : undefined
-  if (f.size <= AZAMI_BAYT && /jpeg|png|webp|gif/.test(f.type)) return { blob: f, ad: f.name, b64, mime: turev ? "image/jpeg" : undefined }
-  const kucuk = (await tara(2400, 0.85)) || turev
-  if (kucuk) return { blob: kucuk, ad: f.name.replace(/\.[^.]+$/, "") + ".jpg", b64, mime: "image/jpeg" }
+  // NOTYA-BELGE-OTO-01: no unmasked derivative is kept for evaluation; the outbound copy is produced (masked) at evaluation time.
+  if (f.size <= AZAMI_BAYT && /jpeg|png|webp|gif/.test(f.type)) return { blob: f, ad: f.name }
+  const kucuk = (await tara(2400, 0.85)) || (await tara(1600, 0.82))
+  if (kucuk) return { blob: kucuk, ad: f.name.replace(/\.[^.]+$/, "") + ".jpg", mime: "image/jpeg" }
   return { blob: f, ad: f.name }
 }
 
@@ -126,7 +128,8 @@ function Ic({ sessionId, patientId, transcript, pediatrik, hata, onDevam }: Prop
   const [surukle, setSurukle] = useState(false)
   const [kapatilan, setKapatilan] = useState<string[]>([])
   const [calisiyor, setCalisiyor] = useState(false)
-  const [kimliksiz, setKimliksiz] = useState(false)
+  const kuyruk = useRef(sinirliKuyruk(3)) // evaluation starts as soon as a document is classified, max 3 in parallel
+  const ucuslar = useRef<Map<string, Promise<void>>>(new Map())
   const [barkodAcik, setBarkodAcik] = useState(false)
   const [barkodYazi, setBarkodYazi] = useState("")
   const [bildirim, setBildirim] = useState("")
@@ -147,6 +150,18 @@ function Ic({ sessionId, patientId, transcript, pediatrik, hata, onDevam }: Prop
     catch { return [] as Hatirlatici[] }
   }, [transcript, pediatrik, ogeler, kapatilan])
 
+  /** Evaluation starts immediately when a document is classified with confidence (no button, no approval). */
+  const otoBaslat = (key: string, tur: EkTuru) => {
+    const p = kuyruk.current(async () => {
+      // state is read through the ref: wait one tick so the 'hazir' + tur update is visible
+      await new Promise((r) => setTimeout(r, 0))
+      const o = ogelerRef.current.find((x) => x.key === key)
+      if (o && !o.tur) guncelle(key, { tur })
+      await degerlendirOge(key, false, tur)
+    }).catch(() => undefined).finally(() => { ucuslar.current.delete(key) })
+    ucuslar.current.set(key, p as Promise<void>)
+  }
+
   const islemeAl = useCallback(async (f: File, kaynak: Oge["kaynak"], ipucu: EkTuru | null) => {
     const key = `o${++sayac}`
     setOgeler((l) => [...l, { key, ad: f.name || "belge", kaynak, durum: "yukleniyor", yuzde: 0, ipucu }])
@@ -162,7 +177,7 @@ function Ic({ sessionId, patientId, transcript, pediatrik, hata, onDevam }: Prop
         }
       } catch { /* kalite kapısı yardımcıdır; hata kaydı engellemez */ }
     }
-    guncelle(key, { dosya: k.blob, gorselB64: k.b64, gorselMime: k.mime })
+    guncelle(key, { dosya: k.blob })
     if (k.blob.size > 4 * 1024 * 1024) { guncelle(key, { durum: "yukleme_hata", hata: "Dosya 4 MB sınırını aşıyor." }); return }
     const tok = await token()
     const y = await yukle(k.blob, k.ad, patientId, sessionId, tok, (yuzde) => guncelle(key, { yuzde }))
@@ -172,7 +187,10 @@ function Ic({ sessionId, patientId, transcript, pediatrik, hata, onDevam }: Prop
       "/api/doktor/muayene-ekleri/siniflandir", { sessionId, belgeId: y.id, kaynak, ipucuTur: ipucu })
     const c = s.veri?.siniflandirma
     if (!s.ok || !c) guncelle(key, { durum: "tur_sor", adaylar: [], tur: undefined })
-    else guncelle(key, { tur: c.tur, adaylar: c.adaylar, durum: c.sor ? "tur_sor" : "hazir" })
+    else {
+      guncelle(key, { tur: c.tur, adaylar: c.adaylar, durum: c.sor ? "tur_sor" : "hazir" })
+      if (!c.sor) otoBaslat(key, c.tur)
+    }
   }, [guncelle, patientId, sessionId])
 
   // Yükleme havuzu: aynı anda en fazla 3
@@ -188,18 +206,30 @@ function Ic({ sessionId, patientId, transcript, pediatrik, hata, onDevam }: Prop
     void api("/api/doktor/muayene-ekleri/tur", { sessionId, belgeId: o.belgeId, tur, onceki: o.adaylar?.[0]?.tur ?? null, kaynak: o.kaynak })
   }
 
-  async function degerlendirOge(key: string, yeniden = false) {
+  async function degerlendirOge(key: string, yeniden = false, turIpucu?: EkTuru) {
     const o = ogelerRef.current.find((x) => x.key === key)
-    if (!o?.belgeId || !o.tur) return
-    const tur = o.tur
-    if (GORSEL_TURLERI.includes(tur) && o.gorselB64 && !kimliksiz) {
-      guncelle(key, { durum: "atlandi", sonuc: atlaSonucu(tur, "Görselde kimlik bilgisi olmadığı onaylanmadı."), hata: "Görselde kimlik bilgisi olmadığını onaylayın, sonra yeniden deneyin." })
+    const tur = o?.tur ?? turIpucu
+    if (!o?.belgeId || !tur) return
+    // NOTYA-BELGE-OTO-01: images are masked ON DEVICE; only the masked copy is sent. Masking failure -> skipped, never sent unmasked.
+    let maskeli: { mime: string; base64: string } | null = null
+    if (GORSEL_TURLERI.includes(tur) && o.dosya && o.dosya.type.startsWith("image/")) {
+      guncelle(key, { durum: "maskeleniyor", hata: undefined })
+      try {
+        const m = await gorseliOtomatikKimliksizlestir(o.dosya, { modalite: "us" })
+        if (m.maske.durum === "maskelendi") maskeli = { mime: m.gorsel.mime, base64: m.gorsel.base64 }
+      } catch { maskeli = null }
+      if (!maskeli) {
+        guncelle(key, { durum: "atlandi", sonuc: atlaSonucu(tur, KIMLIK_GIZLENEMEDI), hata: `${KIMLIK_GIZLENEMEDI} — Belgeler bölümünden elle değerlendirebilirsiniz.` })
+        return
+      }
+    } else if (GORSEL_TURLERI.includes(tur)) {
+      guncelle(key, { durum: "atlandi", sonuc: atlaSonucu(tur, KIMLIK_GIZLENEMEDI), hata: `${KIMLIK_GIZLENEMEDI} — Belgeler bölümünden elle değerlendirebilirsiniz.` })
       return
     }
     guncelle(key, { durum: "degerlendiriliyor", hata: undefined })
     const r = await api<{ sonuc?: EkSonuc }>("/api/doktor/muayene-ekleri/degerlendir", {
       sessionId, belgeId: o.belgeId, tur, yeniden,
-      deid: GORSEL_TURLERI.includes(tur) && o.gorselB64 ? { mime: o.gorselMime || "image/jpeg", base64: o.gorselB64 } : null,
+      deid: maskeli,
     })
     const s = r.veri?.sonuc
     if (!r.ok || !s) { guncelle(key, { durum: "hata", hata: "Değerlendirilemedi — yeniden deneyin." }); return }
@@ -240,8 +270,9 @@ function Ic({ sessionId, patientId, transcript, pediatrik, hata, onDevam }: Prop
     atlaRef.current = false
     setCalisiyor(true); setBildirim("")
     try {
+      await Promise.all(Array.from(ucuslar.current.values())) // auto-started evaluations finish first (no duplicates)
       const isler = ogelerRef.current
-        .filter((o) => o.belgeId && o.tur && o.durum !== "tur_sor" && o.durum !== "tamam" && o.durum !== "atlandi")
+        .filter((o) => o.belgeId && o.tur && o.durum !== "tur_sor" && o.durum !== "tamam" && o.durum !== "atlandi" && o.durum !== "degerlendiriliyor" && o.durum !== "maskeleniyor")
         .map((o) => () => degerlendirOge(o.key))
       await havuz(isler, ESZAMANLI, () => atlaRef.current)
     } catch { /* tek tek durumlar zaten işlendi */ }
@@ -296,7 +327,6 @@ function Ic({ sessionId, patientId, transcript, pediatrik, hata, onDevam }: Prop
   }, [barkodAcik])
 
   const yuklemede = ogeler.some((o) => o.durum === "yukleniyor" || o.durum === "siniflaniyor")
-  const gorselVar = ogeler.some((o) => o.tur && GORSEL_TURLERI.includes(o.tur) && o.gorselB64)
 
   const btn = (ana?: boolean): React.CSSProperties => ({ padding: "14px 18px", minHeight: 48, borderRadius: 12, border: ana ? "none" : `1px solid ${CHROME_RENK.border}`, background: ana ? CHROME_RENK.pine : "#fff", color: ana ? "#fff" : CHROME_RENK.ink, fontSize: 15, fontWeight: ana ? 600 : 500, cursor: "pointer", fontFamily: CHROME_FONT.sans })
 
@@ -402,11 +432,8 @@ function Ic({ sessionId, patientId, transcript, pediatrik, hata, onDevam }: Prop
         </div>
       ))}
 
-      {gorselVar && (
-        <label style={{ display: "flex", gap: 8, alignItems: "flex-start", fontSize: 14, margin: "10px 0" }}>
-          <input type="checkbox" checked={kimliksiz} onChange={(e) => setKimliksiz(e.target.checked)} style={{ width: 20, height: 20, marginTop: 2 }} />
-          <span>Röntgen / EKG / fotoğraflarda hasta adı ya da kimlik bilgisi görünmüyor (görüntü yalnızca bu onayla değerlendirilir).</span>
-        </label>
+      {ogeler.some((o) => o.tur && GORSEL_TURLERI.includes(o.tur)) && (
+        <div style={{ fontSize: 12, margin: "8px 0", opacity: 0.75 }}>{deIdMetin(process.env.NOTYA_COUNTRY).kopyadaGizli}</div>
       )}
 
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 14 }}>
@@ -435,6 +462,7 @@ function durumMetni(o: Oge): string {
     case "siniflaniyor": return "Türü anlaşılıyor…"
     case "tur_sor": return "Tür seçin"
     case "hazir": return "Hazır"
+    case "maskeleniyor": return "Kimlik taranıyor…"
     case "degerlendiriliyor": return "Değerlendiriliyor…"
     case "tamam": return "Değerlendirildi"
     case "hata": return "Değerlendirilemedi"

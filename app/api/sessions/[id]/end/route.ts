@@ -292,7 +292,9 @@ SADECE geçerli JSON döndür, başka hiçbir şey yazma:
     // NOTYA-BETA-0925 (a): geçici hatada (bozuk JSON, overloaded / 5xx / 529, ağ, zaman aşımı) bir kez daha — yalnız
     // maxDuration içinde yeterli pay kaldıysa (lib/doktor/soapYeniden.ts).
     let ekBlogu = ''
-    try { if (ekHazir.ekler.length) ekBlogu = (await import('@/lib/doktor/muayeneEk/rapor')).ekPromptBlogu(ekHazir.ekler) } catch { ekBlogu = '' }
+    // NOTYA-BELGE-OTO-01: imaging results are inserted deterministically into Fizik Muayene / Bulgular below (labelled block), so they are not
+    // re-narrated by the model; lab / aşı / general documents keep the existing prompt path.
+    try { const _ek = ekHazir.ekler.filter((e) => !['rontgen', 'ekg', 'foto'].includes(e.sonuc.tur)); if (_ek.length) ekBlogu = (await import('@/lib/doktor/muayeneEk/rapor')).ekPromptBlogu(_ek) } catch { ekBlogu = '' }
     // NOTYA-NOT-HIZ-03: not gövdesi (A) hazır olunca döner; Ayşe'nin önerisi (B) ayrı sözle gelir (son denemeninki).
     const oneri: { soz?: Promise<SoapOnerisi | null> } = {}
     const { sonuc: noteData } = await soapUretYeniden(
@@ -327,6 +329,22 @@ SADECE geçerli JSON döndür, başka hiçbir şey yazma:
         if (typeof noteData?.aiDegerlendirme === 'string') noteData.aiDegerlendirme = atifKontrol(noteData.aiDegerlendirme, ekHazir.ekler).metin
       } catch { console.error('[muayene-ekleri] atif kontrolu atlandi') }
     }
+    // NOTYA-BELGE-OTO-01: ONE write of every imaging block (stable upload order), idempotent per document id, no approval step.
+    try {
+      const gor = ekHazir.ekler.filter((e) => ['rontgen', 'ekg', 'foto'].includes(e.sonuc.tur) && e.sonuc.durum === 'tamam')
+      if (gor.length && noteData?.soap) {
+        const { notaBloklariUygula } = await import('@/core/belgeler/notaBlok')
+        const { ulkeDili } = await import('@/lib/doktor/belgeNotaYaz')
+        const { EK_TUR_ETIKETI } = await import('@/lib/doktor/muayeneEk/tipler')
+        const dil = ulkeDili()
+        const tarih = new Date(gecmisTarihIso || Date.now()).toLocaleDateString(dil === 'tr' ? 'tr-TR' : dil === 'ru' ? 'ru-RU' : 'en-GB')
+        const uy = notaBloklariUygula(typeof noteData.soap.objektif === 'string' ? noteData.soap.objektif : '', gor.map((e, i) => ({
+          belgeId: e.belgeId, etiket: (e.sonuc.baslik || EK_TUR_ETIKETI[e.sonuc.tur]).slice(0, 60), tarih, yuklemeSirasi: i,
+          ozet: e.sonuc.ozet, bulgular: e.sonuc.bulgular.map((b) => b.metin), acil: e.sonuc.uyarilar.some((u) => /^Acil bayrağı/.test(u)),
+        })), dil)
+        noteData.soap.objektif = uy.metin
+      }
+    } catch { console.error('[belge-oto] goruntu blogu eklenemedi') }
     // Çek listesi yalnız notun kendisine bakar (sayfada yeniden hesaplandığında aynı sonucu versin); LLM bloğu yazamaz.
     const { satirlar: cekListeDogrulama, metin: cekMetin } = cekListeHesapla(cekVeri, cekNotMetni({
       basvuruYakinmasi: noteData?.basvuruYakinmasi, subjektif: noteData?.soap?.subjektif, objektif: noteData?.soap?.objektif,

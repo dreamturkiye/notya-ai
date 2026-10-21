@@ -1,5 +1,13 @@
 # OPEN COMMITMENTS — Notya AI
 
+## BELGE-OTO-01 — automatic document workflow (upload -> mask -> evaluate -> note) for all 40 branches + 6 countries (Claude, 2026-10-21)
+
+Shipped: shared core (`core/belgeler/notaBlok.ts`, `otoBatch.ts`, `otoIstemci.ts`, `belgeAkisi.ts`), batch-first Belgeler upload, Ekler step auto-evaluation, deterministic imaging block in `sessions/end`, original image shown to the doctor (masking only on the outbound copy), chips + wrong-patient warning, 4 note-text bug fixes, 40-branch static check. Skill: `.cursor/skills/belge-otomatik-akis`. Open items (all wait on Claude unless stated):
+- PDFs / audio are not auto-sent (no pixel masking possible); they stay in Belgeler for manual evaluation. Waits on Claude: text-layer de-identification for PDFs. (2026-10-21)
+- Exam date/time from the image is read by OCR for chips only; batch ordering uses upload order until a reliable exam-time extraction is added (ordering code already supports it). Waits on Claude. (2026-10-21)
+- Optional combined "Görüntüleme özeti" line for N>1 not added (would need extra text synthesis). Waits on Kaan: say if wanted. (2026-10-21)
+- Country builds ship the Belgeler page / vault batch / note-text fixes; the post-dictation Ekler step (`MuayeneEklerAdimi`, `lib/doktor/muayeneEk`) does not exist in the country trees. Building it there is a larger separate port. Waits on Claude. (2026-10-21)
+
 ## AU-ARAC-DOGRULAMA-01 — four named AU clinical-calculator gaps checked against the live kit; 3 already closed independently, 1 real gap found and fixed on the TR golden reference (Claude, 2026-10-20)
 
 Scoped job: check and close four specific, named AU gaps — ASA class VI, dose-arithmetic helpers, PASI/EASI severity bands, hearing-threshold (PTA) averaging — each supposed to be a universal clinical scale/formula, not AU-specific regulatory content. Found, before writing anything, that `docs/araclar-denetim/AU.md` / `au-kararlar.json` / `docs/COUNTRY-MEDICAL-AUSTRALIA.md` (the three docs this job was briefed from) exist only on side branches (`.claude/worktrees/*`, `origin/araclar-denetim/au`) — not on `main`, not on `release/au`. They describe an older finding. A **separate, later, already-merged** job (`NOTYA-ULKE-ARAC-DUZELTME-01` / `NOTYA-ULKE-UYGULA-AU`, 2026-10-10) had already fixed three of the four items independently, in a different tree (`lib/ulke/araclar/` — the real, reachable AU tool kit, wired through `.ulke`-suffixed files per `COUNTRY-BUILD-ROUTING-01`, confirmed byte-identical with `release/us` so it is shared English-pack code, not AU-only):
