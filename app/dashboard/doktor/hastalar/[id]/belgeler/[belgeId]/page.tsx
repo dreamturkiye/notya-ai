@@ -5,14 +5,15 @@
  * + Plan düzenle → Muayeneyi onayla (revizyon). Disclaimer strip always visible (locked).
  * Motor / kaynak adları hekim yüzünde gösterilmez (nota da yazılmaz).
  */
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import DoktorGeriLink from '@/components/doktor/DoktorGeriLink';
 import DocumentViewer from '@/components/doktor/DocumentViewer';
 import { getAccessTokenAsync, toolsShell, toolsCard, toolsInput } from '@/lib/doktor/toolsUi';
 import { MODALITE_TR, type Modalite } from '@/core/belgeler/ontoloji';
 import { bransKurali, tierBMotorlari, SES_MODALITELERI } from '@/core/belgeler/router';
-import { gorseliKimliksizlestir, sesiHazirla, type DeIdGorsel } from '@/core/belgeler/deid';
+import { gorseliOtomatikKimliksizlestir, sesiHazirla, type DeIdGorsel, type OtomatikDeId } from '@/core/belgeler/deid';
+import { deIdMetin } from '@/core/belgeler/deidMetin';
 import { tierBCalistir, tarayiciYetenek } from '@/core/belgeler/tarayiciMotor';
 import { dicomMi, dicomCoz } from '@/core/belgeler/dicom';
 import '@/core/belgeler/motorlar/txrv'; // NOTYA-BELGE-02: registers the browser CXR engine
@@ -50,6 +51,11 @@ export default function BelgeAnalizPage() {
   const [fundusGoz, setFundusGoz] = useState<'sag' | 'sol' | 'iki' | ''>('');
   const [tekAlanFundus, setTekAlanFundus] = useState(true);
   const [kimlikYok, setKimlikYok] = useState(false);
+  // NOTYA-BELGE-DEID-02: automatic on-device masking; checkbox only when OCR failed / low confidence
+  const [yedekGerek, setYedekGerek] = useState(false);
+  const [maskeOnizleme, setMaskeOnizleme] = useState<{ url: string; kutu: number } | null>(null);
+  const deidOnbellek = useRef<{ docId: string; o: OtomatikDeId } | null>(null);
+  const deMetin = deIdMetin(process.env.NOTYA_COUNTRY);
   const [durum, setDurum] = useState<'hazir' | 'hazirlaniyor' | 'motorlar' | 'yaziyor' | 'onayliyor' | 'hata'>('hazir');
   const [mesaj, setMesaj] = useState('');
   const [onayMesaj, setOnayMesaj] = useState('');
@@ -111,7 +117,6 @@ export default function BelgeAnalizPage() {
   const raporla = async () => {
     if (!doc || !modalite) return;
     if (videoMu) { setDurum('hata'); setMesaj(modalite === 'eko' ? 'Sine döngüsünden EF ölçülmez. Metin katmanı olan eko raporu PDF’ini veya bir JPEG kare ekleyin.' : 'Video dosyası bu değerlendirmede çözülmez. PDF rapor veya JPEG/PNG kare ekleyin.'); return; }
-    if (!pdfMi && !kimlikYok) { setMesaj('Göndermeden önce görüntüde hasta adı / TC / tarih bulunmadığını onaylayın (KVKK).'); return; }
     setMesaj(''); setUyusmazlik(null); setDurum('hazirlaniyor');
     const token = await getAccessTokenAsync();
     try {
@@ -129,7 +134,16 @@ export default function BelgeAnalizPage() {
         if (sesMi) {
           const s = await sesiHazirla(blob); deid = s.spektrogram; sesMetrikleri = { ...s.metrikler, ...(s.kaliteDusuk ? { kalite_notu: s.neden || '' } : {}) };
         } else {
-          deid = await gorseliKimliksizlestir(blob);
+          // OCR -> black-box identity text -> EXIF-free re-encode. Only this masked copy is ever sent to the server/LLM.
+          const onb = deidOnbellek.current;
+          const o = onb && onb.docId === doc.id ? onb.o : await gorseliOtomatikKimliksizlestir(blob, { modalite });
+          deidOnbellek.current = { docId: doc.id, o };
+          deid = o.gorsel;
+          setMaskeOnizleme({ url: o.maske.onizlemeUrl, kutu: o.maske.kutuSayisi });
+          if (o.maske.durum !== 'maskelendi') {
+            setYedekGerek(true);
+            if (!kimlikYok) { setMesaj(deMetin.yedekUyari); setDurum('hazir'); return; }
+          } else setYedekGerek(false);
         }
         setDurum('motorlar');
         const istenen = tierBMotorlari(bransKey, modalite as Modalite);
@@ -298,16 +312,24 @@ export default function BelgeAnalizPage() {
                   <span>Tek alan fundus fotoğrafı (güven üst sınırı %70 — TR poliklinik standardı: OD ve OS ayrı yükleyin).</span>
                 </label>
               )}
-              {!pdfMi && (
+              {!pdfMi && maskeOnizleme && (
+                <div style={{ marginTop: 8, fontSize: 12, color: CHROME_RENK.muted }}>
+                  {!yedekGerek && <div style={{ color: CHROME_RENK.pine, fontWeight: 700, marginBottom: 4 }}>{deMetin.maskelendi}{maskeOnizleme.kutu > 0 ? ` (${maskeOnizleme.kutu})` : ''}</div>}
+                  <div style={{ marginBottom: 4 }}>{deMetin.onizlemeBaslik}</div>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={maskeOnizleme.url} alt="" style={{ maxWidth: 260, maxHeight: 200, borderRadius: 6, border: '1px solid rgba(0,0,0,0.12)' }} />
+                </div>
+              )}
+              {!pdfMi && yedekGerek && (
                 <label style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginTop: 8, fontSize: 12, color: CHROME_RENK.muted, cursor: 'pointer' }}>
                   <input type="checkbox" checked={kimlikYok} onChange={(e) => setKimlikYok(e.target.checked)} />
-                  <span>Görüntüde hasta adı, TC, doğum tarihi gibi kimlik bilgisi yok. (Fotoğraf üst verisi cihazınızda temizlenir; yalnız kimliksiz kopya gönderilir.)</span>
+                  <span>{deMetin.yedekOnay}</span>
                 </label>
               )}
               {yetenek?.not && <div style={{ fontSize: 11, color: CHROME_RENK.muted, marginTop: 6 }}>{yetenek.not}</div>}
               <div style={{ marginTop: 10, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                 <button type="button" onClick={raporla} disabled={durum !== 'hazir' && durum !== 'hata' || !modalite} style={{ ...btn, opacity: durum === 'hazir' || durum === 'hata' ? 1 : 0.6 }}>
-                  {durum === 'hazirlaniyor' ? 'Kimliksizleştiriliyor…' : durum === 'motorlar' ? 'Değerlendiriliyor…' : durum === 'yaziyor' ? `${personaAd} yazıyor…` : analiz ? 'Yeniden raporla' : modalite === 'eko' ? `${personaAd} ile ekoyu değerlendir` : modalite === 'cxr' || String(modalite).startsWith('xr_') ? `${personaAd} ile röntgeni değerlendir` : `${personaAd} ile değerlendir`}
+                  {durum === 'hazirlaniyor' ? deMetin.yukleniyor : durum === 'motorlar' ? 'Değerlendiriliyor…' : durum === 'yaziyor' ? `${personaAd} yazıyor…` : analiz ? 'Yeniden raporla' : modalite === 'eko' ? `${personaAd} ile ekoyu değerlendir` : modalite === 'cxr' || String(modalite).startsWith('xr_') ? `${personaAd} ile röntgeni değerlendir` : `${personaAd} ile değerlendir`}
                 </button>
                 {doc && belgeLabMi(doc) && (
                   <a href={`/dashboard/doktor/hastalar/${patientId}/belgeler/${belgeId}/lab${geriTab ? `?geriTab=${geriTab}` : ''}`} style={{ fontSize: 12, fontWeight: 700, color: '#B4832F' }}>Laboratuvarı değerlendir →</a>
