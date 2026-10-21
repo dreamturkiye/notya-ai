@@ -4135,3 +4135,30 @@ Kaan reported no forgot-password option at all on the login page, and the page n
 **Verified:** `tsc --noEmit` clean (0 errors; this country's one pre-existing, unrelated error if any is unchanged by this job). `npm run test -- lib/ulke/ulkeDuvarlari.test.ts` (and `turkceTavan.test.ts` on `au`) run before/after via `git stash` — any failure present is pre-existing and unrelated to this job's files (confirmed by name). A full `next build` could not be run in this sandbox for the reason stated above — Vercel's own build servers have normal internet access and are the real verification once deployed.
 
 Commits: `release/au@<SHA>`. See `main`'s own `docs/OPEN-COMMITMENTS.md` entry of the same name for the TR-side work and the full two-finding writeup. | Claude | Forgot-password: DONE. Dead `app/giris/*` tree and the Uzbek/Russian native review: OPEN, waiting on Kaan
+
+## AU-DEPTH-PARITY-01 — Kaan's "unlock AU into the real doctor-dashboard tree" brief conflicts with this branch's own `COUNTRY-BUILD-ROUTING-01` precedent; decision needed before more branch-depth work (Claude, 2026-10-20)
+
+Full audit and both options: `docs/AU-DEPTH-PARITY-PLAN.md`. Short version: Kaan's brief
+(2026-10-20) asks to expose AU to the real `app/dashboard/doktor/**` tree (same
+components TR uses, country-adapted) instead of AU's current parallel, shallower
+`.ulke` implementation. `COUNTRY-BUILD-ROUTING-01` (this file, 2026-10-17) already found
+the same mechanism the brief describes — and every job since (`FOTO-ARSIV-AU-01`,
+`MUAYENE-EKLERI-07`, `KONSULTASYONLAR-01`, `NOTYA-SIFRE-SIFIRLA-01`) chose, each time,
+to build a new country-native implementation instead of exposing the Turkish tree,
+specifically because `pageExtensions` is build-wide (not per-route) and the Turkish tree
+mixes universal patient-file chrome with embedded SGK/e-Reçete/MBYS sections in the same
+files (confirmed this job: 16 of 36 top-level `app/dashboard/doktor/**` routes). Exposing
+it safely needs a new per-route content gate, a URL-shape decision (AU's flat `/patient`
+etc. vs TR's nested `/dashboard/doktor/hastalar/[id]`), and reopens the patient-file perf
+budget this tree was never checked against on a country build. This job did not touch
+`app/dashboard/doktor/**`, `next.config.mjs` or either route gate, and instead completed
+Phase 1 (gap table) and confirmed Phase 3 (conversion-map) is already largely correctly
+applied on AU's current reachable surface. The 40-branch clinical-engine depth gap (each
+branch's `specialties/<branch>/engines/*` — growth charts, dosing, vaccine plans, etc. —
+not yet ported to AU in any form) is real either way and is the dominant remaining item
+regardless of which option below is chosen.
+
+| Date | Item | Owner | Status / what is needed |
+|------|------|-------|-------------------------|
+| 2026-10-20 | **AU-DEPTH-PARITY-01 — pick Option A (keep building `.ulke`-native per-branch depth, proven pattern, slower) or Option B (literal unlock: new per-route Turkey-only content gate + URL-shape decision + perf-budget re-check, matches the brief literally, materially higher risk, not started)** — see `docs/AU-DEPTH-PARITY-PLAN.md` §2 for both options in full | Kaan | OPEN |
+| 2026-10-20 | **AU-DEPTH-PARITY-02 — 40-branch clinical-engine port to AU is unstarted regardless of the Option A/B decision above** (pediatri's `asiPlan.ts`/`buyume.ts`/`doz.ts`/`gelisimPlan.ts`/`kohort.ts`/`saglamCocukCek.ts` class of engine, × 40 branches); needs a named AU clinician per branch before any real threshold/dosing content is written (hard boundary: no invented AU clinical content) | Kaan (name AU clinicians per branch) | OPEN |
