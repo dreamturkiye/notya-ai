@@ -6,6 +6,9 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { getAccessTokenAsync } from '@/lib/doktor/toolsUi'
 import { VAULT_MAX_BYTES } from '@/lib/vault/types'
+import { belgeleriOtomatikIsle } from '@/core/belgeler/otoIstemci'
+import { sinirliHavuz, type BelgeAsama } from '@/core/belgeler/otoBatch'
+import { deIdMetin } from '@/core/belgeler/deidMetin'
 
 type Ek = {
   id: string
@@ -60,25 +63,50 @@ export default function MuayeneEkleri({
 
   useEffect(() => { void yukleListe() }, [yukleListe])
 
-  const ekle = async (dosya: File | null) => {
-    if (!dosya || !hastaId) return
-    if (dosya.size > VAULT_MAX_BYTES) { setHata('Dosya 4 MB sınırını aşıyor.'); return }
-    setYukleniyor(true); setHata(''); setMesaj('')
+  // NOTYA-BELGE-OTO-01: batch-first. N files -> upload (3 at a time) -> mask (outbound copy only) -> evaluate -> ONE note write.
+  const [satirlar, setSatirlar] = useState<{ id: string; ad: string; asama: BelgeAsama | 'yuklendi'; not?: string }[]>([])
+  const deMetin = deIdMetin(process.env.NOTYA_COUNTRY)
+  const ASAMA_ETIKET: Record<string, string> = { bekliyor: 'Sırada', yukleniyor: 'Yükleniyor', yuklendi: 'Yüklendi', maskeleniyor: 'Kimlik taranıyor', degerlendiriliyor: 'Değerlendiriliyor', nota_eklendi: 'Nota eklendi', atlandi: 'Otomatik değerlendirilmedi', hata: 'Hata' }
+
+  const ekle = async (dosyalar: File[]) => {
+    const liste = dosyalar.filter(Boolean).slice(0, 12)
+    if (!liste.length || !hastaId) return
+    const buyuk = liste.filter((d) => d.size > VAULT_MAX_BYTES)
+    if (buyuk.length) setHata(`${buyuk.length} dosya 4 MB sınırını aşıyor.`); else setHata('')
+    const uygun = liste.filter((d) => d.size <= VAULT_MAX_BYTES)
+    setYukleniyor(true); setMesaj('')
+    const yuklenen: { belgeId: string; ad: string; dosya: Blob }[] = []
     try {
       const token = await getAccessTokenAsync()
       if (!token) throw new Error('Oturum bulunamadı.')
-      const fd = new FormData()
-      fd.append('file', dosya)
-      fd.append('patientId', hastaId)
-      if (visitId) fd.append('visitId', visitId)
-      const audio = dosya.type.startsWith('audio/')
-      fd.append('category', audio ? 'Muayene ses kaydı' : 'Muayene görüntüsü')
-      const r = await fetch('/api/doktor/documents', { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: fd })
-      const j = await r.json().catch(() => ({}))
-      if (!r.ok) throw new Error(j.error || 'Yüklenemedi')
-      setMesaj(`${dosya.name} bu muayeneye eklendi.`)
+      const satirGuncelle = (id: string, asama: BelgeAsama | 'yuklendi', not?: string) => setSatirlar((l) => l.map((x) => (x.id === id ? { ...x, asama, not } : x)))
+      const gecici = uygun.map((d, i) => ({ id: `t${Date.now()}_${i}`, ad: d.name, asama: 'bekliyor' as const }))
+      setSatirlar(gecici)
+      await sinirliHavuz(uygun.map((dosya, i) => async () => {
+        const gid = gecici[i].id
+        satirGuncelle(gid, 'yukleniyor')
+        try {
+          const fd = new FormData()
+          fd.append('file', dosya); fd.append('patientId', hastaId)
+          if (visitId) fd.append('visitId', visitId)
+          fd.append('category', dosya.type.startsWith('audio/') ? 'Muayene ses kaydı' : 'Muayene görüntüsü')
+          const r = await fetch('/api/doktor/documents', { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: fd })
+          const j = await r.json().catch(() => ({}))
+          if (!r.ok || !j?.document?.id) { satirGuncelle(gid, 'hata', j?.error || 'Yüklenemedi'); return }
+          yuklenen.push({ belgeId: String(j.document.id), ad: dosya.name, dosya })
+          setSatirlar((l) => l.map((x) => (x.id === gid ? { ...x, id: String(j.document.id), asama: 'yuklendi' } : x)))
+        } catch { satirGuncelle(gid, 'hata', 'Yüklenemedi') }
+      }), 3)
       await yukleListe()
       onYuklendi?.()
+      const gorseller = yuklenen.filter((y) => y.dosya.type.startsWith('image/'))
+      if (visitId && gorseller.length) {
+        const sonuc = await belgeleriOtomatikIsle(gorseller, { token, onDurum: satirGuncelle })
+        const g = sonuc.genel
+        setMesaj(`${g.eklenen}/${g.toplam} belge muayene notuna eklendi${g.atlanan ? `; ${g.atlanan} belge: ${deMetin.atlandi}` : ''}${g.hatali ? `; ${g.hatali} hata` : ''}.`)
+      } else {
+        setMesaj(`${yuklenen.length} belge bu muayeneye eklendi.`)
+      }
     } catch (e) {
       setHata(e instanceof Error ? e.message : 'Yüklenemedi')
     } finally {
@@ -96,17 +124,23 @@ export default function MuayeneEkleri({
           Bu muayenenin görüntü / sesi
         </span>
         <button type="button" style={btn} disabled={!visitId || yukleniyor} onClick={() => inputRef.current?.click()}>
-          {yukleniyor ? 'Yükleniyor…' : 'Foto / ses ekle'}
+          {yukleniyor ? 'İşleniyor…' : 'Belge / foto / ses ekle'}
         </button>
         <input
           ref={inputRef}
           type="file"
+          multiple
           accept="image/*,audio/*,.heic,.heif,.jpg,.jpeg,.png,.webp,.pdf,application/pdf"
           style={{ display: 'none' }}
-          onChange={(e) => void ekle(e.target.files?.[0] || null)}
+          onChange={(e) => void ekle(Array.from(e.target.files || []))}
         />
         {!visitId && <span style={{ fontSize: 11, color: '#8b7d70' }}>Muayene kaydı yok — belge hasta dosyasına gider.</span>}
       </div>
+      {satirlar.length > 0 && (
+        <ul style={{ margin: '6px 0 0', paddingLeft: 18, fontSize: 12, color: '#8b7d70' }}>
+          {satirlar.map((x) => (<li key={x.id}>{x.ad} — {ASAMA_ETIKET[x.asama] || x.asama}{x.not ? ` (${x.not})` : ''}</li>))}
+        </ul>
+      )}
       {ekler.length > 0 && (
         <ul style={{ margin: '6px 0 0', paddingLeft: 18, fontSize: 12, color: '#8b7d70' }}>
           {ekler.map((e) => (
