@@ -58,9 +58,26 @@ const DUR_ETIKET = new Set([
   'tarih', 'date', 'exam', 'muayene', 'time', 'saat', 'sana', 'vaqt', 'время', 'weeks', 'hafta', 'days', 'gun', 'wk', 'gw',
 ])
 
+/** Long, distinctive labels that tolerate one OCR slip ("Hasla", "Protokoi", "Doktar"). Short labels stay exact. */
+const BULANIK_ETIKETLER = ['hasta', 'protokol', 'doktor', 'patient', 'dogum', 'hekim', 'accession', 'birth']
+function editMesafe1(a: string, b: string): boolean {
+  if (Math.abs(a.length - b.length) > 1) return false
+  let i = 0, j = 0, fark = 0
+  while (i < a.length && j < b.length) {
+    if (a[i] === b[j]) { i++; j++; continue }
+    if (++fark > 1) return false
+    if (a.length > b.length) i++; else if (a.length < b.length) j++; else { i++; j++ }
+  }
+  return fark + (a.length - i) + (b.length - j) <= 1
+}
+function bulanikEtiketMi(w: string): boolean {
+  return w.length >= 5 && BULANIK_ETIKETLER.some((e) => e !== w && editMesafe1(w, e))
+}
+
 function etiketMi(kelimeAscii: string, sonrakiAscii: string): 0 | 1 | 2 {
   if (sonrakiAscii && KIMLIK_CIFT.has(`${kelimeAscii} ${sonrakiAscii}`)) return 2
   if (KIMLIK_TEK.has(kelimeAscii)) return 1
+  if (bulanikEtiketMi(kelimeAscii)) return 1 // OCR slip in a distinctive label ("Hasla", "Protokoi")
   return 0
 }
 function durMu(kelimeAscii: string): boolean { return DUR_ETIKET.has(kelimeAscii) }
@@ -175,4 +192,87 @@ export function kimlikKutulari(
 
   const kirp = kutular.map((k) => ({ x0: Math.max(0, Math.floor(k.x0)), y0: Math.max(0, Math.floor(k.y0)), x1: Math.min(o.genislik, Math.ceil(k.x1)), y1: Math.min(o.yukseklik, Math.ceil(k.y1)) })).filter((k) => k.x1 > k.x0 && k.y1 > k.y0)
   return { kutular: kirp, kimlikEtiketiVar, ustBantUygulandi, durum, ortalamaGuven: Math.round(ort), kelimeSayisi: tum.length }
+}
+
+
+// ─── What was found (chips, wrong-patient guard) ──────────────────────────────────
+export type KimlikBulgulari = { ad?: string; dogum?: string; muayeneTarihi?: string; protokol?: string; doktor?: string }
+
+const TARIH_RE = /(\d{1,2})\s*[./\-]\s*(\d{1,2})\s*[./\-]\s*(\d{2,4})/
+const AD_ETIKET = new Set(['hasta', 'hastaadi', 'adi', 'adsoyad', 'isim', 'name', 'patient', 'pname', 'pt', 'bemor', 'ismi', 'fio', 'пациент', 'фио', 'имя'])
+const AD_CIFT = new Set(['hasta adi', 'ad soyad', 'adi soyadi', 'patient name', 'bemor ismi', 'ф и о'])
+const DOGUM_ETIKET = new Set(['dob', 'dogum', 'birth', 'born', 'birthdate', 'dogumtarihi', 'tugilgan'])
+const MUAYENE_ETIKET = new Set(['tarih', 'date', 'exam', 'muayene', 'sana', 'study', 'incelenme'])
+const PROTOKOL_ETIKET = new Set(['protokol', 'prot', 'mrn', 'accession', 'acc', 'pid', 'patientid', 'id', 'dosya', 'file'])
+const DOKTOR_ETIKET = new Set(['doktor', 'dr', 'hekim', 'physician', 'referring', 'sonographer', 'operator', 'врач'])
+
+/** Reads the VALUES behind identity labels from OCR lines (local only; never sent anywhere). Tolerates label noise. */
+export function kimlikBulgulari(satirlar: OcrSatir[]): KimlikBulgulari {
+  const out: KimlikBulgulari = {}
+  for (const satir of satirlar) {
+    const ks = [...satir.kelimeler].filter((w) => w.text.trim()).sort((a, b) => a.x0 - b.x0)
+    for (let i = 0; i < ks.length; i++) {
+      const raw = ks[i].text
+      const iki = raw.indexOf(':')
+      const bas = asciiNorm(iki > 0 ? raw.slice(0, iki) : raw)
+      const sonraki = ks[i + 1] ? asciiNorm(ks[i + 1].text) : ''
+      const glued = iki > 0 && iki < raw.length - 1 ? raw.slice(iki + 1) : ''
+      const sonrasi = (bas1: number): string[] => [glued, ...ks.slice(i + bas1).map((w) => w.text)].filter(Boolean)
+      const degerAl = (liste: string[]): string[] => {
+        const v: string[] = []
+        for (const t of liste) {
+          const a = asciiNorm(t)
+          if (v.length && (durMu(a) || etiketMi(a, '') > 0)) break
+          if (!v.length && (durMu(a) && !TARIH_RE.test(t))) break
+          v.push(t)
+        }
+        return v
+      }
+      const cift = sonraki && AD_CIFT.has(`${bas} ${sonraki}`)
+      const bulanik = bulanikEtiketMi(bas) ? (['hasta', 'protokol', 'doktor'].find((e) => editMesafe1(bas, e)) ?? '') : ''
+      const b = bulanik || bas
+      if (!out.ad && (cift || AD_ETIKET.has(b))) {
+        const ad = degerAl(sonrasi(cift ? 2 : 1)).join(' ').replace(/[^\p{L}\s'.-]/gu, ' ').replace(/\s+/g, ' ').trim()
+        if (ad.length >= 3) out.ad = ad
+      } else if (!out.dogum && (DOGUM_ETIKET.has(b) || (b === 'dogum' && sonraki.startsWith('tar')))) {
+        const m = sonrasi(1).join(' ').match(TARIH_RE); if (m) out.dogum = `${m[1].padStart(2, '0')}.${m[2].padStart(2, '0')}.${m[3]}`
+      } else if (!out.muayeneTarihi && MUAYENE_ETIKET.has(b)) {
+        const m = sonrasi(1).join(' ').match(TARIH_RE); if (m) out.muayeneTarihi = `${m[1].padStart(2, '0')}.${m[2].padStart(2, '0')}.${m[3]}`
+      } else if (!out.protokol && PROTOKOL_ETIKET.has(b)) {
+        const v = degerAl(sonrasi(sonraki === 'no' || sonraki === 'numarasi' ? 2 : 1)).join('').replace(/[^\w-]/g, '')
+        if (v.length >= 3) out.protokol = v
+      } else if (!out.doktor && DOKTOR_ETIKET.has(b)) {
+        const v = degerAl(sonrasi(1)).join(' ').replace(/\s+/g, ' ').trim()
+        if (v.length >= 3) out.doktor = v
+      }
+    }
+  }
+  return out
+}
+
+/** Merges OCR line sets from several passes (full image + 2x header band) into one list in the same pixel space. */
+export function satirlariBirlestir(...kumeler: (OcrSatir[] | null | undefined)[]): OcrSatir[] | null {
+  const hepsi = kumeler.filter((k): k is OcrSatir[] => Array.isArray(k))
+  if (!hepsi.length) return null
+  const out: OcrSatir[] = []
+  const ayni = (a: OcrKelime, b: OcrKelime) => asciiNorm(a.text) === asciiNorm(b.text) && Math.abs(a.x0 - b.x0) < 12 && Math.abs(a.y0 - b.y0) < 12
+  for (const k of hepsi) for (const s of k) {
+    const yeni = s.kelimeler.filter((w) => !out.some((o) => o.kelimeler.some((x) => ayni(x, w))))
+    if (yeni.length) out.push({ kelimeler: yeni })
+  }
+  return out
+}
+
+const sadelestir = (s: string) => s.toLocaleLowerCase('tr').replace(/ı/g, 'i').replace(/ş/g, 's').replace(/ğ/g, 'g').replace(/ç/g, 'c').replace(/ö/g, 'o').replace(/ü/g, 'u')
+  .normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9а-яё\s]/g, ' ').replace(/\s+/g, ' ').trim()
+
+/** Wrong-patient guard. Non-blocking: 'eslesmiyor' only when both sides have a name and no token overlaps (fuzzy, diacritic-insensitive). */
+export function adKarsilastir(bulunan: string | undefined, hastaAdi: string | undefined | null): 'eslesir' | 'eslesmiyor' | 'belirsiz' {
+  if (!bulunan || !hastaAdi) return 'belirsiz'
+  const a = sadelestir(bulunan).split(' ').filter((t) => t.length >= 2)
+  const h = sadelestir(hastaAdi).split(' ').filter((t) => t.length >= 2)
+  if (!a.length || !h.length) return 'belirsiz'
+  const esle = (x: string, y: string) => x === y || (x.length >= 4 && y.length >= 4 && editMesafe1(x, y))
+  const ortak = a.filter((t) => h.some((u) => esle(t, u))).length
+  return ortak > 0 ? 'eslesir' : 'eslesmiyor'
 }

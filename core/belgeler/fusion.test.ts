@@ -119,6 +119,8 @@ describe('motor afişi hekim yüzünde yok', () => {
   it('onayla rota nota Motorlar: yazmaz', () => {
     const r = readFileSync(join(import.meta.dirname, '../../app/api/doktor/belgeler/analiz/onayla/route.ts'), 'utf8')
     assert.doesNotMatch(r, /Motorlar:\s*\$\{/)
-    assert.match(r, /satirlar\.push\(UYARI_SERIDI\)/)
+    // NOTYA-BELGE-OTO-01: the banner sentence is UI-only and must never be inserted into the note body
+    assert.doesNotMatch(r, /push\(UYARI_SERIDI\)/)
+    assert.doesNotMatch(r, /\$\{UYARI_SERIDI\}/)
   })
 })
