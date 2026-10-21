@@ -3,9 +3,12 @@
  *  - images: canvas re-encode strips EXIF/metadata, downscales to ≤1568 px (vision input cap),
  *            returns JPEG base64 + sha256. The vault original never leaves the device in original form.
  *  - audio : Web Audio decode → mono → mel-ish log spectrogram PNG + quality metrics (duration, clipping, RMS, SNR proxy).
- * Face blur for facial photos and OCR redaction of burned-in text are the doctor's explicit checkbox in V1
- * ("görüntüde hasta adı/TC yok"); automatic OCR/face blur is a Tier B item (README_BELGELER.md).
+ * NOTYA-BELGE-DEID-02: burned-in identity text (name, DOB, protocol/MRN, doctor, ID numbers) is found by on-device OCR
+ * (ocrKimlik.ts) and blacked out BEFORE encoding (kimlikMaske.ts holds the pure rules). Only the masked copy is returned;
+ * the checkbox is a fallback for when OCR fails or is not confident. Face blur remains the doctor's call.
  */
+import { kimlikKutulari, type MaskeSonuc } from './kimlikMaske'
+import { kimlikMetniOku } from './ocrKimlik'
 
 export type DeIdGorsel = { mime: 'image/jpeg' | 'image/png'; base64: string; hash: string; genislik: number; yukseklik: number; kalite: { bulanik: boolean; laplacianVar: number; parlaklik: number } }
 export type SesHazirlik = { spektrogram: DeIdGorsel; metrikler: Record<string, number | string>; kaliteDusuk: boolean; neden: string | null }
@@ -32,13 +35,45 @@ function laplacianVariance(ctx: CanvasRenderingContext2D, w: number, h: number):
   return { v: lsq / n - lmean * lmean, mean }
 }
 
-export async function gorseliKimliksizlestir(dosya: Blob, maxKenar = 1568): Promise<DeIdGorsel> {
+export type OtomatikDeId = {
+  gorsel: DeIdGorsel
+  /** 'maskelendi' = OCR ran confidently (boxes may be 0); 'ocr_basarisiz' / 'dusuk_guven' = doctor checkbox required. */
+  maske: { durum: 'maskelendi' | 'ocr_basarisiz' | 'dusuk_guven'; kutuSayisi: number; ustBant: boolean; onizlemeUrl: string }
+}
+
+/** OCR + mask + EXIF-strip. Never returns the unmasked pixels when boxes were found. */
+export async function gorseliOtomatikKimliksizlestir(dosya: Blob, o: { modalite?: string; maxKenar?: number } = {}): Promise<OtomatikDeId> {
+  const maxKenar = o.maxKenar ?? 1568
+  const bmp = await createImageBitmap(dosya)
+  // OCR on a larger working copy than the 1568 px send size: small overlay text needs the pixels
+  const ocrOlcek = Math.min(1, 2400 / Math.max(bmp.width, bmp.height))
+  const oc = document.createElement('canvas'); oc.width = Math.max(1, Math.round(bmp.width * ocrOlcek)); oc.height = Math.max(1, Math.round(bmp.height * ocrOlcek))
+  oc.getContext('2d')!.drawImage(bmp, 0, 0, oc.width, oc.height)
+  const satirlar = await kimlikMetniOku(oc)
+  let sonuc: MaskeSonuc | null = null
+  let durum: OtomatikDeId['maske']['durum'] = 'ocr_basarisiz'
+  if (satirlar) {
+    sonuc = kimlikKutulari(satirlar, { genislik: oc.width, yukseklik: oc.height, modalite: o.modalite })
+    durum = sonuc.durum === 'ok' ? 'maskelendi' : sonuc.durum === 'dusuk_guven' ? 'dusuk_guven' : 'ocr_basarisiz'
+  }
+  const kutular = sonuc ? sonuc.kutular.map((k) => ({ x0: k.x0 / oc.width, y0: k.y0 / oc.height, x1: k.x1 / oc.width, y1: k.y1 / oc.height })) : []
+  const gorsel = await gorseliKimliksizlestir(dosya, maxKenar, kutular)
+  return {
+    gorsel,
+    maske: { durum, kutuSayisi: kutular.length, ustBant: !!sonuc?.ustBantUygulandi, onizlemeUrl: `data:${gorsel.mime};base64,${gorsel.base64}` },
+  }
+}
+
+/** `maskeler`: boxes in 0..1 relative coordinates, painted solid black before the re-encode. */
+export async function gorseliKimliksizlestir(dosya: Blob, maxKenar = 1568, maskeler: { x0: number; y0: number; x1: number; y1: number }[] = []): Promise<DeIdGorsel> {
   const bmp = await createImageBitmap(dosya)
   const olcek = Math.min(1, maxKenar / Math.max(bmp.width, bmp.height))
   const w = Math.max(1, Math.round(bmp.width * olcek)), h = Math.max(1, Math.round(bmp.height * olcek))
   const c = document.createElement('canvas'); c.width = w; c.height = h
   const ctx = c.getContext('2d')!
   ctx.drawImage(bmp, 0, 0, w, h)
+  ctx.fillStyle = '#000'
+  for (const m of maskeler) ctx.fillRect(Math.floor(m.x0 * w), Math.floor(m.y0 * h), Math.ceil((m.x1 - m.x0) * w) + 1, Math.ceil((m.y1 - m.y0) * h) + 1)
   const kucuk = document.createElement('canvas'); kucuk.width = Math.min(w, 512); kucuk.height = Math.round(h * (kucuk.width / w))
   const kctx = kucuk.getContext('2d')!; kctx.drawImage(c, 0, 0, kucuk.width, kucuk.height)
   const { v, mean } = laplacianVariance(kctx, kucuk.width, kucuk.height)
