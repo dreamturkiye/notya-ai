@@ -4505,3 +4505,13 @@ Two reports arrived back to back while Dr. Gökhan live-tested Kadın Doğum/Jin
 **Status:** FIXED on `main`, not yet deployed/verified live, not yet ported to country branches. Owner: Claude (deploy + AU/country port), Kaan (confirm it doesn't recur on a live retest). Date: 2026-10-21.
 
 **Status:** OPEN — blocked on Kaan (provider signup + DNS + API key; also his call on the SMTP-wiring path). Owner: Kaan for steps 1–3 above, then Claude for the wiring and verification. Date: 2026-10-20.
+
+## NOTYA-BELGE-DEID-02 — automatic on-device de-identification of burned-in image text before the Asistan evaluation (Kaan, 2026-10-21, Claude)
+
+Problem: the Belgeler "Asistan ile değerlendir" flow asked the doctor to tick "no name / TC / date in the image", which is untrue for ultrasound headers with burned-in Hasta / Doğum Tarihi / Protokol / Doktor text; EXIF stripping does not touch pixels.
+
+Done: tesseract.js (tur+eng, already a dependency) runs in the browser (`core/belgeler/ocrKimlik.ts`); pure masking rules in `core/belgeler/kimlikMaske.ts` (label-value pairs for name / DOB / protocol / MRN / accession / ID / doctor in TR, EN and UZ-RU, long digit runs incl. 11-digit TC, NHS/Medicare, SSN, NHI, JSHSHIR; clinical measurements and exam date untouched; top header band masked for us/eko/ct/mr/mamografi/pet when an identity label is found there). `deid.ts` blacks out the boxes before the EXIF-free re-encode; the doctor sees the masked preview ("Kimlik bilgileri otomatik gizlendi") and only the masked copy is posted (server already rejects image analysis without `deid`). Checkbox is a fallback only when OCR fails, times out (30 s) or is not confident (copy in `core/belgeler/deidMetin.ts`; TR stays Turkish, other countries English, UZ Russian). Unit test: `core/belgeler/kimlikMaske.test.ts` (synthetic fixtures), added to `npm test`.
+
+Country parity: country builds route only `*.ulke.tsx` files and none of the six has a Belgeler image-evaluation screen, so the UI is N/A there; the shared core (deid, masking, OCR, copy, test) and the dormant page copy were ported to all six release branches so a future country screen starts from the safe flow.
+
+Open, waits on Claude / Kaan live check: (1) tune label list and the header-band proportion against a real ultrasound screenshot once Dr. Gökhan retests on main (owner: Kaan to report misses, then Claude), 2026-10-21. (2) PDF reports are still sent server-side from the vault as-is (no pixel masking); text-layer redaction for PDFs is not built (owner: Claude, needs Kaan's go-ahead on scope), 2026-10-21. (3) Tesseract language data is fetched from the tesseract.js CDN at run time; self-hosting it under /public would remove that third-party fetch (owner: Claude, low priority), 2026-10-21.
