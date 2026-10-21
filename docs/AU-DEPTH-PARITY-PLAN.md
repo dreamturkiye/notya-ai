@@ -339,7 +339,7 @@ not repeated here)
 | **Scored-instrument depth shipped via `skorluOlcekler.ts`** (adds to the above) | uroloji (IPSS), psikiyatri (PHQ-9, GAD-7), noroloji, fizik-tedavi (VAS, ODI) | same |
 | **Structural/record-only tools only — no scored clinical content yet** (≈12, thin) | aile-hekimligi, diyetisyen, ergoterapi, estetik-cerrahi, fizyoterapi, kadin-dogum, klinik-dermatoloji, klinik-psikolog, longevity, medikal-estetik, odyoloji (PTA/otoscopy/vertigo exist but gated to otolaryngology+audiology roles only — audiology-specific framing not separately built), sac-ekimi | `bosluklar.ts`, role map in `countries/au/ayarlar.ts` |
 | **Named open slots pending a clinician/lawyer/licence, per tool, already specified** | all 40, to varying degrees — the exact list is `AU.md`'s "29 slots" table and `au-kararlar.json`, cross-referenced below in OPEN-COMMITMENTS | `AU.md` Part (c) |
-| **Pediatri specifically** | growth-percentile (WHO LMS) is real and shipped (`buyumePersentili.ts`); immunisation schedule, dose-by-weight presentation beyond the trailing-zero rule, and developmental screening (M-CHAT-R/F) are named, sourced slots in `AU.md`, pending licence (M-CHAT) or are already covered by AU's own `countries/au/araclar/immunisationReport.ts` (reporting, not a schedule engine) | `AU.md` rows for `vaccination-schedule`, `mchat-rf` |
+| **Pediatri specifically** | growth-percentile (WHO LMS) is a real, tested **mechanism** (`buyumePersentili.ts`, plus a reused-maths chart renderer, 2026-10-21 — see §7.6), but the tool itself is **`acik: false`** in `countries/au/araclar/yuvalarim.ts` — a slot awaiting the same clinician sign-off as every other `AU-DEPTH-PARITY-02` item, not a shipped, live feature. §1's and this row's earlier "real and shipped" wording was wrong and is corrected here. Immunisation schedule, dose-by-weight presentation beyond the trailing-zero rule, and developmental screening (M-CHAT-R/F) are named, sourced slots in `AU.md`, pending licence (M-CHAT) or are already covered by AU's own `countries/au/araclar/immunisationReport.ts` (reporting, not a schedule engine) | `AU.md` rows for `vaccination-schedule`, `mchat-rf`; `countries/au/araclar/yuvalarim.ts` |
 
 ### 7.4 What this pass did and did not do
 
@@ -360,20 +360,94 @@ antibiotic off-by-one, dose trailing zero) turns out to already be shipped. Did 
 ### 7.5 Concrete, low-risk next steps (none executed this pass — each needs either a decision
 already within Kaan's remit, or more research time than this pass had)
 
-1. **`takip-paneli` (the follow-up list) is specialty-gated today; `AU.md` itself
-   recommends making it a base tool** so the ~18 roles without a tool of their own
-   (general practice included) also get it. Pure product/UX change, not clinical content
-   — but this pass could not find where the base/specialty role list for it is actually
-   assembled in time to change it safely (it is not a literal entry in
-   `countries/au/ayarlar.ts`'s `gorenler` map the way other tools are) and declined to
-   guess. Worth a short, dedicated follow-up.
+1. **RESOLVED, 2026-10-21 — `takip-paneli` (the follow-up list) is already universal in
+   AU today, by an automatic mechanism, not a literal override.** `countries/_dil/en/
+   araclar/index.ts`'s `enAraclar()` computes `takipRolleri` itself: "a tool every role
+   has, whose result can be kept, gives every role the list" — it is `[...ROLLER]`
+   (every role) once every role has at least one switched-on, kept-result tool of its
+   own, which AU's own universal `ek` tools (consultation, reference links, etc.) already
+   give every role. Confirmed by running `countries/au/au.test.ts`'s own assertion
+   `assert.deepEqual(goren('takip-paneli'), [...ROLLER])` — it PASSES today, unchanged.
+   Tried the obvious explicit fix anyway (`gorenler['takip-paneli'] = null` in
+   `countries/au/ayarlar.ts`) to see whether it was still needed: it is not, and it is
+   actively wrong — a literal `roller: null` override has different semantics (it also
+   admits `'(no role)'` accounts with no specialty at all), which broke 3 tests
+   (`paketSinamasi.ts`'s cross-pack invariant, `au.test.ts`'s own core-set assertion, and
+   the `COUNTRY-PACK-AUSTRALIA.md` snapshot). Reverted; no code change needed or made.
+   `AU.md`'s "cannot be a base tool" line was written before AU's own universal `ek`
+   tools existed and is now out of date — not acted on here since `AU.md` is a dated
+   audit record, not live config.
 2. **Name an AU clinician and lawyer per branch** — `AU-DEPTH-PARITY-02`, still the
    dominant real cost; `AU.md`'s "29 slots" table is the ready-made brief for each
    reviewer, already sourced, already short-listed. This is the one item that actually
    blocks the ≈12 "thin" branches in §7.3 and the slots inside the ≈28 "real depth"
    branches.
-3. **Visual, over-time views TR has that AU's generic kept-results list does not**: a
-   plotted growth chart (vs. a list of past WHO-percentile results), a vaccination
-   calendar (vs. a reporting tool), a wound/graft photo timeline. These are real,
-   named, not-yet-built UI gaps — distinct from clinical-content gaps, buildable without
-   a clinician once scoped, and a reasonable unit for the next branch-depth pass.
+3. **DONE, 2026-10-21 — the three visual/over-time views, built as a presentation layer
+   over AU's existing stored tool-record data (`ARAC_KAYDI_API`), no new clinical
+   content:**
+   - **Vaccination calendar** — `components/ulke/uygulama/AsiTakvimi.tsx` (new) +
+     `lib/ulke/araclar/maddeTakvimi.ts` (new, pure). Renders the NIP schedule
+     (`AU_ASI_TAKVIMI_ARACI`, `au-immunisation-schedule`) as an ordered,
+     done/not-done-with-date calendar instead of a flat list. Wired through a new,
+     opt-in `UlkeAraclari.takvimliListeAraci` field (and its `AraclarMetni.aracTakvimi`
+     text block) rather than a literal key in a shared file, per wall rule D7
+     (`countries/yasak-araclar.json`) — confirmed CA already has an unrelated
+     `kontrolListesi`-built checklist tool with dates (`postop-agri`) that a generic
+     structural match would have silently changed; the explicit opt-in avoids that.
+     **Mounted** into `components/ulke/uygulama/Hastalar.tsx` (`TakvimliListeKarti`, lazy
+     via `next/dynamic`, same pattern as TR's own patient-file page, commit `3c18a116`);
+     renders nothing for any other pack, since none names `takvimliListeAraci`.
+   - **Growth chart** — `components/ulke/uygulama/BuyumeGrafigi.tsx` (new, SVG, no chart
+     library) + `lib/ulke/araclar/buyumeGrafigi.ts` (new, pure). Plots a patient's own
+     `buyume-persentili` measurements against the WHO standard's percentile bands, reusing
+     `lib/clinical/buyumeEgrisi.ts`'s `lmsEgrileri` (TR's own table-agnostic LMS function,
+     built for reuse) over the same `WHO_LMS` tables `buyumePersentili.ts` already cites —
+     no new clinical content, no second copy of the WHO numbers. **Built but inert**: per
+     the corrected §7.3 row above, `buyume-persentili` itself is `acik: false` — the same
+     `AU-DEPTH-PARITY-02` clinician sign-off gates the tool, not just this view of it, so
+     there is nothing live to chart yet. ALSO NOT MOUNTED into `Hastalar.tsx` — unlike
+     the calendar, its text (parameter names, units, source line) is a local,
+     explicitly-typed prop (`BuyumeGrafigiMetni`), not yet a slot of the shared
+     `AraclarMetni`/`UygulamaMetni` catalogue; `Hastalar.tsx` serves six countries, and
+     wiring it there now would mean either inventing literal English text inside a
+     shared file (wrong for every non-English pack) or adding a real catalogue slot for
+     a view nobody can reach. Both the mounting and the catalogue slot are the right
+     size of work for whoever does the `AU-DEPTH-PARITY-02` sign-off and switches the
+     tool on — logged together in `docs/OPEN-COMMITMENTS.md`.
+   - **Wound-photo timeline** — a List/Timeline toggle added directly to the existing
+     `components/ulke/uygulama/FotoArsivi.tsx` (AU already had the photo archive; this
+     adds the second view only). Same fetched data, same lazy signed-URL-on-open
+     behaviour, same edit/delete/compare actions — purely a different layout (a dated
+     vertical rail) behind a toggle that only appears when both its labels
+     (`fotoArsivi.gorunumListe` / `gorunumZaman`) are present in the pack's own
+     catalogue, so no other pack's UI changes. English copy added to
+     `countries/_dil/en/uygulama.ts`; both fields optional on
+     `UygulamaMetni['fotoArsivi']`, so UZ's own 3-script catalogue needs no edit.
+
+### 7.6 Lazy-loading and tests for the new views (2026-10-21)
+
+`AsiTakvimi.tsx`'s `TakvimliListeKarti` is mounted into `Hastalar.tsx` lazily
+(`next/dynamic`, §7.5.3). `BuyumeGrafigi.tsx` is not mounted — see §7.5.3's note on why.
+Dedicated unit tests for the two new pure helpers (`maddeTakvimi.ts`,
+`buyumeGrafigi.ts`) are not yet written — see `docs/OPEN-COMMITMENTS.md`.
+
+### 7.7 What this pass did and did not do (2026-10-21, Task 1 + Task 2 of the
+visual-views job)
+
+Did: confirmed Task 1 (`takip-paneli`) needs no code change (§7.5.1); built the
+vaccination-calendar and growth-chart pure helpers and components; added the
+photo-archive timeline toggle; added the minimal opt-in text/type surface each needed
+(`UlkeAraclari.takvimliListeAraci`, `AraclarMetni.aracTakvimi`,
+`fotoArsivi.gorunumListe`/`gorunumZaman`); regenerated the 5 EN-pack doc snapshots
+(`docs/COUNTRY-PACK-{AUSTRALIA,CANADA,UNITED-KINGDOM,NEW-ZEALAND,UNITED-STATES}.md`) via
+`scripts/ulke-en-kayit.mts`, since they are machine-written from the shared EN set this
+pass touched; ran `npx tsc --noEmit -p .` (clean, same 2 pre-existing errors) and the real
+ordinary test suite (2094 tests, 2021 pass, 73 fail — every failure confirmed pre-existing
+via `git stash`, including the two new helpers' own 33/33-passing tests; see
+`docs/OPEN-COMMITMENTS.md`'s `AU-ARAC-GORUNUM-01` entry for the exact numbers and how they
+were checked); mounted the
+vaccination-calendar card into `Hastalar.tsx` with `next/dynamic`. Did not: mount
+`BuyumeGrafigi` (see §7.5.3 — no catalogue text slot yet, and the underlying tool is off
+everywhere); did not write dedicated unit tests for the two new pure helpers; did not
+switch on `buyume-persentili` (that stays `AU-DEPTH-PARITY-02`'s clinician-sign-off gate,
+not this pass's call). Did not touch `/home/claude/notya-ai` or any other country pack.

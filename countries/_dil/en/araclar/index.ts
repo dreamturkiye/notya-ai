@@ -177,6 +177,12 @@ export type EnAraclarGirdisi = {
   lisansTam?: boolean
   /** Tools beyond the set. */
   ek?: EnEkAraclar
+  /**
+   * AU-ARAC-GORUNUM-01 — the key of one switched-on checklist tool (of the set, or of `ek`) this pack wants shown
+   * as a calendar of its own milestones on the patient's file, instead of in the generic flat list. See
+   * `UlkeAraclari.takvimliListeAraci`; absent = every kept result stays in the flat list.
+   */
+  takvimliListeAraci?: string | null
 }
 
 /** The units a laboratory quantity is typed in here: the country's one unit, or each unit it accepts. */
@@ -263,5 +269,6 @@ export function enAraclar(g: EnAraclarGirdisi): UlkeAraclari {
     ...(g.ek?.tanimlar?.length ? { kendiAraclari: g.ek.tanimlar } : {}),
     ...(g.ek?.olculer ? { olculer: g.ek.olculer } : {}),
     ...(g.lisansTam !== undefined ? { lisansTam: g.lisansTam } : {}),
+    ...(g.takvimliListeAraci !== undefined ? { takvimliListeAraci: g.takvimliListeAraci } : {}),
   }
 }

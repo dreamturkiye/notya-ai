@@ -6,6 +6,7 @@
  * else (lib/ulke/uygulama/hastalar.ts), and another doctor's patient id answers "not found".
  */
 import React, { useEffect, useState, type FormEvent, type ReactNode } from 'react'
+import dinamikYukle from 'next/dynamic'
 import { AramaFormu } from './Bugun'
 import { Bilgi, Cerceve, Hata, HAZIR, Secim, tarihYaz, useUygulama, YOL, Yukleniyor } from './Kabuk'
 import { saatAraligi, DurumRozeti, takvimYolu, type RandevuKaydi } from './randevuOrtak'
@@ -21,6 +22,15 @@ import type { DilKodu } from '@/lib/ulke/tipler'
 import { GIRDI_GECERSIZ } from '@/lib/ulke/arayuz/zamanGirdisi'
 import { TarihGirisi } from '../girdi/TarihGirisi'
 import { Ipucu } from './Ipucu'
+
+/**
+ * AU-ARAC-GORUNUM-01 / PERF-SAGLAMLIK-2026-10 — the calendar view is a tab-gated, additional card on an already
+ * heavy page: lazy-loaded the same way TR's own patient-file page already lazy-loads its heavy, tab-gated panels
+ * (`next/dynamic`, commit `3c18a116`). Renders nothing itself for a pack that names no `takvimliListeAraci` — see
+ * ./AsiTakvimi.tsx — so this costs other packs nothing beyond the dynamic-import wrapper.
+ */
+const KartYukleniyor = () => <p className="uza-bos" role="status" aria-hidden="true" />
+const TakvimliListeKarti = dinamikYukle(() => import('./AsiTakvimi').then((m) => m.TakvimliListeKarti), { loading: KartYukleniyor })
 
 export type HastaKaydi = { id: string; ad: string; otaIsmi: string; dogumTarihi: string; cinsiyet: 'male' | 'female' | ''; telefon: string; dil: string; ulusalKimlik: string }
 export type DosyaMuayenesi = { seansId: string; notId: string | null; baslangic: string; durum: 'taslak' | 'onayli' | 'notsuz' }
@@ -200,7 +210,7 @@ export function YeniHasta() {
 
 // ───────────────────────── one patient's file ─────────────────────────
 
-export function HastaDosyasiGorunumu({ m, hasta, muayeneler, bugun, randevular, portal, form, araclar, mesajlar, konsultasyon, fotograflar, duzenle }: {
+export function HastaDosyasiGorunumu({ m, hasta, muayeneler, bugun, randevular, portal, form, araclar, aracTakvimi, mesajlar, konsultasyon, fotograflar, duzenle }: {
   m: UygulamaMetni; hasta: HastaKaydi; muayeneler: DosyaMuayenesi[]; bugun?: Date
   /** NOTYA-UZ-RANDEVU-01: this patient's appointments from today on. Absent = not loaded: no list is drawn. */
   randevular?: RandevuKaydi[] | null
@@ -210,6 +220,8 @@ export function HastaDosyasiGorunumu({ m, hasta, muayeneler, bugun, randevular, 
   form?: ReactNode
   /** NOTYA-ULKE-ARACLAR-01: the tool results kept on this patient, and the way to the tools for them, where the country has the tools area. */
   araclar?: ReactNode
+  /** AU-ARAC-GORUNUM-01: the calendar view of one checklist tool's own milestones, where the pack names one (`UlkeAraclari.takvimliListeAraci`). Drawn beside the flat list — both show the same kept results. */
+  aracTakvimi?: ReactNode
   /** NOTYA-ULKE-MESAJ-01: the messages with this patient, where the country has them. Drawn after the portal's card: a patient reads them there. */
   mesajlar?: ReactNode
   /** NOTYA-ULKE-MESAJ-01: asking a colleague for an opinion on this patient, and this patient's consultations, where the country has consultation. */
@@ -276,6 +288,7 @@ export function HastaDosyasiGorunumu({ m, hasta, muayeneler, bugun, randevular, 
       {portal ?? null}
       {mesajlar ?? null}
       {araclar ?? null}
+      {aracTakvimi ?? null}
       {konsultasyon ?? null}
       {fotograflar ?? null}
       {taslak.length ? (
@@ -363,7 +376,7 @@ export function HastaDosyasi() {
       {durum === 'tamam' && veri ? <>
         <Bilgi>{kaydedildi ? u.m.hasta.duzenlendi : null}</Bilgi>
         {duzenleme ? <YeniHastaGorunumu m={u.m} dil={u.dil} a={alanlar} set={(yeni) => { setAlanlar(yeni); setHata(null) }} gonder={duzenleKaydet} bekliyor={bekliyor} hata={hata} telefonOrnek={ulkePaketi().telefon.ornek} baslik={u.m.hasta.duzenle} iptal={() => { setDuzenleme(false); setHata(null) }} /> : null}
-        <HastaDosyasiGorunumu m={u.m} hasta={veri.hasta} muayeneler={veri.muayeneler} randevular={randevular} duzenle={duzenleAc} portal={ozellikAcik('hastaPortali') ? <PortalErisimKarti u={u} hastaId={veri.hasta.id} /> : null} form={ozellikAcik('hastaPortali') && ozellikAcik('hastaFormu') ? <HastaFormuKarti u={u} hastaId={veri.hasta.id} /> : null} araclar={ozellikAcik('araclar') ? <HastaAracKayitlariKarti u={u} hastaId={veri.hasta.id} /> : null} mesajlar={ozellikAcik('hastaPortali') && ozellikAcik('hastaMesajlari') ? <HastaMesajKarti u={u} hastaId={veri.hasta.id} sablonlar={ozellikAcik('hekimSablonlari')} /> : null} konsultasyon={ozellikAcik('konsultasyon') ? <KonsultasyonKarti u={u} hastaId={veri.hasta.id} /> : null} fotograflar={ozellikAcik('fotoArsivi') ? <FotoArsivKarti u={u} hastaId={veri.hasta.id} /> : null} />
+        <HastaDosyasiGorunumu m={u.m} hasta={veri.hasta} muayeneler={veri.muayeneler} randevular={randevular} duzenle={duzenleAc} portal={ozellikAcik('hastaPortali') ? <PortalErisimKarti u={u} hastaId={veri.hasta.id} /> : null} form={ozellikAcik('hastaPortali') && ozellikAcik('hastaFormu') ? <HastaFormuKarti u={u} hastaId={veri.hasta.id} /> : null} araclar={ozellikAcik('araclar') ? <HastaAracKayitlariKarti u={u} hastaId={veri.hasta.id} /> : null} aracTakvimi={ozellikAcik('araclar') ? <TakvimliListeKarti u={u} hastaId={veri.hasta.id} /> : null} mesajlar={ozellikAcik('hastaPortali') && ozellikAcik('hastaMesajlari') ? <HastaMesajKarti u={u} hastaId={veri.hasta.id} sablonlar={ozellikAcik('hekimSablonlari')} /> : null} konsultasyon={ozellikAcik('konsultasyon') ? <KonsultasyonKarti u={u} hastaId={veri.hasta.id} /> : null} fotograflar={ozellikAcik('fotoArsivi') ? <FotoArsivKarti u={u} hastaId={veri.hasta.id} /> : null} />
       </> : (
         <section className="uza-kart">
           {durum === 'yukleniyor' ? <p className="uza-bos" role="status">{u.m.kabuk.yukleniyor}</p> : <Hata>{durum === 'yok' ? u.m.hasta.bulunamadi : u.m.kabuk.hata}</Hata>}

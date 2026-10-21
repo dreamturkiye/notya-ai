@@ -78,6 +78,12 @@ export const EN_ARACLAR_METNI_TEMEL: AraclarMetni = {
     yapilamadi: 'Could not mark it. Please try again.',
     okunamadi: 'The list could not be read. Reload the page.',
   },
+  aracTakvimi: {
+    beklemede: 'Not yet recorded',
+    tarihli: 'Recorded: %',
+    tarihsiz: 'Recorded, no date entered',
+    okunamadi: 'This milestone list could not be read.',
+  },
 }
 
 /** The tools area's catalogue in a country's form of English. */

@@ -408,6 +408,17 @@ export type UlkeAraclari = {
   /** Quantities only this country's own tools read, each with its units. Keys begin with the country's code. */
   olculer?: Readonly<Partial<Record<UlkeOlcusu, OlcuTanimi>>>
   /**
+   * AU-ARAC-GORUNUM-01 — the key of ONE switched-on checklist tool (`tur: 'liste'`, with at least one date among its
+   * `cikti.tarihler`) that this pack wants shown on the patient's file as a CALENDAR of its own milestones — in the
+   * order the tool's own fields list them — instead of in the generic flat list of kept results every other tool
+   * still gets there. Named by the pack itself (never guessed from a tool's shape): a national immunisation
+   * schedule is the case this was built for, but the field names no country and no tool, so any pack with a
+   * checklist of dated milestones worth a calendar may set it. null/absent = every kept result of this pack stays
+   * in the flat list, as before. Read by `components/ulke/uygulama/AsiTakvimi.tsx` (wall rule D7: that file may
+   * never name a country-prefixed key, so it only ever reacts to this field, never to a literal tool key).
+   */
+  takvimliListeAraci?: string | null
+  /**
    * HOW THIS COUNTRY WRITES AN AMOUNT OF A MEDICINE (NOTYA-ULKE-ARAC-DUZELTME-01). `sondaSifir: false` = no zero is
    * ever written after the decimal mark ("5 mL", "2.5 mg", never "5.0 mL"); `true` = the fixed decimals stand
    * ("1,0"). A NATIONAL RULE WITH NO DEFAULT: required for every pack that switches on a tool which writes such an

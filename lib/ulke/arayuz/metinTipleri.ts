@@ -401,6 +401,17 @@ export type UygulamaMetni = {
     readonly okunamadi: string
     readonly indirilemedi: string
     readonly iptal: string
+    /**
+     * AU-ARAC-GORUNUM-01 — the List/Timeline view toggle. OPTIONAL, both or neither: a pack that has not filled
+     * them keeps today's one view (the flat list) with no toggle shown at all — this never forces a new word on a
+     * pack that has not translated it. The timeline re-orders nothing and fetches nothing new: the same kept
+     * photos, the same dates, the same open/edit/delete/compare actions, laid out against a vertical date rail
+     * instead of a plain list, so a run of visits reads as a sequence. No grouping by body site or by visit (that
+     * stays out of V1 per this file's own docstring); no new signed URL is asked for until a photo is opened,
+     * exactly as the list view already does.
+     */
+    readonly gorunumListe?: string
+    readonly gorunumZaman?: string
   }
 }
 
@@ -910,6 +921,18 @@ export type AraclarMetni = {
     readonly kapat: string
     readonly kapatildi: string
     readonly yapilamadi: string
+    readonly okunamadi: string
+  }
+  /**
+   * AU-ARAC-GORUNUM-01 — the calendar view of a checklist tool a pack names with `takvimliListeAraci` (see
+   * UlkeAraclari). Absent = no pack this form serves uses the calendar view; the flat list stays the only one.
+   */
+  readonly aracTakvimi?: {
+    /** A milestone that is not yet ticked for this patient. */
+    readonly beklemede: string
+    /** % the date it was ticked on. A milestone that is ticked with no date typed. */
+    readonly tarihli: string
+    readonly tarihsiz: string
     readonly okunamadi: string
   }
 }

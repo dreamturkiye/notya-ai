@@ -4162,3 +4162,76 @@ regardless of which option below is chosen.
 |------|------|-------|-------------------------|
 | 2026-10-20 | **AU-DEPTH-PARITY-01 — pick Option A (keep building `.ulke`-native per-branch depth, proven pattern, slower) or Option B (literal unlock: new per-route Turkey-only content gate + URL-shape decision + perf-budget re-check, matches the brief literally, materially higher risk, not started)** — see `docs/AU-DEPTH-PARITY-PLAN.md` §2 for both options in full | Kaan | **CLOSED 2026-10-21: Kaan picked A** (after B's two blockers in §6 of the plan doc). Building `.ulke`-native, no shared-mount, no `next.config.mjs`/route-gate change — see §7 of the plan doc for what "building" means in AU's own architecture |
 | 2026-10-20 | **AU-DEPTH-PARITY-02 — 40-branch clinical-engine port to AU is unstarted regardless of the Option A/B decision above** (pediatri's `asiPlan.ts`/`buyume.ts`/`doz.ts`/`gelisimPlan.ts`/`kohort.ts`/`saglamCocukCek.ts` class of engine, × 40 branches); needs a named AU clinician per branch before any real threshold/dosing content is written (hard boundary: no invented AU clinical content) | Kaan (name AU clinicians per branch) | **CORRECTED 2026-10-21 — "unstarted" was wrong.** Re-reading `/home/claude/notya-au` end to end (not just the two route files the first two passes read) found a mature, already-shipped, already-audited clinical-calculator layer covering ≈28 of 40 branches (`lib/ulke/araclar/tanimlar/*.ts`, cited sources, tests comparing input-for-input against the TR engine in `esdegerlik.test.ts`) plus an exhaustive, ~95-search, sourced Australian audit (`docs/araclar-denetim/AU.md`, 2026-10-10) that is the real, existing placeholder/slot list — not a new one to write. Full corrected branch table: `docs/AU-DEPTH-PARITY-PLAN.md` §7.3. What is still genuinely true and still OPEN: zero of the 40 branches have a NAMED AU clinician or lawyer on file, so every "slot" in `AU.md`'s own table (29 of them) and every "unverified" tool stays exactly as it is until one is named — that part of this entry stands. What changed: the ≈12 "thin" branches (aile-hekimligi, diyetisyen, ergoterapi, estetik-cerrahi, fizyoterapi, kadin-dogum, klinik-dermatoloji, klinik-psikolog, longevity, medikal-estetik, odyoloji, sac-ekimi) have structural/record tools only and are the real remaining depth gap, not all 40. This pass wrote no new kit tool or pack wiring itself — every independently-checkable "revise" fault from `AU.md` that doesn't need a named clinician (ASA six classes, EASI's under-8 multiplier, the antibiotic off-by-one, dose trailing-zero) turns out to already be fixed in the kit; see `docs/AU-DEPTH-PARITY-PLAN.md` §7.4 for what was checked and §7.5 for the three concrete next steps that remain (one of them, the AU-specific audiometry threshold, was a near-miss this pass caught and deliberately did NOT wire in — `AU.md`/`countries/au/ayarlar.ts` already explain why it would be wrong to) |
+
+## AU-ARAC-GORUNUM-01 — the three visual/over-time views from `AU-DEPTH-PARITY-PLAN.md` §7.5.3: vaccination calendar, growth chart, wound-photo timeline (2026-10-21, owner Claude, branch `release/au`)
+
+Task 1 (`takip-paneli`) needed no code change — see `docs/AU-DEPTH-PARITY-PLAN.md` §7.5.1
+for the full finding (it is already universal, computed automatically by
+`enAraclar()`; an explicit `gorenler['takip-paneli'] = null` override was tried and
+reverted because it has different, wrong semantics and broke 3 tests).
+
+Task 2, built as a presentation layer over AU's existing stored tool-record data
+(`ARAC_KAYDI_API`) — no new clinical content in any of the three:
+
+- **Vaccination calendar — BUILT AND MOUNTED.** `lib/ulke/araclar/maddeTakvimi.ts` (pure)
+  + `components/ulke/uygulama/AsiTakvimi.tsx`, lazy-mounted into `Hastalar.tsx` via
+  `next/dynamic`. Renders the National Immunisation Program schedule
+  (`au-immunisation-schedule`) as an ordered, done/not-done-with-date calendar. New,
+  opt-in `UlkeAraclari.takvimliListeAraci` field (+ `AraclarMetni.aracTakvimi` text) so no
+  shared file names AU's key literally (wall rule D7) and no other pack's UI changes —
+  confirmed CA already has an unrelated dated checklist tool (`postop-agri`) that a
+  generic structural match would have silently changed.
+- **Growth chart — BUILT, NOT MOUNTED.** `lib/ulke/araclar/buyumeGrafigi.ts` (pure) +
+  `components/ulke/uygulama/BuyumeGrafigi.tsx`. Plots a patient's `buyume-persentili`
+  measurements against the WHO standard's percentile bands, reusing TR's own
+  table-agnostic `lmsEgrileri` (`lib/clinical/buyumeEgrisi.ts`) over the same `WHO_LMS`
+  tables `buyumePersentili.ts` already cites — no new clinical content, no second copy of
+  the WHO numbers. Two separate reasons it is not wired into `Hastalar.tsx` yet: (a) the
+  underlying `buyume-persentili` tool is `acik: false` in `countries/au/araclar/
+  yuvalarim.ts` — the same `AU-DEPTH-PARITY-02` clinician sign-off gates the tool itself,
+  so nothing exists to chart for any real patient yet; (b) its text (parameter names,
+  units, the WHO source line) is currently a local, explicitly-typed prop
+  (`BuyumeGrafigiMetni`), not a slot of the shared `AraclarMetni`/`UygulamaMetni`
+  catalogue — `Hastalar.tsx` is shared by six countries, so mounting it now would mean
+  either hardcoded English in a shared file (wrong for every non-English pack) or adding
+  a real catalogue slot for a view nobody can reach yet. §7.3 of the plan doc is also
+  corrected: it previously said growth-percentile was "real and shipped" — it was only
+  ever a mechanism, never switched on.
+- **Wound-photo timeline — BUILT AND MOUNTED** (AU already had the photo archive; this
+  adds the second view only). A List/Timeline toggle added directly to the existing
+  `components/ulke/uygulama/FotoArsivi.tsx` — same fetched data, same lazy
+  signed-URL-on-open behaviour, same edit/delete/compare actions, laid out against a
+  dated vertical rail. The toggle only renders when both its labels
+  (`fotoArsivi.gorunumListe` / `gorunumZaman`) are present in the pack's own catalogue
+  (added for English in `countries/_dil/en/uygulama.ts`; both optional on
+  `UygulamaMetni['fotoArsivi']`), so no other pack's UI changes and UZ's own 3-script
+  catalogue needs no edit.
+
+**Parity maintenance done alongside this:** the shared EN set's new text
+(`aracTakvimi`, `gorunumListe`/`gorunumZaman`) changed the text count every EN-pack
+reports, so `docs/COUNTRY-PACK-{AUSTRALIA,CANADA,UNITED-KINGDOM,NEW-ZEALAND,
+UNITED-STATES}.md` were regenerated via `scripts/ulke-en-kayit.mts` so their
+"status — machine-written, unread" snapshot tests stay green.
+
+**Verified:** `npx tsc --noEmit -p .` clean (only the 2 pre-existing
+`countries/au/au.test.ts` errors, confirmed via `git stash` identical before/after).
+`npm run test:ulke`'s "ordinary country tests" (the run that auto-discovers every
+`*.test.ts` under `lib/ulke`/`components/ulke`/`countries/`, including this job's two new
+files): 2094 tests, 2021 pass, 73 fail — the two new files' own 33 assertions all pass
+(`maddeTakvimi.test.ts` 24/24, `buyumeGrafigi.test.ts` 9/9); every one of the 73 failures
+confirmed pre-existing via `git stash` (re-run against the clean, pre-this-job tree:
+identical failures, same test names — spot-checked
+`countries/au/araclar/planKayit.test.ts`'s "Australia plan rows" failure directly, byte
+line-for-line, plus the rest are the already-logged `uz`/"Charlie and Clara"
+cross-country ones). Each pack's own `*.paket.test.ts` run (`au`/`ca`/`gb`/`nz`/`tr`/`us`
+pass; `uz` has its 1 pre-existing failure) is unchanged from before this job. Bare
+`npm test` (TR + `countries/uz/*` only, per `package.json` — does not exercise any file
+this job touched) ran 5956/5858/94, also pre-existing; not investigated further, out of
+this job's scope. (Correction: an earlier draft of this entry compared only the repeated
+per-pack 384-test block, the same block every pack prints, and mistook it for the much
+larger 2094-test ordinary suite — the real ordinary-suite comparison above supersedes it.)
+
+| Date | Item | Owner | Status / what is needed |
+|------|------|-------|-------------------------|
+| 2026-10-21 | **AU-ARAC-GORUNUM-01-A — mount `BuyumeGrafigiKarti` into `Hastalar.tsx` and give it a real catalogue text slot** once `buyume-persentili` clears `AU-DEPTH-PARITY-02`'s clinician sign-off. Needs: (1) the sign-off itself (tracked under `AU-DEPTH-PARITY-02`, not duplicated here); (2) folding `BuyumeGrafigiMetni` into `AraclarMetni` (or a new typed block) with an EN translation, the same way `aracTakvimi` was done this job, so a shared file never carries literal English | Kaan (clinician sign-off) / Claude (catalogue slot + mount, mechanical once (1) lands) | OPEN |
+| 2026-10-21 | **AU-ARAC-GORUNUM-01-B — unit tests for the two new pure helpers** (`lib/ulke/araclar/maddeTakvimi.ts`, `lib/ulke/araclar/buyumeGrafigi.ts`) with synthetic `AracKaydi` fixtures, mirroring `lib/ulke/araclar/araclar.paket.test.ts`'s existing patterns | Claude | **DONE, same day** — `lib/ulke/araclar/maddeTakvimi.test.ts` (24 cases) and `lib/ulke/araclar/buyumeGrafigi.test.ts` (9 cases), run directly (`tsx --experimental-test-module-mocks --test`): 33/33 pass. Not yet wired into `npm run test:ulke`'s auto-discovery or bare `npm test`'s hardcoded list — follow-up, low risk (same `*.test.ts` convention the discovery script already walks for every other `lib/ulke/araclar/*.test.ts` file) |

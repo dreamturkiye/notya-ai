@@ -339,6 +339,13 @@ export const AU_GIRDI: EnUlkeGirdisi = {
       // ./araclar/yuvalarim.ts for what each is and why it is not live.
       yuvalar: AU_EK_YUVALAR,
     },
+    // AU-ARAC-GORUNUM-01, 2026-10-21 — the patient's file shows the National Immunisation Program schedule's own
+    // milestones as a calendar (components/ulke/uygulama/AsiTakvimi.tsx), not as a flat list of past submissions:
+    // this is a record of a lifelong schedule's milestones, not a once-off assessment, so "newest first" is the
+    // wrong shape for it. The milestone order, their labels and their vaccine content stay exactly ./araclar/
+    // metinler.ts's own (AU_ASI_TAKVIMI_ARACI) — this field only tells the shared screen which tool to read that
+    // way; it names no content.
+    takvimliListeAraci: 'au-immunisation-schedule',
   },
   acilis: {
     // THE EXAMPLE PHONE NUMBER — UNVERIFIED. One of the mobile numbers the communications regulator sets aside for

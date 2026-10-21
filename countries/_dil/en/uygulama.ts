@@ -419,6 +419,8 @@ export const EN_UYGULAMA_TEMEL: Temel = {
     okunamadi: 'Could not load the photo archive.',
     indirilemedi: 'Could not open this photo. Please try again.',
     iptal: 'Cancel',
+    gorunumListe: 'List',
+    gorunumZaman: 'Timeline',
   },
 }
 

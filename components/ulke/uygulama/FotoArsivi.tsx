@@ -40,6 +40,76 @@ function boyutYaz(b: number): string {
   return `${(b / 1_048_576).toFixed(1)} MB`
 }
 
+/**
+ * AU-ARAC-GORUNUM-01 — one photo's row, shared by BOTH views (the flat list and the timeline): same label, same
+ * date, same open/edit/delete/compare actions, same lazily-fetched image. Only the wrapping list element differs.
+ */
+function FotoSatiri(p: {
+  f: HastaFotosu
+  n: Uygulama['m']['fotoArsivi']
+  acik: string | null
+  urller: Record<string, string>
+  karsilastir: readonly string[]
+  silOnay: string | null
+  duzenleId: string | null
+  duzenleTarih: string
+  duzenleEtiket: string
+  m: Uygulama['m']
+  ac: (id: string) => void
+  karsilastirSecimDegistir: (id: string) => void
+  duzenleAc: (f: HastaFotosu) => void
+  duzenleKaydet: () => void
+  sil: (id: string) => void
+  setSilOnay: (id: string | null) => void
+  setDuzenleId: (id: string | null) => void
+  setDuzenleTarih: (v: string) => void
+  setDuzenleEtiket: (v: string) => void
+}) {
+  const { f, n, acik, urller, karsilastir, silOnay, duzenleId, duzenleTarih, duzenleEtiket, m, ac, karsilastirSecimDegistir, duzenleAc, duzenleKaydet, sil, setSilOnay, setDuzenleId, setDuzenleTarih, setDuzenleEtiket } = p
+  return (
+    <li key={f.id} data-foto={f.id}>
+      <div className="uza-satir">
+        <label className="uza-liste-ad" style={{ display: 'flex', alignItems: 'center', gap: 8 }} data-yazdirma-gizle>
+          <input type="checkbox" checked={karsilastir.includes(f.id)} onChange={() => karsilastirSecimDegistir(f.id)} aria-label={n.karsilastir} />
+          <span>
+            {f.etiket || n.etiketYokYazi}
+            <span className="uza-liste-alt">{tarihYaz(f.cekimTarihi)} · {boyutYaz(f.boyut)}</span>
+          </span>
+        </label>
+        <div className="uza-eylemler" style={{ marginTop: 0 }} data-yazdirma-gizle>
+          <button type="button" className="uza-dugme uza-dugme-cizgi uza-dugme-kucuk" onClick={() => ac(f.id)} data-eylem="foto-ac">{acik === f.id ? n.kapat : n.goster}</button>
+          <button type="button" className="uza-dugme uza-dugme-cizgi uza-dugme-kucuk" onClick={() => duzenleAc(f)} data-eylem="foto-duzenle">{n.duzenle}</button>
+          {silOnay === f.id ? (
+            <>
+              <button type="button" className="uza-dugme uza-dugme-kucuk" onClick={() => sil(f.id)} data-eylem="foto-sil-onayla">{n.sil}</button>
+              <button type="button" className="uza-dugme uza-dugme-cizgi uza-dugme-kucuk" onClick={() => setSilOnay(null)}>{n.iptal}</button>
+            </>
+          ) : (
+            <button type="button" className="uza-dugme uza-dugme-cizgi uza-dugme-kucuk" onClick={() => setSilOnay(f.id)} data-eylem="foto-sil">{n.sil}</button>
+          )}
+        </div>
+      </div>
+      {acik === f.id && urller[f.id] ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={urller[f.id]} alt={f.etiket || tarihYaz(f.cekimTarihi)} style={{ maxWidth: '100%', maxHeight: 420, marginTop: 8, borderRadius: 8 }} />
+      ) : null}
+      {duzenleId === f.id ? (
+        <form className="uza-form" style={{ marginTop: 8 }} onSubmit={(e) => { e.preventDefault(); duzenleKaydet() }} data-yazdirma-gizle>
+          <TarihGirisi id={`uza-foto-duzenle-${f.id}`} etiket={n.tarih} deger={duzenleTarih} degistir={setDuzenleTarih} m={m.girdi} />
+          <div className="uza-alan">
+            <label className="uza-etiket" htmlFor={`uza-foto-etiket-${f.id}`}>{n.etiket}</label>
+            <input id={`uza-foto-etiket-${f.id}`} className="uza-girdi" value={duzenleEtiket} onChange={(e) => setDuzenleEtiket(e.target.value)} maxLength={300} />
+          </div>
+          <div className="uza-eylemler">
+            <button type="submit" className="uza-dugme">{n.kaydet}</button>
+            <button type="button" className="uza-dugme uza-dugme-cizgi" onClick={() => setDuzenleId(null)}>{n.iptal}</button>
+          </div>
+        </form>
+      ) : null}
+    </li>
+  )
+}
+
 export function FotoArsivKarti({ u, hastaId }: { u: Uygulama; hastaId: string }) {
   const m = u.m
   const n = m.fotoArsivi
@@ -47,6 +117,9 @@ export function FotoArsivKarti({ u, hastaId }: { u: Uygulama; hastaId: string })
   const [fotolar, setFotolar] = useState<HastaFotosu[] | null>(null)
   const [okumaHatasi, setOkumaHatasi] = useState(false)
   const [urller, setUrller] = useState<Record<string, string>>({})
+  // AU-ARAC-GORUNUM-01 — which of the two views is open. Only offered when the pack's own catalogue has both view
+  // labels (n.gorunumListe / n.gorunumZaman); every other pack keeps exactly today's one view, no toggle rendered.
+  const [gorunum, setGorunum] = useState<'liste' | 'zaman'>('liste')
   const [acik, setAcik] = useState<string | null>(null)
   const [karsilastir, setKarsilastir] = useState<string[]>([])
   const [karsilastirAcik, setKarsilastirAcik] = useState(false)
@@ -154,50 +227,34 @@ export function FotoArsivKarti({ u, hastaId }: { u: Uygulama; hastaId: string })
       {okumaHatasi ? <Hata>{n.okunamadi}</Hata> : !fotolar ? <p className="uza-bos" role="status">{m.kabuk.yukleniyor}</p> : !fotolar.length ? <p className="uza-bos">{n.bos}</p> : (
         <>
           <p className="uza-ipucu" data-yazdirma-gizle>{n.karsilastirSec}</p>
-          <ul className="uza-liste">
-            {fotolar.map((f) => (
-              <li key={f.id} data-foto={f.id}>
-                <div className="uza-satir">
-                  <label className="uza-liste-ad" style={{ display: 'flex', alignItems: 'center', gap: 8 }} data-yazdirma-gizle>
-                    <input type="checkbox" checked={karsilastir.includes(f.id)} onChange={() => karsilastirSecimDegistir(f.id)} aria-label={n.karsilastir} />
-                    <span>
-                      {f.etiket || n.etiketYokYazi}
-                      <span className="uza-liste-alt">{tarihYaz(f.cekimTarihi)} · {boyutYaz(f.boyut)}</span>
-                    </span>
-                  </label>
-                  <div className="uza-eylemler" style={{ marginTop: 0 }} data-yazdirma-gizle>
-                    <button type="button" className="uza-dugme uza-dugme-cizgi uza-dugme-kucuk" onClick={() => void ac(f.id)} data-eylem="foto-ac">{acik === f.id ? n.kapat : n.goster}</button>
-                    <button type="button" className="uza-dugme uza-dugme-cizgi uza-dugme-kucuk" onClick={() => duzenleAc(f)} data-eylem="foto-duzenle">{n.duzenle}</button>
-                    {silOnay === f.id ? (
-                      <>
-                        <button type="button" className="uza-dugme uza-dugme-kucuk" onClick={() => void sil(f.id)} data-eylem="foto-sil-onayla">{n.sil}</button>
-                        <button type="button" className="uza-dugme uza-dugme-cizgi uza-dugme-kucuk" onClick={() => setSilOnay(null)}>{n.iptal}</button>
-                      </>
-                    ) : (
-                      <button type="button" className="uza-dugme uza-dugme-cizgi uza-dugme-kucuk" onClick={() => setSilOnay(f.id)} data-eylem="foto-sil">{n.sil}</button>
-                    )}
-                  </div>
-                </div>
-                {acik === f.id && urller[f.id] ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={urller[f.id]} alt={f.etiket || tarihYaz(f.cekimTarihi)} style={{ maxWidth: '100%', maxHeight: 420, marginTop: 8, borderRadius: 8 }} />
-                ) : null}
-                {duzenleId === f.id ? (
-                  <form className="uza-form" style={{ marginTop: 8 }} onSubmit={(e) => { e.preventDefault(); void duzenleKaydet() }} data-yazdirma-gizle>
-                    <TarihGirisi id={`uza-foto-duzenle-${f.id}`} etiket={n.tarih} deger={duzenleTarih} degistir={setDuzenleTarih} m={m.girdi} />
-                    <div className="uza-alan">
-                      <label className="uza-etiket" htmlFor={`uza-foto-etiket-${f.id}`}>{n.etiket}</label>
-                      <input id={`uza-foto-etiket-${f.id}`} className="uza-girdi" value={duzenleEtiket} onChange={(e) => setDuzenleEtiket(e.target.value)} maxLength={300} />
-                    </div>
-                    <div className="uza-eylemler">
-                      <button type="submit" className="uza-dugme">{n.kaydet}</button>
-                      <button type="button" className="uza-dugme uza-dugme-cizgi" onClick={() => setDuzenleId(null)}>{n.iptal}</button>
-                    </div>
-                  </form>
-                ) : null}
-              </li>
-            ))}
-          </ul>
+          {n.gorunumListe && n.gorunumZaman ? (
+            <div className="uza-eylemler" style={{ marginBottom: 8 }} data-yazdirma-gizle data-alan="foto-gorunum-secici">
+              <button type="button" className={gorunum === 'liste' ? 'uza-dugme uza-dugme-kucuk' : 'uza-dugme uza-dugme-cizgi uza-dugme-kucuk'} aria-pressed={gorunum === 'liste'} onClick={() => setGorunum('liste')} data-eylem="foto-gorunum-liste">{n.gorunumListe}</button>
+              <button type="button" className={gorunum === 'zaman' ? 'uza-dugme uza-dugme-kucuk' : 'uza-dugme uza-dugme-cizgi uza-dugme-kucuk'} aria-pressed={gorunum === 'zaman'} onClick={() => setGorunum('zaman')} data-eylem="foto-gorunum-zaman">{n.gorunumZaman}</button>
+            </div>
+          ) : null}
+          {gorunum === 'zaman' && n.gorunumZaman ? (
+            <ol className="uza-liste uza-zaman-cizgisi" data-gorunum="zaman" style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+              {fotolar.map((f) => (
+                <li key={f.id} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', borderLeft: '2px solid rgba(100,116,139,0.3)', paddingLeft: 10, marginLeft: 4, paddingBottom: 14 }}>
+                  <span aria-hidden="true" style={{ width: 10, height: 10, borderRadius: '50%', background: 'currentColor', opacity: 0.55, marginTop: 7, marginLeft: -16, flex: '0 0 auto' }} />
+                  <ul className="uza-liste" style={{ flex: 1, margin: 0 }}>
+                    <FotoSatiri f={f} n={n} acik={acik} urller={urller} karsilastir={karsilastir} silOnay={silOnay} duzenleId={duzenleId} duzenleTarih={duzenleTarih} duzenleEtiket={duzenleEtiket} m={m}
+                      ac={(id) => void ac(id)} karsilastirSecimDegistir={karsilastirSecimDegistir} duzenleAc={duzenleAc} duzenleKaydet={() => void duzenleKaydet()} sil={(id) => void sil(id)}
+                      setSilOnay={setSilOnay} setDuzenleId={setDuzenleId} setDuzenleTarih={setDuzenleTarih} setDuzenleEtiket={setDuzenleEtiket} />
+                  </ul>
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <ul className="uza-liste" data-gorunum="liste">
+              {fotolar.map((f) => (
+                <FotoSatiri key={f.id} f={f} n={n} acik={acik} urller={urller} karsilastir={karsilastir} silOnay={silOnay} duzenleId={duzenleId} duzenleTarih={duzenleTarih} duzenleEtiket={duzenleEtiket} m={m}
+                  ac={(id) => void ac(id)} karsilastirSecimDegistir={karsilastirSecimDegistir} duzenleAc={duzenleAc} duzenleKaydet={() => void duzenleKaydet()} sil={(id) => void sil(id)}
+                  setSilOnay={setSilOnay} setDuzenleId={setDuzenleId} setDuzenleTarih={setDuzenleTarih} setDuzenleEtiket={setDuzenleEtiket} />
+              ))}
+            </ul>
+          )}
           {karsilastir.length === 2 ? (
             <div style={{ marginTop: 12 }} data-yazdirma-gizle>
               <button type="button" className="uza-dugme uza-dugme-cizgi" onClick={() => void karsilastirmayiGoster()} data-eylem="foto-karsilastir">{n.karsilastir}</button>
