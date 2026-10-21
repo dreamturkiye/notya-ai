@@ -14,6 +14,7 @@ import { MODALITE_TR, type Modalite } from '@/core/belgeler/ontoloji';
 import { bransKurali, tierBMotorlari, SES_MODALITELERI } from '@/core/belgeler/router';
 import { gorseliOtomatikKimliksizlestir, sesiHazirla, type DeIdGorsel, type OtomatikDeId } from '@/core/belgeler/deid';
 import { deIdMetin } from '@/core/belgeler/deidMetin';
+import { adKarsilastir, type KimlikBulgulari } from '@/core/belgeler/kimlikMaske';
 import { tierBCalistir, tarayiciYetenek } from '@/core/belgeler/tarayiciMotor';
 import { dicomMi, dicomCoz } from '@/core/belgeler/dicom';
 import '@/core/belgeler/motorlar/txrv'; // NOTYA-BELGE-02: registers the browser CXR engine
@@ -53,7 +54,21 @@ export default function BelgeAnalizPage() {
   const [kimlikYok, setKimlikYok] = useState(false);
   // NOTYA-BELGE-DEID-02: automatic on-device masking; checkbox only when OCR failed / low confidence
   const [yedekGerek, setYedekGerek] = useState(false);
-  const [maskeOnizleme, setMaskeOnizleme] = useState<{ url: string; kutu: number } | null>(null);
+  // NOTYA-BELGE-OTO-01: the doctor keeps seeing the ORIGINAL; masking only touches the outbound copy. We only show what was found.
+  const [bulguBilgi, setBulguBilgi] = useState<{ bulgu: KimlikBulgulari; ad: 'eslesir' | 'eslesmiyor' | 'belirsiz' } | null>(null);
+  const [hastaAdi, setHastaAdi] = useState<string | null>(null);
+  useEffect(() => {
+    let iptal = false;
+    (async () => {
+      try {
+        const t = await getAccessTokenAsync();
+        const r = await fetch(`/api/doktor/hastalar/${patientId}`, { headers: { Authorization: `Bearer ${t}` } });
+        const d = await r.json().catch(() => null);
+        if (!iptal && d?.patient?.ad_soyad) setHastaAdi(String(d.patient.ad_soyad));
+      } catch { /* the wrong-patient guard is optional */ }
+    })();
+    return () => { iptal = true; };
+  }, [patientId]);
   const deidOnbellek = useRef<{ docId: string; o: OtomatikDeId } | null>(null);
   const deMetin = deIdMetin(process.env.NOTYA_COUNTRY);
   const [durum, setDurum] = useState<'hazir' | 'hazirlaniyor' | 'motorlar' | 'yaziyor' | 'onayliyor' | 'hata'>('hazir');
@@ -139,7 +154,7 @@ export default function BelgeAnalizPage() {
           const o = onb && onb.docId === doc.id ? onb.o : await gorseliOtomatikKimliksizlestir(blob, { modalite });
           deidOnbellek.current = { docId: doc.id, o };
           deid = o.gorsel;
-          setMaskeOnizleme({ url: o.maske.onizlemeUrl, kutu: o.maske.kutuSayisi });
+          setBulguBilgi({ bulgu: o.bulgu, ad: adKarsilastir(o.bulgu.ad, hastaAdi) });
           if (o.maske.durum !== 'maskelendi') {
             setYedekGerek(true);
             if (!kimlikYok) { setMesaj(deMetin.yedekUyari); setDurum('hazir'); return; }
@@ -160,6 +175,13 @@ export default function BelgeAnalizPage() {
       const j = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(j.error || 'Taslak üretilemedi');
       if (j.uyusmazlik) setUyusmazlik(`Asistan görüntüyü "${MODALITE_TR[j.analiz?.sonuc?.modalite as Modalite] || j.analiz?.sonuc?.modalite}" olarak gördü; siz "${MODALITE_TR[j.secilenModalite as Modalite] || j.secilenModalite}" seçtiniz. Modaliteyi kontrol edip yeniden raporlayın veya taslağı bu haliyle değerlendirin.`);
+      // NOTYA-BELGE-OTO-01: no approval step -- the evaluation goes straight into the exam note (replaces this document's own block on re-run).
+      if (j.analiz?.id && j.analiz.durum !== 'kalite_dusuk' && !j.uyusmazlik && modalite !== 'eko') {
+        const ar = await fetch('/api/doktor/belgeler/analiz/otomatik-ekle', { method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ analizIds: [j.analiz.id] }) });
+        const aj = await ar.json().catch(() => ({}));
+        const d0 = aj?.sonuclar?.[0]?.durum;
+        setOnayMesaj(!ar.ok ? 'Nota eklenemedi.' : d0 === 'not_yok' ? 'Muayene notu bulunamadı: değerlendirme Belgeler bölümünde kaldı.' : 'Değerlendirme muayene notuna eklendi (Fizik Muayene / Bulgular).');
+      }
       setDurum('hazir'); setMesaj(''); await yukle();
     } catch (e) { setDurum('hata'); setMesaj(e instanceof Error ? e.message : 'Hata'); }
   };
@@ -243,11 +265,7 @@ export default function BelgeAnalizPage() {
       setOnayMesaj(okMsg);
       setPlanAcik(false);
       await yukle();
-      if (j.noteId) {
-        router.push(`/dashboard/doktor/notlar/${j.noteId}`);
-        return;
-      }
-      setDurum('hazir');
+      setDurum('hazir'); // NOTYA-BELGE-OTO-01: never auto-open the revision page as a side effect
     } catch (e) {
       const err = e instanceof Error ? e.message : 'Onaylanamadı';
       setOnayMesaj(err);
@@ -312,12 +330,18 @@ export default function BelgeAnalizPage() {
                   <span>Tek alan fundus fotoğrafı (güven üst sınırı %70 — TR poliklinik standardı: OD ve OS ayrı yükleyin).</span>
                 </label>
               )}
-              {!pdfMi && maskeOnizleme && (
+              {!pdfMi && (
                 <div style={{ marginTop: 8, fontSize: 12, color: CHROME_RENK.muted }}>
-                  {!yedekGerek && <div style={{ color: CHROME_RENK.pine, fontWeight: 700, marginBottom: 4 }}>{deMetin.maskelendi}{maskeOnizleme.kutu > 0 ? ` (${maskeOnizleme.kutu})` : ''}</div>}
-                  <div style={{ marginBottom: 4 }}>{deMetin.onizlemeBaslik}</div>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={maskeOnizleme.url} alt="" style={{ maxWidth: 260, maxHeight: 200, borderRadius: 6, border: '1px solid rgba(0,0,0,0.12)' }} />
+                  <div>{deMetin.kopyadaGizli}</div>
+                  {bulguBilgi && (bulguBilgi.bulgu.ad || bulguBilgi.bulgu.muayeneTarihi || bulguBilgi.bulgu.dogum || bulguBilgi.bulgu.protokol) && (
+                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 4 }}>
+                      {bulguBilgi.bulgu.ad && <span style={{ border: '1px solid rgba(0,0,0,0.15)', borderRadius: 10, padding: '1px 8px' }}>{deMetin.chipAd}</span>}
+                      {bulguBilgi.bulgu.muayeneTarihi && <span style={{ border: '1px solid rgba(0,0,0,0.15)', borderRadius: 10, padding: '1px 8px' }}>{deMetin.chipMuayene(bulguBilgi.bulgu.muayeneTarihi)}</span>}
+                      {bulguBilgi.bulgu.dogum && <span style={{ border: '1px solid rgba(0,0,0,0.15)', borderRadius: 10, padding: '1px 8px' }}>{deMetin.chipDogum}</span>}
+                      {bulguBilgi.bulgu.protokol && <span style={{ border: '1px solid rgba(0,0,0,0.15)', borderRadius: 10, padding: '1px 8px' }}>{deMetin.chipProtokol}</span>}
+                    </div>
+                  )}
+                  {bulguBilgi?.ad === 'eslesmiyor' && <div style={{ color: '#a45b3e', fontWeight: 700, marginTop: 4 }}>{deMetin.adUyusmuyor}</div>}
                 </div>
               )}
               {!pdfMi && yedekGerek && (
