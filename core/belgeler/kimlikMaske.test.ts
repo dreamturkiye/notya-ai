@@ -64,3 +64,32 @@ test('confidence policy: no text on ultrasound or low confidence -> fallback; no
   // header text present but no identity label recognised on an ultrasound -> cannot be sure
   assert.equal(kimlikKutulari([satir(10, 'Siemens', 'ACUSON')], { genislik: W, yukseklik: H, modalite: 'us' }).durum, 'dusuk_guven')
 })
+
+import { adKarsilastir, kimlikBulgulari, satirlariBirlestir } from './kimlikMaske'
+
+test('noisy labels are still detected and masked ("Hasla", "Protokoi"), exam date stays visible', () => {
+  const s1 = satir(10, 'Hasla:', 'AYSE', 'DEMIR')
+  const s2 = satir(40, 'Protokoi', 'No:', 'A-12345', 'Tarih:', '20.10.2026')
+  const r = kimlikKutulari([s1, s2], { genislik: W, yukseklik: H, modalite: 'us' })
+  assert.ok(kapsar(r.kutular, s1, 1) && kapsar(r.kutular, s2, 2))
+  assert.equal(kapsar(r.kutular.filter((k) => !(k.x0 === 0 && k.x1 === W)), s2, 4), false)
+})
+
+test('findings for chips: name, exam date, DOB, protocol are read; no TC lookup in UI data', () => {
+  const b = kimlikBulgulari([satir(10, 'Hasta:', 'AYŞE', 'DEMİR', 'Doğum', 'Tarihi:', '01.02.1990'), satir(40, 'Protokol', 'No:', 'A12345', 'Muayene', 'Tarihi:', '20.10.2026')])
+  assert.equal(b.ad, 'AYŞE DEMİR'); assert.equal(b.dogum, '01.02.1990'); assert.equal(b.protokol, 'A12345'); assert.equal(b.muayeneTarihi, '20.10.2026')
+})
+
+test('wrong-patient guard: diacritic/case-insensitive, fuzzy, non-blocking verdicts', () => {
+  assert.equal(adKarsilastir('AYSE DEMIR', 'Ayşe Demir'), 'eslesir')
+  assert.equal(adKarsilastir('Ayse Demlr', 'Ayşe Demir'), 'eslesir')
+  assert.equal(adKarsilastir('MEHMET KAYA', 'Ayşe Demir'), 'eslesmiyor')
+  assert.equal(adKarsilastir(undefined, 'Ayşe Demir'), 'belirsiz')
+})
+
+test('merging OCR passes drops duplicates and keeps new words', () => {
+  const a = [satir(10, 'Hasta:', 'AYSE')], b = [satir(10, 'Hasta:', 'AYSE'), satir(60, 'Doktor:', 'TEST')]
+  const m = satirlariBirlestir(a, b)!
+  assert.equal(m.flatMap((x) => x.kelimeler).length, 4)
+  assert.equal(satirlariBirlestir(null, null), null)
+})

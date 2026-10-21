@@ -1,5 +1,9 @@
 # OPEN COMMITMENTS — Notya AI
 
+## BELGE-OTO-01 (country port) — automatic batch document workflow (Claude, 2026-10-21)
+
+Ported from main beb5761: Belgeler vault batch upload, original-image masking posture, shared note-block logic (onayla route), copy localized by build. The post-dictation Ekler step and sessions/end hook do not exist in this country tree (N/A; building it is a separate port, waits on Claude). PDFs are not auto-sent (waits on Claude).
+
 
 ## PERF-SAGLAMLIK-COUNTRY-CORRECTION-01 — correction: the app-layer gains in PERF-SAGLAMLIK-2026-10 did not reach any country build (Claude, 2026-10-17, found while verifying `COUNTRY-BUILD-ROUTING-01` above)
 
