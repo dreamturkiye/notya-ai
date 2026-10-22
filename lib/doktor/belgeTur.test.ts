@@ -143,3 +143,14 @@ describe('belgeTur', () => {
     assert.equal(ham[0]?.label, 'Değerlendir')
   })
 })
+
+it('Ultrasonografi: USG kategorisi röntgene karışmaz, doğru CTA ve etiket', async () => {
+  const m = await import('./belgeTur')
+  const usg = { fileName: 'ece_1.png', category: 'Ultrasonografi', fileType: 'image/png' }
+  assert.equal(m.belgeUsgMi(usg), true)
+  assert.equal(m.belgeRontgenMi(usg), false)
+  assert.equal(m.belgeKategoriEtiket(usg), 'Ultrasonografi')
+  assert.equal(m.belgeDegerlendirmeCtalari(usg)[0].tur, 'rontgen')
+  assert.equal(m.belgeRontgenMi({ fileName: 'akciger_grafi.png', category: 'Röntgen' }), true)
+  assert.equal(m.belgeUsgMi({ fileName: 'abdomen_usg.jpg', category: null }), true)
+})

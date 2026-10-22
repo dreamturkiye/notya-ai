@@ -143,6 +143,17 @@ function bloklariBul(metin: string): BlokAralik[] {
   return out
 }
 
+/**
+ * Revision page: blocks written to the saved note by a later upload are merged into the text the doctor is still editing
+ * (blocks whose key is already there are left alone, so the doctor's own edits to them survive).
+ */
+export function bloklariAktar(kaynak: string, hedef: string): string {
+  const var_ = new Set(bloklariBul(hedef).map((b) => b.anahtar))
+  const yeni = bloklariBul(kaynak).filter((b) => !var_.has(b.anahtar)).map((b) => kaynak.slice(b.bas, b.son).trim())
+  if (!yeni.length) return hedef
+  return `${hedef.trimEnd()}${hedef.trim() ? '\n\n' : ''}${yeni.join('\n\n')}`
+}
+
 /** Note text with every automatic block removed (used for the discrepancy check against doctor-authored text). */
 export function blokSizMetin(metin: string): string {
   const b = bloklariBul(metin)

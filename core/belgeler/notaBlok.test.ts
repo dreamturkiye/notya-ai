@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { llmBelgeBlokTemizle, afisTemizle, belgeAnahtari, blokSizMetin, bulguTemizle, celiskiler, icdKoru, notaBloklariUygula, temizBirlestir, type BlokGirdi } from './notaBlok'
+import { bloklariAktar, llmBelgeBlokTemizle, afisTemizle, belgeAnahtari, blokSizMetin, bulguTemizle, celiskiler, icdKoru, notaBloklariUygula, temizBirlestir, type BlokGirdi } from './notaBlok'
 
 const BANNER = 'Yapay zekâ taslak rapor üretir. Tanı ve tedavi kararı hekime aittir.'
 const g = (id: string, o: Partial<BlokGirdi> = {}): BlokGirdi => ({ belgeId: id, etiket: 'Ultrason', tarih: '20.10.2026', yuklemeSirasi: 0, ozet: 'Tek canlı fetüs.', bulgular: ['Fetal kalp atımı izleniyor.', 'Yolk kesesi görüldü'], ...o })
@@ -93,4 +93,14 @@ test('llmBelgeBlokTemizle: boş başlığı ve afiş cümlesini siler, gerçek m
     assert.match(t, /FHR 160\/dk/)
     assert.match(t, /Rahim normal/)
   }
+})
+
+test('bloklariAktar: yeni blok eklenir, hekimin düzenlediği mevcut blok korunur', () => {
+  const a = notaBloklariUygula('', [g('a')]).metin
+  const ab = notaBloklariUygula(a, [g('a'), g('b', { yuklemeSirasi: 1 })]).metin
+  const hekim = `${a}\n\nHekim eki.`
+  const r = bloklariAktar(ab, hekim)
+  assert.ok(r.includes('Hekim eki.'))
+  assert.ok(r.includes(belgeAnahtari('b')))
+  assert.equal(bloklariAktar(a, hekim), hekim)
 })
