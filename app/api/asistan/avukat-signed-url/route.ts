@@ -34,7 +34,7 @@ export async function GET(req: NextRequest) {
     const agentId = PERSONA_AGENTS[persona] || PERSONA_AGENTS.kemalbey
     if (!agentId) return NextResponse.json({ error: 'AVUKAT_AGENT_ID env var not set' }, { status: 500 })
 
-    const elKey = process.env.ELEVENLABS_API_KEY || process.env.NEXT_PUBLIC_ELEVENLABS_KEY
+    const elKey = process.env.ELEVENLABS_API_KEY
     if (!elKey) return NextResponse.json({ error: 'ElevenLabs key missing' }, { status: 500 })
 
     await sesMotorunuSabitle(agentId, elKey)
