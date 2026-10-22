@@ -2,7 +2,7 @@
  * Belge routing helpers — lab PDFs use NOTYA-LAB-01 (/lab);
  * röntgen / imaging use NOTYA-BELGE-01 (Asistana raporla + CXR engine).
  */
-import { EKOKARDIYOGRAFI, YENIDOGAN_TABURCULUK_EPIKRIZI } from '@/lib/doktor/belgeTurleri'
+import { EKOKARDIYOGRAFI, ULTRASONOGRAFI, YENIDOGAN_TABURCULUK_EPIKRIZI } from '@/lib/doktor/belgeTurleri'
 
 export function belgeYenidoganTaburcuEpikriziMi(doc: {
   fileName?: string | null
@@ -34,7 +34,16 @@ export function belgeEkoMi(doc: { fileName?: string | null; category?: string | 
   return /ekokardiyograf|eko\s*kardiyo|transtorasik|trans[öo]zofaj|\btte\b|\btee\b|echocardiogra|\becho\b|\beko\b/.test(y)
 }
 
+/** Kategori "Ultrasonografi" ya da dosya adında USG / ultrason / sonografi. "grafi" ile röntgene karışmaz. */
+export function belgeUsgMi(doc: { fileName?: string | null; category?: string | null }): boolean {
+  const cat = String(doc.category || '').toLocaleLowerCase('tr-TR')
+  const ad = String(doc.fileName || '').toLocaleLowerCase('tr-TR').replace(/[_./\\-]+/g, ' ')
+  if (cat === ULTRASONOGRAFI.toLocaleLowerCase('tr-TR')) return true
+  return /ultrason|ultrasound|sonograf|\busg\b/.test(`${cat} ${ad}`)
+}
+
 export function belgeRontgenMi(doc: { fileName?: string | null; category?: string | null }): boolean {
+  if (belgeUsgMi(doc)) return false
   const cat = String(doc.category || '').toLocaleLowerCase('tr-TR')
   const ad = String(doc.fileName || '').toLocaleLowerCase('tr-TR')
   return /röntgen|rontgen|x-?ray|grafi|cxr|akciğer|akciger|chest/.test(`${cat} ${ad}`)
@@ -50,7 +59,7 @@ export type BelgeDegerlendirmeCta = {
 
 /** Epikriz / reçete / konsültasyon PDF’lerine lab paneli CTA’sı sızmasın. */
 function belgeIkincilLabCtaUygunMu(doc: { fileName?: string | null; category?: string | null }): boolean {
-  if (belgeYenidoganTaburcuEpikriziMi(doc) || belgeRontgenMi(doc) || belgeEkoMi(doc)) return false
+  if (belgeYenidoganTaburcuEpikriziMi(doc) || belgeRontgenMi(doc) || belgeEkoMi(doc) || belgeUsgMi(doc)) return false
   const cat = String(doc.category || '').toLocaleLowerCase('tr-TR')
   if (/epikriz|konsültasyon|konsultasyon|reçete|recete|\bsevk\b/.test(cat)) return false
   return true
@@ -107,6 +116,9 @@ export function belgeDegerlendirmeCtalari(doc: {
   if (belgeLabMi(doc)) {
     return [lab(labYapildi)]
   }
+  if (belgeUsgMi(doc)) {
+    return [rontgen(analizYapildi)]
+  }
   if (belgeRontgenMi(doc)) {
     return [rontgen(analizYapildi)]
   }
@@ -122,6 +134,7 @@ export function belgeDegerlendirmeCtalari(doc: {
 export function belgeKategoriEtiket(doc: { fileName?: string | null; category?: string | null; fileType?: string | null }): string {
   if (belgeYenidoganTaburcuEpikriziMi(doc)) return YENIDOGAN_TABURCULUK_EPIKRIZI
   if (belgeEkoMi(doc)) return EKOKARDIYOGRAFI
+  if (belgeUsgMi(doc)) return ULTRASONOGRAFI
   if (belgeRontgenMi(doc)) return 'Röntgen'
   if (belgeLabMi(doc)) return doc.category || 'Lab Sonucu'
   return doc.category || doc.fileType || 'Belge'
