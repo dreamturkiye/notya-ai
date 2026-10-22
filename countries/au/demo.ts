@@ -21,10 +21,10 @@ export const AU_DEMO: UlkeDemosu = {
       ustBaslik: 'Book a demo',
       baslik: 'See Notya',
       baslikVurgu: 'in a live call',
-      govde: 'Dr. Gokhan Mamur walks you through a real visit on a video call — 60 minutes, at a time that works for you.',
+      govde: 'Dr. Gokhan Mamur walks you through an example visit, start to finish, on a video call — 60 minutes, at a time that works for you.',
       kartEtiketi: 'On the call',
       satirlar: [
-        { k: 'A live walkthrough', v: 'A real visit, start to finish' },
+        { k: 'A live walkthrough', v: 'An example visit, start to finish' },
         { k: '60 minutes', v: 'Times shown in your own time zone' },
         { k: 'Your own questions', v: 'Time set aside to ask them' },
       ],

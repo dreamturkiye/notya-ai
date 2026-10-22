@@ -22,7 +22,7 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import type { Uygulama } from './Kabuk'
 import { buyumeCinsiyeti, buyumeEgrileriWho, buyumeNoktalari, BUYUME_PARAMETRELERI, BUYUME_PERSENTILI_ANAHTARI, type BuyumeNoktasi, type BuyumeParametresi } from '@/lib/ulke/araclar/buyumeGrafigi'
-import type { EgriSerisi } from '@/lib/clinical/buyumeEgrisi'
+import type { EgriSerisi } from '@/lib/clinical/lmsCekirdek'
 import { ARAC_KAYDI_API, type AracKaydi } from '@/lib/ulke/araclar/kayitTipleri'
 
 export type BuyumeGrafigiMetni = {

@@ -1,6 +1,6 @@
 /**
  * AU-BETA-01 — the Australian landing's disclaimer block. The four disclaimers are the OWNER'S WORDS and are shown
- * VERBATIM (2026-10-22). Contact particulars are placeholders and are marked as such. Nothing here claims a
+ * VERBATIM (2026-10-22). The public contact block carries only the e-mail addresses: no placeholder, no ABN and no Australian address are shown (Notya has none to claim; the privacy pages say that entity details are to be published before commercial launch). Nothing here claims a
  * certification, partnership, approval or validation, and no competitor is named.
  *
  * Sentence 2 is the owner-required wording ("By using Notya you consent …"). The product does NOT rely on it: explicit
@@ -21,8 +21,7 @@ export const AU_YASAL_NOTLARI: AcilisYasalNotlari = {
   satirlar: AU_YASAL_SATIRLARI,
   taslakEtiketi: AU_TASLAK_ETIKETI,
   iletisim: [
-    'Notya (Australia) — [business address: street, suburb, state, postcode — placeholder]',
-    'ABN: [ABN — placeholder, to be completed]  ·  Email: hello@notya.io',
+    'Enquiries: hello@notya.io  ·  Privacy: privacy@notya.io',
   ],
   baglantilar: [
     { etiket: 'Privacy Policy', href: '/privacy' },

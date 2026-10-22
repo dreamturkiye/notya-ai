@@ -19,7 +19,7 @@
  * Stands beside specialties/pediatri/engines/buyume.ts → degerlendir('who', …) (the WHO branch only; the Neyzi
  * branch is Turkey-specific and has no counterpart here).
  */
-import { lmsDegerlendir } from '@/lib/clinical/buyumeEgrisi'
+import { lmsDegerlendir } from '@/lib/clinical/lmsCekirdek'
 import { WHO_LMS, WHO_UST_AY } from '@/lib/clinical/whoBuyumeLms'
 import type { AracTanimi } from '../tipler'
 import { BOS_SONUC, gunFarki, gunMu, sayi, sayiMi, secim, tarih } from '../yardimci'

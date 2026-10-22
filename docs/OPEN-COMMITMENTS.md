@@ -14,6 +14,21 @@ Order from the owner: activate the bring-your-own Stripe layer in every country 
 | BYO-PAYMENTS-01f | 2026-10-22 | OPEN | **uz: NOT enabled.** Stripe does not operate there; uz stays demo only (no `uzanti.fatura`, no migration 151 applied to the uz project). | Owner |
 | BYO-PAYMENTS-01g | 2026-10-22 | OPEN | Tyro is AU-only and inert (`NOTYA_TYRO_ETKIN` unset). Observed, out of scope: us/gb/ca/nz branches lack the migration-148 Ekler tables; three pre-existing D5 wall violations (`belgeNotaYaz.ts`, `MuayeneEkleri.tsx`, belgeler page) and, on the au base, `lib/clinical/buyumeEgrisi.ts` Turkish text, fail the walls test independent of this change. Possible follow-up: show the last 4 characters of the key. | Claude / owner |
 
+## AU-MKT-AUDIT — Australian marketing-readiness audit and fixes (Claude, 2026-10-22, `release/au`)
+
+Full findings table: `docs/au/MARKETING-AUDIT-2026-10-22.md`. Fixed in the same job: wall violations that stopped every country build (live au.notya.io was stale), Supabase advisor findings (migration 152 applied and verified on `sllwiuhobuagumwbvulf`), APP 8 / payments / TGA wording, placeholders, CSP, favicon/OG, landing counts, AUD/GST note.
+
+| ID | Date | Status | What | Owner |
+|---|---|---|---|---|
+| AU-MKT-01 | 2026-10-22 | OPEN | Confirm in the AU Vercel project: region `syd1`, `NOTYA_COUNTRY=au`, Stripe/encryption env, and that the build after this push is READY and serves `/au/billing`, `/au/privacy-requests`, `/au/data-breach`. The session could not read that project. | Kaan |
+| AU-MKT-02 | 2026-10-22 | OPEN | Supabase Auth: turn on leaked-password protection (dashboard). | Kaan |
+| AU-MKT-03 | 2026-10-22 | OPEN | Rotate the ElevenLabs key exposed as `NEXT_PUBLIC_ELEVENLABS_KEY` in Vercel project `notya-ai`; remove the NEXT_PUBLIC fallback in Turkish-tree code. | Kaan (rotate), Claude (code) |
+| AU-MKT-04 | 2026-10-22 | OPEN | Operator legal entity name, postal address and a named privacy officer for the policies (entity not yet formed); external legal review of all AU policy text; regulatory advice on whether any feature is a TGA medical device. | Kaan, then a lawyer |
+| AU-MKT-05 | 2026-10-22 | OPEN | Walk signup, practice setup, patient create, booking, consult note with Ekler, billing and portal in a browser with a test account (none was created; sign-up is invite-only). | Kaan (invite code), Claude |
+| AU-MKT-06 | 2026-10-22 | OPEN | APP 12 patient-data export (and send the response to the patient); optional IHI field; move `btree_gist` out of `public`. | Claude |
+| AU-MKT-07 | 2026-10-22 | OPEN | **Propagation of this job's shared fixes** to us, gb, ca, nz, uz: D5 wall fix (3 files), migration 152 (needs applying to each country database), CSP tightening, favicon/OG, English landing copy ("Your clinical judgement", role count). Done where noted in the final report; the rest is logged here. Per-country status: au done; others see report. | Claude |
+| AU-MKT-08 | 2026-10-22 | OPEN | Owner decision: open the site to search engines (checklist K2) and open sign-up, only after clinician and legal review. | Kaan |
+
 ## AU-BETA-01 — Australian limited-beta structure: identity fields, privacy records, BYO payments, references (Claude, 2026-10-22, `release/au` only)
 
 Built on `release/au` for a limited beta / marketing demo. **Everything below is an initial draft: "Initial compliance draft – external legal review later" and "Initial clinical draft – external clinician review later". No lawyer and no clinician has reviewed anything. Nothing claims compliance, certification, partnership or validation.** Sources and retrieval dates: `docs/au/SOURCES.md`. Breach process: `docs/au/INCIDENT-RESPONSE.md`.

@@ -120,7 +120,7 @@ describe('landing disclaimers, labels and honesty', () => {
   })
   it('the notice states overseas disclosure and names the providers the code really calls', () => {
     const metin = JSON.stringify(AU_GIZLILIK.bildirim)
-    for (const x of ['Overseas disclosure', 'Frankfurt', 'ElevenLabs', 'OpenRouter', 'Supabase', 'Vercel', 'APP 12', 'APP 13']) assert.ok(metin.includes(x), x)
+    for (const x of ['Overseas disclosure', 'Sydney', 'ElevenLabs', 'OpenRouter', 'Supabase', 'Vercel', 'APP 12', 'APP 13']) assert.ok(metin.includes(x), x)
   })
   it('explicit consent is a separate, un-ticked action with a version', () => {
     assert.match(AU_GIZLILIK.riza.kutu, /consent/)

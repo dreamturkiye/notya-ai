@@ -12,8 +12,8 @@
  * WHAT THE CODE REALLY DOES (checked in this repository on 2026-10-22; each line is a fact of the code, not a promise):
  *   - Patient records live in this country's own Supabase database. The Australian project is recorded in
  *     docs/OPEN-COMMITMENTS.md as the Sydney region (not re-verified in this session; confirm in the Supabase dashboard).
- *   - The application's server functions run on Vercel in the region set in vercel.json: `fra1` (Frankfurt, Germany).
- *     That is an overseas location for Australian data in transit and in memory while a request is handled.
+ *   - The application's server functions run on Vercel in the region set in vercel.json: `syd1` (Sydney) since AU-MKT-AUDIT 2026-10-22
+ *     (was `fra1`, Frankfurt). Requests still pass through Vercel's global network. The Supabase project region ap-southeast-2 was read via the Supabase API on 2026-10-22.
  *   - A visit recording is sent to ElevenLabs (api.elevenlabs.io, lib/ulke/uygulama/konusmaTanima.ts) for speech-to-text.
  *   - The transcript is sent to a language model through the shared gateway (lib/ai/cagir.ts), which calls
  *     OpenRouter (lib/ai/saglayici.ts) and, through it, the model provider the model policy names. The instruction
@@ -26,9 +26,9 @@
 import type { GizlilikMetni } from '@/lib/ulke/uzanti/tipler'
 
 export const AU_TASLAK_ETIKETI = 'Initial compliance draft – external legal review later.'
-export const AU_GIZLILIK_SURUMU = 'au-2026-10-22-draft-1'
-export const AU_PRIVACY_OFFICER = '[Privacy officer name and contact details — to be completed by the practice before use]'
-export const AU_OPERATOR = '[Notya operator legal name and ABN — placeholder, to be completed]'
+export const AU_GIZLILIK_SURUMU = 'au-2026-10-22-draft-2'
+export const AU_PRIVACY_OFFICER = 'Notya’s privacy contact, privacy@notya.io (a named privacy officer is to be published before commercial launch)'
+export const AU_OPERATOR = 'Notya (the operating entity’s legal name and postal address are to be published before commercial launch; they are available on request at privacy@notya.io)'
 
 export const AU_GIZLILIK: GizlilikMetni = {
   surum: AU_GIZLILIK_SURUMU,
@@ -49,7 +49,7 @@ export const AU_GIZLILIK: GizlilikMetni = {
         'Your information is not sold or used for advertising. Your practitioner may also disclose it as the law requires or as you ask (for example, a referral).',
       ] },
       { baslik: 'Overseas disclosure (APP 8)', paragraflar: [
-        'Yes, some of your information is likely to go overseas. As currently configured, the application servers that handle each request run in Frankfurt, Germany. A visit recording and its transcript may be processed by the speech and language-model providers named above in countries that are not confirmed in this draft (they include the United States). The practice’s database is intended to be in Sydney, Australia.',
+        'Yes, some of your information is likely to go overseas. As currently configured, the application servers that handle each request run in Sydney, Australia (Vercel region syd1), but requests first pass through the hosting provider’s global network and the providers are overseas-owned companies. A visit recording and its transcript may be processed by the speech and language-model providers named above in countries that are not confirmed in this draft (which may include countries in North America). The practice’s database is hosted in Sydney, Australia (Supabase region ap-southeast-2, checked 2026-10-22). Payments, if the practice connects its own Stripe account, are processed by Stripe on its hosted page. The booking calendar on the demo page is provided by Cal.com, and the pages load their fonts from Google Fonts, so a visitor’s address is seen by those services.',
         'By accepting below you acknowledge this overseas disclosure. Where you do not wish your recording or transcript to go to these providers, ask your practitioner not to record the visit.',
       ] },
       { baslik: 'How it is protected', paragraflar: ['Names, details, notes and answers are encrypted by the application before they are stored; every request is limited to the signed-in practitioner’s own patients; this page needs a link and a PIN and ends by itself. Some data, such as appointment times and invoice amounts, is not separately encrypted. No system is risk-free.'] },

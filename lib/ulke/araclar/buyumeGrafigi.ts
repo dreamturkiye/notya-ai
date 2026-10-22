@@ -10,7 +10,7 @@
  * source to drift from. International, not country-specific; this file is kit-level and may serve any pack that
  * switches `buyume-persentili` on (lib/ulke/araclar/katalog.ts already lists it as one of the kit's own).
  */
-import { lmsEgrileri, type EgriSerisi } from '@/lib/clinical/buyumeEgrisi'
+import { lmsEgrileri, type EgriSerisi } from '@/lib/clinical/lmsCekirdek'
 import { WHO_LMS, WHO_UST_AY } from '@/lib/clinical/whoBuyumeLms'
 import type { AracKaydi } from './kayitTipleri'
 import { BUYUME_PARAMETRELERI, type BuyumeParametresi } from './tanimlar/buyumePersentili'

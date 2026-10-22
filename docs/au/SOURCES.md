@@ -17,7 +17,7 @@ Sources earlier jobs cited in code comments (legislation.gov.au compilations for
 | NDB scheme | https://www.oaic.gov.au/privacy/notifiable-data-breaches and /about-the-notifiable-data-breaches-scheme | trigger "likely to result in serious harm"; notify individuals and the OAIC; OAIC online form. **Neither page stated the assessment period, so none is restated** | `/data-breach`, `INCIDENT-RESPONSE.md` |
 | PBS search pattern | https://www.pbs.gov.au/browse/medicine-listing | the page's own medicine links use `https://www.pbs.gov.au/search?term=<name>&analyse=false&search-type=medicines` | PBS lookup |
 | PBS data | https://data.pbs.gov.au/ | states no licence; embargo data needs a login. **Not used.** | — |
-| NIP schedule page | https://www.health.gov.au/topics/immunisation/when-to-get-vaccinated/national-immunisation-program-schedule | exists; its fetched text was garbled and carried only the date "1 July 2020". **No schedule content copied.** | link only |
+| NIP schedule page | https://www.health.gov.au/topics/immunisation/when-to-get-vaccinated/national-immunisation-program-schedule | exists; its fetched text was garbled and carried only the date "1 July 2020". **No schedule content copied by the reference links.** The older NIP checklist tool (`countries/au/araclar/metinler.ts`) holds schedule wording cited to NSW Health ("current as at 1 October 2026"), read 2026-10-13. | link only |
 | Australian Immunisation Handbook | https://immunisationhandbook.health.gov.au/ | ATAGI recommendations approved by NHMRC; publisher Department of Health and Aged Care; includes the National Immunisation Catch-up Calculator | link only |
 | AIR | https://www.health.gov.au/topics/immunisation/immunisation-information-for-health-professionals/using-the-australian-immunisation-register | "a national database that tracks vaccinations" | link only (no submission) |
 | RACGP Red Book | https://www.racgp.org.au/clinical-resources/clinical-guidelines/key-racgp-guidelines/view-all-racgp-guidelines/red-book | 10th edition, web document | link only |
@@ -53,10 +53,17 @@ Sources earlier jobs cited in code comments (legislation.gov.au compilations for
 ## What the code really does (checked in the repository, used for the notice and policy)
 
 - Application-level encryption AES-256-GCM: `lib/security/encryption.ts` (key from the environment; not every column is encrypted).
-- Application servers: `vercel.json` `regions: ["fra1"]` (Frankfurt). Database: the Australian Supabase project is recorded in OPEN-COMMITMENTS as Sydney — **not re-verified here**.
+- Application servers: `vercel.json` `regions: ["syd1"]` (Sydney; was `fra1` until AU-MKT-AUDIT 2026-10-22; the AU Vercel project's own dashboard setting was not readable). Database: Supabase project `sllwiuhobuagumwbvulf`, region `ap-southeast-2` (Sydney), read via the Supabase API on 2026-10-22.
 - Speech-to-text: `lib/ulke/uygulama/konusmaTanima.ts` → `https://api.elevenlabs.io/v1/speech-to-text`. Text-to-speech: `sesSentez.ts` → ElevenLabs.
 - Language model: `lib/ai/cagir.ts` → `lib/ai/saglayici.ts` → OpenRouter (`openrouter.ai/api/v1`).
 
 ## Clinical content shown by the build
 
 New in this job: **none** — no dose, threshold, growth flag or schedule number was added. The reference sections carry links and a "Source:" line. Existing tools carry their own sources in code (`kaynak`, `lisans`), many are switched off pending clinician sign-off (`countries/au/ayarlar.ts` `kapali`), and the growth-chart tool uses the WHO tables the kit already holds. Whether every number in every existing AU tool traces to a fetched source was **not re-audited** in this job; the earlier audits are `docs/araclar-denetim/AU.md` and `docs/COUNTRY-AUDIT-AUSTRALIA.md`.
+
+## AU-MKT-AUDIT (2026-10-22) — added
+
+| What | URL | Taken from it | Where used |
+|---|---|---|---|
+| TGA and AI scribes | https://www.minterellison.com/articles/tga-publishes-findings-on-ai-and-medical-devices (6 Aug 2025, a law firm's summary of the TGA report of 25 July 2025; the TGA page itself was not read) | some digital scribes may already be medical devices, especially where they suggest diagnoses or treatments; the TGA recommended a review with Ahpra and the ACSQHC | AU medical-disclaimer page (`countries/au/yasal.ts`) |
+| Supabase AU project | Supabase API `get_project`, 2026-10-22 | region `ap-southeast-2`, status ACTIVE_HEALTHY | privacy notice and policy |

@@ -6,12 +6,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { ulkeServisSupabase } from '@/lib/ulke/sunucuOturum'
 import { ulkePaketi } from '@/lib/ulke/ulke'
+import { sinirda } from '@/lib/ulke/uygulama/sinir'
 import { uuidMi } from '@/lib/ulke/uygulama/cevap'
 import { tyroWebhookIsle } from '@/lib/ulke/fatura/webhook'
 
 export const dynamic = 'force-dynamic'
 
-export async function POST(req: NextRequest) {
+export const POST = sinirda('odeme-webhook/tyro POST', async (req: NextRequest) => {
   if (!ulkePaketi().uzanti?.fatura) return NextResponse.json({ code: 'NOT_FOUND' }, { status: 404 })
   const d = new URL(req.url).searchParams.get('d')
   // No (or a malformed) doctor id names no endpoint: answered like an endpoint that does not exist, to whoever calls.
@@ -24,4 +25,4 @@ export async function POST(req: NextRequest) {
   } catch {
     return NextResponse.json({ code: 'FAILED' }, { status: 500 })
   }
-}
+})

@@ -26,6 +26,27 @@ const temel = ingilizceYasal({
 
 const INCELEME = `${AU_TASLAK_ETIKETI} A lawyer has not read this text. It does not say the service complies with the Privacy Act 1988 (Cth) or any other law.`
 
+const MEDICAL: YasalBelge = {
+  anahtar: 'medical',
+  baslik: 'Medical disclaimer',
+  inceleme: INCELEME,
+  bolumler: [
+    { baslik: 'Drafts, not a decision', paragraflar: [
+      'Notya is a practice management and clinical documentation tool. It records and organises what the practitioner says and enters, drafts a visit note for the practitioner to read, correct and approve, and keeps appointments, patient pages and invoices.',
+      'It does not provide medical advice, diagnosis or treatment, and it does not suggest a diagnosis or a treatment. Clinical decisions remain the responsibility of the registered practitioner. It is not a substitute for professional medical advice: always consult a registered Australian health practitioner for medical concerns.',
+      'If you need urgent care, call Triple Zero (000).',
+    ] },
+    { baslik: 'Therapeutic Goods Administration (TGA)', paragraflar: [
+      'Notya has not been approved, assessed or endorsed by the TGA and is not entered on the Australian Register of Therapeutic Goods. It has not been endorsed by Ahpra or any professional college.',
+      'The TGA has said that some digital scribes may be regulated as medical devices, in particular software that goes beyond administrative support and suggests diagnoses or treatments (TGA report on AI and medical devices, July 2025). Notya is intended for documentation and administration only; the intended use is described above. Whether any feature falls inside the device rules is for external regulatory advice, which has not yet been obtained.',
+    ] },
+    { baslik: 'Clinical content', paragraflar: [
+      'Where Notya shows clinical reference content, it is based on publicly available Australian guidelines and sources named on the screen (for example the RACGP Red Book, the Royal Children’s Hospital Melbourne, the Pharmaceutical Benefits Scheme, the Australian Immunisation Handbook and the WHO). It is an initial clinical draft; external clinician review is planned after the first customers. Check the source before relying on it.',
+    ] },
+    { baslik: 'For a lawyer to review', paragraflar: ['Review this draft against TGA rules on software-based medical devices and on advertising of therapeutic goods. This draft does not say the service is or is not a device.'] },
+  ],
+}
+
 const PRIVACY: YasalBelge = {
   anahtar: 'privacy',
   baslik: 'Privacy Policy',
@@ -44,12 +65,12 @@ const PRIVACY: YasalBelge = {
     { baslik: 'Why it is used (APP 6)', paragraflar: ['To provide the service to the practitioner: keep clinical records, draft notes from a recording, book and show appointments, let a patient see what the practitioner shares, prepare invoices, and keep the service secure. It is not sold and is not used for advertising.'] },
     { baslik: 'Who it goes to, including overseas (APP 6, APP 8)', paragraflar: [
       'Service providers acting for the practice: Supabase (database), Vercel (application hosting), ElevenLabs (speech-to-text for a visit recording) and OpenRouter with the language-model provider it routes to (to draft a note from the transcript).',
-      'Some of these are overseas. As currently configured, application servers run in Frankfurt, Germany; the database for this deployment is intended to be in Sydney, Australia (to be confirmed in the dashboard); and the speech and language-model providers process data in countries that this draft does not confirm (they include the United States). A lawyer should review this disclosure and the contracts with each provider.',
+      'Some of these are overseas. As currently configured, application servers are configured to run in Sydney, Australia (Vercel region syd1) but requests first pass through the host’s global network; the database is hosted in Sydney, Australia (Supabase region ap-southeast-2, checked 2026-10-22); a practice that connects its own Stripe account has payments processed by Stripe; the demo page’s booking calendar is provided by Cal.com and pages load fonts from Google Fonts; and the speech and language-model providers process data in countries that this draft does not confirm (which may include countries in North America). A lawyer should review this disclosure and the contracts with each provider.',
     ] },
     { baslik: 'Security (APP 11) — what the software does', paragraflar: [
       'Names, details, notes and answers are encrypted by the application with AES-256-GCM before they are stored. Not every field is encrypted: appointment times, invoice amounts and status, and identifiers are stored plainly.',
       'Every request is limited to the signed-in practitioner’s own patients. The patient page needs a private link and a six-digit PIN, locks after five wrong PINs, and each session ends by itself after 30 minutes. The service is served over HTTPS by its hosting platform.',
-      'Payment card details are never taken or stored by this software: a card is taken by the payment provider’s own hosted page, and in this beta payments run in a demonstration mode with no real charge.',
+      'Payment card details are never taken or stored by this software: a card is taken on the payment provider’s own hosted page, using the practice’s own merchant account that it connects to Notya (bring your own Stripe account; a test or a live connection). Notya does not hold or move your patients’ money. The connection key is stored encrypted and is never shown again.',
       'This is a description of the software, not a guarantee. No system is free of risk, and no security audit or penetration test has been done (see the Security page).',
     ] },
     { baslik: 'Keeping and deleting', paragraflar: [
@@ -73,9 +94,9 @@ const SECURITY: YasalBelge = {
       'Application-level encryption (AES-256-GCM) of patient names, details, notes and form answers before they are stored; the key is held in the deployment’s environment, not in the code.',
       'Per-practitioner scoping of every database statement; browser access to the privacy, invoice and payment-connection tables is switched off.',
       'Patient page: private link, six-digit PIN, five-try lock, 30-minute session, private no-store responses.',
-      'Payment connection keys are stored encrypted, are never shown again and are never sent to the browser. Live keys are refused in this beta.',
+      'Payment connection keys are stored encrypted, are never shown again and are never sent to the browser. Only restricted keys (not full secret keys) are accepted, in test or live mode, and a live connection needs an explicit confirmation. Webhooks from the payment provider are checked against a signature before anything is read.',
     ] },
-    { baslik: 'What has NOT been done', paragraflar: ['No independent security audit or penetration test. No claim is made of any certification. The hosting providers’ own controls are theirs and are not assessed here.'] },
+    { baslik: 'What has NOT been done', paragraflar: ['No independent security audit or penetration test. No independent assessment or accreditation is claimed. The hosting providers’ own controls are theirs and are not assessed here.'] },
     { baslik: 'How to report a problem', paragraflar: [`Write to ${E.security}. Say what you saw, the page and the time. Leave out a patient’s name and the content of a record.`, 'The same address is in /.well-known/security.txt on this deployment.'] },
   ],
 }
@@ -95,7 +116,7 @@ export const AU_YASAL: YasalKapisi = {
   diller: [{
     ...temel,
     belgeler: [
-      ...temel.belgeler.map((b) => (b.anahtar === 'privacy' ? PRIVACY : b.anahtar === 'security' ? SECURITY : b.anahtar === 'data-request' ? DATA_REQUEST : { ...b, inceleme: `${AU_TASLAK_ETIKETI} ${b.inceleme}` })),
+      ...temel.belgeler.map((b) => (b.anahtar === 'privacy' ? PRIVACY : b.anahtar === 'security' ? SECURITY : b.anahtar === 'medical' ? MEDICAL : b.anahtar === 'data-request' ? DATA_REQUEST : { ...b, inceleme: `${AU_TASLAK_ETIKETI} ${b.inceleme}` })),
     ],
   }],
 }
