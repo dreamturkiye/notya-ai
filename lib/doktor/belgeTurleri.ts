@@ -18,9 +18,13 @@ export const YENIDOGAN_TABURCULUK_EPIKRIZI = 'Yenidoğan Taburculuk Epikrizi'
  */
 export const EKOKARDIYOGRAFI = 'Ekokardiyografi' as const
 
+/** Ortak kasa türü (tüm branşlar): USG görüntü / raporu. Röntgen'den ayrı; Asistan değerlendirmesinde modalite 'us'. */
+export const ULTRASONOGRAFI = 'Ultrasonografi' as const
+
 export const ORTAK_BELGE_TURLERI = [
   'Lab Sonucu',
   'Görüntüleme Raporu',
+  ULTRASONOGRAFI,
   'EKG',
   EKOKARDIYOGRAFI,
   'Röntgen',

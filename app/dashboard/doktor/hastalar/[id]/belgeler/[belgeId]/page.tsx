@@ -20,7 +20,7 @@ import { dicomMi, dicomCoz } from '@/core/belgeler/dicom';
 import '@/core/belgeler/motorlar/txrv'; // NOTYA-BELGE-02: registers the browser CXR engine
 import { UYARI_SERIDI } from '@/core/belgeler/yazar';
 import type { BelgeRaporu, MotorCiktisi } from '@/core/belgeler/types';
-import { belgeEkoMi, belgeLabMi, belgeRontgenMi } from '@/lib/doktor/belgeTur';
+import { belgeEkoMi, belgeLabMi, belgeRontgenMi, belgeUsgMi } from '@/lib/doktor/belgeTur';
 import { hastaBelgelerHref, hastaDosyaHref } from '@/lib/doktor/geriNavigasyon';
 import type { HastaDosyaSekmeId } from '@/lib/doktor/hastaDosyaSekmeleri';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
@@ -123,6 +123,7 @@ export default function BelgeAnalizPage() {
     if (!doc) return;
     if (doc.fileType.startsWith('audio/')) { setModalite(kural.modaliteler.includes('ses_kalp') ? 'ses_kalp' : kural.modaliteler.includes('ses_akciger') ? 'ses_akciger' : 'ses_kalp'); setModaliteGuvenli(false) }
     else if (belgeEkoMi(doc) && kural.modaliteler.includes('eko')) { setModalite('eko'); setModaliteGuvenli(true) }
+    else if (belgeUsgMi(doc) && kural.modaliteler.includes('us')) { setModalite('us'); setModaliteGuvenli(true) }
     else if (belgeRontgenMi(doc) && kural.modaliteler.includes('cxr')) { setModalite('cxr'); setModaliteGuvenli(false) }
     else if (doc.fileType === 'application/pdf') { setModalite('pdf_rapor'); setModaliteGuvenli(true) } // file type alone is deterministic here
     else { setModalite(kural.modaliteler.find((m) => !m.startsWith('ses') && m !== 'pdf_rapor') || 'serbest'); setModaliteGuvenli(false) }

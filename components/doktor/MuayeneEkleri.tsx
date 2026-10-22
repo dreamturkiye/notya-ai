@@ -35,11 +35,14 @@ export default function MuayeneEkleri({
   visitId,
   kompakt = false,
   onYuklendi,
+  onNotaEklendi,
 }: {
   hastaId: string | null
   visitId: string | null
   kompakt?: boolean
   onYuklendi?: () => void
+  /** Called after the batch wrote blocks to the saved note (e.g. so the revision page can merge them). */
+  onNotaEklendi?: () => void
 }) {
   const [ekler, setEkler] = useState<Ek[]>([])
   const [mesaj, setMesaj] = useState('')
@@ -103,6 +106,7 @@ export default function MuayeneEkleri({
       if (visitId && gorseller.length) {
         const sonuc = await belgeleriOtomatikIsle(gorseller, { token, onDurum: satirGuncelle })
         const g = sonuc.genel
+        if (g.eklenen > 0) onNotaEklendi?.()
         setMesaj(`${g.eklenen}/${g.toplam} belge muayene notuna eklendi${g.atlanan ? `; ${g.atlanan} belge: ${deMetin.atlandi}` : ''}${g.hatali ? `; ${g.hatali} hata` : ''}.`)
       } else {
         setMesaj(`${yuklenen.length} belge bu muayeneye eklendi.`)
