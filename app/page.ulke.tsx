@@ -9,7 +9,9 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { UlkeAcilisSayfasi } from '@/components/ulke/acilis'
 import { acilisFormu } from '@/components/ulke/acilis/AcilisSayfasi'
-import { ACIK_ROBOTS } from '@/lib/ulke/acikIcerik'
+import { sayfaMeta } from '@/lib/ulke/seo/meta'
+import { yapisalVeri } from '@/lib/ulke/seo/yapisalVeri'
+import { JsonLd } from '@/components/ulke/JsonLd'
 import { acilis } from '@/lib/ulke/arayuz'
 import { ozellikAcik } from '@/lib/ulke/ulke'
 import { sayfaDili, type AramaParametreleri } from '@/lib/ulke/sayfaDili'
@@ -22,7 +24,7 @@ export function generateMetadata({ searchParams }: { searchParams?: AramaParamet
   const ham = searchParams?.dil
   const d = acilisFormu(icerik, sayfaDili(searchParams), (Array.isArray(ham) ? ham[0] : ham) ?? null)
   const t = icerik.icerik[d]?.meta
-  return t ? { title: t.baslik, description: t.aciklama, robots: ACIK_ROBOTS } : {}
+  return sayfaMeta('home', { baslik: t?.baslik, aciklama: t?.aciklama })
 }
 
 export default function UlkeKokSayfasi({ searchParams }: { searchParams?: AramaParametreleri }) {
@@ -30,5 +32,5 @@ export default function UlkeKokSayfasi({ searchParams }: { searchParams?: AramaP
   if (!icerik || !ozellikAcik('acilisSayfasi')) notFound()
   // Where "request a price" messages go is a setting of the deployment, never a default in code.
   const ham = searchParams?.dil
-  return <UlkeAcilisSayfasi acilis={icerik} dil={sayfaDili(searchParams)} istenenDil={(Array.isArray(ham) ? ham[0] : ham) ?? null} iletisimEposta={process.env.NOTYA_ILETISIM_EPOSTA?.trim() || null} />
+  return <><JsonLd veri={yapisalVeri()} /><UlkeAcilisSayfasi acilis={icerik} dil={sayfaDili(searchParams)} istenenDil={(Array.isArray(ham) ? ham[0] : ham) ?? null} iletisimEposta={process.env.NOTYA_ILETISIM_EPOSTA?.trim() || null} /></>
 }

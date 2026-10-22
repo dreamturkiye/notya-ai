@@ -121,7 +121,7 @@ function Kahraman({ t, gorsel, c, demo }: { t: AcilisIcerigi['kahraman']; gorsel
         </div>
 
         <figure className="order-first min-w-0 lg:order-none">
-          <img src={gorsel} alt={t.gorselAlt} className="aspect-[16/10] w-full rounded-xl object-cover object-center lg:aspect-[5/4]" />
+          <img src={gorsel} alt={t.gorselAlt} fetchPriority="high" decoding="async" className="aspect-[16/10] w-full rounded-xl object-cover object-center lg:aspect-[5/4]" />
           <figcaption className="mt-3 flex items-center justify-between gap-4 font-outfit text-xs uppercase tracking-[0.18em] text-ink-muted">
             <span>{t.gorselAlti}</span>
           </figcaption>
@@ -224,7 +224,7 @@ function Xavfsizlik({ t, gorsel, c }: { t: AcilisIcerigi['xavfsizlik']; gorsel: 
         </div>
 
         <figure>
-          <img src={gorsel} alt={t.gorselAlt} className="aspect-[4/3] w-full rounded-xl object-cover" />
+          <img src={gorsel} alt={t.gorselAlt} loading="lazy" decoding="async" className="aspect-[4/3] w-full rounded-xl object-cover" />
           <figcaption className="mt-3 font-outfit text-xs uppercase tracking-[0.18em] text-ink-muted">{t.gorselAlti}</figcaption>
         </figure>
       </div>

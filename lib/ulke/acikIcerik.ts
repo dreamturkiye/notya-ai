@@ -8,6 +8,7 @@
 import type { Metadata } from 'next'
 import type { DilKodu } from './tipler'
 import { YASAL_YOLLAR } from './yasal/tipler'
+import { AKTIF_PAKET } from '@/countries/active'
 
 export const ACIK_ICERIK_YOLLARI = [
   '/',
@@ -23,7 +24,7 @@ export function icerikHerkezeAcikMi(pathname: string): boolean {
 }
 
 /**
- * robots.txt while the rest of the build stays closed: the public pages are allowed,
+ * (Legacy) robots.txt while the rest of the build stays closed: the public pages are allowed,
  * and every other path is disallowed.
  */
 export function robotsAcikMetni(): string {
@@ -34,12 +35,15 @@ export function robotsAcikMetni(): string {
 }
 
 /** Replaces the layout's noindex on a public page. A shallow metadata merge keeps a parent googleBot unless it is set here. */
-export const ACIK_ROBOTS: Metadata['robots'] = {
+const ACIK: Metadata['robots'] = {
   index: true,
   follow: true,
   nocache: false,
   googleBot: { index: true, follow: true },
 }
+export const GIZLI_ROBOTS: Metadata['robots'] = { index: false, follow: false, nocache: true, googleBot: { index: false, follow: false } }
+/** AU-SEO-01: a public page is indexable only while the country's single indexing switch is on. */
+export const ACIK_ROBOTS: Metadata['robots'] = AKTIF_PAKET.aramaMotorlarinaGizli ? GIZLI_ROBOTS : ACIK
 
 const BETA: Partial<Record<DilKodu, string>> = {
   'en-GB': 'Beta, under review',
