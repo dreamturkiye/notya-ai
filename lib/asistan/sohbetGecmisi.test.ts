@@ -1,4 +1,4 @@
-import { describe, it } from 'node:test'
+import { describe, it, test } from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -81,4 +81,9 @@ describe('NOTYA-ASISTAN-GECMIS-01 — son 50 sıra FIFO', () => {
     // startConversation içindeki setMessages([]) kaldırıldı — geçmiş mikrofona yeniden dokununca silinmez.
     assert.doesNotMatch(ui, /setStatus\("connecting"\)\s*\n\s*setErrorMsg\(""\)\s*\n\s*setMessages\(\[\]\)/)
   })
+})
+
+test('NOTYA-SES-KULLANICI-BALON-01: kayıtlı geçmişten olay numarası geri yüklenmez', () => {
+  const g = sohbetCoz({ ses: [{ id: 'a', role: 'user', text: 'soru', sira: 1, olay: 7 }], yazili: [] })
+  assert.equal(g.ses[0].olay, undefined)
 })
