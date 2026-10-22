@@ -14,6 +14,7 @@ import { MODALITE_TR, type Modalite } from '@/core/belgeler/ontoloji';
 import { bransKurali, tierBMotorlari, SES_MODALITELERI } from '@/core/belgeler/router';
 import { gorseliOtomatikKimliksizlestir, sesiHazirla, type DeIdGorsel, type OtomatikDeId } from '@/core/belgeler/deid';
 import { deIdMetin } from '@/core/belgeler/deidMetin';
+import { aktifUlke } from '@/lib/ulke/ulke';
 import { adKarsilastir, type KimlikBulgulari } from '@/core/belgeler/kimlikMaske';
 import { tierBCalistir, tarayiciYetenek } from '@/core/belgeler/tarayiciMotor';
 import { dicomMi, dicomCoz } from '@/core/belgeler/dicom';
@@ -70,7 +71,7 @@ export default function BelgeAnalizPage() {
     return () => { iptal = true; };
   }, [patientId]);
   const deidOnbellek = useRef<{ docId: string; o: OtomatikDeId } | null>(null);
-  const deMetin = deIdMetin(process.env.NOTYA_COUNTRY);
+  const deMetin = deIdMetin(aktifUlke());
   const [durum, setDurum] = useState<'hazir' | 'hazirlaniyor' | 'motorlar' | 'yaziyor' | 'onayliyor' | 'hata'>('hazir');
   const [mesaj, setMesaj] = useState('');
   const [onayMesaj, setOnayMesaj] = useState('');
