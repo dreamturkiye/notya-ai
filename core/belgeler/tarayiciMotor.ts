@@ -25,7 +25,8 @@ export type TarayiciYetenek = { webgpu: boolean; wasm: boolean; not: string }
 export function tarayiciYetenek(): TarayiciYetenek {
   const webgpu = typeof navigator !== 'undefined' && 'gpu' in navigator
   const wasm = typeof WebAssembly !== 'undefined'
-  return { webgpu, wasm, not: webgpu ? 'WebGPU hazır — motorlar hızlı çalışır.' : wasm ? 'WebGPU yok — motorlar WASM ile daha yavaş çalışır.' : 'Bu tarayıcıda yerel motor çalışmaz; yalnız asistan değerlendirmesi.' }
+  // NOTYA-GIZLILIK-01 (Kaan, 2026-10-21): never tell the user which engine / runtime we use (competitive discretion) — `not` stays empty.
+  return { webgpu, wasm, not: '' }
 }
 
 const KAYIT: TarayiciMotor[] = [] // engine modules register themselves here when shipped

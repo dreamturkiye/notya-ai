@@ -44,7 +44,7 @@ type VaultDoc = {
 type SeansSecim = { id: string; etiket: string }
 
 export default function BelgelerPage() {
-  const [file, setFile] = useState<File | null>(null)
+  const [files, setFiles] = useState<File[]>([])
   const [hastaId, setHastaId] = useState('')
   const [seanslar, setSeanslar] = useState<SeansSecim[]>([])
   const [visitId, setVisitId] = useState('')
@@ -190,18 +190,24 @@ export default function BelgelerPage() {
     setVisitId('')
   }
 
-  const dosyaSecildi = (f: File | null) => {
+  // Kaan 2026-10-21: bir anda çok sayıda belge yüklenebilmeli (üst sınır 30; her dosya ≤ 4 MB).
+  const DOSYA_UST_SINIR = 30
+  const dosyalarSecildi = (liste: File[]) => {
     setError('')
-    if (f && f.size > VAULT_MAX_BYTES) {
-      setError('Dosya 4 MB sınırını aşıyor. Lütfen daha küçük bir PDF/JPG seçin.')
-      if (fileInputRef.current) fileInputRef.current.value = ''
-      return
-    }
-    setFile(f)
+    const buyuk = liste.filter((f) => f.size > VAULT_MAX_BYTES)
+    const uygun = liste.filter((f) => f.size <= VAULT_MAX_BYTES)
+    if (buyuk.length) setError(`${buyuk.length} dosya 4 MB sınırını aşıyor ve listeye alınmadı: ${buyuk.slice(0, 3).map((f) => f.name).join(', ')}${buyuk.length > 3 ? '…' : ''}`)
+    else if (uygun.length > DOSYA_UST_SINIR) setError(`Bir seferde en çok ${DOSYA_UST_SINIR} dosya yüklenebilir; ilk ${DOSYA_UST_SINIR} tanesi alındı.`)
+    setFiles((onceki) => {
+      const hepsi = [...onceki, ...uygun]
+      const gorulen = new Set<string>()
+      return hepsi.filter((f) => { const k = `${f.name}|${f.size}|${f.lastModified}`; if (gorulen.has(k)) return false; gorulen.add(k); return true }).slice(0, DOSYA_UST_SINIR)
+    })
+    if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
-  const dosyayiKaldir = () => {
-    setFile(null)
+  const dosyayiKaldir = (i?: number) => {
+    setFiles((l) => (i == null ? [] : l.filter((_, j) => j !== i)))
     if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
@@ -237,8 +243,8 @@ export default function BelgelerPage() {
       setError('Lütfen bir hasta seçin.')
       return
     }
-    if (!file) {
-      setError('Lütfen yüklenecek bir dosya seçin.')
+    if (!files.length) {
+      setError('Lütfen yüklenecek en az bir dosya seçin.')
       return
     }
 
@@ -246,40 +252,50 @@ export default function BelgelerPage() {
     try {
       const token = await getAccessTokenAsync()
       if (!token) throw new Error('Oturum bulunamadı. Lütfen tekrar giriş yapın.')
-      const form = new FormData()
-      form.append('file', file)
-      form.append('patientId', hastaId)
-      form.append('category', belgeType)
-      if (visitId) form.append('visitId', visitId)
-      if (notes.trim()) form.append('notes', notes.trim())
-
-      const res = await fetch('/api/doktor/documents', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-        body: form,
-      })
-      const d = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(d.error || 'Belge yüklenemedi. Lütfen tekrar deneyin.')
-      // KONSULTASYON-01: isteğe bağlı — yüklenen raporu seçili konsültasyona bağla (KANIT).
-      const bag = kons.acik && kons.id && d.document?.id ? await konsultasyonaBagla(kons, d.document.id) : null
+      const basarili: { id: string; ad: string; doc: VaultDoc | null }[] = []
+      const hatali: { ad: string; neden: string }[] = []
+      let kalan = [...files]
+      const isci = async () => {
+        for (;;) {
+          const f = kalan.shift()
+          if (!f) return
+          try {
+            const form = new FormData()
+            form.append('file', f)
+            form.append('patientId', hastaId)
+            form.append('category', belgeType)
+            if (visitId) form.append('visitId', visitId)
+            if (notes.trim()) form.append('notes', notes.trim())
+            const res = await fetch('/api/doktor/documents', { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: form })
+            const d = await res.json().catch(() => ({}))
+            if (!res.ok) { hatali.push({ ad: f.name, neden: d.error || 'yüklenemedi' }); continue }
+            basarili.push({
+              id: d.document?.id, ad: f.name,
+              doc: d.document ? { id: d.document.id, fileName: d.document.fileName, fileType: d.document.fileType, fileSize: d.document.fileSize, category: d.document.category, notes: d.document.notes, createdAt: d.document.createdAt, visitId: d.document.visitId || visitId || null } : null,
+            })
+          } catch { hatali.push({ ad: f.name, neden: 'bağlantı hatası' }) }
+        }
+      }
+      await Promise.all([isci(), isci(), isci()])
+      // KONSULTASYON-01: yalnız tek dosyada, isteğe bağlı konsültasyona bağla (KANIT).
+      let bag: Awaited<ReturnType<typeof konsultasyonaBagla>> | null = null
+      if (basarili.length === 1 && kons.acik && kons.id && basarili[0].id) bag = await konsultasyonaBagla(kons, basarili[0].id)
       if (bag?.hata) setError(`Belge kasaya eklendi ama konsültasyona bağlanamadı: ${bag.hata}`)
-      setInfo(`"${file.name}" kasaya eklendi${secili ? ` · ${secili.label}` : ''}${bag && !bag.hata ? (bag.yanitlandi ? ' · konsültasyon yanıtlandı' : ' · konsültasyona bağlandı — yanıt özetinizi hasta dosyasından yazın') : ''}.`)
-      if (bag && !bag.hata) setKons(BOS_KONSULTASYON_SECIMI)
-      dosyayiKaldir()
+      if (hatali.length) setError(`${hatali.length} dosya yüklenemedi: ${hatali.slice(0, 3).map((h) => `${h.ad} (${h.neden})`).join('; ')}${hatali.length > 3 ? '…' : ''}`)
+      if (basarili.length) {
+        setInfo(basarili.length === 1
+          ? `"${basarili[0].ad}" kasaya eklendi${secili ? ` · ${secili.label}` : ''}${bag && !bag.hata ? (bag.yanitlandi ? ' · konsültasyon yanıtlandı' : ' · konsültasyona bağlandı — yanıt özetinizi hasta dosyasından yazın') : ''}.`
+          : `${basarili.length} belge kasaya eklendi${secili ? ` · ${secili.label}` : ''}${belgeType === 'Ultrasonografi' ? ' · Belgeler sayfasından değerlendirebilir ya da muayene sonunda otomatik değerlendirtebilirsiniz' : ''}.`)
+        if (bag && !bag.hata) setKons(BOS_KONSULTASYON_SECIMI)
+      }
+      // yalnız yüklenenler listeden çıkar; hatalılar seçili kalır (yeniden denenebilir)
+      const hataAdlari = new Set(hatali.map((h) => h.ad))
+      setFiles((l) => l.filter((f) => hataAdlari.has(f.name)))
+      if (fileInputRef.current) fileInputRef.current.value = ''
       setNotes('')
       await loadDocs(hastaId)
-      if (d.document) {
-        setViewer({
-          id: d.document.id,
-          fileName: d.document.fileName,
-          fileType: d.document.fileType,
-          fileSize: d.document.fileSize,
-          category: d.document.category,
-          notes: d.document.notes,
-          createdAt: d.document.createdAt,
-          visitId: d.document.visitId || visitId || null,
-        })
-      }
+      const sonDoc = [...basarili].reverse().find((x) => x.doc)?.doc
+      if (sonDoc && basarili.length === 1) setViewer(sonDoc)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Belge yüklenemedi.')
     } finally {
@@ -439,81 +455,43 @@ export default function BelgelerPage() {
               id="belge-dosya"
               ref={fileInputRef}
               type="file"
+              multiple
               accept=".pdf,.jpg,.jpeg,.png,.webp,.heic,.heif,.mp3,.m4a,.wav,application/pdf,image/*,audio/*"
-              onChange={(e) => dosyaSecildi(e.target.files?.[0] || null)}
+              onChange={(e) => dosyalarSecildi(Array.from(e.target.files || []))}
               style={{ display: 'none' }}
             />
-            {!file ? (
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                style={{
-                  ...toolsInput,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 12,
-                  padding: '10px 12px',
-                  fontSize: 13,
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                  width: '100%',
-                  boxSizing: 'border-box',
-                }}
-              >
-                <span
-                  style={{
-                    flexShrink: 0,
-                    padding: '6px 12px',
-                    borderRadius: 8,
-                    background: 'rgba(58,44,34,0.1)',
-                    border: '1px solid rgba(58,44,34,0.18)',
-                    color: CHROME_RENK.ink,
-                    fontWeight: 600,
-                  }}
-                >
-                  Dosya Seç
-                </span>
-                <span style={{ color: CHROME_RENK.muted }}>PDF, görüntü, ses (≤4 MB)</span>
-              </button>
-            ) : (
-              <div
-                style={{
-                  ...toolsInput,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 10,
-                  padding: '10px 12px',
-                  width: '100%',
-                  boxSizing: 'border-box',
-                }}
-              >
-                <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: CHROME_RENK.ink, fontSize: 13 }}>
-                  {file.name} <span style={{ color: CHROME_RENK.muted }}>({Math.max(1, Math.round(file.size / 1024))} KB)</span>
-                </span>
-                <button
-                  type="button"
-                  aria-label="Dosyayı kaldır"
-                  onClick={dosyayiKaldir}
-                  style={{
-                    flexShrink: 0,
-                    background: '#FBEAE3',
-                    border: '1px solid rgba(164,91,62,0.4)',
-                    color: '#7A3D28',
-                    borderRadius: 8,
-                    padding: '5px 10px',
-                    fontSize: 12,
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                  }}
-                >
-                  ✕ Kaldır
-                </button>
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              style={{ ...toolsInput, display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', fontSize: 13, cursor: 'pointer', textAlign: 'left', width: '100%', boxSizing: 'border-box' }}
+            >
+              <span style={{ flexShrink: 0, padding: '6px 12px', borderRadius: 8, background: 'rgba(58,44,34,0.1)', border: '1px solid rgba(58,44,34,0.18)', color: CHROME_RENK.ink, fontWeight: 600 }}>
+                {files.length ? 'Dosya Ekle' : 'Dosya Seç'}
+              </span>
+              <span style={{ color: CHROME_RENK.muted }}>PDF, görüntü, ses — birden fazla seçebilirsiniz (her biri ≤4 MB)</span>
+            </button>
+            {files.length > 0 && (
+              <div style={{ marginTop: 8, display: 'grid', gap: 6 }}>
+                <div style={{ fontSize: 12, color: CHROME_RENK.muted }}>{files.length} dosya seçili</div>
+                {files.map((f, i) => (
+                  <div key={`${f.name}|${f.size}|${f.lastModified}`} style={{ ...toolsInput, display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', width: '100%', boxSizing: 'border-box' }}>
+                    <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: CHROME_RENK.ink, fontSize: 13 }}>
+                      {f.name} <span style={{ color: CHROME_RENK.muted }}>({Math.max(1, Math.round(f.size / 1024))} KB)</span>
+                    </span>
+                    <button type="button" aria-label={`${f.name} dosyasını kaldır`} onClick={() => dosyayiKaldir(i)} style={{ flexShrink: 0, background: '#FBEAE3', border: '1px solid rgba(164,91,62,0.4)', color: '#7A3D28', borderRadius: 8, padding: '4px 10px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                      ✕ Kaldır
+                    </button>
+                  </div>
+                ))}
+                {files.length > 1 && (
+                  <button type="button" onClick={() => dosyayiKaldir()} style={{ justifySelf: 'start', background: 'transparent', border: 'none', color: '#7A3D28', fontSize: 12, fontWeight: 700, cursor: 'pointer', padding: 0 }}>Tümünü kaldır</button>
+                )}
               </div>
             )}
           </div>
 
-          <button onClick={handleUpload} disabled={uploading || !hastaId || !file} style={toolsPrimaryBtn(uploading || !hastaId || !file)}>
-            {uploading ? 'Kasaya yükleniyor…' : 'Kasaya yükle'}
+          <button onClick={handleUpload} disabled={uploading || !hastaId || !files.length} style={toolsPrimaryBtn(uploading || !hastaId || !files.length)}>
+            {uploading ? 'Kasaya yükleniyor…' : files.length > 1 ? `${files.length} belgeyi kasaya yükle` : 'Kasaya yükle'}
           </button>
 
           {error && <div style={toolsErrorBox}>{error}</div>}
