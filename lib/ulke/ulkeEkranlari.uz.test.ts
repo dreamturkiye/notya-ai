@@ -28,7 +28,6 @@ import React from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 // NOTYA-UZ-ACILIS-02: nor is a photograph, and the shared landing components expect React in scope.
 import './testing/varlikTaklidi'
-import { robotsAcikMetni } from './acikIcerik'
 import { gorunurMetin, sizintiTara } from './testing/sizintiTarayici'
 import { davetKoduHash } from './davet'
 import type { DilKodu } from './tipler'
@@ -447,7 +446,8 @@ describe('an Uzbekistan build: routes', () => {
     for (const yol of ['/', '/?dil=ru', '/privacy', '/medical', '/for-clinics']) {
       const r = git(yol)
       assert.equal(r.status, 200, yol)
-      assert.equal(r.headers.get('x-robots-tag'), null, yol)
+      // AU-SEO-01: while the country's switch is off even the public pages say noindex.
+      assert.match(r.headers.get('x-robots-tag') || '', /noindex/, yol)
       assert.equal(r.headers.get('x-frame-options'), 'DENY', yol)
     }
     for (const yol of ['/login', '/signup', '/welcome', '/start', '/today', '/settings', '/patients', '/patients?q=karim', '/patients/new', '/patient?id=x', '/visit', '/visit?hasta=x', '/visit?seans=x', '/visit?not=x', '/api/ulke/hesap', '/api/ulke/kayit', '/api/ulke/tercihler', '/api/ulke/bugun', '/api/ulke/hastalar?q=a', '/api/ulke/hasta?id=x', '/api/ulke/muayene', '/api/ulke/muayene?id=x', '/api/ulke/not?id=x', '/api/ulke/not/yeniden-yaz', '/api/ulke/not/onayla', '/_next/static/chunks/x.js']) {
@@ -456,7 +456,7 @@ describe('an Uzbekistan build: routes', () => {
       assert.match(r.headers.get('x-robots-tag') || '', /noindex, nofollow/, yol)
       assert.equal(r.headers.get('x-frame-options'), 'DENY', yol)
     }
-    const kapali = ['/doktor', '/klinik', '/home', '/kvkk', '/giris', '/giris/doktor', '/kayit', '/onboarding', '/dashboard', '/dashboard/doktor', '/dashboard/klinik', '/asistan', '/doktor-tools', '/doktor-tools/erecete', '/doktor-tools/enabiz', '/klinik-tools', '/portal/demo', '/intake/x', '/install', '/session/new', '/login/x', '/welcome/x', '/patient/x', '/patients/x', '/visit/x', '/visits', '/note', '/dashboard/doktor/hastalar', '/api/doktor/hastalar/x', '/api', '/api/users/me', '/api/users/profile', '/api/doktor/hastalar', '/api/notes', '/api/sessions/start', '/api/sessions/ses-yukle', '/api/cron/kvkk-imha', '/api/billing/webhook', '/api/ulkeler', '/manifest.json', '/sw.js', '/sitemap.xml', '/dahiliye-final-audit.html', '/sagligim/a.png', '/icon-192.png']
+    const kapali = ['/doktor', '/klinik', '/home', '/kvkk', '/giris', '/giris/doktor', '/kayit', '/onboarding', '/dashboard', '/dashboard/doktor', '/dashboard/klinik', '/asistan', '/doktor-tools', '/doktor-tools/erecete', '/doktor-tools/enabiz', '/klinik-tools', '/portal/demo', '/intake/x', '/install', '/session/new', '/login/x', '/welcome/x', '/patient/x', '/patients/x', '/visit/x', '/visits', '/note', '/dashboard/doktor/hastalar', '/api/doktor/hastalar/x', '/api', '/api/users/me', '/api/users/profile', '/api/doktor/hastalar', '/api/notes', '/api/sessions/start', '/api/sessions/ses-yukle', '/api/cron/kvkk-imha', '/api/billing/webhook', '/api/ulkeler', '/manifest.json', '/sw.js', '/dahiliye-final-audit.html', '/sagligim/a.png', '/icon-192.png']
     for (const yol of kapali) {
       const r = git(yol)
       assert.equal(r.status, 404, yol)
@@ -477,7 +477,7 @@ describe('an Uzbekistan build: routes', () => {
 
   it('robots.txt disallows everything and API refusals carry a code, not a sentence', async () => {
     const git = (yol: string) => ara.middleware(new NextRequest(`https://uz.notya.test${yol}`))
-    assert.equal(await git('/robots.txt').text(), robotsAcikMetni())
+    assert.equal(git('/robots.txt').status, 200, 'AU-SEO-01: robots.txt is a route handler that follows the indexing switch (lib/ulke/seo)')
     assert.deepEqual(await git('/api/users/me').json(), { code: 'NOT_FOUND' })
     const yok = await git('/dashboard/doktor')
     assert.equal(yok.status, 404)
