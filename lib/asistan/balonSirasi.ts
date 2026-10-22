@@ -12,7 +12,20 @@
  * user line is treated as an orphan reply and the question slots in front of it.
  */
 
-export type Balon = { role: 'user' | 'ai'; text: string; olay?: number }
+export type Balon = { role: 'user' | 'ai'; text: string; olay?: number; kaynak?: 'ekran' }
+
+/**
+ * NOTYA-SES-SIRA-03 (Kaan live, 2026-10-22): a poll reply (kaynak 'ekran', no event id) can land before the doctor's
+ * transcript on any turn. In the trailing run of AI bubbles the first one answers the user line in front of it; a poll
+ * reply after that one has no doctor line yet, so a new transcript goes in front of it. The greeting is never moved.
+ */
+export function ekranYetimYeri<T extends Balon>(prev: T[]): number | null {
+  let bas = prev.length
+  while (bas > 0 && prev[bas - 1].role === 'ai') bas--
+  if (bas === prev.length || bas === 0) return null
+  for (let i = bas + 1; i < prev.length; i++) if (prev[i].kaynak === 'ekran') return i
+  return null
+}
 
 function olayYeri<T extends Balon>(prev: T[], olay: number | undefined): number {
   if (olay == null) return prev.length
@@ -118,7 +131,7 @@ export function kullaniciEkle<T extends Balon>(
   let at = olayYeri(prev, olay)
   // NOTYA-SES-SIRA-02: no usable event order (poll AI has no olay) → still put the question before the orphan reply.
   if (at >= prev.length) {
-    const yetim = yetimCevapYeri(prev)
+    const yetim = yetimCevapYeri(prev) ?? ekranYetimYeri(prev)
     if (yetim != null) at = yetim
   }
   return [...prev.slice(0, at), msg, ...prev.slice(at)]
@@ -134,6 +147,8 @@ export function cevapEkle<T extends Balon>(
   soru: string | null,
   cevap: string,
   ekle: (role: 'user' | 'ai', text: string) => T,
+  /** The real doctor sentence this reply answers (tags the bubble as a poll reply for ordering); null for pause / hidden turns. */
+  cevaplanan: string | null = null,
 ): T[] {
   const c = String(cevap || '').trim()
   if (!c) return prev
@@ -161,7 +176,7 @@ export function cevapEkle<T extends Balon>(
     // NOTYA-BUYUME-KISA-01 / multi-reply: aynı klinik cevabın 2.–3. modeli (araya kullanıcı
     // satırı girse bile) yeni balon açmasın — son birkaç AI'ya bak.
     const sonAilar = next.filter((m) => m.role === 'ai').slice(-4)
-    if (!sonAilar.some((m) => benzerCevapMi(m.text, c))) next.push(ekle('ai', c))
+    if (!sonAilar.some((m) => benzerCevapMi(m.text, c))) next.push(String(cevaplanan || '').trim() ? { ...ekle('ai', c), kaynak: 'ekran' as const } : ekle('ai', c))
   }
   return next
 }
