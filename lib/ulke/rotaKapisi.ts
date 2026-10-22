@@ -10,7 +10,12 @@
 import type { RotaIzni } from './tipler'
 
 /** Framework internals every deployment needs (chunks, HMR, image optimiser). Never application content. */
-const CATI_ON_EKLERI = ['/_next/'] as const
+/**
+ * `/tesseract/` and `/pdfjs/` are the same-origin files of the on-device engines of the "add documents" step
+ * (identity masking, PDF page rendering): static code and language data, no application content. Without them the
+ * middleware answered 404 for every engine file and no document could ever be masked.
+ */
+const CATI_ON_EKLERI = ['/_next/', '/tesseract/', '/pdfjs/'] as const
 
 function duzYol(pathname: string): string {
   const y = pathname.split('?')[0].split('#')[0]
