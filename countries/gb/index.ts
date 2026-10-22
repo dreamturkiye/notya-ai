@@ -15,6 +15,7 @@ import { enKlinikHesaplari } from '../_dil/en/klinikHesaplari'
 import { enRolAnahtarlari } from '../_dil/en/klinik/roller'
 import { enMesajAyarlari } from '../_dil/en/mesaj'
 import { GB_RESMI_GUNLER } from './resmiGunler'
+import { GB_UZANTI } from './uzanti'
 import { GB_BIRIMLER, GB_KIMLIK_ETIKETI, GB_VELI_YASI } from './temel'
 import { GB_ROLLER } from './roller'
 
@@ -68,13 +69,15 @@ export const GB_PAKETI: UlkePaketi = {
     klinikHesaplari: true,
   },
   araclar: [],
+  // BYO-PAYMENTS-01 (2026-10-22): invoices and the bring-your-own Stripe connection (test and live). All words: ./uzanti/. Initial draft – external review later.
+  uzanti: GB_UZANTI,
   // The ONLY paths that exist in this country's deployment; every other path answers 404 in the middleware.
   rotalar: {
     // NOTYA-SIFRE-SIFIRLA-ULKE-01 (Kaan, 2026-10-20): '/password-reset' was missing here — the page file
     // (app/password-reset/page.ulke.tsx) existed and built fine, but this allow-list is the second 404 gate
     // (lib/ulke/rotaKapisi.ts) and it answered "Page not found" for any path it does not list, login included
     // once, before this fix. Keep it next to '/login' so the two stay paired.
-    sayfalar: ['/', '/for-clinics', '/login', '/password-reset', '/signup', '/welcome', '/start', '/today', '/settings', '/patients', '/patients/new', '/patient', '/visit', '/calendar', '/portal', '/tools', '/medical', '/clinic', '/desk', '/privacy', '/terms', '/cookies', '/data-request', '/accessibility', '/medical-disclaimer', '/security', '/refund', '/copyright', '/demo'],    apiOnEkleri: ['/api/ulke/'],
+    sayfalar: ['/', '/for-clinics', '/login', '/password-reset', '/signup', '/welcome', '/start', '/today', '/settings', '/patients', '/patients/new', '/patient', '/visit', '/calendar', '/portal', '/tools', '/medical', '/clinic', '/desk', '/privacy', '/terms', '/cookies', '/data-request', '/accessibility', '/medical-disclaimer', '/security', '/refund', '/copyright', '/demo', '/billing'],    apiOnEkleri: ['/api/ulke/'],
   },
   // The country's code is `gb`; the path it is served under is /uk.
   yolOnEki: '/uk',
