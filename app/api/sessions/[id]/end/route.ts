@@ -265,6 +265,16 @@ SADECE geçerli JSON döndür, başka hiçbir şey yazma:
       const { muayeneAsilariniHazirla } = await import('@/lib/doktor/notAsiAktarim')
       notAsilari = await muayeneAsilariniHazirla(getSupabase(), { doktorId: user.id, patientId: hastaId, transcript, ham: noteData?.asilar, ziyaretIso: gecmisTarihIso })
     } catch (e) { console.error('[asi-not] sessions/end', e) }
+    try {
+      if (noteData?.soap) {
+        const { llmBelgeBlokTemizle } = await import('@/core/belgeler/notaBlok')
+        for (const alan of ['subjektif', 'objektif', 'degerlendirme', 'plan'] as const) {
+          const v = noteData.soap[alan]
+          if (typeof v === 'string' && v) noteData.soap[alan] = llmBelgeBlokTemizle(v)
+        }
+        if (typeof noteData.aiDegerlendirme === 'string') noteData.aiDegerlendirme = llmBelgeBlokTemizle(noteData.aiDegerlendirme)
+      }
+    } catch { console.error('[belge-oto] llm blok temizligi atlandi') }
     // Çek listesi yalnız notun kendisine bakar (sayfada yeniden hesaplandığında aynı sonucu versin); LLM bloğu yazamaz.
     const { satirlar: cekListeDogrulama, metin: cekMetin } = cekListeHesapla(cekVeri, cekNotMetni({
       basvuruYakinmasi: noteData?.basvuruYakinmasi, subjektif: noteData?.soap?.subjektif, objektif: noteData?.soap?.objektif,
