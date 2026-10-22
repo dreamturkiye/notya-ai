@@ -27,8 +27,8 @@ import type { GizlilikMetni } from '@/lib/ulke/uzanti/tipler'
 
 export const AU_TASLAK_ETIKETI = 'Initial compliance draft – external legal review later.'
 export const AU_GIZLILIK_SURUMU = 'au-2026-10-22-draft-2'
-export const AU_PRIVACY_OFFICER = 'Notya’s privacy contact, privacy@notya.io (a named privacy officer is to be published before commercial launch)'
-export const AU_OPERATOR = 'Notya (the operating entity’s legal name and postal address are to be published before commercial launch; they are available on request at privacy@notya.io)'
+export const AU_PRIVACY_OFFICER = 'Notya LLC privacy contact, kaan@notya.io (an individually named privacy officer is to be published before commercial launch)'
+export const AU_OPERATOR = 'Notya LLC, a United States company (3424 Sollers Point Rd., Baltimore, MD 21222, USA)'
 
 export const AU_GIZLILIK: GizlilikMetni = {
   surum: AU_GIZLILIK_SURUMU,

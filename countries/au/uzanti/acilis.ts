@@ -21,7 +21,7 @@ export const AU_YASAL_NOTLARI: AcilisYasalNotlari = {
   satirlar: AU_YASAL_SATIRLARI,
   taslakEtiketi: AU_TASLAK_ETIKETI,
   iletisim: [
-    'Enquiries: hello@notya.io  ·  Privacy: privacy@notya.io',
+    'Notya LLC, 3424 Sollers Point Rd., Baltimore, MD 21222, USA  ·  Enquiries and privacy: kaan@notya.io',
   ],
   baglantilar: [
     { etiket: 'Privacy Policy', href: '/privacy' },
