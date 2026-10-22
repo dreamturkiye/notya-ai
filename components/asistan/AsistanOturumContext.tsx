@@ -651,7 +651,7 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
             // NOTYA-SES-ESKI-01: before the Fish work the poll wrote only the answer; the doctor line came from ElevenLabs alone. A second source made double bubbles.
             const soru = fishAcikRef.current && hamSoru && hamSoru !== DEVAM_ISARETI && !kendiSelamiMi(hamSoru) ? hamSoru : null
             const cevaplanan = hamSoru && hamSoru !== DEVAM_ISARETI && !kendiSelamiMi(hamSoru) && !kesintiMesajiMi(hamSoru) && !sesGurultusuMu(hamSoru) ? hamSoru : null
-            next = cevapEkle(next, soru, tur.metin, yeniBalon, cevaplanan)
+            next = cevapEkle(next, soru, tur.metin, yeniBalon, cevaplanan, !hamSoru)
           }
           messagesRef.current = next
           return next
