@@ -144,6 +144,27 @@ export type FaturaMetni = {
   baglantiAnahtar: string
   baglantiKaydet: string
   baglantiCanli: string
+  /** Shown when payments really run on the doctor's own connected account. */
+  canliNotu: string
+  /** Tyro saved but not active (needs Tyro onboarding). */
+  tyroBekliyor: string
+  izinler: string
+  webhookEtiket: string
+  webhookUrlEtiket: string
+  webhookYok: string
+  tyroIstemci: string
+  tyroGizli: string
+  tyroKonum: string
+  anahtarReddedildi: string
+  izinYok: string
+  odemeYonlendiriliyor: string
+  onayBekliyor: string
+  uzlasmaDemoEtiketi: string
+  uzlasmaGercekNotu: string
+  uzlasmaAralik: string
+  aralik7: string
+  aralik30: string
+  aralik90: string
   iadeTam: string
   iadeKismi: string
   iadeTutar: string
@@ -151,7 +172,7 @@ export type FaturaMetni = {
   uzlasmaNotu: string
   uzlasmaCalistir: string
   csv: string
-  uzlasmaSonuclari: Readonly<Record<'eslesti' | 'uyusmadi' | 'saglayicida_yok' | 'odenmedi', string>>
+  uzlasmaSonuclari: Readonly<Record<'eslesti' | 'uyusmadi' | 'saglayicida_yok' | 'odenmedi' | 'notya_yok' | 'iade_edildi', string>>
 }
 export type FaturaTanimi = {
   /** "GST" */

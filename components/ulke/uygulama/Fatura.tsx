@@ -19,9 +19,9 @@ import { tarihYaz } from './Kabuk'
 
 type Kalem = { aciklama: string; kalemNo: string; tutar: string; muaf: boolean }
 type Fatura = { id: string; no: number; hastaId: string; hastaAdi: string; kalemler: { aciklama: string; kalemNo: string; tutarKurus: number; muaf: boolean }[]; satici: Record<string, string>; tarih: string
-  altToplamKurus: number; vergiKurus: number; toplamKurus: number; iadeKurus: number; paraKodu: string; durum: 'taslak' | 'odendi' | 'iptal'; odemeRef: string | null }
+  altToplamKurus: number; vergiKurus: number; toplamKurus: number; iadeKurus: number; paraKodu: string; durum: 'taslak' | 'odendi' | 'iptal'; odemeRef: string | null; saglayici: string | null }
 type Hasta = { id: string; ad: string }
-type Baglanti = { saglayici: 'stripe' | 'tyro'; mod: 'test'; sonDort: string } | null
+type Baglanti = { saglayici: 'stripe' | 'tyro'; mod: 'test'; sonDort: string; webhookKurulu: boolean; etkin: boolean } | null
 
 export default function FaturaEkrani() {
   const u = useUygulama('fatura')
@@ -34,13 +34,18 @@ export default function FaturaEkrani() {
   const [hata, setHata] = useState<string | null>(null)
   const [bilgi, setBilgi] = useState<string | null>(null)
   const [bekliyor, setBekliyor] = useState(false)
-  const [uzlasma, setUzlasma] = useState<{ satirlar: UzlasmaSatiri[]; gercek: boolean } | null>(null)
+  const [uzlasma, setUzlasma] = useState<{ satirlar: UzlasmaSatiri[]; gercek: boolean; not?: string } | null>(null)
+  const [webhookGizli, setWebhookGizli] = useState('')
+  const [webhookUrl, setWebhookUrl] = useState<string | null>(null)
+  const [tyroId, setTyroId] = useState(''); const [tyroGizli, setTyroGizli] = useState(''); const [tyroKonum, setTyroKonum] = useState('')
+  const [gun, setGun] = useState(30)
   const [anahtar, setAnahtar] = useState('')
   const [saglayici, setSaglayici] = useState<'stripe' | 'tyro'>('stripe')
   const { api, hesap } = u
 
   const yukle = useCallback(async () => {
-    const [f, h] = await Promise.all([api('/api/ulke/fatura'), api('/api/ulke/hastalar')])
+    const [f, h, b] = await Promise.all([api('/api/ulke/fatura'), api('/api/ulke/hastalar'), api('/api/ulke/odeme-baglantisi')])
+    if (b.ok) setWebhookUrl((b.j.webhookUrl as string | null) ?? null)
     if (f.ok) { setFaturalar(f.j.faturalar as Fatura[]); setBaglanti((f.j.baglanti as Baglanti) ?? null) } else setFaturalar([])
     if (h.ok && Array.isArray(h.j.hastalar)) setHastalar((h.j.hastalar as { id: string; ad: string }[]).map((x) => ({ id: x.id, ad: x.ad })))
   }, [api])
@@ -67,24 +72,29 @@ export default function FaturaEkrani() {
     setHata(null); setBilgi(null); setBekliyor(true)
     const r = await api('/api/ulke/fatura', { method: 'PATCH', govde: { id, ...govde } })
     setBekliyor(false)
-    if (!r.ok) setHata(x.hata); else { setBilgi(govde.eylem === 'ode' ? x.odendi : x.durumlar.odendi); await yukle() }
+    if (!r.ok) { setHata(x.hata); return }
+    if (govde.eylem === 'ode' && typeof r.j.url === 'string' && /^https:\/\//.test(r.j.url)) { setBilgi(x.odemeYonlendiriliyor); window.location.assign(r.j.url); return }
+    setBilgi(govde.eylem === 'ode' ? (r.j.bekliyor ? x.onayBekliyor : x.odendi) : x.durumlar.odendi); await yukle()
   }
   async function uzlastir() {
-    const r = await api('/api/ulke/fatura/uzlasma')
-    if (r.ok) setUzlasma({ satirlar: r.j.satirlar as UzlasmaSatiri[], gercek: Boolean(r.j.gercek) }); else setHata(x.hata)
+    const bit = new Date(); const bas = new Date(bit.getTime() - gun * 86_400_000)
+    const gunYaz = (d: Date) => d.toISOString().slice(0, 10)
+    const r = await api(`/api/ulke/fatura/uzlasma?from=${gunYaz(bas)}&to=${gunYaz(bit)}`)
+    if (r.ok) setUzlasma({ satirlar: r.j.satirlar as UzlasmaSatiri[], gercek: Boolean(r.j.gercek), not: typeof r.j.not === 'string' ? r.j.not : undefined }); else setHata(x.hata)
   }
   function csvIndir() {
     if (!uzlasma) return
-    const blob = new Blob([uzlasmaCsv(uzlasma.satirlar)], { type: 'text/csv;charset=utf-8' })
+    const blob = new Blob([uzlasmaCsv(uzlasma.satirlar, uzlasma.gercek)], { type: 'text/csv;charset=utf-8' })
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'reconciliation.csv'; a.click(); URL.revokeObjectURL(a.href)
   }
   async function baglantiKaydet() {
     setHata(null); setBekliyor(true)
-    const r = await api('/api/ulke/odeme-baglantisi', { method: 'POST', govde: { saglayici, anahtar } })
-    setBekliyor(false); setAnahtar('')
-    if (r.ok) { setBaglanti(r.j.baglanti as Baglanti); setBilgi(x.testNotu) } else setHata(r.j.code === 'CANLI_MOD' ? x.baglantiCanli : x.hata)
+    const r = await api('/api/ulke/odeme-baglantisi', { method: 'POST', govde: saglayici === 'stripe' ? { saglayici, anahtar, webhookGizli } : { saglayici, istemciId: tyroId, istemciGizli: tyroGizli, konumId: tyroKonum, webhookGizli } })
+    setBekliyor(false); setAnahtar(''); setWebhookGizli(''); setTyroGizli('')
+    if (r.ok) { setBaglanti(r.j.baglanti as Baglanti); setWebhookUrl((r.j.webhookUrl as string | null) ?? null); setBilgi(x.testNotu) }
+    else setHata(r.j.code === 'CANLI_MOD' ? x.baglantiCanli : r.j.code === 'ANAHTAR_REDDEDILDI' ? x.anahtarReddedildi : r.j.code === 'IZIN_YOK' ? x.izinYok : x.hata)
   }
-  async function baglantiSil() { await api('/api/ulke/odeme-baglantisi', { method: 'DELETE' }); setBaglanti(null) }
+  async function baglantiSil() { await api('/api/ulke/odeme-baglantisi', { method: 'DELETE' }); setBaglanti(null); setWebhookUrl(null) }
 
   return (
     <Cerceve dil={u.dil} m={u.m} ad={u.hesap.ad} unvan={rolAdi(u.hesap.rol, u.dil) ?? undefined} aktif="fatura" cikis={u.cikis}>
@@ -97,14 +107,32 @@ export default function FaturaEkrani() {
         <h2 className="uza-h2">{x.baglantiBaslik}</h2>
         <p className="uza-not-metin">{x.baglantiAciklama}</p>
         {baglanti ? (
-          <p className="uza-not-metin" data-alan="baglanti-durumu">{x.baglantiVar.replace('%1', baglanti.saglayici).replace('%2', baglanti.sonDort)} <button type="button" className="uza-dugme uza-dugme-cizgi uza-dugme-kucuk" onClick={baglantiSil}>{x.baglantiSil}</button></p>
+          <>
+            <p className="uza-not-metin" data-alan="baglanti-durumu">{x.baglantiVar.replace('%1', baglanti.saglayici).replace('%2', baglanti.sonDort)} <button type="button" className="uza-dugme uza-dugme-cizgi uza-dugme-kucuk" onClick={baglantiSil}>{x.baglantiSil}</button></p>
+            <div role="note" className="uza-bilgi-kutu" data-alan="baglanti-etkin">{baglanti.etkin ? x.canliNotu : x.tyroBekliyor}</div>
+            {webhookUrl ? <p className="uza-ipucu" data-alan="webhook-url">{x.webhookUrlEtiket} <code>{webhookUrl}</code></p> : null}
+            {!baglanti.webhookKurulu ? <p className="uza-ipucu" data-alan="webhook-yok">{x.webhookYok}</p> : null}
+          </>
         ) : (
           <form className="uza-form" onSubmit={(e) => { e.preventDefault(); void baglantiKaydet() }}>
             <div className="uza-alan"><label className="uza-etiket" htmlFor="uza-sag">{x.baglantiSaglayici}</label>
               <select id="uza-sag" className="uza-girdi" value={saglayici} onChange={(e) => setSaglayici(e.target.value as 'stripe' | 'tyro')}><option value="stripe">Stripe</option><option value="tyro">Tyro (needs Tyro partner onboarding)</option></select></div>
-            <div className="uza-alan"><label className="uza-etiket" htmlFor="uza-anahtar">{x.baglantiAnahtar}</label>
-              <input id="uza-anahtar" className="uza-girdi" type="password" autoComplete="off" value={anahtar} onChange={(e) => setAnahtar(e.target.value)} maxLength={300} /></div>
-            <button type="submit" className="uza-dugme" disabled={bekliyor || !anahtar.trim()}>{x.baglantiKaydet}</button>
+            {saglayici === 'stripe' ? (
+              <>
+                <p className="uza-ipucu">{x.izinler}</p>
+                <div className="uza-alan"><label className="uza-etiket" htmlFor="uza-anahtar">{x.baglantiAnahtar}</label>
+                  <input id="uza-anahtar" className="uza-girdi" type="password" autoComplete="off" value={anahtar} onChange={(e) => setAnahtar(e.target.value)} maxLength={300} /></div>
+              </>
+            ) : (
+              <>
+                <div className="uza-alan"><label className="uza-etiket" htmlFor="uza-ty1">{x.tyroIstemci}</label><input id="uza-ty1" className="uza-girdi" autoComplete="off" value={tyroId} onChange={(e) => setTyroId(e.target.value)} maxLength={300} /></div>
+                <div className="uza-alan"><label className="uza-etiket" htmlFor="uza-ty2">{x.tyroGizli}</label><input id="uza-ty2" className="uza-girdi" type="password" autoComplete="off" value={tyroGizli} onChange={(e) => setTyroGizli(e.target.value)} maxLength={300} /></div>
+                <div className="uza-alan"><label className="uza-etiket" htmlFor="uza-ty3">{x.tyroKonum}</label><input id="uza-ty3" className="uza-girdi" autoComplete="off" value={tyroKonum} onChange={(e) => setTyroKonum(e.target.value)} maxLength={300} /></div>
+              </>
+            )}
+            <div className="uza-alan"><label className="uza-etiket" htmlFor="uza-whs">{x.webhookEtiket}</label>
+              <input id="uza-whs" className="uza-girdi" type="password" autoComplete="off" value={webhookGizli} onChange={(e) => setWebhookGizli(e.target.value)} maxLength={300} /></div>
+            <button type="submit" className="uza-dugme" disabled={bekliyor || (saglayici === 'stripe' ? !anahtar.trim() : !(tyroId.trim() && tyroGizli.trim() && tyroKonum.trim()))}>{x.baglantiKaydet}</button>
           </form>
         )}
       </section>
@@ -141,6 +169,7 @@ export default function FaturaEkrani() {
                     <span className="uza-liste-alt">{(f.satici[t.saticiAdAlani] ?? '')} {sKimlik ? `· ${x.saticiKimlik}: ${sKimlik}` : `· ${x.saticiEksik}`}</span>
                     {f.kalemler.map((k, i) => <span key={i} className="uza-liste-alt">{k.aciklama}{k.kalemNo ? ` (${k.kalemNo})` : ''} — {para(k.tutarKurus, f.paraKodu)} {k.muaf ? `(${t.vergiAdi}-free)` : `(+${t.vergiAdi})`}</span>)}
                   </span>
+                  {f.durum === 'taslak' && f.saglayici ? <span className="uza-liste-alt" data-alan="fatura-bekliyor">{x.onayBekliyor}</span> : null}
                   {f.durum === 'taslak' ? <button type="button" className="uza-dugme uza-dugme-kucuk" disabled={bekliyor} onClick={() => void eylem(f.id, { eylem: 'ode' })} data-eylem="fatura-ode">{x.ode}</button> : null}
                   {f.durum === 'odendi' && f.iadeKurus < f.toplamKurus ? (
                     <>
@@ -157,12 +186,16 @@ export default function FaturaEkrani() {
 
       <section className="uza-kart" data-alan="fatura-uzlasma">
         <h2 className="uza-h2">{x.uzlasmaBaslik}</h2>
-        <p className="uza-ipucu">{x.uzlasmaNotu}</p>
+        <p className="uza-ipucu">{baglanti?.etkin ? x.uzlasmaGercekNotu : x.uzlasmaNotu}</p>
+        <div className="uza-alan"><label className="uza-etiket" htmlFor="uza-aralik">{x.uzlasmaAralik}</label>
+          <select id="uza-aralik" className="uza-girdi" value={gun} onChange={(e) => setGun(Number(e.target.value))}><option value={7}>{x.aralik7}</option><option value={30}>{x.aralik30}</option><option value={90}>{x.aralik90}</option></select></div>
         <div className="uza-eylemler">
           <button type="button" className="uza-dugme uza-dugme-cizgi" onClick={() => void uzlastir()}>{x.uzlasmaCalistir}</button>
           {uzlasma ? <button type="button" className="uza-dugme uza-dugme-cizgi" onClick={csvIndir}>{x.csv}</button> : null}
         </div>
-        {uzlasma ? <ul className="uza-liste">{uzlasma.satirlar.map((s) => <li key={s.faturaId}><div className="uza-satir"><span className="uza-liste-ad">#{s.no} · {para(s.faturaToplamKurus)}<span className="uza-liste-alt">{x.uzlasmaSonuclari[s.sonuc]}</span></span></div></li>)}</ul> : null}
+        {uzlasma && !uzlasma.gercek ? <div role="note" className="uza-bilgi-kutu" data-alan="uzlasma-demo">{x.uzlasmaDemoEtiketi}</div> : null}
+        {uzlasma?.not ? <p className="uza-ipucu">{uzlasma.not}</p> : null}
+        {uzlasma ? <ul className="uza-liste">{uzlasma.satirlar.map((s) => <li key={s.faturaId || s.ref}><div className="uza-satir"><span className="uza-liste-ad">{s.no ? `#${s.no}` : s.ref} · {para(s.faturaToplamKurus || s.saglayici?.tutarKurus || 0)}<span className="uza-liste-alt">{x.uzlasmaSonuclari[s.sonuc]}</span></span></div></li>)}</ul> : null}
       </section>
     </Cerceve>
   )

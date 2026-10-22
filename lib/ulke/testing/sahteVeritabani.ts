@@ -197,6 +197,8 @@ export function sahteVeritabani() {
   }
 
   const kisit = (ad: string, yeni: Satir, digerleri: Satir[], islem: 'insert' | 'update' = 'insert'): { message: string; code: string } | null => {
+    // migration 150 — one row per provider event per connection: a second delivery hits the unique key
+    if (ad === 'ulke_odeme_olaylari' && islem === 'insert' && digerleri.some((x) => x.ulke === yeni.ulke && x.doctor_id === yeni.doctor_id && x.saglayici === yeni.saglayici && x.olay_id === yeni.olay_id)) return { code: '23505', message: 'duplicate key value violates unique constraint "ulke_odeme_olaylari_tekil"' }
     if (ad.startsWith('ulke_klinik')) return klinikKisiti(ad, yeni, digerleri, islem)
     const c = cakisma(ad, yeni, digerleri)
     if (c) return c

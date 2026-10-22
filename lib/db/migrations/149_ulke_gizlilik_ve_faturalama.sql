@@ -18,8 +18,8 @@ set local lock_timeout = '4s';
 
 do $$
 begin
-  if to_regclass('public.ulke_hastalar') is null then
-    raise exception 'country migration 149 refused: public.ulke_hastalar is missing. Not a country database.';
+  if to_regclass('public.ulke_hesaplari') is null then
+    raise exception 'country migration 149 refused: public.ulke_hesaplari is missing. Not a country database.';
   end if;
 end $$;
 
@@ -107,7 +107,8 @@ create table if not exists public.ulke_odeme_baglantilari (
   mod text not null default 'test' check (mod in ('test')),
   kimlik_encrypted text not null check (char_length(kimlik_encrypted) > 0),
   created_at timestamptz not null default now(),
-  constraint ulke_odeme_baglantilari_tekil unique (ulke, doctor_id)
+  constraint ulke_odeme_baglantilari_tekil unique (ulke, doctor_id),
+  constraint ulke_odeme_baglantilari_hesap_fk foreign key (ulke, doctor_id) references public.ulke_hesaplari (ulke, id) on delete cascade
 );
 
 alter table public.ulke_riza_kayitlari enable row level security;
@@ -119,5 +120,10 @@ revoke all on table public.ulke_erisim_talepleri from anon, authenticated;
 revoke all on table public.ulke_faturalar from anon, authenticated;
 revoke all on table public.ulke_odeme_baglantilari from anon, authenticated;
 revoke all on function public.ulke_riza_kayitlari_kilidi() from public, anon, authenticated;
+
+insert into schema_migrations (version, filename, checksum, applied_at, backfilled, note)
+values ('149', '149_ulke_gizlilik_ve_faturalama.sql', null, now(), false,
+  'AU-BETA-01: consent ledger, access/correction requests, invoices, the doctors own payment connection. Server only.')
+on conflict (version) do nothing;
 
 commit;

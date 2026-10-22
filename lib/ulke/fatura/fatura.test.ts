@@ -56,7 +56,7 @@ describe('bring-your-own payment path on the demo adapter (no network, no charge
     assert.deepEqual(u.map((x) => x.sonuc), ['eslesti', 'uyusmadi', 'saglayicida_yok', 'odenmedi'])
     const csv = uzlasmaCsv([{ ...u[0], faturaDurum: '=HYPERLINK("x")' }])
     assert.match(csv, /'=HYPERLINK/)
-    assert.equal(csv.split('\n')[0].split(',').length, 8)
+    assert.equal(csv.split('\n')[0].split(',').length, 9)
   })
   it('live keys are recognised (live mode is off)', () => {
     assert.equal(canliAnahtarMi('sk_live_abcdefgh'), true)

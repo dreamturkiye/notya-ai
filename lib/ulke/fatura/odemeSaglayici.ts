@@ -6,12 +6,10 @@
  * takes no platform fee. A charge is created on the connected account; no card data touches this product's servers
  * (a hosted page takes the card).
  *
- * WHAT IS BUILT HERE: the interface, a DEMO adapter that runs the whole path (pay, refund in full or in part,
- * reconcile) with NO network call and NO real charge, and the connection record (./baglanti.ts). WHAT IS NOT: the
- * Stripe and Tyro adapters. The provider documentation (docs.stripe.com, docs.tyro.com) could not be fetched in the
- * session that wrote this file, and an adapter is written only against behaviour read in the public docs. Until each
- * adapter exists and is verified, a connection of that provider is stored but the PAYMENT RUNS ON THE DEMO ADAPTER,
- * and the screen says so. LIVE MODE IS OFF: a live key is refused (`CANLI_MOD`).
+ * WHAT IS BUILT: the DEMO adapter (this file: no network call, no real charge), the REAL Stripe adapter (./stripe.ts, bring-your-own
+ * restricted key, test mode) and the Tyro adapter (./tyro.ts, written against the documented surface, OFF until Tyro onboarding),
+ * the connection record (./fatura.ts) and the reconciliation (below). LIVE MODE IS OFF: a live key is refused (`CANLI_MOD`);
+ * the database column accepts only 'test' (migration 149) — enabling live needs a reviewed migration, not just a flag.
  */
 export type OdemeSaglayiciAdi = 'demo' | 'stripe' | 'tyro'
 export const SAGLAYICILAR: readonly OdemeSaglayiciAdi[] = ['demo', 'stripe', 'tyro']
@@ -59,12 +57,12 @@ export function canliAnahtarMi(ham: string): boolean {
   return /^(sk|rk|pk)_live_/i.test(ham.trim()) || /live/i.test(ham.trim().slice(0, 12))
 }
 
-/** Which adapter runs. Today always the demo adapter: see the header. */
+/** The DEMO adapter. A connected Stripe account is used through ./stripe.ts by ./fatura.ts, never through this function. */
 export function saglayiciSec(_baglanti: { saglayici: OdemeSaglayiciAdi } | null, kayitlar?: ReadonlyMap<string, { tutarKurus: number; iadeKurus: number }>): OdemeSaglayici {
   return demoSaglayici(kayitlar)
 }
 
-export type Uzlasma = 'eslesti' | 'uyusmadi' | 'saglayicida_yok' | 'odenmedi'
+export type Uzlasma = 'eslesti' | 'uyusmadi' | 'saglayicida_yok' | 'odenmedi' | 'notya_yok' | 'iade_edildi'
 export type UzlasmaSatiri = { faturaId: string; no: number; faturaToplamKurus: number; faturaIadeKurus: number; faturaDurum: string; ref: string | null; saglayici: SaglayiciOdemesi | null; sonuc: Uzlasma }
 
 /** Pure: invoices (with their own paid/refunded records) against what the provider reports. */
@@ -81,8 +79,48 @@ export function uzlastir(faturalar: readonly { id: string; no: number; toplamKur
 }
 
 const csvHucre = (x: string | number): string => { const t = String(x); const g = /^[=+\-@\t\r]/.test(t) ? `'${t}` : t; return /[",\n]/.test(g) ? `"${g.replace(/"/g, '""')}"` : g }
-export function uzlasmaCsv(satirlar: readonly UzlasmaSatiri[]): string {
-  const ust = ['invoice_no', 'invoice_total_cents', 'invoice_refunded_cents', 'invoice_status', 'provider_ref', 'provider_amount_cents', 'provider_refunded_cents', 'result']
-  const g = satirlar.map((s) => [s.no, s.faturaToplamKurus, s.faturaIadeKurus, s.faturaDurum, s.ref ?? '', s.saglayici?.tutarKurus ?? '', s.saglayici?.iadeKurus ?? '', s.sonuc].map(csvHucre).join(','))
+export function uzlasmaCsv(satirlar: readonly UzlasmaSatiri[], gercek = false): string {
+  const ust = ['mode', 'invoice_no', 'invoice_total_cents', 'invoice_refunded_cents', 'invoice_status', 'provider_ref', 'provider_amount_cents', 'provider_refunded_cents', 'result']
+  const g = satirlar.map((s) => [gercek ? 'provider' : 'DEMO (not a real reconciliation)', s.no, s.faturaToplamKurus, s.faturaIadeKurus, s.faturaDurum, s.ref ?? '', s.saglayici?.tutarKurus ?? '', s.saglayici?.iadeKurus ?? '', s.sonuc].map(csvHucre).join(','))
   return [ust.join(','), ...g].join('\n') + '\n'
+}
+
+import type { SaglayiciKaydi } from './saglayiciTipleri'
+export type UzlasmaFatura = { id: string; no: number; toplamKurus: number; iadeKurus: number; durum: string; ref: string | null; paraKodu: string; odendiAt: number | null }
+
+/**
+ * REAL reconciliation: the invoices paid in [gte, lte] (epoch ms) against the payments the provider LISTS for that range.
+ * Matched by the invoice id the payment carries in its metadata, then by the provider reference. Result per row:
+ *   eslesti          paid, amount + currency + refunded total agree, nothing refunded
+ *   iade_edildi      same, and (partly or fully) refunded — both sides agree on the refunded total
+ *   uyusmadi         found, but amount, currency or refunded total differ
+ *   saglayicida_yok  Notya says paid, the provider lists no such successful payment
+ *   notya_yok        the provider lists a successful payment Notya has no invoice for (no/unknown invoice id)
+ *   odenmedi         a draft with nothing to match (shown for completeness)
+ */
+export function uzlastirKayitlarla(faturalar: readonly UzlasmaFatura[], kayitlar: readonly SaglayiciKaydi[], gte: number, lte: number): UzlasmaSatiri[] {
+  const sag = kayitlar.filter((k) => k.basarili)
+  const idile = new Map(sag.filter((k) => k.faturaId).map((k) => [k.faturaId as string, k]))
+  const refle = new Map(sag.map((k) => [k.ref, k]))
+  const kullanilan = new Set<string>()
+  const satirlar: UzlasmaSatiri[] = []
+  for (const f of faturalar) {
+    const aralikta = f.odendiAt !== null && f.odendiAt >= gte && f.odendiAt <= lte
+    if (f.durum === 'odendi' && !aralikta) continue
+    if (f.durum !== 'odendi') { if (!f.ref) satirlar.push({ faturaId: f.id, no: f.no, faturaToplamKurus: f.toplamKurus, faturaIadeKurus: f.iadeKurus, faturaDurum: f.durum, ref: null, saglayici: null, sonuc: 'odenmedi' }); continue }
+    const k = (f.ref ? refle.get(f.ref) : undefined) ?? idile.get(f.id) ?? null
+    if (k) kullanilan.add(k.ref)
+    const sagOdeme = k ? { ref: k.ref, tutarKurus: k.tutarKurus, iadeKurus: k.iadeKurus, durum: (k.iadeKurus === 0 ? 'odendi' : k.iadeKurus >= k.tutarKurus ? 'iade' : 'kismen_iade') as SaglayiciOdemesi['durum'] } : null
+    let sonuc: Uzlasma
+    if (!k) sonuc = 'saglayicida_yok'
+    else if (k.tutarKurus !== f.toplamKurus || k.iadeKurus !== f.iadeKurus || k.paraKodu.toUpperCase() !== f.paraKodu.toUpperCase()) sonuc = 'uyusmadi'
+    else sonuc = k.iadeKurus > 0 ? 'iade_edildi' : 'eslesti'
+    satirlar.push({ faturaId: f.id, no: f.no, faturaToplamKurus: f.toplamKurus, faturaIadeKurus: f.iadeKurus, faturaDurum: f.durum, ref: f.ref ?? k?.ref ?? null, saglayici: sagOdeme, sonuc })
+  }
+  for (const k of sag) {
+    if (kullanilan.has(k.ref)) continue
+    if (k.faturaId && faturalar.some((f) => f.id === k.faturaId)) continue
+    satirlar.push({ faturaId: '', no: 0, faturaToplamKurus: 0, faturaIadeKurus: 0, faturaDurum: '', ref: k.ref, saglayici: { ref: k.ref, tutarKurus: k.tutarKurus, iadeKurus: k.iadeKurus, durum: k.iadeKurus === 0 ? 'odendi' : k.iadeKurus >= k.tutarKurus ? 'iade' : 'kismen_iade' }, sonuc: 'notya_yok' })
+  }
+  return satirlar
 }

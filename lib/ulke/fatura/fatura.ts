@@ -17,7 +17,10 @@ import { hesapSaatDilimi } from '../uygulama/saatDilimi'
 import { ulkeTablosu } from '../uygulama/tablolar'
 import { yerelAn } from '../uygulama/zaman'
 import { faturaToplami, kalemleriTemizle, type FaturaKalemi } from './hesap'
-import { canliAnahtarMi, saglayiciSec, uzlastir, type OdemeSaglayiciAdi, type UzlasmaSatiri } from './odemeSaglayici'
+import { canliAnahtarMi, saglayiciSec, uzlastir, uzlastirKayitlarla, type OdemeSaglayiciAdi, type UzlasmaSatiri } from './odemeSaglayici'
+import type { GercekSaglayici } from './saglayiciTipleri'
+import { stripeAnahtarModu, stripeIstemciYap, stripeSaglayici } from './stripe'
+import { tyroEtkin, tyroSaglayici, type TyroKimlik } from './tyro'
 
 export type Fatura = {
   id: string; no: number; hastaId: string; hastaAdi: string; muayeneId: string | null; kalemler: FaturaKalemi[]
@@ -92,69 +95,180 @@ export async function faturaListe(supabase: SupabaseClient, doktorId: string, ha
   return satirlar.map((s) => donustur(s, adlar.get(s.patient_id) ?? '')).filter((f): f is Fatura => f !== null)
 }
 
-async function tek(supabase: SupabaseClient, doktorId: string, id: string): Promise<Satir | null> {
+export async function faturaTek(supabase: SupabaseClient, doktorId: string, id: string): Promise<Satir | null> {
   const { data } = await ulkeTablosu(supabase, 'ulke_faturalar').select(KOLON).eq('doctor_id', doktorId).eq('id', id).limit(1)
   return ((data as Satir[] | null) ?? [])[0] ?? null
 }
 
-export async function faturaOde(supabase: SupabaseClient, doktorId: string, id: string, simdi = Date.now()): Promise<{ tamam: true } | { tamam: false; kod: FaturaRet }> {
-  const s = await tek(supabase, doktorId, id)
+/** The adapter for the doctor's OWN connected account, or null (→ the demo adapter). Tyro stays off until `tyroEtkin()`. */
+export function gercekSaglayiciYap(k: Kimlik | null, saglayici: 'stripe' | 'tyro' | null): GercekSaglayici | null {
+  if (!k || !saglayici) return null
+  if (saglayici === 'stripe') return k.anahtar && stripeAnahtarModu(k.anahtar) === 'test' ? stripeSaglayici(stripeIstemciYap(k.anahtar)) : null
+  return tyroEtkin() && k.tyro ? tyroSaglayici(k.tyro) : null
+}
+
+export type OdemeSonucu = { tamam: true; url?: string; paySecret?: string; bekliyor: boolean } | { tamam: false; kod: FaturaRet }
+
+/**
+ * Pay an invoice. Demo adapter: paid at once. A connected Stripe account: a hosted Checkout Session is created on the DOCTOR'S account and
+ * its URL returned; the invoice stays a draft until the signed webhook (./webhook.ts) says the money arrived — the browser's word is never taken.
+ */
+export async function faturaOde(supabase: SupabaseClient, doktorId: string, id: string, donus: { basariUrl: string; iptalUrl: string } = { basariUrl: '', iptalUrl: '' }, simdi = Date.now(), uretici: typeof gercekSaglayiciYap = gercekSaglayiciYap): Promise<OdemeSonucu> {
+  const s = await faturaTek(supabase, doktorId, id)
   if (!s) return { tamam: false, kod: 'NOT_FOUND' }
   if (s.durum !== 'taslak') return { tamam: false, kod: 'DURUM' }
-  const bag = await baglantiOku(supabase, doktorId)
-  const sag = saglayiciSec(bag)
+  const k = await kimlikOku(supabase, doktorId)
+  const gercek = uretici(k?.kimlik ?? null, k?.saglayici ?? null)
+  if (gercek) {
+    if (!donus.basariUrl || !donus.iptalUrl) return { tamam: false, kod: 'GECERSIZ' }
+    try {
+      const b = await gercek.baslat({ faturaId: s.id, no: s.fatura_no, tutarKurus: Number(s.toplam_kurus), paraKodu: s.para_kodu, basariUrl: donus.basariUrl, iptalUrl: donus.iptalUrl })
+      const { error } = await ulkeTablosu(supabase, 'ulke_faturalar').update({ saglayici: gercek.ad, odeme_ref: b.ref }).eq('doctor_id', doktorId).eq('id', id).eq('durum', 'taslak')
+      if (error) return { tamam: false, kod: 'BASARISIZ' }
+      return { tamam: true, url: b.url, paySecret: b.paySecret, bekliyor: true }
+    } catch { return { tamam: false, kod: 'BASARISIZ' } }
+  }
+  const sag = saglayiciSec(k ? { saglayici: k.saglayici } : null)
   const r = await sag.ode({ faturaId: s.id, tutarKurus: Number(s.toplam_kurus), paraKodu: s.para_kodu })
   if (!r.tamam) return { tamam: false, kod: 'BASARISIZ' }
   const { data, error } = await ulkeTablosu(supabase, 'ulke_faturalar').update({ durum: 'odendi', saglayici: sag.ad, odeme_ref: r.ref, odendi_at: new Date(simdi).toISOString() })
     .eq('doctor_id', doktorId).eq('id', id).eq('durum', 'taslak').select('id')
   if (error) return { tamam: false, kod: 'BASARISIZ' }
-  return (data as unknown[] | null)?.length ? { tamam: true } : { tamam: false, kod: 'DURUM' }
+  return (data as unknown[] | null)?.length ? { tamam: true, bekliyor: false } : { tamam: false, kod: 'DURUM' }
+}
+
+/** The signed webhook (or nothing else) marks a provider-paid invoice. Idempotent: an already paid invoice answers ok. Amount and currency must equal the invoice. */
+export async function faturaOdendiIsaretle(supabase: SupabaseClient, doktorId: string, faturaId: string, g: { saglayici: 'stripe' | 'tyro'; ref: string; tutarKurus: number; paraKodu: string }, simdi = Date.now()): Promise<'tamam' | 'yok' | 'uyusmadi'> {
+  const s = await faturaTek(supabase, doktorId, faturaId)
+  if (!s) return 'yok'
+  if (s.durum === 'odendi') return 'tamam'
+  if (s.durum !== 'taslak') return 'uyusmadi'
+  if (Number(s.toplam_kurus) !== g.tutarKurus || s.para_kodu.toUpperCase() !== g.paraKodu.toUpperCase()) return 'uyusmadi'
+  const { error } = await ulkeTablosu(supabase, 'ulke_faturalar').update({ durum: 'odendi', saglayici: g.saglayici, odeme_ref: g.ref, odendi_at: new Date(simdi).toISOString() }).eq('doctor_id', doktorId).eq('id', faturaId).eq('durum', 'taslak')
+  return error ? 'yok' : 'tamam'
+}
+
+/** A refund the provider reports (Stripe `charge.refunded`) raises the invoice's refunded total to the provider's figure; it never lowers it and never passes the invoice total. */
+export async function faturaIadeSenkron(supabase: SupabaseClient, doktorId: string, odemeRef: string, iadeKurus: number): Promise<boolean> {
+  const { data } = await ulkeTablosu(supabase, 'ulke_faturalar').select(KOLON).eq('doctor_id', doktorId).eq('odeme_ref', odemeRef).limit(1)
+  const s = ((data as Satir[] | null) ?? [])[0]
+  if (!s) return false
+  const yeni = Math.min(Number(s.toplam_kurus), iadeKurus)
+  if (yeni <= Number(s.iade_kurus)) return true
+  const { error } = await ulkeTablosu(supabase, 'ulke_faturalar').update({ iade_kurus: yeni }).eq('doctor_id', doktorId).eq('id', s.id)
+  return !error
+}
+
+export async function faturaRefile(supabase: SupabaseClient, doktorId: string, odemeRef: string): Promise<string | null> {
+  const { data } = await ulkeTablosu(supabase, 'ulke_faturalar').select('id').eq('doctor_id', doktorId).eq('odeme_ref', odemeRef).limit(1)
+  return ((data as { id: string }[] | null) ?? [])[0]?.id ?? null
 }
 
 /** A full or partial refund of a paid invoice. The total refunded never exceeds the total paid. */
-export async function faturaIade(supabase: SupabaseClient, doktorId: string, id: string, kurus: unknown): Promise<{ tamam: true; iadeKurus: number } | { tamam: false; kod: FaturaRet }> {
-  const s = await tek(supabase, doktorId, id)
+export async function faturaIade(supabase: SupabaseClient, doktorId: string, id: string, kurus: unknown, uretici: typeof gercekSaglayiciYap = gercekSaglayiciYap): Promise<{ tamam: true; iadeKurus: number } | { tamam: false; kod: FaturaRet }> {
+  const s = await faturaTek(supabase, doktorId, id)
   if (!s) return { tamam: false, kod: 'NOT_FOUND' }
   if (s.durum !== 'odendi' || !s.odeme_ref) return { tamam: false, kod: 'DURUM' }
   const kalan = Number(s.toplam_kurus) - Number(s.iade_kurus)
   if (typeof kurus !== 'number' || !Number.isInteger(kurus) || kurus <= 0 || kurus > kalan) return { tamam: false, kod: 'GECERSIZ' }
-  const sag = saglayiciSec(await baglantiOku(supabase, doktorId))
-  const r = await sag.iade(s.odeme_ref, kurus)
-  if (!r.tamam) return { tamam: false, kod: 'BASARISIZ' }
+  let basarili = false
+  if (s.saglayici === 'stripe' || s.saglayici === 'tyro') {
+    const k = await kimlikOku(supabase, doktorId)
+    const gercek = k && k.saglayici === s.saglayici ? uretici(k.kimlik, k.saglayici) : null
+    if (!gercek) return { tamam: false, kod: 'BASARISIZ' }
+    basarili = (await gercek.iade({ faturaId: s.id, odemeRef: s.odeme_ref, kurus, oncekiIadeKurus: Number(s.iade_kurus) })).tamam
+  } else {
+    basarili = (await saglayiciSec(null).iade(s.odeme_ref, kurus)).tamam
+  }
+  if (!basarili) return { tamam: false, kod: 'BASARISIZ' }
   const yeni = Number(s.iade_kurus) + kurus
   const { data, error } = await ulkeTablosu(supabase, 'ulke_faturalar').update({ iade_kurus: yeni }).eq('doctor_id', doktorId).eq('id', id).eq('iade_kurus', Number(s.iade_kurus)).select('id')
   if (error) return { tamam: false, kod: 'BASARISIZ' }
   return (data as unknown[] | null)?.length ? { tamam: true, iadeKurus: yeni } : { tamam: false, kod: 'DURUM' }
 }
 
-export async function uzlasma(supabase: SupabaseClient, doktorId: string): Promise<{ saglayici: OdemeSaglayiciAdi; gercek: boolean; satirlar: UzlasmaSatiri[] }> {
+export type UzlasmaCevabi = { saglayici: OdemeSaglayiciAdi; gercek: boolean; satirlar: UzlasmaSatiri[]; aralik: { gte: number; lte: number } | null; not?: string }
+
+/**
+ * Reconciliation. With a connected Stripe account it is REAL: the provider's PaymentIntents of the range are listed with the doctor's own key and matched to the
+ * invoices paid in that range (./odemeSaglayici.ts uzlastirKayitlarla). Tyro has no documented list, so each invoice's own Pay Request is read by id. Without a
+ * connection it is the DEMO check, which is built from the invoices themselves and says so (`gercek: false`).
+ */
+export async function uzlasma(supabase: SupabaseClient, doktorId: string, aralik?: { gte: number; lte: number }, uretici: typeof gercekSaglayiciYap = gercekSaglayiciYap, simdi = Date.now()): Promise<UzlasmaCevabi> {
   const liste = await faturaListe(supabase, doktorId)
+  const k = await kimlikOku(supabase, doktorId)
+  const gercek = uretici(k?.kimlik ?? null, k?.saglayici ?? null)
+  if (gercek) {
+    const lte = aralik?.lte ?? simdi, gte = aralik?.gte ?? lte - 30 * 86_400_000
+    const faturalar = liste.map((f) => ({ id: f.id, no: f.no, toplamKurus: f.toplamKurus, iadeKurus: f.iadeKurus, durum: f.durum, ref: f.odemeRef, paraKodu: f.paraKodu, odendiAt: f.odendiAt ? Date.parse(f.odendiAt) : null }))
+    let kayitlar = await gercek.kayitlar(Math.floor(gte / 1000), Math.floor(lte / 1000))
+    let not: string | undefined
+    if (gercek.ad === 'tyro') {
+      const oku = (gercek as unknown as { odemeyiOku(ref: string): Promise<import('./saglayiciTipleri').SaglayiciKaydi | null> }).odemeyiOku
+      kayitlar = (await Promise.all(faturalar.filter((f) => f.durum === 'odendi' && f.ref).map((f) => oku(f.ref as string)))).filter((x): x is NonNullable<typeof x> => Boolean(x))
+      not = 'tyro: checked invoice by invoice (no list of payments is documented); refunded totals are not read'
+    }
+    return { saglayici: gercek.ad, gercek: true, satirlar: uzlastirKayitlarla(faturalar, kayitlar, gte, lte), aralik: { gte, lte }, not }
+  }
   // The demo adapter answers from the invoices' own records, so in demo mode this check is tautological: the screen says so.
   const kayit = new Map(liste.filter((f) => f.odemeRef).map((f) => [f.odemeRef as string, { tutarKurus: f.toplamKurus, iadeKurus: f.iadeKurus }]))
-  const sag = saglayiciSec(await baglantiOku(supabase, doktorId), kayit)
+  const sag = saglayiciSec(null, kayit)
   const yanit = await sag.sorgula(liste.map((f) => f.odemeRef).filter((x): x is string => Boolean(x)))
-  return { saglayici: sag.ad, gercek: sag.gercek, satirlar: uzlastir(liste.map((f) => ({ id: f.id, no: f.no, toplamKurus: f.toplamKurus, iadeKurus: f.iadeKurus, durum: f.durum, ref: f.odemeRef })), yanit) }
+  return { saglayici: sag.ad, gercek: false, satirlar: uzlastir(liste.map((f) => ({ id: f.id, no: f.no, toplamKurus: f.toplamKurus, iadeKurus: f.iadeKurus, durum: f.durum, ref: f.odemeRef })), yanit), aralik: null }
 }
 
 // ───────────────────────── the doctor's own connection ─────────────────────────
 
-export type Baglanti = { saglayici: 'stripe' | 'tyro'; mod: 'test'; sonDort: string }
-export async function baglantiOku(supabase: SupabaseClient, doktorId: string): Promise<(Baglanti & { saglayici: 'stripe' | 'tyro' }) | null> {
+export type Kimlik = { anahtar?: string; webhookGizli?: string; tyro?: TyroKimlik }
+export type Baglanti = { saglayici: 'stripe' | 'tyro'; mod: 'test'; sonDort: string; webhookKurulu: boolean; /** true = payments are routed to the provider; false = demo (e.g. Tyro before onboarding). */ etkin: boolean }
+
+/** SERVER ONLY: the decrypted credentials. Never returned to a browser and never logged. */
+export async function kimlikOku(supabase: SupabaseClient, doktorId: string): Promise<{ saglayici: 'stripe' | 'tyro'; mod: 'test'; kimlik: Kimlik } | null> {
   const { data } = await ulkeTablosu(supabase, 'ulke_odeme_baglantilari').select('saglayici, mod, kimlik_encrypted').eq('doctor_id', doktorId).limit(1)
   const s = ((data as { saglayici: 'stripe' | 'tyro'; mod: 'test'; kimlik_encrypted: string }[] | null) ?? [])[0]
   if (!s) return null
-  let son = ''
-  try { son = (JSON.parse(decrypt(s.kimlik_encrypted)) as { anahtar?: string }).anahtar?.slice(-4) ?? '' } catch { /* shown without the tail */ }
-  return { saglayici: s.saglayici, mod: s.mod, sonDort: son }
+  try { return { saglayici: s.saglayici, mod: s.mod, kimlik: JSON.parse(decrypt(s.kimlik_encrypted)) as Kimlik } } catch { return null }
 }
 
-/** Keys of the provider's TEST mode only. A live key is refused (live mode is off in this beta); the key is never echoed. */
-export async function baglantiKaydet(supabase: SupabaseClient, doktorId: string, g: { saglayici: unknown; anahtar: unknown }): Promise<'TAMAM' | 'GECERSIZ' | 'CANLI_MOD' | 'BASARISIZ'> {
+export async function baglantiOku(supabase: SupabaseClient, doktorId: string): Promise<Baglanti | null> {
+  const k = await kimlikOku(supabase, doktorId)
+  if (!k) return null
+  const son = (k.saglayici === 'tyro' ? k.kimlik.tyro?.istemciId : k.kimlik.anahtar)?.slice(-4) ?? ''
+  return { saglayici: k.saglayici, mod: k.mod, sonDort: son, webhookKurulu: Boolean(k.kimlik.webhookGizli), etkin: k.saglayici === 'stripe' || tyroEtkin() }
+}
+
+export type BaglantiRet = 'TAMAM' | 'GECERSIZ' | 'CANLI_MOD' | 'ANAHTAR_REDDEDILDI' | 'IZIN_YOK' | 'BASARISIZ'
+const kisa = (x: unknown, azami = 300) => (typeof x === 'string' && x.trim().length >= 3 && x.trim().length <= azami && !/\s/.test(x.trim()) ? x.trim() : '')
+
+/**
+ * Connect the doctor's own account. Stripe: a restricted key `rk_test_…` (or `sk_test_…`); the key is CHECKED with one cheap authenticated read before it is kept;
+ * a live key is refused (live mode is off in this beta). The webhook signing secret `whsec_…` of the doctor's own endpoint may come with it or later.
+ * Tyro: client id, client secret and location id, checked by asking Tyro for a token — keeps the adapter OFF until `NOTYA_TYRO_ETKIN=1` (needs Tyro onboarding).
+ * Everything is stored as ONE encrypted value; nothing is echoed or logged.
+ */
+export async function baglantiKaydet(supabase: SupabaseClient, doktorId: string, g: { saglayici: unknown; anahtar?: unknown; webhookGizli?: unknown; istemciId?: unknown; istemciGizli?: unknown; konumId?: unknown }, getir: typeof fetch = fetch, stripeUret: (anahtar: string) => GercekSaglayici = (a) => stripeSaglayici(stripeIstemciYap(a))): Promise<BaglantiRet> {
   if (g.saglayici !== 'stripe' && g.saglayici !== 'tyro') return 'GECERSIZ'
-  const anahtar = typeof g.anahtar === 'string' ? g.anahtar.trim() : ''
-  if (anahtar.length < 8 || anahtar.length > 300 || /\s/.test(anahtar)) return 'GECERSIZ'
-  if (canliAnahtarMi(anahtar) || (g.saglayici === 'stripe' && !/^(sk|rk)_test_/.test(anahtar))) return 'CANLI_MOD'
-  const { error } = await ulkeTablosu(supabase, 'ulke_odeme_baglantilari').upsert({ doctor_id: doktorId, saglayici: g.saglayici, mod: 'test', kimlik_encrypted: encrypt(JSON.stringify({ anahtar })) }, { onConflict: 'ulke,doctor_id' })
+  const onceki = await kimlikOku(supabase, doktorId)
+  let kimlik: Kimlik
+  if (g.saglayici === 'stripe') {
+    const anahtar = kisa(g.anahtar)
+    const gizli = g.webhookGizli === undefined || g.webhookGizli === '' ? (onceki?.saglayici === 'stripe' ? onceki.kimlik.webhookGizli : undefined) : kisa(g.webhookGizli)
+    if (!anahtar || gizli === '' || (gizli !== undefined && !/^whsec_[A-Za-z0-9]{8,}$/.test(gizli))) return 'GECERSIZ'
+    const mod = stripeAnahtarModu(anahtar)
+    if (canliAnahtarMi(anahtar) || mod === 'live') return 'CANLI_MOD'
+    if (mod !== 'test') return 'GECERSIZ'
+    const d = await stripeUret(anahtar).dogrula()
+    if (!d.tamam) return d.hata === 'anahtar' ? 'ANAHTAR_REDDEDILDI' : d.hata === 'izin' ? 'IZIN_YOK' : 'BASARISIZ'
+    kimlik = { anahtar, webhookGizli: gizli }
+  } else {
+    const istemciId = kisa(g.istemciId), istemciGizli = kisa(g.istemciGizli), konumId = kisa(g.konumId)
+    const gizli = g.webhookGizli === undefined || g.webhookGizli === '' ? (onceki?.saglayici === 'tyro' ? onceki.kimlik.webhookGizli : undefined) : kisa(g.webhookGizli)
+    if (!istemciId || !istemciGizli || !konumId || gizli === '') return 'GECERSIZ'
+    const d = await tyroSaglayici({ istemciId, istemciGizli, konumId }, getir).dogrula()
+    if (!d.tamam) return d.hata === 'anahtar' ? 'ANAHTAR_REDDEDILDI' : 'BASARISIZ'
+    kimlik = { tyro: { istemciId, istemciGizli, konumId }, webhookGizli: gizli }
+  }
+  const { error } = await ulkeTablosu(supabase, 'ulke_odeme_baglantilari').upsert({ doctor_id: doktorId, saglayici: g.saglayici, mod: 'test', kimlik_encrypted: encrypt(JSON.stringify(kimlik)) }, { onConflict: 'ulke,doctor_id' })
   return error ? 'BASARISIZ' : 'TAMAM'
 }
 export async function baglantiSil(supabase: SupabaseClient, doktorId: string): Promise<boolean> {

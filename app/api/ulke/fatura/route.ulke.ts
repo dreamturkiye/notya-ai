@@ -2,7 +2,8 @@
  * AU-BETA-01 — /api/ulke/fatura (pack extension `uzanti.fatura`). Doctor's session only.
  *   GET   ?hasta=<id>?            200 { faturalar, baglanti, demo }
  *   POST  { hastaId, muayeneId?, kalemler }   create an invoice (draft). Totals are worked out HERE, never taken from the browser.
- *   PATCH { id, eylem: 'ode' }                 pay (demo adapter unless a verified adapter exists: see lib/ulke/fatura/odemeSaglayici.ts)
+ *   PATCH { id, eylem: 'ode' }                 pay: demo adapter, or — with the doctor's own Stripe account connected — a hosted Checkout Session (answer carries `url`;
+ *                                              the invoice is marked paid only by the signed webhook)
  *   PATCH { id, eylem: 'iade', kurus }         refund, full or partial, on the same adapter
  */
 import { NextRequest } from 'next/server'
@@ -44,8 +45,9 @@ export const PATCH = sinirda('fatura PATCH', async (req: NextRequest) => {
   const g = await govdeOku(req)
   if (!uuidMi(g.id)) return KOD.gecersiz('id')
   if (g.eylem === 'ode') {
-    const r = await faturaOde(oturum.supabase, oturum.user.id, g.id)
-    return r.tamam ? cevap({ ok: true }) : cevap({ code: r.kod }, durum(r.kod))
+    const kok = `${req.nextUrl.origin}${ulkePaketi().yolOnEki ?? ''}/billing`
+    const r = await faturaOde(oturum.supabase, oturum.user.id, g.id, { basariUrl: `${kok}?odeme=tamam`, iptalUrl: `${kok}?odeme=iptal` })
+    return r.tamam ? cevap({ ok: true, url: r.url, paySecret: r.paySecret, bekliyor: r.bekliyor }) : cevap({ code: r.kod }, durum(r.kod))
   }
   if (g.eylem === 'iade') {
     const r = await faturaIade(oturum.supabase, oturum.user.id, g.id, g.kurus)
