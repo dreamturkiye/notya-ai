@@ -684,6 +684,43 @@ export type UlkeKlinigi = {
    * male and one female voice. Countries without this field are unchanged.
    */
   ses?: UlkeSesCikisi
+  /**
+   * AU-CANLI-01 — the LIVE spoken assistant (lib/ulke/asistan/). Needs `ses` (the two voices) and an assistant name
+   * for the role (arayuz().asistan). Absent = the country has no live assistant and no screen offers one.
+   */
+  canliAsistan?: CanliAsistanAyarlari
+}
+
+/**
+ * What a pack says about its live assistant. Core holds the mechanism (agent choice, token, stream, spoken-vs-screen
+ * rule, rate limit, hiding) and NO instruction text: the sentences the model is given are the pack's own.
+ */
+export type CanliAsistanAyarlari = {
+  /** Language and variety the assistant speaks and writes in, as the model is told it ("Australian English"). */
+  dilAdi: string
+  /** The country's name as the model is told it ("Australia"). */
+  ulkeAdi: string
+  /** Sentences about practice in this country (health system, schedules, regulators), one idea each. */
+  pratikBaglami: readonly string[]
+  /** Hard limits of this country (no regulatory or compliance claims, no clinical overreach, emergency number). */
+  sinirlar: readonly string[]
+  /** The role's national sources block for the prompt, or null when the role has none. */
+  kaynakBlogu: (rol: string) => string | null
+  /** Turns (spoken or written exchanges) one account may have per day of the country. */
+  gunlukTurLimiti: number
+  /** Words the speech layer says for what the screen shows. */
+  ekranSozleri: {
+    /** "3 items, on your screen." — `n` is the count. */
+    liste: (n: number) => string
+    tablo: string
+    devami: string
+    veda: string
+    anlasilmadi: string
+    /** Said when the account has used its turns for the day. */
+    gunlukSinir: string
+  }
+  /** The first thing the assistant says when the call opens. */
+  acilis: (g: { tamAd: string; kisaAd: string; rolAdi: string; doktorAdi: string | null }) => string
 }
 
 // ───────────────────────── text surfaces (translation mechanism — lib/ulke/metin.ts) ─────────────────────────

@@ -49,6 +49,8 @@ export type AsistanKimligi = {
   kisaAd: string
   /** true = this form was derived by rule from another spelling and has not been read by a native reader. */
   makineTuretimi: boolean
+  /** AU-CANLI-01: the persona's gender — decides which of the pack's two voices speaks for it (`erkek` / `kadin`). */
+  cinsiyet?: 'erkek' | 'kadin'
 }
 
 /** One field a note can have beside the four sections: which section it sits under, and its label in every form. */
