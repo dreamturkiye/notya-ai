@@ -72,7 +72,7 @@ function sesTemizle(m: unknown): SakliSesMesaj | null {
   const sira = Number(o.sira)
   const id = typeof o.id === 'string' && o.id ? o.id : `g-${sira || 0}-${Math.random().toString(36).slice(2, 8)}`
   const out: SakliSesMesaj = { id, role, text: text.slice(0, 8000), sira: Number.isFinite(sira) ? sira : 0 }
-  if (typeof o.olay === 'number' && Number.isFinite(o.olay)) out.olay = o.olay
+  // NOTYA-SES-KULLANICI-BALON-01: `olay` (ElevenLabs event id) is per call — never restored from an earlier call's history.
   return out
 }
 
