@@ -22,6 +22,9 @@ export type OzellikBolumu = {
   kart: { etiket: string; satirlar: readonly KartSatiri[]; not?: string }
 }
 
+/** A further capability section a country may add (optional, rendered after the tools section / after the clinic's patient page). `id` is a lower-case anchor. */
+export type EkOzellikBolumu = OzellikBolumu & { id: string }
+
 export type SahneNavbati = { kim: string; rol: 'shifokor' | 'yordamchi' | 'ogohlantirish'; matn: string }
 export type Sahne = { id: string; meta: string; yordamchi: string; alan: string; saat: string; navbatlar: readonly SahneNavbati[] }
 
@@ -52,6 +55,8 @@ export type AcilisYasalNotlari = {
 }
 
 export type AcilisIcerigi = {
+  /** Optional extra capability sections of a country, after the tools section. */
+  ekBolumler?: readonly EkOzellikBolumu[]
   /** AU-BETA-01 — optional block above the footer: legal and clinical disclaimers, contact particulars, policy links. */
   yasalNotlari?: AcilisYasalNotlari
   meta: { baslik: string; aciklama: string }
@@ -180,6 +185,8 @@ export type AcilisIcerigi = {
 
 /** What the clinic landing says. Anchors are values of `UlkeAcilisi.capalar` (keys `klinikUst` … `klinikSorov`). */
 export type KlinikAcilisIcerigi = {
+  /** Optional extra capability sections of a country, after the patient page. */
+  ekBolumler?: readonly EkOzellikBolumu[]
   meta: { baslik: string; aciklama: string }
   /** The small word beside the word mark, as the Turkish clinic page writes "klinik". */
   markaEk: string

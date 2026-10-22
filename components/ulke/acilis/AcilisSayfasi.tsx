@@ -317,6 +317,9 @@ export function AcilisSayfasi({ dil, istenenDil, iletisimEposta, gorseller, acil
           <Ozellik id={c.jadval} b={t.jadval} tone="paper" reverse />
           <Yonalishlar c={c} t={t.yonalish} />
           <Ozellik id={c.kuzatuv} b={t.kuzatuv} tone="paper" />
+          {(t.ekBolumler ?? []).map((b, i) => (
+            <Ozellik key={b.id} id={b.id} b={b} tone={i % 2 === 0 ? 'paper-2' : 'paper'} reverse={i % 2 === 1} />
+          ))}
           <Organish metin={t.organish} gorsel={gorseller.stol} capa={c.organish} />
           <Xavfsizlik c={c} t={t.xavfsizlik} gorsel={gorseller.yolak} />
           <Narx metin={t.narx} fiyatlar={narxSatirlari(a)} capa={c.narx} sorovHref={`#${c.sorov}`} />

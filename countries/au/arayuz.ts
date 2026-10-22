@@ -14,6 +14,7 @@ import { auAsistanAdi } from './klinik/asistanAdlari'
 import { auAsistanKaynaklari } from './asistan/kaynaklar'
 import { AU_SES } from './ses'
 import { AU_YASAL_NOTLARI } from './uzanti/acilis'
+import { auAcilisGuncelle } from './uzanti/acilisEk'
 
 const temel = enArayuz(AU_GIRDI)
 const sunulan = new Set(temel.roller.map((r) => r.anahtar))
@@ -52,7 +53,11 @@ const narxAu = <T extends { gruplar: readonly { izoh?: string }[] }>(n: T): T =>
 const acilis = temel.acilis
   ? {
       ...temel.acilis,
-      icerik: Object.fromEntries(Object.entries(temel.acilis.icerik).map(([k, v]) => [k, v ? { ...v, narx: narxAu(v.narx), yasalNotlari: AU_YASAL_NOTLARI, klinik: { ...v.klinik, yasalNotlari: AU_YASAL_NOTLARI } } : v])),
+      icerik: Object.fromEntries(Object.entries(temel.acilis.icerik).map(([k, v]) => {
+        if (!v) return [k, v]
+        const g = auAcilisGuncelle(v, temel.roller.length)
+        return [k, { ...g, narx: narxAu(g.narx), yasalNotlari: AU_YASAL_NOTLARI, klinik: { ...g.klinik, yasalNotlari: AU_YASAL_NOTLARI } }]
+      })),
     }
   : temel.acilis
 

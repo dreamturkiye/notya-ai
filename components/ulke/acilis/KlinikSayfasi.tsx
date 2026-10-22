@@ -97,6 +97,21 @@ export function KlinikSayfasi({ dil, istenenDil, iletisimEposta, gorsel, acilis:
             card={<TypeCard label={b.kart.etiket} rows={b.kart.satirlar} note={b.kart.not} />}
           />
 
+          {(k.ekBolumler ?? []).map((e, i) => (
+            <FeatureSection
+              key={e.id}
+              id={e.id}
+              tone={i % 2 === 0 ? 'paper' : 'paper-2'}
+              reverse={i % 2 === 0}
+              eyebrow={e.ustBaslik}
+              title={e.baslik}
+              titleItalic={e.baslikVurgu}
+              body={e.govde}
+              bullets={e.maddeler}
+              card={<TypeCard label={e.kart.etiket} rows={e.kart.satirlar} note={e.kart.not} />}
+            />
+          ))}
+
           <section id={c.klinikDallar} className="scroll-mt-16 bg-paper py-20 sm:py-28">
             <div className="mx-auto max-w-7xl px-5 sm:px-8">
               <p className="font-outfit text-xs uppercase tracking-[0.22em] text-ink-muted">{k.dallar.ustBaslik}</p>
