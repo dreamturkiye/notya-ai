@@ -302,7 +302,7 @@ export function Cerceve({ dil, m, ad, unvan, aktif, cikis, sade, onBuro, childre
           {cikis ? <button type="button" className="uza-dugme uza-dugme-cizgi uza-dugme-kucuk" onClick={cikis}>{m.kabuk.cikis}</button> : null}
         </div>
       ) : null}
-      <main className="uza-ic uza-govde">{ulkePaketi().uzanti?.ekNot ? <p className="uza-ipucu" role="note" data-alan="ek-not">{ulkePaketi().uzanti!.ekNot}</p> : null}{children}</main>
+      <main className="uza-ic uza-govde">{children}</main>
     </div>
   )
 }

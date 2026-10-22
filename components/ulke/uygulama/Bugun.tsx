@@ -6,16 +6,15 @@
  * Replaces the holding page for accounts of a country where the application is switched on.
  */
 import React, { useEffect, useState, type CSSProperties } from 'react'
-import { Cerceve, Hata, HAZIR, saatYaz, useUygulama, YOL, Yukleniyor, type Api } from './Kabuk'
+import { Cerceve, Hata, HAZIR, saatYaz, useUygulama, YOL, Yukleniyor } from './Kabuk'
 import { asistanAdi, asistanSatiri } from './Asistan'
-import { AsistanSesKontrol } from './AsistanSes'
 import { CHROME_FONT, CHROME_RENK as R } from '@/lib/doktor/chromeRenk'
 import { hesapSaatDilimi } from '@/lib/ulke/arayuz/bicim'
 import { OkunmamisMesajlarKarti } from './HastaMesajlari'
 import { BekleyenKonsultasyonlarKarti } from './Konsultasyonlar'
 import { Istekler } from './PortalIstekleri'
 import { saatAraligi, DurumRozeti, muayeneBaslatilabilir, muayeneBaslatYolu, takvimYolu, type RandevuKaydi } from './randevuOrtak'
-import { araclarMetni, asistanKimligi, asistanSesAdlari, metninDili, randevuMetni, rolAdi, type UygulamaMetni } from '@/lib/ulke/arayuz'
+import { araclarMetni, metninDili, randevuMetni, rolAdi, type UygulamaMetni } from '@/lib/ulke/arayuz'
 import { ozellikAcik, ulkePaketi } from '@/lib/ulke/ulke'
 import { roller } from '@/lib/ulke/arayuz'
 import { Ipucu } from './Ipucu'
@@ -104,7 +103,7 @@ function KaroIkon({ ad }: { ad: string }) {
   }
 }
 
-export function BugunGorunumu({ m, ad, muayeneler, hata, rol, randevular, mesajlar, konsultasyon, istekler, ilkAdimlar, api }: {
+export function BugunGorunumu({ m, ad, muayeneler, hata, rol, randevular, mesajlar, konsultasyon, istekler, ilkAdimlar }: {
   m: UygulamaMetni; ad: string; muayeneler: BugunMuayenesi[] | null; hata: boolean
   /** NOTYA-UZ-RANDEVU-01: today's appointments. Absent or null = not loaded, or the country has none: no list is drawn. */
   randevular?: RandevuKaydi[] | null
@@ -118,8 +117,6 @@ export function BugunGorunumu({ m, ad, muayeneler, hata, rol, randevular, mesajl
   istekler?: React.ReactNode
   /** YENI-DOKTOR-UX-2026-10: the first-run checklist of a new account. Draws nothing once set up. */
   ilkAdimlar?: React.ReactNode
-  /** Present on the live page. A static render without it still shows the two voice names. */
-  api?: Api
 }) {
   const p = m.pano
   const tz = hesapSaatDilimi()
@@ -133,8 +130,6 @@ export function BugunGorunumu({ m, ad, muayeneler, hata, rol, randevular, mesajl
   const hastaSayi = new Set((muayeneler ?? []).map((v) => v.hastaId).filter(Boolean)).size
   const asistan = asistanAdi(m, rol)
   const satir = asistanSatiri(m, rol)
-  const sesler = satir ? asistanSesAdlari() : null
-  const kaynaklar = sesler ? asistanKimligi(rol, dil)?.kaynaklar : undefined
   const karo = (href: string | null, text: string, not?: string) => {
     const ic = (
       <>
@@ -153,27 +148,11 @@ export function BugunGorunumu({ m, ad, muayeneler, hata, rol, randevular, mesajl
           <h1 className="uza-h1" style={S({ margin: 0 })}>{m.bugun.selam}, {ad}</h1>
           <Ipucu m={m} bolum="bugun" />
         </div>
-        <div className="uza-ekran-disi">
-          <span data-alan="asistan-ad">{asistan}</span>
+        {/* The Turkish home names the assistant in one line under the title ("Ayşe: …"); no card, no source lists, no voice buttons. The nav link "Ask the assistant" lands here. Voice preview lives in Settings. */}
+        <div id="asistan" className={satir ? undefined : 'uza-ekran-disi'} style={S({ marginTop: 12, fontSize: 15, color: R.ink, lineHeight: 1.55, maxWidth: 720 })}>
+          <span data-alan="asistan-ad" style={S({ color: R.pine, fontWeight: 700 })}>{asistan}</span>
           {satir ? <span data-alan="asistan-satir">{`: ${satir}`}</span> : null}
         </div>
-        {sesler && satir ? (
-          <section id="asistan" className="uza-kart" data-alan="asistan-kart" data-rol={rol ?? undefined}>
-            <p className="uza-ust-yazi">{m.asistan.etiket}</p>
-            <p className="uza-asistan-ad" data-alan="asistan-kart-ad">{asistan}</p>
-            <p className="uza-ipucu" data-alan="asistan-kart-satir">{satir}</p>
-            {kaynaklar ? (
-              <>
-                <p className="uza-ipucu" data-alan="asistan-kaynak-not">{kaynaklar.not}</p>
-                <p className="uza-ust-yazi uza-asistan-baslik" data-alan="asistan-yetki-baslik">{kaynaklar.yetkiBaslik}</p>
-                <ul className="uza-asistan-kaynak" data-alan="asistan-yetki">{kaynaklar.yetki.map((sat) => <li key={sat}>{sat}</li>)}</ul>
-                <p className="uza-ust-yazi uza-asistan-baslik" data-alan="asistan-kitap-baslik">{kaynaklar.kitapBaslik}</p>
-                <ul className="uza-asistan-kaynak" data-alan="asistan-kitap">{kaynaklar.kitaplar.map((sat) => <li key={sat}>{sat}</li>)}</ul>
-              </>
-            ) : null}
-            <AsistanSesKontrol m={m} api={api} sesler={sesler} />
-          </section>
-        ) : null}
       </section>
 
       {ilkAdimlar ?? null}
@@ -369,7 +348,7 @@ export default function Bugun() {
   if (!hesap) return <Yukleniyor m={u.m} dil={u.dil} />
   return (
     <Cerceve dil={u.dil} m={u.m} ad={hesap.ad} unvan={rolAdi(hesap.rol, u.dil) ?? undefined} aktif="bugun" cikis={u.cikis}>
-      <BugunGorunumu m={u.m} ad={hesap.ad} muayeneler={muayeneler} hata={hata} rol={hesap.rol} api={api} randevular={randevular} mesajlar={ozellikAcik('hastaPortali') && ozellikAcik('hastaMesajlari') ? <OkunmamisMesajlarKarti u={u} /> : null} konsultasyon={ozellikAcik('konsultasyon') && ozellikAcik('araclar') ? <BekleyenKonsultasyonlarKarti u={u} /> : null} istekler={ozellikAcik('hastaPortali') && ozellikAcik('randevu') ? <Istekler u={u} r={randevuMetni(u.dil)} /> : null} ilkAdimlar={<IlkAdimlarKarti m={u.m} api={api} rolTamam={Boolean(hesap.rol) || roller().length === 0} />} />
+      <BugunGorunumu m={u.m} ad={hesap.ad} muayeneler={muayeneler} hata={hata} rol={hesap.rol} randevular={randevular} mesajlar={ozellikAcik('hastaPortali') && ozellikAcik('hastaMesajlari') ? <OkunmamisMesajlarKarti u={u} /> : null} konsultasyon={ozellikAcik('konsultasyon') && ozellikAcik('araclar') ? <BekleyenKonsultasyonlarKarti u={u} /> : null} istekler={ozellikAcik('hastaPortali') && ozellikAcik('randevu') ? <Istekler u={u} r={randevuMetni(u.dil)} /> : null} ilkAdimlar={<IlkAdimlarKarti m={u.m} api={api} rolTamam={Boolean(hesap.rol) || roller().length === 0} />} />
     </Cerceve>
   )
 }
