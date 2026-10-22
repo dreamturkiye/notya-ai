@@ -34,7 +34,7 @@ export function getDrAyseVoiceId(): string {
 }
 
 export async function synthesizeSpeech(text: string): Promise<ArrayBuffer> {
-  const apiKey = process.env.ELEVENLABS_API_KEY || process.env.NEXT_PUBLIC_ELEVENLABS_KEY
+  const apiKey = process.env.ELEVENLABS_API_KEY
   if (!apiKey) {
     throw new Error('ElevenLabs API key missing')
   }
