@@ -144,6 +144,9 @@ function Ic({ sessionId, patientId, transcript, pediatrik, hata, onDevam }: Prop
     setOgeler((l) => l.map((o) => (o.key === key ? { ...o, ...y } : o)))
   }, [])
 
+  // NOTYA-BELGE-OTO-02: warm the on-device OCR engine as soon as the step opens (first image no longer waits for it).
+  useEffect(() => { void import("@/core/belgeler/ocrKimlik").then((m) => m.ocrIsit()).catch(() => undefined) }, [])
+
   // Hatırlatıcılar: hafif, kapatılabilir, asla engellemez.
   const hatirlaticilar = useMemo(() => {
     try { return eksikHatirlaticilar(ekHatirlaticilar(transcript, { pediatrik }), ogeler.map((o) => o.tur).filter((t): t is EkTuru => !!t)).filter((h) => !kapatilan.includes(h.kod)) }

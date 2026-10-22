@@ -331,6 +331,16 @@ SADECE geçerli JSON döndür, başka hiçbir şey yazma:
     }
     // NOTYA-BELGE-OTO-01: ONE write of every imaging block (stable upload order), idempotent per document id, no approval step.
     try {
+      if (noteData?.soap) {
+        const { llmBelgeBlokTemizle } = await import('@/core/belgeler/notaBlok')
+        for (const alan of ['subjektif', 'objektif', 'degerlendirme', 'plan'] as const) {
+          const v = noteData.soap[alan]
+          if (typeof v === 'string' && v) noteData.soap[alan] = llmBelgeBlokTemizle(v)
+        }
+        if (typeof noteData.aiDegerlendirme === 'string') noteData.aiDegerlendirme = llmBelgeBlokTemizle(noteData.aiDegerlendirme)
+      }
+    } catch { console.error('[belge-oto] llm blok temizligi atlandi') }
+    try {
       const gor = ekHazir.ekler.filter((e) => ['rontgen', 'ekg', 'foto'].includes(e.sonuc.tur) && e.sonuc.durum === 'tamam')
       if (gor.length && noteData?.soap) {
         const { notaBloklariUygula } = await import('@/core/belgeler/notaBlok')

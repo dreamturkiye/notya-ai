@@ -307,7 +307,15 @@ export default function HastaProfilPage() {
         const genelHam = String(data.patient?.genel_ozet || '').trim()
         const sonHam = String(data.patient?.son_muayene_ozeti || '').trim()
         const ozetKesik = /…|\.\.\.\s*$/.test(genelHam) || /…|\.\.\.\s*$/.test(sonHam)
-        if (!genelHam || !sonHam || ozetKesik) {
+        // NOTYA-OZET-GELIS-01: eski biçimli özet (geliş sebebi/gebelik satırı yok) bir kez yenilenir (sekme başına, hasta başına).
+        let ozetEski = false
+        if (genelHam && sonHam && !/Geliş sebebi|Gebelik/.test(`${genelHam} ${sonHam}`)) {
+          try {
+            const anahtar = `klinikOzetYenilendi:${patientId}`
+            if (!window.sessionStorage.getItem(anahtar)) { window.sessionStorage.setItem(anahtar, '1'); ozetEski = true }
+          } catch { /* sessionStorage yok: yenileme atlanır */ }
+        }
+        if (!genelHam || !sonHam || ozetKesik || ozetEski) {
           setKlinikOzetYukleniyor(true)
           void fetch(`/api/doktor/hastalar/${patientId}/klinik-ozet`, {
             method: 'POST',
