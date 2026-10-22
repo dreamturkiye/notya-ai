@@ -9,6 +9,7 @@ import { VAULT_MAX_BYTES } from '@/lib/vault/types'
 import { belgeleriOtomatikIsle } from '@/core/belgeler/otoIstemci'
 import { sinirliHavuz, type BelgeAsama } from '@/core/belgeler/otoBatch'
 import { deIdMetin } from '@/core/belgeler/deidMetin'
+import { aktifUlke } from '@/lib/ulke/ulke'
 
 type Ek = {
   id: string
@@ -68,7 +69,7 @@ export default function MuayeneEkleri({
 
   // NOTYA-BELGE-OTO-01: batch-first. N files -> upload (3 at a time) -> mask (outbound copy only) -> evaluate -> ONE note write.
   const [satirlar, setSatirlar] = useState<{ id: string; ad: string; asama: BelgeAsama | 'yuklendi'; not?: string }[]>([])
-  const deMetin = deIdMetin(process.env.NOTYA_COUNTRY)
+  const deMetin = deIdMetin(aktifUlke())
   const ASAMA_ETIKET: Record<string, string> = { bekliyor: 'Sırada', yukleniyor: 'Yükleniyor', yuklendi: 'Yüklendi', maskeleniyor: 'Kimlik taranıyor', degerlendiriliyor: 'Değerlendiriliyor', nota_eklendi: 'Nota eklendi', atlandi: 'Otomatik değerlendirilmedi', hata: 'Hata' }
 
   const ekle = async (dosyalar: File[]) => {

@@ -224,7 +224,7 @@ const TEMEL: AcilisIcerigi = {
       { k: 'Separate access', v: 'Each doctor sees only their own patients.' },
       { k: 'The doctor\'s approval', v: 'A note, and everything a patient sees, passes your approval first.' },
       { k: 'Nothing sent by itself', v: 'The system sends nothing out. A message stays on the patient\'s page, and you tell the patient it is there.' },
-      { k: 'Decision support', v: '%M supports your decisions; diagnosis and treatment are the doctor\'s.' },
+      { k: 'Your clinical judgement', v: '%M drafts and organises what you record. It does not diagnose or recommend treatment; every clinical decision stays with the registered practitioner.' },
     ],
   },
   narx: {
@@ -386,6 +386,8 @@ export function enAcilis(g: EnAcilisGirdisi): AcilisIcerigi {
   const t = enCevir(TEMEL, bicim)
   const ad = (rol: string): string => g.roller.find((r) => r.anahtar === rol)?.ad[bicim] ?? ''
   const metin = JSON.parse(JSON.stringify(t), (_k, v: unknown) => (typeof v === 'string' ? doldur(v) : v)) as AcilisIcerigi
+  // AU-MKT-AUDIT (2026-10-22): the count in the hero strip is the pack's own number of roles, not a fixed 40.
+  metin.kahraman.serit = metin.kahraman.serit.map((x) => x.replace(/\b40 specialties/, `${g.roller.length} specialties`))
   return {
     ...metin,
     yonalish: {
