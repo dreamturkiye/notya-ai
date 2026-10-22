@@ -1,5 +1,16 @@
 # OPEN COMMITMENTS — Notya AI
 
+## AU-KITAP-01 — per-role reference books (Claude, 2026-10-22, `release/au`)
+
+Kaan's order: every Australian role has its OWN Australian reference books, as Türkiye's specialties do. Türkiye's mechanism (read, not assumed): the national authority list plus the international texts are DATA on each persona (`lib/asistan/turkishSpecialtyRefs.ts`, `specialistsCatalog.ts`, `lib/klinik/klinikTurkishRefs.ts`) and are used in the assistant's SYSTEM PROMPT (`personaEngine.ts`, national binding, international depth only); they are shown on NO doctor screen. Australia now matches: `countries/au/asistan/kaynaklar.ts` (restored from `03493a8^`, then rebuilt) rides on `AsistanKimligi.kaynaklar`; `auAsistanKaynakBlogu` is the prompt-block counterpart (not called yet: the text/voice assistant exists for Türkiye only, and the note instructions deliberately name no source). Home page unchanged (no card).
+
+| ID | Date | Status | What | Owner / waits on |
+|---|---|---|---|---|
+| AU-KITAP-01a | 2026-10-22 | DONE (this branch) | All 44 roles carry >= 2 books and >= 4 authorities, Australian / ANZ titles first (29 roles), international depth texts after. Titles opened on publisher / college / library pages; test `countries/au/asistan/kaynaklar.test.ts`. | Claude |
+| AU-KITAP-01b | 2026-10-22 | OPEN | 15 roles have NO verified Australian-authored textbook (ophthalmology, otolaryngology, orthopaedics, plastic surgery, radiology, urology, cardio-thoracic, vascular, radiation oncology, immunology and allergy, haematology, cosmetic surgery, aesthetic medicine, clinical psychology, podiatry): authorities + international texts only. Test holds the list; add a verified title in `kaynaklar.ts`. Needs a local clinician or college reading list. | Claude (search again), a clinician of each role |
+| AU-KITAP-01c | 2026-10-22 | OPEN | Wire `auAsistanKaynakBlogu` into the assistant prompt when the AU text/voice assistant is built. Do NOT give it to the visit-note instructions (they must name no source). | Claude, with the AU assistant job |
+| AU-KITAP-02 | 2026-10-22 | OPEN | Same gap in us, gb, ca, nz, uz: no country pack carries per-role national books or authorities on the assistant identity (`AsistanKimligi.kaynaklar` is unused outside AU; uz has names/titles only). Country-adapted data needed per country (US, UK, Canada, NZ, Uzbekistan: their own colleges, regulators, national texts; about 35-40 roles each), each title verified on a publisher or college page. Not done in this change set: ~190 researched titles, cost and verification time. Mechanism needs no new kit code (type and slot exist). Regulatory recognition gate applies per country. | Claude |
+
 ## BYO-PAYMENTS-01 — bring-your-own Stripe, live mode on (Claude, 2026-10-22, owner: Kaan Arıoğlu; this branch: au (AUD, GST 10; Tyro option present but OFF))
 
 Order from the owner: activate the bring-your-own Stripe layer in every country where Stripe operates (us, gb, ca, au, nz) and turn LIVE mode on. Core kit change (`lib/ulke/fatura/*`, migration 151, `components/ulke/uygulama/Fatura.tsx`, wording in `countries/_dil/en/fatura.ts`), applied country-adapted; not branş-specific. Runbooks: `docs/payments/STRIPE-LIVE-RUNBOOK.md`, `docs/payments/STRIPE-TEST-RUNBOOK.md`. Initial compliance draft – external legal review later.
