@@ -14,7 +14,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { AKTIF_PAKET } from '@/countries/active'
 import { bulunamadiHtml } from '@/lib/ulke/bulunamadiHtml'
-import { icerikHerkezeAcikMi, robotsAcikMetni } from '@/lib/ulke/acikIcerik'
+import { icerikHerkezeAcikMi } from '@/lib/ulke/acikIcerik'
 import { ARAMA_GIZLI_BASLIGI, rotaAcikMi } from '@/lib/ulke/rotaKapisi'
 import { securityTxt } from '@/lib/ulke/yasal/securityTxt'
 import { PORTAL_SAYFASI } from '@/lib/ulke/portal/sabitler'
@@ -24,15 +24,18 @@ function guvenlikBasliklari(h: Headers, pathname: string) {
   h.set('X-Content-Type-Options', 'nosniff')
   h.set('Referrer-Policy', 'strict-origin-when-cross-origin')
   h.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload')
-  const herkeseAcik = icerikHerkezeAcikMi(pathname) || pathname === '/.well-known/security.txt' || pathname === '/robots.txt'
-  if (AKTIF_PAKET.aramaMotorlarinaGizli && !herkeseAcik) h.set('X-Robots-Tag', ARAMA_GIZLI_BASLIGI)
+  // AU-SEO-01: the signed-in application is noindex ALWAYS. Public pages are noindex only while the country's switch is off.
+  const dosya = pathname === '/.well-known/security.txt' || pathname === '/robots.txt' || pathname === '/sitemap.xml'
+  const herkeseAcik = icerikHerkezeAcikMi(pathname)
+  if (!dosya && (!herkeseAcik || AKTIF_PAKET.aramaMotorlarinaGizli)) h.set('X-Robots-Tag', ARAMA_GIZLI_BASLIGI)
 }
 
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
 
-  if (pathname === '/robots.txt' && AKTIF_PAKET.aramaMotorlarinaGizli) {
-    const r = new NextResponse(robotsAcikMetni(), { status: 200, headers: { 'Content-Type': 'text/plain; charset=utf-8' } })
+  // robots.txt and sitemap.xml are route handlers (app/robots.txt, app/sitemap.xml) that follow the indexing switch.
+  if (pathname === '/robots.txt' || pathname === '/sitemap.xml') {
+    const r = NextResponse.next()
     guvenlikBasliklari(r.headers, pathname)
     return r
   }

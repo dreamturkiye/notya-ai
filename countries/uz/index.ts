@@ -125,7 +125,8 @@ export const UZ_PAKETI: UlkePaketi = {
   },
   // NOTYA-UZ-MUAYENE-01 (Kaan, 2026-10-08): served at notya.io/uzbek. The paths above are relative to this prefix.
   yolOnEki: '/uzbek',
-  aramaMotorlarinaGizli: true,
+  // AU-SEO-01: THE single indexing switch. Hidden unless NOTYA_UZ_INDEXABLE=true is set in the deployment. Signed-in pages are noindex whatever this says.
+  aramaMotorlarinaGizli: process.env.NOTYA_UZ_INDEXABLE !== 'true',
   kabuk: {
     baslik: 'Notya',
     aciklama: 'Shifokorlar va klinikalar uchun klinik yordamchi.',

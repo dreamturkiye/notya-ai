@@ -74,6 +74,16 @@ const nextConfig = {
   },
 
   // QA-2026-09-06 bulgu #1: /login 404'tı — alışkanlıkla yazılan yolları gerçek girişe yönlendir.
+  // AU-SEO-01: crawlers ask the HOST root for these two files; the build serves them under its path prefix. (Uzbekistan
+  // shares notya.io with the Turkish site, whose root files are not ours to take.)
+  async rewrites() {
+    if (ulkeDerleme.bolunmemisUygulama || !YOL_ON_EKI || ULKE === 'uz') return []
+    return [
+      { source: '/robots.txt', destination: `${YOL_ON_EKI}/robots.txt`, basePath: false },
+      { source: '/sitemap.xml', destination: `${YOL_ON_EKI}/sitemap.xml`, basePath: false },
+    ]
+  },
+
   async redirects() {
     // NOTYA-ULKE-01: the list below belongs to the pre-split application (Türkiye today) and is returned only for it.
     // Any other country gets its own list from countries/<kod>/derleme.mjs, plus the one redirect below that every
