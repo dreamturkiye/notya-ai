@@ -1,5 +1,19 @@
 # OPEN COMMITMENTS — Notya AI
 
+## BYO-PAYMENTS-01 — bring-your-own Stripe, live mode on (Claude, 2026-10-22, owner: Kaan Arıoğlu; this branch: ca (CAD, GST 5 starting value; HST/provincial not computed))
+
+Order from the owner: activate the bring-your-own Stripe layer in every country where Stripe operates (us, gb, ca, au, nz) and turn LIVE mode on. Core kit change (`lib/ulke/fatura/*`, migration 151, `components/ulke/uygulama/Fatura.tsx`, wording in `countries/_dil/en/fatura.ts`), applied country-adapted; not branş-specific. Runbooks: `docs/payments/STRIPE-LIVE-RUNBOOK.md`, `docs/payments/STRIPE-TEST-RUNBOOK.md`. Initial compliance draft – external legal review later.
+
+| ID | Date | Status | What | Owner / waits on |
+|---|---|---|---|---|
+| BYO-PAYMENTS-01a | 2026-10-22 | DONE (this branch) | Restricted keys only (`rk_test_` / `rk_live_`); `sk_` keys of any mode refused; key encrypted at rest, never logged or returned; mode `test`/`live` stored per connection (migration 151, applied to this country's own Supabase project and verified); live connect needs a live `whsec_` and an explicit confirmation; TEST/LIVE badge; webhook rejects events whose `livemode` differs from the connection; refunds and reconciliation never cross modes; minor units; idempotency keys; no platform fee, no funds held. | Claude |
+| BYO-PAYMENTS-01b | 2026-10-22 | OPEN | **No external legal or payments review of live mode.** Merchant-of-record / money-transmission posture, consumer-law and tax-invoice wording are unreviewed in every country. | Owner / external counsel |
+| BYO-PAYMENTS-01c | 2026-10-22 | OPEN | **Webhook delivery and a real Checkout have never been run live**; no live charge was made. Tests use fake fetch and SDK-signed fixtures. Follow the live runbook with a small charge on the doctor's own account. | Owner |
+| BYO-PAYMENTS-01d | 2026-10-22 | OPEN | **Restricted-key permission labels** (Checkout Sessions, Payment Intents, Refunds, Charges) are the API object names; Stripe's dashboard labels were not verified. The text points the doctor to the key's request log. | Owner |
+| BYO-PAYMENTS-01e | 2026-10-22 | OPEN | **Tax defaults for gb (VAT 20), ca (GST 5; no HST/provincial), nz (GST 15), us (none)** are unverified starting values; official pages could not be fetched. Seller-identity particulars (practice-identity form) are built only in au; not yet in us/gb/ca/nz. | Owner / external review |
+| BYO-PAYMENTS-01f | 2026-10-22 | OPEN | **uz: NOT enabled.** Stripe does not operate there; uz stays demo only (no `uzanti.fatura`, no migration 151 applied to the uz project). | Owner |
+| BYO-PAYMENTS-01g | 2026-10-22 | OPEN | Tyro is AU-only and inert (`NOTYA_TYRO_ETKIN` unset). Observed, out of scope: us/gb/ca/nz branches lack the migration-148 Ekler tables; three pre-existing D5 wall violations (`belgeNotaYaz.ts`, `MuayeneEkleri.tsx`, belgeler page) and, on the au base, `lib/clinical/buyumeEgrisi.ts` Turkish text, fail the walls test independent of this change. Possible follow-up: show the last 4 characters of the key. | Claude / owner |
+
 ## BELGE-OTO-01 (country port) — automatic batch document workflow (Claude, 2026-10-21)
 
 Ported from main beb5761: Belgeler vault batch upload, original-image masking posture, shared note-block logic (onayla route), copy localized by build. The post-dictation Ekler step and sessions/end hook do not exist in this country tree (N/A; building it is a separate port, waits on Claude). PDFs are not auto-sent (waits on Claude).
