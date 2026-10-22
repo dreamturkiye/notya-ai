@@ -269,6 +269,20 @@ export type UygulamaMetni = {
     readonly qayd: string
     readonly qoralama: string
   }
+  /** AU-CANLI-01: the live spoken assistant's screen. Absent = the pack has none (the screen draws nothing). */
+  readonly asistanCanli?: {
+    readonly baslat: string
+    readonly baglaniyor: string
+    readonly dinliyor: string
+    readonly konusuyor: string
+    readonly bitir: string
+    readonly hata: string
+    readonly mikrofon: string
+    readonly limit: string
+    readonly not: string
+    readonly siz: string
+    readonly ekranda: string
+  }
   readonly rol: {
     readonly baslik: string
     readonly aciklama: string
