@@ -11,7 +11,7 @@ import type { AsistanKimligi } from '../arayuz/tipler'
 import { enCanliAsistan } from '../../../countries/_dil/en/asistan/canli'
 import { ajanKimligi, ajanOrtamAdi, canliDurum } from './ajan'
 import { canliIstem } from './istem'
-import { canliJetonuDogrula, canliJetonuImzala } from './jeton'
+import { canliJetonuDogrula, canliJetonuImzala, JETON_OMRU_MS, llmSirriGecerliMi } from './jeton'
 import { konusmaYap, SesAkisi } from './konusma'
 import { motorKilidiGerekli, motorKilidiGovdesi, motoruSabitle, motorOnbelleginiSil } from './motorKilidi'
 import { sesMetni } from './okunus'
@@ -57,27 +57,42 @@ describe('live assistant: agent choice and fail closed', () => {
 })
 
 describe('live assistant: call token', () => {
-  const eski = process.env.NOTYA_SES_JETON_SECRET
+  const eski = { j: process.env.NOTYA_SES_JETON_SECRET, l: process.env.NOTYA_SES_LLM_SECRET }
   process.env.NOTYA_SES_JETON_SECRET = SIR
+  process.env.NOTYA_SES_LLM_SECRET = 'l'.repeat(32)
   it('carries the account and the role, bound to its country', () => {
     const j = canliJetonuImzala({ hesapId: 'u-1', kod: 'au', rol: 'cardiology', saatDilimi: 'Australia/Perth' })
     assert.ok(j)
-    assert.deepEqual({ ...canliJetonuDogrula(j, 'au'), oturum: 'x' }, { hesapId: 'u-1', rol: 'cardiology', saatDilimi: 'Australia/Perth', oturum: 'x' })
+    assert.deepEqual(canliJetonuDogrula(j, 'au'), { hesapId: 'u-1', rol: 'cardiology', saatDilimi: 'Australia/Perth' })
     assert.equal(canliJetonuDogrula(j, 'gb'), null)
     assert.equal(canliJetonuDogrula(`${j}x`, 'au'), null)
     assert.equal(canliJetonuDogrula(undefined, 'au'), null)
   })
-  it('carries no patient id and without a secret there is no token', () => {
-    const j = canliJetonuImzala({ hesapId: 'u-1', kod: 'au', rol: 'cardiology' })!
+  it('expires, and carries no patient id or any id but the account\'s', () => {
+    const j = canliJetonuImzala({ hesapId: 'u-1', kod: 'au', rol: 'cardiology' }, 1_000)!
+    assert.equal(canliJetonuDogrula(j, 'au', 1_000 + JETON_OMRU_MS + 1), null)
+    assert.ok(canliJetonuDogrula(j, 'au', 2_000))
     const yuk = JSON.parse(Buffer.from(j.split('.')[0], 'base64url').toString('utf8')) as Record<string, unknown>
-    assert.equal(yuk.p, null)
+    assert.deepEqual(Object.keys(yuk).sort(), ['d', 'exp', 'pc', 'r'])
+  })
+  it('without a signing secret there is no token, and a forged one is refused', () => {
+    const j = canliJetonuImzala({ hesapId: 'u-1', kod: 'au', rol: 'cardiology' })!
+    const govde = Buffer.from(JSON.stringify({ d: 'someone-else', pc: 'au', r: 'cardiology', exp: Date.now() + 1e6 })).toString('base64url')
+    assert.equal(canliJetonuDogrula(`${govde}.${j.split('.')[1]}`, 'au'), null)
     delete process.env.NOTYA_SES_JETON_SECRET
     assert.equal(canliJetonuImzala({ hesapId: 'u-1', kod: 'au', rol: 'cardiology' }), null)
+    assert.equal(canliJetonuDogrula(j, 'au'), null)
     process.env.NOTYA_SES_JETON_SECRET = SIR
   })
-  it('a token for another route kind (no ulke prefix) is refused', () => {
-    const j = canliJetonuImzala({ hesapId: 'u-1', kod: 'au', rol: 'cardiology' })!
-    assert.equal(canliJetonuDogrula(j, 'a'), null)
+  it('the agent\'s server secret is checked, and a short or missing one refuses everything', () => {
+    assert.equal(llmSirriGecerliMi(new Headers({ authorization: `Bearer ${'l'.repeat(32)}` })), true)
+    assert.equal(llmSirriGecerliMi(new Headers({ 'x-notya-ses-sirri': 'l'.repeat(32) })), true)
+    assert.equal(llmSirriGecerliMi(new Headers({ authorization: `Bearer ${'m'.repeat(32)}` })), false)
+    assert.equal(llmSirriGecerliMi(new Headers()), false)
+    delete process.env.NOTYA_SES_LLM_SECRET
+    assert.equal(llmSirriGecerliMi(new Headers({ authorization: 'Bearer ' })), false)
+    process.env.NOTYA_SES_LLM_SECRET = eski.l
+    if (eski.l === undefined) delete process.env.NOTYA_SES_LLM_SECRET
   })
   void eski
 })
