@@ -6,7 +6,9 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { AKTIF_YASAL } from '@/countries/active/yasal'
 import { ULKE_STIL as S, UlkeKart } from '@/components/ulke/UlkeKart'
-import { ACIK_ROBOTS, betaNotu } from '@/lib/ulke/acikIcerik'
+import { betaNotu } from '@/lib/ulke/acikIcerik'
+import { sayfaMeta } from '@/lib/ulke/seo/meta'
+import type { SeoSayfa } from '@/lib/ulke/seo/metinler'
 import { dilliYol, type AramaParametreleri } from '@/lib/ulke/sayfaDili'
 import { ulkePaketi } from '@/lib/ulke/ulke'
 import { YASAL_YOLLAR, type YasalAnahtar, type YasalDilPaketi } from '@/lib/ulke/yasal/tipler'
@@ -29,7 +31,7 @@ export function yasalSayfasi(anahtar: YasalAnahtar) {
   const yol = YASAL_YOLLAR[anahtar]
   function generateMetadata({ searchParams }: { searchParams?: AramaParametreleri }): Metadata {
     const { belge } = sec(anahtar, searchParams)
-    return belge ? { title: `${belge.baslik} — Notya`, robots: ACIK_ROBOTS } : {}
+    return belge ? sayfaMeta(anahtar as SeoSayfa, { baslik: `${belge.baslik} — Notya` }) : {}
   }
   function Sayfa({ searchParams }: { searchParams?: AramaParametreleri }) {
     const { dil, belge } = sec(anahtar, searchParams)

@@ -17,7 +17,7 @@ export function Organish({ metin, gorsel, capa }: { metin: AcilisIcerigi['organi
     <section id={capa} className="bg-paper-2 py-20 sm:py-28">
       <div className="mx-auto grid max-w-7xl items-center gap-12 px-5 sm:px-8 lg:grid-cols-2 lg:gap-16">
         <div className="relative">
-          <img src={gorsel} alt={metin.gorselAlt} className="aspect-[3/2] w-full rounded-xl object-cover" />
+          <img src={gorsel} alt={metin.gorselAlt} loading="lazy" decoding="async" className="aspect-[3/2] w-full rounded-xl object-cover" />
           <p className="mt-3 font-outfit text-xs uppercase tracking-[0.18em] text-ink-muted">{metin.gorselAlti}</p>
         </div>
 
