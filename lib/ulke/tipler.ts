@@ -11,6 +11,7 @@
 import type { ComponentType } from 'react'
 import type { HastaFormuIcerigi } from './intake/tipler'
 import type { ResmiGunKaynagi } from './tatiller/tipler'
+import type { UlkeUzantisi } from './uzanti/tipler'
 
 /** ISO 3166-1 alpha-2, lower case. Adding a country = a new folder under countries/ + a branch in countries/active/. */
 export const ULKE_KODLARI = ['tr', 'uz', 'gb', 'us', 'au', 'nz', 'ca'] as const
@@ -219,6 +220,8 @@ export type UlkePaketi = {
   dilAdlari: Partial<Record<DilKodu, string>>
   /** Settings of the signed-in application. Present exactly where the feature `cekirdekMuayene` is on. */
   uygulama?: UygulamaAyarlari
+  /** AU-BETA-01 — optional pack extensions: practice identity, privacy records, invoices, reference lookups (./uzanti/tipler.ts). */
+  uzanti?: UlkeUzantisi
   /**
    * Public days the calendar shows. Omitted = the calendar names none. Türkiye keeps its own list and does not
    * set this. It is not inside `uygulama.randevu`: the working pattern still treats a weekday as open.
@@ -467,6 +470,10 @@ export const UYGULAMA_EKRANLARI = {
   klinik: '/clinic',
   /** NOTYA-ULKE-KLINIK-01 — the front-desk workspace: the doctors who gave the account a grant, their appointments, the minimal patient card. */
   onBuro: '/desk',
+  /** AU-BETA-01 — the doctor's list of patients' access and correction requests and of consent records (pack extension `uzanti.gizlilik`). */
+  gizlilikTalepleri: '/privacy-requests',
+  /** AU-BETA-01 — invoices (pack extension `uzanti.fatura`). */
+  fatura: '/billing',
 } as const
 export type UygulamaEkrani = keyof typeof UYGULAMA_EKRANLARI
 

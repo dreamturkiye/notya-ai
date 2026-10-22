@@ -19,7 +19,7 @@ A pack that builds has every text and setting filled in. It says nothing about w
 
 ## What is in this pack, and where it comes from
 
-- **From the shared English set** (`countries/_dil/en/`, written once for five countries): 4152 texts as this pack shows them or hands the model (the country's own, counted in the next line, among them) — the screens, the role names, 40 note templates, the instructions to the model, the intake questions, 126 tools, the landing copy — written in `en-AU` spelling by the set's spelling table.
+- **From the shared English set** (`countries/_dil/en/`, written once for five countries): 4184 texts as this pack shows them or hands the model (the country's own, counted in the next line, among them) — the screens, the role names, 40 note templates, the instructions to the model, the intake questions, 126 tools, the landing copy — written in `en-AU` spelling by the set's spelling table.
 - **This country's own** (`countries/au/`, six small files): 42 texts it writes itself (its consent sentence, identifier label, time sentence, date example, name, word for a senior doctor, role names where they differ, what its closed tools are missing and who decides, unit names and tool words it writes differently, the example phone number and the pattern of an amount) and the settings in the table below.
 
 ## Settings — every one unverified
@@ -39,8 +39,8 @@ A pack that builds has every text and setting filled in. It says nothing about w
 | Days a patient's link stays valid | 30 | the owner; how long access may stand: for a lawyer |
 | Patient identifier | optional free text, encrypted, never validated; label "Medicare card number" | a local lead and a lawyer. Label "Medicare number". Whether a private clinic should record it in this product at all is unverified. |
 | Guardian age | 16 | **for a lawyer**. 16 as a starting value. Consent of minors differs by state and territory. |
-| Recording-consent sentence | "The patient, or the person who can consent for them, has agreed to this visit being recorded." — stamp `au-draft-2026-10-11`, NOT READ BY A LAWYER | **for a lawyer**. A draft sentence. Recording a consultation is governed by state and territory law, which differs. |
-| Intake-form consent sentence | the shared draft — stamp `au-draft-2026-10-11`, NOT READ BY A LAWYER | **for a lawyer** |
+| Recording-consent sentence | "The patient, or the person who can consent for them, has agreed to this visit being recorded." — stamp `au-draft-2026-10-22`, NOT READ BY A LAWYER | **for a lawyer**. A draft sentence. Recording a consultation is governed by state and territory law, which differs. |
+| Intake-form consent sentence | the shared draft — stamp `au-draft-2026-10-22`, NOT READ BY A LAWYER | **for a lawyer** |
 | Word for a senior doctor (in the instructions to the model) | "specialist" | a local clinical lead |
 | Phone: prefix, example, rule | +61; +61 491 570 006; a format rule only | a local lead. The example is one of the mobile numbers the communications regulator sets aside for creative works (0491 570 006, 0491 570 110, 0491 570 156 to 159). Unverified. |
 | Appointment norms | 09:00–17:00, 30 min; no public holiday | a local clinical lead |

@@ -21,6 +21,7 @@
  * pack's template for this visit owns it (../klinik/notSablonlari.ts → uzSablonAlanlari) — a key of another role is
  * not drawn even if it arrives. The label is the pack's, in the account's form; the key is never shown.
  */
+import { ReferansAramalari } from './ReferansKarti'
 import React, { useCallback, useEffect, useState, type ReactNode } from 'react'
 import { Bilgi, Hata, Secim, tarihYaz, saatYaz, YOL, type Uygulama } from './Kabuk'
 import { tamAd } from './Hastalar'
@@ -272,6 +273,8 @@ export function Not({ u, notId }: { u: Uygulama; notId: string }) {
       {/* MUAYENE-EKLERI-07: files attached to this visit (a lab PDF, a scanned referral, a photographed document). */}
       {ozellikAcik('muayeneEkleri') ? <MuayeneEkleri m={u.m} seansId={not.seansId} api={api} /> : null}
       <DosyaEk m={u.m} not={not} api={api} yenile={() => yukle()} />
+      {/* AU-BETA-01: the official medicines-schedule lookup beside the note, where the pack brings one. */}
+      <ReferansAramalari />
     </>
   )
 }

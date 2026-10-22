@@ -28,6 +28,8 @@ import { GIRDI_GECERSIZ } from '@/lib/ulke/arayuz/zamanGirdisi'
 import { yerine } from '@/lib/ulke/arayuz/yerTutucu'
 import type { Cevap, Cevaplar, FormSorusu, HastaFormuGorunumu } from '@/lib/ulke/intake/tipler'
 import { PORTAL_FORM_API, PORTAL_API } from '@/lib/ulke/portal/sabitler'
+import { ulkePaketi } from '@/lib/ulke/ulke'
+import { GizlilikBildirimi } from './GizlilikKarti'
 import type { PortalIcerigi } from '@/lib/ulke/portal/tipler'
 import type { DilKodu } from '@/lib/ulke/tipler'
 import { SayiGirisi } from '../girdi/SayiGirisi'
@@ -243,6 +245,7 @@ export function HastaFormuGorunumu({ f, form, cevaplar, sayilar, bolum, riza, se
         <h1 className="uza-h1">{h.bekliyorBaslik}</h1>
         <p className="uza-aciklama">{form.veli ? h.veliAciklama : h.bekliyorAciklama}</p>
         <div className="uza-form">
+          {ulkePaketi().uzanti?.gizlilik ? <GizlilikBildirimi g={ulkePaketi().uzanti!.gizlilik!} acik /> : null}
           <h2 className="uza-h2">{h.rizaBaslik}</h2>
           <p className="uza-not-metin" data-alan="form-riza">{form.riza.metin}</p>
           <label className="uza-onay">

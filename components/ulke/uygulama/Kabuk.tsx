@@ -155,7 +155,7 @@ export function useUygulama(ekran: UygulamaEkrani): Uygulama {
   '--uza-uyari': R.warn, '--uza-cizgi': R.border, '--uza-altin': R.gold, '--uza-nav': R.nav, '--uza-serif': CHROME_FONT.serif, '--uza-sans': CHROME_FONT.sans,
 } as CSSProperties
 
-export type Sekme = 'bugun' | 'takvim' | 'hastalar' | 'araclar' | 'klinik' | 'onBuro' | 'ayarlar'
+export type Sekme = 'bugun' | 'takvim' | 'hastalar' | 'araclar' | 'klinik' | 'onBuro' | 'ayarlar' | 'fatura' | 'gizlilikTalepleri'
 
 /** WMO weather code to a glyph. Same bands as the reference chrome; no sentence, so nothing to translate. */
 function havaIkonu(kod: number): string {
@@ -278,6 +278,9 @@ export function Cerceve({ dil, m, ad, unvan, aktif, cikis, sade, onBuro, childre
               {ozellikAcik('araclar') ? baglanti('araclar', YOL.araclar, araclarMetni(dil).kabuk.araclar) : null}
               {/* NOTYA-ULKE-KLINIK-01: the clinic, where the country has clinic accounts. Its name is in the clinic catalogue, in the same form. */}
               {ozellikAcik('klinikHesaplari') ? baglanti('klinik', YOL.klinik, klinikMetni(dil).kabuk.klinik) : null}
+              {/* AU-BETA-01: invoices and privacy requests, where the pack brings those extensions. */}
+              {ulkePaketi().uzanti?.fatura ? baglanti('fatura', YOL.fatura, ulkePaketi().uzanti!.fatura!.metin.baslik) : null}
+              {ulkePaketi().uzanti?.gizlilik ? baglanti('gizlilikTalepleri', YOL.gizlilikTalepleri, ulkePaketi().uzanti!.gizlilik!.doktor.baslik) : null}
               {baglanti('ayarlar', YOL.ayarlar, m.kabuk.ayarlar)}
             </nav>
           )}
@@ -299,7 +302,7 @@ export function Cerceve({ dil, m, ad, unvan, aktif, cikis, sade, onBuro, childre
           {cikis ? <button type="button" className="uza-dugme uza-dugme-cizgi uza-dugme-kucuk" onClick={cikis}>{m.kabuk.cikis}</button> : null}
         </div>
       ) : null}
-      <main className="uza-ic uza-govde">{children}</main>
+      <main className="uza-ic uza-govde">{ulkePaketi().uzanti?.ekNot ? <p className="uza-ipucu" role="note" data-alan="ek-not">{ulkePaketi().uzanti!.ekNot}</p> : null}{children}</main>
     </div>
   )
 }

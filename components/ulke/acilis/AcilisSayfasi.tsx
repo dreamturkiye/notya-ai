@@ -15,6 +15,7 @@
  *
  * Server component. Client parts: the bar, the typed visits, the learning toggle, the price section, the request form.
  */
+import { YasalNotlari } from './YasalNotlari'
 import React from 'react'
 import { Button } from '@/components/doktor-landing/button'
 import { FeatureSection, TypeCard } from '@/components/doktor-landing/feature'
@@ -219,7 +220,7 @@ function Xavfsizlik({ t, gorsel, c }: { t: AcilisIcerigi['xavfsizlik']; gorsel: 
           </h2>
           <blockquote className="mt-8 max-w-xl border-l-2 border-pine pl-5">
             <p className="font-display text-title font-normal italic leading-snug text-ink">{t.iqtibos}</p>
-            <footer className="mt-6 font-outfit text-sm leading-relaxed text-ink-2">{t.izoh}</footer>
+        <footer className="mt-6 font-outfit text-sm leading-relaxed text-ink-2">{t.izoh}</footer>
           </blockquote>
         </div>
 
@@ -321,6 +322,7 @@ export function AcilisSayfasi({ dil, istenenDil, iletisimEposta, gorseller, acil
           <Narx metin={t.narx} fiyatlar={narxSatirlari(a)} capa={c.narx} sorovHref={`#${c.sorov}`} />
           <Sorov c={c} t={t.sorov} iletisimEposta={iletisimEposta} kayitHref={kayitHref} />
         </main>
+        <YasalNotlari n={t.yasalNotlari} />
         <footer className="border-t border-line bg-paper">
           <div className="mx-auto flex max-w-7xl flex-col gap-10 px-5 py-12 sm:px-8 lg:flex-row lg:items-end lg:justify-between">
             <div>

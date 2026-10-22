@@ -27,6 +27,7 @@
  *     pack; nothing of the patient is put into it, it opens in a tab of its own and tells that site nothing of where
  *     the doctor came from.
  */
+import { KayitSistemiKarti, ReferansAramalari, ReferansBolumleri } from './ReferansKarti'
 import React, { useEffect, useMemo, useState } from 'react'
 import { Bilgi, Cerceve, Hata, useUygulama, YOL, Yukleniyor, type Uygulama } from './Kabuk'
 import { AramaFormu } from './Bugun'
@@ -368,6 +369,8 @@ export default function Araclar() {
     <Cerceve dil={u.dil} m={u.m} ad={u.hesap.ad} aktif="araclar" cikis={u.cikis}>
       <div style={{ display: 'flex', justifyContent: 'flex-end', margin: '0 0 8px' }}><Ipucu m={u.m} bolum="araclar" /></div>
       <Hata>{h.durum === 'bulunamadi' ? a.kayit.hastaBulunamadi : null}</Hata>
+      {/* AU-BETA-01: official-site lookups, reference links and the record-system stub, where the pack brings them. */}
+      {!x ? <><ReferansAramalari /><ReferansBolumleri /><KayitSistemiKarti /></> : null}
       {x ? <AracEkrani x={x} a={a} u={u} dil={u.dil} notDili={u.hesap.notDili} icerik={icerik} hasta={h.hasta} /> : (
         <>
           {/* An address that names a tool this account does not have: said once, above the grid it does have. */}

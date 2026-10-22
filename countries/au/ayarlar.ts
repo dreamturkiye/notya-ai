@@ -21,6 +21,7 @@
  *   UNITS       `araclar.labBirimleri`, each with the page it was read on
  *   OWN TOOLS   `araclar.ek`: the tools only Australia has (./araclar/)
  */
+import { AU_GIZLILIK } from './uzanti/gizlilik'
 import { hekimRolleri } from '@/lib/ulke/araclar/paket'
 import type { EnUlkeGirdisi } from '../_dil/en/girdi'
 import { enRolSatirlari } from '../_dil/en/klinik/roller'
@@ -129,7 +130,13 @@ export const AU_GIRDI: EnUlkeGirdisi = {
   roller: AU_ROLLER,
   veliYasi: AU_VELI_YASI,
   birimler: AU_BIRIMLER,
-  surum: 'au-draft-2026-10-11',
+  // AU-BETA-01 (2026-10-22): bumped from au-draft-2026-10-11 because the intake consent sentence below changed. Initial
+  // compliance draft – external legal review later.
+  surum: 'au-draft-2026-10-22',
+  formRizasi: {
+    metin: AU_GIZLILIK.riza.metin,
+    veliMetni: 'I am the parent or legal guardian of the patient and I consent on their behalf to my practitioner collecting, using and storing their health information in Notya for their care and the administration of their care, as described in the collection notice above, including the disclosure of that information to the service providers named in it, some of which are overseas. I understand I can withdraw this consent at any time and can ask to see or correct their information.',
+  },
   konusma: {
     saglayici: 'elevenlabs-scribe',
     model: 'scribe_v2',

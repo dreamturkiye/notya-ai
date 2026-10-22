@@ -149,7 +149,7 @@ describe('au: what is Australia\'s', () => {
     assert.equal(A.birimler['ug/L'][D], 'µg/L')
     assert.equal(A.birimler['ug/L/yil'][D], 'µg/L per year')
     assert.ok(!('ng/mL' in A.birimler), 'no tool shows ng/mL here')
-    assert.equal(AU_KLINIK.riza.surum, 'au-draft-2026-10-11')
+    assert.equal(AU_KLINIK.riza.surum, 'au-draft-2026-10-22')
     assert.equal(AU_ARAYUZ.metinler[D]!.muayene.riza, AU_GIRDI.sozler.kayitRizasi)
   })
 })
@@ -396,7 +396,7 @@ describe('au: its own role list — the Medical Board\'s wording, a split, one r
     assert.match(html, /<a href="\/au\/patients"[^>]*>\s*<span[^>]*>Documents<\/span><\/a>/)
     assert.match(html, /class="uza-duvar"[^>]*>\s*<span[^>]*>Reports<\/span>/)
     const belgeler = renderToStaticMarkup(React.createElement(FotoArsivKarti, {
-      u: { hesap: null, m: AU_ARAYUZ.metinler[D]!, dil: D, api: async () => ({ ok: false, durum: 0, j: {} }), hesabiGuncelle: () => undefined, cikis: () => undefined },
+      u: { hesap: null, m: AU_ARAYUZ.metinler[D]!, dil: D, api: async () => ({ ok: false, status: 0, j: {} }), hesabiGuncelle: () => undefined, cikis: () => undefined },
       hastaId: 'qa-hasta',
     }))
     assert.match(belgeler, /id="belgeler"/)
@@ -641,7 +641,7 @@ describe('au: the tools only Australia has — switched on by the owner\'s order
     assert.match(bildirim.metin.alanlar.t_cinsel[D], /at risk of engaging/)
     assert.doesNotMatch(bildirim.metin.alanlar.m_cinsel[D], /at risk of engaging/)
     assert.match(bildirim.metin.not?.[D] ?? '', /Queensland Act/)
-    assert.match(bildirim.metin.uyarilar.gonderilmedi[D], /Nothing was sent/)
+    assert.match(bildirim.metin.uyarilar?.gonderilmedi[D] ?? '', /Nothing was sent/)
   })
 
   it('each offered role has its own reference tile, and a reference does not open for another role', () => {

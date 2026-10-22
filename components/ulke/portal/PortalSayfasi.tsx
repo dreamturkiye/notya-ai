@@ -36,6 +36,7 @@ import { ozellikAcik, ulkePaketi } from '@/lib/ulke/ulke'
 import { gunYazDesenle, haftaGunu } from '@/lib/ulke/uygulama/zaman'
 import { ulkeYolu } from '@/lib/ulke/yol'
 import { PortalFormKarti, PortalFormu, type PortalIstegi } from './HastaFormu'
+import { EkNot, PortalGizlilikKarti } from './GizlilikKarti'
 import { PortalMesajlar } from './Mesajlar'
 
 const DEGISKENLER = {
@@ -70,7 +71,7 @@ export function PortalCercevesi({ dil, children }: { dil: DilKodu; children: Rea
       <header className="uza-ust">
         <div className="uza-ic uza-ust-ic"><span className="uza-marka">{marka()}</span></div>
       </header>
-      <main className="uza-ic uza-govde">{children}</main>
+      <main className="uza-ic uza-govde">{children}<EkNot /></main>
     </div>
   )
 }
@@ -126,7 +127,9 @@ export type IstekFormu = { gunler: string[]; neden: string }
 export type IstekHatasi = 'gun' | 'cok' | 'gonderilemedi' | 'baglanti' | null
 
 /** The patient's own page. `r` = the appointment catalogue in the same form, or null where the country has no appointments. */
-export function PortalSayfaGorunumu({ p, r, icerik, acilNumara, form, setForm, istekGonder, istekBekliyor, istekHatasi, cikis, formKarti, mesajlar }: {
+export function PortalSayfaGorunumu({ p, r, icerik, acilNumara, form, setForm, istekGonder, istekBekliyor, istekHatasi, cikis, formKarti, mesajlar, gizlilik }: {
+  /** AU-BETA-01: the privacy card (collection notice, consent, access/correction request), where the pack brings one. */
+  gizlilik?: ReactNode
   p: PortalMetni; r: RandevuMetni | null; icerik: PortalIcerigi
   /** NOTYA-ULKE-MESAJ-01: the messages with the doctor, where the country has them. Drawn after the form's card. */
   mesajlar?: ReactNode
@@ -157,6 +160,7 @@ export function PortalSayfaGorunumu({ p, r, icerik, acilNumara, form, setForm, i
       </section>
 
       {formKarti ?? null}
+      {gizlilik ?? null}
       {mesajlar ?? null}
 
       {i.randevular && r ? (
@@ -358,6 +362,7 @@ export default function PortalSayfasi() {
         <PortalFormu dil={dil} iste={iste} kapat={() => { setFormAcik(false); void yukle(true) }} oturumBitti={() => { void yukle(true) }} />
       ) : asama === 'sayfa' && icerik ? (
         <PortalSayfaGorunumu p={p} formKarti={icerik.form ? <PortalFormKarti f={formMetni(dil)} ozet={icerik.form} ac={() => setFormAcik(true)} /> : null} r={ozellikAcik('randevu') ? randevuMetni(dil) : null} icerik={icerik} acilNumara={portalAcilNumarasi()}
+          gizlilik={ulkePaketi().uzanti?.gizlilik ? <PortalGizlilikKarti iste={iste} oturumBitti={() => { void yukle(true) }} /> : undefined}
           mesajlar={ozellikAcik('hastaMesajlari') ? <PortalMesajlar dil={dil} iste={iste} acilNumara={portalAcilNumarasi()} saatDilimi={icerik.saatDilimi} oturumBitti={() => { void yukle(true) }} /> : null}
           form={form} setForm={(y) => { setForm(y); setIstekHatasi(null) }} istekGonder={istekGonder} istekBekliyor={istekBekliyor} istekHatasi={istekHatasi} cikis={() => { void cikis() }} />
       ) : asama === 'pin' ? (

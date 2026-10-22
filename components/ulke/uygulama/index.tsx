@@ -16,6 +16,8 @@ import Takvim from './Takvim'
 import Araclar from './Araclar'
 import Klinik from './Klinik'
 import OnBuro from './OnBuro'
+import Fatura from './Fatura'
+import GizlilikTalepleri from './GizlilikTalepleri'
 
 export const UYGULAMA_EKRAN_BILESENLERI: Readonly<Record<UygulamaEkrani, ComponentType>> = {
   baslangic: Baslangic,
@@ -33,4 +35,7 @@ export const UYGULAMA_EKRAN_BILESENLERI: Readonly<Record<UygulamaEkrani, Compone
   klinik: Klinik,
   // The front-desk workspace (features `klinikHesaplari` and `randevu`).
   onBuro: OnBuro,
+  // AU-BETA-01 — only where the pack brings the extension (components/ulke/UlkeUygulamaSayfasi.tsx).
+  fatura: Fatura,
+  gizlilikTalepleri: GizlilikTalepleri,
 }

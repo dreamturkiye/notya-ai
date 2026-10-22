@@ -7,6 +7,7 @@
  * (`sorov`) so a label is written once. Prices are the clinic group of the same price list; a plan with no amount
  * says the pack's "on request" line. No trial, no demo, no screenshot of the product.
  */
+import { YasalNotlari } from './YasalNotlari'
 import React from 'react'
 import { Button } from '@/components/doktor-landing/button'
 import { FeatureSection, TypeCard } from '@/components/doktor-landing/feature'
@@ -159,6 +160,7 @@ export function KlinikSayfasi({ dil, istenenDil, iletisimEposta, gorsel, acilis:
             </div>
           </section>
         </main>
+        <YasalNotlari n={t.yasalNotlari} />
         <footer className="border-t border-line bg-paper">
           <div className="mx-auto flex max-w-7xl flex-col gap-6 px-5 py-10 sm:px-8 lg:flex-row lg:items-center lg:justify-between">
             <a href={`#${c.klinikUst}`} className="flex items-baseline gap-2 font-display text-2xl italic leading-none tracking-tight">

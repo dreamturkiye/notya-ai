@@ -13,6 +13,7 @@ import { AU_GIRDI } from './ayarlar'
 import { auAsistanAdi } from './klinik/asistanAdlari'
 import { auAsistanKaynaklari } from './asistan/kaynaklar'
 import { AU_SES } from './ses'
+import { AU_YASAL_NOTLARI } from './uzanti/acilis'
 
 const temel = enArayuz(AU_GIRDI)
 const sunulan = new Set(temel.roller.map((r) => r.anahtar))
@@ -39,8 +40,17 @@ export function auAsistanKimligi(rol: unknown): AsistanKimligi | null {
   }
 }
 
+/** AU-BETA-01: the shared English landing copy plus Australia's disclaimer block, on both landing pages. */
+const acilis = temel.acilis
+  ? {
+      ...temel.acilis,
+      icerik: Object.fromEntries(Object.entries(temel.acilis.icerik).map(([k, v]) => [k, v ? { ...v, yasalNotlari: AU_YASAL_NOTLARI, klinik: { ...v.klinik, yasalNotlari: AU_YASAL_NOTLARI } } : v])),
+    }
+  : temel.acilis
+
 export const AU_ARAYUZ: UlkeArayuzu = {
   ...temel,
+  acilis,
   // NOTYA-ARACLAR-DENETIM-02-AU, 2026-10-13 — the English language set has not written consultation between doctors
   // for any of the five English-speaking countries; Australia's own words are here, not in countries/_dil/en/.
   konsultasyonMetinleri: { 'en-AU': AU_KONSULTASYON_METNI },

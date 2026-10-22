@@ -21,6 +21,8 @@ export function UlkeUygulamaSayfasi({ ekran }: { ekran: UygulamaEkrani }) {
   const var_ = ozellikAcik('cekirdekMuayene') && AKTIF_ARAYUZ !== null && rotaAcikMi(ulkePaketi().rotalar, UYGULAMA_EKRANLARI[ekran]) && (ekran !== 'takvim' || ozellikAcik('randevu')) && (ekran !== 'araclar' || ozellikAcik('araclar'))
     // NOTYA-ULKE-KLINIK-01: the clinic's screen where the pack has clinic accounts; the front-desk workspace needs appointments as well.
     && ((ekran !== 'klinik' && ekran !== 'onBuro') || ozellikAcik('klinikHesaplari')) && (ekran !== 'onBuro' || ozellikAcik('randevu'))
+    // AU-BETA-01: the privacy-request and invoice screens exist only where the pack brings that extension.
+    && (ekran !== 'gizlilikTalepleri' || Boolean(ulkePaketi().uzanti?.gizlilik)) && (ekran !== 'fatura' || Boolean(ulkePaketi().uzanti?.fatura))
   const Ekran = var_ ? UYGULAMA_EKRAN_BILESENLERI[ekran] : undefined
   if (!Ekran) notFound()
   return <BitkiSaglayici src={bitki.src}><Ekran /></BitkiSaglayici>

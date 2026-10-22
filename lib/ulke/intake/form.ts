@@ -47,6 +47,7 @@ import { hekimRolunuOku } from '../uygulama/rol'
 import { hesapSaatDilimi } from '../uygulama/saatDilimi'
 import { ulkeIslevi, ulkeTablosu } from '../uygulama/tablolar'
 import { yerelAn } from '../uygulama/zaman'
+import { rizaEkle } from '../gizlilik/riza'
 import { CEVAPLAR_AZAMI, cevaplariSuz, cevapMetni, eksikZorunlular, formBolumleri, formGorunumu, formSorulari, type FormBaglami } from './sorular'
 import type { Cevaplar, FormDurumu, FormIstegiSonucu, HastaFormuGorunumu, HastaFormuIcerigi, HekimFormu } from './tipler'
 
@@ -286,5 +287,8 @@ export async function hastaFormuYaz(supabase: SupabaseClient, kim: Pick<PortalKi
   if (error) return { tamam: false, kod: 'BASARISIZ' }
   const yeni = ((data as Satir[] | null) ?? [])[0]
   if (!yeni) return { tamam: false, kod: 'NOT_FOUND' }
+  // AU-BETA-01: the first acceptance of the consent sentence is also entered in the consent ledger (a no-op where the pack
+  // brings no privacy extension). Best effort: the form's own riza_surumu / riza_at stay the record that gates the form.
+  if (!s.riza_at) { try { await rizaEkle(supabase, kim.doktorId, hasta.id, 'hasta_formu') } catch { /* the form is saved all the same */ } }
   return { tamam: true, form: gorunum(yeni, hasta, dil, kim.doktorId, icerik) }
 }

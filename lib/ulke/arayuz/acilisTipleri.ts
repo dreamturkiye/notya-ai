@@ -41,7 +41,19 @@ export type AcilisFiyatlari = Readonly<Record<string, {
   oneCikan: boolean
 }>>
 
+export type AcilisYasalNotlari = {
+  baslik: string
+  /** Shown verbatim, one paragraph each. */
+  satirlar: readonly string[]
+  taslakEtiketi: string
+  /** Contact and company particulars (placeholders are marked as such in the text). */
+  iletisim: readonly string[]
+  baglantilar: readonly { etiket: string; href: string }[]
+}
+
 export type AcilisIcerigi = {
+  /** AU-BETA-01 — optional block above the footer: legal and clinical disclaimers, contact particulars, policy links. */
+  yasalNotlari?: AcilisYasalNotlari
   meta: { baslik: string; aciklama: string }
   nav: {
     bolumler: string

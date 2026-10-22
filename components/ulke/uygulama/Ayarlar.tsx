@@ -9,6 +9,7 @@
  * own: changing it changes the assistant shown and the structure of the NEXT visit notes; notes already written
  * keep the structure they were written with.
  */
+import { MuayenehaneKarti } from './MuayenehaneKarti'
 import React, { useEffect, useState } from 'react'
 import { Bilgi, Cerceve, Hata, useUygulama, YOL, Yukleniyor, type Api, type Hesap } from './Kabuk'
 import { DilSecimi, YaziSecimi } from './DilFormu'
@@ -239,6 +240,7 @@ export default function Ayarlar() {
           {dilSecimiVarMi() ? <AyarlarGorunumu kart m={u.m} d={d} set={(yeni) => { setD(yeni); setSonuc(null) }} gonder={gonder} bekliyor={bekliyor} sonuc={sonuc} /> : null}
           {u.hesap.saatDilimleri && u.hesap.saatDilimleri.length > 1 ? <SaatDilimiGorunumu m={u.m} dilim={dilim} dilimler={u.hesap.saatDilimleri} sec={(z) => { setDilim(z); setDilimSonucu(null) }} gonder={dilimGonder} bekliyor={dilimBekliyor} sonuc={dilimSonucu} /> : null}
           {roller().length ? <RolAyariGorunumu m={u.m} rol={rol} kayitliRol={u.hesap.rol} api={u.api} setRol={(r) => { setRol(r); setRolSonucu(null) }} gonder={rolGonder} bekliyor={rolBekliyor} sonuc={rolSonucu} /> : null}
+          <MuayenehaneKarti u={u} />
           <MeslekKaydiGorunumu m={u.m} deger={meslek} set={(v) => { setMeslek(v); setMeslekSonucu(null) }} gonder={meslekGonder} bekliyor={meslekBekliyor} sonuc={meslekSonucu} />
           {pano && ozellikAcik('fotoArsivi') ? (
             <a className="yg-satir" href={YOL.hastalar} data-alan="belgeler">

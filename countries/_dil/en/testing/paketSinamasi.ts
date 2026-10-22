@@ -181,7 +181,11 @@ export function ingilizcePaketSinamasi(s: EnPaketSinamasi): void {
 
   describe(`${kod}: no claim, no price, hidden, by invitation`, () => {
     it('no compliance, approval, certification, endorsement or integration claim; no law or regulator named; no trial or discount', () => {
-      assert.deepEqual(metinler.filter((x) => IDDIA.test(x.metin)).map((x) => `${x.yer}: ${IDDIA.exec(x.metin)?.[0]}`), [])
+      // The ONE exemption: the draft labels that DENY a claim ("Initial compliance draft – external legal review later.",
+      // "initial compliance and clinical draft", "Initial Australian compliance and clinical content …"). Any other use of the word still fails.
+      const TASLAK_ETIKETI = /initial (australian )?compliance (draft|and clinical (draft|content))/gi
+      const taranan = metinler.map((x) => ({ ...x, metin: x.metin.replace(TASLAK_ETIKETI, '') }))
+      assert.deepEqual(taranan.filter((x) => IDDIA.test(x.metin)).map((x) => `${x.yer}: ${IDDIA.exec(x.metin)?.[0]}`), [])
     })
     it('no price: every plan is by quote, and no amount of money is written into any text', () => {
       const f = arayuz.acilis!.fiyatlar
