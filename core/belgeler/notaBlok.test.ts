@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { afisTemizle, belgeAnahtari, blokSizMetin, bulguTemizle, celiskiler, icdKoru, notaBloklariUygula, temizBirlestir, type BlokGirdi } from './notaBlok'
+import { llmBelgeBlokTemizle, afisTemizle, belgeAnahtari, blokSizMetin, bulguTemizle, celiskiler, icdKoru, notaBloklariUygula, temizBirlestir, type BlokGirdi } from './notaBlok'
 
 const BANNER = 'Yapay zekâ taslak rapor üretir. Tanı ve tedavi kararı hekime aittir.'
 const g = (id: string, o: Partial<BlokGirdi> = {}): BlokGirdi => ({ belgeId: id, etiket: 'Ultrason', tarih: '20.10.2026', yuklemeSirasi: 0, ozet: 'Tek canlı fetüs.', bulgular: ['Fetal kalp atımı izleniyor.', 'Yolk kesesi görüldü'], ...o })
@@ -82,4 +82,15 @@ test('English and Russian headings for country builds', () => {
   assert.match(notaBloklariUygula('', [g('a')], 'en').metin, /— Document review \(Ultrason, 20\.10\.2026\) —/)
   assert.match(notaBloklariUygula('', [g('a')], 'ru').metin, /— Оценка документа/)
   assert.ok(belgeAnahtari('a') !== belgeAnahtari('b'))
+})
+
+test('llmBelgeBlokTemizle: boş başlığı ve afiş cümlesini siler, gerçek metni korur', () => {
+  {
+    const m = 'FHR 160/dk.\n\n— Belge değerlendirmesi (Ultrason, 22.10.2026) —\nYapay zeka taslak rapor üretir. Tanı ve tedavi kararı hekime aittir.\n\nRahim normal.'
+    const t = llmBelgeBlokTemizle(m)
+    assert.ok(!/Belge değerlendirmesi/.test(t))
+    assert.ok(!/Yapay zek/.test(t))
+    assert.match(t, /FHR 160\/dk/)
+    assert.match(t, /Rahim normal/)
+  }
 })

@@ -5,6 +5,7 @@ import {
   sonMuayeneOzetiYaz,
   klinikOzetleriNotesOku,
   klinikOzetleriNotesYaz,
+  klinikOzetBaglami,
 } from './hastaKlinikOzet'
 
 describe('NOTYA-OZET-CIFT-01 — Genel Özet + Son muayene özeti', () => {
@@ -84,5 +85,22 @@ describe('NOTYA-OZET-CIFT-01 — Genel Özet + Son muayene özeti', () => {
     const oku = klinikOzetleriNotesOku(yaz)
     assert.equal(oku.genelOzet, 'Genel metin')
     assert.equal(oku.sonMuayeneOzeti, 'Son metin')
+  })
+
+  it('geliş sebebi + gebelik (hasta formu) her iki özette görünür', () => {
+    const b = klinikOzetBaglami({ basvuruNedeni: 'Gebelik kontrolü', gebelikSuphesi: 'Hamileyim', gebelikHaftasi: '10' }, [])
+    assert.equal(b.gelisSebebi, 'Gebelik kontrolü')
+    assert.match(b.gebelik || '', /10\. hafta/)
+    const son = sonMuayeneOzetiYaz({ approved_at: '2026-10-21T10:00:00Z', content_tani: 'Gebelik' }, b)
+    assert.match(son, /Geliş sebebi: Gebelik kontrolü/)
+    assert.match(son, /Gebelik: gebe/)
+    const genel = genelOzetYaz({ cinsiyetHam: 'female', notes: {}, aktifIlaclar: [], onayliNotlar: [], baglam: b })
+    assert.match(genel, /Gebelik durumu: gebe/)
+    assert.match(genel, /Geliş sebebi: Gebelik kontrolü/)
+  })
+
+  it('gebelik yalnız randevu notunda yazıyorsa oradan alınır; veri yoksa hiçbir şey eklenmez', () => {
+    assert.match(klinikOzetBaglami({}, ['10 haftalık hamile, kontrol']).gebelik || '', /randevu notu/)
+    assert.deepEqual(klinikOzetBaglami({ alerji: 'Yok' }, ['rutin kontrol']), { gelisSebebi: undefined, gebelik: undefined })
   })
 })
