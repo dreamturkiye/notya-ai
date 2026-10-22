@@ -240,3 +240,17 @@ export function cevapEkle<T extends Balon>(
   }
   return next
 }
+
+/**
+ * NOTYA-SES-KULLANICI-BALON-01 (Kaan live, 2026-10-22) — the doctor's spoken line showed no bubble.
+ * `olay` is the ElevenLabs event id, which restarts at 1 on every call. Bubbles kept from an earlier call (state, or the
+ * stored history) still carried theirs, so `olayYeri` filed the new call's transcript among the OLD bubbles — out of
+ * sight, and first in line for the 50-bubble FIFO trim. Call this whenever a new call starts / history is loaded.
+ */
+export function oturumOlaylariniSil<T extends Balon>(liste: T[]): T[] {
+  return liste.map((m) => {
+    if (m.olay == null) return m
+    const { olay: _olay, ...rest } = m
+    return rest as T
+  })
+}

@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { ayniSozMu, benzerCevapMi, cevapEkle, kullaniciEkle, siraAraya, sorusuzCevapYeri, turZamanlari, yetimCevapYeri, type Balon } from './balonSirasi'
+import { ayniSozMu, benzerCevapMi, cevapEkle, kullaniciEkle, oturumOlaylariniSil, siraAraya, sorusuzCevapYeri, turZamanlari, yetimCevapYeri, type Balon } from './balonSirasi'
 
 const ekle = (role: 'user' | 'ai', text: string, olay?: number): Balon => ({ role, text, ...(olay != null ? { olay } : {}) })
 
@@ -218,4 +218,21 @@ test('NOTYA-AYSE-SAYI-SIRA-01: saklanan turda doktorun cümlesi kendi zamanını
   assert.ok(geri.cevap > geri.soru)
   const bozuk = turZamanlari('', new Date(geldi))
   assert.ok(bozuk.cevap > bozuk.soru)
+})
+
+// NOTYA-SES-KULLANICI-BALON-01 — the doctor's own bubble vanished once the stored history held bubbles of earlier calls.
+// ElevenLabs event ids restart at 1 on every call; the stored `olay` of an old call made olayYeri file the NEW transcript
+// among the old bubbles (far above the screen, then first in line for the 50-bubble FIFO trim).
+test('önceki görüşmenin olay numaraları yeni konuşmanın doktor balonunu eski geçmişe atar (üretimdeki hata)', () => {
+  const eski: Balon[] = []
+  for (let i = 0; i < 6; i++) {
+    eski.push({ role: 'user', text: 'eski soru ' + i, olay: 10 + i * 2, sira: i * 2 + 1 })
+    eski.push({ role: 'ai', text: 'eski cevap ' + i, olay: 11 + i * 2, sira: i * 2 + 2 })
+  }
+  const cevap: Balon = { role: 'ai', text: 'Merhaba Hocam, iyiyim teşekkür ederim. Siz nasılsınız?', sira: 13, soru: 'Merhaba hocam. Bugün nasılsınız?' } // screen poll: no olay
+  const hata = kullaniciEkle([...eski, cevap], 'Merhaba hocam. Bugün nasılsınız?', 2, ekle)
+  assert.notEqual(hata[hata.length - 2].text, 'Merhaba hocam. Bugün nasılsınız?', 'bug: the bubble is not in front of its reply')
+  const duzgun = kullaniciEkle([...oturumOlaylariniSil(eski), cevap], 'Merhaba hocam. Bugün nasılsınız?', 2, ekle)
+  assert.equal(duzgun[duzgun.length - 2].text, 'Merhaba hocam. Bugün nasılsınız?')
+  assert.equal(duzgun[duzgun.length - 1].text, cevap.text)
 })
