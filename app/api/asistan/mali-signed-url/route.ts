@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
     const { data: { user }, error: ae } = await sb.auth.getUser(authHeader.split(" ")[1])
     if (ae || !user) return NextResponse.json({ error: "Oturum bulunamadı. Lütfen tekrar giriş yapın." }, { status: 401 })
 
-    const elKey = process.env.ELEVENLABS_API_KEY || process.env.NEXT_PUBLIC_ELEVENLABS_KEY
+    const elKey = process.env.ELEVENLABS_API_KEY
     if (!elKey) return NextResponse.json({ error: "ElevenLabs key missing" }, { status: 500 })
 
     await sesMotorunuSabitle(AGENT_ID, elKey)
