@@ -10,6 +10,7 @@ import { arsivsizIlaclar, arsivsizNotlar } from '@/lib/doktor/arsiv'
 import { yasHesapla } from '@/lib/doktor/yas'
 import { cinsiyetTr } from '@/lib/utils/cinsiyet'
 import { kronikListesi } from '@/lib/doktor/hastaOzetKayit'
+import { sifreliFormlariCoz, formlariBirlestir } from '@/lib/intake/formBirlestir'
 
 export type KlinikOzetNot = {
   created_at?: string | null
@@ -24,6 +25,37 @@ export type KlinikOzetNot = {
 }
 
 const TZ = 'Europe/Istanbul'
+
+/** NOTYA-OZET-GELIS-01: bağlam (hasta formu + randevu notu) — geliş sebebi ve gebelik her iki özette görünür. */
+export type KlinikOzetBaglam = { gelisSebebi?: string; gebelik?: string }
+
+const GEBE_RE = /(\d{1,2})\s*(?:haftal[ıi]k|hafta)[^.\n]{0,20}?(?:gebe|hamile)|(?:gebe|hamile)[^.\n]{0,40}?(\d{1,2})\s*(?:\.\s*)?(?:hafta|haftal[ıi]k)|\b(?:gebe|hamile)\w*/i
+
+function metinOlarak(v: unknown): string {
+  return Array.isArray(v) ? v.map((x) => String(x ?? '').trim()).filter(Boolean).join(', ') : String(v ?? '').trim()
+}
+
+/** Form yanıtları + randevu notlarından geliş sebebi ve gebelik durumu. Yalnız veride olan alanlar konuşur (branş sızması yok). */
+export function klinikOzetBaglami(yanitlar: Record<string, unknown> | null | undefined, randevuNotlari: (string | null | undefined)[] = []): KlinikOzetBaglam {
+  const y = yanitlar || {}
+  const gelis = Object.keys(y).filter((k) => /^basvuruNedeni/i.test(k)).map((k) => metinOlarak(y[k])).find(Boolean) || ''
+  const gebelikAlanlari = ['gebelikSuphesi', 'adetDuzeni', 'gebelikEmzirme', 'gebelikDurumuDerm'].map((k) => metinOlarak(y[k])).join(' | ')
+  const formGebe = /Hamileyim|Gebeyim/i.test(gebelikAlanlari)
+  const emziriyor = /Emziriyorum/i.test(gebelikAlanlari)
+  const hafta = metinOlarak(y.gebelikHaftasi).match(/\d{1,2}/)?.[0]
+  const parcalar: string[] = []
+  if (formGebe) parcalar.push(hafta ? `gebe, yaklaşık ${hafta}. hafta (hasta formu)` : 'gebe (hasta formu)')
+  else if (emziriyor) parcalar.push('emziriyor (hasta formu)')
+  const sonAdet = metinOlarak(y.sonAdetTarihi)
+  if (formGebe && sonAdet) parcalar.push(`son adet tarihi ${sonAdet}`)
+  if (!formGebe) {
+    for (const n of randevuNotlari) {
+      const m = String(n || '').match(GEBE_RE)
+      if (m) { parcalar.push(`randevu notu: “${kisalt(String(n), 100)}”`); break }
+    }
+  }
+  return { gelisSebebi: kisalt(gelis, 220) || undefined, gebelik: parcalar.join('; ') || undefined }
+}
 
 function trTarih(iso: string | null | undefined): string {
   if (!iso) return ''
@@ -46,18 +78,22 @@ function satirTemiz(s: string | null | undefined, azami = 280): string {
   return kisalt(String(s || '').replace(/\n+/g, ' '), azami)
 }
 
-/** Son onaylı muayeneden kısa özet — varsa hekimin hasta_ozeti öncelikli. */
-export function sonMuayeneOzetiYaz(not: KlinikOzetNot | null | undefined): string {
+/** Son onaylı muayeneden kısa özet — geliş sebebi ve gebelik durumu her zaman yer alır. */
+export function sonMuayeneOzetiYaz(not: KlinikOzetNot | null | undefined, baglam?: KlinikOzetBaglam): string {
   if (!not) return ''
   const tarih = trTarih(not.approved_at || not.created_at)
   const veli = String(not.hasta_ozeti || '').trim()
+  const yakinma = satirTemiz(not.basvuru_yakinmasi || not.content_subjektif, 160) || baglam?.gelisSebebi || ''
+  const gebelik = baglam?.gebelik && !/gebe|hamile/i.test(veli) ? baglam.gebelik : ''
+  const gebeParca = gebelik ? `Gebelik: ${gebelik}.` : ''
   if (veli) {
-    return [tarih ? `${tarih} muayenesi:` : 'Son muayene:', veli].join(' ')
+    const ekGelis = yakinma && !veli.toLowerCase().includes(yakinma.slice(0, 24).toLowerCase()) ? `Geliş sebebi: ${yakinma}.` : ''
+    return [tarih ? `${tarih} muayenesi:` : 'Son muayene:', veli, ekGelis, gebeParca].filter(Boolean).join(' ')
   }
   const parcalar: string[] = []
   if (tarih) parcalar.push(`${tarih} muayenesi.`)
-  const yakinma = satirTemiz(not.basvuru_yakinmasi || not.content_subjektif, 160)
-  if (yakinma) parcalar.push(`Başvuru: ${yakinma}`)
+  if (yakinma) parcalar.push(`Geliş sebebi: ${yakinma}`)
+  if (gebeParca) parcalar.push(gebeParca)
   const tani = satirTemiz(not.content_tani || not.content_degerlendirme, 200)
   if (tani) parcalar.push(`Değerlendirme / tanı: ${tani}`)
   const plan = satirTemiz(not.content_plan || not.content_tedavi, 200)
@@ -72,6 +108,7 @@ export type GenelOzetGirdi = {
   notes: Record<string, unknown>
   aktifIlaclar: string[]
   onayliNotlar: KlinikOzetNot[] // yeniden eskiye (en yeni önce)
+  baglam?: KlinikOzetBaglam
 }
 
 /** Doğuşundan / dosyadan derlenen genel klinik özet (kimliksiz klinik dil). */
@@ -82,6 +119,7 @@ export function genelOzetYaz(g: GenelOzetGirdi): string {
   const kim = [yas ? `${yas}` : '', cins].filter(Boolean).join(', ')
   if (kim) cumleler.push(`Hasta ${kim}.`)
   else cumleler.push('Hasta dosyası özeti.')
+  if (g.baglam?.gebelik) cumleler.push(`Gebelik durumu: ${g.baglam.gebelik}.`)
 
   const alerji = String(g.notes.alerjiler || '').trim()
   const kronik = kronikListesi(g.notes)
@@ -99,6 +137,7 @@ export function genelOzetYaz(g: GenelOzetGirdi): string {
 
   const notlar = g.onayliNotlar.filter((n) => n.approved_at || n.content_tani || n.basvuru_yakinmasi)
   if (!notlar.length) {
+    if (g.baglam?.gelisSebebi) cumleler.push(`Geliş sebebi: ${g.baglam.gelisSebebi}.`)
     cumleler.push('Henüz onaylı muayene kaydı yok.')
     return cumleler.join(' ')
   }
@@ -127,7 +166,7 @@ export function genelOzetYaz(g: GenelOzetGirdi): string {
   const sonPlan = String(son.content_plan || son.content_tedavi || '').replace(/\s+/g, ' ').trim()
   const sonParca = [
     sonT ? `Son muayene (${sonT})` : 'Son muayene',
-    sonYakinma ? `yakınma: ${sonYakinma}` : '',
+    sonYakinma ? `geliş sebebi: ${sonYakinma}` : '',
     sonTani ? `tanı: ${sonTani}` : '',
     sonPlan ? `plan: ${sonPlan}` : '',
   ].filter(Boolean)
@@ -226,14 +265,24 @@ export async function hastaKlinikOzetleriGuncelle(
     }).filter(Boolean)
 
     const notes = notesCoz(hasta.notes_encrypted as string | null)
+    let baglam: KlinikOzetBaglam = {}
+    try {
+      const [{ data: formHam }, { data: rdvHam }] = await Promise.all([
+        supabase.from('hasta_intake_formlari').select('form_data_encrypted, created_at').eq('patient_id', patientId).eq('doktor_id', doctorId).not('form_data_encrypted', 'is', null).order('created_at', { ascending: false }).limit(5),
+        supabase.from('randevular').select('notlar, baslangic').eq('patient_id', patientId).eq('doktor_id', doctorId).neq('durum', 'iptal').order('baslangic', { ascending: false }).limit(5),
+      ])
+      const birlesik = formlariBirlestir(sifreliFormlariCoz(formHam as never).formlar)
+      baglam = klinikOzetBaglami(birlesik?.yanitlar, (Array.isArray(rdvHam) ? rdvHam : []).map((r) => (r as { notlar?: string | null }).notlar))
+    } catch (e) { console.error('[klinik-ozet] baglam', e) }
     const genelOzet = genelOzetYaz({
+      baglam,
       dogumIso: dogum,
       cinsiyetHam: cinsiyet,
       notes,
       aktifIlaclar,
       onayliNotlar: notlar,
     })
-    const sonMuayeneOzeti = sonMuayeneOzetiYaz(notlar[0] || sonNot || null)
+    const sonMuayeneOzeti = sonMuayeneOzetiYaz(notlar[0] || sonNot || null, baglam)
     const yeniNotes = klinikOzetleriNotesYaz(notes, genelOzet, sonMuayeneOzeti)
 
     const { error } = await supabase
