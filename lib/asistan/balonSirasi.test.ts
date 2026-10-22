@@ -135,3 +135,13 @@ test('NOTYA-SES-SIRA-03: ekran cevabı dökümden önce geldiyse döküm cevabı
   assert.deepEqual(l.map((m) => m.role), ['ai', 'user', 'ai', 'user', 'ai'])
   assert.ok(l[4].text.startsWith('22 Ekim'))
 })
+
+test('NOTYA-SES-SIRA-03: sunucu hiç doktor satırı döndürmese de ekran cevabı dökümden önce gelirse sıra korunur', () => {
+  const e = (role: 'user' | 'ai', text: string, olay?: number): Balon => ({ role, text, ...(olay != null ? { olay } : {}) })
+  let l: Balon[] = [{ role: 'ai', text: 'Merhaba Hocam, nasıl yardımcı olabilirim?' }]
+  l = cevapEkle(l, null, 'Birinci cevap.', e, null, true)
+  l = kullaniciEkle(l, 'Birinci soru?', undefined, e)
+  l = cevapEkle(l, null, 'İkinci cevap uzun.', e, null, true)
+  l = kullaniciEkle(l, 'İkinci soru?', 12, e)
+  assert.deepEqual(l.map((m) => m.text), ['Merhaba Hocam, nasıl yardımcı olabilirim?', 'Birinci soru?', 'Birinci cevap.', 'İkinci soru?', 'İkinci cevap uzun.'])
+})
