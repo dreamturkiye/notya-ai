@@ -23,7 +23,7 @@ export const AU_DATA_BREACH: UzantiBelgesi = {
       '5. Review: record what happened, what was changed, and who was told.',
     ] },
     { baslik: 'Roles', paragraflar: [`Software provider: ${AU_OPERATOR}. Each practice remains responsible for its own patients’ information. Privacy officer: ${AU_PRIVACY_OFFICER}. Security reports: ${E.security}.`] },
-    { baslik: 'Not yet done', paragraflar: ['No breach drill has been run. A named privacy officer is not yet published (the privacy contact is shown above). A lawyer has not reviewed this process.'] },
+    { baslik: 'Not yet done', paragraflar: ['No breach drill has been run. The privacy officer is the founder of the operating company, not a dedicated privacy professional. A lawyer has not reviewed this process.'] },
   ],
 }
 
