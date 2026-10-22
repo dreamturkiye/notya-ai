@@ -38,7 +38,8 @@ describe('country policy pages', () => {
       assert.match(metin, /lawyer|huquqshunos|юрист/i, kod)
       for (const adres of Object.values(YASAL_EPOSTA)) assert.ok(metin.includes(adres), `${kod} missing ${adres}`)
       assert.doesNotMatch(metin, /kvkk@/i, kod)
-      assert.doesNotMatch(metin, /\b(compliant|compliance|certified|certification)\b/i, kod)
+      // AU-MKT-AUDIT 2026-10-22: the owner-mandated draft label "Initial compliance draft – external legal review later" is the one allowed use of the word.
+      assert.doesNotMatch(metin.replace(/Initial compliance draft/gi, ''), /\b(compliant|compliance|certified|certification)\b/i, kod)
       for (const d of PAKETLER[kod].diller) {
         assert.deepEqual(d.belgeler.map((b) => b.anahtar), [...YASAL_ANAHTARLARI], `${kod} ${d.kod}`)
       }
