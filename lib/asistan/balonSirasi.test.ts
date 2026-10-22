@@ -124,3 +124,14 @@ test('önceki görüşmenin olay numaraları yeni konuşmanın doktor balonunu e
   const duzgun = kullaniciEkle(oturumOlaylariniSil(eski), 'Merhaba doktor, nasılsınız bugün?', 2, ekle)
   assert.equal(duzgun[duzgun.length - 1].text, 'Merhaba doktor, nasılsınız bugün?')
 })
+
+test('NOTYA-SES-SIRA-03: ekran cevabı dökümden önce geldiyse döküm cevabın önüne oturur, selam yerinde', () => {
+  const e = (role: 'user' | 'ai', text: string, olay?: number): Balon => ({ role, text, ...(olay != null ? { olay } : {}) })
+  let l: Balon[] = [{ role: 'ai', text: 'Merhaba Hocam, nasıl yardımcı olabilirim?' }]
+  l = cevapEkle(l, null, 'Birinci cevap burada.', e, 'Birinci soru yazılışı')
+  l = kullaniciEkle(l, 'Birinci soru?', undefined, e)
+  l = cevapEkle(l, null, '22 Ekim 2026 Perşembe takviminde randevu yok.', e, 'Bugün randevumuz var mı')
+  l = kullaniciEkle(l, 'Bugün bir randevumuz var mı hocam?', 12, e)
+  assert.deepEqual(l.map((m) => m.role), ['ai', 'user', 'ai', 'user', 'ai'])
+  assert.ok(l[4].text.startsWith('22 Ekim'))
+})
