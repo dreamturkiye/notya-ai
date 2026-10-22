@@ -19,9 +19,21 @@ export const OCR_BASLATMA_ZAMAN_ASIMI_MS = 90000
 const BOSTA_BIRAKMA_MS = 120000
 const DILLER = 'tur+eng'
 
+/**
+ * Where the engine files are served and which languages are read. Defaults = the Türkiye build (domain root, tur+eng).
+ * A country build that is served under a path prefix (Next basePath, e.g. '/uzbek') and/or reads another script
+ * sets them once, before the first image (the country glue does; core never reads a country code).
+ */
+let VARLIK_ON_EKI = ''
+let OCR_DILLERI = DILLER
+export function ocrAyarla(o: { varlikOnEki?: string; diller?: string }): void {
+  if (typeof o.varlikOnEki === 'string' && /^(\/[a-z0-9][a-z0-9-]*)?$/.test(o.varlikOnEki)) VARLIK_ON_EKI = o.varlikOnEki
+  if (typeof o.diller === 'string' && /^[a-z]{3}(\+[a-z]{3})*$/.test(o.diller)) OCR_DILLERI = o.diller
+}
+
 /** Same-origin engine files (never a CDN): public/tesseract/{worker.min.js, tesseract-core*.wasm.js, lang/*.traineddata.gz}. */
-export function tesseractVarliklari(origin: string = typeof window !== 'undefined' ? window.location.origin : ''): { workerPath: string; corePath: string; langPath: string; gzip: boolean } {
-  const k = `${origin}/tesseract`
+export function tesseractVarliklari(origin: string = typeof window !== 'undefined' ? window.location.origin : '', onEk: string = VARLIK_ON_EKI): { workerPath: string; corePath: string; langPath: string; gzip: boolean } {
+  const k = `${origin}${onEk}/tesseract`
   return { workerPath: `${k}/worker.min.js`, corePath: k, langPath: `${k}/lang`, gzip: true }
 }
 
@@ -38,7 +50,7 @@ function isciAl(): Promise<Is> {
     const s = (async () => {
       const { createWorker } = await import('tesseract.js')
       const olustur = createWorker as unknown as (d: string, oem: number, o: Record<string, unknown>) => Promise<Is>
-      return zamanla(olustur(DILLER, 1, tesseractVarliklari()), OCR_BASLATMA_ZAMAN_ASIMI_MS, 'ocr init')
+      return zamanla(olustur(OCR_DILLERI, 1, tesseractVarliklari()), OCR_BASLATMA_ZAMAN_ASIMI_MS, 'ocr init')
     })()
     isciSozu = s
     s.catch(() => { if (isciSozu === s) isciSozu = null })
