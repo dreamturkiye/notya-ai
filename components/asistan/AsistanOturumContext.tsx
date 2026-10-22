@@ -64,7 +64,7 @@ import { sesGurultusuMu } from '@/lib/asistan/sesGurultu'
 import { asistaniKapatMi } from '@/lib/asistan/uyandirSoz'
 import { DEVAM_ISARETI } from '@/lib/asistan/konusma'
 import { sohbetMaxSira, sohbetOku, sohbetYaz, type SakliYaziliMesaj } from '@/lib/asistan/sohbetGecmisi'
-import { cevapEkle, kullaniciEkle } from '@/lib/asistan/balonSirasi'
+import { cevapEkle, kullaniciEkle, oturumOlaylariniSil } from '@/lib/asistan/balonSirasi'
 
 const SESSIZ_WAV = "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA="
 
@@ -1290,6 +1290,12 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
     let retriedWithoutFirst = false
     let retryInFlight = false
     let activeSignedUrl = signedUrl
+    // NOTYA-SES-KULLANICI-BALON-01: event ids restart on every call — bubbles of an earlier call must not order this one's.
+    if (messagesRef.current.some((m) => m.olay != null)) {
+      const temiz = oturumOlaylariniSil(messagesRef.current)
+      messagesRef.current = temiz
+      setMessages(temiz)
+    }
 
     const endCurrentSession = async () => {
       elevenKapiKapat()
@@ -1519,7 +1525,11 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
             skipNextAgentTranscript = false
             return
           }
-          if (role === "user" && (String(message || "").trim() === DEVAM_ISARETI || kesintiMesajiMi(message) || kendiSelamiMi(message) || sesGurultusuMu(message))) return
+          if (role === "user" && (String(message || "").trim() === DEVAM_ISARETI || kesintiMesajiMi(message) || kendiSelamiMi(message) || sesGurultusuMu(message))) {
+            // NOTYA-SES-KULLANICI-BALON-01: a dropped doctor line must be visible in the console, with the reason.
+            console.warn("[ses-balon] user onMessage dropped", { olay: typeof event_id === "number" ? event_id : undefined, uzunluk: String(message || "").trim().length })
+            return
+          }
           if (role === "user") {
             // NOTYA-AYSE-GURULTU-02: real doctor words — a pending resume is cancelled.
             kesintiRef.current = kesintiDoktorKonustu(kesintiRef.current)

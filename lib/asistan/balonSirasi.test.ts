@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { benzerCevapMi, cevapEkle, kullaniciEkle, yetimCevapYeri, type Balon } from './balonSirasi'
+import { benzerCevapMi, cevapEkle, kullaniciEkle, oturumOlaylariniSil, yetimCevapYeri, type Balon } from './balonSirasi'
 
 const ekle = (role: 'user' | 'ai', text: string, olay?: number): Balon => ({ role, text, ...(olay != null ? { olay } : {}) })
 
@@ -110,4 +110,17 @@ test('NOTYA-SES-TEK-CEVAP-01: 24 ay muayene özeti parafrazı ikinci balon açma
   assert.equal(tekrar.filter((m) => m.role === 'ai').length, 2, 'selam + tek özet')
   const ucuncu = cevapEkle(tekrar, soru, a.replace('dosya hazır', 'hazırlandı'), ekle)
   assert.equal(ucuncu.filter((m) => m.role === 'ai').length, 2)
+})
+
+// NOTYA-SES-KULLANICI-BALON-01 — event ids restart on every call; a stale `olay` filed the new transcript among old bubbles.
+test('önceki görüşmenin olay numaraları yeni konuşmanın doktor balonunu eski geçmişe atmaz', () => {
+  const eski: Balon[] = []
+  for (let i = 0; i < 6; i++) {
+    eski.push({ role: 'user', text: 'eski soru ' + i, olay: 10 + i * 2 })
+    eski.push({ role: 'ai', text: 'eski cevap ' + i, olay: 11 + i * 2 })
+  }
+  const hata = kullaniciEkle(eski, 'Merhaba doktor, nasılsınız bugün?', 2, ekle)
+  assert.notEqual(hata.length - 1, hata.findIndex((m) => m.text.startsWith('Merhaba doktor')), 'bug: misfiled among old bubbles')
+  const duzgun = kullaniciEkle(oturumOlaylariniSil(eski), 'Merhaba doktor, nasılsınız bugün?', 2, ekle)
+  assert.equal(duzgun[duzgun.length - 1].text, 'Merhaba doktor, nasılsınız bugün?')
 })
