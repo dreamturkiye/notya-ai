@@ -17,7 +17,7 @@
  *
  * No instruction text lives here: it comes from the active pack (countries/active/klinik).
  */
-import { aiCagir, AiCagriHatasi, yanitMetni } from '@/lib/ai/cagir'
+import { aiAkis, aiCagir, AiCagriHatasi, yanitMetni, type AiMesaj } from '@/lib/ai/cagir'
 import { jsonOnarDetay } from '@/lib/ai/jsonOnar'
 import { modelSec } from '@/lib/ai/modeller'
 import type { SupabaseClient } from '@supabase/supabase-js'
@@ -120,6 +120,31 @@ export async function modeldenBelge(g: { talimat: string; baglam: string; mime: 
     return yanitMetni(yanit)
   } catch (e) {
     console.error(`[ulke/belge] goruntu-inceleme: ${e instanceof AiCagriHatasi ? `gateway ${e.durum}` : e instanceof Error ? e.name : typeof e}`)
+    return null
+  }
+}
+
+/**
+ * AU-CANLI-01 — the live assistant's turn: ONE streamed answer from the same gateway and the same policy as everything
+ * else here (task `sohbet-uzman`, the policy picks the model). The pieces arrive in `parca` as they are written, so the
+ * voice can start before the answer ends. Returns the whole text, or null when the gateway could not answer (what it
+ * threw is logged by kind and goes no further). The instruction is the cached system block and holds nothing about a
+ * doctor or a patient; `mesajlar` are the clinician's and the assistant's own words of this call.
+ */
+export async function modeldenAkis(g: { talimat: string; mesajlar: AiMesaj[]; doktorId: string; butceMs?: number }, parca: (p: string) => void): Promise<string | null> {
+  try {
+    const yanit = await aiAkis({
+      gorev: 'sohbet-uzman',
+      system: [{ metin: g.talimat, onbellek: true }],
+      messages: g.mesajlar,
+      maxTokens: 900,
+      temperature: 0.3,
+      doctorId: g.doktorId,
+      ...(g.butceMs ? { butceMs: g.butceMs } : {}),
+    }, parca)
+    return yanitMetni(yanit)
+  } catch (e) {
+    console.error(`[ulke/asistan] sohbet-uzman: ${e instanceof AiCagriHatasi ? `gateway ${e.durum}` : e instanceof Error ? e.name : typeof e}`)
     return null
   }
 }

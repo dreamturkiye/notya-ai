@@ -15,15 +15,23 @@ import { hesapSaatDilimi } from './saatDilimi'
 import { ulkeTablosu } from './tablolar'
 
 const KOVA = 'soap'
+/** AU-CANLI-01 — the live assistant's two buckets: turns answered, and calls opened. */
+export const KOVA_ASISTAN_TUR = 'asistan-tur'
+export const KOVA_ASISTAN_BAGLANTI = 'asistan-baglanti'
 
-export async function muayeneKotasiKullan(supabase: SupabaseClient, doktorId: string, limit: number): Promise<boolean> {
+export function muayeneKotasiKullan(supabase: SupabaseClient, doktorId: string, limit: number): Promise<boolean> {
+  return kovaKotasiKullan(supabase, doktorId, KOVA, limit)
+}
+
+/** One unit of `kova` for the day of the account's country. false = the ceiling is reached. Fails open like the original. */
+export async function kovaKotasiKullan(supabase: SupabaseClient, doktorId: string, kova: string, limit: number): Promise<boolean> {
   try {
     // The day is the ACCOUNT's own (its time zone, one of the pack's list).
     const gun = ulkeGunu(new Date(), await hesapSaatDilimi(supabase, doktorId))
-    const { data } = await ulkeTablosu(supabase, 'ulke_kullanim').select('sayac').eq('doctor_id', doktorId).eq('gun', gun).eq('kova', KOVA).maybeSingle()
+    const { data } = await ulkeTablosu(supabase, 'ulke_kullanim').select('sayac').eq('doctor_id', doktorId).eq('gun', gun).eq('kova', kova).maybeSingle()
     const mevcut = Number((data as { sayac?: number } | null)?.sayac ?? 0)
     if (mevcut >= limit) return false
-    await ulkeTablosu(supabase, 'ulke_kullanim').upsert({ doctor_id: doktorId, gun, kova: KOVA, sayac: mevcut + 1 }, { onConflict: 'ulke,doctor_id,gun,kova' })
+    await ulkeTablosu(supabase, 'ulke_kullanim').upsert({ doctor_id: doktorId, gun, kova, sayac: mevcut + 1 }, { onConflict: 'ulke,doctor_id,gun,kova' })
     return true
   } catch {
     return true
