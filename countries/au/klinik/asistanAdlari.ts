@@ -32,7 +32,11 @@
  *
  * NO FALLBACK TO ANOTHER ROLE. A key without an entry has no assistant: the neutral "Notya assistant" (../arayuz.ts).
  */
-import type { Sunulan } from '../asistan/kaynaklar'
+import type { AuEkRolAnahtari } from './rolListesi'
+import type { EnRol } from '../../_dil/en/klinik/roller'
+
+/** The 44 roles this pack offers an assistant for. */
+export type Sunulan = Exclude<EnRol, 'thoracic-surgery' | 'cardiovascular-surgery' | 'clinic-dermatology' | 'hair-transplant' | 'longevity'> | AuEkRolAnahtari
 
 export type AuAsistanCinsiyeti = 'erkek' | 'kadin'
 

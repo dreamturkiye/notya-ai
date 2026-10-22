@@ -11,7 +11,6 @@ import { enArayuz } from '../_dil/en/arayuz'
 import { AU_KONSULTASYON_METNI } from './araclar/konsultasyonMetinleri'
 import { AU_GIRDI } from './ayarlar'
 import { auAsistanAdi } from './klinik/asistanAdlari'
-import { auAsistanKaynaklari } from './asistan/kaynaklar'
 import { AU_SES } from './ses'
 import { AU_YASAL_NOTLARI } from './uzanti/acilis'
 
@@ -31,12 +30,10 @@ export function auAsistanKimligi(rol: unknown): AsistanKimligi | null {
   if (typeof rol !== 'string' || !sunulan.has(rol)) return null
   const ad = auAsistanAdi(rol)
   if (!ad) return null
-  const kaynaklar = auAsistanKaynaklari(rol)
   return {
     tamAd: ad.tamAd,
     kisaAd: ad.kisaAd,
     makineTuretimi: false,
-    ...(kaynaklar ? { kaynaklar } : {}),
   }
 }
 
