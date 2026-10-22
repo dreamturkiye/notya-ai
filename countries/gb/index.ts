@@ -81,8 +81,8 @@ export const GB_PAKETI: UlkePaketi = {
   },
   // The country's code is `gb`; the path it is served under is /uk.
   yolOnEki: '/uk',
-  // HIDDEN FROM SEARCH. Only the owner changes this, after the pilot approves the site (checklist K2).
-  aramaMotorlarinaGizli: true,
+  // AU-SEO-01: THE single indexing switch. Hidden unless NOTYA_GB_INDEXABLE=true is set in the deployment. Signed-in pages are noindex whatever this says.
+  aramaMotorlarinaGizli: process.env.NOTYA_GB_INDEXABLE !== 'true',
   kabuk: {
     baslik: 'Notya',
     aciklama: 'A clinical assistant for doctors and clinics.',

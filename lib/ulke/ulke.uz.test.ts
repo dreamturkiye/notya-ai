@@ -139,7 +139,9 @@ describe('an Uzbekistan build', () => {
   it('hidden from search engines; no sitemap exists to list it', () => {
     assert.equal(ulke.ulkePaketi().aramaMotorlarinaGizli, true)
     assert.match(kapi.ROBOTS_HERKESE_KAPALI, /^User-agent: \*\nDisallow: \/\n$/)
-    for (const ad of ['sitemap.ts', 'sitemap.xml', 'sitemap.js']) assert.equal(existsSync(join(KOK, 'app', ad)), false, ad)
+    for (const ad of ['sitemap.ts', 'sitemap.js']) assert.equal(existsSync(join(KOK, 'app', ad)), false, ad)
+    // AU-SEO-01: the sitemap is a route handler that answers 404 while the switch is off (lib/ulke/seo).
+    assert.equal(existsSync(join(KOK, 'app', 'sitemap.xml', 'route.ulke.ts')), true)
     assert.equal(existsSync(join(KOK, 'public', 'sitemap.xml')), false)
   })
 })
