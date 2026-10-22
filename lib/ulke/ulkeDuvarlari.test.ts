@@ -261,6 +261,22 @@ describe('build-time selection: the entry point and the import graph', () => {
       neden: 'Writes the usage row of every model call (token counts, model, task, doctor id — never content). Turkish text: one console warning when the row cannot be written.',
       azamiSatir: 1,
     },
+    'core/belgeler/notaBlok.ts': {
+      neden: 'Shared note-block writer (NOTYA-ULKE-EKLER-01). Turkish text: the Turkish table of the block wording, which a country build never selects (blokDili never returns the Turkish language), the Turkish heading pattern the cleaner also recognises in a model reply, and the Turkish spelling of a few words used to match a heading. None of it is shown in a country build.',
+      azamiSatir: 7,
+    },
+    'core/belgeler/deid.ts': {
+      neden: 'Shared on-device masking (NOTYA-ULKE-EKLER-01). Turkish text: the reasons of the audio-quality check, which is the recording path of Türkiye and is not called from the document step; the image masking function used by a country build returns no text.',
+      azamiSatir: 4,
+    },
+    'core/belgeler/kimlikMaske.ts': {
+      neden: 'Shared identity-label matching (NOTYA-ULKE-EKLER-01). Turkish text: the Turkish spellings of identity labels and a Turkish case-folding, used only to RECOGNISE what to hide on a picture; nothing in it is output.',
+      azamiSatir: 3,
+    },
+    'core/belgeler/otoBatch.ts': {
+      neden: 'Shared bounded work queue (NOTYA-ULKE-EKLER-01). Turkish text: the default status words of the Turkish document step; a country build uses only the queue function (sinirliKuyruk) and writes its own status words from its language catalogue.',
+      azamiSatir: 3,
+    },
   }
 
   // Every route file of a build that is not the pre-split application: the *.ulke.* files under app/, the root

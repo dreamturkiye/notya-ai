@@ -32,6 +32,8 @@ import { DosyaEk } from './DosyaEk'
 import { PortalOzetKarti } from './PortalOzeti'
 import { HastaFormuKarti } from './HastaFormuKarti'
 import { SablonSecici, useSablonlar } from './Sablonlarim'
+import { EklerNotKarti } from './Ekler'
+import { bloklariAktar } from '@/core/belgeler/notaBlok'
 import { sonaEkle } from '@/lib/ulke/sablon/sabitler'
 import type { DilKodu } from '@/lib/ulke/tipler'
 
@@ -254,6 +256,13 @@ export function Not({ u, notId }: { u: Uygulama; notId: string }) {
       <NotGorunumu m={u.m} not={not} aktifDil={aktifDil} setAktifDil={(d) => { setAktifDil(d); setBildirim(null) }} icerik={icerik}
         setIcerik={(i) => { setMetinler((eski) => ({ ...eski, [aktifDil]: i })); setBildirim(null) }} islem={islem} bildirim={bildirim} kaydet={kaydet} yenidenYaz={yenidenYaz} onayla={onayla}
         sablonEki={ozellikAcik('hekimSablonlari') ? (b, mesgul) => <SablonSecici x={sablonMetni(u.dil)} sablonlar={sablonlar} hedef={b} mesgul={mesgul} ekle={(t) => { setMetinler((eski) => ({ ...eski, [aktifDil]: { ...icerik, [b]: sonaEkle(icerik[b], t) } })); setBildirim(null) }} /> : undefined} />
+      {/* NOTYA-ULKE-EKLER-01: documents added after the note was written — read, and merged into the Examination section of
+          this DRAFT in one write. What the server saved is merged into the text still being edited, so the doctor's own
+          unsaved changes survive (blocks already on the screen are left alone). An approved note offers nothing. */}
+      {!not.onayli ? (
+        <EklerNotKarti m={u.m} api={api} notId={not.notId} seansId={not.seansId} hastaAdi={not.muayene.hasta ? tamAd(not.muayene.hasta) : ''}
+          onEklendi={(o) => setMetinler((eski) => { const t = eski[not.dil] ?? not.icerik; return { ...eski, [not.dil]: { ...t, o: bloklariAktar(o, t.o) } } })} />
+      ) : null}
       {/* NOTYA-ULKE-PORTAL-01: only an APPROVED note of a patient can have a summary for that patient; the server decides again. */}
       {/* NOTYA-ULKE-INTAKE-01: beside a DRAFT, what the patient wrote before the visit — for the doctor to read while the note is
           still theirs to change. Read-only, marked as the patient's own words; it was never given to the model. */}

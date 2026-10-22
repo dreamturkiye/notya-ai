@@ -32,6 +32,8 @@
  */
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { AKTIF_KLINIK } from '@/countries/active/klinik'
+import { llmBelgeBlokTemizle, notaBloklariUygula } from '@/core/belgeler/notaBlok'
+import { blokDili, ekGirdileriniOku } from '../belgeler/ekler'
 import type { DilKodu, NotIcerigi } from '../tipler'
 import { uygulamaDiliMi } from '../ulke'
 import { hastaGetir } from './hastalar'
@@ -142,7 +144,7 @@ async function notuOku(supabase: SupabaseClient, doktorId: string, notId: string
  * Writes the note of a visit from its transcript, in the doctor's note language. Once per visit: asked again for a
  * visit that has a note, it answers with that note and calls nobody.
  */
-export async function notYaz(supabase: SupabaseClient, doktorId: string, seansId: string, butceMs?: number): Promise<{ tamam: true; notId: string } | Ret> {
+export async function notYaz(supabase: SupabaseClient, doktorId: string, seansId: string, butceMs?: number, ekHam?: unknown): Promise<{ tamam: true; notId: string } | Ret> {
   const klinik = AKTIF_KLINIK
   if (!klinik) return ret('HAZIR_DEGIL')
   // ISOLATION: the visit, its language record and its patient are each read with the doctor's id.
@@ -164,6 +166,11 @@ export async function notYaz(supabase: SupabaseClient, doktorId: string, seansId
   const girdi = klinik.notGirdisi(notDili, { dogumTarihi: hasta.dogumTarihi, cinsiyet: hasta.cinsiyet, muayeneTarihi, metin: muayene.metin.slice(0, 120_000), sablon })
   const icerik = await modeldenNot({ gorev: 'soap', talimat, girdi, doktorId, butceMs, olcum: { supabase, gorev: 'not' } })
   if (!icerik) return ret('NOT_YAZILAMADI')
+  // NOTYA-ULKE-EKLER-01: the documents added after the dictation go into the FIRST note, in this one write. The model's
+  // own imitation of a document heading / banner is removed first; the real labelled blocks ("Ultrasound 1/4 …") are
+  // then appended to the findings section, in the note's language, idempotent per document id.
+  const ekler = ekGirdileriniOku(ekHam, notDili)
+  if (ekler.length) icerik.o = notaBloklariUygula(llmBelgeBlokTemizle(icerik.o), ekler, blokDili(notDili)).metin.slice(0, BOLUM_AZAMI)
   // LEAK RULE: of what the model returned, only the fields THIS template owns for THIS patient are kept.
   const alanlar = alanlariSuz(icerik.alanlar, klinik.notAlanlari?.(sablon, { dogumTarihi: hasta.dogumTarihi, muayeneTarihi }) ?? [])
 
@@ -203,6 +210,29 @@ export async function notGetir(supabase: SupabaseClient, doktorId: string, notId
   const ekMetin = await ekMetinOku(supabase, doktorId, notId)
   if (ekMetin === null) return null
   return { notId: o.not.id, seansId: o.not.session_id, onayli, onayTarihi: o.not.approved_at ?? null, dil, icerik: alanliIcerik(satirdan(o.not), alanlariSuz(o.dil.alanlar, alanAnahtarlari)), ikinci, yenidenYazilabilir, alanAnahtarlari, muayene, ekMetin }
+}
+
+/**
+ * NOTYA-ULKE-EKLER-01 — documents added to a DRAFT note after it was written (the note screen's upload). The evaluations
+ * are merged into the findings section in ONE write; a document already in the note has its own block replaced, text the
+ * doctor wrote is never touched. The write carries the doctor's id and `approved_at IS NULL` — a note the doctor has
+ * approved answers 'ONAYLI' and is not changed. Returns the section as saved, for the screen to merge into what the
+ * doctor is still typing.
+ */
+export async function notBelgeEkle(supabase: SupabaseClient, doktorId: string, notId: string, ekHam: unknown): Promise<{ tamam: true; o: string; eklendi: number } | Ret> {
+  const o = await notuOku(supabase, doktorId, notId)
+  if (!o) return ret('NOT_FOUND')
+  if (o.not.approved_at) return ret('ONAYLI')
+  const ekler = ekGirdileriniOku(ekHam, o.dil.not_dili)
+  if (!ekler.length) return ret('BOS')
+  const onceki = o.not.content_objektif ?? ''
+  const uy = notaBloklariUygula(onceki, ekler, blokDili(o.dil.not_dili))
+  if (uy.metin.length > BOLUM_AZAMI) return ret('GECERSIZ', 'o')
+  if (!uy.degisti) return { tamam: true, o: onceki, eklendi: 0 }
+  const { data, error } = await ulkeTablosu(supabase, 'ulke_notlar').update({ content_objektif: uy.metin }).eq('id', notId).eq('doctor_id', doktorId).is('approved_at', null).select('id')
+  if (error) return ret('BASARISIZ')
+  if (!(data as unknown[] | null)?.length) return ret('ONAYLI')
+  return { tamam: true, o: uy.metin, eklendi: uy.islemler.filter((i) => i.islem !== 'ayni').length }
 }
 
 /**

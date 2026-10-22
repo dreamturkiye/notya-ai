@@ -15,7 +15,8 @@
 
 export type NotaBolumu = 'objektif'
 
-export type BlokDili = 'tr' | 'en' | 'ru'
+/** 'uz' = Uzbek (Latin), 'uzk' = Uzbek (Cyrillic). */
+export type BlokDili = 'tr' | 'en' | 'ru' | 'uz' | 'uzk'
 
 export interface BlokGirdi {
   belgeId: string
@@ -52,6 +53,18 @@ const METIN: Record<BlokDili, { baslik: (etiket: string, tarih: string) => strin
     bulgular: 'Находки: ', tani: 'Диагноз врача: ',
     acil: '⚠ Срочный флаг: в оценке отмечена тревожная находка.',
     celiski: (e, m, b) => `Примечание: по ${e} в заметке ${m}, в документе ${b}; сохранены оба значения.`,
+  },
+  uz: {
+    baslik: (e, t) => `— Hujjat bahosi (${e}, ${t}) —`,
+    bulgular: 'Topilmalar: ', tani: 'Shifokor tashxisi: ',
+    acil: '⚠ Shoshilinch belgi: baholashda xavfli topilma qayd etildi.',
+    celiski: (e, m, b) => `Izoh: ${e} boʻyicha mavjud yozuvda ${m}, hujjatda ${b}; ikkalasi ham saqlandi.`,
+  },
+  uzk: {
+    baslik: (e, t) => `— Ҳужжат баҳоси (${e}, ${t}) —`,
+    bulgular: 'Топилмалар: ', tani: 'Шифокор ташхиси: ',
+    acil: '⚠ Шошилинч белги: баҳолашда хавфли топилма қайд этилди.',
+    celiski: (e, m, b) => `Изоҳ: ${e} бўйича мавжуд ёзувда ${m}, ҳужжатда ${b}; иккаласи ҳам сақланди.`,
   },
 }
 
