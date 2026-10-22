@@ -98,8 +98,9 @@ export const AU_PAKETI: UlkePaketi = {
   },
   // The path of the main site this country is served under.
   yolOnEki: '/au',
-  // HIDDEN FROM SEARCH. Only the owner changes this, after the pilot approves the site (checklist K2).
-  aramaMotorlarinaGizli: true,
+  // AU-SEO-01: THE single indexing switch. au.notya.io is indexable (owner decision 2026-10-22); set NOTYA_AU_INDEXABLE=false
+  // in the Vercel project and redeploy to hide it again. Signed-in pages are noindex whatever this says. See docs/au/SEO.md.
+  aramaMotorlarinaGizli: process.env.NOTYA_AU_INDEXABLE === 'false',
   kabuk: {
     baslik: 'Notya',
     aciklama: 'A clinical assistant for doctors and clinics.',

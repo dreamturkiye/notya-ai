@@ -80,7 +80,7 @@ export function KlinikSayfasi({ dil, istenenDil, iletisimEposta, gorsel, acilis:
                 </div>
               </div>
               <figure className="order-first min-w-0 lg:order-none">
-                <img src={gorsel} alt={k.kahraman.gorselAlt} className="aspect-[16/10] w-full rounded-xl object-cover object-center lg:aspect-[5/4]" />
+                <img src={gorsel} alt={k.kahraman.gorselAlt} fetchPriority="high" decoding="async" className="aspect-[16/10] w-full rounded-xl object-cover object-center lg:aspect-[5/4]" />
                 <figcaption className="mt-3 font-outfit text-xs uppercase tracking-[0.18em] text-ink-muted">{k.kahraman.gorselAlti}</figcaption>
               </figure>
             </div>

@@ -6,7 +6,7 @@ import React from 'react'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { ULKE_STIL as S, UlkeKart } from '@/components/ulke/UlkeKart'
-import { ACIK_ROBOTS, betaNotu } from '@/lib/ulke/acikIcerik'
+import { GIZLI_ROBOTS, betaNotu } from '@/lib/ulke/acikIcerik'
 import { ulkePaketi } from '@/lib/ulke/ulke'
 import type { DilKodu } from '@/lib/ulke/tipler'
 
@@ -14,7 +14,7 @@ export function uzantiBelgesi(slug: string) {
   const belge = () => ulkePaketi().uzanti?.belgeler?.[slug] ?? null
   function generateMetadata(): Metadata {
     const b = belge()
-    return b ? { title: `${b.baslik} — Notya`, robots: ACIK_ROBOTS } : {}
+    return b ? { title: `${b.baslik} — Notya`, robots: GIZLI_ROBOTS } : {}
   }
   function Sayfa() {
     const b = belge()

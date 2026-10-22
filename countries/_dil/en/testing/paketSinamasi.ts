@@ -207,7 +207,8 @@ export function ingilizcePaketSinamasi(s: EnPaketSinamasi): void {
       }
     })
     it('hidden from search; sign-up by invitation code only', () => {
-      assert.equal(paket.aramaMotorlarinaGizli, true)
+      // AU-SEO-01: Australia is indexable by owner decision (2026-10-22); every other country is hidden by default.
+      assert.equal(paket.aramaMotorlarinaGizli, paket.kod !== 'au')
       assert.equal(paket.uygulama!.kayitAcik, false)
     })
     it('only what the country kit has built is switched on', () => {
