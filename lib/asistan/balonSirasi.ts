@@ -16,7 +16,7 @@
  * `sira`: the timeline key the floating panel and the saved history sort by. `soru`: on a reply painted by the
  * screen poll, the doctor line the server stored in front of it (NOTYA-AYSE-SAYI-SIRA-01).
  */
-export type Balon = { role: 'user' | 'ai'; text: string; olay?: number; sira?: number; soru?: string }
+export type Balon = { role: 'user' | 'ai'; text: string; olay?: number; sira?: number; soru?: string; kaynak?: 'ekran' }
 
 /**
  * NOTYA-AYSE-SAYI-SIRA-01 (Kaan live, 2026-10-11 01:08 UTC) — the reply to the THIRD sentence of a voice
@@ -103,6 +103,20 @@ export function yetimCevapYeri<T extends Balon>(prev: T[]): number | null {
   return bas
 }
 
+/**
+ * NOTYA-SES-SIRA-03 (Kaan live, 2026-10-22): a poll reply (kaynak 'ekran', no event id) can land before the doctor's
+ * transcript on any turn, and `soru` cannot match when the stored line differs from the ElevenLabs transcript.
+ * In the trailing run of AI bubbles, the first one answers the user line in front of it; a poll reply (one that answers a real doctor sentence; pause / hidden turns carry no tag) after that
+ * one has no doctor line of its own yet, so a new transcript goes in front of it. The greeting is never moved.
+ */
+export function ekranYetimYeri<T extends Balon>(prev: T[]): number | null {
+  let bas = prev.length
+  while (bas > 0 && prev[bas - 1].role === 'ai') bas--
+  if (bas === prev.length || bas === 0) return null // no trailing AI run / greeting-only run: yetimCevapYeri's case
+  for (let i = bas + 1; i < prev.length; i++) if (prev[i].kaynak === 'ekran') return i
+  return null
+}
+
 /** Two model generations of the same isolation (or a cut + replay) start the same way. */
 export function benzerCevapMi(a: string, b: string): boolean {
   const n = (s: string) => String(s || '').replace(/\s+/g, ' ').trim()
@@ -185,7 +199,7 @@ export function kullaniciEkle<T extends Balon>(
   // NOTYA-SES-SIRA-02: no usable event order (poll AI has no olay) → still put the question before the orphan reply.
   if (at >= prev.length) {
     // NOTYA-AYSE-SAYI-SIRA-01: the reply that answers THIS sentence is already on screen → in front of it, on any turn.
-    const yetim = sorusuzCevapYeri(prev, t) ?? yetimCevapYeri(prev)
+    const yetim = sorusuzCevapYeri(prev, t) ?? yetimCevapYeri(prev) ?? ekranYetimYeri(prev)
     if (yetim != null) at = yetim
   }
   return siraAraya([...prev.slice(0, at), msg, ...prev.slice(at)], at)
@@ -236,7 +250,7 @@ export function cevapEkle<T extends Balon>(
     // satırı girse bile) yeni balon açmasın — son birkaç AI'ya bak.
     const sonAilar = next.filter((m) => m.role === 'ai').slice(-4)
     const etiket = String(cevaplanan || '').trim()
-    if (!sonAilar.some((m) => benzerCevapMi(m.text, c))) next.push(etiket ? { ...ekle('ai', c), soru: etiket } : ekle('ai', c))
+    if (!sonAilar.some((m) => benzerCevapMi(m.text, c))) next.push(etiket ? { ...ekle('ai', c), soru: etiket, kaynak: 'ekran' as const } : ekle('ai', c))
   }
   return next
 }

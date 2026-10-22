@@ -236,3 +236,23 @@ test('önceki görüşmenin olay numaraları yeni konuşmanın doktor balonunu e
   assert.equal(duzgun[duzgun.length - 2].text, 'Merhaba hocam. Bugün nasılsınız?')
   assert.equal(duzgun[duzgun.length - 1].text, cevap.text)
 })
+
+test('NOTYA-SES-SIRA-03: ekran cevabı döküm gelmeden önce geldiyse döküm cevabın önüne oturur (selam yerinde, soru eşleşmese de)', () => {
+  const SORU2 = 'Bugün bir randevumuz var mı hocam?'
+  // first turn: [greeting][poll answer][transcript]
+  let l: Balon[] = [{ role: 'ai', text: SELAM }]
+  l = cevapEkle(l, null, KAHVE, ekle, 'Başka bir yazılış')
+  l = kullaniciEkle(l, SORU, undefined, ekle)
+  assert.deepEqual(l.map((m) => m.role), ['ai', 'user', 'ai'])
+  // second turn: stored line differs from the transcript, so `soru` cannot match
+  l = cevapEkle(l, null, '22 Ekim 2026 Perşembe takviminde randevu yok.', ekle, 'Bugün randevumuz var mı')
+  l = kullaniciEkle(l, SORU2, 12, ekle)
+  assert.deepEqual(l.map((m) => m.text.slice(0, 8)), [SELAM.slice(0, 8), SORU.slice(0, 8), KAHVE.slice(0, 8), SORU2.slice(0, 8), '22 Ekim '])
+  // transcript first: stays in order
+  let k: Balon[] = [{ role: 'ai', text: SELAM }]
+  k = kullaniciEkle(k, SORU, 4, ekle)
+  k = cevapEkle(k, null, KAHVE, ekle, SORU)
+  k = kullaniciEkle(k, SORU2, 8, ekle)
+  k = cevapEkle(k, null, 'Yok.', ekle, SORU2)
+  assert.deepEqual(k.map((m) => m.role), ['ai', 'user', 'ai', 'user', 'ai'])
+})
