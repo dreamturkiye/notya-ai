@@ -70,6 +70,25 @@ export function afisTemizle(s: string): string {
   return o.replace(/[ \t]{2,}/g, ' ').trim()
 }
 
+const BASLIK_RE = /^\s*[—–-]\s*(Belge değerlendirmesi|Document assessment|Document evaluation|Оценка документа)\b.*[—–-]\s*$/i
+
+/**
+ * NOTYA-BELGE-OTO-02: the model mimics old-format "Belge değerlendirmesi" blocks from the style-learning data and writes an
+ * empty heading + the UI banner. Only blocks carrying the invisible key are ours; keyless headings and banner sentences
+ * written by the model are removed (the real blocks are appended afterwards by notaBloklariUygula).
+ */
+export function llmBelgeBlokTemizle(metin: string): string {
+  if (!metin) return metin
+  const cikti: string[] = []
+  for (const satir of metin.split('\n')) {
+    if (BASLIK_RE.test(satir) && !satir.includes(ZW_BAS)) continue
+    const t = afisTemizle(satir)
+    if (t === '' && satir.trim() !== '') continue // line was only the banner
+    cikti.push(t === satir.trim() ? satir : t)
+  }
+  return cikti.join('\n').replace(/\n{3,}/g, '\n\n').trim()
+}
+
 /** Keeps ICD-10 style codes on one line and strips stray whitespace inside parentheses. */
 export function icdKoru(s: string): string {
   return s
