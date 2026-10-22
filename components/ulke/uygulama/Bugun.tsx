@@ -19,6 +19,7 @@ import { ozellikAcik, ulkePaketi } from '@/lib/ulke/ulke'
 import { roller } from '@/lib/ulke/arayuz'
 import { Ipucu } from './Ipucu'
 import { IlkAdimlarKarti } from './IlkAdimlar'
+import { AsistanCanli } from './AsistanCanli'
 
 export type BugunMuayenesi = { seansId: string; notId: string | null; hastaId: string | null; hastaAdi: string; baslangic: string; durum: 'taslak' | 'onayli' | 'notsuz' }
 
@@ -103,7 +104,7 @@ function KaroIkon({ ad }: { ad: string }) {
   }
 }
 
-export function BugunGorunumu({ m, ad, muayeneler, hata, rol, randevular, mesajlar, konsultasyon, istekler, ilkAdimlar }: {
+export function BugunGorunumu({ m, ad, muayeneler, hata, rol, randevular, mesajlar, konsultasyon, istekler, ilkAdimlar, canli }: {
   m: UygulamaMetni; ad: string; muayeneler: BugunMuayenesi[] | null; hata: boolean
   /** NOTYA-UZ-RANDEVU-01: today's appointments. Absent or null = not loaded, or the country has none: no list is drawn. */
   randevular?: RandevuKaydi[] | null
@@ -117,6 +118,8 @@ export function BugunGorunumu({ m, ad, muayeneler, hata, rol, randevular, mesajl
   istekler?: React.ReactNode
   /** YENI-DOKTOR-UX-2026-10: the first-run checklist of a new account. Draws nothing once set up. */
   ilkAdimlar?: React.ReactNode
+  /** AU-CANLI-01: the live spoken assistant. Draws nothing unless the server says it is available. */
+  canli?: React.ReactNode
 }) {
   const p = m.pano
   const tz = hesapSaatDilimi()
@@ -154,6 +157,8 @@ export function BugunGorunumu({ m, ad, muayeneler, hata, rol, randevular, mesajl
           {satir ? <span data-alan="asistan-satir">{`: ${satir}`}</span> : null}
         </div>
       </section>
+
+      {canli ?? null}
 
       {ilkAdimlar ?? null}
 
@@ -348,7 +353,7 @@ export default function Bugun() {
   if (!hesap) return <Yukleniyor m={u.m} dil={u.dil} />
   return (
     <Cerceve dil={u.dil} m={u.m} ad={hesap.ad} unvan={rolAdi(hesap.rol, u.dil) ?? undefined} aktif="bugun" cikis={u.cikis}>
-      <BugunGorunumu m={u.m} ad={hesap.ad} muayeneler={muayeneler} hata={hata} rol={hesap.rol} randevular={randevular} mesajlar={ozellikAcik('hastaPortali') && ozellikAcik('hastaMesajlari') ? <OkunmamisMesajlarKarti u={u} /> : null} konsultasyon={ozellikAcik('konsultasyon') && ozellikAcik('araclar') ? <BekleyenKonsultasyonlarKarti u={u} /> : null} istekler={ozellikAcik('hastaPortali') && ozellikAcik('randevu') ? <Istekler u={u} r={randevuMetni(u.dil)} /> : null} ilkAdimlar={<IlkAdimlarKarti m={u.m} api={api} rolTamam={Boolean(hesap.rol) || roller().length === 0} />} />
+      <BugunGorunumu m={u.m} ad={hesap.ad} muayeneler={muayeneler} hata={hata} rol={hesap.rol} randevular={randevular} mesajlar={ozellikAcik('hastaPortali') && ozellikAcik('hastaMesajlari') ? <OkunmamisMesajlarKarti u={u} /> : null} konsultasyon={ozellikAcik('konsultasyon') && ozellikAcik('araclar') ? <BekleyenKonsultasyonlarKarti u={u} /> : null} istekler={ozellikAcik('hastaPortali') && ozellikAcik('randevu') ? <Istekler u={u} r={randevuMetni(u.dil)} /> : null} ilkAdimlar={<IlkAdimlarKarti m={u.m} api={api} rolTamam={Boolean(hesap.rol) || roller().length === 0} />} canli={<AsistanCanli m={u.m} api={api} />} />
     </Cerceve>
   )
 }

@@ -10,6 +10,7 @@ import type { UlkeKlinigi } from '@/lib/ulke/tipler'
 import { enKlinik } from '../../_dil/en/klinik'
 import { AU_KONSULTASYON_RIZA_SURUMU } from '../araclar/konsultasyonMetinleri'
 import { AU_GIRDI } from '../ayarlar'
+import { AU_CANLI_ASISTAN } from '../asistan/canli'
 import { AU_SES } from '../ses'
 import { AU_ACIL_CUMLE, AU_CEKIRDEK_EK } from './formEk'
 
@@ -21,4 +22,6 @@ export const AU_KLINIK: UlkeKlinigi = {
   // added here, since this change is scoped to countries/au/ and its own tests. Flip to true only once a lawyer has.
   konsultasyonRizasi: { surum: AU_KONSULTASYON_RIZA_SURUMU, hukukcuInceledi: false },
   ses: AU_SES,
+  // AU-CANLI-01: the live spoken assistant. Fails closed until the agents and secrets exist (lib/ulke/asistan/ajan.ts).
+  canliAsistan: AU_CANLI_ASISTAN,
 }

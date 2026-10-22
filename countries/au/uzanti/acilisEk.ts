@@ -14,26 +14,36 @@
  *   Medicare/PBS/GST checklists   [araclar/medicareParticulars.ts, pbsPrescription.ts, gstInvoice.ts, kimlikKontrol.ts, baglantilar.ts]
  *   clinic team and front desk    [Klinik.tsx, KlinikYetkiler.tsx, OnBuro.tsx]
  * LEFT OUT ON PURPOSE: TGA/Ahpra/Medicare/PBS endorsement, compliance or certification; Medicare billing or claims; My Health
- * Record (a stub, no connection); Tyro (inactive); any price; any testimonial or number of customers; voice buttons (removed
+ * Record (a stub, no connection); Tyro (inactive); any price; any testimonial or number of customers; voice PREVIEW buttons (removed
  * in AU-HOME-01); the growth-chart tool (off); data residency promises; the persona names themselves.
+ * AU-CANLI-01 (2026-10-22): the live SPOKEN assistant IS mentioned (microphone on the home screen) — but only while the
+ * deployment really holds both agents, the key and the secrets (lib/ulke/asistan/ajan.ts canliAjanlarVar), and never with a
+ * claim of diagnosis, decision support, a regulator or a standard. [components/ulke/uygulama/AsistanCanli.tsx, app/api/ulke/asistan-canli/]
  * No competitor, no public demo of the product, no named integration other than the doctor's own Stripe account.
  */
 import type { AcilisIcerigi, EkOzellikBolumu } from '@/lib/ulke/arayuz/acilisTipleri'
+import { canliAjanlarVar } from '@/lib/ulke/asistan/ajan'
 
 const EPOSTA = 'kaan@notya.io'
 
-function ekBolumler(rolSayisi: number): EkOzellikBolumu[] {
+/**
+ * AU-CANLI-01: the spoken assistant is mentioned ONLY while this deployment really has it (both agents, the key and the
+ * secrets in its environment). A landing line for a feature the visitor's doctor could not press would be false.
+ */
+const SESLI = (): boolean => canliAjanlarVar('au')
+
+function ekBolumler(rolSayisi: number, sesli: boolean = SESLI()): EkOzellikBolumu[] {
   return [
     {
       id: 'your-assistant',
       ustBaslik: 'Your assistant',
       baslik: 'An assistant with a name',
       baslikVurgu: 'for your specialty.',
-      govde: `Each of the ${rolSayisi} specialties and professions has an assistant with its own name. You meet it on your home screen, and it is named on the visit and on every note it drafts. The names are invented product names, not real clinicians.`,
-      maddeler: ['A card on your home screen, set for the specialty you chose', 'Each draft says who wrote it: “Note drafted by …”', 'The assistant drafts and organises. It never approves anything for you'],
+      govde: `Each of the ${rolSayisi} specialties and professions has an assistant with its own name. You meet it on your home screen, and it is named on the visit and on every note it drafts. The names are invented product names, not real clinicians.${sesli ? ' Press the microphone on your home screen and talk to it: you hear a short answer in an Australian voice, and the full written answer stays on your screen. It gives general reference information, not a diagnosis or a treatment decision.' : ''}`,
+      maddeler: ['A card on your home screen, set for the specialty you chose', 'Each draft says who wrote it: “Note drafted by …”', 'The assistant drafts and organises. It never approves anything for you', ...(sesli ? ['Ask out loud: a short spoken answer, the full text on your screen'] : [])],
       kart: {
         etiket: 'Your assistant',
-        satirlar: [{ k: 'Home screen', v: 'Named for your role' }, { k: 'Visit screen', v: 'Says who drafts the note' }, { k: 'Drafted note', v: 'Marked “Draft written by …”' }, { k: 'Approval', mark: 'Yours' }],
+        satirlar: [{ k: 'Home screen', v: 'Named for your role' }, { k: 'Visit screen', v: 'Says who drafts the note' }, { k: 'Drafted note', v: 'Marked “Draft written by …”' }, { k: 'Approval', mark: 'Yours' }, ...(sesli ? [{ k: 'Voice', v: 'Short answer aloud, full text on screen' }] : [])],
         not: 'Change your specialty in Settings and the assistant changes with it.',
       },
     },

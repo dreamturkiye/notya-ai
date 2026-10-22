@@ -13,9 +13,9 @@
  *     match Türkiye's home. It must not come back.)
  * The Australian equivalent is the same: this file is the data on the role's assistant identity
  * (`AsistanKimligi.kaynaklar`, read through ../arayuz.ts) and `auAsistanKaynakBlogu` below is the prompt block that
- * the personaEngine counterpart writes. NOTHING CALLS THE BLOCK YET: the assistant in text and voice is not built for
- * any country but Türkiye (docs/COUNTRY-PACK-HOWTO.md), and the visit-note instructions (countries/_dil/en/klinik/
- * talimatlar.ts) tell the model to name no source, so they must not be given these lists.
+ * the personaEngine counterpart writes. AU-CANLI-01: THE LIVE ASSISTANT NOW CALLS THE BLOCK (countries/au/asistan/canli.ts → the kit's
+ * prompt, lib/ulke/asistan/istem.ts), as Türkiye's persona engine does. The visit-note instructions (countries/_dil/en/
+ * klinik/talimatlar.ts) still tell the model to name no source, so they must NOT be given these lists.
  *
  * `yetki` = the Australian authorities (colleges, societies, boards, national guidelines). `kitaplar` = the books,
  * Australian / binational ANZ titles FIRST, then the international texts named for depth. The split is kept in
@@ -300,9 +300,9 @@ export function auAsistanKaynaklari(rol: string): AsistanKaynaklari | null {
 }
 
 /**
- * The prompt block for a future Australian assistant: the counterpart of the Turkish personaEngine's
+ * The prompt block of the Australian live assistant: the counterpart of the Turkish personaEngine's
  * `specialtyKnowhowBlock`. Australian sources first and binding; Australian books next; international texts for
- * depth only; on conflict the Australian source wins. Not called by anything yet (see the note at the top).
+ * depth only; on conflict the Australian source wins. Called by countries/au/asistan/canli.ts (see the note at the top).
  * null = not a role of this pack: there is no block, and never another role's.
  */
 export function auAsistanKaynakBlogu(rol: string): string | null {

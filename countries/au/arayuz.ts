@@ -38,6 +38,7 @@ export function auAsistanKimligi(rol: unknown): AsistanKimligi | null {
     tamAd: ad.tamAd,
     kisaAd: ad.kisaAd,
     makineTuretimi: false,
+    cinsiyet: ad.cinsiyet,
     ...(kaynaklar ? { kaynaklar } : {}),
   }
 }

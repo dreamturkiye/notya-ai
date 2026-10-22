@@ -60,6 +60,8 @@ export type AsistanKimligi = {
   makineTuretimi: boolean
   /** Absent = this assistant names no practice source. Present = this role's own list, never another role's. */
   kaynaklar?: AsistanKaynaklari
+  /** AU-CANLI-01: the persona's gender — decides which of the pack's two voices speaks for it (`erkek` / `kadin`). */
+  cinsiyet?: 'erkek' | 'kadin'
 }
 
 /** One field a note can have beside the four sections: which section it sits under, and its label in every form. */
