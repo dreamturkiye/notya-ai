@@ -10,16 +10,16 @@ process.env.ENCRYPTION_MASTER_KEY = 'yalniz-test-icin-sentetik-anahtar-0011'
 
 import { describe, it, beforeEach } from 'node:test'
 import assert from 'node:assert/strict'
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { createHmac } from 'node:crypto'
 import { join } from 'node:path'
 import Stripe from 'stripe'
 import { sahteVeritabani } from '../testing/sahteVeritabani'
-import { stripeAnahtarModu, stripeIstemciYap, stripeOlayiDogrula, stripeSaglayici } from './stripe'
+import { stripeAnahtarModu, stripeGizliAnahtarMi, stripeIstemciYap, stripeOlayiDogrula, stripeSaglayici } from './stripe'
 import { tyroImzaDogru, tyroOlayiOku, tyroSaglayici } from './tyro'
 import { uzlastirKayitlarla, uzlasmaCsv } from './odemeSaglayici'
 import { ulkePaketi } from '../ulke'
-import { baglantiKaydet, baglantiOku, faturaIade, faturaOde, gercekSaglayiciYap, kimlikOku } from './fatura'
+import { baglantiKaydet, baglantiOku, faturaIade, faturaOde, gercekSaglayiciYap, kimlikOku, uzlasma } from './fatura'
 import { stripeWebhookIsle, tyroWebhookIsle } from './webhook'
 import type { GercekSaglayici, SaglayiciKaydi } from './saglayiciTipleri'
 
@@ -29,6 +29,8 @@ const D2 = '10000000-0000-4000-8000-00000000000b'
 const F1 = '50000000-0000-4000-8000-000000000001'
 const KEY = 'rk_test_SYNTHETICKEY0123456789'
 const WHSEC = 'whsec_SYNTHETICSECRET0123456789'
+const LIVEKEY = ('rk_' + 'live_') + 'SYNTHETICLIVEKEY0123456789'
+const LIVEWHSEC = 'whsec_SYNTHETICLIVESECRET0123456789'
 
 type Cagri = { url: string; method: string; headers: Record<string, string>; govde: string }
 function sahteGetir(yanitlar: (c: Cagri) => { durum?: number; govde: unknown } | undefined) {
@@ -49,14 +51,21 @@ const stripeSahte = (yanit: (c: Cagri) => { durum?: number; govde: unknown } | u
 }
 const form = (g: string) => Object.fromEntries(new URLSearchParams(g))
 
-describe('Stripe: key mode, live refusal', () => {
-  it('reads test / live from the key prefix; a publishable or odd key is neither', () => {
+describe('Stripe: key mode (restricted keys only), full-access keys refused', () => {
+  it('reads test / live from a RESTRICTED key prefix; secret, publishable and odd keys are neither', () => {
     assert.equal(stripeAnahtarModu('rk_test_ABCDEFGH1234'), 'test')
-    assert.equal(stripeAnahtarModu('sk_test_ABCDEFGH1234'), 'test')
-    assert.equal(stripeAnahtarModu('rk_live_ABCDEFGH1234'), 'live')
+    assert.equal(stripeAnahtarModu(('rk_' + 'live_') + 'ABCDEFGH1234'), 'live')
+    assert.equal(stripeAnahtarModu('sk_test_ABCDEFGH1234'), null)
+    assert.equal(stripeAnahtarModu(('sk_' + 'live_') + 'ABCDEFGH1234'), null)
     assert.equal(stripeAnahtarModu('pk_test_ABCDEFGH1234'), null)
     assert.equal(stripeAnahtarModu('whsec_ABCDEFGH1234'), null)
     assert.equal(stripeAnahtarModu(''), null)
+  })
+  it('a full-access secret key is recognised in both modes', () => {
+    assert.equal(stripeGizliAnahtarMi(('sk_' + 'live_') + 'ABCDEFGH1234'), true)
+    assert.equal(stripeGizliAnahtarMi('sk_test_ABCDEFGH1234'), true)
+    assert.equal(stripeGizliAnahtarMi(('rk_' + 'live_') + 'ABCDEFGH1234'), false)
+    assert.equal(stripeGizliAnahtarMi('pk_live_ABCDEFGH1234'), false)
   })
 })
 
@@ -140,11 +149,45 @@ const satir = (ad: string) => vt.tablo(ad)
 
 beforeEach(() => { for (const ad of ['ulke_faturalar', 'ulke_odeme_baglantilari', 'ulke_odeme_olaylari']) vt.tablo(ad).length = 0 })
 
-describe('connection record: live refusal, key check, encryption', () => {
-  it('a live key is refused and nothing is stored; a publishable key is invalid', async () => {
-    assert.equal(await baglantiKaydet(sb(), D, { saglayici: 'stripe', anahtar: 'rk_live_ABCDEFGH12345678' }, fetch, sahteStripeUret()), 'CANLI_MOD')
+describe('connection record: restricted keys, live safeguards, key check, encryption', () => {
+  it('a full-access secret key is refused in BOTH modes and nothing is stored; a publishable key is invalid', async () => {
+    for (const k of [('sk_' + 'live_') + 'ABCDEFGH12345678', 'sk_test_ABCDEFGH12345678']) assert.equal(await baglantiKaydet(sb(), D, { saglayici: 'stripe', anahtar: k, webhookGizli: LIVEWHSEC, canliOnay: true }, fetch, sahteStripeUret()), 'SIR_ANAHTAR', k)
     assert.equal(await baglantiKaydet(sb(), D, { saglayici: 'stripe', anahtar: 'pk_test_ABCDEFGH12345678' }, fetch, sahteStripeUret()), 'GECERSIZ')
     assert.equal(satir('ulke_odeme_baglantilari').length, 0)
+  })
+  it('a LIVE key needs its live webhook secret AND the explicit confirmation before anything is checked or stored', async () => {
+    let cagrildi = 0
+    const sayac = (): ((a: string) => GercekSaglayici) => (a) => { cagrildi++; return sahteStripeUret()(a) }
+    assert.equal(await baglantiKaydet(sb(), D, { saglayici: 'stripe', anahtar: LIVEKEY, canliOnay: true }, fetch, sayac()), 'WEBHOOK_GEREKLI')
+    assert.equal(await baglantiKaydet(sb(), D, { saglayici: 'stripe', anahtar: LIVEKEY, webhookGizli: LIVEWHSEC }, fetch, sayac()), 'CANLI_ONAY')
+    assert.equal(await baglantiKaydet(sb(), D, { saglayici: 'stripe', anahtar: LIVEKEY, webhookGizli: LIVEWHSEC, canliOnay: 'true' }, fetch, sayac()), 'CANLI_ONAY', 'only the boolean true confirms')
+    assert.equal(await baglantiKaydet(sb(), D, { saglayici: 'stripe', anahtar: LIVEKEY, webhookGizli: 'not-a-secret', canliOnay: true }, fetch, sayac()), 'GECERSIZ')
+    assert.equal(cagrildi, 0, 'Stripe is not even asked while a safeguard is missing')
+    assert.equal(satir('ulke_odeme_baglantilari').length, 0)
+  })
+  it('a confirmed live key with its secret is checked, stored ENCRYPTED with mode live, and never read back whole', async () => {
+    assert.equal(await baglantiKaydet(sb(), D, { saglayici: 'stripe', anahtar: LIVEKEY, webhookGizli: LIVEWHSEC, canliOnay: true }, fetch, sahteStripeUret()), 'TAMAM')
+    const satirlar = satir('ulke_odeme_baglantilari'); assert.equal(satirlar.length, 1); assert.equal(satirlar[0].mod, 'live')
+    const ham = JSON.stringify(satirlar)
+    assert.ok(!ham.includes(LIVEKEY) && !ham.includes(LIVEWHSEC) && !ham.includes('SYNTHETICLIVE'), 'no plaintext credential in the stored row')
+    const b = await baglantiOku(sb(), D)
+    assert.deepEqual(b, { saglayici: 'stripe', mod: 'live', sonDort: LIVEKEY.slice(-4), webhookKurulu: true, etkin: true })
+    assert.ok(!JSON.stringify(b).includes('SYNTHETIC'))
+    assert.equal((await kimlikOku(sb(), D))?.mod, 'live')
+  })
+  it('a test webhook secret is never carried over to a live key (and the reverse); a live secret is kept for the same mode', async () => {
+    await baglantiKaydet(sb(), D, { saglayici: 'stripe', anahtar: KEY, webhookGizli: WHSEC }, fetch, sahteStripeUret())
+    assert.equal(await baglantiKaydet(sb(), D, { saglayici: 'stripe', anahtar: LIVEKEY, canliOnay: true }, fetch, sahteStripeUret()), 'WEBHOOK_GEREKLI')
+    await baglantiKaydet(sb(), D, { saglayici: 'stripe', anahtar: LIVEKEY, webhookGizli: LIVEWHSEC, canliOnay: true }, fetch, sahteStripeUret())
+    assert.equal(await baglantiKaydet(sb(), D, { saglayici: 'stripe', anahtar: LIVEKEY, canliOnay: true }, fetch, sahteStripeUret()), 'TAMAM')
+    assert.equal((await kimlikOku(sb(), D))?.kimlik.webhookGizli, LIVEWHSEC)
+    await baglantiKaydet(sb(), D, { saglayici: 'stripe', anahtar: KEY }, fetch, sahteStripeUret())
+    const t = await kimlikOku(sb(), D); assert.equal(t?.mod, 'test'); assert.equal(t?.kimlik.webhookGizli, undefined, 'the live secret does not follow the key back to test mode')
+  })
+  it('a pack that offers only Stripe refuses Tyro', async () => {
+    const eski = ulkePaketi().uzanti?.fatura
+    if (!eski || (eski.saglayicilar ?? ['stripe']).includes('tyro')) return
+    assert.equal(await baglantiKaydet(sb(), D, { saglayici: 'tyro', istemciId: 'abc', istemciGizli: 'def', konumId: 'ghi' }), 'GECERSIZ')
   })
   it('a key Stripe rejects is not stored', async () => {
     assert.equal(await baglantiKaydet(sb(), D, { saglayici: 'stripe', anahtar: KEY }, fetch, sahteStripeUret(false)), 'ANAHTAR_REDDEDILDI')
@@ -179,6 +222,17 @@ describe('pay and refund through a real adapter (stand-in adapter, stand-in data
     assert.deepEqual(r, { tamam: true, url: 'https://checkout.stripe.com/c/pay/cs_test_9', paySecret: undefined, bekliyor: true })
     const f = satir('ulke_faturalar')[0]; assert.equal(f.durum, 'taslak'); assert.equal(f.saglayici, 'stripe'); assert.equal(f.odeme_ref, 'cs_test_9')
     assert.deepEqual(cagri, [`baslat:${F1}:11000`])
+    assert.equal(f.odeme_modu, 'test', 'the mode of the connection is recorded on the invoice')
+  })
+  it('a payment started under a LIVE connection is recorded as live, and is refunded only through a live connection', async () => {
+    await baglantiKaydet(sb(), D, { saglayici: 'stripe', anahtar: LIVEKEY, webhookGizli: LIVEWHSEC, canliOnay: true }, fetch, sahteStripeUret()); satir('ulke_faturalar').push(fatura())
+    const cagri: string[] = []
+    await faturaOde(sb(), D, F1, { basariUrl: 'https://x/ok', iptalUrl: 'https://x/no' }, Date.now(), (k, s) => (k && s ? sahteGercek(cagri) : null))
+    assert.equal(satir('ulke_faturalar')[0].odeme_modu, 'live')
+    satir('ulke_faturalar')[0].durum = 'odendi'; satir('ulke_faturalar')[0].odeme_ref = 'pi_live_9'
+    await baglantiKaydet(sb(), D, { saglayici: 'stripe', anahtar: KEY }, fetch, sahteStripeUret())
+    assert.deepEqual(await faturaIade(sb(), D, F1, 100, (k, s) => (k && s ? sahteGercek(cagri) : null)), { tamam: false, kod: 'DURUM' }, 'a live payment is not refunded through a test connection')
+    assert.ok(!cagri.some((c) => c.startsWith('iade')))
   })
   it('without a connection Pay is the DEMO payment and says so in the stored provider', async () => {
     satir('ulke_faturalar').push(fatura())
@@ -203,9 +257,11 @@ describe('pay and refund through a real adapter (stand-in adapter, stand-in data
     satir('ulke_faturalar').push(fatura({ durum: 'odendi', saglayici: 'stripe', odeme_ref: 'pi_9' }))
     assert.deepEqual(await faturaIade(sb(), D, F1, 100), { tamam: false, kod: 'BASARISIZ' })
   })
-  it('gercekSaglayiciYap: Tyro stays off without NOTYA_TYRO_ETKIN; Stripe needs a test key', () => {
+  it('gercekSaglayiciYap: Tyro stays off without NOTYA_TYRO_ETKIN; Stripe needs a restricted key (test or live), never a secret key', () => {
     assert.equal(gercekSaglayiciYap({ tyro: { istemciId: 'a', istemciGizli: 'b', konumId: 'c' } }, 'tyro'), null)
-    assert.equal(gercekSaglayiciYap({ anahtar: 'rk_live_ABCDEFGH12345678' }, 'stripe'), null)
+    assert.equal(gercekSaglayiciYap({ anahtar: ('rk_' + 'live_') + 'ABCDEFGH12345678' }, 'stripe')?.ad, 'stripe')
+    assert.equal(gercekSaglayiciYap({ anahtar: ('sk_' + 'live_') + 'ABCDEFGH12345678' }, 'stripe'), null)
+    assert.equal(gercekSaglayiciYap({ anahtar: 'sk_test_ABCDEFGH12345678' }, 'stripe'), null)
     assert.equal(gercekSaglayiciYap({ anahtar: KEY }, 'stripe')?.ad, 'stripe')
     assert.equal(gercekSaglayiciYap(null, null), null)
   })
@@ -213,7 +269,7 @@ describe('pay and refund through a real adapter (stand-in adapter, stand-in data
 
 describe('Stripe webhook handler: verified, de-duplicated, amount-checked', () => {
   const stripe = new Stripe(KEY)
-  const olay = (id: string, type: string, obj: Record<string, unknown>) => JSON.stringify({ id, object: 'event', type, created: Math.floor(Date.now() / 1000), data: { object: obj } })
+  const olay = (id: string, type: string, obj: Record<string, unknown>, livemode = false) => JSON.stringify({ id, object: 'event', type, livemode, created: Math.floor(Date.now() / 1000), data: { object: obj } })
   const imzali = (g: string, gizli = WHSEC) => stripe.webhooks.generateTestHeaderString({ payload: g, secret: gizli })
   const oturum = (extra: Record<string, unknown> = {}) => ({ id: 'cs_test_9', object: 'checkout.session', payment_status: 'paid', amount_total: 11000, currency: 'aud', payment_intent: 'pi_9', metadata: { notya_invoice_id: F1 }, ...extra })
   beforeEach(async () => { await baglantiKaydet(sb(), D, { saglayici: 'stripe', anahtar: KEY, webhookGizli: WHSEC }, fetch, sahteStripeUret()); satir('ulke_faturalar').push(fatura({ saglayici: 'stripe', odeme_ref: 'cs_test_9' })) })
@@ -222,6 +278,22 @@ describe('Stripe webhook handler: verified, de-duplicated, amount-checked', () =
     const g = olay('evt_1', 'checkout.session.completed', oturum())
     assert.deepEqual(await stripeWebhookIsle(sb(), D, g, imzali(g)), { durum: 200, sonuc: 'paid' })
     const f = satir('ulke_faturalar')[0]; assert.equal(f.durum, 'odendi'); assert.equal(f.odeme_ref, 'pi_9'); assert.ok(f.odendi_at)
+  })
+  it('LIVE connection: a signed live event is processed with the live secret and the invoice is stamped live; a test-mode event is ignored', async () => {
+    satir('ulke_odeme_baglantilari').length = 0
+    await baglantiKaydet(sb(), D, { saglayici: 'stripe', anahtar: LIVEKEY, webhookGizli: LIVEWHSEC, canliOnay: true }, fetch, sahteStripeUret())
+    const t = olay('evt_t', 'checkout.session.completed', oturum(), false)
+    assert.deepEqual(await stripeWebhookIsle(sb(), D, t, imzali(t, LIVEWHSEC)), { durum: 200, sonuc: 'mode_mismatch' })
+    assert.equal((await stripeWebhookIsle(sb(), D, t, imzali(t, WHSEC))).durum, 400, 'the test secret does not sign for a live connection')
+    assert.equal(satir('ulke_odeme_olaylari').length, 0); assert.equal(satir('ulke_faturalar')[0].durum, 'taslak')
+    const g = olay('evt_l', 'checkout.session.completed', oturum(), true)
+    assert.deepEqual(await stripeWebhookIsle(sb(), D, g, imzali(g, LIVEWHSEC)), { durum: 200, sonuc: 'paid' })
+    assert.equal(satir('ulke_faturalar')[0].odeme_modu, 'live')
+  })
+  it('TEST connection: a live-mode event is ignored even when somebody signed it', async () => {
+    const g = olay('evt_x', 'checkout.session.completed', oturum(), true)
+    assert.deepEqual(await stripeWebhookIsle(sb(), D, g, imzali(g)), { durum: 200, sonuc: 'mode_mismatch' })
+    assert.equal(satir('ulke_faturalar')[0].durum, 'taslak')
   })
   it('REPLAY: the same event again is acknowledged and not processed twice', async () => {
     const g = olay('evt_1', 'checkout.session.completed', oturum())
@@ -347,15 +419,35 @@ describe('reconciliation against what the provider LISTS', () => {
   })
 })
 
+describe('reconciliation through a connection judges only the invoices of its own mode', () => {
+  it('a test-mode payment is not reported missing at a live account', async () => {
+    const { encrypt } = await import('@/lib/security/encryption')
+    const govde = encrypt(JSON.stringify({ v: 1, kalemler: [{ aciklama: 'x', kalemNo: '', tutarKurus: 10000, muaf: false }], satici: {}, tarih: '2026-10-22' }))
+    const ic = Date.now() - 86_400_000
+    await baglantiKaydet(sb(), D, { saglayici: 'stripe', anahtar: LIVEKEY, webhookGizli: LIVEWHSEC, canliOnay: true }, fetch, sahteStripeUret())
+    satir('ulke_faturalar').push(
+      fatura({ id: F1, fatura_no: 1, govde_encrypted: govde, durum: 'odendi', saglayici: 'stripe', odeme_ref: 'pi_t', odeme_modu: 'test', odendi_at: new Date(ic).toISOString() }),
+      fatura({ id: '50000000-0000-4000-8000-000000000003', fatura_no: 2, govde_encrypted: govde, durum: 'odendi', saglayici: 'stripe', odeme_ref: 'pi_l', odeme_modu: 'live', odendi_at: new Date(ic).toISOString() }),
+    )
+    const sag: GercekSaglayici = { ad: 'stripe', async dogrula() { return { tamam: true } }, async baslat() { throw new Error('unused') }, async iade() { throw new Error('unused') },
+      async kayitlar() { return [{ ref: 'pi_l', faturaId: '50000000-0000-4000-8000-000000000003', tutarKurus: 11000, iadeKurus: 0, paraKodu: 'AUD', basarili: true, olusturuldu: ic }] } }
+    const r = await uzlasma(sb(), D, undefined, (k, s) => (k && s ? sag : null))
+    assert.equal(r.gercek, true)
+    assert.deepEqual(r.satirlar.map((x) => [x.no, x.sonuc]), [[2, 'eslesti']], 'only the live invoice is judged')
+    assert.equal(r.satirlar.some((x) => x.ref === 'pi_t'), false, 'the test-mode invoice is not part of a live reconciliation')
+  })
+})
+
 describe('credentials are not logged and not sent to the client', () => {
   it('no adapter or flow file writes to the console, and no route returns a credential field', () => {
-    for (const f of ['lib/ulke/fatura/stripe.ts', 'lib/ulke/fatura/tyro.ts', 'lib/ulke/fatura/webhook.ts', 'lib/ulke/fatura/fatura.ts', 'app/api/ulke/odeme-webhook/stripe/route.ulke.ts', 'app/api/ulke/odeme-webhook/tyro/route.ulke.ts', 'app/api/ulke/odeme-baglantisi/route.ulke.ts']) {
+    // The Tyro webhook route exists only in the Australian build.
+    for (const f of ['lib/ulke/fatura/stripe.ts', 'lib/ulke/fatura/tyro.ts', 'lib/ulke/fatura/webhook.ts', 'lib/ulke/fatura/fatura.ts', 'app/api/ulke/odeme-webhook/stripe/route.ulke.ts', 'app/api/ulke/odeme-webhook/tyro/route.ulke.ts', 'app/api/ulke/odeme-baglantisi/route.ulke.ts'].filter((x) => existsSync(join(KOK, x)))) {
       assert.doesNotMatch(readFileSync(join(KOK, f), 'utf8'), /console\.(log|info|warn|error|debug)/, f)
     }
     const r = readFileSync(join(KOK, 'app/api/ulke/odeme-baglantisi/route.ulke.ts'), 'utf8')
     assert.doesNotMatch(r, /kimlik\b|istemciGizli:\s*b|anahtar:\s*b/)
   })
-  it('the live-mode refusal and the no-platform-fee rule are in the Stripe adapter source', () => {
+  it('the no-platform-fee rule holds in the Stripe adapter source (no application fee, no transfer, no on-behalf-of)', () => {
     const s = readFileSync(join(KOK, 'lib/ulke/fatura/stripe.ts'), 'utf8')
     assert.doesNotMatch(s.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, ''), /application_fee|transfer_data|on_behalf_of|stripeAccount/)
   })

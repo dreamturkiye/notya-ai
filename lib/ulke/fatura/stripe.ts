@@ -1,7 +1,7 @@
 /**
  * AU-BETA-02 — STRIPE adapter, bring-your-own account. Server only.
  *
- * WHOSE MONEY: the doctor pastes THEIR OWN restricted API key (rk_test_… in this beta). Every call is made with that key,
+ * WHOSE MONEY: the doctor pastes THEIR OWN restricted API key (rk_test_… or rk_live_…). Every call is made with that key,
  * so the charge is created on, and settles to, the doctor's own Stripe account. This product is not the merchant of
  * record, takes no application fee, passes no `on_behalf_of`/`transfer_data`, and holds no funds. Card details are typed
  * on Stripe's hosted Checkout page, never on this product's servers.
@@ -19,10 +19,18 @@ import type { DogrulamaSonucu, GercekSaglayici, IadeIstegi, IadeYapildi, OdemeBa
 /** The metadata key carrying the Notya invoice id on the Checkout Session AND on the PaymentIntent. */
 export const STRIPE_FATURA_ANAHTARI = 'notya_invoice_id'
 
-/** `rk_test_…` / `sk_test_…` → 'test', `…_live_…` → 'live', anything else (publishable keys, junk) → null. */
+/**
+ * Only a RESTRICTED key is accepted: `rk_test_…` → 'test', `rk_live_…` → 'live'. A full-access secret key (`sk_…`, any mode), a publishable
+ * key and anything else → null. (Stripe: "A RAK starts with `rk_live_` or `rk_test_`" — https://docs.stripe.com/keys/restricted-api-keys, read 2026-10-22.)
+ */
 export function stripeAnahtarModu(ham: string): 'test' | 'live' | null {
-  const m = /^(sk|rk)_(test|live)_[A-Za-z0-9]{8,}$/.exec(ham.trim())
-  return m ? (m[2] as 'test' | 'live') : null
+  const m = /^rk_(test|live)_[A-Za-z0-9]{8,}$/.exec(ham.trim())
+  return m ? (m[1] as 'test' | 'live') : null
+}
+
+/** A full-access secret key (`sk_test_…` / `sk_live_…`). Refused in every mode: the doctor must give a restricted key with only the permissions this product needs. */
+export function stripeGizliAnahtarMi(ham: string): boolean {
+  return /^sk_(test|live)_/i.test(ham.trim())
 }
 
 export function stripeIstemciYap(anahtar: string, http?: Stripe.HttpClient): Stripe {

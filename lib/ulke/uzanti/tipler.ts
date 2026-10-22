@@ -143,7 +143,22 @@ export type FaturaMetni = {
   baglantiSaglayici: string
   baglantiAnahtar: string
   baglantiKaydet: string
-  baglantiCanli: string
+  /** The full-access secret key (`sk_…`) was pasted: refused, a restricted key is required. */
+  sirAnahtar: string
+  /** Badge next to a TEST connection. */
+  modEtiketTest: string
+  /** Badge next to a LIVE connection (real money). */
+  modEtiketCanli: string
+  /** Live flow: why the webhook secret is required and what to do first. */
+  webhookGerekli: string
+  /** Live confirmation step (shown before the first live connection is sent). */
+  canliOnayBaslik: string
+  canliOnayMetin: string
+  canliOnayKutu: string
+  canliOnayDugme: string
+  canliOnayVazgec: string
+  /** The connection was saved in live mode. */
+  canliKaydedildi: string
   /** Shown when payments really run on the doctor's own connected account. */
   canliNotu: string
   /** Tyro saved but not active (needs Tyro onboarding). */
@@ -182,10 +197,12 @@ export type FaturaTanimi = {
   /** true = a new line starts with the tax-free box ticked. Advice is not given; the doctor decides per line. */
   varsayilanMuaf: boolean
   paraKodu: string
-  /** The key of the practice-identity field that holds the seller's tax identifier (printed on the invoice). */
-  saticiKimlikAlani: string
+  /** The key of the practice-identity field that holds the seller's tax identifier (printed on the invoice). Omitted = the pack has no practice-identity form (the seller line is not shown). */
+  saticiKimlikAlani?: string
   /** The key of the field printed as the seller's name. */
-  saticiAdAlani: string
+  saticiAdAlani?: string
+  /** Payment providers this country's build offers. Omitted = Stripe only. Tyro is Australian: only the AU pack lists it. */
+  saglayicilar?: readonly ('stripe' | 'tyro')[]
   metin: FaturaMetni
 }
 
@@ -224,7 +241,7 @@ export type UlkeUzantisi = {
   /** Extra policy pages, by route slug (served at /<slug>, listed by the pack's route list). Not part of the shared policy-document set. */
   belgeler?: Readonly<Record<string, UzantiBelgesi>>
   /** The non-blocking note shown on clinical and consent screens. */
-  ekNot: string
+  ekNot?: string
   muayenehane?: MuayenehaneTanimi
   gizlilik?: GizlilikMetni
   fatura?: FaturaTanimi

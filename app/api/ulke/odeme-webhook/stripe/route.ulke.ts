@@ -14,7 +14,8 @@ export const dynamic = 'force-dynamic'
 export async function POST(req: NextRequest) {
   if (!ulkePaketi().uzanti?.fatura) return NextResponse.json({ code: 'NOT_FOUND' }, { status: 404 })
   const d = new URL(req.url).searchParams.get('d')
-  if (!d || !uuidMi(d)) return NextResponse.json({ code: 'INVALID' }, { status: 400 })
+  // No (or a malformed) doctor id names no endpoint: answered like an endpoint that does not exist, to whoever calls.
+  if (!d || !uuidMi(d)) return NextResponse.json({ code: 'NOT_FOUND' }, { status: 404 })
   const govde = await req.text()
   if (govde.length > 200_000) return NextResponse.json({ code: 'TOO_LARGE' }, { status: 400 })
   try {

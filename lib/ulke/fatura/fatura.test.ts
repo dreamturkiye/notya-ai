@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 import { faturaToplami, kalemleriTemizle, kurusYaz, tutarKurusa } from './hesap'
-import { canliAnahtarMi, demoSaglayici, uzlasmaCsv, uzlastir } from './odemeSaglayici'
+import { demoSaglayici, uzlasmaCsv, uzlastir } from './odemeSaglayici'
 import { kalanGun, talepSonTarihi } from '../gizlilik/hesap'
 
 describe('invoice arithmetic (integer cents; the rate is the pack\'s)', () => {
@@ -22,7 +22,8 @@ describe('invoice arithmetic (integer cents; the rate is the pack\'s)', () => {
     assert.equal(tutarKurusa('-5'), null)
     assert.equal(tutarKurusa('0'), null)
     assert.equal(tutarKurusa('abc'), null)
-    assert.equal(kurusYaz(1250), 'AUD 12.50')
+    assert.equal(kurusYaz(1250, 'AUD'), 'AUD 12.50')
+    assert.equal(kurusYaz(1250, 'GBP'), 'GBP 12.50')
   })
   it('lines from a browser are validated; nothing invented', () => {
     assert.equal(kalemleriTemizle([]), null)
@@ -57,11 +58,6 @@ describe('bring-your-own payment path on the demo adapter (no network, no charge
     const csv = uzlasmaCsv([{ ...u[0], faturaDurum: '=HYPERLINK("x")' }])
     assert.match(csv, /'=HYPERLINK/)
     assert.equal(csv.split('\n')[0].split(',').length, 9)
-  })
-  it('live keys are recognised (live mode is off)', () => {
-    assert.equal(canliAnahtarMi('sk_live_abcdefgh'), true)
-    assert.equal(canliAnahtarMi('rk_live_abcdefgh'), true)
-    assert.equal(canliAnahtarMi('sk_test_abcdefgh'), false)
   })
 })
 

@@ -7,9 +7,11 @@
  * (a hosted page takes the card).
  *
  * WHAT IS BUILT: the DEMO adapter (this file: no network call, no real charge), the REAL Stripe adapter (./stripe.ts, bring-your-own
- * restricted key, test mode) and the Tyro adapter (./tyro.ts, written against the documented surface, OFF until Tyro onboarding),
- * the connection record (./fatura.ts) and the reconciliation (below). LIVE MODE IS OFF: a live key is refused (`CANLI_MOD`);
- * the database column accepts only 'test' (migration 149) — enabling live needs a reviewed migration, not just a flag.
+ * RESTRICTED key, test or live), the Tyro adapter (./tyro.ts, Australia only, OFF until Tyro onboarding), the connection record
+ * (./fatura.ts) and the reconciliation (below).
+ * LIVE MODE (owner's order of 2026-10-22): a restricted live key (`rk_live_…`) is accepted next to a test key; the mode is stored per connection
+ * (migration 151, column `mod` = 'test' | 'live'). Full-access secret keys (`sk_…`) are refused in every mode. A live connection also needs its own
+ * live webhook signing secret and an explicit confirmation (`canliOnay`) from the screen.
  */
 export type OdemeSaglayiciAdi = 'demo' | 'stripe' | 'tyro'
 export const SAGLAYICILAR: readonly OdemeSaglayiciAdi[] = ['demo', 'stripe', 'tyro']
@@ -50,11 +52,6 @@ export function demoSaglayici(kayitlar: ReadonlyMap<string, { tutarKurus: number
       })
     },
   }
-}
-
-/** A key is "live" when it carries the provider's live prefix. Live mode is off in this beta. */
-export function canliAnahtarMi(ham: string): boolean {
-  return /^(sk|rk|pk)_live_/i.test(ham.trim()) || /live/i.test(ham.trim().slice(0, 12))
 }
 
 /** The DEMO adapter. A connected Stripe account is used through ./stripe.ts by ./fatura.ts, never through this function. */

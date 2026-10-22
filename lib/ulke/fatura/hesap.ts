@@ -32,7 +32,7 @@ export function tutarKurusa(ham: unknown): number | null {
   return k > 0 && k <= TUTAR_AZAMI_KURUS ? k : null
 }
 
-export const kurusYaz = (kurus: number, kod = 'AUD'): string => `${kod} ${(kurus / 100).toFixed(2)}`
+export const kurusYaz = (kurus: number, kod: string): string => `${kod} ${(kurus / 100).toFixed(2)}`
 
 /** Validates the lines a client sent. null = refuse. */
 export function kalemleriTemizle(ham: unknown): FaturaKalemi[] | null {

@@ -17,23 +17,27 @@ import { hesapSaatDilimi } from '../uygulama/saatDilimi'
 import { ulkeTablosu } from '../uygulama/tablolar'
 import { yerelAn } from '../uygulama/zaman'
 import { faturaToplami, kalemleriTemizle, type FaturaKalemi } from './hesap'
-import { canliAnahtarMi, saglayiciSec, uzlastir, uzlastirKayitlarla, type OdemeSaglayiciAdi, type UzlasmaSatiri } from './odemeSaglayici'
+import { saglayiciSec, uzlastir, uzlastirKayitlarla, type OdemeSaglayiciAdi, type UzlasmaSatiri } from './odemeSaglayici'
 import type { GercekSaglayici } from './saglayiciTipleri'
-import { stripeAnahtarModu, stripeIstemciYap, stripeSaglayici } from './stripe'
+import { stripeAnahtarModu, stripeGizliAnahtarMi, stripeIstemciYap, stripeSaglayici } from './stripe'
 import { tyroEtkin, tyroSaglayici, type TyroKimlik } from './tyro'
+
+export type OdemeModu = 'test' | 'live'
 
 export type Fatura = {
   id: string; no: number; hastaId: string; hastaAdi: string; muayeneId: string | null; kalemler: FaturaKalemi[]
   satici: Record<string, string>; tarih: string
   altToplamKurus: number; vergiKurus: number; toplamKurus: number; iadeKurus: number; paraKodu: string
   durum: 'taslak' | 'odendi' | 'iptal'; saglayici: string | null; odemeRef: string | null; odendiAt: string | null
+  /** The mode of the connection the payment was started/confirmed under (null = demo or older than migration 151). */
+  odemeModu: OdemeModu | null
 }
 type Satir = {
   id: string; fatura_no: number; patient_id: string; session_id: string | null; govde_encrypted: string
   alt_toplam_kurus: number | string; vergi_kurus: number | string; toplam_kurus: number | string; iade_kurus: number | string
-  para_kodu: string; durum: Fatura['durum']; saglayici: string | null; odeme_ref: string | null; odendi_at: string | null
+  para_kodu: string; durum: Fatura['durum']; saglayici: string | null; odeme_ref: string | null; odendi_at: string | null; odeme_modu: OdemeModu | null
 }
-const KOLON = 'id, fatura_no, patient_id, session_id, govde_encrypted, alt_toplam_kurus, vergi_kurus, toplam_kurus, iade_kurus, para_kodu, durum, saglayici, odeme_ref, odendi_at'
+const KOLON = 'id, fatura_no, patient_id, session_id, govde_encrypted, alt_toplam_kurus, vergi_kurus, toplam_kurus, iade_kurus, para_kodu, durum, saglayici, odeme_ref, odendi_at, odeme_modu'
 type Govde = { v: 1; kalemler: FaturaKalemi[]; satici: Record<string, string>; tarih: string }
 
 const aktifTanim = () => ulkePaketi().uzanti?.fatura ?? null
@@ -47,7 +51,7 @@ function donustur(s: Satir, ad: string): Fatura | null {
   return {
     id: s.id, no: s.fatura_no, hastaId: s.patient_id, hastaAdi: ad, muayeneId: s.session_id, kalemler: g.kalemler, satici: g.satici, tarih: g.tarih,
     altToplamKurus: Number(s.alt_toplam_kurus), vergiKurus: Number(s.vergi_kurus), toplamKurus: Number(s.toplam_kurus), iadeKurus: Number(s.iade_kurus),
-    paraKodu: s.para_kodu, durum: s.durum, saglayici: s.saglayici, odemeRef: s.odeme_ref, odendiAt: s.odendi_at,
+    paraKodu: s.para_kodu, durum: s.durum, saglayici: s.saglayici, odemeRef: s.odeme_ref, odendiAt: s.odendi_at, odemeModu: s.odeme_modu ?? null,
   }
 }
 
@@ -100,10 +104,10 @@ export async function faturaTek(supabase: SupabaseClient, doktorId: string, id: 
   return ((data as Satir[] | null) ?? [])[0] ?? null
 }
 
-/** The adapter for the doctor's OWN connected account, or null (→ the demo adapter). Tyro stays off until `tyroEtkin()`. */
+/** The adapter for the doctor's OWN connected account, or null (→ the demo adapter). Only a restricted key (test or live) builds one. Tyro stays off until `tyroEtkin()`. */
 export function gercekSaglayiciYap(k: Kimlik | null, saglayici: 'stripe' | 'tyro' | null): GercekSaglayici | null {
   if (!k || !saglayici) return null
-  if (saglayici === 'stripe') return k.anahtar && stripeAnahtarModu(k.anahtar) === 'test' ? stripeSaglayici(stripeIstemciYap(k.anahtar)) : null
+  if (saglayici === 'stripe') return k.anahtar && stripeAnahtarModu(k.anahtar) !== null ? stripeSaglayici(stripeIstemciYap(k.anahtar)) : null
   return tyroEtkin() && k.tyro ? tyroSaglayici(k.tyro) : null
 }
 
@@ -123,7 +127,7 @@ export async function faturaOde(supabase: SupabaseClient, doktorId: string, id: 
     if (!donus.basariUrl || !donus.iptalUrl) return { tamam: false, kod: 'GECERSIZ' }
     try {
       const b = await gercek.baslat({ faturaId: s.id, no: s.fatura_no, tutarKurus: Number(s.toplam_kurus), paraKodu: s.para_kodu, basariUrl: donus.basariUrl, iptalUrl: donus.iptalUrl })
-      const { error } = await ulkeTablosu(supabase, 'ulke_faturalar').update({ saglayici: gercek.ad, odeme_ref: b.ref }).eq('doctor_id', doktorId).eq('id', id).eq('durum', 'taslak')
+      const { error } = await ulkeTablosu(supabase, 'ulke_faturalar').update({ saglayici: gercek.ad, odeme_ref: b.ref, odeme_modu: k?.mod ?? null }).eq('doctor_id', doktorId).eq('id', id).eq('durum', 'taslak')
       if (error) return { tamam: false, kod: 'BASARISIZ' }
       return { tamam: true, url: b.url, paySecret: b.paySecret, bekliyor: true }
     } catch { return { tamam: false, kod: 'BASARISIZ' } }
@@ -138,13 +142,13 @@ export async function faturaOde(supabase: SupabaseClient, doktorId: string, id: 
 }
 
 /** The signed webhook (or nothing else) marks a provider-paid invoice. Idempotent: an already paid invoice answers ok. Amount and currency must equal the invoice. */
-export async function faturaOdendiIsaretle(supabase: SupabaseClient, doktorId: string, faturaId: string, g: { saglayici: 'stripe' | 'tyro'; ref: string; tutarKurus: number; paraKodu: string }, simdi = Date.now()): Promise<'tamam' | 'yok' | 'uyusmadi'> {
+export async function faturaOdendiIsaretle(supabase: SupabaseClient, doktorId: string, faturaId: string, g: { saglayici: 'stripe' | 'tyro'; ref: string; tutarKurus: number; paraKodu: string; mod?: OdemeModu }, simdi = Date.now()): Promise<'tamam' | 'yok' | 'uyusmadi'> {
   const s = await faturaTek(supabase, doktorId, faturaId)
   if (!s) return 'yok'
   if (s.durum === 'odendi') return 'tamam'
   if (s.durum !== 'taslak') return 'uyusmadi'
   if (Number(s.toplam_kurus) !== g.tutarKurus || s.para_kodu.toUpperCase() !== g.paraKodu.toUpperCase()) return 'uyusmadi'
-  const { error } = await ulkeTablosu(supabase, 'ulke_faturalar').update({ durum: 'odendi', saglayici: g.saglayici, odeme_ref: g.ref, odendi_at: new Date(simdi).toISOString() }).eq('doctor_id', doktorId).eq('id', faturaId).eq('durum', 'taslak')
+  const { error } = await ulkeTablosu(supabase, 'ulke_faturalar').update({ durum: 'odendi', saglayici: g.saglayici, odeme_ref: g.ref, odendi_at: new Date(simdi).toISOString(), ...(g.mod ? { odeme_modu: g.mod } : {}) }).eq('doctor_id', doktorId).eq('id', faturaId).eq('durum', 'taslak')
   return error ? 'yok' : 'tamam'
 }
 
@@ -174,6 +178,8 @@ export async function faturaIade(supabase: SupabaseClient, doktorId: string, id:
   let basarili = false
   if (s.saglayici === 'stripe' || s.saglayici === 'tyro') {
     const k = await kimlikOku(supabase, doktorId)
+    // A refund is made with the key of the mode the payment was taken under: a payment of the other mode (test vs live) is never refunded through this connection.
+    if (k && s.odeme_modu && s.odeme_modu !== k.mod) return { tamam: false, kod: 'DURUM' }
     const gercek = k && k.saglayici === s.saglayici ? uretici(k.kimlik, k.saglayici) : null
     if (!gercek) return { tamam: false, kod: 'BASARISIZ' }
     basarili = (await gercek.iade({ faturaId: s.id, odemeRef: s.odeme_ref, kurus, oncekiIadeKurus: Number(s.iade_kurus) })).tamam
@@ -200,7 +206,8 @@ export async function uzlasma(supabase: SupabaseClient, doktorId: string, aralik
   const gercek = uretici(k?.kimlik ?? null, k?.saglayici ?? null)
   if (gercek) {
     const lte = aralik?.lte ?? simdi, gte = aralik?.gte ?? lte - 30 * 86_400_000
-    const faturalar = liste.map((f) => ({ id: f.id, no: f.no, toplamKurus: f.toplamKurus, iadeKurus: f.iadeKurus, durum: f.durum, ref: f.odemeRef, paraKodu: f.paraKodu, odendiAt: f.odendiAt ? Date.parse(f.odendiAt) : null }))
+    // Only invoices paid under the connection's current mode are judged against its account (a test payment is not "missing" in a live account).
+    const faturalar = liste.filter((f) => !f.odemeModu || f.odemeModu === k?.mod).map((f) => ({ id: f.id, no: f.no, toplamKurus: f.toplamKurus, iadeKurus: f.iadeKurus, durum: f.durum, ref: f.odemeRef, paraKodu: f.paraKodu, odendiAt: f.odendiAt ? Date.parse(f.odendiAt) : null }))
     let kayitlar = await gercek.kayitlar(Math.floor(gte / 1000), Math.floor(lte / 1000))
     let not: string | undefined
     if (gercek.ad === 'tyro') {
@@ -220,12 +227,12 @@ export async function uzlasma(supabase: SupabaseClient, doktorId: string, aralik
 // ───────────────────────── the doctor's own connection ─────────────────────────
 
 export type Kimlik = { anahtar?: string; webhookGizli?: string; tyro?: TyroKimlik }
-export type Baglanti = { saglayici: 'stripe' | 'tyro'; mod: 'test'; sonDort: string; webhookKurulu: boolean; /** true = payments are routed to the provider; false = demo (e.g. Tyro before onboarding). */ etkin: boolean }
+export type Baglanti = { saglayici: 'stripe' | 'tyro'; mod: OdemeModu; sonDort: string; webhookKurulu: boolean; /** true = payments are routed to the provider; false = demo (e.g. Tyro before onboarding). */ etkin: boolean }
 
 /** SERVER ONLY: the decrypted credentials. Never returned to a browser and never logged. */
-export async function kimlikOku(supabase: SupabaseClient, doktorId: string): Promise<{ saglayici: 'stripe' | 'tyro'; mod: 'test'; kimlik: Kimlik } | null> {
+export async function kimlikOku(supabase: SupabaseClient, doktorId: string): Promise<{ saglayici: 'stripe' | 'tyro'; mod: OdemeModu; kimlik: Kimlik } | null> {
   const { data } = await ulkeTablosu(supabase, 'ulke_odeme_baglantilari').select('saglayici, mod, kimlik_encrypted').eq('doctor_id', doktorId).limit(1)
-  const s = ((data as { saglayici: 'stripe' | 'tyro'; mod: 'test'; kimlik_encrypted: string }[] | null) ?? [])[0]
+  const s = ((data as { saglayici: 'stripe' | 'tyro'; mod: OdemeModu; kimlik_encrypted: string }[] | null) ?? [])[0]
   if (!s) return null
   try { return { saglayici: s.saglayici, mod: s.mod, kimlik: JSON.parse(decrypt(s.kimlik_encrypted)) as Kimlik } } catch { return null }
 }
@@ -237,26 +244,40 @@ export async function baglantiOku(supabase: SupabaseClient, doktorId: string): P
   return { saglayici: k.saglayici, mod: k.mod, sonDort: son, webhookKurulu: Boolean(k.kimlik.webhookGizli), etkin: k.saglayici === 'stripe' || tyroEtkin() }
 }
 
-export type BaglantiRet = 'TAMAM' | 'GECERSIZ' | 'CANLI_MOD' | 'ANAHTAR_REDDEDILDI' | 'IZIN_YOK' | 'BASARISIZ'
+export type BaglantiRet = 'TAMAM' | 'GECERSIZ' | 'SIR_ANAHTAR' | 'CANLI_ONAY' | 'WEBHOOK_GEREKLI' | 'ANAHTAR_REDDEDILDI' | 'IZIN_YOK' | 'BASARISIZ'
 const kisa = (x: unknown, azami = 300) => (typeof x === 'string' && x.trim().length >= 3 && x.trim().length <= azami && !/\s/.test(x.trim()) ? x.trim() : '')
 
+/** The providers a pack offers (its `saglayicilar`; Stripe alone when the pack names none). */
+export const paketSaglayicilari = (): readonly ('stripe' | 'tyro')[] => aktifTanim()?.saglayicilar ?? ['stripe']
+
 /**
- * Connect the doctor's own account. Stripe: a restricted key `rk_test_…` (or `sk_test_…`); the key is CHECKED with one cheap authenticated read before it is kept;
- * a live key is refused (live mode is off in this beta). The webhook signing secret `whsec_…` of the doctor's own endpoint may come with it or later.
- * Tyro: client id, client secret and location id, checked by asking Tyro for a token — keeps the adapter OFF until `NOTYA_TYRO_ETKIN=1` (needs Tyro onboarding).
+ * Connect the doctor's own account. Stripe: a RESTRICTED key — `rk_test_…` or `rk_live_…` — and nothing else: a full-access secret key (`sk_…`, any mode)
+ * is refused (`SIR_ANAHTAR`). The key is CHECKED with one cheap authenticated read before it is kept. The mode (test | live) is read from the key prefix and
+ * stored with the connection. A LIVE key additionally needs (1) the signing secret `whsec_…` of the doctor's own LIVE webhook endpoint in the same request
+ * (`WEBHOOK_GEREKLI`: payments could not be confirmed without it), and (2) the explicit confirmation `canliOnay === true` that the screen collects before the
+ * first live connection (`CANLI_ONAY`). A webhook secret stored for the other mode is never carried over.
+ * Tyro (Australia only, a pack decision): client id, client secret and location id, checked by asking Tyro for a token — keeps the adapter OFF until `NOTYA_TYRO_ETKIN=1`.
  * Everything is stored as ONE encrypted value; nothing is echoed or logged.
  */
-export async function baglantiKaydet(supabase: SupabaseClient, doktorId: string, g: { saglayici: unknown; anahtar?: unknown; webhookGizli?: unknown; istemciId?: unknown; istemciGizli?: unknown; konumId?: unknown }, getir: typeof fetch = fetch, stripeUret: (anahtar: string) => GercekSaglayici = (a) => stripeSaglayici(stripeIstemciYap(a))): Promise<BaglantiRet> {
+export async function baglantiKaydet(supabase: SupabaseClient, doktorId: string, g: { saglayici: unknown; anahtar?: unknown; webhookGizli?: unknown; istemciId?: unknown; istemciGizli?: unknown; konumId?: unknown; canliOnay?: unknown }, getir: typeof fetch = fetch, stripeUret: (anahtar: string) => GercekSaglayici = (a) => stripeSaglayici(stripeIstemciYap(a))): Promise<BaglantiRet> {
   if (g.saglayici !== 'stripe' && g.saglayici !== 'tyro') return 'GECERSIZ'
+  if (!paketSaglayicilari().includes(g.saglayici)) return 'GECERSIZ'
   const onceki = await kimlikOku(supabase, doktorId)
   let kimlik: Kimlik
+  let mod: OdemeModu = 'test'
   if (g.saglayici === 'stripe') {
     const anahtar = kisa(g.anahtar)
-    const gizli = g.webhookGizli === undefined || g.webhookGizli === '' ? (onceki?.saglayici === 'stripe' ? onceki.kimlik.webhookGizli : undefined) : kisa(g.webhookGizli)
-    if (!anahtar || gizli === '' || (gizli !== undefined && !/^whsec_[A-Za-z0-9]{8,}$/.test(gizli))) return 'GECERSIZ'
-    const mod = stripeAnahtarModu(anahtar)
-    if (canliAnahtarMi(anahtar) || mod === 'live') return 'CANLI_MOD'
-    if (mod !== 'test') return 'GECERSIZ'
+    if (anahtar && stripeGizliAnahtarMi(anahtar)) return 'SIR_ANAHTAR'
+    const kModu = anahtar ? stripeAnahtarModu(anahtar) : null
+    if (!anahtar || !kModu) return 'GECERSIZ'
+    mod = kModu
+    // The stored secret is reused only when it belongs to the same mode (test and live endpoints have different secrets).
+    const gizli = g.webhookGizli === undefined || g.webhookGizli === '' ? (onceki?.saglayici === 'stripe' && onceki.mod === mod ? onceki.kimlik.webhookGizli : undefined) : kisa(g.webhookGizli)
+    if (gizli === '' || (gizli !== undefined && !/^whsec_[A-Za-z0-9]{8,}$/.test(gizli))) return 'GECERSIZ'
+    if (mod === 'live') {
+      if (!gizli) return 'WEBHOOK_GEREKLI'
+      if (g.canliOnay !== true) return 'CANLI_ONAY'
+    }
     const d = await stripeUret(anahtar).dogrula()
     if (!d.tamam) return d.hata === 'anahtar' ? 'ANAHTAR_REDDEDILDI' : d.hata === 'izin' ? 'IZIN_YOK' : 'BASARISIZ'
     kimlik = { anahtar, webhookGizli: gizli }
@@ -268,7 +289,7 @@ export async function baglantiKaydet(supabase: SupabaseClient, doktorId: string,
     if (!d.tamam) return d.hata === 'anahtar' ? 'ANAHTAR_REDDEDILDI' : 'BASARISIZ'
     kimlik = { tyro: { istemciId, istemciGizli, konumId }, webhookGizli: gizli }
   }
-  const { error } = await ulkeTablosu(supabase, 'ulke_odeme_baglantilari').upsert({ doctor_id: doktorId, saglayici: g.saglayici, mod: 'test', kimlik_encrypted: encrypt(JSON.stringify(kimlik)) }, { onConflict: 'ulke,doctor_id' })
+  const { error } = await ulkeTablosu(supabase, 'ulke_odeme_baglantilari').upsert({ doctor_id: doktorId, saglayici: g.saglayici, mod, kimlik_encrypted: encrypt(JSON.stringify(kimlik)) }, { onConflict: 'ulke,doctor_id' })
   return error ? 'BASARISIZ' : 'TAMAM'
 }
 export async function baglantiSil(supabase: SupabaseClient, doktorId: string): Promise<boolean> {

@@ -33,6 +33,9 @@ export async function stripeWebhookIsle(supabase: SupabaseClient, doktorId: stri
   const d = stripeOlayiDogrula(govde, imza, k.kimlik.webhookGizli)
   if (!d.tamam) return { durum: 400, sonuc: 'bad_signature' }
   const olay = d.olay
+  // The signing secret of a test endpoint never signs a live event and vice versa; this is the belt to that braces: an event whose `livemode`
+  // disagrees with the mode of the connection is acknowledged (no retry can ever make it valid) and changes nothing.
+  if (olay.livemode !== (k.mod === 'live')) return { durum: 200, sonuc: 'mode_mismatch' }
   const kayit = await olayKaydet(supabase, doktorId, 'stripe', olay.id, olay.type)
   if (kayit === 'tekrar') return { durum: 200, sonuc: 'duplicate' }
   if (kayit === 'hata') return { durum: 500, sonuc: 'ledger' }
@@ -41,7 +44,7 @@ export async function stripeWebhookIsle(supabase: SupabaseClient, doktorId: stri
       const o = olay.data.object as Stripe.Checkout.Session
       const faturaId = o.metadata?.[STRIPE_FATURA_ANAHTARI]
       if (o.payment_status !== 'paid' || !faturaId || !o.currency || o.amount_total == null) return { durum: 200, sonuc: 'ignored' }
-      const r = await faturaOdendiIsaretle(supabase, doktorId, faturaId, { saglayici: 'stripe', ref: kimlikId(o.payment_intent) || o.id, tutarKurus: o.amount_total, paraKodu: o.currency })
+      const r = await faturaOdendiIsaretle(supabase, doktorId, faturaId, { saglayici: 'stripe', ref: kimlikId(o.payment_intent) || o.id, tutarKurus: o.amount_total, paraKodu: o.currency, mod: k.mod })
       return { durum: 200, sonuc: r === 'tamam' ? 'paid' : r === 'uyusmadi' ? 'mismatch' : 'unknown_invoice' }
     }
     if (olay.type === 'charge.refunded') {
