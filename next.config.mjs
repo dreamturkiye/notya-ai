@@ -117,6 +117,15 @@ const nextConfig = {
     // its frame (cal.com, app.cal.com) and its font (cal.com). Allowed on that path only; every other path keeps CSP
     // as it is. The /demo entry comes after the catch-all one: for the same header the later entry wins.
     // The pre-split application gets nothing here.
+    // AU-MKT-AUDIT (2026-10-22): a COUNTRY build has no Groq or weather calls and no use for a microphone grant to other origins, and
+    // nothing in it may be framed, rebased or post to another site. Tightened for country builds only; the pre-split application keeps its list.
+    if (!ulkeDerleme.bolunmemisUygulama) {
+      for (let i = 0; i < CSP.length; i++) {
+        if (CSP[i].startsWith('connect-src ')) CSP[i] = CSP[i].replace(' https://api.groq.com', '').replace(' https://api.open-meteo.com', '')
+      }
+      CSP.push("object-src 'none'", "base-uri 'self'", "form-action 'self'", "frame-ancestors 'none'")
+    }
+    const PERMISSIONS = ulkeDerleme.bolunmemisUygulama ? 'microphone=*, camera=(), geolocation=(self)' : 'microphone=(self), camera=(), geolocation=()'
     const CAL_EMBED = 'https://app.cal.com https://cal.com'
     const DEMO_CSP = [...CSP.map((y) => (/^(script-src|font-src) /.test(y) ? `${y} ${CAL_EMBED}` : y)), `frame-src 'self' ${CAL_EMBED}`]
     return [
@@ -126,7 +135,7 @@ const nextConfig = {
           {
             // Allow microphone from all origins including ElevenLabs WebRTC; geolocation same-origin only (weather chip)
             key: "Permissions-Policy",
-            value: "microphone=*, camera=(), geolocation=(self)",
+            value: PERMISSIONS,
           },
           {
             // Allow connections to ElevenLabs WebSocket and Supabase

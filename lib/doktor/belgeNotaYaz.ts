@@ -8,10 +8,11 @@ import { MODALITE_TR, type Modalite } from '@/core/belgeler/ontoloji'
 import type { BelgeRaporu } from '@/core/belgeler/types'
 import { notaBloklariUygula, type BlokDili, type BlokGirdi } from '@/core/belgeler/notaBlok'
 import { arsivsizNotlar, arsivsizSeanslar } from '@/lib/doktor/arsiv'
+import { aktifUlke } from '@/lib/ulke/ulke'
 
 export type YazimDurumu = 'eklendi' | 'degisti' | 'ayni' | 'not_yok' | 'kalite_dusuk' | 'lab_atlandi' | 'bulunamadi'
 
-export function ulkeDili(ulke: string | undefined = process.env.NOTYA_COUNTRY): BlokDili {
+export function ulkeDili(ulke: string | undefined = aktifUlke()): BlokDili {
   const k = (ulke || 'tr').toLowerCase()
   return k === 'tr' ? 'tr' : k === 'uz' ? 'ru' : 'en'
 }
