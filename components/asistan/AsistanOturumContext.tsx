@@ -664,7 +664,7 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
             // NOTYA-AYSE-SAYI-SIRA-01: the reply remembers the doctor line it answers, so a transcript that arrives
             // after it is shown in front of it. A hidden or pause turn has no doctor bubble and is not remembered.
             const cevaplanan = hamSoru && hamSoru !== DEVAM_ISARETI && !kendiSelamiMi(hamSoru) && !kesintiMesajiMi(hamSoru) && !sesGurultusuMu(hamSoru) ? hamSoru : null
-            next = cevapEkle(next, soru, tur.metin, yeniBalon, cevaplanan)
+            next = cevapEkle(next, soru, tur.metin, yeniBalon, cevaplanan, !hamSoru)
           }
           messagesRef.current = next
           return next

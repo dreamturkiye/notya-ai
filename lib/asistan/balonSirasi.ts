@@ -221,6 +221,8 @@ export function cevapEkle<T extends Balon>(
    * bubble, NOTYA-SES-ESKI-01) — so that a transcript arriving after the reply finds its place in front of it.
    */
   cevaplanan: string | null = null,
+  /** NOTYA-SES-SIRA-03: the server returned no doctor line at all (not a pause turn) — still a poll reply for ordering. */
+  etiketsiz = false,
 ): T[] {
   const c = String(cevap || '').trim()
   if (!c) return prev
@@ -250,7 +252,7 @@ export function cevapEkle<T extends Balon>(
     // satırı girse bile) yeni balon açmasın — son birkaç AI'ya bak.
     const sonAilar = next.filter((m) => m.role === 'ai').slice(-4)
     const etiket = String(cevaplanan || '').trim()
-    if (!sonAilar.some((m) => benzerCevapMi(m.text, c))) next.push(etiket ? { ...ekle('ai', c), soru: etiket, kaynak: 'ekran' as const } : ekle('ai', c))
+    if (!sonAilar.some((m) => benzerCevapMi(m.text, c))) next.push(etiket ? { ...ekle('ai', c), soru: etiket, kaynak: 'ekran' as const } : etiketsiz ? { ...ekle('ai', c), kaynak: 'ekran' as const } : ekle('ai', c))
   }
   return next
 }

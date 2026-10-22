@@ -256,3 +256,66 @@ test('NOTYA-SES-SIRA-03: ekran cevabı döküm gelmeden önce geldiyse döküm c
   k = cevapEkle(k, null, 'Yok.', ekle, SORU2)
   assert.deepEqual(k.map((m) => m.role), ['ai', 'user', 'ai', 'user', 'ai'])
 })
+
+/* ───── NOTYA-SES-SIRA-03 ordering matrix (voice->voice, voice->text, text->voice, call 2+ with saved history) ───── */
+{
+  type B = Balon & { sira: number }
+  const sayfa2 = (baslangic: B[] = []) => {
+    let n = baslangic.reduce((m, b) => Math.max(m, b.sira), 0)
+    const yeni = (role: 'user' | 'ai', text: string, olay?: number): B => ({ role, text, sira: ++n, ...(olay != null ? { olay } : {}) })
+    return { yeni, yaz: (t: string) => ({ rol: 'doktor' as const, icerik: t, sira: ++n }) }
+  }
+  const panel = (ses: B[], yazili: { icerik: string; sira: number }[] = []) =>
+    [...ses.map((m) => ({ t: m.text, s: m.sira })), ...yazili.map((m) => ({ t: m.icerik, s: m.sira }))].sort((a, b) => a.s - b.s).map((x) => x.t)
+  const G = 'Merhaba Kaan Hocam. Nasıl yardımcı olabilirim?'
+  const Q = 'Bugün bir randevumuz var mı hocam?'
+  const A = '22 Ekim 2026 Perşembe takviminde randevu yok.'
+
+  for (const [ad, soruTuru] of [['stored line equals transcript', Q], ['stored line differs from transcript', 'bugün randevumuz var mı'], ['server returned no line', '']] as const) {
+    test(`ORDER matrix [${ad}]: transcript AFTER the poll answer -> greeting, question, answer`, () => {
+      const { yeni } = sayfa2()
+      let l: B[] = [yeni('ai', G, 1)]
+      l = cevapEkle(l, null, 'Ben buradayım Hocam.', yeni, 'selam yazılışı', !soruTuru)
+      l = kullaniciEkle(l, 'Merhaba hocam', 4, yeni)
+      l = cevapEkle(l, null, A, yeni, soruTuru || null, !soruTuru)
+      l = kullaniciEkle(l, Q, 8, yeni)
+      assert.deepEqual(l.map((m) => m.text), [G, 'Merhaba hocam', 'Ben buradayım Hocam.', Q, A])
+      assert.deepEqual(panel(l), l.map((m) => m.text), 'by sira too')
+    })
+    test(`ORDER matrix [${ad}]: transcript BEFORE the poll answer stays in order`, () => {
+      const { yeni } = sayfa2()
+      let l: B[] = [yeni('ai', G, 1)]
+      l = kullaniciEkle(l, Q, 4, yeni)
+      l = cevapEkle(l, null, A, yeni, soruTuru || null, !soruTuru)
+      assert.deepEqual(l.map((m) => m.text), [G, Q, A])
+    })
+  }
+
+  test('ORDER matrix: call 2 in the same page with saved history (stripped olay) keeps greeting first and each question before its answer', () => {
+    const { yeni } = sayfa2()
+    let l: B[] = [yeni('ai', G, 1), yeni('user', 'eski soru', 4), yeni('ai', 'eski cevap')]
+    l = oturumOlaylariniSil(l)
+    l.push(yeni('ai', 'Merhaba Kaan Hocam.', 1)) // call 2 opening, event ids restart
+    l = cevapEkle(l, null, A, yeni, Q)
+    l = kullaniciEkle(l, Q, 3, yeni)
+    assert.deepEqual(l.map((m) => m.text), [G, 'eski soru', 'eski cevap', 'Merhaba Kaan Hocam.', Q, A])
+    assert.deepEqual(panel(l), l.map((m) => m.text))
+  })
+
+  test('ORDER matrix: voice -> text -> voice: the late transcript sorts in front of its answer, typed lines keep their place', () => {
+    const { yeni, yaz } = sayfa2()
+    let l: B[] = [yeni('ai', G, 1)]
+    l = kullaniciEkle(l, 'ilk soru', 4, yeni)
+    l = cevapEkle(l, null, 'ilk cevap', yeni, 'ilk soru')
+    const t = yaz('yazılı soru')
+    const ta = { icerik: 'yazılı cevap', sira: t.sira + 0.5 }
+    const yaz2 = [t, ta]
+    // spoken question 2: the poll answer is painted first, the transcript later
+    l = cevapEkle(l, null, A, yeni, Q)
+    l = kullaniciEkle(l, Q, 8, yeni)
+    const sirali = panel(l, yaz2)
+    assert.ok(sirali.indexOf(Q) < sirali.indexOf(A), 'question above its answer')
+    assert.ok(sirali.indexOf('ilk cevap') < sirali.indexOf(Q))
+    assert.equal(sirali[0], G)
+  })
+}
