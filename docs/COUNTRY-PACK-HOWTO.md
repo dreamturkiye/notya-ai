@@ -87,7 +87,7 @@ Some keys are required only under a condition and are written as comments in the
 
 Screens, layout and look; the route list; patient isolation; the rule that an approved note is never overwritten; the note contract with the model (`s`, `o`, `a`, `p` and `fields`); the speech engine and the model gateway; appointment logic and the no-double-booking rule; sign-up by invitation code; the walls between countries; the baseline of a country database and its migrations; the tests.
 
-Off for every new country until built and reviewed for it: the assistant in text and voice, consultation and messaging, the voice profile, image evaluation. The patient portal, the intake form, the tools area and clinic accounts are part of the kit since 2026-10-09 (the sections below).
+Off for every new country until built and reviewed for it: the assistant in TEXT (the live VOICE assistant is in the kit since 2026-10-22, below), consultation and messaging, the voice profile, image evaluation. The patient portal, the intake form, the tools area and clinic accounts are part of the kit since 2026-10-09 (the sections below).
 
 ## Numbers, days and times a person types
 
@@ -504,6 +504,35 @@ From scaffold to a passing walk-through took about 16 minutes of machine time, t
 - **Intake answers stay beside the note.** They are shown to the doctor and never given to the model that writes the note; whether and how they should be is an open decision (`docs/OPEN-COMMITMENTS.md`, NOTYA-ULKE-INTAKE-01b).
 - **The portal's link validity and ambulance number** are settings a pack must state and that nothing can verify by machine: the first is the owner's, the second needs a local source.
 - The **Uzbek** walk-through of its own wording is not parameterised; the pack-neutral one is.
+
+## Live spoken assistant (AU-CANLI-01, 2026-10-22)
+
+The ConvAI-based live assistant (Türkiye: "Ask the assistant" / Ayşe) is in the kit as a mechanism any pack can switch on by
+bringing `klinik.canliAsistan` beside `klinik.ses` and a persona (name and `cinsiyet`) per role. Without all of them the
+feature is OFF and no screen shows a microphone.
+
+**How Türkiye builds it, end to end (read from the code, 2026-10-22).**
+
+| Step | Türkiye | In the country kit |
+|---|---|---|
+| Signed URL | `GET /api/asistan/signed-url` (bearer → `verifyAuth`) → ElevenLabs `get_signed_url` for a **base agent** | `POST /api/ulke/asistan-canli` (`ulkeOturum`) → same provider call, `lib/ulke/asistan/sunucu.ts` |
+| Agent per persona | `lib/asistan/agentSec.ts`: three base agents (Ayşe, Mehmet, Elif); other personas ride one by gender, voice and prompt overridden by the client | exactly **two** agents per country, one per pack voice: `ELEVENLABS_AGENT_<CC>_MALE` / `_FEMALE` (`ajan.ts`) |
+| Voice | per-persona `voiceId` (`elevenVoices.ts`) | the pack's two voices by the persona's `cinsiyet` (never a third); the agent is held to it before every call (`motorKilidi.ts`) |
+| Delivery lock | `sesMotoru.ts`: Flash v2.5, speed 1, no expressive mode, re-written if drifted | same lock plus the voice id (`motorKilidi.ts`) |
+| Brain | "tek beyin": agent LLM = custom-llm → `/api/asistan/ses-llm/v1`; brain `ayseCevapla` (Turkish prompt, patient tools, session in `asistan_sessions`) | custom-llm → `/api/ulke/asistan-canli/ses-llm/v1`; brain = `canliIstem` (persona, the pack's practice context and limits, the role's national sources block) through `aiAkis` (`gorev: 'sohbet-uzman'`, OpenRouter policy, no model name in the kit); stateless — history is what the provider sends |
+| Guards | server secret header + signed call token (`sesJetonu.ts`: doctor, session, role, patient, timezone) | same two guards (`NOTYA_SES_LLM_SECRET`, `NOTYA_SES_JETON_SECRET`); the token names the country (`pe = ulke:<cc>:<role>`), carries NO patient id |
+| Tools / actions | client tools (patient lookup, record cards, voice confirm), `end_call` system tool | no patient or record tools in this version; `end_call` and one client tool `show_on_screen(text)` that carries the full written answer |
+| Spoken vs screen | `konusma.ts` `SesAkisi`: 3–5 spoken beats, lists → "N items, on your screen", finished sentences only; `elevenMetni.ts` says units | `lib/ulke/asistan/konusma.ts` + `okunus.ts` (English units, `bd`, `q8h`, ranges); the words added come from the pack (`ekranSozleri`) |
+| UI | `components/asistan/AsistanOturumContext.tsx` (1,850 lines) + `/asistan` | `components/ulke/uygulama/AsistanCanli.tsx` on the home: draws nothing until `GET /api/ulke/asistan-canli` says `hazir: true` |
+| Rate limits | `lib/doktor/hizLimiti.ts` | `ulke_kullanim` buckets `asistan-baglanti` (40 calls/day) and `asistan-tur` (pack: `gunlukTurLimiti`, default 150), by the account's own day |
+| Failure handling | spoken apology, `.` keeps the socket, 22 s voice guard | same: model failure → one spoken apology; an empty stream becomes `.`; the model call has a 20 s budget; the screen draws nothing when anything is missing |
+
+**Reusable core:** the token and secret check (`lib/asistan/sesJetonu.ts`), the model gateway (`lib/ai/cagir.ts`), the audio worklets (`public/ses/`, `lib/asistan/sesCalar.ts`), the ConvAI client wrapper, the kit's session/role/quota helpers.
+**Türkiye only (not reused):** `ayseCevapla` and everything under it (Turkish prompt, SGK/MBYS rules, patient tables, tools, cards), the Fish Audio path, tek-beyin copies mapping (`tekBeyinAjanlari.ts`), Turkish speech normalisation.
+
+**Provisioning** (the owner, or Claude with the key): `npx tsx scripts/ulke-asistan-ajanlari.mts --ulke au --site https://<host>/au` prints a plan; add `--uygula` to create the two agents from Türkiye's base agents and print the two variables to set. Deployment variables: `ELEVENLABS_API_KEY`, `ELEVENLABS_AGENT_<CC>_MALE`, `ELEVENLABS_AGENT_<CC>_FEMALE`, `NOTYA_SES_JETON_SECRET` (≥ 32), `NOTYA_SES_LLM_SECRET` (≥ 32, equal to the ElevenLabs workspace secret `notya_ses_llm_secret`), `OPENROUTER_API_KEY`.
+
+**Not in this version (logged in docs/OPEN-COMMITMENTS.md):** the assistant opens no patient file and writes nothing; no voice profile; no written chat; no conversation memory beyond the call.
 
 ## One release branch per country (Kaan, 2026-10-09)
 
