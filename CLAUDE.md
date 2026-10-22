@@ -82,3 +82,7 @@ Most tools built during pediatri sprints are **base** and must remain identical 
 3. **New universal** → `ORTAK_DOKTOR_ARACLARI`
 
 Commercial UI only — no internal audits or named beta-doctor copy on `/doktor-tools`. Full text: the skill above.
+
+## Standing rule — classify every request, apply it in all six countries (Kaan, 2026-10-21, permanent)
+
+For every request (including live feedback relayed from Dr. Gökhan Mamur), Claude decides **without being asked** whether it is **core** (all 40 branches) or **branş-specific** (that branş only), says which in one line, and applies the change in the **same change set** to all six country builds (us, gb, ca, au, nz, uz) — core change → core in all six; branş-specific change → that branş's implementation in all six. Turkey-only legal mechanics (MBYS, SGK, e-Nabız, e-Reçete, NVI, e-Fatura, KVKK) are the only exemption. Kaan must never have to repeat or check this; the final report states the per-country status. Details: `.cursor/skills/ulke-paritesi-duzeltme/SKILL.md`.
