@@ -352,6 +352,53 @@ export type UygulamaMetni = {
     /** The steps; `randevu` is read only where the pack's `randevu` feature is on. */
     readonly adimlar: Readonly<Record<'rol' | 'hasta' | 'randevu' | 'muayene', { readonly etiket: string; readonly aciklama: string }>>
   }
+  /**
+   * NOTYA-ULKE-EKLER-01 — the "add documents" step between the recording and the note (and the same card on a draft
+   * note): any number of pictures or PDFs, hidden-identity copy read by the model, results written into the note's
+   * findings section. No engine, model or runtime is named in any of these sentences.
+   */
+  readonly ekler: {
+    readonly baslik: string
+    readonly aciklama: string
+    /** The one quiet line: the doctor sees the original; only a copy with identity details hidden is sent. */
+    readonly gizlilik: string
+    readonly dosyaSec: string
+    readonly birak: string
+    readonly turEtiketi: string
+    readonly turOtomatik: string
+    readonly turler: Readonly<Record<'ultrasound' | 'xray' | 'ct_mri' | 'ecg' | 'lab' | 'photo' | 'other', string>>
+    readonly durumBekliyor: string
+    readonly durumHazirlaniyor: string
+    readonly durumGizleniyor: string
+    readonly durumOkunuyor: string
+    readonly durumTamam: string
+    readonly durumAtlandi: string
+    readonly durumHata: string
+    /** Masking failed: the file was NOT sent. */
+    readonly gizlenemedi: string
+    readonly kaliteDusuk: string
+    readonly okunamadi: string
+    readonly desteklenmiyor: string
+    readonly buyuk: string
+    /** "You can add up to %1 documents at a time." */
+    readonly cokDosya: string
+    readonly pdfOkunamadi: string
+    /** "page %1 of %2". */
+    readonly sayfa: string
+    readonly adUyusmuyor: string
+    readonly yeniden: string
+    readonly kaldir: string
+    readonly devam: string
+    readonly devamBelgesiz: string
+    readonly devamBekliyor: string
+    readonly devamYaziyor: string
+    /** On a draft note: the card's heading, its line and its two outcomes. */
+    readonly notBaslik: string
+    readonly notAciklama: string
+    readonly notEklendi: string
+    readonly notEklenemedi: string
+    readonly notOnayli: string
+  }
   /** MUAYENE-EKLERI-07 — "Yüklenen dosyalar": a file (lab report, scanned referral, photographed document) attached to one visit. */
   readonly muayeneEkleri: {
     readonly baslik: string
