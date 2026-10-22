@@ -149,6 +149,8 @@ export function cevapEkle<T extends Balon>(
   ekle: (role: 'user' | 'ai', text: string) => T,
   /** The real doctor sentence this reply answers (tags the bubble as a poll reply for ordering); null for pause / hidden turns. */
   cevaplanan: string | null = null,
+  /** The server returned no doctor line at all (not a pause turn) — still a poll reply for ordering. */
+  etiketsiz = false,
 ): T[] {
   const c = String(cevap || '').trim()
   if (!c) return prev
@@ -176,7 +178,7 @@ export function cevapEkle<T extends Balon>(
     // NOTYA-BUYUME-KISA-01 / multi-reply: aynı klinik cevabın 2.–3. modeli (araya kullanıcı
     // satırı girse bile) yeni balon açmasın — son birkaç AI'ya bak.
     const sonAilar = next.filter((m) => m.role === 'ai').slice(-4)
-    if (!sonAilar.some((m) => benzerCevapMi(m.text, c))) next.push(String(cevaplanan || '').trim() ? { ...ekle('ai', c), kaynak: 'ekran' as const } : ekle('ai', c))
+    if (!sonAilar.some((m) => benzerCevapMi(m.text, c))) next.push(String(cevaplanan || '').trim() || etiketsiz ? { ...ekle('ai', c), kaynak: 'ekran' as const } : ekle('ai', c))
   }
   return next
 }
