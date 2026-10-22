@@ -15,8 +15,7 @@
  *   https://docs.connect.tyro.com/api-explorer/pay-online/0.9/notification-events    types NEW_PAY_REQUEST, PAY_REQUEST_VOIDED, PAY_REQUEST_FAILED, PAY_REQUEST_PROCESSING, PAY_REQUEST_SUCCESS, NEW_PAY_METHOD, NEW_PAY_REFUND; payload {type, data:{id, uri, resource}}
  *
  * NOT VERIFIED (the schema pages could not be fetched; the OpenAPI file came back as binary): the exact field names of the
- * refund request and of the Pay Request response, the status vocabulary beyond the sample's SUCCESS/FAILED, the token
- * request's `audience`, and the signature's text encoding (the page says both "SHA-256 hash" and `hmacSha256`). Each guess
+ * refund request and of the Pay Request response, the status vocabulary beyond the sample's SUCCESS/FAILED, the signature's text encoding (the page says both "SHA-256 hash" and `hmacSha256`). Each guess
  * lives in ONE marked place below (search "TYRO-UNVERIFIED") so the first run against a Tyro test location corrects it there.
  * Tyro documents no way to LIST Pay Requests, so reconciliation asks for each invoice's own Pay Request by id.
  */
@@ -25,6 +24,8 @@ import type { DogrulamaSonucu, GercekSaglayici, IadeIstegi, IadeYapildi, OdemeBa
 
 export const TYRO_API = 'https://api.tyro.com/connect'
 export const TYRO_KESIF = 'https://auth.connect.tyro.com/.well-known/openid-configuration'
+/** Token audience for an App integration (Tyro Connect authentication docs, retrieved 2026-10-22). */
+export const TYRO_AUDIENCE = 'https://app.connect.tyro'
 export const TYRO_IMZA_BASLIGI = 'Tyro-Connect-Signature'
 
 /** Off until the owner's Tyro credentials and webhook registration exist AND the Tyro.js checkout page is built. */
@@ -41,8 +42,9 @@ async function jetonAl(k: TyroKimlik, getir: Getir): Promise<string> {
   if (o && o.bitis - 300 > sn()) return o.jeton
   const kesif = await (await getir(TYRO_KESIF)).json() as { token_endpoint?: string }
   if (!kesif.token_endpoint?.startsWith('https://')) throw new Error('tyro: no token endpoint in the discovery document')
-  // TYRO-UNVERIFIED: the docs name client_id and client_secret but do not print the token request; standard OAuth client-credentials form.
-  const r = await getir(kesif.token_endpoint, { method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ grant_type: 'client_credentials', client_id: k.istemciId, client_secret: k.istemciGizli }).toString() })
+  // Verified 2026-10-22 from https://docs.connect.tyro.com/app/authentication (Client credentials page): OAuth 2.0 client-credentials, `audience` = https://app.connect.tyro for an App integration.
+  // TYRO-UNVERIFIED: the remaining form fields (grant_type, client_id, client_secret) follow the standard OAuth form; the page's curl sample was not fully captured.
+  const r = await getir(kesif.token_endpoint, { method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ grant_type: 'client_credentials', client_id: k.istemciId, client_secret: k.istemciGizli, audience: TYRO_AUDIENCE }).toString() })
   if (!r.ok) throw Object.assign(new Error('tyro: token refused'), { durum: r.status })
   const j = await r.json() as { access_token?: string; expires_in?: number; token_type?: string }
   if (!j.access_token || j.token_type?.toLowerCase() !== 'bearer') throw new Error('tyro: unexpected token response')

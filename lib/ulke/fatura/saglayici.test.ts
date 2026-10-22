@@ -284,6 +284,7 @@ describe('Tyro adapter and webhook (fabricated fixtures from the documented surf
     assert.equal(pr.headers.authorization, 'Bearer jwt.fixture')
     assert.deepEqual(JSON.parse(pr.govde), { locationId: K.konumId, provider: { name: 'TYRO', method: 'CARD' }, origin: { orderId: F1 }, total: { amount: 11000, currency: 'AUD' } })
     await t.baslat({ faturaId: F1, no: 1, tutarKurus: 11000, paraKodu: 'AUD', basariUrl: '', iptalUrl: '' })
+    assert.match(String(cagrilar.find((c) => c.url.endsWith('/oauth/token'))?.govde ?? ''), /audience=https%3A%2F%2Fapp\.connect\.tyro/, 'token request carries the documented App audience')
     assert.equal(cagrilar.filter((c) => c.url.endsWith('/oauth/token')).length, 1, 'the 12-hour JWT is cached (Tyro rejects more than 12 tokens in 11 h)')
   })
   it('a refused token is a failed check; a refund is sent for the Pay Request; reading a Pay Request maps status SUCCESS', async () => {
