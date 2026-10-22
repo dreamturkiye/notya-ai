@@ -100,6 +100,30 @@ export async function modeldenNot(g: ModelGirdisi): Promise<NotIcerigi | null> {
   return metin === null ? null : notIceriginiOku(metin)
 }
 
+/**
+ * NOTYA-ULKE-EKLER-01 — ONE document image, read by the model for the "add documents" step. Same gateway, same rules
+ * as the note: the call names a TASK (image / document reading) and the policy picks the model; the instruction is
+ * the cached system block and holds nothing about a doctor or a patient; the user message is the (already masked,
+ * on the device) image plus one line of age and sex. Nothing it throws leaves this file: null = no answer.
+ */
+export async function modeldenBelge(g: { talimat: string; baglam: string; mime: 'image/jpeg' | 'image/png' | 'image/webp'; base64: string; doktorId: string; butceMs?: number }): Promise<string | null> {
+  try {
+    const yanit = await aiCagir({
+      gorev: 'goruntu-inceleme',
+      system: [{ metin: g.talimat, onbellek: true }],
+      messages: [{ role: 'user', content: [{ type: 'image', source: { type: 'base64', media_type: g.mime, data: g.base64 } }, { type: 'text', text: g.baglam }] }],
+      maxTokens: 1500,
+      temperature: 0.2,
+      doctorId: g.doktorId,
+      ...(g.butceMs ? { butceMs: g.butceMs } : {}),
+    })
+    return yanitMetni(yanit)
+  } catch (e) {
+    console.error(`[ulke/belge] goruntu-inceleme: ${e instanceof AiCagriHatasi ? `gateway ${e.durum}` : e instanceof Error ? e.name : typeof e}`)
+    return null
+  }
+}
+
 /** The key under which the model returns a summary for the patient. One word, shared by packs and core. */
 export const HASTA_OZETI_ANAHTARI = 'summary'
 

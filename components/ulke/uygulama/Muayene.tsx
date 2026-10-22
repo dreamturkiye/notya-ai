@@ -31,6 +31,8 @@ import { tamAd, type HastaKaydi } from './Hastalar'
 import { Not } from './Not'
 import { asistanAdi } from './Asistan'
 import { HastaFormuKarti } from './HastaFormuKarti'
+import { EklerAdimi } from './Ekler'
+import type { EkGonderimi } from '@/lib/ulke/belgeler/ekler'
 import { ozellikAcik } from '@/lib/ulke/ulke'
 import { Ipucu } from './Ipucu'
 import { gunBasligi, muayeneBaslatilabilir, takvimYolu, type RandevuKaydi } from './randevuOrtak'
@@ -281,10 +283,9 @@ function YeniMuayene({ u, hastaId, randevuId }: { u: ReturnType<typeof useUygula
       setDurum('isleniyor')
       const r = await api('/api/ulke/muayene', { method: 'POST', govde: { yol, hastaId, sablon, riza: true, ...(randevu ? { randevuId: randevu.id } : {}) } })
       if (!r.ok || !r.j.seansId) { geri(typeof r.j.code === 'string' ? r.j.code : 'BASARISIZ'); return }
-      // The visit is saved. Now its note; if that fails, the recorded visit opens and says so — nothing is lost.
-      let notId = ''
-      try { const n = await api('/api/ulke/not', { method: 'POST', govde: { seansId: r.j.seansId } }); if (n.ok && typeof n.j.notId === 'string') notId = n.j.notId } catch { /* the visit screen offers to try again */ }
-      window.location.assign(notId ? `${YOL.muayene}?not=${notId}` : `${YOL.muayene}?seans=${r.j.seansId}&xato=not`)
+      // The visit is saved. NOTYA-ULKE-EKLER-01: before its note is written, the "add documents" step (always shown; one
+      // click skips it). The visit is saved, so a reload of that step loses nothing.
+      window.location.assign(`${YOL.muayene}?seans=${r.j.seansId}&ekler=1`)
     } catch { geri('BAGLANTI') }
   }
 
@@ -393,6 +394,45 @@ function KayitliMuayene({ u, seansId, yazilamadiBaslangic }: { u: ReturnType<typ
   )
 }
 
+/**
+ * NOTYA-ULKE-EKLER-01 — /visit?seans=<id>&ekler=1: the "add documents" step of a recorded visit that has no note yet.
+ * A visit that already has a note opens that note instead. Writing the note posts the documents with the visit.
+ */
+function EklerSeansi({ u, seansId }: { u: ReturnType<typeof useUygulama>; seansId: string }) {
+  const [muayene, setMuayene] = useState<MuayeneDetayi | null>(null)
+  const [yuk, setYuk] = useState<'yukleniyor' | 'yok' | 'hata' | 'tamam'>('yukleniyor')
+  const { hesap, api } = u
+  useEffect(() => {
+    if (!hesap) return
+    let iptal = false
+    api(`/api/ulke/muayene?id=${encodeURIComponent(seansId)}`)
+      .then((r) => {
+        if (iptal) return
+        const x = r.ok ? (r.j.muayene as MuayeneDetayi | undefined) : undefined
+        if (!x) { setYuk(r.status === 404 ? 'yok' : 'hata'); return }
+        if (x.notId) { window.location.replace(`${YOL.muayene}?not=${x.notId}`); return }
+        setMuayene(x); setYuk('tamam')
+      })
+      .catch(() => { if (!iptal) setYuk('hata') })
+    return () => { iptal = true }
+  }, [hesap, api, seansId])
+  if (yuk === 'tamam' && muayene) {
+    const yaz = async (ekler: EkGonderimi[]): Promise<boolean> => {
+      const n = await api('/api/ulke/not', { method: 'POST', govde: { seansId, ...(ekler.length ? { ekler } : {}) } })
+      if (!n.ok || typeof n.j.notId !== 'string') return false
+      window.location.assign(`${YOL.muayene}?not=${n.j.notId}`)
+      return true
+    }
+    return <EklerAdimi m={u.m} api={api} seansId={seansId} hastaAdi={muayene.hasta ? tamAd(muayene.hasta) : ''} yaz={yaz} hataMetni={u.m.muayene.notYazilamadi} />
+  }
+  return (
+    <section className="uza-kart">
+      {yuk === 'yukleniyor' ? <p className="uza-bos" role="status">{u.m.kabuk.yukleniyor}</p> : <Hata>{yuk === 'yok' ? u.m.muayene.bulunamadi : u.m.kabuk.hata}</Hata>}
+      {yuk === 'yukleniyor' ? null : <p className="uza-ipucu"><a className="uza-baglanti" href={YOL.bugun}>{u.m.kabuk.geri}</a></p>}
+    </section>
+  )
+}
+
 function HastaSec({ u, q }: { u: ReturnType<typeof useUygulama>; q: string }) {
   const [hastalar, setHastalar] = useState<HastaKaydi[] | null>(null)
   const [hata, setHata] = useState(false)
@@ -410,15 +450,15 @@ function HastaSec({ u, q }: { u: ReturnType<typeof useUygulama>; q: string }) {
 
 export default function Muayene() {
   const u = useUygulama('muayene')
-  const [param, setParam] = useState<{ hasta: string; seans: string; not: string; q: string; xato: string; randevu: string } | null>(null)
+  const [param, setParam] = useState<{ hasta: string; seans: string; not: string; q: string; xato: string; randevu: string; ekler: string } | null>(null)
   useEffect(() => {
     const p = new URLSearchParams(window.location.search)
-    setParam({ hasta: p.get('hasta') ?? '', seans: p.get('seans') ?? '', not: p.get('not') ?? '', q: p.get('q') ?? '', xato: p.get('xato') ?? '', randevu: p.get('randevu') ?? '' })
+    setParam({ hasta: p.get('hasta') ?? '', seans: p.get('seans') ?? '', not: p.get('not') ?? '', q: p.get('q') ?? '', xato: p.get('xato') ?? '', randevu: p.get('randevu') ?? '', ekler: p.get('ekler') ?? '' })
   }, [])
   if (!u.hesap || !param) return <Yukleniyor m={u.m} dil={u.dil} />
   return (
     <Cerceve dil={u.dil} m={u.m} ad={u.hesap.ad} aktif="bugun" cikis={u.cikis}>
-      {param.not ? <Not u={u} notId={param.not} /> : param.seans ? <KayitliMuayene u={u} seansId={param.seans} yazilamadiBaslangic={param.xato === 'not'} /> : param.hasta ? <YeniMuayene u={u} hastaId={param.hasta} randevuId={param.randevu} /> : <HastaSec u={u} q={param.q} />}
+      {param.not ? <Not u={u} notId={param.not} /> : param.seans ? (param.ekler === '1' ? <EklerSeansi u={u} seansId={param.seans} /> : <KayitliMuayene u={u} seansId={param.seans} yazilamadiBaslangic={param.xato === 'not'} />) : param.hasta ? <YeniMuayene u={u} hastaId={param.hasta} randevuId={param.randevu} /> : <HastaSec u={u} q={param.q} />}
     </Cerceve>
   )
 }
