@@ -104,3 +104,14 @@ test('bloklariAktar: yeni blok eklenir, hekimin düzenlediği mevcut blok korunu
   assert.ok(r.includes(belgeAnahtari('b')))
   assert.equal(bloklariAktar(a, hekim), hekim)
 })
+
+for (const dil of ['uz', 'uzk'] as const) {
+  test(`Uzbek block language ${dil}: numbered 1/2..2/2, no Turkish letters, a repeat changes nothing`, () => {
+    const girdi = [1, 2].map((i) => ({ belgeId: `60000000-0000-4000-8000-00000000000${i}`, etiket: 'X', tarih: '01.01.2026', sinavZamani: null, yuklemeSirasi: i, ozet: `s${i}`, bulgular: [`b${i}`], acil: false }))
+    const r = notaBloklariUygula('doctor text', girdi as never, dil)
+    assert.ok(r.metin.startsWith('doctor text'))
+    assert.ok(r.metin.includes('X 1/2') && r.metin.includes('X 2/2'))
+    assert.doesNotMatch(r.metin, /[çğıİşĞŞöüÖÜ]/)
+    assert.equal(notaBloklariUygula(r.metin, girdi as never, dil).metin, r.metin)
+  })
+}

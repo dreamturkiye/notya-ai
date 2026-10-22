@@ -1,8 +1,10 @@
 /**
  * NOTYA-UZ-MUAYENE-01 — /api/ulke/not: the note of a visit of the caller.
  *
- *   POST  { seansId }                 writes the note of that visit from its transcript, in the doctor's note
- *                                     language (once per visit: asked again, it answers with the existing note)
+ *   POST  { seansId, ekler? }         writes the note of that visit from its transcript, in the doctor's note
+ *                                     language (once per visit: asked again, it answers with the existing note).
+ *                                     `ekler` (NOTYA-ULKE-EKLER-01): the documents evaluated in the "add documents"
+ *                                     step; they go into the findings section of THIS first note, in the same write
  *         200 { notId }
  *         502 { code: 'NOT_YAZILAMADI' }   the note could not be written; the visit and its transcript are kept
  *   GET   ?id=<notId>
@@ -36,7 +38,7 @@ export const POST = sinirda('not POST', async (req: NextRequest) => {
   if (!oturum) return KOD.oturumYok()
   const g = await govdeOku(req)
   if (!uuidMi(g.seansId)) return KOD.yok()
-  const r = await notYaz(oturum.supabase, oturum.user.id, g.seansId, rotaButcesiMs(maxDuration))
+  const r = await notYaz(oturum.supabase, oturum.user.id, g.seansId, rotaButcesiMs(maxDuration), g.ekler)
   if (!r.tamam) return cevap({ code: r.kod }, NOT_DURUMU[r.kod])
   return cevap({ notId: r.notId })
 })
