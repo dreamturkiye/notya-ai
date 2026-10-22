@@ -38,7 +38,7 @@ export async function GET(req: NextRequest) {
   const persona = KlinikUzmanPersonas[slug]
   if (!persona) return NextResponse.json({ error: "Bilinmeyen uzman." }, { status: 400 })
 
-  const elKey = process.env.ELEVENLABS_API_KEY || process.env.NEXT_PUBLIC_ELEVENLABS_KEY
+  const elKey = process.env.ELEVENLABS_API_KEY
   if (!elKey) return NextResponse.json({ error: "Ses servisi yapılandırılmamış." }, { status: 500 })
 
   let agentId = klinikTabanAgentSec(persona.gender)
