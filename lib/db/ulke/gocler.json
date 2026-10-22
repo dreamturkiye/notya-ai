@@ -19,6 +19,7 @@
     "140_ulke_hasta_mesajlari.sql",
     "141_ulke_hekim_sablonlari.sql",
     "142_ulke_konsultasyon.sql",
-    "145_ulke_klinik.sql"
+    "145_ulke_klinik.sql",
+    "151_ulke_odeme_canli_mod.sql"
   ]
 }
