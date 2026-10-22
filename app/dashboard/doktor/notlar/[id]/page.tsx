@@ -54,6 +54,8 @@ import { motorAfisiTemizle } from '@/core/belgeler/yazar'
 import SizinTarzinizChip from '@/components/doktor/SizinTarzinizChip'
 import SonrakiAdim from '@/components/doktor/SonrakiAdim'
 import YuklenenDosyalar from '@/components/doktor/YuklenenDosyalar'
+import MuayeneEkleri from '@/components/doktor/MuayeneEkleri'
+import { bloklariAktar } from '@/core/belgeler/notaBlok'
 import { useRutinPaket } from '@/lib/doktor/ogrenme/rutinIstemci'
 import { kullanimEylem } from '@/lib/telemetri/kullanim'
 import { oneriGeldiMi, oneriYoklamasiGerekli, oneriyiYokla } from '@/lib/doktor/oneriBekle';
@@ -249,6 +251,21 @@ export default function NotSayfasi() {
     })();
     return () => { iptal = true; };
   }, [oneriBekleniyor, params.id]);
+
+  // Revision (Kaan, 2026-10-21): documents can be uploaded days later; the auto flow writes its blocks to the saved note, and the
+  // blocks are merged into the text being edited here (the doctor's unsaved edits stay; nothing is lost on the next save).
+  const [ekSayac, setEkSayac] = useState(0);
+  const ekBloklariniAl = async () => {
+    try {
+      const t = await ensureDoctorAccessToken();
+      const r = await fetch(`/api/notes/${params.id}`, { headers: { Authorization: `Bearer ${t}` } });
+      if (!r.ok) return;
+      const j = (await r.json()) as NotVeri;
+      const sunucu = satirBasiNumarala(motorAfisiTemizle(j.not.objektif || ''));
+      setTaslak((o) => ({ ...o, objektif: bloklariAktar(sunucu, o.objektif) }));
+    } catch { /* the note is still saved on the server; reload shows it */ }
+    setEkSayac((n) => n + 1);
+  };
 
   const isaretle = <T,>(set: (v: T) => void) => (v: T) => { set(v); setDegisti(true); };
 
@@ -708,7 +725,8 @@ export default function NotSayfasi() {
           <textarea value={ozet} onChange={(e) => isaretle(setOzet)(e.target.value)} rows={4} style={kutu} />
         </div>
         {/* MUAYENE-EKLERI-07: visit uploads as links; the viewer opens beside the report (no navigation, no unmount). */}
-        <YuklenenDosyalar sessionId={not.sessionId} />
+        <MuayeneEkleri hastaId={veri.hasta.patientId} visitId={not.sessionId ?? null} onYuklendi={() => setEkSayac((n) => n + 1)} onNotaEklendi={() => { void ekBloklariniAl(); }} />
+        <YuklenenDosyalar key={ekSayac} sessionId={not.sessionId} />
       </div>
       {cekVar ? (
         <aside style={{ background: 'rgba(180,131,47,0.08)', border: '1px solid rgba(180,131,47,0.30)', borderRadius: 12, padding: '12px 14px' }}>
