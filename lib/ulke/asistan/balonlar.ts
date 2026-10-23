@@ -30,7 +30,7 @@ export function sesKullanicisi(onceki: SohbetBalon[], metin: string, olay: numbe
 /** A fragment the assistant is saying. Fragments of one turn join one provisional bubble. */
 export function sesAsistani(onceki: SohbetBalon[], metin: string, sayac: BalonSayaci): SohbetBalon[] {
   const t = String(metin || '').trim()
-  if (!t) return onceki
+  if (!t || !/[\p{L}\p{N}]/u.test(t)) return onceki
   const son = onceki[onceki.length - 1]
   if (son && son.role === 'ai' && son.gecici) return [...onceki.slice(0, -1), { ...son, text: `${son.text} ${t}` }]
   return sohbetKirp([...onceki, { ...yap(sayac)('ai', t), gecici: true }])

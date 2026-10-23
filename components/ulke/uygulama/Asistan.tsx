@@ -10,6 +10,7 @@
  */
 import React from 'react'
 import PersonaFoto from '@/components/asistan/PersonaFoto'
+import { ulkeYolu } from '@/lib/ulke/yol'
 import { asistanKimligi, marka, metninDili, rolAdi, rolMu, type UygulamaMetni } from '@/lib/ulke/arayuz'
 
 /** The name a screen shows for the assistant of `rol`: the owner's name for that role, or the neutral one. */
@@ -19,7 +20,8 @@ export function asistanAdi(m: UygulamaMetni, rol: string | null | undefined): st
 
 /** AU-PORTRE-01: the portrait URL of the role's assistant, or null (no portrait produced: screens show nothing / initials). */
 export function asistanPortresi(m: UygulamaMetni, rol: string | null | undefined): string | null {
-  return asistanKimligi(rol, metninDili(m))?.portre ?? null
+  const yol = asistanKimligi(rol, metninDili(m))?.portre
+  return yol ? ulkeYolu(yol) : null
 }
 
 /** Small round portrait for the home line and the card. Draws nothing without a portrait. */

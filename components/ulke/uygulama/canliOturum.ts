@@ -25,6 +25,7 @@ import { ulkeYolu } from '@/lib/ulke/yol'
 import { ekranCevabi, geciciyiOturt, saklanacak, saklidan, selamEkle, sesAsistani, sesKullanicisi, yeniCagri, type BalonSayaci, type SohbetBalon } from '@/lib/ulke/asistan/balonlar'
 import type { UygulamaMetni } from '@/lib/ulke/arayuz'
 import { hataYazisi, kisaAyrinti } from '@/lib/ulke/asistan/ayrinti'
+import { okunurMu, sesiDokunustaAc } from '@/lib/ulke/asistan/sesAcma'
 import type { Api } from './Kabuk'
 
 /** `sessiz` = the written chat was used while the voice was live: the call ended, the page stays; the microphone starts a new one (Türkiye's "sessiz"). */
@@ -116,7 +117,7 @@ export function useCanliOturum({ t, api, dil }: { t: Metin | undefined; api: Api
         const j = r.j as DurumCevabi
         if (iptal) return
         if (r.ok && j.hazir === true && typeof j.ad === 'string' && j.ad) {
-          setHazir({ ad: j.ad, kisaAd: typeof j.kisaAd === 'string' && j.kisaAd ? j.kisaAd : j.ad, cinsiyet: j.cinsiyet === 'erkek' || j.cinsiyet === 'kadin' ? j.cinsiyet : null, portre: typeof j.portre === 'string' && j.portre.startsWith('/') ? j.portre : null })
+          setHazir({ ad: j.ad, kisaAd: typeof j.kisaAd === 'string' && j.kisaAd ? j.kisaAd : j.ad, cinsiyet: j.cinsiyet === 'erkek' || j.cinsiyet === 'kadin' ? j.cinsiyet : null, portre: typeof j.portre === 'string' && j.portre.startsWith('/') ? ulkeYolu(j.portre) : null })
         } else setHazir(null)
       } catch { if (!iptal) setHazir(null) }
     })()
@@ -154,6 +155,7 @@ export function useCanliOturum({ t, api, dil }: { t: Metin | undefined; api: Api
 
   const baslat = useCallback(async () => {
     if (!t || !api || sohbet.current || durum === 'baglaniyor') return
+    sesiDokunustaAc() // inside the click, before any await: Safari plays the voice only after this
     setHata(null); setDurum('baglaniyor')
     const izin = await mikrofonIste()
     if (izin !== 'tamam') { setHata(t.mikrofon); setDurum('hata'); return }
@@ -213,6 +215,7 @@ export function useCanliOturum({ t, api, dil }: { t: Metin | undefined; api: Api
           },
           onMessage: ({ message, role, event_id }: { message: string; role: string; event_id?: number }) => {
             if (bitti || !gecerli()) return
+            if (!okunurMu(message)) return // the provider's keep-alive "." is never a bubble
             const olay = typeof event_id === 'number' ? event_id : undefined
             if (role === 'user') { kullaniciKonustu = true; setBalonlar((b) => sesKullanicisi(geciciyiOturt(b), message, olay, sayac.current)) }
             else if (!kullaniciKonustu && baglanmaAni && Date.now() - baglanmaAni < 8000) setBalonlar((b) => selamEkle(b, message, sayac.current))

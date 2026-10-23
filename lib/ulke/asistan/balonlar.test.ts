@@ -81,4 +81,10 @@ describe('assistant page bubbles: history', () => {
     assert.equal(geri.liste.at(-1)?.text, 'line 60 is a full written answer')
     assert.ok(geri.sira >= 60)
   })
+  it('a punctuation-only fragment (the provider keep-alive ".") never becomes a bubble', () => {
+    const sayac = { sira: 0 }
+    const b = sesAsistani(selamEkle([], 'Hello.', sayac), ' . ', sayac)
+    assert.equal(b.length, 1)
+    assert.equal(sesAsistani([], '…', sayac).length, 0)
+  })
 })
