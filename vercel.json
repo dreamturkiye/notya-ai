@@ -88,5 +88,15 @@
       "path": "/api/cron/randevu-v2",
       "schedule": "*/10 3-19 * * *"
     }
+  ],
+  "rewrites": [
+    {
+      "source": "/robots.txt",
+      "destination": "/nz/robots.txt"
+    },
+    {
+      "source": "/sitemap.xml",
+      "destination": "/nz/sitemap.xml"
+    }
   ]
 }
