@@ -1,7 +1,7 @@
 {
-  "aciklama": "Ceiling for source files outside countries/tr that carry user-visible Turkish text (letters ç ğ ı ö ş ü İ in a string, template or JSX text — a proxy). May only go down. Raised once on 2026-10-14 from 1692 to 1698 for the photo/PDF capture screens of dermatoloji, kulak-burun-bogaz, plastik-cerrahi and goz (specialties/ and components/doktor). Those files are the Turkish product, the same set already on main, and they are not country-pack text. scripts/ulke-turkce-tavan.mjs Raised once more on 2026-10-22 from 1698 to 1706 (AU-MKT-AUDIT): eight Turkish-tree files that arrived with the main-branch document workflow port (Ekler / belge-otomatik-akis: core/belgeler/*, lib/doktor/muayeneEk/*, components/doktor/YuklenenDosyalar.tsx). They are the Turkish product's code, unreachable on a country build (route gate), and carry per-country text tables; not country-pack text.",
-  "tavan": 1706,
-  "taranan": 2493,
-  "harfIcerenHerhangi": 1904,
-  "kayit": "2026-10-22"
+  "aciklama": "Ceiling for source files outside countries/tr that carry user-visible Turkish text (letters ç ğ ı ö ş ü İ in a string, template or JSX text — a proxy). May only go down. scripts/ulke-turkce-tavan.mjs",
+  "tavan": 1705,
+  "taranan": 2632,
+  "harfIcerenHerhangi": 1940,
+  "kayit": "2026-10-23"
 }

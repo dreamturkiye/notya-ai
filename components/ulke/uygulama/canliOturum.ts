@@ -19,14 +19,17 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Conversation } from '@/components/AsistanConversation'
 import { SES_CALAR } from '@/lib/asistan/sesCalar'
-import { sohbetMaxSira, sohbetOku, sohbetYaz } from '@/lib/asistan/sohbetGecmisi'
+import { sohbetMaxSira, sohbetOku, sohbetYaz, type SakliYaziliMesaj } from '@/lib/asistan/sohbetGecmisi'
 import { ulkeIstemciSupabase } from '@/lib/ulke/istemciSupabase'
 import { ulkeYolu } from '@/lib/ulke/yol'
-import { ekranCevabi, geciciyiOturt, saklanacak, saklidan, selamEkle, sesAsistani, sesKullanicisi, yaziliEkle, yeniCagri, type BalonSayaci, type SohbetBalon } from '@/lib/ulke/asistan/balonlar'
+import { ekranCevabi, geciciyiOturt, saklanacak, saklidan, selamEkle, sesAsistani, sesKullanicisi, yeniCagri, type BalonSayaci, type SohbetBalon } from '@/lib/ulke/asistan/balonlar'
 import type { UygulamaMetni } from '@/lib/ulke/arayuz'
 import type { Api } from './Kabuk'
 
-export type CanliDurumu = 'bosta' | 'baglaniyor' | 'dinliyor' | 'konusuyor' | 'hata'
+/** `sessiz` = the written chat was used while the voice was live: the call ended, the page stays; the microphone starts a new one (Türkiye's "sessiz"). */
+export type CanliDurumu = 'bosta' | 'baglaniyor' | 'dinliyor' | 'konusuyor' | 'hata' | 'sessiz'
+/** A line of the written chat (Türkiye: YaziliMesaj, without patient cards — a country's assistant has no patient file). */
+export type YaziliMesaj = SakliYaziliMesaj
 export type Metin = NonNullable<UygulamaMetni['asistanCanli']>
 export type Hazir = { ad: string; kisaAd: string; cinsiyet: 'erkek' | 'kadin' | null }
 
@@ -51,15 +54,34 @@ export async function mikrofonIste(): Promise<'tamam' | 'reddedildi' | 'yok'> {
 }
 
 type Baglanti = Awaited<ReturnType<typeof Conversation.startSession>>
+interface TanimaSonucu { isFinal: boolean; 0: { transcript: string } }
+interface TanimaOlayi { resultIndex: number; results: { length: number; [i: number]: TanimaSonucu } }
+interface Tanima {
+  lang: string; continuous: boolean; interimResults: boolean
+  onresult: ((e: TanimaOlayi) => void) | null; onend: (() => void) | null; onerror: (() => void) | null
+  start: () => void; stop: () => void
+}
 type DurumCevabi = { hazir?: boolean; ad?: string; kisaAd?: string; cinsiyet?: string }
 
-export function useCanliOturum({ t, api }: { t: Metin | undefined; api: Api | undefined }) {
+export function useCanliOturum({ t, api, dil }: { t: Metin | undefined; api: Api | undefined; /** The account's language: the language of the browser's dictation (en-AU …). */ dil?: string }) {
   /** undefined = not asked yet · null = not available (draw nothing / say so) · object = available. */
   const [hazir, setHazir] = useState<Hazir | null | undefined>(undefined)
   const [durum, setDurum] = useState<CanliDurumu>('bosta')
   const [balonlar, setBalonlar] = useState<SohbetBalon[]>([])
   const [hata, setHata] = useState<string | null>(null)
+  // The written chat (Türkiye: components/asistan/YaziliSohbet): its own list, open/closed, input, dictation.
+  const [yaziliAcik, setYaziliAcik] = useState(false)
+  const [yazili, setYazili] = useState<YaziliMesaj[]>([])
+  const [yaziliGirdi, setYaziliGirdi] = useState('')
   const [bekliyor, setBekliyor] = useState(false)
+  const [yaziliDinliyor, setYaziliDinliyor] = useState(false)
+  const tanimaRef = useRef<Tanima | null>(null)
+  const yaziliRef = useRef<YaziliMesaj[]>([])
+  const girdiRef = useRef('')
+  yaziliRef.current = yazili
+  girdiRef.current = yaziliGirdi
+  const durumRef = useRef<CanliDurumu>('bosta')
+  durumRef.current = durum
   const sohbet = useRef<Baglanti | null>(null)
   const sayac = useRef<BalonSayaci>({ sira: 0 })
   const nesil = useRef(0)
@@ -95,7 +117,8 @@ export function useCanliOturum({ t, api }: { t: Metin | undefined; api: Api | un
     return () => { iptal = true }
   }, [t, api])
 
-  // History: the last 50 bubbles of this browser, loaded once the persona is known (event ids of an earlier call are dropped).
+  // History: the last 50 lines of this browser, voice and written together (Türkiye: sohbetGecmisi), loaded once the
+  // persona is known (event ids of an earlier call are dropped).
   useEffect(() => {
     if (!anahtar || yuklendi.current) return
     yuklendi.current = true
@@ -103,12 +126,14 @@ export function useCanliOturum({ t, api }: { t: Metin | undefined; api: Api | un
     const { liste, sira } = saklidan(g.ses)
     sayac.current.sira = Math.max(sira, sohbetMaxSira(g))
     if (liste.length) setBalonlar((onceki) => (onceki.length ? onceki : yeniCagri(liste)))
+    if (g.yazili.length) setYazili((onceki) => (onceki.length ? onceki : g.yazili))
   }, [anahtar])
   useEffect(() => {
     // An empty list is never written here (the load above has not been applied yet on the first pass); "clear" writes it itself.
-    if (!anahtar || !yuklendi.current || balonlar.length === 0) return
-    sohbetYaz(anahtar, saklanacak(balonlar), [])
-  }, [anahtar, balonlar])
+    if (!anahtar || !yuklendi.current || (balonlar.length === 0 && yazili.length === 0)) return
+    const kirp = sohbetYaz(anahtar, saklanacak(balonlar), yazili)
+    if (kirp.yazili.length !== yazili.length) setYazili(kirp.yazili)
+  }, [anahtar, balonlar, yazili])
 
   const bitir = useCallback(async () => {
     nesil.current += 1
@@ -119,7 +144,7 @@ export function useCanliOturum({ t, api }: { t: Metin | undefined; api: Api | un
     setDurum('bosta')
   }, [])
 
-  useEffect(() => () => { nesil.current += 1; const c = sohbet.current; sohbet.current = null; if (c) void c.endSession().catch(() => {}) }, [])
+  useEffect(() => () => { nesil.current += 1; try { tanimaRef.current?.stop() } catch { /* quiet */ } const c = sohbet.current; sohbet.current = null; if (c) void c.endSession().catch(() => {}) }, [])
 
   const baslat = useCallback(async () => {
     if (!t || !api || sohbet.current || durum === 'baglaniyor') return
@@ -189,24 +214,78 @@ export function useCanliOturum({ t, api }: { t: Metin | undefined; api: Api | un
     await dene(true)
   }, [t, api, durum])
 
-  const gonder = useCallback(async (metin: string) => {
-    const soru = metin.trim()
+  /**
+   * Türkiye's rule (NOTYA-SES-SESSIZ-01): from the moment the written chat is used while the voice is live, the voice goes
+   * quiet — the call ends, the page and the written chat stay, and the microphone starts a new call.
+   */
+  const sustur = useCallback(async () => {
+    const d = durumRef.current
+    if (!sohbet.current && d !== 'baglaniyor' && d !== 'dinliyor' && d !== 'konusuyor') return
+    nesil.current += 1
+    const c = sohbet.current
+    sohbet.current = null
+    setBalonlar((b) => geciciyiOturt(b))
+    if (c) { try { await c.endSession() } catch { /* already closed */ } }
+    setDurum('sessiz')
+  }, [])
+
+  const girdiAyarla = useCallback((g: string) => {
+    setYaziliGirdi(g)
+    if (g.trim()) void sustur()
+  }, [sustur])
+
+  const yaziliMikrofon = useCallback(() => {
+    if (yaziliDinliyor) { try { tanimaRef.current?.stop() } catch { /* quiet */ } setYaziliDinliyor(false); return }
+    const w = window as unknown as { webkitSpeechRecognition?: new () => Tanima; SpeechRecognition?: new () => Tanima }
+    const Ctor = w.SpeechRecognition || w.webkitSpeechRecognition
+    if (!Ctor) { setYaziliGirdi(t?.sayfa.sesDestegiYok ?? ''); return }
+    const r = new Ctor()
+    r.lang = dil || 'en'
+    r.continuous = true
+    r.interimResults = true
+    r.onresult = (e) => {
+      let son = ''
+      for (let i = e.resultIndex; i < e.results.length; i++) if (e.results[i].isFinal) son += e.results[i][0].transcript
+      if (son) girdiAyarla((girdiRef.current ? girdiRef.current + ' ' : '') + son.trim())
+    }
+    r.onend = () => setYaziliDinliyor(false)
+    r.onerror = () => setYaziliDinliyor(false)
+    tanimaRef.current = r
+    r.start()
+    setYaziliDinliyor(true)
+  }, [yaziliDinliyor, t, dil, girdiAyarla])
+
+  const yaziliGonder = useCallback(async () => {
+    const soru = yaziliGirdi.trim()
     if (!t || !api || !soru || bekliyor) return
+    await sustur()
+    try { tanimaRef.current?.stop() } catch { /* quiet */ }
+    setYaziliDinliyor(false)
+    setYaziliGirdi('')
+    setYaziliAcik(true)
     setHata(null)
-    const gecmis = balonRef.current.filter((b) => !b.gecici).slice(-12).map((b) => ({ rol: b.role === 'user' ? 'siz' : 'asistan', metin: b.text }))
-    setBalonlar((b) => yaziliEkle(b, 'user', soru, sayac.current))
+    const siradaki = () => (sayac.current.sira += 1)
+    // What the assistant is told so far: voice and written lines in the order they were said, the last twelve.
+    const gecmis = [
+      ...balonRef.current.filter((b) => !b.gecici).map((b) => ({ sira: b.sira, rol: b.role === 'user' ? 'siz' : 'asistan', metin: b.text })),
+      ...yaziliRef.current.map((m) => ({ sira: m.sira, rol: m.rol === 'doktor' ? 'siz' : 'asistan', metin: m.icerik })),
+    ].sort((a, b) => a.sira - b.sira).slice(-12).map(({ rol, metin }) => ({ rol, metin }))
+    setYazili((onceki) => [...onceki, { rol: 'doktor', icerik: soru, sira: siradaki() }])
     setBekliyor(true)
     try {
       const r = await api('/api/ulke/asistan-canli/yazili', { method: 'POST', govde: { mesaj: soru, gecmis } })
       const cevap = (r.j as { cevap?: unknown }).cevap
-      if (r.status === 429) setHata(t.limit)
-      else if (r.ok && typeof cevap === 'string' && cevap.trim()) setBalonlar((b) => yaziliEkle(b, 'ai', cevap, sayac.current))
-      else setHata(t.sayfa.yaziHata)
-    } catch { setHata(t.sayfa.yaziHata) }
+      const satir = r.status === 429 ? t.limit : r.ok && typeof cevap === 'string' && cevap.trim() ? cevap : t.sayfa.yaziHata
+      setYazili((onceki) => [...onceki, { rol: 'asistan', icerik: satir, sira: siradaki() }])
+    } catch { setYazili((onceki) => [...onceki, { rol: 'asistan', icerik: t.sayfa.yaziHata, sira: siradaki() }]) }
     setBekliyor(false)
-  }, [t, api, bekliyor])
+  }, [t, api, bekliyor, yaziliGirdi, sustur])
 
-  const temizle = useCallback(() => { setBalonlar([]); if (anahtar) sohbetYaz(anahtar, [], []) }, [anahtar])
+  const temizle = useCallback(() => { setBalonlar([]); setYazili([]); if (anahtar) sohbetYaz(anahtar, [], []) }, [anahtar])
 
-  return { hazir, durum, balonlar, hata, bekliyor, baslat, bitir, gonder, temizle }
+  return {
+    hazir, durum, balonlar, hata, baslat, bitir, temizle, sustur,
+    yazili: { acik: yaziliAcik, mesajlar: yazili, girdi: yaziliGirdi, bekliyor, dinliyor: yaziliDinliyor },
+    setYaziliAcik, setYaziliGirdi: girdiAyarla, yaziliGonder, yaziliMikrofon,
+  }
 }

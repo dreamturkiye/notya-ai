@@ -6,7 +6,7 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 import { sohbetOku, sohbetYaz } from '@/lib/asistan/sohbetGecmisi'
-import { ekranCevabi, saklanacak, saklidan, sesAsistani, selamEkle, sesKullanicisi, yaziliEkle, yeniCagri, type BalonSayaci, type SohbetBalon } from './balonlar'
+import { ekranCevabi, saklanacak, saklidan, sesAsistani, selamEkle, sesKullanicisi, yeniCagri, type BalonSayaci, type SohbetBalon } from './balonlar'
 
 const bos = (): { l: SohbetBalon[]; s: BalonSayaci } => ({ l: [], s: { sira: 0 } })
 const yazi = (l: readonly SohbetBalon[]) => l.map((b) => `${b.role === 'user' ? 'U' : 'A'}:${b.text}`)
@@ -54,17 +54,6 @@ describe('assistant page bubbles: order (NOTYA-SES-SIRA-03)', () => {
     assert.equal(l[1].gecici, true)
   })
 
-  it('typed lines go last, and settle a spoken fragment that never got its full answer', () => {
-    const { s } = bos()
-    let l: SohbetBalon[] = []
-    l = sesKullanicisi(l, 'Spoken', 1, s)
-    l = sesAsistani(l, 'Spoken reply.', s)
-    l = yaziliEkle(l, 'user', 'Typed question', s)
-    l = yaziliEkle(l, 'ai', 'Typed answer', s)
-    assert.deepEqual(yazi(l), ['U:Spoken', 'A:Spoken reply.', 'U:Typed question', 'A:Typed answer'])
-    assert.ok(!l.some((b) => b.gecici))
-  })
-
   it('event ids of an earlier call never order the next one (NOTYA-SES-KULLANICI-BALON-01)', () => {
     const { s } = bos()
     let l: SohbetBalon[] = []
@@ -81,7 +70,7 @@ describe('assistant page bubbles: history', () => {
   it('keeps the last 50 and restores them in order, without provisional bubbles', () => {
     const { s } = bos()
     let l: SohbetBalon[] = []
-    for (let i = 1; i <= 60; i++) l = yaziliEkle(l, i % 2 ? 'user' : 'ai', `line ${i}`, s)
+    for (let i = 1; i <= 60; i++) l = i % 2 ? sesKullanicisi(l, `line ${i}`, i, s) : ekranCevabi(l, `line ${i} is a full written answer`, s)
     l = sesAsistani(l, 'half spoken', s)
     assert.ok(l.length <= 50)
     const depo = new Map<string, string>()
@@ -89,7 +78,7 @@ describe('assistant page bubbles: history', () => {
     sohbetYaz('au_acc_kadin', saklanacak(l), [], sahte)
     const geri = saklidan(sohbetOku('au_acc_kadin', sahte).ses)
     assert.equal(geri.liste.length, l.filter((b) => !b.gecici).length)
-    assert.equal(geri.liste.at(-1)?.text, 'line 60')
+    assert.equal(geri.liste.at(-1)?.text, 'line 60 is a full written answer')
     assert.ok(geri.sira >= 60)
   })
 })

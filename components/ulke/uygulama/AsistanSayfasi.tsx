@@ -1,120 +1,135 @@
 'use client'
 
 /**
- * AU-CANLI-02 — the ASSISTANT PAGE (/asistan): the country kit's counterpart of Türkiye's app/asistan/page.tsx, with the
- * same layout and behaviour: persona column (desktop) and header, a conversation of bubbles (the assistant's on the left
- * with its initial, the doctor's on the right), the assistant's full answer written out as a bubble with its lists and
- * tables, a big microphone control with its status line, and a typed-question row under it. The history of the last 50
- * bubbles stays in this browser. The session lives in ./canliOturum.ts; the bubble order is Türkiye's own engine.
+ * AU-CANLI-02 / AU-DEPTH-PARITY-03 — the ASSISTANT PAGE (/asistan) of a country that brings the live assistant.
+ *
+ * It is NOT a copy of Türkiye's page. It renders through the SAME two views Türkiye's page renders through
+ * (components/asistan/AsistanSayfaGorunumu.tsx and YaziliSohbetGorunumu.tsx): layout, bubbles, microphone, status line,
+ * written chat, colours and animation are those views', so the two pages cannot drift apart. What is the country's:
+ *
+ *   the words        the pack's language set (countries/_dil/<language>/uygulama.ts → asistanCanli.sayfa)
+ *   the assistant    one colleague per role, named by the pack (the server answers with her name and gender)
+ *   the session      ./canliOturum.ts — the country's two voices, its routes (/api/ulke/asistan-canli/*), no patient file
+ *   the frame        the kit's own sidebar (Cerceve), as Türkiye's page sits in its doctor chrome
  *
  * FAIL CLOSED: until the server says yes (`hazir: true`) the page shows only the "not available" line — no microphone.
  * The pure view `AsistanGorunumu` renders in a plain test.
  */
-import React, { useEffect, useRef, useState } from 'react'
-import HafifMarkdown from '@/components/asistan/HafifMarkdown'
+import React from 'react'
+import AsistanSayfaGorunumu from '@/components/asistan/AsistanSayfaGorunumu'
+import YaziliSohbetGorunumu from '@/components/asistan/YaziliSohbetGorunumu'
+import type { AsistanSayfaMetni, SesDurumu, YaziliSatir, YaziliSohbetMetni } from '@/components/asistan/asistanSayfaTipleri'
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme'
 import { rolAdi } from '@/lib/ulke/arayuz'
 import type { SohbetBalon } from '@/lib/ulke/asistan/balonlar'
 import { Cerceve, Yukleniyor, useUygulama, YOL } from './Kabuk'
-import { useCanliOturum, type CanliDurumu, type Hazir, type Metin } from './canliOturum'
+import { useCanliOturum, type CanliDurumu, type Hazir, type Metin, type YaziliMesaj } from './canliOturum'
 
-const ETIKET: Record<CanliDurumu, 'baslat' | 'baglaniyor' | 'dinliyor' | 'konusuyor'> = { bosta: 'baslat', hata: 'baslat', baglaniyor: 'baglaniyor', dinliyor: 'dinliyor', konusuyor: 'konusuyor' }
+/** The colleague's colour: the application's own accent (Türkiye gives each colleague one; a country's pack has none). */
+const RENK = '#0F9B8E'
 
-function Mikrofon({ konusuyor, baglaniyor }: { konusuyor: boolean; baglaniyor: boolean }) {
-  if (baglaniyor) return <span className="uza-as-donen" aria-hidden="true" />
-  if (konusuyor) {
-    return (
-      <svg width="28" height="28" viewBox="0 0 30 24" aria-hidden="true">
-        {[1, 8, 15, 22].map((x, i) => <rect key={x} className="uza-as-dalga" style={{ animationDelay: `${i * 0.1}s` }} x={x} y={i % 2 ? 5 : 3} width="4" height={i % 2 ? 14 : 18} rx="2" fill="currentColor" />)}
-      </svg>
-    )
+const SES_DURUMU: Record<CanliDurumu, SesDurumu> = { bosta: 'idle', hata: 'error', baglaniyor: 'connecting', dinliyor: 'listening', konusuyor: 'speaking', sessiz: 'sessiz' }
+
+const adla = (sablon: string, ad: string) => sablon.replace(/\{ad\}/g, ad)
+
+/** The page's sentences in the pack's language. */
+export function sayfaMetni(t: Metin): AsistanSayfaMetni {
+  const s = t.sayfa
+  return {
+    durum: { idle: s.baslatIpucu, connecting: t.baglaniyor, listening: t.dinliyor, speaking: (etiket) => adla(s.konusuyorAd, etiket), error: s.durumHata, sessiz: s.durumSessiz },
+    dokunBaslat: s.baslatIpucu,
+    dokunBitir: s.bitirIpucu,
+    geri: s.geri,
+    bosIpucu: s.bos,
+    // This assistant has no session clock, so the "time is running out" box is never drawn.
+    sureUyari: '',
+    sureUzat: '',
   }
-  return (
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <rect x="9" y="2" width="6" height="11" rx="3" /><path d="M5 10a7 7 0 0 0 14 0" /><line x1="12" y1="21" x2="12" y2="17" /><line x1="8" y1="21" x2="16" y2="21" />
-    </svg>
-  )
+}
+
+/** The written chat's sentences in the pack's language. */
+export function yaziliMetni(t: Metin): YaziliSohbetMetni {
+  const s = t.sayfa
+  return {
+    ac: (ad) => adla(s.yaziAc, ad),
+    baslik: s.yaziBaslik,
+    kapat: s.yaziKapat,
+    bos: (ad) => adla(s.yaziBos, ad),
+    bekliyor: (ad) => adla(s.yaziBekliyor, ad),
+    mikrofonAc: s.yaziMikrofonAc,
+    mikrofonDurdur: s.yaziMikrofonDurdur,
+    yerTutucu: s.yaziIpucu,
+    yerTutucuDinliyor: s.yaziIpucuDinliyor,
+    gonder: s.gonder,
+  }
+}
+
+export interface AsistanGorunumuProps {
+  t: Metin
+  hazir: Hazir | null | undefined
+  unvan: string
+  durum: CanliDurumu
+  balonlar: readonly SohbetBalon[]
+  hata: string | null
+  yazili: { acik: boolean; mesajlar: readonly YaziliMesaj[]; girdi: string; bekliyor: boolean; dinliyor: boolean }
+  onYaziliAc: (acik: boolean) => void
+  onGirdi: (g: string) => void
+  onGonder: () => void
+  onMikrofon?: () => void
+  onBaslat: () => void
+  onBitir: () => void
+  onTemizle: () => void
+  geriHref: string
+  /** A test can start in the wide layout. */
+  mobilBaslangic?: boolean
 }
 
 /** Pure view. */
-export function AsistanGorunumu({ t, hazir, unvan, durum, balonlar, hata, bekliyor, girdi, onGirdi, onGonder, onBaslat, onBitir, onTemizle, geriHref }: {
-  t: Metin; hazir: Hazir | null | undefined; unvan: string; durum: CanliDurumu; balonlar: readonly SohbetBalon[]
-  hata: string | null; bekliyor: boolean; girdi: string; onGirdi: (g: string) => void; onGonder: () => void
-  onBaslat: () => void; onBitir: () => void; onTemizle: () => void; geriHref: string
-}) {
-  const s = t.sayfa
-  const sonRef = useRef<HTMLDivElement>(null)
-  const kayanRef = useRef<HTMLDivElement>(null)
-  useEffect(() => {
-    // Same as Türkiye: the empty idle screen stays at the top, a conversation follows its last bubble.
-    if (balonlar.length === 0) { if (kayanRef.current) kayanRef.current.scrollTop = 0; return }
-    sonRef.current?.scrollIntoView?.({ behavior: 'smooth' })
-  }, [balonlar, bekliyor])
-
+export function AsistanGorunumu({ t, hazir, unvan, durum, balonlar, hata, yazili, onYaziliAc, onGirdi, onGonder, onMikrofon, onBaslat, onBitir, onTemizle, geriHref, mobilBaslangic }: AsistanGorunumuProps) {
   if (hazir === undefined) return <p className="uza-bos" role="status">{t.baglaniyor}</p>
-  if (hazir === null) return <p className="uza-bos" role="status" data-alan="asistan-yok">{s.yok}</p>
+  if (hazir === null) return <p className="uza-bos" role="status" data-alan="asistan-yok">{t.sayfa.yok}</p>
 
   const aktif = durum === 'baglaniyor' || durum === 'dinliyor' || durum === 'konusuyor'
-  const durumYazisi = aktif ? t[ETIKET[durum]] : s.baslatIpucu
-  const bas = hazir.kisaAd.slice(0, 1).toUpperCase()
-  const Avatar = ({ boy }: { boy: number }) => <span className="uza-as-avatar" style={{ width: boy, height: boy, fontSize: Math.round(boy / 2.4) }} aria-hidden="true">{bas}</span>
+  const satirlar: YaziliSatir[] = yazili.mesajlar.map((m) => ({ sira: m.sira, rol: m.rol, icerik: m.icerik }))
   return (
-    <section className="uza-as" data-alan="asistan-sayfa" data-durum={durum}>
-      <aside className="uza-as-yan">
-        <Avatar boy={150} />
-        <p className="uza-as-ad">{hazir.ad}</p>
-        <p className="uza-as-unvan">{unvan}</p>
-        <p className="uza-as-durum"><span className="uza-as-nokta" data-durum={durum} />{durumYazisi}</p>
-      </aside>
-      <div className="uza-as-sohbet">
-        <header className="uza-as-ust">
-          <a href={geriHref} className="uza-as-geri" aria-label={s.geri}>‹</a>
-          <div className="uza-as-baslik">
-            <p className="uza-as-ad">{hazir.ad}</p>
-            <p className="uza-as-unvan">{unvan}</p>
-          </div>
-          {balonlar.length > 0 ? <button type="button" className="uza-dugme uza-dugme-cizgi uza-dugme-kucuk" data-eylem="temizle" onClick={onTemizle}>{s.temizle}</button> : null}
-        </header>
-        <div className="uza-as-liste" ref={kayanRef} data-alan="asistan-canli-yazi">
-          {balonlar.length === 0 && durum === 'bosta' && !bekliyor ? (
-            <div className="uza-as-bos" data-alan="asistan-bos">
-              <Avatar boy={112} />
-              <p className="uza-as-ad">{hazir.ad}</p>
-              <p className="uza-as-unvan">{unvan}</p>
-              <p className="uza-as-ipucu">{s.bos}</p>
-            </div>
-          ) : null}
-          {balonlar.map((b) => (
-            <div key={b.id} className="uza-as-satir" data-rol={b.role === 'user' ? 'siz' : 'asistan'} data-gecici={b.gecici ? 'evet' : undefined}>
-              {b.role === 'ai' ? <Avatar boy={28} /> : null}
-              <div className="uza-as-balon">{b.role === 'ai' ? <HafifMarkdown metin={b.text} /> : b.text}</div>
-            </div>
-          ))}
-          {durum === 'baglaniyor' || bekliyor ? (
-            <div className="uza-as-satir" data-rol="asistan" data-alan="asistan-bekle" role="status" aria-label={s.dusunuyor}>
-              <Avatar boy={28} />
-              <div className="uza-as-balon uza-as-noktalar"><i /><i /><i /></div>
-            </div>
-          ) : null}
-          <div ref={sonRef} />
-        </div>
-        <div className="uza-as-kontrol" role="group" aria-label={s.kontrol}>
-          {hata ? <p role="alert" className="uza-as-hata" data-alan="asistan-canli-hata">{hata}</p> : null}
-          <p className="uza-as-durum" aria-live="polite" data-alan="asistan-canli-durum">{aktif ? durumYazisi : ''}</p>
-          <button type="button" className="uza-as-mik" data-eylem={aktif ? 'bitir' : 'baslat'} data-aktif={aktif ? 'evet' : undefined} aria-pressed={aktif}
-            aria-label={aktif ? t.bitir : t.baslat} disabled={durum === 'baglaniyor'} onClick={aktif ? onBitir : onBaslat}>
-            <Mikrofon konusuyor={durum === 'konusuyor'} baglaniyor={durum === 'baglaniyor'} />
-          </button>
-          <p className="uza-as-ipucu">{aktif ? s.bitirIpucu : s.baslatIpucu}</p>
-        </div>
-        <form className="uza-as-yazi" data-alan="asistan-yazili" onSubmit={(e) => { e.preventDefault(); onGonder() }}>
-          <label className="uza-ekran-disi" htmlFor="uza-as-girdi">{s.yaziEtiketi}</label>
-          <textarea id="uza-as-girdi" className="uza-as-girdi" rows={1} value={girdi} maxLength={4000} placeholder={s.yaziIpucu} disabled={bekliyor}
-            onChange={(e) => onGirdi(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); onGonder() } }} />
-          <button type="submit" className="uza-dugme" disabled={bekliyor || !girdi.trim()}>{s.gonder}</button>
-        </form>
-        <p className="uza-ipucu uza-as-not" data-alan="asistan-canli-not">{t.not} {s.gecmisNotu}</p>
-      </div>
+    <section className="uza-as-kok" data-alan="asistan-sayfa" data-durum={durum}>
+      <AsistanSayfaGorunumu
+        persona={{ ad: hazir.ad, etiket: hazir.ad, unvan, renk: RENK, kisaAd: hazir.kisaAd }}
+        durum={SES_DURUMU[durum]}
+        aktif={aktif}
+        mesajlar={balonlar.map((b) => ({ id: b.id, role: b.role, text: b.text }))}
+        hata={hata ?? ''}
+        sureUzatmaGoster={false}
+        metin={sayfaMetni(t)}
+        onBasla={onBaslat}
+        onBitir={onBitir}
+        onSureUzat={() => {}}
+        geri={(p) => <a href={geriHref} {...p}>‹</a>}
+        ustSag={balonlar.length > 0 || yazili.mesajlar.length > 0
+          ? <button type="button" className="uza-dugme uza-dugme-cizgi uza-dugme-kucuk" data-eylem="temizle" style={{ flexShrink: 0 }} onClick={onTemizle}>{t.sayfa.temizle}</button>
+          : null}
+        yanKolonBasHarf
+        mikrofonAdi={aktif ? t.bitir : t.baslat}
+        mobilBaslangic={mobilBaslangic}
+        yazili={(
+          <>
+            <YaziliSohbetGorunumu
+              ad={hazir.kisaAd}
+              metin={yaziliMetni(t)}
+              acik={yazili.acik}
+              mesajlar={satirlar}
+              girdi={yazili.girdi}
+              bekliyor={yazili.bekliyor}
+              dinliyor={yazili.dinliyor}
+              onAc={onYaziliAc}
+              onGirdi={onGirdi}
+              onGonder={onGonder}
+              onMikrofon={onMikrofon}
+            />
+            <p data-alan="asistan-canli-not" style={{ margin: '-14px auto 22px', maxWidth: 560, padding: '0 16px', fontSize: 11.5, lineHeight: 1.5, color: CHROME_RENK.muted, textAlign: 'center', userSelect: 'text' }}>{t.not} {t.sayfa.gecmisNotu}</p>
+          </>
+        )}
+      />
     </section>
   )
 }
@@ -122,14 +137,13 @@ export function AsistanGorunumu({ t, hazir, unvan, durum, balonlar, hata, bekliy
 export default function AsistanEkrani() {
   const u = useUygulama('asistan')
   const t = u.m.asistanCanli
-  const o = useCanliOturum({ t, api: u.hesap ? u.api : undefined })
-  const [girdi, setGirdi] = useState('')
+  const o = useCanliOturum({ t, api: u.hesap ? u.api : undefined, dil: u.dil })
   if (!u.hesap) return <Yukleniyor m={u.m} dil={u.dil} />
   return (
     <Cerceve dil={u.dil} m={u.m} ad={u.hesap.ad} unvan={rolAdi(u.hesap.rol, u.dil) ?? undefined} aktif="asistan" cikis={u.cikis}>
       {t ? (
-        <AsistanGorunumu t={t} hazir={o.hazir} unvan={rolAdi(u.hesap.rol, u.dil) ?? ''} durum={o.durum} balonlar={o.balonlar} hata={o.hata} bekliyor={o.bekliyor}
-          girdi={girdi} onGirdi={setGirdi} onGonder={() => { const q = girdi; setGirdi(''); void o.gonder(q) }}
+        <AsistanGorunumu t={t} hazir={o.hazir} unvan={rolAdi(u.hesap.rol, u.dil) ?? ''} durum={o.durum} balonlar={o.balonlar} hata={o.hata}
+          yazili={o.yazili} onYaziliAc={o.setYaziliAcik} onGirdi={o.setYaziliGirdi} onGonder={() => { void o.yaziliGonder() }} onMikrofon={o.yaziliMikrofon}
           onBaslat={() => { void o.baslat() }} onBitir={() => { void o.bitir() }} onTemizle={o.temizle} geriHref={YOL.bugun} />
       ) : <p className="uza-bos" role="status">{u.m.kabuk.yukleniyor}</p>}
     </Cerceve>

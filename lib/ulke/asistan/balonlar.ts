@@ -7,7 +7,7 @@
  *   - a spoken fragment of the assistant (arrives while it speaks)             → a provisional bubble
  *   - the full answer (the `show_on_screen` tool)                              → `cevapEkle`, tagged as a screen reply,
  *                                                                                  replacing the provisional bubbles of its turn
- *   - a typed question and its answer                                          → appended: they are always the last thing said
+ *   - a typed question and its answer                                          → not here: the written chat has its own list (as in Türkiye)
  *
  * Pure: renders and orders in a plain Node test.
  */
@@ -55,13 +55,6 @@ export function ekranCevabi(onceki: SohbetBalon[], metin: string, sayac: BalonSa
 /** A spoken fragment that never got its full answer becomes a settled bubble (the call ended, or the screen tool was not offered). */
 export function geciciyiOturt(onceki: SohbetBalon[]): SohbetBalon[] {
   return onceki.some((b) => b.gecici) ? onceki.map((b) => (b.gecici ? { ...b, gecici: false } : b)) : onceki
-}
-
-/** A typed line or its answer: the last thing said, so it goes last. */
-export function yaziliEkle(onceki: SohbetBalon[], role: 'user' | 'ai', metin: string, sayac: BalonSayaci): SohbetBalon[] {
-  const t = String(metin || '').trim()
-  if (!t) return onceki
-  return sohbetKirp([...geciciyiOturt(onceki), yap(sayac)(role, t)])
 }
 
 /** Event ids restart at 1 on every call: call this when a new call starts or the stored history is loaded. */

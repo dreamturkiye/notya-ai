@@ -282,21 +282,39 @@ export type UygulamaMetni = {
     readonly not: string
     readonly siz: string
     readonly ekranda: string
-    /** AU-CANLI-02 — the assistant page (voice and typed chat). */
+    /**
+     * AU-CANLI-02 / AU-DEPTH-PARITY-03 — the assistant page (voice and typed chat). The same sentences Türkiye's page has
+     * (components/asistan/AsistanSayfaTR.tsx), in this language. `{ad}` is replaced by the assistant's name.
+     */
     readonly sayfa: {
       readonly baslik: string
+      /** Label of the back arrow. */
       readonly geri: string
+      /** Under the assistant on the empty idle screen. */
       readonly bos: string
+      /** Status line while idle, and the line under the big microphone. */
       readonly baslatIpucu: string
       readonly bitirIpucu: string
-      readonly yaziEtiketi: string
+      readonly durumHata: string
+      readonly durumSessiz: string
+      /** Status line while the assistant speaks. */
+      readonly konusuyorAd: string
+      readonly yaziAc: string
+      readonly yaziBaslik: string
+      readonly yaziKapat: string
+      readonly yaziBos: string
+      readonly yaziBekliyor: string
+      readonly yaziMikrofonAc: string
+      readonly yaziMikrofonDurdur: string
+      /** Placeholder of the written chat's input, and while dictating. */
       readonly yaziIpucu: string
+      readonly yaziIpucuDinliyor: string
       readonly gonder: string
-      readonly dusunuyor: string
       readonly yaziHata: string
+      /** Shown in the input where the browser has no dictation. */
+      readonly sesDestegiYok: string
       readonly temizle: string
       readonly yok: string
-      readonly kontrol: string
       readonly gecmisNotu: string
     }
   }

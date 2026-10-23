@@ -55,3 +55,7 @@ Most tools built during pediatri sprints are **base** and must remain identical 
 3. **New universal** → `ORTAK_DOKTOR_ARACLARI`
 
 Commercial UI only — no internal audits or named beta-doctor copy on `/doktor-tools`. Full text: the skill above.
+
+## Standing rule — one look in every country (Kaan, 2026-10-23, permanent)
+
+"Our application look and feel and the pages cannot look different for each country. This is not acceptable. They must all look exactly the same." Every country build uses the SAME visual design, layout, components and page structure as Türkiye (main). Only language, voices, personas, reference books, laws/regulatory content, tools that exist by law and country data differ. A country-only visual or layout fork is a defect (share the Türkiye component with injected words/data instead). Full text: `.cursor/rules/gorunum-paritesi-ulke.mdc`.

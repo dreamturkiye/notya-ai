@@ -79,18 +79,34 @@ describe('live assistant: the active pack', () => {
     const m = uygulamaMetni(ulkePaketi().varsayilanDil)
     if (!m.asistanCanli) return assert.ok(true)
     const t = m.asistanCanli
-    const props = { t, unvan: 'Role', durum: 'bosta' as const, balonlar: [], hata: null, bekliyor: false, girdi: '', onGirdi: () => {}, onGonder: () => {}, onBaslat: () => {}, onBitir: () => {}, onTemizle: () => {}, geriHref: '/today' }
+    const yazili = { acik: false, mesajlar: [], girdi: '', bekliyor: false, dinliyor: false }
+    const props = { t, unvan: 'Role', durum: 'bosta' as const, balonlar: [], hata: null, yazili, onYaziliAc: () => {}, onGirdi: () => {}, onGonder: () => {}, onBaslat: () => {}, onBitir: () => {}, onTemizle: () => {}, geriHref: '/today' }
     // Not asked yet / not available: no microphone control at all.
-    for (const hazir of [undefined, null]) assert.ok(!/data-eylem="baslat"/.test(renderToStaticMarkup(React.createElement(AsistanGorunumu, { ...props, hazir }))))
-    const html = renderToStaticMarkup(React.createElement(AsistanGorunumu, { ...props, hazir: { ad: 'Dr Name', kisaAd: 'Name', cinsiyet: 'kadin' as const }, balonlar: [{ id: 'a', sira: 1, role: 'user' as const, text: 'Question?' }, { id: 'b', sira: 2, role: 'ai' as const, text: 'Answer.' }] }))
-    assert.match(html, /data-eylem="baslat"/)
-    assert.match(html, /data-alan="asistan-yazili"/)
-    assert.match(html, /data-rol="siz"[\s\S]*Question\?[\s\S]*data-rol="asistan"[\s\S]*Answer\./)
+    for (const hazir of [undefined, null]) assert.ok(!/aria-pressed/.test(renderToStaticMarkup(React.createElement(AsistanGorunumu, { ...props, hazir }))))
+    const hazir = { ad: 'Dr Name', kisaAd: 'Name', cinsiyet: 'kadin' as const }
+    const html = renderToStaticMarkup(React.createElement(AsistanGorunumu, { ...props, hazir, balonlar: [{ id: 'a', sira: 1, role: 'user' as const, text: 'Question?' }, { id: 'b', sira: 2, role: 'ai' as const, text: 'Answer.' }] }))
+    // The microphone, the doctor's bubble before the assistant's, the collapsed written chat — the shared views of Türkiye's page.
+    assert.match(html, /role="button"[^>]*aria-label="[^"]+"|aria-label="[^"]+"[^>]*role="button"/)
+    assert.match(html, /Question\?[\s\S]*Answer\./)
+    assert.ok(html.indexOf('Question?') < html.indexOf('Answer.'))
+    assert.match(html, /data-alan="asistan-canli-not"/)
+    assert.match(html, /Written chat/)
+    // The status line, the idle hint and the colleague's name are the pack's sentences, and no Turkish sentence is in the page.
+    const bos = renderToStaticMarkup(React.createElement(AsistanGorunumu, { ...props, hazir }))
+    assert.ok(html.includes(t.sayfa.baslatIpucu) && bos.includes(t.sayfa.bos) && html.includes('Dr Name'))
+    assert.ok(!/[çğıöşüİ]/.test(html), 'the page carries no Turkish text')
+    // The typed chat, opened: a microphone for dictation and the pack's input hint.
+    const acik = renderToStaticMarkup(React.createElement(AsistanGorunumu, { ...props, hazir, onMikrofon: () => {}, yazili: { ...yazili, acik: true, mesajlar: [{ rol: 'doktor' as const, icerik: 'Hi', sira: 3 }] } }))
+    assert.ok(acik.includes(t.sayfa.yaziIpucu) && acik.includes(t.sayfa.gonder))
+    // Same view as Türkiye: the kit's page imports the shared views, not a copy of them.
+    const kaynak = readFileSync(join(KOK, 'components/ulke/uygulama/AsistanSayfasi.tsx'), 'utf8')
+    assert.match(kaynak, /components\/asistan\/AsistanSayfaGorunumu/)
+    assert.match(kaynak, /components\/asistan\/YaziliSohbetGorunumu/)
     const sayfa = readFileSync(join(KOK, 'app/asistan/page.ulke.tsx'), 'utf8')
     assert.match(sayfa, /ekran="asistan"/)
-    const yazili = readFileSync(join(KOK, 'app/api/ulke/asistan-canli/yazili/route.ulke.ts'), 'utf8')
-    assert.match(yazili, /ozellikAcik\('cekirdekMuayene'\)[\s\S]*ulkeOturum[\s\S]*canliYaziliCevabi/)
-    assert.ok(!/searchParams/.test(yazili))
+    const yaziliRota = readFileSync(join(KOK, 'app/api/ulke/asistan-canli/yazili/route.ulke.ts'), 'utf8')
+    assert.match(yaziliRota, /ozellikAcik\('cekirdekMuayene'\)[\s\S]*ulkeOturum[\s\S]*canliYaziliCevabi/)
+    assert.ok(!/searchParams/.test(yaziliRota))
     // The shared screens: the page is a registered screen, the sidebar links to it, the home links to it.
     assert.match(readFileSync(join(KOK, 'components/ulke/uygulama/Kabuk.tsx'), 'utf8'), /baglanti\('asistan', YOL\.asistan/)
     assert.match(readFileSync(join(KOK, 'components/ulke/uygulama/AsistanCanli.tsx'), 'utf8'), /YOL\.asistan/)

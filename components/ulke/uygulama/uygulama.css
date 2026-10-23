@@ -770,49 +770,8 @@ textarea.uza-hatirlatma { min-height: 0; margin-top: 8px; }
   .uza-ust, .uza-nav, .uza-hesap, .uza-bitki, .uza-bitki-kutu, [data-yazdirma-gizle] { display: none !important; }
 }
 
-/* ───────── AU-CANLI-02 — the assistant page (/asistan): Türkiye's layout in the kit's colours ───────── */
-.uza-as { display: flex; flex-direction: column; min-height: calc(100dvh - 210px); border: 1px solid var(--uza-cizgi); border-radius: 16px; background: #faf6ee; overflow: hidden; }
-.uza-as-yan { display: none; }
-.uza-as-sohbet { flex: 1; display: flex; flex-direction: column; min-width: 0; min-height: 0; }
-.uza-as-ust { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-bottom: 1px solid var(--uza-cizgi); }
-.uza-as-geri { color: var(--uza-soluk); font-size: 26px; line-height: 1; padding: 4px 8px; text-decoration: none; }
-.uza-as-baslik { flex: 1; min-width: 0; }
-.uza-as-ad { font-size: 15px; font-weight: 600; color: var(--uza-murekkep); line-height: 1.35; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.uza-as-unvan { font-size: 12px; color: var(--uza-soluk); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.uza-as-avatar { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; border-radius: 50%; background: #fff; color: var(--uza-cam); border: 3px solid color-mix(in srgb, var(--uza-cam) 80%, transparent); font-weight: 700; }
-.uza-as-liste { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; min-height: 260px; max-height: 58dvh; }
-.uza-as-bos { margin-block: auto; display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; }
-.uza-as-ipucu { font-size: 12px; color: var(--uza-soluk); max-width: 280px; line-height: 1.6; text-align: center; }
-.uza-as-satir { display: flex; align-items: flex-end; gap: 8px; }
-.uza-as-satir[data-rol="siz"] { justify-content: flex-end; }
-.uza-as-satir .uza-as-avatar { border-width: 0; background: var(--uza-cam); color: #fff; }
-.uza-as-balon { max-width: 78%; padding: 10px 14px; font-size: 14px; line-height: 1.55; border-radius: 16px 16px 16px 3px; background: #fff; border: 1px solid var(--uza-cizgi); color: var(--uza-murekkep); overflow-wrap: anywhere; }
-.uza-as-satir[data-rol="siz"] .uza-as-balon { border-radius: 16px 16px 3px 16px; background: var(--uza-cam); border-color: var(--uza-cam); color: #fff; white-space: pre-wrap; }
-.uza-as-satir[data-gecici="evet"] .uza-as-balon { opacity: 0.8; }
-.uza-as-noktalar { display: flex; gap: 5px; align-items: center; padding: 12px 16px; }
-.uza-as-noktalar i { width: 6px; height: 6px; border-radius: 50%; background: var(--uza-soluk); animation: uza-as-zipla 1.2s ease-in-out infinite; }
-.uza-as-noktalar i:nth-child(2) { animation-delay: .2s; } .uza-as-noktalar i:nth-child(3) { animation-delay: .4s; }
-.uza-as-kontrol { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 14px 16px 16px; border-top: 1px solid var(--uza-cizgi); }
-.uza-as-durum { font-size: 13px; color: var(--uza-soluk); display: flex; align-items: center; gap: 8px; min-height: 18px; }
-.uza-as-nokta { width: 8px; height: 8px; border-radius: 50%; background: var(--uza-soluk); }
-.uza-as-nokta[data-durum="konusuyor"] { background: #10B981; } .uza-as-nokta[data-durum="dinliyor"] { background: #3B82F6; }
-.uza-as-hata { font-size: 13px; color: var(--uza-uyari); background: #FBEAE3; border: 1px solid color-mix(in srgb, var(--uza-uyari) 45%, transparent); padding: 10px 14px; border-radius: 10px; text-align: center; max-width: 360px; line-height: 1.5; }
-.uza-as-mik { width: 80px; height: 80px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; background: #F6F0E4; color: var(--uza-murekkep); border: 2px solid var(--uza-cizgi); transition: all .25s; }
-.uza-as-mik[data-aktif="evet"] { background: radial-gradient(circle, var(--uza-cam), color-mix(in srgb, var(--uza-cam) 55%, transparent)); color: #fff; border-color: var(--uza-cam); box-shadow: 0 0 32px color-mix(in srgb, var(--uza-cam) 35%, transparent); }
-.uza-as-mik:disabled { cursor: default; }
-.uza-as-donen { width: 26px; height: 26px; border-radius: 50%; border: 2.5px solid var(--uza-cizgi); border-top-color: var(--uza-altin); animation: uza-as-don .8s linear infinite; }
-.uza-as-dalga { transform-origin: center; transform-box: fill-box; animation: uza-as-dalga .7s ease-in-out infinite; }
-.uza-as-yazi { display: flex; gap: 8px; align-items: flex-end; padding: 0 16px 8px; }
-.uza-as-girdi { flex: 1; resize: none; min-height: 46px; max-height: 140px; padding: 11px 14px; border-radius: 12px; border: 1px solid var(--uza-cizgi); background: #fff; font: inherit; font-size: 15px; color: var(--uza-murekkep); }
-.uza-as-not { padding: 0 16px 14px; }
-@media (min-width: 768px) {
-  .uza-as { flex-direction: row; }
-  .uza-as-yan { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; width: 280px; flex-shrink: 0; padding: 24px; border-right: 1px solid var(--uza-cizgi); text-align: center; }
-  .uza-as-yan .uza-as-ad { font-size: 20px; font-weight: 700; white-space: normal; }
-  .uza-as-ust .uza-as-baslik { display: none; }
-  .uza-as-ust { justify-content: space-between; }
-  .uza-as-liste { max-height: none; }
-}
-@keyframes uza-as-zipla { 0%, 60%, 100% { transform: translateY(0); } 30% { transform: translateY(-5px); } }
-@keyframes uza-as-don { to { transform: rotate(360deg); } }
-@keyframes uza-as-dalga { 0%, 100% { transform: scaleY(.5); } 50% { transform: scaleY(1); } }
+/* ───────── AU-CANLI-02 / AU-DEPTH-PARITY-03 — the assistant page (/asistan) ─────────
+   The page itself is the shared view of Türkiye's page (components/asistan/AsistanSayfaGorunumu.tsx, inline styles);
+   this only gives it the height Türkiye's compact doctor chrome gives it, inside the kit's sidebar frame. */
+.uza-as-kok { height: calc(100dvh - 72px); min-height: 520px; overflow: hidden; background: var(--uza-krem); }
+@media (max-width: 899px) { .uza-as-kok { height: calc(100dvh - 190px); } }
