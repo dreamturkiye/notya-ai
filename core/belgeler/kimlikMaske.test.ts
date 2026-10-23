@@ -1,7 +1,7 @@
 // Synthetic OCR fixture only — no real patient data.
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { kimlikKutulari, type OcrSatir, type OcrKelime } from './kimlikMaske'
+import { kimlikKutulari, kimlikBulgulari, type OcrSatir, type OcrKelime } from './kimlikMaske'
 
 const W = 1000, H = 800
 function satir(y: number, ...parcalar: string[]): OcrSatir {
@@ -92,4 +92,20 @@ test('merging OCR passes drops duplicates and keeps new words', () => {
   const m = satirlariBirlestir(a, b)!
   assert.equal(m.flatMap((x) => x.kelimeler).length, 4)
   assert.equal(satirlariBirlestir(null, null), null)
+})
+
+test('unlabelled name line + ID/DOB/Exam Date header; noisy speckle words do not force the checkbox fallback', () => {
+  const ad = satir(10, 'Ece', 'Yıldırım')
+  const id = satir(32, 'ID:', '261021-01', 'DOB:', '12.03.1992', '(34y)')
+  const exam = satir(10, 'Exam', 'Date:', '21.10.2026')
+  exam.kelimeler.forEach((w) => { w.x0 += 400; w.x1 += 400 })
+  const gurultu = Array.from({ length: 40 }, (_, i) => satir(300 + i * 6, 'xq', 'zz')).map((s) => ({ kelimeler: s.kelimeler.map((w) => ({ ...w, conf: 20 })) }))
+  const r = kimlikKutulari([ad, id, exam, ...gurultu], { genislik: W, yukseklik: H, modalite: 'us' })
+  assert.equal(r.durum, 'ok')
+  assert.ok(kapsar(r.kutular, ad, 0) && kapsar(r.kutular, ad, 1) && kapsar(r.kutular, id, 1) && kapsar(r.kutular, id, 3))
+  const b = kimlikBulgulari([ad, id, exam])
+  assert.equal(b.ad, 'Ece Yıldırım')
+  assert.equal(b.protokol, '261021-01')
+  assert.equal(b.dogum, '12.03.1992')
+  assert.equal(b.muayeneTarihi, '21.10.2026')
 })
