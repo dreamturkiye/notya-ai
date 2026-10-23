@@ -74,7 +74,7 @@ export async function canliBaglantiCevabi(oturum: { user: User; supabase: Supaba
   // The agent is held to the pack's voice and the fixed delivery BEFORE the call starts.
   await motoruSabitle(durum.ajan, durum.sesId, anahtar)
   const adres = await imzaliAdresAl(durum.ajan, anahtar)
-  if (!adres) return cevap({ code: 'BASARISIZ' }, 502)
+  if (!adres) return cevap({ code: 'BASARISIZ', neden: 'signed-url' }, 502)
   const jeton = canliJetonuImzala({ hesapId: oturum.user.id, kod: paket.kod, rol })
   if (!jeton) return KOD.yok()
   return cevap({

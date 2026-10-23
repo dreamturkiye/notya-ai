@@ -13,6 +13,7 @@ import { ajanKimligi, ajanOrtamAdi, canliDurum } from './ajan'
 import { canliIstem } from './istem'
 import { canliJetonuDogrula, canliJetonuImzala, JETON_OMRU_MS, llmSirriGecerliMi } from './jeton'
 import { konusmaYap, SesAkisi } from './konusma'
+import { kisaAyrinti, hataYazisi } from './ayrinti'
 import { gecersizKilmaGerekli, gecersizKilmaGovdesi, motorKilidiGerekli, motorKilidiGovdesi, motoruSabitle, motorOnbelleginiSil } from './motorKilidi'
 import { sesMetni } from './okunus'
 import { modelMesajlari, vedaMi } from './sunucu'
@@ -187,6 +188,45 @@ describe('live assistant: per-call overrides (the dead-button cause)', () => {
     const y = canliIstem({ canli: CANLI, tamAd: KIMLIK.tamAd, kisaAd: KIMLIK.kisaAd, rolAdi: 'Cardiology', rol: 'cardiology', acilNumara: null, yazili: true })
     assert.match(y, /THIS TURN IS TYPED/)
     assert.ok(!/THIS TURN IS TYPED/.test(canliIstem({ canli: CANLI, tamAd: KIMLIK.tamAd, kisaAd: KIMLIK.kisaAd, rolAdi: 'Cardiology', rol: 'cardiology', acilNumara: null })))
+  })
+})
+
+describe('live assistant: why a call failed (AU-CANLI-03)', () => {
+  it('the call token switch (custom_llm_extra_body) is part of what the lock requires and writes', () => {
+    const sadece3 = { overrides: { conversation_config_override: { agent: { first_message: true, language: true }, tts: { voice_id: true } } } }
+    assert.equal(gecersizKilmaGerekli(sadece3), true)
+    assert.equal(gecersizKilmaGovdesi().platform_settings.overrides.custom_llm_extra_body, true)
+    assert.equal(gecersizKilmaGerekli(gecersizKilmaGovdesi().platform_settings), false)
+  })
+  it('a refused delivery write (400) falls back to the voice alone, and the log names the field, never the value', async () => {
+    motorOnbelleginiSil()
+    const govdeler: string[] = []
+    const gunluk: string[] = []
+    const eski = console.error
+    console.error = (m: unknown) => { gunluk.push(String(m)) }
+    try {
+      const sahte = (async (_u: string, o?: RequestInit) => {
+        if (!o?.method) return new Response(JSON.stringify({ conversation_config: { tts: { model_id: 'eleven_v3_conversational', voice_id: 'someOtherVoiceId12345' } }, platform_settings: gecersizKilmaGovdesi().platform_settings }), { status: 200 })
+        govdeler.push(String(o.body))
+        if (govdeler.length === 1) return new Response(JSON.stringify({ detail: [{ loc: ['body', 'conversation_config', 'tts', 'speed'], type: 'value_error', msg: 'secret prompt text', input: 'secret' }] }), { status: 400 })
+        return new Response('{}', { status: 200 })
+      }) as unknown as typeof fetch
+      const s = await motoruSabitle(AJAN_K, SES.sesler.kadin.id, 'key', sahte)
+      assert.equal(s.durum, 'tamam')
+      assert.equal(govdeler.length, 2)
+      assert.deepEqual(Object.keys(JSON.parse(govdeler[1]).conversation_config.tts).sort(), ['model_id', 'voice_id'])
+      const yazi = gunluk.join('\n')
+      assert.match(yazi, /body\.conversation_config\.tts\.speed\(value_error\)/)
+      assert.ok(!/secret/.test(yazi))
+    } finally { console.error = eski }
+    motorOnbelleginiSil()
+  })
+  it('the on-screen reason keeps the step and the provider text but never an address or a long id', () => {
+    const y = kisaAyrinti('call closed 1008', 'Override not allowed wss://api.elevenlabs.io/v1/convai/conversation?agent_id=agent_0301m5k5cq6vff3bhx44cthkx5sd&conversation_signature=abcdefghijklmnopqrstuvwxyz0123')
+    assert.match(y, /^call closed 1008: Override not allowed \[url\]$/)
+    assert.ok(y.length <= 90)
+    assert.equal(hataYazisi('The assistant could not connect.', 'start 502 BASARISIZ'), 'The assistant could not connect. (start 502 BASARISIZ)')
+    assert.equal(kisaAyrinti('setup', new Error('Failed to load the audioConcatProcessor worklet')), 'setup: Error: Failed to load the audioConcatProcessor worklet')
   })
 })
 

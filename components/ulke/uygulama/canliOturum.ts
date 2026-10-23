@@ -24,6 +24,7 @@ import { ulkeIstemciSupabase } from '@/lib/ulke/istemciSupabase'
 import { ulkeYolu } from '@/lib/ulke/yol'
 import { ekranCevabi, geciciyiOturt, saklanacak, saklidan, selamEkle, sesAsistani, sesKullanicisi, yeniCagri, type BalonSayaci, type SohbetBalon } from '@/lib/ulke/asistan/balonlar'
 import type { UygulamaMetni } from '@/lib/ulke/arayuz'
+import { hataYazisi, kisaAyrinti } from '@/lib/ulke/asistan/ayrinti'
 import type { Api } from './Kabuk'
 
 /** `sessiz` = the written chat was used while the voice was live: the call ended, the page stays; the microphone starts a new one (Türkiye's "sessiz"). */
@@ -161,21 +162,25 @@ export function useCanliOturum({ t, api, dil }: { t: Metin | undefined; api: Api
       let baglandi = false
       let baglanmaAni = 0 // when the call opened; what the assistant says first, before the doctor has spoken, is the greeting
       let kullaniciKonustu = false
-      const basarisiz = (yenidenDene: boolean) => {
+      const basarisiz = (yenidenDene: boolean, ayrinti: string) => {
         if (bitti || !gecerli()) return
         bitti = true
         const c = sohbet.current
         sohbet.current = null
         if (c) void c.endSession().catch(() => {})
         if (yenidenDene && ovr && !baglandi) { void dene(false); return }
-        setHata(t.hata); setDurum('hata')
+        setHata(hataYazisi(t.hata, ayrinti)); setDurum('hata')
       }
       try {
         const r = await api('/api/ulke/asistan-canli', { method: 'POST' })
         if (!gecerli()) return
         const j = r.j as { signed_url?: string; voice_id?: string; first_message?: string; notya_jeton?: string; ekran_araci?: string }
         if (r.status === 429) { setHata(t.limit); setDurum('hata'); return }
-        if (!r.ok || !j.signed_url || !j.notya_jeton || !j.voice_id) { setHata(t.hata); setDurum('hata'); return }
+        if (!r.ok || !j.signed_url || !j.notya_jeton || !j.voice_id) {
+          // Which part of the opening answer was missing is the whole diagnosis (a 502 = the provider gave no address, a 404 = not available here).
+          const eksik = !j.signed_url ? 'no address' : !j.notya_jeton ? 'no token' : !j.voice_id ? 'no voice' : ''
+          setHata(hataYazisi(t.hata, kisaAyrinti(`start ${r.status}`, [(r.j as { code?: unknown }).code, eksik].filter((x) => typeof x === 'string' && x).join(' ')))); setDurum('hata'); return
+        }
         const aracAdi = j.ekran_araci || 'show_on_screen'
         const baglanti = await Conversation.startSession({
           signedUrl: j.signed_url,
@@ -190,12 +195,17 @@ export function useCanliOturum({ t, api, dil }: { t: Metin | undefined; api: Api
             },
           },
           onConnect: () => { baglandi = true; baglanmaAni = Date.now(); if (!bitti && gecerli()) setDurum('dinliyor') },
-          onDisconnect: (d?: { reason?: string }) => {
+          onDisconnect: (d?: { reason?: string; message?: string; closeCode?: number; closeReason?: string }) => {
             if (bitti || !gecerli()) return
-            if (d?.reason === 'error') { basarisiz(true); return }
+            if (d?.reason === 'error') { basarisiz(true, kisaAyrinti(`call closed ${d.closeCode ?? ''}`.trim(), d.closeReason || d.message)); return }
             bitti = true; sohbet.current = null; setBalonlar((b) => geciciyiOturt(b)); setDurum((x) => (x === 'hata' ? x : 'bosta'))
           },
-          onError: () => basarisiz(true),
+          // A provider error BEFORE the call is up ends the attempt; one in the middle of a call (a screen-tool hiccup, a model
+          // error on one turn) is shown but does not hang the call up — the provider closes the socket itself when it is fatal.
+          onError: (m?: string) => {
+            if (baglandi && !bitti && gecerli()) { setHata(hataYazisi(t.hata, kisaAyrinti('call', m))); return }
+            basarisiz(true, kisaAyrinti('call', m))
+          },
           onMessage: ({ message, role, event_id }: { message: string; role: string; event_id?: number }) => {
             if (bitti || !gecerli()) return
             const olay = typeof event_id === 'number' ? event_id : undefined
@@ -207,8 +217,9 @@ export function useCanliOturum({ t, api, dil }: { t: Metin | undefined; api: Api
         })
         if (bitti || !gecerli()) { try { await baglanti.endSession() } catch { /* gone */ } return }
         sohbet.current = baglanti
-      } catch {
-        basarisiz(true)
+      } catch (e) {
+        // startSession rejects with the step that failed (socket, worklet, microphone): its message is the diagnosis.
+        basarisiz(true, kisaAyrinti('setup', e))
       }
     }
     await dene(true)

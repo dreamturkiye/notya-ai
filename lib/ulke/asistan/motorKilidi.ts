@@ -55,8 +55,11 @@ export function motorKilidiGovdesi(sesId: string, gorunen?: MotorGorunen | null)
   }
 }
 
+/** The smallest write that holds the pack's voice and the fixed model (fallback when the full delivery write is refused). */
+export const motorKilidiSesGovdesi = (sesId: string) => ({ conversation_config: { tts: { model_id: SES_MODEL_ID, voice_id: sesId } } })
+
 const ADRES = 'https://api.elevenlabs.io/v1/convai/agents'
-const ZAMAN_MS = 2_500
+const ZAMAN_MS = 4_000
 const ONBELLEK_MS = 60_000
 const onbellek = new Map<string, number>()
 
@@ -70,18 +73,49 @@ export function motorOnbelleginiSil(): void {
  * These are the three switches the call needs.
  */
 export type GecersizKilmaGorunen = {
-  overrides?: { conversation_config_override?: { agent?: { first_message?: boolean; language?: boolean }; tts?: { voice_id?: boolean } } }
+  overrides?: {
+    conversation_config_override?: { agent?: { first_message?: boolean; language?: boolean }; tts?: { voice_id?: boolean } }
+    custom_llm_extra_body?: boolean
+  }
 }
 
-/** true = the agent refuses at least one of the three per-call values. */
+/**
+ * true = the agent refuses at least one of the per-call values. `custom_llm_extra_body` (a sibling of the config overrides in the
+ * provider's schema, default false) is the call token the screen sends: with it off, a call with a token can be refused at once.
+ */
 export function gecersizKilmaGerekli(platform: GecersizKilmaGorunen | null | undefined): boolean {
   const o = platform?.overrides?.conversation_config_override
-  return !(o?.agent?.first_message === true && o?.agent?.language === true && o?.tts?.voice_id === true)
+  return !(o?.agent?.first_message === true && o?.agent?.language === true && o?.tts?.voice_id === true && platform?.overrides?.custom_llm_extra_body === true)
 }
 
 export const gecersizKilmaGovdesi = () => ({
-  platform_settings: { overrides: { conversation_config_override: { agent: { first_message: true, language: true }, tts: { voice_id: true } } } },
+  platform_settings: {
+    overrides: {
+      conversation_config_override: { agent: { first_message: true, language: true }, tts: { voice_id: true } },
+      custom_llm_extra_body: true,
+    },
+  },
 })
+
+/**
+ * What the provider refused, by KIND only: the field paths and error types of a 4xx answer (never the input values or the message,
+ * which may quote the prompt). Lets the log say WHICH field a 400 was about.
+ */
+export async function reddedilenAlanlar(r: Response): Promise<string> {
+  try {
+    const v = (await r.clone().json()) as { detail?: unknown }
+    const d = v?.detail
+    if (Array.isArray(d)) {
+      return d.slice(0, 6).map((e) => {
+        const x = e as { loc?: unknown; type?: unknown }
+        const yol = Array.isArray(x.loc) ? x.loc.filter((k) => typeof k === 'string' || typeof k === 'number').join('.') : ''
+        return `${yol || '?'}${typeof x.type === 'string' ? `(${x.type})` : ''}`
+      }).join(', ').slice(0, 300)
+    }
+    const st = (d as { status?: unknown } | undefined)?.status
+    return typeof st === 'string' ? st.slice(0, 60) : ''
+  } catch { return '' }
+}
 
 export type MotorSonuc = { durum: 'tamam' | 'onbellek' | 'okunamadi' | 'yazilamadi' | 'yok'; degisti: boolean }
 
@@ -104,12 +138,21 @@ export async function motoruSabitle(ajan: string, sesId: string, anahtar: string
       console.error('[ulke/asistan] agent does not allow the per-call greeting, language and voice; allowing them')
       const izin = await fetchFn(`${ADRES}/${ajan}`, { method: 'PATCH', headers: baslik, body: JSON.stringify(gecersizKilmaGovdesi()), signal: kontrol.signal })
       if (izin.ok) degisti = true
-      else console.error(`[ulke/asistan] agent override write answered ${izin.status}`)
+      else console.error(`[ulke/asistan] agent override write answered ${izin.status} ${await reddedilenAlanlar(izin)}`.trim())
     }
     if (!motorKilidiGerekli(tts, sesId)) { onbellek.set(`${ajan}:${sesId}`, simdi); return { durum: 'tamam', degisti } }
     console.error('[ulke/asistan] agent drifted from the pack voice or delivery; writing it back')
-    const yama = await fetchFn(`${ADRES}/${ajan}`, { method: 'PATCH', headers: baslik, body: JSON.stringify(motorKilidiGovdesi(sesId, tts)), signal: kontrol.signal })
-    if (!yama.ok) { console.error(`[ulke/asistan] agent write answered ${yama.status}`); return { durum: 'yazilamadi', degisti } }
+    let yama = await fetchFn(`${ADRES}/${ajan}`, { method: 'PATCH', headers: baslik, body: JSON.stringify(motorKilidiGovdesi(sesId, tts)), signal: kontrol.signal })
+    if (!yama.ok) {
+      console.error(`[ulke/asistan] agent write answered ${yama.status} ${await reddedilenAlanlar(yama)}`.trim())
+      // The provider refused the full delivery write (it has refused fields of this object before). The VOICE is the part the
+      // pack must hold: write that alone, so one refused delivery field never leaves the voice unlocked.
+      if (yama.status === 400 || yama.status === 422) {
+        yama = await fetchFn(`${ADRES}/${ajan}`, { method: 'PATCH', headers: baslik, body: JSON.stringify(motorKilidiSesGovdesi(sesId)), signal: kontrol.signal })
+        if (!yama.ok) console.error(`[ulke/asistan] agent voice-only write answered ${yama.status} ${await reddedilenAlanlar(yama)}`.trim())
+      }
+      if (!yama.ok) return { durum: 'yazilamadi', degisti }
+    }
     onbellek.set(`${ajan}:${sesId}`, simdi)
     return { durum: 'tamam', degisti: true }
   } catch (e) {
