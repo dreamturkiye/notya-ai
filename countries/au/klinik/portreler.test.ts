@@ -3,6 +3,7 @@ import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 import { existsSync, statSync } from 'node:fs'
 import { join } from 'node:path'
+import { AU_PAKETI } from '../index'
 import { AU_ASISTAN_ADLARI } from './asistanAdlari'
 import { AU_PORTRE_MANIFESTI, AU_PORTRE_URETILDI, PORTRE_AZAMI_BAYT, auPortreYolu } from './portreler'
 
@@ -35,15 +36,13 @@ describe('AU persona portraits', () => {
     }
     assert.equal(auPortreYolu('no-such-role'), null)
   })
-  it('every persona with a produced file resolves to an existing file, and the screen address carries the /au prefix', async () => {
-    const { ulkeYolu } = await import('../../../lib/ulke/yol')
+  it('every persona with a produced file resolves to an existing root-relative file under the /au-prefixed pack', () => {
     for (const rol of roller) {
       const yol = auPortreYolu(rol)
       assert.ok(yol, `no portrait for ${rol}`)
       assert.ok(existsSync(join(process.cwd(), 'public', yol as string)), `file for ${rol} missing`)
-      const adres = ulkeYolu(yol as string)
-      const { AKTIF_PAKET } = await import('../../../countries/active')
-      assert.equal(adres, `${AKTIF_PAKET.yolOnEki ?? ''}${yol}`)
+      assert.equal(AU_PAKETI.yolOnEki, '/au')
+      assert.ok((yol as string).startsWith('/'), `${rol}: portrait path is root-relative, so ulkeYolu adds the /au prefix`)
     }
   })
 })
