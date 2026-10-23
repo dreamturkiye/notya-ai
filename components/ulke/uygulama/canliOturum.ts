@@ -32,7 +32,7 @@ export type CanliDurumu = 'bosta' | 'baglaniyor' | 'dinliyor' | 'konusuyor' | 'h
 /** A line of the written chat (Türkiye: YaziliMesaj, without patient cards — a country's assistant has no patient file). */
 export type YaziliMesaj = SakliYaziliMesaj
 export type Metin = NonNullable<UygulamaMetni['asistanCanli']>
-export type Hazir = { ad: string; kisaAd: string; cinsiyet: 'erkek' | 'kadin' | null }
+export type Hazir = { ad: string; kisaAd: string; cinsiyet: 'erkek' | 'kadin' | null; portre?: string | null }
 
 /** The two worklet files live under the country's path prefix (public/ses/). */
 export const CALAR = {
@@ -62,7 +62,7 @@ interface Tanima {
   onresult: ((e: TanimaOlayi) => void) | null; onend: (() => void) | null; onerror: (() => void) | null
   start: () => void; stop: () => void
 }
-type DurumCevabi = { hazir?: boolean; ad?: string; kisaAd?: string; cinsiyet?: string }
+type DurumCevabi = { hazir?: boolean; ad?: string; kisaAd?: string; cinsiyet?: string; portre?: string | null }
 
 export function useCanliOturum({ t, api, dil }: { t: Metin | undefined; api: Api | undefined; /** The account's language: the language of the browser's dictation (en-AU …). */ dil?: string }) {
   /** undefined = not asked yet · null = not available (draw nothing / say so) · object = available. */
@@ -111,7 +111,7 @@ export function useCanliOturum({ t, api, dil }: { t: Metin | undefined; api: Api
         const j = r.j as DurumCevabi
         if (iptal) return
         if (r.ok && j.hazir === true && typeof j.ad === 'string' && j.ad) {
-          setHazir({ ad: j.ad, kisaAd: typeof j.kisaAd === 'string' && j.kisaAd ? j.kisaAd : j.ad, cinsiyet: j.cinsiyet === 'erkek' || j.cinsiyet === 'kadin' ? j.cinsiyet : null })
+          setHazir({ ad: j.ad, kisaAd: typeof j.kisaAd === 'string' && j.kisaAd ? j.kisaAd : j.ad, cinsiyet: j.cinsiyet === 'erkek' || j.cinsiyet === 'kadin' ? j.cinsiyet : null, portre: typeof j.portre === 'string' && j.portre.startsWith('/') ? j.portre : null })
         } else setHazir(null)
       } catch { if (!iptal) setHazir(null) }
     })()

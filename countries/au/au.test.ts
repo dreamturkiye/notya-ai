@@ -390,7 +390,7 @@ describe('au: its own role list — the Medical Board\'s wording, a split, one r
     assert.match(belgeler, />Documents</)
     assert.match(belgeler, /data-alan="foto-arsivi"/)
     const rolsuz = renderToStaticMarkup(React.createElement(BugunGorunumu, { m: AU_ARAYUZ.metinler[D]!, ad: 'QA', muayeneler: [], hata: false, rol: null }))
-    assert.match(rolsuz, /class="uza-ekran-disi"[^>]*>\s*<span[^>]*data-alan="asistan-ad"/)
+    assert.match(rolsuz, /class="uza-ekran-disi"[^>]*>\s*(<span[^>]*data-alan="asistan-portre"[\s\S]*?<\/span>)?<span[^>]*data-alan="asistan-ad"/)
     const nav = renderToStaticMarkup(React.createElement(Cerceve, { dil: D, m: AU_ARAYUZ.metinler[D]!, ad: 'QA', aktif: 'bugun', cikis: () => {}, children: null }))
     assert.match(nav, new RegExp(`href="${YOL.asistan}"`))
     assert.match(nav, /Ask the assistant/)

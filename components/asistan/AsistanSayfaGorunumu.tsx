@@ -14,6 +14,7 @@
  * It holds no session and calls no API; the session is whoever renders it (Türkiye: AsistanOturumContext, a country: its
  * own hook). Its markup for Türkiye is pinned byte for byte by lib/asistan/asistanSayfa.test.ts.
  */
+import PersonaFoto from './PersonaFoto'
 import React, { useEffect, useRef, useState } from 'react'
 import HafifMarkdown from '@/components/asistan/HafifMarkdown'
 import { CHROME_RENK, CHROME_FONT } from '@/lib/doktor/chromeTheme'
@@ -97,9 +98,7 @@ export default function AsistanSayfaGorunumu({
 
       {yanKolon && (
         <div style={{ width: "320px", flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", borderRight: `1px solid ${CHROME_RENK.border}`, background: "#faf6ee", padding: "40px 28px", gap: "20px" }}>
-          {persona.foto
-            ? <img src={persona.foto} alt={persona.ad} style={{ width: "200px", height: "200px", borderRadius: "50%", objectFit: "cover", objectPosition: "center top", border: "3px solid " + persona.renk + "CC", boxShadow: "0 0 60px " + persona.renk + "33" }} />
-            : <div aria-hidden="true" style={{ width: "200px", height: "200px", borderRadius: "50%", background: "#faf6ee", border: "3px solid " + persona.renk + "CC", boxShadow: "0 0 60px " + persona.renk + "33", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "52px", fontWeight: 700, color: persona.renk }}>{persona.kisaAd.slice(0, 2).toUpperCase()}</div>}
+          <div aria-hidden={persona.foto ? undefined : "true"} style={{ width: "200px", height: "200px", borderRadius: "50%", background: "#faf6ee", overflow: "hidden", border: "3px solid " + persona.renk + "CC", boxShadow: "0 0 60px " + persona.renk + "33", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "52px", fontWeight: 700, color: persona.renk }}><PersonaFoto src={persona.foto} ad={persona.ad} harf={persona.kisaAd.slice(0, 2).toUpperCase()} /></div>
           <div style={{ textAlign: "center" }}>
             <div style={{ fontSize: "20px", fontWeight: 700, color: CHROME_RENK.ink, marginBottom: "6px" }}>{persona.etiket}</div>
             <div style={{ fontSize: "13px", color: CHROME_RENK.muted, marginBottom: "16px" }}>{persona.unvan}</div>
@@ -154,9 +153,7 @@ export default function AsistanSayfaGorunumu({
                           display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
                           fontSize: '30px', fontWeight: 700, color: persona.renk,
                           boxShadow: '0 0 48px ' + persona.renk + '33' }}>
-              {persona.foto
-                ? <img src={persona.foto} alt={persona.ad} style={{width:'100%',height:'100%',objectFit:'cover',objectPosition:'center top',borderRadius:'50%'}}/>
-                : persona.kisaAd.slice(0, 2).toUpperCase()}
+              <PersonaFoto src={persona.foto} ad={persona.ad} harf={persona.kisaAd.slice(0, 2).toUpperCase()} />
             </div>
             <div style={{ fontSize: "16px", fontWeight: "600", color: CHROME_RENK.ink }}>{persona.etiket}</div>
             <div style={{ fontSize: "13px", color: CHROME_RENK.muted }}>{persona.unvan}</div>

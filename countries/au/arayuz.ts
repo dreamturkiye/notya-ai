@@ -11,6 +11,7 @@ import { enArayuz } from '../_dil/en/arayuz'
 import { AU_KONSULTASYON_METNI } from './araclar/konsultasyonMetinleri'
 import { AU_GIRDI } from './ayarlar'
 import { auAsistanAdi } from './klinik/asistanAdlari'
+import { auPortreYolu } from './klinik/portreler'
 import { auAsistanKaynaklari } from './asistan/kaynaklar'
 import { AU_SES } from './ses'
 import { AU_YASAL_NOTLARI } from './uzanti/acilis'
@@ -39,6 +40,7 @@ export function auAsistanKimligi(rol: unknown): AsistanKimligi | null {
     kisaAd: ad.kisaAd,
     makineTuretimi: false,
     cinsiyet: ad.cinsiyet,
+    ...(auPortreYolu(rol) ? { portre: auPortreYolu(rol) as string } : {}),
     ...(kaynaklar ? { kaynaklar } : {}),
   }
 }

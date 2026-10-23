@@ -94,7 +94,7 @@ export function AsistanGorunumu({ t, hazir, unvan, durum, balonlar, hata, yazili
   return (
     <section className="uza-as-kok" data-alan="asistan-sayfa" data-durum={durum}>
       <AsistanSayfaGorunumu
-        persona={{ ad: hazir.ad, etiket: hazir.ad, unvan, renk: RENK, kisaAd: hazir.kisaAd }}
+        persona={{ ad: hazir.ad, etiket: hazir.ad, unvan, renk: RENK, kisaAd: hazir.kisaAd, foto: hazir.portre ?? undefined }}
         durum={SES_DURUMU[durum]}
         aktif={aktif}
         mesajlar={balonlar.map((b) => ({ id: b.id, role: b.role, text: b.text }))}

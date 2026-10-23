@@ -7,7 +7,7 @@
  */
 import React, { useEffect, useState, type CSSProperties } from 'react'
 import { Cerceve, Hata, HAZIR, saatYaz, useUygulama, YOL, Yukleniyor } from './Kabuk'
-import { asistanAdi, asistanSatiri } from './Asistan'
+import { asistanAdi, asistanSatiri, AsistanKucukFoto } from './Asistan'
 import { CHROME_FONT, CHROME_RENK as R } from '@/lib/doktor/chromeRenk'
 import { hesapSaatDilimi } from '@/lib/ulke/arayuz/bicim'
 import { OkunmamisMesajlarKarti } from './HastaMesajlari'
@@ -140,7 +140,7 @@ export function BugunGorunumu({ m, ad, muayeneler, hata, rol, randevular, mesajl
         </div>
         {/* The Turkish home names the assistant in one line under the title ("Ayşe: …"); no card, no source lists, no voice buttons. The nav button and "Your assistant" open the assistant page. */}
         <div id="asistan" className={satir ? undefined : 'uza-ekran-disi'} style={S({ marginTop: 12, fontSize: 15, color: R.ink, lineHeight: 1.55, maxWidth: 720 })}>
-          <span data-alan="asistan-ad" style={S({ color: R.pine, fontWeight: 700 })}>{asistan}</span>
+          <AsistanKucukFoto m={m} rol={rol} /><span data-alan="asistan-ad" style={S({ color: R.pine, fontWeight: 700 })}>{asistan}</span>
           {satir ? <span data-alan="asistan-satir">{`: ${satir}`}</span> : null}
         </div>
       </section>

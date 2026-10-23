@@ -1,5 +1,15 @@
 # OPEN COMMITMENTS — Notya AI
 
+## AU-PORTRE-01 — persona portraits for every country (Claude, 2026-10-23, `release/au`)
+
+Kaan's order: the Australian build shows Australian-looking doctor portraits matched to each persona's name and gender for all 44 roles (30 core + 10 Özel Branşlar as offered in AU), as Türkiye does (`photo: '/doctors/dr_*.jpg'`, 1024x1024, round crop). Built in this change: shared renderer `components/asistan/PersonaFoto.tsx` (used by Türkiye's `app/asistan/page.tsx` and the kit's assistant page, home line and card; falls back to initials), `AsistanKimligi.portre`, `/asistan` status endpoint returns `portre`, AU manifest with one precise prompt per persona (`countries/au/klinik/portreler.ts`), pipeline script `scripts/au-portreler-uret.mjs`, test `portreler.test.ts`. **No image could be produced from this sandbox** (Canva generate-image answered `quota_exceeded`; no other generator reachable), so 0/44 files exist and screens show initials. Nothing is faked.
+
+| ID | Date | Status | What | Owner / waits on |
+|---|---|---|---|---|
+| AU-PORTRE-01a | 2026-10-23 | OPEN | Produce the 44 AU portraits: `npx tsx scripts/au-portreler-uret.mjs --liste`, generate each at 1:1 with an image generator (Canva credits or another), put sources in a folder, run `--isle <dir>` (1024x1024 WebP <=120 KB), add the printed roles to `AU_PORTRE_URETILDI`, run `npm run test:ulke`. | Claude, once an image generator with credit is available (Kaan: Canva quota or another tool) |
+| AU-PORTRE-01b | 2026-10-23 | OPEN | Same for us, gb, ca, nz, uz: each pack needs `klinik/portreler.ts` (manifest with country-appropriate faces, e.g. US/CA diverse, GB/NZ local workforce, UZ Uzbek faces and modest attire) feeding `AsistanKimligi.portre`; the shared components already render it. Files under `public/portreler/<country>/`. | Claude |
+| AU-PORTRE-01c | 2026-10-23 | OPEN | Floating panel / chooser: Türkiye's chooser and floating panel already show `persona.photo` (now through `PersonaFoto` on `/asistan`); the kit has no chooser or floating panel yet (one assistant per account role), so nothing further to wire until it exists. | Claude |
+
 ## AU-KITAP-01 — per-role reference books (Claude, 2026-10-22, `release/au`)
 
 Kaan's order: every Australian role has its OWN Australian reference books, as Türkiye's specialties do. Türkiye's mechanism (read, not assumed): the national authority list plus the international texts are DATA on each persona (`lib/asistan/turkishSpecialtyRefs.ts`, `specialistsCatalog.ts`, `lib/klinik/klinikTurkishRefs.ts`) and are used in the assistant's SYSTEM PROMPT (`personaEngine.ts`, national binding, international depth only); they are shown on NO doctor screen. Australia now matches: `countries/au/asistan/kaynaklar.ts` (restored from `03493a8^`, then rebuilt) rides on `AsistanKimligi.kaynaklar`; `auAsistanKaynakBlogu` is the prompt-block counterpart (not called yet: the text/voice assistant exists for Türkiye only, and the note instructions deliberately name no source). Home page unchanged (no card).

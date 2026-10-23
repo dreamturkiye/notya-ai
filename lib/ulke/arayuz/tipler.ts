@@ -62,6 +62,8 @@ export type AsistanKimligi = {
   kaynaklar?: AsistanKaynaklari
   /** AU-CANLI-01: the persona's gender — decides which of the pack's two voices speaks for it (`erkek` / `kadin`). */
   cinsiyet?: 'erkek' | 'kadin'
+  /** AU-PORTRE-01: root-relative URL of this persona's portrait. Absent = no portrait produced yet: screens show initials. */
+  portre?: string
 }
 
 /** One field a note can have beside the four sections: which section it sits under, and its label in every form. */

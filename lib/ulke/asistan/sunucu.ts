@@ -58,7 +58,7 @@ export async function canliDurumCevabi(oturum: { user: User; supabase: SupabaseC
   const rol = await hekimRolunuOku(oturum.supabase, oturum.user.id)
   const { durum, kimlik } = durumOku(rol)
   if (!durum.hazir || !kimlik) return cevap({ hazir: false })
-  return cevap({ hazir: true, ad: kimlik.tamAd, kisaAd: kimlik.kisaAd, cinsiyet: durum.cinsiyet })
+  return cevap({ hazir: true, ad: kimlik.tamAd, kisaAd: kimlik.kisaAd, cinsiyet: durum.cinsiyet, portre: kimlik.portre ?? null })
 }
 
 export async function canliBaglantiCevabi(oturum: { user: User; supabase: SupabaseClient }): Promise<Response> {
