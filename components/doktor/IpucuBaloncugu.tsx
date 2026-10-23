@@ -13,7 +13,7 @@
  * Kalıcılık v1: localStorage (lib/doktor/ipucu/ipucuDurumu.ts — oradaki başlık yorumuna bakın).
  */
 
-import React, { useCallback, useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { CHROME_FONT, CHROME_RENK } from '@/lib/doktor/chromeTheme'
 import { IPUCLARI, type IpucuBolumu } from '@/lib/doktor/ipucu/ipuclari'
 import {
@@ -38,6 +38,7 @@ export default function IpucuBaloncugu({
   const [acik, setAcik] = useState(false)
   const [etkin, setEtkin] = useState(true)
   const kokRef = useRef<HTMLSpanElement | null>(null)
+  const balonRef = useRef<HTMLDivElement | null>(null)
 
   // Global anahtar: ilk okumada ve Ayarlar'dan değiştirildiğinde.
   useEffect(() => {
@@ -59,6 +60,25 @@ export default function IpucuBaloncugu({
   }, [bolum, otomatik])
 
   const kapat = useCallback(() => setAcik(false), [])
+
+  // Balon hiçbir zaman ekranın dışına taşmasın (tetikleyici sağ kenardaysa "Anladım" görünmez kalıyordu): açılınca ölç, yatayda içeri it.
+  useLayoutEffect(() => {
+    const el = balonRef.current
+    if (!acik || !el) return
+    const yerlestir = () => {
+      el.style.transform = ''
+      if (window.innerWidth <= 480) return // dar ekranda CSS alta sabitliyor
+      const r = el.getBoundingClientRect()
+      const kenar = 12
+      let dx = 0
+      if (r.right > window.innerWidth - kenar) dx = window.innerWidth - kenar - r.right
+      if (r.left + dx < kenar) dx = kenar - r.left
+      if (dx) el.style.transform = `translateX(${Math.round(dx)}px)`
+    }
+    yerlestir()
+    window.addEventListener('resize', yerlestir)
+    return () => window.removeEventListener('resize', yerlestir)
+  }, [acik])
 
   // Dışarı tıklama + Escape — yalnız açıkken dinle.
   useEffect(() => {
@@ -129,6 +149,7 @@ export default function IpucuBaloncugu({
 
       {acik && (
         <div
+          ref={balonRef}
           className="notya-ipucu-balon"
           role="dialog"
           aria-label={`${icerik.baslik} ipucu`}
