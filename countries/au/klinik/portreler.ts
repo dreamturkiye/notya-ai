@@ -23,7 +23,9 @@ export const PORTRE_BOYUT = 1024
 export const PORTRE_AZAMI_BAYT = 120 * 1024
 
 /** Roles whose portrait file has been produced and committed. EMPTY until images exist: no image generator was reachable. */
-export const AU_PORTRE_URETILDI: ReadonlySet<string> = new Set<string>([])
+export const AU_PORTRE_URETILDI: ReadonlySet<string> = new Set<string>([
+  'aesthetic-medicine', 'aesthetic-surgery', 'anaesthesia', 'audiology', 'cardio-thoracic-surgery', 'cardiology', 'clinical-psychology', 'dermatology', 'dietetics', 'emergency-medicine', 'endocrinology', 'family-medicine', 'gastroenterology', 'general-surgery', 'geriatric-medicine', 'haematology', 'immunology-and-allergy', 'infectious-diseases', 'internal-medicine', 'nephrology', 'neurology', 'neurosurgery', 'obstetrics-gynaecology', 'occupational-therapy', 'oncology', 'ophthalmology', 'orthopaedics', 'otolaryngology', 'paediatric-surgery', 'paediatrics', 'pain-medicine', 'physiotherapy', 'plastic-surgery', 'podiatry', 'psychiatry', 'radiation-oncology', 'radiology', 'rehabilitation-medicine', 'respiratory-medicine', 'rheumatology', 'speech-pathology', 'sports-medicine', 'urology', 'vascular-surgery',
+])
 
 type Gorunum = string
 /** Plausible Australian clinical workforce: varied heritage and age, one short descriptor each (no real person implied). */
