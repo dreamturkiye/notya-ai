@@ -262,7 +262,7 @@ export default function BelgeAnalizPage() {
         setDurum('hazir');
         return;
       }
-      const okMsg = adim === 'onayla' ? 'Rapor muayenenin Objektif bölümüne eklendi.' : 'Muayene onaylandı; plan revizyonu kaydedildi.';
+      const okMsg = adim === 'onayla' ? 'USG raporu muayenenin FM bölümüne eklendi.' : 'Muayene onaylandı; plan revizyonu kaydedildi.';
       setMesaj(okMsg);
       setOnayMesaj(okMsg);
       setPlanAcik(false);
@@ -282,7 +282,7 @@ export default function BelgeAnalizPage() {
   // Specialty deep-links (Deri/Göz) return to that chapter; default vault path → Belgeler.
   const geriTab = (searchParams?.get('geriTab') || (searchParams?.get('dermModality') ? 'deri' : null)) as HastaDosyaSekmeId | null;
   const geriHref = geriTab ? hastaDosyaHref(patientId, geriTab) : hastaBelgelerHref(patientId);
-  const geriLabel = geriTab === 'deri' ? '← Deri' : geriTab === 'goz' ? '← Göz' : geriTab === 'gebelik' ? '← Gebelik' : geriTab === 'dahiliye' ? '← Dahiliye' : geriTab === 'goruntuleme' ? '← Görüntüler' : '← Belgeler';
+  const geriLabel = geriTab === 'deri' ? '← Deri' : geriTab === 'goz' ? '← Göz' : geriTab === 'gebelik' ? '← Gebelik' : geriTab === 'dahiliye' ? '← Dahiliye' : geriTab === 'goruntuleme' ? '← Görüntüler' : '← Geri';
 
   return (
     <div style={toolsShell}>
@@ -293,8 +293,8 @@ export default function BelgeAnalizPage() {
           <div>
             <div style={{ ...toolsCard, marginBottom: 12 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8, marginBottom: 8 }}>
-                <div style={{ fontSize: 15, fontWeight: 800, color: CHROME_RENK.ink }}>{doc?.fileName || 'Belge'}</div>
                 <DoktorGeriLink href={geriHref}>{geriLabel}</DoktorGeriLink>
+                <div style={{ fontSize: 15, fontWeight: 800, color: CHROME_RENK.ink, flex: 1, textAlign: 'right' }}>{doc?.fileName || 'Belge'}</div>
               </div>
               <div style={etiket}>{personaAd} ile değerlendir · {kural.ad}</div>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
@@ -323,7 +323,7 @@ export default function BelgeAnalizPage() {
               </div>
               {modalite === 'eko' && (
                 <div style={{ marginTop: 8, fontSize: 12, color: CHROME_RENK.muted }}>
-                  Metin katmanı olan eko raporu PDF’i okunur. Taslak ölçümleri bölümler; uyumlu ileri darlığı düşük gradyanlı darlıktan ayırır ve raporda olmayan ölçümü listeler. Durağan kare ve sineden EF ölçülmez. Onay, son muayenenin Objektif bölümüne yazılır.
+                  Metin katmanı olan eko raporu PDF’i okunur. Taslak ölçümleri bölümler; uyumlu ileri darlığı düşük gradyanlı darlıktan ayırır ve raporda olmayan ölçümü listeler. Durağan kare ve sineden EF ölçülmez. Onay, son muayenenin Fizik Muayene (FM) bölümüne yazılır.
                 </div>
               )}
               {modalite === 'fundus' && (
@@ -373,7 +373,7 @@ export default function BelgeAnalizPage() {
             {!rapor && <div style={{ ...toolsCard, color: CHROME_RENK.muted, fontSize: 13 }}>
               <div style={{ fontWeight: 700, color: CHROME_RENK.ink, marginBottom: 6 }}>Henüz taslak yok</div>
               {modalite === 'eko'
-                ? <>Ekokardiyografi olarak tanındı. <b>{personaAd} ile ekoyu değerlendir</b>e basın. Onay, taslağı son muayenenin Objektif bölümüne yazar.</>
+                ? <>Ekokardiyografi olarak tanındı. <b>{personaAd} ile ekoyu değerlendir</b>e basın. Onay, taslağı son muayenenin Fizik Muayene (FM) bölümüne yazar.</>
                 : <>Solda modaliteyi seçin (röntgen için <b>Röntgen (akciğer grafisi)</b>) ve <b>{personaAd} ile değerlendir</b>e basın. Lab PDF ise <b>Laboratuvarı değerlendir</b> yolunu kullanın.</>}
             </div>}
             {rapor && analiz && (
@@ -421,15 +421,15 @@ export default function BelgeAnalizPage() {
                       onClick={() => void onayla('onayla')}
                       style={{ ...btn, opacity: onayKapali ? 0.45 : 1, cursor: onayKapali ? 'not-allowed' : 'pointer', flex: '1 1 200px' }}
                       disabled={onayKapali}
-                      title={taniHazir ? 'Tanıyı kaydeder ve son muayenenin Objektif bölümüne yazar' : 'Önce resmi tanı yazın veya öneriden seçin'}
+                      title={taniHazir ? 'Tanıyı kaydeder ve son muayenenin Fizik Muayene (FM) bölümüne yazar' : 'Önce resmi tanı yazın veya öneriden seçin'}
                     >
-                      {durum === 'onayliyor' ? 'Muayeneye ekleniyor…' : 'Onayla → Muayene Objektif'}
+                      {durum === 'onayliyor' ? 'Muayeneye ekleniyor…' : 'Onayla ve Muayene Notu FM’ye ekle'}
                     </button>
                     {(analiz.durum === 'onaylandi') && <button type="button" onClick={() => setPlanAcik(!planAcik)} style={btnGhost}>Plan düzenle</button>}
                   </div>
                   {onayMesaj && <div style={{ marginTop: 8, fontSize: 12, fontWeight: 700, color: /eklendi|kilitlendi|onaylandı/i.test(onayMesaj) ? CHROME_RENK.pine : '#a45b3e' }}>{onayMesaj}</div>}
                   {!taniHazir && analiz.durum !== 'onaylandi' && analiz.durum !== 'muayene_onaylandi' && (
-                    <div style={{ marginTop: 6, fontSize: 11, color: '#B4832F' }}>Onaylamak için yukarıdan “Resmi tanıya al” veya tanı yazın — tek tıkla hem kilitlenir hem Objektif’e eklenir.</div>
+                    <div style={{ marginTop: 6, fontSize: 11, color: '#B4832F' }}>Onaylamak için yukarıdan “Resmi tanıya al” veya tanı yazın — tek tıkla hem kilitlenir hem FM’ye eklenir.</div>
                   )}
                   {planAcik && analiz.durum === 'onaylandi' && (
                     <div style={{ marginTop: 8 }}>
@@ -439,8 +439,7 @@ export default function BelgeAnalizPage() {
                     </div>
                   )}
                   {analiz.durum === 'muayene_onaylandi' && <div style={{ marginTop: 6, fontSize: 12, color: CHROME_RENK.pine }}>Muayene onaylandı — rapor kilitli. {analiz.note_id && <a href={`/dashboard/doktor/notlar/${analiz.note_id}`} style={{ color: CHROME_RENK.pine }}>Notu aç →</a>}</div>}
-                  {analiz.durum === 'onaylandi' && analiz.note_id && <div style={{ marginTop: 6, fontSize: 12, color: CHROME_RENK.pine }}>Objektif&apos;e eklendi. <a href={`/dashboard/doktor/notlar/${analiz.note_id}`} style={{ color: CHROME_RENK.pine }}>Notu aç →</a> · <a href={hastaBelgelerHref(patientId)} style={{ color: CHROME_RENK.pine }}>← Belgeler</a></div>}
-                </div>
+                                  </div>
 
                 {kural.goruntuOkumaKoprusu && ['fundus', 'oct', 'dis_goz'].includes(analiz.modality_final) && analiz.durum !== 'kalite_dusuk' && (
                   <div style={{ ...toolsCard, marginBottom: 10, fontSize: 13, color: CHROME_RENK.ink }}>
