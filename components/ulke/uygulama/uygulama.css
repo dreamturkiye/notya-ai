@@ -773,5 +773,7 @@ textarea.uza-hatirlatma { min-height: 0; margin-top: 8px; }
 /* ───────── AU-CANLI-02 / AU-DEPTH-PARITY-03 — the assistant page (/asistan) ─────────
    The page itself is the shared view of Türkiye's page (components/asistan/AsistanSayfaGorunumu.tsx, inline styles);
    this only gives it the height Türkiye's compact doctor chrome gives it, inside the kit's sidebar frame. */
-.uza-as-kok { height: calc(100dvh - 72px); min-height: 520px; overflow: hidden; background: var(--uza-krem); }
-@media (max-width: 899px) { .uza-as-kok { height: calc(100dvh - 190px); } }
+.uza-as-kok { height: 100%; min-height: 520px; overflow: hidden; background: var(--uza-krem); }
+
+/* AU-LOOK-PARITY-01: the loading pulse of Türkiye's home (app/dashboard/doktor/page.tsx). */
+@keyframes nabizYg { 0%, 100% { opacity: 1 } 50% { opacity: 0.4 } }

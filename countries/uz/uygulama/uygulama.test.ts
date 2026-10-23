@@ -202,7 +202,7 @@ describe('Uzbekistan application: screens (first-login question, settings, home)
       assert.deepEqual(secenekler('yazi'), temel === 'uz' ? ['Latn', 'Cyrl'] : [])
       if (temel === 'uz') assert.ok(html.includes('>Lotin yozuvi</span>') && html.includes('>Кирилл ёзуви</span>'))
       // No way out of the question except answering it: no navigation.
-      assert.doesNotMatch(html, /class="uza-nav"/)
+      assert.doesNotMatch(html, /class="notya-yan"/)
       ekranTemiz(html, `/start (${f})`)
     })
 
@@ -211,7 +211,7 @@ describe('Uzbekistan application: screens (first-login question, settings, home)
       const html = cerceve(f, 'ayarlar', React.createElement(Ayarlar.AyarlarGorunumu, { m, d: { arayuz: temel, not: temel, yazi }, set: () => {}, gonder: () => {}, bekliyor: false, sonuc: 'tamam' }))
       for (const s of [m.ayarlar.baslik, m.ayarlar.arayuzDili, m.ayarlar.notDili, m.ayarlar.kaydet, m.ayarlar.kaydedildi, m.kabuk.bugun, m.kabuk.hastalar, m.kabuk.ayarlar, m.kabuk.cikis]) assert.ok(gorunurMetin(html).includes(s), s)
       assert.equal(gorunurMetin(html).includes(m.ayarlar.yazi), temel === 'uz', 'the script question is shown only while Uzbek is in use')
-      assert.match(html, /aria-current="page">[^<]+<\/a>/)
+      assert.match(html, /<a href="[^"]+" aria-current="page"/)
       ekranTemiz(html, `/settings (${f})`)
     })
 

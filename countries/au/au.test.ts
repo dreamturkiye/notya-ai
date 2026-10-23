@@ -379,8 +379,8 @@ describe('au: its own role list — the Medical Board\'s wording, a split, one r
     assert.match(html, new RegExp(`data-alan="asistan-ad"[^>]*>${AU_ASISTAN_ADLARI.cardiology.tamAd}<`))
     assert.match(html, /data-alan="asistan-satir">: Your senior colleague · Cardiology</)
     assert.doesNotMatch(html, /asistan-kart|asistan-yetki|asistan-kitap|data-ses=|Australian practice sources|Books named for this role/)
-    assert.match(html, /<a href="\/au\/patients"[^>]*>\s*<span[^>]*>Documents<\/span><\/a>/)
-    assert.match(html, /class="uza-duvar"[^>]*>\s*<span[^>]*>Reports<\/span>/)
+    assert.match(html, /<a href="\/au\/patients"[^>]*>(?:(?!<\/a>).)*<span[^>]*>Documents<\/span><\/a>/)
+    assert.match(html, /class="uza-duvar"[^>]*>(?:(?!<\/span>\s*<\/span>).)*<span[^>]*>Reports<\/span>/)
     const belgeler = renderToStaticMarkup(React.createElement(FotoArsivKarti, {
       u: { hesap: null, m: AU_ARAYUZ.metinler[D]!, dil: D, api: async () => ({ ok: false, status: 0, j: {} }), hesabiGuncelle: () => undefined, cikis: () => undefined },
       hastaId: 'qa-hasta',
@@ -392,7 +392,7 @@ describe('au: its own role list — the Medical Board\'s wording, a split, one r
     const rolsuz = renderToStaticMarkup(React.createElement(BugunGorunumu, { m: AU_ARAYUZ.metinler[D]!, ad: 'QA', muayeneler: [], hata: false, rol: null }))
     assert.match(rolsuz, /class="uza-ekran-disi"[^>]*>\s*<span[^>]*data-alan="asistan-ad"/)
     const nav = renderToStaticMarkup(React.createElement(Cerceve, { dil: D, m: AU_ARAYUZ.metinler[D]!, ad: 'QA', aktif: 'bugun', cikis: () => {}, children: null }))
-    assert.match(nav, new RegExp(`href="${YOL.bugun}#asistan"`))
+    assert.match(nav, new RegExp(`href="${YOL.asistan}"`))
     assert.match(nav, /Ask the assistant/)
     assert.match(nav, new RegExp(`href="${YOL.bugun}#mesajlar"`))
     assert.match(nav, /data-duvar="rapor"/)

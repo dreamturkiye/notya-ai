@@ -305,7 +305,7 @@ describe('tools — the screens', () => {
       }
       // the navigation carries the way in, marked as the current page
       const nav = cerceve(dil, null)
-      assert.match(nav, new RegExp(`<a href="${Kabuk.YOL.araclar}" class="uza-sekme" aria-current="page">`))
+      assert.match(nav, new RegExp(`<a href="${Kabuk.YOL.araclar}" aria-current="page"`))
       assert.ok(gorunurMetin(nav).includes(a.kabuk.araclar))
       // search: a title finds its tool; nonsense finds nothing and says so
       const biri = icerik.araclar[0]
@@ -467,7 +467,7 @@ describe('tools — the screens', () => {
     }
     assert.deepEqual([...new Set([...kayit.matchAll(/api\(([^,)]+)/g)].map((x) => x[1].trim().replace(/\$\{.*$/, '')))].sort(), ['ARAC_KAYDI_API', '`', '`/api/ulke/hasta?id='].sort())
     assert.match(kod('components/ulke/UlkeUygulamaSayfasi.tsx'), /\(ekran !== 'araclar' \|\| ozellikAcik\('araclar'\)\)/)
-    assert.match(kod('components/ulke/uygulama/Kabuk.tsx'), /ozellikAcik\('araclar'\) \? baglanti\('araclar', YOL\.araclar, araclarMetni\(dil\)\.kabuk\.araclar\) : null/)
+    assert.match(kod('components/ulke/uygulama/Kabuk.tsx'), /ozellikAcik\('araclar'\) \? \[oge\('araclar', araclarMetni\(dil\)\.kabuk\.araclar, 'araclar', YOL\.araclar\)\] : \[\]/)
     assert.match(kod('components/ulke/uygulama/Bugun.tsx'), /ozellikAcik\('araclar'\) \? /)
     assert.match(kod('app/tools/page.ulke.tsx'), /<UlkeUygulamaSayfasi ekran="araclar" \/>/)
   })

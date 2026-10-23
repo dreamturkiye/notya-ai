@@ -14,12 +14,12 @@ import { OkunmamisMesajlarKarti } from './HastaMesajlari'
 import { BekleyenKonsultasyonlarKarti } from './Konsultasyonlar'
 import { Istekler } from './PortalIstekleri'
 import { saatAraligi, DurumRozeti, muayeneBaslatilabilir, muayeneBaslatYolu, takvimYolu, type RandevuKaydi } from './randevuOrtak'
-import { araclarMetni, metninDili, randevuMetni, rolAdi, type UygulamaMetni } from '@/lib/ulke/arayuz'
+import { araclarMetni, asistanSesAdlari, metninDili, randevuMetni, rolAdi, type UygulamaMetni } from '@/lib/ulke/arayuz'
 import { ozellikAcik, ulkePaketi } from '@/lib/ulke/ulke'
 import { roller } from '@/lib/ulke/arayuz'
 import { Ipucu } from './Ipucu'
 import { IlkAdimlarKarti } from './IlkAdimlar'
-import { AsistanCanli } from './AsistanCanli'
+import { Ikon } from '@/components/doktor/AnaSayfaIkon'
 
 export type BugunMuayenesi = { seansId: string; notId: string | null; hastaId: string | null; hastaAdi: string; baslangic: string; durum: 'taslak' | 'onayli' | 'notsuz' }
 
@@ -90,21 +90,7 @@ const KART: CSSProperties = { background: R.paper, border: `1px solid ${R.border
 const ETIKET: CSSProperties = { fontSize: 14, fontWeight: 700, color: '#4A4030', margin: '0 0 12px', textTransform: 'uppercase', letterSpacing: '0.04em' }
 const ARAC: CSSProperties = { color: R.pine, fontSize: 13, fontWeight: 600 }
 
-/** Stroke icons for the seven quick-access tiles. Paths only — the words sit beside them. */
-function KaroIkon({ ad }: { ad: string }) {
-  const ortak = { width: 22, height: 22, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.7, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const }
-  switch (ad) {
-    case 'takvim': return <svg {...ortak}><rect x="3.5" y="5" width="17" height="15.5" rx="3" /><path d="M8 3v4M16 3v4M3.5 10h17" /></svg>
-    case 'asistan': return <svg {...ortak}><rect x="9.2" y="3.5" width="5.6" height="10" rx="2.8" /><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v2.5M9 20.5h6" /></svg>
-    case 'hastaEkle': return <svg {...ortak}><circle cx="10" cy="8.5" r="3.5" /><path d="M4 20c.6-3.4 3-5.5 6-5.5s5.4 2.1 6 5.5" /><path d="M18.5 8v5M16 10.5h5" /></svg>
-    case 'belge': return <svg {...ortak}><path d="M7 3.5h7l4 4V19a1.8 1.8 0 0 1-1.8 1.8H7A1.8 1.8 0 0 1 5.2 19V5.3A1.8 1.8 0 0 1 7 3.5Z" /><path d="M14 3.5V8h4.5" /></svg>
-    case 'inceleme': return <svg {...ortak}><rect x="4.5" y="4.5" width="15" height="16" rx="2.5" /><path d="m8.6 13.6 2.2 2.2 4.6-4.8" /></svg>
-    case 'araclar': return <svg {...ortak}><path d="M4 7.5h9M17 7.5h3M4 16.5h3M11 16.5h9" /><circle cx="15" cy="7.5" r="2.2" /><circle cx="9" cy="16.5" r="2.2" /></svg>
-    default: return <svg {...ortak}><path d="M4.5 20V4.5M4.5 20H20" /><path d="M8.5 16.5v-5M12.5 16.5V8M16.5 16.5v-8.5" /></svg>
-  }
-}
-
-export function BugunGorunumu({ m, ad, muayeneler, hata, rol, randevular, mesajlar, konsultasyon, istekler, ilkAdimlar, canli }: {
+export function BugunGorunumu({ m, ad, muayeneler, hata, rol, randevular, mesajlar, konsultasyon, istekler, ilkAdimlar }: {
   m: UygulamaMetni; ad: string; muayeneler: BugunMuayenesi[] | null; hata: boolean
   /** NOTYA-UZ-RANDEVU-01: today's appointments. Absent or null = not loaded, or the country has none: no list is drawn. */
   randevular?: RandevuKaydi[] | null
@@ -118,8 +104,6 @@ export function BugunGorunumu({ m, ad, muayeneler, hata, rol, randevular, mesajl
   istekler?: React.ReactNode
   /** YENI-DOKTOR-UX-2026-10: the first-run checklist of a new account. Draws nothing once set up. */
   ilkAdimlar?: React.ReactNode
-  /** AU-CANLI-01: the live spoken assistant. Draws nothing unless the server says it is available. */
-  canli?: React.ReactNode
 }) {
   const p = m.pano
   const tz = hesapSaatDilimi()
@@ -133,9 +117,11 @@ export function BugunGorunumu({ m, ad, muayeneler, hata, rol, randevular, mesajl
   const hastaSayi = new Set((muayeneler ?? []).map((v) => v.hastaId).filter(Boolean)).size
   const asistan = asistanAdi(m, rol)
   const satir = asistanSatiri(m, rol)
-  const karo = (href: string | null, text: string, not?: string) => {
+  const asistanYolu = asistanSesAdlari() ? YOL.asistan : null
+  const karo = (href: string | null, text: string, ikon: string, not?: string) => {
     const ic = (
       <>
+        <span style={S({ color: R.pine, display: 'inline-flex' })}><Ikon ad={ikon} /></span>
         <span style={S({ fontSize: 14, fontWeight: 600, lineHeight: 1.15 })}>{text}</span>
         {not ? <span style={S({ fontSize: 11, lineHeight: 1, color: R.muted })}>{not}</span> : null}
       </>
@@ -145,35 +131,27 @@ export function BugunGorunumu({ m, ad, muayeneler, hata, rol, randevular, mesajl
   }
   return (
     <div className="yg-ana" style={S({ display: 'flex', flexDirection: 'column', gap: 22 })}>
-      <section className="uza-karsilama">
-        <p className="uza-ust-yazi">{p ? `${gunSelami(p, tz)}, ${uzunGun(tz)}` : m.bugun.selam}</p>
+      <section data-alan="bugun-karsilama">
+        {/* Same kicker, title and assistant line as Türkiye's home (app/dashboard/doktor/page.tsx), the same inline style. */}
+        <div style={S({ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', fontSize: 18, color: '#6d6055', marginBottom: 2 })}>{p ? `${gunSelami(p, tz)}, ${uzunGun(tz)}` : m.bugun.selam}</div>
         <div style={S({ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' })}>
-          <h1 className="uza-h1" style={S({ margin: 0 })}>{m.bugun.selam}, {ad}</h1>
+          <h1 style={S({ fontFamily: CHROME_FONT.serif, fontWeight: 500, fontSize: 'clamp(28px, 8vw, 48px)', letterSpacing: '-0.03em', lineHeight: 1.05, color: '#2e251d', margin: 0 })}>{m.bugun.selam}, {ad}</h1>
           <Ipucu m={m} bolum="bugun" />
         </div>
-        {/* The Turkish home names the assistant in one line under the title ("Ayşe: …"); no card, no source lists, no voice buttons. The nav link "Ask the assistant" lands here. Voice preview lives in Settings. */}
+        {/* The Turkish home names the assistant in one line under the title ("Ayşe: …"); no card, no source lists, no voice buttons. The nav button and "Your assistant" open the assistant page. */}
         <div id="asistan" className={satir ? undefined : 'uza-ekran-disi'} style={S({ marginTop: 12, fontSize: 15, color: R.ink, lineHeight: 1.55, maxWidth: 720 })}>
           <span data-alan="asistan-ad" style={S({ color: R.pine, fontWeight: 700 })}>{asistan}</span>
           {satir ? <span data-alan="asistan-satir">{`: ${satir}`}</span> : null}
         </div>
       </section>
 
-      {canli ?? null}
-
       {ilkAdimlar ?? null}
-
-      {p ? (
-        <div className="yg-fisilti">
-          <div className="yg-fisilti-ad">{p.fisilti}</div>
-          <div className="yg-fisilti-bos">{p.fisiltiBos}</div>
-        </div>
-      ) : null}
 
       {p ? (
         <div className="yg-masa-arac">
           <h2 style={ETIKET}>{p.hizliAraclar}</h2>
           <div style={S({ display: 'flex', gap: 18, flexWrap: 'wrap', alignItems: 'center', ...KART, borderRadius: 16, padding: '14px 20px', boxShadow: '0 8px 18px rgba(58,44,34,0.045)' })}>
-            <span style={ARAC}>{m.asistan.etiket} ›</span>
+            {asistanYolu ? <a href={asistanYolu} style={{ ...ARAC, textDecoration: 'none' }}>{m.asistan.etiket} ›</a> : <span style={ARAC}>{m.asistan.etiket} ›</span>}
             <span style={ARAC}>{p.epikriz} ›</span>
             <span style={ARAC}>{p.kodlama} ›</span>
           </div>
@@ -184,15 +162,15 @@ export function BugunGorunumu({ m, ad, muayeneler, hata, rol, randevular, mesajl
         <div className="yg-mobil-ust">
           <h2 style={S({ ...ETIKET, fontSize: 12, marginBottom: 8 })}>{p.hizliErisim}</h2>
           <div style={S({ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 8 })}>
-            {karo(YOL.bugun, m.kabuk.bugun)}
-            {HAZIR.takvim ? karo(YOL.takvim, r.kabuk.takvim) : null}
-            {karo(YOL.hastalar, m.kabuk.hastalar)}
-            {karo(YOL.yeniHasta, m.bugun.yeniHasta)}
-            {karo(null, p.epikriz, p.kodlama)}
-            {karo(null, p.mesajlar)}
-            {karo(ozellikAcik('fotoArsivi') ? YOL.hastalar : null, p.belgeler)}
-            {karo(null, p.raporlar)}
-            {arac ? karo(YOL.araclar, arac.izgara.baslik) : karo(null, p.inceleme)}
+            {karo(asistanYolu, m.asistan.etiket, 'asistan')}
+            {HAZIR.takvim ? karo(YOL.takvim, r.kabuk.takvim, 'takvim') : null}
+            {karo(YOL.hastalar, m.kabuk.hastalar, 'hastalar')}
+            {karo(ozellikAcik('fotoArsivi') ? YOL.hastalar : null, p.belgeler, 'belge')}
+            {karo(null, p.epikriz, 'epikriz', p.notArac)}
+            {karo(null, p.kodlama, 'icd', p.notArac)}
+            {karo(null, p.inceleme, 'inceleme')}
+            {karo(null, p.raporlar, 'raporlar')}
+            {arac ? karo(YOL.araclar, arac.izgara.baslik, 'araclar', p.notTumu) : null}
           </div>
         </div>
       ) : null}
@@ -233,7 +211,7 @@ export function BugunGorunumu({ m, ad, muayeneler, hata, rol, randevular, mesajl
             const govde = (
               <>
                 <div style={S({ fontSize: 13, color: R.muted })}>{c.label}</div>
-                {c.value === null ? <div style={S({ height: 40, width: 60, background: '#EFE9DC', borderRadius: 8, margin: '10px 0 6px' })} /> : <div style={S({ fontFamily: CHROME_FONT.serif, fontSize: 40, fontWeight: 600, color: c.color, lineHeight: 1.15, fontVariantNumeric: 'tabular-nums', margin: '4px 0 2px' })}>{c.value}</div>}
+                {c.value === null ? <div style={S({ height: 40, width: 60, background: '#EFE9DC', borderRadius: 8, margin: '10px 0 6px', animation: 'nabizYg 1.5s infinite' })} /> : <div style={S({ fontFamily: CHROME_FONT.serif, fontSize: 40, fontWeight: 600, color: c.color, lineHeight: 1.15, fontVariantNumeric: 'tabular-nums', margin: '4px 0 2px' })}>{c.value}</div>}
                 <div style={S({ fontSize: 12, color: R.muted })}>{c.sub}</div>
               </>
             )
@@ -249,7 +227,7 @@ export function BugunGorunumu({ m, ad, muayeneler, hata, rol, randevular, mesajl
           <div className="yg-erisim-izgara" style={S({ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10 })}>
             {[
               HAZIR.takvim ? { href: YOL.takvim, text: r.kabuk.takvim, ikon: 'takvim' } : null,
-              { href: null, text: p.asistanAc, ikon: 'asistan' },
+              { href: asistanYolu, text: p.asistanAc, ikon: 'asistan' },
               { href: YOL.yeniHasta, text: m.bugun.yeniHasta, ikon: 'hastaEkle' },
               arac ? { href: YOL.araclar, text: arac.izgara.baslik, ikon: 'araclar' } : null,
               { href: ozellikAcik('fotoArsivi') ? YOL.hastalar : null, text: p.belgeYukle, ikon: 'belge' },
@@ -258,7 +236,7 @@ export function BugunGorunumu({ m, ad, muayeneler, hata, rol, randevular, mesajl
             ].filter((x): x is { href: string | null; text: string; ikon: string } => Boolean(x)).map((k) => {
               const ic = (
                 <>
-                  <span style={S({ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 40, height: 40, borderRadius: 11, background: '#E4F3F1', color: R.pine })}><KaroIkon ad={k.ikon} /></span>
+                  <span style={S({ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 40, height: 40, borderRadius: 11, background: '#E4F3F1', color: R.pine })}><Ikon ad={k.ikon} /></span>
                   <span style={S({ fontSize: 13.5, fontWeight: 600 })}>{k.text}</span>
                 </>
               )
@@ -353,7 +331,7 @@ export default function Bugun() {
   if (!hesap) return <Yukleniyor m={u.m} dil={u.dil} />
   return (
     <Cerceve dil={u.dil} m={u.m} ad={hesap.ad} unvan={rolAdi(hesap.rol, u.dil) ?? undefined} aktif="bugun" cikis={u.cikis}>
-      <BugunGorunumu m={u.m} ad={hesap.ad} muayeneler={muayeneler} hata={hata} rol={hesap.rol} randevular={randevular} mesajlar={ozellikAcik('hastaPortali') && ozellikAcik('hastaMesajlari') ? <OkunmamisMesajlarKarti u={u} /> : null} konsultasyon={ozellikAcik('konsultasyon') && ozellikAcik('araclar') ? <BekleyenKonsultasyonlarKarti u={u} /> : null} istekler={ozellikAcik('hastaPortali') && ozellikAcik('randevu') ? <Istekler u={u} r={randevuMetni(u.dil)} /> : null} ilkAdimlar={<IlkAdimlarKarti m={u.m} api={api} rolTamam={Boolean(hesap.rol) || roller().length === 0} />} canli={<AsistanCanli m={u.m} api={api} />} />
+      <BugunGorunumu m={u.m} ad={hesap.ad} muayeneler={muayeneler} hata={hata} rol={hesap.rol} randevular={randevular} mesajlar={ozellikAcik('hastaPortali') && ozellikAcik('hastaMesajlari') ? <OkunmamisMesajlarKarti u={u} /> : null} konsultasyon={ozellikAcik('konsultasyon') && ozellikAcik('araclar') ? <BekleyenKonsultasyonlarKarti u={u} /> : null} istekler={ozellikAcik('hastaPortali') && ozellikAcik('randevu') ? <Istekler u={u} r={randevuMetni(u.dil)} /> : null} ilkAdimlar={<IlkAdimlarKarti m={u.m} api={api} rolTamam={Boolean(hesap.rol) || roller().length === 0} />} />
     </Cerceve>
   )
 }

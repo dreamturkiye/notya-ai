@@ -140,7 +140,7 @@ export default function AsistanEkrani() {
   const o = useCanliOturum({ t, api: u.hesap ? u.api : undefined, dil: u.dil })
   if (!u.hesap) return <Yukleniyor m={u.m} dil={u.dil} />
   return (
-    <Cerceve dil={u.dil} m={u.m} ad={u.hesap.ad} unvan={rolAdi(u.hesap.rol, u.dil) ?? undefined} aktif="asistan" cikis={u.cikis}>
+    <Cerceve dil={u.dil} m={u.m} ad={u.hesap.ad} unvan={rolAdi(u.hesap.rol, u.dil) ?? undefined} aktif="asistan" cikis={u.cikis} kompakt>
       {t ? (
         <AsistanGorunumu t={t} hazir={o.hazir} unvan={rolAdi(u.hesap.rol, u.dil) ?? ''} durum={o.durum} balonlar={o.balonlar} hata={o.hata}
           yazili={o.yazili} onYaziliAc={o.setYaziliAcik} onGirdi={o.setYaziliGirdi} onGonder={() => { void o.yaziliGonder() }} onMikrofon={o.yaziliMikrofon}
