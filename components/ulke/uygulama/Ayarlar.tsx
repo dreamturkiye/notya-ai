@@ -14,10 +14,9 @@ import React, { useEffect, useState } from 'react'
 import { Bilgi, Cerceve, Hata, useUygulama, YOL, Yukleniyor, type Api, type Hesap } from './Kabuk'
 import { DilSecimi, YaziSecimi } from './DilFormu'
 import { RolSecimi } from './RolFormu'
-import { asistanAdi, asistanSatiri } from './Asistan'
-import { AsistanSesKontrol } from './AsistanSes'
+import { asistanAdi } from './Asistan'
 import { Ipucu, IpucuAyarKarti } from './Ipucu'
-import { araclarMetni, asistanSesAdlari, dilBirlestir, dilSecimiVarMi, rolAdi, rolMu, roller, temelDil, varsayilanYazi, yaziSec, yaziSorulurMu, type UygulamaMetni } from '@/lib/ulke/arayuz'
+import { araclarMetni, dilBirlestir, dilSecimiVarMi, rolAdi, rolMu, roller, temelDil, varsayilanYazi, yaziSec, yaziSorulurMu, type UygulamaMetni } from '@/lib/ulke/arayuz'
 import { hesapSaatDilimiAyarla } from '@/lib/ulke/arayuz/bicim'
 import { ozellikAcik, ulkePaketi } from '@/lib/ulke/ulke'
 import type { DilKodu } from '@/lib/ulke/tipler'
@@ -76,7 +75,6 @@ export function RolAyariGorunumu({ m, rol, kayitliRol, setRol, gonder, bekliyor,
   setRol: (r: string) => void; gonder: () => void; bekliyor: boolean; sonuc: 'tamam' | 'hata' | 'gerekli' | null
   api?: Api
 }) {
-  const sesler = asistanSatiri(m, kayitliRol) ? asistanSesAdlari() : null
   return (
     <section className="yg-satir yg-ayar-kart" data-alan="rol-ayari">
       <span className="yg-satir-emoji" aria-hidden="true">{'\u2695'}</span>
@@ -85,7 +83,6 @@ export function RolAyariGorunumu({ m, rol, kayitliRol, setRol, gonder, bekliyor,
       <form className="uza-form" onSubmit={(e) => { e.preventDefault(); gonder() }}>
         <RolSecimi m={m} deger={rol} sec={setRol} kimlik="uza-rol-ayar" />
         <p className="uza-ipucu">{m.asistan.etiket}: <span data-alan="asistan-ad">{asistanAdi(m, kayitliRol)}</span></p>
-        {sesler ? <AsistanSesKontrol m={m} api={api} sesler={sesler} /> : null}
         <p className="uza-ipucu">{m.rol.ayarIzoh}</p>
         <Hata>{sonuc === 'hata' ? m.rol.kaydedilemedi : sonuc === 'gerekli' ? m.rol.gerekli : null}</Hata>
         <Bilgi>{sonuc === 'tamam' ? m.rol.kaydedildi : null}</Bilgi>

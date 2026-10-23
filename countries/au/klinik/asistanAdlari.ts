@@ -18,7 +18,7 @@
  * field anywhere in this pack's types, so a 45th voice cannot be wired in by accident. `cinsiyet` below is this
  * persona's own gender, recorded so the mapping from name to voice is explicit and auditable — not because
  * anything here calls `sesSentezle` with it today (the "Your assistant" card lets a doctor preview EITHER voice;
- * see components/ulke/uygulama/AsistanSes.tsx).
+ * the voice picker was removed from Settings 2026-10-23: the voice follows the persona).
  *
  * TITLING: Australian convention, not the Turkish "Prof. Dr." form (UZ keeps the Turkish convention only because
  * the owner asked for it there, 2026-10-09; no such instruction exists for Australia). A registered medical
