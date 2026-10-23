@@ -94,6 +94,31 @@ function kimlikBenzeriMi(t: string): boolean {
   return digits.length >= 9 && RAKAM_UZUN.test(s)
 }
 
+
+/**
+ * Unlabelled patient name: scanners often print the name alone in the top-left of the header ("Ece Yıldırım", no "Name:").
+ * Returns the leading run of 2-4 name-like words of the topmost line in the header band (letters only, no label / clinical token).
+ */
+function adSatiriBul(satirlar: OcrSatir[], yukseklik?: number): OcrKelime[] | null {
+  let enUst: { y: number; ks: OcrKelime[] } | null = null
+  for (const satir of satirlar) {
+    const ks = [...satir.kelimeler].filter((w) => w.text.trim()).sort((a, b) => a.x0 - b.x0)
+    if (!ks.length) continue
+    const y = Math.min(...ks.map((w) => w.y0))
+    if (yukseklik && y > yukseklik * UST_BOLGE_ORANI) continue
+    if (!enUst || y < enUst.y) enUst = { y, ks }
+  }
+  if (!enUst) return null
+  const ad: OcrKelime[] = []
+  for (const w of enUst.ks) {
+    const t = w.text.replace(/[.,;:]+$/g, '')
+    const a = asciiNorm(t)
+    if (!/^\p{Lu}\p{Ll}[\p{L}'’.-]*$/u.test(t) || t.length < 2 || etiketMi(a, '') > 0 || durMu(a) || ['ob', 'gen', 'abd', 'cardiac', 'obstetric'].includes(a)) break
+    ad.push(w)
+  }
+  return ad.length >= 2 && ad.length <= 4 ? ad : null
+}
+
 function kutuBirlestir(k: OcrKelime[], pad: number): Kutu {
   return {
     x0: Math.min(...k.map((w) => w.x0)) - pad, y0: Math.min(...k.map((w) => w.y0)) - pad,
@@ -172,6 +197,14 @@ export function kimlikKutulari(
     bosalt()
   }
 
+  const adKelimeleri = o.modalite && BASLIK_MODALITELERI.includes(o.modalite) ? adSatiriBul(satirlar, o.yukseklik) : null
+  if (adKelimeleri) {
+    kimlikEtiketiVar = true
+    ustEtiket = true
+    ustEtiketAlt = Math.max(ustEtiketAlt, ...adKelimeleri.map((w) => w.y1))
+    kutular.push(kutuBirlestir(adKelimeleri, 3))
+  }
+
   let ustBantUygulandi = false
   if (ustEtiket && o.modalite && BASLIK_MODALITELERI.includes(o.modalite)) {
     const alt = Math.min(o.yukseklik * 0.3, Math.max(o.yukseklik * UST_BANT_ORANI, ustEtiketAlt + 4))
@@ -179,12 +212,15 @@ export function kimlikKutulari(
     ustBantUygulandi = true
   }
 
-  const guvenler = tum.map((w) => w.conf).filter((c) => Number.isFinite(c))
+  // Confidence is judged on the header text only: speckle inside the scan produces junk "words" that drag the whole-image
+  // average down even when every label and value in the header was read correctly (that sent clean headers to the checkbox).
+  const baslikKelimeleri = tum.filter((w) => w.y0 < o.yukseklik * UST_BOLGE_ORANI)
+  const guvenler = (baslikKelimeleri.length >= 3 ? baslikKelimeleri : tum).map((w) => w.conf).filter((c) => Number.isFinite(c))
   const ort = guvenler.length ? guvenler.reduce((a, b) => a + b, 0) / guvenler.length : 0
   const baslikBeklenir = !!o.modalite && BASLIK_MODALITELERI.includes(o.modalite)
   let durum: MaskeSonuc['durum'] = 'ok'
   if (!tum.length) durum = baslikBeklenir ? 'ocr_yok' : 'ok'
-  else if (ort < MIN_GUVEN) durum = 'dusuk_guven'
+  else if (ort < MIN_GUVEN && !(kimlikEtiketiVar && ustBantUygulandi && ort >= 40)) durum = 'dusuk_guven' // whole header band is blacked out: safe
   else if (baslikBeklenir && !kimlikEtiketiVar && tum.some((w) => w.y0 < o.yukseklik * UST_BOLGE_ORANI)) {
     // header text exists but no identity label was recognised: we cannot be sure it is clinical-only text
     durum = 'dusuk_guven'
@@ -246,6 +282,10 @@ export function kimlikBulgulari(satirlar: OcrSatir[]): KimlikBulgulari {
         if (v.length >= 3) out.doktor = v
       }
     }
+  }
+  if (!out.ad) {
+    const ad = adSatiriBul(satirlar)
+    if (ad) out.ad = ad.map((w) => w.text.replace(/[.,;:]+$/g, '')).join(' ')
   }
   return out
 }
