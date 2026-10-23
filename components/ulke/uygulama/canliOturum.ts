@@ -36,7 +36,12 @@ export type Hazir = { ad: string; kisaAd: string; cinsiyet: 'erkek' | 'kadin' | 
 
 /** The two worklet files live under the country's path prefix (public/ses/). */
 export const CALAR = {
-  workletPaths: { audioConcatProcessor: ulkeYolu(SES_CALAR.workletPaths.audioConcatProcessor) },
+  // rawAudioProcessor (microphone input) is served from our own origin as well: the library otherwise builds it from a
+  // blob/data URL, which Safari/CSP refused on AU ("Failed to load the rawAudioProcessor worklet module").
+  workletPaths: {
+    audioConcatProcessor: ulkeYolu(SES_CALAR.workletPaths.audioConcatProcessor),
+    rawAudioProcessor: ulkeYolu('/ses/ham-ses-islemcisi.js'),
+  },
   libsampleratePath: ulkeYolu(SES_CALAR.libsampleratePath),
 } as const
 
