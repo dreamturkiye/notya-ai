@@ -13,7 +13,7 @@ import { ajanKimligi, ajanOrtamAdi, canliDurum } from './ajan'
 import { canliIstem } from './istem'
 import { canliJetonuDogrula, canliJetonuImzala, JETON_OMRU_MS, llmSirriGecerliMi } from './jeton'
 import { konusmaYap, SesAkisi } from './konusma'
-import { motorKilidiGerekli, motorKilidiGovdesi, motoruSabitle, motorOnbelleginiSil } from './motorKilidi'
+import { gecersizKilmaGerekli, gecersizKilmaGovdesi, motorKilidiGerekli, motorKilidiGovdesi, motoruSabitle, motorOnbelleginiSil } from './motorKilidi'
 import { sesMetni } from './okunus'
 import { modelMesajlari, vedaMi } from './sunucu'
 
@@ -156,11 +156,37 @@ describe('the agent lock', () => {
       return new Response('{}', { status: 200 })
     }) as unknown as typeof fetch
     const s = await motoruSabitle(AJAN_K, SES.sesler.kadin.id, 'key', sahte)
-    assert.deepEqual(cagrilar, ['GET', 'PATCH'])
+    // The fake agent has no override switches either: they are written first, then the voice.
+    assert.deepEqual(cagrilar, ['GET', 'PATCH', 'PATCH'])
     assert.equal(s.degisti, true)
     motorOnbelleginiSil()
     const kirik = (async () => { throw new Error('offline') }) as unknown as typeof fetch
     assert.equal((await motoruSabitle(AJAN_K, SES.sesler.kadin.id, 'key', kirik)).durum, 'okunamadi')
+  })
+})
+
+describe('live assistant: per-call overrides (the dead-button cause)', () => {
+  it('a fresh agent refuses the greeting, language and voice; the lock switches all three on', () => {
+    assert.equal(gecersizKilmaGerekli(undefined), true)
+    assert.equal(gecersizKilmaGerekli({ overrides: { conversation_config_override: { agent: { first_message: true, language: true }, tts: { voice_id: false } } } }), true)
+    const o = gecersizKilmaGovdesi().platform_settings
+    assert.equal(gecersizKilmaGerekli(o), false)
+  })
+  it('an agent that already allows them is left alone (one read, no write)', async () => {
+    motorOnbelleginiSil()
+    const ok = motorKilidiGovdesi(SES.sesler.kadin.id).conversation_config.tts
+    const cagrilar: string[] = []
+    const sahte = (async (_u: string, o?: RequestInit) => {
+      cagrilar.push(o?.method ?? 'GET')
+      return new Response(JSON.stringify({ conversation_config: { tts: ok }, platform_settings: gecersizKilmaGovdesi().platform_settings }), { status: 200 })
+    }) as unknown as typeof fetch
+    await motoruSabitle(AJAN_K, SES.sesler.kadin.id, 'key', sahte)
+    assert.deepEqual(cagrilar, ['GET'])
+  })
+  it('the typed turn is told nothing is spoken', () => {
+    const y = canliIstem({ canli: CANLI, tamAd: KIMLIK.tamAd, kisaAd: KIMLIK.kisaAd, rolAdi: 'Cardiology', rol: 'cardiology', acilNumara: null, yazili: true })
+    assert.match(y, /THIS TURN IS TYPED/)
+    assert.ok(!/THIS TURN IS TYPED/.test(canliIstem({ canli: CANLI, tamAd: KIMLIK.tamAd, kisaAd: KIMLIK.kisaAd, rolAdi: 'Cardiology', rol: 'cardiology', acilNumara: null })))
   })
 })
 

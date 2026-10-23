@@ -10,6 +10,7 @@ import { AKTIF_ARAYUZ } from '@/countries/active/arayuz'
 import { UYGULAMA_EKRAN_BILESENLERI } from '@/components/ulke/uygulama'
 import { BitkiSaglayici } from '@/components/ulke/uygulama/bitki'
 import { UYGULAMA_EKRANLARI } from '@/lib/ulke/tipler'
+import { asistanSesAdlari } from '@/lib/ulke/arayuz'
 import { ozellikAcik, ulkePaketi } from '@/lib/ulke/ulke'
 import { rotaAcikMi } from '@/lib/ulke/rotaKapisi'
 import type { UygulamaEkrani } from '@/lib/ulke/tipler'
@@ -23,6 +24,8 @@ export function UlkeUygulamaSayfasi({ ekran }: { ekran: UygulamaEkrani }) {
     && ((ekran !== 'klinik' && ekran !== 'onBuro') || ozellikAcik('klinikHesaplari')) && (ekran !== 'onBuro' || ozellikAcik('randevu'))
     // AU-BETA-01: the privacy-request and invoice screens exist only where the pack brings that extension.
     && (ekran !== 'gizlilikTalepleri' || Boolean(ulkePaketi().uzanti?.gizlilik)) && (ekran !== 'fatura' || Boolean(ulkePaketi().uzanti?.fatura))
+    // AU-CANLI-02: the assistant page exists only where the pack has the live assistant (its two voices and its settings).
+    && (ekran !== 'asistan' || asistanSesAdlari() !== null)
   const Ekran = var_ ? UYGULAMA_EKRAN_BILESENLERI[ekran] : undefined
   if (!Ekran) notFound()
   return <BitkiSaglayici src={bitki.src}><Ekran /></BitkiSaglayici>

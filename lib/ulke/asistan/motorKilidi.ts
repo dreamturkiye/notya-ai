@@ -64,6 +64,25 @@ export function motorOnbelleginiSil(): void {
   onbellek.clear()
 }
 
+/**
+ * The per-call values the screen sends (the greeting, the language, the voice) are accepted by the provider ONLY if the agent
+ * allows them to be overridden. A new agent does not: the call then closed at once and the microphone button looked dead.
+ * These are the three switches the call needs.
+ */
+export type GecersizKilmaGorunen = {
+  overrides?: { conversation_config_override?: { agent?: { first_message?: boolean; language?: boolean }; tts?: { voice_id?: boolean } } }
+}
+
+/** true = the agent refuses at least one of the three per-call values. */
+export function gecersizKilmaGerekli(platform: GecersizKilmaGorunen | null | undefined): boolean {
+  const o = platform?.overrides?.conversation_config_override
+  return !(o?.agent?.first_message === true && o?.agent?.language === true && o?.tts?.voice_id === true)
+}
+
+export const gecersizKilmaGovdesi = () => ({
+  platform_settings: { overrides: { conversation_config_override: { agent: { first_message: true, language: true }, tts: { voice_id: true } } } },
+})
+
 export type MotorSonuc = { durum: 'tamam' | 'onbellek' | 'okunamadi' | 'yazilamadi' | 'yok'; degisti: boolean }
 
 export async function motoruSabitle(ajan: string, sesId: string, anahtar: string, fetchFn: typeof fetch = fetch): Promise<MotorSonuc> {
@@ -77,12 +96,20 @@ export async function motoruSabitle(ajan: string, sesId: string, anahtar: string
   try {
     const getir = await fetchFn(`${ADRES}/${ajan}`, { headers: baslik, cache: 'no-store', signal: kontrol.signal })
     if (!getir.ok) { console.error(`[ulke/asistan] agent read answered ${getir.status}`); return { durum: 'okunamadi', degisti: false } }
-    const veri = (await getir.json()) as { conversation_config?: { tts?: MotorGorunen } }
+    const veri = (await getir.json()) as { conversation_config?: { tts?: MotorGorunen }; platform_settings?: GecersizKilmaGorunen }
     const tts = veri?.conversation_config?.tts
-    if (!motorKilidiGerekli(tts, sesId)) { onbellek.set(`${ajan}:${sesId}`, simdi); return { durum: 'tamam', degisti: false } }
+    let degisti = false
+    // Allowing the three per-call values is a separate, best-effort write: a refusal of it never blocks the voice lock or the call.
+    if (gecersizKilmaGerekli(veri?.platform_settings)) {
+      console.error('[ulke/asistan] agent does not allow the per-call greeting, language and voice; allowing them')
+      const izin = await fetchFn(`${ADRES}/${ajan}`, { method: 'PATCH', headers: baslik, body: JSON.stringify(gecersizKilmaGovdesi()), signal: kontrol.signal })
+      if (izin.ok) degisti = true
+      else console.error(`[ulke/asistan] agent override write answered ${izin.status}`)
+    }
+    if (!motorKilidiGerekli(tts, sesId)) { onbellek.set(`${ajan}:${sesId}`, simdi); return { durum: 'tamam', degisti } }
     console.error('[ulke/asistan] agent drifted from the pack voice or delivery; writing it back')
     const yama = await fetchFn(`${ADRES}/${ajan}`, { method: 'PATCH', headers: baslik, body: JSON.stringify(motorKilidiGovdesi(sesId, tts)), signal: kontrol.signal })
-    if (!yama.ok) { console.error(`[ulke/asistan] agent write answered ${yama.status}`); return { durum: 'yazilamadi', degisti: false } }
+    if (!yama.ok) { console.error(`[ulke/asistan] agent write answered ${yama.status}`); return { durum: 'yazilamadi', degisti } }
     onbellek.set(`${ajan}:${sesId}`, simdi)
     return { durum: 'tamam', degisti: true }
   } catch (e) {

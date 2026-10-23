@@ -13,7 +13,8 @@ import { AKTIF_KLINIK } from '@/countries/active/klinik'
 import { asistanKimligi, roller, uygulamaMetni } from '@/lib/ulke/arayuz'
 import { ulkePaketi } from '@/lib/ulke/ulke'
 import { canliDurum } from './ajan'
-import { AsistanCanli, CanliPanel } from '@/components/ulke/uygulama/AsistanCanli'
+import { AsistanCanli, CanliKarti } from '@/components/ulke/uygulama/AsistanCanli'
+import { AsistanGorunumu } from '@/components/ulke/uygulama/AsistanSayfasi'
 
 const KOK = join(__dirname, '../../..')
 const SIR = 'q'.repeat(32)
@@ -57,9 +58,10 @@ describe('live assistant: the active pack', () => {
     // No api, or a catalogue without the slot: nothing at all.
     assert.equal(renderToStaticMarkup(React.createElement(AsistanCanli, { m })), '')
     if (m.asistanCanli) {
-      const html = renderToStaticMarkup(React.createElement(CanliPanel, { t: m.asistanCanli, ad: 'Name', durum: 'bosta', mesajlar: [], gecici: '', hata: null, onBaslat: () => {}, onBitir: () => {} }))
-      assert.match(html, /data-eylem="baslat"/)
-      assert.ok(!/data-eylem="bitir"/.test(html))
+      const html = renderToStaticMarkup(React.createElement(CanliKarti, { t: m.asistanCanli, ad: 'Name', href: '/x/asistan' }))
+      // The home card is a door to the assistant page, not a call button of its own (AU-CANLI-02).
+      assert.match(html, /href="\/x\/asistan"/)
+      assert.ok(!/<button/.test(html))
     }
   })
 
@@ -71,5 +73,26 @@ describe('live assistant: the active pack', () => {
       assert.match(readFileSync(join(KOK, yol), 'utf8'), /canliLlmPost/)
     }
     void SIR
+  })
+
+  it('the assistant page: fail closed, the door on the home, the sidebar and the typed route', () => {
+    const m = uygulamaMetni(ulkePaketi().varsayilanDil)
+    if (!m.asistanCanli) return assert.ok(true)
+    const t = m.asistanCanli
+    const props = { t, unvan: 'Role', durum: 'bosta' as const, balonlar: [], hata: null, bekliyor: false, girdi: '', onGirdi: () => {}, onGonder: () => {}, onBaslat: () => {}, onBitir: () => {}, onTemizle: () => {}, geriHref: '/today' }
+    // Not asked yet / not available: no microphone control at all.
+    for (const hazir of [undefined, null]) assert.ok(!/data-eylem="baslat"/.test(renderToStaticMarkup(React.createElement(AsistanGorunumu, { ...props, hazir }))))
+    const html = renderToStaticMarkup(React.createElement(AsistanGorunumu, { ...props, hazir: { ad: 'Dr Name', kisaAd: 'Name', cinsiyet: 'kadin' as const }, balonlar: [{ id: 'a', sira: 1, role: 'user' as const, text: 'Question?' }, { id: 'b', sira: 2, role: 'ai' as const, text: 'Answer.' }] }))
+    assert.match(html, /data-eylem="baslat"/)
+    assert.match(html, /data-alan="asistan-yazili"/)
+    assert.match(html, /data-rol="siz"[\s\S]*Question\?[\s\S]*data-rol="asistan"[\s\S]*Answer\./)
+    const sayfa = readFileSync(join(KOK, 'app/asistan/page.ulke.tsx'), 'utf8')
+    assert.match(sayfa, /ekran="asistan"/)
+    const yazili = readFileSync(join(KOK, 'app/api/ulke/asistan-canli/yazili/route.ulke.ts'), 'utf8')
+    assert.match(yazili, /ozellikAcik\('cekirdekMuayene'\)[\s\S]*ulkeOturum[\s\S]*canliYaziliCevabi/)
+    assert.ok(!/searchParams/.test(yazili))
+    // The shared screens: the page is a registered screen, the sidebar links to it, the home links to it.
+    assert.match(readFileSync(join(KOK, 'components/ulke/uygulama/Kabuk.tsx'), 'utf8'), /baglanti\('asistan', YOL\.asistan/)
+    assert.match(readFileSync(join(KOK, 'components/ulke/uygulama/AsistanCanli.tsx'), 'utf8'), /YOL\.asistan/)
   })
 })

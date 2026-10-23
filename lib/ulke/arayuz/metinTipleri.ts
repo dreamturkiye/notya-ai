@@ -282,6 +282,23 @@ export type UygulamaMetni = {
     readonly not: string
     readonly siz: string
     readonly ekranda: string
+    /** AU-CANLI-02 — the assistant page (voice and typed chat). */
+    readonly sayfa: {
+      readonly baslik: string
+      readonly geri: string
+      readonly bos: string
+      readonly baslatIpucu: string
+      readonly bitirIpucu: string
+      readonly yaziEtiketi: string
+      readonly yaziIpucu: string
+      readonly gonder: string
+      readonly dusunuyor: string
+      readonly yaziHata: string
+      readonly temizle: string
+      readonly yok: string
+      readonly kontrol: string
+      readonly gecmisNotu: string
+    }
   }
   readonly rol: {
     readonly baslik: string

@@ -155,7 +155,7 @@ export function useUygulama(ekran: UygulamaEkrani): Uygulama {
   '--uza-uyari': R.warn, '--uza-cizgi': R.border, '--uza-altin': R.gold, '--uza-nav': R.nav, '--uza-serif': CHROME_FONT.serif, '--uza-sans': CHROME_FONT.sans,
 } as CSSProperties
 
-export type Sekme = 'bugun' | 'takvim' | 'hastalar' | 'araclar' | 'klinik' | 'onBuro' | 'ayarlar' | 'fatura' | 'gizlilikTalepleri'
+export type Sekme = 'bugun' | 'takvim' | 'hastalar' | 'araclar' | 'klinik' | 'onBuro' | 'ayarlar' | 'fatura' | 'gizlilikTalepleri' | 'asistan'
 
 /** WMO weather code to a glyph. Same bands as the reference chrome; no sentence, so nothing to translate. */
 function havaIkonu(kod: number): string {
@@ -264,7 +264,7 @@ export function Cerceve({ dil, m, ad, unvan, aktif, cikis, sade, onBuro, childre
             </nav>
           ) : (
             <nav className="uza-nav" aria-label={m.kabuk.menu}>
-              {m.pano ? (asistanSesAdlari() ? <a href={`${YOL.bugun}#asistan`} className="uza-sekme">{m.pano.asistanaSor}</a> : <span className="uza-duvar uza-asistan" data-duvar="asistan">{m.pano.asistanaSor}</span>) : null}
+              {m.pano ? (asistanSesAdlari() ? baglanti('asistan', YOL.asistan, m.pano.asistanaSor) : <span className="uza-duvar uza-asistan" data-duvar="asistan">{m.pano.asistanaSor}</span>) : null}
               {m.kabuk.calismaAlani ? <div className="uza-grup">{m.kabuk.calismaAlani}</div> : null}
               {baglanti('bugun', YOL.bugun, m.kabuk.bugun)}
               {/* NOTYA-UZ-RANDEVU-01: the calendar. Its name is in the appointment catalogue, in the same form. */}

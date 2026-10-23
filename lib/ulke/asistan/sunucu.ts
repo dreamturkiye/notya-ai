@@ -26,7 +26,7 @@ import type { AiMesaj } from '@/lib/ai/cagir'
 import { modeldenAkis } from '@/lib/ulke/uygulama/notModeli'
 import { asistanKimligi, rolAdi } from '@/lib/ulke/arayuz'
 import { ulkePaketi } from '@/lib/ulke/ulke'
-import { cevap, KOD } from '@/lib/ulke/uygulama/cevap'
+import { cevap, govdeOku, KOD, metinAlani } from '@/lib/ulke/uygulama/cevap'
 import { KOVA_ASISTAN_BAGLANTI, KOVA_ASISTAN_TUR, kovaKotasiKullan } from '@/lib/ulke/uygulama/kota'
 import { hekimRolunuOku, uygulamaRoluMu } from '@/lib/ulke/uygulama/rol'
 import { ulkeServisSupabase } from '@/lib/ulke/sunucuOturum'
@@ -42,6 +42,8 @@ import type { SupabaseClient, User } from '@supabase/supabase-js'
 export const GUNLUK_BAGLANTI_LIMITI = 40
 /** The voice turn never runs longer than this; the model call is given the same budget. */
 export const TUR_BUTCESI_MS = 20_000
+/** A typed turn may take longer than a spoken one: nobody is waiting in silence. */
+export const YAZILI_BUTCE_MS = 40_000
 export const EKRAN_ARACI = 'show_on_screen'
 const GECMIS_TUR = 12
 const MESAJ_AZAMI = 2_000
@@ -84,6 +86,34 @@ export async function canliBaglantiCevabi(oturum: { user: User; supabase: Supaba
     notya_jeton: jeton,
     ekran_araci: EKRAN_ARACI,
   })
+}
+
+/**
+ * The TYPED turn of the assistant page (the written chat beside the voice). Same persona, same prompt, same gateway and the
+ * same daily turn ceiling as the voice; the whole answer comes back at once. The conversation is what the page sends
+ * (its own last lines, bounded and cleaned like the voice's); no id of any kind is read from the request.
+ *   200 { cevap }   400 GECERSIZ   401 OTURUM_YOK   404 NOT_FOUND (not available here)   429 LIMIT   502 BASARISIZ
+ */
+export async function canliYaziliCevabi(oturum: { user: User; supabase: SupabaseClient }, req: Request): Promise<Response> {
+  const rol = await hekimRolunuOku(oturum.supabase, oturum.user.id)
+  const { durum, kimlik } = durumOku(rol)
+  const canli = AKTIF_KLINIK?.canliAsistan
+  const paket = ulkePaketi()
+  const rolun = rol ? rolAdi(rol, paket.varsayilanDil) : null
+  if (!durum.hazir || !kimlik || !rol || !canli || !rolun || !uygulamaRoluMu(rol)) return KOD.yok()
+  const govde = await govdeOku(req)
+  const mesaj = metinAlani(govde.mesaj, 4000)
+  if (!mesaj) return KOD.gecersiz('mesaj')
+  const gecmis = Array.isArray(govde.gecmis) ? (govde.gecmis as { rol?: unknown; metin?: unknown }[]) : []
+  const ham = [
+    ...gecmis.slice(-GECMIS_TUR).map((g) => ({ role: g?.rol === 'asistan' ? 'assistant' : 'user', content: typeof g?.metin === 'string' ? g.metin : '' })),
+    { role: 'user', content: mesaj },
+  ]
+  if (!(await kovaKotasiKullan(oturum.supabase, oturum.user.id, KOVA_ASISTAN_TUR, canli.gunlukTurLimiti))) return cevap({ code: 'LIMIT' }, 429)
+  const istem = canliIstem({ canli, tamAd: kimlik.tamAd, kisaAd: kimlik.kisaAd, rolAdi: rolun, rol, acilNumara: paket.uygulama?.portal?.acilNumara ?? null, yazili: true })
+  const sonuc = await modeldenAkis({ talimat: istem, mesajlar: modelMesajlari(ham), doktorId: oturum.user.id, butceMs: YAZILI_BUTCE_MS }, () => {})
+  if (!sonuc || !sonuc.trim()) return cevap({ code: 'BASARISIZ' }, 502)
+  return cevap({ cevap: sonuc.trim().slice(0, 8000) })
 }
 
 // ───────────────────────── the agent's brain ─────────────────────────

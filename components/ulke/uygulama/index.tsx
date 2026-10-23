@@ -18,6 +18,7 @@ import Klinik from './Klinik'
 import OnBuro from './OnBuro'
 import Fatura from './Fatura'
 import GizlilikTalepleri from './GizlilikTalepleri'
+import Asistan from './AsistanSayfasi'
 
 export const UYGULAMA_EKRAN_BILESENLERI: Readonly<Record<UygulamaEkrani, ComponentType>> = {
   baslangic: Baslangic,
@@ -38,4 +39,6 @@ export const UYGULAMA_EKRAN_BILESENLERI: Readonly<Record<UygulamaEkrani, Compone
   // AU-BETA-01 — only where the pack brings the extension (components/ulke/UlkeUygulamaSayfasi.tsx).
   fatura: Fatura,
   gizlilikTalepleri: GizlilikTalepleri,
+  // AU-CANLI-02 — the assistant page (the pack's `canliAsistan`; components/ulke/UlkeUygulamaSayfasi.tsx).
+  asistan: Asistan,
 }

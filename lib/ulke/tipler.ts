@@ -474,6 +474,8 @@ export const UYGULAMA_EKRANLARI = {
   gizlilikTalepleri: '/privacy-requests',
   /** AU-BETA-01 — invoices (pack extension `uzanti.fatura`). */
   fatura: '/billing',
+  /** AU-CANLI-02 — the assistant page: voice and typed chat (pack setting `canliAsistan`). */
+  asistan: '/asistan',
 } as const
 export type UygulamaEkrani = keyof typeof UYGULAMA_EKRANLARI
 
