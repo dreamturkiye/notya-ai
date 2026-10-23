@@ -24,6 +24,7 @@
     "denetim:kalite-taban:kuru": "npx --yes tsx scripts/ayse-denetim/kalite-karsilastir.mts --yaz --kuru",
     "denetim:kalite-cevap": "npx --yes tsx scripts/ayse-denetim/kalite-cevap.mts",
     "denetim:ses-kisaltma": "npx --yes tsx scripts/ayse-denetim/ses-kisaltma.mts",
+    "test:portre": "node --test scripts/lib/wavespeed-portre.test.mjs",
     "test:liste": "node scripts/test-listesi-denetle.mjs",
     "test:ulke": "node scripts/ulke-test.mjs",
     "ulke:duvarlar": "node scripts/ulke-duvarlari.mjs",
