@@ -14,9 +14,10 @@ import type { RotaIzni } from './tipler'
  * `/tesseract/` and `/pdfjs/` are the same-origin files of the on-device engines of the "add documents" step
  * (identity masking, PDF page rendering): static code and language data, no application content. Without them the
  * middleware answered 404 for every engine file and no document could ever be masked.
+ * `/portreler/` is the generated assistant portraits (AU-PORTRE-01; public/portreler/<cc>/): images only, no content. Without it every portrait answered 404.
  * `/ses/` is the two audio-playback worklet files of the live assistant (AU-CANLI-01; public/ses/): static code, no content.
  */
-const CATI_ON_EKLERI = ['/_next/', '/tesseract/', '/pdfjs/', '/ses/'] as const
+const CATI_ON_EKLERI = ['/_next/', '/tesseract/', '/pdfjs/', '/ses/', '/portreler/'] as const
 
 function duzYol(pathname: string): string {
   const y = pathname.split('?')[0].split('#')[0]
