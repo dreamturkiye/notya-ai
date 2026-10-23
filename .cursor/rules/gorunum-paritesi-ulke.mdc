@@ -1,0 +1,21 @@
+---
+description: >-
+  Standing rule (Kaan, 2026-10-23, permanent): every country build uses the SAME visual design, layout, components and
+  page structure as Türkiye (main). Only language, voices, personas, reference books, laws/regulatory content, tools that
+  exist by law and country data differ. A country-only visual or layout fork is a defect.
+alwaysApply: true
+---
+
+# Görünüm paritesi — one look, every country
+
+Kaan, 2026-10-23, verbatim intent: "Our application look and feel and the pages cannot look different for each country.
+This is not acceptable. They must all look exactly the same."
+
+- Every country build renders the SAME design, layout, components and page structure as Türkiye (`main`): sidebar,
+  typography, colours, spacing, cards, buttons, page composition.
+- What may differ: language, voices, personas, reference books, laws and regulatory content, tools that exist by law, and
+  the country's data.
+- Build it by SHARING the Türkiye component (neutral view + injected words/data, see `components/asistan/AsistanSayfaGorunumu.tsx`),
+  never by a country-only CSS or markup copy. A country-only visual or layout fork is a defect: fix it, or log a dated
+  `AU-LOOK-PARITY`-style entry in `docs/OPEN-COMMITMENTS.md` (owner Claude) in the same change.
+- Pin the Türkiye markup with a render test when a component is made country-neutral (`lib/asistan/asistanSayfa.test.ts`).

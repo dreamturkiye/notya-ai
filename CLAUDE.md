@@ -86,3 +86,7 @@ Commercial UI only — no internal audits or named beta-doctor copy on `/doktor-
 ## Standing rule — classify every request, apply it in all six countries (Kaan, 2026-10-21, permanent)
 
 For every request (including live feedback relayed from Dr. Gökhan Mamur), Claude decides **without being asked** whether it is **core** (all 40 branches) or **branş-specific** (that branş only), says which in one line, and applies the change in the **same change set** to all six country builds (us, gb, ca, au, nz, uz) — core change → core in all six; branş-specific change → that branş's implementation in all six. Turkey-only legal mechanics (MBYS, SGK, e-Nabız, e-Reçete, NVI, e-Fatura, KVKK) are the only exemption. Kaan must never have to repeat or check this; the final report states the per-country status. Details: `.cursor/skills/ulke-paritesi-duzeltme/SKILL.md`.
+
+## Standing rule — one look in every country (Kaan, 2026-10-23, permanent)
+
+"Our application look and feel and the pages cannot look different for each country. This is not acceptable. They must all look exactly the same." Every country build uses the SAME visual design, layout, components and page structure as Türkiye (main). Only language, voices, personas, reference books, laws/regulatory content, tools that exist by law and country data differ. A country-only visual or layout fork is a defect (share the Türkiye component with injected words/data instead). Full text: `.cursor/rules/gorunum-paritesi-ulke.mdc`.
