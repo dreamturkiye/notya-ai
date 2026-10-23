@@ -1,16 +1,16 @@
 #!/usr/bin/env node
 /**
  * AU-PORTRE-01 — portrait pipeline for the Australian assistant personas.
- *   node scripts/au-portreler-uret.mjs --liste            print role, name, gender and the generation prompt for each persona
- *   node scripts/au-portreler-uret.mjs --json > m.json    same, as JSON (feed to any image generator, 1:1)
- *   node scripts/au-portreler-uret.mjs --isle <src_dir>   convert <src_dir>/<role>.(png|jpg|jpeg|webp) to public/portreler/au/<role>.webp
+ *   node countries/au/scripts/au-portreler-uret.mjs --liste            print role, name, gender and the generation prompt for each persona
+ *   node countries/au/scripts/au-portreler-uret.mjs --json > m.json    same, as JSON (feed to any image generator, 1:1)
+ *   node countries/au/scripts/au-portreler-uret.mjs --isle <src_dir>   convert <src_dir>/<role>.(png|jpg|jpeg|webp) to public/portreler/au/<role>.webp
  *                                                         (1024x1024 centre-top crop, WebP, <=120 KB) and print the roles to add to AU_PORTRE_URETILDI
- *   node scripts/au-portreler-uret.mjs --durum            produced / total
- * --isle needs `sharp` (npm i --no-save sharp). Run through tsx so the TypeScript manifest loads: npx tsx scripts/au-portreler-uret.mjs ...
+ *   node countries/au/scripts/au-portreler-uret.mjs --durum            produced / total
+ * --isle needs `sharp` (npm i --no-save sharp). Run through tsx so the TypeScript manifest loads: npx tsx countries/au/scripts/au-portreler-uret.mjs ...
  */
 import { existsSync, mkdirSync, readdirSync, statSync } from 'node:fs'
 import { join } from 'node:path'
-import { AU_PORTRE_MANIFESTI, AU_PORTRE_URETILDI, PORTRE_BOYUT, PORTRE_AZAMI_BAYT } from '../countries/au/klinik/portreler.ts'
+import { AU_PORTRE_MANIFESTI, AU_PORTRE_URETILDI, PORTRE_BOYUT, PORTRE_AZAMI_BAYT } from '../klinik/portreler.ts'
 
 const cikti = join(process.cwd(), 'public/portreler/au')
 const m = Object.values(AU_PORTRE_MANIFESTI)

@@ -1,5 +1,5 @@
 /**
- * Pure helpers for scripts/au-portreler-wavespeed.mjs (AU-PORTRE-02). No fs, no env, no real network:
+ * Pure helpers for countries/au/scripts/au-portreler-wavespeed.mjs (AU-PORTRE-02). No fs, no env, no real network:
  * `fetch` and `sleep` are injected so the unit tests run offline. The API key is only ever placed in an
  * Authorization header and is never returned in an error message or log line.
  * API shape (read from the hq repo, server/lib/seedreamStack.ts): POST {BASE}/{model} -> {code:200,data:{id}};

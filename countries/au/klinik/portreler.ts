@@ -10,7 +10,7 @@
  * Faces are AI-generated FICTIONAL people; never a real person, clinician or celebrity.
  * The test (./portreler.test.ts) fails if a listed file is missing, oversize, or if a persona has no manifest entry.
  *
- * PRODUCTION: `scripts/au-portreler-uret.mjs --liste` prints one prompt per persona (from AU_PORTRE_MANIFESTI);
+ * PRODUCTION: `countries/au/scripts/au-portreler-uret.mjs --liste` prints one prompt per persona (from AU_PORTRE_MANIFESTI);
  * generate each at 1:1, save as public/portreler/au/<rol>.webp (1024x1024, <=120 KB; the script's `--isle` converts),
  * then add the role to AU_PORTRE_URETILDI.
  *

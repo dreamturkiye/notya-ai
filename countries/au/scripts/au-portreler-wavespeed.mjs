@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * AU-PORTRE-02 — generate the 44 Australian persona portraits with WaveSpeed (AI-generated FICTIONAL people).
- *   WAVESPEED_API_KEY=... node scripts/au-portreler-wavespeed.mjs [--only <slug>] [--dry-run] [--model <id>] [--size 2048*2048] [--force]
+ *   WAVESPEED_API_KEY=... node countries/au/scripts/au-portreler-wavespeed.mjs [--only <slug>] [--dry-run] [--model <id>] [--size 2048*2048] [--force]
  * Flow per persona: submit prompt -> poll -> download -> ./portre-ham/<slug>.png -> WebP 1024x1024 <=120 KB in public/portreler/au/
  * -> slug added to AU_PORTRE_URETILDI in countries/au/klinik/portreler.ts. Resume-safe: finished slugs are skipped (--force redoes them).
  * Needs `sharp` (npm i --no-save sharp). The key is read from the environment only and is never printed.
@@ -9,7 +9,7 @@
 import { spawnSync } from 'node:child_process'
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { DEFAULT_MODEL, DEFAULT_SIZE, buildRequest, submitTask, pollTask, downloadImage, mapLimit, uretildiGuncelle } from './lib/wavespeed-portre.mjs'
+import { DEFAULT_MODEL, DEFAULT_SIZE, buildRequest, submitTask, pollTask, downloadImage, mapLimit, uretildiGuncelle } from '../../../scripts/lib/wavespeed-portre.mjs'
 
 const args = process.argv.slice(2)
 const val = (f) => { const i = args.indexOf(f); return i >= 0 ? args[i + 1] : undefined }
@@ -17,8 +17,8 @@ const dry = args.includes('--dry-run'), force = args.includes('--force')
 const only = val('--only'), model = val('--model') || DEFAULT_MODEL, size = val('--size') || DEFAULT_SIZE
 
 let manifest
-try { manifest = await import('../countries/au/klinik/portreler.ts') } catch {
-  if (process.env.PORTRE_TSX_CHILD) { console.error('cannot load portreler.ts (run: npx tsx scripts/au-portreler-wavespeed.mjs ...)'); process.exit(1) }
+try { manifest = await import('../klinik/portreler.ts') } catch {
+  if (process.env.PORTRE_TSX_CHILD) { console.error('cannot load portreler.ts (run: npx tsx countries/au/scripts/au-portreler-wavespeed.mjs ...)'); process.exit(1) }
   const r = spawnSync('npx', ['--yes', 'tsx', process.argv[1], ...args], { stdio: 'inherit', env: { ...process.env, PORTRE_TSX_CHILD: '1' } })
   process.exit(r.status ?? 1)
 }
