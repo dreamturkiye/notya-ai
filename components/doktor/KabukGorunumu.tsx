@@ -77,6 +77,8 @@ export interface KabukProps {
   anaSayfa: boolean;
   genis: boolean;
   kompakt: boolean;
+  /** Extra CSS of the phone layout (Türkiye: the touch rules). Spliced into the phone block of the frame's stylesheet. */
+  cssEk?: string;
   bitkiSrc: string;
   altYazi: React.ReactNode;
   children: React.ReactNode;
@@ -312,7 +314,8 @@ export default function KabukGorunumu(p: KabukProps) {
           background: ${CHROME_RENK.cream};
           border-bottom: 1px solid ${CHROME_RENK.border};
         }
-        .notya-bitki { opacity: 0.28; }
+        ${p.cssEk ? `${p.cssEk}
+        ` : ''}.notya-bitki { opacity: 0.28; }
         .notya-bitki-asagi {
           top: 18rem !important;
           right: -22% !important;
