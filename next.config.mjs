@@ -76,12 +76,10 @@ const nextConfig = {
   // QA-2026-09-06 bulgu #1: /login 404'tı — alışkanlıkla yazılan yolları gerçek girişe yönlendir.
   // AU-SEO-01: crawlers ask the HOST root for these two files; the build serves them under its path prefix. (Uzbekistan
   // shares notya.io with the Turkish site, whose root files are not ours to take.)
+  // AU-SEO-01 (fixed 2026-10-22): the host-root /robots.txt and /sitemap.xml rewrites live in vercel.json (edge rewrites).
+  // Next rejects a basePath:false rewrite whose destination is not an absolute URL, which failed every country build.
   async rewrites() {
-    if (ulkeDerleme.bolunmemisUygulama || !YOL_ON_EKI || ULKE === 'uz') return []
-    return [
-      { source: '/robots.txt', destination: `${YOL_ON_EKI}/robots.txt`, basePath: false },
-      { source: '/sitemap.xml', destination: `${YOL_ON_EKI}/sitemap.xml`, basePath: false },
-    ]
+    return []
   },
 
   async redirects() {
