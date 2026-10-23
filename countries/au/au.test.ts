@@ -365,7 +365,7 @@ describe('au: its own role list — the Medical Board\'s wording, a split, one r
     const isimler = ROLLER.map((rol) => AU_ARAYUZ.asistan(rol, D)!.tamAd)
     assert.equal(new Set(isimler).size, ROLLER.length, 'every role has its own distinct name, never a shared or combined one')
     assert.equal(AU_ARAYUZ.asistan('no-such-role', D), null)
-    assert.deepEqual(AU_ARAYUZ.sesAdlari, { erkek: 'Charlie', kadin: 'Clara' })
+    assert.deepEqual(AU_ARAYUZ.sesAdlari, { erkek: 'Male voice', kadin: 'Female voice' })
     for (const rol of ROLLER) {
       const adRol = ad(rol)
       assert.equal(asistanKonusmaMetni(rol, 'erkek'), `Charlie. Your senior colleague. ${adRol}.`, rol)

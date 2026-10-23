@@ -12,7 +12,7 @@
  * deliberate v1, same decision as the Turkish product's lib/doktor/ipucu/ipucuDurumu.ts).
  */
 
-import React, { useCallback, useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { UlkeIpucuBolumu, UygulamaMetni } from '@/lib/ulke/arayuz'
 
 /** The Settings switch: '0' = off; missing or anything else = on (default ON). */
@@ -68,6 +68,7 @@ export function Ipucu({ m, bolum }: { m: UygulamaMetni; bolum: UlkeIpucuBolumu }
   const [acik, setAcik] = useState(false)
   const [etkin, setEtkin] = useState(true)
   const kokRef = useRef<HTMLSpanElement | null>(null)
+  const balonRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
     setEtkin(ipuclariAcikMi())
@@ -89,6 +90,24 @@ export function Ipucu({ m, bolum }: { m: UygulamaMetni; bolum: UlkeIpucuBolumu }
   }, [bolum, icerik])
 
   const kapat = useCallback(() => setAcik(false), [])
+
+  // Keep the bubble inside the viewport (a trigger on the right edge pushed "Got it" off the screen): measure on open, shift inwards.
+  useLayoutEffect(() => {
+    const el = balonRef.current
+    if (!acik || !el) return
+    const yerlestir = () => {
+      el.style.transform = ''
+      if (window.innerWidth <= 480) return
+      const r = el.getBoundingClientRect()
+      let dx = 0
+      if (r.right > window.innerWidth - 12) dx = window.innerWidth - 12 - r.right
+      if (r.left + dx < 12) dx = 12 - r.left
+      if (dx) el.style.transform = `translateX(${Math.round(dx)}px)`
+    }
+    yerlestir()
+    window.addEventListener('resize', yerlestir)
+    return () => window.removeEventListener('resize', yerlestir)
+  }, [acik])
 
   useEffect(() => {
     if (!acik) return
@@ -158,6 +177,7 @@ export function Ipucu({ m, bolum }: { m: UygulamaMetni; bolum: UlkeIpucuBolumu }
 
       {acik && (
         <div
+          ref={balonRef}
           className="uza-ipucu-balon"
           role="dialog"
           aria-label={icerik.baslik}

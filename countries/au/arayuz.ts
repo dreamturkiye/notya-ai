@@ -71,5 +71,6 @@ export const AU_ARAYUZ: UlkeArayuzu = {
   // for any of the five English-speaking countries; Australia's own words are here, not in countries/_dil/en/.
   konsultasyonMetinleri: { 'en-AU': AU_KONSULTASYON_METNI },
   asistan: (rol) => auAsistanKimligi(rol),
-  sesAdlari: { erkek: AU_SES.sesler.erkek.ad, kadin: AU_SES.sesler.kadin.ad },
+  // Voice names (Charlie, Clara) are provider-side identifiers and are never shown to the doctor (Kaan, 2026-10-23): neutral labels only.
+  sesAdlari: { erkek: 'Male voice', kadin: 'Female voice' },
 }
