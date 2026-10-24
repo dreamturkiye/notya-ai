@@ -253,7 +253,7 @@ describe('messages — the doctor opens, the patient answers, the doctor closes'
     const { kim } = await hastaOturumu(DA, H1)
     for (let i = 0; i < C.MESAJ_GUNLUK_AZAMI; i++) assert.equal((await M.hastaMesajYaz(sb(), kim, `m${i}`)).tamam, true)
     assert.deepEqual(await M.hastaMesajYaz(sb(), kim, 'one too many'), { tamam: false, kod: 'LIMIT' })
-    assert.equal((await yaz(DA, H1, 'the doctor is not capped by the patient\'s count')).tamam, true)
+    assert.equal((await M.hekimMesajYaz(sb(), DA, H1, 'the doctor is not capped by the patient\'s count')).tamam, true)
   })
 
   it('UNREAD MARKS, BOTH SIDES: each side marks only what the OTHER wrote, only up to what its screen showed, and once', async () => {
