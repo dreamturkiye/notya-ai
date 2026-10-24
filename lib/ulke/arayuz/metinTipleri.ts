@@ -622,6 +622,44 @@ export type RandevuMetni = {
     readonly randevular: string
     readonly randevuAl: string
   }
+  /** INNER-A: the calendar as Türkiye has it (month / day / agenda / list, type colours, day cards, a booking without a patient record). */
+  readonly ek: {
+    readonly ay: string
+    readonly ajanda: string
+    readonly liste: string
+    readonly turIlk: string
+    readonly turMuayene: string
+    readonly turKontrol: string
+    readonly turDiger: string
+    readonly noktaIpucu: string
+    readonly kayitsiz: string
+    readonly kayitsizSecenek: string
+    readonly kayitsizBaslik: string
+    readonly kayitsizAciklama: string
+    readonly adAlani: string
+    readonly telefonAlani: string
+    readonly turAlani: string
+    readonly kayitOlusturBagla: string
+    readonly hastaDosyasiAc: string
+    readonly hastaFormu: string
+    readonly yenidenPlanla: string
+    readonly sil: string
+    readonly silOnay: string
+    readonly ayBos: string
+    readonly gunBos: string
+    readonly ajandaBos: string
+    readonly randevuSayisi: string
+    readonly daha: string
+    readonly adGerekli: string
+    readonly silinemedi: string
+    readonly sekmeOzet: string
+    readonly sekmeMuayeneler: string
+    readonly sekmeBelgeler: string
+    readonly sekmeAraclar: string
+    readonly sekmeAsilar: string
+    readonly sekmeIletisim: string
+    readonly geriHastalar: string
+  }
 }
 
 /**
