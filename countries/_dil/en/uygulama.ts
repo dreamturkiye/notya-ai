@@ -27,7 +27,7 @@ type Temel = Omit<UygulamaMetni, 'muayene' | 'yeniHasta' | 'ayarlar'> & {
 
 export const EN_UYGULAMA_TEMEL: Temel = {
   kabuk: {
-    bugun: 'Today',
+    bugun: 'Home',
     hastalar: 'Patients',
     ayarlar: 'Settings',
     cikis: 'Sign out',

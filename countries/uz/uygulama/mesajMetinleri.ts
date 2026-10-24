@@ -10,7 +10,7 @@
  * CYRILLIC SCRIPT WAS DERIVED FROM THE LATIN TEXT BY RULE (scripts/uz-kiril.mjs), letter by letter. Nobody who
  * speaks Uzbek or Russian as a first language has read a line of it. `hasta` is PATIENT-FACING: a patient reads it
  * alone, on their own phone. It comes first for the native reader, `hasta.acil`, `hasta.acilNumara`,
- * `hasta.baslatamaz` and `hasta.yanitSuresi` before anything else, and must be read and corrected before a real
+ * `hasta.bos` and `hasta.yanitSuresi` before anything else, and must be read and corrected before a real
  * doctor writes to a real patient (docs/COUNTRY-PACK-UZBEKISTAN.md, "Messages between doctor and patient").
  * WHETHER A DOCTOR MAY WRITE TO A PATIENT THIS WAY under the country's law has not been read by a lawyer.
  * ────────────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -68,12 +68,15 @@ const METINLER: Uclu<MesajMetni> = {
   },
   hasta: {
     baslik: u('Shifokor bilan yozishma', 'Шифокор билан ёзишма', 'Переписка с врачом'),
-    aciklama: u('Bu yerda shifokoringiz sizga yozgan xabarlarni oʻqiysiz va ularga javob yozasiz.', 'Бу ерда шифокорингиз сизга ёзган хабарларни ўқийсиз ва уларга жавоб ёзасиз.', 'Здесь вы читаете сообщения вашего врача и отвечаете на них.'),
+    aciklama: u('Bu yerda shifokoringizga yozasiz va uning javoblarini oʻqiysiz.', 'Бу ерда шифокорингизга ёзасиз ва унинг жавобларини ўқийсиз.', 'Здесь вы пишете врачу и читаете его ответы.'),
     acil: u('Xabarlar shoshilinch holatlar uchun emas: shifokor ularni darhol oʻqimasligi mumkin.', 'Хабарлар шошилинч ҳолатлар учун эмас: шифокор уларни дарҳол ўқимаслиги мумкин.', 'Сообщения не предназначены для экстренных случаев: врач может прочитать их не сразу.'),
     acilNumara: u('Shoshilinch holatda % raqamiga qoʻngʻiroq qiling.', 'Шошилинч ҳолатда % рақамига қўнғироқ қилинг.', 'В экстренном случае звоните по номеру %.'),
     yanitSuresi: u('Javob muddati kafolatlanmaydi: shifokor imkoni boʻlganda javob beradi.', 'Жавоб муддати кафолатланмайди: шифокор имкони бўлганда жавоб беради.', 'Срок ответа не гарантируется: врач отвечает, когда у него есть возможность.'),
-    baslatamaz: u('Bu yerdan yozishmani oʻzingiz boshlay olmaysiz. Shifokoringiz sizga yozganda javob yozishingiz mumkin boʻladi.', 'Бу ердан ёзишмани ўзингиз бошлай олмайсиз. Шифокорингиз сизга ёзганда жавоб ёзишингиз мумкин бўлади.', 'Начать переписку отсюда вы не можете. Вы сможете ответить, когда врач напишет вам.'),
-    yok: u('Shifokoringiz sizga hali yozmagan.', 'Шифокорингиз сизга ҳали ёзмаган.', 'Ваш врач вам пока не писал.'),
+    bos: u('Sizda hali xabar yoʻq. Shifokoringizga yozish uchun «Yangi xabar» tugmasini bosing.', 'Сизда ҳали хабар йўқ. Шифокорингизга ёзиш учун «Янги хабар» тугмасини босинг.', 'Сообщений пока нет. Чтобы написать врачу, нажмите «Новое сообщение».'),
+    yeniMesaj: u('Yangi xabar', 'Янги хабар', 'Новое сообщение'),
+    mesajYer: u('Xabaringizni yozing', 'Хабарингизни ёзинг', 'Напишите сообщение'),
+    vazgec: u('Bekor qilish', 'Бекор қилиш', 'Отмена'),
+    yok: u('Hozircha xabar yoʻq.', 'Ҳозирча хабар йўқ.', 'Сообщений пока нет.'),
     kapali: u('Shifokoringiz bu yozishmani yopgan. Uni oʻqishingiz mumkin, lekin unga yoza olmaysiz.', 'Шифокорингиз бу ёзишмани ёпган. Уни ўқишингиз мумкин, лекин унга ёза олмайсиз.', 'Ваш врач закрыл эту переписку. Вы можете её читать, но писать в неё нельзя.'),
     kapandi: u('Yozishma yopilgan: %', 'Ёзишма ёпилган: %', 'Переписка закрыта: %'),
     yaz: u('Javobingiz', 'Жавобингиз', 'Ваш ответ'),

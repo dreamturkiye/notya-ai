@@ -70,7 +70,7 @@ describe('Uzbekistan — messages between a doctor and a patient: text in three 
   })
 
   it('LEAK TEST over every string, in all three forms: same keys, nothing empty, each form in its own script, no Turkish word or letter', () => {
-    ucBicimDenetle(MM.UZ_MESAJ_METINLERI, 'messages', 49)
+    ucBicimDenetle(MM.UZ_MESAJ_METINLERI, 'messages', 62)
   })
 
   it('THE OUTBOUND CHANNEL IS A SLOT: switched off, no provider, says what is missing and that it waits on the owner; the feature is on and says it is machine-written', () => {
@@ -92,11 +92,11 @@ describe('Uzbekistan — messages between a doctor and a patient: text in three 
         assert.doesNotMatch(v, /\d/, `${f}/${k} carries a digit`)
       }
       // The doctor is told plainly that nobody is notified; the patient that no answer time is promised and that they cannot start.
-      assert.ok(m.hekim.bildirimYok.length > 30 && m.hasta.yanitSuresi.length > 30 && m.hasta.baslatamaz.length > 30)
+      assert.ok(m.hekim.bildirimYok.length > 30 && m.hasta.yanitSuresi.length > 30 && m.hasta.bos.length > 30)
     }
     assert.match(MM.UZ_MESAJ_METINLERI.ru.hekim.bildirimYok, /не оповещает/)
     assert.match(MM.UZ_MESAJ_METINLERI.ru.hasta.yanitSuresi, /не гарантируется/)
-    assert.match(MM.UZ_MESAJ_METINLERI.ru.hasta.baslatamaz, /Начать переписку отсюда вы не можете/)
+    assert.match(MM.UZ_MESAJ_METINLERI.ru.hasta.bos, /Сообщений пока нет/)
     assert.match(MM.UZ_MESAJ_METINLERI['uz-Latn'].hasta.acil, /shoshilinch holatlar uchun emas/)
   })
 
@@ -208,7 +208,7 @@ describe('Uzbekistan — THE RECORD: what a patient reads in the messages, and w
         n++
       }
     }
-    assert.equal(n, 21 * 3, 'every patient-facing sentence of the messages, in three forms')
+    assert.equal(n, 24 * 3, 'every patient-facing sentence of the messages, in three forms')
   })
 
   it('FOR THE LAWYER: the record carries the consent sentence of a consultation in three forms, its stamp, both periods, and says that all of it is unverified', () => {

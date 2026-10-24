@@ -66,17 +66,20 @@ All of it on commit `a1c9020a` of `feat/uz-mesaj`, in the working copy of the re
 
 ### Patient-facing sentences of the messages, for the native reader
 
-Machine-written, in three forms. A patient reads these alone, on their own phone. **Read first:** `hasta.acil` and `hasta.acilNumara` (a patient in an emergency must not wait for an answer here), `hasta.yok` and `hasta.baslatamaz` (a patient must understand that they cannot begin a conversation), `hasta.yanitSuresi` (no promise of a time to answer), `hasta.kapali`. `%` stands for a value the page writes: the ambulance number, a date, a count. A test holds this list to the text in `countries/uz/uygulama/mesajMetinleri.ts`.
+Machine-written, in three forms. A patient reads these alone, on their own phone. **Read first:** `hasta.acil` and `hasta.acilNumara` (a patient in an emergency must not wait for an answer here), `hasta.bos` and `hasta.yeniMesaj` (a patient must understand that they can write first), `hasta.yanitSuresi` (no promise of a time to answer), `hasta.kapali`. `%` stands for a value the page writes: the ambulance number, a date, a count. A test holds this list to the text in `countries/uz/uygulama/mesajMetinleri.ts`.
 
 | Key | Uzbek (Latin) | Uzbek (Cyrillic, derived by rule) | Russian |
 |---|---|---|---|
 | `hasta.baslik` | Shifokor bilan yozishma | Шифокор билан ёзишма | Переписка с врачом |
-| `hasta.aciklama` | Bu yerda shifokoringiz sizga yozgan xabarlarni oʻqiysiz va ularga javob yozasiz. | Бу ерда шифокорингиз сизга ёзган хабарларни ўқийсиз ва уларга жавоб ёзасиз. | Здесь вы читаете сообщения вашего врача и отвечаете на них. |
+| `hasta.aciklama` | Bu yerda shifokoringizga yozasiz va uning javoblarini oʻqiysiz. | Бу ерда шифокорингизга ёзасиз ва унинг жавобларини ўқийсиз. | Здесь вы пишете врачу и читаете его ответы. |
 | `hasta.acil` | Xabarlar shoshilinch holatlar uchun emas: shifokor ularni darhol oʻqimasligi mumkin. | Хабарлар шошилинч ҳолатлар учун эмас: шифокор уларни дарҳол ўқимаслиги мумкин. | Сообщения не предназначены для экстренных случаев: врач может прочитать их не сразу. |
 | `hasta.acilNumara` | Shoshilinch holatda % raqamiga qoʻngʻiroq qiling. | Шошилинч ҳолатда % рақамига қўнғироқ қилинг. | В экстренном случае звоните по номеру %. |
 | `hasta.yanitSuresi` | Javob muddati kafolatlanmaydi: shifokor imkoni boʻlganda javob beradi. | Жавоб муддати кафолатланмайди: шифокор имкони бўлганда жавоб беради. | Срок ответа не гарантируется: врач отвечает, когда у него есть возможность. |
-| `hasta.baslatamaz` | Bu yerdan yozishmani oʻzingiz boshlay olmaysiz. Shifokoringiz sizga yozganda javob yozishingiz mumkin boʻladi. | Бу ердан ёзишмани ўзингиз бошлай олмайсиз. Шифокорингиз сизга ёзганда жавоб ёзишингиз мумкин бўлади. | Начать переписку отсюда вы не можете. Вы сможете ответить, когда врач напишет вам. |
-| `hasta.yok` | Shifokoringiz sizga hali yozmagan. | Шифокорингиз сизга ҳали ёзмаган. | Ваш врач вам пока не писал. |
+| `hasta.bos` | Sizda hali xabar yoʻq. Shifokoringizga yozish uchun «Yangi xabar» tugmasini bosing. | Сизда ҳали хабар йўқ. Шифокорингизга ёзиш учун «Янги хабар» тугмасини босинг. | Сообщений пока нет. Чтобы написать врачу, нажмите «Новое сообщение». |
+| `hasta.yeniMesaj` | Yangi xabar | Янги хабар | Новое сообщение |
+| `hasta.mesajYer` | Xabaringizni yozing | Хабарингизни ёзинг | Напишите сообщение |
+| `hasta.vazgec` | Bekor qilish | Бекор қилиш | Отмена |
+| `hasta.yok` | Hozircha xabar yoʻq. | Ҳозирча хабар йўқ. | Сообщений пока нет. |
 | `hasta.kapali` | Shifokoringiz bu yozishmani yopgan. Uni oʻqishingiz mumkin, lekin unga yoza olmaysiz. | Шифокорингиз бу ёзишмани ёпган. Уни ўқишингиз мумкин, лекин унга ёза олмайсиз. | Ваш врач закрыл эту переписку. Вы можете её читать, но писать в неё нельзя. |
 | `hasta.kapandi` | Yozishma yopilgan: % | Ёзишма ёпилган: % | Переписка закрыта: % |
 | `hasta.yaz` | Javobingiz | Жавобингиз | Ваш ответ |

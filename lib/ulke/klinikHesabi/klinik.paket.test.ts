@@ -943,7 +943,7 @@ describe('clinic accounts — the front desk never receives a clinical field (as
       ['search by name', await al(OB, `${OB_YOL}?hekim=${HE}&q=QA+Patient`)],
       ['search by phone', await al(OB, `${OB_YOL}?hekim=${HE}&q=5550101`)],
       ['the card', await al(OB, `${OB_YOL}?hekim=${HE}&hasta=${P1}`)],
-      ['a new patient', await gonder(OB, 'POST', OB_YOL, { hekimId: HE, islem: 'hasta', ad: 'QA New Patient', otaIsmi: 'QA Mid', dogumTarihi: '2001-02-03', cinsiyet: 'male', telefon: '+000 11', dil: paket.uygulama?.hastaDilleri[0], ulusalKimlik: '11223344556677' })],
+      ['a new patient', await gonder(OB, 'POST', OB_YOL, { hekimId: HE, islem: 'hasta', ad: 'QA New Patient', otaIsmi: 'QA Mid', dogumTarihi: '2001-02-03', cinsiyet: 'male', telefon: paket.telefon.ornek, dil: paket.uygulama?.hastaDilleri[0], ulusalKimlik: '11223344556677' })],
       ['a booking', await gonder(OB, 'POST', OB_YOL, { hekimId: HE, islem: 'randevu', hastaId: P1, gun: GUN(), saat: '14:00', sureDk: SURE, yineDe: true, neden: 'QA-GIZLI-ON-BURO-NEDENI' })],
       ['a status', await gonder(OB, 'PATCH', OB_YOL, { hekimId: HE, randevuId: R1, durum: 'geldi' })],
       ['a move', await gonder(OB, 'PATCH', OB_YOL, { hekimId: HE, randevuId: R1, gun: GUN(), saat: '16:00', sureDk: SURE, yineDe: true })],

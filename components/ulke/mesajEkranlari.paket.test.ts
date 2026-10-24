@@ -125,19 +125,19 @@ describe('the messages\' screens — the patient\'s side', () => {
     assert.match(kod('components/ulke/portal/PortalSayfasi.tsx'), /const acil = portalAcilNumarasi\(\)[\s\S]*<PortalHastaSayfasi [^>]*acilNumara=\{acil\}/)
   })
 
-  it('A PATIENT CANNOT START A CONVERSATION: with none open the section says so in plain words and has NO text box and NO send button', () => {
+  it('A PATIENT CAN START A CONVERSATION: with none open the section says so and offers a new message; a failed load offers nothing', () => {
     if (!ACIK) return
     for (const dil of FORMLAR) {
       const s = x(dil).hasta
-      const hic = hastaBolumu(dil, { yazismalar: [], yazabilir: false })
-      for (const m of [s.baslik, s.aciklama, s.yok, s.baslatamaz]) var_(hic, m, `${dil} none`)
+      const hic = hastaBolumu(dil, { yazismalar: [], yazabilir: true })
+      for (const m of [s.baslik, s.aciklama, s.yok, s.yaz, s.gonder]) var_(hic, m, `${dil} none`)
+      assert.match(hic, /<textarea/, `${dil}: a patient with no conversation can write`)
       yok(hic, s.kapali, `${dil} none: "closed" where nothing was ever open`)
-      assert.match(hic, /data-alan="portal-mesajlar"[^>]*data-yazabilir="hayir"/)
-      assert.match(hic, /data-alan="mesaj-baslatamaz"/)
-      const kapanmis = hastaBolumu(dil, { yazismalar: [kapali()], yazabilir: false })
-      for (const m of [s.kapali, s.baslatamaz, Y.yerine(s.kapandi, B.tarihYaz(G2, paket.saatDilimi)), `${QA} of the closed one`]) var_(kapanmis, m, `${dil} closed`)
-      yok(kapanmis, s.yok, `${dil} closed`)
-      for (const html of [hic, kapanmis, hastaBolumu(dil, null), hastaBolumu(dil, null, { yuklenemedi: true })]) {
+      assert.match(hic, /data-alan="portal-mesajlar"[^>]*data-yazabilir="evet"/)
+      assert.doesNotMatch(hic, /doctor writes first|Your doctor has not written/i)
+      const kapanmis = hastaBolumu(dil, { yazismalar: [kapali()], yazabilir: true })
+      for (const m of [s.kapali, Y.yerine(s.kapandi, B.tarihYaz(G2, paket.saatDilimi)), `${QA} of the closed one`, s.gonder]) var_(kapanmis, m, `${dil} closed`)
+      for (const html of [hastaBolumu(dil, null), hastaBolumu(dil, null, { yuklenemedi: true })]) {
         assert.doesNotMatch(html, /<textarea|data-eylem="portal-mesaj-gonder"|<form/, `${dil}: a text box is offered where no answer is possible`)
         yok(html, s.gonder, `${dil}`)
       }
@@ -152,7 +152,7 @@ describe('the messages\' screens — the patient\'s side', () => {
       const html = hastaBolumu(dil, { yazismalar: [acik(), kapali()], yazabilir: true })
       for (const m of [s.hekim, s.siz, s.yaz, s.gonder, s.yeni, Y.yerine(s.okunmamis, 1), `${B.tarihYaz(G1, paket.saatDilimi)} ${B.saatYaz(G1, paket.saatDilimi)}`, `${QA} from the patient`, `${QA} from the doctor <b>not markup</b>`]) var_(html, m, `${dil} open`)
       assert.doesNotMatch(html, /<b>not markup<\/b>/, 'a message\'s text was drawn as markup')
-      for (const m of [s.baslatamaz, s.yok, s.kapali]) yok(html, m, `${dil} open`)
+      for (const m of [s.yok, s.kapali]) yok(html, m, `${dil} open`)
       assert.match(html, /data-alan="portal-mesajlar" data-okunmamis="1" data-yazabilir="evet"/)
       // newest conversation first; inside one, oldest message first
       assert.ok(html.indexOf('data-yazisma="y1"') < html.indexOf('data-yazisma="y0"'))
@@ -312,7 +312,7 @@ describe('the messages\' screens — the catalogue', () => {
   it('is the same shape in every form, each entry is there, a sentence keeps its placeholders in every form, the emergency notice holds no digit, and nothing of another country is in it', () => {
     if (!ACIK) return
     const ilk = yaprak(x(FORMLAR[0]))
-    assert.equal(ilk.length, 59, `${ilk.length} entries`)
+    assert.equal(ilk.length, 62, `${ilk.length} entries`)
     for (const dil of FORMLAR) {
       const y = yaprak(x(dil))
       assert.deepEqual(y.map((e) => e[0]), ilk.map((e) => e[0]), `${dil}: not the same keys as ${FORMLAR[0]}`)
@@ -322,7 +322,7 @@ describe('the messages\' screens — the catalogue', () => {
         temiz(y[n][1], `messages catalogue ${dil}/${y[n][0]}`)
       }
       const s = x(dil).hasta
-      for (const t of [s.acil, s.acilNumara, s.baslatamaz, s.yanitSuresi]) assert.doesNotMatch(t, /\d/, `${dil}: a digit in a sentence a patient relies on`)
+      for (const t of [s.acil, s.acilNumara, s.bos, s.yeniMesaj, s.mesajYer, s.yanitSuresi]) assert.doesNotMatch(t, /\d/, `${dil}: a digit in a sentence a patient relies on`)
       assert.match(s.acilNumara, /%(?!\d)/, `${dil}: the number's sentence has no place for the number`)
       assert.doesNotMatch(s.acil, /%/, `${dil}: the notice itself carries no value`)
       for (const k of ['cokUzun', 'okunmamis', 'kapandi'] as const) assert.match(s[k], /%(?!\d)/, `${dil}/hasta.${k}`)

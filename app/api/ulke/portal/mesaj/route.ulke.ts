@@ -2,13 +2,12 @@
  * NOTYA-ULKE-MESAJ-01 — /api/ulke/portal/mesaj: the signed-in PATIENT's messages with their doctor.
  *
  *   GET                 200 { yazismalar: [{ id, olusturuldu, kapandi, mesajlar: [{ id, gonderen, metin, an, okundu }] }], yazabilir }
- *                       `yazabilir` false = no conversation is open: a patient cannot start one
- *   POST  { metin }     200 { id }            the patient answers in the conversation that is open
+ *                       `yazabilir` is true for a signed-in patient: they may write first (as in Türkiye's portal)
+ *   POST  { metin }     200 { id }            the patient writes: into the open conversation, or into a NEW one when none is open
  *   PUT   { kadar }     200 { ok: true }      the patient has read what the doctor wrote, up to the moment `kadar`
  *                                             (the newest message the page showed): nothing unseen is marked
  *
- *   409 { code: 'KAPALI' }           no conversation is open (none yet, or the doctor closed it)
- *   400 { code: 'BOS' | 'UZUN' }     429 { code: 'LIMIT' }
+ *    *   400 { code: 'BOS' | 'UZUN' }     429 { code: 'LIMIT' }
  *   400 { code: 'GECERSIZ' }         not the portal's own request
  *   404 { code: 'NOT_FOUND' }        the feature is off
  *   401 { code: 'OTURUM_YOK' }       no portal session (a doctor's session is not one)

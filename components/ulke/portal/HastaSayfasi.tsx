@@ -174,7 +174,7 @@ export function PortalHastaSayfasi({ dil, p, r, icerik, acilNumara, iste, yenile
         tarih: son ? `${tarihYaz(son.an, tz)} ${saatYaz(son.an, tz)}` : '', okundu: !y.mesajlar.some((m) => m.gonderen === 'hekim' && !m.okundu),
         mesajlar: y.mesajlar.map((m) => ({ id: m.id, kimden: m.gonderen === 'hekim' ? `${x.hekim}` : x.siz, metin: m.metin, tarih: `${tarihYaz(m.an, tz)} ${saatYaz(m.an, tz)}`, taraf: m.gonderen === 'hekim' ? 'doktor' as const : 'hasta' as const })),
         yanitlayabilir: !y.kapandi && Boolean(mesajlar.g?.yazabilir),
-        yanitYokNotu: y.kapandi ? x.kapali : x.baslatamaz,
+        yanitYokNotu: x.kapali,
       }
     })
     const gonder = async (gv: { metin: string }): Promise<PortalMesajSonucu> => {
@@ -193,10 +193,10 @@ export function PortalHastaSayfasi({ dil, p, r, icerik, acilNumara, iste, yenile
       <section data-alan="portal-mesajlar" data-okunmamis={mesajlar.g ? okunmamis : undefined} data-yazabilir={mesajlar.g ? (mesajlar.g.yazabilir ? 'evet' : 'hayir') : undefined}>
         <PortalMesajlarGorunumu
           s={{
-            baslik: x.baslik, altBaslik: x.aciklama, yeniMesaj: '', konuYer: '', mesajYer: '', dosyaEkle: '', ekBilgi: '', kaldir: '', uyari: x.yanitSuresi,
-            gonder: x.gonder, gonderiliyor: x.gonderiliyor, vazgec: '', bosBaslik: g.mesajBosBaslik, bosGovdeYazilabilir: x.baslatamaz, bosGovdeSalt: x.baslatamaz,
+            baslik: x.baslik, altBaslik: x.aciklama, yeniMesaj: x.yeniMesaj, konuYer: '', mesajYer: x.mesajYer, dosyaEkle: '', ekBilgi: '', kaldir: '', uyari: x.yanitSuresi,
+            gonder: x.gonder, gonderiliyor: x.gonderiliyor, vazgec: x.vazgec, bosBaslik: g.mesajBosBaslik, bosGovdeYazilabilir: x.bos, bosGovdeSalt: x.kapali,
             klasorler: [{ key: 'gelen', label: g.mesajKlasorAcik }, { key: 'arsiv', label: g.mesajKlasorKapali }], klasorBos: g.mesajKlasorBos,
-            geri: g.mesajGeri, yanitYer: x.yaz, yanitla: x.gonder, sec: g.mesajSec, yanitYokNotu: x.baslatamaz, ac: '',
+            geri: g.mesajGeri, yanitYer: x.yaz, yanitla: x.gonder, sec: g.mesajSec, yanitYokNotu: x.kapali, ac: '',
           }}
           ust={(
             <>
@@ -206,7 +206,7 @@ export function PortalHastaSayfasi({ dil, p, r, icerik, acilNumara, iste, yenile
           )}
           mesajlar={konular}
           yanitlayabilir={Boolean(mesajlar.g?.yazabilir)}
-          yeniMesajAcik={false}
+          yeniMesajAcik={Boolean(mesajlar.g?.yazabilir)}
           ekler={false}
           onOku={(id) => mesajlar.oku(id)}
           onGonder={gonder}

@@ -26,7 +26,7 @@ export type { UygulamaMetni }
 
 const UZ_LATN: UygulamaMetni = {
   kabuk: {
-    bugun: 'Bugun',
+    bugun: 'Bosh sahifa',
     hastalar: 'Bemorlar',
     ayarlar: 'Sozlamalar',
     cikis: 'Chiqish',
@@ -395,7 +395,7 @@ const UZ_LATN: UygulamaMetni = {
 
 const UZ_CYRL: UygulamaMetni = {
   kabuk: {
-    bugun: 'Бугун',
+    bugun: 'Бош саҳифа',
     hastalar: 'Беморлар',
     ayarlar: 'Созламалар',
     cikis: 'Чиқиш',
@@ -760,7 +760,7 @@ const UZ_CYRL: UygulamaMetni = {
 
 const RU: UygulamaMetni = {
   kabuk: {
-    bugun: 'Сегодня',
+    bugun: 'Главная',
     hastalar: 'Пациенты',
     ayarlar: 'Настройки',
     cikis: 'Выйти',

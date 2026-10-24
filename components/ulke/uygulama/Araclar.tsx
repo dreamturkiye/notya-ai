@@ -379,13 +379,13 @@ export default function Araclar() {
     <Cerceve dil={u.dil} m={u.m} ad={u.hesap.ad} aktif="araclar" cikis={u.cikis}>
       <div style={{ display: 'flex', justifyContent: 'flex-end', margin: '0 0 8px' }}><Ipucu m={u.m} bolum="araclar" /></div>
       <Hata>{h.durum === 'bulunamadi' ? a.kayit.hastaBulunamadi : null}</Hata>
-      {/* AU-BETA-01: official-site lookups, reference links and the record-system stub, where the pack brings them. */}
-      {!x ? <><ReferansAramalari /><ReferansBolumleri /><KayitSistemiKarti /></> : null}
       {x ? <AracEkrani x={x} a={a} u={u} dil={u.dil} notDili={u.hesap.notDili} icerik={icerik} hasta={h.hasta} rol={u.hesap.rol} /> : (
         <>
           {/* An address that names a tool this account does not have: said once, above the grid it does have. */}
           <Hata>{adres.arac ? a.arac.yok : null}</Hata>
           <AraclarIzgarasi a={a} dil={u.dil} icerik={icerik} rol={u.hesap.rol} q={adres.q} hasta={h.hasta} bugun={ulkeGunu(new Date(), hesapSaatDilimi())} />
+          {/* AU-BETA-01: official-site lookups, reference links and the record-system stub, where the pack brings them. They sit BELOW the tools grid, as Türkiye's tools page leads with the tools (Kaan, 2026-10-24). */}
+          <ReferansAramalari /><ReferansBolumleri /><KayitSistemiKarti />
         </>
       )}
     </Cerceve>

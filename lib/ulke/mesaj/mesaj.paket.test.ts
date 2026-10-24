@@ -217,17 +217,43 @@ describe('messages — the doctor opens, the patient answers, the doctor closes'
     assert.ok(!JSON.stringify(await M.hekimOkunmamislari(sb(), DA)).includes(GIZLI), 'the list holds no text of a message')
   })
 
-  it('A PATIENT CANNOT START A CONVERSATION: with none open nothing is written — not before the doctor wrote, and not into an empty one', async () => {
+  it('A PATIENT CAN START A CONVERSATION: the first message opens one, the doctor sees it unread, the doctor answers into the same thread, both directions are in it', async () => {
     if (!KIT) return
     const { kim } = await hastaOturumu(DA, H1)
-    assert.deepEqual(await M.hastaMesajlari(sb(), kim), { yazismalar: [], yazabilir: false })
-    assert.deepEqual(await M.hastaMesajYaz(sb(), kim, 'may I ask something?'), { tamam: false, kod: 'KAPALI' })
-    assert.equal(yazismalar().length + mesajlar().length, 0, 'a patient\'s message opened a conversation')
-    // a conversation that was opened and never got the doctor's message (a failed write) is not an invitation either
-    yazismalar().push({ id: 'bos-yazisma', ulke: BU, doctor_id: DA, patient_id: H1, kapandi_at: null, created_at: simdiIso(), updated_at: simdiIso() })
-    assert.deepEqual(await M.hastaMesajlari(sb(), kim), { yazismalar: [], yazabilir: false })
-    assert.deepEqual(await M.hastaMesajYaz(sb(), kim, 'hello?'), { tamam: false, kod: 'KAPALI' })
-    assert.equal(mesajlar().length, 0)
+    assert.deepEqual(await M.hastaMesajlari(sb(), kim), { yazismalar: [], yazabilir: true })
+    const r = await M.hastaMesajYaz(sb(), kim, 'may I ask something?')
+    assert.equal(r.tamam, true)
+    assert.equal(yazismalar().length, 1)
+    assert.equal(mesajlar().length, 1)
+    assert.equal(mesajlar()[0].gonderen, 'hasta')
+    // the doctor's inbox: unread from this patient, no text in the list
+    assert.deepEqual((await M.hekimOkunmamislari(sb(), DA)).map((x) => [x.hastaId, x.adet]), [[H1, 1]])
+    assert.deepEqual((await M.hekimOkunmamislari(sb(), DB)), [], 'another doctor sees nothing of it')
+    // a second patient message continues the SAME conversation
+    ilerle(DAKIKA)
+    assert.equal((await M.hastaMesajYaz(sb(), kim, 'and one more thing')).tamam, true)
+    assert.equal(yazismalar().length, 1)
+    // the doctor answers into it: one thread, both directions
+    ilerle(DAKIKA)
+    const d = await yaz(DA, H1, 'yes, go ahead')
+    assert.equal(d.yazismaId, yazismalar()[0].id)
+    const g = await M.hastaMesajlari(sb(), kim)
+    assert.deepEqual(metinler(g), ['may I ask something?', 'and one more thing', 'yes, go ahead'])
+    const h = await M.hekimMesajlari(sb(), DA, H1)
+    assert.deepEqual(h!.yazismalar[0].mesajlar.map((x) => x.gonderen), ['hasta', 'hasta', 'hekim'])
+    // an empty or over-long message is refused, nothing is written
+    const once = mesajlar().length
+    assert.equal((await M.hastaMesajYaz(sb(), kim, '   ')).tamam, false)
+    assert.equal((await M.hastaMesajYaz(sb(), kim, 'x'.repeat(C.MESAJ_AZAMI + 1))).tamam, false)
+    assert.equal(mesajlar().length, once)
+  })
+
+  it('A PATIENT\'S DAILY LIMIT: the day\'s cap on a patient\'s messages is enforced, and the doctor\'s own cap is separate', async () => {
+    if (!KIT) return
+    const { kim } = await hastaOturumu(DA, H1)
+    for (let i = 0; i < C.MESAJ_GUNLUK_AZAMI; i++) assert.equal((await M.hastaMesajYaz(sb(), kim, `m${i}`)).tamam, true)
+    assert.deepEqual(await M.hastaMesajYaz(sb(), kim, 'one too many'), { tamam: false, kod: 'LIMIT' })
+    assert.equal((await yaz(DA, H1, 'the doctor is not capped by the patient\'s count')).tamam, true)
   })
 
   it('UNREAD MARKS, BOTH SIDES: each side marks only what the OTHER wrote, only up to what its screen showed, and once', async () => {
@@ -274,11 +300,13 @@ describe('messages — the doctor opens, the patient answers, the doctor closes'
     ilerle(DAKIKA)
     // THE PATIENT: reads it, cannot write, and is told so
     const g = await M.hastaMesajlari(sb(), kim)
-    assert.equal(g!.yazabilir, false)
+    assert.equal(g!.yazabilir, true)
     assert.deepEqual([g!.yazismalar[0].kapandi, metinler(g)], [kapanis, ['first conversation', 'my answer']])
-    const once = anlik()
-    assert.deepEqual(await M.hastaMesajYaz(sb(), kim, 'one more thing'), { tamam: false, kod: 'KAPALI' })
-    assert.equal(anlik(), once, 'a patient wrote into a closed conversation')
+    // the patient never writes INTO the closed one: a new message opens a NEW conversation
+    const once = mesajlar().filter((m) => m.yazisma_id === a.yazismaId).length
+    assert.equal((await M.hastaMesajYaz(sb(), kim, 'one more thing')).tamam, true)
+    assert.equal(mesajlar().filter((m) => m.yazisma_id === a.yazismaId).length, once, 'a patient wrote into a closed conversation')
+    assert.equal(yazismalar().length, 2)
     // closing again changes nothing
     assert.deepEqual(await M.yazismaKapat(sb(), DA, a.yazismaId), { tamam: false, kod: 'DURUM' })
     assert.equal(yazismalar()[0].kapandi_at, kapanis)
@@ -290,7 +318,8 @@ describe('messages — the doctor opens, the patient answers, the doctor closes'
     assert.deepEqual(h!.yazismalar.map((y) => [y.id, Boolean(y.kapandi)]), [[b.yazismaId, false], [a.yazismaId, true]], 'newest conversation first')
     assert.equal((await M.hastaMesajlari(sb(), kim))!.yazabilir, true)
     await cevapla(kim, 'answer to the second')
-    assert.equal(mesajlar().filter((m) => m.yazisma_id === b.yazismaId).length, 2)
+    // the patient's own new message opened it; the doctor's message and the answer joined it
+    assert.equal(mesajlar().filter((m) => m.yazisma_id === b.yazismaId).length, 3)
   })
 
   it('THE DATABASE\'S OWN RULE: a message written straight into a closed conversation is refused, a message never changes, a closed conversation does not reopen', async () => {
@@ -402,8 +431,13 @@ describe('messages — isolation', () => {
     assert.equal(satir(id).okundu_at, null, 'reading patient one\'s file marked patient two\'s answer as read')
     // closing one patient's conversation does not close the other's
     await M.yazismaKapat(sb(), DA, a1.yazismaId)
-    assert.equal((await M.hastaMesajlari(sb(), o1.kim))!.yazabilir, false)
-    assert.equal((await M.hastaMesajlari(sb(), o2.kim))!.yazabilir, true)
+    assert.equal((await M.hastaMesajlari(sb(), o1.kim))!.yazismalar[0].kapandi !== null, true)
+    assert.equal((await M.hastaMesajlari(sb(), o2.kim))!.yazismalar[0].kapandi, null)
+    // a patient who writes first lands in THEIR OWN thread with THEIR doctor, never the other patient's
+    const yeni = await M.hastaMesajYaz(sb(), o3.kim, 'from patient three')
+    assert.equal(yeni.tamam, true)
+    const ys = yazismalar().filter((y) => y.patient_id === H3)
+    assert.equal(ys.length, 1); assert.equal(ys[0].doctor_id, DB)
   })
 
   it('A SESSION THAT POINTS AT SOMEBODY ELSE gets nothing: a patient id of another doctor, or a doctor who is not the patient\'s', async () => {
@@ -637,24 +671,29 @@ describe('messages — the routes', () => {
     assert.equal(anlik(), once)
   })
 
-  it('CLOSED CONVERSATION through the routes: the patient is answered 409 and nothing is written; the patient still reads it, and cannot start one', async () => {
+  it('PATIENT-FIRST THROUGH THE ROUTES: a signed-in patient starts a conversation (201/200), the doctor\'s inbox shows it unread, a closed one is read-only and the next message opens a NEW one; no session is refused', async () => {
     if (!ROTA) return
     const o = await hastaOturumu(DA, H1)
     const s = { cerez: o.anahtar, baglanti: o.token }
-    // before the doctor wrote: nothing to read, nothing to answer
-    assert.deepEqual((await cagir(rota.hasta, 'GET', HASTA, s)).govde, { yazismalar: [], yazabilir: false })
-    const erken = await cagir(rota.hasta, 'POST', HASTA, { ...s, portal: true, govde: { metin: 'may I write first?' } })
-    assert.deepEqual([erken.status, erken.govde], [409, { code: 'KAPALI' }])
+    assert.deepEqual((await cagir(rota.hasta, 'GET', HASTA, s)).govde, { yazismalar: [], yazabilir: true })
+    // no PIN session: refused, nothing written
+    const yetkisiz = await cagir(rota.hasta, 'POST', HASTA, { portal: true, govde: { metin: 'no session' } })
+    assert.equal(yetkisiz.status, 401)
     assert.equal(yazismalar().length + mesajlar().length, 0)
-    const a = await yaz(DA, H1, 'text')
-    await cagir(rota.hekim, 'PATCH', HEKIM, { jeton: 'jeton-a', govde: { yazismaId: a.yazismaId, islem: 'kapat' } })
-    const once = anlik()
-    const r = await cagir(rota.hasta, 'POST', HASTA, { ...s, portal: true, govde: { metin: 'too late' } })
-    assert.deepEqual([r.status, r.govde], [409, { code: 'KAPALI' }])
-    assert.equal(anlik(), once)
+    const ilk = await cagir(rota.hasta, 'POST', HASTA, { ...s, portal: true, govde: { metin: 'may I write first?' } })
+    assert.equal(ilk.status, 200)
+    assert.equal(yazismalar().length, 1)
+    const gelen = await cagir(rota.hekim, 'GET', HEKIM + '?gelen=1', { jeton: 'jeton-a' })
+    assert.equal(gelen.status, 200)
+    assert.match(JSON.stringify(gelen.govde), new RegExp(H1))
+    const a = { yazismaId: yazismalar()[0].id }
+    await cagir(rota.hekim, 'PATCH', HEKIM, { jeton: 'jeton-a', govde: { ...a, islem: 'kapat' } })
     const g = await cagir(rota.hasta, 'GET', HASTA, s)
-    assert.equal(g.govde.yazabilir, false)
     assert.deepEqual(g.govde.yazismalar.map((y: { kapandi: string | null; mesajlar: unknown[] }) => [Boolean(y.kapandi), y.mesajlar.length]), [[true, 1]])
+    const r = await cagir(rota.hasta, 'POST', HASTA, { ...s, portal: true, govde: { metin: 'after close' } })
+    assert.equal(r.status, 200)
+    assert.equal(yazismalar().length, 2, 'the closed conversation was written into')
+    assert.equal(mesajlar().filter((m) => m.yazisma_id === a.yazismaId).length, 1)
   })
 
   it('NOTHING IS SENT AND NO MODEL IS CALLED: the library and both routes import no model gateway, no mail and no messenger, and the page\'s own answer still holds no message', async () => {

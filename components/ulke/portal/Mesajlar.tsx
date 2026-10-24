@@ -62,6 +62,7 @@ export function PortalMesajGorunumu({ x, g, yuklenemedi, acilNumara, saatDilimi,
             <YazismaListesi yazismalar={g.yazismalar} ben="hasta" zaman={(iso) => `${tarihYaz(iso, saatDilimi)} ${saatYaz(iso, saatDilimi)}`}
               s={{ yazan: { hekim: x.hekim, hasta: x.siz }, acik: '', kapali: (k) => yerine(x.kapandi, tarihYaz(k, saatDilimi)), yeni: x.yeni }} />
           )}
+          {sonKapali ? <p className="uza-bilgi-kutu" role="status" data-alan="mesaj-kapali">{x.kapali}</p> : null}
           {g.yazabilir ? (
             <form className="uza-form" onSubmit={gonder} noValidate data-alan="mesaj-yaz">
               <div className="uza-alan">
@@ -73,12 +74,7 @@ export function PortalMesajGorunumu({ x, g, yuklenemedi, acilNumara, saatDilimi,
                 <button type="submit" className="uza-dugme" disabled={bekliyor} data-eylem="portal-mesaj-gonder">{bekliyor ? x.gonderiliyor : x.gonder}</button>
               </div>
             </form>
-          ) : (
-            <div data-alan="mesaj-baslatamaz" style={{ marginTop: 12 }}>
-              {sonKapali ? <p className="uza-bilgi-kutu" role="status" data-alan="mesaj-kapali">{x.kapali}</p> : null}
-              <p className="uza-ipucu">{x.baslatamaz}</p>
-            </div>
-          )}
+          ) : null}
         </>
       )}
     </section>

@@ -263,13 +263,15 @@ describe('E. a short day is the day, never a cut-off year', () => {
 describe('F. the words of the fields', () => {
   it('every form of the pack has every word, the sentence for an unreadable number holds the two places for its examples, and no word is another country\'s', () => {
     if (!ACIK) return
-    const ANAHTARLAR = ['gun', 'ay', 'yil', 'saat', 'dakika', 'tarihGecersiz', 'saatGecersiz', 'sayiOkunamadi', 'duzelt'] as const
+    const ANAHTARLAR = ['gun', 'ay', 'yil', 'saat', 'dakika', 'tarihGecersiz', 'saatGecersiz', 'sayiOkunamadi', 'telefonGerekli', 'telefonKisa', 'telefonUzun', 'telefonHarf', 'telefonGecersiz', 'duzelt'] as const
+    const ORNEKLI = ['sayiOkunamadi', 'telefonKisa', 'telefonUzun', 'telefonGecersiz']
     for (const dil of FORMLAR) {
       const m = g(dil) as unknown as Record<string, string>
       assert.deepEqual(Object.keys(m).sort(), [...ANAHTARLAR].sort(), dil)
       for (const k of ANAHTARLAR) assert.ok(typeof m[k] === 'string' && m[k].trim().length > 0, `${dil}: girdi.${k}`)
       assert.match(m.sayiOkunamadi, /%1(?!\d)/); assert.match(m.sayiOkunamadi, /%2(?!\d)/)
-      for (const k of ANAHTARLAR) if (k !== 'sayiOkunamadi') assert.doesNotMatch(m[k], /%|\d/, `${dil}: girdi.${k} holds no value and no figure`)
+      for (const k of ANAHTARLAR) if (!ORNEKLI.includes(k)) assert.doesNotMatch(m[k], /%|\d/, `${dil}: girdi.${k} holds no value and no figure`)
+      for (const k of ['telefonKisa', 'telefonUzun', 'telefonGecersiz']) assert.match(m[k], /%1(?!\d)/, `${dil}: girdi.${k} holds the example`)
       temiz(Object.values(m).join('\n'), `girdi ${dil}`)
     }
     // the words differ between the forms of a pack that has several (a form is never a copy of another)

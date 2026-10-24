@@ -1,10 +1,10 @@
 /**
  * NOTYA-ULKE-MESAJ-01 — MESSAGES BETWEEN A DOCTOR AND A PATIENT, inside the patient portal (migration 140). Server only.
  *
- * WHO OPENS, WHO CLOSES. THE DOCTOR opens a conversation by writing to one of their own patients, and the doctor
- * closes it. THE PATIENT answers in a conversation that is open, and cannot start one: with none open, the
- * patient's page says so and still shows that messages are not for emergencies. A closed conversation can be read by
- * both and written in by neither; the doctor's next message opens a new one.
+ * WHO OPENS, WHO CLOSES. EITHER SIDE opens a conversation by writing (Kaan, 2026-10-24: as in Türkiye's portal the
+ * patient can write first); only the doctor closes it. The patient's page still shows that messages are not for
+ * emergencies and promises no reply at a particular time. A closed conversation can be read by both and written in by
+ * neither; the next message of either side opens a new one.
  *
  * NOTHING LEAVES THE PRODUCT. No SMS, no e-mail, no messenger: the kit has no outbound channel, and a pack's
  * `uygulama.mesaj.disBildirim` is a slot that can only say "off". The patient reads a message after signing in to
@@ -68,6 +68,18 @@ type MesajSatiri = { id: string; yazisma_id: string; gonderen: string; metin_enc
 async function acikYazisma(supabase: SupabaseClient, c: Cift): Promise<YazismaSatiri | null> {
   const { data } = await ulkeTablosu(supabase, YAZISMALAR).select('id, kapandi_at, created_at').eq('doctor_id', c.doktorId).eq('patient_id', c.hastaId).is('kapandi_at', null).maybeSingle()
   return (data as unknown as YazismaSatiri | null) ?? null
+}
+
+/**
+ * The open conversation of this pair — opened here when none is. EITHER SIDE opens it (Kaan, 2026-10-24: a patient can
+ * write first, as in Türkiye's portal). 23505: another request of the pair opened it at the same moment — that one is it.
+ */
+async function acikYazismaAc(supabase: SupabaseClient, c: Cift, simdi: number): Promise<YazismaSatiri | null> {
+  const var_ = await acikYazisma(supabase, c)
+  if (var_) return var_
+  const an = new Date(simdi).toISOString()
+  const { data, error } = await ulkeTablosu(supabase, YAZISMALAR).insert({ doctor_id: c.doktorId, patient_id: c.hastaId, kapandi_at: null, created_at: an, updated_at: an }).select('id, kapandi_at, created_at').single()
+  return error ? await acikYazisma(supabase, c) : (data as unknown as YazismaSatiri | null)
 }
 
 /** The conversations of this pair with their messages, newest conversation first. A message whose value cannot be read is left out. */
@@ -150,14 +162,8 @@ export async function hekimMesajYaz(supabase: SupabaseClient, doktorId: string, 
   if (!m.tamam) return m
   const c = { doktorId, hastaId: hasta.id }
   if ((await gunlukAdet(supabase, c, 'hekim', simdi)) >= MESAJ_GUNLUK_AZAMI) return { tamam: false, kod: 'LIMIT' }
-  let y = await acikYazisma(supabase, c)
-  if (!y) {
-    const an = new Date(simdi).toISOString()
-    const { data, error } = await ulkeTablosu(supabase, YAZISMALAR).insert({ doctor_id: doktorId, patient_id: hasta.id, kapandi_at: null, created_at: an, updated_at: an }).select('id, kapandi_at, created_at').single()
-    // 23505: another request of the same doctor opened it at the same moment — that one is the conversation.
-    y = error ? await acikYazisma(supabase, c) : (data as unknown as YazismaSatiri | null)
-    if (!y) return { tamam: false, kod: 'BASARISIZ' }
-  }
+  const y = await acikYazismaAc(supabase, c, simdi)
+  if (!y) return { tamam: false, kod: 'BASARISIZ' }
   const r = await mesajEkle(supabase, c, y.id, 'hekim', m.metin, simdi)
   return r.tamam ? { tamam: true, id: r.id, yazismaId: y.id } : r
 }
@@ -243,23 +249,24 @@ export async function hastaMesajlari(supabase: SupabaseClient, o: PortalKimligi)
   if (!hasta) return null
   const c = { doktorId: o.doktorId, hastaId: hasta.id }
   const yazismalar = await yazismalariOku(supabase, c)
-  // The patient may answer only where a conversation is open AND the doctor has written in it.
-  return { yazismalar, yazabilir: yazismalar.some((y) => !y.kapandi) }
+  // The patient can always write: with no conversation open, the first message opens one (two-way, as in Türkiye's portal).
+  return { yazismalar, yazabilir: true }
 }
 
-/** The signed-in PATIENT answers in the conversation that is open. With none open nothing is written: a patient opens none. */
+/**
+ * The signed-in PATIENT writes to their own doctor — in the conversation that is open, or in a new one this message
+ * opens. The patient and the doctor are the portal session's own; a request names neither. Text length and the daily
+ * count are limited like the doctor's.
+ */
 export async function hastaMesajYaz(supabase: SupabaseClient, o: PortalKimligi, ham: unknown, simdi = Date.now()): Promise<{ tamam: true; id: string } | Ret> {
   const hasta = await hastaGetir(supabase, o.doktorId, o.hastaId)
   if (!hasta) return { tamam: false, kod: 'NOT_FOUND' }
   const m = metniDenetle(ham)
   if (!m.tamam) return m
   const c = { doktorId: o.doktorId, hastaId: hasta.id }
-  const y = await acikYazisma(supabase, c)
-  if (!y) return { tamam: false, kod: 'KAPALI' }
-  // "Open" for a patient means the doctor has written in it: an empty conversation is not an invitation.
-  const { data: ilk } = await ulkeTablosu(supabase, MESAJLAR).select('id').eq('doctor_id', c.doktorId).eq('patient_id', c.hastaId).eq('yazisma_id', y.id).eq('gonderen', 'hekim').limit(1)
-  if (!Array.isArray(ilk) || !ilk.length) return { tamam: false, kod: 'KAPALI' }
   if ((await gunlukAdet(supabase, c, 'hasta', simdi)) >= MESAJ_GUNLUK_AZAMI) return { tamam: false, kod: 'LIMIT' }
+  const y = await acikYazismaAc(supabase, c, simdi)
+  if (!y) return { tamam: false, kod: 'BASARISIZ' }
   const r = await mesajEkle(supabase, c, y.id, 'hasta', m.metin, simdi)
   return r.tamam ? { tamam: true, id: r.id } : r
 }

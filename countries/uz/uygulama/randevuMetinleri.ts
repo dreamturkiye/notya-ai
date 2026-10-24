@@ -29,7 +29,7 @@ import type { RandevuMetni } from '@/lib/ulke/arayuz/metinTipleri'
 export type { RandevuMetni }
 
 const UZ_LATN: RandevuMetni = {
-  kabuk: { takvim: 'Taqvim' },
+  kabuk: { takvim: 'Qabullar' },
   // ISO weekdays: 1 = Monday … 7 = Sunday. The week starts on Monday (the pack's `bicim.haftaBasi`).
   gunKisa: { 1: 'Du', 2: 'Se', 3: 'Chor', 4: 'Pay', 5: 'Ju', 6: 'Shan', 7: 'Yak' },
   gunUzun: { 1: 'Dushanba', 2: 'Seshanba', 3: 'Chorshanba', 4: 'Payshanba', 5: 'Juma', 6: 'Shanba', 7: 'Yakshanba' },
@@ -192,7 +192,7 @@ const UZ_LATN: RandevuMetni = {
 /** Same keys, any text. */
 
 const UZ_CYRL: RandevuMetni = {
-  kabuk: { takvim: 'Тақвим' },
+  kabuk: { takvim: 'Қабуллар' },
   gunKisa: { 1: 'Ду', 2: 'Се', 3: 'Чор', 4: 'Пай', 5: 'Жу', 6: 'Шан', 7: 'Як' },
   gunUzun: { 1: 'Душанба', 2: 'Сешанба', 3: 'Чоршанба', 4: 'Пайшанба', 5: 'Жума', 6: 'Шанба', 7: 'Якшанба' },
   durum: {
@@ -352,7 +352,7 @@ const UZ_CYRL: RandevuMetni = {
 
 // Russian. A visit is «приём» on the earlier screens (./metinler.ts), so an appointment is «запись на приём».
 const RU: RandevuMetni = {
-  kabuk: { takvim: 'Календарь' },
+  kabuk: { takvim: 'Записи на приём' },
   gunKisa: { 1: 'Пн', 2: 'Вт', 3: 'Ср', 4: 'Чт', 5: 'Пт', 6: 'Сб', 7: 'Вс' },
   gunUzun: { 1: 'Понедельник', 2: 'Вторник', 3: 'Среда', 4: 'Четверг', 5: 'Пятница', 6: 'Суббота', 7: 'Воскресенье' },
   durum: {

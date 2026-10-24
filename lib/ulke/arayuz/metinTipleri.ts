@@ -1263,9 +1263,13 @@ export type MesajMetni = {
     readonly acilNumara: string
     /** No answer time is promised. */
     readonly yanitSuresi: string
-    /** A patient cannot start a conversation: said plainly wherever none is open. */
-    readonly baslatamaz: string
-    /** The doctor has not written yet. */
+    /** Empty state: no conversation yet; the patient can write first. */
+    readonly bos: string
+    /** The button that opens a new message, and the placeholder of its box. */
+    readonly yeniMesaj: string
+    readonly mesajYer: string
+    readonly vazgec: string
+    /** No conversation yet (legacy list). */
     readonly yok: string
     /** The doctor closed the conversation: it can be read, not written in. */
     readonly kapali: string

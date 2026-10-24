@@ -18,7 +18,7 @@ import { enCevir } from './varyant'
 
 /** `%D` stands where the country's date pattern is written; the country's calendar sentence is put in whole. */
 export const EN_RANDEVU_TEMEL: RandevuMetni = {
-  kabuk: { takvim: 'Calendar' },
+  kabuk: { takvim: 'Appointments' },
   gunKisa: { 1: 'Mon', 2: 'Tue', 3: 'Wed', 4: 'Thu', 5: 'Fri', 6: 'Sat', 7: 'Sun' },
   gunUzun: { 1: 'Monday', 2: 'Tuesday', 3: 'Wednesday', 4: 'Thursday', 5: 'Friday', 6: 'Saturday', 7: 'Sunday' },
   durum: {
