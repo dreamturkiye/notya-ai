@@ -12,6 +12,8 @@
   min-height: 100dvh;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  /* A long URL, chemical name or code never pushes the page wider than the phone. */
+  overflow-wrap: anywhere;
 }
 .uza *, .uza *::before, .uza *::after { box-sizing: border-box; }
 .uza :where(h1, h2, p, ul, ol, fieldset, legend) { margin: 0; padding: 0; }
@@ -494,6 +496,12 @@
 .yg-satir-alt { display: block; font-size: 12px; color: #8a7b6c; margin-top: 2px; }
 .yg-satir-ok { color: #C9BEA9; font-size: 18px; flex-shrink: 0; }
 .yg-ayar-kart { align-items: flex-start; }
+.yg-acilir { display: block; padding: 0; }
+.yg-acilir-baslik { display: flex; align-items: center; gap: 14px; padding: 16px 18px; cursor: pointer; list-style: none; }
+.yg-acilir-baslik::-webkit-details-marker { display: none; }
+.yg-acilir[open] > .yg-acilir-baslik .yg-satir-ok { transform: rotate(90deg); }
+.yg-acilir-govde { padding: 0 18px 18px 60px; }
+@media (max-width: 480px) { .yg-acilir-govde { padding-left: 18px; } }
 .yg-ayar-kart .uza-h2 { font-family: var(--uza-sans); font-size: 15px; font-weight: 700; margin: 0; }
 .yg-ayar-kart .uza-form { margin-top: 10px; gap: 12px; }
 .yg-ayar-kart .uza-ipucu { margin-top: 0; }
@@ -766,3 +774,12 @@ textarea.uza-hatirlatma { min-height: 0; margin-top: 8px; }
 @media print {
   .uza-ust, .uza-nav, .uza-hesap, .uza-bitki, .uza-bitki-kutu, [data-yazdirma-gizle] { display: none !important; }
 }
+
+/* Cards and notes that sit one after the other keep the same breathing room as the Türkiye pages. */
+.uza-kart + .uza-kart, .uza-aciklama + .uza-kart, .uza-aciklama + .uza-bilgi-kutu, .uza-aciklama + .uza-ipucu,
+.uza-ipucu + .uza-kart, .uza-bilgi-kutu + .uza-kart { margin-top: 16px; }
+.uza-ipucu + .uza-ipucu { margin-top: 6px; }
+fieldset.uza-alan { display: flex; flex-direction: column; gap: 10px; }
+.yg-klinik-baslik .uza-eylemler { margin-bottom: 16px; }
+.uza-aciklama + .uza-alan, .uza-aciklama + .uza-form { margin-top: 14px; }
+.uza-alan + .uza-lista-baslik, .uza-alan + h2.uza-h2 { margin-top: 16px; }
