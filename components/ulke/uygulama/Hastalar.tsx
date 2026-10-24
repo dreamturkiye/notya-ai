@@ -184,6 +184,17 @@ export function YeniHasta() {
   const [a, setA] = useState<YeniHastaAlanlari>(() => { const d = ulkePaketi().uygulama?.hastaDilleri ?? []; return d.length === 1 ? { ...BOS_HASTA, dil: d[0] } : BOS_HASTA })
   const [bekliyor, setBekliyor] = useState(false)
   const [hata, setHata] = useState<YeniHastaHatasi>(null)
+  // INNER-A: "Create patient record and link" on a calendar card arrives with the name and phone typed at booking and
+  // the appointment to link. The values only fill the form; the doctor still saves the record, and only then is it linked.
+  const [bagla, setBagla] = useState('')
+  useEffect(() => {
+    const s = new URLSearchParams(window.location.search)
+    const ad = (s.get('ad') ?? '').slice(0, 160)
+    const telefon = (s.get('telefon') ?? '').slice(0, 40)
+    if (ad || telefon) setA((o) => ({ ...o, ad: o.ad || ad, telefon: o.telefon || telefon }))
+    const b = s.get('bagla') ?? ''
+    if (/^[0-9a-f-]{36}$/i.test(b)) setBagla(b)
+  }, [])
   if (!u.hesap) return <Yukleniyor m={u.m} dil={u.dil} />
 
   async function gonder(e: FormEvent) {
@@ -195,7 +206,11 @@ export function YeniHasta() {
     setBekliyor(true); setHata(null)
     try {
       const r = await u.api('/api/ulke/hastalar', { method: 'POST', govde: a })
-      if (r.ok && r.j.hasta?.id) { window.location.assign(`${YOL.hasta}?id=${r.j.hasta.id}`); return }
+      if (r.ok && r.j.hasta?.id) {
+        // The appointment is linked to the new record by the server, which proves the record is this doctor's.
+        if (bagla) await u.api('/api/ulke/randevu', { method: 'PATCH', govde: { id: bagla, hastaId: r.j.hasta.id } }).catch(() => null)
+        window.location.assign(`${YOL.hasta}?id=${r.j.hasta.id}`); return
+      }
       setHata(r.j.code === 'GECERSIZ' && (r.j.alan === 'ad' || r.j.alan === 'dogumTarihi' || r.j.alan === 'dil') ? r.j.alan : 'kayit')
     } catch { setHata('baglanti') }
     setBekliyor(false)
@@ -246,76 +261,98 @@ export function HastaDosyasiGorunumu({ m, hasta, muayeneler, bugun, randevular, 
       </a>
     </li>
   )
-  return (
-    <>
+  const ad = tamAd(hasta)
+  const cipler = [
+    yas ? `${m.hasta.yas}: ${yas}` : '',
+    hasta.cinsiyet ? (hasta.cinsiyet === 'female' ? m.yeniHasta.kadin : m.yeniHasta.erkek) : '',
+    hasta.dogumTarihi ? tarihYaz(hasta.dogumTarihi) : '',
+    hasta.telefon,
+    hasta.dil ? hastaDiliAdi(m, hasta.dil) : '',
+    hasta.ulusalKimlik,
+  ].filter(Boolean)
+  const randevuListesi = HAZIR.takvim && randevular && randevular.length ? (
+    <section className="uza-kart" data-alan="hasta-randevular">
+      <h2 className="uza-h2">{r.hasta.randevular}</h2>
+      <ul className="uza-liste">
+        {randevular.map((x) => (
+          <li key={x.id}>
+            <a className="uza-satir" href={takvimYolu({ randevu: x.id })} data-randevu={x.id}>
+              <span className="uza-saat">{tarihYaz(x.gun)} {saatAraligi(x.saat, x.sureDk)}</span>
+              <span className="uza-liste-ad">{x.neden}</span>
+              <DurumRozeti r={r} durum={x.durum} />
+            </a>
+          </li>
+        ))}
+      </ul>
+    </section>
+  ) : null
+  // The tabs of Türkiye's patient file (app/dashboard/doktor/hastalar/[id]): pill tabs under the header. Only the
+  // tabs this country has something for are drawn. Every panel is in the page; the others are `hidden`, so nothing
+  // here changes what is loaded or who may see it.
+  const sekmeler: { id: string; ad: string; icerik: ReactNode }[] = [
+    { id: 'ozet', ad: r.ek.sekmeOzet, icerik: <>{randevuListesi}{taslak.length ? (
       <section className="uza-kart">
-        <p className="uza-ust-yazi">{m.hasta.baslik}</p>
-        <div className="uza-baslik-satiri">
-          <h1 className="uza-h1">{tamAd(hasta)}</h1>
-          <div className="uza-eylemler" style={{ marginTop: 0 }}>
-            {duzenle ? <button type="button" className="uza-dugme uza-dugme-cizgi" onClick={duzenle} data-eylem="hasta-duzenle" data-yazdirma-gizle>{m.hasta.duzenle}</button> : null}
-            {HAZIR.muayene ? <a className="uza-dugme" href={`${YOL.muayene}?hasta=${hasta.id}`}>{m.bugun.muayeneBaslat}</a> : null}
-            {/* NOTYA-UZ-RANDEVU-01: booking from the patient's file — the form opens with this patient chosen. */}
-            {HAZIR.takvim ? <a className="uza-dugme uza-dugme-cizgi" href={takvimYolu({ yeni: '1', hasta: hasta.id })} data-eylem="randevu-al">{r.hasta.randevuAl}</a> : null}
-          </div>
-        </div>
-        <dl className="uza-bilgiler">
-          {hasta.dogumTarihi ? <><dt>{m.yeniHasta.dogumTarihi}</dt><dd>{tarihYaz(hasta.dogumTarihi)}</dd></> : null}
-          {yas ? <><dt>{m.hasta.yas}</dt><dd>{yas}</dd></> : null}
-          {hasta.cinsiyet ? <><dt>{m.yeniHasta.cinsiyet}</dt><dd>{hasta.cinsiyet === 'female' ? m.yeniHasta.kadin : m.yeniHasta.erkek}</dd></> : null}
-          {hasta.telefon ? <><dt>{m.yeniHasta.telefon}</dt><dd>{hasta.telefon}</dd></> : null}
-          {hasta.dil ? <><dt>{m.yeniHasta.dil}</dt><dd>{hastaDiliAdi(m, hasta.dil)}</dd></> : null}
-          {hasta.ulusalKimlik ? <><dt>{m.yeniHasta.ulusalKimlik}</dt><dd>{hasta.ulusalKimlik}</dd></> : null}
-        </dl>
+        <h2 className="uza-h2">{m.hasta.taslaklar}</h2>
+        <ul className="uza-liste">{taslak.map(satir)}</ul>
       </section>
-      {HAZIR.takvim && randevular && randevular.length ? (
-        <section className="uza-kart" data-alan="hasta-randevular">
-          <h2 className="uza-h2">{r.hasta.randevular}</h2>
-          <ul className="uza-liste">
-            {randevular.map((x) => (
-              <li key={x.id}>
-                <a className="uza-satir" href={takvimYolu({ randevu: x.id })} data-randevu={x.id}>
-                  <span className="uza-saat">{tarihYaz(x.gun)} {saatAraligi(x.saat, x.sureDk)}</span>
-                  <span className="uza-liste-ad">{x.neden}</span>
-                  <DurumRozeti r={r} durum={x.durum} />
-                </a>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
-      {form ?? null}
-      {portal ?? null}
-      {mesajlar ?? null}
-      {araclar ?? null}
-      {aracTakvimi ?? null}
-      {konsultasyon ?? null}
-      {fotograflar ?? null}
-      {taslak.length ? (
-        <section className="uza-kart">
-          <h2 className="uza-h2">{m.hasta.taslaklar}</h2>
-          <ul className="uza-liste">{taslak.map(satir)}</ul>
-        </section>
-      ) : null}
-      {notsuz.length ? (
-        <section className="uza-kart">
-          <h2 className="uza-h2">{m.hasta.notsuzlar}</h2>
-          <ul className="uza-liste">
-            {notsuz.map((v) => (
-              <li key={v.seansId}>
-                <a className="uza-satir" href={`${YOL.muayene}?seans=${v.seansId}`}>
-                  <span className="uza-saat">{tarihYaz(v.baslangic)}</span>
-                  <span className="uza-liste-ad">{m.hasta.notsuz}</span>
-                </a>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
+    ) : null}{notsuz.length ? (
+      <section className="uza-kart">
+        <h2 className="uza-h2">{m.hasta.notsuzlar}</h2>
+        <ul className="uza-liste">
+          {notsuz.map((v) => (
+            <li key={v.seansId}>
+              <a className="uza-satir" href={`${YOL.muayene}?seans=${v.seansId}`}>
+                <span className="uza-saat">{tarihYaz(v.baslangic)}</span>
+                <span className="uza-liste-ad">{m.hasta.notsuz}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    ) : null}</> },
+    { id: 'muayene', ad: r.ek.sekmeMuayeneler, icerik: (
       <section className="uza-kart">
         <h2 className="uza-h2">{m.hasta.notlar}</h2>
         {onayli.length ? <ul className="uza-liste">{onayli.map(satir)}</ul> : <p className="uza-bos">{m.hasta.notYok}</p>}
       </section>
+    ) },
+    ...(fotograflar ? [{ id: 'belgeler', ad: r.ek.sekmeBelgeler, icerik: fotograflar }] : []),
+    ...(araclar ? [{ id: 'araclar', ad: r.ek.sekmeAraclar, icerik: araclar }] : []),
+    ...(form || portal ? [{ id: 'formu', ad: r.ek.hastaFormu, icerik: <div id="hasta-formu">{form ?? null}{portal ?? null}</div> }] : []),
+    ...(aracTakvimi ? [{ id: 'asilar', ad: r.ek.sekmeAsilar, icerik: aracTakvimi }] : []),
+    ...(mesajlar || konsultasyon ? [{ id: 'iletisim', ad: r.ek.sekmeIletisim, icerik: <>{mesajlar ?? null}{konsultasyon ?? null}</> }] : []),
+  ]
+  const [aktif, setAktif] = useState('ozet')
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search).get('tab') ?? ''
+    const hedef = q || (window.location.hash === '#hasta-formu' ? 'formu' : '')
+    if (hedef && sekmeler.some((x) => x.id === hedef)) setAktif(hedef)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+  return (
+    <>
+      <section className="yg-dosya-ust" aria-label={m.hasta.baslik}>
+        <div className="yg-dosya-avatar" aria-hidden="true">{(ad.trim().charAt(0) || 'P').toUpperCase()}</div>
+        <div className="yg-dosya-kimlik">
+          <h1 className="yg-dosya-ad">{ad}</h1>
+          {cipler.length ? <div className="yg-dosya-cipler">{cipler.map((c, i) => <span key={i} className="yg-dosya-cip">{c}</span>)}</div> : null}
+        </div>
+        <div className="yg-dosya-eylemler">
+          {duzenle ? <button type="button" className="yg-dosya-dugme" onClick={duzenle} data-eylem="hasta-duzenle" data-yazdirma-gizle>{m.hasta.duzenle}</button> : null}
+          {/* NOTYA-UZ-RANDEVU-01: booking from the patient's file — the form opens with this patient chosen. */}
+          {HAZIR.takvim ? <a className="yg-dosya-dugme" href={takvimYolu({ yeni: '1', hasta: hasta.id })} data-eylem="randevu-al">{r.hasta.randevuAl}</a> : null}
+          {HAZIR.muayene ? <a className="yg-dosya-dugme" data-birincil="evet" href={`${YOL.muayene}?hasta=${hasta.id}`}>{m.bugun.muayeneBaslat}</a> : null}
+        </div>
+      </section>
+      <p className="yg-dosya-geri"><a className="uza-baglanti" href={YOL.hastalar}>{'\u2190'} {r.ek.geriHastalar}</a></p>
+      <div className="yg-dosya-sekmeler" role="tablist">
+        {sekmeler.map((x) => (
+          <button key={x.id} type="button" role="tab" id={`yg-sekme-${x.id}`} aria-selected={aktif === x.id} aria-controls={`yg-panel-${x.id}`} className="yg-dosya-sekme" data-aktif={aktif === x.id ? 'evet' : undefined} onClick={() => setAktif(x.id)}>{x.ad}</button>
+        ))}
+      </div>
+      {sekmeler.map((x) => (
+        <div key={x.id} role="tabpanel" id={`yg-panel-${x.id}`} aria-labelledby={`yg-sekme-${x.id}`} hidden={aktif !== x.id} data-sekme={x.id}>{x.icerik}</div>
+      ))}
     </>
   )
 }

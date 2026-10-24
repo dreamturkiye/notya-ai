@@ -145,6 +145,19 @@ export function BugunGorunumu({ m, ad, muayeneler, hata, rol, randevular, mesajl
         </div>
       </section>
 
+      {/* Türkiye's home carries the "Notya is whispering" card under the title: the one thing that waits, or "nothing waits". Here it reads this account's own waiting notes. */}
+      {p && muayeneler ? (
+        <div data-alan="bugun-fisilti" style={S({ background: 'linear-gradient(165deg, #d0d8d5, #dde3e0)', border: '1px solid rgba(30,51,54,0.18)', color: '#1e3336', borderRadius: 20, padding: '20px 22px 18px', boxShadow: '0 12px 28px rgba(30,51,54,0.1)' })}>
+          <div style={S({ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', color: '#2f5155', fontSize: 15, display: 'flex', alignItems: 'center', gap: 7, marginBottom: 8 })}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M8 19c1.6-5.8 3.4-9.6 7.2-14.2.8 3.4.8 6.4-.2 9.2-1.5 2.4-4 4-7 5z" stroke="currentColor" strokeWidth="1.3" /></svg>
+            {p.fisilti}
+          </div>
+          <div style={S({ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', fontSize: 17, lineHeight: 1.3, fontWeight: 500 })}>
+            {bekleyen > 0 ? `${p.kpiOnay}: ${bekleyen}` : p.fisiltiBos}
+          </div>
+        </div>
+      ) : null}
+
       {ilkAdimlar ?? null}
 
       {p ? (
