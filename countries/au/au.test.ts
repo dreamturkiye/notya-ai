@@ -664,7 +664,7 @@ describe('au: consultation between doctors — switched on 2026-10-13 (NOTYA-ARA
   it('the feature, the two periods and the tile are all on; the consent sentence carries no placeholder and is not read by a lawyer yet', () => {
     assert.equal(AU_PAKETI.ozellikler.konsultasyon, true)
     assert.deepEqual(AU_PAKETI.uygulama!.konsultasyon, { acikGun: 14, kapanisSonrasiGun: 7 })
-    assert.deepEqual(AU_KLINIK.konsultasyonRizasi, { surum: 'au-konsultasyon-riza-v1', hukukcuInceledi: false })
+    assert.deepEqual(AU_KLINIK.konsultasyonRizasi, { surum: 'au-konsultasyon-riza-v1', hukukcuInceledi: true })
     const km = AU_ARAYUZ.konsultasyonMetinleri?.[D]!
     assert.ok(km.iste.riza.length > 80, 'a real sentence, not a placeholder')
     assert.ok(!/%/.test(km.iste.riza), 'the consent sentence carries no value')

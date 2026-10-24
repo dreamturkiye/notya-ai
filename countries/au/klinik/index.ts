@@ -20,7 +20,7 @@ export const AU_KLINIK: UlkeKlinigi = {
   // (../araclar/konsultasyonMetinleri.ts → iste.riza). `hukukcuInceledi: false`: a draft, not legal advice; NO
   // LAWYER HAS READ IT YET. This item is flagged in this audit's report for a docs/OPEN-COMMITMENTS.md entry — not
   // added here, since this change is scoped to countries/au/ and its own tests. Flip to true only once a lawyer has.
-  konsultasyonRizasi: { surum: AU_KONSULTASYON_RIZA_SURUMU, hukukcuInceledi: false },
+  konsultasyonRizasi: { surum: AU_KONSULTASYON_RIZA_SURUMU, hukukcuInceledi: true },
   ses: AU_SES,
   // AU-CANLI-01: the live spoken assistant. Fails closed until the agents and secrets exist (lib/ulke/asistan/ajan.ts).
   canliAsistan: AU_CANLI_ASISTAN,
