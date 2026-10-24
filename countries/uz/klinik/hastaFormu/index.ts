@@ -29,6 +29,7 @@
 import type { HastaFormuIcerigi } from '@/lib/ulke/intake/tipler'
 import { UZ_CEKIRDEK_BOLUMLER } from './cekirdek'
 import { UZ_CEKIRDEK_EK } from './cekirdekEk'
+import { UZ_COCUK_KRONIK, UZ_COCUK_ROLLERI } from './cocukKronik'
 import { derinlestir } from './derinlik'
 import { UZ_ROL_SORULARI_1 } from './roller1'
 import { UZ_ROL_SORULARI_2 } from './roller2'
@@ -56,5 +57,5 @@ export const UZ_HASTA_FORMU: HastaFormuIcerigi = {
     ),
   },
   cekirdek: { bolumler: [...UZ_CEKIRDEK_BOLUMLER, ...UZ_CEKIRDEK_EK], inceleme: MAKINE },
-  roller: Object.fromEntries(Object.entries(ROL_MANBALARI).map(([rol, r]) => [rol, derinlestir(rol, r)])),
+  roller: Object.fromEntries(Object.entries(ROL_MANBALARI).map(([rol, r]) => [rol, { ...derinlestir(rol, r), ...(UZ_COCUK_ROLLERI.includes(rol) ? { cekirdekDegisimi: UZ_COCUK_KRONIK } : {}) }])),
 }

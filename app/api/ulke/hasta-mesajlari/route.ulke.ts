@@ -4,6 +4,8 @@
  *   GET    ?hasta=<hastaId>     200 { yazismalar: [{ id, olusturuldu, kapandi, mesajlar: [{ id, gonderen, metin, an, okundu }] }], erisim }
  *                               the conversations with that patient, newest first; `erisim` says whether the patient
  *                               has a link that works (without one they cannot read)
+ *   GET    ?gelen=1             200 { konular: [{ yazismaId, hastaId, hastaAdi, kapandi, son, okunmamis, ozet }] }
+ *                               the doctor's inbox: their newest conversations across all their patients
  *   GET                         200 { okunmamis: [{ hastaId, hastaAdi, adet, son }] }
  *                               the doctor's patients whose messages are unread, newest first. No text.
  *   POST   { hastaId, metin }   200 { id, yazismaId }    the doctor writes; a conversation is opened where none is open
@@ -25,7 +27,7 @@ import { NextRequest } from 'next/server'
 import { ulkeOturum } from '@/lib/ulke/sunucuOturum'
 import { sinirda } from '@/lib/ulke/uygulama/sinir'
 import { cevap, govdeOku, KOD, uuidMi } from '@/lib/ulke/uygulama/cevap'
-import { hekimMesajlari, hekimMesajYaz, hekimOkudu, hekimOkunmamislari, MESAJ_DURUMU, mesajAcik, yazismaKapat } from '@/lib/ulke/mesaj/mesaj'
+import { hekimGelenKutusu, hekimMesajlari, hekimMesajYaz, hekimOkudu, hekimOkunmamislari, MESAJ_DURUMU, mesajAcik, yazismaKapat } from '@/lib/ulke/mesaj/mesaj'
 
 export const dynamic = 'force-dynamic'
 
@@ -33,6 +35,7 @@ export const GET = sinirda('hasta-mesajlari GET', async (req: NextRequest) => {
   if (!mesajAcik()) return KOD.yok()
   const oturum = await ulkeOturum(req)
   if (!oturum) return KOD.oturumYok()
+  if (req.nextUrl.searchParams.get('gelen') === '1') return cevap({ konular: await hekimGelenKutusu(oturum.supabase, oturum.user.id) })
   if (!req.nextUrl.searchParams.has('hasta')) return cevap({ okunmamis: await hekimOkunmamislari(oturum.supabase, oturum.user.id) })
   const id = req.nextUrl.searchParams.get('hasta')
   if (!uuidMi(id)) return KOD.yok()

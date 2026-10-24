@@ -825,6 +825,8 @@ export type PortalMetni = {
     /** % tries left */
     readonly pinYanlis: string
     readonly kilitli: string
+    /** The line under the PIN box: who to ask when the PIN is forgotten. */
+    readonly unuttum: string
     readonly yavas: string
     readonly gecersiz: string
     readonly hata: string
@@ -867,6 +869,72 @@ export type PortalMetni = {
     /** % the pack's ambulance number (`uygulama.portal.acilNumara`). Shown only where the pack states one; the sentence itself holds no number. */
     readonly acilNumara: string
     readonly yalniz: string
+  }
+  /**
+   * AU-PORTAL-LOOK-01 — the words of the patient's page drawn through Türkiye's "Sağlığım" views (components/doktor/portal):
+   * the frame, the overview, the visits, the appointments and the messages. A PATIENT reads them.
+   */
+  readonly gorunum: {
+    /** The product's name for the patient, next to the word mark ("My Health"). */
+    readonly urun: string
+    readonly hastaAlani: string
+    readonly navEtiketi: string
+    readonly sekmeOzet: string
+    readonly sekmeMesajlar: string
+    readonly sekmeZiyaretler: string
+    readonly sekmeRandevu: string
+    readonly sekmeGizlilik: string
+    readonly sekmeForm: string
+    readonly lede: string
+    readonly hastaEtiketi: string
+    readonly mesajaGit: string
+    readonly hekimBos: string
+    readonly koruyucu: string
+    readonly cipRandevu: string
+    readonly cipRandevuYok: string
+    readonly cipMesaj: string
+    readonly cipMesajYok: string
+    readonly cipYeniMesaj: string
+    /** % how many messages are unread */
+    readonly cipOkunmamis: string
+    readonly cipOzet: string
+    readonly cipOzetYok: string
+    readonly cipIstek: string
+    readonly cipIstekYok: string
+    readonly cipIstekBekliyor: string
+    readonly kisayolBaslik: string
+    readonly ipucuMesajlar: string
+    readonly ipucuZiyaretler: string
+    readonly ipucuRandevu: string
+    readonly ipucuGizlilik: string
+    readonly ipucuForm: string
+    readonly aktiviteBaslik: string
+    readonly aktiviteBos: string
+    readonly ac: string
+    readonly uyariBaslik: string
+    /** % the appointment's day and time */
+    readonly uyariMetin: string
+    readonly ayrinti: string
+    readonly ziyaretBaslik: string
+    readonly ziyaretAlt: string
+    readonly ziyaretBosBaslik: string
+    readonly ziyaretBosGovde: string
+    readonly ozetRozet: string
+    readonly ziyaretDetay: string
+    readonly geriZiyaretler: string
+    readonly ziyaretYokGovde: string
+    readonly ozetBlok: string
+    readonly randevuBaslik: string
+    readonly randevuAlt: string
+    readonly randevuGun: string
+    readonly mesajKlasorAcik: string
+    readonly mesajKlasorKapali: string
+    readonly mesajKlasorBos: string
+    readonly mesajGeri: string
+    readonly mesajSec: string
+    readonly mesajBosBaslik: string
+    readonly gizlilikBaslik: string
+    readonly formBaslik: string
   }
 }
 
@@ -959,6 +1027,10 @@ export type FormMetni = {
     readonly gonderilemedi: string
     readonly gonderUyari: string
     readonly eksik: string
+    /** The banner when exactly one required question is unanswered / when several are (%1 = how many); the line under a question that needs an answer. */
+    readonly eksikTek: string
+    readonly eksikCok: string
+    readonly soruEksik: string
     /** %1 the smallest, %2 the largest number the question accepts */
     readonly sayiGecersiz: string
     readonly gonderildiBaslik: string
@@ -1161,6 +1233,20 @@ export type MesajMetni = {
     readonly okunmamisBaslik: string
     /** % how many messages of that patient are unread */
     readonly okunmamisAdet: string
+  }
+  /** The doctor's inbox page: the conversations with all their patients in one place. */
+  readonly gelen: {
+    /** The small line above the heading. */
+    readonly ustYazi: string
+    readonly baslik: string
+    readonly aciklama: string
+    readonly bosBaslik: string
+    readonly bosGovde: string
+    readonly sec: string
+    readonly yanitYer: string
+    readonly yanitla: string
+    readonly hastaDosyasi: string
+    readonly yukleniyor: string
   }
   readonly hasta: {
     readonly baslik: string

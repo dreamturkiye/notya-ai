@@ -21,6 +21,7 @@ import { ulkeIstemciSupabase } from '@/lib/ulke/istemciSupabase'
 import { UYGULAMA_EKRANLARI, type UygulamaEkrani } from '@/lib/ulke/tipler'
 import { ulkeYolu } from '@/lib/ulke/yol'
 import { useBitki } from './bitki'
+import { HEKIM_MESAJ_API } from '@/lib/ulke/mesaj/sabitler'
 import KabukGorunumu, { type KabukOge } from '@/components/doktor/KabukGorunumu'
 import { CHROME_FONT, CHROME_FONT_HREF, CHROME_RENK as R } from '@/lib/doktor/chromeRenk'
 import { araclarMetni, asistanSesAdlari, klinikMetni, marka, metninDili, randevuMetni, roller, rolMu, uygulamaDili, uygulamaMetni, type UygulamaMetni } from '@/lib/ulke/arayuz'
@@ -156,7 +157,7 @@ export function useUygulama(ekran: UygulamaEkrani): Uygulama {
   '--uza-uyari': R.warn, '--uza-cizgi': R.border, '--uza-altin': R.gold, '--uza-nav': R.nav, '--uza-serif': CHROME_FONT.serif, '--uza-sans': CHROME_FONT.sans,
 } as CSSProperties
 
-export type Sekme = 'bugun' | 'takvim' | 'hastalar' | 'araclar' | 'klinik' | 'onBuro' | 'ayarlar' | 'fatura' | 'gizlilikTalepleri' | 'asistan'
+export type Sekme = 'bugun' | 'takvim' | 'hastalar' | 'araclar' | 'klinik' | 'onBuro' | 'ayarlar' | 'fatura' | 'gizlilikTalepleri' | 'asistan' | 'mesajlar'
 
 /** The clock (in the account's zone) and, when the browser shares a place, the weather: the same two values the Türkiye chrome shows. */
 function useSaatHava() {
@@ -194,6 +195,31 @@ function useSaatHava() {
   return { saat, hava }
 }
 
+/**
+ * The unread badge of the Messages item: how many of the doctor's patients have written something not yet read. One
+ * request when the frame opens, like Türkiye's chrome; no model, no text — names and counts only. 0 while unknown.
+ */
+function useMesajRozeti(acik: boolean): number {
+  const [n, setN] = useState(0)
+  useEffect(() => {
+    if (!acik) return
+    let iptal = false
+    ;(async () => {
+      try {
+        const { data } = (await ulkeIstemciSupabase()?.auth.getSession()) ?? { data: { session: null } }
+        const jeton = data.session?.access_token
+        if (!jeton) return
+        const r = await fetch(ulkeYolu(HEKIM_MESAJ_API), { headers: { Authorization: `Bearer ${jeton}` }, cache: 'no-store' })
+        if (!r.ok) return
+        const j = (await r.json().catch(() => ({}))) as { okunmamis?: unknown }
+        if (!iptal && Array.isArray(j.okunmamis)) setN(j.okunmamis.length)
+      } catch { /* the badge stays 0 */ }
+    })()
+    return () => { iptal = true }
+  }, [acik])
+  return n
+}
+
 function harfler(ad: string): string {
   const p = ad.trim().split(/\s+/).filter(Boolean)
   return ((p[0]?.[0] ?? '') + (p[1]?.[0] ?? '')).toUpperCase()
@@ -212,6 +238,7 @@ function KabukCercevesi({ dil, m, ad, unvan, aktif, cikis, onBuro, kompakt, chil
   const [menuAcik, setMenuAcik] = useState(false)
   const k = m.kabuk
   const git = (yol: string) => { window.location.assign(yol) }
+  const mesajRozeti = useMesajRozeti(!onBuro && ozellikAcik('hastaMesajlari'))
   const oge = (id: Sekme | 'mesaj' | 'rapor' | 'odeme', label: string, ikon: string, href: string | null, aktifMi?: boolean): KabukOge => (
     { id: String(id), label, ikon, aktif: aktifMi ?? aktif === id, ...(href ? { href } : { pasif: true, isaret: String(id) }) }
   )
@@ -226,12 +253,13 @@ function KabukCercevesi({ dil, m, ad, unvan, aktif, cikis, onBuro, kompakt, chil
     diger = [oge('ayarlar', k.ayarlar, 'ayarlar', YOL.ayarlar)]
   } else {
     const p = m.pano
-    if (p) asistan = oge('asistan', p.asistanaSor, 'asistan', asistanSesAdlari() ? YOL.asistan : null)
+    // The live assistant is opt-in (NOTYA_AU_ASSISTANT_ENABLED): while it is off the entry is not drawn at all, instead of a dead button.
+    if (p && asistanSesAdlari()) asistan = oge('asistan', p.asistanaSor, 'asistan', YOL.asistan)
     calisma = [
       oge('bugun', k.bugun, 'anaSayfa', YOL.bugun),
       ...(HAZIR.takvim ? [oge('takvim', randevuMetni(dil).kabuk.takvim, 'randevular', YOL.takvim)] : []),
       oge('hastalar', k.hastalar, 'hastalar', YOL.hastalar),
-      ...(p ? [oge('mesaj', p.mesajlar, 'mesajlar', ozellikAcik('hastaMesajlari') ? `${YOL.bugun}#mesajlar` : null, false)] : []),
+      ...(p && ozellikAcik('hastaMesajlari') ? [{ ...oge('mesajlar', p.mesajlar, 'mesajlar', YOL.mesajlar), ...(mesajRozeti > 0 ? { rozet: mesajRozeti } : {}) }] : []),
     ]
     diger = [
       ...(p ? [oge('rapor', p.raporlar, 'raporlar', null, false), oge('odeme', p.odeme, 'belge', null, false)] : []),
@@ -243,7 +271,7 @@ function KabukCercevesi({ dil, m, ad, unvan, aktif, cikis, onBuro, kompakt, chil
     ]
   }
   // The phone's tab bar holds the first four daily screens (Türkiye: Ana Sayfa, Randevular, Hastalar, Mesajlar); the rest opens from the menu.
-  const sekmeIdleri = ['bugun', 'takvim', 'hastalar', 'mesaj']
+  const sekmeIdleri = ['bugun', 'takvim', 'hastalar', 'mesajlar']
   const sekme = calisma.filter((o) => sekmeIdleri.includes(o.id) && o.href)
   const menuOgeleri = [...calisma.filter((o) => !sekme.includes(o)), ...diger]
   const menuAktif = menuAcik || menuOgeleri.some((o) => o.aktif)

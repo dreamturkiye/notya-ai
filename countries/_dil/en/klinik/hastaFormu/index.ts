@@ -18,11 +18,12 @@ import type { HastaFormuIcerigi } from '@/lib/ulke/intake/tipler'
 import { enYaz, type EnBicim } from '../../varyant'
 import { EN_ROLLER, enGibiRolleri, enRolSatirlari, type EnRol, type EnRolDegisimi } from '../roller'
 import { EN_CEKIRDEK_BOLUMLER } from './cekirdek'
+import { EN_COCUK_KRONIK, EN_COCUK_ROLLERI } from './cocukKronik'
 import { ACIL_JETONU, ekleDerinlik, VARSAYILAN_ACIL } from './derinlik'
 import { EN_ROL_SORULARI_1 } from './roller1'
 import { EN_ROL_SORULARI_2 } from './roller2'
 import { EN_ROL_SORULARI_3 } from './roller3'
-import { bolumuBicimle, MAKINE, roluBicimle, type HamBolum, type HamRol } from './yardimci'
+import { bolumuBicimle, MAKINE, roluBicimle, soruyuBicimle, type HamBolum, type HamRol } from './yardimci'
 
 export { enFormYuvalari, type EnFormYuvasi } from './yuvalar'
 
@@ -65,6 +66,8 @@ export function enHastaFormu(g: EnFormGirdisi): HastaFormuIcerigi {
   for (const rol of EN_ROLLER) if (tutulan.has(rol)) roller[rol] = roluBicimle(ekleDerinlik(EN_ROL_SORULARI[rol], rol, rol), g.bicim)
   // A role of the country's own that brings its own questions: the red-flag list is the role it behaves like, under keys of its own.
   for (const r of satirlar) if (r.ek?.form) roller[r.anahtar] = roluBicimle(ekleDerinlik(r.ek.form, r.ek.gibi ?? r.anahtar, r.anahtar), g.bicim)
+  // Paediatrics (and paediatric surgery) ask the long-term conditions question in a child's own list.
+  for (const rol of EN_COCUK_ROLLERI) if (roller[rol]) roller[rol] = { ...roller[rol], cekirdekDegisimi: EN_COCUK_KRONIK.map((q) => soruyuBicimle(q, g.bicim)) }
   const hazir = (s: (typeof roller)[string]['sorular'][number]) => (s.yardim ? { ...s, yardim: Object.fromEntries(Object.entries(s.yardim).map(([d, t]) => [d, acilYaz(t, cumle)])) } : s)
   for (const rol of Object.keys(roller)) roller[rol] = { ...roller[rol], sorular: roller[rol].sorular.map(hazir) }
   return {

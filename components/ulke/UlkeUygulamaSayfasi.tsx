@@ -30,6 +30,8 @@ export function UlkeUygulamaSayfasi({ ekran }: { ekran: UygulamaEkrani }) {
     && (ekran !== 'gizlilikTalepleri' || Boolean(ulkePaketi().uzanti?.gizlilik)) && (ekran !== 'fatura' || Boolean(ulkePaketi().uzanti?.fatura))
     // AU-CANLI-02: the assistant page exists only where the pack has the live assistant (its two voices and its settings).
     && (ekran !== 'asistan' || asistanSesAdlari() !== null)
+    // The messages inbox exists where doctors and patients can write to each other.
+    && (ekran !== 'mesajlar' || ozellikAcik('hastaMesajlari'))
   const Ekran = var_ ? UYGULAMA_EKRAN_BILESENLERI[ekran] : undefined
   if (!Ekran) notFound()
   return <BitkiSaglayici src={bitki.src}><HedefBoyGorselSaglayici gorseller={{ baba: hbBaba.src, anne: hbAnne.src, erkek: hbErkek.src, kiz: hbKiz.src }}><Ekran /></HedefBoyGorselSaglayici></BitkiSaglayici>

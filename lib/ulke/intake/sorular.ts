@@ -64,10 +64,12 @@ export const ROL_BOLUMU = 'rol'
  */
 export function formBolumleri(icerik: HastaFormuIcerigi, k: FormBaglami): HamBolum[] {
   const sorular = (hepsi: readonly Soru[]) => hepsi.filter((s) => kimeUygun(s.kime, k.veli) && cinsiyeteUygun(s.cinsiyet, k.cinsiyet))
+  const r = k.rol && sahip(icerik.roller, k.rol) ? icerik.roller[k.rol] : null
+  // A role's own form of a core question (paediatrics: the long-term conditions of a child) — on the guardian form, for that role only.
+  const degisim = new Map<string, Soru>(k.veli && r?.cekirdekDegisimi ? r.cekirdekDegisimi.map((q) => [q.anahtar, q] as [string, Soru]) : [])
   const bolumler: HamBolum[] = icerik.cekirdek.bolumler
     .filter((b) => kimeUygun(b.kime, k.veli))
-    .map((b) => ({ anahtar: b.anahtar, baslik: k.veli && b.veliBasligi ? b.veliBasligi : b.baslik, sorular: sorular(b.sorular) }))
-  const r = k.rol && sahip(icerik.roller, k.rol) ? icerik.roller[k.rol] : null
+    .map((b) => ({ anahtar: b.anahtar, baslik: k.veli && b.veliBasligi ? b.veliBasligi : b.baslik, sorular: sorular(b.sorular.map((q) => degisim.get(q.anahtar) ?? q)) }))
   if (r) bolumler.push({ anahtar: ROL_BOLUMU, baslik: k.veli && r.veliBasligi ? r.veliBasligi : r.baslik, sorular: sorular(r.sorular) })
   return bolumler.filter((b) => b.sorular.length > 0)
 }
@@ -272,6 +274,20 @@ export function formIcerigiSorunlari(icerik: HastaFormuIcerigi, rolAnahtarlari: 
     metinVar(r.veliBasligi, `${y}.veliBasligi`, false)
     inceleme(r.inceleme, `${y}.inceleme`)
     sorular(r.sorular, y)
+    // A role's own form of a core question: the key of a core question, of the same type — so the stored answer stays that question's.
+    if (r.cekirdekDegisimi?.length) {
+      const cekirdekSorulari = new Map<string, Soru>(bolumler.flatMap((b) => b.sorular).map((q) => [q.anahtar, q] as [string, Soru]))
+      const yer = new Map<string, string>()
+      for (const q of r.cekirdekDegisimi) {
+        const asil = cekirdekSorulari.get(q.anahtar)
+        if (!asil) ekle(`${y}.cekirdekDegisimi.${q.anahtar}`, 'replaces a core question that does not exist')
+        else if (asil.tur !== q.tur) ekle(`${y}.cekirdekDegisimi.${q.anahtar}`, 'must be of the same type as the core question it replaces')
+        yer.set(q.anahtar, gorulen.get(q.anahtar) ?? '')
+        gorulen.delete(q.anahtar)
+      }
+      sorular(r.cekirdekDegisimi, `${y}.cekirdekDegisimi`)
+      for (const [a, v] of yer) gorulen.set(a, v)
+    }
   }
   // Every role of the pack has a set of its own: a role without one would silently get a shorter form.
   for (const rol of rolAnahtarlari) {

@@ -26,7 +26,7 @@ export type HamSoru = Ek & {
   enCok?: number
 }
 export type HamBolum = { anahtar: string; baslik: string; veliBasligi?: string; kime?: 'yetiskin' | 'cocuk'; sorular: readonly HamSoru[] }
-export type HamRol = { baslik: string; veliBasligi?: string; sorular: readonly HamSoru[] }
+export type HamRol = { baslik: string; veliBasligi?: string; sorular: readonly HamSoru[]; /** Core questions this role asks in its own form (see RolSorulari.cekirdekDegisimi). */ cekirdekDegisimi?: readonly HamSoru[] }
 
 /** An option of a choice. */
 export const s = (anahtar: string, ad: string): HamSecenek => ({ anahtar, ad })
@@ -86,5 +86,5 @@ export function bolumuBicimle(b: HamBolum, bicim: EnBicim): FormBolumu {
 }
 
 export function roluBicimle(r: HamRol, bicim: EnBicim): RolSorulari {
-  return { baslik: { [bicim]: enYaz(r.baslik, bicim) }, ...(r.veliBasligi ? { veliBasligi: { [bicim]: enYaz(r.veliBasligi, bicim) } } : {}), sorular: r.sorular.map((q) => soruyuBicimle(q, bicim)), inceleme: MAKINE }
+  return { baslik: { [bicim]: enYaz(r.baslik, bicim) }, ...(r.veliBasligi ? { veliBasligi: { [bicim]: enYaz(r.veliBasligi, bicim) } } : {}), sorular: r.sorular.map((q) => soruyuBicimle(q, bicim)), inceleme: MAKINE, ...(r.cekirdekDegisimi ? { cekirdekDegisimi: r.cekirdekDegisimi.map((q) => soruyuBicimle(q, bicim)) } : {}) }
 }

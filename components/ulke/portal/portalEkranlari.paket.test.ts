@@ -255,7 +255,7 @@ describe('the patient portal\'s screens — the patient\'s side', () => {
     assert.doesNotMatch(kod('components/ulke/portal/index.tsx'), /from '\.\.\/uygulama\/[A-Z]/)
     // The token: read from the fragment, sent in the body of the sign-in request, and nowhere else.
     assert.match(ekran, /window\.location\.hash/)
-    assert.match(ekran, /iste\('\/giris', \{ token: token\.current, pin \}\)/)
+    assert.match(ekran, /iste\('\/giris', \{ token: token\.current, pin: pinDegeri \}\)/)
     assert.equal([...ekran.matchAll(/token\.current/g)].length, 2, 'the token is set once and sent once')
     assert.doesNotMatch(ekran, /searchParams\.get\('token'\)|\?token=|console\./)
     // Every request says which link the page is open for, sends the cookie to this site only, and names no referrer.

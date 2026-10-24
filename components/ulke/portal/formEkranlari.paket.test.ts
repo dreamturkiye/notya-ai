@@ -187,7 +187,7 @@ describe('the intake form\'s screens — the patient\'s side', () => {
     var_(formEkrani(dil, fo, { bolum: 1, sayilar: { q_boy: '9999' } }), Y.yerine(x.sayiGecersiz, '20', '260'), 'range')
     // Refused: the sentence, and each missing question marked.
     const eksik = formEkrani(dil, form(dil), { gonderim: 'eksik', eksik: ['q_uzun'] })
-    var_(eksik, x.eksik, 'missing'); assert.match(eksik, /data-soru="q_uzun" data-tur="uzun-metin" data-eksik="evet"/)
+    var_(eksik, x.eksikTek, 'missing'); var_(eksik, x.soruEksik, 'line under the question'); assert.match(eksik, /data-soru="q_uzun" data-tur="uzun-metin" data-eksik="evet"/)
     assert.equal((eksik.match(/data-eksik="evet"/g) ?? []).length, 1)
     for (const [ek, metin] of [[{ kayit: 'hata' }, x.kaydedilemedi], [{ gonderim: 'hata' }, x.gonderilemedi], [{ kayit: 'kaydediliyor' }, x.kaydediliyor], [{ bolum: 1, gonderim: 'gonderiliyor' }, x.gonderiliyor]] as const) var_(formEkrani(dil, fo, ek as FormEk), metin, JSON.stringify(ek))
   })
@@ -345,7 +345,7 @@ describe('the intake form\'s screens — rules', () => {
     assert.doesNotMatch(k, /from '\.\.\/uygulama\/|from '@\/components\/ulke\/uygulama|istemciSupabase|supabase|Authorization|localStorage|sessionStorage|document\.cookie/, 'the patient\'s form reaches for the doctor\'s application or a browser store')
     assert.doesNotMatch(k, /\bfetch\(/, 'every request goes through the page\'s helper (same origin, the cookie, the link\'s mark)')
     // It holds no question: nothing of a pack's clinical half can be imported into a browser file.
-    for (const d of ['components/ulke/portal/HastaFormu.tsx', 'components/ulke/uygulama/HastaFormuKarti.tsx', 'components/ulke/portal/PortalSayfasi.tsx']) assert.doesNotMatch(kod(d), /countries\/active\/klinik|intake\/icerik|intake\/form'|intake\/sorular/, `${d} imports the questions or the server's rules into the browser`)
+    for (const d of ['components/ulke/portal/HastaFormu.tsx', 'components/ulke/uygulama/HastaFormuKarti.tsx', 'components/ulke/portal/PortalSayfasi.tsx', 'components/ulke/portal/HastaSayfasi.tsx']) assert.doesNotMatch(kod(d), /countries\/active\/klinik|intake\/icerik|intake\/form'|intake\/sorular/, `${d} imports the questions or the server's rules into the browser`)
   })
 
   it('the cards are mounted where they belong, and only where the country has the form', () => {
@@ -358,8 +358,10 @@ describe('the intake form\'s screens — rules', () => {
     assert.equal((muayene.match(/<HastaFormuKarti /g) ?? []).length, 2)
     assert.match(muayene, /const formAcik = \(\): boolean => ozellikAcik\('hastaPortali'\) && ozellikAcik\('hastaFormu'\)/)
     // The patient's page draws the card only when the server says there is a form, and the form replaces the page.
-    assert.match(sayfa, /formKarti=\{icerik\.form \? <PortalFormKarti /)
-    assert.match(sayfa, /asama === 'sayfa' && icerik && formAcik \? \(/)
+    const hasta = kod('components/ulke/portal/HastaSayfasi.tsx')
+    assert.match(hasta, /\.\.\.\(i\.form \? \[\{ key: 'form' as const/)
+    assert.match(hasta, /sekme === 'form' && i\.form/)
+    assert.match(hasta, /formAcik\s*\? <PortalFormu[\s\S]*: <PortalFormKarti /)
   })
 })
 

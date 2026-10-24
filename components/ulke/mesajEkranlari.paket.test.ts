@@ -122,7 +122,7 @@ describe('the messages\' screens — the patient\'s side', () => {
     if (!ACIK) return
     const n = paket.uygulama?.portal?.acilNumara
     assert.equal(Sayfa.portalAcilNumarasi(), typeof n === 'string' && n.trim() ? n.trim() : null)
-    assert.match(kod('components/ulke/portal/PortalSayfasi.tsx'), /<PortalMesajlar dil=\{dil\} iste=\{iste\} acilNumara=\{portalAcilNumarasi\(\)\}/)
+    assert.match(kod('components/ulke/portal/PortalSayfasi.tsx'), /const acil = portalAcilNumarasi\(\)[\s\S]*<PortalHastaSayfasi [^>]*acilNumara=\{acil\}/)
   })
 
   it('A PATIENT CANNOT START A CONVERSATION: with none open the section says so in plain words and has NO text box and NO send button', () => {
@@ -293,12 +293,18 @@ describe('the messages\' screens — rules', () => {
     const hastalar = kod('components/ulke/uygulama/Hastalar.tsx'), bugun = kod('components/ulke/uygulama/Bugun.tsx'), sayfa = kod('components/ulke/portal/PortalSayfasi.tsx')
     assert.match(hastalar, /mesajlar=\{ozellikAcik\('hastaPortali'\) && ozellikAcik\('hastaMesajlari'\) \? <HastaMesajKarti u=\{u\} hastaId=\{veri\.hasta\.id\}/)
     assert.match(bugun, /mesajlar=\{ozellikAcik\('hastaPortali'\) && ozellikAcik\('hastaMesajlari'\) \? <OkunmamisMesajlarKarti u=\{u\} \/> : null\}/)
-    assert.match(sayfa, /mesajlar=\{ozellikAcik\('hastaMesajlari'\) \? <PortalMesajlar /)
+    // the patient's page (Türkiye's "Sağlığım" views, HastaSayfasi.tsx): the tab, the chip and the load exist only where the country has messages
+    const hasta = kod('components/ulke/portal/HastaSayfasi.tsx')
+    assert.match(hasta, /const mesajVar = ozellikAcik\('hastaMesajlari'\)/)
+    assert.match(hasta, /\.\.\.\(mesajVar \? \[\{ key: 'mesajlar'/)
+    assert.match(hasta, /sekme === 'mesajlar' && mesajVar/)
+    assert.match(hasta, /useMesajlar\(mesajVar,/)
+    assert.equal((hasta.match(/<PortalMesajlarGorunumu/g) ?? []).length, 1)
     // on the patient's page the section is drawn only after sign-in: it sits inside the signed-in view and nowhere else
-    assert.equal((sayfa.match(/<PortalMesajlar /g) ?? []).length, 1)
-    assert.match(sayfa, /asama === 'sayfa' && icerik \? \(\s*<PortalSayfaGorunumu[\s\S]*?<PortalMesajlar /)
+    assert.equal((sayfa.match(/<PortalHastaSayfasi /g) ?? []).length, 1)
+    assert.match(sayfa, /asama === 'sayfa' && icerik \? \(\s*<PortalHastaSayfasi/)
     // the card marks as read only up to the newest message it drew
-    for (const d of ['components/ulke/uygulama/HastaMesajlari.tsx', 'components/ulke/portal/Mesajlar.tsx']) assert.match(kod(d), /kadar: son/, `${d} does not say up to where it has read`)
+    for (const d of ['components/ulke/uygulama/HastaMesajlari.tsx', 'components/ulke/portal/HastaSayfasi.tsx', 'components/ulke/uygulama/GelenKutusu.tsx']) assert.match(kod(d), /kadar: son/, `${d} does not say up to where it has read`)
   })
 })
 
@@ -306,7 +312,7 @@ describe('the messages\' screens — the catalogue', () => {
   it('is the same shape in every form, each entry is there, a sentence keeps its placeholders in every form, the emergency notice holds no digit, and nothing of another country is in it', () => {
     if (!ACIK) return
     const ilk = yaprak(x(FORMLAR[0]))
-    assert.equal(ilk.length, 49, `${ilk.length} entries`)
+    assert.equal(ilk.length, 59, `${ilk.length} entries`)
     for (const dil of FORMLAR) {
       const y = yaprak(x(dil))
       assert.deepEqual(y.map((e) => e[0]), ilk.map((e) => e[0]), `${dil}: not the same keys as ${FORMLAR[0]}`)

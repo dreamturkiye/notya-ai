@@ -31,7 +31,7 @@ import type { PortalKimligi } from '../portal/giris'
 import { aktifUlke, ozellikAcik } from '../ulke'
 import { hastaAdlari, hastaGetir } from '../uygulama/hastalar'
 import { ulkeTablosu } from '../uygulama/tablolar'
-import { MESAJ_AZAMI, MESAJ_GUNLUK_AZAMI, MESAJ_LISTE_AZAMI, mesajMetniAl, OKUNMAMIS_AZAMI, YAZISMA_LISTE_AZAMI, type HastaMesajGorunumu, type HekimMesajGorunumu, type Mesaj, type MesajGondereni, type OkunmamisHasta, type Yazisma } from './sabitler'
+import { GELEN_KONU_AZAMI, MESAJ_AZAMI, MESAJ_GUNLUK_AZAMI, MESAJ_LISTE_AZAMI, mesajMetniAl, OKUNMAMIS_AZAMI, YAZISMA_LISTE_AZAMI, type GelenKonu, type HastaMesajGorunumu, type HekimMesajGorunumu, type Mesaj, type MesajGondereni, type OkunmamisHasta, type Yazisma } from './sabitler'
 
 const YAZISMALAR = 'ulke_mesaj_yazismalari'
 const MESAJLAR = 'ulke_hasta_mesajlari'
@@ -204,6 +204,35 @@ export async function hekimOkunmamislari(supabase: SupabaseClient, doktorId: str
     else liste.set(s.patient_id, { hastaId: s.patient_id, hastaAdi: adlar.get(s.patient_id) ?? '', adet: 1, son: s.created_at })
   }
   return [...liste.values()]
+}
+
+/**
+ * THE INBOX of THIS doctor: their newest conversations across all their patients, newest message first, each with the
+ * unread count and the first words of the newest message. Every statement carries doctor_id; a name is read only for a
+ * patient of this doctor (hastaAdlari); a message whose value cannot be read is left out, as everywhere else.
+ */
+export async function hekimGelenKutusu(supabase: SupabaseClient, doktorId: string): Promise<GelenKonu[]> {
+  const { data: y } = await ulkeTablosu(supabase, YAZISMALAR).select('id, patient_id, kapandi_at, created_at').eq('doctor_id', doktorId).order('created_at', { ascending: false }).limit(GELEN_KONU_AZAMI)
+  const yazismalar = (y as unknown as { id: string; patient_id: string; kapandi_at: string | null; created_at: string }[] | null) ?? []
+  if (!yazismalar.length) return []
+  const { data: m } = await ulkeTablosu(supabase, MESAJLAR).select('id, yazisma_id, patient_id, gonderen, metin_encrypted, okundu_at, created_at').eq('doctor_id', doktorId).in('yazisma_id', yazismalar.map((x) => x.id)).order('created_at', { ascending: false }).limit(MESAJ_LISTE_AZAMI)
+  const mesajlar = (m as unknown as (MesajSatiri & { patient_id: string })[] | null) ?? []
+  const adlar = await hastaAdlari(supabase, doktorId, [...new Set(yazismalar.map((x) => x.patient_id))])
+  const liste: GelenKonu[] = []
+  for (const x of yazismalar) {
+    if (!adlar.has(x.patient_id)) continue
+    const bunlar = mesajlar.filter((s) => s.yazisma_id === x.id && (s.gonderen === 'hekim' || s.gonderen === 'hasta'))
+    const c = { doktorId, hastaId: x.patient_id }
+    const okunabilir = bunlar.map((s) => ({ s, metin: coz(s.metin_encrypted, c, x.id, s.gonderen) })).filter((e) => e.metin !== null)
+    if (!okunabilir.length) continue
+    const son = okunabilir[0]
+    liste.push({
+      yazismaId: x.id, hastaId: x.patient_id, hastaAdi: adlar.get(x.patient_id) ?? '', kapandi: x.kapandi_at ?? null, son: son.s.created_at,
+      okunmamis: okunabilir.filter((e) => e.s.gonderen === 'hasta' && !e.s.okundu_at).length,
+      ozet: (son.metin as string).replace(/\s+/g, ' ').slice(0, 90),
+    })
+  }
+  return liste.sort((a, b) => (a.son < b.son ? 1 : -1))
 }
 
 // ───────────────────────── the patient's side: no id from a request, ever ─────────────────────────

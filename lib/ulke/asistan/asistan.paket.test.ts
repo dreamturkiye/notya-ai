@@ -108,7 +108,7 @@ describe('live assistant: the active pack', () => {
     assert.match(yaziliRota, /ozellikAcik\('cekirdekMuayene'\)[\s\S]*ulkeOturum[\s\S]*canliYaziliCevabi/)
     assert.ok(!/searchParams/.test(yaziliRota))
     // The shared screens: the page is a registered screen, the sidebar links to it, the home links to it.
-    assert.match(readFileSync(join(KOK, 'components/ulke/uygulama/Kabuk.tsx'), 'utf8'), /oge\('asistan', p\.asistanaSor, 'asistan', asistanSesAdlari\(\) \? YOL\.asistan/)
+    assert.match(readFileSync(join(KOK, 'components/ulke/uygulama/Kabuk.tsx'), 'utf8'), /asistanSesAdlari\(\)\) asistan = oge\('asistan', p\.asistanaSor, 'asistan', YOL\.asistan/)
     assert.match(readFileSync(join(KOK, 'components/ulke/uygulama/AsistanCanli.tsx'), 'utf8'), /YOL\.asistan/)
   })
 })

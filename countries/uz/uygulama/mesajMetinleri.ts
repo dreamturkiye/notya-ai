@@ -54,6 +54,18 @@ const METINLER: Uclu<MesajMetni> = {
     okunmamisBaslik: u('Bemorlardan oʻqilmagan xabarlar', 'Беморлардан ўқилмаган хабарлар', 'Непрочитанные сообщения от пациентов'),
     okunmamisAdet: u('Yangi: %', 'Янги: %', 'Новых: %'),
   },
+  gelen: {
+    ustYazi: u('Shifokor', 'Шифокор', 'Врач'),
+    baslik: u('Xabarlar', 'Хабарлар', 'Сообщения'),
+    aciklama: u('Bemorlaringizning oʻz sahifasidan yozgan xabarlari va sizning javoblaringiz bir joyda.', 'Беморларингизнинг ўз саҳифасидан ёзган хабарлари ва сизнинг жавобларингиз бир жойда.', 'Сообщения пациентов со своих страниц и ваши ответы в одном месте.'),
+    bosBaslik: u('Hali xabar yoʻq', 'Ҳали хабар йўқ', 'Сообщений пока нет'),
+    bosGovde: u('Kirish bergan bemoringiz oʻz sahifasidan yozganda, xabar shu yerda paydo boʻladi. Kirish berish uchun bemor kartasini oching.', 'Кириш берган беморингиз ўз саҳифасидан ёзганда, хабар шу ерда пайдо бўлади. Кириш бериш учун бемор картасини очинг.', 'Когда пациент, которому вы дали доступ, напишет со своей страницы, сообщение появится здесь. Чтобы дать доступ, откройте карту пациента.'),
+    sec: u('Yozishmani tanlang.', 'Ёзишмани танланг.', 'Выберите переписку.'),
+    yanitYer: u('Javob yozing…', 'Жавоб ёзинг…', 'Напишите ответ…'),
+    yanitla: u('Javob berish', 'Жавоб бериш', 'Ответить'),
+    hastaDosyasi: u('Bemor kartasi', 'Бемор картаси', 'Карта пациента'),
+    yukleniyor: u('Yuklanmoqda…', 'Юкланмоқда…', 'Загрузка…'),
+  },
   hasta: {
     baslik: u('Shifokor bilan yozishma', 'Шифокор билан ёзишма', 'Переписка с врачом'),
     aciklama: u('Bu yerda shifokoringiz sizga yozgan xabarlarni oʻqiysiz va ularga javob yozasiz.', 'Бу ерда шифокорингиз сизга ёзган хабарларни ўқийсиз ва уларга жавоб ёзасиз.', 'Здесь вы читаете сообщения вашего врача и отвечаете на них.'),

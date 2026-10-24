@@ -62,14 +62,14 @@ const GIRDI_ANAHTARLARI = ['gun', 'ay', 'yil', 'saat', 'dakika', 'tarihGecersiz'
 const PORTAL_YER_TUTUCULARI: readonly (readonly [string, readonly string[]])[] = [
   ['erisim.durumAcik', ['%']], ['erisim.sonGiris', ['%']], ['ozet.dil', ['%']], ['ozet.paylasildi', ['%']], ['istek.istekTarihi', ['%']],
   ['giris.pinBicimi', ['%']], ['giris.pinYanlis', ['%']],
-  ['sayfa.selam', ['%']], ['sayfa.saatDilimi', ['%']], ['sayfa.muayene', ['%']], ['sayfa.istekAciklama', ['%']], ['sayfa.istekCokGun', ['%']], ['sayfa.istekGunler', ['%']], ['sayfa.istekKabul', ['%1', '%2']], ['sayfa.acilNumara', ['%']],
+  ['sayfa.selam', ['%']], ['sayfa.saatDilimi', ['%']], ['sayfa.muayene', ['%']], ['sayfa.istekAciklama', ['%']], ['sayfa.istekCokGun', ['%']], ['sayfa.istekGunler', ['%']], ['sayfa.istekKabul', ['%1', '%2']], ['sayfa.acilNumara', ['%']], ['gorunum.cipOkunmamis', ['%']], ['gorunum.uyariMetin', ['%']],
 ]
 
 /** Sentences of the intake form's catalogue that carry a value (lib/ulke/arayuz/metinTipleri.ts → FormMetni). */
 const FORM_YER_TUTUCULARI: readonly (readonly [string, readonly string[]])[] = [
   ['hekim.durumBekliyor', ['%']], ['hekim.durumTaslak', ['%']], ['hekim.durumGonderildi', ['%']],
   ['davet.metin', ['%1', '%2']], ['davet.metinAdsiz', ['%']], ['davet.baglantisiz', ['%']],
-  ['hasta.bolum', ['%1', '%2']], ['hasta.sayiGecersiz', ['%1', '%2']], ['hasta.gonderildi', ['%']],
+  ['hasta.bolum', ['%1', '%2']], ['hasta.sayiGecersiz', ['%1', '%2']], ['hasta.eksikCok', ['%1']], ['hasta.gonderildi', ['%']],
 ]
 
 function saatDilimiGecerli(z: unknown): boolean {

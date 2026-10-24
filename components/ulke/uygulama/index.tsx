@@ -18,6 +18,7 @@ import Klinik from './Klinik'
 import OnBuro from './OnBuro'
 import Fatura from './Fatura'
 import GizlilikTalepleri from './GizlilikTalepleri'
+import GelenKutusu from './GelenKutusu'
 import Asistan from './AsistanSayfasi'
 
 export const UYGULAMA_EKRAN_BILESENLERI: Readonly<Record<UygulamaEkrani, ComponentType>> = {
@@ -41,4 +42,6 @@ export const UYGULAMA_EKRAN_BILESENLERI: Readonly<Record<UygulamaEkrani, Compone
   gizlilikTalepleri: GizlilikTalepleri,
   // AU-CANLI-02 — the assistant page (the pack's `canliAsistan`; components/ulke/UlkeUygulamaSayfasi.tsx).
   asistan: Asistan,
+  // The doctor's messages inbox (the pack's `hastaMesajlari`).
+  mesajlar: GelenKutusu,
 }

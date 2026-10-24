@@ -52,6 +52,10 @@ export type HekimMesajGorunumu = {
 /** One patient with unread messages, on the home screen (GET without an id). */
 export type OkunmamisHasta = { hastaId: string; hastaAdi: string; adet: number; /** The newest unread message's moment. */ son: string }
 
+/** One conversation in the doctor's inbox, across all their patients (GET ?gelen=1). Newest message first. */
+export type GelenKonu = { yazismaId: string; hastaId: string; hastaAdi: string; /** When the doctor closed it, or null. */ kapandi: string | null; /** The newest message's moment. */ son: string; /** Messages of the patient's the doctor has not read. */ okunmamis: number; /** The first words of the newest message. */ ozet: string }
+export const GELEN_KONU_AZAMI = 60
+
 /** What the patient's page is answered with. */
 export type HastaMesajGorunumu = {
   /** Newest conversation first. */

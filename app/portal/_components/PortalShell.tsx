@@ -1,7 +1,6 @@
 'use client'
 
-import Link from 'next/link'
-import { useEffect, useRef } from 'react'
+import { PortalKabukGorunumu } from '@/components/doktor/portal/PortalKabukGorunumu'
 import { usePathname } from 'next/navigation'
 import type { PortalNavKey, PortalNavOge } from '@/lib/portal/types'
 
@@ -30,48 +29,26 @@ export function PortalShell({
   children: React.ReactNode
 }) {
   const pathname = usePathname() || ''
-  const navRef = useRef<HTMLElement>(null)
-
-  useEffect(() => {
-    const active = navRef.current?.querySelector<HTMLElement>('.sg-nav-link.is-active')
-    active?.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' })
-  }, [pathname])
+  const nav = [...NAV, ...ekNav].map((item) => {
+    const href = `${basePath}${item.path}`
+    const active =
+      item.path === ''
+        ? pathname === basePath || pathname === `${basePath}/`
+        : pathname === href || pathname.startsWith(`${href}/`)
+    return { key: item.key, label: item.label, href, aktif: active }
+  })
 
   return (
-    <div className="sg-shell">
-      <header className="sg-header">
-        <div className="sg-header-inner">
-          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12 }}>
-            <Link href={basePath} className="sg-brand-lockup">
-              <span className="sg-brand-mark">Notya</span>
-              <span className="sg-brand-product">Sağlığım</span>
-            </Link>
-            {hastaAdi ? (
-              <span className="sg-header-hasta" data-testid="portal-header-hasta-adi" title={hastaAdi}>
-                {hastaAdi}
-              </span>
-            ) : (
-              <span className="sg-header-tag">Hasta alanı</span>
-            )}
-          </div>
-          <nav ref={navRef} className="sg-nav" aria-label="Sağlığım bölümleri">
-            {[...NAV, ...ekNav].map((item) => {
-              const href = `${basePath}${item.path}`
-              const active =
-                item.path === ''
-                  ? pathname === basePath || pathname === `${basePath}/`
-                  : pathname === href || pathname.startsWith(`${href}/`)
-              return (
-                <Link key={item.key} href={href} className={`sg-nav-link${active ? ' is-active' : ''}`}>
-                  {item.label}
-                </Link>
-              )
-            })}
-          </nav>
-        </div>
-      </header>
-      <main className="sg-main">{children}</main>
-      <footer className="sg-footer">
+    <PortalKabukGorunumu
+      marka="Notya"
+      urun="Sağlığım"
+      anaHref={basePath}
+      hastaAdi={hastaAdi}
+      hastaAlani="Hasta alanı"
+      navEtiketi="Sağlığım bölümleri"
+      nav={nav}
+      altBilgi={
+        <>
         <p style={{ margin: '0 0 10px' }}>
           Notya · Sağlığım — acil durumda 112&apos;yi veya muayenehaneyi arayın. Portal mesajları acil değildir.
         </p>
@@ -84,7 +61,10 @@ export function PortalShell({
           <a href="/kvkk">KVKK Aydınlatma Metni</a>.
         </p>
         <p style={{ margin: 0, opacity: 0.85 }}>Bu bağlantı size özeldir; başkalarıyla paylaşmayın.</p>
-      </footer>
-    </div>
+        </>
+      }
+    >
+      {children}
+    </PortalKabukGorunumu>
   )
 }

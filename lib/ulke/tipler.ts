@@ -476,6 +476,8 @@ export const UYGULAMA_EKRANLARI = {
   fatura: '/billing',
   /** AU-CANLI-02 — the assistant page: voice and typed chat (pack setting `canliAsistan`). */
   asistan: '/asistan',
+  /** The doctor's messages inbox: the conversations with all their patients (pack feature `hastaMesajlari`). */
+  mesajlar: '/messages',
 } as const
 export type UygulamaEkrani = keyof typeof UYGULAMA_EKRANLARI
 

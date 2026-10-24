@@ -100,6 +100,12 @@ export type RolSorulari = {
   veliBasligi?: BicimliMetin
   sorular: readonly Soru[]
   inceleme: FormIncelemesi
+  /**
+   * Core questions THIS role asks in its own form: a question here replaces the core question with the same key (same
+   * key, same type, so a stored answer stays readable), on the guardian form only. Used by paediatrics for the
+   * long-term conditions list, which must not offer an adult's. Every other role keeps the core question.
+   */
+  cekirdekDegisimi?: readonly Soru[]
 }
 
 /**

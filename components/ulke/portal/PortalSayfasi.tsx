@@ -36,6 +36,8 @@ import { ozellikAcik, ulkePaketi } from '@/lib/ulke/ulke'
 import { gunYazDesenle, haftaGunu } from '@/lib/ulke/uygulama/zaman'
 import { ulkeYolu } from '@/lib/ulke/yol'
 import { PortalFormKarti, PortalFormu, type PortalIstegi } from './HastaFormu'
+import { PortalPinGorunumu } from '@/components/doktor/portal/PortalPinGorunumu'
+import { PortalDurumGorunumu as PortalDurumSatiri } from '@/components/doktor/portal/PortalRandevuGorunumu'
 import { EkNot, PortalGizlilikKarti } from './GizlilikKarti'
 import { PortalMesajlar } from './Mesajlar'
 
@@ -48,13 +50,9 @@ const Hata = ({ children }: { children: ReactNode }) => (children ? <div role="a
 const Bilgi = ({ children }: { children: ReactNode }) => (children ? <div role="status" className="uza-bilgi-kutu">{children}</div> : null)
 
 const gunYaz = (gun: string): string => gunYazDesenle(gun, tarihDeseni())
-/**
- * A day with its weekday where the country has appointments (the weekday names are the appointment catalogue's).
- * `uzun` false = the short weekday name, for a button. THE DAY IS ALWAYS WRITTEN IN FULL, in the pack's own pattern:
- * the short form used to be the first five characters of the written date, which in a year-first country is the year
- * and no day ("Sat 2026-"), so a patient could not tell one Saturday from the next (NOTYA-ULKE-DENETIM-01c).
- */
-export const portalGunu = (r: RandevuMetni | null, gun: string, uzun = true): string => (r ? `${gunAdi(r, haftaGunu(gun), uzun)}${uzun ? ',' : ''} ${gunYaz(gun)}` : gunYaz(gun))
+import { portalGunu, PortalHastaSayfasi, type IstekFormu, type IstekHatasi } from './HastaSayfasi'
+export { portalGunu }
+export type { IstekFormu, IstekHatasi }
 
 /** The ambulance number the pack states, or null: the kit has none of its own and never falls back to one. */
 export function portalAcilNumarasi(): string | null {
@@ -123,8 +121,6 @@ export function PortalGirisGorunumu({ p, pin, setPin, gonder, bekliyor, hata, ot
   )
 }
 
-export type IstekFormu = { gunler: string[]; neden: string }
-export type IstekHatasi = 'gun' | 'cok' | 'gonderilemedi' | 'baglanti' | null
 
 /** The patient's own page. `r` = the appointment catalogue in the same form, or null where the country has no appointments. */
 export function PortalSayfaGorunumu({ p, r, icerik, acilNumara, form, setForm, istekGonder, istekBekliyor, istekHatasi, cikis, formKarti, mesajlar, gizlilik }: {
@@ -316,12 +312,13 @@ export default function PortalSayfasi() {
     return () => window.clearTimeout(z)
   }, [asama, icerik])
 
-  async function giris(e: FormEvent) {
-    e.preventDefault()
-    if (!pinBicimiGecerli(pin)) { setHata({ kod: 'PIN_BICIMI' }); return }
+  async function giris(e?: FormEvent, deger?: string) {
+    e?.preventDefault()
+    const pinDegeri = deger ?? pin
+    if (!pinBicimiGecerli(pinDegeri)) { setHata({ kod: 'PIN_BICIMI' }); return }
     setBekliyor(true); setHata(null)
     try {
-      const r = await iste('/giris', { token: token.current, pin })
+      const r = await iste('/giris', { token: token.current, pin: pinDegeri })
       setPin('')
       if (r.status === 200) { await yukle() }
       else if (r.j.code === 'PIN_YANLIS') setHata({ kod: 'PIN_YANLIS', kalan: Number(r.j.kalan) || 0 })
@@ -355,21 +352,28 @@ export default function PortalSayfasi() {
   }
 
   const p = portalMetni(dil)
+  // The patient's page is Türkiye's "Sağlığım": the PIN page, the frame and every tab are the shared views
+  // (components/doktor/portal). The old frame (PortalCercevesi) is kept for tests of the older views only.
+  const acil = portalAcilNumarasi()
   return (
-    <PortalCercevesi dil={dil}>
-      {asama === 'sayfa' && icerik && formAcik ? (
-        // The form instead of the page: on a phone there is room for one of them. Closing it reads the page again.
-        <PortalFormu dil={dil} iste={iste} kapat={() => { setFormAcik(false); void yukle(true) }} oturumBitti={() => { void yukle(true) }} />
-      ) : asama === 'sayfa' && icerik ? (
-        <PortalSayfaGorunumu p={p} formKarti={icerik.form ? <PortalFormKarti f={formMetni(dil)} ozet={icerik.form} ac={() => setFormAcik(true)} /> : null} r={ozellikAcik('randevu') ? randevuMetni(dil) : null} icerik={icerik} acilNumara={portalAcilNumarasi()}
-          gizlilik={ulkePaketi().uzanti?.gizlilik ? <PortalGizlilikKarti iste={iste} oturumBitti={() => { void yukle(true) }} /> : undefined}
-          mesajlar={ozellikAcik('hastaMesajlari') ? <PortalMesajlar dil={dil} iste={iste} acilNumara={portalAcilNumarasi()} saatDilimi={icerik.saatDilimi} oturumBitti={() => { void yukle(true) }} /> : null}
-          form={form} setForm={(y) => { setForm(y); setIstekHatasi(null) }} istekGonder={istekGonder} istekBekliyor={istekBekliyor} istekHatasi={istekHatasi} cikis={() => { void cikis() }} />
+    <div lang={dil} data-alan="portal-sayfasi">
+      {/* eslint-disable-next-line @next/next/no-page-custom-font */}
+      <link rel="stylesheet" href={CHROME_FONT_HREF} referrerPolicy="no-referrer" />
+      {asama === 'sayfa' && icerik ? (
+        <PortalHastaSayfasi dil={dil} p={p} r={ozellikAcik('randevu') ? randevuMetni(dil) : null} icerik={icerik} acilNumara={acil} iste={iste} yenile={() => { void yukle(true) }} cikis={() => { void cikis() }}
+          form={form} setForm={(y) => { setForm(y); setIstekHatasi(null) }} istekGonder={istekGonder} istekBekliyor={istekBekliyor} istekHatasi={istekHatasi} />
       ) : asama === 'pin' ? (
-        <PortalGirisGorunumu p={p} pin={pin} setPin={(y) => { setPin(y); setHata(null) }} gonder={giris} bekliyor={bekliyor} hata={hata} oturumBitti={oturumBitti} />
+        <div data-alan="portal-giris">
+          <PortalPinGorunumu
+            s={{ marka: marka(), urun: p.gorunum.urun, aciklama: p.giris.aciklama, etiket: p.giris.pin, devam: p.giris.gonder, kontrol: p.giris.gonderiliyor, eskiLink: p.giris.gecersiz, unuttum: p.giris.unuttum }}
+            pin={pin} onPin={(y) => { setPin(y); setHata(null); if (y.length === PIN_HANE) void giris(undefined, y) }} onGonder={() => { void giris() }}
+            mesgul={bekliyor} hata={girisHataMetni(p, hata)} eskiLink={false} hane={PIN_HANE} oturumBitti={oturumBitti ? p.sayfa.oturumBitti : null} />
+        </div>
       ) : (
-        <PortalDurumGorunumu p={p} durum={asama === 'sayfa' ? 'yukleniyor' : asama} />
+        <div data-alan="portal-durum" data-durum={asama === 'sayfa' ? 'yukleniyor' : asama}>
+          <PortalDurumSatiri baslik={asama === 'yukleniyor' ? undefined : p.giris.baslik} govde={asama === 'yukleniyor' ? p.giris.yukleniyor : asama === 'kilitli' ? p.giris.kilitli : p.giris.gecersiz} hata={asama === 'gecersiz' || asama === 'kilitli'} />
+        </div>
       )}
-    </PortalCercevesi>
+    </div>
   )
 }

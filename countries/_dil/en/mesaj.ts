@@ -43,6 +43,18 @@ export const EN_MESAJ_TEMEL: MesajMetni = {
     okunmamisBaslik: 'Unread messages',
     okunmamisAdet: '% unread',
   },
+  gelen: {
+    ustYazi: 'Doctor',
+    baslik: 'Messages',
+    aciklama: 'Your patients\' messages from their own page, and your answers, in one inbox.',
+    bosBaslik: 'No messages yet',
+    bosGovde: 'When a patient you have given access writes from their page, the message appears here. To give a patient access, open the patient file.',
+    sec: 'Choose a conversation.',
+    yanitYer: 'Write a reply…',
+    yanitla: 'Reply',
+    hastaDosyasi: 'Patient file',
+    yukleniyor: 'Loading…',
+  },
   hasta: {
     baslik: 'Messages',
     aciklama: 'Messages from your doctor, on this page. You can answer here.',

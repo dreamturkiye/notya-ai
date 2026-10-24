@@ -897,3 +897,7 @@ fieldset.uza-alan { display: flex; flex-direction: column; gap: 10px; }
 .uza [role='tabpanel'] .uza-liste > li { display: flex; align-items: center; gap: 10px; background: #F6F0E4; border: 0; border-radius: 12px; padding: 10px 12px; }
 .uza [role='tabpanel'] .uza-liste .uza-liste-ad { font-size: 14px; font-weight: 600; color: var(--uza-murekkep); }
 .uza [role='tabpanel'] .uza-liste .uza-liste-alt { display: block; font-size: 12px; font-weight: 400; color: var(--uza-soluk); margin-top: 2px; }
+
+/* A question the patient has to answer before going on (the intake form): marked until it is answered. */
+[data-soru][data-eksik="evet"] { border-left: 3px solid var(--uza-uyari); background: color-mix(in srgb, var(--uza-uyari) 7%, transparent); border-radius: 8px; padding: 10px 12px; }
+fieldset[data-soru][data-eksik="evet"] { border-top: 0; border-right: 0; border-bottom: 0; }

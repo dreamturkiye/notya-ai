@@ -83,6 +83,26 @@ export function okunamayanCevap(q: FormSorusu, ham: string, cevap: Cevap | undef
   return q.tur === 'sayi' && ham.trim() !== '' && cevap === undefined
 }
 
+/**
+ * The keys of the questions of `sorular` that stop the patient: a required one with no answer, and one whose field holds
+ * something that could not be read. ONE rule for the Next button, the Send button and the marks on the screen, so a mark
+ * is gone the moment its question is answered (nothing stale is kept: the marked keys are intersected with this list
+ * on every draw).
+ */
+export function formEksikleri(sorular: readonly FormSorusu[], cevaplar: Cevaplar, sayilar: Record<string, string>): string[] {
+  return sorular
+    .filter((q) => (q.zorunlu && cevaplar[q.anahtar] === undefined) || okunamayanCevap(q, sayilar[q.anahtar] ?? '', cevaplar[q.anahtar]))
+    .map((q) => q.anahtar)
+}
+
+/** The banner above the buttons: how many required questions need an answer, or the field's own "correct it" sentence. null = none. */
+export function eksikBandi(f: FormMetni, g: GirdiMetni, sorular: readonly FormSorusu[], isaretli: readonly string[], cevaplar: Cevaplar, sayilar: Record<string, string>): string | null {
+  const okunmaz = sorular.filter((q) => isaretli.includes(q.anahtar) && okunamayanCevap(q, sayilar[q.anahtar] ?? '', cevaplar[q.anahtar])).length
+  const zorunlu = isaretli.length - okunmaz
+  if (zorunlu > 0) return zorunlu === 1 ? f.hasta.eksikTek : yerine(f.hasta.eksikCok, zorunlu)
+  return okunmaz > 0 ? g.duzelt : null
+}
+
 /** An answer as text, for the read-only view: option names, yes/no and the unit in the form's own language. '' = no answer. */
 export function gorunumCevapMetni(q: FormSorusu, c: Cevap | undefined, f: FormMetni): string {
   if (c === undefined || c === null) return ''
@@ -109,7 +129,9 @@ export function SoruAlani({ q, f, g, cevap, ham, eksik, degistir, hamDegistir }:
   const id = `uzf-${q.anahtar}`
   const baslik = (<>{q.metin}{q.zorunlu ? <small> ({f.hasta.zorunlu})</small> : null}</>)
   const yardim = q.yardim ? <p className="uza-ipucu" style={{ marginTop: 0 }}>{q.yardim}</p> : null
-  const sarici = { 'data-soru': q.anahtar, 'data-tur': q.tur, 'data-eksik': eksik ? 'evet' : undefined }
+  const sarici = { id: `uzf-soru-${q.anahtar}`, 'data-soru': q.anahtar, 'data-tur': q.tur, 'data-eksik': eksik ? 'evet' : undefined }
+  // The line under a required question that has no answer. A field that holds something unreadable says so itself.
+  const eksikSatir = eksik && q.zorunlu && cevap === undefined && ham.trim() === '' ? <p className="uza-ipucu uza-girdi-hata" role="alert" style={{ marginTop: 6 }} data-hata="zorunlu">{f.hasta.soruEksik}</p> : null
   if (q.tur === 'tek-secim' || q.tur === 'cok-secim') {
     const secili = (k: string) => (q.tur === 'tek-secim' ? cevap === k : Array.isArray(cevap) && cevap.includes(k))
     const sec = (k: string, tek: boolean) => {
@@ -132,6 +154,7 @@ export function SoruAlani({ q, f, g, cevap, ham, eksik, degistir, hamDegistir }:
             </label>
           ))}
         </div>
+        {eksikSatir}
       </fieldset>
     )
   }
@@ -155,6 +178,7 @@ export function SoruAlani({ q, f, g, cevap, ham, eksik, degistir, hamDegistir }:
             <textarea id={`${id}-ayrinti`} className="uza-girdi" rows={2} maxLength={500} value={c.a ?? ''} onChange={(e) => degistir(e.target.value ? { e: true, a: e.target.value } : { e: true })} />
           </div>
         ) : null}
+        {eksikSatir}
       </fieldset>
     )
   }
@@ -197,6 +221,7 @@ export function SoruAlani({ q, f, g, cevap, ham, eksik, degistir, hamDegistir }:
       <label className="uza-etiket" htmlFor={id}>{baslik}</label>
       {yardim}
       {girdi}
+      {eksikSatir}
     </div>
   )
 }
@@ -272,7 +297,7 @@ export function HastaFormuGorunumu({ f, form, cevaplar, sayilar, bolum, riza, se
           <SoruAlani key={q.anahtar} q={q} f={f} g={g} cevap={cevaplar[q.anahtar]} ham={sayilar[q.anahtar] ?? ''} eksik={eksik.includes(q.anahtar)} degistir={(c) => degistir(q.anahtar, c)} hamDegistir={(metin) => hamDegistir(q.anahtar, metin)} />
         ))}
         <p className="uza-ipucu" role="status" data-alan="form-kayit" style={{ marginTop: 0, minHeight: '1.4em' }}>{kayit === 'kaydediliyor' ? h.kaydediliyor : kayit === 'kaydedildi' ? h.kaydedildi : ''}</p>
-        <Hata>{kayit === 'hata' ? h.kaydedilemedi : gonderim === 'eksik' ? h.eksik : gonderim === 'okunamadi' ? g.duzelt : gonderim === 'hata' ? h.gonderilemedi : null}</Hata>
+        <Hata>{kayit === 'hata' ? h.kaydedilemedi : eksikBandi(f, g, form.bolumler.flatMap((x) => x.sorular), eksik, cevaplar, sayilar) ?? (gonderim === 'eksik' ? h.eksik : gonderim === 'hata' ? h.gonderilemedi : null)}</Hata>
         {son ? <p className="uza-ipucu" style={{ marginTop: 0 }}>{h.gonderUyari}</p> : null}
         <div className="uza-eylemler" style={{ marginTop: 0 }}>
           {son ? <button type="button" className="uza-dugme" disabled={gonderim === 'gonderiliyor'} onClick={gonder} data-eylem="form-gonder">{gonderim === 'gonderiliyor' ? h.gonderiliyor : h.gonder}</button>
@@ -307,7 +332,9 @@ export function PortalFormu({ dil, iste, kapat, oturumBitti }: { dil: DilKodu; i
   const [rizaHatasi, setRizaHatasi] = useState(false)
   const [kayit, setKayit] = useState<FormKaydi>('yok')
   const [gonderim, setGonderim] = useState<FormGonderimi>('yok')
-  const [eksik, setEksik] = useState<string[]>([])
+  const [isaretli, setIsaretli] = useState<string[]>([])
+  /** Where the screen should bring the patient next: the first question that needs an answer. `n` makes a second press on the same question move again. */
+  const [odak, setOdak] = useState<{ anahtar: string; n: number } | null>(null)
   const son = useRef<Cevaplar>({})
   const kirli = useRef(false)
   const rizaVerildi = useRef(false)
@@ -371,9 +398,33 @@ export function PortalFormu({ dil, iste, kapat, oturumBitti }: { dil: DilKodu; i
     return () => { document.removeEventListener('visibilitychange', gizlendi); window.removeEventListener('pagehide', birak) }
   }, [kaydet])
 
+  // The marks on the screen are the marked questions that STILL need an answer: answering one removes its mark at once,
+  // with no state left over, and the buttons never wait on a mark.
+  const tumSorular = form ? form.bolumler.flatMap((b) => b.sorular) : []
+  const eksikOlan = formEksikleri(tumSorular, cevaplar, sayilar)
+  const eksik = isaretli.filter((k) => eksikOlan.includes(k))
+
+  // Scroll to the first question that needs an answer and put the cursor in it.
+  useEffect(() => {
+    if (!odak) return
+    const kutu = document.getElementById(`uzf-soru-${odak.anahtar}`)
+    if (!kutu) return
+    kutu.scrollIntoView?.({ behavior: 'smooth', block: 'center' })
+    kutu.querySelector<HTMLElement>('input, textarea, select, button')?.focus({ preventScroll: true })
+  }, [odak, bolum])
+
+  /** Marks the questions of `liste` that need an answer and brings the patient to the first. true = something was marked. */
+  function isaretle(liste: readonly FormSorusu[]): boolean {
+    const keys = formEksikleri(liste, son.current, sayilar)
+    if (!keys.length) return false
+    setIsaretli(keys); setGonderim('yok')
+    setOdak((o) => ({ anahtar: keys[0], n: (o?.n ?? 0) + 1 }))
+    return true
+  }
+
   function degistir(anahtar: string, c: Cevap | undefined) {
     kirli.current = true
-    setEksik((e) => e.filter((x) => x !== anahtar)); setGonderim('yok')
+    setGonderim('yok')
     setCevaplar((eski) => { const yeni = { ...eski }; if (c === undefined) delete yeni[anahtar]; else yeni[anahtar] = c; return yeni })
   }
 
@@ -384,30 +435,34 @@ export function PortalFormu({ dil, iste, kapat, oturumBitti }: { dil: DilKodu; i
       rizaVerildi.current = true
       if (!(await kaydet())) { rizaVerildi.current = false; return }
     } else if (kirli.current) void kaydet()
+    // Going on needs this part's required questions answered; going back never does. The answers are saved either way.
+    if (form && hedef > bolum && bolum >= 0 && isaretle(form.bolumler[bolum].sorular)) return
+    setIsaretli([])
     setBolum(hedef)
     window.scrollTo?.(0, 0)
   }
 
   async function gonder() {
     if (!form) return
-    // NOTHING IS SENT WHILE A FIELD HOLDS WHAT COULD NOT BE READ. A form is sent once; a date or a number the patient
-    // typed and the form could not read would otherwise leave as "no answer". The part with the first such field is
-    // shown, the fields are marked, and each says what is wrong with it.
-    const okunamayan = form.bolumler.flatMap((b) => b.sorular).filter((q) => okunamayanCevap(q, sayilar[q.anahtar] ?? '', son.current[q.anahtar])).map((q) => q.anahtar)
-    if (okunamayan.length) {
-      setEksik(okunamayan); setGonderim('okunamadi')
-      const i = form.bolumler.findIndex((b) => b.sorular.some((q) => okunamayan.includes(q.anahtar)))
+    // NOTHING IS SENT WHILE A REQUIRED QUESTION HAS NO ANSWER OR A FIELD HOLDS WHAT COULD NOT BE READ. A form is sent
+    // once; a date or a number the patient typed and the form could not read would otherwise leave as "no answer".
+    // Every such question is marked, the part with the first one is shown, and the screen scrolls to it.
+    const eksikler = formEksikleri(tumSorular, son.current, sayilar)
+    if (eksikler.length) {
+      isaretle(tumSorular)
+      const i = form.bolumler.findIndex((b) => b.sorular.some((q) => q.anahtar === eksikler[0]))
       if (i >= 0) setBolum(i)
       return
     }
-    setGonderim('gonderiliyor'); setEksik([])
+    setGonderim('gonderiliyor'); setIsaretli([])
     try {
       const r = await iste(FORM_YOLU, { cevaplar: son.current, riza: true }, 'POST')
       if (r.status === 401) { oturumBitti(); return }
       if (r.status === 200 && r.j.form) { kirli.current = false; yerlestir(r.j.form as HastaFormuGorunumu, true); setGonderim('yok'); window.scrollTo?.(0, 0); return }
       if (r.j.code === 'EKSIK' && Array.isArray(r.j.eksik)) {
         const anahtarlar = (r.j.eksik as unknown[]).filter((x): x is string => typeof x === 'string')
-        setEksik(anahtarlar); setGonderim('eksik')
+        setIsaretli(anahtarlar); setGonderim('eksik')
+        if (anahtarlar[0]) setOdak((o) => ({ anahtar: anahtarlar[0], n: (o?.n ?? 0) + 1 }))
         // The part that holds the first unanswered question is shown.
         const i = form.bolumler.findIndex((b) => b.sorular.some((q) => anahtarlar.includes(q.anahtar)))
         if (i >= 0) setBolum(i)
