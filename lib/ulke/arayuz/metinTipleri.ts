@@ -224,6 +224,8 @@ export type UygulamaMetni = {
     readonly hastaSec: string
     readonly sesDosyasi: string
     readonly sesDosyasiIzoh: string
+    /** The word between "start recording" and "upload a file" (Türkiye: "ya da"). */
+    readonly yada: string
     readonly sesBuyuk: string
     readonly sesTur: string
   }
@@ -523,6 +525,8 @@ export type RandevuMetni = {
     readonly tamamla: string
     readonly gelmedi: string
     readonly iptalEt: string
+    /** Takes a cancelled appointment back to planned (Türkiye: "Aktif Hale Getir"). */
+    readonly aktifEt: string
     readonly planaAl: string
     readonly geldiyeAl: string
     readonly muayeneyiAc: string
@@ -900,6 +904,18 @@ export type AraclarMetni = {
     readonly sonuc: string
     /** Shown instead of a result while something required is missing or out of range. */
     readonly eksik: string
+    /** The family studio of the target-height tool (Türkiye: components/hedefBoy/HedefBoyManken.tsx), in the country's words. */
+    readonly mankenBaba: string
+    readonly mankenAnne: string
+    readonly mankenErkek: string
+    readonly mankenKiz: string
+    readonly mankenOlcerBirim: string
+    readonly mankenHedef: string
+    readonly mankenTahmini: string
+    readonly mankenAralik: string
+    readonly mankenSahneKicker: string
+    readonly mankenSahneBaslik: string
+    readonly mankenSahneAlt: string
     /** The label of an item of a published questionnaire the pack does not word. % the item's number */
     readonly madde: string
     /** Under a number field. %1 the smallest, %2 the largest value it accepts */
