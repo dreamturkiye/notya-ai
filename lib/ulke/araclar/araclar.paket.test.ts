@@ -425,6 +425,18 @@ describe('tools — the screens', () => {
     }
   })
 
+  it('a height typed in metres is read as centimetres where the pack works in centimetres (as Türkiye does: 1.65 = 165 cm)', async () => {
+    if (!icerik) return
+    const o = Ekran.birimOrtami(icerik)
+    if (o.birimler.boy !== 'cm') return
+    const alanlar: AracAlani[] = [{ anahtar: 'b', tur: 'sayi', enAz: 130, enCok: 230, olcu: 'boy' }]
+    const oku = (v: string) => Ekran.girdiyiCoz(alanlar, { b: v }, o).b
+    assert.equal(oku(yazilan(1.65)), 165)
+    assert.equal(oku(yazilan(165)), 165)
+    assert.equal(oku(yazilan(1.1)), null, '110 cm is out of the field\'s range: still nothing')
+    assert.equal(oku(yazilan(0)), null)
+  })
+
   it('what is typed is narrowed before the arithmetic sees it: a number is read by THE PACK\'S number rules, text is nothing, a number out of range is nothing', async () => {
     if (!icerik) return
     const o = Ekran.birimOrtami(icerik)
