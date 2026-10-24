@@ -17,6 +17,8 @@ export type PortalPinSozleri = {
   kontrol: string
   /** Said instead of the form when the link is too old to be safe. */
   eskiLink: string
+  /** Optional line under the form for a patient who forgot the PIN. Türkiye does not pass it, so its page is unchanged. */
+  unuttum?: string
 }
 
 export function PortalPinGorunumu({ s, pin, onPin, onGonder, mesgul, hata, eskiLink, hane = 6, girdiRef, oturumBitti }: {
@@ -78,6 +80,7 @@ export function PortalPinGorunumu({ s, pin, onPin, onGonder, mesgul, hata, eskiL
           </button>
         </form>
       )}
+      {s.unuttum ? <p data-alan="pin-unuttum" style={{ margin: '22px 0 0', color: 'var(--sg-muted)', fontSize: 14, lineHeight: 1.5, maxWidth: 340 }}>{s.unuttum}</p> : null}
     </div>
   )
 }

@@ -169,7 +169,7 @@ export function PortalMesajlarGorunumu({ s, mesajlar, yanitlayabilir, yeniMesajA
       {composeOpen && yeniMesajAcik ? (
         <SoftPanel className="sg-compose-panel" style={{ marginBottom: 14 }}>
           <div style={{ fontWeight: 650, marginBottom: 10 }}>{s.yeniMesaj}</div>
-          <input value={draftKonu} onChange={(e) => setDraftKonu(e.target.value)} placeholder={s.konuYer} className="sg-field" />
+          {s.konuYer ? <input value={draftKonu} onChange={(e) => setDraftKonu(e.target.value)} placeholder={s.konuYer} className="sg-field" /> : null}
           <textarea
             value={draftMetin}
             onChange={(e) => setDraftMetin(e.target.value)}
