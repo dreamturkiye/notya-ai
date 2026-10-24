@@ -771,7 +771,7 @@ describe('Uzbekistan appointments: text, reminder and screens in the three forms
     assert.deepEqual([Kabuk.YOL.takvim, Kabuk.HAZIR.takvim], ['/uzbek/calendar', true])
     for (const f of FORMLAR) {
       const html = cerceve(f, 'takvim', React.createElement('p', null, 'x'))
-      assert.match(html, new RegExp(`<a href="/uzbek/calendar" class="uza-sekme" aria-current="page">${RM.randevuMetni(f).kabuk.takvim}</a>`))
+      assert.match(html, new RegExp(`<a href="/uzbek/calendar" aria-current="page"[^>]*>(?:(?!</a>).)*<span[^>]*>${RM.randevuMetni(f).kabuk.takvim}</span>`))
       ekranTemiz(html, `shell (${f})`)
     }
   })
@@ -799,7 +799,7 @@ describe('Uzbekistan appointments: text, reminder and screens in the three forms
       assert.ok(!g.includes('2026-10-12'), 'a day is shown in the machine pattern')
       for (const h of ['/uzbek/calendar?yeni=1&gun=2026-10-12', '/uzbek/calendar?yeni=1&gun=2026-10-12&saat=09%3A00', '/uzbek/calendar?yeni=1&gun=2026-10-12&saat=11%3A00', '/uzbek/calendar?randevu=r1', '/uzbek/calendar?randevu=r3', '/uzbek/calendar?gun=2026-10-11', '/uzbek/calendar?gun=2026-10-13', '/uzbek/calendar?gun=2026-10-09', '/uzbek/calendar?gun=2026-10-12&gorunum=hafta', '/uzbek/calendar?duzen=1']) assert.ok(html.includes(href(h)), h)
       assert.ok(!html.includes('saat=10%3A00'), 'a taken time is offered as free')
-      assert.match(html, /<a class="uza-sekme" href="[^"]+" aria-current="page">/)
+      assert.match(html, /<a href="[^"]+" aria-current="page"/)
       ekranTemiz(html, `/calendar day (${f})`)
       // Not a working day: said plainly, nothing offered as free; an empty day; loading; a failure.
       const cmt = cerceve(f, 'takvim', React.createElement(T.TakvimGorunumu, { m, r, gorunum: 'gun', gun: '2026-10-17', gunler: ['2026-10-17'], bugun: '2026-10-09', duzen: DUZEN, randevular: [], hata: false }))

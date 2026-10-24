@@ -21,8 +21,9 @@ import { ulkeIstemciSupabase } from '@/lib/ulke/istemciSupabase'
 import { UYGULAMA_EKRANLARI, type UygulamaEkrani } from '@/lib/ulke/tipler'
 import { ulkeYolu } from '@/lib/ulke/yol'
 import { useBitki } from './bitki'
+import KabukGorunumu, { type KabukOge } from '@/components/doktor/KabukGorunumu'
 import { CHROME_FONT, CHROME_FONT_HREF, CHROME_RENK as R } from '@/lib/doktor/chromeRenk'
-import { araclarMetni, klinikMetni, marka, randevuMetni, roller, rolMu, uygulamaDili, uygulamaMetni, type UygulamaMetni } from '@/lib/ulke/arayuz'
+import { araclarMetni, klinikMetni, marka, metninDili, randevuMetni, roller, rolMu, uygulamaDili, uygulamaMetni, type UygulamaMetni } from '@/lib/ulke/arayuz'
 import { hesapSaatDilimi, hesapSaatDilimiAyarla, saatBicimi } from '@/lib/ulke/arayuz/bicim'
 import { ozellikAcik, ulkePaketi } from '@/lib/ulke/ulke'
 import type { DilKodu } from '@/lib/ulke/tipler'
@@ -155,22 +156,10 @@ export function useUygulama(ekran: UygulamaEkrani): Uygulama {
   '--uza-uyari': R.warn, '--uza-cizgi': R.border, '--uza-altin': R.gold, '--uza-nav': R.nav, '--uza-serif': CHROME_FONT.serif, '--uza-sans': CHROME_FONT.sans,
 } as CSSProperties
 
-export type Sekme = 'bugun' | 'takvim' | 'hastalar' | 'araclar' | 'klinik' | 'onBuro' | 'ayarlar'
+export type Sekme = 'bugun' | 'takvim' | 'hastalar' | 'araclar' | 'klinik' | 'onBuro' | 'ayarlar' | 'fatura' | 'asistan'
 
-/** WMO weather code to a glyph. Same bands as the reference chrome; no sentence, so nothing to translate. */
-function havaIkonu(kod: number): string {
-  if (kod === 0) return '\u2600\uFE0F'
-  if (kod <= 3) return '\u26C5'
-  if (kod === 45 || kod === 48) return '\u{1F32B}\uFE0F'
-  if (kod >= 51 && kod <= 67) return '\u{1F326}\uFE0F'
-  if (kod >= 71 && kod <= 77) return '\u2744\uFE0F'
-  if (kod >= 80 && kod <= 82) return '\u{1F326}\uFE0F'
-  if (kod >= 95) return '\u26C8\uFE0F'
-  return '\u{1F324}\uFE0F'
-}
-
-/** Clock in the account's zone, with the weather chip under it when the browser shares a place. */
-function SaatKutusu() {
+/** The clock (in the account's zone) and, when the browser shares a place, the weather: the same two values the Türkiye chrome shows. */
+function useSaatHava() {
   const [saat, setSaat] = useState('')
   const [hava, setHava] = useState<{ sicaklik: number; kod: number } | null>(null)
   useEffect(() => {
@@ -202,12 +191,7 @@ function SaatKutusu() {
     )
     return () => { iptal = true }
   }, [])
-  return (
-    <div className="uza-saat-kutu">
-      <div className="uza-saat-buyuk">{saat || '\u00A0'}</div>
-      {hava ? <div className="uza-hava"><span>{havaIkonu(hava.kod)}</span><span>{hava.sicaklik}{'°'}</span></div> : null}
-    </div>
-  )
+  return { saat, hava }
 }
 
 function harfler(ad: string): string {
@@ -215,7 +199,91 @@ function harfler(ad: string): string {
   return ((p[0]?.[0] ?? '') + (p[1]?.[0] ?? '')).toUpperCase()
 }
 
-export function Cerceve({ dil, m, ad, unvan, aktif, cikis, sade, onBuro, children }: {
+/**
+ * AU-LOOK-PARITY-01 — the signed-in frame IS Türkiye's: components/doktor/KabukGorunumu.tsx (sidebar, pine assistant button,
+ * icons, account cluster, plant, phone tab bar). This function only turns the pack's words and the country's screens into
+ * the items that view draws. A screen that is not in this build yet is shown the same and does nothing (`pasif`).
+ */
+function KabukCercevesi({ dil, m, ad, unvan, aktif, cikis, onBuro, kompakt, children }: {
+  dil: DilKodu; m: UygulamaMetni; ad?: string; unvan?: string; aktif?: Sekme | null; cikis?: () => void; onBuro?: boolean; kompakt?: boolean; children: ReactNode
+}) {
+  const bitkiSrc = useBitki() || ulkeYolu('/doktor-chrome/plant.jpg')
+  const { saat, hava } = useSaatHava()
+  const [menuAcik, setMenuAcik] = useState(false)
+  const k = m.kabuk
+  const git = (yol: string) => { window.location.assign(yol) }
+  const oge = (id: Sekme | 'mesaj' | 'rapor' | 'odeme', label: string, ikon: string, href: string | null, aktifMi?: boolean): KabukOge => (
+    { id: String(id), label, ikon, aktif: aktifMi ?? aktif === id, ...(href ? { href } : { pasif: true, isaret: String(id) }) }
+  )
+  const ev = onBuro ? (ozellikAcik('randevu') ? YOL.onBuro : YOL.klinik) : YOL.bugun
+  const anaDil = metninDili(m)
+  let asistan: KabukOge | null = null
+  let calisma: KabukOge[] = []
+  let diger: KabukOge[] = []
+  if (onBuro) {
+    if (ozellikAcik('randevu')) calisma.push(oge('onBuro', klinikMetni(dil).kabuk.onBuro, 'randevular', YOL.onBuro))
+    calisma.push(oge('klinik', klinikMetni(dil).kabuk.klinik, 'hastalar', YOL.klinik))
+    diger = [oge('ayarlar', k.ayarlar, 'ayarlar', YOL.ayarlar)]
+  } else {
+    const p = m.pano
+    if (p) asistan = oge('asistan', p.asistanaSor, 'asistan', null)
+    calisma = [
+      oge('bugun', k.bugun, 'anaSayfa', YOL.bugun),
+      ...(HAZIR.takvim ? [oge('takvim', randevuMetni(dil).kabuk.takvim, 'randevular', YOL.takvim)] : []),
+      oge('hastalar', k.hastalar, 'hastalar', YOL.hastalar),
+      ...(p ? [oge('mesaj', p.mesajlar, 'mesajlar', ozellikAcik('hastaMesajlari') ? `${YOL.bugun}#mesajlar` : null, false)] : []),
+    ]
+    diger = [
+      ...(p ? [oge('rapor', p.raporlar, 'raporlar', null, false), oge('odeme', p.odeme, 'belge', null, false)] : []),
+      ...(ozellikAcik('araclar') ? [oge('araclar', araclarMetni(dil).kabuk.araclar, 'araclar', YOL.araclar)] : []),
+      ...(ozellikAcik('klinikHesaplari') ? [oge('klinik', klinikMetni(dil).kabuk.klinik, 'hastalar', YOL.klinik)] : []),
+      oge('ayarlar', k.ayarlar, 'ayarlar', YOL.ayarlar),
+    ]
+  }
+  // The phone's tab bar holds the first four daily screens (Türkiye: Ana Sayfa, Randevular, Hastalar, Mesajlar); the rest opens from the menu.
+  const sekmeIdleri = ['bugun', 'takvim', 'hastalar', 'mesaj']
+  const sekme = calisma.filter((o) => sekmeIdleri.includes(o.id) && o.href)
+  const menuOgeleri = [...calisma.filter((o) => !sekme.includes(o)), ...diger]
+  const menuAktif = menuAcik || menuOgeleri.some((o) => o.aktif)
+  const geri = !onBuro && aktif && aktif !== 'bugun' ? { id: YOL.bugun, etiket: k.bugun, aria: `${k.geri}: ${k.bugun}` } : null
+  return (
+    <div className="uza" lang={dil} style={DEGISKENLER}>
+      {/* eslint-disable-next-line @next/next/no-page-custom-font */}
+      <link rel="stylesheet" href={CHROME_FONT_HREF} />
+      <KabukGorunumu
+        marka={marka()}
+        kicker={(onBuro && k.onBuroKas ? k.onBuroKas : k.kas) ?? ''}
+        asistan={asistan}
+        calisma={calisma.length > 0 ? { baslik: k.calismaAlani ?? '', ogeler: calisma } : null}
+        diger={diger.length > 0 ? { baslik: k.diger ?? '', ogeler: diger } : null}
+        onGit={git}
+        hesap={{
+          harfler: harfler(ad ?? ''), avatarUrl: null, ad: ad || '\u00A0', alt: unvan || '\u00A0', avatarAd: ad ?? '', avatarBasligi: ad ? `${ad}` : (k.hesabim ?? k.ayarlar), avatarEtiketi: k.hesabim ?? k.ayarlar,
+          saat, hava, cikis: k.cikis, onHesap: () => git(YOL.ayarlar), onCikis: () => { cikis?.() },
+        }}
+        sekme={sekme}
+        menu={{ asistan: asistan ? [asistan] : [], ogeler: menuOgeleri }}
+        menuAktif={menuAktif}
+        menuAcik={menuAcik}
+        onMenu={setMenuAcik}
+        geri={geri}
+        anaSayfaId={ev}
+        menuMetni={k.menuKisa ?? k.menu}
+        menuKapat={k.menuKapat ?? k.menu}
+        anaMenu={k.menu}
+        anaSayfa={aktif === 'bugun'}
+        genis={aktif === 'takvim'}
+        kompakt={Boolean(kompakt)}
+        bitkiSrc={bitkiSrc}
+        altYazi={k.haklar ?? `\u00A9 2026 ${marka()}`}
+      >
+        {children}
+      </KabukGorunumu>
+    </div>
+  )
+}
+
+export function Cerceve({ dil, m, ad, unvan, aktif, cikis, sade, onBuro, kompakt, children }: {
   dil: DilKodu
   m: UygulamaMetni
   ad?: string
@@ -227,78 +295,24 @@ export function Cerceve({ dil, m, ad, unvan, aktif, cikis, sade, onBuro, childre
   sade?: boolean
   /** NOTYA-ULKE-KLINIK-01 — true = the navigation of a front-desk member: the workspace, the clinic, the settings. */
   onBuro?: boolean
+  /** AU-LOOK-PARITY-01: the assistant page's own full-height layout (Türkiye's useChromeKompakt): keep the sidebar, drop the header, footer and width wrapper. */
+  kompakt?: boolean
   children: ReactNode
 }) {
-  const baglanti = (s: Sekme, href: string, ad2: string) => (
-    <a href={href} className="uza-sekme" aria-current={aktif === s ? 'page' : undefined}>{ad2}</a>
-  )
-  // Bundled photograph when the page provides one. The public/ address is only a fallback for a
-  // test render: a country build does not serve files from public/.
-  const bitkiSrc = useBitki() || ulkeYolu('/doktor-chrome/plant.jpg')
+  if (!sade) return <KabukCercevesi dil={dil} m={m} ad={ad} unvan={unvan} aktif={aktif} cikis={cikis} onBuro={onBuro} kompakt={kompakt}>{children}</KabukCercevesi>
   return (
     <div className="uza" lang={dil} style={DEGISKENLER}>
       {/* eslint-disable-next-line @next/next/no-page-custom-font */}
       <link rel="stylesheet" href={CHROME_FONT_HREF} />
-      {/* The same plant the Turkish doctor chrome uses (public/doktor-chrome/plant.jpg). The address goes through
-          the country's path prefix; alt stays empty so it is decoration, not a sentence. */}
-      {sade ? null : (
-        <div className="uza-bitki-kutu" aria-hidden="true">
-          <img src={bitkiSrc} alt="" className="uza-bitki" />
-        </div>
-      )}
       <header className="uza-ust">
         <div className="uza-ic uza-ust-ic">
-          <a href={sade ? undefined : onBuro ? (ozellikAcik('randevu') ? YOL.onBuro : YOL.klinik) : YOL.bugun} className="uza-marka">
+          <span className="uza-marka">
             <span className="uza-marka-yazi">
               <span className="uza-marka-ad">{marka()}</span>
-              {m.kabuk.kas ? <span className="uza-kas">{onBuro && m.kabuk.onBuroKas ? m.kabuk.onBuroKas : m.kabuk.kas}</span> : null}
             </span>
-          </a>
-          {sade ? null : onBuro ? (
-            <nav className="uza-nav" aria-label={m.kabuk.menu}>
-              {m.kabuk.calismaAlani ? <div className="uza-grup">{m.kabuk.calismaAlani}</div> : null}
-              {ozellikAcik('randevu') ? baglanti('onBuro', YOL.onBuro, klinikMetni(dil).kabuk.onBuro) : null}
-              {baglanti('klinik', YOL.klinik, klinikMetni(dil).kabuk.klinik)}
-              {m.kabuk.diger ? <><div className="uza-ayrac" /><div className="uza-grup">{m.kabuk.diger}</div></> : null}
-              {baglanti('ayarlar', YOL.ayarlar, m.kabuk.ayarlar)}
-            </nav>
-          ) : (
-            <nav className="uza-nav" aria-label={m.kabuk.menu}>
-              {m.pano ? <span className="uza-duvar uza-asistan" data-duvar="asistan">{m.pano.asistanaSor}</span> : null}
-              {m.kabuk.calismaAlani ? <div className="uza-grup">{m.kabuk.calismaAlani}</div> : null}
-              {baglanti('bugun', YOL.bugun, m.kabuk.bugun)}
-              {/* NOTYA-UZ-RANDEVU-01: the calendar. Its name is in the appointment catalogue, in the same form. */}
-              {HAZIR.takvim ? baglanti('takvim', YOL.takvim, randevuMetni(dil).kabuk.takvim) : null}
-              {baglanti('hastalar', YOL.hastalar, m.kabuk.hastalar)}
-              {m.pano ? <span className="uza-duvar" data-duvar="mesaj">{m.pano.mesajlar}</span> : null}
-              {m.kabuk.diger ? <><div className="uza-ayrac" /><div className="uza-grup">{m.kabuk.diger}</div></> : null}
-              {m.pano ? <span className="uza-duvar" data-duvar="rapor">{m.pano.raporlar}</span> : null}
-              {m.pano ? <span className="uza-duvar" data-duvar="odeme">{m.pano.odeme}</span> : null}
-              {/* NOTYA-ULKE-ARACLAR-01: the tools area, where the country has it. Its name is in the tools catalogue, in the same form. */}
-              {ozellikAcik('araclar') ? baglanti('araclar', YOL.araclar, araclarMetni(dil).kabuk.araclar) : null}
-              {/* NOTYA-ULKE-KLINIK-01: the clinic, where the country has clinic accounts. Its name is in the clinic catalogue, in the same form. */}
-              {ozellikAcik('klinikHesaplari') ? baglanti('klinik', YOL.klinik, klinikMetni(dil).kabuk.klinik) : null}
-              {baglanti('ayarlar', YOL.ayarlar, m.kabuk.ayarlar)}
-            </nav>
-          )}
+          </span>
         </div>
       </header>
-      {/* Account row sits beside the sidebar (the Turkish chrome's top-right cluster), not inside it. */}
-      {ad || cikis ? (
-        <div className="uza-hesap">
-          {ad ? <span className="uza-avatar" aria-hidden="true">{harfler(ad)}</span> : null}
-          {ad ? (
-            <span className="uza-hesap-blok">
-              <span className="uza-hesap-ad">{ad}</span>
-              {unvan ? <small className="uza-hesap-unvan">{unvan}</small> : null}
-            </span>
-          ) : null}
-          <span className="uza-dik" aria-hidden="true" />
-          <SaatKutusu />
-          <span className="uza-dik" aria-hidden="true" />
-          {cikis ? <button type="button" className="uza-dugme uza-dugme-cizgi uza-dugme-kucuk" onClick={cikis}>{m.kabuk.cikis}</button> : null}
-        </div>
-      ) : null}
       <main className="uza-ic uza-govde">{children}</main>
     </div>
   )

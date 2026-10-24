@@ -29,6 +29,15 @@ export type UygulamaMetni = {
     readonly kas?: string
     /** Small capitals under the word mark for a front-desk account. */
     readonly onBuroKas?: string
+    /** AU-LOOK-PARITY-01 — words of the shared frame (components/doktor/KabukGorunumu.tsx). Each falls back to a neutral form. */
+    /** Title of the account photo button (opens the settings). */
+    readonly hesabim?: string
+    /** The phone tab bar's last tab, which opens the rest of the navigation. */
+    readonly menuKisa?: string
+    /** Close button of that sheet. */
+    readonly menuKapat?: string
+    /** Footer line of every signed-in screen. */
+    readonly haklar?: string
   }
   /** The name of each language of the country (key: the language's code in the pack's `dilGruplari`, e.g. 'uz', 'en'). */
   readonly diller: Readonly<Record<string, string>>
@@ -119,6 +128,9 @@ export type UygulamaMetni = {
     readonly mesajlar: string
     readonly belgeler: string
     readonly inceleme: string
+    /** AU-LOOK-PARITY-01: the small notes under two phone tiles ("tool", "all"). Optional: absent = no note. */
+    readonly notArac?: string
+    readonly notTumu?: string
     readonly odeme: string
     readonly aktif: string
     readonly pasif: string

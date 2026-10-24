@@ -74,6 +74,10 @@
    "calismaAlani": "$m",
    "diger": "$m",
    "kas": "$m",
+   "hesabim": "$m",
+   "menuKisa": "$m",
+   "menuKapat": "$m",
+   "haklar": "$m",
    "onBuroKas": "$m"
   },
   "diller": {
@@ -163,6 +167,8 @@
    "mesajlar": "$m",
    "belgeler": "$m",
    "inceleme": "$m",
+   "notArac": "$m",
+   "notTumu": "$m",
    "odeme": "$m",
    "aktif": "$m",
    "pasif": "$m",

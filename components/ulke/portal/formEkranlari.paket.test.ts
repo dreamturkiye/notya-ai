@@ -323,7 +323,7 @@ describe('the intake form\'s screens — the doctor\'s side', () => {
       const html = ekran([hekimFormu({ id: 'acik', durum: 'taslak', bolumler: null, gonderildi: null }), hekimFormu()])
       for (const m of [x.cevaplar, x.beyan, `${QA} long`, x.notaGirmez]) var_(html, m, `${dil} visit`)
       assert.match(html, /data-alan="muayene-formu"/)
-      assert.doesNotMatch(html.slice(html.indexOf('data-alan="muayene-formu"')), /<button|data-eylem=/, 'the visit screen only reads')
+      assert.doesNotMatch(html.slice(html.indexOf('data-alan="muayene-formu"'), html.indexOf('class="notya-alt"')), /<button|data-eylem=/, 'the visit screen only reads')
       for (const bosluk of [null, [], [hekimFormu({ durum: 'bekliyor', bolumler: null, gonderildi: null })]]) assert.doesNotMatch(ekran(bosluk), /muayene-formu|form-beyan/, 'nothing is drawn without a submitted form')
       temiz(gorunurMetin(html), `visit view ${dil}`)
     }
