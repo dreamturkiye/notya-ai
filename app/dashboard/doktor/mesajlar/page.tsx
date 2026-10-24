@@ -14,7 +14,7 @@ import MesajEkViewer from '@/components/doktor/MesajEkViewer'
 import { EKOKARDIYOGRAFI, ORTAK_BELGE_TURLERI } from '@/lib/doktor/belgeTurleri'
 import { belgeEkoMi } from '@/lib/doktor/belgeTur'
 import { hastaDosyaHref } from '@/lib/doktor/geriNavigasyon'
-import { MesajKartlari, MesajListeBos, MesajKonuListesi, MesajPanelBos, MesajPanelBasligi, MesajBalonlari, MesajBalonu, MesajBalonEylemi, MesajEkListesi, MesajEkKutusu, MesajYazmaKutusu, mesajEkDugmeStili } from '@/components/doktor/MesajlarGorunumu'
+import { MesajSayfaBasligi, MesajKartlari, MesajListeBos, MesajKonuListesi, MesajPanelBos, MesajPanelBasligi, MesajBalonlari, MesajBalonu, MesajBalonEylemi, MesajEkListesi, MesajEkKutusu, MesajYazmaKutusu, mesajEkDugmeStili } from '@/components/doktor/MesajlarGorunumu'
 
 type Ek = {
   id: string
@@ -195,16 +195,8 @@ function DoktorMesajlarIcerik() {
 
   return (
     <div>
-      <div style={{ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', fontSize: 15, color: '#6d6055', marginBottom: 4 }}>Doktor</div>
-      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
-        <h1 style={{ fontFamily: CHROME_FONT.serif, fontWeight: 500, fontSize: 32, margin: '0 0 6px', color: '#2e251d', letterSpacing: '-0.02em' }}>
-          Mesajlar {unreadCount > 0 ? <span style={{ color: CHROME_RENK.pine }}>({unreadCount})</span> : null}
-        </h1>
-        <IpucuBaloncugu bolum="mesajlar" />
-      </span>
-      <p style={{ margin: '0 0 18px', color: CHROME_RENK.muted, fontSize: 14 }}>
-        Hasta portalı (Sağlığım) gelen kutusu — ekleri gözlemleyin, belgelere kaydedin veya mesajla silin.
-      </p>
+      <MesajSayfaBasligi eyebrow="Doktor" baslik="Mesajlar" okunmamis={unreadCount} ipucu={<IpucuBaloncugu bolum="mesajlar" />}
+        alt="Hasta portalı (Sağlığım) gelen kutusu — ekleri gözlemleyin, belgelere kaydedin veya mesajla silin." />
 
       {error ? <p style={{ color: CHROME_RENK.warn, fontSize: 14 }}>{error}</p> : null}
       {loading ? <p style={{ color: CHROME_RENK.muted }}>Yükleniyor…</p> : null}

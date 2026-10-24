@@ -143,3 +143,19 @@ export function MesajYazmaKutusu({ deger, onDegis, yerTutucu, etiket, etiketFor,
     </>
   )
 }
+
+/** The heading of the messages page: the small italic line above, the title with the unread count and the tip, the line below. */
+export function MesajSayfaBasligi({ eyebrow, baslik, okunmamis, ipucu, alt }: { eyebrow: React.ReactNode; baslik: React.ReactNode; okunmamis: number; ipucu?: React.ReactNode; alt: React.ReactNode }) {
+  return (
+    <>
+      <div style={{ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', fontSize: 15, color: '#6d6055', marginBottom: 4 }}>{eyebrow}</div>
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+        <h1 style={{ fontFamily: CHROME_FONT.serif, fontWeight: 500, fontSize: 32, margin: '0 0 6px', color: '#2e251d', letterSpacing: '-0.02em' }}>
+          {baslik} {okunmamis > 0 ? <span style={{ color: CHROME_RENK.pine }}>({okunmamis})</span> : null}
+        </h1>
+        {ipucu}
+      </span>
+      <p style={{ margin: '0 0 18px', color: CHROME_RENK.muted, fontSize: 14 }}>{alt}</p>
+    </>
+  )
+}
