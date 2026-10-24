@@ -4536,3 +4536,6 @@ Audit: `docs/ULKE-GORUNUM-DENETIM-2026-10-23.md`. Done 2026-10-23: Tools tile ba
 - 2026-10-23 (owner: Claude) — LOOK-PARITY-02: rendered screenshot diff of every page, Türkiye vs each country, in a browser environment (this audit was static). Includes voice-name check (Charlie/Clara) in all six Settings pages.
 - 2026-10-23 (owner: Claude) — LOOK-PARITY-03: page-set parity: AU 31 routes, US/GB/CA/NZ 28, UZ 27; bring every country to the full Türkiye page set (country-adapted), except Turkey-only legal pages.
 - 2026-10-23 (owner: Kaan to approve, then Claude) — LOOK-PARITY-04: AU Settings duplicate "AHPRA registration number" card. Invoices read `muayenehane.ahpra` (Practice details), not `meslekKaydi`. Recommend removing the card (or migrating its value) once Kaan says yes.
+
+- 2026-10-23 · waits on Claude · USG-RACE-01: Ekler-step race fixed on main (c49a7f397); check whether the country flow (components/ulke/uygulama/Ekler.tsx) has an equivalent race, then run the controlled 4-USG test.
+- 2026-10-23 · waits on Claude · LOOK-PARITY-05: Türkiye calendar allows unregistered appointments with "Create patient record and link" (day view + modal); country calendar (Takvim.tsx) requires a registered patient first. Decide parity (Kaan: gold standard = Türkiye).
