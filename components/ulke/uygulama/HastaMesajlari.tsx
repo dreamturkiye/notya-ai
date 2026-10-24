@@ -15,7 +15,8 @@
  */
 import React, { useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { Bilgi, Hata, saatYaz, tarihYaz, YOL, type Uygulama } from './Kabuk'
-import { okunmamisSayisi, sonMesajAni, YazismaListesi } from '../mesajOrtak'
+import { okunmamisSayisi, sonMesajAni } from '../mesajOrtak'
+import { MesajBalonlari, MesajBalonu, MesajYazmaKutusu } from '@/components/doktor/MesajlarGorunumu'
 import { SablonSecici, useSablonlar } from './Sablonlarim'
 import { sonaEkle } from '@/lib/ulke/sablon/sabitler'
 import { mesajMetni, sablonMetni, type MesajMetni } from '@/lib/ulke/arayuz'
@@ -42,6 +43,7 @@ export function HastaMesajGorunumu({ x, g, yuklenemedi, metin, setMetin, gonder,
   ek?: ReactNode
 }) {
   const yeni = g ? okunmamisSayisi(g.yazismalar, 'hekim') : 0
+  const kapaliMetni = (k: string) => yerine(x.kapali, tarihYaz(k))
   const hataMetni = hata === 'bos' ? x.bosMesaj : hata === 'uzun' ? yerine(x.cokUzun, MESAJ_AZAMI) : hata === 'limit' ? x.limit : hata === 'gonderilemedi' ? x.gonderilemedi : hata === 'yapilamadi' || hata === 'kapali' ? x.yapilamadi : null
   return (
     <section className="uza-kart" id={MESAJ_CAPASI} data-alan="hasta-mesajlari" data-okunmamis={g ? yeni : undefined}>
@@ -55,31 +57,46 @@ export function HastaMesajGorunumu({ x, g, yuklenemedi, metin, setMetin, gonder,
         <>
           {g.erisim !== 'acik' ? <div style={{ marginTop: 12 }} data-alan="mesaj-erisim-yok" data-erisim={g.erisim}><Hata>{x.erisimYok}</Hata></div> : null}
           {g.yazismalar.length === 0 ? <p className="uza-bos" data-alan="mesaj-bos">{x.bos}</p> : (
-            <YazismaListesi yazismalar={g.yazismalar} ben="hekim" zaman={an}
-              s={{ yazan: { hekim: x.siz, hasta: x.hasta }, acik: x.acik, kapali: (k) => yerine(x.kapali, tarihYaz(k)), yeni: x.yeni, okundu: x.okundu, okunmadi: x.okunmadi }}
-              alt={(y) => (y.kapandi ? null : kapatSorulan === y.id ? (
-                <div className="uza-form" data-alan="mesaj-kapat-onay" style={{ marginTop: 10 }}>
-                  <Hata>{x.kapatUyari}</Hata>
-                  <div className="uza-eylemler" style={{ marginTop: 0 }}>
-                    <button type="button" className="uza-dugme uza-dugme-uyari uza-dugme-kucuk" disabled={bekliyor} onClick={kapatOnayla} data-eylem="mesaj-kapat-onayla">{x.kapatOnay}</button>
-                    <button type="button" className="uza-dugme uza-dugme-cizgi uza-dugme-kucuk" disabled={bekliyor} onClick={kapatVazgec} data-eylem="mesaj-kapat-vazgec">{x.vazgec}</button>
-                  </div>
+            <div className="uza-yazismalar">
+              {g.yazismalar.map((y) => (
+                <div key={y.id} className="uza-yazisma" data-yazisma={y.id} data-yazisma-durumu={y.kapandi ? 'kapali' : 'acik'}>
+                  {(y.kapandi ? kapaliMetni(y.kapandi) : x.acik) ? <p className="uza-ust-yazi" data-alan="yazisma-durumu">{y.kapandi ? kapaliMetni(y.kapandi) : x.acik}</p> : null}
+                  {/* Türkiye's conversation look (components/doktor/MesajlarGorunumu.tsx): the patient's bubbles left, the doctor's right. */}
+                  <MesajBalonlari>
+                    {y.mesajlar.map((mj) => {
+                      const benim = mj.gonderen === 'hekim'
+                      const yeniMi = !benim && !mj.okundu
+                      return (
+                        <MesajBalonu key={mj.id} karsi={!benim} kimden={<>{benim ? x.siz : x.hasta}{yeniMi ? <> <span className="uza-rozet" data-mesaj-durum="yeni">{x.yeni}</span></> : null}</>}
+                          metin={mj.metin} zaman={an(mj.an)}
+                          veri={{ 'data-mesaj': mj.id, 'data-gonderen': mj.gonderen, 'data-benim': benim ? 'evet' : undefined, 'data-okunmamis': yeniMi ? 'evet' : undefined }}
+                          alt={benim ? <p style={{ margin: '6px 0 0', fontSize: 11, color: 'rgba(250,248,244,0.7)' }} data-okundu={mj.okundu ? 'evet' : 'hayir'}>{mj.okundu ? x.okundu : x.okunmadi}</p> : null} />
+                      )
+                    })}
+                  </MesajBalonlari>
+                  {y.kapandi ? null : kapatSorulan === y.id ? (
+                    <div className="uza-form" data-alan="mesaj-kapat-onay" style={{ marginTop: 10 }}>
+                      <Hata>{x.kapatUyari}</Hata>
+                      <div className="uza-eylemler" style={{ marginTop: 0 }}>
+                        <button type="button" className="uza-dugme uza-dugme-uyari uza-dugme-kucuk" disabled={bekliyor} onClick={kapatOnayla} data-eylem="mesaj-kapat-onayla">{x.kapatOnay}</button>
+                        <button type="button" className="uza-dugme uza-dugme-cizgi uza-dugme-kucuk" disabled={bekliyor} onClick={kapatVazgec} data-eylem="mesaj-kapat-vazgec">{x.vazgec}</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="uza-eylemler"><button type="button" className="uza-dugme uza-dugme-cizgi uza-dugme-kucuk" disabled={bekliyor} onClick={() => kapatIste(y.id)} data-eylem="mesaj-kapat">{x.kapat}</button></div>
+                  )}
                 </div>
-              ) : (
-                <div className="uza-eylemler"><button type="button" className="uza-dugme uza-dugme-cizgi uza-dugme-kucuk" disabled={bekliyor} onClick={() => kapatIste(y.id)} data-eylem="mesaj-kapat">{x.kapat}</button></div>
-              ))} />
+              ))}
+            </div>
           )}
-          <form className="uza-form" onSubmit={gonder} noValidate data-alan="mesaj-yaz">
-            <div className="uza-alan">
-              <label className="uza-etiket" htmlFor="uza-mesaj-metin">{x.yaz}</label>
-              <textarea id="uza-mesaj-metin" name="metin" className="uza-girdi" rows={4} maxLength={MESAJ_AZAMI} value={metin} onChange={(e) => setMetin(e.target.value)} />
-            </div>
-            {ek ?? null}
-            <Bilgi>{kapatildi ? x.kapatildi : null}</Bilgi>
-            <Hata>{hataMetni}</Hata>
-            <div className="uza-eylemler" style={{ marginTop: 0 }}>
-              <button type="submit" className="uza-dugme" disabled={bekliyor} data-eylem="mesaj-gonder">{bekliyor ? x.gonderiliyor : x.gonder}</button>
-            </div>
+          <form className="uza-form" onSubmit={gonder} noValidate data-alan="mesaj-yaz" style={{ marginTop: 0 }}>
+            <MesajYazmaKutusu etiket={x.yaz} etiketFor="uza-mesaj-metin" kimlik="uza-mesaj-metin" ad="metin" satir={4} azami={MESAJ_AZAMI} deger={metin} onDegis={setMetin}
+              ara={<>
+                {ek ?? null}
+                <Bilgi>{kapatildi ? x.kapatildi : null}</Bilgi>
+                <Hata>{hataMetni}</Hata>
+              </>}
+              tur="submit" pasif={bekliyor} veri={{ 'data-eylem': 'mesaj-gonder' }} gonderMetni={bekliyor ? x.gonderiliyor : x.gonder} />
           </form>
         </>
       )}
