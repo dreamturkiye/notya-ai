@@ -19,7 +19,7 @@ import { auAsistanKaynakBlogu } from './kaynaklar'
 const D = 'en-AU' as const
 const ROLLER = Object.keys(AU_ASISTAN_ADLARI)
 const SIR = 'y'.repeat(32)
-const ORTAM = { ELEVENLABS_API_KEY: 'k', ELEVENLABS_AGENT_AU_MALE: 'agent_0123456789abcdefghijklmn', ELEVENLABS_AGENT_AU_FEMALE: 'agent_abcdefghijklmn0123456789', NOTYA_SES_JETON_SECRET: SIR, NOTYA_SES_LLM_SECRET: SIR }
+const ORTAM = { ELEVENLABS_API_KEY: 'k', ELEVENLABS_AGENT_AU_MALE: 'agent_0123456789abcdefghijklmn', ELEVENLABS_AGENT_AU_FEMALE: 'agent_abcdefghijklmn0123456789', NOTYA_SES_JETON_SECRET: SIR, NOTYA_SES_LLM_SECRET: SIR, NOTYA_AU_ASSISTANT_ENABLED: '1' }
 
 describe('au live assistant', () => {
   it('is wired to the clinical half beside the two voices', () => {
@@ -50,6 +50,10 @@ describe('au live assistant', () => {
     assert.equal(d({ ...ORTAM, ELEVENLABS_AGENT_AU_MALE: undefined }).hazir, false)
     assert.equal(d({ ...ORTAM, NOTYA_SES_LLM_SECRET: undefined }).hazir, false)
     assert.equal(d(ORTAM).hazir, true)
+    // AU-LAUNCH-01: opt-in. Everything else present but the switch unset / off = not offered.
+    assert.equal(d({ ...ORTAM, NOTYA_AU_ASSISTANT_ENABLED: undefined }).hazir, false)
+    assert.equal(d({ ...ORTAM, NOTYA_AU_ASSISTANT_ENABLED: '0' }).hazir, false)
+    assert.equal(d({ ...ORTAM, NOTYA_AU_ASSISTANT_ENABLED: 'true' }).hazir, true)
   })
 
   it('each role\'s prompt carries its own persona, its Australian sources and the AU limits — and nobody else\'s', () => {

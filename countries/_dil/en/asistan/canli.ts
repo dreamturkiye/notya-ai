@@ -13,6 +13,8 @@ export type EnCanliGirdisi = {
   sinirlar: readonly string[]
   kaynakBlogu: (rol: string) => string | null
   gunlukTurLimiti?: number
+  /** Opt-in environment switch; see CanliAsistanAyarlari.acikDegiskeni. */
+  acikDegiskeni?: string
 }
 
 export function enCanliAsistan(g: EnCanliGirdisi): CanliAsistanAyarlari {
@@ -23,6 +25,7 @@ export function enCanliAsistan(g: EnCanliGirdisi): CanliAsistanAyarlari {
     sinirlar: g.sinirlar,
     kaynakBlogu: g.kaynakBlogu,
     gunlukTurLimiti: g.gunlukTurLimiti ?? 150,
+    ...(g.acikDegiskeni ? { acikDegiskeni: g.acikDegiskeni } : {}),
     ekranSozleri: {
       liste: (n) => `${n} items, on your screen.`,
       tablo: 'I have put the table on your screen.',

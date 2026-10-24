@@ -47,10 +47,16 @@ export type CanliGirdi = {
   ortam?: Ortam
 }
 
+/** AU-LAUNCH-01: a pack with an opt-in switch (`acikDegiskeni`) offers the assistant only while that variable is "1" or "true". */
+export function canliAcikMi(canli: Pick<CanliAsistanAyarlari, 'acikDegiskeni'> | null | undefined, ortam: Ortam = process.env): boolean {
+  if (!canli?.acikDegiskeni) return true
+  return /^(1|true)$/i.test((ortam[canli.acikDegiskeni] ?? '').trim())
+}
+
 /** Is the live assistant available for this account's role right now, and with which agent and voice? */
 export function canliDurum(g: CanliGirdi): CanliDurum {
   const ortam = g.ortam ?? process.env
-  if (!g.ses || !g.canli) return { hazir: false, neden: 'paket' }
+  if (!g.ses || !g.canli || !canliAcikMi(g.canli, ortam)) return { hazir: false, neden: 'paket' }
   const cinsiyet = g.kimlik?.cinsiyet
   if (!g.kimlik || (cinsiyet !== 'erkek' && cinsiyet !== 'kadin')) return { hazir: false, neden: 'rol' }
   const ses = g.ses.sesler[cinsiyet]
@@ -66,7 +72,8 @@ export function canliDurum(g: CanliGirdi): CanliDurum {
  * Do this deployment's environment hold both agents of the country and the key and secrets the assistant needs? Used by
  * the country's landing copy: a public page may mention the spoken assistant only while the deployment really has it.
  */
-export function canliAjanlarVar(kod: string, ortam: Ortam = process.env): boolean {
+export function canliAjanlarVar(kod: string, ortam: Ortam = process.env, acikDegiskeni?: string): boolean {
+  if (!canliAcikMi({ acikDegiskeni }, ortam)) return false
   return Boolean(
     ajanKimligi(kod, 'erkek', ortam) && ajanKimligi(kod, 'kadin', ortam) &&
     (ortam.ELEVENLABS_API_KEY ?? '').trim() && sirVarMi(ortam, 'NOTYA_SES_JETON_SECRET') && sirVarMi(ortam, 'NOTYA_SES_LLM_SECRET'),
