@@ -31,6 +31,7 @@ import { KayitSistemiKarti, ReferansAramalari, ReferansBolumleri } from './Refer
 import React, { useEffect, useMemo, useState } from 'react'
 import { Bilgi, Cerceve, Hata, useUygulama, YOL, Yukleniyor, type Uygulama } from './Kabuk'
 import { AramaFormu } from './Bugun'
+import { aracRozeti } from '@/lib/ulke/araclar/gorunum'
 import { arayuz, araclarMetni, girdiMetni, rolAdi, type AraclarMetni, type GirdiMetni, type UygulamaMetni } from '@/lib/ulke/arayuz'
 import { yerine } from '@/lib/ulke/arayuz/yerTutucu'
 import { hesapSaatDilimi } from '@/lib/ulke/arayuz/bicim'
@@ -61,11 +62,13 @@ export { aracYolu, araclarYolu, birimOrtami, yazici } from './aracOrtak'
 // ───────────────────────── the grid ─────────────────────────
 
 function Kutu({ x, dil, hastaId, duvar }: { x: GorunurArac; dil: DilKodu; hastaId?: string | null; duvar?: boolean }) {
+  // Türkiye's own badge for the same job (lib/ulke/araclar/gorunum.ts): stripe and round badge share its colour.
+  const rozet = aracRozeti(x.tanim.anahtar)
   const ic = (
     <>
-      <span className="uza-arac-serit" aria-hidden="true" />
+      <span className="uza-arac-serit" aria-hidden="true" style={{ backgroundColor: rozet.renk }} />
       <span className="uza-arac-ust">
-        <span className="uza-arac-daire" aria-hidden="true" />
+        <span className="uza-arac-daire" aria-hidden="true" style={{ backgroundColor: rozet.renk }}>{rozet.simge}</span>
         <span className="uza-arac-ad">{bicimli(x.paket.metin.ad, dil)}</span>
         <span className="uza-arac-ok" aria-hidden="true" />
       </span>
