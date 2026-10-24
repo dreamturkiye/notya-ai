@@ -8,7 +8,7 @@ import assert from 'node:assert/strict'
 import { EN_UYGULAMA_TEMEL } from './uygulama'
 import type { UlkeIpucuBolumu } from '@/lib/ulke/arayuz/metinTipleri'
 
-const BOLUMLER: readonly UlkeIpucuBolumu[] = ['bugun', 'takvim', 'hastalar', 'muayene', 'araclar', 'klinik', 'onBuro', 'ayarlar']
+const BOLUMLER: readonly UlkeIpucuBolumu[] = ['bugun', 'takvim', 'hastalar', 'muayene', 'araclar', 'klinik', 'onBuro', 'ayarlar', 'fatura', 'gizlilik']
 
 describe('en: in-place tips (YENI-DOKTOR-UX-2026-10)', () => {
   const t = EN_UYGULAMA_TEMEL.ipuclari
