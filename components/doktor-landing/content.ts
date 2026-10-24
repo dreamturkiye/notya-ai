@@ -45,7 +45,7 @@ export const HERO = {
   title: "Günde 2 saat",
   titleItalic: "size kalsın.",
   lede:
-    "Tipik 8 saatlik bir klinik günde Notya, not, reçete, takip ve ön büro işlerinden yaklaşık 2 saat tasarruf ettirir. Bu süreyi kendinize ayırabilir veya günde 4 ek hasta alabilirsiniz — üstelik daha kaliteli bakım vererek.",
+    "8 saatlik bir klinik günde Notya, not tutma, reçete, takip ve ön büro işlerinden size yaklaşık 2 saat kazandırır. Bu süreyi kendinize ayırabilir veya günde 4 ek hasta bakabilirsiniz — hem de daha kaliteli bakım vererek.",
 } as const;
 
 export const HERO_STRIP = [
@@ -111,7 +111,7 @@ export const INDIVIDUAL_PLANS = [
     unit: "/ ay",
     highlight: true,
     items: [
-      "Metin Asistan'nın tümü",
+      "Metin Asistan'ın tümü",
       "Dinler + sesli yanıt",
       "Sınırsız seans (adil kullanım)",
       "Hasta portalı",
