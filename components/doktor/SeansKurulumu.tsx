@@ -91,3 +91,49 @@ export function SeansYuklemeKutusu({ etiket, accept, disabled, onDosya, id }: { 
     </label>
   )
 }
+
+// ───────────────────────── the recording step (Türkiye: app/session/new, step "recording") ─────────────────────────
+
+/**
+ * The recording card: round icon, big timer, one status line, then whatever the page puts inside (Türkiye: the dictation
+ * button, the warnings, the notes box), then the two-button row. Words arrive as props.
+ */
+export function SeansKayitKarti({ aktif, sure, durum, ust, children, sinif }: {
+  /** true = the recording is running (red icon disc), false = idle (green disc). */
+  aktif: boolean; sure: string; durum: React.ReactNode; ust?: React.ReactNode; children?: React.ReactNode; sinif?: string
+}) {
+  return (
+    <div className={sinif} style={S({ background: '#faf6ee', border: '1px solid rgba(58,44,34,0.08)', borderRadius: '20px', padding: '24px' })}>
+      {ust ?? null}
+      <div style={S({ textAlign: 'center', marginBottom: '20px' })}>
+        <div style={S({ width: '64px', height: '64px', background: aktif ? '#FEE2E2' : '#e8ede6', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px', fontSize: '28px' })}>{'\u{1F399}️'}</div>
+        <div style={S({ fontSize: '32px', fontWeight: '600', color: '#3b2e24', fontFamily: 'monospace', marginBottom: '4px' })}>{sure}</div>
+        <div style={S({ fontSize: '13px', color: '#8b7d70', lineHeight: 1.45, padding: '0 4px' })}>{durum}</div>
+      </div>
+      {children}
+    </div>
+  )
+}
+
+/** The cancel / finish row at the bottom of the recording card. */
+export function SeansEylemSatiri({ vazgecMetni, onVazgec, bitirMetni, onBitir, bitirPasif, sinif }: {
+  vazgecMetni: string; onVazgec: () => void; bitirMetni: React.ReactNode; onBitir: () => void; bitirPasif?: boolean; sinif?: string
+}) {
+  return (
+    <div className={sinif} style={S({ display: 'flex', gap: '10px' })}>
+      <button onClick={onVazgec} style={S({ flex: 1, padding: '14px', background: '#F1F5F9', color: '#3b2e24', border: 'none', borderRadius: '10px', fontSize: '14px', cursor: 'pointer' })}>{vazgecMetni}</button>
+      <button onClick={onBitir} style={S({ flex: 2, padding: '14px', background: bitirPasif ? '#8b7d70' : '#DC2626', color: '#fff', border: 'none', borderRadius: '10px', fontSize: '15px', fontWeight: '600', cursor: bitirPasif ? 'not-allowed' : 'pointer' })}>{bitirMetni}</button>
+    </div>
+  )
+}
+
+/** The "working on it" card (Türkiye: step "processing"). */
+export function SeansIsleniyorKarti({ baslik, alt, rol }: { baslik: string; alt?: string; rol?: string }) {
+  return (
+    <div role={rol} style={S({ background: '#faf6ee', border: '1px solid rgba(58,44,34,0.08)', borderRadius: '20px', padding: '48px', textAlign: 'center' })}>
+      <div style={S({ fontSize: '48px', marginBottom: '16px' })}>{'⚙️'}</div>
+      <div style={S({ fontSize: '18px', fontWeight: '600', color: '#3b2e24', marginBottom: alt ? '8px' : '0' })}>{baslik}</div>
+      {alt ? <div style={S({ fontSize: '13px', color: '#8b7d70' })}>{alt}</div> : null}
+    </div>
+  )
+}

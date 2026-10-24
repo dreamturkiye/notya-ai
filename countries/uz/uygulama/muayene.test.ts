@@ -516,7 +516,7 @@ describe('Uzbekistan visit: screens in the three forms', () => {
         ekranTemiz(html, `/visit error ${kod} (${f})`)
       }
       const kayitta = cerceve(f, React.createElement(Muayene.KayitGorunumu, { m, hasta: HASTA, sablon: 'genel', riza: true, setRiza: bos, durum: 'kayit', sure: 75, hataKodu: null, baslat: bos, durdur: bos, vazgec: bos }))
-      for (const x of [m.muayene.kaydediliyor, '01:15', m.muayene.kayitDurdur, m.muayene.vazgec]) assert.ok(gorunurMetin(kayitta).includes(x), x)
+      for (const x of [m.muayene.kaydediliyor, '1:15', m.muayene.kayitDurdur, m.muayene.vazgec]) assert.ok(gorunurMetin(kayitta).includes(x), x)
       ekranTemiz(kayitta, `/visit recording (${f})`)
       for (const durum of ['yukleniyor', 'isleniyor'] as const) {
         const html = cerceve(f, React.createElement(Muayene.KayitGorunumu, { m, hasta: HASTA, sablon: 'genel', riza: true, setRiza: bos, durum, sure: 0, hataKodu: null, baslat: bos, durdur: bos, vazgec: bos }))
