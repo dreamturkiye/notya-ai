@@ -341,97 +341,50 @@
    "sayiOkunamadi": "$m:%1,%2",
    "duzelt": "$m"
   },
-  "ipuclari": {
-   "rozet": "$m",
-   "anladim": "$m",
-   "birDaha": "$m",
-   "ac": "$m:%",
-   "ayarEtiket": "$m",
-   "ayarIzoh": "$m",
-   "bolumler": {
-    "bugun": {
-     "baslik": "$m",
-     "satirlar": [
-      "$m",
-      "$m"
-     ]
-    },
-    "takvim": {
-     "baslik": "$m",
-     "satirlar": [
-      "$m",
-      "$m"
-     ]
-    },
-    "hastalar": {
-     "baslik": "$m",
-     "satirlar": [
-      "$m",
-      "$m",
-      "$m"
-     ]
-    },
-    "muayene": {
-     "baslik": "$m",
-     "satirlar": [
-      "$m",
-      "$m",
-      "$m"
-     ]
-    },
-    "araclar": {
-     "baslik": "$m",
-     "satirlar": [
-      "$m",
-      "$m"
-     ]
-    },
-    "klinik": {
-     "baslik": "$m",
-     "satirlar": [
-      "$m",
-      "$m"
-     ]
-    },
-    "onBuro": {
-     "baslik": "$m",
-     "satirlar": [
-      "$m",
-      "$m"
-     ]
-    },
-    "ayarlar": {
-     "baslik": "$m",
-     "satirlar": [
-      "$m",
-      "$m"
-     ]
-    }
-   }
-  },
-  "ilkAdimlar": {
+  "ekler": {
    "baslik": "$m",
    "aciklama": "$m",
-   "gizle": "$m",
-   "tamamOrani": "$m:%1,%2",
-   "adimlar": {
-    "rol": {
-     "etiket": "$m",
-     "aciklama": "$m"
-    },
-    "hasta": {
-     "etiket": "$m",
-     "aciklama": "$m"
-    },
-    "randevu": {
-     "etiket": "$m",
-     "aciklama": "$m"
-    },
-    "muayene": {
-     "etiket": "$m",
-     "aciklama": "$m"
-    }
-   }
+   "gizlilik": "$m",
+   "dosyaSec": "$m",
+   "birak": "$m",
+   "turEtiketi": "$m",
+   "turOtomatik": "$m",
+   "turler": {
+    "ultrasound": "$m",
+    "xray": "$m",
+    "ct_mri": "$m",
+    "ecg": "$m",
+    "lab": "$m",
+    "photo": "$m",
+    "other": "$m"
+   },
+   "durumBekliyor": "$m",
+   "durumHazirlaniyor": "$m",
+   "durumGizleniyor": "$m",
+   "durumOkunuyor": "$m",
+   "durumTamam": "$m",
+   "durumAtlandi": "$m",
+   "durumHata": "$m",
+   "gizlenemedi": "$m",
+   "kaliteDusuk": "$m",
+   "okunamadi": "$m",
+   "desteklenmiyor": "$m",
+   "buyuk": "$m",
+   "cokDosya": "$m:%1",
+   "pdfOkunamadi": "$m",
+   "sayfa": "$m:%1,%2",
+   "adUyusmuyor": "$m",
+   "yeniden": "$m",
+   "kaldir": "$m",
+   "devam": "$m",
+   "devamBelgesiz": "$m",
+   "devamBekliyor": "$m",
+   "devamYaziyor": "$m",
+   "notBaslik": "$m",
+   "notAciklama": "$m",
+   "notEklendi": "$m",
+   "notEklenemedi": "$m",
+   "notOnayli": "$m"
   }
  },
  "randevu": {
@@ -571,6 +524,43 @@
   "hasta": {
    "randevular": "$m",
    "randevuAl": "$m"
+  },
+  "ek": {
+   "ay": "$m",
+   "ajanda": "$m",
+   "liste": "$m",
+   "turIlk": "$m",
+   "turMuayene": "$m",
+   "turKontrol": "$m",
+   "turDiger": "$m",
+   "noktaIpucu": "$m",
+   "kayitsiz": "$m",
+   "kayitsizSecenek": "$m",
+   "kayitsizBaslik": "$m",
+   "kayitsizAciklama": "$m",
+   "adAlani": "$m",
+   "telefonAlani": "$m",
+   "turAlani": "$m",
+   "kayitOlusturBagla": "$m",
+   "hastaDosyasiAc": "$m",
+   "hastaFormu": "$m",
+   "yenidenPlanla": "$m",
+   "sil": "$m",
+   "silOnay": "$m",
+   "ayBos": "$m",
+   "gunBos": "$m",
+   "ajandaBos": "$m",
+   "randevuSayisi": "$m:%",
+   "daha": "$m:%",
+   "adGerekli": "$m",
+   "silinemedi": "$m",
+   "sekmeOzet": "$m",
+   "sekmeMuayeneler": "$m",
+   "sekmeBelgeler": "$m",
+   "sekmeAraclar": "$m",
+   "sekmeAsilar": "$m",
+   "sekmeIletisim": "$m",
+   "geriHastalar": "$m"
   }
  },
  "portal": {
@@ -1829,6 +1819,8 @@
     "$m",
     "$m",
     "$m",
+    "$m",
+    "$m",
     "$m"
    ]
   },
@@ -1954,6 +1946,8 @@
     "haklar": "$m",
     "diller": "$m",
     "yasal": [
+     "$m",
+     "$m",
      "$m",
      "$m",
      "$m",
