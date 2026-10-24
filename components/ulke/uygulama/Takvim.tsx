@@ -338,7 +338,7 @@ export function AyPlani({ m, r, gun, bugun, randevular, hata, bolge }: {
                           <span>{x.hastaAdi || '—'}</span>
                         </a>
                       ))}
-                      {liste.length > goster.length ? <div className="yg-ay-fazla">+{liste.length - goster.length}</div> : null}
+                      {liste.length > goster.length ? <a className="yg-ay-fazla" href={takvimAdresi(bolge, { gun: h, gorunum: 'gun' })}>+{liste.length - goster.length}</a> : null}
                     </div>
                   )
                 })}
