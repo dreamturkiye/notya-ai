@@ -9,6 +9,7 @@
  * own: changing it changes the assistant shown and the structure of the NEXT visit notes; notes already written
  * keep the structure they were written with.
  */
+import { AyarSatiri } from './AyarSatiri'
 import React, { useEffect, useState } from 'react'
 import { Bilgi, Cerceve, Hata, useUygulama, YOL, Yukleniyor, type Hesap } from './Kabuk'
 import { DilSecimi, YaziSecimi } from './DilFormu'
@@ -50,13 +51,7 @@ export function AyarlarGorunumu({ m, d, set, gonder, bekliyor, sonuc, kart }: {
   )
   if (kart) {
     return (
-      <section className="yg-satir yg-ayar-kart" data-alan="dil-ayari">
-        <span className="yg-satir-emoji" aria-hidden="true">{'\u{1F310}'}</span>
-        <div className="yg-satir-metin">
-          <span className="yg-satir-ad">{m.ayarlar.dilBolumu}</span>
-          {form}
-        </div>
-      </section>
+      <AyarSatiri emoji={'\u{1F310}'} ad={m.ayarlar.dilBolumu} alan="dil-ayari">{form}</AyarSatiri>
     )
   }
   return (
@@ -74,10 +69,7 @@ export function RolAyariGorunumu({ m, rol, kayitliRol, setRol, gonder, bekliyor,
   setRol: (r: string) => void; gonder: () => void; bekliyor: boolean; sonuc: 'tamam' | 'hata' | 'gerekli' | null
 }) {
   return (
-    <section className="yg-satir yg-ayar-kart" data-alan="rol-ayari">
-      <span className="yg-satir-emoji" aria-hidden="true">{'\u2695'}</span>
-      <div className="yg-satir-metin">
-      <h2 className="uza-h2">{m.rol.ayarBaslik}</h2>
+    <AyarSatiri emoji={'\u2695'} ad={m.rol.ayarBaslik} alan="rol-ayari">
       <form className="uza-form" onSubmit={(e) => { e.preventDefault(); gonder() }}>
         <RolSecimi m={m} deger={rol} sec={setRol} kimlik="uza-rol-ayar" />
         <p className="uza-ipucu">{m.asistan.etiket}: <span data-alan="asistan-ad">{asistanAdi(m, kayitliRol)}</span></p>
@@ -86,8 +78,7 @@ export function RolAyariGorunumu({ m, rol, kayitliRol, setRol, gonder, bekliyor,
         <Bilgi>{sonuc === 'tamam' ? m.rol.kaydedildi : null}</Bilgi>
         <button type="submit" className="uza-dugme" disabled={bekliyor} data-eylem="rol-kaydet">{bekliyor ? m.rol.kaydediliyor : m.rol.kaydet}</button>
       </form>
-      </div>
-    </section>
+    </AyarSatiri>
   )
 }
 
@@ -99,9 +90,7 @@ export function SaatDilimiGorunumu({ m, dilim, dilimler, sec, gonder, bekliyor, 
   m: UygulamaMetni; dilim: string; dilimler: readonly string[]; sec: (d: string) => void; gonder: () => void; bekliyor: boolean; sonuc: 'tamam' | 'hata' | null
 }) {
   return (
-    <section className="yg-satir yg-ayar-kart" data-alan="saat-dilimi">
-      <span className="yg-satir-emoji" aria-hidden="true">{'\u{1F550}'}</span>
-      <div className="yg-satir-metin">
+    <AyarSatiri emoji={'\u{1F550}'} ad={m.ayarlar.saatDilimi} alan="saat-dilimi">
       <form className="uza-form" onSubmit={(e) => { e.preventDefault(); gonder() }}>
         <div className="uza-alan">
           <label className="uza-etiket" htmlFor="uza-saat-dilimi">{m.ayarlar.saatDilimi}</label>
@@ -114,8 +103,7 @@ export function SaatDilimiGorunumu({ m, dilim, dilimler, sec, gonder, bekliyor, 
         <Bilgi>{sonuc === 'tamam' ? m.ayarlar.kaydedildi : null}</Bilgi>
         <button type="submit" className="uza-dugme" disabled={bekliyor} data-eylem="saat-dilimi-kaydet">{bekliyor ? m.ayarlar.kaydediliyor : m.ayarlar.kaydet}</button>
       </form>
-      </div>
-    </section>
+    </AyarSatiri>
   )
 }
 
@@ -125,9 +113,7 @@ export function MeslekKaydiGorunumu({ m, deger, set, gonder, bekliyor, sonuc }: 
 }) {
   const a = m.ayarlar
   return (
-    <section className="yg-satir yg-ayar-kart" data-alan="meslek-kaydi">
-      <span className="yg-satir-emoji" aria-hidden="true">{'\u{1F4CB}'}</span>
-      <div className="yg-satir-metin">
+    <AyarSatiri emoji={'\u{1F4CB}'} ad={a.meslekKaydi} alan="meslek-kaydi">
       <form className="uza-form" onSubmit={(e) => { e.preventDefault(); gonder() }}>
         <div className="uza-alan">
           <label className="uza-etiket" htmlFor="uza-meslek-kaydi">{a.meslekKaydi}</label>
@@ -138,8 +124,7 @@ export function MeslekKaydiGorunumu({ m, deger, set, gonder, bekliyor, sonuc }: 
         <Bilgi>{sonuc === 'tamam' ? a.kaydedildi : null}</Bilgi>
         <button type="submit" className="uza-dugme" disabled={bekliyor} data-eylem="meslek-kaydi-kaydet">{bekliyor ? a.kaydediliyor : a.kaydet}</button>
       </form>
-      </div>
-    </section>
+    </AyarSatiri>
   )
 }
 

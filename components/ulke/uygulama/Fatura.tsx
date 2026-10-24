@@ -10,6 +10,7 @@
  * The free-text item-number field takes whatever the practitioner types; no item description or fee is supplied here.
  */
 import React, { useCallback, useEffect, useState } from 'react'
+import { Ipucu } from './Ipucu'
 import { Bilgi, Cerceve, Hata, Yukleniyor, useUygulama } from './Kabuk'
 import { girdiMetni, rolAdi } from '@/lib/ulke/arayuz'
 import { SayiGirisi } from '../girdi/SayiGirisi'
@@ -108,7 +109,7 @@ export default function FaturaEkrani() {
 
   return (
     <Cerceve dil={u.dil} m={u.m} ad={u.hesap.ad} unvan={rolAdi(u.hesap.rol, u.dil) ?? undefined} aktif="fatura" cikis={u.cikis}>
-      <h1 className="uza-h1">{x.baslik}</h1>
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}><h1 className="uza-h1">{x.baslik}</h1><Ipucu m={u.m} bolum="fatura" /></span>
       <p className="uza-aciklama">{x.aciklama}</p>
       {baglanti?.etkin ? null : <div role="note" className="uza-bilgi-kutu" data-alan="fatura-demo">{x.demoNotu}</div>}
       <Hata>{hata}</Hata><Bilgi>{bilgi}</Bilgi>
