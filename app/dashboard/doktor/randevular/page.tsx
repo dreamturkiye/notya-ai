@@ -782,14 +782,17 @@ export default function RandevularPage() {
    * tam da form ziyaret ÖNCESİ gönderilsin diye. Modal açık kalır; "Muayeneyi Başlat / Hasta
    * Dosyasını Aç / Hasta Formu" düğmeleri ve "Hastaya mesaj" aynı anda görünür hale gelir.
    */
-  async function hastaKaydiOlusturVeBagla() {
-    if (!duzenlenenId || !duzenlenenRandevu) return;
+  async function hastaKaydiOlusturVeBagla(kaynak?: Randevu) {
+    // Day view passes the appointment itself; the edit modal relies on its own state.
+    const hedef = kaynak ?? duzenlenenRandevu;
+    const hedefId = kaynak?.id ?? duzenlenenId;
+    if (!hedefId || !hedef) return;
     setHastaKaydiOlusturuluyor(true);
     setHata('');
     try {
       const t = await token();
       if (!t) { setHata('Oturum bulunamadı. Lütfen tekrar giriş yapın.'); return; }
-      const r = await fetch(`/api/doktor/randevular/${duzenlenenId}`, {
+      const r = await fetch(`/api/doktor/randevular/${hedefId}`, {
         method: 'PATCH',
         headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ hastaKaydiOlustur: true }),
@@ -800,8 +803,8 @@ export default function RandevularPage() {
         return;
       }
       const yeniPatientId = String(j.yeniHasta.id);
-      const yeniAd = String(j.yeniHasta.ad || duzenlenenRandevu.hastaAdi);
-      setDuzenlenenRandevu((r) => (r ? { ...r, patientId: yeniPatientId, hastaAdi: yeniAd, kayitliHasta: true } : r));
+      const yeniAd = String(j.yeniHasta.ad || hedef.hastaAdi);
+      setDuzenlenenRandevu((r) => (r && r.id === hedefId ? { ...r, patientId: yeniPatientId, hastaAdi: yeniAd, kayitliHasta: true } : r));
       setBasariMesaji(`${yeniAd} için hasta kaydı oluşturuldu ve randevuya bağlandı.`);
       setTimeout(() => setBasariMesaji(''), 6000);
       // Yeni bağlanan hasta formu henüz doldurmadı — aynı "form gönderilsin mi?" sorusu, randevu
@@ -809,7 +812,7 @@ export default function RandevularPage() {
       setFormLinki(null);
       setFormLinkiHata('');
       if (!(await formDolduMu(yeniPatientId))) {
-        setFormSorusu({ patientId: yeniPatientId, randevuId: duzenlenenId, ad: yeniAd });
+        setFormSorusu({ patientId: yeniPatientId, randevuId: hedefId, ad: yeniAd });
       }
       await yenile();
     } catch {
@@ -1177,7 +1180,11 @@ export default function RandevularPage() {
                                 </div>
                               );
                             })}
-                            {fazlaSayisi > 0 && <div style={{ fontSize: 10, color: CHROME_RENK.muted, paddingLeft: 15 }}>+{fazlaSayisi} daha</div>}
+                            {fazlaSayisi > 0 && (
+                              <button type="button" onClick={(e) => { e.stopPropagation(); setGun(d); setGorunum('gun'); }}
+                                title="Bu günün tüm randevularını gün görünümünde aç"
+                                style={{ fontSize: 10, color: CHROME_RENK.pine, fontWeight: 600, paddingLeft: 15, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', textDecoration: 'underline' }}>+{fazlaSayisi} daha</button>
+                            )}
                           </div>
                         </div>
                       );
@@ -1255,6 +1262,12 @@ export default function RandevularPage() {
                                   <button type="button" onClick={() => router.push(`/dashboard/doktor/hastalar/${rv.patientId}`)} style={{ ...aksiyonBtn, color: CHROME_RENK.pine, fontWeight: 600 }}>Hasta Dosyasını Aç</button>
                                   <button type="button" onClick={() => router.push(`/dashboard/doktor/hastalar/${rv.patientId}?tab=formu`)} style={{ ...aksiyonBtn, color: CHROME_RENK.pine }}>Hasta Formu</button>
                                 </>
+                              )}
+                              {!aks.aktifEt && !rv.patientId && rv.durum !== 'iptal' && (
+                                <button type="button" onClick={() => void hastaKaydiOlusturVeBagla(rv)} disabled={hastaKaydiOlusturuluyor}
+                                  style={{ ...aksiyonBtn, background: CHROME_RENK.pine, color: 'white', fontWeight: 700, opacity: hastaKaydiOlusturuluyor ? 0.6 : 1 }}>
+                                  {hastaKaydiOlusturuluyor ? 'Oluşturuluyor…' : '+ Hasta kaydı oluştur ve bağla'}
+                                </button>
                               )}
                               {aks.yenidenPlanla && (
                                 <button type="button" onClick={() => duzenlemeyeAc(rv)} style={aksiyonBtn}>Yeniden Planla</button>
