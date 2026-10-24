@@ -11,6 +11,7 @@
  * closing section (label above a 44px field, full-width button). The Turkish form itself is not reused: it is a
  * trial sign-up that sends the visitor to Türkiye's registration page.
  */
+import { ulkeTelefonu } from '@/lib/ulke/arayuz/telefon'
 import React from 'react'
 import { useState, type FormEvent } from 'react'
 import { Button } from '@/components/doktor-landing/button'
@@ -34,6 +35,7 @@ const ETIKET = 'grid gap-1.5 font-outfit text-sm'
 
 export function IletisimFormu({ adres, metin }: { adres: string; metin: FormMetni }) {
   const [hata, setHata] = useState('')
+  const [telefonHata, setTelefonHata] = useState(false)
 
   function gonder(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -41,7 +43,9 @@ export function IletisimFormu({ adres, metin }: { adres: string; metin: FormMetn
     const al = (ad: string) => String(veri.get(ad) ?? '').trim().slice(0, 500)
     const alan = { adSoyad: al('adSoyad'), kurum: al('kurum'), telefon: al('telefon'), uzmanlik: al('uzmanlik'), mesaj: al('mesaj') }
     if (!alan.adSoyad || !alan.telefon) { setHata(metin.eksik); return }
-    setHata('')
+    // The phone is checked by the country's one rule (lib/telefon/dogrula.ts) before the mail app opens.
+    if (!ulkeTelefonu(alan.telefon).tamam) { setHata(''); setTelefonHata(true); return }
+    setHata(''); setTelefonHata(false)
     window.location.href = mailtoBaglantisi(adres, metin, alan)
   }
 
@@ -58,7 +62,8 @@ export function IletisimFormu({ adres, metin }: { adres: string; metin: FormMetn
       </label>
       <label className={ETIKET}>
         <span className="text-ink-muted">{metin.telefon}</span>
-        <input name="telefon" type="tel" inputMode="tel" autoComplete="tel" placeholder={metin.telefonOrnek} maxLength={40} className={ALAN} />
+        <input name="telefon" type="tel" inputMode="tel" autoComplete="tel" placeholder={metin.telefonOrnek} maxLength={40} className={ALAN} aria-invalid={telefonHata || undefined} aria-describedby={telefonHata ? 'uzl-tel-hata' : undefined} onChange={() => setTelefonHata(false)} />
+        {telefonHata ? <span id="uzl-tel-hata" role="alert" className="text-sm text-red-700" data-hata="telefon">{metin.telefonGecersiz}</span> : null}
       </label>
       <label className={ETIKET}>
         <span className="text-ink-muted">{metin.uzmanlik}</span>

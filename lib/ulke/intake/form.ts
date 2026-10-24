@@ -48,7 +48,7 @@ import { hesapSaatDilimi } from '../uygulama/saatDilimi'
 import { ulkeIslevi, ulkeTablosu } from '../uygulama/tablolar'
 import { yerelAn } from '../uygulama/zaman'
 import { rizaEkle } from '../gizlilik/riza'
-import { CEVAPLAR_AZAMI, cevaplariSuz, cevapMetni, eksikZorunlular, formBolumleri, formGorunumu, formSorulari, type FormBaglami } from './sorular'
+import { CEVAPLAR_AZAMI, cevaplariSuz, cevapMetni, eksikZorunlular, telefonHatalari, formBolumleri, formGorunumu, formSorulari, type FormBaglami } from './sorular'
 import type { Cevaplar, FormDurumu, FormIstegiSonucu, HastaFormuGorunumu, HastaFormuIcerigi, HekimFormu } from './tipler'
 
 const TABLO = 'ulke_hasta_formlari'
@@ -251,7 +251,7 @@ export async function hastaFormuOku(supabase: SupabaseClient, kim: Pick<PortalKi
   return s ? gorunum(s, hasta, await hastaBicimi(supabase, kim.doktorId, hasta), kim.doktorId, icerik) : null
 }
 
-export type HastaFormuRetKodu = 'NOT_FOUND' | 'RIZA_GEREKLI' | 'EKSIK' | 'GECERSIZ' | 'BASARISIZ'
+export type HastaFormuRetKodu = 'NOT_FOUND' | 'RIZA_GEREKLI' | 'EKSIK' | 'TELEFON' | 'GECERSIZ' | 'BASARISIZ'
 export type HastaFormuSonucu = { tamam: true; form: HastaFormuGorunumu } | { tamam: false; kod: HastaFormuRetKodu; eksik?: string[] }
 
 /**
@@ -273,6 +273,9 @@ export async function hastaFormuYaz(supabase: SupabaseClient, kim: Pick<PortalKi
   if (g.gonder) {
     const eksik = eksikZorunlular(sorular, cevaplar)
     if (eksik.length) return { tamam: false, kod: 'EKSIK', eksik }
+    // A phone typed and not a number of the country is refused by name, never sent as "no answer".
+    const telefon = telefonHatalari(sorular, g.cevaplar)
+    if (telefon.length) return { tamam: false, kod: 'TELEFON', eksik: telefon }
   }
   const an = new Date(simdi).toISOString()
   const dil = await hastaBicimi(supabase, kim.doktorId, hasta)

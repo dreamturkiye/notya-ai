@@ -17,6 +17,8 @@
  * catalogue and the application's own — in the account's form. The server answers with codes.
  */
 import React, { useCallback, useEffect, useState } from 'react'
+import { TelefonGirisi } from '../girdi/TelefonGirisi'
+import { telefonHatasi, telefonNedeniMetni } from '@/lib/ulke/arayuz/telefon'
 import { Bilgi, Cerceve, Hata, tarihYaz, useUygulama, Yukleniyor } from './Kabuk'
 import { tamAd } from './Hastalar'
 import { panoyaKopyala } from './pano'
@@ -209,7 +211,7 @@ export function HastaKartiGorunumu({ k, r, g, hasta, yetkiler, form, setForm, su
   )
 }
 
-export function YeniHastaGorunumu({ k, m, f, setF, kaydet, bekliyor }: { k: KlinikMetni; m: UygulamaMetni; f: HastaFormu; setF: (f: HastaFormu) => void; kaydet: () => void; bekliyor: boolean }) {
+export function YeniHastaGorunumu({ k, m, f, setF, kaydet, bekliyor, telefonHatali }: { k: KlinikMetni; m: UygulamaMetni; f: HastaFormu; setF: (f: HastaFormu) => void; kaydet: () => void; bekliyor: boolean; /** true = the phone was refused: its sentence is shown under the field. */ telefonHatali?: boolean }) {
   const y = m.yeniHasta
   const paket = ulkePaketi()
   return (
@@ -227,7 +229,7 @@ export function YeniHastaGorunumu({ k, m, f, setF, kaydet, bekliyor }: { k: Klin
             </select>
           </div>
         </div>
-        <div className="uza-alan"><label className="uza-etiket" htmlFor="uza-ob-tel">{y.telefon} <small>{y.istegeBagli}</small></label><input id="uza-ob-tel" type="tel" className="uza-girdi" value={f.telefon} onChange={(e) => setF({ ...f, telefon: e.target.value })} maxLength={40} placeholder={paket.telefon.ornek} /></div>
+        <div className="uza-alan"><label className="uza-etiket" htmlFor="uza-ob-tel">{y.telefon} <small>{y.istegeBagli}</small></label><TelefonGirisi id="uza-ob-tel" ad="telefon" deger={f.telefon} degistir={(telefon) => setF({ ...f, telefon })} hata={telefonHatali ? (telefonHatasi(m.girdi, f.telefon) ?? telefonNedeniMetni(m.girdi, 'gecersiz')) : null} /></div>
         <div className="uza-alan">
           <label className="uza-etiket" htmlFor="uza-ob-dil">{y.dil}</label>
           <select id="uza-ob-dil" className="uza-girdi" value={f.dil} onChange={(e) => setF({ ...f, dil: e.target.value })} required data-alan="hasta-dili">
@@ -255,6 +257,7 @@ export default function OnBuro() {
   const [yeni, setYeni] = useState<YeniErisim | null>(null)
   const [form, setForm] = useState<RandevuFormu>({ gun: '', saat: '', sureDk: ulkePaketi().uygulama?.randevu?.varsayilan.sureDk ?? 30, yineDe: false })
   const [yeniHasta, setYeniHasta] = useState<HastaFormu>(bosHasta)
+  const [telefonHatali, setTelefonHatali] = useState(false)
   const [bekliyor, setBekliyor] = useState(false)
   const [bildirim, setBildirim] = useState<OnBuroBildirimi>(null)
   const [kopuk, setKopuk] = useState(false)
@@ -325,8 +328,8 @@ export default function OnBuro() {
               kopyala={(ne) => { if (yeni) void panoyaKopyala(ne === 'pin' ? yeni.pin : yeni.adres).then((t) => setBildirim(t ? 'kopyalandi' : 'kopyalanamadi')) }} />
           ) : null}
           {secili && yetkiler.includes('on-buro-hasta') ? (
-            <YeniHastaGorunumu k={k} m={u.m} f={yeniHasta} setF={setYeniHasta} bekliyor={bekliyor}
-              kaydet={() => { if (yeniHasta.dogumTarihi === GIRDI_GECERSIZ) { setBildirim('gecersiz'); return } void yap(() => api(API, { method: 'POST', govde: { hekimId, islem: 'hasta', ...yeniHasta } }), (j) => { const h = j.hasta as HastaKarti | undefined; setYeniHasta(bosHasta()); if (h && randevuYetkisi) hastaSec(h); return 'hasta-kaydedildi' }) }} />
+            <YeniHastaGorunumu k={k} m={u.m} f={yeniHasta} setF={(x) => { setYeniHasta(x); setTelefonHatali(false) }} bekliyor={bekliyor} telefonHatali={telefonHatali}
+              kaydet={() => { if (yeniHasta.dogumTarihi === GIRDI_GECERSIZ) { setBildirim('gecersiz'); return } if (telefonHatasi(u.m.girdi, yeniHasta.telefon)) { setTelefonHatali(true); return } void yap(() => api(API, { method: 'POST', govde: { hekimId, islem: 'hasta', ...yeniHasta } }), (j) => { const h = j.hasta as HastaKarti | undefined; setYeniHasta(bosHasta()); if (h && randevuYetkisi) hastaSec(h); return 'hasta-kaydedildi' }) }} />
           ) : null}
         </>
       )}

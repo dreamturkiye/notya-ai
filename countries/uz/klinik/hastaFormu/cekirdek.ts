@@ -45,7 +45,7 @@ export const UZ_CEKIRDEK_BOLUMLER: readonly FormBolumu[] = [
         s('boshqa', 'Boshqa yaqini', 'Бошқа яқини', 'Другой близкий человек'),
       ], { zorunlu: true }),
       kisa('vakil_ism', u('Ismingiz va familiyangiz', 'Исмингиз ва фамилиянгиз', 'Ваши имя и фамилия'), { zorunlu: true }),
-      kisa('vakil_telefon', u('Siz bilan bogʻlanish uchun telefon raqami', 'Сиз билан боғланиш учун телефон рақами', 'Номер телефона для связи с вами')),
+      kisa('vakil_telefon', u('Siz bilan bogʻlanish uchun telefon raqami', 'Сиз билан боғланиш учун телефон рақами', 'Номер телефона для связи с вами'), { tel: true }),
       tek('ota_ona_holati', u('Bolaning ota-onasi', 'Боланинг ота-онаси', 'Родители ребёнка'), [
         s('birga', 'Nikohda, birga yashaydi', 'Никоҳда, бирга яшайди', 'В браке, живут вместе'),
         s('ajrashgan', 'Ajrashgan', 'Ажрашган', 'В разводе'),
@@ -149,7 +149,7 @@ export const UZ_CEKIRDEK_BOLUMLER: readonly FormBolumu[] = [
     sorular: [
       kisa('yaqin_ism', u('Ismi va familiyasi', 'Исми ва фамилияси', 'Имя и фамилия')),
       kisa('yaqin_kim', u('Sizga kim boʻladi?', 'Сизга ким бўлади?', 'Кем он или она вам приходится?')),
-      kisa('yaqin_telefon', u('Telefon raqami', 'Телефон рақами', 'Номер телефона')),
+      kisa('yaqin_telefon', u('Telefon raqami', 'Телефон рақами', 'Номер телефона'), { tel: true }),
     ],
   },
 ]

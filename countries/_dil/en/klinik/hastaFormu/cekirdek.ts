@@ -42,7 +42,7 @@ export const EN_CEKIRDEK_BOLUMLER: readonly HamBolum[] = [
         s('other', 'Another close person'),
       ], { zorunlu: true }),
       kisa('guardian_name', 'Your full name', { zorunlu: true }),
-      kisa('guardian_phone', 'A phone number where you can be reached'),
+      kisa('guardian_phone', 'A phone number where you can be reached', { tel: true }),
       tek('parents_situation', 'The child\'s parents', [
         s('together', 'Live together'),
         s('apart', 'Live apart'),
@@ -171,7 +171,7 @@ export const EN_CEKIRDEK_BOLUMLER: readonly HamBolum[] = [
     sorular: [
       kisa('contact_name', 'Full name'),
       kisa('contact_relation', 'Their relationship to you'),
-      kisa('contact_phone', 'Phone number'),
+      kisa('contact_phone', 'Phone number', { tel: true }),
     ],
   },
 ]

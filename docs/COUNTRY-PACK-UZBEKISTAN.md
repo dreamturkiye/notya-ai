@@ -253,6 +253,9 @@ Machine-written, in three forms; nobody who speaks Uzbek or Russian as a first l
 | `gonderilemedi` | Yuborib boʻlmadi. Qaytadan urinib koʻring. | Юбориб бўлмади. Қайтадан уриниб кўринг. | Не удалось отправить. Попробуйте ещё раз. |
 | `gonderUyari` | Yuborganingizdan keyin javoblaringizni oʻqiy olasiz, lekin oʻzgartira olmaysiz. | Юборганингиздан кейин жавобларингизни ўқий оласиз, лекин ўзгартира олмайсиз. | После отправки вы сможете читать свои ответы, но не сможете их изменить. |
 | `eksik` | Majburiy deb belgilangan savollarga javob bering. | Мажбурий деб белгиланган саволларга жавоб беринг. | Ответьте на вопросы, отмеченные как обязательные. |
+| `eksikTek` | 1 ta majburiy savolga javob berish kerak | 1 та мажбурий саволга жавоб бериш керак | Нужно ответить на 1 обязательный вопрос |
+| `eksikCok` | %1 ta majburiy savolga javob berish kerak | %1 та мажбурий саволга жавоб бериш керак | Нужно ответить на обязательные вопросы: %1 |
+| `soruEksik` | Iltimos, bu savolga javob bering. | Илтимос, бу саволга жавоб беринг. | Пожалуйста, ответьте на этот вопрос. |
 | `sayiGecersiz` | %1 dan %2 gacha boʻlgan son kiriting. | %1 дан %2 гача бўлган сон киритинг. | Введите число от %1 до %2. |
 | `gonderildiBaslik` | Soʻrovnoma yuborildi | Сўровнома юборилди | Анкета отправлена |
 | `gonderildi` | Soʻrovnomani % kuni yuborgansiz. Shifokoringiz uni koʻrikdan oldin oʻqiydi. | Сўровномани % куни юборгансиз. Шифокорингиз уни кўрикдан олдин ўқийди. | Вы отправили анкету %. Врач прочитает её перед приёмом. |
@@ -503,7 +506,7 @@ The pack had no conversion from Latin to Cyrillic script before this slice (only
 | 21 | `noroloji` | doctor specialty | Nevrologiya / Неврология / Неврология | Prof. Dr. Bobur Rahimov | yes | 6 | none yet | 1: `neuro_scales` | 8 questions, machine-written, read by no clinician |
 | 22 | `onkoloji` | doctor specialty | Onkologiya / Онкология / Онкология | Prof. Dr. Nigora Tursunova | yes | 7 | none yet | 3: `staging_system`, `treatment_regimens`, `performance_scale` | 9 questions, machine-written, read by no clinician |
 | 23 | `ortopedi` | doctor specialty | Travmatologiya va ortopediya / Травматология ва ортопедия / Травматология и ортопедия | Prof. Dr. Ulugbek Ismailov | yes | 7 | none yet | 1: `fracture_classification` | 9 questions, machine-written, read by no clinician |
-| 24 | `pediatri` | doctor specialty | Pediatriya / Педиатрия / Педиатрия | Prof. Dr. Malika Nazarova | yes | 8 | none yet | 4: `vaccination_calendar`, `growth_standard`, `development_milestones`, `pediatric_dosing` | 12 questions, machine-written, read by no clinician |
+| 24 | `pediatri` | doctor specialty | Pediatriya / Педиатрия / Педиатрия | Prof. Dr. Malika Nazarova | yes | 8 | none yet | 4: `vaccination_calendar`, `growth_standard`, `development_milestones`, `pediatric_dosing` | 16 questions, machine-written, read by no clinician |
 | 25 | `plastik-cerrahi` | doctor specialty | Plastik xirurgiya / Пластик хирургия / Пластическая хирургия | Prof. Dr. Barno Mirzayeva | yes | 8 | none yet | 1: `surgical_consent_form` | 8 questions, machine-written, read by no clinician |
 | 26 | `psikiyatri` | doctor specialty | Psixiatriya / Психиатрия / Психиатрия | Prof. Dr. Zulfiya Saidova | yes | 7 | none yet | 2: `rating_scales`, `involuntary_care_law` | 10 questions, machine-written, read by no clinician |
 | 27 | `radyoloji` | doctor specialty | Tibbiy radiologiya / Тиббий радиология / Медицинская радиология | Prof. Dr. Akmal Qodirov | yes | 6 | none yet | 2: `reporting_systems`, `dose_record` | 10 questions, machine-written, read by no clinician |

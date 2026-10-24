@@ -145,19 +145,32 @@ export const UZ_ROL_SORULARI_2: Readonly<Record<string, RolSorulari>> = {
     baslik: u('Bola haqida', 'Бола ҳақида', 'О ребёнке'),
     inceleme: MAKINE,
     sorular: [
-      tek('pd_tugilish', u('Bola qachon tugʻilgan?', 'Бола қачон туғилган?', 'Когда родился ребёнок?'), [
-        s('muddatida', 'Muddatida', 'Муддатида', 'В срок'),
-        s('oldin', 'Muddatidan oldin', 'Муддатидан олдин', 'Раньше срока'),
-        s('bilmayman', 'Bilmayman', 'Билмайман', 'Не знаю'),
-      ]),
+      // The same parts, in the same order, as Türkiye's paediatrics form (lib/intake/bransSorulari.ts › pediatri).
+      cok('pd_homiladorlik', u('Homiladorlik davrida quyidagilardan biri boʻlganmi?', 'Ҳомиладорлик даврида қуйидагилардан бири бўлганми?', 'Было ли во время беременности что-либо из перечисленного?'), [
+        s('diabet', 'Qandli diabet', 'Қандли диабет', 'Сахарный диабет'),
+        s('bosim', 'Yuqori qon bosimi', 'Юқори қон босими', 'Повышенное давление'),
+        s('erta_xavf', 'Muddatidan oldin tugʻish xavfi', 'Муддатидан олдин туғиш хавфи', 'Риск преждевременных родов'),
+        s('infeksiya', 'Infeksiya', 'Инфекция', 'Инфекция'),
+        s('kopchilik', 'Koʻp homilalik (egizak yoki undan koʻp)', 'Кўп ҳомилалик (эгизак ёки ундан кўп)', 'Многоплодная беременность'),
+        s('eko', 'EKO (probirkadagi urugʻlantirish)', 'ЭКО (пробиркадаги уруғлантириш)', 'ЭКО'),
+        s('muammo_yoq', 'Muammo boʻlmagan', 'Муаммо бўлмаган', 'Проблем не было'),
+      ], { zorunlu: true }),
+      tek('pd_hafta', u('Tugʻilganda homiladorlik necha haftalik edi?', 'Туғилганда ҳомиладорлик неча ҳафталик эди?', 'Какой был срок беременности при родах?'), [
+        s('h37_kam', 'Muddatidan oldin (erta)', 'Муддатидан олдин (эрта)', 'Раньше срока (недоношенный)'),
+        s('h37_38', 'Muddatga yaqin', 'Муддатга яқин', 'Почти в срок'),
+        s('h39', 'Toʻliq muddatda yoki undan keyin', 'Тўлиқ муддатда ёки ундан кейин', 'В срок или позже'),
+        s('bilmayman', 'Eslay olmayman', 'Эслай олмайман', 'Не помню'),
+      ], { zorunlu: true }),
+      son('pd_vazn', u('Tugʻilgandagi vazni', 'Туғилгандаги вазни', 'Вес при рождении'), GRAMM, 300, 7000, { zorunlu: true }),
+      olcu('pd_boy', u('Tugʻilgandagi boʻyi', 'Туғилгандаги бўйи', 'Рост при рождении'), 'boy', { zorunlu: true }),
+      olcu('pd_bosh', u('Tugʻilgandagi bosh aylanasi (eslaganingizcha)', 'Туғилгандаги бош айланаси (эслаганингизча)', 'Окружность головы при рождении (насколько помните)'), 'boy'),
+      olcu('pd_ona_boyi', u('Onaning boʻyi (ixtiyoriy)', 'Онанинг бўйи (ихтиёрий)', 'Рост матери (по желанию)'), 'boy', { yardim: u('Bolaning kutilayotgan boʻyini hisoblash uchun. Boʻsh qoldirishingiz mumkin.', 'Боланинг кутилаётган бўйини ҳисоблаш учун. Бўш қолдиришингиз мумкин.', 'Для расчёта ожидаемого роста ребёнка. Можно оставить пустым.') }),
+      olcu('pd_ota_boyi', u('Otaning boʻyi (ixtiyoriy)', 'Отанинг бўйи (ихтиёрий)', 'Рост отца (по желанию)'), 'boy', { yardim: u('Bolaning kutilayotgan boʻyini hisoblash uchun. Boʻsh qoldirishingiz mumkin.', 'Боланинг кутилаётган бўйини ҳисоблаш учун. Бўш қолдиришингиз мумкин.', 'Для расчёта ожидаемого роста ребёнка. Можно оставить пустым.') }),
       tek('pd_tugruq', u('Tugʻruq qanday boʻlgan?', 'Туғруқ қандай бўлган?', 'Какими были роды?'), [
         s('tabiiy', 'Tabiiy yoʻl bilan', 'Табиий йўл билан', 'Естественные'),
         s('kesarcha', 'Kesarcha kesish', 'Кесарча кесиш', 'Кесарево сечение'),
-        s('bilmayman', 'Bilmayman', 'Билмайман', 'Не знаю'),
-      ]),
-      son('pd_vazn', u('Tugʻilgandagi vazni', 'Туғилгандаги вазни', 'Вес при рождении'), GRAMM, 300, 7000),
-      olcu('pd_boy', u('Tugʻilgandagi boʻyi', 'Туғилгандаги бўйи', 'Рост при рождении'), 'boy'),
-      eh('pd_tugruqdan_keyin', u('Tugʻilgandan keyingi kunlarda muammo boʻlganmi?', 'Туғилгандан кейинги кунларда муаммо бўлганми?', 'Были ли проблемы в первые дни после рождения?'), QANDAY),
+      ], { zorunlu: true }),
+      eh('pd_tugruqdan_keyin', u('Tugʻilgandan keyingi kunlarda muammo boʻlganmi?', 'Туғилгандан кейинги кунларда муаммо бўлганми?', 'Были ли проблемы в первые дни после рождения?'), u('Nima boʻlgan (masalan, sariqlik, chaqaloqlar reanimatsiyasi, nafas yordami)?', 'Нима бўлган (масалан, сариқлик, чақалоқлар реанимацияси, нафас ёрдами)?', 'Что именно было (например, желтуха, реанимация новорождённых, дыхательная поддержка)?'), { zorunlu: true }),
       cok('pd_ovqat', u('Bola hozir qanday ovqatlanadi?', 'Бола ҳозир қандай овқатланади?', 'Как ребёнок питается сейчас?'), [
         s('ona_suti', 'Ona suti', 'Она сути', 'Грудное молоко'),
         s('aralashma', 'Sunʼiy aralashma', 'Сунъий аралашма', 'Молочная смесь'),

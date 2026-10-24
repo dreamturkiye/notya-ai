@@ -19,6 +19,7 @@
  * limits against a slip of the finger, not clinical limits: they refuse 1750 cm, not a tall patient.
  */
 import type { BicimliMetin } from '../arayuz/tipler'
+import { ulkeTelefonu } from '../arayuz/telefon'
 import type { Birimler } from '../tipler'
 import type { BirimKodu, Cevap, Cevaplar, FormBolumGorunumu, FormSorusu, HastaFormuIcerigi, Olcu, Secenek, Soru } from './tipler'
 import { OLCULER, SORU_TURLERI } from './tipler'
@@ -97,6 +98,7 @@ export function formGorunumu(icerik: HastaFormuIcerigi, k: FormBaglami, dil: str
       metin: (k.veli && yaz(s.veliMetni, dil)) || yaz(s.metin, dil),
       yardim: yaz(s.yardim, dil) || null,
       zorunlu: s.zorunlu === true,
+      tel: s.tur === 'kisa-metin' && s.tel === true,
       secenekler: s.tur === 'tek-secim' || s.tur === 'cok-secim' ? s.secenekler.map((o) => ({ anahtar: o.anahtar, ad: yaz(o.ad, dil), tek: o.tek === true })) : null,
       ayrinti: s.tur === 'evet-hayir' ? yaz(s.ayrinti, dil) || null : null,
       birim: s.tur === 'sayi' ? sayiBirimi(s, dil, birimler, birimAdlari) : null,
@@ -125,6 +127,13 @@ export function cevabiSuz(s: Soru, ham: unknown, birimler: Birimler): Cevap | un
     const tek = secilen.find((o) => o.tek)
     const anahtarlar = (tek ? [tek] : secilen).map((o) => o.anahtar)
     return anahtarlar.length ? anahtarlar : undefined
+  }
+  if (s.tur === 'kisa-metin' && s.tel === true) {
+    // A phone answer is kept as the E.164 number; one that is not a number of the country is not kept.
+    const t = metin(ham, 40)
+    if (!t) return undefined
+    const r = ulkeTelefonu(t)
+    return r.tamam ? r.e164 : undefined
   }
   if (s.tur === 'kisa-metin' || s.tur === 'uzun-metin') return metin(ham, s.tur === 'kisa-metin' ? KISA_METIN_AZAMI : UZUN_METIN_AZAMI) || undefined
   if (s.tur === 'evet-hayir') {
@@ -159,6 +168,13 @@ export function cevaplariSuz(sorular: readonly Soru[], ham: unknown, birimler: B
     if (c !== undefined) cikti[s.anahtar] = c
   }
   return cikti
+}
+
+/** Keys of the phone questions whose answer was typed and is not a number of the country: a form with any of them is not submitted. */
+export function telefonHatalari(sorular: readonly Soru[], ham: unknown): string[] {
+  if (!ham || typeof ham !== 'object' || Array.isArray(ham)) return []
+  const g = ham as Record<string, unknown>
+  return sorular.filter((s) => s.tur === 'kisa-metin' && s.tel === true && sahip(g, s.anahtar) && typeof g[s.anahtar] === 'string' && metin(g[s.anahtar], 40) !== '' && !ulkeTelefonu(metin(g[s.anahtar], 40)).tamam).map((s) => s.anahtar)
 }
 
 /** Keys of the required questions that have no answer: a form with any of them is not submitted. */
@@ -275,7 +291,7 @@ export function formIcerigiSorunlari(icerik: HastaFormuIcerigi, rolAnahtarlari: 
     inceleme(r.inceleme, `${y}.inceleme`)
     sorular(r.sorular, y)
     // A role's own form of a core question: the key of a core question, of the same type — so the stored answer stays that question's.
-    if (r.cekirdekDegisimi?.length) {
+    if (r.cekirdekDegisimi?.length && bolumler.length) {
       const cekirdekSorulari = new Map<string, Soru>(bolumler.flatMap((b) => b.sorular).map((q) => [q.anahtar, q] as [string, Soru]))
       const yer = new Map<string, string>()
       for (const q of r.cekirdekDegisimi) {

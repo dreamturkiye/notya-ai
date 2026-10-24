@@ -268,6 +268,7 @@ const TEMEL: AcilisIcerigi = {
       gonder: 'Send the request',
       ipucu: 'The request is sent with the mail app on your device.',
       eksik: 'Enter your name and phone number.',
+      telefonGecersiz: 'This is not a phone number we can use. Check it, for example %T.',
       konu: '%M: request for a quote',
       satir: { adSoyad: 'Full name', kurum: 'Clinic or organisation', telefon: 'Phone number', uzmanlik: 'Specialty', mesaj: 'Message' },
     },

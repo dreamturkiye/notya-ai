@@ -10,6 +10,7 @@
  *
  *   400 { code: 'RIZA_GEREKLI' }         nothing is saved before the consent sentence is accepted (`riza: true`)
  *   400 { code: 'EKSIK', eksik: [...] }  submitting: required questions without an answer (their keys)
+ *   400 { code: 'TELEFON', eksik: [...] } submitting: a phone answer that is not a number of the country (their keys)
  *   400 { code: 'GECERSIZ' }             not the portal's own request, or answers too large to be a form
  *   404 { code: 'NOT_FOUND' }            the feature is off; or (PUT, POST) there is no open form to write to —
  *                                        it was submitted or withdrawn, or never asked for

@@ -304,7 +304,7 @@ export const NZ_GIRDI: EnUlkeGirdisi = {
     // dialled and can be nobody's. A number from a reserved range, if a local source names one, may replace it.
     // The audit of 2026-10-09 found no official page that reserves a range for fiction. The spacing follows the
     // government's own example of an international number ("+64 4 456 2390").
-    telefonOrnegi: '+64 2X XXX XXXX',
+    telefonOrnegi: '+64 21 123 4567',
     // NOT SHOWN: every plan is by quote. How an amount would be written here when the owner sets prices.
     // SOURCE-CHECKED: the government's writing guidance uses "$" alone where only New Zealand dollars are meant.
     // Whether an amount must be shown with or without goods and services tax is for a lawyer.

@@ -22,7 +22,7 @@ export const YOQ = (): Secenek => ({ anahtar: 'yoq', ad: u('Bularning hech biri 
 /** Yes / no / I do not know, as a single choice. */
 export const HA_YOQ_BILMAYMAN = (): Secenek[] => [s('ha', 'Ha', 'Ҳа', 'Да'), s('yoq', 'Yoʻq', 'Йўқ', 'Нет'), s('bilmayman', 'Bilmayman', 'Билмайман', 'Не знаю')]
 
-type Ek = { zorunlu?: boolean; kime?: 'yetiskin' | 'cocuk'; cinsiyet?: 'female' | 'male'; yardim?: Uc; veliMetni?: Uc }
+type Ek = { zorunlu?: boolean; kime?: 'yetiskin' | 'cocuk'; cinsiyet?: 'female' | 'male'; yardim?: Uc; veliMetni?: Uc; tel?: boolean }
 export const tek = (anahtar: string, metin: Uc, secenekler: Secenek[], ek: Ek = {}): Soru => ({ anahtar, tur: 'tek-secim', metin, secenekler, ...ek })
 export const cok = (anahtar: string, metin: Uc, secenekler: Secenek[], ek: Ek = {}): Soru => ({ anahtar, tur: 'cok-secim', metin, secenekler, ...ek })
 export const kisa = (anahtar: string, metin: Uc, ek: Ek = {}): Soru => ({ anahtar, tur: 'kisa-metin', metin, ...ek })

@@ -26,6 +26,8 @@ import { tarihYaz } from '@/lib/ulke/arayuz/bicim'
 import { sayiAlanMetni, sayiCoz as ulkeSayiCoz, sayiYaz } from '@/lib/ulke/arayuz/sayi'
 import { GIRDI_GECERSIZ } from '@/lib/ulke/arayuz/zamanGirdisi'
 import { yerine } from '@/lib/ulke/arayuz/yerTutucu'
+import { telefonHatasi, ulkeTelefonu } from '@/lib/ulke/arayuz/telefon'
+import { TelefonGirisi } from '../girdi/TelefonGirisi'
 import type { Cevap, Cevaplar, FormSorusu, HastaFormuGorunumu } from '@/lib/ulke/intake/tipler'
 import { PORTAL_FORM_API, PORTAL_API } from '@/lib/ulke/portal/sabitler'
 import { ulkePaketi } from '@/lib/ulke/ulke'
@@ -80,6 +82,8 @@ export function sayiCoz(ham: string): number | null {
  */
 export function okunamayanCevap(q: FormSorusu, ham: string, cevap: Cevap | undefined): boolean {
   if (q.tur === 'tarih') return ham === GIRDI_GECERSIZ
+  // A phone typed and not a number of the country (lib/telefon/dogrula.ts — the server applies the same rule).
+  if (q.tur === 'kisa-metin' && q.tel) return typeof cevap === 'string' && cevap.trim() !== '' && !ulkeTelefonu(cevap).tamam
   return q.tur === 'sayi' && ham.trim() !== '' && cevap === undefined
 }
 
@@ -190,6 +194,17 @@ export function SoruAlani({ q, f, g, cevap, ham, eksik, degistir, hamDegistir }:
         <TarihGirisi id={id} etiket={baslik} deger={ham || (typeof cevap === 'string' ? cevap : '')} m={g} zorunlu={q.zorunlu} hata={eksik && ham === GIRDI_GECERSIZ}
           degistir={(gun) => { hamDegistir(gun); degistir(/^\d{4}-\d{2}-\d{2}$/.test(gun) ? gun : undefined) }} />
         {yardim}
+      </div>
+    )
+  }
+  if (q.tur === 'kisa-metin' && q.tel) {
+    return (
+      <div className="uza-alan" {...sarici}>
+        <label className="uza-etiket" htmlFor={id}>{baslik}</label>
+        {yardim}
+        <TelefonGirisi id={id} deger={typeof cevap === 'string' ? cevap : ''} degistir={(t) => degistir(t || undefined)} zorunlu={q.zorunlu}
+          hata={eksik && typeof cevap === 'string' ? telefonHatasi(g, cevap) : null} />
+        {eksikSatir}
       </div>
     )
   }
@@ -459,7 +474,7 @@ export function PortalFormu({ dil, iste, kapat, oturumBitti }: { dil: DilKodu; i
       const r = await iste(FORM_YOLU, { cevaplar: son.current, riza: true }, 'POST')
       if (r.status === 401) { oturumBitti(); return }
       if (r.status === 200 && r.j.form) { kirli.current = false; yerlestir(r.j.form as HastaFormuGorunumu, true); setGonderim('yok'); window.scrollTo?.(0, 0); return }
-      if (r.j.code === 'EKSIK' && Array.isArray(r.j.eksik)) {
+      if ((r.j.code === 'EKSIK' || r.j.code === 'TELEFON') && Array.isArray(r.j.eksik)) {
         const anahtarlar = (r.j.eksik as unknown[]).filter((x): x is string => typeof x === 'string')
         setIsaretli(anahtarlar); setGonderim('eksik')
         if (anahtarlar[0]) setOdak((o) => ({ anahtar: anahtarlar[0], n: (o?.n ?? 0) + 1 }))

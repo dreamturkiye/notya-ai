@@ -13,7 +13,7 @@
  *      listed as an ordinary word.
  *   5. The set belongs to no country: it names no country, no country's system, authority, law or number, and it
  *      makes no claim of compliance, approval, certification or integration.
- *   6. The intake form: 36 core questions and 350 role questions, one set for each of the 40 roles, every key unique.
+ *   6. The intake form: 36 core questions and 354 role questions, one set for each of the 40 roles, every key unique.
  */
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
@@ -130,6 +130,8 @@ const AILE: readonly (readonly [string, RegExp])[] = [
 const KAYIT: Readonly<Record<string, Anlam>> = {
   'notSablonlari.rehab_program|programme': 'scheme',
   'notSablonlari.home_program|programme': 'scheme',
+  'portal.gorunum.hekimBos|practice': 'noun',
+  'portal.gorunum.uyariMetin|practice': 'noun',
 }
 
 describe('English language set: practise / practice, licence / license, metre / meter, programme / program', () => {
@@ -315,12 +317,12 @@ describe('English language set: roles, templates, instructions and the intake fo
     assert.match(kur(18).notGirdisi('en-GB', girdi('general', '1980-01-01')), /^PATIENT: age — 46 years; sex — female\.\n\nTRANSCRIPT OF THE VISIT:\nx$/)
   })
 
-  it('the intake form: 36 core questions, 350 role questions, a set for every role, every key unique', () => {
+  it('the intake form: 36 core questions, 354 role questions, a set for every role, every key unique', () => {
     const f = enHastaFormu({ bicim: 'en-GB', surum: 'test-1' })
     const cekirdek = f.cekirdek.bolumler.flatMap((b) => b.sorular)
     const rol = Object.values(f.roller).flatMap((r) => r.sorular)
     assert.equal(cekirdek.length, 36)
-    assert.equal(rol.length, 350)
+    assert.equal(rol.length, 354)
     assert.deepEqual(Object.keys(f.roller).sort(), [...EN_ROLLER].sort())
     const anahtarlar = [...cekirdek, ...rol].map((q) => q.anahtar)
     assert.equal(new Set(anahtarlar).size, anahtarlar.length)

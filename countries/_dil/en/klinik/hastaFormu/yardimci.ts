@@ -13,7 +13,7 @@ import { enYaz, type EnBicim } from '../../varyant'
 export const MAKINE: FormIncelemesi = { makineYazimi: true, klinisyen: null }
 
 export type HamSecenek = { anahtar: string; ad: string; tek?: boolean }
-type Ek = { zorunlu?: boolean; kime?: 'yetiskin' | 'cocuk'; cinsiyet?: 'female' | 'male'; yardim?: string; veliMetni?: string }
+type Ek = { zorunlu?: boolean; kime?: 'yetiskin' | 'cocuk'; cinsiyet?: 'female' | 'male'; yardim?: string; veliMetni?: string; /** A telephone number (kisa-metin only). */ tel?: boolean }
 export type HamSoru = Ek & {
   anahtar: string
   tur: Soru['tur']
@@ -78,7 +78,7 @@ export function soruyuBicimle(q: HamSoru, bicim: EnBicim): Soru {
   if (q.tur === 'tek-secim' || q.tur === 'cok-secim') return { ...ortak, tur: q.tur, secenekler: (q.secenekler ?? []).map((o): Secenek => ({ anahtar: o.anahtar, ad: m(o.ad), ...(o.tek ? { tek: true } : {}) })) }
   if (q.tur === 'evet-hayir') return { ...ortak, tur: 'evet-hayir', ...(q.ayrinti ? { ayrinti: m(q.ayrinti) } : {}) }
   if (q.tur === 'sayi') return q.olcu ? { ...ortak, tur: 'sayi', olcu: q.olcu } : { ...ortak, tur: 'sayi', birim: m(q.birim ?? ''), enAz: q.enAz ?? 0, enCok: q.enCok ?? 0 }
-  return { ...ortak, tur: q.tur }
+  return q.tur === 'kisa-metin' && q.tel ? { ...ortak, tur: q.tur, tel: true } : { ...ortak, tur: q.tur }
 }
 
 export function bolumuBicimle(b: HamBolum, bicim: EnBicim): FormBolumu {

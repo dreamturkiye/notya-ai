@@ -64,7 +64,7 @@ export const NZ_PAKETI: UlkePaketi = {
   // daylight time. Nearly every account is on the main islands' time.
   saatDilimi: 'Pacific/Auckland',
   bicim: { yerel: 'en-NZ', tarihDeseni: 'DD/MM/YYYY', ondalikAyraci: '.', binlikAyraci: ',', haftaBasi: 1 },
-  telefon: { ulkeOnEki: '+64', ulusalHane: 9, ornek: '+64 2X XXX XXXX', cepGecerliMi: nzCepGecerliMi },
+  telefon: { ulkeOnEki: '+64', ulusalHane: 9, ornek: '+64 21 123 4567', cepGecerliMi: nzCepGecerliMi },
   // THE PATIENT IDENTIFIER: an OPTIONAL FREE-TEXT field, stored encrypted and never validated (`dogrula: false`
   // below). `hane: 0` = no length is assumed. The label ("NHI number") is source-checked wording (./ayarlar.ts).
   // An NHI number holds LETTERS and digits (seven characters, two forms): nothing here may assume digits only.

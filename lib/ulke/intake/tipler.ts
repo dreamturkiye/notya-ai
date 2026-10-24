@@ -69,7 +69,7 @@ type SoruOrtak = {
 
 export type Soru =
   | (SoruOrtak & { tur: 'tek-secim' | 'cok-secim'; secenekler: readonly Secenek[] })
-  | (SoruOrtak & { tur: 'kisa-metin' | 'uzun-metin' })
+  | (SoruOrtak & { tur: 'kisa-metin' | 'uzun-metin'; /** true = a telephone number: checked by the country's one phone rule (lib/telefon/dogrula.ts) and stored as E.164. */ tel?: boolean })
   | (SoruOrtak & { tur: 'evet-hayir'; /** Label of the line asked after "yes". Absent = no detail is asked. */ ayrinti?: BicimliMetin })
   | (SoruOrtak & { tur: 'tarih' })
   | (SoruOrtak & { tur: 'sayi'; /** A measure of the pack's units. */ olcu: Olcu })
@@ -148,6 +148,8 @@ export type FormSorusu = {
   metin: string
   yardim: string | null
   zorunlu: boolean
+  /** true = a telephone number: the field is a phone field and the answer is checked as one. */
+  tel?: boolean
   secenekler: { anahtar: string; ad: string; tek: boolean }[] | null
   /** evet-hayir: label of the detail line, or null where none is asked. */
   ayrinti: string | null

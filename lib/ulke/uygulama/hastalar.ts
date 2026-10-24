@@ -19,6 +19,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { decrypt, encrypt } from '@/lib/security/encryption'
 import { ulkePaketi } from '../ulke'
+import { telefonKaydi, ulkeTelefonu } from '../arayuz/telefon'
 import { ulkeTablosu } from './tablolar'
 
 export type Cinsiyet = 'male' | 'female'
@@ -59,6 +60,8 @@ export function hastaDilleri(): readonly string[] {
 export function hastaGirdisiHatasi(g: HastaGirdisi): keyof HastaGirdisi | null {
   if (g.ad.length < 2) return 'ad'
   if (g.dogumTarihi && !dogumTarihiGecerli(g.dogumTarihi)) return 'dogumTarihi'
+  // The phone is checked by the country's one rule (lib/telefon/dogrula.ts) — here, so every route that records a patient has it.
+  if (g.telefon && !ulkeTelefonu(g.telefon).tamam) return 'telefon'
   if (g.cinsiyet && g.cinsiyet !== 'male' && g.cinsiyet !== 'female') return 'cinsiyet'
   if (!hastaDilleri().includes(g.dil)) return 'dil'
   // NOTYA-ULKE-SABLON-01: the identity number is checked only where the pack says its rule is to be applied
@@ -75,7 +78,7 @@ export function hastaGirdisiHatasi(g: HastaGirdisi): keyof HastaGirdisi | null {
  */
 export function hastaGirdisiniSuz(g: HastaGirdisi): HastaGirdisi {
   const p = ulkePaketi()
-  return { ...g, otaIsmi: p.uygulama?.adAlanlari.ikinciAd ? g.otaIsmi : '', ulusalKimlik: p.ulusalKimlik ? g.ulusalKimlik : '' }
+  return { ...g, telefon: telefonKaydi(g.telefon), otaIsmi: p.uygulama?.adAlanlari.ikinciAd ? g.otaIsmi : '', ulusalKimlik: p.ulusalKimlik ? g.ulusalKimlik : '' }
 }
 
 const coz = (ham: unknown): string => {

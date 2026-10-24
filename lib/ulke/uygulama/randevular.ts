@@ -24,6 +24,7 @@
  * Storage: `ulke_randevulari` (migration 135). The reason is encrypted like the rest of a patient's data.
  */
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { telefonKaydi, ulkeTelefonu } from '../arayuz/telefon'
 import { decrypt, encrypt } from '@/lib/security/encryption'
 import { ulkePaketi } from '../ulke'
 import { calismaDuzeniniOku, mesaiIcinde, sureSecenekleri } from './calismaDuzeni'
@@ -197,8 +198,11 @@ export async function randevuOlustur(supabase: SupabaseClient, doktorId: string,
   if (g.hastaId && !hasta) return ret('NOT_FOUND')
   // Without a record the appointment carries a name; it is stored encrypted, like the reason.
   const serbestAd = (g.serbestAd ?? '').trim().slice(0, SERBEST_AD_AZAMI)
-  const serbestTelefon = (g.serbestTelefon ?? '').trim().slice(0, SERBEST_TELEFON_AZAMI)
+  const serbestTelefonHam = (g.serbestTelefon ?? '').trim().slice(0, SERBEST_TELEFON_AZAMI)
   if (!hasta && !serbestAd) return ret('GECERSIZ', 'ad')
+  // The phone typed with the name is checked by the country's one rule (lib/telefon/dogrula.ts) and stored as E.164.
+  if (!hasta && serbestTelefonHam && !ulkeTelefonu(serbestTelefonHam).tamam) return ret('GECERSIZ', 'telefon')
+  const serbestTelefon = hasta ? '' : telefonKaydi(serbestTelefonHam)
   const dilim = await hesapSaatDilimi(supabase, doktorId)
   const z = zamanCoz(g, simdi, dilim)
   if (!z.tamam) return z

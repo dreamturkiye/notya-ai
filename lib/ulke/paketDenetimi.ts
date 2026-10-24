@@ -57,7 +57,7 @@ function metinleriGez(deger: unknown, yer: string, sorunlar: PaketSorunu[], bosO
 
 /** Sentences of the portal catalogue that carry a value: path → the placeholders they must hold (lib/ulke/arayuz/metinTipleri.ts → PortalMetni). */
 /** The keys of `UygulamaMetni.girdi`: what the kit's own date, time and number fields say. */
-const GIRDI_ANAHTARLARI = ['gun', 'ay', 'yil', 'saat', 'dakika', 'tarihGecersiz', 'saatGecersiz', 'sayiOkunamadi', 'duzelt'] as const
+const GIRDI_ANAHTARLARI = ['gun', 'ay', 'yil', 'saat', 'dakika', 'tarihGecersiz', 'saatGecersiz', 'sayiOkunamadi', 'telefonGerekli', 'telefonKisa', 'telefonUzun', 'telefonHarf', 'telefonGecersiz', 'duzelt'] as const
 
 const PORTAL_YER_TUTUCULARI: readonly (readonly [string, readonly string[]])[] = [
   ['erisim.durumAcik', ['%']], ['erisim.sonGiris', ['%']], ['ozet.dil', ['%']], ['ozet.paylasildi', ['%']], ['istek.istekTarihi', ['%']],
@@ -254,6 +254,7 @@ function kurallar(paket: UlkePaketi, arayuz: UlkeArayuzu | null, klinik: UlkeKli
       // NOTYA-ULKE-DENETIM-01 — the words of the kit's own date, time and number fields (components/ulke/girdi/): every
       // one of them, and the two places for the examples in the sentence that asks for a number to be typed again.
       for (const k of GIRDI_ANAHTARLARI) if ((m.girdi as Record<string, unknown> | undefined)?.[k] === undefined) ekle(`arayuz.metinler[${d}].girdi.${k}`, 'the kit\'s own date, time and number fields have no word for this')
+      for (const k of ['telefonKisa', 'telefonUzun', 'telefonGecersiz'] as const) { const t = m.girdi?.[k]; if (dolu(t) && !eksikMetinMi(t) && !/%1(?!\d)/.test(t)) ekle(`arayuz.metinler[${d}].girdi.${k}`, 'must hold "%1" where the example number is written') }
       { const t = m.girdi?.sayiOkunamadi; if (dolu(t) && !eksikMetinMi(t)) for (const y of ['%1', '%2']) if (!new RegExp(`${y}(?!\\d)`).test(t)) ekle(`arayuz.metinler[${d}].girdi.sayiOkunamadi`, `must hold "${y}" where the example is written`) }
     }
     if (paket.ozellikler.randevu) {

@@ -28,7 +28,7 @@ describe('paediatric long-term conditions', () => {
     const roller = COCUK.filter((r) => Object.prototype.hasOwnProperty.call(ic.roller, r))
     assert.ok(roller.length >= 1, 'the pack has a paediatric role')
     for (const rol of roller) {
-      const q = formSorulari(ic, { rol, veli: true, cinsiyet: '' }).filter((x) => x.tur === 'cok-secim' && x.secenekler.length >= 10 && x.zorunlu)
+      const q: Soru[] = formSorulari(ic, { rol, veli: true, cinsiyet: '' }).filter((x) => x.tur === 'cok-secim' && x.secenekler.length >= 10 && x.zorunlu)
       assert.equal(q.length, 1, rol)
       assert.ok(q[0].tur === 'cok-secim' && q[0].secenekler.length >= 12, 'a child list')
       for (const t of metinler(q[0])) assert.ok(!YETISKIN.test(t), `${rol}: ${t}`)
@@ -42,7 +42,7 @@ describe('paediatric long-term conditions', () => {
     const cekirdek = formSorulari({ ...ic, roller: {} }, { rol: null, veli: true, cinsiyet: '' })
     for (const rol of Object.keys(ic.roller).filter((r) => !COCUK.includes(r))) {
       assert.equal(ic.roller[rol].cekirdekDegisimi, undefined, rol)
-      const a = formBolumleri(ic, { rol, veli: true, cinsiyet: '' }).flatMap((b) => b.sorular).filter((q) => cekirdek.some((c) => c.anahtar === q.anahtar))
+      const a: Soru[] = formBolumleri(ic, { rol, veli: true, cinsiyet: '' }).flatMap((b) => [...b.sorular]).filter((q: Soru) => cekirdek.some((c) => c.anahtar === q.anahtar))
       assert.deepEqual(a.map((q) => JSON.stringify(q)), cekirdek.map((q) => JSON.stringify(q)), rol)
     }
   })

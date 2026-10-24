@@ -21,6 +21,8 @@ import { FotoArsivKarti } from './FotoArsivi'
 import type { DilKodu } from '@/lib/ulke/tipler'
 import { GIRDI_GECERSIZ } from '@/lib/ulke/arayuz/zamanGirdisi'
 import { TarihGirisi } from '../girdi/TarihGirisi'
+import { TelefonGirisi } from '../girdi/TelefonGirisi'
+import { telefonHatasi } from '@/lib/ulke/arayuz/telefon'
 import { Ipucu } from './Ipucu'
 
 /**
@@ -120,7 +122,7 @@ export function Hastalar() {
 
 export type YeniHastaAlanlari = { ad: string; otaIsmi: string; dogumTarihi: string; cinsiyet: 'male' | 'female' | ''; telefon: string; dil: string; ulusalKimlik: string }
 export const BOS_HASTA: YeniHastaAlanlari = { ad: '', otaIsmi: '', dogumTarihi: '', cinsiyet: '', telefon: '', dil: '', ulusalKimlik: '' }
-export type YeniHastaHatasi = 'ad' | 'dogumTarihi' | 'dil' | 'kayit' | 'baglanti' | null
+export type YeniHastaHatasi = 'ad' | 'dogumTarihi' | 'telefon' | 'dil' | 'kayit' | 'baglanti' | null
 
 export function YeniHastaGorunumu({ m, dil, a, set, gonder, bekliyor, hata, telefonOrnek, baslik, iptal }: {
   m: UygulamaMetni; dil: DilKodu; a: YeniHastaAlanlari; set: (a: YeniHastaAlanlari) => void
@@ -156,7 +158,7 @@ export function YeniHastaGorunumu({ m, dil, a, set, gonder, bekliyor, hata, tele
           </div>
           <div className="uza-alan">
             <label className="uza-etiket" htmlFor="uza-h-tel">{y.telefon}</label>
-            <input id="uza-h-tel" className="uza-girdi" type="tel" inputMode="tel" value={a.telefon} onChange={(e) => set({ ...a, telefon: e.target.value })} placeholder={telefonOrnek} autoComplete="off" maxLength={40} />
+            <TelefonGirisi id="uza-h-tel" ad="telefon" deger={a.telefon} degistir={(telefon) => set({ ...a, telefon })} hata={hata === 'telefon' ? telefonHatasi(m.girdi, a.telefon) : null} />
           </div>
         </div>
         <Secim etiket={y.cinsiyet} ad="cinsiyet" deger={a.cinsiyet} sec={(cinsiyet) => set({ ...a, cinsiyet })} secenekler={[{ deger: 'female', ad: y.kadin }, { deger: 'male', ad: y.erkek }]} />
@@ -201,6 +203,7 @@ export function YeniHasta() {
     e.preventDefault()
     if (a.ad.trim().length < 2) { setHata('ad'); return }
     if (!a.dil) { setHata('dil'); return }
+    if (telefonHatasi(u.m.girdi, a.telefon)) { setHata('telefon'); return }
     // A date of birth that is typed and is not a day is never sent as "no date of birth".
     if (a.dogumTarihi === GIRDI_GECERSIZ) { setHata('dogumTarihi'); return }
     setBekliyor(true); setHata(null)
@@ -211,7 +214,7 @@ export function YeniHasta() {
         if (bagla) await u.api('/api/ulke/randevu', { method: 'PATCH', govde: { id: bagla, hastaId: r.j.hasta.id } }).catch(() => null)
         window.location.assign(`${YOL.hasta}?id=${r.j.hasta.id}`); return
       }
-      setHata(r.j.code === 'GECERSIZ' && (r.j.alan === 'ad' || r.j.alan === 'dogumTarihi' || r.j.alan === 'dil') ? r.j.alan : 'kayit')
+      setHata(r.j.code === 'GECERSIZ' && (r.j.alan === 'ad' || r.j.alan === 'dogumTarihi' || r.j.alan === 'telefon' || r.j.alan === 'dil') ? r.j.alan : 'kayit')
     } catch { setHata('baglanti') }
     setBekliyor(false)
   }
@@ -398,12 +401,13 @@ export function HastaDosyasi() {
     if (!veri) return
     if (alanlar.ad.trim().length < 2) { setHata('ad'); return }
     if (!alanlar.dil) { setHata('dil'); return }
+    if (telefonHatasi(u.m.girdi, alanlar.telefon)) { setHata('telefon'); return }
     if (alanlar.dogumTarihi === GIRDI_GECERSIZ) { setHata('dogumTarihi'); return }
     setBekliyor(true); setHata(null)
     try {
       const r = await api(`/api/ulke/hasta?id=${encodeURIComponent(veri.hasta.id)}`, { method: 'PATCH', govde: alanlar })
       if (r.ok && r.j.hasta) { setVeri({ ...veri, hasta: r.j.hasta as HastaKaydi }); setDuzenleme(false); setKaydedildi(true) }
-      else setHata(r.j.code === 'GECERSIZ' && (r.j.alan === 'ad' || r.j.alan === 'dogumTarihi' || r.j.alan === 'dil') ? r.j.alan : 'kayit')
+      else setHata(r.j.code === 'GECERSIZ' && (r.j.alan === 'ad' || r.j.alan === 'dogumTarihi' || r.j.alan === 'telefon' || r.j.alan === 'dil') ? r.j.alan : 'kayit')
     } catch { setHata('baglanti') }
     setBekliyor(false)
   }

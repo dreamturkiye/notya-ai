@@ -85,11 +85,17 @@ export const EN_ROL_SORULARI_2: Readonly<Partial<Record<EnRol, HamRol>>> = {
   paediatrics: {
     baslik: 'About the child',
     sorular: [
-      tek('pe_term', 'When was the child born?', [s('term', 'On time (at term)'), s('early', 'Early'), s('unknown', 'I do not know')]),
-      tek('pe_delivery', 'How was the child born?', [s('vaginal', 'Vaginal birth'), s('caesarean', 'Caesarean section'), s('unknown', 'I do not know')]),
-      kisa('pe_birth_weight', 'Weight at birth, with its unit, as you know it'),
-      olcu('pe_birth_length', 'Length at birth', 'boy'),
-      eh('pe_newborn', 'Were there problems in the first days after birth?', NE),
+      // The same parts, in the same order, as Türkiye's paediatrics form (lib/intake/bransSorulari.ts › pediatri): pregnancy,
+      // weeks, birth weight / length / head, the parents' heights (for the target height), delivery, after the birth.
+      cok('pe_pregnancy', 'Did any of these happen during the pregnancy?', [s('diabetes', 'Diabetes'), s('blood_pressure', 'High blood pressure'), s('early_risk', 'A risk of early birth'), s('infection', 'An infection'), s('multiple', 'A multiple pregnancy (twins or more)'), s('ivf', 'IVF'), s('none', 'No problems')], { zorunlu: true }),
+      tek('pe_weeks', 'How many weeks pregnant was the mother at the birth?', [s('under37', 'Before 37 weeks'), s('w37_38', '37 to 38 weeks'), s('w39', '39 weeks or more'), s('unknown', 'I do not remember')], { zorunlu: true }),
+      olcu('pe_birth_weight', 'Weight at birth', 'agirlik', { zorunlu: true }),
+      olcu('pe_birth_length', 'Length at birth', 'boy', { zorunlu: true }),
+      olcu('pe_head', 'Head circumference at birth, as far as you remember', 'boy'),
+      olcu('pe_mother_height', 'The mother\'s height (optional)', 'boy', { yardim: 'Used to work out the expected adult height. You can leave it empty.' }),
+      olcu('pe_father_height', 'The father\'s height (optional)', 'boy', { yardim: 'Used to work out the expected adult height. You can leave it empty.' }),
+      tek('pe_delivery', 'How was the child born?', [s('vaginal', 'Vaginal birth'), s('caesarean', 'Caesarean section')], { zorunlu: true }),
+      eh('pe_newborn', 'Were there problems in the first days after birth?', 'What happened (for example jaundice treated with light, newborn intensive care, breathing support)?', { zorunlu: true }),
       cok('pe_feeding', 'How is the child fed now?', [s('breast', 'Breast milk'), s('formula', 'Formula milk'), s('weaning', 'Solid food has been started'), s('family', 'Eats with the family')]),
       tek('pe_vaccines', 'Are the child\'s vaccinations up to date (as far as you know)?', EVET_HAYIR_BILMIYORUM(), { yardim: 'Bring the child\'s vaccination record to the visit.' }),
       tek('pe_setting', 'Does the child go to childcare or to school?', [s('home', 'No, at home'), s('nursery', 'Goes to childcare or preschool'), s('school', 'Goes to school')]),

@@ -379,6 +379,12 @@ export type UygulamaMetni = {
      * %1 a whole number and %2 a number with a decimal, both written the pack's own way (examples of what is read).
      */
     readonly sayiOkunamadi: string
+    /** Phone fields (lib/telefon/dogrula.ts). %1 = an example number of the country. */
+    readonly telefonGerekli: string
+    readonly telefonKisa: string
+    readonly telefonUzun: string
+    readonly telefonHarf: string
+    readonly telefonGecersiz: string
     /** Above the buttons of a form that was asked to send while one of its fields holds something that could not be read. */
     readonly duzelt: string
   }

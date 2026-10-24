@@ -165,6 +165,8 @@ export type AcilisIcerigi = {
       gonder: string
       ipucu: string
       eksik: string
+      /** The phone is not a number of the country (lib/telefon/dogrula.ts); %T is replaced by an example. */
+      telefonGecersiz: string
       konu: string
       /** Labels of the lines in the message that the visitor's mail app opens with. */
       satir: { adSoyad: string; kurum: string; telefon: string; uzmanlik: string; mesaj: string }

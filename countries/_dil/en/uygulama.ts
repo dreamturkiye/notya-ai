@@ -332,6 +332,11 @@ export const EN_UYGULAMA_TEMEL: Temel = {
     tarihGecersiz: 'This is not a complete, real date. Check the day, the month and the four-digit year.',
     saatGecersiz: 'This is not a complete time. Fill in every part of it; the minute takes two digits.',
     sayiOkunamadi: 'This number could not be read. Type it again, for example %1 or %2.',
+    telefonGerekli: 'Enter a phone number.',
+    telefonKisa: 'This phone number is too short. Include every digit, for example %1.',
+    telefonUzun: 'This phone number is too long. Check it, for example %1.',
+    telefonHarf: 'A phone number has digits only. You can add spaces, brackets, dashes and a + at the start.',
+    telefonGecersiz: 'This is not a phone number we can use here. Check the number, for example %1.',
     duzelt: 'Something you typed could not be read. Correct the marked fields, or clear them, and try again.',
   },
   // YENI-DOKTOR-UX-2026-10 — in-place tips: what each screen is for and the one next action, in two to four short

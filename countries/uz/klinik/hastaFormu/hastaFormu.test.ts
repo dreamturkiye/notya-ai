@@ -129,7 +129,7 @@ describe('Uzbekistan — the intake form: questions of the core set and of the 4
 
   it('LEAK TEST over every sentence of the form\'s screens, in all three forms: same keys, each form in its own script, same placeholders', () => {
     const [lat, kir, ru] = FORMLAR.map((f) => yaprak(FM.UZ_FORM_METINLERI[f]))
-    assert.equal(lat.length, 30 + 4 + 29 + 3, `the form catalogue has ${lat.length} entries per form`)
+    assert.equal(lat.length, 33 + 4 + 29 + 3, `the form catalogue has ${lat.length} entries per form`)
     assert.deepEqual(kir.map((x) => x[0]), lat.map((x) => x[0])); assert.deepEqual(ru.map((x) => x[0]), lat.map((x) => x[0]))
     for (let i = 0; i < lat.length; i++) {
       const k = lat[i][0]
@@ -228,7 +228,7 @@ describe('Uzbekistan — the intake form: questions of the core set and of the 4
       }
     }
     // 209 until 2026-10-11, then a red-flag box and two depth questions on every set, plus a safety question on psychiatry and psychology
-    assert.equal(toplam, 322, 'the role questions of the 37 sets')
+    assert.equal(toplam, 326, 'the role questions of the 37 sets')
     assert.equal(isaretler.size, 37)
     // A key that is no role any more gets no role section, though a set may still stand under it: the kit asks for a ROLE first.
     for (const k of ['sac-ekimi', 'longevity', 'ergoterapi', 'diyetisyen', 'odyoloji']) assert.equal(setAnahtari(k) !== null && UZ_ROLLER.includes(k), false, k)
@@ -353,7 +353,7 @@ describe('Uzbekistan — the intake form: questions of the core set and of the 4
         n++
       }
     }
-    assert.equal(n, (2 + 4 + 29) * 3, 'the consent sentence and every patient-facing sentence, in three forms')
+    assert.equal(n, (2 + 4 + 32) * 3, 'the consent sentence and every patient-facing sentence, in three forms')
     assert.match(kayit, /countries\/uz\/klinik\/hastaFormu\//)
     assert.match(kayit, /not read by a lawyer/i)
   })

@@ -43,7 +43,7 @@ ingilizcePaketSinamasi({
   labBirimleri: { albuminKreatinin: 'mg/mmol', hemoglobin: 'g/L', kreatinin: 'umol/L', glukoz: 'mmol/L', kolesterol: 'mmol/L', hba1c: 'mmol/mol', crp: 'mg/L', psa: 'ug/L' },
   kidemliHekim: 'specialist',
   // a range reserved for fiction where this job is certain of one; otherwise a shape that is no number (see ./ayarlar.ts)
-  ornekTelefon: /^\+64 2X XXX XXXX$/,
+  ornekTelefon: /^\+64 21 123 4567$/,
   // NOTYA-ULKE-UYGULA-NZ: the country's own role list, and the tools it has beyond the shared set
   rolDegisimi: NZ_ROLLER,
   ekAraclar: NZ_ONAYSIZ_ARACLAR,

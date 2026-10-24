@@ -27,6 +27,8 @@
  * The server answers with codes; every sentence here is the catalogue's (./randevuMetinleri.ts), in the account's form.
  */
 import React, { useEffect, useState, type FormEvent } from 'react'
+import { TelefonGirisi } from '../girdi/TelefonGirisi'
+import { telefonHatasi, telefonNedeniMetni } from '@/lib/ulke/arayuz/telefon'
 import { gunCoz, gunEkle, gunYazDesenle, gunYazYilsiz, haftaGunu, haftaninIlkGunu, saatCoz, saatYazDk } from '@/lib/ulke/uygulama/zaman'
 import { Bilgi, Cerceve, Hata, tarihYaz, useUygulama, YOL, Yukleniyor, type Uygulama } from './Kabuk'
 import { tamAd, type HastaKaydi } from './Hastalar'
@@ -71,7 +73,7 @@ export function randevuHataMetni(m: UygulamaMetni, r: RandevuMetni, kod: string 
   if (!kod) return null
   if (kod === 'DOLU') return r.form.dolu
   if (kod === 'MESAI_DISI') return tasima ? r.randevu.tasiMesaiDisi : r.form.mesaiDisi
-  if (kod === 'GECERSIZ') return alan === 'gun' ? r.form.tarihGecersiz : alan === 'saat' ? r.form.saatGecersiz : alan === 'sure' ? r.form.sureGecersiz : alan === 'ad' ? r.ek.adGerekli : tasima ? r.randevu.degistirilemedi : r.form.kaydedilemedi
+  if (kod === 'GECERSIZ') return alan === 'gun' ? r.form.tarihGecersiz : alan === 'saat' ? r.form.saatGecersiz : alan === 'sure' ? r.form.sureGecersiz : alan === 'ad' ? r.ek.adGerekli : alan === 'telefon' ? '' : tasima ? r.randevu.degistirilemedi : r.form.kaydedilemedi
   if (kod === 'GECIS_YOK') return r.randevu.gecisYok
   if (kod === 'RANDEVU_YOK') return r.randevu.bulunamadi
   if (kod === 'NOT_FOUND') return tasima ? r.randevu.bulunamadi : m.hasta.bulunamadi
@@ -644,7 +646,7 @@ export function RandevuFormuGorunumu({ m, r, hasta, a, set, sureler, gonder, bek
             </div>
             <div className="uza-alan">
               <label className="uza-etiket" htmlFor="uza-rf-tel">{r.ek.telefonAlani}</label>
-              <input id="uza-rf-tel" name="serbestTelefon" type="tel" className="uza-girdi" maxLength={40} value={a.telefon ?? ''} onChange={(e) => set({ telefon: e.target.value })} autoComplete="off" />
+              <TelefonGirisi id="uza-rf-tel" ad="serbestTelefon" deger={a.telefon ?? ''} degistir={(telefon) => set({ telefon })} hata={hata?.alan === 'telefon' ? (telefonHatasi(m.girdi, a.telefon) ?? telefonNedeniMetni(m.girdi, 'gecersiz')) : null} />
             </div>
           </div>
         )}
@@ -767,6 +769,7 @@ function YeniRandevu({ u, r, hastaId, kayitsiz, gunParam, saatParam, q, bolge }:
   async function gonder(yineDe: boolean) {
     if (!a || (!hasta && !kayitsiz)) return
     if (!hasta && !(a.ad ?? '').trim()) { setHata({ kod: 'GECERSIZ', alan: 'ad' }); return }
+    if (!hasta && telefonHatasi(u.m.girdi, a.telefon)) { setHata({ kod: 'GECERSIZ', alan: 'telefon' }); return }
     setBekliyor(true); setHata(null)
     try {
       const kisi = hasta ? { hastaId: hasta.id } : { serbestAd: (a.ad ?? '').trim(), serbestTelefon: (a.telefon ?? '').trim() }
