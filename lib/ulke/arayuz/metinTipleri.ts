@@ -536,6 +536,8 @@ export type UlkeIpucuBolumu =
   | 'klinik'
   | 'onBuro'
   | 'ayarlar'
+  | 'fatura'
+  | 'gizlilik'
 
 /** The words of the kit's own entry fields, in one language form. */
 export type GirdiMetni = UygulamaMetni['girdi']

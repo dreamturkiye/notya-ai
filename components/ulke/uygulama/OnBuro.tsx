@@ -45,12 +45,12 @@ export const onBuroGecisleri = (durum: string): ('geldi' | 'gelmedi' | 'iptal' |
   durum === 'planlandi' ? ['geldi', 'gelmedi', 'iptal'] : durum === 'geldi' ? ['planlandi', 'gelmedi', 'iptal'] : durum === 'gelmedi' ? ['planlandi', 'geldi', 'iptal'] : []
 const gecisAdi = (r: RandevuMetni, d: 'geldi' | 'gelmedi' | 'iptal' | 'planlandi') => (d === 'geldi' ? r.randevu.geldi : d === 'gelmedi' ? r.randevu.gelmedi : d === 'iptal' ? r.randevu.iptalEt : r.randevu.planaAl)
 
-export function HekimSecimiGorunumu({ k, hekimler, hekimId, sec }: { k: KlinikMetni; hekimler: OnBuroHekimi[]; hekimId: string; sec: (id: string) => void }) {
+export function HekimSecimiGorunumu({ k, hekimler, hekimId, sec, ipucu }: { ipucu?: React.ReactNode; k: KlinikMetni; hekimler: OnBuroHekimi[]; hekimId: string; sec: (id: string) => void }) {
   const o = k.onBuro
   const secili = hekimler.find((h) => h.hekimId === hekimId)
   return (
     <section className="uza-kart" data-alan="on-buro-hekim">
-      <h1 className="uza-h1">{o.baslik}</h1>
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}><h1 className="uza-h1">{o.baslik}</h1>{ipucu}</span>
       <p className="uza-aciklama">{o.aciklama}</p>
       {hekimler.length === 0 ? <p className="uza-bos" data-alan="hekim-yok">{o.hekimYok}</p> : (
         <>
@@ -304,10 +304,10 @@ export default function OnBuro() {
   const kotu = bildirim === 'dolu' ? r.form.dolu : bildirim === 'mesai-disi' ? r.form.mesaiDisi : bildirim === 'gecersiz' ? r.form.tarihGecersiz : bildirim === 'gecis-yok' ? r.randevu.gecisYok : bildirim === 'yetki-yok' ? o.yetkiYok : bildirim === 'yapilamadi' ? o.yapilamadi : bildirim === 'kopyalanamadi' ? o.kopyalanamadi : kopuk ? u.m.kabuk.hata : null
   return (
     <Cerceve dil={u.dil} m={u.m} ad={hesap.ad} aktif="onBuro" cikis={u.cikis} onBuro={hesap.onBuro}>
-      <div style={{ display: 'flex', justifyContent: 'flex-end', margin: '0 0 8px' }}><Ipucu m={u.m} bolum="onBuro" /></div>
+      {hekimler === null ? <div style={{ display: 'flex', justifyContent: 'flex-end', margin: '0 0 8px' }}><Ipucu m={u.m} bolum="onBuro" /></div> : null}
       {hekimler === null ? (kopuk ? <Hata>{u.m.kabuk.hata}</Hata> : <p className="uza-bos" role="status">{u.m.kabuk.yukleniyor}</p>) : (
         <>
-          <HekimSecimiGorunumu k={k} hekimler={hekimler} hekimId={hekimId} sec={setHekimId} />
+          <HekimSecimiGorunumu k={k} hekimler={hekimler} hekimId={hekimId} sec={setHekimId} ipucu={<Ipucu m={u.m} bolum="onBuro" />} />
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }} data-alan="on-buro-bildirim"><Bilgi>{iyi}</Bilgi><Hata>{kotu}</Hata></div>
           {secili && randevuYetkisi ? (
             <>

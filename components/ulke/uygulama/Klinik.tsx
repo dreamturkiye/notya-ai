@@ -222,11 +222,11 @@ export function KlinikTakvimGorunumu({ k, r, veri, gun, git, hata }: { k: Klinik
   )
 }
 
-export function KlinikBasligi({ k, klinik }: { k: KlinikMetni; klinik: KlinikGorunumu }) {
+export function KlinikBasligi({ k, klinik, ipucu }: { k: KlinikMetni; klinik: KlinikGorunumu; /** The "?" tip, drawn beside the heading as on the Türkiye pages. */ ipucu?: React.ReactNode }) {
   const c = k.klinik
   return (
     <section className="yg-klinik-baslik" data-alan="klinik-basligi" data-konum={klinik.konum}>
-      <h1 className="yg-klinik-h1">{klinik.ad}</h1>
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}><h1 className="yg-klinik-h1">{klinik.ad}</h1>{ipucu}</span>
       <p className="yg-klinik-alt">{yerine(c.konumunuz, k.konum[klinik.konum])}</p>
       <div className="uza-eylemler">
         {klinik.konum !== 'on-buro' ? <a className="uza-dugme" href={klinikYolu('yetkiler')} data-eylem="yetkileri-ac">{c.yetkilerBaglanti}</a> : null}
@@ -297,7 +297,7 @@ function KlinikAna({ u, veri, yenile }: { u: Uygulama; veri: KlinikVerisi; yenil
   const say = (konum: KlinikKonumu) => klinik.uyeler.filter((u) => u.konum === konum).length
   return (
     <div className="yg-klinik">
-      <KlinikBasligi k={k} klinik={klinik} />
+      <KlinikBasligi k={k} klinik={klinik} ipucu={<Ipucu m={u.m} bolum="klinik" />} />
       <div className="yg-klinik-kpi">
         <div><span>{c.uyeler}</span><strong>{klinik.uyeler.length}</strong></div>
         <div><span>{k.konum.hekim}</span><strong>{say('hekim')}</strong></div>
@@ -347,7 +347,7 @@ export default function Klinik() {
   const altGorunum = veri?.klinik && veri.klinik.konum !== 'on-buro' ? gorunum : 'ana'
   return (
     <Cerceve dil={u.dil} m={u.m} ad={hesap.ad} aktif="klinik" cikis={u.cikis} onBuro={hesap.onBuro}>
-      <div style={{ display: 'flex', justifyContent: 'flex-end', margin: '0 0 8px' }}><Ipucu m={u.m} bolum="klinik" /></div>
+      {veri?.klinik && altGorunum === 'ana' ? null : <div style={{ display: 'flex', justifyContent: 'flex-end', margin: '0 0 8px' }}><Ipucu m={u.m} bolum="klinik" /></div>}
       <Hata>{kopuk ? u.m.kabuk.hata : null}</Hata>
       {!veri ? (kopuk ? null : <p className="uza-bos" role="status">{u.m.kabuk.yukleniyor}</p>) : altGorunum === 'yetkiler' && veri.klinik ? (
         <><p className="uza-ipucu"><a className="uza-baglanti" href={klinikYolu()}>{k.klinik.geri}</a></p><KlinikYetkiler u={u} klinik={veri.klinik} ayarlar={veri.ayarlar} ben={veri.ben} /></>

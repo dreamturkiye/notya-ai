@@ -791,3 +791,6 @@ textarea.uza-hatirlatma { min-height: 0; margin-top: 8px; }
 .uza-ipucu + .uza-kart, .uza-bilgi-kutu + .uza-kart { margin-top: 16px; }
 .uza-ipucu + .uza-ipucu { margin-top: 6px; }
 fieldset.uza-alan { display: flex; flex-direction: column; gap: 10px; }
+.yg-klinik-baslik .uza-eylemler { margin-bottom: 16px; }
+.uza-aciklama + .uza-alan, .uza-aciklama + .uza-form { margin-top: 14px; }
+.uza-alan + .uza-lista-baslik, .uza-alan + h2.uza-h2 { margin-top: 16px; }
