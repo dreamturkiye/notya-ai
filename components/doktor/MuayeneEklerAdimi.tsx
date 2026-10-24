@@ -200,7 +200,12 @@ function Ic({ sessionId, patientId, transcript, pediatrik, hata, onDevam }: Prop
   const kuyrukRef = useRef<Promise<void>>(Promise.resolve())
   const ekle = useCallback((dosyalar: File[], kaynak: Oge["kaynak"], ipucu: EkTuru | null = null) => {
     const liste = dosyalar.slice(0, 12)
-    kuyrukRef.current = kuyrukRef.current.then(() => havuz(liste.map((f) => () => islemeAl(f, kaynak, ipucu)), ESZAMANLI, () => false))
+    kuyrukRef.current = kuyrukRef.current.then(() => havuz(liste.map((f) => async () => {
+      try { await islemeAl(f, kaynak, ipucu) } catch {
+        // a thrown upload/classification must never leave the item 'loading' forever (it would block or silently drop the document)
+        setOgeler((l) => l.map((o) => (o.durum === "yukleniyor" || o.durum === "siniflaniyor") && o.ad === (f.name || "belge") ? { ...o, durum: "yukleme_hata" as Durum, hata: "Yüklenemedi — yeniden deneyin." } : o))
+      }
+    }), ESZAMANLI, () => false))
   }, [islemeAl])
 
   async function turSec(o: Oge, tur: EkTuru) {
@@ -273,7 +278,15 @@ function Ic({ sessionId, patientId, transcript, pediatrik, hata, onDevam }: Prop
     atlaRef.current = false
     setCalisiyor(true); setBildirim("")
     try {
-      await Promise.all(Array.from(ucuslar.current.values())) // auto-started evaluations finish first (no duplicates)
+      // Uploads and classification still in flight must finish first: otherwise those documents have no type yet,
+      // are left out of the report and the note is written without their evaluation (race seen 2026-10-23).
+      for (let tur = 0; tur < 6; tur++) {
+        await kuyrukRef.current.catch(() => undefined)
+        await Promise.all(Array.from(ucuslar.current.values())) // auto-started evaluations finish first (no duplicates)
+        if (atlaRef.current) break
+        const bekleyen = ogelerRef.current.some((o) => o.durum === "yukleniyor" || o.durum === "siniflaniyor")
+        if (!bekleyen && ucuslar.current.size === 0) break
+      }
       const isler = ogelerRef.current
         .filter((o) => o.belgeId && o.tur && o.durum !== "tur_sor" && o.durum !== "tamam" && o.durum !== "atlandi" && o.durum !== "degerlendiriliyor" && o.durum !== "maskeleniyor")
         .map((o) => () => degerlendirOge(o.key))
