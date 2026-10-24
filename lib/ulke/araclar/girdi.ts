@@ -59,7 +59,10 @@ export function girdiyiCoz(alanlar: readonly AracAlani[], ham: HamGirdi, o: Biri
     if (a.tur === 'tarih') { g[a.anahtar] = typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : null; continue }
     if (a.tur === 'metin') { const t = typeof v === 'string' ? v.trim().slice(0, METIN_UZUNLUGU) : ''; g[a.anahtar] = t || null; continue }
     const okuma = sayiCozKuralla(v, o.sayi)
-    const n = okuma.tamam ? okuma.sayi : NaN
+    let n = okuma.tamam ? okuma.sayi : NaN
+    // A HEIGHT TYPED IN METRES (Türkiye's parseBoyGirdi reads "1.65" as 165 cm): in a pack that works in centimetres no
+    // person is below 3 cm, so a number between 0 and 3 can only be metres — unambiguous, never a guess.
+    if (a.olcu === 'boy' && o.birimler.boy === 'cm' && Number.isFinite(n) && n > 0 && n < 3) n = Math.round(n * 1000) / 10
     // The unit the doctor chose, where the pack accepts several for this quantity; otherwise the pack's one unit.
     const secilen = ham[birimAnahtari(a.anahtar)]
     // A NUMBER WITHOUT ITS UNIT IS NOT A VALUE: nothing is assumed for the doctor.
