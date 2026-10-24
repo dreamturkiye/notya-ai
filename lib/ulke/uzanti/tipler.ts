@@ -83,6 +83,8 @@ export type GizlilikMetni = {
     hata: string
     bekleyenVar: string
     durumlar: Readonly<Record<'yeni' | 'islemde' | 'tamamlandi' | 'reddedildi', string>>
+    /** AU-LAUNCH-01: label above the practitioner's response, shown to the patient once the request is answered or declined. */
+    yanitBaslik: string
   }
   doktor: {
     baslik: string
@@ -97,6 +99,9 @@ export type GizlilikMetni = {
     reddet: string
     yanit: string
     yanitIpucu: string
+    /** AU-LAUNCH-01: the button that downloads the patient's data as one JSON file (APP 12). */
+    disaAktar: string
+    disaAktarIpucu: string
     kaydet: string
     rizaBaslik: string
     rizaBos: string

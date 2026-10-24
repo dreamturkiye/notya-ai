@@ -38,7 +38,7 @@ export function EkNot(): ReactNode {
 }
 
 type Riza = { surum: string; verildiAt: string } | null
-type Talep = { id: string; tur: 'erisim' | 'duzeltme'; durum: 'yeni' | 'islemde' | 'tamamlandi' | 'reddedildi'; sonTarih: string }
+type Talep = { id: string; tur: 'erisim' | 'duzeltme'; durum: 'yeni' | 'islemde' | 'tamamlandi' | 'reddedildi'; sonTarih: string; yanit?: string }
 
 export function PortalGizlilikKarti({ iste, oturumBitti }: { iste: PortalIstegi; oturumBitti: () => void }) {
   const g = ulkePaketi().uzanti?.gizlilik
@@ -131,7 +131,7 @@ export function PortalGizlilikKarti({ iste, oturumBitti }: { iste: PortalIstegi;
       {talepBilgi ? <div role="status" className="uza-bilgi-kutu">{talepBilgi}</div> : null}
       {talepler.length ? (
         <ul className="uza-liste" data-alan="talep-listesi">
-          {talepler.map((t) => <li key={t.id}><div className="uza-satir"><span className="uza-liste-ad">{t.tur === 'erisim' ? g.talep.erisim : g.talep.duzeltme}<span className="uza-liste-alt">{g.talep.durumlar[t.durum]} · {yerine(g.talep.sonTarih, tarihYaz(t.sonTarih))}</span></span></div></li>)}
+          {talepler.map((t) => <li key={t.id}><div className="uza-satir"><span className="uza-liste-ad">{t.tur === 'erisim' ? g.talep.erisim : g.talep.duzeltme}<span className="uza-liste-alt">{g.talep.durumlar[t.durum]} · {yerine(g.talep.sonTarih, tarihYaz(t.sonTarih))}</span>{(t.durum === 'tamamlandi' || t.durum === 'reddedildi') && t.yanit ? <span className="uza-liste-alt" data-alan="talep-yanit"><strong>{g.talep.yanitBaslik}:</strong> {t.yanit}</span> : null}</span></div></li>)}
         </ul>
       ) : null}
     </section>
