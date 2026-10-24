@@ -232,6 +232,10 @@ export type UygulamaMetni = {
   readonly not: {
     readonly baslik: string
     readonly uyari: string
+    /** AU-LAUNCH-01 (optional, English packs): label of the line that shows when and under which wording the recording consent was given. */
+    readonly rizaKaydi?: string
+    /** AU-LAUNCH-01 (optional, English packs): the provenance line on an APPROVED note (AI draft, practitioner approval). */
+    readonly onayliKaynak?: string
     readonly s: string
     readonly o: string
     readonly a: string

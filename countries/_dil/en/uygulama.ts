@@ -212,7 +212,9 @@ export const EN_UYGULAMA_TEMEL: Temel = {
   },
   not: {
     baslik: 'Visit note',
-    uyari: 'This note was drafted by artificial intelligence. Read it and correct it where needed before you approve it.',
+    uyari: 'This note was drafted by artificial intelligence. It is a draft, not part of the patient record, until you have read it, corrected it where needed and approved it. You remain responsible for its content.',
+    rizaKaydi: 'Recording consent',
+    onayliKaynak: 'Drafted by artificial intelligence from the recording; read, edited as needed and approved by the practitioner.',
     s: 'History and presenting complaint',
     o: 'Examination',
     a: 'Assessment',

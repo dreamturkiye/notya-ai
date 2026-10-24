@@ -149,7 +149,7 @@ describe('au: what is Australia\'s', () => {
     assert.equal(A.birimler['ug/L'][D], 'µg/L')
     assert.equal(A.birimler['ug/L/yil'][D], 'µg/L per year')
     assert.ok(!('ng/mL' in A.birimler), 'no tool shows ng/mL here')
-    assert.equal(AU_KLINIK.riza.surum, 'au-draft-2026-10-22')
+    assert.equal(AU_KLINIK.riza.surum, 'au-draft-2026-10-24')
     assert.equal(AU_ARAYUZ.metinler[D]!.muayene.riza, AU_GIRDI.sozler.kayitRizasi)
   })
 })

@@ -109,11 +109,12 @@ export function NotGorunumu({ m, not, aktifDil, setAktifDil, icerik, setIcerik, 
           {/* NOTYA-UZ-BRANSLAR-01: the assistant of the template the visit was recorded with — not of whatever role the account has today. */}
           {not.onayli ? null : <><dt>{m.asistan.qoralama}</dt><dd data-alan="asistan-ad">{asistanAdi(m, v.sablon)}</dd></>}
           {not.onayli && not.onayTarihi ? <><dt>{m.durum.onayli}</dt><dd>{tarihYaz(not.onayTarihi)} {saatYaz(not.onayTarihi)}</dd></> : null}
+          {n.rizaKaydi && v.rizaAt ? <><dt>{n.rizaKaydi}</dt><dd data-alan="riza-kaydi">{tarihYaz(v.rizaAt)} {saatYaz(v.rizaAt)}{v.rizaSurumu ? ` · ${v.rizaSurumu}` : ''}</dd></> : null}
         </dl>
         <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 8 }}>
           {/* Low confidence of the recording: the doctor is asked, in plain words, to check the note carefully. */}
           <KonusmaBildirimleri m={m} k={v.konusma} />
-          {not.onayli ? null : <p className="uza-ipucu" data-bildirim="yapay-zeka">{n.uyari}</p>}
+          {not.onayli ? (n.onayliKaynak ? <p className="uza-ipucu" data-bildirim="yapay-zeka-onayli">{n.onayliKaynak}</p> : null) : <p className="uza-ipucu" data-bildirim="yapay-zeka">{n.uyari}</p>}
         </div>
       </section>
 
@@ -261,7 +262,7 @@ export function Not({ u, notId }: { u: Uygulama; notId: string }) {
       {/* NOTYA-ULKE-EKLER-01: documents added after the note was written — read, and merged into the Examination section of
           this DRAFT in one write. What the server saved is merged into the text still being edited, so the doctor's own
           unsaved changes survive (blocks already on the screen are left alone). An approved note offers nothing. */}
-      {!not.onayli ? (
+      {!not.onayli && ozellikAcik('goruntuDegerlendirme') ? (
         <EklerNotKarti m={u.m} api={api} notId={not.notId} seansId={not.seansId} hastaAdi={not.muayene.hasta ? tamAd(not.muayene.hasta) : ''}
           onEklendi={(o) => setMetinler((eski) => { const t = eski[not.dil] ?? not.icerik; return { ...eski, [not.dil]: { ...t, o: bloklariAktar(o, t.o) } } })} />
       ) : null}
