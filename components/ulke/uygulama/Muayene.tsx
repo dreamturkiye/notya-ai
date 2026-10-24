@@ -35,7 +35,7 @@ import { EklerAdimi } from './Ekler'
 import type { EkGonderimi } from '@/lib/ulke/belgeler/ekler'
 import { ozellikAcik } from '@/lib/ulke/ulke'
 import { Ipucu } from './Ipucu'
-import { SeansSayfasi, SeansKarti, SeansBanner, SeansEtiketi, SeansBaslatDugmesi, SeansAyirac, SeansYuklemeKutusu } from '@/components/doktor/SeansKurulumu'
+import { SeansSayfasi, SeansKarti, SeansBanner, SeansEtiketi, SeansBaslatDugmesi, SeansAyirac, SeansYuklemeKutusu, SeansKayitKarti, SeansEylemSatiri, SeansIsleniyorKarti } from '@/components/doktor/SeansKurulumu'
 import { gunBasligi, muayeneBaslatilabilir, takvimYolu, type RandevuKaydi } from './randevuOrtak'
 import { metninDili, randevuMetni, rolAdi, genelSablon, sablonMu, type UygulamaMetni } from '@/lib/ulke/arayuz'
 
@@ -74,7 +74,8 @@ export function konusmaDiliAdi(m: UygulamaMetni, k: KonusmaOzeti | null): string
 /** NOTYA-ULKE-INTAKE-01: true = the country has the intake form (which needs the portal). */
 const formAcik = (): boolean => ozellikAcik('hastaPortali') && ozellikAcik('hastaFormu')
 
-const sureYaz = (sn: number) => `${String(Math.floor(sn / 60)).padStart(2, '0')}:${String(sn % 60).padStart(2, '0')}`
+// Türkiye's timer form (m:ss), so the recording card reads the same.
+const sureYaz = (sn: number) => `${Math.floor(sn / 60)}:${String(sn % 60).padStart(2, '0')}`
 
 // ───────────────────────── choose the patient ─────────────────────────
 
@@ -134,51 +135,59 @@ export function KayitGorunumu({ m, hasta, sablon, riza, setRiza, durum, sure, ha
   const v = m.muayene
   const geriHref = randevu ? takvimYolu({ randevu: randevu.id }) : `${YOL.hasta}?id=${hasta.id}`
   const hata = muayeneHataMetni(m, hataKodu)
+  const gizliBaslik = (
+    <>
+      <h1 style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0 0 0 0)' }}>{tamAd(hasta)}</h1>
+      <p style={{ display: 'none' }} data-alan="asistan">{m.asistan.qayd}: <span data-alan="asistan-ad">{asistanAdi(m, rol)}</span></p>
+    </>
+  )
+  const ust = (
+    <>
+      <SeansBanner metin={tamAd(hasta)} alt={`${m.asistan.qayd}: ${asistanAdi(m, rol)}`} />
+      {gizliBaslik}
+      {randevu ? <p style={{ margin: '0 0 14px', fontSize: 13, color: '#8b7d70' }} data-alan="randevu">{randevuMetni(metninDili(m)).randevu.baslik}: {gunBasligi(randevuMetni(metninDili(m)), randevu.gun)} · {saatGoster(randevu.saat)}</p> : null}
+    </>
+  )
   // Türkiye's "new visit" screen (app/session/new, step setup): its page, header row, cream card, banner, big dark button and
   // dashed boxes are drawn by components/doktor/SeansKurulumu.tsx. Every sentence here is the catalogue's.
   return (
     <SeansSayfasi geri={m.kabuk.geri} geriHref={geriHref} baslik={v.baslik} ipucu={<Ipucu m={m} bolum="muayene" />} genis={false}>
+      {durum === 'hazir' ? (
       <SeansKarti>
-        <SeansBanner metin={tamAd(hasta)} alt={`${m.asistan.qayd}: ${asistanAdi(m, rol)}`} />
-        <h1 style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0 0 0 0)' }}>{tamAd(hasta)}</h1>
-        <p style={{ display: 'none' }} data-alan="asistan">{m.asistan.qayd}: <span data-alan="asistan-ad">{asistanAdi(m, rol)}</span></p>
-        {randevu ? <p style={{ margin: '0 0 14px', fontSize: 13, color: '#8b7d70' }} data-alan="randevu">{randevuMetni(metninDili(m)).randevu.baslik}: {gunBasligi(randevuMetni(metninDili(m)), randevu.gun)} · {saatGoster(randevu.saat)}</p> : null}
-        {durum === 'hazir' ? (
-          <div>
-            <SeansEtiketi>{v.sablon}</SeansEtiketi>
-            <dl className="uza-seans-sablon" style={{ margin: '0 0 18px', fontSize: 14, color: '#3b2e24' }}><style>{'.uza-seans-sablon dd{margin:0}'}</style><dd data-alan="sablon">{sablonAdi(m, sablon)}</dd></dl>
-            <label className="uza-onay" style={{ display: 'flex', gap: 10, alignItems: 'flex-start', fontSize: 13.5, color: '#3b2e24', lineHeight: 1.45, marginBottom: 16 }}>
-              <input type="checkbox" name="riza" checked={riza} onChange={(e) => setRiza(e.target.checked)} />
-              <span>{v.riza}</span>
-            </label>
-            <Hata>{hata}</Hata>
-            <SeansBaslatDugmesi onClick={baslat} disabled={!riza}>{'\u{1F399}\uFE0F'} {v.kayitBaslat}</SeansBaslatDugmesi>
-            {riza ? null : <p className="uza-ipucu" id="uza-riza-ipucu" style={{ textAlign: 'center' }}>{v.rizaGerekli}</p>}
-            {dosyaSec ? (
-              <div data-alan="ses-dosyasi" data-yazdirma-gizle>
-                <SeansAyirac>{v.yada}</SeansAyirac>
-                <SeansYuklemeKutusu id="uza-ses-dosyasi" etiket={v.sesDosyasi} accept="audio/*" disabled={!riza || durum !== 'hazir'} onDosya={dosyaSec} />
-                <p className="uza-ipucu" style={{ textAlign: 'center' }}>{v.sesDosyasiIzoh}</p>
-              </div>
-            ) : null}
-          </div>
-        ) : durum === 'kayit' ? (
-          <div role="status" style={{ textAlign: 'center' }}>
-            <div style={{ width: 64, height: 64, background: '#FEE2E2', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px', fontSize: 28 }}>{'\u{1F399}\uFE0F'}</div>
-            <div style={{ fontSize: 32, fontWeight: 600, color: '#3b2e24', fontFamily: 'monospace', marginBottom: 4 }} aria-live="off">{sureYaz(sure)}</div>
-            <p style={{ fontSize: 13, color: '#8b7d70', margin: '0 0 18px' }}><span className="uza-nabiz" aria-hidden="true" />{v.kaydediliyor}</p>
-            <div style={{ display: 'flex', gap: 10 }}>
-              <button type="button" onClick={vazgec} style={{ flex: 1, padding: 14, background: '#F1F5F9', color: '#3b2e24', border: 'none', borderRadius: 10, fontSize: 14, cursor: 'pointer' }}>{v.vazgec}</button>
-              <button type="button" onClick={durdur} style={{ flex: 2, padding: 14, background: '#DC2626', color: '#fff', border: 'none', borderRadius: 10, fontSize: 15, fontWeight: 600, cursor: 'pointer' }}>{'\u23F9'} {v.kayitDurdur}</button>
+        {ust}
+        <div>
+          <SeansEtiketi>{v.sablon}</SeansEtiketi>
+          <dl className="uza-seans-sablon" style={{ margin: '0 0 18px', fontSize: 14, color: '#3b2e24' }}><style>{'.uza-seans-sablon dd{margin:0}'}</style><dd data-alan="sablon">{sablonAdi(m, sablon)}</dd></dl>
+          <label className="uza-onay" style={{ display: 'flex', gap: 10, alignItems: 'flex-start', fontSize: 13.5, color: '#3b2e24', lineHeight: 1.45, marginBottom: 16 }}>
+            <input type="checkbox" name="riza" checked={riza} onChange={(e) => setRiza(e.target.checked)} />
+            <span>{v.riza}</span>
+          </label>
+          <Hata>{hata}</Hata>
+          <SeansBaslatDugmesi onClick={baslat} disabled={!riza}>{'\u{1F399}\uFE0F'} {v.kayitBaslat}</SeansBaslatDugmesi>
+          {riza ? null : <p className="uza-ipucu" id="uza-riza-ipucu" style={{ textAlign: 'center' }}>{v.rizaGerekli}</p>}
+          {dosyaSec ? (
+            <div data-alan="ses-dosyasi" data-yazdirma-gizle>
+              <SeansAyirac>{v.yada}</SeansAyirac>
+              <SeansYuklemeKutusu id="uza-ses-dosyasi" etiket={v.sesDosyasi} accept="audio/*" disabled={!riza || durum !== 'hazir'} onDosya={dosyaSec} />
+              <p className="uza-ipucu" style={{ textAlign: 'center' }}>{v.sesDosyasiIzoh}</p>
             </div>
-          </div>
-        ) : (
-          <div role="status" style={{ textAlign: 'center', padding: '24px 0' }}>
-            <div style={{ fontSize: 48, marginBottom: 16 }}>{'\u2699\uFE0F'}</div>
-            <div style={{ fontSize: 16, fontWeight: 600, color: '#3b2e24' }}>{durum === 'yukleniyor' ? v.yukleniyor : v.isleniyor}</div>
-          </div>
-        )}
+          ) : null}
+        </div>
       </SeansKarti>
+      ) : durum === 'kayit' ? (
+        <div role="status">
+          {/* Türkiye's recording card (components/doktor/SeansKurulumu.tsx): icon disc, timer, status line, cancel / finish row. */}
+          <SeansKayitKarti aktif sure={sureYaz(sure)} ust={ust}
+            durum={<><span className="uza-nabiz" aria-hidden="true" />{v.kaydediliyor}</>}>
+            <SeansEylemSatiri vazgecMetni={v.vazgec} onVazgec={vazgec} bitirMetni={<>{'\u23F9'} {v.kayitDurdur}</>} onBitir={durdur} />
+          </SeansKayitKarti>
+        </div>
+      ) : (
+        <>
+          {gizliBaslik}
+          <SeansIsleniyorKarti rol="status" baslik={durum === 'yukleniyor' ? v.yukleniyor : v.isleniyor} />
+        </>
+      )}
       {children ? <div style={{ marginTop: 16 }}>{children}</div> : null}
     </SeansSayfasi>
   )

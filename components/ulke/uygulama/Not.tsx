@@ -29,6 +29,8 @@ import { asistanAdi } from './Asistan'
 import { dilAdi, temelDil, metninDili, sablonAlanlari, alanTanimi, alanAdi, bolumAdi, NOT_BOLUMLERI, sablonMetni, type UygulamaMetni, type NotBolumu } from '@/lib/ulke/arayuz'
 import { ozellikAcik, ulkePaketi } from '@/lib/ulke/ulke'
 import { DosyaEk } from './DosyaEk'
+import GeriLink from '@/components/navigasyon/GeriLink'
+import { NotUstCubugu, NotBaslikKuyrugu, NotPil, NotAnaDugme, NotDuzeni, NotAlani, NotYazi, NotOkunurKutu, NOT_ETIKET } from '@/components/doktor/NotDuzenGorunumu'
 import { PortalOzetKarti } from './PortalOzeti'
 import { HastaFormuKarti } from './HastaFormuKarti'
 import { SablonSecici, useSablonlar } from './Sablonlarim'
@@ -92,45 +94,63 @@ export function NotGorunumu({ m, not, aktifDil, setAktifDil, icerik, setIcerik, 
   const ekranDili = metninDili(m)
   const alanlar = notAlanlari(not)
   const bolumBasligi = (b: NotBolumu) => bolumAdi(v.sablon, b, ekranDili) ?? n[b]
+  const geriYol = v.hasta ? `${YOL.hasta}?id=${v.hasta.id}` : YOL.bugun
+  const adi = v.hasta ? tamAd(v.hasta) : m.bugun.hastasiz
+  // Türkiye's note page (components/doktor/NotDuzenGorunumu.tsx): the sticky bar with the back link, name, status pill and
+  // actions; then ONE column of labelled boxes. Every sentence below is the catalogue's.
   return (
     <>
-      <section className="uza-kart">
-        <p className="uza-ust-yazi">{n.baslik} · {tarihYaz(v.baslangic)} {saatYaz(v.baslangic)}</p>
-        <div className="uza-baslik-satiri">
-          <h1 className="uza-h1">{v.hasta ? tamAd(v.hasta) : m.bugun.hastasiz}</h1>
-          <span className="uza-rozet" data-durum={not.onayli ? 'onayli' : 'taslak'}>{not.onayli ? m.durum.onayli : m.durum.taslak}</span>
-        </div>
-        <dl className="uza-bilgiler">
-          <dt>{m.muayene.sablon}</dt><dd>{sablonAdi(m, v.sablon)}</dd>
-          {dil ? <><dt>{m.muayene.taninanDil}</dt><dd>{dil}</dd></> : null}
-          <dt>{n.notDili}</dt><dd>{notDiliAdi(m, not.onayli ? not.dil : aktifDil)}</dd>
-          {/* NOTYA-UZ-BRANSLAR-01: the assistant of the template the visit was recorded with — not of whatever role the account has today. */}
-          {not.onayli ? null : <><dt>{m.asistan.qoralama}</dt><dd data-alan="asistan-ad">{asistanAdi(m, v.sablon)}</dd></>}
-          {not.onayli && not.onayTarihi ? <><dt>{m.durum.onayli}</dt><dd>{tarihYaz(not.onayTarihi)} {saatYaz(not.onayTarihi)}</dd></> : null}
-        </dl>
-        <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {/* Low confidence of the recording: the doctor is asked, in plain words, to check the note carefully. */}
-          <KonusmaBildirimleri m={m} k={v.konusma} />
-          {not.onayli ? null : <p className="uza-ipucu" data-bildirim="yapay-zeka">{n.uyari}</p>}
-        </div>
-      </section>
+      <NotUstCubugu
+        geri={<GeriLink href={geriYol}>{'←'} {n.dosyayaDon}</GeriLink>}
+        baslik={<><span data-alan="hasta-ad">{adi}</span> <NotBaslikKuyrugu>· {n.baslik} · {sablonAdi(m, v.sablon)} · {tarihYaz(v.baslangic)} {saatYaz(v.baslangic)}</NotBaslikKuyrugu></>}
+        onayli={not.onayli}
+        rozet={<span data-durum={not.onayli ? 'onayli' : 'taslak'}>{not.onayli ? m.durum.onayli : m.durum.taslak}</span>}
+        eylemler={not.onayli ? null : (
+          <>
+            {not.yenidenYazilabilir ? (
+              <NotPil disabled={mesgul} onClick={yenidenYaz} veri={{ 'data-eylem': 'yeniden-yaz' }}>
+                {islem === 'cevriliyor' ? n.cevriliyor : n.cevir[temelDil(not.yenidenYazilabilir)] ?? ''}
+              </NotPil>
+            ) : null}
+            <NotPil disabled={mesgul} onClick={kaydet} veri={{ 'data-eylem': 'kaydet' }}>{n.kaydet}</NotPil>
+            <NotAnaDugme tur="submit" disabled={mesgul} veri={{ form: 'uza-not-form', 'data-eylem': 'onayla' }}>{islem === 'onaylaniyor' ? n.onaylaniyor : n.onayla}</NotAnaDugme>
+          </>
+        )}
+      />
 
-      <section className="uza-kart" data-alan="not">
+      <NotDuzeni>
+        <div>
+          <dl className="uza-bilgiler" style={{ marginTop: 0 }}>
+            <dt>{m.muayene.sablon}</dt><dd>{sablonAdi(m, v.sablon)}</dd>
+            {dil ? <><dt>{m.muayene.taninanDil}</dt><dd>{dil}</dd></> : null}
+            <dt>{n.notDili}</dt><dd>{notDiliAdi(m, not.onayli ? not.dil : aktifDil)}</dd>
+            {/* NOTYA-UZ-BRANSLAR-01: the assistant of the template the visit was recorded with — not of whatever role the account has today. */}
+            {not.onayli ? null : <><dt>{m.asistan.qoralama}</dt><dd data-alan="asistan-ad">{asistanAdi(m, v.sablon)}</dd></>}
+            {not.onayli && not.onayTarihi ? <><dt>{m.durum.onayli}</dt><dd>{tarihYaz(not.onayTarihi)} {saatYaz(not.onayTarihi)}</dd></> : null}
+          </dl>
+          <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {/* Low confidence of the recording: the doctor is asked, in plain words, to check the note carefully. */}
+            <KonusmaBildirimleri m={m} k={v.konusma} />
+            {not.onayli ? null : <p className="uza-ipucu" data-bildirim="yapay-zeka">{n.uyari}</p>}
+          </div>
+        </div>
+
         {not.onayli ? (
-          BOLUMLER.map((b) => (
-            <div className="uza-not-bolum" key={b}>
-              <h2 className="uza-h2">{bolumBasligi(b)}</h2>
-              <p className="uza-not-metin" data-bolum={b}>{not.icerik[b]}</p>
-              {alanlar[b].filter((k) => (not.icerik.alanlar?.[k] ?? '').trim()).map((k) => (
-                <div className="uza-alt-alan" key={k} data-alan-anahtar={k}>
-                  <h3 className="uza-alt-baslik">{alanAdi(k, ekranDili)}</h3>
-                  <p className="uza-not-metin">{not.icerik.alanlar?.[k]}</p>
-                </div>
-              ))}
-            </div>
-          ))
+          <div data-alan="not" style={{ display: 'grid', gap: 16 }}>
+            {BOLUMLER.map((b) => (
+              <NotAlani key={b} etiket={bolumBasligi(b)}>
+                <NotOkunurKutu data-bolum={b}>{not.icerik[b]}</NotOkunurKutu>
+                {alanlar[b].filter((k) => (not.icerik.alanlar?.[k] ?? '').trim()).map((k) => (
+                  <div key={k} data-alan-anahtar={k} style={{ marginTop: 10 }}>
+                    <div style={NOT_ETIKET}>{alanAdi(k, ekranDili)}</div>
+                    <NotOkunurKutu>{not.icerik.alanlar?.[k]}</NotOkunurKutu>
+                  </div>
+                ))}
+              </NotAlani>
+            ))}
+          </div>
         ) : (
-          <form className="uza-form" style={{ marginTop: 0 }} onSubmit={(e) => { e.preventDefault(); onayla() }}>
+          <form id="uza-not-form" data-alan="not" style={{ display: 'grid', gap: 16 }} onSubmit={(e) => { e.preventDefault(); onayla() }}>
             {taslaklar.length > 1 ? (
               <div>
                 <Secim etiket={n.notDili} ad="taslak-dili" deger={aktifDil} sec={setAktifDil} secenekler={taslaklar.map((d) => ({ deger: d, ad: notDiliAdi(m, d) }))} />
@@ -138,41 +158,28 @@ export function NotGorunumu({ m, not, aktifDil, setAktifDil, icerik, setIcerik, 
               </div>
             ) : null}
             {BOLUMLER.map((b) => (
-              <div className="uza-alan" key={b}>
-                <label className="uza-etiket" htmlFor={`uza-not-${b}`}>{bolumBasligi(b)}</label>
-                <textarea id={`uza-not-${b}`} name={b} className="uza-girdi" lang={aktifDil} value={icerik[b]} onChange={(e) => setIcerik({ ...icerik, [b]: e.target.value })} disabled={mesgul} />
+              <NotAlani key={b} etiket={<label htmlFor={`uza-not-${b}`}>{bolumBasligi(b)}</label>}>
+                <NotYazi id={`uza-not-${b}`} name={b} lang={aktifDil} rows={Math.max(4, Math.min(18, Math.ceil((icerik[b] || '').length / 95)))} value={icerik[b]} onChange={(e) => setIcerik({ ...icerik, [b]: e.target.value })} disabled={mesgul} />
                 {sablonEki ? sablonEki(b, mesgul) : null}
                 {alanlar[b].map((k) => (
-                  <div className="uza-alt-alan" key={k} data-alan-anahtar={k}>
-                    <label className="uza-etiket uza-alt-etiket" htmlFor={`uza-alan-${k}`}>{alanAdi(k, ekranDili)}</label>
-                    <textarea id={`uza-alan-${k}`} name={`alan-${k}`} className="uza-girdi uza-alt-girdi" rows={2} lang={aktifDil} value={icerik.alanlar?.[k] ?? ''} onChange={(e) => setIcerik({ ...icerik, alanlar: { ...(icerik.alanlar ?? {}), [k]: e.target.value } })} disabled={mesgul} />
+                  <div key={k} data-alan-anahtar={k} style={{ marginTop: 10 }}>
+                    <div style={NOT_ETIKET}><label htmlFor={`uza-alan-${k}`}>{alanAdi(k, ekranDili)}</label></div>
+                    <NotYazi id={`uza-alan-${k}`} name={`alan-${k}`} rows={2} lang={aktifDil} value={icerik.alanlar?.[k] ?? ''} onChange={(e) => setIcerik({ ...icerik, alanlar: { ...(icerik.alanlar ?? {}), [k]: e.target.value } })} disabled={mesgul} />
                   </div>
                 ))}
-              </div>
+              </NotAlani>
             ))}
-            <Hata>{kotu}</Hata>
-            <Bilgi>{iyi}</Bilgi>
-            <div className="uza-eylemler" style={{ marginTop: 0 }}>
-              <button type="submit" className="uza-dugme" disabled={mesgul} data-eylem="onayla">{islem === 'onaylaniyor' ? n.onaylaniyor : n.onayla}</button>
-              <button type="button" className="uza-dugme uza-dugme-cizgi" disabled={mesgul} onClick={kaydet} data-eylem="kaydet">{n.kaydet}</button>
-              {not.yenidenYazilabilir ? (
-                <button type="button" className="uza-dugme uza-dugme-cizgi" disabled={mesgul} onClick={yenidenYaz} data-eylem="yeniden-yaz">
-                  {islem === 'cevriliyor' ? n.cevriliyor : n.cevir[temelDil(not.yenidenYazilabilir)] ?? ''}
-                </button>
-              ) : null}
-            </div>
           </form>
         )}
-        {not.onayli ? <div style={{ marginTop: 16 }}><Bilgi>{iyi}</Bilgi></div> : null}
-        {v.hasta ? <p className="uza-ipucu" style={{ marginTop: 16 }}><a className="uza-baglanti" href={`${YOL.hasta}?id=${v.hasta.id}`}>{n.dosyayaDon}</a></p> : null}
-      </section>
 
-      <section className="uza-kart">
+        <Hata>{kotu}</Hata>
+        <Bilgi>{iyi}</Bilgi>
+
         <details className="uza-transkript" style={{ marginTop: 0 }}>
           <summary>{n.transkript}</summary>
           <p data-alan="transkript">{v.metin}</p>
         </details>
-      </section>
+      </NotDuzeni>
     </>
   )
 }
