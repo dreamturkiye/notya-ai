@@ -75,6 +75,7 @@ export const EN_RANDEVU_TEMEL: RandevuMetni = {
     tamamla: 'Mark as completed',
     gelmedi: 'Patient did not attend',
     iptalEt: 'Cancel the appointment',
+    aktifEt: 'Reactivate',
     planaAl: 'Return to booked',
     geldiyeAl: 'Undo completed',
     muayeneyiAc: 'Open the visit',
