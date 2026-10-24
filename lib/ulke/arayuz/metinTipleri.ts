@@ -71,6 +71,12 @@ export type UygulamaMetni = {
     /** Says the value is optional, stored on the account, and not checked. Machine-written until a clinician or a lawyer reads it. */
     readonly meslekKaydiIzoh: string
     readonly meslekKaydiGecersiz: string
+    /** The account row: the sign-in email and a password change. Optional: a pack without it shows no row. */
+    readonly hesap?: {
+      readonly baslik: string; readonly alt: string; readonly eposta: string; readonly yeniSifre: string; readonly tekrar: string
+      readonly ipucu: string; readonly kisa: string; readonly eslesmiyor: string; readonly degistir: string; readonly degisiyor: string
+      readonly tamam: string; readonly hata: string
+    }
   }
   readonly arama: {
     readonly etiket: string

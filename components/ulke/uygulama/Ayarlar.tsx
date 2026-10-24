@@ -109,6 +109,38 @@ export function SaatDilimiGorunumu({ m, dilim, dilimler, sec, gonder, bekliyor, 
   )
 }
 
+
+/** The account row: the sign-in email and a password change. Drawn only where the pack carries the words. */
+export function HesapSifreGorunumu({ m, eposta, yeni, tekrar, setYeni, setTekrar, gonder, bekliyor, sonuc }: {
+  m: UygulamaMetni; eposta: string; yeni: string; tekrar: string; setYeni: (v: string) => void; setTekrar: (v: string) => void
+  gonder: () => void; bekliyor: boolean; sonuc: 'tamam' | 'hata' | 'kisa' | 'eslesmiyor' | null
+}) {
+  const h = m.ayarlar.hesap
+  if (!h) return null
+  return (
+    <AyarSatiri emoji={'\u{1F511}'} ad={h.baslik} alt={h.alt} alan="hesap">
+      <form className="uza-form" onSubmit={(e) => { e.preventDefault(); gonder() }}>
+        <div className="uza-alan">
+          <label className="uza-etiket" htmlFor="uza-hesap-eposta">{h.eposta}</label>
+          <input id="uza-hesap-eposta" className="uza-girdi" value={eposta} readOnly data-alan="hesap-eposta" />
+        </div>
+        <div className="uza-alan">
+          <label className="uza-etiket" htmlFor="uza-hesap-yeni">{h.yeniSifre}</label>
+          <input id="uza-hesap-yeni" name="yeniSifre" type="password" className="uza-girdi" value={yeni} onChange={(e) => setYeni(e.target.value)} autoComplete="new-password" minLength={8} maxLength={72} />
+        </div>
+        <div className="uza-alan">
+          <label className="uza-etiket" htmlFor="uza-hesap-tekrar">{h.tekrar}</label>
+          <input id="uza-hesap-tekrar" name="tekrar" type="password" className="uza-girdi" value={tekrar} onChange={(e) => setTekrar(e.target.value)} autoComplete="new-password" minLength={8} maxLength={72} />
+        </div>
+        <p className="uza-ipucu">{h.ipucu}</p>
+        <Hata>{sonuc === 'hata' ? h.hata : sonuc === 'kisa' ? h.kisa : sonuc === 'eslesmiyor' ? h.eslesmiyor : null}</Hata>
+        <Bilgi>{sonuc === 'tamam' ? h.tamam : null}</Bilgi>
+        <button type="submit" className="uza-dugme" disabled={bekliyor} data-eylem="sifre-degistir">{bekliyor ? h.degisiyor : h.degistir}</button>
+      </form>
+    </AyarSatiri>
+  )
+}
+
 /** Optional professional registration. Not checked against a register. */
 export function MeslekKaydiGorunumu({ m, deger, set, gonder, bekliyor, sonuc }: {
   m: UygulamaMetni; deger: string; set: (v: string) => void; gonder: () => void; bekliyor: boolean; sonuc: 'tamam' | 'hata' | 'gecersiz' | null
@@ -162,6 +194,24 @@ export default function Ayarlar() {
       if (r.ok) { u.hesabiGuncelle({ dil: arayuzDili, notDili }); setSonuc('tamam') } else setSonuc('hata')
     } catch { setSonuc('hata') }
     setBekliyor(false)
+  }
+
+  const [eposta, setEposta] = useState('')
+  const [sifre, setSifre] = useState('')
+  const [sifre2, setSifre2] = useState('')
+  const [sifreBekliyor, setSifreBekliyor] = useState(false)
+  const [sifreSonucu, setSifreSonucu] = useState<'tamam' | 'hata' | 'kisa' | 'eslesmiyor' | null>(null)
+  useEffect(() => { if (!u.hesap?.dil) return; void u.api('/api/ulke/hesap/sifre').then((r) => { if (r.ok && typeof r.j.eposta === 'string') setEposta(r.j.eposta) }).catch(() => undefined) }, [u.hesap?.dil])
+
+  async function sifreGonder() {
+    if (sifre.length < 8) { setSifreSonucu('kisa'); return }
+    if (sifre !== sifre2) { setSifreSonucu('eslesmiyor'); return }
+    setSifreBekliyor(true); setSifreSonucu(null)
+    try {
+      const r = await u.api('/api/ulke/hesap/sifre', { method: 'POST', govde: { yeniSifre: sifre } })
+      if (r.ok) { setSifre(''); setSifre2(''); setSifreSonucu('tamam') } else setSifreSonucu('hata')
+    } catch { setSifreSonucu('hata') }
+    setSifreBekliyor(false)
   }
 
   async function dilimGonder() {
@@ -222,6 +272,7 @@ export default function Ayarlar() {
           {dilSecimiVarMi() ? <AyarlarGorunumu kart m={u.m} d={d} set={(yeni) => { setD(yeni); setSonuc(null) }} gonder={gonder} bekliyor={bekliyor} sonuc={sonuc} /> : null}
           {u.hesap.saatDilimleri && u.hesap.saatDilimleri.length > 1 ? <SaatDilimiGorunumu m={u.m} dilim={dilim} dilimler={u.hesap.saatDilimleri} sec={(z) => { setDilim(z); setDilimSonucu(null) }} gonder={dilimGonder} bekliyor={dilimBekliyor} sonuc={dilimSonucu} /> : null}
           {roller().length ? <RolAyariGorunumu m={u.m} rol={rol} kayitliRol={u.hesap.rol} api={u.api} setRol={(r) => { setRol(r); setRolSonucu(null) }} gonder={rolGonder} bekliyor={rolBekliyor} sonuc={rolSonucu} /> : null}
+          <HesapSifreGorunumu m={u.m} eposta={eposta} yeni={sifre} tekrar={sifre2} setYeni={(v) => { setSifre(v); setSifreSonucu(null) }} setTekrar={(v) => { setSifre2(v); setSifreSonucu(null) }} gonder={sifreGonder} bekliyor={sifreBekliyor} sonuc={sifreSonucu} />
           <MuayenehaneKarti u={u} />
           {ulkePaketi().uzanti?.muayenehane?.meslekKaydiTasi ? null : <MeslekKaydiGorunumu m={u.m} deger={meslek} set={(v) => { setMeslek(v); setMeslekSonucu(null) }} gonder={meslekGonder} bekliyor={meslekBekliyor} sonuc={meslekSonucu} />}
           {pano && ozellikAcik('fotoArsivi') ? (

@@ -69,6 +69,11 @@ export const EN_UYGULAMA_TEMEL: Temel = {
     kaydedilemedi: 'Could not save. Please try again.',
     meslekKaydiIzoh: 'Optional. Stored on this account. Not checked against a register.',
     meslekKaydiGecersiz: 'Use 2–40 letters, digits, spaces, full stops or hyphens.',
+    hesap: {
+      baslik: 'Account', alt: 'Your sign-in email and password', eposta: 'Email', yeniSifre: 'New password', tekrar: 'Repeat the new password',
+      ipucu: 'At least 8 characters.', kisa: 'The password must have at least 8 characters.', eslesmiyor: 'The two passwords do not match.',
+      degistir: 'Change password', degisiyor: 'Changing…', tamam: 'Password changed.', hata: 'The password could not be changed. Please try again.',
+    },
   },
   arama: {
     etiket: 'Find a patient',

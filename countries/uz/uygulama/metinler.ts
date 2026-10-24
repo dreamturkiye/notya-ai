@@ -65,6 +65,11 @@ const UZ_LATN: UygulamaMetni = {
     meslekKaydi: 'Kasbiy guvohnoma raqami',
     meslekKaydiIzoh: 'Ixtiyoriy. Hisobda saqlanadi va hech qanday reestrga solishtirilmaydi. Bu matnni shifokor ham, huquqshunos ham koʻrib chiqmagan.',
     meslekKaydiGecersiz: '2–40 belgi: harf, raqam, boʻsh joy, nuqta yoki chiziqcha.',
+    hesap: {
+      baslik: 'Hisob', alt: 'Kirish uchun email va parol', eposta: 'Email', yeniSifre: 'Yangi parol', tekrar: 'Yangi parolni takrorlang',
+      ipucu: 'Kamida 8 ta belgi.', kisa: 'Parol kamida 8 ta belgidan iborat boʻlishi kerak.', eslesmiyor: 'Ikki parol mos kelmadi.', degistir: 'Parolni oʻzgartirish', degisiyor: 'Oʻzgartirilmoqda…',
+      tamam: 'Parol oʻzgartirildi.', hata: 'Parolni oʻzgartirib boʻlmadi. Qayta urinib koʻring.',
+    },
   },
   arama: {
     etiket: 'Bemorni qidirish',
@@ -434,6 +439,11 @@ const UZ_CYRL: UygulamaMetni = {
     meslekKaydi: 'Касбий гувоҳнома рақами',
     meslekKaydiIzoh: 'Ихтиёрий. Ҳисобда сақланади ва ҳеч қандай реестрга солиштирилмайди. Бу матнни шифокор ҳам, ҳуқуқшунос ҳам кўриб чиқмаган.',
     meslekKaydiGecersiz: '2–40 белги: ҳарф, рақам, бўш жой, нуқта ёки чизиқча.',
+    hesap: {
+      baslik: 'Ҳисоб', alt: 'Кириш учун email ва парол', eposta: 'Email', yeniSifre: 'Янги парол', tekrar: 'Янги паролни такрорланг',
+      ipucu: 'Камида 8 та белги.', kisa: 'Парол камида 8 та белгидан иборат бўлиши керак.', eslesmiyor: 'Икки парол мос келмади.', degistir: 'Паролни ўзгартириш', degisiyor: 'Ўзгартирилмоқда…',
+      tamam: 'Парол ўзгартирилди.', hata: 'Паролни ўзгартириб бўлмади. Қайта уриниб кўринг.',
+    },
   },
   arama: {
     etiket: 'Беморни қидириш',
@@ -799,6 +809,11 @@ const RU: UygulamaMetni = {
     meslekKaydi: 'Номер профессиональной лицензии',
     meslekKaydiIzoh: 'Необязательно. Хранится в учётной записи и ни с каким реестром не сверяется. Этот текст не читали ни врач, ни юрист.',
     meslekKaydiGecersiz: 'От 2 до 40 знаков: буквы, цифры, пробел, точка или дефис.',
+    hesap: {
+      baslik: 'Аккаунт', alt: 'Email и пароль для входа', eposta: 'Email', yeniSifre: 'Новый пароль', tekrar: 'Повторите новый пароль',
+      ipucu: 'Не менее 8 символов.', kisa: 'Пароль должен содержать не менее 8 символов.', eslesmiyor: 'Пароли не совпадают.', degistir: 'Сменить пароль', degisiyor: 'Меняем…',
+      tamam: 'Пароль изменён.', hata: 'Не удалось сменить пароль. Попробуйте ещё раз.',
+    },
   },
   arama: {
     etiket: 'Поиск пациента',
