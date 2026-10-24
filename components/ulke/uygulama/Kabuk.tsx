@@ -21,10 +21,11 @@ import { ulkeIstemciSupabase } from '@/lib/ulke/istemciSupabase'
 import { UYGULAMA_EKRANLARI, type UygulamaEkrani } from '@/lib/ulke/tipler'
 import { ulkeYolu } from '@/lib/ulke/yol'
 import { useBitki } from './bitki'
+import { aracYolu } from './aracOrtak'
 import { HEKIM_MESAJ_API } from '@/lib/ulke/mesaj/sabitler'
 import KabukGorunumu, { type KabukOge } from '@/components/doktor/KabukGorunumu'
 import { CHROME_FONT, CHROME_FONT_HREF, CHROME_RENK as R } from '@/lib/doktor/chromeRenk'
-import { araclarMetni, asistanSesAdlari, klinikMetni, marka, metninDili, randevuMetni, roller, rolMu, uygulamaDili, uygulamaMetni, type UygulamaMetni } from '@/lib/ulke/arayuz'
+import { arayuz, araclarMetni, asistanSesAdlari, klinikMetni, marka, metninDili, randevuMetni, roller, rolMu, uygulamaDili, uygulamaMetni, type UygulamaMetni } from '@/lib/ulke/arayuz'
 import { hesapSaatDilimi, hesapSaatDilimiAyarla, saatBicimi } from '@/lib/ulke/arayuz/bicim'
 import { ozellikAcik, ulkePaketi } from '@/lib/ulke/ulke'
 import type { DilKodu } from '@/lib/ulke/tipler'
@@ -157,7 +158,7 @@ export function useUygulama(ekran: UygulamaEkrani): Uygulama {
   '--uza-uyari': R.warn, '--uza-cizgi': R.border, '--uza-altin': R.gold, '--uza-nav': R.nav, '--uza-serif': CHROME_FONT.serif, '--uza-sans': CHROME_FONT.sans,
 } as CSSProperties
 
-export type Sekme = 'bugun' | 'takvim' | 'hastalar' | 'araclar' | 'klinik' | 'onBuro' | 'ayarlar' | 'fatura' | 'gizlilikTalepleri' | 'asistan' | 'mesajlar' | 'hesabim'
+export type Sekme = 'bugun' | 'takvim' | 'hastalar' | 'araclar' | 'klinik' | 'onBuro' | 'ayarlar' | 'fatura' | 'gizlilikTalepleri' | 'asistan' | 'mesajlar' | 'hesabim' | 'raporlar'
 
 /** The clock (in the account's zone) and, when the browser shares a place, the weather: the same two values the Türkiye chrome shows. */
 function useSaatHava() {
@@ -264,6 +265,8 @@ function KabukCercevesi({ dil, m, ad, unvan, aktif, cikis, onBuro, kompakt, chil
   const git = (yol: string) => { window.location.assign(yol) }
   const mesajRozeti = useMesajRozeti(!onBuro && ozellikAcik('hastaMesajlari'))
   const avatarUrl = useAvatar(Boolean(m.ayarlar.hesap))
+  // The payer entry opens the country's payer tool (AU: the Medicare number check); a country without one draws no dead entry.
+  const medicareAraci = ozellikAcik('araclar') ? arayuz().araclar?.araclar?.find((a) => /medicare/i.test(a.anahtar))?.anahtar ?? null : null
   const oge = (id: Sekme | 'mesaj' | 'rapor' | 'odeme', label: string, ikon: string, href: string | null, aktifMi?: boolean): KabukOge => (
     { id: String(id), label, ikon, aktif: aktifMi ?? aktif === id, ...(href ? { href } : { pasif: true, isaret: String(id) }) }
   )
@@ -287,7 +290,8 @@ function KabukCercevesi({ dil, m, ad, unvan, aktif, cikis, onBuro, kompakt, chil
       ...(p && ozellikAcik('hastaMesajlari') ? [{ ...oge('mesajlar', p.mesajlar, 'mesajlar', YOL.mesajlar), ...(mesajRozeti > 0 ? { rozet: mesajRozeti } : {}) }] : []),
     ]
     diger = [
-      ...(p ? [oge('rapor', p.raporlar, 'raporlar', null, false), oge('odeme', p.odeme, 'belge', null, false)] : []),
+      ...(p && m.rapor && ozellikAcik('cekirdekMuayene') ? [oge('raporlar', p.raporlar, 'raporlar', YOL.raporlar)] : []),
+      ...(p && medicareAraci ? [oge('odeme', p.odeme, 'belge', aracYolu(medicareAraci), false)] : []),
       ...(ozellikAcik('araclar') ? [oge('araclar', araclarMetni(dil).kabuk.araclar, 'araclar', YOL.araclar)] : []),
       ...(ozellikAcik('klinikHesaplari') ? [oge('klinik', klinikMetni(dil).kabuk.klinik, 'hastalar', YOL.klinik)] : []),
       ...(ulkePaketi().uzanti?.fatura ? [oge('fatura', ulkePaketi().uzanti!.fatura!.metin.baslik, 'belge', YOL.fatura)] : []),

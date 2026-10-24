@@ -120,7 +120,7 @@ export function ulkeTablosu(supabase: SupabaseClient, ad: UlkeTablosu) {
   const ulke = aktifUlke()
   return {
     // The column list is typed as '*' only so that the rows stay untyped, as with a literal list on an untyped client.
-    select: (kolonlar: string) => supabase.from(ad).select(kolonlar as '*').eq(ULKE_KOLONU, ulke),
+    select: (kolonlar: string, secenek?: { count?: 'exact'; head?: boolean }) => supabase.from(ad).select(kolonlar as '*', secenek).eq(ULKE_KOLONU, ulke),
     insert: (satir: Satir) => supabase.from(ad).insert(damgala(satir, ulke)),
     upsert: (satir: Satir, secenek: { onConflict: string }) => supabase.from(ad).upsert(damgala(satir, ulke), secenek),
     update: (degerler: Satir) => supabase.from(ad).update(damgasiz(degerler)).eq(ULKE_KOLONU, ulke),

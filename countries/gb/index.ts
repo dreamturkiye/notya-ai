@@ -70,7 +70,7 @@ export const GB_PAKETI: UlkePaketi = {
   araclar: [],
   // The ONLY paths that exist in this country's deployment; every other path answers 404 in the middleware.
   rotalar: {
-    sayfalar: ['/', '/for-clinics', '/login', '/signup', '/welcome', '/start', '/today', '/settings', '/account', '/patients', '/patients/new', '/messages', '/patient', '/visit', '/calendar', '/portal', '/tools', '/medical', '/clinic', '/desk', '/privacy', '/terms', '/cookies', '/data-request', '/accessibility', '/medical-disclaimer', '/security', '/refund', '/copyright', '/demo'],    apiOnEkleri: ['/api/ulke/'],
+    sayfalar: ['/', '/for-clinics', '/login', '/signup', '/welcome', '/start', '/today', '/settings', '/account', '/reports', '/patients', '/patients/new', '/messages', '/patient', '/visit', '/calendar', '/portal', '/tools', '/medical', '/clinic', '/desk', '/privacy', '/terms', '/cookies', '/data-request', '/accessibility', '/medical-disclaimer', '/security', '/refund', '/copyright', '/demo'],    apiOnEkleri: ['/api/ulke/'],
   },
   // The country's code is `gb`; the path it is served under is /uk.
   yolOnEki: '/uk',

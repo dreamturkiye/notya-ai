@@ -52,6 +52,29 @@ export type UygulamaMetni = {
     readonly kaydediliyor: string
     readonly kaydedilemedi: string
   }
+  /** The practice reports screen (Türkiye: Raporlar). Optional: a pack without it draws no reports page. */
+  readonly rapor?: {
+    readonly baslik: string
+    readonly alt: string
+    readonly geri: string
+    readonly hasta: string
+    readonly hastaAlt: string
+    readonly yeniAy: string
+    readonly muayene: string
+    readonly muayeneAlt: string
+    readonly buHafta: string
+    readonly buAy: string
+    readonly toplam: string
+    readonly notlar: string
+    readonly onayli: string
+    readonly bekleyen: string
+    readonly randevu: string
+    readonly randevuAlt: string
+    readonly tamamlanan: string
+    readonly iptal: string
+    readonly hata: string
+    readonly yukleniyor: string
+  }
   readonly ayarlar: {
     /** Time zone of the account. REQUIRED where the pack lists more than one zone; not read otherwise. */
     readonly saatDilimi?: string

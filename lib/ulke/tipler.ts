@@ -480,6 +480,8 @@ export const UYGULAMA_EKRANLARI = {
   mesajlar: '/messages',
   /** The account page (Türkiye: Hesabım): profile photo, sign-in email, password. */
   hesabim: '/account',
+  /** The practice reports (Türkiye: Raporlar): patients, visits, notes and appointments, counted for the signed-in doctor. */
+  raporlar: '/reports',
 } as const
 export type UygulamaEkrani = keyof typeof UYGULAMA_EKRANLARI
 
