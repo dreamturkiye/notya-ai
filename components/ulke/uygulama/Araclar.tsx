@@ -48,6 +48,7 @@ import { aracYolu, araclarYolu, birimOrtami, yazici } from './aracOrtak'
 import { AracKayitKarti, TakipPaneli, useAracHastasi, useAracKaydi, type AracHastasi } from './AracKayitlari'
 import { Sablonlarim } from './Sablonlarim'
 import { Konsultasyonlar } from './Konsultasyonlar'
+import { HedefBoyKarti } from './HedefBoyKarti'
 import { AracKabugu, AracIkiKolon, SonucSayisi, ulkeAracStil } from './AracKabugu'
 import { SayiGirisi } from '../girdi/SayiGirisi'
 import { TarihGirisi } from '../girdi/TarihGirisi'
@@ -260,6 +261,7 @@ export function AracGorunumu({ x, a, dil, notDili, icerik, ham, degistir, temizl
   // THE LIVE RESULT PANEL: always there, beside the form; until the fields are valid it holds one quiet line.
   const panel = (
     <>
+      {x.tanim.anahtar === 'hedef-boy' ? <div data-bolum="manken" style={{ marginBottom: 14 }}><HedefBoyKarti a={a} y={y} o={o} cinsiyet={g.cinsiyet} anne={g.anne} baba={g.baba} sayilar={sonuc.tamam ? sonuc.sayilar : null} /></div> : null}
       <section className="uza-kart" data-bolum="sonuc" aria-live="polite">
         <h2 className="uza-h2">{a.arac.sonuc}</h2>
         {!sonuc.tamam ? <p className="uza-ipucu" data-sonuc="eksik" style={{ fontSize: 14, margin: 0 }}>{a.arac.eksik}</p> : (

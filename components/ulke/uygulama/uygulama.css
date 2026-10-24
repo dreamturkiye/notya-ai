@@ -882,3 +882,16 @@ fieldset.uza-alan { display: flex; flex-direction: column; gap: 10px; }
 .yg-dosya-sekmeler { display: flex; flex-wrap: wrap; gap: 6px; margin: 16px 0 12px; padding-bottom: 2px; }
 .yg-dosya-sekme { flex-shrink: 0; padding: 8px 16px; background: #fff; border: 1px solid rgba(58, 44, 34, 0.1); color: inherit; font-weight: 500; border-radius: 999px; font-size: 13px; cursor: pointer; white-space: nowrap; }
 .yg-dosya-sekme[data-aktif='evet'] { background: var(--uza-cam); border-color: var(--uza-cam); color: #FAF8F4; font-weight: 700; }
+
+/* ───────── SHELL-PARITY-02 — the patient file's panels wear Türkiye's panel look ─────────
+   Türkiye's patient-file panels (components/doktor/Hasta*.tsx) are white 16px cards with the soft shadow, a 15px bold
+   section label, cream (#F6F0E4) 12px inner blocks and 1.5px-bordered inputs. Same tokens, no new colours. */
+.uza [role='tabpanel'] .uza-kart { background: #fff; border: 1px solid var(--uza-cizgi); border-radius: 16px; padding: 18px 16px; margin-bottom: 14px; box-shadow: 0 8px 18px rgba(58, 44, 34, 0.045); }
+.uza [role='tabpanel'] .uza-h2 { font-family: var(--uza-sans); font-size: 15px; font-weight: 700; letter-spacing: 0; margin-bottom: 8px; color: var(--uza-murekkep); }
+.uza [role='tabpanel'] .uza-aciklama, .uza [role='tabpanel'] .uza-ipucu { font-size: 13px; color: var(--uza-soluk); line-height: 1.5; }
+.uza [role='tabpanel'] .uza-girdi { border: 1.5px solid var(--uza-cizgi); border-radius: 12px; background: #fff; min-height: 44px; }
+.uza [role='tabpanel'] .uza-dugme { border-radius: 12px; font-weight: 700; font-size: 14px; }
+.uza [role='tabpanel'] ol.uza-liste, .uza [role='tabpanel'] ul.uza-liste { display: flex; flex-direction: column; gap: 8px; list-style: none; padding: 0; margin: 10px 0 0; }
+.uza [role='tabpanel'] .uza-liste > li { display: flex; align-items: center; gap: 10px; background: #F6F0E4; border: 0; border-radius: 12px; padding: 10px 12px; }
+.uza [role='tabpanel'] .uza-liste .uza-liste-ad { font-size: 14px; font-weight: 600; color: var(--uza-murekkep); }
+.uza [role='tabpanel'] .uza-liste .uza-liste-alt { display: block; font-size: 12px; font-weight: 400; color: var(--uza-soluk); margin-top: 2px; }

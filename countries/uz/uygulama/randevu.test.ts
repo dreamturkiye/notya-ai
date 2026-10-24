@@ -402,8 +402,13 @@ describe('Uzbekistan appointments: booking, moving, status', () => {
     assert.equal(satirlar().find((s) => s.id === id)!.durum, 'gelmedi')
     // Cancelled is final and frees the time.
     assert.equal(await durum('iptal'), 'iptal')
-    for (const d of ['planlandi', 'geldi', 'tamamlandi', 'gelmedi', 'iptal']) assert.equal(await durum(d), 'GECIS_YOK', d)
+    for (const d of ['geldi', 'tamamlandi', 'gelmedi', 'iptal']) assert.equal(await durum(d), 'GECIS_YOK', d)
+    // …except back to planned ("reactivate"): while its time belongs to another appointment the answer is "taken".
+    assert.equal(await durum('planlandi'), 'DOLU')
     assert.equal(await durum('iptal', yerine.j.randevu.id), 'iptal')
+    // The time is free again: the cancelled appointment can be reactivated, and cancelled once more.
+    assert.equal(await durum('planlandi'), 'planlandi')
+    assert.equal(await durum('iptal'), 'iptal')
     assert.equal((await al('jeton-a', { hastaId: h1, gun: yaz(PAZARTESI), saat: '10:00', sureDk: 30 })).s, 200)
     // A status that does not exist, and an id that does not.
     assert.deepEqual(await degistir('jeton-a', { id, durum: 'kechikdi' }), { s: 400, j: { code: 'GECERSIZ', alan: 'durum' } })
@@ -964,7 +969,7 @@ describe('Uzbekistan appointments: text, reminder and screens in the three forms
       // The visit screen, started from an appointment: it says which one, and "back" leads to it.
       const kayit = cerceve(f, 'bugun', React.createElement(Muayene.KayitGorunumu, { m, hasta: HASTA, sablon: 'pediatri', riza: false, setRiza: bos, durum: 'hazir', sure: 0, hataKodu: null, baslat: bos, durdur: bos, vazgec: bos, rol: 'pediatri', randevu: { id: 'r3', gun: PZT, saat: '11:00' } }))
       assert.ok(gorunurMetin(kayit).includes(`${r.randevu.baslik}: ${r.gunUzun[1]}, 12.10.2026 · 11:00`)); assert.ok(kayit.includes(href('/uzbek/calendar?randevu=r3')))
-      assert.match(kayit, /<button type="button" class="uza-dugme" disabled="">/, 'consent still blocks recording')
+      assert.match(kayit, /<button type="button" disabled=""/, 'consent still blocks recording')
       ekranTemiz(kayit, `/visit from an appointment (${f})`)
       const duz = cerceve(f, 'bugun', React.createElement(Muayene.KayitGorunumu, { m, hasta: HASTA, sablon: 'pediatri', riza: false, setRiza: bos, durum: 'hazir', sure: 0, hataKodu: null, baslat: bos, durdur: bos, vazgec: bos, rol: 'pediatri' }))
       assert.ok(!duz.includes('data-alan="randevu"') && duz.includes(href(`/uzbek/patient?id=${HASTA.id}`)))

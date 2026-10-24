@@ -206,6 +206,7 @@ export const EN_UYGULAMA_TEMEL: Temel = {
     hastaSec: 'Choose a patient first.',
     sesDosyasi: 'Upload an existing recording',
     sesDosyasiIzoh: 'An audio file you already have, up to 25 MB. The same consent applies. A clinician has not read this wording.',
+    yada: 'or',
     sesBuyuk: 'The file is too large. The limit is 25 MB.',
     sesTur: 'Choose an audio file.',
   },

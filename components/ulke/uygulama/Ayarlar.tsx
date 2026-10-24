@@ -92,7 +92,7 @@ export function SaatDilimiGorunumu({ m, dilim, dilimler, sec, gonder, bekliyor, 
   m: UygulamaMetni; dilim: string; dilimler: readonly string[]; sec: (d: string) => void; gonder: () => void; bekliyor: boolean; sonuc: 'tamam' | 'hata' | null
 }) {
   return (
-    <AyarSatiri emoji={'\u{1F550}'} ad={m.ayarlar.saatDilimi} alan="saat-dilimi">
+    <AyarSatiri emoji={'\u{1F550}'} ad={m.ayarlar.saatDilimi ?? ''} alan="saat-dilimi">
       <form className="uza-form" onSubmit={(e) => { e.preventDefault(); gonder() }}>
         <div className="uza-alan">
           <label className="uza-etiket" htmlFor="uza-saat-dilimi">{m.ayarlar.saatDilimi}</label>
