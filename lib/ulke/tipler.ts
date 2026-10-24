@@ -650,6 +650,12 @@ export type CanliAsistanAyarlari = {
   kaynakBlogu: (rol: string) => string | null
   /** Turns (spoken or written exchanges) one account may have per day of the country. */
   gunlukTurLimiti: number
+  /**
+   * AU-LAUNCH-01 — OPT-IN SWITCH. Name of an environment variable that must hold "1" or "true" before the assistant is
+   * offered at all (screen, connection, typed turn, landing line). Absent = no such switch. Used where a clinical Q&A
+   * assistant needs regulatory advice first (Australia: TGA software-as-a-medical-device boundary): OFF until the owner sets it.
+   */
+  acikDegiskeni?: string
   /** Words the speech layer says for what the screen shows. */
   ekranSozleri: {
     /** "3 items, on your screen." — `n` is the count. */

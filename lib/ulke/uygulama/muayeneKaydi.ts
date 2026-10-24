@@ -62,6 +62,9 @@ export type MuayeneDetayi = {
   notId: string | null
   notDurumu: 'taslak' | 'onayli' | 'notsuz'
   konusma: KonusmaOzeti | null
+  /** AU-LAUNCH-01: when the recording consent was ticked and the stamp of the wording shown then. null = not recorded. */
+  rizaAt?: string | null
+  rizaSurumu?: string | null
 }
 
 export { sesYoluGecerli }
@@ -186,7 +189,7 @@ export async function muayeneGetir(supabase: SupabaseClient, doktorId: string, s
     .maybeSingle()
   if (error || !s) return null
   const seans = s as { id: string; patient_id: string | null; started_at: string | null; created_at: string | null; specialty: string | null; transcript_cleaned: string | null }
-  const { data: kayit } = await ulkeTablosu(supabase, 'muayene_dil_kaydi').select('taninan_dil, dil_olasiligi, ikinci_gecis, dusuk_guven').eq('session_id', seansId).eq('doctor_id', doktorId).maybeSingle()
+  const { data: kayit } = await ulkeTablosu(supabase, 'muayene_dil_kaydi').select('taninan_dil, dil_olasiligi, ikinci_gecis, dusuk_guven, riza_at, riza_surumu').eq('session_id', seansId).eq('doctor_id', doktorId).maybeSingle()
   const { data: notlar } = await ulkeTablosu(supabase, 'ulke_notlar').select('id, approved_at').eq('session_id', seansId).eq('doctor_id', doktorId).order('created_at', { ascending: false }).limit(1)
   const not = ((notlar as { id: string; approved_at: string | null }[] | null) ?? [])[0]
   // The patient is read by doctor AND id: a visit row pointing at somebody else's patient shows no patient.
@@ -200,6 +203,8 @@ export async function muayeneGetir(supabase: SupabaseClient, doktorId: string, s
     notId: not?.id ?? null,
     notDurumu: !not ? 'notsuz' : not.approved_at ? 'onayli' : 'taslak',
     konusma: konusmaOzeti(kayit as KayitSatiri | null),
+    rizaAt: (kayit as { riza_at?: string | null } | null)?.riza_at ?? null,
+    rizaSurumu: (kayit as { riza_surumu?: string | null } | null)?.riza_surumu ?? null,
   }
 }
 

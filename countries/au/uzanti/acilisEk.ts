@@ -5,7 +5,7 @@
  *
  * EVERY CLAIM BELOW WAS CHECKED AGAINST THE CODE OF THIS BUILD (file in brackets):
  *   named assistant per role      [klinik/asistanAdlari.ts, components/ulke/uygulama/Asistan.tsx, Bugun/Muayene/Not.tsx]
- *   add documents after recording [components/ulke/uygulama/Ekler.tsx, lib/ulke/belgeler/ekler.ts, _dil/en/uygulama.ts ekler]
+ *   add documents after recording [REMOVED from the AU landing 2026-10-24 (AU-LAUNCH-01): the model reading of images is off in AU; the step is hidden]
  *   calendar month/week/day       [components/ulke/uygulama/Takvim.tsx, PortalIstekleri.tsx]
  *   photo archive                 [FotoArsivi.tsx; pack feature fotoArsivi]
  *   consultation between doctors  [Konsultasyonlar.tsx; pack feature konsultasyon]
@@ -23,6 +23,7 @@
  */
 import type { AcilisIcerigi, EkOzellikBolumu } from '@/lib/ulke/arayuz/acilisTipleri'
 import { canliAjanlarVar } from '@/lib/ulke/asistan/ajan'
+import { AU_ASISTAN_DEGISKENI } from '../asistan/canli'
 
 const EPOSTA = 'kaan@notya.io'
 
@@ -30,7 +31,7 @@ const EPOSTA = 'kaan@notya.io'
  * AU-CANLI-01: the spoken assistant is mentioned ONLY while this deployment really has it (both agents, the key and the
  * secrets in its environment). A landing line for a feature the visitor's doctor could not press would be false.
  */
-const SESLI = (): boolean => canliAjanlarVar('au')
+const SESLI = (): boolean => canliAjanlarVar('au', process.env, AU_ASISTAN_DEGISKENI)
 
 function ekBolumler(rolSayisi: number, sesli: boolean = SESLI()): EkOzellikBolumu[] {
   return [
@@ -115,22 +116,22 @@ export function auAcilisGuncelle(c: AcilisIcerigi, rolSayisi: number): AcilisIce
     ekBolumler: ekBolumler(rolSayisi),
     kahraman: {
       ...c.kahraman,
-      giris: 'Notya records the visit with the patient’s consent and drafts the note for you to read, correct and approve. The calendar, invoices and a page for each patient sit beside it. Nothing is saved to the patient file until you approve it.',
+      giris: 'Notya assists with documentation. It records the visit with the patient’s consent and drafts the note for you to read, correct and approve; the calendar, invoices and a page for each patient sit beside it. It does not diagnose or suggest treatment, and nothing becomes part of the patient’s record until you approve it.',
     },
     qabul: {
       ...c.qabul,
-      govde: 'The steps at the end of the visit stand in front of you, in order. After the recording you can add ultrasound images, scans, lab reports or photographs; they are read with the visit and their results go into the Examination section of the first draft. The draft holds what was said and what those documents show, and nothing more. You correct it, and you approve it. An approved note is never changed afterwards.',
+      govde: 'The steps at the end of the visit stand in front of you, in order. The draft is written from what was said, and the assistant is told to add nothing more. You read it, correct it and approve it. An approved note is never changed afterwards.',
       maddeler: [
         'Four sections, and the fields of your own specialty',
         'Unclear places are marked, not guessed',
         'The transcript stays beside the note',
-        'Documents are optional: add as many as you need, or skip the step',
-        'Identifying details are hidden in the copy that is read; if that cannot be done, the file is not sent and is left out of the note',
+        'A draft is marked as a draft, and as AI-drafted, until you approve it',
+        'The consent given for the recording is shown on the note',
       ],
       kart: {
         etiket: 'The visit note',
-        satirlar: [{ k: 'Recording, with consent', mark: '01' }, { k: 'Documents (optional)', mark: '02' }, { k: 'Transcript', mark: '03' }, { k: 'Draft note', mark: '04' }, { k: 'Your approval', mark: '05' }],
-        not: 'Nothing is saved to the patient file until you approve it.',
+        satirlar: [{ k: 'Recording, with consent', mark: '01' }, { k: 'Transcript', mark: '02' }, { k: 'Draft note', mark: '03' }, { k: 'Your approval', mark: '04' }],
+        not: 'Nothing becomes part of the patient’s record until you approve it.',
       },
     },
     jadval: {
@@ -150,7 +151,7 @@ export function auAcilisGuncelle(c: AcilisIcerigi, rolSayisi: number): AcilisIce
       gruplar: c.narx.gruplar.map((g) => ({
         ...g,
         rejalar: g.rejalar.map((r) => (r.id === 'doctor'
-          ? { ...r, maddeler: planEk(r.maddeler, ['Documents added after the recording', 'An assistant named for your specialty', 'Invoices in Australian dollars, paid into your own Stripe account', 'Privacy requests with a response timer', 'Checklists and links for Australian paperwork']) }
+          ? { ...r, maddeler: planEk(r.maddeler, ['An assistant named for your specialty', 'Invoices in Australian dollars, paid into your own Stripe account', 'Privacy requests with a response timer', 'Checklists and links for Australian paperwork']) }
           : r)),
         izoh: g.id === 'clinic'
           ? `Early access: accounts are opened with an invitation code while the first practices are set up. Ask for one at ${EPOSTA}. The price depends on the number of accounts.`

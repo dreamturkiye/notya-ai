@@ -10,8 +10,9 @@ import { Bilgi, Cerceve, Hata, Yukleniyor, tarihYaz, useUygulama } from './Kabuk
 import { rolAdi } from '@/lib/ulke/arayuz'
 import { yerine } from '@/lib/ulke/arayuz/yerTutucu'
 import { ulkePaketi } from '@/lib/ulke/ulke'
+import { ulkeYolu } from '@/lib/ulke/yol'
 
-type Talep = { id: string; hastaAdi: string; tur: 'erisim' | 'duzeltme'; durum: 'yeni' | 'islemde' | 'tamamlandi' | 'reddedildi'; alindiAt: string; sonTarih: string; ayrinti: string; yanit: string; kalanGun: number }
+type Talep = { id: string; hastaId: string; hastaAdi: string; tur: 'erisim' | 'duzeltme'; durum: 'yeni' | 'islemde' | 'tamamlandi' | 'reddedildi'; alindiAt: string; sonTarih: string; ayrinti: string; yanit: string; kalanGun: number }
 type Riza = { id: string; hastaAdi: string; surum: string; kaynak: string; verildiAt: string; geriCekildiAt: string | null }
 
 export default function GizlilikTalepleri() {
@@ -54,6 +55,9 @@ export default function GizlilikTalepleri() {
                     {t.yanit ? <span className="uza-liste-alt">{t.yanit}</span> : null}
                   </span>
                 </div>
+                {t.tur === 'erisim' && t.hastaId ? (
+                  <p className="uza-ipucu" data-alan="disa-aktar"><a className="uza-baglanti" href={ulkeYolu(`/api/ulke/gizlilik/disa-aktar?hastaId=${encodeURIComponent(t.hastaId)}`)} download>{d.disaAktar}</a><br />{d.disaAktarIpucu}</p>
+                ) : null}
                 {acik ? (
                   <div className="uza-form">
                     <label className="uza-etiket" htmlFor={`y-${t.id}`}>{d.yanit}</label>

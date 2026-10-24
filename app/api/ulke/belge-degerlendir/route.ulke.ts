@@ -26,7 +26,8 @@ export const dynamic = 'force-dynamic'
 export const maxDuration = 120
 
 export const POST = sinirda('belge-degerlendir POST', async (req: NextRequest) => {
-  if (!ozellikAcik('cekirdekMuayene')) return KOD.yok()
+  // AU-LAUNCH-01: reading an image / document with the model is a separate feature (`goruntuDegerlendirme`), off in Australia.
+  if (!ozellikAcik('cekirdekMuayene') || !ozellikAcik('goruntuDegerlendirme')) return KOD.yok()
   const oturum = await ulkeOturum(req)
   if (!oturum) return KOD.oturumYok()
   const g = await govdeOku(req)

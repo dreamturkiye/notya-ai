@@ -31,6 +31,10 @@ const MEDICAL: YasalBelge = {
   baslik: 'Medical disclaimer',
   inceleme: INCELEME,
   bolumler: [
+    { baslik: 'Intended purpose', paragraflar: [
+      'Notya assists registered practitioners with documentation and practice administration. It records a visit with the patient’s agreement, turns what was said into a draft visit note, and keeps appointments, patient pages, forms and invoices. The practitioner reviews, corrects and approves every note before it becomes part of the record. Notya does not diagnose, does not suggest a diagnosis or a treatment, and does not replace the practitioner’s clinical judgement.',
+      'Reference tools (checklists, scales and calculators that work only on figures the practitioner enters, and links to published sources) are decision support only. The practitioner decides.',
+    ] },
     { baslik: 'Drafts, not a decision', paragraflar: [
       'Notya is a practice management and clinical documentation tool. It records and organises what the practitioner says and enters, drafts a visit note for the practitioner to read, correct and approve, and keeps appointments, patient pages and invoices.',
       'It does not provide medical advice, diagnosis or treatment, and it does not suggest a diagnosis or a treatment. Clinical decisions remain the responsibility of the registered practitioner. It is not a substitute for professional medical advice: always consult a registered Australian health practitioner for medical concerns.',
@@ -38,7 +42,7 @@ const MEDICAL: YasalBelge = {
     ] },
     { baslik: 'Therapeutic Goods Administration (TGA)', paragraflar: [
       'Notya has not been approved, assessed or endorsed by the TGA and is not entered on the Australian Register of Therapeutic Goods. It has not been endorsed by Ahpra or any professional college.',
-      'The TGA has said that some digital scribes may be regulated as medical devices, in particular software that goes beyond administrative support and suggests diagnoses or treatments (TGA report on AI and medical devices, July 2025). Notya is intended for documentation and administration only; the intended use is described above. Whether any feature falls inside the device rules is for external regulatory advice, which has not yet been obtained.',
+      'The TGA has said that some digital scribes may be regulated as medical devices, in particular software that goes beyond administrative support and suggests diagnoses or treatments (TGA report on AI and medical devices, July 2025). Notya is intended for documentation and administration only; the intended purpose is stated at the top of this page. Whether any feature falls inside the device rules is for external regulatory advice, which has not yet been obtained.',
     ] },
     { baslik: 'Clinical content', paragraflar: [
       'Where Notya shows clinical reference content, it is based on publicly available Australian guidelines and sources named on the screen (for example the RACGP Red Book, the Royal Children’s Hospital Melbourne, the Pharmaceutical Benefits Scheme, the Australian Immunisation Handbook and the WHO). It is an initial clinical draft; external clinician review is planned after the first customers. Check the source before relying on it.',
@@ -64,7 +68,9 @@ const PRIVACY: YasalBelge = {
     ] },
     { baslik: 'Why it is used (APP 6)', paragraflar: ['To provide the service to the practitioner: keep clinical records, draft notes from a recording, book and show appointments, let a patient see what the practitioner shares, prepare invoices, and keep the service secure. It is not sold and is not used for advertising.'] },
     { baslik: 'Who it goes to, including overseas (APP 6, APP 8)', paragraflar: [
-      'Service providers acting for the practice: Supabase (database), Vercel (application hosting), ElevenLabs (speech-to-text for a visit recording) and OpenRouter with the language-model provider it routes to (to draft a note from the transcript).',
+      'Service providers acting for the practice: Supabase (database), Vercel (application hosting), ElevenLabs (speech-to-text for a visit recording) and OpenRouter with the language-model provider it routes to (OpenAI or Anthropic models, under the model policy in force) to draft a note from the transcript and, when the practitioner asks, a plain-language summary of an approved note. The recording is deleted from Notya’s storage once it has been transcribed.',
+      'Notya does not send attached documents, scans or photographs to an AI model in the Australian version, and the photo archive is not read by any model. The optional assistant that answers a clinician’s general questions is switched off unless it is turned on for the deployment; the clinician is told not to give it patient identifiers.',
+      'Some of these are overseas. The providers named above are companies headquartered outside Australia; how long each keeps what it receives, and whether it may train on it, is set by its own terms, which have not been verified for this draft.',
       'Some of these are overseas. As currently configured, application servers are configured to run in Sydney, Australia (Vercel region syd1) but requests first pass through the host’s global network; the database is hosted in Sydney, Australia (Supabase region ap-southeast-2, checked 2026-10-22); a practice that connects its own Stripe account has payments processed by Stripe; the demo page’s booking calendar is provided by Cal.com and pages load fonts from Google Fonts; and the speech and language-model providers process data in countries that this draft does not confirm (which may include countries in North America). A lawyer should review this disclosure and the contracts with each provider.',
     ] },
     { baslik: 'Security (APP 11) — what the software does', paragraflar: [
@@ -107,7 +113,7 @@ const DATA_REQUEST: YasalBelge = {
   inceleme: INCELEME,
   bolumler: [
     { baslik: 'Patients', paragraflar: ['Open your patient page (the link and PIN your practitioner gave you) and use “Ask to see or correct your information”. Your practitioner sees it with a 30-day response target. If you have no link, ask your practitioner.'] },
-    { baslik: 'Practitioners', paragraflar: ['Open Privacy requests in the application to see requests, the days left, and to record your response. In the beta the response is not sent to the patient automatically; give it to the patient yourself.'] },
+    { baslik: 'Practitioners', paragraflar: ['Open Privacy requests in the application to see requests, the days left, and to record your response. When you mark a request answered or declined, your response appears on the patient’s own page; Notya sends no email or text. For an access request you can download the patient’s data as one JSON file and give it to the patient yourself; the file lists what it does not yet carry (files and photographs, intake answers, messages, invoices).'] },
     { baslik: 'Anything else', paragraflar: [`Write to ${E.privacy}. Do not send an identity number or health detail in the email. Privacy officer: ${AU_PRIVACY_OFFICER}.`] },
   ],
 }

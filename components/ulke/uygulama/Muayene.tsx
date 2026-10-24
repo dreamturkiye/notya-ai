@@ -43,7 +43,7 @@ export type KonusmaOzeti = { dil: string; dilKesin: boolean; ikinciGecis: boolea
 export type MuayeneDetayi = {
   seansId: string; baslangic: string; sablon: string; metin: string
   hasta: { id: string; ad: string; otaIsmi: string; dogumTarihi: string } | null
-  notId: string | null; notDurumu: 'taslak' | 'onayli' | 'notsuz'; konusma: KonusmaOzeti | null
+  notId: string | null; notDurumu: 'taslak' | 'onayli' | 'notsuz'; konusma: KonusmaOzeti | null; rizaAt?: string | null; rizaSurumu?: string | null
 }
 
 /** A code of the visit API (or of the browser) → the catalogue's sentence for it. Unknown codes get the general one. */
@@ -303,7 +303,8 @@ function YeniMuayene({ u, hastaId, randevuId }: { u: ReturnType<typeof useUygula
       if (!r.ok || !r.j.seansId) { geri(typeof r.j.code === 'string' ? r.j.code : 'BASARISIZ'); return }
       // The visit is saved. NOTYA-ULKE-EKLER-01: before its note is written, the "add documents" step (always shown; one
       // click skips it). The visit is saved, so a reload of that step loses nothing.
-      window.location.assign(`${YOL.muayene}?seans=${r.j.seansId}&ekler=1`)
+      // AU-LAUNCH-01: the step reads images with the model, so it exists only where the pack switches `goruntuDegerlendirme` on.
+      window.location.assign(`${YOL.muayene}?seans=${r.j.seansId}${ozellikAcik('goruntuDegerlendirme') ? '&ekler=1' : ''}`)
     } catch { geri('BAGLANTI') }
   }
 
@@ -478,7 +479,7 @@ export default function Muayene() {
   if (param.hasta && !param.seans && !param.not) return <YeniMuayene u={u} hastaId={param.hasta} randevuId={param.randevu} />
   return (
     <Cerceve dil={u.dil} m={u.m} ad={u.hesap.ad} aktif="bugun" cikis={u.cikis}>
-      {param.not ? <Not u={u} notId={param.not} /> : param.seans ? (param.ekler === '1' ? <EklerSeansi u={u} seansId={param.seans} /> : <KayitliMuayene u={u} seansId={param.seans} yazilamadiBaslangic={param.xato === 'not'} />) : param.hasta ? <YeniMuayene u={u} hastaId={param.hasta} randevuId={param.randevu} /> : <HastaSec u={u} q={param.q} />}
+      {param.not ? <Not u={u} notId={param.not} /> : param.seans ? (param.ekler === '1' && ozellikAcik('goruntuDegerlendirme') ? <EklerSeansi u={u} seansId={param.seans} /> : <KayitliMuayene u={u} seansId={param.seans} yazilamadiBaslangic={param.xato === 'not'} />) : param.hasta ? <YeniMuayene u={u} hastaId={param.hasta} randevuId={param.randevu} /> : <HastaSec u={u} q={param.q} />}
     </Cerceve>
   )
 }

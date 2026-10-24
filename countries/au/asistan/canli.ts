@@ -16,6 +16,9 @@
 import { enCanliAsistan } from '../../_dil/en/asistan/canli'
 import { auAsistanKaynakBlogu } from './kaynaklar'
 
+/** The environment switch (Vercel AU project) that turns the live assistant on. Unset = off. */
+export const AU_ASISTAN_DEGISKENI = 'NOTYA_AU_ASSISTANT_ENABLED'
+
 export const AU_CANLI_ASISTAN = enCanliAsistan({
   ulkeAdi: 'Australia',
   dilAdi: 'Australian English',
@@ -35,4 +38,8 @@ export const AU_CANLI_ASISTAN = enCanliAsistan({
     'For an emergency, say to call Triple Zero (000) first, then give the immediate steps in a few words.',
   ],
   kaynakBlogu: auAsistanKaynakBlogu,
+  // AU-LAUNCH-01: OFF UNLESS THE OWNER SETS IT. A clinical Q&A assistant that states dose ranges and flags risks sits near the
+  // TGA's software-as-a-medical-device line (TGA report on AI and medical devices, July 2025). Until regulatory advice has
+  // been taken (docs/au/LAUNCH-READINESS.md, item TGA-2), no AU deployment offers it unless this variable is "1" or "true".
+  acikDegiskeni: AU_ASISTAN_DEGISKENI,
 })

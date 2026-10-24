@@ -78,7 +78,11 @@ export const AU_GIRDI: EnUlkeGirdisi = {
     // NOT READ BY A LAWYER — recording-consent wording (checklist A3, I1). Recording is governed by state and territory
     // law, which differs. Shown beside the box that unlocks recording. The version stamped on every visit is `surum`
     // below: change both together when a reviewed wording arrives.
-    kayitRizasi: 'The patient, or the person who can consent for them, has agreed to this visit being recorded.',
+    // AU-LAUNCH-01 (2026-10-24): names the AI processing and the overseas providers (Ahpra AI guidance: the patient's informed
+    // consent when their information enters an AI tool or scribe) and asks the practitioner to confirm the recording is lawful
+    // where the visit takes place (state and territory surveillance-devices laws differ). FOR A LAWYER: this sentence is a
+    // draft, not a legal conclusion; whether it satisfies those laws and the Privacy Act is NOT decided here (docs/au/LAUNCH-READINESS.md, LEGAL-2).
+    kayitRizasi: 'Everyone recorded at this visit (the patient, or the person who can consent for them, and anyone else present) has been told that the visit will be recorded and that the audio and transcript will be processed by artificial intelligence tools, including services outside Australia, to draft a note that I will read and approve, and has agreed. I have checked that recording is lawful where this visit takes place.',
     // THE LABEL is the name of the national data element ("Medicare card number", AIHW METEOR 270101, N(11); read for
     // the localisation audit of 2026-10-09, branch audit/au, docs/COUNTRY-AUDIT-AUSTRALIA.md, A12). One card may list
     // several people, so the number printed on a card is not, alone, one person. It is a government related
@@ -132,7 +136,7 @@ export const AU_GIRDI: EnUlkeGirdisi = {
   birimler: AU_BIRIMLER,
   // AU-BETA-01 (2026-10-22): bumped from au-draft-2026-10-11 because the intake consent sentence below changed. Initial
   // compliance draft – external legal review later.
-  surum: 'au-draft-2026-10-22',
+  surum: 'au-draft-2026-10-24',
   formRizasi: {
     metin: AU_GIZLILIK.riza.metin,
     veliMetni: 'I am the parent or legal guardian of the patient and I consent on their behalf to my practitioner collecting, using and storing their health information in Notya for their care and the administration of their care, as described in the collection notice above, including the disclosure of that information to the service providers named in it, some of which are overseas. I understand I can withdraw this consent at any time and can ask to see or correct their information.',

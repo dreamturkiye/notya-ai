@@ -26,7 +26,7 @@
 import type { GizlilikMetni } from '@/lib/ulke/uzanti/tipler'
 
 export const AU_TASLAK_ETIKETI = 'Initial compliance draft – external legal review later.'
-export const AU_GIZLILIK_SURUMU = 'au-2026-10-22-draft-2'
+export const AU_GIZLILIK_SURUMU = 'au-2026-10-24-draft-3'
 export const AU_PRIVACY_OFFICER = 'Kaan Arıoğlu, Notya LLC (kaan@notya.io)'
 export const AU_OPERATOR = 'Notya LLC, a United States company (3424 Sollers Point Rd., Baltimore, MD 21222, USA)'
 
@@ -45,11 +45,15 @@ export const AU_GIZLILIK: GizlilikMetni = {
       { baslik: 'Why it is collected', paragraflar: ['To provide your care and keep your clinical record, to book and remind you of appointments, to let you see what your practitioner shares with you, and to prepare invoices. Health information is sensitive information; it is collected only with your consent, which you can decline or withdraw.'] },
       { baslik: 'If you do not provide it', paragraflar: ['Your practitioner may not be able to prepare for your visit, share information with you through this page, or keep a complete record. You can still be seen: you can leave the form or the consent unticked and tell your practitioner.'] },
       { baslik: 'Who it is disclosed to', paragraflar: [
-        'Only to people and services needed to provide the service, acting for your practitioner: your practitioner and the clinic staff they authorise; the database host (Supabase); the application host (Vercel); a speech-to-text provider (ElevenLabs), which receives a visit recording if one is made; and a language-model service reached through a gateway (OpenRouter and the model provider it routes to), which receives the transcript of a recording to draft a note.',
+        'Only to people and services needed to provide the service, acting for your practitioner: your practitioner and the clinic staff they authorise; the database host (Supabase); the application host (Vercel); a speech-to-text provider (ElevenLabs), which receives a visit recording if one is made; and a language-model service reached through a gateway (OpenRouter, which routes to a model provider such as OpenAI or Anthropic), which receives the transcript of a recording to draft a note, and the approved note when your practitioner asks for a plain-language summary for you. The recording itself is deleted from Notya’s storage once it has been transcribed; the transcript and the note are kept.',
         'Your information is not sold or used for advertising. Your practitioner may also disclose it as the law requires or as you ask (for example, a referral).',
       ] },
+      { baslik: 'Artificial intelligence', paragraflar: [
+        'If your practitioner records a visit, artificial intelligence tools are used to turn the recording into text and to draft a visit note from it. The draft is only a draft: your practitioner must read it, correct it and approve it before it becomes part of your record, and your practitioner remains responsible for what is in it. The tools are told to write only what was said at the visit. They are not used to decide your care.',
+        'A recording is made only with your agreement. You can say no, or ask for it to stop, and your practitioner can still see you and write notes in the usual way. Recording a conversation is governed by state and territory law, and your practitioner is responsible for following it.',
+      ] },
       { baslik: 'Overseas disclosure (APP 8)', paragraflar: [
-        'Yes, some of your information is likely to go overseas. As currently configured, the application servers that handle each request run in Sydney, Australia (Vercel region syd1), but requests first pass through the hosting provider’s global network and the providers are overseas-owned companies. A visit recording and its transcript may be processed by the speech and language-model providers named above in countries that are not confirmed in this draft (which may include countries in North America). The practice’s database is hosted in Sydney, Australia (Supabase region ap-southeast-2, checked 2026-10-22). Payments, if the practice connects its own Stripe account, are processed by Stripe on its hosted page. The booking calendar on the demo page is provided by Cal.com, and the pages load their fonts from Google Fonts, so a visitor’s address is seen by those services.',
+        'Yes, some of your information is likely to go overseas. As currently configured, the application servers that handle each request run in Sydney, Australia (Vercel region syd1), but requests first pass through the hosting provider’s global network and the providers are overseas-owned companies. A visit recording and its transcript may be processed by the speech and language-model providers named above, which are companies headquartered outside Australia, in countries that are not confirmed in this draft (which may include countries in North America). How long each provider keeps what it receives, and whether it may use it to train its models, is set by that provider’s terms, which have not been verified for this draft. The practice’s database is hosted in Sydney, Australia (Supabase region ap-southeast-2, checked 2026-10-22). Payments, if the practice connects its own Stripe account, are processed by Stripe on its hosted page. The booking calendar on the demo page is provided by Cal.com, and the pages load their fonts from Google Fonts, so a visitor’s address is seen by those services.',
         'By accepting below you acknowledge this overseas disclosure. Where you do not wish your recording or transcript to go to these providers, ask your practitioner not to record the visit.',
       ] },
       { baslik: 'How it is protected', paragraflar: ['Names, details, notes and answers are encrypted by the application before they are stored; every request is limited to the signed-in practitioner’s own patients; this page needs a link and a PIN and ends by itself. Some data, such as appointment times and invoice amounts, is not separately encrypted. No system is risk-free.'] },
@@ -83,6 +87,7 @@ export const AU_GIZLILIK: GizlilikMetni = {
     hata: 'Could not send the request. Try again, or tell your practitioner.',
     bekleyenVar: 'You already have an open request of this kind.',
     durumlar: { yeni: 'Received', islemde: 'In progress', tamamlandi: 'Answered', reddedildi: 'Declined — ask your practitioner for the reasons' },
+    yanitBaslik: 'Response from your practitioner',
   },
   doktor: {
     baslik: 'Privacy requests',
@@ -94,7 +99,9 @@ export const AU_GIZLILIK: GizlilikMetni = {
     tamamla: 'Mark answered',
     reddet: 'Decline',
     yanit: 'Your response (kept with the request)',
-    yanitIpucu: 'The patient is not sent this automatically in the beta; give the answer to the patient yourself and note it here.',
+    yanitIpucu: 'The patient reads this on their own page once you mark the request answered or declined. Notya sends no email or text.',
+    disaAktar: 'Download this patient’s data (JSON)',
+    disaAktarIpucu: 'One file with the patient record, visits with transcripts and notes (drafts are marked), appointments, consent records and privacy requests. It lists what it does not yet carry (files and photos, intake answers, messages, invoices): add those yourself before you send it. Check who you are sending it to.',
     kaydet: 'Save',
     rizaBaslik: 'Consent records',
     rizaBos: 'No consent records yet.',

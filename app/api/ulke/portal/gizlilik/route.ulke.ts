@@ -21,7 +21,9 @@ export const GET = portalSinirinda('portal gizlilik GET', async (req: NextReques
   const oturum = await portalOturum(req)
   if (!oturum) return PORTAL_KOD.oturumYok()
   const [riza, talepler] = await Promise.all([gecerliRiza(oturum.supabase, oturum.doktorId, oturum.hastaId), hastaninTalepleri(oturum.supabase, oturum.doktorId, oturum.hastaId)])
-  return portalCevabi({ riza, talepler })
+  // AU-LAUNCH-01: the practitioner's response reaches the patient only once the request is closed (answered or declined);
+  // a note kept while it is "in progress" is not shown.
+  return portalCevabi({ riza, talepler: talepler.map((t) => (t.durum === 'tamamlandi' || t.durum === 'reddedildi' ? t : { ...t, yanit: '' })) })
 })
 
 export const POST = portalSinirinda('portal gizlilik POST', async (req: NextRequest) => {
