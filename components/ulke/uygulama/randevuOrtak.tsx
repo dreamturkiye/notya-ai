@@ -10,9 +10,13 @@ import { YOL } from './Kabuk'
 import { gunAdi, type RandevuMetni } from '@/lib/ulke/arayuz'
 import { tarihDeseni } from '@/lib/ulke/arayuz/hatirlatma'
 
+export type RandevuTuru = 'ilk_muayene' | 'muayene' | 'kontrol' | 'diger'
+export const RANDEVU_TURLERI: readonly RandevuTuru[] = ['ilk_muayene', 'muayene', 'kontrol', 'diger']
 export type RandevuDurumu = 'planlandi' | 'geldi' | 'tamamlandi' | 'gelmedi' | 'iptal'
 export type RandevuKaydi = {
   id: string; hastaId: string; hastaAdi: string; baslangic: string; bitis: string
+  /** false = booked by name, no patient record yet (hastaId is ''). */
+  kayitli: boolean; hastaTelefon: string; tur: RandevuTuru
   /** The start in the country's own clock: 'YYYY-MM-DD', 'HH:MM'. */
   gun: string; saat: string
   sureDk: number; neden: string; durum: RandevuDurumu; mesaiDisi: boolean; seansId: string | null
@@ -21,6 +25,7 @@ export type RandevuKaydi = {
 }
 export type DuzenKaydi = { gunler: number[]; baslangic: string; bitis: string; sureDk: number; molalar: { baslangic: string; bitis: string }[] }
 export type Gorunum = 'gun' | 'hafta'
+export type TakvimGorunumu = 'ay' | 'gun' | 'ajanda' | 'liste' | 'hafta'
 
 /** An address of the calendar. Empty values are left out. */
 export function takvimYolu(p: Record<string, string | undefined | null> = {}): string {
@@ -33,7 +38,7 @@ export function takvimYolu(p: Record<string, string | undefined | null> = {}): s
 /** "Start the visit" for an appointment: the visit screen for that patient, carrying the appointment. */
 export const muayeneBaslatYolu = (r: Pick<RandevuKaydi, 'id' | 'hastaId'>) => `${YOL.muayene}?hasta=${r.hastaId}&randevu=${r.id}`
 /** A visit can be started from an appointment that is planned or has arrived and has no visit yet. */
-export const muayeneBaslatilabilir = (r: Pick<RandevuKaydi, 'durum' | 'seansId'>) => (r.durum === 'planlandi' || r.durum === 'geldi') && !r.seansId
+export const muayeneBaslatilabilir = (r: Pick<RandevuKaydi, 'durum' | 'seansId'> & { hastaId?: string }) => r.hastaId !== '' && (r.durum === 'planlandi' || r.durum === 'geldi') && !r.seansId
 
 const gunYaz = (gun: string) => gunYazDesenle(gun, tarihDeseni())
 /** "Juma, 09.10.2026" */
