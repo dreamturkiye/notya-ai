@@ -157,7 +157,7 @@ export function useUygulama(ekran: UygulamaEkrani): Uygulama {
   '--uza-uyari': R.warn, '--uza-cizgi': R.border, '--uza-altin': R.gold, '--uza-nav': R.nav, '--uza-serif': CHROME_FONT.serif, '--uza-sans': CHROME_FONT.sans,
 } as CSSProperties
 
-export type Sekme = 'bugun' | 'takvim' | 'hastalar' | 'araclar' | 'klinik' | 'onBuro' | 'ayarlar' | 'fatura' | 'gizlilikTalepleri' | 'asistan' | 'mesajlar'
+export type Sekme = 'bugun' | 'takvim' | 'hastalar' | 'araclar' | 'klinik' | 'onBuro' | 'ayarlar' | 'fatura' | 'gizlilikTalepleri' | 'asistan' | 'mesajlar' | 'hesabim'
 
 /** The clock (in the account's zone) and, when the browser shares a place, the weather: the same two values the Türkiye chrome shows. */
 function useSaatHava() {
@@ -220,7 +220,31 @@ function useMesajRozeti(acik: boolean): number {
   return n
 }
 
-function harfler(ad: string): string {
+/** The doctor's own profile photo (a data URL) for the top bar; null = the initials. Follows a change made on the account page. */
+function useAvatar(acik: boolean): string | null {
+  const [url, setUrl] = useState<string | null>(null)
+  useEffect(() => {
+    if (!acik) return
+    let iptal = false
+    const olay = (e: Event) => { const d = (e as CustomEvent<{ dataUrl?: string | null }>).detail; if (!iptal) setUrl(d?.dataUrl ?? null) }
+    window.addEventListener('notya-avatar-guncellendi', olay)
+    ;(async () => {
+      try {
+        const { data } = (await ulkeIstemciSupabase()?.auth.getSession()) ?? { data: { session: null } }
+        const jeton = data.session?.access_token
+        if (!jeton) return
+        const r = await fetch(ulkeYolu('/api/ulke/hesap/avatar'), { headers: { Authorization: `Bearer ${jeton}` }, cache: 'no-store' })
+        if (!r.ok) return
+        const j = (await r.json().catch(() => ({}))) as { avatar?: unknown }
+        if (!iptal && typeof j.avatar === 'string') setUrl(j.avatar)
+      } catch { /* the initials stay */ }
+    })()
+    return () => { iptal = true; window.removeEventListener('notya-avatar-guncellendi', olay) }
+  }, [acik])
+  return url
+}
+
+export function harfler(ad: string): string {
   const p = ad.trim().split(/\s+/).filter(Boolean)
   return ((p[0]?.[0] ?? '') + (p[1]?.[0] ?? '')).toUpperCase()
 }
@@ -239,6 +263,7 @@ function KabukCercevesi({ dil, m, ad, unvan, aktif, cikis, onBuro, kompakt, chil
   const k = m.kabuk
   const git = (yol: string) => { window.location.assign(yol) }
   const mesajRozeti = useMesajRozeti(!onBuro && ozellikAcik('hastaMesajlari'))
+  const avatarUrl = useAvatar(Boolean(m.ayarlar.hesap))
   const oge = (id: Sekme | 'mesaj' | 'rapor' | 'odeme', label: string, ikon: string, href: string | null, aktifMi?: boolean): KabukOge => (
     { id: String(id), label, ikon, aktif: aktifMi ?? aktif === id, ...(href ? { href } : { pasif: true, isaret: String(id) }) }
   )
@@ -288,7 +313,7 @@ function KabukCercevesi({ dil, m, ad, unvan, aktif, cikis, onBuro, kompakt, chil
         diger={diger.length > 0 ? { baslik: k.diger ?? '', ogeler: diger } : null}
         onGit={git}
         hesap={{
-          harfler: harfler(ad ?? ''), avatarUrl: null, ad: ad || '\u00A0', alt: unvan || '\u00A0', avatarAd: ad ?? '', avatarBasligi: ad ? `${ad}` : (k.hesabim ?? k.ayarlar), avatarEtiketi: k.hesabim ?? k.ayarlar,
+          harfler: harfler(ad ?? ''), avatarUrl, ad: ad || '\u00A0', alt: unvan || '\u00A0', avatarAd: ad ?? '', avatarBasligi: ad ? `${ad}` : (k.hesabim ?? k.ayarlar), avatarEtiketi: k.hesabim ?? k.ayarlar,
           saat, hava, cikis: k.cikis, onHesap: () => git(YOL.ayarlar), onCikis: () => { cikis?.() },
         }}
         sekme={sekme}

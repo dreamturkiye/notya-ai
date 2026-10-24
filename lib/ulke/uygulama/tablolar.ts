@@ -56,6 +56,7 @@ export const ULKE_TABLOLARI = [
   'ulke_mesaj_yazismalari',
   'ulke_hasta_mesajlari',
   'ulke_hekim_sablonlari',
+  'ulke_hekim_avatarlari',
   'ulke_konsultasyon_kodlari',
   'ulke_konsultasyonlar',
   // NOTYA-ULKE-KLINIK-01 — clinic accounts (migration 145): clinics, members, invitations, grants, the record. Server only.
@@ -82,7 +83,7 @@ export type UlkeTablosu = (typeof ULKE_TABLOLARI)[number]
  * Only the server's routes reach them. (Every other country table lets a signed-in account read its own rows of its
  * own country, as a second line behind the server.)
  */
-export const YALNIZ_SUNUCU_TABLOLARI: readonly UlkeTablosu[] = ['ulke_kullanim', 'ulke_kullanim_olcumu', 'ulke_portal_erisimleri', 'ulke_portal_oturumlari', 'ulke_hasta_ozetleri', 'ulke_portal_kayitlari', 'ulke_randevu_istekleri', 'ulke_hasta_formlari', 'ulke_arac_kayitlari', 'ulke_mesaj_yazismalari', 'ulke_hasta_mesajlari', 'ulke_hekim_sablonlari', 'ulke_konsultasyon_kodlari', 'ulke_konsultasyonlar', 'ulke_klinikler', 'ulke_klinik_uyeleri', 'ulke_klinik_davetleri', 'ulke_klinik_yetkileri', 'ulke_klinik_erisim_kayitlari', 'ulke_muayene_ekleri', 'ulke_hasta_fotograflari', 'ulke_riza_kayitlari', 'ulke_erisim_talepleri', 'ulke_faturalar', 'ulke_odeme_baglantilari', 'ulke_odeme_olaylari']
+export const YALNIZ_SUNUCU_TABLOLARI: readonly UlkeTablosu[] = ['ulke_kullanim', 'ulke_kullanim_olcumu', 'ulke_portal_erisimleri', 'ulke_portal_oturumlari', 'ulke_hasta_ozetleri', 'ulke_portal_kayitlari', 'ulke_randevu_istekleri', 'ulke_hasta_formlari', 'ulke_arac_kayitlari', 'ulke_mesaj_yazismalari', 'ulke_hasta_mesajlari', 'ulke_hekim_sablonlari', 'ulke_hekim_avatarlari', 'ulke_konsultasyon_kodlari', 'ulke_konsultasyonlar', 'ulke_klinikler', 'ulke_klinik_uyeleri', 'ulke_klinik_davetleri', 'ulke_klinik_yetkileri', 'ulke_klinik_erisim_kayitlari', 'ulke_muayene_ekleri', 'ulke_hasta_fotograflari', 'ulke_riza_kayitlari', 'ulke_erisim_talepleri', 'ulke_faturalar', 'ulke_odeme_baglantilari', 'ulke_odeme_olaylari']
 
 /** Database functions a country build may call. Each takes the country as `p_ulke`. */
 export const ULKE_ISLEVLERI = [

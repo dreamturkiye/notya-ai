@@ -88,7 +88,7 @@ export const NZ_PAKETI: UlkePaketi = {
   araclar: [],
   // The ONLY paths that exist in this country's deployment; every other path answers 404 in the middleware.
   rotalar: {
-    sayfalar: ['/', '/for-clinics', '/login', '/signup', '/welcome', '/start', '/today', '/settings', '/patients', '/patients/new', '/messages', '/patient', '/visit', '/calendar', '/portal', '/tools', '/medical', '/clinic', '/desk', '/privacy', '/terms', '/cookies', '/data-request', '/accessibility', '/medical-disclaimer', '/security', '/refund', '/copyright', '/demo'],    apiOnEkleri: ['/api/ulke/'],
+    sayfalar: ['/', '/for-clinics', '/login', '/signup', '/welcome', '/start', '/today', '/settings', '/account', '/patients', '/patients/new', '/messages', '/patient', '/visit', '/calendar', '/portal', '/tools', '/medical', '/clinic', '/desk', '/privacy', '/terms', '/cookies', '/data-request', '/accessibility', '/medical-disclaimer', '/security', '/refund', '/copyright', '/demo'],    apiOnEkleri: ['/api/ulke/'],
   },
   // The path of the main site this country is served under.
   yolOnEki: '/nz',

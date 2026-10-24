@@ -71,11 +71,15 @@ export type UygulamaMetni = {
     /** Says the value is optional, stored on the account, and not checked. Machine-written until a clinician or a lawyer reads it. */
     readonly meslekKaydiIzoh: string
     readonly meslekKaydiGecersiz: string
-    /** The account row: the sign-in email and a password change. Optional: a pack without it shows no row. */
+    /** The account page (Türkiye: Hesabım): profile photo, sign-in email, password. Optional: a pack without it shows no row. */
     readonly hesap?: {
-      readonly baslik: string; readonly alt: string; readonly eposta: string; readonly yeniSifre: string; readonly tekrar: string
-      readonly ipucu: string; readonly kisa: string; readonly eslesmiyor: string; readonly degistir: string; readonly degisiyor: string
-      readonly tamam: string; readonly hata: string
+      readonly baslik: string; readonly alt: string; readonly aciklama: string; readonly geri: string
+      readonly fotoVar: string; readonly fotoYok: string; readonly yukle: string; readonly degistirFoto: string; readonly kaldir: string
+      readonly yukleniyor: string; readonly fotoNot: string; readonly fotoKaydedildi: string; readonly fotoTur: string; readonly fotoBoyut: string
+      readonly fotoHata: string; readonly fotoKaldirilamadi: string
+      readonly adSoyad: string; readonly eposta: string; readonly sifreBaslik: string; readonly yeniSifre: string; readonly tekrar: string
+      readonly yerTutucu: string; readonly kisa: string; readonly eslesmiyor: string; readonly kaydet: string; readonly kaydediliyor: string
+      readonly degisti: string; readonly hata: string; readonly cikis: string
     }
   }
   readonly arama: {

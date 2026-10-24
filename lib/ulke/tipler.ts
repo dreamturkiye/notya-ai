@@ -478,6 +478,8 @@ export const UYGULAMA_EKRANLARI = {
   asistan: '/asistan',
   /** The doctor's messages inbox: the conversations with all their patients (pack feature `hastaMesajlari`). */
   mesajlar: '/messages',
+  /** The account page (Türkiye: Hesabım): profile photo, sign-in email, password. */
+  hesabim: '/account',
 } as const
 export type UygulamaEkrani = keyof typeof UYGULAMA_EKRANLARI
 
