@@ -38,7 +38,9 @@ export const POST = sinirda('not POST', async (req: NextRequest) => {
   if (!oturum) return KOD.oturumYok()
   const g = await govdeOku(req)
   if (!uuidMi(g.seansId)) return KOD.yok()
-  const r = await notYaz(oturum.supabase, oturum.user.id, g.seansId, rotaButcesiMs(maxDuration), g.ekler)
+  // AU-LAUNCH-01: document / image reading results are accepted only where the pack switches that feature on (a TGA
+  // software-as-a-medical-device question in Australia: off there). Anything a client sends as `ekler` is dropped otherwise.
+  const r = await notYaz(oturum.supabase, oturum.user.id, g.seansId, rotaButcesiMs(maxDuration), ozellikAcik('goruntuDegerlendirme') ? g.ekler : undefined)
   if (!r.tamam) return cevap({ code: r.kod }, NOT_DURUMU[r.kod])
   return cevap({ notId: r.notId })
 })

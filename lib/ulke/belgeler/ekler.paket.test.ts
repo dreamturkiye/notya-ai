@@ -60,6 +60,8 @@ type Paket = import('../tipler').UlkePaketi
 let paket: Paket
 let BU = ''
 let AKTIF = false
+/** AU-LAUNCH-01: the pack switches on reading images with the model (`goruntuDegerlendirme`). Without it the three routes answer "not found". */
+let GORUNTU = false
 let NextRequest: typeof import('next/server').NextRequest
 let E: typeof import('./ekler')
 let TL: typeof import('./belgeTalimati')
@@ -116,6 +118,7 @@ before(async () => {
   paket = (await import('@/countries/active')).AKTIF_PAKET
   BU = paket.kod
   AKTIF = paket.ozellikler.cekirdekMuayene === true
+  GORUNTU = paket.ozellikler.goruntuDegerlendirme === true
   DIL = paket.varsayilanDil
   NextRequest = (await import('next/server')).NextRequest
   E = await import('./ekler')
@@ -274,12 +277,29 @@ describe('2. the engine files are reachable through the country gate, under the 
   })
 })
 
+async function taslakNot() {
+  tablo('ulke_notlar').push({ id: N1, ulke: BU, session_id: V1, doctor_id: DA, approved_at: null, content_subjektif: 's', content_objektif: 'Doctor wrote this.', content_degerlendirme: 'a', content_plan: 'p' })
+  tablo('not_dil_kaydi').push({ ulke: BU, note_id: N1, doctor_id: DA, patient_id: H1, not_dili: DIL })
+}
+
+describe('3a. a pack that leaves image reading off: the routes answer not found and the model is never called', () => {
+  it('belge-degerlendir, not (documents ignored) and not/belge', async () => {
+    if (!AKTIF || GORUNTU) return
+    const r = await cagir(rota.belge, 'POST', '/api/ulke/belge-degerlendir', 'jeton-a', { seansId: V1, tur: 'auto', base64: JPEG_B64 })
+    assert.deepEqual([r.status, r.govde], [404, { code: 'NOT_FOUND' }])
+    await taslakNot()
+    const b = await cagir(rota.notBelge, 'POST', '/api/ulke/not/belge', 'jeton-a', { notId: N1, ekler: [{ belgeId: B(1), tur: 'ultrasound', ozet: 'x', bulgular: ['y'] }] })
+    assert.equal(b.status, 404)
+    assert.equal(model.cagrilar.length, 0)
+  })
+})
+
 describe('3. the reader\'s route (/api/ulke/belge-degerlendir)', () => {
   const YOL = '/api/ulke/belge-degerlendir'
   const CEVAP = { kind: 'ultrasound', quality: 'good', exam_datetime: '2026-10-20', summary: 'Single live intrauterine fetus.', findings: ['FHR 150 bpm', 'CRL 45 mm'], urgent: false }
 
   it('needs a signed-in doctor; a visit of another doctor is "not found" and the model is never called', async () => {
-    if (!AKTIF) return
+    if (!AKTIF || !GORUNTU) return
     assert.equal((await cagir(rota.belge, 'POST', YOL, undefined, { seansId: V1, tur: 'auto', base64: JPEG_B64 })).status, 401)
     const r = await cagir(rota.belge, 'POST', YOL, 'jeton-b', { seansId: V1, tur: 'auto', base64: JPEG_B64 })
     assert.deepEqual([r.status, r.govde], [404, { code: 'NOT_FOUND' }])
@@ -288,7 +308,7 @@ describe('3. the reader\'s route (/api/ulke/belge-degerlendir)', () => {
   })
 
   it('refuses what is not a small masked picture, before anything is read: wrong type, not base64, a PDF in disguise, too large, unknown document type', async () => {
-    if (!AKTIF) return
+    if (!AKTIF || !GORUNTU) return
     const pdf = Buffer.from('%PDF-1.7 not a picture').toString('base64')
     for (const g of [{ base64: pdf }, { base64: '***' }, { base64: '' }, { base64: 'A'.repeat(E.EK_GORSEL_AZAMI_B64 + 4) }, { base64: JPEG_B64, tur: 'dicom' }, { base64: 5 }]) {
       const r = await cagir(rota.belge, 'POST', YOL, 'jeton-a', { seansId: V1, tur: 'auto', ...g })
@@ -298,7 +318,7 @@ describe('3. the reader\'s route (/api/ulke/belge-degerlendir)', () => {
   })
 
   it('what leaves for the model: the picture, age and sex, the note language\'s instruction — no name, no id, no transcript; nothing is stored', async () => {
-    if (!AKTIF) return
+    if (!AKTIF || !GORUNTU) return
     model.cevaplar = [CEVAP]
     const once = JSON.stringify(vt.tablolar)
     const r = await cagir(rota.belge, 'POST', YOL, 'jeton-a', { seansId: V1, tur: 'ultrasound', base64: JPEG_B64 })
@@ -317,7 +337,7 @@ describe('3. the reader\'s route (/api/ulke/belge-degerlendir)', () => {
   })
 
   it('the doctor\'s own type wins over the reader\'s; poor quality and an unusable answer are told apart by code', async () => {
-    if (!AKTIF) return
+    if (!AKTIF || !GORUNTU) return
     model.cevaplar = [{ ...CEVAP, kind: 'photo' }]
     assert.equal((await cagir(rota.belge, 'POST', YOL, 'jeton-a', { seansId: V1, tur: 'ultrasound', base64: JPEG_B64 })).govde.sonuc.tur, 'ultrasound')
     model.cevaplar = [{ ...CEVAP, kind: 'photo' }]
@@ -335,7 +355,7 @@ describe('4. the first note takes every document in one write', () => {
   const belge = (i: number, ozet = `Finding ${i}.`) => ({ belgeId: B(i), tur: 'ultrasound', sinavZamani: null, ozet, bulgular: [`FHR ${140 + i} bpm`], acil: false })
 
   it('four ultrasounds → "1/4 … 4/4" in the findings section, the model\'s banner removed, the doctor\'s text kept; asked again → the same note, nobody is called', async () => {
-    if (!AKTIF) return
+    if (!AKTIF || !GORUNTU) return
     model.cevaplar = [NOT]
     const r = await cagir(rota.not, 'POST', '/api/ulke/not', 'jeton-a', { seansId: V1, ekler: [1, 2, 3, 4].map((i) => belge(i)) })
     assert.equal(r.status, 200, JSON.stringify(r.govde))
@@ -353,7 +373,7 @@ describe('4. the first note takes every document in one write', () => {
   })
 
   it('no documents → the note is exactly the model\'s (nothing is added, nothing is stripped); a request with only unusable entries is the same', async () => {
-    if (!AKTIF) return
+    if (!AKTIF || !GORUNTU) return
     model.cevaplar = [{ s: 'a', o: 'b', a: 'c', p: 'd' }]
     assert.equal((await cagir(rota.not, 'POST', '/api/ulke/not', 'jeton-a', { seansId: V1 })).status, 200)
     assert.equal(tablo('ulke_notlar')[0].content_objektif, 'b')
@@ -375,7 +395,7 @@ describe('5. documents added to a draft note', () => {
   const g = (...n: number[]) => n.map((i) => ({ belgeId: B(i), tur: 'ultrasound', ozet: `Finding ${i}.`, bulgular: [`FHR ${140 + i} bpm`] }))
 
   it('merged into the findings section in one write; the doctor\'s text untouched; the route returns the section as saved', async () => {
-    if (!AKTIF) return
+    if (!AKTIF || !GORUNTU) return
     await taslak()
     const r = await cagir(rota.notBelge, 'POST', '/api/ulke/not/belge', 'jeton-a', { notId: N1, ekler: g(1, 2) })
     assert.equal(r.status, 200, JSON.stringify(r.govde))
@@ -395,7 +415,7 @@ describe('5. documents added to a draft note', () => {
   })
 
   it('an approved note is not changed (409), another doctor\'s note is "not found" (404), nothing usable is "empty" (400)', async () => {
-    if (!AKTIF) return
+    if (!AKTIF || !GORUNTU) return
     await taslak(true)
     const onceki = JSON.stringify(tablo('ulke_notlar'))
     assert.deepEqual((await cagir(rota.notBelge, 'POST', '/api/ulke/not/belge', 'jeton-a', { notId: N1, ekler: g(1) })).govde, { code: 'ONAYLI' })

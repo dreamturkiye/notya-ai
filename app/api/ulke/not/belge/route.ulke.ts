@@ -24,7 +24,8 @@ import { NOT_DURUMU } from '@/lib/ulke/uygulama/notDurumu'
 export const dynamic = 'force-dynamic'
 
 export const POST = sinirda('not belge POST', async (req: NextRequest) => {
-  if (!ozellikAcik('cekirdekMuayene')) return KOD.yok()
+  // AU-LAUNCH-01: no document / image reading results where the pack leaves that feature off.
+  if (!ozellikAcik('cekirdekMuayene') || !ozellikAcik('goruntuDegerlendirme')) return KOD.yok()
   const oturum = await ulkeOturum(req)
   if (!oturum) return KOD.oturumYok()
   const g = await govdeOku(req)
