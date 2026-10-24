@@ -67,3 +67,13 @@ New in this job: **none** — no dose, threshold, growth flag or schedule number
 |---|---|---|---|
 | TGA and AI scribes | https://www.minterellison.com/articles/tga-publishes-findings-on-ai-and-medical-devices (6 Aug 2025, a law firm's summary of the TGA report of 25 July 2025; the TGA page itself was not read) | some digital scribes may already be medical devices, especially where they suggest diagnoses or treatments; the TGA recommended a review with Ahpra and the ACSQHC | AU medical-disclaimer page (`countries/au/yasal.ts`) |
 | Supabase AU project | Supabase API `get_project`, 2026-10-22 | region `ap-southeast-2`, status ACTIVE_HEALTHY | privacy notice and policy |
+
+## AU-LAUNCH-01 (2026-10-24) — what the code was checked for (no external page was fetched in this job)
+
+| What | Where in the code | Taken from it |
+|---|---|---|
+| Which providers receive patient data | `lib/ulke/uygulama/konusmaTanima.ts` (ElevenLabs speech-to-text, audio), `lib/ai/cagir.ts` + `lib/ai/saglayici.ts` + `lib/ai/modeller.ts` (OpenRouter; models `openai/gpt-6-luna`, `openai/gpt-6-luna-pro` primary, `anthropic/claude-sonnet-5` fallback; transcript for the note, approved note for the patient summary) | notice and policy wording; provider countries and terms NOT verified |
+| Audio is deleted after transcription | `lib/ulke/uygulama/muayeneKaydi.ts` (`finally { await sesiSil() }`) | notice sentence |
+| Not patient data | `lib/ulke/uygulama/asistanSes.ts` (fixed role sentence, "No patient text is read"), `countries/au/scripts/au-portreler-wavespeed.mjs` (offline portraits), image-masking and OCR run in the browser (`components/ulke/uygulama/Ekler.tsx`, now hidden) | policy sentence |
+| No model reads attachments or the photo archive | no `aiCagir` / `modeldenBelge` call in `lib/ulke/muayeneEki`, `lib/ulke/fotoArsivi` | policy sentence |
+| TGA July 2025 report on AI and medical devices | cited second-hand in earlier jobs (see AU-MKT-AUDIT above); the TGA page itself was not read in this job | gate on suggestion features; needs adviser |
