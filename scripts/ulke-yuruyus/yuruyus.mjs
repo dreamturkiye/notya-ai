@@ -351,7 +351,7 @@ const A = await sayfaAc(MASA) // doctor A — stays signed in for the rest of th
   kontrol('the session is stored under a key that names the country, and nowhere else', JSON.stringify(anahtarlar) === JSON.stringify([OTURUM_ANAHTARI]), anahtarlar.join(' '))
   const cerezler = [await p.evaluate(() => document.cookie), ...(await p.cookies()).map((c) => c.name)].filter(Boolean)
   kontrol('no cookie is set', cerezler.length === 0, cerezler.join(' '))
-  kontrol('the question cannot be skipped: no navigation on it', !(await p.$('.uza-nav')))
+  kontrol('the question cannot be skipped: no navigation on it', !(await p.$('.notya-yan')))
   // Uzbek or Russian? — and for Uzbek: Latin or Cyrillic? The screen re-reads itself as soon as a choice is made.
   await sec(p, 'dil', 'ru'); await bekle(150)
   kontrol('choosing Russian: the question is now in Russian and the script question is gone', (await metin(p, 'h1')) === 'На каком языке вы работаете?' && !(await p.$('input[name=yazi]')))
@@ -364,7 +364,7 @@ const A = await sayfaAc(MASA) // doctor A — stays signed in for the rest of th
   // the audit of the specialties was applied on 2026-10-10, NOTYA-ULKE-UYGULA-UZ: 37 doctor specialties, 3 clinic doctors, 2 allied).
   await p.waitForSelector('[data-alan=rol-sorusu] select[name=rol]', { timeout: 60000 })
   const rolSorusu = await p.evaluate(() => ({
-    yol: location.pathname, h1: document.querySelector('h1').innerText, nav: !!document.querySelector('.uza-nav'),
+    yol: location.pathname, h1: document.querySelector('h1').innerText, nav: !!document.querySelector('.notya-yan'),
     gruplar: [...document.querySelectorAll('select[name=rol] optgroup')].map((g) => `${g.label}:${g.children.length}`).join('|'),
     adlar: [...document.querySelectorAll('select[name=rol] optgroup option')].map((o) => o.textContent),
   }))
@@ -1722,8 +1722,8 @@ const PORTAL = {}
   const robots = await p.evaluate(async (u) => (await fetch(u)).text(), `${ON_EK}/robots.txt`)
   kontrol('robots.txt under the prefix disallows everything', robots === 'User-agent: *\nDisallow: /\n', JSON.stringify(robots))
   await git(p, '/today')
-  await p.waitForSelector('.uza-hesap button')
-  await p.click('.uza-hesap button')
+  await p.waitForSelector('.notya-masa-ust button:last-of-type')
+  await p.click('.notya-masa-ust button:last-of-type')
   await yolda(p, '/login')
   kontrol(`logout → back to ${adres('/login')}, and the session is gone from the browser`, (await p.evaluate(() => Object.keys(localStorage).length)) === 0)
   await git(p, '/today')
