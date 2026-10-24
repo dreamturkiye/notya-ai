@@ -87,7 +87,9 @@ export function Pricing() {
           ))}
         </ol>
         <p className="mt-6 font-outfit text-sm text-ink-muted">
-          {clinic ? "İlk 15 gün ücretsiz. Kredi kartı gerekmez. Fiyat, kullanıcı sayısına ve dalınıza göre belirlenir." : "İlk 15 gün ücretsiz. Kredi kartı gerekmez. Fiyatlara KDV dahil değildir. Yıllık ödemede 2 ay bizden. Kurucu hekim programı: ilk 50 hekime 12 ay boyunca %40 indirim."}
+          {clinic
+            ? "Klinik Taban + hekim koltukları. İlk 15 gün ücretsiz. Kredi kartı gerekmez. Fiyatlara KDV dahil değildir."
+            : "İlk 15 gün ücretsiz. Kredi kartı gerekmez. Fiyatlara KDV dahil değildir. Yıllık ödemede 2 ay bizden."}
         </p>
       </div>
     </section>
