@@ -642,7 +642,7 @@ describe('Uzbekistan note: screens in the three forms', () => {
     assert.doesNotMatch(html, TURKCE, `${kaynak}: a Turkish letter`)
     for (const m of html.matchAll(/(?:href|action)="([^"]+)"/g)) {
       if (m[1].startsWith('https://fonts.googleapis.com/')) continue
-      const adres = m[1].split('?')[0]
+      const adres = m[1].split(/[?#]/)[0]
       assert.ok(adres === ON_EK || adres.startsWith(`${ON_EK}/`), `${kaynak}: "${m[1]}" is outside ${ON_EK}`)
       assert.ok(ACIK.includes(adres.slice(ON_EK.length) || '/'), `${kaynak}: links to ${m[1]}, which is not a page of this build`)
     }

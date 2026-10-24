@@ -76,7 +76,7 @@ const ekranTemiz = (html: string, kaynak: string) => {
     if (m[1].startsWith('https://fonts.googleapis.com/')) continue
     assert.doesNotMatch(m[1], TURKCE_ADRES, `${kaynak}: links to a page of the pre-split application: ${m[1]}`)
     // NOTYA-UZ-MUAYENE-01: the build is served under /uzbek — an address outside it is another country's site.
-    const adres = m[1].split('?')[0]
+    const adres = m[1].split(/[?#]/)[0]
     assert.ok(adres === ON_EK || adres.startsWith(`${ON_EK}/`), `${kaynak}: "${m[1]}" is outside ${ON_EK}`)
     // "Never offer an address that answers not found": every link is a page this country's pack lists.
     const yol = adres.slice(ON_EK.length) || '/'

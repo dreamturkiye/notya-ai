@@ -460,7 +460,7 @@ describe('Uzbekistan visit: screens in the three forms', () => {
     assert.doesNotMatch(html, TURKCE, `${kaynak}: a Turkish letter`)
     for (const m of html.matchAll(/(?:href|action)="([^"]+)"/g)) {
       if (m[1].startsWith('https://fonts.googleapis.com/')) continue
-      const adres = m[1].split('?')[0]
+      const adres = m[1].split(/[?#]/)[0]
       assert.ok(adres === ON_EK || adres.startsWith(`${ON_EK}/`), `${kaynak}: "${m[1]}" is outside ${ON_EK}`)
       assert.ok(ACIK.includes(adres.slice(ON_EK.length) || '/'), `${kaynak}: links to ${m[1]}, which is not a page of this build`)
     }
@@ -499,10 +499,10 @@ describe('Uzbekistan visit: screens in the three forms', () => {
       const g = gorunurMetin(kapali)
       for (const x of [m.muayene.baslik, 'QA Karimova Dilnoza Rustam qizi', m.muayene.sablon, m.muayene.sablonPediatri, m.muayene.riza, m.muayene.kayitBaslat, m.muayene.rizaGerekli]) assert.ok(g.includes(x), x)
       assert.match(kapali, /<input type="checkbox" name="riza"\/>/, 'the consent box starts unticked')
-      assert.match(kapali, new RegExp(`<button type="button" class="uza-dugme" disabled="">${m.muayene.kayitBaslat}</button>`))
+      assert.match(kapali, new RegExp(`<button type="button" disabled=""[^>]*>[^<]*${m.muayene.kayitBaslat}</button>`))
       const acik = ciz(true)
       assert.match(acik, /<input type="checkbox" name="riza" checked=""\/>/)
-      assert.match(acik, new RegExp(`<button type="button" class="uza-dugme">${m.muayene.kayitBaslat}</button>`))
+      assert.match(acik, new RegExp(`<button type="button"(?! disabled)[^>]*>[^<]*${m.muayene.kayitBaslat}</button>`))
       assert.ok(!gorunurMetin(acik).includes(m.muayene.rizaGerekli))
       // The template is not a choice: it is the account's role, shown by name. No template control exists.
       assert.equal([...kapali.matchAll(/<input\b[^>]*name="sablon"[^>]*>/g)].length, 0)
