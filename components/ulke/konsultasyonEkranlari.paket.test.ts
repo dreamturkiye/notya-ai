@@ -295,7 +295,7 @@ describe('consultation screens — rules and the catalogue', () => {
   it('the catalogue is the same shape in every form, each entry is there, a sentence keeps its placeholders in every form, and nothing of another country is in it', () => {
     if (!ACIK) return
     const ilk = yaprak(x(FORMLAR[0]))
-    assert.equal(ilk.length, 126, `${ilk.length} entries`)
+    assert.equal(ilk.length, 129, `${ilk.length} entries`)
     for (const dil of FORMLAR) {
       const y = yaprak(x(dil))
       assert.deepEqual(y.map((e) => e[0]), ilk.map((e) => e[0]), `${dil}: not the same keys as ${FORMLAR[0]}`)

@@ -1401,6 +1401,9 @@ export type KonsultasyonMetni = {
     readonly adYer: string
     readonly brans: string
     readonly bransYer: string
+    readonly bransSec: string
+    readonly bransDiger: string
+    readonly bransDigerYer: string
     readonly ofisTelefon: string
     readonly telefon: string
     readonly whatsapp: string

@@ -8,7 +8,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { Bilgi, Hata, type Uygulama } from './Kabuk'
 import { yerine } from '@/lib/ulke/arayuz/yerTutucu'
-import { konsultasyonMetni } from '@/lib/ulke/arayuz'
+import { konsultasyonMetni, rolAdi, roller } from '@/lib/ulke/arayuz'
 import type { DefterAlani, DefterKaydi } from '@/lib/ulke/uygulama/konsultanDefteri'
 
 const API = '/api/ulke/konsultan-defteri'
@@ -48,6 +48,8 @@ export function KonsultanDefteri({ u }: { u: Uygulama }) {
   const [bilgi, setBilgi] = useState<string | null>(null)
   const [bekliyor, setBekliyor] = useState(false)
   const formRef = useRef<HTMLFormElement>(null)
+  const bransler = Array.from(new Set(roller().map((r) => rolAdi(r.anahtar, u.dil)).filter((x): x is string => Boolean(x))))
+  const [kendi, setKendi] = useState(false)
 
   const yukle = useCallback(async () => {
     const r = await api(API)
@@ -57,7 +59,7 @@ export function KonsultanDefteri({ u }: { u: Uygulama }) {
   if (!d) return null
 
   const alanMetni = (a: DefterAlani | null): string | null => a === 'ad' ? d.adHata : a === 'eposta' ? d.epostaHata : a ? d.telefonHata : null
-  const sifirla = () => { setDuzenleId(null); setForm(BOS); setAlanHata(null); setGenelHata(null) }
+  const sifirla = () => { setKendi(false); setDuzenleId(null); setForm(BOS); setAlanHata(null); setGenelHata(null) }
 
   async function kaydet(e: React.FormEvent) {
     e.preventDefault()
@@ -101,7 +103,15 @@ export function KonsultanDefteri({ u }: { u: Uygulama }) {
         <h2 className="uza-h2">{duzenleId ? d.duzenle : d.ekle}</h2>
         <form className="uza-form" ref={formRef} onSubmit={(e) => { void kaydet(e) }} noValidate>
           {metinAlani('ad', d.ad, { yer: d.adYer, max: 120 })}
-          {metinAlani('brans', d.brans, { yer: d.bransYer, max: 80 })}
+          <div className="uza-alan">
+            <label className="uza-etiket" htmlFor="uza-df-brans">{d.brans}</label>
+            <select id="uza-df-brans" name="bransSecim" className="uza-girdi" value={kendi ? '__diger' : form.brans} onChange={(e) => { if (e.target.value === '__diger') { setKendi(true); setForm({ ...form, brans: '' }) } else { setKendi(false); setForm({ ...form, brans: e.target.value }) } }}>
+              <option value="">{d.bransSec}</option>
+              {bransler.map((b) => <option key={b} value={b}>{b}</option>)}
+              <option value="__diger">{d.bransDiger}</option>
+            </select>
+            {kendi ? <input id="uza-df-brans-kendi" name="brans" className="uza-girdi" style={{ marginTop: 8 }} type="text" maxLength={80} autoComplete="off" placeholder={d.bransDigerYer} aria-label={d.bransDigerYer} value={form.brans} onChange={(e) => setForm({ ...form, brans: e.target.value })} /> : null}
+          </div>
           {metinAlani('ofisTelefon', d.ofisTelefon, { type: 'tel', mod: 'tel', max: 40 })}
           {metinAlani('telefon', d.telefon, { type: 'tel', mod: 'tel', max: 40 })}
           {metinAlani('whatsapp', d.whatsapp, { type: 'tel', mod: 'tel', max: 40 })}
@@ -125,7 +135,7 @@ export function KonsultanDefteri({ u }: { u: Uygulama }) {
           <h2 className="uza-h2" style={{ marginTop: 18 }}>{yerine(d.defterSayisi, liste.length)}</h2>
           {liste.map((k) => (
             <DefterKarti key={k.id} k={k} d={d} duzenleniyor={duzenleId === k.id}
-              duzenle={() => { setDuzenleId(k.id); setForm({ ad: k.ad, brans: k.brans, ofisTelefon: k.ofisTelefon, telefon: k.telefon, whatsapp: k.whatsapp, eposta: k.eposta, adres: k.adres, not: k.not, kurumIci: k.kurumIci }); setAlanHata(null); setGenelHata(null); setBilgi(null); formRef.current?.scrollIntoView({ block: 'start', behavior: 'smooth' }) }}
+              duzenle={() => { setDuzenleId(k.id); setKendi(Boolean(k.brans) && !bransler.includes(k.brans)); setForm({ ad: k.ad, brans: k.brans, ofisTelefon: k.ofisTelefon, telefon: k.telefon, whatsapp: k.whatsapp, eposta: k.eposta, adres: k.adres, not: k.not, kurumIci: k.kurumIci }); setAlanHata(null); setGenelHata(null); setBilgi(null); formRef.current?.scrollIntoView({ block: 'start', behavior: 'smooth' }) }}
               sil={() => { void sil(k) }} />
           ))}
         </>
