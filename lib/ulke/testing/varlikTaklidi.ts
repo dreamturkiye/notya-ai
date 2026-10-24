@@ -14,6 +14,9 @@ import React from 'react'
 type Yukleyici = (m: { exports: unknown }, dosya: string) => void
 const uzantilar = (require as unknown as { extensions: Record<string, Yukleyici> }).extensions
 
+uzantilar['.png'] = (m, dosya) => {
+  m.exports = { src: `/uzbek/_next/static/media/${dosya.split(/[\\/]/).pop()}`, width: 1, height: 1 }
+}
 uzantilar['.jpg'] = (m, dosya) => {
   m.exports = { src: `/uzbek/_next/static/media/${dosya.split(/[\\/]/).pop()}`, width: 1, height: 1 }
 }

@@ -288,7 +288,7 @@ function DurumHapi({ r, durum }: { r: RandevuMetni; durum: RandevuDurumu }) {
   return <span className="yg-durum-hap" data-randevu-durum={durum}>{r.durum[durum]}</span>
 }
 
-const durumEtiketi = (r: RandevuMetni, x: RandevuKaydi, d: RandevuDurumu) => d === 'geldi' ? (x.durum === 'tamamlandi' ? r.randevu.geldiyeAl : r.randevu.geldi) : d === 'tamamlandi' ? r.randevu.tamamla : d === 'gelmedi' ? r.randevu.gelmedi : d === 'iptal' ? r.randevu.iptalEt : r.randevu.planaAl
+const durumEtiketi = (r: RandevuMetni, x: RandevuKaydi, d: RandevuDurumu) => d === 'geldi' ? (x.durum === 'tamamlandi' ? r.randevu.geldiyeAl : r.randevu.geldi) : d === 'tamamlandi' ? r.randevu.tamamla : d === 'gelmedi' ? r.randevu.gelmedi : d === 'iptal' ? r.randevu.iptalEt : x.durum === 'iptal' ? r.randevu.aktifEt : r.randevu.planaAl
 
 /**
  * One appointment as Türkiye's day view draws it: a card with the type's colour on its edge, the time, the name
@@ -801,6 +801,7 @@ export function durumEylemleri(x: Pick<RandevuKaydi, 'durum' | 'seansId'>): Rand
   if (x.durum === 'gelmedi') return ['geldi', 'planlandi', 'iptal']
   // "Done" by hand, with no visit, can be taken back; with a visit it is the approved note that finished it.
   if (x.durum === 'tamamlandi' && !x.seansId) return ['geldi']
+  if (x.durum === 'iptal') return ['planlandi']
   return []
 }
 
@@ -817,7 +818,7 @@ export function RandevuDetayGorunumu({ m, r, randevu, hekim, sureler, tasi, setT
   const x = randevu
   const tasinabilir = x.durum === 'planlandi' || x.durum === 'geldi'
   const eylemler = durumEylemleri(x)
-  const etiket = (d: RandevuDurumu) => d === 'geldi' ? (x.durum === 'tamamlandi' ? r.randevu.geldiyeAl : r.randevu.geldi) : d === 'tamamlandi' ? r.randevu.tamamla : d === 'gelmedi' ? r.randevu.gelmedi : d === 'iptal' ? r.randevu.iptalEt : r.randevu.planaAl
+  const etiket = (d: RandevuDurumu) => d === 'geldi' ? (x.durum === 'tamamlandi' ? r.randevu.geldiyeAl : r.randevu.geldi) : d === 'tamamlandi' ? r.randevu.tamamla : d === 'gelmedi' ? r.randevu.gelmedi : d === 'iptal' ? r.randevu.iptalEt : x.durum === 'iptal' ? r.randevu.aktifEt : r.randevu.planaAl
   // The reminder is for an appointment that is still to come: planned.
   const h = x.durum === 'planlandi' ? hatirlatmaMetni({ hastaDili: x.hastaDili ?? '', hekim, gun: x.gun, saat: x.saat }) : null
   const tasiMesaiDisi = hata?.nerede === 'tasi' && hata.kod === 'MESAI_DISI'
