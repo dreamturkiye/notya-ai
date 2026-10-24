@@ -183,6 +183,13 @@ export default function Ayarlar() {
 
   useEffect(() => { if (u.hesap && !hazir) { setD(ayarDurumu(u.hesap)); setRol(u.hesap.rol ?? ''); setDilim(u.hesap.saatDilimi ?? ''); setMeslek(u.hesap.meslekKaydi ?? ''); setHazir(true) } }, [u.hesap, hazir])
 
+  const [eposta, setEposta] = useState('')
+  const [sifre, setSifre] = useState('')
+  const [sifre2, setSifre2] = useState('')
+  const [sifreBekliyor, setSifreBekliyor] = useState(false)
+  const [sifreSonucu, setSifreSonucu] = useState<'tamam' | 'hata' | 'kisa' | 'eslesmiyor' | null>(null)
+  useEffect(() => { if (!u.hesap?.dil) return; void u.api('/api/ulke/hesap/sifre').then((r) => { if (r.ok && typeof r.j.eposta === 'string') setEposta(r.j.eposta) }).catch(() => undefined) }, [u.hesap?.dil])
+
   if (!u.hesap) return <Yukleniyor m={u.m} dil={u.dil} />
 
   async function gonder() {
@@ -195,13 +202,6 @@ export default function Ayarlar() {
     } catch { setSonuc('hata') }
     setBekliyor(false)
   }
-
-  const [eposta, setEposta] = useState('')
-  const [sifre, setSifre] = useState('')
-  const [sifre2, setSifre2] = useState('')
-  const [sifreBekliyor, setSifreBekliyor] = useState(false)
-  const [sifreSonucu, setSifreSonucu] = useState<'tamam' | 'hata' | 'kisa' | 'eslesmiyor' | null>(null)
-  useEffect(() => { if (!u.hesap?.dil) return; void u.api('/api/ulke/hesap/sifre').then((r) => { if (r.ok && typeof r.j.eposta === 'string') setEposta(r.j.eposta) }).catch(() => undefined) }, [u.hesap?.dil])
 
   async function sifreGonder() {
     if (sifre.length < 8) { setSifreSonucu('kisa'); return }
