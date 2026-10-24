@@ -24,6 +24,7 @@
     "149_ulke_gizlilik_ve_faturalama.sql",
     "150_ulke_odeme_olaylari.sql",
     "151_ulke_odeme_canli_mod.sql",
-    "152_ulke_guvenlik_sertlestirme.sql"
+    "152_ulke_guvenlik_sertlestirme.sql",
+    "180_ulke_randevu_tur_ve_kayitsiz.sql"
   ]
 }
