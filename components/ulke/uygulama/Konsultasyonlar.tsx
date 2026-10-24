@@ -23,6 +23,8 @@
 import React, { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { Bilgi, Hata, Secim, tarihYaz, YOL, type Uygulama } from './Kabuk'
 import { aracYolu } from './aracOrtak'
+import { KonsultanDefteri } from './KonsultanDefteri'
+import { CHROME_FONT, CHROME_RENK as R } from '@/lib/doktor/chromeRenk'
 import { panoyaKopyala } from './pano'
 import { alanAdi, alanTanimi, bolumAdi, konsultasyonMetni, NOT_BOLUMLERI, type KonsultasyonMetni, type UygulamaMetni } from '@/lib/ulke/arayuz'
 import { yerine } from '@/lib/ulke/arayuz/yerTutucu'
@@ -317,13 +319,48 @@ export function Konsultasyonlar({ u }: { u: Uygulama }) {
   }
 
   const x = konsultasyonMetni(u.dil)
+  const d = x.defter
+  const [sekme, setSekme] = useState<'bekleyen' | 'istem' | 'defter'>('bekleyen')
+  const sekmeler: { id: typeof sekme; etiket: string }[] = d ? [{ id: 'defter', etiket: d.sekmeDefter }, { id: 'istem', etiket: d.sekmeIstem }, { id: 'bekleyen', etiket: d.sekmeBekleyen }] : []
+  const kodKarti = (
+    <KodKarti k={x.kod} kod={kod} bekliyor={kodBekliyor} bildirim={kodBildirimi} onaySoruluyor={kodOnayi} uret={() => { void kodUret() }} yenileSor={() => { setKodOnayi(true); setKodBildirimi(null) }} yenileVazgec={() => setKodOnayi(false)}
+      kopyala={() => { if (kod) void panoyaKopyala(koduYaz(kod)).then((tamam) => setKodBildirimi(tamam ? 'kopyalandi' : 'kopyalanamadi')) }} />
+  )
+  const gelenListesi = (
+    <GelenListesi x={x} m={u.m} dil={u.dil} liste={gelen} yuklenemedi={yuklenemedi} cevaplar={cevaplar} setCevap={(id, metin) => { setCevaplar((eski) => ({ ...eski, [id]: metin })); setCevapHatasi(null) }} gonder={(id) => { void cevapla(id) }} bekleyen={bekleyen} hata={cevapHatasi} />
+  )
+  const gidenListesi = (
+    <GidenListesi x={x} m={u.m} dil={u.dil} liste={giden} yuklenemedi={yuklenemedi} hastaBaglantisi {...kapatma} />
+  )
+  // A pack without the contacts words keeps the single page it always had.
+  if (!d) return <>{kodKarti}{gelenListesi}{gidenListesi}</>
   return (
-    <>
-      <KodKarti k={x.kod} kod={kod} bekliyor={kodBekliyor} bildirim={kodBildirimi} onaySoruluyor={kodOnayi} uret={() => { void kodUret() }} yenileSor={() => { setKodOnayi(true); setKodBildirimi(null) }} yenileVazgec={() => setKodOnayi(false)}
-        kopyala={() => { if (kod) void panoyaKopyala(koduYaz(kod)).then((tamam) => setKodBildirimi(tamam ? 'kopyalandi' : 'kopyalanamadi')) }} />
-      <GelenListesi x={x} m={u.m} dil={u.dil} liste={gelen} yuklenemedi={yuklenemedi} cevaplar={cevaplar} setCevap={(id, metin) => { setCevaplar((eski) => ({ ...eski, [id]: metin })); setCevapHatasi(null) }} gonder={(id) => { void cevapla(id) }} bekleyen={bekleyen} hata={cevapHatasi} />
-      <GidenListesi x={x} m={u.m} dil={u.dil} liste={giden} yuklenemedi={yuklenemedi} hastaBaglantisi {...kapatma} />
-    </>
+    <div data-konsultasyonlar="">
+      <div role="tablist" aria-label={d.sekmeAria} style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginBottom: 18, borderBottom: `1px solid ${R.border}`, paddingBottom: 2 }}>
+        {sekmeler.map((s) => {
+          const aktif = sekme === s.id
+          return (
+            <button key={s.id} type="button" role="tab" aria-selected={aktif} data-sekme={s.id} onClick={() => setSekme(s.id)}
+              style={{ fontFamily: CHROME_FONT.sans, fontSize: 15, fontWeight: aktif ? 600 : 500, color: aktif ? R.pine : R.muted, background: 'transparent', border: 'none', borderBottom: aktif ? `2px solid ${R.pine}` : '2px solid transparent', padding: '10px 14px', cursor: 'pointer', marginBottom: -2 }}>
+              {s.etiket}
+            </button>
+          )
+        })}
+      </div>
+      {sekme === 'defter' ? <KonsultanDefteri u={u} /> : null}
+      {sekme === 'istem' ? (
+        <>
+          <section className="uza-kart" data-alan="konsultasyon-istem-aciklama">
+            <h2 className="uza-h2">{d.istemBaslik}</h2>
+            <p className="uza-aciklama">{d.istemAciklama}</p>
+            <a className="uza-dugme" href={YOL.hastalar} data-eylem="hasta-sec">{d.hastaSec}</a>
+          </section>
+          {kodKarti}
+          {gidenListesi}
+        </>
+      ) : null}
+      {sekme === 'bekleyen' ? gelenListesi : null}
+    </div>
   )
 }
 

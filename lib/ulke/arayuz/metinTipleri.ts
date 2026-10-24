@@ -1388,6 +1388,53 @@ export type SablonMetni = {
  * Placeholders: '%' where a sentence carries one value, '%1' '%2' where it carries two (see each key).
  */
 export type KonsultasyonMetni = {
+  /** The colleague address book and the tool's tabs (Türkiye gold: Defter · İstem · Bekleyen). Optional. */
+  readonly defter?: {
+    readonly sekmeBekleyen: string
+    readonly sekmeIstem: string
+    readonly sekmeDefter: string
+    readonly sekmeAria: string
+    readonly aciklama: string
+    readonly ekle: string
+    readonly duzenle: string
+    readonly ad: string
+    readonly adYer: string
+    readonly brans: string
+    readonly bransYer: string
+    readonly ofisTelefon: string
+    readonly telefon: string
+    readonly whatsapp: string
+    readonly eposta: string
+    readonly adres: string
+    readonly not: string
+    readonly notIpucu: string
+    readonly kurumIci: string
+    readonly kurumIciEtiket: string
+    readonly disarida: string
+    readonly kaydet: string
+    readonly degisiklikKaydet: string
+    readonly kaydediliyor: string
+    readonly vazgec: string
+    readonly duzenleniyor: string
+    readonly duzenleBtn: string
+    readonly sil: string
+    readonly silOnay: string
+    readonly eklendi: string
+    readonly guncellendi: string
+    readonly silindi: string
+    readonly bos: string
+    readonly yuklenemedi: string
+    readonly kaydedilemedi: string
+    readonly dolu: string
+    readonly adHata: string
+    readonly epostaHata: string
+    readonly telefonHata: string
+    readonly iletisimYok: string
+    readonly istemBaslik: string
+    readonly istemAciklama: string
+    readonly hastaSec: string
+    readonly defterSayisi: string
+  }
   readonly kod: {
     readonly baslik: string
     /** What the code is for, and that nobody finds the account without it. */
