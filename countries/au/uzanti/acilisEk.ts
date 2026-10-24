@@ -58,7 +58,6 @@ function ekBolumler(rolSayisi: number, sesli: boolean = SESLI()): EkOzellikBolum
       kart: {
         etiket: 'Privacy requests',
         satirlar: [{ k: 'Access request', mark: 'Days left' }, { k: 'Correction request', mark: 'Days left' }, { k: 'Consent records', v: 'Date and notice version' }, { k: 'Withdrawn consent', v: 'Shown as withdrawn' }],
-        not: 'Reviewed by a lawyer, October 2026.',
       },
     },
     {

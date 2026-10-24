@@ -41,7 +41,7 @@ export function yasalSayfasi(anahtar: YasalAnahtar) {
       <UlkeKart dil={dil.kod as DilKodu} genislik={820} anaSayfa={{ href: dilliYol('/', dil.kod as DilKodu), ad: dil.geri }} diller={diller}>
         <p style={S.bilgi} data-beta="evet">{betaNotu(dil.kod)}</p>
         <h1 style={{ margin: '16px 0 12px', fontSize: 28, lineHeight: 1.25 }}>{belge.baslik}</h1>
-        <p style={S.bilgi}>{belge.inceleme}</p>
+        {belge.inceleme ? <p style={S.bilgi}>{belge.inceleme}</p> : null}
         {belge.bolumler.map((b) => (
           <section key={b.baslik}>
             <h2 style={{ margin: '28px 0 8px', fontSize: 18 }}>{b.baslik}</h2>

@@ -24,7 +24,7 @@ export function uzantiBelgesi(slug: string) {
       <UlkeKart dil={dil} genislik={820} anaSayfa={{ href: '/', ad: 'Home' }} diller={[]}>
         <p style={S.bilgi} data-beta="evet">{betaNotu(dil)}</p>
         <h1 style={{ margin: '16px 0 12px', fontSize: 28, lineHeight: 1.25 }}>{b!.baslik}</h1>
-        <p style={S.bilgi}>{b!.inceleme}</p>
+        {b!.inceleme ? <p style={S.bilgi}>{b!.inceleme}</p> : null}
         {b!.bolumler.map((x) => (
           <section key={x.baslik}>
             <h2 style={{ margin: '28px 0 8px', fontSize: 18 }}>{x.baslik}</h2>

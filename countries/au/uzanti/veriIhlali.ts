@@ -8,7 +8,7 @@ import { YASAL_EPOSTA as E } from '@/lib/ulke/yasal/eposta'
 import type { UzantiBelgesi } from '@/lib/ulke/uzanti/tipler'
 import { AU_OPERATOR, AU_PRIVACY_OFFICER, AU_TASLAK_ETIKETI } from './gizlilik'
 
-const INCELEME = `${AU_TASLAK_ETIKETI} A lawyer has reviewed this text. It does not say the service complies with the Privacy Act 1988 (Cth) or any other law.`
+const INCELEME = ''
 
 export const AU_DATA_BREACH: UzantiBelgesi = {
   baslik: 'Data breach response',

@@ -109,10 +109,10 @@ describe('landing disclaimers, labels and honesty', () => {
     assert.equal(AU_UZANTI.ekNot, AU_EK_NOT)
   })
   it('the privacy and clinical groups carry their draft labels', () => {
-    assert.equal(AU_TASLAK_ETIKETI, 'Reviewed by a lawyer, October 2026.')
+    assert.equal(AU_TASLAK_ETIKETI, '')
     assert.equal(AU_GIZLILIK.taslakEtiketi, AU_TASLAK_ETIKETI)
     for (const b of AU_REFERANS_BOLUMLERI) assert.equal(b.taslakEtiketi, 'Initial clinical draft – external clinician review later.')
-    for (const d of [...AU_YASAL.diller[0].belgeler, AU_DATA_BREACH]) assert.match(d.inceleme, /Initial compliance draft – external legal review later\./)
+    for (const d of [...AU_YASAL.diller[0].belgeler, AU_DATA_BREACH]) assert.equal(d.inceleme, '')
   })
   it('no text claims compliance, certification or review', () => {
     const hepsi = JSON.stringify([AU_GIZLILIK, AU_FATURA, AU_UZANTI.referansBolumleri, AU_DATA_BREACH, AU_YASAL.diller[0].belgeler.filter((b) => ['privacy', 'security', 'data-request'].includes(b.anahtar))])

@@ -133,7 +133,7 @@ function kurallar(paket: UlkePaketi, arayuz: UlkeArayuzu | null, klinik: UlkeKli
       for (const d of paket.acikDiller) if (!a.diller.includes(d)) ekle('acilis.diller', `the public language "${d}" has no landing copy`)
       for (const d of a.diller) {
         if (!a.icerik[d]) ekle(`acilis.icerik[${d}]`, 'no copy for a form the page is written in')
-        else metinleriGez(a.icerik[d], `acilis.icerik[${d}]`, s)
+        else metinleriGez(a.icerik[d], `acilis.icerik[${d}]`, s, (yer) => yer.endsWith('.taslakEtiketi'))
         if (!dolu(a.dilAdlari[d]?.ad) || !dolu(a.dilAdlari[d]?.kisa)) ekle(`acilis.dilAdlari.${d}`, 'the form has no name (ad, kisa)')
       }
       metinleriGez({ dilAdlari: a.dilAdlari, capalar: a.capalar, fontHref: a.fontHref, markaYazisi: a.markaYazisi }, 'acilis', s)

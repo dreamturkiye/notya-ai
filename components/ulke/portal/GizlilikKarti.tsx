@@ -19,7 +19,7 @@ export function GizlilikBildirimi({ g, acik }: { g: GizlilikMetni; acik?: boolea
   return (
     <details className="uza-bildirim" open={acik} data-alan="gizlilik-bildirimi" data-surum={g.surum}>
       <summary><strong>{g.bildirim.baslik}</strong></summary>
-      <p className="uza-ipucu" data-alan="taslak-etiketi">{g.taslakEtiketi}</p>
+      {g.taslakEtiketi ? <p className="uza-ipucu" data-alan="taslak-etiketi">{g.taslakEtiketi}</p> : null}
       <p className="uza-not-metin">{g.bildirim.giris}</p>
       {g.bildirim.bolumler.map((b) => (
         <div key={b.baslik}>
@@ -95,7 +95,7 @@ export function PortalGizlilikKarti({ iste, oturumBitti }: { iste: PortalIstegi;
   return (
     <section className="uza-kart" data-alan="portal-gizlilik">
       <h2 className="uza-h2">{g.riza.baslik}</h2>
-      <p className="uza-ipucu">{g.taslakEtiketi}</p>
+      {g.taslakEtiketi ? <p className="uza-ipucu">{g.taslakEtiketi}</p> : null}
       <GizlilikBildirimi g={g} />
       <p className="uza-not-metin" data-alan="riza-metni">{g.riza.metin}</p>
       {riza ? (

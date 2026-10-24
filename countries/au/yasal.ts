@@ -24,7 +24,7 @@ const temel = ingilizceYasal({
   copyright: 'Review this draft against the Copyright Act 1968 (Cth).',
 })
 
-const INCELEME = `${AU_TASLAK_ETIKETI} A lawyer has reviewed this text. It does not say the service complies with the Privacy Act 1988 (Cth) or any other law.`
+const INCELEME = ''
 
 const MEDICAL: YasalBelge = {
   anahtar: 'medical',

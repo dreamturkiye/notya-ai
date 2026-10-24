@@ -39,7 +39,7 @@ export default function GizlilikTalepleri() {
     <Cerceve dil={u.dil} m={u.m} ad={u.hesap.ad} unvan={rolAdi(u.hesap.rol, u.dil) ?? undefined} aktif="gizlilikTalepleri" cikis={u.cikis}>
       <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}><h1 className="uza-h1">{d.baslik}</h1><Ipucu m={u.m} bolum="gizlilik" /></span>
       <p className="uza-aciklama">{d.aciklama}</p>
-      <p className="uza-ipucu" data-alan="taslak-etiketi">{g.taslakEtiketi}</p>
+      {g.taslakEtiketi ? <p className="uza-ipucu" data-alan="taslak-etiketi">{g.taslakEtiketi}</p> : null}
       <Hata>{hata}</Hata>
       <section className="uza-kart" data-alan="talep-liste">
         {talepler === null ? <p className="uza-bos">…</p> : talepler.length === 0 ? <p className="uza-bos">{d.bos}</p> : (
