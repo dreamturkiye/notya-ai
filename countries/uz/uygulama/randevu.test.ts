@@ -263,7 +263,7 @@ describe('Uzbekistan appointments: booking, moving, status', () => {
     const r = await al('jeton-a', { hastaId: h1, gun: yaz(PAZARTESI), saat: '10:00', sureDk: 30, neden: '  Nazorat koʻrigi, yoʻtal  ' })
     assert.equal(r.s, 200, JSON.stringify(r.j))
     const [s] = satirlar()
-    assert.deepEqual(r.j.randevu, { id: s.id, hastaId: h1, hastaAdi: 'QA Karimova Dilnoza', baslangic: an(PAZARTESI, '10:00'), bitis: an(PAZARTESI, '10:30'), gun: PAZARTESI, saat: '10:00', sureDk: 30, neden: 'Nazorat koʻrigi, yoʻtal', durum: 'planlandi', mesaiDisi: false, seansId: null })
+    assert.deepEqual(r.j.randevu, { id: s.id, hastaId: h1, hastaAdi: 'QA Karimova Dilnoza', kayitli: true, hastaTelefon: '', tur: 'muayene', baslangic: an(PAZARTESI, '10:00'), bitis: an(PAZARTESI, '10:30'), gun: PAZARTESI, saat: '10:00', sureDk: 30, neden: 'Nazorat koʻrigi, yoʻtal', durum: 'planlandi', mesaiDisi: false, seansId: null })
     assert.deepEqual([s.doctor_id, s.patient_id, s.baslangic, s.bitis, s.durum, s.mesai_disi], [A, h1, an(PAZARTESI, '10:00'), an(PAZARTESI, '10:30'), 'planlandi', false])
     assert.ok(typeof s.neden_encrypted === 'string' && !String(s.neden_encrypted).includes('Nazorat') && !JSON.stringify(s).includes('yoʻtal'), 'the reason is stored readable')
     // Read back: the patient's own language comes with it (for the reminder text).
@@ -665,7 +665,7 @@ describe('Uzbekistan appointments: text, reminder and screens in the three forms
   const DUZEN = { gunler: [1, 2, 3, 4, 5], baslangic: '09:00', bitis: '18:00', sureDk: 30, molalar: [{ baslangic: '13:00', bitis: '14:00' }] }
   // 2026-10-12 is a Monday.
   const PZT = '2026-10-12'
-  const randevu = (id: string, gun: string, saat: string, durum: string, ek: Record<string, unknown> = {}) => ({ id, hastaId: HASTA.id, hastaAdi: 'QA Karimova Dilnoza', baslangic: `${gun}T00:00:00.000Z`, bitis: `${gun}T00:30:00.000Z`, gun, saat, sureDk: 30, neden: '', durum, mesaiDisi: false, seansId: null, ...ek }) as import('@/components/ulke/uygulama/Takvim').RandevuKaydi
+  const randevu = (id: string, gun: string, saat: string, durum: string, ek: Record<string, unknown> = {}) => ({ id, hastaId: HASTA.id, hastaAdi: 'QA Karimova Dilnoza', kayitli: true, hastaTelefon: '', tur: 'muayene', baslangic: `${gun}T00:00:00.000Z`, bitis: `${gun}T00:30:00.000Z`, gun, saat, sureDk: 30, neden: '', durum, mesaiDisi: false, seansId: null, ...ek }) as import('@/components/ulke/uygulama/Takvim').RandevuKaydi
 
   it('the catalogue says, at its top, that it is machine-written, that the reminder is patient-facing, and that it awaits native review', () => {
     const bas = readFileSync(join(KOK, 'countries/uz/uygulama/randevuMetinleri.ts'), 'utf8').slice(0, 1600)
@@ -978,5 +978,77 @@ describe('Uzbekistan appointments: text, reminder and screens in the three forms
       // No address is written by hand: every one comes from YOL (the country's path prefix).
       assert.doesNotMatch(kod, /['"`]\/(calendar|visit|patient|today|settings|uzbek)/, `${d} writes an address by hand`)
     }
+  })
+})
+
+// INNER-A (2026-10-23): the calendar of Türkiye — appointment type, an appointment by name without a patient record
+// ("kayıtsız"), linked to a record later, and deleted. Same isolation as every other appointment route.
+describe('Uzbekistan appointments: type, a booking by name without a record, linking, deleting', () => {
+  beforeEach(sifirla)
+  const sil = async (jeton: string | undefined, id: string) => oku(await R.randevu.DELETE(istek(`/api/ulke/randevu?id=${id}`, jeton, undefined, 'DELETE')))
+  const yok = { s: 404, j: { code: 'NOT_FOUND' } }
+
+  it('a booking by name stores the name encrypted, carries no patient, and needs a name', async () => {
+    const r = await al('jeton-a', { serbestAd: '  QA Mehmon  ', serbestTelefon: '+998 90 111 11 11', gun: yaz(PAZARTESI), saat: '10:00', sureDk: 30, tur: 'kontrol' })
+    assert.equal(r.s, 200, JSON.stringify(r.j))
+    assert.deepEqual([r.j.randevu.hastaId, r.j.randevu.hastaAdi, r.j.randevu.kayitli, r.j.randevu.hastaTelefon, r.j.randevu.tur], ['', 'QA Mehmon', false, '+998 90 111 11 11', 'kontrol'])
+    const [s] = satirlar()
+    assert.equal(s.patient_id, null)
+    assert.ok(typeof s.serbest_ad_encrypted === 'string' && !JSON.stringify(s).includes('Mehmon') && !JSON.stringify(s).includes('111 11 11'), 'the name or phone is stored readable')
+    // No name, and no patient: refused with the field. A patient key that is present but empty or malformed is never "no patient".
+    assert.deepEqual(await al('jeton-a', { gun: yaz(SALI), saat: '10:00', sureDk: 30 }), { s: 400, j: { code: 'GECERSIZ', alan: 'ad' } })
+    assert.deepEqual(await al('jeton-a', { hastaId: '', serbestAd: 'QA', gun: yaz(SALI), saat: '10:00', sureDk: 30 }), yok)
+    assert.deepEqual(await al('jeton-a', { serbestAd: 'QA', tur: 'zzz', gun: yaz(SALI), saat: '10:00', sureDk: 30 }), { s: 400, j: { code: 'GECERSIZ', alan: 'tur' } })
+    assert.equal(satirlar().length, 1)
+  })
+
+  it('a booking by name still holds its time: no double booking, and it cannot be started as a visit', async () => {
+    const r = await al('jeton-a', { serbestAd: 'QA Mehmon', gun: yaz(PAZARTESI), saat: '10:00', sureDk: 30 })
+    assert.equal(r.s, 200)
+    const h = await hastaEkle('jeton-a', 'QA Karimova Dilnoza')
+    assert.deepEqual(await al('jeton-a', { hastaId: h, gun: yaz(PAZARTESI), saat: '10:00', sureDk: 30 }), { s: 409, j: { code: 'DOLU' } })
+    assert.equal((await liste('jeton-a', `?gun=${PAZARTESI}`)).j.randevular[0].kayitli, false)
+  })
+
+  it('the type can be changed; the month, list and agenda views read their own range', async () => {
+    const h = await hastaEkle('jeton-a', 'QA Karimova Dilnoza')
+    const id = (await al('jeton-a', { hastaId: h, gun: yaz(PAZARTESI), saat: '10:00', sureDk: 30 })).j.randevu.id as string
+    assert.equal((await al('jeton-a', { hastaId: h, gun: yaz(PAZARTESI), saat: '11:00', sureDk: 30 })).j.randevu.tur, 'muayene')
+    assert.equal((await degistir('jeton-a', { id, tur: 'ilk_muayene' })).j.randevu.tur, 'ilk_muayene')
+    assert.deepEqual(await degistir('jeton-a', { id, tur: 'zzz' }), { s: 400, j: { code: 'GECERSIZ', alan: 'tur' } })
+    for (const g of ['ay', 'liste', 'ajanda']) {
+      const l = await liste('jeton-a', `?gun=${PAZARTESI}&gorunum=${g}`)
+      assert.equal(l.s, 200, g)
+      assert.ok(l.j.gunler.length >= 28 && l.j.randevular.some((x: Record<string, unknown>) => x.id === id), g)
+    }
+    assert.equal((await liste('jeton-a', `?gun=${PAZARTESI}&gorunum=ay`)).j.gunler.length, 42)
+    assert.equal((await liste('jeton-a', `?gun=${PAZARTESI}&gorunum=ajanda`)).j.gunler.length, 30)
+  })
+
+  it('linking to a record: only THIS doctor\'s patient, only an appointment without one; the typed name is then gone', async () => {
+    const id = (await al('jeton-a', { serbestAd: 'QA Mehmon', serbestTelefon: '+998 90 111 11 11', gun: yaz(PAZARTESI), saat: '10:00', sureDk: 30 })).j.randevu.id as string
+    const benim = await hastaEkle('jeton-a', 'QA Karimova Dilnoza')
+    const onun = await hastaEkle('jeton-b', 'QA GIZLI-BEMOR-7Q')
+    // The other doctor's patient, and another doctor's appointment: the same "not found" as a made-up id.
+    assert.deepEqual(await degistir('jeton-a', { id, hastaId: onun }), yok)
+    assert.deepEqual(await degistir('jeton-a', { id, hastaId: YOK }), yok)
+    assert.deepEqual(await degistir('jeton-b', { id, hastaId: onun }), yok)
+    assert.equal(satirlar()[0].patient_id, null)
+    const l = await degistir('jeton-a', { id, hastaId: benim })
+    assert.equal(l.s, 200, JSON.stringify(l.j))
+    assert.deepEqual([l.j.randevu.hastaId, l.j.randevu.hastaAdi, l.j.randevu.kayitli, l.j.randevu.hastaTelefon], [benim, 'QA Karimova Dilnoza', true, ''])
+    assert.deepEqual([satirlar()[0].serbest_ad_encrypted, satirlar()[0].serbest_telefon_encrypted], [null, null])
+    // Linked once: a second link is refused (the appointment already has a patient).
+    assert.deepEqual(await degistir('jeton-a', { id, hastaId: benim }), { s: 409, j: { code: 'GECIS_YOK' } })
+  })
+
+  it('deleting: the owner, an appointment without a visit; another doctor\'s or a made-up id answers "not found"', async () => {
+    const id = (await al('jeton-a', { serbestAd: 'QA Mehmon', gun: yaz(PAZARTESI), saat: '10:00', sureDk: 30 })).j.randevu.id as string
+    assert.deepEqual(await sil('jeton-b', id), yok); assert.deepEqual(await sil('jeton-a', YOK), yok); assert.deepEqual(await sil('jeton-a', 'abc'), yok)
+    assert.deepEqual(await sil(undefined, id), { s: 401, j: { code: 'OTURUM_YOK' } })
+    assert.equal(satirlar().length, 1)
+    assert.deepEqual(await sil('jeton-a', id), { s: 200, j: { silindi: true } })
+    assert.equal(satirlar().length, 0)
+    assert.deepEqual(await sil('jeton-a', id), yok)
   })
 })

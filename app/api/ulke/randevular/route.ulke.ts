@@ -4,7 +4,10 @@
  *   ?gun=<YYYY-MM-DD>[&gorunum=hafta]   the appointments that start on that day of the COUNTRY — or, with
  *                                       gorunum=hafta, in the week that day lies in (the week starts on the pack's
  *                                       first weekday). No `gun` = the country's today.
- *        200 { gunler: ['YYYY-MM-DD', …], bugun, randevular: [{ id, hastaId, hastaAdi, baslangic, bitis, gun, saat, sureDk, neden, durum, mesaiDisi, seansId }] }
+ *                                       gorunum=ay      the 42 days of the month grid of that day (INNER-A: every cell shows its own)
+ *                                       gorunum=liste   the days of that day's month, for the list view
+ *                                       gorunum=ajanda  30 days from that day, for the agenda view
+ *        200 { gunler: ['YYYY-MM-DD', …], bugun, randevular: [{ id, hastaId, hastaAdi, kayitli, hastaTelefon, tur, baslangic, bitis, gun, saat, sureDk, neden, durum, mesaiDisi, seansId }] }
  *        400 { code: 'GECERSIZ', alan: 'gun' }
  *   ?hasta=<hastaId>                    that patient's appointments from today on
  *        200 { randevular: [...] }
@@ -25,6 +28,9 @@ import { hesapSaatDilimi } from '@/lib/ulke/uygulama/saatDilimi'
 import { hastaGetir } from '@/lib/ulke/uygulama/hastalar'
 import { hastaninRandevulari, randevulariListele } from '@/lib/ulke/uygulama/randevular'
 import { gunCoz, gunEkle, haftaninIlkGunu } from '@/lib/ulke/uygulama/zaman'
+
+/** Days in the month of a 'YYYY-MM-DD'. */
+const ayGunSayisi = (gun: string) => new Date(Date.UTC(Number(gun.slice(0, 4)), Number(gun.slice(5, 7)), 0)).getUTCDate()
 
 export const dynamic = 'force-dynamic'
 
@@ -47,9 +53,13 @@ export const GET = sinirda('randevular GET', async (req: NextRequest) => {
   const gunHam = p.get('gun')
   const gun = gunHam === null || gunHam === '' ? bugun : gunCoz(gunHam, paket.bicim.tarihDeseni)
   if (!gun) return KOD.gecersiz('gun')
-  const hafta = p.get('gorunum') === 'hafta'
-  const ilkGun = hafta ? haftaninIlkGunu(gun, paket.bicim.haftaBasi) : gun
-  const gunSayisi = hafta ? 7 : 1
+  const gorunum = p.get('gorunum')
+  let ilkGun = gun
+  let gunSayisi = 1
+  if (gorunum === 'hafta') { ilkGun = haftaninIlkGunu(gun, paket.bicim.haftaBasi); gunSayisi = 7 }
+  else if (gorunum === 'ay') { ilkGun = haftaninIlkGunu(`${gun.slice(0, 7)}-01`, paket.bicim.haftaBasi); gunSayisi = 42 }
+  else if (gorunum === 'liste') { ilkGun = `${gun.slice(0, 7)}-01`; gunSayisi = ayGunSayisi(gun) }
+  else if (gorunum === 'ajanda') { gunSayisi = 30 }
   const randevular = await randevulariListele(oturum.supabase, oturum.user.id, ilkGun, gunSayisi)
   if (!randevular) return KOD.basarisiz()
   return cevap({ gunler: Array.from({ length: gunSayisi }, (_, i) => gunEkle(ilkGun, i)), bugun, randevular })

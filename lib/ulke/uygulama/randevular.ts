@@ -47,14 +47,27 @@ const GECISLER: Readonly<Record<RandevuDurumu, readonly RandevuDurumu[]>> = {
   iptal: ['planlandi', 'geldi', 'gelmedi'],
 }
 export const NEDEN_AZAMI = 200
+/** Appointment types (migration 180). Colour in the calendar; 'muayene' is what every older appointment is. */
+export const RANDEVU_TURLERI = ['ilk_muayene', 'muayene', 'kontrol', 'diger'] as const
+export type RandevuTuru = (typeof RANDEVU_TURLERI)[number]
+export const randevuTuruMu = (ham: unknown): ham is RandevuTuru => typeof ham === 'string' && (RANDEVU_TURLERI as readonly string[]).includes(ham)
+/** The longest name and phone an appointment without a patient record carries. */
+export const SERBEST_AD_AZAMI = 120
+export const SERBEST_TELEFON_AZAMI = 40
 /** How far ahead an appointment may be booked, in days. */
 export const ILERI_GUN_AZAMI = 730
 
 export type Randevu = {
   id: string
+  /** '' for an appointment without a patient record (INNER-A: booked by name, linked to a record later). */
   hastaId: string
   /** '' when the row's patient is not this doctor's (never another doctor's patient's name). */
   hastaAdi: string
+  /** false = booked by name only: no patient record yet. */
+  kayitli: boolean
+  /** Only for an appointment without a record: the phone typed with the name. */
+  hastaTelefon: string
+  tur: RandevuTuru
   /** ISO instants. */
   baslangic: string
   bitis: string
@@ -75,8 +88,8 @@ const ret = (kod: RandevuRetKodu, alan?: string): Ret => ({ tamam: false, kod, .
 
 export const randevuDurumuMu = (ham: unknown): ham is RandevuDurumu => typeof ham === 'string' && (RANDEVU_DURUMLARI as readonly string[]).includes(ham)
 
-type Satir = { id: string; patient_id: string; baslangic: string; bitis: string; neden_encrypted: string | null; durum: string; mesai_disi: boolean | null; session_id: string | null }
-const KOLONLAR = 'id, patient_id, baslangic, bitis, neden_encrypted, durum, mesai_disi, session_id'
+type Satir = { id: string; patient_id: string | null; baslangic: string; bitis: string; neden_encrypted: string | null; durum: string; mesai_disi: boolean | null; session_id: string | null; tur?: string | null; serbest_ad_encrypted?: string | null; serbest_telefon_encrypted?: string | null }
+const KOLONLAR = 'id, patient_id, baslangic, bitis, neden_encrypted, durum, mesai_disi, session_id, tur, serbest_ad_encrypted, serbest_telefon_encrypted'
 const TABLO = 'ulke_randevulari'
 /** PostgreSQL's code for a violated exclusion constraint: the time is taken. */
 const CAKISMA_KODU = '23P01'
@@ -92,8 +105,11 @@ function satirdan(s: Satir, hastaAdi: string, dilim: string): Randevu {
   const y = yerelAn(bas, dilim)
   return {
     id: s.id,
-    hastaId: s.patient_id,
-    hastaAdi,
+    hastaId: s.patient_id ?? '',
+    hastaAdi: s.patient_id ? hastaAdi : coz(s.serbest_ad_encrypted),
+    kayitli: Boolean(s.patient_id),
+    hastaTelefon: s.patient_id ? '' : coz(s.serbest_telefon_encrypted),
+    tur: randevuTuruMu(s.tur) ? s.tur : 'muayene',
     baslangic: new Date(bas).toISOString(),
     bitis: new Date(bit).toISOString(),
     gun: y.gun,
@@ -149,7 +165,14 @@ async function yerKontrolu(supabase: SupabaseClient, doktorId: string, z: { bas:
   return { tamam: true, mesaiDisi: !icinde }
 }
 
-export type RandevuGirdisi = ZamanGirdisi & { hastaId: string; neden: string }
+export type RandevuGirdisi = ZamanGirdisi & {
+  /** '' = no patient record: then `serbestAd` is required. */
+  hastaId: string
+  neden: string
+  tur?: RandevuTuru
+  serbestAd?: string
+  serbestTelefon?: string
+}
 
 /**
  * NOTYA-ULKE-PORTAL-01 — the same two checks a booking makes, for a caller that writes the appointment itself
@@ -169,8 +192,12 @@ export async function randevuYeriHazirla(supabase: SupabaseClient, doktorId: str
 /** Books an appointment for one of THIS doctor's patients. */
 export async function randevuOlustur(supabase: SupabaseClient, doktorId: string, g: RandevuGirdisi, simdi = Date.now()): Promise<{ tamam: true; randevu: Randevu } | Ret> {
   // ISOLATION: the patient must be this doctor's before anything is read or written for them.
-  const hasta = await hastaGetir(supabase, doktorId, g.hastaId)
-  if (!hasta) return ret('NOT_FOUND')
+  const hasta = g.hastaId ? await hastaGetir(supabase, doktorId, g.hastaId) : null
+  if (g.hastaId && !hasta) return ret('NOT_FOUND')
+  // Without a record the appointment carries a name; it is stored encrypted, like the reason.
+  const serbestAd = (g.serbestAd ?? '').trim().slice(0, SERBEST_AD_AZAMI)
+  const serbestTelefon = (g.serbestTelefon ?? '').trim().slice(0, SERBEST_TELEFON_AZAMI)
+  if (!hasta && !serbestAd) return ret('GECERSIZ', 'ad')
   const dilim = await hesapSaatDilimi(supabase, doktorId)
   const z = zamanCoz(g, simdi, dilim)
   if (!z.tamam) return z
@@ -180,10 +207,13 @@ export async function randevuOlustur(supabase: SupabaseClient, doktorId: string,
   const { data, error } = await ulkeTablosu(supabase, TABLO)
     .insert({
       doctor_id: doktorId,
-      patient_id: hasta.id,
+      patient_id: hasta?.id ?? null,
       baslangic: new Date(z.bas).toISOString(),
       bitis: new Date(z.bit).toISOString(),
       neden_encrypted: neden ? encrypt(neden) : null,
+      tur: g.tur && randevuTuruMu(g.tur) ? g.tur : 'muayene',
+      serbest_ad_encrypted: hasta ? null : encrypt(serbestAd),
+      serbest_telefon_encrypted: !hasta && serbestTelefon ? encrypt(serbestTelefon) : null,
       durum: 'planlandi',
       mesai_disi: yer.mesaiDisi,
     })
@@ -192,7 +222,7 @@ export async function randevuOlustur(supabase: SupabaseClient, doktorId: string,
   // The database's own refusal: somebody else's request took the time between the check and this statement.
   if (error) return ret((error as { code?: string }).code === CAKISMA_KODU ? 'DOLU' : 'BASARISIZ')
   if (!data) return ret('BASARISIZ')
-  return { tamam: true, randevu: satirdan(data as Satir, hasta.ad, dilim) }
+  return { tamam: true, randevu: satirdan(data as Satir, hasta?.ad ?? '', dilim) }
 }
 
 async function satirOku(supabase: SupabaseClient, doktorId: string, id: string): Promise<Satir | null> {
@@ -205,7 +235,7 @@ export async function randevuGetir(supabase: SupabaseClient, doktorId: string, i
   const s = await satirOku(supabase, doktorId, id)
   if (!s) return null
   // The patient is read by doctor AND id: a row pointing at somebody else's patient shows no name and no language.
-  const hasta = await hastaGetir(supabase, doktorId, s.patient_id)
+  const hasta = s.patient_id ? await hastaGetir(supabase, doktorId, s.patient_id) : null
   return { ...satirdan(s, hasta?.ad ?? '', await hesapSaatDilimi(supabase, doktorId)), hastaDili: hasta?.dil ?? '' }
 }
 
@@ -228,8 +258,8 @@ export async function randevuTasi(supabase: SupabaseClient, doktorId: string, id
   if (error) return ret((error as { code?: string }).code === CAKISMA_KODU ? 'DOLU' : 'BASARISIZ')
   const yeni = ((data as Satir[] | null) ?? [])[0]
   if (!yeni) return ret('GECIS_YOK')
-  const adlar = await hastaAdlari(supabase, doktorId, [yeni.patient_id])
-  return { tamam: true, randevu: satirdan(yeni, adlar.get(yeni.patient_id) ?? '', dilim) }
+  const adlar = await hastaAdlari(supabase, doktorId, [yeni.patient_id ?? ''])
+  return { tamam: true, randevu: satirdan(yeni, adlar.get(yeni.patient_id ?? '') ?? '', dilim) }
 }
 
 /**
@@ -252,14 +282,14 @@ export async function randevuDurumDegistir(supabase: SupabaseClient, doktorId: s
   if (error) return ret((error as { code?: string }).code === CAKISMA_KODU ? 'DOLU' : 'BASARISIZ')
   const yeni = ((data as Satir[] | null) ?? [])[0]
   if (!yeni) return ret('GECIS_YOK')
-  const adlar = await hastaAdlari(supabase, doktorId, [yeni.patient_id])
-  return { tamam: true, randevu: satirdan(yeni, adlar.get(yeni.patient_id) ?? '', await hesapSaatDilimi(supabase, doktorId)) }
+  const adlar = await hastaAdlari(supabase, doktorId, [yeni.patient_id ?? ''])
+  return { tamam: true, randevu: satirdan(yeni, adlar.get(yeni.patient_id ?? '') ?? '', await hesapSaatDilimi(supabase, doktorId)) }
 }
 
 async function adlandir(supabase: SupabaseClient, doktorId: string, satirlar: Satir[], dilim: string): Promise<Randevu[]> {
   if (!satirlar.length) return []
-  const adlar = await hastaAdlari(supabase, doktorId, satirlar.map((s) => s.patient_id))
-  return satirlar.map((s) => satirdan(s, adlar.get(s.patient_id) ?? '', dilim))
+  const adlar = await hastaAdlari(supabase, doktorId, satirlar.map((s) => s.patient_id ?? ''))
+  return satirlar.map((s) => satirdan(s, adlar.get(s.patient_id ?? '') ?? '', dilim))
 }
 
 /**
@@ -292,6 +322,44 @@ export async function hastaninRandevulari(supabase: SupabaseClient, doktorId: st
     .limit(50)
   if (error || !data) return null
   return adlandir(supabase, doktorId, data as Satir[], dilim)
+}
+
+/** Changes the type of an appointment (colour only). Scoped by doctor in the same statement. */
+export async function randevuTuruDegistir(supabase: SupabaseClient, doktorId: string, id: string, tur: RandevuTuru): Promise<{ tamam: true; randevu: Randevu } | Ret> {
+  const { data, error } = await ulkeTablosu(supabase, TABLO).update({ tur, updated_at: new Date().toISOString() }).eq('id', id).eq('doctor_id', doktorId).select(KOLONLAR)
+  if (error) return ret('BASARISIZ')
+  const yeni = ((data as Satir[] | null) ?? [])[0]
+  if (!yeni) return ret('NOT_FOUND')
+  const adlar = await hastaAdlari(supabase, doktorId, [yeni.patient_id ?? ''])
+  return { tamam: true, randevu: satirdan(yeni, adlar.get(yeni.patient_id ?? '') ?? '', await hesapSaatDilimi(supabase, doktorId)) }
+}
+
+/**
+ * Links an appointment booked by name to a patient record. ISOLATION: the patient must be THIS doctor's (read by
+ * doctor and id), and the appointment must be this doctor's and still without a patient — one statement carries both.
+ * The name and phone typed at booking are then removed from the row: the record is the one place for them.
+ */
+export async function randevuyuHastayaBagla(supabase: SupabaseClient, doktorId: string, id: string, hastaId: string): Promise<{ tamam: true; randevu: Randevu } | Ret> {
+  const hasta = await hastaGetir(supabase, doktorId, hastaId)
+  if (!hasta) return ret('NOT_FOUND')
+  const { data, error } = await ulkeTablosu(supabase, TABLO)
+    .update({ patient_id: hasta.id, serbest_ad_encrypted: null, serbest_telefon_encrypted: null, updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .eq('doctor_id', doktorId)
+    .is('patient_id', null)
+    .select(KOLONLAR)
+  if (error) return ret('BASARISIZ')
+  const yeni = ((data as Satir[] | null) ?? [])[0]
+  // Another doctor's appointment answers exactly like one that does not exist; only this doctor's own, already linked, is "no change possible".
+  if (!yeni) return ret((await satirOku(supabase, doktorId, id)) ? 'GECIS_YOK' : 'NOT_FOUND')
+  return { tamam: true, randevu: satirdan(yeni, hasta.ad, await hesapSaatDilimi(supabase, doktorId)) }
+}
+
+/** Removes an appointment of THIS doctor that has no visit. A real cancellation is a status, not this. */
+export async function randevuSil(supabase: SupabaseClient, doktorId: string, id: string): Promise<{ tamam: true } | Ret> {
+  const { data, error } = await ulkeTablosu(supabase, TABLO).delete().eq('id', id).eq('doctor_id', doktorId).is('session_id', null).select('id')
+  if (error) return ret('BASARISIZ')
+  return (data as unknown[] | null)?.length ? { tamam: true } : ret('NOT_FOUND')
 }
 
 // ───────────────────────── from appointment to visit ─────────────────────────
