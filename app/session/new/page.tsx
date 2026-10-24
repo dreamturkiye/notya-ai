@@ -10,6 +10,7 @@ import { bransAnahtari } from "@/lib/specialties/bransAnahtari"
 import { muayeneFormuYolu } from "@/lib/doktor/muayeneFormuYolu"
 import { onaylananNotYolu, INCELEME_KUYRUGU_YOLU } from "@/lib/doktor/onaySonrasiYol"
 import { seansGeriHref } from "@/lib/doktor/geriNavigasyon"
+import { SeansSayfasi } from "@/components/doktor/SeansKurulumu"
 import { CHROME_FONT, CHROME_FONT_HREF } from "@/lib/doktor/chromeTheme"
 import { turkceHataMesaji } from "@/lib/turkce/dogrulamaMesaji"
 import MuayeneCekListesi from "@/components/doktor/MuayeneCekListesi"
@@ -481,16 +482,7 @@ function NewSessionInner() {
   const S = (s: Record<string,unknown>) => s as React.CSSProperties
 
   return (
-    <div className="notya-seans-sayfa" style={S({minHeight:"100vh",background:"#f4eee3",fontFamily:CHROME_FONT.sans,padding:"20px"})}>
-      {/* eslint-disable-next-line @next/next/no-page-custom-font */}
-      <link rel="stylesheet" href={CHROME_FONT_HREF} />
-      <div style={S({maxWidth: step === "recording" || step === "done" ? "980px" : "600px", margin:"0 auto"})}>
-        <div style={S({display:"flex",alignItems:"center",gap:"12px",marginBottom:"24px"})}>
-          <div onClick={()=>router.push(seansGeriHref(patientId))} style={S({color:"#8b7d70",cursor:"pointer",fontSize:"14px"})}>← Geri</div>
-          <div style={S({fontSize:"18px",fontWeight:"600",color:"#3b2e24"})}>Yeni Seans</div>
-        </div>
-
-        {error && <div style={S({background:"#FCEBEB",border:"1px solid #F09595",borderRadius:"12px",padding:"14px",fontSize:"13px",color:"#A32D2D",marginBottom:"16px"})}>{error}</div>}
+    <SeansSayfasi geri="Geri" onGeri={()=>router.push(seansGeriHref(patientId))} baslik="Yeni Seans" genis={step === "recording" || step === "done"} hata={error}>
 
         {step === "setup" && (
           <div style={S({background:"#faf6ee",border:"1px solid rgba(58,44,34,0.08)",borderRadius:"20px",padding:"24px"})}>
@@ -709,7 +701,6 @@ function NewSessionInner() {
             )}
           </div>
         )}
-      </div>
-    </div>
+    </SeansSayfasi>
   )
 }

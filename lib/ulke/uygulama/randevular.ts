@@ -38,9 +38,10 @@ export type RandevuDurumu = (typeof RANDEVU_DURUMLARI)[number]
 export const YER_TUTAN_DURUMLAR: readonly RandevuDurumu[] = ['planlandi', 'geldi', 'tamamlandi']
 /** A visit can be started from, and linked to, an appointment in these statuses. */
 export const MUAYENE_BASLATILABILIR: readonly RandevuDurumu[] = ['planlandi', 'geldi']
-/** Target status → the statuses it may be reached from by hand. 'tamamlandi' and 'iptal' are final. */
+/** Target status → the statuses it may be reached from by hand. 'tamamlandi' is final; 'iptal' can only go back to 'planlandi'. */
 const GECISLER: Readonly<Record<RandevuDurumu, readonly RandevuDurumu[]>> = {
-  planlandi: ['geldi', 'gelmedi'],
+  // A cancelled appointment can be taken back to planned (Türkiye: "Aktif Hale Getir"); the exclusion constraint answers "taken" if its time went to somebody else.
+  planlandi: ['geldi', 'gelmedi', 'iptal'],
   geldi: ['planlandi', 'gelmedi'],
   tamamlandi: ['planlandi', 'geldi'],
   gelmedi: ['planlandi', 'geldi'],
