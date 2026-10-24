@@ -4,15 +4,12 @@ export const LINKS = {
   assistant: "/asistan",
   kvkk: "/kvkk",
   home: "/home",
-  // HUKUK-01: yasal metinler — kullanım koşulları, gizlilik ve tüm metinlerin merkez sayfası.
   kosullar: "/kullanim-kosullari",
   gizlilik: "/gizlilik",
   yasal: "/yasal",
-  // NOTYA-DEMO-01: shown only when NEXT_PUBLIC_DEMO_BOOKING_URL holds a Cal.com link (lib/demo/demoBaglantisi.ts).
   demo: "/demo",
 } as const;
 
-// NOTYA-DEMO-01 — /demo page copy. No claims about compliance, integrations, prices or results.
 export const DEMO = {
   cta: "Demo planla",
   title: "Demo planla",
@@ -21,7 +18,6 @@ export const DEMO = {
   soonBody: "Takvim hazır olduğunda bu sayfadan doğrudan randevu alabileceksiniz.",
   provider: "Randevu işlemleri Cal.com üzerinden yürütülür.",
   calendarLabel: "Demo randevu takvimi",
-  // Landing section right after the hero (shown only when the booking link is set).
   section: {
     eyebrow: "Demo",
     title: "Notya'yı bir hekimle birlikte görün.",
@@ -45,18 +41,18 @@ export const NAV = [
 ] as const;
 
 export const HERO = {
-  eyebrow: "Hekimler için yapay zekâ klinik asistanı",
-  title: "Hasta odadan çıktığında",
-  titleItalic: "işiniz bitmiş olsun.",
+  eyebrow: "Türkiye'deki hekimler için yapay zekâ klinik asistanı",
+  title: "Günde 2 saat",
+  titleItalic: "size kalsın.",
   lede:
-    "Prof. Ayşe muayeneyi dinler, notunuzu yazar, reçete ve rapor taslağını hazırlar, hastanızı takipte tutar. Her karar sizin onayınızla kesinleşir.",
+    "Tipik 8 saatlik bir klinik günde Notya, not, reçete, takip ve ön büro işlerinden yaklaşık 2 saat tasarruf ettirir. Bu süreyi kendinize ayırabilir veya günde 4 ek hasta alabilirsiniz — üstelik daha kaliteli bakım vererek.",
 } as const;
 
 export const HERO_STRIP = [
-  "30 branş",
-  "Sesli, gerçek zamanlı",
-  "Hasta portalı dahil",
-  "Her adım hekim onaylı",
+  "Günde ~2 saat tasarruf",
+  "30 branş + 10 özel branş",
+  "Türkiye'ye özel, hekimler tarafından",
+  "Kolay kullanım, güçlü sonuç",
 ] as const;
 
 export const BRANCHES = [
@@ -95,49 +91,47 @@ export const BRANCHES = [
 
 export const INDIVIDUAL_PLANS = [
   {
-    name: "Başlangıç",
-    price: "1.490",
+    name: "Metin Asistan",
+    price: "2.490",
     unit: "/ ay",
     highlight: false,
     items: [
-      "60 seans / ay",
-      "1 hekim",
-      "Sesli asistan Prof. Ayşe",
-      "SOAP notu ve reçete taslağı",
-      "Branşınıza özel çalışma alanı",
-      "Doz ve SUT uyarıları",
+      "100 seans / ay",
+      "Dinler, metin yanıtlar",
+      "SOAP + reçete/rapor taslağı",
+      "Branşa özel alan",
+      "SUT / doz uyarıları",
       "Hasta dosyası ve arşiv",
     ],
     href: LINKS.signup,
   },
   {
-    name: "Pro",
-    price: "3.490",
+    name: "Sesli Pro",
+    price: "3.990",
     unit: "/ ay",
     highlight: true,
     items: [
-      "Başlangıç'taki her şey",
+      "Metin Asistan'nın tümü",
+      "Dinler + sesli yanıt",
       "Sınırsız seans (adil kullanım)",
       "Hasta portalı",
-      "Konsültasyon",
-      "Randevu takvimi ve hatırlatmalar",
-      "Hasta mesajları ve gelen belgeler",
+      "Randevu + hatırlatmalar",
       "Takip listeleri",
-      "Tek akışta vizit kapanışı ve şablonlar",
-      "Rapor ve epikriz taslakları",
+      "Konsültasyon",
       "Öğrenen sistem",
+      "Rapor / epikriz taslakları",
     ],
     href: LINKS.signup,
   },
   {
     name: "Muayenehane",
-    price: "5.990",
+    price: "5.490",
     unit: "/ ay",
     highlight: false,
     items: [
-      "Pro'daki her şey",
-      "Sekreter hesabı, ayrı yetkiyle",
-      "Size özel asistan ayarı",
+      "Sesli Pro'nun tümü",
+      "Sekreter hesabı (ayrı yetki)",
+      "Özel asistan ayarı",
       "Kurulum desteği",
       "Öncelikli destek",
     ],
@@ -147,55 +141,48 @@ export const INDIVIDUAL_PLANS = [
 
 export const CLINIC_PLANS = [
   {
-    name: "Notya Klinik 5",
-    price: "Fiyat alın",
-    unit: "",
+    name: "Klinik Taban",
+    price: "3.490",
+    unit: "/ ay",
     highlight: false,
     items: [
-      "5 kullanıcıya kadar",
-      "Hekim, uzman ve sekreter yetkileri",
-      "Seans ve randevu takvimi",
-      "İşlem sonrası bakım vadeleri ve hatırlatma",
-      "Hasta portalı",
-      "Kayıt ve onam kontrol listesi",
-      "Takip listeleri",
-      "Yönetim paneli",
+      "Klinik platformu",
+      "1 yönetici + temel portal",
+      "e-Belge ve fiyat kataloğu",
+      "Bakım vadeleri ve hatırlatma",
     ],
     href: `${LINKS.signup}?plan=klinik`,
   },
   {
-    name: "Notya Klinik 10",
-    price: "Fiyat alın",
-    unit: "",
+    name: "3 hekim koltuğu",
+    price: "1.490",
+    unit: "/ koltuk / ay",
+    highlight: false,
+    items: ["Hekim koltuğu", "Örnek toplam ~₺7.960"],
+    href: `${LINKS.signup}?plan=klinik`,
+  },
+  {
+    name: "5 hekim koltuğu",
+    price: "1.290",
+    unit: "/ koltuk / ay",
     highlight: true,
-    items: [
-      "10 kullanıcıya kadar",
-      "Notya Klinik 5'teki her şey",
-      "Marka ayarları",
-      "Kurulum desteği",
-      "Öncelikli destek",
-    ],
+    items: ["Hekim koltuğu", "Örnek toplam ~₺9.940"],
     href: `${LINKS.signup}?plan=klinik`,
   },
   {
-    name: "Notya Klinik 20",
-    price: "Fiyat alın",
-    unit: "",
+    name: "10 hekim koltuğu",
+    price: "990",
+    unit: "/ koltuk / ay",
     highlight: false,
-    items: [
-      "20 kullanıcıya kadar",
-      "Notya Klinik 10'daki her şey",
-      "Ekip eğitimi",
-      "Özel destek",
-    ],
+    items: ["Hekim koltuğu", "Örnek toplam ~₺13.390"],
     href: `${LINKS.signup}?plan=klinik`,
   },
   {
-    name: "Kurumsal",
+    name: "10+ / Kurumsal",
     price: "Fiyat alın",
     unit: "",
     highlight: false,
-    items: ["Sınırsız kullanıcı", "Özel hizmet sözleşmesi", "Özel kurulum ve eğitim"],
+    items: ["Özel teklif", "Özel kurulum ve destek"],
     href: `${LINKS.signup}?plan=kurumsal`,
   },
 ] as const;
@@ -207,7 +194,6 @@ export const PROOF = [
   { k: "Karar desteği", v: "Notya karar desteğidir; tanı ve tedavi kararı hekime aittir." },
 ] as const;
 
-/** NOTYA-LANDING-2026-10 — practice-system sections, in page order. Outcomes only, no mechanisms. */
 export const VIZIT = {
   eyebrow: "02 — Muayene sonu",
   title: "Vizit tek akışta",
@@ -261,7 +247,7 @@ export const BRANS = {
   eyebrow: "06 — Branşınıza özel",
   title: "Genel bir asistan değil.",
   titleItalic: "Sizin branşınız.",
-  body: "30 branşta, o branşın gündelik işine göre hazırlanmış çalışma alanı. Kayıt olurken branşınızı seçersiniz; ekranınız ona göre kurulur.",
+  body: "30 branş + 10 özel branşta, o branşın gündelik işine göre hazırlanmış çalışma alanı. Türkiye'de pratik yapan hekimler tarafından, Türkiye'nin ihtiyaçlarına göre tasarlandı. Kayıt olurken branşınızı seçersiniz; ekranınız ona göre kurulur.",
   examples: [
     { k: "Pediatri", v: "Büyüme, aşı ve gelişim takibi tek bakışta." },
     { k: "Kadın Hastalıkları ve Doğum", v: "Gebelik takvimi ve izlem pencereleri kendiliğinden." },
@@ -277,7 +263,6 @@ export const TAKIP = {
   rows: ["Kontrolü geciken", "İzlemi kaçan"],
 } as const;
 
-/** NOTYA-FATURA-LANDING-01 — capability block only; no vendor/integration names (rule: competitive discretion). */
 export const FATURA = {
   eyebrow: "10 — Faturalama ve Tahsilat",
   title: "Faturanız da",
