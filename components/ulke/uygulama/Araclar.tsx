@@ -47,6 +47,7 @@ import { aracYolu, araclarYolu, birimOrtami, yazici } from './aracOrtak'
 import { AracKayitKarti, TakipPaneli, useAracHastasi, useAracKaydi, type AracHastasi } from './AracKayitlari'
 import { Sablonlarim } from './Sablonlarim'
 import { Konsultasyonlar } from './Konsultasyonlar'
+import { AracKabugu, AracIkiKolon, SonucSayisi, ulkeAracStil } from './AracKabugu'
 import { SayiGirisi } from '../girdi/SayiGirisi'
 import { TarihGirisi } from '../girdi/TarihGirisi'
 
@@ -244,25 +245,28 @@ export function AracGorunumu({ x, a, dil, notDili, icerik, ham, degistir, temizl
   // The summary is written in the account's NOTE language: it is pasted into a note.
   const ozet = aracOzeti(x, hamdanGosterilen(x.tanim.alanlar, ham, g, o), sonuc, notDili, araclarMetni(notDili), yazici(icerik, notDili), o)
   const gm = girdiMetni(dil)
-  return (
+  const form = (
+    <section className="uza-kart" data-bolum="girdiler">
+      <h2 className="uza-h2">{a.arac.girdiler}</h2>
+      {/* Who the tool is for, where the pack limits it by the patient: said before anything is typed. */}
+      {x.paket.hasta && kapi ? <p className="uza-ipucu" data-hasta-kapisi>{kapi}</p> : null}
+      <div className="uza-form" style={{ marginTop: 0 }}>
+        {x.tanim.alanlar.filter((alan) => alanVarMi(alan, g)).map((alan) => <Alan key={alan.anahtar} x={x} alan={alan} dil={dil} a={a} gm={gm} ham={ham} degistir={degistir} o={o} y={y} birimEksik={birimsiz.includes(alan.anahtar)} />)}
+      </div>
+      <div className="uza-eylemler"><button type="button" className="uza-dugme uza-dugme-cizgi uza-dugme-kucuk" onClick={temizle}>{a.arac.temizle}</button></div>
+    </section>
+  )
+  // THE LIVE RESULT PANEL: always there, beside the form; until the fields are valid it holds one quiet line.
+  const panel = (
     <>
-      <section className="uza-kart" data-bolum="girdiler">
-        <h2 className="uza-h2">{a.arac.girdiler}</h2>
-        {/* Who the tool is for, where the pack limits it by the patient: said before anything is typed. */}
-        {x.paket.hasta && kapi ? <p className="uza-ipucu" data-hasta-kapisi>{kapi}</p> : null}
-        <div className="uza-form" style={{ marginTop: 0 }}>
-          {x.tanim.alanlar.filter((alan) => alanVarMi(alan, g)).map((alan) => <Alan key={alan.anahtar} x={x} alan={alan} dil={dil} a={a} gm={gm} ham={ham} degistir={degistir} o={o} y={y} birimEksik={birimsiz.includes(alan.anahtar)} />)}
-        </div>
-        <div className="uza-eylemler"><button type="button" className="uza-dugme uza-dugme-cizgi uza-dugme-kucuk" onClick={temizle}>{a.arac.temizle}</button></div>
-      </section>
       <section className="uza-kart" data-bolum="sonuc" aria-live="polite">
         <h2 className="uza-h2">{a.arac.sonuc}</h2>
-        {!sonuc.tamam ? <p className="uza-bos" data-sonuc="eksik">{a.arac.eksik}</p> : (
+        {!sonuc.tamam ? <p className="uza-ipucu" data-sonuc="eksik" style={{ fontSize: 14, margin: 0 }}>{a.arac.eksik}</p> : (
           <>
             {sonuc.sayilar.length ? (
-              <dl className="uza-bilgiler" style={{ marginTop: 0 }}>
-                {sonuc.sayilar.map((s) => <React.Fragment key={s.anahtar}><dt>{bicimli(t.sayilar?.[s.anahtar], dil)}</dt><dd data-sayi={s.anahtar}>{sayiMetni(s, a, y, o)}</dd></React.Fragment>)}
-              </dl>
+              <div className="uza-ak-sayilar">
+                {sonuc.sayilar.map((s) => <SonucSayisi key={s.anahtar} anahtar={s.anahtar} etiket={bicimli(t.sayilar?.[s.anahtar], dil)} deger={sayiMetni(s, a, y, o)} />)}
+              </div>
             ) : null}
             {sonuc.bant ? <p className="uza-arac-bant" data-bant={sonuc.bant}>{bicimli(t.bantlar?.[sonuc.bant], dil)}</p> : null}
             {sonuc.uyarilar.length ? <ul className="uza-arac-uyarilar">{sonuc.uyarilar.map((u) => <li key={u} data-uyari={u}>{bicimli(t.uyarilar?.[u], dil)}</li>)}</ul> : null}
@@ -271,7 +275,7 @@ export function AracGorunumu({ x, a, dil, notDili, icerik, ham, degistir, temizl
                 {sonuc.tarihler.map((d) => <React.Fragment key={d.anahtar}><dt>{bicimli(t.tarihler?.[d.anahtar], dil)}</dt><dd data-tarih={d.anahtar}>{y.tarih(d.tarih)}</dd></React.Fragment>)}
               </dl>
             ) : null}
-            <div className="uza-eylemler"><button type="button" className="uza-dugme uza-dugme-kucuk" onClick={() => kopyalaTikla(ozet)} data-eylem="kopyala">{a.arac.kopyala}</button></div>
+            <div className="uza-eylemler"><button type="button" className="uza-dugme uza-dugme-kucuk" style={ulkeAracStil.btn} onClick={() => kopyalaTikla(ozet)} data-eylem="kopyala">{a.arac.kopyala}</button></div>
             <Bilgi>{kopya === 'tamam' ? a.arac.kopyalandi : null}</Bilgi>
             <Hata>{kopya === 'hata' ? a.arac.kopyalanamadi : null}</Hata>
           </>
@@ -285,6 +289,7 @@ export function AracGorunumu({ x, a, dil, notDili, icerik, ham, degistir, temizl
       {kayit ? kayit(sonuc.tamam) : null}
     </>
   )
+  return <AracIkiKolon form={form} sonuc={panel} />
 }
 
 /**
@@ -325,24 +330,24 @@ export function HastaPortaliAraci({ a, m }: { a: AraclarMetni; m: UygulamaMetni 
   )
 }
 
-export function AracBasligi({ x, a, dil, hastaId }: { x: GorunurArac; a: AraclarMetni; dil: DilKodu; hastaId?: string | null }) {
+/** The tool's header in the shared tool shell: "Tools · <role>" kicker (links back to the grid), title, description. */
+export function AracBasligi({ x, a, dil, hastaId, rol, children }: { x: GorunurArac; a: AraclarMetni; dil: DilKodu; hastaId?: string | null; rol?: string | null; children?: React.ReactNode }) {
+  const rolunAdi = rol ? rolAdi(rol, dil) : null
+  const kicker = rolunAdi && x.paket.roller !== null ? `${a.kabuk.araclar} \u00b7 ${rolunAdi}` : a.kabuk.araclar
   return (
-    <section className="uza-karsilama">
-      <p className="uza-ust-yazi"><a className="uza-baglanti" href={araclarYolu(hastaId)} data-eylem="araclara-don">{a.arac.geri}</a></p>
-      <h1 className="uza-h1">{bicimli(x.paket.metin.ad, dil)}</h1>
-      <p className="uza-aciklama">{bicimli(x.paket.metin.aciklama, dil)}</p>
-    </section>
+    <AracKabugu kicker={kicker} geriHref={araclarYolu(hastaId)} geriEtiket={a.arac.geri} baslik={bicimli(x.paket.metin.ad, dil)} aciklama={bicimli(x.paket.metin.aciklama, dil)}>
+      {children}
+    </AracKabugu>
   )
 }
 
-function AracEkrani({ x, a, u, dil, notDili, icerik, hasta }: { x: GorunurArac; a: AraclarMetni; u: Uygulama; dil: DilKodu; notDili: DilKodu; icerik: UlkeAraclari; hasta: AracHastasi | null }) {
+function AracEkrani({ x, a, u, dil, notDili, icerik, hasta, rol }: { rol: string | null; x: GorunurArac; a: AraclarMetni; u: Uygulama; dil: DilKodu; notDili: DilKodu; icerik: UlkeAraclari; hasta: AracHastasi | null }) {
   const [ham, setHam] = useState<HamGirdi>({})
   const [kopya, setKopya] = useState<'yok' | 'tamam' | 'hata'>('yok')
   const bugun = useMemo(() => ulkeGunu(new Date(), hesapSaatDilimi()), [])
   const k = useAracKaydi(u.api, hasta?.id ?? null, x.tanim.anahtar)
   return (
-    <>
-      <AracBasligi x={x} a={a} dil={dil} hastaId={hasta?.id} />
+    <AracBasligi x={x} a={a} dil={dil} hastaId={hasta?.id} rol={rol}>
       {x.tanim.ekran === 'hastaPortali' ? <HastaPortaliAraci a={a} m={u.m} /> : x.tanim.ekran === 'takipPaneli' ? <TakipPaneli u={u} a={a} icerik={icerik} /> : x.tanim.ekran === 'sablonlarim' ? <Sablonlarim u={u} /> : x.tanim.ekran === 'konsultasyonlar' ? <Konsultasyonlar u={u} /> : x.tanim.tur === 'baglanti' ? <DisBaglantiAraci x={x} dil={dil} /> : hasta && aracinKapisi(x, hasta, bugun) === 'degil' ? <HastaKapisiKapali x={x} dil={dil} /> : (
         <AracGorunumu x={x} a={a} dil={dil} notDili={notDili} icerik={icerik} ham={ham} bugun={bugun} kopya={kopya}
           degistir={(anahtar, v) => { setKopya('yok'); k.degisti(); setHam((eski) => ({ ...eski, [anahtar]: v })) }}
@@ -350,7 +355,7 @@ function AracEkrani({ x, a, u, dil, notDili, icerik, hasta }: { x: GorunurArac; 
           kopyalaTikla={(metin) => { void panoyaKopyala(metin).then((tamam) => setKopya(tamam ? 'tamam' : 'hata')) }}
           kayit={hasta ? (tamam) => <AracKayitKarti a={a} g={u.m.girdi} hasta={hasta} tamam={tamam} takip={k.takip} takipDegistir={k.takipDegistir} kaydet={() => k.kaydet(ham)} durum={k.durum} /> : undefined} />
       )}
-    </>
+    </AracBasligi>
   )
 }
 
@@ -368,7 +373,7 @@ export default function Araclar() {
     <Cerceve dil={u.dil} m={u.m} ad={u.hesap.ad} aktif="araclar" cikis={u.cikis}>
       <div style={{ display: 'flex', justifyContent: 'flex-end', margin: '0 0 8px' }}><Ipucu m={u.m} bolum="araclar" /></div>
       <Hata>{h.durum === 'bulunamadi' ? a.kayit.hastaBulunamadi : null}</Hata>
-      {x ? <AracEkrani x={x} a={a} u={u} dil={u.dil} notDili={u.hesap.notDili} icerik={icerik} hasta={h.hasta} /> : (
+      {x ? <AracEkrani x={x} a={a} u={u} dil={u.dil} notDili={u.hesap.notDili} icerik={icerik} hasta={h.hasta} rol={u.hesap.rol} /> : (
         <>
           {/* An address that names a tool this account does not have: said once, above the grid it does have. */}
           <Hata>{adres.arac ? a.arac.yok : null}</Hata>
