@@ -32,7 +32,7 @@ export default function SignupPage({ searchParams }: { searchParams?: AramaParam
       anaSayfa={dilliYol('/', dil)}
       giris={dilliYol('/login', dil)}
       fiyat={dilliYol('/', dil, acilisCapasi('narx') ? `#${acilisCapasi('narx')}` : '')}
-      meslek={{ etiket: a.meslekKaydi, izoh: a.meslekKaydiIzoh, gecersiz: a.meslekKaydiGecersiz }}
+      meslek={ulkePaketi().uzanti?.muayenehane?.meslekKaydiTasi ? undefined : { etiket: a.meslekKaydi, izoh: a.meslekKaydiIzoh, gecersiz: a.meslekKaydiGecersiz }}
     />
   )
 }

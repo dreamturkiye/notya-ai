@@ -16,9 +16,25 @@ export const GET = sinirda('muayenehane GET', async (req: NextRequest) => {
   if (!t) return KOD.yok()
   const oturum = await ulkeOturum(req)
   if (!oturum) return KOD.oturumYok()
-  const ham = (oturum.user.user_metadata as { muayenehane?: unknown } | null)?.muayenehane
-  const r = t.dogrula(ham && typeof ham === 'object' ? (ham as Record<string, unknown>) : {})
-  return cevap({ degerler: Object.keys(r.hatalar).length ? {} : r.temiz })
+  const meta = (oturum.user.user_metadata ?? {}) as { muayenehane?: unknown; meslekKaydi?: unknown }
+  const ham = meta.muayenehane && typeof meta.muayenehane === 'object' ? { ...(meta.muayenehane as Record<string, unknown>) } : {}
+  // LOOK-PARITY-04: the retired account field moves in only when it passes the same validation; an existing value wins.
+  const tasi = t.meslekKaydiTasi
+  const eskiVar = Boolean(tasi) && 'meslekKaydi' in meta
+  if (tasi && eskiVar) {
+    const tas = typeof meta.meslekKaydi === 'string' ? tasi.bicim(meta.meslekKaydi) : null
+    if (tas && !(typeof ham[tasi.alan] === 'string' && (ham[tasi.alan] as string).trim())) ham[tasi.alan] = tas
+  }
+  const r = t.dogrula(ham)
+  const degerler = Object.keys(r.hatalar).length ? {} : r.temiz
+  if (eskiVar) {
+    // Best effort: keep the migrated value (or none) and drop the retired field, so nothing stale is left behind.
+    const yeni = { ...(oturum.user.user_metadata as Record<string, unknown>) }
+    delete yeni.meslekKaydi
+    if (Object.keys(degerler).length) yeni.muayenehane = degerler
+    try { await oturum.supabase.auth.admin.updateUserById(oturum.user.id, { user_metadata: yeni }) } catch { /* retried on the next read */ }
+  }
+  return cevap({ degerler })
 })
 
 export const POST = sinirda('muayenehane POST', async (req: NextRequest) => {
@@ -32,6 +48,7 @@ export const POST = sinirda('muayenehane POST', async (req: NextRequest) => {
   const mevcut = oturum.user.user_metadata && typeof oturum.user.user_metadata === 'object' ? { ...oturum.user.user_metadata } : {}
   if (Object.keys(r.temiz).length) mevcut.muayenehane = r.temiz
   else delete mevcut.muayenehane
+  if (t.meslekKaydiTasi) delete mevcut.meslekKaydi
   const { error } = await oturum.supabase.auth.admin.updateUserById(oturum.user.id, { user_metadata: mevcut })
   if (error) return KOD.basarisiz()
   return cevap({ ok: true, degerler: r.temiz, uyarilar: r.uyarilar })

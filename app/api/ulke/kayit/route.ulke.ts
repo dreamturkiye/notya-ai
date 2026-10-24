@@ -50,7 +50,8 @@ export const POST = sinirda('sign-up POST', async (req: NextRequest) => {
   if (sifre.length < 8 || sifre.length > 200) return cevap({ code: 'SIFRE_KISA' }, 400)
   if (kodGerekli && !davetKoduBicimiGecerli(g?.davetKodu)) return cevap({ code: 'KOD_GECERSIZ' }, 400)
   // Optional professional registration. Checked BEFORE the invitation is consumed, so a bad value leaves the code unused.
-  const meslek = meslekKaydiGecerli(g?.meslekKaydi)
+  const tasindi = Boolean(ulkePaketi().uzanti?.muayenehane?.meslekKaydiTasi)
+  const meslek = tasindi ? '' : meslekKaydiGecerli(g?.meslekKaydi)
   if (meslek === null) return cevap({ code: 'GECERSIZ', alan: 'meslekKaydi' }, 400)
   // The interface language must be one this country has switched on; anything else is the country's default.
   const paket = ulkePaketi()

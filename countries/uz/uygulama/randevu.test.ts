@@ -912,7 +912,7 @@ describe('Uzbekistan appointments: text, reminder and screens in the three forms
       const surmekte = detay(randevu('r1', PZT, '10:00', 'geldi', { seansId: 's1' }))
       assert.ok(!eylemler(surmekte).includes('muayene-baslat') && eylemler(surmekte).includes('muayene-ac'), 'an appointment with a visit must not offer a second one')
       const iptal = detay(randevu('r1', PZT, '10:00', 'iptal'))
-      assert.deepEqual(eylemler(iptal), []); assert.ok(!iptal.includes('data-alan="tasi"') && !iptal.includes('data-alan="hatirlatma"'))
+      assert.deepEqual(eylemler(iptal), ['durum-planlandi']); assert.ok(!iptal.includes('data-alan="tasi"') && !iptal.includes('data-alan="hatirlatma"'))
       for (const h of [geldi, gelmedi, elle, muayeneli, iptal]) { ekranTemiz(h, `/calendar appointment states (${f})`); assert.ok(!h.includes('data-alan="hatirlatma"'), 'the reminder is for a planned appointment only') }
       // MOVING: taken → the sentence, no way round; outside hours → "nothing was moved" and the explicit button.
       const tDolu = detay(randevu('r1', PZT, '10:00', 'planlandi'), { hata: { nerede: 'tasi', kod: 'DOLU' } })

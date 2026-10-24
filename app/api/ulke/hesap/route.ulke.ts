@@ -47,6 +47,6 @@ export const GET = sinirda('hesap GET', async (req: NextRequest) => {
   // say: the pack's zone is the only one). Its choice when that is one of the pack's zones, otherwise the default.
   const dilimler = saatDilimleri()
   const saatDilimi = dilimler.length > 1 ? { saatDilimi: saatDilimiMi(s.saat_dilimi) ? s.saat_dilimi : ulkePaketi().saatDilimi, saatDilimleri: dilimler } : {}
-  const meslekKaydi = meslekKaydiOku(oturum.user.user_metadata)
+  const meslekKaydi = ulkePaketi().uzanti?.muayenehane?.meslekKaydiTasi ? '' : meslekKaydiOku(oturum.user.user_metadata)
   return cevap({ ulke: aktifUlke(), dil: t.arayuzDili, durum: 'uygulama', ad, notDili: t.notDili, dilSoruldu: t.soruldu, ...saatDilimi, ...(meslekKaydi ? { meslekKaydi } : {}) }, 200)
 })

@@ -33,6 +33,12 @@ export type MuayenehaneTanimi = {
   kaydediliyor: string
   kaydedildi: string
   kaydedilemedi: string
+  /**
+   * The pack keeps its professional registration number HERE, as the one store invoices read. The older free-text
+   * account field (user_metadata.meslekKaydi) is then retired: a stored value moves into `alan` only when `bicim`
+   * accepts it, otherwise it is dropped. Never invented. Packs without this keep the account field as it is.
+   */
+  meslekKaydiTasi?: { alan: string; bicim: (ham: string) => string | null }
   /** Pure. Empty optional fields are valid. Never throws. */
   dogrula: (girdi: Record<string, unknown>) => MuayenehaneSonucu
 }

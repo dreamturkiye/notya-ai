@@ -7,7 +7,7 @@
 import { NextRequest } from 'next/server'
 import { ulkeOturum } from '@/lib/ulke/sunucuOturum'
 import { sinirda } from '@/lib/ulke/uygulama/sinir'
-import { ozellikAcik } from '@/lib/ulke/ulke'
+import { ozellikAcik, ulkePaketi } from '@/lib/ulke/ulke'
 import { cevap, govdeOku, KOD } from '@/lib/ulke/uygulama/cevap'
 import { meslekKaydiGecerli } from '@/lib/ulke/uygulama/meslekKaydi'
 
@@ -15,6 +15,8 @@ export const dynamic = 'force-dynamic'
 
 export const POST = sinirda('meslek-kaydi POST', async (req: NextRequest) => {
   if (!ozellikAcik('cekirdekMuayene')) return KOD.yok()
+  // LOOK-PARITY-04: where practice details carry the number, this second store no longer exists.
+  if (ulkePaketi().uzanti?.muayenehane?.meslekKaydiTasi) return KOD.yok()
   const oturum = await ulkeOturum(req)
   if (!oturum) return KOD.oturumYok()
   const g = await govdeOku(req)
