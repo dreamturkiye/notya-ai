@@ -4,6 +4,7 @@
  * AU-BETA-01 — the practice particulars form (pack extension `uzanti.muayenehane`): fields, formats and sentences are the
  * pack's. Every field optional; an invalid one shows its sentence beside it and nothing else happens.
  */
+import { AyarSatiri } from './AyarSatiri'
 import React, { useEffect, useState } from 'react'
 import { Bilgi, Hata, type Uygulama } from './Kabuk'
 import { ulkePaketi } from '@/lib/ulke/ulke'
@@ -29,11 +30,8 @@ export function MuayenehaneKarti({ u }: { u: Uygulama }) {
     setBekliyor(false)
   }
   return (
-    <section className="yg-satir yg-ayar-kart" data-alan="muayenehane">
-      <span className="yg-satir-emoji" aria-hidden="true">{'\u{1F3E2}'}</span>
-      <div className="yg-satir-metin">
+    <AyarSatiri emoji={'\u{1F3E2}'} ad={t.baslik} alan="muayenehane">
         <form className="uza-form" onSubmit={(e) => { e.preventDefault(); void gonder() }} noValidate>
-          <h2 className="uza-h2">{t.baslik}</h2>
           <p className="uza-ipucu">{t.aciklama}</p>
           {t.alanlar.map((a) => (
             <div className="uza-alan" key={a.anahtar}>
@@ -52,7 +50,6 @@ export function MuayenehaneKarti({ u }: { u: Uygulama }) {
           <Bilgi>{sonuc === 'tamam' ? t.kaydedildi : null}</Bilgi>
           <button type="submit" className="uza-dugme" disabled={bekliyor} data-eylem="muayenehane-kaydet">{bekliyor ? t.kaydediliyor : t.kaydet}</button>
         </form>
-      </div>
-    </section>
+    </AyarSatiri>
   )
 }

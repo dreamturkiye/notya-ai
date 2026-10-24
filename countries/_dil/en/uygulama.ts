@@ -392,6 +392,20 @@ export const EN_UYGULAMA_TEMEL: Temel = {
           'Book and manage appointments here; the clinical record stays the doctor’s.',
         ],
       },
+      fatura: {
+        baslik: 'Invoices',
+        satirlar: [
+          'Create an invoice for a patient, record a payment, refund and reconcile.',
+          'Payments run on your own merchant account; Notya never holds the money.',
+        ],
+      },
+      gizlilik: {
+        baslik: 'Privacy requests',
+        satirlar: [
+          'Patients’ requests to see or correct their information, with the days left to answer.',
+          'The consent records are kept below the requests.',
+        ],
+      },
       ayarlar: {
         baslik: 'Settings',
         satirlar: [

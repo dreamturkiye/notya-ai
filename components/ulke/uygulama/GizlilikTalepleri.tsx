@@ -5,6 +5,7 @@
  * with the days left on the response timer, and the consent records. Initial compliance draft – external legal review later.
  */
 import React, { useCallback, useEffect, useState } from 'react'
+import { Ipucu } from './Ipucu'
 import { Bilgi, Cerceve, Hata, Yukleniyor, tarihYaz, useUygulama } from './Kabuk'
 import { rolAdi } from '@/lib/ulke/arayuz'
 import { yerine } from '@/lib/ulke/arayuz/yerTutucu'
@@ -35,7 +36,7 @@ export default function GizlilikTalepleri() {
   }
   return (
     <Cerceve dil={u.dil} m={u.m} ad={u.hesap.ad} unvan={rolAdi(u.hesap.rol, u.dil) ?? undefined} aktif="gizlilikTalepleri" cikis={u.cikis}>
-      <h1 className="uza-h1">{d.baslik}</h1>
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}><h1 className="uza-h1">{d.baslik}</h1><Ipucu m={u.m} bolum="gizlilik" /></span>
       <p className="uza-aciklama">{d.aciklama}</p>
       <p className="uza-ipucu" data-alan="taslak-etiketi">{g.taslakEtiketi}</p>
       <Hata>{hata}</Hata>
