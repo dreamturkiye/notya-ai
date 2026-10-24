@@ -50,6 +50,7 @@ import { ilacKontroluGerekliMi, ilacKontrolSonucu, ilacListeleriAyniMi } from '@
 import IlacUyumKarti, { planaGoreIlacOnerisiOnbellekli, type IlacUyumDurumu } from '@/components/doktor/IlacUyumKarti';
 import IlacSonlandirmaSatiri, { ilacSonlandirmaBilgisi, type IlacSonlandirmaBilgisi } from '@/components/doktor/IlacSonlandirmaSatiri';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme'
+import { NOT_KUTU, NOT_ETIKET, NotUstCubugu, NotBaslikKuyrugu, NotPil, NotSilDugmesi, NotAnaDugme, NotDuzeni, NotAlani, NotYazi, NotYanKutu } from '@/components/doktor/NotDuzenGorunumu'
 import { motorAfisiTemizle } from '@/core/belgeler/yazar'
 import SizinTarzinizChip from '@/components/doktor/SizinTarzinizChip'
 import SonrakiAdim from '@/components/doktor/SonrakiAdim'
@@ -127,14 +128,8 @@ function asiSatirlari(liste: NotAsisi[]): NotAsisi[] {
 }
 function trTarih(iso: string | null): string { if (!iso) return ''; return new Date(iso).toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul', day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }); }
 
-const kutu: React.CSSProperties = { width: '100%', background: '#FFFFFF', border: '1px solid rgba(58,44,34,0.14)', borderRadius: 8, color: CHROME_RENK.ink, fontSize: 13.5, lineHeight: 1.6, padding: '10px 12px', fontFamily: 'inherit', boxSizing: 'border-box', resize: 'vertical' };
-const etiket: React.CSSProperties = { fontSize: 12, fontWeight: 700, color: CHROME_RENK.pine, marginBottom: 4 };
-// NOTYA-CEK-EKSIK-SAG-01 (Gökhan, 2026-09-23): çek listesinde "✗ eksik" kalanlar formun sağında,
-// göz önünde durmalı (tam doğrulama metni aşağıda AI değerlendirmesinde aynen kalır). Telefonda üste gelir.
-const NOT_DUZEN_CSS = `.notDuzen{max-width:1180px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:20px;grid-template-columns:minmax(0,1fr) 280px;align-items:start}
-.notDuzen.tek{max-width:860px;grid-template-columns:minmax(0,1fr)}
-.notDuzen aside{position:sticky;top:84px}
-@media (max-width:900px){.notDuzen{grid-template-columns:minmax(0,1fr)}.notDuzen aside{order:-1;position:static}}`;
+const kutu = NOT_KUTU;
+const etiket = NOT_ETIKET;
 const EKSIK_SATIR = /^\s*-\s*(.+?):\s*[✗✕×]\s*eksik\s*$/;
 
 export default function NotSayfasi() {
@@ -526,56 +521,49 @@ export default function NotSayfasi() {
         <IlacUyumKarti durum={uyum} onGuncelleOnayla={(m) => { void kaydetVeOnayla(m) }} onMevcutlaOnayla={() => { void kaydetVeOnayla(ilac) }} onVazgec={() => setUyum(null)} />
       ) : null}
       {sonlandirma ? <IlacSonlandirmaSatiri bilgi={sonlandirma} devamHref={onaylananNotYolu(params.id)} /> : null}
-      <div style={{ position: 'sticky', top: 0, zIndex: 5, background: '#F6F0E4', borderBottom: '1px solid rgba(58,44,34,0.1)', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-        <GeriLink
-          href={notDuzenleGeriHref(hasta.patientId)}
-        >
-          {hasta.patientId ? '← Muayene Geçmişi' : '← Hastalar'}
-        </GeriLink>
-        
-        <div style={{ flex: 1, minWidth: 200 }}>
-          <div style={{ fontSize: 16, fontWeight: 800 }}>{hasta.ad} <span style={{ color: CHROME_RENK.muted, fontWeight: 500 }}>· {bransEtiketi(not.specialty)} · {trTarih(not.createdAt)} · Protokol No: {not.protokolNo || '—'}</span></div>
-          <div style={{ fontSize: 12, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginTop: 3 }}>
-            <span style={{ padding: '2px 10px', borderRadius: 999, fontWeight: 700, fontSize: 11.5, background: onayli ? 'rgba(46,110,78,0.12)' : 'rgba(180,131,47,0.14)', color: onayli ? '#2E6E4E' : '#B4832F', border: `1px solid ${onayli ? 'rgba(46,110,78,0.35)' : 'rgba(180,131,47,0.4)'}` }}>{onayli ? `Onaylı — ${trTarih(not.approvedAt)}` : 'Onay bekliyor'}</span>
-            {not.uygulananKurallar && not.uygulananKurallar.length > 0 ? <SizinTarzinizChip kurallar={not.uygulananKurallar} /> : null}
-            {onaylandiSimdi ? <SonrakiAdim sonEylem="not_onayla" paket={rutinPaket} noteId={params.id} /> : null}
-            <span style={{ color: '#B4832F' }}>
-            {degisti ? ' · kaydedilmemiş değişiklik var' : ''}
-            {aiDurum === 'bekliyor' ? ' · Ayşe notu yeniden okuyor…' : ''}
-            {aiDurum === 'guncellendi' ? ' · öneriler güncellendi' : ''}
-            {aiDurum === 'hata' ? ' · AI öneri güncellemesi başarısız' : ''}</span>
-          </div>
-        </div>
-        <a href={`/dashboard/doktor/notlar/${not.id}/yazdir`} target="_blank" rel="noreferrer" style={{ color: CHROME_RENK.ink, fontSize: 13, textDecoration: 'none', border: '1px solid rgba(58,44,34,0.16)', borderRadius: 999, padding: '7px 12px' }}>🖨️ Yazdır / PDF</a>
-        <a href={`/dashboard/doktor/notlar/${not.id}/recete`} target="_blank" rel="noreferrer" style={{ color: CHROME_RENK.pine, fontSize: 13, textDecoration: 'none', border: '1px solid rgba(47,67,52,0.4)', borderRadius: 999, padding: '7px 12px' }}>🧾 Reçete</a>
-        <a href={`/dashboard/doktor/notlar/${not.id}/tetkikler`} target="_blank" rel="noreferrer" style={{ color: CHROME_RENK.pine, fontSize: 13, textDecoration: 'none', border: '1px solid rgba(47,67,52,0.4)', borderRadius: 999, padding: '7px 12px' }}>🧪 Tetkikler</a>
-        {/* MBYS-BILDIR-01: one-click report of an approved muayene, behind a mandatory confirmation dialog. */}
-        <MbysBildirButonu notId={not.id} onayli={onayli && !degisti} />
-        {onayli && faturalamaAcik && (
-          // NOTYA-ACCOUNTING-ENCOUNTER-01: muayene bitince doğal son adım — "Faturala", bu
-          // muayeneyi (not.sessionId) ve o anki aşı listesini taslak faturaya taşır. Her branşta
-          // aynı (base/universal — bu sayfa tüm ~30 branşın paylaştığı tek notlar sayfası).
-          <button
-            type="button"
-            onClick={() => {
-              const asiParam = encodeURIComponent(asilar.map((a) => a.asi_adi).filter(Boolean).join('|'));
-              const sessionParam = not.sessionId ? `&session=${encodeURIComponent(not.sessionId)}` : '';
-              router.push(`/dashboard/doktor/notlar/${not.id}/faturala?asi=${asiParam}${sessionParam}`);
-            }}
-            style={{ color: CHROME_RENK.pine, fontSize: 13, background: 'transparent', textDecoration: 'none', border: '1px solid rgba(47,67,52,0.4)', borderRadius: 999, padding: '7px 12px', cursor: 'pointer' }}
-          >
-            🧾 Faturala
-          </button>
-        )}
-        {!onayli && (
-          <button type="button" onClick={() => { void notuSil() }} disabled={durum === 'kaydediyor'} style={{ background: 'transparent', border: '1px solid rgba(178,58,58,0.5)', color: '#B23A3A', borderRadius: 10, padding: '8px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
-            Sil
-          </button>
-        )}
-        <button type="button" className="notya-ana-eylem" onClick={() => { void kaydetVeOnayla() }} disabled={durum === 'kaydediyor'} style={{ background: CHROME_RENK.pine, border: 'none', color: 'white', borderRadius: 10, padding: '10px 18px', fontSize: 14, fontWeight: 800, cursor: 'pointer', opacity: aiDurum === 'bekliyor' ? 0.85 : 1 }}>
-          {durum === 'kaydediyor' ? 'Kaydediliyor…' : durum === 'kaydedildi' ? '✓ Onaylandı' : onayli ? 'Kaydet ve yeniden onayla' : 'Onayla'}
-        </button>
-      </div>
+      <NotUstCubugu
+        geri={<GeriLink href={notDuzenleGeriHref(hasta.patientId)}>{hasta.patientId ? '← Muayene Geçmişi' : '← Hastalar'}</GeriLink>}
+        baslik={<>{hasta.ad} <NotBaslikKuyrugu>· {bransEtiketi(not.specialty)} · {trTarih(not.createdAt)} · Protokol No: {not.protokolNo || '—'}</NotBaslikKuyrugu></>}
+        onayli={onayli}
+        rozet={onayli ? `Onaylı — ${trTarih(not.approvedAt)}` : 'Onay bekliyor'}
+        ek={<>
+          {not.uygulananKurallar && not.uygulananKurallar.length > 0 ? <SizinTarzinizChip kurallar={not.uygulananKurallar} /> : null}
+          {onaylandiSimdi ? <SonrakiAdim sonEylem="not_onayla" paket={rutinPaket} noteId={params.id} /> : null}
+        </>}
+        durum={<>
+          {degisti ? ' · kaydedilmemiş değişiklik var' : ''}
+          {aiDurum === 'bekliyor' ? ' · Ayşe notu yeniden okuyor…' : ''}
+          {aiDurum === 'guncellendi' ? ' · öneriler güncellendi' : ''}
+          {aiDurum === 'hata' ? ' · AI öneri güncellemesi başarısız' : ''}
+        </>}
+        eylemler={<>
+          <NotPil ton="ink" href={`/dashboard/doktor/notlar/${not.id}/yazdir`}>🖨️ Yazdır / PDF</NotPil>
+          <NotPil href={`/dashboard/doktor/notlar/${not.id}/recete`}>🧾 Reçete</NotPil>
+          <NotPil href={`/dashboard/doktor/notlar/${not.id}/tetkikler`}>🧪 Tetkikler</NotPil>
+          {/* MBYS-BILDIR-01: one-click report of an approved muayene, behind a mandatory confirmation dialog. */}
+          <MbysBildirButonu notId={not.id} onayli={onayli && !degisti} />
+          {onayli && faturalamaAcik && (
+            // NOTYA-ACCOUNTING-ENCOUNTER-01: muayene bitince doğal son adım — "Faturala", bu
+            // muayeneyi (not.sessionId) ve o anki aşı listesini taslak faturaya taşır. Her branşta
+            // aynı (base/universal — bu sayfa tüm ~30 branşın paylaştığı tek notlar sayfası).
+            <NotPil
+              onClick={() => {
+                const asiParam = encodeURIComponent(asilar.map((a) => a.asi_adi).filter(Boolean).join('|'));
+                const sessionParam = not.sessionId ? `&session=${encodeURIComponent(not.sessionId)}` : '';
+                router.push(`/dashboard/doktor/notlar/${not.id}/faturala?asi=${asiParam}${sessionParam}`);
+              }}
+            >
+              🧾 Faturala
+            </NotPil>
+          )}
+          {!onayli && (
+            <NotSilDugmesi onClick={() => { void notuSil() }} disabled={durum === 'kaydediyor'}>Sil</NotSilDugmesi>
+          )}
+          <NotAnaDugme onClick={() => { void kaydetVeOnayla() }} disabled={durum === 'kaydediyor'} soluk={aiDurum === 'bekliyor'}>
+            {durum === 'kaydediyor' ? 'Kaydediliyor…' : durum === 'kaydedildi' ? '✓ Onaylandı' : onayli ? 'Kaydet ve yeniden onayla' : 'Onayla'}
+          </NotAnaDugme>
+        </>}
+      />
 
       {not.arsivde && (
         <div role="status" style={{ margin: '12px 16px 0', padding: '10px 14px', borderRadius: 10, background: 'rgba(139,125,112,0.12)', border: '1px solid rgba(139,125,112,0.35)', color: '#6d6055', fontSize: 13 }}>
@@ -610,13 +598,30 @@ export default function NotSayfasi() {
         </div>
       )}
 
-      <style>{NOT_DUZEN_CSS}</style>
-      <div className={cekVar ? 'notDuzen' : 'notDuzen tek'}>
-      <div style={{ display: 'grid', gap: 16, minWidth: 0 }}>
-        <div>
-          <div style={etiket}>Başvuru Yakınması</div>
+      <NotDuzeni yan={cekVar ? (
+        <NotYanKutu baslik={eksikler.length ? `Eksik kalanlar (${eksikler.length})` : 'Çek listesi tamam'} alt="Çek listesi · notu düzenledikçe güncellenir · karar desteği, hekim değerlendirir">
+          {eksikler.length ? (
+            <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 6 }}>
+              {eksikler.map((e, i) => (
+                <li key={i} style={{ fontSize: 13, color: CHROME_RENK.ink, lineHeight: 1.4, display: 'flex', gap: 6 }}>
+                  <span style={{ color: '#A4453C', fontWeight: 800 }}>✗</span><span>{e}</span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div style={{ fontSize: 13, color: '#2E6E4E' }}>Boş madde kalmadı.</div>
+          )}
+          {oncekiler.length ? (
+            <div style={{ marginTop: 10, paddingTop: 8, borderTop: '1px solid rgba(58,44,34,0.1)' }}>
+              <div style={{ fontSize: 11, color: CHROME_RENK.muted, marginBottom: 4 }}>✓ önceki kayıtta var</div>
+              <div style={{ fontSize: 12, color: CHROME_RENK.muted, lineHeight: 1.5 }}>{oncekiler.join(' · ')}</div>
+            </div>
+          ) : null}
+        </NotYanKutu>
+      ) : undefined}>
+        <NotAlani etiket="Başvuru Yakınması">
           <input value={basvuru} onChange={(e) => isaretle(setBasvuru)(e.target.value)} style={{ ...kutu, fontStyle: 'italic' }} />
-        </div>
+        </NotAlani>
         <div>
           <div style={etiket}>Yaşamsal Bulgular</div>
           <YasamsalBulgularFormu
@@ -630,10 +635,9 @@ export default function NotSayfasi() {
           />
         </div>
         {BOLUM.map(([k, ad]) => (
-          <div key={k}>
-            <div style={etiket}>{ad}</div>
-            <textarea value={taslak[k]} onChange={(e) => isaretle((v: string) => setTaslak({ ...taslak, [k]: v }))(e.target.value)} rows={Math.max(4, Math.min(18, Math.ceil((taslak[k] || '').length / 95)))} style={kutu} />
-          </div>
+          <NotAlani key={k} etiket={ad}>
+            <NotYazi value={taslak[k]} onChange={(e) => isaretle((v: string) => setTaslak({ ...taslak, [k]: v }))(e.target.value)} rows={Math.max(4, Math.min(18, Math.ceil((taslak[k] || '').length / 95)))} />
+          </NotAlani>
         ))}
         <div>
           <div style={{ ...etiket, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
@@ -727,33 +731,7 @@ export default function NotSayfasi() {
         {/* MUAYENE-EKLERI-07: visit uploads as links; the viewer opens beside the report (no navigation, no unmount). */}
         <MuayeneEkleri hastaId={veri.hasta.patientId} visitId={not.sessionId ?? null} onYuklendi={() => setEkSayac((n) => n + 1)} onNotaEklendi={() => { void ekBloklariniAl(); }} />
         <YuklenenDosyalar key={ekSayac} sessionId={not.sessionId} />
-      </div>
-      {cekVar ? (
-        <aside style={{ background: 'rgba(180,131,47,0.08)', border: '1px solid rgba(180,131,47,0.30)', borderRadius: 12, padding: '12px 14px' }}>
-          <div style={{ fontSize: 13, fontWeight: 800, color: '#B4832F' }}>
-            {eksikler.length ? `Eksik kalanlar (${eksikler.length})` : 'Çek listesi tamam'}
-          </div>
-          <div style={{ fontSize: 11, color: CHROME_RENK.muted, margin: '2px 0 8px' }}>Çek listesi · notu düzenledikçe güncellenir · karar desteği, hekim değerlendirir</div>
-          {eksikler.length ? (
-            <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 6 }}>
-              {eksikler.map((e, i) => (
-                <li key={i} style={{ fontSize: 13, color: CHROME_RENK.ink, lineHeight: 1.4, display: 'flex', gap: 6 }}>
-                  <span style={{ color: '#A4453C', fontWeight: 800 }}>✗</span><span>{e}</span>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <div style={{ fontSize: 13, color: '#2E6E4E' }}>Boş madde kalmadı.</div>
-          )}
-          {oncekiler.length ? (
-            <div style={{ marginTop: 10, paddingTop: 8, borderTop: '1px solid rgba(58,44,34,0.1)' }}>
-              <div style={{ fontSize: 11, color: CHROME_RENK.muted, marginBottom: 4 }}>✓ önceki kayıtta var</div>
-              <div style={{ fontSize: 12, color: CHROME_RENK.muted, lineHeight: 1.5 }}>{oncekiler.join(' · ')}</div>
-            </div>
-          ) : null}
-        </aside>
-      ) : null}
-      </div>
+      </NotDuzeni>
     </div>
   );
 }

@@ -10,7 +10,8 @@ import { bransAnahtari } from "@/lib/specialties/bransAnahtari"
 import { muayeneFormuYolu } from "@/lib/doktor/muayeneFormuYolu"
 import { onaylananNotYolu, INCELEME_KUYRUGU_YOLU } from "@/lib/doktor/onaySonrasiYol"
 import { seansGeriHref } from "@/lib/doktor/geriNavigasyon"
-import { CHROME_FONT, CHROME_FONT_HREF } from "@/lib/doktor/chromeTheme"
+import { SeansSayfasi, SeansKayitKarti, SeansEylemSatiri, SeansIsleniyorKarti } from "@/components/doktor/SeansKurulumu"
+import { CHROME_FONT } from "@/lib/doktor/chromeTheme"
 import { turkceHataMesaji } from "@/lib/turkce/dogrulamaMesaji"
 import MuayeneCekListesi from "@/components/doktor/MuayeneCekListesi"
 import IpucuBaloncugu from "@/components/doktor/IpucuBaloncugu"
@@ -544,17 +545,7 @@ function NewSessionInner() {
   const S = (s: Record<string,unknown>) => s as React.CSSProperties
 
   return (
-    <div className="notya-seans-sayfa" style={S({minHeight:"100vh",background:"#f4eee3",fontFamily:CHROME_FONT.sans,padding:"20px"})}>
-      {/* eslint-disable-next-line @next/next/no-page-custom-font */}
-      <link rel="stylesheet" href={CHROME_FONT_HREF} />
-      <div style={S({maxWidth: step === "recording" || step === "done" ? "980px" : "600px", margin:"0 auto"})}>
-        <div style={S({display:"flex",alignItems:"center",gap:"12px",marginBottom:"24px"})}>
-          <div onClick={()=>router.push(seansGeriHref(patientId))} style={S({color:"#8b7d70",cursor:"pointer",fontSize:"14px"})}>← Geri</div>
-          <div style={S({fontSize:"18px",fontWeight:"600",color:"#3b2e24"})}>Yeni Seans</div>
-          <IpucuBaloncugu bolum="yeni-muayene" />
-        </div>
-
-        {error && <div style={S({background:"#FCEBEB",border:"1px solid #F09595",borderRadius:"12px",padding:"14px",fontSize:"13px",color:"#A32D2D",marginBottom:"16px"})}>{error}</div>}
+    <SeansSayfasi geri="Geri" onGeri={()=>router.push(seansGeriHref(patientId))} baslik="Yeni Seans" ipucu={<IpucuBaloncugu bolum="yeni-muayene" />} genis={step === "recording" || step === "done"} hata={error}>
 
         {patientId && hastaKarti && (step === "setup" || step === "recording") && (
           <SinavHastaBilgisi bilgi={sinavHastaBilgisi({ ...hastaKarti, dogumIso: hastaDogumIso, seansBransi: specialty, nowMs: efektifTarihIso ? new Date(efektifTarihIso).getTime() : undefined })} />
@@ -628,12 +619,8 @@ function NewSessionInner() {
 
         {step === "recording" && (
           <div className="notya-grid-yigin notya-seans-cek" style={S({display:"grid",gridTemplateColumns:oneriPaneli?"minmax(0,1.15fr) minmax(240px,0.85fr)":"minmax(0,1fr)",gap:"16px",alignItems:"start"})}>
-          <div className="notya-seans-kayit" style={S({background:"#faf6ee",border:"1px solid rgba(58,44,34,0.08)",borderRadius:"20px",padding:"24px"})}>
-            <div style={S({textAlign:"center",marginBottom:"20px"})}>
-              <div style={S({width:"64px",height:"64px",background:isRecordingVoice?"#FEE2E2":"#e8ede6",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 12px",fontSize:"28px"})}>🎙️</div>
-              <div style={S({fontSize:"32px",fontWeight:"600",color:"#3b2e24",fontFamily:"monospace",marginBottom:"4px"})}>{fmt(seconds)}</div>
-              <div style={S({fontSize:"13px",color:"#8b7d70",lineHeight:1.45,padding:"0 4px"})}>{isRecordingVoice ? "Kayıt devam ediyor" : seconds > 0 ? "Kayıt duraklatıldı" : "Kayıt başlamadı — 🎤 Sesle Dikte Et'e basın"} · {SPECIALTIES.find(s=>s.id===specialty)?.label} · üst sınır {kayitHedefDk} dk</div>
-            </div>
+          <SeansKayitKarti sinif="notya-seans-kayit" aktif={isRecordingVoice} sure={fmt(seconds)}
+            durum={<>{isRecordingVoice ? "Kayıt devam ediyor" : seconds > 0 ? "Kayıt duraklatıldı" : "Kayıt başlamadı — 🎤 Sesle Dikte Et'e basın"} · {SPECIALTIES.find(s=>s.id===specialty)?.label} · üst sınır {kayitHedefDk} dk</>}>
 
             {/* Voice recording button */}
             <div style={S({display:"flex",alignItems:"center",justifyContent:"center",gap:"10px",marginBottom:"14px"})}>
@@ -672,20 +659,13 @@ function NewSessionInner() {
               placeholder={"Muayene bulgularını buraya yazın...\n\nÖrnek: 7 yaşında erkek hasta, 3 gündür devam eden ateş şikayeti var. Ateş 38.8°C. Boğaz kırmızı, tonsiller hiperemik..."}
               style={S({width:"100%",minHeight:"180px",padding:"12px",border:"1.5px solid #e5ddd0",borderRadius:"10px",fontSize:"16px",fontFamily:CHROME_FONT.sans,resize:"vertical",marginBottom:"16px",color:"#3b2e24",lineHeight:"1.6",outline:"none",boxSizing:"border-box"})}
             />
-            <div className="notya-seans-aksiyon" style={S({display:"flex",gap:"10px"})}>
-              <button onClick={()=>{istenenKayitRef.current=false;stopTimer();recognitionRef.current?.stop();setIsRecordingVoice(false);setStep("setup");setSeconds(0);setTranscript("");setKayitHedefDk(KAYIT_VARSAYILAN_DK);uyariCalindiRef.current=false;setSureUyari(false);setSureDoldu(false);setKayitDurdu(false)}}
-                style={S({flex:1,padding:"14px",background:"#F1F5F9",color:"#3b2e24",border:"none",borderRadius:"10px",fontSize:"14px",cursor:"pointer"})}>
-                İptal
-              </button>
-              <button onClick={() => void seansiBitir()}
-                style={S({flex:2,padding:"14px",background:transcript.trim()?"#DC2626":"#8b7d70",color:"#fff",border:"none",borderRadius:"10px",fontSize:"15px",fontWeight:"600",cursor:transcript.trim()?"pointer":"not-allowed"})}>
-                ⏹ Seansı Bitir → Not Oluştur
-              </button>
-            </div>
+            <SeansEylemSatiri sinif="notya-seans-aksiyon" vazgecMetni="İptal"
+              onVazgec={()=>{istenenKayitRef.current=false;stopTimer();recognitionRef.current?.stop();setIsRecordingVoice(false);setStep("setup");setSeconds(0);setTranscript("");setKayitHedefDk(KAYIT_VARSAYILAN_DK);uyariCalindiRef.current=false;setSureUyari(false);setSureDoldu(false);setKayitDurdu(false)}}
+              bitirMetni="⏹ Seansı Bitir → Not Oluştur" onBitir={() => void seansiBitir()} bitirPasif={!transcript.trim()} />
             <div style={S({textAlign:"center",marginTop:"10px",fontSize:"11px",color:"#8b7d70"})}>
               Notları yazdıktan sonra "Seansı Bitir" butonuna basın
             </div>
-          </div>
+          </SeansKayitKarti>
           {oneriPaneli && (
           <MuayeneCekListesi
             acikRenk
@@ -713,11 +693,7 @@ function NewSessionInner() {
         )}
 
         {step === "processing" && (
-          <div style={S({background:"#faf6ee",border:"1px solid rgba(58,44,34,0.08)",borderRadius:"20px",padding:"48px",textAlign:"center"})}>
-            <div style={S({fontSize:"48px",marginBottom:"16px"})}>⚙️</div>
-            <div style={S({fontSize:"18px",fontWeight:"600",color:"#3b2e24",marginBottom:"8px"})}>Yapay zekâ notu oluşturuyor</div>
-            <div style={S({fontSize:"13px",color:"#8b7d70"})}>30-60 saniye...</div>
-          </div>
+          <SeansIsleniyorKarti baslik="Yapay zekâ notu oluşturuyor" alt="30-60 saniye..." />
         )}
 
         {step === "done" && note && (
@@ -788,7 +764,6 @@ function NewSessionInner() {
             )}
           </div>
         )}
-      </div>
-    </div>
+    </SeansSayfasi>
   )
 }

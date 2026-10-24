@@ -14,6 +14,7 @@ import MesajEkViewer from '@/components/doktor/MesajEkViewer'
 import { EKOKARDIYOGRAFI, ORTAK_BELGE_TURLERI } from '@/lib/doktor/belgeTurleri'
 import { belgeEkoMi } from '@/lib/doktor/belgeTur'
 import { hastaDosyaHref } from '@/lib/doktor/geriNavigasyon'
+import { MesajKartlari, MesajListeBos, MesajKonuListesi, MesajPanelBos, MesajPanelBasligi, MesajBalonlari, MesajBalonu, MesajBalonEylemi, MesajEkListesi, MesajEkKutusu, MesajYazmaKutusu, mesajEkDugmeStili } from '@/components/doktor/MesajlarGorunumu'
 
 type Ek = {
   id: string
@@ -208,78 +209,23 @@ function DoktorMesajlarIcerik() {
       {error ? <p style={{ color: CHROME_RENK.warn, fontSize: 14 }}>{error}</p> : null}
       {loading ? <p style={{ color: CHROME_RENK.muted }}>Yükleniyor…</p> : null}
 
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-          gap: 12,
-        }}
-      >
-        <div
-          style={{
-            background: '#FFFFFF',
-            border: `1px solid ${CHROME_RENK.border}`,
-            borderRadius: 16,
-            overflow: 'hidden',
-            boxShadow: '0 8px 18px rgba(58,44,34,0.045)',
-          }}
-        >
-          {!threads.length && !loading ? (
-            /* YENI-DOKTOR-UX-2026-10: boş ekran bölümün ne olduğunu ve ilk adımı söyler. */
-            <div style={{ padding: '22px 18px' }}>
-              <p style={{ margin: 0, color: CHROME_RENK.ink, fontSize: 14.5, fontWeight: 600 }}>Henüz mesaj yok</p>
-              <p style={{ margin: '6px 0 0', color: CHROME_RENK.muted, fontSize: 13.5, lineHeight: 1.5 }}>
-                Hastalarınız Sağlığım portalından yazdığında mesajları burada görürsünüz. Bir hastaya portal erişimi vermek için{' '}
-                <a href="/doktor-tools/hasta-portali" style={{ color: CHROME_RENK.pine, fontWeight: 700, textDecoration: 'none' }}>Araçlar › Hasta Portalı</a>'nı kullanın.
-              </p>
-            </div>
-          ) : (
-            threads.map((t) => (
-              <button
-                key={t.id}
-                type="button"
-                onClick={() => openThread(t.id)}
-                style={{
-                  display: 'block',
-                  width: '100%',
-                  textAlign: 'left',
-                  border: 'none',
-                  borderBottom: `1px solid ${CHROME_RENK.border}`,
-                  background: activeId === t.id ? '#E4F3F1' : 'transparent',
-                  color: CHROME_RENK.ink,
-                  padding: '14px 16px',
-                  cursor: 'pointer',
-                }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
-                  <strong style={{ fontSize: 14 }}>{t.konu}</strong>
-                  {!t.okundu ? (
-                    <span style={{ width: 8, height: 8, borderRadius: 99, background: CHROME_RENK.pine, marginTop: 5 }} />
-                  ) : null}
-                </div>
-                <div style={{ fontSize: 12, color: CHROME_RENK.muted, marginTop: 4 }}>{t.hastaAdi}</div>
-                <div style={{ fontSize: 13, color: CHROME_RENK.ink, marginTop: 4 }}>{t.ozet}</div>
-              </button>
-            ))
-          )}
-        </div>
-
-        <div
-          style={{
-            background: '#FFFFFF',
-            border: `1px solid ${CHROME_RENK.border}`,
-            borderRadius: 16,
-            padding: 16,
-            minHeight: 280,
-            boxShadow: '0 8px 18px rgba(58,44,34,0.045)',
-          }}
-        >
-          {!activeId ? (
-            <p style={{ margin: 0, color: CHROME_RENK.muted }}>Bir konuşma seçin.</p>
-          ) : (
-            <>
-              <h2 style={{ margin: '0 0 4px', fontFamily: CHROME_FONT.serif, fontWeight: 500, fontSize: 20, color: '#2e251d' }}>{threadMeta?.konu}</h2>
-              <p style={{ margin: 0, color: CHROME_RENK.muted, fontSize: 13 }}>
+      <MesajKartlari
+        sol={!threads.length && !loading ? (
+          /* YENI-DOKTOR-UX-2026-10: boş ekran bölümün ne olduğunu ve ilk adımı söyler. */
+          <MesajListeBos baslik="Henüz mesaj yok">
+            Hastalarınız Sağlığım portalından yazdığında mesajları burada görürsünüz. Bir hastaya portal erişimi vermek için{' '}
+            <a href="/doktor-tools/hasta-portali" style={{ color: CHROME_RENK.pine, fontWeight: 700, textDecoration: 'none' }}>Araçlar › Hasta Portalı</a>'nı kullanın.
+          </MesajListeBos>
+        ) : (
+          <MesajKonuListesi aktifId={activeId} onSec={(id) => { void openThread(id) }}
+            konular={threads.map((t) => ({ id: t.id, baslik: t.konu, alt: t.hastaAdi, ozet: t.ozet, okunmamis: !t.okundu }))} />
+        )}
+        sag={!activeId ? (
+          <MesajPanelBos>Bir konuşma seçin.</MesajPanelBos>
+        ) : (
+          <>
+            <MesajPanelBasligi baslik={threadMeta?.konu}
+              alt={<>
                 {threadMeta?.hastaAdi}
                 {patientId ? (
                   <>
@@ -289,125 +235,48 @@ function DoktorMesajlarIcerik() {
                     </Link>
                   </>
                 ) : null}
-              </p>
-              <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {messages.map((m) => (
-                  <div
-                    key={m.id}
-                    style={{
-                      alignSelf: m.taraf === 'hasta' ? 'flex-start' : 'flex-end',
-                      maxWidth: '94%',
-                      padding: '10px 12px',
-                      borderRadius: 12,
-                      background: m.taraf === 'hasta' ? '#F6F0E4' : CHROME_RENK.pine,
-                      color: m.taraf === 'hasta' ? CHROME_RENK.ink : '#FAF8F4',
-                    }}
-                  >
-                    <div style={{ fontSize: 11, color: m.taraf === 'hasta' ? CHROME_RENK.pine : CHROME_RENK.gold, fontWeight: 700, marginBottom: 4 }}>{m.kimden}</div>
-                    <div style={{ fontSize: 14, lineHeight: 1.45, whiteSpace: 'pre-wrap' }}>{m.metin}</div>
-                    {m.ekler?.length ? (
-                      <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 6 }}>
+              </>} />
+            <MesajBalonlari>
+              {messages.map((m) => {
+                const karsi = m.taraf === 'hasta'
+                return (
+                  <MesajBalonu key={m.id} karsi={karsi} kimden={m.kimden} metin={m.metin} zaman={new Date(m.tarih).toLocaleString('tr-TR')}
+                    ekler={m.ekler?.length ? (
+                      <MesajEkListesi>
                         {m.ekler.map((ek) => (
-                          <div
-                            key={ek.id}
-                            style={{
-                              padding: '8px 10px',
-                              borderRadius: 10,
-                              background: m.taraf === 'hasta' ? 'rgba(47,67,52,0.06)' : 'rgba(255,255,255,0.12)',
-                              fontSize: 13,
-                            }}
-                          >
-                            <div style={{ fontWeight: 650, marginBottom: 6 }}>📎 {ek.fileName}</div>
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                              <button type="button" style={ekBtn(m.taraf === 'hasta')} onClick={() => setViewer(ek)}>
-                                Gözlemle
-                              </button>
-                              {ek.belgeId ? (
-                                patientId ? (
-                                  <Link
-                                    href={`/dashboard/doktor/hastalar/${encodeURIComponent(patientId)}/belgeler/${encodeURIComponent(ek.belgeId)}`}
-                                    style={{ ...ekBtn(m.taraf === 'hasta'), textDecoration: 'none' }}
-                                  >
-                                    Belgelerde aç
-                                  </Link>
-                                ) : (
-                                  <span style={{ fontSize: 12, opacity: 0.85 }}>Belgelere kaydedildi</span>
-                                )
+                          <MesajEkKutusu key={ek.id} karsi={karsi} ad={ek.fileName}>
+                            <button type="button" style={mesajEkDugmeStili(karsi)} onClick={() => setViewer(ek)}>
+                              Gözlemle
+                            </button>
+                            {ek.belgeId ? (
+                              patientId ? (
+                                <Link
+                                  href={`/dashboard/doktor/hastalar/${encodeURIComponent(patientId)}/belgeler/${encodeURIComponent(ek.belgeId)}`}
+                                  style={{ ...mesajEkDugmeStili(karsi), textDecoration: 'none' }}
+                                >
+                                  Belgelerde aç
+                                </Link>
                               ) : (
-                                <button type="button" style={ekBtn(m.taraf === 'hasta')} onClick={() => { setKaydetEk(ek); setKategori(tahminKategori(ek.fileName, ek.fileType)) }}>
-                                  Belgeler&apos;e kaydet
-                                </button>
-                              )}
-                            </div>
-                          </div>
+                                <span style={{ fontSize: 12, opacity: 0.85 }}>Belgelere kaydedildi</span>
+                              )
+                            ) : (
+                              <button type="button" style={mesajEkDugmeStili(karsi)} onClick={() => { setKaydetEk(ek); setKategori(tahminKategori(ek.fileName, ek.fileType)) }}>
+                                Belgeler&apos;e kaydet
+                              </button>
+                            )}
+                          </MesajEkKutusu>
                         ))}
-                      </div>
+                      </MesajEkListesi>
                     ) : null}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, marginTop: 8, alignItems: 'center' }}>
-                      <span style={{ fontSize: 11, color: m.taraf === 'hasta' ? CHROME_RENK.muted : 'rgba(250,248,244,0.7)' }}>
-                        {new Date(m.tarih).toLocaleString('tr-TR')}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => void mesajSil(m.id)}
-                        disabled={busyEk === m.id}
-                        style={{
-                          border: 'none',
-                          background: 'transparent',
-                          color: m.taraf === 'hasta' ? CHROME_RENK.warn : 'rgba(250,248,244,0.85)',
-                          fontSize: 12,
-                          fontWeight: 700,
-                          cursor: 'pointer',
-                          textDecoration: 'underline',
-                        }}
-                      >
-                        Sil
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <textarea
-                value={reply}
-                onChange={(e) => setReply(e.target.value)}
-                placeholder="Yanıt yazın…"
-                rows={3}
-                style={{
-                  width: '100%',
-                  marginTop: 16,
-                  boxSizing: 'border-box',
-                  borderRadius: 12,
-                  border: `1px solid ${CHROME_RENK.border}`,
-                  background: '#FFFFFF',
-                  color: CHROME_RENK.ink,
-                  padding: 12,
-                  fontSize: 16,
-                  fontFamily: 'inherit',
-                  resize: 'vertical',
-                }}
-              />
-              <button
-                type="button"
-                onClick={sendReply}
-                disabled={sending || !reply.trim()}
-                style={{
-                  marginTop: 10,
-                  padding: '10px 18px',
-                  borderRadius: 999,
-                  border: 'none',
-                  background: CHROME_RENK.pine,
-                  color: '#FAF8F4',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  opacity: sending || !reply.trim() ? 0.6 : 1,
-                }}
-              >
-                {sending ? 'Gönderiliyor…' : 'Yanıtla'}
-              </button>
-            </>
-          )}
-        </div>
-      </div>
+                    sag={<MesajBalonEylemi karsi={karsi} onClick={() => void mesajSil(m.id)} disabled={busyEk === m.id}>Sil</MesajBalonEylemi>} />
+                )
+              })}
+            </MesajBalonlari>
+            <MesajYazmaKutusu deger={reply} onDegis={setReply} yerTutucu="Yanıt yazın…" gonderMetni={sending ? 'Gönderiliyor…' : 'Yanıtla'}
+              onGonder={sendReply} pasif={sending || !reply.trim()} soluk={sending || !reply.trim()} />
+          </>
+        )}
+      />
 
       {viewer ? (
         <MesajEkViewer
@@ -468,19 +337,6 @@ function DoktorMesajlarIcerik() {
       ) : null}
     </div>
   )
-}
-
-function ekBtn(hasta: boolean): React.CSSProperties {
-  return {
-    border: `1px solid ${hasta ? 'rgba(47,67,52,0.25)' : 'rgba(255,255,255,0.35)'}`,
-    background: hasta ? '#fff' : 'rgba(255,255,255,0.12)',
-    color: hasta ? CHROME_RENK.pine : '#FAF8F4',
-    borderRadius: 999,
-    padding: '5px 10px',
-    fontSize: 12,
-    fontWeight: 700,
-    cursor: 'pointer',
-  }
 }
 
 function tahminKategori(fileName: string, fileType: string): string {
