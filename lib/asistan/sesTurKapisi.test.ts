@@ -167,3 +167,36 @@ describe('SES-CLICK-01 — nothing spoken is ever punctuation only', () => {
     assert.match(kod, /SESLENEBILIR = \/\[\\p\{L\}\\p\{N\}\]\/u/)
   })
 })
+
+describe('SES-DUP-01 — the duplicate that loses the lock says the winner\'s words', () => {
+  it('waits for the winner\'s sesSonSoz and returns it; null when nothing comes', async () => {
+    const { sesSonSozBekle } = await import('./sesTurKilit')
+    let n = 0
+    const sb = { from: () => ({ select: () => ({ eq: () => ({ eq: () => ({ maybeSingle: async () => {
+      n++
+      return { data: { active_context: n < 3 ? {} : { sesSonSoz: { mesaj: 'Merhaba Hocam', soz: 'Merhaba Hocam, iyiyim.', zaman: new Date(Date.now() + 5).toISOString() } } } }
+    } }) }) }) }) }
+    assert.equal(await sesSonSozBekle(sb as never, 'd', 'o', 'merhaba hocam', 2000, 5), 'Merhaba Hocam, iyiyim.')
+    const bos = { from: () => ({ select: () => ({ eq: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { active_context: {} } }) }) }) }) }) }
+    assert.equal(await sesSonSozBekle(bos as never, 'd', 'o', 'x', 30, 5), null)
+  })
+  it('an older answer to the same words is not replayed', async () => {
+    const { sesSonSozBekle } = await import('./sesTurKilit')
+    const eski = { from: () => ({ select: () => ({ eq: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { active_context: { sesSonSoz: { mesaj: 'selam', soz: 'eski', zaman: new Date(Date.now() - 60000).toISOString() } } } }) }) }) }) }) }
+    assert.equal(await sesSonSozBekle(eski as never, 'd', 'o', 'selam', 40, 5), null)
+  })
+})
+
+describe('SES-DUP-01 — releasing the lock really releases it and records the spoken words', () => {
+  it('sesTurKilidiBirak deletes the lock of the same message and stores sesSonSoz', async () => {
+    const { sesTurKilidiBirak } = await import('./sesTurKilit')
+    let ctx: Record<string, unknown> = { sesTurKilit: { mesaj: 'Merhaba Hocam', zaman: new Date().toISOString(), claimId: 'a' } }
+    const sb = { from: () => ({
+      select: () => ({ eq: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { active_context: ctx } }) }) }) }),
+      update: (v: { active_context: Record<string, unknown> }) => ({ eq: () => ({ eq: async () => { ctx = v.active_context; return {} } }) }),
+    }) }
+    await sesTurKilidiBirak(sb as never, 'd', 'o', 'Merhaba Hocam', 'Merhaba Hocam, iyiyim.')
+    assert.equal(ctx.sesTurKilit, undefined)
+    assert.equal((ctx.sesSonSoz as { soz: string }).soz, 'Merhaba Hocam, iyiyim.')
+  })
+})

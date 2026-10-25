@@ -35,7 +35,7 @@ import { sesOnayMetniGecerliMi, sesVazgecMetniMi } from '@/core/eylemler/sesKapi
 import { netSosyalMi } from '@/lib/ai/modeller'
 import { takvimSorusuMu, sesGurultusuMu, takvimTakibiMi } from '@/lib/randevu/takvimSorusu'
 import { sesTurKapisi } from '@/lib/asistan/sesTurKapisi'
-import { sesTurKilidiAl, sesTurKilidiBirak } from '@/lib/asistan/sesTurKilit'
+import { sesSonSozBekle, sesTurKilidiAl, sesTurKilidiBirak } from '@/lib/asistan/sesTurKilit'
 import { asistaniKapatMi } from '@/lib/asistan/uyandirSoz'
 import { kesintiKalani, kesintiMesajiMi } from '@/lib/asistan/kesintiDevam'
 
@@ -256,7 +256,11 @@ export async function sesLlmPost(req: NextRequest): Promise<Response> {
           isaret('kilit')
           if (!kilitAlindi) {
             console.error('[ses-llm/kilit]', 'tur_dusuruldu')
-            parca({ content: SESSIZ_ICERIK })
+            // SES-DUP-01: ElevenLabs plays ONE of the two replies. Silence here meant "text but no voice" whenever it
+            // picked this one — wait for the winner's words and say them (no second brain run).
+            const baskasininSozu = await sesSonSozBekle(supabase, jeton.d, jeton.o, mesaj).catch(() => null)
+            if (baskasininSozu) { cevapSoylendi = true; yaz(baskasininSozu.endsWith(' ') ? baskasininSozu : `${baskasininSozu} `) }
+            else parca({ content: SESSIZ_ICERIK })
           } else {
           yaz(dolguSec(mesaj, { onay: sesOnayMetniGecerliMi(mesaj), vazgec: sesVazgecMetniMi(mesaj), sosyal: netSosyalMi(mesaj) }), true)
           // Sözlü onay / ret bir model turu değildir: bekleyen kart varsa dokunuşun omurgasından geçer, model çağrılmaz.
@@ -297,7 +301,7 @@ export async function sesLlmPost(req: NextRequest): Promise<Response> {
               }
               if (sonuc.cevap.kartlar.length) await eskiSesTaslaklariniCek(supabase, jeton.d, sonuc.cevap.oncekiBekleyen || [], sonuc.cevap.kartlar, sonuc.cevap.kartHastaId ?? null)
             }).catch((e) => { console.error('[ses-llm/arka]', e instanceof Error ? e.name : 'hata') })
-              .finally(() => { void sesTurKilidiBirak(supabase, jeton.d, jeton.o, mesaj).catch(() => {}) })
+              .finally(() => { void sesTurKilidiBirak(supabase, jeton.d, jeton.o, mesaj, soylenen).catch(() => {}) })
             const bekci = new Promise<'bekci'>((r) => setTimeout(() => r('bekci'), SES_BEKCI_MS))
             const kim = await Promise.race([sonrasi.then(() => 'bitti' as const), sesSiniri.then(() => 'sinir' as const), bekci])
             if (kim !== 'bitti') {
@@ -314,7 +318,7 @@ export async function sesLlmPost(req: NextRequest): Promise<Response> {
           }
           } finally {
             // Takvim / klinik / karar yolları: kilit burada bırakılır. Arka plan ayse yolu finally'de bırakır.
-            if (!turKapandi) await sesTurKilidiBirak(supabase, jeton.d, jeton.o, mesaj).catch(() => {})
+            if (!turKapandi) await sesTurKilidiBirak(supabase, jeton.d, jeton.o, mesaj, soylenen).catch(() => {})
           }
           }
           }

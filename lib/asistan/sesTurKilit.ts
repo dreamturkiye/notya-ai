@@ -13,6 +13,7 @@ import { ayniIstekYeniBilgiYokMu } from '@/lib/asistan/sesTurKapisi'
 const TTL_MS = 45_000
 
 export type SesTurKilit = { mesaj: string; zaman: string; claimId?: string }
+export type SesSonSoz = { mesaj: string; soz: string; zaman: string }
 
 function sozNorm(s: string): string {
   return String(s || '').replace(/\s+/g, ' ').trim().toLocaleLowerCase('tr-TR')
@@ -72,16 +73,37 @@ export async function sesTurKilidiAl(
   return false
 }
 
-export async function sesTurKilidiBirak(sb: Sb, doktorId: string, oturumId: string, mesaj?: string): Promise<void> {
+export async function sesTurKilidiBirak(sb: Sb, doktorId: string, oturumId: string, mesaj?: string, soylenen?: string): Promise<void> {
   const { data } = await sb.from('asistan_sessions').select('active_context').eq('id', oturumId).eq('doctor_id', doktorId).maybeSingle()
   const baglam = { ...baglamOku(data) }
   const mevcut = baglam.sesTurKilit as SesTurKilit | undefined
-  if (mesaj && mevcut && !sesTurKilitAyniMi(mesaj, mevcut, Date.now() + TTL_MS)) return
+  // (It used to pass `Date.now() + TTL_MS`, which made every lock look expired → this returned early and the lock was never released.)
+  if (mesaj && mevcut && !sesTurKilitAyniMi(mesaj, mevcut, Date.now())) return
   delete baglam.sesTurKilit
+  // SES-DUP-01: what this turn said, for the duplicate request that lost the lock (see sesSonSozBekle).
+  if (mesaj && soylenen && soylenen.trim()) baglam.sesSonSoz = { mesaj: String(mesaj).slice(0, 500), soz: soylenen.slice(0, 1500), zaman: new Date().toISOString() } satisfies SesSonSoz
   await sb.from('asistan_sessions').update({ active_context: baglam }).eq('id', oturumId).eq('doctor_id', doktorId)
 }
 
 /** Test / log helper — normalized token fingerprint. */
 export function sesTurKilitAnahtar(mesaj: string): string {
   return trAramaNormalize(String(mesaj || '')).replace(/\s+/g, ' ').trim().slice(0, 200)
+}
+
+/**
+ * SES-DUP-01 (Kaan, 2026-10-25: "it writes but there is no speech"): ElevenLabs sends the same question twice and plays ONE
+ * of the two replies. The loser of the lock used to answer with silence; when ElevenLabs picked that one, the doctor got the
+ * text bubble (written by the winner) and no voice. The loser now waits for the winner's spoken words and says them.
+ * Returns the words, or null when the winner said nothing within `bekleMs`. Reads only this session row (id AND doctor_id).
+ */
+export async function sesSonSozBekle(sb: Sb, doktorId: string, oturumId: string, mesaj: string, bekleMs = 12_000, aralikMs = 400, simdi: () => number = Date.now): Promise<string | null> {
+  const basladi = simdi()
+  const hedef = sozNorm(mesaj)
+  while (simdi() - basladi < bekleMs) {
+    await new Promise((r) => setTimeout(r, aralikMs))
+    const { data } = await sb.from('asistan_sessions').select('active_context').eq('id', oturumId).eq('doctor_id', doktorId).maybeSingle()
+    const s = baglamOku(data).sesSonSoz as SesSonSoz | undefined
+    if (s?.soz && sozNorm(s.mesaj) === hedef && Date.parse(s.zaman) >= basladi - 1000) return s.soz
+  }
+  return null
 }
