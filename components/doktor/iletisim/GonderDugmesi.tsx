@@ -226,7 +226,7 @@ export default function GonderDugmesi(p: GonderDugmesiProps) {
           <div
             onClick={() => setTamMetin(!tamMetin)}
             style={{
-              whiteSpace: 'pre-wrap', fontSize: buyuk ? 16 : 14, lineHeight: 1.55, color: R.ink, background: R.cream,
+              whiteSpace: 'pre-wrap', overflowWrap: 'anywhere', wordBreak: 'break-word', fontSize: buyuk ? 16 : 14, lineHeight: 1.55, color: R.ink, background: R.cream,
               borderRadius: 12, padding: '12px 14px', marginBottom: 14, cursor: 'pointer',
               ...(tamMetin ? {} : { display: '-webkit-box', WebkitLineClamp: buyuk ? 5 : 3, WebkitBoxOrient: 'vertical' as const, overflow: 'hidden' }),
             }}

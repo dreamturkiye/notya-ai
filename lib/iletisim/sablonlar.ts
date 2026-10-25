@@ -35,6 +35,9 @@ export type SablonGirdisi = {
   bugunIso?: string | null
   /** Sağlığım / intake link. */
   link?: string | null
+  /** INTAKE-PORTAL-01: bilgi_formu only — the patient's Sağlığım link and the 6-digit PIN minted for this message. */
+  portalLink?: string | null
+  portalPin?: string | null
   /** YYYY-MM-DD, e.g. the next vaccine date the doctor recorded. */
   tarihIso?: string | null
   /** Only for 'serbest': the text the doctor wrote. */
@@ -123,6 +126,8 @@ export type BilgiFormuSatirlari = {
   gizlilik: string
   /** "Dr. Ad Soyad", or '' when the practice has no doctor name */
   doktor: string
+  /** INTAKE-PORTAL-01: the portal block (two lines + a note) or null when this message carries no portal login. */
+  portal: { baslik: string; link: string; pinSatiri: string } | null
   metin: string
 }
 
@@ -134,8 +139,11 @@ export function bilgiFormuSatirlari(g: SablonGirdisi, link: string): BilgiFormuS
   const giris = `${doktor || 'Muayenehanemiz'}, ${kimIcin} hazırlanan Hasta Bilgi Formu’nu randevudan önce doldurmanızı rica ediyor.`
   const neden = 'Bilgileri önceden almamız, muayene süresini asıl konuya ayırmamızı sağlar.'
   const gizlilik = 'Bu bağlantı size özeldir; lütfen başkalarıyla paylaşmayın.'
-  const metin = [selam, '', giris, '', link, '', neden, gizlilik, '', 'Saygılarımızla,', ...(doktor ? [doktor] : [])].join('\n')
-  return { selam, giris, link, neden, gizlilik, doktor, metin }
+  const pLink = temiz(g.portalLink)
+  const pPin = temiz(g.portalPin)
+  const portal = pLink && /^\d{6}$/.test(pPin) ? { baslik: 'Sağlığım hasta portalınız:', link: pLink, pinSatiri: `Giriş PIN’i: ${pPin}` } : null
+  const metin = [selam, '', giris, '', link, '', neden, ...(portal ? ['', portal.baslik, portal.link, portal.pinSatiri] : []), gizlilik, '', 'Saygılarımızla,', ...(doktor ? [doktor] : [])].join('\n')
+  return { selam, giris, link, neden, gizlilik, doktor, portal, metin }
 }
 
 /**

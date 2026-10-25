@@ -190,7 +190,7 @@ export function istekKur(h: Hazirlik, kanal: IletisimKanali, doktorId: string, d
   if (!alici || !h.mesaj) return null
   // NOTYA-INTAKE-EPOSTA: the intake invitation goes as text + designed HTML; every other type stays plain text.
   if (h.tur === 'bilgi_formu' && h.link) {
-    const e = bilgiFormuEpostasi({ hastaAdi: h.hasta.ad, veliDili: h.hasta.veliDili, doktorAdi, link: h.link })
+    const e = bilgiFormuEpostasi({ hastaAdi: h.hasta.ad, veliDili: h.hasta.veliDili, doktorAdi, link: h.link, portalLink: h.portal?.url ?? null, portalPin: h.portal?.pin ?? null })
     return { ...temel, alici, metin: e.metin, ...(e.html ? { html: e.html } : {}) }
   }
   return { ...temel, alici }

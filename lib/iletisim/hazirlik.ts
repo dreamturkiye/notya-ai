@@ -12,6 +12,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import type { PratikRol } from '@/lib/doktor/pratikOturum'
 import { arsivsizAsilar } from '@/lib/doktor/arsiv'
 import { ensurePatientPortalUrl } from '@/lib/portal/notifyPatientEmail'
+import { portalGirisiUret, type PortalGirisi } from '@/lib/portal/girisUret'
 import { mesajHazirla, type HazirMesaj } from './sablonlar'
 import { turIzinliMi } from './kuyruk'
 import { sonKanal, type HastaIletisimi } from './sunucu'
@@ -42,6 +43,8 @@ export type Hazirlik = {
   randevu: { baslangic: string; durum: string; hatirlatmaGonderildi: boolean } | null
   /** Sağlığım link that went into the message (saglikim_yeni_mesaj / bilgi_formu), else null. */
   link: string | null
+  /** INTAKE-PORTAL-01: portal link + PIN minted for a bilgi_formu message (null for every other type or when minting failed). */
+  portal: PortalGirisi | null
 }
 
 export type HazirlikHatasi = { durum: 400 | 403 | 404; hata: string }
@@ -128,19 +131,23 @@ export async function iletisimHazirla(
   let link = guvenliLink(g.link)
   if (tur === 'saglikim_yeni_mesaj') link = await ensurePatientPortalUrl(sb, doktorId, patientId)
 
+  // INTAKE-PORTAL-01: the intake message carries the patient's portal link + a PIN minted now (only for a form with a link).
+  const portal = tur === 'bilgi_formu' && link ? await portalGirisiUret(sb, doktorId, patientId) : null
   const mesaj = mesajHazirla(tur, {
     hastaAdi: hasta.ad,
     veliDili: hasta.veliDili,
     doktorAdi: secenek.doktorAdi,
     randevuIso,
     link,
+    portalLink: portal?.url ?? null,
+    portalPin: portal?.pin ?? null,
     tarihIso: asiTarih,
     metin: tur === 'serbest' ? str(g.metin).slice(0, 1500) : null,
     odemeTutarKurus,
     odemeFaturaRef,
     odemeKademe,
   })
-  return { tur, hasta, mesaj, sonKanal: await sonKanal(sb, doktorId, patientId), randevuId, asiId, kuyrukId, randevu, link }
+  return { tur, hasta, mesaj, sonKanal: await sonKanal(sb, doktorId, patientId), randevuId, asiId, kuyrukId, randevu, link, portal }
 }
 
 export function hataMi(x: Hazirlik | HazirlikHatasi): x is HazirlikHatasi {

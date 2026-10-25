@@ -59,6 +59,11 @@ export function bilgiFormuEpostasi(g: SablonGirdisi & { link: string; muayenehan
     '</td></tr></table>',
     `<p style="margin:0 0 20px;${font}font-size:13px;line-height:20px;color:${RENK.soluk};word-break:break-all;"><a href="${href}" target="_blank" style="color:${RENK.cam};text-decoration:underline;">${href}</a></p>`,
     p(s.neden),
+    ...(s.portal && bilgiFormuLinkiGecerliMi(s.portal.link) ? [
+      p(s.portal.baslik, 'margin:0 0 6px;font-weight:bold;'),
+      `<p style="margin:0 0 6px;${font}font-size:13px;line-height:20px;word-break:break-all;"><a href="${kacir(s.portal.link)}" target="_blank" style="color:${RENK.cam};text-decoration:underline;">${kacir(s.portal.link)}</a></p>`,
+      p(s.portal.pinSatiri, 'font-weight:bold;letter-spacing:1px;'),
+    ] : []),
     p(s.gizlilik),
     p('Saygılarımızla,', 'margin:0;'),
     ...(s.doktor ? [p(s.doktor, 'margin:0;font-weight:bold;')] : []),

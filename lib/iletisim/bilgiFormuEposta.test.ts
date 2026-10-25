@@ -77,3 +77,19 @@ describe('bilgi formu e-postası', () => {
     assert.match(ham, /Content-Disposition: attachment; filename="r.ics"/)
   })
 })
+
+describe('INTAKE-PORTAL-01 — the intake message carries the portal link and PIN', () => {
+  const temel = { hastaAdi: 'Merve Yılmaz', doktorAdi: 'Dr. Gökhan Mamur', link: 'https://www.notya.io/intake/abc' }
+  it('adds the portal block to the text and the HTML when a link and a 6-digit PIN are given', () => {
+    const e = bilgiFormuEpostasi({ ...temel, portalLink: 'https://www.notya.io/portal/hasta/xyz', portalPin: '048213' })
+    assert.ok(e.metin.includes('https://www.notya.io/portal/hasta/xyz'))
+    assert.ok(e.metin.includes('Giriş PIN’i: 048213'))
+    assert.ok(e.html!.includes('048213') && e.html!.includes('/portal/hasta/xyz'))
+  })
+  it('adds nothing without a valid PIN or without a link', () => {
+    for (const g of [{ portalLink: 'https://www.notya.io/portal/hasta/xyz', portalPin: '12' }, { portalLink: null, portalPin: '048213' }, {}]) {
+      const e = bilgiFormuEpostasi({ ...temel, ...g })
+      assert.ok(!e.metin.includes('PIN') && !e.html!.includes('PIN'))
+    }
+  })
+})
