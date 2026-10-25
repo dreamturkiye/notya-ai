@@ -130,7 +130,8 @@ export function BugunGorunumu({ m, ad, muayeneler, hata, rol, randevular, mesajl
       </>
     )
     const stil = S({ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 4, minHeight: 64, padding: 8, borderRadius: 16, border: '1px solid rgba(30,51,54,0.18)', background: '#d0d8d5', color: R.ink, textAlign: 'left', textDecoration: 'none' })
-    return href ? <a key={text} href={href} style={stil}>{ic}</a> : <span key={text} className="uza-duvar" style={stil}>{ic}</span>
+    // A tile that leads nowhere is not drawn (Kaan 2026-10-25: dead tiles on the phone): this country has no such page.
+    return href ? <a key={text} href={href} style={stil}>{ic}</a> : null
   }
   return (
     <div className="yg-ana" style={S({ display: 'flex', flexDirection: 'column', gap: 22 })}>
@@ -168,8 +169,6 @@ export function BugunGorunumu({ m, ad, muayeneler, hata, rol, randevular, mesajl
           <h2 style={ETIKET}>{p.hizliAraclar}</h2>
           <div style={S({ display: 'flex', gap: 18, flexWrap: 'wrap', alignItems: 'center', ...KART, borderRadius: 16, padding: '14px 20px', boxShadow: '0 8px 18px rgba(58,44,34,0.045)' })}>
             {asistanYolu ? <a href={asistanYolu} style={{ ...ARAC, textDecoration: 'none' }}>{m.asistan.etiket} ›</a> : null}
-            <span style={ARAC}>{p.epikriz} ›</span>
-            <span style={ARAC}>{p.kodlama} ›</span>
           </div>
         </div>
       ) : null}
