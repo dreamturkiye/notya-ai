@@ -124,7 +124,7 @@ describe('au live assistant: the brain', { skip: process.env.NOTYA_COUNTRY !== '
     assert.equal(v.arac?.function.name, 'end_call')
     assert.equal(model.cagrildi, 0)
     const t = await iste({ mesajlar: [{ role: 'user', content: 'dose?' }, { role: 'assistant', content: '' }, { role: 'tool', content: 'ok' }] })
-    assert.equal(t.konusma, '.') // a full stop only: it keeps the socket and is never spoken
+    assert.equal(t.konusma.trim(), '') // whitespace only: keeps the socket, is never spoken (a '.' is read out as a click)
     assert.equal(model.cagrildi, 0)
     assert.equal(t.bitti, true)
   })
