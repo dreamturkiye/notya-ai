@@ -4,7 +4,7 @@
  * AU-LAUNCH-01g — one shared, lightweight availability check for the live assistant. Every entry point (sidebar, phone menu,
  * home quick-access tile) draws only when `GET /api/ulke/asistan-canli` answers `{ hazir: true }`. FAIL CLOSED: anything else
  * (not ready, error, offline, no session) is "unavailable", and until the answer is known nothing is drawn (no flash).
- * The result is cached per tab (module + sessionStorage) so the call is made once per session.
+ * A positive result is cached per tab (module + sessionStorage); a negative one is never cached, so it can not stick.
  */
 import { useEffect, useState } from 'react'
 import { ulkeIstemciSupabase } from '@/lib/ulke/istemciSupabase'
@@ -24,14 +24,15 @@ function oku(): boolean | null {
   try {
     const v = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem(ANAHTAR) : null
     if (v === '1') return (bilinen = true)
-    if (v === '0') return (bilinen = false)
   } catch { /* no storage: ask again */ }
   return null
 }
 
+/** Only a positive answer is remembered: a "no" (not signed in yet, a blip on a phone, an old deployment) is asked again. */
 function yaz(v: boolean) {
-  bilinen = v
-  try { sessionStorage.setItem(ANAHTAR, v ? '1' : '0') } catch { /* cache only */ }
+  if (!v) return
+  bilinen = true
+  try { sessionStorage.setItem(ANAHTAR, '1') } catch { /* cache only */ }
 }
 
 export async function asistanHazirSor(): Promise<boolean> {
@@ -60,8 +61,12 @@ export function useAsistanHazir(etkin = true): boolean {
   useEffect(() => {
     if (!etkin) { setHazir(false); return }
     let iptal = false
-    void asistanHazirSor().then((v) => { if (!iptal) setHazir(v) })
-    return () => { iptal = true }
+    const sor = () => { void asistanHazirSor().then((v) => { if (!iptal) setHazir(v) }) }
+    sor()
+    // A phone that was asleep or offline: ask again when the tab comes back, until the answer is yes.
+    const gorunur = () => { if (document.visibilityState === 'visible') sor() }
+    document.addEventListener('visibilitychange', gorunur)
+    return () => { iptal = true; document.removeEventListener('visibilitychange', gorunur) }
   }, [etkin])
   return etkin && hazir
 }

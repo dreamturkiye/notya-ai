@@ -107,21 +107,32 @@ export function useCanliOturum({ t, api, dil }: { t: Metin | undefined; api: Api
   }, [])
   const anahtar = hazir && hesapId ? `au_${hesapId}_${hazir.cinsiyet ?? hazir.kisaAd}` : null
 
-  // Is it available? Anything but a clear yes is "not available".
+  // Is it available? Anything but a clear yes is "not available" — but a failure (a phone that just woke up, a token that
+  // is being refreshed, a network blip) is asked again a few times and whenever the tab comes back, so it never sticks.
   useEffect(() => {
     if (!t || !api) return
     let iptal = false
-    ;(async () => {
+    let deneme = 0
+    let zaman: ReturnType<typeof setTimeout> | undefined
+    const sor = async (): Promise<void> => {
+      let ok = false
       try {
         const r = await api('/api/ulke/asistan-canli')
         const j = r.j as DurumCevabi
         if (iptal) return
         if (r.ok && j.hazir === true && typeof j.ad === 'string' && j.ad) {
+          ok = true
           setHazir({ ad: j.ad, kisaAd: typeof j.kisaAd === 'string' && j.kisaAd ? j.kisaAd : j.ad, cinsiyet: j.cinsiyet === 'erkek' || j.cinsiyet === 'kadin' ? j.cinsiyet : null, portre: typeof j.portre === 'string' && j.portre.startsWith('/') ? ulkeYolu(j.portre) : null })
-        } else setHazir(null)
-      } catch { if (!iptal) setHazir(null) }
-    })()
-    return () => { iptal = true }
+        }
+      } catch { /* retried below */ }
+      if (iptal || ok) return
+      if (++deneme < 4) zaman = setTimeout(() => { void sor() }, 1500 * deneme)
+      else setHazir((h) => h ?? null)
+    }
+    void sor()
+    const gorunur = () => { if (document.visibilityState === 'visible' && !iptal) { deneme = 0; void sor() } }
+    document.addEventListener('visibilitychange', gorunur)
+    return () => { iptal = true; if (zaman) clearTimeout(zaman); document.removeEventListener('visibilitychange', gorunur) }
   }, [t, api])
 
   // History: the last 50 lines of this browser, voice and written together (Türkiye: sohbetGecmisi), loaded once the

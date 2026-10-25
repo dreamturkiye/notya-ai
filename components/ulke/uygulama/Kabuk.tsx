@@ -284,7 +284,7 @@ function KabukCercevesi({ dil, m, ad, unvan, aktif, cikis, onBuro, kompakt, chil
     diger = [oge('ayarlar', k.ayarlar, 'ayarlar', YOL.ayarlar)]
   } else {
     const p = m.pano
-    // The live assistant is opt-in (NOTYA_AU_ASSISTANT_ENABLED): while it is off the entry is not drawn at all, instead of a dead button.
+    // The live assistant is drawn only once the status call says ready: while it is not the entry is not drawn at all, instead of a dead button.
     if (p && asistanHazir) asistan = oge('asistan', p.asistanaSor, 'asistan', YOL.asistan)
     calisma = [
       oge('bugun', k.bugun, 'anaSayfa', YOL.bugun),
