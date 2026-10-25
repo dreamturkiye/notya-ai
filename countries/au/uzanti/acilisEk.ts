@@ -23,7 +23,6 @@
  */
 import type { AcilisIcerigi, EkOzellikBolumu } from '@/lib/ulke/arayuz/acilisTipleri'
 import { canliAjanlarVar } from '@/lib/ulke/asistan/ajan'
-import { AU_ASISTAN_DEGISKENI } from '../asistan/canli'
 
 const EPOSTA = 'kaan@notya.io'
 
@@ -31,7 +30,7 @@ const EPOSTA = 'kaan@notya.io'
  * AU-CANLI-01: the spoken assistant is mentioned ONLY while this deployment really has it (both agents, the key and the
  * secrets in its environment). A landing line for a feature the visitor's doctor could not press would be false.
  */
-const SESLI = (): boolean => canliAjanlarVar('au', process.env, AU_ASISTAN_DEGISKENI)
+const SESLI = (): boolean => canliAjanlarVar('au', process.env)
 
 function ekBolumler(rolSayisi: number, sesli: boolean = SESLI()): EkOzellikBolumu[] {
   return [

@@ -50,10 +50,8 @@ describe('au live assistant', () => {
     assert.equal(d({ ...ORTAM, ELEVENLABS_AGENT_AU_MALE: undefined }).hazir, false)
     assert.equal(d({ ...ORTAM, NOTYA_SES_LLM_SECRET: undefined }).hazir, false)
     assert.equal(d(ORTAM).hazir, true)
-    // AU-LAUNCH-01: opt-in. Everything else present but the switch unset / off = not offered.
-    assert.equal(d({ ...ORTAM, NOTYA_AU_ASSISTANT_ENABLED: undefined }).hazir, false)
-    assert.equal(d({ ...ORTAM, NOTYA_AU_ASSISTANT_ENABLED: '0' }).hazir, false)
-    assert.equal(d({ ...ORTAM, NOTYA_AU_ASSISTANT_ENABLED: 'true' }).hazir, true)
+    // 2026-10-25: no opt-in switch; a stray NOTYA_AU_ASSISTANT_ENABLED=0 changes nothing.
+    assert.equal(d({ ...ORTAM, NOTYA_AU_ASSISTANT_ENABLED: '0' }).hazir, true)
   })
 
   it('each role\'s prompt carries its own persona, its Australian sources and the AU limits — and nobody else\'s', () => {

@@ -12,7 +12,7 @@ import { AU_GIRDI } from './ayarlar'
 import { AU_YASAL } from './yasal'
 import { AU_GIZLILIK } from './uzanti/gizlilik'
 import { auAcilisGuncelle } from './uzanti/acilisEk'
-import { AU_CANLI_ASISTAN, AU_ASISTAN_DEGISKENI } from './asistan/canli'
+import { AU_CANLI_ASISTAN } from './asistan/canli'
 import { canliAcikMi, canliAjanlarVar } from '@/lib/ulke/asistan/ajan'
 import { seoMetni } from '@/lib/ulke/seo/metinler'
 import { DISA_AKTARMADA_YOK, disaAktarmaOlustur } from '@/lib/ulke/gizlilik/disaAktar'
@@ -44,12 +44,10 @@ describe('AU launch: TGA boundary (brief item 2)', () => {
     assert.match(oku('components/ulke/uygulama/Muayene.tsx'), /ozellikAcik\('goruntuDegerlendirme'\) \? '&ekler=1'/)
     assert.match(oku('components/ulke/uygulama/Not.tsx'), /ozellikAcik\('goruntuDegerlendirme'\) \? \(\s*<EklerNotKarti/)
   })
-  it('the clinical Q&A assistant is opt-in: off unless the environment switch is set', () => {
-    assert.equal(AU_CANLI_ASISTAN.acikDegiskeni, AU_ASISTAN_DEGISKENI)
-    assert.equal(canliAcikMi(AU_CANLI_ASISTAN, {}), false)
-    assert.equal(canliAcikMi(AU_CANLI_ASISTAN, { [AU_ASISTAN_DEGISKENI]: '0' }), false)
-    assert.equal(canliAcikMi(AU_CANLI_ASISTAN, { [AU_ASISTAN_DEGISKENI]: '1' }), true)
-    assert.equal(canliAjanlarVar('au', {}, AU_ASISTAN_DEGISKENI), false)
+  it('the live assistant has no opt-in switch (Kaan, 2026-10-25): it is on whenever its environment prerequisites exist', () => {
+    assert.equal(AU_CANLI_ASISTAN.acikDegiskeni, undefined)
+    assert.equal(canliAcikMi(AU_CANLI_ASISTAN, {}), true)
+    assert.equal(canliAjanlarVar('au', {}), false)
   })
   it('the assistant prompt no longer calculates a dose for a patient', () => {
     const t = oku('lib/ulke/asistan/istem.ts')
