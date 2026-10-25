@@ -133,3 +133,21 @@ describe('NOTYA-SES-ARKA-01 wired into Custom LLM', () => {
     assert.ok(/asistaniKapatMi\(mesaj\)/.test(s))
   })
 })
+
+describe('SES-SORU-CEVABI-01 — an answer to the assistant\'s question is never background or a look-alike', () => {
+  const oturum = [
+    { role: 'user', content: 'Hastanın adı Bora Toros.', kanal: 'ses' },
+    { role: 'assistant', content: 'Hangi gün ve saat için Hocam?' },
+  ]
+  it('"onu yarın saat 11.00\'de alalım" after a question goes to the model', () => {
+    assert.equal(sesTurKapisi({ mesaj: "Hocam, onu yarın saat 11.00'de alalım.", oturumMesajlari: oturum }).tip, 'model')
+  })
+  it('a short reworded answer ("Saat 11.00\'de yarın.") after the next question still goes to the model', () => {
+    const o = [...oturum, { role: 'user', content: "Hocam, onu yarın saat 11.00'de alalım.", kanal: 'ses' }, { role: 'assistant', content: 'Saat kaçta Hocam?' }]
+    assert.equal(sesTurKapisi({ mesaj: "Saat 11.00'de yarın.", oturumMesajlari: o }).tip, 'model')
+  })
+  it('the assistant\'s own question coming back through the microphone stays silent', () => {
+    const o = [{ role: 'user', content: 'Bugün randevum var mı', kanal: 'ses' }, { role: 'assistant', content: 'Bora Toros için yarın saat on bire randevu oluşturdum, ekranınızda onay bekliyor Hocam, onaylıyor musunuz?' }]
+    assert.equal(sesTurKapisi({ mesaj: 'Bora Toros için yarın saat on bire randevu oluşturdum ekranınızda onay bekliyor Hocam onaylıyor musunuz', oturumMesajlari: o }).tip, 'sessiz')
+  })
+})

@@ -18,7 +18,7 @@ function sozNorm(s: string): string {
   return String(s || '').replace(/\s+/g, ' ').trim().toLocaleLowerCase('tr-TR')
 }
 
-export function sesTurKilitAyniMi(mesaj: string, kilit: SesTurKilit | null | undefined, simdiMs = Date.now()): boolean {
+export function sesTurKilitAyniMi(mesaj: string, kilit: SesTurKilit | null | undefined, simdiMs = Date.now(), yalnizBirebir = false): boolean {
   if (!kilit?.mesaj || !kilit.zaman) return false
   const t = Date.parse(kilit.zaman)
   if (!Number.isFinite(t) || simdiMs - t > TTL_MS) return false
@@ -26,6 +26,8 @@ export function sesTurKilitAyniMi(mesaj: string, kilit: SesTurKilit | null | und
   const b = sozNorm(kilit.mesaj)
   if (!a || !b) return false
   if (a === b) return true
+  // An answer to the assistant's question ("yarın saat 11.00'de") looks like the doctor's earlier line: only the same words count.
+  if (yalnizBirebir) return false
   return ayniIstekYeniBilgiYokMu(mesaj, kilit.mesaj)
 }
 
@@ -47,13 +49,14 @@ export async function sesTurKilidiAl(
   doktorId: string,
   oturumId: string,
   mesaj: string,
+  yalnizBirebir = false,
 ): Promise<boolean> {
   const claimId = randomUUID()
   const { data, error } = await sb.from('asistan_sessions').select('active_context').eq('id', oturumId).eq('doctor_id', doktorId).maybeSingle()
   if (error) throw error
   const baglam = baglamOku(data)
   const mevcut = baglam.sesTurKilit as SesTurKilit | undefined
-  if (sesTurKilitAyniMi(mesaj, mevcut)) return false
+  if (sesTurKilitAyniMi(mesaj, mevcut, Date.now(), yalnizBirebir)) return false
   const kilit: SesTurKilit = {
     mesaj: String(mesaj || '').slice(0, 500),
     zaman: new Date().toISOString(),

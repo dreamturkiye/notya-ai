@@ -151,6 +151,17 @@ export function arkaPlanIstekDegilMi(mesaj: string): boolean {
   return t.length <= 6
 }
 
+/** The assistant's last spoken-or-written line asked something: the doctor's next words are its answer, not background talk. */
+export function sonAsistanSoruMu(oturum: TurMesaj[]): boolean {
+  for (let i = (oturum || []).length - 1; i >= 0; i--) {
+    if (oturum[i]?.role !== 'assistant') continue
+    const t = metin(oturum[i].content).replace(/\s+/g, ' ').trim()
+    if (!t) continue
+    return t.endsWith('?')
+  }
+  return false
+}
+
 export function sesTurKapisi(opts: {
   mesaj: string
   oturumMesajlari: TurMesaj[]
@@ -168,6 +179,14 @@ export function sesTurKapisi(opts: {
   if (bilinenKisaTurMu(mesaj)) return { tip: 'model', neden: 'kisa_tur' }
 
   const cift = sonSesCift(opts.oturumMesajlari || [])
+  // SES-SORU-CEVABI-01 (2026-10-25): "Hangi gün ve saat için Hocam?" → "onu yarın saat 11.00'de alalım" is the ANSWER to a question.
+  // It resembles the doctor's earlier lines, so the look-alike and background gates dropped it (silence, then the same question again).
+  // Only the assistant's own voice coming back (an echo) or the very same line twice stays silent.
+  if (sonAsistanSoruMu(opts.oturumMesajlari || [])) {
+    if (cift && sonCevapEkoMu(mesaj, cift.cevap)) return { tip: 'sessiz', neden: 'eko_tts' }
+    if (cift && sozNorm(mesaj) === sozNorm(cift.soru)) return { tip: 'devam_oku', neden: 'birebir_tekrar' }
+    return { tip: 'model', neden: 'soru_cevabi' }
+  }
   if (cift) {
     if (sonCevapEkoMu(mesaj, cift.cevap)) return { tip: 'sessiz', neden: 'eko_tts' }
     const ayni = sozNorm(mesaj) === sozNorm(cift.soru)

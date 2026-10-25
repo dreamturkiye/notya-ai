@@ -46,6 +46,13 @@ const getSupabase = () => createClient(
 
 /** NOTYA-SES-ERKEN-01: the voice turn never runs longer than this; the screen answer is not bound by it. */
 const SES_BEKCI_MS = 22_000
+/**
+ * A turn with nothing to say still needs one content delta (an empty SSE is what ElevenLabs reports as "Bağlantı kurulamadı").
+ * It must be SILENT: a lone "." is synthesised by ElevenLabs as a click, the open microphone hears it, the transcript "..."
+ * becomes the next silent turn, and the clicks feed themselves (2026-10-25, conv_9801m5spcq7dfa4s2ry73ym3vj5b: six "." turns in a row).
+ * Whitespace is what the TTS socket itself uses as its keep-alive and produces no audio.
+ */
+const SESSIZ_ICERIK = ' '
 /** Keep a background promise alive after the SSE closes (Vercel freezes the function otherwise). */
 function arkaPlandaSurdur(p: Promise<unknown>): void {
   try {
@@ -209,7 +216,7 @@ export async function sesLlmPost(req: NextRequest): Promise<Response> {
           bitis = 'tool_calls'
         } else if (mesaj && kendiSelamiMi(mesaj)) {
           // Açılış cümlesi mikrofon veya ElevenLabs tarafından doktora ait sanıldı. Cevap yok.
-          parca({ content: '.' })
+          parca({ content: SESSIZ_ICERIK })
         } else if (mesaj && devamIstegiMi(mesaj) && (await devamiOku(mesaj))) {
           // okundu (ya da söylenecek bir şey kalmadı — boş SSE aşağıda nokta ile tutulur)
         } else if (mesaj) {
@@ -218,7 +225,8 @@ export async function sesLlmPost(req: NextRequest): Promise<Response> {
           // NOTYA-SES-ARKA-01: eko / aynı istek / arka plan — model + dolgu yok (maliyet/hız).
           const tur = sesTurKapisi({ mesaj, oturumMesajlari: oturum })
           if (tur.tip === 'sessiz') {
-            parca({ content: '.' })
+            console.error('[ses-llm/sessiz]', tur.neden)
+            parca({ content: SESSIZ_ICERIK })
           } else if (tur.tip === 'devam_oku') {
             // Birebir EL replay — kalanı oku, modeli yeniden çalıştırma.
             await devamiOku(mesaj)
@@ -229,12 +237,13 @@ export async function sesLlmPost(req: NextRequest): Promise<Response> {
           } else if (cevaplanmisSonSoruMu(oturum, mesaj)) {
             // NOTYA-SES-TEK-CEVAP-01: EL önceki ses sorusunu yeniden POST ederse ikinci beyin yok.
             await devamiOku(mesaj)
-            if (!icerikGitti) parca({ content: '.' })
+            if (!icerikGitti) parca({ content: SESSIZ_ICERIK })
           } else {
           // NOTYA-BUYUME-KISA-01 / NOTYA-SES-TEK-CEVAP-01: kilit fail-closed — hata = ikinci tur yok.
-          const kilitAlindi = await sesTurKilidiAl(supabase, jeton.d, jeton.o, mesaj).catch(() => false)
+          const kilitAlindi = await sesTurKilidiAl(supabase, jeton.d, jeton.o, mesaj, tur.neden === 'soru_cevabi').catch(() => false)
           if (!kilitAlindi) {
-            parca({ content: '.' })
+            console.error('[ses-llm/kilit]', 'tur_dusuruldu')
+            parca({ content: SESSIZ_ICERIK })
           } else {
           yaz(dolguSec(mesaj, { onay: sesOnayMetniGecerliMi(mesaj), vazgec: sesVazgecMetniMi(mesaj), sosyal: netSosyalMi(mesaj) }), true)
           // Sözlü onay / ret bir model turu değildir: bekleyen kart varsa dokunuşun omurgasından geçer, model çağrılmaz.
@@ -306,7 +315,7 @@ export async function sesLlmPost(req: NextRequest): Promise<Response> {
       // Empty Custom LLM SSE (hidden `[devam]` with nothing left, or a replayed question)
       // is what ElevenLabs reports as "Bağlantı kurulamadı". A period keeps the socket;
       // Fish treats punctuation as noise and does not speak it.
-      if (!icerikGitti) parca({ content: '.' })
+      if (!icerikGitti) parca({ content: SESSIZ_ICERIK })
       parca({}, bitis)
       if (!kapali) {
         try { controller.enqueue(enc.encode('data: [DONE]\n\n')); controller.close() } catch { /* bağlantı kapandı */ }
