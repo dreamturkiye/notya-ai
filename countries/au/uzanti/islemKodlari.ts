@@ -5,15 +5,15 @@
  */
 import type { IslemKodlariTanimi } from '@/lib/ulke/uzanti/tipler'
 
-export const AU_ISLEM_KAYNAK_ETIKETI = 'Medicare Benefits Schedule (MBS) item to ACHI code map, published free by IHACPA. ACHI codes only; not the licensed ACHI code set.'
+export const AU_ISLEM_KAYNAK_ETIKETI = 'Medicare Benefits Schedule (MBS) item to ACHI stem code map, Twelfth Edition, published free by IHACPA. Stem codes only; not the licensed ACHI code set.'
 
 export const AU_ISLEM_KODLARI_TANIMI: IslemKodlariTanimi = {
   metin: {
     baslik: 'Procedure codes',
-    aciklama: 'Look up a procedure by MBS item number, ACHI code or words.',
+    aciklama: 'Look up the ACHI stem code for an MBS item number, or the MBS items behind an ACHI stem code.',
     arac: 'Tools',
-    araEtiketi: 'Search by item, code or words',
-    araOrnek: 'An MBS item, an ACHI code or words',
+    araEtiketi: 'Search by MBS item or ACHI stem code',
+    araOrnek: 'An MBS item number or an ACHI stem code',
     ara: 'Search',
     araniyor: 'Searching…',
     sonucSayisi: '{n} results',
@@ -21,7 +21,7 @@ export const AU_ISLEM_KODLARI_TANIMI: IslemKodlariTanimi = {
     veriYok: 'The procedure table is not loaded on this server yet, so there is nothing to search.',
     kaynakEtiketi: AU_ISLEM_KAYNAK_ETIKETI,
     mbsEtiketi: 'MBS item',
-    achiEtiketi: 'ACHI',
+    achiEtiketi: 'ACHI stem code',
     esleme_yok: 'No ACHI mapping',
     surum: 'Edition {surum}',
     hata: 'The search could not be completed. Try again.',
