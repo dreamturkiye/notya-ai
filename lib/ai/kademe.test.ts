@@ -101,6 +101,11 @@ describe('kademe tablosu ve modelSec', () => {
 })
 
 describe('sohbetKademesi — sohbet turunun kademesi', () => {
+  it('SES-LAT-01: a social turn with a chart open (sohbet-uzman) is luna-none when no tool is offered; with tools it is not', () => {
+    assert.equal(sohbetKademesi({ gorev: 'sohbet-uzman', mesaj: 'Merhaba hocam', sosyal: true, aracSayisi: 0 }).caba, 'none')
+    assert.equal(sohbetKademesi({ gorev: 'sohbet-uzman', mesaj: 'Merhaba hocam', sosyal: true, aracSayisi: 3 }).caba, undefined)
+    assert.equal(sohbetKademesi({ gorev: 'sohbet-uzman', mesaj: 'Merhaba hocam', aracSayisi: 0 }).caba, undefined)
+  })
   it('sohbet → none; sohbet-uzman tek-slot ≤ 12 kelime takip → none', () => {
     assert.equal(sohbetKademesi({ gorev: 'sohbet', mesaj: 'teşekkürler', aracSayisi: 0 }).caba, 'none')
     for (const n of ['hasta-dosya', 'recete', 'tahlil', 'asi', 'buyume', 'genel']) {

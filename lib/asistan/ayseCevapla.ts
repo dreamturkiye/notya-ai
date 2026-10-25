@@ -938,7 +938,9 @@ ${ilacBaglamMetni(drugs[0])}`
   // keeps its write tools exactly as they were (list, forcing, card path) and is not offered the read tools; a turn
   // that is only a greeting or thanks has nothing to look up.
   const okumaSunulur = !komut && !okumaAraciKapali() && !netSosyalMi(String(message || ""))
-  const araclar = okumaSunulur ? [...yazmaAraclari, ...OKUMA_ARACLARI] : yazmaAraclari
+  // SES-LAT-01: a purely social turn (hello, how are you, thanks) offers no tools at all — see sohbetKademesi.
+  const sosyalTur = !komut && netSosyalMi(String(message || ""))
+  const araclar = sosyalTur ? [] : okumaSunulur ? [...yazmaAraclari, ...OKUMA_ARACLARI] : yazmaAraclari
   const toolChoice = !araclar.length || !eylemHastasi || !komutZorla
     ? undefined
     : zorlanan && araclar.some((a) => a.name === zorlanan) ? { type: 'tool' as const, name: zorlanan } : ('any' as const)
@@ -1013,7 +1015,7 @@ ${ilacBaglamMetni(drugs[0])}`
   // NOTYA-KADEME-01: sosyal tur ve tek-slot kısa takip turu luna-none (effort none); araç / eylem / ağır soru luna.
   const kademe = sohbetKademesi({
     gorev: yonlendirme.gorev, mesaj: String(message || ""), sonNiyet: takip?.niyet ?? konusmaOnceki?.sonNiyet ?? null,
-    niyet: quickIntent, aracSayisi: araclar.length, girdiToken: girdiTokenTahmini(cagriTaban),
+    niyet: quickIntent, aracSayisi: araclar.length, sosyal: sosyalTur, girdiToken: girdiTokenTahmini(cagriTaban),
   })
   const cagri = kademe.caba ? { ...cagriTaban, caba: kademe.caba } : cagriTaban
   let akanHam = ""
