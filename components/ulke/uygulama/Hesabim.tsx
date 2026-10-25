@@ -49,9 +49,9 @@ function OturumKarti({ h }: { h: NonNullable<ReturnType<typeof useUygulama>['m']
     <div data-alan="hesap-oturum" style={{ background: '#FFFFFF', border: `1px solid ${CHROME_RENK.border}`, borderRadius: 16, padding: 18, marginTop: 20, boxShadow: '0 8px 18px rgba(58,44,34,0.045)' }}>
       <div style={{ fontWeight: 700, marginBottom: 4, color: CHROME_RENK.ink }}>{h.oturumBaslik}</div>
       <p style={{ fontSize: 12, color: CHROME_RENK.muted, margin: '0 0 12px' }}>{h.oturumAciklama}</p>
-      <dl style={{ margin: '0 0 14px', display: 'grid', gridTemplateColumns: 'max-content 1fr', gap: '6px 14px', fontSize: 13 }}>
-        <dt style={{ color: CHROME_RENK.muted }}>{h.sonGiris}</dt><dd style={{ margin: 0, color: CHROME_RENK.ink }}>{sonGiris}</dd>
-        <dt style={{ color: CHROME_RENK.muted }}>{h.buCihaz}</dt><dd style={{ margin: 0, color: CHROME_RENK.ink }}>{cihaz}</dd>
+      <dl style={{ margin: '0 0 14px', display: 'grid', gridTemplateColumns: 'max-content minmax(0, 1fr)', gap: '6px 14px', fontSize: 13 }}>
+        <dt style={{ color: CHROME_RENK.muted }}>{h.sonGiris}</dt><dd style={{ margin: 0, color: CHROME_RENK.ink, overflowWrap: 'anywhere' }}>{sonGiris}</dd>
+        <dt style={{ color: CHROME_RENK.muted }}>{h.buCihaz}</dt><dd style={{ margin: 0, color: CHROME_RENK.ink, overflowWrap: 'anywhere' }}>{cihaz}</dd>
       </dl>
       {hata ? <div style={{ color: CHROME_RENK.warn, fontSize: 13, marginBottom: 10 }}>{hata}</div> : null}
       <button type="button" data-eylem="tum-cihazlardan-cik" onClick={() => { void hepsindenCik() }} disabled={mesgul} style={{ background: 'transparent', border: `1px solid ${CHROME_RENK.warn}55`, color: CHROME_RENK.warn, borderRadius: 8, padding: '10px 18px', minHeight: 44, fontWeight: 600, cursor: 'pointer', width: '100%' }}>{mesgul ? h.kapaniyor : h.tumuCikis}</button>
