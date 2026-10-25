@@ -227,7 +227,7 @@ export async function canliLlmPost(req: NextRequest): Promise<Response> {
         const sonMesaj = Array.isArray(govde.messages) ? (govde.messages as ElMesaj[])[(govde.messages as ElMesaj[]).length - 1] : null
         if (!mesaj) {
           // A client-tool round trip (the screen tool) or nothing to answer: stay silent, keep the socket.
-          if (sonMesaj?.role !== 'tool' && sonMesaj?.role !== 'function') parca({ content: '.' })
+          if (sonMesaj?.role !== 'tool' && sonMesaj?.role !== 'function') parca({ content: ' ' })
         } else if (vedaMi(mesaj) && aracVarMi(govde.tools, 'end_call')) {
           soyle(canli.ekranSozleri.veda)
           parca({ tool_calls: [{ index: 0, id: `call_${randomUUID().slice(0, 8)}`, type: 'function', function: { name: 'end_call', arguments: JSON.stringify({ reason: 'The clinician ended the conversation.' }) } }] })
@@ -255,7 +255,7 @@ export async function canliLlmPost(req: NextRequest): Promise<Response> {
         if (!icerikGitti) soyle(canli.ekranSozleri.anlasilmadi)
       }
       // An empty stream is what the provider reports as a lost connection; a full stop keeps it and is never spoken.
-      if (!icerikGitti && bitis === 'stop') parca({ content: '.' })
+      if (!icerikGitti && bitis === 'stop') parca({ content: ' ' })
       parca({}, bitis)
       if (!kapali) { try { controller.enqueue(enc.encode('data: [DONE]\n\n')); controller.close() } catch { /* the caller hung up */ } }
     },
