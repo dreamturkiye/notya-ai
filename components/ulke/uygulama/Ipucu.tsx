@@ -138,7 +138,8 @@ export function Ipucu({ m, bolum }: { m: UygulamaMetni; bolum: UlkeIpucuBolumu }
             left: 16px !important;
             right: 16px !important;
             top: auto !important;
-            bottom: calc(24px + env(safe-area-inset-bottom, 0px)) !important;
+            bottom: calc(120px + env(safe-area-inset-bottom, 0px)) !important;
+            z-index: 80 !important;
             width: auto !important;
             max-width: none !important;
           }

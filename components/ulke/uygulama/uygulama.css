@@ -906,3 +906,22 @@ fieldset.uza-alan { display: flex; flex-direction: column; gap: 10px; }
 /* A question the patient has to answer before going on (the intake form): marked until it is answered. */
 [data-soru][data-eksik="evet"] { border-left: 3px solid var(--uza-uyari); background: color-mix(in srgb, var(--uza-uyari) 7%, transparent); border-radius: 8px; padding: 10px 12px; }
 fieldset[data-soru][data-eksik="evet"] { border-top: 0; border-right: 0; border-bottom: 0; }
+
+/* Phone display fixes (Kaan 2026-10-25, screenshots from an iPhone). */
+@media (max-width: 640px) {
+  /* Month grid: a cell is ~50px wide, so an appointment shows as a dot, never as text broken one letter per line. */
+  .yg-ay-hucre { min-height: 64px; padding: 4px 2px; flex-direction: row; flex-wrap: wrap; align-content: flex-start; justify-content: center; gap: 3px; }
+  .yg-ay-sayi { flex: 1 0 100%; text-align: center; }
+  .yg-ay-olay { padding: 0; width: auto; flex: none; }
+  .yg-ay-olay > span { display: none; }
+  .yg-ay-tatil { display: none; }
+  .yg-ay-fazla { flex: 1 0 100%; text-align: center; font-size: 10px; }
+  /* Rows: the time sits on its own line, then the name and the status, so the name never gets squeezed to nothing. */
+  .uza-satir { flex-wrap: wrap; row-gap: 4px; }
+  .uza-saat { flex: 1 0 100%; }
+  .uza-liste-ad { flex: 1 1 8em; min-width: 8em; overflow-wrap: break-word; word-break: normal; }
+}
+/* The tip bubble must sit above the bottom tab bar and the browser's own bar, never behind them. */
+@media (max-width: 480px) {
+  .uza-ipucu-balon { bottom: calc(120px + env(safe-area-inset-bottom, 0px)) !important; z-index: 80 !important; max-height: 55vh; overflow-y: auto; }
+}
