@@ -131,11 +131,11 @@ export async function modeldenBelge(g: { talimat: string; baglam: string; mime: 
  * threw is logged by kind and goes no further). The instruction is the cached system block and holds nothing about a
  * doctor or a patient; `mesajlar` are the clinician's and the assistant's own words of this call.
  */
-export async function modeldenAkis(g: { talimat: string; mesajlar: AiMesaj[]; doktorId: string; butceMs?: number }, parca: (p: string) => void): Promise<string | null> {
+export async function modeldenAkis(g: { talimat: string; /** Per-turn text (not cached), after the cached instruction. */ baglam?: string; mesajlar: AiMesaj[]; doktorId: string; butceMs?: number }, parca: (p: string) => void): Promise<string | null> {
   try {
     const yanit = await aiAkis({
       gorev: 'sohbet-uzman',
-      system: [{ metin: g.talimat, onbellek: true }],
+      system: [{ metin: g.talimat, onbellek: true }, ...(g.baglam ? [{ metin: g.baglam }] : [])],
       messages: g.mesajlar,
       maxTokens: 900,
       temperature: 0.3,

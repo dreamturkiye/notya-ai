@@ -16,7 +16,8 @@ import { konusmaYap, SesAkisi } from './konusma'
 import { kisaAyrinti, hataYazisi } from './ayrinti'
 import { gecersizKilmaGerekli, gecersizKilmaGovdesi, motorKilidiGerekli, motorKilidiGovdesi, motoruSabitle, motorOnbelleginiSil } from './motorKilidi'
 import { sesMetni } from './okunus'
-import { modelMesajlari, vedaMi } from './sunucu'
+import { cevabiSoyle, modelMesajlari, vedaMi } from './sunucu'
+import { adiGecenHastalar } from './masa'
 
 const SES: UlkeSesCikisi = { saglayici: 'elevenlabs', model: 'eleven_flash_v2_5', dilKodu: 'en', yerel: 'en-AU', sesler: { erkek: { ad: 'Charlie', id: 'IKne3meq5aSn9XLyUdCD' }, kadin: { ad: 'Clara', id: 'tyepWYJJwJM9TTFIg5U7' } } }
 const CANLI: CanliAsistanAyarlari = enCanliAsistan({ ulkeAdi: 'Testland', dilAdi: 'Test English', pratikBaglami: ['A context sentence.'], sinirlar: ['A limit sentence.'], kaynakBlogu: (r) => (r === 'cardiology' ? '=== SOURCES ===\n- A source' : null) })
@@ -233,7 +234,7 @@ describe('live assistant: why a call failed (AU-CANLI-03)', () => {
 describe('the prompt and the conversation the model sees', () => {
   const istem = canliIstem({ canli: CANLI, tamAd: KIMLIK.tamAd, kisaAd: KIMLIK.kisaAd, rolAdi: 'Cardiology', rol: 'cardiology', acilNumara: '000' })
   it('carries the persona, the country, the sources, the limits and the spoken rule', () => {
-    for (const parca of ['Dr. Test Person', 'Test English', 'Testland', 'A context sentence.', '=== SOURCES ===', 'A limit sentence.', 'SPOKEN VERSUS SCREEN', 'The emergency number is 000.', 'NO access to patient files', 'not a person']) {
+    for (const parca of ['Dr. Test Person', 'Test English', 'Testland', 'A context sentence.', '=== SOURCES ===', 'A limit sentence.', 'SPOKEN VERSUS SCREEN', 'The emergency number is 000.', 'not a person']) {
       assert.ok(istem.toLowerCase().includes(parca.toLowerCase()) || istem.includes(parca), parca)
     }
   })
@@ -267,5 +268,66 @@ describe('the kit holds no Turkish', () => {
       const kaynak = readFileSync(join(__dirname, `${f}.ts`), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '')
       assert.equal(/[çğıöşüİÇĞÖŞÜ]/.test(kaynak), false, f)
     }
+  })
+})
+
+describe('AU-CANLI-02: a short answer is spoken ONCE (regression: "I am fine" said twice)', () => {
+  const spoken = async (pieces: string[], whole: string | null) => {
+    const said: string[] = []
+    const r = await cevabiSoyle(async (p) => { for (const x of pieces) p(x); return whole }, (c) => said.push(c), CANLI.ekranSozleri)
+    return { said: said.join(' '), tam: r.tam }
+  }
+  it('one finished sentence, streamed in pieces', async () => {
+    const { said, tam } = await spoken(['I am', ' fine', '.'], 'I am fine.')
+    assert.equal(said, 'I am fine.')
+    assert.equal(tam, 'I am fine.')
+  })
+  it('one sentence in a single piece, and with no full stop', async () => {
+    assert.equal((await spoken(['I am fine.'], 'I am fine.')).said, 'I am fine.')
+    assert.equal((await spoken(['I am fine'], 'I am fine')).said, 'I am fine')
+  })
+  it('two sentences are each said once', async () => {
+    assert.equal((await spoken(['Good morning. ', 'You have two patients today.'], 'x')).said, 'Good morning. You have two patients today.')
+  })
+  it('a gateway fallback that answers whole is still said once', async () => {
+    assert.equal((await spoken([], 'I am fine.')).said, 'I am fine.')
+  })
+  it('the old double feed would have said it twice (guard against reintroducing it)', () => {
+    const said: string[] = []
+    const a = new SesAkisi((c) => said.push(c), CANLI.ekranSozleri)
+    a.ekle('I am fine.')
+    assert.equal(a.beatSayisi, 0) // still buffered: the exact state the old code mistook for "nothing streamed"
+    a.ekle('I am fine.')
+    a.bitir()
+    assert.equal(said.join(' '), 'I am fine.I am fine.')
+  })
+})
+
+describe('AU-CANLI-02: the desk (what the assistant reads in the doctor\'s own account)', () => {
+  const P = [{ id: 'p1', ad: 'Olivia Nguyen' }, { id: 'p2', ad: 'Olivia Brown' }, { id: 'p3', ad: 'Liam O\'Connor' }]
+  it('a full name finds one patient; a shared given name asks which; an unrelated sentence finds none', () => {
+    assert.deepEqual(adiGecenHastalar('open olivia nguyen\'s notes', P).tam.map((h) => h.id), ['p1'])
+    const belirsiz = adiGecenHastalar('what did we do for olivia', P)
+    assert.equal(belirsiz.tam.length, 0)
+    assert.equal(belirsiz.adaylar.length, 2)
+    assert.deepEqual(adiGecenHastalar('liam', P).tam.map((h) => h.id), ['p3'])
+    assert.equal(adiGecenHastalar('how is my day looking', P).tam.length, 0)
+  })
+  it('the matcher only ever returns patients from the list it is given (ids never come from the sentence)', () => {
+    assert.equal(adiGecenHastalar('patient p1 olivia nguyen', []).tam.length, 0)
+  })
+  it('the prompt no longer claims the assistant cannot see the calendar, and states the limits', () => {
+    const t = canliIstem({ canli: CANLI, tamAd: KIMLIK.tamAd, kisaAd: 'Test', rolAdi: 'Cardiology', rol: 'cardiology', acilNumara: '000' })
+    assert.ok(!/NO access to patient files/i.test(t))
+    assert.match(t, /DESK block/)
+    assert.match(t, /Never say you cannot see the calendar/)
+    assert.match(t, /read-only/)
+    assert.match(t, /cannot book, move, cancel/)
+    assert.match(t, /never see another clinician/i)
+  })
+  it('masa.ts is read-only and takes no id: no write calls, no request-id parameters', () => {
+    const k = readFileSync(join(__dirname, 'masa.ts'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '')
+    assert.ok(!/\.(insert|update|upsert|delete)\(|Olustur|Yaz\(|Kaydet|Sil\(|Degistir/.test(k))
+    assert.match(k, /hastalariListele\(sb, doktorId\)/)
   })
 })

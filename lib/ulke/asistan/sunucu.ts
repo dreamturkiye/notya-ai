@@ -12,9 +12,9 @@
  * tables and speaks Turkish — and its patient tools.
  *
  * HASTA-IZOLASYON: no route here takes a patient id, a note id or any id from the request. The only identity is the
- * signed-in account (bearer session) or the signed call token (account + role). Nothing patient-derived is read or
- * written; the prompt says so and asks for de-identified descriptions. A later version that opens a patient file must
- * add the ownership check first (lib/ulke/uygulama/hastalar.ts) — see docs/OPEN-COMMITMENTS.md.
+ * signed-in account (bearer session) or the signed call token (account + role). AU-CANLI-02: the assistant READS the
+ * doctor's own desk (lib/ulke/asistan/masa.ts: calendar, patients, a patient the doctor names by NAME, notes, messages,
+ * consultations, report numbers) — every read is scoped by that account's doctor id; nothing is written.
  *
  * Logs name the KIND of failure only, never a message or a transcript.
  */
@@ -34,6 +34,7 @@ import { canliDurum, type CanliDurum } from './ajan'
 import { canliIstem } from './istem'
 import { canliJetonuDogrula, canliJetonuImzala, llmSirriGecerliMi } from './jeton'
 import { imzaliAdresAl, motoruSabitle } from './motorKilidi'
+import { masaBlogunuAl } from './masa'
 import { sesMetni } from './okunus'
 import { SesAkisi } from './konusma'
 import type { SupabaseClient, User } from '@supabase/supabase-js'
@@ -111,7 +112,8 @@ export async function canliYaziliCevabi(oturum: { user: User; supabase: Supabase
   ]
   if (!(await kovaKotasiKullan(oturum.supabase, oturum.user.id, KOVA_ASISTAN_TUR, canli.gunlukTurLimiti))) return cevap({ code: 'LIMIT' }, 429)
   const istem = canliIstem({ canli, tamAd: kimlik.tamAd, kisaAd: kimlik.kisaAd, rolAdi: rolun, rol, acilNumara: paket.uygulama?.portal?.acilNumara ?? null, yazili: true })
-  const sonuc = await modeldenAkis({ talimat: istem, mesajlar: modelMesajlari(ham), doktorId: oturum.user.id, butceMs: YAZILI_BUTCE_MS }, () => {})
+  const baglam = await masaBlogunuAl(oturum.supabase, oturum.user.id, mesaj)
+  const sonuc = await modeldenAkis({ talimat: istem, baglam: baglam || DESK_YOK, mesajlar: modelMesajlari(ham), doktorId: oturum.user.id, butceMs: YAZILI_BUTCE_MS }, () => {})
   if (!sonuc || !sonuc.trim()) return cevap({ code: 'BASARISIZ' }, 502)
   return cevap({ cevap: sonuc.trim().slice(0, 8000) })
 }
@@ -155,6 +157,34 @@ export function sonKullaniciCumlesi(ham: unknown): string | null {
 
 const VEDA = /^(?:ok(?:ay)?[,.]?\s+|thanks?[,.]?\s+|thank you[,.]?\s+)?(?:goodbye|good bye|bye(?:\s+bye)?|that'?s all|that will be all|end (?:the )?(?:call|conversation)|stop (?:the )?(?:assistant|call)|hang up|close (?:the )?assistant)(?:\s+(?:for now|thanks|thank you|please))*[.!]?$/i
 export const vedaMi = (m: string): boolean => VEDA.test(m.trim())
+
+
+/** Said to the model when the desk could not be read in time: it must not turn that into "I have no access". */
+export const DESK_YOK = 'DESK — could not be read in time this turn. Say that the calendar and patient information are not available right now and suggest the Notya screen; do not say you have no access.'
+
+/**
+ * Streams one answer through the spoken-form rule. The model's pieces are fed to the speaker AS THEY ARRIVE; only a model
+ * call that did not stream at all (a gateway fallback answers whole) is fed once, at the end.
+ *
+ * ECHO FIX (Kaan, 2026-10-25, "I am fine" spoken twice): the old code fed the whole answer a second time whenever no
+ * sentence had been finished yet (`beatSayisi === 0`). A one-sentence answer ("I am fine.") has no text after its last
+ * full stop, so it is still in the speaker's buffer at the end of the stream, and it was appended to itself and said
+ * twice. A streamed answer is never fed again.
+ */
+export async function cevabiSoyle(
+  model: (parca: (p: string) => void) => Promise<string | null>,
+  yaz: (cumle: string) => void,
+  sozler: ConstructorParameters<typeof SesAkisi>[1],
+): Promise<{ tam: string; hata: boolean; sozAkisi: SesAkisi }> {
+  const sozAkisi = new SesAkisi(yaz, sozler)
+  let tam = ''
+  let akti = false
+  const sonuc = await model((p) => { if (!p) return; akti = true; tam += p; sozAkisi.ekle(p) })
+  const hata = sonuc === null
+  if (!akti && sonuc && sonuc.trim()) { tam = sonuc; sozAkisi.ekle(sonuc) }
+  sozAkisi.bitir()
+  return { tam, hata, sozAkisi }
+}
 
 export async function canliLlmPost(req: NextRequest): Promise<Response> {
   const paket = ulkePaketi()
@@ -207,15 +237,11 @@ export async function canliLlmPost(req: NextRequest): Promise<Response> {
           if (!(await kovaKotasiKullan(sb, jeton.hesapId, KOVA_ASISTAN_TUR, canli.gunlukTurLimiti))) {
             soyle(canli.ekranSozleri.gunlukSinir)
           } else {
-            const sozAkisi = new SesAkisi((c) => soyle(sesMetni(c)), canli.ekranSozleri)
-            let tam = ''
-            let hata = false
             const istem = canliIstem({ canli, tamAd: kimlik.tamAd, kisaAd: kimlik.kisaAd, rolAdi: rolun, rol: jeton.rol, acilNumara: paket.uygulama?.portal?.acilNumara ?? null })
-            const sonuc = await modeldenAkis({ talimat: istem, mesajlar: modelMesajlari(govde.messages), doktorId: jeton.hesapId, butceMs: TUR_BUTCESI_MS }, (p) => { tam += p; sozAkisi.ekle(p) })
-            if (sonuc === null) hata = true
-            else if (!tam) tam = sonuc // a gateway fallback answers whole, not in pieces
-            if (tam && sozAkisi.beatSayisi === 0 && !sozAkisi.ekranaKaldi) sozAkisi.ekle(tam)
-            sozAkisi.bitir()
+            // The doctor's own desk (calendar, patients, notes, messages...), read for this turn with the account of the signed call token.
+            const baglam = await masaBlogunuAl(sb, jeton.hesapId, mesaj ?? '')
+            const r = await cevabiSoyle((p) => modeldenAkis({ talimat: istem, baglam: baglam || DESK_YOK, mesajlar: modelMesajlari(govde.messages), doktorId: jeton.hesapId, butceMs: TUR_BUTCESI_MS }, p), (c) => soyle(sesMetni(c)), canli.ekranSozleri)
+            const { tam, hata } = r
             if (hata && !icerikGitti) soyle(canli.ekranSozleri.anlasilmadi)
             // The screen gets the full answer. Only when the agent offers the screen tool; otherwise the transcript is the screen.
             if (tam.trim() && aracVarMi(govde.tools, EKRAN_ARACI)) {
