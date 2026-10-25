@@ -172,6 +172,11 @@ describe('asistan sohbeti yönlendirme — şüphede uzman tur (sohbet-uzman)', 
     assert.equal(yon('ayarlar menüsü nerede', true), 'sohbet-uzman')
   })
 
+  it('netSosyalMi: "Hocam, bugün nasılsınız? İyi misiniz?" sosyal tur (hızlı, effort none); klinik/takvim sorusu değil', () => {
+    assert.equal(netSosyalMi('Hocam, bugün nasılsınız? İyi misiniz?'), true)
+    assert.equal(netSosyalMi('Bugün randevularınız var mı hiç?'), false)
+    assert.equal(netSosyalMi('bugün'), false)
+  })
   it('netSosyalMi dolgu kelimesini tek başına sosyal saymaz', () => {
     assert.equal(netSosyalMi('iyi'), false)
     assert.equal(netSosyalMi('hocam'), false)

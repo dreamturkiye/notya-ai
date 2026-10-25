@@ -300,7 +300,7 @@ const SOSYAL_CEKIRDEK = new Set([
   'eyvallah', 'gelsin', 'görüşürüz', 'hoşça', 'bye',
 ])
 // Tek başına sosyal sayılmayan dolgu kelimeleri ("iyi" tek başına klinik soruya cevap olabilir → uzman tur).
-const SOSYAL_DOLGU = new Set(['iyi', 'sen', 'siz', 'ben', 'de', 'da', 'çok', 'sana', 'size', 'ederim', 'ediyorum', 'rica', 'kolay', 'kal', 'kalın', 'hocam', 'hanım', 'bey'])
+const SOSYAL_DOLGU = new Set(['iyi', 'bugün', 'misiniz', 'misin', 'sen', 'siz', 'ben', 'de', 'da', 'çok', 'sana', 'size', 'ederim', 'ediyorum', 'rica', 'kolay', 'kal', 'kalın', 'hocam', 'hanım', 'bey'])
 const SOSYAL_AZAMI_KELIME = 8
 // HIZLI istisnası 2 — uygulama kullanımı sorusu: açık bir uygulama/ekran/hesap terimi, kısa, klinik sinyalsiz, hastasız.
 // Belirsiz kelimeler BİLEREK yok ("dil" = organ, "bildirim" = bildirimi zorunlu hastalık, "hesapla" = doz hesabı).
