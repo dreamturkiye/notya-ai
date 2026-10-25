@@ -4,6 +4,7 @@ import { AU_FATURA } from './fatura'
 import { AU_GIZLILIK } from './gizlilik'
 import { AU_KAYIT_SISTEMI, AU_REFERANS_ARAMALARI, AU_REFERANS_BOLUMLERI } from './referans'
 import { AU_TANI_KODLARI_TANIMI } from './taniKodlari'
+import { AU_ISLEM_KODLARI_TANIMI } from './islemKodlari'
 import { AU_MUAYENEHANE } from './muayenehane'
 import { AU_DATA_BREACH } from './veriIhlali'
 
@@ -19,4 +20,5 @@ export const AU_UZANTI: UlkeUzantisi = {
   referansBolumleri: AU_REFERANS_BOLUMLERI,
   kayitSistemi: AU_KAYIT_SISTEMI,
   taniKodlari: AU_TANI_KODLARI_TANIMI,
+  islemKodlari: AU_ISLEM_KODLARI_TANIMI,
 }

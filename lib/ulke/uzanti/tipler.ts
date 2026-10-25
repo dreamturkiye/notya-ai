@@ -282,6 +282,31 @@ export type TaniKodlariTanimi = {
   saglayici: 'acik' | 'lisansli'
 }
 
+/** Every word of the procedure-code (MBS item -> ACHI) screen. The pack writes them; the kit draws them. */
+export type IslemKodlariMetni = {
+  baslik: string
+  aciklama: string
+  arac: string
+  araEtiketi: string
+  araOrnek: string
+  ara: string
+  araniyor: string
+  /** "{n}" is the number of results. */
+  sonucSayisi: string
+  sonucYok: string
+  veriYok: string
+  kaynakEtiketi: string
+  mbsEtiketi: string
+  achiEtiketi: string
+  /** Label of an MBS item with no ACHI code in the table. */
+  esleme_yok: string
+  /** "{surum}" is the ACHI edition of the mapping row. */
+  surum: string
+  hata: string
+}
+
+export type IslemKodlariTanimi = { metin: IslemKodlariMetni }
+
 export type UlkeUzantisi = {
   /** Extra policy pages, by route slug (served at /<slug>, listed by the pack's route list). Not part of the shared policy-document set. */
   belgeler?: Readonly<Record<string, UzantiBelgesi>>
@@ -295,4 +320,6 @@ export type UlkeUzantisi = {
   kayitSistemi?: UlkeKayitSistemiBaglantisi
   /** Diagnosis-code lookup screen + API. Absent = the country has none. */
   taniKodlari?: TaniKodlariTanimi
+  /** Procedure-code lookup (MBS item -> ACHI code). Absent = the country has none. */
+  islemKodlari?: IslemKodlariTanimi
 }

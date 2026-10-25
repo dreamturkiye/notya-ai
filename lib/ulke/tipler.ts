@@ -488,6 +488,8 @@ export const UYGULAMA_EKRANLARI = {
   raporlar: '/reports',
   /** AU-QUICK-01 — diagnosis-code lookup (pack extension `uzanti.taniKodlari`). */
   taniKodlari: '/diagnosis-codes',
+  /** AU-QUICK-02 — procedure-code lookup, MBS item to ACHI (pack extension `uzanti.islemKodlari`). */
+  islemKodlari: '/procedure-codes',
 } as const
 export type UygulamaEkrani = keyof typeof UYGULAMA_EKRANLARI
 

@@ -30,6 +30,7 @@
 import { KayitSistemiKarti, ReferansAramalari, ReferansBolumleri } from './ReferansKarti'
 import React, { useEffect, useMemo, useState } from 'react'
 import { TaniBaglantisi } from './TaniBaglantisi'
+import { IslemBaglantisi } from './IslemBaglantisi'
 import { Bilgi, Cerceve, Hata, useUygulama, YOL, Yukleniyor, type Uygulama } from './Kabuk'
 import { AramaFormu } from './Bugun'
 import { aracRozeti } from '@/lib/ulke/araclar/gorunum'
@@ -134,6 +135,7 @@ export function AraclarIzgarasi({ a, dil, icerik, rol, q, hasta, bugun }: {
         <h1 className="uza-h1">{a.izgara.baslik}</h1>
         {hicYok ? null : <p className="yg-arac-say">{rolunAdi ? <>{rolunAdi}{'\u00b7'}{toplam}</> : toplam}</p>}
         <TaniBaglantisi />
+        <IslemBaglantisi />
         {hasta ? <p className="uza-ipucu" data-alan="arac-hastasi" data-hasta={hasta.id}><a className="uza-baglanti" href={`${YOL.hasta}?id=${hasta.id}`}>{yerine(a.kayit.hastaIcin, hasta.ad)}</a></p> : null}
         {hicYok || ham.temel.length === 0 || ham.rol.length === 0 ? null : (
           <div className="yg-arac-cipler">

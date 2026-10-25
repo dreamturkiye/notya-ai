@@ -159,7 +159,7 @@ export function useUygulama(ekran: UygulamaEkrani): Uygulama {
   '--uza-uyari': R.warn, '--uza-cizgi': R.border, '--uza-altin': R.gold, '--uza-nav': R.nav, '--uza-serif': CHROME_FONT.serif, '--uza-sans': CHROME_FONT.sans,
 } as CSSProperties
 
-export type Sekme = 'bugun' | 'takvim' | 'hastalar' | 'araclar' | 'klinik' | 'onBuro' | 'ayarlar' | 'fatura' | 'gizlilikTalepleri' | 'taniKodlari' | 'asistan' | 'mesajlar' | 'hesabim' | 'raporlar'
+export type Sekme = 'bugun' | 'takvim' | 'hastalar' | 'araclar' | 'klinik' | 'onBuro' | 'ayarlar' | 'fatura' | 'gizlilikTalepleri' | 'taniKodlari' | 'islemKodlari' | 'asistan' | 'mesajlar' | 'hesabim' | 'raporlar'
 
 /** The clock (in the account's zone) and, when the browser shares a place, the weather: the same two values the Türkiye chrome shows. */
 function useSaatHava() {

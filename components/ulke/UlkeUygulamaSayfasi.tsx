@@ -27,7 +27,7 @@ export function UlkeUygulamaSayfasi({ ekran }: { ekran: UygulamaEkrani }) {
     // NOTYA-ULKE-KLINIK-01: the clinic's screen where the pack has clinic accounts; the front-desk workspace needs appointments as well.
     && ((ekran !== 'klinik' && ekran !== 'onBuro') || ozellikAcik('klinikHesaplari')) && (ekran !== 'onBuro' || ozellikAcik('randevu'))
     // AU-BETA-01: the privacy-request and invoice screens exist only where the pack brings that extension.
-    && (ekran !== 'gizlilikTalepleri' || Boolean(ulkePaketi().uzanti?.gizlilik)) && (ekran !== 'taniKodlari' || Boolean(ulkePaketi().uzanti?.taniKodlari)) && (ekran !== 'fatura' || Boolean(ulkePaketi().uzanti?.fatura))
+    && (ekran !== 'gizlilikTalepleri' || Boolean(ulkePaketi().uzanti?.gizlilik)) && (ekran !== 'taniKodlari' || Boolean(ulkePaketi().uzanti?.taniKodlari)) && (ekran !== 'islemKodlari' || Boolean(ulkePaketi().uzanti?.islemKodlari)) && (ekran !== 'fatura' || Boolean(ulkePaketi().uzanti?.fatura))
     // AU-CANLI-02: the assistant page exists only where the pack has the live assistant (its two voices and its settings).
     && (ekran !== 'asistan' || asistanSesAdlari() !== null)
     // The messages inbox exists where doctors and patients can write to each other.
