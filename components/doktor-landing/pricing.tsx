@@ -107,7 +107,7 @@ export function Pricing() {
         </div>
 
         <p className="mt-10 text-center font-outfit text-sm text-ink-muted">
-          {İlk 15 gün ücretsiz. Kredi kartı gerekmez. Fiyatlara KDV dahil değildir. Yıllık ödemede 2 ay bizden.}
+          {İlk 15 gün ücretsiz. Kredi kartı gerekmez. Yıllık ödemede 2 ay bizden.}
         </p>
       </div>
     </section>
