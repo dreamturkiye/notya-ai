@@ -10,9 +10,12 @@ import type { UlkeKlinigi } from '@/lib/ulke/tipler'
 import { enKlinik } from '../../_dil/en/klinik'
 import { GB_GIRDI } from '../ayarlar'
 import { GB_SES } from '../ses'
+import { GB_CANLI_ASISTAN } from '../canli'
 import { GB_ACIL_CUMLE, GB_CEKIRDEK_EK } from './formEk'
 
 export const GB_KLINIK: UlkeKlinigi = {
   ...enKlinik({ ...GB_GIRDI, cekirdekEk: GB_CEKIRDEK_EK, acilCumle: GB_ACIL_CUMLE }),
   ses: GB_SES,
+  // Live spoken assistant: fails closed until the agents and secrets exist (lib/ulke/asistan/ajan.ts).
+  canliAsistan: GB_CANLI_ASISTAN,
 }
