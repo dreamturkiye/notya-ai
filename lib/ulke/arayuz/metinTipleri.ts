@@ -74,11 +74,15 @@ export type UygulamaMetni = {
     readonly iptal: string
     readonly hata: string
     readonly yukleniyor: string
+    /** Words of the range view (Türkiye's Raporlar layout). */
+    readonly ayrinti: { readonly [K in 'hafta' | 'ay' | 'ucAy' | 'yil' | 'aralikNotu' | 'yazdir' | 'yeniAy' | 'yeni3Ay' | 'aktif' | 'muayeneHafta' | 'muayeneAy' | 'muayeneToplam' | 'gecenAy' | 'gecenHafta' | 'onceki3Ay' | 'toplamAlt' | 'tumKayitlar' | 'gunGun' | 'ortNotu' | 'birimMuayene' | 'birimDk' | 'tip' | 'yakinma' | 'tani' | 'yakinmaYok' | 'taniYok' | 'isinDokumu' | 'kayitYok' | 'onayliNot' | 'bekleyenNot' | 'ortSure' | 'dk' | 'gun' | 'ortalama' | 'muayene']: string }
   }
   readonly ayarlar: {
     /** Time zone of the account. REQUIRED where the pack lists more than one zone; not read otherwise. */
     readonly saatDilimi?: string
     readonly saatDilimiIzoh?: string
+    /** Words of the settings sub-pages (Communication, Integrations) and their tiles. */
+    readonly ek: { readonly [K in 'iletisimBaslik' | 'iletisimTile' | 'iletisimAlt' | 'eposta' | 'epostaIzoh' | 'acilis' | 'acilisUygulama' | 'acilisGmail' | 'acilisOutlook' | 'saklandi' | 'deneme' | 'denemeMetni' | 'denemeKonu' | 'geri' | 'entegrasyonBaslik' | 'entegrasyonTile' | 'entegrasyonAlt' | 'hazir' | 'bagliDegil' | 'epostaKalemi' | 'epostaKalemiAlt' | 'mesajKalemi' | 'mesajKalemiAlt' | 'takvimKalemi' | 'takvimKalemiAlt' | 'personelKalemi' | 'personelKalemiAlt' | 'disSistemler' | 'disSistemlerAlt' | 'personelTile' | 'personelTileAlt']: string }
     readonly baslik: string
     readonly dilBolumu: string
     readonly arayuzDili: string
@@ -103,6 +107,7 @@ export type UygulamaMetni = {
       readonly adSoyad: string; readonly eposta: string; readonly sifreBaslik: string; readonly yeniSifre: string; readonly tekrar: string
       readonly yerTutucu: string; readonly kisa: string; readonly eslesmiyor: string; readonly kaydet: string; readonly kaydediliyor: string
       readonly degisti: string; readonly hata: string; readonly cikis: string
+      readonly oturumBaslik: string; readonly oturumAciklama: string; readonly sonGiris: string; readonly buCihaz: string; readonly tumuCikis: string; readonly kapaniyor: string; readonly onay: string; readonly oturumHata: string
     }
   }
   readonly arama: {
@@ -583,6 +588,7 @@ export type UlkeIpucuBolumu =
   | 'ayarlar'
   | 'fatura'
   | 'gizlilik'
+  | 'mesajlar'
 
 /** The words of the kit's own entry fields, in one language form. */
 export type GirdiMetni = UygulamaMetni['girdi']

@@ -394,7 +394,10 @@ export function TakvimPlani({ m, r, mod, gun, bugun, randevular, hata, bolge, ey
   const ayGunleri = hucreler.filter((h) => h.slice(0, 7) === ay)
   return (
     <>
-      <h1 className="yg-ay-sayfa-baslik">{r.takvim.baslik}</h1>
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10, margin: '0 0 14px' }}>
+        <h1 className="yg-ay-sayfa-baslik" style={{ margin: 0 }}>{r.takvim.baslik}</h1>
+        <Ipucu m={m} bolum="takvim" />
+      </span>
       <section className="yg-ay-plan" data-gorunum={mod}>
         <aside className="yg-ay-yan">
           <div className="yg-ay-yan-ust">
@@ -1116,7 +1119,6 @@ export default function Takvim() {
   const portal = ozellikAcik('hastaPortali')
   return (
     <Cerceve dil={u.dil} m={u.m} ad={u.hesap.ad} aktif="takvim" cikis={u.cikis}>
-      <div style={{ display: 'flex', justifyContent: 'flex-end', margin: '0 0 8px' }}><Ipucu m={u.m} bolum="takvim" /></div>
       {p.randevu ? <RandevuDetay u={u} r={r} id={p.randevu} />
         : p.duzen ? <Duzen u={u} r={r} />
           : p.istek && portal ? <IstekCevabi u={u} r={r} id={p.istek} />

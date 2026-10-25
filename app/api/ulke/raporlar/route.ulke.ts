@@ -8,7 +8,7 @@ import { ulkeOturum } from '@/lib/ulke/sunucuOturum'
 import { sinirda } from '@/lib/ulke/uygulama/sinir'
 import { ozellikAcik } from '@/lib/ulke/ulke'
 import { cevap, KOD } from '@/lib/ulke/uygulama/cevap'
-import { raporOzeti } from '@/lib/ulke/uygulama/raporlar'
+import { raporOzeti, RAPOR_ARALIKLARI, type RaporAralik } from '@/lib/ulke/uygulama/raporlar'
 
 export const dynamic = 'force-dynamic'
 
@@ -16,7 +16,9 @@ export const GET = sinirda('reports GET', async (req: NextRequest) => {
   if (!ozellikAcik('cekirdekMuayene')) return KOD.yok()
   const oturum = await ulkeOturum(req)
   if (!oturum) return KOD.oturumYok()
-  const rapor = await raporOzeti(oturum.supabase, oturum.user.id)
+  const ham = req.nextUrl.searchParams.get('aralik')
+  const aralik: RaporAralik = RAPOR_ARALIKLARI.find((a) => a === ham) ?? 'ay'
+  const rapor = await raporOzeti(oturum.supabase, oturum.user.id, aralik)
   if (!rapor) return KOD.basarisiz()
   return cevap({ rapor })
 })

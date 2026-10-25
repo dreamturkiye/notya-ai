@@ -94,7 +94,7 @@ export const AU_PAKETI: UlkePaketi = {
     // (app/password-reset/page.ulke.tsx) existed and built fine, but this allow-list is the second 404 gate
     // (lib/ulke/rotaKapisi.ts) and it answered "Page not found" for any path it does not list, login included
     // once, before this fix. Keep it next to '/login' so the two stay paired.
-    sayfalar: ['/', '/for-clinics', '/login', '/password-reset', '/signup', '/welcome', '/start', '/today', '/settings', '/account', '/reports', '/patients', '/patients/new', '/messages', '/patient', '/visit', '/calendar', '/portal', '/tools', '/medical', '/clinic', '/desk', '/privacy', '/terms', '/cookies', '/data-request', '/accessibility', '/medical-disclaimer', '/security', '/refund', '/copyright', '/demo', '/billing', '/privacy-requests', '/data-breach', '/asistan'],    apiOnEkleri: ['/api/ulke/'],
+    sayfalar: ['/', '/for-clinics', '/login', '/password-reset', '/signup', '/welcome', '/start', '/today', '/settings', '/settings/communication', '/settings/integrations', '/account', '/reports', '/patients', '/patients/new', '/messages', '/patient', '/visit', '/calendar', '/portal', '/tools', '/medical', '/clinic', '/desk', '/privacy', '/terms', '/cookies', '/data-request', '/accessibility', '/medical-disclaimer', '/security', '/refund', '/copyright', '/demo', '/billing', '/privacy-requests', '/data-breach', '/asistan'],    apiOnEkleri: ['/api/ulke/'],
   },
   // The path of the main site this country is served under.
   yolOnEki: '/au',

@@ -233,6 +233,23 @@ export default function Ayarlar() {
               <span className="yg-satir-ok" aria-hidden="true">{'\u203A'}</span>
             </a>
           ) : null}
+          <a className="yg-satir" href={YOL.iletisim} data-alan="iletisim">
+            <span className="yg-satir-emoji" aria-hidden="true">{'\u{1F4AC}'}</span>
+            <span className="yg-satir-metin"><span className="yg-satir-ad">{u.m.ayarlar.ek.iletisimBaslik}</span><span className="yg-satir-alt">{u.m.ayarlar.ek.iletisimTile}</span></span>
+            <span className="yg-satir-ok" aria-hidden="true">{'\u203A'}</span>
+          </a>
+          <a className="yg-satir" href={YOL.entegrasyonlar} data-alan="entegrasyonlar">
+            <span className="yg-satir-emoji" aria-hidden="true">{'\u{1F50C}'}</span>
+            <span className="yg-satir-metin"><span className="yg-satir-ad">{u.m.ayarlar.ek.entegrasyonTile}</span><span className="yg-satir-alt">{u.m.ayarlar.ek.entegrasyonAlt}</span></span>
+            <span className="yg-satir-ok" aria-hidden="true">{'\u203A'}</span>
+          </a>
+          {ozellikAcik('klinikHesaplari') ? (
+            <a className="yg-satir" href={YOL.klinik} data-alan="personel">
+              <span className="yg-satir-emoji" aria-hidden="true">{'\u{1F465}'}</span>
+              <span className="yg-satir-metin"><span className="yg-satir-ad">{u.m.ayarlar.ek.personelTile}</span><span className="yg-satir-alt">{u.m.ayarlar.ek.personelTileAlt}</span></span>
+              <span className="yg-satir-ok" aria-hidden="true">{'\u203A'}</span>
+            </a>
+          ) : null}
           <MuayenehaneKarti u={u} />
           {ulkePaketi().uzanti?.muayenehane?.meslekKaydiTasi ? null : <MeslekKaydiGorunumu m={u.m} deger={meslek} set={(v) => { setMeslek(v); setMeslekSonucu(null) }} gonder={meslekGonder} bekliyor={meslekBekliyor} sonuc={meslekSonucu} />}
           {pano && ozellikAcik('fotoArsivi') ? (

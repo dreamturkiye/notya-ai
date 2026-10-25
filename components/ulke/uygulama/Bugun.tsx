@@ -111,6 +111,7 @@ export function BugunGorunumu({ m, ad, muayeneler, hata, rol, randevular, mesajl
   const dil = metninDili(m)
   const r = randevuMetni(dil)
   const arac = ozellikAcik('araclar') ? araclarMetni(dil) : null
+  const raporAcik = Boolean(p && m.rapor && ozellikAcik('cekirdekMuayene'))
   const bekleyen = (muayeneler ?? []).filter((v) => v.durum === 'taslak').length
   const onayli = (muayeneler ?? []).filter((v) => v.durum === 'onayli').length
   const bugunSayi = muayeneler?.length ?? 0
@@ -182,7 +183,7 @@ export function BugunGorunumu({ m, ad, muayeneler, hata, rol, randevular, mesajl
             {karo(null, p.epikriz, 'epikriz', p.notArac)}
             {karo(null, p.kodlama, 'icd', p.notArac)}
             {karo(null, p.inceleme, 'inceleme')}
-            {karo(null, p.raporlar, 'raporlar')}
+            {karo(raporAcik ? YOL.raporlar : null, p.raporlar, 'raporlar')}
             {arac ? karo(YOL.araclar, arac.izgara.baslik, 'araclar', p.notTumu) : null}
           </div>
         </div>
@@ -245,7 +246,7 @@ export function BugunGorunumu({ m, ad, muayeneler, hata, rol, randevular, mesajl
               arac ? { href: YOL.araclar, text: arac.izgara.baslik, ikon: 'araclar' } : null,
               { href: ozellikAcik('fotoArsivi') ? YOL.hastalar : null, text: p.belgeYukle, ikon: 'belge' },
               { href: null, text: p.inceleme, ikon: 'inceleme' },
-              { href: null, text: p.raporlar, ikon: 'raporlar' },
+              { href: raporAcik ? YOL.raporlar : null, text: p.raporlar, ikon: 'raporlar' },
             ].filter((x): x is { href: string | null; text: string; ikon: string } => Boolean(x)).map((k) => {
               const ic = (
                 <>

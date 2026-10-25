@@ -17,6 +17,7 @@ import { CHROME_RENK } from '@/lib/doktor/chromeRenk'
 import { mesajMetni } from '@/lib/ulke/arayuz'
 import { yerine } from '@/lib/ulke/arayuz/yerTutucu'
 import { HEKIM_MESAJ_API, type GelenKonu, type HekimMesajGorunumu, type Yazisma } from '@/lib/ulke/mesaj/sabitler'
+import { Ipucu } from './Ipucu'
 import { sonMesajAni } from '../mesajOrtak'
 
 const an = (iso: string): string => `${tarihYaz(iso)} ${saatYaz(iso)}`
@@ -88,7 +89,7 @@ export default function GelenKutusu() {
   return (
     <Cerceve dil={u.dil} m={u.m} ad={hesap.ad} unvan={rolAdi(hesap.rol, u.dil) ?? undefined} aktif="mesajlar" cikis={u.cikis}>
       <div data-alan="gelen-kutusu">
-        <MesajSayfaBasligi eyebrow={g.ustYazi} baslik={g.baslik} okunmamis={toplamOkunmamis} alt={g.aciklama} />
+        <MesajSayfaBasligi eyebrow={g.ustYazi} baslik={g.baslik} okunmamis={toplamOkunmamis} ipucu={<Ipucu m={u.m} bolum="mesajlar" />} alt={g.aciklama} />
         {hata ? <p style={{ color: CHROME_RENK.warn, fontSize: 14 }} role="alert">{hata}</p> : null}
         {konular === null ? <p style={{ color: CHROME_RENK.muted }}>{g.yukleniyor}</p> : null}
         <MesajKartlari

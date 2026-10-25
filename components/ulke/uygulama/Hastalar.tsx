@@ -138,8 +138,10 @@ export function YeniHastaGorunumu({ m, dil, a, set, gonder, bekliyor, hata, tele
   const hastaDilleri = (p.uygulama?.hastaDilleri ?? []).map((temel) => { const bicim = dilBirlestir(temel, yaziSec(dil)); return { deger: temel, ad: dilAdi(uygulamaMetni(bicim), temel), dil: bicim } })
   const istegeBagli = <small> ({y.istegeBagli})</small>
   return (
-    <section className="uza-kart uza-dar">
-      <h1 className="uza-h1">{baslik ?? y.baslik}</h1>
+    <div className="uza-dar" data-alan={iptal ? undefined : 'yeni-hasta'}>
+    {iptal ? null : <a href={YOL.hastalar} style={{ display: 'inline-block', fontSize: 12, fontWeight: 600, color: '#4A4030', textDecoration: 'none', margin: '0 0 12px', padding: '10px 0', minHeight: 40, boxSizing: 'border-box' }}>{'\u2190'} {m.hastalar.baslik}</a>}
+    <section className="uza-kart" style={iptal ? undefined : { borderRadius: 16, padding: '20px 20px 22px' }}>
+      <h1 className="uza-h1" style={iptal ? undefined : { fontSize: 28, fontWeight: 600, margin: '0 0 14px' }}>{baslik ?? y.baslik}</h1>
       <form className="uza-form" onSubmit={gonder} noValidate>
         <div className="uza-alan">
           <label className="uza-etiket" htmlFor="uza-h-ad">{y.ad}</label>
@@ -177,6 +179,7 @@ export function YeniHastaGorunumu({ m, dil, a, set, gonder, bekliyor, hata, tele
         </div>
       </form>
     </section>
+    </div>
   )
 }
 

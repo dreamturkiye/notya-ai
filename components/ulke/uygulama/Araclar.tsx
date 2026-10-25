@@ -78,7 +78,7 @@ function Kutu({ x, dil, hastaId, duvar }: { x: GorunurArac; dil: DilKodu; hastaI
   return (
     <li>
       {duvar ? <span className="uza-arac-kutu" data-duvar="evet">{ic}</span> : (
-        <a className="uza-arac-kutu" href={aracYolu(x.tanim.anahtar, hastaId)} data-arac={x.tanim.anahtar} data-kapsam={x.paket.roller === null ? 'temel' : 'rol'} data-tur={x.tanim.tur === 'baglanti' ? 'baglanti' : undefined}>{ic}</a>
+        <a className="uza-arac-kutu" title={bicimli(x.paket.metin.aciklama, dil)} href={aracYolu(x.tanim.anahtar, hastaId)} data-arac={x.tanim.anahtar} data-kapsam={x.paket.roller === null ? 'temel' : 'rol'} data-tur={x.tanim.tur === 'baglanti' ? 'baglanti' : undefined}>{ic}</a>
       )}
     </li>
   )
@@ -377,7 +377,7 @@ export default function Araclar() {
   const x = adres.arac ? hesabinAraci(icerik, u.hesap.rol, adres.arac) : null
   return (
     <Cerceve dil={u.dil} m={u.m} ad={u.hesap.ad} aktif="araclar" cikis={u.cikis}>
-      <div style={{ display: 'flex', justifyContent: 'flex-end', margin: '0 0 8px' }}><Ipucu m={u.m} bolum="araclar" /></div>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', height: 0, position: 'relative', zIndex: 2 }}><Ipucu m={u.m} bolum="araclar" /></div>
       <Hata>{h.durum === 'bulunamadi' ? a.kayit.hastaBulunamadi : null}</Hata>
       {x ? <AracEkrani x={x} a={a} u={u} dil={u.dil} notDili={u.hesap.notDili} icerik={icerik} hasta={h.hasta} rol={u.hesap.rol} /> : (
         <>

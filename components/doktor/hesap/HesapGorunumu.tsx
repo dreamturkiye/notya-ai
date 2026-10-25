@@ -26,12 +26,14 @@ function Avatar({ harfler, fotoUrl, ad, boyut = 56 }: { harfler: string; fotoUrl
   return <div aria-label={ad} style={{ ...ortak, background: 'rgba(15,155,142,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: Math.round(boyut * 0.36), fontWeight: 800, color: '#0F9B8E', letterSpacing: 0.5, lineHeight: 1 }}>{harfler}</div>
 }
 
-export function HesapGorunumu({ s, geriYol, adSoyad, harfler, eposta, fotoUrl, avatarDurum, avatarHata, dosyaRef, fotoSecildi, fotoKaldir, yeni, tekrar, setYeni, setTekrar, sifreDurumu, sifreHata, sifreKaydet, cikis }: {
+export function HesapGorunumu({ s, geriYol, adSoyad, harfler, eposta, fotoUrl, avatarDurum, avatarHata, dosyaRef, fotoSecildi, fotoKaldir, yeni, tekrar, setYeni, setTekrar, sifreDurumu, sifreHata, sifreKaydet, cikis, oturum }: {
   s: HesapSozleri; geriYol: string; adSoyad: string; harfler: string; eposta: string
   fotoUrl: string | null; avatarDurum: HesapAvatarDurumu; avatarHata: string
   dosyaRef: React.RefObject<HTMLInputElement>; fotoSecildi: (f: File | undefined) => void; fotoKaldir: () => void
   yeni: string; tekrar: string; setYeni: (v: string) => void; setTekrar: (v: string) => void
   sifreDurumu: 'bos' | 'kaydediyor' | 'kaydedildi' | 'hata'; sifreHata: string; sifreKaydet: () => void; cikis: () => void
+  /** The sessions card (last sign-in, this device, sign out everywhere), drawn between the password card and sign-out. */
+  oturum?: React.ReactNode
 }) {
   return (
     <div data-alan="hesap-sayfasi">
@@ -76,6 +78,7 @@ export function HesapGorunumu({ s, geriYol, adSoyad, harfler, eposta, fotoUrl, a
             {sifreDurumu === 'kaydediyor' ? s.kaydediliyor : sifreDurumu === 'kaydedildi' ? s.degisti : s.kaydet}
           </button>
         </div>
+        {oturum ?? null}
         <button type="button" data-eylem="cikis" onClick={cikis} style={{ marginTop: 24, background: 'transparent', border: `1px solid ${CHROME_RENK.warn}55`, color: CHROME_RENK.warn, borderRadius: 8, padding: '10px 18px', fontWeight: 600, cursor: 'pointer', width: '100%' }}>{s.cikis}</button>
       </div>
     </div>

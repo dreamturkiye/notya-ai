@@ -480,6 +480,10 @@ export const UYGULAMA_EKRANLARI = {
   mesajlar: '/messages',
   /** The account page (Türkiye: Hesabım): profile photo, sign-in email, password. */
   hesabim: '/account',
+  /** Settings > Communication (Türkiye: Ayarlar > İletişim): how the doctor's own email opens for a message to a patient. */
+  iletisim: '/settings/communication',
+  /** Settings > Integrations (Türkiye: Entegrasyonlar): the connections the practice uses. */
+  entegrasyonlar: '/settings/integrations',
   /** The practice reports (Türkiye: Raporlar): patients, visits, notes and appointments, counted for the signed-in doctor. */
   raporlar: '/reports',
 } as const

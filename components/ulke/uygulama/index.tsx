@@ -12,6 +12,7 @@ import Bugun from './Bugun'
 import Ayarlar from './Ayarlar'
 import Hesabim from './Hesabim'
 import Raporlar from './Raporlar'
+import { Iletisim, Entegrasyonlar } from './AyarAltSayfalari'
 import { HastaDosyasi, Hastalar, YeniHasta } from './Hastalar'
 import Muayene from './Muayene'
 import Takvim from './Takvim'
@@ -47,5 +48,7 @@ export const UYGULAMA_EKRAN_BILESENLERI: Readonly<Record<UygulamaEkrani, Compone
   // The doctor's messages inbox (the pack's `hastaMesajlari`).
   mesajlar: GelenKutusu,
   hesabim: Hesabim,
+  iletisim: Iletisim,
+  entegrasyonlar: Entegrasyonlar,
   raporlar: Raporlar,
 }
