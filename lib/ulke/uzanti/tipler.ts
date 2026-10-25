@@ -248,6 +248,40 @@ export type UlkeKayitSistemiBaglantisi = {
 
 export type UzantiBelgesi = { baslik: string; inceleme: string; bolumler: readonly { baslik: string; paragraflar: readonly string[] }[] }
 
+// ───────────────────────── diagnosis-code lookup (open data, server-side) ─────────────────────────
+
+/** Every word of the diagnosis-code screen. The pack writes them; the kit draws them. */
+export type TaniKodlariMetni = {
+  baslik: string
+  aciklama: string
+  /** Kicker above the title ("Tools"). */
+  arac: string
+  araEtiketi: string
+  araOrnek: string
+  ara: string
+  araniyor: string
+  /** "{n}" is the number of results. */
+  sonucSayisi: string
+  sonucYok: string
+  /** Shown instead of results while no code data is loaded on the server. */
+  veriYok: string
+  /** The exact source label printed on the screen. */
+  kaynakEtiketi: string
+  /** Label of a WHO code with no mapped national code. */
+  esleme_yok: string
+  whoKodu: string
+  esleme_etiketi: string
+  /** "{surum}" is the ICD-10-AM edition the mapping row comes from. */
+  surum: string
+  hata: string
+}
+
+export type TaniKodlariTanimi = {
+  metin: TaniKodlariMetni
+  /** Which provider answers: 'acik' = open WHO list + open mapping files; 'lisansli' = the licensed code lists (not built yet). */
+  saglayici: 'acik' | 'lisansli'
+}
+
 export type UlkeUzantisi = {
   /** Extra policy pages, by route slug (served at /<slug>, listed by the pack's route list). Not part of the shared policy-document set. */
   belgeler?: Readonly<Record<string, UzantiBelgesi>>
@@ -259,4 +293,6 @@ export type UlkeUzantisi = {
   referansAramalari?: readonly ReferansAramasi[]
   referansBolumleri?: readonly ReferansBolumu[]
   kayitSistemi?: UlkeKayitSistemiBaglantisi
+  /** Diagnosis-code lookup screen + API. Absent = the country has none. */
+  taniKodlari?: TaniKodlariTanimi
 }

@@ -22,6 +22,7 @@ import OnBuro from './OnBuro'
 import Fatura from './Fatura'
 import GizlilikTalepleri from './GizlilikTalepleri'
 import GelenKutusu from './GelenKutusu'
+import TaniKodlari from './TaniKodlari'
 import Asistan from './AsistanSayfasi'
 
 export const UYGULAMA_EKRAN_BILESENLERI: Readonly<Record<UygulamaEkrani, ComponentType>> = {
@@ -43,6 +44,7 @@ export const UYGULAMA_EKRAN_BILESENLERI: Readonly<Record<UygulamaEkrani, Compone
   // AU-BETA-01 — only where the pack brings the extension (components/ulke/UlkeUygulamaSayfasi.tsx).
   fatura: Fatura,
   gizlilikTalepleri: GizlilikTalepleri,
+  taniKodlari: TaniKodlari,
   // AU-CANLI-02 — the assistant page (the pack's `canliAsistan`; components/ulke/UlkeUygulamaSayfasi.tsx).
   asistan: Asistan,
   // The doctor's messages inbox (the pack's `hastaMesajlari`).

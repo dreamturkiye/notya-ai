@@ -6,6 +6,7 @@
  * Replaces the holding page for accounts of a country where the application is switched on.
  */
 import React, { useEffect, useState, type CSSProperties } from 'react'
+import { useTaniHazir } from './taniHazir'
 import { Cerceve, Hata, HAZIR, saatYaz, useUygulama, YOL, Yukleniyor } from './Kabuk'
 import { useAsistanHazir } from './asistanHazir'
 import { asistanAdi, asistanSatiri, AsistanKucukFoto } from './Asistan'
@@ -121,6 +122,9 @@ export function BugunGorunumu({ m, ad, muayeneler, hata, rol, randevular, mesajl
   const satir = asistanSatiri(m, rol)
   const asistanHazir = useAsistanHazir(Boolean(asistanSesAdlari()))
   const asistanYolu = asistanHazir ? YOL.asistan : null
+  // AU-QUICK-01: the diagnosis-codes tile exists only while the server has code data (fail closed).
+  const taniHazir = useTaniHazir()
+  const taniYolu = taniHazir ? YOL.taniKodlari : null
   const karo = (href: string | null, text: string, ikon: string, not?: string) => {
     const ic = (
       <>
@@ -169,6 +173,7 @@ export function BugunGorunumu({ m, ad, muayeneler, hata, rol, randevular, mesajl
           <h2 style={ETIKET}>{p.hizliAraclar}</h2>
           <div style={S({ display: 'flex', gap: 18, flexWrap: 'wrap', alignItems: 'center', ...KART, borderRadius: 16, padding: '14px 20px', boxShadow: '0 8px 18px rgba(58,44,34,0.045)' })}>
             {asistanYolu ? <a href={asistanYolu} style={{ ...ARAC, textDecoration: 'none' }}>{m.asistan.etiket} ›</a> : null}
+            {taniYolu ? <a href={taniYolu} data-alan="hizli-tani" style={{ ...ARAC, textDecoration: 'none' }}>{p.kodlama} ›</a> : null}
           </div>
         </div>
       ) : null}
@@ -182,7 +187,7 @@ export function BugunGorunumu({ m, ad, muayeneler, hata, rol, randevular, mesajl
             {karo(YOL.hastalar, m.kabuk.hastalar, 'hastalar')}
             {karo(ozellikAcik('fotoArsivi') ? YOL.hastalar : null, p.belgeler, 'belge')}
             {karo(null, p.epikriz, 'epikriz', p.notArac)}
-            {karo(null, p.kodlama, 'icd', p.notArac)}
+            {karo(taniYolu, p.kodlama, 'icd')}
             {karo(null, p.inceleme, 'inceleme')}
             {karo(raporAcik ? YOL.raporlar : null, p.raporlar, 'raporlar')}
             {arac ? karo(YOL.araclar, arac.izgara.baslik, 'araclar', p.notTumu) : null}

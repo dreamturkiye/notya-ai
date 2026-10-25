@@ -100,6 +100,7 @@ describe('au record services: configured, not connected', () => {
     assert.equal(AU_ETKILESIM.bagli, false)
     assert.equal(AU_ETKILESIM.juftlar.length, 0)
     assert.equal(AU_TANI_KODLARI.satirlar.length, 0)
+    assert.equal(AU_TANI_KODLARI.okundu, '2026-10-25')
     assert.equal(AU_LABORATUVAR.paneller.length, 0)
     assert.equal(AU_LABORATUVAR.araliklar.length, 0)
     assert.equal(AU_LABORATUVAR.birimler.kreatinin, 'umol/L')

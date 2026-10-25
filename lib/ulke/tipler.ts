@@ -486,6 +486,8 @@ export const UYGULAMA_EKRANLARI = {
   entegrasyonlar: '/settings/integrations',
   /** The practice reports (Türkiye: Raporlar): patients, visits, notes and appointments, counted for the signed-in doctor. */
   raporlar: '/reports',
+  /** AU-QUICK-01 — diagnosis-code lookup (pack extension `uzanti.taniKodlari`). */
+  taniKodlari: '/diagnosis-codes',
 } as const
 export type UygulamaEkrani = keyof typeof UYGULAMA_EKRANLARI
 
