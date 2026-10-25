@@ -53,6 +53,10 @@ const SES_BEKCI_MS = 22_000
  * Whitespace is what the TTS socket itself uses as its keep-alive and produces no audio.
  */
 const SESSIZ_ICERIK = ' '
+/** Something a voice can actually say: at least one letter or digit. */
+export const SESLENEBILIR = /[\p{L}\p{N}]/u
+/** The one content value a silent turn may carry. */
+export const SESSIZ = SESSIZ_ICERIK
 /** Keep a background promise alive after the SSE closes (Vercel freezes the function otherwise). */
 function arkaPlandaSurdur(p: Promise<unknown>): void {
   try {
@@ -146,6 +150,10 @@ export async function sesLlmPost(req: NextRequest): Promise<Response> {
   const model = String(govde.model || 'notya-ayse')
   const enc = new TextEncoder()
 
+  // NOTYA-SES-SURE-01: where a voice turn's time goes (milliseconds since the request body was read; no text, no ids).
+  const t0 = Date.now()
+  const ani: Record<string, number> = {}
+  const isaret = (k: string) => { if (ani[k] === undefined) ani[k] = Date.now() - t0 }
   const akis = new ReadableStream<Uint8Array>({
     async start(controller) {
       let ilk = true
@@ -156,7 +164,10 @@ export async function sesLlmPost(req: NextRequest): Promise<Response> {
         try { controller.enqueue(enc.encode(`data: ${JSON.stringify(nesne)}\n\n`)) } catch { kapali = true }
       }
       const parca = (delta: Record<string, unknown>, bitis: string | null = null) => {
-        if (typeof delta.content === 'string' && delta.content) icerikGitti = true
+        // GUARD (Kaan 2026-10-25, "we must ensure this never happens"): whatever reaches here, a content delta with no letter or
+        // digit (".", "…", "-", "?!", "...") is never sent as such: ElevenLabs speaks it as a click. It becomes silent whitespace.
+        if (typeof delta.content === 'string' && delta.content && !SESLENEBILIR.test(delta.content)) delta = { ...delta, content: SESSIZ_ICERIK }
+        if (typeof delta.content === 'string' && delta.content) { icerikGitti = true; if (delta.content !== SESSIZ_ICERIK) isaret('ilkSoz') }
         gonder({
           id: kimlik, object: 'chat.completion.chunk', created: olusturma, model,
           choices: [{ index: 0, delta: ilk ? { role: 'assistant', ...delta } : delta, finish_reason: bitis }],
@@ -222,6 +233,7 @@ export async function sesLlmPost(req: NextRequest): Promise<Response> {
         } else if (mesaj) {
           const supabase = getSupabase()
           const oturum = await oturumMesajlari(supabase, jeton.d, jeton.o)
+          isaret('gecmis')
           // NOTYA-SES-ARKA-01: eko / aynı istek / arka plan — model + dolgu yok (maliyet/hız).
           const tur = sesTurKapisi({ mesaj, oturumMesajlari: oturum })
           if (tur.tip === 'sessiz') {
@@ -241,6 +253,7 @@ export async function sesLlmPost(req: NextRequest): Promise<Response> {
           } else {
           // NOTYA-BUYUME-KISA-01 / NOTYA-SES-TEK-CEVAP-01: kilit fail-closed — hata = ikinci tur yok.
           const kilitAlindi = await sesTurKilidiAl(supabase, jeton.d, jeton.o, mesaj, tur.neden === 'soru_cevabi').catch(() => false)
+          isaret('kilit')
           if (!kilitAlindi) {
             console.error('[ses-llm/kilit]', 'tur_dusuruldu')
             parca({ content: SESSIZ_ICERIK })
@@ -256,6 +269,7 @@ export async function sesLlmPost(req: NextRequest): Promise<Response> {
             if (!klinik.ok && !cevapSoylendi) cevapYaz('Şu an yanıt veremedim, bir daha söyler misiniz?')
           } else {
           const karar = (takvimSorusuMu(mesaj) || takvimTakibiMi(mesaj)) ? null : await sesliKarariUygula(supabase, jeton.d, jeton.o, mesaj, jeton.tz || null)
+          isaret('karar')
           if (karar) {
             cevapYaz(karar.soz)
             await sesDevamAl(supabase, jeton.d, jeton.o).catch(() => null) // yeni gerçek tur: önceki turun kalanı düşer
@@ -312,6 +326,8 @@ export async function sesLlmPost(req: NextRequest): Promise<Response> {
       // Flush the breath still held in the gate BEFORE the SSE closes, including on a cut,
       // so the sentences already counted in `soylenen` actually reach ElevenLabs.
       kapi.bitir()
+      isaret('bitis')
+      console.log('[ses-llm/sure]', JSON.stringify(ani))
       // Empty Custom LLM SSE (hidden `[devam]` with nothing left, or a replayed question)
       // is what ElevenLabs reports as "Bağlantı kurulamadı". A period keeps the socket;
       // Fish treats punctuation as noise and does not speak it.

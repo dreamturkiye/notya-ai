@@ -151,3 +151,19 @@ describe('SES-SORU-CEVABI-01 — an answer to the assistant\'s question is never
     assert.equal(sesTurKapisi({ mesaj: 'Bora Toros için yarın saat on bire randevu oluşturdum ekranınızda onay bekliyor Hocam onaylıyor musunuz', oturumMesajlari: o }).tip, 'sessiz')
   })
 })
+
+describe('SES-CLICK-01 — nothing spoken is ever punctuation only', () => {
+  it('no source line sends "." (or any bare punctuation) as speech content', () => {
+    const dosyalar = ['lib/asistan/sesLlm.ts', 'lib/ulke/asistan/sunucu.ts']
+    for (const d of dosyalar) {
+      let kod = ''
+      try { kod = readFileSync(join(process.cwd(), d), 'utf8') } catch { continue }
+      assert.doesNotMatch(kod, /content:\s*['"`][\s.,;:!?…\-–—]+['"`]/, `${d}: a bare "." or punctuation as content is spoken as a click; use the silent whitespace`)
+    }
+  })
+  it('the guard in sesLlm turns punctuation-only content into whitespace', () => {
+    const kod = readFileSync(join(process.cwd(), 'lib/asistan/sesLlm.ts'), 'utf8')
+    assert.match(kod, /!SESLENEBILIR\.test\(delta\.content\)/)
+    assert.match(kod, /SESLENEBILIR = \/\[\\p\{L\}\\p\{N\}\]\/u/)
+  })
+})
