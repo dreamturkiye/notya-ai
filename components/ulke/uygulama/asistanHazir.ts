@@ -2,8 +2,8 @@
 
 /**
  * AU-LAUNCH-01g — one shared, lightweight availability check for the live assistant. Every entry point (sidebar, phone menu,
- * home quick-access tile) draws only when `GET /api/ulke/asistan-canli` answers `{ hazir: true }`. FAIL CLOSED: anything else
- * (not ready, error, offline, no session) is "unavailable", and until the answer is known nothing is drawn (no flash).
+ * home quick-access tile) hide only when `GET /api/ulke/asistan-canli` clearly answers `{ hazir: false }`. Kaan 2026-10-25: the assistant is ON. FAIL OPEN: the entries show
+ * unless the server clearly answers `{ hazir: false }`; an error, offline or missing session never hides them.
  * A positive result is cached per tab (module + sessionStorage); a negative one is never cached, so it can not stick.
  */
 import { useEffect, useState } from 'react'
@@ -43,12 +43,13 @@ export async function asistanHazirSor(): Promise<boolean> {
       try {
         const { data } = (await ulkeIstemciSupabase()?.auth.getSession()) ?? { data: { session: null } }
         const jeton = data.session?.access_token
-        if (!jeton) return false // not signed in yet: unavailable, and not cached so the next mount asks again
+        if (!jeton) return true // can not ask yet (phone, token not ready): keep the entry, the page itself says what is wrong
         const r = await fetch(ulkeYolu('/api/ulke/asistan-canli'), { headers: { Authorization: `Bearer ${jeton}` }, cache: 'no-store' })
-        const ok = r.ok && hazirMi(await r.json().catch(() => null))
+        if (!r.ok) return true // an error is not a "no": keep the entry
+        const ok = hazirMi(await r.json().catch(() => null))
         yaz(ok)
-        return ok
-      } catch { return false } // transient failure: hidden, not cached
+        return ok // only a clear { hazir: false } hides the entries
+      } catch { return true } // transient failure: keep the entry
       finally { bekleyen = null }
     })()
   }
@@ -57,7 +58,7 @@ export async function asistanHazirSor(): Promise<boolean> {
 
 /** `true` = show the entries; `false` and `null` (still unknown) = draw nothing. */
 export function useAsistanHazir(etkin = true): boolean {
-  const [hazir, setHazir] = useState<boolean>(() => (etkin ? oku() === true : false))
+  const [hazir, setHazir] = useState<boolean>(() => etkin)
   useEffect(() => {
     if (!etkin) { setHazir(false); return }
     let iptal = false

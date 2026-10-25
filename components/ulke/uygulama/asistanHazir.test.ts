@@ -8,7 +8,7 @@ import { hazirMi } from './asistanHazir'
 const DIR = resolve(__dirname)
 const oku = (f: string) => readFileSync(join(DIR, f), 'utf8')
 
-describe('asistanHazir (fail closed)', () => {
+describe('asistanHazir (only an explicit true is available; unknown keeps the entries)', () => {
   it('only an explicit hazir:true is available', () => {
     assert.equal(hazirMi({ hazir: true, ad: 'X' }), true)
     for (const v of [{ hazir: false }, { hazir: 'true' }, { hazir: 1 }, {}, null, undefined, 'x', 0]) assert.equal(hazirMi(v), false)
