@@ -215,6 +215,8 @@ export async function canliLlmPost(req: NextRequest): Promise<Response> {
         try { controller.enqueue(enc.encode(`data: ${JSON.stringify(nesne)}\n\n`)) } catch { kapali = true }
       }
       const parca = (delta: Record<string, unknown>, bitis: string | null = null) => {
+        // Guard (Kaan 2026-10-25): content with no letter or digit (".", "...") is spoken as a click; it is sent as silent whitespace.
+        if (typeof delta.content === 'string' && delta.content && !/[\p{L}\p{N}]/u.test(delta.content)) delta = { ...delta, content: ' ' }
         if (typeof delta.content === 'string' && delta.content) icerikGitti = true
         gonder({ id: kimlikNo, object: 'chat.completion.chunk', created: olusturma, model, choices: [{ index: 0, delta: ilk ? { role: 'assistant', ...delta } : delta, finish_reason: bitis }] })
         ilk = false
