@@ -21,6 +21,7 @@ import { ulkeIstemciSupabase } from '@/lib/ulke/istemciSupabase'
 import { UYGULAMA_EKRANLARI, type UygulamaEkrani } from '@/lib/ulke/tipler'
 import { ulkeYolu } from '@/lib/ulke/yol'
 import { useBitki } from './bitki'
+import { useAsistanHazir } from './asistanHazir'
 import { aracYolu } from './aracOrtak'
 import { HEKIM_MESAJ_API } from '@/lib/ulke/mesaj/sabitler'
 import KabukGorunumu, { type KabukOge } from '@/components/doktor/KabukGorunumu'
@@ -272,6 +273,8 @@ function KabukCercevesi({ dil, m, ad, unvan, aktif, cikis, onBuro, kompakt, chil
   )
   const ev = onBuro ? (ozellikAcik('randevu') ? YOL.onBuro : YOL.klinik) : YOL.bugun
   const anaDil = metninDili(m)
+  // AU-LAUNCH-01g: the entry is drawn only once the status call says the live assistant is ready (hidden while unknown).
+  const asistanHazir = useAsistanHazir(Boolean(asistanSesAdlari()))
   let asistan: KabukOge | null = null
   let calisma: KabukOge[] = []
   let diger: KabukOge[] = []
@@ -282,7 +285,7 @@ function KabukCercevesi({ dil, m, ad, unvan, aktif, cikis, onBuro, kompakt, chil
   } else {
     const p = m.pano
     // The live assistant is opt-in (NOTYA_AU_ASSISTANT_ENABLED): while it is off the entry is not drawn at all, instead of a dead button.
-    if (p && asistanSesAdlari()) asistan = oge('asistan', p.asistanaSor, 'asistan', YOL.asistan)
+    if (p && asistanHazir) asistan = oge('asistan', p.asistanaSor, 'asistan', YOL.asistan)
     calisma = [
       oge('bugun', k.bugun, 'anaSayfa', YOL.bugun),
       ...(HAZIR.takvim ? [oge('takvim', randevuMetni(dil).kabuk.takvim, 'randevular', YOL.takvim)] : []),
