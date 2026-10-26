@@ -1,13 +1,4 @@
 /**
- * NOTYA-UZ-ASISTAN-PERSONA-DOKTOR-01 (release/uz ONLY, Kaan 2026-10-08/09 names): before falling
- * through to the TR Doktor roster below, this file now checks `uzAsistanAdi()`
- * (countries/uz/klinik/asistanAdlari.ts) for a Doktor entry. That file already names all 30 Doktor
- * specialties for Uzbekistan — it was wired only into the Klinik "uygulama" screen and the UZ
- * landing copy, never into this Doktor "Ayşe'ye Danış" panel lookup. `gender`/`voiceId` (fields this
- * module's return type requires) are NOT in asistanAdlari.ts by design (it is names-only, see its own
- * header) — they come from `uzDoktorPersonaSesi.ts`, a separate, clearly-flagged, Claude-inferred
- * file pending Kaan/Dr. Gökhan review. Klinik roster + unknown-branş flagship fallback are unchanged.
- *
  * NOTYA-ASISTAN-PERSONA-BRANS-LOOKUP-01 (Kaan, CEO düzeltmesi — BUG A GERÇEK, "by design" DEĞİL):
  * "Ayşe'ye Danış" paneli hekimin KENDİ branşının uzmanını göstermeli. CEO'nun açık talimatı:
  * "Ayşe Kaya Dermatoloji'de HİÇ görünmemeli — Dermatoloji'nin tamamında Selin Aksoy olmalı."
@@ -48,10 +39,8 @@ import { bransAnahtari } from '@/lib/specialties/bransAnahtari'
 import { getSpecialistForSpecialty, SPECIALIST_BY_SPECIALTY, type SpecialtyKey } from '@/lib/asistan/specialistsCatalog'
 import { KlinikUzmanPersonas } from '@/lib/ai/personas/klinik_uzmanlar'
 import { formatColleagueDisplayName } from '@/lib/colleagueAddress'
-import { AKTIF_PAKET } from '@/countries/active'
-import { uzDoktorPersonaSesi } from '@/lib/asistan/uzDoktorPersonaSesi'
 
-export type BransPersonaKaynagi = 'doktor-brans' | 'doktor-brans-uz' | 'klinik-dali' | 'varsayilan'
+export type BransPersonaKaynagi = 'doktor-brans' | 'klinik-dali' | 'varsayilan'
 
 export interface BransAsistanPersonasi {
   /** Tam ad, unvanla — ör. "Prof. Dr. Selin Aksoy" / "Dr. Emre Kaya". */
@@ -78,36 +67,12 @@ export function bransPersonasiBulunamadiMi(brans: string | null | undefined): bo
 /**
  * TEK genel arama noktası. Önce Doktor'un 30 branşlık rosterini dener (kanonik anahtara çözerek —
  * `kadin-dogum` ↔ `kadin-hastaliklari-dogum` gibi takma adlar `bransAnahtari()` ile dahil), sonra
- * Klinik'in 10 dalını (ham slug ile — `/asistan/klinik` ve `klinik-signed-url` rotalarının
+ * Özel Branşlar’ın 10 dalını (ham slug ile — `/asistan/ozel-branslar` ve `klinik-signed-url` rotalarının
  * KlinikUzmanPersonas'ı okuduğu AYNI anahtar biçimiyle). İkisinde de yoksa bayrak gemisi
  * (pediatri/Ayşe) döner — asla çöker, asla isim üretmez.
  */
 export function bransAsistanPersonasiBul(brans: string | null | undefined): BransAsistanPersonasi {
   const anahtar = brans ? bransAnahtari(brans) : null
-  // UZ Doktor roster first (release/uz only) — see NOTYA-UZ-ASISTAN-PERSONA-DOKTOR-01 above. Read through
-  // countries/active (AKTIF_PAKET.asistanAdlariBransaGore), never a direct countries/uz/... import — D1
-  // (scripts/ulke-duvarlari.mjs); the door is populated from the owner's unchanged list, see
-  // countries/uz/index.ts and lib/ulke/tipler.ts's AsistanAdlariBransaGore doc.
-  if (anahtar) {
-    const uzAdi = AKTIF_PAKET.asistanAdlariBransaGore?.[anahtar]
-    if (uzAdi) {
-      const ses = uzDoktorPersonaSesi(anahtar)
-      if (ses) {
-        // All 30 UZ Doktor entries carry unvan 'prof-dr' today (countries/uz/klinik/asistanAdlari.ts) —
-        // guarded by bransAsistanPersonasi.test.ts; a future non-'prof-dr' Doktor entry falls through
-        // to the TR roster below rather than guessing a title.
-        if (uzAdi.unvan === 'prof-dr') {
-          return {
-            tamAd: `Prof. Dr. ${uzAdi.kisaAd} ${uzAdi.soyad}`,
-            kisaAd: uzAdi.kisaAd,
-            gender: ses.gender,
-            voiceId: ses.voiceId,
-            kaynak: 'doktor-brans-uz',
-          }
-        }
-      }
-    }
-  }
   if (anahtar && SPECIALIST_BY_SPECIALTY[anahtar as SpecialtyKey]) {
     const p = getSpecialistForSpecialty(anahtar)
     return { tamAd: p.name, kisaAd: p.shortName, gender: p.gender, voiceId: p.voice.voiceId, kaynak: 'doktor-brans' }
