@@ -22,6 +22,7 @@ import { randomUUID } from 'node:crypto'
 import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 import { AKTIF_KLINIK } from '@/countries/active/klinik'
+import { dolguGecikmesiMs } from '@/lib/asistan/konusma'
 import type { AiMesaj } from '@/lib/ai/cagir'
 import { modeldenAkis } from '@/lib/ulke/uygulama/notModeli'
 import { asistanKimligi, rolAdi } from '@/lib/ulke/arayuz'
@@ -155,11 +156,14 @@ export async function canliLlmPost(req: NextRequest): Promise<Response> {
         try { controller.enqueue(enc.encode(`data: ${JSON.stringify(nesne)}\n\n`)) } catch { kapali = true }
       }
       const parca = (delta: Record<string, unknown>, bitis: string | null = null) => {
+        // Guard (Kaan 2026-10-25): content with no letter or digit (".", "...") is spoken as a click; it is sent as silent whitespace.
+        if (typeof delta.content === 'string' && delta.content && !/[\p{L}\p{N}]/u.test(delta.content)) delta = { ...delta, content: ' ' }
         if (typeof delta.content === 'string' && delta.content) icerikGitti = true
         gonder({ id: kimlikNo, object: 'chat.completion.chunk', created: olusturma, model, choices: [{ index: 0, delta: ilk ? { role: 'assistant', ...delta } : delta, finish_reason: bitis }] })
         ilk = false
       }
-      const soyle = (t: string) => { const m = t.trim(); if (m) parca({ content: `${m} ` }) }
+      let sozGitti = false
+      const soyle = (t: string) => { const m = t.trim(); if (m) { sozGitti = true; parca({ content: `${m} ` }) } }
       let bitis = 'stop'
       try {
         // Open the stream at once: an empty first chunk lets the provider commit the clinician's transcript while we work.
@@ -167,7 +171,7 @@ export async function canliLlmPost(req: NextRequest): Promise<Response> {
         const sonMesaj = Array.isArray(govde.messages) ? (govde.messages as ElMesaj[])[(govde.messages as ElMesaj[]).length - 1] : null
         if (!mesaj) {
           // A client-tool round trip (the screen tool) or nothing to answer: stay silent, keep the socket.
-          if (sonMesaj?.role !== 'tool' && sonMesaj?.role !== 'function') parca({ content: '.' })
+          if (sonMesaj?.role !== 'tool' && sonMesaj?.role !== 'function') parca({ content: ' ' })
         } else if (vedaMi(mesaj) && aracVarMi(govde.tools, 'end_call')) {
           soyle(canli.ekranSozleri.veda)
           parca({ tool_calls: [{ index: 0, id: `call_${randomUUID().slice(0, 8)}`, type: 'function', function: { name: 'end_call', arguments: JSON.stringify({ reason: 'The clinician ended the conversation.' }) } }] })
@@ -177,6 +181,12 @@ export async function canliLlmPost(req: NextRequest): Promise<Response> {
           if (!(await kovaKotasiKullan(sb, jeton.hesapId, KOVA_ASISTAN_TUR, canli.gunlukTurLimiti))) {
             soyle(canli.ekranSozleri.gunlukSinir)
           } else {
+            // SES-DOLGU-02 (same rule as Türkiye, 2026-10-26): a slow turn may not sit in silence — past ~8 s with
+            // no content ElevenLabs retries the request as failed (duplicate turns). One localized holding phrase,
+            // only when the deadline passes before the first spoken sentence.
+            const bekletme = canli.ekranSozleri.bekletme && dolguGecikmesiMs() > 0
+              ? setTimeout(() => { if (!sozGitti && !kapali) soyle(canli.ekranSozleri.bekletme!) }, dolguGecikmesiMs())
+              : null
             const sozAkisi = new SesAkisi((c) => soyle(sesMetni(c)), canli.ekranSozleri)
             let tam = ''
             let hata = false
@@ -186,6 +196,7 @@ export async function canliLlmPost(req: NextRequest): Promise<Response> {
             else if (!tam) tam = sonuc // a gateway fallback answers whole, not in pieces
             if (tam && sozAkisi.beatSayisi === 0 && !sozAkisi.ekranaKaldi) sozAkisi.ekle(tam)
             sozAkisi.bitir()
+            if (bekletme) clearTimeout(bekletme)
             if (hata && !icerikGitti) soyle(canli.ekranSozleri.anlasilmadi)
             // The screen gets the full answer. Only when the agent offers the screen tool; otherwise the transcript is the screen.
             if (tam.trim() && aracVarMi(govde.tools, EKRAN_ARACI)) {
@@ -199,7 +210,7 @@ export async function canliLlmPost(req: NextRequest): Promise<Response> {
         if (!icerikGitti) soyle(canli.ekranSozleri.anlasilmadi)
       }
       // An empty stream is what the provider reports as a lost connection; a full stop keeps it and is never spoken.
-      if (!icerikGitti && bitis === 'stop') parca({ content: '.' })
+      if (!icerikGitti && bitis === 'stop') parca({ content: ' ' })
       parca({}, bitis)
       if (!kapali) { try { controller.enqueue(enc.encode('data: [DONE]\n\n')); controller.close() } catch { /* the caller hung up */ } }
     },

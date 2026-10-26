@@ -87,6 +87,19 @@ export function sesOkunusModu(mesaj: string | null | undefined): SesOkunusModu {
   if (tamSesIstegiMi(mesaj)) return 'tam'
   return 'varsayilan'
 }
+
+/**
+ * NOTYA-SES-KIMLIK-OKU-01 (Dr. Gökhan, 2026-10-25: "cevabı okumalı — ekrana verdim demesin"): the doctor's own sentence
+ * asks to HEAR the answer ("bana söyler misin", "sesli oku", "sözlü yanıtla", "anlat"). Names, birth date and birth
+ * place of an identity answer are always spoken; a phone number or address is spoken only when this is true. A
+ * screen-only request ("yalnızca ekrana") is never one. E-mail and T.C. no are never spoken.
+ */
+export function sesliIstekMi(mesaj: string | null | undefined): boolean {
+  const ham = String(mesaj || '').trim()
+  if (!ham || sadeceEkranIstegiMi(ham)) return false
+  const n = sesKomutDuz(ham)
+  return /\b(soyle\w*|oku(?:r|yun|yabilir|yacak|sana|mak)?|anlat\w*|sesli|sozlu|dinle\w*|duyur\w*)\b/.test(n)
+}
 /**
  * NOTYA-AYSE-OZET-01 (Dr. Gökhan, 2026-10-02): the summary of one visit is HEARD as a condensed narrative — one
  * short sentence per part, about seven. This many are spoken in the turn; if the narrative is longer, the rest goes
@@ -110,9 +123,12 @@ const MADDE_IMI = /^\s*(?:[-*•]\s+|\d{1,2}\.\s+|#{1,6}\s+|>\s*)/
 const BUYUK = 'A-ZÇĞİÖŞÜ'
 // Cümle sonu: nokta/ünlem/soru + boşluk + büyük harf (ya da satır içi "2)" numarası). "d.t. 20.05" bölünmez.
 const CUMLE_SONU = new RegExp(`([.!?…])\\s+(?=["“'(]?[${BUYUK}]|\\d{1,2}\\))`)
-/** Bir cümlede okunmaması gereken kimlik / iletişim değeri var mı? */
-export function kimlikDegeriVarMi(s: string): boolean {
-  return TELEFON.test(s) || EPOSTA.test(s) || TC_NO.test(s)
+/**
+ * Bir cümlede okunmaması gereken kimlik / iletişim değeri var mı? `telefonSerbest`: doktor telefonu SESLE İSTEDİ
+ * (NOTYA-SES-KIMLIK-OKU-01) — telefon numarası okunabilir; e-posta ve T.C. kimlik no HİÇBİR ZAMAN okunmaz.
+ */
+export function kimlikDegeriVarMi(s: string, telefonSerbest = false): boolean {
+  return (!telefonSerbest && TELEFON.test(s)) || EPOSTA.test(s) || TC_NO.test(s)
 }
 
 function satirIciSade(s: string): string {
@@ -158,6 +174,8 @@ export class SesAkisi {
     private readonly sinir: number = SOZ_BEAT_SINIRI,
     /** NOTYA-SES-DEVAM-01: a continuation turn follows the cap — stop silently, no "Devamı ekranınızda". */
     private readonly sessizSinir = false,
+    /** NOTYA-SES-KIMLIK-OKU-01: the doctor asked to HEAR the contact value — a phone number may be read (never e-mail / T.C. no). */
+    private readonly telefonSerbest = false,
   ) {}
 
   /** NOTYA-SES-DEVAM-01: the cap was reached (sentences after it were not spoken). */
@@ -238,9 +256,12 @@ export class SesAkisi {
     }
     const madde = LISTE_MADDESI.test(ham)
     if (!madde) this.listeyiBitir()
-    const s = this.temizle(satirIciSade(ham)).trim()
+    const sade = satirIciSade(ham)
+    const s = this.temizle(sade).trim()
     if (!s) return
-    if (kimlikDegeriVarMi(s)) {
+    // The identity check reads the sentence as WRITTEN as well: the cleaner may spell digits out for the speech
+    // provider (elevenMetni, NOTYA-SES-SAYI-NET-01), and a phone / T.C. number in words no longer looks like one.
+    if (kimlikDegeriVarMi(sade, this.telefonSerbest) || kimlikDegeriVarMi(s, this.telefonSerbest)) {
       if (!this.iletisimNotu) { this.iletisimNotu = true; this.soyle(ILETISIM_EKRANDA, true) }
       return
     }
@@ -254,8 +275,8 @@ export class SesAkisi {
 }
 
 /** Akışsız: ekran metninin tamamından sözlü biçim. */
-export function konusmaYap(ekran: string, temizle?: (cumle: string) => string, secenek?: { sinirsiz?: boolean }): string {
-  const a = new SesAkisi(() => {}, temizle, undefined, secenek?.sinirsiz ? Number.POSITIVE_INFINITY : SOZ_BEAT_SINIRI)
+export function konusmaYap(ekran: string, temizle?: (cumle: string) => string, secenek?: { sinirsiz?: boolean; telefonSerbest?: boolean }): string {
+  const a = new SesAkisi(() => {}, temizle, undefined, secenek?.sinirsiz ? Number.POSITIVE_INFINITY : SOZ_BEAT_SINIRI, false, Boolean(secenek?.telefonSerbest))
   a.ekle(String(ekran || ''))
   return a.bitir()
 }
@@ -312,6 +333,25 @@ export function devamIstegiMi(mesaj: string): boolean {
 export function dolguSec(mesaj: string, g: { onay: boolean; vazgec: boolean; sosyal: boolean }): string {
   if (g.vazgec || g.sosyal || !String(mesaj || '').trim()) return ''
   return g.onay ? DOLGU_KAYDEDIYORUM : ''
+}
+
+/**
+ * SES-DOLGU-02 (Kaan, 2026-10-26 — launch audit): a slow turn may not sit in SILENCE. NOTYA-AYSE-ACILIS-01 stands —
+ * no phrase before every answer — but a turn whose first spoken sentence has not left after this many milliseconds
+ * says ONE short holding sentence. Below ~8 s of no content ElevenLabs treats the Custom LLM as failed and re-POSTs
+ * the same question (≥3 attempts — their LLM-cascade retry): the duplicate turns, the lock losers and the 12 s silent
+ * answers in the 2026-10-25 logs all start there. Fast turns (first sentence before the deadline) stay clean.
+ * NOTYA_SES_DOLGU_MS overrides the deadline (tests, tuning); 0 turns the holding phrase off.
+ */
+export const DOLGU_GECIKME_MS = 2500
+export function dolguGecikmesiMs(deger: string | null | undefined = typeof process !== 'undefined' ? process.env?.NOTYA_SES_DOLGU_MS : undefined): number {
+  const n = Number(String(deger ?? '').trim())
+  return Number.isFinite(n) && String(deger ?? '').trim() !== '' ? Math.max(0, n) : DOLGU_GECIKME_MS
+}
+const BEKLETME_SOZLERI = ['Bakıyorum Hocam... ', 'Hemen bakıyorum... ', 'Dosyaya bakıyorum Hocam... '] as const
+/** The holding sentence, varied so consecutive slow turns do not repeat the same words. */
+export function bekletmeSec(sira: number): string {
+  return BEKLETME_SOZLERI[Math.abs(Math.trunc(sira)) % BEKLETME_SOZLERI.length]
 }
 
 /**

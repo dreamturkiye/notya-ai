@@ -77,8 +77,9 @@ describe('yönlendiriciler devre dışı: model okuma araçlarıyla doğru cevab
         const ekran = soru.kimlik ? await ekranMetni(k.s, oturum) : sonAsistanMesaji(oturum)
         for (const d of soru.dogru) assert.match(ekran, d, 'ekrandaki cevap')
         if (soru.kimlik) {
-          assert.match(v.soz, /istediğiniz bilgiyi ekranınıza yazdım Hocam/)
-          assert.ok(!v.soz.includes(PRATIK.annesi) && !sonAsistanMesaji(oturum).includes(PRATIK.annesi), 'kimlik değeri söylenmez, saklanmaz')
+          // NOTYA-SES-KIMLIK-OKU-01: the name is read aloud; it is still never stored in the session history.
+          assert.ok(v.soz.includes(PRATIK.annesi), 'ad okunur')
+          assert.ok(!sonAsistanMesaji(oturum).includes(PRATIK.annesi), 'kimlik değeri saklanmaz')
         } else {
           for (const d of soru.sozde || soru.dogru) assert.match(v.soz, d, 'söylenen cevap')
         }
