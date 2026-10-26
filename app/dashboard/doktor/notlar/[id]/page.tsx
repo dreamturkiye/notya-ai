@@ -104,7 +104,10 @@ interface NotVeri {
     cek?: { maddeler: CekMadde[]; oncekiIdler: string[]; isaretler: Record<string, boolean> } | null
     uygulananKurallar?: { slug: string; deger: string }[]
   }
-  hasta: { ad: string; patientId: string | null }
+  /** HASTA-KIMLIK-SERIDI-01: dogum/yas were always in the API response, just unread here — the
+   * revizyon ekranı only showed ad + protokolNo, so which patient's file was open wasn't
+   * visible without a separate lookup (Dr. Gökhan Mamur, 2026-10-26 live session). */
+  hasta: { ad: string; dogum?: string | null; yas?: string | null; patientId: string | null }
   doktor: { ad: string }
   duzenlemeSayisi: number
 }
@@ -523,7 +526,7 @@ export default function NotSayfasi() {
       {sonlandirma ? <IlacSonlandirmaSatiri bilgi={sonlandirma} devamHref={onaylananNotYolu(params.id)} /> : null}
       <NotUstCubugu
         geri={<GeriLink href={notDuzenleGeriHref(hasta.patientId)}>{hasta.patientId ? '← Muayene Geçmişi' : '← Hastalar'}</GeriLink>}
-        baslik={<>{hasta.ad} <NotBaslikKuyrugu>· {bransEtiketi(not.specialty)} · {trTarih(not.createdAt)} · Protokol No: {not.protokolNo || '—'}</NotBaslikKuyrugu></>}
+        baslik={<>{hasta.ad} <NotBaslikKuyrugu>· {bransEtiketi(not.specialty)} · {trTarih(not.createdAt)} · Doğum: {hasta.dogum || '—'}{hasta.yas ? ` (${hasta.yas})` : ''} · Protokol No: {not.protokolNo || '—'}</NotBaslikKuyrugu></>}
         onayli={onayli}
         rozet={onayli ? `Onaylı — ${trTarih(not.approvedAt)}` : 'Onay bekliyor'}
         ek={<>
