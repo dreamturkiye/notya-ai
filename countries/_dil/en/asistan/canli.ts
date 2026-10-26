@@ -32,7 +32,7 @@ export function enCanliAsistan(g: EnCanliGirdisi): CanliAsistanAyarlari {
       devami: 'The rest is on your screen.',
       veda: 'Goodbye for now.',
       anlasilmadi: 'Sorry, I could not answer that just now. Could you say it again?',
-      bekletme: 'One moment, let me have a look...',
+      bekletme: 'One moment, please.',
       gunlukSinir: 'We have reached the limit for the assistant today. You can pick this up again tomorrow.',
     },
     acilis: (a) => `Hello, I'm ${a.tamAd}, your ${a.rolAdi} colleague. What can I help with?`,
