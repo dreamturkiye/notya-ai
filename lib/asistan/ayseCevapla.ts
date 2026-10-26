@@ -62,7 +62,7 @@ import { aiAkis, aiCagir, girdiTokenTahmini, yanitMetni, type AiMesaj } from "@/
 import { anilanBaskaKisi, okumaAraciCalistir, okumaAraciKapali, okumaAraciMi, OKUMA_ARACI_BLOGU, OKUMA_ARACLARI, OKUMA_TUR_TAVANI, type OkumaSonucu } from "@/lib/asistan/okumaAraclari"
 import { aramaCevabiGuvenilirMi, kimlikAcikDosyayaDusmesinMi } from "@/lib/asistan/ikiBeyinBirde"
 import { turZamanlari } from "@/lib/asistan/balonSirasi"
-import { AlanDefteri, alanlariYerineKoy, alanSozcusu, verilmeyenleriSil, type AlanRef } from "@/lib/asistan/hastaAlan"
+import { AlanDefteri, alanlariYerineKoy, alanSozcusu, defteriGeriKur, verilmeyenleriSil, type AlanRef } from "@/lib/asistan/hastaAlan"
 import { asistanModelYonlendir, gecmisiKirp, netSosyalMi, sohbetKademesi, SOHBET_SAKLANAN_MESAJ } from "@/lib/ai/modeller"
 import { aracTanimlari, eylemKapali, HASTA_ADI_ALANI } from "@/core/eylemler/araclar"
 import { toolUseOnerileri, toolUseBloklari, oneriHazirla, type HazirOneri } from "@/core/eylemler/oneri"
@@ -78,7 +78,7 @@ import { kayitCevabi, kayitIstegiBul, olcumVarMi, type KayitCevabi } from "@/lib
 import { asiKarnesiVerisi } from "@/lib/asi/karneSunucu"
 import { ciddiUyariSozu, sesOzetMetni, UYARI_ONAY_SOZU } from "@/core/eylemler/sesKapilari"
 import { bransAnahtari } from "@/lib/specialties/bransAnahtari"
-import { kimlikEkrandaSozu, konusmaYap, okumaIstegiMi, OZET_ANLATIM_SINIRI, SADECE_EKRAN_SOZU, SesAkisi, sesOkunusModu, sesSiniriSec, SOZ_BEAT_SINIRI, sozCumleleri, sesDevamKalani, devamIstegiMi } from "@/lib/asistan/konusma"
+import { kimlikEkrandaSozu, konusmaYap, okumaIstegiMi, sesliIstekMi, OZET_ANLATIM_SINIRI, SADECE_EKRAN_SOZU, SesAkisi, sesOkunusModu, sesSiniriSec, SOZ_BEAT_SINIRI, sozCumleleri, sesDevamKalani, devamIstegiMi } from "@/lib/asistan/konusma"
 import { elevenMetni } from "@/lib/asistan/elevenMetni"
 import { detayIstegiMi } from "@/lib/ses/tibbiSeslendirme"
 import { soruTuruBul, type SoruTuru } from "@/lib/asistan/dosyaSorgu/soruTuru"
@@ -646,7 +646,10 @@ ${ilacBaglamMetni(drugs[0])}`
       // NOTYA-SES-NEFES-01: stream sentence-by-sentence into sozParcasi (SesYayKapisi breaths) — a single dump of
       // the whole previous answer was the silent-turn bug (text on screen, no audible TTS).
       const sozler: string[] = []
-      const akis = new SesAkisi((p) => { sozler.push(p); soyle(p) }, alanSozcusu(null), undefined, Number.POSITIVE_INFINITY)
+      // NOTYA-SES-KIMLIK-OKU-01: a stored answer's placeholders are read now (doctor-scoped) under the same speak rules;
+      // "bana oku" is itself a spoken request, so phone/address in that answer are read too (e-mail never).
+      const okuDefter = sonEkran.alanlar?.length ? await defteriGeriKur(supabase, doktorId, sonEkran.alanlar, true).catch(() => null) : null
+      const akis = new SesAkisi((p) => { sozler.push(p); soyle(p) }, alanSozcusu(okuDefter), undefined, Number.POSITIVE_INFINITY, false, true)
       akis.ekle(String(sonEkran.content))
       const okuma = akis.bitir() || "Ekranda okunacak bir cevap bulamadım Hocam."
       if (!sozler.length) soyle(okuma)
@@ -968,16 +971,20 @@ ${ilacBaglamMetni(drugs[0])}`
   // Ses: model yazarken her cümle ekrandakiyle aynı kilitlerden geçer — doğrulanmamış doz / kılavuz numarası söylenmez.
   // NOTYA-SES-ELEVEN-NORMAL-01: on ElevenLabs, also rewrite units/abbreviations for the spoken form (screen stays written).
   const sesDetay = detayIstegiMi(String(message || '')) || devamIstegiMi(String(message || ''))
-  const sesTemizle = (c: string) => {
+  const sesTemizleKur = (alanSozu: (c: string) => string) => (c: string) => {
     // NOTYA-AYSE-GERI-06: the "ask again with the full chart" marker is never spoken.
     if (sesTamDosyaIstendiMi(c)) return ""
     let t = uydurmaDozTemizle(doktorMetniTemizle(c), dozKaynak).metin
     if (kdMi) t = uydurmaKaynakTemizle(t, liste).metin
     // A sentence that would carry an identity value is not read: once per turn "… ekranınıza yazdım Hocam".
-    t = alanSoz(t)
+    t = alanSozu(t)
     if (g.saglayici === 'elevenlabs' && t.trim()) t = elevenMetni(t, { detay: sesDetay })
     return t
   }
+  const sesTemizle = sesTemizleKur(alanSoz)
+  // The remainder of a cut turn is STORED (the page's hidden [devam] turn): the same filters, but no identity value is
+  // ever written to the session — a sentence that carries one keeps the pointer (NOTYA-SES-KIMLIK-OKU-01).
+  const sesTemizleKayit = sesTemizleKur(alanSozcusu(alanDefteri, false))
   // NOTYA-AYSE-OZET-01 (Dr. Gökhan, 2026-10-02: the summary of a visit reached the screen and nothing was said): the
   // summary of one visit is spoken from the RECORD, now, before the model writes — a condensed narrative, one short
   // sentence per part. The model's eight paragraphs are the screen answer and are not read on top of it: read as
@@ -986,13 +993,13 @@ ${ilacBaglamMetni(drugs[0])}`
   if (ses && vizitOzeti && !sadeceEkran) {
     const anlatim = vizitOzetSozu(vizitOzeti, odakHastaAdi)
     const ozetSinir = okunus === 'tam' ? Number.POSITIVE_INFINITY : OZET_ANLATIM_SINIRI
-    const akis = new SesAkisi(g.sozParcasi ?? (() => {}), sesTemizle, g.sesSiniri, ozetSinir, Boolean(g.sesDurumu))
+    const akis = new SesAkisi(g.sozParcasi ?? (() => {}), sesTemizle, g.sesSiniri, ozetSinir, Boolean(g.sesDurumu), sesliIstekMi(hamMesaj))
     akis.ekle(anlatim)
     ozetAnlatimi = { soylenen: akis.bitir(), cumleler: sozCumleleri(anlatim, sesTemizle) }
   }
   // NOTYA-SES-DEVAM-01: with a continuation behind it the cap is silent — the remainder comes in the next turn.
   // NOTYA-SES-OKUNUS-01: "yalnızca ekrana" → no SesAkisi; "hepsini anlat" → uncapped (still breath-paced by SesYayKapisi).
-  const sesAkisiKur = () => (ses && g.sozParcasi && !ozetAnlatimi && !sadeceEkran ? new SesAkisi(g.sozParcasi, sesTemizle, g.sesSiniri, sesSiniriSec(kanitYoluAktif, okunus), Boolean(g.sesDurumu)) : null)
+  const sesAkisiKur = () => (ses && g.sozParcasi && !ozetAnlatimi && !sadeceEkran ? new SesAkisi(g.sozParcasi, sesTemizle, g.sesSiniri, sesSiniriSec(kanitYoluAktif, okunus), Boolean(g.sesDurumu), sesliIstekMi(hamMesaj)) : null)
   let sesAkisi = sesAkisiKur()
 
   const cagriTaban = {
@@ -1177,13 +1184,13 @@ ${ilacBaglamMetni(drugs[0])}`
   // NOTYA-AYSE-OZET-01: the visit summary's narrative was spoken before the model call; the screen text is not read again.
   // NOTYA-SES-OKUNUS-01: "yalnızca ekrana" → no content speech; "hepsini anlat" → uncapped spoken form.
   if (ses && !sadeceEkran) {
-    sozler.push(ozetAnlatimi ? ozetAnlatimi.soylenen : sesAkisi ? sesAkisi.bitir() : konusmaYap(aiData.speech, sesTemizle, { sinirsiz: okunus === 'tam' }))
+    sozler.push(ozetAnlatimi ? ozetAnlatimi.soylenen : sesAkisi ? sesAkisi.bitir() : konusmaYap(aiData.speech, sesTemizle, { sinirsiz: okunus === 'tam', telefonSerbest: sesliIstekMi(hamMesaj) }))
   }
   // The stream said nothing (the full-chart marker was all the model wrote, twice) but there is an answer on screen:
   // it is spoken now — a voice turn never ends in silence while the screen shows a sentence.
   if (ses && !sadeceEkran && sesAkisi && !sozler[0] && String(aiData.speech || "").trim() && !toolUseBloklari(response as unknown as { content?: unknown }).length) {
     sozler.length = 0
-    const soz = konusmaYap(aiData.speech, sesTemizle, { sinirsiz: okunus === 'tam' })
+    const soz = konusmaYap(aiData.speech, sesTemizle, { sinirsiz: okunus === 'tam', telefonSerbest: sesliIstekMi(hamMesaj) })
     sozler.push(soz)
     soyle(soz)
   }
@@ -1339,7 +1346,7 @@ ${ilacBaglamMetni(drugs[0])}`
     const soylenenDuz = durum.soylenen.replace(/\s+/g, " ")
     const ekler = sozler.slice(1).filter(Boolean)
     const ekSoylendi = ekler.some((e) => soylenenDuz.includes(e.replace(/\s+/g, " ").trim()))
-    sesDevamKalan = ekSoylendi ? "" : sesDevamKalani([...sozCumleleri(String(aiData.speech || ""), sesTemizle), ...ekler], durum.soylenen)
+    sesDevamKalan = ekSoylendi ? "" : sesDevamKalani([...sozCumleleri(String(aiData.speech || ""), sesTemizleKayit), ...ekler], durum.soylenen)
   }
 
   // NOTYA-AYSE-ALAN-01: two forms of the answer from here on.
@@ -1473,9 +1480,12 @@ export async function asistanOturumuAc(
   return data
 }
 
-/** Kimlik cevabının sözlü biçimi: değer ASLA okunmaz. */
+/**
+ * Kimlik cevabının sözlü biçimi (NOTYA-SES-KIMLIK-OKU-01): ad / doğum tarihi / doğum yeri okunur; telefon ve adres yalnız
+ * doktor sesle istediyse; e-posta ve T.C. asla. Okunamayan alan "… ekranda." der.
+ */
 export function kimlikSozu(k: KimlikCevabi): string {
-  if (k.hasta) return kimlikEkrandaSozu(k.hasta.ad)
+  if (k.hasta) return k.soz || kimlikEkrandaSozu(k.hasta.ad)
   return konusmaYap(k.ekran)
 }
 

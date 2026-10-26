@@ -497,15 +497,17 @@ describe('tek beyin — aynı soru, aynı ekran; ses aynı içeriği konuşur', 
     assert.deepEqual(sy.messages, ty.messages)
   })
 
-  it('kimlik sorusu: iki yolda aynı ekran (değerlerle); ses değeri SÖYLEMEZ; model çağrılmaz, geçmiş değersiz', async () => {
+  it('kimlik sorusu: iki yolda aynı ekran (değerlerle); ses adı SÖYLER; model çağrılmaz, geçmiş değersiz', async () => {
     const soru = 'Umutcan Türkoğlu’nun anne ve babasının adı nedir'
     const a = sahne()
     const t = await yazi(a, soru)
     assert.match(t.speech, new RegExp(ANNE))
     const b = sahne()
     const v = await ses({ sahne: b, mesaj: soru })
-    for (const deger of [ANNE, BABA, TEL]) assert.ok(!v.metin.includes(deger), `sözlü biçimde kimlik değeri: ${deger}`)
-    assert.match(v.metin, /Umutcan Türkoğlu için istediğiniz bilgiyi ekranınıza yazdım/)
+    // NOTYA-SES-KIMLIK-OKU-01: names are read aloud; a phone number (not asked to hear) is not.
+    for (const deger of [ANNE, BABA]) assert.ok(v.metin.includes(deger), `sözlü biçimde ad okunur: ${deger}`)
+    assert.ok(!v.metin.includes(TEL), 'telefon istenmedikçe okunmaz')
+    assert.ok(!/ekranınıza yazdım/.test(v.metin), 'ekrana bak denmez')
     assert.equal(modelIstekleri.length, 0)
     const gecmis = JSON.stringify(db.tablo('asistan_sessions').find((o) => o.id === b.oturum)?.messages)
     assert.ok(!gecmis.includes(ANNE) && !gecmis.includes(BABA), 'saklanan geçmiş değer taşımamalı')

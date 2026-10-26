@@ -22,6 +22,7 @@ import { kimlikAlanlariniTara, metinleriTopla } from '@/lib/doktor/dosyaAlanTara
 import { ARAMA_ALANLARI } from '@/lib/doktor/hastaAramaFiltre'
 import { cozumKonus, hastaninSozunuCoz } from '@/lib/doktor/hastaCozumleyici'
 import { veliOnamGerekliMi } from '@/lib/specialties/kapsam'
+import { sesliIstekMi } from '@/lib/asistan/konusma'
 
 export type KimlikAlani =
   | 'anneAdi' | 'babaAdi' | 'veli'
@@ -46,6 +47,12 @@ export interface KimlikKaydi {
 }
 
 export interface KimlikCevabi {
+  /**
+   * NOTYA-SES-KIMLIK-OKU-01 — the SPOKEN form (Dr. Gökhan, 2026-10-25): names, birth date and birth place are read out;
+   * a phone number or address only when the doctor asked to hear it; e-mail never ("E-posta ekranda."). Goes to the
+   * speech provider and the doctor's client only — like `ekran` it is never stored and never reaches a model.
+   */
+  soz?: string
   /** Değerlerle — yalnız doktorun ekranına. */
   ekran: string
   /** Değersiz — sesli ajana ve sohbet geçmişine (model bağlamı) yalnız bu gider. */
@@ -225,6 +232,16 @@ function trTarih(iso: string): string {
   return m ? `${m[3]}.${m[2]}.${m[1]}` : iso
 }
 
+const AYLAR = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık']
+/** "2001-03-14" / "14.03.2001" → "14 Mart 2001" (a date is spoken in words, not as digits and dots). */
+export function tarihSoz(s: string): string {
+  const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})/)
+  const tr = s.match(/^(\d{1,2})[./](\d{1,2})[./](\d{4})/)
+  const [g, a, y] = iso ? [iso[3], iso[2], iso[1]] : tr ? [tr[1], tr[2], tr[3]] : ['', '', '']
+  const ay = AYLAR[Number(a) - 1]
+  return g && ay ? `${Number(g)} ${ay} ${y}` : s
+}
+
 function yakinMi(k: Kisi | null, kim: 'anne' | 'baba'): boolean {
   return !!k && trAramaNormalize(k.yakinlik).includes(kim)
 }
@@ -234,11 +251,11 @@ function yakinMi(k: Kisi | null, kim: 'anne' | 'baba'): boolean {
  * kaynaksız) — yalnız yer tutucu yolu okur (kimlikAlanDegeri). `degerliCumle`: değer ayrıca kayıtlı değil ama ekran
  * cümlesi yine de bir iletişim değeri taşıyor (dosyadaki iletişim telefonu).
  */
-type AlanSatiri = { ekran: string; model: string; deger?: string; degerliCumle?: boolean }
+type AlanSatiri = { ekran: string; model: string; deger?: string; degerliCumle?: boolean; soz?: string }
 function satir(alan: KimlikAlani, k: KimlikKaydi, nowMs: number): AlanSatiri {
   const etiket = ETIKET[alan]
-  const goster = (x: Kaynakli, bicim: (s: string) => string = (s) => s): AlanSatiri | null =>
-    x ? { ekran: `${etiket}: ${bicim(x.deger)} (${KAYNAK_ETIKETI[x.kaynak]})`, model: `${etiket} ekranda`, deger: bicim(x.deger) } : null
+  const goster = (x: Kaynakli, bicim: (s: string) => string = (s) => s, soz: (s: string) => string = (s) => s): AlanSatiri | null =>
+    x ? { ekran: `${etiket}: ${bicim(x.deger)} (${KAYNAK_ETIKETI[x.kaynak]})`, model: `${etiket} ekranda`, deger: bicim(x.deger), soz: soz(x.deger) } : null
   const eksik = (nereden: string) => ({ ekran: `${etiket} kayıtlı değil — ${nereden}.`, model: `${etiket} kayıtlı değil — ${nereden}.` })
 
   switch (alan) {
@@ -246,13 +263,15 @@ function satir(alan: KimlikAlani, k: KimlikKaydi, nowMs: number): AlanSatiri {
     case 'babaAdi': return goster(k.babaAdi) || eksik(KART_YERI)
     case 'telefon': return goster(k.telefon) || eksik(KART_YERI)
     case 'eposta': return goster(k.eposta) || eksik(KART_YERI)
-    case 'dogumTarihi': return goster(k.dogumTarihi, trTarih) || eksik(KART_YERI)
+    case 'dogumTarihi': return goster(k.dogumTarihi, trTarih, tarihSoz) || eksik(KART_YERI)
     case 'adres': return goster(k.adres) || eksik(FORM_YERI)
     case 'dogumYeri': return goster(k.dogumYeri) || eksik(FORM_YERI)
     case 'veli': {
       if (k.veli) {
         const parca = [k.veli.ad, k.veli.yakinlik ? `(${k.veli.yakinlik})` : '', k.veli.telefon ? `— ${k.veli.telefon}` : ''].filter(Boolean).join(' ')
-        return { ekran: `${etiket}: ${parca} (Hasta Bilgi Formu)`, model: `${etiket} ekranda`, deger: parca }
+        // Spoken: the guardian's name and kinship only — the guardian's phone is a contact value (asked for separately).
+        const sozlu = [k.veli.ad, k.veli.yakinlik].filter(Boolean).join(', ')
+        return { ekran: `${etiket}: ${parca} (Hasta Bilgi Formu)`, model: `${etiket} ekranda`, deger: parca, ...(k.veli.ad ? { soz: sozlu } : {}) }
       }
       const dogum = k.dogumTarihi?.deger || ''
       if (dogum && !veliOnamGerekliMi(dogum, nowMs)) {
@@ -270,7 +289,7 @@ function satir(alan: KimlikAlani, k: KimlikKaydi, nowMs: number): AlanSatiri {
       if (kisi) {
         const nereden = kisi.kaynak === 'veli' ? 'Hasta Bilgi Formu, veli' : 'Hasta Bilgi Formu, acil durumda aranacak kişi'
         const deger = `${kisi.telefon}${kisi.ad ? ` — ${kisi.ad}` : ''}`
-        return { ekran: `${etiket}: ${deger} (${nereden})`, model: `${etiket} ekranda`, deger }
+        return { ekran: `${etiket}: ${deger} (${nereden})`, model: `${etiket} ekranda`, deger, soz: deger.replace(/\s+—\s+/g, ', ') }
       }
       if (k.telefon) {
         return {
@@ -288,6 +307,19 @@ export function kimlikAlanEtiketi(alan: KimlikAlani): string {
   return ETIKET[alan]
 }
 
+/**
+ * NOTYA-SES-KIMLIK-OKU-01 — what may be SPOKEN. 'serbest': names, birth date, birth place (the doctor asked about them;
+ * the patient's own name already goes to the speech provider in every answer). 'istenirse': phone and address, only
+ * when the doctor's sentence asks to hear ("bana söyle", "oku"). 'yok': e-mail — screen only.
+ */
+export type SozKosulu = 'serbest' | 'istenirse' | 'yok'
+export const SOZ_KOSULU: Record<KimlikAlani, SozKosulu> = {
+  anneAdi: 'serbest', babaAdi: 'serbest', veli: 'serbest', dogumYeri: 'serbest', dogumTarihi: 'serbest',
+  telefon: 'istenirse', anneTelefon: 'istenirse', babaTelefon: 'istenirse', veliTelefon: 'istenirse', adres: 'istenirse',
+  eposta: 'yok',
+}
+export const sesteOkunur = (k: SozKosulu, sesliIstek: boolean): boolean => k === 'serbest' || (k === 'istenirse' && sesliIstek)
+
 export interface KimlikAlanDegeri {
   /** 'var': kayıtta değer var. 'eksik': yok. */
   durum: 'var' | 'eksik'
@@ -295,6 +327,8 @@ export interface KimlikAlanDegeri {
   metin: string
   /** Metin bir kimlik / iletişim değeri taşıyor: seste okunmaz, hiçbir model bağlamına girmez. */
   degerli: boolean
+  /** NOTYA-SES-KIMLIK-OKU-01: the spoken form of a recorded value (null: nothing to speak). Whether it MAY be spoken: SOZ_KOSULU. */
+  soz?: string | null
 }
 
 /**
@@ -304,16 +338,24 @@ export interface KimlikAlanDegeri {
  */
 export function kimlikAlanDegeri(alan: KimlikAlani, k: KimlikKaydi, nowMs = Date.now()): KimlikAlanDegeri {
   const s = satir(alan, k, nowMs)
-  if (s.deger) return { durum: 'var', metin: s.deger, degerli: true }
+  if (s.deger) return { durum: 'var', metin: s.deger, degerli: true, soz: s.soz ?? null }
   return { durum: 'eksik', metin: s.ekran, degerli: Boolean(s.degerliCumle) }
 }
 
-export function kimlikCevabiMetni(alanlar: KimlikAlani[], k: KimlikKaydi, nowMs = Date.now()): { ekran: string; model: string } {
+export function kimlikCevabiMetni(alanlar: KimlikAlani[], k: KimlikKaydi, nowMs = Date.now(), sesliIstek = false): { ekran: string; model: string; soz: string } {
   const satirlar = alanlar.map((a) => satir(a, k, nowMs))
+  // Spoken form: a value that may be spoken is read ("Anne adı: Ayşe Yılmaz."); one that may not points to the screen;
+  // a field with no value says where to add it (no value in that sentence).
+  const sozlu = satirlar.map((s, i) => {
+    const etiket = ETIKET[alanlar[i]]
+    if (!s.deger) return s.degerliCumle ? `${etiket} ekranda.` : s.ekran
+    return s.soz && sesteOkunur(SOZ_KOSULU[alanlar[i]], sesliIstek) ? `${etiket}: ${s.soz}.` : `${etiket} ekranda.`
+  })
   return {
+    soz: `${k.ad}. ${sozlu.join(' ')}`,
     ekran: satirlar.length === 1 ? `${k.ad} — ${satirlar[0].ekran}` : `${k.ad}\n${satirlar.map((s) => `• ${s.ekran}`).join('\n')}`,
     model: `${k.ad} için istenen kimlik ve iletişim bilgisine ERİŞİMİM VAR; değeri az önce ekrana yazdım (${satirlar.map((s) => s.model).join('; ')}). `
-      + 'Seste okumam — telefon ve adres ekranda kalır. "Erişemem / ulaşamam" DEME. Doktor tekrar sorarsa: "Ekranda, az önce yazdım."',
+      + 'Ad, doğum tarihi ve doğum yerini sesle de söylerim; telefon ve adresi yalnız doktor sesle isterse, e-postayı hiç okumam (ekranda kalır). "Erişemem / ulaşamam" DEME. Doktor tekrar sorarsa kimlik okumasını yeniden çalıştır; "ekrana verdim" deyip geçme.',
   }
 }
 
@@ -328,6 +370,7 @@ export async function kimlikSorusunuCevapla(
   mesaj: string,
   aktifPatientId: string | null,
   nowMs = Date.now(),
+  sesliIstek: boolean = sesliIstekMi(mesaj),
 ): Promise<KimlikCevabi | null> {
   const alanlar = kimlikSorusu(mesaj)
   if (!alanlar.length) return null
@@ -347,6 +390,6 @@ export async function kimlikSorusunuCevapla(
     const yok = 'Bu hastayı kayıtlarınızda bulamadım.'
     return { ekran: yok, model: yok, hasta: null }
   }
-  const m = kimlikCevabiMetni(alanlar, kayit, nowMs)
+  const m = kimlikCevabiMetni(alanlar, kayit, nowMs, sesliIstek)
   return { ...m, hasta: { id: hedef.id, ad: hedef.ad || kayit.ad } }
 }
