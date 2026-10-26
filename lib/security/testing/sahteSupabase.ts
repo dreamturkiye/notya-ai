@@ -159,6 +159,25 @@ export class SahteVeritabani {
           if (dolu) dolu.adet = Number(dolu.adet) - 1
           return { data: null, error: null }
         }
+        // SES-LAT-02: mirrors ses_turu_ac() (178_ses_turu_ac.sql) — atomic voice-turn open: duplicate check, claim
+        // and row read in one call. The real atomicity is Postgres's FOR UPDATE; this fake is single-threaded and
+        // only needs the same kazandi/oncekiKilit/satir shape (row snapshot is PRE-claim, like the SQL).
+        if (ad === 'ses_turu_ac') {
+          const satir = db.tablo('asistan_sessions').find((r) => r.id === args.p_oturum && r.doctor_id === args.p_doktor)
+          if (!satir) return { data: { yok: true, kazandi: false }, error: null }
+          const okunan = JSON.parse(JSON.stringify({ id: satir.id, messages: satir.messages || [], active_context: satir.active_context || {}, persona_id: satir.persona_id ?? null, patient_id: satir.patient_id ?? null }))
+          const k = (satir.active_context as Record<string, any> | null)?.sesTurKilit || null
+          const t = k?.zaman ? Date.parse(String(k.zaman)) : NaN
+          const canli = Number.isFinite(t) && Date.now() - t <= 45000
+          const bosluksuz = (x: unknown) => String(x || '').replace(/\s+/g, ' ').trim()
+          const ayni = canli && (k?.anahtar ? k.anahtar === args.p_anahtar : bosluksuz(k?.mesaj) === bosluksuz(args.p_mesaj))
+          let kazandi = false
+          if (!(canli && ayni)) {
+            satir.active_context = { ...((satir.active_context as Record<string, unknown>) || {}), sesTurKilit: { mesaj: String(args.p_mesaj || '').slice(0, 500), anahtar: String(args.p_anahtar || '').slice(0, 200), zaman: new Date().toISOString(), claimId: args.p_claim } }
+            kazandi = true
+          }
+          return { data: { yok: false, kazandi, oncekiKilit: k, satir: okunan }, error: null }
+        }
         throw new Error(`[sahteSupabase] desteklenmeyen rpc: ${ad}`)
       },
     }

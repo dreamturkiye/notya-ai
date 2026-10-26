@@ -57,6 +57,12 @@ export const KORPUS_KIMLIK_DEGERLERI: readonly string[] = [
   'Melis', 'Kerem', '0536 000 55 66',
 ]
 
+/**
+ * NOTYA-SES-KIMLIK-OKU-01 (Dr. Gökhan, 2026-10-25): names, birth date and birth place ARE spoken now; the values below
+ * are the ones a voice turn still may not carry unless the doctor asked to hear them (phone, address) or ever (e-mail, T.C.).
+ */
+export const KORPUS_SESTE_YASAK_DEGERLER: readonly string[] = KORPUS_KIMLIK_DEGERLERI.filter((d) => /\d|@|Mahallesi/.test(d))
+
 const erkek = /erkek|male/i
 
 function kucukDosyalar(bugunIso: string): Record<'ayse' | 'tarik' | 'olcay', KorpusDosyasi> {

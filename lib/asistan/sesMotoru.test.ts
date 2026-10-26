@@ -61,13 +61,17 @@ test('konuşma kapısı: etiket yok, yarım cümle biriktirilir, nefes dolunca v
   assert.equal(sesEtiketTemizle('Önemli. [slow] Doz hekimindir. [excited]').replace(/\s+/g, ' ').trim(), 'Önemli. Doz hekimindir.')
   const parcalar: string[] = []
   const k = new SesYayKapisi((p) => parcalar.push(p))
+  // SES-LAT-02: the FIRST sentence leaves at once — the doctor is waiting on it (holding it for a full breath
+  // added the generation time of the NEXT sentences to the first audio).
   k.ekle('Kısa cümle. ')
-  assert.equal(parcalar.length, 0, 'eşik dolmadan ElevenLabs\'e gitmez')
+  assert.deepEqual(parcalar, ['Kısa cümle. '], 'ilk cümle beklemeden gider')
+  k.ekle('İkinci kısa cümle. ')
+  assert.equal(parcalar.length, 1, 'ilk yayından sonra eşik dolmadan gitmez')
   const uzun = 'Hocam, bu cümle tek başına bir nefes olacak kadar uzundur ve Flash her cümleyi ayrı sentezleyip Türkçeyi peltekleştirmesin diye burada birikir, eşik dolar. '
   k.ekle(uzun)
-  assert.equal(parcalar.length, 1, 'eşik aşılınca tek delta')
-  assert.ok(parcalar[0].length >= SES_BLOK_ESIGI)
-  assert.equal(parcalar[0].includes('[slow]'), false)
+  assert.equal(parcalar.length, 2, 'eşik aşılınca tek delta')
+  assert.ok(parcalar[1].length >= SES_BLOK_ESIGI)
+  assert.equal(parcalar[1].includes('[slow]'), false)
   k.ekle('Kuyruk cümlesi. ')
   k.bitir()
   assert.match(parcalar[parcalar.length - 1], /Kuyruk cümlesi\./)

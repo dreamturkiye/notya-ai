@@ -27,7 +27,7 @@ const ortamdakiAnahtar = process.env.OPENROUTER_API_KEY || ''
 delete process.env.OPENROUTER_API_KEY
 
 export type SahteArac = { name: string; input: Record<string, unknown> }
-export type SahteYanit = { metin: string; araclar?: SahteArac[] }
+export type SahteYanit = { metin: string; araclar?: SahteArac[]; gecikmeMs?: number }
 /** One recorded model request: the parsed Anthropic body. */
 export type ModelIstegi = { stream: boolean; govde: Record<string, any> }
 
@@ -84,6 +84,8 @@ function mesajKur(y: SahteYanit) {
   return { model: 'sahte', content, stop_reason: y.araclar?.length ? 'tool_use' : 'end_turn', usage: { input_tokens: 1, output_tokens: 1 } }
 }
 async function* akis(y: SahteYanit) {
+  // SES-DOLGU-02 tests: a slow model — nothing arrives until gecikmeMs passes (first token delay).
+  if (y.gecikmeMs) await new Promise((r) => setTimeout(r, y.gecikmeMs))
   const m = mesajKur(y)
   yield { type: 'message_start', message: { model: 'sahte', usage: { input_tokens: 1 } } }
   let sira = 0

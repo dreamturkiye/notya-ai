@@ -103,10 +103,20 @@ async function kopyaHazirla(taban: string, oncekiKopya: string | undefined, secr
   }
   const url = `${TABAN_URL}/api/asistan/ses-llm/v1`
   const overrides = { ...(t.platform_settings?.overrides || {}), custom_llm_extra_body: true }
-  const govde = (basliklar: boolean) => ({
+  // SES-LAT-02 (2026-10-26 launch audit): the voice stack is PINNED in code — dashboard drift must not change it.
+  //   tts.model_id eleven_flash_v2_5 : ~75 ms synthesis, the agent-recommended model (multilingual v2 is seconds slower)
+  //   optimize_streaming_latency 3   : max latency optimizations that keep normalizer quality
+  //   agent.language tr              : ASR + normalizer locked to Turkish (mixed guesses produced garbled transcripts)
+  const sesAyari = {
+    tts: { model_id: 'eleven_flash_v2_5', optimize_streaming_latency: 3 },
+    agent_dil: { language: 'tr' },
+  }
+  const govde = (basliklar: boolean, ses: boolean) => ({
     name: `${(t.name || taban).replace(EK, '')}${EK}`,
     conversation_config: {
+      ...(ses ? { tts: sesAyari.tts } : {}),
       agent: {
+        ...(ses ? sesAyari.agent_dil : {}),
         prompt: {
           llm: 'custom-llm',
           custom_llm: {
@@ -124,11 +134,16 @@ async function kopyaHazirla(taban: string, oncekiKopya: string | undefined, secr
   })
   if (DRY) { console.log(`  [dry] PATCH ${kopya} → custom-llm ${url}, extra body açık, client tool yok`); return kopya }
   try {
-    await el('PATCH', `/agents/${kopya}`, govde(true))
+    await el('PATCH', `/agents/${kopya}`, govde(true, true))
   } catch (e) {
-    // request_headers şeması sırrı kabul etmiyorsa: yalnız API anahtarı (Authorization: Bearer) — uç ikisini de kabul eder.
-    console.log(`    request_headers reddedildi, yalnız api_key ile: ${String(e).slice(0, 160)}`)
-    await el('PATCH', `/agents/${kopya}`, govde(false))
+    // request_headers / tts şeması reddedilirse kademeli geri çekil: önce ses ayarı olmadan, sonra yalnız api_key.
+    console.log(`    tam gövde reddedildi, kademeli: ${String(e).slice(0, 160)}`)
+    try {
+      await el('PATCH', `/agents/${kopya}`, govde(true, false))
+    } catch (e2) {
+      console.log(`    request_headers reddedildi, yalnız api_key ile: ${String(e2).slice(0, 160)}`)
+      await el('PATCH', `/agents/${kopya}`, govde(false, false))
+    }
   }
   const son = await el<Ajan>('GET', `/agents/${kopya}`)
   const p = son.conversation_config?.agent?.prompt || {}
