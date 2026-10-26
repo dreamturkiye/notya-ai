@@ -131,7 +131,8 @@ export function SeansEylemSatiri({ vazgecMetni, onVazgec, bitirMetni, onBitir, b
 export function SeansIsleniyorKarti({ baslik, alt, rol }: { baslik: string; alt?: string; rol?: string }) {
   return (
     <div role={rol} style={S({ background: '#faf6ee', border: '1px solid rgba(58,44,34,0.08)', borderRadius: '20px', padding: '48px', textAlign: 'center' })}>
-      <div style={S({ fontSize: '48px', marginBottom: '16px' })}>{'⚙️'}</div>
+      <style>{'@keyframes notyaDisliDon{to{transform:rotate(360deg)}}.notya-disli{display:inline-block;animation:notyaDisliDon 2.4s linear infinite}@media (prefers-reduced-motion:reduce){.notya-disli{animation:none}}'}</style>
+      <div style={S({ fontSize: '72px', lineHeight: '1', marginBottom: '20px' })}><span className="notya-disli" aria-hidden="true">{'⚙️'}</span></div>
       <div style={S({ fontSize: '18px', fontWeight: '600', color: '#3b2e24', marginBottom: alt ? '8px' : '0' })}>{baslik}</div>
       {alt ? <div style={S({ fontSize: '13px', color: '#8b7d70' })}>{alt}</div> : null}
     </div>
