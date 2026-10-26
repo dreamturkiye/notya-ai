@@ -10,6 +10,7 @@
  */
 import fs from 'fs'
 import path from 'path'
+import { klinikSlugCoz } from '@/lib/specialties/klinikDikey'
 import { DERMATOLOJI_TOOLS } from './tools'
 
 export const DERMATOLOJI_PROMPT_DOSYALARI = {
@@ -39,7 +40,10 @@ export function dermatolojiPromptlari(): Record<Anahtar, string> {
 
 /** users.specialty / session specialty → dermatoloji? core/belgeler/router bransAnahtari (/derma/) + the resmi unvan "Deri ve Zührevi". */
 export function dermatolojiMi(...branslar: (string | null | undefined)[]): boolean {
-  return branslar.some((b) => /derma|deri ve z/.test((b || '').toLocaleLowerCase('tr-TR')))
+  return branslar.some((b) => {
+    if (klinikSlugCoz(b)) return false
+    return /derma|deri ve z/.test((b || '').toLocaleLowerCase('tr-TR'))
+  })
 }
 
 /** tools.ts rendered as a read-only map of steps. Chat has no tool-use loop for these: every image/VisionRead write is a hekim action in the UI. */
