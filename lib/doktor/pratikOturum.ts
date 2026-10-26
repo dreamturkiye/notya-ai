@@ -25,9 +25,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { type SupabaseClient, type User } from '@supabase/supabase-js'
 import { servisSupabase, OTURUM_YOK } from './serverAuth'
+import { izinVarMi, personelRoluMu, yolIzniVarMi, type PratikRol, type Yetki } from './personelYetki'
 import { hesapBuUlkedeMi } from '@/lib/ulke/hesapUlkesi'
 
-export type PratikRol = 'doktor' | 'sekreter'
+/**
+ * MOBIL-PERSONEL-01: 'doktor' | 'sekreter' | 'asistan' | 'hasta_danismani'. The permission map lives in
+ * lib/doktor/personelYetki.ts. NEVER test `rol === 'sekreter'` to mean "is staff" — use personelMi().
+ */
+export type { PratikRol } from './personelYetki'
 
 export type PratikOturum = {
   user: User
@@ -35,7 +40,7 @@ export type PratikOturum = {
   /** Whose practice this request acts on — always the scoping key for patients/randevular/etc. */
   doktorId: string
   rol: PratikRol
-  /** Present only when rol === 'sekreter'. */
+  /** Present for every staff role (sekreter / asistan / hasta_danismani); absent for the doctor. */
   personelId?: string
 }
 
@@ -56,16 +61,44 @@ export async function pratikOturum(
 
   const { data: personelRow } = await supabase
     .from('personel')
-    .select('id, doktor_id, aktif')
+    .select('id, doktor_id, aktif, rol')
     .eq('user_id', user.id)
     .eq('aktif', true)
     .maybeSingle()
 
   if (personelRow) {
-    return { user, supabase, doktorId: personelRow.doktor_id, rol: 'sekreter', personelId: personelRow.id }
+    // A row written before migration 172 has rol 'sekreter' (the only value the old CHECK allowed).
+    const hamRol = personelRow.rol ?? 'sekreter'
+    if (!personelRoluMu(hamRol)) {
+      return { hata: NextResponse.json({ error: 'Hesap rolü tanınmıyor. Doktorunuzla görüşün.' }, { status: 403 }) }
+    }
+    // Server-side role gate. The doctor and the (unchanged) secretary pass; asistan / hasta_danismani only
+    // reach the paths listed for them in personelYetki.ts. UI hiding is cosmetic — this is the enforcement.
+    const yol = req.nextUrl?.pathname ?? new URL(req.url).pathname
+    const karar = yolIzniVarMi(hamRol, yol, req.method)
+    if (!karar.izin) {
+      return { hata: NextResponse.json({ error: ROL_ENGEL_MESAJI }, { status: 403 }) }
+    }
+    return { user, supabase, doktorId: personelRow.doktor_id, rol: hamRol, personelId: personelRow.id }
   }
 
   return { user, supabase, doktorId: user.id, rol: 'doktor' }
+}
+
+export const ROL_ENGEL_MESAJI = 'Bu işlem için rolünüzün yetkisi yok.'
+
+/** True for every staff role (secretary, assistant, patient liaison); false for the doctor. */
+export function personelMi(oturum: Pick<PratikOturum, 'rol'>): boolean {
+  return oturum.rol !== 'doktor'
+}
+
+/**
+ * In-route capability check for routes that serve several roles with different field sets
+ * (e.g. patient file: the liaison gets contact data only). Returns a 403 response, or null when allowed.
+ */
+export function yetkiYoksa(oturum: Pick<PratikOturum, 'rol'>, yetki: Yetki): NextResponse | null {
+  if (izinVarMi(oturum.rol, yetki)) return null
+  return NextResponse.json({ error: ROL_ENGEL_MESAJI }, { status: 403 })
 }
 
 /** Guard for routes a secretary must never reach (clinical notes, e-reçete, SGK, billing, staff mgmt). */

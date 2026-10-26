@@ -43,8 +43,8 @@ const ulkesiz = ({ ulkeler: _u, ...gerisi }: DoktorArac): AnlikArac => gerisi
 
 describe('Türkiye: tool lists identical to main (snapshot taken before the change)', () => {
   it('the snapshot covers all 30 specialties plus the raw spellings and the empty cases', () => {
-    assert.match(anlik.kaynak, /^main@9891987/)
-    assert.equal(anlik.araclar.length, 144)
+    assert.match(anlik.kaynak, /^main@328e1c7/)
+    assert.equal(anlik.araclar.length, 145)
     for (const b of Object.keys(BRANS_ETIKETLERI)) assert.ok(b in anlik.branslar, b)
     assert.equal(Object.keys(BRANS_ETIKETLERI).length, 30)
     for (const ek of ['kadin-dogum', 'Kadın Hastalıkları ve Doğum', 'Çocuk Sağlığı ve Hastalıkları', 'İç Hastalıkları', 'genel', 'sac-ekimi', '(bos)', '(null)']) assert.ok(ek in anlik.branslar, ek)
@@ -52,7 +52,7 @@ describe('Türkiye: tool lists identical to main (snapshot taken before the chan
 
   it('the registry: same tools, same order, same fields — only `ulkeler` was added', () => {
     assert.deepEqual(TUM_DOKTOR_ARACLARI.map(ulkesiz), anlik.araclar)
-    assert.equal(ORTAK_DOKTOR_ARACLARI.length + BRANS_DOKTOR_ARACLARI.length, 144)
+    assert.equal(ORTAK_DOKTOR_ARACLARI.length + BRANS_DOKTOR_ARACLARI.length, 145)
   })
 
   const rotayaGore = new Map(anlik.araclar.map((a) => [a.route, a]))
@@ -77,7 +77,7 @@ describe('Türkiye: tool lists identical to main (snapshot taken before the chan
 })
 
 describe('every tool declares its countries', () => {
-  it('`ulkeler` is present, non-empty and holds known country codes — for all 144', () => {
+  it('`ulkeler` is present, non-empty and holds known country codes — for all 145', () => {
     for (const a of TUM_DOKTOR_ARACLARI) {
       assert.ok(Array.isArray(a.ulkeler) && a.ulkeler.length > 0, `${a.route}: ulkeler missing or empty`)
       for (const u of a.ulkeler) assert.ok((ULKE_KODLARI as readonly string[]).includes(u), `${a.route}: unknown country ${u}`)
@@ -92,7 +92,7 @@ describe('every tool declares its countries', () => {
   it('source lock: every registry line carries the field (a new tile cannot be added without answering "which countries?")', () => {
     const kaynak = readFileSync(join(KOK, 'lib/doktor/doktorAraclari.ts'), 'utf8')
     const satirlar = kaynak.split('\n').filter((s) => /route: '\/doktor-tools\//.test(s))
-    assert.equal(satirlar.length, 144)
+    assert.equal(satirlar.length, 145)
     for (const s of satirlar) assert.match(s, /branslar: (null|\[[^\]]+\]), ulkeler: [A-Z_]+ \}/, s.slice(0, 80))
     assert.match(kaynak, /ulkeler: readonly UlkeKodu\[\]\n\}/, 'the field must be required in the type')
   })
