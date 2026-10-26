@@ -56,9 +56,13 @@ async function tur(mod: typeof davranis) {
   s = sahneKur()
   // The pool opens the next socket when a turn ends: one throw-away turn makes the turn under test take a socket of `mod`.
   davranis = mod
-  ortam.yanit = { metin: JSON.stringify({ speech: CEVAP }) }
+  // The warm-up answer is a different sentence on purpose. Since NOTYA-SES-ARKA-01 (0f97c058) a voice sentence made
+  // mostly of the words of Ayşe's LAST answer is treated as the microphone hearing her own speech and gets no reply —
+  // with the same canned answer for both turns the question under test ("Akut otitte ilk seçenek …") was dropped.
+  ortam.yanit = { metin: JSON.stringify({ speech: 'İyiyim Hocam, buyurun.' }) }
   await fishTur(s, 'Merhaba nasılsın bugün?', { govde: { ses: 'ws' } })
   verilen.length = 0
+  ortam.yanit = { metin: JSON.stringify({ speech: CEVAP }) }
   return fishTur(s, 'Akut otitte ilk seçenek nedir?', { govde: { ses: 'ws' } })
 }
 const olay = (t: Awaited<ReturnType<typeof fishTur>>, ad: string) => t.olaylar.filter((e) => e.t === ad)
