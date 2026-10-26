@@ -201,6 +201,8 @@ export interface SohbetKademeGirdisi {
   /** intentParser.quickClassify (eylem niyeti → luna). */
   niyet?: string | null
   aracSayisi: number
+  /** Net sosyal tur (selam, hal-hatır, teşekkür) — hasta bağlamı açık olsa bile hızlı kademe; çağıran araç sunmaz. */
+  sosyal?: boolean
   /** Kaba girdi token tahmini (metin/4); > 20k → luna. */
   girdiToken?: number
 }
@@ -214,6 +216,9 @@ export interface SohbetKademeSonucu { caba?: 'none'; neden: string }
 export function sohbetKademesi(g: SohbetKademeGirdisi): SohbetKademeSonucu {
   if (kademeKapali()) return { neden: 'kademe kapalı' }
   if (g.gorev === 'sohbet') return { caba: 'none', neden: 'sosyal / uygulama turu' }
+  // SES-LAT-01: a greeting with a chart open routes to sohbet-uzman (hasta bağlamı) and used to carry the read/write tools →
+  // 'araç turu' → medium effort, 4–9 s to the first word. A purely social turn has nothing to look up: no tools, no effort.
+  if (g.sosyal && g.aracSayisi === 0) return { caba: 'none', neden: 'sosyal tur (araçsız)' }
   if (g.aracSayisi > 0) return { neden: 'araç turu' }
   if (g.niyet && EYLEM_NIYETLERI.has(g.niyet)) return { neden: `eylem niyeti: ${g.niyet}` }
   if ((g.girdiToken ?? 0) > 20_000) return { neden: 'uzun girdi' }
@@ -223,6 +228,19 @@ export function sohbetKademesi(g: SohbetKademeGirdisi): SohbetKademeSonucu {
     return { caba: 'none', neden: `tek-slot takip (${g.sonNiyet})` }
   }
   return { neden: 'uzman tur' }
+}
+
+/**
+ * SES-CABA-01: reasoning effort of a VOICE sohbet-uzman turn that sohbetKademesi left at the provider default.
+ * Default 'low' (TTFT seconds instead of 4–9 s on Luna); NOTYA_SES_CABA=none|low|medium overrides, 'kapali'/'off'/'0'
+ * restores the provider default. Text-channel turns are untouched. Kill-switch NOTYA_TIER_KAPALI wins (no reasoning field).
+ */
+export function sesSohbetCabasi(deger: string | null | undefined = typeof process !== 'undefined' ? process.env?.NOTYA_SES_CABA : undefined): Caba | null {
+  if (kademeKapali()) return null
+  const v = String(deger ?? '').trim().toLowerCase()
+  if (v === 'kapali' || v === 'off' || v === '0') return null
+  if (v === 'none' || v === 'low' || v === 'medium') return v as Caba
+  return 'low'
 }
 
 // ─── Yükseltme nedenleri (NOTYA-MODEL-LUNA-01, ai_token_kullanim.neden) ──────────────────────────────
@@ -300,7 +318,7 @@ const SOSYAL_CEKIRDEK = new Set([
   'eyvallah', 'gelsin', 'görüşürüz', 'hoşça', 'bye',
 ])
 // Tek başına sosyal sayılmayan dolgu kelimeleri ("iyi" tek başına klinik soruya cevap olabilir → uzman tur).
-const SOSYAL_DOLGU = new Set(['iyi', 'sen', 'siz', 'ben', 'de', 'da', 'çok', 'sana', 'size', 'ederim', 'ediyorum', 'rica', 'kolay', 'kal', 'kalın', 'hocam', 'hanım', 'bey'])
+const SOSYAL_DOLGU = new Set(['iyi', 'bugün', 'misiniz', 'misin', 'sen', 'siz', 'ben', 'de', 'da', 'çok', 'sana', 'size', 'ederim', 'ediyorum', 'rica', 'kolay', 'kal', 'kalın', 'hocam', 'hanım', 'bey'])
 const SOSYAL_AZAMI_KELIME = 8
 // HIZLI istisnası 2 — uygulama kullanımı sorusu: açık bir uygulama/ekran/hesap terimi, kısa, klinik sinyalsiz, hastasız.
 // Belirsiz kelimeler BİLEREK yok ("dil" = organ, "bildirim" = bildirimi zorunlu hastalık, "hesapla" = doz hesabı).

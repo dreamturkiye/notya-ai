@@ -55,6 +55,8 @@ const KIMLIK = 'lib/doktor/kimlikSorusu.ts'
 /** No answer of these entries may be a refusal, a deflection or a raw placeholder. */
 export const AA_ICERMEZ = ['erişimim yok', 'erişemem', 'ulaşamıyorum', 'göremiyorum', 'bilemedim', '\\{\\{', '\\}\\}']
 
+// NOTYA-SES-KIMLIK-OKU-01: names are read aloud; phone / address (not asked to hear) point to the screen.
+const AD_SOYLENIR = (...adlar: string[]) => ({ icerir: adlar, icermez: ['ekranınıza yazdım'] })
 const DEGER_SOYLENMEZ = { icerir: ['istediğiniz bilgiyi ekranınıza yazdım Hocam'], icermez: ['QA-'] }
 const alan = (ad: string, isimle = false) => ({ arac: { name: 'hasta_alan', input: { alan: ad } }, ad: isimle })
 
@@ -66,7 +68,7 @@ export const ALAN_ANALIZ_KORPUSU: AaGirdisi[] = [
     soz: '{AD}’nin anne ve baba adı ne?',
     not: 'The live sentence of 2026-09-25, said about the synthetic patient. The identity router answers it; that fast path must stay.',
     beklenti: { rota: 'kimlik', arac: [], icerir: ['Anne adı: QA-Anne-Sevgül', 'Baba adı: QA-Baba-Rıfkı'] },
-    sozlu: DEGER_SOYLENMEZ, vekil: [],
+    sozlu: AD_SOYLENIR('QA-Anne-Sevgül', 'QA-Baba-Rıfkı'), vekil: [],
   },
   {
     id: 'ALAN-02', kat: 'kimlik', hasta: 'kimlik', yuzeyler: ['yazi', 'ses'], turetilmis: true,
@@ -74,7 +76,7 @@ export const ALAN_ANALIZ_KORPUSU: AaGirdisi[] = [
     soz: '{AD}’nin annesine nasıl hitap edeyim?',
     not: 'Derived: the complaint is "a phrasing the classifier misses". This one asks for the mother’s name without the words the classifier lists.',
     beklenti: { rota: 'model', arac: ['hasta_alan'], icerir: ['QA-Anne-Sevgül'] },
-    sozlu: DEGER_SOYLENMEZ, vekil: [alan('anne_adi', true)],
+    sozlu: AD_SOYLENIR('QA-Anne-Sevgül'), vekil: [alan('anne_adi', true)],
   },
   {
     id: 'ALAN-03', kat: 'kimlik', hasta: 'kimlik', acik: true, yuzeyler: ['yazi', 'ses'], turetilmis: true,
@@ -90,7 +92,7 @@ export const ALAN_ANALIZ_KORPUSU: AaGirdisi[] = [
     soz: 'Aileye hangi numaradan ulaşırım, kiminle konuşacağım?',
     not: 'Derived: phone and guardian in one sentence — two fields, two calls, one answer.',
     beklenti: { rota: 'model', arac: ['hasta_alan', 'hasta_alan'], icerir: ['0555 000 11 22', 'QA-Veli-Nezahat QA-Soyad-Erdemli \\(Anne\\) — 0555 000 33 44'] },
-    sozlu: { icerir: ['ekranınıza yazdım'], icermez: ['QA-', '0555'] }, vekil: [alan('telefon'), alan('veli')],
+    sozlu: { icerir: ['ekranınıza yazdım', 'QA-Veli-Nezahat'], icermez: ['0555'] }, vekil: [alan('telefon'), alan('veli')],
   },
   {
     id: 'ALAN-05', kat: 'kimlik', hasta: 'kimlik', acik: true, yuzeyler: ['yazi', 'ses'], turetilmis: true,

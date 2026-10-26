@@ -28,6 +28,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import type { AnthropicArac } from '@/core/eylemler/araclar'
 import { HASTA_BUL_KURALI, RANDEVU_TAKVIM_KURALI } from '@/lib/asistan/personaEngine'
 import { kapsamKarariHastayla, KAPSAM_RED, KAPSAM_SORU } from '@/lib/asistan/kapsamKilidi'
+import { sesliIstekMi } from '@/lib/asistan/konusma'
 import { kimlikAlanDegeri, kimlikAlanEtiketi, kimlikKaydiOku, kimlikSorusunuCevapla, type KimlikCevabi } from '@/lib/doktor/kimlikSorusu'
 import { ALAN_ADLARI, AlanDefteri, alanAnahtari, HASTA_ALAN_ARACI, HASTA_ALAN_KURALI } from '@/lib/asistan/hastaAlan'
 import { ANALIZ_ARACLARI, ANALIZ_KURALI, eksiklerMetni, muayeneAra, muayeneOzeti } from '@/lib/asistan/muayeneAnaliz'
@@ -244,7 +245,7 @@ async function hastaBul(b: OkumaBaglami, g: Record<string, unknown>): Promise<Ok
   const aktifId = b.aktifHasta?.id || null
   // The identity read falls back to the open patient only when the sentence names nobody else: a named person who
   // is not found must not be answered with the open patient's parents or phone.
-  const kimlik = await kimlikSorusunuCevapla(supabase, doktorId, soz, anilanBaskaKisi(soz, b.aktifHasta?.ad) ? null : aktifId)
+  const kimlik = await kimlikSorusunuCevapla(supabase, doktorId, soz, anilanBaskaKisi(soz, b.aktifHasta?.ad) ? null : aktifId, Date.now(), sesliIstekMi(b.doktorSozu))
   if (kimlik) return kimlik.hasta ? { sonuc: kimlik.model, kimlik, hasta: kimlik.hasta } : { sonuc: kimlik.model, hekimMetni: kimlik.ekran }
 
   // Same binding rules as the brain (NOTYA-AKTIF-HASTA-01): a name in the sentence wins; an unnamed, non-cohort
@@ -381,7 +382,7 @@ async function hastaAlan(b: OkumaBaglami, g: Record<string, unknown>): Promise<O
   const hasta = { id: hedef.id, ad: hedef.ad || kayit.ad }
   const alan = ALAN_ADLARI[alanAdi]
   const deger = kimlikAlanDegeri(alan, kayit)
-  const yer = (b.alanDefteri ?? new AlanDefteri()).ver(alanAdi, hasta, deger)
+  const yer = (b.alanDefteri ?? new AlanDefteri()).ver(alanAdi, hasta, deger, sesliIstekMi(b.doktorSozu))
   const etiket = kimlikAlanEtiketi(alan)
   // Audit trail: which field of which patient was asked for — references, never the value.
   console.info('[asistan/okuma-araci] alan', { alan: alanAdi, hasta: hasta.id, durum: deger.durum })
