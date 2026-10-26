@@ -984,34 +984,52 @@ describe('SES-DOLGU-02 — yavaş tur bekletme cümlesi söyler, hızlı tur tem
     }
   }
 
-  it('ilk söz eşiği aşınca TEK kısa bekletme cümlesi gider; cevap yine tam söylenir, saklanan cevap bekletmesizdir', async () => {
+  // SES-DOLGU-02 (düzeltme 2026-10-26): bekletme sözü VARSAYILAN KAPALI (bir selamlamada "Dosyaya bakıyorum" dedi).
+  // Açıkken bile söz NÖTRdür — asla "dosya" ya da bir şeye bakma iddiası içermez.
+  it('açıkken (NOTYA_SES_DOLGU_MS) nötr bekletme gider — "dosya" ya da "bakıyorum" YOK; cevap tam söylenir, oturuma yazılmaz', async () => {
     const b = sahne()
     yanit = { ilkGecikmeMs: 450, metin: JSON.stringify({ speech: 'Hocam, bu yaşta uyku düzeni on bir saat olmalı.' }) }
     const v = await dolguyla('80', () => ses({ sahne: b, mesaj: 'Genel bir soru: bu yaşta uyku düzeni nasıl olmalı?' }))
     const dolu = v.parcalar.filter((p) => /[\p{L}\p{N}]/u.test(p))
-    assert.match(dolu[0] || '', /bakıyorum/i, `ilk dolu delta bekletme olmalı: ${JSON.stringify(dolu)}`)
-    assert.equal(dolu.filter((p) => /bakıyorum/i.test(p)).length, 1, 'bekletme yalnız bir kez')
+    assert.match(dolu[0] || '', /bir saniye/i, `ilk dolu delta nötr bekletme olmalı: ${JSON.stringify(dolu)}`)
+    assert.doesNotMatch(v.metin, /dosya|bakıyorum/i, 'bekletme sözü dosya / bakma iddiası içermez')
+    assert.equal(dolu.filter((p) => /bir saniye/i.test(p)).length, 1, 'bekletme yalnız bir kez')
     assert.match(v.metin, /uyku düzeni on bir saat/)
     const kayit = db.tablo('asistan_sessions').find((r) => r.id === b.oturum)
     const sonMesaj = String(([...((kayit?.messages as { role: string; content: string }[]) || [])].reverse().find((m) => m.role === 'assistant')?.content) || '')
-    assert.doesNotMatch(sonMesaj, /bakıyorum/i, 'bekletme cevabın parçası değildir: oturuma yazılmaz')
+    assert.doesNotMatch(sonMesaj, /bir saniye/i, 'bekletme cevabın parçası değildir: oturuma yazılmaz')
+  })
+
+  it('VARSAYILAN (env yok): bekletme KAPALI — yavaş tur bile hiçbir bekletme sözü söylemez', async () => {
+    const eski = process.env.NOTYA_SES_DOLGU_MS
+    delete process.env.NOTYA_SES_DOLGU_MS
+    try {
+      const b = sahne()
+      yanit = { ilkGecikmeMs: 450, metin: JSON.stringify({ speech: 'Hocam, bu yaşta uyku düzeni on bir saat olmalı.' }) }
+      const v = await ses({ sahne: b, mesaj: 'Genel bir soru: bu yaşta uyku düzeni nasıl olmalı?' })
+      assert.doesNotMatch(v.metin, /bir saniye|dosya|bakıyorum/i, 'varsayılan: hiç bekletme yok')
+      assert.match(v.metin, /uyku düzeni on bir saat/)
+    } finally {
+      if (eski === undefined) delete process.env.NOTYA_SES_DOLGU_MS
+      else process.env.NOTYA_SES_DOLGU_MS = eski
+    }
   })
 
   it('ilk söz eşikten önce gelirse bekletme yok (NOTYA-AYSE-ACILIS-01 korunur); sosyal tur hiç almaz', async () => {
     const b = sahne()
     yanit = { metin: JSON.stringify({ speech: 'Hocam, on bir saat uyku yeterlidir.' }) }
     const v = await dolguyla('1500', () => ses({ sahne: b, mesaj: 'Genel bir soru: bu yaşta uyku düzeni nasıl olmalı?' }))
-    assert.doesNotMatch(v.metin, /bakıyorum/i)
+    assert.doesNotMatch(v.metin, /bir saniye/i)
     const c = sahne()
     yanit = { ilkGecikmeMs: 300, metin: JSON.stringify({ speech: 'İyiyim Hocam, teşekkür ederim.' }) }
     const sosyal = await dolguyla('80', () => ses({ sahne: c, mesaj: 'Merhaba, nasılsın?' }))
-    assert.doesNotMatch(sosyal.metin, /bakıyorum/i, 'sosyal tur bekletme almaz')
+    assert.doesNotMatch(sosyal.metin, /bir saniye/i, 'sosyal tur bekletme almaz')
   })
 
   it('NOTYA_SES_DOLGU_MS=0 bekletmeyi kapatır', async () => {
     const b = sahne()
     yanit = { ilkGecikmeMs: 250, metin: JSON.stringify({ speech: 'Hocam, cevap burada.' }) }
     const v = await dolguyla('0', () => ses({ sahne: b, mesaj: 'Genel bir soru: bu yaşta uyku düzeni nasıl olmalı?' }))
-    assert.doesNotMatch(v.metin, /bakıyorum/i)
+    assert.doesNotMatch(v.metin, /bir saniye/i)
   })
 })
