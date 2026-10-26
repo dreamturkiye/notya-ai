@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js'
 import { normalizeImagingModality } from '@/lib/doktor/imagingModalities'
 import { hastaSahibiMi, seansSahibi } from '@/lib/doktor/hastaSahipligi'
 import { gorselYakalamaDogrula, gorselYakalamaTuru } from '@/lib/doktor/gorselYakalama'
+import { goruntuImzaliUrl } from '@/lib/doktor/goruntulemeImzaliUrl'
 
 export const dynamic = 'force-dynamic'
 
@@ -87,7 +88,11 @@ export async function POST(request: NextRequest) {
       }, { status: 500 })
     }
 
-    const { data: urlData } = supabase.storage.from('hasta-goruntuleme').getPublicUrl(filePath)
+    // HASTA-GORUNTU-GIZLILIK-01: hasta-goruntuleme PRIVATE bir kova — her patient-data kovası gibi
+    // (hasta-belgeler, mali-belgeler, ses-kayitlari). DB'de yalnız storage referansı tutulur,
+    // hiçbir zaman çözülmüş/public bir URL değil. Ekrana yeni yüklenen görüntüyü hemen göstermek
+    // için kısa ömürlü bir imzalı URL de üretilip yalnız bu yanıtta döndürülür.
+    const dosyaRef = `hasta-goruntuleme/${filePath}`
 
     const { data: goruntuleme, error: insertError } = await supabase
       .from('hasta_goruntulemeler')
@@ -96,7 +101,7 @@ export async function POST(request: NextRequest) {
         patient_id: hastaId,
         modalite,
         vucut_bolgesi: vucut_bolgesi || null,
-        dosya_url: urlData.publicUrl,
+        dosya_url: dosyaRef,
         rapor_metni: rapor_metni || null,
         goruntuleme_tarihi: tarih || null,
         visit_id: visitId || null,
@@ -109,7 +114,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: `Kayıt oluşturulamadı: ${insertError.message || 'bilinmeyen hata'}` }, { status: 500 })
     }
 
-    return NextResponse.json({ goruntuleme })
+    const imzaliUrl = await goruntuImzaliUrl(supabase, dosyaRef)
+    return NextResponse.json({ goruntuleme: { ...goruntuleme, dosya_url: imzaliUrl || dosyaRef } })
   } catch (e) {
     console.error('[goruntuleme/yukle]', e)
     return NextResponse.json({ error: e instanceof Error ? e.message : 'Sunucu hatası' }, { status: 500 })

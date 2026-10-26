@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { goruntuYolCoz } from '@/lib/doktor/goruntulemeImzaliUrl'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -50,11 +51,10 @@ export async function DELETE(request: NextRequest, { params }: Ctx) {
     }
 
     try {
-      const url = String(kayit.dosya_url || '')
-      const marker = '/hasta-goruntuleme/'
-      const idx = url.indexOf(marker)
-      if (idx >= 0) {
-        const filePath = decodeURIComponent(url.slice(idx + marker.length))
+      // HASTA-GORUNTU-GIZLILIK-01: dosya_url artık "hasta-goruntuleme/<path>" referansı (eski tam
+      // public URL biçimi de geriye dönük olarak çözülür — goruntuYolCoz ikisini de tanır).
+      const filePath = goruntuYolCoz(kayit.dosya_url)
+      if (filePath) {
         await supabase.storage.from('hasta-goruntuleme').remove([filePath])
       }
     } catch {
