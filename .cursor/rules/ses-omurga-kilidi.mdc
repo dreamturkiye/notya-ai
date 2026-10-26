@@ -1,0 +1,45 @@
+---
+description: Ses omurgası kilidi — TTS/STT/ses-LLM yolu donduruldu (Kaan, 2026-10-26, lansman denetimi)
+alwaysApply: true
+---
+
+# Ses omurgası kilidi (SES-KILIT-2026-10)
+
+Kaan'ın lansman kararı (2026-10-26): sesli görüşme Notya'nın birincil özelliğidir ve denetlenmiş, ölçülmüş
+hâliyle DONDURULMUŞTUR. Aşağıdaki dosyalarda davranış değiştiren her değişiklik, Kaan'ın AÇIK onayı olmadan
+yapılamaz; onaylı bir değişiklik bile tam ses paketiyle (aşağıda) yeşil olmadan main'e giremez.
+
+## Korunan dosyalar (ses/metin omurgası)
+
+- `app/api/asistan/ses-llm/**`, `lib/asistan/sesLlm.ts` — ElevenLabs Custom LLM ağzı
+- `lib/asistan/konusma.ts`, `lib/asistan/sesYay.ts` — söz/ekran ayrımı, nefes kapısı, bekletme (SES-DOLGU-02)
+- `lib/asistan/sesTurKilit.ts`, `lib/db/migrations/178_ses_turu_ac.sql` — tek-beyin tur kilidi (SES-LAT-02)
+- `lib/asistan/sesTurKapisi.ts`, `lib/asistan/sesJetonu.ts`, `lib/asistan/sesDevam.ts`, `lib/asistan/kesintiDevam.ts`
+- `lib/asistan/elevenMetni.ts`, `lib/asistan/sesYay.ts`, `scripts/tek-beyin-ajanlari.mts` (TTS modeli pinli: eleven_flash_v2_5, tr)
+- `lib/ai/modeller.ts` içindeki kademe/caba kuralları (`sohbetKademesi`, `sesSohbetCabasi`)
+- Ülke ağzı: `lib/ulke/asistan/sunucu.ts`, `lib/ulke/asistan/konusma.ts`
+
+## Dokunulmaz davranış sözleşmeleri
+
+1. **Asla sessiz, asla klik:** içerik taşımayan delta yalnız BOŞLUK olabilir (nokta/"..." ElevenLabs'te klik üretir —
+   2026-10-25 vakası). Harf/rakam içermeyen hiçbir delta sese gitmez (`SESLENEBILIR` muhafızı).
+2. **İlk cümle beklemez:** biten ilk cümle anında ElevenLabs'e gider; sonrası nefes nefes (SES_BLOK_ESIGI).
+3. **Bekletme sözü:** ilk söz `NOTYA_SES_DOLGU_MS` (vars. 2500 ms) içinde çıkmazsa TEK kısa bekletme cümlesi
+   söylenir (EL ≥3 kez yeniden POST etmeden). Hızlı turlar temiz kalır (NOTYA-AYSE-ACILIS-01).
+4. **Tek beyin:** aynı soru iki kez model çalıştırmaz; tur kilidi `ses_turu_ac` RPC ile TEK gidiş-dönüş ve atomiktir.
+   Kaybeden tur kazananın sözünü bekler ve söyler (SES-DUP-01).
+5. **Ses turu effort:** sesli sohbet-uzman turu `low` çalışır (`NOTYA_SES_CABA`); kapatmak env iledir, kod değişikliğiyle değil.
+6. **Kimlik/iletişim söz kuralları** NOTYA-SES-KIMLIK-OKU-01'e tabidir; değer modele/geçmişe asla yazılmaz.
+
+## Zorunlu ses paketi (değişiklik öncesi ve sonrası yeşil)
+
+```
+npx tsx --test lib/asistan/tekBeyin.test.ts lib/asistan/sesTurKilit.test.ts lib/asistan/sesMotoru.test.ts \
+  lib/asistan/sesNormalTur.test.ts lib/asistan/sesEskiDavranis.test.ts lib/asistan/fishTur.test.ts \
+  lib/asistan/fishTurSessiz.test.ts lib/asistan/sesTurKapisi.test.ts lib/asistan/alanSizinti.test.ts \
+  lib/asistan/kalite/kalite.test.ts lib/asistan/gokhanKorpus.test.ts lib/ulke/asistan/asistan.test.ts
+```
+(node 22+: `--experimental-test-module-mocks` gerekir.)
+
+Gecikme ölçüsü: her sesli turda `[ses-llm/sure]` satırı (gecmis/kilit/bekletme/ilkSoz/bitis, ms). Bir değişiklik
+bu sayıları kötüleştiriyorsa geri alınır. Referans: docs/OPEN-COMMITMENTS.md → SES-LAT-02.

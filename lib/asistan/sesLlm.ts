@@ -24,7 +24,7 @@ import { ayseCevapla } from '@/lib/asistan/ayseCevapla'
 import { klinikCevapla } from '@/lib/asistan/klinikCevapla'
 import { klinikSlugJetonndan } from '@/lib/asistan/agentSec'
 import { kendiSelamiMi } from '@/lib/asistan/acilis'
-import { DEVAM_ISARETI, devamIstegiMi, dolguSec, SesAkisi } from '@/lib/asistan/konusma'
+import { bekletmeSec, DEVAM_ISARETI, devamIstegiMi, dolguGecikmesiMs, dolguSec, SesAkisi } from '@/lib/asistan/konusma'
 import { elevenMetni } from '@/lib/asistan/elevenMetni'
 import { detayIstegiMi } from '@/lib/ses/tibbiSeslendirme'
 import { SesYayKapisi, sesEtiketTemizle } from '@/lib/asistan/sesYay'
@@ -35,7 +35,7 @@ import { sesOnayMetniGecerliMi, sesVazgecMetniMi } from '@/core/eylemler/sesKapi
 import { netSosyalMi } from '@/lib/ai/modeller'
 import { takvimSorusuMu, sesGurultusuMu, takvimTakibiMi } from '@/lib/randevu/takvimSorusu'
 import { sesTurKapisi } from '@/lib/asistan/sesTurKapisi'
-import { sesSonSozBekle, sesTurKilidiAl, sesTurKilidiBirak } from '@/lib/asistan/sesTurKilit'
+import { sesSonSozBekle, sesTurKilidiBirak, sesTurKilitAyniMi, sesTurunuAc } from '@/lib/asistan/sesTurKilit'
 import { asistaniKapatMi } from '@/lib/asistan/uyandirSoz'
 import { kesintiKalani, kesintiMesajiMi } from '@/lib/asistan/kesintiDevam'
 
@@ -125,12 +125,6 @@ const VEDA = /^(?:tamam\s+|peki\s+)?(?:(?:görüşmeyi|konuşmayı|aramayı)\s+(
 
 export function vedaMi(mesaj: string): boolean {
   return VEDA.test(String(mesaj || '').trim().toLocaleLowerCase('tr-TR'))
-}
-
-async function oturumMesajlari(supabase: ReturnType<typeof getSupabase>, doktorId: string, oturumId: string): Promise<ElMesaj[]> {
-  const { data } = await supabase.from('asistan_sessions').select('messages').eq('id', oturumId).eq('doctor_id', doktorId).maybeSingle()
-  const liste = (data as { messages?: ElMesaj[] } | null)?.messages
-  return Array.isArray(liste) ? liste : []
 }
 
 function aracVarMi(araclar: unknown, ad: string): boolean {
@@ -232,15 +226,34 @@ export async function sesLlmPost(req: NextRequest): Promise<Response> {
           // okundu (ya da söylenecek bir şey kalmadı — boş SSE aşağıda nokta ile tutulur)
         } else if (mesaj) {
           const supabase = getSupabase()
-          const oturum = await oturumMesajlari(supabase, jeton.d, jeton.o)
+          // SES-LAT-02: history + atomic lock claim in ONE round trip (was: history read, then a 3-trip claim —
+          // ~450–750 ms of serial DB time before any work). The claim is optimistic: a turn the gate then rules
+          // out (echo, noise) releases it in the background.
+          const ac = await sesTurunuAc(supabase, jeton.d, jeton.o, mesaj).catch((e) => { console.error('[ses-llm/ac]', e instanceof Error ? e.name : 'hata'); return null })
           isaret('gecmis')
+          isaret('kilit')
+          if (!ac || ac.yok) {
+            // yok: the session row is not this token's doctor's (foreign token) — fail-closed and SILENT, exactly as
+            // before (and without the old 12 s loser poll). null: the DB could not be reached — tell the doctor.
+            if (!ac) cevapYaz('Şu an dosyaya ulaşamadım Hocam, bir daha söyler misiniz?')
+            else console.error('[ses-llm/ac]', 'oturum_yok')
+            kapi.bitir(); isaret('bitis'); console.log('[ses-llm/sure]', JSON.stringify(ani))
+            if (!icerikGitti) parca({ content: SESSIZ_ICERIK })
+            parca({}, bitis)
+            if (!kapali) { try { controller.enqueue(enc.encode('data: [DONE]\n\n')); controller.close() } catch { /* kapandı */ } }
+            return
+          }
+          const kilidiBirak = () => { void sesTurKilidiBirak(supabase, jeton.d, jeton.o, mesaj, soylenen).catch(() => {}) }
+          const oturum = ac.satir?.messages ?? []
           // NOTYA-SES-ARKA-01: eko / aynı istek / arka plan — model + dolgu yok (maliyet/hız).
           const tur = sesTurKapisi({ mesaj, oturumMesajlari: oturum })
           if (tur.tip === 'sessiz') {
             console.error('[ses-llm/sessiz]', tur.neden)
+            if (ac.kazandi) kilidiBirak()
             parca({ content: SESSIZ_ICERIK })
           } else if (tur.tip === 'devam_oku') {
             // Birebir EL replay — kalanı oku, modeli yeniden çalıştırma.
+            if (ac.kazandi) kilidiBirak()
             await devamiOku(mesaj)
           } else if (tur.tip === 'veda' && aracVarMi(govde.tools, 'end_call')) {
             yaz('Görüşmek üzere Hocam.', true)
@@ -248,12 +261,18 @@ export async function sesLlmPost(req: NextRequest): Promise<Response> {
             bitis = 'tool_calls'
           } else if (cevaplanmisSonSoruMu(oturum, mesaj)) {
             // NOTYA-SES-TEK-CEVAP-01: EL önceki ses sorusunu yeniden POST ederse ikinci beyin yok.
+            if (ac.kazandi) kilidiBirak()
             await devamiOku(mesaj)
             if (!icerikGitti) parca({ content: SESSIZ_ICERIK })
           } else {
           // NOTYA-BUYUME-KISA-01 / NOTYA-SES-TEK-CEVAP-01: kilit fail-closed — hata = ikinci tur yok.
-          const kilitAlindi = await sesTurKilidiAl(supabase, jeton.d, jeton.o, mesaj, tur.neden === 'soru_cevabi').catch(() => false)
-          isaret('kilit')
+          // Claimed, but the previous live lock was the same request in other words (fuzzy): loser, release the steal.
+          // 'soru_cevabi' (an answer to Ayşe's question) keeps exact-only semantics, as before.
+          let kilitAlindi = ac.kazandi
+          if (kilitAlindi && tur.neden !== 'soru_cevabi' && ac.oncekiKilit && sesTurKilitAyniMi(mesaj, ac.oncekiKilit)) {
+            kilitAlindi = false
+            kilidiBirak()
+          }
           if (!kilitAlindi) {
             console.error('[ses-llm/kilit]', 'tur_dusuruldu')
             // SES-DUP-01: ElevenLabs plays ONE of the two replies. Silence here meant "text but no voice" whenever it
@@ -263,6 +282,14 @@ export async function sesLlmPost(req: NextRequest): Promise<Response> {
             else parca({ content: SESSIZ_ICERIK })
           } else {
           yaz(dolguSec(mesaj, { onay: sesOnayMetniGecerliMi(mesaj), vazgec: sesVazgecMetniMi(mesaj), sosyal: netSosyalMi(mesaj) }), true)
+          // SES-DOLGU-02: a slow turn says one short holding sentence instead of sitting silent until ElevenLabs
+          // re-POSTs the question (≥3 cascade retries ≈ 8 s — the duplicate-turn storm of 2026-10-25). Armed only
+          // here, on the model stretch; a first sentence before the deadline keeps the turn clean (ACILIS-01).
+          const dolguMs = dolguGecikmesiMs()
+          const bekletme = dolguMs > 0 && !netSosyalMi(mesaj)
+            ? setTimeout(() => { if (!cevapSoylendi && !turKapandi && !kapali) { isaret('bekletme'); yaz(bekletmeSec(oturum.length), true) } }, dolguMs)
+            : null
+          const bekletmeyiKapat = () => { if (bekletme) clearTimeout(bekletme) }
           // Sözlü onay / ret bir model turu değildir: bekleyen kart varsa dokunuşun omurgasından geçer, model çağrılmaz.
           // Takvim: modelsiz ve hızlı — bekleyen-kart okumasını atla.
           // NOTYA-TEK-BEYIN-CORE-01: klinik experts use the same Custom LLM mouth; brain is klinikCevapla (no chart tools).
@@ -288,7 +315,7 @@ export async function sesLlmPost(req: NextRequest): Promise<Response> {
             let sinirGeldi = false
             const sesSiniri = new Promise<void>((r) => { sesSinirCoz = r })
             const sonucSozu = ayseCevapla({
-              supabase, doktorId: jeton.d, oturumId: jeton.o, mesaj, kanal: 'ses', saglayici: 'elevenlabs',
+              supabase, doktorId: jeton.d, oturumId: jeton.o, oturumSatiri: ac.satir, mesaj, kanal: 'ses', saglayici: 'elevenlabs',
               specialty: jeton.s, patientId: jeton.p, personaId: jeton.pe || null, saatDilimi: jeton.tz || null, sozParcasi: cevapYaz,
               sesSiniri: () => { sinirGeldi = true; sesSinirCoz() },
               sesDurumu: () => ({ kesildi: sinirGeldi || turKapandi, soylenen }),
@@ -317,6 +344,7 @@ export async function sesLlmPost(req: NextRequest): Promise<Response> {
           }
           }
           } finally {
+            bekletmeyiKapat()
             // Takvim / klinik / karar yolları: kilit burada bırakılır. Arka plan ayse yolu finally'de bırakır.
             if (!turKapandi) await sesTurKilidiBirak(supabase, jeton.d, jeton.o, mesaj, soylenen).catch(() => {})
           }

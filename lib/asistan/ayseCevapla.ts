@@ -63,7 +63,7 @@ import { anilanBaskaKisi, okumaAraciCalistir, okumaAraciKapali, okumaAraciMi, OK
 import { aramaCevabiGuvenilirMi, kimlikAcikDosyayaDusmesinMi } from "@/lib/asistan/ikiBeyinBirde"
 import { turZamanlari } from "@/lib/asistan/balonSirasi"
 import { AlanDefteri, alanlariYerineKoy, alanSozcusu, defteriGeriKur, verilmeyenleriSil, type AlanRef } from "@/lib/asistan/hastaAlan"
-import { asistanModelYonlendir, gecmisiKirp, netSosyalMi, sohbetKademesi, SOHBET_SAKLANAN_MESAJ } from "@/lib/ai/modeller"
+import { asistanModelYonlendir, gecmisiKirp, netSosyalMi, sesSohbetCabasi, sohbetKademesi, SOHBET_SAKLANAN_MESAJ } from "@/lib/ai/modeller"
 import { aracTanimlari, eylemKapali, HASTA_ADI_ALANI } from "@/core/eylemler/araclar"
 import { toolUseOnerileri, toolUseBloklari, oneriHazirla, type HazirOneri } from "@/core/eylemler/oneri"
 import { bekleyenKomutOku, komutCevabiMi, komutNiyetiBul, randevuTamMi, type BekleyenKomut, type KomutNiyeti } from "@/lib/asistan/komutNiyeti"
@@ -133,6 +133,8 @@ export interface AyseGirdisi {
   doktorId: string
   /** asistan_sessions.id — iki kanalın ortak hafızası. Yoksa / başka doktorunsa yeni oturum açılır. */
   oturumId?: string | null
+  /** SES-LAT-02: the session row the voice route already read (ses_turu_ac) — skips the re-read of the same row. */
+  oturumSatiri?: Record<string, unknown> | null
   mesaj: string
   kanal: Kanal
   specialty?: string
@@ -260,6 +262,14 @@ export function gunBolumuBul(mesaj: string): string | null {
   return / ogleden sonra\w* /.test(n) ? "öğleden sonra" : / sabah\w* /.test(n) ? "sabah" : / ogle\w* /.test(n) ? "öğle" : / aksam\w* /.test(n) ? "akşam" : null
 }
 
+/**
+ * SES-LAT-02: the doctor's profile and preferences change rarely but sat on the critical path of every turn
+ * (one parallel round trip before anything else). A warm serverless instance remembers them briefly; a stale
+ * read is at most 45 s of an old address style. Keyed per doctor; never holds patient data.
+ */
+const PROFIL_ONBELLEK_MS = 45_000
+const profilOnbellek = new Map<string, { zaman: number; doctorRow: unknown; prefs: unknown }>()
+
 export async function ayseCevapla(g: AyseGirdisi): Promise<AyseSonucu> {
   const cevapBas = Date.now()
   const supabase = g.supabase
@@ -288,13 +298,19 @@ export async function ayseCevapla(g: AyseGirdisi): Promise<AyseSonucu> {
   }
 
   // Load doctor profile for Hocam addressing — profil, tercihler ve oturum birbirinden bağımsız: paralel okunur.
+  // SES-LAT-02: a row the voice route already read is not read again; profile/prefs come from the warm memo when fresh.
+  const anilan = profilOnbellek.get(doktorId)
+  const anilanTaze = anilan && Date.now() - anilan.zaman < PROFIL_ONBELLEK_MS
   const [{ data: doctorRow }, { data: prefs }, oturumOkuma] = await Promise.all([
-    supabase.from("users").select("*").eq("id", doktorId).maybeSingle(),
-    supabase.from("doctor_preferences").select("*").eq("doctor_id", doktorId).single(),
-    g.oturumId
-      ? supabase.from("asistan_sessions").select("*").eq("id", g.oturumId).eq("doctor_id", doktorId).single()
-      : Promise.resolve({ data: null }),
+    anilanTaze ? Promise.resolve({ data: anilan.doctorRow }) : supabase.from("users").select("*").eq("id", doktorId).maybeSingle(),
+    anilanTaze ? Promise.resolve({ data: anilan.prefs }) : supabase.from("doctor_preferences").select("*").eq("doctor_id", doktorId).single(),
+    g.oturumSatiri
+      ? Promise.resolve({ data: g.oturumSatiri })
+      : g.oturumId
+        ? supabase.from("asistan_sessions").select("*").eq("id", g.oturumId).eq("doctor_id", doktorId).single()
+        : Promise.resolve({ data: null }),
   ])
+  if (!anilanTaze && doctorRow) profilOnbellek.set(doktorId, { zaman: Date.now(), doctorRow, prefs })
   const doctorProfile = toAddressableUser(doctorRow as DoctorProfile | null)
   // DAH-/KD-/DERM-PROMPTS-LOCK + ASISTAN-PERSONA-BRANS: users.specialty drives the branch lock and the default colleague
   const hekimBransi = (doctorRow as { specialty?: string } | null)?.specialty
@@ -1024,7 +1040,11 @@ ${ilacBaglamMetni(drugs[0])}`
     gorev: yonlendirme.gorev, mesaj: String(message || ""), sonNiyet: takip?.niyet ?? konusmaOnceki?.sonNiyet ?? null,
     niyet: quickIntent, aracSayisi: araclar.length, sosyal: sosyalTur, girdiToken: girdiTokenTahmini(cagriTaban),
   })
-  const cagri = kademe.caba ? { ...cagriTaban, caba: kademe.caba } : cagriTaban
+  // SES-CABA-01 (launch audit, 2026-10-26): a VOICE expert turn without its own tier runs at reasoning effort 'low' —
+  // provider-default (medium) was 4–9 s to the first word with the doctor waiting in silence. Screen answers of voice
+  // turns share the call; Dr. Gökhan's retest judges the quality, NOTYA_SES_CABA=kapali reverts without a deploy.
+  const sesCaba = ses && !kademe.caba ? sesSohbetCabasi() : null
+  const cagri = kademe.caba ? { ...cagriTaban, caba: kademe.caba } : sesCaba ? { ...cagriTaban, caba: sesCaba } : cagriTaban
   let akanHam = ""
   const modeliCagir = async (c: typeof cagri) => {
     const akis = sesAkisi

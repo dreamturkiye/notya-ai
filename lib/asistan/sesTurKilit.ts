@@ -85,6 +85,47 @@ export async function sesTurKilidiBirak(sb: Sb, doktorId: string, oturumId: stri
   await sb.from('asistan_sessions').update({ active_context: baglam }).eq('id', oturumId).eq('doctor_id', doktorId)
 }
 
+/** The session row `ses_turu_ac` returns alongside the claim — saves the separate history read AND ayseCevapla's re-read. */
+export type SesOturumSatiri = { id: string; messages: unknown[]; active_context: Record<string, unknown>; persona_id: string | null; patient_id: string | null }
+export type SesTuruAcSonucu = { yok: boolean; kazandi: boolean; oncekiKilit: SesTurKilit | null; satir: SesOturumSatiri | null }
+
+/**
+ * SES-LAT-02 (Kaan, 2026-10-26 — launch audit): the old claim was read + write + verify-read, three round trips
+ * (~350–600 ms on cle1 ↔ Supabase) before a voice turn could start, and it ran AFTER a separate history read — four
+ * trips in all. `ses_turu_ac` (migration 152) does the row lock, the claim and the row read in ONE statement under
+ * FOR UPDATE, so it is also genuinely atomic (the optimistic dance only probabilistically was). SQL compares the
+ * EXACT normalized fingerprint (`anahtar`, computed here — SQL lower() is not tr-TR aware); the fuzzy same-info
+ * check (ayniIstekYeniBilgiYokMu) stays in TS on the returned previous lock, exactly as before:
+ *   · live lock, same fingerprint        → kazandi=false (duplicate — loser)
+ *   · live lock, different message       → claim steals it (a real second question must not be blocked)
+ *   · claimed, but TS fuzzy says same    → demoted to loser by the caller (unless yalnizBirebir)
+ * Falls back to the old three-trip path when the function is missing (a country DB the migration has not reached).
+ * Any error throws — callers stay fail-closed.
+ */
+export async function sesTurunuAc(sb: Sb & { rpc?: (fn: string, args: Record<string, unknown>) => PromiseLike<{ data: unknown; error: { message?: string; code?: string } | null }> }, doktorId: string, oturumId: string, mesaj: string): Promise<SesTuruAcSonucu> {
+  const claimId = randomUUID()
+  if (typeof sb.rpc === 'function') {
+    const { data, error } = await Promise.resolve(sb.rpc('ses_turu_ac', {
+      p_oturum: oturumId, p_doktor: doktorId,
+      p_mesaj: String(mesaj || '').slice(0, 500), p_anahtar: sesTurKilitAnahtar(mesaj), p_claim: claimId,
+    })).catch((e: unknown) => ({ data: null, error: { message: e instanceof Error ? e.message : String(e), code: 'THROWN' } }))
+    if (!error) {
+      const r = (data || {}) as { yok?: boolean; kazandi?: boolean; oncekiKilit?: SesTurKilit | null; satir?: SesOturumSatiri | null }
+      return { yok: Boolean(r.yok), kazandi: Boolean(r.kazandi), oncekiKilit: r.oncekiKilit ?? null, satir: r.satir ?? null }
+    }
+    // PGRST202: the function is not in this database yet — old path below. Any other error is a real failure.
+    if (error.code !== 'PGRST202' && error.code !== 'THROWN' && !/ses_turu_ac/.test(String(error.message || ''))) throw new Error(String(error.message || 'ses_turu_ac'))
+  }
+  const { data: row, error } = await sb.from('asistan_sessions').select('id, messages, active_context, persona_id, patient_id').eq('id', oturumId).eq('doctor_id', doktorId).maybeSingle()
+  if (error) throw error
+  if (!row) return { yok: true, kazandi: false, oncekiKilit: null, satir: null }
+  const baglam = baglamOku(row)
+  const oncekiKilit = (baglam.sesTurKilit as SesTurKilit | undefined) ?? null
+  const kazandi = await sesTurKilidiAl(sb, doktorId, oturumId, mesaj, true)
+  const r = row as unknown as SesOturumSatiri
+  return { yok: false, kazandi, oncekiKilit, satir: { id: r.id, messages: Array.isArray(r.messages) ? r.messages : [], active_context: baglam, persona_id: r.persona_id ?? null, patient_id: r.patient_id ?? null } }
+}
+
 /** Test / log helper — normalized token fingerprint. */
 export function sesTurKilitAnahtar(mesaj: string): string {
   return trAramaNormalize(String(mesaj || '')).replace(/\s+/g, ' ').trim().slice(0, 200)

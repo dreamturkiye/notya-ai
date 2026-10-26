@@ -336,6 +336,25 @@ export function dolguSec(mesaj: string, g: { onay: boolean; vazgec: boolean; sos
 }
 
 /**
+ * SES-DOLGU-02 (Kaan, 2026-10-26 — launch audit): a slow turn may not sit in SILENCE. NOTYA-AYSE-ACILIS-01 stands —
+ * no phrase before every answer — but a turn whose first spoken sentence has not left after this many milliseconds
+ * says ONE short holding sentence. Below ~8 s of no content ElevenLabs treats the Custom LLM as failed and re-POSTs
+ * the same question (≥3 attempts — their LLM-cascade retry): the duplicate turns, the lock losers and the 12 s silent
+ * answers in the 2026-10-25 logs all start there. Fast turns (first sentence before the deadline) stay clean.
+ * NOTYA_SES_DOLGU_MS overrides the deadline (tests, tuning); 0 turns the holding phrase off.
+ */
+export const DOLGU_GECIKME_MS = 2500
+export function dolguGecikmesiMs(deger: string | null | undefined = typeof process !== 'undefined' ? process.env?.NOTYA_SES_DOLGU_MS : undefined): number {
+  const n = Number(String(deger ?? '').trim())
+  return Number.isFinite(n) && String(deger ?? '').trim() !== '' ? Math.max(0, n) : DOLGU_GECIKME_MS
+}
+const BEKLETME_SOZLERI = ['Bakıyorum Hocam... ', 'Hemen bakıyorum... ', 'Dosyaya bakıyorum Hocam... '] as const
+/** The holding sentence, varied so consecutive slow turns do not repeat the same words. */
+export function bekletmeSec(sira: number): string {
+  return BEKLETME_SOZLERI[Math.abs(Math.trunc(sira)) % BEKLETME_SOZLERI.length]
+}
+
+/**
  * NOTYA-SES-OKU-01 (Dr. Gökhan, 2026-09-26: "Devamını ekranda görüyorum ama sen bana anlat"): the doctor asks
  * to HEAR the answer that is already on screen. No model call — the screen text is read aloud without the
  * sentence cap. Lists are still summarised ("N madde") because a list is not speech; prose is read in full.
