@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { goruntuImzaliUrl } from '@/lib/doktor/goruntulemeImzaliUrl';
 
 export const dynamic = 'force-dynamic';
 
@@ -42,7 +43,13 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Veri alınamadı' }, { status: 500 });
     }
 
-    return NextResponse.json(goruntulemeler);
+    // HASTA-GORUNTU-GIZLILIK-01: dosya_url satırda yalnızca bir storage referansı — kova private,
+    // her okumada taze kısa ömürlü imzalı URL üretilir, hiçbir zaman kalıcı/public bir URL değil.
+    const sonuc = await Promise.all(
+      (goruntulemeler || []).map(async (g) => ({ ...g, dosya_url: (await goruntuImzaliUrl(supabase, g.dosya_url)) || '' }))
+    );
+
+    return NextResponse.json(sonuc);
   } catch (error) {
     return NextResponse.json({ error: 'Sunucu hatası' }, { status: 500 });
   }
