@@ -336,20 +336,25 @@ export function dolguSec(mesaj: string, g: { onay: boolean; vazgec: boolean; sos
 }
 
 /**
- * SES-DOLGU-02 (Kaan, 2026-10-26 — launch audit): a slow turn may not sit in SILENCE. NOTYA-AYSE-ACILIS-01 stands —
- * no phrase before every answer — but a turn whose first spoken sentence has not left after this many milliseconds
- * says ONE short holding sentence. Below ~8 s of no content ElevenLabs treats the Custom LLM as failed and re-POSTs
- * the same question (≥3 attempts — their LLM-cascade retry): the duplicate turns, the lock losers and the 12 s silent
- * answers in the 2026-10-25 logs all start there. Fast turns (first sentence before the deadline) stay clean.
- * NOTYA_SES_DOLGU_MS overrides the deadline (tests, tuning); 0 turns the holding phrase off.
+ * SES-DOLGU-02 (Kaan, 2026-10-26 — launch audit) — the holding phrase, and why it is OFF by default.
+ *
+ * The idea: a turn whose first spoken sentence has not left after a deadline says ONE short sentence, so ElevenLabs
+ * does not treat ~8 s of silence as a failed Custom LLM and re-POST the question (the duplicate-turn storm). But a
+ * SPOKEN-ONLY filler is itself a defect — it diverges from the screen, and on 2026-10-26 it fired on a plain greeting
+ * and said "Dosyaya bakıyorum", a file lookup the doctor never asked for (Kaan, live test). The real latency fixes
+ * (atomic lock, effort low, first-sentence-immediate) already bring first audio well under the retry window, so the
+ * filler is redundant for normal and social turns. It is therefore OFF by default (deadline 0); only a truly neutral
+ * phrase — never "dosya", never a claim about looking anything up — is ever spoken if it is explicitly enabled.
+ * NOTYA_SES_DOLGU_MS turns it on for a given deadline (e.g. a heavy "özet" that genuinely runs long); 0 / unset = off.
  */
-export const DOLGU_GECIKME_MS = 2500
+export const DOLGU_GECIKME_MS = 0
 export function dolguGecikmesiMs(deger: string | null | undefined = typeof process !== 'undefined' ? process.env?.NOTYA_SES_DOLGU_MS : undefined): number {
   const n = Number(String(deger ?? '').trim())
   return Number.isFinite(n) && String(deger ?? '').trim() !== '' ? Math.max(0, n) : DOLGU_GECIKME_MS
 }
-const BEKLETME_SOZLERI = ['Bakıyorum Hocam... ', 'Hemen bakıyorum... ', 'Dosyaya bakıyorum Hocam... '] as const
-/** The holding sentence, varied so consecutive slow turns do not repeat the same words. */
+/** Neutral — no claim about files or looking anything up (the 2026-10-26 "Dosyaya bakıyorum" on a greeting). */
+const BEKLETME_SOZLERI = ['Bir saniye Hocam. '] as const
+/** The holding sentence (only reached when the filler is explicitly enabled via NOTYA_SES_DOLGU_MS). */
 export function bekletmeSec(sira: number): string {
   return BEKLETME_SOZLERI[Math.abs(Math.trunc(sira)) % BEKLETME_SOZLERI.length]
 }
