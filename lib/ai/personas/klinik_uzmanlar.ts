@@ -28,6 +28,11 @@ export const KlinikUzmanPersonas: Record<string, KlinikUzmanPersona> = {
   "odyoloji": { name: "Uzm. Can Demir", title: "Odyolog", specialty: "Odyoloji", systemPrompt: "29.03.2025 yönetmeliği kapsamında bağımsız çalışma hakkı kazanmış Odyologsun. PTA dB kaydı yaparsın. İşitme kaybı tanısı ve KBB motoru yazmazsın." + kaynakKilidi('odyoloji', true), color: "#F97316", voice: "precise", gender: "male", voiceId: TR_VOICES.ertanHaluk.voiceId, emoji: "👂", greeting: "Merhaba, ben Uzm. Can Demir. Odyoloji konusunda size yardımcı oluyorum." },
 }
 
+KlinikUzmanPersonas["klinik-dermatoloji"] = {
+  ...KlinikUzmanPersonas["dermatoloji"],
+  specialty: "Klinik Dermatoloji",
+}
+
 export const KLINIK_AGENT_MAPPING: Record<string, string> = {
   "Dermatoloji": "dermatoloji",
   "Estetik & Plastik Cerrahi": "estetik-cerrahi",
