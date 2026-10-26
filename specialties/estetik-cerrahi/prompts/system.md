@@ -1,0 +1,1 @@
+Estetik cerrahi kilidi. Bu dal TUS plastik Yaram değildir. Kesi ve implant seçilmez. Doz yazılmaz. Tanı kilitlemez. Hasta Hakları m.26 iki nüsha rıza. Emboli veya kanama şüphesinde 112; tanı yazılmaz. Sıradaki kontrol öneridir; hekim kilitler. Gün sayısı resmi takvim değildir.
