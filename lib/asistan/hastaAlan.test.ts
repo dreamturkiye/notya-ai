@@ -114,7 +114,7 @@ describe('tek alanın değeri: kimlik yönlendiricisiyle aynı okuma, aynı eksi
   const simdi = Date.parse('2026-10-02T09:00:00Z')
 
   it('kayıtlı alan: yalın değer (etiketsiz, kaynaksız); tarih gg.aa.yyyy', () => {
-    assert.deepEqual(kimlikAlanDegeri('anneAdi', kayit, simdi), { durum: 'var', metin: 'QA-Anne', degerli: true })
+    assert.deepEqual(kimlikAlanDegeri('anneAdi', kayit, simdi), { durum: 'var', metin: 'QA-Anne', degerli: true, soz: 'QA-Anne' })
     assert.equal(kimlikAlanDegeri('dogumTarihi', kayit, simdi).metin, '14.03.2021')
     assert.equal(kimlikAlanDegeri('veli', kayit, simdi).metin, 'QA-Veli (Anne) — 0555 000 33 44')
     assert.equal(kimlikAlanDegeri('anneTelefon', kayit, simdi).metin, '0555 000 33 44 — QA-Veli')
@@ -134,5 +134,55 @@ describe('tek alanın değeri: kimlik yönlendiricisiyle aynı okuma, aynı eksi
     assert.equal(d.durum, 'eksik')
     assert.equal(d.degerli, true)
     assert.match(d.metin, /ayrıca kayıtlı değil\. Dosyadaki iletişim telefonu: 0555 000 11 22/)
+  })
+})
+
+describe('NOTYA-SES-KIMLIK-OKU-01: değer sesle okunur (Dr. Gökhan, 2026-10-25)', () => {
+  const kayit: KimlikKaydi = {
+    ad: 'Tuna Erdemli', dogumTarihi: { deger: '2021-03-14', kaynak: 'kart' }, telefon: { deger: '0555 000 11 22', kaynak: 'kart' }, eposta: { deger: 'qa@ornek.com', kaynak: 'kart' },
+    adres: { deger: 'QA-Sokak No 7, QA-İl', kaynak: 'form' }, dogumYeri: { deger: 'Ankara', kaynak: 'form' }, anneAdi: { deger: 'Ayşe Yılmaz', kaynak: 'kart' }, babaAdi: null,
+    veli: null, acilKisi: null,
+  }
+  const simdi = Date.parse('2026-10-25T09:00:00Z')
+  const sozle = (alan: KimlikAlani, anahtar: Parameters<AlanDefteri['ver']>[0], sesli: boolean) => {
+    const d = new AlanDefteri()
+    const yt = d.ver(anahtar, A, kimlikAlanDegeri(alan, kayit, simdi), sesli)
+    return konusmaYap(`Bilgi: ${yt}.`, alanSozcusu(d), { telefonSerbest: sesli })
+  }
+
+  it('ad, doğum tarihi (sözcüklerle) ve doğum yeri her zaman okunur', () => {
+    assert.match(sozle('anneAdi', 'anne_adi', false), /Ayşe Yılmaz/)
+    assert.match(sozle('dogumTarihi', 'dogum_tarihi', false), /14 Mart 2021/)
+    assert.match(sozle('dogumYeri', 'dogum_yeri', false), /Ankara/)
+  })
+
+  it('telefon ve adres yalnız doktor sesle istediyse okunur; yoksa ekrana işaret', () => {
+    assert.ok(!/0555/.test(sozle('telefon', 'telefon', false)))
+    assert.ok(!/QA-Sokak/.test(sozle('adres', 'adres', false)))
+    assert.equal(sozle('telefon', 'telefon', false), kimlikEkrandaSozu('Tuna Erdemli'))
+    assert.match(sozle('telefon', 'telefon', true), /0555 000 11 22/)
+    assert.match(sozle('adres', 'adres', true), /QA-Sokak No 7/)
+  })
+
+  it('e-posta hiçbir koşulda okunmaz', () => {
+    assert.ok(!/qa@ornek|ornek\.com/.test(sozle('eposta', 'eposta', true)))
+  })
+
+  it('saklanacak biçimde (degerSoyle=false) değer yazılmaz: işaret kalır', () => {
+    const d = new AlanDefteri()
+    const yt = d.ver('anne_adi', A, kimlikAlanDegeri('anneAdi', kayit, simdi), true)
+    const out = konusmaYap(`Annesinin adı ${yt}.`, alanSozcusu(d, false))
+    assert.ok(!/Ayşe/.test(out))
+    assert.equal(out, kimlikEkrandaSozu('Tuna Erdemli'))
+  })
+
+  it('kimlik yönlendiricisinin sözlü biçimi: ad/yer okunur, telefon istenmedikçe "ekranda", e-posta "ekranda"', () => {
+    assert.match(kimlikCevabiMetni(['anneAdi'], kayit, simdi).soz, /Anne adı: Ayşe Yılmaz\./)
+    assert.match(kimlikCevabiMetni(['dogumTarihi'], kayit, simdi).soz, /14 Mart 2021/)
+    assert.ok(!/0555/.test(kimlikCevabiMetni(['telefon'], kayit, simdi).soz))
+    assert.match(kimlikCevabiMetni(['telefon'], kayit, simdi, true).soz, /0555 000 11 22/)
+    assert.ok(!/qa@ornek/.test(kimlikCevabiMetni(['eposta'], kayit, simdi, true).soz))
+    // the stored (model-visible) form never carries a value
+    assert.ok(!/Ayşe|0555|qa@ornek/.test(kimlikCevabiMetni(['anneAdi', 'telefon', 'eposta'], kayit, simdi, true).model))
   })
 })

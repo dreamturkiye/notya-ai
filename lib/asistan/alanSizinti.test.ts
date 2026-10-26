@@ -56,6 +56,8 @@ const modeleGiden = (): string => JSON.stringify(ortam.modelIstekleri)
 const saklanan = (oturum: string): string => JSON.stringify(ortam.db.tablo('asistan_sessions').find((x) => x.id === oturum) || {})
 const tablo = (ad: string): string => JSON.stringify(ortam.db.tablo(ad))
 
+const sesteYasak = [KIMLIK.telefon, KIMLIK.telefon.replace(/\s/g, ''), KIMLIK.adres, KIMLIK.il, KIMLIK.veliTelefon, KIMLIK.veliTelefon.replace(/\s/g, '')]
+
 function degerYok(metin: string, nerede: string, k = KIMLIK): void {
   for (const d of kimlikDegerleri(k)) assert.ok(!metin.includes(d), `SIZINTI — ${nerede}: ${d}`)
 }
@@ -137,10 +139,14 @@ for (const adli of [true, false]) {
         for (const d of t.teslim) typeof d === 'string' ? assert.ok(ekran.includes(d), `tur ${i + 1}: ekranda "${d}" yok → ${ekran}`) : assert.match(ekran, d, `tur ${i + 1}`)
         assert.ok(!/\{\{|\}\}/.test(ekran + v.soz), `tur ${i + 1}: yer tutucu hekime gitti → ${ekran} / ${v.soz}`)
         degerYok(modeleGiden(), `tur ${i + 1} sonrası model istekleri`)
-        // Spoken text is what goes to the speech provider: no identity value in it, as on the identity router's path.
-        degerYok(v.soz, `tur ${i + 1} söylenen metin`)
+        // NOTYA-SES-KIMLIK-OKU-01: names / birth place are read aloud; phone, address and the guardian's phone are not
+        // (the doctor never asked to hear them), and nothing is ever stored or sent to a model (checked above/below).
+        for (const d of sesteYasak) assert.ok(!v.soz.includes(d), `SIZINTI — tur ${i + 1} söylenen metin: ${d}`)
       }
-      assert.match(sozler[0], new RegExp(`${KIMLIK.ad} için istediğiniz bilgiyi ekranınıza yazdım Hocam`))
+      assert.ok(sozler[0].includes(KIMLIK.annesi), `anne adı okunmadı → ${sozler[0]}`)
+      assert.ok(sozler[1].includes(KIMLIK.babasi), `baba adı okunmadı → ${sozler[1]}`)
+      assert.ok(sozler[2].includes(KIMLIK.dogumYeri), `doğum yeri okunmadı → ${sozler[2]}`)
+      assert.ok(!sozler[2].includes(KIMLIK.adres), 'adres istenmedi: okunmaz')
       // A missing field carries no value: its "where to add it" sentence is spoken.
       assert.match(sozler[4], /E-posta kayıtlı değil/)
       degerYok(saklanan(oturum), 'saklanan oturum (geçmiş + bağlam + okunmamış kalan)')

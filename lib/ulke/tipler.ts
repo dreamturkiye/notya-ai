@@ -716,6 +716,9 @@ export type CanliAsistanAyarlari = {
     devami: string
     veda: string
     anlasilmadi: string
+    /** SES-DOLGU-02: said once when no spoken sentence has left after the deadline (a silent custom-LLM stream is
+     * what ElevenLabs retries as failed — the duplicate-turn storm). Absent: no holding phrase. */
+    bekletme?: string
     /** Said when the account has used its turns for the day. */
     gunlukSinir: string
   }

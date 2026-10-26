@@ -208,13 +208,15 @@ describe('kimlik: değer modele gitmez, ekrana gider', () => {
     assert.equal(ortam.okumaTurlari[0].kimlik, true)
   })
 
-  it('ses: değer söylenmez; ekran yoklaması değeri aracın sorusundan yeniden kurar', async () => {
+  it('ses: ad söylenir (ekrana bak denmez); ekran yoklaması değeri aracın sorusundan yeniden kurar', async () => {
     const { s, oturum } = acikDosya()
     ortam.yanit = aracCagiranModel({ name: 'hasta_bul', input: { isim: 'annesinin ve babasının adı ne' } }, () => 'kullanılmaz')
     const v = await fishTur(s, SORU, { oturum })
     assert.equal(sonRota(), 'kimlik')
-    assert.match(v.soz, /istediğiniz bilgiyi ekranınıza yazdım Hocam/)
-    assert.ok(!v.soz.includes('QA-Anne-Selin'))
+    // NOTYA-SES-KIMLIK-OKU-01 (Dr. Gökhan, 2026-10-25): names are read aloud, like in a conversation.
+    assert.match(v.soz, /Anne adı: QA-Anne-Selin\./)
+    assert.match(v.soz, /Baba adı: QA-Baba-Murat\./)
+    assert.ok(!/ekranınıza yazdım/.test(v.soz))
     const turlar = await ekran(s, oturum)
     assert.match(turlar.at(-1)!.metin, /QA-Anne-Selin/)
     assert.match(turlar.at(-1)!.metin, /QA-Baba-Murat/)

@@ -199,6 +199,23 @@ const BULUNAMADI = 'bulamadım|bulunamadı|kayıtlarınızda yok|kayıtlı deği
 /** The patient-count template's sentence shapes (lib/doktor/hastaAramaFiltre.ts). */
 const SAYIM_SABLONU = 'Kayıtlarda \\d+ hasta|\\b0 hasta|Filtre:'
 const PANEL_SAYI = `\\b${KORPUS_PANEL_SAYISI}\\b|beş`
+/** NOTYA-AYSE-SAYI-SIRA-01: a plain panel count — the doctor's real number, no filter the doctor did not state. */
+const SAYI_TAM: Beklenti = { rota: ['arama'], icerir: [`Kayıtlarda ${KORPUS_PANEL_SAYISI} hasta`], icermez: ['\\b0 hasta', 'Filtre:'] }
+const SAYI_NOTU = 'A wording of the live sentence of NOTYA-AYSE-SAYI-SIRA-01 ("how many patients do we have") with other words of conversation — şu anda, bizim, toplam, hocam, tabii — as the founder listed them in the brief of 2026-10-10. None states a filter.'
+const SAYI_VARYANTLARI = [
+  'Kaç tane hastamız var şu anda bizim?',
+  'toplam kaç hasta kayıtlı',
+  'hasta sayımız kaç',
+  'Hocam şu anda hasta sayımız nedir?',
+  'Tabii hocam, bizim toplam kaç hastamız var?',
+  'Peki, bizde kaç hasta kayıtlı şu anda?',
+  'Yani şu an elimizde kaç hasta var hocam?',
+  'Evet, tamam. Kaç tane hastamız oldu toplamda?',
+  'Kaç kişi kayıtlı bizde?',
+  'Hasta sayımızı söyler misin?',
+  'Sistemde kaç hastam görünüyor?',
+  'Tabii, tabii. Toplam kaç adet hastamız var?',
+]
 /** NOTYA-AYSE-OZET-01: the eight parts of one visit's summary, as bold headings, in their fixed order. */
 const OZET_SIRASI = ['Muayene', 'Şikayet', 'Muayene bulgusu', 'Laboratuvar', 'Aşı', 'Büyüme ve gelişme', 'Tedavi', 'Plan'].map((b) => `\\*\\*${b}:\\*\\*`).join('[\\s\\S]*')
 
@@ -248,6 +265,17 @@ const LEDGER_GIRDILERI: KorpusGirdisi[] = [
   // ── counts ──
   g('L-SAYIM-ANDA', 'sayim', 'Hocam benim şu anda toplam kaç hastam var?', [L('NOTYA-SAYIM-ANDA-01'), C(1)],
     { rota: ['arama'], icerir: [`Kayıtlarda ${KORPUS_PANEL_SAYISI} hasta`], icermez: ['Kayıtlarda 0 hasta'] }),
+  // NOTYA-AYSE-SAYI-SIRA-01 (Kaan live, voice, 2026-10-11): the panel count said with words of conversation. "tabii" and
+  // "bizim" became mandatory search terms → "Kayıtlarda 0 hasta." for a doctor with one patient.
+  g('L-SAYI-T4', 'sayim', 'Tabii, tabii. Hocam, kaç tane hastamız var şu anda bizim?', L('NOTYA-AYSE-SAYI-SIRA-01'), SAYI_TAM),
+  ...SAYI_VARYANTLARI.map((soz, i) => g(`L-SAYI-V${String(i + 1).padStart(2, '0')}`, 'sayim', soz, L('NOTYA-AYSE-SAYI-SIRA-01'), SAYI_TAM, { turetilmis: true, not: SAYI_NOTU })),
+  // A filter the doctor DOES state is kept and named, with the same words of conversation around it.
+  g('L-SAYI-F1', 'sayim', 'Tabii hocam, bizim 5 yaşında kaç hastamız var şu anda?', L('NOTYA-AYSE-SAYI-SIRA-01'),
+    { rota: ['arama'], icerir: ['Filtre: 5 yaş', 'Ayşe Bozkurt'], icermez: [`Kayıtlarda ${KORPUS_PANEL_SAYISI} hasta`, 'söz:'] }, { turetilmis: true, not: 'The live sentence with an age stated: only the five-year-old chart of the fixture is counted, and the answer names the age filter.' }),
+  g('L-SAYI-F2', 'sayim', 'Tabii, bizim bu hafta kaç hasta muayene ettik hocam?', L('NOTYA-AYSE-SAYI-SIRA-01'),
+    { rota: ['arama'], icerir: ['[Bb]u hafta'], icermez: ['söz:'] }, { turetilmis: true, not: 'The live sentence with a time window and a visit verb stated: the window stays (the number depends on the weekday of the run, as in Y-084).' }),
+  g('L-SAYI-F3', 'sayim', 'Peki bizim şizofreni tanılı kaç hastamız var şu anda?', L('NOTYA-AYSE-SAYI-SIRA-01'),
+    { rota: ['arama'], icerir: ['\\b0 hasta', 'Filtre:[^.]*şizofreni', `Kayıtlı toplam ${KORPUS_PANEL_SAYISI} hastanız var`], icermez: ['tabii|bizim|peki'] }, { turetilmis: true, not: 'The live sentence with a diagnosis no chart of the fixture carries: zero is right, and the answer says which word narrowed the count and gives the registered total — never a bare "0 hasta".' }),
   g('L-1TO1-YAS', 'dosya', 'hastamız kaç yaşında', L('NOTYA-SES-1TO1-02'),
     { hasta: 'bebek', icerir: ['2 yaş'], icermez: [SAYIM_SABLONU], rotaDegil: ['arama'] }, { acik: 'bebek' }),
   g('L-1TO1-AC', 'hasta-cozum', `${P}'nun dosyasını aç`, L('NOTYA-SES-1TO1-02'),
@@ -270,23 +298,23 @@ const LEDGER_GIRDILERI: KorpusGirdisi[] = [
 
   // ── identity questions answered on the server, without the model (NOTYA-BETA-0925) ──
   g('L-KIMLIK-ANNE', 'kimlik', 'Annesinin adı ne?', [L('NOTYA-BETA-0925'), K(ROTA, 'Annesinin adı ne?')],
-    { rota: ['kimlik'], hasta: 'bebek', icerir: ['Elif'] }, { acik: 'bebek', ses: { icerir: ['ekran'], icermez: ['Elif'] }, not: 'Voice: the value stays on screen, the spoken sentence carries none.' }),
+    { rota: ['kimlik'], hasta: 'bebek', icerir: ['Elif'] }, { acik: 'bebek', ses: { icerir: ['Elif'] }, not: 'Voice (Dr. Gökhan 2026-10-25): the name is read aloud, as in a conversation.' }),
   g('L-KIMLIK-BABA', 'kimlik', 'Babasının adı ne?', L('NOTYA-BETA-0925'),
-    { rota: ['kimlik'], hasta: 'bebek', icerir: ['Serdar'] }, { acik: 'bebek', ses: { icerir: ['ekran'], icermez: ['Serdar'] }, turetilmis: true, not: 'The row lists "anne/baba adı"; the father form of the quoted mother question.' }),
+    { rota: ['kimlik'], hasta: 'bebek', icerir: ['Serdar'] }, { acik: 'bebek', ses: { icerir: ['Serdar'] }, turetilmis: true, not: 'The row lists "anne/baba adı"; the father form of the quoted mother question.' }),
   g('L-KIMLIK-ANNETEL', 'kimlik', 'Annesinin telefonu ne?', [L('NOTYA-BETA-0925'), K(T_STANDART, 'Annesinin telefonu ne?')],
     { rota: ['kimlik'], hasta: 'bebek', icerir: ['0532 000 11 22'] }, { acik: 'bebek', ses: { icerir: ['ekran'], icermez: ['0532'] } }),
   g('L-KIMLIK-VELI', 'kimlik', 'Velisi kim?', L('NOTYA-BETA-0925'),
-    { rota: ['kimlik'], hasta: 'bebek', icerir: ['Elif Karaoğlu'] }, { acik: 'bebek', ses: { icerir: ['ekran'], icermez: ['Elif'] }, turetilmis: true, not: 'The row lists "veli" among the answered fields.' }),
+    { rota: ['kimlik'], hasta: 'bebek', icerir: ['Elif Karaoğlu'] }, { acik: 'bebek', ses: { icerir: ['Elif'] }, turetilmis: true, not: 'The row lists "veli" among the answered fields.' }),
   g('L-KIMLIK-DOGUMYERI', 'kimlik', 'Doğum yeri neresi?', L('NOTYA-BETA-0925'),
-    { rota: ['kimlik'], hasta: 'bebek', icerir: ['İzmir'] }, { acik: 'bebek', ses: { icerir: ['ekran'] }, turetilmis: true, not: 'The row lists "doğum yeri/tarihi".' }),
+    { rota: ['kimlik'], hasta: 'bebek', icerir: ['İzmir'] }, { acik: 'bebek', ses: { icerir: ['İzmir'] }, turetilmis: true, not: 'The row lists "doğum yeri/tarihi".' }),
   g('L-KIMLIK-ADRES', 'kimlik', 'Adresi ne?', L('NOTYA-BETA-0925'),
     { rota: ['kimlik'], hasta: 'bebek', icerir: ['QA Mahallesi'] }, { acik: 'bebek', ses: { icerir: ['ekran'], icermez: ['QA Mahallesi'] }, turetilmis: true, not: 'The row lists "adres".' }),
   g('L-KIMLIK-EPOSTA', 'kimlik', 'E-posta adresi ne?', L('NOTYA-BETA-0925'),
     { rota: ['kimlik'], hasta: 'bebek', icerir: ['qa-veli@example\\.test'] }, { acik: 'bebek', ses: { icerir: ['ekran'], icermez: ['example'] }, turetilmis: true, not: 'The row lists "e-posta".' }),
   g('L-KIMLIK-DT', 'kimlik', `${P}'nun doğum tarihini verir misin?`, L('STT mis-transcription investigated'),
-    { rota: ['kimlik'], hasta: 'bebek', icerir: ['{P_DOGUM}'] }, { ses: { icerir: ['ekran'] } }),
+    { rota: ['kimlik'], hasta: 'bebek', icerir: ['{P_DOGUM}'] }, { ses: { icerir: ['Doğum tarihi'] } }),
   g('L-KIMLIK-DT-ASR', 'kimlik', 'Emircan Kara oğlunun doğum tarihini verir misin?', L('STT mis-transcription investigated'),
-    { rota: ['kimlik'], hasta: 'bebek', icerir: ['{P_DOGUM}'] }, { ses: { icerir: ['ekran'] }, turetilmis: true, not: 'The transcript Fish produced: the compound surname split in two, no apostrophe.' }),
+    { rota: ['kimlik'], hasta: 'bebek', icerir: ['{P_DOGUM}'] }, { ses: { icerir: ['Doğum tarihi'] }, turetilmis: true, not: 'The transcript Fish produced: the compound surname split in two, no apostrophe.' }),
 
   // ── voice found no record of an exactly named patient (NOTYA-SES-HASTA-01, #504) ──
   g('L-SES-HASTA-01', 'hasta-cozum', `${A}'un son muayenesinin özetini verir misin?`, [L('NOTYA-SES-HASTA-01'), K(T_COZ, 'son muayenesinin özetini verir misin?')],
@@ -384,7 +412,7 @@ const LEDGER_GIRDILERI: KorpusGirdisi[] = [
       icermez: ['\\*\\*Aşı', 'persentil', 'baş çevresi', 'Büyüme'],
     }, { acik: 'eriskin', brans: 'dahiliye', turetilmis: true, not: 'The same question on the adult chart of a dahiliye doctor: the generic sections with the branch\'s own measurements, no vaccine and no growth section.' }),
   g('L-OZET-YABANCI', 'izolasyon', 'Selim Erkoç\'un 12 aylık sağlam çocuk muayenesinin özetini verir misin?', L('NOTYA-AYSE-OZET-01'),
-    { hasta: null, icermez: ['\\*\\*Muayene:\\*\\*', '\\*\\*Aşı:\\*\\*', 'dosyası açık'] }, { turetilmis: true, not: 'The live sentence about a patient of the scene\'s other doctor: no summary, no chart. What IS answered today is the count template ("Kayıtlarda 0 hasta. Filtre: 12 aylık.") — the age phrase is read as a cohort filter when the name resolves to nobody; listed as open under NOTYA-AYSE-OZET-01g, not graded here.' }),
+    { hasta: null, icermez: ['\\*\\*Muayene:\\*\\*', '\\*\\*Aşı:\\*\\*', 'dosyası açık'] }, { turetilmis: true, not: 'The live sentence about a patient of the scene\'s other doctor: no summary, no chart. Until NOTYA-IKI-BEYIN-BIRDE (2026-10-03) the answer was the count template ("Kayıtlarda 0 hasta. Filtre: 12 aylık." — the age phrase read as a cohort filter when the name resolves to nobody; NOTYA-AYSE-OZET-01g). An empty search now falls through to the model with no chart bound, so the stand-in answers and the turn is VEKIL here; what is graded is that no chart and no summary reach the answer.' }),
   g('L-GECMIS', 'muayene', 'Bu hastanın geçmişini özetler misin?', L('çoklu-muayene sorgusu'),
     { hasta: 'bebek', rotaDegil: ['arama', 'kapsam'], icerir: ['demir eksikliği|anemi', 'otit'] }, { acik: 'bebek', yuzeyler: UC, turetilmis: true, not: 'The ledger\'s success criterion: a "bu hastanın geçmişi" question is answered from ALL notes, not only the last one.' }),
 
