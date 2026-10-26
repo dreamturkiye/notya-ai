@@ -52,6 +52,22 @@ export default function LabPage() {
   const [kayitMesaj, setKayitMesaj] = useState('');
   const [kayitDurum, setKayitDurum] = useState<'hazir' | 'kaydediyor'>('hazir');
   const autoCikarRef = useRef(false);
+  // HASTA-KIMLIK-SERIDI-01: hangi hastanın dosyası açık, her zaman görünür (Dr. Gökhan Mamur, 2026-10-26).
+  const [hastaAdi, setHastaAdi] = useState<string | null>(null);
+  const [hastaDogum, setHastaDogum] = useState<string | null>(null);
+  useEffect(() => {
+    let iptal = false;
+    (async () => {
+      try {
+        const t = await getAccessTokenAsync();
+        const r = await fetch(`/api/doktor/hastalar/${patientId}`, { headers: { Authorization: `Bearer ${t}` } });
+        const d = await r.json().catch(() => null);
+        if (!iptal && d?.patient?.ad_soyad) setHastaAdi(String(d.patient.ad_soyad));
+        if (!iptal && d?.patient?.dogum_tarihi) setHastaDogum(String(d.patient.dogum_tarihi));
+      } catch { /* kimlik şeridi isteğe bağlı */ }
+    })();
+    return () => { iptal = true; };
+  }, [patientId]);
 
   const api = useCallback(async (body: Record<string, unknown>) => {
     const token = await getAccessTokenAsync();
@@ -177,6 +193,9 @@ export default function LabPage() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>
                 <div style={{ fontSize: 15, fontWeight: 800, color: CHROME_RENK.ink }}>{doc?.fileName || 'Laboratuvar belgesi'}</div>
                 <DoktorGeriLink href={geriHref}>{geriLabel}</DoktorGeriLink>
+              </div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: CHROME_RENK.ink, marginTop: 2 }}>
+                {hastaAdi || 'Hasta'}{hastaDogum && <span style={{ fontWeight: 400, color: CHROME_RENK.muted }}> · Doğum: {new Date(hastaDogum).toLocaleDateString('tr-TR', { timeZone: 'Europe/Istanbul' })}</span>}
               </div>
               {doc && !/csv|excel|spreadsheet/.test(doc.fileType) && <div style={{ marginTop: 8 }}><DocumentViewer documentId={doc.id} fileName={doc.fileName} fileType={doc.fileType} /></div>}
               {doc && /csv|excel|spreadsheet/.test(doc.fileType) && <div style={{ fontSize: 12, color: CHROME_RENK.muted, marginTop: 8 }}>Tablo dosyası — satırlar sağda.</div>}
