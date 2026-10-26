@@ -282,7 +282,7 @@ export const SUBSCRIPTION_PLANS: Record<string, {
     features: ['Sınırsız seans', 'Tüm şablonlar', 'ICD-10 kodlama', 'WhatsApp', 'Çevrimdışı mod'],
   },
   klinik: {
-    name: 'Klinik',
+    name: 'Notya Klinik',
     price_try_monthly: 3999,
     price_try_yearly: 3299,
     session_limit: null,

@@ -1,7 +1,8 @@
 /**
- * Klinik dikeyi — Doktor’dan ayrı kategori (Mali / Avukat / Doktor ile aynı katman).
+ * Notya Klinik — çok hekimli masa. Doktor’dan ayrı ürün.
+ * On dalın kategori adı Özel Branşlar’dır; ürün adı “Klinik” diye kısaltılmaz.
  *
- * Landing 10 dal (`components/klinik-landing/content.ts`):
+ * Landing 10 özel branş (`components/klinik-landing/content.ts`):
  *   Hekim klinik: saç ekimi, estetik-cerrahi, medikal-estetik, klinik-dermatoloji, longevity
  *   Müttefik (29.03.2025): fizyoterapi, klinik-psikolog, diyetisyen, ergoterapi, odyoloji
  *
@@ -26,6 +27,12 @@ export const KLINIK_MUTTEFIK_SLUGS = [
 ] as const
 
 export const KLINIK_YENI_SLUGS = [...KLINIK_HEKIM_SLUGS, ...KLINIK_MUTTEFIK_SLUGS] as const
+
+/** Çok hekimli ürün. Ekranda “Klinik” tek başına yazılmaz. */
+export const NOTYA_KLINIK_AD = 'Notya Klinik'
+
+/** Eski “Klinik” kategori adı. On dalın ortak etiketi. */
+export const OZEL_BRANS_KATEGORI = 'Özel Branşlar'
 
 export type KlinikYeniSlug = (typeof KLINIK_YENI_SLUGS)[number]
 
@@ -69,6 +76,7 @@ const ETIKET_SLUG: Record<string, KlinikYeniSlug> = {
   'klinik-dermatoloji': 'klinik-dermatoloji',
   'klinik dermatoloji': 'klinik-dermatoloji',
   'klinik dermatolojisi': 'klinik-dermatoloji',
+  'dermatoloji (klinik)': 'klinik-dermatoloji',
   longevity: 'longevity',
   'longevity & wellness': 'longevity',
   'longevity ve wellness': 'longevity',

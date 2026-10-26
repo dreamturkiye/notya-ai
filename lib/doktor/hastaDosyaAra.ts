@@ -665,6 +665,11 @@ export async function klinikAramaYurut(
   if (q.kirilim === 'ilac_adi' && ek.length) istatistik.cumle = ek.join(' ')
   else if (ek.length) istatistik.cumle = `${istatistik.cumle} ${ek.join(' ')}`
   if (cikti.length === 0 && pencereliCiplakSayim(q)) istatistik.cumle = bosGunSayimCumlesi(q, (hastalar || []).length)
+  // NOTYA-AYSE-SAYI-SIRA-01: a patient count that one of the doctor's own words narrowed to nobody also says the
+  // registered total (this doctor's active patients, the rows read above) — never a bare "0 hasta".
+  else if (cikti.length === 0 && q.sayim && q.olcum === 'hasta' && q.sozFiltre) {
+    istatistik.cumle = `${istatistik.cumle} Kayıtlı toplam ${(hastalar || []).length} hastanız var.`
+  }
   return { adaylar, q, istatistik, tur: cevapTuru(q, null) }
 }
 
