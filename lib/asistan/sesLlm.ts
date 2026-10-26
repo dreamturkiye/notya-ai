@@ -244,7 +244,7 @@ export async function sesLlmPost(req: NextRequest): Promise<Response> {
             return
           }
           const kilidiBirak = () => { void sesTurKilidiBirak(supabase, jeton.d, jeton.o, mesaj, soylenen).catch(() => {}) }
-          const oturum = ac.satir?.messages ?? []
+          const oturum = (ac.satir?.messages ?? []) as ElMesaj[]
           // NOTYA-SES-ARKA-01: eko / aynı istek / arka plan — model + dolgu yok (maliyet/hız).
           const tur = sesTurKapisi({ mesaj, oturumMesajlari: oturum })
           if (tur.tip === 'sessiz') {
