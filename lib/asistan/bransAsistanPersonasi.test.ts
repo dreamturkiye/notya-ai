@@ -67,7 +67,7 @@ describe('bransAsistanPersonasiBul — Klinik rosteri (10/10 dal, kendi adı —
   // `bransAnahtari('dermatoloji')` Doktor'un kanonik branş anahtarına çözüldüğü için Doktor rosteri
   // ÖNCELİKLİDİR (bkz. aşağıdaki "iki rosterde de olan ortak anahtar" testi) — bu panel yalnız
   // Doktor dikeyinde mount edildiği için (app/dashboard/doktor/…) bu, gerçek çağıranlar için doğru
-  // davranıştır; Klinik kendi "dermatoloji" dalını AYRI bir yüzeyden (app/asistan/klinik) okur.
+  // davranıştır; Klinik kendi "dermatoloji" dalını AYRI bir yüzeyden (app/asistan/ozel-branslar) okur.
   const beklenen: Record<string, string> = {
     'estetik-cerrahi': 'Leyla Arslan',
     'sac-ekimi': 'Emre Kaya',

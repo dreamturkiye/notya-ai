@@ -38,6 +38,8 @@ import { dahiliyeKilidi, dahiliyeMi } from "@/specialties/dahiliye/prompts"
 import { kadinDogumKilidi, kadinDogumMi } from "@/specialties/kadin-dogum/prompts"
 import { dermatolojiKilidi, dermatolojiMi } from "@/specialties/dermatoloji/prompts"
 import { gozKilidi, gozMi } from "@/specialties/goz-hastaliklari/prompts"
+import { ozelBransKilidi } from "@/lib/klinik/ozelPrompt"
+import { SPECIALTIES } from "@/lib/doktor/specialties"
 import { dozKilitliBrans } from "@/lib/doktor/soapUret"
 import { kaynakSayilari, uydurmaDozTemizle } from "@/lib/doktor/dozKilidi"
 import { uydurmaKaynakTemizle } from "@/lib/doktor/kaynakKilidi"
@@ -59,6 +61,7 @@ import { acikDosyaDisiSoruMu, aktifHastaKullanilsinMi, dosyaAcmaIstegiMi } from 
 import { aiAkis, aiCagir, girdiTokenTahmini, yanitMetni, type AiMesaj } from "@/lib/ai/cagir"
 import { anilanBaskaKisi, okumaAraciCalistir, okumaAraciKapali, okumaAraciMi, OKUMA_ARACI_BLOGU, OKUMA_ARACLARI, OKUMA_TUR_TAVANI, type OkumaSonucu } from "@/lib/asistan/okumaAraclari"
 import { aramaCevabiGuvenilirMi, kimlikAcikDosyayaDusmesinMi } from "@/lib/asistan/ikiBeyinBirde"
+import { turZamanlari } from "@/lib/asistan/balonSirasi"
 import { AlanDefteri, alanlariYerineKoy, alanSozcusu, defteriGeriKur, verilmeyenleriSil, type AlanRef } from "@/lib/asistan/hastaAlan"
 import { asistanModelYonlendir, gecmisiKirp, netSosyalMi, sesSohbetCabasi, sohbetKademesi, SOHBET_SAKLANAN_MESAJ } from "@/lib/ai/modeller"
 import { aracTanimlari, eylemKapali, HASTA_ADI_ALANI } from "@/core/eylemler/araclar"
@@ -392,8 +395,11 @@ export async function ayseCevapla(g: AyseGirdisi): Promise<AyseSonucu> {
     // NOTYA-SES-TUR-02: this turn was cancelled (barge-in / sentence merge) -- never let its answer reach
     // the session record, where a later poll or follow-up turn could surface it as a fresh answer.
     if (g.sinyal?.aborted) return
-    const kullanici: OturumMesaji = ses ? { role: "user", content: hamMesaj, kanal: "ses", zaman: simdi() } : { role: "user", content: hamMesaj }
-    const asistanZamani = simdi()
+    // NOTYA-AYSE-SAYI-SIRA-01: the doctor's line carries its own time (the moment the sentence reached this turn), the
+    // reply a strictly later one. Both used to be stamped here, at write time, with the same instant.
+    const zamanlar = turZamanlari(turBaslangic)
+    const kullanici: OturumMesaji = ses ? { role: "user", content: hamMesaj, kanal: "ses", zaman: zamanlar.soru } : { role: "user", content: hamMesaj }
+    const asistanZamani = zamanlar.cevap
     const asistan: OturumMesaji = ses
       ? {
           role: "assistant", content: asistanSozu, kanal: "ses", zaman: asistanZamani,
@@ -894,7 +900,9 @@ ${ilacBaglamMetni(drugs[0])}`
 
   // Build system prompt with learning context
   // DAH-/KD-/DERM-PROMPTS-LOCK: branş hekimi (users.specialty) → specialties/<branş>/prompts kilidi (system.md + tools.ts)
-  const bransKilidi = dahiliyeMi(hekimBransi, specialty) ? dahiliyeKilidi("asistan") : kadinDogumMi(hekimBransi, specialty) ? kadinDogumKilidi("asistan") : dermatolojiMi(hekimBransi, specialty) ? dermatolojiKilidi("asistan") : gozMi(hekimBransi, specialty) ? gozKilidi("asistan") : ""
+  const tusSeans = SPECIALTIES.some((x) => x.key === specialty)
+  const ozelKilit = tusSeans ? "" : ozelBransKilidi(hekimBransi, specialty)
+  const bransKilidi = ozelKilit || (dahiliyeMi(hekimBransi, specialty) ? dahiliyeKilidi("asistan") : kadinDogumMi(hekimBransi, specialty) ? kadinDogumKilidi("asistan") : dermatolojiMi(hekimBransi, specialty) ? dermatolojiKilidi("asistan") : gozMi(hekimBransi, specialty) ? gozKilidi("asistan") : "")
   // NOTYA-ONBELLEK-SICAK-YOL: global ve hekim önbellekte (sabit). Hafıza, hasta satırı, branş kilidi
   // ve dosya gövdesi kuyrukla birlikte önbelleksiz — seans sayacı ve hasta satırı her tur değişir,
   // önbelleğe yazmak cevabı yazma bitene kadar bekletir.
@@ -949,7 +957,9 @@ ${ilacBaglamMetni(drugs[0])}`
   // keeps its write tools exactly as they were (list, forcing, card path) and is not offered the read tools; a turn
   // that is only a greeting or thanks has nothing to look up.
   const okumaSunulur = !komut && !okumaAraciKapali() && !netSosyalMi(String(message || ""))
-  const araclar = okumaSunulur ? [...yazmaAraclari, ...OKUMA_ARACLARI] : yazmaAraclari
+  // SES-LAT-01: a purely social turn (hello, how are you, thanks) offers no tools at all — see sohbetKademesi.
+  const sosyalTur = !komut && netSosyalMi(String(message || ""))
+  const araclar = sosyalTur ? [] : okumaSunulur ? [...yazmaAraclari, ...OKUMA_ARACLARI] : yazmaAraclari
   const toolChoice = !araclar.length || !eylemHastasi || !komutZorla
     ? undefined
     : zorlanan && araclar.some((a) => a.name === zorlanan) ? { type: 'tool' as const, name: zorlanan } : ('any' as const)
@@ -1028,7 +1038,7 @@ ${ilacBaglamMetni(drugs[0])}`
   // NOTYA-KADEME-01: sosyal tur ve tek-slot kısa takip turu luna-none (effort none); araç / eylem / ağır soru luna.
   const kademe = sohbetKademesi({
     gorev: yonlendirme.gorev, mesaj: String(message || ""), sonNiyet: takip?.niyet ?? konusmaOnceki?.sonNiyet ?? null,
-    niyet: quickIntent, aracSayisi: araclar.length, girdiToken: girdiTokenTahmini(cagriTaban),
+    niyet: quickIntent, aracSayisi: araclar.length, sosyal: sosyalTur, girdiToken: girdiTokenTahmini(cagriTaban),
   })
   // SES-CABA-01 (launch audit, 2026-10-26): a VOICE expert turn without its own tier runs at reasoning effort 'low' —
   // provider-default (medium) was 4–9 s to the first word with the doctor waiting in silence. Screen answers of voice
