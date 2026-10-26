@@ -18,7 +18,7 @@ import {
   type Sahne,
 } from './ayseSahne'
 import { GERCEKCI_HASTA_ADI, gercekciHastaEkle } from './gercekciHasta'
-import { KORPUS_ADLARI, KORPUS_GEC_GIRIS_ADI, KORPUS_KIMLIK_DEGERLERI, YABANCI_HASTALAR, gecGirisHastasiEkle, korpusPaneliKur } from './gokhanKorpusHastalari'
+import { KORPUS_ADLARI, KORPUS_GEC_GIRIS_ADI, KORPUS_SESTE_YASAK_DEGERLER, YABANCI_HASTALAR, gecGirisHastasiEkle, korpusPaneliKur } from './gokhanKorpusHastalari'
 import { KORPUS_GEC_GIRIS, korpusBebek, korpusGecGiris } from '../dosyaSorgu/denetim/fikstur'
 import { bugunTz } from '../../randevu/tarihCozumle'
 import { fishMetni } from '../fishSes'
@@ -197,7 +197,7 @@ async function oturumuKos(grup: KorpusGirdisi[], yuzey: Yuzey, o: { saatDilimi: 
     if (!g.yuzeyler.includes(yuzey)) continue
     const gozlem: TurGozlemi = { ...r, hata: r.hata || kurulumHatasi }
     const { karar, nedenler } = beklentiDegerlendir(yuzeyBeklentisi(g, yuzey), gozlem, baglam, TUM_ADLAR, { vekil: o.vekil })
-    const kaliteGirdisi = kaliteGirdisiKur(g, gozlem, { vekil: o.vekil, kimlikDegerleri: KORPUS_KIMLIK_DEGERLERI, yabanciAdlar: YABANCI_HASTALAR })
+    const kaliteGirdisi = kaliteGirdisiKur(g, gozlem, { vekil: o.vekil, kimlikDegerleri: KORPUS_SESTE_YASAK_DEGERLER, yabanciAdlar: YABANCI_HASTALAR })
     satirlar.push({
       id: g.id, kaynak: g.kaynak.map((k) => `${k.dosya}: ${k.kimlik}`).join('; '), kaynakDosyalari: [...new Set(g.kaynak.map((k) => k.dosya))],
       kat: g.kat, yuzey, oturum: g.oturum ?? null, onceki, soz: g.soz,

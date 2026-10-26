@@ -16,14 +16,16 @@
  *      read (app/api/asistan/ses-ekran);
  *   4. a placeholder that was not issued in this turn is removed; a field with no value becomes the existing
  *      sentence that tells the doctor where to add it;
- *   5. spoken form: a sentence that would carry a value is not read — the doctor hears the same sentence the
- *      identity router says ("… ekranınıza yazdım Hocam"). No identity value goes to the speech provider.
+ *   5. spoken form (NOTYA-SES-KIMLIK-OKU-01, Dr. Gökhan 2026-10-25 — supersedes "no identity value is spoken"): names,
+ *      birth date and birth place are READ OUT; a phone number or address only when the doctor's own sentence asked to
+ *      hear it; e-mail never. A sentence with a value that may not be spoken becomes the pointer sentence ("… ekranınıza
+ *      yazdım Hocam"). The spoken value lives in the turn's ledger in memory only — never stored, never sent to a model.
  *
  * No reader lives here: values come from kimlikKaydiOku / kimlikAlanDegeri, which scope by doctor.
  */
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { AnthropicArac } from '@/core/eylemler/araclar'
-import { kimlikAlanDegeri, kimlikKaydiOku, type KimlikAlanDegeri, type KimlikAlani } from '@/lib/doktor/kimlikSorusu'
+import { kimlikAlanDegeri, kimlikKaydiOku, SOZ_KOSULU, sesteOkunur, type KimlikAlanDegeri, type KimlikAlani } from '@/lib/doktor/kimlikSorusu'
 import { EKRANA_YAZDIM, kimlikEkrandaSozu } from '@/lib/asistan/konusma'
 import { trAramaNormalize } from '@/lib/utils/turkceArama'
 
@@ -57,7 +59,7 @@ export const HASTA_ALAN_ARACI: AnthropicArac = {
 }
 
 /** Prompt rule for the single brain's tail (lib/asistan/okumaAraclari.ts). Names no field key: the keys are in the tool schema. */
-export const HASTA_ALAN_KURALI = `KİMLİK / İLETİŞİM ALANI (anne adı, baba adı, veli / yasal temsilci, telefon, annenin / babanın / velinin telefonu, e-posta, adres, doğum yeri, doğum tarihi): hekim bunlardan birini NASIL sorarsa sorsun ("annesi kimdi", "aileye nasıl ulaşırım", "nerede oturuyorlar", "hangi şehirde doğmuş") hasta_alan çağır (bu alanlarda hasta_bul yerine bunu kullan); hangi alanın sorulduğuna SEN karar ver, birden çok alan sorulduysa her biri için ayrı çağır. Soruda hasta adı geçiyorsa aracın hasta adı alanına yaz; geçmiyorsa boş bırak (açık dosya kullanılır). Araç sana DEĞERİ VERMEZ: alanın kayıtlı olup olmadığını ve {{ALAN:…}} biçiminde bir yer tutucu verir. Cevabında değerin geleceği yere o yer tutucuyu HARFİ HARFİNE yaz (ör. "Annesinin adı {{ALAN:…}}." — üç nokta yerine aracın verdiği ad); sunucu, cevabı hekime göstermeden önce gerçek değeri yerine koyar. Değeri tahmin etme, uydurma; yer tutucuyu değiştirme, çevirme, açıklama. Araç "kayıtlı değil" derse yer tutucuyu tek başına bir cümle olarak yaz; sunucu yerine bilginin nereden ekleneceğini söyleyen cümleyi koyar. Bu turda aracın VERMEDİĞİ bir yer tutucuyu (ör. geçmişteki bir cevaptan) yazma: silinir. "Erişimim yok / bu bilgiyi göremiyorum" DEME.`
+export const HASTA_ALAN_KURALI = `KİMLİK / İLETİŞİM ALANI (anne adı, baba adı, veli / yasal temsilci, telefon, annenin / babanın / velinin telefonu, e-posta, adres, doğum yeri, doğum tarihi): hekim bunlardan birini NASIL sorarsa sorsun ("annesi kimdi", "aileye nasıl ulaşırım", "nerede oturuyorlar", "hangi şehirde doğmuş") hasta_alan çağır (bu alanlarda hasta_bul yerine bunu kullan); hangi alanın sorulduğuna SEN karar ver, birden çok alan sorulduysa her biri için ayrı çağır. Soruda hasta adı geçiyorsa aracın hasta adı alanına yaz; geçmiyorsa boş bırak (açık dosya kullanılır). Araç sana DEĞERİ VERMEZ: alanın kayıtlı olup olmadığını ve {{ALAN:…}} biçiminde bir yer tutucu verir. Cevabında değerin geleceği yere o yer tutucuyu HARFİ HARFİNE yaz (ör. "Annesinin adı {{ALAN:…}}." — üç nokta yerine aracın verdiği ad); sunucu, cevabı hekime göstermeden önce gerçek değeri yerine koyar. Değeri tahmin etme, uydurma; yer tutucuyu değiştirme, çevirme, açıklama. Araç "kayıtlı değil" derse yer tutucuyu tek başına bir cümle olarak yaz; sunucu yerine bilginin nereden ekleneceğini söyleyen cümleyi koyar. Sunucu sesli okumada ad, doğum tarihi ve doğum yerini yer tutucunun yerine okur (telefon / adres yalnız hekim sesle isterse, e-posta asla); cümleni doğal kur, "ekrana bak" ile bitirme. Bu turda aracın VERMEDİĞİ bir yer tutucuyu (ör. geçmişteki bir cevaptan) yazma: silinir. "Erişimim yok / bu bilgiyi göremiyorum" DEME.`
 
 /** What the session stores about a placeholder: which field of which patient. Never a value. */
 export interface AlanRef {
@@ -72,6 +74,8 @@ interface VerilenAlan extends AlanRef {
   durum: 'var' | 'eksik'
   /** The "where to add it" sentence when it carries no value (it can be spoken); null when the text carries a value. */
   sozluMetin: string | null
+  /** The value in its spoken form, only when this turn may speak it (SOZ_KOSULU + the doctor's request); else null. In memory for the turn. */
+  soz: string | null
 }
 
 const YER_TUTUCU = /\{\{\s*ALAN\s*:\s*([a-z_]+(?:#\d+)?)\s*\}\}/gi
@@ -93,15 +97,25 @@ export class AlanDefteri {
   private readonly verilen = new Map<string, VerilenAlan>()
 
   /** Register a field of a patient and return the placeholder the model must write. */
-  ver(alanAdi: string, hasta: { id: string; ad: string }, d: Pick<KimlikAlanDegeri, 'durum' | 'metin' | 'degerli'>): string {
+  ver(alanAdi: string, hasta: { id: string; ad: string }, d: Pick<KimlikAlanDegeri, 'durum' | 'metin' | 'degerli' | 'soz'>, sesliIstek = false): string {
     let sira = this.hastalar.indexOf(hasta.id)
     if (sira < 0) sira = this.hastalar.push(hasta.id) - 1
     const anahtar = sira === 0 ? alanAdi : `${alanAdi}#${sira + 1}`
-    this.verilen.set(anahtar, {
-      anahtar, alan: ALAN_ADLARI[alanAdi], hastaId: hasta.id, hastaAd: hasta.ad, durum: d.durum,
-      sozluMetin: d.durum === 'eksik' && !d.degerli ? d.metin : null,
-    })
+    this.verilen.set(anahtar, this.kayit(anahtar, ALAN_ADLARI[alanAdi], hasta, d, sesliIstek))
     return yerTutucu(anahtar)
+  }
+
+  private kayit(anahtar: string, alan: KimlikAlani, hasta: { id: string; ad: string }, d: Pick<KimlikAlanDegeri, 'durum' | 'metin' | 'degerli' | 'soz'>, sesliIstek: boolean): VerilenAlan {
+    return {
+      anahtar, alan, hastaId: hasta.id, hastaAd: hasta.ad, durum: d.durum,
+      sozluMetin: d.durum === 'eksik' && !d.degerli ? d.metin : null,
+      soz: d.durum === 'var' && d.soz && sesteOkunur(SOZ_KOSULU[alan], sesliIstek) ? d.soz : null,
+    }
+  }
+
+  /** Rebuild the entry of a stored reference (reading a stored answer aloud): the same rule, the value read now. */
+  geriYukle(r: AlanRef, hasta: { id: string; ad: string }, d: Pick<KimlikAlanDegeri, 'durum' | 'metin' | 'degerli' | 'soz'>, sesliIstek: boolean): void {
+    this.verilen.set(anahtarDuz(r.anahtar), this.kayit(anahtarDuz(r.anahtar), r.alan, hasta, d, sesliIstek))
   }
 
   bul(anahtar: string): VerilenAlan | null {
@@ -173,12 +187,27 @@ export async function alanlariYerineKoy(supabase: SupabaseClient, doktorId: stri
 }
 
 /**
- * Spoken form, one sentence at a time (the `temizle` hook of SesAkisi). A sentence that would carry a value is not
- * read: once per turn the doctor hears where it is. A field with no value is spoken as its "where to add it"
+ * A ledger for a STORED answer that is read aloud ("bana oku"): the references the answer was stored with, read now with
+ * the authenticated doctor's id (HASTA-IZOLASYON-01 — a patient who is not this doctor's reads nothing).
+ */
+export async function defteriGeriKur(supabase: SupabaseClient, doktorId: string, refler: AlanRef[], sesliIstek: boolean, nowMs = Date.now()): Promise<AlanDefteri> {
+  const defter = new AlanDefteri()
+  const gecerli = (refler || []).filter((r) => r && typeof r.anahtar === 'string' && typeof r.hastaId === 'string' && Object.values(ALAN_ADLARI).includes(r.alan))
+  const kayitlar = new Map(await Promise.all([...new Set(gecerli.map((r) => r.hastaId))].map(async (id) => [id, await kimlikKaydiOku(supabase, doktorId, id).catch(() => null)] as const)))
+  for (const r of gecerli) {
+    const kayit = kayitlar.get(r.hastaId)
+    if (kayit) defter.geriYukle(r, { id: r.hastaId, ad: kayit.ad }, kimlikAlanDegeri(r.alan, kayit, nowMs), sesliIstek)
+  }
+  return defter
+}
+
+/**
+ * Spoken form, one sentence at a time (the `temizle` hook of SesAkisi). A value this turn may speak is read out; a
+ * sentence with one it may not is not read: once per turn the doctor hears where it is. A field with no value is spoken as its "where to add it"
  * sentence. A placeholder that was not issued is dropped. `defter` null: the turn has no ledger (reading a stored
  * answer aloud) — any sentence with a placeholder becomes one pointer to the screen.
  */
-export function alanSozcusu(defter: AlanDefteri | null): (cumle: string) => string {
+export function alanSozcusu(defter: AlanDefteri | null, degerSoyle = true): (cumle: string) => string {
   let soylendi = false
   return (cumle) => {
     if (!yerTutucuVarMi(cumle)) return cumle
@@ -186,8 +215,11 @@ export function alanSozcusu(defter: AlanDefteri | null): (cumle: string) => stri
     const out = cumle.replace(YER_TUTUCU, (t, anahtar: string) => {
       const v = defter?.bul(anahtar)
       if (!v) return defter ? '' : t
-      if (v.sozluMetin == null) { degerli = degerli ?? v; return t }
-      return v.sozluMetin
+      if (v.sozluMetin != null) return v.sozluMetin
+      // NOTYA-SES-KIMLIK-OKU-01: a value this turn may speak is read inline; `degerSoyle` false (text that is STORED, e.g.
+      // the remainder of a cut voice turn) keeps the pointer — no value is ever written to the session.
+      if (degerSoyle && v.soz != null) return v.soz
+      degerli = degerli ?? v; return t
     })
     if (degerli || !defter) {
       if (soylendi) return ''
