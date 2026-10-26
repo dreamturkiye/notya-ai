@@ -24,6 +24,8 @@ export function sesEtiketTemizle(s: string): string {
 export class SesYayKapisi {
   private tampon = ''
   private kapali = false
+  /** SES-LAT-02: the FIRST finished sentence has the doctor waiting on it — it leaves at once, not at a full breath. */
+  private ilkGitti = false
 
   constructor(private readonly yay: (parca: string) => void) {}
 
@@ -33,7 +35,11 @@ export class SesYayKapisi {
     const t = sesEtiketTemizle(parca)
     if (!t.trim()) return
     this.tampon += t
-    if (hemen || this.tampon.length >= SES_BLOK_ESIGI) this.bosalt()
+    // SES-LAT-02 (ElevenLabs' own guidance: "keep the first chunk small, the user waits on it"): callers feed whole
+    // sentences, so the first one is a complete, speakable unit — holding it for a 160-char breath only delayed the
+    // first audio by however long the model took to write the NEXT sentences. One prosody restart after sentence one
+    // is inaudible next to seconds of silence. Everything after the first release still leaves in full breaths.
+    if (hemen || !this.ilkGitti || this.tampon.length >= SES_BLOK_ESIGI) this.bosalt()
   }
 
   bitir(): void {
@@ -54,6 +60,7 @@ export class SesYayKapisi {
     let t = this.tampon.trim()
     this.tampon = ''
     if (!t) return
+    this.ilkGitti = true
     const hedef = Math.floor(SES_BLOK_ESIGI * 1.5)
     const minKes = Math.floor(SES_BLOK_ESIGI / 2)
     while (t.length > hedef * 1.25) {

@@ -225,6 +225,19 @@ export function sohbetKademesi(g: SohbetKademeGirdisi): SohbetKademeSonucu {
   return { neden: 'uzman tur' }
 }
 
+/**
+ * SES-CABA-01: reasoning effort of a VOICE sohbet-uzman turn that sohbetKademesi left at the provider default.
+ * Default 'low' (TTFT seconds instead of 4–9 s on Luna); NOTYA_SES_CABA=none|low|medium overrides, 'kapali'/'off'/'0'
+ * restores the provider default. Text-channel turns are untouched. Kill-switch NOTYA_TIER_KAPALI wins (no reasoning field).
+ */
+export function sesSohbetCabasi(deger: string | null | undefined = typeof process !== 'undefined' ? process.env?.NOTYA_SES_CABA : undefined): Caba | null {
+  if (kademeKapali()) return null
+  const v = String(deger ?? '').trim().toLowerCase()
+  if (v === 'kapali' || v === 'off' || v === '0') return null
+  if (v === 'none' || v === 'low' || v === 'medium') return v as Caba
+  return 'low'
+}
+
 // ─── Yükseltme nedenleri (NOTYA-MODEL-LUNA-01, ai_token_kullanim.neden) ──────────────────────────────
 /**
  * Neden koruyucuya (Sonnet 5) gidildi — ölçüm satırına yazılır, içerik değildir. NOTYA-MODEL-LUNAPRO-01: dört kapı.

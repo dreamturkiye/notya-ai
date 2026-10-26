@@ -22,6 +22,7 @@ import { randomUUID } from 'node:crypto'
 import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 import { AKTIF_KLINIK } from '@/countries/active/klinik'
+import { dolguGecikmesiMs } from '@/lib/asistan/konusma'
 import type { AiMesaj } from '@/lib/ai/cagir'
 import { modeldenAkis } from '@/lib/ulke/uygulama/notModeli'
 import { asistanKimligi, rolAdi } from '@/lib/ulke/arayuz'
@@ -221,7 +222,8 @@ export async function canliLlmPost(req: NextRequest): Promise<Response> {
         gonder({ id: kimlikNo, object: 'chat.completion.chunk', created: olusturma, model, choices: [{ index: 0, delta: ilk ? { role: 'assistant', ...delta } : delta, finish_reason: bitis }] })
         ilk = false
       }
-      const soyle = (t: string) => { const m = t.trim(); if (m) parca({ content: `${m} ` }) }
+      let sozGitti = false
+      const soyle = (t: string) => { const m = t.trim(); if (m) { sozGitti = true; parca({ content: `${m} ` }) } }
       let bitis = 'stop'
       try {
         // Open the stream at once: an empty first chunk lets the provider commit the clinician's transcript while we work.
@@ -240,6 +242,13 @@ export async function canliLlmPost(req: NextRequest): Promise<Response> {
             soyle(canli.ekranSozleri.gunlukSinir)
           } else {
             const istem = canliIstem({ canli, tamAd: kimlik.tamAd, kisaAd: kimlik.kisaAd, rolAdi: rolun, rol: jeton.rol, acilNumara: paket.uygulama?.portal?.acilNumara ?? null })
+            // SES-DOLGU-02 (same rule as Türkiye, 2026-10-26): a slow desk read + model may not sit in silence —
+            // past ~8 s with no content ElevenLabs retries the request as failed. One localized holding phrase,
+            // only when the deadline passes before the first spoken sentence.
+            const bekletme = canli.ekranSozleri.bekletme && dolguGecikmesiMs() > 0
+              ? setTimeout(() => { if (!sozGitti && !kapali) soyle(canli.ekranSozleri.bekletme!) }, dolguGecikmesiMs())
+              : null
+            try {
             // The doctor's own desk (calendar, patients, notes, messages...), read for this turn with the account of the signed call token.
             const baglam = await masaBlogunuAl(sb, jeton.hesapId, mesaj ?? '')
             const r = await cevabiSoyle((p) => modeldenAkis({ talimat: istem, baglam: baglam || DESK_YOK, mesajlar: modelMesajlari(govde.messages), doktorId: jeton.hesapId, butceMs: TUR_BUTCESI_MS }, p), (c) => soyle(sesMetni(c)), canli.ekranSozleri)
@@ -250,6 +259,7 @@ export async function canliLlmPost(req: NextRequest): Promise<Response> {
               parca({ tool_calls: [{ index: 0, id: `call_${randomUUID().slice(0, 8)}`, type: 'function', function: { name: EKRAN_ARACI, arguments: JSON.stringify({ text: tam.trim().slice(0, 8000) }) } }] })
               bitis = 'tool_calls'
             }
+            } finally { if (bekletme) clearTimeout(bekletme) }
           }
         }
       } catch (e) {

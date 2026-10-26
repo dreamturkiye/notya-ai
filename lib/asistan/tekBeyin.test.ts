@@ -53,13 +53,15 @@ function sahteCreateClient(_url?: string, _key?: string, opts?: { global?: { hea
 
 /** Sahte Claude: `yanit` her testte ayarlanır; stream:true istekte gerçek olay dizisini küçük parçalarla akıtır. */
 const modelIstekleri: { stream: boolean; govde: string }[] = []
-let yanit: { metin: string; araclar?: { name: string; input: Record<string, unknown> }[]; gecikmeMs?: number; gecikmeSonrasi?: string } = { metin: JSON.stringify({ speech: 'Sentetik yanıt.' }) }
+let yanit: { metin: string; araclar?: { name: string; input: Record<string, unknown> }[]; gecikmeMs?: number; gecikmeSonrasi?: string; ilkGecikmeMs?: number } = { metin: JSON.stringify({ speech: 'Sentetik yanıt.' }) }
 function mesaj() {
   const content: Record<string, unknown>[] = [{ type: 'text', text: yanit.metin }]
   for (const [i, a] of (yanit.araclar || []).entries()) content.push({ type: 'tool_use', id: `toolu_${i}`, name: a.name, input: a.input })
   return { model: 'sahte', content, stop_reason: yanit.araclar?.length ? 'tool_use' : 'end_turn', usage: { input_tokens: 1, output_tokens: 1 } }
 }
 async function* akis() {
+  // SES-DOLGU-02: first-token delay — nothing leaves the fake model until it passes.
+  if (yanit.ilkGecikmeMs) await new Promise((r) => setTimeout(r, yanit.ilkGecikmeMs))
   const m = mesaj()
   yield { type: 'message_start', message: { model: 'sahte', usage: { input_tokens: 1 } } }
   yield { type: 'content_block_start', index: 0, content_block: { type: 'text', text: '' } }
@@ -327,8 +329,15 @@ describe('kilitler — sunucu sırrı + imzalı konuşma jetonu', () => {
     assert.ok(!y.metin.includes('Umutcan'), 'başka doktorun jetonuyla hasta çözülmemeli')
     assert.equal(db.tablo('asistan_sessions').find((o) => o.id === s.oturum)?.messages.length, 0, 'bu doktorun oturumuna yazılmamalı')
     const p = await ses({ sahne: s, mesaj: 'Durumu nasıl?', jetonVeri: { d: s.diger.id, p: s.hasta } })
-    assert.match(p.metin, /bulamadım/)
+    // NOTYA-SES-TEK-CEVAP-01 (79c503fd): the turn lock is claimed on the session row scoped to the token's doctor.
+    // A foreign doctor's token cannot claim this doctor's session, so the turn closes fail-closed: the keep-alive
+    // period only — no "bulamadım" sentence, no patient, no model call, nothing written.
+    assert.equal(p.status, 200)
+    assert.equal(p.metin.trim(), '', 'yabancı jeton: tur sessizdir — boşluk tutucu, asla klik üreten "." değil (2026-10-25)')
+    assert.ok(!p.ham.includes('Umutcan') && !p.ham.includes(ANNE), 'başka doktorun jetonuyla hasta çözülmemeli')
+    assert.equal(modelIstekleri.length, 0, 'yabancı jetonla model çağrılmaz')
     assert.ok(!modelIstekleri.some((m) => m.govde.includes(s.hasta)))
+    assert.equal(db.tablo('asistan_sessions').find((o) => o.id === s.oturum)?.messages.length, 0, 'bu doktorun oturumuna yazılmamalı')
   })
 })
 
@@ -372,7 +381,7 @@ describe('tek beyin — aynı soru, aynı ekran; ses aynı içeriği konuşur', 
     assert.equal((await sesEkrani(b)).devam, false)
     // a duplicate [devam] says nothing and still calls no model
     const tekrar = await ses({ sahne: b, mesaj: '[devam]' })
-    assert.equal(tekrar.metin.trim(), '.', 'boş [devam] ElevenLabs soketini nokta ile tutar')
+    assert.equal(tekrar.metin.trim(), '', 'boş [devam] soketi SESSİZ boşlukla tutar — "." kliği (2026-10-25) geri gelmesin')
     assert.equal(modelIstekleri.length, modelOnce)
   })
 
@@ -402,7 +411,7 @@ describe('tek beyin — aynı soru, aynı ekran; ses aynı içeriği konuşur', 
     const n = modelIstekleri.length
     const tekrar = await ses({ sahne: b, mesaj: soru })
     assert.equal(modelIstekleri.length, n, 'replay yeni model turu açmaz')
-    assert.equal(tekrar.metin.trim(), '.')
+    assert.equal(tekrar.metin.trim(), '')
   })
   it('NOTYA-SES-TAKVIM-01: bugün randevu modelsiz okunur ve söylenir; yabancı doktorun günü sızmaz', async () => {
     const { bugunTRT } = await import('../../core/eylemler/types')
@@ -702,13 +711,21 @@ describe('NOTYA-SAYFA-HASTA-01: asistan doktorun açtığı hasta sayfasını ta
     method: 'POST', headers: { ...(token ? { authorization: `Bearer ${token}` } : {}), 'content-type': 'application/json' }, body: JSON.stringify(govde),
   } as ConstructorParameters<typeof NextRequestSinifi>[1])) as Promise<Response>
   const oturumu = (id: string) => db.tablo('asistan_sessions').find((o) => o.id === id)!
-  /** İkinci hasta (Ayşe Yeşil) + iki çocuğun da onaylı cihaz kilosu; oturum Ayşe Yeşil'e odaklı başlar. */
+  /**
+   * İkinci hasta (Ayşe Yeşil) + iki çocuğun da kilosu; oturum Ayşe Yeşil'e odaklı başlar. Kilo iki yerde durur:
+   * onaylı muayenenin yaşamsal bulgusu (hızlı kartın "Son ölçüm"ü buradan okunur — cihaz köprüsü d5b8e2da ile
+   * kaldırıldı, kart artık cihaz tablosunu okumaz) ve eski cihaz satırı (büyüme kanıtı onu hâlâ okur).
+   */
   function ikiHasta() {
     const s = sahne()
     const ayse = db.ekle('patients', { doctor_id: s.doktor.id, is_active: true, name_encrypted: encrypt(JSON.stringify({ ad: 'Ayşe Yeşil' })), dob_encrypted: encrypt('2021-02-03') }).id
     indeksle(s.doktor.id, ayse, 'Ayşe Yeşil')
     db.ekle('cihaz_olcumleri', { doctor_id: s.doktor.id, patient_id: ayse, tur: 'kilo', deger: 18.4, birim: 'kg', alindi: '2026-09-20T09:00:00Z', onaylandi: true })
     db.ekle('cihaz_olcumleri', { doctor_id: s.doktor.id, patient_id: s.hasta, tur: 'kilo', deger: 21.7, birim: 'kg', alindi: '2026-09-22T09:00:00Z', onaylandi: true })
+    for (const [hasta, kilo, gun] of [[ayse, 18.4, '2026-09-20'], [s.hasta, 21.7, '2026-09-22']] as const) {
+      const seans = db.ekle('sessions', { patient_id: hasta, doctor_id: s.doktor.id, created_at: `${gun}T09:00:00Z`, status: 'completed', specialty: 'pediatri', session_type: 'muayene', archived_at: null }).id
+      db.ekle('notes', { session_id: seans, doctor_id: s.doktor.id, patient_id: hasta, created_at: `${gun}T09:10:00Z`, approved_at: `${gun}T09:20:00Z`, vitaller: { kilo } })
+    }
     oturumu(s.oturum).active_context = { specialty: 'pediatri', currentPatientId: ayse, patientName: 'Ayşe Yeşil' }
     return { ...s, ayse }
   }
@@ -831,9 +848,12 @@ describe('NOTYA-SES-BAGLAM-KUCULT-01: sesli turda kısa, güvenlik-tam dosya; İ
     modelIstekleri.length = 0
   }
   const sistem = () => {
-    // [0] asıl tur; "bana" gibi bir söz arka plan öğrenme çağrısını (sohbettenOgren) da tetikleyebilir.
-    assert.ok(modelIstekleri.length >= 1, 'model turu')
-    return (JSON.parse(modelIstekleri[0].govde).system as { text: string }[]).map((b) => b.text).join('\n')
+    // Asıl tur: sistem istemi blok dizisi olan istek. "bana" gibi bir söz arka plan öğrenme çağrısını (sohbettenOgren,
+    // düz metin sistem istemi) da tetikler; o çağrı arka planda sürer (arkaPlandaSurdur) ve önceki turunki bu turun
+    // isteğinden ÖNCE de düşebilir — sırasına güvenilmez.
+    const asil = modelIstekleri.map((m) => JSON.parse(m.govde).system).filter((x) => Array.isArray(x)) as { text: string }[][]
+    assert.equal(asil.length, 1, 'tek asıl model turu')
+    return asil[0].map((b) => b.text).join('\n')
   }
   async function paket(s: Sahne & { h: string }) {
     const sb = db.istemci() as never
@@ -951,5 +971,47 @@ describe('NOTYA-SES-BAGLAM-KUCULT-01: sesli turda kısa, güvenlik-tam dosya; İ
     for (const ilac of F.GUVENLIK_OLGULARI.aktifIlaclar) assert.ok(kisa.includes(`- ${ilac}`), ilac)
     assert.ok(kisa.includes(F.GUVENLIK_OLGULARI.kritik))
     assert.match(kisa, /Epilepsi/)
+  })
+})
+
+describe('SES-DOLGU-02 — yavaş tur bekletme cümlesi söyler, hızlı tur temiz kalır (2026-10-26)', () => {
+  const dolguyla = async (ms: string, kos: () => Promise<SesYaniti>) => {
+    const eski = process.env.NOTYA_SES_DOLGU_MS
+    process.env.NOTYA_SES_DOLGU_MS = ms
+    try { return await kos() } finally {
+      if (eski === undefined) delete process.env.NOTYA_SES_DOLGU_MS
+      else process.env.NOTYA_SES_DOLGU_MS = eski
+    }
+  }
+
+  it('ilk söz eşiği aşınca TEK kısa bekletme cümlesi gider; cevap yine tam söylenir, saklanan cevap bekletmesizdir', async () => {
+    const b = sahne()
+    yanit = { ilkGecikmeMs: 450, metin: JSON.stringify({ speech: 'Hocam, bu yaşta uyku düzeni on bir saat olmalı.' }) }
+    const v = await dolguyla('80', () => ses({ sahne: b, mesaj: 'Genel bir soru: bu yaşta uyku düzeni nasıl olmalı?' }))
+    const dolu = v.parcalar.filter((p) => /[\p{L}\p{N}]/u.test(p))
+    assert.match(dolu[0] || '', /bakıyorum/i, `ilk dolu delta bekletme olmalı: ${JSON.stringify(dolu)}`)
+    assert.equal(dolu.filter((p) => /bakıyorum/i.test(p)).length, 1, 'bekletme yalnız bir kez')
+    assert.match(v.metin, /uyku düzeni on bir saat/)
+    const kayit = db.tablo('asistan_sessions').find((r) => r.id === b.oturum)
+    const sonMesaj = String(([...((kayit?.messages as { role: string; content: string }[]) || [])].reverse().find((m) => m.role === 'assistant')?.content) || '')
+    assert.doesNotMatch(sonMesaj, /bakıyorum/i, 'bekletme cevabın parçası değildir: oturuma yazılmaz')
+  })
+
+  it('ilk söz eşikten önce gelirse bekletme yok (NOTYA-AYSE-ACILIS-01 korunur); sosyal tur hiç almaz', async () => {
+    const b = sahne()
+    yanit = { metin: JSON.stringify({ speech: 'Hocam, on bir saat uyku yeterlidir.' }) }
+    const v = await dolguyla('1500', () => ses({ sahne: b, mesaj: 'Genel bir soru: bu yaşta uyku düzeni nasıl olmalı?' }))
+    assert.doesNotMatch(v.metin, /bakıyorum/i)
+    const c = sahne()
+    yanit = { ilkGecikmeMs: 300, metin: JSON.stringify({ speech: 'İyiyim Hocam, teşekkür ederim.' }) }
+    const sosyal = await dolguyla('80', () => ses({ sahne: c, mesaj: 'Merhaba, nasılsın?' }))
+    assert.doesNotMatch(sosyal.metin, /bakıyorum/i, 'sosyal tur bekletme almaz')
+  })
+
+  it('NOTYA_SES_DOLGU_MS=0 bekletmeyi kapatır', async () => {
+    const b = sahne()
+    yanit = { ilkGecikmeMs: 250, metin: JSON.stringify({ speech: 'Hocam, cevap burada.' }) }
+    const v = await dolguyla('0', () => ses({ sahne: b, mesaj: 'Genel bir soru: bu yaşta uyku düzeni nasıl olmalı?' }))
+    assert.doesNotMatch(v.metin, /bakıyorum/i)
   })
 })
