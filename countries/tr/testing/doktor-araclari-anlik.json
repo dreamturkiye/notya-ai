@@ -1,6 +1,6 @@
 {
- "kaynak": "main@9891987 (2026-10-08) — captured before NOTYA-ULKE-01 touched lib/doktor/doktorAraclari.ts",
- "not": "Every tool exactly as doktorAraclariListesi returned it on main, and for each raw specialty value the routes of the list, of the groups, and of the deep-link guard. Do not edit by hand: a Türkiye tool change must update this file in the same commit, on purpose.",
+ "kaynak": "main@328e1c7, 2026-10-26 (SES-OMURGA-ULKE-ACIK-02 audit: +Hasta İletişimi, YALNIZ_TR)",
+ "not": "Every tool exactly as the registry holds it (without `ulkeler`), and for each raw specialty value the routes of the list, of the groups, and of the deep-link guard. Do not edit by hand: npm run ulke:arac-anlik.",
  "araclar": [
   {
    "circleColor": "#0F9B8E",
@@ -96,6 +96,14 @@
    "title": "Konsültasyonlar",
    "desc": "Güvendiğiniz konsültan defteri · muayeneden istem · yanıt bekleyenler · konsültan e-posta linkiyle rapor bırakır",
    "route": "/doktor-tools/konsultasyonlar",
+   "branslar": null
+  },
+  {
+   "circleColor": "#2563EB",
+   "icon": "HI",
+   "title": "Hasta İletişimi",
+   "desc": "Birden çok hastaya SMS ve/veya e-posta ile toplu bilgilendirme — şablon seç, önizle, onayla, gönder",
+   "route": "/doktor-tools/hasta-iletisimi",
    "branslar": null
   },
   {
@@ -1434,6 +1442,7 @@
     "/doktor-tools/muayene-sonu",
     "/doktor-tools/sablonlarim",
     "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/hasta-iletisimi",
     "/doktor-tools/hedef-boy",
     "/doktor-tools/pedi-buyume",
     "/doktor-tools/pedi-doz",
@@ -1459,7 +1468,8 @@
       "/doktor-tools/enabiz",
       "/doktor-tools/muayene-sonu",
       "/doktor-tools/sablonlarim",
-      "/doktor-tools/konsultasyonlar"
+      "/doktor-tools/konsultasyonlar",
+      "/doktor-tools/hasta-iletisimi"
      ]
     },
     {
@@ -1490,6 +1500,7 @@
     "/doktor-tools/muayene-sonu",
     "/doktor-tools/sablonlarim",
     "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/hasta-iletisimi",
     "/doktor-tools/hedef-boy",
     "/doktor-tools/pedi-buyume",
     "/doktor-tools/pedi-doz",
@@ -1513,6 +1524,7 @@
     "/doktor-tools/muayene-sonu",
     "/doktor-tools/sablonlarim",
     "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/hasta-iletisimi",
     "/doktor-tools/kardio-score2",
     "/doktor-tools/kardio-ht-kky",
     "/doktor-tools/kardio-sgk",
@@ -1535,7 +1547,8 @@
       "/doktor-tools/enabiz",
       "/doktor-tools/muayene-sonu",
       "/doktor-tools/sablonlarim",
-      "/doktor-tools/konsultasyonlar"
+      "/doktor-tools/konsultasyonlar",
+      "/doktor-tools/hasta-iletisimi"
      ]
     },
     {
@@ -1563,6 +1576,7 @@
     "/doktor-tools/muayene-sonu",
     "/doktor-tools/sablonlarim",
     "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/hasta-iletisimi",
     "/doktor-tools/kardio-score2",
     "/doktor-tools/kardio-ht-kky",
     "/doktor-tools/kardio-sgk",
@@ -1583,6 +1597,7 @@
     "/doktor-tools/muayene-sonu",
     "/doktor-tools/sablonlarim",
     "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/hasta-iletisimi",
     "/doktor-tools/noro-inme",
     "/doktor-tools/noro-migren",
     "/doktor-tools/noro-ilac-izlem",
@@ -1605,7 +1620,8 @@
       "/doktor-tools/enabiz",
       "/doktor-tools/muayene-sonu",
       "/doktor-tools/sablonlarim",
-      "/doktor-tools/konsultasyonlar"
+      "/doktor-tools/konsultasyonlar",
+      "/doktor-tools/hasta-iletisimi"
      ]
     },
     {
@@ -1633,6 +1649,7 @@
     "/doktor-tools/muayene-sonu",
     "/doktor-tools/sablonlarim",
     "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/hasta-iletisimi",
     "/doktor-tools/noro-inme",
     "/doktor-tools/noro-migren",
     "/doktor-tools/noro-ilac-izlem",
@@ -1653,6 +1670,7 @@
     "/doktor-tools/muayene-sonu",
     "/doktor-tools/sablonlarim",
     "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/hasta-iletisimi",
     "/doktor-tools/dahiliye-kohort",
     "/doktor-tools/dahiliye-score2",
     "/doktor-tools/dahiliye-ckd",
@@ -1677,7 +1695,8 @@
       "/doktor-tools/enabiz",
       "/doktor-tools/muayene-sonu",
       "/doktor-tools/sablonlarim",
-      "/doktor-tools/konsultasyonlar"
+      "/doktor-tools/konsultasyonlar",
+      "/doktor-tools/hasta-iletisimi"
      ]
     },
     {
@@ -1707,6 +1726,7 @@
     "/doktor-tools/muayene-sonu",
     "/doktor-tools/sablonlarim",
     "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/hasta-iletisimi",
     "/doktor-tools/dahiliye-kohort",
     "/doktor-tools/dahiliye-score2",
     "/doktor-tools/dahiliye-ckd",
@@ -1729,6 +1749,7 @@
     "/doktor-tools/muayene-sonu",
     "/doktor-tools/sablonlarim",
     "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/hasta-iletisimi",
     "/doktor-tools/psik-phq-gad",
     "/doktor-tools/psik-risk",
     "/doktor-tools/psik-ilac-izlem",
@@ -1752,7 +1773,8 @@
       "/doktor-tools/enabiz",
       "/doktor-tools/muayene-sonu",
       "/doktor-tools/sablonlarim",
-      "/doktor-tools/konsultasyonlar"
+      "/doktor-tools/konsultasyonlar",
+      "/doktor-tools/hasta-iletisimi"
      ]
     },
     {
@@ -1781,6 +1803,7 @@
     "/doktor-tools/muayene-sonu",
     "/doktor-tools/sablonlarim",
     "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/hasta-iletisimi",
     "/doktor-tools/psik-phq-gad",
     "/doktor-tools/psik-risk",
     "/doktor-tools/psik-ilac-izlem",
@@ -1802,6 +1825,7 @@
     "/doktor-tools/muayene-sonu",
     "/doktor-tools/sablonlarim",
     "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/hasta-iletisimi",
     "/doktor-tools/gc-preop",
     "/doktor-tools/gc-yara-dren",
     "/doktor-tools/gc-patoloji",
@@ -1824,7 +1848,8 @@
       "/doktor-tools/enabiz",
       "/doktor-tools/muayene-sonu",
       "/doktor-tools/sablonlarim",
-      "/doktor-tools/konsultasyonlar"
+      "/doktor-tools/konsultasyonlar",
+      "/doktor-tools/hasta-iletisimi"
      ]
     },
     {
@@ -1852,6 +1877,7 @@
     "/doktor-tools/muayene-sonu",
     "/doktor-tools/sablonlarim",
     "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/hasta-iletisimi",
     "/doktor-tools/gc-preop",
     "/doktor-tools/gc-yara-dren",
     "/doktor-tools/gc-patoloji",
@@ -1872,6 +1898,7 @@
     "/doktor-tools/muayene-sonu",
     "/doktor-tools/sablonlarim",
     "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/hasta-iletisimi",
     "/doktor-tools/orto-kirik-alci",
     "/doktor-tools/orto-vas",
     "/doktor-tools/orto-op-protokol",
@@ -1894,7 +1921,8 @@
       "/doktor-tools/enabiz",
       "/doktor-tools/muayene-sonu",
       "/doktor-tools/sablonlarim",
-      "/doktor-tools/konsultasyonlar"
+      "/doktor-tools/konsultasyonlar",
+      "/doktor-tools/hasta-iletisimi"
      ]
     },
     {
@@ -1922,6 +1950,7 @@
     "/doktor-tools/muayene-sonu",
     "/doktor-tools/sablonlarim",
     "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/hasta-iletisimi",
     "/doktor-tools/orto-kirik-alci",
     "/doktor-tools/orto-vas",
     "/doktor-tools/orto-op-protokol",
@@ -1942,6 +1971,7 @@
     "/doktor-tools/muayene-sonu",
     "/doktor-tools/sablonlarim",
     "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/hasta-iletisimi",
     "/doktor-tools/derm-pasi",
     "/doktor-tools/derm-gop",
     "/doktor-tools/derm-fototerapi",
@@ -1966,7 +1996,8 @@
       "/doktor-tools/enabiz",
       "/doktor-tools/muayene-sonu",
       "/doktor-tools/sablonlarim",
-      "/doktor-tools/konsultasyonlar"
+      "/doktor-tools/konsultasyonlar",
+      "/doktor-tools/hasta-iletisimi"
      ]
     },
     {
@@ -1996,6 +2027,7 @@
     "/doktor-tools/muayene-sonu",
     "/doktor-tools/sablonlarim",
     "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/hasta-iletisimi",
     "/doktor-tools/derm-pasi",
     "/doktor-tools/derm-gop",
     "/doktor-tools/derm-fototerapi",
@@ -2018,6 +2050,7 @@
     "/doktor-tools/muayene-sonu",
     "/doktor-tools/sablonlarim",
     "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/hasta-iletisimi",
     "/doktor-tools/kbb-otoskopi",
     "/doktor-tools/kbb-odyometri",
     "/doktor-tools/kbb-vertigo",
@@ -2041,7 +2074,8 @@
       "/doktor-tools/enabiz",
       "/doktor-tools/muayene-sonu",
       "/doktor-tools/sablonlarim",
-      "/doktor-tools/konsultasyonlar"
+      "/doktor-tools/konsultasyonlar",
+      "/doktor-tools/hasta-iletisimi"
      ]
     },
     {
@@ -2070,6 +2104,7 @@
     "/doktor-tools/muayene-sonu",
     "/doktor-tools/sablonlarim",
     "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/hasta-iletisimi",
     "/doktor-tools/kbb-otoskopi",
     "/doktor-tools/kbb-odyometri",
     "/doktor-tools/kbb-vertigo",
@@ -2091,6 +2126,7 @@
     "/doktor-tools/muayene-sonu",
     "/doktor-tools/sablonlarim",
     "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/hasta-iletisimi",
     "/doktor-tools/goz-va",
     "/doktor-tools/goz-sut-vegf",
     "/doktor-tools/goz-sgk-rapor",
@@ -2114,7 +2150,8 @@
       "/doktor-tools/enabiz",
       "/doktor-tools/muayene-sonu",
       "/doktor-tools/sablonlarim",
-      "/doktor-tools/konsultasyonlar"
+      "/doktor-tools/konsultasyonlar",
+      "/doktor-tools/hasta-iletisimi"
      ]
     },
     {
@@ -2143,6 +2180,7 @@
     "/doktor-tools/muayene-sonu",
     "/doktor-tools/sablonlarim",
     "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/hasta-iletisimi",
     "/doktor-tools/goz-va",
     "/doktor-tools/goz-sut-vegf",
     "/doktor-tools/goz-sgk-rapor",
@@ -2164,6 +2202,7 @@
     "/doktor-tools/muayene-sonu",
     "/doktor-tools/sablonlarim",
     "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/hasta-iletisimi",
     "/doktor-tools/kd-gebelik-takvim",
     "/doktor-tools/kd-dogum-rapor",
     "/doktor-tools/kd-mec",
@@ -2187,7 +2226,8 @@
       "/doktor-tools/enabiz",
       "/doktor-tools/muayene-sonu",
       "/doktor-tools/sablonlarim",
-      "/doktor-tools/konsultasyonlar"
+      "/doktor-tools/konsultasyonlar",
+      "/doktor-tools/hasta-iletisimi"
      ]
     },
     {
@@ -2216,6 +2256,7 @@
     "/doktor-tools/muayene-sonu",
     "/doktor-tools/sablonlarim",
     "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/hasta-iletisimi",
     "/doktor-tools/kd-gebelik-takvim",
     "/doktor-tools/kd-dogum-rapor",
     "/doktor-tools/kd-mec",
@@ -2237,6 +2278,7 @@
     "/doktor-tools/muayene-sonu",
     "/doktor-tools/sablonlarim",
     "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/hasta-iletisimi",
     "/doktor-tools/uro-ipss",
     "/doktor-tools/uro-psa",
     "/doktor-tools/uro-acil",
@@ -2259,7 +2301,8 @@
       "/doktor-tools/enabiz",
       "/doktor-tools/muayene-sonu",
       "/doktor-tools/sablonlarim",
-      "/doktor-tools/konsultasyonlar"
+      "/doktor-tools/konsultasyonlar",
+      "/doktor-tools/hasta-iletisimi"
      ]
     },
     {
@@ -2287,6 +2330,7 @@
     "/doktor-tools/muayene-sonu",
     "/doktor-tools/sablonlarim",
     "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/hasta-iletisimi",
     "/doktor-tools/uro-ipss",
     "/doktor-tools/uro-psa",
     "/doktor-tools/uro-acil",
@@ -2307,6 +2351,7 @@
     "/doktor-tools/muayene-sonu",
     "/doktor-tools/sablonlarim",
     "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/hasta-iletisimi",
     "/doktor-tools/radyo-kuyruk",
     "/doktor-tools/radyo-rapor",
     "/doktor-tools/radyo-kritik",
@@ -2329,7 +2374,8 @@
       "/doktor-tools/enabiz",
       "/doktor-tools/muayene-sonu",
       "/doktor-tools/sablonlarim",
-      "/doktor-tools/konsultasyonlar"
+      "/doktor-tools/konsultasyonlar",
+      "/doktor-tools/hasta-iletisimi"
      ]
     },
     {
@@ -2357,6 +2403,7 @@
     "/doktor-tools/muayene-sonu",
     "/doktor-tools/sablonlarim",
     "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/hasta-iletisimi",
     "/doktor-tools/radyo-kuyruk",
     "/doktor-tools/radyo-rapor",
     "/doktor-tools/radyo-kritik",
@@ -2377,6 +2424,7 @@
     "/doktor-tools/muayene-sonu",
     "/doktor-tools/sablonlarim",
     "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/hasta-iletisimi",
     "/doktor-tools/anestezi-asa",
     "/doktor-tools/anestezi-hava-yolu",
     "/doktor-tools/anestezi-agri",
@@ -2399,7 +2447,8 @@
       "/doktor-tools/enabiz",
       "/doktor-tools/muayene-sonu",
       "/doktor-tools/sablonlarim",
-      "/doktor-tools/konsultasyonlar"
+      "/doktor-tools/konsultasyonlar",
+      "/doktor-tools/hasta-iletisimi"
      ]
     },
     {
@@ -2427,6 +2476,7 @@
     "/doktor-tools/muayene-sonu",
     "/doktor-tools/sablonlarim",
     "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/hasta-iletisimi",
     "/doktor-tools/anestezi-asa",
     "/doktor-tools/anestezi-hava-yolu",
     "/doktor-tools/anestezi-agri",
@@ -2447,6 +2497,7 @@
     "/doktor-tools/muayene-sonu",
     "/doktor-tools/sablonlarim",
     "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/hasta-iletisimi",
     "/doktor-tools/acil-esi",
     "/doktor-tools/acil-kritik-yol",
     "/doktor-tools/acil-sevk",
@@ -2469,7 +2520,8 @@
       "/doktor-tools/enabiz",
       "/doktor-tools/muayene-sonu",
       "/doktor-tools/sablonlarim",
-      "/doktor-tools/konsultasyonlar"
+      "/doktor-tools/konsultasyonlar",
+      "/doktor-tools/hasta-iletisimi"
      ]
     },
     {
@@ -2497,6 +2549,7 @@
     "/doktor-tools/muayene-sonu",
     "/doktor-tools/sablonlarim",
     "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/hasta-iletisimi",
     "/doktor-tools/acil-esi",
     "/doktor-tools/acil-kritik-yol",
     "/doktor-tools/acil-sevk",
@@ -2517,6 +2570,7 @@
     "/doktor-tools/muayene-sonu",
     "/doktor-tools/sablonlarim",
     "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/hasta-iletisimi",
     "/doktor-tools/ftr-seans",
     "/doktor-tools/ftr-vas-odi",
     "/doktor-tools/ftr-egzersiz",
@@ -2539,7 +2593,8 @@
       "/doktor-tools/enabiz",
       "/doktor-tools/muayene-sonu",
       "/doktor-tools/sablonlarim",
-      "/doktor-tools/konsultasyonlar"
+      "/doktor-tools/konsultasyonlar",
+      "/doktor-tools/hasta-iletisimi"
      ]
     },
     {
@@ -2567,6 +2622,7 @@
     "/doktor-tools/muayene-sonu",
     "/doktor-tools/sablonlarim",
     "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/hasta-iletisimi",
     "/doktor-tools/ftr-seans",
     "/doktor-tools/ftr-vas-odi",
     "/doktor-tools/ftr-egzersiz",
@@ -2587,6 +2643,7 @@
     "/doktor-tools/muayene-sonu",
     "/doktor-tools/sablonlarim",
     "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/hasta-iletisimi",
     "/doktor-tools/enfeksiyon-izolasyon",
     "/doktor-tools/enfeksiyon-atb-sure",
     "/doktor-tools/enfeksiyon-viral-izlem",
@@ -2609,7 +2666,8 @@
       "/doktor-tools/enabiz",
       "/doktor-tools/muayene-sonu",
       "/doktor-tools/sablonlarim",
-      "/doktor-tools/konsultasyonlar"
+      "/doktor-tools/konsultasyonlar",
+      "/doktor-tools/hasta-iletisimi"
      ]
     },
     {
@@ -2637,6 +2695,7 @@
     "/doktor-tools/muayene-sonu",
     "/doktor-tools/sablonlarim",
     "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/hasta-iletisimi",
     "/doktor-tools/enfeksiyon-izolasyon",
     "/doktor-tools/enfeksiyon-atb-sure",
     "/doktor-tools/enfeksiyon-viral-izlem",
@@ -2657,6 +2716,7 @@
     "/doktor-tools/muayene-sonu",
     "/doktor-tools/sablonlarim",
     "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/hasta-iletisimi",
     "/doktor-tools/endo-lab-izlem",
     "/doktor-tools/endo-dxa",
     "/doktor-tools/endo-rejim",
@@ -2679,7 +2739,8 @@
       "/doktor-tools/enabiz",
       "/doktor-tools/muayene-sonu",
       "/doktor-tools/sablonlarim",
-      "/doktor-tools/konsultasyonlar"
+      "/doktor-tools/konsultasyonlar",
+      "/doktor-tools/hasta-iletisimi"
      ]
     },
     {
@@ -2707,6 +2768,7 @@
     "/doktor-tools/muayene-sonu",
     "/doktor-tools/sablonlarim",
     "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/hasta-iletisimi",
     "/doktor-tools/endo-lab-izlem",
     "/doktor-tools/endo-dxa",
     "/doktor-tools/endo-rejim",
@@ -2727,6 +2789,7 @@
     "/doktor-tools/muayene-sonu",
     "/doktor-tools/sablonlarim",
     "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/hasta-iletisimi",
     "/doktor-tools/gastro-ibd-ibs",
     "/doktor-tools/gastro-endoskopi",
     "/doktor-tools/gastro-hepatit",
@@ -2749,7 +2812,8 @@
       "/doktor-tools/enabiz",
       "/doktor-tools/muayene-sonu",
       "/doktor-tools/sablonlarim",
-      "/doktor-tools/konsultasyonlar"
+      "/doktor-tools/konsultasyonlar",
+      "/doktor-tools/hasta-iletisimi"
      ]
     },
     {
@@ -2777,6 +2841,7 @@
     "/doktor-tools/muayene-sonu",
     "/doktor-tools/sablonlarim",
     "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/hasta-iletisimi",
     "/doktor-tools/gastro-ibd-ibs",
     "/doktor-tools/gastro-endoskopi",
     "/doktor-tools/gastro-hepatit",
@@ -2797,6 +2862,7 @@
     "/doktor-tools/muayene-sonu",
     "/doktor-tools/sablonlarim",
     "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/hasta-iletisimi",
     "/doktor-tools/nef-egfr-kdigo",
     "/doktor-tools/nef-diyaliz",
     "/doktor-tools/nef-anemi",
@@ -2820,7 +2886,8 @@
       "/doktor-tools/enabiz",
       "/doktor-tools/muayene-sonu",
       "/doktor-tools/sablonlarim",
-      "/doktor-tools/konsultasyonlar"
+      "/doktor-tools/konsultasyonlar",
+      "/doktor-tools/hasta-iletisimi"
      ]
     },
     {
@@ -2849,6 +2916,7 @@
     "/doktor-tools/muayene-sonu",
     "/doktor-tools/sablonlarim",
     "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/hasta-iletisimi",
     "/doktor-tools/nef-egfr-kdigo",
     "/doktor-tools/nef-diyaliz",
     "/doktor-tools/nef-anemi",
@@ -2870,6 +2938,7 @@
     "/doktor-tools/muayene-sonu",
     "/doktor-tools/sablonlarim",
     "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/hasta-iletisimi",
     "/doktor-tools/roma-das28-basdai",
     "/doktor-tools/roma-biyolojik-sut",
     "/doktor-tools/roma-lab-izlem",
@@ -2892,7 +2961,8 @@
       "/doktor-tools/enabiz",
       "/doktor-tools/muayene-sonu",
       "/doktor-tools/sablonlarim",
-      "/doktor-tools/konsultasyonlar"
+      "/doktor-tools/konsultasyonlar",
+      "/doktor-tools/hasta-iletisimi"
      ]
     },
     {
@@ -2920,6 +2990,7 @@
     "/doktor-tools/muayene-sonu",
     "/doktor-tools/sablonlarim",
     "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/hasta-iletisimi",
     "/doktor-tools/roma-das28-basdai",
     "/doktor-tools/roma-biyolojik-sut",
     "/doktor-tools/roma-lab-izlem",
@@ -2940,6 +3011,7 @@
     "/doktor-tools/muayene-sonu",
     "/doktor-tools/sablonlarim",
     "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/hasta-iletisimi",
     "/doktor-tools/onko-kur",
     "/doktor-tools/onko-toksisite",
     "/doktor-tools/onko-sut",
@@ -2962,7 +3034,8 @@
       "/doktor-tools/enabiz",
       "/doktor-tools/muayene-sonu",
       "/doktor-tools/sablonlarim",
-      "/doktor-tools/konsultasyonlar"
+      "/doktor-tools/konsultasyonlar",
+      "/doktor-tools/hasta-iletisimi"
      ]
     },
     {
@@ -2990,6 +3063,7 @@
     "/doktor-tools/muayene-sonu",
     "/doktor-tools/sablonlarim",
     "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/hasta-iletisimi",
     "/doktor-tools/onko-kur",
     "/doktor-tools/onko-toksisite",
     "/doktor-tools/onko-sut",
@@ -3010,6 +3084,7 @@
     "/doktor-tools/muayene-sonu",
     "/doktor-tools/sablonlarim",
     "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/hasta-iletisimi",
     "/doktor-tools/gogus-cat-mmrc",
     "/doktor-tools/gogus-aksiyon-plani",
     "/doktor-tools/gogus-inhaler",
@@ -3033,7 +3108,8 @@
       "/doktor-tools/enabiz",
       "/doktor-tools/muayene-sonu",
       "/doktor-tools/sablonlarim",
-      "/doktor-tools/konsultasyonlar"
+      "/doktor-tools/konsultasyonlar",
+      "/doktor-tools/hasta-iletisimi"
      ]
     },
     {
@@ -3062,6 +3138,7 @@
     "/doktor-tools/muayene-sonu",
     "/doktor-tools/sablonlarim",
     "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/hasta-iletisimi",
     "/doktor-tools/gogus-cat-mmrc",
     "/doktor-tools/gogus-aksiyon-plani",
     "/doktor-tools/gogus-inhaler",
@@ -3083,6 +3160,7 @@
     "/doktor-tools/muayene-sonu",
     "/doktor-tools/sablonlarim",
     "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/hasta-iletisimi",
     "/doktor-tools/gogus-cerrahi-preop",
     "/doktor-tools/gogus-cerrahi-tup-yara",
     "/doktor-tools/gogus-cerrahi-patoloji",
@@ -3105,7 +3183,8 @@
       "/doktor-tools/enabiz",
       "/doktor-tools/muayene-sonu",
       "/doktor-tools/sablonlarim",
-      "/doktor-tools/konsultasyonlar"
+      "/doktor-tools/konsultasyonlar",
+      "/doktor-tools/hasta-iletisimi"
      ]
     },
     {
@@ -3133,6 +3212,7 @@
     "/doktor-tools/muayene-sonu",
     "/doktor-tools/sablonlarim",
     "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/hasta-iletisimi",
     "/doktor-tools/gogus-cerrahi-preop",
     "/doktor-tools/gogus-cerrahi-tup-yara",
     "/doktor-tools/gogus-cerrahi-patoloji",
@@ -3153,6 +3233,7 @@
     "/doktor-tools/muayene-sonu",
     "/doktor-tools/sablonlarim",
     "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/hasta-iletisimi",
     "/doktor-tools/plastik-foto",
     "/doktor-tools/plastik-yara",
     "/doktor-tools/plastik-onam",
@@ -3175,7 +3256,8 @@
       "/doktor-tools/enabiz",
       "/doktor-tools/muayene-sonu",
       "/doktor-tools/sablonlarim",
-      "/doktor-tools/konsultasyonlar"
+      "/doktor-tools/konsultasyonlar",
+      "/doktor-tools/hasta-iletisimi"
      ]
     },
     {
@@ -3203,6 +3285,7 @@
     "/doktor-tools/muayene-sonu",
     "/doktor-tools/sablonlarim",
     "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/hasta-iletisimi",
     "/doktor-tools/plastik-foto",
     "/doktor-tools/plastik-yara",
     "/doktor-tools/plastik-onam",
@@ -3223,6 +3306,7 @@
     "/doktor-tools/muayene-sonu",
     "/doktor-tools/sablonlarim",
     "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/hasta-iletisimi",
     "/doktor-tools/bc-postop",
     "/doktor-tools/bc-goruntu",
     "/doktor-tools/bc-bilinc",
@@ -3245,7 +3329,8 @@
       "/doktor-tools/enabiz",
       "/doktor-tools/muayene-sonu",
       "/doktor-tools/sablonlarim",
-      "/doktor-tools/konsultasyonlar"
+      "/doktor-tools/konsultasyonlar",
+      "/doktor-tools/hasta-iletisimi"
      ]
     },
     {
@@ -3273,6 +3358,7 @@
     "/doktor-tools/muayene-sonu",
     "/doktor-tools/sablonlarim",
     "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/hasta-iletisimi",
     "/doktor-tools/bc-postop",
     "/doktor-tools/bc-goruntu",
     "/doktor-tools/bc-bilinc",
@@ -3293,6 +3379,7 @@
     "/doktor-tools/muayene-sonu",
     "/doktor-tools/sablonlarim",
     "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/hasta-iletisimi",
     "/doktor-tools/kdc-preop",
     "/doktor-tools/kdc-greft-yara",
     "/doktor-tools/kdc-antikoag",
@@ -3315,7 +3402,8 @@
       "/doktor-tools/enabiz",
       "/doktor-tools/muayene-sonu",
       "/doktor-tools/sablonlarim",
-      "/doktor-tools/konsultasyonlar"
+      "/doktor-tools/konsultasyonlar",
+      "/doktor-tools/hasta-iletisimi"
      ]
     },
     {
@@ -3343,6 +3431,7 @@
     "/doktor-tools/muayene-sonu",
     "/doktor-tools/sablonlarim",
     "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/hasta-iletisimi",
     "/doktor-tools/kdc-preop",
     "/doktor-tools/kdc-greft-yara",
     "/doktor-tools/kdc-antikoag",
@@ -3363,6 +3452,7 @@
     "/doktor-tools/muayene-sonu",
     "/doktor-tools/sablonlarim",
     "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/hasta-iletisimi",
     "/doktor-tools/cc-prepost-op",
     "/doktor-tools/cc-yara-dren",
     "/doktor-tools/cc-onam-veli",
@@ -3385,7 +3475,8 @@
       "/doktor-tools/enabiz",
       "/doktor-tools/muayene-sonu",
       "/doktor-tools/sablonlarim",
-      "/doktor-tools/konsultasyonlar"
+      "/doktor-tools/konsultasyonlar",
+      "/doktor-tools/hasta-iletisimi"
      ]
     },
     {
@@ -3413,6 +3504,7 @@
     "/doktor-tools/muayene-sonu",
     "/doktor-tools/sablonlarim",
     "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/hasta-iletisimi",
     "/doktor-tools/cc-prepost-op",
     "/doktor-tools/cc-yara-dren",
     "/doktor-tools/cc-onam-veli",
@@ -3433,6 +3525,7 @@
     "/doktor-tools/muayene-sonu",
     "/doktor-tools/sablonlarim",
     "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/hasta-iletisimi",
     "/doktor-tools/aile-asi-tarama",
     "/doktor-tools/aile-kronik",
     "/doktor-tools/aile-sevk",
@@ -3455,7 +3548,8 @@
       "/doktor-tools/enabiz",
       "/doktor-tools/muayene-sonu",
       "/doktor-tools/sablonlarim",
-      "/doktor-tools/konsultasyonlar"
+      "/doktor-tools/konsultasyonlar",
+      "/doktor-tools/hasta-iletisimi"
      ]
     },
     {
@@ -3483,6 +3577,7 @@
     "/doktor-tools/muayene-sonu",
     "/doktor-tools/sablonlarim",
     "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/hasta-iletisimi",
     "/doktor-tools/aile-asi-tarama",
     "/doktor-tools/aile-kronik",
     "/doktor-tools/aile-sevk",
@@ -3503,6 +3598,7 @@
     "/doktor-tools/muayene-sonu",
     "/doktor-tools/sablonlarim",
     "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/hasta-iletisimi",
     "/doktor-tools/spor-rtp",
     "/doktor-tools/spor-sakatlik",
     "/doktor-tools/spor-kohort"
@@ -3524,7 +3620,8 @@
       "/doktor-tools/enabiz",
       "/doktor-tools/muayene-sonu",
       "/doktor-tools/sablonlarim",
-      "/doktor-tools/konsultasyonlar"
+      "/doktor-tools/konsultasyonlar",
+      "/doktor-tools/hasta-iletisimi"
      ]
     },
     {
@@ -3551,6 +3648,7 @@
     "/doktor-tools/muayene-sonu",
     "/doktor-tools/sablonlarim",
     "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/hasta-iletisimi",
     "/doktor-tools/spor-rtp",
     "/doktor-tools/spor-sakatlik",
     "/doktor-tools/spor-kohort"
@@ -3570,6 +3668,7 @@
     "/doktor-tools/muayene-sonu",
     "/doktor-tools/sablonlarim",
     "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/hasta-iletisimi",
     "/doktor-tools/kd-gebelik-takvim",
     "/doktor-tools/kd-dogum-rapor",
     "/doktor-tools/kd-mec",
@@ -3593,7 +3692,8 @@
       "/doktor-tools/enabiz",
       "/doktor-tools/muayene-sonu",
       "/doktor-tools/sablonlarim",
-      "/doktor-tools/konsultasyonlar"
+      "/doktor-tools/konsultasyonlar",
+      "/doktor-tools/hasta-iletisimi"
      ]
     },
     {
@@ -3622,6 +3722,7 @@
     "/doktor-tools/muayene-sonu",
     "/doktor-tools/sablonlarim",
     "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/hasta-iletisimi",
     "/doktor-tools/kd-gebelik-takvim",
     "/doktor-tools/kd-dogum-rapor",
     "/doktor-tools/kd-mec",
@@ -3643,6 +3744,7 @@
     "/doktor-tools/muayene-sonu",
     "/doktor-tools/sablonlarim",
     "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/hasta-iletisimi",
     "/doktor-tools/kd-gebelik-takvim",
     "/doktor-tools/kd-dogum-rapor",
     "/doktor-tools/kd-mec",
@@ -3666,7 +3768,8 @@
       "/doktor-tools/enabiz",
       "/doktor-tools/muayene-sonu",
       "/doktor-tools/sablonlarim",
-      "/doktor-tools/konsultasyonlar"
+      "/doktor-tools/konsultasyonlar",
+      "/doktor-tools/hasta-iletisimi"
      ]
     },
     {
@@ -3695,6 +3798,7 @@
     "/doktor-tools/muayene-sonu",
     "/doktor-tools/sablonlarim",
     "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/hasta-iletisimi",
     "/doktor-tools/kd-gebelik-takvim",
     "/doktor-tools/kd-dogum-rapor",
     "/doktor-tools/kd-mec",
@@ -3716,6 +3820,7 @@
     "/doktor-tools/muayene-sonu",
     "/doktor-tools/sablonlarim",
     "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/hasta-iletisimi",
     "/doktor-tools/hedef-boy",
     "/doktor-tools/pedi-buyume",
     "/doktor-tools/pedi-doz",
@@ -3741,7 +3846,8 @@
       "/doktor-tools/enabiz",
       "/doktor-tools/muayene-sonu",
       "/doktor-tools/sablonlarim",
-      "/doktor-tools/konsultasyonlar"
+      "/doktor-tools/konsultasyonlar",
+      "/doktor-tools/hasta-iletisimi"
      ]
     },
     {
@@ -3772,6 +3878,7 @@
     "/doktor-tools/muayene-sonu",
     "/doktor-tools/sablonlarim",
     "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/hasta-iletisimi",
     "/doktor-tools/hedef-boy",
     "/doktor-tools/pedi-buyume",
     "/doktor-tools/pedi-doz",
@@ -3795,6 +3902,7 @@
     "/doktor-tools/muayene-sonu",
     "/doktor-tools/sablonlarim",
     "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/hasta-iletisimi",
     "/doktor-tools/dahiliye-kohort",
     "/doktor-tools/dahiliye-score2",
     "/doktor-tools/dahiliye-ckd",
@@ -3819,7 +3927,8 @@
       "/doktor-tools/enabiz",
       "/doktor-tools/muayene-sonu",
       "/doktor-tools/sablonlarim",
-      "/doktor-tools/konsultasyonlar"
+      "/doktor-tools/konsultasyonlar",
+      "/doktor-tools/hasta-iletisimi"
      ]
     },
     {
@@ -3849,6 +3958,7 @@
     "/doktor-tools/muayene-sonu",
     "/doktor-tools/sablonlarim",
     "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/hasta-iletisimi",
     "/doktor-tools/dahiliye-kohort",
     "/doktor-tools/dahiliye-score2",
     "/doktor-tools/dahiliye-ckd",
@@ -3870,7 +3980,8 @@
     "/doktor-tools/enabiz",
     "/doktor-tools/muayene-sonu",
     "/doktor-tools/sablonlarim",
-    "/doktor-tools/konsultasyonlar"
+    "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/hasta-iletisimi"
    ],
    "gruplar": [
     {
@@ -3889,7 +4000,8 @@
       "/doktor-tools/enabiz",
       "/doktor-tools/muayene-sonu",
       "/doktor-tools/sablonlarim",
-      "/doktor-tools/konsultasyonlar"
+      "/doktor-tools/konsultasyonlar",
+      "/doktor-tools/hasta-iletisimi"
      ]
     }
    ],
@@ -3905,7 +4017,8 @@
     "/doktor-tools/enabiz",
     "/doktor-tools/muayene-sonu",
     "/doktor-tools/sablonlarim",
-    "/doktor-tools/konsultasyonlar"
+    "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/hasta-iletisimi"
    ]
   },
   "sac-ekimi": {
@@ -3921,7 +4034,8 @@
     "/doktor-tools/enabiz",
     "/doktor-tools/muayene-sonu",
     "/doktor-tools/sablonlarim",
-    "/doktor-tools/konsultasyonlar"
+    "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/hasta-iletisimi"
    ],
    "gruplar": [
     {
@@ -3940,7 +4054,8 @@
       "/doktor-tools/enabiz",
       "/doktor-tools/muayene-sonu",
       "/doktor-tools/sablonlarim",
-      "/doktor-tools/konsultasyonlar"
+      "/doktor-tools/konsultasyonlar",
+      "/doktor-tools/hasta-iletisimi"
      ]
     }
    ],
@@ -3956,7 +4071,8 @@
     "/doktor-tools/enabiz",
     "/doktor-tools/muayene-sonu",
     "/doktor-tools/sablonlarim",
-    "/doktor-tools/konsultasyonlar"
+    "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/hasta-iletisimi"
    ]
   },
   "(bos)": {
@@ -3972,7 +4088,8 @@
     "/doktor-tools/enabiz",
     "/doktor-tools/muayene-sonu",
     "/doktor-tools/sablonlarim",
-    "/doktor-tools/konsultasyonlar"
+    "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/hasta-iletisimi"
    ],
    "gruplar": [
     {
@@ -3991,7 +4108,8 @@
       "/doktor-tools/enabiz",
       "/doktor-tools/muayene-sonu",
       "/doktor-tools/sablonlarim",
-      "/doktor-tools/konsultasyonlar"
+      "/doktor-tools/konsultasyonlar",
+      "/doktor-tools/hasta-iletisimi"
      ]
     }
    ],
@@ -4007,7 +4125,8 @@
     "/doktor-tools/enabiz",
     "/doktor-tools/muayene-sonu",
     "/doktor-tools/sablonlarim",
-    "/doktor-tools/konsultasyonlar"
+    "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/hasta-iletisimi"
    ]
   },
   "(null)": {
@@ -4023,7 +4142,8 @@
     "/doktor-tools/enabiz",
     "/doktor-tools/muayene-sonu",
     "/doktor-tools/sablonlarim",
-    "/doktor-tools/konsultasyonlar"
+    "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/hasta-iletisimi"
    ],
    "gruplar": [
     {
@@ -4042,7 +4162,8 @@
       "/doktor-tools/enabiz",
       "/doktor-tools/muayene-sonu",
       "/doktor-tools/sablonlarim",
-      "/doktor-tools/konsultasyonlar"
+      "/doktor-tools/konsultasyonlar",
+      "/doktor-tools/hasta-iletisimi"
      ]
     }
    ],
@@ -4058,7 +4179,8 @@
     "/doktor-tools/enabiz",
     "/doktor-tools/muayene-sonu",
     "/doktor-tools/sablonlarim",
-    "/doktor-tools/konsultasyonlar"
+    "/doktor-tools/konsultasyonlar",
+    "/doktor-tools/hasta-iletisimi"
    ]
   }
  }
