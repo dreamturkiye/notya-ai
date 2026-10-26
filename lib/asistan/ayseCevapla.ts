@@ -66,7 +66,7 @@ import { AlanDefteri, alanlariYerineKoy, alanSozcusu, defteriGeriKur, verilmeyen
 import { asistanModelYonlendir, gecmisiKirp, netSosyalMi, sesSohbetCabasi, sohbetKademesi, SOHBET_SAKLANAN_MESAJ } from "@/lib/ai/modeller"
 import { aracTanimlari, eylemKapali, HASTA_ADI_ALANI } from "@/core/eylemler/araclar"
 import { toolUseOnerileri, toolUseBloklari, oneriHazirla, type HazirOneri } from "@/core/eylemler/oneri"
-import { bekleyenKomutOku, komutCevabiMi, komutNiyetiBul, randevuTamMi, type BekleyenKomut, type KomutNiyeti } from "@/lib/asistan/komutNiyeti"
+import { bekleyenKomutOku, komutCevabiMi, komutNiyetiBul, randevuTamMi, sonrakiDeneme, type BekleyenKomut, type KomutNiyeti } from "@/lib/asistan/komutNiyeti"
 import { adsiz, duz, randevuSaatiBul, randevuTarihiBul, soylenenAd, type RandevuNiyeti } from "@/lib/randevu/randevuSozu"
 import { bosSaatMetni, doktorCalismaGunu } from "@/lib/randevu/bosSaatler"
 import { hastaOzetiGetir } from "@/core/eylemler/hasta"
@@ -511,7 +511,7 @@ export async function ayseCevapla(g: AyseGirdisi): Promise<AyseSonucu> {
     // NOTYA-SES-ESKI-02: on ElevenLabs the pause reaches the model again, as before the Fish work (it answers with a check-in);
     // only right after a calendar answer the fixed line is spoken. Fish and the default keep the silent route.
     const sonAsistanMesaji = [...messages].reverse().find((m) => m.role === "assistant")
-    const karar = duraklamaKarari(g.saglayici, !!sonAsistanMesaji && sonTakvimCevabiMi(sonAsistanMesaji.content))
+    const karar = duraklamaKarari(g.saglayici, !!sonAsistanMesaji && sonTakvimCevabiMi(sonAsistanMesaji.content), Boolean(bekleyenKomut))
     if (karar !== "model") {
       const soz = karar === "buradayim" ? BURADAYIM_SOZU : ""
       return sade("gurultu", soz, soz, baglam.patientName ? String(baglam.patientName) : null)
@@ -1390,7 +1390,7 @@ ${ilacBaglamMetni(drugs[0])}`
   // NOTYA-AYSE-GERI-03: a command that ended without a card is still open — what was said so far waits for the
   // doctor's next sentence. A card, or a turn that is not a command, closes it.
   const yeniBekleyenKomut: BekleyenKomut | null = komut && !eylemOnerileri.length
-    ? { arac: komut.arac, randevu: komut.randevu, hastasiz: !kartHastasi, tarih: komut.randevu ? randevuTarih : null, saat: komut.randevu ? randevuSaat : null, deneme: (komutDevami?.deneme ?? -1) + 1, zaman: simdi() }
+    ? { arac: komut.arac, randevu: komut.randevu, hastasiz: !kartHastasi, tarih: komut.randevu ? randevuTarih : null, saat: komut.randevu ? randevuSaat : null, deneme: sonrakiDeneme(komutDevami, Boolean(komutDevami && (buTurTarih || buTurSaat || (komutDevami.hastasiz && adlaCozuldu)))), zaman: simdi() }
     : null
   await oturumuYaz(String(aiData.speech), { hasta: cozulenHasta, kartlar: eylemOnerileri.map((o) => o.id), kartHastaId: kartHastasi?.id ?? null, bekleyen, sesDevamKalan, bekleyenKomut: yeniBekleyenKomut, alanlar: alanRefleri })
 

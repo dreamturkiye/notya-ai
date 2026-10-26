@@ -19,6 +19,7 @@
  * "randevu aldı mı", "kilosu kaç", "bu ilaç ağrıyı keser", "yazın alerjisi artıyor".
  */
 import { kayitNiyetiMi } from '@/core/eylemler/oneri'
+import { sesGurultusuMu } from '@/lib/asistan/sesGurultu'
 import { duz, randevuNiyetiBul, randevuSaatiBul, soylenenTarih, type RandevuNiyeti } from '@/lib/randevu/randevuSozu'
 
 export interface KomutNiyeti {
@@ -123,6 +124,15 @@ export function bekleyenKomutOku(ham: unknown, simdi: Date = new Date()): Bekley
   }
 }
 
+/**
+ * NOTYA-SES-BEKLEYEN-01: tries are spent only by turns that moved nothing forward. A sentence that supplied the
+ * patient, the day or the time is progress and does not count against the cap.
+ */
+export function sonrakiDeneme(devami: Pick<BekleyenKomut, 'deneme'> | null | undefined, ilerleme: boolean): number {
+  if (!devami) return 0
+  return ilerleme ? devami.deneme : devami.deneme + 1
+}
+
 const VAZGEC = / (vazgec\w*|bosver|bos ver|gerek yok|gerek kalmadi|istemiyorum|kalsin|iptal|hayir) /
 const SORU = / (mi|mu|miyim|muyum|miyiz|muyuz|misin|musun|misiniz|musunuz|miydi|muydu|kac|kim|kimler|kimin|ne|nedir|neydi|nasil|neden|niye|neler|hangi|hangisi) /
 
@@ -132,7 +142,9 @@ const SORU = / (mi|mu|miyim|muyum|miyiz|muyuz|misin|musun|misiniz|musunuz|miydi|
  */
 export function komutCevabiMi(mesaj: string | null | undefined): boolean {
   const ham = String(mesaj || '').trim()
-  if (!ham || /\?/.test(ham)) return false
+  // NOTYA-SES-BEKLEYEN-01: an ASR pause ("...", "eee") is silence, not an answer. ElevenLabs sends one about every
+  // 8 s; each used to burn one of the BEKLEYEN_KOMUT_AZAMI_DENEME tries and the booking was dropped (Kaan, 2026-10-25).
+  if (!ham || /\?/.test(ham) || sesGurultusuMu(ham)) return false
   const n = duz(ham)
   if (n.trim().split(' ').length > 8) return false
   return !VAZGEC.test(n) && !SORU.test(n)

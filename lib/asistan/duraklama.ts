@@ -9,7 +9,9 @@ export type Saglayici = 'elevenlabs' | 'fish'
 export type DuraklamaKarari = 'sessiz' | 'buradayim' | 'model'
 export const BURADAYIM_SOZU = 'Buradayım Hocam.'
 
-export function duraklamaKarari(saglayici: Saglayici | undefined, takvimdenHemenSonra: boolean): DuraklamaKarari {
+export function duraklamaKarari(saglayici: Saglayici | undefined, takvimdenHemenSonra: boolean, bekleyenKomutVar = false): DuraklamaKarari {
   if (saglayici !== 'elevenlabs') return 'sessiz'
-  return takvimdenHemenSonra ? 'buradayim' : 'model'
+  // NOTYA-SES-BEKLEYEN-01: while a command waits for its next slot, a pause never reaches the model — it would ask
+  // the open question again in new words (the double "Saat kaçta?") and spend a try of the pending command.
+  return takvimdenHemenSonra || bekleyenKomutVar ? 'buradayim' : 'model'
 }
