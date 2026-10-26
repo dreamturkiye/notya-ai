@@ -58,6 +58,10 @@ export default function BelgeAnalizPage() {
   // NOTYA-BELGE-OTO-01: the doctor keeps seeing the ORIGINAL; masking only touches the outbound copy. We only show what was found.
   const [bulguBilgi, setBulguBilgi] = useState<{ bulgu: KimlikBulgulari; ad: 'eslesir' | 'eslesmiyor' | 'belirsiz' } | null>(null);
   const [hastaAdi, setHastaAdi] = useState<string | null>(null);
+  // HASTA-KIMLIK-SERIDI-01: the wrong-patient guard already loaded this patient's name; the
+  // screen itself showed only the document's filename, with no visible patient identity at all
+  // (Dr. Gökhan Mamur, 2026-10-26 live session: "hangi hastanın dosyasına baktığımız belli değil").
+  const [hastaDogum, setHastaDogum] = useState<string | null>(null);
   useEffect(() => {
     let iptal = false;
     (async () => {
@@ -66,6 +70,7 @@ export default function BelgeAnalizPage() {
         const r = await fetch(`/api/doktor/hastalar/${patientId}`, { headers: { Authorization: `Bearer ${t}` } });
         const d = await r.json().catch(() => null);
         if (!iptal && d?.patient?.ad_soyad) setHastaAdi(String(d.patient.ad_soyad));
+        if (!iptal && d?.patient?.dogum_tarihi) setHastaDogum(String(d.patient.dogum_tarihi));
       } catch { /* the wrong-patient guard is optional */ }
     })();
     return () => { iptal = true; };
@@ -295,6 +300,10 @@ export default function BelgeAnalizPage() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8, marginBottom: 8 }}>
                 <DoktorGeriLink href={geriHref}>{geriLabel}</DoktorGeriLink>
                 <div style={{ fontSize: 15, fontWeight: 800, color: CHROME_RENK.ink, flex: 1, textAlign: 'right' }}>{doc?.fileName || 'Belge'}</div>
+              </div>
+              {/* HASTA-KIMLIK-SERIDI-01: hangi hastanın dosyası açık, her zaman görünür. */}
+              <div style={{ fontSize: 13, fontWeight: 700, color: CHROME_RENK.ink, marginBottom: 6 }}>
+                {hastaAdi || 'Hasta'}{hastaDogum && <span style={{ fontWeight: 400, color: CHROME_RENK.muted }}> · Doğum: {new Date(hastaDogum).toLocaleDateString('tr-TR', { timeZone: 'Europe/Istanbul' })}</span>}
               </div>
               <div style={etiket}>{personaAd} ile değerlendir · {kural.ad}</div>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
