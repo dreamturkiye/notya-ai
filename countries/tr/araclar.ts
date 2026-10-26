@@ -19,6 +19,7 @@ export const TR_ARACLARI: readonly string[] = [
   '/doktor-tools/muayene-sonu',
   '/doktor-tools/sablonlarim',
   '/doktor-tools/konsultasyonlar',
+  '/doktor-tools/hasta-iletisimi',
   '/doktor-tools/hedef-boy',
   '/doktor-tools/pedi-buyume',
   '/doktor-tools/pedi-doz',
