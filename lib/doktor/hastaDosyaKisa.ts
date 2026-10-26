@@ -228,9 +228,11 @@ export function hastaOzetiKisa(paket: KisaOzetPaketi, bugunIso: string = bugunTR
       sinyalEkle(etiket, s.replace(/^(- Özet:|[SOAP] \([^)]+\):|Tanı:|Verilen ilaçlar:)\s*/, ''))
     }
   }
-  const cihazBelge = bolumBul(b, 'CİHAZ VE BELGE DEĞERLENDİRMELERİ')
-  for (const s of cihazBelge?.satirlar || []) if (s.includes('⚠ acil bayrak')) alarm.push(kirp(s.replace(/^- /, '⚠ '), 500))
-  for (const baslik of ['CİHAZ VE BELGE', 'ONAYLI LAB', 'GÖRÜNTÜLEME', 'BELGELER']) {
+  // The section is 'BELGE DEĞERLENDİRMELERİ' since the device bridge was removed (it was 'CİHAZ VE BELGE
+  // DEĞERLENDİRMELERİ'); the old heading is still accepted so a cached file text keeps its emergency flag.
+  const belgeDegerlendirme = bolumBul(b, 'BELGE DEĞERLENDİRMELERİ') || bolumBul(b, 'CİHAZ VE BELGE DEĞERLENDİRMELERİ')
+  for (const s of belgeDegerlendirme?.satirlar || []) if (s.includes('⚠ acil bayrak')) alarm.push(kirp(s.replace(/^- /, '⚠ '), 500))
+  for (const baslik of ['BELGE DEĞERLENDİRMELERİ', 'CİHAZ VE BELGE', 'ONAYLI LAB', 'GÖRÜNTÜLEME', 'BELGELER']) {
     for (const s of bolumBul(b, baslik)?.satirlar || []) if (!s.includes('⚠ acil bayrak')) sinyalEkle(baslik.toLocaleLowerCase('tr-TR'), s.replace(/^- /, ''))
   }
 
