@@ -70,9 +70,9 @@ function kaynakMetni(k: { dosya: string; kimlik: string }): string | null {
 }
 
 describe('Gökhan korpusu — girdiler', () => {
-  it('korpus yalnız büyür (Q-40): en az 436 girdi; yapısal denetim temiz; id tekil', () => {
+  it('korpus yalnız büyür (Q-40): en az 452 girdi; yapısal denetim temiz; id tekil', () => {
     // A floor, not a window: an entry is never removed to make a run green. Raise the floor when entries are added.
-    assert.ok(GOKHAN_SIKAYET_KORPUSU.length >= 436, String(GOKHAN_SIKAYET_KORPUSU.length))
+    assert.ok(GOKHAN_SIKAYET_KORPUSU.length >= 452, String(GOKHAN_SIKAYET_KORPUSU.length))
     assert.deepEqual(korpusDenetle(GOKHAN_SIKAYET_KORPUSU), [])
     assert.equal(new Set(GOKHAN_SIKAYET_KORPUSU.map((g) => g.id)).size, GOKHAN_SIKAYET_KORPUSU.length)
   })
@@ -499,9 +499,12 @@ describe('Gökhan korpusu — sentetik dosyalar', () => {
   })
 })
 
+/** NOTYA-AYSE-SAYI-SIRA-01: the live count sentence, its twelve wordings and the three that state a filter. */
+const SAYI_SIRA = GOKHAN_SIKAYET_KORPUSU.filter((g) => g.id.startsWith('L-SAYI-')).map((g) => g.id)
+
 describe('Gökhan korpusu — koşum (vekil model, gerçek rotalar)', () => {
   let satirlar: KorpusSatiri[] = []
-  const SECILEN = ['L-KIMLIK-ANNE', 'C-2', 'C-3', 'R-ASI-2', 'E-01', 'L-EYLEM-HEPB', 'Y-097', 'I-01', 'L-SAYFA-KILO', 'T-088', 'T-089', 'L-AKTIF-TANSIYON', 'L-BIRIM-02', 'G-K1', 'G-K2', 'L-DANIS-12AY', 'L-DANIS-15AY', 'L-TUR-15AY', 'L-TUR-18AY', 'L-TUR-24AY', 'L-TUR-6AY-PANEL', 'L-OZET-12AY', 'L-OZET-15AY', 'L-OZET-24AY-DEVAM', 'L-OZET-ERISKIN', 'L-OZET-YABANCI', 'K-G01', 'K-OLCUM-ATES', 'K-TARIH-SON']
+  const SECILEN = ['L-KIMLIK-ANNE', 'C-2', 'C-3', 'R-ASI-2', 'E-01', 'L-EYLEM-HEPB', 'Y-097', 'I-01', 'L-SAYFA-KILO', 'T-088', 'T-089', 'L-AKTIF-TANSIYON', 'L-BIRIM-02', 'G-K1', 'G-K2', 'L-DANIS-12AY', 'L-DANIS-15AY', 'L-TUR-15AY', 'L-TUR-18AY', 'L-TUR-24AY', 'L-TUR-6AY-PANEL', 'L-OZET-12AY', 'L-OZET-15AY', 'L-OZET-24AY-DEVAM', 'L-OZET-ERISKIN', 'L-OZET-YABANCI', 'K-G01', 'K-OLCUM-ATES', 'K-TARIH-SON', ...SAYI_SIRA]
   before(async () => {
     await sahneHazirla()
     assert.equal(gercekModelAc(vekilOpenRouter), true)
@@ -561,6 +564,23 @@ describe('Gökhan korpusu — koşum (vekil model, gerçek rotalar)', () => {
     assert.equal(p.karar, 'VEKIL')
   })
 
+  it('panel sayımı sohbet sözcükleriyle de hekimin gerçek sayısıdır; söylenen filtre kalır ve adıyla geçer — yazıda ve seste, modelsiz (NOTYA-AYSE-SAYI-SIRA-01)', () => {
+    assert.equal(SAYI_SIRA.length, 16)
+    for (const yuzey of ['yazi', 'ses'] as const) {
+      for (const id of SAYI_SIRA) {
+        const s = bul(id, yuzey)
+        assert.deepEqual([s.karar, s.rota, s.modeleGitti], ['PASS', 'arama', false], `${id}/${yuzey}: ${s.nedenler.join('; ')} | ${s.cevap} | ${s.sozlu}`)
+      }
+      // The live sentence: the whole panel, by name, and no filter line.
+      const canli = bul('L-SAYI-T4', yuzey)
+      assert.match(yuzey === 'ses' ? canli.sozlu : canli.cevap, new RegExp(`^Kayıtlarda ${KORPUS_PANEL_SAYISI} hasta: `))
+      assert.doesNotMatch(`${canli.cevap} ${canli.sozlu}`, /Filtre|\b0 hasta/)
+      // A stated diagnosis nobody carries: zero, the word that narrowed it, and the registered total.
+      const tani = bul('L-SAYI-F3', yuzey)
+      assert.match(yuzey === 'ses' ? tani.sozlu : tani.cevap, new RegExp(`^Kayıtlarda 0 hasta\\. Filtre: aranan söz: şizofreni\\. Kayıtlı toplam ${KORPUS_PANEL_SAYISI} hastanız var\\.$`))
+    }
+  })
+
   it('adı geçen muayenenin ölçümü üç yüzeyde kayıttan gelir — panelde vekil ne yazarsa yazsın (NOTYA-DANIS-OLCUM)', () => {
     for (const yuzey of ['yazi', 'ses', 'panel'] as const) {
       const s = bul('L-DANIS-12AY', yuzey)
@@ -584,10 +604,12 @@ describe('Gökhan korpusu — koşum (vekil model, gerçek rotalar)', () => {
       assert.match(o.cevap, /\*\*Aşı:\*\* Yapılmış .*KKK/)
       assert.match(o.cevap, /kilo 9,8 kg; boy 76 cm; baş çevresi 46,4 cm/)
       assert.equal(bul('L-OZET-ERISKIN', yuzey).hasta, KORPUS_ADLARI.eriskin)
-      // Another doctor's patient: no chart is bound, no summary is written.
+      // Another doctor's patient: no chart is bound, no summary is written. Since NOTYA-IKI-BEYIN-BIRDE (3f8ca065) the
+      // empty count template ("Kayıtlarda 0 hasta. Filtre: 12 aylık.") is no longer the answer — an empty search falls
+      // through to the model with no chart — so the stand-in answers and the turn is VEKIL (not judged), no longer PASS.
       const y = bul('L-OZET-YABANCI', yuzey)
-      assert.deepEqual([y.karar, y.hasta], ['PASS', null])
-      assert.ok(!/\*\*Muayene:\*\*|9,8/.test(`${y.cevap} ${y.sozlu}`))
+      assert.deepEqual([y.karar, y.hasta, y.modeleGitti], ['VEKIL', null, true], `${yuzey}: ${y.nedenler.join('; ')}`)
+      assert.ok(!/\*\*Muayene:\*\*|9,8|Filtre:/.test(`${y.cevap} ${y.sozlu}`))
     }
     // Voice: the summary is HEARD — the narrative from the record, not "Dayanak. N madde, ekranınızda.".
     const ses = bul('L-OZET-12AY', 'ses')
