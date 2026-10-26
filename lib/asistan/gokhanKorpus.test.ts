@@ -18,7 +18,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { EYLEM_CUMLELERI, vekilOpenRouter } from './tests/eylemDenetimi'
 import { GERCEKCI_HASTA_ADI } from './tests/gercekciHasta'
-import { HASTA_ESLEME, KORPUS_ADLARI, KORPUS_AYSE, KORPUS_KIMLIK_DEGERLERI, KORPUS_TARIK, PANEL_SAYISI, YABANCI_HASTALAR, korpusDosyasiYaz } from './tests/gokhanKorpusHastalari'
+import { HASTA_ESLEME, KORPUS_ADLARI, KORPUS_AYSE, KORPUS_KIMLIK_DEGERLERI, KORPUS_SESTE_YASAK_DEGERLER, KORPUS_TARIK, PANEL_SAYISI, YABANCI_HASTALAR, korpusDosyasiYaz } from './tests/gokhanKorpusHastalari'
 import { fiksturTarihleri, kaliteBolumu, korpusRaporu, korpusuKos, ozetle, type KorpusSatiri } from './tests/gokhanKorpusKosucu'
 import {
   ALTIN_ON_EKI, GOKHAN_SIKAYET_KORPUSU, KAPSAM_DISI_SIKAYETLER, KAPSAM_RED_BASI, KORPUS_KAYNAKLARI, KORPUS_PANEL_SAYISI,
@@ -282,11 +282,11 @@ describe('Gökhan korpusu — değerlendirme yardımcıları', () => {
     assert.equal(karar({ tablo: true, icerir: ['Hepatit B'] }, { rota: 'kayit', ekran: tablo }).karar, 'PASS')
     assert.match(karar({ tablo: true }, { ekran: 'Aşı karnesi ekranda.' }).nedenler.join(), /ekranda tablo yok/)
     assert.equal(karar({ icerir: ['Hepatit B', 'ekrana getirdim'] }, { yuzey: 'ses', ekran: tablo, soz: 'Aşı karnesini ekrana getirdim Hocam; 16 kayıt var.' }).karar, 'PASS')
-    const kimlik: KorpusGirdisi = { id: 'X-1', kat: 'kimlik', soz: 'Annesinin adı ne?', kaynak: [{ dosya: 'x', kimlik: 'x' }], yuzeyler: ['yazi', 'ses'], beklenti: { rota: ['kimlik'], icerir: ['Elif'] }, ses: { icerir: ['ekran'], icermez: ['Elif'] } }
+    const kimlik: KorpusGirdisi = { id: 'X-1', kat: 'kimlik', soz: 'Annesinin adı ne?', kaynak: [{ dosya: 'x', kimlik: 'x' }], yuzeyler: ['yazi', 'ses'], beklenti: { rota: ['kimlik'], icerir: ['Elif'] }, ses: { icerir: ['Elif'] } }
     assert.deepEqual(yuzeyBeklentisi(kimlik, 'yazi'), kimlik.beklenti)
-    assert.deepEqual(yuzeyBeklentisi(kimlik, 'ses'), { rota: ['kimlik'], icerir: ['ekran'], icermez: ['Elif'] })
-    assert.equal(beklentiDegerlendir(yuzeyBeklentisi(kimlik, 'ses'), tur({ yuzey: 'ses', rota: 'kimlik', soz: 'İstediğiniz bilgiyi ekranınıza yazdım Hocam.' }), B, AD).karar, 'PASS')
-    assert.equal(beklentiDegerlendir(yuzeyBeklentisi(kimlik, 'ses'), tur({ yuzey: 'ses', rota: 'kimlik', soz: 'Annesinin adı Elif.' }), B, AD).karar, 'FAIL')
+    assert.deepEqual(yuzeyBeklentisi(kimlik, 'ses'), { rota: ['kimlik'], icerir: ['Elif'] })
+    assert.equal(beklentiDegerlendir(yuzeyBeklentisi(kimlik, 'ses'), tur({ yuzey: 'ses', rota: 'kimlik', soz: 'Anne adı: Elif.' }), B, AD).karar, 'PASS')
+    assert.equal(beklentiDegerlendir(yuzeyBeklentisi(kimlik, 'ses'), tur({ yuzey: 'ses', rota: 'kimlik', soz: 'İstediğiniz bilgiyi ekranınıza yazdım Hocam.' }), B, AD).karar, 'FAIL')
     assert.equal(karar({ okunus: { icerir: ['derece'], icermez: ['°'] } }, { yuzey: 'ses', soz: 'Ateş: 38,7 °C', okunus: 'Ateş: otuz sekiz virgül yedi derece' }).karar, 'PASS')
     assert.match(karar({ okunus: { icermez: ['°'] } }, { yuzey: 'ses', soz: 'Ateş: 38,7 °C', okunus: 'Ateş: 38,7 °C' }).nedenler.join(), /okunuş içermemeli/)
   })
@@ -330,8 +330,8 @@ describe('Gökhan korpusu — kalite rubriği girdisi (NOTYA-KALITE-STANDART-01)
   it('tek ölçüm ve tek bilgi cümleden; hasta adı kuralı yalnız dosya cevabında; seste söz ve okunuş ayrı verilir', () => {
     const y = kaliteGirdisiKur(girdi(), tur())!
     assert.deepEqual([y.olcum, y.olgu, y.hastaAdi, y.yapi, y.soz], ['kilo', true, KORPUS_BEBEK_ADI, null, undefined])
-    const s = kaliteGirdisiKur(girdi(), tur({ yuzey: 'ses', soz: 'Emircan Karaoğlu — dosyada son ölçüm: Kilo: 12,8 kg.', okunus: 'on iki virgül sekiz kilogram' }), { kimlikDegerleri: KORPUS_KIMLIK_DEGERLERI, yabanciAdlar: YABANCI_HASTALAR })!
-    assert.deepEqual([s.soz, s.okunus, s.kimlikDegerleri?.length, s.yabanciAdlar], ['Emircan Karaoğlu — dosyada son ölçüm: Kilo: 12,8 kg.', 'on iki virgül sekiz kilogram', KORPUS_KIMLIK_DEGERLERI.length, [...YABANCI_HASTALAR]])
+    const s = kaliteGirdisiKur(girdi(), tur({ yuzey: 'ses', soz: 'Emircan Karaoğlu — dosyada son ölçüm: Kilo: 12,8 kg.', okunus: 'on iki virgül sekiz kilogram' }), { kimlikDegerleri: KORPUS_SESTE_YASAK_DEGERLER, yabanciAdlar: YABANCI_HASTALAR })!
+    assert.deepEqual([s.soz, s.okunus, s.kimlikDegerleri?.length, s.yabanciAdlar], ['Emircan Karaoğlu — dosyada son ölçüm: Kilo: 12,8 kg.', 'on iki virgül sekiz kilogram', KORPUS_SESTE_YASAK_DEGERLER.length, [...YABANCI_HASTALAR]])
     // A calendar or practice answer is not about one chart: no patient-name rule, no file structure.
     const t = kaliteGirdisiKur(girdi({ kat: 'takvim', soz: 'Bugün hiçbir randevumuz var mı?', beklenti: { rota: ['takvim'] } }), tur({ rota: 'takvim', hasta: KORPUS_BEBEK_ADI }))!
     assert.deepEqual([t.hastaAdi, t.yapi, t.olgu], [null, null, false])
@@ -519,13 +519,13 @@ describe('Gökhan korpusu — koşum (vekil model, gerçek rotalar)', () => {
     for (const s of satirlar) assert.equal(s.hata, '', `${s.id}/${s.yuzey}: ${s.hata}`)
   })
 
-  it('modelsiz cevap vekil koşumunda da tam yargılanır: kimlik (yazıda değer, seste değersiz cümle), takvim, tablo, kapsam reddi', () => {
+  it('modelsiz cevap vekil koşumunda da tam yargılanır: kimlik (yazıda değer, seste ad okunur), takvim, tablo, kapsam reddi', () => {
     const y = bul('L-KIMLIK-ANNE', 'yazi')
     assert.deepEqual([y.rota, y.karar, y.modeleGitti, y.hasta], ['kimlik', 'PASS', false, KORPUS_BEBEK_ADI])
     assert.ok(y.cevap.includes(KORPUS_BEBEK.anneAdi), y.cevap)
     const s = bul('L-KIMLIK-ANNE', 'ses')
     assert.deepEqual([s.rota, s.karar], ['kimlik', 'PASS'])
-    assert.ok(!s.sozlu.includes(KORPUS_BEBEK.anneAdi) && /ekran/.test(s.sozlu), s.sozlu)
+    assert.ok(s.sozlu.includes(KORPUS_BEBEK.anneAdi) && !/ekranınıza yazdım/.test(s.sozlu), s.sozlu)
     for (const yuzey of ['yazi', 'ses'] as const) {
       assert.deepEqual([bul('C-2', yuzey).rota, bul('C-2', yuzey).karar], ['takvim', 'PASS'])
       const t = bul('R-ASI-2', yuzey)
