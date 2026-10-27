@@ -4,7 +4,7 @@
  * the page, never the registry's other fields.
  */
 import { SPECIALTIES } from "@/lib/doktor/specialties";
-import { BRANS, KONSULTASYON, ON_BURO, PORTAL, TAKIP, VIZIT } from "./content";
+import { BRANS, FATURA, KONSULTASYON, ON_BURO, PORTAL, TAKIP, VIZIT } from "./content";
 import { FeatureSection, TypeCard } from "./feature";
 
 export function MuayeneSonu() {
@@ -149,6 +149,31 @@ export function Takip() {
           label="Takip listesi"
           rows={TAKIP.rows.map((k) => ({ k, mark: "Hatırlat" }))}
           note="Liste kendiliğinden güncellenir."
+        />
+      }
+    />
+  );
+}
+export function Faturalama() {
+  return (
+    <FeatureSection
+      id="faturalama"
+      tone="paper-2"
+      reverse
+      eyebrow={FATURA.eyebrow}
+      title={FATURA.title}
+      titleItalic={FATURA.titleItalic}
+      body={FATURA.body}
+      bullets={FATURA.bullets}
+      card={
+        <TypeCard
+          label="Faturalama ve Tahsilat"
+          rows={[
+            { k: "Fiyat kataloğu", v: "Her hizmet için kendi fiyatınız" },
+            { k: "e-Belge", v: "Kendi kimliğinizle kesilir" },
+            { k: "Tahsilat", v: "Kart bilgisi Notya'da tutulmaz" },
+            { k: "Mali müşavir raporu", v: "Ay sonunda tek tıkla" },
+          ]}
         />
       }
     />

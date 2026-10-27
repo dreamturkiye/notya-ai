@@ -1,8 +1,10 @@
 import { SiteNav } from "@/components/doktor-landing/site-nav";
 import { Hero } from "@/components/doktor-landing/hero";
+import { DemoSection } from "@/components/doktor-landing/demo-section";
 import { Conversation } from "@/components/doktor-landing/conversation";
 import {
   Branslar,
+  Faturalama,
   HastaPortali,
   Konsultasyon,
   MuayeneSonu,
@@ -23,6 +25,7 @@ export default function DoktorLandingPage() {
       <SiteNav />
       <main>
         <Hero />
+        <DemoSection />
         <Conversation />
         <MuayeneSonu />
         <HastaPortali />
@@ -32,6 +35,7 @@ export default function DoktorLandingPage() {
         <Takip />
         <Learning />
         <Safety />
+        <Faturalama />
         <Pricing />
         <FinalCta />
       </main>
