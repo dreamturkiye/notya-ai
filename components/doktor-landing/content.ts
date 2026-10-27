@@ -4,6 +4,29 @@ export const LINKS = {
   assistant: "/asistan",
   kvkk: "/kvkk",
   home: "/home",
+  demo: "/demo",
+} as const;
+
+export const DEMO = {
+  cta: "Demo planla",
+  title: "Demo planla",
+  lede: "Dr. Gökhan Mamur ile 60 dakikalık bir görüntülü görüşme. Saatler kendi saat diliminizde gösterilir.",
+  soonTitle: "Demo randevuları çok yakında açılıyor.",
+  soonBody: "Takvim hazır olduğunda bu sayfadan doğrudan randevu alabileceksiniz.",
+  provider: "Randevu işlemleri Cal.com üzerinden yürütülür.",
+  calendarLabel: "Demo randevu takvimi",
+  section: {
+    eyebrow: "Demo",
+    title: "Notya'yı bir hekimle birlikte görün.",
+    titleItalic: "60 dakikalık bir görüşmede.",
+    body: "Dr. Gökhan Mamur ile görüntülü bir görüşme planlayın. Size uygun saati takvimden seçin; saatler kendi saat diliminizde gösterilir.",
+    cardLabel: "Demo görüşmesi",
+    rows: [
+      { k: "60 dakika", v: "Görüntülü görüşme" },
+      { k: "Dr. Gökhan Mamur", v: "Sorularınızı birlikte konuşun" },
+      { k: "Kendi saatinizle", v: "Takvim saat diliminize göre açılır" },
+    ],
+  },
 } as const;
 
 export const NAV = [
@@ -11,7 +34,7 @@ export const NAV = [
   { href: "#portal", label: "Portal", index: "03" },
   { href: "#brans", label: "Branşlar", index: "06" },
   { href: "#guvenlik", label: "Güvenlik", index: "09" },
-  { href: "#fiyat", label: "Fiyat", index: "10" },
+  { href: "#fiyat", label: "Fiyat", index: "11" },
 ] as const;
 
 export const HERO = {
@@ -245,6 +268,19 @@ export const TAKIP = {
   titleItalic: "takipten düşmez.",
   body: "Kontrolü geciken ve izlemi kaçan hastalar kendiliğinden listelenir. Tek dokunuşla hatırlatma gönderirsiniz.",
   rows: ["Kontrolü geciken", "İzlemi kaçan"],
+} as const;
+
+export const FATURA = {
+  eyebrow: "10 — Faturalama ve Tahsilat",
+  title: "Faturanız da",
+  titleItalic: "aynı sistemde.",
+  body: "Hizmet ve fiyat kataloğunuzu siz oluşturursunuz; e-belge kendi kimliğinizle kesilir, tahsilat hastanızdan güvenle alınır.",
+  bullets: [
+    "Muayene, aşı, her hizmet için kendi fiyatınız",
+    "Kart bilgisi hiçbir zaman Notya'da tutulmaz",
+    "Hatırlatma, onayınızdan geçmeden gitmez",
+    "Ay sonu raporu mali müşavirinize tek tıkla",
+  ],
 } as const;
 
 export type ChartTurn = {
