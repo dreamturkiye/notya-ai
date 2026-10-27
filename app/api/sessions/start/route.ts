@@ -31,12 +31,26 @@ export async function POST(req: NextRequest) {
     // Kullanıcı ve abonelik kontrolü
     const { data: userData } = await getSupabase()
       .from('users')
-      .select('subscription_tier, subscription_status, monthly_session_count')
+      .select('subscription_tier, subscription_status, monthly_session_count, stripe_subscription_id')
       .eq('id', user.id)
       .single()
 
     if (!userData) {
       return NextResponse.json({ success: false, error: 'Kullanıcı bulunamadı' }, { status: 404 })
+    }
+
+    // STRIPE-NOTYA-01 (ported from main): only a doctor who actually went through the new Stripe
+    // checkout flow (stripe_subscription_id set) can be blocked here, and only on a terminal
+    // status. Every hand-onboarded doctor (subscription_status defaults to 'active', no
+    // stripe_subscription_id) is untouched by this check — never retroactively gated. past_due is
+    // deliberately NOT blocked: no grace-period policy exists yet, this is Kaan's call (see
+    // OPEN-COMMITMENTS).
+    if (userData.stripe_subscription_id && ['canceled', 'unpaid'].includes(String(userData.subscription_status))) {
+      return NextResponse.json({
+        success: false,
+        error: 'Notya aboneliğiniz sona erdi. Devam etmek için abonenliğinizi yenileyin.',
+        code: 'SUBSCRIPTION_INACTIVE',
+      }, { status: 403 })
     }
 
     // Abonelik limit kontrolü

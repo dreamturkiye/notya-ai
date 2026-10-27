@@ -90,6 +90,7 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "resend": "^4.0.1",
+    "stripe": "^19.3.0",
     "tesseract.js": "^5.1.1",
     "undici": "^6.29.0",
     "ws": "^8.21.0",
@@ -103,11 +104,11 @@
     "autoprefixer": "^10.4.20",
     "eslint": "^8.57.1",
     "eslint-config-next": "^14.2.16",
+    "linkedom": "^0.18.13",
     "mysql2": "^3.11.5",
     "pg": "^8.13.1",
     "postcss": "^8.4.47",
     "tailwindcss": "^3.4.14",
-    "typescript": "^6.0.3",
-    "linkedom": "^0.18.13"
+    "typescript": "^6.0.3"
   }
 }
