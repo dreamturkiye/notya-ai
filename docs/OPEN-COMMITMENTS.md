@@ -4506,3 +4506,24 @@ Conversion logic: looked up the live AUD/TRY mid-market rate (≈35.0, 2026-10-2
 - Move to Notya's own dedicated Stripe account when Kaan creates it (env-var swap only, per the existing `envOrFallback` design).
 
 | Claude: done above | Kaan: plan-selection entry point decision, STRIPE_SECRET_KEY/WEBHOOK_SECRET, test-object cleanup, own Stripe account |
+
+## STRIPE-NOTYA-AU-02 — real self-serve door into checkout; the billing routes were unreachable from au.notya.io entirely (Claude, 2026-10-27)
+
+Supersedes STRIPE-NOTYA-AU-01's "no public plan-selection UI exists" open item. Also corrects that entry's assumption that the webhook route is "live at `https://au.notya.io/api/billing/webhook`" — it was not.
+
+**More fundamental gap found first, fixed first:** `countries/au/index.ts`'s route gate (`rotalar.apiOnEkleri`) only allowed `/api/ulke/`. `/api/billing/checkout` and `/api/billing/webhook` are not under that prefix, so `lib/ulke/rotaKapisi.ts`'s allow-list gate (enforced by `middleware.ulke.ts`) 404'd both routes on the real deployed domain — regardless of catalog, env vars or code correctness, nothing in STRIPE-NOTYA-AU-01 was ever reachable from outside. Fixed: added `/api/billing/` to `apiOnEkleri`. **This is almost certainly the same gap on UZ, and will be on US/GB/CA/NZ once they get this billing port — each country's `apiOnEkleri` allow-list is independent, not shared.** Not fixed here (AU-only per this job's scope) — flag for whoever does UZ's/the others' equivalent wiring to check this first, not last.
+
+**Self-serve door into checkout, AU only:** confirmed AU's actual reachable public account-creation path is `/signup` → `DavetliKayitFormu` → `POST /api/ulke/kayit` (invite-code-gated: `davetliKayit:true`, `kayitAcik:false`). That endpoint creates the account server-side with the service role and deliberately returns no session — the browser can't call checkout from there. `/kayit` (main's TR-only page, hardcoded to TR's own Supabase project) is not a `*.ulke.tsx` file and is 404'd by the same route gate on AU — confirmed dead code, not a live bug, no action needed. `/billing` (`app/billing/page.ulke.tsx`) is the Faturalama/Tyro patient-accounting screen (`ekran="fatura"`) — a different system; did not touch it, same boundary this morning's main fix drew.
+
+Wired the first point a real AU session actually exists — the doctor's first `/login` right after registering:
+- `app/signup/page.ulke.tsx`: reads an optional `?plan=` (validated against `metin_asistan`/`sesli_pro`/`muayenehane` only), appends it to the post-registration "giriş yap" link it already shows.
+- `app/login/page.ulke.tsx`: reads `?plan=`, passes it to `GirisFormu` as a new optional prop.
+- `components/ulke/GirisFormu.tsx` (shared across every country using this component): new optional `planKey` prop, additive only — no other country's page passes it, so no other country's behavior changes. After a successful sign-in and the existing country-ownership check, if `planKey` is a recognized key it calls `/api/billing/checkout` with the fresh session token and redirects to the returned Stripe Checkout URL; any failure falls through to the normal post-login destination, same non-blocking rule as main's `/kayit` fix.
+
+**What this does NOT give AU yet:** a way for a doctor to pick a plan themselves without someone handing them a `?plan=` link — there is no in-app plan picker. Given `kayitAcik:false`, every AU signup today already goes through someone sharing an invite link (Kaan's "15-day demo" beta per his own plan); this makes that same link able to carry a plan choice, nothing more. A real self-serve plan picker (on the signup form, or a settings page) is bigger feature work, not this job's "smallest real fix."
+
+**Verified:** `npx tsc --noEmit -p .` clean on all 4 touched files (2 pre-existing, unrelated errors in `core/belgeler/kimlikMaske.test.ts`, not touched here, not caused here). Existing test suites for this area (`lib/ulke/ulke.test.ts`, `countries/au/au.test.ts`) fail on missing build-time aliases (`@/countries/active`) that need the country build step (`derleme.mjs`) to generate — a pre-existing environment gap in this worktree, not a regression from this change. Commit `edcc7fa50`, pushed to `release/au` (fast-forward confirmed before and after via `git ls-remote`).
+
+**Still open / Kaan's:** everything STRIPE-NOTYA-AU-01 already listed (STRIPE_SECRET_KEY/WEBHOOK_SECRET, test-object cleanup, own Stripe account), plus: decide whether AU ever gets a true self-serve plan picker, or stays invite-link-carries-the-plan as built here.
+
+| Claude: done above | Kaan: decide if a real plan-picker UI is wanted; everything else inherited from STRIPE-NOTYA-AU-01 | Claude (next, not this job): check the same `apiOnEkleri` gap on UZ and any other country before wiring their checkout |
