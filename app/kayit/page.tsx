@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { Suspense, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
 import { CHROME_RENK, CHROME_FONT, CHROME_FONT_HREF } from '@/lib/doktor/chromeTheme';
@@ -17,12 +17,21 @@ const SELF_SERVE_PLAN_KEYS = new Set(['metin_asistan', 'sesli_pro', 'muayenehane
 // This page is a per-visitor signup form with no static content to prerender anyway; force it dynamic.
 export const dynamic = 'force-dynamic';
 
+// NOTYA-BUILD-01 correction (2026-10-27): `dynamic = 'force-dynamic'` alone did NOT fix the build —
+// confirmed on the next 7 production deployments in a row, every one still failing on the exact same
+// "useSearchParams() should be wrapped in a suspense boundary" error. That export controls server
+// rendering mode; it does nothing for the client-side Suspense requirement useSearchParams() itself
+// imposes during the build's static-shell pass. The actual fix, per Next's own linked doc
+// (nextjs.org/docs/messages/missing-suspense-with-csr-bailout): wrap the component that calls
+// useSearchParams() in <Suspense>. Kept the dynamic export too — harmless, and correct for a
+// per-visitor form with nothing to statically cache.
+
 const supabase = createClient(
   'https://anjayzospuurymjmmtim.supabase.co',
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFuamF5em9zcHV1cnltam1tdGltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA2NDc5NzIsImV4cCI6MjA5NjIyMzk3Mn0.J4qRde2QJxxErFIWsO6Zb2TPN8GEIFXloLRpdac4GxE'
 );
 
-export default function KayitPage() {
+function KayitForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const planKey = searchParams.get('plan') || '';
@@ -279,5 +288,16 @@ export default function KayitPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function KayitPage() {
+  // The Suspense boundary itself — not the dynamic export above — is what satisfies
+  // useSearchParams()'s build-time requirement. Fallback is null: this page has no meaningful
+  // "loading" state to show before the form mounts.
+  return (
+    <Suspense fallback={null}>
+      <KayitForm />
+    </Suspense>
   );
 }
