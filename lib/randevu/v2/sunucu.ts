@@ -143,7 +143,7 @@ export async function mevcutHastaMi(sb: Sb, doktorId: string, patientId: string)
 
 // ── Event log and jobs ───────────────────────────────────────────────────────────────────────────────
 
-export type Yapan = 'hasta' | 'doktor' | 'sekreter' | 'sistem'
+export type Yapan = 'hasta' | 'doktor' | 'sekreter' | 'asistan' | 'hasta_danismani' | 'sistem'
 
 export async function olayYaz(sb: Sb, o: { randevuId: string; doktorId: string; olay: string; yapan: Yapan; yapanId?: string | null; detay?: Record<string, unknown> }): Promise<void> {
   await sb.from('randevu_olaylari').insert({
@@ -216,7 +216,7 @@ export async function talepOlustur(sb: Sb, g: { doktorId: string; patientId: str
 
 export type PratikIslemi = 'onayla' | 'oner' | 'reddet'
 
-export async function pratikIslem(sb: Sb, g: { doktorId: string; randevuId: string; islem: PratikIslemi; baslangic?: string; yapan: 'doktor' | 'sekreter'; yapanId: string; simdi?: number }): Promise<Islem> {
+export async function pratikIslem(sb: Sb, g: { doktorId: string; randevuId: string; islem: PratikIslemi; baslangic?: string; yapan: Exclude<Yapan, 'hasta' | 'sistem'>; yapanId: string; simdi?: number }): Promise<Islem> {
   const simdi = g.simdi ?? Date.now()
   const r = await satirGetir(sb, g.doktorId, g.randevuId)
   if (!r) return hata(404, MESAJ.yok)
