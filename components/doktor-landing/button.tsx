@@ -3,6 +3,7 @@ import { cn } from "./cn";
 
 const variants = {
   pine: "bg-pine text-cream hover:bg-pine-2",
+  blue: "bg-blue-600 text-white hover:bg-blue-700",
   cream: "bg-cream text-ink hover:bg-paper",
   ink: "bg-ink text-cream hover:bg-ink-2",
   outline: "bg-transparent text-ink ring-1 ring-line hover:bg-paper-2",
