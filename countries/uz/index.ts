@@ -121,7 +121,11 @@ export const UZ_PAKETI: UlkePaketi = {
     // (lib/ulke/rotaKapisi.ts) and it answered "Page not found" for any path it does not list, login included
     // once, before this fix. Keep it next to '/login' so the two stay paired.
     sayfalar: ['/', '/for-clinics', '/login', '/password-reset', '/signup', '/welcome', '/start', '/today', '/settings', '/patients', '/patients/new', '/patient', '/visit', '/calendar', '/portal', '/tools', '/medical', '/clinic', '/desk', '/privacy', '/terms', '/cookies', '/data-request', '/accessibility', '/medical-disclaimer', '/security', '/refund', '/copyright', '/demo'],
-    apiOnEkleri: ['/api/ulke/'],
+    // STRIPE-NOTYA-UZ-02 (same gap AU had, AU-BUILD-FIX found it first): without this prefix,
+    // /api/billing/checkout and /api/billing/webhook 404 at this gate before Next.js ever serves
+    // them — the Stripe-side plumbing (UZS catalog, env vars, trial) built and verified earlier
+    // today was never actually reachable from uz.notya.io. This is the fix.
+    apiOnEkleri: ['/api/ulke/', '/api/billing/'],
   },
   // NOTYA-UZ-MUAYENE-01 (Kaan, 2026-10-08): served at notya.io/uzbek. The paths above are relative to this prefix.
   yolOnEki: '/uzbek',
