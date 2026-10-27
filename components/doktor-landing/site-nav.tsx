@@ -60,7 +60,7 @@ export function SiteNav({ home = "" }: { home?: string } = {}) {
               Giriş
             </a>
             {demoAcik ? (
-              <Button href={LINKS.demo} variant="outline" size="sm">
+              <Button href={LINKS.demo} variant="blue" size="sm">
                 {DEMO.cta}
               </Button>
             ) : null}
@@ -102,7 +102,7 @@ export function SiteNav({ home = "" }: { home?: string } = {}) {
                 15 gün ücretsiz başlayın
               </Button>
               {demoAcik ? (
-                <Button href={LINKS.demo} variant="outline" size="lg">
+                <Button href={LINKS.demo} variant="blue" size="lg">
                   {DEMO.cta}
                 </Button>
               ) : null}
