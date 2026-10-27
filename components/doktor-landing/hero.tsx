@@ -29,7 +29,7 @@ export function Hero() {
               Muayeneyi izleyin
             </Button>
             {demoAcik ? (
-              <Button href={LINKS.demo} variant="outline" size="lg" className="w-full sm:w-auto">
+              <Button href={LINKS.demo} variant="blue" size="lg" className="w-full sm:w-auto">
                 {DEMO.cta}
               </Button>
             ) : null}
