@@ -1,6 +1,18 @@
 # OPEN COMMITMENTS — Notya AI
 
-## BELGE-OTO-01 — automatic document workflow (upload -> mask -> evaluate -> note) for all 40 branches + 6 countries (Claude, 2026-10-21)
+## STRIPE-NOTYA-02 — doktor landing page pricing cards wired to the real Stripe checkout; Klinik self-serve and all 6 country billing still open (Claude, 2026-10-27)
+
+Kaan flagged that pricing already exists on the doktor landing page (`components/doktor-landing/content.ts`) and should match Stripe. It does (same plan keys as `lib/billing/stripePlans.ts`, no hardcoded prices to drift). The real gap: every card's button went to `/kayit?plan=...`, and `/kayit/page.tsx` never read `plan` at all — a doctor who clicked "Satın Al" signed up and landed in onboarding with **no Stripe interaction, no trial started, no payment ever collected**, regardless of which card they clicked.
+
+**Shipped on `main` (TR), not yet pushed to the 6 countries:**
+- `components/doktor-landing/content.ts`: the three solo-doctor cards (Metin Asistan, Sesli Pro, Muayenehane) now carry their real plan key in the href (`?plan=metin_asistan` etc., matching `NotyaPlanKey` exactly).
+- `app/kayit/page.tsx`: reads `plan` from the URL; on successful signup (session issued immediately — email confirmation OFF path), a recognized solo plan key now calls `POST /api/billing/checkout` with the signup session's token and redirects straight to the returned Stripe Checkout URL (15-day trial already server-side). Checkout failing never blocks the account that was already created — falls back to `/onboarding?p=doktor` same as before.
+
+**Deliberately NOT wired, by design:**
+- Klinik Taban + Hekim Koltuğu (per-seat) and Kurumsal stay on the old `/kayit?plan=klinik`/`?plan=kurumsal` path (ignored, same as before). A real Klinik purchase is taban + N seats as *combined* Stripe line items (example totals ₺7.960/9.940/13.390 only work that way) — `/api/billing/checkout` only takes one `plan_key`. Building combined-line-item checkout is a separate, larger job. Waits on Kaan: confirm Klinik should be self-serve at all, vs. staying a sales-touch flow (current "1 yönetici + temel portal / Kurulum desteği" language already reads like one).
+- The "e-posta onayı bekliyor" path (email confirmation ON — no session returned from `signUp`) still has no way to carry the chosen plan through to checkout after the doctor confirms their email. Those doctors land in onboarding with no checkout step, same gap as before, just for a smaller slice of signups. Waits on Claude.
+
+**OPEN GAP — all 6 countries.** None of the Stripe billing work exists on `release/{us,gb,ca,au,nz,uz}` yet — confirmed `app/api/billing/checkout` is MISSING on all six, i.e. this is not a new gap created today, it is the pre-existing one from STRIPE-NOTYA-01 (2026-10-27) never having been ported, now compounded by this fix. Porting today would be hollow: no country has its own Stripe (or other processor) account, catalog, or price IDs, and whether Stripe is even the right processor outside Turkey hasn't been decided. Owner: Kaan, to say whether self-serve doctor billing is wanted outside Turkey yet and with which processor; Owner: Claude, to build the port once that's decided. — automatic document workflow (upload -> mask -> evaluate -> note) for all 40 branches + 6 countries (Claude, 2026-10-21)
 
 Shipped: shared core (`core/belgeler/notaBlok.ts`, `otoBatch.ts`, `otoIstemci.ts`, `belgeAkisi.ts`), batch-first Belgeler upload, Ekler step auto-evaluation, deterministic imaging block in `sessions/end`, original image shown to the doctor (masking only on the outbound copy), chips + wrong-patient warning, 4 note-text bug fixes, 40-branch static check. Skill: `.cursor/skills/belge-otomatik-akis`. Open items (all wait on Claude unless stated):
 - PDFs / audio are not auto-sent (no pixel masking possible); they stay in Belgeler for manual evaluation. Waits on Claude: text-layer de-identification for PDFs. (2026-10-21)

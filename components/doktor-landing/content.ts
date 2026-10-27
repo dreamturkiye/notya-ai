@@ -103,7 +103,9 @@ export const INDIVIDUAL_PLANS = [
       "SUT / doz uyarıları",
       "Hasta dosyası ve arşiv",
     ],
-    href: LINKS.signup,
+    // STRIPE-NOTYA-01: plan key must match lib/billing/stripePlans.ts NotyaPlanKey exactly —
+    // /kayit reads this and drives the doctor straight into Stripe Checkout (15-day trial) on signup.
+    href: `${LINKS.signup}?plan=metin_asistan`,
   },
   {
     name: "Sesli Pro",
@@ -121,7 +123,7 @@ export const INDIVIDUAL_PLANS = [
       "Öğrenen sistem",
       "Rapor / epikriz taslakları",
     ],
-    href: LINKS.signup,
+    href: `${LINKS.signup}?plan=sesli_pro`,
   },
   {
     name: "Muayenehane",
@@ -135,7 +137,7 @@ export const INDIVIDUAL_PLANS = [
       "Kurulum desteği",
       "Öncelikli destek",
     ],
-    href: LINKS.signup,
+    href: `${LINKS.signup}?plan=muayenehane`,
   },
 ] as const;
 

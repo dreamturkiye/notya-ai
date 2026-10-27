@@ -1,9 +1,15 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
 import { CHROME_RENK, CHROME_FONT, CHROME_FONT_HREF } from '@/lib/doktor/chromeTheme';
+
+// STRIPE-NOTYA-01 (2026-10-27): only the solo-doctor self-serve plans get driven straight into
+// Stripe Checkout from here. Klinik (multi-doctor: taban + per-seat koltuk, combined line items)
+// and Kurumsal are a sales-touch flow today — not wired here on purpose, logged in
+// docs/OPEN-COMMITMENTS.md (STRIPE-NOTYA-02) rather than silently built or silently skipped.
+const SELF_SERVE_PLAN_KEYS = new Set(['metin_asistan', 'sesli_pro', 'muayenehane']);
 
 const supabase = createClient(
   'https://anjayzospuurymjmmtim.supabase.co',
@@ -12,6 +18,8 @@ const supabase = createClient(
 
 export default function KayitPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const planKey = searchParams.get('plan') || '';
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -98,6 +106,31 @@ export default function KayitPage() {
 
       if (data.session) {
         localStorage.setItem('auth-token', JSON.stringify({ access_token: data.session.access_token }));
+
+        // STRIPE-NOTYA-01: a doctor who clicked a priced plan on the landing page goes straight
+        // into Stripe Checkout (15-day trial already applied server-side) instead of silently
+        // landing in onboarding with no payment step. Checkout failing (network, Stripe hiccup)
+        // must never block account creation that already succeeded — fall back to onboarding.
+        if (SELF_SERVE_PLAN_KEYS.has(planKey)) {
+          try {
+            const res = await fetch('/api/billing/checkout', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${data.session.access_token}`,
+              },
+              body: JSON.stringify({ plan_key: planKey, interval: 'month' }),
+            });
+            const json = await res.json();
+            if (json?.success && json?.data?.checkout_url) {
+              window.location.href = json.data.checkout_url;
+              return;
+            }
+          } catch {
+            // Fall through to onboarding below — the account itself was created successfully.
+          }
+        }
+
         router.replace('/onboarding?p=doktor');
       } else {
         // NOTYA-SIGNUP-02: no session here means the account was created and e-mail confirmation
