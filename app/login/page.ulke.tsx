@@ -22,6 +22,8 @@ export const metadata: Metadata = { robots: { index: false, follow: false } }
 export default function LoginPage({ searchParams }: { searchParams?: AramaParametreleri }) {
   if (!ozellikAcik('cekirdekGiris')) notFound()
   const dil = sayfaDili(searchParams)
+  // STRIPE-NOTYA-AU-02: carried from /signup's post-registration "giriş yap" link — see that page's comment.
+  const planHam = typeof searchParams?.plan === 'string' ? searchParams.plan : null
   return (
     <GirisFormu
       dil={dil}
@@ -31,6 +33,7 @@ export default function LoginPage({ searchParams }: { searchParams?: AramaParame
       anaSayfa={dilliYol('/', dil)}
       kayit={ozellikAcik('davetliKayit') ? dilliYol('/signup', dil) : null}
       sonra={ulkeYolu(ozellikAcik('cekirdekMuayene') ? UYGULAMA_EKRANLARI.bugun : '/welcome')}
+      planKey={planHam}
     />
   )
 }

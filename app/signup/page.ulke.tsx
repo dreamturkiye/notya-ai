@@ -18,10 +18,21 @@ export const dynamic = 'force-dynamic'
 export const viewport = ulkeKabukViewport()
 export const metadata: Metadata = { robots: { index: false, follow: false } }
 
+// STRIPE-NOTYA-AU-02: the 3 solo-doctor plan keys this build's Stripe catalog actually prices
+// (lib/billing/stripePlans.ts) — Klinik/Kurumsal are out of scope here, same boundary as main's /kayit fix.
+const SELF_SERVE_PLAN_KEYS = new Set(['metin_asistan', 'sesli_pro', 'muayenehane'])
+
 export default function SignupPage({ searchParams }: { searchParams?: AramaParametreleri }) {
   if (!ozellikAcik('davetliKayit')) notFound()
   const dil = sayfaDili(searchParams)
   const a = uygulamaMetni(dil).ayarlar
+  // STRIPE-NOTYA-AU-02: /api/ulke/kayit creates the account server-side and returns no session (by design —
+  // the browser never gets a service-role-issued token), so there is nowhere to call checkout from right here.
+  // The doctor's first real session is their first /login right after. Carry the chosen plan forward on that
+  // link; GirisFormu drives checkout from there once it actually has a session.
+  const planHam = typeof searchParams?.plan === 'string' ? searchParams.plan : null
+  const plan = planHam && SELF_SERVE_PLAN_KEYS.has(planHam) ? planHam : null
+  const girisYolu = dilliYol('/login', dil)
   return (
     <DavetliKayitFormu
       kodGerekli={kayitKoduGerekliMi(ulkePaketi())}
@@ -30,7 +41,7 @@ export default function SignupPage({ searchParams }: { searchParams?: AramaParam
       anaSayfaAdi={yuzeyMetinleri('giris', dil).anaSayfa}
       diller={dilSecenekleri('/signup')}
       anaSayfa={dilliYol('/', dil)}
-      giris={dilliYol('/login', dil)}
+      giris={plan ? `${girisYolu}${girisYolu.includes('?') ? '&' : '?'}plan=${plan}` : girisYolu}
       fiyat={dilliYol('/', dil, acilisCapasi('narx') ? `#${acilisCapasi('narx')}` : '')}
       meslek={ulkePaketi().uzanti?.muayenehane?.meslekKaydiTasi ? undefined : { etiket: a.meslekKaydi, izoh: a.meslekKaydiIzoh, gecersiz: a.meslekKaydiGecersiz }}
     />
