@@ -1,5 +1,17 @@
 # OPEN COMMITMENTS — Notya AI
 
+## STRIPE-NOTYA-03 — real Stripe webhook endpoints created for TR + AU; TR's webhook secret set, AU's blocked on Vercel write access, STRIPE_SECRET_KEY still needed from Kaan for both (Claude, 2026-10-27)
+
+Kaan asked to close the "Stripe checkout can't take a payment yet" gap the AU audit found (missing `STRIPE_SECRET_KEY`/`STRIPE_WEBHOOK_SECRET`), the same way as Türkiye — turns out Türkiye had the identical gap, not yet actually closed either.
+
+**Done:** created two real webhook endpoints on the shared test-mode account (`acct_1SX5XF2LZ4pKabuO`) via the Stripe API directly — `we_1UVEod2LZ4pKabuOBoa9no3s` → `https://www.notya.io/api/billing/webhook` and `we_1UVEof2LZ4pKabuONbbzgfx5` → `https://au.notya.io/api/billing/webhook`, both `enabled_events: ["*"]` (the handler already dispatches by event type internally). TR's signing secret set as `STRIPE_WEBHOOK_SECRET` on `notya-ai` (Vercel), production target — confirmed via the create call's own response.
+
+**Blocked, needs Kaan:**
+- **AU's webhook secret could not be set** — `mcp__Vercel__create_project_env` 404'd ("Project not found") against `notya-au-preview` by both project ID and name, while reads against the same project worked fine earlier the same day. Matches an already-logged pattern (AU-ASSIST-ON-01, 2026-10-25: "Claude's Vercel connector gets 404 on every `notya-<cc>-preview` project" for some operations) — this looks like a write-scope limitation on the country Vercel projects specifically, not a mistake in the request. Two attempts, stopped rather than keep retrying. **The value to paste in by hand** (Vercel → `notya-au-preview` → Settings → Environment Variables → Production): `STRIPE_WEBHOOK_SECRET` = `whsec_xnN64zeTRiJa0uLWpHag1LHnjSVU4xFC`.
+- **`STRIPE_SECRET_KEY` itself (both TR and AU — same value, same shared account) cannot be created or read via the Stripe API at all.** This isn't a tooling gap, it's Stripe's own design: secret API keys are issued only through the Dashboard (Developers → API keys), shown once, never retrievable after. Kaan needs to copy the test-mode secret key from the Stripe Dashboard and either hand it to Claude or set it himself on both `notya-ai` and `notya-au-preview` (Production). Until this is set, `/api/billing/checkout` throws server-side on both — the webhook secret alone doesn't unblock checkout.
+
+Logged rather than silently left as "should be fine" — matches STRIPE-NOTYA-01/02's own "Stripe/Vercel env" open items, consolidated here.
+
 ## STRIPE-NOTYA-02 — doktor landing page pricing cards wired to the real Stripe checkout; Klinik self-serve and all 6 country billing still open (Claude, 2026-10-27)
 
 Kaan flagged that pricing already exists on the doktor landing page (`components/doktor-landing/content.ts`) and should match Stripe. It does (same plan keys as `lib/billing/stripePlans.ts`, no hardcoded prices to drift). The real gap: every card's button went to `/kayit?plan=...`, and `/kayit/page.tsx` never read `plan` at all — a doctor who clicked "Satın Al" signed up and landed in onboarding with **no Stripe interaction, no trial started, no payment ever collected**, regardless of which card they clicked.
