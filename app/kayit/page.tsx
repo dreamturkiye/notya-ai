@@ -11,6 +11,12 @@ import { CHROME_RENK, CHROME_FONT, CHROME_FONT_HREF } from '@/lib/doktor/chromeT
 // docs/OPEN-COMMITMENTS.md (STRIPE-NOTYA-02) rather than silently built or silently skipped.
 const SELF_SERVE_PLAN_KEYS = new Set(['metin_asistan', 'sesli_pro', 'muayenehane']);
 
+// NOTYA-BUILD-01 (2026-10-27): useSearchParams() (added for the plan-key wiring above) made Next.js
+// try to statically prerender this page and fail the whole production build — every deploy since
+// STRIPE-NOTYA-02 errored on exactly this, not on anything else that landed on top of it afterward.
+// This page is a per-visitor signup form with no static content to prerender anyway; force it dynamic.
+export const dynamic = 'force-dynamic';
+
 const supabase = createClient(
   'https://anjayzospuurymjmmtim.supabase.co',
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFuamF5em9zcHV1cnltam1tdGltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA2NDc5NzIsImV4cCI6MjA5NjIyMzk3Mn0.J4qRde2QJxxErFIWsO6Zb2TPN8GEIFXloLRpdac4GxE'
