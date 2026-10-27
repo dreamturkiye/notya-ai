@@ -12,7 +12,7 @@ import { AU_TASLAK_ETIKETI } from './gizlilik'
 export const AU_YASAL_SATIRLARI = [
   'Notya is a practice management and clinical documentation tool. It does not provide medical advice, diagnosis, or treatment. Clinical decisions remain the responsibility of the registered practitioner.',
   'Health information is handled in accordance with the Privacy Act 1988 (Cth) and the Australian Privacy Principles. By using Notya you consent to the collection and use of health information for the purpose of providing the service.',
-  'Clinical content is based on publicly available Australian guidelines (RACGP, RCH Melbourne, PBS, WHO). It is an initial compliance and clinical draft. External clinician and legal review is planned after the first customers.',
+  'Clinical content is based on publicly available Australian guidelines (RACGP, RCH Melbourne, PBS, WHO).',
   'Notya is not a substitute for professional medical advice. Always consult a registered Australian health practitioner for medical concerns.',
 ] as const
 

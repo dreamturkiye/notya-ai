@@ -69,7 +69,7 @@ export function auMuayenehaneDogrula(girdi: Record<string, unknown>): Muayenehan
 
 export const AU_MUAYENEHANE: MuayenehaneTanimi = {
   baslik: 'Practice details',
-  aciklama: 'Used on invoices and letters. Every field is optional; leave any empty. Nothing is checked against the ABN, AHPRA or Medicare registers — only the shape of each number is checked. Initial compliance draft – external legal review later.',
+  aciklama: 'Used on invoices and letters. Every field is optional; leave any empty. Nothing is checked against the ABN, AHPRA or Medicare registers — only the shape of each number is checked.',
   meslekKaydiTasi: { alan: 'ahpra', bicim: ahpraNoBicimi },
   alanlar: [
     { anahtar: 'adi', etiket: 'Practice or business name', azami: 120 },
