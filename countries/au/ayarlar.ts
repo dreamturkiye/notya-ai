@@ -194,7 +194,16 @@ export const AU_GIRDI: EnUlkeGirdisi = {
     dozYazimi: { sondaSifir: false },
     // The body mass index of Australia's own tool is written in kilograms per square metre.
     // Dietetics beta suite (kJ/kg, g/kg): Australian clinical practice uses kilojoules, not kcal.
-    birimAdlari: { 'kg/m2': 'kg/m²', 'kJ/kg': 'kJ/kg', 'g/kg': 'g/kg', kJ: 'kJ', 'mL/h': 'mL/h' },
+    birimAdlari: {
+      'kg/m2': 'kg/m²',
+      'kJ/kg': 'kJ/kg',
+      'g/kg': 'g/kg',
+      kJ: 'kJ',
+      'mL/h': 'mL/h',
+      // Dietetics nutrition-lab recorder (ferritin / B12 / folate — AU reporting units)
+      'pmol/L': 'pmol/L',
+      'nmol/L': 'nmol/L',
+    },
     // FOR A LOCAL CLINICAL LEAD: the tools of the shared set this country keeps switched off, and why.
     kapali: {
       // REMOVED FOR AUSTRALIA by the audit's decision ("remove"): it is not this country's scale. It stays a slot only

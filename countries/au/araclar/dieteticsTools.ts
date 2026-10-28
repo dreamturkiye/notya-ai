@@ -9,7 +9,8 @@
  * Built for an Australian clinical dietitian (Dietitians Australia member) beta: malnutrition screening
  * score record, weight-change arithmetic, energy/protein starting estimates (kJ — AU
  * practice), IDDSI level record (CC BY-SA), refeeding risk ticks, enteral rate, person-
- * centred nutrition goals. No meal plan stored. No medicine dose. No medical diagnosis.
+ * centred nutrition goals, and nutrition-relevant lab value recording (no invented
+ * intervals). No meal plan stored. No medicine dose. No medical diagnosis.
  *
  * Licence notes (read 2026-10-28):
  * - MST: score recorded only (ECOG pattern); question wording is NOT reproduced — read
@@ -248,6 +249,85 @@ export const AU_NUTRITION_GOALS: AracTanimi = {
   },
 }
 
+// ─── 8. Nutrition-relevant labs (values recorded; no diagnosis bands) ───────
+
+/**
+ * Common APD working panel: glycaemia, blood count context, lipids, kidney,
+ * inflammation, albumin, iron/B12/folate, refeeding electrolytes. Values only —
+ * no "normal" / disease band is invented here. The dietitian reads the lab report.
+ */
+const LAB_SAYI_ALANLARI = [
+  'hba1c',
+  'glukoz',
+  'hb',
+  'kolesterol',
+  'kreatinin',
+  'crp',
+  'uacr',
+  'albumin',
+  'ferritin',
+  'b12',
+  'folate',
+  'potasyum',
+  'fosfat',
+  'magnezyum',
+] as const
+
+export const AU_NUTRITION_LABS: AracTanimi = {
+  anahtar: 'au-nutrition-labs',
+  tur: 'hesap',
+  alanlar: [
+    sayi('hba1c', 3, 20, { lab: 'hba1c', istege: true }),
+    sayi('glukoz', 1, 40, { lab: 'glukoz', istege: true }),
+    // Plain g/L (AU reporting). Avoid kit key `hemoglobin` in AU-authored tools — en-AU spelling check.
+    sayi('hb', 40, 220, { birim: 'g/L', istege: true }),
+    sayi('kolesterol', 1, 20, { lab: 'kolesterol', istege: true }),
+    sayi('kreatinin', 20, 2000, { lab: 'kreatinin', istege: true }),
+    sayi('crp', 0, 500, { lab: 'crp', istege: true }),
+    sayi('uacr', 0, 10000, { lab: 'albuminKreatinin', istege: true }),
+    sayi('albumin', 10, 60, { birim: 'g/L', istege: true }),
+    sayi('ferritin', 1, 5000, { birim: 'ug/L', istege: true }),
+    sayi('b12', 50, 2000, { birim: 'pmol/L', istege: true }),
+    sayi('folate', 1, 100, { birim: 'nmol/L', istege: true }),
+    sayi('potasyum', 1.5, 8, { birim: 'mmol/L', istege: true }),
+    sayi('fosfat', 0.2, 4, { birim: 'mmol/L', istege: true }),
+    sayi('magnezyum', 0.2, 2, { birim: 'mmol/L', istege: true }),
+  ],
+  cikti: {
+    sayilar: [...LAB_SAYI_ALANLARI, 'dolu'],
+    bantlar: [],
+    uyarilar: ['lab_kayit', 'lab_yok'],
+    tarihler: [],
+  },
+  sonucBirimleri: ['g/L', 'ug/L', 'pmol/L', 'nmol/L', 'mmol/L', 'mg/mmol', 'umol/L', 'mg/L', '%', 'mmol/mol'],
+  kaynak: `${DIYET_KAYNAK} Nutrition-relevant results the dietitian types from the lab report. Units follow Australian laboratory reporting (HbA1c % or mmol/mol; glucose mmol/L; haemoglobin g/L). No reference interval and no diagnosis is stored.`,
+  hesapla: (g) => {
+    const sayilar: { anahtar: string; deger: number; ondalik: number; birim?: string }[] = []
+    for (const k of LAB_SAYI_ALANLARI) {
+      const v = g[k]
+      if (!sayiMi(v)) continue
+      const birim =
+        k === 'hb' || k === 'albumin' ? 'g/L'
+        : k === 'ferritin' ? 'ug/L'
+        : k === 'b12' ? 'pmol/L'
+        : k === 'folate' ? 'nmol/L'
+        : k === 'potasyum' || k === 'fosfat' || k === 'magnezyum' ? 'mmol/L'
+        : undefined
+      sayilar.push({ anahtar: k, deger: v, ondalik: k === 'fosfat' || k === 'magnezyum' || k === 'potasyum' ? 2 : 1, ...(birim ? { birim } : {}) })
+    }
+    if (!sayilar.length) {
+      return { tamam: true, sayilar: [{ anahtar: 'dolu', deger: 0, ondalik: 0, enCok: LAB_SAYI_ALANLARI.length }], bant: null, uyarilar: ['lab_yok'], tarihler: [] }
+    }
+    return {
+      tamam: true,
+      sayilar: [...sayilar, { anahtar: 'dolu', deger: sayilar.length, ondalik: 0, enCok: LAB_SAYI_ALANLARI.length }],
+      bant: null,
+      uyarilar: ['lab_kayit'],
+      tarihler: [],
+    }
+  },
+}
+
 export const AU_DIYET_TANIMLAR: readonly AracTanimi[] = [
   AU_MST,
   AU_KILO_DEGISIM,
@@ -256,6 +336,7 @@ export const AU_DIYET_TANIMLAR: readonly AracTanimi[] = [
   AU_REFEEDING,
   AU_ENTERAL,
   AU_NUTRITION_GOALS,
+  AU_NUTRITION_LABS,
 ]
 
 export const AU_DIYET_ANAHTARLARI: readonly string[] = AU_DIYET_TANIMLAR.map((t) => t.anahtar)
@@ -437,6 +518,54 @@ export function auDieteticsAraclari(): readonly PaketAraci[] {
       },
       not: 'Community and outpatient dietitians often work by shared goals with family. This screen stores ticks only.',
       lisans: { hakSahibi: 'Notya', kaynak: `${DIYET_KAYNAK} Person-centred goal ticks.`, bildirim: 'Goals you agreed with the client. No prescription is stored here.' },
+    }),
+    paket({
+      anahtar: 'au-nutrition-labs',
+      ad: 'Nutrition lab results (record values)',
+      aciklama: 'Type recent nutrition-relevant results from the lab report: HbA1c, glucose, haemoglobin, cholesterol, creatinine, CRP, urine ACR, albumin, ferritin, B12, folate, and potassium / phosphate / magnesium. Australian units. Enter only what you have — empty fields stay empty. No reference interval and no diagnosis is stored on this screen.',
+      alanlar: {
+        hba1c: 'HbA1c',
+        glukoz: 'Glucose',
+        hb: 'Haemoglobin',
+        kolesterol: 'Total cholesterol',
+        kreatinin: 'Creatinine',
+        crp: 'C-reactive protein',
+        uacr: 'Urine albumin-to-creatinine ratio',
+        albumin: 'Serum albumin',
+        ferritin: 'Ferritin',
+        b12: 'Vitamin B12',
+        folate: 'Folate',
+        potasyum: 'Potassium',
+        fosfat: 'Phosphate',
+        magnezyum: 'Magnesium',
+      },
+      sayilar: {
+        hba1c: 'HbA1c',
+        glukoz: 'Glucose',
+        hb: 'Haemoglobin',
+        kolesterol: 'Cholesterol',
+        kreatinin: 'Creatinine',
+        crp: 'CRP',
+        uacr: 'uACR',
+        albumin: 'Albumin',
+        ferritin: 'Ferritin',
+        b12: 'B12',
+        folate: 'Folate',
+        potasyum: 'Potassium',
+        fosfat: 'Phosphate',
+        magnezyum: 'Magnesium',
+        dolu: 'Results recorded',
+      },
+      uyarilar: {
+        lab_kayit: 'Values recorded as you typed them from the report. Interpret with the lab\'s own intervals and the treating team. This is not a diagnosis.',
+        lab_yok: 'No result was entered. Add at least one value from the report when you keep this note.',
+      },
+      not: 'A working record for nutrition assessment. Albumin alone is not a malnutrition diagnosis. Ferritin rises in inflammation — read with CRP. Electrolytes matter for refeeding risk with the treating team.',
+      lisans: {
+        hakSahibi: 'Notya',
+        kaynak: `${DIYET_KAYNAK} Clinician-typed nutrition lab values in Australian units.`,
+        bildirim: 'Lab values you typed. No interval and no diagnosis stored. Triple Zero (000) if the patient is unstable.',
+      },
     }),
   ]
 }

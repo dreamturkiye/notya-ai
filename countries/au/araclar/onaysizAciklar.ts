@@ -168,7 +168,7 @@ export const AU_ONAYSIZ_ACIK_ARACLAR: readonly OnaysizAcikArac[] = [
     anahtar,
     oneri: 'AU clinical dietetics beta suite, 2026-10-28',
     klinisyen: null,
-    bakilacak: 'Dietetics only. A practising dietitian should confirm MST score-only recording (questions not worded), kJ/kg starting estimates, IDDSI level labels, refeeding tick list, and enteral rate arithmetic fit ordinary AU practice before relying on them with patients.',
+    bakilacak: 'Dietetics only. A practising dietitian should confirm MST score-only recording (questions not worded), kJ/kg starting estimates, IDDSI level labels, refeeding tick list, enteral rate arithmetic, and nutrition-lab value recording (no intervals) fit ordinary AU practice before relying on them with patients.',
   })),
   ...AU_BAGLANTI_KAYITLARI.map((k) => ({
     anahtar: k.anahtar,

@@ -19,8 +19,8 @@ A pack that builds has every text and setting filled in. It says nothing about w
 
 ## What is in this pack, and where it comes from
 
-- **From the shared English set** (`countries/_dil/en/`, written once for five countries): 6595 texts as this pack shows them or hands the model (the country's own, counted in the next line, among them) — the screens, the role names, 40 note templates, the instructions to the model, the intake questions, 222 tools, the landing copy — written in `en-AU` spelling by the set's spelling table.
-- **This country's own** (`countries/au/`, six small files): 46 texts it writes itself (its consent sentence, identifier label, time sentence, date example, name, word for a senior doctor, role names where they differ, what its closed tools are missing and who decides, unit names and tool words it writes differently, the example phone number and the pattern of an amount) and the settings in the table below.
+- **From the shared English set** (`countries/_dil/en/`, written once for five countries): 6682 texts as this pack shows them or hands the model (the country's own, counted in the next line, among them) — the screens, the role names, 40 note templates, the instructions to the model, the intake questions, 223 tools, the landing copy — written in `en-AU` spelling by the set's spelling table.
+- **This country's own** (`countries/au/`, six small files): 48 texts it writes itself (its consent sentence, identifier label, time sentence, date example, name, word for a senior doctor, role names where they differ, what its closed tools are missing and who decides, unit names and tool words it writes differently, the example phone number and the pattern of an amount) and the settings in the table below.
 
 ## Settings — every one unverified
 
@@ -31,7 +31,7 @@ A pack that builds has every text and setting filled in. It says nothing about w
 | Default time zone; zones an account may choose | Australia/Sydney; Australia/Sydney, Australia/Melbourne, Australia/Brisbane, Australia/Adelaide, Australia/Darwin, Australia/Perth, Australia/Hobart | product, with a local lead. Several zones are offered (listed in the row) and an account chooses its own; the default (Australia/Sydney) and the list are unverified choices. |
 | Date pattern; clock; first day of the week | DD/MM/YYYY; 12-hour; Monday | a local lead |
 | Units | weight kg, height cm, temperature °C | a local clinical lead — a clinical-safety setting |
-| Laboratory units | urine albumin-to-creatinine ratio: mg/mmol; haemoglobin: g/L; creatinine: umol/L; glucose: mmol/L; cholesterol: mmol/L; C-reactive protein: mg/L; prostate-specific antigen: µg/L; HbA1c: % or mmol/mol | a local clinical lead — a clinical-safety setting; the kit converts from the unit stated here |
+| Laboratory units | urine albumin-to-creatinine ratio: mg/mmol; haemoglobin: g/L; creatinine: µmol/L; glucose: mmol/L; cholesterol: mmol/L; C-reactive protein: mg/L; prostate-specific antigen: µg/L; HbA1c: % or mmol/mol | a local clinical lead — a clinical-safety setting; the kit converts from the unit stated here |
 | Writing an amount of a medicine | no zero after the last figure ("5 mL", never "5.0 mL") | a local pharmacist or clinical lead — a clinical-safety setting; the source read is cited beside the setting in ayarlar.ts |
 | Currency | AUD | the owner |
 | Prices | EMPTY, SWITCHED OFF: every plan "by quote" | **WAITING ON KAAN** |
@@ -115,7 +115,7 @@ The keys are the shared English key set (`docs/COUNTRY-PACK-ROLE-KEYS.md`). The 
 
 ## Tools
 
-### Switched on (222) — with the unit each measured input takes
+### Switched on (223) — with the unit each measured input takes
 
 Units are a clinical-safety matter. A length or a weight is typed in this pack's unit and converted by the kit with the exact defined factors (1 in = 2.54 cm, 1 lb = 0.45359237 kg); a laboratory value is typed in the unit shown. `countries/au/au.test.ts` runs every tool below with this country's units against the kit's reference result. **Every tool's text is machine-written; each waits on a local clinical lead.**
 
@@ -280,6 +280,7 @@ Units are a clinical-safety matter. A length or a weight is typed in this pack's
 | `au-refeeding-risk` | Refeeding risk signs (dietitian ticks) | Dietitian | no measured input |
 | `au-enteral-rate` | Enteral feed rate (mL/h) | Dietitian | Total volume for the period: **mL**; Hours over which that volume will run: **hours** · result in mL/h |
 | `au-nutrition-goals` | Nutrition care goals (with the client) | Dietitian | no measured input |
+| `au-nutrition-labs` | Nutrition lab results (record values) | Dietitian | HbA1c: **% or mmol/mol**; Glucose: **mmol/L**; Haemoglobin: **g/L**; Total cholesterol: **mmol/L**; Creatinine: **µmol/L**; C-reactive protein: **mg/L**; Urine albumin-to-creatinine ratio: **mg/mmol**; Serum albumin: **g/L**; Ferritin: **µg/L**; Vitamin B12: **pmol/L**; Folate: **nmol/L**; Potassium: **mmol/L**; Phosphate: **mmol/L**; Magnesium: **mmol/L** · result in g/L, µg/L, pmol/L, nmol/L, mmol/L, mg/mmol, µmol/L, mg/L, %, mmol/mol |
 | `au-growth-chart-reference` | Which growth chart to use | every role | no measured input |
 | `au-identifier-check` | Medicare card and provider number check | every role | no measured input |
 | `au-privacy-principles` | Privacy Act record | every role | no measured input |
@@ -561,7 +562,7 @@ For each entry: official local name, what it governs, source link, date checked,
 - [ ] C12 Note template per language.
   - MACHINE-BUILT. 40 templates, read by no clinician of this country.
 - [ ] C13 Intake form per language.
-  - MACHINE-WRITTEN. 44 core questions and 393 role questions, read by no clinician of this country.
+  - MACHINE-WRITTEN. 44 core questions and 403 role questions, read by no clinician of this country.
 - [ ] C14 Reviewer name, date, sign-off; a specialty is switched on only after this.
   - NOBODY. No role is signed off.
 - [ ] C15 Owner and next review date for every source.

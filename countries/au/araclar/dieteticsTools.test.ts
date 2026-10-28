@@ -14,6 +14,7 @@ import {
   AU_KILO_DEGISIM,
   AU_MST,
   AU_NUTRITION_GOALS,
+  AU_NUTRITION_LABS,
   AU_REFEEDING,
   auDieteticsAraclari,
   yuvarlaKj,
@@ -26,9 +27,9 @@ const O = { bugun: '2026-10-28', p: {} }
 const kos = (t: typeof AU_MST, g: Record<string, unknown>) => t.hesapla(g as never, O)
 
 describe('AU clinical dietetics Araçlar (beta suite)', () => {
-  it('seven specialty-only tools are wired for dietetics alone', () => {
-    assert.equal(AU_DIYET_ANAHTARLARI.length, 7)
-    assert.equal(auDieteticsAraclari().length, 7)
+  it('eight specialty-only tools are wired for dietetics alone', () => {
+    assert.equal(AU_DIYET_ANAHTARLARI.length, 8)
+    assert.equal(auDieteticsAraclari().length, 8)
     for (const k of AU_DIYET_ANAHTARLARI) {
       const p = A.araclar.find((x) => x.anahtar === k)
       assert.ok(p, k)
@@ -102,6 +103,22 @@ describe('AU clinical dietetics Araçlar (beta suite)', () => {
     const g = kos(AU_NUTRITION_GOALS, { alim: true, aile: true })
     assert.equal(g.sayilar[0].deger, 2)
     assert.deepEqual(g.uyarilar, [])
+  })
+
+  it('nutrition labs: records typed values only; empty warns; no diagnosis band', () => {
+    assert.deepEqual(kos(AU_NUTRITION_LABS, {}).uyarilar, ['lab_yok'])
+    const r = kos(AU_NUTRITION_LABS, { hba1c: 7.2, albumin: 32, ferritin: 18, potasyum: 3.4 })
+    assert.equal(r.tamam, true)
+    assert.equal(r.bant, null)
+    assert.deepEqual(r.uyarilar, ['lab_kayit'])
+    assert.equal(r.sayilar.find((s) => s.anahtar === 'dolu')?.deger, 4)
+    assert.equal(r.sayilar.find((s) => s.anahtar === 'albumin')?.birim, 'g/L')
+    assert.equal(r.sayilar.find((s) => s.anahtar === 'ferritin')?.birim, 'ug/L')
+    const p = A.araclar.find((x) => x.anahtar === 'au-nutrition-labs')!
+    assert.deepEqual(p.roller, ['dietetics'])
+    assert.equal(p.metin.bantlar, undefined)
+    assert.match(p.metin.uyarilar!.lab_kayit['en-AU']!, /not a diagnosis/i)
+    assert.doesNotMatch(p.metin.aciklama['en-AU']!, /\bnormal range\b/i)
   })
 
   it('copy never invents a prescribed calorie target or medical diagnosis', () => {

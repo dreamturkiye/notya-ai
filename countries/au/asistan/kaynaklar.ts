@@ -252,9 +252,24 @@ const SATIRLAR: Record<Sunulan, Satir> = {
     ["Barlow's Clinical Handbook of Psychological Disorders", 'Cognitive Behavior Therapy: Basics and Beyond (Beck)'],
   ),
   dietetics: s(
-    ['Dietitians Australia', 'Dietitians Australia National Competency Standards', 'Australian Dietary Guidelines', OZ],
-    ['Understanding Nutrition (Australian and New Zealand edition)'],
-    ["Krause and Mahan's Food and the Nutrition Care Process"],
+    [
+      'Dietitians Australia',
+      'Dietitians Australia National Competency Standards',
+      'Australian Dietary Guidelines (National Health and Medical Research Council)',
+      'Queensland Health NEMO nutrition support materials (starting estimates)',
+      OZ,
+    ],
+    [
+      'Understanding Nutrition (Australian and New Zealand edition)',
+      'Clinical Sports Nutrition (Burke and Deakin)',
+    ],
+    [
+      "Krause and Mahan's Food and the Nutrition Care Process",
+      'Dietary Guidelines for Americans',
+      'Academy of Nutrition and Dietetics Nutrition Care Manual',
+      'Academy of Nutrition and Dietetics Evidence Analysis Library',
+      'Academy of Nutrition and Dietetics Nutrition Care Process',
+    ],
   ),
   'occupational-therapy': s(
     ['Occupational Therapy Australia', 'Occupational Therapy Board of Australia', 'Occupational Therapy Australia professional standards', 'Ahpra registration standards for occupational therapy'],
