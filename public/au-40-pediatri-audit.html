@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Australia 44 specialties vs TR Pediatri gold · Notya</title>
+  <meta name="description" content="2026-10-28. Full AU specialty audit against Türkiye pediatri golden reference. Mean wow 34. 0 Strong. 44 Thin. No PHI." />
+<style>
+    :root {
+      --bg:#060C18; --surface:#0D1526; --surface2:#121C30; --stroke:rgba(255,255,255,0.10);
+      --text:#EDF1F7; --muted:#8FA0B5; --dim:#64748B; --teal:#14B8A6; --teal-soft:rgba(20,184,166,0.14);
+      --blue:#60A5FA; --blue-soft:rgba(96,165,250,0.14); --amber:#F59E0B; --amber-soft:rgba(245,158,11,0.14);
+      --red:#F87171; --red-soft:rgba(248,113,113,0.14); --green:#2DD4BF;
+    }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; background:var(--bg); color:var(--text); line-height:1.45; -webkit-font-smoothing:antialiased; }
+    .wrap { max-width:1100px; margin:0 auto; padding:32px 20px 72px; }
+    .brand { display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:24px; align-items:center; }
+    .brand .tag { font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--dim); font-weight:700; }
+    .brand a { color:var(--teal); text-decoration:none; font-size:13px; font-weight:600; }
+    h1 { margin:0 0 8px; font-size:28px; font-weight:700; letter-spacing:-.02em; line-height:1.2; }
+    h2 { margin:28px 0 12px; font-size:18px; font-weight:700; }
+    .lede { margin:0 0 14px; color:var(--muted); font-size:15px; max-width:920px; }
+    .pills { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:22px; }
+    .pill { display:inline-flex; align-items:center; padding:3px 10px; border-radius:999px; font-size:12px; font-weight:600; border:1px solid transparent; white-space:nowrap; }
+    .pill.success { background:var(--teal-soft); color:var(--green); border-color:rgba(45,212,191,.25); }
+    .pill.warning { background:var(--amber-soft); color:var(--amber); border-color:rgba(245,158,11,.28); }
+    .pill.danger { background:var(--red-soft); color:var(--red); border-color:rgba(248,113,113,.3); }
+    .pill.info { background:var(--blue-soft); color:var(--blue); border-color:rgba(96,165,250,.25); }
+    .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:18px; }
+    .stat { background:var(--surface); border:1px solid var(--stroke); border-radius:12px; padding:16px 14px; }
+    .stat .v { font-size:24px; font-weight:700; letter-spacing:-.03em; margin-bottom:4px; }
+    .stat .v.success { color:var(--green); } .stat .v.warning { color:var(--amber); } .stat .v.danger { color:var(--red); } .stat .v.info { color:var(--blue); }
+    .stat .l { font-size:12px; color:var(--muted); }
+    .callout { border-radius:12px; padding:16px 18px; margin:14px 0 22px; border:1px solid; }
+    .callout.info { background:var(--blue-soft); border-color:rgba(96,165,250,.28); }
+    .callout.warning { background:var(--amber-soft); border-color:rgba(245,158,11,.3); }
+    .callout.danger { background:var(--red-soft); border-color:rgba(248,113,113,.32); }
+    .callout h2 { margin:0 0 6px; font-size:12px; text-transform:uppercase; letter-spacing:.04em; }
+    .callout.info h2 { color:var(--blue); } .callout.warning h2 { color:var(--amber); } .callout.danger h2 { color:var(--red); }
+    .callout p { margin:0; font-size:14px; }
+    .table-wrap { border:1px solid var(--stroke); border-radius:12px; overflow:auto; margin-bottom:22px; background:var(--surface); }
+    table { width:100%; border-collapse:collapse; font-size:13px; min-width:760px; }
+    th,td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--stroke); vertical-align:top; }
+    th { background:var(--surface2); color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.05em; font-weight:700; }
+    tr:last-child td { border-bottom:none; }
+    td.domain { font-weight:600; }
+    td.note { color:var(--muted); }
+    td.gap { color:#FBBF24; }
+    td.num { font-variant-numeric:tabular-nums; font-weight:700; }
+    .bars { background:var(--surface); border:1px solid var(--stroke); border-radius:12px; padding:16px; margin-bottom:22px; max-height:720px; overflow:auto; }
+    .bar-row { display:grid; grid-template-columns:minmax(180px,280px) 1fr 40px; gap:10px; align-items:center; margin:8px 0; }
+    .bar-label { font-size:12px; color:var(--muted); }
+    .bar-track { height:10px; background:rgba(255,255,255,.06); border-radius:999px; overflow:hidden; }
+    .bar-fill { height:100%; background:var(--amber); border-radius:999px; }
+    .bar-fill.gold, .bar-fill.strong { background:var(--teal); }
+    .bar-fill.thin { background:var(--red); }
+    .bar-val { font-size:12px; font-weight:700; text-align:right; }
+    .cards { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin-bottom:22px; }
+    .cards.three { grid-template-columns:repeat(3,1fr); }
+    .card { background:var(--surface); border:1px solid var(--stroke); border-radius:12px; padding:14px; }
+    .card .title { font-size:14px; font-weight:650; margin-bottom:6px; }
+    .card .body { font-size:12px; color:var(--muted); }
+    .cap { font-size:12px; color:var(--dim); margin:-6px 0 14px; }
+    .foot { margin-top:36px; padding-top:16px; border-top:1px solid var(--stroke); font-size:12px; color:var(--dim); display:flex; flex-wrap:wrap; gap:8px 16px; justify-content:space-between; }
+    .banner { background:rgba(248,113,113,.1); border:1px solid rgba(248,113,113,.35); color:var(--red); border-radius:10px; padding:10px 14px; font-size:13px; margin-bottom:18px; }
+    code { font-size:12px; }
+    @media (max-width:900px) {
+      .stats { grid-template-columns:repeat(2,1fr); }
+      .cards, .cards.three { grid-template-columns:1fr; }
+      h1 { font-size:22px; }
+      .bar-row { grid-template-columns:1fr; gap:4px; }
+    }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">
+    <span class="tag">Notya · Australia specialties × TR Pediatri gold</span>
+    <span>
+      <a href="/ozel-brans-pediatri-audit.html">TR Özel Branşlar vs pediatri →</a>
+      &nbsp;·&nbsp;
+      <a href="/avustralya-turkiye-audit-guncel.html">AU product rescore →</a>
+    </span>
+  </div>
+
+  <div class="banner"><b>Pre-depth audit · AU-40-PEDIATRI-AUDIT-01</b> — 2026-10-28 (America/New_York). Australia on <code>release/au</code> tip <code>e4409f17</code> scored against Türkiye pediatri on <code>main</code> tip <code>d65d5979</code>. Same 10-slice bar used when TR’s other 39 were raised to pediatri parity. Mean wow 34. 0 Strong. No PHI.</div>
+
+  <h1>Australia’s specialties are not at pediatri gold</h1>
+  <p class="lede">Türkiye pediatri is the golden reference at <b>100 on every slice</b> (Neyzi, Ulusal Aşı Takvimi, GİDR, M-CHAT, kohort, portal, SOAP lock, acil, kayıt, voice). The TR pass that brought the other 39 branşlar up to that bar does <b>not</b> yet have an Australian twin. AU offers <b>44 roles</b> (shared forty minus five Board/regulatory removals plus nine AU-only additions). <b>Mean wow 34. 0 / 44 Strong. 44 / 44 Thin. 0 Partial. 0 Missing among offered roles.</b> AU Paediatrics leads at 40 — still Thin.</p>
+
+  <div class="pills">
+    <span class="pill danger">Overall Thin · mean 34</span>
+    <span class="pill danger">0 / 44 Strong</span>
+    <span class="pill danger">44 / 44 Thin</span>
+    <span class="pill info">AU Paediatrics 40 · TR gold 100</span>
+    <span class="pill warning">5 roles not offered (Board / regulatory)</span>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="v danger">34</div><div class="l">Mean wow · 44 offered roles</div></div>
+    <div class="stat"><div class="v danger">40</div><div class="l">AU Paediatrics · closest to gold</div></div>
+    <div class="stat"><div class="v info">100</div><div class="l">TR Pediatri gold on every slice</div></div>
+    <div class="stat"><div class="v warning">5</div><div class="l">Roles removed for AU recognition</div></div>
+  </div>
+
+  <div class="callout danger">
+    <h2>Executive verdict</h2>
+    <p>An Australian doctor opening any of the 44 offered roles does <b>not</b> get a specialty module at Türkiye pediatri depth. The Turkish chapter folders still sit in the monorepo, but AU builds only mount <code>*.ulke.*</code> routes — the pediatri engines (Neyzi, GİDR, M-CHAT, kohort UI) never appear on the AU visit. What AU does ship is real and correctly cautious: NIP antigen rows, AIR/PBS/Medicare/GST/Privacy ticks, Charlie/Clara specialty lines, Board-accurate role names, and several tools left off where licence or copyright blocks them. Ticks are notes; nothing is reported, claimed, or uploaded. Against the pediatri gold bar used for TR’s 40-branch parity work, every offered AU role is Thin. Closing this is a full-depth AU specialty closeout job (start with Paediatrics), not a rescore of the product-shell audit (mean 59 on 17 slices).</p>
+  </div>
+
+  <h2>Role-list delta from the shared forty</h2>
+  <p class="cap">Medical Board of Australia specialty list (effective 22 Sep 2025) + Ahpra professions list. Hair transplant and longevity are not Board specialties. Clinic dermatology is removed so it cannot be offered beside Dermatology.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Shared / TR key</th><th>AU status</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td class="domain">Hair transplantation</td><td><span class="pill danger">Not offered</span></td><td class="note">Not a Medical Board specialty. Folded into aesthetic-medicine via nonsurgical cosmetic plan. TR saç-ekimi Özel Branş is Strong on main — AU has no studio/photo series.</td></tr>
+<tr><td class="domain">Preventive and longevity medicine</td><td><span class="pill danger">Not offered</span></td><td class="note">Not a recognised specialty. Wellness plan lives inside family-medicine. TR longevity Özel Branş is Strong on main — not offered in AU.</td></tr>
+<tr><td class="domain">Dermatology (clinic)</td><td><span class="pill danger">Not offered</span></td><td class="note">Removed so non-dermatologists are not offered a second “Dermatology” role. TR klinik-dermatoloji stays Turkey Özel Branş.</td></tr>
+<tr><td class="domain">Thoracic surgery</td><td><span class="pill danger">Not offered</span></td><td class="note">Split into cardio-thoracic-surgery per Medical Board list.</td></tr>
+<tr><td class="domain">Cardiac and vascular surgery</td><td><span class="pill danger">Not offered</span></td><td class="note">Split into vascular-surgery (+ cardio-thoracic for heart).</td></tr>
+
+      <tr><td class="domain">+ 9 AU-only roles</td><td><span class="pill info">Offered</span></td><td class="note">cardio-thoracic-surgery, vascular-surgery, radiation-oncology, geriatric-medicine, immunology-and-allergy, haematology, pain-medicine, podiatry, speech-pathology — each behaves like a nearest shared role until it has its own instruments.</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>AU Paediatrics — 10 slices vs TR Pediatri gold</h2>
+  <p class="cap">Same slice vocabulary as the Özel Branşlar × pediatri audit. Wow = mean of the ten scores. AU Paediatrics = 40.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Slice</th><th>TR Pediatri gold</th><th>AU score</th><th>Depth</th><th>What AU has today</th></tr></thead>
+    <tbody><tr><td class="domain">Motor</td><td class="note">Neyzi LMS + Ulusal Aşı Takvimi bound</td><td class="num">48</td><td><span class="pill warning">Partial</span></td><td class="note">NIP antigens + dose + mid-parental height; growth LMS slot empty (link only); catch-up not calculated; M-CHAT licence blocks</td></tr>
+<tr><td class="domain">Tests</td><td class="note">Owner keeps the rule; neighbour does not</td><td class="num">52</td><td><span class="pill warning">Partial</span></td><td class="note">Pack tool tests exist; no AU visit-mounted pediatrics chapter suite</td></tr>
+<tr><td class="domain">Tool UI</td><td class="note">Studios: büyüme, aşı, doz, M-CHAT, GİDR, kohort</td><td class="num">50</td><td><span class="pill warning">Partial</span></td><td class="note">Schedule + growth link + dose + height on the grid; no TR-depth studios</td></tr>
+<tr><td class="domain">Hasta dosyası</td><td class="note">Chapter on patient file</td><td class="num">30</td><td><span class="pill danger">Thin</span></td><td class="note">Shared English patient/visit; specialties/pediatri not in AU pageExtensions</td></tr>
+<tr><td class="domain">Kohort</td><td class="note">Overdue vaccines / screens</td><td class="num">15</td><td><span class="pill danger">Thin</span></td><td class="note">paediatric-follow-up-panel slot empty</td></tr>
+<tr><td class="domain">Hasta portalı</td><td class="note">Parent sees aşı / growth safely</td><td class="num">25</td><td><span class="pill danger">Thin</span></td><td class="note">Single generic portal page; no immunisation card for parent</td></tr>
+<tr><td class="domain">SOAP / prompt lock</td><td class="note">Prompt lock; next visit is öneri</td><td class="num">52</td><td><span class="pill warning">Partial</span></td><td class="note">Child note fields exist; no AU handbook-cited SOAP lock at TR depth</td></tr>
+<tr><td class="domain">Acil</td><td class="note">112 / pathway sentence</td><td class="num">20</td><td><span class="pill danger">Thin</span></td><td class="note">No paediatric emergency pathway bound</td></tr>
+<tr><td class="domain">Kayıt / privacy</td><td class="note">Consent vault / immutable onam</td><td class="num">48</td><td><span class="pill warning">Partial</span></td><td class="note">Recording-consent draft + APP headings; lawyer unread; no digital vaccine consent</td></tr>
+<tr><td class="domain">Voice</td><td class="note">Clinical answers + persona</td><td class="num">62</td><td><span class="pill warning">Partial</span></td><td class="note">Charlie/Clara speak the paediatrics line; no conversation / İlk-10 equivalent</td></tr>
+</tbody>
+  </table></div>
+
+  <h2>Standings — all 44 offered roles</h2>
+  <p class="cap">Strong ≥85 · Partial 45–84 · Thin 15–44 · Missing &lt;15. Rank by wow, then name. Every row is Thin.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>#</th><th>AU specialty / role</th><th>Wow</th><th>Standing</th><th>What is on the branch</th><th>Gap to pediatri gold</th></tr></thead>
+    <tbody><tr>
+      <td class="num">1</td>
+      <td class="domain">Paediatrics</td>
+      <td class="num">40</td>
+      <td><span class="pill danger">Thin</span></td>
+      <td class="note">NIP age rows name antigens; AIR report particulars are ticks; growth is a link (WHO/ANZSPED/CDC), not an LMS engine; mid-parental height uses RCH ±8.5 cm; weight-based dose is on; child note fields exist. TR pediatri chapter (Neyzi, GİDR, M-CHAT, kohort, 4,268 lines) is not mounted on AU visit.</td>
+      <td class="gap">Bind WHO/ANZSPED LMS on visit; catch-up calculator; development panel; parent-facing immunisation card; AU clinician sign-off</td>
+    </tr>
+<tr>
+      <td class="num">2</td>
+      <td class="domain">Family medicine</td>
+      <td class="num">39</td>
+      <td><span class="pill danger">Thin</span></td>
+      <td class="note">Shares child tools (dose, mid-parental height, inhaler technique) plus wellness-plan ticks, chronic-follow-up record, CVD-risk link. Still the shared English visit — not a TR aile-hekimliği chapter.</td>
+      <td class="gap">Catch-up immunisation; chronic pathways with Australian handbook numbers; parent portal</td>
+    </tr>
+<tr>
+      <td class="num">3</td>
+      <td class="domain">Paediatric surgery</td>
+      <td class="num">36</td>
+      <td><span class="pill danger">Thin</span></td>
+      <td class="note">Child role gate; college link; shares immunisation schedule visibility. No AU paediatric-surgery engine set.</td>
+      <td class="gap">Pre/post-op child pathway; guardian consent flow country-adapted</td>
+    </tr>
+<tr>
+      <td class="num">4</td>
+      <td class="domain">Cardio-thoracic surgery</td>
+      <td class="num">35</td>
+      <td><span class="pill danger">Thin</span></td>
+      <td class="note">Board split: gets toraks-preop, toraks-tup-yara, kalp-damar-preop, antikoagulan-vadeleri. Thoracic-surgery key removed.</td>
+      <td class="gap">Chapter depth for AU cardio-thoracic practice</td>
+    </tr>
+<tr>
+      <td class="num">5</td>
+      <td class="domain">Cardiology</td>
+      <td class="num">35</td>
+      <td><span class="pill danger">Thin</span></td>
+      <td class="note">CVD-risk link-out (no equation copied). Shared kardiyo-not style tools from English kit where open.</td>
+      <td class="gap">Licensed AU absolute CVD risk equation in-product</td>
+    </tr>
+<tr>
+      <td class="num">6</td>
+      <td class="domain">Clinical psychologist</td>
+      <td class="num">35</td>
+      <td><span class="pill danger">Thin</span></td>
+      <td class="note">K10 available; sonraki-seans. No DSM invention. TR klinik-psikolog consent vault not ported.</td>
+      <td class="gap">Written consent / medical plan rules for AU psychology</td>
+    </tr>
+<tr>
+      <td class="num">7</td>
+      <td class="domain">Oncology</td>
+      <td class="num">35</td>
+      <td><span class="pill danger">Thin</span></td>
+      <td class="note">ECOG grading record + course/toxicity lists; Optimal Care Pathway is an empty slot (licence unread).</td>
+      <td class="gap">Cancer Australia OCP per cancer type; clinician-signed pathways</td>
+    </tr>
+<tr>
+      <td class="num">8</td>
+      <td class="domain">Psychiatry</td>
+      <td class="num">35</td>
+      <td><span class="pill danger">Thin</span></td>
+      <td class="note">K10 with ABS bands is a real AU mechanism (licence free per Kessler page). Still not a TR psikiyatri chapter.</td>
+      <td class="gap">K10 item wording licence path; risk pathways</td>
+    </tr>
+<tr>
+      <td class="num">9</td>
+      <td class="domain">Emergency medicine</td>
+      <td class="num">34</td>
+      <td><span class="pill danger">Thin</span></td>
+      <td class="note">ESI is correctly off. ATS slot exists but closed (ACEM permission). Acil slice is the only above-base lift.</td>
+      <td class="gap">ACEM permission for Australasian Triage Scale, then bind it</td>
+    </tr>
+<tr>
+      <td class="num">10</td>
+      <td class="domain">Geriatric medicine</td>
+      <td class="num">34</td>
+      <td><span class="pill danger">Thin</span></td>
+      <td class="note">AU-only. Chronic-follow-up + CVD-risk link with GP/IM. No geriatric chapter.</td>
+      <td class="gap">Confirm nearest-role mapping with clinical lead; add own instruments</td>
+    </tr>
+<tr>
+      <td class="num">11</td>
+      <td class="domain">Haematology</td>
+      <td class="num">34</td>
+      <td><span class="pill danger">Thin</span></td>
+      <td class="note">AU-only. Anticoagulant windows + course counter with oncology. Behaves like internal-medicine for the rest.</td>
+      <td class="gap">Confirm nearest-role mapping with clinical lead; add own instruments</td>
+    </tr>
+<tr>
+      <td class="num">12</td>
+      <td class="domain">Obstetrics and gynaecology</td>
+      <td class="num">34</td>
+      <td><span class="pill danger">Thin</span></td>
+      <td class="note">Antenatal/day-count structural tools in shared kit; no RANZCO/SA Perinatal chapter. TR KD chapter stays off AU visit.</td>
+      <td class="gap">Australian antenatal handbook windows bound on visit</td>
+    </tr>
+<tr>
+      <td class="num">13</td>
+      <td class="domain">Radiation oncology</td>
+      <td class="num">34</td>
+      <td><span class="pill danger">Thin</span></td>
+      <td class="note">AU-only Board specialty. Behaves like oncology for tools (ECOG, toxicity). No own chapter.</td>
+      <td class="gap">Own note fields + OCP wiring under this key</td>
+    </tr>
+<tr>
+      <td class="num">14</td>
+      <td class="domain">Respiratory medicine</td>
+      <td class="num">34</td>
+      <td><span class="pill danger">Thin</span></td>
+      <td class="note">Inhaler-technique shared with GP/paeds.</td>
+      <td class="gap">Australian asthma/COPD handbook numbers</td>
+    </tr>
+<tr>
+      <td class="num">15</td>
+      <td class="domain">Vascular surgery</td>
+      <td class="num">34</td>
+      <td><span class="pill danger">Thin</span></td>
+      <td class="note">Board split: greft-yara-izlem + shared pre-op with cardio-thoracic. Heart surgeons must rechoose cardio-thoracic.</td>
+      <td class="gap">Confirm stored-account remapping with clinical lead</td>
+    </tr>
+<tr>
+      <td class="num">16</td>
+      <td class="domain">Anaesthesia</td>
+      <td class="num">33</td>
+      <td><span class="pill danger">Thin</span></td>
+      <td class="note">Post-op pain tool shared with pain-medicine. ASA lives in shared kit; no ANZCA-signed chapter.</td>
+      <td class="gap">ANZCA-aligned peri-op checklist signed by clinical lead</td>
+    </tr>
+<tr>
+      <td class="num">17</td>
+      <td class="domain">Audiologist</td>
+      <td class="num">33</td>
+      <td><span class="pill danger">Thin</span></td>
+      <td class="note">PTA shared with ENT; sonraki-seans. Hearing grades not invented.</td>
+      <td class="gap">Licensable clinical grading or stay measurement-only</td>
+    </tr>
+<tr>
+      <td class="num">18</td>
+      <td class="domain">Dermatology</td>
+      <td class="num">33</td>
+      <td><span class="pill danger">Thin</span></td>
+      <td class="note">TR dermatoloji chapter is deep on main; AU keeps PASI/EASI without severity bands (college classes by treatment need). Diabetic-retinopathy style slots elsewhere. No AU derm studio.</td>
+      <td class="gap">AU dermatologist sign-off on which scores/bands to show</td>
+    </tr>
+<tr>
+      <td class="num">19</td>
+      <td class="domain">Endocrinology</td>
+      <td class="num">33</td>
+      <td><span class="pill danger">Thin</span></td>
+      <td class="note">CVD-risk link shared with GP/cardio; no TEMD-equivalent AU handbook engines.</td>
+      <td class="gap">Australian endocrine society numbers where reusable</td>
+    </tr>
+<tr>
+      <td class="num">20</td>
+      <td class="domain">Gastroenterology</td>
+      <td class="num">33</td>
+      <td><span class="pill danger">Thin</span></td>
+      <td class="note">Renamed gastroenterology and hepatology in AU wording; shared English tools only.</td>
+      <td class="gap">Hepatology instruments under AU sources</td>
+    </tr>
+<tr>
+      <td class="num">21</td>
+      <td class="domain">General surgery</td>
+      <td class="num">33</td>
+      <td><span class="pill danger">Thin</span></td>
+      <td class="note">College link + English surgical checklists.</td>
+      <td class="gap">AU peri-op safety checklist binding</td>
+    </tr>
+<tr>
+      <td class="num">22</td>
+      <td class="domain">Immunology and allergy</td>
+      <td class="num">33</td>
+      <td><span class="pill danger">Thin</span></td>
+      <td class="note">AU-only Board specialty. Behaves like internal-medicine; own intake heading only.</td>
+      <td class="gap">Confirm nearest-role mapping with clinical lead; add own instruments</td>
+    </tr>
+<tr>
+      <td class="num">23</td>
+      <td class="domain">Infectious diseases</td>
+      <td class="num">33</td>
+      <td><span class="pill danger">Thin</span></td>
+      <td class="note">Notifiable-disease names (71) are doctor-wide, not a specialty chapter.</td>
+      <td class="gap">State notification pathway beyond the name list</td>
+    </tr>
+<tr>
+      <td class="num">24</td>
+      <td class="domain">Internal medicine</td>
+      <td class="num">33</td>
+      <td><span class="pill danger">Thin</span></td>
+      <td class="note">College/regulator link + shared English internal-medicine surface. TR dahiliye chapter (SCORE2 etc.) not on AU visit.</td>
+      <td class="gap">AU internal-medicine clinical lead chooses which TR-depth instruments to country-adapt</td>
+    </tr>
+<tr>
+      <td class="num">25</td>
+      <td class="domain">Neurology</td>
+      <td class="num">33</td>
+      <td><span class="pill danger">Thin</span></td>
+      <td class="note">Shared stroke/flag structural tools where open.</td>
+      <td class="gap">AU stroke pathway references</td>
+    </tr>
+<tr>
+      <td class="num">26</td>
+      <td class="domain">Neurosurgery</td>
+      <td class="num">33</td>
+      <td><span class="pill danger">Thin</span></td>
+      <td class="note">College link + shared structural flags. No AU neurosurgery chapter.</td>
+      <td class="gap">Build minimal AU scaffold when a TR branş change needs a home</td>
+    </tr>
+<tr>
+      <td class="num">27</td>
+      <td class="domain">Ophthalmology</td>
+      <td class="num">33</td>
+      <td><span class="pill danger">Thin</span></td>
+      <td class="note">RANZCO diabetic-retinopathy referral pathway is an empty licence slot. Visual-acuity style shared tools only.</td>
+      <td class="gap">RANZCO pathway permission + bands</td>
+    </tr>
+<tr>
+      <td class="num">28</td>
+      <td class="domain">Orthopaedic surgery</td>
+      <td class="num">33</td>
+      <td><span class="pill danger">Thin</span></td>
+      <td class="note">Return-to-sport steps correctly declined (ASC copyright).</td>
+      <td class="gap">Licensed AU physio/ortho instruments only when rights allow</td>
+    </tr>
+<tr>
+      <td class="num">29</td>
+      <td class="domain">Otolaryngology (ENT)</td>
+      <td class="num">33</td>
+      <td><span class="pill danger">Thin</span></td>
+      <td class="note">Audiometry PTA shared with audiology. Hearing-average grades correctly not invented (funding threshold ≠ clinical grades).</td>
+      <td class="gap">Audiology clinical grading source if one is licensed</td>
+    </tr>
+<tr>
+      <td class="num">30</td>
+      <td class="domain">Pain medicine</td>
+      <td class="num">33</td>
+      <td><span class="pill danger">Thin</span></td>
+      <td class="note">AU-only. Sees postop-agri, seans-plani, icf-ozet. Behaves like rehabilitation-medicine for base.</td>
+      <td class="gap">Faculty of Pain Medicine instruments under this key</td>
+    </tr>
+<tr>
+      <td class="num">31</td>
+      <td class="domain">Physiotherapist</td>
+      <td class="num">33</td>
+      <td><span class="pill danger">Thin</span></td>
+      <td class="note">Session plan + ICF; mandatory-notification checklist includes physio. TR fizyoterapi Özel Branş Strong≠ this.</td>
+      <td class="gap">Physician-plan gate + AU physio board instruments</td>
+    </tr>
+<tr>
+      <td class="num">32</td>
+      <td class="domain">Plastic surgery</td>
+      <td class="num">33</td>
+      <td><span class="pill danger">Thin</span></td>
+      <td class="note">Wound/graft list shared with cosmetic surgery.</td>
+      <td class="gap">AHPRA cosmetic-procedure guideline workflow</td>
+    </tr>
+<tr>
+      <td class="num">33</td>
+      <td class="domain">Rehabilitation medicine</td>
+      <td class="num">33</td>
+      <td><span class="pill danger">Thin</span></td>
+      <td class="note">Session plan + ICF summary structural tools.</td>
+      <td class="gap">AFRM-aligned session/outcome set</td>
+    </tr>
+<tr>
+      <td class="num">34</td>
+      <td class="domain">Rheumatology</td>
+      <td class="num">33</td>
+      <td><span class="pill danger">Thin</span></td>
+      <td class="note">DAS28 etc. bands not invented for AU.</td>
+      <td class="gap">Australian rheumatology society practice set</td>
+    </tr>
+<tr>
+      <td class="num">35</td>
+      <td class="domain">Urology</td>
+      <td class="num">33</td>
+      <td><span class="pill danger">Thin</span></td>
+      <td class="note">PSA short-interval caution correctly zeroed to national guideline.</td>
+      <td class="gap">AU urology handbook instruments</td>
+    </tr>
+<tr>
+      <td class="num">36</td>
+      <td class="domain">Aesthetic medicine</td>
+      <td class="num">32</td>
+      <td><span class="pill danger">Thin</span></td>
+      <td class="note">Hair transplantation is folded here (not a Board specialty). Nonsurgical cosmetic plan ticks. Longevity not offered.</td>
+      <td class="gap">Do not invent a longevity specialty; keep wellness inside GP</td>
+    </tr>
+<tr>
+      <td class="num">37</td>
+      <td class="domain">Cosmetic surgery</td>
+      <td class="num">32</td>
+      <td><span class="pill danger">Thin</span></td>
+      <td class="note">AHPRA cosmetic-procedure guideline context; nonsurgical plan is a separate tool for hair-transplant work. No Özel Branş studio, no two-copy consent vault.</td>
+      <td class="gap">Country-adapted consent + photo/series workflow under Australian guideline</td>
+    </tr>
+<tr>
+      <td class="num">38</td>
+      <td class="domain">Nephrology</td>
+      <td class="num">32</td>
+      <td><span class="pill danger">Thin</span></td>
+      <td class="note">Kidney risk tools off by owner order pending licence/clinician.</td>
+      <td class="gap">Nephrologist sign-off to reopen KDIGO classifier</td>
+    </tr>
+<tr>
+      <td class="num">39</td>
+      <td class="domain">Occupational therapist</td>
+      <td class="num">32</td>
+      <td><span class="pill danger">Thin</span></td>
+      <td class="note">ICF + session plan with physio/rehab.</td>
+      <td class="gap">AU OT instruments under this key</td>
+    </tr>
+<tr>
+      <td class="num">40</td>
+      <td class="domain">Podiatrist</td>
+      <td class="num">32</td>
+      <td><span class="pill danger">Thin</span></td>
+      <td class="note">AU-only allied. Session plan with rehab set. Ahpra-regulated.</td>
+      <td class="gap">Podiatry Board instruments</td>
+    </tr>
+<tr>
+      <td class="num">41</td>
+      <td class="domain">Radiology</td>
+      <td class="num">32</td>
+      <td><span class="pill danger">Thin</span></td>
+      <td class="note">BI-RADS report tool off (ACR licence).</td>
+      <td class="gap">ACR agreement or AU-native reporting templates</td>
+    </tr>
+<tr>
+      <td class="num">42</td>
+      <td class="domain">Sport and exercise medicine</td>
+      <td class="num">32</td>
+      <td><span class="pill danger">Thin</span></td>
+      <td class="note">Concussion steps not copied (ASC commercial-use ban). Days-since-injury only.</td>
+      <td class="gap">Cannot port ASC tables; find a licensable source or stay link-out</td>
+    </tr>
+<tr>
+      <td class="num">43</td>
+      <td class="domain">Dietitian</td>
+      <td class="num">31</td>
+      <td><span class="pill danger">Thin</span></td>
+      <td class="note">Body-size BMI/waist is base; macro record structural. College link may be limited for non-AhPRA.</td>
+      <td class="gap">Dietitians Australia practice tools where licensable</td>
+    </tr>
+<tr>
+      <td class="num">44</td>
+      <td class="domain">Speech pathologist</td>
+      <td class="num">31</td>
+      <td><span class="pill danger">Thin</span></td>
+      <td class="note">AU-only; self-regulated (not Ahpra). Behaves like OT for base; own intake heading.</td>
+      <td class="gap">Speech Pathology Australia practice set</td>
+    </tr>
+</tbody>
+  </table></div>
+
+  <h2>Slice scores (leaders)</h2>
+  <p class="cap">Top 12 by wow, plus TR gold. Full set is Thin; leaders show where AU already has more than a college link.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Role</th><th>Motor</th><th>Test</th><th>UI</th><th>Dosya</th><th>Kohort</th><th>Portal</th><th>SOAP</th><th>Acil</th><th>Kayıt</th><th>Ses</th><th>Wow</th></tr></thead>
+    <tbody><tr><td class="domain">Paediatrics</td><td class="num">48</td><td class="num">52</td><td class="num">50</td><td class="num">30</td><td class="num">15</td><td class="num">25</td><td class="num">52</td><td class="num">20</td><td class="num">48</td><td class="num">62</td><td class="num">40</td></tr>
+<tr><td class="domain">Family medicine</td><td class="num">44</td><td class="num">50</td><td class="num">48</td><td class="num">30</td><td class="num">18</td><td class="num">25</td><td class="num">50</td><td class="num">20</td><td class="num">48</td><td class="num">60</td><td class="num">39</td></tr>
+<tr><td class="domain">Paediatric surgery</td><td class="num">36</td><td class="num">44</td><td class="num">40</td><td class="num">28</td><td class="num">14</td><td class="num">24</td><td class="num">48</td><td class="num">22</td><td class="num">46</td><td class="num">58</td><td class="num">36</td></tr>
+<tr><td class="domain">Cardio-thoracic surgery</td><td class="num">36</td><td class="num">44</td><td class="num">40</td><td class="num">28</td><td class="num">12</td><td class="num">22</td><td class="num">46</td><td class="num">20</td><td class="num">44</td><td class="num">58</td><td class="num">35</td></tr>
+<tr><td class="domain">Cardiology</td><td class="num">34</td><td class="num">44</td><td class="num">40</td><td class="num">28</td><td class="num">14</td><td class="num">22</td><td class="num">42</td><td class="num">22</td><td class="num">44</td><td class="num">58</td><td class="num">35</td></tr>
+<tr><td class="domain">Clinical psychologist</td><td class="num">38</td><td class="num">44</td><td class="num">40</td><td class="num">26</td><td class="num">12</td><td class="num">22</td><td class="num">44</td><td class="num">18</td><td class="num">44</td><td class="num">58</td><td class="num">35</td></tr>
+<tr><td class="domain">Oncology</td><td class="num">38</td><td class="num">46</td><td class="num">42</td><td class="num">28</td><td class="num">14</td><td class="num">22</td><td class="num">44</td><td class="num">18</td><td class="num">44</td><td class="num">58</td><td class="num">35</td></tr>
+<tr><td class="domain">Psychiatry</td><td class="num">40</td><td class="num">46</td><td class="num">42</td><td class="num">26</td><td class="num">12</td><td class="num">22</td><td class="num">42</td><td class="num">18</td><td class="num">44</td><td class="num">58</td><td class="num">35</td></tr>
+<tr><td class="domain">Emergency medicine</td><td class="num">30</td><td class="num">42</td><td class="num">34</td><td class="num">26</td><td class="num">12</td><td class="num">22</td><td class="num">40</td><td class="num">28</td><td class="num">44</td><td class="num">58</td><td class="num">34</td></tr>
+<tr><td class="domain">Geriatric medicine</td><td class="num">32</td><td class="num">40</td><td class="num">38</td><td class="num">26</td><td class="num">12</td><td class="num">22</td><td class="num">46</td><td class="num">18</td><td class="num">44</td><td class="num">58</td><td class="num">34</td></tr>
+<tr><td class="domain">Haematology</td><td class="num">34</td><td class="num">40</td><td class="num">40</td><td class="num">26</td><td class="num">12</td><td class="num">22</td><td class="num">46</td><td class="num">18</td><td class="num">44</td><td class="num">58</td><td class="num">34</td></tr>
+<tr><td class="domain">Obstetrics and gynaecology</td><td class="num">34</td><td class="num">40</td><td class="num">40</td><td class="num">26</td><td class="num">12</td><td class="num">22</td><td class="num">48</td><td class="num">18</td><td class="num">44</td><td class="num">58</td><td class="num">34</td></tr>
+<tr><td class="domain">TR Pediatri gold</td><td class="num">100</td><td class="num">100</td><td class="num">100</td><td class="num">100</td><td class="num">100</td><td class="num">100</td><td class="num">100</td><td class="num">100</td><td class="num">100</td><td class="num">100</td><td class="num">100</td></tr>
+</tbody>
+  </table></div>
+
+  <h2>Wow bar</h2>
+  <p class="cap">0–100 against TR pediatri gold. Red = Thin. Teal reference bar is Türkiye pediatri at 100. No AU role reaches Partial (45).</p>
+  <div class="bars"><div class="bar-row"><div class="bar-label">TR Pediatri gold</div><div class="bar-track"><div class="bar-fill gold" style="width:100%"></div></div><div class="bar-val">100</div></div>
+<div class="bar-row"><div class="bar-label">Paediatrics</div><div class="bar-track"><div class="bar-fill thin" style="width:40%"></div></div><div class="bar-val">40</div></div>
+<div class="bar-row"><div class="bar-label">Family medicine</div><div class="bar-track"><div class="bar-fill thin" style="width:39%"></div></div><div class="bar-val">39</div></div>
+<div class="bar-row"><div class="bar-label">Paediatric surgery</div><div class="bar-track"><div class="bar-fill thin" style="width:36%"></div></div><div class="bar-val">36</div></div>
+<div class="bar-row"><div class="bar-label">Cardio-thoracic surgery</div><div class="bar-track"><div class="bar-fill thin" style="width:35%"></div></div><div class="bar-val">35</div></div>
+<div class="bar-row"><div class="bar-label">Cardiology</div><div class="bar-track"><div class="bar-fill thin" style="width:35%"></div></div><div class="bar-val">35</div></div>
+<div class="bar-row"><div class="bar-label">Clinical psychologist</div><div class="bar-track"><div class="bar-fill thin" style="width:35%"></div></div><div class="bar-val">35</div></div>
+<div class="bar-row"><div class="bar-label">Oncology</div><div class="bar-track"><div class="bar-fill thin" style="width:35%"></div></div><div class="bar-val">35</div></div>
+<div class="bar-row"><div class="bar-label">Psychiatry</div><div class="bar-track"><div class="bar-fill thin" style="width:35%"></div></div><div class="bar-val">35</div></div>
+<div class="bar-row"><div class="bar-label">Emergency medicine</div><div class="bar-track"><div class="bar-fill thin" style="width:34%"></div></div><div class="bar-val">34</div></div>
+<div class="bar-row"><div class="bar-label">Geriatric medicine</div><div class="bar-track"><div class="bar-fill thin" style="width:34%"></div></div><div class="bar-val">34</div></div>
+<div class="bar-row"><div class="bar-label">Haematology</div><div class="bar-track"><div class="bar-fill thin" style="width:34%"></div></div><div class="bar-val">34</div></div>
+<div class="bar-row"><div class="bar-label">Obstetrics and gynaecology</div><div class="bar-track"><div class="bar-fill thin" style="width:34%"></div></div><div class="bar-val">34</div></div>
+<div class="bar-row"><div class="bar-label">Radiation oncology</div><div class="bar-track"><div class="bar-fill thin" style="width:34%"></div></div><div class="bar-val">34</div></div>
+<div class="bar-row"><div class="bar-label">Respiratory medicine</div><div class="bar-track"><div class="bar-fill thin" style="width:34%"></div></div><div class="bar-val">34</div></div>
+<div class="bar-row"><div class="bar-label">Vascular surgery</div><div class="bar-track"><div class="bar-fill thin" style="width:34%"></div></div><div class="bar-val">34</div></div>
+<div class="bar-row"><div class="bar-label">Anaesthesia</div><div class="bar-track"><div class="bar-fill thin" style="width:33%"></div></div><div class="bar-val">33</div></div>
+<div class="bar-row"><div class="bar-label">Audiologist</div><div class="bar-track"><div class="bar-fill thin" style="width:33%"></div></div><div class="bar-val">33</div></div>
+<div class="bar-row"><div class="bar-label">Dermatology</div><div class="bar-track"><div class="bar-fill thin" style="width:33%"></div></div><div class="bar-val">33</div></div>
+<div class="bar-row"><div class="bar-label">Endocrinology</div><div class="bar-track"><div class="bar-fill thin" style="width:33%"></div></div><div class="bar-val">33</div></div>
+<div class="bar-row"><div class="bar-label">Gastroenterology</div><div class="bar-track"><div class="bar-fill thin" style="width:33%"></div></div><div class="bar-val">33</div></div>
+<div class="bar-row"><div class="bar-label">General surgery</div><div class="bar-track"><div class="bar-fill thin" style="width:33%"></div></div><div class="bar-val">33</div></div>
+<div class="bar-row"><div class="bar-label">Immunology and allergy</div><div class="bar-track"><div class="bar-fill thin" style="width:33%"></div></div><div class="bar-val">33</div></div>
+<div class="bar-row"><div class="bar-label">Infectious diseases</div><div class="bar-track"><div class="bar-fill thin" style="width:33%"></div></div><div class="bar-val">33</div></div>
+<div class="bar-row"><div class="bar-label">Internal medicine</div><div class="bar-track"><div class="bar-fill thin" style="width:33%"></div></div><div class="bar-val">33</div></div>
+<div class="bar-row"><div class="bar-label">Neurology</div><div class="bar-track"><div class="bar-fill thin" style="width:33%"></div></div><div class="bar-val">33</div></div>
+<div class="bar-row"><div class="bar-label">Neurosurgery</div><div class="bar-track"><div class="bar-fill thin" style="width:33%"></div></div><div class="bar-val">33</div></div>
+<div class="bar-row"><div class="bar-label">Ophthalmology</div><div class="bar-track"><div class="bar-fill thin" style="width:33%"></div></div><div class="bar-val">33</div></div>
+<div class="bar-row"><div class="bar-label">Orthopaedic surgery</div><div class="bar-track"><div class="bar-fill thin" style="width:33%"></div></div><div class="bar-val">33</div></div>
+<div class="bar-row"><div class="bar-label">Otolaryngology (ENT)</div><div class="bar-track"><div class="bar-fill thin" style="width:33%"></div></div><div class="bar-val">33</div></div>
+<div class="bar-row"><div class="bar-label">Pain medicine</div><div class="bar-track"><div class="bar-fill thin" style="width:33%"></div></div><div class="bar-val">33</div></div>
+<div class="bar-row"><div class="bar-label">Physiotherapist</div><div class="bar-track"><div class="bar-fill thin" style="width:33%"></div></div><div class="bar-val">33</div></div>
+<div class="bar-row"><div class="bar-label">Plastic surgery</div><div class="bar-track"><div class="bar-fill thin" style="width:33%"></div></div><div class="bar-val">33</div></div>
+<div class="bar-row"><div class="bar-label">Rehabilitation medicine</div><div class="bar-track"><div class="bar-fill thin" style="width:33%"></div></div><div class="bar-val">33</div></div>
+<div class="bar-row"><div class="bar-label">Rheumatology</div><div class="bar-track"><div class="bar-fill thin" style="width:33%"></div></div><div class="bar-val">33</div></div>
+<div class="bar-row"><div class="bar-label">Urology</div><div class="bar-track"><div class="bar-fill thin" style="width:33%"></div></div><div class="bar-val">33</div></div>
+<div class="bar-row"><div class="bar-label">Aesthetic medicine</div><div class="bar-track"><div class="bar-fill thin" style="width:32%"></div></div><div class="bar-val">32</div></div>
+<div class="bar-row"><div class="bar-label">Cosmetic surgery</div><div class="bar-track"><div class="bar-fill thin" style="width:32%"></div></div><div class="bar-val">32</div></div>
+<div class="bar-row"><div class="bar-label">Nephrology</div><div class="bar-track"><div class="bar-fill thin" style="width:32%"></div></div><div class="bar-val">32</div></div>
+<div class="bar-row"><div class="bar-label">Occupational therapist</div><div class="bar-track"><div class="bar-fill thin" style="width:32%"></div></div><div class="bar-val">32</div></div>
+<div class="bar-row"><div class="bar-label">Podiatrist</div><div class="bar-track"><div class="bar-fill thin" style="width:32%"></div></div><div class="bar-val">32</div></div>
+<div class="bar-row"><div class="bar-label">Radiology</div><div class="bar-track"><div class="bar-fill thin" style="width:32%"></div></div><div class="bar-val">32</div></div>
+<div class="bar-row"><div class="bar-label">Sport and exercise medicine</div><div class="bar-track"><div class="bar-fill thin" style="width:32%"></div></div><div class="bar-val">32</div></div>
+<div class="bar-row"><div class="bar-label">Dietitian</div><div class="bar-track"><div class="bar-fill thin" style="width:31%"></div></div><div class="bar-val">31</div></div>
+<div class="bar-row"><div class="bar-label">Speech pathologist</div><div class="bar-track"><div class="bar-fill thin" style="width:31%"></div></div><div class="bar-val">31</div></div>
+</div>
+
+  <h2>Mandate / practice matrix (AU Paediatrics first)</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Mandate / expectation</th><th>Level</th><th>In AU product today</th><th>Gap to wow</th></tr></thead>
+    <tbody>
+      <tr><td class="domain">National Immunisation Program schedule + catch-up</td><td><span class="pill info">NIP / Handbook</span></td><td class="note">Age rows name antigens incl. Aboriginal and Torres Strait Islander additions; AIR s.10 report particulars are ticks</td><td class="gap">Catch-up not calculated; Handbook commercial reuse blocks copying catch-up rows; nothing is reported</td></tr>
+      <tr><td class="domain">Growth standards for Australian children</td><td><span class="pill info">ANZSPED / WHO</span></td><td class="note">Link-out names WHO (&lt;2y) and ANZSPED/CDC choice (2–18); mid-parental height uses RCH ±8.5 cm</td><td class="gap">No LMS percentile engine on AU visit; TR Neyzi chapter not mounted</td></tr>
+      <tr><td class="domain">Development / autism screening</td><td><span class="pill info">BP</span></td><td class="note">M-CHAT-R/F slot exists as licence question only</td><td class="gap">No item wording, no scoring, no parent portal result</td></tr>
+      <tr><td class="domain">Specialty chapter on the visit</td><td><span class="pill info">Product bar</span></td><td class="note">Shared English note fields for paediatrics</td><td class="gap">TR specialties/pediatri engines excluded by AU pageExtensions</td></tr>
+      <tr><td class="domain">Parent-facing portal (Sağlığım analogue)</td><td><span class="pill info">Product bar</span></td><td class="note">One generic <code>/portal</code> page</td><td class="gap">No immunisation card, growth, or screening chapter for the parent</td></tr>
+      <tr><td class="domain">AHPRA / Medical Board role naming</td><td><span class="pill info">Law</span></td><td class="note">Role list follows Board specialties; removals and splits recorded</td><td class="gap">Naming is Strong for recognition — depth is not</td></tr>
+      <tr><td class="domain">Recording + privacy consent</td><td><span class="pill info">Privacy Act / state law</span></td><td class="note">Draft recording-consent sentence; 13 APP headings as ticks</td><td class="gap">Lawyer unread; operative APP subclauses not set out</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>Doctor pain points (AU clinic day)</h2>
+  <div class="cards">
+    <div class="card"><div class="title">“Where is the growth chart for this child?” <span class="pill danger">daily</span></div><div class="body"><b>Wow move:</b> WHO/ANZSPED LMS on the visit, same depth as Neyzi on TR.<br/><b>Now:</b> Link-out tile only — clinician plots elsewhere.</div></div>
+    <div class="card"><div class="title">“Is this child overdue for vaccines?” <span class="pill danger">daily</span></div><div class="body"><b>Wow move:</b> Catch-up engine + AIR report that actually sends.<br/><b>Now:</b> Age-row ticks + report particulars as notes.</div></div>
+    <div class="card"><div class="title">“My specialty tools from Turkey aren’t here” <span class="pill danger">every branş</span></div><div class="body"><b>Wow move:</b> Country-adapted chapter per offered role on the AU visit.<br/><b>Now:</b> Shared English note + college link + Charlie/Clara line.</div></div>
+    <div class="card"><div class="title">“Parent can’t see the immunisation card” <span class="pill warning">every visit</span></div><div class="body"><b>Wow move:</b> Portal chapter gated like TR Aşı Karnesi.<br/><b>Now:</b> Generic portal shell.</div></div>
+  </div>
+
+  <h2>Game changers</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>#</th><th>Move</th><th>Why AU doctors will care</th><th>Size</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td class="domain">AU Paediatrics full-depth closeout</td><td class="note">Closest analogue to the gold bar. Without growth LMS, catch-up, development panel, visit-mounted chapter and parent portal, no other specialty can honestly claim parity.</td><td><span class="pill warning">L</span></td></tr>
+      <tr><td>2</td><td class="domain">Mount country-adapted chapters on AU visit</td><td class="note">Today pageExtensions keep TR chapters off. Minimal real scaffolds must land as branş changes ship (ulke-paritesi), then deepen.</td><td><span class="pill warning">L</span></td></tr>
+      <tr><td>3</td><td class="domain">Assistant a doctor can ask (not only hear)</td><td class="note">Charlie/Clara speak a specialty line. There is still no reply path at TR Ayşe İlk-10 depth.</td><td><span class="pill warning">L</span></td></tr>
+      <tr><td>4</td><td class="domain">Live registers where law allows</td><td class="note">AIR report, PBS claim, Medicare invoice, My Health Record upload — ticks today, not sends.</td><td><span class="pill warning">L</span></td></tr>
+      <tr><td>5</td><td class="domain">Lawyer + clinical lead sign-off wave</td><td class="note">Pack is machine-written and flagged unread. Depth work without sign-off stays onaysız.</td><td><span class="pill info">M</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>Recommended next ships</h2>
+  <div class="cards three">
+    <div class="card"><div class="title">Sprint A — Impress <span class="pill info">Paediatrics</span></div><div class="body">WHO growth LMS on visit (reuse kit math already cited in AU slot notes), catch-up design that respects Handbook copyright, parent immunisation portal card, AU clinician sign-off list.</div></div>
+    <div class="card"><div class="title">Sprint B — Velocity <span class="pill info">Scaffold</span></div><div class="body">For each offered role, a real AU visit chapter shell (note + tools mount + portal stub) so ulke-paritesi branş changes have a home — not stubs.</div></div>
+    <div class="card"><div class="title">Sprint C — Mandate <span class="pill info">Consent / AIR</span></div><div class="body">Lawyer-read recording consent; AIR report path beyond ticks; keep licence-blocked tools off.</div></div>
+  </div>
+
+  <h2>Sources</h2>
+  <p class="lede">Code: <code>release/au@e4409f17</code> — <code>countries/au/ayarlar.ts</code>, <code>klinik/rolListesi.ts</code>, <code>araclar/*</code>, <code>docs/COUNTRY-MEDICAL-AUSTRALIA.md</code>, <code>lib/ulke/araclar</code>, AU <code>pageExtensions</code> in <code>next.config.mjs</code>. Gold: <code>main@d65d5979</code> — <code>specialties/pediatri</code> (24 files / 4,268 lines), <code>public/ozel-brans-pediatri-audit.html</code> (pass 14), <code>public/pediatri-presprint-audit.html</code>. Prior product shell: <code>public/avustralya-turkiye-audit-guncel.html</code> (mean 59 on 17 slices) — complementary, not replaced. External: Medical Board specialty list (22 Sep 2025); Ahpra professions; NIP / AIR Rules 2026; ANZSPED growth page; Privacy Act Schedule 1. No patient data. No person is named.</p>
+
+  <div class="foot">
+    <span>AU-40-PEDIATRI-AUDIT-01 · 2026-10-28 · Australia only · no patient data</span>
+    <span>Strong ≥85 · Partial 45–84 · Thin 15–44 · Missing &lt;15 · mean 34</span>
+  </div>
+</div>
+</body>
+</html>
