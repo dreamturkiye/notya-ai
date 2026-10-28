@@ -1,5 +1,26 @@
 # OPEN COMMITMENTS — Notya AI
 
+## AU-40-PEDIATRI-AUDIT-01 — full AU specialty audit vs TR pediatri gold: mean wow 34, 0/44 Strong (Claude, 2026-10-28)
+
+**Ask:** Full audit of Australia’s specialties against the Türkiye pediatri golden reference (the same bar used when TR’s other 39 branşlar were brought up to pediatri parity).
+
+**Method:** Same 10 slices as `public/ozel-brans-pediatri-audit.html` (Motor, Tests, Tool UI, Hasta dosyası, Kohort, Hasta portalı, SOAP, Acil, Kayıt, Voice). Gold = TR `specialties/pediatri` on `main` at 100 each. Scored `release/au` tip `e4409f17` against `main` tip `d65d5979`.
+
+**Finding:** AU offers **44 roles** (shared 40 − 5 Board/regulatory removals + 9 AU-only). **Mean wow 34. 0 Strong. 44 Thin.** AU Paediatrics leads at 40 — still Thin. Turkish chapter engines are excluded from AU builds (`pageExtensions` → `*.ulke.*` only). AU ships real cautious kit work (NIP rows, AIR/PBS/Medicare/GST/Privacy ticks, Charlie/Clara lines, Board-accurate names) but ticks are notes; nothing is reported/claimed/uploaded. Prior product-shell rescore (`avustralya-turkiye-audit-guncel.html`, mean 59 on 17 slices) is complementary and not overwritten.
+
+**Deliverables:** `public/au-40-pediatri-audit.html`, `docs/audits/AU-40-PEDIATRI-AUDIT-01.json`, Cursor canvas (this run).
+
+**Open (owner Claude, AU-first depth closeout — separate from scaffold-as-you-go):**
+1. AU Paediatrics full-depth: WHO/ANZSPED LMS on visit, catch-up design that respects Handbook copyright, parent immunisation portal card, clinician sign-off.
+2. Real AU visit chapter shells for every offered role so branş-specific TR changes have a home (ulke-paritesi minimal scaffold ≠ this full-depth job).
+3. Assistant conversation path beyond Charlie/Clara specialty line.
+4. Live register paths (AIR/PBS/Medicare/MHR) beyond ticks where law allows.
+5. Lawyer + clinical lead sign-off wave for onaysız AU tools.
+
+**Country status for this audit artifact:** AU = OPEN GAP (depth). us/gb/ca/nz/uz = N/A (audit scoped to AU). TR = reference only.
+
+**Classification:** Core audit / country-depth gap log — not a specialty-only TR UI change. No runtime product code changed on `release/au` in this job.
+
 ## ISLEYEN-ROL-TIP-01 — pre-existing Isleyen/Yapan type bug fixed on gb/ca/nz/us; Vercel READY status for all 6 country projects NOT verifiable from this session (Claude, 2026-10-27)
 
 **Context:** cherry-picking the Narx.tsx pricing-card-grid parity fix onto all 6 release branches surfaced a pre-existing, unrelated `next build` type-check failure on `release/gb`: `Type '{ userId: string; personelId: string | null; rol: PratikRol }' is not assignable to type 'Isleyen'`.
