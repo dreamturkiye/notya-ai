@@ -13,9 +13,19 @@ import { AU_GIRDI } from '../ayarlar'
 import { AU_CANLI_ASISTAN } from '../asistan/canli'
 import { AU_SES } from '../ses'
 import { AU_ACIL_CUMLE, AU_CEKIRDEK_EK } from './formEk'
+import { auSoapKilidi } from './soapKilitleri'
+
+const AU_KLINIK_TEMEL = enKlinik({ ...AU_GIRDI, cekirdekEk: AU_CEKIRDEK_EK, acilCumle: AU_ACIL_CUMLE })
 
 export const AU_KLINIK: UlkeKlinigi = {
-  ...enKlinik({ ...AU_GIRDI, cekirdekEk: AU_CEKIRDEK_EK, acilCumle: AU_ACIL_CUMLE }),
+  ...AU_KLINIK_TEMEL,
+  // AU-PEDIATRI-GOLD-01a — role SOAP locks appended to the English baseline instruction.
+  notTalimati: (dil, sablon) => {
+    const temel = AU_KLINIK_TEMEL.notTalimati(dil, sablon)
+    if (!temel) return null
+    const kilit = auSoapKilidi(sablon)
+    return kilit ? `${temel}\n\n${kilit}` : temel
+  },
   // NOTYA-ARACLAR-DENETIM-02-AU, 2026-10-13 — the stamp of the consent sentence an asking doctor ticks
   // (../araclar/konsultasyonMetinleri.ts → iste.riza). `hukukcuInceledi: false`: a draft, not legal advice; NO
   // LAWYER HAS READ IT YET. This item is flagged in this audit's report for a docs/OPEN-COMMITMENTS.md entry — not

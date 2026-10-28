@@ -44,6 +44,8 @@ import { AU_BUYUME_PERSENTILI_ARACI } from './araclar/buyumePersentili'
 import { AU_ASI_TAKVIMI_ARACI, AU_KONSULTASYON_ARACI, auEkAraclar } from './araclar/metinler'
 import { AU_TANIMLAR } from './araclar/tanimlar'
 import { AU_EK_YUVALAR } from './araclar/yuvalarim'
+import { auAcilBayraklari } from './araclar/acilBayraklari'
+import { auKohortAraclari } from './araclar/kohort'
 import { auIncelemePlanlari } from './araclar/reviewPlans'
 import { AU_ROLLER } from './klinik/roller'
 import { AU_BIRIMLER, AU_VELI_YASI } from './temel'
@@ -315,6 +317,10 @@ export const AU_GIRDI: EnUlkeGirdisi = {
         // AU pediatri gold, 2026-10-28 — one clinical-review studio per role that still had none
         // (every medical specialty + podiatry + speech pathology + pain medicine). Specialty-gated.
         ...auIncelemePlanlari(),
+        // AU-PEDIATRI-GOLD-01a/b Strong push, 2026-10-28 — per-role danger-sign pathways + overdue
+        // immunisation/review cohort checks. Specialty-gated flags; cohort tools as documented.
+        ...auAcilBayraklari(),
+        ...auKohortAraclari(),
         AU_GROWTH_CHART_REFERENCE,
         AU_KIMLIK_KONTROL_ARACI,
         AU_GIZLILIK_ARACI,

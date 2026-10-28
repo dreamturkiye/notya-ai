@@ -36,6 +36,7 @@
  */
 import type { AsistanKaynaklari } from '@/lib/ulke/arayuz/tipler'
 import type { Sunulan } from '../klinik/asistanAdlari'
+import { auSesOdakBlogu } from './sesOdak'
 
 // Short, plain caption text — never developer/compliance jargon rendered to a doctor.
 const NOT = 'For reference only. Not used to answer questions, and not stored.'
@@ -310,6 +311,7 @@ export function auAsistanKaynakBlogu(rol: string): string | null {
   if (!k) return null
   const a = AU_KITAP_AYRIMI[rol as Sunulan]
   const sat = (liste: readonly string[]) => liste.map((x) => `• ${x}`).join('\n')
+  const odak = auSesOdakBlogu(rol)
   return [
     '=== AUSTRALIAN PRACTICE SOURCES (BINDING) ===',
     'For clinical decisions, doses, work-up and referral use these FIRST.',
@@ -318,5 +320,7 @@ export function auAsistanKaynakBlogu(rol: string): string | null {
     sat(k.yetki),
     ...(a.ulusal.length ? ['', '=== AUSTRALIAN AND ANZ BOOKS ===', sat(a.ulusal)] : []),
     ...(a.uluslararasi.length ? ['', '=== INTERNATIONAL TEXTS (depth only — not practice authority) ===', sat(a.uluslararasi)] : []),
+    // AU-PEDIATRI-GOLD-01a — specialty clinical focus + Triple Zero pathway (TR clinicalFocus mirror).
+    ...(odak ? ['', odak] : []),
   ].join('\n')
 }

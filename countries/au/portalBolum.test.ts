@@ -39,7 +39,9 @@ describe('Australia patient chapters', () => {
     for (const rol of ROLLER) {
       const b = AU_PORTAL_BOLUMLERI[rol]!
       assert.ok(b.baslik.length > 8, rol)
-      assert.equal(b.satirlar.length, 2, rol)
+      // AU-PEDIATRI-GOLD Strong push: specialty lines + Triple Zero emergency line.
+      assert.equal(b.satirlar.length, 3, rol)
+      assert.match(b.satirlar[2]!, /Triple Zero \(000\)/, rol)
     }
   })
 

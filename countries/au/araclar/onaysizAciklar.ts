@@ -13,6 +13,8 @@
  *
  * Plain data: tests and documents read it; no screen does.
  */
+import { AU_ACIL_ANAHTARLARI } from './acilBayraklari'
+import { AU_KOHORT_ANAHTARLARI } from './kohort'
 import { AU_BAGLANTI_KAYITLARI } from './referanslar'
 import { AU_INCELEME_ANAHTARLARI } from './reviewPlans'
 
@@ -148,6 +150,18 @@ export const AU_ONAYSIZ_ACIK_ARACLAR: readonly OnaysizAcikArac[] = [
     oneri: 'AU pediatri gold — clinical review studio per role, 2026-10-28',
     klinisyen: null,
     bakilacak: 'Session date plus the interval the practitioner enters. No college pathway, dose or protocol is copied. A clinician of that specialty should say whether the two consent lines and the next-review day are the right three lines for ordinary follow-up in their practice.',
+  })),
+  ...AU_ACIL_ANAHTARLARI.map((anahtar) => ({
+    anahtar,
+    oneri: 'AU-PEDIATRI-GOLD-01a — per-role danger-sign pathway, 2026-10-28',
+    klinisyen: null,
+    bakilacak: 'Clinician ticks only; warning names Triple Zero (000). No diagnosis stored. TGA advice on checklist tools that restate ticks remains OPEN (AU-LAUNCH-01b). A clinician of that specialty should say whether the sign list matches ordinary red-flag teaching in their practice.',
+  })),
+  ...AU_KOHORT_ANAHTARLARI.map((anahtar) => ({
+    anahtar,
+    oneri: 'AU-PEDIATRI-GOLD-01b — overdue immunisation / clinical-review cohort, 2026-10-28',
+    klinisyen: null,
+    bakilacak: 'Immunisation cohort: NIP age milestones vs today; review cohort: visit + interval. Nothing is sent to AIR. Companion to takip-paneli, not a full practice-wide recall product. A paediatrician or GP lead should confirm the age-milestone set and the overdue rule.',
   })),
   ...AU_BAGLANTI_KAYITLARI.map((k) => ({
     anahtar: k.anahtar,
