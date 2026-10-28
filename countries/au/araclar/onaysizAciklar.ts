@@ -14,6 +14,7 @@
  * Plain data: tests and documents read it; no screen does.
  */
 import { AU_BAGLANTI_KAYITLARI } from './referanslar'
+import { AU_INCELEME_ANAHTARLARI } from './reviewPlans'
 
 export type OnaysizAcikArac = {
   anahtar: string
@@ -142,6 +143,12 @@ export const AU_ONAYSIZ_ACIK_ARACLAR: readonly OnaysizAcikArac[] = [
     anahtar: 'au-privacy-principles', oneri: 'Privacy Act 1988 Schedule 1, compilation of 4 June 2026', klinisyen: null,
     bakilacak: 'The 13 headings in Schedule 1, read 20 October 2026 from the compilation in force on 4 June 2026. The operative subclauses are not set out. A tick is a note. It is not a finding that the Act is met. State and territory health-records laws are not on this screen. A lawyer should still read the consent pages.',
   },
+  ...AU_INCELEME_ANAHTARLARI.map((anahtar) => ({
+    anahtar,
+    oneri: 'AU pediatri gold — clinical review studio per role, 2026-10-28',
+    klinisyen: null,
+    bakilacak: 'Session date plus the interval the practitioner enters. No college pathway, dose or protocol is copied. A clinician of that specialty should say whether the two consent lines and the next-review day are the right three lines for ordinary follow-up in their practice.',
+  })),
   ...AU_BAGLANTI_KAYITLARI.map((k) => ({
     anahtar: k.anahtar,
     oneri: k.anahtar,

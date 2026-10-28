@@ -14,6 +14,7 @@ import { alanVarMi } from '@/lib/ulke/araclar/yardimci'
 import { AU_ASI_TAKVIMI, AU_ASI_TAKVIMI_MADDELERI, AU_BEDEN, AU_ECOG, AU_K10, AU_TANIMLAR, BEL_SINIRLARI, bmiSinifi, ECOG_DERECELERI, k10Grubu, K10_MADDELERI } from './tanimlar'
 import { AU_NONSURGICAL } from './nonsurgicalPlan'
 import { AU_AUDIOLOGY, AU_COSMETIC, AU_DIETETICS, AU_OT, AU_PHYSIO, AU_PSYCHOLOGY } from './privatePlans'
+import { AU_INCELEME_ANAHTARLARI, AU_INCELEME_TANIMLAR } from './reviewPlans'
 import { AU_WELLNESS } from './wellnessPlan'
 import { AU_GST } from './gstInvoice'
 import { AU_AIR } from './immunisationReport'
@@ -304,7 +305,7 @@ describe('au-immunisation-schedule — NIP milestones (NSW Health schedule, curr
 
 describe('the mechanisms only Australia has', () => {
   it('each key carries the country\'s code, each names the source of its arithmetic, and none asks the country for a number of its own', () => {
-    assert.deepEqual(AU_TANIMLAR.map((t) => t.anahtar), ['au-body-size', 'au-mental-health-screen', 'au-oncology-grading', 'au-immunisation-schedule', 'au-immunisation-report', 'au-notifiable-diseases', 'au-poisons-schedules', 'au-schedule-8', 'au-dispensing-label', 'au-mandatory-notifications', 'au-pbs-prescription', 'au-medicare-particulars', 'au-identifier-check', 'au-privacy-principles', 'au-tax-invoice', 'au-my-health-record', 'au-wellness-plan', 'au-nonsurgical-plan', 'au-cosmetic-surgery-plan', 'au-physio-plan', 'au-psychology-plan', 'au-dietetics-plan', 'au-ot-plan', 'au-audiology-plan'])
+    assert.deepEqual(AU_TANIMLAR.map((t) => t.anahtar), ['au-body-size', 'au-mental-health-screen', 'au-oncology-grading', 'au-immunisation-schedule', 'au-immunisation-report', 'au-notifiable-diseases', 'au-poisons-schedules', 'au-schedule-8', 'au-dispensing-label', 'au-mandatory-notifications', 'au-pbs-prescription', 'au-medicare-particulars', 'au-identifier-check', 'au-privacy-principles', 'au-tax-invoice', 'au-my-health-record', 'au-wellness-plan', 'au-nonsurgical-plan', 'au-cosmetic-surgery-plan', 'au-physio-plan', 'au-psychology-plan', 'au-dietetics-plan', 'au-ot-plan', 'au-audiology-plan', ...AU_INCELEME_ANAHTARLARI])
     for (const t of AU_TANIMLAR) {
       assert.match(t.anahtar, /^au-[a-z0-9]+(-[a-z0-9]+)*$/)
       assert.ok((t.kaynak ?? '').length > 20, t.anahtar)
@@ -496,6 +497,26 @@ describe('general-practice wellness plan and the non-surgical cosmetic plan', ()
       const r = kos(t, { seans: '2026-02-01', aralik: 7, dosya: true, hasta: true, goruntu: 'yok' })
       assert.equal(tarih(r, 'sonraki'), '2026-02-08', t.anahtar)
       assert.equal(t.dozYazar, undefined, t.anahtar)
+    }
+  })
+})
+
+describe('clinical-review studios for every remaining AU role (AU pediatri gold)', () => {
+  const sonraki = (r: AracSonucu) => r.tarihler.find((x) => x.anahtar === 'sonraki')?.tarih
+  it('each works out the next review from the visit and the interval, and is specialty-keyed', () => {
+    assert.equal(AU_INCELEME_TANIMLAR.length, AU_INCELEME_ANAHTARLARI.length)
+    assert.ok(AU_INCELEME_ANAHTARLARI.includes('au-paediatrics-review'))
+    assert.ok(AU_INCELEME_ANAHTARLARI.includes('au-cardiology-review'))
+    assert.ok(!AU_INCELEME_ANAHTARLARI.includes('au-physio-plan'))
+    for (const t of AU_INCELEME_TANIMLAR) {
+      assert.equal(kos(t, {}).tamam, false, t.anahtar)
+      const r = kos(t, { seans: '2026-10-20', aralik: 14, dosya: true, hasta: true })
+      assert.equal(r.tamam, true, t.anahtar)
+      assert.equal(sonraki(r), '2026-11-03', t.anahtar)
+      assert.deepEqual(r.uyarilar, ['gonderilmedi'], t.anahtar)
+      assert.equal(t.dozYazar, undefined, t.anahtar)
+      const eksik = kos(t, { seans: '2026-10-20', aralik: 14, dosya: true })
+      assert.ok(eksik.uyarilar.includes('nusha'), t.anahtar)
     }
   })
 })

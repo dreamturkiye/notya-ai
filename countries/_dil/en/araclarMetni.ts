@@ -95,6 +95,17 @@ export const EN_ARACLAR_METNI_TEMEL: AraclarMetni = {
     tarihsiz: 'Recorded, no date entered',
     okunamadi: 'This milestone list could not be read.',
   },
+  buyumeGrafigi: {
+    baslik: 'Growth chart (WHO)',
+    bos: 'No growth measurement has been kept for this patient yet.',
+    parametreAdi: {
+      kilo: 'Weight for age',
+      boy: 'Height for age',
+      basCevresi: 'Head circumference for age',
+    },
+    birim: { kilo: 'kg', boy: 'cm', basCevresi: 'cm' },
+    kaynak: 'Bands: WHO Child Growth Standards (2006) and WHO Growth Reference (2007). Points are measurements kept with the WHO growth-percentiles tool.',
+  },
 }
 
 /** The tools area's catalogue in a country's form of English. */

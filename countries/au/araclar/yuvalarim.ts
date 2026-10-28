@@ -146,20 +146,7 @@ export const AU_EK_YUVALAR: readonly AracYuvasi[] = [
     kimden: KLINISYEN,
     roller: ['physiotherapy', 'rehabilitation-medicine', 'occupational-therapy'],
   },
-  // ── paediatrics: WHO growth percentiles, reusing this pack's own already-built WHO LMS tables and math
-  // (lib/clinical/whoBuyumeLms.ts, lib/clinical/buyumeEgrisi.ts — byte-identical to the Turkiye build, so there is
-  // no second source to drift from) — distinct from the shared set's own `growth-percentiles` slot (above in
-  // countries/_dil/en/araclar/yuvalar.ts), which asks the broader, still-open clinical question of which chart
-  // standard this country's paediatricians actually want; this slot answers only "is the WHO-standard mechanism
-  // ready", not that broader question ──
-  {
-    anahtar: 'buyume-persentili',
-    acik: false,
-    icerik: null,
-    mekanizmaHazir: true,
-    eksik:
-      'Weight-for-age, height-for-age and head-circumference-for-age percentiles against the WHO Child Growth Standards (2006, 0–60 months) and WHO Growth Reference (2007, 61+ months): the kit holds the mechanism under this key, reusing the pack\'s own existing WHO LMS tables and z-score math rather than a second copy, proven against the real paediatrics engine\'s arithmetic in the equivalence suite. Awaits a clinical lead\'s sign-off that the WHO standard (rather than, e.g., a locally-preferred alternative — the open question of the shared set\'s own growth-percentiles slot) is the right one to show Australian doctors, consistent with this pack\'s standing rule for a brand-new tool.',
-    kimden: KLINISYEN,
-    roller: ['paediatrics'],
-  },
+  // buyume-persentili left this list on 2026-10-28 (AU pediatri gold): switched on as a live PaketAraci in
+  // ../ayarlar.ts → ek.araclar (./buyumePersentili.ts). The shared set's own `growth-percentiles` slot (which chart
+  // standard for 2–18) stays open; the link-out tile au-growth-chart-reference still names WHO / ANZSPED / CDC.
 ]

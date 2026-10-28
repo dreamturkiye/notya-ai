@@ -33,6 +33,7 @@ import { Ipucu } from './Ipucu'
  */
 const KartYukleniyor = () => <p className="uza-bos" role="status" aria-hidden="true" />
 const TakvimliListeKarti = dinamikYukle(() => import('./AsiTakvimi').then((m) => m.TakvimliListeKarti), { loading: KartYukleniyor })
+const BuyumeGrafigiKarti = dinamikYukle(() => import('./BuyumeGrafigi').then((m) => m.BuyumeGrafigiKarti), { loading: KartYukleniyor })
 
 export type HastaKaydi = { id: string; ad: string; otaIsmi: string; dogumTarihi: string; cinsiyet: 'male' | 'female' | ''; telefon: string; dil: string; ulusalKimlik: string }
 export type DosyaMuayenesi = { seansId: string; notId: string | null; baslangic: string; durum: 'taslak' | 'onayli' | 'notsuz' }
@@ -231,7 +232,7 @@ export function YeniHasta() {
 
 // ───────────────────────── one patient's file ─────────────────────────
 
-export function HastaDosyasiGorunumu({ m, hasta, muayeneler, bugun, randevular, portal, form, araclar, aracTakvimi, mesajlar, konsultasyon, fotograflar, duzenle }: {
+export function HastaDosyasiGorunumu({ m, hasta, muayeneler, bugun, randevular, portal, form, araclar, aracTakvimi, buyumeGrafigi, mesajlar, konsultasyon, fotograflar, duzenle }: {
   m: UygulamaMetni; hasta: HastaKaydi; muayeneler: DosyaMuayenesi[]; bugun?: Date
   /** NOTYA-UZ-RANDEVU-01: this patient's appointments from today on. Absent = not loaded: no list is drawn. */
   randevular?: RandevuKaydi[] | null
@@ -243,6 +244,8 @@ export function HastaDosyasiGorunumu({ m, hasta, muayeneler, bugun, randevular, 
   araclar?: ReactNode
   /** AU-ARAC-GORUNUM-01: the calendar view of one checklist tool's own milestones, where the pack names one (`UlkeAraclari.takvimliListeAraci`). Drawn beside the flat list — both show the same kept results. */
   aracTakvimi?: ReactNode
+  /** AU-ARAC-GORUNUM-01-A: WHO growth chart from kept `buyume-persentili` results, where the pack has switched that tool on. */
+  buyumeGrafigi?: ReactNode
   /** NOTYA-ULKE-MESAJ-01: the messages with this patient, where the country has them. Drawn after the portal's card: a patient reads them there. */
   mesajlar?: ReactNode
   /** NOTYA-ULKE-MESAJ-01: asking a colleague for an opinion on this patient, and this patient's consultations, where the country has consultation. */
@@ -325,7 +328,7 @@ export function HastaDosyasiGorunumu({ m, hasta, muayeneler, bugun, randevular, 
     ...(fotograflar ? [{ id: 'belgeler', ad: r.ek.sekmeBelgeler, icerik: fotograflar }] : []),
     ...(araclar ? [{ id: 'araclar', ad: r.ek.sekmeAraclar, icerik: araclar }] : []),
     ...(form || portal ? [{ id: 'formu', ad: r.ek.hastaFormu, icerik: <div id="hasta-formu">{form ?? null}{portal ?? null}</div> }] : []),
-    ...(aracTakvimi ? [{ id: 'asilar', ad: r.ek.sekmeAsilar, icerik: aracTakvimi }] : []),
+    ...(aracTakvimi || buyumeGrafigi ? [{ id: 'asilar', ad: r.ek.sekmeAsilar, icerik: <>{buyumeGrafigi ?? null}{aracTakvimi ?? null}</> }] : []),
     ...(mesajlar || konsultasyon ? [{ id: 'iletisim', ad: r.ek.sekmeIletisim, icerik: <>{mesajlar ?? null}{konsultasyon ?? null}</> }] : []),
   ]
   const [aktif, setAktif] = useState('ozet')
@@ -420,7 +423,7 @@ export function HastaDosyasi() {
       {durum === 'tamam' && veri ? <>
         <Bilgi>{kaydedildi ? u.m.hasta.duzenlendi : null}</Bilgi>
         {duzenleme ? <YeniHastaGorunumu m={u.m} dil={u.dil} a={alanlar} set={(yeni) => { setAlanlar(yeni); setHata(null) }} gonder={duzenleKaydet} bekliyor={bekliyor} hata={hata} telefonOrnek={ulkePaketi().telefon.ornek} baslik={u.m.hasta.duzenle} iptal={() => { setDuzenleme(false); setHata(null) }} /> : null}
-        <HastaDosyasiGorunumu m={u.m} hasta={veri.hasta} muayeneler={veri.muayeneler} randevular={randevular} duzenle={duzenleAc} portal={ozellikAcik('hastaPortali') ? <PortalErisimKarti u={u} hastaId={veri.hasta.id} /> : null} form={ozellikAcik('hastaPortali') && ozellikAcik('hastaFormu') ? <HastaFormuKarti u={u} hastaId={veri.hasta.id} /> : null} araclar={ozellikAcik('araclar') ? <HastaAracKayitlariKarti u={u} hastaId={veri.hasta.id} /> : null} aracTakvimi={ozellikAcik('araclar') ? <TakvimliListeKarti u={u} hastaId={veri.hasta.id} /> : null} mesajlar={ozellikAcik('hastaPortali') && ozellikAcik('hastaMesajlari') ? <HastaMesajKarti u={u} hastaId={veri.hasta.id} sablonlar={ozellikAcik('hekimSablonlari')} /> : null} konsultasyon={ozellikAcik('konsultasyon') ? <KonsultasyonKarti u={u} hastaId={veri.hasta.id} /> : null} fotograflar={ozellikAcik('fotoArsivi') ? <FotoArsivKarti u={u} hastaId={veri.hasta.id} /> : null} />
+        <HastaDosyasiGorunumu m={u.m} hasta={veri.hasta} muayeneler={veri.muayeneler} randevular={randevular} duzenle={duzenleAc} portal={ozellikAcik('hastaPortali') ? <PortalErisimKarti u={u} hastaId={veri.hasta.id} /> : null} form={ozellikAcik('hastaPortali') && ozellikAcik('hastaFormu') ? <HastaFormuKarti u={u} hastaId={veri.hasta.id} /> : null} araclar={ozellikAcik('araclar') ? <HastaAracKayitlariKarti u={u} hastaId={veri.hasta.id} /> : null} aracTakvimi={ozellikAcik('araclar') ? <TakvimliListeKarti u={u} hastaId={veri.hasta.id} /> : null} buyumeGrafigi={ozellikAcik('araclar') ? <BuyumeGrafigiKarti u={u} hastaId={veri.hasta.id} cinsiyetVarsayilan={veri.hasta.cinsiyet || null} /> : null} mesajlar={ozellikAcik('hastaPortali') && ozellikAcik('hastaMesajlari') ? <HastaMesajKarti u={u} hastaId={veri.hasta.id} sablonlar={ozellikAcik('hekimSablonlari')} /> : null} konsultasyon={ozellikAcik('konsultasyon') ? <KonsultasyonKarti u={u} hastaId={veri.hasta.id} /> : null} fotograflar={ozellikAcik('fotoArsivi') ? <FotoArsivKarti u={u} hastaId={veri.hasta.id} /> : null} />
       </> : (
         <section className="uza-kart">
           {durum === 'yukleniyor' ? <p className="uza-bos" role="status">{u.m.kabuk.yukleniyor}</p> : <Hata>{durum === 'yok' ? u.m.hasta.bulunamadi : u.m.kabuk.hata}</Hata>}

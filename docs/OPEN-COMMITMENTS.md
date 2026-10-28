@@ -1,5 +1,28 @@
 # OPEN COMMITMENTS — Notya AI
 
+## AU-PEDIATRI-GOLD-01 — bring all AU offered roles toward TR pediatri gold (Claude, 2026-10-28, branch `cursor/au-pediatri-gold-ef6b` → `release/au`)
+
+**Ask:** Based on AU-40-PEDIATRI-AUDIT-01 (mean wow 34, 0/44 Strong), bring every offered AU role to the Turkish pediatrics gold bar — Option A (`.ulke`-native), same pattern as TR’s 39→pediatri parity.
+
+**Shipped this change (runtime on AU pack):**
+1. `buyume-persentili` switched ON for `paediatrics` + `family-medicine` (kit WHO LMS; removed from `yuvalarim`; onaysiz/owner-gold pattern — no clinician sign-off yet).
+2. `BuyumeGrafigiKarti` mounted on patient file (asilar tab) + `AraclarMetni.buyumeGrafigi` EN catalogue slot. Closes AU-ARAC-GORUNUM-01-A.
+3. Cherry-picked altin depth: portal chapter per role, immunisation due days + Handbook catch-up, six private-role studios.
+4. **36 clinical-review studios** for every remaining offered role (specialty-gated; not duplicating wellness/nonsurgical/cosmetic/allied plans).
+5. Rescore: `public/au-40-pediatri-audit.html` + `docs/audits/AU-40-PEDIATRI-AUDIT-01.json` — **mean wow 50**, **44/44 Partial**, **0 Strong**, paediatrics **70** (was 40).
+
+**Still OPEN to reach Strong (≥85) — honest gap, not claimed done:**
+| ID | Item | Owner |
+|---|---|---|
+| AU-PEDIATRI-GOLD-01a | SOAP locks + specialty voice lines inside studios (TR chapter depth) | Claude |
+| AU-PEDIATRI-GOLD-01b | Full overdue immunisation kohort panel beyond `takip-paneli` + due-day notes | Claude |
+| AU-PEDIATRI-GOLD-01c | Named AU clinician confirm WHO vs ANZSPED/CDC default for ages 2–18 | Kaan |
+| AU-PEDIATRI-GOLD-01d | M-CHAT / ATS / other licence-gated slots remain off | Kaan (licence) |
+| AU-PEDIATRI-GOLD-01e | us/gb/ca/nz/uz: same depth once each country’s pack is the merge target (this PR is AU-only). Shared EN catalogue gained `buyumeGrafigi` text — regenerate other COUNTRY-PACK-*.md when those branches absorb the EN set. | Claude |
+
+**Classification:** Core country-depth (AU pack + shared kit mount). Not a TR branş-only change.
+**Country status:** AU = APPLIED (gold path Partial). us/gb/ca/nz/uz = OPEN GAP (logged). TR = reference.
+
 ## AU-LAUNCH-01 — Australian launch audit against Kaan's regulatory brief (Claude, 2026-10-24, branch `au-launch` off `release/au`)
 
 Full table with file evidence: `docs/au/LAUNCH-READINESS.md`. Fixed in code: image/document reading by the model gated OFF for AU (`goruntuDegerlendirme`; the routes did not check it before), live assistant opt-in via `NOTYA_AU_ASSISTANT_ENABLED` (default OFF) and its dose-working prompt line removed, recording-consent sentence now names AI processing / overseas services / lawful recording (stamp `au-draft-2026-10-24`), notice and policy gained an AI section and accurate provider list (notice `au-2026-10-24-draft-3`), AI-draft banner and approved-note provenance line, recording consent shown on the note, intended-purpose statement (medical disclaimer, landing hero), landing no longer advertises image reading, APP 12 JSON export + the practitioner's response shown on the patient's page. Nothing here is a finding that any law or TGA rule is met.
@@ -4333,7 +4356,7 @@ larger 2094-test ordinary suite — the real ordinary-suite comparison above sup
 
 | Date | Item | Owner | Status / what is needed |
 |------|------|-------|-------------------------|
-| 2026-10-21 | **AU-ARAC-GORUNUM-01-A — mount `BuyumeGrafigiKarti` into `Hastalar.tsx` and give it a real catalogue text slot** once `buyume-persentili` clears `AU-DEPTH-PARITY-02`'s clinician sign-off. Needs: (1) the sign-off itself (tracked under `AU-DEPTH-PARITY-02`, not duplicated here); (2) folding `BuyumeGrafigiMetni` into `AraclarMetni` (or a new typed block) with an EN translation, the same way `aracTakvimi` was done this job, so a shared file never carries literal English | Kaan (clinician sign-off) / Claude (catalogue slot + mount, mechanical once (1) lands) | OPEN |
+| 2026-10-21 | **AU-ARAC-GORUNUM-01-A — mount `BuyumeGrafigiKarti` into `Hastalar.tsx` and give it a real catalogue text slot** once `buyume-persentili` clears `AU-DEPTH-PARITY-02`'s clinician sign-off. Needs: (1) the sign-off itself (tracked under `AU-DEPTH-PARITY-02`, not duplicated here); (2) folding `BuyumeGrafigiMetni` into `AraclarMetni` (or a new typed block) with an EN translation, the same way `aracTakvimi` was done this job, so a shared file never carries literal English | Kaan (clinician sign-off) / Claude (catalogue slot + mount, mechanical once (1) lands) | **CLOSED 2026-10-28 (AU pediatri gold):** owner ordered full gold closeout; `buyume-persentili` switched on for paediatrics + family-medicine without clinician sign-off (same onaysiz pattern as other AU tools); `AraclarMetni.buyumeGrafigi` + EN catalogue; `BuyumeGrafigiKarti` mounted on patient file (asilar tab). Clinical lead still to confirm WHO vs ANZSPED/CDC for ages 2–18 (tracked under growth-chart reference tile / AU-DEPTH-PARITY-02 remainder). |
 | 2026-10-21 | **AU-ARAC-GORUNUM-01-B — unit tests for the two new pure helpers** (`lib/ulke/araclar/maddeTakvimi.ts`, `lib/ulke/araclar/buyumeGrafigi.ts`) with synthetic `AracKaydi` fixtures, mirroring `lib/ulke/araclar/araclar.paket.test.ts`'s existing patterns | Claude | **DONE, same day** — `lib/ulke/araclar/maddeTakvimi.test.ts` (24 cases) and `lib/ulke/araclar/buyumeGrafigi.test.ts` (9 cases), run directly (`tsx --experimental-test-module-mocks --test`): 33/33 pass. Not yet wired into `npm run test:ulke`'s auto-discovery or bare `npm test`'s hardcoded list — follow-up, low risk (same `*.test.ts` convention the discovery script already walks for every other `lib/ulke/araclar/*.test.ts` file) |
 
 ## NOTYA-BELGE-DEID-02 — automatic on-device de-identification of burned-in image text before the Asistan evaluation (Kaan, 2026-10-21, Claude)

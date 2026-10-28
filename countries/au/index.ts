@@ -17,11 +17,8 @@ import { enMesajAyarlari } from '../_dil/en/mesaj'
 import { medicareKartGecerli } from './kimlik'
 import { AU_ROL_LISTESI } from './klinik/rolListesi'
 import { AU_RESMI_GUNLER } from './resmiGunler'
-<<<<<<< HEAD
-import { AU_UZANTI } from './uzanti'
-=======
 import { AU_PORTAL_BOLUMLERI } from './portalBolumleri'
->>>>>>> 5637b95f (Give every Australian role its own patient chapter.)
+import { AU_UZANTI } from './uzanti'
 import { AU_BIRIMLER, AU_VELI_YASI } from './temel'
 
 const cekirdek = enCekirdek('en-AU')

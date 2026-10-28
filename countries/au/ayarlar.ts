@@ -40,9 +40,11 @@ import { auBaglantiAraclari } from './araclar/referanslar'
 import { auMedicare } from './araclar/medicareParticulars'
 import { auZorunluBildirim } from './araclar/notifications'
 import { auPbsRecete } from './araclar/pbsPrescription'
+import { AU_BUYUME_PERSENTILI_ARACI } from './araclar/buyumePersentili'
 import { AU_ASI_TAKVIMI_ARACI, AU_KONSULTASYON_ARACI, auEkAraclar } from './araclar/metinler'
 import { AU_TANIMLAR } from './araclar/tanimlar'
 import { AU_EK_YUVALAR } from './araclar/yuvalarim'
+import { auIncelemePlanlari } from './araclar/reviewPlans'
 import { AU_ROLLER } from './klinik/roller'
 import { AU_BIRIMLER, AU_VELI_YASI } from './temel'
 
@@ -293,6 +295,10 @@ export const AU_GIRDI: EnUlkeGirdisi = {
         AU_KONSULTASYON_ARACI,
         // NOTYA-ARACLAR-DENETIM-02-AU, 2026-10-13 — the National Immunisation Program schedule, CORE (every role).
         AU_ASI_TAKVIMI_ARACI,
+        // AU pediatri gold, 2026-10-28 — WHO growth percentiles (kit mechanism), paediatrics + general practice.
+        // Switched on without a clinician's sign-off (owner order: bring AU to TR pediatri gold). ANZSPED/CDC for
+        // 2–18 stays on the growth-chart reference tile beside this calculator.
+        AU_BUYUME_PERSENTILI_ARACI,
         // Australian Immunisation Register Rules 2026, section 10. Doctors only. A tick is not a report.
         auImmunisationReport(hekimRolleri(SATIRLAR)),
         // NOTYA-ARACLAR-DENETIM-02-AU, 2026-10-13 — the growth-chart link-out tile (founder's question #3).
@@ -306,6 +312,9 @@ export const AU_GIRDI: EnUlkeGirdisi = {
         // One saved plan each for the private roles that still had none: cosmetic surgery,
         // physiotherapy, psychology, dietetics, occupational therapy, audiology.
         ...auOzelPlanlar(),
+        // AU pediatri gold, 2026-10-28 — one clinical-review studio per role that still had none
+        // (every medical specialty + podiatry + speech pathology + pain medicine). Specialty-gated.
+        ...auIncelemePlanlari(),
         AU_GROWTH_CHART_REFERENCE,
         AU_KIMLIK_KONTROL_ARACI,
         AU_GIZLILIK_ARACI,

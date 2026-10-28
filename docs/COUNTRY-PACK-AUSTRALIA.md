@@ -19,7 +19,7 @@ A pack that builds has every text and setting filled in. It says nothing about w
 
 ## What is in this pack, and where it comes from
 
-- **From the shared English set** (`countries/_dil/en/`, written once for five countries): 4420 texts as this pack shows them or hands the model (the country's own, counted in the next line, among them) — the screens, the role names, 40 note templates, the instructions to the model, the intake questions, 132 tools, the landing copy — written in `en-AU` spelling by the set's spelling table.
+- **From the shared English set** (`countries/_dil/en/`, written once for five countries): 5673 texts as this pack shows them or hands the model (the country's own, counted in the next line, among them) — the screens, the role names, 40 note templates, the instructions to the model, the intake questions, 169 tools, the landing copy — written in `en-AU` spelling by the set's spelling table.
 - **This country's own** (`countries/au/`, six small files): 42 texts it writes itself (its consent sentence, identifier label, time sentence, date example, name, word for a senior doctor, role names where they differ, what its closed tools are missing and who decides, unit names and tool words it writes differently, the example phone number and the pattern of an amount) and the settings in the table below.
 
 ## Settings — every one unverified
@@ -115,7 +115,7 @@ The keys are the shared English key set (`docs/COUNTRY-PACK-ROLE-KEYS.md`). The 
 
 ## Tools
 
-### Switched on (132) — with the unit each measured input takes
+### Switched on (169) — with the unit each measured input takes
 
 Units are a clinical-safety matter. A length or a weight is typed in this pack's unit and converted by the kit with the exact defined factors (1 in = 2.54 cm, 1 lb = 0.45359237 kg); a laboratory value is typed in the unit shown. `countries/au/au.test.ts` runs every tool below with this country's units against the kit's reference result. **Every tool's text is machine-written; each waits on a local clinical lead.**
 
@@ -180,6 +180,7 @@ Units are a clinical-safety matter. A length or a weight is typed in this pack's
 | `au-oncology-grading` | ECOG performance status: record the grade | Medical oncology, Radiation oncology | no measured input |
 | `konsultasyonlar` | Consultations | every role | no measured input |
 | `au-immunisation-schedule` | National Immunisation Program schedule | every role | no measured input |
+| `buyume-persentili` | WHO growth percentiles | Paediatrics and child health, General practice | Weight: **kg**; Height / length: **cm** |
 | `au-immunisation-report` | Immunisation register report particulars | Emergency medicine, General practice, Anaesthesia, Neurosurgery, Paediatric surgery, General medicine, Dermatology, Endocrinology, Infectious diseases, Gastroenterology and hepatology, General surgery, Cardio-thoracic surgery, Respiratory and sleep medicine, Ophthalmology, Obstetrics and gynaecology, Vascular surgery, Cardiology, Otolaryngology – head and neck surgery, Nephrology, Neurology, Medical oncology, Radiation oncology, Orthopaedic surgery, Paediatrics and child health, Plastic surgery, Psychiatry, Radiology, Rheumatology, Urology, Sport and exercise medicine, Rehabilitation medicine, Geriatric medicine, Immunology and allergy, Haematology, Pain medicine, Cosmetic surgery, Non-surgical cosmetic procedures | no measured input |
 | `au-my-health-record` | My Health Record upload conditions | every role | no measured input |
 | `au-wellness-plan` | Wellness and longevity plan | General practice | no measured input |
@@ -190,6 +191,42 @@ Units are a clinical-safety matter. A length or a weight is typed in this pack's
 | `au-dietetics-plan` | Dietetics plan | Dietitian | no measured input |
 | `au-ot-plan` | Occupational therapy plan | Occupational therapist | no measured input |
 | `au-audiology-plan` | Audiology plan | Audiologist | no measured input |
+| `au-emergency-medicine-review` | Emergency medicine review | Emergency medicine | no measured input |
+| `au-anaesthesia-review` | Anaesthesia review | Anaesthesia | no measured input |
+| `au-neurosurgery-review` | Neurosurgery review | Neurosurgery | no measured input |
+| `au-paediatric-surgery-review` | Paediatric surgery review | Paediatric surgery | no measured input |
+| `au-internal-medicine-review` | General medicine review | General medicine | no measured input |
+| `au-dermatology-review` | Dermatology review | Dermatology | no measured input |
+| `au-endocrinology-review` | Endocrinology review | Endocrinology | no measured input |
+| `au-infectious-diseases-review` | Infectious diseases review | Infectious diseases | no measured input |
+| `au-gastroenterology-review` | Gastroenterology review | Gastroenterology and hepatology | no measured input |
+| `au-general-surgery-review` | General surgery review | General surgery | no measured input |
+| `au-respiratory-medicine-review` | Respiratory review | Respiratory and sleep medicine | no measured input |
+| `au-ophthalmology-review` | Ophthalmology review | Ophthalmology | no measured input |
+| `au-obstetrics-gynaecology-review` | Obstetrics and gynaecology review | Obstetrics and gynaecology | no measured input |
+| `au-cardiology-review` | Cardiology review | Cardiology | no measured input |
+| `au-otolaryngology-review` | Ear, nose and throat review | Otolaryngology – head and neck surgery | no measured input |
+| `au-nephrology-review` | Nephrology review | Nephrology | no measured input |
+| `au-neurology-review` | Neurology review | Neurology | no measured input |
+| `au-oncology-review` | Medical oncology review | Medical oncology | no measured input |
+| `au-orthopaedics-review` | Orthopaedic review | Orthopaedic surgery | no measured input |
+| `au-paediatrics-review` | Paediatrics review | Paediatrics and child health | no measured input |
+| `au-plastic-surgery-review` | Plastic and reconstructive review | Plastic surgery | no measured input |
+| `au-psychiatry-review` | Psychiatry review | Psychiatry | no measured input |
+| `au-radiology-review` | Radiology review | Radiology | no measured input |
+| `au-rheumatology-review` | Rheumatology review | Rheumatology | no measured input |
+| `au-urology-review` | Urology review | Urology | no measured input |
+| `au-sports-medicine-review` | Sport and exercise review | Sport and exercise medicine | no measured input |
+| `au-rehabilitation-medicine-review` | Rehabilitation medicine review | Rehabilitation medicine | no measured input |
+| `au-cardio-thoracic-surgery-review` | Cardio-thoracic surgery review | Cardio-thoracic surgery | no measured input |
+| `au-vascular-surgery-review` | Vascular surgery review | Vascular surgery | no measured input |
+| `au-radiation-oncology-review` | Radiation oncology review | Radiation oncology | no measured input |
+| `au-geriatric-medicine-review` | Geriatric medicine review | Geriatric medicine | no measured input |
+| `au-immunology-and-allergy-review` | Immunology and allergy review | Immunology and allergy | no measured input |
+| `au-haematology-review` | Haematology review | Haematology | no measured input |
+| `au-pain-medicine-review` | Pain medicine review | Pain medicine | no measured input |
+| `au-podiatry-review` | Podiatry review | Podiatrist | no measured input |
+| `au-speech-pathology-review` | Speech pathology review | Speech pathologist | no measured input |
 | `au-growth-chart-reference` | Which growth chart to use | every role | no measured input |
 | `au-identifier-check` | Medicare card and provider number check | every role | no measured input |
 | `au-privacy-principles` | Privacy Act record | every role | no measured input |
@@ -254,7 +291,7 @@ Units are a clinical-safety matter. A length or a weight is typed in this pack's
 | `au-ref-speech-pathology` | Speech Pathology Australia (link) | Speech pathologist | no measured input |
 | `takip-paneli` | Follow-up list | Emergency medicine, General practice, Anaesthesia, Neurosurgery, Paediatric surgery, General medicine, Dermatology, Endocrinology, Infectious diseases, Gastroenterology and hepatology, General surgery, Cardio-thoracic surgery, Respiratory and sleep medicine, Ophthalmology, Obstetrics and gynaecology, Vascular surgery, Cardiology, Otolaryngology – head and neck surgery, Nephrology, Neurology, Medical oncology, Radiation oncology, Orthopaedic surgery, Paediatrics and child health, Plastic surgery, Psychiatry, Radiology, Rheumatology, Urology, Sport and exercise medicine, Rehabilitation medicine, Geriatric medicine, Immunology and allergy, Haematology, Pain medicine, Cosmetic surgery, Non-surgical cosmetic procedures, Physiotherapist, Psychologist, Dietitian, Occupational therapist, Audiologist, Podiatrist, Speech pathologist | no measured input |
 
-### Kept as slots FOR THIS COUNTRY (17) — for a local clinical lead
+### Kept as slots FOR THIS COUNTRY (16) — for a local clinical lead
 
 The shared English set has the words of these tools and the kit has their mechanism; this country keeps them switched off for the reason given.
 
@@ -276,7 +313,6 @@ The shared English set has the words of these tools and the kit has their mechan
 | `gad7` | Psychiatry, Psychologist | GAD-7 (Generalized Anxiety Disorder-7): the kit holds the scoring mechanism (seven numbered items, no item wording shown) under this key, proven against the real psychiatry engine's arithmetic in the equivalence suite. THE LICENCE QUESTION is the same one the shared set's own `phq9-gad7` slot already names. Awaits a clinical lead's sign-off on top of the licence question. | a clinical lead in Australia, with the national source named |
 | `odi` | Physiotherapist, Rehabilitation medicine, Occupational therapist | ODI (Oswestry Disability Index): the kit holds the scoring mechanism (ten numbered items, no item wording shown) under this key, proven against the real physiotherapy engine's arithmetic in the equivalence suite. THE LICENCE QUESTION is the same one the shared set's own `pain-odi` slot already names: ODI is a published, licensed questionnaire and its rights holder's terms for showing the English wording inside a commercial product were not read this session. Awaits a clinical lead's sign-off on top of the licence question. | a clinical lead in Australia, with the national source named |
 | `vas-agri` | Physiotherapist, Rehabilitation medicine, Occupational therapist | A 0–10 pain visual analogue scale: the kit holds the mechanism under this key, proven against the real physiotherapy engine's arithmetic in the equivalence suite. No published item text is involved (a VAS is a single numbered line, not a copyrighted questionnaire), so there is no licence question here — only a clinical lead's sign-off, per this pack's standing rule for a brand-new tool. | a clinical lead in Australia, with the national source named |
-| `buyume-persentili` | Paediatrics and child health | Weight-for-age, height-for-age and head-circumference-for-age percentiles against the WHO Child Growth Standards (2006, 0–60 months) and WHO Growth Reference (2007, 61+ months): the kit holds the mechanism under this key, reusing the pack's own existing WHO LMS tables and z-score math rather than a second copy, proven against the real paediatrics engine's arithmetic in the equivalence suite. Awaits a clinical lead's sign-off that the WHO standard (rather than, e.g., a locally-preferred alternative — the open question of the shared set's own growth-percentiles slot) is the right one to show Australian doctors, consistent with this pack's standing rule for a brand-new tool. | a clinical lead in Australia, with the national source named |
 
 ### Slots in every English-speaking country (56) — empty, switched off
 
@@ -375,7 +411,7 @@ Every gate is unticked: a gate is ticked by a person, with a name and a date. Th
 - [ ] 2. No fallback between countries: a missing item hides the feature.
   - Nothing falls back: the pack check finds nothing missing, and a tool this country does not have is a slot, not another country's tool.
 - [ ] 3. Every tool, form, reference and feature declares the countries it is valid in; new ones start off everywhere except where they were built.
-  - Every tool is classified (base, or these roles) and 17 tool(s) of the shared English set are kept off for this country (below).
+  - Every tool is classified (base, or these roles) and 16 tool(s) of the shared English set are kept off for this country (below).
 - [ ] 4. The account carries its country and language, set at sign-up from that country's landing page.
   - As in the kit: country and language are stamped at sign-up. One language form, `en-AU`.
 - [ ] 5. Ayşe answers only from the account's country pack and says so when no national source exists.
@@ -472,7 +508,7 @@ For each entry: official local name, what it governs, source link, date checked,
 - [ ] C12 Note template per language.
   - MACHINE-BUILT. 40 templates, read by no clinician of this country.
 - [ ] C13 Intake form per language.
-  - MACHINE-WRITTEN. 44 core questions and 389 role questions, read by no clinician of this country.
+  - MACHINE-WRITTEN. 44 core questions and 393 role questions, read by no clinician of this country.
 - [ ] C14 Reviewer name, date, sign-off; a specialty is switched on only after this.
   - NOBODY. No role is signed off.
 - [ ] C15 Owner and next review date for every source.

@@ -1220,6 +1220,18 @@ export type AraclarMetni = {
     readonly tarihsiz: string
     readonly okunamadi: string
   }
+  /**
+   * AU-ARAC-GORUNUM-01-A — growth chart on the patient's file when the pack has switched on the kit's
+   * `buyume-persentili` tool. Absent = no chart card is mounted (every pack that leaves the tool off).
+   */
+  readonly buyumeGrafigi?: {
+    readonly baslik: string
+    /** No measurement of this parameter has been kept for this patient yet. */
+    readonly bos: string
+    readonly parametreAdi: Readonly<{ kilo: string; boy: string; basCevresi: string }>
+    readonly birim: Readonly<{ kilo: string; boy: string; basCevresi: string }>
+    readonly kaynak: string
+  }
 }
 
 /**
