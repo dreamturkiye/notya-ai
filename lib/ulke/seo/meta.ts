@@ -15,6 +15,9 @@ export const SEO_YOLLARI: Readonly<Record<SeoSayfa, string>> = {
   accessibility: YASAL_YOLLAR.accessibility, medical: YASAL_YOLLAR.medical, security: YASAL_YOLLAR.security, refund: YASAL_YOLLAR.refund, copyright: YASAL_YOLLAR.copyright,
 }
 
+/** notya.io/doktor (Türkiye, the pre-split application) — not a value of SITELER, so added only on the home page. */
+const TURKIYE_ANASAYFA = 'https://www.notya.io/doktor'
+
 export function sayfaMeta(sayfa: SeoSayfa, yedek: { baslik?: string; aciklama?: string }): Metadata {
   const p = ulkePaketi()
   const t = seoMetni(p.kod as string, sayfa)
@@ -23,12 +26,16 @@ export function sayfaMeta(sayfa: SeoSayfa, yedek: { baslik?: string; aciklama?: 
   const yol = SEO_YOLLARI[sayfa]
   const url = mutlakAdres(kendiSite(), yol)
   const yerel = /^[a-z]{2}-[A-Z]{2}$/.test(p.varsayilanDil) ? p.varsayilanDil.replace('-', '_') : undefined
+  // The Turkish /doktor landing is the only page with a real, verified equivalent on every country
+  // build (the home page); other SEO pages (for-clinics, legal, catalogue) have no confirmed 1:1 TR
+  // URL yet, so they are not cross-linked here — see docs/OPEN-COMMITMENTS.md.
+  const diller = sayfa === 'home' ? { ...hreflangHaritasi(yol), tr: TURKIYE_ANASAYFA } : hreflangHaritasi(yol)
   return {
     ...(baslik ? { title: baslik } : {}),
     ...(aciklama ? { description: aciklama } : {}),
-    alternates: { canonical: url, languages: hreflangHaritasi(yol) },
+    alternates: { canonical: url, languages: diller },
     openGraph: { type: 'website', url, siteName: 'Notya', ...(baslik ? { title: baslik } : {}), ...(aciklama ? { description: aciklama } : {}), ...(yerel ? { locale: yerel } : {}) },
-    twitter: { card: 'summary', ...(baslik ? { title: baslik } : {}), ...(aciklama ? { description: aciklama } : {}) },
+    twitter: { card: 'summary_large_image', ...(baslik ? { title: baslik } : {}), ...(aciklama ? { description: aciklama } : {}) },
     robots: p.aramaMotorlarinaGizli ? GIZLI_ROBOTS : ACIK_ROBOTS,
   }
 }
