@@ -159,7 +159,20 @@ export const AU_SOAP_KILITLERI: Readonly<Record<Sunulan, AuSoapKilidi>> = {
   'aesthetic-medicine': yetiskin,
   physiotherapy: muttefik,
   'clinical-psychology': muttefik,
-  dietetics: muttefik,
+  dietetics: {
+    bolumler: [
+      's — Reason for dietetic care and dietary history as the client reported; who spoke if a carer gave history.',
+      'o — Weights, intake observations, MST score if assessed, IDDSI levels if recorded — only as said or measured at the visit.',
+      'a — The dietitian\'s own nutrition assessment as said. Make no medical diagnosis; if a referring doctor\'s diagnosis was named, write it only in the field meant for it.',
+      'p — Nutrition goals, texture advice, estimated energy/protein factors discussed, and follow-up as said. No medicine dose.',
+    ],
+    kirilmaz: [
+      ...ORTAK_KIRILMAZ,
+      'This note is not a medical diagnosis. If a referring doctor\'s diagnosis was named, write it only in the field meant for it.',
+      'Do not invent an MST score, IDDSI level, kilojoule target or protein target that was not assessed or agreed at the visit.',
+      'Energy is discussed in kilojoules when numbers are used. Do not convert units.',
+    ],
+  },
   'occupational-therapy': muttefik,
   audiology: muttefik,
   podiatry: muttefik,

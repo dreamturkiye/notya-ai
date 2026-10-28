@@ -14,6 +14,7 @@
  * Plain data: tests and documents read it; no screen does.
  */
 import { AU_ACIL_ANAHTARLARI } from './acilBayraklari'
+import { AU_DIYET_ANAHTARLARI } from './dieteticsTools'
 import { AU_KOHORT_ANAHTARLARI } from './kohort'
 import { AU_BAGLANTI_KAYITLARI } from './referanslar'
 import { AU_INCELEME_ANAHTARLARI } from './reviewPlans'
@@ -155,13 +156,19 @@ export const AU_ONAYSIZ_ACIK_ARACLAR: readonly OnaysizAcikArac[] = [
     anahtar,
     oneri: 'AU-PEDIATRI-GOLD-01a — per-role danger-sign pathway, 2026-10-28',
     klinisyen: null,
-    bakilacak: 'Clinician ticks only; warning names Triple Zero (000). No diagnosis stored. TGA advice on checklist tools that restate ticks remains OPEN (AU-LAUNCH-01b). A clinician of that specialty should say whether the sign list matches ordinary red-flag teaching in their practice.',
+    bakilacak: 'Clinician ticks only; warning names Triple Zero (000). No diagnosis stored. Regulatory advice on checklist tools that restate ticks remains OPEN (AU-LAUNCH-01b). A clinician of that specialty should say whether the sign list matches ordinary red-flag teaching in their practice.',
   })),
   ...AU_KOHORT_ANAHTARLARI.map((anahtar) => ({
     anahtar,
     oneri: 'AU-PEDIATRI-GOLD-01b — overdue immunisation / clinical-review cohort, 2026-10-28',
     klinisyen: null,
     bakilacak: 'Immunisation cohort: NIP age milestones vs today; review cohort: visit + interval. Nothing is sent to AIR. Companion to takip-paneli, not a full practice-wide recall product. A paediatrician or GP lead should confirm the age-milestone set and the overdue rule.',
+  })),
+  ...AU_DIYET_ANAHTARLARI.map((anahtar) => ({
+    anahtar,
+    oneri: 'AU clinical dietetics beta suite, 2026-10-28',
+    klinisyen: null,
+    bakilacak: 'Dietetics only. A practising dietitian should confirm MST score-only recording (questions not worded), kJ/kg starting estimates, IDDSI level labels, refeeding tick list, and enteral rate arithmetic fit ordinary AU practice before relying on them with patients.',
   })),
   ...AU_BAGLANTI_KAYITLARI.map((k) => ({
     anahtar: k.anahtar,

@@ -45,6 +45,7 @@ import { AU_ASI_TAKVIMI_ARACI, AU_KONSULTASYON_ARACI, auEkAraclar } from './arac
 import { AU_TANIMLAR } from './araclar/tanimlar'
 import { AU_EK_YUVALAR } from './araclar/yuvalarim'
 import { auAcilBayraklari } from './araclar/acilBayraklari'
+import { auDieteticsAraclari } from './araclar/dieteticsTools'
 import { auKohortAraclari } from './araclar/kohort'
 import { auIncelemePlanlari } from './araclar/reviewPlans'
 import { AU_ROLLER } from './klinik/roller'
@@ -192,7 +193,8 @@ export const AU_GIRDI: EnUlkeGirdisi = {
     // UNVERIFIED by a local clinical lead.
     dozYazimi: { sondaSifir: false },
     // The body mass index of Australia's own tool is written in kilograms per square metre.
-    birimAdlari: { 'kg/m2': 'kg/m²' },
+    // Dietetics beta suite (kJ/kg, g/kg): Australian clinical practice uses kilojoules, not kcal.
+    birimAdlari: { 'kg/m2': 'kg/m²', 'kJ/kg': 'kJ/kg', 'g/kg': 'g/kg', kJ: 'kJ', 'mL/h': 'mL/h' },
     // FOR A LOCAL CLINICAL LEAD: the tools of the shared set this country keeps switched off, and why.
     kapali: {
       // REMOVED FOR AUSTRALIA by the audit's decision ("remove"): it is not this country's scale. It stays a slot only
@@ -321,6 +323,9 @@ export const AU_GIRDI: EnUlkeGirdisi = {
         // immunisation/review cohort checks. Specialty-gated flags; cohort tools as documented.
         ...auAcilBayraklari(),
         ...auKohortAraclari(),
+        // AU clinical dietetics beta suite — specialty-only (dietetics). MST score, weight %,
+        // energy/protein kJ, IDDSI, refeeding ticks, enteral rate, person-centred goals.
+        ...auDieteticsAraclari(),
         AU_GROWTH_CHART_REFERENCE,
         AU_KIMLIK_KONTROL_ARACI,
         AU_GIZLILIK_ARACI,

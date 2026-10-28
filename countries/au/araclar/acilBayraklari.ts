@@ -109,7 +109,7 @@ function paket(s: Satir): PaketAraci {
         acil: m('Emergency pathway: call Triple Zero (000) when life or limb is at immediate risk, then give the immediate steps. The clinician decides. Nothing is sent from this screen.'),
       },
       sayilar: { isaretli: m('Signs ticked') },
-      not: m('A record of signs you ticked. Not a diagnosis. TGA advice on checklist tools remains pending (AU-LAUNCH-01b).'),
+      not: m('A record of signs you ticked. Not a diagnosis. Regulatory advice on checklist tools remains pending (AU-LAUNCH-01b).'),
     },
     lisans: {
       durum: 'serbest',

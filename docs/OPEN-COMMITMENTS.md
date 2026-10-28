@@ -2,13 +2,14 @@
 
 ## AU-PEDIATRI-GOLD-01 — bring all AU offered roles toward TR pediatri gold (Claude, 2026-10-28, branch `cursor/au-pediatri-gold-ef6b` → `release/au`)
 
-**Ask:** Based on AU-40-PEDIATRI-AUDIT-01 (mean wow 34, 0/44 Strong), bring every offered AU role to the Turkish pediatrics gold bar — Option A (`.ulke`-native), same pattern as TR’s 39→pediatri parity. Follow-up: bring all to ≥85 Strong.
+**Ask:** Based on AU-40-PEDIATRI-AUDIT-01 (mean wow 34, 0/44 Strong), bring every offered AU role to the Turkish pediatrics gold bar — Option A (`.ulke`-native), same pattern as TR’s 39→pediatri parity. Follow-up: bring all to ≥85 Strong. Follow-up (2026-10-28 evening): unique Australian Araçlar per specialty; **clinical dietetics beta** must impress.
 
 **Shipped (runtime on AU pack):**
 1. `buyume-persentili` ON for `paediatrics` + `family-medicine`; `BuyumeGrafigiKarti` on patient file; NIP + Handbook catch-up; portal chapter per role; 36 clinical-review studios.
 2. **AU-PEDIATRI-GOLD-01a (done):** SOAP locks for all 44 roles (`countries/au/klinik/soapKilitleri.ts` → `notTalimati`); specialty voice clinical focus + Triple Zero pathway (`countries/au/asistan/sesOdak.ts` → `auAsistanKaynakBlogu` / `canliIstem`); **44 specialty-gated danger-sign tools** (`countries/au/araclar/acilBayraklari.ts`).
 3. **AU-PEDIATRI-GOLD-01b (done):** overdue immunisation cohort engine + tool (paeds+GP) and review overdue cohort for every role (`countries/au/araclar/kohort.ts`); companion to `takip-paneli`, nothing sent to AIR. Portal chapters gained a Triple Zero line.
 4. Rescore: **mean wow 87**, **44/44 Strong**, paediatrics **91** (`docs/audits/AU-40-PEDIATRI-AUDIT-01.json`, `public/au-40-pediatri-audit.html`).
+5. **AU-DIETETICS-BETA-01 (done on AU):** BRANŞ-only clinical dietetics suite (`countries/au/araclar/dieteticsTools.ts`) — MST score record (questions not worded), weight-change %, energy/protein in **kJ** (clinician factors, NEMO starting-estimate pattern), IDDSI levels (dietetics + speech-pathology), refeeding ticks, enteral mL/h, person-centred goals. Gated `roller: ['dietetics']` (IDDSI also `speech-pathology`). Units named in pack catalogue. Every offered role already has ≥3 `au-*` role tools (flags / review / college refs); dietetics is the deep clinical beta pack.
 
 **Still OPEN (not blocking Strong spine):**
 | ID | Item | Owner |
@@ -18,9 +19,12 @@
 | AU-PEDIATRI-GOLD-01c | Named AU clinician confirm WHO vs ANZSPED/CDC default for ages 2–18 | Kaan |
 | AU-PEDIATRI-GOLD-01d | M-CHAT / ATS / other licence-gated slots remain off | Kaan (licence) |
 | AU-PEDIATRI-GOLD-01e | us/gb/ca/nz/uz: same depth once each country’s pack is the merge target (this PR is AU-only). Shared EN catalogue gained `buyumeGrafigi` text — regenerate other COUNTRY-PACK-*.md when those branches absorb the EN set. | Claude |
+| AU-DIETETICS-BETA-01a | Practising dietitian sign-off of the seven tools (MST score-only pattern, kJ factors, IDDSI labels, refeeding ticks, enteral arithmetic) before relying on them with patients (`onaysizAciklar`) | Kaan (beta dietitian) |
+| AU-DIETETICS-BETA-01b | us/gb/ca/nz/uz: country-adapted dietetics suite (not a Turkish copy; local malnutrition screens, energy units, dysphagia frameworks). **OPEN GAP** until each pack absorbs. | Claude |
+| AU-ARACLAR-DEPTH-01 | Deeper **clinical** specialty calculators beyond flags/review/refs for non-dietetics AU roles (physio, psychology, OT, audiology, medical specialties) — use dieteticsTools.ts as the template when the next specialty beta is named | Claude |
 
-**Classification:** Core country-depth (AU pack + shared kit mount). Not a TR branş-only change. 40-branch TR parity N/A (AU pack work).
-**Country status:** AU = APPLIED (Strong spine). us/gb/ca/nz/uz = OPEN GAP (01e). TR = reference.
+**Classification:** Specialty-only (dietetics BRANŞ; IDDSI also speech-pathology). AU pack this change. Not TR core spine. 40-branch TR parity N/A.
+**Country status:** AU = APPLIED (dietetics suite + Strong spine). us/gb/ca/nz/uz = OPEN GAP (01e + 01b). TR = reference / N/A for AU-native keys.
 
 ## AU-LAUNCH-01 — Australian launch audit against Kaan's regulatory brief (Claude, 2026-10-24, branch `au-launch` off `release/au`)
 

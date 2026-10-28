@@ -175,8 +175,14 @@ export const AU_SES_ODAK: Readonly<Record<Sunulan, AuSesOdak>> = {
     acil: sifir('immediate risk of suicide or harm to others — call Triple Zero (000) and stay with the person if safe'),
   },
   dietetics: {
-    odak: ['Dietitians Australia standards and Australian Dietary Guidelines.', 'No calorie target invented in speech.'],
-    acil: sifir('suspected refeeding syndrome risk with instability, or anaphylaxis to a food challenge'),
+    odak: [
+      'Dietitians Australia — practising dietitian scope. You do not make a medical diagnosis.',
+      'Malnutrition: MST score is recorded from the form (questions not spoken as a script); ≥2 usually prompts full assessment.',
+      'Energy in kilojoules (kJ), not kilocalories. Factors the dietitian chooses; estimates are a starting point to reassess.',
+      'IDDSI food and drink levels are shared with speech pathology; do not alter framework level meaning.',
+      'Australian Dietary Guidelines and food composition for depth; national sources win on conflict.',
+    ],
+    acil: sifir('suspected refeeding syndrome with instability, anaphylaxis to a food challenge, or uncontrolled vomiting with reduced consciousness'),
   },
   'occupational-therapy': {
     odak: ['Occupational Therapy Australia professional standards.', 'No medical diagnosis.'],

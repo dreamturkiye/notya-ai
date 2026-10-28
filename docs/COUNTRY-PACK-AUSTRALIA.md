@@ -19,8 +19,8 @@ A pack that builds has every text and setting filled in. It says nothing about w
 
 ## What is in this pack, and where it comes from
 
-- **From the shared English set** (`countries/_dil/en/`, written once for five countries): 5673 texts as this pack shows them or hands the model (the country's own, counted in the next line, among them) — the screens, the role names, 40 note templates, the instructions to the model, the intake questions, 169 tools, the landing copy — written in `en-AU` spelling by the set's spelling table.
-- **This country's own** (`countries/au/`, six small files): 42 texts it writes itself (its consent sentence, identifier label, time sentence, date example, name, word for a senior doctor, role names where they differ, what its closed tools are missing and who decides, unit names and tool words it writes differently, the example phone number and the pattern of an amount) and the settings in the table below.
+- **From the shared English set** (`countries/_dil/en/`, written once for five countries): 6595 texts as this pack shows them or hands the model (the country's own, counted in the next line, among them) — the screens, the role names, 40 note templates, the instructions to the model, the intake questions, 222 tools, the landing copy — written in `en-AU` spelling by the set's spelling table.
+- **This country's own** (`countries/au/`, six small files): 46 texts it writes itself (its consent sentence, identifier label, time sentence, date example, name, word for a senior doctor, role names where they differ, what its closed tools are missing and who decides, unit names and tool words it writes differently, the example phone number and the pattern of an amount) and the settings in the table below.
 
 ## Settings — every one unverified
 
@@ -115,7 +115,7 @@ The keys are the shared English key set (`docs/COUNTRY-PACK-ROLE-KEYS.md`). The 
 
 ## Tools
 
-### Switched on (169) — with the unit each measured input takes
+### Switched on (222) — with the unit each measured input takes
 
 Units are a clinical-safety matter. A length or a weight is typed in this pack's unit and converted by the kit with the exact defined factors (1 in = 2.54 cm, 1 lb = 0.45359237 kg); a laboratory value is typed in the unit shown. `countries/au/au.test.ts` runs every tool below with this country's units against the kit's reference result. **Every tool's text is machine-written; each waits on a local clinical lead.**
 
@@ -227,6 +227,59 @@ Units are a clinical-safety matter. A length or a weight is typed in this pack's
 | `au-pain-medicine-review` | Pain medicine review | Pain medicine | no measured input |
 | `au-podiatry-review` | Podiatry review | Podiatrist | no measured input |
 | `au-speech-pathology-review` | Speech pathology review | Speech pathologist | no measured input |
+| `au-emergency-medicine-flags` | Emergency medicine danger signs | Emergency medicine | no measured input |
+| `au-family-medicine-flags` | General practice danger signs | General practice | no measured input |
+| `au-anaesthesia-flags` | Anaesthesia danger signs | Anaesthesia | no measured input |
+| `au-neurosurgery-flags` | Neurosurgery danger signs | Neurosurgery | no measured input |
+| `au-paediatric-surgery-flags` | Paediatric surgery danger signs | Paediatric surgery | no measured input |
+| `au-internal-medicine-flags` | General medicine danger signs | General medicine | no measured input |
+| `au-dermatology-flags` | Dermatology danger signs | Dermatology | no measured input |
+| `au-endocrinology-flags` | Endocrinology danger signs | Endocrinology | no measured input |
+| `au-infectious-diseases-flags` | Infectious diseases danger signs | Infectious diseases | no measured input |
+| `au-gastroenterology-flags` | Gastroenterology danger signs | Gastroenterology and hepatology | no measured input |
+| `au-general-surgery-flags` | General surgery danger signs | General surgery | no measured input |
+| `au-respiratory-medicine-flags` | Respiratory danger signs | Respiratory and sleep medicine | no measured input |
+| `au-ophthalmology-flags` | Ophthalmology danger signs | Ophthalmology | no measured input |
+| `au-obstetrics-gynaecology-flags` | Obstetrics and gynaecology danger signs | Obstetrics and gynaecology | no measured input |
+| `au-cardiology-flags` | Cardiology danger signs | Cardiology | no measured input |
+| `au-otolaryngology-flags` | Ear, nose and throat danger signs | Otolaryngology – head and neck surgery | no measured input |
+| `au-nephrology-flags` | Nephrology danger signs | Nephrology | no measured input |
+| `au-neurology-flags` | Neurology danger signs | Neurology | no measured input |
+| `au-oncology-flags` | Medical oncology danger signs | Medical oncology | no measured input |
+| `au-orthopaedics-flags` | Orthopaedic danger signs | Orthopaedic surgery | no measured input |
+| `au-paediatrics-flags` | Paediatrics danger signs | Paediatrics and child health | no measured input |
+| `au-plastic-surgery-flags` | Plastic surgery danger signs | Plastic surgery | no measured input |
+| `au-psychiatry-flags` | Psychiatry safety signs | Psychiatry | no measured input |
+| `au-radiology-flags` | Radiology danger signs | Radiology | no measured input |
+| `au-rheumatology-flags` | Rheumatology danger signs | Rheumatology | no measured input |
+| `au-urology-flags` | Urology danger signs | Urology | no measured input |
+| `au-sports-medicine-flags` | Sport and exercise danger signs | Sport and exercise medicine | no measured input |
+| `au-rehabilitation-medicine-flags` | Rehabilitation medicine danger signs | Rehabilitation medicine | no measured input |
+| `au-cardio-thoracic-surgery-flags` | Cardio-thoracic surgery danger signs | Cardio-thoracic surgery | no measured input |
+| `au-vascular-surgery-flags` | Vascular surgery danger signs | Vascular surgery | no measured input |
+| `au-radiation-oncology-flags` | Radiation oncology danger signs | Radiation oncology | no measured input |
+| `au-geriatric-medicine-flags` | Geriatric medicine danger signs | Geriatric medicine | no measured input |
+| `au-immunology-and-allergy-flags` | Immunology and allergy danger signs | Immunology and allergy | no measured input |
+| `au-haematology-flags` | Haematology danger signs | Haematology | no measured input |
+| `au-pain-medicine-flags` | Pain medicine danger signs | Pain medicine | no measured input |
+| `au-aesthetic-surgery-flags` | Cosmetic surgery danger signs | Cosmetic surgery | no measured input |
+| `au-aesthetic-medicine-flags` | Non-surgical cosmetic danger signs | Non-surgical cosmetic procedures | no measured input |
+| `au-physiotherapy-flags` | Physiotherapy danger signs | Physiotherapist | no measured input |
+| `au-clinical-psychology-flags` | Clinical psychology safety signs | Psychologist | no measured input |
+| `au-dietetics-flags` | Dietetics danger signs | Dietitian | no measured input |
+| `au-occupational-therapy-flags` | Occupational therapy danger signs | Occupational therapist | no measured input |
+| `au-audiology-flags` | Audiology danger signs | Audiologist | no measured input |
+| `au-podiatry-flags` | Podiatry danger signs | Podiatrist | no measured input |
+| `au-speech-pathology-flags` | Speech pathology danger signs | Speech pathologist | no measured input |
+| `au-immunisation-cohort` | Overdue immunisation check (NIP age milestones) | Paediatrics and child health, General practice | no measured input |
+| `au-review-cohort` | Overdue clinical review check | Emergency medicine, General practice, Anaesthesia, Neurosurgery, Paediatric surgery, General medicine, Dermatology, Endocrinology, Infectious diseases, Gastroenterology and hepatology, General surgery, Respiratory and sleep medicine, Ophthalmology, Obstetrics and gynaecology, Cardiology, Otolaryngology – head and neck surgery, Nephrology, Neurology, Medical oncology, Orthopaedic surgery, Paediatrics and child health, Plastic surgery, Psychiatry, Radiology, Rheumatology, Urology, Sport and exercise medicine, Rehabilitation medicine, Cardio-thoracic surgery, Vascular surgery, Radiation oncology, Geriatric medicine, Immunology and allergy, Haematology, Pain medicine, Cosmetic surgery, Non-surgical cosmetic procedures, Physiotherapist, Psychologist, Dietitian, Occupational therapist, Audiologist, Podiatrist, Speech pathologist | no measured input |
+| `au-mst-score` | Malnutrition Screening Tool (MST): record the score | Dietitian | no measured input |
+| `au-weight-change` | Weight change (kg and %) | Dietitian | Usual or earlier weight: **kg**; Current weight: **kg** |
+| `au-energy-protein` | Estimated energy (kJ) and protein | Dietitian | Weight used for the estimate: **kg**; Kilojoules per kilogram per day (your factor): **kJ/kg**; Grams of protein per kilogram per day (your factor): **g/kg** · result in kJ, g |
+| `au-iddsi-record` | IDDSI food and drink levels | Dietitian, Speech pathologist | no measured input |
+| `au-refeeding-risk` | Refeeding risk signs (dietitian ticks) | Dietitian | no measured input |
+| `au-enteral-rate` | Enteral feed rate (mL/h) | Dietitian | Total volume for the period: **mL**; Hours over which that volume will run: **hours** · result in mL/h |
+| `au-nutrition-goals` | Nutrition care goals (with the client) | Dietitian | no measured input |
 | `au-growth-chart-reference` | Which growth chart to use | every role | no measured input |
 | `au-identifier-check` | Medicare card and provider number check | every role | no measured input |
 | `au-privacy-principles` | Privacy Act record | every role | no measured input |
