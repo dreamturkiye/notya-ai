@@ -1,3 +1,5 @@
+import { JsonLd } from "@/components/doktor-landing/JsonLd";
+import { doktorYapisalVeri } from "@/lib/seo/doktor";
 import { SiteNav } from "@/components/doktor-landing/site-nav";
 import { Hero } from "@/components/doktor-landing/hero";
 import { DemoSection } from "@/components/doktor-landing/demo-section";
@@ -22,6 +24,7 @@ import { SiteFooter } from "@/components/doktor-landing/site-footer";
 export default function DoktorLandingPage() {
   return (
     <div className="relative bg-paper text-ink">
+      <JsonLd veri={doktorYapisalVeri()} />
       <SiteNav />
       <main>
         <Hero />
