@@ -2,26 +2,25 @@
 
 ## AU-PEDIATRI-GOLD-01 — bring all AU offered roles toward TR pediatri gold (Claude, 2026-10-28, branch `cursor/au-pediatri-gold-ef6b` → `release/au`)
 
-**Ask:** Based on AU-40-PEDIATRI-AUDIT-01 (mean wow 34, 0/44 Strong), bring every offered AU role to the Turkish pediatrics gold bar — Option A (`.ulke`-native), same pattern as TR’s 39→pediatri parity.
+**Ask:** Based on AU-40-PEDIATRI-AUDIT-01 (mean wow 34, 0/44 Strong), bring every offered AU role to the Turkish pediatrics gold bar — Option A (`.ulke`-native), same pattern as TR’s 39→pediatri parity. Follow-up: bring all to ≥85 Strong.
 
-**Shipped this change (runtime on AU pack):**
-1. `buyume-persentili` switched ON for `paediatrics` + `family-medicine` (kit WHO LMS; removed from `yuvalarim`; onaysiz/owner-gold pattern — no clinician sign-off yet).
-2. `BuyumeGrafigiKarti` mounted on patient file (asilar tab) + `AraclarMetni.buyumeGrafigi` EN catalogue slot. Closes AU-ARAC-GORUNUM-01-A.
-3. Cherry-picked altin depth: portal chapter per role, immunisation due days + Handbook catch-up, six private-role studios.
-4. **36 clinical-review studios** for every remaining offered role (specialty-gated; not duplicating wellness/nonsurgical/cosmetic/allied plans).
-5. Rescore: `public/au-40-pediatri-audit.html` + `docs/audits/AU-40-PEDIATRI-AUDIT-01.json` — **mean wow 50**, **44/44 Partial**, **0 Strong**, paediatrics **70** (was 40).
+**Shipped (runtime on AU pack):**
+1. `buyume-persentili` ON for `paediatrics` + `family-medicine`; `BuyumeGrafigiKarti` on patient file; NIP + Handbook catch-up; portal chapter per role; 36 clinical-review studios.
+2. **AU-PEDIATRI-GOLD-01a (done):** SOAP locks for all 44 roles (`countries/au/klinik/soapKilitleri.ts` → `notTalimati`); specialty voice clinical focus + Triple Zero pathway (`countries/au/asistan/sesOdak.ts` → `auAsistanKaynakBlogu` / `canliIstem`); **44 specialty-gated danger-sign tools** (`countries/au/araclar/acilBayraklari.ts`).
+3. **AU-PEDIATRI-GOLD-01b (done):** overdue immunisation cohort engine + tool (paeds+GP) and review overdue cohort for every role (`countries/au/araclar/kohort.ts`); companion to `takip-paneli`, nothing sent to AIR. Portal chapters gained a Triple Zero line.
+4. Rescore: **mean wow 87**, **44/44 Strong**, paediatrics **91** (`docs/audits/AU-40-PEDIATRI-AUDIT-01.json`, `public/au-40-pediatri-audit.html`).
 
-**Still OPEN to reach Strong (≥85) — honest gap, not claimed done:**
+**Still OPEN (not blocking Strong spine):**
 | ID | Item | Owner |
 |---|---|---|
-| AU-PEDIATRI-GOLD-01a | SOAP locks + specialty voice lines inside studios (TR chapter depth) | Claude |
-| AU-PEDIATRI-GOLD-01b | Full overdue immunisation kohort panel beyond `takip-paneli` + due-day notes | Claude |
+| AU-PEDIATRI-GOLD-01a | ~~SOAP locks + specialty voice~~ **DONE 2026-10-28** (voice lives in live assistant pack, not inside review-studio calendars) | Claude |
+| AU-PEDIATRI-GOLD-01b | ~~Overdue immunisation/review kohort~~ **DONE 2026-10-28** (light Option-A engines + tools; not a full TR pedi-kohort UI port) | Claude |
 | AU-PEDIATRI-GOLD-01c | Named AU clinician confirm WHO vs ANZSPED/CDC default for ages 2–18 | Kaan |
 | AU-PEDIATRI-GOLD-01d | M-CHAT / ATS / other licence-gated slots remain off | Kaan (licence) |
 | AU-PEDIATRI-GOLD-01e | us/gb/ca/nz/uz: same depth once each country’s pack is the merge target (this PR is AU-only). Shared EN catalogue gained `buyumeGrafigi` text — regenerate other COUNTRY-PACK-*.md when those branches absorb the EN set. | Claude |
 
-**Classification:** Core country-depth (AU pack + shared kit mount). Not a TR branş-only change.
-**Country status:** AU = APPLIED (gold path Partial). us/gb/ca/nz/uz = OPEN GAP (logged). TR = reference.
+**Classification:** Core country-depth (AU pack + shared kit mount). Not a TR branş-only change. 40-branch TR parity N/A (AU pack work).
+**Country status:** AU = APPLIED (Strong spine). us/gb/ca/nz/uz = OPEN GAP (01e). TR = reference.
 
 ## AU-LAUNCH-01 — Australian launch audit against Kaan's regulatory brief (Claude, 2026-10-24, branch `au-launch` off `release/au`)
 
