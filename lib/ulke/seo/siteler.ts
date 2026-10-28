@@ -28,12 +28,16 @@ export function kendiSite(): Site {
   return o && /^https:\/\/[a-z0-9.-]+(:\d+)?$/i.test(o) ? { ...s, origin: o } : s
 }
 
-/** hreflang map: this site always; sister sites only when named in NOTYA_HREFLANG_SITES ("au,us,gb"), so we never point at a noindex site. */
+/**
+ * hreflang map: this site always (+ 'x-default', same URL — the safe fallback for a visitor whose
+ * locale matches none of the alternates); sister sites only when named in NOTYA_HREFLANG_SITES
+ * ("au,us,gb"), so we never point at a noindex site.
+ */
 export function hreflangHaritasi(yol: string): Record<string, string> {
   const kendi = kendiSite()
   const kod = ulkePaketi().kod as string
   const liste = (process.env.NOTYA_HREFLANG_SITES ?? '').split(',').map((x) => x.trim()).filter((x) => x && x !== kod && SITELER[x])
-  const out: Record<string, string> = { [kendi.hreflang]: mutlakAdres(kendi, yol) }
+  const out: Record<string, string> = { [kendi.hreflang]: mutlakAdres(kendi, yol), 'x-default': mutlakAdres(kendi, yol) }
   for (const k of liste) out[SITELER[k].hreflang] = mutlakAdres(SITELER[k], yol)
   return out
 }
