@@ -3,11 +3,12 @@
  * patient-side operations additionally by patient_id). Called by:
  *   • the portal route   app/api/portal/hasta/[token]/randevu      (patient, token's doctor + patient)
  *   • the e-mail links   app/api/randevu/eylem                       (one signed appointment)
- *   • the practice route app/api/doktor/randevu-portal/talepler      (doktor + sekreter, pratikOturum)
+ *   • the practice route app/api/doktor/randevu-portal/talepler      (doktor + sekreter + hasta_danismani, pratikOturum)
  *   • the cron           app/api/cron/randevu-v2                     (jobs + escalation)
  * Fail-soft until migration 116 is applied: settings read as OFF, so nothing here is reachable.
  */
 import type { SupabaseClient } from '@supabase/supabase-js'
+import type { PratikRol } from '@/lib/doktor/personelYetki'
 import { RESMI_TATILLER_2026 } from '@/lib/randevu/resmiTatiller'
 import { doktorIletisimAyari, hastaAdiCoz, hastaIletisimi, tabloYokMu, type DoktorIletisimAyari } from '@/lib/iletisim/sunucu'
 import { sessizSaatMi } from '@/lib/iletisim/otomatikGonderim'
@@ -143,7 +144,10 @@ export async function mevcutHastaMi(sb: Sb, doktorId: string, patientId: string)
 
 // ── Event log and jobs ───────────────────────────────────────────────────────────────────────────────
 
-export type Yapan = 'hasta' | 'doktor' | 'sekreter' | 'sistem'
+// 'doktor' | 'sekreter' | 'asistan' | 'hasta_danismani' via PratikRol (MOBIL-PERSONEL-01) — 'portal.baglanti'
+// already lets hasta_danismani answer portal requests through pratikIslem below; this is the audit/event-log
+// field for who acted, not an access gate, so it must cover every practice role, not a stale subset.
+export type Yapan = 'hasta' | PratikRol | 'sistem'
 
 export async function olayYaz(sb: Sb, o: { randevuId: string; doktorId: string; olay: string; yapan: Yapan; yapanId?: string | null; detay?: Record<string, unknown> }): Promise<void> {
   await sb.from('randevu_olaylari').insert({
@@ -216,7 +220,7 @@ export async function talepOlustur(sb: Sb, g: { doktorId: string; patientId: str
 
 export type PratikIslemi = 'onayla' | 'oner' | 'reddet'
 
-export async function pratikIslem(sb: Sb, g: { doktorId: string; randevuId: string; islem: PratikIslemi; baslangic?: string; yapan: 'doktor' | 'sekreter'; yapanId: string; simdi?: number }): Promise<Islem> {
+export async function pratikIslem(sb: Sb, g: { doktorId: string; randevuId: string; islem: PratikIslemi; baslangic?: string; yapan: PratikRol; yapanId: string; simdi?: number }): Promise<Islem> {
   const simdi = g.simdi ?? Date.now()
   const r = await satirGetir(sb, g.doktorId, g.randevuId)
   if (!r) return hata(404, MESAJ.yok)
