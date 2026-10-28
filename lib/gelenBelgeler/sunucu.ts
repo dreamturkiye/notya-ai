@@ -21,6 +21,7 @@ import { servisSupabase } from '@/lib/doktor/serverAuth'
 import { hastaSahibiMi } from '@/lib/doktor/hastaSahipligi'
 import { aiKotaKullan } from '@/lib/doktor/hizLimiti'
 import { belgeTuruIzinliMi, belgeTurleriIcinBrans } from '@/lib/doktor/belgeTurleri'
+import type { PratikRol } from '@/lib/doktor/personelYetki'
 import { uploadDocument, VaultValidationError, VaultAccessError } from '@/lib/vault/service'
 import { hazirla, BicimHatasi, VARSAYILAN_DONUSTURUCULER, type Donusturuculer, type GelenDosya } from './donustur'
 import { belgeyiOku, bosOkuma } from './okuma'
@@ -245,7 +246,10 @@ export async function hastaAra(sb: SupabaseClient, doktorId: string, sorgu: stri
     .map((h) => ({ id: h.id, ad: h.ad, dogum: h.dogum }))
 }
 
-export type Isleyen = { userId: string; personelId: string | null; rol: 'doktor' | 'sekreter' }
+// rol is the full PratikRol (MOBIL-PERSONEL-01): gelenBelgeOturum only ever lets 'doktor' or 'sekreter'
+// through today (gelenBelgeErisimi), but this is an audit/who-filed-it field, not an access gate — it
+// must accept whatever practice role pratikOturum() hands it, not a stale subset of it.
+export type Isleyen = { userId: string; personelId: string | null; rol: PratikRol }
 
 export type DosyalamaSonucu =
   | { ok: true; belgeId: string; patientId: string; belgeTuru: string }
