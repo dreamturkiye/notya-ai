@@ -1232,6 +1232,37 @@ export type AraclarMetni = {
     readonly birim: Readonly<{ kilo: string; boy: string; basCevresi: string }>
     readonly kaynak: string
   }
+  /**
+   * AU-DIETETICS-TREND-01 — adult anthropometry trend (weight, waist, BMI) on the patient's file when the pack
+   * names `UlkeAraclari.antropometriTrendAraci`. Absent = no trend card is mounted.
+   */
+  readonly antropometriTrend?: {
+    readonly baslik: string
+    readonly bos: string
+    readonly parametreAdi: Readonly<{ agirlik: string; bel: string; bmi: string }>
+    readonly birim: Readonly<{ agirlik: string; bel: string; bmi: string }>
+    readonly kaynak: string
+  }
+  /**
+   * AU-DIETETICS-MEAL-01 — meal plan + food diary card on the dietitian's patient file when the pack names
+   * `uygulama.portal.beslenme` and the role can open the meal-plan tool. Absent = no card.
+   */
+  readonly beslenmeDosya?: {
+    readonly baslik: string
+    readonly planBaslik: string
+    readonly planYok: string
+    readonly gunlukBaslik: string
+    readonly gunlukYok: string
+    readonly kahvalti: string
+    readonly ogle: string
+    readonly aksam: string
+    readonly atistirmalik: string
+    readonly notlar: string
+    readonly planAc: string
+    readonly gunlukAc: string
+    readonly ogunAdi: Readonly<Record<string, string>>
+    readonly kimAdi: Readonly<Record<string, string>>
+  }
 }
 
 /**

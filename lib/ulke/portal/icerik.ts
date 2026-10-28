@@ -33,7 +33,10 @@ import type { PortalOturumu } from './giris'
 import { hastaninSonIstegi, istekAcik, istekGunleri } from './istek'
 import { hastaFormuOzeti } from '../intake/form'
 import { formAcik } from '../intake/icerik'
+import { aktifAracIcerigi, hastaninAracKayitlari } from '../araclar/kayit'
+import { hesabinAraci } from '../araclar/paket'
 import { portalBolumu } from './bolum'
+import { portalOgunPlani, portalYemekGunlugu } from './beslenme'
 import type { PortalIcerigi } from './tipler'
 
 export type { PortalIcerigi } from './tipler'
@@ -104,11 +107,24 @@ export async function portalIcerigi(o: PortalOturumu, simdi = Date.now()): Promi
     takipler = ((data as { takip_tarihi: string | null }[] | null) ?? []).flatMap((s) => (typeof s.takip_tarihi === 'string' ? [s.takip_tarihi] : []))
   }
   const bolum = portalBolumu(rol, bugun, takipler)
+  let beslenme: PortalIcerigi['beslenme'] | undefined
+  const beslenmeAyar = paket.uygulama?.portal?.beslenme
+  // Dietetics (or any role that can open the pack's meal-plan tool) only — never show an empty meal tab for cardiology.
+  const aracIcerik = ozellikAcik('araclar') ? aktifAracIcerigi() : null
+  if (beslenmeAyar && aracIcerik && hesabinAraci(aracIcerik, rol, beslenmeAyar.planAraci)) {
+    const kayitlar = await hastaninAracKayitlari(supabase, doktorId, hastaId)
+    if (kayitlar) {
+      const plan = portalOgunPlani(kayitlar, beslenmeAyar.planAraci)
+      const gunluk = portalYemekGunlugu(kayitlar, beslenmeAyar.gunlukAraci)
+      beslenme = { etiket: beslenmeAyar.etiket, plan, gunluk, gunlukYazabilir: true }
+    }
+  }
   return {
     dil: uygulamaDiliMi(dil) ? dil : paket.varsayilanDil,
     hasta: { ad: [hasta.ad, hasta.otaIsmi].filter(Boolean).join(' ') },
     hekim: { ad: String((hesap as { full_name?: unknown }).full_name ?? ''), rol: (rol ? rolAdi(rol, dil) : null) ?? '' },
     ...(bolum ? { bolum } : {}),
+    ...(beslenme ? { beslenme } : {}),
     randevular,
     saatDilimi: (paket.uygulama?.saatDilimleri.length ?? 1) > 1 ? dilim : null,
     ozetler,

@@ -161,15 +161,15 @@ export const AU_SOAP_KILITLERI: Readonly<Record<Sunulan, AuSoapKilidi>> = {
   'clinical-psychology': muttefik,
   dietetics: {
     bolumler: [
-      's — Reason for dietetic care and dietary history as the client reported; who spoke if a carer gave history.',
-      'o — Weights, intake observations, MST score if assessed, IDDSI levels if recorded — only as said or measured at the visit.',
-      'a — The dietitian\'s own nutrition assessment as said. Make no medical diagnosis; if a referring doctor\'s diagnosis was named, write it only in the field meant for it.',
-      'p — Nutrition goals, texture advice, estimated energy/protein factors discussed, and follow-up as said. No medicine dose.',
+      's — ADIME Assessment (history): reason for dietetic care, diet history, intolerances and weight change as the client reported; who spoke if a carer gave history.',
+      'o — ADIME Assessment (measures): weight, height, waist, body composition, MST score if assessed, IDDSI levels if recorded — only as said or measured at the visit.',
+      'a — ADIME Nutrition Diagnosis: the dietitian\'s PES statement (problem; etiology; signs/symptoms) as said. Make no medical diagnosis; if a referring doctor\'s diagnosis was named, write it only in the referral field.',
+      'p — ADIME Intervention and Monitoring/Evaluation: nutrition intervention, meal or texture advice, goals, and what will be reviewed next — only as said. No medicine dose.',
     ],
     kirilmaz: [
       ...ORTAK_KIRILMAZ,
-      'This note is not a medical diagnosis. If a referring doctor\'s diagnosis was named, write it only in the field meant for it.',
-      'Do not invent an MST score, IDDSI level, kilojoule target or protein target that was not assessed or agreed at the visit.',
+      'This note is not a medical diagnosis. Nutrition diagnosis (PES) is the dietitian\'s own statement. If a referring doctor\'s diagnosis was named, write it only in the field meant for it.',
+      'Do not invent an MST score, IDDSI level, kilojoule target, protein target or PES statement that was not assessed or agreed at the visit.',
       'Energy is discussed in kilojoules when numbers are used. Do not convert units.',
     ],
   },

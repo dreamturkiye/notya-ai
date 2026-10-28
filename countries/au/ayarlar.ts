@@ -390,6 +390,8 @@ export const AU_GIRDI: EnUlkeGirdisi = {
     // metinler.ts's own (AU_ASI_TAKVIMI_ARACI) — this field only tells the shared screen which tool to read that
     // way; it names no content.
     takvimliListeAraci: 'au-immunisation-schedule',
+    // AU dietetics beta, 2026-10-28 — adult anthropometry trend on the patient file from kept au-body-size results.
+    antropometriTrendAraci: 'au-body-size',
   },
   acilis: {
     // THE EXAMPLE PHONE NUMBER — UNVERIFIED. One of the mobile numbers the communications regulator sets aside for

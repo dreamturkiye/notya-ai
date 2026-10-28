@@ -17,6 +17,7 @@ import { enMesajAyarlari } from '../_dil/en/mesaj'
 import { medicareKartGecerli } from './kimlik'
 import { AU_ROL_LISTESI } from './klinik/rolListesi'
 import { AU_RESMI_GUNLER } from './resmiGunler'
+import { AU_BESLENME_ETIKET } from './portalBeslenmeEtiket'
 import { AU_PORTAL_BOLUMLERI } from './portalBolumleri'
 import { AU_UZANTI } from './uzanti'
 import { AU_BIRIMLER, AU_VELI_YASI } from './temel'
@@ -137,6 +138,8 @@ export const AU_PAKETI: UlkePaketi = {
       baglantiGecerlilikGun: 30,
       acilNumara: '000',
       bolumler: AU_PORTAL_BOLUMLERI,
+      // AU dietetics beta — meal plan + food diary on the patient portal (tool keys; shared UI never hard-codes them).
+      beslenme: { planAraci: 'au-meal-plan', gunlukAraci: 'au-food-diary', etiket: AU_BESLENME_ETIKET },
       tarihEtiket: 'Next review',
       durumEtiket: { gecikti: 'Overdue', bugun: 'Today', yaklasiyor: 'Coming up', planli: 'Planned' },
     },

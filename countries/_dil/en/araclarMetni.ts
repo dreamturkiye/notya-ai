@@ -106,6 +106,42 @@ export const EN_ARACLAR_METNI_TEMEL: AraclarMetni = {
     birim: { kilo: 'kg', boy: 'cm', basCevresi: 'cm' },
     kaynak: 'Bands: WHO Child Growth Standards (2006) and WHO Growth Reference (2007). Points are measurements kept with the WHO growth-percentiles tool.',
   },
+  antropometriTrend: {
+    baslik: 'Anthropometry trend',
+    bos: 'No adult body-size measurement has been kept for this patient yet. Use the body size tool, then return here.',
+    parametreAdi: {
+      agirlik: 'Weight',
+      bel: 'Waist',
+      bmi: 'Body mass index',
+    },
+    birim: { agirlik: 'kg', bel: 'cm', bmi: 'kg/m²' },
+    kaynak: 'Points are measurements kept with this pack\'s adult body-size tool (weight in kg, waist in cm, BMI to one decimal). Waist limits stay on that tool\'s own result.',
+  },
+  beslenmeDosya: {
+    baslik: 'Meal plan & food diary',
+    planBaslik: 'Current meal plan',
+    planYok: 'No meal plan kept yet. Open the meal-plan tool to write breakfast, lunch, dinner and snacks.',
+    gunlukBaslik: 'Recent food diary',
+    gunlukYok: 'No diary entries yet. You or the patient can add a short intake note.',
+    kahvalti: 'Breakfast',
+    ogle: 'Lunch',
+    aksam: 'Dinner',
+    atistirmalik: 'Snacks',
+    notlar: 'Notes for the patient',
+    planAc: 'Write or replace meal plan',
+    gunlukAc: 'Add food-diary entry',
+    ogunAdi: {
+      kahvalti: 'Breakfast',
+      ogle: 'Lunch',
+      aksam: 'Dinner',
+      atistirmalik: 'Snack',
+      diger: 'Other',
+    },
+    kimAdi: {
+      diyetisyen: 'Dietitian',
+      hasta: 'Patient',
+    },
+  },
 }
 
 /** The tools area's catalogue in a country's form of English. */

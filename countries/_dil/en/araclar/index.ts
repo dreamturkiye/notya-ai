@@ -183,6 +183,11 @@ export type EnAraclarGirdisi = {
    * `UlkeAraclari.takvimliListeAraci`; absent = every kept result stays in the flat list.
    */
   takvimliListeAraci?: string | null
+  /**
+   * AU-DIETETICS-TREND-01 — body-size tool key for the adult anthropometry trend card. See
+   * `UlkeAraclari.antropometriTrendAraci`.
+   */
+  antropometriTrendAraci?: string | null
 }
 
 /** The units a laboratory quantity is typed in here: the country's one unit, or each unit it accepts. */
@@ -270,5 +275,6 @@ export function enAraclar(g: EnAraclarGirdisi): UlkeAraclari {
     ...(g.ek?.olculer ? { olculer: g.ek.olculer } : {}),
     ...(g.lisansTam !== undefined ? { lisansTam: g.lisansTam } : {}),
     ...(g.takvimliListeAraci !== undefined ? { takvimliListeAraci: g.takvimliListeAraci } : {}),
+    ...(g.antropometriTrendAraci !== undefined ? { antropometriTrendAraci: g.antropometriTrendAraci } : {}),
   }
 }

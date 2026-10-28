@@ -41,6 +41,45 @@ export type PortalIcerigi = {
     durumEtiket: Readonly<Record<'gecikti' | 'bugun' | 'yaklasiyor' | 'planli', string>>
     tarihler: readonly { gun: string; durum: 'gecikti' | 'bugun' | 'yaklasiyor' | 'planli' }[]
   }
+  /**
+   * AU-DIETETICS-MEAL-01 — current meal plan + recent food-diary entries for the patient to read
+   * (and to add a diary line). Absent when the pack names no beslenme tools or the role has none kept.
+   */
+  beslenme?: {
+    /** Pack-supplied labels so the portal catalogue need not gain required keys for every country. */
+    etiket: {
+      sekmeBaslik: string
+      planBaslik: string
+      planYok: string
+      kahvalti: string
+      ogle: string
+      aksam: string
+      atistirmalik: string
+      notlar: string
+      gunlukBaslik: string
+      gunlukYok: string
+      gunlukEkle: string
+      gun: string
+      ogun: string
+      aciklama: string
+      kaydet: string
+      kaydedildi: string
+      kaydedilemedi: string
+      ogunAdi: Readonly<Record<string, string>>
+      kimAdi: Readonly<Record<string, string>>
+    }
+    plan: {
+      gun: string
+      kahvalti: string
+      ogle: string
+      aksam: string
+      atistirmalik: string
+      notlar: string
+    } | null
+    gunluk: readonly { gun: string; ogun: string; aciklama: string; kim: string }[]
+    /** true = the patient may add a diary entry from this page. */
+    gunlukYazabilir: boolean
+  }
   /** When this session ends. */
   bitis: string
 }

@@ -10,8 +10,10 @@ import {
   AU_DIYET_ANAHTARLARI,
   AU_ENERJI_PROTEIN,
   AU_ENTERAL,
+  AU_FOOD_DIARY,
   AU_IDDSI,
   AU_KILO_DEGISIM,
+  AU_MEAL_PLAN,
   AU_MST,
   AU_NUTRITION_GOALS,
   AU_NUTRITION_LABS,
@@ -27,9 +29,9 @@ const O = { bugun: '2026-10-28', p: {} }
 const kos = (t: typeof AU_MST, g: Record<string, unknown>) => t.hesapla(g as never, O)
 
 describe('AU clinical dietetics Araçlar (beta suite)', () => {
-  it('eight specialty-only tools are wired for dietetics alone', () => {
-    assert.equal(AU_DIYET_ANAHTARLARI.length, 8)
-    assert.equal(auDieteticsAraclari().length, 8)
+  it('ten specialty-only tools are wired for dietetics alone', () => {
+    assert.equal(AU_DIYET_ANAHTARLARI.length, 10)
+    assert.equal(auDieteticsAraclari().length, 10)
     for (const k of AU_DIYET_ANAHTARLARI) {
       const p = A.araclar.find((x) => x.anahtar === k)
       assert.ok(p, k)
@@ -119,6 +121,34 @@ describe('AU clinical dietetics Araçlar (beta suite)', () => {
     assert.equal(p.metin.bantlar, undefined)
     assert.match(p.metin.uyarilar!.lab_kayit['en-AU']!, /not a diagnosis/i)
     assert.doesNotMatch(p.metin.aciklama['en-AU']!, /\bnormal range\b/i)
+  })
+
+  it('meal plan: needs a date and at least one meal slot; empty slots warn', () => {
+    assert.equal(kos(AU_MEAL_PLAN, { plan_tarihi: '2026-10-28' }).uyarilar[0], 'plan_bos')
+    const r = kos(AU_MEAL_PLAN, {
+      plan_tarihi: '2026-10-28',
+      kahvalti: 'Oats + milk',
+      ogle: 'Chicken salad',
+      aksam: '',
+      atistirmalik: 'Yoghurt',
+    })
+    assert.equal(r.tamam, true)
+    assert.equal(r.sayilar.find((s) => s.anahtar === 'dolu')?.deger, 3)
+    assert.deepEqual(r.uyarilar, ['portal'])
+    assert.equal(kos(AU_MEAL_PLAN, { kahvalti: 'toast' }).tamam, false)
+  })
+
+  it('food diary: dated meal + description + who wrote it', () => {
+    assert.equal(kos(AU_FOOD_DIARY, { gun: '2026-10-28', ogun: 'kahvalti', aciklama: '', kim: 'diyetisyen' }).tamam, false)
+    const r = kos(AU_FOOD_DIARY, {
+      gun: '2026-10-28',
+      ogun: 'ogle',
+      aciklama: 'Half a sandwich, apple',
+      kim: 'hasta',
+    })
+    assert.equal(r.tamam, true)
+    assert.deepEqual(r.uyarilar, ['portal'])
+    assert.equal(r.tarihler[0]?.tarih, '2026-10-28')
   })
 
   it('copy never invents a prescribed calorie target or medical diagnosis', () => {

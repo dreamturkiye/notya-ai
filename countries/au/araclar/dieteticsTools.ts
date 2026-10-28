@@ -9,8 +9,9 @@
  * Built for an Australian clinical dietitian (Dietitians Australia member) beta: malnutrition screening
  * score record, weight-change arithmetic, energy/protein starting estimates (kJ — AU
  * practice), IDDSI level record (CC BY-SA), refeeding risk ticks, enteral rate, person-
- * centred nutrition goals, and nutrition-relevant lab value recording (no invented
- * intervals). No meal plan stored. No medicine dose. No medical diagnosis.
+ * centred nutrition goals, nutrition-relevant lab value recording (no invented
+ * intervals), a structured meal plan, and a short food diary. No medicine dose.
+ * No medical diagnosis. No AUSNUT food database in this version.
  *
  * Licence notes (read 2026-10-28):
  * - MST: score recorded only (ECOG pattern); question wording is NOT reproduced — read
@@ -20,7 +21,7 @@
  *   Starting point only (Queensland Health NEMO estimating-requirements practice).
  */
 import type { AracGirdisi, AracTanimi, PaketAraci } from '@/lib/ulke/araclar/tipler'
-import { BOS_SONUC, isaret, isaretliler, puan, sayi, sayiMi, secim } from '@/lib/ulke/araclar/yardimci'
+import { BOS_SONUC, gunMu, isaret, isaretliler, metin, puan, sayi, sayiMi, secim, tarih } from '@/lib/ulke/araclar/yardimci'
 
 const D = 'en-AU'
 const m = (metin: string) => ({ [D]: metin })
@@ -34,7 +35,7 @@ const IDDSI_KAYNAK =
   'https://iddsi.org/standards/framework (read 2026-10-28): © The International Dysphagia Diet Standardisation Initiative 2019. Licensed under Creative Commons BY-SA 4.0. Level numbers only; framework descriptors are not altered or extended.'
 const NEMO_KAYNAK =
   'https://www.health.qld.gov.au/nutrition (read 2026-10-28): Queensland Health NEMO nutrition support materials emphasise prediction equations as a starting point with regular reassessment. This tool multiplies the weight by the kilojoule-per-kilogram and protein-per-kilogram factors the dietitian enters; it copies no condition table.'
-const DIYET_KAYNAK = 'https://dietitiansaustralia.org.au/ (read 2026-10-28): Dietitians Australia — practising dietitian scope. No meal plan and no dose is stored.'
+const DIYET_KAYNAK = 'https://dietitiansaustralia.org.au/ (read 2026-10-28): Dietitians Australia — practising dietitian scope. Meal plan and food diary store clinician/patient wording only — no food composition database and no dose.'
 
 /** Round kJ to nearest 100 (NEMO bedside practice). */
 export function yuvarlaKj(kj: number): number {
@@ -328,6 +329,74 @@ export const AU_NUTRITION_LABS: AracTanimi = {
   },
 }
 
+// ─── 9. Meal plan (breakfast / lunch / dinner / snacks) ─────────────────────
+
+/**
+ * Structured meal plan the dietitian keeps on the file and the patient can read on
+ * the portal. Short free-text per meal (no AUSNUT). At least one meal slot required.
+ */
+export const AU_MEAL_PLAN: AracTanimi = {
+  anahtar: 'au-meal-plan',
+  tur: 'liste',
+  alanlar: [
+    tarih('plan_tarihi'),
+    metin('kahvalti'),
+    metin('ogle'),
+    metin('aksam'),
+    metin('atistirmalik'),
+    metin('notlar'),
+  ],
+  cikti: { sayilar: ['dolu'], bantlar: [], uyarilar: ['plan_bos', 'portal'], tarihler: ['plan_tarihi'] },
+  kaynak: `${DIYET_KAYNAK} Structured meal plan wording the dietitian writes. Not a prescription and not a nutrient analysis.`,
+  hesapla: (g) => {
+    if (!gunMu(g.plan_tarihi)) return BOS_SONUC
+    const slotlar = ['kahvalti', 'ogle', 'aksam', 'atistirmalik'] as const
+    const dolu = slotlar.filter((k) => typeof g[k] === 'string' && String(g[k]).trim()).length
+    if (!dolu) {
+      return { tamam: true, sayilar: [{ anahtar: 'dolu', deger: 0, ondalik: 0, enCok: 4 }], bant: null, uyarilar: ['plan_bos'], tarihler: [{ anahtar: 'plan_tarihi', tarih: g.plan_tarihi as string }] }
+    }
+    return {
+      tamam: true,
+      sayilar: [{ anahtar: 'dolu', deger: dolu, ondalik: 0, enCok: 4 }],
+      bant: null,
+      uyarilar: ['portal'],
+      tarihler: [{ anahtar: 'plan_tarihi', tarih: g.plan_tarihi as string }],
+    }
+  },
+}
+
+// ─── 10. Food diary / intake note ───────────────────────────────────────────
+
+const OGUNLER = ['kahvalti', 'ogle', 'aksam', 'atistirmalik', 'diger'] as const
+const KIMLER = ['diyetisyen', 'hasta'] as const
+
+/** Short dated intake note. Dietitian or patient (via portal) can keep an entry. */
+export const AU_FOOD_DIARY: AracTanimi = {
+  anahtar: 'au-food-diary',
+  tur: 'liste',
+  alanlar: [
+    tarih('gun'),
+    secim('ogun', OGUNLER),
+    metin('aciklama', { istege: false }),
+    secim('kim', KIMLER),
+  ],
+  cikti: { sayilar: ['dolu'], bantlar: [], uyarilar: ['portal'], tarihler: ['gun'] },
+  kaynak: `${DIYET_KAYNAK} Short food-diary / intake note. Not a nutrient analysis.`,
+  hesapla: (g) => {
+    if (!gunMu(g.gun)) return BOS_SONUC
+    if (typeof g.ogun !== 'string' || !(OGUNLER as readonly string[]).includes(g.ogun)) return BOS_SONUC
+    if (typeof g.kim !== 'string' || !(KIMLER as readonly string[]).includes(g.kim)) return BOS_SONUC
+    if (typeof g.aciklama !== 'string' || !g.aciklama.trim()) return BOS_SONUC
+    return {
+      tamam: true,
+      sayilar: [{ anahtar: 'dolu', deger: 1, ondalik: 0, enCok: 1 }],
+      bant: null,
+      uyarilar: ['portal'],
+      tarihler: [{ anahtar: 'gun', tarih: g.gun as string }],
+    }
+  },
+}
+
 export const AU_DIYET_TANIMLAR: readonly AracTanimi[] = [
   AU_MST,
   AU_KILO_DEGISIM,
@@ -337,6 +406,8 @@ export const AU_DIYET_TANIMLAR: readonly AracTanimi[] = [
   AU_ENTERAL,
   AU_NUTRITION_GOALS,
   AU_NUTRITION_LABS,
+  AU_MEAL_PLAN,
+  AU_FOOD_DIARY,
 ]
 
 export const AU_DIYET_ANAHTARLARI: readonly string[] = AU_DIYET_TANIMLAR.map((t) => t.anahtar)
@@ -565,6 +636,64 @@ export function auDieteticsAraclari(): readonly PaketAraci[] {
         hakSahibi: 'Notya',
         kaynak: `${DIYET_KAYNAK} Clinician-typed nutrition lab values in Australian units.`,
         bildirim: 'Lab values you typed. No interval and no diagnosis stored. Triple Zero (000) if the patient is unstable.',
+      },
+    }),
+    paket({
+      anahtar: 'au-meal-plan',
+      ad: 'Meal plan (breakfast · lunch · dinner · snacks)',
+      aciklama: 'Write a clear, readable meal plan for this patient: breakfast, lunch, dinner and snacks. Short lines work best (what to eat, texture notes, fortification). No food-composition database — this is the plan you agreed, not a nutrient analysis. The current plan is shown on the patient portal.',
+      alanlar: {
+        plan_tarihi: 'Date this plan starts',
+        kahvalti: 'Breakfast',
+        ogle: 'Lunch',
+        aksam: 'Dinner',
+        atistirmalik: 'Snacks',
+        notlar: 'Notes for the patient (optional)',
+      },
+      sayilar: { dolu: 'Meal slots filled' },
+      uyarilar: {
+        plan_bos: 'Add at least one of breakfast, lunch, dinner or snacks before keeping this plan.',
+        portal: 'This plan is kept on the file and can be shown on the patient portal. It is not a prescription.',
+      },
+      not: 'Replace the previous plan by keeping a new one. Older plans stay in the tool history on the file.',
+      lisans: {
+        hakSahibi: 'Notya',
+        kaynak: `${DIYET_KAYNAK} Meal-plan wording only.`,
+        bildirim: 'Meal plan you wrote. Not a nutrient analysis and not a prescription.',
+      },
+    }),
+    paket({
+      anahtar: 'au-food-diary',
+      ad: 'Food diary / intake note',
+      aciklama: 'A short dated intake note: which meal or snack, what was eaten or offered, and who wrote it (you or the patient). Recent entries appear on the patient portal. Not a nutrient analysis.',
+      alanlar: {
+        gun: 'Date of the intake',
+        ogun: 'Meal or snack',
+        aciklama: 'What was eaten or offered (short description)',
+        kim: 'Who wrote this entry',
+      },
+      secenekler: {
+        ogun: {
+          kahvalti: 'Breakfast',
+          ogle: 'Lunch',
+          aksam: 'Dinner',
+          atistirmalik: 'Snack',
+          diger: 'Other / between meals',
+        },
+        kim: {
+          diyetisyen: 'Dietitian',
+          hasta: 'Patient (or carer)',
+        },
+      },
+      sayilar: { dolu: 'Entry kept' },
+      uyarilar: {
+        portal: 'This entry is kept on the file and can be shown on the patient portal.',
+      },
+      not: 'Keep one entry per meal or snack. Fluid intake can go in the description.',
+      lisans: {
+        hakSahibi: 'Notya',
+        kaynak: `${DIYET_KAYNAK} Short food-diary note.`,
+        bildirim: 'Intake note you or the patient wrote. Not a nutrient analysis.',
       },
     }),
   ]

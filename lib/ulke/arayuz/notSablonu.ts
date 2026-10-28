@@ -70,7 +70,11 @@ export function alanAdi(v: NotSablonVerisi, anahtar: string, dil: string): strin
 
 /** A section heading that is this template's own, or null when the template uses the catalogue's shared one. */
 export function bolumAdi(v: NotSablonVerisi, roller: readonly RolTanimi[], sablon: string, bolum: NotBolumu, dil: string): string | null {
-  const taraf = roller.find((r) => r.anahtar === sablon)?.taraf
-  const b = taraf ? v.bolumBasliklari.find((x) => x.taraf === taraf && x.bolum === bolum) : undefined
+  const rol = roller.find((r) => r.anahtar === sablon)
+  if (!rol) return null
+  // Role-specific heading first (e.g. ADIME titles for dietetics), then the shared heading for that kind of role.
+  const ozel = v.bolumBasliklari.find((x) => x.rol === sablon && x.bolum === bolum)
+  if (ozel && sahip(ozel.ad, dil)) return ozel.ad[dil]
+  const b = v.bolumBasliklari.find((x) => !x.rol && x.taraf === rol.taraf && x.bolum === bolum)
   return b && sahip(b.ad, dil) ? b.ad[dil] : null
 }

@@ -419,6 +419,12 @@ export type UlkeAraclari = {
    */
   takvimliListeAraci?: string | null
   /**
+   * AU-DIETETICS-TREND-01 — the key of ONE switched-on body-size tool whose kept results feed the adult
+   * anthropometry trend card on the patient's file (weight kg, waist cm, BMI). Named by the pack itself —
+   * wall rule D7: shared UI never hard-codes a country-prefixed key. null/absent = no trend card.
+   */
+  antropometriTrendAraci?: string | null
+  /**
    * HOW THIS COUNTRY WRITES AN AMOUNT OF A MEDICINE (NOTYA-ULKE-ARAC-DUZELTME-01). `sondaSifir: false` = no zero is
    * ever written after the decimal mark ("5 mL", "2.5 mg", never "5.0 mL"); `true` = the fixed decimals stand
    * ("1,0"). A NATIONAL RULE WITH NO DEFAULT: required for every pack that switches on a tool which writes such an
