@@ -3,6 +3,7 @@
  * The LLM must not invent a drug, allergy, date or count that is not here.
  */
 import { trAramaNormalize } from '@/lib/utils/turkceArama'
+import { ASI_SOZU, duzMetin, eylemDurumuSorusuMu, genelTibbiSoruMu, hitabiAyikla } from '@/lib/asistan/soruNiyeti'
 
 export interface HastaDosyaKart {
   yas: string
@@ -151,8 +152,12 @@ const TEDAVI_SORUSU = /\btedavi(?:yi|si|sini)? (?:verdik|verdin|yazdik|uyguladik
 const ASI_ISARETI = /asilar|asisi|asilari|karne|asi (?:kayit|yapil|takvim|doz|eksik|gecik|tamam|var|yok|durum)/
 
 export function dosyaSoruCevap(soru: string, k: HastaDosyaKart): string | null {
-  const n = trAramaNormalize(soru)
+  // SES-OMURGA-V2 (B): "Aşı hocam" is the doctor addressing Ayşe (ASR), not the vaccine word — removed first.
+  const n = hitabiAyikla(` ${trAramaNormalize(soru)} `).trim()
   if (!n.trim()) return null
+  // SES-OMURGA-V2 (B): a general dose / guideline / drug question is not a question about the open chart, and the
+  // status of an ACTION ("randevu verdin mi", "takvime koydun mu") is not a stored data field — the model answers both.
+  if (genelTibbiSoruMu(soru) || eylemDurumuSorusuMu(soru)) return null
   if (PRATIK.test(n) && !/bu hasta|hastanin|hastaya|hastanin dosya/.test(n)) return null
 
   // NOTYA-AYSE-100 K1: "e-nabız'dan yeni gelen bir şey var mı" is an integration question, not a vital-sign question.
@@ -181,7 +186,8 @@ export function dosyaSoruCevap(soru: string, k: HastaDosyaKart): string | null {
   }
   // NOTYA-KONUSMA-BAGLAMI-01 (2026-09-30): a question about ONE named vaccine ("Hepatit B kaç doz", "KKK ne zaman")
   // needs the aşı table, not the card's five-line list — it goes to the model with the chart.
-  if (/\basi/.test(n) && !/antibiyoti/.test(n) && !ASI_ADI.test(n) && (!/tedavi|recete|\bilac/.test(n) || ASI_ISARETI.test(n))) ekle('aşı', k.asilar)
+  // SES-OMURGA-V2 (B): whole-word, Turkish-folded vaccine word — never "asit" / "asistan" (10-26: klavulanik asit → vaccine card ×4).
+  if (ASI_SOZU.test(hitabiAyikla(duzMetin(soru))) && !/antibiyoti/.test(n) && !ASI_ADI.test(n) && (!/tedavi|recete|\bilac/.test(n) || ASI_ISARETI.test(n))) ekle('aşı', k.asilar)
   if (/surekli ilac|ne kullaniyor|ilaclari ne|aktif ilac/.test(n)) ekle('aktif ilaç', k.ilaclar)
   // NOTYA-SES-KART-01 (Dr. Gökhan): kontrol / takip soruları son muayenenin planından cevaplanır.
   // NOTYA-DOSYA-SORU-PLAN-01 (Kaan, 2026-10-01): bare 'plan' matched inside unrelated words

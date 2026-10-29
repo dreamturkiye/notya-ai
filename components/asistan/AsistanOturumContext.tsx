@@ -1137,7 +1137,7 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
     fishIsle(m, true)
   }
 
-  async function fetchSignedUrl(p: Persona, sayfaHastasi: string | null = null): Promise<{ signedUrl: string; voiceId: string; fish: boolean; tekBeyin: { oturumId: string; jeton: string; baslangic: string } | null }> {
+  async function fetchSignedUrl(p: Persona, sayfaHastasi: string | null = null): Promise<{ signedUrl: string; voiceId: string; fish: boolean; tekBeyin: { oturumId: string; jeton: string; baslangic: string } | null; conversationToken?: string | null; asrKeywords?: string[] }> {
     const token = authTokenRef.current
     if (!token) throw new Error("Oturum bulunamadı")
     const oturumParam = ortakOturumId ? `&asistanSessionId=${encodeURIComponent(ortakOturumId)}` : ""
@@ -1164,6 +1164,9 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
     if (!body.signed_url) throw new Error("Bağlantı adresi alınamadı")
     return {
       signedUrl: body.signed_url as string,
+      // SES-OMURGA-V2 (C): WebRTC token (browser echo cancellation + noise suppression) and the call's ASR keywords.
+      conversationToken: body.baglanti === "webrtc" && typeof body.conversation_token === "string" ? body.conversation_token : null,
+      asrKeywords: Array.isArray(body.asr_keywords) ? (body.asr_keywords as unknown[]).map(String).slice(0, 50) : [],
       voiceId: (body.voice_id as string) || p.voiceId,
       fish: false,
       tekBeyin: body.tek_beyin && body.notya_jeton && body.asistan_session_id
@@ -1220,7 +1223,7 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
       const firstMessage = `Merhaba ${address(doctor || { firstName: 'Hocam' }, 'named')}. Nasıl yardımcı olabilirim?`
       const voicePrompt = buildVoiceSystemPrompt(p, doctor, [hafiza.sesBlogu, hafiza.gun?.blok].filter(Boolean).join("\n\n") || undefined)
       const sayfaHastasi = ortakOturumId ? null : yeniOturumSayfaHastasi()
-      const { signedUrl, voiceId, fish, tekBeyin } = await fetchSignedUrl(p, sayfaHastasi)
+      const { signedUrl, voiceId, fish, tekBeyin, conversationToken, asrKeywords } = await fetchSignedUrl(p, sayfaHastasi)
       if (ayseFish && fish && p.id === pEarly.id) {
         const akis = await micSozu
         if (akis) fishMicRef.current = akis
@@ -1258,6 +1261,8 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
           tryFirstMessage: true,
           refreshSignedUrl: () => fetchSignedUrl(p, sayfaHastasi).then((r) => r.signedUrl),
           notyaJeton: tekBeyin?.jeton,
+          conversationToken: conversationToken || null,
+          asrKeywords: asrKeywords || [],
         }
       )
     } catch (e: unknown) {
@@ -1294,6 +1299,10 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
       refreshSignedUrl?: () => Promise<string>
       /** NOTYA-TEK-BEYIN: imzalı konuşma jetonu → Custom LLM extra body; varken tarayıcı araçları kullanılmaz. */
       notyaJeton?: string
+      /** SES-OMURGA-V2 (C): WebRTC conversation token (single use — the retry falls back to the signed WebSocket URL). */
+      conversationToken?: string | null
+      /** SES-OMURGA-V2 (C): ElevenLabs `overrides.asr.keywords` for this call (≤ 50). */
+      asrKeywords?: string[]
     }
   ) {
     const tekBeyin = Boolean(opts?.notyaJeton)
@@ -1304,6 +1313,7 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
     let retriedWithoutFirst = false
     let retryInFlight = false
     let activeSignedUrl = signedUrl
+    let activeToken: string | null = opts?.conversationToken || null
     // NOTYA-SES-ZOMBI-01: this attempt's generation. A close (endConversation) or a newer startConversation()
     // bumps elevenNesilRef — any async continuation below (onConversationCreated, the retry, begin() itself)
     // that lands after that must never take over conversationRef; it ends the session it just opened instead.
@@ -1354,9 +1364,10 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
       // Fallback seeds UI greeting; skip the agent's own default transcript once.
       let skipNextAgentTranscript = !includeFirstMessage
       setStatus("connecting")
-      const conversation = await Conversation.startSession({
-        signedUrl: activeSignedUrl,
-        connectionType: "websocket",
+      // SES-OMURGA-V2 (C): WebRTC first (the browser's echo cancellation and noise suppression — the smoke-alarm and
+      // laptop-speaker echo cases), the signed WebSocket URL when the token is missing or WebRTC cannot connect.
+      const ac = (baglanti: { conversationToken: string; connectionType: "webrtc" } | { signedUrl: string; connectionType: "websocket" }) => Conversation.startSession({
+        ...(baglanti as unknown as { signedUrl: string; connectionType: "websocket" }),
         ...SES_CALAR,
         onConversationCreated: (c) => {
           // NOTYA-SES-ZOMBI-01: a close / newer session landed before the SDK handed this one back —
@@ -1371,6 +1382,7 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
             ...(includeFirstMessage ? { firstMessage } : {}),
           },
           tts: { voiceId },
+          ...(opts?.asrKeywords?.length ? { asr: { keywords: opts.asrKeywords.slice(0, 50) } } : {}),
         },
         // NOTYA-TEK-BEYIN: ElevenLabs bunu her LLM isteğinde elevenlabs_extra_body olarak /api/asistan/ses-llm'e taşır.
         ...(tekBeyin ? { customLlmExtraBody: { notya_jeton: opts?.notyaJeton } } : {}),
@@ -1652,11 +1664,28 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
           if (sdkStatus === "connected" && !(fishAcikRef.current && fishRef.current?.caliyorMu())) setStatus("listening")
         },
       })
+      let conversation: Awaited<ReturnType<typeof ac>> | null = null
+      let webrtcAcik = false
+      const token = activeToken
+      activeToken = null // single use: a retry takes the WebSocket URL
+      if (token) {
+        try {
+          conversation = await ac({ conversationToken: token, connectionType: "webrtc" })
+          webrtcAcik = true
+        } catch (e) {
+          console.info("[ses-baglanti]", { webrtc: "acilamadi", hata: e instanceof Error ? e.name : "hata" })
+          if (bayatMi()) return
+        }
+      }
+      if (!conversation) conversation = await ac({ signedUrl: activeSignedUrl, connectionType: "websocket" })
       // NOTYA-SES-ZOMBI-01: the session was closed (or superseded) while Conversation.startSession() was
       // awaiting — this object must not become the live conversation; close it and stop, mic and all.
       if (bayatMi()) { try { await conversation.endSession() } catch { /* ignore */ }; return }
       conversationRef.current = conversation
-      elevenKapiBagla(conversation)
+      console.info("[ses-baglanti]", { tur: webrtcAcik ? "webrtc" : "websocket" })
+      // SES-OMURGA-V2 (C): under WebRTC the browser's echo cancellation covers Ayşe's own voice — the 200 ms local
+      // mic gate (which clipped the start of a barge-in) is not attached. The WebSocket fallback keeps it.
+      if (!webrtcAcik) elevenKapiBagla(conversation)
     }
 
     try {

@@ -1,5 +1,55 @@
 # OPEN COMMITMENTS — Notya AI
 
+## SES-OMURGA-V2 — voice/text assistant rebuild shipped + FOUNDER LOCK; what still needs Kaan (Claude, 2026-10-29)
+
+Kaan ordered "Ses Omurgası v2" on 2026-10-29 (Dr. Gökhan: voice unusable; diagnosis and research in the job brief).
+Shipped on main (core: one shared brain, so all 40 branches): one brain per utterance (call + turn position, latest wins,
+abort on supersede, duplicate served from the shared stream, DB-refused stale writes), router fixes (vaccine word,
+"Aşı hocam", general medical questions, action-status questions, no write tool on questions, escape hatch), noise/echo →
+skip_turn, spoken = written, one-RPC turn open + versioned chart cache + writes after the stream, append-only history,
+ElevenLabs agent config pinned in code, WebRTC client with fallback, per-call ASR keywords, iad1 region pin, per-turn
+timing table `ses_tur_olcum`, `cikarim` token cap. Migration 183 applied to TR production and verified live (registry,
+supersede refusal, append, kopya). Architecture: `docs/SES-MIMARI-V2.md`. Lock: `.cursor/rules/ses-omurga-kilidi.mdc`,
+manifest `lib/asistan/ses-kilit.json`, approvals `docs/SES-KILIT-ONAYLARI.md`.
+
+Open items:
+- **Kaan — live session with Dr. Gökhan** on the deployed build (first real turns since 10-26; `ses_turu_ac` EXECUTE was
+  revoked 10-27 and no voice turn has run since). Read `ses_tur_olcum` afterwards (p50/p95 first speech, duplicates,
+  supersedes) and append the numbers here. Owner: Kaan (session), Claude (readout).
+- **Kaan — ElevenLabs dashboard check** after the first call start: `GET /api/asistan/ses-llm/v1/chat/completions?ajan=1`
+  reports each pinned group (turn, asr, agent/skip_turn/cascade, overrides asr.keywords) as tamam / uygulandi / tutmadi /
+  reddedildi and the backup-LLM state. Anything `reddedildi` / `tutmadi` must be set by hand in the agent (Security tab →
+  allow the ASR keywords override; Tools → enable skip_turn; Advanced → turn model v3, soft timeout 3 s; LLM → backup
+  LLM **disabled**). The container had no ElevenLabs key, so the PATCH could not be dry-run here. Owner: Kaan.
+- **WebRTC fallback**: if WebRTC misbehaves in a real browser, set `NOTYA_SES_BAGLANTI=websocket` in Vercel (one redeploy)
+  — the 160 ms mic gate then comes back automatically. Owner: Kaan (decision after the live test).
+- **Post-call webhook** (ElevenLabs conversation records joined to `ses_tur_olcum`): not built — needs the webhook
+  secret from the ElevenLabs workspace. Owner: Kaan (secret), then Claude.
+- **Retention for `ses_tur_olcum`**: no purge cron yet (rows carry no clinical content). Owner: Claude, with the next cron change.
+- **QA session row**: a synthetic `asistan_sessions` row (`52077ef9-…`, Kaan's own test doctor, no patient, lines
+  "eski/yeni/yazi") was created while verifying migration 183 live; its delete needs a confirmation this session
+  could not give. Delete it once: `delete from asistan_sessions where id = '52077ef9-b215-4e41-84d9-ebec5301dec3';`.
+  Owner: Kaan (or Claude with confirmation).
+- **Country builds** — the same change set, country-adapted, on all six release branches (status: pushed, unverified —
+  the country Vercel projects are not visible to this session's Vercel connection). The country mouth
+  (`lib/ulke/asistan/sunucu.ts` + new `sesTur.ts`) got: one brain per utterance (call id in the call token + turn
+  position, duplicate served from the shared stream, grown transcript aborts the older model call), skip_turn for
+  pauses / fillers / echo in the pack's language, never a whitespace reply ("... " buffer), 12-beat / 5-item spoken
+  limits, ElevenLabs conversation config in code (turn v3, English soft-timeout filler with no time promise, scribe,
+  cascade; the pack's voice lock kept), WebRTC with WebSocket fallback + per-call ASR keywords on the live client, the
+  functions region pinned to the country's database region, the founder lock (manifest + build gate incl. the new
+  `lib/ulke/asistan/sesTur.test.ts`, which drives the real country route). Per country:
+  **au** (syd1) — live: the only pack that names an assistant persona, so the only country where voice is reachable today.
+  **gb** (lhr1), **ca** (yul1) — the pack configures the live assistant but names no persona, so the route answers 404
+  (pre-existing); v2 is in place and dormant until a persona is set. **us** (iad1), **nz** (syd1), **uz** (fra1) — the
+  pack brings no live assistant yet (pre-existing); v2 code dormant. Migration 183: not applicable to the country
+  databases — the Turkish `/api/asistan/*` routes are unreachable in a country build (route gate) and the country mouth
+  is stateless (ElevenLabs' history is the conversation), so there is no stored history or registry table to migrate.
+  Gaps (owner Kaan, decision): persona names for gb/ca and the live assistant for us/nz/uz are product decisions, not
+  part of v2; "oku" verbatim has no stored text in the stateless country mouth (the screen tool carries the full answer);
+  the uz agent still speaks English as before (an Uzbek agent voice/ASR is its own job).
+
+
 ## ISLEYEN-ROL-TIP-01 — pre-existing Isleyen/Yapan type bug fixed on gb/ca/nz/us; Vercel READY status for all 6 country projects NOT verifiable from this session (Claude, 2026-10-27)
 
 **Context:** cherry-picking the Narx.tsx pricing-card-grid parity fix onto all 6 release branches surfaced a pre-existing, unrelated `next build` type-check failure on `release/gb`: `Type '{ userId: string; personelId: string | null; rol: PratikRol }' is not assignable to type 'Isleyen'`.

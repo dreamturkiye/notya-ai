@@ -428,8 +428,11 @@ export function ogrenmeyeDeger(mesaj: string): boolean {
 
 interface CikarilanKayit { kategori: HafizaKategori; anahtar: string; deger: string; unut?: boolean }
 
-/** Output cap of the extraction call — reasoning tokens included. */
-export const OGRENME_TOKEN_TAVANI = 1200
+/**
+ * Output cap of the extraction call — reasoning tokens included. SES-OMURGA-V2 (H, 2026-10-29): 1200 → 2400; at 1200,
+ * 27 of 57 calls in 10 days were cut (`kesildi`) — the reasoning ate the cap and the memory block lost records.
+ */
+export const OGRENME_TOKEN_TAVANI = 2400
 
 /** The extraction answer as records: fenced, wrapped in prose or cut mid-list, whatever can be recovered; else []. */
 export function ogrenilenKayitlar(ham: string): CikarilanKayit[] {
@@ -448,7 +451,8 @@ export async function sohbettenOgren(
   doctorId: string,
   sonMesajlar: { role: string; content: string }[],
 ): Promise<number> {
-  const metin = sonMesajlar.slice(-6).map((m) => `${m.role === 'user' ? 'DOKTOR' : 'ASİSTAN'}: ${String(m.content).slice(0, 600)}`).join('\n')
+  // SES-OMURGA-V2 (H): a smaller input as well — the doctor's own words carry the preference; Ayşe's long answers do not.
+  const metin = sonMesajlar.slice(-4).map((m) => `${m.role === 'user' ? 'DOKTOR' : 'ASİSTAN'}: ${String(m.content).slice(0, m.role === 'user' ? 500 : 250)}`).join('\n')
   // NOTYA-MALIYET-01: doktorun kendi tercihlerini çıkarma — dar HIZLI listesinde (hasta klinik verisi alınmaz)
   // NOTYA-AYSE-GERI-07 (audit §7, PR 12): this answer is PARSED, and the tiering rule is "effort none never where
   // JSON is parsed" (lib/ai/modeller.ts). The task's default is none, so the call site asks for low effort, marks

@@ -12,7 +12,7 @@ This repo is a **commercial** multi-specialty product: **30 medical branches** (
 | Cross-specialty parity (core changes reach all 30 + 10 Özel Branşlar = 40, no exceptions) | `.cursor/rules/cross-specialty-parity.mdc` |
 | Ülke paritesi (core/shared changes & features applied, country-adapted, across all 6 countries — no exceptions) | `.cursor/rules/ulke-paritesi-duzeltme.mdc` |
 | Performans bütçesi (hard ceilings from PERF-SAGLAMLIK-2026-10 — checked per change, not per month) | `.cursor/rules/performans-butcesi-koruma.mdc` |
-| Ses omurgası kilidi (voice/text TTS-STT-LLM path frozen 2026-10-26 — changes need Kaan's sign-off + the voice suite) | `.cursor/rules/ses-omurga-kilidi.mdc` |
+| **FOUNDER LOCK — Ses omurgası v2** (voice/text assistant path locked 2026-10-29: NO change of any size without Kaan's explicit written "go" for that change — stop and ask; hash manifest `lib/asistan/ses-kilit.json` enforced in build + tests) | `.cursor/rules/ses-omurga-kilidi.mdc` |
 
 ## Skills (open before the matching work)
 

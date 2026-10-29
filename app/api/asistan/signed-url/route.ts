@@ -1,4 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { randomUUID } from 'node:crypto';
+import { dosyaPaketOnbellekli } from '@/lib/doktor/ogrenme/dosyaOnbellek';
+import { asrAnahtarKelimeleri } from '@/lib/asistan/sesAnahtarKelime';
+import type { HastaDosyaKart } from '@/lib/doktor/hastaDosyaKart';
 import { createClient } from '@supabase/supabase-js';
 import { getPersona, getPersonaForSpecialty } from '@/lib/asistan/personaEngine';
 import { asistanOturumuAc } from '@/lib/asistan/ayseCevapla';
@@ -6,12 +10,31 @@ import { sesJetonuImzala, tekBeyinAcikMi } from '@/lib/asistan/sesJetonu';
 import { TEK_BEYIN_AJANLARI } from '@/lib/asistan/tekBeyinAjanlari';
 import { tabanAgentSec } from '@/lib/asistan/agentSec';
 import { hastaSahibiMi } from '@/lib/doktor/hastaSahipligi';
-import { sesMotorunuSabitle } from '@/lib/asistan/sesMotoru';
+import { sesBaglantiTuru, sesMotorunuSabitle, SES_TEMEL_ANAHTARLAR_TR } from '@/lib/asistan/sesMotoru';
 import { ayseFishTamMi } from '@/lib/asistan/fishSes';
 import { istekSaatDilimi } from '@/lib/doktor/saatDilimi';
 import { saatDilimiSec } from '@/lib/randevu/tarihCozumle';
 
 const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY;
+
+// SES-OMURGA-V2 (E): next to the database (Supabase us-east-1). vercel.json pins the same region for the project.
+export const preferredRegion = 'iad1';
+export const dynamic = 'force-dynamic';
+
+async function getElevenLabsConversationToken(agentId: string): Promise<string | null> {
+  if (!ELEVENLABS_API_KEY) return null;
+  try {
+    const r = await fetch(`https://api.elevenlabs.io/v1/convai/conversation/token?agent_id=${encodeURIComponent(agentId)}`, {
+      headers: { 'xi-api-key': ELEVENLABS_API_KEY }, cache: 'no-store', signal: AbortSignal.timeout(8_000),
+    });
+    if (!r.ok) { console.error('[signed-url] conversation token', r.status); return null; }
+    const v = (await r.json()) as { token?: unknown };
+    return typeof v.token === 'string' && v.token ? v.token : null;
+  } catch (e) {
+    console.error('[signed-url] conversation token', e instanceof Error ? e.name : 'hata');
+    return null;
+  }
+}
 
 async function verifyAuth(req: NextRequest): Promise<{ userId: string } | null> {
   const authHeader = req.headers.get('authorization');
@@ -25,14 +48,15 @@ async function verifyAuth(req: NextRequest): Promise<{ userId: string } | null> 
   } catch { return null; }
 }
 
-async function getElevenLabsSignedUrl(agentId: string): Promise<string | null> {
+async function getElevenLabsSignedUrl(agentId: string, tekBeyin = false): Promise<string | null> {
   if (!ELEVENLABS_API_KEY) {
     console.error('ELEVENLABS_API_KEY is not configured');
     return null;
   }
 
   // NOTYA-SES-KILIT-01: the call must not start on v3 expressive or a drifted speed.
-  await sesMotorunuSabitle(agentId, ELEVENLABS_API_KEY);
+  // SES-OMURGA-V2 (G): the TEK BEYİN copy is also held to the pinned conversation settings (turn, ASR, skip_turn …).
+  await sesMotorunuSabitle(agentId, ELEVENLABS_API_KEY, fetch, tekBeyin ? { dil: 'tr', anahtarKelimeler: SES_TEMEL_ANAHTARLAR_TR, ozelLlm: true } : undefined);
 
   try {
     const response = await fetch(
@@ -44,6 +68,7 @@ async function getElevenLabsSignedUrl(agentId: string): Promise<string | null> {
           'Content-Type': 'application/json',
         },
         cache: 'no-store',
+        signal: AbortSignal.timeout(8_000),
       }
     );
 
@@ -114,7 +139,7 @@ export async function GET(req: NextRequest) {
 
   // NOTYA-TEK-BEYIN: bayraktaki doktor Custom LLM'li test kopyasına geçer — beyin /api/asistan/ses-llm (yazılı sohbetle
   // aynı fonksiyon, aynı oturum). Bayrak boşsa / kopya ya da jeton anahtarı yoksa eski ajan, eski akış.
-  let tekBeyin: { asistan_session_id: string; notya_jeton: string | null; baslangic: string } | null = null;
+  let tekBeyin: { asistan_session_id: string; notya_jeton: string | null; baslangic: string; hastaId: string | null } | null = null;
   const kopya = TEK_BEYIN_AJANLARI[AGENT_ID];
   if (kopya && tekBeyinAcikMi(auth.userId)) {
     try {
@@ -126,7 +151,13 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  const wssUrl = await getElevenLabsSignedUrl(AGENT_ID);
+  const baglanti = tekBeyin?.notya_jeton ? sesBaglantiTuru() : 'websocket';
+  // In parallel: the agent lock + signed URL, the WebRTC token, and the call's ASR keywords (doctor-scoped chart).
+  const [wssUrl, konusmaJetonu, asrKelimeleri] = await Promise.all([
+    getElevenLabsSignedUrl(AGENT_ID, Boolean(tekBeyin?.notya_jeton)),
+    baglanti === 'webrtc' ? getElevenLabsConversationToken(AGENT_ID) : Promise.resolve(null),
+    tekBeyin?.notya_jeton ? asrKelimeleriHazirla(auth.userId, tekBeyin.hastaId, persona.name) : Promise.resolve([] as string[]),
+  ]);
 
   if (!wssUrl) {
     return NextResponse.json(
@@ -145,8 +176,28 @@ export async function GET(req: NextRequest) {
     persona_title: persona.title,
     specialist_total: 30,
     fish: false,
-    ...(tekBeyin?.notya_jeton ? { tek_beyin: true, ...tekBeyin } : {}),
+    ...(tekBeyin?.notya_jeton ? { tek_beyin: true, asistan_session_id: tekBeyin.asistan_session_id, notya_jeton: tekBeyin.notya_jeton, baslangic: tekBeyin.baslangic } : {}),
+    // SES-OMURGA-V2 (C): WebRTC when a token was minted (the browser falls back to the signed URL otherwise).
+    baglanti: konusmaJetonu ? 'webrtc' : 'websocket',
+    ...(konusmaJetonu ? { conversation_token: konusmaJetonu } : {}),
+    ...(asrKelimeleri.length ? { asr_keywords: asrKelimeleri } : {}),
   });
+}
+
+/**
+ * SES-OMURGA-V2 (C): the call's ASR keywords. HASTA-IZOLASYON-01: `hastaId` reached here only after hastaSahibiMi in
+ * tekBeyinHazirla; the chart package is compiled with doctor-scoped queries (and served from the versioned cache).
+ */
+async function asrKelimeleriHazirla(doktorId: string, hastaId: string | null, personaAdi: string): Promise<string[]> {
+  try {
+    const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { global: { fetch: (u, o) => fetch(u, { ...o, cache: 'no-store' }) } });
+    const paket = hastaId ? await dosyaPaketOnbellekli(sb as never, doktorId, hastaId) : null;
+    const ilkAd = String(personaAdi || '').replace(/^(dr\.?|uzm\.?)\s+/i, '').split(/\s+/)[0] || null;
+    return asrAnahtarKelimeleri({ temel: SES_TEMEL_ANAHTARLAR_TR, asistanAdi: ilkAd, hastaAdi: paket?.ad || null, kart: (paket?.kart as Partial<HastaDosyaKart> | undefined) || null });
+  } catch (e) {
+    console.error('[signed-url] asr anahtar', e instanceof Error ? e.name : 'hata');
+    return asrAnahtarKelimeleri({ temel: SES_TEMEL_ANAHTARLAR_TR });
+  }
 }
 
 /**
@@ -171,7 +222,8 @@ async function tekBeyinHazirla(doktorId: string, personaId: string, specialty: s
   if (!oturumId) return null;
   // NOTYA-TAKVIM-TZ-01: the voice token carries the doctor's timezone (query `tz` → notya_tz cookie → TRT).
   const tz = saatDilimiSec(String(q.get('tz') || '').trim() || null, istekSaatDilimi());
-  const jeton = sesJetonuImzala({ d: doktorId, o: oturumId, s: specialty, p: patientId, pe: personaId, tz });
+  // SES-OMURGA-V2 (A): `c` — one id per call, the turn registry's call key.
+  const jeton = sesJetonuImzala({ d: doktorId, o: oturumId, s: specialty, p: patientId, pe: personaId, tz, c: randomUUID() });
   // baslangic: sayfanın ses-ekran yoklaması sunucu saatinden sayar (istemci saati kayık olabilir).
-  return { asistan_session_id: oturumId, notya_jeton: jeton, baslangic: new Date().toISOString() };
+  return { asistan_session_id: oturumId, notya_jeton: jeton, baslangic: new Date().toISOString(), hastaId: patientId };
 }
