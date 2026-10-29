@@ -107,3 +107,22 @@ export async function imzaliAdresAl(ajan: string, anahtar: string, fetchFn: type
     return null
   }
 }
+
+/**
+ * SES-OMURGA-V2 (C): the call's WebRTC conversation token (browser echo cancellation + noise suppression). null = use
+ * the signed WebSocket address. NOTYA_SES_BAGLANTI=websocket turns WebRTC off for this deployment.
+ */
+export async function konusmaJetonuAl(ajan: string, anahtar: string, fetchFn: typeof fetch = fetch): Promise<string | null> {
+  if (String(process.env.NOTYA_SES_BAGLANTI || '').trim().toLowerCase() === 'websocket') return null
+  try {
+    const r = await fetchFn(`https://api.elevenlabs.io/v1/convai/conversation/token?agent_id=${encodeURIComponent(ajan)}`, {
+      headers: { 'xi-api-key': anahtar }, cache: 'no-store', signal: AbortSignal.timeout(8_000),
+    })
+    if (!r.ok) { console.error(`[ulke/asistan] conversation token answered ${r.status}`); return null }
+    const v = (await r.json()) as { token?: unknown }
+    return typeof v.token === 'string' && v.token ? v.token : null
+  } catch (e) {
+    console.error(`[ulke/asistan] conversation token: ${e instanceof Error ? e.name : typeof e}`)
+    return null
+  }
+}

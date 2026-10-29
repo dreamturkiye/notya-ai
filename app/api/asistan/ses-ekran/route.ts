@@ -15,8 +15,29 @@ import { createClient } from '@supabase/supabase-js'
 import { kimlikSorusunuCevapla } from '@/lib/doktor/kimlikSorusu'
 import type { OturumMesaji, SesDevam } from '@/lib/asistan/ayseCevapla'
 import { alanlariYerineKoy, verilmeyenleriSil, yerTutucuVarMi } from '@/lib/asistan/hastaAlan'
+import { oturumPenceresi } from '@/lib/asistan/oturumYaz'
+import { createHash } from 'node:crypto'
 
 export const dynamic = 'force-dynamic'
+// SES-OMURGA-V2 (E): next to the database.
+export const preferredRegion = 'iad1'
+
+/**
+ * SES-OMURGA-V2 (E/H): this route is polled twice a second during a call. A verified bearer is remembered for 30 s per
+ * instance (keyed by its hash, never stored), so a poll is one windowed DB read instead of an auth call + the whole
+ * history. The poll volume is logged once a minute per instance: `[ses-ekran/hacim] {istek, sn}`.
+ */
+const KIMLIK_ONBELLEK_MS = 30_000
+const kimlikOnbellegi = new Map<string, { id: string; zaman: number }>()
+let hacim = { istek: 0, bas: Date.now() }
+function hacimSay(): void {
+  hacim.istek++
+  const sure = Date.now() - hacim.bas
+  if (sure >= 60_000) {
+    console.info('[ses-ekran/hacim]', JSON.stringify({ istek: hacim.istek, sn: Math.round(sure / 1000) }))
+    hacim = { istek: 0, bas: Date.now() }
+  }
+}
 
 const getSupabase = () => createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -26,19 +47,26 @@ const getSupabase = () => createClient(
 export async function GET(req: NextRequest) {
   const auth = req.headers.get('authorization') || ''
   if (!auth.startsWith('Bearer ')) return NextResponse.json({ error: 'Yetkisiz' }, { status: 401 })
+  hacimSay()
   const supabase = getSupabase()
-  const { data: { user } } = await supabase.auth.getUser(auth.slice(7))
+  const ozet = createHash('sha256').update(auth.slice(7)).digest('hex')
+  const bilinen = kimlikOnbellegi.get(ozet)
+  let user: { id: string } | null = bilinen && Date.now() - bilinen.zaman < KIMLIK_ONBELLEK_MS ? { id: bilinen.id } : null
+  if (!user) {
+    const { data } = await supabase.auth.getUser(auth.slice(7))
+    user = data.user ? { id: data.user.id } : null
+    if (user) {
+      kimlikOnbellegi.set(ozet, { id: user.id, zaman: Date.now() })
+      if (kimlikOnbellegi.size > 500) kimlikOnbellegi.delete(kimlikOnbellegi.keys().next().value as string)
+    }
+  }
   if (!user) return NextResponse.json({ error: 'Geçersiz token' }, { status: 401 })
 
   const oturumId = String(req.nextUrl.searchParams.get('oturum') || '').trim()
   const sonra = String(req.nextUrl.searchParams.get('sonra') || '')
   if (!oturumId) return NextResponse.json({ error: 'Oturum gerekli' }, { status: 400 })
-  const { data: oturum } = await supabase
-    .from('asistan_sessions')
-    .select('id, messages, active_context')
-    .eq('id', oturumId)
-    .eq('doctor_id', user.id)
-    .maybeSingle()
+  // HASTA-IZOLASYON-01: id AND doctor_id; a window of the history (the stored history is no longer cut at 20).
+  const oturum = await oturumPenceresi(supabase, oturumId, user.id, 40)
   if (!oturum) return NextResponse.json({ error: 'Oturum bulunamadı' }, { status: 404 })
 
   const mesajlar = ((oturum as { messages?: OturumMesaji[] }).messages || [])

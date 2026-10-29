@@ -62,14 +62,129 @@ export function sesMotoruOnbelleginiSil(): void {
   onbellek.clear()
 }
 
-export type SesMotorSonuc = { once: string; degisti: boolean }
+export type SesGrupDurumu = 'tamam' | 'uygulandi' | 'reddedildi' | 'tutmadi'
+export type SesMotorSonuc = { once: string; degisti: boolean; gruplar?: Record<string, SesGrupDurumu>; yedekLlm?: string }
+
+/**
+ * SES-OMURGA-V2 (G, Kaan 2026-10-29) — the conversation settings of the TEK BEYİN (Custom LLM) agent, pinned in code like
+ * the TTS lock above. Field names from the ElevenLabs agent API (conversation_config.turn / .asr / .agent.prompt,
+ * platform_settings.overrides); every PATCH result is re-read and logged per group, so a field the API ignores or
+ * refuses is visible (`tutmadi` / `reddedildi`) instead of silently assumed.
+ *
+ *   turn   turn_v3, eagerness normal, turn_timeout 15 s (a doctor thinking is not a turn — the old 7 s default sent a
+ *          "..." pause turn every few seconds), soft timeout 3 s with a Turkish filler that promises nothing
+ *          ("Hmm, Hocam..." — no "bir saniye": ElevenLabs advises against time promises). This IS the holding phrase of
+ *          the v2 contract (ses-omurga-kilidi.mdc #3); the server-side NOTYA_SES_DOLGU_MS filler stays off.
+ *   asr    scribe_realtime (language comes from agent.language = tr), base keywords; per-session keywords via override.
+ *   agent  language; cascade_timeout_seconds 10 (our endpoint sends its first chunk at once and a holding sentence by
+ *          ~7 s, so a working stream is never retried); the skip_turn system tool (noise / echo / pause turns).
+ *   overrides  asr.keywords may be overridden per conversation (the open patient's name, drugs, diagnoses).
+ * A hosted BACKUP LLM is never enabled — it would answer clinically without our brain; its current state is only logged.
+ */
+export type SesKonusmaSecenegi = {
+  dil: string
+  anahtarKelimeler?: string[]
+  ozelLlm?: boolean
+  /** false: the caller holds the TTS itself (country builds pin their own voice and delivery — lib/ulke/asistan/motorKilidi.ts). */
+  tts?: boolean
+  /** The soft-timeout filler in the agent's language (default: Turkish). Never a time promise. */
+  dolgu?: { mesaj: string; ek: string[] }
+}
+
+export const SES_TUR_AYARI = {
+  turn_model: 'turn_v3',
+  turn_eagerness: 'normal',
+  turn_timeout: 15,
+  soft_timeout_config: {
+    timeout_seconds: 3,
+    message: 'Hmm, Hocam...',
+    use_llm_generated_message: false,
+    additional_soft_timeout_messages: ['Şöyle Hocam...'],
+    max_soft_timeouts_per_generation: 2,
+  },
+} as const
+export const SES_KADEMELI_ZAMAN_ASIMI_SN = 10
+export const SES_TEMEL_ANAHTARLAR_TR = ['Ayşe', 'Ayşe Hocam', 'Hocam', 'Notya']
+
+type AjanGorunen = {
+  conversation_config?: {
+    tts?: SesTtsGorunen
+    turn?: { turn_model?: string; turn_eagerness?: string; turn_timeout?: number; soft_timeout_config?: { timeout_seconds?: number; message?: string } }
+    asr?: { provider?: string; quality?: string; keywords?: string[] }
+    agent?: { language?: string; prompt?: { cascade_timeout_seconds?: number; built_in_tools?: Record<string, unknown> | null; backup_llm_config?: unknown } }
+  }
+  platform_settings?: { overrides?: Record<string, unknown> & { conversation_config_override?: Record<string, unknown> } }
+}
+
+const SKIP_TURN_ARACI = { name: 'skip_turn', description: 'Stay silent and keep listening when the turn needs no answer (noise, a pause, the agent\'s own echo).', response_timeout_secs: 20, type: 'system', params: { system_tool_type: 'skip_turn' } }
+
+/** Which conversation groups of the live agent differ from the pinned settings. */
+/** The turn settings for one language (the soft-timeout filler is the only language-specific part). */
+export function turAyari(g: Pick<SesKonusmaSecenegi, 'dolgu'>) {
+  return g.dolgu
+    ? { ...SES_TUR_AYARI, soft_timeout_config: { ...SES_TUR_AYARI.soft_timeout_config, message: g.dolgu.mesaj, additional_soft_timeout_messages: g.dolgu.ek } }
+    : SES_TUR_AYARI
+}
+
+export function konusmaSapmalari(ajan: AjanGorunen | null | undefined, g: SesKonusmaSecenegi): string[] {
+  const c = ajan?.conversation_config || {}
+  const out: string[] = []
+  const t = c.turn || {}
+  const ist = turAyari(g)
+  if (t.turn_model !== ist.turn_model || t.turn_eagerness !== ist.turn_eagerness || !yakin(t.turn_timeout, ist.turn_timeout)
+    || !yakin(t.soft_timeout_config?.timeout_seconds, ist.soft_timeout_config.timeout_seconds) || t.soft_timeout_config?.message !== ist.soft_timeout_config.message) out.push('turn')
+  const kelimeler = g.anahtarKelimeler || []
+  if (c.asr?.provider !== 'scribe_realtime' || kelimeler.some((k) => !(c.asr?.keywords || []).includes(k))) out.push('asr')
+  const ozel = g.ozelLlm !== false
+  if (c.agent?.language !== g.dil || (ozel && (!yakin(c.agent?.prompt?.cascade_timeout_seconds, SES_KADEMELI_ZAMAN_ASIMI_SN) || !c.agent?.prompt?.built_in_tools?.skip_turn))) out.push('agent')
+  const cco = (ajan?.platform_settings?.overrides?.conversation_config_override || {}) as { asr?: { keywords?: unknown } }
+  if (cco.asr?.keywords !== true) out.push('overrides')
+  return out
+}
+
+function konusmaGovdesi(grup: string, ajan: AjanGorunen | null, g: SesKonusmaSecenegi): Record<string, unknown> {
+  const c = ajan?.conversation_config || {}
+  if (grup === 'turn') return { conversation_config: { turn: turAyari(g) } }
+  if (grup === 'asr') return { conversation_config: { asr: { provider: 'scribe_realtime', quality: 'high', keywords: [...new Set([...(c.asr?.keywords || []), ...(g.anahtarKelimeler || [])])].slice(0, 50) } } }
+  if (grup === 'agent') {
+    const ozel = g.ozelLlm !== false
+    return {
+      conversation_config: {
+        agent: {
+          language: g.dil,
+          ...(ozel ? { prompt: { cascade_timeout_seconds: SES_KADEMELI_ZAMAN_ASIMI_SN, built_in_tools: { ...(c.agent?.prompt?.built_in_tools || {}), skip_turn: SKIP_TURN_ARACI } } } : {}),
+        },
+      },
+    }
+  }
+  const ov = ajan?.platform_settings?.overrides || {}
+  const cco = (ov.conversation_config_override || {}) as Record<string, unknown>
+  return { platform_settings: { overrides: { ...ov, conversation_config_override: { ...cco, asr: { ...((cco.asr as Record<string, unknown>) || {}), keywords: true } } } } }
+}
+
+function derinBirlestir(a: Record<string, unknown>, b: Record<string, unknown>): Record<string, unknown> {
+  const o: Record<string, unknown> = { ...a }
+  for (const [k, v] of Object.entries(b)) {
+    o[k] = v && typeof v === 'object' && !Array.isArray(v) && o[k] && typeof o[k] === 'object' && !Array.isArray(o[k])
+      ? derinBirlestir(o[k] as Record<string, unknown>, v as Record<string, unknown>)
+      : v
+  }
+  return o
+}
+
+function yedekLlmDurumu(ajan: AjanGorunen | null): string {
+  const b = ajan?.conversation_config?.agent?.prompt?.backup_llm_config as { preference?: string } | string | null | undefined
+  if (b == null) return 'bilinmiyor'
+  return typeof b === 'string' ? b : String(b.preference || 'bilinmiyor')
+}
 
 /**
  * Read the agent. If TTS has drifted off Flash / fixed speed, PATCH it back.
  * Failure never blocks the call — the player fix and the speech gate still apply —
  * but the drift is logged so it cannot pass silently.
  */
-export async function sesMotorunuSabitle(agentId: string, apiKey: string, fetchFn: typeof fetch = fetch): Promise<SesMotorSonuc> {
+export async function sesMotorunuSabitle(agentId: string, apiKey: string, fetchFn: typeof fetch = fetch, konusma?: SesKonusmaSecenegi): Promise<SesMotorSonuc> {
+  if (konusma) return sesAjaniniSabitle(agentId, apiKey, konusma, fetchFn)
   if (!agentId || !apiKey) return { once: 'yok', degisti: false }
   const simdi = Date.now()
   const son = onbellek.get(agentId)
@@ -130,4 +245,91 @@ export async function sesMotorunuSabitle(agentId: string, apiKey: string, fetchF
   } finally {
     clearTimeout(zaman)
   }
+}
+
+const ajanOnbellek = new Map<string, { zaman: number; sonuc: SesMotorSonuc }>()
+/** A group the API refused is not retried on every call start (it is logged once an hour). */
+const RED_ONBELLEK_MS = 60 * 60 * 1000
+
+/**
+ * SES-OMURGA-V2 (G): TTS lock + the conversation settings, in one GET and (when anything drifted) one PATCH; a refused
+ * PATCH is retried group by group so one unknown field cannot block the others. Every result is re-read from the
+ * PATCH response. Never blocks the call; 2.5 s budget.
+ */
+export async function sesAjaniniSabitle(agentId: string, apiKey: string, g: SesKonusmaSecenegi, fetchFn: typeof fetch = fetch): Promise<SesMotorSonuc> {
+  if (!agentId || !apiKey) return { once: 'yok', degisti: false }
+  const simdi = Date.now()
+  const anahtar = `${agentId}:${g.dil}`
+  const son = ajanOnbellek.get(anahtar)
+  if (son && simdi - son.zaman < (Object.values(son.sonuc.gruplar || {}).some((d) => d === 'reddedildi' || d === 'tutmadi') ? RED_ONBELLEK_MS : ONBELLEK_MS)) return { ...son.sonuc, once: 'onbellek', degisti: false }
+  const kontrol = new AbortController()
+  const zaman = setTimeout(() => kontrol.abort(), ZAMAN_MS)
+  const baslik = { 'xi-api-key': apiKey, 'content-type': 'application/json' }
+  const adres = `https://api.elevenlabs.io/v1/convai/agents/${agentId}`
+  try {
+    const getir = await fetchFn(adres, { headers: baslik, cache: 'no-store', signal: kontrol.signal })
+    if (!getir.ok) {
+      console.error('[ses-motoru] okunamadı', agentId, getir.status)
+      return { once: 'okunamadi', degisti: false }
+    }
+    const ajan = await getir.json() as AjanGorunen
+    const tts = ajan?.conversation_config?.tts
+    const once = `model=${tts?.model_id || '-'} turn=${ajan?.conversation_config?.turn?.turn_model || '-'} asr=${ajan?.conversation_config?.asr?.provider || '-'} dil=${ajan?.conversation_config?.agent?.language || '-'}`
+    const gruplar: Record<string, SesGrupDurumu> = {}
+    const ttsDahil = g.tts !== false
+    const sapan = [...(ttsDahil && ttsKilitGerekli(tts) ? ['tts'] : []), ...konusmaSapmalari(ajan, g)]
+    for (const k of [...(ttsDahil ? ['tts'] : []), 'turn', 'asr', 'agent', 'overrides']) gruplar[k] = sapan.includes(k) ? 'reddedildi' : 'tamam'
+    const ttsGovde = () => ({ conversation_config: { tts: { ...SES_TTS_KILIT, ...(tts?.voice_id ? { voice_id: tts.voice_id } : {}), ...(tts?.agent_output_audio_format ? { agent_output_audio_format: tts.agent_output_audio_format } : {}) } } })
+    const grupGovdesi = (k: string) => (k === 'tts' ? ttsGovde() : konusmaGovdesi(k, ajan, g))
+    let degisti = false
+    const uygula = async (govde: Record<string, unknown>): Promise<AjanGorunen | null> => {
+      const r = await fetchFn(adres, { method: 'PATCH', headers: baslik, body: JSON.stringify(govde), signal: kontrol.signal })
+      if (!r.ok) { console.error('[ses-motoru] yama reddedildi', agentId, r.status, (await r.text().catch(() => '')).slice(0, 200)); return null }
+      degisti = true
+      return (await r.json().catch(() => null)) as AjanGorunen | null
+    }
+    const sonucuIsle = (yeni: AjanGorunen | null, denenen: string[]) => {
+      if (!yeni) return
+      const kalan = [...(ttsDahil && ttsKilitGerekli(yeni?.conversation_config?.tts) ? ['tts'] : []), ...konusmaSapmalari(yeni, g)]
+      // An empty PATCH response (some API versions answer {}) cannot prove anything: counted as applied.
+      const kanit = Boolean(yeni?.conversation_config)
+      for (const k of denenen) gruplar[k] = !kanit || !kalan.includes(k) ? 'uygulandi' : 'tutmadi'
+    }
+    if (sapan.length) {
+      const hepsi = sapan.reduce((acc, k) => derinBirlestir(acc, grupGovdesi(k)), {} as Record<string, unknown>)
+      const yeni = await uygula(hepsi)
+      if (yeni) sonucuIsle(yeni, sapan)
+      else {
+        for (const k of sapan) {
+          const tek = await uygula(grupGovdesi(k)).catch(() => null)
+          if (tek) sonucuIsle(tek, [k])
+          else gruplar[k] = 'reddedildi'
+        }
+      }
+    }
+    const yedekLlm = yedekLlmDurumu(ajan)
+    const sonuc: SesMotorSonuc = { once, degisti, gruplar, yedekLlm }
+    console.info('[ses-motoru] ayar', JSON.stringify({ ajan: agentId, dil: g.dil, gruplar, yedekLlm }))
+    ajanOnbellek.set(anahtar, { zaman: simdi, sonuc })
+    if (ttsDahil && gruplar.tts !== 'reddedildi') onbellek.set(agentId, simdi)
+    return sonuc
+  } catch (e) {
+    console.error('[ses-motoru]', e instanceof Error ? e.name : 'hata')
+    return { once: 'hata', degisti: false }
+  } finally {
+    clearTimeout(zaman)
+  }
+}
+
+/** Test-only. */
+export function sesAjanOnbelleginiSil(): void {
+  ajanOnbellek.clear()
+}
+
+/**
+ * SES-OMURGA-V2 (C): the browser connects over WebRTC (echo cancellation + noise suppression in the browser's audio
+ * stack) with a conversation token; NOTYA_SES_BAGLANTI=websocket switches back to the signed WebSocket URL.
+ */
+export function sesBaglantiTuru(deger: string | null | undefined = process.env.NOTYA_SES_BAGLANTI): 'webrtc' | 'websocket' {
+  return String(deger || '').trim().toLowerCase() === 'websocket' ? 'websocket' : 'webrtc'
 }

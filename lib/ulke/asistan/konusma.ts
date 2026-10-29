@@ -10,8 +10,12 @@
  */
 import type { CanliAsistanAyarlari } from '../tipler'
 
-export const SOZ_BEAT_SINIRI = 5
-export const LISTE_ESIGI = 3
+/**
+ * SES-OMURGA-V2 (D, Kaan 2026-10-29 — spoken = written): a normal-length answer is spoken in full (was 5 beats); only
+ * lists of 5+ items become the pack's "N items, on your screen". The screen tool still carries the full text.
+ */
+export const SOZ_BEAT_SINIRI = 12
+export const LISTE_ESIGI = 5
 
 type EkranSozleri = CanliAsistanAyarlari['ekranSozleri']
 type SatirTuru = 'bos' | 'liste' | 'tablo' | 'baslik' | 'ayirac' | 'duz' | 'belirsiz'

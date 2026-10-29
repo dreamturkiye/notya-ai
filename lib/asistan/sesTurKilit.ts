@@ -148,3 +148,74 @@ export async function sesSonSozBekle(sb: Sb, doktorId: string, oturumId: string,
   }
   return null
 }
+
+// ───────────────────────────── SES-OMURGA-V2 (A + E) ─────────────────────────────
+
+/** What ses_turu_ac_v2 returns: the turn decision, the session window and everything ayseCevapla used to read itself. */
+export type SesTuruAcV2Sonucu = {
+  yok: boolean
+  /** 'kopya': this exact turn is already answered (another instance) — replay `onceki.soz`, no brain. */
+  karar: 'yeni' | 'ustune' | 'kopya'
+  seq: number
+  onceki: { cagri?: string; tur?: number; seq?: number; durum?: string; soz?: string; anahtar?: string } | null
+  satir: SesOturumSatiri | null
+  profil: Record<string, unknown> | null
+  tercih: Record<string, unknown> | null
+  hastaSahibi: boolean
+  acikHasta: string | null
+  acikHastaSahibi: boolean
+  surumler: Record<string, number>
+  /** true when the database does not have the v2 function yet (country DB): the old open was used. */
+  yedek?: boolean
+}
+
+/**
+ * SES-OMURGA-V2: ONE round trip before a voice turn — the turn registry (call id + turn position, latest wins), the
+ * session row with a 60-line history window, the doctor's profile and preferences, ownership of the token patient
+ * and of the open patient, and the chart version stamps. Falls back to the old open on a database without it.
+ * Errors other than "function missing" throw (callers stay fail-closed).
+ */
+export async function sesTuruAcV2(
+  sb: Sb & { rpc?: (fn: string, args: Record<string, unknown>) => PromiseLike<{ data: unknown; error: { message?: string; code?: string } | null }> },
+  g: { doktorId: string; oturumId: string; cagri: string; tur: number; mesaj: string; hastaId?: string | null },
+): Promise<SesTuruAcV2Sonucu> {
+  if (typeof sb.rpc === 'function') {
+    const { data, error } = await Promise.resolve(sb.rpc('ses_turu_ac_v2', {
+      p_oturum: g.oturumId, p_doktor: g.doktorId, p_cagri: g.cagri, p_tur: g.tur,
+      p_mesaj: String(g.mesaj || '').slice(0, 500), p_anahtar: sesTurKilitAnahtar(g.mesaj), p_hasta: g.hastaId || null, p_pencere: 60,
+    })).catch((e: unknown) => ({ data: null, error: { message: e instanceof Error ? e.message : String(e), code: 'THROWN' } }))
+    if (!error) {
+      const r = (data || {}) as Partial<SesTuruAcV2Sonucu>
+      if (r.yok) return { yok: true, karar: 'yeni', seq: 0, onceki: null, satir: null, profil: null, tercih: null, hastaSahibi: false, acikHasta: null, acikHastaSahibi: false, surumler: {} }
+      const satir = r.satir as SesOturumSatiri | null
+      return {
+        yok: false,
+        karar: r.karar === 'kopya' || r.karar === 'ustune' ? r.karar : 'yeni',
+        seq: Number(r.seq) || 1,
+        onceki: (r.onceki as SesTuruAcV2Sonucu['onceki']) ?? null,
+        satir: satir ? { ...satir, messages: Array.isArray(satir.messages) ? satir.messages : [], active_context: satir.active_context || {} } : null,
+        profil: (r.profil as Record<string, unknown> | null) ?? null,
+        tercih: (r.tercih as Record<string, unknown> | null) ?? null,
+        hastaSahibi: r.hastaSahibi !== false,
+        acikHasta: typeof r.acikHasta === 'string' ? r.acikHasta : null,
+        acikHastaSahibi: r.acikHastaSahibi === true,
+        surumler: (r.surumler as Record<string, number>) || {},
+      }
+    }
+    const m = String(error.message || '')
+    if (error.code !== 'PGRST202' && error.code !== '42883' && error.code !== 'THROWN' && !/ses_turu_ac_v2/.test(m)) throw new Error(m || 'ses_turu_ac_v2')
+    if (error.code === 'THROWN' && !/desteklenmeyen rpc|ses_turu_ac_v2/.test(m)) throw new Error(m || 'ses_turu_ac_v2')
+  }
+  // Old database: plain row read (no registry; the in-memory registry still dedupes on this instance).
+  const { data: row, error } = await sb.from('asistan_sessions').select('id, messages, active_context, persona_id, patient_id').eq('id', g.oturumId).eq('doctor_id', g.doktorId).maybeSingle()
+  if (error) throw error
+  if (!row) return { yok: true, karar: 'yeni', seq: 0, onceki: null, satir: null, profil: null, tercih: null, hastaSahibi: false, acikHasta: null, acikHastaSahibi: false, surumler: {}, yedek: true }
+  const r = row as unknown as SesOturumSatiri
+  const mesajlar = Array.isArray(r.messages) ? r.messages : []
+  return {
+    yok: false, karar: 'yeni', seq: 0, onceki: null,
+    satir: { id: r.id, messages: mesajlar.slice(-60), active_context: baglamOku(row), persona_id: r.persona_id ?? null, patient_id: r.patient_id ?? null },
+    // profile / prefs / ownership unknown: ayseCevapla reads them itself (as before)
+    profil: null, tercih: null, hastaSahibi: true, acikHasta: null, acikHastaSahibi: false, surumler: {}, yedek: true,
+  }
+}

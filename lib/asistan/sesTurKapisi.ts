@@ -12,7 +12,7 @@
  *   5. İstek izi taşımayan kısa arka plan konuşması → SESSİZ
  *   6. Aksi → MODEL
  *
- * Pause ("...", "eee") buraya girmez — NOTYA-SES-ESKI-02 EL'de modele gider.
+ * Pause ("...", "eee") buraya girmez: ElevenLabs yolunda sesOnKapisi (aşağıda) onu skip_turn ile atlar (SES-OMURGA-V2).
  */
 
 import { trAramaNormalize } from '@/lib/utils/turkceArama'
@@ -165,6 +165,13 @@ export function sonAsistanSoruMu(oturum: TurMesaj[]): boolean {
 export function sesTurKapisi(opts: {
   mesaj: string
   oturumMesajlari: TurMesaj[]
+  /**
+   * SES-OMURGA-V2: the ElevenLabs path. Replays of the SAME turn are already deduped by turn position
+   * (lib/asistan/sesTurYoneticisi.ts), so a repeat that reaches here is the doctor asking again — a real new turn:
+   * it goes to the model (the escape hatch then bypasses the fast path), never to silence ('ayni_istek') and never to
+   * a replay of the old answer ('birebir_tekrar'). Fish keeps the text-equality gate.
+   */
+  el?: boolean
 }): SesTurKarari {
   const mesaj = String(opts.mesaj || '').replace(/\s+/g, ' ').trim()
   if (!mesaj) return { tip: 'sessiz', neden: 'bos' }
@@ -184,11 +191,12 @@ export function sesTurKapisi(opts: {
   // Only the assistant's own voice coming back (an echo) or the very same line twice stays silent.
   if (sonAsistanSoruMu(opts.oturumMesajlari || [])) {
     if (cift && sonCevapEkoMu(mesaj, cift.cevap)) return { tip: 'sessiz', neden: 'eko_tts' }
-    if (cift && sozNorm(mesaj) === sozNorm(cift.soru)) return { tip: 'devam_oku', neden: 'birebir_tekrar' }
+    if (cift && !opts.el && sozNorm(mesaj) === sozNorm(cift.soru)) return { tip: 'devam_oku', neden: 'birebir_tekrar' }
     return { tip: 'model', neden: 'soru_cevabi' }
   }
   if (cift) {
     if (sonCevapEkoMu(mesaj, cift.cevap)) return { tip: 'sessiz', neden: 'eko_tts' }
+    if (opts.el) return arkaPlanIstekDegilMi(mesaj) ? { tip: 'sessiz', neden: 'arka_plan' } : { tip: 'model', neden: 'istek' }
     const ayni = sozNorm(mesaj) === sozNorm(cift.soru)
     if (ayni || ayniIstekYeniBilgiYokMu(mesaj, cift.soru)) {
       return ayni ? { tip: 'devam_oku', neden: 'birebir_tekrar' } : { tip: 'sessiz', neden: 'ayni_istek' }
@@ -198,4 +206,49 @@ export function sesTurKapisi(opts: {
   if (arkaPlanIstekDegilMi(mesaj)) return { tip: 'sessiz', neden: 'arka_plan' }
 
   return { tip: 'model', neden: 'istek' }
+}
+
+// ───────────────────────────── SES-OMURGA-V2 (C) ─────────────────────────────
+
+/** Sounds that are not words: hesitation, breath, backchannel noise (Turkish-folded). */
+const DOLGU_SESLERI = new Set(['e', 'ee', 'eee', 'eeee', 'i', 'ii', 'iii', 'ı', 'hm', 'hmm', 'hmmm', 'mm', 'mmm', 'ha', 'hi', 'ah', 'aa', 'aaa', 'oh', 'eh', 'oo', 'uh', 'um', 'im', 'sey', 'yani', 'hani', 'sss', 'pst', 'cik', 'off', 'of', 'ay', 'oy'])
+/** Short words that ARE a turn (a card decision, a stop, a greeting). */
+const KISA_GECERLI = new Set(['evet', 'hayir', 'yok', 'var', 'dur', 'tamam', 'olur', 'peki', 'sus', 'iptal', 'selam', 'merhaba', 'tesekkurler', 'sagol', 'oku', 'devam', 'ok', 'okey'])
+
+export type SesOnKapiKarari = { neden: 'duraklama' | 'dolgu' | 'kisa' | 'eko' }
+
+/**
+ * SES-OMURGA-V2 (C): turns that never reach the brain on the ElevenLabs path — answered with ElevenLabs' `skip_turn`
+ * (stay silent, keep listening). Replaces NOTYA-SES-ESKI-02, which sent every "..." pause to the model (10-21: 9 of 10
+ * doctor turns were "...", each answered with chatter after 4–10 s of model time).
+ *   - a pause / filler transcript ("...", "eee", "hmm", "şey")
+ *   - a sub-lexical scrap (one or two letters, a clipped syllable) that is not a known short turn
+ *   - Ayşe's own last spoken text coming back through the microphone (echo), judged against ElevenLabs' history
+ * A known short turn ("evet", "hayır", "dur", "tamam"), a question mark, and anything with real words pass.
+ */
+export function sesOnKapisi(mesaj: string, sonAsistan: string, dil?: { dolgu?: ReadonlySet<string>; kisa?: ReadonlySet<string> }): SesOnKapiKarari | null {
+  // Country builds pass their own language's fillers and short turns (English / Uzbek); Turkish is the default.
+  const dolguSesleri = dil?.dolgu ?? DOLGU_SESLERI
+  const kisaGecerli = dil?.kisa ?? KISA_GECERLI
+  const ham = String(mesaj || '').replace(/\s+/g, ' ').trim()
+  if (!ham || sesGurultusuMu(ham)) return { neden: 'duraklama' }
+  const n = trAramaNormalize(ham).replace(/[^a-z0-9\s]+/g, ' ').replace(/\s+/g, ' ').trim()
+  if (!n) return { neden: 'duraklama' }
+  const sozler = n.split(' ').filter(Boolean)
+  if (sozler.every((w) => dolguSesleri.has(w))) return { neden: 'dolgu' }
+  if (sozler.some((w) => kisaGecerli.has(w)) || /\?/.test(ham) || /\d/.test(n)) {
+    // real short turn — the echo check below still applies to longer lines
+  } else {
+    const harf = n.replace(/[^a-z]/g, '')
+    if (harf.length <= 2) return { neden: 'kisa' }
+    if (sozler.length === 1 && harf.length <= 3 && !/[aeiou].*[aeiou]/.test(harf)) return { neden: 'kisa' }
+  }
+  const son = String(sonAsistan || '').trim()
+  if (son && !/\?\s*$/.test(ham)) {
+    if (sonCevapEkoMu(ham, son)) return { neden: 'eko' }
+    const ns = sozNorm(ham).replace(/[.,!…]+$/g, '')
+    const sn = sozNorm(son)
+    if (sozler.length >= 3 && ns.length >= 12 && sn.includes(ns)) return { neden: 'eko' }
+  }
+  return null
 }
