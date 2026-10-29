@@ -1262,6 +1262,8 @@ export type AraclarMetni = {
     readonly gunlukAc: string
     readonly ogunAdi: Readonly<Record<string, string>>
     readonly kimAdi: Readonly<Record<string, string>>
+    /** Badge on the diary heading when the patient wrote entries. `%` = count. */
+    readonly hastaGunlukRozet: string
   }
 }
 

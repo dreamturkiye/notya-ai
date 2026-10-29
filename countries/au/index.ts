@@ -138,8 +138,14 @@ export const AU_PAKETI: UlkePaketi = {
       baglantiGecerlilikGun: 30,
       acilNumara: '000',
       bolumler: AU_PORTAL_BOLUMLERI,
-      // AU dietetics beta — meal plan + food diary on the patient portal (tool keys; shared UI never hard-codes them).
-      beslenme: { planAraci: 'au-meal-plan', gunlukAraci: 'au-food-diary', etiket: AU_BESLENME_ETIKET },
+      // AU dietetics beta — meal plan, diary, goals and clinic weight on the patient portal (tool keys; shared UI never hard-codes them).
+      beslenme: {
+        planAraci: 'au-meal-plan',
+        gunlukAraci: 'au-food-diary',
+        hedefAraci: 'au-nutrition-goals',
+        agirlikAraci: 'au-body-size',
+        etiket: AU_BESLENME_ETIKET,
+      },
       tarihEtiket: 'Next review',
       durumEtiket: { gecikti: 'Overdue', bugun: 'Today', yaklasiyor: 'Coming up', planli: 'Planned' },
     },

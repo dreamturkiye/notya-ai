@@ -12,6 +12,7 @@
 5. **AU-DIETETICS-BETA-01 (done on AU):** BRANŞ-only clinical dietetics suite (`countries/au/araclar/dieteticsTools.ts`) — MST score record (questions not worded), weight-change %, energy/protein in **kJ** (clinician factors, NEMO starting-estimate pattern), IDDSI levels (dietetics + speech-pathology), refeeding ticks, enteral mL/h, person-centred goals, **nutrition lab value recorder** (HbA1c, glucose, Hb, lipids, kidney, CRP, uACR, albumin, ferritin, B12, folate, K/PO4/Mg — values only, no invented intervals). Gated `roller: ['dietetics']` (IDDSI also `speech-pathology`). Units named in pack catalogue.
 6. **AU-DIETETICS-BETA-01c (done):** Assistant refs + voice focus carry **AU binding sources** (Dietitians Australia, Australian Dietary Guidelines/NHMRC, NEMO, Understanding Nutrition ANZ, Clinical Sports Nutrition) **and US depth** (Dietary Guidelines for Americans, AND Nutrition Care Manual / Evidence Analysis Library / Nutrition Care Process) so an AU dietitian with US clients is covered; national AU wins on conflict for Australian care. Intake form hardened (shared EN dietetics set): purpose by condition, usual place of care (AU/US/both), labs with you, allergy, swallow/texture, supplements, diabetes, bowel, referral, culture — 20 questions incl. red flags.
 7. **AU-DIETETICS-BETA-01d (done on AU):** ADIME note headings (role-keyed) + PES / intervention / monitoring fields; anthropometry trend (weight kg, waist cm, BMI) on the patient file from kept `au-body-size` history; meal plan + food diary tools with doctor file card and patient portal tab (`portal.beslenme`). No AUSNUT. BRANŞ-only.
+8. **AU-DIETETICS-BETA-01e (done on AU):** Exceptional dietetics hasta portalı for high back-and-forth — longer meal/diary text (280), agreed goals + clinic weight numbers on the patient tab, overview chapter + coaching chips (plan / diary / goals), message CTA from nutrition tab, doctor file badge for patient-written diary lines. BRANŞ-only via pack `portal.beslenme`.
 
 **Still OPEN (not blocking Strong spine):**
 | ID | Item | Owner |
@@ -22,11 +23,11 @@
 | AU-PEDIATRI-GOLD-01d | M-CHAT / ATS / other licence-gated slots remain off | Kaan (licence) |
 | AU-PEDIATRI-GOLD-01e | us/gb/ca/nz/uz: same depth once each country’s pack is the merge target (this PR is AU-only). Shared EN catalogue gained `buyumeGrafigi` text — regenerate other COUNTRY-PACK-*.md when those branches absorb the EN set. | Claude |
 | AU-DIETETICS-BETA-01a | Practising dietitian sign-off of the dietetics tools (MST, kJ, IDDSI, refeeding, enteral, goals, nutrition labs, meal plan, food diary) before relying on them with patients (`onaysizAciklar`) | Kaan (beta dietitian) |
-| AU-DIETETICS-BETA-01b | us/gb/ca/nz/uz: country-adapted dietetics **tool** suite + ADIME/meal/trend equivalents (not a Turkish copy; local malnutrition screens, energy units, dysphagia frameworks, lab units). Shared EN intake deepen applies to all EN packs already. **OPEN GAP** for country-native lab/tool packs. | Claude |
+| AU-DIETETICS-BETA-01b | us/gb/ca/nz/uz: country-adapted dietetics **tool** suite + ADIME/meal/trend/portal-coaching equivalents (not a Turkish copy; local malnutrition screens, energy units, dysphagia frameworks, lab units). Shared EN intake deepen applies to all EN packs already. **OPEN GAP** for country-native lab/tool packs + exceptional portal. | Claude |
 | AU-ARACLAR-DEPTH-01 | Deeper **clinical** specialty calculators beyond flags/review/refs for non-dietetics AU roles (physio, psychology, OT, audiology, medical specialties) — use dieteticsTools.ts as the template when the next specialty beta is named | Claude |
 
 **Classification:** Specialty-only (dietetics BRANŞ; IDDSI also speech-pathology). AU pack this change. Not TR core spine. 40-branch TR parity N/A.
-**Country status:** AU = APPLIED (dietetics suite + Strong spine). us/gb/ca/nz/uz = OPEN GAP (01e + 01b). TR = reference / N/A for AU-native keys.
+**Country status:** AU = APPLIED (dietetics suite + Strong spine + exceptional portal coaching). us/gb/ca/nz/uz = OPEN GAP (01e + 01b). TR = reference / N/A for AU-native keys.
 
 ## AU-LAUNCH-01 — Australian launch audit against Kaan's regulatory brief (Claude, 2026-10-24, branch `au-launch` off `release/au`)
 

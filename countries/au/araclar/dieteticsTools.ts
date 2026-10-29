@@ -335,16 +335,19 @@ export const AU_NUTRITION_LABS: AracTanimi = {
  * Structured meal plan the dietitian keeps on the file and the patient can read on
  * the portal. Short free-text per meal (no AUSNUT). At least one meal slot required.
  */
+/** Meal / diary free-text: longer than the kit default so a coaching line fits a real breakfast. */
+const OGUN_METIN = 280
+
 export const AU_MEAL_PLAN: AracTanimi = {
   anahtar: 'au-meal-plan',
   tur: 'liste',
   alanlar: [
     tarih('plan_tarihi'),
-    metin('kahvalti'),
-    metin('ogle'),
-    metin('aksam'),
-    metin('atistirmalik'),
-    metin('notlar'),
+    metin('kahvalti', { enCok: OGUN_METIN }),
+    metin('ogle', { enCok: OGUN_METIN }),
+    metin('aksam', { enCok: OGUN_METIN }),
+    metin('atistirmalik', { enCok: OGUN_METIN }),
+    metin('notlar', { enCok: OGUN_METIN }),
   ],
   cikti: { sayilar: ['dolu'], bantlar: [], uyarilar: ['plan_bos', 'portal'], tarihler: ['plan_tarihi'] },
   kaynak: `${DIYET_KAYNAK} Structured meal plan wording the dietitian writes. Not a prescription and not a nutrient analysis.`,
@@ -377,7 +380,7 @@ export const AU_FOOD_DIARY: AracTanimi = {
   alanlar: [
     tarih('gun'),
     secim('ogun', OGUNLER),
-    metin('aciklama', { istege: false }),
+    metin('aciklama', { istege: false, enCok: OGUN_METIN }),
     secim('kim', KIMLER),
   ],
   cikti: { sayilar: ['dolu'], bantlar: [], uyarilar: ['portal'], tarihler: ['gun'] },
