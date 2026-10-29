@@ -88,8 +88,12 @@ export type NotSablonVerisi = {
   veliAlani: { anahtar: string; tanim: NotAlani } | null
   /** Roles whose patients are children: only there does an UNKNOWN age count as "below the guardian age". */
   cocukRolleri: readonly string[]
-  /** Section headings that belong to one kind of role only (an allied professional's "assessment"). Others use the catalogue's. */
-  bolumBasliklari: readonly { taraf: RolTarafi; bolum: NotBolumu; ad: BicimliMetin }[]
+  /**
+   * Section headings that belong to one kind of role (`taraf`) or to one named role (`rol`).
+   * A heading with `rol` wins for that template; otherwise a matching `taraf` is used. Others use the catalogue's.
+   * AU clinical dietetics uses role-keyed ADIME titles (Assessment / Nutrition Diagnosis / Intervention & Monitoring).
+   */
+  bolumBasliklari: readonly { taraf: RolTarafi; bolum: NotBolumu; ad: BicimliMetin; /** Optional: this heading is only for this role key. */ rol?: string }[]
 }
 
 /** Everything a country brings for the shared screens of the signed-in application. */

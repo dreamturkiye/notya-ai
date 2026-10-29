@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AU Clinical Dietitian — Specialty Audit (post-sprint) · Notya</title>
+  <meta name="description" content="Post-sprint AU dietetics audit after ADIME, anthropometry trend, meal plan and food diary. No patient data." />
+  <style>
+    :root {
+      --bg:#060C18; --surface:#0D1526; --surface2:#121C30; --stroke:rgba(255,255,255,0.10);
+      --text:#EDF1F7; --muted:#8FA0B5; --dim:#64748B; --teal:#14B8A6; --teal-soft:rgba(20,184,166,0.14);
+      --blue:#60A5FA; --blue-soft:rgba(96,165,250,0.14); --amber:#F59E0B; --amber-soft:rgba(245,158,11,0.14);
+      --red:#F87171; --red-soft:rgba(248,113,113,0.14); --green:#2DD4BF;
+    }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; background:var(--bg); color:var(--text); line-height:1.45; -webkit-font-smoothing:antialiased; }
+    .wrap { max-width:1100px; margin:0 auto; padding:32px 20px 72px; }
+    .brand { display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:24px; align-items:center; }
+    .brand .tag { font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--dim); font-weight:700; }
+    .brand a { color:var(--teal); text-decoration:none; font-size:13px; font-weight:600; }
+    h1 { margin:0 0 8px; font-size:28px; font-weight:700; letter-spacing:-.02em; line-height:1.2; }
+    h2 { margin:28px 0 12px; font-size:18px; font-weight:700; }
+    h3 { margin:20px 0 8px; font-size:15px; font-weight:700; color:var(--muted); }
+    .lede { margin:0 0 14px; color:var(--muted); font-size:15px; max-width:860px; }
+    .pills { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:22px; }
+    .pill { display:inline-flex; align-items:center; padding:3px 10px; border-radius:999px; font-size:12px; font-weight:600; border:1px solid transparent; white-space:nowrap; }
+    .pill.success { background:var(--teal-soft); color:var(--green); border-color:rgba(45,212,191,.25); }
+    .pill.warning { background:var(--amber-soft); color:var(--amber); border-color:rgba(245,158,11,.28); }
+    .pill.danger { background:var(--red-soft); color:var(--red); border-color:rgba(248,113,113,.3); }
+    .pill.info { background:var(--blue-soft); color:var(--blue); border-color:rgba(96,165,250,.25); }
+    .pill.neutral { background:rgba(255,255,255,.06); color:var(--muted); border-color:var(--stroke); }
+    .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:18px; }
+    .stat { background:var(--surface); border:1px solid var(--stroke); border-radius:12px; padding:16px 14px; }
+    .stat .v { font-size:24px; font-weight:700; letter-spacing:-.03em; margin-bottom:4px; }
+    .stat .v.success { color:var(--green); } .stat .v.warning { color:var(--amber); } .stat .v.info { color:var(--blue); }
+    .stat .l { font-size:12px; color:var(--muted); }
+    .callout { border-radius:12px; padding:16px 18px; margin:14px 0 22px; border:1px solid; }
+    .callout.info { background:var(--blue-soft); border-color:rgba(96,165,250,.28); }
+    .callout.warning { background:var(--amber-soft); border-color:rgba(245,158,11,.3); }
+    .callout h2 { margin:0 0 6px; font-size:12px; text-transform:uppercase; letter-spacing:.04em; }
+    .callout.info h2 { color:var(--blue); } .callout.warning h2 { color:var(--amber); }
+    .callout p { margin:0; font-size:14px; }
+    .table-wrap { border:1px solid var(--stroke); border-radius:12px; overflow:auto; margin-bottom:22px; background:var(--surface); }
+    table { width:100%; border-collapse:collapse; font-size:13px; min-width:640px; }
+    th,td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--stroke); vertical-align:top; }
+    th { background:var(--surface2); color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.05em; font-weight:700; }
+    tr:last-child td { border-bottom:none; }
+    td.domain { font-weight:600; }
+    td.note { color:var(--muted); }
+    td.gap { color:#FBBF24; }
+    .bars { background:var(--surface); border:1px solid var(--stroke); border-radius:12px; padding:16px; margin-bottom:22px; }
+    .bar-row { display:grid; grid-template-columns:minmax(140px,260px) 1fr 36px; gap:10px; align-items:center; margin:8px 0; }
+    .bar-label { font-size:12px; color:var(--muted); }
+    .bar-track { height:10px; background:rgba(255,255,255,.06); border-radius:999px; overflow:hidden; }
+    .bar-fill { height:100%; background:var(--teal); border-radius:999px; }
+    .bar-val { font-size:12px; font-weight:700; color:var(--text); text-align:right; }
+    .cards { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin-bottom:22px; }
+    .cards.three { grid-template-columns:repeat(3,1fr); }
+    .card { background:var(--surface); border:1px solid var(--stroke); border-radius:12px; padding:14px; }
+    .card .top { display:flex; justify-content:space-between; gap:8px; align-items:flex-start; margin-bottom:8px; }
+    .card .title { font-size:14px; font-weight:650; }
+    .card .sub { font-size:11px; font-weight:700; color:var(--text); margin-top:6px; }
+    .card .sub.muted { color:var(--dim); font-weight:500; }
+    .card .body { font-size:12px; color:var(--muted); }
+    .cap { font-size:12px; color:var(--dim); margin:-6px 0 14px; }
+    .foot { margin-top:36px; padding-top:16px; border-top:1px solid var(--stroke); font-size:12px; color:var(--dim); display:flex; flex-wrap:wrap; gap:8px 16px; justify-content:space-between; }
+    .banner { background:rgba(20,184,166,.1); border:1px solid rgba(20,184,166,.35); color:var(--green); border-radius:10px; padding:10px 14px; font-size:13px; margin-bottom:18px; }
+    @media (max-width:900px) {
+      .stats { grid-template-columns:repeat(2,1fr); }
+      .cards, .cards.three { grid-template-columns:1fr; }
+      h1 { font-size:22px; }
+      .bar-row { grid-template-columns:1fr; gap:4px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="brand">
+      <span class="tag">Notya · Post-sprint specialty audit · Australia</span>
+      <div style="display:flex;gap:14px;flex-wrap:wrap">
+        <a href="/au-40-pediatri-audit.html">AU-40 spine audit →</a>
+      </div>
+    </div>
+
+    <div class="banner">Snapshot <b>after</b> AU-DIETETICS-BETA-01d — ADIME note headings, anthropometry trend (weight / waist / BMI), meal plan + food diary on file and portal. Prior generic spine wow was 86.</div>
+
+    <h1>Clinical Dietitian (Australia) — Specialty Audit</h1>
+    <p class="lede">AU pack × Dietitians Australia practice × Australian Dietary Guidelines / NEMO / IDDSI × beta APD daily work. Snapshot 2026-10-29 (America/New_York) after the ADIME + trend + meal/diary ship.</p>
+    <div class="pills">
+      <span class="pill success">Overall Strong · wow 89</span>
+      <span class="pill success">ADIME note ready</span>
+      <span class="pill warning">Meal lines capped at 80 chars</span>
+      <span class="pill danger">Tools unsigned · no AUSNUT</span>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><div class="v success">89</div><div class="l">Overall wow (was 86 spine)</div></div>
+      <div class="stat"><div class="v success">Strong</div><div class="l">Depth for beta daily work</div></div>
+      <div class="stat"><div class="v info">10</div><div class="l">Dietetics-only Araçlar</div></div>
+      <div class="stat"><div class="v warning">01a / 01b</div><div class="l">Sign-off + 5-country OPEN</div></div>
+    </div>
+
+    <div class="callout info">
+      <h2>Executive verdict</h2>
+      <p>A beta Australian clinical dietitian can now do a real visit in Notya: write an ADIME-shaped note with PES, run MST / kJ·protein / IDDSI / labs / refeeding tools, see weight–waist–BMI over time, and leave a meal plan the patient can read (and diary into) on the portal. That clears the “actually useful for my daily work” bar. What still won’t make an APD say this is another product class: unsigned tools, 80-character meal lines, no food composition database, and a care-plan studio that is still just a review calendar.</p>
+    </div>
+
+    <h2>Coverage depth by domain</h2>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Domain</th><th>Depth</th><th>Note</th><th>Gap to wow</th></tr></thead>
+      <tbody>
+        <tr><td class="domain">ADIME note template</td><td><span class="pill success">Strong</span></td><td class="note">Role-keyed Assessment / Nutrition diagnosis / I+M-E; PES fields; SOAP lock</td><td class="gap">SOAP keys under the hood (fine)</td></tr>
+        <tr><td class="domain">Clinical Araçlar (10)</td><td><span class="pill warning">Partial</span></td><td class="note">MST score, weight %, kJ×protein, IDDSI, refeeding, enteral, goals, labs, meal, diary</td><td class="gap">MST questions not worded; no AUSNUT; sign-off OPEN</td></tr>
+        <tr><td class="domain">Anthropometry trend</td><td><span class="pill success">Strong</span></td><td class="note">Weight kg / waist cm / BMI charts from kept au-body-size</td><td class="gap">Adult only; no MUAC / DXA</td></tr>
+        <tr><td class="domain">Meal plan + food diary</td><td><span class="pill warning">Partial</span></td><td class="note">Doctor file card + portal tab; patient can add diary lines</td><td class="gap">80-char lines; no nutrient analysis</td></tr>
+        <tr><td class="domain">Hasta portalı (Sağlığım)</td><td><span class="pill warning">Partial</span></td><td class="note">Dietetics chapter + meal/diary tab (role-gated) + Triple Zero</td><td class="gap">Not full Beslenmem-depth; MST/IDDSI clinician-only</td></tr>
+        <tr><td class="domain">Intake form</td><td><span class="pill success">Strong</span></td><td class="note">AU/US place of care, allergy, swallow, labs, culture + red flags</td><td class="gap">No auto-fill into ADIME yet</td></tr>
+        <tr><td class="domain">Assistant refs + voice</td><td><span class="pill success">Strong</span></td><td class="note">DA / ADG / NEMO / ANZ + US AND; AU wins on conflict</td><td class="gap">Live assistant still AU-launch gated</td></tr>
+        <tr><td class="domain">Emergency / danger signs</td><td><span class="pill warning">Partial</span></td><td class="note">au-dietetics-flags + refeeding 000 + intake red flags</td><td class="gap">Two specialty flags only</td></tr>
+        <tr><td class="domain">Nutrition labs recorder</td><td><span class="pill warning">Partial</span></td><td class="note">AU units; values only — no invented intervals</td><td class="gap">Clipboard, not interpretive panel</td></tr>
+        <tr><td class="domain">Review / care-plan studio</td><td><span class="pill danger">Thin</span></td><td class="note">au-review-cohort + au-dietetics-plan (next review + photo)</td><td class="gap">Studio stores no meal plan; no MST re-screen cohort</td></tr>
+        <tr><td class="domain">Automated tests</td><td><span class="pill success">Strong</span></td><td class="note">Tools, ADIME, trend, portal shaping, pack wiring</td><td class="gap">No browser demo fixture yet</td></tr>
+      </tbody>
+    </table></div>
+
+    <h2>How complete vs APD “wow bar”</h2>
+    <p class="cap">Score = completeness vs what would impress a busy Australian clinical dietitian on a beta day (0–100). Source: repo inventory after AU-DIETETICS-BETA-01d.</p>
+    <div class="bars">
+      <div class="bar-row"><div class="bar-label">ADIME note</div><div class="bar-track"><div class="bar-fill" style="width:90%"></div></div><div class="bar-val">90</div></div>
+      <div class="bar-row"><div class="bar-label">Assistant / voice / SOAP lock</div><div class="bar-track"><div class="bar-fill" style="width:90%"></div></div><div class="bar-val">90</div></div>
+      <div class="bar-row"><div class="bar-label">Anthropometry trend</div><div class="bar-track"><div class="bar-fill" style="width:86%"></div></div><div class="bar-val">86</div></div>
+      <div class="bar-row"><div class="bar-label">Intake form</div><div class="bar-track"><div class="bar-fill" style="width:84%"></div></div><div class="bar-val">84</div></div>
+      <div class="bar-row"><div class="bar-label">Hasta portalı</div><div class="bar-track"><div class="bar-fill" style="width:82%"></div></div><div class="bar-val">82</div></div>
+      <div class="bar-row"><div class="bar-label">Emergency / 000</div><div class="bar-track"><div class="bar-fill" style="width:80%"></div></div><div class="bar-val">80</div></div>
+      <div class="bar-row"><div class="bar-label">Clinical Araçlar suite</div><div class="bar-track"><div class="bar-fill" style="width:76%"></div></div><div class="bar-val">76</div></div>
+      <div class="bar-row"><div class="bar-label">Meal plan + food diary</div><div class="bar-track"><div class="bar-fill" style="width:74%"></div></div><div class="bar-val">74</div></div>
+      <div class="bar-row"><div class="bar-label">Nutrition labs recorder</div><div class="bar-track"><div class="bar-fill" style="width:74%"></div></div><div class="bar-val">74</div></div>
+      <div class="bar-row"><div class="bar-label">Review / care-plan studio</div><div class="bar-track"><div class="bar-fill" style="width:58%"></div></div><div class="bar-val">58</div></div>
+      <div class="bar-row"><div class="bar-label">AUSNUT / nutrient analysis</div><div class="bar-track"><div class="bar-fill" style="width:5%"></div></div><div class="bar-val">5</div></div>
+    </div>
+
+    <h2>Practice &amp; mandate matrix</h2>
+    <p class="cap">DA = Dietitians Australia. ADG = Australian Dietary Guidelines (NHMRC). NEMO = Queensland Health nutrition support materials. IDDSI = CC BY-SA framework.</p>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Expectation</th><th>Level</th><th>In product today</th><th>Gap to wow</th></tr></thead>
+      <tbody>
+        <tr><td>Nutrition Care Process / ADIME documentation</td><td><span class="pill info">DA / NCP</span></td><td class="note">ADIME headings + PES fields + SOAP lock</td><td class="gap">Single ADIME print view for referral letters</td></tr>
+        <tr><td>Malnutrition screening (MST)</td><td><span class="pill info">AU hospital BP</span></td><td class="note">Score 0–5 recorded; band ≥2</td><td class="gap">Question wording blocked by licence — keep form beside screen</td></tr>
+        <tr><td>Energy in kilojoules</td><td><span class="pill info">AU practice</span></td><td class="note">au-energy-protein uses kJ/kg factors</td><td class="gap">No condition tables copied (correct); clinician chooses factors</td></tr>
+        <tr><td>IDDSI food/drink levels</td><td><span class="pill info">DA + SPA</span></td><td class="note">Level record for dietetics + speech-pathology</td><td class="gap">Descriptors not rewritten; testing method tick only</td></tr>
+        <tr><td>Refeeding risk awareness</td><td><span class="pill neutral">BP</span></td><td class="note">Tick list + Triple Zero warning</td><td class="gap">No electrolyte order set / thiamine pathway card</td></tr>
+        <tr><td>Adult anthropometry (BMI, waist)</td><td><span class="pill info">AIHW</span></td><td class="note">au-body-size + trend charts</td><td class="gap">Paediatric dietetics anthropometry separate</td></tr>
+        <tr><td>Patient-visible meal plan</td><td><span class="pill neutral">BP</span></td><td class="note">Portal meal + diary</td><td class="gap">Longer free text; optional food pick later</td></tr>
+        <tr><td>Practising dietitian sign-off of tools</td><td><span class="pill neutral">Product / ethics</span></td><td class="note">onaysizAciklar — unsigned</td><td class="gap">AU-DIETETICS-BETA-01a (Kaan / beta APD)</td></tr>
+      </tbody>
+    </table></div>
+
+    <h2>Dietitian pain points (typical day)</h2>
+    <div class="cards">
+      <div class="card"><div class="top"><span class="title">Writing a proper ADIME note fast</span><span class="pill success">Shipped</span></div>
+        <div class="sub"><b>Wow move</b></div><div class="body">ADIME headings + PES / intervention / monitoring prompts on the note</div>
+        <div class="sub muted">Now: Strong for beta</div></div>
+      <div class="card"><div class="top"><span class="title">Seeing weight / waist / BMI change across visits</span><span class="pill success">Shipped</span></div>
+        <div class="sub"><b>Wow move</b></div><div class="body">Trend charts from kept body-size results on the file</div>
+        <div class="sub muted">Now: Strong adult path</div></div>
+      <div class="card"><div class="top"><span class="title">Leaving a meal plan the patient can follow</span><span class="pill warning">Partial</span></div>
+        <div class="sub"><b>Wow move</b></div><div class="body">Longer lines + one care-plan card (goals + plan + next review)</div>
+        <div class="sub muted">Now: Works, but 80-char slots frustrate</div></div>
+      <div class="card"><div class="top"><span class="title">Recording MST / IDDSI / labs without inventing ranges</span><span class="pill success">Shipped</span></div>
+        <div class="sub"><b>Wow move</b></div><div class="body">Values-only labs + MST score record + IDDSI levels</div>
+        <div class="sub muted">Now: Correct and useful; MST form still external</div></div>
+      <div class="card"><div class="top"><span class="title">Trusting tools with real patients</span><span class="pill danger">Open</span></div>
+        <div class="sub"><b>Wow move</b></div><div class="body">Practising dietitian sign-off (01a)</div>
+        <div class="sub muted">Now: onaysizAciklar</div></div>
+      <div class="card"><div class="top"><span class="title">Food composition / nutrient analysis</span><span class="pill danger">Missing</span></div>
+        <div class="sub"><b>Wow move</b></div><div class="body">AUSNUT-lite pick later — not required for hospital screening beta</div>
+        <div class="sub muted">Now: Explicitly out of v1</div></div>
+    </div>
+
+    <h2>Spine scores (AU-40 dimensions, dietetics row)</h2>
+    <p class="cap">Re-scored after beta ships. Prior generic row was flat 82–90 with wow 86.</p>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Motor</th><th>Tests</th><th>UI</th><th>Patient file</th><th>Cohort</th><th>Portal</th><th>SOAP</th><th>Emergency</th><th>Record</th><th>Voice</th><th>Wow</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>92</td><td>92</td><td>88</td><td>91</td><td>86</td><td>90</td><td>94</td><td>88</td><td>88</td><td>92</td>
+          <td><strong>89</strong> <span class="pill success">Strong</span></td>
+        </tr>
+      </tbody>
+    </table></div>
+
+    <h2>Game changers (priority)</h2>
+    <div class="table-wrap"><table>
+      <thead><tr><th>#</th><th>Move</th><th>Why an APD will care</th><th>Size</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td class="domain">Raise meal/diary free-text past 80 chars</td><td class="note">First friction a beta tester will report</td><td><span class="pill success">S</span></td></tr>
+        <tr><td>2</td><td class="domain">Practising dietitian sign-off of the ten tools</td><td class="note">Unsigned tools cannot be relied on with patients</td><td><span class="pill success">S</span></td></tr>
+        <tr><td>3</td><td class="domain">One nutrition care-plan card (goals + plan + next review)</td><td class="note">Studio today is calendar-only</td><td><span class="pill warning">M</span></td></tr>
+        <tr><td>4</td><td class="domain">MST re-screen / enteral review cohort</td><td class="note">Closes the hospital dietetics loop</td><td><span class="pill warning">M</span></td></tr>
+        <tr><td>5</td><td class="domain">Optional AUSNUT-lite food pick</td><td class="note">Outpatient wow — not needed for screening beta</td><td><span class="pill neutral">L</span></td></tr>
+      </tbody>
+    </table></div>
+
+    <h2>Recommended next ships</h2>
+    <div class="cards three">
+      <div class="card"><div class="title">Sprint A — impress this week</div>
+        <div class="body"><div>1. Longer meal/diary text</div><div>2. Beta APD sign-off (01a)</div><div>3. Care-plan card unifying plan + goals + review</div></div></div>
+      <div class="card"><div class="title">Sprint B — hospital velocity</div>
+        <div class="body"><div>1. MST re-screen cohort</div><div>2. Enteral review due list</div><div>3. ADIME referral letter print</div></div></div>
+      <div class="card"><div class="title">Sprint C — country parity</div>
+        <div class="body"><div>1. us/gb/ca/nz/uz native packs (01b)</div><div>2. Local screens / energy units / dysphagia frameworks</div><div>3. Regenerate COUNTRY-PACK docs</div></div></div>
+    </div>
+
+    <h3>Sources</h3>
+    <p class="cap">Code: <code>countries/au/araclar/dieteticsTools.ts</code>, <code>countries/au/arayuz.ts</code>, <code>AntropometriTrend.tsx</code>, <code>BeslenmeDosya.tsx</code>, portal <code>beslenme</code>, <code>docs/OPEN-COMMITMENTS.md</code> AU-DIETETICS-BETA-01*. External: Dietitians Australia; Australian Dietary Guidelines (NHMRC); Queensland Health NEMO; IDDSI CC BY-SA; AIHW overweight/obesity; Ferguson et al. MST 1999 (score only).</p>
+    <p class="cap">Intentionally out of wow now: full AUSNUT, invented lab intervals, paediatric dietetics anthropometry depth, live ministry write — keep honesty, don’t fake depth.</p>
+
+    <div class="foot">
+      <span>AU-DIETETICS-BETA-AUDIT-01 · post-sprint · 2026-10-29</span>
+      <span>No patient data · internal product audit</span>
+    </div>
+  </div>
+</body>
+</html>

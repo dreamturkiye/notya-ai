@@ -13,7 +13,11 @@
  *
  * Plain data: tests and documents read it; no screen does.
  */
+import { AU_ACIL_ANAHTARLARI } from './acilBayraklari'
+import { AU_DIYET_ANAHTARLARI } from './dieteticsTools'
+import { AU_KOHORT_ANAHTARLARI } from './kohort'
 import { AU_BAGLANTI_KAYITLARI } from './referanslar'
+import { AU_INCELEME_ANAHTARLARI } from './reviewPlans'
 
 export type OnaysizAcikArac = {
   anahtar: string
@@ -64,7 +68,7 @@ export const AU_ONAYSIZ_ACIK_ARACLAR: readonly OnaysizAcikArac[] = [
   },
   {
     anahtar: 'au-immunisation-schedule', oneri: 'NOTYA-ARACLAR-DENETIM-02-AU (founder\'s question #2, 2026-10-13)', klinisyen: null,
-    bakilacak: 'Built CORE and switched on by the owner\'s explicit instruction, not waiting on this list — but still machine-written and unread by a clinician of Australia. It is a record only: no catch-up schedule, no eligibility test and no brand name. A tick does not send a dose to the Australian Immunisation Register. Sourced to NSW Health\'s published rendering of the National Immunisation Program Schedule (the Department\'s own PDF was robots-blocked this session): a clinician of Australia should confirm that rendering is still a faithful, current copy of the national schedule, and that the twelve milestones chosen are the right set to show (no risk-based or Aboriginal-and-Torres-Strait-Islander-specific additions beyond the one line that names them).',
+    bakilacak: 'Built CORE for every role, and still unread by a clinician of Australia. Milestone due days come from NSW Health\'s rendering of the National Immunisation Program Schedule (current as at 1 October 2026). Catch-up dose counts and minimum intervals come from the Australian Immunisation Handbook catch-up page (last updated 30 September 2026): a vaccine-interval month is 4 weeks. Hib-by-age, hepatitis A, meningococcal B, extra pneumococcal doses, HPV, zoster and the brand limits on later rotavirus doses are not calculated. Nothing is sent to the Australian Immunisation Register.',
   },
   {
     anahtar: 'au-mandatory-notifications', oneri: 'National Law sections 140 to 142, Queensland Act, 2026-10-15', klinisyen: null,
@@ -115,9 +119,57 @@ export const AU_ONAYSIZ_ACIK_ARACLAR: readonly OnaysizAcikArac[] = [
     bakilacak: 'Non-surgical cosmetic procedures only. Hair transplants are named there because the Medical Board guideline lists them in that group. The seven-day note is for a patient under 18. No graft count is stored. A lawyer should confirm that shortening the cooling-off rule into a tick is acceptable. Nothing is booked.',
   },
   {
+    anahtar: 'au-cosmetic-surgery-plan', oneri: 'Cosmetic surgery plan, Medical Board guideline, 2026-10-20', klinisyen: null,
+    bakilacak: 'Cosmetic surgery only. The seven-day note is for a patient 18 or older. The three-month note and the independent evaluation are for a patient under 18. A lawyer should confirm that shortening those rules into ticks is acceptable. Nothing is booked. Images stay under Documents.',
+  },
+  {
+    anahtar: 'au-physio-plan', oneri: 'Physiotherapy plan, 2026-10-20', klinisyen: null,
+    bakilacak: 'Physiotherapy only. The ticks are the practitioner\'s notes. No exercise protocol is copied. A clinician should say whether consent, a copy, and an optional photograph are the right three lines.',
+  },
+  {
+    anahtar: 'au-psychology-plan', oneri: 'Psychology plan, 2026-10-20', klinisyen: null,
+    bakilacak: 'Psychology only. A photograph is not part of an ordinary consultation. A clinician should say whether the consent lines are enough until a lawyer reads them.',
+  },
+  {
+    anahtar: 'au-dietetics-plan', oneri: 'Dietetics plan, 2026-10-20', klinisyen: null,
+    bakilacak: 'Dietetics only. No meal plan and no dose is stored. A clinician should say whether that omission is right.',
+  },
+  {
+    anahtar: 'au-ot-plan', oneri: 'Occupational therapy plan, 2026-10-20', klinisyen: null,
+    bakilacak: 'Occupational therapy only. No activity protocol is copied. A clinician should say whether consent, a copy, and an optional photograph are the right three lines.',
+  },
+  {
+    anahtar: 'au-audiology-plan', oneri: 'Audiology plan, 2026-10-20', klinisyen: null,
+    bakilacak: 'Audiology only. Hearing figures stay in the hearing tool. A clinician should say whether this note should also name a device review.',
+  },
+  {
     anahtar: 'au-privacy-principles', oneri: 'Privacy Act 1988 Schedule 1, compilation of 4 June 2026', klinisyen: null,
     bakilacak: 'The 13 headings in Schedule 1, read 20 October 2026 from the compilation in force on 4 June 2026. The operative subclauses are not set out. A tick is a note. It is not a finding that the Act is met. State and territory health-records laws are not on this screen. A lawyer should still read the consent pages.',
   },
+  ...AU_INCELEME_ANAHTARLARI.map((anahtar) => ({
+    anahtar,
+    oneri: 'AU pediatri gold — clinical review studio per role, 2026-10-28',
+    klinisyen: null,
+    bakilacak: 'Session date plus the interval the practitioner enters. No college pathway, dose or protocol is copied. A clinician of that specialty should say whether the two consent lines and the next-review day are the right three lines for ordinary follow-up in their practice.',
+  })),
+  ...AU_ACIL_ANAHTARLARI.map((anahtar) => ({
+    anahtar,
+    oneri: 'AU-PEDIATRI-GOLD-01a — per-role danger-sign pathway, 2026-10-28',
+    klinisyen: null,
+    bakilacak: 'Clinician ticks only; warning names Triple Zero (000). No diagnosis stored. Regulatory advice on checklist tools that restate ticks remains OPEN (AU-LAUNCH-01b). A clinician of that specialty should say whether the sign list matches ordinary red-flag teaching in their practice.',
+  })),
+  ...AU_KOHORT_ANAHTARLARI.map((anahtar) => ({
+    anahtar,
+    oneri: 'AU-PEDIATRI-GOLD-01b — overdue immunisation / clinical-review cohort, 2026-10-28',
+    klinisyen: null,
+    bakilacak: 'Immunisation cohort: NIP age milestones vs today; review cohort: visit + interval. Nothing is sent to AIR. Companion to takip-paneli, not a full practice-wide recall product. A paediatrician or GP lead should confirm the age-milestone set and the overdue rule.',
+  })),
+  ...AU_DIYET_ANAHTARLARI.map((anahtar) => ({
+    anahtar,
+    oneri: 'AU clinical dietetics beta suite, 2026-10-28',
+    klinisyen: null,
+    bakilacak: 'Dietetics only. A practising dietitian should confirm MST score-only recording (questions not worded), kJ/kg starting estimates, IDDSI level labels, refeeding tick list, enteral rate arithmetic, and nutrition-lab value recording (no intervals) fit ordinary AU practice before relying on them with patients.',
+  })),
   ...AU_BAGLANTI_KAYITLARI.map((k) => ({
     anahtar: k.anahtar,
     oneri: k.anahtar,

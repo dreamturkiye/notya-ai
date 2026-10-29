@@ -1,26 +1,18 @@
 'use client'
 
 /**
- * AU-ARAC-GORUNUM-01 — THE GROWTH CHART, as a plot. Reads the SAME kept results the flat list already shows
+ * AU-ARAC-GORUNUM-01-A — THE GROWTH CHART, as a plot. Reads the SAME kept results the flat list already shows
  * (./AracKayitlari.tsx is untouched) for the kit's `buyume-persentili` tool and draws them against the WHO
  * standard's own percentile bands (lib/ulke/araclar/buyumeGrafigi.ts — no new clinical content, see that file).
  *
- * NOT MOUNTED ANYWHERE YET. `buyume-persentili` is itself a switched-OFF slot of every pack today (e.g. Australia's
- * own `countries/au/araclar/yuvalarim.ts`, `acik: false`): the mechanism is ready and tested, but no pack has
- * turned it on, because the SAME clinical-lead sign-off `AU-DEPTH-PARITY-02` already asks for (a named local
- * clinician confirming the WHO standard is the right chart to show) gates the tool itself, not just this view of
- * it. Building the chart now, inert until that sign-off, means the view does not have to be built twice; wiring it
- * onto a patient's file before the tool exists would show every patient an empty chart for no reason. See
- * docs/OPEN-COMMITMENTS.md.
- *
- * Text is NOT yet routed through the per-country catalogue (lib/ulke/arayuz/metinTipleri.ts): with nothing
- * switched on anywhere to read it in the account's own form, adding new mandatory words to every pack's text file
- * for a view nobody can reach yet would be guesswork, not localisation. `metin` is a small, local, explicit prop —
- * whichever pack mounts this once the tool is live supplies its own words the same way every other tool's copy
- * comes from that pack, not a shared default. Logged as the same follow-up, not a new one.
+ * Mounted from ./Hastalar.tsx when the active pack has switched the kit tool on AND supplies
+ * `AraclarMetni.buyumeGrafigi`. Packs that leave the tool off (or omit the catalogue block) render nothing —
+ * wall rule D7: this file never names a country's own key.
  */
 import React, { useCallback, useEffect, useState } from 'react'
 import type { Uygulama } from './Kabuk'
+import { paketAraci } from './aracOrtak'
+import { arayuz, araclarMetni } from '@/lib/ulke/arayuz'
 import { buyumeCinsiyeti, buyumeEgrileriWho, buyumeNoktalari, BUYUME_PARAMETRELERI, BUYUME_PERSENTILI_ANAHTARI, type BuyumeNoktasi, type BuyumeParametresi } from '@/lib/ulke/araclar/buyumeGrafigi'
 import type { EgriSerisi } from '@/lib/clinical/lmsCekirdek'
 import { ARAC_KAYDI_API, type AracKaydi } from '@/lib/ulke/araclar/kayitTipleri'
@@ -107,13 +99,20 @@ export function BuyumeGrafigiGorunumu({ metin, kayitlar, cinsiyetVarsayilan }: {
   )
 }
 
-/** The card: reads the patient's kept results and shows the chart. null while nothing is kept yet — no empty chart shown. */
-export function BuyumeGrafigiKarti({ u, hastaId, metin, cinsiyetVarsayilan }: { u: Uygulama; hastaId: string; metin: BuyumeGrafigiMetni; cinsiyetVarsayilan?: 'male' | 'female' | null }) {
+/**
+ * The card on the patient's file. null when this pack has not switched `buyume-persentili` on, or has no
+ * `buyumeGrafigi` catalogue text — nothing is fetched in those cases. Renders nothing while no measurement is kept.
+ */
+export function BuyumeGrafigiKarti({ u, hastaId, cinsiyetVarsayilan }: { u: Uygulama; hastaId: string; cinsiyetVarsayilan?: 'male' | 'female' | null }) {
   const [kayitlar, setKayitlar] = useState<AracKaydi[] | null>(null)
-  const { hesap, api } = u
+  const { hesap, api, dil } = u
+  const icerik = arayuz().araclar
+  const metin = araclarMetni(dil).buyumeGrafigi
+  const acik = Boolean(icerik && metin && paketAraci(icerik, BUYUME_PERSENTILI_ANAHTARI))
   const yukle = useCallback(() => {
     api(`${ARAC_KAYDI_API}?hasta=${encodeURIComponent(hastaId)}`).then((r) => { if (r.ok && Array.isArray(r.j.kayitlar)) setKayitlar(r.j.kayitlar) }).catch(() => { /* no chart without a readable list */ })
   }, [api, hastaId])
-  useEffect(() => { if (hesap) yukle() }, [hesap, yukle])
+  useEffect(() => { if (hesap && acik) yukle() }, [hesap, acik, yukle])
+  if (!acik || !metin) return null
   return <BuyumeGrafigiGorunumu metin={metin} kayitlar={kayitlar} cinsiyetVarsayilan={cinsiyetVarsayilan} />
 }

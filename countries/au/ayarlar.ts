@@ -30,6 +30,7 @@ import { auEtiketAraci, auSchedule8Araci, auZehirSinifiAraci } from './araclar/p
 import { AU_GROWTH_CHART_REFERENCE, auCvdBaglantisi, auMbsBaglantisi, auPbsListesi, auPbsRaporu } from './araclar/baglantilar'
 import { AU_GIZLILIK_ARACI } from './araclar/gizlilik'
 import { auNonsurgicalPlan } from './araclar/nonsurgicalPlan'
+import { auOzelPlanlar } from './araclar/privatePlans'
 import { auWellnessPlan } from './araclar/wellnessPlan'
 import { auGstFatura } from './araclar/gstInvoice'
 import { auImmunisationReport } from './araclar/immunisationReport'
@@ -39,9 +40,14 @@ import { auBaglantiAraclari } from './araclar/referanslar'
 import { auMedicare } from './araclar/medicareParticulars'
 import { auZorunluBildirim } from './araclar/notifications'
 import { auPbsRecete } from './araclar/pbsPrescription'
+import { AU_BUYUME_PERSENTILI_ARACI } from './araclar/buyumePersentili'
 import { AU_ASI_TAKVIMI_ARACI, AU_KONSULTASYON_ARACI, auEkAraclar } from './araclar/metinler'
 import { AU_TANIMLAR } from './araclar/tanimlar'
 import { AU_EK_YUVALAR } from './araclar/yuvalarim'
+import { auAcilBayraklari } from './araclar/acilBayraklari'
+import { auDieteticsAraclari } from './araclar/dieteticsTools'
+import { auKohortAraclari } from './araclar/kohort'
+import { auIncelemePlanlari } from './araclar/reviewPlans'
 import { AU_ROLLER } from './klinik/roller'
 import { AU_BIRIMLER, AU_VELI_YASI } from './temel'
 
@@ -187,7 +193,17 @@ export const AU_GIRDI: EnUlkeGirdisi = {
     // UNVERIFIED by a local clinical lead.
     dozYazimi: { sondaSifir: false },
     // The body mass index of Australia's own tool is written in kilograms per square metre.
-    birimAdlari: { 'kg/m2': 'kg/m²' },
+    // Dietetics beta suite (kJ/kg, g/kg): Australian clinical practice uses kilojoules, not kcal.
+    birimAdlari: {
+      'kg/m2': 'kg/m²',
+      'kJ/kg': 'kJ/kg',
+      'g/kg': 'g/kg',
+      kJ: 'kJ',
+      'mL/h': 'mL/h',
+      // Dietetics nutrition-lab recorder (ferritin / B12 / folate — AU reporting units)
+      'pmol/L': 'pmol/L',
+      'nmol/L': 'nmol/L',
+    },
     // FOR A LOCAL CLINICAL LEAD: the tools of the shared set this country keeps switched off, and why.
     kapali: {
       // REMOVED FOR AUSTRALIA by the audit's decision ("remove"): it is not this country's scale. It stays a slot only
@@ -292,6 +308,10 @@ export const AU_GIRDI: EnUlkeGirdisi = {
         AU_KONSULTASYON_ARACI,
         // NOTYA-ARACLAR-DENETIM-02-AU, 2026-10-13 — the National Immunisation Program schedule, CORE (every role).
         AU_ASI_TAKVIMI_ARACI,
+        // AU pediatri gold, 2026-10-28 — WHO growth percentiles (kit mechanism), paediatrics + general practice.
+        // Switched on without a clinician's sign-off (owner order: bring AU to TR pediatri gold). ANZSPED/CDC for
+        // 2–18 stays on the growth-chart reference tile beside this calculator.
+        AU_BUYUME_PERSENTILI_ARACI,
         // Australian Immunisation Register Rules 2026, section 10. Doctors only. A tick is not a report.
         auImmunisationReport(hekimRolleri(SATIRLAR)),
         // NOTYA-ARACLAR-DENETIM-02-AU, 2026-10-13 — the growth-chart link-out tile (founder's question #3).
@@ -302,6 +322,19 @@ export const AU_GIRDI: EnUlkeGirdisi = {
         auWellnessPlan(),
         // Hair transplants, listed with non-surgical cosmetic procedures. Not a role of their own.
         auNonsurgicalPlan(),
+        // One saved plan each for the private roles that still had none: cosmetic surgery,
+        // physiotherapy, psychology, dietetics, occupational therapy, audiology.
+        ...auOzelPlanlar(),
+        // AU pediatri gold, 2026-10-28 — one clinical-review studio per role that still had none
+        // (every medical specialty + podiatry + speech pathology + pain medicine). Specialty-gated.
+        ...auIncelemePlanlari(),
+        // AU-PEDIATRI-GOLD-01a/b Strong push, 2026-10-28 — per-role danger-sign pathways + overdue
+        // immunisation/review cohort checks. Specialty-gated flags; cohort tools as documented.
+        ...auAcilBayraklari(),
+        ...auKohortAraclari(),
+        // AU clinical dietetics beta suite — specialty-only (dietetics). MST score, weight %,
+        // energy/protein kJ, IDDSI, refeeding ticks, enteral rate, person-centred goals.
+        ...auDieteticsAraclari(),
         AU_GROWTH_CHART_REFERENCE,
         AU_KIMLIK_KONTROL_ARACI,
         AU_GIZLILIK_ARACI,
@@ -357,6 +390,8 @@ export const AU_GIRDI: EnUlkeGirdisi = {
     // metinler.ts's own (AU_ASI_TAKVIMI_ARACI) — this field only tells the shared screen which tool to read that
     // way; it names no content.
     takvimliListeAraci: 'au-immunisation-schedule',
+    // AU dietetics beta, 2026-10-28 — adult anthropometry trend on the patient file from kept au-body-size results.
+    antropometriTrendAraci: 'au-body-size',
   },
   acilis: {
     // THE EXAMPLE PHONE NUMBER — UNVERIFIED. One of the mobile numbers the communications regulator sets aside for

@@ -9,7 +9,7 @@
  * (./yuvalar.ts, `scope_of_practice`).
  */
 import type { EnRol } from '../roller'
-import { BARDAK, cok, eh, HICBIRI, KEZ, kisa, NE, NE_ZAMAN, PUAN, s, SAAT, sayi, tek, uzun, type HamRol } from './yardimci'
+import { BARDAK, cok, eh, HICBIRI, ILAC_ADI, KEZ, kisa, NE, NE_ZAMAN, PUAN, s, SAAT, sayi, tek, TETKIK, uzun, type HamRol } from './yardimci'
 
 export const EN_ROL_SORULARI_3: Readonly<Partial<Record<EnRol, HamRol>>> = {
   'hair-transplant': {
@@ -87,15 +87,43 @@ export const EN_ROL_SORULARI_3: Readonly<Partial<Record<EnRol, HamRol>>> = {
     ],
   },
   dietetics: {
-    baslik: 'About eating',
+    baslik: 'About eating and nutrition',
+    veliBasligi: 'About the child\'s eating and nutrition',
     sorular: [
-      tek('di_purpose', 'Purpose of the visit', [s('lose', 'Losing weight'), s('gain', 'Gaining weight'), s('condition', 'A diet because of a condition'), s('healthy', 'Healthy eating')]),
+      tek('di_purpose', 'Purpose of the visit', [
+        s('lose', 'Losing weight'),
+        s('gain', 'Gaining weight'),
+        s('diabetes', 'Diabetes or blood sugar'),
+        s('renal', 'Kidney or fluid'),
+        s('gi', 'Gut, bowel or digestion'),
+        s('allergy', 'Food allergy or intolerance'),
+        s('texture', 'Chewing, swallowing or texture'),
+        s('enteral', 'Tube or oral nutrition support'),
+        s('healthy', 'Healthy eating or general advice'),
+        s('other', 'Something else'),
+      ]),
+      tek('di_care_place', 'Where is nutrition care usually arranged for you?', [
+        s('au', 'Australia'),
+        s('us', 'United States'),
+        s('both', 'Both Australia and the United States'),
+        s('other', 'Another country'),
+        s('unsure', 'I am not sure'),
+      ], { yardim: 'This helps the dietitian match advice to the guidelines that usually apply to you.' }),
       tek('di_weight', 'Has the weight changed in the last six months?', [s('no', 'It has not'), s('down', 'It has gone down'), s('up', 'It has gone up')]),
+      eh('di_weight_amt', 'Do you know about how much the weight changed?', 'About how many kilograms, and over how long?'),
       sayi('di_meals', 'How many times a day do you eat?', KEZ, 1, 12, { veliMetni: 'How many times a day does the child eat?' }),
       sayi('di_water', 'About how many glasses of water are drunk in a day?', BARDAK, 0, 30),
-      uzun('di_diet', 'A diet or eating restrictions that are followed'),
+      uzun('di_diet', 'A diet, eating pattern or restrictions that are followed'),
       uzun('di_avoided', 'Foods that are not eaten or not tolerated well'),
+      eh('di_allergy', 'Is there a food allergy with a reaction (rash, swelling, breathing trouble)?', 'Which food, and what happened?'),
+      eh('di_swallow', 'Is chewing or swallowing hard, or is a special food texture used?', NE),
+      eh('di_labs', 'Do you have recent blood-test results with you?', TETKIK),
+      eh('di_supp', 'Are vitamins, minerals or other supplements taken?', 'Which ones, and the dose if you know it'),
+      eh('di_diabetes', 'Is diabetes or high blood sugar treated with medicine or insulin?', ILAC_ADI),
+      eh('di_bowel', 'Has bowel habit changed lately (constipation, diarrhoea, or blood)?', NE),
       tek('di_activity', 'Physical activity', [s('little', 'Hardly any'), s('sometimes', 'Once or twice a week'), s('regular', 'Three times a week or more')]),
+      eh('di_referral', 'Is there a referral from a doctor?', 'Which diagnosis or reason does the referral name?'),
+      uzun('di_culture', 'Cultural, religious or family food rules the dietitian should know'),
     ],
   },
   'occupational-therapy': {

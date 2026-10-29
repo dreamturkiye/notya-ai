@@ -24,9 +24,10 @@ import { paketMetinleri } from '@/countries/_dil/en/testing/paketSinamasi'
 import type { EnUlkeGirdisi } from '@/countries/_dil/en/girdi'
 import type { EnBicim } from '@/countries/_dil/en/varyant'
 
-// `--ulke <code>` names the country for a caller that may not read the build variable itself (the tests of a pack)
+// `--ulke` after static imports cannot override a pack already locked by a parent without NOTYA_COUNTRY.
+// Pack tests set NOTYA_COUNTRY on the parent so the spawn inherits it; CLI callers should set the env too.
 const ulkeArg = process.argv.indexOf('--ulke')
-if (ulkeArg > -1) process.env.NOTYA_COUNTRY = process.argv[ulkeArg + 1]
+if (ulkeArg > -1 && !process.env.NOTYA_COUNTRY) process.env.NOTYA_COUNTRY = process.argv[ulkeArg + 1]
 const { AKTIF_PAKET: p } = await import('@/countries/active')
 const { AKTIF_ARAYUZ: a } = await import('@/countries/active/arayuz')
 const { AKTIF_KLINIK: k } = await import('@/countries/active/klinik')

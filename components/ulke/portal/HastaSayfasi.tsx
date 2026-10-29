@@ -36,6 +36,7 @@ import type { DilKodu } from '@/lib/ulke/tipler'
 import { okunmamisSayisi, sonMesajAni } from '../mesajOrtak'
 import { PortalFormKarti, PortalFormu, type PortalIstegi } from './HastaFormu'
 import { PortalGizlilikKarti } from './GizlilikKarti'
+import { PortalBeslenmeKarti } from './BeslenmeKarti'
 
 /** A day with its weekday where the country has appointments, in the pack's own pattern (the day is always written in full). */
 export const portalGunu = (r: RandevuMetni | null, gun: string, uzun = true): string => {
@@ -43,7 +44,7 @@ export const portalGunu = (r: RandevuMetni | null, gun: string, uzun = true): st
   return r ? `${gunAdi(r, haftaGunu(gun), uzun)}${uzun ? ',' : ''} ${yazi}` : yazi
 }
 
-export type Sekme = 'ozet' | 'mesajlar' | 'ziyaretler' | 'randevu' | 'gizlilik' | 'form'
+export type Sekme = 'ozet' | 'mesajlar' | 'ziyaretler' | 'randevu' | 'beslenme' | 'gizlilik' | 'form'
 export type IstekFormu = { gunler: string[]; neden: string }
 export type IstekHatasi = 'gun' | 'cok' | 'gonderilemedi' | 'baglanti' | null
 
@@ -128,11 +129,13 @@ export function PortalHastaSayfasi({ dil, p, r, icerik, acilNumara, iste, yenile
   const okunmamis = mesajlar.g ? okunmamisSayisi(mesajlar.g.yazismalar, 'hasta') : 0
   const sonrakiRandevu = i.randevular?.[0] ?? null
 
+  const beslenmeVar = Boolean(i.beslenme)
   const nav: Array<{ key: Sekme; label: string }> = [
     { key: 'ozet', label: g.sekmeOzet },
     ...(mesajVar ? [{ key: 'mesajlar' as const, label: g.sekmeMesajlar }] : []),
     { key: 'ziyaretler', label: g.sekmeZiyaretler },
     ...(randevuVar ? [{ key: 'randevu' as const, label: g.sekmeRandevu }] : []),
+    ...(beslenmeVar ? [{ key: 'beslenme' as const, label: i.beslenme!.etiket.sekmeBaslik }] : []),
     ...(gizlilikVar ? [{ key: 'gizlilik' as const, label: g.sekmeGizlilik }] : []),
     ...(i.form ? [{ key: 'form' as const, label: g.sekmeForm }] : []),
   ]
@@ -256,6 +259,22 @@ export function PortalHastaSayfasi({ dil, p, r, icerik, acilNumara, iste, yenile
         ))}
         {i.saatDilimi && s.saatDilimi ? <p style={{ color: 'var(--sg-muted)', fontSize: 13 }}>{yerine(s.saatDilimi, i.saatDilimi.replace(/_/g, ' '))}</p> : null}
       </div>
+    )
+  } else if (sekme === 'beslenme' && i.beslenme) {
+    icerikEkrani = (
+      <Eski dil={dil}>
+        <PortalBeslenmeKarti
+          beslenme={i.beslenme}
+          kaydet={async (girdi) => {
+            try {
+              const rr = await iste('/beslenme', girdi)
+              if (rr.status === 200) { yenile(); return true }
+              if (rr.status === 401) { yenile(); return false }
+              return false
+            } catch { return false }
+          }}
+        />
+      </Eski>
     )
   } else if (sekme === 'gizlilik' && gizlilikVar) {
     icerikEkrani = <Eski dil={dil}><PortalGizlilikKarti iste={iste} oturumBitti={yenile} /></Eski>

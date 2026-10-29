@@ -15,8 +15,11 @@
  *                             NOT paediatrics, NOT paediatric surgery, NOT the other allied professions.
  *   au-oncology-grading       medical oncology and radiation oncology. NOT general practice, NOT haematology, NOT
  *                             any other role: nobody else was named for it by the audit.
+ *   au-immunisation-schedule  BASE: every role, cardiology included. Catch-up uses the same screen. It is not a
+ *                             paediatrics-only tool, and it is not hidden from any branş.
  */
 import type { PaketAraci } from '@/lib/ulke/araclar/tipler'
+import { ASI_ADIM, ASI_ANTIJEN, ASI_BANT } from './asiYakalama'
 import { AU_ASI_TAKVIMI_MADDELERI } from './tanimlar'
 
 const D = 'en-AU'
@@ -73,20 +76,96 @@ export const AU_ASI_TAKVIMI_ARACI: PaketAraci = {
   roller: null,
   metin: {
     ad: m('National Immunisation Program schedule'),
-    aciklama: m('A record of the National Immunisation Program (NIP) schedule’s milestones, from birth to the recommended vaccines of later life. Tick a milestone once it is done and, if you wish, the date. This is a record, not a reminder: it works out no catch-up schedule and no eligibility, and it does not name which brand or exact risk-based addition was given — read those from the schedule itself.'),
-    alanlar: Object.fromEntries(AU_ASI_TAKVIMI_MADDELERI.flatMap((k) => [[k, m(`${AU_ASI_SATIRLARI[k].etiket} — ${AU_ASI_SATIRLARI[k].icerik}`)], [`${k}_tarih`, m(`Date given (${AU_ASI_SATIRLARI[k].etiket.toLowerCase()})`)]])),
+    aciklama: m('A record of the National Immunisation Program (NIP) schedule’s milestones, and the catch-up for one missed dose from the Australian Immunisation Handbook. Enter the date of birth and the screen works out the due day of each milestone the schedule states as an age, and how many doses of the all-children antigens the Handbook says a child of that age should already have had. For a missed dose, choose the vaccine, which doses the interval sits between, and the date of the last dose. The next day is the Handbook minimum: a month in that interval is 4 weeks. School Year 7, School Year 10 and pregnancy are not worked out from the birth date.'),
+    alanlar: {
+      dogumGunu: m('Date of birth'),
+      asisi: m('Vaccine for the missed dose'),
+      adim: m('Which doses the interval sits between'),
+      sonDoz: m('Date of the last dose of that vaccine'),
+      ilkDoz: m('Date of hepatitis B dose 1'),
+      ...Object.fromEntries(AU_ASI_TAKVIMI_MADDELERI.flatMap((k) => [[k, m(`${AU_ASI_SATIRLARI[k].etiket} — ${AU_ASI_SATIRLARI[k].icerik}`)], [`${k}_tarih`, m(`Date given (${AU_ASI_SATIRLARI[k].etiket.toLowerCase()})`)]])),
+    },
+    secenekler: {
+      asisi: Object.fromEntries((Object.entries({
+        dtpa: 'Diphtheria, tetanus and pertussis',
+        hepb: 'Hepatitis B (not the birth dose)',
+        hib: 'Haemophilus influenzae type b',
+        ipv: 'Polio',
+        mmr: 'Measles, mumps and rubella',
+        pcv: 'Pneumococcal conjugate',
+        menacwy: 'Meningococcal ACWY',
+        rota: 'Rotavirus',
+        varicella: 'Varicella',
+      } satisfies Record<(typeof ASI_ANTIJEN)[number], string>) as [string, string][]).map(([k, ad]) => [k, m(ad)])),
+      adim: Object.fromEntries((Object.entries({
+        d12: 'Between dose 1 and dose 2',
+        d23: 'Between dose 2 and dose 3',
+        d34: 'Between dose 3 and dose 4',
+        d45: 'Between dose 4 and dose 5',
+      } satisfies Record<(typeof ASI_ADIM)[number], string>) as [string, string][]).map(([k, ad]) => [k, m(ad)])),
+    },
     // One label per milestone's date, for the RESULT line once it is kept (./tanimlar.ts `tarihler`) — distinct from
     // `alanlar` above, which labels the typed field itself (lib/ulke/araclar/tipler.ts, `AracMetni.tarihler`).
-    tarihler: Object.fromEntries(AU_ASI_TAKVIMI_MADDELERI.map((k) => [`${k}_tarih`, m(`Date given (${AU_ASI_SATIRLARI[k].etiket.toLowerCase()})`)])),
-    sayilar: { isaretli: m('Milestones recorded') },
-    uyarilar: { air_yok: m('Nothing is sent to the Australian Immunisation Register. A tick is a note in this product only.') },
-    not: m('A record of the national schedule’s milestones, kept by this product. It is not a reminder service, it does not report a dose to the Australian Immunisation Register, and it sends nothing to the patient. Source: Australian Government Department of Health, Disability and Ageing, National Immunisation Program Schedule.'),
+    tarihler: {
+      ...Object.fromEntries(AU_ASI_TAKVIMI_MADDELERI.map((k) => [`${k}_tarih`, m(`Date given (${AU_ASI_SATIRLARI[k].etiket.toLowerCase()})`)])),
+      vade_dogum: m('Due day (birth)'),
+      dogum_son: m('Last day of the birth dose window'),
+      vade_hafta6: m('Due day (6 weeks)'),
+      vade_ay4: m('Due day (4 months)'),
+      vade_ay6: m('Due day (6 months)'),
+      vade_ay12: m('Due day (12 months)'),
+      vade_ay18: m('Due day (18 months)'),
+      vade_yas4: m('Due day (4 years)'),
+      vade_yas65: m('Due day (65 years)'),
+      vade_yas75: m('Due day (75 years)'),
+      enErken: m('Earliest day for the next dose'),
+      planBitis: m('Last day of a planned catch-up'),
+    },
+    sayilar: {
+      isaretli: m('Milestones recorded'),
+      dtpa: m('DTPa doses already due'),
+      hepb: m('Hepatitis B doses already due'),
+      menacwy: m('Meningococcal ACWY doses already due'),
+      mmr: m('MMR doses already due'),
+      pcv: m('Pneumococcal doses already due'),
+      ipv: m('Polio doses already due'),
+      varicella: m('Varicella doses already due'),
+      rota: m('Rotavirus doses already due'),
+    },
+    bantlar: Object.fromEntries((Object.entries({
+      ay0: '0 to under 2 months',
+      ay2: '2 to under 4 months',
+      ay4: '4 to under 6 months',
+      ay6: '6 to under 12 months',
+      ay12: '12 to 18 months',
+      ay18: 'Over 18 months to under 4 years',
+      yas4: '4 years to under 10 years',
+      yas10: '10 years and over',
+    } satisfies Record<(typeof ASI_BANT)[number], string>) as [string, string][]).map(([k, ad]) => [k, m(ad)])),
+    uyarilar: {
+      air_yok: m('Nothing is sent to the Australian Immunisation Register. A tick, a due day and a catch-up day are notes in this product only.'),
+      ozel: m('Hepatitis A, meningococcal B, an extra pneumococcal dose, and Hib doses by age are not in these counts. They depend on Aboriginal and Torres Strait Islander status, the state or territory, a risk condition, or the separate Hib table.'),
+      istisna: m('From 4 years to under 10 years the table counts 5 DTPa doses unless dose 4 was given after 3.5 years, and 4 polio doses unless dose 3 was given after 4 years. The ages of those earlier doses were not entered, so the full count is shown.'),
+      rota: m('No rotavirus catch-up day is shown from 6 months of age, or when the date of birth is missing. The Handbook gives no Rotarix catch-up from 6 months, and every dose must stay inside the brand’s upper age limit.'),
+      rotaSinir: m('This day is 4 weeks after the last rotavirus dose. It does not apply the brand’s upper age limit. The first dose of RotaTeq is before 13 weeks of age, and the first dose of Rotarix is before 15 weeks. Later doses follow the Rotavirus chapter, which this screen does not apply.'),
+      onYas: m('From 10 years the childhood dose counts are not used. On the population table, diphtheria and tetanus are 3 doses and pertussis is 1 dose, with the adolescent pertussis booster at 11–13 years. Pneumococcal, HPV and zoster catch-up are not worked out here.'),
+      onYasAralik: m('That step is not a minimum interval on the population catch-up table for people aged 10 years and over.'),
+      yasGerek: m('The date of birth is needed before this step is read from the table for the person’s age. The childhood table and the table for 10 years and over do not give the same interval.'),
+      adimYok: m('The Handbook table has no minimum interval for that step of this vaccine.'),
+      hepb16: m('The 16-week span from hepatitis B dose 1 to dose 3 was not applied, because the date of dose 1 was not entered. The day is 8 weeks after dose 2 only.'),
+      hepbIki: m('At 11–15 years, hepatitis B can also be completed as 2 adult doses, 16 weeks apart. The day shown is the 3-dose schedule.'),
+      pcvYas: m('Pneumococcal dose 3 or dose 4 must also fall at 12 months of age or older. The date of birth was not entered, so that age was not applied.'),
+      hib: m('The day uses the summary intervals (4 weeks, 4 weeks, then 8 weeks). The Hib table for children under 5 years changes the doses with age and with the ages of the doses already given. This screen does not apply that table.'),
+      menTek: m('Nimenrix and MenQuadfi are a single dose. The 8-week interval is for Menveo only. Extra doses for a specified medical condition are not worked out here.'),
+      kombinasyon: m('Where the dose is a combination vaccine, every antigen in it must meet its own minimum interval. The day is for the one vaccine chosen.'),
+    },
+    not: m('Due days are the ages on the national schedule, counted from the date of birth. The birth dose window is the 7 days named beside that dose. School Year 7, School Year 10 and pregnancy are not counted from the birth date. A catch-up interval uses the Handbook rule that a month is 4 weeks. The age column, and the 6-month planned catch-up for a person under 20, are calendar months. The planned-catch-up day is not recorded on the Register. Nothing is sent.'),
   },
   lisans: {
     durum: 'serbest',
     hakSahibi: 'Australian Government Department of Health, Disability and Ageing',
-    kaynak: 'https://www.health.nsw.gov.au/schedule (read 2026-10-13): NSW Health’s published rendering of the Australian Government’s National Immunisation Program Schedule, current as at 1 October 2026; the Department’s own PDF refused this session’s automated reader (robots-disallowed).',
-    bildirim: m('Content: Australian Government Department of Health, Disability and Ageing, National Immunisation Program Schedule, as published by NSW Health, current as at 1 October 2026.'),
+    kaynak: 'https://immunisationhandbook.health.gov.au/contents/catch-up-vaccination (read 2026-10-20): Australian Immunisation Handbook, catch-up vaccination, last updated 30 September 2026. Milestone list from https://www.health.nsw.gov.au/schedule (read 2026-10-13), NSW Health’s published rendering of the National Immunisation Program Schedule, current as at 1 October 2026.',
+    bildirim: m('Catch-up intervals: Australian Government Department of Health, Disability and Ageing, Australian Immunisation Handbook, catch-up vaccination, last updated 30 September 2026. Milestones: National Immunisation Program Schedule, as published by NSW Health, current as at 1 October 2026.'),
   },
 }
 

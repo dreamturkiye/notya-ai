@@ -328,6 +328,45 @@ export type PortalAyarlari = {
    * is not for emergencies and names NO number. The catalogue holds the sentence, never the number.
    */
   acilNumara?: string | null
+  /**
+   * One patient chapter per role. Absent = the patient's page has no specialty chapter.
+   * The words are the pack's. The kit shows the chapter of the doctor's role and no other.
+   */
+  bolumler?: Readonly<Record<string, { baslik: string; satirlar: readonly string[] }>>
+  /**
+   * AU-DIETETICS-MEAL-01 — optional: pack-named tool keys whose kept results the patient portal shows for
+   * dietetics (current meal plan + recent food-diary entries), plus patient-facing labels. Absent = no block.
+   */
+  beslenme?: {
+    planAraci: string
+    gunlukAraci: string
+    etiket: {
+      /** Portal nav tab label (patient-facing). */
+      sekmeBaslik: string
+      planBaslik: string
+      planYok: string
+      kahvalti: string
+      ogle: string
+      aksam: string
+      atistirmalik: string
+      notlar: string
+      gunlukBaslik: string
+      gunlukYok: string
+      gunlukEkle: string
+      gun: string
+      ogun: string
+      aciklama: string
+      kaydet: string
+      kaydedildi: string
+      kaydedilemedi: string
+      ogunAdi: Readonly<Record<string, string>>
+      kimAdi: Readonly<Record<string, string>>
+    }
+  }
+  /** The label beside a follow-up day the clinician kept. Required when `bolumler` is set. */
+  tarihEtiket?: string
+  /** Overdue, today, within 7 days, later. Required when `bolumler` is set. */
+  durumEtiket?: Readonly<Record<'gecikti' | 'bugun' | 'yaklasiyor' | 'planli', string>>
 }
 
 /**

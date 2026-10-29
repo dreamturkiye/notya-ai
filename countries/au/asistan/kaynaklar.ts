@@ -36,6 +36,7 @@
  */
 import type { AsistanKaynaklari } from '@/lib/ulke/arayuz/tipler'
 import type { Sunulan } from '../klinik/asistanAdlari'
+import { auSesOdakBlogu } from './sesOdak'
 
 // Short, plain caption text — never developer/compliance jargon rendered to a doctor.
 const NOT = 'For reference only. Not used to answer questions, and not stored.'
@@ -251,9 +252,24 @@ const SATIRLAR: Record<Sunulan, Satir> = {
     ["Barlow's Clinical Handbook of Psychological Disorders", 'Cognitive Behavior Therapy: Basics and Beyond (Beck)'],
   ),
   dietetics: s(
-    ['Dietitians Australia', 'Dietitians Australia National Competency Standards', 'Australian Dietary Guidelines', OZ],
-    ['Understanding Nutrition (Australian and New Zealand edition)'],
-    ["Krause and Mahan's Food and the Nutrition Care Process"],
+    [
+      'Dietitians Australia',
+      'Dietitians Australia National Competency Standards',
+      'Australian Dietary Guidelines (National Health and Medical Research Council)',
+      'Queensland Health NEMO nutrition support materials (starting estimates)',
+      OZ,
+    ],
+    [
+      'Understanding Nutrition (Australian and New Zealand edition)',
+      'Clinical Sports Nutrition (Burke and Deakin)',
+    ],
+    [
+      "Krause and Mahan's Food and the Nutrition Care Process",
+      'Dietary Guidelines for Americans',
+      'Academy of Nutrition and Dietetics Nutrition Care Manual',
+      'Academy of Nutrition and Dietetics Evidence Analysis Library',
+      'Academy of Nutrition and Dietetics Nutrition Care Process',
+    ],
   ),
   'occupational-therapy': s(
     ['Occupational Therapy Australia', 'Occupational Therapy Board of Australia', 'Occupational Therapy Australia professional standards', 'Ahpra registration standards for occupational therapy'],
@@ -310,6 +326,7 @@ export function auAsistanKaynakBlogu(rol: string): string | null {
   if (!k) return null
   const a = AU_KITAP_AYRIMI[rol as Sunulan]
   const sat = (liste: readonly string[]) => liste.map((x) => `• ${x}`).join('\n')
+  const odak = auSesOdakBlogu(rol)
   return [
     '=== AUSTRALIAN PRACTICE SOURCES (BINDING) ===',
     'For clinical decisions, doses, work-up and referral use these FIRST.',
@@ -318,5 +335,7 @@ export function auAsistanKaynakBlogu(rol: string): string | null {
     sat(k.yetki),
     ...(a.ulusal.length ? ['', '=== AUSTRALIAN AND ANZ BOOKS ===', sat(a.ulusal)] : []),
     ...(a.uluslararasi.length ? ['', '=== INTERNATIONAL TEXTS (depth only — not practice authority) ===', sat(a.uluslararasi)] : []),
+    // AU-PEDIATRI-GOLD-01a — specialty clinical focus + Triple Zero pathway (TR clinicalFocus mirror).
+    ...(odak ? ['', odak] : []),
   ].join('\n')
 }

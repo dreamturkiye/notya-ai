@@ -451,8 +451,38 @@ describe('patient portal — C. isolation', () => {
     for (const q of vt.sorgular) {
       const f = q.filtreler.join(' ')
       assert.ok(![H2, H3, B].some((x) => f.includes(x)), `${q.tablo}: a statement of patient 1's page names somebody else — ${f}`)
-      if (['ulke_hastalar', 'hasta_ulke_bilgisi', 'ulke_randevulari', 'ulke_hasta_ozetleri', 'ulke_randevu_istekleri', 'ulke_notlar', 'ulke_muayeneler'].includes(q.tablo)) assert.ok(f.includes(`doctor_id=eq.${A}`), `${q.tablo}: read without the doctor — ${f}`)
-      if (['ulke_randevulari', 'ulke_hasta_ozetleri', 'ulke_randevu_istekleri', 'ulke_muayeneler', 'hasta_ulke_bilgisi'].includes(q.tablo)) assert.ok(f.includes(H1), `${q.tablo}: read without the patient — ${f}`)
+      if (['ulke_hastalar', 'hasta_ulke_bilgisi', 'ulke_randevulari', 'ulke_hasta_ozetleri', 'ulke_randevu_istekleri', 'ulke_notlar', 'ulke_muayeneler', 'ulke_arac_kayitlari'].includes(q.tablo)) assert.ok(f.includes(`doctor_id=eq.${A}`), `${q.tablo}: read without the doctor — ${f}`)
+      if (['ulke_randevulari', 'ulke_hasta_ozetleri', 'ulke_randevu_istekleri', 'ulke_muayeneler', 'hasta_ulke_bilgisi', 'ulke_arac_kayitlari'].includes(q.tablo)) assert.ok(f.includes(H1), `${q.tablo}: read without the patient — ${f}`)
+    }
+  })
+
+  it('a follow-up day kept for another patient, another doctor, or a closed row is not on this page, and the tool record is never read', async () => {
+    if (!ACIK) return
+    const GIZLI = 'QA-TOOL-RECORD-SECRET'
+    const kendi = '2099-04-02'
+    const kapali = '2099-05-09'
+    const baskasi = '2099-03-17'
+    const baskaDoktor = '2099-06-21'
+    const satir = (id: string, doktor: string, hasta: string, gun: string, kapandi: string | null) => ({ id, ulke: BU, doctor_id: doktor, patient_id: hasta, arac: 'qa-arac', kayit_encrypted: sifrele(GIZLI), takip_tarihi: gun, kapandi_at: kapandi, created_at: simdiIso(), updated_at: simdiIso() })
+    tablo('ulke_arac_kayitlari').push(
+      satir('90000000-0000-4000-8000-0000000000a1', A, H1, kendi, null),
+      satir('90000000-0000-4000-8000-0000000000a2', A, H1, kapali, simdiIso()),
+      satir('90000000-0000-4000-8000-0000000000a3', A, H2, baskasi, null),
+      satir('90000000-0000-4000-8000-0000000000a4', B, H3, baskaDoktor, null),
+    )
+    const l1 = await erisimVer('jeton-a', H1)
+    const g1 = await girisYap(l1.token, l1.pin)
+    const sayfa = await iste(rota.portal, 'GET', '/api/ulke/portal', { cerez: g1.cerez })
+    const metin = JSON.stringify(sayfa.govde)
+    assert.equal(sayfa.status, 200)
+    for (const yasak of [GIZLI, baskasi, kapali, baskaDoktor, H2, H3, B]) assert.ok(!metin.includes(yasak), `the page carries "${yasak}"`)
+    const bolum = sayfa.govde.bolum as { anahtar?: string; tarihler?: { gun: string }[] } | undefined
+    if (rol && paket.uygulama?.portal?.bolumler?.[rol]) {
+      assert.equal(bolum?.anahtar, rol)
+      assert.deepEqual(bolum?.tarihler?.map((t) => t.gun), [kendi])
+    } else {
+      assert.equal(bolum, undefined)
+      assert.ok(!metin.includes(kendi))
     }
   })
 

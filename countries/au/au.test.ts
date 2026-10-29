@@ -8,6 +8,8 @@
  * (docs/araclar-denetim/AU.md): its own role list, who sees which tool, the country's numbers with their sources,
  * and the tools only it has. Their arithmetic, against each source's own worked example: ./araclar/araclar.test.ts.
  */
+process.env.NOTYA_COUNTRY = 'au'
+
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 import { join } from 'node:path'
@@ -30,6 +32,10 @@ import { EN_ROLLER, enRolAnahtarlari } from '../_dil/en/klinik/roller'
 import { ingilizcePaketSinamasi, kaynakOku } from '../_dil/en/testing/paketSinamasi'
 import { enYaz } from '../_dil/en/varyant'
 import { AU_ONAYSIZ_ACIK_ANAHTARLAR, AU_ONAYSIZ_ACIK_ARACLAR } from './araclar/onaysizAciklar'
+import { AU_ACIL_ANAHTARLARI } from './araclar/acilBayraklari'
+import { AU_DIYET_ANAHTARLARI } from './araclar/dieteticsTools'
+import { AU_KOHORT_ANAHTARLARI } from './araclar/kohort'
+import { AU_INCELEME_ANAHTARLARI } from './araclar/reviewPlans'
 import { AU_BAGLANTI_ANAHTARLARI } from './araclar/referanslar'
 import { AU_ARAYUZ } from './arayuz'
 import { AU_GIRDI } from './ayarlar'
@@ -46,13 +52,13 @@ import { AU_SIZINTI_TERIMLERI } from './sizintiTerimleri'
 const D = 'en-AU'
 const LAB = { albuminKreatinin: 'mg/mmol', hemoglobin: 'g/L', kreatinin: 'umol/L', glukoz: 'mmol/L', kolesterol: 'mmol/L', crp: 'mg/L', psa: 'ug/L', hba1c: ['%', 'mmol/mol'] } as const
 /** The tools with a MECHANISM only Australia has (./araclar/tanimlar.ts). */
-const KENDI_MEKANIZMALI = ['au-body-size', 'au-mental-health-screen', 'au-oncology-grading', 'au-immunisation-schedule', 'au-immunisation-report', 'au-notifiable-diseases', 'au-poisons-schedules', 'au-schedule-8', 'au-dispensing-label', 'au-mandatory-notifications', 'au-pbs-prescription', 'au-medicare-particulars', 'au-identifier-check', 'au-privacy-principles', 'au-tax-invoice', 'au-my-health-record', 'au-wellness-plan', 'au-nonsurgical-plan']
+const KENDI_MEKANIZMALI = ['au-body-size', 'au-mental-health-screen', 'au-oncology-grading', 'au-immunisation-schedule', 'au-immunisation-report', 'au-notifiable-diseases', 'au-poisons-schedules', 'au-schedule-8', 'au-dispensing-label', 'au-mandatory-notifications', 'au-pbs-prescription', 'au-medicare-particulars', 'au-identifier-check', 'au-privacy-principles', 'au-tax-invoice', 'au-my-health-record', 'au-wellness-plan', 'au-nonsurgical-plan', 'au-cosmetic-surgery-plan', 'au-physio-plan', 'au-psychology-plan', 'au-dietetics-plan', 'au-ot-plan', 'au-audiology-plan', ...AU_INCELEME_ANAHTARLARI, ...AU_ACIL_ANAHTARLARI, ...AU_KOHORT_ANAHTARLARI, ...AU_DIYET_ANAHTARLARI]
 /** Link-out tiles only Australia has: no mechanism, no arithmetic. College tiles are AU_BAGLANTI_ANAHTARLARI. */
 const KENDI_BAGLANTILARI = ['au-growth-chart-reference', 'au-pbs-report-link', 'au-pbs-schedule-link', 'au-mbs-online-link', 'au-cvd-risk-link', ...AU_BAGLANTI_ANAHTARLARI]
 /** Every tool that carries Australia's own code, switched on by the owner's order of 2026-10-10 or 2026-10-13. */
 const KENDI_ARACLARI = [...KENDI_MEKANIZMALI, ...KENDI_BAGLANTILARI]
 /** Every tool Australia has added beyond the shared set, mechanism or not: fed to the shared harness's count check. */
-const EK_ARACLAR = [...KENDI_ARACLARI, 'konsultasyonlar']
+const EK_ARACLAR = [...KENDI_ARACLARI, 'konsultasyonlar', 'buyume-persentili']
 /** NOTYA-ARACLAR-DENETIM-03-AU, 2026-10-14 — the slots this pass proposed: never switched on, so never in `acik`, but
  * still carrying Australia's own code, so `ulkeyeOzelAnahtarlar` (which scans araclar + yuvalar + kendiAraclari) sees
  * them too. */
@@ -365,11 +371,12 @@ describe('au: its own role list — the Medical Board\'s wording, a split, one r
     const isimler = ROLLER.map((rol) => AU_ARAYUZ.asistan(rol, D)!.tamAd)
     assert.equal(new Set(isimler).size, ROLLER.length, 'every role has its own distinct name, never a shared or combined one')
     assert.equal(AU_ARAYUZ.asistan('no-such-role', D), null)
+    // Kaan 2026-10-23: Charlie/Clara are provider voice ids only — the spoken line uses the neutral sesAdlari labels.
     assert.deepEqual(AU_ARAYUZ.sesAdlari, { erkek: 'Male voice', kadin: 'Female voice' })
     for (const rol of ROLLER) {
       const adRol = ad(rol)
-      assert.equal(asistanKonusmaMetni(rol, 'erkek'), `Charlie. Your senior colleague. ${adRol}.`, rol)
-      assert.equal(asistanKonusmaMetni(rol, 'kadin'), `Clara. Your senior colleague. ${adRol}.`, rol)
+      assert.equal(asistanKonusmaMetni(rol, 'erkek'), `Male voice. Your senior colleague. ${adRol}.`, rol)
+      assert.equal(asistanKonusmaMetni(rol, 'kadin'), `Female voice. Your senior colleague. ${adRol}.`, rol)
     }
     for (const eski of AU_CIKAN_ROLLER) assert.equal(asistanKonusmaMetni(eski, 'kadin'), null, eski)
     assert.equal(asistanKonusmaMetni(null, 'erkek'), null)
@@ -380,7 +387,8 @@ describe('au: its own role list — the Medical Board\'s wording, a split, one r
     assert.match(html, /data-alan="asistan-satir">: Your senior colleague · Cardiology</)
     assert.doesNotMatch(html, /asistan-kart|asistan-yetki|asistan-kitap|data-ses=|Australian practice sources|Books named for this role/)
     assert.match(html, /<a href="\/au\/patients"[^>]*>(?:(?!<\/a>).)*<span[^>]*>Documents<\/span><\/a>/)
-    assert.match(html, /class="uza-duvar"[^>]*>(?:(?!<\/span>\s*<\/span>).)*<span[^>]*>Reports<\/span>/)
+    // Reports is offered on the AU home quick-access strip (same path as /au/reports in nav).
+    assert.match(html, /<a href="\/au\/reports"[^>]*>(?:(?!<\/a>).)*<span[^>]*>Reports<\/span><\/a>/)
     const belgeler = renderToStaticMarkup(React.createElement(FotoArsivKarti, {
       u: { hesap: null, m: AU_ARAYUZ.metinler[D]!, dil: D, api: async () => ({ ok: false, status: 0, j: {} }), hesabiGuncelle: () => undefined, cikis: () => undefined },
       hastaId: 'qa-hasta',
@@ -394,11 +402,12 @@ describe('au: its own role list — the Medical Board\'s wording, a split, one r
     const nav = renderToStaticMarkup(React.createElement(Cerceve, { dil: D, m: AU_ARAYUZ.metinler[D]!, ad: 'QA', aktif: 'bugun', cikis: () => {}, children: null }))
     assert.match(nav, new RegExp(`href="${YOL.asistan}"`))
     assert.match(nav, /Ask the assistant/)
-    assert.match(nav, new RegExp(`href="${YOL.bugun}#mesajlar"`))
-    assert.match(nav, /data-duvar="rapor"/)
-    assert.match(nav, /data-duvar="odeme"/)
+    // Messages and reports are first-class routes (not hash anchors or wall tiles).
+    assert.match(nav, new RegExp(`href="${YOL.mesajlar}"`))
+    assert.match(nav, new RegExp(`href="${YOL.raporlar}"`))
     assert.doesNotMatch(nav, /data-duvar="asistan"/)
     assert.doesNotMatch(nav, /data-duvar="mesaj"/)
+    assert.doesNotMatch(nav, /data-duvar="rapor"/)
     const cagrilan: string[] = []
     const fetchFn: typeof fetch = async (_adres, init) => {
       cagrilan.push(String(init?.body ?? ''))
@@ -410,7 +419,7 @@ describe('au: its own role list — the Medical Board\'s wording, a split, one r
     assert.equal(govde.ok, true)
     assert.equal(govde.cinsiyet, 'kadin')
     assert.equal(Buffer.from(govde.ses, 'base64').length, 3)
-    assert.match(cagrilan[0] ?? '', /Clara\. Your senior colleague\. Cardiology\./)
+    assert.match(cagrilan[0] ?? '', /Female voice\. Your senior colleague\. Cardiology\./)
     assert.equal((await asistanSesCevabi('hair-transplant', 'erkek', { ses: AU_SES, anahtar: 'anahtar', fetchFn })).status, 404)
     assert.equal((await asistanSesCevabi('cardiology', 'erkek', { ses: AU_SES, anahtar: '' })).status, 503)
     assert.equal((await asistanSesCevabi('cardiology', 'other', { ses: AU_SES, anahtar: 'anahtar', fetchFn })).status, 400)
@@ -548,7 +557,7 @@ describe('au: the tools only Australia has — switched on by the owner\'s order
     for (const k of KENDI_MEKANIZMALI) {
       const l = A.araclar.find((p) => p.anahtar === k)!.lisans!
       assert.equal(l.durum, 'serbest', k)
-      assert.match(l.kaynak ?? '', /^https:\/\/\S+ \(read 2026-10-(10|13|14|15|19|20)\): /, k)
+      assert.match(l.kaynak ?? '', /^https:\/\/\S+ \(read 2026-10-(10|13|14|15|19|20|28)\): /, k)
       assert.ok((l.bildirim?.[D] ?? '').length > 20, `${k}: the rights holder's notice`)
     }
     // the link-out tile: free, but no reproduced notice is shown under a result it never gives
@@ -619,9 +628,37 @@ describe('au: the tools only Australia has — switched on by the owner\'s order
     assert.deepEqual(goren('au-gp-red-book'), ['family-medicine'])
     assert.deepEqual(goren('au-wellness-plan'), ['family-medicine'])
     assert.deepEqual(goren('au-nonsurgical-plan'), ['aesthetic-medicine'])
+    assert.deepEqual(goren('au-cosmetic-surgery-plan'), ['aesthetic-surgery'])
+    assert.deepEqual(goren('au-physio-plan'), ['physiotherapy'])
+    assert.deepEqual(goren('au-psychology-plan'), ['clinical-psychology'])
+    assert.deepEqual(goren('au-dietetics-plan'), ['dietetics'])
+    assert.deepEqual(goren('au-ot-plan'), ['occupational-therapy'])
+    assert.deepEqual(goren('au-audiology-plan'), ['audiology'])
+    // AU pediatri gold — WHO growth (kit) for paeds + GP only; one review studio per remaining role
+    assert.deepEqual(goren('buyume-persentili').sort(), ['family-medicine', 'paediatrics'])
+    assert.equal(goren('buyume-persentili').includes('cardiology'), false)
+    for (const k of AU_INCELEME_ANAHTARLARI) {
+      const roller = goren(k)
+      assert.equal(roller.length, 1, `${k} must be specialty-only`)
+      assert.ok(ROLLER.includes(roller[0]!), k)
+    }
+    assert.deepEqual(goren('au-cardiology-review'), ['cardiology'])
+    assert.deepEqual(goren('au-paediatrics-review'), ['paediatrics'])
+    assert.deepEqual(goren('au-podiatry-review'), ['podiatry'])
+    assert.deepEqual(goren('au-speech-pathology-review'), ['speech-pathology'])
+    assert.equal(goren('au-cardiology-review').includes('paediatrics'), false)
+    assert.equal(goren('au-paediatrics-review').includes('cardiology'), false)
     for (const r of ['cardiology', 'dermatology', 'aesthetic-surgery', 'plastic-surgery', 'physiotherapy', 'podiatry', 'clinical-psychology']) {
       assert.ok(!goren('au-wellness-plan').includes(r), r)
       assert.ok(!goren('au-nonsurgical-plan').includes(r), r)
+    }
+    for (const r of ['cardiology', 'dermatology', 'family-medicine', 'aesthetic-medicine', 'plastic-surgery']) {
+      assert.ok(!goren('au-cosmetic-surgery-plan').includes(r), r)
+      assert.ok(!goren('au-physio-plan').includes(r), r)
+      assert.ok(!goren('au-psychology-plan').includes(r), r)
+      assert.ok(!goren('au-dietetics-plan').includes(r), r)
+      assert.ok(!goren('au-ot-plan').includes(r), r)
+      assert.ok(!goren('au-audiology-plan').includes(r), r)
     }
     assert.equal(AU_ESKI_ROL_ESLEMESI['clinic-dermatology'], null)
     assert.equal(AU_ESKI_ROL_ESLEMESI.longevity, null)

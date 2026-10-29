@@ -64,9 +64,27 @@ const acilis = temel.acilis
     }
   : temel.acilis
 
+/** ADIME section titles for the Clinical Dietitian note — role-keyed, not shared with other allied roles. */
+const ADIME_BOLUM_BASLIKLARI = ([
+  ['s', 'A — Assessment (history)'],
+  ['o', 'A — Assessment (measures)'],
+  ['a', 'D — Nutrition diagnosis'],
+  ['p', 'I / M-E — Intervention & monitoring'],
+] as const).map(([bolum, ad]) => ({
+  taraf: 'klinik-muttefik' as const,
+  bolum,
+  rol: 'dietetics',
+  ad: { 'en-AU': ad },
+}))
+
 export const AU_ARAYUZ: UlkeArayuzu = {
   ...temel,
   acilis,
+  // AU dietetics beta, 2026-10-28 — ADIME headings on the dietitian note only (SOAP spine unchanged for other roles).
+  notSablonlari: {
+    ...temel.notSablonlari,
+    bolumBasliklari: [...temel.notSablonlari.bolumBasliklari, ...ADIME_BOLUM_BASLIKLARI],
+  },
   // NOTYA-ARACLAR-DENETIM-02-AU, 2026-10-13 — the English language set has not written consultation between doctors
   // for any of the five English-speaking countries; Australia's own words are here, not in countries/_dil/en/.
   konsultasyonMetinleri: { 'en-AU': AU_KONSULTASYON_METNI },
