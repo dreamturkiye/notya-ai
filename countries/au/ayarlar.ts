@@ -398,9 +398,15 @@ export const AU_GIRDI: EnUlkeGirdisi = {
     // creative works (0491 570 006, 0491 570 110, 0491 570 156 to 159): it is not issued to anybody. Not checked
     // against the regulator's current list by anybody of the country.
     telefonOrnegi: '+61 491 570 006',
-    // NOT SHOWN: every plan is by quote. How an amount would be written here when the owner sets prices.
     aylikTutarKalibi: '$% a month',
-    // PRICES: EMPTY, SWITCHED OFF. WAITING ON KAAN. No amount exists for Australia; every plan shows "by quote".
-    fiyatlar: { doctor: { aylik: null, oneCikan: false }, clinic: { aylik: null, oneCikan: false } },
+    // PRICES SET 2026-10-29 (Kaan), from the Türkiye price draft at notya-fiyatlandirma.vercel.app: Sesli Pro
+    // 3.990 TL/month. FX ≈0.0356 AUD/TRY (exchange-rates.org, read 2026-10-29) → ≈$142, rounded to a clean AU
+    // SaaS price point ($149). Mapped to "doctor" (the single plan here) since its feature list — voice
+    // response, patient portal, appointments, messaging — matches the TR "Sesli Pro" tier, not the lighter
+    // "Metin Asistan" tier. "clinic" stays by-quote: its own copy ("A quote for the number of accounts") is
+    // already seat-based, and the TR draft's Klinik tier is a base price plus a per-seat rate that drops by
+    // volume — this plan list has only one amount per plan, nowhere to put that. A real clinic number needs
+    // either a flat placeholder (loses the seat structure) or a type/copy change (bigger job, not done here).
+    fiyatlar: { doctor: { aylik: 149, oneCikan: false }, clinic: { aylik: null, oneCikan: false } },
   },
 }
