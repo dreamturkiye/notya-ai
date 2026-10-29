@@ -102,6 +102,8 @@ Full findings table: `docs/au/MARKETING-AUDIT-2026-10-22.md`. Fixed in the same 
 | AU-MKT-08 | 2026-10-22 | SUPERSEDED 2026-10-22 by AU-SEO-01 (indexing ON for au); open sign-up still waits on review | Owner decision: open the site to search engines (checklist K2) and open sign-up, only after clinician and legal review. | Kaan |
 | AU-SEO-01 | 2026-10-22 | DONE (AU) | SEO kit shipped to all six builds; indexing switch `NOTYA_<CC>_INDEXABLE`, AU default ON by owner decision, others OFF. Doc: `docs/au/SEO.md`. | Claude |
 | AU-SEO-02 | 2026-10-22 | OPEN | Social preview image (needs owner-approved image), WebP re-encode of landing photos, font-display check, Search Console property and sitemap submission for au.notya.io. | Kaan (Search Console, image approval), Claude (rest) |
+
+> Build unblock 2026-10-29: `app/opengraph-image.ulke.tsx` removed (Next 14.2 pageExtensions treats it as invalid image); Twitter card back to `summary`.
 | AU-SEO-03 | 2026-10-22 | OPEN | Confirm the hosts of us/gb/ca/nz in `lib/ulke/seo/siteler.ts` (pattern assumed) before turning any of them ON or enabling `NOTYA_HREFLANG_SITES`. | Kaan (hosts), Claude |
 
 ## AU-BETA-01 — Australian limited-beta structure: identity fields, privacy records, BYO payments, references (Claude, 2026-10-22, `release/au` only)
