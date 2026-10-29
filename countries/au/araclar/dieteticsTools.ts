@@ -424,6 +424,8 @@ function paket(p: {
   sayilar?: Record<string, string>
   bantlar?: Record<string, string>
   uyarilar?: Record<string, string>
+  /** Result-line date labels (`cikti.tarihler`) — distinct from `alanlar` field labels. */
+  tarihler?: Record<string, string>
   not: string
   lisans: { hakSahibi: string; kaynak: string; bildirim: string }
   roller?: readonly string[]
@@ -441,6 +443,7 @@ function paket(p: {
       ...(p.sayilar ? { sayilar: Object.fromEntries(Object.entries(p.sayilar).map(([k, v]) => [k, m(v)])) } : {}),
       ...(p.bantlar ? { bantlar: Object.fromEntries(Object.entries(p.bantlar).map(([k, v]) => [k, m(v)])) } : {}),
       ...(p.uyarilar ? { uyarilar: Object.fromEntries(Object.entries(p.uyarilar).map(([k, v]) => [k, m(v)])) } : {}),
+      ...(p.tarihler ? { tarihler: Object.fromEntries(Object.entries(p.tarihler).map(([k, v]) => [k, m(v)])) } : {}),
       not: m(p.not),
     },
     lisans: {
@@ -654,6 +657,7 @@ export function auDieteticsAraclari(): readonly PaketAraci[] {
         notlar: 'Notes for the patient (optional)',
       },
       sayilar: { dolu: 'Meal slots filled' },
+      tarihler: { plan_tarihi: 'Plan start date' },
       uyarilar: {
         plan_bos: 'Add at least one of breakfast, lunch, dinner or snacks before keeping this plan.',
         portal: 'This plan is kept on the file and can be shown on the patient portal. It is not a prescription.',
@@ -689,6 +693,7 @@ export function auDieteticsAraclari(): readonly PaketAraci[] {
         },
       },
       sayilar: { dolu: 'Entry kept' },
+      tarihler: { gun: 'Intake date' },
       uyarilar: {
         portal: 'This entry is kept on the file and can be shown on the patient portal.',
       },
