@@ -39,8 +39,8 @@ export function DietitianBetaLanding({ className = '' }: { className?: string })
       <header className="db-hero">
         <div className="db-hero-media" aria-hidden="true">
           <img src={HERO} alt="" />
-          <div className="db-hero-shade" />
         </div>
+        <div className="db-hero-shade" aria-hidden="true" />
         <div className="db-hero-inner">
           <div className="db-top">
             <div className="db-brand">
