@@ -9,6 +9,9 @@ import { saatDilimiSec } from "@/lib/randevu/tarihCozumle"
 // kaynak kilidi, eylem kartları, hafıza) lib/asistan/ayseCevapla.ts'te; sesli Ayşe (/api/asistan/ses-llm) aynı
 // fonksiyonu çağırır. Bu rota yalnız kimliği doğrular ve yanıt sözleşmesini korur.
 
+// SES-OMURGA-V2 (E): next to the database (Supabase us-east-1).
+export const preferredRegion = 'iad1'
+
 const getSupabase = () => createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!, { global: { fetch: (u, o) => fetch(u, { ...o, cache: 'no-store' }) } }

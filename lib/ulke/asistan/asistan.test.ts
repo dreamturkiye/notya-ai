@@ -63,7 +63,9 @@ describe('live assistant: call token', () => {
   it('carries the account and the role, bound to its country', () => {
     const j = canliJetonuImzala({ hesapId: 'u-1', kod: 'au', rol: 'cardiology', saatDilimi: 'Australia/Perth' })
     assert.ok(j)
-    assert.deepEqual(canliJetonuDogrula(j, 'au'), { hesapId: 'u-1', rol: 'cardiology', saatDilimi: 'Australia/Perth' })
+    assert.deepEqual(canliJetonuDogrula(j, 'au'), { hesapId: 'u-1', rol: 'cardiology', saatDilimi: 'Australia/Perth', cagri: null })
+    // SES-OMURGA-V2: the per-call id (turn registry key) rides in the token
+    assert.equal(canliJetonuDogrula(canliJetonuImzala({ hesapId: 'u-1', kod: 'au', rol: 'cardiology', cagri: 'call-1' }), 'au')?.cagri, 'call-1')
     assert.equal(canliJetonuDogrula(j, 'gb'), null)
     assert.equal(canliJetonuDogrula(`${j}x`, 'au'), null)
     assert.equal(canliJetonuDogrula(undefined, 'au'), null)
@@ -99,15 +101,15 @@ describe('live assistant: call token', () => {
 
 describe('spoken versus screen', () => {
   const soz = CANLI.ekranSozleri
-  it('speaks only finished sentences, at most five beats, then says the rest is on screen', () => {
-    const uzun = Array.from({ length: 8 }, (_, i) => `Sentence number ${i + 1} is here.`).join(' ')
+  it('speaks only finished sentences, at most twelve beats (SES-OMURGA-V2), then says the rest is on screen', () => {
+    const uzun = Array.from({ length: 15 }, (_, i) => `Sentence number ${i + 1} is here.`).join(' ')
     const dilim: string[] = []
     const a = new SesAkisi((c) => dilim.push(c), soz)
     for (let i = 0; i < uzun.length; i += 7) a.ekle(uzun.slice(i, i + 7)) // a drip
     a.bitir()
-    assert.equal(dilim.length, 6)
-    assert.deepEqual(dilim.slice(0, 5), [1, 2, 3, 4, 5].map((n) => `Sentence number ${n} is here.`))
-    assert.equal(dilim[5], soz.devami)
+    assert.equal(dilim.length, 13)
+    assert.deepEqual(dilim.slice(0, 12), Array.from({ length: 12 }, (_, i) => `Sentence number ${i + 1} is here.`))
+    assert.equal(dilim[12], soz.devami)
     assert.equal(a.ekranaKaldi, true)
   })
   it('does not speak a clause that has not finished', () => {
@@ -119,8 +121,9 @@ describe('spoken versus screen', () => {
   it('does not end a sentence at an abbreviation or a decimal', () => {
     assert.equal(konusmaYap('Dr. Chen advises 2.5 mg daily. Review in a week.', soz), 'Dr. Chen advises 2.5 mg daily. Review in a week.')
   })
-  it('turns a list of three or more into "N items, on your screen" and reads a short one', () => {
-    assert.equal(konusmaYap('Options:\n- one\n- two\n- three\n- four\n\nThat is all.', soz), `Options: ${soz.liste(4)} That is all.`)
+  it('turns a list of five or more (SES-OMURGA-V2) into "N items, on your screen" and reads a shorter one', () => {
+    assert.equal(konusmaYap('Options:\n- one\n- two\n- three\n- four\n- five\n\nThat is all.', soz), `Options: ${soz.liste(5)} That is all.`)
+    assert.equal(konusmaYap('Options:\n- one\n- two\n- three\n- four\n\nThat is all.', soz), 'Options: one. two. three. four. That is all.')
     assert.equal(konusmaYap('Take both:\n- aspirin\n- statin\n', soz), 'Take both: aspirin. statin.')
   })
   it('turns a table into one sentence and drops headings and markup', () => {

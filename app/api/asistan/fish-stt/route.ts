@@ -11,8 +11,8 @@ import { FISH_KLIP_AZAMI_BAYT } from '@/lib/asistan/fishSes'
 
 export const runtime = 'nodejs'
 export const maxDuration = 30
-// NOTYA-FISH-BOLGE-01: Supabase (auth + DB) is us-east-1; the app default fra1 put an Atlantic
-// round trip in front of every Fish call. Fish's own region is undocumented (see OPEN-COMMITMENTS).
+// NOTYA-FISH-BOLGE-01: Supabase (auth + DB) is us-east-1. SES-OMURGA-V2 (2026-10-29): vercel.json now pins the whole
+// project to iad1 (it said fra1, while the logs showed cle1/iad1). Fish's own region is undocumented (see OPEN-COMMITMENTS).
 export const preferredRegion = ['iad1']
 
 async function doktorMu(req: NextRequest): Promise<boolean> {

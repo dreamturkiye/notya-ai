@@ -10,6 +10,7 @@ This repo is a **commercial** multi-specialty product (~30 branşlar). Skills an
 | Branş alan sızması (specialty fields must not leak) | `.cursor/rules/brans-alan-sizmasi.mdc` |
 | Ülke paritesi (core/shared changes & features applied, country-adapted, across all 6 countries — no exceptions) | `.cursor/rules/ulke-paritesi-duzeltme.mdc` |
 | Performans bütçesi (hard ceilings from PERF-SAGLAMLIK-2026-10 — checked per change, not per month) | `.cursor/rules/performans-butcesi-koruma.mdc` |
+| **FOUNDER LOCK — Ses omurgası v2** (voice/text assistant path locked 2026-10-29: NO change of any size without Kaan's explicit written "go" for that change — stop and ask; hash manifest `lib/asistan/ses-kilit.json` enforced in build + tests) | `.cursor/rules/ses-omurga-kilidi.mdc` |
 
 ## Skills (open before the matching work)
 

@@ -20,6 +20,7 @@
  */
 import { kayitNiyetiMi } from '@/core/eylemler/oneri'
 import { duz, randevuNiyetiBul, randevuSaatiBul, soylenenTarih, type RandevuNiyeti } from '@/lib/randevu/randevuSozu'
+import { ASI_SOZU, eylemDurumuSorusuMu, genelTibbiSoruMu, hitabiAyikla } from '@/lib/asistan/soruNiyeti'
 
 export interface KomutNiyeti {
   /** The tool the wording names (core/eylemler anahtar), or null when it is a command without a single clear tool. */
@@ -142,7 +143,11 @@ export function komutCevabiMi(mesaj: string | null | undefined): boolean {
 export function komutNiyetiBul(mesaj: string | null | undefined, secenek: { saatDilimi?: string | null; simdi?: Date } = {}): KomutNiyeti | null {
   const ham = String(mesaj || '').trim()
   if (!ham) return null
-  const n = duz(ham)
+  // SES-OMURGA-V2 (B): a write tool is never forced on a question. A general dose / guideline question ("…klavulanik
+  // asit dozunu rica ediyorum") and a question about an action's status ("randevu verdin mi") are not commands — on
+  // 10-26 the first one forced asi_kaydi_ekle. "Aşı hocam" (the ASR's "Ayşe Hocam") is an address, not the vaccine word.
+  if (genelTibbiSoruMu(ham) || eylemDurumuSorusuMu(ham)) return null
+  const n = hitabiAyikla(duz(ham))
   const k = n.trim().split(' ').filter(Boolean)
   const var_ = (kokler: string[]) => fiilBul(k, kokler) >= 0
 
@@ -171,7 +176,7 @@ export function komutNiyetiBul(mesaj: string | null | undefined, secenek: { saat
   if (/ bas cevre\w* /.test(n) && yaz) adaylar.push('bas_cevresi_ekle')
   else if (/ (kilo\w*|agirlig\w*|boy|boyu\w*|ates\w*|nabiz\w*|nabz\w*|tansiyon\w*|spo2|saturasyon\w*|olcum\w*) /.test(n) && yaz) adaylar.push('olcum_ekle')
   // A vaccine named without the word "aşı" ("Hepatit B dün yapıldı, kaydet") is still a vaccine record.
-  if ((/ asi\w* /.test(n) || ASI_ADI.test(n)) && yaz && !adaylar.includes('alerji_ekle')) adaylar.push('asi_kaydi_ekle')
+  if ((ASI_SOZU.test(n) || ASI_ADI.test(n)) && yaz && !adaylar.includes('alerji_ekle')) adaylar.push('asi_kaydi_ekle')
   if (/ doz\w* /.test(n) && var_(DEGISTIR)) adaylar.push('ilac_doz_degistir')
   else if ((/ (ilac\w*|tedavi\w*) /.test(n) || DOZ_BICIMI.test(n)) && (ekle || var_(BASLA)) && !adaylar.length) adaylar.push('ilac_ekle')
   // "Ventolini kes", "ilacı sonlandır": a stop verb with an object that is not the conversation itself.
