@@ -35,7 +35,9 @@ export function sayfaMeta(sayfa: SeoSayfa, yedek: { baslik?: string; aciklama?: 
     ...(aciklama ? { description: aciklama } : {}),
     alternates: { canonical: url, languages: diller },
     openGraph: { type: 'website', url, siteName: 'Notya', ...(baslik ? { title: baslik } : {}), ...(aciklama ? { description: aciklama } : {}), ...(yerel ? { locale: yerel } : {}) },
-    twitter: { card: 'summary_large_image', ...(baslik ? { title: baslik } : {}), ...(aciklama ? { description: aciklama } : {}) },
+    // summary (not summary_large_image): app/opengraph-image.ulke.tsx breaks Next 14.2 country
+    // builds with pageExtensions (AU-SEO-02 / same class as not-found.ulke.tsx). File removed.
+    twitter: { card: 'summary', ...(baslik ? { title: baslik } : {}), ...(aciklama ? { description: aciklama } : {}) },
     robots: p.aramaMotorlarinaGizli ? GIZLI_ROBOTS : ACIK_ROBOTS,
   }
 }
