@@ -35,7 +35,10 @@ export function sayfaMeta(sayfa: SeoSayfa, yedek: { baslik?: string; aciklama?: 
     ...(aciklama ? { description: aciklama } : {}),
     alternates: { canonical: url, languages: diller },
     openGraph: { type: 'website', url, siteName: 'Notya', ...(baslik ? { title: baslik } : {}), ...(aciklama ? { description: aciklama } : {}), ...(yerel ? { locale: yerel } : {}) },
-    twitter: { card: 'summary_large_image', ...(baslik ? { title: baslik } : {}), ...(aciklama ? { description: aciklama } : {}) },
+    // summary (not summary_large_image): app/opengraph-image.ulke.tsx breaks Next 14.2 country
+    // builds under pageExtensions (same class as not-found.ulke.tsx → not-found.mjs). A real
+    // OG image stays AU-SEO-02 until it is a static asset or a non-special-file route.
+    twitter: { card: 'summary', ...(baslik ? { title: baslik } : {}), ...(aciklama ? { description: aciklama } : {}) },
     robots: p.aramaMotorlarinaGizli ? GIZLI_ROBOTS : ACIK_ROBOTS,
   }
 }
