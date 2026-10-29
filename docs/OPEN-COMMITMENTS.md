@@ -4321,3 +4321,11 @@ Conversion: looked up real rates 2026-10-27 (1 USD ≈ 49.7852 TRY per poundster
 - Move to Notya's own dedicated Stripe account when Kaan creates it (env-var swap only).
 
 | Claude: done above | Kaan: plan-selection entry point decision, STRIPE_SECRET_KEY/WEBHOOK_SECRET, test-object cleanup, UZS-launch go/no-go, own Stripe account |
+
+## SEO-OG-01 — country builds unblocked: the OG image route removed (Claude, 2026-10-29)
+
+`app/opengraph-image.ulke.tsx` (from the 2026-10-28 SEO commit, all six release branches) is not a valid special file
+under the country build's `pageExtensions` (same class as `not-found.ulke.tsx` → `not-found.mjs`) and failed the AU
+production builds. Removed on all six branches the same way the AU side branch fixed it; Twitter card back to `summary`;
+canonical, hreflang (x-default, TR cross-link), Open Graph title/description kept. Open: a real social preview image as a
+static asset (owner-approved image) or a non-special-file `/api/ulke/…` route. Owner: Kaan (image approval), Claude (build).
