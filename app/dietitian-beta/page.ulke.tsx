@@ -5,6 +5,7 @@
  */
 import React from 'react'
 import type { Metadata } from 'next'
+import { Syne, Literata } from 'next/font/google'
 import { notFound } from 'next/navigation'
 import { DietitianBetaLanding } from '@/components/ulke/dietitian-beta/DietitianBetaLanding'
 import { PORTAL_SAYFASI } from '@/lib/ulke/portal/sabitler'
@@ -14,6 +15,20 @@ import { ulkePaketi } from '@/lib/ulke/ulke'
 export const dynamic = 'force-dynamic'
 
 const YOL = '/dietitian-beta'
+
+const syne = Syne({
+  subsets: ['latin'],
+  weight: ['500', '700', '800'],
+  variable: '--font-db-display',
+  display: 'swap',
+})
+
+const literata = Literata({
+  subsets: ['latin'],
+  weight: ['400', '500', '600'],
+  variable: '--font-db-body',
+  display: 'swap',
+})
 
 export const metadata: Metadata = {
   title: 'Notya for Australian Clinical Dietitians — private beta',
@@ -27,7 +42,10 @@ export default function DietitianBetaSayfasi() {
   const paket = ulkePaketi()
   if (paket.kod !== 'au') notFound()
   if (!rotaAcikMi(paket.rotalar, YOL)) notFound()
-  // Portal is part of the pitch — keep the page off if the pack ever drops it.
   if (!rotaAcikMi(paket.rotalar, PORTAL_SAYFASI)) notFound()
-  return <DietitianBetaLanding />
+  return (
+    <div className={`${syne.variable} ${literata.variable}`}>
+      <DietitianBetaLanding />
+    </div>
+  )
 }
