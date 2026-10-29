@@ -36,7 +36,7 @@ import { formAcik } from '../intake/icerik'
 import { aktifAracIcerigi, hastaninAracKayitlari } from '../araclar/kayit'
 import { hesabinAraci } from '../araclar/paket'
 import { portalBolumu } from './bolum'
-import { portalOgunPlani, portalYemekGunlugu } from './beslenme'
+import { portalAgirlikGecmisi, portalBeslenmeHedefleri, portalOgunPlani, portalYemekGunlugu } from './beslenme'
 import type { PortalIcerigi } from './tipler'
 
 export type { PortalIcerigi } from './tipler'
@@ -116,7 +116,12 @@ export async function portalIcerigi(o: PortalOturumu, simdi = Date.now()): Promi
     if (kayitlar) {
       const plan = portalOgunPlani(kayitlar, beslenmeAyar.planAraci)
       const gunluk = portalYemekGunlugu(kayitlar, beslenmeAyar.gunlukAraci)
-      beslenme = { etiket: beslenmeAyar.etiket, plan, gunluk, gunlukYazabilir: true }
+      const hedefler = beslenmeAyar.hedefAraci
+        ? portalBeslenmeHedefleri(kayitlar, beslenmeAyar.hedefAraci, beslenmeAyar.etiket.hedefAdi)
+        : []
+      const agirlikAnahtari = beslenmeAyar.agirlikAraci ?? aracIcerik.antropometriTrendAraci ?? null
+      const agirlik = agirlikAnahtari ? portalAgirlikGecmisi(kayitlar, agirlikAnahtari) : []
+      beslenme = { etiket: beslenmeAyar.etiket, plan, gunluk, gunlukYazabilir: true, hedefler, agirlik }
     }
   }
   return {

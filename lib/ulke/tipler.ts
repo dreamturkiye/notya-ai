@@ -334,12 +334,20 @@ export type PortalAyarlari = {
    */
   bolumler?: Readonly<Record<string, { baslik: string; satirlar: readonly string[] }>>
   /**
-   * AU-DIETETICS-MEAL-01 — optional: pack-named tool keys whose kept results the patient portal shows for
-   * dietetics (current meal plan + recent food-diary entries), plus patient-facing labels. Absent = no block.
+   * AU-DIETETICS-MEAL-01 / portal coaching — optional: pack-named tool keys whose kept results the patient
+   * portal shows for dietetics (meal plan, diary, agreed goals, clinic weight numbers), plus patient-facing
+   * labels. Absent = no block. Shared UI never hard-codes a country tool key (wall D7).
    */
   beslenme?: {
     planAraci: string
     gunlukAraci: string
+    /** Person-centred goals tool (ticks only). Absent = no goals section on the portal. */
+    hedefAraci?: string
+    /**
+     * Adult body-size tool for patient-safe weight / waist / BMI numbers on the portal.
+     * Absent = fall back to `UlkeAraclari.antropometriTrendAraci` when that is set.
+     */
+    agirlikAraci?: string
     etiket: {
       /** Portal nav tab label (patient-facing). */
       sekmeBaslik: string
@@ -359,8 +367,25 @@ export type PortalAyarlari = {
       kaydet: string
       kaydedildi: string
       kaydedilemedi: string
+      hedefBaslik: string
+      hedefYok: string
+      agirlikBaslik: string
+      agirlikYok: string
+      agirlikKg: string
+      bmiEtiket: string
+      belEtiket: string
+      mesajCta: string
+      mesajIpucu: string
+      cipPlan: string
+      cipPlanYok: string
+      cipGunluk: string
+      cipGunlukYok: string
+      cipHedef: string
+      cipHedefYok: string
       ogunAdi: Readonly<Record<string, string>>
       kimAdi: Readonly<Record<string, string>>
+      /** Patient-facing labels for ticked nutrition-goal keys (e.g. agirlik, alim). */
+      hedefAdi: Readonly<Record<string, string>>
     }
   }
   /** The label beside a follow-up day the clinician kept. Required when `bolumler` is set. */

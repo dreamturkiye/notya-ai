@@ -154,17 +154,44 @@ export function PortalHastaSayfasi({ dil, p, r, icerik, acilNumara, iste, yenile
   const yarin = gunDizesi(tz, 1)
   const yaklasan = sonrakiRandevu && (sonrakiRandevu.gun === bugun || sonrakiRandevu.gun === yarin) ? sonrakiRandevu : null
   const istekSon = i.istek?.son ?? null
+  const bEtiket = i.beslenme?.etiket
+  const sonGunluk = i.beslenme?.gunluk[0]
   const cipler: PortalCip[] = [
     { key: 'randevu', label: g.cipRandevu, value: sonrakiRandevu ? `${gunYaz(sonrakiRandevu.gun)} · ${saatGoster(sonrakiRandevu.saat)}` : g.cipRandevuYok, href: href('randevu'), vurgu: false, testId: 'chip-randevu' },
     ...(mesajVar ? [{ key: 'mesaj', label: g.cipMesaj, value: okunmamis > 0 ? g.cipYeniMesaj : g.cipMesajYok, href: href('mesajlar'), vurgu: okunmamis > 0, yeniAlt: yerine(g.cipOkunmamis, okunmamis), testId: 'chip-mesaj' }] : []),
     { key: 'ozet', label: g.cipOzet, value: i.ozetler.length ? String(i.ozetler.length) : g.cipOzetYok, href: href('ziyaretler'), vurgu: false },
     ...(i.istek ? [{ key: 'istek', label: g.cipIstek, value: istekSon?.durum === 'bekliyor' ? g.cipIstekBekliyor : g.cipIstekYok, href: href('randevu'), vurgu: false }] : []),
+    ...(i.beslenme && bEtiket ? [
+      { key: 'plan', label: bEtiket.cipPlan, value: i.beslenme.plan ? gunYaz(i.beslenme.plan.gun) : bEtiket.cipPlanYok, href: href('beslenme'), vurgu: false, testId: 'chip-meal-plan' },
+      { key: 'gunluk', label: bEtiket.cipGunluk, value: sonGunluk ? gunYaz(sonGunluk.gun) : bEtiket.cipGunlukYok, href: href('beslenme'), vurgu: false, testId: 'chip-food-diary' },
+      { key: 'hedef', label: bEtiket.cipHedef, value: i.beslenme.hedefler.length ? String(i.beslenme.hedefler.length) : bEtiket.cipHedefYok, href: href('beslenme'), vurgu: false, testId: 'chip-nutrition-goals' },
+    ] : []),
   ]
   const kisayollar: PortalKisayol[] = nav.filter((o) => o.key !== 'ozet').map((o) => ({
     label: o.label, href: href(o.key),
-    hint: o.key === 'mesajlar' ? g.ipucuMesajlar : o.key === 'ziyaretler' ? g.ipucuZiyaretler : o.key === 'randevu' ? g.ipucuRandevu : o.key === 'gizlilik' ? g.ipucuGizlilik : g.ipucuForm,
+    hint: o.key === 'mesajlar' ? g.ipucuMesajlar : o.key === 'ziyaretler' ? g.ipucuZiyaretler : o.key === 'randevu' ? g.ipucuRandevu : o.key === 'beslenme' ? (bEtiket?.mesajIpucu ?? g.ipucuForm) : o.key === 'gizlilik' ? g.ipucuGizlilik : g.ipucuForm,
   }))
   const aktiviteler: PortalAktivite[] = i.ozetler.slice(0, 5).map((o) => ({ id: o.id, baslik: yerine(s.muayene, gunYaz(o.gun)), tarih: gunYaz(o.gun), href: href('ziyaretler', o.id) }))
+  const bolumEk = i.bolum ? {
+    baslik: i.bolum.baslik,
+    icerik: (
+      <div data-alan="portal-bolum" data-bolum={i.bolum.anahtar}>
+        <ul style={{ margin: '0 0 12px', paddingLeft: 18, color: 'var(--sg-ink)', lineHeight: 1.55 }}>
+          {i.bolum.satirlar.map((satir, idx) => <li key={idx}>{satir}</li>)}
+        </ul>
+        {i.bolum.tarihler.length ? (
+          <div data-alan="portal-bolum-tarihler">
+            <p style={{ margin: '0 0 6px', fontSize: 13, color: 'var(--sg-muted)' }}>{i.bolum.tarihEtiket}</p>
+            <ul style={{ margin: 0, paddingLeft: 18 }}>
+              {i.bolum.tarihler.slice(0, 4).map((t) => (
+                <li key={t.gun} data-durum={t.durum}>{gunYaz(t.gun)} · {i.bolum!.durumEtiket[t.durum]}</li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+      </div>
+    ),
+  } : null
 
   const hekimAdi = i.hekim.ad
   let icerikEkrani: ReactNode
@@ -265,6 +292,7 @@ export function PortalHastaSayfasi({ dil, p, r, icerik, acilNumara, iste, yenile
       <Eski dil={dil}>
         <PortalBeslenmeKarti
           beslenme={i.beslenme}
+          mesajaGit={mesajVar ? () => git(href('mesajlar')) : undefined}
           kaydet={async (girdi) => {
             try {
               const rr = await iste('/beslenme', girdi)
@@ -294,7 +322,7 @@ export function PortalHastaSayfasi({ dil, p, r, icerik, acilNumara, iste, yenile
         kutucuk={{ baslik: g.koruyucu, href: null }}
         hekim={{ ad: hekimAdi, altSatir: i.hekim.rol, adres: null, telefon: null, telefonHref: null, avatarUrl: null, harfler: doktorBasHarfleri(hekimAdi) }}
         uyari={yaklasan ? { baslik: g.uyariBaslik, metin: yerine(g.uyariMetin, `${gunYaz(yaklasan.gun)} ${saatGoster(yaklasan.saat)}`), href: href('randevu'), cta: g.ayrinti } : null}
-        cipler={cipler} kisayollar={kisayollar} aktiviteler={aktiviteler} git={git}
+        cipler={cipler} ekBolum={bolumEk} kisayollar={kisayollar} aktiviteler={aktiviteler} git={git}
       />
     )
   }

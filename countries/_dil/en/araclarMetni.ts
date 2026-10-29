@@ -130,6 +130,7 @@ export const EN_ARACLAR_METNI_TEMEL: AraclarMetni = {
     notlar: 'Notes for the patient',
     planAc: 'Write or replace meal plan',
     gunlukAc: 'Add food-diary entry',
+    hastaGunlukRozet: '% from the patient',
     ogunAdi: {
       kahvalti: 'Breakfast',
       ogle: 'Lunch',

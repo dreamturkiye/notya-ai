@@ -335,16 +335,19 @@ export const AU_NUTRITION_LABS: AracTanimi = {
  * Structured meal plan the dietitian keeps on the file and the patient can read on
  * the portal. Short free-text per meal (no AUSNUT). At least one meal slot required.
  */
+/** Meal / diary free-text: longer than the kit default so a coaching line fits a real breakfast. */
+const OGUN_METIN = 280
+
 export const AU_MEAL_PLAN: AracTanimi = {
   anahtar: 'au-meal-plan',
   tur: 'liste',
   alanlar: [
     tarih('plan_tarihi'),
-    metin('kahvalti'),
-    metin('ogle'),
-    metin('aksam'),
-    metin('atistirmalik'),
-    metin('notlar'),
+    metin('kahvalti', { enCok: OGUN_METIN }),
+    metin('ogle', { enCok: OGUN_METIN }),
+    metin('aksam', { enCok: OGUN_METIN }),
+    metin('atistirmalik', { enCok: OGUN_METIN }),
+    metin('notlar', { enCok: OGUN_METIN }),
   ],
   cikti: { sayilar: ['dolu'], bantlar: [], uyarilar: ['plan_bos', 'portal'], tarihler: ['plan_tarihi'] },
   kaynak: `${DIYET_KAYNAK} Structured meal plan wording the dietitian writes. Not a prescription and not a nutrient analysis.`,
@@ -377,7 +380,7 @@ export const AU_FOOD_DIARY: AracTanimi = {
   alanlar: [
     tarih('gun'),
     secim('ogun', OGUNLER),
-    metin('aciklama', { istege: false }),
+    metin('aciklama', { istege: false, enCok: OGUN_METIN }),
     secim('kim', KIMLER),
   ],
   cikti: { sayilar: ['dolu'], bantlar: [], uyarilar: ['portal'], tarihler: ['gun'] },
@@ -421,6 +424,8 @@ function paket(p: {
   sayilar?: Record<string, string>
   bantlar?: Record<string, string>
   uyarilar?: Record<string, string>
+  /** Result-line date labels (`cikti.tarihler`) — distinct from `alanlar` field labels. */
+  tarihler?: Record<string, string>
   not: string
   lisans: { hakSahibi: string; kaynak: string; bildirim: string }
   roller?: readonly string[]
@@ -438,6 +443,7 @@ function paket(p: {
       ...(p.sayilar ? { sayilar: Object.fromEntries(Object.entries(p.sayilar).map(([k, v]) => [k, m(v)])) } : {}),
       ...(p.bantlar ? { bantlar: Object.fromEntries(Object.entries(p.bantlar).map(([k, v]) => [k, m(v)])) } : {}),
       ...(p.uyarilar ? { uyarilar: Object.fromEntries(Object.entries(p.uyarilar).map(([k, v]) => [k, m(v)])) } : {}),
+      ...(p.tarihler ? { tarihler: Object.fromEntries(Object.entries(p.tarihler).map(([k, v]) => [k, m(v)])) } : {}),
       not: m(p.not),
     },
     lisans: {
@@ -651,6 +657,7 @@ export function auDieteticsAraclari(): readonly PaketAraci[] {
         notlar: 'Notes for the patient (optional)',
       },
       sayilar: { dolu: 'Meal slots filled' },
+      tarihler: { plan_tarihi: 'Plan start date' },
       uyarilar: {
         plan_bos: 'Add at least one of breakfast, lunch, dinner or snacks before keeping this plan.',
         portal: 'This plan is kept on the file and can be shown on the patient portal. It is not a prescription.',
@@ -686,6 +693,7 @@ export function auDieteticsAraclari(): readonly PaketAraci[] {
         },
       },
       sayilar: { dolu: 'Entry kept' },
+      tarihler: { gun: 'Intake date' },
       uyarilar: {
         portal: 'This entry is kept on the file and can be shown on the patient portal.',
       },

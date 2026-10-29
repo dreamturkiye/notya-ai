@@ -96,7 +96,8 @@ export const AU_PAKETI: UlkePaketi = {
     // (app/password-reset/page.ulke.tsx) existed and built fine, but this allow-list is the second 404 gate
     // (lib/ulke/rotaKapisi.ts) and it answered "Page not found" for any path it does not list, login included
     // once, before this fix. Keep it next to '/login' so the two stay paired.
-    sayfalar: ['/', '/for-clinics', '/login', '/password-reset', '/signup', '/welcome', '/start', '/today', '/settings', '/settings/communication', '/settings/integrations', '/account', '/reports', '/patients', '/patients/new', '/messages', '/patient', '/visit', '/calendar', '/portal', '/tools', '/medical', '/clinic', '/desk', '/privacy', '/terms', '/cookies', '/data-request', '/accessibility', '/medical-disclaimer', '/security', '/refund', '/copyright', '/demo', '/billing', '/privacy-requests', '/data-breach', '/asistan', '/diagnosis-codes', '/procedure-codes'],
+    // /dietitian-beta — temporary Clinical Dietitian invite landing (remove when the invite closes).
+    sayfalar: ['/', '/for-clinics', '/login', '/password-reset', '/signup', '/welcome', '/start', '/today', '/settings', '/settings/communication', '/settings/integrations', '/account', '/reports', '/patients', '/patients/new', '/messages', '/patient', '/visit', '/calendar', '/portal', '/tools', '/medical', '/clinic', '/desk', '/privacy', '/terms', '/cookies', '/data-request', '/accessibility', '/medical-disclaimer', '/security', '/refund', '/copyright', '/demo', '/billing', '/privacy-requests', '/data-breach', '/asistan', '/diagnosis-codes', '/procedure-codes', '/dietitian-beta'],
     // STRIPE-NOTYA-AU-02: without this prefix, /api/billing/checkout and /api/billing/webhook 404 at this
     // gate before Next.js ever serves them — the Stripe-side plumbing (catalog, env vars, trial) built and
     // verified earlier today was never actually reachable from au.notya.io. This is the fix.
@@ -138,8 +139,14 @@ export const AU_PAKETI: UlkePaketi = {
       baglantiGecerlilikGun: 30,
       acilNumara: '000',
       bolumler: AU_PORTAL_BOLUMLERI,
-      // AU dietetics beta — meal plan + food diary on the patient portal (tool keys; shared UI never hard-codes them).
-      beslenme: { planAraci: 'au-meal-plan', gunlukAraci: 'au-food-diary', etiket: AU_BESLENME_ETIKET },
+      // AU dietetics beta — meal plan, diary, goals and clinic weight on the patient portal (tool keys; shared UI never hard-codes them).
+      beslenme: {
+        planAraci: 'au-meal-plan',
+        gunlukAraci: 'au-food-diary',
+        hedefAraci: 'au-nutrition-goals',
+        agirlikAraci: 'au-body-size',
+        etiket: AU_BESLENME_ETIKET,
+      },
       tarihEtiket: 'Next review',
       durumEtiket: { gecikti: 'Overdue', bugun: 'Today', yaklasiyor: 'Coming up', planli: 'Planned' },
     },

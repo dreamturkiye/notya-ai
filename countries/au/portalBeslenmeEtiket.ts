@@ -1,5 +1,5 @@
 /**
- * AU dietetics — patient-facing meal plan / food diary labels (en-AU).
+ * AU dietetics — patient-facing meal plan / food diary / goals / weight labels (en-AU).
  * Carried on the portal payload so other countries' catalogues stay untouched.
  */
 export const AU_BESLENME_ETIKET = {
@@ -12,14 +12,29 @@ export const AU_BESLENME_ETIKET = {
   atistirmalik: 'Snacks',
   notlar: 'Notes from your dietitian',
   gunlukBaslik: 'Food diary',
-  gunlukYok: 'No diary entries yet. You can add a short note below.',
+  gunlukYok: 'No diary entries yet. You can add a note below.',
   gunlukEkle: 'Add what you ate',
   gun: 'Date',
   ogun: 'Meal or snack',
-  aciklama: 'Short description',
+  aciklama: 'What you ate or drank (you can write a longer note)',
   kaydet: 'Keep this note',
   kaydedildi: 'Saved. Your dietitian can see it on your file.',
   kaydedilemedi: 'That note could not be saved. Try again.',
+  hedefBaslik: 'Goals you agreed',
+  hedefYok: 'No shared goals are on this page yet. Your dietitian records them with you at a visit.',
+  agirlikBaslik: 'Your weight at the clinic',
+  agirlikYok: 'No weight has been kept on your file yet.',
+  agirlikKg: 'kg',
+  bmiEtiket: 'BMI',
+  belEtiket: 'Waist (cm)',
+  mesajCta: 'Message your dietitian',
+  mesajIpucu: 'Questions about today’s meals, the plan, or a diary note? Send a message — this is not for emergencies.',
+  cipPlan: 'Meal plan',
+  cipPlanYok: 'None yet',
+  cipGunluk: 'Food diary',
+  cipGunlukYok: 'Add a note',
+  cipHedef: 'Care goals',
+  cipHedefYok: 'None yet',
   ogunAdi: {
     kahvalti: 'Breakfast',
     ogle: 'Lunch',
@@ -30,5 +45,13 @@ export const AU_BESLENME_ETIKET = {
   kimAdi: {
     diyetisyen: 'Dietitian',
     hasta: 'You',
+  },
+  hedefAdi: {
+    agirlik: 'Weight or muscle goal',
+    alim: 'Intake or fortification goal',
+    yutma: 'Texture or swallowing-related nutrition goal',
+    semptom: 'Symptom or tolerance goal',
+    egitim: 'Education or food-skills goal',
+    aile: 'Family or carer included in goal-setting',
   },
 } as const

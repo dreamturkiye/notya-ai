@@ -5,6 +5,7 @@
  *
  * Tool keys come from the pack (`uygulama.portal.beslenme`); this file never hard-codes a country key (wall D7).
  * Mounted only when the signed-in role can open the meal-plan tool (`hesabinAraci`).
+ * Patient-written diary lines are counted so the dietitian sees back-and-forth activity at a glance.
  */
 import React, { useCallback, useEffect, useState } from 'react'
 import type { Uygulama } from './Kabuk'
@@ -12,7 +13,7 @@ import { aracYolu, paketAraci } from './aracOrtak'
 import { arayuz, araclarMetni } from '@/lib/ulke/arayuz'
 import { hesabinAraci } from '@/lib/ulke/araclar/paket'
 import { ARAC_KAYDI_API, type AracKaydi } from '@/lib/ulke/araclar/kayitTipleri'
-import { portalOgunPlani, portalYemekGunlugu } from '@/lib/ulke/portal/beslenme'
+import { portalHastaGunlukSayisi, portalOgunPlani, portalYemekGunlugu } from '@/lib/ulke/portal/beslenme'
 import { ulkePaketi } from '@/lib/ulke/ulke'
 
 export type BeslenmeDosyaMetni = {
@@ -30,6 +31,8 @@ export type BeslenmeDosyaMetni = {
   gunlukAc: string
   ogunAdi: Readonly<Record<string, string>>
   kimAdi: Readonly<Record<string, string>>
+  /** "% from the patient" — placeholder is the count of patient-written diary lines. */
+  hastaGunlukRozet: string
 }
 
 /** Pure view: current plan + recent diary from kept results. */
@@ -49,8 +52,9 @@ export function BeslenmeDosyaGorunumu({
   if (!kayitlar) return null
   const plan = portalOgunPlani(kayitlar, planAraci)
   const gunluk = portalYemekGunlugu(kayitlar, gunlukAraci, 8)
+  const hastaSayisi = portalHastaGunlukSayisi(kayitlar, gunlukAraci)
   return (
-    <section className="uza-kart" data-alan="beslenme-dosya">
+    <section className="uza-kart" data-alan="beslenme-dosya" data-hasta-gunluk={hastaSayisi}>
       <h2 className="uza-h2">{metin.baslik}</h2>
 
       <div data-alan="meal-plan" style={{ marginBottom: 20 }}>
@@ -72,13 +76,37 @@ export function BeslenmeDosyaGorunumu({
       </div>
 
       <div data-alan="food-diary">
-        <h3 className="uza-alt-baslik">{metin.gunlukBaslik}</h3>
+        <h3 className="uza-alt-baslik" style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+          <span>{metin.gunlukBaslik}</span>
+          {hastaSayisi > 0 ? (
+            <span
+              className="uza-rozet"
+              data-alan="hasta-gunluk-rozet"
+              style={{
+                display: 'inline-block',
+                fontSize: 12,
+                fontWeight: 600,
+                padding: '2px 8px',
+                borderRadius: 999,
+                background: 'var(--uza-altin, #c4a35a)',
+                color: 'var(--uza-murekkep, #1a1a1a)',
+              }}
+            >
+              {metin.hastaGunlukRozet.replace('%', String(hastaSayisi))}
+            </span>
+          ) : null}
+        </h3>
         {gunluk.length === 0 ? (
           <p className="uza-bos">{metin.gunlukYok}</p>
         ) : (
           <ul className="uza-liste">
             {gunluk.map((x, i) => (
-              <li key={`${x.gun}-${x.ogun}-${i}`} data-gunluk-gun={x.gun}>
+              <li
+                key={`${x.gun}-${x.ogun}-${i}`}
+                data-gunluk-gun={x.gun}
+                data-kim={x.kim}
+                style={x.kim === 'hasta' ? { borderLeft: '3px solid var(--uza-altin, #c4a35a)', paddingLeft: 8 } : undefined}
+              >
                 <span className="uza-liste-ad">{x.gun} · {metin.ogunAdi[x.ogun] ?? x.ogun}</span>
                 <span className="uza-liste-alt">{x.aciklama} · {metin.kimAdi[x.kim] ?? x.kim}</span>
               </li>

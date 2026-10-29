@@ -44,7 +44,9 @@ export function hamiSuz(alanlar: readonly AracAlani[], ham: unknown): HamGirdi {
     if (!Object.prototype.hasOwnProperty.call(ham, a.anahtar)) continue
     const v = (ham as Record<string, unknown>)[a.anahtar]
     if (a.tur === 'isaret') { if (v === true) cikti[a.anahtar] = true; continue }
-    if (typeof v === 'string' && v.length <= METIN_UZUNLUGU * 2) cikti[a.anahtar] = v
+    // metin fields may set enCok (e.g. meal-plan lines); ham accepts twice the kept length for paste/trim.
+    const metinEnCok = a.tur === 'metin' ? (a.enCok ?? METIN_UZUNLUGU) : METIN_UZUNLUGU
+    if (typeof v === 'string' && v.length <= metinEnCok * 2) cikti[a.anahtar] = v
   }
   return cikti
 }
@@ -57,7 +59,12 @@ export function girdiyiCoz(alanlar: readonly AracAlani[], ham: HamGirdi, o: Biri
     if (a.tur === 'isaret') { g[a.anahtar] = v === true; continue }
     if (a.tur === 'secim') { g[a.anahtar] = typeof v === 'string' && (a.secenekler ?? []).includes(v) ? v : null; continue }
     if (a.tur === 'tarih') { g[a.anahtar] = typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : null; continue }
-    if (a.tur === 'metin') { const t = typeof v === 'string' ? v.trim().slice(0, METIN_UZUNLUGU) : ''; g[a.anahtar] = t || null; continue }
+    if (a.tur === 'metin') {
+      const enCok = a.enCok ?? METIN_UZUNLUGU
+      const t = typeof v === 'string' ? v.trim().slice(0, enCok) : ''
+      g[a.anahtar] = t || null
+      continue
+    }
     const okuma = sayiCozKuralla(v, o.sayi)
     let n = okuma.tamam ? okuma.sayi : NaN
     // A HEIGHT TYPED IN METRES (Türkiye's parseBoyGirdi reads "1.65" as 165 cm): in a pack that works in centimetres no

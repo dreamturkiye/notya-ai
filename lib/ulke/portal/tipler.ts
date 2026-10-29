@@ -42,8 +42,9 @@ export type PortalIcerigi = {
     tarihler: readonly { gun: string; durum: 'gecikti' | 'bugun' | 'yaklasiyor' | 'planli' }[]
   }
   /**
-   * AU-DIETETICS-MEAL-01 — current meal plan + recent food-diary entries for the patient to read
-   * (and to add a diary line). Absent when the pack names no beslenme tools or the role has none kept.
+   * AU-DIETETICS-MEAL-01 / portal coaching — meal plan, diary, agreed goals and clinic weight numbers
+   * for dietitian↔patient back-and-forth. Absent when the pack names no beslenme tools or the role has none kept.
+   * No diagnosis, no kilojoule prescription, no IDDSI score on this payload.
    */
   beslenme?: {
     /** Pack-supplied labels so the portal catalogue need not gain required keys for every country. */
@@ -65,8 +66,24 @@ export type PortalIcerigi = {
       kaydet: string
       kaydedildi: string
       kaydedilemedi: string
+      hedefBaslik: string
+      hedefYok: string
+      agirlikBaslik: string
+      agirlikYok: string
+      agirlikKg: string
+      bmiEtiket: string
+      belEtiket: string
+      mesajCta: string
+      mesajIpucu: string
+      cipPlan: string
+      cipPlanYok: string
+      cipGunluk: string
+      cipGunlukYok: string
+      cipHedef: string
+      cipHedefYok: string
       ogunAdi: Readonly<Record<string, string>>
       kimAdi: Readonly<Record<string, string>>
+      hedefAdi: Readonly<Record<string, string>>
     }
     plan: {
       gun: string
@@ -79,6 +96,10 @@ export type PortalIcerigi = {
     gunluk: readonly { gun: string; ogun: string; aciklama: string; kim: string }[]
     /** true = the patient may add a diary entry from this page. */
     gunlukYazabilir: boolean
+    /** Agreed person-centred goals from the newest completed goals tool result (labels from the pack). */
+    hedefler: readonly { anahtar: string; etiket: string }[]
+    /** Clinic-recorded weight / waist / BMI points, newest first. Numbers only. */
+    agirlik: readonly { gun: string; kiloKg: number | null; belCm: number | null; bmi: number | null }[]
   }
   /** When this session ends. */
   bitis: string
