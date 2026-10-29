@@ -1015,21 +1015,21 @@
       "group": "shared-40",
       "like": null,
       "scores": {
-        "motor": 82,
-        "tests": 88,
-        "ui": 84,
-        "dosya": 82,
+        "motor": 92,
+        "tests": 92,
+        "ui": 88,
+        "dosya": 91,
         "kohort": 86,
-        "portal": 86,
-        "soap": 90,
+        "portal": 90,
+        "soap": 94,
         "acil": 88,
-        "kayit": 86,
-        "voice": 90
+        "kayit": 88,
+        "voice": 92
       },
-      "wow": 86,
+      "wow": 89,
       "depth": "Strong",
-      "note": "AU-PEDIATRI-GOLD-01a/b Strong push: SOAP locks in notTalimati, specialty voice clinical focus + Triple Zero pathway, per-role danger-sign tools, immunisation overdue cohort (paeds+GP) + review overdue cohort (all roles), portal Triple Zero line. Prior gold: WHO growth, review studios, portal chapters, NIP/catch-up.",
-      "gap": "Named AU clinician confirm WHO vs ANZSPED/CDC for ages 2–18 (01c); M-CHAT/ATS licence-gated (01d); college-specific engines beyond this spine remain open for further wow; TGA advice on checklist tools (AU-LAUNCH-01b)."
+      "note": "AU-DIETETICS-BETA-01d rescore: ADIME headings + PES fields; 10 dietetics Araçlar; anthropometry trend; meal plan + food diary on file and portal. Prior gold spine + dietetics suite (MST/kJ/IDDSI/labs/refs/intake).",
+      "gap": "Practising dietitian sign-off (01a); meal free-text 80 chars; no AUSNUT; care-plan studio calendar-only; us/gb/ca/nz/uz OPEN GAP (01b). Full specialty audit: AU-DIETETICS-BETA-AUDIT-01."
     },
     {
       "key": "speech-pathology",
@@ -1056,5 +1056,6 @@
     }
   ],
   "rescore": "AU-PEDIATRI-GOLD-01a/b Strong: SOAP locks, voice focus, acil flags, immunisation+review cohort, portal 000 — mean wow 87, 44/44 Strong",
-  "au_tip_note": "cursor/au-pediatri-gold-ef6b (from release/au e4409f17 + altin cherry-picks + gold)"
+  "au_tip_note": "cursor/au-pediatri-gold-ef6b (from release/au e4409f17 + altin cherry-picks + gold)",
+  "dietetics_wow": 89
 }

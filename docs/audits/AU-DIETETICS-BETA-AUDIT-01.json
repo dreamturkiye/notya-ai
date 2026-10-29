@@ -1,0 +1,58 @@
+{
+  "audit_id": "AU-DIETETICS-BETA-AUDIT-01",
+  "date": "2026-10-29",
+  "role": "dietetics",
+  "name": "Clinical Dietitian (Australia)",
+  "branch": "cursor/au-pediatri-gold-ef6b",
+  "base": "release/au",
+  "label": "Post-sprint — after ADIME + anthropometry trend + meal plan/diary (AU-DIETETICS-BETA-01d)",
+  "prior": {
+    "source": "AU-40-PEDIATRI-AUDIT-01",
+    "wow": 86,
+    "depth": "Strong",
+    "note": "Generic gold spine score — same note as other roles; not dietetics-beta-aware."
+  },
+  "overall": {
+    "wow": 89,
+    "depth": "Strong",
+    "verdict": "A beta APD can run a real visit: ADIME note, MST/kJ/IDDSI/labs tools, weight–waist–BMI trend, meal plan + food diary on file and portal. Not yet ‘ulan bu başka’ — no AUSNUT, 80-char meal lines, tools unsigned, care-plan studio is calendar-only."
+  },
+  "spine_scores": {
+    "motor": 92,
+    "tests": 92,
+    "ui": 88,
+    "dosya": 91,
+    "kohort": 86,
+    "portal": 90,
+    "soap": 94,
+    "acil": 88,
+    "kayit": 88,
+    "voice": 92
+  },
+  "domains": [
+    { "domain": "ADIME note template", "depth": "Strong", "wow": 90, "note": "Role-keyed Assessment / Nutrition diagnosis / I+M-E headings; PES + intervention + monitoring fields; SOAP lock.", "gap": "Still SOAP keys under the hood — fine for product; no separate ADIME document type." },
+    { "domain": "Clinical Araçlar (10 tools)", "depth": "Partial", "wow": 76, "note": "MST score, weight %, kJ×protein, IDDSI, refeeding ticks, enteral mL/h, goals, labs, meal plan, food diary — dietetics-gated.", "gap": "MST questions not worded (licence); no AUSNUT; energy is multiply-only; practising dietitian sign-off OPEN (01a)." },
+    { "domain": "Anthropometry trend", "depth": "Strong", "wow": 86, "note": "Weight kg / waist cm / BMI charts + dated list from kept au-body-size; AU units.", "gap": "Adult body-size only; no MUAC/skinfold/DXA." },
+    { "domain": "Meal plan + food diary", "depth": "Partial", "wow": 74, "note": "Structured slots + diary; doctor file card; portal tab; patient can add diary lines.", "gap": "METIN_UZUNLUGU 80 chars; no nutrient analysis; no food composition DB." },
+    { "domain": "Hasta portalı (Sağlığım)", "depth": "Partial", "wow": 82, "note": "Dietetics chapter + meal/diary tab role-gated; Triple Zero line; goals messaging.", "gap": "Not a full Beslenmem-style chapter (TR depth); MST/IDDSI stay clinician-only by design." },
+    { "domain": "Intake form", "depth": "Strong", "wow": 84, "note": "EN dietetics set: purpose, AU/US place of care, allergy, swallow, labs, supplements, diabetes, bowel, culture + red flags.", "gap": "No live link from intake answers into ADIME fields yet." },
+    { "domain": "Assistant refs + voice", "depth": "Strong", "wow": 90, "note": "DA / ADG / NEMO / ANZ texts + US DGA/AND; AU wins on conflict; 000 pathway for refeeding/anaphylaxis.", "gap": "Live assistant still launch-gated for AU (AU-LAUNCH)." },
+    { "domain": "Emergency / danger signs", "depth": "Partial", "wow": 80, "note": "au-dietetics-flags + refeeding 000 + intake red flags.", "gap": "Two specialty flags — thin vs hospital APD pathways." },
+    { "domain": "Nutrition labs recorder", "depth": "Partial", "wow": 74, "note": "AU units; values only; no invented intervals.", "gap": "Clipboard, not interpretive panel — correct by law, still feels thin in clinic." },
+    { "domain": "Review cohort / care-plan studio", "depth": "Thin", "wow": 58, "note": "au-review-cohort + au-dietetics-plan (next review + photo consent).", "gap": "Studio stores no meal plan; no MST re-screen cohort." },
+    { "domain": "Automated tests", "depth": "Strong", "wow": 92, "note": "dieteticsTools, adime, antropometriTrend, beslenme portal shaping, pack wiring.", "gap": "No end-to-end browser demo fixture yet." }
+  ],
+  "open": [
+    "AU-DIETETICS-BETA-01a — practising dietitian sign-off (Kaan)",
+    "AU-DIETETICS-BETA-01b — us/gb/ca/nz/uz country-native packs (OPEN GAP)",
+    "No AUSNUT / nutrient analysis (intentional v1)",
+    "MST question wording blocked by licence"
+  ],
+  "game_changers": [
+    { "n": 1, "move": "Raise meal/diary free-text past 80 chars (or multi-line slots)", "why": "Beta APDs will bounce on short breakfast lines first", "size": "S" },
+    { "n": 2, "move": "Practising dietitian sign-off of the ten tools", "why": "Unsigned tools cannot be relied on with patients", "size": "S" },
+    { "n": 3, "move": "Real nutrition care-plan surface (goals + plan + review on one card)", "why": "au-dietetics-plan is calendar-only today", "size": "M" },
+    { "n": 4, "move": "MST re-screen / enteral review cohort", "why": "Closes the review loop APDs live in", "size": "M" },
+    { "n": 5, "move": "Optional AUSNUT-lite food pick (later)", "why": "Wow bar for outpatient dietetics — not required for hospital screening beta", "size": "L" }
+  ]
+}
