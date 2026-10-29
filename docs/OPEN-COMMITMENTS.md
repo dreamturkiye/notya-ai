@@ -4190,3 +4190,11 @@ Done in this change set (release/au first, the same kit commit to us/gb/ca/nz/uz
 | SHELL-PARITY-02h | 2026-10-23 | OPEN | Tip bubble wording buttons ("Got it" / "Don't show this again") are the pack's; Türkiye's bubble has a different arrangement for the same two buttons. Empty states of the lists use the kit text line, not Türkiye's centred card with a button. | Claude |
 
 - 2026-10-24 · waits on Claude · LOOK-PARITY-01 (pilot done: visit recording card, note page, conversation look): shared views in components/doktor/{SeansKurulumu,NotDuzenGorunumu,MesajlarGorunumu}.tsx. NOT yet shared: (a) Türkiye /session/new setup step still draws its own inline copy of the pieces SeansKurulumu already offers (same look, not de-duplicated); (b) Türkiye "done" step (note preview after recording); (c) note-page fields beyond the SOAP boxes (vitals, ICD, medicines, tests, vaccines, home care, patient summary, check-list box) are Türkiye-only content, country has role fields instead; (d) country has NO messages inbox page (conversations live in the patient file; a cross-patient list needs a new list API in lib/ulke/mesaj + hasta-izolasyon review), Türkiye's thread list (MesajKonuListesi) is ready to receive it; (e) Türkiye mesajlar delete / save-to-documents have no country twin yet. Next pages: Şablonlar, patient-file cards (portal, vaccine list, growth chart, photo archive), Konsültasyonlar.
+
+## SEO-OG-01 — country builds unblocked: the OG image route removed (Claude, 2026-10-29)
+
+`app/opengraph-image.ulke.tsx` (from the 2026-10-28 SEO commit, all six release branches) is not a valid special file
+under the country build's `pageExtensions` (same class as `not-found.ulke.tsx` → `not-found.mjs`) and failed the AU
+production builds. Removed on all six branches the same way the AU side branch fixed it; Twitter card back to `summary`;
+canonical, hreflang (x-default, TR cross-link), Open Graph title/description kept. Open: a real social preview image as a
+static asset (owner-approved image) or a non-special-file `/api/ulke/…` route. Owner: Kaan (image approval), Claude (build).
