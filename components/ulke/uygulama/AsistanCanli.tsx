@@ -111,16 +111,17 @@ export function AsistanCanli({ m, api }: { m: UygulamaMetni; api?: Api }) {
     setHata(null); setDurum('baglaniyor'); setMesajlar([]); setGecici(''); geciciRef.current = ''
     try {
       const r = await api('/api/ulke/asistan-canli', { method: 'POST' })
-      const j = r.j as { signed_url?: string; voice_id?: string; first_message?: string; notya_jeton?: string; ekran_araci?: string }
+      const j = r.j as { signed_url?: string; voice_id?: string; first_message?: string; notya_jeton?: string; ekran_araci?: string; conversation_token?: string; asr_keywords?: string[] }
       if (r.status === 429) { setHata(t.limit); setDurum('hata'); return }
       if (!r.ok || !j.signed_url || !j.notya_jeton || !j.voice_id) { setHata(t.hata); setDurum('hata'); return }
       const aracAdi = j.ekran_araci || 'show_on_screen'
-      const baglanti = await Conversation.startSession({
-        signedUrl: j.signed_url,
-        connectionType: 'websocket',
+      // SES-OMURGA-V2 (C): WebRTC (browser echo cancellation + noise suppression) when the server minted a token; the signed
+      // WebSocket address when it did not, or when WebRTC cannot connect.
+      const ac = (webrtc: boolean) => Conversation.startSession({
+        ...((webrtc && j.conversation_token ? { conversationToken: j.conversation_token, connectionType: 'webrtc' } : { signedUrl: j.signed_url, connectionType: 'websocket' }) as unknown as { signedUrl: string; connectionType: 'websocket' }),
         ...CALAR,
         customLlmExtraBody: { notya_jeton: j.notya_jeton },
-        overrides: { agent: { language: 'en', firstMessage: j.first_message || '' }, tts: { voiceId: j.voice_id } },
+        overrides: { agent: { language: 'en', firstMessage: j.first_message || '' }, tts: { voiceId: j.voice_id }, ...(j.asr_keywords?.length ? { asr: { keywords: j.asr_keywords.slice(0, 50) } } : {}) },
         clientTools: {
           [aracAdi]: (p: { text?: unknown }) => {
             // The full written answer replaces the spoken line shown while it was being said.
@@ -142,6 +143,11 @@ export function AsistanCanli({ m, api }: { m: UygulamaMetni; api?: Api }) {
           }
         },
         onModeChange: ({ mode }: { mode: string }) => { setDurum(mode === 'speaking' ? 'konusuyor' : 'dinliyor') },
+      })
+      const baglanti = await ac(Boolean(j.conversation_token)).catch((e: unknown) => {
+        if (!j.conversation_token) throw e
+        console.info('[ses-baglanti]', { webrtc: 'acilamadi' })
+        return ac(false)
       })
       sohbet.current = baglanti
     } catch {

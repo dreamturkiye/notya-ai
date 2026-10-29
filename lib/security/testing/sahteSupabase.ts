@@ -82,6 +82,25 @@ export class SahteVeritabani {
     this.tablo(ad).push(r)
     return r
   }
+  /**
+   * SES-OMURGA-V2: stands in for the hasta_dosya_surum triggers (migration 183). The version is a hash of every row of
+   * the tables the chart package reads for that patient, so ANY change — a route's write or a test mutating a row in
+   * place — changes it, exactly like the trigger would bump it.
+   */
+  dosyaSurumu(patientId: string): number {
+    const tablolar = ['patients', 'sessions', 'notes', 'hasta_ilaclar', 'asilar', 'hasta_intake_formlari', 'hasta_goruntulemeler', 'hasta_belgeler', 'belge_analizleri', 'randevular', 'lab_satirlar', 'goruntu_calisma', 'sevkler', 'mchat_testleri', 'gelisim_taramalari', 'pedi_taramalar', 'cihaz_olcumleri', 'hasta_tetkik_istemleri']
+    const seanslar = new Set(this.tablo('sessions').filter((r) => r.patient_id === patientId).map((r) => r.id))
+    let h = 0
+    for (const t of tablolar) {
+      for (const r of this.tablolar.get(t) || []) {
+        const ilgili = t === 'patients' ? r.id === patientId : t === 'notes' ? seanslar.has(r.session_id) : r.patient_id === patientId
+        if (!ilgili) continue
+        const m = `${t}:${JSON.stringify(r)}`
+        for (let i = 0; i < m.length; i++) h = (Math.imul(h, 31) + m.charCodeAt(i)) | 0
+      }
+    }
+    return Math.abs(h)
+  }
   dosyaKoy(kova: string, yol: string, veri: unknown) {
     if (!this.depolama.has(kova)) this.depolama.set(kova, new Map())
     this.depolama.get(kova)!.set(yol, veri)
@@ -177,6 +196,79 @@ export class SahteVeritabani {
             kazandi = true
           }
           return { data: { yok: false, kazandi, oncekiKilit: k, satir: okunan }, error: null }
+        }
+        // SES-OMURGA-V2: mirrors 183_ses_omurga_v2.sql. The real atomicity is Postgres's FOR UPDATE; this fake is
+        // single-threaded and only needs the same karar/seq/satir shape and the same write refusal.
+        if (ad === 'ses_turu_ac_v2') {
+          const satir = db.tablo('asistan_sessions').find((r) => r.id === args.p_oturum && r.doctor_id === args.p_doktor)
+          if (!satir) return { data: { yok: true }, error: null }
+          const ac = ((satir.active_context as Record<string, any> | null) || {})
+          const k = ac.sesTur && typeof ac.sesTur === 'object' ? ac.sesTur : null
+          const ayniCagri = Boolean(k && k.cagri === args.p_cagri)
+          const yas = ayniCagri ? Date.now() - Date.parse(String(k.zaman)) : Infinity
+          let seq = ayniCagri ? Number(k.seq || 0) + 1 : 1
+          let karar = 'yeni'
+          if (ayniCagri && Number(k.tur) === Number(args.p_tur) && String(k.anahtar || '') === String(args.p_anahtar || '') && k.durum === 'bitti' && yas <= 120000) { karar = 'kopya'; seq = Number(k.seq || 0) }
+          else if (ayniCagri && Number(k.tur) === Number(args.p_tur) && k.durum !== 'bitti' && yas <= 60000) karar = 'ustune'
+          const okunan = JSON.parse(JSON.stringify({ id: satir.id, messages: ((satir.messages as unknown[]) || []).slice(-Number(args.p_pencere || 60)), active_context: ac, persona_id: satir.persona_id ?? null, patient_id: satir.patient_id ?? null }))
+          if (karar !== 'kopya') {
+            const turlar: Record<string, number> = { ...((ayniCagri && k.turlar) || {}), [String(args.p_tur)]: seq }
+            for (const t of Object.keys(turlar)) if (Number(t) <= Number(args.p_tur) - 10) delete turlar[t]
+            const { sesTurKilit: _a, sesSonSoz: _b, ...geri } = ac
+            satir.active_context = { ...geri, sesTur: { cagri: String(args.p_cagri || ''), tur: Number(args.p_tur), seq, anahtar: String(args.p_anahtar || '').slice(0, 200), zaman: new Date().toISOString(), durum: 'acik', turlar } }
+          }
+          const acik = typeof ac.currentPatientId === 'string' && ac.currentPatientId ? ac.currentPatientId : null
+          const sahibi = (id: unknown) => db.tablo('patients').some((p) => p.id === id && p.doctor_id === args.p_doktor)
+          const surumler: Record<string, number> = {}
+          for (const id of [args.p_hasta, acik]) {
+            if (!id || !sahibi(id)) continue
+            surumler[String(id)] = db.dosyaSurumu(String(id))
+          }
+          return {
+            data: {
+              yok: false, karar, seq, onceki: k, satir: okunan,
+              profil: db.tablo('users').find((u) => u.id === args.p_doktor) ?? null,
+              tercih: db.tablo('doctor_preferences').find((d) => d.doctor_id === args.p_doktor) ?? null,
+              hastaSahibi: !args.p_hasta || sahibi(args.p_hasta),
+              acikHasta: acik,
+              acikHastaSahibi: Boolean(acik && sahibi(acik)),
+              surumler,
+            },
+            error: null,
+          }
+        }
+        if (ad === 'asistan_gecmis_ekle') {
+          const satir = db.tablo('asistan_sessions').find((r) => r.id === args.p_oturum && r.doctor_id === args.p_doktor)
+          if (!satir) return { data: { yazildi: false, yok: true }, error: null }
+          const ac = { ...((satir.active_context as Record<string, any> | null) || {}) }
+          const st = ac.sesTur
+          if (args.p_cagri != null && args.p_tur != null && args.p_seq != null && st && st.cagri === args.p_cagri) {
+            const ts = st.turlar?.[String(args.p_tur)]
+            if (ts != null && Number(ts) !== Number(args.p_seq)) return { data: { yazildi: false, ustune: true }, error: null }
+          }
+          const sayfa = ac.odakKaynak === 'sayfa' && ac.currentPatientId != null && String(ac.odakZaman || '') > String(args.p_tur_bas || '')
+          const yama = { ...((args.p_yama as Record<string, unknown>) || {}) }
+          if (sayfa) for (const x of ['currentPatientId', 'patientName', 'odakKaynak', 'odakZaman', 'sesDevam']) delete yama[x]
+          delete yama.sesTur
+          for (const x of ((args.p_sil as string[]) || [])) delete ac[x]
+          const yeniAc: Record<string, any> = { ...ac, ...yama }
+          if (args.p_cagri != null && st && st.cagri === args.p_cagri && Number(st.tur) === Number(args.p_tur) && Number(st.seq) === Number(args.p_seq)) {
+            yeniAc.sesTur = { ...yeniAc.sesTur, durum: 'bitti', soz: String(args.p_soz || '').slice(0, 2000) }
+          }
+          const azami = Math.max(20, Math.min(Number(args.p_azami || 300), 2000))
+          const mesajlar = [...(args.p_sifirla ? [] : ((satir.messages as unknown[]) || [])), ...((args.p_yeni as unknown[]) || [])].slice(-azami)
+          satir.messages = JSON.parse(JSON.stringify(mesajlar))
+          satir.active_context = JSON.parse(JSON.stringify(yeniAc))
+          if (args.p_persona) satir.persona_id = args.p_persona
+          if (sayfa) satir.patient_id = ac.currentPatientId
+          else if (args.p_hasta_yaz) satir.patient_id = args.p_hasta_yaz
+          else if (args.p_hasta_null) satir.patient_id = null
+          return { data: { yazildi: true, sayfa }, error: null }
+        }
+        if (ad === 'asistan_oturum_pencere') {
+          const satir = db.tablo('asistan_sessions').find((r) => r.id === args.p_oturum && r.doctor_id === args.p_doktor)
+          if (!satir) return { data: null, error: null }
+          return { data: JSON.parse(JSON.stringify({ id: satir.id, messages: ((satir.messages as unknown[]) || []).slice(-Number(args.p_pencere || 40)), active_context: satir.active_context || {} })), error: null }
         }
         throw new Error(`[sahteSupabase] desteklenmeyen rpc: ${ad}`)
       },
@@ -319,6 +411,13 @@ class Sorgu {
   }
 
   private calistir(): { data: unknown; error: unknown; count?: number | null } {
+    if (this.ad === 'hasta_dosya_surum' && this.islem === 'select') {
+      // SES-OMURGA-V2: virtual — computed from the rows themselves (see SahteVeritabani.dosyaSurumu).
+      const tum = [...new Set([...(this.db.tablolar.get('patients') || []).map((r) => r.id)])].map((pid) => ({ patient_id: pid, surum: this.db.dosyaSurumu(String(pid)) }))
+      const sanal = tum.filter((r) => this.kosullar.every((k) => k.test((r as Satir)[k.kolon])))
+      if (this.tek) return { data: sanal[0] ?? null, error: null }
+      return { data: sanal, error: null }
+    }
     const tablo = this.db.tablo(this.ad)
     const gommeler = gommeleriCoz(this.secim)
 

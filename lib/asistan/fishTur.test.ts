@@ -13,6 +13,7 @@ import { ortam, sahneHazirla, sahneKur, hastaEkle, oturumAc, oturumBaglami, fish
 import { describe, it, before, beforeEach } from 'node:test'
 import assert from 'node:assert/strict'
 import { gercekciHastaEkle, GERCEKCI_HASTA_ADI } from './tests/gercekciHasta'
+import { SOZ_BEAT_SINIRI } from './konusma'
 
 let s: Sahne
 let hasta: string
@@ -282,20 +283,23 @@ describe('NOTYA-AYSE-GERI-02 — aynı kart sesle yeniden hazırlanınca eski ta
 })
 
 describe('NOTYA-AYSE-GERI-02 — kesilen sesli cevabın devamı (NOTYA-SES-DEVAM-01, PR 8)', () => {
-  const YEDI = 'Bir. İki. Üç. Dört. Beş. Altı. Yedi.'
+  // SES-OMURGA-V2 (D): the spoken cap is SOZ_BEAT_SINIRI (was 5); "YEDI" = cap + 2 sentences.
+  const cumleler = (n: number, bas = 1) => Array.from({ length: n }, (_, i) => `Cümle ${bas + i}.`).join(' ')
+  const N = SOZ_BEAT_SINIRI
+  const YEDI = cumleler(N + 2)
 
   it('yedi cümlelik cevap beşte sessizce kesilir, kalan saklanır; "devam et" kalan ikiyi model çağırmadan okur', async () => {
     ortam.yanit = { metin: JSON.stringify({ speech: YEDI }) }
     const t = await fishTur(s, 'Akut otitte ilk seçenek nedir?')
-    assert.equal(t.soz, 'Bir. İki. Üç. Dört. Beş.')
+    assert.equal(t.soz, cumleler(N))
     assert.ok(!/Devamı ekranınızda/.test(t.soz), 'devamı gelecek — "Devamı ekranınızda" denmez')
-    assert.equal(oturumBaglami(s.oturum).sesDevam?.kalan, 'Altı. Yedi.')
+    assert.equal(oturumBaglami(s.oturum).sesDevam?.kalan, cumleler(2, N + 1))
     assert.equal(sonAsistanMesaji(s.oturum), YEDI, 'ekran cevabı tamdır')
 
     const once = ortam.modelIstekleri.length
     const mesajSayisi = (ortam.db.tablo('asistan_sessions').find((x) => x.id === s.oturum)!.messages as unknown[]).length
     const d = await fishTur(s, 'devam et')
-    assert.equal(d.soz, 'Altı. Yedi.')
+    assert.equal(d.soz, cumleler(2, N + 1))
     assert.equal(ortam.modelIstekleri.length, once, '"devam et" bir model turu değildir')
     assert.equal(oturumBaglami(s.oturum).sesDevam, undefined, 'kalan bir kez okunur')
     assert.equal((ortam.db.tablo('asistan_sessions').find((x) => x.id === s.oturum)!.messages as unknown[]).length, mesajSayisi, 'devam yeni baloncuk açmaz')
@@ -340,7 +344,8 @@ describe('NOTYA-AYSE-GERI-02 — kesilen sesli cevabın devamı (NOTYA-SES-DEVAM
     const oturum = oturumAc(s, { id: hasta, ad: AD })
     ortam.yanit = { ...alerjiKarti('Penisilin'), metin: JSON.stringify({ speech: YEDI }) }
     const t = await fishTur(s, 'Penisilin alerjisini dosyaya gir', { oturum })
-    assert.match(t.soz, /^Bir\. İki\. Üç\. Dört\. Beş\. Umutcan Türkoğlu için Alerji ekle hazırladım.*Onaylıyor musunuz\?$/)
+    assert.ok(t.soz.startsWith(`${cumleler(N)} Umutcan Türkoğlu için Alerji ekle hazırladım`), t.soz)
+    assert.match(t.soz, /Onaylıyor musunuz\?$/)
     assert.equal(oturumBaglami(oturum).sesDevam, undefined)
     await fishTur(s, 'Evet', { oturum })
     assert.equal(hastaNotlari(hasta).alerjiler, 'Penisilin')

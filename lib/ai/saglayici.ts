@@ -154,6 +154,8 @@ export function openRouterGovdesi(govde: Record<string, unknown>): Record<string
     if (secim !== undefined) or.tool_choice = secim
   }
   if (govde.stream) or.stream = true
+  // SES-OMURGA-V2 (E): sticky routing (prompt cache stays warm on one provider). No provider.order is ever set.
+  if (typeof govde.session_id === 'string' && govde.session_id) or.session_id = govde.session_id.slice(0, 256)
   return or
 }
 
@@ -242,16 +244,19 @@ function uc(): string {
   return `${(process.env.OPENROUTER_BASE_URL || 'https://openrouter.ai/api/v1').replace(/\/+$/, '')}/chat/completions`
 }
 
-async function gonder(govde: Record<string, unknown>, zamanAsimiMs?: number): Promise<Response> {
+async function gonder(govde: Record<string, unknown>, zamanAsimiMs?: number, iptal?: AbortSignal): Promise<Response> {
   let r: Response
+  const sinyaller = [zamanAsimiMs ? AbortSignal.timeout(zamanAsimiMs) : null, iptal ?? null].filter((x): x is AbortSignal => Boolean(x))
+  const sinyal = sinyaller.length > 1 ? AbortSignal.any(sinyaller) : sinyaller[0]
   try {
     r = await fetch(uc(), {
       method: 'POST',
       headers: basliklar(),
       body: JSON.stringify(govde),
-      ...(zamanAsimiMs ? { signal: AbortSignal.timeout(zamanAsimiMs) } : {}),
+      ...(sinyal ? { signal: sinyal } : {}),
     })
   } catch (e) {
+    if (iptal?.aborted) throw new AiCagriHatasi(499, 'iptal')
     const ad = (e as { name?: string })?.name
     if (ad === 'TimeoutError' || ad === 'AbortError') throw new AiCagriHatasi(504, 'OpenRouter zaman aşımı')
     throw new AiCagriHatasi(503, `OpenRouter ağ hatası: ${String((e as Error)?.message || e).slice(0, 120)}`)
@@ -261,9 +266,9 @@ async function gonder(govde: Record<string, unknown>, zamanAsimiMs?: number): Pr
 }
 
 /** Tek OpenRouter çağrısı (akışsız). Boş/bozuk gövde → 502 AiCagriHatasi (taşıma). */
-export async function openRouterCagir(govde: Record<string, unknown>, zamanAsimiMs?: number): Promise<Anthropic.Message> {
+export async function openRouterCagir(govde: Record<string, unknown>, zamanAsimiMs?: number, iptal?: AbortSignal): Promise<Anthropic.Message> {
   const or = openRouterGovdesi({ ...govde, stream: false })
-  const r = await gonder(or, zamanAsimiMs)
+  const r = await gonder(or, zamanAsimiMs, iptal)
   const ham = await r.text().catch(() => '')
   let json: unknown = null
   try { json = ham ? JSON.parse(ham) : null } catch { json = null }
@@ -281,9 +286,9 @@ export async function openRouterCagir(govde: Record<string, unknown>, zamanAsimi
  * olarak döner (stop_reason 'max_tokens', `koptu: true`); F3 kurtarma ve DEVAMI_EKRANDA yolu onu normal kesik tur gibi
  * işler. Söylenmiş söz asla yeniden söylenmez.
  */
-export async function openRouterAkis(govde: Record<string, unknown>, metinParcasi: (p: string) => void, zamanAsimiMs?: number): Promise<{ yanit: Anthropic.Message; metinVerildi: boolean; koptu?: boolean }> {
+export async function openRouterAkis(govde: Record<string, unknown>, metinParcasi: (p: string) => void, zamanAsimiMs?: number, iptal?: AbortSignal): Promise<{ yanit: Anthropic.Message; metinVerildi: boolean; koptu?: boolean }> {
   const or = openRouterGovdesi({ ...govde, stream: true })
-  const r = await gonder(or, zamanAsimiMs)
+  const r = await gonder(or, zamanAsimiMs, iptal)
   if (!r.body) throw new AiCagriHatasi(502, 'OpenRouter boş akış')
   const okuyucu = r.body.getReader()
   const coz = new TextDecoder()
@@ -335,6 +340,7 @@ export async function openRouterAkis(govde: Record<string, unknown>, metinParcas
     }
     if (tampon) satirIsle(tampon)
   } catch (e) {
+    if (iptal?.aborted) { try { await okuyucu.cancel() } catch { /* */ } throw new AiCagriHatasi(499, 'iptal') }
     const hata = e instanceof AiCagriHatasi ? e : new AiCagriHatasi(503, `OpenRouter akış koptu: ${String((e as Error)?.message || e).slice(0, 120)}`)
     // İlk sözden önce kopan akış taşıma hatasıdır (çağıran yeniden dener / koruyucuya gider); sonra kopan akış kesik turdur.
     if (!metin) throw Object.assign(hata, { metinVerildi: false })

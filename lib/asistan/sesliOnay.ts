@@ -13,7 +13,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { hastaSahibiMi } from '@/lib/doktor/hastaSahipligi'
 import { bransAnahtari } from '@/lib/specialties/bransAnahtari'
-import { SOHBET_SAKLANAN_MESAJ } from '@/lib/ai/modeller'
+import { gecmisEkle } from '@/lib/asistan/oturumYaz'
 import { eylemBul } from '@/core/eylemler/kayit'
 import { eylemOnayla, eylemVazgec } from '@/core/eylemler/onayla'
 import { sesCiddiUyariEngeli, sesEksikAlanEngeli, sesOnayMetniGecerliMi, sesVazgecMetniMi } from '@/core/eylemler/sesKapilari'
@@ -60,15 +60,15 @@ export async function sesliKarariUygula(supabase: SupabaseClient, doktorId: stri
   const karar = await uygula(supabase, doktorId, taslaklar, sesOnayMetniGecerliMi(mesaj), saatDilimi)
   // NOTYA-AYSE-SAYI-SIRA-01: the doctor's line keeps its own time; the reply is strictly later (one instant for both before).
   const zaman = turZamanlari(turBaslangic)
-  const mesajlar = ((oturum as { messages?: OturumMesaji[] }).messages || [])
-  await supabase.from('asistan_sessions').update({
-    messages: [
-      ...mesajlar,
-      { role: 'user', content: mesaj, kanal: 'ses', zaman: zaman.soru },
-      { role: 'assistant', content: karar.soz, kanal: 'ses', zaman: zaman.cevap },
-    ].slice(-SOHBET_SAKLANAN_MESAJ),
-    active_context: { ...baglam, bekleyenOneriler: karar.kalan },
-  }).eq('id', oturumId).eq('doctor_id', doktorId)
+  // SES-OMURGA-V2 (F): append + field-level merge — a concurrent turn's lines and keys are not overwritten.
+  await gecmisEkle(supabase, {
+    oturumId, doktorId,
+    yeni: [
+      { role: 'user', content: mesaj, kanal: 'ses', zaman: zaman.soru } satisfies OturumMesaji,
+      { role: 'assistant', content: karar.soz, kanal: 'ses', zaman: zaman.cevap } satisfies OturumMesaji,
+    ],
+    yama: { bekleyenOneriler: karar.kalan },
+  })
   return { soz: karar.soz }
 }
 

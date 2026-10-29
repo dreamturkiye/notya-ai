@@ -24,6 +24,10 @@ process.env.ANTHROPIC_API_KEY = 'sahte'
 // The fake model stands in for the direct SDK client; no OpenRouter request may leave a test. The audit runner
 // (eylemDenetimi.kos.ts) puts the key back through gercekModelAc() — nothing else can.
 const ortamdakiAnahtar = process.env.OPENROUTER_API_KEY || ''
+// SES-OMURGA-V2: the ElevenLabs Custom LLM route (elTur) needs its two locks.
+export const SES_SIRRI = 'qa-sentetik-ses-llm-sirri-ayse-sahne-0123456789'
+process.env.NOTYA_SES_LLM_SECRET = SES_SIRRI
+process.env.NOTYA_SES_JETON_SECRET = 'qa-sentetik-ses-jeton-ayse-sahne-0123456789ab'
 delete process.env.OPENROUTER_API_KEY
 
 export type SahteArac = { name: string; input: Record<string, unknown> }
@@ -217,7 +221,7 @@ export type Sahne = { doktor: Kullanici; diger: Kullanici; oturum: string }
 
 let sifrele: ((s: string) => string) | null = null
 let NextRequestSinifi: typeof import('next/server').NextRequest
-let rotalar: { chat: { POST: (r: any) => Promise<Response> }; fishTur: { POST: (r: any) => Promise<Response> } } | null = null
+let rotalar: { chat: { POST: (r: any) => Promise<Response> }; fishTur: { POST: (r: any) => Promise<Response> }; sesLlm: { POST: (r: any) => Promise<Response> } } | null = null
 
 /** Load the encryption helper and the real route handlers (after the mocks above are installed). Call in `before`. */
 export async function sahneHazirla(): Promise<void> {
@@ -226,6 +230,7 @@ export async function sahneHazirla(): Promise<void> {
   rotalar = {
     chat: await import('../../../app/api/asistan/chat/route'),
     fishTur: await import('../../../app/api/asistan/fish-tur/route'),
+    sesLlm: await import('../../../app/api/asistan/ses-llm/v1/chat/completions/route'),
   }
 }
 
@@ -418,4 +423,62 @@ export function sonAsistanMesaji(oturumId: string): string {
   const r = ortam.db.tablo('asistan_sessions').find((x) => x.id === oturumId)
   const m = ((r?.messages || []) as { role: string; content: string }[]).filter((x) => x.role === 'assistant')
   return m.length ? String(m[m.length - 1].content) : ''
+}
+
+export type ElTuru = {
+  status: number
+  /** Content deltas in order (speech form). */
+  parcalar: string[]
+  metin: string
+  araclar: string[]
+  bitis: string | null
+  /** ms from the POST to the first SSE byte (the role chunk). */
+  ilkBaytMs: number | null
+  ham: string
+}
+
+/**
+ * SES-OMURGA-V2: one ElevenLabs Custom-LLM request through the real /api/asistan/ses-llm handler. `gecmis` is
+ * ElevenLabs' own history BEFORE this user line (assistant / user lines) — its user count sets the turn position.
+ * `cagri` is the per-call id in the voice token. `arkaBekle: false` returns as soon as the stream ends.
+ */
+export async function elTur(s: Sahne, mesaj: string, o: { oturum?: string; cagri?: string; gecmis?: { role: string; content: string }[]; patientId?: string | null; tools?: string[]; arkaBekle?: boolean; doktor?: string } = {}): Promise<ElTuru> {
+  if (!rotalar) throw new Error('sahneHazirla() çağrılmadı')
+  const { sesJetonuImzala } = await import('../sesJetonu')
+  const jeton = sesJetonuImzala({ d: o.doktor || s.doktor.id, o: o.oturum || s.oturum, s: 'pediatri', p: o.patientId ?? null, pe: 'aysekaya', c: o.cagri || 'qa-cagri' })
+  const istek = new NextRequestSinifi('http://localhost/api/asistan/ses-llm/v1/chat/completions', {
+    method: 'POST', headers: { authorization: `Bearer ${SES_SIRRI}`, 'content-type': 'application/json' },
+    body: JSON.stringify({
+      model: 'notya-ayse', stream: true,
+      messages: [{ role: 'system', content: 'ElevenLabs ajan promptu' }, { role: 'assistant', content: 'Merhaba Hocam.' }, ...(o.gecmis || []), { role: 'user', content: mesaj }],
+      ...(o.tools ? { tools: o.tools.map((n) => ({ type: 'function', function: { name: n } })) } : {}),
+      elevenlabs_extra_body: { notya_jeton: jeton },
+    }),
+  } as ConstructorParameters<typeof NextRequestSinifi>[1])
+  const t0 = Date.now()
+  const y = await rotalar.sesLlm.POST(istek)
+  let ilkBaytMs: number | null = null
+  let ham = ''
+  const okuyucu = y.body?.getReader()
+  if (okuyucu) {
+    const coz = new TextDecoder()
+    for (;;) {
+      const { done, value } = await okuyucu.read()
+      if (done) break
+      if (ilkBaytMs === null) ilkBaytMs = Date.now() - t0
+      ham += coz.decode(value, { stream: true })
+    }
+  } else ham = await y.text()
+  if (o.arkaBekle !== false) await (await import('../sesLlm')).sesArkaPlaniBekle()
+  const parcalar: string[] = []
+  const araclar: string[] = []
+  let bitis: string | null = null
+  for (const satir of ham.split('\n')) {
+    if (!satir.startsWith('data: ') || satir === 'data: [DONE]') continue
+    const c = JSON.parse(satir.slice(6)).choices[0]
+    if (typeof c.delta.content === 'string') parcalar.push(c.delta.content)
+    for (const t of c.delta.tool_calls || []) araclar.push(String(t.function?.name))
+    if (c.finish_reason) bitis = c.finish_reason
+  }
+  return { status: y.status, parcalar, metin: parcalar.join(''), araclar, bitis, ilkBaytMs, ham }
 }

@@ -4,7 +4,7 @@
   "devCommand": "npm run dev",
   "installCommand": "npm install",
   "regions": [
-    "fra1"
+    "syd1"
   ],
   "functions": {
     "app/api/sessions/[id]/end/route.ts": {
