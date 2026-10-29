@@ -131,7 +131,7 @@ export async function modeldenBelge(g: { talimat: string; baglam: string; mime: 
  * threw is logged by kind and goes no further). The instruction is the cached system block and holds nothing about a
  * doctor or a patient; `mesajlar` are the clinician's and the assistant's own words of this call.
  */
-export async function modeldenAkis(g: { talimat: string; /** Per-turn text (not cached), after the cached instruction. */ baglam?: string; mesajlar: AiMesaj[]; doktorId: string; butceMs?: number }, parca: (p: string) => void): Promise<string | null> {
+export async function modeldenAkis(g: { talimat: string; /** Per-turn text (not cached), after the cached instruction. */ baglam?: string; mesajlar: AiMesaj[]; doktorId: string; butceMs?: number; /** SES-OMURGA-V2 (A): a superseded voice request aborts its model call. */ iptal?: AbortSignal }, parca: (p: string) => void): Promise<string | null> {
   try {
     const yanit = await aiAkis({
       gorev: 'sohbet-uzman',
@@ -141,6 +141,7 @@ export async function modeldenAkis(g: { talimat: string; /** Per-turn text (not 
       temperature: 0.3,
       doctorId: g.doktorId,
       ...(g.butceMs ? { butceMs: g.butceMs } : {}),
+      ...(g.iptal ? { iptal: g.iptal } : {}),
     }, parca)
     return yanitMetni(yanit)
   } catch (e) {

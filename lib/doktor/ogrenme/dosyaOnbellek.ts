@@ -131,13 +131,77 @@ async function dosyaPaketDerle(
   return { ...yazilacak, onbellekten: false }
 }
 
+/**
+ * SES-OMURGA-V2 (E, Kaan 2026-10-29) — compiled chart cache, back with a version stamp.
+ *
+ * The 2026-10-01 removal was right for the OLD cache (a DB table, slower than compiling, invalidated by a `kirli` flag
+ * nobody set reliably). The cost it left: every voice turn recompiled the chart — ~24 queries + decryption, 0 of 111
+ * turns cached. This cache is different:
+ *   - in-process LRU (no DB round trip to read it), keyed by (doctor, patient) — a package compiled with one doctor's
+ *     doctor-scoped queries can never be served to another doctor or for another patient;
+ *   - valid only while the patient's version stamp is unchanged. `hasta_dosya_surum` is bumped by a trigger on every
+ *     table the package reads (migration 183), so any write — note, vaccine, medication, lab, appointment, form,
+ *     archive — invalidates it on every instance;
+ *   - and at most TTL old and never across a TRT day boundary (age and "next appointment" are day-relative).
+ * The version comes free with the voice route's turn RPC (`surumler`); other callers read it with one small query.
+ */
+export const DOSYA_ONBELLEK_TTL_MS = 10 * 60 * 1000
+const DOSYA_ONBELLEK_AZAMI = 60
+type DosyaOnbellekKaydi = { surum: number; zaman: number; gun: string; paket: OnbellekPaket }
+const dosyaOnbellegi = new Map<string, DosyaOnbellekKaydi>()
+
+function trtGunu(simdi: Date): string {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Istanbul', year: 'numeric', month: '2-digit', day: '2-digit' }).format(simdi)
+}
+
+/** Test helper. */
+export function dosyaOnbelleginiSil(): void {
+  dosyaOnbellegi.clear()
+}
+
+/** The patient's chart version (0 when never bumped). null = unknown (table missing / error) — do not cache. */
+export async function dosyaSurumuOku(sb: SupabaseClient, patientId: string): Promise<number | null> {
+  try {
+    const { data, error } = await sb.from('hasta_dosya_surum').select('surum').eq('patient_id', patientId).maybeSingle()
+    if (error) return null
+    return Number((data as { surum?: number } | null)?.surum ?? 0)
+  } catch {
+    return null
+  }
+}
+
 export async function dosyaPaketOnbellekli(
   sb: SupabaseClient,
   doctorId: string,
   patientId: string,
+  surumler?: Record<string, number> | null,
 ): Promise<OnbellekPaket | null> {
   if (!doctorId || !patientId) return null
-  return tekUcus(ucuslar, `${doctorId}:${patientId}`, () => dosyaPaketDerle(sb, doctorId, patientId))
+  const anahtar = `${doctorId}:${patientId}`
+  const surum = surumler && Object.prototype.hasOwnProperty.call(surumler, patientId)
+    ? Number(surumler[patientId])
+    : await dosyaSurumuOku(sb, patientId)
+  const simdi = new Date()
+  if (surum !== null) {
+    const k = dosyaOnbellegi.get(anahtar)
+    if (k && k.surum === surum && simdi.getTime() - k.zaman < DOSYA_ONBELLEK_TTL_MS && k.gun === trtGunu(simdi)
+      && !sonrakiRandevuGecmisMi((k.paket.kart as { randevu?: unknown } | null)?.randevu, simdi)) {
+      dosyaOnbellegi.delete(anahtar)
+      dosyaOnbellegi.set(anahtar, k)
+      return { ...k.paket, onbellekten: true }
+    }
+  }
+  const paket = await tekUcus(ucuslar, anahtar, () => dosyaPaketDerle(sb, doctorId, patientId))
+  if (paket && surum !== null) {
+    dosyaOnbellegi.delete(anahtar)
+    dosyaOnbellegi.set(anahtar, { surum, zaman: simdi.getTime(), gun: trtGunu(simdi), paket: { ...paket, onbellekten: false } })
+    while (dosyaOnbellegi.size > DOSYA_ONBELLEK_AZAMI) {
+      const ilk = dosyaOnbellegi.keys().next().value
+      if (ilk === undefined) break
+      dosyaOnbellegi.delete(ilk)
+    }
+  }
+  return paket
 }
 
 /** İlk notun günü cache_read vursun diye sabit SOAP önekini ısıtır. İstek yolunda yok. */
@@ -146,7 +210,8 @@ export async function soapOnekIsin(doctorId: string, brans: string): Promise<voi
   const { soapSistemBloklari } = await import('@/lib/doktor/soapUret')
   const bloklar = soapSistemBloklari({ transcript: '.', specialty: brans || 'dahiliye' })
   await aiCagir({
-    gorev: 'cikarim',
+    // SES-OMURGA-V2 (H): not a learning call — kept out of the `cikarim` truncation stats (an 8-token warm-up is always cut).
+    gorev: 'kisa-yanit',
     doctorId,
     system: bloklar,
     messages: [{ role: 'user', content: '.' }],

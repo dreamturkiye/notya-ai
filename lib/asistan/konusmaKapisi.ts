@@ -16,8 +16,13 @@
 import { FISH_SILERO_CIKIS_ESIK, FISH_SILERO_ESIK } from '@/lib/asistan/fishVad'
 import { SES_PROFILI_AYAR, type ProfilKarari } from '@/lib/asistan/sesProfili/ayar'
 
-/** Speech (Silero ≥ enter AND RMS ≥ floor) needed before the gate opens while Ayşe speaks. */
-export const KAPI_ACMA_MS = 200
+/**
+ * Speech (Silero ≥ enter AND RMS ≥ floor) needed before the gate opens while Ayşe speaks.
+ * SES-OMURGA-V2 (C, 2026-10-29): 200 → 160 ms (still above a stalled-tab jump of one frame plus KAPI_ADIM_AZAMI_MS). The gate held back the first syllables of a barge-in ("Müsa--",
+ * "Bu-- bunu" on 10-26). It now runs only on the WebSocket fallback; under WebRTC the browser's echo cancellation
+ * covers Ayşe's own voice and the gate is not attached at all (components/asistan/AsistanOturumContext.tsx).
+ */
+export const KAPI_ACMA_MS = 160
 /** Hangover: the gate stays open this long after the doctor's speech ends, if Ayşe is still speaking. */
 export const KAPI_KUYRUK_MS = 600
 /**

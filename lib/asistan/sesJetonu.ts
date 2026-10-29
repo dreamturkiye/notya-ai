@@ -27,6 +27,11 @@ export interface SesJetonu {
   pe: string
   /** NOTYA-TAKVIM-TZ-01: doctor's IANA timezone at connect time (ElevenLabs sends no cookie) — "bugün / yarın" resolve here. */
   tz?: string
+  /**
+   * SES-OMURGA-V2 (A): one id per call (minted with each signed URL). ElevenLabs sends no conversation id to a Custom
+   * LLM, so this is the call key of the turn registry (call + turn position).
+   */
+  c?: string
   /** bitiş (ms) */
   exp: number
 }
@@ -67,7 +72,7 @@ export function sesJetonuDogrula(jeton: unknown, simdi = Date.now()): SesJetonu 
   try {
     const v = JSON.parse(Buffer.from(govde, 'base64url').toString('utf8')) as SesJetonu
     if (typeof v.d !== 'string' || !v.d || typeof v.o !== 'string' || !v.o || typeof v.exp !== 'number' || v.exp < simdi) return null
-    return { d: v.d, o: v.o, s: String(v.s || 'genel'), p: v.p ? String(v.p) : null, pe: String(v.pe || ''), ...(typeof v.tz === 'string' && v.tz ? { tz: v.tz } : {}), exp: v.exp }
+    return { d: v.d, o: v.o, s: String(v.s || 'genel'), p: v.p ? String(v.p) : null, pe: String(v.pe || ''), ...(typeof v.tz === 'string' && v.tz ? { tz: v.tz } : {}), ...(typeof v.c === 'string' && v.c ? { c: v.c.slice(0, 64) } : {}), exp: v.exp }
   } catch {
     return null
   }

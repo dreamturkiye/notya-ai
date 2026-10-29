@@ -34,7 +34,10 @@ import { ulkeServisSupabase } from '@/lib/ulke/sunucuOturum'
 import { canliDurum, type CanliDurum } from './ajan'
 import { canliIstem } from './istem'
 import { canliJetonuDogrula, canliJetonuImzala, llmSirriGecerliMi } from './jeton'
-import { imzaliAdresAl, motoruSabitle } from './motorKilidi'
+import { imzaliAdresAl, konusmaJetonuAl, motoruSabitle } from './motorKilidi'
+import { atlaCagrisi, dolguSozu, SES_TAMPON, turOlcumuYaz, ulkeOnKapi, ulkeTurKarsila } from './sesTur'
+import { sesAjaniniSabitle } from '@/lib/asistan/sesMotoru'
+import type { SesTurKaydi } from '@/lib/asistan/sesTurYoneticisi'
 import { masaBlogunuAl } from './masa'
 import { sesMetni } from './okunus'
 import { SesAkisi } from './konusma'
@@ -47,6 +50,8 @@ export const TUR_BUTCESI_MS = 20_000
 /** A typed turn may take longer than a spoken one: nobody is waiting in silence. */
 export const YAZILI_BUTCE_MS = 40_000
 export const EKRAN_ARACI = 'show_on_screen'
+/** The agent's speech language (ASR + soft-timeout filler); the same value the call start overrides. */
+export const AJAN_DILI = 'en'
 const GECMIS_TUR = 12
 const MESAJ_AZAMI = 2_000
 
@@ -75,17 +80,25 @@ export async function canliBaglantiCevabi(oturum: { user: User; supabase: Supaba
   const paket = ulkePaketi()
   // The agent is held to the pack's voice and the fixed delivery BEFORE the call starts.
   await motoruSabitle(durum.ajan, durum.sesId, anahtar)
-  const adres = await imzaliAdresAl(durum.ajan, anahtar)
+  // SES-OMURGA-V2 (G): turn v3, soft-timeout filler in the agent's language, scribe_realtime, skip_turn, cascade 10 s,
+  // ASR keyword override — the pack's voice and delivery stay with motoruSabitle (tts: false). No hosted backup LLM.
+  const anahtarKelimeler = [kimlik.kisaAd, kimlik.tamAd, 'Notya'].filter(Boolean).map(String)
+  await sesAjaniniSabitle(durum.ajan, anahtar, { dil: AJAN_DILI, tts: false, ozelLlm: true, anahtarKelimeler, dolgu: dolguSozu(AJAN_DILI) })
+  const [adres, konusmaJetonu] = await Promise.all([imzaliAdresAl(durum.ajan, anahtar), konusmaJetonuAl(durum.ajan, anahtar)])
   if (!adres) return cevap({ code: 'BASARISIZ', neden: 'signed-url' }, 502)
-  const jeton = canliJetonuImzala({ hesapId: oturum.user.id, kod: paket.kod, rol })
+  const jeton = canliJetonuImzala({ hesapId: oturum.user.id, kod: paket.kod, rol, cagri: randomUUID() })
   if (!jeton) return KOD.yok()
   return cevap({
     signed_url: adres,
     voice_id: durum.sesId,
     persona_ad: kimlik.tamAd,
     first_message: canli.acilis({ tamAd: kimlik.tamAd, kisaAd: kimlik.kisaAd, rolAdi: rolAdi(rol, paket.varsayilanDil) ?? '', doktorAdi: null }),
-    language: 'en',
+    language: AJAN_DILI,
     notya_jeton: jeton,
+    // SES-OMURGA-V2 (C): WebRTC when a token was minted; the client falls back to the signed URL otherwise.
+    baglanti: konusmaJetonu ? 'webrtc' : 'websocket',
+    ...(konusmaJetonu ? { conversation_token: konusmaJetonu } : {}),
+    asr_keywords: anahtarKelimeler.slice(0, 50),
     ekran_araci: EKRAN_ARACI,
   })
 }
@@ -205,6 +218,14 @@ export async function canliLlmPost(req: NextRequest): Promise<Response> {
   const olusturma = Math.floor(Date.now() / 1000)
   const model = String(govde.model || 'notya-canli')
   const enc = new TextEncoder()
+  // SES-OMURGA-V2 (A/H): call key, turn registry entry, timing.
+  const cagri = jeton.cagri || `h:${jeton.hesapId}`
+  const t0 = Date.now()
+  let ilkSoz: number | null = null
+  let kayit: SesTurKaydi | null = null
+  let turNo = 0
+  let karar = 'yok'
+  let rota = 'model'
 
   const akis = new ReadableStream<Uint8Array>({
     async start(controller) {
@@ -216,26 +237,52 @@ export async function canliLlmPost(req: NextRequest): Promise<Response> {
         try { controller.enqueue(enc.encode(`data: ${JSON.stringify(nesne)}\n\n`)) } catch { kapali = true }
       }
       const parca = (delta: Record<string, unknown>, bitis: string | null = null) => {
-        // Guard (Kaan 2026-10-25): content with no letter or digit (".", "...") is spoken as a click; it is sent as silent whitespace.
-        if (typeof delta.content === 'string' && delta.content && !/[\p{L}\p{N}]/u.test(delta.content)) delta = { ...delta, content: ' ' }
-        if (typeof delta.content === 'string' && delta.content) icerikGitti = true
+        // Guard (Kaan 2026-10-25): content with no letter or digit is never spoken (a click) — SES-OMURGA-V2: dropped,
+        // never turned into whitespace (a whitespace-only reply is what ElevenLabs retries). A superseded request says
+        // nothing more: ElevenLabs plays the newer one.
+        if (typeof delta.content === 'string') {
+          if (!delta.content || !/[\p{L}\p{N}]/u.test(delta.content) || kayit?.iptalEdildi) {
+            const { content: _c, ...geri } = delta
+            if (!Object.keys(geri).length && !bitis) return
+            delta = geri
+          } else {
+            icerikGitti = true
+            if (ilkSoz === null) ilkSoz = Date.now() - t0
+            kayit?.yay(delta.content)
+          }
+        }
         gonder({ id: kimlikNo, object: 'chat.completion.chunk', created: olusturma, model, choices: [{ index: 0, delta: ilk ? { role: 'assistant', ...delta } : delta, finish_reason: bitis }] })
         ilk = false
       }
       let sozGitti = false
       const soyle = (t: string) => { const m = t.trim(); if (m) { sozGitti = true; parca({ content: `${m} ` }) } }
       let bitis = 'stop'
+      /** SES-OMURGA-V2 (C): no answer needed — ElevenLabs' skip_turn (silent, keeps listening), else the buffer chunk at the end. */
+      const atla = (neden: string) => {
+        rota = `atla:${neden}`
+        if (aracVarMi(govde.tools, 'skip_turn')) { parca(atlaCagrisi(neden, `call_${randomUUID().slice(0, 8)}`)); bitis = 'tool_calls' }
+      }
+      let onNeden: string | null = null
+      let kopyasi: SesTurKaydi | null = null
       try {
         // Open the stream at once: an empty first chunk lets the provider commit the clinician's transcript while we work.
         parca({})
         const sonMesaj = Array.isArray(govde.messages) ? (govde.messages as ElMesaj[])[(govde.messages as ElMesaj[]).length - 1] : null
         if (!mesaj) {
           // A client-tool round trip (the screen tool) or nothing to answer: stay silent, keep the socket.
-          if (sonMesaj?.role !== 'tool' && sonMesaj?.role !== 'function') parca({ content: ' ' })
+          if (sonMesaj?.role !== 'tool' && sonMesaj?.role !== 'function') atla('bos')
         } else if (vedaMi(mesaj) && aracVarMi(govde.tools, 'end_call')) {
           soyle(canli.ekranSozleri.veda)
           parca({ tool_calls: [{ index: 0, id: `call_${randomUUID().slice(0, 8)}`, type: 'function', function: { name: 'end_call', arguments: JSON.stringify({ reason: 'The clinician ended the conversation.' }) } }] })
           bitis = 'tool_calls'
+        } else if ((onNeden = ulkeOnKapi(mesaj, govde.messages, AJAN_DILI))) {
+          // SES-OMURGA-V2 (C): a pause, a filler, a scrap or the assistant's own echo — never the model.
+          atla(onNeden)
+        } else if ((() => { const k = ulkeTurKarsila(cagri, govde.messages, mesaj); karar = k.karar; turNo = k.turNo; if (k.karar !== 'kopya') kayit = k.kayit; else kopyasi = k.kayit; return k.karar === 'kopya' })()) {
+          // SES-OMURGA-V2 (A): the same turn again — served the first request's words, no second model call.
+          rota = 'kopya'
+          await kopyasi!.paylas((p) => parca({ content: p }))
+          if (!icerikGitti) atla('kopya')
         } else {
           const sb = ulkeServisSupabase()
           if (!(await kovaKotasiKullan(sb, jeton.hesapId, KOVA_ASISTAN_TUR, canli.gunlukTurLimiti))) {
@@ -251,11 +298,11 @@ export async function canliLlmPost(req: NextRequest): Promise<Response> {
             try {
             // The doctor's own desk (calendar, patients, notes, messages...), read for this turn with the account of the signed call token.
             const baglam = await masaBlogunuAl(sb, jeton.hesapId, mesaj ?? '')
-            const r = await cevabiSoyle((p) => modeldenAkis({ talimat: istem, baglam: baglam || DESK_YOK, mesajlar: modelMesajlari(govde.messages), doktorId: jeton.hesapId, butceMs: TUR_BUTCESI_MS }, p), (c) => soyle(sesMetni(c)), canli.ekranSozleri)
+            const r = await cevabiSoyle((p) => modeldenAkis({ talimat: istem, baglam: baglam || DESK_YOK, mesajlar: modelMesajlari(govde.messages), doktorId: jeton.hesapId, butceMs: TUR_BUTCESI_MS, iptal: kayit?.iptal.signal }, p), (c) => soyle(sesMetni(c)), canli.ekranSozleri)
             const { tam, hata } = r
             if (hata && !icerikGitti) soyle(canli.ekranSozleri.anlasilmadi)
             // The screen gets the full answer. Only when the agent offers the screen tool; otherwise the transcript is the screen.
-            if (tam.trim() && aracVarMi(govde.tools, EKRAN_ARACI)) {
+            if (tam.trim() && aracVarMi(govde.tools, EKRAN_ARACI) && !kayit?.iptalEdildi) {
               parca({ tool_calls: [{ index: 0, id: `call_${randomUUID().slice(0, 8)}`, type: 'function', function: { name: EKRAN_ARACI, arguments: JSON.stringify({ text: tam.trim().slice(0, 8000) }) } }] })
               bitis = 'tool_calls'
             }
@@ -266,10 +313,13 @@ export async function canliLlmPost(req: NextRequest): Promise<Response> {
         console.error(`[ulke/asistan] stream: ${e instanceof Error ? e.name : typeof e}`)
         if (!icerikGitti) soyle(canli.ekranSozleri.anlasilmadi)
       }
-      // An empty stream is what the provider reports as a lost connection; a full stop keeps it and is never spoken.
-      if (!icerikGitti && bitis === 'stop') parca({ content: ' ' })
+      // An empty stream is what the provider reports as a lost connection. SES-OMURGA-V2: never whitespace-only — the
+      // documented buffer chunk "... " (sent directly: it carries no letter, so not through the guard).
+      if (!icerikGitti && bitis === 'stop') { gonder({ id: kimlikNo, object: 'chat.completion.chunk', created: olusturma, model, choices: [{ index: 0, delta: ilk ? { role: 'assistant', content: SES_TAMPON } : { content: SES_TAMPON }, finish_reason: null }] }); ilk = false }
       parca({}, bitis)
       if (!kapali) { try { controller.enqueue(enc.encode('data: [DONE]\n\n')); controller.close() } catch { /* the caller hung up */ } }
+      kayit?.bitir()
+      turOlcumuYaz({ cagri, turNo, karar, rota: kayit?.iptalEdildi ? 'iptal' : rota, ilkBayt: 0, ilkSoz, toplam: Date.now() - t0 })
     },
   })
 
