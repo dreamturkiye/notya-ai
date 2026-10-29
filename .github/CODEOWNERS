@@ -12,3 +12,31 @@
 /app/dashboard/          @dreamturkiye
 /components/             @dreamturkiye
 /lib/                    @dreamturkiye
+
+# SES-KILIT — FOUNDER LOCK (Kaan, 2026-10-29): the voice / text assistant path (Ses Omurgası v2).
+# No change of any size without Kaan's explicit written "go" (.cursor/rules/ses-omurga-kilidi.mdc).
+/.cursor/rules/ses-omurga-kilidi.mdc                         @dreamturkiye
+/lib/asistan/ses-kilit.json                                  @dreamturkiye
+/scripts/ses-kilit.mjs                                       @dreamturkiye
+/scripts/ses-ci.mjs                                          @dreamturkiye
+/docs/SES-KILIT-ONAYLARI.md                                  @dreamturkiye
+/app/api/asistan/ses-llm/                                    @dreamturkiye
+/app/api/asistan/signed-url/                                 @dreamturkiye
+/app/api/asistan/ses-ekran/                                  @dreamturkiye
+/lib/asistan/sesLlm.ts                                       @dreamturkiye
+/lib/asistan/sesSaglik.ts                                    @dreamturkiye
+/lib/asistan/sesTurYoneticisi.ts                             @dreamturkiye
+/lib/asistan/sesTurKilit.ts                                  @dreamturkiye
+/lib/asistan/sesTurKapisi.ts                                 @dreamturkiye
+/lib/asistan/ayseCevapla.ts                                  @dreamturkiye
+/lib/asistan/soruNiyeti.ts                                   @dreamturkiye
+/lib/asistan/komutNiyeti.ts                                  @dreamturkiye
+/lib/asistan/oturumYaz.ts                                    @dreamturkiye
+/lib/asistan/konusma.ts                                      @dreamturkiye
+/lib/asistan/sesMotoru.ts                                    @dreamturkiye
+/lib/asistan/elevenKapi.ts                                   @dreamturkiye
+/lib/asistan/konusmaKapisi.ts                                @dreamturkiye
+/lib/doktor/hastaDosyaKart.ts                                @dreamturkiye
+/components/asistan/AsistanOturumContext.tsx                 @dreamturkiye
+/lib/db/migrations/183_ses_omurga_v2.sql                     @dreamturkiye
+/lib/ulke/asistan/                                           @dreamturkiye

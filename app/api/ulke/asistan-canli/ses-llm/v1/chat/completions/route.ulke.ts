@@ -10,5 +10,7 @@ import { canliLlmPost } from '@/lib/ulke/asistan/sunucu'
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 export const maxDuration = 60
+// SES-OMURGA-V2 (E): next to this country's database.
+export const preferredRegion = 'yul1'
 
 export const POST = sinirda('asistan-canli ses-llm POST', async (req: NextRequest) => canliLlmPost(req))

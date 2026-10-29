@@ -143,3 +143,27 @@ test('NOTYA-SES-ACILIS-TEMPO-01: cihaz hızını kaynak sanmak açılışı ~3×
   assert.equal(yanlis.length / 48000, 1 / 3)
   assert.ok(Math.abs(dogru.length / 48000 - 1) < 1 / 48000)
 })
+
+test('SES-OMURGA-V2 (G): drifted conversation groups are PATCHed and re-read from the response; a refused group is reported', async () => {
+  const { sesAjaniniSabitle, sesAjanOnbelleginiSil, SES_TUR_AYARI, SES_KADEMELI_ZAMAN_ASIMI_SN } = await import('./sesMotoru')
+  sesAjanOnbelleginiSil()
+  const yamalar: Record<string, unknown>[] = []
+  const temizTts = { model_id: 'eleven_flash_v2_5', expressive_mode: false, speed: 1, stability: 0.55, similarity_boost: 0.75 }
+  const fetchFn: typeof fetch = async (_url, init) => {
+    if ((init?.method || 'GET') === 'GET') return new Response(JSON.stringify({ conversation_config: { tts: temizTts, turn: { turn_model: 'turn_v2' }, asr: { provider: 'elevenlabs' }, agent: { language: 'tr', prompt: {} } }, platform_settings: { overrides: { custom_llm_extra_body: true } } }), { status: 200 })
+    const govde = JSON.parse(String(init?.body))
+    yamalar.push(govde)
+    if (yamalar.length === 1) return new Response('unknown field', { status: 422 })
+    if (govde.platform_settings) return new Response('nope', { status: 422 })
+    return new Response(JSON.stringify({ conversation_config: { tts: temizTts, turn: SES_TUR_AYARI, asr: { provider: 'scribe_realtime', keywords: ['Ayşe'] }, agent: { language: 'tr', prompt: { cascade_timeout_seconds: SES_KADEMELI_ZAMAN_ASIMI_SN, built_in_tools: { skip_turn: {} } } } }, platform_settings: { overrides: {} } }), { status: 200 })
+  }
+  const r = await sesAjaniniSabitle('agent_v2', 'anahtar', { dil: 'tr', anahtarKelimeler: ['Ayşe'], ozelLlm: true }, fetchFn)
+  assert.equal(r.gruplar?.tts, 'tamam')
+  assert.equal(r.gruplar?.turn, 'uygulandi')
+  assert.equal(r.gruplar?.asr, 'uygulandi')
+  assert.equal(r.gruplar?.agent, 'uygulandi')
+  assert.equal(r.gruplar?.overrides, 'reddedildi', 'a refused group is visible, not assumed')
+  assert.ok(yamalar.length >= 5, 'one combined PATCH, then one per group')
+  const turn = yamalar.find((y) => (y as { conversation_config?: { turn?: unknown } }).conversation_config?.turn) as { conversation_config: { turn: { soft_timeout_config: { message: string } } } }
+  assert.doesNotMatch(turn.conversation_config.turn.soft_timeout_config.message, /saniye/i, 'no time promise')
+})

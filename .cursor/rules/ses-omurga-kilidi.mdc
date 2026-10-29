@@ -1,45 +1,103 @@
 ---
-description: Ses omurgası kilidi — TTS/STT/ses-LLM yolu donduruldu (Kaan, 2026-10-26, lansman denetimi)
+description: KURUCU KİLİDİ — Ses/metin omurgası v2 (Ayşe) donduruldu. Kaan'ın o değişiklik için yazılı "go"su olmadan HİÇBİR boyutta değişiklik yok (Kaan, 2026-10-29). Cursor ajanları ve Claude için geçerli.
 alwaysApply: true
 ---
 
-# Ses omurgası kilidi (SES-KILIT-2026-10)
+# Ses omurgası kilidi — v2 (SES-OMURGA-V2, Kaan onayı 2026-10-29)
 
-Kaan'ın lansman kararı (2026-10-26): sesli görüşme Notya'nın birincil özelliğidir ve denetlenmiş, ölçülmüş
-hâliyle DONDURULMUŞTUR. Aşağıdaki dosyalarda davranış değiştiren her değişiklik, Kaan'ın AÇIK onayı olmadan
-yapılamaz; onaylı bir değişiklik bile tam ses paketiyle (aşağıda) yeşil olmadan main'e giremez.
+## 🔒 FOUNDER LOCK (KURUCU KİLİDİ) — read this first
 
-## Korunan dosyalar (ses/metin omurgası)
+Kaan (founder), 2026-10-29, verbatim intent: once v2 is merged and deployed, lock it so nobody slows it down or
+introduces bugs or artifacts; **any change to this architecture or path needs his explicit approval / "go"**. This
+applies to **Cursor agents and Claude alike**.
 
-- `app/api/asistan/ses-llm/**`, `lib/asistan/sesLlm.ts` — ElevenLabs Custom LLM ağzı
-- `lib/asistan/konusma.ts`, `lib/asistan/sesYay.ts` — söz/ekran ayrımı, nefes kapısı, bekletme (SES-DOLGU-02)
-- `lib/asistan/sesTurKilit.ts`, `lib/db/migrations/178_ses_turu_ac.sql` — tek-beyin tur kilidi (SES-LAT-02)
-- `lib/asistan/sesTurKapisi.ts`, `lib/asistan/sesJetonu.ts`, `lib/asistan/sesDevam.ts`, `lib/asistan/kesintiDevam.ts`
-- `lib/asistan/elevenMetni.ts`, `lib/asistan/sesYay.ts`, `scripts/tek-beyin-ajanlari.mts` (TTS modeli pinli: eleven_flash_v2_5, tr)
-- `lib/ai/modeller.ts` içindeki kademe/caba kuralları (`sohbetKademesi`, `sesSohbetCabasi`)
-- Ülke ağzı: `lib/ulke/asistan/sunucu.ts`, `lib/ulke/asistan/konusma.ts`
+**Rules (no exceptions):**
 
-## Dokunulmaz davranış sözleşmeleri
+1. **No change of ANY size** to a locked path — not a one-line fix, not a comment, not a rename, not a "harmless"
+   refactor, not a dependency bump that changes its behaviour — without **Kaan's explicit written "go" in the chat for
+   that specific change**. A general instruction ("fix the bugs", "clean up", "make it faster") is NOT a go for a
+   locked path.
+2. **Agents must STOP and ASK.** When a task touches a locked path, describe the exact change and its reason to Kaan
+   and wait. Never "small-fix it", never route around the lock (copying the logic elsewhere, adding a wrapper, changing
+   a caller so the locked code behaves differently, editing the manifest by hand).
+3. The lock is **mechanical**: `lib/asistan/ses-kilit.json` holds the content hash of every locked file.
+   `node scripts/ses-kilit.mjs --denetle` runs in `prebuild` (a Vercel build of an unapproved change FAILS) and in
+   `npm test` (`lib/asistan/sesKilit.test.ts`). `node scripts/ses-ci.mjs` also runs in `prebuild`: the required
+   voice tests (`sesOmurgaV2`: one brain per utterance, no whitespace replies, first chunk ≤ 300 ms, fast-path
+   correctness) must pass or the Vercel build fails — the build is this repo's CI. `.github/CODEOWNERS` routes the
+   locked paths to Kaan.
+4. **Approving a change** (only after Kaan's "go"): make the change, run `npm run test:ses` (all green), then
+   `node scripts/ses-kilit.mjs --onayla "Kaan-onay: YYYY-MM-DD <what Kaan approved>"`. The script re-hashes the
+   files and appends the approval line, the changed files and the base commit to `docs/SES-KILIT-ONAYLARI.md`.
+   Writing an approval line Kaan did not give is a breach of this rule.
 
-1. **Asla sessiz, asla klik:** içerik taşımayan delta yalnız BOŞLUK olabilir (nokta/"..." ElevenLabs'te klik üretir —
-   2026-10-25 vakası). Harf/rakam içermeyen hiçbir delta sese gitmez (`SESLENEBILIR` muhafızı).
-2. **İlk cümle beklemez:** biten ilk cümle anında ElevenLabs'e gider; sonrası nefes nefes (SES_BLOK_ESIGI).
-3. **Bekletme sözü:** ilk söz `NOTYA_SES_DOLGU_MS` (vars. 2500 ms) içinde çıkmazsa TEK kısa bekletme cümlesi
-   söylenir (EL ≥3 kez yeniden POST etmeden). Hızlı turlar temiz kalır (NOTYA-AYSE-ACILIS-01).
-4. **Tek beyin:** aynı soru iki kez model çalıştırmaz; tur kilidi `ses_turu_ac` RPC ile TEK gidiş-dönüş ve atomiktir.
-   Kaybeden tur kazananın sözünü bekler ve söyler (SES-DUP-01).
-5. **Ses turu effort:** sesli sohbet-uzman turu `low` çalışır (`NOTYA_SES_CABA`); kapatmak env iledir, kod değişikliğiyle değil.
-6. **Kimlik/iletişim söz kuralları** NOTYA-SES-KIMLIK-OKU-01'e tabidir; değer modele/geçmişe asla yazılmaz.
+**Locked paths** (the manifest is the authoritative list):
 
-## Zorunlu ses paketi (değişiklik öncesi ve sonrası yeşil)
+| Area | Files |
+|---|---|
+| ElevenLabs Custom LLM mouth | `app/api/asistan/ses-llm/v1/chat/completions/route.ts`, `lib/asistan/sesLlm.ts`, `lib/asistan/sesSaglik.ts` |
+| Turn identity / supersede / gate | `lib/asistan/sesTurYoneticisi.ts`, `lib/asistan/sesTurKilit.ts`, `lib/asistan/sesTurKapisi.ts`, `lib/asistan/duraklama.ts` |
+| Brain router + fast path | `lib/asistan/ayseCevapla.ts`, `lib/doktor/hastaDosyaKart.ts`, `lib/asistan/soruNiyeti.ts`, `lib/asistan/komutNiyeti.ts` |
+| Session state | `lib/asistan/oturumYaz.ts`, `lib/asistan/sesDevam.ts`, `lib/asistan/sesliOnay.ts` |
+| Speech form / normalization | `lib/asistan/konusma.ts` (SesAkisi), `lib/asistan/sesYay.ts`, `lib/asistan/elevenMetni.ts`, `lib/asistan/kesintiDevam.ts` |
+| Voice prompt + tool set | `lib/asistan/onbellekBloklari.ts`, `lib/asistan/okumaAraclari.ts`, `lib/asistan/sesDosya.ts`, `lib/ai/modeller.ts` (tiers, effort, `sesSohbetCabasi`) |
+| ElevenLabs agent config + call start | `lib/asistan/sesMotoru.ts`, `lib/asistan/sesAnahtarKelime.ts`, `lib/asistan/sesJetonu.ts`, `app/api/asistan/signed-url/route.ts` |
+| Client voice session + mic gate | `components/asistan/AsistanOturumContext.tsx`, `lib/asistan/elevenKapi.ts`, `lib/asistan/konusmaKapisi.ts` |
+| Screen poll | `app/api/asistan/ses-ekran/route.ts` |
+| Chart cache | `lib/doktor/ogrenme/dosyaOnbellek.ts` |
+| Migrations | `lib/db/migrations/178_ses_turu_ac.sql`, `180_ses_turu_ac_grant_fix.sql`, `183_ses_omurga_v2.sql` |
+| Country mouth (release branches) | `lib/ulke/asistan/sunucu.ts`, `lib/ulke/asistan/konusma.ts`, `lib/ulke/asistan/motorKilidi.ts`, `lib/ulke/asistan/sesTur.ts`, `lib/ulke/asistan/sesTur.test.ts` |
+| This lock | `.cursor/rules/ses-omurga-kilidi.mdc`, `scripts/ses-kilit.mjs`, `scripts/ses-ci.mjs`, `lib/asistan/sesKilit.test.ts`, `lib/asistan/sesOmurgaV2.test.ts` |
+
+Not hash-locked but covered by the same rule: the `regions` / `preferredRegion` pins (iad1, next to Supabase
+us-east-1), the voice parts of `lib/ai/cagir.ts` / `lib/ai/saglayici.ts` (abort, `session_id`), and the ElevenLabs
+agent settings in the dashboard (code re-applies them on every call start).
+
+## v2 behaviour contracts (what the lock protects)
+
+Architecture, turn state machine and latency budget: `docs/SES-MIMARI-V2.md`.
+
+1. **One utterance → one brain, latest wins.** A request is keyed by the call (`c` in the voice token) and the turn
+   POSITION in ElevenLabs' `messages`. Exact duplicate → served from the first request's stream (what exists, then
+   live). Grown / corrected transcript (same turn, or the next turn while the previous said nothing) → supersedes:
+   the old model call is aborted, its unspoken output dropped, the newest request answers. The database
+   (`ses_turu_ac_v2` / `asistan_gecmis_ekle`) refuses a superseded request's history write. **No lock-loser wait, no
+   DB polling.**
+2. **Never whitespace-only, always `[DONE]`.** A turn with nothing to say ends with ElevenLabs' `skip_turn` tool, or
+   with the documented buffer chunk `"... "` when the agent offers no skip_turn. Content with no letter/digit is never
+   sent (`SESLENEBILIR`).
+3. **First chunk at once; content inside the cascade window.** The role chunk leaves before any DB / model work
+   (synthetic p50 ≈ 2 ms, CI bound 300 ms). The 3 s holding filler is ElevenLabs' soft timeout ("Hmm, Hocam...",
+   no time promise); if nothing was said by 7 s the route says one neutral holding sentence. ElevenLabs'
+   `cascade_timeout_seconds` is 10. **No hosted backup LLM** (it would answer clinically without our brain).
+4. **Noise never reaches the brain.** Pauses, fillers, scraps and Ayşe's own echo (judged against ElevenLabs' history)
+   → skip_turn, no model call.
+5. **Router correctness (voice and text).** Turkish-folded whole-word matchers ("aşı" ≠ "asit", "Aşı hocam" = address);
+   general dose / guideline / drug questions are not chart questions; action-status questions go to the model; a write
+   tool is never forced on a question and is not even offered to a non-command voice turn; a rejection or the same
+   voice question repeated bypasses the fast path (escape hatch).
+6. **Spoken = written.** A normal-length answer is spoken in full (cap 12 sentences, the rest via the silent
+   continuation); long lists: count + first two items + the offer to read; "oku / yazdığını oku" reads the stored
+   screen text verbatim, never regenerated. The deterministic Turkish number / dose normalization stays before TTS.
+7. **Latency.** One DB round trip before the brain; versioned chart cache (never across doctors / patients); session
+   write, learning and bookkeeping after the stream; voice tool set = read tools only (non-command); stable
+   `session_id` to OpenRouter; voice effort `low` (`NOTYA_SES_CABA`, env only).
+8. **Session state.** Append-only history (stored cap 300, model window unchanged); field-level context merge.
+9. **Kimlik / iletişim** spoken rules: NOTYA-SES-KIMLIK-OKU-01; values never reach a model or the history.
+
+## Mandatory voice suite (green before and after any approved change)
 
 ```
-npx tsx --test lib/asistan/tekBeyin.test.ts lib/asistan/sesTurKilit.test.ts lib/asistan/sesMotoru.test.ts \
-  lib/asistan/sesNormalTur.test.ts lib/asistan/sesEskiDavranis.test.ts lib/asistan/fishTur.test.ts \
-  lib/asistan/fishTurSessiz.test.ts lib/asistan/sesTurKapisi.test.ts lib/asistan/alanSizinti.test.ts \
-  lib/asistan/kalite/kalite.test.ts lib/asistan/gokhanKorpus.test.ts lib/ulke/asistan/asistan.test.ts
+npm run test:ses
 ```
-(node 22+: `--experimental-test-module-mocks` gerekir.)
+(= the lock check + tekBeyin, sesTurKilit, sesMotoru, sesNormalTur, sesEskiDavranis, fishTur, fishTurSessiz,
+sesTurKapisi, alanSizinti, kalite, gokhanKorpus, duraklama, konusmaKapisi, **sesOmurgaV2** (Dr.
+Gökhan's failure patterns: one brain per burst, no whitespace replies, first chunk ≤ 300 ms, fast-path cases) and
+sesKilit; on a release branch also `lib/ulke/asistan/asistan.test.ts` and `lib/ulke/asistan/sesTur.test.ts`.)
+All of them are also in `npm test`; `sesOmurgaV2` also gates every Vercel build (`scripts/ses-ci.mjs`).
 
-Gecikme ölçüsü: her sesli turda `[ses-llm/sure]` satırı (gecmis/kilit/bekletme/ilkSoz/bitis, ms). Bir değişiklik
-bu sayıları kötüleştiriyorsa geri alınır. Referans: docs/OPEN-COMMITMENTS.md → SES-LAT-02.
+Production measurement: one `ses_tur_olcum` row and one `[ses-llm/tur]` log line per voice turn (call, turn, seq,
+decision, route, first byte, first speech, model TTFT, tools, total, region). A change that worsens these numbers is
+reverted. Health check (no patient): `GET /api/asistan/ses-llm/v1/chat/completions?tur=1&ajan=1`.
+
+History: v1 lock 2026-10-26 (launch audit, SES-LAT-02); v2 2026-10-29 (this file, Kaan's order and sign-off).
