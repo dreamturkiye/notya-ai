@@ -22,12 +22,24 @@ export function kimlikEkrandaSozu(hastaAdi: string): string {
   return `${hastaAdi} için istediğiniz bilgiyi ekranınıza yazdım Hocam.`
 }
 export const TABLO_EKRANDA = 'Tabloyu ekranınıza yazdım.'
-/** NOTYA-SES-SLUR-01 (Kaan, 2026-09-26): a spoken turn is at most this many sentences; the rest stays on screen. */
-export const SOZ_BEAT_SINIRI = 5
+/**
+ * SES-OMURGA-V2 (D, Kaan 2026-10-29 — spoken = written). NOTYA-SES-SLUR-01 capped a spoken turn at 5 sentences and said
+ * "Devamı ekranınızda"; Dr. Gökhan asked four times in two sessions for the written answer to be read. A normal-length
+ * answer is now spoken in full. On the ElevenLabs route the cap is SILENT and only splits a very long answer into the
+ * continuation turn ([devam], NOTYA-SES-DEVAM-01) — the doctor still hears all of it; "Devamı ekranınızda" is said only
+ * where no continuation exists (Fish / the plain non-streamed form).
+ */
+export const SOZ_BEAT_SINIRI = 12
 export const DEVAMI_EKRANDA = 'Devamı ekranınızda Hocam.'
-/** Lists of this many items or more are not read item by item — one sentence points to the screen. */
-export const LISTE_ESIGI = 3
-export function listeEkranda(n: number): string { return `${n} madde, ekranınızda.` }
+/**
+ * SES-OMURGA-V2 (D): lists of this many items or more are summarised — the count, the first items, then the offer to read
+ * the rest ("oku" reads the stored screen text verbatim). Shorter lists are read item by item.
+ */
+export const LISTE_ESIGI = 5
+/** How many items of a long list are read before the offer. */
+export const LISTE_ONIZLEME = 2
+export const LISTE_TEKLIF = 'Tamamı ekranınızda; isterseniz hepsini okuyayım.'
+export function listeEkranda(n: number): string { return `${n} madde var.` }
 
 /**
  * NOTYA-SES-SLUR-02 + NOTYA-SES-OKUNUS-01 (Dr. Gökhan, 2026-10-03):
@@ -176,6 +188,8 @@ export class SesAkisi {
     private readonly sessizSinir = false,
     /** NOTYA-SES-KIMLIK-OKU-01: the doctor asked to HEAR the contact value — a phone number may be read (never e-mail / T.C. no). */
     private readonly telefonSerbest = false,
+    /** SES-OMURGA-V2 (D): "oku" — every list item is read (the doctor asked for the full written text). */
+    private readonly listeTam = false,
   ) {}
 
   /** NOTYA-SES-DEVAM-01: the cap was reached (sentences after it were not spoken). */
@@ -243,7 +257,12 @@ export class SesAkisi {
     const items = this.liste
     this.liste = []
     if (!items.length) return
-    if (items.length >= LISTE_ESIGI) { this.soyle(listeEkranda(items.length)); return }
+    if (!this.listeTam && items.length >= LISTE_ESIGI) {
+      this.soyle(listeEkranda(items.length))
+      for (const s of items.slice(0, LISTE_ONIZLEME)) this.soyle(s)
+      this.soyle(LISTE_TEKLIF, true)
+      return
+    }
     for (const s of items) this.soyle(s)
   }
 
@@ -352,8 +371,12 @@ export function dolguGecikmesiMs(deger: string | null | undefined = typeof proce
   const n = Number(String(deger ?? '').trim())
   return Number.isFinite(n) && String(deger ?? '').trim() !== '' ? Math.max(0, n) : DOLGU_GECIKME_MS
 }
-/** Neutral — no claim about files or looking anything up (the 2026-10-26 "Dosyaya bakıyorum" on a greeting). */
-const BEKLETME_SOZLERI = ['Bir saniye Hocam. '] as const
+/**
+ * Neutral — no claim about files or looking anything up (the 2026-10-26 "Dosyaya bakıyorum" on a greeting), and no time
+ * promise ("bir saniye" — ElevenLabs advises against it). SES-OMURGA-V2: the 3 s holding filler is ElevenLabs' own soft
+ * timeout (lib/asistan/sesMotoru.ts SES_TUR_AYARI); this server-side one stays OFF unless NOTYA_SES_DOLGU_MS is set.
+ */
+const BEKLETME_SOZLERI = ['Hmm, Hocam... '] as const
 /** The holding sentence (only reached when the filler is explicitly enabled via NOTYA_SES_DOLGU_MS). */
 export function bekletmeSec(sira: number): string {
   return BEKLETME_SOZLERI[Math.abs(Math.trunc(sira)) % BEKLETME_SOZLERI.length]
@@ -371,7 +394,12 @@ const OKU_ISTEGI = /(?:bana\s+(?:anlat|oku|söyle)|anlat(?:ır|sana)?\s*m[ıiuü
  * read-aloud route used to take every sentence ending in "oku" and re-read Ayşe's PREVIOUS answer. The words that
  * point at the screen answer itself ("devamını", "hepsini", "bunu" …) are the only objects this request may carry.
  */
-const EKRAN_NESNESI = new Set(['devamini', 'devami', 'hepsini', 'tamamini', 'tumunu', 'ekrandakini', 'cevabini', 'cevabi', 'yanitini', 'yaniti', 'kalanini', 'gerisini', 'bunu', 'sunu', 'onu', 'bunlari', 'sunlari', 'onlari', 'yazilani', 'yazani', 'metni', 'listeyi', 'tabloyu', 'yaziyi'])
+const EKRAN_NESNESI = new Set(['devamini', 'devami', 'hepsini', 'tamamini', 'tumunu', 'ekrandakini', 'cevabini', 'cevabi', 'yanitini', 'yaniti', 'kalanini', 'gerisini', 'bunu', 'sunu', 'onu', 'bunlari', 'sunlari', 'onlari', 'yazilani', 'yazani', 'metni', 'listeyi', 'tabloyu', 'yaziyi', 'maddeleri', 'maddelerini', 'yazdigini', 'yazdiklarini', 'yazdigin', 'gosterdigini', 'gosterdiklerini', 'koydugunu', 'koyduklarini', 'verdigini', 'verdiklerini', 'soylediklerini', 'ekrana', 'ekrandakileri', 'ekrandakilerini', 'yazilanlari', 'cevabinin', 'tamamen'])
+/**
+ * SES-OMURGA-V2 (D, 10-25: "ekrana koyduğun cevabı oku", "yazdığını oku", "gösterdiğin maddeleri oku"): a sentence that
+ * points at what Ayşe WROTE / SHOWED is the read-aloud of the screen answer, whatever object it names.
+ */
+const EKRAN_ATFI = /\b(?:yazdi[gk]\w*|gosterdi[gk]\w*|koydu[gk]\w*|ekrana (?:yaz|koy|ver)d\w*|ekrandaki\w*|yazili (?:cevab|metn)\w*)\b/
 const BELIRTME_EKI = /(?:s?[iu]n[iu]|l[ae]r[iu]n[iu]|l[ae]r[iu]|y[iu])$/
 function okunacakNesneVar(mesaj: string): boolean {
   const duz = mesaj.toLocaleLowerCase('tr-TR').replace(/ç/g, 'c').replace(/ğ/g, 'g').replace(/ı/g, 'i').replace(/ö/g, 'o').replace(/ş/g, 's').replace(/ü/g, 'u')
@@ -396,6 +424,7 @@ export function okumaIstegiMi(mesaj: string): boolean {
   // answer (ekrandaki), not a new chart summary — "özetini" alone used to skip this route and the
   // model invented a contradictory short read of three weights.
   if (/\bekrandak/i.test(m)) return true
+  if (EKRAN_ATFI.test(m.toLocaleLowerCase('tr-TR').replace(/ç/g, 'c').replace(/ğ/g, 'g').replace(/ı/g, 'i').replace(/ö/g, 'o').replace(/ş/g, 's').replace(/ü/g, 'u'))) return true
   // "Hepsini anlat" with no chart object = re-read what is on screen.
   if (tamSesIstegiMi(m) && !okunacakNesneVar(m)) return true
   if (!sesliOkumaSozuMu(m)) return false

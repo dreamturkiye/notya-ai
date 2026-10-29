@@ -100,6 +100,16 @@ export interface AiCagriGirdisi {
    * gets what is left, and a call that still cannot finish fails as an ordinary transport error the route reports.
    */
   butceMs?: number
+  /**
+   * SES-OMURGA-V2 (A): the caller can abort the call (a superseded voice request). The network stream is closed, no
+   * retry and no guard model follow, and the call rejects with an AiCagriHatasi 499 'iptal'.
+   */
+  iptal?: AbortSignal
+  /**
+   * SES-OMURGA-V2 (E): a stable conversation id sent to OpenRouter as `session_id` — sticky routing keeps the
+   * provider (and its prompt cache) for the session. Never a patient id.
+   */
+  oturumKimligi?: string
 }
 
 /** Budget for aiCagir from a route's `maxDuration` (seconds) — the margin is for the route's own reads and writes. */
@@ -431,9 +441,22 @@ export function dusunmeBloklariniAt<T extends { content?: unknown }>(yanit: T): 
   return yanit
 }
 
+/** SES-OMURGA-V2 (E): OpenRouter-only extras (never sent on the direct Anthropic path, which would reject them). */
+function orEk(govde: Record<string, unknown>, g: AiCagriGirdisi): Record<string, unknown> {
+  return g.oturumKimligi ? { ...govde, session_id: String(g.oturumKimligi).slice(0, 256) } : govde
+}
+
+/** SES-OMURGA-V2 (A): the abort error — not a transport failure (no retry, no guard model, no breaker hit). */
+export function iptalHatasi(): AiCagriHatasi {
+  return new AiCagriHatasi(499, 'iptal')
+}
+export function iptalMi(e: unknown): boolean {
+  return e instanceof AiCagriHatasi && e.durum === 499
+}
+
 async function tekCagri(g: AiCagriGirdisi, govde: Record<string, unknown>, zamanAsimiMs?: number): Promise<Anthropic.Message> {
   const model = String(govde.model)
-  if (yolSec(model) === 'openrouter') return openRouterCagir(govde, zamanAsimiMs)
+  if (yolSec(model) === 'openrouter') return openRouterCagir(orEk(govde, g), zamanAsimiMs, g.iptal)
   const dogrudan = { ...cabasiz(govde), model: dogrudanModelAdi(model) }
   const istemci = await dogrudanIstemci(g)
   return dusunmeBloklariniAt((await istemci.messages.create(dogrudan as never)) as Anthropic.Message)
@@ -599,7 +622,7 @@ async function openRouterAkisKapili(g: AiCagriGirdisi, h: Hedef, metinParcasi: (
   const istekId = istekKimligi(g)
   kademeGunlukle(istekId, g.gorev, h)
   if (!lunaKapisiMi(h)) {
-    const { yanit } = await openRouterAkis(h.govde, metinParcasi)
+    const { yanit } = await openRouterAkis(orEk(h.govde, g), metinParcasi, undefined, g.iptal)
     await olcSessiz(g, h, yanit)
     return isaretle(yanit, h)
   }
@@ -608,7 +631,7 @@ async function openRouterAkisKapili(g: AiCagriGirdisi, h: Hedef, metinParcasi: (
     dususGunlukle(istekId, g.gorev, neden, altKod)
     if (koruyucuKapali()) throw koruyucuKapaliHatasi(neden, altKod)
     const t = gucluyeYukselt(h, neden)
-    const { yanit } = await openRouterAkis(t.govde, metinParcasi)
+    const { yanit } = await openRouterAkis(orEk(t.govde, g), metinParcasi, undefined, g.iptal)
     await olcSessiz(g, t, yanit)
     return isaretle(yanit, t)
   }
@@ -617,14 +640,17 @@ async function openRouterAkisKapili(g: AiCagriGirdisi, h: Hedef, metinParcasi: (
   let sonHata: unknown = null
   for (let deneme = 0; deneme < 2 && !sonuc; deneme++) {
     if (deneme) await bekle(TASIMA_BEKLEME.ms)
+    if (g.iptal?.aborted) throw iptalHatasi()
     try {
-      sonuc = await openRouterAkis(h.govde, metinParcasi, lunaZamanAsimiMs(h.govde.max_tokens))
+      sonuc = await openRouterAkis(orEk(h.govde, g), metinParcasi, lunaZamanAsimiMs(h.govde.max_tokens), g.iptal)
     } catch (e) {
+      if (g.iptal?.aborted || iptalMi(e)) { devreNotr(birincil); throw iptalHatasi() }
       if (!tasimaHatasiMi(e)) { devreNotr(birincil); throw e }
       sonHata = e
     }
   }
   if (!sonuc) {
+    if (g.iptal?.aborted) { devreNotr(birincil); throw iptalHatasi() }
     devreHata(birincil)
     return guclu('transport', tasimaAltKodu(sonHata))
   }
@@ -643,7 +669,7 @@ async function openRouterAkisKapili(g: AiCagriGirdisi, h: Hedef, metinParcasi: (
       const t = lunayaYukselt(h)
       kademeGunlukle(istekId, g.gorev, t)
       try {
-        sonuc = await openRouterAkis(t.govde, metinParcasi, lunaZamanAsimiMs(t.govde.max_tokens))
+        sonuc = await openRouterAkis(orEk(t.govde, g), metinParcasi, lunaZamanAsimiMs(t.govde.max_tokens), g.iptal)
       } catch (e) {
         if (!tasimaHatasiMi(e)) { devreNotr(birincil); throw e }
         devreHata(birincil)
@@ -673,6 +699,20 @@ async function openRouterAkisKapili(g: AiCagriGirdisi, h: Hedef, metinParcasi: (
  * OpenRouter yolunda SSE chat.completions akışı aynı geri çağrıya bağlanır.
  */
 export async function aiAkis(g: AiCagriGirdisi, metinParcasi: (parca: string) => void): Promise<Anthropic.Message> {
+  if (g.iptal?.aborted) throw iptalHatasi()
+  if (g.iptal) {
+    // SES-OMURGA-V2 (A): nothing reaches the caller after an abort, and the call settles at once.
+    const sinyal = g.iptal
+    const parca = metinParcasi
+    metinParcasi = (p) => { if (!sinyal.aborted) parca(p) }
+    const durdur = new Promise<never>((_, red) => sinyal.addEventListener('abort', () => red(iptalHatasi()), { once: true }))
+    durdur.catch(() => { /* handled by the race */ })
+    return Promise.race([aiAkisIc(g, metinParcasi), durdur])
+  }
+  return aiAkisIc(g, metinParcasi)
+}
+
+async function aiAkisIc(g: AiCagriGirdisi, metinParcasi: (parca: string) => void): Promise<Anthropic.Message> {
   const h = hedefBelirle(g)
   if (h.neden === 'safety') dususGunlukle(istekKimligi(g), g.gorev, 'safety', 'sinyal')
   if (yolSec(String(h.govde.model)) === 'openrouter') return openRouterAkisKapili(g, h, metinParcasi)

@@ -11,8 +11,8 @@ describe('duraklamaKarari', () => {
     assert.equal(duraklamaKarari('fish', false), 'sessiz')
     assert.equal(duraklamaKarari('fish', true), 'sessiz')
   })
-  it('ElevenLabs sends the pause to the model, as before the Fish work', () => {
-    assert.equal(duraklamaKarari('elevenlabs', false), 'model')
+  it('SES-OMURGA-V2: ElevenLabs no longer sends a pause to the model (skip_turn on the route)', () => {
+    assert.equal(duraklamaKarari('elevenlabs', false), 'sessiz') // SES-OMURGA-V2: a pause never reaches the model
   })
   it('ElevenLabs right after a calendar answer gets the fixed line, never the model', () => {
     assert.equal(duraklamaKarari('elevenlabs', true), 'buradayim')

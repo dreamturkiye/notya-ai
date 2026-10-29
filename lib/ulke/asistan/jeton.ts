@@ -38,18 +38,19 @@ function esitMi(a: string, b: string): boolean {
   return x.length === y.length && timingSafeEqual(x, y)
 }
 
-type Yuk = { d: string; pc: string; r: string; tz?: string; exp: number }
+/** SES-OMURGA-V2: `c` — one id per call (the turn registry's call key; ElevenLabs sends no conversation id). */
+type Yuk = { d: string; pc: string; r: string; tz?: string; c?: string; exp: number }
 
 /** null = no signing secret in this deployment (the feature is then not offered at all). */
-export function canliJetonuImzala(g: { hesapId: string; kod: string; rol: string; saatDilimi?: string | null }, simdi = Date.now()): string | null {
+export function canliJetonuImzala(g: { hesapId: string; kod: string; rol: string; saatDilimi?: string | null; cagri?: string | null }, simdi = Date.now()): string | null {
   const k = anahtar('NOTYA_SES_JETON_SECRET')
   if (!k) return null
-  const yuk: Yuk = { d: g.hesapId, pc: g.kod, r: g.rol, ...(g.saatDilimi ? { tz: g.saatDilimi } : {}), exp: simdi + JETON_OMRU_MS }
+  const yuk: Yuk = { d: g.hesapId, pc: g.kod, r: g.rol, ...(g.saatDilimi ? { tz: g.saatDilimi } : {}), ...(g.cagri ? { c: String(g.cagri).slice(0, 64) } : {}), exp: simdi + JETON_OMRU_MS }
   const govde = b64(JSON.stringify(yuk))
   return `${govde}.${imza(govde, k)}`
 }
 
-export type CanliJeton = { hesapId: string; rol: string; saatDilimi: string | null }
+export type CanliJeton = { hesapId: string; rol: string; saatDilimi: string | null; cagri: string | null }
 
 /** The token's content, or null: not signed by us, expired, malformed, or minted for another country. */
 export function canliJetonuDogrula(ham: unknown, kod: string, simdi = Date.now()): CanliJeton | null {
@@ -63,7 +64,7 @@ export function canliJetonuDogrula(ham: unknown, kod: string, simdi = Date.now()
     if (typeof v.r !== 'string' || !v.r || v.r.length > ALAN_AZAMI) return null
     if (v.pc !== kod) return null
     if (typeof v.exp !== 'number' || v.exp < simdi) return null
-    return { hesapId: v.d, rol: v.r, saatDilimi: typeof v.tz === 'string' && v.tz ? v.tz : null }
+    return { hesapId: v.d, rol: v.r, saatDilimi: typeof v.tz === 'string' && v.tz ? v.tz : null, cagri: typeof v.c === 'string' && v.c ? v.c.slice(0, 64) : null }
   } catch {
     return null
   }

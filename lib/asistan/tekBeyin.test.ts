@@ -144,8 +144,11 @@ async function yazi(s: Sahne, message: string, asistanSessionId?: string) {
   return j.data as { speech: string; asistanSessionId: string; aktifHasta: string | null; eylemOnerileri: unknown[] }
 }
 
+/** SES-OMURGA-V2 (D): n numbered sentences ("Cümle 1. Cümle 2. …"). */
+const cumleler = (n: number, bas = 1) => Array.from({ length: n }, (_, i) => `Cümle ${'ABCDEFGHIJKLMNOPRSTUVYZ'[bas + i - 1]}.`).join(' ')
+
 type SesYaniti = { status: number; parcalar: string[]; metin: string; ham: string; aracCagrilari: { function: { name: string } }[]; bitis: string | null }
-async function ses(g: { sahne: Sahne; mesaj: string; jeton?: string | null; sir?: string | null; tools?: unknown[]; oturum?: string; jetonVeri?: Partial<import('./sesJetonu').SesJetonu> }): Promise<SesYaniti> {
+async function ses(g: { sahne: Sahne; mesaj: string; jeton?: string | null; sir?: string | null; tools?: unknown[]; oturum?: string; jetonVeri?: Partial<import('./sesJetonu').SesJetonu>; arkaBekle?: boolean }): Promise<SesYaniti> {
   const jeton = g.jeton !== undefined ? g.jeton : J.sesJetonuImzala({ d: g.sahne.doktor.id, o: g.oturum || g.sahne.oturum, s: 'pediatri', p: null, pe: 'aysekaya', ...(g.jetonVeri || {}) })
   const basliklar: Record<string, string> = { 'content-type': 'application/json' }
   const sir = g.sir !== undefined ? g.sir : SIR
@@ -161,6 +164,8 @@ async function ses(g: { sahne: Sahne; mesaj: string; jeton?: string | null; sir?
   } as ConstructorParameters<typeof NextRequestSinifi>[1])
   const y: Response = await R.sesLlm.POST(req)
   const ham = await y.text()
+  // SES-OMURGA-V2 (E): the session write runs after the stream (waitUntil) — settle it before the test reads the DB.
+  if (g.arkaBekle !== false) await L.sesArkaPlaniBekle()
   const parcalar: string[] = []
   const aracCagrilari: SesYaniti['aracCagrilari'] = []
   let bitis: string | null = null
@@ -245,18 +250,21 @@ describe('sözlü biçim — yazılı kadar ayrıntılı, doğal cümleler, kiml
     b.ekle(`Annesinin numarası ${TEL} olarak kayıtlı, ister misiniz`)
     assert.ok(!b.bitir().includes('0532'))
   })
-  it('NOTYA-SES-SLUR-01: 3+ maddelik liste okunmaz — "N madde, ekranınızda"; 1-2 madde cümle olarak okunur; dosya cümlesi hastanın adıyla başlar', () => {
+  it('SES-OMURGA-V2 (D): kısa liste (≤4) okunur; uzun liste: sayı + ilk iki madde + "isterseniz okuyayım"; dosya cümlesi hastanın adıyla başlar', () => {
     const k = K.konusmaYap('Hocam, aşı durumu şöyle.\n\n**Hepatit B**\n- 1. doz — 15 Haziran 2024\n- 2. doz — 15 Temmuz 2024\n- 3. doz — Aralık 2024\n\nKontrol bir hafta sonra.')
-    assert.equal(k, `Hocam, aşı durumu şöyle. Hepatit B. ${K.listeEkranda(3)} Kontrol bir hafta sonra.`)
+    assert.equal(k, 'Hocam, aşı durumu şöyle. Hepatit B. 1. doz — 15 Haziran 2024. 2. doz — 15 Temmuz 2024. 3. doz — Aralık 2024. Kontrol bir hafta sonra.')
+    const uzun = K.konusmaYap('Eksik aşılar:\n- KKK\n- Hepatit A\n- Su çiçeği\n- KPA\n- DaBT-İPA\n- Hib\nKontrol bir ay sonra.')
+    assert.equal(uzun, `Eksik aşılar. ${K.listeEkranda(6)} KKK. Hepatit A. ${K.LISTE_TEKLIF} Kontrol bir ay sonra.`)
     assert.equal(K.konusmaYap('İki madde:\n- bir\n- iki'), 'İki madde. bir. iki.')
     assert.equal(K.konusmaYap('Umutcan Türkoğlu — dosyada aşı: Hib 15 Ağustos 2025; KKK 15 Mayıs 2025.'), 'Umutcan Türkoğlu — dosyada aşı: Hib 15 Ağustos 2025; KKK 15 Mayıs 2025.')
   })
-  it('NOTYA-SES-SLUR-01: sözlü tur en çok 5 cümle, sonra bir kez "Devamı ekranınızda"; notlar sayılmaz; ekran metni değişmez', () => {
-    const k = K.konusmaYap('Bir. İki. Üç. Dört. Beş. Altı. Yedi.')
-    assert.equal(k, `Bir. İki. Üç. Dört. Beş. ${K.DEVAMI_EKRANDA}`)
-    assert.equal(K.konusmaYap('Bir. İki. Üç. Dört. Beş.'), 'Bir. İki. Üç. Dört. Beş.')
-    const t = K.konusmaYap(`Bir. İki. Üç. Dört. İletişim: ${TEL}. Beş. Altı.`)
-    assert.equal(t, `Bir. İki. Üç. Dört. ${K.ILETISIM_EKRANDA} Beş. ${K.DEVAMI_EKRANDA}`)
+  it('SES-OMURGA-V2 (D): normal uzunlukta cevap TAMAMEN okunur (5 cümle sınırı kalktı); çok uzunda yalnız devamsız biçim "Devamı ekranınızda" der', () => {
+    const N = K.SOZ_BEAT_SINIRI
+    assert.ok(N >= 10, 'sözlü tur artık 5 cümlede kesilmez')
+    assert.equal(K.konusmaYap('Bir. İki. Üç. Dört. Beş. Altı. Yedi.'), 'Bir. İki. Üç. Dört. Beş. Altı. Yedi.')
+    assert.equal(K.konusmaYap(cumleler(N + 2)), `${cumleler(N)} ${K.DEVAMI_EKRANDA}`)
+    const t = K.konusmaYap(`${cumleler(N - 1)} İletişim: ${TEL}. Son. Fazla.`)
+    assert.equal(t, `${cumleler(N - 1)} ${K.ILETISIM_EKRANDA} Son. ${K.DEVAMI_EKRANDA}`)
   })
   it('bekletme sözü yok (NOTYA-AYSE-ACILIS-01): aramada da sessiz; yalnız sesli onay teyitle başlar', () => {
     assert.equal(K.dolguSec('Umutcan’ın aşıları', { onay: false, vazgec: false, sosyal: false }), '')
@@ -333,7 +341,8 @@ describe('kilitler — sunucu sırrı + imzalı konuşma jetonu', () => {
     // A foreign doctor's token cannot claim this doctor's session, so the turn closes fail-closed: the keep-alive
     // period only — no "bulamadım" sentence, no patient, no model call, nothing written.
     assert.equal(p.status, 200)
-    assert.equal(p.metin.trim(), '', 'yabancı jeton: tur sessizdir — boşluk tutucu, asla klik üreten "." değil (2026-10-25)')
+    // SES-OMURGA-V2: never whitespace-only — the documented buffer chunk is the only content (no skip_turn offered here).
+    assert.equal(p.metin, L.SES_TAMPON, 'yabancı jeton: tur sessizdir — yalnız tampon parçası')
     assert.ok(!p.ham.includes('Umutcan') && !p.ham.includes(ANNE), 'başka doktorun jetonuyla hasta çözülmemeli')
     assert.equal(modelIstekleri.length, 0, 'yabancı jetonla model çağrılmaz')
     assert.ok(!modelIstekleri.some((m) => m.govde.includes(s.hasta)))
@@ -345,25 +354,28 @@ describe('tek beyin — aynı soru, aynı ekran; ses aynı içeriği konuşur', 
   beforeEach(() => { sahne() })
 
   it('NOTYA-SES-ERKEN-01 + DEVAM-01: ses turu sözlü sınırda sessizce kapanır ([DONE]), ekran arka planda tamamlanır; [devam] kalanı modelsiz okur', async () => {
-    const bas = 'Bir. İki. Üç. Dört. Beş. Altı. Yedi.'
+    const N = K.SOZ_BEAT_SINIRI
+    const bas = cumleler(N + 2)
     const kuyruk = ' Sekiz. Dokuz. Ekrana yazılan uzun tablo satırı.'
     const b = sahne()
     // speech JSON is cut mid-string on purpose: the first half streams fast, the tail after 2.5 s
     const tam = JSON.stringify({ speech: bas + kuyruk })
-    const kes = tam.indexOf('Yedi.') + 'Yedi.'.length
+    const son = cumleler(1, N + 2)
+    const kes = tam.indexOf(son) + son.length
     yanit = { metin: tam.slice(0, kes), gecikmeMs: 2500, gecikmeSonrasi: tam.slice(kes) }
     const t0 = Date.now()
-    const v = await ses({ sahne: b, mesaj: 'Genel bir soru: bu yaşta uyku düzeni nasıl olmalı?' })
+    const v = await ses({ sahne: b, mesaj: 'Genel bir soru: bu yaşta uyku düzeni nasıl olmalı?', arkaBekle: false })
     const gecen = Date.now() - t0
     assert.equal(v.status, 200)
     assert.ok(gecen < 2000, `ses turu sınırda kapanmalı, ${gecen} ms sürdü`)
     // NOTYA-SES-DEVAM-01: a continuation follows, so the cut itself says nothing extra ("Devamı ekranınızda" is fallback only)
-    assert.equal(v.metin.replace(/\s+/g, ' ').trim(), 'Bir. İki. Üç. Dört. Beş.')
+    assert.equal(v.metin.replace(/\s+/g, ' ').trim(), cumleler(N))
     await new Promise((r) => setTimeout(r, 3500))
+    await L.sesArkaPlaniBekle()
     const e = await sesEkrani(b)
     assert.ok((e.turlar.at(-1)?.metin || '').includes('Dokuz.'), 'ekran cevabı arka planda tamamlanmalı')
     const oturum = () => db.tablo('asistan_sessions').find((o) => o.id === b.oturum)!
-    const kalan = 'Altı. Yedi. Sekiz. Dokuz. Ekrana yazılan uzun tablo satırı.'
+    const kalan = `${cumleler(2, N + 1)} Sekiz. Dokuz. Ekrana yazılan uzun tablo satırı.`
     assert.equal(oturum().active_context.sesDevam?.kalan, kalan, 'söylenmeyen kalan oturuma yazılmalı')
     assert.equal(e.devam, true)
     assert.equal(e.devamAnahtar, e.turlar.at(-1)?.zaman, 'devam anahtarı kesilen turun zamanıdır')
@@ -379,9 +391,10 @@ describe('tek beyin — aynı soru, aynı ekran; ses aynı içeriği konuşur', 
     assert.equal(oturum().active_context.sesDevam, undefined, 'okunan kalan silinmeli')
     assert.equal(oturum().messages.length, mesajOnce, '[devam] yeni baloncuk yazmaz')
     assert.equal((await sesEkrani(b)).devam, false)
-    // a duplicate [devam] says nothing and still calls no model
+    // a duplicate [devam] says nothing and still calls no model — SES-OMURGA-V2: never whitespace-only; the documented
+    // buffer chunk keeps the socket (no skip_turn tool offered in this request)
     const tekrar = await ses({ sahne: b, mesaj: '[devam]' })
-    assert.equal(tekrar.metin.trim(), '', 'boş [devam] soketi SESSİZ boşlukla tutar — "." kliği (2026-10-25) geri gelmesin')
+    assert.equal(tekrar.metin, L.SES_TAMPON, 'boş [devam]: yalnız ElevenLabs tampon parçası, boşluk değil')
     assert.equal(modelIstekleri.length, modelOnce)
   })
 
@@ -411,7 +424,8 @@ describe('tek beyin — aynı soru, aynı ekran; ses aynı içeriği konuşur', 
     const n = modelIstekleri.length
     const tekrar = await ses({ sahne: b, mesaj: soru })
     assert.equal(modelIstekleri.length, n, 'replay yeni model turu açmaz')
-    assert.equal(tekrar.metin.trim(), '')
+    // SES-OMURGA-V2 (A): the same turn again is served the first request's words — never silence, never a second brain.
+    assert.equal(tekrar.metin.trim(), ilk.metin.trim())
   })
   it('NOTYA-SES-TAKVIM-01: bugün randevu modelsiz okunur ve söylenir; yabancı doktorun günü sızmaz', async () => {
     const { bugunTRT } = await import('../../core/eylemler/types')
@@ -443,9 +457,13 @@ describe('tek beyin — aynı soru, aynı ekran; ses aynı içeriği konuşur', 
     const gurultu = await ses({ sahne: b, mesaj: '...' })
     assert.equal(gurultu.status, 200)
     assert.equal(modelIstekleri.length, once, '"..." model turu değildir')
-    // NOTYA-SES-ESKI-02: this route is the ElevenLabs Custom LLM; right after a calendar answer the pause now gets
-    // the fixed line instead of a lone period (Flash voiced the period as a sigh). Still no model turn, still no recant.
-    assert.equal(gurultu.metin.trim(), 'Buradayım Hocam.', 'takvimden sonraki duraklama sabit sözdür, model cevabı değildir')
+    // SES-OMURGA-V2 (C): a pause never reaches the brain on the ElevenLabs route — skip_turn when the agent offers it,
+    // otherwise the buffer chunk. No model turn, no recant, no chatter.
+    assert.equal(gurultu.metin, L.SES_TAMPON, 'duraklama: model yok, söz yok')
+    const atla = await ses({ sahne: b, mesaj: '...', tools: [{ type: 'function', function: { name: 'skip_turn' } }] })
+    assert.equal(atla.metin, '', 'skip_turn varken içerik hiç gitmez')
+    assert.equal(atla.aracCagrilari[0]?.function.name, 'skip_turn')
+    assert.equal(atla.bitis, 'tool_calls')
     assert.doesNotMatch(gurultu.metin, /Haklısınız|doğrulamadan|Ana Sayfa/)
     const emin = await ses({ sahne: b, mesaj: 'Emin misin?' })
     assert.equal(emin.status, 200)
@@ -493,9 +511,17 @@ describe('tek beyin — aynı soru, aynı ekran; ses aynı içeriği konuşur', 
     const [sesSistem, yaziSistem] = [sistemMetni(sy, b.hasta, b.doktor.id), sistemMetni(ty, a.hasta, a.doktor.id)]
     assert.match(sesSistem, /SESLİ GÖRÜŞME DOSYA ÖZETİ/)
     assert.match(yaziSistem, /## VİZİT GEÇMİŞİ/)
-    const strip = (s: string) => s.replace(dosyaBlogu, '<DOSYA>').replace(hastaSatiri, '<HASTA>')
+    // SES-OMURGA-V2: a voice turn that is not a command is offered no write tool (so no action-instructions block) and
+    // carries the short-first-sentence block; everything else is identical.
+    const { EYLEM_ISTEM_BLOGU } = await import('../../core/eylemler/istem')
+    const { SES_ILK_CUMLE_BLOGU } = await import('./ayseCevapla')
+    const { OKUMA_ARACLARI } = await import('./okumaAraclari')
+    const strip = (s: string) => s.replace(dosyaBlogu, '<DOSYA>').replace(hastaSatiri, '<HASTA>').split(EYLEM_ISTEM_BLOGU.trim()).join('').split(SES_ILK_CUMLE_BLOGU.trim()).join('').replace(/\s+/g, ' ')
     assert.equal(strip(sesSistem), strip(yaziSistem))
-    assert.deepEqual(sy.tools, ty.tools)
+    assert.ok(sesSistem.includes('[SESLİ CEVAP]') && !yaziSistem.includes('[SESLİ CEVAP]'))
+    const okumaAdlari = new Set(OKUMA_ARACLARI.map((a) => (a as { name: string }).name))
+    assert.deepEqual(sy.tools, (ty.tools as { name: string }[]).filter((a) => okumaAdlari.has(a.name)))
+    assert.ok((ty.tools as unknown[]).length > (sy.tools as unknown[]).length, 'yazılı turda yazma araçları da var')
     assert.deepEqual(sy.messages, ty.messages)
   })
 
@@ -628,7 +654,7 @@ describe('NOTYA-SES-DEVAM-01: kesilen sesli turun kalanı', () => {
     // everything said → nothing left
     assert.equal(K.sesDevamKalani(tum, tum.join(' ')), '')
     const listeli = K.sozCumleleri('Özet hazır.\n- a\n- b\n- c\nSon cümle.')
-    assert.equal(K.sesDevamKalani([...listeli, 'Kart ekranda.'], 'Özet hazır. '), `${K.listeEkranda(3)} Son cümle. Kart ekranda.`)
+    assert.equal(K.sesDevamKalani([...listeli, 'Kart ekranda.'], 'Özet hazır. '), 'a. b. c. Son cümle. Kart ekranda.')
   })
   // NOTYA-SES-SLUR-02 (Dr. Gökhan, 2026-10-03): evidence answers are capped again (SES-OZET-TAM lifted briefly).
   it('sesSiniriSec: varsayılan SOZ_BEAT_SINIRI; tamSes sınırsız', () => {
@@ -637,16 +663,16 @@ describe('NOTYA-SES-DEVAM-01: kesilen sesli turun kalanı', () => {
     assert.equal(K.sesSiniriSec(true, 'tam'), Number.POSITIVE_INFINITY)
     assert.equal(K.sesSiniriSec(false, 'varsayilan'), K.SOZ_BEAT_SINIRI)
   })
-  it('sesSiniriSec(true) ile SesAkisi 5 cümleden sonra "Devamı ekranınızda" der', () => {
+  it('sesSiniriSec(true) ile SesAkisi SOZ_BEAT_SINIRI cümleden sonra "Devamı ekranınızda" der (devamsız biçim)', () => {
     const parcalar: string[] = []
     const a = new K.SesAkisi((p) => parcalar.push(p), undefined, undefined, K.sesSiniriSec(true))
-    const uzunOzet = Array.from({ length: 8 }, (_, i) => `Cümle ${i + 1} burada klinik bilgi anlatır.`).join(' ')
+    const uzunOzet = Array.from({ length: K.SOZ_BEAT_SINIRI + 3 }, (_, i) => `Cümle ${i + 1} burada klinik bilgi anlatır.`).join(' ')
     a.ekle(uzunOzet)
     const tam = a.bitir()
     assert.match(tam, /Devamı ekranınızda/)
     assert.match(tam, /Cümle 1 /)
-    assert.match(tam, /Cümle 5 /)
-    assert.doesNotMatch(tam, /Cümle 8 /)
+    assert.match(tam, new RegExp(`Cümle ${K.SOZ_BEAT_SINIRI} `))
+    assert.doesNotMatch(tam, new RegExp(`Cümle ${K.SOZ_BEAT_SINIRI + 3} `))
   })
   it('sesSiniriSec(..., tam) ile SesAkisi uzun özeti "Devamı ekranınızda" demeden tam okur', () => {
     const parcalar: string[] = []
@@ -673,12 +699,12 @@ describe('NOTYA-SES-DEVAM-01: kesilen sesli turun kalanı', () => {
     const parcalar: string[] = []
     let sinir = 0
     const a = new K.SesAkisi((p) => parcalar.push(p), undefined, () => { sinir++ }, K.SOZ_BEAT_SINIRI, true)
-    a.ekle('Bir. İki. Üç. Dört. Beş. Altı. Yedi.')
-    assert.equal(a.bitir(), 'Bir. İki. Üç. Dört. Beş.')
+    a.ekle(cumleler(K.SOZ_BEAT_SINIRI + 2))
+    assert.equal(a.bitir(), cumleler(K.SOZ_BEAT_SINIRI))
     assert.equal(sinir, 1)
     assert.ok(a.sinirAsildi)
     assert.ok(!parcalar.join('').includes(K.DEVAMI_EKRANDA))
-    assert.equal(K.konusmaYap('Bir. İki. Üç. Dört. Beş. Altı.'), `Bir. İki. Üç. Dört. Beş. ${K.DEVAMI_EKRANDA}`)
+    assert.equal(K.konusmaYap(cumleler(K.SOZ_BEAT_SINIRI + 1)), `${cumleler(K.SOZ_BEAT_SINIRI)} ${K.DEVAMI_EKRANDA}`)
   })
   it('devamIstegiMi: gizli işaret ve kısa "devam" sözü; başka cümle değil', () => {
     for (const m of ['[devam]', '[devam].', 'devam', 'Devam et', 'devam et hocam.', 'Devam edelim Ayşe']) assert.ok(K.devamIstegiMi(m), m)
@@ -694,9 +720,11 @@ describe('NOTYA-SES-OKU-01: "bana anlat" ekrandaki cevabı sınırsız okur, mod
     // previous answer is not re-read. The words that point at the screen answer itself keep the route.
     for (const m of ['MCV ve MCHC değerlerini oku', 'Son SOAP notunu oku', 'Emircan Karaoğlu’nun son SOAP notunu oku', 'Hastanın özetini oku', 'Son reçeteyi oku', "MCV'yi oku", 'Son muayenesini bana anlat', 'İlaçlarını oku', 'Lab sonuçlarını bana oku']) assert.ok(!K.okumaIstegiMi(m), m)
     for (const m of ['Devamını ekranda görüyorum ama sen bana anlat', 'bunu bana oku', 'Tamamını oku hocam', 'Ekrandakini oku', 'cevabını sesli oku', 'kalanını da sesli oku', 'Hepsini oku Ayşe', 'listeyi bana oku', 'Peki, lütfen ekrandaki özetini okur musun?', 'bunu bana okuyacak mısın yoksa yalnızca yazılı olarak mı vereceksin?']) assert.ok(K.okumaIstegiMi(m), m)
-    const uzun = 'Bir. İki. Üç. Dört. Beş. Altı. Yedi. Sekiz.'
+    const uzun = cumleler(K.SOZ_BEAT_SINIRI + 3)
     assert.equal(K.konusmaYap(uzun, undefined, { sinirsiz: true }), uzun)
-    assert.equal(K.konusmaYap(uzun), `Bir. İki. Üç. Dört. Beş. ${K.DEVAMI_EKRANDA}`)
+    assert.equal(K.konusmaYap(uzun), `${cumleler(K.SOZ_BEAT_SINIRI)} ${K.DEVAMI_EKRANDA}`)
+    // SES-OMURGA-V2 (D, 10-25): "what you wrote / showed" is the screen answer, whatever object the sentence names.
+    for (const m of ['yazdığını oku', 'ekrana koyduğun cevabı oku', 'gösterdiğin maddeleri oku', 'ekrana yazdıklarını okur musun']) assert.ok(K.okumaIstegiMi(m), m)
   })
 })
 
@@ -907,7 +935,10 @@ describe('NOTYA-SES-BAGLAM-KUCULT-01: sesli turda kısa, güvenlik-tam dosya; İ
     await yazi(s, soru, s.oturum)
     const y = sistem()
     assert.ok(y.includes('## VİZİT GEÇMİŞİ') && y.includes(KANIT), 'yazı: tam dosya + kanıt')
-    assert.equal(kanitSes, y.slice(y.indexOf(KANIT)), 'kanıt bloğu (ve sonrası) iki kanalda bayt bayt aynı')
+    // SES-OMURGA-V2: a voice question that is not a command carries no write tools, so no action-instructions block.
+    const { EYLEM_ISTEM_BLOGU } = await import('../../core/eylemler/istem')
+    const eylemsiz = (x: string) => x.split(EYLEM_ISTEM_BLOGU).join('')
+    assert.equal(eylemsiz(kanitSes), eylemsiz(y.slice(y.indexOf(KANIT))), 'kanıt bloğu (ve sonrası) iki kanalda bayt bayt aynı')
   })
 
   it("kanal:'yazi' → soru türünden bağımsız TAM dosya (adsız da adlı da; açık hasta)", async () => {
@@ -991,13 +1022,13 @@ describe('SES-DOLGU-02 — yavaş tur bekletme cümlesi söyler, hızlı tur tem
     yanit = { ilkGecikmeMs: 450, metin: JSON.stringify({ speech: 'Hocam, bu yaşta uyku düzeni on bir saat olmalı.' }) }
     const v = await dolguyla('80', () => ses({ sahne: b, mesaj: 'Genel bir soru: bu yaşta uyku düzeni nasıl olmalı?' }))
     const dolu = v.parcalar.filter((p) => /[\p{L}\p{N}]/u.test(p))
-    assert.match(dolu[0] || '', /bir saniye/i, `ilk dolu delta nötr bekletme olmalı: ${JSON.stringify(dolu)}`)
+    assert.match(dolu[0] || '', /Hmm, Hocam/, `ilk dolu delta nötr bekletme olmalı: ${JSON.stringify(dolu)}`)
     assert.doesNotMatch(v.metin, /dosya|bakıyorum/i, 'bekletme sözü dosya / bakma iddiası içermez')
-    assert.equal(dolu.filter((p) => /bir saniye/i.test(p)).length, 1, 'bekletme yalnız bir kez')
+    assert.equal(dolu.filter((p) => /Hmm, Hocam/.test(p)).length, 1, 'bekletme yalnız bir kez')
     assert.match(v.metin, /uyku düzeni on bir saat/)
     const kayit = db.tablo('asistan_sessions').find((r) => r.id === b.oturum)
     const sonMesaj = String(([...((kayit?.messages as { role: string; content: string }[]) || [])].reverse().find((m) => m.role === 'assistant')?.content) || '')
-    assert.doesNotMatch(sonMesaj, /bir saniye/i, 'bekletme cevabın parçası değildir: oturuma yazılmaz')
+    assert.doesNotMatch(sonMesaj, /Hmm, Hocam/, 'bekletme cevabın parçası değildir: oturuma yazılmaz')
   })
 
   it('VARSAYILAN (env yok): bekletme KAPALI — yavaş tur bile hiçbir bekletme sözü söylemez', async () => {
