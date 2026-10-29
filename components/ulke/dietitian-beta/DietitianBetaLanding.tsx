@@ -1,8 +1,8 @@
 'use client'
 
 /**
- * Temporary AU Clinical Dietitian beta invite landing — specialty-only marketing surface.
- * Not part of the shared doktor landing kit; remove when the invite closes.
+ * AU Clinical Dietitian marketing landing — specialty-only surface.
+ * Not part of the shared doktor landing kit.
  */
 import React, { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
@@ -51,7 +51,7 @@ export function DietitianBetaLanding({ className = '' }: { className?: string })
             </Link>
           </div>
           <div className="db-hero-copy">
-            <p className="db-kicker db-reveal">Australia · Clinical Dietitian beta</p>
+            <p className="db-kicker db-reveal">Australia · Clinical Dietitian</p>
             <h1 className="db-display db-reveal">Your nutrition practice, with a partner who already speaks dietetics.</h1>
             <p className="db-hero-lead db-reveal">
               An AI clinical assistant steeped in Australian dietetic practice — ADIME, kJ, MST, IDDSI, and the
@@ -59,10 +59,10 @@ export function DietitianBetaLanding({ className = '' }: { className?: string })
             </p>
             <div className="db-cta-row db-reveal">
               <Link className="db-btn db-btn-primary" href="/signup">
-                Join the dietitian beta
+                Get started
               </Link>
               <Link className="db-btn db-btn-ghost" href="/login">
-                I already have access
+                Sign in
               </Link>
             </div>
           </div>
@@ -187,15 +187,15 @@ export function DietitianBetaLanding({ className = '' }: { className?: string })
 
       <section className="db-section db-close">
         <div className="db-reveal">
-          <p className="db-kicker">Private beta</p>
-          <h2 className="db-display">Come pressure-test it with real clients in mind.</h2>
+          <p className="db-kicker">Ready when you are</p>
+          <h2 className="db-display">Built for Australian dietitians — ready for your next client.</h2>
           <p className="db-prose">
-            We are inviting practising Australian dietitians to use Notya on their own workflows and tell us where
-            it shines — and where it must improve — before we open wider.
+            Open an account, set your role to Clinical Dietitian, and work from ADIME, tools, and the patient
+            portal in one place.
           </p>
           <div className="db-cta-row">
             <Link className="db-btn db-btn-primary" href="/signup">
-              Request beta access
+              Create your account
             </Link>
             <Link className="db-btn db-btn-ghost" href="/demo">
               Book a walkthrough
@@ -206,8 +206,8 @@ export function DietitianBetaLanding({ className = '' }: { className?: string })
 
       <footer className="db-foot">
         <p>
-          Temporary invite page for the Australian Clinical Dietitian beta. Not medical advice. Notya does not
-          replace clinical judgement. Emergencies: Triple Zero (000).
+          Notya for Australian Clinical Dietitians. Not medical advice. Notya does not replace clinical judgement.
+          Emergencies: Triple Zero (000).
         </p>
       </footer>
     </div>

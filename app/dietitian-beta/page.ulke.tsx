@@ -1,7 +1,6 @@
 /**
- * Temporary AU Clinical Dietitian beta invite landing.
- * Specialty-specific marketing surface (dietetics). Allow-listed only on the AU pack.
- * Remove when the invite closes.
+ * AU Clinical Dietitian marketing landing.
+ * Specialty-specific surface (dietetics). Allow-listed only on the AU pack.
  */
 import React from 'react'
 import type { Metadata } from 'next'
@@ -31,7 +30,7 @@ const literata = Literata({
 })
 
 export const metadata: Metadata = {
-  title: 'Notya for Australian Clinical Dietitians — private beta',
+  title: 'Notya for Australian Clinical Dietitians',
   description:
     'An AI clinical assistant steeped in Australian dietetic practice — ADIME, kJ, MST, IDDSI, and a patient portal your clients use between visits.',
   robots: { index: false, follow: false, noarchive: true, nosnippet: true },
