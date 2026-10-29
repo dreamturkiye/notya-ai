@@ -40,7 +40,8 @@ export function portalYemekGunlugu(
   gunlukAraci: string,
   enCok = 12,
 ): NonNullable<PortalIcerigi['beslenme']>['gunluk'] {
-  const liste: NonNullable<PortalIcerigi['beslenme']>['gunluk'] = []
+  // Mutable builder — PortalIcerigi.beslenme.gunluk is readonly on the wire type.
+  const liste: { gun: string; ogun: string; aciklama: string; kim: string }[] = []
   for (const k of kayitlar) {
     if (k.arac !== gunlukAraci || !k.sonuc?.tamam || !k.girdiler) continue
     const g = k.girdiler
