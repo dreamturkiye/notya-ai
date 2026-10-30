@@ -1,5 +1,23 @@
 # OPEN COMMITMENTS — Notya AI
 
+## AU-GOLDEN-GAP-AUDIT-02 — fresh AU vs Türkiye golden standard (Claude, 2026-10-30)
+
+Fresh country-depth audit (not a specialty sprint). Tips: AU `e0a570fb` (release/au) × TR `3fde301e` (main). Deliverables: `docs/audits/AU-GOLDEN-GAP-AUDIT-02.json`, `public/au-golden-gap-audit.html`.
+
+**Verdict:** mean wow vs TR gold **44**. Strong 3 · Partial 7 · Thin 1 · Missing 1 · Exempt 1. Largest gap: **Muayene / clinical engines** (one generic visit; 321 TR engines in-repo but not AU-reachable). Dietetics is the specialty depth outlier (Strong). Country pack + Medical Board roster Strong. Prior AU-40-PEDIATRI-AUDIT-01 “44 Strong / mean 87” remains valid only as Option-A **spine** completeness — do not treat it as golden-standard equivalence.
+
+| ID | Status | Owner |
+|---|---|---|
+| AU-GOLDEN-GAP-AUDIT-02 | DONE (audit shipped) | Claude |
+| AU-DEPTH-PARITY-03 | OPEN — visit/note shared components + country gates (game changer #1) | Claude (build); Kaan (URL/flat confirm if still open) |
+| AU-ARACLAR-DEPTH-01 | OPEN — non-dietetics clinical calculators (game changer #2) | Claude |
+| specialty-hasta-portali AU modules | OPEN — real chapters beyond 3-line blurbs (game changer #3) | Claude |
+| AU-DEPTH-PARITY-03-B/C + AU-CANLI-03/04 | OPEN — assistant session/floating/open-patient (game changer #4) | Claude |
+| AU-PORTRE-02 | OPEN — 0/44 portraits (game changer #5) | Kaan (WaveSpeed run) / Claude |
+| AU-LOOK-PARITY-02 | OPEN — share TR page components for inner screens | Claude |
+
+No application behaviour changed by this audit job.
+
 ## SES-OMURGA-V2 — voice/text assistant rebuild shipped + FOUNDER LOCK; what still needs Kaan (Claude, 2026-10-29)
 
 Kaan ordered "Ses Omurgası v2" on 2026-10-29 (Dr. Gökhan: voice unusable; diagnosis and research in the job brief).

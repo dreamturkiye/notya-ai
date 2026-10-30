@@ -1,0 +1,163 @@
+{
+  "audit_id": "AU-GOLDEN-GAP-AUDIT-02",
+  "date": "2026-10-30",
+  "label": "Fresh AU vs Türkiye golden standard — country depth gap audit",
+  "au_tip": "e0a570fb",
+  "tr_tip": "3fde301e",
+  "branch": "cursor/au-golden-gap-audit-ef6b",
+  "gold": "Türkiye main — 30 medical + 10 Özel Branşlar with 321 specialty engines, 145 Doktor Araçları tiles, 42 Sağlığım portal modules, full dashboard/doktor tree",
+  "method": "Code inventory on release/au-derived checkout vs main golden lists. Depth pills = clinic-ready vs TR wow bar, not spine-completeness alone. Supersedes AU-40-PEDIATRI-AUDIT-01's 44/44 Strong claim for the country-vs-gold question.",
+  "supersedes": "AU-40-PEDIATRI-AUDIT-01 (2026-10-28) for overall AU≈TR gold scoring; that audit remains valid as a spine-completeness rescore of Option-A flags/SOAP/kohort/portal blurbs",
+  "offered_roles": 44,
+  "tr_engines_non_test": 321,
+  "au_muayene_imports_engines": false,
+  "mean_wow_vs_tr_gold": 44,
+  "depth_counts": {
+    "Strong": 3,
+    "Partial": 7,
+    "Thin": 1,
+    "Missing": 1,
+    "Exempt": 1
+  },
+  "domains": [
+    {
+      "domain": "Role roster (Medical Board fit)",
+      "depth": "Strong",
+      "wow": 90,
+      "note": "44 offered roles: EN shared-40 minus 5 (thoracic/cardio-vascular split into cardio-thoracic+vascular; clinic-derm, hair-transplant, longevity removed) plus 9 AU adds including podiatry and speech pathology.",
+      "gap": "None for roster naming. Depth of each role is scored in other rows."
+    },
+    {
+      "domain": "Country pack (IDs, PBS, MHR, Privacy, GST)",
+      "depth": "Strong",
+      "wow": 92,
+      "note": "Medicare checksum, PBS/MHR/GST/poisons/AIR naming, Privacy Act/APP framing. Zero SGK/e-Reçete/MBYS/e-Nabız leaks outside leak-detector tests.",
+      "gap": "AHPRA register verify (AU-AHPRA-VERIFY-01) still research-only; legal review post-beta per Kaan."
+    },
+    {
+      "domain": "Specialty college references",
+      "depth": "Strong",
+      "wow": 88,
+      "note": "Link-only tiles to RACGP/RACP/RACS/ANZCA/RANZCOG/… + allied associations, sourced and dated.",
+      "gap": "No in-product guideline content (by design). Local clinical lead open questions remain on tiles."
+    },
+    {
+      "domain": "Shell / look parity",
+      "depth": "Partial",
+      "wow": 68,
+      "note": "Shared KabukGorunumu for signed-in chrome (AU-LOOK-PARITY-01 DONE). Bugun closer to TR; many inner screens still kit/uza copies.",
+      "gap": "AU-LOOK-PARITY-02 — share Türkiye page components for patients/calendar/visit/note/settings/tools."
+    },
+    {
+      "domain": "Muayene / clinical engines",
+      "depth": "Thin",
+      "wow": 20,
+      "note": "One generic Muayene.tsx (~485 lines) for every role. TR has 321 specialty engine files under specialties/*/engines; present in repo but not imported and not compiled into AU routes (pageExtensions ulke-only).",
+      "gap": "AU-DEPTH-PARITY-03 migration (shared components + country config) or Option-A per-role engines — visit depth is the largest gold gap."
+    },
+    {
+      "domain": "Doktor Araçları (clinical)",
+      "depth": "Partial",
+      "wow": 42,
+      "note": "~130 au-* tools: regulatory Strong; 44 danger-flag ticklists; review/session plans light; shared kit calculators partial. Dietetics suite (~10 tools) is the depth template. 10 slots closed (ATS, FIM, fracture risk, PHQ/GAD, …).",
+      "gap": "AU-ARACLAR-DEPTH-01 for non-dietetics specialties; licence-gated M-CHAT/ATS (GOLD-01d); clinician sign-off (onaysizAciklar)."
+    },
+    {
+      "domain": "Dietetics (Clinical Dietitian)",
+      "depth": "Strong",
+      "wow": 78,
+      "note": "ADIME-aware tools (MST, kJ/protein, IDDSI, refeeding, enteral, labs, goals, meal plan, food diary) + portal coaching cards + landing. Closest AU specialty to TR Özel Branş depth.",
+      "gap": "Named dietitian sign-off (DIETETICS-01a); still not TR diyetisyen engine/chapter mount."
+    },
+    {
+      "domain": "Patient file",
+      "depth": "Partial",
+      "wow": 40,
+      "note": "Hastalar.tsx (~441) + growth chart mount for paeds/GP; photo archive / visit attachments exist as ulke features. TR patient file is ~819 lines plus asi-karnesi/gebelik/konsültasyon/belge sub-routes.",
+      "gap": "Chapter tabs and specialty file depth per branş; coded complaint/diagnosis for reports (AU-REPORTS-DATA-01)."
+    },
+    {
+      "domain": "Calendar / randevu",
+      "depth": "Partial",
+      "wow": 55,
+      "note": "Takvim.tsx (~1129) real; TR randevular page ~1851 with portal request/Google calendar depth.",
+      "gap": "Feature-by-feature parity vs TR randevu (portal talepleri, richer booking) still open under AU-LOOK-PARITY-02 / DEPTH-03 order."
+    },
+    {
+      "domain": "Hasta portalı (Sağlığım)",
+      "depth": "Partial",
+      "wow": 48,
+      "note": "44 role chapters with 3 patient-safe lines + Triple Zero. Dietetics chapter points to meal plan/diary/goals/weight (Partial→Strong for that role). Most roles are awareness blurbs only — Thin by specialty-hasta-portali Strong bar.",
+      "gap": "Build real specialty portal modules (eligibility-gated, demo fixtures) per specialty-hasta-portali; do not flatten all roles into identical shells."
+    },
+    {
+      "domain": "Asistan / voice",
+      "depth": "Partial",
+      "wow": 55,
+      "note": "Live /asistan page, AU personas/voices, Triple Zero pathway in focus. Look chrome shared.",
+      "gap": "AU-DEPTH-PARITY-03-B/C session engine + floating panel; AU-CANLI-03/04/05 navigation and open-patient context; portraits 0/44 (AU-PORTRE-02)."
+    },
+    {
+      "domain": "Faturalama / subscription",
+      "depth": "Partial",
+      "wow": 58,
+      "note": "Fatura screen + Stripe AUD path and billing API allow-list fixed (STRIPE-NOTYA-AU-01/02). Not TR mali suite depth.",
+      "gap": "Self-serve plan picker decision (Kaan); full mali parity not started."
+    },
+    {
+      "domain": "Portraits",
+      "depth": "Missing",
+      "wow": 5,
+      "note": "Generation script ready; 0/44 committed under public/portreler/au.",
+      "gap": "Run au-portreler-wavespeed.mjs and commit assets (AU-PORTRE-02)."
+    },
+    {
+      "domain": "Turkey-only regulatory (MBYS, SGK, e-Nabız, e-Reçete, e-Fatura/GİB, NVI)",
+      "depth": "Exempt",
+      "wow": null,
+      "note": "Correctly absent. AU equivalents live under country pack (PBS/MHR/Medicare/GST).",
+      "gap": "N/A — do not port."
+    }
+  ],
+  "game_changers": [
+    {
+      "rank": 1,
+      "move": "Visit / note clinical depth (engines or shared TR components with country gates)",
+      "why": "An AU MD opening /visit today gets one generic screen; TR MD gets branş engines. Without this, AU cannot claim golden-standard clinical wow.",
+      "size": "L"
+    },
+    {
+      "rank": 2,
+      "move": "Per-specialty clinical calculators (dieteticsTools.ts as template)",
+      "why": "Flags + review calendars are spine, not wow. Physio/psych/OT/audiology/medical specialties still Thin beside dietetics.",
+      "size": "L"
+    },
+    {
+      "rank": 3,
+      "move": "Real Sağlığım specialty modules beyond 3-line blurbs",
+      "why": "Patients need chapter UX like TR portal modules; dietetics already shows the pattern.",
+      "size": "M"
+    },
+    {
+      "rank": 4,
+      "move": "Share TR assistant session engine + floating panel",
+      "why": "Voice is primary; AU still runs a thinner canliOturum without patient tools / cross-page session.",
+      "size": "L"
+    },
+    {
+      "rank": 5,
+      "move": "Generate + ship 44 AU portraits",
+      "why": "Visible product polish; initials undermine invite demos.",
+      "size": "S"
+    }
+  ],
+  "open_commitments_touched": [
+    "AU-DEPTH-PARITY-03",
+    "AU-ARACLAR-DEPTH-01",
+    "AU-LOOK-PARITY-02",
+    "AU-PEDIATRI-GOLD-01c/d",
+    "AU-PORTRE-02",
+    "AU-CANLI-03/04/05",
+    "AU-AHPRA-VERIFY-01"
+  ]
+}
