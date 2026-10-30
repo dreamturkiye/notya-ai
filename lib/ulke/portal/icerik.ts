@@ -34,9 +34,9 @@ import { hastaninSonIstegi, istekAcik, istekGunleri } from './istek'
 import { hastaFormuOzeti } from '../intake/form'
 import { formAcik } from '../intake/icerik'
 import { aktifAracIcerigi, hastaninAracKayitlari } from '../araclar/kayit'
-import { hesabinAraci } from '../araclar/paket'
 import { portalBolumu } from './bolum'
 import { portalAgirlikGecmisi, portalBeslenmeHedefleri, portalOgunPlani, portalYemekGunlugu } from './beslenme'
+import { portalKoclukAyari } from './koclukAyari'
 import type { PortalIcerigi } from './tipler'
 
 export type { PortalIcerigi } from './tipler'
@@ -108,10 +108,10 @@ export async function portalIcerigi(o: PortalOturumu, simdi = Date.now()): Promi
   }
   const bolum = portalBolumu(rol, bugun, takipler)
   let beslenme: PortalIcerigi['beslenme'] | undefined
-  const beslenmeAyar = paket.uygulama?.portal?.beslenme
-  // Dietetics (or any role that can open the pack's meal-plan tool) only — never show an empty meal tab for cardiology.
+  // Dietetics meal plan OR per-role care-plan coaching — never an empty tab for a role without tools.
   const aracIcerik = ozellikAcik('araclar') ? aktifAracIcerigi() : null
-  if (beslenmeAyar && aracIcerik && hesabinAraci(aracIcerik, rol, beslenmeAyar.planAraci)) {
+  const beslenmeAyar = portalKoclukAyari(paket, rol, aracIcerik)
+  if (beslenmeAyar && aracIcerik) {
     const kayitlar = await hastaninAracKayitlari(supabase, doktorId, hastaId)
     if (kayitlar) {
       const plan = portalOgunPlani(kayitlar, beslenmeAyar.planAraci)
@@ -119,7 +119,9 @@ export async function portalIcerigi(o: PortalOturumu, simdi = Date.now()): Promi
       const hedefler = beslenmeAyar.hedefAraci
         ? portalBeslenmeHedefleri(kayitlar, beslenmeAyar.hedefAraci, beslenmeAyar.etiket.hedefAdi)
         : []
-      const agirlikAnahtari = beslenmeAyar.agirlikAraci ?? aracIcerik.antropometriTrendAraci ?? null
+      // Weight numbers only when the pack names a body-size tool for this coaching module (dietetics).
+      const agirlikAnahtari = beslenmeAyar.agirlikAraci
+        ?? (beslenmeAyar.etiket.agirlikBaslik ? aracIcerik.antropometriTrendAraci ?? null : null)
       const agirlik = agirlikAnahtari ? portalAgirlikGecmisi(kayitlar, agirlikAnahtari) : []
       beslenme = { etiket: beslenmeAyar.etiket, plan, gunluk, gunlukYazabilir: true, hedefler, agirlik }
     }

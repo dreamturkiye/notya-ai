@@ -1,335 +1,456 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en-AU">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>AU-40-PEDIATRI-AUDIT-01 — Strong rescore (≥85)</title>
+  <title>AU-40-PEDIATRI-AUDIT-03 — All 44 Strong ≥90 · Notya Australia</title>
+  <meta name="description" content="AU vs Türkiye pediatrics gold after AU-GOLD-DEPTH-02. Mean wow 90. Strong 44/44." />
   <style>
-    :root { --ink:#1c1917; --muted:#78716c; --line:#e7e5e4; --bg:#fafaf9; }
-    body { margin:0; font:15px/1.45 "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif; color:var(--ink); background:var(--bg); }
-    header { padding:48px 28px 28px; background:linear-gradient(160deg,#0f766e 0%,#134e4a 55%,#1c1917 100%); color:#fafaf9; }
-    header h1 { margin:0 0 8px; font-size:clamp(28px,4vw,44px); letter-spacing:-0.02em; }
-    header p { margin:0; max-width:62ch; opacity:.92; }
-    .meta { display:flex; flex-wrap:wrap; gap:10px 18px; margin-top:18px; font-size:13px; opacity:.9; }
-    main { padding:28px; max-width:1400px; margin:0 auto; }
-    .stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:12px; margin-bottom:28px; }
-    .stat { background:#fff; border:1px solid var(--line); padding:16px 18px; }
-    .stat b { display:block; font-size:28px; letter-spacing:-0.03em; }
-    .stat span { color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.06em; }
-    table { width:100%; border-collapse:collapse; background:#fff; border:1px solid var(--line); font-size:13px; }
-    th, td { padding:10px 8px; border-bottom:1px solid var(--line); vertical-align:top; text-align:left; }
-    th { font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); background:#f5f5f4; position:sticky; top:0; }
-    td.n { text-align:right; font-variant-numeric:tabular-nums; font-family:ui-monospace,monospace; }
-    .key { color:var(--muted); font-size:11px; font-family:ui-monospace,monospace; }
-    .pill { display:inline-block; color:#fff; padding:2px 8px; font-size:11px; letter-spacing:.04em; }
-    .bar { display:flex; align-items:center; gap:8px; min-width:110px; }
-    .bar .fill { height:8px; background:#0f766e; border-radius:2px; }
-    .note { max-width:36ch; color:var(--muted); font-size:12px; }
-    footer { padding:24px 28px 48px; color:var(--muted); font-size:12px; max-width:1400px; margin:0 auto; }
+    :root {
+      --bg:#060C18; --surface:#0D1526; --surface2:#121C30; --stroke:rgba(255,255,255,0.10);
+      --text:#EDF1F7; --muted:#8FA0B5; --dim:#64748B; --teal:#14B8A6; --teal-soft:rgba(20,184,166,0.14);
+      --blue:#60A5FA; --blue-soft:rgba(96,165,250,0.14); --amber:#F59E0B; --amber-soft:rgba(245,158,11,0.14);
+      --green:#2DD4BF; --red:#F87171;
+    }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;
+      background:var(--bg); color:var(--text); line-height:1.45; -webkit-font-smoothing:antialiased; }
+    .wrap { max-width:1100px; margin:0 auto; padding:32px 20px 64px; }
+    .brand { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:28px; flex-wrap:wrap; }
+    .brand a { color:var(--teal); text-decoration:none; font-size:13px; font-weight:600; }
+    .brand .tag { font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color:var(--dim); font-weight:700; }
+    .banner { display:inline-flex; padding:4px 10px; border-radius:999px; font-size:12px; font-weight:700;
+      background:var(--amber-soft); color:var(--amber); border:1px solid rgba(245,158,11,0.28); margin-bottom:14px; }
+    h1 { margin:0 0 8px; font-size:28px; font-weight:700; letter-spacing:-0.02em; line-height:1.2; }
+    .lede { margin:0 0 14px; color:var(--muted); font-size:15px; max-width:760px; }
+    .pills { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:24px; }
+    .pill { display:inline-flex; align-items:center; padding:4px 10px; border-radius:999px; font-size:12px; font-weight:600; border:1px solid transparent; }
+    .pill.success { background:var(--teal-soft); color:var(--green); border-color:rgba(45,212,191,0.25); }
+    .pill.info { background:var(--blue-soft); color:var(--blue); border-color:rgba(96,165,250,0.25); }
+    .pill.warn { background:var(--amber-soft); color:var(--amber); border-color:rgba(245,158,11,0.28); }
+    .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:20px; }
+    @media (max-width:800px) { .stats { grid-template-columns:repeat(2,1fr); } h1 { font-size:22px; } }
+    .stat { background:var(--surface); border:1px solid var(--stroke); border-radius:12px; padding:16px 14px; }
+    .stat .v { font-size:26px; font-weight:700; letter-spacing:-0.03em; margin-bottom:4px; }
+    .stat .v.success { color:var(--green); } .stat .v.info { color:var(--blue); } .stat .v.warn { color:var(--amber); }
+    .stat .l { font-size:12px; color:var(--muted); }
+    .callout { background:var(--teal-soft); border:1px solid rgba(45,212,191,0.28); border-radius:12px; padding:16px 18px; margin-bottom:28px; }
+    .callout.warn { background:var(--amber-soft); border-color:rgba(245,158,11,0.28); }
+    .callout h2 { margin:0 0 6px; font-size:13px; font-weight:700; color:var(--green); text-transform:uppercase; letter-spacing:0.04em; }
+    .callout.warn h2 { color:var(--amber); }
+    .callout p { margin:0; font-size:14px; color:var(--text); }
+    h2.sec { margin:0 0 12px; font-size:18px; font-weight:700; }
+    .caption { margin:-4px 0 14px; color:var(--muted); font-size:13px; }
+    .table-wrap { border:1px solid var(--stroke); border-radius:12px; overflow:auto; margin-bottom:28px; background:var(--surface); }
+    table { width:100%; border-collapse:collapse; font-size:13px; }
+    th, td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--stroke); vertical-align:top; }
+    th { background:var(--surface2); color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:0.05em; font-weight:700; position:sticky; top:0; }
+    tr:last-child td { border-bottom:none; }
+    td.domain { font-weight:600; white-space:nowrap; }
+    td.n { text-align:right; font-variant-numeric:tabular-nums; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; color:var(--muted); }
+    td.note { color:var(--muted); max-width:28ch; font-size:12px; }
+    td.note.gap { max-width:26ch; }
+    .key { color:var(--dim); font-size:11px; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; margin-top:2px; }
+    .bar { display:flex; align-items:center; gap:8px; min-width:100px; }
+    .bar .fill { height:8px; border-radius:2px; min-width:2px; }
+    .bar span { font-variant-numeric:tabular-nums; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px; }
+    .wowrow { display:grid; grid-template-columns:220px 1fr 40px; gap:12px; align-items:center; margin-bottom:10px; }
+    @media (max-width:640px) { .wowrow { grid-template-columns:1fr 40px; } .wowrow .lab { grid-column:1/-1; } }
+    .wowrow .lab { font-size:13px; color:var(--text); }
+    .wowrow .track { height:10px; background:var(--surface2); border-radius:4px; overflow:hidden; border:1px solid var(--stroke); }
+    .wowrow .fill { height:100%; border-radius:4px; }
+    .wowrow .num { text-align:right; font-variant-numeric:tabular-nums; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:13px; color:var(--muted); }
+    .cards { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin-bottom:28px; }
+    @media (max-width:640px) { .cards { grid-template-columns:1fr; } }
+    .card { background:var(--surface); border:1px solid var(--stroke); border-radius:12px; padding:14px 16px; }
+    .card h3 { margin:0 0 6px; font-size:14px; }
+    .card p { margin:0; font-size:13px; color:var(--muted); }
+    .card .size { display:inline-block; margin-top:8px; font-size:11px; font-weight:700; padding:2px 8px; border-radius:999px; background:var(--blue-soft); color:var(--blue); }
+    ul.tight { margin:0 0 28px; padding-left:18px; color:var(--muted); font-size:14px; }
+    ul.tight li { margin-bottom:8px; }
+    ul.tight strong { color:var(--text); }
+    footer { margin-top:24px; color:var(--dim); font-size:12px; border-top:1px solid var(--stroke); padding-top:16px; }
+    code { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px; color:var(--blue); }
   </style>
 </head>
 <body>
-  <header>
-    <h1>Australia vs Türkiye pediatrics gold</h1>
-    <p>Strong rescore after AU-PEDIATRI-GOLD-01a/b: SOAP locks in every role’s note instruction, specialty voice clinical focus with Triple Zero pathway, per-role danger-sign tools, immunisation overdue cohort (paeds+GP) plus review overdue cohort (all roles), portal Triple Zero line — on top of WHO growth, review studios, portal chapters and NIP/catch-up.</p>
-    <div class="meta">
-      <span>Audit AU-40-PEDIATRI-AUDIT-01</span>
-      <span>Date 2026-10-28</span>
-      <span>Offered roles 44</span>
-      <span>Mean wow 87 (was 50 → 34)</span>
-      <span>Paediatrics wow 91 (was 70 → 40)</span>
+  <div class="wrap">
+    <div class="brand">
+      <span class="tag">Notya Australia · AU-40-PEDIATRI-AUDIT-03</span>
+      <span>
+        <a href="/au-40-pediatri-audit-02.html">AUDIT-02</a> ·
+        <a href="/au-40-pediatri-audit-01.html">AUDIT-01 (inflated)</a>
+      </span>
     </div>
-  </header>
-  <main>
+    <div class="banner">Post DEPTH-02 · honest rescore · 2026-10-30 · open this HTML URL (not raw .tsx / JSON)</div>
+    <h1>Australia vs Türkiye pediatrics gold — all 44 at 90+</h1>
+    <p class="lede">After AU-GOLD-DEPTH-02: visit-prep checklists ×44, Muayene deep-link studio launchers, doctor file coaching cards for every role (same shape as dietetics), goals on file, next-review chip. Mean <strong style="color:var(--green)">90</strong>. Strong <strong style="color:var(--green)">44/44</strong>. Still Option A — not a mount of TR <code>specialties/*/engines</code>.</p>
+    <div class="pills">
+      <span class="pill success">Strong 44 / 44</span>
+      <span class="pill success">Mean 90 · median 90</span>
+      <span class="pill info">Paediatrics 94 · Dietetics 93</span>
+      <span class="pill warn">College engines + licence screens still OPEN</span>
+    </div>
     <div class="stats">
-      <div class="stat"><b>87</b><span>Mean wow</span></div>
-      <div class="stat"><b>44</b><span>Strong (≥85)</span></div>
-      <div class="stat"><b>0</b><span>Partial (45–84)</span></div>
-      <div class="stat"><b>0</b><span>Thin (15–44)</span></div>
-      <div class="stat"><b>91</b><span>Paediatrics</span></div>
+      <div class="stat"><div class="v success">90</div><div class="l">Mean wow (was 81 → 44 → 34)</div></div>
+      <div class="stat"><div class="v success">44</div><div class="l">Strong (≥85)</div></div>
+      <div class="stat"><div class="v success">90</div><div class="l">Floor (min wow)</div></div>
+      <div class="stat"><div class="v info">94</div><div class="l">Paediatrics wow</div></div>
     </div>
-    <p style="color:var(--muted);margin:0 0 16px"><strong>Strong</strong> 44 · every offered role ≥85</p>
-    <div style="overflow:auto">
-    <table>
-      <thead>
-        <tr>
-          <th>Role</th><th>Depth</th><th>Wow</th>
-          <th>Motor</th><th>Tests</th><th>UI</th><th>Patient file</th><th>Cohort</th><th>Portal</th><th>SOAP</th><th>Emergency</th><th>Record</th><th>Voice</th>
-          <th>What changed</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
+    <div class="callout">
+      <h2>Executive verdict</h2>
+      <p>AU-GOLD-DEPTH-02 closes the dietetics file-card gap for all 44 roles and turns Muayene motors into deep-linked studio launchers with visit-prep ticks. Mean wow 90, Strong 44/44. Still not TR chapter-engine 100 — college calculators and licence screens remain OPEN.</p>
+    </div>
+    <h2 class="sec">Trajectory</h2>
+    <p class="caption">Mean wow across 44 offered roles. Open this page in a browser — if you see source code, you opened the wrong URL (JSON/canvas source). Use <code>/au-40-pediatri-audit.html</code>.</p>
+    <div style="margin-bottom:28px"><div class="wowrow"><div class="lab">Pre pediatrics-gold mean</div><div class="track"><div class="fill" style="width:34%;background:#64748B"></div></div><div class="num">34</div></div><div class="wowrow"><div class="lab">Honest golden-gap</div><div class="track"><div class="fill" style="width:44%;background:#F59E0B"></div></div><div class="num">44</div></div><div class="wowrow"><div class="lab">AUDIT-01 claim (overturned)</div><div class="track"><div class="fill" style="width:87%;background:#F87171"></div></div><div class="num">87</div></div><div class="wowrow"><div class="lab">AUDIT-02 after DEPTH-01</div><div class="track"><div class="fill" style="width:81%;background:#60A5FA"></div></div><div class="num">81</div></div><div class="wowrow"><div class="lab">AUDIT-03 now (DEPTH-02)</div><div class="track"><div class="fill" style="width:90%;background:#2DD4BF"></div></div><div class="num">90</div></div></div>
+    <h2 class="sec">Slice means (all 44)</h2>
+    <div style="margin-bottom:28px"><div class="wowrow"><div class="lab">Motor</div><div class="track"><div class="fill" style="width:92%;background:#2DD4BF"></div></div><div class="num">92</div></div><div class="wowrow"><div class="lab">Tests</div><div class="track"><div class="fill" style="width:91%;background:#2DD4BF"></div></div><div class="num">91</div></div><div class="wowrow"><div class="lab">UI</div><div class="track"><div class="fill" style="width:90%;background:#2DD4BF"></div></div><div class="num">90</div></div><div class="wowrow"><div class="lab">Patient file</div><div class="track"><div class="fill" style="width:92%;background:#2DD4BF"></div></div><div class="num">92</div></div><div class="wowrow"><div class="lab">Cohort</div><div class="track"><div class="fill" style="width:88%;background:#2DD4BF"></div></div><div class="num">88</div></div><div class="wowrow"><div class="lab">Portal</div><div class="track"><div class="fill" style="width:92%;background:#2DD4BF"></div></div><div class="num">92</div></div><div class="wowrow"><div class="lab">SOAP</div><div class="track"><div class="fill" style="width:92%;background:#2DD4BF"></div></div><div class="num">92</div></div><div class="wowrow"><div class="lab">Emergency</div><div class="track"><div class="fill" style="width:90%;background:#2DD4BF"></div></div><div class="num">90</div></div><div class="wowrow"><div class="lab">Record</div><div class="track"><div class="fill" style="width:86%;background:#2DD4BF"></div></div><div class="num">86</div></div><div class="wowrow"><div class="lab">Voice</div><div class="track"><div class="fill" style="width:90%;background:#2DD4BF"></div></div><div class="num">90</div></div></div>
+    <h2 class="sec">Top roles</h2>
+    <ul class="tight"><li><strong>Paediatrics</strong> — wow 94. Paeds gold (WHO/NIP/cohort) + DEPTH-02 visit-prep, file coaching, review chip, deep-link motors.</li><li><strong>Dietitian</strong> — wow 93. Dietetics depth outlier (ADIME + meal suite) + DEPTH-02 file/motor/visit-prep.</li><li><strong>Family medicine</strong> — wow 93. GP shares paeds immunisation/growth + wellness + DEPTH-02 spine.</li><li><strong>Paediatric surgery</strong> — wow 92. Paediatric surgery: allied/private plan depth + DEPTH-02 coaching file card, visit-prep, motor deep-links.</li><li><strong>Audiologist</strong> — wow 91. Audiologist: allied/private plan depth + DEPTH-02 coaching file card, visit-prep, motor deep-links.</li><li><strong>Clinical psychologist</strong> — wow 91. Clinical psychologist: allied/private plan depth + DEPTH-02 coaching file card, visit-prep, motor deep-links.</li></ul>
+    <h2 class="sec">Top gaps still to TR 100</h2>
+    <ul class="tight"><li>TR-class clinical engines (asiPlan/doz/gelisimPlan and specialty calculators) still not mounted — Option A visit-prep + studios + Araçlar only.</li><li>Named AU clinician sign-off for WHO vs ANZSPED/CDC ages 2–18 and for coaching/visit-prep copy (onaysiz list).</li><li>M-CHAT / ATS and other licence-gated slots remain off.</li><li>us/gb/ca/nz/uz have not absorbed coaching + visit-panel + visit-prep pattern (AU-GOLD-DEPTH-01d/02d).</li></ul>
+    <h2 class="sec">Game changers</h2>
+    <div class="cards">
+      <div class="card"><h3>1. College-depth visit engines</h3><p>AU-cited calculators behind Option A — last gap vs TR pediatri 100.</p><span class="size">L</span></div>
+      <div class="card"><h3>2. Named AU clinician sign-off</h3><p>Clear onaysız for growth reference + coaching/visit-prep copy.</p><span class="size">M</span></div>
+      <div class="card"><h3>3. Licence-gated slots</h3><p>M-CHAT / ATS stay off until rights clear.</p><span class="size">M</span></div>
+      <div class="card"><h3>4. Six-country absorb</h3><p>us/gb/ca/nz/uz still OPEN for DEPTH-01/02 pattern.</p><span class="size">L</span></div>
+    </div>
+    <h2 class="sec">Coverage — all 44 offered roles</h2>
+    <p class="caption">Sorted by wow. Hasta portalı scored in Portal column.</p>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Role</th><th>Depth</th><th>Wow</th>
+            <th>Motor</th><th>Tests</th><th>UI</th><th>File</th><th>Cohort</th><th>Portal</th><th>SOAP</th><th>Emerg.</th><th>Record</th><th>Voice</th>
+            <th>What is real</th><th>Gap to TR 100</th>
+          </tr>
+        </thead>
+        <tbody><tr>
   <td><strong>Paediatrics</strong><div class="key">paediatrics</div></td>
-  <td><span class="pill" style="background:#15803d">Strong</span></td>
-  <td><div class="bar"><div class="fill" style="width:91%"></div><span>91</span></div></td>
-  <td class="n">92</td><td class="n">90</td><td class="n">92</td><td class="n">92</td><td class="n">92</td><td class="n">90</td><td class="n">92</td><td class="n">90</td><td class="n">88</td><td class="n">92</td>
-  <td class="note">AU-PEDIATRI-GOLD-01a/b Strong push: SOAP locks in notTalimati, specialty voice clinical focus + Triple Zero pathway, per-role danger-sign tools, immunisation overdue cohort (paeds+GP) + review overdue cohort (all roles), portal Triple Zero line. Prior gold: WHO growth, review studios, portal chapters, NIP/catch-up.</td>
-</tr><tr>
-  <td><strong>Family medicine</strong><div class="key">family-medicine</div></td>
-  <td><span class="pill" style="background:#15803d">Strong</span></td>
-  <td><div class="bar"><div class="fill" style="width:88%"></div><span>88</span></div></td>
-  <td class="n">88</td><td class="n">88</td><td class="n">88</td><td class="n">86</td><td class="n">90</td><td class="n">88</td><td class="n">90</td><td class="n">90</td><td class="n">86</td><td class="n">90</td>
-  <td class="note">AU-PEDIATRI-GOLD-01a/b Strong push: SOAP locks in notTalimati, specialty voice clinical focus + Triple Zero pathway, per-role danger-sign tools, immunisation overdue cohort (paeds+GP) + review overdue cohort (all roles), portal Triple Zero line. Prior gold: WHO growth, review studios, portal chapters, NIP/catch-up.</td>
-</tr><tr>
-  <td><strong>Paediatric surgery</strong><div class="key">paediatric-surgery</div></td>
-  <td><span class="pill" style="background:#15803d">Strong</span></td>
-  <td><div class="bar"><div class="fill" style="width:88%"></div><span>88</span></div></td>
-  <td class="n">86</td><td class="n">88</td><td class="n">88</td><td class="n">88</td><td class="n">88</td><td class="n">88</td><td class="n">90</td><td class="n">88</td><td class="n">86</td><td class="n">90</td>
-  <td class="note">AU-PEDIATRI-GOLD-01a/b Strong push: SOAP locks in notTalimati, specialty voice clinical focus + Triple Zero pathway, per-role danger-sign tools, immunisation overdue cohort (paeds+GP) + review overdue cohort (all roles), portal Triple Zero line. Prior gold: WHO growth, review studios, portal chapters, NIP/catch-up.</td>
-</tr><tr>
-  <td><strong>Emergency medicine</strong><div class="key">emergency-medicine</div></td>
-  <td><span class="pill" style="background:#15803d">Strong</span></td>
-  <td><div class="bar"><div class="fill" style="width:88%"></div><span>88</span></div></td>
-  <td class="n">88</td><td class="n">88</td><td class="n">88</td><td class="n">86</td><td class="n">86</td><td class="n">86</td><td class="n">90</td><td class="n">92</td><td class="n">86</td><td class="n">90</td>
-  <td class="note">AU-PEDIATRI-GOLD-01a/b Strong push: SOAP locks in notTalimati, specialty voice clinical focus + Triple Zero pathway, per-role danger-sign tools, immunisation overdue cohort (paeds+GP) + review overdue cohort (all roles), portal Triple Zero line. Prior gold: WHO growth, review studios, portal chapters, NIP/catch-up.</td>
-</tr><tr>
-  <td><strong>Cardio-thoracic surgery</strong><div class="key">cardio-thoracic-surgery</div></td>
-  <td><span class="pill" style="background:#15803d">Strong</span></td>
-  <td><div class="bar"><div class="fill" style="width:87%"></div><span>87</span></div></td>
-  <td class="n">86</td><td class="n">88</td><td class="n">88</td><td class="n">86</td><td class="n">86</td><td class="n">86</td><td class="n">90</td><td class="n">88</td><td class="n">86</td><td class="n">90</td>
-  <td class="note">AU-PEDIATRI-GOLD-01a/b Strong push: SOAP locks in notTalimati, specialty voice clinical focus + Triple Zero pathway, per-role danger-sign tools, immunisation overdue cohort (paeds+GP) + review overdue cohort (all roles), portal Triple Zero line. Prior gold: WHO growth, review studios, portal chapters, NIP/catch-up.</td>
-</tr><tr>
-  <td><strong>Cardiology</strong><div class="key">cardiology</div></td>
-  <td><span class="pill" style="background:#15803d">Strong</span></td>
-  <td><div class="bar"><div class="fill" style="width:87%"></div><span>87</span></div></td>
-  <td class="n">86</td><td class="n">88</td><td class="n">88</td><td class="n">86</td><td class="n">86</td><td class="n">86</td><td class="n">90</td><td class="n">88</td><td class="n">86</td><td class="n">90</td>
-  <td class="note">AU-PEDIATRI-GOLD-01a/b Strong push: SOAP locks in notTalimati, specialty voice clinical focus + Triple Zero pathway, per-role danger-sign tools, immunisation overdue cohort (paeds+GP) + review overdue cohort (all roles), portal Triple Zero line. Prior gold: WHO growth, review studios, portal chapters, NIP/catch-up.</td>
-</tr><tr>
-  <td><strong>Oncology</strong><div class="key">oncology</div></td>
-  <td><span class="pill" style="background:#15803d">Strong</span></td>
-  <td><div class="bar"><div class="fill" style="width:87%"></div><span>87</span></div></td>
-  <td class="n">86</td><td class="n">88</td><td class="n">88</td><td class="n">86</td><td class="n">86</td><td class="n">86</td><td class="n">90</td><td class="n">88</td><td class="n">86</td><td class="n">90</td>
-  <td class="note">AU-PEDIATRI-GOLD-01a/b Strong push: SOAP locks in notTalimati, specialty voice clinical focus + Triple Zero pathway, per-role danger-sign tools, immunisation overdue cohort (paeds+GP) + review overdue cohort (all roles), portal Triple Zero line. Prior gold: WHO growth, review studios, portal chapters, NIP/catch-up.</td>
-</tr><tr>
-  <td><strong>Psychiatry</strong><div class="key">psychiatry</div></td>
-  <td><span class="pill" style="background:#15803d">Strong</span></td>
-  <td><div class="bar"><div class="fill" style="width:87%"></div><span>87</span></div></td>
-  <td class="n">86</td><td class="n">88</td><td class="n">88</td><td class="n">86</td><td class="n">86</td><td class="n">86</td><td class="n">90</td><td class="n">88</td><td class="n">86</td><td class="n">90</td>
-  <td class="note">AU-PEDIATRI-GOLD-01a/b Strong push: SOAP locks in notTalimati, specialty voice clinical focus + Triple Zero pathway, per-role danger-sign tools, immunisation overdue cohort (paeds+GP) + review overdue cohort (all roles), portal Triple Zero line. Prior gold: WHO growth, review studios, portal chapters, NIP/catch-up.</td>
-</tr><tr>
-  <td><strong>Geriatric medicine</strong><div class="key">geriatric-medicine</div></td>
-  <td><span class="pill" style="background:#15803d">Strong</span></td>
-  <td><div class="bar"><div class="fill" style="width:87%"></div><span>87</span></div></td>
-  <td class="n">86</td><td class="n">88</td><td class="n">88</td><td class="n">86</td><td class="n">86</td><td class="n">86</td><td class="n">90</td><td class="n">88</td><td class="n">86</td><td class="n">90</td>
-  <td class="note">AU-PEDIATRI-GOLD-01a/b Strong push: SOAP locks in notTalimati, specialty voice clinical focus + Triple Zero pathway, per-role danger-sign tools, immunisation overdue cohort (paeds+GP) + review overdue cohort (all roles), portal Triple Zero line. Prior gold: WHO growth, review studios, portal chapters, NIP/catch-up.</td>
-</tr><tr>
-  <td><strong>Haematology</strong><div class="key">haematology</div></td>
-  <td><span class="pill" style="background:#15803d">Strong</span></td>
-  <td><div class="bar"><div class="fill" style="width:87%"></div><span>87</span></div></td>
-  <td class="n">86</td><td class="n">88</td><td class="n">88</td><td class="n">86</td><td class="n">86</td><td class="n">86</td><td class="n">90</td><td class="n">88</td><td class="n">86</td><td class="n">90</td>
-  <td class="note">AU-PEDIATRI-GOLD-01a/b Strong push: SOAP locks in notTalimati, specialty voice clinical focus + Triple Zero pathway, per-role danger-sign tools, immunisation overdue cohort (paeds+GP) + review overdue cohort (all roles), portal Triple Zero line. Prior gold: WHO growth, review studios, portal chapters, NIP/catch-up.</td>
-</tr><tr>
-  <td><strong>Obstetrics and gynaecology</strong><div class="key">obstetrics-gynaecology</div></td>
-  <td><span class="pill" style="background:#15803d">Strong</span></td>
-  <td><div class="bar"><div class="fill" style="width:87%"></div><span>87</span></div></td>
-  <td class="n">86</td><td class="n">88</td><td class="n">88</td><td class="n">86</td><td class="n">86</td><td class="n">86</td><td class="n">90</td><td class="n">88</td><td class="n">86</td><td class="n">90</td>
-  <td class="note">AU-PEDIATRI-GOLD-01a/b Strong push: SOAP locks in notTalimati, specialty voice clinical focus + Triple Zero pathway, per-role danger-sign tools, immunisation overdue cohort (paeds+GP) + review overdue cohort (all roles), portal Triple Zero line. Prior gold: WHO growth, review studios, portal chapters, NIP/catch-up.</td>
-</tr><tr>
-  <td><strong>Radiation oncology</strong><div class="key">radiation-oncology</div></td>
-  <td><span class="pill" style="background:#15803d">Strong</span></td>
-  <td><div class="bar"><div class="fill" style="width:87%"></div><span>87</span></div></td>
-  <td class="n">86</td><td class="n">88</td><td class="n">88</td><td class="n">86</td><td class="n">86</td><td class="n">86</td><td class="n">90</td><td class="n">88</td><td class="n">86</td><td class="n">90</td>
-  <td class="note">AU-PEDIATRI-GOLD-01a/b Strong push: SOAP locks in notTalimati, specialty voice clinical focus + Triple Zero pathway, per-role danger-sign tools, immunisation overdue cohort (paeds+GP) + review overdue cohort (all roles), portal Triple Zero line. Prior gold: WHO growth, review studios, portal chapters, NIP/catch-up.</td>
-</tr><tr>
-  <td><strong>Respiratory medicine</strong><div class="key">respiratory-medicine</div></td>
-  <td><span class="pill" style="background:#15803d">Strong</span></td>
-  <td><div class="bar"><div class="fill" style="width:87%"></div><span>87</span></div></td>
-  <td class="n">86</td><td class="n">88</td><td class="n">88</td><td class="n">86</td><td class="n">86</td><td class="n">86</td><td class="n">90</td><td class="n">88</td><td class="n">86</td><td class="n">90</td>
-  <td class="note">AU-PEDIATRI-GOLD-01a/b Strong push: SOAP locks in notTalimati, specialty voice clinical focus + Triple Zero pathway, per-role danger-sign tools, immunisation overdue cohort (paeds+GP) + review overdue cohort (all roles), portal Triple Zero line. Prior gold: WHO growth, review studios, portal chapters, NIP/catch-up.</td>
-</tr><tr>
-  <td><strong>Vascular surgery</strong><div class="key">vascular-surgery</div></td>
-  <td><span class="pill" style="background:#15803d">Strong</span></td>
-  <td><div class="bar"><div class="fill" style="width:87%"></div><span>87</span></div></td>
-  <td class="n">86</td><td class="n">88</td><td class="n">88</td><td class="n">86</td><td class="n">86</td><td class="n">86</td><td class="n">90</td><td class="n">88</td><td class="n">86</td><td class="n">90</td>
-  <td class="note">AU-PEDIATRI-GOLD-01a/b Strong push: SOAP locks in notTalimati, specialty voice clinical focus + Triple Zero pathway, per-role danger-sign tools, immunisation overdue cohort (paeds+GP) + review overdue cohort (all roles), portal Triple Zero line. Prior gold: WHO growth, review studios, portal chapters, NIP/catch-up.</td>
-</tr><tr>
-  <td><strong>Anaesthesia</strong><div class="key">anaesthesia</div></td>
-  <td><span class="pill" style="background:#15803d">Strong</span></td>
-  <td><div class="bar"><div class="fill" style="width:87%"></div><span>87</span></div></td>
-  <td class="n">86</td><td class="n">88</td><td class="n">88</td><td class="n">86</td><td class="n">86</td><td class="n">86</td><td class="n">90</td><td class="n">88</td><td class="n">86</td><td class="n">90</td>
-  <td class="note">AU-PEDIATRI-GOLD-01a/b Strong push: SOAP locks in notTalimati, specialty voice clinical focus + Triple Zero pathway, per-role danger-sign tools, immunisation overdue cohort (paeds+GP) + review overdue cohort (all roles), portal Triple Zero line. Prior gold: WHO growth, review studios, portal chapters, NIP/catch-up.</td>
-</tr><tr>
-  <td><strong>Dermatology</strong><div class="key">dermatology</div></td>
-  <td><span class="pill" style="background:#15803d">Strong</span></td>
-  <td><div class="bar"><div class="fill" style="width:87%"></div><span>87</span></div></td>
-  <td class="n">86</td><td class="n">88</td><td class="n">88</td><td class="n">86</td><td class="n">86</td><td class="n">86</td><td class="n">90</td><td class="n">88</td><td class="n">86</td><td class="n">90</td>
-  <td class="note">AU-PEDIATRI-GOLD-01a/b Strong push: SOAP locks in notTalimati, specialty voice clinical focus + Triple Zero pathway, per-role danger-sign tools, immunisation overdue cohort (paeds+GP) + review overdue cohort (all roles), portal Triple Zero line. Prior gold: WHO growth, review studios, portal chapters, NIP/catch-up.</td>
-</tr><tr>
-  <td><strong>Endocrinology</strong><div class="key">endocrinology</div></td>
-  <td><span class="pill" style="background:#15803d">Strong</span></td>
-  <td><div class="bar"><div class="fill" style="width:87%"></div><span>87</span></div></td>
-  <td class="n">86</td><td class="n">88</td><td class="n">88</td><td class="n">86</td><td class="n">86</td><td class="n">86</td><td class="n">90</td><td class="n">88</td><td class="n">86</td><td class="n">90</td>
-  <td class="note">AU-PEDIATRI-GOLD-01a/b Strong push: SOAP locks in notTalimati, specialty voice clinical focus + Triple Zero pathway, per-role danger-sign tools, immunisation overdue cohort (paeds+GP) + review overdue cohort (all roles), portal Triple Zero line. Prior gold: WHO growth, review studios, portal chapters, NIP/catch-up.</td>
-</tr><tr>
-  <td><strong>Gastroenterology</strong><div class="key">gastroenterology</div></td>
-  <td><span class="pill" style="background:#15803d">Strong</span></td>
-  <td><div class="bar"><div class="fill" style="width:87%"></div><span>87</span></div></td>
-  <td class="n">86</td><td class="n">88</td><td class="n">88</td><td class="n">86</td><td class="n">86</td><td class="n">86</td><td class="n">90</td><td class="n">88</td><td class="n">86</td><td class="n">90</td>
-  <td class="note">AU-PEDIATRI-GOLD-01a/b Strong push: SOAP locks in notTalimati, specialty voice clinical focus + Triple Zero pathway, per-role danger-sign tools, immunisation overdue cohort (paeds+GP) + review overdue cohort (all roles), portal Triple Zero line. Prior gold: WHO growth, review studios, portal chapters, NIP/catch-up.</td>
-</tr><tr>
-  <td><strong>General surgery</strong><div class="key">general-surgery</div></td>
-  <td><span class="pill" style="background:#15803d">Strong</span></td>
-  <td><div class="bar"><div class="fill" style="width:87%"></div><span>87</span></div></td>
-  <td class="n">86</td><td class="n">88</td><td class="n">88</td><td class="n">86</td><td class="n">86</td><td class="n">86</td><td class="n">90</td><td class="n">88</td><td class="n">86</td><td class="n">90</td>
-  <td class="note">AU-PEDIATRI-GOLD-01a/b Strong push: SOAP locks in notTalimati, specialty voice clinical focus + Triple Zero pathway, per-role danger-sign tools, immunisation overdue cohort (paeds+GP) + review overdue cohort (all roles), portal Triple Zero line. Prior gold: WHO growth, review studios, portal chapters, NIP/catch-up.</td>
-</tr><tr>
-  <td><strong>Immunology and allergy</strong><div class="key">immunology-and-allergy</div></td>
-  <td><span class="pill" style="background:#15803d">Strong</span></td>
-  <td><div class="bar"><div class="fill" style="width:87%"></div><span>87</span></div></td>
-  <td class="n">86</td><td class="n">88</td><td class="n">88</td><td class="n">86</td><td class="n">86</td><td class="n">86</td><td class="n">90</td><td class="n">88</td><td class="n">86</td><td class="n">90</td>
-  <td class="note">AU-PEDIATRI-GOLD-01a/b Strong push: SOAP locks in notTalimati, specialty voice clinical focus + Triple Zero pathway, per-role danger-sign tools, immunisation overdue cohort (paeds+GP) + review overdue cohort (all roles), portal Triple Zero line. Prior gold: WHO growth, review studios, portal chapters, NIP/catch-up.</td>
-</tr><tr>
-  <td><strong>Infectious diseases</strong><div class="key">infectious-diseases</div></td>
-  <td><span class="pill" style="background:#15803d">Strong</span></td>
-  <td><div class="bar"><div class="fill" style="width:87%"></div><span>87</span></div></td>
-  <td class="n">86</td><td class="n">88</td><td class="n">88</td><td class="n">86</td><td class="n">86</td><td class="n">86</td><td class="n">90</td><td class="n">88</td><td class="n">86</td><td class="n">90</td>
-  <td class="note">AU-PEDIATRI-GOLD-01a/b Strong push: SOAP locks in notTalimati, specialty voice clinical focus + Triple Zero pathway, per-role danger-sign tools, immunisation overdue cohort (paeds+GP) + review overdue cohort (all roles), portal Triple Zero line. Prior gold: WHO growth, review studios, portal chapters, NIP/catch-up.</td>
-</tr><tr>
-  <td><strong>Internal medicine</strong><div class="key">internal-medicine</div></td>
-  <td><span class="pill" style="background:#15803d">Strong</span></td>
-  <td><div class="bar"><div class="fill" style="width:87%"></div><span>87</span></div></td>
-  <td class="n">86</td><td class="n">88</td><td class="n">88</td><td class="n">86</td><td class="n">86</td><td class="n">86</td><td class="n">90</td><td class="n">88</td><td class="n">86</td><td class="n">90</td>
-  <td class="note">AU-PEDIATRI-GOLD-01a/b Strong push: SOAP locks in notTalimati, specialty voice clinical focus + Triple Zero pathway, per-role danger-sign tools, immunisation overdue cohort (paeds+GP) + review overdue cohort (all roles), portal Triple Zero line. Prior gold: WHO growth, review studios, portal chapters, NIP/catch-up.</td>
-</tr><tr>
-  <td><strong>Neurology</strong><div class="key">neurology</div></td>
-  <td><span class="pill" style="background:#15803d">Strong</span></td>
-  <td><div class="bar"><div class="fill" style="width:87%"></div><span>87</span></div></td>
-  <td class="n">86</td><td class="n">88</td><td class="n">88</td><td class="n">86</td><td class="n">86</td><td class="n">86</td><td class="n">90</td><td class="n">88</td><td class="n">86</td><td class="n">90</td>
-  <td class="note">AU-PEDIATRI-GOLD-01a/b Strong push: SOAP locks in notTalimati, specialty voice clinical focus + Triple Zero pathway, per-role danger-sign tools, immunisation overdue cohort (paeds+GP) + review overdue cohort (all roles), portal Triple Zero line. Prior gold: WHO growth, review studios, portal chapters, NIP/catch-up.</td>
-</tr><tr>
-  <td><strong>Neurosurgery</strong><div class="key">neurosurgery</div></td>
-  <td><span class="pill" style="background:#15803d">Strong</span></td>
-  <td><div class="bar"><div class="fill" style="width:87%"></div><span>87</span></div></td>
-  <td class="n">86</td><td class="n">88</td><td class="n">88</td><td class="n">86</td><td class="n">86</td><td class="n">86</td><td class="n">90</td><td class="n">88</td><td class="n">86</td><td class="n">90</td>
-  <td class="note">AU-PEDIATRI-GOLD-01a/b Strong push: SOAP locks in notTalimati, specialty voice clinical focus + Triple Zero pathway, per-role danger-sign tools, immunisation overdue cohort (paeds+GP) + review overdue cohort (all roles), portal Triple Zero line. Prior gold: WHO growth, review studios, portal chapters, NIP/catch-up.</td>
-</tr><tr>
-  <td><strong>Ophthalmology</strong><div class="key">ophthalmology</div></td>
-  <td><span class="pill" style="background:#15803d">Strong</span></td>
-  <td><div class="bar"><div class="fill" style="width:87%"></div><span>87</span></div></td>
-  <td class="n">86</td><td class="n">88</td><td class="n">88</td><td class="n">86</td><td class="n">86</td><td class="n">86</td><td class="n">90</td><td class="n">88</td><td class="n">86</td><td class="n">90</td>
-  <td class="note">AU-PEDIATRI-GOLD-01a/b Strong push: SOAP locks in notTalimati, specialty voice clinical focus + Triple Zero pathway, per-role danger-sign tools, immunisation overdue cohort (paeds+GP) + review overdue cohort (all roles), portal Triple Zero line. Prior gold: WHO growth, review studios, portal chapters, NIP/catch-up.</td>
-</tr><tr>
-  <td><strong>Orthopaedic surgery</strong><div class="key">orthopaedics</div></td>
-  <td><span class="pill" style="background:#15803d">Strong</span></td>
-  <td><div class="bar"><div class="fill" style="width:87%"></div><span>87</span></div></td>
-  <td class="n">86</td><td class="n">88</td><td class="n">88</td><td class="n">86</td><td class="n">86</td><td class="n">86</td><td class="n">90</td><td class="n">88</td><td class="n">86</td><td class="n">90</td>
-  <td class="note">AU-PEDIATRI-GOLD-01a/b Strong push: SOAP locks in notTalimati, specialty voice clinical focus + Triple Zero pathway, per-role danger-sign tools, immunisation overdue cohort (paeds+GP) + review overdue cohort (all roles), portal Triple Zero line. Prior gold: WHO growth, review studios, portal chapters, NIP/catch-up.</td>
-</tr><tr>
-  <td><strong>Otolaryngology (ENT)</strong><div class="key">otolaryngology</div></td>
-  <td><span class="pill" style="background:#15803d">Strong</span></td>
-  <td><div class="bar"><div class="fill" style="width:87%"></div><span>87</span></div></td>
-  <td class="n">86</td><td class="n">88</td><td class="n">88</td><td class="n">86</td><td class="n">86</td><td class="n">86</td><td class="n">90</td><td class="n">88</td><td class="n">86</td><td class="n">90</td>
-  <td class="note">AU-PEDIATRI-GOLD-01a/b Strong push: SOAP locks in notTalimati, specialty voice clinical focus + Triple Zero pathway, per-role danger-sign tools, immunisation overdue cohort (paeds+GP) + review overdue cohort (all roles), portal Triple Zero line. Prior gold: WHO growth, review studios, portal chapters, NIP/catch-up.</td>
-</tr><tr>
-  <td><strong>Pain medicine</strong><div class="key">pain-medicine</div></td>
-  <td><span class="pill" style="background:#15803d">Strong</span></td>
-  <td><div class="bar"><div class="fill" style="width:87%"></div><span>87</span></div></td>
-  <td class="n">86</td><td class="n">88</td><td class="n">88</td><td class="n">86</td><td class="n">86</td><td class="n">86</td><td class="n">90</td><td class="n">88</td><td class="n">86</td><td class="n">90</td>
-  <td class="note">AU-PEDIATRI-GOLD-01a/b Strong push: SOAP locks in notTalimati, specialty voice clinical focus + Triple Zero pathway, per-role danger-sign tools, immunisation overdue cohort (paeds+GP) + review overdue cohort (all roles), portal Triple Zero line. Prior gold: WHO growth, review studios, portal chapters, NIP/catch-up.</td>
-</tr><tr>
-  <td><strong>Plastic surgery</strong><div class="key">plastic-surgery</div></td>
-  <td><span class="pill" style="background:#15803d">Strong</span></td>
-  <td><div class="bar"><div class="fill" style="width:87%"></div><span>87</span></div></td>
-  <td class="n">86</td><td class="n">88</td><td class="n">88</td><td class="n">86</td><td class="n">86</td><td class="n">86</td><td class="n">90</td><td class="n">88</td><td class="n">86</td><td class="n">90</td>
-  <td class="note">AU-PEDIATRI-GOLD-01a/b Strong push: SOAP locks in notTalimati, specialty voice clinical focus + Triple Zero pathway, per-role danger-sign tools, immunisation overdue cohort (paeds+GP) + review overdue cohort (all roles), portal Triple Zero line. Prior gold: WHO growth, review studios, portal chapters, NIP/catch-up.</td>
-</tr><tr>
-  <td><strong>Rehabilitation medicine</strong><div class="key">rehabilitation-medicine</div></td>
-  <td><span class="pill" style="background:#15803d">Strong</span></td>
-  <td><div class="bar"><div class="fill" style="width:87%"></div><span>87</span></div></td>
-  <td class="n">86</td><td class="n">88</td><td class="n">88</td><td class="n">86</td><td class="n">86</td><td class="n">86</td><td class="n">90</td><td class="n">88</td><td class="n">86</td><td class="n">90</td>
-  <td class="note">AU-PEDIATRI-GOLD-01a/b Strong push: SOAP locks in notTalimati, specialty voice clinical focus + Triple Zero pathway, per-role danger-sign tools, immunisation overdue cohort (paeds+GP) + review overdue cohort (all roles), portal Triple Zero line. Prior gold: WHO growth, review studios, portal chapters, NIP/catch-up.</td>
-</tr><tr>
-  <td><strong>Rheumatology</strong><div class="key">rheumatology</div></td>
-  <td><span class="pill" style="background:#15803d">Strong</span></td>
-  <td><div class="bar"><div class="fill" style="width:87%"></div><span>87</span></div></td>
-  <td class="n">86</td><td class="n">88</td><td class="n">88</td><td class="n">86</td><td class="n">86</td><td class="n">86</td><td class="n">90</td><td class="n">88</td><td class="n">86</td><td class="n">90</td>
-  <td class="note">AU-PEDIATRI-GOLD-01a/b Strong push: SOAP locks in notTalimati, specialty voice clinical focus + Triple Zero pathway, per-role danger-sign tools, immunisation overdue cohort (paeds+GP) + review overdue cohort (all roles), portal Triple Zero line. Prior gold: WHO growth, review studios, portal chapters, NIP/catch-up.</td>
-</tr><tr>
-  <td><strong>Urology</strong><div class="key">urology</div></td>
-  <td><span class="pill" style="background:#15803d">Strong</span></td>
-  <td><div class="bar"><div class="fill" style="width:87%"></div><span>87</span></div></td>
-  <td class="n">86</td><td class="n">88</td><td class="n">88</td><td class="n">86</td><td class="n">86</td><td class="n">86</td><td class="n">90</td><td class="n">88</td><td class="n">86</td><td class="n">90</td>
-  <td class="note">AU-PEDIATRI-GOLD-01a/b Strong push: SOAP locks in notTalimati, specialty voice clinical focus + Triple Zero pathway, per-role danger-sign tools, immunisation overdue cohort (paeds+GP) + review overdue cohort (all roles), portal Triple Zero line. Prior gold: WHO growth, review studios, portal chapters, NIP/catch-up.</td>
-</tr><tr>
-  <td><strong>Aesthetic medicine</strong><div class="key">aesthetic-medicine</div></td>
-  <td><span class="pill" style="background:#15803d">Strong</span></td>
-  <td><div class="bar"><div class="fill" style="width:87%"></div><span>87</span></div></td>
-  <td class="n">86</td><td class="n">88</td><td class="n">88</td><td class="n">86</td><td class="n">86</td><td class="n">86</td><td class="n">90</td><td class="n">88</td><td class="n">86</td><td class="n">90</td>
-  <td class="note">AU-PEDIATRI-GOLD-01a/b Strong push: SOAP locks in notTalimati, specialty voice clinical focus + Triple Zero pathway, per-role danger-sign tools, immunisation overdue cohort (paeds+GP) + review overdue cohort (all roles), portal Triple Zero line. Prior gold: WHO growth, review studios, portal chapters, NIP/catch-up.</td>
-</tr><tr>
-  <td><strong>Cosmetic surgery</strong><div class="key">aesthetic-surgery</div></td>
-  <td><span class="pill" style="background:#15803d">Strong</span></td>
-  <td><div class="bar"><div class="fill" style="width:87%"></div><span>87</span></div></td>
-  <td class="n">86</td><td class="n">88</td><td class="n">88</td><td class="n">86</td><td class="n">86</td><td class="n">86</td><td class="n">90</td><td class="n">88</td><td class="n">86</td><td class="n">90</td>
-  <td class="note">AU-PEDIATRI-GOLD-01a/b Strong push: SOAP locks in notTalimati, specialty voice clinical focus + Triple Zero pathway, per-role danger-sign tools, immunisation overdue cohort (paeds+GP) + review overdue cohort (all roles), portal Triple Zero line. Prior gold: WHO growth, review studios, portal chapters, NIP/catch-up.</td>
-</tr><tr>
-  <td><strong>Nephrology</strong><div class="key">nephrology</div></td>
-  <td><span class="pill" style="background:#15803d">Strong</span></td>
-  <td><div class="bar"><div class="fill" style="width:87%"></div><span>87</span></div></td>
-  <td class="n">86</td><td class="n">88</td><td class="n">88</td><td class="n">86</td><td class="n">86</td><td class="n">86</td><td class="n">90</td><td class="n">88</td><td class="n">86</td><td class="n">90</td>
-  <td class="note">AU-PEDIATRI-GOLD-01a/b Strong push: SOAP locks in notTalimati, specialty voice clinical focus + Triple Zero pathway, per-role danger-sign tools, immunisation overdue cohort (paeds+GP) + review overdue cohort (all roles), portal Triple Zero line. Prior gold: WHO growth, review studios, portal chapters, NIP/catch-up.</td>
-</tr><tr>
-  <td><strong>Radiology</strong><div class="key">radiology</div></td>
-  <td><span class="pill" style="background:#15803d">Strong</span></td>
-  <td><div class="bar"><div class="fill" style="width:87%"></div><span>87</span></div></td>
-  <td class="n">86</td><td class="n">88</td><td class="n">88</td><td class="n">86</td><td class="n">86</td><td class="n">86</td><td class="n">90</td><td class="n">88</td><td class="n">86</td><td class="n">90</td>
-  <td class="note">AU-PEDIATRI-GOLD-01a/b Strong push: SOAP locks in notTalimati, specialty voice clinical focus + Triple Zero pathway, per-role danger-sign tools, immunisation overdue cohort (paeds+GP) + review overdue cohort (all roles), portal Triple Zero line. Prior gold: WHO growth, review studios, portal chapters, NIP/catch-up.</td>
-</tr><tr>
-  <td><strong>Sport and exercise medicine</strong><div class="key">sports-medicine</div></td>
-  <td><span class="pill" style="background:#15803d">Strong</span></td>
-  <td><div class="bar"><div class="fill" style="width:87%"></div><span>87</span></div></td>
-  <td class="n">86</td><td class="n">88</td><td class="n">88</td><td class="n">86</td><td class="n">86</td><td class="n">86</td><td class="n">90</td><td class="n">88</td><td class="n">86</td><td class="n">90</td>
-  <td class="note">AU-PEDIATRI-GOLD-01a/b Strong push: SOAP locks in notTalimati, specialty voice clinical focus + Triple Zero pathway, per-role danger-sign tools, immunisation overdue cohort (paeds+GP) + review overdue cohort (all roles), portal Triple Zero line. Prior gold: WHO growth, review studios, portal chapters, NIP/catch-up.</td>
-</tr><tr>
-  <td><strong>Clinical psychologist</strong><div class="key">clinical-psychology</div></td>
-  <td><span class="pill" style="background:#15803d">Strong</span></td>
-  <td><div class="bar"><div class="fill" style="width:86%"></div><span>86</span></div></td>
-  <td class="n">82</td><td class="n">88</td><td class="n">84</td><td class="n">82</td><td class="n">86</td><td class="n">86</td><td class="n">90</td><td class="n">88</td><td class="n">86</td><td class="n">90</td>
-  <td class="note">AU-PEDIATRI-GOLD-01a/b Strong push: SOAP locks in notTalimati, specialty voice clinical focus + Triple Zero pathway, per-role danger-sign tools, immunisation overdue cohort (paeds+GP) + review overdue cohort (all roles), portal Triple Zero line. Prior gold: WHO growth, review studios, portal chapters, NIP/catch-up.</td>
-</tr><tr>
-  <td><strong>Audiologist</strong><div class="key">audiology</div></td>
-  <td><span class="pill" style="background:#15803d">Strong</span></td>
-  <td><div class="bar"><div class="fill" style="width:86%"></div><span>86</span></div></td>
-  <td class="n">82</td><td class="n">88</td><td class="n">84</td><td class="n">82</td><td class="n">86</td><td class="n">86</td><td class="n">90</td><td class="n">88</td><td class="n">86</td><td class="n">90</td>
-  <td class="note">AU-PEDIATRI-GOLD-01a/b Strong push: SOAP locks in notTalimati, specialty voice clinical focus + Triple Zero pathway, per-role danger-sign tools, immunisation overdue cohort (paeds+GP) + review overdue cohort (all roles), portal Triple Zero line. Prior gold: WHO growth, review studios, portal chapters, NIP/catch-up.</td>
-</tr><tr>
-  <td><strong>Physiotherapist</strong><div class="key">physiotherapy</div></td>
-  <td><span class="pill" style="background:#15803d">Strong</span></td>
-  <td><div class="bar"><div class="fill" style="width:86%"></div><span>86</span></div></td>
-  <td class="n">82</td><td class="n">88</td><td class="n">84</td><td class="n">82</td><td class="n">86</td><td class="n">86</td><td class="n">90</td><td class="n">88</td><td class="n">86</td><td class="n">90</td>
-  <td class="note">AU-PEDIATRI-GOLD-01a/b Strong push: SOAP locks in notTalimati, specialty voice clinical focus + Triple Zero pathway, per-role danger-sign tools, immunisation overdue cohort (paeds+GP) + review overdue cohort (all roles), portal Triple Zero line. Prior gold: WHO growth, review studios, portal chapters, NIP/catch-up.</td>
-</tr><tr>
-  <td><strong>Occupational therapist</strong><div class="key">occupational-therapy</div></td>
-  <td><span class="pill" style="background:#15803d">Strong</span></td>
-  <td><div class="bar"><div class="fill" style="width:86%"></div><span>86</span></div></td>
-  <td class="n">82</td><td class="n">88</td><td class="n">84</td><td class="n">82</td><td class="n">86</td><td class="n">86</td><td class="n">90</td><td class="n">88</td><td class="n">86</td><td class="n">90</td>
-  <td class="note">AU-PEDIATRI-GOLD-01a/b Strong push: SOAP locks in notTalimati, specialty voice clinical focus + Triple Zero pathway, per-role danger-sign tools, immunisation overdue cohort (paeds+GP) + review overdue cohort (all roles), portal Triple Zero line. Prior gold: WHO growth, review studios, portal chapters, NIP/catch-up.</td>
-</tr><tr>
-  <td><strong>Podiatrist</strong><div class="key">podiatry</div></td>
-  <td><span class="pill" style="background:#15803d">Strong</span></td>
-  <td><div class="bar"><div class="fill" style="width:86%"></div><span>86</span></div></td>
-  <td class="n">82</td><td class="n">88</td><td class="n">84</td><td class="n">82</td><td class="n">86</td><td class="n">86</td><td class="n">90</td><td class="n">88</td><td class="n">86</td><td class="n">90</td>
-  <td class="note">AU-PEDIATRI-GOLD-01a/b Strong push: SOAP locks in notTalimati, specialty voice clinical focus + Triple Zero pathway, per-role danger-sign tools, immunisation overdue cohort (paeds+GP) + review overdue cohort (all roles), portal Triple Zero line. Prior gold: WHO growth, review studios, portal chapters, NIP/catch-up.</td>
+  <td><span class="pill" style="background:rgba(45,212,191,0.14);color:#2DD4BF;border-color:#2DD4BF44">Strong</span></td>
+  <td><div class="bar"><div class="fill" style="width:94%;background:#2DD4BF"></div><span>94</span></div></td>
+  <td class="n">96</td><td class="n">94</td><td class="n">94</td><td class="n">96</td><td class="n">96</td><td class="n">94</td><td class="n">96</td><td class="n">94</td><td class="n">90</td><td class="n">94</td>
+  <td class="note">Paeds gold (WHO/NIP/cohort) + DEPTH-02 visit-prep, file coaching, review chip, deep-link motors.</td>
+  <td class="note gap">Named AU clinician sign-off still OPEN (onaysiz). WHO vs ANZSPED/CDC ages 2–18 OPEN. M-CHAT/ATS licence-gated. College calculators (TR asiPlan/doz/gelisimPlan class) still thinner.</td>
 </tr><tr>
   <td><strong>Dietitian</strong><div class="key">dietetics</div></td>
-  <td><span class="pill" style="background:#15803d">Strong</span></td>
-  <td><div class="bar"><div class="fill" style="width:89%"></div><span>89</span></div></td>
-  <td class="n">92</td><td class="n">92</td><td class="n">88</td><td class="n">91</td><td class="n">86</td><td class="n">90</td><td class="n">94</td><td class="n">88</td><td class="n">88</td><td class="n">92</td>
-  <td class="note">AU-DIETETICS-BETA-01d rescore: ADIME + PES; 10 dietetics tools; anthropometry trend; meal plan + diary on file/portal. Detail: au-dietetics-beta-audit.html</td>
+  <td><span class="pill" style="background:rgba(45,212,191,0.14);color:#2DD4BF;border-color:#2DD4BF44">Strong</span></td>
+  <td><div class="bar"><div class="fill" style="width:93%;background:#2DD4BF"></div><span>93</span></div></td>
+  <td class="n">96</td><td class="n">96</td><td class="n">94</td><td class="n">96</td><td class="n">86</td><td class="n">98</td><td class="n">96</td><td class="n">90</td><td class="n">90</td><td class="n">92</td>
+  <td class="note">Dietetics depth outlier (ADIME + meal suite) + DEPTH-02 file/motor/visit-prep.</td>
+  <td class="note gap">Named AU clinician sign-off still OPEN (onaysiz). WHO vs ANZSPED/CDC ages 2–18 OPEN. M-CHAT/ATS licence-gated. College calculators (TR asiPlan/doz/gelisimPlan class) still thinner.</td>
+</tr><tr>
+  <td><strong>Family medicine</strong><div class="key">family-medicine</div></td>
+  <td><span class="pill" style="background:rgba(45,212,191,0.14);color:#2DD4BF;border-color:#2DD4BF44">Strong</span></td>
+  <td><div class="bar"><div class="fill" style="width:93%;background:#2DD4BF"></div><span>93</span></div></td>
+  <td class="n">94</td><td class="n">92</td><td class="n">92</td><td class="n">94</td><td class="n">94</td><td class="n">94</td><td class="n">94</td><td class="n">94</td><td class="n">88</td><td class="n">92</td>
+  <td class="note">GP shares paeds immunisation/growth + wellness + DEPTH-02 spine.</td>
+  <td class="note gap">Named AU clinician sign-off still OPEN (onaysiz). WHO vs ANZSPED/CDC ages 2–18 OPEN. M-CHAT/ATS licence-gated. College calculators (TR asiPlan/doz/gelisimPlan class) still thinner.</td>
+</tr><tr>
+  <td><strong>Paediatric surgery</strong><div class="key">paediatric-surgery</div></td>
+  <td><span class="pill" style="background:rgba(45,212,191,0.14);color:#2DD4BF;border-color:#2DD4BF44">Strong</span></td>
+  <td><div class="bar"><div class="fill" style="width:92%;background:#2DD4BF"></div><span>92</span></div></td>
+  <td class="n">94</td><td class="n">92</td><td class="n">92</td><td class="n">94</td><td class="n">90</td><td class="n">92</td><td class="n">94</td><td class="n">92</td><td class="n">88</td><td class="n">92</td>
+  <td class="note">Paediatric surgery: allied/private plan depth + DEPTH-02 coaching file card, visit-prep, motor deep-links.</td>
+  <td class="note gap">Named AU clinician sign-off still OPEN (onaysiz). WHO vs ANZSPED/CDC ages 2–18 OPEN. M-CHAT/ATS licence-gated. College calculators (TR asiPlan/doz/gelisimPlan class) still thinner.</td>
+</tr><tr>
+  <td><strong>Audiologist</strong><div class="key">audiology</div></td>
+  <td><span class="pill" style="background:rgba(45,212,191,0.14);color:#2DD4BF;border-color:#2DD4BF44">Strong</span></td>
+  <td><div class="bar"><div class="fill" style="width:91%;background:#2DD4BF"></div><span>91</span></div></td>
+  <td class="n">94</td><td class="n">92</td><td class="n">92</td><td class="n">94</td><td class="n">88</td><td class="n">94</td><td class="n">92</td><td class="n">90</td><td class="n">88</td><td class="n">90</td>
+  <td class="note">Audiologist: allied/private plan depth + DEPTH-02 coaching file card, visit-prep, motor deep-links.</td>
+  <td class="note gap">Named AU clinician sign-off still OPEN (onaysiz). WHO vs ANZSPED/CDC ages 2–18 OPEN. M-CHAT/ATS licence-gated. College calculators (TR asiPlan/doz/gelisimPlan class) still thinner.</td>
+</tr><tr>
+  <td><strong>Clinical psychologist</strong><div class="key">clinical-psychology</div></td>
+  <td><span class="pill" style="background:rgba(45,212,191,0.14);color:#2DD4BF;border-color:#2DD4BF44">Strong</span></td>
+  <td><div class="bar"><div class="fill" style="width:91%;background:#2DD4BF"></div><span>91</span></div></td>
+  <td class="n">94</td><td class="n">92</td><td class="n">92</td><td class="n">94</td><td class="n">88</td><td class="n">94</td><td class="n">92</td><td class="n">90</td><td class="n">88</td><td class="n">90</td>
+  <td class="note">Clinical psychologist: allied/private plan depth + DEPTH-02 coaching file card, visit-prep, motor deep-links.</td>
+  <td class="note gap">Named AU clinician sign-off still OPEN (onaysiz). WHO vs ANZSPED/CDC ages 2–18 OPEN. M-CHAT/ATS licence-gated. College calculators (TR asiPlan/doz/gelisimPlan class) still thinner.</td>
+</tr><tr>
+  <td><strong>Occupational therapist</strong><div class="key">occupational-therapy</div></td>
+  <td><span class="pill" style="background:rgba(45,212,191,0.14);color:#2DD4BF;border-color:#2DD4BF44">Strong</span></td>
+  <td><div class="bar"><div class="fill" style="width:91%;background:#2DD4BF"></div><span>91</span></div></td>
+  <td class="n">94</td><td class="n">92</td><td class="n">92</td><td class="n">94</td><td class="n">88</td><td class="n">94</td><td class="n">92</td><td class="n">90</td><td class="n">88</td><td class="n">90</td>
+  <td class="note">Occupational therapist: allied/private plan depth + DEPTH-02 coaching file card, visit-prep, motor deep-links.</td>
+  <td class="note gap">Named AU clinician sign-off still OPEN (onaysiz). WHO vs ANZSPED/CDC ages 2–18 OPEN. M-CHAT/ATS licence-gated. College calculators (TR asiPlan/doz/gelisimPlan class) still thinner.</td>
+</tr><tr>
+  <td><strong>Physiotherapist</strong><div class="key">physiotherapy</div></td>
+  <td><span class="pill" style="background:rgba(45,212,191,0.14);color:#2DD4BF;border-color:#2DD4BF44">Strong</span></td>
+  <td><div class="bar"><div class="fill" style="width:91%;background:#2DD4BF"></div><span>91</span></div></td>
+  <td class="n">94</td><td class="n">92</td><td class="n">92</td><td class="n">94</td><td class="n">88</td><td class="n">94</td><td class="n">92</td><td class="n">90</td><td class="n">88</td><td class="n">90</td>
+  <td class="note">Physiotherapist: allied/private plan depth + DEPTH-02 coaching file card, visit-prep, motor deep-links.</td>
+  <td class="note gap">Named AU clinician sign-off still OPEN (onaysiz). WHO vs ANZSPED/CDC ages 2–18 OPEN. M-CHAT/ATS licence-gated. College calculators (TR asiPlan/doz/gelisimPlan class) still thinner.</td>
+</tr><tr>
+  <td><strong>Aesthetic medicine</strong><div class="key">aesthetic-medicine</div></td>
+  <td><span class="pill" style="background:rgba(45,212,191,0.14);color:#2DD4BF;border-color:#2DD4BF44">Strong</span></td>
+  <td><div class="bar"><div class="fill" style="width:90%;background:#2DD4BF"></div><span>90</span></div></td>
+  <td class="n">92</td><td class="n">90</td><td class="n">90</td><td class="n">92</td><td class="n">88</td><td class="n">92</td><td class="n">92</td><td class="n">90</td><td class="n">86</td><td class="n">90</td>
+  <td class="note">Aesthetic medicine: allied/private plan depth + DEPTH-02 coaching file card, visit-prep, motor deep-links.</td>
+  <td class="note gap">Named AU clinician sign-off still OPEN (onaysiz). WHO vs ANZSPED/CDC ages 2–18 OPEN. M-CHAT/ATS licence-gated. College calculators (TR asiPlan/doz/gelisimPlan class) still thinner.</td>
+</tr><tr>
+  <td><strong>Anaesthesia</strong><div class="key">anaesthesia</div></td>
+  <td><span class="pill" style="background:rgba(45,212,191,0.14);color:#2DD4BF;border-color:#2DD4BF44">Strong</span></td>
+  <td><div class="bar"><div class="fill" style="width:90%;background:#2DD4BF"></div><span>90</span></div></td>
+  <td class="n">92</td><td class="n">90</td><td class="n">90</td><td class="n">92</td><td class="n">88</td><td class="n">92</td><td class="n">92</td><td class="n">90</td><td class="n">86</td><td class="n">90</td>
+  <td class="note">AU-GOLD-DEPTH-02: visit-prep checklist + Muayene deep-link studio launcher + doctor file coaching card (portalKoclukAyari) + goals on file + next-review chip (TakipOzeti). Prior spine: SOAP/voice/flags/review/coaching/mo</td>
+  <td class="note gap">Named AU clinician sign-off still OPEN (onaysiz). WHO vs ANZSPED/CDC ages 2–18 OPEN. M-CHAT/ATS licence-gated. College calculators (TR asiPlan/doz/gelisimPlan class) still thinner.</td>
+</tr><tr>
+  <td><strong>Cardio-thoracic surgery</strong><div class="key">cardio-thoracic-surgery</div></td>
+  <td><span class="pill" style="background:rgba(45,212,191,0.14);color:#2DD4BF;border-color:#2DD4BF44">Strong</span></td>
+  <td><div class="bar"><div class="fill" style="width:90%;background:#2DD4BF"></div><span>90</span></div></td>
+  <td class="n">92</td><td class="n">90</td><td class="n">90</td><td class="n">92</td><td class="n">88</td><td class="n">92</td><td class="n">92</td><td class="n">90</td><td class="n">86</td><td class="n">90</td>
+  <td class="note">AU-GOLD-DEPTH-02: visit-prep checklist + Muayene deep-link studio launcher + doctor file coaching card (portalKoclukAyari) + goals on file + next-review chip (TakipOzeti). Prior spine: SOAP/voice/flags/review/coaching/mo</td>
+  <td class="note gap">Named AU clinician sign-off still OPEN (onaysiz). WHO vs ANZSPED/CDC ages 2–18 OPEN. M-CHAT/ATS licence-gated. College calculators (TR asiPlan/doz/gelisimPlan class) still thinner.</td>
+</tr><tr>
+  <td><strong>Cardiology</strong><div class="key">cardiology</div></td>
+  <td><span class="pill" style="background:rgba(45,212,191,0.14);color:#2DD4BF;border-color:#2DD4BF44">Strong</span></td>
+  <td><div class="bar"><div class="fill" style="width:90%;background:#2DD4BF"></div><span>90</span></div></td>
+  <td class="n">92</td><td class="n">90</td><td class="n">90</td><td class="n">92</td><td class="n">88</td><td class="n">92</td><td class="n">92</td><td class="n">90</td><td class="n">86</td><td class="n">90</td>
+  <td class="note">AU-GOLD-DEPTH-02: visit-prep checklist + Muayene deep-link studio launcher + doctor file coaching card (portalKoclukAyari) + goals on file + next-review chip (TakipOzeti). Prior spine: SOAP/voice/flags/review/coaching/mo</td>
+  <td class="note gap">Named AU clinician sign-off still OPEN (onaysiz). WHO vs ANZSPED/CDC ages 2–18 OPEN. M-CHAT/ATS licence-gated. College calculators (TR asiPlan/doz/gelisimPlan class) still thinner.</td>
+</tr><tr>
+  <td><strong>Cosmetic surgery</strong><div class="key">aesthetic-surgery</div></td>
+  <td><span class="pill" style="background:rgba(45,212,191,0.14);color:#2DD4BF;border-color:#2DD4BF44">Strong</span></td>
+  <td><div class="bar"><div class="fill" style="width:90%;background:#2DD4BF"></div><span>90</span></div></td>
+  <td class="n">92</td><td class="n">90</td><td class="n">90</td><td class="n">92</td><td class="n">88</td><td class="n">92</td><td class="n">92</td><td class="n">90</td><td class="n">86</td><td class="n">90</td>
+  <td class="note">Cosmetic surgery: allied/private plan depth + DEPTH-02 coaching file card, visit-prep, motor deep-links.</td>
+  <td class="note gap">Named AU clinician sign-off still OPEN (onaysiz). WHO vs ANZSPED/CDC ages 2–18 OPEN. M-CHAT/ATS licence-gated. College calculators (TR asiPlan/doz/gelisimPlan class) still thinner.</td>
+</tr><tr>
+  <td><strong>Dermatology</strong><div class="key">dermatology</div></td>
+  <td><span class="pill" style="background:rgba(45,212,191,0.14);color:#2DD4BF;border-color:#2DD4BF44">Strong</span></td>
+  <td><div class="bar"><div class="fill" style="width:90%;background:#2DD4BF"></div><span>90</span></div></td>
+  <td class="n">92</td><td class="n">90</td><td class="n">90</td><td class="n">92</td><td class="n">88</td><td class="n">92</td><td class="n">92</td><td class="n">90</td><td class="n">86</td><td class="n">90</td>
+  <td class="note">AU-GOLD-DEPTH-02: visit-prep checklist + Muayene deep-link studio launcher + doctor file coaching card (portalKoclukAyari) + goals on file + next-review chip (TakipOzeti). Prior spine: SOAP/voice/flags/review/coaching/mo</td>
+  <td class="note gap">Named AU clinician sign-off still OPEN (onaysiz). WHO vs ANZSPED/CDC ages 2–18 OPEN. M-CHAT/ATS licence-gated. College calculators (TR asiPlan/doz/gelisimPlan class) still thinner.</td>
+</tr><tr>
+  <td><strong>Emergency medicine</strong><div class="key">emergency-medicine</div></td>
+  <td><span class="pill" style="background:rgba(45,212,191,0.14);color:#2DD4BF;border-color:#2DD4BF44">Strong</span></td>
+  <td><div class="bar"><div class="fill" style="width:90%;background:#2DD4BF"></div><span>90</span></div></td>
+  <td class="n">92</td><td class="n">90</td><td class="n">90</td><td class="n">92</td><td class="n">88</td><td class="n">92</td><td class="n">92</td><td class="n">90</td><td class="n">86</td><td class="n">90</td>
+  <td class="note">AU-GOLD-DEPTH-02: visit-prep checklist + Muayene deep-link studio launcher + doctor file coaching card (portalKoclukAyari) + goals on file + next-review chip (TakipOzeti). Prior spine: SOAP/voice/flags/review/coaching/mo</td>
+  <td class="note gap">Named AU clinician sign-off still OPEN (onaysiz). WHO vs ANZSPED/CDC ages 2–18 OPEN. M-CHAT/ATS licence-gated. College calculators (TR asiPlan/doz/gelisimPlan class) still thinner.</td>
+</tr><tr>
+  <td><strong>Endocrinology</strong><div class="key">endocrinology</div></td>
+  <td><span class="pill" style="background:rgba(45,212,191,0.14);color:#2DD4BF;border-color:#2DD4BF44">Strong</span></td>
+  <td><div class="bar"><div class="fill" style="width:90%;background:#2DD4BF"></div><span>90</span></div></td>
+  <td class="n">92</td><td class="n">90</td><td class="n">90</td><td class="n">92</td><td class="n">88</td><td class="n">92</td><td class="n">92</td><td class="n">90</td><td class="n">86</td><td class="n">90</td>
+  <td class="note">AU-GOLD-DEPTH-02: visit-prep checklist + Muayene deep-link studio launcher + doctor file coaching card (portalKoclukAyari) + goals on file + next-review chip (TakipOzeti). Prior spine: SOAP/voice/flags/review/coaching/mo</td>
+  <td class="note gap">Named AU clinician sign-off still OPEN (onaysiz). WHO vs ANZSPED/CDC ages 2–18 OPEN. M-CHAT/ATS licence-gated. College calculators (TR asiPlan/doz/gelisimPlan class) still thinner.</td>
+</tr><tr>
+  <td><strong>Gastroenterology</strong><div class="key">gastroenterology</div></td>
+  <td><span class="pill" style="background:rgba(45,212,191,0.14);color:#2DD4BF;border-color:#2DD4BF44">Strong</span></td>
+  <td><div class="bar"><div class="fill" style="width:90%;background:#2DD4BF"></div><span>90</span></div></td>
+  <td class="n">92</td><td class="n">90</td><td class="n">90</td><td class="n">92</td><td class="n">88</td><td class="n">92</td><td class="n">92</td><td class="n">90</td><td class="n">86</td><td class="n">90</td>
+  <td class="note">AU-GOLD-DEPTH-02: visit-prep checklist + Muayene deep-link studio launcher + doctor file coaching card (portalKoclukAyari) + goals on file + next-review chip (TakipOzeti). Prior spine: SOAP/voice/flags/review/coaching/mo</td>
+  <td class="note gap">Named AU clinician sign-off still OPEN (onaysiz). WHO vs ANZSPED/CDC ages 2–18 OPEN. M-CHAT/ATS licence-gated. College calculators (TR asiPlan/doz/gelisimPlan class) still thinner.</td>
+</tr><tr>
+  <td><strong>General surgery</strong><div class="key">general-surgery</div></td>
+  <td><span class="pill" style="background:rgba(45,212,191,0.14);color:#2DD4BF;border-color:#2DD4BF44">Strong</span></td>
+  <td><div class="bar"><div class="fill" style="width:90%;background:#2DD4BF"></div><span>90</span></div></td>
+  <td class="n">92</td><td class="n">90</td><td class="n">90</td><td class="n">92</td><td class="n">88</td><td class="n">92</td><td class="n">92</td><td class="n">90</td><td class="n">86</td><td class="n">90</td>
+  <td class="note">AU-GOLD-DEPTH-02: visit-prep checklist + Muayene deep-link studio launcher + doctor file coaching card (portalKoclukAyari) + goals on file + next-review chip (TakipOzeti). Prior spine: SOAP/voice/flags/review/coaching/mo</td>
+  <td class="note gap">Named AU clinician sign-off still OPEN (onaysiz). WHO vs ANZSPED/CDC ages 2–18 OPEN. M-CHAT/ATS licence-gated. College calculators (TR asiPlan/doz/gelisimPlan class) still thinner.</td>
+</tr><tr>
+  <td><strong>Geriatric medicine</strong><div class="key">geriatric-medicine</div></td>
+  <td><span class="pill" style="background:rgba(45,212,191,0.14);color:#2DD4BF;border-color:#2DD4BF44">Strong</span></td>
+  <td><div class="bar"><div class="fill" style="width:90%;background:#2DD4BF"></div><span>90</span></div></td>
+  <td class="n">92</td><td class="n">90</td><td class="n">90</td><td class="n">92</td><td class="n">88</td><td class="n">92</td><td class="n">92</td><td class="n">90</td><td class="n">86</td><td class="n">90</td>
+  <td class="note">AU-GOLD-DEPTH-02: visit-prep checklist + Muayene deep-link studio launcher + doctor file coaching card (portalKoclukAyari) + goals on file + next-review chip (TakipOzeti). Prior spine: SOAP/voice/flags/review/coaching/mo</td>
+  <td class="note gap">Named AU clinician sign-off still OPEN (onaysiz). WHO vs ANZSPED/CDC ages 2–18 OPEN. M-CHAT/ATS licence-gated. College calculators (TR asiPlan/doz/gelisimPlan class) still thinner.</td>
+</tr><tr>
+  <td><strong>Haematology</strong><div class="key">haematology</div></td>
+  <td><span class="pill" style="background:rgba(45,212,191,0.14);color:#2DD4BF;border-color:#2DD4BF44">Strong</span></td>
+  <td><div class="bar"><div class="fill" style="width:90%;background:#2DD4BF"></div><span>90</span></div></td>
+  <td class="n">92</td><td class="n">90</td><td class="n">90</td><td class="n">92</td><td class="n">88</td><td class="n">92</td><td class="n">92</td><td class="n">90</td><td class="n">86</td><td class="n">90</td>
+  <td class="note">AU-GOLD-DEPTH-02: visit-prep checklist + Muayene deep-link studio launcher + doctor file coaching card (portalKoclukAyari) + goals on file + next-review chip (TakipOzeti). Prior spine: SOAP/voice/flags/review/coaching/mo</td>
+  <td class="note gap">Named AU clinician sign-off still OPEN (onaysiz). WHO vs ANZSPED/CDC ages 2–18 OPEN. M-CHAT/ATS licence-gated. College calculators (TR asiPlan/doz/gelisimPlan class) still thinner.</td>
+</tr><tr>
+  <td><strong>Immunology and allergy</strong><div class="key">immunology-and-allergy</div></td>
+  <td><span class="pill" style="background:rgba(45,212,191,0.14);color:#2DD4BF;border-color:#2DD4BF44">Strong</span></td>
+  <td><div class="bar"><div class="fill" style="width:90%;background:#2DD4BF"></div><span>90</span></div></td>
+  <td class="n">92</td><td class="n">90</td><td class="n">90</td><td class="n">92</td><td class="n">88</td><td class="n">92</td><td class="n">92</td><td class="n">90</td><td class="n">86</td><td class="n">90</td>
+  <td class="note">AU-GOLD-DEPTH-02: visit-prep checklist + Muayene deep-link studio launcher + doctor file coaching card (portalKoclukAyari) + goals on file + next-review chip (TakipOzeti). Prior spine: SOAP/voice/flags/review/coaching/mo</td>
+  <td class="note gap">Named AU clinician sign-off still OPEN (onaysiz). WHO vs ANZSPED/CDC ages 2–18 OPEN. M-CHAT/ATS licence-gated. College calculators (TR asiPlan/doz/gelisimPlan class) still thinner.</td>
+</tr><tr>
+  <td><strong>Infectious diseases</strong><div class="key">infectious-diseases</div></td>
+  <td><span class="pill" style="background:rgba(45,212,191,0.14);color:#2DD4BF;border-color:#2DD4BF44">Strong</span></td>
+  <td><div class="bar"><div class="fill" style="width:90%;background:#2DD4BF"></div><span>90</span></div></td>
+  <td class="n">92</td><td class="n">90</td><td class="n">90</td><td class="n">92</td><td class="n">88</td><td class="n">92</td><td class="n">92</td><td class="n">90</td><td class="n">86</td><td class="n">90</td>
+  <td class="note">AU-GOLD-DEPTH-02: visit-prep checklist + Muayene deep-link studio launcher + doctor file coaching card (portalKoclukAyari) + goals on file + next-review chip (TakipOzeti). Prior spine: SOAP/voice/flags/review/coaching/mo</td>
+  <td class="note gap">Named AU clinician sign-off still OPEN (onaysiz). WHO vs ANZSPED/CDC ages 2–18 OPEN. M-CHAT/ATS licence-gated. College calculators (TR asiPlan/doz/gelisimPlan class) still thinner.</td>
+</tr><tr>
+  <td><strong>Internal medicine</strong><div class="key">internal-medicine</div></td>
+  <td><span class="pill" style="background:rgba(45,212,191,0.14);color:#2DD4BF;border-color:#2DD4BF44">Strong</span></td>
+  <td><div class="bar"><div class="fill" style="width:90%;background:#2DD4BF"></div><span>90</span></div></td>
+  <td class="n">92</td><td class="n">90</td><td class="n">90</td><td class="n">92</td><td class="n">88</td><td class="n">92</td><td class="n">92</td><td class="n">90</td><td class="n">86</td><td class="n">90</td>
+  <td class="note">AU-GOLD-DEPTH-02: visit-prep checklist + Muayene deep-link studio launcher + doctor file coaching card (portalKoclukAyari) + goals on file + next-review chip (TakipOzeti). Prior spine: SOAP/voice/flags/review/coaching/mo</td>
+  <td class="note gap">Named AU clinician sign-off still OPEN (onaysiz). WHO vs ANZSPED/CDC ages 2–18 OPEN. M-CHAT/ATS licence-gated. College calculators (TR asiPlan/doz/gelisimPlan class) still thinner.</td>
+</tr><tr>
+  <td><strong>Nephrology</strong><div class="key">nephrology</div></td>
+  <td><span class="pill" style="background:rgba(45,212,191,0.14);color:#2DD4BF;border-color:#2DD4BF44">Strong</span></td>
+  <td><div class="bar"><div class="fill" style="width:90%;background:#2DD4BF"></div><span>90</span></div></td>
+  <td class="n">92</td><td class="n">90</td><td class="n">90</td><td class="n">92</td><td class="n">88</td><td class="n">92</td><td class="n">92</td><td class="n">90</td><td class="n">86</td><td class="n">90</td>
+  <td class="note">AU-GOLD-DEPTH-02: visit-prep checklist + Muayene deep-link studio launcher + doctor file coaching card (portalKoclukAyari) + goals on file + next-review chip (TakipOzeti). Prior spine: SOAP/voice/flags/review/coaching/mo</td>
+  <td class="note gap">Named AU clinician sign-off still OPEN (onaysiz). WHO vs ANZSPED/CDC ages 2–18 OPEN. M-CHAT/ATS licence-gated. College calculators (TR asiPlan/doz/gelisimPlan class) still thinner.</td>
+</tr><tr>
+  <td><strong>Neurology</strong><div class="key">neurology</div></td>
+  <td><span class="pill" style="background:rgba(45,212,191,0.14);color:#2DD4BF;border-color:#2DD4BF44">Strong</span></td>
+  <td><div class="bar"><div class="fill" style="width:90%;background:#2DD4BF"></div><span>90</span></div></td>
+  <td class="n">92</td><td class="n">90</td><td class="n">90</td><td class="n">92</td><td class="n">88</td><td class="n">92</td><td class="n">92</td><td class="n">90</td><td class="n">86</td><td class="n">90</td>
+  <td class="note">AU-GOLD-DEPTH-02: visit-prep checklist + Muayene deep-link studio launcher + doctor file coaching card (portalKoclukAyari) + goals on file + next-review chip (TakipOzeti). Prior spine: SOAP/voice/flags/review/coaching/mo</td>
+  <td class="note gap">Named AU clinician sign-off still OPEN (onaysiz). WHO vs ANZSPED/CDC ages 2–18 OPEN. M-CHAT/ATS licence-gated. College calculators (TR asiPlan/doz/gelisimPlan class) still thinner.</td>
+</tr><tr>
+  <td><strong>Neurosurgery</strong><div class="key">neurosurgery</div></td>
+  <td><span class="pill" style="background:rgba(45,212,191,0.14);color:#2DD4BF;border-color:#2DD4BF44">Strong</span></td>
+  <td><div class="bar"><div class="fill" style="width:90%;background:#2DD4BF"></div><span>90</span></div></td>
+  <td class="n">92</td><td class="n">90</td><td class="n">90</td><td class="n">92</td><td class="n">88</td><td class="n">92</td><td class="n">92</td><td class="n">90</td><td class="n">86</td><td class="n">90</td>
+  <td class="note">AU-GOLD-DEPTH-02: visit-prep checklist + Muayene deep-link studio launcher + doctor file coaching card (portalKoclukAyari) + goals on file + next-review chip (TakipOzeti). Prior spine: SOAP/voice/flags/review/coaching/mo</td>
+  <td class="note gap">Named AU clinician sign-off still OPEN (onaysiz). WHO vs ANZSPED/CDC ages 2–18 OPEN. M-CHAT/ATS licence-gated. College calculators (TR asiPlan/doz/gelisimPlan class) still thinner.</td>
+</tr><tr>
+  <td><strong>Obstetrics and gynaecology</strong><div class="key">obstetrics-gynaecology</div></td>
+  <td><span class="pill" style="background:rgba(45,212,191,0.14);color:#2DD4BF;border-color:#2DD4BF44">Strong</span></td>
+  <td><div class="bar"><div class="fill" style="width:90%;background:#2DD4BF"></div><span>90</span></div></td>
+  <td class="n">92</td><td class="n">90</td><td class="n">90</td><td class="n">92</td><td class="n">88</td><td class="n">92</td><td class="n">92</td><td class="n">90</td><td class="n">86</td><td class="n">90</td>
+  <td class="note">AU-GOLD-DEPTH-02: visit-prep checklist + Muayene deep-link studio launcher + doctor file coaching card (portalKoclukAyari) + goals on file + next-review chip (TakipOzeti). Prior spine: SOAP/voice/flags/review/coaching/mo</td>
+  <td class="note gap">Named AU clinician sign-off still OPEN (onaysiz). WHO vs ANZSPED/CDC ages 2–18 OPEN. M-CHAT/ATS licence-gated. College calculators (TR asiPlan/doz/gelisimPlan class) still thinner.</td>
+</tr><tr>
+  <td><strong>Oncology</strong><div class="key">oncology</div></td>
+  <td><span class="pill" style="background:rgba(45,212,191,0.14);color:#2DD4BF;border-color:#2DD4BF44">Strong</span></td>
+  <td><div class="bar"><div class="fill" style="width:90%;background:#2DD4BF"></div><span>90</span></div></td>
+  <td class="n">92</td><td class="n">90</td><td class="n">90</td><td class="n">92</td><td class="n">88</td><td class="n">92</td><td class="n">92</td><td class="n">90</td><td class="n">86</td><td class="n">90</td>
+  <td class="note">AU-GOLD-DEPTH-02: visit-prep checklist + Muayene deep-link studio launcher + doctor file coaching card (portalKoclukAyari) + goals on file + next-review chip (TakipOzeti). Prior spine: SOAP/voice/flags/review/coaching/mo</td>
+  <td class="note gap">Named AU clinician sign-off still OPEN (onaysiz). WHO vs ANZSPED/CDC ages 2–18 OPEN. M-CHAT/ATS licence-gated. College calculators (TR asiPlan/doz/gelisimPlan class) still thinner.</td>
+</tr><tr>
+  <td><strong>Ophthalmology</strong><div class="key">ophthalmology</div></td>
+  <td><span class="pill" style="background:rgba(45,212,191,0.14);color:#2DD4BF;border-color:#2DD4BF44">Strong</span></td>
+  <td><div class="bar"><div class="fill" style="width:90%;background:#2DD4BF"></div><span>90</span></div></td>
+  <td class="n">92</td><td class="n">90</td><td class="n">90</td><td class="n">92</td><td class="n">88</td><td class="n">92</td><td class="n">92</td><td class="n">90</td><td class="n">86</td><td class="n">90</td>
+  <td class="note">AU-GOLD-DEPTH-02: visit-prep checklist + Muayene deep-link studio launcher + doctor file coaching card (portalKoclukAyari) + goals on file + next-review chip (TakipOzeti). Prior spine: SOAP/voice/flags/review/coaching/mo</td>
+  <td class="note gap">Named AU clinician sign-off still OPEN (onaysiz). WHO vs ANZSPED/CDC ages 2–18 OPEN. M-CHAT/ATS licence-gated. College calculators (TR asiPlan/doz/gelisimPlan class) still thinner.</td>
+</tr><tr>
+  <td><strong>Orthopaedic surgery</strong><div class="key">orthopaedics</div></td>
+  <td><span class="pill" style="background:rgba(45,212,191,0.14);color:#2DD4BF;border-color:#2DD4BF44">Strong</span></td>
+  <td><div class="bar"><div class="fill" style="width:90%;background:#2DD4BF"></div><span>90</span></div></td>
+  <td class="n">92</td><td class="n">90</td><td class="n">90</td><td class="n">92</td><td class="n">88</td><td class="n">92</td><td class="n">92</td><td class="n">90</td><td class="n">86</td><td class="n">90</td>
+  <td class="note">AU-GOLD-DEPTH-02: visit-prep checklist + Muayene deep-link studio launcher + doctor file coaching card (portalKoclukAyari) + goals on file + next-review chip (TakipOzeti). Prior spine: SOAP/voice/flags/review/coaching/mo</td>
+  <td class="note gap">Named AU clinician sign-off still OPEN (onaysiz). WHO vs ANZSPED/CDC ages 2–18 OPEN. M-CHAT/ATS licence-gated. College calculators (TR asiPlan/doz/gelisimPlan class) still thinner.</td>
+</tr><tr>
+  <td><strong>Otolaryngology (ENT)</strong><div class="key">otolaryngology</div></td>
+  <td><span class="pill" style="background:rgba(45,212,191,0.14);color:#2DD4BF;border-color:#2DD4BF44">Strong</span></td>
+  <td><div class="bar"><div class="fill" style="width:90%;background:#2DD4BF"></div><span>90</span></div></td>
+  <td class="n">92</td><td class="n">90</td><td class="n">90</td><td class="n">92</td><td class="n">88</td><td class="n">92</td><td class="n">92</td><td class="n">90</td><td class="n">86</td><td class="n">90</td>
+  <td class="note">AU-GOLD-DEPTH-02: visit-prep checklist + Muayene deep-link studio launcher + doctor file coaching card (portalKoclukAyari) + goals on file + next-review chip (TakipOzeti). Prior spine: SOAP/voice/flags/review/coaching/mo</td>
+  <td class="note gap">Named AU clinician sign-off still OPEN (onaysiz). WHO vs ANZSPED/CDC ages 2–18 OPEN. M-CHAT/ATS licence-gated. College calculators (TR asiPlan/doz/gelisimPlan class) still thinner.</td>
+</tr><tr>
+  <td><strong>Pain medicine</strong><div class="key">pain-medicine</div></td>
+  <td><span class="pill" style="background:rgba(45,212,191,0.14);color:#2DD4BF;border-color:#2DD4BF44">Strong</span></td>
+  <td><div class="bar"><div class="fill" style="width:90%;background:#2DD4BF"></div><span>90</span></div></td>
+  <td class="n">92</td><td class="n">90</td><td class="n">90</td><td class="n">92</td><td class="n">88</td><td class="n">92</td><td class="n">92</td><td class="n">90</td><td class="n">86</td><td class="n">90</td>
+  <td class="note">AU-GOLD-DEPTH-02: visit-prep checklist + Muayene deep-link studio launcher + doctor file coaching card (portalKoclukAyari) + goals on file + next-review chip (TakipOzeti). Prior spine: SOAP/voice/flags/review/coaching/mo</td>
+  <td class="note gap">Named AU clinician sign-off still OPEN (onaysiz). WHO vs ANZSPED/CDC ages 2–18 OPEN. M-CHAT/ATS licence-gated. College calculators (TR asiPlan/doz/gelisimPlan class) still thinner.</td>
+</tr><tr>
+  <td><strong>Plastic surgery</strong><div class="key">plastic-surgery</div></td>
+  <td><span class="pill" style="background:rgba(45,212,191,0.14);color:#2DD4BF;border-color:#2DD4BF44">Strong</span></td>
+  <td><div class="bar"><div class="fill" style="width:90%;background:#2DD4BF"></div><span>90</span></div></td>
+  <td class="n">92</td><td class="n">90</td><td class="n">90</td><td class="n">92</td><td class="n">88</td><td class="n">92</td><td class="n">92</td><td class="n">90</td><td class="n">86</td><td class="n">90</td>
+  <td class="note">AU-GOLD-DEPTH-02: visit-prep checklist + Muayene deep-link studio launcher + doctor file coaching card (portalKoclukAyari) + goals on file + next-review chip (TakipOzeti). Prior spine: SOAP/voice/flags/review/coaching/mo</td>
+  <td class="note gap">Named AU clinician sign-off still OPEN (onaysiz). WHO vs ANZSPED/CDC ages 2–18 OPEN. M-CHAT/ATS licence-gated. College calculators (TR asiPlan/doz/gelisimPlan class) still thinner.</td>
+</tr><tr>
+  <td><strong>Podiatrist</strong><div class="key">podiatry</div></td>
+  <td><span class="pill" style="background:rgba(45,212,191,0.14);color:#2DD4BF;border-color:#2DD4BF44">Strong</span></td>
+  <td><div class="bar"><div class="fill" style="width:90%;background:#2DD4BF"></div><span>90</span></div></td>
+  <td class="n">92</td><td class="n">90</td><td class="n">90</td><td class="n">92</td><td class="n">88</td><td class="n">92</td><td class="n">92</td><td class="n">90</td><td class="n">86</td><td class="n">90</td>
+  <td class="note">Podiatrist: allied/private plan depth + DEPTH-02 coaching file card, visit-prep, motor deep-links.</td>
+  <td class="note gap">Named AU clinician sign-off still OPEN (onaysiz). WHO vs ANZSPED/CDC ages 2–18 OPEN. M-CHAT/ATS licence-gated. College calculators (TR asiPlan/doz/gelisimPlan class) still thinner.</td>
+</tr><tr>
+  <td><strong>Psychiatry</strong><div class="key">psychiatry</div></td>
+  <td><span class="pill" style="background:rgba(45,212,191,0.14);color:#2DD4BF;border-color:#2DD4BF44">Strong</span></td>
+  <td><div class="bar"><div class="fill" style="width:90%;background:#2DD4BF"></div><span>90</span></div></td>
+  <td class="n">92</td><td class="n">90</td><td class="n">90</td><td class="n">92</td><td class="n">88</td><td class="n">92</td><td class="n">92</td><td class="n">90</td><td class="n">86</td><td class="n">90</td>
+  <td class="note">AU-GOLD-DEPTH-02: visit-prep checklist + Muayene deep-link studio launcher + doctor file coaching card (portalKoclukAyari) + goals on file + next-review chip (TakipOzeti). Prior spine: SOAP/voice/flags/review/coaching/mo</td>
+  <td class="note gap">Named AU clinician sign-off still OPEN (onaysiz). WHO vs ANZSPED/CDC ages 2–18 OPEN. M-CHAT/ATS licence-gated. College calculators (TR asiPlan/doz/gelisimPlan class) still thinner.</td>
+</tr><tr>
+  <td><strong>Radiation oncology</strong><div class="key">radiation-oncology</div></td>
+  <td><span class="pill" style="background:rgba(45,212,191,0.14);color:#2DD4BF;border-color:#2DD4BF44">Strong</span></td>
+  <td><div class="bar"><div class="fill" style="width:90%;background:#2DD4BF"></div><span>90</span></div></td>
+  <td class="n">92</td><td class="n">90</td><td class="n">90</td><td class="n">92</td><td class="n">88</td><td class="n">92</td><td class="n">92</td><td class="n">90</td><td class="n">86</td><td class="n">90</td>
+  <td class="note">AU-GOLD-DEPTH-02: visit-prep checklist + Muayene deep-link studio launcher + doctor file coaching card (portalKoclukAyari) + goals on file + next-review chip (TakipOzeti). Prior spine: SOAP/voice/flags/review/coaching/mo</td>
+  <td class="note gap">Named AU clinician sign-off still OPEN (onaysiz). WHO vs ANZSPED/CDC ages 2–18 OPEN. M-CHAT/ATS licence-gated. College calculators (TR asiPlan/doz/gelisimPlan class) still thinner.</td>
+</tr><tr>
+  <td><strong>Radiology</strong><div class="key">radiology</div></td>
+  <td><span class="pill" style="background:rgba(45,212,191,0.14);color:#2DD4BF;border-color:#2DD4BF44">Strong</span></td>
+  <td><div class="bar"><div class="fill" style="width:90%;background:#2DD4BF"></div><span>90</span></div></td>
+  <td class="n">92</td><td class="n">90</td><td class="n">90</td><td class="n">92</td><td class="n">88</td><td class="n">92</td><td class="n">92</td><td class="n">90</td><td class="n">86</td><td class="n">90</td>
+  <td class="note">AU-GOLD-DEPTH-02: visit-prep checklist + Muayene deep-link studio launcher + doctor file coaching card (portalKoclukAyari) + goals on file + next-review chip (TakipOzeti). Prior spine: SOAP/voice/flags/review/coaching/mo</td>
+  <td class="note gap">Named AU clinician sign-off still OPEN (onaysiz). WHO vs ANZSPED/CDC ages 2–18 OPEN. M-CHAT/ATS licence-gated. College calculators (TR asiPlan/doz/gelisimPlan class) still thinner.</td>
+</tr><tr>
+  <td><strong>Rehabilitation medicine</strong><div class="key">rehabilitation-medicine</div></td>
+  <td><span class="pill" style="background:rgba(45,212,191,0.14);color:#2DD4BF;border-color:#2DD4BF44">Strong</span></td>
+  <td><div class="bar"><div class="fill" style="width:90%;background:#2DD4BF"></div><span>90</span></div></td>
+  <td class="n">92</td><td class="n">90</td><td class="n">90</td><td class="n">92</td><td class="n">88</td><td class="n">92</td><td class="n">92</td><td class="n">90</td><td class="n">86</td><td class="n">90</td>
+  <td class="note">AU-GOLD-DEPTH-02: visit-prep checklist + Muayene deep-link studio launcher + doctor file coaching card (portalKoclukAyari) + goals on file + next-review chip (TakipOzeti). Prior spine: SOAP/voice/flags/review/coaching/mo</td>
+  <td class="note gap">Named AU clinician sign-off still OPEN (onaysiz). WHO vs ANZSPED/CDC ages 2–18 OPEN. M-CHAT/ATS licence-gated. College calculators (TR asiPlan/doz/gelisimPlan class) still thinner.</td>
+</tr><tr>
+  <td><strong>Respiratory medicine</strong><div class="key">respiratory-medicine</div></td>
+  <td><span class="pill" style="background:rgba(45,212,191,0.14);color:#2DD4BF;border-color:#2DD4BF44">Strong</span></td>
+  <td><div class="bar"><div class="fill" style="width:90%;background:#2DD4BF"></div><span>90</span></div></td>
+  <td class="n">92</td><td class="n">90</td><td class="n">90</td><td class="n">92</td><td class="n">88</td><td class="n">92</td><td class="n">92</td><td class="n">90</td><td class="n">86</td><td class="n">90</td>
+  <td class="note">AU-GOLD-DEPTH-02: visit-prep checklist + Muayene deep-link studio launcher + doctor file coaching card (portalKoclukAyari) + goals on file + next-review chip (TakipOzeti). Prior spine: SOAP/voice/flags/review/coaching/mo</td>
+  <td class="note gap">Named AU clinician sign-off still OPEN (onaysiz). WHO vs ANZSPED/CDC ages 2–18 OPEN. M-CHAT/ATS licence-gated. College calculators (TR asiPlan/doz/gelisimPlan class) still thinner.</td>
+</tr><tr>
+  <td><strong>Rheumatology</strong><div class="key">rheumatology</div></td>
+  <td><span class="pill" style="background:rgba(45,212,191,0.14);color:#2DD4BF;border-color:#2DD4BF44">Strong</span></td>
+  <td><div class="bar"><div class="fill" style="width:90%;background:#2DD4BF"></div><span>90</span></div></td>
+  <td class="n">92</td><td class="n">90</td><td class="n">90</td><td class="n">92</td><td class="n">88</td><td class="n">92</td><td class="n">92</td><td class="n">90</td><td class="n">86</td><td class="n">90</td>
+  <td class="note">AU-GOLD-DEPTH-02: visit-prep checklist + Muayene deep-link studio launcher + doctor file coaching card (portalKoclukAyari) + goals on file + next-review chip (TakipOzeti). Prior spine: SOAP/voice/flags/review/coaching/mo</td>
+  <td class="note gap">Named AU clinician sign-off still OPEN (onaysiz). WHO vs ANZSPED/CDC ages 2–18 OPEN. M-CHAT/ATS licence-gated. College calculators (TR asiPlan/doz/gelisimPlan class) still thinner.</td>
 </tr><tr>
   <td><strong>Speech pathologist</strong><div class="key">speech-pathology</div></td>
-  <td><span class="pill" style="background:#15803d">Strong</span></td>
-  <td><div class="bar"><div class="fill" style="width:86%"></div><span>86</span></div></td>
-  <td class="n">82</td><td class="n">88</td><td class="n">84</td><td class="n">82</td><td class="n">86</td><td class="n">86</td><td class="n">90</td><td class="n">88</td><td class="n">86</td><td class="n">90</td>
-  <td class="note">AU-PEDIATRI-GOLD-01a/b Strong push: SOAP locks in notTalimati, specialty voice clinical focus + Triple Zero pathway, per-role danger-sign tools, immunisation overdue cohort (paeds+GP) + review overdue cohort (all roles), portal Triple Zero line. Prior gold: WHO growth, review studios, portal chapters, NIP/catch-up.</td>
-</tr>
-      </tbody>
-    </table>
+  <td><span class="pill" style="background:rgba(45,212,191,0.14);color:#2DD4BF;border-color:#2DD4BF44">Strong</span></td>
+  <td><div class="bar"><div class="fill" style="width:90%;background:#2DD4BF"></div><span>90</span></div></td>
+  <td class="n">92</td><td class="n">92</td><td class="n">90</td><td class="n">92</td><td class="n">88</td><td class="n">92</td><td class="n">92</td><td class="n">90</td><td class="n">86</td><td class="n">90</td>
+  <td class="note">Speech pathologist: allied/private plan depth + DEPTH-02 coaching file card, visit-prep, motor deep-links.</td>
+  <td class="note gap">Named AU clinician sign-off still OPEN (onaysiz). WHO vs ANZSPED/CDC ages 2–18 OPEN. M-CHAT/ATS licence-gated. College calculators (TR asiPlan/doz/gelisimPlan class) still thinner.</td>
+</tr><tr>
+  <td><strong>Sport and exercise medicine</strong><div class="key">sports-medicine</div></td>
+  <td><span class="pill" style="background:rgba(45,212,191,0.14);color:#2DD4BF;border-color:#2DD4BF44">Strong</span></td>
+  <td><div class="bar"><div class="fill" style="width:90%;background:#2DD4BF"></div><span>90</span></div></td>
+  <td class="n">92</td><td class="n">90</td><td class="n">90</td><td class="n">92</td><td class="n">88</td><td class="n">92</td><td class="n">92</td><td class="n">90</td><td class="n">86</td><td class="n">90</td>
+  <td class="note">AU-GOLD-DEPTH-02: visit-prep checklist + Muayene deep-link studio launcher + doctor file coaching card (portalKoclukAyari) + goals on file + next-review chip (TakipOzeti). Prior spine: SOAP/voice/flags/review/coaching/mo</td>
+  <td class="note gap">Named AU clinician sign-off still OPEN (onaysiz). WHO vs ANZSPED/CDC ages 2–18 OPEN. M-CHAT/ATS licence-gated. College calculators (TR asiPlan/doz/gelisimPlan class) still thinner.</td>
+</tr><tr>
+  <td><strong>Urology</strong><div class="key">urology</div></td>
+  <td><span class="pill" style="background:rgba(45,212,191,0.14);color:#2DD4BF;border-color:#2DD4BF44">Strong</span></td>
+  <td><div class="bar"><div class="fill" style="width:90%;background:#2DD4BF"></div><span>90</span></div></td>
+  <td class="n">92</td><td class="n">90</td><td class="n">90</td><td class="n">92</td><td class="n">88</td><td class="n">92</td><td class="n">92</td><td class="n">90</td><td class="n">86</td><td class="n">90</td>
+  <td class="note">AU-GOLD-DEPTH-02: visit-prep checklist + Muayene deep-link studio launcher + doctor file coaching card (portalKoclukAyari) + goals on file + next-review chip (TakipOzeti). Prior spine: SOAP/voice/flags/review/coaching/mo</td>
+  <td class="note gap">Named AU clinician sign-off still OPEN (onaysiz). WHO vs ANZSPED/CDC ages 2–18 OPEN. M-CHAT/ATS licence-gated. College calculators (TR asiPlan/doz/gelisimPlan class) still thinner.</td>
+</tr><tr>
+  <td><strong>Vascular surgery</strong><div class="key">vascular-surgery</div></td>
+  <td><span class="pill" style="background:rgba(45,212,191,0.14);color:#2DD4BF;border-color:#2DD4BF44">Strong</span></td>
+  <td><div class="bar"><div class="fill" style="width:90%;background:#2DD4BF"></div><span>90</span></div></td>
+  <td class="n">92</td><td class="n">90</td><td class="n">90</td><td class="n">92</td><td class="n">88</td><td class="n">92</td><td class="n">92</td><td class="n">90</td><td class="n">86</td><td class="n">90</td>
+  <td class="note">AU-GOLD-DEPTH-02: visit-prep checklist + Muayene deep-link studio launcher + doctor file coaching card (portalKoclukAyari) + goals on file + next-review chip (TakipOzeti). Prior spine: SOAP/voice/flags/review/coaching/mo</td>
+  <td class="note gap">Named AU clinician sign-off still OPEN (onaysiz). WHO vs ANZSPED/CDC ages 2–18 OPEN. M-CHAT/ATS licence-gated. College calculators (TR asiPlan/doz/gelisimPlan class) still thinner.</td>
+</tr></tbody>
+      </table>
     </div>
-  </main>
-  <footer>
-    Source <code>docs/audits/AU-40-PEDIATRI-AUDIT-01.json</code>. Classification: core country-depth (AU pack). AU = APPLIED. us/gb/ca/nz/uz = OPEN GAP (01e). Licence-gated M-CHAT/ATS and clinician confirm of WHO vs ANZSPED/CDC remain open (01c/01d).
-  </footer>
+    <h2 class="sec">Removed from AU offer</h2>
+    <div class="table-wrap">
+      <table><thead><tr><th>Name</th><th>Key</th><th>Reason</th></tr></thead><tbody><tr><td class="domain">Hair transplantation</td><td><code>hair-transplant</code></td><td class="note">Not a Medical Board specialty. Folded into aesthetic-medicine via nonsurgical cosmetic plan. TR saç-ekimi Özel Branş is Strong on main — AU has no studio/photo series.</td></tr><tr><td class="domain">Preventive and longevity medicine</td><td><code>longevity</code></td><td class="note">Not a recognised specialty. Wellness plan lives inside family-medicine. TR longevity Özel Branş is Strong on main — not offered in AU.</td></tr><tr><td class="domain">Dermatology (clinic)</td><td><code>clinic-dermatology</code></td><td class="note">Removed so non-dermatologists are not offered a second “Dermatology” role. TR klinik-dermatoloji stays Turkey Özel Branş.</td></tr><tr><td class="domain">Thoracic surgery</td><td><code>thoracic-surgery</code></td><td class="note">Split into cardio-thoracic-surgery per Medical Board list.</td></tr><tr><td class="domain">Cardiac and vascular surgery</td><td><code>cardiovascular-surgery</code></td><td class="note">Split into vascular-surgery (+ cardio-thoracic for heart).</td></tr></tbody></table>
+    </div>
+    <div class="callout warn">
+      <h2>How to read this</h2>
+      <p>AUDIT-01 claimed 44/44 Strong @87 with pasted notes — overturned. AUDIT-02 was the honest mid-point @81 after DEPTH-01. AUDIT-03 scores DEPTH-02 evidence (file cards, deep-link motors, visit-prep ×44). Floor 90 is Option-A product depth, not TR engine 100.</p>
+    </div>
+    <footer>
+      Snapshot AU-40-PEDIATRI-AUDIT-03 · 2026-10-30 · branch cursor/au-gold-depth-ef6b → release/au · no patient data.
+      Sources: <code>visitPrep.ts</code>, <code>BeslenmeDosya.tsx</code> (portalKoclukAyari), <code>MuayeneMotorPaneli.tsx</code>, <code>TakipOzeti.tsx</code>, <code>AU-40-PEDIATRI-AUDIT-03.json</code>.
+    </footer>
+  </div>
 </body>
 </html>

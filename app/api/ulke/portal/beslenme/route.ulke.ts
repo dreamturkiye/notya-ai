@@ -12,6 +12,8 @@ import { govdeOku } from '@/lib/ulke/uygulama/cevap'
 import { portalOturum } from '@/lib/ulke/portal/giris'
 import { PORTAL_KOD, portalCevabi, portalIstegiMi, portalSinirinda } from '@/lib/ulke/portal/rotaYardimcisi'
 import { aktifAracIcerigi, aracKaydet } from '@/lib/ulke/araclar/kayit'
+import { portalKoclukAyari } from '@/lib/ulke/portal/koclukAyari'
+import { hekimRolunuOku } from '@/lib/ulke/uygulama/rol'
 import { ozellikAcik, ulkePaketi } from '@/lib/ulke/ulke'
 
 export const dynamic = 'force-dynamic'
@@ -23,9 +25,11 @@ export const POST = portalSinirinda('portal beslenme POST', async (req: NextRequ
   if (!portalIstegiMi(req)) return PORTAL_KOD.gecersiz()
   const oturum = await portalOturum(req)
   if (!oturum) return PORTAL_KOD.oturumYok()
-  const ayar = ulkePaketi().uygulama?.portal?.beslenme
   const icerik = aktifAracIcerigi()
-  if (!ayar || !icerik) return PORTAL_KOD.yok()
+  if (!icerik) return PORTAL_KOD.yok()
+  const rol = await hekimRolunuOku(oturum.supabase, oturum.doktorId)
+  const ayar = portalKoclukAyari(ulkePaketi(), rol, icerik)
+  if (!ayar) return PORTAL_KOD.yok()
   const g = await govdeOku(req)
   const gun = typeof g.gun === 'string' ? g.gun : ''
   const ogun = typeof g.ogun === 'string' ? g.ogun : ''

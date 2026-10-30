@@ -75,27 +75,29 @@ export function PortalBeslenmeKarti({
         )}
       </section>
 
-      <section className="uza-kart" data-alan="portal-weight">
-        <h2 className="uza-h2">{e.agirlikBaslik}</h2>
-        {beslenme.agirlik.length === 0 ? (
-          <p className="uza-bos">{e.agirlikYok}</p>
-        ) : (
-          <ul className="uza-liste">
-            {beslenme.agirlik.map((x) => (
-              <li key={x.gun} data-agirlik-gun={x.gun}>
-                <span className="uza-liste-ad">{x.gun}</span>
-                <span className="uza-liste-alt">
-                  {[
-                    x.kiloKg != null ? `${x.kiloKg} ${e.agirlikKg}` : null,
-                    x.bmi != null ? `${e.bmiEtiket} ${x.bmi}` : null,
-                    x.belCm != null ? `${e.belEtiket} ${x.belCm}` : null,
-                  ].filter(Boolean).join(' · ')}
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+      {e.agirlikBaslik ? (
+        <section className="uza-kart" data-alan="portal-weight">
+          <h2 className="uza-h2">{e.agirlikBaslik}</h2>
+          {beslenme.agirlik.length === 0 ? (
+            <p className="uza-bos">{e.agirlikYok}</p>
+          ) : (
+            <ul className="uza-liste">
+              {beslenme.agirlik.map((x) => (
+                <li key={x.gun} data-agirlik-gun={x.gun}>
+                  <span className="uza-liste-ad">{x.gun}</span>
+                  <span className="uza-liste-alt">
+                    {[
+                      x.kiloKg != null ? `${x.kiloKg} ${e.agirlikKg}` : null,
+                      x.bmi != null ? `${e.bmiEtiket} ${x.bmi}` : null,
+                      x.belCm != null ? `${e.belEtiket} ${x.belCm}` : null,
+                    ].filter(Boolean).join(' · ')}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      ) : null}
 
       <section className="uza-kart" data-alan="portal-food-diary">
         <h2 className="uza-h2">{e.gunlukBaslik}</h2>

@@ -1,5 +1,20 @@
 # OPEN COMMITMENTS — Notya AI
 
+## AU-GOLD-DEPTH-01 — per-role Muayene engines + Hasta portalı coaching for all 44 AU roles (Claude, 2026-10-30)
+
+Bring AU to Turkish golden depth for the three top gaps from the gold audit: Muayene engines, non-dietetics clinical tools, and per-branch Hasta portalı.
+
+| Date | Item | Owner | Status |
+|---|---|---|---|
+| 2026-10-30 | **AU-GOLD-DEPTH-01a — per-role Hasta portalı coaching (43 roles + dietetics meal plan).** Care-plan / between-visit-log / care-goals tools + portal cards, dietetics pattern. Specialty-gated. Shared UI via pack `portal.kocluk` / `portal.beslenme`. | Claude | **DONE** on AU (`countries/au/portalBransModulleri.ts`, `araclar/bransKocluk.ts`, `lib/ulke/portal/koclukAyari.ts`) |
+| 2026-10-30 | **AU-GOLD-DEPTH-01b — AU Muayene visit engines (44 roles).** `.ulke`-native visit prompts + linked Araçlar; AU-vs-TR research in `docs/audits/AU-MUAYENE-TR-DIFF.md`. Not a mount of TR `specialties/*/engines`. | Claude | **DONE** on AU (`klinik/muayeneMotorlari.ts`, `MuayeneMotorPaneli.tsx`) |
+| 2026-10-30 | **AU-GOLD-DEPTH-01c — non-dietetics clinical tool depth.** Coaching trio (129 tools) + existing flags/review/private plans. Full TR calculator ports stay Option A / clinician-gated. | Claude | **DONE** structural depth on AU; named clinician sign-off still OPEN under onaysiz list |
+| 2026-10-30 | **AU-GOLD-DEPTH-01d — us/gb/ca/nz/uz absorb the same coaching + visit-panel pattern, country-adapted.** | Claude | **OPEN GAP** |
+| 2026-10-30 | **AU-40-PEDIATRI-AUDIT-02 — honest mid-point after DEPTH-01.** Mean wow **81**, Strong **3/44**. AUDIT-01 paste-forward overturned. Kept as `public/au-40-pediatri-audit-02.html` + JSON. | Claude | **DONE** (superseded by AUDIT-03) |
+| 2026-10-30 | **AU-GOLD-DEPTH-02 — file-card parity + Muayene deep-links + visit-prep ×44.** `BeslenmeDosya` via `portalKoclukAyari` for every role; `MuayeneMotorPaneli` per-tool chips; `visitPrep.ts` ticks; `TakipOzeti` next-review chip. | Claude | **DONE** on AU |
+| 2026-10-30 | **AU-40-PEDIATRI-AUDIT-03 — all 44 Strong ≥90.** Mean wow **90**, floor **90**, Strong **44/44**. HTML `public/au-40-pediatri-audit.html` (+ `-03.html`). JSON `docs/audits/AU-40-PEDIATRI-AUDIT-03.json`. College engines / sign-off / M-CHAT / six-country still OPEN. | Claude | **DONE** (audit publish) |
+
+
 ## SES-OMURGA-V2 — voice/text assistant rebuild shipped + FOUNDER LOCK; what still needs Kaan (Claude, 2026-10-29)
 
 Kaan ordered "Ses Omurgası v2" on 2026-10-29 (Dr. Gökhan: voice unusable; diagnosis and research in the job brief).
@@ -251,7 +266,7 @@ Follow-up/closure to NOTYA-VERCEL-COUNTRY-PREVIEW-PROMOTE-01 above, which flagge
 1. `buyume-persentili` ON for `paediatrics` + `family-medicine`; `BuyumeGrafigiKarti` on patient file; NIP + Handbook catch-up; portal chapter per role; 36 clinical-review studios.
 2. **AU-PEDIATRI-GOLD-01a (done):** SOAP locks for all 44 roles (`countries/au/klinik/soapKilitleri.ts` → `notTalimati`); specialty voice clinical focus + Triple Zero pathway (`countries/au/asistan/sesOdak.ts` → `auAsistanKaynakBlogu` / `canliIstem`); **44 specialty-gated danger-sign tools** (`countries/au/araclar/acilBayraklari.ts`).
 3. **AU-PEDIATRI-GOLD-01b (done):** overdue immunisation cohort engine + tool (paeds+GP) and review overdue cohort for every role (`countries/au/araclar/kohort.ts`); companion to `takip-paneli`, nothing sent to AIR. Portal chapters gained a Triple Zero line.
-4. Rescore: **mean wow 87**, **44/44 Strong**, paediatrics **91** (`docs/audits/AU-40-PEDIATRI-AUDIT-01.json`, `public/au-40-pediatri-audit.html`).
+4. Rescore (AUDIT-01, **overturned 2026-10-30**): claimed mean wow 87 / 44/44 Strong / paediatrics 91 — paste-forward, not TR-engine evidence. Kept at `docs/audits/AU-40-PEDIATRI-AUDIT-01.json` + `public/au-40-pediatri-audit-01.html`. **Honest current standings = AUDIT-02** (below / AU-GOLD-DEPTH-01).
 5. **AU-DIETETICS-BETA-01 (done on AU):** BRANŞ-only clinical dietetics suite (`countries/au/araclar/dieteticsTools.ts`) — MST score record (questions not worded), weight-change %, energy/protein in **kJ** (clinician factors, NEMO starting-estimate pattern), IDDSI levels (dietetics + speech-pathology), refeeding ticks, enteral mL/h, person-centred goals, **nutrition lab value recorder** (HbA1c, glucose, Hb, lipids, kidney, CRP, uACR, albumin, ferritin, B12, folate, K/PO4/Mg — values only, no invented intervals). Gated `roller: ['dietetics']` (IDDSI also `speech-pathology`). Units named in pack catalogue.
 6. **AU-DIETETICS-BETA-01c (done):** Assistant refs + voice focus carry **AU binding sources** (Dietitians Australia, Australian Dietary Guidelines/NHMRC, NEMO, Understanding Nutrition ANZ, Clinical Sports Nutrition) **and US depth** (Dietary Guidelines for Americans, AND Nutrition Care Manual / Evidence Analysis Library / Nutrition Care Process) so an AU dietitian with US clients is covered; national AU wins on conflict for Australian care. Intake form hardened (shared EN dietetics set): purpose by condition, usual place of care (AU/US/both), labs with you, allergy, swallow/texture, supplements, diabetes, bowel, referral, culture — 20 questions incl. red flags.
 7. **AU-DIETETICS-BETA-01d (done on AU):** ADIME note headings (role-keyed) + PES / intervention / monitoring fields; anthropometry trend (weight kg, waist cm, BMI) on the patient file from kept `au-body-size` history; meal plan + food diary tools with doctor file card and patient portal tab (`portal.beslenme`). No AUSNUT. BRANŞ-only.

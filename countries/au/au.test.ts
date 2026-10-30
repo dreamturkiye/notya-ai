@@ -34,6 +34,7 @@ import { enYaz } from '../_dil/en/varyant'
 import { AU_ONAYSIZ_ACIK_ANAHTARLAR, AU_ONAYSIZ_ACIK_ARACLAR } from './araclar/onaysizAciklar'
 import { AU_ACIL_ANAHTARLARI } from './araclar/acilBayraklari'
 import { AU_DIYET_ANAHTARLARI } from './araclar/dieteticsTools'
+import { AU_KOCLUK_ANAHTARLARI } from './araclar/bransKocluk'
 import { AU_KOHORT_ANAHTARLARI } from './araclar/kohort'
 import { AU_INCELEME_ANAHTARLARI } from './araclar/reviewPlans'
 import { AU_BAGLANTI_ANAHTARLARI } from './araclar/referanslar'
@@ -52,7 +53,7 @@ import { AU_SIZINTI_TERIMLERI } from './sizintiTerimleri'
 const D = 'en-AU'
 const LAB = { albuminKreatinin: 'mg/mmol', hemoglobin: 'g/L', kreatinin: 'umol/L', glukoz: 'mmol/L', kolesterol: 'mmol/L', crp: 'mg/L', psa: 'ug/L', hba1c: ['%', 'mmol/mol'] } as const
 /** The tools with a MECHANISM only Australia has (./araclar/tanimlar.ts). */
-const KENDI_MEKANIZMALI = ['au-body-size', 'au-mental-health-screen', 'au-oncology-grading', 'au-immunisation-schedule', 'au-immunisation-report', 'au-notifiable-diseases', 'au-poisons-schedules', 'au-schedule-8', 'au-dispensing-label', 'au-mandatory-notifications', 'au-pbs-prescription', 'au-medicare-particulars', 'au-identifier-check', 'au-privacy-principles', 'au-tax-invoice', 'au-my-health-record', 'au-wellness-plan', 'au-nonsurgical-plan', 'au-cosmetic-surgery-plan', 'au-physio-plan', 'au-psychology-plan', 'au-dietetics-plan', 'au-ot-plan', 'au-audiology-plan', ...AU_INCELEME_ANAHTARLARI, ...AU_ACIL_ANAHTARLARI, ...AU_KOHORT_ANAHTARLARI, ...AU_DIYET_ANAHTARLARI]
+const KENDI_MEKANIZMALI = ['au-body-size', 'au-mental-health-screen', 'au-oncology-grading', 'au-immunisation-schedule', 'au-immunisation-report', 'au-notifiable-diseases', 'au-poisons-schedules', 'au-schedule-8', 'au-dispensing-label', 'au-mandatory-notifications', 'au-pbs-prescription', 'au-medicare-particulars', 'au-identifier-check', 'au-privacy-principles', 'au-tax-invoice', 'au-my-health-record', 'au-wellness-plan', 'au-nonsurgical-plan', 'au-cosmetic-surgery-plan', 'au-physio-plan', 'au-psychology-plan', 'au-dietetics-plan', 'au-ot-plan', 'au-audiology-plan', ...AU_INCELEME_ANAHTARLARI, ...AU_ACIL_ANAHTARLARI, ...AU_KOHORT_ANAHTARLARI, ...AU_DIYET_ANAHTARLARI, ...AU_KOCLUK_ANAHTARLARI]
 /** Link-out tiles only Australia has: no mechanism, no arithmetic. College tiles are AU_BAGLANTI_ANAHTARLARI. */
 const KENDI_BAGLANTILARI = ['au-growth-chart-reference', 'au-pbs-report-link', 'au-pbs-schedule-link', 'au-mbs-online-link', 'au-cvd-risk-link', ...AU_BAGLANTI_ANAHTARLARI]
 /** Every tool that carries Australia's own code, switched on by the owner's order of 2026-10-10 or 2026-10-13. */
@@ -557,7 +558,7 @@ describe('au: the tools only Australia has — switched on by the owner\'s order
     for (const k of KENDI_MEKANIZMALI) {
       const l = A.araclar.find((p) => p.anahtar === k)!.lisans!
       assert.equal(l.durum, 'serbest', k)
-      assert.match(l.kaynak ?? '', /^https:\/\/\S+ \(read 2026-10-(10|13|14|15|19|20|28)\): /, k)
+      assert.match(l.kaynak ?? '', /^https:\/\/\S+ \(read 2026-10-(10|13|14|15|19|20|28|30)\): /, k)
       assert.ok((l.bildirim?.[D] ?? '').length > 20, `${k}: the rights holder's notice`)
     }
     // the link-out tile: free, but no reproduced notice is shown under a result it never gives
