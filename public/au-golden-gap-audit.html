@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AU vs Türkiye golden standard — gap audit · Notya</title>
+  <meta name="description" content="Fresh 2026-10-30 audit of au.notya.io against the Turkish golden reference. Honest Strong/Partial/Thin/Missing depth pills and game changers." />
+  <style>
+    :root {
+      --bg:#060C18; --surface:#0D1526; --surface2:#121C30; --stroke:rgba(255,255,255,0.10);
+      --text:#EDF1F7; --muted:#8FA0B5; --dim:#64748B; --teal:#14B8A6; --teal-soft:rgba(20,184,166,0.14);
+      --blue:#60A5FA; --blue-soft:rgba(96,165,250,0.14); --amber:#F59E0B; --amber-soft:rgba(245,158,11,0.14);
+      --red:#F87171; --red-soft:rgba(248,113,113,0.14); --green:#2DD4BF;
+    }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; background:var(--bg); color:var(--text); line-height:1.45; -webkit-font-smoothing:antialiased; }
+    .wrap { max-width:1100px; margin:0 auto; padding:32px 20px 72px; }
+    .brand { display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:24px; align-items:center; }
+    .brand .tag { font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--dim); font-weight:700; }
+    .brand a { color:var(--teal); text-decoration:none; font-size:13px; font-weight:600; }
+    h1 { margin:0 0 8px; font-size:28px; font-weight:700; letter-spacing:-.02em; line-height:1.2; }
+    h2 { margin:28px 0 12px; font-size:18px; font-weight:700; }
+    h3 { margin:20px 0 8px; font-size:15px; font-weight:700; color:var(--muted); }
+    .lede { margin:0 0 14px; color:var(--muted); font-size:15px; max-width:860px; }
+    .pills { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:22px; }
+    .pill { display:inline-flex; align-items:center; padding:3px 10px; border-radius:999px; font-size:12px; font-weight:600; border:1px solid transparent; white-space:nowrap; }
+    .pill.success { background:var(--teal-soft); color:var(--green); border-color:rgba(45,212,191,.25); }
+    .pill.warning { background:var(--amber-soft); color:var(--amber); border-color:rgba(245,158,11,.28); }
+    .pill.danger { background:var(--red-soft); color:var(--red); border-color:rgba(248,113,113,.3); }
+    .pill.info { background:var(--blue-soft); color:var(--blue); border-color:rgba(96,165,250,.25); }
+    .pill.neutral { background:rgba(255,255,255,.06); color:var(--muted); border-color:var(--stroke); }
+    .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:18px; }
+    .stat { background:var(--surface); border:1px solid var(--stroke); border-radius:12px; padding:16px 14px; }
+    .stat .v { font-size:24px; font-weight:700; letter-spacing:-.03em; margin-bottom:4px; }
+    .stat .v.success { color:var(--green); } .stat .v.warning { color:var(--amber); } .stat .v.danger { color:var(--red); } .stat .v.info { color:var(--blue); }
+    .stat .l { font-size:12px; color:var(--muted); }
+    .callout { border-radius:12px; padding:16px 18px; margin:14px 0 22px; border:1px solid; }
+    .callout.info { background:var(--blue-soft); border-color:rgba(96,165,250,.28); }
+    .callout.warning { background:var(--amber-soft); border-color:rgba(245,158,11,.3); }
+    .callout.danger { background:var(--red-soft); border-color:rgba(248,113,113,.32); }
+    .callout h2 { margin:0 0 6px; font-size:12px; text-transform:uppercase; letter-spacing:.04em; }
+    .callout.info h2 { color:var(--blue); } .callout.warning h2 { color:var(--amber); } .callout.danger h2 { color:var(--red); }
+    .callout p { margin:0; font-size:14px; }
+    .table-wrap { border:1px solid var(--stroke); border-radius:12px; overflow:auto; margin-bottom:22px; background:var(--surface); }
+    table { width:100%; border-collapse:collapse; font-size:13px; min-width:640px; }
+    th,td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--stroke); vertical-align:top; }
+    th { background:var(--surface2); color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.05em; font-weight:700; }
+    tr:last-child td { border-bottom:none; }
+    td.domain { font-weight:600; }
+    td.note { color:var(--muted); }
+    td.gap { color:#FBBF24; }
+    .bars { background:var(--surface); border:1px solid var(--stroke); border-radius:12px; padding:16px; margin-bottom:22px; }
+    .bar-row { display:grid; grid-template-columns:minmax(140px,240px) 1fr 36px; gap:10px; align-items:center; margin:8px 0; }
+    .bar-label { font-size:12px; color:var(--muted); }
+    .bar-track { height:10px; background:rgba(255,255,255,.06); border-radius:999px; overflow:hidden; }
+    .bar-fill { height:100%; background:var(--teal); border-radius:999px; }
+    .bar-fill.warn { background:var(--amber); }
+    .bar-fill.bad { background:var(--red); }
+    .bar-val { font-size:12px; font-weight:700; color:var(--text); text-align:right; }
+    .cards { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin-bottom:22px; }
+    .cards.three { grid-template-columns:repeat(3,1fr); }
+    .card { background:var(--surface); border:1px solid var(--stroke); border-radius:12px; padding:14px; }
+    .card .top { display:flex; justify-content:space-between; gap:8px; align-items:flex-start; margin-bottom:8px; }
+    .card .title { font-size:14px; font-weight:650; }
+    .card .body { font-size:12px; color:var(--muted); }
+    .card .sub { font-size:11px; font-weight:700; color:var(--text); margin-top:8px; }
+    .cap { font-size:12px; color:var(--dim); margin:-6px 0 14px; }
+    .foot { margin-top:36px; padding-top:16px; border-top:1px solid var(--stroke); font-size:12px; color:var(--dim); display:flex; flex-wrap:wrap; gap:8px 16px; justify-content:space-between; }
+    .banner { background:rgba(245,158,11,.1); border:1px solid rgba(245,158,11,.35); color:var(--amber); border-radius:10px; padding:10px 14px; font-size:13px; margin-bottom:18px; }
+    .src { font-size:12px; color:var(--dim); margin:0 0 8px; }
+    @media (max-width:900px) {
+      .stats { grid-template-columns:repeat(2,1fr); }
+      .cards, .cards.three { grid-template-columns:1fr; }
+      h1 { font-size:22px; }
+      .bar-row { grid-template-columns:1fr; gap:4px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="brand">
+      <span class="tag">Notya · Country depth audit</span>
+      <div style="display:flex;gap:14px;flex-wrap:wrap">
+        <a href="/au-40-pediatri-audit.html">Prior spine rescore (2026-10-28) →</a>
+        <a href="https://au.notya.io">au.notya.io →</a>
+      </div>
+    </div>
+
+    <div class="banner">Fresh audit <b>2026-10-30</b> — AU tip <code>e0a570fb</code> × TR tip <code>3fde301e</code>. Scores completeness <b>against Türkiye golden wow</b>, not Option-A spine checklist completeness. Supersedes AU-40-PEDIATRI-AUDIT-01’s 44/44 Strong claim for the country-vs-gold question.</div>
+
+    <h1>Australia vs Türkiye golden standard</h1>
+    <p class="lede">What an Australian clinician gets on <code>au.notya.io</code> today versus the Turkish golden reference on <code>main</code> (30 medical branches + 10 Özel Branşlar, 321 specialty engines, full doktor dashboard). Country-adapted — never a translated copy — and Turkey-only regulatory (MBYS / SGK / e-Nabız / e-Reçete) correctly exempt.</p>
+
+    <div class="pills">
+      <span class="pill success">Country pack &amp; roster: Strong</span>
+      <span class="pill warning">Most clinical depth: Partial</span>
+      <span class="pill danger">Muayene engines: Thin — largest gap</span>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><div class="v warning">44</div><div class="l">Mean wow vs TR gold</div></div>
+      <div class="stat"><div class="v success">3</div><div class="l">Strong domains</div></div>
+      <div class="stat"><div class="v warning">7</div><div class="l">Partial domains</div></div>
+      <div class="stat"><div class="v danger">2</div><div class="l">Thin + Missing</div></div>
+    </div>
+
+    <div class="callout warning">
+      <h2>Executive verdict</h2>
+      <p>AU already looks like a real country product for roster, Medicare/PBS/MHR naming, references, shell chrome, and — uniquely — Clinical Dietitian tools/portal. It will <b>not</b> yet make a Turkish MD say the AU build matches their branş depth: one generic visit screen faces 321 TR specialty engines that exist in the repo but never mount in the AU build. The 2026-10-28 “44 Strong” rescore measured spine completeness (SOAP locks, danger flags, Triple Zero lines); this audit measures golden-standard clinical wow. Both can be true — do not conflate them.</p>
+    </div>
+
+    <h2>Coverage depth</h2>
+    <p class="cap">Depth vocabulary: Strong = clinic-ready for that slice · Partial = real product, missing wow · Thin = awareness/stub · Missing = absent · Exempt = Turkey-only by law</p>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Domain</th><th>Depth</th><th>Note</th><th>Gap to wow</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="domain">Role roster (Medical Board)</td>
+            <td><span class="pill success">Strong</span></td>
+            <td class="note">44 roles: sourced removals/splits/adds vs EN shared-40.</td>
+            <td class="gap">Naming done; depth is other rows.</td>
+          </tr>
+          <tr>
+            <td class="domain">Country pack (IDs / PBS / MHR / Privacy / GST)</td>
+            <td><span class="pill success">Strong</span></td>
+            <td class="note">AU-named identifiers and regulatory tools; no TR regulatory leaks.</td>
+            <td class="gap">AHPRA verify research; post-beta legal review.</td>
+          </tr>
+          <tr>
+            <td class="domain">Specialty college references</td>
+            <td><span class="pill success">Strong</span></td>
+            <td class="note">Link tiles to colleges/associations, sourced + dated.</td>
+            <td class="gap">Content stays off-product (by design).</td>
+          </tr>
+          <tr>
+            <td class="domain">Dietetics (Clinical Dietitian)</td>
+            <td><span class="pill success">Strong</span></td>
+            <td class="note">MST, kJ/protein, IDDSI, meal plan/diary, portal coaching — depth template for others.</td>
+            <td class="gap">Named dietitian sign-off; not full TR engine mount.</td>
+          </tr>
+          <tr>
+            <td class="domain">Shell / look parity</td>
+            <td><span class="pill warning">Partial</span></td>
+            <td class="note">Shared KabukGorunumu; home closer to TR; many inner screens still kit copies.</td>
+            <td class="gap">AU-LOOK-PARITY-02 — share TR page components.</td>
+          </tr>
+          <tr>
+            <td class="domain">Doktor Araçları (non-dietetics clinical)</td>
+            <td><span class="pill warning">Partial</span></td>
+            <td class="note">~130 tools; flags + light review plans dominate; 10 slots closed.</td>
+            <td class="gap">AU-ARACLAR-DEPTH-01; licences (M-CHAT/ATS).</td>
+          </tr>
+          <tr>
+            <td class="domain">Patient file</td>
+            <td><span class="pill warning">Partial</span></td>
+            <td class="note">Hastalar + growth chart (paeds/GP); thinner than TR file + chapter tabs.</td>
+            <td class="gap">Specialty file chapters; coded diagnoses for reports.</td>
+          </tr>
+          <tr>
+            <td class="domain">Calendar / randevu</td>
+            <td><span class="pill warning">Partial</span></td>
+            <td class="note">Real Takvim (~1.1k lines) vs TR randevular (~1.8k).</td>
+            <td class="gap">Portal request / richer booking parity.</td>
+          </tr>
+          <tr>
+            <td class="domain">Hasta portalı (Sağlığım)</td>
+            <td><span class="pill warning">Partial</span></td>
+            <td class="note">44× three-line chapters + Triple Zero; dietetics coaching cards stronger.</td>
+            <td class="gap">Real specialty modules per specialty-hasta-portali Strong bar.</td>
+          </tr>
+          <tr>
+            <td class="domain">Asistan / voice</td>
+            <td><span class="pill warning">Partial</span></td>
+            <td class="note">Live /asistan + AU voices; thinner than TR session engine.</td>
+            <td class="gap">Shared session engine, floating panel, open-patient tools.</td>
+          </tr>
+          <tr>
+            <td class="domain">Faturalama / subscription</td>
+            <td><span class="pill warning">Partial</span></td>
+            <td class="note">Fatura + Stripe AUD path reachable; not TR mali suite.</td>
+            <td class="gap">Plan-picker decision; mali depth.</td>
+          </tr>
+          <tr>
+            <td class="domain">Muayene / clinical engines</td>
+            <td><span class="pill danger">Thin</span></td>
+            <td class="note">One generic Muayene for every role. TR: 321 engines in specialties/*/engines — in repo, not AU-reachable.</td>
+            <td class="gap">AU-DEPTH-PARITY-03 (or Option-A engines) — #1 game changer.</td>
+          </tr>
+          <tr>
+            <td class="domain">Portraits</td>
+            <td><span class="pill danger">Missing</span></td>
+            <td class="note">Script ready; 0/44 assets committed.</td>
+            <td class="gap">Run WaveSpeed job; commit public/portreler/au.</td>
+          </tr>
+          <tr>
+            <td class="domain">Turkey-only regulatory</td>
+            <td><span class="pill neutral">Exempt</span></td>
+            <td class="note">MBYS, SGK, e-Nabız, e-Reçete, e-Fatura/GİB, NVI — correctly absent.</td>
+            <td class="gap">N/A — do not port.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2>Wow-bar vs Türkiye gold</h2>
+    <p class="cap">0–100 = how close that slice is to making a clinician feel “this matches TR branş depth,” country-adapted. Not the same as “spine checklist done.”</p>
+    <div class="bars">
+      <div class="bar-row"><div class="bar-label">Country pack / regulatory naming</div><div class="bar-track"><div class="bar-fill" style="width:92%"></div></div><div class="bar-val">92</div></div>
+      <div class="bar-row"><div class="bar-label">Role roster</div><div class="bar-track"><div class="bar-fill" style="width:90%"></div></div><div class="bar-val">90</div></div>
+      <div class="bar-row"><div class="bar-label">College references</div><div class="bar-track"><div class="bar-fill" style="width:88%"></div></div><div class="bar-val">88</div></div>
+      <div class="bar-row"><div class="bar-label">Dietetics specialty</div><div class="bar-track"><div class="bar-fill" style="width:78%"></div></div><div class="bar-val">78</div></div>
+      <div class="bar-row"><div class="bar-label">Shell / look parity</div><div class="bar-track"><div class="bar-fill warn" style="width:68%"></div></div><div class="bar-val">68</div></div>
+      <div class="bar-row"><div class="bar-label">Faturalama / Stripe</div><div class="bar-track"><div class="bar-fill warn" style="width:58%"></div></div><div class="bar-val">58</div></div>
+      <div class="bar-row"><div class="bar-label">Calendar / randevu</div><div class="bar-track"><div class="bar-fill warn" style="width:55%"></div></div><div class="bar-val">55</div></div>
+      <div class="bar-row"><div class="bar-label">Asistan / voice</div><div class="bar-track"><div class="bar-fill warn" style="width:55%"></div></div><div class="bar-val">55</div></div>
+      <div class="bar-row"><div class="bar-label">Hasta portalı modules</div><div class="bar-track"><div class="bar-fill warn" style="width:48%"></div></div><div class="bar-val">48</div></div>
+      <div class="bar-row"><div class="bar-label">Non-dietetics clinical tools</div><div class="bar-track"><div class="bar-fill bad" style="width:42%"></div></div><div class="bar-val">42</div></div>
+      <div class="bar-row"><div class="bar-label">Patient file depth</div><div class="bar-track"><div class="bar-fill bad" style="width:40%"></div></div><div class="bar-val">40</div></div>
+      <div class="bar-row"><div class="bar-label">Muayene / engines</div><div class="bar-track"><div class="bar-fill bad" style="width:20%"></div></div><div class="bar-val">20</div></div>
+      <div class="bar-row"><div class="bar-label">Portraits</div><div class="bar-track"><div class="bar-fill bad" style="width:5%"></div></div><div class="bar-val">5</div></div>
+      <div class="bar-row"><div class="bar-label"><b>Overall vs TR MD wow</b></div><div class="bar-track"><div class="bar-fill bad" style="width:44%"></div></div><div class="bar-val">44</div></div>
+    </div>
+
+    <h2>Mandate / practice matrix</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Mandate</th><th>Level</th><th>In AU product today</th><th>Gap to wow</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="domain">Medical Board specialty list</td>
+            <td><span class="pill info">Regulator</span></td>
+            <td class="note">44 roles; hair-transplant/longevity/clinic-derm not offered.</td>
+            <td class="gap">Keep recognition gate; do not reintroduce non-recognised branşlar.</td>
+          </tr>
+          <tr>
+            <td class="domain">PBS / Medicare / My Health Record naming</td>
+            <td><span class="pill info">Gov</span></td>
+            <td class="note">Tools + labels present; no invented send-to-AIR/PBS.</td>
+            <td class="gap">Stay record/checklist until integrations are lawful + signed.</td>
+          </tr>
+          <tr>
+            <td class="domain">Privacy Act / APP patient requests</td>
+            <td><span class="pill info">Law</span></td>
+            <td class="note">GizlilikTalepleri screen + APP framing tools.</td>
+            <td class="gap">APP12 export completeness still OPEN (AU-LAUNCH).</td>
+          </tr>
+          <tr>
+            <td class="domain">Clinical decision support / TGA</td>
+            <td><span class="pill warning">Regulator</span></td>
+            <td class="note">Calculators + checklists; several kit faults listed in docs/araclar-denetim/AU.md.</td>
+            <td class="gap">TGA advice (AU-LAUNCH); fix confirmed arithmetic faults before claiming CDS.</td>
+          </tr>
+          <tr>
+            <td class="domain">Ahpra registration verify</td>
+            <td><span class="pill warning">Regulator</span></td>
+            <td class="note">Not built.</td>
+            <td class="gap">AU-AHPRA-VERIFY-01 — terms/API research first; no scraping.</td>
+          </tr>
+          <tr>
+            <td class="domain">TR MBYS / Medula / e-Reçete</td>
+            <td><span class="pill neutral">TR-only</span></td>
+            <td class="note">Absent (correct).</td>
+            <td class="gap">Exempt — never port.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2>Doctor pain points</h2>
+    <div class="cards">
+      <div class="card">
+        <div class="top"><div class="title">“My branş visit screen is generic”</div><span class="pill danger">Daily cost: high</span></div>
+        <div class="body">Cardiology, O&amp;G, paeds, surgery — same Muayene chrome. TR engines (growth, pregnancy, specialty SOAP chapters) do not mount.</div>
+        <div class="sub">Wow move: AU-DEPTH-PARITY-03 visit/note shared with country gates — or Option-A engines per role.</div>
+        <div class="sub muted">Now: keep generic safe; do not invent AU thresholds without a clinician.</div>
+      </div>
+      <div class="card">
+        <div class="top"><div class="title">“Tools are flags, not my specialty kit”</div><span class="pill warning">Daily cost: medium</span></div>
+        <div class="body">Danger-sign ticklists and review calendars for 44 roles. Dietetics has real calculators; physio/psych/OT/audiology/medical specialties do not match that bar.</div>
+        <div class="sub">Wow move: AU-ARACLAR-DEPTH-01 using dieteticsTools.ts as template.</div>
+        <div class="sub muted">Now: leave licence-gated slots closed (GOLD-01d).</div>
+      </div>
+      <div class="card">
+        <div class="top"><div class="title">“Patient portal is three lines”</div><span class="pill warning">Daily cost: medium</span></div>
+        <div class="body">Most roles get title + 3 safe lines. Dietetics already shares meal plan/diary — others still awareness-only.</div>
+        <div class="sub">Wow move: specialty-hasta-portali Strong modules per high-volume roles (paeds, GP, O&amp;G, physio…).</div>
+        <div class="sub muted">Now: keep Triple Zero line; no diagnosis/dose on patient surface.</div>
+      </div>
+      <div class="card">
+        <div class="top"><div class="title">“Assistant forgets the open patient”</div><span class="pill warning">Daily cost: medium</span></div>
+        <div class="body">Live voice works; no floating panel across pages, thinner session engine, no open-patient context tools.</div>
+        <div class="sub">Wow move: AU-DEPTH-PARITY-03-B/C + AU-CANLI-03/04.</div>
+        <div class="sub muted">Now: name-only patient find; identity speak rules when patient file access lands.</div>
+      </div>
+    </div>
+
+    <h2>What the prior “44 Strong” audit actually measured</h2>
+    <div class="callout info">
+      <h2>Do not conflate</h2>
+      <p><b>AU-40-PEDIATRI-AUDIT-01 (2026-10-28)</b> scored Option-A spine completeness after SOAP locks, 44 danger tools, light kohorts, portal Triple Zero — mean wow 87. Its own gap column already said “college-specific engines beyond this spine remain open.” <b>This audit</b> answers Kaan’s golden-standard question: is AU equivalent to TR branş depth? Mean wow <b>44</b>. Spine Strong ≠ gold Strong.</p>
+    </div>
+
+    <h2>Hard inventory (live counts)</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Item</th><th>Türkiye (gold)</th><th>Australia today</th></tr></thead>
+        <tbody>
+          <tr><td class="domain">Offered roles</td><td class="note">40 (30 medical + 10 Özel Branşlar)</td><td class="note">44 (Medical Board–adapted)</td></tr>
+          <tr><td class="domain">Specialty engine files</td><td class="note">321 non-test under specialties/*/engines</td><td class="note">Same files in tree; <b>0 imported</b> by Muayene; ulke pageExtensions</td></tr>
+          <tr><td class="domain">Doktor Araçları catalog</td><td class="note">145 (13 ortak + 132 branş)</td><td class="note">~130 au-* keys + shared kit; dietetics depth outlier</td></tr>
+          <tr><td class="domain">Sağlığım portal modules</td><td class="note">42 PortalModulId (chapter UX)</td><td class="note">44 three-line blurbs; dietetics coaching cards</td></tr>
+          <tr><td class="domain">Visit UI</td><td class="note">branş SOAP + engines</td><td class="note">Single Muayene.tsx (~485 lines)</td></tr>
+          <tr><td class="domain">Patient file</td><td class="note">~819 lines + sub-routes</td><td class="note">Hastalar.tsx ~441 + growth/photo extras</td></tr>
+          <tr><td class="domain">Closed tool slots</td><td class="note">—</td><td class="note">10 (ATS, FIM, PHQ/GAD, …)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2>Game changers (priority)</h2>
+    <div class="cards three">
+      <div class="card">
+        <div class="top"><div class="title">1 · Visit clinical depth</div><span class="pill danger">L</span></div>
+        <div class="body">Shared TR visit/note with country gates (DEPTH-03) or Option-A engines. Without this AU cannot claim gold.</div>
+      </div>
+      <div class="card">
+        <div class="top"><div class="title">2 · Specialty calculators</div><span class="pill danger">L</span></div>
+        <div class="body">Clone the dieteticsTools pattern for physio, psych, OT, audiology, high-volume medical roles.</div>
+      </div>
+      <div class="card">
+        <div class="top"><div class="title">3 · Real portal chapters</div><span class="pill warning">M</span></div>
+        <div class="body">Move past three-line blurbs to eligibility-gated specialty modules with fixtures.</div>
+      </div>
+      <div class="card">
+        <div class="top"><div class="title">4 · Assistant session parity</div><span class="pill danger">L</span></div>
+        <div class="body">Share session engine + floating panel; open-patient context; navigation tools.</div>
+      </div>
+      <div class="card">
+        <div class="top"><div class="title">5 · Ship 44 portraits</div><span class="pill info">S</span></div>
+        <div class="body">Run WaveSpeed script; commit public/portreler/au — demo polish.</div>
+      </div>
+    </div>
+
+    <h2>Recommended next ships</h2>
+    <div class="cards three">
+      <div class="card">
+        <div class="top"><div class="title">Impress</div><span class="pill success">Sprint</span></div>
+        <div class="body">Pick one high-volume AU role (paeds or GP) and ship visit-depth + one real portal module to TR’s wow bar — country-adapted, clinician-gated content only.</div>
+      </div>
+      <div class="card">
+        <div class="top"><div class="title">Velocity</div><span class="pill warning">Sprint</span></div>
+        <div class="body">AU-LOOK-PARITY-02: share patients/calendar/settings page components so look cannot re-drift while depth work lands.</div>
+      </div>
+      <div class="card">
+        <div class="top"><div class="title">Mandate</div><span class="pill info">Sprint</span></div>
+        <div class="body">Close TGA/licence open items for calculators already on; keep closed slots closed until signed content exists.</div>
+      </div>
+    </div>
+
+    <h2>Sources</h2>
+    <p class="src">Code: <code>countries/au/**</code>, <code>components/ulke/uygulama/*</code>, <code>lib/doktor/specialties.ts</code>, <code>lib/specialties/klinikDikey.ts</code>, <code>specialties/*/engines</code> (321), <code>lib/doktor/doktorAraclari.ts</code>, <code>lib/portal/moduller.ts</code>, <code>docs/AU-DEPTH-PARITY-PLAN.md</code>, <code>docs/OPEN-COMMITMENTS.md</code> (AU-DEPTH-PARITY-03, AU-ARACLAR-DEPTH-01, AU-LOOK-PARITY-02, AU-PEDIATRI-GOLD-01*), <code>docs/araclar-denetim/AU.md</code>, prior <code>docs/audits/AU-40-PEDIATRI-AUDIT-01.json</code>.</p>
+    <p class="src">Intentionally out of wow now: inventing AU doses/thresholds without a named clinician; scraping Ahpra; sending to AIR/PBS; porting MBYS/Medula/e-Reçete.</p>
+
+    <div class="foot">
+      <span>AU-GOLDEN-GAP-AUDIT-02 · 2026-10-30 · no patient data</span>
+      <span>Mean wow vs TR gold: 44 · Strong 3 · Partial 7 · Thin 1 · Missing 1 · Exempt 1</span>
+    </div>
+  </div>
+</body>
+</html>
