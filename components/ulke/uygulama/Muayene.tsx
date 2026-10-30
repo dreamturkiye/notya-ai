@@ -31,6 +31,7 @@ import { tamAd, type HastaKaydi } from './Hastalar'
 import { Not } from './Not'
 import { asistanAdi } from './Asistan'
 import { HastaFormuKarti } from './HastaFormuKarti'
+import { MuayeneMotorPaneli } from './MuayeneMotorPaneli'
 import { EklerAdimi } from './Ekler'
 import type { EkGonderimi } from '@/lib/ulke/belgeler/ekler'
 import { ozellikAcik } from '@/lib/ulke/ulke'
@@ -321,6 +322,8 @@ function YeniMuayene({ u, hastaId, randevuId }: { u: ReturnType<typeof useUygula
       <KayitGorunumu m={u.m} hasta={hasta} sablon={sablon} randevu={randevu} riza={riza} setRiza={(r) => { setRiza(r); setHataKodu(null) }} durum={durum} sure={sure} hataKodu={hataKodu} baslat={baslat} durdur={durdur} vazgec={vazgec} rol={u.hesap?.rol} dosyaSec={dosyaSec}>
         {/* NOTYA-ULKE-INTAKE-01: what the patient wrote before the visit, to read while it is recorded. Never sent to the model. */}
         {formAcik() ? <HastaFormuKarti u={u} hastaId={hasta.id} mod="muayene" /> : null}
+        {/* AU gold depth / pack muayeneMotorlari — per-role visit prompts when the pack declares them. */}
+        <MuayeneMotorPaneli rol={u.hesap?.rol} />
       </KayitGorunumu>
     </>
   )
