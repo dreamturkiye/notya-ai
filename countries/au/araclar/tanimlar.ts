@@ -28,6 +28,7 @@ import { AU_NONSURGICAL } from './nonsurgicalPlan'
 import { AU_OZEL_TANIMLAR } from './privatePlans'
 import { AU_ACIL_TANIMLAR } from './acilBayraklari'
 import { AU_DIYET_TANIMLAR } from './dieteticsTools'
+import { AU_KOCLUK_TANIMLAR } from './bransKocluk'
 import { AU_KOHORT_TANIMLAR } from './kohort'
 import { AU_INCELEME_TANIMLAR } from './reviewPlans'
 import { AU_WELLNESS } from './wellnessPlan'
@@ -279,4 +280,4 @@ export const AU_ASI_TAKVIMI: AracTanimi = {
 }
 
 /** The mechanisms only Australia has, in the order the grid shows their tools. */
-export const AU_TANIMLAR: readonly AracTanimi[] = [AU_BEDEN, AU_K10, AU_ECOG, AU_ASI_TAKVIMI, AU_AIR, AU_BILDIRIM, AU_ZEHIR_SINIFI, AU_SCHEDULE_8_TANIMI, AU_ETIKET, AU_ZORUNLU_BILDIRIM, AU_PBS_RECETE, AU_MEDICARE, AU_KIMLIK_KONTROL, AU_GIZLILIK, AU_GST, AU_MHR, AU_WELLNESS, AU_NONSURGICAL, ...AU_OZEL_TANIMLAR, ...AU_INCELEME_TANIMLAR, ...AU_ACIL_TANIMLAR, ...AU_KOHORT_TANIMLAR, ...AU_DIYET_TANIMLAR]
+export const AU_TANIMLAR: readonly AracTanimi[] = [AU_BEDEN, AU_K10, AU_ECOG, AU_ASI_TAKVIMI, AU_AIR, AU_BILDIRIM, AU_ZEHIR_SINIFI, AU_SCHEDULE_8_TANIMI, AU_ETIKET, AU_ZORUNLU_BILDIRIM, AU_PBS_RECETE, AU_MEDICARE, AU_KIMLIK_KONTROL, AU_GIZLILIK, AU_GST, AU_MHR, AU_WELLNESS, AU_NONSURGICAL, ...AU_OZEL_TANIMLAR, ...AU_INCELEME_TANIMLAR, ...AU_ACIL_TANIMLAR, ...AU_KOHORT_TANIMLAR, ...AU_DIYET_TANIMLAR, ...AU_KOCLUK_TANIMLAR]

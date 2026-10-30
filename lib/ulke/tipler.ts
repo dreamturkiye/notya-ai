@@ -258,6 +258,15 @@ export type UygulamaAyarlari = {
   randevu?: RandevuAyarlari
   /** NOTYA-ULKE-PORTAL-01 — the patient portal's settings. Present exactly where the feature `hastaPortali` is on. */
   portal?: PortalAyarlari
+  /**
+   * Per-role Muayene (visit) engine prompts shown on the visit setup screen. Pack-owned copy and linked
+   * tool keys; absent = no specialty panel. Shared UI never hard-codes a country role string.
+   */
+  muayeneMotorlari?: Readonly<Record<string, {
+    baslik: string
+    kontrol: readonly string[]
+    araclar: readonly string[]
+  }>>
   /** NOTYA-ULKE-MESAJ-01 — messages between a doctor and a patient. Present exactly where the feature `hastaMesajlari` is on. */
   mesaj?: MesajAyarlari
   /** NOTYA-ULKE-MESAJ-01 — consultation between doctors. Present exactly where the feature `konsultasyon` is on. */
@@ -387,6 +396,20 @@ export type PortalAyarlari = {
       /** Patient-facing labels for ticked nutrition-goal keys (e.g. agirlik, alim). */
       hedefAdi: Readonly<Record<string, string>>
     }
+  }
+  /**
+   * Per-role portal coaching (care plan / between-visit log / care goals) — same payload shape as
+   * `beslenme`, keyed by role. Dietetics stays on `beslenme`. Absent = no per-role coaching block.
+   * Shared UI never hard-codes a country tool key (wall D7).
+   */
+  kocluk?: {
+    moduller: Readonly<Record<string, {
+      planAraci: string
+      gunlukAraci: string
+      hedefAraci?: string
+      agirlikAraci?: string
+      etiket: NonNullable<PortalAyarlari['beslenme']>['etiket']
+    }>>
   }
   /** The label beside a follow-up day the clinician kept. Required when `bolumler` is set. */
   tarihEtiket?: string

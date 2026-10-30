@@ -46,6 +46,7 @@ import { AU_TANIMLAR } from './araclar/tanimlar'
 import { AU_EK_YUVALAR } from './araclar/yuvalarim'
 import { auAcilBayraklari } from './araclar/acilBayraklari'
 import { auDieteticsAraclari } from './araclar/dieteticsTools'
+import { auBransKoclukAraclari } from './araclar/bransKocluk'
 import { auKohortAraclari } from './araclar/kohort'
 import { auIncelemePlanlari } from './araclar/reviewPlans'
 import { AU_ROLLER } from './klinik/roller'
@@ -335,6 +336,8 @@ export const AU_GIRDI: EnUlkeGirdisi = {
         // AU clinical dietetics beta suite — specialty-only (dietetics). MST score, weight %,
         // energy/protein kJ, IDDSI, refeeding ticks, enteral rate, person-centred goals.
         ...auDieteticsAraclari(),
+        // AU gold depth — per-role care-plan / between-visit-log / care-goals (every role except dietetics).
+        ...auBransKoclukAraclari(),
         AU_GROWTH_CHART_REFERENCE,
         AU_KIMLIK_KONTROL_ARACI,
         AU_GIZLILIK_ARACI,

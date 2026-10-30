@@ -1,5 +1,17 @@
 # OPEN COMMITMENTS — Notya AI
 
+## AU-GOLD-DEPTH-01 — per-role Muayene engines + Hasta portalı coaching for all 44 AU roles (Claude, 2026-10-30)
+
+Bring AU to Turkish golden depth for the three top gaps from the gold audit: Muayene engines, non-dietetics clinical tools, and per-branch Hasta portalı.
+
+| Date | Item | Owner | Status |
+|---|---|---|---|
+| 2026-10-30 | **AU-GOLD-DEPTH-01a — per-role Hasta portalı coaching (43 roles + dietetics meal plan).** Care-plan / between-visit-log / care-goals tools + portal cards, dietetics pattern. Specialty-gated. Shared UI via pack `portal.kocluk` / `portal.beslenme`. | Claude | **DONE** on AU (`countries/au/portalBransModulleri.ts`, `araclar/bransKocluk.ts`, `lib/ulke/portal/koclukAyari.ts`) |
+| 2026-10-30 | **AU-GOLD-DEPTH-01b — AU Muayene visit engines (44 roles).** `.ulke`-native visit prompts + linked Araçlar; AU-vs-TR research in `docs/audits/AU-MUAYENE-TR-DIFF.md`. Not a mount of TR `specialties/*/engines`. | Claude | **DONE** on AU (`klinik/muayeneMotorlari.ts`, `MuayeneMotorPaneli.tsx`) |
+| 2026-10-30 | **AU-GOLD-DEPTH-01c — non-dietetics clinical tool depth.** Coaching trio (129 tools) + existing flags/review/private plans. Full TR calculator ports stay Option A / clinician-gated. | Claude | **DONE** structural depth on AU; named clinician sign-off still OPEN under onaysiz list |
+| 2026-10-30 | **AU-GOLD-DEPTH-01d — us/gb/ca/nz/uz absorb the same coaching + visit-panel pattern, country-adapted.** | Claude | **OPEN GAP** |
+
+
 ## SES-OMURGA-V2 — voice/text assistant rebuild shipped + FOUNDER LOCK; what still needs Kaan (Claude, 2026-10-29)
 
 Kaan ordered "Ses Omurgası v2" on 2026-10-29 (Dr. Gökhan: voice unusable; diagnosis and research in the job brief).
