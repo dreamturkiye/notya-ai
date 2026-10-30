@@ -21,6 +21,7 @@ import { AU_BESLENME_ETIKET } from './portalBeslenmeEtiket'
 import { AU_PORTAL_BOLUMLERI } from './portalBolumleri'
 import { AU_KOCLUK_MODULLERI } from './portalBransModulleri'
 import { AU_MUAYENE_MOTORLARI } from './klinik/muayeneMotorlari'
+import { AU_VISIT_PREP_ROL } from './araclar/visitPrep'
 import { AU_UZANTI } from './uzanti'
 import { AU_BIRIMLER, AU_VELI_YASI } from './temel'
 
@@ -164,8 +165,22 @@ export const AU_PAKETI: UlkePaketi = {
       durumEtiket: { gecikti: 'Overdue', bugun: 'Today', yaklasiyor: 'Coming up', planli: 'Planned' },
     },
     // AU gold depth — per-role visit engine prompts on Muayene setup (AU-adapted; not TR specialty engines).
+    // AU-GOLD-DEPTH-02: enrich linked Araçlar with visit-prep + care-log/goals so the panel launches the full spine.
     muayeneMotorlari: Object.fromEntries(
-      Object.values(AU_MUAYENE_MOTORLARI).map((m) => [m.rol, { baslik: m.baslik, kontrol: m.kontrol, araclar: m.araclar }]),
+      Object.values(AU_MUAYENE_MOTORLARI).map((m) => {
+        const ekstra: string[] = []
+        const prep = AU_VISIT_PREP_ROL[m.rol]
+        if (prep) ekstra.push(prep)
+        const kocluk = AU_KOCLUK_MODULLERI[m.rol]
+        if (kocluk) {
+          for (const k of [kocluk.gunlukAraci, kocluk.hedefAraci, kocluk.planAraci]) {
+            if (k && !m.araclar.includes(k) && !ekstra.includes(k)) ekstra.push(k)
+          }
+        }
+        // Dietetics: keep meal-suite keys already on the motor; still add visit-prep.
+        const araclar = [...m.araclar, ...ekstra.filter((k) => !m.araclar.includes(k))]
+        return [m.rol, { baslik: m.baslik, kontrol: m.kontrol, araclar }]
+      }),
     ),
     // CONSULTATION BETWEEN DOCTORS: how long one stays open to answer, and how long the consulted colleague may
     // still read it after it is closed. STARTING VALUES, unverified by a lawyer (checklist I9, same as the consent

@@ -16,6 +16,7 @@
 import { AU_ACIL_ANAHTARLARI } from './acilBayraklari'
 import { AU_DIYET_ANAHTARLARI } from './dieteticsTools'
 import { AU_KOCLUK_ANAHTARLARI } from './bransKocluk'
+import { AU_VISIT_PREP_ANAHTARLARI } from './visitPrep'
 import { AU_KOHORT_ANAHTARLARI } from './kohort'
 import { AU_BAGLANTI_KAYITLARI } from './referanslar'
 import { AU_INCELEME_ANAHTARLARI } from './reviewPlans'
@@ -176,6 +177,12 @@ export const AU_ONAYSIZ_ACIK_ARACLAR: readonly OnaysizAcikArac[] = [
     oneri: 'AU gold depth — per-role portal coaching suite, 2026-10-30',
     klinisyen: null,
     bakilacak: 'Specialty-only care-plan / between-visit-log / care-goals. Free-text and ticks only — no dose, score or pathway. A clinician of that specialty should say whether the four plan slots and goal ticks match ordinary between-visit coaching in their practice.',
+  })),
+  ...AU_VISIT_PREP_ANAHTARLARI.map((anahtar) => ({
+    anahtar,
+    oneri: 'AU gold depth — per-role visit-prep checklist, 2026-10-30',
+    klinisyen: null,
+    bakilacak: 'Specialty-only visit-prep ticks. No dose, triage scale or pathway hours. A clinician of that specialty should say whether the five ticks match ordinary end-of-visit safety-netting in their practice.',
   })),
   ...AU_BAGLANTI_KAYITLARI.map((k) => ({
     anahtar: k.anahtar,

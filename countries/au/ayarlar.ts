@@ -47,6 +47,7 @@ import { AU_EK_YUVALAR } from './araclar/yuvalarim'
 import { auAcilBayraklari } from './araclar/acilBayraklari'
 import { auDieteticsAraclari } from './araclar/dieteticsTools'
 import { auBransKoclukAraclari } from './araclar/bransKocluk'
+import { auVisitPrepAraclari } from './araclar/visitPrep'
 import { auKohortAraclari } from './araclar/kohort'
 import { auIncelemePlanlari } from './araclar/reviewPlans'
 import { AU_ROLLER } from './klinik/roller'
@@ -338,6 +339,8 @@ export const AU_GIRDI: EnUlkeGirdisi = {
         ...auDieteticsAraclari(),
         // AU gold depth — per-role care-plan / between-visit-log / care-goals (every role except dietetics).
         ...auBransKoclukAraclari(),
+        // AU-GOLD-DEPTH-02 — per-role visit-prep ticks (all 44 roles). No dose/score.
+        ...auVisitPrepAraclari(),
         AU_GROWTH_CHART_REFERENCE,
         AU_KIMLIK_KONTROL_ARACI,
         AU_GIZLILIK_ARACI,

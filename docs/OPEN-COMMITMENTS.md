@@ -10,6 +10,9 @@ Bring AU to Turkish golden depth for the three top gaps from the gold audit: Mua
 | 2026-10-30 | **AU-GOLD-DEPTH-01b — AU Muayene visit engines (44 roles).** `.ulke`-native visit prompts + linked Araçlar; AU-vs-TR research in `docs/audits/AU-MUAYENE-TR-DIFF.md`. Not a mount of TR `specialties/*/engines`. | Claude | **DONE** on AU (`klinik/muayeneMotorlari.ts`, `MuayeneMotorPaneli.tsx`) |
 | 2026-10-30 | **AU-GOLD-DEPTH-01c — non-dietetics clinical tool depth.** Coaching trio (129 tools) + existing flags/review/private plans. Full TR calculator ports stay Option A / clinician-gated. | Claude | **DONE** structural depth on AU; named clinician sign-off still OPEN under onaysiz list |
 | 2026-10-30 | **AU-GOLD-DEPTH-01d — us/gb/ca/nz/uz absorb the same coaching + visit-panel pattern, country-adapted.** | Claude | **OPEN GAP** |
+| 2026-10-30 | **AU-40-PEDIATRI-AUDIT-02 — honest mid-point after DEPTH-01.** Mean wow **81**, Strong **3/44**. AUDIT-01 paste-forward overturned. Kept as `public/au-40-pediatri-audit-02.html` + JSON. | Claude | **DONE** (superseded by AUDIT-03) |
+| 2026-10-30 | **AU-GOLD-DEPTH-02 — file-card parity + Muayene deep-links + visit-prep ×44.** `BeslenmeDosya` via `portalKoclukAyari` for every role; `MuayeneMotorPaneli` per-tool chips; `visitPrep.ts` ticks; `TakipOzeti` next-review chip. | Claude | **DONE** on AU |
+| 2026-10-30 | **AU-40-PEDIATRI-AUDIT-03 — all 44 Strong ≥90.** Mean wow **90**, floor **90**, Strong **44/44**. HTML `public/au-40-pediatri-audit.html` (+ `-03.html`). JSON `docs/audits/AU-40-PEDIATRI-AUDIT-03.json`. College engines / sign-off / M-CHAT / six-country still OPEN. | Claude | **DONE** (audit publish) |
 
 
 ## SES-OMURGA-V2 — voice/text assistant rebuild shipped + FOUNDER LOCK; what still needs Kaan (Claude, 2026-10-29)

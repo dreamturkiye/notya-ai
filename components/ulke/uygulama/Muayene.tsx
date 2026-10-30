@@ -323,7 +323,7 @@ function YeniMuayene({ u, hastaId, randevuId }: { u: ReturnType<typeof useUygula
         {/* NOTYA-ULKE-INTAKE-01: what the patient wrote before the visit, to read while it is recorded. Never sent to the model. */}
         {formAcik() ? <HastaFormuKarti u={u} hastaId={hasta.id} mod="muayene" /> : null}
         {/* AU gold depth / pack muayeneMotorlari — per-role visit prompts when the pack declares them. */}
-        <MuayeneMotorPaneli rol={u.hesap?.rol} />
+        <MuayeneMotorPaneli rol={u.hesap?.rol} hastaId={hasta.id} />
       </KayitGorunumu>
     </>
   )

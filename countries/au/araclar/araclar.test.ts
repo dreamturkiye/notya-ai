@@ -17,6 +17,7 @@ import { AU_AUDIOLOGY, AU_COSMETIC, AU_DIETETICS, AU_OT, AU_PHYSIO, AU_PSYCHOLOG
 import { AU_ACIL_ANAHTARLARI, AU_ACIL_TANIMLAR } from './acilBayraklari'
 import { AU_DIYET_ANAHTARLARI } from './dieteticsTools'
 import { AU_KOCLUK_ANAHTARLARI } from './bransKocluk'
+import { AU_VISIT_PREP_ANAHTARLARI } from './visitPrep'
 import { AU_KOHORT_ANAHTARLARI, AU_KOHORT_TANIMLAR } from './kohort'
 import { AU_INCELEME_ANAHTARLARI, AU_INCELEME_TANIMLAR } from './reviewPlans'
 import { AU_WELLNESS } from './wellnessPlan'
@@ -309,7 +310,7 @@ describe('au-immunisation-schedule — NIP milestones (NSW Health schedule, curr
 
 describe('the mechanisms only Australia has', () => {
   it('each key carries the country\'s code, each names the source of its arithmetic, and none asks the country for a number of its own', () => {
-    assert.deepEqual(AU_TANIMLAR.map((t) => t.anahtar), ['au-body-size', 'au-mental-health-screen', 'au-oncology-grading', 'au-immunisation-schedule', 'au-immunisation-report', 'au-notifiable-diseases', 'au-poisons-schedules', 'au-schedule-8', 'au-dispensing-label', 'au-mandatory-notifications', 'au-pbs-prescription', 'au-medicare-particulars', 'au-identifier-check', 'au-privacy-principles', 'au-tax-invoice', 'au-my-health-record', 'au-wellness-plan', 'au-nonsurgical-plan', 'au-cosmetic-surgery-plan', 'au-physio-plan', 'au-psychology-plan', 'au-dietetics-plan', 'au-ot-plan', 'au-audiology-plan', ...AU_INCELEME_ANAHTARLARI, ...AU_ACIL_ANAHTARLARI, ...AU_KOHORT_ANAHTARLARI, ...AU_DIYET_ANAHTARLARI, ...AU_KOCLUK_ANAHTARLARI])
+    assert.deepEqual(AU_TANIMLAR.map((t) => t.anahtar), ['au-body-size', 'au-mental-health-screen', 'au-oncology-grading', 'au-immunisation-schedule', 'au-immunisation-report', 'au-notifiable-diseases', 'au-poisons-schedules', 'au-schedule-8', 'au-dispensing-label', 'au-mandatory-notifications', 'au-pbs-prescription', 'au-medicare-particulars', 'au-identifier-check', 'au-privacy-principles', 'au-tax-invoice', 'au-my-health-record', 'au-wellness-plan', 'au-nonsurgical-plan', 'au-cosmetic-surgery-plan', 'au-physio-plan', 'au-psychology-plan', 'au-dietetics-plan', 'au-ot-plan', 'au-audiology-plan', ...AU_INCELEME_ANAHTARLARI, ...AU_ACIL_ANAHTARLARI, ...AU_KOHORT_ANAHTARLARI, ...AU_DIYET_ANAHTARLARI, ...AU_KOCLUK_ANAHTARLARI, ...AU_VISIT_PREP_ANAHTARLARI])
     for (const t of AU_TANIMLAR) {
       assert.match(t.anahtar, /^au-[a-z0-9]+(-[a-z0-9]+)*$/)
       assert.ok((t.kaynak ?? '').length > 20, t.anahtar)
