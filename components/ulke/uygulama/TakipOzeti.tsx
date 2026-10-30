@@ -10,11 +10,12 @@ import React, { useCallback, useEffect, useState } from 'react'
 import type { Uygulama } from './Kabuk'
 import { aracYolu, paketAraci } from './aracOrtak'
 import { arayuz } from '@/lib/ulke/arayuz'
+import { bicimli } from '@/lib/ulke/araclar/paket'
 import { ARAC_KAYDI_API, type AracKaydi } from '@/lib/ulke/araclar/kayitTipleri'
 import { portalIncelemeOzeti } from '@/lib/ulke/portal/incelemeOzeti'
 import { ulkePaketi } from '@/lib/ulke/ulke'
 
-function incelemeAnahtarlari(rol: string | null, icerik: ReturnType<typeof arayuz>['araclar']): string[] {
+function incelemeAnahtarlari(rol: string | null, icerik: NonNullable<ReturnType<typeof arayuz>['araclar']> | null): string[] {
   if (!rol || !icerik) return []
   const motor = ulkePaketi().uygulama?.muayeneMotorlari?.[rol] as { araclar?: readonly string[] } | undefined
   const adaylar = (motor?.araclar ?? []).filter((k) => {
@@ -85,7 +86,7 @@ export function TakipOzetiGorunumu({
 export function TakipOzetiKarti({ u, hastaId }: { u: Uygulama; hastaId: string }) {
   const [kayitlar, setKayitlar] = useState<AracKaydi[] | null>(null)
   const { hesap, api } = u
-  const icerik = arayuz().araclar
+  const icerik = arayuz().araclar ?? null
   const rol = hesap?.rol ?? null
   const anahtarlar = incelemeAnahtarlari(rol, icerik)
   const acik = anahtarlar.length > 0
@@ -100,10 +101,11 @@ export function TakipOzetiKarti({ u, hastaId }: { u: Uygulama; hastaId: string }
   if (!ozet) return null
   const arac = paketAraci(icerik!, ozet.arac)
   const bugun = new Date().toISOString().slice(0, 10)
+  const dil = ulkePaketi().varsayilanDil
   return (
     <TakipOzetiGorunumu
       ozet={ozet}
-      aracAdi={arac?.ad ?? ozet.arac}
+      aracAdi={arac ? bicimli(arac.paket.metin.ad, dil) || ozet.arac : ozet.arac}
       hastaId={hastaId}
       bugun={bugun}
     />

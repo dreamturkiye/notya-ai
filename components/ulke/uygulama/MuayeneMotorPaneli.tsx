@@ -11,6 +11,7 @@
  */
 import React from 'react'
 import { arayuz } from '@/lib/ulke/arayuz'
+import { bicimli } from '@/lib/ulke/araclar/paket'
 import { ulkePaketi } from '@/lib/ulke/ulke'
 import { aracYolu, paketAraci } from './aracOrtak'
 import { YOL } from './Kabuk'
@@ -33,7 +34,8 @@ export function MuayeneMotorPaneli({
   const motorlar = ulkePaketi().uygulama?.muayeneMotorlari
   const motor = motorlar?.[rol] as MuayeneMotorSatiri | undefined
   if (!motor) return null
-  const icerik = arayuz().araclar
+  const icerik = arayuz().araclar ?? null
+  const dil = ulkePaketi().varsayilanDil
   return (
     <section className="uza-kart" data-alan="muayene-motor" data-rol={rol}>
       <h2 className="uza-h2">{motor.baslik}</h2>
@@ -58,7 +60,7 @@ export function MuayeneMotorPaneli({
           >
             {motor.araclar.map((anahtar) => {
               const arac = icerik ? paketAraci(icerik, anahtar) : null
-              const ad = arac?.ad ?? anahtar
+              const ad = arac ? bicimli(arac.paket.metin.ad, dil) || anahtar : anahtar
               return (
                 <li key={anahtar}>
                   <a

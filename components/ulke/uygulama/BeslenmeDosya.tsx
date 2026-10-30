@@ -163,7 +163,7 @@ export function BeslenmeDosyaGorunumu({
 export function BeslenmeDosyaKarti({ u, hastaId }: { u: Uygulama; hastaId: string }) {
   const [kayitlar, setKayitlar] = useState<AracKaydi[] | null>(null)
   const { hesap, api, dil } = u
-  const icerik = arayuz().araclar
+  const icerik = arayuz().araclar ?? null
   const rol = hesap?.rol ?? null
   const ayar = portalKoclukAyari(ulkePaketi(), rol, icerik)
   const katalog = araclarMetni(dil).beslenmeDosya
