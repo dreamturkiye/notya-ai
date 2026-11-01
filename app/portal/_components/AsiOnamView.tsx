@@ -1,24 +1,22 @@
 'use client'
 /**
- * NOTYA-ASI-ONAM-01 — Sağlığım › Aşı Onamı. Remote half of the three consent flows: the parent
- * reads the SAME static per-vaccine content the doctor would show in clinic (lib/asi/onam —
- * no AI text here either), and confirms or declines once. The confirmation is final: there is no
- * "undo" button because the record it creates is immutable by design (migration 161).
+ * NOTYA-ASI-ONAM-01 — Sağlığım › Aşı Bilgilendirme. The parent reads the SAME static per-vaccine
+ * content the doctor would show in clinic (lib/asi/onam — no AI text here either).
+ *
+ * NOTYA-ASI-ONAM-02 (2026-11-01): this is a pre-visit information acknowledgement, never a consent
+ * (Resmî Gazete 27.10.2026/33413 requires verified identity + SMS OTP via e-Nabız or the facility's
+ * SBYS; see lib/asi/onam/asiOnamDurum.ts). The parent marks it read or reports a concern; the
+ * doctor takes the consent at the visit. Labels come from asiOnamDurum.ts, never from raw durum.
  */
 import { useEffect, useState } from 'react'
 import { EmptyState, formatTrDate, SectionHeader, SoftPanel } from './ui'
+import { ASI_ONAM_GORUNEN_ETIKET, ASI_ONAM_YONTEM_KISA, asiOnamGorunenDurumu, type AsiOnamGorunenDurum } from '@/lib/asi/onam/asiOnamDurum'
 
 interface IcerikGosterim { ad: string; korur: string; yanEtkiler: string[]; onamCumlesi: string; kaynak: string }
 interface Talep { id: string; asilar: string[]; bildirim_kanali: string }
-interface Kayit { id: string; asilar: string[]; yontem: string; durum: 'alindi' | 'reddedildi'; created_at: string }
+interface Kayit { id: string; asilar: string[]; yontem: string; durum: string; gorunenDurum?: AsiOnamGorunenDurum; created_at: string }
 
-const YONTEM_ETIKETI: Record<string, string> = {
-  klinik: 'Klinikte',
-  'uzaktan-eposta': 'Uzaktan (e-posta)',
-  'uzaktan-whatsapp': 'Uzaktan (WhatsApp)',
-  'uzaktan-portal': 'Uzaktan (Sağlığım)',
-  kagit: 'Kağıt form',
-}
+const YONTEM_ETIKETI: Record<string, string> = ASI_ONAM_YONTEM_KISA
 
 export function AsiOnamView({ token, basePath }: { token: string; basePath: string }) {
   const api = `/api/portal/hasta/${encodeURIComponent(token)}/asi-onam`
@@ -31,7 +29,7 @@ export function AsiOnamView({ token, basePath }: { token: string; basePath: stri
   const [yakinlik, setYakinlik] = useState('Anne')
   const [telefon, setTelefon] = useState('')
   const [gonderiliyor, setGonderiliyor] = useState(false)
-  const [tamamlandi, setTamamlandi] = useState<'alindi' | 'reddedildi' | null>(null)
+  const [tamamlandi, setTamamlandi] = useState<'okundu' | 'cekince' | null>(null)
 
   useEffect(() => {
     let aktif = true
@@ -51,7 +49,7 @@ export function AsiOnamView({ token, basePath }: { token: string; basePath: stri
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  async function yanitla(durum: 'alindi' | 'reddedildi') {
+  async function yanitla(okundu: boolean) {
     if (!talep) return
     if (!ad.trim()) { setHata('Adınızı ve soyadınızı yazın.'); return }
     setGonderiliyor(true)
@@ -61,11 +59,11 @@ export function AsiOnamView({ token, basePath }: { token: string; basePath: stri
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ talepId: talep.id, durum, onayEden: { ad: ad.trim(), yakinlik, telefon: telefon.trim() || null } }),
+        body: JSON.stringify({ talepId: talep.id, okundu, onayEden: { ad: ad.trim(), yakinlik, telefon: telefon.trim() || null } }),
       })
       const j = await r.json().catch(() => ({}))
       if (!r.ok) { setHata(j.error || 'Gönderilemedi.'); return }
-      setTamamlandi(durum)
+      setTamamlandi(okundu ? 'okundu' : 'cekince')
     } catch { setHata('Gönderilemedi.') }
     finally { setGonderiliyor(false) }
   }
@@ -74,18 +72,18 @@ export function AsiOnamView({ token, basePath }: { token: string; basePath: stri
 
   return (
     <div className="sg-fade">
-      <SectionHeader title="Aşı Onamı" subtitle="Çocuğunuz için planlanan aşıların bilgilendirme ve onay formu." />
+      <SectionHeader title="Aşı Bilgilendirme" subtitle="Çocuğunuz için planlanan aşılar hakkında muayene öncesi bilgilendirme. Aşı onamı muayenede alınır." />
       {hata && <div role="alert" style={{ margin: '0 20px 12px', color: 'var(--sg-warn, #B4302F)', fontSize: 13.5 }}>{hata}</div>}
 
       {tamamlandi ? (
         <SoftPanel style={{ margin: '0 20px' }}>
           <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 6 }}>
-            {tamamlandi === 'alindi' ? 'Onayınız kaydedildi.' : 'Yanıtınız kaydedildi.'}
+            {tamamlandi === 'okundu' ? 'Bilgilendirmeyi okuduğunuz kaydedildi.' : 'Çekinceniz kaydedildi.'}
           </div>
           <div style={{ fontSize: 13.5, color: 'var(--sg-muted)' }}>
-            {tamamlandi === 'alindi'
-              ? 'Teşekkürler — doktorunuz muayenede bu onayı görecek.'
-              : 'Doktorunuz bunu görecek ve sizinle konuşacaktır; dilerseniz muayenede tekrar değerlendirilebilir.'}
+            {tamamlandi === 'okundu'
+              ? 'Teşekkürler. Bu bir onam değildir — aşı onamı muayenede, kimliğiniz doğrulanarak hekiminiz tarafından alınacaktır.'
+              : 'Doktorunuz bunu görecek ve muayenede sizinle konuşacaktır. Aşı onamı muayenede alınır.'}
           </div>
         </SoftPanel>
       ) : talep && icerik ? (
@@ -102,9 +100,12 @@ export function AsiOnamView({ token, basePath }: { token: string; basePath: stri
           ))}
 
           <SoftPanel>
-            <div style={{ fontSize: 13.5, marginBottom: 10 }}>{icerik[0]?.onamCumlesi}</div>
+            <div style={{ fontSize: 13.5, marginBottom: 10 }}>
+              Bu bilgileri muayeneden önce okumanız içindir; bu ekran bir onam değildir. Aşı onamı muayenede,
+              veli / yasal temsilcinin kimliği doğrulanarak hekim tarafından alınır.
+            </div>
             <div style={{ display: 'grid', gap: 8, marginBottom: 10 }}>
-              <input value={ad} onChange={(e) => setAd(e.target.value)} placeholder="Veli / yasal temsilcinin adı soyadı"
+              <input value={ad} onChange={(e) => setAd(e.target.value)} placeholder="Okuyan veli / yasal temsilcinin adı soyadı"
                 style={{ width: '100%', padding: '9px 11px', fontSize: 15, borderRadius: 8, border: '1px solid var(--sg-line)', boxSizing: 'border-box' }} />
               <select value={yakinlik} onChange={(e) => setYakinlik(e.target.value)}
                 style={{ width: '100%', padding: '9px 11px', fontSize: 15, borderRadius: 8, border: '1px solid var(--sg-line)', boxSizing: 'border-box' }}>
@@ -114,30 +115,30 @@ export function AsiOnamView({ token, basePath }: { token: string; basePath: stri
                 style={{ width: '100%', padding: '9px 11px', fontSize: 15, borderRadius: 8, border: '1px solid var(--sg-line)', boxSizing: 'border-box' }} />
             </div>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              <button type="button" disabled={gonderiliyor} onClick={() => void yanitla('alindi')}
+              <button type="button" disabled={gonderiliyor} onClick={() => void yanitla(true)}
                 style={{ flex: '1 1 180px', padding: '11px 14px', fontSize: 14.5, fontWeight: 700, borderRadius: 10, border: 'none', background: 'var(--sg-accent, #0F9B8E)', color: '#fff', cursor: gonderiliyor ? 'default' : 'pointer' }}>
-                Okudum, kabul ediyorum
+                Okudum
               </button>
-              <button type="button" disabled={gonderiliyor} onClick={() => void yanitla('reddedildi')}
+              <button type="button" disabled={gonderiliyor} onClick={() => void yanitla(false)}
                 style={{ padding: '11px 14px', fontSize: 14, borderRadius: 10, border: '1px solid var(--sg-line)', background: 'transparent', cursor: gonderiliyor ? 'default' : 'pointer' }}>
-                Kabul etmiyorum
+                Sorum / çekincem var
               </button>
             </div>
           </SoftPanel>
         </div>
       ) : (
-        <EmptyState art={false} title="Bekleyen bir aşı onam talebi yok" body="Doktorunuz bir onam talebi gönderdiğinde burada görünecek." />
+        <EmptyState art={false} title="Bekleyen bir aşı bilgilendirmesi yok" body="Doktorunuz bir aşı bilgilendirmesi gönderdiğinde burada görünecek." />
       )}
 
       {kayitlar.length > 0 && (
         <div style={{ margin: '20px 20px 0' }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--sg-muted)', marginBottom: 8 }}>Geçmiş onam kayıtları</div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--sg-muted)', marginBottom: 8 }}>Geçmiş bilgilendirme ve onam kayıtları</div>
           <div style={{ display: 'grid', gap: 8 }}>
             {kayitlar.map((k) => (
               <SoftPanel key={k.id} style={{ padding: '10px 14px' }}>
                 <div style={{ fontSize: 13.5, fontWeight: 600 }}>{k.asilar.join(', ')}</div>
                 <div style={{ fontSize: 12, color: 'var(--sg-muted)' }}>
-                  {k.durum === 'alindi' ? 'Onaylandı' : 'Kabul edilmedi'} · {YONTEM_ETIKETI[k.yontem] || k.yontem} · {formatTrDate(k.created_at)}
+                  {ASI_ONAM_GORUNEN_ETIKET[k.gorunenDurum ?? asiOnamGorunenDurumu(k)]} · {YONTEM_ETIKETI[k.yontem] || k.yontem} · {formatTrDate(k.created_at)}
                 </div>
               </SoftPanel>
             ))}

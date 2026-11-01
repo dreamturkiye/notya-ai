@@ -84,7 +84,7 @@ export const PEDIATRI_PROFILE: SpecialtyProfile = {
     // doctor_specialty eligibility, own dedicated route (/asi-onam, own API — not the shared bundle),
     // so this module carries no bundleKeys (lib/portal/moduller.ts marks it attached; the page fetches
     // its own data from app/api/portal/hasta/[token]/asi-onam/route.ts).
-    id: 'asi-onam', nav: [{ key: 'asi-onam', label: 'Aşı Onamı', path: '/asi-onam' }], bundleKeys: [], eligibility: 'doctor_specialty',
+    id: 'asi-onam', nav: [{ key: 'asi-onam', label: 'Aşı Bilgilendirme', path: '/asi-onam' }], bundleKeys: [], eligibility: 'doctor_specialty',
     copyHints: ['Aşı bilgilendirme ve onay formu burada okunur; onay verildiğinde geri alınamaz, yalnız yeni bir muayenede yeniden değerlendirilir.', 'Red de kabul kadar geçerli bir yanıttır.'],
     views: ['AsiOnamView'], derinlik: 'Strong',
   }],

@@ -16,14 +16,19 @@ import type { SpecialtyKey } from '@/lib/asistan/turkishSpecialtyRefs'
 
 export type AsiOnamYontemi = 'klinik' | 'uzaktan-eposta' | 'uzaktan-whatsapp' | 'uzaktan-portal' | 'kagit'
 export const ASI_ONAM_YONTEMLERI: readonly AsiOnamYontemi[] = ['klinik', 'uzaktan-eposta', 'uzaktan-whatsapp', 'uzaktan-portal', 'kagit']
-export type AsiOnamDurumu = 'alindi' | 'reddedildi'
-export const ASI_ONAM_DURUMLARI: readonly AsiOnamDurumu[] = ['alindi', 'reddedildi']
+/**
+ * 'alindi' / 'reddedildi' — consent taken in the clinic (yöntem klinik/kagit only, enforced by
+ * migration 184). 'bilgilendirme-okundu' / 'bilgilendirme-cekince' — a remote pre-visit
+ * acknowledgement, never a consent (NOTYA-ASI-ONAM-02, see asiOnamDurum.ts).
+ */
+export type AsiOnamDurumu = 'alindi' | 'reddedildi' | 'bilgilendirme-okundu' | 'bilgilendirme-cekince'
+export const ASI_ONAM_DURUMLARI: readonly AsiOnamDurumu[] = ['alindi', 'reddedildi', 'bilgilendirme-okundu', 'bilgilendirme-cekince']
 
 export const ASI_ONAM_YONTEMI_ETIKETI: Record<AsiOnamYontemi, string> = {
   klinik: 'Klinikte (veli hazır)',
-  'uzaktan-eposta': 'Uzaktan — e-posta bildirimiyle',
-  'uzaktan-whatsapp': 'Uzaktan — WhatsApp bildirimiyle',
-  'uzaktan-portal': 'Uzaktan — doğrudan Sağlığım',
+  'uzaktan-eposta': 'Uzaktan ön bilgilendirme — e-posta bildirimiyle (onam değildir)',
+  'uzaktan-whatsapp': 'Uzaktan ön bilgilendirme — WhatsApp bildirimiyle (onam değildir)',
+  'uzaktan-portal': 'Uzaktan ön bilgilendirme — doğrudan Sağlığım (onam değildir)',
   kagit: 'Kağıt form (imzalı)',
 }
 

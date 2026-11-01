@@ -11,7 +11,7 @@ export default function HastaAsiOnamPage() {
   if (!portalModulAktif(data, 'asi-onam')) {
     return (
       <div className="sg-fade">
-        <SectionHeader title="Aşı Onamı" subtitle="Bu bölüm bulunamadı." />
+        <SectionHeader title="Aşı Bilgilendirme" subtitle="Bu bölüm bulunamadı." />
         <Link href={basePath} className="sg-back-link" style={{ margin: '0 20px' }}>← Özet</Link>
       </div>
     )

@@ -1,9 +1,16 @@
 /**
  * NOTYA-ASI-ONAM-01 — in-clinic consent flow: GET lists a patient's immutable consent records
  * and any still-pending remote requests; POST records an in-clinic ("klinik") consent — the
- * doctor hands a tablet to the parent (or shows the screen), the parent taps
- * "Okudum, kabul ediyorum" (or declines), and the record is written ONCE, immediately, with no
- * update path afterward (lib/db/migrations/161_asi_onam.sql).
+ * record is written ONCE, immediately, with no update path afterward
+ * (lib/db/migrations/161_asi_onam.sql).
+ *
+ * NOTYA-ASI-ONAM-02 (2026-11-01): this is the ONLY digital path to "Onaylandı". Recording an
+ * acceptance requires the doctor's explicit confirmation that the veli / yasal temsilci (or the
+ * ≥18 patient) is present in the clinic and was identified (`kimlikDogrulandi: true`, stored on
+ * the row) — the regulation of Resmî Gazete 27.10.2026/33413 requires identity verification
+ * before consent (Madde 6, and Madde 11/2 for the legal representative of a minor). A remote
+ * Sağlığım/e-posta/WhatsApp submission is only an acknowledgement (lib/asi/onam/asiOnamDurum.ts).
+ * GET adds `gorunenDurum` to every row so no screen renders a raw remote 'alindi' as consent.
  *
  * HASTA-IZOLASYON-01: patientId (and sessionId, when given) are proven to belong to this doctor's
  * practice BEFORE any read or write. pratikOturum: doctor or their secretary may read; recording
@@ -20,6 +27,7 @@ import { hastaSahibiMi, seansSahibi } from '@/lib/doktor/hastaSahipligi'
 import { decrypt } from '@/lib/security/encryption'
 import { asiOnamIstegiHazirla, asiOnamOnayEdenGecerliMi, type AsiOnamOnayEden } from '@/lib/asi/onam/asiOnamMotoru'
 import { VARSAYILAN_ONAM_DILI } from '@/lib/asi/onam/dil'
+import { asiOnamGorunenDurumu } from '@/lib/asi/onam/asiOnamDurum'
 
 export const dynamic = 'force-dynamic'
 
@@ -37,7 +45,8 @@ export async function GET(req: NextRequest) {
     supabase.from('asi_onam_talepleri').select('*').eq('doktor_id', doktorId).eq('patient_id', patientId).eq('durum', 'gonderildi').order('created_at', { ascending: false }),
   ])
   if (kayitlarQ.error) return NextResponse.json({ error: 'Onam kayıtları alınamadı.' }, { status: 500 })
-  return NextResponse.json({ kayitlar: kayitlarQ.data || [], bekleyenTalepler: talepQ.data || [] })
+  const kayitlar = (kayitlarQ.data || []).map((k) => ({ ...k, gorunenDurum: asiOnamGorunenDurumu(k) }))
+  return NextResponse.json({ kayitlar, bekleyenTalepler: talepQ.data || [] })
 }
 
 export async function POST(req: NextRequest) {
@@ -50,8 +59,9 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json().catch(() => ({}))
   const {
-    patientId, sessionId, randevuId, asilar, durum, onayEden, dil,
+    patientId, sessionId, randevuId, asilar, durum, onayEden, dil, kimlikDogrulandi,
   } = body as {
+    kimlikDogrulandi?: boolean
     patientId?: string
     sessionId?: string | null
     randevuId?: string | null
@@ -72,6 +82,9 @@ export async function POST(req: NextRequest) {
   }
 
   const durumGecerli = durum === 'reddedildi' ? 'reddedildi' : 'alindi'
+  if (durumGecerli === 'alindi' && kimlikDogrulandi !== true) {
+    return NextResponse.json({ error: 'Onamı kaydetmeden önce veli/yasal temsilcinin muayenede hazır olduğunu ve kimliğinin doğrulandığını işaretleyin.' }, { status: 400 })
+  }
   if (!asiOnamOnayEdenGecerliMi(onayEden)) {
     return NextResponse.json({ error: 'Onayı veren kişinin adı zorunludur (veli/yasal temsilci veya hastanın kendisi).' }, { status: 400 })
   }
@@ -100,11 +113,12 @@ export async function POST(req: NextRequest) {
       onay_eden_yakinlik: onay.yakinlik?.trim() || null,
       onay_eden_telefon: onay.telefon?.trim() || null,
       hasta_dogum_tarihi_anlik: dogumTarihi,
+      kimlik_dogrulandi: kimlikDogrulandi === true,
       created_by: user.id,
     })
     .select()
     .single()
 
   if (error) return NextResponse.json({ error: 'Onam kaydı oluşturulamadı.' }, { status: 500 })
-  return NextResponse.json({ kayit: data })
+  return NextResponse.json({ kayit: { ...data, gorunenDurum: asiOnamGorunenDurumu(data) } })
 }
