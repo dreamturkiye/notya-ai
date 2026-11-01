@@ -47,10 +47,10 @@ export function auAsistanKimligi(rol: unknown): AsistanKimligi | null {
 
 /** AU-BETA-01: the shared English landing copy plus Australia's disclaimer block, on both landing pages. */
 /**
- * AU-MKT-AUDIT (2026-10-22): prices are by quote; say in which currency, and that GST is stated on the quote (Notya itself has no ABN claim to make).
- * No amount is shown, so nothing here can be a price claim.
+ * AU-MKT-AUDIT (2026-10-22) + launch 2026-11-01: doctor plan shows a list price in AUD; clinic stays by quote.
+ * GST note stays — Notya itself has no ABN claim to make; the quote/invoice states whether GST applies.
  */
-const AU_PRICE_NOTE = ' Prices are quoted in Australian dollars (AUD); the quote states whether GST applies.'
+const AU_PRICE_NOTE = ' Amounts are in Australian dollars (AUD); invoices and quotes state whether GST applies.'
 const narxAu = <T extends { gruplar: readonly { izoh?: string }[] }>(n: T): T => ({ ...n, gruplar: n.gruplar.map((g) => ({ ...g, izoh: `${g.izoh ?? ''}${AU_PRICE_NOTE}`.trim() })) })
 
 const acilis = temel.acilis

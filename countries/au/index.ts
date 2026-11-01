@@ -26,10 +26,28 @@ import { AU_UZANTI } from './uzanti'
 import { AU_BIRIMLER, AU_VELI_YASI } from './temel'
 
 const cekirdek = enCekirdek('en-AU')
+/** AU launch 2026-11-01 (Kaan): open self-serve 15-day free trial — no invitation code. */
+const AU_ACIK_KAYIT = {
+  ...cekirdek,
+  giris: {
+    ...cekirdek.giris,
+    davetSorusu: 'New here?',
+    kayitBaglantisi: 'Start a free trial',
+  },
+  davetliKayit: {
+    ...cekirdek.davetliKayit,
+    baslik: 'Start your free trial',
+    aciklama: '15 days free. No invitation code. After you create the account, sign in to open Stripe Checkout and begin the trial (card details are taken to start the trial; you are not charged until it ends).',
+    gonder: 'Create account',
+    basarili: 'Your account has been created. Sign in to start your 15-day free trial.',
+    kodYokSorusu: 'Prefer a walkthrough first?',
+    fiyatBaglantisi: 'Book a demo',
+  },
+} as const
 const metin = paketMetinleri({
   acikDiller: ['en-AU'],
   yuzeyler: ['hesap', 'giris', 'davetliKayit', 'bekletme', 'sistem'],
-  metinler: { 'en-AU': cekirdek },
+  metinler: { 'en-AU': AU_ACIK_KAYIT },
 })
 
 /** Mobile number: +61 and nine digits beginning with 4, in any common spelling (04… at home). UNVERIFIED format rule. */
@@ -208,7 +226,8 @@ export const AU_PAKETI: UlkePaketi = {
     adAlanlari: { ikinciAd: false },
     kimlikNumarasi: { dogrula: true },
     veliYasi: AU_VELI_YASI,
-    // SIGN-UP IS CLOSED: invitation code only. Only the owner opens it, after section A of the checklist passes.
-    kayitAcik: false,
+    // AU launch 2026-11-01 (Kaan): self-serve open. No invitation code. 15-day Stripe trial via ?plan=sesli_pro
+    // (doctor plan on the landing = Sesli Pro AUD catalog, STRIPE-NOTYA-AU-03).
+    kayitAcik: true,
   },
 }

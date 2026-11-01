@@ -14,8 +14,9 @@
  *   Medicare/PBS/GST checklists   [araclar/medicareParticulars.ts, pbsPrescription.ts, gstInvoice.ts, kimlikKontrol.ts, baglantilar.ts]
  *   clinic team and front desk    [Klinik.tsx, KlinikYetkiler.tsx, OnBuro.tsx]
  * LEFT OUT ON PURPOSE: TGA/Ahpra/Medicare/PBS endorsement, compliance or certification; Medicare billing or claims; My Health
- * Record (a stub, no connection); Tyro (inactive); any price; any testimonial or number of customers; voice PREVIEW buttons (removed
+ * Record (a stub, no connection); Tyro (inactive); any testimonial or number of customers; voice PREVIEW buttons (removed
  * in AU-HOME-01); the growth-chart tool (off); data residency promises; the persona names themselves.
+ * AU launch 2026-11-01 (Kaan): self-serve 15-day free trial is ON (no invitation code). Doctor plan list price is A$149/mo.
  * AU-CANLI-01 (2026-10-22): the live SPOKEN assistant IS mentioned (microphone on the home screen) — but only while the
  * deployment really holds both agents, the key and the secrets (lib/ulke/asistan/ajan.ts canliAjanlarVar), and never with a
  * claim of diagnosis, decision support, a regulator or a standard. [components/ulke/uygulama/AsistanCanli.tsx, app/api/ulke/asistan-canli/]
@@ -144,27 +145,37 @@ export function auAcilisGuncelle(c: AcilisIcerigi, rolSayisi: number): AcilisIce
     narx: {
       ...c.narx,
       ustBaslik: '10 — Plans',
-      baslik: 'Early access.',
-      baslikVurgu: 'By quote.',
+      baslik: 'Start free.',
+      baslikVurgu: 'Then choose.',
+      dugme: 'Start 15-day free trial',
+      sorovDugme: 'Request a quote',
       gruplar: c.narx.gruplar.map((g) => ({
         ...g,
         rejalar: g.rejalar.map((r) => (r.id === 'doctor'
-          ? { ...r, maddeler: planEk(r.maddeler, ['An assistant named for your specialty', 'Invoices in Australian dollars, paid into your own Stripe account', 'Privacy requests with a response timer', 'Checklists and links for Australian paperwork']) }
+          ? { ...r, maddeler: planEk(r.maddeler, ['15-day free trial — no invitation code', 'An assistant named for your specialty', 'Invoices in Australian dollars, paid into your own Stripe account', 'Privacy requests with a response timer', 'Checklists and links for Australian paperwork']) }
           : r)),
         izoh: g.id === 'clinic'
-          ? `Early access: accounts are opened with an invitation code while the first practices are set up. Ask for one at ${EPOSTA}. The price depends on the number of accounts.`
-          : `Early access: accounts are opened with an invitation code while the first practices are set up. Ask for one at ${EPOSTA}. Prices are given by quote.`,
+          ? `Clinic plans are quoted for the number of accounts. Solo doctors start a 15-day free trial online — no invitation code. Questions: ${EPOSTA}.`
+          : `15-day free trial for one doctor — no invitation code, no credit card charged until the trial ends. After that, $149.00 a month. Questions: ${EPOSTA}.`,
       })),
     },
     sorov: {
       ...c.sorov,
-      govde: `Early access. Tell us the specialty and how you work and we will come back with a quote and an invitation code, or write to ${EPOSTA}.`,
+      baslik: 'Start your free trial.',
+      baslikVurgu: 'Or ask us anything.',
+      govde: `Create an account and begin a 15-day free trial — no invitation code. Prefer a walkthrough first? Book a demo, or write to ${EPOSTA}.`,
+      davetSorusu: 'Ready to try Notya?',
+      davetBaglantisi: 'Start free trial',
       formYok: `The request form opens soon. In the meantime, write to ${EPOSTA}.`,
+    },
+    altBilgi: {
+      ...c.altBilgi,
+      kayit: 'Start a free trial',
     },
     klinik: {
       ...c.klinik,
       ekBolumler: klinikEk(),
-      cta: { ...c.klinik.cta, govde: `Early access: accounts are opened with an invitation code. Tell us the discipline and how many accounts you need, or write to ${EPOSTA}.` },
+      cta: { ...c.klinik.cta, govde: `Clinic pricing depends on how many accounts you need — write to ${EPOSTA}. Solo doctors can start a 15-day free trial online with no invitation code.` },
     },
   }
 }
