@@ -4817,3 +4817,15 @@ Wired the first point a real AU session actually exists — the doctor's first `
 **Still open / Kaan's:** everything STRIPE-NOTYA-AU-01 already listed (STRIPE_SECRET_KEY/WEBHOOK_SECRET, test-object cleanup, own Stripe account), plus: decide whether AU ever gets a true self-serve plan picker, or stays invite-link-carries-the-plan as built here.
 
 | Claude: done above | Kaan: decide if a real plan-picker UI is wanted; everything else inherited from STRIPE-NOTYA-AU-01 | Claude (next, not this job): check the same `apiOnEkleri` gap on UZ and any other country before wiring their checkout |
+
+## STRIPE-NOTYA-AU-03 — AU doctor plan A$149/mo price in Stripe; Vercel env var pending (Claude, 2026-11-01)
+
+The AU landing advertises one doctor plan at A$149/month (`countries/au/ayarlar.ts`, commit 74d903f99 = TR Sesli Pro converted). Kaan approved creating it in the existing StopThreatAI Stripe account (`acct_1SX5XF2LZ4pKabuO`, live mode). The AU catalog there already had "Notya Sesli Pro (AU)" (`prod_VWLfaVEGyWFOPo`, metadata `notya_country:au`, `notya_plan_key:sesli_pro`) with a stale A$115 monthly price, so no duplicate product was made. Added to that product:
+- `price_1UX0dH2LZ4pKabuOkfzLgIFT` — AUD 149.00/month, lookup_key `notya_au_doctor_monthly`, tax_behavior unspecified, metadata `landing_plan:doctor`. No clinic price (by quote).
+
+How the AU build picks it up: `lib/billing/stripePlans.ts` reads `STRIPE_PRICE_SESLI_PRO_MONTH` (no lookup-key path; unset falls back to a TR test-mode ID). Checkout is reached via an invite link carrying `?plan=sesli_pro` (STRIPE-NOTYA-AU-02).
+
+**Waiting on Kaan:**
+1. Vercel project notya-au-preview (`prj_0NpbbCUZW8FhUFw0jvfB2ZOwK9AV`) returned 404/no access to MCP — paste `STRIPE_PRICE_SESLI_PRO_MONTH=price_1UX0dH2LZ4pKabuOkfzLgIFT` (Production + Preview), then redeploy.
+2. Decide whether to archive the stale AU prices (Sesli Pro A$115/mo `price_1UVIy12LZ4pKabuOp33J6X5X`, A$1,150/yr `price_1UVIy02LZ4pKabuOMVU4FFop`) and whether Metin Asistan / Muayenehane AU stay offered at all, since the landing shows one doctor plan.
+3. GST: prices are tax-unspecified. GST registration is required from A$75k AU turnover; no ABN today — later decision.
