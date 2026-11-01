@@ -37,6 +37,9 @@ export async function POST(req: NextRequest) {
   const onayEdenAdi = String(form.get('onayEdenAdi') || '').trim()
   const onayEdenYakinlik = String(form.get('onayEdenYakinlik') || '').trim() || null
   const onayEdenTelefon = String(form.get('onayEdenTelefon') || '').trim() || null
+  // NOTYA-ASI-ONAM-02: a signed paper form counts as consent taken in the clinic — the doctor confirms
+  // it was signed by the representative present and identified (Resmî Gazete 27.10.2026/33413 Madde 6, 11/2).
+  const kimlikDogrulandi = String(form.get('kimlikDogrulandi') || '') === 'true'
   let asilar: unknown = []
   // NOTYA-ASI-NOT-01: this form-field key is named asiAdlari (not "asilar") on purpose — the
   // arsiv.test.ts guard's regex flags any literal `('asilar'` call as a possible raw read of the
@@ -51,6 +54,7 @@ export async function POST(req: NextRequest) {
     if (seans.patient_id && seans.patient_id !== patientId) return NextResponse.json({ error: 'Muayene bu hastaya ait değil.' }, { status: 400 })
   }
   if (!file) return NextResponse.json({ error: 'İmzalı kağıt formun taraması/fotoğrafı zorunludur.' }, { status: 400 })
+  if (durum === 'alindi' && !kimlikDogrulandi) return NextResponse.json({ error: 'İmzalı formun muayenede, kimliği doğrulanan veli/yasal temsilci tarafından imzalandığını işaretleyin.' }, { status: 400 })
   if (!KAGIT_IZINLI_TIPLER.has(file.type)) return NextResponse.json({ error: 'Desteklenmeyen dosya türü — yalnız fotoğraf veya PDF.' }, { status: 400 })
   if (file.size > KAGIT_AZAMI_BAYT) return NextResponse.json({ error: `Dosya ${Math.round(KAGIT_AZAMI_BAYT / 1024 / 1024)} MB sınırını aşıyor.` }, { status: 400 })
   const onayEden: AsiOnamOnayEden = { ad: onayEdenAdi, yakinlik: onayEdenYakinlik, telefon: onayEdenTelefon }
@@ -85,6 +89,7 @@ export async function POST(req: NextRequest) {
       onay_eden_telefon: onayEden.telefon,
       hasta_dogum_tarihi_anlik: dogumTarihi,
       kagit_dosya_url: kagitDosyaUrl,
+      kimlik_dogrulandi: kimlikDogrulandi,
       created_by: user.id,
     })
     .select()

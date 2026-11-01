@@ -4,10 +4,15 @@
  * GET  → the pending remote request (if any) with its content snapshot, built fresh from the
  *        live reference dataset (lib/asi/onam/asiOnamIcerigi.ts) — not yet frozen, since nothing
  *        has been confirmed. Also the patient's past consent records (read-only).
- * POST → the parent (or the patient themself, if ≥18) confirms or declines. This is the ONE
- *        moment the immutable record is written for a remote consent: the content shown here is
- *        frozen into icerik_anlik_goruntu at this instant, exactly as the doctor's screen would
- *        freeze it in clinic.
+ * POST → the parent (or the patient themself, if ≥18) marks the information as READ, or reports a
+ *        concern. NOTYA-ASI-ONAM-02 (2026-11-01): this is a pre-visit information acknowledgement,
+ *        NOT a consent — Resmî Gazete 27.10.2026/33413 (Bilgilendirilmiş Rızanın Elektronik Ortamda
+ *        Alınması Hakkında Yönetmelik) Madde 6-8 and 11 require identity verification, a verified
+ *        mobile number and an SMS OTP (e-Nabız or the facility's SBYS channel), none of which this
+ *        portal does. The row is stored with durum 'bilgilendirme-okundu' / 'bilgilendirme-cekince'
+ *        (migration 184 forbids 'alindi' on a remote yöntem); consent itself is taken in the clinic
+ *        (app/api/doktor/asi-onam POST). The content shown is still frozen into icerik_anlik_goruntu
+ *        so the record proves what the parent read.
  *
  * Isolation: resolvePortalToken fixes BOTH doctor and patient from the PIN-unlocked token — never
  * trust a patientId/doctorId from the request body (same convention as randevu/route.ts).
@@ -22,6 +27,7 @@ import { hekimBransi } from '@/lib/doktor/hekimAdi'
 import { bransAnahtari } from '@/lib/specialties/bransAnahtari'
 import { asiOnamBransUygunMu } from '@/lib/asi/onam/asiOnamBransKapisi'
 import { asiOnamIstegiHazirla, asiOnamOnayEdenGecerliMi, type AsiOnamOnayEden } from '@/lib/asi/onam/asiOnamMotoru'
+import { asiOnamGorunenDurumu, uzaktanBilgilendirmeDurumu } from '@/lib/asi/onam/asiOnamDurum'
 import { decrypt } from '@/lib/security/encryption'
 
 export const dynamic = 'force-dynamic'
@@ -59,7 +65,10 @@ export async function GET(req: NextRequest, { params }: { params: { token: strin
     const istek = asiOnamIstegiHazirla(talep.asilar, talep.dil || 'tr')
     icerikOnizleme = istek.ok ? istek.icerikAnlikGoruntu : null
   }
-  return NextResponse.json({ talep, icerikOnizleme, kayitlar: kayitlarQ.data || [] })
+  // NOTYA-ASI-ONAM-02: the portal never receives a raw durum it could render as "Onaylandı" — every
+  // row carries its displayed meaning (legacy remote 'alindi' rows → bilgilendirme-okundu).
+  const kayitlar = (kayitlarQ.data || []).map((k) => ({ ...k, gorunenDurum: asiOnamGorunenDurumu(k) }))
+  return NextResponse.json({ talep, icerikOnizleme, kayitlar })
 }
 
 export async function POST(req: NextRequest, { params }: { params: { token: string } }) {
@@ -68,7 +77,8 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
   const { sb, doktorId, patientId } = o
 
   const body = await req.json().catch(() => ({}))
-  const { talepId, durum, onayEden } = body as { talepId?: string; durum?: string; onayEden?: unknown }
+  // `okundu: false` (or the legacy `durum: 'reddedildi'`) = the parent has a concern to raise in clinic.
+  const { talepId, durum, okundu, onayEden } = body as { talepId?: string; durum?: string; okundu?: boolean; onayEden?: unknown }
   if (!talepId) return NextResponse.json({ error: 'talepId zorunludur.' }, { status: 400 })
   if (!asiOnamOnayEdenGecerliMi(onayEden)) {
     return NextResponse.json({ error: 'Onayı veren kişinin adı zorunludur (veli/yasal temsilci veya hastanın kendisi).' }, { status: 400 })
@@ -81,7 +91,8 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
 
   const istek = asiOnamIstegiHazirla(talep.asilar, talep.dil || 'tr')
   if (!istek.ok) return NextResponse.json({ error: istek.hata }, { status: 400 })
-  const durumGecerli = durum === 'reddedildi' ? 'reddedildi' : 'alindi'
+  // Never 'alindi' from here — a remote submission is an acknowledgement (asiOnamDurum.ts).
+  const durumGecerli = uzaktanBilgilendirmeDurumu(!(okundu === false || durum === 'reddedildi'))
 
   const yontem = talep.bildirim_kanali === 'eposta' ? 'uzaktan-eposta' : talep.bildirim_kanali === 'whatsapp' ? 'uzaktan-whatsapp' : 'uzaktan-portal'
 
@@ -106,7 +117,7 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
       onay_eden_yakinlik: onay.yakinlik?.trim() || null,
       onay_eden_telefon: onay.telefon?.trim() || null,
       hasta_dogum_tarihi_anlik: dogumTarihi,
-      // NOTYA-ASI-ONAM-01: a remote consent has no doctor/secretary "recorder" — the parent IS the
+      // NOTYA-ASI-ONAM-01: a remote acknowledgement has no doctor/secretary "recorder" — the parent IS the
       // actor. created_by still needs a value (NOT NULL); the token's own doctor is used, matching
       // how the doctor remains accountable for the request that was sent.
       created_by: doktorId,
@@ -117,5 +128,5 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
 
   await sb.from('asi_onam_talepleri').update({ durum: 'tamamlandi', onam_kaydi_id: kayit.id, completed_at: new Date().toISOString() }).eq('id', talep.id)
 
-  return NextResponse.json({ kayit })
+  return NextResponse.json({ kayit: { ...kayit, gorunenDurum: asiOnamGorunenDurumu(kayit) } })
 }

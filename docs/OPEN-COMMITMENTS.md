@@ -1,5 +1,28 @@
 # OPEN COMMITMENTS — Notya AI
 
+## ASI-ONAM-02 — remote vaccine "consent" downgraded to a pre-visit information acknowledgement; a compliant remote-consent flow is NOT built (Claude, 2026-11-01) — waits on Kaan
+
+Source read in full on 2026-11-01: Sağlık Bakanlığı, *Bilgilendirilmiş Rızanın Elektronik Ortamda Alınması Hakkında Yönetmelik*, Resmî Gazete 27.10.2026 sayı 33413 (resmigazete.gov.tr/eskiler/2026/10/20261027-4.htm), in force on publication (Madde 14). Turkey-only regulatory mechanic: no country build changed (none of the six release branches ships the vaccine consent system).
+
+Shipped (Pediatri only, Türkiye): a Sağlığım / e-posta / WhatsApp submission is stored as `bilgilendirme-okundu` / `bilgilendirme-cekince` and shown as "Bilgilendirme okundu — onam muayenede alınacak"; "Onaylandı" comes only from the doctor's in-clinic step (veli present and identified, checkbox stored as `kimlik_dogrulandi`) or a signed paper form. Migration 184 (applied to TR production, verified): new durum values, NOT VALID checks that forbid remote `alindi` and in-clinic `alindi` without identity confirmation on new rows, `kimlik_dogrulandi` column, view `asi_onam_kayitlari_gorunum.gecerli_durum`. No row was changed (the table is append-only; production held 0 consent rows). Mapping: `lib/asi/onam/asiOnamDurum.ts`.
+
+What a compliant REMOTE consent would need (from the text), none of it built:
+1. **Channel** (Madde 8/1): either e-Nabız, or the facility's own "elektronik haberleşme aracı" that is registered in the facility inventory and connected to the facility's **SBYS** (Madde 4/h; SBYS = software registered under the 25.08.2022/31934 SBYS Yönetmeliği that exchanges data with the Ministry's central system, Madde 4/ı). Open question for Kaan: is Notya registered (or registrable) as an SBYS? Without that, only e-Nabız remains.
+2. **Identity verification before the process starts** (Madde 6/1-2): patient identity per the Ministry's patient-identification quality standards; for SGK-reimbursed acts also the SUT identity rules. The doctor must be defined and active on the **Entegre Kurumsal İşlem Platformu** (Madde 6/3) and log in to the channel (Madde 8/2).
+3. **Verified mobile number** (Madde 7): via e-Nabız, or in the facility channel by sending an SMS OTP that the patient tells the doctor, who enters it online; a number verified this way is valid for 12 months (Madde 7/3-ç).
+4. **Consent act** (Madde 8/3-8): the doctor approves the form and sends it via an SMS link to the verified number or via e-Nabız; on acceptance a consent-specific SMS OTP is sent; consent counts only when the OTP is entered (e-Nabız: by the patient; facility channel: shared with and entered by the doctor). The form must then be transferred to the Ministry's central system and shown in e-Nabız (Madde 8/9).
+5. **Minors** (Madde 11): the legal representative does everything; identity and mobile-number verification apply to the representative; if the representative is absent or cannot be verified electronically, electronic consent is not possible.
+6. **Records** (Madde 9): audit trail with hash (elektronik veri bütünlük değeri) and a timestamp under the 5070 e-imza law; at minimum date/time of the declaration, OTP send/verify data, the professional's details, encryption/integrity/timestamp data.
+7. **OTP provider and cost**: an SMS operator OTP service (Madde 4/i). NetGSM is already integrated for doctors' own accounts (NETGSM-01); per-SMS price and a sender-ID / commercial-message exemption for OTP need Kaan's quote. Two SMS per consent at minimum (number verification once per 12 months + one consent OTP). Timestamp service (KamuSM or a licensed TSP) is a separate cost.
+8. **e-Nabız integration**: Ministry onboarding (USS / e-Nabız web services) — not available to Notya today; MBYS/e-Nabız work is already tracked under the e-Nabız entries.
+
+Owner: **Kaan** (decide SBYS status / e-Nabız route, OTP provider and budget, timestamp provider). Then Claude builds it.
+
+## SGK-ILAC-2026-11 — reimbursed-medicines catalogue NOT rebuilt: sgk.gov.tr is blocked from the build sandbox (Claude, 2026-11-01) — waits on Kaan
+
+Catalogue still reflects EK-4/A in force 2026-10-02 (`data/sgk-ilaclar.json`, 8,661 records). SGK published five changes since: duyuru 2026/39 (07.10), 2026/40 (14.10), the 2026/1. Dönem İGÖK + 3. Olağanüstü İGÖK list change (16.10), 2026/41 (21.10), 2026/42 (28.10). The latest attachment, `https://www.sgk.gov.tr/Download/DownloadFile?f=7620a2b4-2d71-43cd-9fd5-67bb61e0e1a7.xlsx&d=7936de9b-c03f-4a97-8acc-2a396c560c25` ("12.Madde Yayım.xlsx", duyuru 2026/42), failed from the sandbox: `CONNECT tunnel failed, response 403` — the egress proxy denies the whole host `www.sgk.gov.tr:443`. No unofficial mirror was used, nothing was changed.
+To finish: either allowlist `www.sgk.gov.tr` for the Claude Code environment, or drop the current consolidated EK-4/A xlsx (and/or the five October delta files) into the repo under `docs/kaynak/` on a side branch. Then Claude runs `scripts/import-sgk-ilac.mjs --tam-liste --liste-tarihi=… --rapor=…` unchanged, produces the old/new diff and the full reimbursed-status flip list for Dr. Gökhan, runs `lib/ilac/sgkListe.test.ts`, and ships. Owner: **Kaan** (access or files), then Claude.
+
 ## SES-OMURGA-V2 — voice/text assistant rebuild shipped + FOUNDER LOCK; what still needs Kaan (Claude, 2026-10-29)
 
 Kaan ordered "Ses Omurgası v2" on 2026-10-29 (Dr. Gökhan: voice unusable; diagnosis and research in the job brief).

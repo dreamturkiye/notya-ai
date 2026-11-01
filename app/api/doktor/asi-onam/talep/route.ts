@@ -1,5 +1,5 @@
 /**
- * NOTYA-ASI-ONAM-01 — optional secondary flow: pre-visit REMOTE consent request. The doctor (when
+ * NOTYA-ASI-ONAM-01 — optional secondary flow: pre-visit REMOTE information request. The doctor (when
  * an appointment is created, or the day before) picks the planned vaccines; this route records
  * the request (mutable workflow state — lib/db/migrations/161_asi_onam.sql) and enqueues ONE
  * notice through the existing one-tap channel (lib/iletisim — doctor's own WhatsApp account is
@@ -7,7 +7,10 @@
  * No new send mechanism: it reuses HazirMesajlar / GonderDugmesi exactly as asi_hatirlatma and
  * saglikim_yeni_mesaj already do — see lib/iletisim/README.md "no clinical content in any
  * message": the queued notice never names a vaccine, only points at the Sağlığım link where the
- * parent actually reviews and confirms (app/api/portal/hasta/[token]/asi-onam/route.ts).
+ * parent actually reads the content (app/api/portal/hasta/[token]/asi-onam/route.ts).
+ * NOTYA-ASI-ONAM-02 (2026-11-01): what comes back is an information acknowledgement, never a
+ * consent (Resmî Gazete 27.10.2026/33413 — see lib/asi/onam/asiOnamDurum.ts); consent is taken in
+ * the clinic.
  *
  * HASTA-IZOLASYON-01: patientId / randevuId / sessionId are all proven to belong to this doctor
  * before any read or write.

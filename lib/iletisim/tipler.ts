@@ -102,6 +102,6 @@ export const TUR_ETIKETI: Record<MesajTuru, string> = {
   kontrol_hatirlatma: 'Kontrol hatırlatma',
   serbest: 'Mesaj',
   odeme_hatirlatma: 'Ödeme hatırlatma',
-  asi_onam_hazir: 'Aşı onam formu hazır',
+  asi_onam_hazir: 'Aşı ön bilgilendirmesi hazır',
   toplu_mesaj: 'Toplu mesaj',
 }

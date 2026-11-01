@@ -104,8 +104,8 @@ describe('NOTYA-ASI-ONAM-01 · yöntem / durum / onayEden doğrulayıcıları', 
     for (const kötü of ['sms', 'telefon', '', null, undefined, 42]) assert.equal(asiOnamYontemiGecerliMi(kötü), false)
   })
 
-  it('ASI_ONAM_DURUMLARI sadece alindi/reddedildi', () => {
-    assert.deepEqual([...ASI_ONAM_DURUMLARI].sort(), ['alindi', 'reddedildi'])
+  it('ASI_ONAM_DURUMLARI: muayene onamı (alindi/reddedildi) + uzaktan ön bilgilendirme (NOTYA-ASI-ONAM-02)', () => {
+    assert.deepEqual([...ASI_ONAM_DURUMLARI].sort(), ['alindi', 'bilgilendirme-cekince', 'bilgilendirme-okundu', 'reddedildi'])
     for (const d of ASI_ONAM_DURUMLARI) assert.equal(asiOnamDurumuGecerliMi(d), true)
     for (const kötü of ['beklemede', '', null, undefined]) assert.equal(asiOnamDurumuGecerliMi(kötü), false)
   })

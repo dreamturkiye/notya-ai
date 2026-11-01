@@ -207,11 +207,14 @@ export function mesajHazirla(tur: MesajTuru, g: SablonGirdisi): HazirMesaj | nul
       if (!link) return null
       const kimin = temiz(g.hastaAdi) ? `${temiz(g.hastaAdi)} için ` : ''
       return {
-        konu: konuYap('Aşı bilgilendirme ve onay formu hazır', g),
+        // NOTYA-ASI-ONAM-02 (2026-11-01): the parent READS here; consent is taken at the visit
+        // (Resmî Gazete 27.10.2026/33413 — no verified-identity / SMS OTP channel in Notya).
+        konu: konuYap('Aşı ön bilgilendirmesi hazır', g),
         metin: imzala([
-          `${merhaba(g)} ${kimin}bir aşı bilgilendirme ve onay formu hazırlandı. İçeriği okumak ve onaylamak için Sağlığım’a girin:`,
+          `${merhaba(g)} ${kimin}muayeneden önce okumanız için bir aşı ön bilgilendirmesi hazırlandı. Okumak için Sağlığım’a girin:`,
           link,
           'Giriş için muayenehanemizin size verdiği 6 haneli PIN gerekir.',
+          'Aşı onamı muayenede, hekiminiz tarafından alınacaktır.',
           '',
           ACIL_SATIRI,
         ], g),

@@ -60,8 +60,8 @@ function AsiOnamYazdirIc() {
         <div style={{ flex: 1 }}>Tanık<br /><br />______________________</div>
       </div>
       <p style={{ fontSize: 10, color: '#777', marginTop: 24 }}>
-        Notya — Aşı onam içeriği (standart bilgilendirme). İmzalı form taranıp/fotoğraflanıp hasta dosyasına
-        "Kağıt onam yükle" ile eklenmelidir. Kaynak: {icerikler[0]?.kaynak}
+        Notya — Aşı onam içeriği (standart bilgilendirme). Form muayenede, kimliği doğrulanan veli / yasal temsilci
+        tarafından imzalanır; imzalı form taranıp/fotoğraflanıp hasta dosyasına "Kağıt onam yükle" ile eklenmelidir. Kaynak: {icerikler[0]?.kaynak}
       </p>
     </div>
   );

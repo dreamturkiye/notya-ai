@@ -9,8 +9,12 @@
  * Üç akış:
  *  1. Klinikte (varsayılan) — aşı seç → içerik gösterilir → "Okudum, kabul ediyorum" / "Kabul
  *     etmiyorum" → kayıt anında ve değişmez biçimde oluşur.
- *  2. Uzaktan (isteğe bağlı) — e-posta / WhatsApp bildirimiyle veya doğrudan Sağlığım'dan; veli
- *     Sağlığım'da onaylar/reddeder, klinik ekranı burada "beklemede" olarak görür.
+ *  2. Uzaktan ön bilgilendirme (isteğe bağlı) — e-posta / WhatsApp bildirimiyle veya doğrudan
+ *     Sağlığım'dan; veli içeriği okur ("Okudum" / "Sorum var"). NOTYA-ASI-ONAM-02 (2026-11-01): bu
+ *     ONAM DEĞİLDİR (Resmî Gazete 27.10.2026/33413 — kimlik doğrulama + SMS OTP yok); panel bunu
+ *     "Bilgilendirme okundu — onam muayenede alınacak" olarak gösterir ve onamı 1. akışla almayı ister.
+ *     "Onaylandı" yalnız 1. ve 3. akıştan gelir; hekim veli/yasal temsilcinin muayenede hazır ve
+ *     kimliğinin doğrulandığını işaretlemeden onam kaydedilemez. Etiketler lib/asi/onam/asiOnamDurum.ts.
  *  3. Kağıt (yedek) — imzalı kağıdın taraması/fotoğrafı yüklenir, kayıt aynı anda oluşur.
  *
  * İçerik asla modelden gelmez — lib/asi/onam/asiOnamIcerigi.ts statik veridir (pure import, sunucu
@@ -21,25 +25,21 @@ import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 import { ASI_ONAM_ICERIGI_ADLARI } from '@/lib/asi/onam/asiOnamIcerigi';
 import { asiOnamIcerigiGoster } from '@/lib/asi/onam/asiOnamMotoru';
+import { ASI_ONAM_GORUNEN_ETIKET, ASI_ONAM_YONTEM_KISA, asiOnamGorunenDurumu, asiOnamMuayeneOnami, bekleyenUzaktanBilgilendirme, type AsiOnamGorunenDurum } from '@/lib/asi/onam/asiOnamDurum';
 import { DosyaSecDugmesi } from '@/components/core/DosyaSecDugmesi';
 
 interface AsiOnamKaydi {
   id: string;
   asilar: string[];
   yontem: string;
-  durum: 'alindi' | 'reddedildi';
+  durum: string;
+  gorunenDurum?: AsiOnamGorunenDurum;
   created_at: string;
   session_id: string | null;
 }
 interface AsiOnamTalep { id: string; asilar: string[]; bildirim_kanali: string; created_at: string }
 
-const YONTEM_ETIKETI: Record<string, string> = {
-  klinik: 'Klinikte',
-  'uzaktan-eposta': 'Uzaktan (e-posta)',
-  'uzaktan-whatsapp': 'Uzaktan (WhatsApp)',
-  'uzaktan-portal': 'Uzaktan (Sağlığım)',
-  kagit: 'Kağıt form',
-};
+const YONTEM_ETIKETI: Record<string, string> = ASI_ONAM_YONTEM_KISA;
 
 const kutu: React.CSSProperties = { background: '#FBF8F2', border: '1px solid rgba(58,44,34,0.14)', borderRadius: 10, padding: 12 };
 const girisAlani: React.CSSProperties = { width: '100%', background: '#FFFFFF', border: '1px solid rgba(58,44,34,0.16)', color: '#3b2e24', borderRadius: 8, padding: '8px 10px', fontSize: 14, boxSizing: 'border-box' };
@@ -60,6 +60,7 @@ export default function AsiOnamPaneli({ patientId, sessionId }: { patientId: str
   const [uzaktanKanal, setUzaktanKanal] = useState<'eposta' | 'whatsapp'>('whatsapp');
   const [kagitAcik, setKagitAcik] = useState(false);
   const [kagitDosya, setKagitDosya] = useState<File | null>(null);
+  const [kimlikDogrulandi, setKimlikDogrulandi] = useState(false);
 
   const yukle = useCallback(async () => {
     setYukleniyor(true);
@@ -77,7 +78,9 @@ export default function AsiOnamPaneli({ patientId, sessionId }: { patientId: str
 
   useEffect(() => { void yukle(); }, [yukle]);
 
-  const buMuayeneninOnami = sessionId ? kayitlar.find((k) => k.session_id === sessionId && k.durum === 'alindi') : null;
+  // NOTYA-ASI-ONAM-02: only an in-clinic (or signed-paper) consent counts — never a remote acknowledgement.
+  const buMuayeneninOnami = asiOnamMuayeneOnami(kayitlar, sessionId);
+  const uzaktanOkundu = bekleyenUzaktanBilgilendirme(kayitlar);
 
   function asiSecimiDegis(ad: string) {
     setSecilenAsilar((s) => s.includes(ad) ? s.filter((x) => x !== ad) : [...s, ad]);
@@ -86,6 +89,7 @@ export default function AsiOnamPaneli({ patientId, sessionId }: { patientId: str
   async function klinikteOnayla(durum: 'alindi' | 'reddedildi') {
     if (!secilenAsilar.length) { setHata('En az bir aşı seçin.'); return; }
     if (!onayEdenAd.trim()) { setHata('Onayı veren kişinin (veli/yasal temsilci) adını yazın.'); return; }
+    if (durum === 'alindi' && !kimlikDogrulandi) { setHata('Önce veli/yasal temsilcinin muayenede hazır olduğunu ve kimliğinin doğrulandığını işaretleyin.'); return; }
     setGonderiliyor(true);
     setHata('');
     try {
@@ -95,13 +99,14 @@ export default function AsiOnamPaneli({ patientId, sessionId }: { patientId: str
         method: 'POST',
         headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          patientId, sessionId, asilar: secilenAsilar, durum,
+          patientId, sessionId, asilar: secilenAsilar, durum, kimlikDogrulandi,
           onayEden: { ad: onayEdenAd.trim(), yakinlik: onayEdenYakinlik, telefon: onayEdenTelefon.trim() || null },
         }),
       });
       const j = await r.json().catch(() => ({}));
       if (!r.ok) { setHata(j.error || 'Kaydedilemedi.'); return; }
       setSecilenAsilar([]);
+      setKimlikDogrulandi(false);
       void yukle();
     } catch { setHata('Kaydedilemedi.'); }
     finally { setGonderiliyor(false); }
@@ -132,6 +137,7 @@ export default function AsiOnamPaneli({ patientId, sessionId }: { patientId: str
     if (!secilenAsilar.length) { setHata('En az bir aşı seçin.'); return; }
     if (!kagitDosya) { setHata('İmzalı kağıdın taraması/fotoğrafı zorunludur.'); return; }
     if (!onayEdenAd.trim()) { setHata('Onayı veren kişinin adını yazın.'); return; }
+    if (!kimlikDogrulandi) { setHata('İmzalı formun muayenede, kimliği doğrulanan veli/yasal temsilci tarafından imzalandığını işaretleyin.'); return; }
     setGonderiliyor(true);
     setHata('');
     try {
@@ -145,6 +151,7 @@ export default function AsiOnamPaneli({ patientId, sessionId }: { patientId: str
       fd.append('onayEdenAdi', onayEdenAd.trim());
       fd.append('onayEdenYakinlik', onayEdenYakinlik);
       if (onayEdenTelefon.trim()) fd.append('onayEdenTelefon', onayEdenTelefon.trim());
+      fd.append('kimlikDogrulandi', kimlikDogrulandi ? 'true' : 'false');
       const r = await fetch('/api/doktor/asi-onam/kagit', { method: 'POST', headers: { Authorization: `Bearer ${t}` }, body: fd });
       const j = await r.json().catch(() => ({}));
       if (!r.ok) { setHata(j.error || 'Yüklenemedi.'); return; }
@@ -166,13 +173,20 @@ export default function AsiOnamPaneli({ patientId, sessionId }: { patientId: str
     <div style={{ display: 'grid', gap: 10 }}>
       {buMuayeneninOnami ? (
         <div style={{ background: '#E4F3F1', border: `1px solid ${CHROME_RENK.pine}`, borderRadius: 8, padding: '8px 10px', fontSize: 13, color: CHROME_RENK.pine }}>
-          ✓ Aşı onamı alındı · {buMuayeneninOnami.asilar.join(', ')} · {new Date(buMuayeneninOnami.created_at).toLocaleString('tr-TR')}
+          ✓ Aşı onamı muayenede alındı · {buMuayeneninOnami.asilar.join(', ')} · {new Date(buMuayeneninOnami.created_at).toLocaleString('tr-TR')}
         </div>
       ) : null}
 
+      {!buMuayeneninOnami && uzaktanOkundu && (
+        <div style={{ background: '#FBF3DE', border: '1px solid rgba(180,131,47,0.35)', borderRadius: 8, padding: '8px 10px', fontSize: 12.5, color: '#8a6420', display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+          <span>{ASI_ONAM_GORUNEN_ETIKET[uzaktanOkundu.gorunenDurum ?? asiOnamGorunenDurumu(uzaktanOkundu)]}: {uzaktanOkundu.asilar.join(', ')}. Uzaktan bilgilendirme onam yerine geçmez.</span>
+          <button type="button" onClick={() => setSecilenAsilar(uzaktanOkundu.asilar)} style={{ ...ikincil, padding: '4px 10px', fontSize: 12 }}>Aşıları seç ve onamı al</button>
+        </div>
+      )}
+
       {bekleyenTalepler.length > 0 && (
         <div style={{ background: '#FBF3DE', border: '1px solid rgba(180,131,47,0.35)', borderRadius: 8, padding: '8px 10px', fontSize: 12.5, color: '#8a6420' }}>
-          Uzaktan onam beklemede: {bekleyenTalepler.map((t) => t.asilar.join(', ')).join(' · ')}
+          Ön bilgilendirme gönderildi, veli henüz okumadı: {bekleyenTalepler.map((t) => t.asilar.join(', ')).join(' · ')}
         </div>
       )}
 
@@ -219,11 +233,16 @@ export default function AsiOnamPaneli({ patientId, sessionId }: { patientId: str
           </div>
         </div>
 
+        <label style={{ display: 'flex', gap: 8, alignItems: 'flex-start', fontSize: 12.5, color: CHROME_RENK.ink, marginBottom: 10, cursor: 'pointer' }}>
+          <input type="checkbox" checked={kimlikDogrulandi} onChange={(e) => setKimlikDogrulandi(e.target.checked)} style={{ marginTop: 2 }} />
+          <span>Veli / yasal temsilci (veya 18 yaşını doldurmuş hasta) muayenede hazır, kimliği doğrulandı ve bilgilendirildi.</span>
+        </label>
+
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          <button type="button" disabled={gonderiliyor} onClick={() => void klinikteOnayla('alindi')} style={birincil}>Okudum, kabul ediyorum</button>
-          <button type="button" disabled={gonderiliyor} onClick={() => void klinikteOnayla('reddedildi')} style={ikincil}>Kabul etmiyorum</button>
+          <button type="button" disabled={gonderiliyor || !kimlikDogrulandi} onClick={() => void klinikteOnayla('alindi')} style={{ ...birincil, opacity: kimlikDogrulandi ? 1 : 0.55 }}>Onamı muayenede kaydet — kabul etti</button>
+          <button type="button" disabled={gonderiliyor} onClick={() => void klinikteOnayla('reddedildi')} style={ikincil}>Kabul etmedi</button>
           {yazdirHref && <a href={yazdirHref} target="_blank" rel="noopener noreferrer" style={{ ...ikincil, textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>Yazdır / PDF</a>}
-          <button type="button" onClick={() => setUzaktanAcik((v) => !v)} style={ikincil}>Uzaktan onam isteği gönder</button>
+          <button type="button" onClick={() => setUzaktanAcik((v) => !v)} style={ikincil}>Uzaktan ön bilgilendirme gönder</button>
           <button type="button" onClick={() => setKagitAcik((v) => !v)} style={ikincil}>Kağıt onam yükle</button>
         </div>
 
@@ -234,7 +253,7 @@ export default function AsiOnamPaneli({ patientId, sessionId }: { patientId: str
               <option value="eposta">E-posta</option>
             </select>
             <button type="button" disabled={gonderiliyor} onClick={() => void uzaktanTalepGonder()} style={birincil}>Gönder</button>
-            <span style={{ fontSize: 11.5, color: CHROME_RENK.muted }}>Veli, Sağlığım’dan aynı içeriği görüp onaylar/reddeder.</span>
+            <span style={{ fontSize: 11.5, color: CHROME_RENK.muted }}>Veli, Sağlığım’da aynı içeriği muayeneden önce okur. Bu bir onam değildir; onam muayenede alınır.</span>
           </div>
         )}
 
@@ -250,11 +269,11 @@ export default function AsiOnamPaneli({ patientId, sessionId }: { patientId: str
 
       {kayitlar.length > 0 && (
         <details style={{ fontSize: 12.5, color: CHROME_RENK.muted }}>
-          <summary style={{ cursor: 'pointer', fontWeight: 600 }}>Geçmiş aşı onam kayıtları ({kayitlar.length})</summary>
+          <summary style={{ cursor: 'pointer', fontWeight: 600 }}>Geçmiş aşı bilgilendirme ve onam kayıtları ({kayitlar.length})</summary>
           <div style={{ marginTop: 6, display: 'grid', gap: 4 }}>
             {kayitlar.map((k) => (
               <div key={k.id}>
-                {k.asilar.join(', ')} — {k.durum === 'alindi' ? 'Onaylandı' : 'Kabul edilmedi'} · {YONTEM_ETIKETI[k.yontem] || k.yontem} · {new Date(k.created_at).toLocaleString('tr-TR')}
+                {k.asilar.join(', ')} — {ASI_ONAM_GORUNEN_ETIKET[k.gorunenDurum ?? asiOnamGorunenDurumu(k)]} · {YONTEM_ETIKETI[k.yontem] || k.yontem} · {new Date(k.created_at).toLocaleString('tr-TR')}
               </div>
             ))}
           </div>
