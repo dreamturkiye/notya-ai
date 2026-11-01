@@ -416,9 +416,10 @@ describe('NOTYA-SUT-RAPOR-01 · SGK satırları resmî SUT metniyle aynı kural�
     assert.match(satir('simvastatin'), /EK-4\/A/)
     assert.match(satir('simvastatin'), /SUT 4\.1\.9/)
     assert.doesNotMatch(satir('simvastatin'), /ödeme koşullarına bakınız/)
-    // The list itself: no record of the catalogue built from the 02.10.2026 list carries simvastatin.
+    // The list itself: no record of the catalogue (02.10.2026 full list + later SGK deltas, latest 2026/42 of
+    // 30.10.2026) carries simvastatin. A later list date must keep this true, so only "not older" is pinned.
     const katalog = JSON.parse(readFileSync(path.join(process.cwd(), 'data', 'sgk-ilaclar.json'), 'utf8')) as { guncelleme: string; ilaclar: { ad: string; etkenMadde?: string }[] }
-    assert.equal(katalog.guncelleme, '2026-10-02')
+    assert.ok(katalog.guncelleme >= '2026-10-02', katalog.guncelleme)
     assert.equal(katalog.ilaclar.filter((k) => /simvastatin/i.test(`${k.etkenMadde || ''} ${k.ad}`)).length, 0)
     const markalar = TURKISH_DRUGS.simvastatin.brand.map((b) => b.toLocaleUpperCase('tr'))
     assert.equal(katalog.ilaclar.filter((k) => markalar.some((m) => k.ad.toLocaleUpperCase('tr').startsWith(`${m} `))).length, 0, markalar.join(', '))

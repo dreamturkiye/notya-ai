@@ -9,7 +9,7 @@ import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
-import { listeyiBirlestir, pasifDurumu, tarihleriCoz, barkodlar, type KatalogKaydi, type ListeSatiri } from '../../scripts/lib/sgk-liste.mjs'
+import { listeyiBirlestir, pasifDurumu, tarihleriCoz, barkodlar, cikarmaSayfasiMi, type KatalogKaydi, type ListeSatiri } from '../../scripts/lib/sgk-liste.mjs'
 import { ilacAra, type IlacKaydi } from './ilacArama'
 import { ilaclariGrupla } from './ilacGrupla'
 
@@ -101,25 +101,36 @@ describe('SGK liste importu — etken madde korunur, pasif ve listeden çıkan �
     assert.equal(d2.etkenMadde, 'Çıkan madde')
   })
 
+  it('yalnız listeden çıkarma sayfası çıkarmadır; bant hesabından çıkarılan ürün listede kalır (duyuru 2026/42)', () => {
+    assert.equal(cikarmaSayfasiMi('ÇIKARILANLAR'), true)
+    assert.equal(cikarmaSayfasiMi('4A ÇIKARILANLAR'), true)
+    assert.equal(cikarmaSayfasiMi('4A BANT HESABINDAN ÇIKARILANLAR'), false)
+    assert.equal(cikarmaSayfasiMi('4A BANT HESABI DAHİL EDİLENLER'), false)
+    assert.equal(cikarmaSayfasiMi('4A PASİFLENENLER'), false)
+  })
+
   it('barkod hücresi birden çok barkod taşıyabilir', () => {
     assert.deepEqual(barkodlar('8699624570062, 8699624570079'), ['8699624570062', '8699624570079'])
     assert.deepEqual(barkodlar(null), [])
   })
 })
 
-describe('data/sgk-ilaclar.json — 02.10.2026 tarihli EK-4/A’dan üretilen katalog', () => {
+describe('data/sgk-ilaclar.json — 02.10.2026 tam EK-4/A + SGK duyuru 2026/42 (30.10.2026) fark dosyası', () => {
   const veri = JSON.parse(readFileSync(path.join(process.cwd(), 'data', 'sgk-ilaclar.json'), 'utf8')) as { guncelleme: string; titck: string; ilaclar: (IlacKaydi & { sgkDurum?: string; sgkDurumTarihi?: string })[] }
   const kayitlar = veri.ilaclar
 
-  it('liste tarihi 02.10.2026; TİTCK tarihi (etken maddenin kaynağı) korunmuş', () => {
-    assert.equal(veri.guncelleme, '2026-10-02')
+  it('liste tarihi 30.10.2026 (duyuru 2026/42); TİTCK tarihi (etken maddenin kaynağı) korunmuş', () => {
+    assert.equal(veri.guncelleme, '2026-10-30')
     assert.equal(veri.titck, '2026-08-26')
   })
 
-  it('02.10.2026 listesindeki 8.184 üründen 8.180’i ödenir, 4’ü listede pasiftir; listeden çıkan 477 ürün ödenmez olarak durur', () => {
-    assert.equal(kayitlar.filter((k) => k.sgk !== false).length, 8180)
-    assert.equal(kayitlar.filter((k) => k.sgkDurum === 'pasif').length, 4)
-    assert.equal(kayitlar.filter((k) => k.sgkDurum === 'cikarildi').length, 477)
+  it('2026/42 sonrası 8.666 kayıttan 8.187’si ödenir, 6’sı listede pasiftir; listeden çıkan 473 ürün ödenmez olarak durur', () => {
+    assert.equal(kayitlar.length, 8666)
+    assert.equal(kayitlar.filter((k) => k.sgk !== false).length, 8187)
+    assert.equal(kayitlar.filter((k) => k.sgkDurum === 'pasif').length, 6)
+    assert.equal(kayitlar.filter((k) => k.sgkDurum === 'cikarildi').length, 473)
+    // Bant hesabından çıkarılan ürün listede kalır, ödenir (duyuru 2026/42 EK-6).
+    assert.equal(kayitlar.find((k) => k.barkod === '8684777716023')!.sgk, true)
     assert.ok(kayitlar.every((k) => (k.sgk === false) === (k.sgkDurum === 'pasif' || k.sgkDurum === 'cikarildi')))
     assert.equal(new Set(kayitlar.map((k) => k.barkod || k.ad)).size, kayitlar.length, 'barkod tekrarı yok')
   })

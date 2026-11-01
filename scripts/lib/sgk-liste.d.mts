@@ -51,3 +51,4 @@ export function listeyiBirlestir(
   satirlar: ListeSatiri[],
   secenek?: { tamListe?: boolean; listeTarihi?: string | null },
 ): { ilaclar: KatalogKaydi[]; rapor: ListeRaporu }
+export function cikarmaSayfasiMi(sayfaAdi: string): boolean

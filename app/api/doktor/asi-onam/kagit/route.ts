@@ -15,6 +15,7 @@ import { hastaSahibiMi, seansSahibi } from '@/lib/doktor/hastaSahipligi'
 import { decrypt } from '@/lib/security/encryption'
 import { asiOnamIstegiHazirla, asiOnamOnayEdenGecerliMi, type AsiOnamOnayEden } from '@/lib/asi/onam/asiOnamMotoru'
 import { VARSAYILAN_ONAM_DILI } from '@/lib/asi/onam/dil'
+import { asiOnamKimlikEksikMi } from '@/lib/asi/onam/asiOnamDurum'
 
 export const dynamic = 'force-dynamic'
 
@@ -54,7 +55,7 @@ export async function POST(req: NextRequest) {
     if (seans.patient_id && seans.patient_id !== patientId) return NextResponse.json({ error: 'Muayene bu hastaya ait değil.' }, { status: 400 })
   }
   if (!file) return NextResponse.json({ error: 'İmzalı kağıt formun taraması/fotoğrafı zorunludur.' }, { status: 400 })
-  if (durum === 'alindi' && !kimlikDogrulandi) return NextResponse.json({ error: 'İmzalı formun muayenede, kimliği doğrulanan veli/yasal temsilci tarafından imzalandığını işaretleyin.' }, { status: 400 })
+  if (asiOnamKimlikEksikMi(durum, kimlikDogrulandi)) return NextResponse.json({ error: 'İmzalı formun muayenede, kimliği doğrulanan veli/yasal temsilci tarafından imzalandığını işaretleyin.' }, { status: 400 })
   if (!KAGIT_IZINLI_TIPLER.has(file.type)) return NextResponse.json({ error: 'Desteklenmeyen dosya türü — yalnız fotoğraf veya PDF.' }, { status: 400 })
   if (file.size > KAGIT_AZAMI_BAYT) return NextResponse.json({ error: `Dosya ${Math.round(KAGIT_AZAMI_BAYT / 1024 / 1024)} MB sınırını aşıyor.` }, { status: 400 })
   const onayEden: AsiOnamOnayEden = { ad: onayEdenAdi, yakinlik: onayEdenYakinlik, telefon: onayEdenTelefon }

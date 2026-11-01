@@ -10,6 +10,7 @@
  * the row) — the regulation of Resmî Gazete 27.10.2026/33413 requires identity verification
  * before consent (Madde 6, and Madde 11/2 for the legal representative of a minor). A remote
  * Sağlığım/e-posta/WhatsApp submission is only an acknowledgement (lib/asi/onam/asiOnamDurum.ts).
+ * Recording a REFUSAL ("Kabul etmedi") needs the same tick (asiOnamKimlikEksikMi; migration 185).
  * GET adds `gorunenDurum` to every row so no screen renders a raw remote 'alindi' as consent.
  *
  * HASTA-IZOLASYON-01: patientId (and sessionId, when given) are proven to belong to this doctor's
@@ -27,7 +28,7 @@ import { hastaSahibiMi, seansSahibi } from '@/lib/doktor/hastaSahipligi'
 import { decrypt } from '@/lib/security/encryption'
 import { asiOnamIstegiHazirla, asiOnamOnayEdenGecerliMi, type AsiOnamOnayEden } from '@/lib/asi/onam/asiOnamMotoru'
 import { VARSAYILAN_ONAM_DILI } from '@/lib/asi/onam/dil'
-import { asiOnamGorunenDurumu } from '@/lib/asi/onam/asiOnamDurum'
+import { asiOnamGorunenDurumu, asiOnamKimlikEksikMi } from '@/lib/asi/onam/asiOnamDurum'
 
 export const dynamic = 'force-dynamic'
 
@@ -82,8 +83,9 @@ export async function POST(req: NextRequest) {
   }
 
   const durumGecerli = durum === 'reddedildi' ? 'reddedildi' : 'alindi'
-  if (durumGecerli === 'alindi' && kimlikDogrulandi !== true) {
-    return NextResponse.json({ error: 'Onamı kaydetmeden önce veli/yasal temsilcinin muayenede hazır olduğunu ve kimliğinin doğrulandığını işaretleyin.' }, { status: 400 })
+  // Acceptance AND refusal both need the identity tick: a refusal is the representative's decision too.
+  if (asiOnamKimlikEksikMi(durumGecerli, kimlikDogrulandi)) {
+    return NextResponse.json({ error: 'Kaydetmeden önce veli/yasal temsilcinin muayenede hazır olduğunu ve kimliğinin doğrulandığını işaretleyin (kabul de ret de).' }, { status: 400 })
   }
   if (!asiOnamOnayEdenGecerliMi(onayEden)) {
     return NextResponse.json({ error: 'Onayı veren kişinin adı zorunludur (veli/yasal temsilci veya hastanın kendisi).' }, { status: 400 })

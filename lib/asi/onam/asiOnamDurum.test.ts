@@ -10,6 +10,7 @@ import {
   ASI_ONAM_GORUNEN_ETIKET,
   asiOnamGorunenDurumu,
   asiOnamGorunenEtiket,
+  asiOnamKimlikEksikMi,
   asiOnamMuayeneOnami,
   asiOnamMuayenedeAlindiMi,
   asiOnamUzaktanMi,
@@ -99,9 +100,26 @@ describe('NOTYA-ASI-ONAM-02 · onam kapısı uzaktan bilgilendirmeyle geçmez', 
     assert.match(portal, /durumGecerli = uzaktanBilgilendirmeDurumu\(/)
     assert.doesNotMatch(portal, /: 'alindi'/)
     const klinik = oku('app/api/doktor/asi-onam/route.ts')
-    assert.match(klinik, /durumGecerli === 'alindi' && kimlikDogrulandi !== true/)
+    assert.match(klinik, /asiOnamKimlikEksikMi\(durumGecerli, kimlikDogrulandi\)/)
     assert.match(klinik, /yontem: 'klinik'/)
-    assert.match(oku('app/api/doktor/asi-onam/kagit/route.ts'), /durum === 'alindi' && !kimlikDogrulandi/)
+    assert.match(oku('app/api/doktor/asi-onam/kagit/route.ts'), /asiOnamKimlikEksikMi\(durum, kimlikDogrulandi\)/)
+  })
+
+  it('ret ("Kabul etmedi") de kabul gibi kimlik işareti ister — yardımcı, rotalar, ekran ve migration 185', () => {
+    for (const d of ['alindi', 'reddedildi']) {
+      assert.equal(asiOnamKimlikEksikMi(d, undefined), true, d)
+      assert.equal(asiOnamKimlikEksikMi(d, false), true, d)
+      assert.equal(asiOnamKimlikEksikMi(d, 'true'), true, `${d}: yalnız gerçek true geçer`)
+      assert.equal(asiOnamKimlikEksikMi(d, true), false, d)
+    }
+    // Uzaktan bilgilendirme muayenede kimlik işaretiyle yazılmaz; bu kapı ona uygulanmaz.
+    assert.equal(asiOnamKimlikEksikMi('bilgilendirme-okundu', undefined), false)
+    const panel = oku('components/doktor/AsiOnamPaneli.tsx')
+    assert.match(panel, /disabled=\{gonderiliyor \|\| !kimlikDogrulandi\} onClick=\{\(\) => void klinikteOnayla\('reddedildi'\)\}/)
+    assert.doesNotMatch(panel, /durum === 'alindi' && !kimlikDogrulandi/)
+    const m = oku('lib/db/migrations/185_asi_onam_ret_kimlik.sql')
+    assert.match(m, /durum NOT IN \('alindi', 'reddedildi'\) OR kimlik_dogrulandi IS TRUE\)\s*NOT VALID/)
+    assert.doesNotMatch(m, /^\s*(UPDATE|DELETE)\s/im)
   })
 
   it('migration 184: eski satırlar değişmez (NOT VALID), uzaktan + alindi yeni satırda yasak, görünüm türetilmiş durum ekler', () => {

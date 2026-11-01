@@ -84,6 +84,17 @@ export function pasifDurumu(aktiflenme, pasiflenme, listeTarihi) {
   return { pasif: true, belirsiz: false, tarih: p }
 }
 
+/**
+ * Does this delta sheet withdraw products from the list? Only an "ÇIKARILANLAR" sheet that is about the list itself.
+ * SGK duyuru 2026/42 (28.10.2026) added "4A BANT HESABI DAHİL EDİLENLER" / "4A BANT HESABINDAN ÇIKARILANLAR": those
+ * products move in or out of the price-band (discount) calculation and STAY on EK-4/A, still reimbursed. Reading
+ * "BANT HESABINDAN ÇIKARILANLAR" as a withdrawal marked 25 reimbursed products "not paid" in a dry run.
+ */
+export function cikarmaSayfasiMi(sayfaAdi) {
+  const ad = String(sayfaAdi || '').toLocaleUpperCase('tr')
+  return /ÇIKARILAN/.test(ad) && !/BANT/.test(ad)
+}
+
 /** "8699…, 8680…" / "8699…\n8680…" → barcodes. */
 export function barkodlar(hucre) {
   return String(hucre ?? '').match(/\d{8,14}/g) || []

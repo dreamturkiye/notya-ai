@@ -39,7 +39,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import XLSX from 'xlsx'
-import { barkodlar, listeyiBirlestir, tarihleriCoz } from './lib/sgk-liste.mjs'
+import { barkodlar, cikarmaSayfasiMi, listeyiBirlestir, tarihleriCoz } from './lib/sgk-liste.mjs'
 
 const VARSAYILAN = path.join(process.cwd(), 'data', 'sgk-ilaclar.json')
 
@@ -100,7 +100,7 @@ const satirlar = []
 for (const f of files) {
   const wb = XLSX.readFile(f)
   for (const name of wb.SheetNames) {
-    const cikar = /ÇIKARILAN/i.test(name)
+    const cikar = cikarmaSayfasiMi(name) // band-calculation sheets are not withdrawals (2026/42)
     const rows = sheetToRows(wb.Sheets[name], cikar)
     if (!rows.length) continue
     satirlar.push(...rows)

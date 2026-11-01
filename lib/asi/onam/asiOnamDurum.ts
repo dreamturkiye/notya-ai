@@ -85,6 +85,19 @@ export function bekleyenUzaktanBilgilendirme<T extends { yontem: string; durum: 
   return null
 }
 
+/**
+ * In-clinic / paper records whose durum needs the doctor's identity tick ("veli muayenede hazır,
+ * kimliği doğrulandı"). A REFUSAL is a decision of the veli / yasal temsilci just like an acceptance,
+ * so it is recorded only for a person who is present and identified (RG 27.10.2026/33413 Madde 6,
+ * 11/2) — otherwise anyone could record "Kabul etmedi" for a child. Mirrors migration 185's check.
+ */
+export const ASI_ONAM_KIMLIK_GEREKEN_DURUMLAR: readonly AsiOnamDurumu[] = ['alindi', 'reddedildi']
+
+/** True when this in-clinic/paper record may not be written: its durum needs the tick and it is missing. */
+export function asiOnamKimlikEksikMi(durum: string, kimlikDogrulandi: unknown): boolean {
+  return (ASI_ONAM_KIMLIK_GEREKEN_DURUMLAR as readonly string[]).includes(durum) && kimlikDogrulandi !== true
+}
+
 export const ASI_ONAM_YONTEM_KISA: Record<AsiOnamYontemi, string> = {
   klinik: 'Klinikte',
   'uzaktan-eposta': 'Uzaktan ön bilgilendirme (e-posta)',

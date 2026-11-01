@@ -89,7 +89,8 @@ export default function AsiOnamPaneli({ patientId, sessionId }: { patientId: str
   async function klinikteOnayla(durum: 'alindi' | 'reddedildi') {
     if (!secilenAsilar.length) { setHata('En az bir aşı seçin.'); return; }
     if (!onayEdenAd.trim()) { setHata('Onayı veren kişinin (veli/yasal temsilci) adını yazın.'); return; }
-    if (durum === 'alindi' && !kimlikDogrulandi) { setHata('Önce veli/yasal temsilcinin muayenede hazır olduğunu ve kimliğinin doğrulandığını işaretleyin.'); return; }
+    // Acceptance and refusal are both the representative's decision: both need the identity tick (RG 27.10.2026/33413).
+    if (!kimlikDogrulandi) { setHata('Önce veli/yasal temsilcinin muayenede hazır olduğunu ve kimliğinin doğrulandığını işaretleyin.'); return; }
     setGonderiliyor(true);
     setHata('');
     try {
@@ -240,7 +241,7 @@ export default function AsiOnamPaneli({ patientId, sessionId }: { patientId: str
 
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <button type="button" disabled={gonderiliyor || !kimlikDogrulandi} onClick={() => void klinikteOnayla('alindi')} style={{ ...birincil, opacity: kimlikDogrulandi ? 1 : 0.55 }}>Onamı muayenede kaydet — kabul etti</button>
-          <button type="button" disabled={gonderiliyor} onClick={() => void klinikteOnayla('reddedildi')} style={ikincil}>Kabul etmedi</button>
+          <button type="button" disabled={gonderiliyor || !kimlikDogrulandi} onClick={() => void klinikteOnayla('reddedildi')} style={{ ...ikincil, opacity: kimlikDogrulandi ? 1 : 0.55 }}>Kabul etmedi</button>
           {yazdirHref && <a href={yazdirHref} target="_blank" rel="noopener noreferrer" style={{ ...ikincil, textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>Yazdır / PDF</a>}
           <button type="button" onClick={() => setUzaktanAcik((v) => !v)} style={ikincil}>Uzaktan ön bilgilendirme gönder</button>
           <button type="button" onClick={() => setKagitAcik((v) => !v)} style={ikincil}>Kağıt onam yükle</button>
