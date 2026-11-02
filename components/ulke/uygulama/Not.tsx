@@ -34,8 +34,9 @@ import GeriLink from '@/components/navigasyon/GeriLink'
 import { NotUstCubugu, NotBaslikKuyrugu, NotPil, NotAnaDugme, NotDuzeni, NotAlani, NotYazi, NotOkunurKutu, NOT_ETIKET } from '@/components/doktor/NotDuzenGorunumu'
 import { MuayeneEkleri } from './MuayeneEkleri'
 import { PortalOzetKarti } from './PortalOzeti'
-import { MektupKarti } from './MektupKarti'
+import { MektupKarti, type OnayliMektup } from './MektupKarti'
 import { MbsOneriKarti } from './MbsOneriKarti'
+import type { MektupTuru } from '@/lib/ulke/mektup/sabitler'
 import { HastaFormuKarti } from './HastaFormuKarti'
 import { SablonSecici, useSablonlar } from './Sablonlarim'
 import { EklerNotKarti } from './Ekler'
@@ -197,6 +198,8 @@ export function Not({ u, notId }: { u: Uygulama; notId: string }) {
   const [metinler, setMetinler] = useState<Partial<Record<DilKodu, NotIcerigi>>>({})
   const [islem, setIslem] = useState<NotIslemi>(null)
   const [bildirim, setBildirim] = useState<NotBildirimi>(null)
+  /** AU-GAP-CLOSE-02 — letters the doctor signed off on this approved note (lifted into MBS/export). */
+  const [onayliMektuplar, setOnayliMektuplar] = useState<Partial<Record<MektupTuru, OnayliMektup>>>({})
   const { hesap, api } = u
 
   const yukle = useCallback(async (gecilecekDil?: DilKodu): Promise<void> => {
@@ -210,6 +213,8 @@ export function Not({ u, notId }: { u: Uygulama; notId: string }) {
   }, [api, notId])
 
   useEffect(() => { if (hesap) yukle().catch(() => setYuk('hata')) }, [hesap, yukle])
+  // AU-GAP-CLOSE-02: clear lifted letter sign-offs when the note identity changes.
+  useEffect(() => { setOnayliMektuplar({}) }, [notId, not?.onayTarihi])
   // NOTYA-ULKE-MESAJ-01: the doctor's own templates for a note — read once, and only while the note is a draft.
   const sablonlar = useSablonlar(api, Boolean(hesap) && ozellikAcik('hekimSablonlari') && not !== null && !not.onayli, 'not')
 
@@ -280,9 +285,23 @@ export function Not({ u, notId }: { u: Uygulama; notId: string }) {
           still theirs to change. Read-only, marked as the patient's own words; it was never given to the model. */}
       {!not.onayli && not.muayene.hasta && ozellikAcik('hastaPortali') && ozellikAcik('hastaFormu') ? <HastaFormuKarti u={u} hastaId={not.muayene.hasta.id} mod="muayene" /> : null}
       {not.onayli && not.muayene.hasta && ozellikAcik('hastaPortali') ? <PortalOzetKarti key={`${not.notId}-${not.onayTarihi ?? ''}`} u={u} notId={not.notId} /> : null}
-      {/* AU-GAP-CLOSE-01: letter studio + MBS suggestions + visit export — only when the pack brings them; approved note only. */}
-      {not.onayli ? <MektupKarti key={`mektup-${not.notId}-${not.onayTarihi ?? ''}`} u={u} notId={not.notId} /> : null}
-      {not.onayli ? <MbsOneriKarti key={`mbs-${not.notId}-${not.onayTarihi ?? ''}`} u={u} notId={not.notId} /> : null}
+      {/* AU-GAP-CLOSE-01/02: letter studio + MBS + export/queue — approved note only; hekimOnayi lifts into the export card. */}
+      {not.onayli ? (
+        <MektupKarti
+          key={`mektup-${not.notId}-${not.onayTarihi ?? ''}`}
+          u={u}
+          notId={not.notId}
+          onOnayliDegisti={setOnayliMektuplar}
+        />
+      ) : null}
+      {not.onayli ? (
+        <MbsOneriKarti
+          key={`mbs-${not.notId}-${not.onayTarihi ?? ''}`}
+          u={u}
+          notId={not.notId}
+          mektuplar={onayliMektuplar}
+        />
+      ) : null}
       {/* MUAYENE-EKLERI-07: files attached to this visit (a lab PDF, a scanned referral, a photographed document). */}
       {ozellikAcik('muayeneEkleri') ? <MuayeneEkleri m={u.m} seansId={not.seansId} api={api} /> : null}
       <DosyaEk m={u.m} not={not} api={api} yenile={() => yukle()} />

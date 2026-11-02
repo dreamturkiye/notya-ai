@@ -1,7 +1,8 @@
 /**
  * AU-GAP-CLOSE-01 — Australia: instructions to the model for letter drafts and MBS suggestions from an APPROVED note.
  *
- * MACHINE-DRAFTED. No Australian clinician has signed these prompts off. They produce drafts for the doctor to edit.
+ * MACHINE-DRAFTED. Sign-off register: `./mektupOnay.ts` (AU_MEKTUP_ICERIK_ONAYLARI). Until `klinisyen` is set,
+ * prompts remain usable for drafts but are listed as awaiting Australian clinician review.
  * Nothing is lodged with Medicare, sent as a referral, or written to a practice-management system from this product.
  */
 import type { NotIcerigi } from '@/lib/ulke/tipler'

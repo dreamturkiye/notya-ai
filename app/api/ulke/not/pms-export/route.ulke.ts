@@ -1,8 +1,9 @@
 /**
- * AU-GAP-CLOSE-01 — /api/ulke/not/pms-export: structured export pack for ONE approved note of THIS doctor.
+ * AU-GAP-CLOSE-01/02 — /api/ulke/not/pms-export: structured export pack for ONE approved note of THIS doctor.
  *
  *   POST { notId, mektuplar?, mbsOnerileri? }   200 { paket }
  *
+ * Letters / MBS rows are included only when the doctor sent `hekimOnayi: true` (clinician sign-off on the draft).
  * Honest export only. No Best Practice / Genie / Gentu connection. PATIENT ISOLATION via notGetir.
  */
 import { NextRequest } from 'next/server'
@@ -21,7 +22,17 @@ function mektuplariOku(ham: unknown): Partial<Record<MektupTuru, string>> | unde
   if (!ham || typeof ham !== 'object' || Array.isArray(ham)) return undefined
   const out: Partial<Record<MektupTuru, string>> = {}
   for (const [k, v] of Object.entries(ham as Record<string, unknown>)) {
-    if (mektupTuruMu(k) && typeof v === 'string' && v.trim()) out[k] = v.trim().slice(0, 12_000)
+    if (!mektupTuruMu(k)) continue
+    // AU-GAP-CLOSE-02: accept either plain string (legacy) gated off, or { metin, hekimOnayi: true }.
+    if (typeof v === 'string' && v.trim()) {
+      // Unsigned plain strings are refused for export inclusion.
+      continue
+    }
+    if (v && typeof v === 'object' && !Array.isArray(v)) {
+      const b = v as Record<string, unknown>
+      const metin = typeof b.metin === 'string' ? b.metin.trim() : ''
+      if (metin && b.hekimOnayi === true) out[k] = metin.slice(0, 12_000)
+    }
   }
   return Object.keys(out).length ? out : undefined
 }
@@ -32,6 +43,7 @@ function mbsOku(ham: unknown): readonly MbsOneri[] | undefined {
   for (const x of ham.slice(0, 8)) {
     if (!x || typeof x !== 'object') continue
     const o = x as Record<string, unknown>
+    if (o.hekimOnayi !== true) continue
     const item = typeof o.item === 'string' ? o.item.trim() : ''
     if (!/^\d{1,6}[A-Za-z]{0,2}$/.test(item)) continue
     out.push({
@@ -39,6 +51,7 @@ function mbsOku(ham: unknown): readonly MbsOneri[] | undefined {
       aciklama: typeof o.aciklama === 'string' ? o.aciklama.slice(0, 240) : '',
       gerekce: typeof o.gerekce === 'string' ? o.gerekce.slice(0, 400) : '',
       lodgeEdilmez: true,
+      hekimOnayi: true,
     })
   }
   return out.length ? out : undefined
