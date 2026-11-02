@@ -4836,3 +4836,20 @@ How the AU build picks it up: `lib/billing/stripePlans.ts` reads `STRIPE_PRICE_S
 ## STRIPE-NOTYA-AU-04 — AU free trial fixed at 15 days (Kaan, 2026-11-02; Claude)
 
 Decision: the Australian free trial is 15 days, because each free month costs about US$37 per doctor in AI usage. The code already used 15 days (`NOTYA_TRIAL_DAYS` in `lib/billing/stripePlans.ts`, passed as `subscription_data.trial_period_days` in `app/api/billing/checkout/route.ts`); the constant is now commented with the decision so a merge from main cannot change it silently. No Stripe price or product carries a trial. No AU page, email, FAQ or legal text states a trial length (the en pre-launch copy rules ban "free trial" wording on the landing), so no copy changed. Card at signup: the invite-code signup (`/signup`) takes no card, but the trial itself starts only through Stripe Checkout, which collects a card (no `payment_method_collection` override). Card-required behaviour was not changed. Founding price (proposed A$79/month locked 24 months, voice fair use 300 min/month) is NOT approved and NOT built. | Waits on Kaan (founding price) | OPEN
+
+## AU-GAP-CLOSE-01 — close competitive gaps vs Heidi / Lyrebird / Medow + switcher game changers (Claude, 2026-11-02)
+
+**Classification:** specialty-agnostic **AU country pack + shared `lib/ulke` spine** (reaches all AU roles / 44 AHPRA paths). Not a Türkiye core change. **Branş:** N/A (country). **Countries:** AU **APPLIED** · us / gb / ca / nz / uz = **OPEN GAP** (country-adapted letter/MBS/PMS copy + clinical prompts not ported this change — owner Claude; date 2026-11-02).
+
+**Shipped in product (not audit-only):**
+1. **Letter studio** under an approved note — GP / referral / patient drafts via `/api/ulke/not/mektup` + `MektupKarti`. Approve gate mirrors portal ozet. Copy / download / print only; nothing sent or lodged.
+2. **MBS suggestions** — `/api/ulke/not/mbs-oneri` + `MbsOneriKarti`. Suggest only; filtered against local MBS→ACHI map when present; every row `lodgeEdilmez: true`.
+3. **PMS scaffold** — visit export pack JSON (`/api/ulke/not/pms-export`) + Settings › Integrations honest roadmap (export ready / partner-API / roadmap). **No fake sync** to Best Practice, Genie or Gentu.
+4. **Price ladder** — landing `yillik: 1490`; Narx shows “or $X a year”; `/signup?interval=year` → `/login` → checkout `interval: year`.
+5. **Trust / OS wedge** — landing “Not another scribe overlay. A practice OS.” section; Security page trust-centre framing (approve-before-anything-leaves).
+6. **Telehealth / dictate path** — pack tip under existing audio upload (bring the call recording). Desktop capture **not** built.
+
+**Still open (partner / product bets):** live Bp then Genie/Gentu write-back; Heidi-style free forever / freemium; desktop/telehealth capture; clinician sign-off on letter/MBS prompts (`countries/au/klinik/mektupTalimatlari.ts`).
+
+**Tests:** `lib/ulke/mektup/mektup.test.ts`, `countries/au/mektup.gap.test.ts`. Competitive HTML updated: `public/au-competitive-heidi-lyrebird-medow.html`.
+
