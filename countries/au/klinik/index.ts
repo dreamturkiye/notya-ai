@@ -13,6 +13,7 @@ import { AU_GIRDI } from '../ayarlar'
 import { AU_CANLI_ASISTAN } from '../asistan/canli'
 import { AU_SES } from '../ses'
 import { AU_ACIL_CUMLE, AU_CEKIRDEK_EK } from './formEk'
+import { auMbsOneriGirdisi, auMbsOneriTalimati, auMektupGirdisi, auMektupTalimati } from './mektupTalimatlari'
 import { auSoapKilidi } from './soapKilitleri'
 
 const AU_KLINIK_TEMEL = enKlinik({ ...AU_GIRDI, cekirdekEk: AU_CEKIRDEK_EK, acilCumle: AU_ACIL_CUMLE })
@@ -34,4 +35,9 @@ export const AU_KLINIK: UlkeKlinigi = {
   ses: AU_SES,
   // AU-CANLI-01: the live spoken assistant. Fails closed until the agents and secrets exist (lib/ulke/asistan/ajan.ts).
   canliAsistan: AU_CANLI_ASISTAN,
+  // AU-GAP-CLOSE-01 — letter studio + MBS suggest from an approved note (suggest only; never lodge / never send).
+  mektupTalimati: auMektupTalimati,
+  mektupGirdisi: auMektupGirdisi,
+  mbsOneriTalimati: auMbsOneriTalimati,
+  mbsOneriGirdisi: auMbsOneriGirdisi,
 }

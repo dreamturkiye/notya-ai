@@ -307,6 +307,52 @@ export type IslemKodlariMetni = {
 
 export type IslemKodlariTanimi = { metin: IslemKodlariMetni }
 
+/** AU-GAP-CLOSE-01 — letter studio UI copy (drawn under an approved note). */
+export type MektupUzantiMetni = {
+  baslik: string
+  aciklama: string
+  turler: readonly { tur: 'gp' | 'referral' | 'patient'; ad: string; aciklama: string }[]
+  yaz: string
+  yaziliyor: string
+  yenidenYaz: string
+  etiket: string
+  kopyala: string
+  kopyalandi: string
+  indir: string
+  yazdir: string
+  makine: string
+  yazilamadi: string
+  onayliDegil: string
+  bos: string
+  uyari: string
+}
+
+/** AU-GAP-CLOSE-01 — MBS suggestion card copy. */
+export type MbsOneriUzantiMetni = {
+  baslik: string
+  aciklama: string
+  oner: string
+  oneriliyor: string
+  kopyala: string
+  kopyalandi: string
+  bos: string
+  yazilamadi: string
+  uyari: string
+  kaynak: string
+}
+
+/** AU-GAP-CLOSE-01 — PMS export / write-back roadmap on Settings › Integrations. */
+export type PmsEntegrasyonUzanti = {
+  baslik: string
+  aciklama: string
+  exportBaslik: string
+  exportAciklama: string
+  exportDugme: string
+  exportIndiriliyor: string
+  kalemler: readonly { anahtar: string; ad: string; durum: 'hazir-export' | 'yol-haritasi' | 'partner-api'; aciklama: string }[]
+  uyari: string
+}
+
 export type UlkeUzantisi = {
   /** Extra policy pages, by route slug (served at /<slug>, listed by the pack's route list). Not part of the shared policy-document set. */
   belgeler?: Readonly<Record<string, UzantiBelgesi>>
@@ -322,4 +368,15 @@ export type UlkeUzantisi = {
   taniKodlari?: TaniKodlariTanimi
   /** Procedure-code lookup (MBS item -> ACHI code). Absent = the country has none. */
   islemKodlari?: IslemKodlariTanimi
+  /** AU-GAP-CLOSE-01 — letter studio under an approved note. Absent = not drawn. */
+  mektup?: MektupUzantiMetni
+  /** AU-GAP-CLOSE-01 — MBS suggest card under an approved note. Absent = not drawn. */
+  mbsOneri?: MbsOneriUzantiMetni
+  /** AU-GAP-CLOSE-01 — PMS export pack + honest write-back roadmap. Absent = Integrations unchanged. */
+  pmsEntegrasyon?: PmsEntegrasyonUzanti
+  /**
+   * AU-GAP-CLOSE-01 — tip under the visit audio-upload box (telehealth / dictate path). Absent = no extra tip.
+   * The upload control itself is already in the shared visit screen.
+   */
+  telehealthIpucu?: string
 }

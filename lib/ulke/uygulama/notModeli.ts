@@ -173,3 +173,61 @@ export async function modeldenHastaOzeti(g: Omit<ModelGirdisi, 'gorev'> & { azam
   const metin = await modeldenMetin({ ...g, gorev: 'not-uretimi' }, 'ozet')
   return metin === null ? null : hastaOzetiniOku(metin, g.azami)
 }
+
+/** AU-GAP-CLOSE-01 — key under which the model returns a clinical letter draft. */
+export const MEKTUP_ANAHTARI = 'letter'
+
+/** The model's answer as a letter body, or null. Pure. */
+export function mektubuOku(metin: string, azami: number): string | null {
+  const r = jsonOnarDetay(metin)
+  if (r.deger === null || typeof r.deger !== 'object' || Array.isArray(r.deger)) {
+    // Plain text fallback: some answers arrive as the letter itself.
+    const t = metin.trim()
+    return t && !t.startsWith('{') ? t.slice(0, azami) : null
+  }
+  const ham = (r.deger as Record<string, unknown>)[MEKTUP_ANAHTARI]
+  const t = (Array.isArray(ham) ? ham.map((x) => String(x ?? '')).join('\n') : typeof ham === 'string' ? ham : '').trim()
+  return t ? t.slice(0, azami) : null
+}
+
+/**
+ * AU-GAP-CLOSE-01 — a clinical letter draft from an APPROVED note. Same gateway rules as the patient summary.
+ * The doctor reads and edits; nothing is sent, lodged or written to a PMS from here.
+ */
+export async function modeldenMektup(g: Omit<ModelGirdisi, 'gorev'> & { azami: number }): Promise<string | null> {
+  const metin = await modeldenMetin({ ...g, gorev: 'not-uretimi' }, 'mektup')
+  return metin === null ? null : mektubuOku(metin, g.azami)
+}
+
+/** AU-GAP-CLOSE-01 — key under which the model returns MBS item suggestions. */
+export const MBS_ONERI_ANAHTARI = 'suggestions'
+
+/** Pure. Parses `{ "suggestions": [ { item, aciklama, gerekce } ] }`. */
+export function mbsOnerisiniOku(metin: string): { item: string; aciklama: string; gerekce: string }[] | null {
+  const r = jsonOnarDetay(metin)
+  if (r.deger === null || typeof r.deger !== 'object' || Array.isArray(r.deger)) return null
+  const ham = (r.deger as Record<string, unknown>)[MBS_ONERI_ANAHTARI]
+  if (!Array.isArray(ham)) return null
+  const cikti: { item: string; aciklama: string; gerekce: string }[] = []
+  for (const x of ham) {
+    if (!x || typeof x !== 'object' || Array.isArray(x)) continue
+    const o = x as Record<string, unknown>
+    const item = typeof o.item === 'string' ? o.item : typeof o.mbs === 'string' ? o.mbs : ''
+    if (!item.trim()) continue
+    cikti.push({
+      item: item.trim(),
+      aciklama: typeof o.aciklama === 'string' ? o.aciklama : typeof o.description === 'string' ? o.description : '',
+      gerekce: typeof o.gerekce === 'string' ? o.gerekce : typeof o.reason === 'string' ? o.reason : '',
+    })
+  }
+  return cikti.length ? cikti : null
+}
+
+/**
+ * AU-GAP-CLOSE-01 — MBS item SUGGESTIONS from an approved note. Suggest only; never lodge. The caller filters
+ * against the local MBS map and adds the never-lodge flag.
+ */
+export async function modeldenMbsOneri(g: Omit<ModelGirdisi, 'gorev'>): Promise<{ item: string; aciklama: string; gerekce: string }[] | null> {
+  const metin = await modeldenMetin({ ...g, gorev: 'not-uretimi' }, 'mbs')
+  return metin === null ? null : mbsOnerisiniOku(metin)
+}
