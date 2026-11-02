@@ -84,6 +84,9 @@ export const NOTYA_PLANS: NotyaPlanDef[] = [
   },
 ]
 
+// Australia (release/au): 15-day free trial, decided by Kaan 2026-11-02 (each free month costs about
+// US$37 per doctor in AI usage). Do not raise it on this branch without his go, even if main changes.
+// The trial starts only through Stripe Checkout (app/api/billing/checkout), which collects a card.
 export const NOTYA_TRIAL_DAYS = 15
 
 export function planByKey(key: string): NotyaPlanDef | null {
