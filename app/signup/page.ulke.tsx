@@ -38,7 +38,13 @@ export default function SignupPage({ searchParams }: { searchParams?: AramaParam
       : !kayitKoduGerekliMi(ulkePaketi())
         ? 'sesli_pro'
         : null
+  // AU-GAP-CLOSE-01: yearly ladder via ?interval=year on signup → carried into /login checkout.
+  const interval = typeof searchParams?.interval === 'string' && searchParams.interval === 'year' ? 'year' : null
   const girisYolu = dilliYol('/login', dil)
+  const girisParams = [
+    plan ? `plan=${encodeURIComponent(plan)}` : null,
+    interval ? `interval=${interval}` : null,
+  ].filter(Boolean).join('&')
   return (
     <DavetliKayitFormu
       kodGerekli={kayitKoduGerekliMi(ulkePaketi())}
@@ -47,7 +53,7 @@ export default function SignupPage({ searchParams }: { searchParams?: AramaParam
       anaSayfaAdi={yuzeyMetinleri('giris', dil).anaSayfa}
       diller={dilSecenekleri('/signup')}
       anaSayfa={dilliYol('/', dil)}
-      giris={plan ? `${girisYolu}${girisYolu.includes('?') ? '&' : '?'}plan=${plan}` : girisYolu}
+      giris={girisParams ? `${girisYolu}${girisYolu.includes('?') ? '&' : '?'}${girisParams}` : girisYolu}
       fiyat={dilliYol('/', dil, acilisCapasi('narx') ? `#${acilisCapasi('narx')}` : '')}
       meslek={ulkePaketi().uzanti?.muayenehane?.meslekKaydiTasi ? undefined : { etiket: a.meslekKaydi, izoh: a.meslekKaydiIzoh, gecersiz: a.meslekKaydiGecersiz }}
     />

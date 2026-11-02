@@ -16,7 +16,8 @@
  * LEFT OUT ON PURPOSE: TGA/Ahpra/Medicare/PBS endorsement, compliance or certification; Medicare billing or claims; My Health
  * Record (a stub, no connection); Tyro (inactive); any testimonial or number of customers; voice PREVIEW buttons (removed
  * in AU-HOME-01); the growth-chart tool (off); data residency promises; the persona names themselves.
- * AU launch 2026-11-01 (Kaan): self-serve 15-day free trial is ON (no invitation code). Doctor plan list price is A$149/mo.
+ * AU launch 2026-11-01 (Kaan): self-serve 15-day free trial is ON (no invitation code). Doctor plan list price is A$149/mo or A$1,490/yr.
+ * AU-GAP-CLOSE-01 (2026-11-02): practice-OS positioning vs Heidi / Lyrebird / Medow; letter studio + MBS suggest + export pack called out.
  * AU-CANLI-01 (2026-10-22): the live SPOKEN assistant IS mentioned (microphone on the home screen) — but only while the
  * deployment really holds both agents, the key and the secrets (lib/ulke/asistan/ajan.ts canliAjanlarVar), and never with a
  * claim of diagnosis, decision support, a regulator or a standard. [components/ulke/uygulama/AsistanCanli.tsx, app/api/ulke/asistan-canli/]
@@ -35,6 +36,29 @@ const SESLI = (): boolean => canliAjanlarVar('au', process.env)
 
 function ekBolumler(rolSayisi: number, sesli: boolean = SESLI()): EkOzellikBolumu[] {
   return [
+    {
+      id: 'practice-os',
+      ustBaslik: 'Why switch',
+      baslik: 'Not another scribe overlay.',
+      baslikVurgu: 'A practice OS.',
+      govde: 'Most AI “scribes” sit on top of Best Practice or Genie and stop at the note. Notya is the product you run the day in: consent → record → approve, letters from that approved visit, MBS suggestions you check yourself, the patient page, calendar, invoices into your own Stripe, clinic roles, and specialty tools — one account. Heidi, Lyrebird and Medow win the scribe frame; Notya wins when you want the practice, not a plug-in.',
+      maddeler: [
+        'One approved note becomes a patient summary, a GP letter, a referral draft and a visit export pack',
+        'MBS suggestions that never lodge — you check MBS Online before you bill',
+        'Patient portal with consent, privacy requests and a 30-day response timer',
+        'Honest Integrations page: export pack ready now; Best Practice / Genie / Gentu write-back only when a partner API is live — no fake “Synced” badge',
+      ],
+      kart: {
+        etiket: 'Scribe vs Notya',
+        satirlar: [
+          { k: 'Scribe products', v: 'Note + PMS overlay' },
+          { k: 'Notya', v: 'Note + letters + portal + calendar + invoices + clinic' },
+          { k: 'Approval gate', mark: 'Required' },
+          { k: 'PMS write-back', v: 'Export now · API later' },
+        ],
+        not: 'Switch because the rest of the practice is already here — not because we claim a louder microphone.',
+      },
+    },
     {
       id: 'your-assistant',
       ustBaslik: 'Your assistant',
@@ -156,7 +180,7 @@ export function auAcilisGuncelle(c: AcilisIcerigi, rolSayisi: number): AcilisIce
           : r)),
         izoh: g.id === 'clinic'
           ? `Clinic plans are quoted for the number of accounts. Solo doctors start a 15-day free trial online — no invitation code. Questions: ${EPOSTA}.`
-          : `15-day free trial for one doctor — no invitation code, no credit card charged until the trial ends. After that, $149.00 a month. Questions: ${EPOSTA}.`,
+          : `15-day free trial for one doctor — no invitation code, no credit card charged until the trial ends. After that, $149.00 a month or $1,490.00 a year (two months free). Questions: ${EPOSTA}.`,
       })),
     },
     sorov: {

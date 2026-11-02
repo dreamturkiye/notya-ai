@@ -248,7 +248,11 @@ function Xavfsizlik({ t, gorsel, c }: { t: AcilisIcerigi['xavfsizlik']; gorsel: 
  * A plan the price list gives no amount for, or does not name at all, has none: the copy's "on request" line stands.
  */
 export function narxSatirlari(a: UlkeAcilisi): Record<string, NarxSatiri> {
-  return Object.fromEntries(Object.entries(a.fiyatlar ?? {}).map(([id, f]) => [id, { tutar: typeof f.aylik === 'number' && f.aylik > 0 ? tutarYaz(f.aylik) : null, oneCikan: f.oneCikan === true }]))
+  return Object.fromEntries(Object.entries(a.fiyatlar ?? {}).map(([id, f]) => [id, {
+    tutar: typeof f.aylik === 'number' && f.aylik > 0 ? tutarYaz(f.aylik) : null,
+    yillikTutar: typeof f.yillik === 'number' && f.yillik > 0 ? tutarYaz(f.yillik) : null,
+    oneCikan: f.oneCikan === true,
+  }]))
 }
 
 /** Closing section. The Turkish page has a trial sign-up form here; this is the request form and the invitation link. */

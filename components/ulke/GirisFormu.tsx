@@ -35,13 +35,18 @@ export type GirisFormuProps = {
    * and additive: a country page that never passes it (every country but AU, for now) sees no change at all.
    */
   planKey?: string | null
+  /**
+   * AU-GAP-CLOSE-01: billing interval for that checkout. Defaults to month when omitted.
+   * Pass `year` from signup `?interval=year` so the yearly ladder (A$1,490) is reachable.
+   */
+  billingInterval?: 'month' | 'year' | null
 }
 
 // The 3 solo-doctor plan keys this build's Stripe catalog actually prices (lib/billing/stripePlans.ts).
 // Klinik/Kurumsal are out of scope — same boundary main's /kayit fix drew.
 const SELF_SERVE_PLAN_KEYS = new Set(['metin_asistan', 'sesli_pro', 'muayenehane'])
 
-export default function GirisFormu({ dil, metin, ret, diller, anaSayfa, kayit, sonra, planKey }: GirisFormuProps) {
+export default function GirisFormu({ dil, metin, ret, diller, anaSayfa, kayit, sonra, planKey, billingInterval }: GirisFormuProps) {
   const [eposta, setEposta] = useState('')
   const [sifre, setSifre] = useState('')
   const [bekliyor, setBekliyor] = useState(false)
@@ -84,10 +89,11 @@ export default function GirisFormu({ dil, metin, ret, diller, anaSayfa, kayit, s
       // who already has a valid, confirmed account — fall through to the normal destination either way.
       if (planKey && SELF_SERVE_PLAN_KEYS.has(planKey)) {
         try {
+          const interval = billingInterval === 'year' ? 'year' : 'month'
           const cres = await fetch(ulkeYolu('/api/billing/checkout'), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${data.session.access_token}` },
-            body: JSON.stringify({ plan_key: planKey, interval: 'month' }),
+            body: JSON.stringify({ plan_key: planKey, interval }),
           })
           const cjson = await cres.json().catch(() => null)
           if (cjson?.success && cjson?.data?.checkout_url) {

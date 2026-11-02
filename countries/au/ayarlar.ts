@@ -413,6 +413,7 @@ export const AU_GIRDI: EnUlkeGirdisi = {
     // already seat-based, and the TR draft's Klinik tier is a base price plus a per-seat rate that drops by
     // volume — this plan list has only one amount per plan, nowhere to put that. A real clinic number needs
     // either a flat placeholder (loses the seat structure) or a type/copy change (bigger job, not done here).
-    fiyatlar: { doctor: { aylik: 149, oneCikan: false }, clinic: { aylik: null, oneCikan: false } },
+    // AU-GAP-CLOSE-01: yearly ladder A$1,490 (10× monthly = two months free), same Stripe ratio as STRIPE-NOTYA-AU-03.
+    fiyatlar: { doctor: { aylik: 149, yillik: 1490, oneCikan: true }, clinic: { aylik: null, oneCikan: false } },
   },
 }
