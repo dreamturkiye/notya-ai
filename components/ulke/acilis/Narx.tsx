@@ -19,8 +19,8 @@ import { cn } from '@/components/doktor-landing/cn'
 import { ArrowUpRight } from '@/components/doktor-landing/icons'
 import type { AcilisIcerigi } from '@/lib/ulke/arayuz/acilisTipleri'
 
-/** One plan's price as the page shows it: the amount written out (null = on request), and whether it carries the badge. */
-export type NarxSatiri = { tutar: string | null; oneCikan: boolean }
+/** One plan's price as the page shows it: the amount written out (null = on request), optional yearly line, and whether it carries the badge. */
+export type NarxSatiri = { tutar: string | null; /** Optional yearly amount already written out (AU-GAP-CLOSE-01). */ yillikTutar?: string | null; oneCikan: boolean }
 
 export function Narx({ metin: t, fiyatlar, capa, sorovHref }: { metin: AcilisIcerigi['narx']; /** plan id → price, written out */ fiyatlar: Readonly<Record<string, NarxSatiri>>; /** The section's anchor (the pack's). */ capa: string; /** Where every button leads: the request form. */ sorovHref: string }) {
   const [secili, setSecili] = useState(0)
@@ -79,7 +79,14 @@ export function Narx({ metin: t, fiyatlar, capa, sorovHref }: { metin: AcilisIce
 
                 <div className="mt-5" data-alan="narx">
                   {tutar ? (
-                    <span className="font-display text-4xl font-semibold tracking-tight text-ink">{t.oylik.replace('%', tutar)}</span>
+                    <>
+                      <span className="font-display text-4xl font-semibold tracking-tight text-ink">{t.oylik.replace('%', tutar)}</span>
+                      {fiyat?.yillikTutar ? (
+                        <span className="mt-2 block font-outfit text-sm text-ink-2" data-alan="narx-yillik">
+                          or {fiyat.yillikTutar} a year
+                        </span>
+                      ) : null}
+                    </>
                   ) : (
                     <span className="font-display text-4xl font-medium text-ink">{t.sorovNarx}</span>
                   )}

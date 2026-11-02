@@ -40,6 +40,11 @@ export type NarxGuruhi = { id: string; ad: string; rejalar: readonly NarxRejasi[
 export type AcilisFiyatlari = Readonly<Record<string, {
   /** Whole units of the pack's currency for one month. null = no amount is shown: the price is given on request. */
   aylik: number | null
+  /**
+   * AU-GAP-CLOSE-01 — optional yearly amount (whole units). Shown under the monthly line when present.
+   * null / omitted = yearly not offered on the landing card (checkout may still accept year via Stripe).
+   */
+  yillik?: number | null
   /** true = the plan carries the badge. */
   oneCikan: boolean
 }>>
