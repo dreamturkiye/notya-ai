@@ -12,7 +12,7 @@ import { baglantiyiAc, cihazEpostaAcilisi, cihazEpostaAcilisiniKaydet } from '@/
 import type { EpostaAcilis } from '@/lib/iletisim/tipler'
 import { ulkeIstemciSupabase } from '@/lib/ulke/istemciSupabase'
 import { rolAdi } from '@/lib/ulke/arayuz'
-import { ozellikAcik } from '@/lib/ulke/ulke'
+import { ozellikAcik, ulkePaketi } from '@/lib/ulke/ulke'
 import { Cerceve, Yukleniyor, useUygulama, YOL, type Uygulama } from './Kabuk'
 
 const KUTU: CSSProperties = { background: '#FFFFFF', border: `1px solid ${R.border}`, borderRadius: 16, padding: '18px 18px 20px', boxShadow: '0 8px 18px rgba(58,44,34,0.045)', marginBottom: 14 }
@@ -72,6 +72,11 @@ export function Iletisim() {
 export function Entegrasyonlar() {
   const u = useUygulama('entegrasyonlar')
   const e = u.m.ayarlar.ek
+  const pms = ulkePaketi().uzanti?.pmsEntegrasyon
+  const durumRozet = (durum: 'hazir-export' | 'yol-haritasi' | 'partner-api') =>
+    durum === 'hazir-export' ? { ad: 'Export ready', renk: R.pine, zemin: '#E4F3F1' }
+      : durum === 'partner-api' ? { ad: 'Needs partner API', renk: R.muted, zemin: '#F2ECDF' }
+        : { ad: 'On the roadmap', renk: R.muted, zemin: '#F2ECDF' }
   const kalem = (ad: string, alt: string, href: string | null) => {
     const ic = (
       <>
@@ -93,6 +98,30 @@ export function Entegrasyonlar() {
         {ozellikAcik('klinikHesaplari') ? kalem(e.personelKalemi, e.personelKalemiAlt, YOL.klinik) : null}
         {kalem(e.disSistemler, e.disSistemlerAlt, null)}
       </div>
+      {/* AU-GAP-CLOSE-01: honest PMS export / write-back roadmap — no fake “Synced” badges. */}
+      {pms ? (
+        <div style={{ ...KUTU, marginTop: 18 }} data-alan="pms-entegrasyon">
+          <h2 style={{ fontFamily: CHROME_FONT.serif, fontWeight: 500, fontSize: 22, margin: '0 0 6px', color: '#2e251d' }}>{pms.baslik}</h2>
+          <p style={{ fontSize: 13, color: R.muted, margin: '0 0 14px' }}>{pms.aciklama}</p>
+          <p style={{ fontSize: 13, fontWeight: 600, margin: '0 0 4px' }}>{pms.exportBaslik}</p>
+          <p style={{ fontSize: 12, color: R.muted, margin: '0 0 12px' }}>{pms.exportAciklama}</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {pms.kalemler.map((k) => {
+              const r = durumRozet(k.durum)
+              return (
+                <div key={k.anahtar} style={SATIR} data-pms={k.anahtar} data-durum={k.durum}>
+                  <span style={{ flex: 1 }}>
+                    <span style={{ display: 'block', fontSize: 15, fontWeight: 700 }}>{k.ad}</span>
+                    <span style={{ display: 'block', fontSize: 12, color: R.muted, marginTop: 2 }}>{k.aciklama}</span>
+                  </span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: r.renk, background: r.zemin, borderRadius: 999, padding: '4px 10px', whiteSpace: 'nowrap' }}>{r.ad}</span>
+                </div>
+              )
+            })}
+          </div>
+          <p style={{ fontSize: 12, color: R.muted, margin: '12px 0 0' }}>{pms.uyari}</p>
+        </div>
+      ) : null}
     </Sayfa>
   )
 }

@@ -96,11 +96,18 @@ const SECURITY: YasalBelge = {
   baslik: 'Security',
   inceleme: INCELEME,
   bolumler: [
-    { baslik: 'What the software does (verified in the code on 2026-10-22)', paragraflar: [
+    { baslik: 'Trust centre (plain language)', paragraflar: [
+      'Notya is built so that clinical text does not leave the doctor’s control by accident: a draft note is marked as AI-drafted; nothing becomes part of the patient record, a patient summary, a letter or an export pack until the doctor approves the visit note.',
+      'Each practitioner only reaches their own patients. A foreign note or patient id answers “not found”, never another doctor’s file.',
+      'Letters and MBS suggestions are drafts for the doctor. Notya does not lodge Medicare claims and does not write silently to Best Practice, Genie or Gentu.',
+      'This page describes software controls. It is not a certification, an accreditation, or a guarantee.',
+    ] },
+    { baslik: 'What the software does (verified in the code on 2026-10-22, extended 2026-11-02)', paragraflar: [
       'Application-level encryption (AES-256-GCM) of patient names, details, notes and form answers before they are stored; the key is held in the deployment’s environment, not in the code.',
       'Per-practitioner scoping of every database statement; browser access to the privacy, invoice and payment-connection tables is switched off.',
       'Patient page: private link, six-digit PIN, five-try lock, 30-minute session, private no-store responses.',
       'Payment connection keys are stored encrypted, are never shown again and are never sent to the browser. Only restricted keys (not full secret keys) are accepted, in test or live mode, and a live connection needs an explicit confirmation. Webhooks from the payment provider are checked against a signature before anything is read.',
+      'Approved-note gate for patient summaries, letter drafts, MBS suggestions and the visit export pack (AU-GAP-CLOSE-01).',
     ] },
     { baslik: 'What has NOT been done', paragraflar: ['No independent security audit or penetration test. No independent assessment or accreditation is claimed. The hosting providers’ own controls are theirs and are not assessed here.'] },
     { baslik: 'How to report a problem', paragraflar: [`Write to ${E.security}. Say what you saw, the page and the time. Leave out a patient’s name and the content of a record.`, 'The same address is in /.well-known/security.txt on this deployment.'] },

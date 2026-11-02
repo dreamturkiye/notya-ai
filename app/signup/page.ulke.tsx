@@ -31,8 +31,20 @@ export default function SignupPage({ searchParams }: { searchParams?: AramaParam
   // The doctor's first real session is their first /login right after. Carry the chosen plan forward on that
   // link; GirisFormu drives checkout from there once it actually has a session.
   const planHam = typeof searchParams?.plan === 'string' ? searchParams.plan : null
-  const plan = planHam && SELF_SERVE_PLAN_KEYS.has(planHam) ? planHam : null
+  // Open signup defaults to the doctor plan (sesli_pro) so landing CTAs without ?plan= still start the 15-day trial.
+  const plan =
+    planHam && SELF_SERVE_PLAN_KEYS.has(planHam)
+      ? planHam
+      : !kayitKoduGerekliMi(ulkePaketi())
+        ? 'sesli_pro'
+        : null
+  // AU-GAP-CLOSE-01: yearly ladder via ?interval=year on signup → carried into /login checkout.
+  const interval = typeof searchParams?.interval === 'string' && searchParams.interval === 'year' ? 'year' : null
   const girisYolu = dilliYol('/login', dil)
+  const girisParams = [
+    plan ? `plan=${encodeURIComponent(plan)}` : null,
+    interval ? `interval=${interval}` : null,
+  ].filter(Boolean).join('&')
   return (
     <DavetliKayitFormu
       kodGerekli={kayitKoduGerekliMi(ulkePaketi())}
@@ -41,7 +53,7 @@ export default function SignupPage({ searchParams }: { searchParams?: AramaParam
       anaSayfaAdi={yuzeyMetinleri('giris', dil).anaSayfa}
       diller={dilSecenekleri('/signup')}
       anaSayfa={dilliYol('/', dil)}
-      giris={plan ? `${girisYolu}${girisYolu.includes('?') ? '&' : '?'}plan=${plan}` : girisYolu}
+      giris={girisParams ? `${girisYolu}${girisYolu.includes('?') ? '&' : '?'}${girisParams}` : girisYolu}
       fiyat={dilliYol('/', dil, acilisCapasi('narx') ? `#${acilisCapasi('narx')}` : '')}
       meslek={ulkePaketi().uzanti?.muayenehane?.meslekKaydiTasi ? undefined : { etiket: a.meslekKaydi, izoh: a.meslekKaydiIzoh, gecersiz: a.meslekKaydiGecersiz }}
     />

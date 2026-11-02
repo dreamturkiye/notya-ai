@@ -14,8 +14,10 @@
  *   Medicare/PBS/GST checklists   [araclar/medicareParticulars.ts, pbsPrescription.ts, gstInvoice.ts, kimlikKontrol.ts, baglantilar.ts]
  *   clinic team and front desk    [Klinik.tsx, KlinikYetkiler.tsx, OnBuro.tsx]
  * LEFT OUT ON PURPOSE: TGA/Ahpra/Medicare/PBS endorsement, compliance or certification; Medicare billing or claims; My Health
- * Record (a stub, no connection); Tyro (inactive); any price; any testimonial or number of customers; voice PREVIEW buttons (removed
+ * Record (a stub, no connection); Tyro (inactive); any testimonial or number of customers; voice PREVIEW buttons (removed
  * in AU-HOME-01); the growth-chart tool (off); data residency promises; the persona names themselves.
+ * AU launch 2026-11-01 (Kaan): self-serve 15-day free trial is ON (no invitation code). Doctor plan list price is A$149/mo or A$1,490/yr.
+ * AU-GAP-CLOSE-01 (2026-11-02): practice-OS positioning vs Heidi / Lyrebird / Medow; letter studio + MBS suggest + export pack called out.
  * AU-CANLI-01 (2026-10-22): the live SPOKEN assistant IS mentioned (microphone on the home screen) — but only while the
  * deployment really holds both agents, the key and the secrets (lib/ulke/asistan/ajan.ts canliAjanlarVar), and never with a
  * claim of diagnosis, decision support, a regulator or a standard. [components/ulke/uygulama/AsistanCanli.tsx, app/api/ulke/asistan-canli/]
@@ -34,6 +36,29 @@ const SESLI = (): boolean => canliAjanlarVar('au', process.env)
 
 function ekBolumler(rolSayisi: number, sesli: boolean = SESLI()): EkOzellikBolumu[] {
   return [
+    {
+      id: 'practice-os',
+      ustBaslik: 'Why switch',
+      baslik: 'Not another scribe overlay.',
+      baslikVurgu: 'A practice OS.',
+      govde: 'Most AI “scribes” sit on top of Best Practice or Genie and stop at the note. Notya is the product you run the day in: consent → record → approve, letters from that approved visit, MBS suggestions you check yourself, the patient page, calendar, invoices into your own Stripe, clinic roles, and specialty tools — one account. Heidi, Lyrebird and Medow win the scribe frame; Notya wins when you want the practice, not a plug-in.',
+      maddeler: [
+        'One approved note becomes a patient summary, a GP letter, a referral draft and a visit export pack',
+        'MBS suggestions that never lodge — you check MBS Online before you bill',
+        'Patient portal with consent, privacy requests and a 30-day response timer',
+        'Honest Integrations page: export pack ready now; Best Practice / Genie / Gentu write-back only when a partner API is live — no fake “Synced” badge',
+      ],
+      kart: {
+        etiket: 'Scribe vs Notya',
+        satirlar: [
+          { k: 'Scribe products', v: 'Note + PMS overlay' },
+          { k: 'Notya', v: 'Note + letters + portal + calendar + invoices + clinic' },
+          { k: 'Approval gate', mark: 'Required' },
+          { k: 'PMS write-back', v: 'Export now · API later' },
+        ],
+        not: 'Switch because the rest of the practice is already here — not because we claim a louder microphone.',
+      },
+    },
     {
       id: 'your-assistant',
       ustBaslik: 'Your assistant',
@@ -144,27 +169,37 @@ export function auAcilisGuncelle(c: AcilisIcerigi, rolSayisi: number): AcilisIce
     narx: {
       ...c.narx,
       ustBaslik: '10 — Plans',
-      baslik: 'Early access.',
-      baslikVurgu: 'By quote.',
+      baslik: 'Start free.',
+      baslikVurgu: 'Then choose.',
+      dugme: 'Start 15-day free trial',
+      sorovDugme: 'Request a quote',
       gruplar: c.narx.gruplar.map((g) => ({
         ...g,
         rejalar: g.rejalar.map((r) => (r.id === 'doctor'
-          ? { ...r, maddeler: planEk(r.maddeler, ['An assistant named for your specialty', 'Invoices in Australian dollars, paid into your own Stripe account', 'Privacy requests with a response timer', 'Checklists and links for Australian paperwork']) }
+          ? { ...r, maddeler: planEk(r.maddeler, ['15-day free trial — no invitation code', 'An assistant named for your specialty', 'Invoices in Australian dollars, paid into your own Stripe account', 'Privacy requests with a response timer', 'Checklists and links for Australian paperwork']) }
           : r)),
         izoh: g.id === 'clinic'
-          ? `Early access: accounts are opened with an invitation code while the first practices are set up. Ask for one at ${EPOSTA}. The price depends on the number of accounts.`
-          : `Early access: accounts are opened with an invitation code while the first practices are set up. Ask for one at ${EPOSTA}. Prices are given by quote.`,
+          ? `Clinic plans are quoted for the number of accounts. Solo doctors start a 15-day free trial online — no invitation code. Questions: ${EPOSTA}.`
+          : `15-day free trial for one doctor — no invitation code, no credit card charged until the trial ends. After that, $149.00 a month or $1,490.00 a year (two months free). Questions: ${EPOSTA}.`,
       })),
     },
     sorov: {
       ...c.sorov,
-      govde: `Early access. Tell us the specialty and how you work and we will come back with a quote and an invitation code, or write to ${EPOSTA}.`,
+      baslik: 'Start your free trial.',
+      baslikVurgu: 'Or ask us anything.',
+      govde: `Create an account and begin a 15-day free trial — no invitation code. Prefer a walkthrough first? Book a demo, or write to ${EPOSTA}.`,
+      davetSorusu: 'Ready to try Notya?',
+      davetBaglantisi: 'Start free trial',
       formYok: `The request form opens soon. In the meantime, write to ${EPOSTA}.`,
+    },
+    altBilgi: {
+      ...c.altBilgi,
+      kayit: 'Start a free trial',
     },
     klinik: {
       ...c.klinik,
       ekBolumler: klinikEk(),
-      cta: { ...c.klinik.cta, govde: `Early access: accounts are opened with an invitation code. Tell us the discipline and how many accounts you need, or write to ${EPOSTA}.` },
+      cta: { ...c.klinik.cta, govde: `Clinic pricing depends on how many accounts you need — write to ${EPOSTA}. Solo doctors can start a 15-day free trial online with no invitation code.` },
     },
   }
 }

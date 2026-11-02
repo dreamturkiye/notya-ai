@@ -24,6 +24,8 @@ export default function LoginPage({ searchParams }: { searchParams?: AramaParame
   const dil = sayfaDili(searchParams)
   // STRIPE-NOTYA-AU-02: carried from /signup's post-registration "giriş yap" link — see that page's comment.
   const planHam = typeof searchParams?.plan === 'string' ? searchParams.plan : null
+  // AU-GAP-CLOSE-01: yearly ladder via ?interval=year (default month).
+  const intervalHam = typeof searchParams?.interval === 'string' && searchParams.interval === 'year' ? 'year' as const : 'month' as const
   return (
     <GirisFormu
       dil={dil}
@@ -34,6 +36,7 @@ export default function LoginPage({ searchParams }: { searchParams?: AramaParame
       kayit={ozellikAcik('davetliKayit') ? dilliYol('/signup', dil) : null}
       sonra={ulkeYolu(ozellikAcik('cekirdekMuayene') ? UYGULAMA_EKRANLARI.bugun : '/welcome')}
       planKey={planHam}
+      billingInterval={intervalHam}
     />
   )
 }

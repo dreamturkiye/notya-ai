@@ -248,7 +248,11 @@ function Xavfsizlik({ t, gorsel, c }: { t: AcilisIcerigi['xavfsizlik']; gorsel: 
  * A plan the price list gives no amount for, or does not name at all, has none: the copy's "on request" line stands.
  */
 export function narxSatirlari(a: UlkeAcilisi): Record<string, NarxSatiri> {
-  return Object.fromEntries(Object.entries(a.fiyatlar ?? {}).map(([id, f]) => [id, { tutar: typeof f.aylik === 'number' && f.aylik > 0 ? tutarYaz(f.aylik) : null, oneCikan: f.oneCikan === true }]))
+  return Object.fromEntries(Object.entries(a.fiyatlar ?? {}).map(([id, f]) => [id, {
+    tutar: typeof f.aylik === 'number' && f.aylik > 0 ? tutarYaz(f.aylik) : null,
+    yillikTutar: typeof f.yillik === 'number' && f.yillik > 0 ? tutarYaz(f.yillik) : null,
+    oneCikan: f.oneCikan === true,
+  }]))
 }
 
 /** Closing section. The Turkish page has a trial sign-up form here; this is the request form and the invitation link. */
@@ -296,7 +300,9 @@ export function AcilisSayfasi({ dil, istenenDil, iletisimEposta, gorseller, acil
   const c = a.capalar
   // Login and sign-up exist in the pack's public languages only; a visitor reading another form continues in the default.
   const girisHref = dilliYol('/login', dilSec(d))
-  const kayitHref = dilliYol('/signup', dilSec(d))
+  // Open signup (kayitAcik): doctor plan maps to Stripe sesli_pro (AU A$149 / TR Sesli Pro equivalent).
+  const kayitAcik = ulkePaketi().uygulama?.kayitAcik === true
+  const kayitHref = `${dilliYol('/signup', dilSec(d))}${kayitAcik ? '?plan=sesli_pro' : ''}`
   const ustDiller = ustDilSecenekleri(a, ulkePaketi().uygulama?.dilGruplari ?? [], d)
   const altDiller = a.diller.map((k) => dilSecenegi(a, k, k === d, '/'))
   const demo = demoDugmesi(d)
@@ -322,7 +328,7 @@ export function AcilisSayfasi({ dil, istenenDil, iletisimEposta, gorseller, acil
           ))}
           <Organish metin={t.organish} gorsel={gorseller.stol} capa={c.organish} />
           <Xavfsizlik c={c} t={t.xavfsizlik} gorsel={gorseller.yolak} />
-          <Narx metin={t.narx} fiyatlar={narxSatirlari(a)} capa={c.narx} sorovHref={`#${c.sorov}`} />
+          <Narx metin={t.narx} fiyatlar={narxSatirlari(a)} capa={c.narx} sorovHref={`#${c.sorov}`} kayitHref={kayitAcik ? kayitHref : undefined} />
           <Sorov c={c} t={t.sorov} iletisimEposta={iletisimEposta} kayitHref={kayitHref} />
         </main>
         <YasalNotlari n={t.yasalNotlari} />

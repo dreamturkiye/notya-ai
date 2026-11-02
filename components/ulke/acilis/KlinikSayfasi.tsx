@@ -31,7 +31,8 @@ export function KlinikSayfasi({ dil, istenenDil, iletisimEposta, gorsel, acilis:
   const k = t.klinik
   const c = a.capalar
   const girisHref = dilliYol('/login', dilSec(d))
-  const kayitHref = dilliYol('/signup', dilSec(d))
+  const kayitAcik = ulkePaketi().uygulama?.kayitAcik === true
+  const kayitHref = `${dilliYol('/signup', dilSec(d))}${kayitAcik ? '?plan=sesli_pro' : ''}`
   const doktorHref = dilliYol('/', dilSec(d))
   const ust = ustDilSecenekleri(a, ulkePaketi().uygulama?.dilGruplari ?? [], d, '/for-clinics')
   const alt = a.diller.map((kod) => {

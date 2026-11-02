@@ -86,6 +86,8 @@ export type EnPaketSinamasi = {
 
 const TURKIYE_OZBEKISTAN = /Türkiye|Turkey|Turkish|Uzbek|Tashkent|\bSGK\b|MEDULA|e-Nabız|\bKVKK\b|JSHSHIR|PINFL|[çğıöşüİĞŞÇÖÜʻўқғҳЎҚҒҲ]/
 const IDDIA = /\b(HIPAA|GDPR|PIPEDA|FDA|TGA|MHRA|Medsafe|Health Canada|ISO ?\d+|SOC ?2|CE[- ]mark\w*|compliant|compliance|certified|certification|accredited|accreditation|endorsed|clinically proven|cleared|integrat\w*|trusted by|award\w*|guarantee\w*|free trial|discount\w*)\b/i
+/** AU launch 2026-11-01: self-serve 15-day free trial is an intentional, owner-approved claim — still ban the rest. */
+const IDDIA_AU = /\b(HIPAA|GDPR|PIPEDA|FDA|TGA|MHRA|Medsafe|Health Canada|ISO ?\d+|SOC ?2|CE[- ]mark\w*|compliant|compliance|certified|certification|accredited|accreditation|endorsed|clinically proven|cleared|integrat\w*|trusted by|award\w*|guarantee\w*|discount\w*)\b/i
 const KIMLIK = /social security|\bSSN\b/i
 const PARA = /\d[\d,.]*\s*(USD|GBP|CAD|AUD|NZD|dollars?|pounds?)\b|[$£€]\s*\d/
 
@@ -168,7 +170,8 @@ export function ingilizcePaketSinamasi(s: EnPaketSinamasi): void {
       // spelling check does not read them; every other rule of the pack holds for them as for a screen
       const yuvaMetinleri = a.yuvalar.flatMap((y) => [{ yer: `slot ${y.anahtar}: what is missing`, metin: y.eksik }, { yer: `slot ${y.anahtar}: who supplies it`, metin: y.kimden }])
       assert.ok(yuvaMetinleri.length >= 2 * s.kapaliAraclar.length && yuvaMetinleri.length > 0)
-      for (const desen of [s.yabanci, TURKIYE_OZBEKISTAN, IDDIA, KIMLIK, PARA]) {
+      const iddiaYuva = kod === 'au' ? IDDIA_AU : IDDIA
+      for (const desen of [s.yabanci, TURKIYE_OZBEKISTAN, iddiaYuva, KIMLIK, PARA]) {
         assert.deepEqual(yuvaMetinleri.filter((x) => desen.test(x.metin)).map((x) => `${x.yer}: ${desen.exec(x.metin)?.[0]}`), [])
       }
     })
@@ -179,17 +182,26 @@ export function ingilizcePaketSinamasi(s: EnPaketSinamasi): void {
     })
   })
 
-  describe(`${kod}: no claim, no price, hidden, by invitation`, () => {
-    it('no compliance, approval, certification, endorsement or integration claim; no law or regulator named; no trial or discount', () => {
+  describe(`${kod}: no claim, no unapproved price claim, search + signup gates`, () => {
+    it('no compliance, approval, certification, endorsement or integration claim; no law or regulator named; no unapproved trial or discount', () => {
       // The ONE exemption: the draft labels that DENY a claim ("Initial compliance draft – external legal review later.",
       // "initial compliance and clinical draft", "Initial Australian compliance and clinical content …"). Any other use of the word still fails.
+      // AU launch 2026-11-01: "free trial" is an intentional claim (IDDIA_AU).
+      const iddia = kod === 'au' ? IDDIA_AU : IDDIA
       const TASLAK_ETIKETI = /initial (australian )?compliance (draft|and clinical (draft|content))/gi
       const taranan = metinler.map((x) => ({ ...x, metin: x.metin.replace(TASLAK_ETIKETI, '') }))
-      assert.deepEqual(taranan.filter((x) => IDDIA.test(x.metin)).map((x) => `${x.yer}: ${IDDIA.exec(x.metin)?.[0]}`), [])
+      assert.deepEqual(taranan.filter((x) => iddia.test(x.metin)).map((x) => `${x.yer}: ${iddia.exec(x.metin)?.[0]}`), [])
     })
-    it('no price: every plan is by quote, and no amount of money is written into any text', () => {
+    it('price list: by quote everywhere except AU doctor plan (A$149)', () => {
       const f = arayuz.acilis!.fiyatlar
       assert.ok(Object.keys(f).length >= 1)
+      if (kod === 'au') {
+        assert.equal(f.doctor?.aylik, 149)
+        assert.equal(f.clinic?.aylik, null)
+        const n = arayuz.acilis!.icerik[bicim]!.narx
+        assert.deepEqual(n.gruplar.flatMap((g) => g.rejalar.map((r) => r.id)).sort(), Object.keys(f).sort())
+        return
+      }
       for (const [plan, v] of Object.entries(f)) { assert.equal(v.aylik, null, plan); assert.equal(v.oneCikan, false, plan) }
       assert.deepEqual(metinler.filter((x) => PARA.test(x.metin)).map((x) => x.yer), [])
       const n = arayuz.acilis!.icerik[bicim]!.narx
@@ -206,10 +218,11 @@ export function ingilizcePaketSinamasi(s: EnPaketSinamasi): void {
         for (const r of ROLLER) assert.equal(arayuz.asistan(r, bicim), null, r)
       }
     })
-    it('hidden from search; sign-up by invitation code only', () => {
+    it('search indexing + sign-up gate match the pack', () => {
       // AU-SEO-01: Australia is indexable by owner decision (2026-10-22); every other country is hidden by default.
       assert.equal(paket.aramaMotorlarinaGizli, paket.kod !== 'au')
-      assert.equal(paket.uygulama!.kayitAcik, false)
+      // AU launch 2026-11-01: open self-serve free trial. Other EN packs stay invitation-only.
+      assert.equal(paket.uygulama!.kayitAcik, kod === 'au')
     })
     it('only what the country kit has built is switched on', () => {
       assert.deepEqual(Object.keys(paket.ozellikler).sort(), ['acilisSayfasi', 'araclar', 'bekletmeSayfasi', 'cekirdekGiris', 'cekirdekMuayene', 'davetliKayit', ...(s.ekOzellikler ?? []), 'hastaFormu', 'hastaMesajlari', 'hastaPortali', 'klinikHesaplari', ...(s.konsultasyonAcik ? ['konsultasyon'] : []), 'randevu'].sort())

@@ -34,6 +34,8 @@ import GeriLink from '@/components/navigasyon/GeriLink'
 import { NotUstCubugu, NotBaslikKuyrugu, NotPil, NotAnaDugme, NotDuzeni, NotAlani, NotYazi, NotOkunurKutu, NOT_ETIKET } from '@/components/doktor/NotDuzenGorunumu'
 import { MuayeneEkleri } from './MuayeneEkleri'
 import { PortalOzetKarti } from './PortalOzeti'
+import { MektupKarti } from './MektupKarti'
+import { MbsOneriKarti } from './MbsOneriKarti'
 import { HastaFormuKarti } from './HastaFormuKarti'
 import { SablonSecici, useSablonlar } from './Sablonlarim'
 import { EklerNotKarti } from './Ekler'
@@ -278,6 +280,9 @@ export function Not({ u, notId }: { u: Uygulama; notId: string }) {
           still theirs to change. Read-only, marked as the patient's own words; it was never given to the model. */}
       {!not.onayli && not.muayene.hasta && ozellikAcik('hastaPortali') && ozellikAcik('hastaFormu') ? <HastaFormuKarti u={u} hastaId={not.muayene.hasta.id} mod="muayene" /> : null}
       {not.onayli && not.muayene.hasta && ozellikAcik('hastaPortali') ? <PortalOzetKarti key={`${not.notId}-${not.onayTarihi ?? ''}`} u={u} notId={not.notId} /> : null}
+      {/* AU-GAP-CLOSE-01: letter studio + MBS suggestions + visit export — only when the pack brings them; approved note only. */}
+      {not.onayli ? <MektupKarti key={`mektup-${not.notId}-${not.onayTarihi ?? ''}`} u={u} notId={not.notId} /> : null}
+      {not.onayli ? <MbsOneriKarti key={`mbs-${not.notId}-${not.onayTarihi ?? ''}`} u={u} notId={not.notId} /> : null}
       {/* MUAYENE-EKLERI-07: files attached to this visit (a lab PDF, a scanned referral, a photographed document). */}
       {ozellikAcik('muayeneEkleri') ? <MuayeneEkleri m={u.m} seansId={not.seansId} api={api} /> : null}
       <DosyaEk m={u.m} not={not} api={api} yenile={() => yukle()} />

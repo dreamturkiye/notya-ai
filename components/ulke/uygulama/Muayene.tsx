@@ -34,7 +34,7 @@ import { HastaFormuKarti } from './HastaFormuKarti'
 import { MuayeneMotorPaneli } from './MuayeneMotorPaneli'
 import { EklerAdimi } from './Ekler'
 import type { EkGonderimi } from '@/lib/ulke/belgeler/ekler'
-import { ozellikAcik } from '@/lib/ulke/ulke'
+import { ozellikAcik, ulkePaketi } from '@/lib/ulke/ulke'
 import { Ipucu } from './Ipucu'
 import { SeansSayfasi, SeansKarti, SeansBanner, SeansEtiketi, SeansBaslatDugmesi, SeansAyirac, SeansYuklemeKutusu, SeansKayitKarti, SeansEylemSatiri, SeansIsleniyorKarti } from '@/components/doktor/SeansKurulumu'
 import { gunBasligi, muayeneBaslatilabilir, takvimYolu, type RandevuKaydi } from './randevuOrtak'
@@ -171,6 +171,10 @@ export function KayitGorunumu({ m, hasta, sablon, riza, setRiza, durum, sure, ha
               <SeansAyirac>{v.yada}</SeansAyirac>
               <SeansYuklemeKutusu id="uza-ses-dosyasi" etiket={v.sesDosyasi} accept="audio/*" disabled={!riza || durum !== 'hazir'} onDosya={dosyaSec} />
               <p className="uza-ipucu" style={{ textAlign: 'center' }}>{v.sesDosyasiIzoh}</p>
+              {/* AU-GAP-CLOSE-01: pack tip for telehealth / dictate upload path (no desktop capture claim). */}
+              {ulkePaketi().uzanti?.telehealthIpucu ? (
+                <p className="uza-ipucu" style={{ textAlign: 'center' }} data-alan="telehealth-ipucu">{ulkePaketi().uzanti?.telehealthIpucu}</p>
+              ) : null}
             </div>
           ) : null}
         </div>

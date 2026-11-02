@@ -709,6 +709,19 @@ export type UlkeKlinigi = {
   /** The message that carries the approved note to the model, in the summary's language. The note and nothing else. */
   hastaOzetiGirdisi?: (dil: DilKodu, icerik: NotIcerigi) => string
   /**
+   * AU-GAP-CLOSE-01 — instructions for a clinical LETTER draft from an APPROVED note (`tur`: gp / referral / patient).
+   * null = that kind is not offered. Absent = the country has no letter studio.
+   */
+  mektupTalimati?: (tur: 'gp' | 'referral' | 'patient') => string | null
+  /** The message that carries the approved note to the model for a letter. The note and nothing else. */
+  mektupGirdisi?: (tur: 'gp' | 'referral' | 'patient', icerik: NotIcerigi) => string
+  /**
+   * AU-GAP-CLOSE-01 — instructions for MBS item SUGGESTIONS from an approved note. Suggest only; never lodge.
+   * Absent = the country has no MBS assist.
+   */
+  mbsOneriTalimati?: () => string | null
+  mbsOneriGirdisi?: (icerik: NotIcerigi) => string
+  /**
    * NOTYA-ULKE-INTAKE-01 — THE QUESTIONS of the intake form: a core set and one set per role, the consent sentence,
    * and who wrote and who reviewed each set (lib/ulke/intake/tipler.ts). The pack's own clinical content; core holds
    * no question. Required where `hastaFormu` is on. Answers are NOT given to the model that writes a note.

@@ -11,7 +11,8 @@
  * the server (./AcilisSayfasi.tsx), so this file knows no currency and no country.
  *
  * A plan WITHOUT an amount in the price list shows the copy's "on request" line instead — also when the list has no
- * entry for it at all: an amount is never guessed. Every button leads to the request form of the same page.
+ * entry for it at all: an amount is never guessed. Priced plans link to `kayitHref` when the pack supplies one
+ * (self-serve free trial); otherwise every button leads to the request form of the same page.
  */
 import React from 'react'
 import { useState } from 'react'
@@ -19,10 +20,10 @@ import { cn } from '@/components/doktor-landing/cn'
 import { ArrowUpRight } from '@/components/doktor-landing/icons'
 import type { AcilisIcerigi } from '@/lib/ulke/arayuz/acilisTipleri'
 
-/** One plan's price as the page shows it: the amount written out (null = on request), and whether it carries the badge. */
-export type NarxSatiri = { tutar: string | null; oneCikan: boolean }
+/** One plan's price as the page shows it: the amount written out (null = on request), optional yearly line, and whether it carries the badge. */
+export type NarxSatiri = { tutar: string | null; /** Optional yearly amount already written out (AU-GAP-CLOSE-01). */ yillikTutar?: string | null; oneCikan: boolean }
 
-export function Narx({ metin: t, fiyatlar, capa, sorovHref }: { metin: AcilisIcerigi['narx']; /** plan id → price, written out */ fiyatlar: Readonly<Record<string, NarxSatiri>>; /** The section's anchor (the pack's). */ capa: string; /** Where every button leads: the request form. */ sorovHref: string }) {
+export function Narx({ metin: t, fiyatlar, capa, sorovHref, kayitHref }: { metin: AcilisIcerigi['narx']; /** plan id → price, written out */ fiyatlar: Readonly<Record<string, NarxSatiri>>; /** The section's anchor (the pack's). */ capa: string; /** Where "on request" buttons lead: the request form. */ sorovHref: string; /** Optional: where priced-plan buttons lead (e.g. open free-trial signup). */ kayitHref?: string }) {
   const [secili, setSecili] = useState(0)
   const grup = t.gruplar[secili] ?? t.gruplar[0]
   if (!grup) return null
@@ -79,7 +80,14 @@ export function Narx({ metin: t, fiyatlar, capa, sorovHref }: { metin: AcilisIce
 
                 <div className="mt-5" data-alan="narx">
                   {tutar ? (
-                    <span className="font-display text-4xl font-semibold tracking-tight text-ink">{t.oylik.replace('%', tutar)}</span>
+                    <>
+                      <span className="font-display text-4xl font-semibold tracking-tight text-ink">{t.oylik.replace('%', tutar)}</span>
+                      {fiyat?.yillikTutar ? (
+                        <span className="mt-2 block font-outfit text-sm text-ink-2" data-alan="narx-yillik">
+                          or {fiyat.yillikTutar} a year
+                        </span>
+                      ) : null}
+                    </>
                   ) : (
                     <span className="font-display text-4xl font-medium text-ink">{t.sorovNarx}</span>
                   )}
@@ -95,7 +103,7 @@ export function Narx({ metin: t, fiyatlar, capa, sorovHref }: { metin: AcilisIce
                 </ul>
 
                 <a
-                  href={sorovHref}
+                  href={tutar && kayitHref ? kayitHref : sorovHref}
                   className={cn(
                     'mt-8 inline-flex h-12 items-center justify-center gap-1.5 rounded-full px-5 font-outfit text-sm font-medium transition-colors',
                     fiyat?.oneCikan ? 'bg-pine text-cream hover:bg-pine-2' : 'bg-paper-2 text-ink hover:bg-line',
