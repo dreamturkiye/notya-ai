@@ -11,7 +11,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { denemeDurumu, denemeKarari, istemIcerigi, istemNedeni, teklifSec, yanittanIstem } from '@/lib/billing/deneme'
 import { ULKE_TICARI } from '@/lib/billing/ulkeTicari'
 import { kurucuKoltukKaldiMi, koltukOnbelleginiTemizle, fiyatOnbelleginiTemizle, type FiyatStripe } from '@/lib/billing/kurucuTeklifi'
-import { denemeEngeli, denemeOnbellekTemizle, muayeneDenemeKapisi } from './deneme'
+import { denemeEngeli, denemeOnbellekTemizle, hesapMuafMi, muayeneDenemeKapisi } from './deneme'
 
 const AU = ULKE_TICARI.au
 const AYAR = AU.deneme!
@@ -20,14 +20,14 @@ const ACILIS = '2026-11-05T09:00:00Z'
 const A = Date.parse(ACILIS)
 
 /** A stand-in client: the account row, the subscription rows and the visit count. Counts the reads. */
-function sahteDb(g: { acilis?: string | null; abonelik?: Array<Record<string, unknown>>; muayene?: number; hata?: boolean }) {
+function sahteDb(g: { acilis?: string | null; abonelik?: Array<Record<string, unknown>>; muayene?: number; hata?: boolean; muaf?: boolean }) {
   const okunan: string[] = []
   const db = {
     from(ad: string) {
       okunan.push(ad)
       const sonuc =
         g.hata ? { data: null, error: new Error('x'), count: null }
-        : ad === 'ulke_hesaplari' ? { data: g.acilis === undefined ? { created_at: ACILIS } : g.acilis === null ? null : { created_at: g.acilis }, error: null }
+        : ad === 'ulke_hesaplari' ? { data: g.acilis === undefined ? { created_at: ACILIS, ozel_muafiyet: g.muaf ?? false } : g.acilis === null ? null : { created_at: g.acilis, ozel_muafiyet: g.muaf ?? false }, error: null }
         : ad === 'subscriptions' ? { data: g.abonelik ?? [], error: null }
         : ad === 'ulke_muayeneler' ? { data: null, error: null, count: g.muayene ?? 0 }
         : { data: null, error: null }
@@ -192,5 +192,38 @@ describe('upgrade prompt selection', () => {
     assert.equal(await kurucuKoltukKaldiMi(stripe(0), 'au'), false, 'cached for ten minutes')
     assert.equal(cagri, once)
     assert.equal(await kurucuKoltukKaldiMi(stripe(0), 'gb'), null)
+  })
+})
+
+describe('founder exemption (Kaan, 2026-11-02; migration 186 ozel_muafiyet)', () => {
+  beforeEach(() => denemeOnbellekTemizle())
+
+  it('an exempt account is never limited: no trial end, no visit cap, no prompt - long after day 15, with no plan', () => {
+    const d = denemeDurumu({ ayar: AYAR, hesapAcilis: ACILIS, abonelik: null, simdi: A + 400 * GUN, muaf: true })
+    assert.equal(d.tur, 'muaf')
+    assert.equal(denemeKarari(d, AYAR, 10_000), null)
+    assert.equal(istemNedeni({ durum: d, ayar: AYAR, muayeneSayisi: 10_000, sesDakika: 10_000, sesSiniri: 60 }), null)
+    // Not set (or false): the same account is read-only and prompted as before.
+    const n = denemeDurumu({ ayar: AYAR, hesapAcilis: ACILIS, abonelik: null, simdi: A + 400 * GUN, muaf: false })
+    assert.equal(n.tur, 'bitti')
+    assert.equal(denemeKarari(n, AYAR, 0), 'DENEME_BITTI')
+  })
+
+  it('the gates read the flag from the account row they already read: allowed, and no extra read', async () => {
+    const muaf = sahteDb({ muaf: true, muayene: 500 })
+    assert.equal(await muayeneDenemeKapisi(muaf.db, 'u1', 'au', A + 30 * GUN), null)
+    assert.deepEqual([...muaf.okunan].sort(), ['subscriptions', 'ulke_hesaplari', 'ulke_muayeneler'])
+    const ai = sahteDb({ muaf: true })
+    assert.equal(await denemeEngeli(ai.db, 'u1', 'au', A + 30 * GUN), null)
+    assert.deepEqual([...ai.okunan].sort(), ['subscriptions', 'ulke_hesaplari'])
+    denemeOnbellekTemizle()
+    const normal = sahteDb({ muaf: false, muayene: 500 })
+    assert.equal(await muayeneDenemeKapisi(normal.db, 'u1', 'au', A + 2 * GUN), 'DENEME_MUAYENE')
+  })
+
+  it('checkout sees the flag (an exempt account never takes a founding seat); a failed read is not exempt', async () => {
+    assert.equal(await hesapMuafMi(sahteDb({ muaf: true }).db, 'u1'), true)
+    assert.equal(await hesapMuafMi(sahteDb({ muaf: false }).db, 'u1'), false)
+    assert.equal(await hesapMuafMi(sahteDb({ hata: true }).db, 'u1'), false)
   })
 })

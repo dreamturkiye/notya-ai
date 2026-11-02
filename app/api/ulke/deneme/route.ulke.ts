@@ -4,6 +4,7 @@
  * ten minutes), never per request.
  *
  *   200 { aktif: false }                                  this country has no in-app trial (nothing is read)
+ *   200 { aktif: false, muaf: true }                      founder exemption (migration 186): no band, no prompt, ever
  *   200 { aktif: true, tur: 'ucretli' | 'deneme' | 'bitti', gun, kalanGun, bitis, muayene, muayeneSiniri,
  *         sesDakika, sesSiniri, istem: null | { neden: 'bitti' | 'muayene' | 'ses' | 'hatirlatma', teklif:
  *         'kurucu' | 'normal', kalanGun?, hatirlatmaGunu? } }
@@ -36,6 +37,7 @@ export const GET = sinirda('deneme GET', async (req: NextRequest) => {
   // Fail open: an unreadable trial shows no prompt and gates nothing.
   if (!o) return cevap({ aktif: false })
   const { durum, ayar } = o
+  if (durum.tur === 'muaf') return cevap({ aktif: false, muaf: true })
   const muayene = o.muayeneSayisi ?? 0
   const ses = durum.tur === 'deneme' ? await sesDakikaKapisi(oturum.supabase, oturum.user.id, ulke) : null
   const neden = istemNedeni({ durum, ayar, muayeneSayisi: muayene, sesDakika: ses?.kullanilanDakika ?? null, sesSiniri: ses?.limitDakika ?? null })

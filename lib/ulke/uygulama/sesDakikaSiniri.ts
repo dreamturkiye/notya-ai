@@ -6,8 +6,9 @@
  * opener; a call that is already running is never cut. The cap is the country's (lib/billing/ulkeTicari.ts);
  * a country without one is not gated at all.
  *
- *   sesDakikaKapisi   call start: the subscription row and the voice-seconds rows of the period, read in parallel
- *                     (one round trip, two small indexed reads) - never on the per-turn path.
+ *   sesDakikaKapisi   call start: the subscription row, the voice-seconds rows of the period and the account's founder
+ *                     exemption flag (migration 186), read in parallel (one round trip, three small indexed reads) -
+ *                     never on the per-turn path. An exempt account has no cap (null).
  *   cagriSuresiYaz    call end: the browser posts the call token once; the seconds are bounded by the token's own
  *                     issue time, so a browser cannot report more than the call could have lasted. Stored as the
  *                     task `canli-ses` in the country's usage record (ulke_kullanim_olcumu, adds atomically).
@@ -32,10 +33,13 @@ export async function sesDakikaKapisi(supabase: SupabaseClient, hesapId: string,
   try {
     // The widest window any plan state can need is the account's whole life; the rows are one per day, so read them
     // all with the subscription in parallel and filter by the period here.
-    const [ab, kullanim] = await Promise.all([
+    const [ab, kullanim, hesap] = await Promise.all([
       abonelikOzetiOku(supabase, hesapId),
       ulkeTablosu(supabase, 'ulke_kullanim_olcumu').select('gun, saniye').eq('doctor_id', hesapId).eq('gorev', SES_GOREVI),
+      ulkeTablosu(supabase, 'ulke_hesaplari').select('ozel_muafiyet').eq('id', hesapId).maybeSingle(),
     ])
+    // Founder exemption (Kaan, 2026-11-02): neither the trial's nor the paid plan's minutes apply.
+    if (!hesap.error && (hesap.data as { ozel_muafiyet?: boolean } | null)?.ozel_muafiyet === true) return null
     if (kullanim.error) throw new Error('usage read failed')
     const donem = sesDonemi(ab, sinir, simdi)
     const sn = ((kullanim.data ?? []) as Array<{ gun: string; saniye: number | string }>)

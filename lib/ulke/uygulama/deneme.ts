@@ -3,7 +3,7 @@
  * Rules: lib/billing/deneme.ts. Settings: lib/billing/ulkeTicari.ts (`deneme`; a country without it is never gated and
  * nothing here reads anything for it).
  *
- *   denemeOku          one round trip: the account row (created_at) and the subscription row in parallel, plus the
+ *   denemeOku          one round trip: the account row (created_at, ozel_muafiyet) and the subscription row in parallel, plus the
  *                      count of the account's visits only when asked (visit start and the status call).
  *   muayeneDenemeKapisi   visit start only (lib/ulke/uygulama/muayeneKaydi.ts): read-only and the 40-visit cap.
  *   denemeEngeli       the AI routes and live voice: read-only only. Cached per account for a minute on the instance, so
@@ -26,17 +26,31 @@ export async function denemeOku(supabase: SupabaseClient, hesapId: string, ulke:
   if (!ayar) return null
   try {
     const [hesap, abonelik, sayim] = await Promise.all([
-      ulkeTablosu(supabase, 'ulke_hesaplari').select('created_at').eq('id', hesapId).maybeSingle(),
+      ulkeTablosu(supabase, 'ulke_hesaplari').select('created_at, ozel_muafiyet').eq('id', hesapId).maybeSingle(),
       abonelikOzetiOku(supabase, hesapId),
       secenek.muayeneSay ? ulkeTablosu(supabase, 'ulke_muayeneler').select('id', { count: 'exact', head: true }).eq('doctor_id', hesapId) : Promise.resolve(null),
     ])
     if (hesap.error) throw new Error('account read failed')
     if (sayim && sayim.error) throw new Error('visit count failed')
-    const durum = denemeDurumu({ ayar, hesapAcilis: (hesap.data as { created_at?: string } | null)?.created_at ?? null, abonelik, simdi: secenek.simdi })
+    const satir = hesap.data as { created_at?: string; ozel_muafiyet?: boolean } | null
+    const durum = denemeDurumu({ ayar, hesapAcilis: satir?.created_at ?? null, abonelik, simdi: secenek.simdi, muaf: satir?.ozel_muafiyet === true })
     return { ayar, durum, muayeneSayisi: sayim ? Number(sayim.count ?? 0) : null }
   } catch {
     console.warn('[ulke/deneme] trial not checked')
     return null
+  }
+}
+
+/**
+ * The founder exemption flag of the account (migration 186), for checkout only: an exempt account has nothing to pay,
+ * so it never takes a founding seat. false on any failed read (the account is then treated like any other).
+ */
+export async function hesapMuafMi(supabase: SupabaseClient, hesapId: string): Promise<boolean> {
+  try {
+    const { data, error } = await ulkeTablosu(supabase, 'ulke_hesaplari').select('ozel_muafiyet').eq('id', hesapId).maybeSingle()
+    return !error && (data as { ozel_muafiyet?: boolean } | null)?.ozel_muafiyet === true
+  } catch {
+    return false
   }
 }
 

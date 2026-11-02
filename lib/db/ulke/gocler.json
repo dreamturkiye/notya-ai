@@ -27,6 +27,7 @@
     "152_ulke_guvenlik_sertlestirme.sql",
     "180_ulke_randevu_tur_ve_kayitsiz.sql",
     "181_ulke_hekim_avatarlari.sql",
-    "182_ulke_konsultan_defteri.sql"
+    "182_ulke_konsultan_defteri.sql",
+    "186_ulke_hesap_muafiyeti.sql"
   ]
 }

@@ -26,7 +26,7 @@ const DURUM_ANAHTARI = 'notya-deneme-durumu'
 const DURUM_OMRU_MS = 10 * 60 * 1000
 
 type Durum = {
-  aktif: boolean; tur?: 'ucretli' | 'deneme' | 'bitti'; kalanGun?: number
+  aktif: boolean; muaf?: boolean; tur?: 'ucretli' | 'deneme' | 'bitti'; kalanGun?: number
   muayeneSiniri?: number; sesSiniri?: number | null
   istem?: (Pick<Istem, 'neden' | 'teklif' | 'kalanGun' | 'hatirlatmaGunu'>) | null
 }
@@ -98,6 +98,8 @@ export default function YukseltmeIstemi() {
       yaz('session', DURUM_ANAHTARI, null)
       setIstem((onceki) => ({ neden, teklif: onceki?.teklif ?? (ticari?.kurucu ? 'kurucu' : 'normal') }))
       void durumGetir(true).then((d) => {
+        // Founder exemption (migration 186): never an upgrade prompt, even after a refusal that slipped through.
+        if (!iptal && d?.muaf) { setIstem(null); return }
         if (iptal || !d?.aktif) return
         setDurum(d)
         if (d.istem) setIstem((o) => (o ? { ...o, teklif: d.istem!.teklif } : o))

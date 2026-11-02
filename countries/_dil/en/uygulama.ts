@@ -405,7 +405,7 @@ export const EN_UYGULAMA_TEMEL: Temel = {
     hata: 'The assistant could not connect. Please try again.',
     mikrofon: 'Allow the microphone in your browser to talk to the assistant.',
     limit: 'You have reached today\'s limit for the assistant.',
-    sesDenemeDoldu: 'You have used the live voice minutes included in your free trial. The text assistant stays unlimited: type your question below.',
+    sesDenemeDoldu: 'You have used the included live voice minutes. The text assistant stays unlimited: type your question below.',
     sesAylikDoldu: 'You have used this month\'s live voice minutes. The text assistant stays unlimited: type your question below.',
     not: 'General reference information, not a diagnosis or a treatment decision. Please do not say patient names or identifiers. The decision is yours.',
     siz: 'You',

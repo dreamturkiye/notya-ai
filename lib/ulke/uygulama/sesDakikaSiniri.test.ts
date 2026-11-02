@@ -14,7 +14,7 @@ const SINIR = { denemeDakika: 60, aylikDakika: 150 }
 const T = Date.parse('2026-11-20T10:00:00Z')
 
 /** A stand-in client: every chain resolves to the table's rows; writes are recorded. */
-function sahteDb(tablolar: Record<string, unknown[] | Error>) {
+function sahteDb(tablolar: Record<string, unknown[] | Record<string, unknown> | Error>) {
   const okunan: string[] = []
   const islevler: Array<{ ad: string; p: Record<string, unknown> }> = []
   const db = {
@@ -60,7 +60,7 @@ describe('call-start gate', () => {
     })
     const k = await sesDakikaKapisi(db, 'u1', 'au', T)
     assert.deepEqual(k, { izin: false, tur: 'deneme', limitDakika: 60, kullanilanDakika: 60 })
-    assert.deepEqual(okunan.sort(), ['subscriptions', 'ulke_kullanim_olcumu'])
+    assert.deepEqual(okunan.sort(), ['subscriptions', 'ulke_hesaplari', 'ulke_kullanim_olcumu'])
   })
 
   it('paid at 149 minutes this period: allowed (checked at start only, a running call is never cut)', async () => {
@@ -69,6 +69,17 @@ describe('call-start gate', () => {
       ulke_kullanim_olcumu: [{ gun: '2026-11-05', saniye: 149 * 60 }],
     })
     assert.equal((await sesDakikaKapisi(db, 'u1', 'au', T))?.izin, true)
+  })
+
+  it('founder exemption (migration 186): no cap at all - trial or paid - read in the same round trip', async () => {
+    for (const subscriptions of [[], [{ status: 'active', trial_ends_at: null, current_period_start: '2026-11-03T00:00:00Z' }]]) {
+      const { db, okunan } = sahteDb({ subscriptions, ulke_kullanim_olcumu: [{ gun: '2026-11-05', saniye: 999 * 60 }], ulke_hesaplari: { ozel_muafiyet: true } })
+      assert.equal(await sesDakikaKapisi(db, 'u1', 'au', T), null)
+      assert.deepEqual(okunan.sort(), ['subscriptions', 'ulke_hesaplari', 'ulke_kullanim_olcumu'])
+    }
+    // Flag off: the same usage is refused as before.
+    const { db } = sahteDb({ subscriptions: [], ulke_kullanim_olcumu: [{ gun: '2026-11-05', saniye: 999 * 60 }], ulke_hesaplari: { ozel_muafiyet: false } })
+    assert.equal((await sesDakikaKapisi(db, 'u1', 'au', T))?.izin, false)
   })
 
   it('a country without a cap reads nothing; a failed read fails open', async () => {

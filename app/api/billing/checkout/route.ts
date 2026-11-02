@@ -15,6 +15,7 @@ import { NOTYA_TRIAL_DAYS, planByKey, type NotyaBillingInterval } from '@/lib/bi
 import { KURUCU_DOLU_MESAJI, KURUCU_PLAN_KEY, sesliProFiyatiSec, type FiyatStripe } from '@/lib/billing/kurucuTeklifi'
 import { aktifUlke } from '@/lib/ulke/ulke'
 import { ulkeTicari } from '@/lib/billing/ulkeTicari'
+import { hesapMuafMi } from '@/lib/ulke/uygulama/deneme'
 import { ulkeYolu } from '@/lib/ulke/yol'
 import { UYGULAMA_EKRANLARI } from '@/lib/ulke/tipler'
 
@@ -40,6 +41,12 @@ export async function POST(req: NextRequest) {
     const { data: { user }, error: authError } = await sb.auth.getUser(token)
     if (authError || !user) {
       return NextResponse.json({ success: false, error: 'Oturum bulunamadı. Lütfen tekrar giriş yapın.' }, { status: 401 })
+    }
+
+    // Founder exemption (Kaan, 2026-11-02, migration 186): an exempt country account has nothing to pay, so it never
+    // opens Checkout and never takes a founding seat (the seat count is of founding subscriptions in Stripe).
+    if (ulkeTicari(aktifUlke())?.deneme && (await hesapMuafMi(sb, user.id))) {
+      return NextResponse.json({ success: false, error: 'This account is exempt: there is nothing to pay.', code: 'MUAF' }, { status: 409 })
     }
 
     const body = await req.json().catch(() => ({}))
