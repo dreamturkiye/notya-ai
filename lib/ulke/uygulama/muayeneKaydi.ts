@@ -26,6 +26,8 @@ import { MUAYENE_SES_KOVASI, type DilKodu } from '../tipler'
 import { dilTercihleriniOku } from './dilTercihleri'
 import { hastaGetir, type Hasta } from './hastalar'
 import { konusmaTanimaHazir, konusmayiTani } from './konusmaTanima'
+import { gunlukNotLimiti } from '@/lib/billing/ucretsizPlan'
+import { ulkePaketi } from '@/lib/ulke/ulke'
 import { muayeneKotasiKullan } from './kota'
 import { kullanimEkle } from './kullanimOlcumu'
 import { randevuMuayeneyeUygun, randevuyuMuayeneyeBagla } from './randevular'
@@ -119,7 +121,9 @@ export async function muayeneKaydet(supabase: SupabaseClient, doktorId: string, 
     // NOTYA-UZ-RANDEVU-01 — ISOLATION: an appointment id from the request must be this doctor's AND this patient's
     // before the recording is read. Another doctor's appointment answers exactly like one that does not exist.
     if (g.randevuId && !(await randevuMuayeneyeUygun(supabase, doktorId, g.randevuId, hasta.id))) return { tamam: false, kod: 'NOT_FOUND' }
-    if (!(await muayeneKotasiKullan(supabase, doktorId, klinik.gunlukMuayeneLimiti))) return { tamam: false, kod: 'LIMIT' }
+    // AU-GAP-CLOSE-02 freemium: abonesiz accounts in a country with `ucretsiz` get the note-only daily ceiling.
+    const limit = await gunlukNotLimiti(supabase, doktorId, ulkePaketi().kod, klinik.gunlukMuayeneLimiti)
+    if (!(await muayeneKotasiKullan(supabase, doktorId, limit))) return { tamam: false, kod: 'LIMIT' }
 
     const { notDili } = await hekimDilleri(supabase, doktorId)
     let transcript = metin

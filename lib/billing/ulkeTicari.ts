@@ -26,21 +26,35 @@ export interface KurucuTeklifi {
   fiyatAnahtarlari: Record<TicariAralik, string>
 }
 
+/**
+ * AU-GAP-CLOSE-02 — note-only free forever (Heidi-style wedge). Not a Stripe $0 plan.
+ * Accounts with no live subscription (trialing/active/past_due) get this daily visit ceiling.
+ * Live voice stays gated by sesDakika; founding A$79 invite is untouched.
+ */
+export interface UcretsizPlan {
+  /** Approved visit notes (SOAP) per country-day while abonesiz. */
+  gunlukNot: number
+}
+
 export interface UlkeTicariAyar {
   /** Stripe lookup keys of the regular Sesli Pro prices; used when the STRIPE_PRICE_SESLI_PRO_* env var is unset. */
   sesliProFiyatAnahtarlari?: Record<TicariAralik, string>
   kurucu?: KurucuTeklifi
   sesDakika?: SesDakikaSiniri
+  /** Note-only freemium for accounts without a live Stripe subscription. Absent = no freemium wedge. */
+  ucretsiz?: UcretsizPlan
 }
 
 export const ULKE_TICARI: Readonly<Record<string, UlkeTicariAyar>> = {
   // Kaan, 2026-11-02: founding A$79/month (not locked) or A$948/year (locked for that year), first 20 doctors;
   // regular A$149/month or A$1,490/year; 15-day trial with a card; live voice 60 min in the trial, 150 min per
   // billing month on any paid plan. The text assistant stays unlimited.
+  // AU-GAP-CLOSE-02: free forever = 5 notes/day, no live voice entitlement beyond the abonesiz sesDakika path.
   au: {
     sesliProFiyatAnahtarlari: { month: 'notya_au_doctor_monthly', year: 'notya_au_doctor_yearly' },
     kurucu: { koltuk: 20, fiyatAnahtarlari: { month: 'notya_au_founding_monthly', year: 'notya_au_founding_yearly' } },
     sesDakika: { denemeDakika: 60, aylikDakika: 150 },
+    ucretsiz: { gunlukNot: 5 },
   },
 }
 

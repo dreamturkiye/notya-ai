@@ -17,6 +17,7 @@
  * Record (a stub, no connection); Tyro (inactive); any price; any testimonial or number of customers; voice PREVIEW buttons (removed
  * in AU-HOME-01); the growth-chart tool (off); data residency promises; the persona names themselves.
  * AU-GAP-CLOSE-01 (2026-11-02): practice-OS positioning vs Heidi / Lyrebird / Medow; letter studio + MBS suggest + export pack called out.
+ * AU-GAP-CLOSE-02 (2026-11-02): note-only freemium (5 notes/day) mentioned honestly; founding A$79 invite stays invite-only and is not undercut on this page.
  * Pricing copy stays Early access / invitation (STRIPE-NOTYA-AU-05 founding offer is invite-only; do not overwrite on this page).
  * AU-CANLI-01 (2026-10-22): the live SPOKEN assistant IS mentioned (microphone on the home screen) — but only while the
  * deployment really holds both agents, the key and the secrets (lib/ulke/asistan/ajan.ts canliAjanlarVar), and never with a
@@ -46,7 +47,8 @@ function ekBolumler(rolSayisi: number, sesli: boolean = SESLI()): EkOzellikBolum
         'One approved note becomes a patient summary, a GP letter, a referral draft and a visit export pack',
         'MBS suggestions that never lodge — you check MBS Online before you bill',
         'Patient portal with consent, privacy requests and a 30-day response timer',
-        'Honest Integrations page: export pack ready now; Best Practice / Genie / Gentu write-back only when a partner API is live — no fake “Synced” badge',
+        'Honest Integrations page: export pack ready now; Best Practice / Genie / Gentu credentials vault + outbox; live write-back only when a partner API is live — no fake “Synced” badge',
+        'Note-only free forever for trying the product (5 notes a day). Live voice and founding invite prices stay separate',
       ],
       kart: {
         etiket: 'Scribe vs Notya',
@@ -54,9 +56,10 @@ function ekBolumler(rolSayisi: number, sesli: boolean = SESLI()): EkOzellikBolum
           { k: 'Scribe products', v: 'Note + PMS overlay' },
           { k: 'Notya', v: 'Note + letters + portal + calendar + invoices + clinic' },
           { k: 'Approval gate', mark: 'Required' },
-          { k: 'PMS write-back', v: 'Export now · API later' },
+          { k: 'PMS write-back', v: 'Vault + outbox · partner API for live send' },
+          { k: 'Free forever', v: '5 notes/day · no live voice' },
         ],
-        not: 'Switch because the rest of the practice is already here — not because we claim a louder microphone.',
+        not: 'Switch because the rest of the practice is already here — not because we claim a louder scribe overlay.',
       },
     },
     {
@@ -174,16 +177,16 @@ export function auAcilisGuncelle(c: AcilisIcerigi, rolSayisi: number): AcilisIce
       gruplar: c.narx.gruplar.map((g) => ({
         ...g,
         rejalar: g.rejalar.map((r) => (r.id === 'doctor'
-          ? { ...r, maddeler: planEk(r.maddeler, ['An assistant named for your specialty', 'Invoices in Australian dollars, paid into your own Stripe account', 'Privacy requests with a response timer', 'Checklists and links for Australian paperwork']) }
+          ? { ...r, maddeler: planEk(r.maddeler, ['An assistant named for your specialty', 'Invoices in Australian dollars, paid into your own Stripe account', 'Privacy requests with a response timer', 'Checklists and links for Australian paperwork', 'Note-only free forever: 5 approved notes a day while you try the practice OS (live voice needs a paid or trial plan)']) }
           : r)),
         izoh: g.id === 'clinic'
-          ? `Early access: accounts are opened with an invitation code while the first practices are set up. Ask for one at ${EPOSTA}. The price depends on the number of accounts.`
-          : `Early access: accounts are opened with an invitation code while the first practices are set up. Ask for one at ${EPOSTA}. Prices are given by quote.`,
+          ? `Early access: accounts are opened with an invitation code while the first practices are set up. Ask for one at ${EPOSTA}. The price depends on the number of accounts. Founding invite pricing (first 20) is separate from the note-only free forever tier.`
+          : `Early access: accounts are opened with an invitation code while the first practices are set up. Ask for one at ${EPOSTA}. Prices are given by quote. You can also start note-only free forever (5 notes a day) without undercutting the founding invite.`,
       })),
     },
     sorov: {
       ...c.sorov,
-      govde: `Early access. Tell us the specialty and how you work and we will come back with a quote and an invitation code, or write to ${EPOSTA}.`,
+      govde: `Early access. Tell us the specialty and how you work and we will come back with a quote and an invitation code, or write to ${EPOSTA}. Note-only free forever (5 notes a day) is available without an invitation — founding A$79 seats stay invite-only.`,
       formYok: `The request form opens soon. In the meantime, write to ${EPOSTA}.`,
     },
     klinik: {
