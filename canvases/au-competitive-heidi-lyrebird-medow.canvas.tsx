@@ -8,19 +8,19 @@ import { Pill, Stat, Callout, Table, Card, BarChart } from 'cursor/canvas'
 
 const DOMAIN_ROWS = [
   ['Ambient visit → note (consent + approve)', 'success', 'Record → transcript → draft → approval hard-gated; unclear marked, not guessed'],
-  ['Referral / GP / patient letters / certificates', 'danger', 'No first-class letter studio — leaders all ship multi-doc from one consult'],
-  ['AU PMS write-back (Bp / Genie / Gentu / Cliniko)', 'danger', 'Notya is system of record; no outbound sync to incumbent PMS — deal-killer for Bp clinics'],
-  ['Dictate / telehealth / desktop capture', 'warning', 'Web visit recording + live assistant; no Heidi Desktop / Smart Dictation parity'],
+  ['Referral / GP / patient letters / certificates', 'success', 'Letter studio under approved note + clinician sign-off before export (AU-GAP-CLOSE-01/02)'],
+  ['AU PMS write-back (Bp / Genie / Gentu / Cliniko)', 'warning', 'Export pack + vault + outbox shipped; live partner HTTP still PARTNER_YOK until adapter lands'],
+  ['Dictate / telehealth / desktop capture', 'success', 'Tab/window capture + paste transcript + telehealth tip on shared visit screen'],
   ['Specialty depth / templates', 'success', '~44 AU roles, specialty note shapes, 40+ tools, named assistants'],
-  ['MBS / PBS / care plans / CCMP', 'warning', 'Medicare/PBS/GST checklists + link-outs only — Lyrebird has live MBS prompts + care plans'],
+  ['MBS / PBS / care plans / CCMP', 'warning', 'MBS suggest + sign-off on approved note; still never lodge — Lyrebird deeper on care plans'],
   ['Clinical evidence / citations', 'warning', 'Specialty assistant with AU college framing; not Heidi Evidence journal RAG'],
   ['Patient portal (patient page)', 'success', 'PIN page: appointments, summaries, intake, messages, consent / privacy requests'],
   ['Calendar + patients + clinic multi-doctor', 'success', 'Full practice OS — scribes assume you already have a PMS'],
   ['Invoicing / payments', 'success', 'AUD invoices, GST per line, bring-your-own Stripe'],
   ['Front desk / phone AI', 'danger', 'Human desk only — Medow Front Desk answers calls into PMS'],
   ['Document inbox sorter', 'danger', 'Attachments/photo archive only — Lyrebird Document Sorter for Bp'],
-  ['Pricing / acquisition', 'warning', 'A$149 + 15-day trial; Heidi Free + Clinician ~A$85 annual undercuts'],
-  ['Trust / compliance signalling', 'warning', 'APP copy + approval gates; leaders lead with ISO/SOC + published safety studies'],
+  ['Pricing / acquisition', 'success', 'Founding A$79 invite + note-only freemium 5/day + A$149 paid; Heidi Free still broader'],
+  ['Trust / compliance signalling', 'warning', 'APP copy + approval gates + hekimOnayi export gate; leaders lead with ISO/SOC'],
   ['Market presence / proof', 'danger', 'AU launch/beta — need named clinics + evaluations to enter shortlists'],
 ] as const
 
@@ -29,19 +29,19 @@ const WOW_BARS = [
   { label: 'Visit note + approval safety', value: 78 },
   { label: 'Specialty coverage', value: 72 },
   { label: 'Patient portal / privacy ops', value: 80 },
-  { label: 'Letters & certificates', value: 12 },
-  { label: 'Incumbent PMS write-back', value: 5 },
-  { label: 'MBS co-pilot / care plans', value: 28 },
-  { label: 'Telehealth / dictate / desktop', value: 35 },
-  { label: 'Price & free-entry', value: 40 },
+  { label: 'Letters & certificates', value: 72 },
+  { label: 'Incumbent PMS write-back', value: 42 },
+  { label: 'MBS co-pilot / care plans', value: 48 },
+  { label: 'Telehealth / dictate / desktop', value: 70 },
+  { label: 'Price & free-entry', value: 68 },
   { label: 'Brand proof / evaluation', value: 18 },
 ] as const
 
 const PAIN_CARDS = [
-  { title: 'Already live in Best Practice', cost: 'Lyrebird wins today', wow: 'Bp write-back for notes + letters', now: 'Missing — cannot enter Bp deals' },
-  { title: 'Genie/Gentu specialist, letters same day', cost: 'Medow wins today', wow: 'Specialty letter pack + Genie/Gentu sync', now: 'Thin letters · Missing sync' },
-  { title: 'Want free forever + evidence citations', cost: 'Heidi wins today', wow: 'OS value story + annual ladder / freemium note wedge', now: 'Partial — A$149 alone loses' },
-  { title: 'Opening new rooms / hate my PMS', cost: 'Notya can win', wow: 'Calendar + portal + invoices + letters in one', now: 'Strong OS · letters gap still hurts' },
+  { title: 'Already live in Best Practice', cost: 'Lyrebird still ahead on live sync', wow: 'Bp vault + outbox + export; partner API for live send', now: 'Partial — credentials + queue, not live write' },
+  { title: 'Genie/Gentu specialist, letters same day', cost: 'Medow still ahead on live sync', wow: 'Letter studio + Genie/Gentu vault/outbox', now: 'Letters Strong · sync Partial' },
+  { title: 'Want free forever + evidence citations', cost: 'Heidi still wins evidence RAG', wow: 'Note-only freemium 5/day + OS value story', now: 'Freemium shipped · citations still Partial' },
+  { title: 'Opening new rooms / hate my PMS', cost: 'Notya can win', wow: 'Calendar + portal + invoices + letters in one', now: 'Strong OS · letters closed' },
   { title: 'Patients need a page + consent trail', cost: 'Notya wins', wow: 'Lead marketing with PIN portal + privacy timer', now: 'Strong — productised' },
   { title: 'Front desk drowning in calls', cost: 'Medow wins today', wow: 'Later: Front Desk AI; now sell human desk + portal', now: 'Missing phone AI' },
 ] as const
@@ -72,9 +72,9 @@ export default function AuCompetitiveAnalysis() {
       </p>
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', margin: '12px 0 20px' }}>
         <Pill tone="success">Notya = practice OS, not a scribe overlay</Pill>
-        <Pill tone="danger">Missing: AU PMS write-back (Bp / Genie / Gentu)</Pill>
-        <Pill tone="danger">Missing: referral / GP / WorkCover letter suite</Pill>
-        <Pill tone="warning">Price: A$149 vs Heidi Clinician ~A$85 annual</Pill>
+        <Pill tone="success">Letters + MBS sign-off shipped (AU-GAP-CLOSE-02)</Pill>
+        <Pill tone="warning">PMS: vault + outbox · live partner HTTP still open</Pill>
+        <Pill tone="success">Freemium: 5 notes/day · founding A$79 invite intact</Pill>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 16 }}>

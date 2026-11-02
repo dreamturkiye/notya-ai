@@ -4863,8 +4863,26 @@ Supersedes STRIPE-NOTYA-AU-04's "founding price NOT approved" line, and AU-03's 
 5. **Trust / OS wedge** — landing “Not another scribe overlay. A practice OS.” section; Security page trust-centre framing (approve-before-anything-leaves).
 6. **Telehealth / dictate path** — tip under audio upload + **desktop tab/window capture** (`getDisplayMedia`) + **paste transcript** on the shared visit screen and Türkiye `app/session/new` (same consent + approve gate). Paste posts `metin` to `/api/ulke/muayene` (no STT); capture reuses the audio upload path.
 
-**Still open (partner / product bets):** live Bp then Genie/Gentu write-back; Heidi-style free forever / freemium; clinician sign-off on letter/MBS prompts (`countries/au/klinik/mektupTalimatlari.ts`). Letter/MBS country-adapted copy for us/gb/ca/nz/uz remains OPEN GAP (owner Claude).
+**Status:** CLOSED for product bets listed in AU-GAP-CLOSE-01; remaining partner/clinician items moved to AU-GAP-CLOSE-02.
 
 **Tests:** `lib/ulke/mektup/mektup.test.ts`, `countries/au/mektup.gap.test.ts`, paste-transcript cases in `countries/uz/uygulama/muayene.test.ts`.
+
+## AU-GAP-CLOSE-02 — Bp/Genie/Gentu vault+outbox · freemium · clinician sign-off (Claude, 2026-11-02)
+
+**Classification:** **AU pack + shared `lib/ulke` spine** (same as CLOSE-01). Freemium limit + PMS vault/outbox are shared mechanism (AU `ucretsiz` + `pmsEntegrasyon` gated). Per-draft `hekimOnayi` gates export/queue. **Branş:** specialty-agnostic (all AU roles). **Countries:** AU **APPLIED** · us/gb/ca/nz/uz letter/MBS/PMS copy **OPEN GAP** (owner Claude) · TR **N/A** for MBS/PMS (Turkey-only Medula/e-Nabız exempt) · freemium config **AU only** (other countries unchanged until Kaan sets `ulkeTicari.ucretsiz`).
+
+**Shipped:**
+1. **PMS vault + outbox** — migration `184_ulke_pms_yazma.sql`; `lib/ulke/pms/*`; `/api/ulke/pms/baglanti` + `/api/ulke/pms/kuyruk`; Settings › Integrations credential form. Badges: credentials saved · partner pending. Adapter returns `PARTNER_YOK` until `NOTYA_PMS_<VENDOR>_ETKIN=1` **and** a real partner HTTP lands. **Never fake Synced / gonderildi.**
+2. **Freemium note-only** — `ulkeTicari.au.ucretsiz.gunlukNot=5`; `gunlukNotLimiti` in `muayeneKaydi`. Live Stripe sub keeps pack ceiling. Founding seat config (20 · A$79) untouched. Landing copy names the wedge without undercutting founding invite.
+3. **Clinician sign-off (product)** — letter + MBS cards require explicit `hekimOnayi` before export/queue inclusion; unsigned plain strings refused by `pms-export` / kuyruk parsers. Prompt register `countries/au/klinik/mektupOnay.ts` lists all four prompt keys awaiting a named Australian clinician (`klinisyen: null`).
+
+**Still OPEN (honest):**
+| Item | Owner |
+|---|---|
+| Real Bp / Genie / Gentu partner HTTP adapters (env flags ready; stub stays PARTNER_YOK) | Kaan → partner contract, then Claude |
+| Fill `klinisyen` / `onayTarihi` on `AU_MEKTUP_ICERIK_ONAYLARI` after an Australian clinician reads the prompts | Kaan → clinician |
+| Letter/MBS/PMS country-adapted copy for us/gb/ca/nz/uz | Claude |
+
+**Tests:** `lib/ulke/pms/pms.test.ts`, `lib/billing/ucretsizPlan.test.ts`, `countries/au/mektup.gap.test.ts`.
 
 

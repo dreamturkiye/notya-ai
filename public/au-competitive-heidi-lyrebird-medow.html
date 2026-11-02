@@ -81,17 +81,18 @@
 </head>
 <body>
 <section style="margin:24px auto;max-width:960px;padding:18px 20px;border:1px solid #1f6f64;background:#0d1f1c;border-radius:12px;color:#d7efe9;font-family:ui-sans-serif,system-ui,sans-serif">
-  <div style="font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#7dcfbf;margin-bottom:8px">AU-GAP-CLOSE-01 — shipped on this branch</div>
+  <div style="font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#7dcfbf;margin-bottom:8px">AU-GAP-CLOSE-01/02 — shipped on this branch</div>
   <h2 style="margin:0 0 10px;font-size:20px;color:#f4fffb">Gap close in product (not just the audit)</h2>
   <ul style="margin:0;padding-left:18px;line-height:1.55;font-size:14px;color:#c9e8e0">
-    <li><strong>Letters</strong> — Letter studio under an approved note (GP / referral / patient): draft, edit, copy, download, print. Nothing sent or lodged.</li>
-    <li><strong>MBS assist</strong> — Suggestions from the approved note; matched to the local MBS→ACHI map where possible; <em>never lodge</em>.</li>
-    <li><strong>PMS</strong> — Visit export pack (JSON) ready now. Best Practice / Genie / Gentu listed honestly as partner-API / roadmap — no fake “Synced”.</li>
-    <li><strong>Price</strong> — Landing shows A$149/mo <em>or</em> A$1,490/yr; checkout accepts <code>?interval=year</code>.</li>
+    <li><strong>Letters</strong> — Letter studio under an approved note (GP / referral / patient): draft, edit, <em>clinician sign-off</em>, then copy / download / print / export. Nothing sent or lodged.</li>
+    <li><strong>MBS assist</strong> — Suggestions from the approved note; doctor ticks + confirms selected items; matched to the local MBS→ACHI map where possible; <em>never lodge</em>.</li>
+    <li><strong>PMS</strong> — Visit export pack (JSON) + encrypted Bp/Genie/Gentu credential vault + write-back outbox. Partner flag off → row stays prepared (PARTNER_YOK), never fake “Synced”.</li>
+    <li><strong>Freemium</strong> — Note-only free forever: 5 notes/day for abonesiz AU accounts. Founding A$79 invite (first 20) untouched.</li>
+    <li><strong>Price</strong> — Landing shows A$149/mo; checkout accepts <code>?interval=year</code>; founding invite separate.</li>
     <li><strong>Trust / OS wedge</strong> — Landing “Not another scribe overlay” section + Security trust-centre framing (approve-before-anything-leaves).</li>
     <li><strong>Telehealth path</strong> — Tip under audio upload + tab/window capture (`getDisplayMedia`) + paste transcript on the shared visit screen (TR + all country packs).</li>
   </ul>
-  <p style="margin:12px 0 0;font-size:12px;color:#8fb8ae">Still open for partner work: live Bp/Genie/Gentu write-back, freemium/Heidi-style free forever. Classification: <strong>specialty-agnostic AU country pack + shared ulke spine</strong> (all AU roles). Letter/MBS/PMS copy: us/gb/ca/nz/uz OPEN GAP until country-adapted. Telehealth capture: APPLIED on shared Muayene + TR.</p>
+  <p style="margin:12px 0 0;font-size:12px;color:#8fb8ae">Still open: real partner HTTP adapters for Bp/Genie/Gentu (env flag ready; stub returns PARTNER_YOK until partner API lands); named Australian clinician fill-in on letter/MBS prompt register (<code>mektupOnay.ts</code>). Classification: <strong>specialty-agnostic AU country pack + shared ulke spine</strong>. Letter/MBS/PMS copy: us/gb/ca/nz/uz OPEN GAP until country-adapted. Telehealth capture: APPLIED on shared Muayene + TR.</p>
 </section>
 
   <div class="wrap">
