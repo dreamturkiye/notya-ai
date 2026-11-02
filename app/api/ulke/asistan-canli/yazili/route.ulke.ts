@@ -11,6 +11,7 @@ import { ulkeOturum } from '@/lib/ulke/sunucuOturum'
 import { ozellikAcik } from '@/lib/ulke/ulke'
 import { KOD } from '@/lib/ulke/uygulama/cevap'
 import { sinirda } from '@/lib/ulke/uygulama/sinir'
+import { denemeEngeli } from '@/lib/ulke/uygulama/deneme'
 import { canliYaziliCevabi } from '@/lib/ulke/asistan/sunucu'
 
 export const dynamic = 'force-dynamic'
@@ -20,5 +21,8 @@ export const POST = sinirda('asistan-canli yazili POST', async (req: NextRequest
   if (!ozellikAcik('cekirdekMuayene')) return KOD.yok()
   const oturum = await ulkeOturum(req)
   if (!oturum) return KOD.oturumYok()
+  // STRIPE-NOTYA-AU-05 trial model: read-only after the free trial (402 DENEME_BITTI). No read where the country has no trial.
+  const deneme = await denemeEngeli(oturum.supabase, oturum.user.id)
+  if (deneme) return deneme
   return canliYaziliCevabi(oturum, req)
 })

@@ -5,6 +5,7 @@
  *   POST  open a call (nothing is read from the body) 200 { signed_url, voice_id, persona_ad, first_message, language,
  *                                                        notya_jeton, ekran_araci }
  *                                                     401 OTURUM_YOK · 404 NOT_FOUND (not available here: hidden) ·
+ *                                                     402 DENEME_BITTI (free trial over: read-only) ·
  *                                                     429 LIMIT · 429 SES_DAKIKA (the plan's live-voice minutes are used:
  *                                                     { tur, limit_dakika, kullanilan_dakika }) · 502 BASARISIZ · 500 BASARISIZ
  *
@@ -17,6 +18,7 @@ import { aktifUlke, ozellikAcik } from '@/lib/ulke/ulke'
 import { cevap, KOD } from '@/lib/ulke/uygulama/cevap'
 import { sesDakikaKapisi } from '@/lib/ulke/uygulama/sesDakikaSiniri'
 import { sinirda } from '@/lib/ulke/uygulama/sinir'
+import { denemeEngeli } from '@/lib/ulke/uygulama/deneme'
 import { canliBaglantiCevabi, canliDurumCevabi } from '@/lib/ulke/asistan/sunucu'
 
 export const dynamic = 'force-dynamic'
@@ -33,6 +35,9 @@ export const POST = sinirda('asistan-canli POST', async (req: NextRequest) => {
   if (!ozellikAcik('cekirdekMuayene')) return KOD.yok()
   const oturum = await ulkeOturum(req)
   if (!oturum) return KOD.oturumYok()
+  // STRIPE-NOTYA-AU-05 trial model: read-only after the free trial (402 DENEME_BITTI). No read where the country has no trial.
+  const deneme = await denemeEngeli(oturum.supabase, oturum.user.id)
+  if (deneme) return deneme
   // STRIPE-NOTYA-AU-05 (Kaan, 2026-11-02, pricing/limits only): the plan's live-voice minutes, checked once at call
   // start in front of the locked opener; a running call is never cut. The text assistant is not gated.
   const sinir = await sesDakikaKapisi(oturum.supabase, oturum.user.id, aktifUlke())

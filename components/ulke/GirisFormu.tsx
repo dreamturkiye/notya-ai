@@ -13,6 +13,8 @@ import { useState, type FormEvent } from 'react'
 import { ulkeIstemciSupabase } from '@/lib/ulke/istemciSupabase'
 import { hesapBuUlkedeMi } from '@/lib/ulke/hesapUlkesi'
 import { ulkeYolu } from '@/lib/ulke/yol'
+import { aktifUlke } from '@/lib/ulke/ulke'
+import { ulkeTicari } from '@/lib/billing/ulkeTicari'
 import { dilliYol } from '@/lib/ulke/sayfaDili'
 import type { DilKodu, YuzeyMetinleri } from '@/lib/ulke/tipler'
 import { ULKE_STIL as S, UlkeKart, type DilSecenegi } from './UlkeKart'
@@ -84,7 +86,9 @@ export default function GirisFormu({ dil, metin, ret, diller, anaSayfa, kayit, s
       // STRIPE-NOTYA-AU-02: a plan chosen at signup drives straight into Stripe Checkout here, the first
       // point a real session exists. Checkout failing (network, Stripe hiccup) must never strand a doctor
       // who already has a valid, confirmed account — fall through to the normal destination either way.
-      if (planKey && SELF_SERVE_PLAN_KEYS.has(planKey)) {
+      // Trial model (Kaan, 2026-11-02): where the trial runs in the app with no card (AU), signing in never opens Checkout;
+      // the doctor pays later from the upgrade prompt.
+      if (planKey && SELF_SERVE_PLAN_KEYS.has(planKey) && !ulkeTicari(aktifUlke())?.deneme) {
         try {
           const cres = await fetch(ulkeYolu('/api/billing/checkout'), {
             method: 'POST',

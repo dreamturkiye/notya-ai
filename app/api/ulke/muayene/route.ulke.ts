@@ -12,6 +12,8 @@
  *        404 { code: 'NOT_FOUND' }              no such patient FOR THIS DOCTOR (another doctor's patient: the same)
  *        422 { code: 'KISA_KAYIT' }             not enough speech in the recording
  *        429 { code: 'LIMIT' }                  the day's ceiling is reached
+ *        402 { code: 'DENEME_BITTI' }           the free trial is over: the account is read-only (STRIPE-NOTYA-AU-05)
+ *        402 { code: 'DENEME_MUAYENE' }         the free trial's recorded-visit cap is reached
  *        502 { code: 'SES_OKUNAMADI' }          the recording could not be read or transcribed
  *        503 { code: 'HAZIR_DEGIL' }            speech recognition is not configured in this deployment
  *
@@ -36,7 +38,7 @@ export const dynamic = 'force-dynamic'
 // Two transcription passes of a long recording at most; the platform must not cut the request before they finish.
 export const maxDuration = 300
 
-const DURUM: Record<MuayeneRetKodu, number> = { RIZA_GEREKLI: 400, GECERSIZ: 400, NOT_FOUND: 404, KISA_KAYIT: 422, LIMIT: 429, SES_OKUNAMADI: 502, HAZIR_DEGIL: 503, BASARISIZ: 500, ONAYLI: 409 }
+const DURUM: Record<MuayeneRetKodu, number> = { RIZA_GEREKLI: 400, GECERSIZ: 400, NOT_FOUND: 404, KISA_KAYIT: 422, LIMIT: 429, SES_OKUNAMADI: 502, HAZIR_DEGIL: 503, BASARISIZ: 500, ONAYLI: 409, DENEME_BITTI: 402, DENEME_MUAYENE: 402 }
 
 export const POST = sinirda('muayene POST', async (req: NextRequest) => {
   if (!ozellikAcik('cekirdekMuayene')) return KOD.yok()

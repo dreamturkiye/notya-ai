@@ -67,7 +67,7 @@ export async function kurucuKoltukSayisi(stripe: FiyatStripe, fiyatIdleri: strin
 }
 
 export const KURUCU_DOLU_MESAJI =
-  'The founding-doctor offer (first 20 doctors) is now full, so this subscription is at the regular price. Your 15-day free trial still applies.'
+  'The founding-doctor offer (first 20 doctors) is now full, so this subscription is at the regular price. Everything from your free trial carries over.'
 
 export type CheckoutFiyati = {
   priceId: string
@@ -114,3 +114,32 @@ export async function sesliProFiyatiSec(g: {
 }
 
 export { KURUCU_PLAN_KEY }
+
+const KOLTUK_ONBELLEK_MS = 10 * 60 * 1000
+let koltukOnbellegi: { ulke: string; kaldi: boolean | null; bitis: number } | null = null
+
+/**
+ * Trial model (Kaan, 2026-11-02): does the founding offer still have a seat? For the upgrade prompt only (which offer
+ * leads), never a hot path: cached for ten minutes. null = unknown (no offer here, or Stripe could not be read).
+ * Checkout still enforces the cap itself.
+ */
+export async function kurucuKoltukKaldiMi(stripe: FiyatStripe, ulke: string | null, simdi = Date.now()): Promise<boolean | null> {
+  const kurucu = ulkeTicari(ulke)?.kurucu
+  if (!kurucu || !ulke) return null
+  if (koltukOnbellegi && koltukOnbellegi.ulke === ulke && koltukOnbellegi.bitis > simdi) return koltukOnbellegi.kaldi
+  let kaldi: boolean | null = null
+  try {
+    const coz = await fiyatlariAnahtarlaCoz(stripe, [kurucu.fiyatAnahtarlari.month, kurucu.fiyatAnahtarlari.year], simdi)
+    const idler = Object.values(coz).filter((x): x is string => Boolean(x))
+    kaldi = idler.length ? (await kurucuKoltukSayisi(stripe, idler)) < kurucu.koltuk : false
+  } catch {
+    kaldi = null
+  }
+  koltukOnbellegi = { ulke, kaldi, bitis: simdi + KOLTUK_ONBELLEK_MS }
+  return kaldi
+}
+
+/** Test hook. */
+export function koltukOnbelleginiTemizle(): void {
+  koltukOnbellegi = null
+}

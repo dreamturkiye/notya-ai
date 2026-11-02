@@ -26,6 +26,7 @@ import { MUAYENE_SES_KOVASI, type DilKodu } from '../tipler'
 import { dilTercihleriniOku } from './dilTercihleri'
 import { hastaGetir, type Hasta } from './hastalar'
 import { konusmaTanimaHazir, konusmayiTani } from './konusmaTanima'
+import { muayeneDenemeKapisi } from './deneme'
 import { muayeneKotasiKullan } from './kota'
 import { kullanimEkle } from './kullanimOlcumu'
 import { randevuMuayeneyeUygun, randevuyuMuayeneyeBagla } from './randevular'
@@ -37,7 +38,7 @@ export type MuayeneGirdisi = {
   /** NOTYA-UZ-RANDEVU-01: the appointment this visit is started from. Absent = a visit without an appointment. */
   randevuId?: string | null
 }
-export type MuayeneRetKodu = 'RIZA_GEREKLI' | 'GECERSIZ' | 'NOT_FOUND' | 'HAZIR_DEGIL' | 'LIMIT' | 'SES_OKUNAMADI' | 'KISA_KAYIT' | 'BASARISIZ' | 'ONAYLI'
+export type MuayeneRetKodu = 'RIZA_GEREKLI' | 'GECERSIZ' | 'NOT_FOUND' | 'HAZIR_DEGIL' | 'LIMIT' | 'SES_OKUNAMADI' | 'KISA_KAYIT' | 'BASARISIZ' | 'ONAYLI' | 'DENEME_BITTI' | 'DENEME_MUAYENE'
 export type MuayeneSonucu =
   | { tamam: true; seansId: string; ikinciGecis: boolean; dusukGuven: boolean; /** true = the visit is linked to the appointment it was started from. */ randevuBagli: boolean }
   | { tamam: false; kod: MuayeneRetKodu; alan?: string }
@@ -98,6 +99,10 @@ export async function muayeneKaydet(supabase: SupabaseClient, doktorId: string, 
     // before the recording is read. Another doctor's appointment answers exactly like one that does not exist.
     if (g.randevuId && !(await randevuMuayeneyeUygun(supabase, doktorId, g.randevuId, hasta.id))) return { tamam: false, kod: 'NOT_FOUND' }
     if (!konusmaTanimaHazir()) return { tamam: false, kod: 'HAZIR_DEGIL' }
+    // STRIPE-NOTYA-AU-05 trial model: one cheap check at visit start only (read-only after the trial, the trial's visit
+    // cap). A country without an in-app trial reads nothing here. The recording is removed on this way out too.
+    const deneme = await muayeneDenemeKapisi(supabase, doktorId)
+    if (deneme) return { tamam: false, kod: deneme }
     if (!(await muayeneKotasiKullan(supabase, doktorId, klinik.gunlukMuayeneLimiti))) return { tamam: false, kod: 'LIMIT' }
 
     const { data: ses, error: sesHatasi } = await supabase.storage.from(MUAYENE_SES_KOVASI).download(g.yol)

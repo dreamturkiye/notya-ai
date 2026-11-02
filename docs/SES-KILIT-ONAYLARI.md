@@ -13,3 +13,8 @@
 - Onay satırı: `Kaan-onay: 2026-11-02 AU voice minute caps (trial 60 min, paid 150 min/month) — pricing/limits only`
 - Taban commit: `beb4dd2f6`
 - Değişen kilitli dosyalar: none. The cap is a gate in front of the locked opener (`app/api/ulke/asistan-canli/route.ulke.ts`, not hashed) plus a call-end ping (`app/api/ulke/asistan-canli/bitti/route.ulke.ts`, `components/ulke/uygulama/canliOturum.ts`), logic in `lib/ulke/uygulama/sesDakikaSiniri.ts` and `lib/billing/sesDakika.ts`. No change to voice architecture, routing, prompts, streaming or turns; `lib/asistan/ses-kilit.json` unchanged; `npm run test:ses` green (324/324).
+
+## 2026-11-02 — AU trial model (no card): read-only gate at live-call start — pricing/limits only
+
+- Covered by Kaan's 2026-11-02 approval above (pricing and limits, not voice architecture).
+- Değişen kilitli dosyalar: none. `app/api/ulke/asistan-canli/route.ulke.ts` and `.../yazili/route.ulke.ts` (not hashed) refuse a new call / typed turn with 402 `DENEME_BITTI` once the AU free trial is over without a paid plan (`lib/ulke/uygulama/deneme.ts`). No change to routing, prompts, streaming or turns; `lib/asistan/ses-kilit.json` unchanged; `npm run test:ses` green (324/324).

@@ -16,6 +16,7 @@ import { NextRequest } from 'next/server'
 import { rotaButcesiMs } from '@/lib/ai/cagir'
 import { ulkeOturum } from '@/lib/ulke/sunucuOturum'
 import { sinirda } from '@/lib/ulke/uygulama/sinir'
+import { denemeEngeli } from '@/lib/ulke/uygulama/deneme'
 import { ozellikAcik } from '@/lib/ulke/ulke'
 import { cevap, govdeOku, KOD, uuidMi } from '@/lib/ulke/uygulama/cevap'
 import { notYenidenYaz } from '@/lib/ulke/uygulama/notlar'
@@ -28,6 +29,9 @@ export const POST = sinirda('not/yeniden-yaz POST', async (req: NextRequest) => 
   if (!ozellikAcik('cekirdekMuayene')) return KOD.yok()
   const oturum = await ulkeOturum(req)
   if (!oturum) return KOD.oturumYok()
+  // STRIPE-NOTYA-AU-05 trial model: read-only after the free trial (402 DENEME_BITTI). No read where the country has no trial.
+  const deneme = await denemeEngeli(oturum.supabase, oturum.user.id)
+  if (deneme) return deneme
   const g = await govdeOku(req)
   if (!uuidMi(g.notId)) return KOD.yok()
   const r = await notYenidenYaz(oturum.supabase, oturum.user.id, g.notId, rotaButcesiMs(maxDuration))

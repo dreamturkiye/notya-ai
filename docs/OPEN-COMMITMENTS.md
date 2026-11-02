@@ -4850,3 +4850,21 @@ Supersedes STRIPE-NOTYA-AU-04's "founding price NOT approved" line, and AU-03's 
 **Country parity:** settings live per country in `lib/billing/ulkeTicari.ts`; only `au` is set, every other country is off/unchanged.
 
 | Claude: done above | **Kaan (2026-11-02): decide trial length, voice minute caps and any founding offer for us, gb, ca, nz, uz (and TR) — all off/unchanged until then** | OPEN |
+
+### STRIPE-NOTYA-AU-05 — trial model update: no card (Kaan, 2026-11-02; Claude)
+
+Supersedes the card-first trial above and in STRIPE-NOTYA-AU-04 ("card at signup"). Kaan: "Most people would not try the product with a card requirement."
+
+**Approach chosen: in-app trial, no Stripe involvement.** The 15-day trial starts at signup (`ulke_hesaplari.created_at`; accounts created before today start on 2026-11-02) and touches no Stripe object. Stripe Checkout is reached only when the doctor chooses to pay: for AU it carries no `trial_period_days` and charges at once (`payment_method_collection: 'always'`). Chosen over a Stripe no-card trial because it needs no Stripe customer/subscription for doctors who never pay, keeps one subscription state (paid or not), and founding-seat counting stays exact (only paid founding subscriptions hold seats). Login no longer opens Checkout in AU (`components/ulke/GirisFormu.tsx`).
+
+**Where it lives:** settings in `lib/billing/ulkeTicari.ts` (`au.deneme` = 15 days / 40 visits / reminders days 10 and 13; `au.fiyatlar`; `au.yukseltme` English prompt text); rules in `lib/billing/deneme.ts`; reads and gates in `lib/ulke/uygulama/deneme.ts`; status `GET /api/ulke/deneme`; prompt `components/ulke/uygulama/YukseltmeIstemi.tsx` (mounted in the app frame, existing uza-kart/uza-dugme/uza-bilgi-kutu look). Other countries have no `deneme` entry: nothing read, nothing gated.
+
+**Limits:** 40 recorded visits (count of `ulke_muayeneler`, checked once at visit start inside `muayeneKaydet`, 402 `DENEME_MUAYENE`); live voice 60 min trial / 150 min per paid month (unchanged gate). **After day 15 without a paid plan: read-only** — patients and notes stay visible and exportable, nothing deleted; visit start, live voice call start, note generation, note rewrite, document reading and the typed assistant answer 402 `DENEME_BITTI` (one parallel read, cached a minute per account; never per voice turn).
+
+**Upgrade prompts:** day 15 (plus a persistent read-only band), 40 visits, 60 voice minutes — on frame load and whenever an action is refused — and once each on day 10 and day 13. Leads with the founding offer (A$79/month or A$948/year, price locked for the year) while Stripe shows a founding seat left (10-min cache), else regular (A$149/month, A$1,490/year). One click opens Checkout; same account, all data carries over.
+
+**Fix found on the way:** AU accounts may have no `users` row, but `subscriptions.user_id` references `users(id)`, so the webhook could not record an AU payment. Checkout now writes the minimal `users` row first. Checkout success/cancel now return to the country app's home (the AU build has no `/dashboard` or `/onboarding`).
+
+**Known limits:** deleting a draft visit frees a trial visit (count is of stored visits); a call whose browser dies before the end ping is not counted (as before). Tests: `lib/ulke/uygulama/deneme.test.ts`.
+
+| Claude: done above | Kaan: none required; other countries still wait on the line above | DONE |

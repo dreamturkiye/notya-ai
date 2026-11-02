@@ -22,6 +22,8 @@ import { UYGULAMA_EKRANLARI, type UygulamaEkrani } from '@/lib/ulke/tipler'
 import { ulkeYolu } from '@/lib/ulke/yol'
 import { useBitki } from './bitki'
 import { useAsistanHazir } from './asistanHazir'
+import YukseltmeIstemi, { YUKSELT_OLAYI } from './YukseltmeIstemi'
+import { yanittanIstem } from '@/lib/billing/deneme'
 import { aracYolu } from './aracOrtak'
 import { HEKIM_MESAJ_API } from '@/lib/ulke/mesaj/sabitler'
 import KabukGorunumu, { type KabukOge } from '@/components/doktor/KabukGorunumu'
@@ -98,6 +100,10 @@ export function useUygulama(ekran: UygulamaEkrani): Uygulama {
     })
     const j = (await r.json().catch(() => ({}))) as Record<string, unknown>
     if (r.status === 401) { void cikis() }
+    // STRIPE-NOTYA-AU-05 trial model: a refusal for the trial's limits (read-only, visit cap, voice minutes) opens the
+    // upgrade prompt, whatever screen asked. The screen still shows its own refusal.
+    const neden = yanittanIstem(r.status, j)
+    if (neden) { try { window.dispatchEvent(new CustomEvent(YUKSELT_OLAYI, { detail: { neden } })) } catch { /* no prompt */ } }
     return { ok: r.ok, status: r.status, j }
   }, [cikis])
 
@@ -339,6 +345,8 @@ function KabukCercevesi({ dil, m, ad, unvan, aktif, cikis, onBuro, kompakt, chil
         bitkiSrc={bitkiSrc}
         altYazi={k.haklar ?? `\u00A9 2026 ${marka()}`}
       >
+        {/* STRIPE-NOTYA-AU-05 trial model: the upgrade prompt and read-only band (draws nothing without an in-app trial). */}
+        {!onBuro && <YukseltmeIstemi />}
         {children}
       </KabukGorunumu>
     </div>
