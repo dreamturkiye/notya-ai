@@ -4850,3 +4850,21 @@ Supersedes STRIPE-NOTYA-AU-04's "founding price NOT approved" line, and AU-03's 
 **Country parity:** settings live per country in `lib/billing/ulkeTicari.ts`; only `au` is set, every other country is off/unchanged.
 
 | Claude: done above | **Kaan (2026-11-02): decide trial length, voice minute caps and any founding offer for us, gb, ca, nz, uz (and TR) — all off/unchanged until then** | OPEN |
+
+## AU-GAP-CLOSE-01 — close competitive gaps vs Heidi / Lyrebird / Medow + switcher game changers (Claude, 2026-11-02)
+
+**Classification:** specialty-agnostic **AU country pack + shared `lib/ulke` spine** (reaches all AU roles / 44 AHPRA paths). Letter studio / MBS / PMS export are AU-pack clinical copy; telehealth desktop capture + paste-transcript land on the **shared visit screen** (core for all country packs + Türkiye). **Branş:** core for telehealth capture path; AU-pack for letter/MBS/PMS copy. **Countries:** AU **APPLIED** for pack features · telehealth capture **APPLIED** on shared `Muayene` (us/gb/ca/nz/uz inherit via spine) · TR **APPLIED** on `app/session/new` · Pricing ladder on landing left alone this change (STRIPE-NOTYA-AU-05 founding A$79/A$948 invite-only; public A$1,490/yr display not overwritten).
+
+**Shipped in product (not audit-only):**
+1. **Letter studio** under an approved note — GP / referral / patient drafts via `/api/ulke/not/mektup` + `MektupKarti`. Approve gate mirrors portal ozet. Copy / download / print only; nothing sent or lodged.
+2. **MBS suggestions** — `/api/ulke/not/mbs-oneri` + `MbsOneriKarti`. Suggest only; filtered against local MBS→ACHI map when present; every row `lodgeEdilmez: true`.
+3. **PMS scaffold** — visit export pack JSON (`/api/ulke/not/pms-export`) + Settings › Integrations honest roadmap (export ready / partner-API / roadmap). **No fake sync** to Best Practice, Genie or Gentu.
+4. **Checkout `?interval=year`** — founding invite already carries interval (STRIPE-NOTYA-AU-05 `planInterval`); public landing yearly ladder display **not** changed here (founding offer takes priority).
+5. **Trust / OS wedge** — landing “Not another scribe overlay. A practice OS.” section; Security page trust-centre framing (approve-before-anything-leaves).
+6. **Telehealth / dictate path** — tip under audio upload + **desktop tab/window capture** (`getDisplayMedia`) + **paste transcript** on the shared visit screen (same consent + approve gate).
+
+**Still open (partner / product bets):** live Bp then Genie/Gentu write-back; Heidi-style free forever / freemium; clinician sign-off on letter/MBS prompts (`countries/au/klinik/mektupTalimatlari.ts`).
+
+**Tests:** `lib/ulke/mektup/mektup.test.ts`, `countries/au/mektup.gap.test.ts`, plus telehealth capture / paste-transcript unit coverage when landed.
+
+
