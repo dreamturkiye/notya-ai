@@ -335,6 +335,10 @@ export type UygulamaMetni = {
     readonly hata: string
     readonly mikrofon: string
     readonly limit: string
+    /** STRIPE-NOTYA-AU-05: a new call refused because the trial's live-voice minutes are used (only where a cap is set). */
+    readonly sesDenemeDoldu?: string
+    /** STRIPE-NOTYA-AU-05: a new call refused because this billing month's live-voice minutes are used. */
+    readonly sesAylikDoldu?: string
     readonly not: string
     readonly siz: string
     readonly ekranda: string

@@ -35,13 +35,15 @@ export type GirisFormuProps = {
    * and additive: a country page that never passes it (every country but AU, for now) sees no change at all.
    */
   planKey?: string | null
+  /** STRIPE-NOTYA-AU-05: monthly or yearly, carried from the invite (`?interval=year`); default monthly. */
+  planInterval?: 'month' | 'year'
 }
 
 // The 3 solo-doctor plan keys this build's Stripe catalog actually prices (lib/billing/stripePlans.ts).
 // Klinik/Kurumsal are out of scope — same boundary main's /kayit fix drew.
-const SELF_SERVE_PLAN_KEYS = new Set(['metin_asistan', 'sesli_pro', 'muayenehane'])
+const SELF_SERVE_PLAN_KEYS = new Set(['metin_asistan', 'sesli_pro', 'muayenehane', 'sesli_pro_founding'])
 
-export default function GirisFormu({ dil, metin, ret, diller, anaSayfa, kayit, sonra, planKey }: GirisFormuProps) {
+export default function GirisFormu({ dil, metin, ret, diller, anaSayfa, kayit, sonra, planKey, planInterval }: GirisFormuProps) {
   const [eposta, setEposta] = useState('')
   const [sifre, setSifre] = useState('')
   const [bekliyor, setBekliyor] = useState(false)
@@ -87,7 +89,7 @@ export default function GirisFormu({ dil, metin, ret, diller, anaSayfa, kayit, s
           const cres = await fetch(ulkeYolu('/api/billing/checkout'), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${data.session.access_token}` },
-            body: JSON.stringify({ plan_key: planKey, interval: 'month' }),
+            body: JSON.stringify({ plan_key: planKey, interval: planInterval === 'year' ? 'year' : 'month' }),
           })
           const cjson = await cres.json().catch(() => null)
           if (cjson?.success && cjson?.data?.checkout_url) {

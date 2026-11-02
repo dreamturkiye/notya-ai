@@ -34,6 +34,7 @@ export default function LoginPage({ searchParams }: { searchParams?: AramaParame
       kayit={ozellikAcik('davetliKayit') ? dilliYol('/signup', dil) : null}
       sonra={ulkeYolu(ozellikAcik('cekirdekMuayene') ? UYGULAMA_EKRANLARI.bugun : '/welcome')}
       planKey={planHam}
+      planInterval={searchParams?.interval === 'year' ? 'year' : 'month'}
     />
   )
 }

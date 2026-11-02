@@ -90,6 +90,29 @@ export function useCanliOturum({ t, api, dil }: { t: Metin | undefined; api: Api
   const durumRef = useRef<CanliDurumu>('bosta')
   durumRef.current = durum
   const sohbet = useRef<Baglanti | null>(null)
+  /**
+   * STRIPE-NOTYA-AU-05 (pricing/limits only): the open call's token and when it connected. Sent ONCE when the call ends,
+   * however it ends, so the server can count the plan's live-voice minutes. Nothing in the call itself changes.
+   */
+  const acikCagri = useRef<{ jeton: string; basladi: number } | null>(null)
+  const cagriyiKapat = useCallback((jeton?: string) => {
+    const a = acikCagri.current
+    if (!a || (jeton && a.jeton !== jeton)) return
+    acikCagri.current = null
+    try {
+      void fetch(ulkeYolu('/api/ulke/asistan-canli/bitti'), {
+        method: 'POST',
+        keepalive: true,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ notya_jeton: a.jeton, saniye: Math.max(0, Math.round((Date.now() - a.basladi) / 1000)) }),
+      }).catch(() => {})
+    } catch { /* counting never disturbs the page */ }
+  }, [])
+  useEffect(() => {
+    const kapat = () => cagriyiKapat()
+    window.addEventListener('pagehide', kapat)
+    return () => window.removeEventListener('pagehide', kapat)
+  }, [cagriyiKapat])
   const sayac = useRef<BalonSayaci>({ sira: 0 })
   const nesil = useRef(0)
   const balonRef = useRef<SohbetBalon[]>([])
@@ -157,12 +180,13 @@ export function useCanliOturum({ t, api, dil }: { t: Metin | undefined; api: Api
     nesil.current += 1
     const c = sohbet.current
     sohbet.current = null
+    cagriyiKapat()
     setBalonlar((b) => geciciyiOturt(b))
     if (c) { try { await c.endSession() } catch { /* already closed */ } }
     setDurum('bosta')
-  }, [])
+  }, [cagriyiKapat])
 
-  useEffect(() => () => { nesil.current += 1; try { tanimaRef.current?.stop() } catch { /* quiet */ } const c = sohbet.current; sohbet.current = null; if (c) void c.endSession().catch(() => {}) }, [])
+  useEffect(() => () => { nesil.current += 1; try { tanimaRef.current?.stop() } catch { /* quiet */ } const c = sohbet.current; sohbet.current = null; cagriyiKapat(); if (c) void c.endSession().catch(() => {}) }, [cagriyiKapat])
 
   const baslat = useCallback(async () => {
     if (!t || !api || sohbet.current || durum === 'baglaniyor') return
@@ -185,6 +209,7 @@ export function useCanliOturum({ t, api, dil }: { t: Metin | undefined; api: Api
         bitti = true
         const c = sohbet.current
         sohbet.current = null
+        cagriyiKapat()
         if (c) void c.endSession().catch(() => {})
         if (yenidenDene && ovr && !baglandi) { void dene(false); return }
         setHata(hataYazisi(t.hata, ayrinti)); setDurum('hata')
@@ -193,7 +218,12 @@ export function useCanliOturum({ t, api, dil }: { t: Metin | undefined; api: Api
         const r = await api('/api/ulke/asistan-canli', { method: 'POST' })
         if (!gecerli()) return
         const j = r.j as { signed_url?: string; voice_id?: string; first_message?: string; notya_jeton?: string; ekran_araci?: string; conversation_token?: string; asr_keywords?: string[] }
-        if (r.status === 429) { setHata(t.limit); setDurum('hata'); return }
+        if (r.status === 429) {
+          // STRIPE-NOTYA-AU-05: the plan's live-voice minutes are used; the text assistant stays open.
+          const kod = r.j as { code?: unknown; tur?: unknown }
+          const dakika = kod.code === 'SES_DAKIKA' ? (kod.tur === 'ucretli' ? t.sesAylikDoldu : t.sesDenemeDoldu) : undefined
+          setHata(dakika || t.limit); setDurum('hata'); return
+        }
         if (!r.ok || !j.signed_url || !j.notya_jeton || !j.voice_id) {
           // Which part of the opening answer was missing is the whole diagnosis (a 502 = the provider gave no address, a 404 = not available here).
           const eksik = !j.signed_url ? 'no address' : !j.notya_jeton ? 'no token' : !j.voice_id ? 'no voice' : ''
@@ -213,8 +243,9 @@ export function useCanliOturum({ t, api, dil }: { t: Metin | undefined; api: Api
               return 'ok'
             },
           },
-          onConnect: () => { baglandi = true; baglanmaAni = Date.now(); if (!bitti && gecerli()) setDurum('dinliyor') },
+          onConnect: () => { baglandi = true; baglanmaAni = Date.now(); acikCagri.current = { jeton: j.notya_jeton as string, basladi: baglanmaAni }; if (!bitti && gecerli()) setDurum('dinliyor') },
           onDisconnect: (d?: { reason?: string; message?: string; closeCode?: number; closeReason?: string }) => {
+            cagriyiKapat(j.notya_jeton)
             if (bitti || !gecerli()) return
             if (d?.reason === 'error') { basarisiz(true, kisaAyrinti(`call closed ${d.closeCode ?? ''}`.trim(), d.closeReason || d.message)); return }
             bitti = true; sohbet.current = null; setBalonlar((b) => geciciyiOturt(b)); setDurum((x) => (x === 'hata' ? x : 'bosta'))
@@ -248,7 +279,7 @@ export function useCanliOturum({ t, api, dil }: { t: Metin | undefined; api: Api
       }
     }
     await dene(true)
-  }, [t, api, durum])
+  }, [t, api, durum, cagriyiKapat])
 
   /**
    * Türkiye's rule (NOTYA-SES-SESSIZ-01): from the moment the written chat is used while the voice is live, the voice goes
@@ -260,10 +291,11 @@ export function useCanliOturum({ t, api, dil }: { t: Metin | undefined; api: Api
     nesil.current += 1
     const c = sohbet.current
     sohbet.current = null
+    cagriyiKapat()
     setBalonlar((b) => geciciyiOturt(b))
     if (c) { try { await c.endSession() } catch { /* already closed */ } }
     setDurum('sessiz')
-  }, [])
+  }, [cagriyiKapat])
 
   const girdiAyarla = useCallback((g: string) => {
     setYaziliGirdi(g)

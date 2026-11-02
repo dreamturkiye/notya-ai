@@ -20,7 +20,8 @@ export const metadata: Metadata = { robots: { index: false, follow: false } }
 
 // STRIPE-NOTYA-AU-02: the 3 solo-doctor plan keys this build's Stripe catalog actually prices
 // (lib/billing/stripePlans.ts) — Klinik/Kurumsal are out of scope here, same boundary as main's /kayit fix.
-const SELF_SERVE_PLAN_KEYS = new Set(['metin_asistan', 'sesli_pro', 'muayenehane'])
+// STRIPE-NOTYA-AU-05: + the founding offer (`sesli_pro_founding`, with `interval=month|year`).
+const SELF_SERVE_PLAN_KEYS = new Set(['metin_asistan', 'sesli_pro', 'muayenehane', 'sesli_pro_founding'])
 
 export default function SignupPage({ searchParams }: { searchParams?: AramaParametreleri }) {
   if (!ozellikAcik('davetliKayit')) notFound()
@@ -32,6 +33,7 @@ export default function SignupPage({ searchParams }: { searchParams?: AramaParam
   // link; GirisFormu drives checkout from there once it actually has a session.
   const planHam = typeof searchParams?.plan === 'string' ? searchParams.plan : null
   const plan = planHam && SELF_SERVE_PLAN_KEYS.has(planHam) ? planHam : null
+  const aralik = searchParams?.interval === 'year' ? 'year' : null
   const girisYolu = dilliYol('/login', dil)
   return (
     <DavetliKayitFormu
@@ -41,7 +43,7 @@ export default function SignupPage({ searchParams }: { searchParams?: AramaParam
       anaSayfaAdi={yuzeyMetinleri('giris', dil).anaSayfa}
       diller={dilSecenekleri('/signup')}
       anaSayfa={dilliYol('/', dil)}
-      giris={plan ? `${girisYolu}${girisYolu.includes('?') ? '&' : '?'}plan=${plan}` : girisYolu}
+      giris={plan ? `${girisYolu}${girisYolu.includes('?') ? '&' : '?'}plan=${plan}${aralik ? `&interval=${aralik}` : ''}` : girisYolu}
       fiyat={dilliYol('/', dil, acilisCapasi('narx') ? `#${acilisCapasi('narx')}` : '')}
       meslek={ulkePaketi().uzanti?.muayenehane?.meslekKaydiTasi ? undefined : { etiket: a.meslekKaydi, izoh: a.meslekKaydiIzoh, gecersiz: a.meslekKaydiGecersiz }}
     />

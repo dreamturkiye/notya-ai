@@ -11,6 +11,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { getStripe } from '@/lib/billing/stripeClient'
 import { NOTYA_TRIAL_DAYS, planByKey, type NotyaBillingInterval } from '@/lib/billing/stripePlans'
+import { KURUCU_DOLU_MESAJI, KURUCU_PLAN_KEY, sesliProFiyatiSec, type FiyatStripe } from '@/lib/billing/kurucuTeklifi'
+import { aktifUlke } from '@/lib/ulke/ulke'
 
 export const dynamic = 'force-dynamic'
 
@@ -41,16 +43,39 @@ export async function POST(req: NextRequest) {
     const interval = (body.interval === 'year' ? 'year' : 'month') as NotyaBillingInterval
     const seats = Number.isFinite(Number(body.seats)) ? Math.max(1, Math.floor(Number(body.seats))) : 1
 
-    const plan = planByKey(planKey)
+    // STRIPE-NOTYA-AU-05: the founding offer is Sesli Pro at a founding price (first N doctors of the country).
+    const kurucuIstendi = planKey === KURUCU_PLAN_KEY
+    const plan = planByKey(kurucuIstendi ? 'sesli_pro' : planKey)
     if (!plan) {
       return NextResponse.json({ success: false, error: 'Geçersiz plan.', code: 'INVALID_PLAN' }, { status: 400 })
     }
-    const priceId = plan.priceIds[interval]
+
+    const stripe = getStripe()
+
+    let priceId = plan.priceIds[interval]
+    let kurucu = false
+    let kurucuDolu = false
+    if (plan.key === 'sesli_pro') {
+      // The env var wins when set; otherwise the country's Stripe lookup key (AU: no env var needed); otherwise the
+      // catalog fallback. Founding: lookup key + server-side seat cap; full = the regular price with a message.
+      const envAdi = interval === 'year' ? 'STRIPE_PRICE_SESLI_PRO_YEAR' : 'STRIPE_PRICE_SESLI_PRO_MONTH'
+      const secim = await sesliProFiyatiSec({
+        stripe: stripe as unknown as FiyatStripe,
+        ulke: aktifUlke(),
+        aralik: interval,
+        kurucuIstendi,
+        envFiyati: (process.env[envAdi] || '').trim() || null,
+        yedekFiyat: priceId || null,
+      })
+      if (secim) {
+        priceId = secim.priceId
+        kurucu = secim.kurucu
+        kurucuDolu = secim.kurucuDolu
+      }
+    }
     if (!priceId) {
       return NextResponse.json({ success: false, error: 'Bu plan için fiyat tanımlı değil.', code: 'PRICE_NOT_CONFIGURED' }, { status: 500 })
     }
-
-    const stripe = getStripe()
 
     // Reuse an existing Stripe Customer for this doctor (users.stripe_customer_id) or create one,
     // tied to users.id via metadata so the webhook can always resolve the doctor from the event.
@@ -79,21 +104,28 @@ export async function POST(req: NextRequest) {
       await sb.from('users').update({ stripe_customer_id: customerId, updated_at: new Date().toISOString() }).eq('id', user.id)
     }
 
+    const meta = { supabase_user_id: user.id, notya_plan_key: plan.key, notya_interval: interval, notya_founding: kurucu ? 'true' : 'false' }
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
       customer: customerId,
       line_items: [{ price: priceId, quantity: plan.perSeat ? seats : 1 }],
+      // Card at trial signup is Kaan-approved (STRIPE-NOTYA-AU-05): Checkout always collects a payment method.
+      payment_method_collection: 'always',
       subscription_data: {
         trial_period_days: NOTYA_TRIAL_DAYS,
-        metadata: { supabase_user_id: user.id, notya_plan_key: plan.key, notya_interval: interval },
+        metadata: meta,
       },
-      metadata: { supabase_user_id: user.id, notya_plan_key: plan.key, notya_interval: interval },
+      metadata: meta,
+      ...(kurucuDolu ? { custom_text: { submit: { message: KURUCU_DOLU_MESAJI } } } : {}),
       success_url: `${appUrl()}/dashboard/doktor?billing=success&plan=${plan.key}`,
       cancel_url: `${appUrl()}/onboarding?billing=cancelled`,
       allow_promotion_codes: true,
     })
 
-    return NextResponse.json({ success: true, data: { checkout_url: session.url, session_id: session.id } })
+    return NextResponse.json({
+      success: true,
+      data: { checkout_url: session.url, session_id: session.id, founding: kurucu, founding_full: kurucuDolu, ...(kurucuDolu ? { message: KURUCU_DOLU_MESAJI } : {}) },
+    })
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Bilinmeyen hata'
     console.error('[API/billing/checkout]', message)

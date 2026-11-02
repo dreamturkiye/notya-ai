@@ -22,9 +22,10 @@ import { ulkeIslevi } from './tablolar'
 
 /**
  * The tasks that are measured. Speech: the first pass of a recording, and the second pass where one ran. The model:
- * a visit note, a rewrite of a note in another language, a summary for the patient.
+ * a visit note, a rewrite of a note in another language, a summary for the patient. STRIPE-NOTYA-AU-05: `canli-ses` =
+ * live-assistant calls and their seconds (the minute cap, lib/ulke/uygulama/sesDakikaSiniri.ts).
  */
-export const KULLANIM_GOREVLERI = ['konusma-ilk', 'konusma-ikinci', 'not', 'yeniden-yazim', 'hasta-ozeti'] as const
+export const KULLANIM_GOREVLERI = ['konusma-ilk', 'konusma-ikinci', 'not', 'yeniden-yazim', 'hasta-ozeti', 'canli-ses'] as const
 export type KullanimGorevi = (typeof KULLANIM_GOREVLERI)[number]
 
 export type KullanimOlcusu = {
