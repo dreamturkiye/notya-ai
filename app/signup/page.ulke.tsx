@@ -31,7 +31,13 @@ export default function SignupPage({ searchParams }: { searchParams?: AramaParam
   // The doctor's first real session is their first /login right after. Carry the chosen plan forward on that
   // link; GirisFormu drives checkout from there once it actually has a session.
   const planHam = typeof searchParams?.plan === 'string' ? searchParams.plan : null
-  const plan = planHam && SELF_SERVE_PLAN_KEYS.has(planHam) ? planHam : null
+  // Open signup defaults to the doctor plan (sesli_pro) so landing CTAs without ?plan= still start the 15-day trial.
+  const plan =
+    planHam && SELF_SERVE_PLAN_KEYS.has(planHam)
+      ? planHam
+      : !kayitKoduGerekliMi(ulkePaketi())
+        ? 'sesli_pro'
+        : null
   const girisYolu = dilliYol('/login', dil)
   return (
     <DavetliKayitFormu

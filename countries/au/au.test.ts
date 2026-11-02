@@ -119,6 +119,19 @@ describe('au: what is Australia\'s', () => {
     assert.equal(AU_ARAYUZ.randevuMetinleri![D]!.form.tarihOrnek, 'DD/MM/YYYY')
   })
 
+  it('AU launch: open 15-day free trial (no invitation code); demo is 30 minutes with Dr. Han Mamur', async () => {
+    assert.equal(AU_PAKETI.uygulama!.kayitAcik, true)
+    const { kayitKoduGerekliMi } = await import('@/lib/ulke/davet')
+    assert.equal(kayitKoduGerekliMi(AU_PAKETI), false)
+    const { AU_DEMO } = await import('./demo')
+    const d = AU_DEMO['en-AU']!
+    assert.match(d.giris, /30-minute/)
+    assert.match(d.giris, /Dr\. Han Mamur/)
+    assert.doesNotMatch(d.giris, /60-minute|Gokhan/)
+    assert.equal(d.bolum.satirlar.some((s) => s.k === '30 minutes'), true)
+    assert.match(AU_PAKETI.metinler['en-AU']!.davetliKayit.baslik, /free trial/i)
+  })
+
   it('several time zones: the default is one of them, an account is asked, and the calendar names no single zone', () => {
     const dilimler = [...AU_PAKETI.uygulama!.saatDilimleri]
     assert.deepEqual(dilimler, ['Australia/Sydney', 'Australia/Melbourne', 'Australia/Brisbane', 'Australia/Adelaide', 'Australia/Darwin', 'Australia/Perth', 'Australia/Hobart'])

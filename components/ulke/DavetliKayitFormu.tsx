@@ -124,8 +124,12 @@ export default function DavetliKayitFormu({ dil, metin, anaSayfaAdi, diller, ana
       </form>
       <div style={S.alt}>
         {metin.girisSorusu} <a href={giris} style={S.baglanti}>{metin.girisBaglantisi}</a>
-        <br />
-        {metin.kodYokSorusu} <a href={fiyat} style={S.baglanti}>{metin.fiyatBaglantisi}</a>
+        {kodGerekli ? (
+          <>
+            <br />
+            {metin.kodYokSorusu} <a href={fiyat} style={S.baglanti}>{metin.fiyatBaglantisi}</a>
+          </>
+        ) : null}
       </div>
     </UlkeKart>
   )
