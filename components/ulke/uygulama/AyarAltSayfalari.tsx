@@ -69,14 +69,69 @@ export function Iletisim() {
   )
 }
 
+type PmsBaglantiOzet = { saglayici: string; baglantiDurum: string; sonDort: string | null }
+
 export function Entegrasyonlar() {
   const u = useUygulama('entegrasyonlar')
   const e = u.m.ayarlar.ek
   const pms = ulkePaketi().uzanti?.pmsEntegrasyon
-  const durumRozet = (durum: 'hazir-export' | 'yol-haritasi' | 'partner-api') =>
-    durum === 'hazir-export' ? { ad: 'Export ready', renk: R.pine, zemin: '#E4F3F1' }
-      : durum === 'partner-api' ? { ad: 'Needs partner API', renk: R.muted, zemin: '#F2ECDF' }
-        : { ad: 'On the roadmap', renk: R.muted, zemin: '#F2ECDF' }
+  const [baglantilar, setBaglantilar] = useState<PmsBaglantiOzet[]>([])
+  const [saglayici, setSaglayici] = useState('best-practice')
+  const [etiket, setEtiket] = useState('')
+  const [anahtar, setAnahtar] = useState('')
+  const [bekliyor, setBekliyor] = useState(false)
+  const [bilgi, setBilgi] = useState<string | null>(null)
+  const [hata, setHata] = useState<string | null>(null)
+
+  const { hesap, api } = u
+  useEffect(() => {
+    if (!pms || !hesap) return
+    void (async () => {
+      try {
+        const r = await api('/api/ulke/pms/baglanti')
+        if (r.ok && Array.isArray(r.j.baglantilar)) setBaglantilar(r.j.baglantilar as PmsBaglantiOzet[])
+      } catch { /* list stays empty */ }
+    })()
+  }, [pms, hesap, api])
+
+  const durumRozet = (durum: string) => {
+    if (durum === 'hazir-export') return { ad: 'Export ready', renk: R.pine, zemin: '#E4F3F1' }
+    if (durum === 'kimlik-kayitli' || durum === 'partner-bekleniyor') {
+      return { ad: 'Credentials saved · partner pending', renk: R.muted, zemin: '#F2ECDF' }
+    }
+    if (durum === 'partner-api') return { ad: 'Needs partner API', renk: R.muted, zemin: '#F2ECDF' }
+    return { ad: 'On the roadmap', renk: R.muted, zemin: '#F2ECDF' }
+  }
+
+  async function kaydet() {
+    if (!pms) return
+    setBekliyor(true); setHata(null); setBilgi(null)
+    try {
+      const r = await api('/api/ulke/pms/baglanti', { method: 'POST', govde: { saglayici, anahtar, etiket } })
+      if (r.ok && r.j.baglanti) {
+        const o = r.j.baglanti as PmsBaglantiOzet
+        setBaglantilar((eski) => {
+          const kal = eski.filter((b) => b.saglayici !== o.saglayici)
+          return [...kal, o]
+        })
+        setAnahtar('')
+        setBilgi(pms.baglantiKaydedildi || 'Saved. Waiting for partner API — not Synced.')
+      } else setHata('Credentials could not be saved.')
+    } catch { setHata('Credentials could not be saved.') }
+    setBekliyor(false)
+  }
+
+  async function sil(s: string) {
+    if (!pms) return
+    setBekliyor(true); setHata(null); setBilgi(null)
+    try {
+      const r = await api('/api/ulke/pms/baglanti', { method: 'DELETE', govde: { saglayici: s } })
+      if (r.ok) setBaglantilar((eski) => eski.filter((b) => b.saglayici !== s))
+      else setHata('Could not remove credentials.')
+    } catch { setHata('Could not remove credentials.') }
+    setBekliyor(false)
+  }
+
   const kalem = (ad: string, alt: string, href: string | null) => {
     const ic = (
       <>
@@ -89,6 +144,9 @@ export function Entegrasyonlar() {
     )
     return href ? <a key={ad} href={href} style={SATIR}>{ic}</a> : <div key={ad} style={SATIR}>{ic}</div>
   }
+
+  const kayitli = (anahtar: string) => baglantilar.find((b) => b.saglayici === anahtar)
+
   return (
     <Sayfa u={u} baslik={e.entegrasyonBaslik} alt={e.entegrasyonAlt}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }} data-alan="entegrasyon-listesi">
@@ -98,7 +156,7 @@ export function Entegrasyonlar() {
         {ozellikAcik('klinikHesaplari') ? kalem(e.personelKalemi, e.personelKalemiAlt, YOL.klinik) : null}
         {kalem(e.disSistemler, e.disSistemlerAlt, null)}
       </div>
-      {/* AU-GAP-CLOSE-01: honest PMS export / write-back roadmap — no fake “Synced” badges. */}
+      {/* AU-GAP-CLOSE-01/02: honest PMS roadmap + credential vault — never a Synced badge. */}
       {pms ? (
         <div style={{ ...KUTU, marginTop: 18 }} data-alan="pms-entegrasyon">
           <h2 style={{ fontFamily: CHROME_FONT.serif, fontWeight: 500, fontSize: 22, margin: '0 0 6px', color: '#2e251d' }}>{pms.baslik}</h2>
@@ -107,18 +165,48 @@ export function Entegrasyonlar() {
           <p style={{ fontSize: 12, color: R.muted, margin: '0 0 12px' }}>{pms.exportAciklama}</p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {pms.kalemler.map((k) => {
-              const r = durumRozet(k.durum)
+              const kayit = kayitli(k.anahtar)
+              const durum = kayit ? kayit.baglantiDurum : k.durum
+              const r = durumRozet(durum)
               return (
-                <div key={k.anahtar} style={SATIR} data-pms={k.anahtar} data-durum={k.durum}>
+                <div key={k.anahtar} style={SATIR} data-pms={k.anahtar} data-durum={durum} data-kimlik={kayit ? 'var' : 'yok'}>
                   <span style={{ flex: 1 }}>
                     <span style={{ display: 'block', fontSize: 15, fontWeight: 700 }}>{k.ad}</span>
-                    <span style={{ display: 'block', fontSize: 12, color: R.muted, marginTop: 2 }}>{k.aciklama}</span>
+                    <span style={{ display: 'block', fontSize: 12, color: R.muted, marginTop: 2 }}>
+                      {kayit?.sonDort ? `${k.aciklama} · key …${kayit.sonDort}` : k.aciklama}
+                    </span>
                   </span>
                   <span style={{ fontSize: 12, fontWeight: 700, color: r.renk, background: r.zemin, borderRadius: 999, padding: '4px 10px', whiteSpace: 'nowrap' }}>{r.ad}</span>
+                  {kayit ? (
+                    <button type="button" disabled={bekliyor} onClick={() => { void sil(k.anahtar) }} data-eylem={`pms-sil-${k.anahtar}`} style={{ marginLeft: 8, background: 'none', border: 'none', color: R.muted, fontSize: 12, fontWeight: 600, cursor: 'pointer', textDecoration: 'underline' }}>
+                      {pms.baglantiSil || 'Remove'}
+                    </button>
+                  ) : null}
                 </div>
               )
             })}
           </div>
+          {pms.baglantiBaslik ? (
+            <div style={{ marginTop: 18 }} data-alan="pms-vault">
+              <p style={{ fontSize: 13, fontWeight: 600, margin: '0 0 4px' }}>{pms.baglantiBaslik}</p>
+              <p style={{ fontSize: 12, color: R.muted, margin: '0 0 10px' }}>{pms.baglantiAciklama}</p>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, marginBottom: 4 }} htmlFor="pms-saglayici">Practice system</label>
+              <select id="pms-saglayici" value={saglayici} onChange={(ev) => setSaglayici(ev.target.value)} style={{ width: '100%', boxSizing: 'border-box', border: `1px solid ${R.border}`, borderRadius: 10, padding: '10px 12px', fontSize: 15, marginBottom: 8, fontFamily: CHROME_FONT.sans }}>
+                {pms.kalemler.filter((k) => k.anahtar !== 'export-pack').map((k) => (
+                  <option key={k.anahtar} value={k.anahtar}>{k.ad}</option>
+                ))}
+              </select>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, marginBottom: 4 }} htmlFor="pms-etiket">Label (optional)</label>
+              <input id="pms-etiket" value={etiket} onChange={(ev) => setEtiket(ev.target.value)} maxLength={80} style={{ width: '100%', boxSizing: 'border-box', border: `1px solid ${R.border}`, borderRadius: 10, padding: '10px 12px', fontSize: 15, marginBottom: 8, fontFamily: CHROME_FONT.sans }} />
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, marginBottom: 4 }} htmlFor="pms-anahtar">API key</label>
+              <input id="pms-anahtar" type="password" autoComplete="off" value={anahtar} onChange={(ev) => setAnahtar(ev.target.value)} maxLength={500} style={{ width: '100%', boxSizing: 'border-box', border: `1px solid ${R.border}`, borderRadius: 10, padding: '10px 12px', fontSize: 15, marginBottom: 10, fontFamily: CHROME_FONT.sans }} />
+              <button type="button" disabled={bekliyor || anahtar.trim().length < 8} onClick={() => { void kaydet() }} data-eylem="pms-baglanti-kaydet" style={{ background: R.pine, color: '#fff', border: 'none', borderRadius: 10, padding: '11px 16px', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: CHROME_FONT.sans, minHeight: 44 }}>
+                {pms.baglantiKaydet || 'Save credentials'}
+              </button>
+              {bilgi ? <p role="status" data-alan="pms-vault-bilgi" style={{ fontSize: 12, color: R.pine, margin: '10px 0 0' }}>{bilgi}</p> : null}
+              {hata ? <p role="alert" data-alan="pms-vault-hata" style={{ fontSize: 12, color: '#9b3b2e', margin: '10px 0 0' }}>{hata}</p> : null}
+            </div>
+          ) : null}
           <p style={{ fontSize: 12, color: R.muted, margin: '12px 0 0' }}>{pms.uyari}</p>
         </div>
       ) : null}

@@ -24,6 +24,10 @@ export type MektupMetni = {
   bos: string
   /** Never claims lodgement, referral transmission, or PMS sync. */
   uyari: string
+  /** AU-GAP-CLOSE-02 — doctor attests they reviewed this letter before export/queue. */
+  onayla: string
+  onaylandi: string
+  onayBekliyor: string
 }
 
 export type MbsOneriMetni = {
@@ -38,12 +42,17 @@ export type MbsOneriMetni = {
   /** Hard rule shown every time: suggest only, never lodge. */
   uyari: string
   kaynak: string
+  /** AU-GAP-CLOSE-02 — confirm selected MBS suggestions for export/queue. */
+  onayla: string
+  onaylandi: string
+  onayBekliyor: string
 }
 
 export type PmsEntegrasyonKalemi = {
   anahtar: string
   ad: string
-  durum: 'hazir-export' | 'yol-haritasi' | 'partner-api'
+  /** kimlik-kayitli = credentials saved, partner still pending — never a Synced state. */
+  durum: 'hazir-export' | 'yol-haritasi' | 'partner-api' | 'kimlik-kayitli'
   aciklama: string
 }
 
@@ -62,6 +71,8 @@ export type PmsEntegrasyonMetni = {
 export type MektupTaslak = {
   tur: MektupTuru
   metin: string
+  /** Doctor attested they read/edited this draft (export/queue gate). */
+  hekimOnayi?: boolean
 }
 
 export type MbsOneri = {
@@ -70,6 +81,8 @@ export type MbsOneri = {
   gerekce: string
   /** Always false in this product — never a claim. */
   lodgeEdilmez: true
+  /** Doctor confirmed this suggestion for export/queue. */
+  hekimOnayi?: boolean
 }
 
 export type PmsExportPaket = {

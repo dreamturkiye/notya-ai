@@ -1,5 +1,5 @@
 /**
- * AU-GAP-CLOSE-01 — Australia: client-safe UI copy for letter studio, MBS assist and PMS export roadmap.
+ * AU-GAP-CLOSE-01 / 02 — Australia: client-safe UI copy for letter studio, MBS assist and PMS export roadmap.
  * Drawn only where the pack extension is present. No claim of lodgement, write-back or regulator endorsement.
  */
 import type { MbsOneriUzantiMetni, MektupUzantiMetni, PmsEntegrasyonUzanti } from '@/lib/ulke/uzanti/tipler'
@@ -25,6 +25,9 @@ export const AU_MEKTUP: MektupUzantiMetni = {
   onayliDegil: 'Approve the note before a letter can be drafted.',
   bos: 'The letter is empty.',
   uyari: 'A draft only. Notya does not send letters, lodge claims, or write to Best Practice, Genie or Gentu.',
+  onayla: 'I have read this letter — include in export',
+  onaylandi: 'Signed off for export. You can still edit; sign off again after changes.',
+  onayBekliyor: 'Sign off this letter before it can enter the visit export or write-back queue.',
 }
 
 export const AU_MBS_ONERI: MbsOneriUzantiMetni = {
@@ -38,6 +41,9 @@ export const AU_MBS_ONERI: MbsOneriUzantiMetni = {
   yazilamadi: 'Suggestions could not be prepared. Try again.',
   uyari: 'Suggestions only. Notya never lodges a Medicare claim and never decides that a benefit is payable. Check MBS Online before you bill.',
   kaynak: 'Matched where possible against the local MBS item → ACHI stem map (IHACPA). Unknown items without a descriptor are dropped.',
+  onayla: 'Confirm selected items for export',
+  onaylandi: 'Selected items signed off for export. Still never lodged from Notya.',
+  onayBekliyor: 'Tick the items you accept, then confirm — only confirmed rows enter the export pack.',
 }
 
 /** Shown under “Upload an existing recording” on the visit screen — telehealth / dictate path. */
@@ -46,9 +52,9 @@ export const AU_TELEHEALTH_IPUCU =
 
 export const AU_PMS_ENTEGRASYON: PmsEntegrasyonUzanti = {
   baslik: 'Practice systems',
-  aciklama: 'Export an approved visit as a file you control. Live write-back to Best Practice, Genie or Gentu needs a partner API and is not connected in this build — we say so plainly.',
+  aciklama: 'Export an approved visit as a file you control. Live write-back to Best Practice, Genie or Gentu needs a partner API — credentials can be saved now; nothing is marked Synced until that API is live.',
   exportBaslik: 'Visit export pack',
-  exportAciklama: 'Download the approved note (and any letter / MBS suggestions you prepared on the note screen) as JSON. Paste or import under your own control.',
+  exportAciklama: 'Download the approved note (and any letter / MBS suggestions you signed off on the note screen) as JSON. Paste or import under your own control.',
   exportDugme: 'How it works',
   exportIndiriliyor: 'Preparing…',
   kalemler: [
@@ -62,20 +68,29 @@ export const AU_PMS_ENTEGRASYON: PmsEntegrasyonUzanti = {
       anahtar: 'best-practice',
       ad: 'Best Practice write-back',
       durum: 'partner-api',
-      aciklama: 'Roadmap L+. Needs Bp partner credentials and a dual-write adapter. Not connected — no fake “Synced” state.',
+      aciklama: 'Save Bp credentials below. Outbox queues an export pack; live write needs the partner API flag. Never shows Synced without an adapter ack.',
     },
     {
       anahtar: 'genie',
       ad: 'Genie sync',
       durum: 'partner-api',
-      aciklama: 'Roadmap after Best Practice. Partner API required. Not connected.',
+      aciklama: 'Same vault + outbox as Best Practice. Partner API required for a live send.',
     },
     {
       anahtar: 'gentu',
       ad: 'Gentu sync',
       durum: 'yol-haritasi',
-      aciklama: 'On the specialist write-back roadmap. Not connected.',
+      aciklama: 'Vault + outbox ready; specialist write-back adapter still on the roadmap.',
     },
   ],
-  uyari: 'Notya does not silently sync notes into another product. Until a partner API is live, the honest path is the export pack on the approved note.',
+  uyari: 'Notya does not silently sync notes into another product. Until a partner API acknowledges a send, the honest path is the export pack — or a queued row that stays “prepared”, never “Synced”.',
+  baglantiBaslik: 'Partner credentials',
+  baglantiAciklama: 'Store a practice-system API key encrypted on this deployment. The browser never sees the secret again. Saving a key does not mean Synced.',
+  baglantiKaydet: 'Save credentials',
+  baglantiKaydedildi: 'Saved. Status: waiting for partner API — not Synced.',
+  baglantiSil: 'Remove',
+  kuyrukBaslik: 'Write-back queue',
+  kuyrukAciklama: 'Queue an approved visit for Best Practice / Genie / Gentu. Without a live partner adapter the row stays prepared (PARTNER_YOK) — never marked sent.',
+  kuyrukEkle: 'Queue this visit',
+  kuyrukBekliyor: 'Prepared — partner API not live',
 }

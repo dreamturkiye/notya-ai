@@ -325,6 +325,9 @@ export type MektupUzantiMetni = {
   onayliDegil: string
   bos: string
   uyari: string
+  onayla: string
+  onaylandi: string
+  onayBekliyor: string
 }
 
 /** AU-GAP-CLOSE-01 — MBS suggestion card copy. */
@@ -339,6 +342,9 @@ export type MbsOneriUzantiMetni = {
   yazilamadi: string
   uyari: string
   kaynak: string
+  onayla: string
+  onaylandi: string
+  onayBekliyor: string
 }
 
 /** AU-GAP-CLOSE-01 — PMS export / write-back roadmap on Settings › Integrations. */
@@ -349,8 +355,18 @@ export type PmsEntegrasyonUzanti = {
   exportAciklama: string
   exportDugme: string
   exportIndiriliyor: string
-  kalemler: readonly { anahtar: string; ad: string; durum: 'hazir-export' | 'yol-haritasi' | 'partner-api'; aciklama: string }[]
+  kalemler: readonly { anahtar: string; ad: string; durum: 'hazir-export' | 'yol-haritasi' | 'partner-api' | 'kimlik-kayitli'; aciklama: string }[]
   uyari: string
+  /** AU-GAP-CLOSE-02 — save partner credentials (encrypted); never shows Synced. */
+  baglantiBaslik?: string
+  baglantiAciklama?: string
+  baglantiKaydet?: string
+  baglantiKaydedildi?: string
+  baglantiSil?: string
+  kuyrukBaslik?: string
+  kuyrukAciklama?: string
+  kuyrukEkle?: string
+  kuyrukBekliyor?: string
 }
 
 export type UlkeUzantisi = {
