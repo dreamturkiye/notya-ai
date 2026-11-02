@@ -55,6 +55,7 @@ export function muayeneHataMetni(m: UygulamaMetni, kod: string | null): string |
     RIZA_GEREKLI: v.rizaGerekli, KISA_KAYIT: v.kisaKayit, SES_OKUNAMADI: v.sesOkunamadi, LIMIT: v.limit, HAZIR_DEGIL: v.hazirDegil,
     NOT_FOUND: m.hasta.bulunamadi, MIKROFON: v.mikrofonYok, BAGLANTI: m.kabuk.baglanti, NOT_YAZILAMADI: v.notYazilamadi,
     SES_BUYUK: v.sesBuyuk, SES_TUR: v.sesTur,
+    EKRAN_YOK: v.ekranYakalaYok, EKRAN_SES_YOK: v.ekranSesYok,
   }
   return harita[kod] ?? m.kabuk.hata
 }
@@ -76,7 +77,7 @@ export function konusmaDiliAdi(m: UygulamaMetni, k: KonusmaOzeti | null): string
 const formAcik = (): boolean => ozellikAcik('hastaPortali') && ozellikAcik('hastaFormu')
 
 // Türkiye's timer form (m:ss), so the recording card reads the same.
-const sureYaz = (sn: number) => `${Math.floor(sn / 60)}:${String(sn % 60).padStart(2, '0')}`
+const sureYaz = (sn: number) => `${String(Math.floor(sn / 60)).padStart(2, '0')}:${String(sn % 60).padStart(2, '0')}`
 
 // ───────────────────────── choose the patient ─────────────────────────
 
@@ -120,7 +121,7 @@ export type KayitDurumu = 'hazir' | 'kayit' | 'yukleniyor' | 'isleniyor'
 
 const SES_AZAMI = 25 * 1024 * 1024
 
-export function KayitGorunumu({ m, hasta, sablon, riza, setRiza, durum, sure, hataKodu, baslat, durdur, vazgec, rol, randevu, dosyaSec, children }: {
+export function KayitGorunumu({ m, hasta, sablon, riza, setRiza, durum, sure, hataKodu, baslat, durdur, vazgec, rol, randevu, dosyaSec, ekranYakala, metinGonder, children }: {
   /** Under the card, inside the page (the intake form the patient wrote). */
   children?: React.ReactNode
   /** NOTYA-UZ-RANDEVU-01: the appointment this visit is started from, if any — shown, and where "back" leads. */
@@ -130,10 +131,15 @@ export function KayitGorunumu({ m, hasta, sablon, riza, setRiza, durum, sure, ha
   baslat: () => void; durdur: () => void; vazgec: () => void
   /** An audio file the doctor already has. Same consent and the same upload as a recording just made. */
   dosyaSec?: (dosya: File) => void
+  /** AU-GAP-CLOSE telehealth: capture tab/window audio (getDisplayMedia) → same upload path. */
+  ekranYakala?: () => void
+  /** Paste / type a ready transcript → POST metin (no STT). */
+  metinGonder?: (metin: string) => void
   /** NOTYA-UZ-BRANSLAR-01: the account's role — names the assistant that will prepare the note. No role = the neutral assistant. */
   rol?: string | null
 }) {
   const v = m.muayene
+  const [yapistirilan, setYapistirilan] = useState('')
   const geriHref = randevu ? takvimYolu({ randevu: randevu.id }) : `${YOL.hasta}?id=${hasta.id}`
   const hata = muayeneHataMetni(m, hataKodu)
   const gizliBaslik = (
@@ -166,12 +172,53 @@ export function KayitGorunumu({ m, hasta, sablon, riza, setRiza, durum, sure, ha
           <Hata>{hata}</Hata>
           <SeansBaslatDugmesi onClick={baslat} disabled={!riza}>{'\u{1F399}\uFE0F'} {v.kayitBaslat}</SeansBaslatDugmesi>
           {riza ? null : <p className="uza-ipucu" id="uza-riza-ipucu" style={{ textAlign: 'center' }}>{v.rizaGerekli}</p>}
-          {dosyaSec ? (
+          {dosyaSec || ekranYakala || metinGonder ? (
             <div data-alan="ses-dosyasi" data-yazdirma-gizle>
               <SeansAyirac>{v.yada}</SeansAyirac>
-              <SeansYuklemeKutusu id="uza-ses-dosyasi" etiket={v.sesDosyasi} accept="audio/*" disabled={!riza || durum !== 'hazir'} onDosya={dosyaSec} />
-              <p className="uza-ipucu" style={{ textAlign: 'center' }}>{v.sesDosyasiIzoh}</p>
-              {/* AU-GAP-CLOSE-01: pack tip for telehealth / dictate upload path (no desktop capture claim). */}
+              {dosyaSec ? (
+                <>
+                  <SeansYuklemeKutusu id="uza-ses-dosyasi" etiket={v.sesDosyasi} accept="audio/*" disabled={!riza || durum !== 'hazir'} onDosya={dosyaSec} />
+                  <p className="uza-ipucu" style={{ textAlign: 'center' }}>{v.sesDosyasiIzoh}</p>
+                </>
+              ) : null}
+              {ekranYakala ? (
+                <div data-alan="ekran-yakala" style={{ marginTop: dosyaSec ? 10 : 0 }}>
+                  <button
+                    type="button"
+                    data-alan="ekran-yakala-dugme"
+                    disabled={!riza || durum !== 'hazir'}
+                    onClick={ekranYakala}
+                    style={{ display: 'block', width: '100%', padding: 13, background: !riza ? '#e8ede6' : '#F6F0E4', color: '#3b2e24', border: '1.5px dashed #c9bfa9', borderRadius: 12, fontSize: 14, fontWeight: 600, cursor: !riza ? 'not-allowed' : 'pointer', textAlign: 'center', boxSizing: 'border-box', opacity: !riza ? 0.6 : 1 }}
+                  >
+                    {'\u{1F5A5}\uFE0F'} {v.ekranYakala}
+                  </button>
+                  <p className="uza-ipucu" style={{ textAlign: 'center' }}>{v.ekranYakalaIzoh}</p>
+                </div>
+              ) : null}
+              {metinGonder ? (
+                <div data-alan="metin-yapistir" style={{ marginTop: 10 }}>
+                  <SeansEtiketi>{v.metinYapistir}</SeansEtiketi>
+                  <textarea
+                    id="uza-metin-yapistir"
+                    value={yapistirilan}
+                    onChange={(e) => setYapistirilan(e.target.value)}
+                    disabled={!riza || durum !== 'hazir'}
+                    rows={5}
+                    style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px', border: '1.5px solid #e5ddd0', borderRadius: 10, fontSize: 14, color: '#3b2e24', background: '#fff', resize: 'vertical', lineHeight: 1.5, fontFamily: 'inherit' }}
+                  />
+                  <p className="uza-ipucu" style={{ textAlign: 'center' }}>{v.metinYapistirIzoh}</p>
+                  <button
+                    type="button"
+                    data-alan="metin-gonder"
+                    disabled={!riza || durum !== 'hazir' || !yapistirilan.trim()}
+                    onClick={() => metinGonder(yapistirilan)}
+                    style={{ display: 'block', width: '100%', marginTop: 8, padding: 12, background: !riza || !yapistirilan.trim() ? '#8b9a8f' : '#2f4334', color: '#fff', border: 'none', borderRadius: 12, fontSize: 14, fontWeight: 600, cursor: !riza || !yapistirilan.trim() ? 'not-allowed' : 'pointer' }}
+                  >
+                    {v.metinGonder}
+                  </button>
+                </div>
+              ) : null}
+              {/* Pack tip (AU telehealth copy); other packs omit uzanti.telehealthIpucu. */}
               {ulkePaketi().uzanti?.telehealthIpucu ? (
                 <p className="uza-ipucu" style={{ textAlign: 'center' }} data-alan="telehealth-ipucu">{ulkePaketi().uzanti?.telehealthIpucu}</p>
               ) : null}
@@ -245,23 +292,53 @@ function YeniMuayene({ u, hastaId, randevuId }: { u: ReturnType<typeof useUygula
   // Leaving the page stops the microphone.
   useEffect(() => () => { try { if (kayitci.current && kayitci.current.state !== 'inactive') { kayitci.current.onstop = null; kayitci.current.stop() } } catch { /* already stopped */ } birak() }, [])
 
+  function kayitciBaslat(stream: MediaStream, hataKodu: string) {
+    try {
+      const tur = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4'].find((t) => typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported(t))
+      const k = new MediaRecorder(stream, tur ? { mimeType: tur } : undefined)
+      parcalar.current = []
+      k.ondataavailable = (e) => { if (e.data.size) parcalar.current.push(e.data) }
+      k.start(1000)
+      kayitci.current = k
+    } catch { birak(); setHataKodu(hataKodu); return false }
+    setSure(0)
+    sayac.current = setInterval(() => setSure((s) => s + 1), 1000)
+    setDurum('kayit')
+    return true
+  }
+
   async function baslat() {
     if (!riza) { setHataKodu('RIZA_GEREKLI'); return }
     setHataKodu(null)
     try {
       akis.current = await navigator.mediaDevices.getUserMedia({ audio: true })
     } catch { setHataKodu('MIKROFON'); return }
+    kayitciBaslat(akis.current, 'MIKROFON')
+  }
+
+  /** Telehealth: capture tab/window audio via getDisplayMedia; video track kept alive so browsers keep feeding audio. */
+  async function ekranYakala() {
+    if (!riza) { setHataKodu('RIZA_GEREKLI'); return }
+    if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getDisplayMedia) { setHataKodu('EKRAN_YOK'); return }
+    setHataKodu(null)
+    let ham: MediaStream
     try {
-      const tur = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4'].find((t) => typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported(t))
-      const k = new MediaRecorder(akis.current, tur ? { mimeType: tur } : undefined)
-      parcalar.current = []
-      k.ondataavailable = (e) => { if (e.data.size) parcalar.current.push(e.data) }
-      k.start(1000)
-      kayitci.current = k
-    } catch { birak(); setHataKodu('MIKROFON'); return }
-    setSure(0)
-    sayac.current = setInterval(() => setSure((s) => s + 1), 1000)
-    setDurum('kayit')
+      ham = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true })
+    } catch { setHataKodu('EKRAN_YOK'); return }
+    const audio = ham.getAudioTracks()
+    if (!audio.length) {
+      ham.getTracks().forEach((t) => t.stop())
+      setHataKodu('EKRAN_SES_YOK')
+      return
+    }
+    // Keep video tracks running (do not record them) — stopping them early can mute tab audio in Chromium.
+    akis.current = ham
+    const kayitAkisi = new MediaStream(audio)
+    const bitti = () => { if (kayitci.current && kayitci.current.state !== 'inactive') durdur() }
+    ham.getTracks().forEach((t) => { t.addEventListener('ended', bitti) })
+    if (!kayitciBaslat(kayitAkisi, 'EKRAN_YOK')) {
+      ham.getTracks().forEach((t) => t.stop())
+    }
   }
 
   function vazgec() {
@@ -288,6 +365,20 @@ function YeniMuayene({ u, hastaId, randevuId }: { u: ReturnType<typeof useUygula
     setHataKodu(null)
     setDurum('yukleniyor')
     void gonder(dosya)
+  }
+
+  async function metinGonder(metin: string) {
+    if (!riza) { setHataKodu('RIZA_GEREKLI'); return }
+    const temiz = metin.trim()
+    if (!temiz) { setHataKodu('KISA_KAYIT'); return }
+    setHataKodu(null)
+    setDurum('isleniyor')
+    const geri = (kod: string) => { setHataKodu(kod); setDurum('hazir') }
+    try {
+      const r = await api('/api/ulke/muayene', { method: 'POST', govde: { metin: temiz, hastaId, sablon, riza: true, ...(randevu ? { randevuId: randevu.id } : {}) } })
+      if (!r.ok || !r.j.seansId) { geri(typeof r.j.code === 'string' ? r.j.code : 'BASARISIZ'); return }
+      window.location.assign(`${YOL.muayene}?seans=${r.j.seansId}${ozellikAcik('goruntuDegerlendirme') ? '&ekler=1' : ''}`)
+    } catch { geri('BAGLANTI') }
   }
 
   async function gonder(ses: Blob) {
@@ -323,7 +414,7 @@ function YeniMuayene({ u, hastaId, randevuId }: { u: ReturnType<typeof useUygula
   }
   return (
     <>
-      <KayitGorunumu m={u.m} hasta={hasta} sablon={sablon} randevu={randevu} riza={riza} setRiza={(r) => { setRiza(r); setHataKodu(null) }} durum={durum} sure={sure} hataKodu={hataKodu} baslat={baslat} durdur={durdur} vazgec={vazgec} rol={u.hesap?.rol} dosyaSec={dosyaSec}>
+      <KayitGorunumu m={u.m} hasta={hasta} sablon={sablon} randevu={randevu} riza={riza} setRiza={(r) => { setRiza(r); setHataKodu(null) }} durum={durum} sure={sure} hataKodu={hataKodu} baslat={baslat} durdur={durdur} vazgec={vazgec} rol={u.hesap?.rol} dosyaSec={dosyaSec} ekranYakala={ekranYakala} metinGonder={metinGonder}>
         {/* NOTYA-ULKE-INTAKE-01: what the patient wrote before the visit, to read while it is recorded. Never sent to the model. */}
         {formAcik() ? <HastaFormuKarti u={u} hastaId={hasta.id} mod="muayene" /> : null}
         {/* AU gold depth / pack muayeneMotorlari — per-role visit prompts when the pack declares them. */}

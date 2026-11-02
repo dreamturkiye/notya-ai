@@ -33,11 +33,23 @@ import { hekimRolunuOku, uygulamaRolleri } from './rol'
 import { sesYoluGecerli, ulkeTablosu } from './tablolar'
 
 export type MuayeneGirdisi = {
-  yol: string; hastaId: string; sablon: string; riza: boolean
+  /**
+   * Path of an uploaded recording in the caller's own folder — XOR with `metin`.
+   * Absent/empty when the doctor pastes a transcript (AU-GAP-CLOSE telehealth / dictate text path).
+   */
+  yol?: string
+  /**
+   * Pasted / typed visit transcript — XOR with `yol`. Same consent and approve gate; no speech recognition.
+   * Cap enforced by the route (`metinAlani`); minimum length is the pack's `asgariKarakter`.
+   */
+  metin?: string
+  hastaId: string; sablon: string; riza: boolean
   /** NOTYA-UZ-RANDEVU-01: the appointment this visit is started from. Absent = a visit without an appointment. */
   randevuId?: string | null
 }
 export type MuayeneRetKodu = 'RIZA_GEREKLI' | 'GECERSIZ' | 'NOT_FOUND' | 'HAZIR_DEGIL' | 'LIMIT' | 'SES_OKUNAMADI' | 'KISA_KAYIT' | 'BASARISIZ' | 'ONAYLI'
+/** Marker stored on `muayene_dil_kaydi.stt_model` when the visit came from a pasted transcript (no STT). */
+export const MUAYENE_METIN_KAYNAK = 'paste-transcript' as const
 export type MuayeneSonucu =
   | { tamam: true; seansId: string; ikinciGecis: boolean; dusukGuven: boolean; /** true = the visit is linked to the appointment it was started from. */ randevuBagli: boolean }
   | { tamam: false; kod: MuayeneRetKodu; alan?: string }
@@ -79,12 +91,22 @@ export async function hekimDilleri(supabase: SupabaseClient, doktorId: string): 
 export async function muayeneKaydet(supabase: SupabaseClient, doktorId: string, g: MuayeneGirdisi): Promise<MuayeneSonucu> {
   const klinik = AKTIF_KLINIK
   if (!klinik) return { tamam: false, kod: 'HAZIR_DEGIL' }
+
+  const yol = typeof g.yol === 'string' ? g.yol.trim() : ''
+  const metin = typeof g.metin === 'string' ? g.metin.trim() : ''
+  // Exactly one of recording path or pasted transcript. Both / neither → invalid.
+  if ((yol ? 1 : 0) + (metin ? 1 : 0) !== 1) return { tamam: false, kod: 'GECERSIZ', alan: yol && metin ? 'yol' : metin ? 'metin' : 'yol' }
+
+  const pasteYolu = !yol && !!metin
   // A path that is not in the caller's own folder is refused as text: storage is not touched for it at all.
-  if (!sesYoluGecerli(doktorId, g.yol)) return { tamam: false, kod: 'GECERSIZ', alan: 'yol' }
-  const sesiSil = async () => { try { await supabase.storage.from(MUAYENE_SES_KOVASI).remove([g.yol]) } catch { /* nothing more to do */ } }
+  if (!pasteYolu && !sesYoluGecerli(doktorId, yol)) return { tamam: false, kod: 'GECERSIZ', alan: 'yol' }
+  const sesiSil = async () => {
+    if (pasteYolu || !yol) return
+    try { await supabase.storage.from(MUAYENE_SES_KOVASI).remove([yol]) } catch { /* nothing more to do */ }
+  }
 
   try {
-    // Consent first: without the tick-box the recording is not read, only removed.
+    // Consent first: without the tick-box the recording / paste is not accepted.
     if (g.riza !== true) return { tamam: false, kod: 'RIZA_GEREKLI' }
     if (!klinik.sablonlar.includes(g.sablon)) return { tamam: false, kod: 'GECERSIZ', alan: 'sablon' }
     // NOTYA-UZ-BRANSLAR-01 — where the country has roles, an account writes with ITS OWN role's template or with the
@@ -97,21 +119,57 @@ export async function muayeneKaydet(supabase: SupabaseClient, doktorId: string, 
     // NOTYA-UZ-RANDEVU-01 — ISOLATION: an appointment id from the request must be this doctor's AND this patient's
     // before the recording is read. Another doctor's appointment answers exactly like one that does not exist.
     if (g.randevuId && !(await randevuMuayeneyeUygun(supabase, doktorId, g.randevuId, hasta.id))) return { tamam: false, kod: 'NOT_FOUND' }
-    if (!konusmaTanimaHazir()) return { tamam: false, kod: 'HAZIR_DEGIL' }
     if (!(await muayeneKotasiKullan(supabase, doktorId, klinik.gunlukMuayeneLimiti))) return { tamam: false, kod: 'LIMIT' }
 
-    const { data: ses, error: sesHatasi } = await supabase.storage.from(MUAYENE_SES_KOVASI).download(g.yol)
-    if (sesHatasi || !ses) return { tamam: false, kod: 'SES_OKUNAMADI' }
-
     const { notDili } = await hekimDilleri(supabase, doktorId)
-    const t = await konusmayiTani(ses, notDili)
-    if (t.durum === 'hazir-degil') return { tamam: false, kod: 'HAZIR_DEGIL' }
-    if (t.durum === 'okunamadi') return { tamam: false, kod: 'SES_OKUNAMADI' }
-    // NOTYA-ULKE-PORTAL-01 — usage: every pass the provider answered, with the seconds it reported. Recorded here,
-    // before anything can refuse the visit: a recording that turns out too short was transcribed all the same.
-    await kullanimEkle(supabase, doktorId, 'konusma-ilk', { saniye: t.gecisSureleri.ilk })
-    if (t.gecisSureleri.ikinci !== undefined) await kullanimEkle(supabase, doktorId, 'konusma-ikinci', { saniye: t.gecisSureleri.ikinci })
-    if (t.secilen.metin.length < klinik.konusma.asgariKarakter) return { tamam: false, kod: 'KISA_KAYIT' }
+    let transcript = metin
+    let ikinciGecis = false
+    let dusukGuven = false
+    let dilKaydi: Record<string, unknown> = {
+      stt_model: MUAYENE_METIN_KAYNAK,
+      taninan_dil: null,
+      dil_olasiligi: null,
+      ortalama_log_olasilik: null,
+      ikinci_gecis: false,
+      ikinci_gecis_dili: null,
+      secilen_gecis: 1,
+      gecis_sayisi: 0,
+      dusuk_guven: false,
+      ses_suresi_sn: null,
+    }
+    let sureSn: number | undefined
+
+    if (!pasteYolu) {
+      if (!konusmaTanimaHazir()) return { tamam: false, kod: 'HAZIR_DEGIL' }
+      const { data: ses, error: sesHatasi } = await supabase.storage.from(MUAYENE_SES_KOVASI).download(yol)
+      if (sesHatasi || !ses) return { tamam: false, kod: 'SES_OKUNAMADI' }
+
+      const t = await konusmayiTani(ses, notDili)
+      if (t.durum === 'hazir-degil') return { tamam: false, kod: 'HAZIR_DEGIL' }
+      if (t.durum === 'okunamadi') return { tamam: false, kod: 'SES_OKUNAMADI' }
+      // NOTYA-ULKE-PORTAL-01 — usage: every pass the provider answered, with the seconds it reported. Recorded here,
+      // before anything can refuse the visit: a recording that turns out too short was transcribed all the same.
+      await kullanimEkle(supabase, doktorId, 'konusma-ilk', { saniye: t.gecisSureleri.ilk })
+      if (t.gecisSureleri.ikinci !== undefined) await kullanimEkle(supabase, doktorId, 'konusma-ikinci', { saniye: t.gecisSureleri.ikinci })
+      transcript = t.secilen.metin
+      ikinciGecis = t.ikinciGecis
+      dusukGuven = t.dusukGuven
+      sureSn = t.secilen.sureSn
+      dilKaydi = {
+        stt_model: klinik.konusma.model,
+        taninan_dil: t.taninanDil || null,
+        dil_olasiligi: t.dilOlasiligi,
+        ortalama_log_olasilik: t.secilen.ortalamaLogOlasilik,
+        ikinci_gecis: t.ikinciGecis,
+        ikinci_gecis_dili: t.ikinciGecisDili,
+        secilen_gecis: t.secilenGecis,
+        gecis_sayisi: t.gecisSayisi,
+        dusuk_guven: t.dusukGuven,
+        ses_suresi_sn: t.secilen.sureSn,
+      }
+    }
+
+    if (transcript.length < klinik.konusma.asgariKarakter) return { tamam: false, kod: 'KISA_KAYIT' }
 
     const rizaAni = new Date().toISOString()
     const { data: seans, error: seansHatasi } = await ulkeTablosu(supabase, 'ulke_muayeneler')
@@ -120,12 +178,12 @@ export async function muayeneKaydet(supabase: SupabaseClient, doktorId: string, 
         patient_id: hasta.id,
         patient_consent_given: true,
         patient_consent_at: rizaAni,
-        ...(t.secilen.sureSn ? { duration_seconds: Math.round(t.secilen.sureSn) } : {}),
+        ...(sureSn ? { duration_seconds: Math.round(sureSn) } : {}),
         // Internal identifiers, never shown: the template key, and the kind of visit.
         specialty: g.sablon,
         session_type: 'muayene',
         status: 'completed',
-        transcript_cleaned: t.secilen.metin,
+        transcript_cleaned: transcript,
       })
       .select('id')
       .single()
@@ -138,16 +196,7 @@ export async function muayeneKaydet(supabase: SupabaseClient, doktorId: string, 
       patient_id: hasta.id,
       riza_at: rizaAni,
       riza_surumu: klinik.riza.surum,
-      stt_model: klinik.konusma.model,
-      taninan_dil: t.taninanDil || null,
-      dil_olasiligi: t.dilOlasiligi,
-      ortalama_log_olasilik: t.secilen.ortalamaLogOlasilik,
-      ikinci_gecis: t.ikinciGecis,
-      ikinci_gecis_dili: t.ikinciGecisDili,
-      secilen_gecis: t.secilenGecis,
-      gecis_sayisi: t.gecisSayisi,
-      dusuk_guven: t.dusukGuven,
-      ses_suresi_sn: t.secilen.sureSn,
+      ...dilKaydi,
       not_dili: notDili,
       sablon: g.sablon,
     })
@@ -159,7 +208,7 @@ export async function muayeneKaydet(supabase: SupabaseClient, doktorId: string, 
     // The visit is stored; now the appointment points at it. If the appointment was cancelled or finished meanwhile
     // the visit is kept without the link — a recording is never thrown away over its appointment.
     const randevuBagli = g.randevuId ? await randevuyuMuayeneyeBagla(supabase, doktorId, g.randevuId, hasta.id, seansId) : false
-    return { tamam: true, seansId, ikinciGecis: t.ikinciGecis, dusukGuven: t.dusukGuven, randevuBagli }
+    return { tamam: true, seansId, ikinciGecis, dusukGuven, randevuBagli }
   } finally {
     await sesiSil()
   }

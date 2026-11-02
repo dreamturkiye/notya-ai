@@ -266,6 +266,17 @@ export type UygulamaMetni = {
     readonly yada: string
     readonly sesBuyuk: string
     readonly sesTur: string
+    /** AU-GAP-CLOSE telehealth: capture tab/window audio via getDisplayMedia. */
+    readonly ekranYakala: string
+    readonly ekranYakalaIzoh: string
+    /** Browser refused screen capture, or the API is missing. */
+    readonly ekranYakalaYok: string
+    /** Shared tab/window had no audio track (doctor must tick “share tab audio”). */
+    readonly ekranSesYok: string
+    /** Paste / type a ready transcript (dictate, call notes) — same consent, no STT. */
+    readonly metinYapistir: string
+    readonly metinYapistirIzoh: string
+    readonly metinGonder: string
   }
   readonly not: {
     readonly baslik: string

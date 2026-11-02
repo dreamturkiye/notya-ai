@@ -340,6 +340,13 @@ export const EN_UYGULAMA_TEMEL: Temel = {
     yada: 'or',
     sesBuyuk: 'The file is too large. The limit is 25 MB.',
     sesTur: 'Choose an audio file.',
+    ekranYakala: 'Capture tab or window audio',
+    ekranYakalaIzoh: 'Share the telehealth call’s browser tab or meeting window. Tick “Share tab audio” when the browser offers it. Same consent applies.',
+    ekranYakalaYok: 'Screen capture is not available, or permission was denied. Upload a recording or paste a transcript instead.',
+    ekranSesYok: 'No audio came with that share. Choose a browser tab and tick “Share tab audio”, or upload a recording.',
+    metinYapistir: 'Paste or type a transcript',
+    metinYapistirIzoh: 'If you already have the words of the visit (dictation or call notes), paste them here. Same consent applies; you still approve the note.',
+    metinGonder: 'Prepare note from this text',
   },
   not: {
     baslik: 'Visit note',

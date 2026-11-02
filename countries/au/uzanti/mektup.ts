@@ -42,7 +42,7 @@ export const AU_MBS_ONERI: MbsOneriUzantiMetni = {
 
 /** Shown under “Upload an existing recording” on the visit screen — telehealth / dictate path. */
 export const AU_TELEHEALTH_IPUCU =
-  'Telehealth or dictate: upload the call recording or a dictated audio file (same consent). Notya transcribes it and drafts the note for you to approve — same path as an in-room visit. Desktop screen capture is not built yet; bring the audio.'
+  'Telehealth or dictate: upload the call recording, capture the call’s tab/window audio, or paste a transcript (same consent). Notya drafts the note for you to approve — same path as an in-room visit.'
 
 export const AU_PMS_ENTEGRASYON: PmsEntegrasyonUzanti = {
   baslik: 'Practice systems',

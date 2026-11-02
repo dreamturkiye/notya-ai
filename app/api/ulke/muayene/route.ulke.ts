@@ -1,19 +1,20 @@
 /**
  * NOTYA-UZ-MUAYENE-01 — /api/ulke/muayene: a visit of the caller.
  *
- *   POST { yol, hastaId, sablon, riza: true, randevuId? }
- *        The recording at `yol` (uploaded by the browser to the caller's own folder of the recordings bucket) is
- *        transcribed and removed; the visit is stored with its transcript and its language record.
+ *   POST { yol?, metin?, hastaId, sablon, riza: true, randevuId? }
+ *        Exactly one of `yol` or `metin`:
+ *        - `yol`: recording in the caller's own folder of the recordings bucket — transcribed and removed.
+ *        - `metin`: pasted / typed visit transcript (telehealth dictate / call notes) — no STT; same consent gate.
  *        200 { seansId, ikinciGecis, dusukGuven, randevuBagli }
  *        `randevuId` (NOTYA-UZ-RANDEVU-01): the appointment the visit is started from — it must be the caller's and for
  *        this patient (anything else: 404, before the recording is read); the stored visit is then linked to it.
  *        400 { code: 'RIZA_GEREKLI' }           the recording-consent box was not ticked
- *        400 { code: 'GECERSIZ', alan }         a path outside the caller's folder, or an unknown template
+ *        400 { code: 'GECERSIZ', alan }         a path outside the caller's folder, both/neither yol+metin, or an unknown template
  *        404 { code: 'NOT_FOUND' }              no such patient FOR THIS DOCTOR (another doctor's patient: the same)
- *        422 { code: 'KISA_KAYIT' }             not enough speech in the recording
+ *        422 { code: 'KISA_KAYIT' }             not enough speech / text
  *        429 { code: 'LIMIT' }                  the day's ceiling is reached
  *        502 { code: 'SES_OKUNAMADI' }          the recording could not be read or transcribed
- *        503 { code: 'HAZIR_DEGIL' }            speech recognition is not configured in this deployment
+ *        503 { code: 'HAZIR_DEGIL' }            speech recognition is not configured in this deployment (audio path only)
  *
  *   GET ?id=<seansId>
  *        200 { muayene: { seansId, baslangic, sablon, metin, hasta, notId, notDurumu, konusma } }
@@ -44,8 +45,11 @@ export const POST = sinirda('muayene POST', async (req: NextRequest) => {
   if (!oturum) return KOD.oturumYok()
   const g = await govdeOku(req)
   if (!uuidMi(g.hastaId)) return KOD.yok()
+  const yol = metinAlani(g.yol, 200)
+  const metin = metinAlani(g.metin, 120_000)
   const r = await muayeneKaydet(oturum.supabase, oturum.user.id, {
-    yol: metinAlani(g.yol, 200),
+    ...(yol ? { yol } : {}),
+    ...(metin ? { metin } : {}),
     hastaId: g.hastaId,
     sablon: metinAlani(g.sablon, 40),
     riza: g.riza === true,

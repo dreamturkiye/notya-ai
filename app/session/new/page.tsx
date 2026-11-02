@@ -158,6 +158,13 @@ function NewSessionInner() {
   const [onayDurumu, setOnayDurumu] = useState<"beklemede"|"gonderiliyor"|"onaylandi">("beklemede")
   const [onayHata, setOnayHata] = useState("")
   const [sesYukleniyor, setSesYukleniyor] = useState(false)
+  // AU-GAP-CLOSE telehealth (core): tab/window capture on the TR visit setup — same upload path as file pick.
+  const [ekranKayit, setEkranKayit] = useState(false)
+  const [ekranSure, setEkranSure] = useState(0)
+  const ekranKayitciRef = useRef<MediaRecorder | null>(null)
+  const ekranAkisRef = useRef<MediaStream | null>(null)
+  const ekranParcalarRef = useRef<Blob[]>([])
+  const ekranSayacRef = useRef<ReturnType<typeof setInterval> | null>(null)
   // NOTYA-NOT-HIZ-01: istek sürerken ikinci basış (çift tık, state yenilenmeden gelen tık) aynı notu ikinci kez üretmesin.
   // Yalnız istemci korumasıdır — sunucu tarafında tekilleştirme yok (meşru ikinci kayıt düşmesin).
   const notIstegiSuruyorRef = useRef(false)
@@ -188,6 +195,71 @@ function NewSessionInner() {
   const istenenKayitRef = useRef(false)
   const yenidenBaslamaRef = useRef<number[]>([])
   const uyariCalindiRef = useRef(false)
+
+  function ekranBirak() {
+    if (ekranSayacRef.current) { clearInterval(ekranSayacRef.current); ekranSayacRef.current = null }
+    ekranAkisRef.current?.getTracks().forEach((t) => t.stop())
+    ekranAkisRef.current = null
+    setEkranKayit(false)
+    setEkranSure(0)
+  }
+
+  useEffect(() => () => {
+    try { if (ekranKayitciRef.current && ekranKayitciRef.current.state !== 'inactive') { ekranKayitciRef.current.onstop = null; ekranKayitciRef.current.stop() } } catch { /* already stopped */ }
+    ekranBirak()
+  }, [])
+
+  async function ekranYakalaBaslat() {
+    setSesHata("")
+    if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getDisplayMedia) {
+      setSesHata("Ekran yakalama bu tarayıcıda yok. Ses dosyası yükleyin veya aşağıda metin yazın.")
+      return
+    }
+    let ham: MediaStream
+    try {
+      ham = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true })
+    } catch {
+      setSesHata("Ekran paylaşımı reddedildi veya iptal edildi.")
+      return
+    }
+    const audio = ham.getAudioTracks()
+    if (!audio.length) {
+      ham.getTracks().forEach((t) => t.stop())
+      setSesHata("Paylaşımda ses yok. Sekme seçip «Sekme sesini paylaş»ı işaretleyin, veya ses dosyası yükleyin.")
+      return
+    }
+    ekranAkisRef.current = ham
+    ekranParcalarRef.current = []
+    try {
+      const tur = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4'].find((t) => typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported(t))
+      const k = new MediaRecorder(new MediaStream(audio), tur ? { mimeType: tur } : undefined)
+      k.ondataavailable = (e) => { if (e.data.size) ekranParcalarRef.current.push(e.data) }
+      k.onstop = () => {
+        const blob = new Blob(ekranParcalarRef.current, { type: k.mimeType || 'audio/webm' })
+        ekranBirak()
+        if (blob.size < 1024) { setSesHata("Yakalama çok kısa veya boş. Tekrar deneyin."); return }
+        const uzanti = (k.mimeType || '').includes('mp4') ? 'm4a' : 'webm'
+        void sesDosyasiIsle(new File([blob], `telehealth-yakalama.${uzanti}`, { type: blob.type || 'audio/webm' }))
+      }
+      ham.getTracks().forEach((t) => t.addEventListener('ended', () => {
+        if (ekranKayitciRef.current && ekranKayitciRef.current.state !== 'inactive') ekranKayitciRef.current.stop()
+      }))
+      k.start(1000)
+      ekranKayitciRef.current = k
+      setEkranSure(0)
+      ekranSayacRef.current = setInterval(() => setEkranSure((s) => s + 1), 1000)
+      setEkranKayit(true)
+    } catch {
+      ham.getTracks().forEach((t) => t.stop())
+      setSesHata("Ekran sesi kaydedilemedi. Ses dosyası yükleyin.")
+    }
+  }
+
+  function ekranYakalaDurdur() {
+    const k = ekranKayitciRef.current
+    if (!k || k.state === 'inactive') { ekranBirak(); return }
+    k.stop()
+  }
 
   // NOTYA-SES-01: hazır ses dosyasını doğrudan Storage'a yükle (Vercel gövde limiti aşılır),
   // sunucu transkript + SOAP üretir, not İnceleme kuyruğuna düşer. Ham ses sunucuda silinir.
@@ -541,11 +613,31 @@ function NewSessionInner() {
             {/* NOTYA-SES-01: hazır ses kaydı yükle — telefonda kaydedilen ya da kayıt başlatılmayı
                 unutulan muayeneler için aynı Ayşe Kaya SOAP motoru. Ses, transkript sonrası silinir. */}
             <div style={S({textAlign:"center",margin:"14px 0 6px",color:"#8b7d70",fontSize:"12px"})}>ya da</div>
-            <label style={S({display:"block",width:"100%",padding:"13px",background:sesYukleniyor?"#e8ede6":"#F6F0E4",color:"#3b2e24",border:"1.5px dashed #c9bfa9",borderRadius:"12px",fontSize:"14px",fontWeight:"600",cursor:sesYukleniyor?"default":"pointer",textAlign:"center",boxSizing:"border-box"})}>
+            <label style={S({display:"block",width:"100%",padding:"13px",background:sesYukleniyor||ekranKayit?"#e8ede6":"#F6F0E4",color:"#3b2e24",border:"1.5px dashed #c9bfa9",borderRadius:"12px",fontSize:"14px",fontWeight:"600",cursor:sesYukleniyor||ekranKayit?"default":"pointer",textAlign:"center",boxSizing:"border-box"})}>
               {sesYukleniyor ? "⏳ Ses çözümlüyor ve not üretiliyor… birkaç dakika sürebilir, sayfayı kapatmayın" : "📁 Ses dosyası yükle (m4a / mp3 / wav)"}
-              <input type="file" accept="audio/*,.m4a,.mp3,.wav,.aac,.ogg" style={{display:"none"}} disabled={sesYukleniyor}
+              <input type="file" accept="audio/*,.m4a,.mp3,.wav,.aac,.ogg" style={{display:"none"}} disabled={sesYukleniyor||ekranKayit}
                 onChange={(e)=>{const f=e.target.files?.[0]; if(f) sesDosyasiIsle(f); e.target.value=""}} />
             </label>
+            {/* Telehealth / dikte yolu — core (AU-GAP-CLOSE): sekme sesi yakala; dikte metni kayıt adımında. */}
+            <div style={S({marginTop:"10px"})} data-alan="telehealth-yakala">
+              {ekranKayit ? (
+                <div style={S({padding:"12px",background:"#FEE2E2",border:"1px solid #F09595",borderRadius:"12px",textAlign:"center"})}>
+                  <div style={S({fontSize:"13px",color:"#991B1B",fontWeight:600,marginBottom:"8px"})}>● Sekme / pencere sesi kaydediliyor · {Math.floor(ekranSure/60)}:{String(ekranSure%60).padStart(2,"0")}</div>
+                  <button type="button" onClick={ekranYakalaDurdur}
+                    style={S({padding:"10px 16px",background:"#DC2626",color:"#fff",border:"none",borderRadius:"10px",fontSize:"13px",fontWeight:600,cursor:"pointer"})}>
+                    Durdur ve not hazırla
+                  </button>
+                </div>
+              ) : (
+                <button type="button" disabled={sesYukleniyor} onClick={ekranYakalaBaslat}
+                  style={S({display:"block",width:"100%",padding:"13px",background:sesYukleniyor?"#e8ede6":"#F6F0E4",color:"#3b2e24",border:"1.5px dashed #c9bfa9",borderRadius:"12px",fontSize:"14px",fontWeight:600,cursor:sesYukleniyor?"default":"pointer",textAlign:"center",boxSizing:"border-box",opacity:sesYukleniyor?0.6:1})}>
+                  🖥️ Telehealth: sekme / pencere sesini yakala
+                </button>
+              )}
+              <p style={S({textAlign:"center",margin:"8px 0 0",fontSize:"12px",color:"#8b7d70",lineHeight:1.45})} data-alan="telehealth-ipucu">
+                Telehealth veya dikte: görüşme kaydını yükleyin, görüşmenin sekme sesini yakalayın, ya da «Muayeneyi Başlat» ile metin yazın / dikte edin. Aynı onay kapısı geçerlidir.
+              </p>
+            </div>
             {sesHata && <div style={S({marginTop:"8px",color:"#DC2626",fontSize:"13px"})}>{sesHata}</div>}
           </div>
         )}

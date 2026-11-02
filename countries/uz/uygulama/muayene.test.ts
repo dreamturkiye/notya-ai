@@ -431,6 +431,26 @@ describe('Uzbekistan visit: recording → transcript (speech provider is a stand
     assert.deepEqual(vt.tablo('ulke_muayeneler'), []); assert.equal(vt.depo.size, 0)
   })
 
+  it('paste-transcript path: stores visit without STT, refuses short text, refuses yol+metin together', async () => {
+    const { MUAYENE_METIN_KAYNAK } = await import('@/lib/ulke/uygulama/muayeneKaydi')
+    const hasta = await hastaEkle('jeton-a', 'QA Karimova Dilnoza')
+    // Both yol and metin → GECERSIZ (exactly one required).
+    const yol = sesKoy(A)
+    assert.deepEqual(await muayeneYap('jeton-a', { yol, metin: UZ_METIN, hastaId: hasta, sablon: 'genel', riza: true }), { s: 400, j: { code: 'GECERSIZ', alan: 'yol' } })
+    assert.ok(vt.depo.has(`${KOVA}/${yol}`), 'audio must not be removed when the body is refused before read')
+    // Too short → KISA_KAYIT, no STT call.
+    assert.deepEqual(await muayeneYap('jeton-a', { metin: 'qisqa', hastaId: hasta, sablon: 'genel', riza: true }), { s: 422, j: { code: 'KISA_KAYIT' } })
+    assert.equal(stt.cagrilar.length, 0)
+    // Happy path: no speech provider, stt_model marked paste-transcript.
+    const r = await muayeneYap('jeton-a', { metin: UZ_METIN, hastaId: hasta, sablon: 'genel', riza: true })
+    assert.equal(r.s, 200)
+    assert.ok(r.j.seansId)
+    assert.equal(stt.cagrilar.length, 0)
+    assert.equal(vt.tablo('ulke_muayeneler')[0].transcript_cleaned, UZ_METIN)
+    assert.equal(vt.tablo('muayene_dil_kaydi')[0].stt_model, MUAYENE_METIN_KAYNAK)
+    assert.equal(vt.tablo('muayene_dil_kaydi')[0].ikinci_gecis, false)
+  })
+
   it('no session, another country\'s account: "no session", nothing read', async () => {
     for (const jeton of [undefined, 'jeton-olmayan', 'jeton-tr']) {
       const yol = sesKoy(A)
@@ -494,12 +514,17 @@ describe('Uzbekistan visit: screens in the three forms', () => {
 
     it(`${f}: consent blocks recording — the button is disabled until the box is ticked`, () => {
       const m = M.uygulamaMetni(f)
-      const ciz = (riza: boolean, hataKodu: string | null = null) => cerceve(f, React.createElement(Muayene.KayitGorunumu, { m, hasta: HASTA, sablon: 'pediatri', riza, setRiza: bos, durum: 'hazir', sure: 0, hataKodu, baslat: bos, durdur: bos, vazgec: bos }))
+      const ciz = (riza: boolean, hataKodu: string | null = null) => cerceve(f, React.createElement(Muayene.KayitGorunumu, {
+        m, hasta: HASTA, sablon: 'pediatri', riza, setRiza: bos, durum: 'hazir', sure: 0, hataKodu, baslat: bos, durdur: bos, vazgec: bos,
+        dosyaSec: bos as unknown as (d: File) => void, ekranYakala: bos, metinGonder: bos as unknown as (t: string) => void,
+      }))
       const kapali = ciz(false)
       const g = gorunurMetin(kapali)
-      for (const x of [m.muayene.baslik, 'QA Karimova Dilnoza Rustam qizi', m.muayene.sablon, m.muayene.sablonPediatri, m.muayene.riza, m.muayene.kayitBaslat, m.muayene.rizaGerekli]) assert.ok(g.includes(x), x)
+      for (const x of [m.muayene.baslik, 'QA Karimova Dilnoza Rustam qizi', m.muayene.sablon, m.muayene.sablonPediatri, m.muayene.riza, m.muayene.kayitBaslat, m.muayene.rizaGerekli, m.muayene.ekranYakala, m.muayene.metinYapistir]) assert.ok(g.includes(x), x)
       assert.match(kapali, /<input type="checkbox" name="riza"\/>/, 'the consent box starts unticked')
       assert.match(kapali, new RegExp(`<button type="button" disabled=""[^>]*>[^<]*${m.muayene.kayitBaslat}</button>`))
+      assert.match(kapali, /data-alan="ekran-yakala"/)
+      assert.match(kapali, /data-alan="metin-yapistir"/)
       const acik = ciz(true)
       assert.match(acik, /<input type="checkbox" name="riza" checked=""\/>/)
       assert.match(acik, new RegExp(`<button type="button"(?! disabled)[^>]*>[^<]*${m.muayene.kayitBaslat}</button>`))
@@ -509,7 +534,7 @@ describe('Uzbekistan visit: screens in the three forms', () => {
       assert.match(kapali, new RegExp(`<dd data-alan="sablon">${m.muayene.sablonPediatri}</dd>`))
       ekranTemiz(kapali, `/visit?hasta= (${f})`)
       // Every code of the visit API has its own sentence in this form — and none of them is the code itself.
-      for (const kod of ['RIZA_GEREKLI', 'KISA_KAYIT', 'SES_OKUNAMADI', 'LIMIT', 'HAZIR_DEGIL', 'NOT_FOUND', 'MIKROFON', 'BAGLANTI', 'BASARISIZ', 'GECERSIZ', 'bilinmeyen']) {
+      for (const kod of ['RIZA_GEREKLI', 'KISA_KAYIT', 'SES_OKUNAMADI', 'LIMIT', 'HAZIR_DEGIL', 'NOT_FOUND', 'MIKROFON', 'BAGLANTI', 'BASARISIZ', 'GECERSIZ', 'EKRAN_YOK', 'EKRAN_SES_YOK', 'bilinmeyen']) {
         const html = ciz(true, kod)
         const uyari = /<div role="alert" class="uza-uyari-kutu">([^<]+)<\/div>/.exec(html)
         assert.ok(uyari && uyari[1].length > 12 && !uyari[1].includes(kod), `${f}/${kod}: ${uyari?.[1]}`)

@@ -4861,10 +4861,10 @@ Supersedes STRIPE-NOTYA-AU-04's "founding price NOT approved" line, and AU-03's 
 3. **PMS scaffold** — visit export pack JSON (`/api/ulke/not/pms-export`) + Settings › Integrations honest roadmap (export ready / partner-API / roadmap). **No fake sync** to Best Practice, Genie or Gentu.
 4. **Checkout `?interval=year`** — founding invite already carries interval (STRIPE-NOTYA-AU-05 `planInterval`); public landing yearly ladder display **not** changed here (founding offer takes priority).
 5. **Trust / OS wedge** — landing “Not another scribe overlay. A practice OS.” section; Security page trust-centre framing (approve-before-anything-leaves).
-6. **Telehealth / dictate path** — tip under audio upload + **desktop tab/window capture** (`getDisplayMedia`) + **paste transcript** on the shared visit screen (same consent + approve gate).
+6. **Telehealth / dictate path** — tip under audio upload + **desktop tab/window capture** (`getDisplayMedia`) + **paste transcript** on the shared visit screen and Türkiye `app/session/new` (same consent + approve gate). Paste posts `metin` to `/api/ulke/muayene` (no STT); capture reuses the audio upload path.
 
-**Still open (partner / product bets):** live Bp then Genie/Gentu write-back; Heidi-style free forever / freemium; clinician sign-off on letter/MBS prompts (`countries/au/klinik/mektupTalimatlari.ts`).
+**Still open (partner / product bets):** live Bp then Genie/Gentu write-back; Heidi-style free forever / freemium; clinician sign-off on letter/MBS prompts (`countries/au/klinik/mektupTalimatlari.ts`). Letter/MBS country-adapted copy for us/gb/ca/nz/uz remains OPEN GAP (owner Claude).
 
-**Tests:** `lib/ulke/mektup/mektup.test.ts`, `countries/au/mektup.gap.test.ts`, plus telehealth capture / paste-transcript unit coverage when landed.
+**Tests:** `lib/ulke/mektup/mektup.test.ts`, `countries/au/mektup.gap.test.ts`, paste-transcript cases in `countries/uz/uygulama/muayene.test.ts`.
 
 

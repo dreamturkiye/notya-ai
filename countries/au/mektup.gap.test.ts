@@ -37,12 +37,15 @@ describe('AU-GAP-CLOSE-01 pack wiring', () => {
     assert.ok(AU_UZANTI.pmsEntegrasyon!.kalemler.some((k) => k.anahtar === 'best-practice' && k.durum === 'partner-api'))
     assert.ok(AU_UZANTI.pmsEntegrasyon!.kalemler.some((k) => k.durum === 'hazir-export'))
     assert.match(AU_UZANTI.telehealthIpucu ?? '', /Telehealth|dictate/i)
+    assert.match(AU_UZANTI.telehealthIpucu ?? '', /capture|paste/i)
+    assert.doesNotMatch(AU_UZANTI.telehealthIpucu ?? '', /not built yet/i)
   })
 
-  it('landing price list exposes yearly A$1,490 for the doctor plan', () => {
+  it('landing list price stays A$149/mo (founding A$79 invite-only is STRIPE-NOTYA-AU-05; yearly ladder not overwritten here)', () => {
     const f = AU_GIRDI.acilis.fiyatlar.doctor
     assert.equal(f.aylik, 149)
-    assert.equal(f.yillik, 1490)
-    assert.equal(f.oneCikan, true)
+    // Public yearly display left alone while founding offer (A$79/mo · A$948/yr invite) is live.
+    assert.equal(f.yillik ?? null, null)
+    assert.equal(f.oneCikan, false)
   })
 })
