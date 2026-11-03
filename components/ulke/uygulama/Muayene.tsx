@@ -20,6 +20,7 @@
  *
  * The server answers with codes; every sentence here is the catalogue's, in the account's language.
  */
+import { rizaVeliMi } from '@/lib/ulke/uygulama/rizaVeli'
 import React, { useEffect, useRef, useState } from 'react'
 import { ulkeIstemciSupabase } from '@/lib/ulke/istemciSupabase'
 import { saatGoster } from '@/lib/ulke/arayuz/bicim'
@@ -120,7 +121,9 @@ export type KayitDurumu = 'hazir' | 'kayit' | 'yukleniyor' | 'isleniyor'
 
 const SES_AZAMI = 25 * 1024 * 1024
 
-export function KayitGorunumu({ m, hasta, sablon, riza, setRiza, durum, sure, hataKodu, baslat, durdur, vazgec, rol, randevu, dosyaSec, children }: {
+export function KayitGorunumu({ m, hasta, sablon, riza, setRiza, durum, sure, hataKodu, baslat, durdur, vazgec, rol, randevu, dosyaSec, veli, children }: {
+  /** AU-RIZA-01: the patient is under 18 - the box names the parent or guardian where the pack has that sentence. */
+  veli?: boolean
   /** Under the card, inside the page (the intake form the patient wrote). */
   children?: React.ReactNode
   /** NOTYA-UZ-RANDEVU-01: the appointment this visit is started from, if any — shown, and where "back" leads. */
@@ -161,7 +164,7 @@ export function KayitGorunumu({ m, hasta, sablon, riza, setRiza, durum, sure, ha
           <dl className="uza-seans-sablon" style={{ margin: '0 0 18px', fontSize: 14, color: '#3b2e24' }}><style>{'.uza-seans-sablon dd{margin:0}'}</style><dd data-alan="sablon">{sablonAdi(m, sablon)}</dd></dl>
           <label className="uza-onay" style={{ display: 'flex', gap: 10, alignItems: 'flex-start', fontSize: 13.5, color: '#3b2e24', lineHeight: 1.45, marginBottom: 16 }}>
             <input type="checkbox" name="riza" checked={riza} onChange={(e) => setRiza(e.target.checked)} />
-            <span>{v.riza}</span>
+            <span data-alan="riza-metni">{veli && v.rizaVeli ? v.rizaVeli : v.riza}</span>
           </label>
           <Hata>{hata}</Hata>
           <SeansBaslatDugmesi onClick={baslat} disabled={!riza}>{'\u{1F399}\uFE0F'} {v.kayitBaslat}</SeansBaslatDugmesi>
@@ -319,7 +322,7 @@ function YeniMuayene({ u, hastaId, randevuId }: { u: ReturnType<typeof useUygula
   }
   return (
     <>
-      <KayitGorunumu m={u.m} hasta={hasta} sablon={sablon} randevu={randevu} riza={riza} setRiza={(r) => { setRiza(r); setHataKodu(null) }} durum={durum} sure={sure} hataKodu={hataKodu} baslat={baslat} durdur={durdur} vazgec={vazgec} rol={u.hesap?.rol} dosyaSec={dosyaSec}>
+      <KayitGorunumu m={u.m} hasta={hasta} sablon={sablon} randevu={randevu} veli={rizaVeliMi(hasta.dogumTarihi)} riza={riza} setRiza={(r) => { setRiza(r); setHataKodu(null) }} durum={durum} sure={sure} hataKodu={hataKodu} baslat={baslat} durdur={durdur} vazgec={vazgec} rol={u.hesap?.rol} dosyaSec={dosyaSec}>
         {/* NOTYA-ULKE-INTAKE-01: what the patient wrote before the visit, to read while it is recorded. Never sent to the model. */}
         {formAcik() ? <HastaFormuKarti u={u} hastaId={hasta.id} mod="muayene" /> : null}
         {/* AU gold depth / pack muayeneMotorlari — per-role visit prompts when the pack declares them. */}

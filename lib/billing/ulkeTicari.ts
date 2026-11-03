@@ -56,6 +56,32 @@ export interface YukseltmeMetni {
   saltOkunurBant: string; yukseltDugme: string
 }
 
+/**
+ * AU-DEMO-02 (Kaan, 2026-11-03) - the country's own demo booking link: the 30-minute Cal.com event tied to Dr. Gokhan
+ * Mamur (the same event as the Turkish site's NEXT_PUBLIC_DEMO_BOOKING_URL, read 2026-11-03). Wins over that env var
+ * on this country's /demo page; the founding page and the upgrade prompt show their demo button only while it is a valid
+ * Cal.com address (lib/ulke/demo). Absent = the env var alone, as before.
+ */
+export interface DemoRandevusu { adres: string }
+
+/** AU-KURUCU-01 (Kaan, 2026-11-03) - the words of the founding-doctor page (/founding). `{n}` = places left, `{k}` = all places. */
+export interface KurucuSayfasiMetni {
+  meta: { baslik: string; aciklama: string }
+  ustBaslik: string; baslik: string; baslikVurgu: string; giris: string
+  sayac: string; sayacBir: string; dolu: string
+  birinciDugme: string; ikinciDugme: string; yillikBaglanti: string
+  teklif: { ustBaslik: string; baslik: string; baslikVurgu: string; govde: string; maddeler: string[]; kartEtiketi: string; kartNot: string }
+  doluTeklif: { ustBaslik: string; baslik: string; baslikVurgu: string; govde: string; maddeler: string[]; kartEtiketi: string; kartNot: string }
+  deneme: { ustBaslik: string; baslik: string; baslikVurgu: string; govde: string; maddeler: string[]; kartEtiketi: string; kartNot: string }
+  karsilik: { ustBaslik: string; baslik: string; baslikVurgu: string; govde: string; maddeler: string[]; kartEtiketi: string; kartNot: string }
+  /** `govdeDemosuz`: the same closing line when no demo can be booked (the button is hidden). */
+  kapanis: { ustBaslik: string; baslik: string; baslikVurgu: string; govde: string; govdeDemosuz: string }
+  kartSatirlari: { aylik: string; yillik: string; yer: string; deneme: string; kart: string; sinir: string; sonra: string }
+  denemeDegerleri: { sure: string; kart: string; sinir: string; sonra: string }
+  denemeSinirlari: string
+  doluFiyatNotu: string
+}
+
 export interface UlkeTicariAyar {
   /** Stripe lookup keys of the regular Sesli Pro prices; used when the STRIPE_PRICE_SESLI_PRO_* env var is unset. */
   sesliProFiyatAnahtarlari?: Record<TicariAralik, string>
@@ -65,6 +91,11 @@ export interface UlkeTicariAyar {
   deneme?: UygulamaIciDeneme
   fiyatlar?: { normal: FiyatGosterimi; kurucu?: FiyatGosterimi }
   yukseltme?: YukseltmeMetni
+  demo?: DemoRandevusu
+  /** The words of /founding; with `kurucu`, the page exists (the route must also be listed in the pack). */
+  kurucuSayfasi?: KurucuSayfasiMetni
+  /** The demo button's words where it appears outside /demo (founding page, upgrade prompt). */
+  demoDugmesi?: string
 }
 
 export const ULKE_TICARI: Readonly<Record<string, UlkeTicariAyar>> = {
@@ -98,6 +129,73 @@ export const ULKE_TICARI: Readonly<Record<string, UlkeTicariAyar>> = {
       acilamadi: 'Checkout could not be opened. Please try again.',
       saltOkunurBant: 'Read-only: your free trial has ended. Your patients and notes are safe.',
       yukseltDugme: 'Upgrade',
+    },
+    demo: { adres: 'https://cal.com/han-mamur-sugmbo/demo-tr' },
+    demoDugmesi: 'Book a 30-minute private demo',
+    // AU-KURUCU-01 (Kaan, 2026-11-03). Every fact here is a setting above (seats, prices, trial days and caps) and is
+    // checked against them in lib/billing/kurucuSayfasi.test.ts. No diagnosis or treatment claim, no regulator, no competitor.
+    kurucuSayfasi: {
+      meta: {
+        baslik: 'Founding doctors — Notya Australia',
+        aciklama: 'The first 20 doctors in Australia get Notya at A$79 a month, or A$948 a year with the price locked for the year. Start with a 15-day free trial, no card needed.',
+      },
+      ustBaslik: 'Founding doctors · Australia',
+      baslik: 'Be one of the first 20.',
+      baslikVurgu: 'Help shape Notya.',
+      giris: 'Notya records the visit with your patient’s consent and drafts the note for you to read, correct and approve. We are opening it to 20 founding doctors in Australia at a founding price, in return for your honest feedback.',
+      sayac: '{n} of {k} founding places left',
+      sayacBir: '1 of {k} founding places left',
+      dolu: 'All {k} founding places have been taken.',
+      birinciDugme: 'Start your free trial',
+      ikinciDugme: 'Book a 30-minute private demo',
+      yillikBaglanti: 'Prefer to pay yearly? Start with the yearly founding price',
+      teklif: {
+        ustBaslik: 'What founding doctors get',
+        baslik: 'A founding price,',
+        baslikVurgu: 'for the first 20 doctors only.',
+        govde: 'Choose monthly or yearly when you upgrade from your trial. The monthly founding price is not locked and can change with notice; the yearly founding price is locked for the year you pay for.',
+        maddeler: ['A$79 a month, or A$948 a year with the price locked for that year', 'Live voice: 150 minutes a month on any paid plan; the text assistant has no minute limit', 'A direct line to the founders for questions and requests', 'Everything you do in the trial carries over when you upgrade'],
+        kartEtiketi: 'Founding offer',
+        kartNot: 'From the 21st doctor the regular price applies: A$149 a month or A$1,490 a year.',
+      },
+      doluTeklif: {
+        ustBaslik: 'Pricing',
+        baslik: 'The founding places are taken.',
+        baslikVurgu: 'The regular plan is open.',
+        govde: 'You can still start with the same 15-day free trial, with no card. If you upgrade, the regular price applies.',
+        maddeler: ['A$149 a month, or A$1,490 a year', 'Live voice: 150 minutes a month; the text assistant has no minute limit', 'Everything you do in the trial carries over when you upgrade'],
+        kartEtiketi: 'Regular plan',
+        kartNot: 'Prices in Australian dollars.',
+      },
+      deneme: {
+        ustBaslik: 'The free trial',
+        baslik: '15 days,',
+        baslikVurgu: 'no card needed.',
+        govde: 'Your trial starts when your account is created. You are not asked for a card and nothing is charged unless you choose to upgrade.',
+        maddeler: ['Up to 40 recorded visits and 60 minutes of live voice during the trial', 'After day 15 your account becomes read-only: your patients and notes stay, and you can view and export them', 'Upgrade any time from inside the app'],
+        kartEtiketi: 'Trial',
+        kartNot: 'You read, correct and approve every note. Nothing becomes part of the record until you do.',
+      },
+      karsilik: {
+        ustBaslik: 'What we ask in return',
+        baslik: 'Your feedback,',
+        baslikVurgu: 'and a few words if it helps you.',
+        govde: 'Founding doctors tell us what works and what does not, so we can fix it quickly. If Notya saves you time, we will ask for a short testimonial we may quote, with your permission and in your own words.',
+        maddeler: ['Tell us what to fix, by email or a short call', 'A short testimonial, only if you are happy with Notya and only with your written permission', 'No patient information is ever part of feedback or a testimonial'],
+        kartEtiketi: 'In return',
+        kartNot: 'You can stop at any time.',
+      },
+      kapanis: {
+        ustBaslik: 'Founding doctors',
+        baslik: 'Start your 15-day trial.',
+        baslikVurgu: 'No card needed.',
+        govde: 'Or book a 30-minute private video call and see an example visit, start to finish, before you sign up.',
+        govdeDemosuz: 'Your trial starts when your account is created, and everything you do in it carries over when you upgrade.',
+      },
+      kartSatirlari: { aylik: 'Monthly', yillik: 'Yearly, price locked for the year', yer: 'Places', deneme: 'Trial', kart: 'Card', sinir: 'Trial limits', sonra: 'After day 15' },
+      denemeDegerleri: { sure: '15 days', kart: 'Not needed', sinir: '40 visits · 60 voice minutes', sonra: 'Read-only' },
+      denemeSinirlari: '40 visits, 60 voice minutes',
+      doluFiyatNotu: 'Regular price',
     },
   },
 }

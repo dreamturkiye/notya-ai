@@ -3,6 +3,7 @@
  * search-engine instruction and viewport, all from the active pack. (The pre-split application keeps the literals in
  * app/layout.tsx untouched.)
  */
+import { ogGorselAlanlari } from '@/lib/ulke/seo/gorsel'
 import type { Metadata, Viewport } from 'next'
 import { ulkePaketi } from './ulke'
 
@@ -13,13 +14,14 @@ const SEKME_SIMGESI = (zemin: string) =>
 export function ulkeKabukMetadata(): Metadata {
   const p = ulkePaketi()
   const yerel = /^[a-z]{2}-[A-Z]{2}$/.test(p.varsayilanDil) ? p.varsayilanDil.replace('-', '_') : undefined
+  const og = ogGorselAlanlari()
   return {
     title: p.kabuk.baslik,
     description: p.kabuk.aciklama,
     icons: { icon: SEKME_SIMGESI(p.kabuk.zemin) },
-    // Link previews carry the page's own title and description only: no image, no claim.
-    openGraph: { type: 'website', siteName: p.kabuk.baslik, title: p.kabuk.baslik, description: p.kabuk.aciklama, ...(yerel ? { locale: yerel } : {}) },
-    twitter: { card: 'summary', title: p.kabuk.baslik, description: p.kabuk.aciklama },
+    // Link previews: the page's own title and description, and the country's static preview image where it has one (AU-SEO-02).
+    openGraph: { type: 'website', siteName: p.kabuk.baslik, title: p.kabuk.baslik, description: p.kabuk.aciklama, ...(yerel ? { locale: yerel } : {}), ...og.og },
+    twitter: { ...og.twitter, title: p.kabuk.baslik, description: p.kabuk.aciklama },
     formatDetection: { telephone: false },
     ...(p.aramaMotorlarinaGizli ? { robots: { index: false, follow: false, nocache: true, googleBot: { index: false, follow: false } } } : {}),
   }

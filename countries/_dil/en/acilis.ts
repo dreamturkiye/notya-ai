@@ -24,7 +24,11 @@
  *     Nothing says where data is kept.
  *   - NO TESTIMONIAL, no quotation of a doctor (invented or real), no customer name or logo, no usage number.
  *   - NO PRICE. Plans are shown "by quote"; a country's price list holds no amount until the owner sets one.
- *     No free trial, no discount, no public demo.
+ *     No discount, no public demo. FREE TRIAL (rule changed 2026-11-03, AU-KURUCU-01; Kaan's decision of 2026-11-02 to
+ *     offer a no-card 15-day in-app trial): a country that HAS an in-app trial (lib/billing/ulkeTicari.ts `deneme`) may
+ *     say "free trial", in accurate words only - its real length, that no card is asked for, its limits and what happens
+ *     when it ends, all read from that setting. A country without one still says nothing about a trial. The old ban
+ *     cited no legal reason (it predates the trial); the Australian Consumer Law still forbids a misleading "free" offer.
  *   - NO CLINICAL REFERENCE CONTENT in the examples: no medicine, no dose, no threshold, no schedule. The example
  *     visits show how a note is drafted and approved, with invented, unremarkable findings.
  *   - NO NAMED ASSISTANT and no biography: the assistant is "the assistant".

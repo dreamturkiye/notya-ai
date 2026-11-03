@@ -232,6 +232,11 @@ export type UygulamaMetni = {
     readonly sablonGenel: string
     readonly sablonPediatri: string
     readonly riza: string
+    /**
+     * AU-RIZA-01 (2026-11-03): the sentence beside the same box when the patient is under 18 (the parent's or
+     * guardian's consent). Absent = the country shows `riza` for every patient.
+     */
+    readonly rizaVeli?: string
     readonly rizaGerekli: string
     readonly kayitBaslat: string
     readonly kayitDurdur: string

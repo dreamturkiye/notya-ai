@@ -3,6 +3,7 @@
  * Switch off (every country except au by default): disallow-all robots, no sitemap, noindex.
  * Switch on: public pages allowed and listed; the signed-in application never.
  */
+import { OG_GORSELLERI } from './gorsel'
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 import { AKTIF_PAKET } from '../../../countries/active'
@@ -47,7 +48,10 @@ describe('SEO kit', { skip: !SITELER[kod] }, () => {
       assert.equal(m.alternates?.canonical, url, s)
       assert.equal((m.alternates?.languages as Record<string, string>)[AKTIF_PAKET.varsayilanDil], url, s)
       assert.equal((m.openGraph as { url: string }).url, url, s)
-      assert.equal((m.twitter as { card: string }).card, 'summary')
+      // AU-SEO-02: a country with a static preview image uses the large card and names the image; others keep 'summary'.
+      const g = OG_GORSELLERI[AKTIF_PAKET.kod as string]
+      assert.equal((m.twitter as { card: string }).card, g ? 'summary_large_image' : 'summary', s)
+      if (g) assert.equal(((m.openGraph as { images: { url: string; width: number; height: number }[] }).images[0]).url, `${kendiSite().origin}${AKTIF_PAKET.yolOnEki}${g.yol}`, s)
       assert.ok(m.title && m.description, s)
     }
     assert.deepEqual(Object.values(SEO_YOLLARI).sort(), [...ACIK_ICERIK_YOLLARI].sort(), 'meta pages = sitemap pages')

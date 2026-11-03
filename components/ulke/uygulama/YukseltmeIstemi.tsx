@@ -20,6 +20,7 @@ import { ulkeYolu } from '@/lib/ulke/yol'
 import { aktifUlke } from '@/lib/ulke/ulke'
 import { ulkeTicari } from '@/lib/billing/ulkeTicari'
 import { istemIcerigi, type Istem, type IstemNedeni } from '@/lib/billing/deneme'
+import { demoIstegi } from '@/lib/ulke/demo'
 
 export const YUKSELT_OLAYI = 'notya-yukselt'
 const DURUM_ANAHTARI = 'notya-deneme-durumu'
@@ -127,6 +128,7 @@ export default function YukseltmeIstemi() {
   if (!acik || !ticari) return null
   const m = ticari.yukseltme!
   const salt = durum?.tur === 'bitti'
+  const demo = demoIstegi()
   const icerik = istem ? istemIcerigi(ticari, istem, { muayene: durum?.muayeneSiniri ?? ticari.deneme!.muayene, ses: durum?.sesSiniri ?? ticari.sesDakika?.denemeDakika ?? null }) : null
 
   return (
@@ -146,6 +148,8 @@ export default function YukseltmeIstemi() {
             <div className="uza-eylemler">
               <button type="button" className="uza-dugme" disabled={bekliyor} onClick={() => void ode('month', icerik.planKey)}>{bekliyor ? m.aciliyor : icerik.aylik}</button>
               <button type="button" className="uza-dugme" disabled={bekliyor} onClick={() => void ode('year', icerik.planKey)}>{bekliyor ? m.aciliyor : icerik.yillik}</button>
+              {/* AU-DEMO-02: the secondary action - a 30-minute private demo - only while /demo holds a real calendar. */}
+              {demo ? <a className="uza-dugme uza-dugme-cizgi" data-alan="demo" href={demo.href}>{demo.etiket}</a> : null}
               <button type="button" className="uza-dugme uza-dugme-cizgi" disabled={bekliyor} onClick={() => { setIstem(null); setHata('') }}>{m.sonra}</button>
             </div>
             {hata && <div role="alert" className="uza-uyari-kutu" style={{ marginTop: 12 }}>{hata}</div>}

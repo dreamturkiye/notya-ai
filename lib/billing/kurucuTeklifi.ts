@@ -143,3 +143,35 @@ export async function kurucuKoltukKaldiMi(stripe: FiyatStripe, ulke: string | nu
 export function koltukOnbelleginiTemizle(): void {
   koltukOnbellegi = null
 }
+
+const KALAN_ONBELLEK_MS = 5 * 60 * 1000
+let kalanOnbellegi: { ulke: string; kalan: number | null; bitis: number } | null = null
+
+/**
+ * AU-KURUCU-01 (Kaan, 2026-11-03) - founding places left, for the public /founding page only ("N of 20 founding places
+ * left"). Never a hot path: cached in memory for five minutes, also when Stripe could not be read. null = unknown (no
+ * offer in this country, no founding price found, or Stripe unreadable): the page then shows the offer without a
+ * counter. 0 = full: the page shows the regular price. Checkout still enforces the cap itself.
+ */
+export async function kurucuKalanKoltuk(stripe: FiyatStripe | null, ulke: string | null, simdi = Date.now()): Promise<number | null> {
+  const kurucu = ulkeTicari(ulke)?.kurucu
+  if (!kurucu || !ulke) return null
+  if (kalanOnbellegi && kalanOnbellegi.ulke === ulke && kalanOnbellegi.bitis > simdi) return kalanOnbellegi.kalan
+  let kalan: number | null = null
+  try {
+    if (stripe) {
+      const coz = await fiyatlariAnahtarlaCoz(stripe, [kurucu.fiyatAnahtarlari.month, kurucu.fiyatAnahtarlari.year], simdi)
+      const idler = Object.values(coz).filter((x): x is string => Boolean(x))
+      kalan = idler.length ? Math.max(0, kurucu.koltuk - (await kurucuKoltukSayisi(stripe, idler))) : null
+    }
+  } catch {
+    kalan = null
+  }
+  kalanOnbellegi = { ulke, kalan, bitis: simdi + KALAN_ONBELLEK_MS }
+  return kalan
+}
+
+/** Test hook. */
+export function kalanOnbelleginiTemizle(): void {
+  kalanOnbellegi = null
+}

@@ -15,9 +15,10 @@ import type { RotaIzni } from './tipler'
  * (identity masking, PDF page rendering): static code and language data, no application content. Without them the
  * middleware answered 404 for every engine file and no document could ever be masked.
  * `/portreler/` is the generated assistant portraits (AU-PORTRE-01; public/portreler/<cc>/): images only, no content. Without it every portrait answered 404.
+ * `/og/` is the static link-preview image of a country site (AU-SEO-02; public/og/, lib/ulke/seo/gorsel.ts): images only, no content.
  * `/ses/` is the two audio-playback worklet files of the live assistant (AU-CANLI-01; public/ses/): static code, no content.
  */
-const CATI_ON_EKLERI = ['/_next/', '/tesseract/', '/pdfjs/', '/ses/', '/portreler/'] as const
+const CATI_ON_EKLERI = ['/_next/', '/tesseract/', '/pdfjs/', '/ses/', '/portreler/', '/og/'] as const
 
 function duzYol(pathname: string): string {
   const y = pathname.split('?')[0].split('#')[0]

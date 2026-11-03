@@ -65,11 +65,12 @@ describe('A. the pack', () => {
     assert.equal(D.demoSayfasiVar(), true)
   })
 
-  it('each form: a 60-minute video call with Dr. Gökhan Mamur, in the visitor\'s own time zone; booking by Cal.com; no claim, no address', () => {
+  // AU-DEMO-02 (2026-11-03): Australia books the 30-minute private demo (Kaan, 2026-11-02); the others still say 60.
+  it('each form: a 30- or 60-minute video call with Dr. Gökhan Mamur, in the visitor\'s own time zone; booking by Cal.com; no claim, no address', () => {
     if (!ACIK) return
     for (const d of FORMLAR) {
       const m = D.demoMetni(d)!
-      assert.match(m.giris, /\b60\b/, d)
+      assert.match(m.giris, /\b(30|60)\b/, d)
       assert.match(m.giris, /Mamur|Мамур/, d)
       assert.match(m.saglayici, /Cal\.com/, d)
       const duzlestir = (v: unknown): string[] => (typeof v === 'string' ? [v] : Array.isArray(v) ? v.flatMap(duzlestir) : v && typeof v === 'object' ? Object.values(v).flatMap(duzlestir) : [])
@@ -104,8 +105,10 @@ describe('B. no link', () => {
         const s = demoCiz(d)
         assert.ok(s.includes(`>${kacisli(m.baslik)}</h1>`), d)
         assert.ok(s.includes(kacisli(m.giris)), d)
-        assert.ok(s.includes(kacisli(m.yakinda)), d)
         assert.ok(s.includes(kacisli(m.saglayici)), d)
+        // AU-DEMO-02: a country that carries its own link (lib/billing/ulkeTicari.ts `demo`) shows its calendar whatever the env var says.
+        if (D.ulkeDemoBaglantisiVar()) { assert.ok(s.includes(`aria-label="${kacisli(m.takvimEtiketi)}"`), d); acilisDugmesi(d); continue }
+        assert.ok(s.includes(kacisli(m.yakinda)), d)
         assert.ok(!s.includes(`aria-label="${kacisli(m.takvimEtiketi)}"`), d)
         assert.doesNotMatch(govde(s), /@/, `${d}: no e-mail address`)
         acilisDugmesi(d)
@@ -135,7 +138,9 @@ describe('D. bad link', () => {
     for (const v of ['http://cal.com/x', 'https://calendly.com/x', 'https://cal.com', 'https://evil.com/cal.com/x', 'cal.com/x']) {
       ayarla(v)
       for (const d of FORMLAR) {
-        assert.ok(demoCiz(d).includes(kacisli(D.demoMetni(d)!.yakinda)), v)
+        // AU-DEMO-02: the country's own link wins over a bad env var.
+        if (D.ulkeDemoBaglantisiVar()) assert.ok(demoCiz(d).includes(`aria-label="${kacisli(D.demoMetni(d)!.takvimEtiketi)}"`), v)
+        else assert.ok(demoCiz(d).includes(kacisli(D.demoMetni(d)!.yakinda)), v)
         acilisDugmesi(d)
       }
     }

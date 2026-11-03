@@ -25,6 +25,7 @@ import { AKTIF_KLINIK } from '@/countries/active/klinik'
 import { MUAYENE_SES_KOVASI, type DilKodu } from '../tipler'
 import { dilTercihleriniOku } from './dilTercihleri'
 import { hastaGetir, type Hasta } from './hastalar'
+import { rizaSurumuYaz, rizaVeliMi } from './rizaVeli'
 import { konusmaTanimaHazir, konusmayiTani } from './konusmaTanima'
 import { muayeneDenemeKapisi } from './deneme'
 import { muayeneKotasiKullan } from './kota'
@@ -142,7 +143,8 @@ export async function muayeneKaydet(supabase: SupabaseClient, doktorId: string, 
       doctor_id: doktorId,
       patient_id: hasta.id,
       riza_at: rizaAni,
-      riza_surumu: klinik.riza.surum,
+      // AU-RIZA-01: which sentence was confirmed (the patient's, or the parent's / guardian's for a patient under 18).
+      riza_surumu: rizaSurumuYaz(klinik.riza.surum, klinik.riza.veliMetni === true && rizaVeliMi(hasta.dogumTarihi, rizaAni.slice(0, 10))),
       stt_model: klinik.konusma.model,
       taninan_dil: t.taninanDil || null,
       dil_olasiligi: t.dilOlasiligi,

@@ -679,6 +679,6 @@ export function enUygulama(u: EnUlkeSozleri): UygulamaMetni {
     ayarlar: { ...t.ayarlar, meslekKaydi: u.meslekKaydiEtiketi, ...(u.cokSaatDilimi ? enCevir(SAAT_DILIMI, u.bicim) : {}) },
     ...(t.pano && u.odeme ? { pano: { ...t.pano, odeme: u.odeme } } : {}),
     yeniHasta: { ...t.yeniHasta, ...(u.kimlikEtiketi ? { ulusalKimlik: u.kimlikEtiketi } : {}) },
-    muayene: { ...t.muayene, riza: u.kayitRizasi },
+    muayene: { ...t.muayene, riza: u.kayitRizasi, ...(u.kayitRizasiVeli ? { rizaVeli: u.kayitRizasiVeli } : {}) },
   }
 }

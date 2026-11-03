@@ -91,6 +91,10 @@ export const AU_GIRDI: EnUlkeGirdisi = {
     // where the visit takes place (state and territory surveillance-devices laws differ). FOR A LAWYER: this sentence is a
     // draft, not a legal conclusion; whether it satisfies those laws and the Privacy Act is NOT decided here (docs/au/LAUNCH-READINESS.md, LEGAL-2).
     kayitRizasi: 'Everyone recorded at this visit (the patient, or the person who can consent for them, and anyone else present) has been told that the visit will be recorded and that the audio and transcript will be processed by artificial intelligence tools, including services outside Australia, to draft a note that I will read and approve, and has agreed. I have checked that recording is lawful where this visit takes place.',
+    // AU-RIZA-01 (2026-11-03), NOT READ BY A LAWYER: the same box for a patient under 18 (lib/ulke/uygulama/rizaVeli.ts).
+    // Names the parent or guardian, and leaves room for a mature minor who consents for themselves (FOR A LAWYER: the
+    // age at which a minor can consent differs by state and territory; docs/au/LEGAL-MEMO-2026-11.md).
+    kayitRizasiVeli: 'The patient\u2019s parent or guardian (or the patient, where they are old enough to consent for themselves), and anyone else present, has been told that the visit will be recorded and that the audio and transcript will be processed by artificial intelligence tools, including services outside Australia, to draft a note that I will read and approve, and has agreed. I have checked that recording is lawful where this visit takes place.',
     // THE LABEL is the name of the national data element ("Medicare card number", AIHW METEOR 270101, N(11); read for
     // the localisation audit of 2026-10-09, branch audit/au, docs/COUNTRY-AUDIT-AUSTRALIA.md, A12). One card may list
     // several people, so the number printed on a card is not, alone, one person. It is a government related

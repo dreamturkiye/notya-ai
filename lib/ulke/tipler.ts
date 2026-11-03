@@ -674,7 +674,8 @@ export type UlkeSesCikisi = {
 export type UlkeKlinigi = {
   konusma: KonusmaTanimaAyarlari
   /** Recording consent shown as a tick-box before recording. The wording is in the pack's catalogue. */
-  riza: { surum: string; hukukcuInceledi: boolean }
+  /** `veliMetni` (AU-RIZA-01): the pack has a parent/guardian sentence; the stored version then says which sentence was shown. */
+  riza: { surum: string; hukukcuInceledi: boolean; veliMetni?: boolean }
   /** Note templates that are switched on, first = default. */
   sablonlar: readonly string[]
   /** Visits (recordings turned into notes) one account may make per day of the country. */

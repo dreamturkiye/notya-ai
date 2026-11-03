@@ -9,7 +9,7 @@
  *   2. WALLS         nothing of another English-speaking country, of Türkiye or of Uzbekistan in any text — the
  *                    sentences of the empty slots included (they are never shown, but they are part of the pack)
  *   3. NO CLAIMS     no compliance, approval, certification, endorsement or integration claim; no law or regulator
- *                    named; no testimonial; no price; no free trial; hidden from search; sign-up by invitation
+ *                    named; no testimonial; no price; no free trial (unless the country has an in-app trial, ulkeTicari `deneme`); hidden from search; sign-up by invitation
  *   4. IDENTITY      the patient identifier is optional free text, never validated; nothing asks for a Social
  *                    Security number
  *   5. UNITS         every numeric field of every switched-on tool that is measured in a unit shows that unit, in
@@ -42,6 +42,7 @@ import { EN_ROL_ARACLARI } from '../araclar'
 import { enRolAnahtarlari, type EnRolDegisimi } from '../klinik/roller'
 import type { EnBicim } from '../varyant'
 import { bicimYazimSorunlari, tumMetinler } from './yazimDenetimi'
+import { ulkeTicari } from '@/lib/billing/ulkeTicari'
 
 export type EnPaketSinamasi = {
   paket: UlkePaketi
@@ -86,6 +87,8 @@ export type EnPaketSinamasi = {
 
 const TURKIYE_OZBEKISTAN = /Türkiye|Turkey|Turkish|Uzbek|Tashkent|\bSGK\b|MEDULA|e-Nabız|\bKVKK\b|JSHSHIR|PINFL|[çğıöşüİĞŞÇÖÜʻўқғҳЎҚҒҲ]/
 const IDDIA = /\b(HIPAA|GDPR|PIPEDA|FDA|TGA|MHRA|Medsafe|Health Canada|ISO ?\d+|SOC ?2|CE[- ]mark\w*|compliant|compliance|certified|certification|accredited|accreditation|endorsed|clinically proven|cleared|integrat\w*|trusted by|award\w*|guarantee\w*|free trial|discount\w*)\b/i
+/** AU-KURUCU-01 (2026-11-03): a country with an in-app no-card trial may name it; IDDIA without "free trial" for that country. */
+const IDDIA_DENEMELI = new RegExp(IDDIA.source.replace('|free trial', ''), 'i')
 const KIMLIK = /social security|\bSSN\b/i
 const PARA = /\d[\d,.]*\s*(USD|GBP|CAD|AUD|NZD|dollars?|pounds?)\b|[$£€]\s*\d/
 
@@ -185,7 +188,8 @@ export function ingilizcePaketSinamasi(s: EnPaketSinamasi): void {
       // "initial compliance and clinical draft", "Initial Australian compliance and clinical content …"). Any other use of the word still fails.
       const TASLAK_ETIKETI = /initial (australian )?compliance (draft|and clinical (draft|content))/gi
       const taranan = metinler.map((x) => ({ ...x, metin: x.metin.replace(TASLAK_ETIKETI, '') }))
-      assert.deepEqual(taranan.filter((x) => IDDIA.test(x.metin)).map((x) => `${x.yer}: ${IDDIA.exec(x.metin)?.[0]}`), [])
+      const iddia = ulkeTicari(kod)?.deneme ? IDDIA_DENEMELI : IDDIA
+      assert.deepEqual(taranan.filter((x) => iddia.test(x.metin)).map((x) => `${x.yer}: ${iddia.exec(x.metin)?.[0]}`), [])
     })
     it('no price: every plan is by quote, and no amount of money is written into any text', () => {
       const f = arayuz.acilis!.fiyatlar

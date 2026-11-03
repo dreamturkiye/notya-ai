@@ -10,10 +10,11 @@ import { AKTIF_DEMO } from '@/countries/active/demo'
 import { ozellikAcik, ulkePaketi } from '@/lib/ulke/ulke'
 import { ulkeYolu } from '@/lib/ulke/yol'
 import type { DilKodu } from '@/lib/ulke/tipler'
-import { DEMO_SAYFASI } from './baglanti'
+import { ulkeTicari } from '@/lib/billing/ulkeTicari'
+import { DEMO_SAYFASI, demoBaglantisi as ortamBaglantisi, demoBaglantisiCoz, type DemoBaglantisi } from './baglanti'
 import type { DemoMetni } from './tipler'
 
-export { demoBaglantisi, demoBaglantisiCoz, DEMO_SAYFASI } from './baglanti'
+export { demoBaglantisiCoz, DEMO_SAYFASI } from './baglanti'
 export type { DemoBaglantisi } from './baglanti'
 export type { DemoMetni, UlkeDemosu } from './tipler'
 
@@ -39,4 +40,30 @@ export function demoDugmesi(dil: DilKodu): { href: string; etiket: string } | nu
   const m = demoMetni(dil)
   if (!m || !demoSayfasiVar()) return null
   return { href: demoAdresi(dil), etiket: m.dugme }
+}
+
+/**
+ * AU-DEMO-02 (Kaan, 2026-11-03) - the booking link of this build: the country's own setting (lib/billing/ulkeTicari.ts
+ * `demo`) when it has one, otherwise NEXT_PUBLIC_DEMO_BOOKING_URL as before. A country setting that is not a Cal.com
+ * address counts as no link (never a fallback to the env var: the country's own value is the decision).
+ */
+export function demoBaglantisi(): DemoBaglantisi | null {
+  const kendi = ulkeTicari(ulkePaketi().kod)?.demo
+  return kendi ? demoBaglantisiCoz(kendi.adres) : ortamBaglantisi()
+}
+
+/** true = this country carries its own booking link (it decides, the env var does not). */
+export function ulkeDemoBaglantisiVar(): boolean {
+  return Boolean(ulkeTicari(ulkePaketi().kod)?.demo)
+}
+
+/**
+ * AU-DEMO-02 - the "Book a 30-minute private demo" button OUTSIDE the landing page (founding page, trial upgrade
+ * prompt): to /demo, and ONLY while /demo exists, holds a real calendar and the country has words for the button.
+ * null = hidden (never a button to a page that says "opens soon").
+ */
+export function demoIstegi(dil: DilKodu = ulkePaketi().varsayilanDil as DilKodu): { href: string; etiket: string } | null {
+  const etiket = ulkeTicari(ulkePaketi().kod)?.demoDugmesi
+  if (!etiket || !demoSayfasiVar() || !demoBaglantisi()) return null
+  return { href: demoAdresi(dil), etiket }
 }

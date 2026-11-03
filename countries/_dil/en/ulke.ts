@@ -20,6 +20,8 @@ export type EnUlkeSozleri = {
    * country's legal terms; marked "not read by a lawyer" where the pack writes it, until one has read it.
    */
   kayitRizasi: string
+  /** AU-RIZA-01: the same sentence for a patient under 18 (parent or guardian). Absent = `kayitRizasi` for everyone. */
+  kayitRizasiVeli?: string
   /** The label of the optional patient identifier on the patient form; null where the pack records none. */
   kimlikEtiketi: string | null
   /** true = the country has several time zones and an account chooses its own. */

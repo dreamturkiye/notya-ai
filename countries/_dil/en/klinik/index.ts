@@ -34,7 +34,7 @@ export function enKlinik(g: EnUlkeGirdisi & EnKlinikEk): UlkeKlinigi {
     konusma: g.konusma,
     // The sentence beside the box is the country's own (`sozler.kayitRizasi`). This stamp is stored with every visit,
     // so that a later, lawyer-reviewed wording can be told apart from the draft.
-    riza: { surum: g.surum, hukukcuInceledi: false },
+    riza: { surum: g.surum, hukukcuInceledi: false, ...(g.sozler.kayitRizasiVeli ? { veliMetni: true } : {}) },
     sablonlar: t.sablonlar,
     gunlukMuayeneLimiti: g.gunlukMuayeneLimiti,
     notTalimati: t.notTalimati,

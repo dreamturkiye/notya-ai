@@ -17,6 +17,8 @@ import stol from '../../../public/landing/desk-notes.jpg'
 import yolak from '../../../public/landing/corridor.jpg'
 import { AcilisSayfasi } from './AcilisSayfasi'
 import { KlinikSayfasi } from './KlinikSayfasi'
+import { KurucuSayfasi } from './KurucuSayfasi'
+import type { DilKodu } from '@/lib/ulke/tipler'
 
 export function UlkeAcilisSayfasi(props: AcilisSayfasiProps & { acilis: UlkeAcilisi }) {
   return <AcilisSayfasi {...props} gorseller={{ xona: xona.src, stol: stol.src, yolak: yolak.src }} />
@@ -25,4 +27,9 @@ export function UlkeAcilisSayfasi(props: AcilisSayfasiProps & { acilis: UlkeAcil
 /** Clinic landing. The corridor photograph is the Turkish clinic page's hero. */
 export function UlkeKlinikSayfasi(props: AcilisSayfasiProps & { acilis: UlkeAcilisi }) {
   return <KlinikSayfasi {...props} gorsel={yolak.src} />
+}
+
+/** AU-KURUCU-01: the founding-doctor page, with the landing page's hero photograph. */
+export function UlkeKurucuGorseli(props: { acilis: UlkeAcilisi; dil: DilKodu; kalan: number | null }) {
+  return <KurucuSayfasi {...props} gorsel={xona.src} />
 }
