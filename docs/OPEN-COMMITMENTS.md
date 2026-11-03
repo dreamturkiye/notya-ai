@@ -4879,9 +4879,10 @@ Supersedes STRIPE-NOTYA-AU-04's "founding price NOT approved" line, and AU-03's 
 **Still OPEN (honest):**
 | Item | Owner |
 |---|---|
-| Real Bp / Genie / Gentu partner HTTP adapters (env flags ready; stub stays PARTNER_YOK) | Kaan → partner contract, then Claude |
+| Real Bp / Genie / Gentu partner HTTP adapters (env flags ready; stub stays PARTNER_YOK) | **Kaan SENT Bp Partner Network application 2026-11-03** (`docs/au/BP-PARTNER-APPLICATION-DRAFT.md`) → waits Bp form/staging keys → then Claude `pmsYaz`. Magentus/Genie–Gentu form still to send. |
 | Fill `klinisyen` / `onayTarihi` on `AU_MEKTUP_ICERIK_ONAYLARI` after an Australian clinician reads the prompts | Kaan → clinician |
 | Letter/MBS/PMS country-adapted copy for us/gb/ca/nz/uz | Claude |
+| MBS / care plans Strong (GPMP/TCA/CCMP + MHCP drafts, never lodge; Bp write of signed plans = Ask #3 after partner live) | Claude (product) after Kaan prioritises |
 
 **Tests:** `lib/ulke/pms/pms.test.ts`, `lib/billing/ucretsizPlan.test.ts`, `countries/au/mektup.gap.test.ts`.
 
