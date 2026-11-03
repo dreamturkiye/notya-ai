@@ -6,7 +6,7 @@ import { AU_KAYIT_SISTEMI, AU_REFERANS_ARAMALARI, AU_REFERANS_BOLUMLERI } from '
 import { AU_TANI_KODLARI_TANIMI } from './taniKodlari'
 import { AU_ISLEM_KODLARI_TANIMI } from './islemKodlari'
 import { AU_MUAYENEHANE } from './muayenehane'
-import { AU_MBS_ONERI, AU_MEKTUP, AU_PMS_ENTEGRASYON, AU_TELEHEALTH_IPUCU } from './mektup'
+import { AU_BAKIM_PLANI, AU_MBS_ONERI, AU_MEKTUP, AU_PMS_ENTEGRASYON, AU_TELEHEALTH_IPUCU } from './mektup'
 import { AU_DATA_BREACH } from './veriIhlali'
 
 export const AU_EK_NOT = 'Initial Australian compliance and clinical content based on public guidelines. External clinician and legal review planned after first customers.'
@@ -22,8 +22,9 @@ export const AU_UZANTI: UlkeUzantisi = {
   kayitSistemi: AU_KAYIT_SISTEMI,
   taniKodlari: AU_TANI_KODLARI_TANIMI,
   islemKodlari: AU_ISLEM_KODLARI_TANIMI,
-  // AU-GAP-CLOSE-01 — competitive gap close: letters, MBS suggest, honest PMS export/roadmap.
+  // AU-GAP-CLOSE-01/03 — letters, care-plan studio, MBS suggest, honest PMS export/roadmap.
   mektup: AU_MEKTUP,
+  bakimPlani: AU_BAKIM_PLANI,
   mbsOneri: AU_MBS_ONERI,
   pmsEntegrasyon: AU_PMS_ENTEGRASYON,
   telehealthIpucu: AU_TELEHEALTH_IPUCU,

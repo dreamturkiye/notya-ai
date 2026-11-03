@@ -12,10 +12,13 @@ import { CA_GIRDI } from '../ayarlar'
 import { CA_SES } from '../ses'
 import { CA_CANLI_ASISTAN } from '../canli'
 import { CA_ACIL_CUMLE, CA_CEKIRDEK_EK } from './formEk'
+import { caMektupGirdisi, caMektupTalimati } from './mektupTalimatlari'
 
 export const CA_KLINIK: UlkeKlinigi = {
   ...enKlinik({ ...CA_GIRDI, cekirdekEk: CA_CEKIRDEK_EK, acilCumle: CA_ACIL_CUMLE }),
   ses: CA_SES,
   // Live spoken assistant: fails closed until the agents and secrets exist (lib/ulke/asistan/ajan.ts).
   canliAsistan: CA_CANLI_ASISTAN,
+  mektupTalimati: caMektupTalimati,
+  mektupGirdisi: caMektupGirdisi,
 }

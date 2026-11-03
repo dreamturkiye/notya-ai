@@ -17,6 +17,7 @@ import { enMesajAyarlari } from '../_dil/en/mesaj'
 import { CA_ROLLER } from './roller'
 import { CA_RESMI_GUNLER } from './resmiGunler'
 import { CA_BIRIMLER, CA_VELI_YASI } from './temel'
+import { CA_UZANTI } from './uzanti'
 
 const cekirdek = enCekirdek('en-CA')
 const metin = paketMetinleri({
@@ -120,4 +121,5 @@ export const CA_PAKETI: UlkePaketi = {
     // SIGN-UP IS CLOSED: invitation code only. Only the owner opens it, after section A of the checklist passes.
     kayitAcik: false,
   },
+  uzanti: CA_UZANTI,
 }

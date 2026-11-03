@@ -17,6 +17,7 @@ import { enMesajAyarlari } from '../_dil/en/mesaj'
 import { GB_RESMI_GUNLER } from './resmiGunler'
 import { GB_BIRIMLER, GB_KIMLIK_ETIKETI, GB_VELI_YASI } from './temel'
 import { GB_ROLLER } from './roller'
+import { GB_UZANTI } from './uzanti'
 
 const cekirdek = enCekirdek('en-GB')
 const metin = paketMetinleri({
@@ -122,4 +123,5 @@ export const GB_PAKETI: UlkePaketi = {
     // SIGN-UP IS CLOSED: invitation code only. Only the owner opens it, after section A of the checklist passes.
     kayitAcik: false,
   },
+  uzanti: GB_UZANTI,
 }

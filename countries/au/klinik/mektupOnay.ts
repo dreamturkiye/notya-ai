@@ -1,12 +1,20 @@
 /**
- * AU-GAP-CLOSE-02 — clinician sign-off register for letter / MBS model prompts.
+ * AU-GAP-CLOSE-02/03 — clinician sign-off register for letter / care-plan / MBS model prompts.
  *
  * Same pattern as `countries/au/araclar/onaysizAciklar.ts`: prompts ship usable for drafting,
  * but this list is the worklist until a named Australian clinician has read them. Pack tests
  * hold the list to the prompt keys; bump `surum` when prompt text changes.
  */
 export type MektupIcerikOnayi = {
-  anahtar: 'mektup-gp' | 'mektup-referral' | 'mektup-patient' | 'mbs-oneri'
+  anahtar:
+    | 'mektup-gp'
+    | 'mektup-referral'
+    | 'mektup-patient'
+    | 'plan-gpmp'
+    | 'plan-tca'
+    | 'plan-ccmp'
+    | 'plan-mhcp'
+    | 'mbs-oneri'
   /** Bump when the prompt text in mektupTalimatlari.ts changes. */
   surum: string
   /** Named clinician who signed the prompt off; null = nobody yet. */
@@ -38,11 +46,39 @@ export const AU_MEKTUP_ICERIK_ONAYLARI: readonly MektupIcerikOnayi[] = [
     bakilacak: 'Patient letter prompt: plain language, no scare wording, invent-nothing, JSON-only.',
   },
   {
-    anahtar: 'mbs-oneri',
-    surum: '2026-11-02-v1',
+    anahtar: 'plan-gpmp',
+    surum: '2026-11-03-v1',
     klinisyen: null,
     onayTarihi: null,
-    bakilacak: 'MBS suggest prompt: suggest-only / never lodge, invent-no-service, max 5 items, JSON-only.',
+    bakilacak: 'GPMP care-plan prompt: structure only, invent-nothing, never assert item billable, JSON-only.',
+  },
+  {
+    anahtar: 'plan-tca',
+    surum: '2026-11-03-v1',
+    klinisyen: null,
+    onayTarihi: null,
+    bakilacak: 'TCA care-plan prompt: providers only if in note, never assert item billable, JSON-only.',
+  },
+  {
+    anahtar: 'plan-ccmp',
+    surum: '2026-11-03-v1',
+    klinisyen: null,
+    onayTarihi: null,
+    bakilacak: 'CCMP (965/967 family) structure prompt: invent-nothing, never lodge, JSON-only.',
+  },
+  {
+    anahtar: 'plan-mhcp',
+    surum: '2026-11-03-v1',
+    klinisyen: null,
+    onayTarihi: null,
+    bakilacak: 'Mental Health Treatment Plan prompt: no invented diagnosis, never assert MH item billable, JSON-only.',
+  },
+  {
+    anahtar: 'mbs-oneri',
+    surum: '2026-11-03-v2',
+    klinisyen: null,
+    onayTarihi: null,
+    bakilacak: 'MBS suggest prompt: suggest-only / never lodge, plan-item families allowed as suggestions, invent-no-service, max 8, JSON-only.',
   },
 ]
 

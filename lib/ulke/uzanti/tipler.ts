@@ -330,6 +330,30 @@ export type MektupUzantiMetni = {
   onayBekliyor: string
 }
 
+/** AU-GAP-CLOSE-03 — Medicare care-plan document studio (draft + sign-off; never lodge). */
+export type BakimPlaniUzantiMetni = {
+  baslik: string
+  aciklama: string
+  turler: readonly { tur: 'gpmp' | 'tca' | 'ccmp' | 'mhcp'; ad: string; aciklama: string }[]
+  yaz: string
+  yaziliyor: string
+  yenidenYaz: string
+  etiket: string
+  kopyala: string
+  kopyalandi: string
+  indir: string
+  yazdir: string
+  makine: string
+  yazilamadi: string
+  onayliDegil: string
+  bos: string
+  uyari: string
+  onayla: string
+  onaylandi: string
+  onayBekliyor: string
+  kaynak: string
+}
+
 /** AU-GAP-CLOSE-01 — MBS suggestion card copy. */
 export type MbsOneriUzantiMetni = {
   baslik: string
@@ -386,6 +410,8 @@ export type UlkeUzantisi = {
   islemKodlari?: IslemKodlariTanimi
   /** AU-GAP-CLOSE-01 — letter studio under an approved note. Absent = not drawn. */
   mektup?: MektupUzantiMetni
+  /** AU-GAP-CLOSE-03 — care-plan document studio (GPMP/TCA/CCMP/MHCP). Absent = not drawn. */
+  bakimPlani?: BakimPlaniUzantiMetni
   /** AU-GAP-CLOSE-01 — MBS suggest card under an approved note. Absent = not drawn. */
   mbsOneri?: MbsOneriUzantiMetni
   /** AU-GAP-CLOSE-01 — PMS export pack + honest write-back roadmap. Absent = Integrations unchanged. */

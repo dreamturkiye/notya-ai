@@ -15,7 +15,7 @@ describe('mektup sabitler', () => {
     assert.equal(mektupTuruMu(null), false)
   })
   it('pins the export pack version stamp', () => {
-    assert.equal(PMS_EXPORT_SURUM, 'au-pms-export-v1')
+    assert.equal(PMS_EXPORT_SURUM, 'au-pms-export-v2')
   })
 })
 

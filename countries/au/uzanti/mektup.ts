@@ -1,8 +1,8 @@
 /**
- * AU-GAP-CLOSE-01 / 02 — Australia: client-safe UI copy for letter studio, MBS assist and PMS export roadmap.
+ * AU-GAP-CLOSE-01 / 02 / 03 — Australia: client-safe UI copy for letter studio, care-plan studio, MBS assist and PMS export.
  * Drawn only where the pack extension is present. No claim of lodgement, write-back or regulator endorsement.
  */
-import type { MbsOneriUzantiMetni, MektupUzantiMetni, PmsEntegrasyonUzanti } from '@/lib/ulke/uzanti/tipler'
+import type { BakimPlaniUzantiMetni, MbsOneriUzantiMetni, MektupUzantiMetni, PmsEntegrasyonUzanti } from '@/lib/ulke/uzanti/tipler'
 
 export const AU_MEKTUP: MektupUzantiMetni = {
   baslik: 'Letter studio',
@@ -30,9 +30,37 @@ export const AU_MEKTUP: MektupUzantiMetni = {
   onayBekliyor: 'Sign off this letter before it can enter the visit export or write-back queue.',
 }
 
+export const AU_BAKIM_PLANI: BakimPlaniUzantiMetni = {
+  baslik: 'Care-plan studio',
+  aciklama: 'Draft a Medicare care-plan document from this approved visit. You edit and sign off every word. Nothing is lodged or sent.',
+  turler: [
+    { tur: 'gpmp', ad: 'GP Management Plan (GPMP)', aciklama: 'Problems, goals and planned management from this note' },
+    { tur: 'tca', ad: 'Team Care Arrangements (TCA)', aciklama: 'Coordinated care with other providers when the note supports it' },
+    { tur: 'ccmp', ad: 'Chronic Condition Management Plan', aciklama: 'CCMP-style structure (965/967 family) — structure only' },
+    { tur: 'mhcp', ad: 'Mental Health Treatment Plan', aciklama: 'Mental health plan draft from this note' },
+  ],
+  yaz: 'Draft care plan',
+  yaziliyor: 'Drafting…',
+  yenidenYaz: 'Draft again',
+  etiket: 'Care plan',
+  kopyala: 'Copy',
+  kopyalandi: 'Copied.',
+  indir: 'Download .txt',
+  yazdir: 'Print',
+  makine: 'Drafted by the model from this approved note only. Edit before you use it. Never lodges.',
+  yazilamadi: 'That care plan could not be drafted. Try again.',
+  onayliDegil: 'Approve the note before a care plan can be drafted.',
+  bos: 'The care plan is empty.',
+  uyari: 'A draft document only. Notya does not lodge Medicare claims and does not decide that a care-plan item is payable. Check MBS Online and your practice rules before you bill.',
+  onayla: 'I have read this care plan — include in export',
+  onaylandi: 'Signed off for export. Edit again and re-sign after changes.',
+  onayBekliyor: 'Sign off this care plan before it can enter the visit export or write-back queue.',
+  kaynak: 'Structure mirrors common Australian GPMP/TCA/CCMP/MHCP document headings. Item numbers are never asserted as payable. Awaiting named clinician review of prompts (mektupOnay.ts).',
+}
+
 export const AU_MBS_ONERI: MbsOneriUzantiMetni = {
   baslik: 'MBS suggestions',
-  aciklama: 'Possible MBS items that may fit this approved visit — for you to check against MBS Online. Suggest only.',
+  aciklama: 'Possible MBS items that may fit this approved visit — attendance, telehealth, procedures and care-plan families when the note supports them. Check MBS Online. Suggest only.',
   oner: 'Suggest items',
   oneriliyor: 'Suggesting…',
   kopyala: 'Copy list',
@@ -40,7 +68,7 @@ export const AU_MBS_ONERI: MbsOneriUzantiMetni = {
   bos: 'No item suggestion fitted this note.',
   yazilamadi: 'Suggestions could not be prepared. Try again.',
   uyari: 'Suggestions only. Notya never lodges a Medicare claim and never decides that a benefit is payable. Check MBS Online before you bill.',
-  kaynak: 'Matched where possible against the local MBS item → ACHI stem map (IHACPA). Unknown items without a descriptor are dropped.',
+  kaynak: 'Matched where possible against the local MBS item → ACHI stem map (IHACPA). Plan-item families may appear as suggestions when the note supports chronic-disease or care-plan work. Unknown items without a descriptor are dropped.',
   onayla: 'Confirm selected items for export',
   onaylandi: 'Selected items signed off for export. Still never lodged from Notya.',
   onayBekliyor: 'Tick the items you accept, then confirm — only confirmed rows enter the export pack.',

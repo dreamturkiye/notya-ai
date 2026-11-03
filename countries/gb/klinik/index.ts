@@ -12,10 +12,13 @@ import { GB_GIRDI } from '../ayarlar'
 import { GB_SES } from '../ses'
 import { GB_CANLI_ASISTAN } from '../canli'
 import { GB_ACIL_CUMLE, GB_CEKIRDEK_EK } from './formEk'
+import { gbMektupGirdisi, gbMektupTalimati } from './mektupTalimatlari'
 
 export const GB_KLINIK: UlkeKlinigi = {
   ...enKlinik({ ...GB_GIRDI, cekirdekEk: GB_CEKIRDEK_EK, acilCumle: GB_ACIL_CUMLE }),
   ses: GB_SES,
   // Live spoken assistant: fails closed until the agents and secrets exist (lib/ulke/asistan/ajan.ts).
   canliAsistan: GB_CANLI_ASISTAN,
+  mektupTalimati: gbMektupTalimati,
+  mektupGirdisi: gbMektupGirdisi,
 }

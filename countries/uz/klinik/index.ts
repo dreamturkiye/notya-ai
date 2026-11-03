@@ -12,6 +12,7 @@ import { UZ_HASTA_FORMU } from './hastaFormu'
 import { uzHastaOzetiGirdisi, uzHastaOzetiTalimati } from './hastaOzeti'
 import { uzSablonAlanlari } from './notSablonlari'
 import { uzDigerDil, uzNotGirdisi, uzNotTalimati, uzYenidenYazimGirdisi, uzYenidenYazimTalimati } from './talimatlar'
+import { uzMektupGirdisi, uzMektupTalimati } from './mektupTalimatlari'
 
 export const UZ_KLINIK: UlkeKlinigi = {
   konusma: {
@@ -58,4 +59,7 @@ export const UZ_KLINIK: UlkeKlinigi = {
   // with every consultation, so it is always known which wording was ticked: CHANGE IT WHENEVER THE SENTENCE CHANGES.
   // A DRAFT: no lawyer of the country has read the sentence, nor whether a consent recorded this way is enough.
   konsultasyonRizasi: { surum: 'uz-konsultatsiya-taslak-2026-10-09', hukukcuInceledi: false },
+  // UZ-GAP-CLOSE — letter studio from approved note (usual doctor / referral / patient). No AU Medicare care-plan.
+  mektupTalimati: uzMektupTalimati,
+  mektupGirdisi: uzMektupGirdisi,
 }

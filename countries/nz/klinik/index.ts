@@ -14,5 +14,10 @@ import { enKlinik } from '../../_dil/en/klinik'
 import { NZ_GIRDI } from '../ayarlar'
 import { NZ_ACIL_CUMLE, NZ_CEKIRDEK_EK } from './formEk'
 import { NZ_ROLLER_FORMLU } from './hastaFormu'
+import { nzMektupGirdisi, nzMektupTalimati } from './mektupTalimatlari'
 
-export const NZ_KLINIK: UlkeKlinigi = enKlinik({ ...NZ_GIRDI, roller: NZ_ROLLER_FORMLU, cekirdekEk: NZ_CEKIRDEK_EK, acilCumle: NZ_ACIL_CUMLE })
+export const NZ_KLINIK: UlkeKlinigi = {
+  ...enKlinik({ ...NZ_GIRDI, roller: NZ_ROLLER_FORMLU, cekirdekEk: NZ_CEKIRDEK_EK, acilCumle: NZ_ACIL_CUMLE }),
+  mektupTalimati: nzMektupTalimati,
+  mektupGirdisi: nzMektupGirdisi,
+}

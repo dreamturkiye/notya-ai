@@ -16,6 +16,7 @@ import { uzAramaKatla } from './arama'
 import { UZ_ROLLER } from './klinik/rolAdlari'
 import { UZ_VELI_YASI } from './ayarlar'
 import { UZ_RESMI_GUNLER } from './resmiGunler'
+import { UZ_UZANTI } from './uzanti'
 
 const metin = paketMetinleri({
   acikDiller: ['uz-Latn', 'ru'],
@@ -212,4 +213,5 @@ export const UZ_PAKETI: UlkePaketi = {
     // Invitation only.
     kayitAcik: false,
   },
+  uzanti: UZ_UZANTI,
 }

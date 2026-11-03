@@ -16,6 +16,7 @@ import { enRolAnahtarlari } from '../_dil/en/klinik/roller'
 import { enMesajAyarlari } from '../_dil/en/mesaj'
 import { NZ_BIRIMLER, NZ_ROLLER, NZ_VELI_YASI } from './ayarlar'
 import { NZ_RESMI_GUNLER } from './resmiGunler'
+import { NZ_UZANTI } from './uzanti'
 
 const cekirdek = enCekirdek('en-NZ')
 const metin = paketMetinleri({
@@ -140,4 +141,5 @@ export const NZ_PAKETI: UlkePaketi = {
     // SIGN-UP IS CLOSED: invitation code only. Only the owner opens it, after section A of the checklist passes.
     kayitAcik: false,
   },
+  uzanti: NZ_UZANTI,
 }

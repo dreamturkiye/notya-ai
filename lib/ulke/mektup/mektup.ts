@@ -12,7 +12,7 @@ import { ulkePaketi } from '@/lib/ulke/ulke'
 import { islemKaynagi } from '@/lib/ulke/kayit/islemKaynagi'
 import { modeldenMektup, modeldenMbsOneri } from '@/lib/ulke/uygulama/notModeli'
 import { notGetir } from '@/lib/ulke/uygulama/notlar'
-import { MEKTUP_AZAMI, MEKTUP_TURLERI, MBS_ONERI_AZAMI, PMS_EXPORT_SURUM, mektupTuruMu, type MektupTuru } from './sabitler'
+import { BAKIM_PLAN_TURLERI, MEKTUP_AZAMI, MEKTUP_TURLERI, MBS_ONERI_AZAMI, PMS_EXPORT_SURUM, mektupTuruMu, type MektupTuru } from './sabitler'
 import type { MbsOneri, MektupTaslak, PmsExportPaket } from './tipler'
 
 export type MektupRetKodu = 'NOT_FOUND' | 'ONAYSIZ' | 'HAZIR_DEGIL' | 'YAZILAMADI' | 'GECERSIZ' | 'BASARISIZ'
@@ -35,18 +35,31 @@ async function onayliNot(supabase: SupabaseClient, doktorId: string, notId: stri
   return { tamam: true as const, not }
 }
 
-/** Which letter kinds this pack offers for the account's UI language form. */
+/** Which letter kinds (gp/referral/patient) this pack offers. */
 export function mektupTurleri(): readonly MektupTuru[] {
   const k = AKTIF_KLINIK
   if (!k?.mektupTalimati) return []
   return MEKTUP_TURLERI.filter((t) => Boolean(k.mektupTalimati!(t)))
 }
 
-export async function mektupHazirMi(supabase: SupabaseClient, doktorId: string, notId: string): Promise<{ onayli: boolean; yazilabilir: boolean; turler: readonly MektupTuru[] } | null> {
+/** AU-GAP-CLOSE-03 — care-plan document kinds (gpmp/tca/ccmp/mhcp) this pack offers. */
+export function bakimPlanTurleri(): readonly MektupTuru[] {
+  const k = AKTIF_KLINIK
+  if (!k?.mektupTalimati) return []
+  return BAKIM_PLAN_TURLERI.filter((t) => Boolean(k.mektupTalimati!(t)))
+}
+
+export async function mektupHazirMi(supabase: SupabaseClient, doktorId: string, notId: string): Promise<{ onayli: boolean; yazilabilir: boolean; turler: readonly MektupTuru[]; bakimTurler: readonly MektupTuru[] } | null> {
   const not = await notGetir(supabase, doktorId, notId)
   if (!not) return null
   const turler = mektupTurleri()
-  return { onayli: not.onayli, yazilabilir: not.onayli && turler.length > 0, turler }
+  const bakimTurler = bakimPlanTurleri()
+  return {
+    onayli: not.onayli,
+    yazilabilir: not.onayli && (turler.length > 0 || bakimTurler.length > 0),
+    turler,
+    bakimTurler,
+  }
 }
 
 export async function mektupUret(

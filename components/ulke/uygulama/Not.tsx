@@ -35,8 +35,9 @@ import { NotUstCubugu, NotBaslikKuyrugu, NotPil, NotAnaDugme, NotDuzeni, NotAlan
 import { MuayeneEkleri } from './MuayeneEkleri'
 import { PortalOzetKarti } from './PortalOzeti'
 import { MektupKarti, type OnayliMektup } from './MektupKarti'
+import { BakimPlaniKarti } from './BakimPlaniKarti'
 import { MbsOneriKarti } from './MbsOneriKarti'
-import type { MektupTuru } from '@/lib/ulke/mektup/sabitler'
+import type { BakimPlanTuru, MektupHarfTuru, MektupTuru } from '@/lib/ulke/mektup/sabitler'
 import { HastaFormuKarti } from './HastaFormuKarti'
 import { SablonSecici, useSablonlar } from './Sablonlarim'
 import { EklerNotKarti } from './Ekler'
@@ -198,9 +199,30 @@ export function Not({ u, notId }: { u: Uygulama; notId: string }) {
   const [metinler, setMetinler] = useState<Partial<Record<DilKodu, NotIcerigi>>>({})
   const [islem, setIslem] = useState<NotIslemi>(null)
   const [bildirim, setBildirim] = useState<NotBildirimi>(null)
-  /** AU-GAP-CLOSE-02 — letters the doctor signed off on this approved note (lifted into MBS/export). */
+  /** AU-GAP-CLOSE-02/03 — letters + care plans the doctor signed off on (lifted into MBS/export). */
   const [onayliMektuplar, setOnayliMektuplar] = useState<Partial<Record<MektupTuru, OnayliMektup>>>({})
   const { hesap, api } = u
+
+  const mektupImza = useCallback((k: Partial<Record<MektupHarfTuru, OnayliMektup>>) => {
+    setOnayliMektuplar((eski) => {
+      const sonraki = { ...eski }
+      for (const t of ['gp', 'referral', 'patient'] as const) {
+        if (k[t]) sonraki[t] = k[t]
+        else delete sonraki[t]
+      }
+      return sonraki
+    })
+  }, [])
+  const planImza = useCallback((k: Partial<Record<BakimPlanTuru, OnayliMektup>>) => {
+    setOnayliMektuplar((eski) => {
+      const sonraki = { ...eski }
+      for (const t of ['gpmp', 'tca', 'ccmp', 'mhcp'] as const) {
+        if (k[t]) sonraki[t] = k[t] as OnayliMektup
+        else delete sonraki[t]
+      }
+      return sonraki
+    })
+  }, [])
 
   const yukle = useCallback(async (gecilecekDil?: DilKodu): Promise<void> => {
     const r = await api(`/api/ulke/not?id=${encodeURIComponent(notId)}`)
@@ -285,13 +307,21 @@ export function Not({ u, notId }: { u: Uygulama; notId: string }) {
           still theirs to change. Read-only, marked as the patient's own words; it was never given to the model. */}
       {!not.onayli && not.muayene.hasta && ozellikAcik('hastaPortali') && ozellikAcik('hastaFormu') ? <HastaFormuKarti u={u} hastaId={not.muayene.hasta.id} mod="muayene" /> : null}
       {not.onayli && not.muayene.hasta && ozellikAcik('hastaPortali') ? <PortalOzetKarti key={`${not.notId}-${not.onayTarihi ?? ''}`} u={u} notId={not.notId} /> : null}
-      {/* AU-GAP-CLOSE-01/02: letter studio + MBS + export/queue — approved note only; hekimOnayi lifts into the export card. */}
+      {/* AU-GAP-CLOSE-01/02/03: letter + care-plan studios + MBS + export/queue — approved note; hekimOnayi lifts into export. */}
       {not.onayli ? (
         <MektupKarti
           key={`mektup-${not.notId}-${not.onayTarihi ?? ''}`}
           u={u}
           notId={not.notId}
-          onOnayliDegisti={setOnayliMektuplar}
+          onOnayliDegisti={mektupImza}
+        />
+      ) : null}
+      {not.onayli ? (
+        <BakimPlaniKarti
+          key={`bakim-${not.notId}-${not.onayTarihi ?? ''}`}
+          u={u}
+          notId={not.notId}
+          onOnayliDegisti={planImza}
         />
       ) : null}
       {not.onayli ? (

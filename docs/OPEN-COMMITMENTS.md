@@ -4879,10 +4879,20 @@ Supersedes STRIPE-NOTYA-AU-04's "founding price NOT approved" line, and AU-03's 
 **Still OPEN (honest):**
 | Item | Owner |
 |---|---|
-| Real Bp / Genie / Gentu partner HTTP adapters (env flags ready; stub stays PARTNER_YOK) | **Kaan SENT Bp Partner Network application 2026-11-03** (`docs/au/BP-PARTNER-APPLICATION-DRAFT.md`) → waits Bp form/staging keys → then Claude `pmsYaz`. Magentus/Genie–Gentu form still to send. |
-| Fill `klinisyen` / `onayTarihi` on `AU_MEKTUP_ICERIK_ONAYLARI` after an Australian clinician reads the prompts | Kaan → clinician |
-| Letter/MBS/PMS country-adapted copy for us/gb/ca/nz/uz | Claude |
-| MBS / care plans Strong (GPMP/TCA/CCMP + MHCP drafts, never lodge; Bp write of signed plans = Ask #3 after partner live) | Claude (product) after Kaan prioritises |
+| Real Bp / Genie / Gentu partner HTTP adapters (env flags ready; stub stays PARTNER_YOK) | **Kaan SENT Bp Partner Network application 2026-11-03** → waits Bp form/staging keys → then Claude `pmsYaz`. Magentus/Genie–Gentu form still to send. |
+| Fill `klinisyen` / `onayTarihi` on `AU_MEKTUP_ICERIK_ONAYLARI` (now includes plan-gpmp/tca/ccmp/mhcp + deepened mbs) | Kaan → clinician |
+| Front desk phone AI | Later |
+
+## AU-GAP-CLOSE-03 — care-plan studio + country letter scaffolds (Claude, 2026-11-03)
+
+**Classification:** AU-pack care plans (Medicare-specific) · letter studio shared mechanism for all 6 countries (country-adapted). **Branş:** specialty-agnostic AU roles for care plans. **Countries:** au **APPLIED** (care-plan + deepened MBS) · us/gb/ca/nz/uz **APPLIED** (letter studio + honest export pack; no MBS/care-plan — N/A Medicare) · TR **N/A**.
+
+**Shipped:**
+1. **Care-plan studio** — GPMP / TCA / CCMP / MHCP drafts under approved note (`BakimPlaniKarti`); `hekimOnayi`; never lodge; prompts in `mektupTalimatlari.ts` + register keys.
+2. **MBS deepen** — plan-item families (721/723/732/965/967…) allowed as suggestions only; max 8.
+3. **Country letter scaffolds** — us/gb/ca/nz (local English) + uz (Uzbek/Russian-aware prompts + Latin UI); export pack without AU PMS vendor names.
+
+**Still OPEN:** live Bp HTTP (waits partner); named clinician on prompt register; front-desk AI.
 
 **Tests:** `lib/ulke/pms/pms.test.ts`, `lib/billing/ucretsizPlan.test.ts`, `countries/au/mektup.gap.test.ts`.
 

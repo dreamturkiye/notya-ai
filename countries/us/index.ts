@@ -17,6 +17,7 @@ import { enMesajAyarlari } from '../_dil/en/mesaj'
 import { US_ROLLER } from './roller'
 import { US_RESMI_GUNLER } from './resmiGunler'
 import { US_BIRIMLER, US_VELI_YASI } from './temel'
+import { US_UZANTI } from './uzanti'
 
 const cekirdek = enCekirdek('en-US')
 const metin = paketMetinleri({
@@ -139,4 +140,6 @@ export const US_PAKETI: UlkePaketi = {
     // SIGN-UP IS CLOSED: invitation code only. Only the owner opens it, after section A of the checklist passes.
     kayitAcik: false,
   },
+  // US-GAP-CLOSE — letter studio + honest visit export (no MBS / AU PMS vendors).
+  uzanti: US_UZANTI,
 }

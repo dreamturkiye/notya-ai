@@ -39,7 +39,8 @@ export function MektupKarti({ u, notId, onOnayliDegisti }: {
     if (!r.ok || r.j.yazilabilir !== true) { setYazilabilir(false); return }
     setYazilabilir(true)
     const turler = Array.isArray(r.j.turler) ? (r.j.turler as MektupTuru[]) : []
-    if (turler.length && !turler.includes(tur)) setTur(turler[0])
+    if (!turler.length) { setYazilabilir(false); return }
+    if (!turler.includes(tur)) setTur(turler[0])
   }, [api, notId, tur])
 
   useEffect(() => { if (hesap && metin) yukle().catch(() => setYazilabilir(false)) }, [hesap, metin, yukle])

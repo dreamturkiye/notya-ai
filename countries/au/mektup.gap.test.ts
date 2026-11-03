@@ -51,15 +51,32 @@ describe('AU-GAP-CLOSE-01/02 pack wiring', () => {
     assert.doesNotMatch(AU_UZANTI.telehealthIpucu ?? '', /not built yet/i)
   })
 
-  it('prompt register lists every letter/MBS key and remains awaiting clinician until filled', () => {
+  it('prompt register lists letter + care-plan + MBS keys and remains awaiting clinician until filled', () => {
     const anahtarlar = AU_MEKTUP_ICERIK_ONAYLARI.map((x) => x.anahtar)
-    assert.deepEqual(anahtarlar, ['mektup-gp', 'mektup-referral', 'mektup-patient', 'mbs-oneri'])
+    assert.deepEqual(anahtarlar, [
+      'mektup-gp', 'mektup-referral', 'mektup-patient',
+      'plan-gpmp', 'plan-tca', 'plan-ccmp', 'plan-mhcp',
+      'mbs-oneri',
+    ])
     assert.equal(mektupIcerikOnaysizMi(), true)
     for (const x of AU_MEKTUP_ICERIK_ONAYLARI) {
       assert.equal(x.klinisyen, null)
       assert.ok(x.surum.length > 0)
       assert.ok(x.bakilacak.length > 20)
     }
+  })
+
+  it('care-plan studio and deepened MBS suggest are wired', () => {
+    assert.ok(AU_UZANTI.bakimPlani)
+    assert.equal(AU_UZANTI.bakimPlani!.turler.length, 4)
+    assert.match(AU_UZANTI.bakimPlani!.uyari, /never lodges|does not lodge/i)
+    for (const t of ['gpmp', 'tca', 'ccmp', 'mhcp'] as const) {
+      const talimat = AU_KLINIK.mektupTalimati!(t)
+      assert.ok(talimat && talimat.length > 40, t)
+      assert.match(talimat!, /Never lodge|never lodge|Never claim a benefit/i)
+    }
+    const mbs = AU_KLINIK.mbsOneriTalimati!()
+    assert.match(mbs!, /965|967|721|care-plan|GPMP/i)
   })
 
   it('AU freemium is note-only 5/day; founding seat count stays 20; PMS tables registered', () => {

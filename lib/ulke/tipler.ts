@@ -709,12 +709,13 @@ export type UlkeKlinigi = {
   /** The message that carries the approved note to the model, in the summary's language. The note and nothing else. */
   hastaOzetiGirdisi?: (dil: DilKodu, icerik: NotIcerigi) => string
   /**
-   * AU-GAP-CLOSE-01 — instructions for a clinical LETTER draft from an APPROVED note (`tur`: gp / referral / patient).
-   * null = that kind is not offered. Absent = the country has no letter studio.
+   * AU-GAP-CLOSE-01/03 — instructions for a clinical LETTER or care-plan draft from an APPROVED note.
+   * Letter kinds: gp / referral / patient. Care-plan kinds (AU): gpmp / tca / ccmp / mhcp.
+   * null = that kind is not offered. Absent = the country has no letter/care-plan studio.
    */
-  mektupTalimati?: (tur: 'gp' | 'referral' | 'patient') => string | null
-  /** The message that carries the approved note to the model for a letter. The note and nothing else. */
-  mektupGirdisi?: (tur: 'gp' | 'referral' | 'patient', icerik: NotIcerigi) => string
+  mektupTalimati?: (tur: 'gp' | 'referral' | 'patient' | 'gpmp' | 'tca' | 'ccmp' | 'mhcp') => string | null
+  /** The message that carries the approved note to the model for a letter or care plan. The note and nothing else. */
+  mektupGirdisi?: (tur: 'gp' | 'referral' | 'patient' | 'gpmp' | 'tca' | 'ccmp' | 'mhcp', icerik: NotIcerigi) => string
   /**
    * AU-GAP-CLOSE-01 — instructions for MBS item SUGGESTIONS from an approved note. Suggest only; never lodge.
    * Absent = the country has no MBS assist.
