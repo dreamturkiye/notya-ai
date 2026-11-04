@@ -9,7 +9,7 @@ import { Pill, Stat, Callout, Table, Card, BarChart } from 'cursor/canvas'
 const DOMAIN_ROWS = [
   ['Ambient visit → note (consent + approve)', 'success', 'Record → transcript → draft → approval hard-gated; unclear marked, not guessed'],
   ['Referral / GP / patient letters / certificates', 'success', 'Letter studio under approved note + clinician sign-off before export (AU-GAP-CLOSE-01/02)'],
-  ['AU PMS write-back (Bp / Genie / Gentu / Cliniko)', 'warning', 'Export pack + vault + outbox shipped; live partner HTTP still PARTNER_YOK until adapter lands'],
+  ['AU PMS write-back (Bp / Genie / Gentu / Cliniko)', 'warning', 'Cliniko live draft treatment-note write; Magentus adapter ready (needs partner keys); Bp back burner (Partner Network)'],
   ['Dictate / telehealth / desktop capture', 'success', 'Tab/window capture + paste transcript + telehealth tip on shared visit screen'],
   ['Specialty depth / templates', 'success', '~44 AU roles, specialty note shapes, 40+ tools, named assistants'],
   ['MBS / PBS / care plans / CCMP', 'success', 'GPMP/TCA/CCMP/MHCP studio + MBS suggest (plan families); never lodge — Bp live write still Partial'],
@@ -30,7 +30,7 @@ const WOW_BARS = [
   { label: 'Specialty coverage', value: 72 },
   { label: 'Patient portal / privacy ops', value: 80 },
   { label: 'Letters & certificates', value: 72 },
-  { label: 'Incumbent PMS write-back', value: 42 },
+  { label: 'Incumbent PMS write-back', value: 58 },
   { label: 'MBS co-pilot / care plans', value: 72 },
   { label: 'Telehealth / dictate / desktop', value: 70 },
   { label: 'Price & free-entry', value: 68 },
@@ -38,8 +38,8 @@ const WOW_BARS = [
 ] as const
 
 const PAIN_CARDS = [
-  { title: 'Already live in Best Practice', cost: 'Lyrebird still ahead on live sync', wow: 'Bp vault + outbox + export; partner API for live send', now: 'Partial — credentials + queue, not live write' },
-  { title: 'Genie/Gentu specialist, letters same day', cost: 'Medow still ahead on live sync', wow: 'Letter studio + Genie/Gentu vault/outbox', now: 'Letters Strong · sync Partial' },
+  { title: 'Already live in Best Practice', cost: 'Lyrebird still ahead on live Bp sync', wow: 'Bp vault + outbox; Partner Network back burner', now: 'Partial — Cliniko live for allied; Bp pending committee' },
+  { title: 'Genie/Gentu specialist, letters same day', cost: 'Needs Magentus sandbox keys', wow: 'Magentus FHIR DocumentReference adapter + letter studio', now: 'Letters Strong · Magentus HTTP ready, keys open' },
   { title: 'Want free forever + evidence citations', cost: 'Heidi still wins evidence RAG', wow: 'Note-only freemium 5/day + OS value story', now: 'Freemium shipped · citations still Partial' },
   { title: 'Opening new rooms / hate my PMS', cost: 'Notya can win', wow: 'Calendar + portal + invoices + letters in one', now: 'Strong OS · letters closed' },
   { title: 'Patients need a page + consent trail', cost: 'Notya wins', wow: 'Lead marketing with PIN portal + privacy timer', now: 'Strong — productised' },
@@ -73,7 +73,8 @@ export default function AuCompetitiveAnalysis() {
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', margin: '12px 0 20px' }}>
         <Pill tone="success">Notya = practice OS, not a scribe overlay</Pill>
         <Pill tone="success">Letters + MBS sign-off shipped (AU-GAP-CLOSE-02)</Pill>
-        <Pill tone="warning">PMS: vault + outbox · live partner HTTP still open</Pill>
+        <Pill tone="success">Cliniko write-back live · Magentus adapter ready</Pill>
+        <Pill tone="warning">Bp Partner Network on back burner</Pill>
         <Pill tone="success">Freemium: 5 notes/day · founding A$79 invite intact</Pill>
       </div>
 

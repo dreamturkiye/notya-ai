@@ -76,12 +76,17 @@ export function Entegrasyonlar() {
   const e = u.m.ayarlar.ek
   const pms = ulkePaketi().uzanti?.pmsEntegrasyon
   const [baglantilar, setBaglantilar] = useState<PmsBaglantiOzet[]>([])
-  const [saglayici, setSaglayici] = useState('best-practice')
+  const [saglayici, setSaglayici] = useState('cliniko')
   const [etiket, setEtiket] = useState('')
   const [anahtar, setAnahtar] = useState('')
+  const [clientId, setClientId] = useState('')
+  const [clientSecret, setClientSecret] = useState('')
+  const [tokenUrl, setTokenUrl] = useState('')
+  const [apiUrl, setApiUrl] = useState('')
   const [bekliyor, setBekliyor] = useState(false)
   const [bilgi, setBilgi] = useState<string | null>(null)
   const [hata, setHata] = useState<string | null>(null)
+  const magentusMu = saglayici === 'genie' || saglayici === 'gentu'
 
   const { hesap, api } = u
   useEffect(() => {
@@ -96,10 +101,10 @@ export function Entegrasyonlar() {
 
   const durumRozet = (durum: string) => {
     if (durum === 'hazir-export') return { ad: 'Export ready', renk: R.pine, zemin: '#E4F3F1' }
-    if (durum === 'kimlik-kayitli' || durum === 'partner-bekleniyor') {
-      return { ad: 'Credentials saved · partner pending', renk: R.muted, zemin: '#F2ECDF' }
-    }
-    if (durum === 'partner-api') return { ad: 'Needs partner API', renk: R.muted, zemin: '#F2ECDF' }
+    if (durum === 'kimlik-kayitli') return { ad: 'API key verified', renk: R.pine, zemin: '#E4F3F1' }
+    if (durum === 'partner-bekleniyor') return { ad: 'Credentials saved · partner pending', renk: R.muted, zemin: '#F2ECDF' }
+    if (durum === 'dogrulanamadi') return { ad: 'Key rejected', renk: '#9b3b2e', zemin: '#F8E8E4' }
+    if (durum === 'partner-api') return { ad: 'Needs API key / partner', renk: R.muted, zemin: '#F2ECDF' }
     return { ad: 'On the roadmap', renk: R.muted, zemin: '#F2ECDF' }
   }
 
@@ -107,14 +112,21 @@ export function Entegrasyonlar() {
     if (!pms) return
     setBekliyor(true); setHata(null); setBilgi(null)
     try {
-      const r = await api('/api/ulke/pms/baglanti', { method: 'POST', govde: { saglayici, anahtar, etiket } })
+      const govde: Record<string, string> = { saglayici, anahtar, etiket }
+      if (magentusMu) {
+        if (clientId) govde.clientId = clientId
+        if (clientSecret) govde.clientSecret = clientSecret
+        if (tokenUrl) govde.tokenUrl = tokenUrl
+        if (apiUrl) govde.apiUrl = apiUrl
+      }
+      const r = await api('/api/ulke/pms/baglanti', { method: 'POST', govde })
       if (r.ok && r.j.baglanti) {
         const o = r.j.baglanti as PmsBaglantiOzet
         setBaglantilar((eski) => {
           const kal = eski.filter((b) => b.saglayici !== o.saglayici)
           return [...kal, o]
         })
-        setAnahtar('')
+        setAnahtar(''); setClientSecret('')
         setBilgi(pms.baglantiKaydedildi || 'Saved. Waiting for partner API — not Synced.')
       } else setHata('Credentials could not be saved.')
     } catch { setHata('Credentials could not be saved.') }
@@ -199,7 +211,19 @@ export function Entegrasyonlar() {
               <label style={{ display: 'block', fontSize: 12, fontWeight: 600, marginBottom: 4 }} htmlFor="pms-etiket">Label (optional)</label>
               <input id="pms-etiket" value={etiket} onChange={(ev) => setEtiket(ev.target.value)} maxLength={80} style={{ width: '100%', boxSizing: 'border-box', border: `1px solid ${R.border}`, borderRadius: 10, padding: '10px 12px', fontSize: 15, marginBottom: 8, fontFamily: CHROME_FONT.sans }} />
               <label style={{ display: 'block', fontSize: 12, fontWeight: 600, marginBottom: 4 }} htmlFor="pms-anahtar">API key</label>
-              <input id="pms-anahtar" type="password" autoComplete="off" value={anahtar} onChange={(ev) => setAnahtar(ev.target.value)} maxLength={500} style={{ width: '100%', boxSizing: 'border-box', border: `1px solid ${R.border}`, borderRadius: 10, padding: '10px 12px', fontSize: 15, marginBottom: 10, fontFamily: CHROME_FONT.sans }} />
+              <input id="pms-anahtar" type="password" autoComplete="off" value={anahtar} onChange={(ev) => setAnahtar(ev.target.value)} maxLength={2000} style={{ width: '100%', boxSizing: 'border-box', border: `1px solid ${R.border}`, borderRadius: 10, padding: '10px 12px', fontSize: 15, marginBottom: 8, fontFamily: CHROME_FONT.sans }} />
+              {magentusMu ? (
+                <div data-alan="pms-magentus-alanlar" style={{ marginBottom: 10 }}>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, marginBottom: 4 }} htmlFor="pms-client-id">Magentus client id</label>
+                  <input id="pms-client-id" value={clientId} onChange={(ev) => setClientId(ev.target.value)} maxLength={200} style={{ width: '100%', boxSizing: 'border-box', border: `1px solid ${R.border}`, borderRadius: 10, padding: '10px 12px', fontSize: 15, marginBottom: 8, fontFamily: CHROME_FONT.sans }} />
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, marginBottom: 4 }} htmlFor="pms-client-secret">Magentus client secret</label>
+                  <input id="pms-client-secret" type="password" autoComplete="off" value={clientSecret} onChange={(ev) => setClientSecret(ev.target.value)} maxLength={2000} style={{ width: '100%', boxSizing: 'border-box', border: `1px solid ${R.border}`, borderRadius: 10, padding: '10px 12px', fontSize: 15, marginBottom: 8, fontFamily: CHROME_FONT.sans }} />
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, marginBottom: 4 }} htmlFor="pms-token-url">Token URL</label>
+                  <input id="pms-token-url" value={tokenUrl} onChange={(ev) => setTokenUrl(ev.target.value)} placeholder="https://…/oauth2/token" maxLength={500} style={{ width: '100%', boxSizing: 'border-box', border: `1px solid ${R.border}`, borderRadius: 10, padding: '10px 12px', fontSize: 15, marginBottom: 8, fontFamily: CHROME_FONT.sans }} />
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, marginBottom: 4 }} htmlFor="pms-api-url">FHIR API URL</label>
+                  <input id="pms-api-url" value={apiUrl} onChange={(ev) => setApiUrl(ev.target.value)} placeholder="https://…/fhir" maxLength={500} style={{ width: '100%', boxSizing: 'border-box', border: `1px solid ${R.border}`, borderRadius: 10, padding: '10px 12px', fontSize: 15, marginBottom: 8, fontFamily: CHROME_FONT.sans }} />
+                </div>
+              ) : null}
               <button type="button" disabled={bekliyor || anahtar.trim().length < 8} onClick={() => { void kaydet() }} data-eylem="pms-baglanti-kaydet" style={{ background: R.pine, color: '#fff', border: 'none', borderRadius: 10, padding: '11px 16px', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: CHROME_FONT.sans, minHeight: 44 }}>
                 {pms.baglantiKaydet || 'Save credentials'}
               </button>

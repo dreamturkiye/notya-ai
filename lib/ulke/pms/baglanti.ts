@@ -1,5 +1,5 @@
 /**
- * AU-GAP-CLOSE-02 — encrypted PMS credential vault (mirror of payment connections).
+ * AU-PMS — encrypted PMS credential vault (mirror of payment connections).
  * Client never receives the secret — only saglayici, baglantiDurum, sonDort.
  */
 import type { SupabaseClient } from '@supabase/supabase-js'
@@ -13,6 +13,10 @@ type Satir = {
   baglanti_durum: PmsBaglantiDurum
   kimlik_encrypted: string
   son_dort: string | null
+}
+
+function alan(v: unknown, max: number): string {
+  return typeof v === 'string' ? v.trim().slice(0, max) : ''
 }
 
 export async function pmsBaglantilariListele(supabase: SupabaseClient, doktorId: string): Promise<PmsBaglantiOzet[]> {
@@ -44,16 +48,29 @@ export async function pmsKimlikOku(
 export async function pmsBaglantiKaydet(
   supabase: SupabaseClient,
   doktorId: string,
-  g: { saglayici: unknown; etiket?: unknown; anahtar?: unknown },
+  g: Record<string, unknown>,
 ): Promise<{ tamam: true; ozet: PmsBaglantiOzet } | { tamam: false; kod: PmsRetKodu }> {
   if (!pmsSaglayiciMi(g.saglayici)) return { tamam: false, kod: 'GECERSIZ' }
-  const anahtar = typeof g.anahtar === 'string' ? g.anahtar.trim() : ''
-  const etiket = typeof g.etiket === 'string' ? g.etiket.trim() : ''
-  if (anahtar.length < 8 || anahtar.length > 500) return { tamam: false, kod: 'GECERSIZ' }
-  const kimlik = { etiket: etiket.slice(0, 80) || g.saglayici, anahtar }
+  const anahtar = alan(g.anahtar, 2000)
+  const etiket = alan(g.etiket, 80)
+  if (anahtar.length < 8) return { tamam: false, kod: 'GECERSIZ' }
+
+  const kimlik: Record<string, unknown> = {
+    etiket: etiket || g.saglayici,
+    anahtar,
+  }
+  // Magentus OAuth fields (Genie / Gentu). Optional Cliniko hastaId / shard overrides.
+  for (const k of ['clientId', 'clientSecret', 'tokenUrl', 'apiUrl', 'scopes', 'hastaId', 'shard'] as const) {
+    const v = alan(g[k], 2000)
+    if (v) kimlik[k] = v
+  }
+
   const dogrula = await pmsDogrula(g.saglayici, kimlik)
-  // Without a live partner adapter, credentials are accepted as "partner pending" — never as synced.
-  const baglantiDurum: PmsBaglantiDurum = dogrula.tamam ? 'kimlik-kayitli' : 'partner-bekleniyor'
+  const baglantiDurum: PmsBaglantiDurum = dogrula.tamam
+    ? 'kimlik-kayitli'
+    : dogrula.kod === 'PARTNER_YOK'
+      ? 'partner-bekleniyor'
+      : 'dogrulanamadi'
   const sonDort = anahtar.slice(-4)
   const { error } = await ulkeTablosu(supabase, 'ulke_pms_baglantilari').upsert({
     doctor_id: doktorId,

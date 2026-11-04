@@ -1,7 +1,8 @@
 /**
- * AU-GAP-CLOSE-02 — PMS write-back scaffold types. Never includes a "synced" connection state.
+ * AU-PMS — write-back types. Never includes a "synced" connection state without adapter ack.
+ * Cliniko = self-serve clinic API key. Genie/Gentu = Magentus Partner API. Bp = back burner.
  */
-export const PMS_SAGLAYICILAR = ['best-practice', 'genie', 'gentu'] as const
+export const PMS_SAGLAYICILAR = ['cliniko', 'gentu', 'genie', 'best-practice'] as const
 export type PmsSaglayici = (typeof PMS_SAGLAYICILAR)[number]
 
 export type PmsBaglantiDurum = 'kimlik-kayitli' | 'partner-bekleniyor' | 'dogrulanamadi'
