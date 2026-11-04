@@ -95,11 +95,11 @@ describe('practice details: empty is valid, invalid shows a sentence and is not 
 })
 
 describe('landing disclaimers, labels and honesty', () => {
-  it('the four owner disclaimers are verbatim', () => {
+  it('the four disclaimers are exact (AU-POLITIKA-01: lines 2 and 3 rewritten from the legal memo)', () => {
     assert.deepEqual([...AU_YASAL_SATIRLARI], [
       'Notya is a practice management and clinical documentation tool. It does not provide medical advice, diagnosis, or treatment. Clinical decisions remain the responsibility of the registered practitioner.',
-      'Health information is handled in accordance with the Privacy Act 1988 (Cth) and the Australian Privacy Principles. By using Notya you consent to the collection and use of health information for the purpose of providing the service.',
-      'Clinical content is based on publicly available Australian guidelines (RACGP, RCH Melbourne, PBS, WHO). It is an initial compliance and clinical draft. External clinician and legal review is planned after the first customers.',
+      'How Notya handles personal and health information, and which providers process it, is set out in our Privacy Policy. A visit is recorded only after the practitioner confirms the patient has agreed.',
+      'Where Notya shows clinical reference content, it names the publicly available source it comes from. Notya is not affiliated with those organisations, and they have not reviewed Notya.',
       'Notya is not a substitute for professional medical advice. Always consult a registered Australian health practitioner for medical concerns.',
     ])
     assert.deepEqual([...AU_YASAL_NOTLARI.satirlar], [...AU_YASAL_SATIRLARI])
@@ -112,7 +112,8 @@ describe('landing disclaimers, labels and honesty', () => {
     assert.equal(AU_TASLAK_ETIKETI, '')
     assert.equal(AU_GIZLILIK.taslakEtiketi, AU_TASLAK_ETIKETI)
     for (const b of AU_REFERANS_BOLUMLERI) assert.equal(b.taslakEtiketi, 'Initial clinical draft – external clinician review later.')
-    for (const d of [...AU_YASAL.diller[0].belgeler, AU_DATA_BREACH]) assert.equal(d.inceleme, '')
+    // AU-POLITIKA-01: no draft label; the launch policies open with their last-updated date.
+    for (const d of [...AU_YASAL.diller[0].belgeler, AU_DATA_BREACH]) assert.ok(d.inceleme === '' || /^Last updated \d{1,2} \w+ \d{4}\.$/.test(d.inceleme), d.baslik)
   })
   it('no text claims compliance, certification or review', () => {
     const hepsi = JSON.stringify([AU_GIZLILIK, AU_FATURA, AU_UZANTI.referansBolumleri, AU_DATA_BREACH, AU_YASAL.diller[0].belgeler.filter((b) => ['privacy', 'security', 'data-request'].includes(b.anahtar))])
@@ -138,6 +139,6 @@ describe('landing disclaimers, labels and honesty', () => {
     assert.equal(AU_UZANTI.kayitSistemi?.durum.bagli, false)
   })
   it('routes for the new screens and pages are listed', () => {
-    for (const r of ['/billing', '/privacy-requests', '/data-breach', '/privacy', '/data-request']) assert.ok(AU_PAKETI.rotalar !== 'hepsi' && AU_PAKETI.rotalar.sayfalar.includes(r), r)
+    for (const r of ['/billing', '/privacy-requests', '/data-breach', '/privacy', '/data-request', '/data-storage', '/sub-processors', '/data-processing-agreement']) assert.ok(AU_PAKETI.rotalar !== 'hepsi' && AU_PAKETI.rotalar.sayfalar.includes(r), r)
   })
 })

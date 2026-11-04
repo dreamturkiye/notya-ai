@@ -1,5 +1,12 @@
 # Notya Australia — legal memo (draft, 2026-11-03)
 
+> **Drafted 2026-11-03, pending AU lawyer review (AU-POLITIKA-01).** Launch policies written from this memo and published on
+> au.notya.io: Privacy Policy and Terms of use / Refunds / Cookie policy (`countries/au/yasal.ts`), Data breach response plan
+> (`countries/au/uzanti/veriIhlali.ts`; internal plan `docs/au/DATA-BREACH-RESPONSE-PLAN.md`), Data storage and retention,
+> Sub-processors and Data processing agreement summary (`countries/au/uzanti/politikalar.ts`; template
+> `docs/au/DPA-TEMPLATE.md`); landing disclaimer lines 2–3 rewritten (`countries/au/uzanti/acilis.ts`). The section 4 rows on the
+> landing's "your-assistant" wording and "Prices are given by quote" are still open (Kaan decisions).
+
 **Status: research notes by Claude, NOT legal advice. NEEDS REVIEW BY AN AUSTRALIAN HEALTH LAWYER BEFORE PUBLIC LAUNCH** (owner: Kaan). Sources were read on 2026-11-03; where an official page could not be fetched, that is said.
 
 ## 1. Findings that change what we do

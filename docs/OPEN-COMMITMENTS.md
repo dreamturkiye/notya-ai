@@ -4900,3 +4900,30 @@ Shipped on release/au: `/founding`, the AU demo link as a per-country setting (`
 `docs/au/LEGAL-MEMO-2026-11.md`: TGA device status of the voice assistant and paediatric tools, APP 8 position and a DPA for practices, consent wording, Spam Act rules, and six risky lines in the current AU copy (not rewritten in this job). Positioning draft awaiting approval: `docs/au/LANDING-COPY-DRAFT.md`.
 
 | Kaan: instruct an Australian health lawyer with the memo | Claude: rewrite the flagged copy and policy items from the lawyer's answer | OPEN (2026-11-03) |
+
+## AU-POLITIKA-01 — AU launch policies: follow-ups (Claude, 2026-11-03)
+
+Published on release/au 2026-11-03 (drafted, pending AU lawyer review): privacy policy, terms, refunds, cookies, data breach
+response plan, data storage and retention, sub-processors, DPA summary ("available on request"). Facts checked are listed at
+the top of `countries/au/uzanti/politikalar.ts`. What the code does NOT have yet, so the pages promise manual handling by email:
+
+| Date | Item | Owner | Status |
+|---|---|---|---|
+| 2026-11-03 | **AU-POLITIKA-01a — automated account export and deletion.** Today: no self-service cancellation (cancel by email; Stripe cancel by hand), no account-deletion or patient-record-delete endpoint, per-patient JSON export only (omits files/photos, intake answers, messages, invoices). Build: whole-account export (incl. files), account deletion (DB rows + storage objects, Supabase Auth user, Stripe customer handling), a self-service cancel (Stripe billing portal or in-app), and a runbook for the manual path until then. Pages promise deletion within 30 days of a written request and a full-account copy within 30 days. | Claude | OPEN (2026-11-03) |
+| 2026-11-03 | **AU-POLITIKA-01b — provider terms.** Confirm and record each provider's retention / no-training / breach-notice terms and processing countries (ElevenLabs, OpenRouter + zero-data-retention routing, OpenAI, Anthropic, Vercel, Supabase DPA), then update /sub-processors. | Claude (research), Kaan (sign provider DPAs) | OPEN (2026-11-03) |
+| 2026-11-03 | **AU-POLITIKA-01c — Kaan decisions.** (1) Approve the DPA template `docs/au/DPA-TEMPLATE.md` before sending it; (2) dormant-account retention period (pages say records stay until deletion is requested); (3) governing law / courts clause for the AU terms (not set); (4) confirm privacy@ / security@ / billing@notya.io mailboxes exist (the new pages use kaan@notya.io; the Security page and security.txt still use security@notya.io); (5) whether /signup should show Terms/Privacy links (it shows none today; shared component, all countries). | Kaan | OPEN (2026-11-03) |
+| 2026-11-03 | **AU-POLITIKA-01d — breach drill and access logging.** Run one tabletop drill before the first paying AU practice; describe how founder/admin access to patient data is logged (memo section 5). | Claude (drill script), Kaan (run it) | OPEN (2026-11-03) |
+
+## POLITIKA-ULKE-01 — equivalent launch policies for the other five countries (Claude, waits on Kaan, 2026-11-03)
+
+The AU documents are written to Australian law and are not copied elsewhere. Each country needs its own set (privacy policy,
+breach response, storage and retention, sub-processors, DPA/BAA, terms with its own consumer law), built on the same
+sub-processor facts, under the same one-look page components.
+
+| Date | Item | Owner | Status |
+|---|---|---|---|
+| 2026-11-03 | gb — UK GDPR / Data Protection Act 2018 (Article 28 DPA, ICO 72-hour breach notice, international transfer mechanism) | Claude (draft), Kaan (go + lawyer) | OPEN — waits on Kaan |
+| 2026-11-03 | ca — PIPEDA and provincial health-information laws (e.g. Ontario PHIPA, Alberta HIA, Quebec Law 25) | Claude (draft), Kaan (go + lawyer) | OPEN — waits on Kaan |
+| 2026-11-03 | nz — Privacy Act 2020 and Health Information Privacy Code 2020 (notifiable privacy breaches to the OPC) | Claude (draft), Kaan (go + lawyer) | OPEN — waits on Kaan |
+| 2026-11-03 | us — HIPAA posture: Business Associate Agreement for covered entities, BAAs with providers, breach notification rule, state laws | Claude (draft), Kaan (go + lawyer) | OPEN — waits on Kaan |
+| 2026-11-03 | uz — Law on Personal Data (localisation of citizens' data) | Claude (draft), Kaan (go + lawyer) | OPEN — waits on Kaan |

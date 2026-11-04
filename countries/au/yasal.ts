@@ -13,6 +13,7 @@ import { ingilizceYasal } from '@/lib/ulke/yasal/ingilizce'
 import { YASAL_EPOSTA as E } from '@/lib/ulke/yasal/eposta'
 import type { YasalBelge, YasalKapisi } from '@/lib/ulke/yasal/tipler'
 import { AU_GIZLILIK, AU_OPERATOR, AU_PRIVACY_OFFICER, AU_TASLAK_ETIKETI } from './uzanti/gizlilik'
+import { AU_ALT_ISLEYENLER, AU_POLITIKA_EPOSTA, AU_POLITIKA_INCELEME, AU_PRATIK_ODEME, AU_SITE_HIZMETLERI, altIsleyenSatiri } from './uzanti/politikalar'
 
 const temel = ingilizceYasal({
   kod: 'en-AU',
@@ -54,40 +55,70 @@ const MEDICAL: YasalBelge = {
 const PRIVACY: YasalBelge = {
   anahtar: 'privacy',
   baslik: 'Privacy Policy',
-  inceleme: INCELEME,
+  inceleme: AU_POLITIKA_INCELEME,
   bolumler: [
-    { baslik: 'About this policy', paragraflar: [
-      'This draft policy is written with the Privacy Act 1988 (Cth) and the Australian Privacy Principles (APPs) in mind. It describes how Notya, a practice management and clinical documentation tool, handles personal information, including health information (sensitive information). It is a draft for a lawyer to review and is not a statement that the service complies with that Act.',
-      `Software provider: ${AU_OPERATOR}. Your practitioner or clinic is the one who collects and decides what is recorded about you; Notya provides the software they use.`,
+    { baslik: 'Who we are', paragraflar: [
+      `Notya is a practice management and clinical documentation tool for registered health practitioners. It is provided by ${AU_OPERATOR} ("Notya", "we"). This policy explains how we handle personal information, including health information, in the Australian Notya service at au.notya.io.`,
+      'Because we hold health information, the small business exemption in the Privacy Act 1988 (Cth) does not apply to us, and we handle personal information under the Australian Privacy Principles (APPs).',
+      'For patient records, the practice is in charge: the practitioner or clinic decides what is recorded about its patients and why, and we handle those records for the practice to provide the service. Questions about your own care or record are best asked of your practice first.',
     ] },
-    { baslik: 'Privacy officer', paragraflar: [`Privacy officer: ${AU_PRIVACY_OFFICER}. General privacy questions: ${E.privacy}.`] },
-    { baslik: 'What is collected (APP 3, APP 5)', paragraflar: [
-      'Practitioner account: name, email address, phone number, profession and optional registration numbers, practice details (name, ABN, address, provider number) and sign-in records.',
-      'Patient record, entered or recorded by the practitioner or given by the patient: name, date of birth, sex, phone, language, an optional Medicare card number, intake-form answers, visit notes, appointment details, messages, attached files or photos, invoices, and, only when the practitioner turns it on and the patient agrees, a recording of a visit.',
-      'Health information is collected with consent. The patient’s consent is recorded with the date and the version of the collection notice they accepted. Consent can be withdrawn.',
+    { baslik: 'What we collect', paragraflar: [
+      'Practitioners and practice staff: name, email address, phone number, profession and optional registration numbers, practice details (name, ABN, address, provider number), account settings, subscription and billing details, sign-in records, and how the service is used (for example, the number of visits and live-voice minutes, to apply plan limits).',
+      'Patients, through their practice: name, date of birth, sex, phone number, language, an optional Medicare card number, intake-form answers, visit notes, visit transcripts, appointment details, messages, attached files and photos, invoices, consent records and privacy requests. A visit is recorded only when the practitioner turns recording on and confirms the patient has agreed.',
+      'Patient page users: what a patient enters on their own page (form answers, messages, consent choices, requests to see or correct information), and a short-lived session so the page stays open after the PIN is entered.',
+      'Website visitors: what you send us when you write to us or book a demo. We do not use advertising or analytics cookies (see the Cookie policy).',
     ] },
-    { baslik: 'Why it is used (APP 6)', paragraflar: ['To provide the service to the practitioner: keep clinical records, draft notes from a recording, book and show appointments, let a patient see what the practitioner shares, prepare invoices, and keep the service secure. It is not sold and is not used for advertising.'] },
-    { baslik: 'Who it goes to, including overseas (APP 6, APP 8)', paragraflar: [
-      'Service providers acting for the practice: Supabase (database), Vercel (application hosting), ElevenLabs (speech-to-text for a visit recording) and OpenRouter with the language-model provider it routes to (OpenAI or Anthropic models, under the model policy in force) to draft a note from the transcript and, when the practitioner asks, a plain-language summary of an approved note. The recording is deleted from Notya’s storage once it has been transcribed.',
-      'Notya does not send attached documents, scans or photographs to an AI model in the Australian version, and the photo archive is not read by any model. The optional assistant that answers a clinician’s general questions is switched off unless it is turned on for the deployment; the clinician is told not to give it patient identifiers.',
-      'Some of these are overseas. The providers named above are companies headquartered outside Australia; how long each keeps what it receives, and whether it may train on it, is set by its own terms, which have not been verified for this draft.',
-      'Some of these are overseas. As currently configured, application servers are configured to run in Sydney, Australia (Vercel region syd1) but requests first pass through the host’s global network; the database is hosted in Sydney, Australia (Supabase region ap-southeast-2, checked 2026-10-22); a practice that connects its own Stripe account has payments processed by Stripe; the demo page’s booking calendar is provided by Cal.com and pages load fonts from Google Fonts; and the speech and language-model providers process data in countries that this draft does not confirm (which may include countries in North America). A lawyer should review this disclosure and the contracts with each provider.',
+    { baslik: 'How we use it', paragraflar: [
+      'To provide the service to the practice: keep clinical records; turn a visit recording into text and draft a visit note; answer the practitioner’s questions from the patient’s file through the assistant; book and show appointments; let a patient see what the practitioner shares; prepare invoices; and keep the service secure and working.',
+      'To run the practitioner’s account: sign-in, the free trial and plan limits, billing, support and service messages.',
+      'We do not sell personal information, we do not use it for advertising, and we do not use practice or patient records to train our own models.',
     ] },
-    { baslik: 'Security (APP 11) — what the software does', paragraflar: [
-      'Names, details, notes and answers are encrypted by the application with AES-256-GCM before they are stored. Not every field is encrypted: appointment times, invoice amounts and status, and identifiers are stored plainly.',
-      'Every request is limited to the signed-in practitioner’s own patients. The patient page needs a private link and a six-digit PIN, locks after five wrong PINs, and each session ends by itself after 30 minutes. The service is served over HTTPS by its hosting platform.',
-      'Payment card details are never taken or stored by this software: a card is taken on the payment provider’s own hosted page, using the practice’s own merchant account that it connects to Notya (bring your own Stripe account; a test or a live connection). Notya does not hold or move your patients’ money. The connection key is stored encrypted and is never shown again.',
-      'This is a description of the software, not a guarantee. No system is free of risk, and no security audit or penetration test has been done (see the Security page).',
+    { baslik: 'Artificial intelligence', paragraflar: [
+      'Visit notes: when a visit is recorded, the recording is sent to a speech provider to turn it into text, and the transcript is sent to a language-model provider to draft a note. The note is only a draft until the practitioner reads, corrects and approves it. The practitioner remains responsible for the record.',
+      'Live voice assistant: when a practitioner talks to the assistant, their voice is sent to the speech provider; Notya’s own server (in Sydney) reads the relevant parts of the patient’s file and sends them, with the question, to a language-model provider; the answer is sent back to the speech provider to be spoken. The assistant finds and reads back what is in the file; decisions remain with the practitioner.',
+      'The practitioner can also ask for a plain-language summary of an approved note for the patient. Attached documents, scans and photos are not sent to an AI model in the Australian service.',
     ] },
-    { baslik: 'Keeping and deleting', paragraflar: [
-      'A practitioner can delete a patient record, and the records that belong to it are removed with it. A practitioner’s account is kept while it is open. How long health records must be kept is set by state and territory law and professional rules, not by this software; the practitioner decides, and a lawyer should set the retention periods for this service.',
+    { baslik: 'Consent before recording', paragraflar: [
+      'Notya will not start a recording until the practitioner confirms that the patient (or, for a patient under 18, their parent or guardian, or the patient where they are old enough to decide) has agreed to the visit being recorded and to AI drafting, including by overseas providers. The confirmation is stored with the visit. A patient can say no or ask for the recording to stop, and can still be seen.',
+      'Patients can also record their consent to the collection of their health information on their own page, and can withdraw it there.',
+    ] },
+    { baslik: 'Who we disclose it to', paragraflar: [
+      'Patient information is seen by the practitioner and the staff the practice authorises. We do not disclose it to anyone else except the service providers below, which act for us to provide the service, or where the law requires it. The practice may disclose information itself, for example in a referral.',
+      ...AU_ALT_ISLEYENLER.map(altIsleyenSatiri),
+      AU_PRATIK_ODEME,
+      ...AU_SITE_HIZMETLERI,
+    ] },
+    { baslik: 'Overseas disclosure (APP 8)', paragraflar: [
+      'Records are stored in Sydney, Australia. Some information is disclosed to, or processed by, providers overseas: Notya LLC itself is a United States company; the speech provider (ElevenLabs), the model gateway (OpenRouter) and the model providers (OpenAI, Anthropic) are based overseas, mainly in the United States; the hosting network (Vercel) is global; and the practitioner’s subscription payments are processed by Stripe through our United States account.',
+      'We remain accountable under the Privacy Act for how these providers handle the information we send them. How long each provider keeps what it receives, and whether it may use it to train its models, is set by its own terms; we are confirming each provider’s terms and will publish what we confirm on the Sub-processors page. The full list is on the Sub-processors page (/sub-processors).',
+    ] },
+    { baslik: 'Payments', paragraflar: [
+      'A practitioner’s own Notya subscription is paid through Stripe. Stripe receives the practitioner’s name, email address and billing details. Card details are entered on Stripe’s own page; Notya never receives or stores them. No patient information is sent to Stripe for the subscription.',
+    ] },
+    { baslik: 'Security', paragraflar: [
+      'Patient names, details, notes and form answers are encrypted by the application (AES-256-GCM) before they are stored; the database provider encrypts all stored data and data in transit. Every request is limited to the signed-in practitioner’s own patients. A patient page needs a private link and a six-digit PIN, locks after five wrong PINs and ends by itself after 30 minutes. Payment-connection keys are stored encrypted.',
+      'No system is free of risk. No independent security audit or penetration test has been done yet (see the Security page).',
+    ] },
+    { baslik: 'How long we keep it', paragraflar: [
+      'Records are kept while the practice’s account exists, including when it is read-only after a trial or a cancelled subscription. We delete an account and its records within 30 days of a written request from the account holder; backups expire on the provider’s schedule. A visit recording is deleted once it has been turned into text. Practices remain responsible for keeping health records for as long as state and territory law and professional rules require. Details: the Data storage and retention page (/data-storage).',
     ] },
     { baslik: 'Seeing and correcting your information (APP 12, APP 13)', paragraflar: [
-      'A patient can send a request to see or correct their information from their patient page. The practitioner sees the request with a 30-day response target and answers it. This is a product timer based on public guidance, not legal advice. You can also write to the privacy officer, or see the data-request page.',
+      `Patients: use “Ask to see or correct your information” on your patient page, or ask your practice. The practice answers, with a 30-day response target. You can also write to us at ${AU_POLITIKA_EPOSTA} and we will pass the request to the practice and help it respond.`,
+      `Practitioners: ask us at ${AU_POLITIKA_EPOSTA} for a copy of your account information or a correction. We respond within 30 days.`,
     ] },
-    { baslik: 'Complaints', paragraflar: ['Tell the privacy officer first. If you are not satisfied, you can complain to the Office of the Australian Information Commissioner (oaic.gov.au).'] },
-    { baslik: 'Data breaches', paragraflar: ['See the Data breach response page (/data-breach) for how a suspected breach is assessed and reported.'] },
-    { baslik: `Notice version`, paragraflar: [`Collection notice version in use: ${AU_GIZLILIK.surum}.`] },
+    { baslik: 'Complaints', paragraflar: [
+      `Write to our Privacy Officer at ${AU_POLITIKA_EPOSTA}. We will acknowledge your complaint within 7 days and aim to give you a full answer within 30 days. If you are not satisfied with our answer, you can complain to the Office of the Australian Information Commissioner (OAIC): oaic.gov.au, phone 1300 363 992.`,
+    ] },
+    { baslik: 'Data breaches', paragraflar: [
+      'If a data breach is likely to result in serious harm, we notify the OAIC and the people affected under the Notifiable Data Breaches scheme, and we tell an affected practice within 72 hours of confirming the breach. See the Data breach response plan (/data-breach).',
+    ] },
+    { baslik: 'Marketing email', paragraflar: [
+      'If we send a practitioner an email about Notya, it identifies Notya LLC, says how to contact us, and has a working unsubscribe link; we stop within 5 working days of an unsubscribe request. We do not send marketing to patients.',
+    ] },
+    { baslik: 'Contact and Privacy Officer', paragraflar: [
+      `Privacy Officer: ${AU_PRIVACY_OFFICER}. Postal address: ${AU_OPERATOR}.`,
+      `Changes: we will post any change to this policy here with a new date. Collection notice version in use: ${AU_GIZLILIK.surum}.`,
+    ] },
   ],
 }
 
@@ -114,7 +145,89 @@ const DATA_REQUEST: YasalBelge = {
   bolumler: [
     { baslik: 'Patients', paragraflar: ['Open your patient page (the link and PIN your practitioner gave you) and use “Ask to see or correct your information”. Your practitioner sees it with a 30-day response target. If you have no link, ask your practitioner.'] },
     { baslik: 'Practitioners', paragraflar: ['Open Privacy requests in the application to see requests, the days left, and to record your response. When you mark a request answered or declined, your response appears on the patient’s own page; Notya sends no email or text. For an access request you can download the patient’s data as one JSON file and give it to the patient yourself; the file lists what it does not yet carry (files and photographs, intake answers, messages, invoices).'] },
-    { baslik: 'Anything else', paragraflar: [`Write to ${E.privacy}. Do not send an identity number or health detail in the email. Privacy officer: ${AU_PRIVACY_OFFICER}.`] },
+    { baslik: 'Anything else', paragraflar: [`Write to ${AU_POLITIKA_EPOSTA}. Do not send an identity number or health detail in the email. Privacy officer: ${AU_PRIVACY_OFFICER}.`] },
+  ],
+}
+
+const TERMS: YasalBelge = {
+  anahtar: 'terms',
+  baslik: 'Terms of use',
+  inceleme: AU_POLITIKA_INCELEME,
+  bolumler: [
+    { baslik: 'These terms', paragraflar: [
+      `These terms apply to the Australian Notya service at au.notya.io, provided by ${AU_OPERATOR}. By opening an account you agree to them. Our Privacy Policy, Data storage and retention page and Refunds and cancellation page form part of them.`,
+      'Nothing in these terms excludes, restricts or modifies any right or remedy you have under the Australian Consumer Law, or any other law, that cannot lawfully be excluded, restricted or modified.',
+    ] },
+    { baslik: 'Who can use Notya', paragraflar: [
+      'Notya is for registered health practitioners and their practices. During the early-access period, an account is opened with an invitation code we provide. You keep your password private and do not share your account; you are responsible for the people you give access to in your practice.',
+    ] },
+    { baslik: 'Your clinical responsibility', paragraflar: [
+      'Notya prepares drafts: a note, a summary, a reminder. You read, correct and approve every draft before it becomes part of a record. Diagnosis, treatment and what is said to a patient remain your responsibility. You confirm a patient’s consent before recording a visit, and you follow the recording, privacy and health records laws that apply to you. See the Medical disclaimer.',
+    ] },
+    { baslik: 'Free trial', paragraflar: [
+      'A new account starts with a 15-day free trial. No card is needed. The trial includes up to 40 visits and 60 minutes of the live voice assistant.',
+      'If you do not choose a paid plan by the end of day 15, the account becomes read-only: your records are kept and you can still view them and download patient records, but you cannot record new visits, use the live voice assistant or generate new drafts until you choose a plan.',
+    ] },
+    { baslik: 'Plans and prices', paragraflar: [
+      'Standard plans: A$149 a month, or A$1,490 a year. Prices are in Australian dollars and are as shown at checkout.',
+      'Founding offer, for the first 20 practitioners who take it: A$79 a month, or A$948 a year. The founding monthly price is not fixed: we may change it by giving you at least 30 days’ notice by email, and you can cancel before the change takes effect. The founding yearly price is fixed for the year you have paid for.',
+      'Paid plans include 150 minutes of the live voice assistant each month. The written assistant is not counted against these minutes.',
+      'We may change standard prices by giving you at least 30 days’ notice by email before the change applies to your next billing period.',
+    ] },
+    { baslik: 'Billing and automatic renewal', paragraflar: [
+      'Payment is taken by Stripe at the start of each billing period. Your subscription renews automatically at the end of each month or year, at the price that applies then, until you cancel.',
+      'If a payment cannot be collected, the account may become read-only until it is paid.',
+    ] },
+    { baslik: 'Cancelling', paragraflar: [
+      `You can cancel at any time by emailing ${AU_POLITIKA_EPOSTA} from your account’s email address. Cancelling stops the next renewal; the period you have already paid for continues to its end. After that, the account is read-only and your records are kept until you ask us to delete them, as described on the Data storage and retention page.`,
+      'Refunds are covered on the Refunds and cancellation page.',
+    ] },
+    { baslik: 'Your records', paragraflar: [
+      'What you write or record about your patients belongs to you or your practice. We handle it only to provide the service, as described in the Privacy Policy. You can ask for a copy of your records, or for your account to be deleted, at any time.',
+    ] },
+    { baslik: 'Acceptable use', paragraflar: [
+      'Do not use Notya for anything unlawful, try to reach another account’s information, interfere with the service, or put information in it that you have no right to hold.',
+    ] },
+    { baslik: 'The service', paragraflar: [
+      'We work to keep Notya available and accurate, but it may sometimes be unavailable, and an AI draft can contain mistakes; that is why every draft needs your approval. We may change features over time; we will give at least 30 days’ notice of a change that materially reduces what your paid plan includes.',
+      'We may suspend an account that breaches these terms or puts other users at risk; except in an urgent case we will tell you first and give you a chance to fix the problem.',
+    ] },
+    { baslik: 'Changes to these terms', paragraflar: ['We will post any change here with a new date, and email you at least 30 days before a change that affects you materially.'] },
+    { baslik: 'Contact', paragraflar: [`${AU_OPERATOR}. Email: ${AU_POLITIKA_EPOSTA}.`] },
+  ],
+}
+
+const REFUND: YasalBelge = {
+  anahtar: 'refund',
+  baslik: 'Refunds and cancellation',
+  inceleme: AU_POLITIKA_INCELEME,
+  bolumler: [
+    { baslik: 'Cancelling', paragraflar: [
+      `You can cancel at any time by emailing ${AU_POLITIKA_EPOSTA} from your account’s email address. The period you have already paid for continues to the date it was paid for, and no further period begins after that date. Your records are kept, read-only, until you ask us to delete them.`,
+    ] },
+    { baslik: 'Refunds', paragraflar: [
+      'The free trial needs no payment, so you can try Notya before you pay. We do not normally refund the unused part of a month or year because you change your mind.',
+      'This does not limit your rights under the Australian Consumer Law. Our services come with guarantees that cannot be excluded under that law. If the service has a major failure, you are entitled to cancel and to a refund for the unused part of what you paid, or to compensation for the drop in value; for a failure that is not major, we will fix it within a reasonable time, and if we do not, you may cancel and ask for a refund.',
+    ] },
+    { baslik: 'Billing questions', paragraflar: [`Write to ${AU_POLITIKA_EPOSTA}.`] },
+  ],
+}
+
+const COOKIES: YasalBelge = {
+  anahtar: 'cookies',
+  baslik: 'Cookie policy',
+  inceleme: AU_POLITIKA_INCELEME,
+  bolumler: [
+    { baslik: 'Only what is needed', paragraflar: [
+      'Notya sets only cookies that are strictly necessary for the service to work. We do not use advertising, tracking or analytics cookies, so there is no cookie banner.',
+    ] },
+    { baslik: 'What is stored', paragraflar: [
+      'Sign-in cookies: keep a practitioner signed in to the application.',
+      'Patient page cookie: keeps a patient’s page open after the PIN is entered; it is limited to that page and ends when the session ends.',
+      'Your browser may also keep small preferences on your own device (for example, that you hid the first-steps panel). They are not sent to us for tracking.',
+    ] },
+    { baslik: 'Other services', paragraflar: [...AU_SITE_HIZMETLERI] },
+    { baslik: 'Questions', paragraflar: [`Write to ${AU_POLITIKA_EPOSTA}.`] },
   ],
 }
 
@@ -122,7 +235,7 @@ export const AU_YASAL: YasalKapisi = {
   diller: [{
     ...temel,
     belgeler: [
-      ...temel.belgeler.map((b) => (b.anahtar === 'privacy' ? PRIVACY : b.anahtar === 'security' ? SECURITY : b.anahtar === 'medical' ? MEDICAL : b.anahtar === 'data-request' ? DATA_REQUEST : { ...b, inceleme: `${AU_TASLAK_ETIKETI} ${b.inceleme}` })),
+      ...temel.belgeler.map((b) => (b.anahtar === 'privacy' ? PRIVACY : b.anahtar === 'security' ? SECURITY : b.anahtar === 'medical' ? MEDICAL : b.anahtar === 'data-request' ? DATA_REQUEST : b.anahtar === 'terms' ? TERMS : b.anahtar === 'refund' ? REFUND : b.anahtar === 'cookies' ? COOKIES : { ...b, inceleme: AU_TASLAK_ETIKETI })),
     ],
   }],
 }
