@@ -23,7 +23,7 @@ export function MbsOneriKarti({ u, notId, mektuplar }: {
   const [secili, setSecili] = useState<Record<string, boolean>>({})
   const [onayli, setOnayli] = useState(false)
   const [islem, setIslem] = useState<'oneriliyor' | 'export' | 'kuyruk' | null>(null)
-  const [hedef, setHedef] = useState<PmsSaglayici>('best-practice')
+  const [hedef, setHedef] = useState<PmsSaglayici>('cliniko')
   const [hata, setHata] = useState<string | null>(null)
   const [bilgi, setBilgi] = useState<string | null>(null)
   const { hesap, api } = u

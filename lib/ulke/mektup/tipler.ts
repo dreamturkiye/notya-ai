@@ -94,6 +94,8 @@ export type PmsExportPaket = {
   not: { s: string; o: string; a: string; p: string }
   mektuplar?: Partial<Record<MektupTuru, string>>
   mbsOnerileri?: readonly MbsOneri[]
-  /** Explicit: this file is for the doctor to import or paste. No PMS was contacted. */
+  /** Demographics for PMS patient match (Cliniko). Never a national ID. */
+  hasta?: { ad: string; otaIsmi: string; dogumTarihi: string; telefon: string } | null
+  /** Explicit: this file is for the doctor to import or paste unless a live adapter acks. */
   uyari: string
 }

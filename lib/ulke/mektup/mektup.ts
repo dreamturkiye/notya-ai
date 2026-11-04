@@ -11,6 +11,7 @@ import { AKTIF_KLINIK } from '@/countries/active/klinik'
 import { ulkePaketi } from '@/lib/ulke/ulke'
 import { islemKaynagi } from '@/lib/ulke/kayit/islemKaynagi'
 import { modeldenMektup, modeldenMbsOneri } from '@/lib/ulke/uygulama/notModeli'
+import { hastaGetir } from '@/lib/ulke/uygulama/hastalar'
 import { notGetir } from '@/lib/ulke/uygulama/notlar'
 import { BAKIM_PLAN_TURLERI, MEKTUP_AZAMI, MEKTUP_TURLERI, MBS_ONERI_AZAMI, PMS_EXPORT_SURUM, mektupTuruMu, type MektupTuru } from './sabitler'
 import type { MbsOneri, MektupTaslak, PmsExportPaket } from './tipler'
@@ -135,6 +136,8 @@ export async function pmsExportPaket(
 ): Promise<{ tamam: true; paket: PmsExportPaket } | Ret> {
   const n = await onayliNot(supabase, doktorId, notId)
   if (!n.tamam) return n
+  const hOzet = n.not.muayene.hasta
+  const hTam = hOzet ? await hastaGetir(supabase, doktorId, hOzet.id) : null
   const paket: PmsExportPaket = {
     surum: PMS_EXPORT_SURUM,
     ulke: ulkePaketi().kod,
@@ -144,7 +147,12 @@ export async function pmsExportPaket(
     not: { s: n.not.icerik.s, o: n.not.icerik.o, a: n.not.icerik.a, p: n.not.icerik.p },
     ...(ekstra?.mektuplar && Object.keys(ekstra.mektuplar).length ? { mektuplar: ekstra.mektuplar } : {}),
     ...(ekstra?.mbsOnerileri?.length ? { mbsOnerileri: ekstra.mbsOnerileri } : {}),
-    uyari: 'Export pack only. Notya did not connect to Best Practice, Genie, Gentu or any other practice-management system. Paste or import under your own control. MBS items are suggestions and must never be lodged from this file.',
+    hasta: hTam
+      ? { ad: hTam.ad, otaIsmi: hTam.otaIsmi, dogumTarihi: hTam.dogumTarihi, telefon: hTam.telefon }
+      : hOzet
+        ? { ad: hOzet.ad, otaIsmi: hOzet.otaIsmi, dogumTarihi: hOzet.dogumTarihi, telefon: '' }
+        : null,
+    uyari: 'Export pack / write-back payload. Live Cliniko write only happens when a clinic API key is saved and the adapter acks. Magentus (Genie/Gentu) needs partner keys. Best Practice stays partner-pending. MBS items are suggestions and must never be lodged from this file.',
   }
   return { tamam: true, paket }
 }

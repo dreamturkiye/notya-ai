@@ -4879,9 +4879,23 @@ Supersedes STRIPE-NOTYA-AU-04's "founding price NOT approved" line, and AU-03's 
 **Still OPEN (honest):**
 | Item | Owner |
 |---|---|
-| Real Bp / Genie / Gentu partner HTTP adapters (env flags ready; stub stays PARTNER_YOK) | **Kaan SENT Bp Partner Network application 2026-11-03** → waits Bp form/staging keys → then Claude `pmsYaz`. Magentus/Genie–Gentu form still to send. |
+| Best Practice live HTTP (`pmsYaz('best-practice')`) | **BACK BURNER** (Kaan 2026-11-03). Vanessa: NDA + form + monthly committee. Paperwork warm; beta not blocked. |
+| Magentus sandbox / production keys for Genie+Gentu | Kaan send `docs/au/MAGENTUS-PARTNER-APPLICATION-DRAFT.md` → then flip `NOTYA_PMS_GENIE_ETKIN` / `GENTU_ETKIN=1` |
 | Fill `klinisyen` / `onayTarihi` on `AU_MEKTUP_ICERIK_ONAYLARI` (now includes plan-gpmp/tca/ccmp/mhcp + deepened mbs) | Kaan → clinician |
 | Front desk phone AI | Later |
+
+## AU-PMS-CLINIKO-01 — Cliniko live + Magentus adapter; Bp back burner (Claude, 2026-11-03)
+
+**Classification:** **AU pack + shared `lib/ulke/pms` spine** (specialty-agnostic). Cliniko serves allied / Özel Branşlar heaviest; Magentus serves specialist Genie/Gentu. **Branş:** all 40 that use AU country pack (shared mechanism). **Countries:** au **APPLIED** · us/gb/ca/nz/uz **N/A** this cycle for AU PMS vendors (Cliniko NZ/UK packs = OPEN GAP owner Claude if those packs adopt the same vault) · TR **N/A**.
+
+**Shipped:**
+1. **Cliniko live adapter** — `lib/ulke/pms/cliniko.ts`: Basic-auth `/user` validate; patient match (name+DOB / phone / explicit `hastaId`); POST draft `treatment_notes`. On by default unless `NOTYA_PMS_CLINIKO_ETKIN=0`. Explicit timeout 15 s.
+2. **Magentus (Genie+Gentu) adapter** — `lib/ulke/pms/magentus.ts`: OAuth2 client_credentials + `x-api-key` + FHIR `DocumentReference` create. Needs complete partner keys; else honest `PARTNER_YOK`. Flags `NOTYA_PMS_GENIE_ETKIN` / `NOTYA_PMS_GENTU_ETKIN`.
+3. **Migration 187** — `cliniko` on vault + outbox check constraints.
+4. **Settings UI** — Cliniko default; Magentus OAuth fields when Genie/Gentu selected; badges: API key verified / partner pending / key rejected.
+5. **Bp** — documented back burner; copy `yol-haritasi`; Magentus application draft ready to send.
+
+**Never fake Synced.** Cliniko `gonderildi` only after Cliniko 2xx; Magentus only after DocumentReference 2xx.
 
 ## AU-GAP-CLOSE-03 — care-plan studio + country letter scaffolds (Claude, 2026-11-03)
 
@@ -4892,8 +4906,10 @@ Supersedes STRIPE-NOTYA-AU-04's "founding price NOT approved" line, and AU-03's 
 2. **MBS deepen** — plan-item families (721/723/732/965/967…) allowed as suggestions only; max 8.
 3. **Country letter scaffolds** — us/gb/ca/nz (local English) + uz (Uzbek/Russian-aware prompts + Latin UI); export pack without AU PMS vendor names.
 
-**Still OPEN:** live Bp HTTP (waits partner); named clinician on prompt register; front-desk AI.
+**Still OPEN:** live Bp HTTP (back burner); Magentus keys; named clinician on prompt register; front-desk AI.
 
 **Tests:** `lib/ulke/pms/pms.test.ts`, `lib/billing/ucretsizPlan.test.ts`, `countries/au/mektup.gap.test.ts`.
+
+
 
 

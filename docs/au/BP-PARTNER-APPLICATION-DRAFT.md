@@ -1,7 +1,8 @@
 # Best Practice Partner Network — application draft
 
-**Status:** **SENT by Kaan** — 2026-11-03 (America/New_York). Ball with Bp Partnerships.  
-**Next:** form / security questionnaire / staging Halo credentials → Claude implements `pmsYaz('best-practice')`.  
+**Status:** **SENT by Kaan** — 2026-11-03 (America/New_York). Vanessa replied with NDA + Application Form + monthly Committee Review.  
+**Priority:** **BACK BURNER** (Kaan 2026-11-03) — beta proceeds via Cliniko (live) + Magentus/Genie–Gentu (adapter ready). Keep Bp paperwork warm; do not block launch.  
+**Next (when resumed):** return NDA + form + privacy policy → tech/commercial meeting → committee → agreement → `pmsYaz('best-practice')`.  
 **Do not** flip UI to Synced or set `NOTYA_PMS_BEST_PRACTICE_ETKIN=1` until a real adapter ack exists.
 
 **To:** partners@bpsoftware.net  
