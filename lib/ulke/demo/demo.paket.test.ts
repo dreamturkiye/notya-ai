@@ -65,11 +65,11 @@ describe('A. the pack', () => {
     assert.equal(D.demoSayfasiVar(), true)
   })
 
-  it('each form: a 60-minute video call with Dr. Gökhan Mamur, in the visitor\'s own time zone; booking by Cal.com; no claim, no address', () => {
+  it('each form: a 30-minute video call with Dr. Gökhan Mamur, in the visitor\'s own time zone; booking by Cal.com; no claim, no address', () => {
     if (!ACIK) return
     for (const d of FORMLAR) {
       const m = D.demoMetni(d)!
-      assert.match(m.giris, /\b60\b/, d)
+      assert.match(m.giris, /\b30\b/, d)
       assert.match(m.giris, /Mamur|Мамур/, d)
       assert.match(m.saglayici, /Cal\.com/, d)
       const duzlestir = (v: unknown): string[] => (typeof v === 'string' ? [v] : Array.isArray(v) ? v.flatMap(duzlestir) : v && typeof v === 'object' ? Object.values(v).flatMap(duzlestir) : [])
