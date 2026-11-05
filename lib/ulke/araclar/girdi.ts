@@ -20,7 +20,7 @@
 import { sayiCozKuralla } from '../arayuz/sayiOkuma'
 import { alanAraligi, birimAnahtari, birimSecilirMi, kanonigeCevir, seciliBirim, type BirimOrtami } from './birimler'
 import type { AracAlani, AracGirdisi } from './tipler'
-import { alanVarMi, kosullariUygula, METIN_UZUNLUGU } from './yardimci'
+import { METIN_UZUNLUGU, alanVarMi, kosullariUygula, metinSiniri } from './yardimci'
 
 /**
  * The unit a laboratory value of an input was typed in, or — where the input does not say (a direct call with a value
@@ -45,7 +45,7 @@ export function hamiSuz(alanlar: readonly AracAlani[], ham: unknown): HamGirdi {
     const v = (ham as Record<string, unknown>)[a.anahtar]
     if (a.tur === 'isaret') { if (v === true) cikti[a.anahtar] = true; continue }
     // metin fields may set enCok (e.g. meal-plan lines); ham accepts twice the kept length for paste/trim.
-    const metinEnCok = a.tur === 'metin' ? (a.enCok ?? METIN_UZUNLUGU) : METIN_UZUNLUGU
+    const metinEnCok = a.tur === 'metin' ? metinSiniri(a) : METIN_UZUNLUGU
     if (typeof v === 'string' && v.length <= metinEnCok * 2) cikti[a.anahtar] = v
   }
   return cikti
@@ -60,7 +60,7 @@ export function girdiyiCoz(alanlar: readonly AracAlani[], ham: HamGirdi, o: Biri
     if (a.tur === 'secim') { g[a.anahtar] = typeof v === 'string' && (a.secenekler ?? []).includes(v) ? v : null; continue }
     if (a.tur === 'tarih') { g[a.anahtar] = typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : null; continue }
     if (a.tur === 'metin') {
-      const enCok = a.enCok ?? METIN_UZUNLUGU
+      const enCok = metinSiniri(a)
       const t = typeof v === 'string' ? v.trim().slice(0, enCok) : ''
       g[a.anahtar] = t || null
       continue

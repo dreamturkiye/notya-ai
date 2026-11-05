@@ -67,6 +67,13 @@ export const AU_PAKETI: UlkePaketi = {
   paraBirimi: { kod: 'AUD', simge: '$', ondalikHane: 2 },
   // The default time zone of a new account. UNVERIFIED choice.
   saatDilimi: 'Australia/Sydney',
+  // OP-DR-01 (2026-11-05): "Dr" before the name (no full stop), Associate Professor and Professor as academic titles;
+  // the college fellowship after it (FRANZCOG for obstetrics and gynaecology). The doctor's own text, never checked
+  // against the register of AHPRA or a college.
+  hekimUnvani: {
+    onEkler: { dr: { 'en-AU': 'Dr' }, aprof: { 'en-AU': 'A/Prof' }, prof: { 'en-AU': 'Prof' } },
+    ekOrnegi: { 'en-AU': 'e.g. MBBS, FRANZCOG' },
+  },
   bicim: { yerel: 'en-AU', tarihDeseni: 'DD/MM/YYYY', ondalikAyraci: '.', binlikAyraci: ',', haftaBasi: 1 },
   telefon: { ulkeOnEki: '+61', ulusalHane: 9, ornek: '+61 491 570 006', cepGecerliMi: auCepGecerliMi },
   // THE PATIENT IDENTIFIER: optional. Empty is still accepted. A non-empty value must pass the Medicare

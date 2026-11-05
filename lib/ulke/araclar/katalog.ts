@@ -18,6 +18,7 @@ import { ORTO_PEDI_RADYO_ROMA } from './tanimlar/ortoPediRadyoRoma'
 import { BOSLUK_ARACLARI } from './tanimlar/bosluklar'
 import { SKORLU_OLCEKLER } from './tanimlar/skorluOlcekler'
 import { BUYUME_PERSENTILI } from './tanimlar/buyumePersentili'
+import { KADIN_DOGUM_CERRAHI } from './tanimlar/kadinDogumCerrahi'
 
 /**
  * The patient portal as a tile: finding a patient and opening their file, where access is given (a link and a PIN)
@@ -49,7 +50,7 @@ const SABLONLARIM: AracTanimi = { anahtar: 'sablonlarim', tur: 'ekran', ekran: '
  */
 const KONSULTASYONLAR: AracTanimi = { anahtar: 'konsultasyonlar', tur: 'ekran', ekran: 'konsultasyonlar', alanlar: [], cikti: { sayilar: [], bantlar: [], uyarilar: [], tarihler: [] }, kaynak: null, hesapla: () => BOS_SONUC }
 
-export const KIT_ARACLARI: readonly AracTanimi[] = [HASTA_PORTALI, TAKIP_PANELI, SABLONLARIM, KONSULTASYONLAR, ...ACIL_ANESTEZI_BEYIN, ...CERRAHI_DAHILIYE_DERM, ...ENDO_ENFEKSIYON_GASTRO, ...CERRAHI_GOGUS_GOZ, ...KALP_KBB, ...NEFRO_ONKO, ...ORTO_PEDI_RADYO_ROMA, ...BOSLUK_ARACLARI, ...SKORLU_OLCEKLER, BUYUME_PERSENTILI]
+export const KIT_ARACLARI: readonly AracTanimi[] = [HASTA_PORTALI, TAKIP_PANELI, SABLONLARIM, KONSULTASYONLAR, ...ACIL_ANESTEZI_BEYIN, ...CERRAHI_DAHILIYE_DERM, ...ENDO_ENFEKSIYON_GASTRO, ...CERRAHI_GOGUS_GOZ, ...KALP_KBB, ...NEFRO_ONKO, ...ORTO_PEDI_RADYO_ROMA, ...BOSLUK_ARACLARI, ...SKORLU_OLCEKLER, BUYUME_PERSENTILI, ...KADIN_DOGUM_CERRAHI]
 
 const DIZIN: ReadonlyMap<string, AracTanimi> = new Map(KIT_ARACLARI.map((a) => [a.anahtar, a]))
 

@@ -57,6 +57,9 @@ export type Hesap = {
   saatDilimleri?: readonly string[]
   /** Optional professional registration. Absent when the account has none. */
   meslekKaydi?: string
+  /** OP-DR-01: the title key and the post-nominals printed records carry (lib/ulke/uygulama/hekimUnvani.ts). */
+  unvan?: string
+  unvanEki?: string
   /**
    * NOTYA-ULKE-KLINIK-01 — true = a FRONT-DESK member of a clinic who works in no role: the application is the
    * front-desk workspace, the clinic and the settings, and the navigation shows those and no doctor's screen.
@@ -148,7 +151,7 @@ export function useUygulama(ekran: UygulamaEkrani): Uygulama {
       // Every day and hour the screens write from now on is in the account's own time zone (one of the pack's list).
       hesapSaatDilimiAyarla(r.j.saatDilimi)
       const dilimler = Array.isArray(r.j.saatDilimleri) ? (r.j.saatDilimleri as unknown[]).filter((x): x is string => typeof x === 'string') : []
-      setHesap({ dil: uygulamaDili(r.j.dil), notDili: uygulamaDili(r.j.notDili), ad: String(r.j.ad || ''), rol, dilSoruldu, ...(onBuro ? { onBuro: true } : {}), ...(dilimler.length > 1 && typeof r.j.saatDilimi === 'string' ? { saatDilimi: r.j.saatDilimi, saatDilimleri: dilimler } : {}), ...(typeof r.j.meslekKaydi === 'string' && r.j.meslekKaydi ? { meslekKaydi: r.j.meslekKaydi } : {}) })
+      setHesap({ dil: uygulamaDili(r.j.dil), notDili: uygulamaDili(r.j.notDili), ad: String(r.j.ad || ''), rol, dilSoruldu, ...(onBuro ? { onBuro: true } : {}), ...(dilimler.length > 1 && typeof r.j.saatDilimi === 'string' ? { saatDilimi: r.j.saatDilimi, saatDilimleri: dilimler } : {}), ...(typeof r.j.meslekKaydi === 'string' && r.j.meslekKaydi ? { meslekKaydi: r.j.meslekKaydi } : {}), ...(typeof r.j.unvan === 'string' && r.j.unvan ? { unvan: r.j.unvan } : {}), ...(typeof r.j.unvanEki === 'string' && r.j.unvanEki ? { unvanEki: r.j.unvanEki } : {}) })
     })()
     return () => { iptal = true }
   }, [api, cikis, ekran])

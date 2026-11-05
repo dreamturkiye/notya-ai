@@ -19,8 +19,8 @@ A pack that builds has every text and setting filled in. It says nothing about w
 
 ## What is in this pack, and where it comes from
 
-- **From the shared English set** (`countries/_dil/en/`, written once for five countries): 6682 texts as this pack shows them or hands the model (the country's own, counted in the next line, among them) — the screens, the role names, 40 note templates, the instructions to the model, the intake questions, 223 tools, the landing copy — written in `en-AU` spelling by the set's spelling table.
-- **This country's own** (`countries/au/`, six small files): 48 texts it writes itself (its consent sentence, identifier label, time sentence, date example, name, word for a senior doctor, role names where they differ, what its closed tools are missing and who decides, unit names and tool words it writes differently, the example phone number and the pattern of an amount) and the settings in the table below.
+- **From the shared English set** (`countries/_dil/en/`, written once for five countries): 11248 texts as this pack shows them or hands the model (the country's own, counted in the next line, among them) — the screens, the role names, 40 note templates, the instructions to the model, the intake questions, 404 tools, the landing copy — written in `en-AU` spelling by the set's spelling table.
+- **This country's own** (`countries/au/`, six small files): 49 texts it writes itself (its consent sentence, identifier label, time sentence, date example, name, word for a senior doctor, role names where they differ, what its closed tools are missing and who decides, unit names and tool words it writes differently, the example phone number and the pattern of an amount) and the settings in the table below.
 
 ## Settings — every one unverified
 
@@ -115,7 +115,7 @@ The keys are the shared English key set (`docs/COUNTRY-PACK-ROLE-KEYS.md`). The 
 
 ## Tools
 
-### Switched on (223) — with the unit each measured input takes
+### Switched on (404) — with the unit each measured input takes
 
 Units are a clinical-safety matter. A length or a weight is typed in this pack's unit and converted by the kit with the exact defined factors (1 in = 2.54 cm, 1 lb = 0.45359237 kg); a laboratory value is typed in the unit shown. `countries/au/au.test.ts` runs every tool below with this country's units against the kit's reference result. **Every tool's text is machine-written; each waits on a local clinical lead.**
 
@@ -175,9 +175,15 @@ Units are a clinical-safety matter. A length or a weight is typed in this pack's
 | `estetik-islem-vade` | Aesthetic-procedure reminders | Non-surgical cosmetic procedures | no measured input |
 | `makro-kaydi` | Intake record | Dietitian | Kilocalories: **kcal**; Protein: **g** · result in kcal, g |
 | `sonraki-seans` | Next session | Psychologist, Audiologist, Speech pathologist | no measured input |
+| `ameliyat-notu` | Operation note | General surgery, Obstetrics and gynaecology, Orthopaedic surgery, Urology, Otolaryngology – head and neck surgery, Ophthalmology, Neurosurgery, Plastic surgery, Paediatric surgery, Cosmetic surgery, Cardio-thoracic surgery, Vascular surgery | Estimated blood loss: **mL** |
+| `ameliyat-notu-kd` | Operation note: obstetrics and gynaecology | Obstetrics and gynaecology | Estimated blood loss: **mL** |
+| `usg-obstetrik` | Obstetric ultrasound report | Obstetrics and gynaecology | Crown-rump length: **mm**; Biparietal diameter: **mm**; Head circumference: **mm**; Abdominal circumference: **mm**; Femur length: **mm**; Amniotic fluid index: **cm**; Deepest vertical pool: **cm**; Middle cerebral artery PSV: **cm/s**; Nuchal translucency: **mm** |
+| `usg-jinekolojik` | Gynaecological ultrasound report | Obstetrics and gynaecology | Uterus, length: **mm**; Uterus, anteroposterior: **mm**; Uterus, width: **mm**; Endometrial thickness: **mm**; Right ovary, length: **mm**; Right ovary, anteroposterior: **mm**; Right ovary, width: **mm**; Left ovary, length: **mm**; Left ovary, anteroposterior: **mm**; Left ovary, width: **mm**; Lesion 1, largest diameter: **mm**; Lesion 2, largest diameter: **mm** |
+| `dogum-epikrizi` | Postnatal discharge summary | Obstetrics and gynaecology | Birth weight: **g**; Estimated blood loss: **mL** |
 | `au-body-size` | Body mass index and waist measurement (adults) | every role | Weight: **kg**; Height: **cm**; Waist measurement (optional): **cm** · result in kg/m², cm |
 | `au-mental-health-screen` | K10 psychological distress scale: total score | Emergency medicine, General practice, Anaesthesia, Neurosurgery, General medicine, Dermatology, Endocrinology, Infectious diseases, Gastroenterology and hepatology, General surgery, Cardio-thoracic surgery, Respiratory and sleep medicine, Ophthalmology, Obstetrics and gynaecology, Vascular surgery, Cardiology, Otolaryngology – head and neck surgery, Nephrology, Neurology, Medical oncology, Radiation oncology, Orthopaedic surgery, Plastic surgery, Psychiatry, Radiology, Rheumatology, Urology, Sport and exercise medicine, Rehabilitation medicine, Geriatric medicine, Immunology and allergy, Haematology, Pain medicine, Cosmetic surgery, Non-surgical cosmetic procedures, Psychologist | no measured input |
 | `au-oncology-grading` | ECOG performance status: record the grade | Medical oncology, Radiation oncology | no measured input |
+| `au-ctg-ranzcog` | CTG: normal or abnormal features (RANZCOG) | Obstetrics and gynaecology | Length of the trace: **min**; Minutes with variability of 5 bpm or less: **min**; Minutes with variability above 25 bpm: **min**; Minutes of a sinusoidal pattern: **min**; Minutes with the baseline above 160 bpm: **min**; Minutes the repetitive decelerations have lasted: **min**; Longest single deceleration (minutes): **min** |
 | `konsultasyonlar` | Consultations | every role | no measured input |
 | `au-immunisation-schedule` | National Immunisation Program schedule | every role | no measured input |
 | `buyume-persentili` | WHO growth percentiles | Paediatrics and child health, General practice | Weight: **kg**; Height / length: **cm** |
@@ -281,6 +287,181 @@ Units are a clinical-safety matter. A length or a weight is typed in this pack's
 | `au-enteral-rate` | Enteral feed rate (mL/h) | Dietitian | Total volume for the period: **mL**; Hours over which that volume will run: **hours** · result in mL/h |
 | `au-nutrition-goals` | Nutrition care goals (with the client) | Dietitian | no measured input |
 | `au-nutrition-labs` | Nutrition lab results (record values) | Dietitian | HbA1c: **% or mmol/mol**; Glucose: **mmol/L**; Haemoglobin: **g/L**; Total cholesterol: **mmol/L**; Creatinine: **µmol/L**; C-reactive protein: **mg/L**; Urine albumin-to-creatinine ratio: **mg/mmol**; Serum albumin: **g/L**; Ferritin: **µg/L**; Vitamin B12: **pmol/L**; Folate: **nmol/L**; Potassium: **mmol/L**; Phosphate: **mmol/L**; Magnesium: **mmol/L** · result in g/L, µg/L, pmol/L, nmol/L, mmol/L, mg/mmol, µmol/L, mg/L, %, mmol/mol |
+| `au-meal-plan` | Meal plan (breakfast · lunch · dinner · snacks) | Dietitian | no measured input |
+| `au-food-diary` | Food diary / intake note | Dietitian | no measured input |
+| `au-emergency-medicine-care-plan` | After-care plan (keep on file) | Emergency medicine | no measured input |
+| `au-emergency-medicine-between-visit-log` | Between-visit note (clinic or patient) | Emergency medicine | no measured input |
+| `au-emergency-medicine-care-goals` | Care goals (ticks) | Emergency medicine | no measured input |
+| `au-family-medicine-care-plan` | Your GP care plan (keep on file) | General practice | no measured input |
+| `au-family-medicine-between-visit-log` | Between-visit note (clinic or patient) | General practice | no measured input |
+| `au-family-medicine-care-goals` | Care goals (ticks) | General practice | no measured input |
+| `au-anaesthesia-care-plan` | Before your anaesthetic (keep on file) | Anaesthesia | no measured input |
+| `au-anaesthesia-between-visit-log` | Between-visit note (clinic or patient) | Anaesthesia | no measured input |
+| `au-anaesthesia-care-goals` | Care goals (ticks) | Anaesthesia | no measured input |
+| `au-neurosurgery-care-plan` | Neurosurgery care plan (keep on file) | Neurosurgery | no measured input |
+| `au-neurosurgery-between-visit-log` | Between-visit note (clinic or patient) | Neurosurgery | no measured input |
+| `au-neurosurgery-care-goals` | Care goals (ticks) | Neurosurgery | no measured input |
+| `au-paediatric-surgery-care-plan` | Your child's surgery plan (keep on file) | Paediatric surgery | no measured input |
+| `au-paediatric-surgery-between-visit-log` | Between-visit note (clinic or patient) | Paediatric surgery | no measured input |
+| `au-paediatric-surgery-care-goals` | Care goals (ticks) | Paediatric surgery | no measured input |
+| `au-internal-medicine-care-plan` | Physician care plan (keep on file) | General medicine | no measured input |
+| `au-internal-medicine-between-visit-log` | Between-visit note (clinic or patient) | General medicine | no measured input |
+| `au-internal-medicine-care-goals` | Care goals (ticks) | General medicine | no measured input |
+| `au-dermatology-care-plan` | Skin care plan (keep on file) | Dermatology | no measured input |
+| `au-dermatology-between-visit-log` | Between-visit note (clinic or patient) | Dermatology | no measured input |
+| `au-dermatology-care-goals` | Care goals (ticks) | Dermatology | no measured input |
+| `au-endocrinology-care-plan` | Hormone care plan (keep on file) | Endocrinology | no measured input |
+| `au-endocrinology-between-visit-log` | Between-visit note (clinic or patient) | Endocrinology | no measured input |
+| `au-endocrinology-care-goals` | Care goals (ticks) | Endocrinology | no measured input |
+| `au-infectious-diseases-care-plan` | Infection care plan (keep on file) | Infectious diseases | no measured input |
+| `au-infectious-diseases-between-visit-log` | Between-visit note (clinic or patient) | Infectious diseases | no measured input |
+| `au-infectious-diseases-care-goals` | Care goals (ticks) | Infectious diseases | no measured input |
+| `au-gastroenterology-care-plan` | Digestive care plan (keep on file) | Gastroenterology and hepatology | no measured input |
+| `au-gastroenterology-between-visit-log` | Between-visit note (clinic or patient) | Gastroenterology and hepatology | no measured input |
+| `au-gastroenterology-care-goals` | Care goals (ticks) | Gastroenterology and hepatology | no measured input |
+| `au-general-surgery-care-plan` | Surgery care plan (keep on file) | General surgery | no measured input |
+| `au-general-surgery-between-visit-log` | Between-visit note (clinic or patient) | General surgery | no measured input |
+| `au-general-surgery-care-goals` | Care goals (ticks) | General surgery | no measured input |
+| `au-respiratory-medicine-care-plan` | Breathing care plan (keep on file) | Respiratory and sleep medicine | no measured input |
+| `au-respiratory-medicine-between-visit-log` | Between-visit note (clinic or patient) | Respiratory and sleep medicine | no measured input |
+| `au-respiratory-medicine-care-goals` | Care goals (ticks) | Respiratory and sleep medicine | no measured input |
+| `au-ophthalmology-care-plan` | Eye care plan (keep on file) | Ophthalmology | no measured input |
+| `au-ophthalmology-between-visit-log` | Between-visit note (clinic or patient) | Ophthalmology | no measured input |
+| `au-ophthalmology-care-goals` | Care goals (ticks) | Ophthalmology | no measured input |
+| `au-obstetrics-gynaecology-care-plan` | Pregnancy or gynaecology plan (keep on file) | Obstetrics and gynaecology | no measured input |
+| `au-obstetrics-gynaecology-between-visit-log` | Between-visit note (clinic or patient) | Obstetrics and gynaecology | no measured input |
+| `au-obstetrics-gynaecology-care-goals` | Care goals (ticks) | Obstetrics and gynaecology | no measured input |
+| `au-cardiology-care-plan` | Heart care plan (keep on file) | Cardiology | no measured input |
+| `au-cardiology-between-visit-log` | Between-visit note (clinic or patient) | Cardiology | no measured input |
+| `au-cardiology-care-goals` | Care goals (ticks) | Cardiology | no measured input |
+| `au-otolaryngology-care-plan` | ENT care plan (keep on file) | Otolaryngology – head and neck surgery | no measured input |
+| `au-otolaryngology-between-visit-log` | Between-visit note (clinic or patient) | Otolaryngology – head and neck surgery | no measured input |
+| `au-otolaryngology-care-goals` | Care goals (ticks) | Otolaryngology – head and neck surgery | no measured input |
+| `au-nephrology-care-plan` | Kidney care plan (keep on file) | Nephrology | no measured input |
+| `au-nephrology-between-visit-log` | Between-visit note (clinic or patient) | Nephrology | no measured input |
+| `au-nephrology-care-goals` | Care goals (ticks) | Nephrology | no measured input |
+| `au-neurology-care-plan` | Neurology care plan (keep on file) | Neurology | no measured input |
+| `au-neurology-between-visit-log` | Between-visit note (clinic or patient) | Neurology | no measured input |
+| `au-neurology-care-goals` | Care goals (ticks) | Neurology | no measured input |
+| `au-oncology-care-plan` | Oncology care plan (keep on file) | Medical oncology | no measured input |
+| `au-oncology-between-visit-log` | Between-visit note (clinic or patient) | Medical oncology | no measured input |
+| `au-oncology-care-goals` | Care goals (ticks) | Medical oncology | no measured input |
+| `au-orthopaedics-care-plan` | Bone and joint plan (keep on file) | Orthopaedic surgery | no measured input |
+| `au-orthopaedics-between-visit-log` | Between-visit note (clinic or patient) | Orthopaedic surgery | no measured input |
+| `au-orthopaedics-care-goals` | Care goals (ticks) | Orthopaedic surgery | no measured input |
+| `au-paediatrics-care-plan` | Your child's care plan (keep on file) | Paediatrics and child health | no measured input |
+| `au-paediatrics-between-visit-log` | Between-visit note (clinic or patient) | Paediatrics and child health | no measured input |
+| `au-paediatrics-care-goals` | Care goals (ticks) | Paediatrics and child health | no measured input |
+| `au-plastic-surgery-care-plan` | Reconstructive care plan (keep on file) | Plastic surgery | no measured input |
+| `au-plastic-surgery-between-visit-log` | Between-visit note (clinic or patient) | Plastic surgery | no measured input |
+| `au-plastic-surgery-care-goals` | Care goals (ticks) | Plastic surgery | no measured input |
+| `au-psychiatry-care-plan` | Psychiatry care plan (keep on file) | Psychiatry | no measured input |
+| `au-psychiatry-between-visit-log` | Between-visit note (clinic or patient) | Psychiatry | no measured input |
+| `au-psychiatry-care-goals` | Care goals (ticks) | Psychiatry | no measured input |
+| `au-radiology-care-plan` | Imaging prep plan (keep on file) | Radiology | no measured input |
+| `au-radiology-between-visit-log` | Between-visit note (clinic or patient) | Radiology | no measured input |
+| `au-radiology-care-goals` | Care goals (ticks) | Radiology | no measured input |
+| `au-rheumatology-care-plan` | Joint care plan (keep on file) | Rheumatology | no measured input |
+| `au-rheumatology-between-visit-log` | Between-visit note (clinic or patient) | Rheumatology | no measured input |
+| `au-rheumatology-care-goals` | Care goals (ticks) | Rheumatology | no measured input |
+| `au-urology-care-plan` | Urology care plan (keep on file) | Urology | no measured input |
+| `au-urology-between-visit-log` | Between-visit note (clinic or patient) | Urology | no measured input |
+| `au-urology-care-goals` | Care goals (ticks) | Urology | no measured input |
+| `au-sports-medicine-care-plan` | Return-to-activity plan (keep on file) | Sport and exercise medicine | no measured input |
+| `au-sports-medicine-between-visit-log` | Between-visit note (clinic or patient) | Sport and exercise medicine | no measured input |
+| `au-sports-medicine-care-goals` | Care goals (ticks) | Sport and exercise medicine | no measured input |
+| `au-rehabilitation-medicine-care-plan` | Rehabilitation plan (keep on file) | Rehabilitation medicine | no measured input |
+| `au-rehabilitation-medicine-between-visit-log` | Between-visit note (clinic or patient) | Rehabilitation medicine | no measured input |
+| `au-rehabilitation-medicine-care-goals` | Care goals (ticks) | Rehabilitation medicine | no measured input |
+| `au-aesthetic-surgery-care-plan` | Cosmetic surgery plan (keep on file) | Cosmetic surgery | no measured input |
+| `au-aesthetic-surgery-between-visit-log` | Between-visit note (clinic or patient) | Cosmetic surgery | no measured input |
+| `au-aesthetic-surgery-care-goals` | Care goals (ticks) | Cosmetic surgery | no measured input |
+| `au-aesthetic-medicine-care-plan` | Cosmetic care plan (keep on file) | Non-surgical cosmetic procedures | no measured input |
+| `au-aesthetic-medicine-between-visit-log` | Between-visit note (clinic or patient) | Non-surgical cosmetic procedures | no measured input |
+| `au-aesthetic-medicine-care-goals` | Care goals (ticks) | Non-surgical cosmetic procedures | no measured input |
+| `au-physiotherapy-care-plan` | Movement plan (keep on file) | Physiotherapist | no measured input |
+| `au-physiotherapy-between-visit-log` | Between-visit note (clinic or patient) | Physiotherapist | no measured input |
+| `au-physiotherapy-care-goals` | Care goals (ticks) | Physiotherapist | no measured input |
+| `au-clinical-psychology-care-plan` | Session plan (keep on file) | Psychologist | no measured input |
+| `au-clinical-psychology-between-visit-log` | Between-visit note (clinic or patient) | Psychologist | no measured input |
+| `au-clinical-psychology-care-goals` | Care goals (ticks) | Psychologist | no measured input |
+| `au-occupational-therapy-care-plan` | Daily-activity plan (keep on file) | Occupational therapist | no measured input |
+| `au-occupational-therapy-between-visit-log` | Between-visit note (clinic or patient) | Occupational therapist | no measured input |
+| `au-occupational-therapy-care-goals` | Care goals (ticks) | Occupational therapist | no measured input |
+| `au-audiology-care-plan` | Hearing care plan (keep on file) | Audiologist | no measured input |
+| `au-audiology-between-visit-log` | Between-visit note (clinic or patient) | Audiologist | no measured input |
+| `au-audiology-care-goals` | Care goals (ticks) | Audiologist | no measured input |
+| `au-cardio-thoracic-surgery-care-plan` | Chest surgery plan (keep on file) | Cardio-thoracic surgery | no measured input |
+| `au-cardio-thoracic-surgery-between-visit-log` | Between-visit note (clinic or patient) | Cardio-thoracic surgery | no measured input |
+| `au-cardio-thoracic-surgery-care-goals` | Care goals (ticks) | Cardio-thoracic surgery | no measured input |
+| `au-vascular-surgery-care-plan` | Vascular care plan (keep on file) | Vascular surgery | no measured input |
+| `au-vascular-surgery-between-visit-log` | Between-visit note (clinic or patient) | Vascular surgery | no measured input |
+| `au-vascular-surgery-care-goals` | Care goals (ticks) | Vascular surgery | no measured input |
+| `au-radiation-oncology-care-plan` | Radiotherapy plan (keep on file) | Radiation oncology | no measured input |
+| `au-radiation-oncology-between-visit-log` | Between-visit note (clinic or patient) | Radiation oncology | no measured input |
+| `au-radiation-oncology-care-goals` | Care goals (ticks) | Radiation oncology | no measured input |
+| `au-geriatric-medicine-care-plan` | Later-life care plan (keep on file) | Geriatric medicine | no measured input |
+| `au-geriatric-medicine-between-visit-log` | Between-visit note (clinic or patient) | Geriatric medicine | no measured input |
+| `au-geriatric-medicine-care-goals` | Care goals (ticks) | Geriatric medicine | no measured input |
+| `au-immunology-and-allergy-care-plan` | Allergy care plan (keep on file) | Immunology and allergy | no measured input |
+| `au-immunology-and-allergy-between-visit-log` | Between-visit note (clinic or patient) | Immunology and allergy | no measured input |
+| `au-immunology-and-allergy-care-goals` | Care goals (ticks) | Immunology and allergy | no measured input |
+| `au-haematology-care-plan` | Blood care plan (keep on file) | Haematology | no measured input |
+| `au-haematology-between-visit-log` | Between-visit note (clinic or patient) | Haematology | no measured input |
+| `au-haematology-care-goals` | Care goals (ticks) | Haematology | no measured input |
+| `au-pain-medicine-care-plan` | Pain care plan (keep on file) | Pain medicine | no measured input |
+| `au-pain-medicine-between-visit-log` | Between-visit note (clinic or patient) | Pain medicine | no measured input |
+| `au-pain-medicine-care-goals` | Care goals (ticks) | Pain medicine | no measured input |
+| `au-podiatry-care-plan` | Foot care plan (keep on file) | Podiatrist | no measured input |
+| `au-podiatry-between-visit-log` | Between-visit note (clinic or patient) | Podiatrist | no measured input |
+| `au-podiatry-care-goals` | Care goals (ticks) | Podiatrist | no measured input |
+| `au-speech-pathology-care-plan` | Speech and swallow plan (keep on file) | Speech pathologist | no measured input |
+| `au-speech-pathology-between-visit-log` | Between-visit note (clinic or patient) | Speech pathologist | no measured input |
+| `au-speech-pathology-care-goals` | Care goals (ticks) | Speech pathologist | no measured input |
+| `au-emergency-medicine-visit-prep` | ED disposition prep | Emergency medicine | no measured input |
+| `au-family-medicine-visit-prep` | Your GP care plan — visit prep | General practice | no measured input |
+| `au-anaesthesia-visit-prep` | Before your anaesthetic — visit prep | Anaesthesia | no measured input |
+| `au-neurosurgery-visit-prep` | Neurosurgery care plan — visit prep | Neurosurgery | no measured input |
+| `au-paediatric-surgery-visit-prep` | Your child's surgery plan — visit prep | Paediatric surgery | no measured input |
+| `au-internal-medicine-visit-prep` | Physician care plan — visit prep | General medicine | no measured input |
+| `au-dermatology-visit-prep` | Skin care plan — visit prep | Dermatology | no measured input |
+| `au-endocrinology-visit-prep` | Hormone care plan — visit prep | Endocrinology | no measured input |
+| `au-infectious-diseases-visit-prep` | Infection care plan — visit prep | Infectious diseases | no measured input |
+| `au-gastroenterology-visit-prep` | Digestive care plan — visit prep | Gastroenterology and hepatology | no measured input |
+| `au-general-surgery-visit-prep` | Surgery care plan — visit prep | General surgery | no measured input |
+| `au-respiratory-medicine-visit-prep` | Breathing care plan — visit prep | Respiratory and sleep medicine | no measured input |
+| `au-ophthalmology-visit-prep` | Eye care plan — visit prep | Ophthalmology | no measured input |
+| `au-obstetrics-gynaecology-visit-prep` | Pregnancy or gynaecology plan — visit prep | Obstetrics and gynaecology | no measured input |
+| `au-cardiology-visit-prep` | Heart care plan — visit prep | Cardiology | no measured input |
+| `au-otolaryngology-visit-prep` | ENT care plan — visit prep | Otolaryngology – head and neck surgery | no measured input |
+| `au-nephrology-visit-prep` | Kidney care plan — visit prep | Nephrology | no measured input |
+| `au-neurology-visit-prep` | Neurology care plan — visit prep | Neurology | no measured input |
+| `au-oncology-visit-prep` | Oncology care plan — visit prep | Medical oncology | no measured input |
+| `au-orthopaedics-visit-prep` | Bone and joint plan — visit prep | Orthopaedic surgery | no measured input |
+| `au-paediatrics-visit-prep` | Your child's care plan — visit prep | Paediatrics and child health | no measured input |
+| `au-plastic-surgery-visit-prep` | Reconstructive care plan — visit prep | Plastic surgery | no measured input |
+| `au-psychiatry-visit-prep` | Psychiatry care plan — session prep | Psychiatry | no measured input |
+| `au-radiology-visit-prep` | Imaging prep plan — visit prep | Radiology | no measured input |
+| `au-rheumatology-visit-prep` | Joint care plan — visit prep | Rheumatology | no measured input |
+| `au-urology-visit-prep` | Urology care plan — visit prep | Urology | no measured input |
+| `au-sports-medicine-visit-prep` | Return-to-activity plan — visit prep | Sport and exercise medicine | no measured input |
+| `au-rehabilitation-medicine-visit-prep` | Rehabilitation plan — visit prep | Rehabilitation medicine | no measured input |
+| `au-aesthetic-surgery-visit-prep` | Cosmetic surgery plan — visit prep | Cosmetic surgery | no measured input |
+| `au-aesthetic-medicine-visit-prep` | Cosmetic care plan — visit prep | Non-surgical cosmetic procedures | no measured input |
+| `au-physiotherapy-visit-prep` | Movement plan — visit prep | Physiotherapist | no measured input |
+| `au-clinical-psychology-visit-prep` | Session plan — session prep | Psychologist | no measured input |
+| `au-occupational-therapy-visit-prep` | Daily-activity plan — visit prep | Occupational therapist | no measured input |
+| `au-audiology-visit-prep` | Hearing care plan — visit prep | Audiologist | no measured input |
+| `au-cardio-thoracic-surgery-visit-prep` | Chest surgery plan — visit prep | Cardio-thoracic surgery | no measured input |
+| `au-vascular-surgery-visit-prep` | Vascular care plan — visit prep | Vascular surgery | no measured input |
+| `au-radiation-oncology-visit-prep` | Radiotherapy plan — visit prep | Radiation oncology | no measured input |
+| `au-geriatric-medicine-visit-prep` | Later-life care plan — visit prep | Geriatric medicine | no measured input |
+| `au-immunology-and-allergy-visit-prep` | Allergy care plan — visit prep | Immunology and allergy | no measured input |
+| `au-haematology-visit-prep` | Blood care plan — visit prep | Haematology | no measured input |
+| `au-pain-medicine-visit-prep` | Pain care plan — visit prep | Pain medicine | no measured input |
+| `au-podiatry-visit-prep` | Foot care plan — visit prep | Podiatrist | no measured input |
+| `au-speech-pathology-visit-prep` | Speech and swallow plan — visit prep | Speech pathologist | no measured input |
+| `au-dietetics-visit-prep` | Nutrition visit prep | Dietitian | no measured input |
 | `au-growth-chart-reference` | Which growth chart to use | every role | no measured input |
 | `au-identifier-check` | Medicare card and provider number check | every role | no measured input |
 | `au-privacy-principles` | Privacy Act record | every role | no measured input |

@@ -200,6 +200,13 @@ export const EN_UYGULAMA_TEMEL: Temel = {
       onay: 'Sign this account out of every device? You will need to sign in again.',
       oturumHata: 'Could not sign out of every device. Check your connection and try again.',
     },
+    // OP-DR-01: the title and post-nominals printed on your records
+    unvanBolumu: 'Title and post-nominals',
+    unvan: 'Title before your name',
+    unvanYok: 'No title',
+    unvanEki: 'Post-nominals after your name',
+    unvanIzoh: 'Printed on the letterhead of your operation notes, reports and summaries. Optional. Not checked against a register.',
+    unvanGecersiz: 'Use up to 80 letters, digits, spaces, commas, full stops, brackets or hyphens, starting with a letter.',
   },
   arama: {
     etiket: 'Find a patient',

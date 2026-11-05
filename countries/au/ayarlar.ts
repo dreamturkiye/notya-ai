@@ -211,6 +211,8 @@ export const AU_GIRDI: EnUlkeGirdisi = {
       'nmol/L': 'nmol/L',
     },
     // FOR A LOCAL CLINICAL LEAD: the tools of the shared set this country keeps switched off, and why.
+    // AMELIYAT-NOTU-01 / KD-RAPOR-01 (2026-11-05): the operation note and obstetrics and gynaecology's printed records of the set
+    ameliyatKayitlari: true,
     kapali: {
       // REMOVED FOR AUSTRALIA by the audit's decision ("remove"): it is not this country's scale. It stays a slot only
       // because every tool of the shared set that is not on is recorded as one; it is never to be switched on here.
@@ -268,6 +270,8 @@ export const AU_GIRDI: EnUlkeGirdisi = {
     //     as bands; the limits the subsidy rules use are payer rules and are not put on a clinical score.
     // WHO SEES A TOOL OF THE SHARED SET HERE, where it differs from the set's list (the audit's decisions, Part 3):
     gorenler: {
+      // AMELIYAT-NOTU-01 (2026-11-05): the operation note for every surgical role of the set here, and this country's own cardio-thoracic-surgery, vascular-surgery
+      'ameliyat-notu': ['general-surgery', 'obstetrics-gynaecology', 'orthopaedics', 'urology', 'otolaryngology', 'ophthalmology', 'neurosurgery', 'plastic-surgery', 'paediatric-surgery', 'aesthetic-surgery', 'cardio-thoracic-surgery', 'vascular-surgery'],
       // "check inhaler technique at every opportunity": general practice and paediatrics, not only the respiratory physician
       'inhaler-teknik': ['respiratory-medicine', 'family-medicine', 'paediatrics'],
       // children are seen in general practice; NEVER a role whose patients are adults only

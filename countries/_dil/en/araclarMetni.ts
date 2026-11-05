@@ -52,6 +52,11 @@ export const EN_ARACLAR_METNI_TEMEL: AraclarMetni = {
     kaynak: 'Source: %',
     saklanmaz: 'What you enter here is not stored: it is gone when you leave the page.',
     yok: 'Your account does not have this tool.',
+    // AMELIYAT-NOTU-01: a printed record on the doctor's letterhead
+    yazdir: 'Print',
+    yazdirHasta: 'Patient: %',
+    yazdirTarih: 'Date: %',
+    yazdirImza: 'Signature',
   },
   portal: {
     nasil: 'Find the patient and open their file: the link and the PIN are created under "Patient\'s page", and that is also where you choose what to share.',

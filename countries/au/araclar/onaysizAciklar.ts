@@ -190,6 +190,10 @@ export const AU_ONAYSIZ_ACIK_ARACLAR: readonly OnaysizAcikArac[] = [
     klinisyen: null,
     bakilacak: k.bakilacak,
   })),
+  {
+    anahtar: 'au-ctg-ranzcog', oneri: 'KD-RAPOR-01 (2026-11-05)', klinisyen: null,
+    bakilacak: 'The normal features are written from the RANZCOG Intrapartum Fetal Surveillance guideline (2019) as the job knew it; the guideline was NOT re-opened in this session. Check each range, and whether reduced variability of 3 to 5 bpm should be named apart from absent variability.',
+  },
 ]
 
 /** The keys alone, sorted. */

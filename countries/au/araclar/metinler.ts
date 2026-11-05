@@ -18,6 +18,7 @@
  *   au-immunisation-schedule  BASE: every role, cardiology included. Catch-up uses the same screen. It is not a
  *                             paediatrics-only tool, and it is not hidden from any branş.
  */
+import { auKtgAraci } from './ktg'
 import type { PaketAraci } from '@/lib/ulke/araclar/tipler'
 import { ASI_ADIM, ASI_ANTIJEN, ASI_BANT } from './asiYakalama'
 import { AU_ASI_TAKVIMI_MADDELERI } from './tanimlar'
@@ -250,5 +251,7 @@ export function auEkAraclar(roller: AuAracRolleri): readonly PaketAraci[] {
         bildirim: m('ECOG Performance Status Scale. Oken MM, Creech RH, Tormey DC, et al. Am J Clin Oncol 1982. Developed by the Eastern Cooperative Oncology Group, now the ECOG-ACRIN Cancer Research Group.'),
       },
     },
+    // KD-RAPOR-01 (2026-11-05): CTG features by the RANZCOG intrapartum fetal surveillance guideline — obstetrics and gynaecology
+    auKtgAraci(['obstetrics-gynaecology']),
   ]
 }
