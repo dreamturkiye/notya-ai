@@ -17,7 +17,7 @@ Doktor mesajında: ABD / görüntülü / demo / free trial yok. Tamamen Türkçe
 
 **İki baloncuk** (önce metin, sonra link).
 
-**Balon 1 — sadece metin:**
+**Balon 1 — sadece metin** (KD / kadın doğum için; diğer branşta `{branş}` satırını uyarla):
 
 ```
 Hocam merhaba 👋
@@ -26,6 +26,9 @@ Ben Kaan, Notya’dan yazıyorum.
 Notya, hekimler için yapay zekâ klinik asistanı: muayeneyi dinler, notunuzu yazar,
 reçete ve rapor taslağını hazırlar, hastanızı takipte tutar — hasta portalı dahil.
 Her karar sizin onayınızla.
+
+Şu ara kadın doğum hekimleriyle birlikte ürünü derinleştiriyoruz; 40’tan fazla branşı
+kendi ihtiyaçlarıyla destekliyoruz.
 
 Yoğun günlerde not, reçete, takip ve ön büro işlerinden yaklaşık 1,5–2 saat kazandırıyor;
 notlar daha düzenli ve eksiksiz olduğu için bakım kalitesine de yansıyor.
@@ -36,6 +39,8 @@ Saatler sizin uygunluğunuza göre ayarlanıyor.
 Tanıtıma vaktiniz yoksa da sorun değil, ücretsiz denemeyi hemen açabiliyoruz.
 İsterseniz kısaca bakabilirsiniz, uygun görürseniz devam ederiz.
 ```
+
+Pediatri için KD satırı yerine: `Şu ara pediatri hekimleriyle birlikte ürünü derinleştiriyoruz; 40’tan fazla branşı kendi ihtiyaçlarıyla destekliyoruz.`
 
 **Balon 2 — linkler:**
 
