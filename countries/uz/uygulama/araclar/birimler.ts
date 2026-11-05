@@ -59,6 +59,8 @@ export const UZ_ARAC_BIRIMLERI: Readonly<Record<string, Uc>> = {
   mmHg: u('mm simob ustuni', 'мм симоб устуни', 'мм рт. ст.'),
   kcal: u('kkal', 'ккал', 'ккал'),
   g: u('g', 'г', 'г'),
+  // AMELIYAT-NOTU-01: Doppler velocity of the obstetric ultrasound report
+  'cm/s': u('sm/s', 'см/с', 'см/с'),
 }
 
 /** One entry of the table below with where its unit was read; `kaynak: null` = no national text read states it. */

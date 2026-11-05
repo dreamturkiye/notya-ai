@@ -52,6 +52,7 @@ import { EN_ARACLAR_1 } from './arac1'
 import { EN_ARACLAR_2 } from './arac2'
 import { EN_ARACLAR_3 } from './arac3'
 import { EN_ARACLAR_4 } from './arac4'
+import { EN_ARACLAR_5 } from './arac5'
 import { araciBicimle, lisansiBicimle, type EnDegisen, type EnLisans, type HamArac } from './yardimci'
 import { enAracYuvalari, yuva } from './yuvalar'
 
@@ -67,6 +68,12 @@ export const EN_TEMEL_ARACLAR: readonly HamArac[] = [
 
 /** Every ROLE tool the set has written, in the order the grid shows them. */
 export const EN_ROL_ARACLARI: readonly HamArac[] = [...EN_ARACLAR_1, ...EN_ARACLAR_2, ...EN_ARACLAR_3, ...EN_ARACLAR_4]
+/**
+ * AMELIYAT-NOTU-01 / KD-RAPOR-01 (2026-11-05) — the operation note and obstetrics and gynaecology's printed records
+ * (./arac5.ts). Role tools of the set like the others, switched on where a country states `ameliyatKayitlari: true`
+ * (each country in its own release, in the same change set), so a pack is never changed by another country's release.
+ */
+export const EN_AMELIYAT_ARACLARI: readonly HamArac[] = EN_ARACLAR_5
 
 const TAKIP: Omit<HamArac, 'roller'> = {
   anahtar: 'takip-paneli',
@@ -114,6 +121,8 @@ export const EN_BIRIM_ADLARI: Readonly<Record<string, string>> = {
   kcal: 'kcal',
   g: 'g',
   cm2: 'cm²',
+  // AMELIYAT-NOTU-01: Doppler velocity of the obstetric ultrasound report
+  'cm/s': 'cm/s',
   '1/cm2': '/cm²',
   hafta: 'weeks',
 }
@@ -154,6 +163,8 @@ export type EnAraclarGirdisi = {
   dozYazimi: { sondaSifir: boolean }
   /** Tools of the set this country keeps as slots: kit key → what is missing, and who decides. */
   kapali: Readonly<Record<string, { eksik: string; kimden: string }>>
+  /** AMELIYAT-NOTU-01 / KD-RAPOR-01: true = the operation note and the obstetrics and gynaecology records of the set are on (EN_AMELIYAT_ARACLARI). */
+  ameliyatKayitlari?: true
   /** Unit names this country writes differently: unit code → name. Used as written. */
   birimAdlari?: Readonly<Record<string, string>>
   /** Words of a tool this country writes differently: kit key → the words. Used as written. */
@@ -227,7 +238,8 @@ export function enAraclar(g: EnAraclarGirdisi): UlkeAraclari {
     return Object.keys(ek).length ? ek : undefined
   }
   const temel = EN_TEMEL_ARACLAR.map((a) => araciBicimle(a, bicim, g.degisen?.[a.anahtar], eki(a)))
-  const rol = EN_ROL_ARACLARI.filter(acik).map((a) => araciBicimle(a, bicim, g.degisen?.[a.anahtar], eki(a)))
+  const setinRolAraclari = g.ameliyatKayitlari ? [...EN_ROL_ARACLARI, ...EN_AMELIYAT_ARACLARI] : EN_ROL_ARACLARI
+  const rol = setinRolAraclari.filter(acik).map((a) => araciBicimle(a, bicim, g.degisen?.[a.anahtar], eki(a)))
   const ekAraclar = g.ek?.araclar ?? []
   // THE FOLLOW-UP LIST: a role tool of every role that has a switched-on tool of its own, in the order of the role list.
   // (A tool beyond the set counts where its result can be kept: not a screen of the kit, not a link-out tile.)
@@ -246,7 +258,7 @@ export function enAraclar(g: EnAraclarGirdisi): UlkeAraclari {
   const acilan = new Set(ekAraclar.map((p) => p.anahtar))
   const yuvayiBicimle = (y: AracYuvasi): AracYuvasi => ({ ...y, ...(g.roller ? { roller: buUlkede(y.roller) } : {}), ...(g.lisanslar?.[y.anahtar] ? { lisans: lisansiBicimle(g.lisanslar[y.anahtar], bicim) } : {}) })
   const ortakYuvalar = enAracYuvalari(g.ulke)
-  const kendiYuvalari: AracYuvasi[] = EN_ROL_ARACLARI.filter((a) => !acik(a)).map((a) => yuva(a.anahtar, a.roller, g.kapali[a.anahtar].eksik, g.kapali[a.anahtar].kimden, true))
+  const kendiYuvalari: AracYuvasi[] = setinRolAraclari.filter((a) => !acik(a)).map((a) => yuva(a.anahtar, a.roller, g.kapali[a.anahtar].eksik, g.kapali[a.anahtar].kimden, true))
   const ozel = Boolean(g.roller || g.lisanslar || acilan.size)
   const yuvalar = ozel ? [...ortakYuvalar, ...kendiYuvalari].filter((y) => !acilan.has(y.anahtar)).map(yuvayiBicimle) : [...ortakYuvalar, ...kendiYuvalari]
   // WHERE A UNIT IS CHOSEN ON THE SCREEN, the catalogue holds the sentence that asks for it.

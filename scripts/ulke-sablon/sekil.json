@@ -109,6 +109,12 @@
    "meslekKaydi": "$m",
    "meslekKaydiIzoh": "$m",
    "meslekKaydiGecersiz": "$m",
+   "unvanBolumu": "$m",
+   "unvan": "$m",
+   "unvanYok": "$m",
+   "unvanEki": "$m",
+   "unvanIzoh": "$m",
+   "unvanGecersiz": "$m",
    "saatDilimi": {
     "$istege": "REQUIRED if the country has more than one time zone (uygulama.saatDilimleri): label of the setting"
    },
@@ -943,6 +949,10 @@
    "kaynak": "$m:%",
    "saklanmaz": "$m",
    "yok": "$m",
+   "yazdir": "$m",
+   "yazdirHasta": "$m:%",
+   "yazdirTarih": "$m:%",
+   "yazdirImza": "$m",
    "birimSec": {
     "$istege": "REQUIRED if the country accepts more than one unit for a laboratory value (araclar.labBirimleri with a list): under a number whose unit is not chosen yet, \"Choose the unit of this value.\""
    }

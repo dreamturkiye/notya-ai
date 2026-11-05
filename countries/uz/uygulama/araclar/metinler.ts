@@ -62,6 +62,11 @@ const UZ_LATN: AraclarMetni = {
     kaynak: 'Manba: %',
     saklanmaz: 'Bu yerda kiritilgan maʼlumot saqlanmaydi: sahifadan chiqsangiz, oʻchib ketadi.',
     yok: 'Bunday vosita sizning hisobingizda yoʻq.',
+    // AMELIYAT-NOTU-01: a printed record on the doctor's letterhead
+    yazdir: 'Chop etish',
+    yazdirHasta: 'Bemor: %',
+    yazdirTarih: 'Sana: %',
+    yazdirImza: 'Imzo',
   },
   portal: {
     nasil: 'Bemorni toping va kartasini oching: «Bemor sahifasi» boʻlimida havola va PIN-kod yaratiladi, nimani ulashishni ham oʻsha yerda tanlaysiz.',
@@ -140,6 +145,10 @@ const UZ_CYRL: AraclarMetni = {
     kaynak: 'Манба: %',
     saklanmaz: 'Бу ерда киритилган маълумот сақланмайди: саҳифадан чиқсангиз, ўчиб кетади.',
     yok: 'Бундай восита сизнинг ҳисобингизда йўқ.',
+    yazdir: 'Чоп этиш',
+    yazdirHasta: 'Бемор: %',
+    yazdirTarih: 'Сана: %',
+    yazdirImza: 'Имзо',
   },
   portal: {
     nasil: 'Беморни топинг ва картасини очинг: «Бемор саҳифаси» бўлимида ҳавола ва ПИН-код яратилади, нимани улашишни ҳам ўша ерда танлайсиз.',
@@ -218,6 +227,10 @@ const RU: AraclarMetni = {
     kaynak: 'Источник: %',
     saklanmaz: 'Введённые здесь данные не сохраняются: при уходе со страницы они исчезают.',
     yok: 'Такого инструмента в вашей учётной записи нет.',
+    yazdir: 'Печать',
+    yazdirHasta: 'Пациент: %',
+    yazdirTarih: 'Дата: %',
+    yazdirImza: 'Подпись',
   },
   portal: {
     nasil: 'Найдите пациента и откройте его карту: в разделе «Страница пациента» создаются ссылка и ПИН-код, там же вы выбираете, чем поделиться.',

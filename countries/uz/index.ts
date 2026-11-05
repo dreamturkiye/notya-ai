@@ -46,6 +46,16 @@ export const UZ_PAKETI: UlkePaketi = {
   varsayilanDil: 'uz-Latn',
   paraBirimi: { kod: 'UZS', simge: 'soʻm', ondalikHane: 0 },
   saatDilimi: 'Asia/Tashkent',
+  // OP-DR-01 (2026-11-05): academic titles before the name and the scientific degree after it, as Uzbek medical
+  // letterheads write them: dotsent / professor; tibbiyot fanlari nomzodi (t.f.n.) / doktori (t.f.d.), PhD, DSc. In
+  // Russian: доцент / профессор; к.м.н. / д.м.н. The doctor's own text, never checked against a register.
+  hekimUnvani: {
+    onEkler: {
+      dotsent: { 'uz-Latn': 'dotsent', 'uz-Cyrl': 'доцент', ru: 'доцент' },
+      professor: { 'uz-Latn': 'professor', 'uz-Cyrl': 'профессор', ru: 'профессор' },
+    },
+    ekOrnegi: { 'uz-Latn': 'masalan: t.f.n., PhD', 'uz-Cyrl': 'масалан: т.ф.н., PhD', ru: 'например: к.м.н., PhD' },
+  },
   bicim: { yerel: 'uz-Latn-UZ', tarihDeseni: 'DD.MM.YYYY', ondalikAyraci: ',', binlikAyraci: ' ', haftaBasi: 1 },
   telefon: { ulkeOnEki: '+998', ulusalHane: 9, ornek: '+998 90 123 45 67', cepGecerliMi: uzCepGecerliMi },
   // JSHSHIR (PINFL): 14 digits. Format only here. The structure and the control-digit rule were verified on 2026-10-09

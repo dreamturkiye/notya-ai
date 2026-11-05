@@ -69,6 +69,13 @@ const UZ_LATN: UygulamaMetni = {
     meslekKaydi: 'Kasbiy guvohnoma raqami',
     meslekKaydiIzoh: 'Ixtiyoriy. Hisobda saqlanadi va hech qanday reestrga solishtirilmaydi. Bu matnni shifokor ham, huquqshunos ham koʻrib chiqmagan.',
     meslekKaydiGecersiz: '2–40 belgi: harf, raqam, boʻsh joy, nuqta yoki chiziqcha.',
+    // OP-DR-01: the title and the degree printed on the doctor's records
+    unvanBolumu: 'Unvon va ilmiy daraja',
+    unvan: 'Ism oldidagi unvon',
+    unvanYok: 'Unvonsiz',
+    unvanEki: 'Ismdan keyingi ilmiy daraja',
+    unvanIzoh: 'Operatsiya bayonnomalari, xulosalar va koʻchirmalar blankasida chop etiladi. Ixtiyoriy. Hech qanday reestrga solishtirilmaydi.',
+    unvanGecersiz: 'Harf bilan boshlang: 80 tagacha harf, raqam, boʻsh joy, vergul, nuqta, qavs yoki chiziqcha.',
   },
   arama: {
     etiket: 'Bemorni qidirish',
@@ -518,6 +525,13 @@ const UZ_CYRL: UygulamaMetni = {
     meslekKaydi: 'Касбий гувоҳнома рақами',
     meslekKaydiIzoh: 'Ихтиёрий. Ҳисобда сақланади ва ҳеч қандай реестрга солиштирилмайди. Бу матнни шифокор ҳам, ҳуқуқшунос ҳам кўриб чиқмаган.',
     meslekKaydiGecersiz: '2–40 белги: ҳарф, рақам, бўш жой, нуқта ёки чизиқча.',
+    // OP-DR-01
+    unvanBolumu: 'Унвон ва илмий даража',
+    unvan: 'Исм олдидаги унвон',
+    unvanYok: 'Унвонсиз',
+    unvanEki: 'Исмдан кейинги илмий даража',
+    unvanIzoh: 'Операция баённомалари, хулосалар ва кўчирмалар бланкасида чоп этилади. Ихтиёрий. Ҳеч қандай реестрга солиштирилмайди.',
+    unvanGecersiz: 'Ҳарф билан бошланг: 80 тагача ҳарф, рақам, бўш жой, вергул, нуқта, қавс ёки чизиқча.',
   },
   arama: {
     etiket: 'Беморни қидириш',
@@ -963,6 +977,13 @@ const RU: UygulamaMetni = {
     meslekKaydi: 'Номер профессиональной лицензии',
     meslekKaydiIzoh: 'Необязательно. Хранится в учётной записи и ни с каким реестром не сверяется. Этот текст не читали ни врач, ни юрист.',
     meslekKaydiGecersiz: 'От 2 до 40 знаков: буквы, цифры, пробел, точка или дефис.',
+    // OP-DR-01
+    unvanBolumu: 'Звание и учёная степень',
+    unvan: 'Звание перед именем',
+    unvanYok: 'Без звания',
+    unvanEki: 'Учёная степень после имени',
+    unvanIzoh: 'Печатается на бланке протоколов операций, заключений и выписок. Необязательно. Не сверяется ни с каким реестром.',
+    unvanGecersiz: 'Начните с буквы: до 80 букв, цифр, пробелов, запятых, точек, скобок или дефисов.',
   },
   arama: {
     etiket: 'Поиск пациента',

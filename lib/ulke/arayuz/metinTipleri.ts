@@ -71,6 +71,17 @@ export type UygulamaMetni = {
     /** Says the value is optional, stored on the account, and not checked. Machine-written until a clinician or a lawyer reads it. */
     readonly meslekKaydiIzoh: string
     readonly meslekKaydiGecersiz: string
+    /**
+     * OP-DR-01 — the title and the post-nominals printed on the doctor's records. Required exactly where the pack
+     * states `hekimUnvani` (the pack check asks then): unvanBolumu the card, unvan the title's label, unvanYok the "no
+     * title" option, unvanEki the post-nominals' label, unvanIzoh the hint, unvanGecersiz the refusal.
+     */
+    readonly unvanBolumu?: string
+    readonly unvan?: string
+    readonly unvanYok?: string
+    readonly unvanEki?: string
+    readonly unvanIzoh?: string
+    readonly unvanGecersiz?: string
   }
   readonly arama: {
     readonly etiket: string
@@ -988,6 +999,18 @@ export type AraclarMetni = {
      * the pack check asks for it exactly then.
      */
     readonly birimSec?: string
+    /**
+     * AMELIYAT-NOTU-01 — the PRINTED RECORD (a tool marked `yazdirilir`: an operation note, a report, a discharge
+     * summary), on the doctor's letterhead. Required by the pack check exactly where such a tool is switched on.
+     *   yazdir        the button ("Print")
+     *   yazdirHasta   % the patient's name ("Patient: %")
+     *   yazdirTarih   % the day it is printed ("Date: %")
+     *   yazdirImza    under the signature line ("Signature")
+     */
+    readonly yazdir?: string
+    readonly yazdirHasta?: string
+    readonly yazdirTarih?: string
+    readonly yazdirImza?: string
   }
   /** The patient portal's tile: how access is given, said in one or two sentences above the patient search. */
   readonly portal: {

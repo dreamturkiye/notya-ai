@@ -42,6 +42,7 @@
  *   - HOW A DOSE IS WRITTEN (`dozYazimi`): a pack that switches on a tool which writes an amount of a medicine says
  *     whether a zero is written after the decimal mark. A national rule: there is no default.
  */
+import { UZUN_METIN_UZUNLUGU } from './yardimci'
 import type { BicimliMetin, UlkeArayuzu } from '../arayuz/tipler'
 import { eksikAyarMi, eksikMetinMi } from '../eksik'
 import type { DilKodu, UlkePaketi } from '../tipler'
@@ -316,6 +317,25 @@ export function araclarSorunlari(paket: UlkePaketi, arayuz: UlkeArayuzu | null, 
       metinVar(`${yer}.hastaKapisi`, m.hastaKapisi)
     } else if (m.hastaKapisi !== undefined) ekle(`${yer}.metin.hastaKapisi`, 'a sentence about who the tool is for, and the tool has no patient gate (hasta)')
 
+    // AMELIYAT-NOTU-01 — PRE-FILLED PARAGRAPHS: a choice of this tool → its options → its paragraph fields, in every form.
+    if (p.sablonlar !== undefined) {
+      if (!p.sablonlar || typeof p.sablonlar !== 'object') ekle(`${yer}.sablonlar`, 'must map a choice field to its options and their paragraphs')
+      else for (const [alan, secenekler] of Object.entries(p.sablonlar)) {
+        const y = `${yer}.sablonlar.${alan}`
+        const al = e.alanlar.find((x) => x.anahtar === alan)
+        if (!al || al.tur !== 'secim') { ekle(y, 'pre-filled paragraphs hang on a choice field of this tool'); continue }
+        for (const [o, alanlar] of Object.entries(secenekler ?? {})) {
+          if (!(al.secenekler ?? []).includes(o)) { ekle(`${y}.${o}`, 'an option this field does not have'); continue }
+          for (const [k, v] of Object.entries(alanlar ?? {})) {
+            const hedef = e.alanlar.find((x) => x.anahtar === k)
+            if (!hedef || hedef.tur !== 'metin' || hedef.uzun !== true) { ekle(`${y}.${o}.${k}`, 'pre-filled words go only into a paragraph field (metin, uzun) of this tool'); continue }
+            metinVar(`${y}.${o}.${k}`, v)
+            for (const [d, t] of Object.entries(v ?? {})) if (typeof t === 'string' && t.length > UZUN_METIN_UZUNLUGU) ekle(`${y}.${o}.${k}.${d}`, `longer than a paragraph field keeps (${UZUN_METIN_UZUNLUGU})`)
+          }
+        }
+      }
+    }
+
     // NUMBERS THE COUNTRY DECIDES: every one stated, a number, and none the tool does not have
     for (const k of t.parametreler ?? []) {
       const v = p.parametreler?.[k]
@@ -421,6 +441,12 @@ export function araclarSorunlari(paket: UlkePaketi, arayuz: UlkeArayuzu | null, 
     if (y.roller !== null) for (const r of Array.isArray(y.roller) ? y.roller : []) if (!roller.includes(r)) ekle(`${yer}.roller`, `"${r}" is not a role of the pack`)
     // A placeholder of the country's own says what stands between it and a tool; so does every placeholder of a pack that states every licence.
     lisansSorunlari(y.lisans, yer, lisansTam || anahtarUlkesi(y.anahtar, kod) !== null, false)
+  }
+  // AMELIYAT-NOTU-01 — a PRINTED record is switched on: the words of the print are there in every form.
+  const yazdirilan = araclar.some((p) => p && (kitAraci(p.anahtar) ?? (Array.isArray(a.kendiAraclari) ? a.kendiAraclari : []).find((t) => t?.anahtar === p.anahtar))?.yazdirilir === true)
+  if (yazdirilan) for (const d of diller) {
+    const am = a.metinler?.[d]?.arac
+    for (const k of ['yazdir', 'yazdirHasta', 'yazdirTarih', 'yazdirImza'] as const) if (!dolu(am?.[k])) ekle(`arayuz.araclar.metinler.${d}.arac.${k}`, 'a printed record is switched on: the words of the print are required')
   }
   return s
 }
