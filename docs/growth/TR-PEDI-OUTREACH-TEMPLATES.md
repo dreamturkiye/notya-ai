@@ -1,14 +1,15 @@
-# TR özel muayenehane — bedava outreach (Kaan invites · Gökhan demos)
+# TR özel muayenehane — bedava outreach (Kaan davet · Gökhan demo)
 
-**Who sends:** Kaan / Notya — WhatsApp and/or e-posta.  
-**Who demos:** Dr. Gökhan Mamur — ABD’den 30 dk görüntülü (Cal.com · Google Meet); saatler ziyaretçinin diliminde.  
-**Context:** Gökhan ~7 yıldır Türkiye dışında; şu an sıcak meslektaş listesi yok. Peer-forward **onun** WhatsApp’ından beklenmez — ilk temas Kaan’dan gider.
+**Kim gönderir:** Kaan / Notya — WhatsApp ve/veya e-posta.  
+**Kim demo yapar:** Dr. Gökhan Mamur — 30 dk (Cal.com · Google Meet); saatler ziyaretçinin diliminde.  
+**Not:** Gökhan ~7 yıldır Türkiye dışında; sıcak meslektaş listesi yok. İlk temas Kaan’dan gider. Doktor mesajında ABD / görüntülü vurgusu yok.
 
 **Demo:** [notya.io/demo](https://www.notya.io/demo) · `https://cal.com/han-mamur-sugmbo/demo-tr`  
-**Trial:** `https://www.notya.io`  
-**Hedef:** mümkün olduğunca çok Cal.com demo **ve/veya** free trial → ağızdan ağıza.
+**Ücretsiz deneme:** `https://www.notya.io`  
+**Hedef:** mümkün olduğunca çok Cal.com demo **ve/veya** ücretsiz deneme → ağızdan ağıza.
 
-Stand yok. Lead: Doktortakvimi + Doktorsitesi (kamuya açık). Spam yok — her mesaj Kaan onaylı.
+Stand yok. Lead: Doktortakvimi + Doktorsitesi (kamuya açık). Spam yok — her mesaj Kaan onaylı.  
+**Doktorlara giden metinler tamamen Türkçe** — “free trial”, “Synced” vb. İngilizce yok.
 
 ---
 
@@ -16,14 +17,11 @@ Stand yok. Lead: Doktortakvimi + Doktorsitesi (kamuya açık). Spam yok — her 
 
 ```
 Hocam merhaba, ben Kaan — Notya’dan yazıyorum. Muayene notu + asistanı tek üründe.
-Pediatride Dr. Gökhan Mamur (ABD’den, görüntülü) 30 dk ücretsiz demo yapıyor;
-saatler sizin diliminizde.
+Pediatride Dr. Gökhan Mamur 30 dk ücretsiz demo yapıyor; saatler sizin diliminizde.
 
 Takvim: https://cal.com/han-mamur-sugmbo/demo-tr
-veya https://www.notya.io/demo
 
-Demoya vakit yoksa free trial’ı hemen açıyoruz: https://www.notya.io
-Beğenirseniz 2 meslektaşınıza da iletin — ürün böyle büyüsün.
+Demoya vakit yoksa ücretsiz denemeyi hemen açıyoruz: https://www.notya.io
 ```
 
 ## E-posta (Kaan)
@@ -36,13 +34,13 @@ Sayın Dr. {İsim},
 Ben Kaan (Notya). {Şehir}’deki özel muayenehaneler için Notya’yı tanıtıyoruz:
 ziyaret kaydı → yapılandırılmış not → sizin onayınız.
 
-Ürünü pediatride birlikte şekillendiren Dr. Gökhan Mamur, ABD’den görüntülü
-30 dakikalık demo veriyor (saatler sizin saat diliminizde).
+Pediatride ürünü birlikte şekillendiren Dr. Gökhan Mamur 30 dakikalık
+ücretsiz demo veriyor; saatler sizin diliminizde.
 
 Demo takvimi: https://cal.com/han-mamur-sugmbo/demo-tr
 Sayfa: https://www.notya.io/demo
 
-Demo istemezseniz free trial hesabı da açabiliyoruz: https://www.notya.io
+Demo istemezseniz ücretsiz deneme hesabı da açabiliyoruz: https://www.notya.io
 Uygunsa bir slot seçmeniz yeterli; “2 meslektaşınıza da iletin” demenizi
 rica ederiz — ürün ağızdan ağıza büyüsün diye.
 
@@ -52,22 +50,21 @@ Kaan · Notya · merhaba@notya.io
 
 WhatsApp Business profil e-postası da `merhaba@notya.io` (`kaan@notya.io`’ya forward — çalışıyor).
 
-## Free-trial only (demo istemeyen — Kaan)
+## Yalnızca ücretsiz deneme (demo istemeyen — Kaan)
 
 ```
-Hocam, demoya vakit yoksa Notya free trial’ı hemen açabiliriz — {branş} şablonu hazır.
-Link: https://www.notya.io
-Takıldığınız yerde Dr. Gökhan Mamur’un Cal.com demosuna da dönebilirsiniz
-(ABD’den, sizin saat diliminizde):
+Hocam, demoya vakit yoksa Notya ücretsiz denemesini hemen açabiliriz — {branş} şablonu hazır.
+Bağlantı: https://www.notya.io
+Takıldığınız yerde Dr. Gökhan Mamur’un demosuna da dönebilirsiniz:
 https://cal.com/han-mamur-sugmbo/demo-tr
 ```
 
-## Demo kapanış (Gökhan söyler veya Kaan follow-up yazar — WOM)
+## Demo kapanış (Gökhan söyler veya Kaan yazar — ağızdan ağıza)
 
 ```
-Teşekkürler hocam. Trial hesabınız açık / açıyoruz.
-İki meslektaşınıza da bu linki atmanızı rica ederiz — onlar da aynı Cal’den
-slot alsın: https://cal.com/han-mamur-sugmbo/demo-tr
+Teşekkürler hocam. Ücretsiz deneme hesabınız açık / açıyoruz.
+İki meslektaşınıza da bu bağlantıyı atmanızı rica ederiz — onlar da aynı takvimden
+randevu alsın: https://cal.com/han-mamur-sugmbo/demo-tr
 (veya bana WhatsApp’tan yazın, ben davet metnini ileteyim — Kaan)
 ```
 
@@ -77,8 +74,8 @@ slot alsın: https://cal.com/han-mamur-sugmbo/demo-tr
 
 1. `tr-call-ready-leads.csv` → `ozel_muayenehane=evet` + telefon (önce İstanbul pediatri).
 2. **Gönderen = Kaan.** Günde max ~20 kişisel WhatsApp ve/veya e-posta.
-3. Gökhan = sadece demo host (Cal.com). Soğuk peer listesi yok — ondan davet göndermesini bekleme.
-4. Cevap → Cal.com **veya** trial; ikisi de başarı. “Synced / AI doktor” iddiası yok.
-5. “2 meslektaş davet et” her demo kapanışında + trial onboarding’de (daveti yine Kaan koordine edebilir).
-6. ABD–TR saat: Cal.com visitor TZ — metinde bir kez söyle, sonra bırak.
-7. Kanal sırası: Kaan WhatsApp → Kaan e-posta. (Gökhan peer-forward yok.)
+3. Gökhan = sadece demo host (Cal.com). Soğuk peer listesi yok.
+4. Cevap → Cal.com **veya** ücretsiz deneme; ikisi de başarı. “Synced / AI doktor” iddiası yok.
+5. “2 meslektaş davet et” her demo kapanışında + deneme açılışında.
+6. Doktor mesajında ABD / “görüntülü” vurgusu yok; saat dilimi yeterli.
+7. Kanal sırası: Kaan WhatsApp → Kaan e-posta.

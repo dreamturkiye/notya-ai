@@ -47,10 +47,11 @@ Gökhan has lived outside Türkiye for ~**7 years** and does **not** have a warm
 public listing → call-ready CSV
       → Kaan WhatsApp and/or e-posta (max ~20/day)
            ├─ books Cal.com → Gökhan 30' remote demo → trial + “invite 2 peers”
-           └─ skips demo → free trial link → soft Cal.com later
+           └─ skips demo → ücretsiz deneme link → soft Cal.com later
 ```
 
-**Primary CTA = demo booking.** Free trial is the soft alternative when they won’t take a call.  
+**Primary CTA = demo booking.** Ücretsiz deneme is the soft alternative when they won’t take a call.  
+Doctor-facing copy is **all Turkish** — no “free trial”, no “ABD’den görüntülü”.  
 Success metric this week: **booked demos + trial signups**, not “messages sent”.
 
 ---
@@ -92,7 +93,7 @@ Success metric this week: **booked demos + trial signups**, not “messages sent
 | Reply | You do |
 |-------|--------|
 | “Tamam / saat?” | Send **only** Cal.com link again; help them pick a slot. No deck. |
-| “Demo olmaz, bakarım” | Free trial link + offer Cal later. |
+| “Demo olmaz, bakarım” | Ücretsiz deneme linki + later Cal offer. |
 | “İstemiyorum” | Soft stop; mark `hayir`. |
 | Silence 3–4 days | One short bump (WhatsApp or e-posta), then stop. |
 
@@ -123,8 +124,9 @@ Success metric this week: **booked demos + trial signups**, not “messages sent
 - No dernek membership dumps, no purchased lists, no automated blast.
 - Soft stop on “istemiyorum”.
 - Claims: structured note + asistan + doctor approval — never “AI replaces doctor”.
-- Gökhan is US-based: say it once (“ABD’den görüntülü, saat sizin diliminizde”), then book.
+- Gökhan is US-based internally; **do not** put ABD / “görüntülü” in doctor messages — “saatler sizin diliminizde” is enough.
 - Do not imply Gökhan is writing from a TR practice WhatsApp — first message is from Kaan / Notya.
+- Doctor copy: Turkish only (`ücretsiz deneme`, not “free trial”).
 
 ## Re-harvest
 
