@@ -11,6 +11,7 @@
  */
 import { MuayenehaneKarti } from './MuayenehaneKarti'
 import { AyarSatiri } from './AyarSatiri'
+import { DavetSatiri, DisaAktarimSatiri } from './DavetVeDisaAktarim'
 import React, { useEffect, useState } from 'react'
 import { Bilgi, Cerceve, Hata, useUygulama, YOL, Yukleniyor, type Api, type Hesap } from './Kabuk'
 import { DilSecimi, YaziSecimi } from './DilFormu'
@@ -329,6 +330,9 @@ export default function Ayarlar() {
               <span className="yg-satir-ok" aria-hidden="true">{'\u203A'}</span>
             </a>
           ) : null}
+          {/* REFERANS-01 / HASTA-DISA-AKTAR-01 (2026-11-05): the same two rows as Türkiye's Settings, where the pack has their words. */}
+          {u.hesap.onBuro ? null : <DavetSatiri u={u} />}
+          {u.hesap.onBuro ? null : <DisaAktarimSatiri u={u} />}
           {/* YENI-DOKTOR-UX-2026-10: the switch for the in-place tips (default ON). */}
           <IpucuAyarKarti m={u.m} />
         </div>

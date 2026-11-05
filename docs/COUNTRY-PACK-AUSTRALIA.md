@@ -19,8 +19,8 @@ A pack that builds has every text and setting filled in. It says nothing about w
 
 ## What is in this pack, and where it comes from
 
-- **From the shared English set** (`countries/_dil/en/`, written once for five countries): 11248 texts as this pack shows them or hands the model (the country's own, counted in the next line, among them) — the screens, the role names, 40 note templates, the instructions to the model, the intake questions, 404 tools, the landing copy — written in `en-AU` spelling by the set's spelling table.
-- **This country's own** (`countries/au/`, six small files): 49 texts it writes itself (its consent sentence, identifier label, time sentence, date example, name, word for a senior doctor, role names where they differ, what its closed tools are missing and who decides, unit names and tool words it writes differently, the example phone number and the pattern of an amount) and the settings in the table below.
+- **From the shared English set** (`countries/_dil/en/`, written once for five countries): 12106 texts as this pack shows them or hands the model (the country's own, counted in the next line, among them) — the screens, the role names, 40 note templates, the instructions to the model, the intake questions, 420 tools, the landing copy — written in `en-AU` spelling by the set's spelling table.
+- **This country's own** (`countries/au/`, six small files): 53 texts it writes itself (its consent sentence, identifier label, time sentence, date example, name, word for a senior doctor, role names where they differ, what its closed tools are missing and who decides, unit names and tool words it writes differently, the example phone number and the pattern of an amount) and the settings in the table below.
 
 ## Settings — every one unverified
 
@@ -115,7 +115,7 @@ The keys are the shared English key set (`docs/COUNTRY-PACK-ROLE-KEYS.md`). The 
 
 ## Tools
 
-### Switched on (404) — with the unit each measured input takes
+### Switched on (420) — with the unit each measured input takes
 
 Units are a clinical-safety matter. A length or a weight is typed in this pack's unit and converted by the kit with the exact defined factors (1 in = 2.54 cm, 1 lb = 0.45359237 kg); a laboratory value is typed in the unit shown. `countries/au/au.test.ts` runs every tool below with this country's units against the kit's reference result. **Every tool's text is machine-written; each waits on a local clinical lead.**
 
@@ -180,6 +180,22 @@ Units are a clinical-safety matter. A length or a weight is typed in this pack's
 | `usg-obstetrik` | Obstetric ultrasound report | Obstetrics and gynaecology | Crown-rump length: **mm**; Biparietal diameter: **mm**; Head circumference: **mm**; Abdominal circumference: **mm**; Femur length: **mm**; Amniotic fluid index: **cm**; Deepest vertical pool: **cm**; Middle cerebral artery PSV: **cm/s**; Nuchal translucency: **mm** |
 | `usg-jinekolojik` | Gynaecological ultrasound report | Obstetrics and gynaecology | Uterus, length: **mm**; Uterus, anteroposterior: **mm**; Uterus, width: **mm**; Endometrial thickness: **mm**; Right ovary, length: **mm**; Right ovary, anteroposterior: **mm**; Right ovary, width: **mm**; Left ovary, length: **mm**; Left ovary, anteroposterior: **mm**; Left ovary, width: **mm**; Lesion 1, largest diameter: **mm**; Lesion 2, largest diameter: **mm** |
 | `dogum-epikrizi` | Postnatal discharge summary | Obstetrics and gynaecology | Birth weight: **g**; Estimated blood loss: **mL** |
+| `cerrahi-guvenlik-listesi` | WHO Surgical Safety Checklist | General surgery, Obstetrics and gynaecology, Orthopaedic surgery, Urology, Otolaryngology – head and neck surgery, Ophthalmology, Neurosurgery, Plastic surgery, Paediatric surgery, Cosmetic surgery, Cardio-thoracic surgery, Vascular surgery | no measured input |
+| `caprini` | Caprini VTE risk score | General surgery, Obstetrics and gynaecology, Orthopaedic surgery, Urology, Otolaryngology – head and neck surgery, Ophthalmology, Neurosurgery, Plastic surgery, Paediatric surgery, Cosmetic surgery, Cardio-thoracic surgery, Vascular surgery | no measured input |
+| `asa-siniflamasi` | ASA physical status | General surgery, Obstetrics and gynaecology, Orthopaedic surgery, Urology, Otolaryngology – head and neck surgery, Ophthalmology, Neurosurgery, Plastic surgery, Paediatric surgery, Cosmetic surgery, Cardio-thoracic surgery, Vascular surgery | no measured input |
+| `antibiyotik-profilaksi-kd` | Antibiotic prophylaxis: caesarean and hysterectomy | Obstetrics and gynaecology | Weight (kg): **kg**; Hours since the first dose (optional): **hours**; Blood loss so far (optional): **mL** · result in g, mg |
+| `iota-basit-kurallar` | IOTA Simple Rules | Obstetrics and gynaecology | no measured input |
+| `rmi` | Risk of Malignancy Index (RMI I) | Obstetrics and gynaecology | Serum CA-125: **U/mL** |
+| `palm-coein` | PALM-COEIN and fibroid mapping | Obstetrics and gynaecology | Fibroid 1: largest diameter: **mm**; Fibroid 2: largest diameter: **mm**; Fibroid 3: largest diameter: **mm**; Fibroid 4: largest diameter: **mm**; Fibroid 5: largest diameter: **mm**; Fibroid 6: largest diameter: **mm** · result in mm |
+| `rasrm-endometriozis` | Revised ASRM endometriosis stage | Obstetrics and gynaecology | no measured input |
+| `enzian` | #Enzian classification | Obstetrics and gynaecology | no measured input |
+| `bishop` | Bishop score | Obstetrics and gynaecology | no measured input |
+| `robson` | Robson Ten-Group Classification | Obstetrics and gynaecology | no measured input |
+| `sezaryen-aciliyeti` | Caesarean urgency and decision-to-birth interval | Obstetrics and gynaecology | no measured input · result in min |
+| `kanama-izlem` | Blood loss, shock index and the haemorrhage bundle | Obstetrics and gynaecology | Weight of the soaked swabs: **g**; Dry weight of the same swabs: **g**; Volume in the suction or drape: **mL**; Amniotic fluid in that volume: **mL**; Estimated loss (when not measured): **mL**; Systolic blood pressure: **mmHg** · result in mL |
+| `histeroskopi-sivi` | Hysteroscopy fluid deficit | Obstetrics and gynaecology | Reading 1: fluid in (cumulative): **mL**; Reading 1: fluid out (cumulative): **mL**; Reading 2: fluid in (cumulative): **mL**; Reading 2: fluid out (cumulative): **mL**; Reading 3: fluid in (cumulative): **mL**; Reading 3: fluid out (cumulative): **mL**; Reading 4: fluid in (cumulative): **mL**; Reading 4: fluid out (cumulative): **mL**; Reading 5: fluid in (cumulative): **mL**; Reading 5: fluid out (cumulative): **mL**; Reading 6: fluid in (cumulative): **mL**; Reading 6: fluid out (cumulative): **mL** · result in mL, % |
+| `eras-kd` | ERAS checklist: gynaecology and caesarean birth | Obstetrics and gynaecology | no measured input |
+| `onam-formu-kd` | Procedure consent form | Obstetrics and gynaecology | no measured input |
 | `au-body-size` | Body mass index and waist measurement (adults) | every role | Weight: **kg**; Height: **cm**; Waist measurement (optional): **cm** · result in kg/m², cm |
 | `au-mental-health-screen` | K10 psychological distress scale: total score | Emergency medicine, General practice, Anaesthesia, Neurosurgery, General medicine, Dermatology, Endocrinology, Infectious diseases, Gastroenterology and hepatology, General surgery, Cardio-thoracic surgery, Respiratory and sleep medicine, Ophthalmology, Obstetrics and gynaecology, Vascular surgery, Cardiology, Otolaryngology – head and neck surgery, Nephrology, Neurology, Medical oncology, Radiation oncology, Orthopaedic surgery, Plastic surgery, Psychiatry, Radiology, Rheumatology, Urology, Sport and exercise medicine, Rehabilitation medicine, Geriatric medicine, Immunology and allergy, Haematology, Pain medicine, Cosmetic surgery, Non-surgical cosmetic procedures, Psychologist | no measured input |
 | `au-oncology-grading` | ECOG performance status: record the grade | Medical oncology, Radiation oncology | no measured input |

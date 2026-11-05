@@ -52,6 +52,7 @@ import { auKohortAraclari } from './araclar/kohort'
 import { auIncelemePlanlari } from './araclar/reviewPlans'
 import { AU_ROLLER } from './klinik/roller'
 import { AU_BIRIMLER, AU_VELI_YASI } from './temel'
+import { AU_OPERATOR_DEGISEN, AU_OPERATOR_PARAMETRELERI } from './operator'
 
 export { AU_BIRIMLER, AU_VELI_YASI } from './temel'
 
@@ -213,6 +214,8 @@ export const AU_GIRDI: EnUlkeGirdisi = {
     // FOR A LOCAL CLINICAL LEAD: the tools of the shared set this country keeps switched off, and why.
     // AMELIYAT-NOTU-01 / KD-RAPOR-01 (2026-11-05): the operation note and obstetrics and gynaecology's printed records of the set
     ameliyatKayitlari: true,
+    // KD-OPERATOR-01 (2026-11-05): the operating surgeon's tools of the set, with this country's numbers and sources (./operator.ts)
+    operatorAraclari: true,
     kapali: {
       // REMOVED FOR AUSTRALIA by the audit's decision ("remove"): it is not this country's scale. It stays a slot only
       // because every tool of the shared set that is not on is recorded as one; it is never to be switched on here.
@@ -232,6 +235,7 @@ export const AU_GIRDI: EnUlkeGirdisi = {
     },
     // WORDS OF A SHARED TOOL THIS COUNTRY WRITES DIFFERENTLY.
     degisen: {
+      ...AU_OPERATOR_DEGISEN,
       // The national guideline gives a yearly rate of change no place: said where the tool is described. Source read
       // 2026-10-10 (the summary of recommendations named under `labBirimleri.psa`): the words "PSA velocity" and a
       // yearly rate do not appear in it; it works with levels by age and risk, a repeat test, and PSA density.
@@ -239,6 +243,7 @@ export const AU_GIRDI: EnUlkeGirdisi = {
     },
     // NUMBERS AUSTRALIA STATES for a tool of the shared set that leaves one to the country.
     parametreler: {
+      ...AU_OPERATOR_PARAMETRELERI,
       // THE RANGE OF THE EXPECTED HEIGHT: 8.5 cm either side. Source read 2026-10-10: The Royal Children's Hospital
       // Melbourne, Primary Care Liaison, "Short stature" (guideline reviewed in July 2025),
       // https://www.rch.org.au/primary-care-liaison/prereferral_guidelines/Short_stature/ — "the normal range for
