@@ -428,6 +428,25 @@ SATIRLAR_5: {
 
 /** Tools of the kit that have no function to stand beside, and why. */
 const KARSILIKSIZ: Readonly<Record<string, string>> = {
+  // KD-OPERATOR-01 (2026-11-05): the kit and the Türkiye build compute these with THE SAME engines (lib/clinical/
+  // cerrahiGuvenlik.ts, antibiyotikProfilaksi.ts, adneksKitle.ts, jinekolojikSiniflama.ts, dogumSalonu.ts, histeroskopiEras.ts,
+  // onamProsedurleri.ts: byte-identical on every branch), tested with known answers in lib/clinical/kdOperator.test.ts.
+  'cerrahi-guvenlik-listesi': 'the shared engine in lib/clinical/ is the Türkiye build\'s own; known answers in lib/clinical/kdOperator.test.ts',
+  'caprini': 'the shared engine in lib/clinical/ is the Türkiye build\'s own; known answers in lib/clinical/kdOperator.test.ts',
+  'asa-siniflamasi': 'the shared engine in lib/clinical/ is the Türkiye build\'s own; known answers in lib/clinical/kdOperator.test.ts',
+  'antibiyotik-profilaksi-kd': 'the shared engine in lib/clinical/ is the Türkiye build\'s own; known answers in lib/clinical/kdOperator.test.ts',
+  'iota-basit-kurallar': 'the shared engine in lib/clinical/ is the Türkiye build\'s own; known answers in lib/clinical/kdOperator.test.ts',
+  'rmi': 'the shared engine in lib/clinical/ is the Türkiye build\'s own; known answers in lib/clinical/kdOperator.test.ts',
+  'palm-coein': 'the shared engine in lib/clinical/ is the Türkiye build\'s own; known answers in lib/clinical/kdOperator.test.ts',
+  'rasrm-endometriozis': 'the shared engine in lib/clinical/ is the Türkiye build\'s own; known answers in lib/clinical/kdOperator.test.ts',
+  'enzian': 'the shared engine in lib/clinical/ is the Türkiye build\'s own; known answers in lib/clinical/kdOperator.test.ts',
+  'bishop': 'the shared engine in lib/clinical/ is the Türkiye build\'s own; known answers in lib/clinical/kdOperator.test.ts',
+  'robson': 'the shared engine in lib/clinical/ is the Türkiye build\'s own; known answers in lib/clinical/kdOperator.test.ts',
+  'sezaryen-aciliyeti': 'the shared engine in lib/clinical/ is the Türkiye build\'s own; known answers in lib/clinical/kdOperator.test.ts',
+  'kanama-izlem': 'the shared engine in lib/clinical/ is the Türkiye build\'s own; known answers in lib/clinical/kdOperator.test.ts',
+  'histeroskopi-sivi': 'the shared engine in lib/clinical/ is the Türkiye build\'s own; known answers in lib/clinical/kdOperator.test.ts',
+  'eras-kd': 'the shared engine in lib/clinical/ is the Türkiye build\'s own; known answers in lib/clinical/kdOperator.test.ts',
+  'onam-formu-kd': 'the shared engine in lib/clinical/ is the Türkiye build\'s own; known answers in lib/clinical/kdOperator.test.ts',
   // AMELIYAT-NOTU-01 / KD-RAPOR-01 (2026-11-05): their Türkiye counterparts are on main (lib/doktor/ameliyatNotu.ts,
   // specialties/kadin-dogum/engines/usgRaporu.ts, nstKtg.ts, dogumEpikrizi.ts), not on this branch; the arithmetic is
   // tested against its published thresholds in lib/ulke/araclar/kadinDogumCerrahi.test.ts instead.

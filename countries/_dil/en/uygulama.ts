@@ -58,6 +58,32 @@ export const EN_UYGULAMA_TEMEL: Temel = {
   },
   ayarlar: {
     baslik: 'Settings',
+    // REFERANS-01: inviting a colleague
+    davet: {
+      baslik: 'Invite a colleague',
+      aciklama: 'Share your link or QR code with a doctor who may find Notya useful.',
+      kod: 'Your code',
+      baglanti: 'Your link',
+      kopyala: 'Copy link',
+      kopyalandi: 'Copied.',
+      kosul: 'The 15-day trial needs no code and no card. When a colleague who signed up with your link pays their first invoice, you each get one month of your own plan free, as credit on your next invoices. At most 12 months a year; not for your own accounts or within one clinic.',
+      sayac: 'Signed up: % · Paid: % · Free months given: %',
+      yuklenemedi: 'Your code could not be loaded. Please try again.',
+    },
+    // HASTA-DISA-AKTAR-01: one patient's record, exported
+    disaAktar: {
+      baslik: 'Export a patient\'s record',
+      aciklama: 'Download one of your patients\' approved visit notes and kept tool results as a structured file (FHIR R4 JSON), or prepare a printable page to save as PDF. Draft notes, the national ID and the telephone number are not exported. Every export is recorded in the audit log.',
+      ara: 'Find the patient',
+      json: 'Download structured data (JSON)',
+      yazdir: 'Prepare a printable page',
+      hazirlaniyor: 'Preparing…',
+      hata: 'The export could not be prepared. Please try again.',
+      bulunamadi: 'No patient of yours matches this search.',
+      notlar: 'Approved visit notes',
+      araclar: 'Kept tool results',
+      dogumTarihi: 'Date of birth: %',
+    },
     dilBolumu: 'Language',
     arayuzDili: 'Language of the screens',
     notDili: 'Language of visit notes',

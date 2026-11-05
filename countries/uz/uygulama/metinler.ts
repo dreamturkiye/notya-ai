@@ -57,6 +57,8 @@ const UZ_LATN: UygulamaMetni = {
   },
   ayarlar: {
     baslik: 'Sozlamalar',
+    davet: { baslik: 'Hamkasbni taklif qilish', aciklama: 'Havolangiz yoki QR-kodingizni Notya foydali boʻlishi mumkin boʻlgan shifokor bilan ulashing.', kod: 'Sizning kodingiz', baglanti: 'Sizning havolangiz', kopyala: 'Havolani nusxalash', kopyalandi: 'Nusxalandi.', kosul: '15 kunlik sinov muddati uchun kod ham, karta ham kerak emas. Havolangiz orqali roʻyxatdan oʻtgan hamkasb birinchi hisobini toʻlaganda, har biringiz oʻz tarifingizning bir oyini bepul olasiz (keyingi hisoblarga kredit sifatida). Yiliga koʻpi bilan 12 oy; oʻz hisoblaringiz va bitta klinika ichida qoʻllanmaydi.', sayac: 'Roʻyxatdan oʻtgan: % · Toʻlagan: % · Berilgan bepul oylar: %', yuklenemedi: 'Kodingizni yuklab boʻlmadi. Qayta urinib koʻring.' },
+    disaAktar: { baslik: 'Bemor yozuvini eksport qilish', aciklama: 'Bemoringizning tasdiqlangan qabul yozuvlari va saqlangan vosita natijalarini tuzilgan fayl (FHIR R4 JSON) sifatida yuklab oling yoki PDF sifatida saqlash uchun chop etiladigan sahifa tayyorlang. Qoralama yozuvlar, milliy identifikator va telefon raqami eksport qilinmaydi. Har bir eksport audit jurnaliga yoziladi.', ara: 'Bemorni toping', json: 'Tuzilgan maʼlumotni yuklab olish (JSON)', yazdir: 'Chop etiladigan sahifa tayyorlash', hazirlaniyor: 'Tayyorlanmoqda…', hata: 'Eksportni tayyorlab boʻlmadi. Qayta urinib koʻring.', bulunamadi: 'Bu qidiruvga mos bemoringiz topilmadi.', notlar: 'Tasdiqlangan qabul yozuvlari', araclar: 'Saqlangan vosita natijalari', dogumTarihi: 'Tugʻilgan sana: %' },
     dilBolumu: 'Til',
     arayuzDili: 'Interfeys tili',
     notDili: 'Koʻrik qaydlari tili',
@@ -513,6 +515,8 @@ const UZ_CYRL: UygulamaMetni = {
   },
   ayarlar: {
     baslik: 'Созламалар',
+    davet: { baslik: 'Ҳамкасбни таклиф қилиш', aciklama: 'Ҳаволангиз ёки штрих-кодингизни бу дастур фойдали бўлиши мумкин бўлган шифокор билан улашинг.', kod: 'Сизнинг кодингиз', baglanti: 'Сизнинг ҳаволангиз', kopyala: 'Ҳаволани нусхалаш', kopyalandi: 'Нусхаланди.', kosul: '15 кунлик синов муддати учун код ҳам, карта ҳам керак эмас. Ҳаволангиз орқали рўйхатдан ўтган ҳамкасб биринчи ҳисобини тўлаганда, ҳар бирингиз ўз тарифингизнинг бир ойини бепул оласиз (кейинги ҳисобларга кредит сифатида). Йилига кўпи билан 12 ой; ўз ҳисобларингиз ва битта клиника ичида қўлланмайди.', sayac: 'Рўйхатдан ўтган: % · Тўлаган: % · Берилган бепул ойлар: %', yuklenemedi: 'Кодингизни юклаб бўлмади. Қайта уриниб кўринг.' },
+    disaAktar: { baslik: 'Бемор ёзувини экспорт қилиш', aciklama: 'Беморингизнинг тасдиқланган қабул ёзувлари ва сақланган восита натижаларини халқаро тузилган файл сифатида юклаб олинг ёки ҳужжат сифатида сақлаш учун чоп этиладиган саҳифа тайёрланг. Қоралама ёзувлар, миллий идентификатор ва телефон рақами экспорт қилинмайди. Ҳар бир экспорт аудит журналига ёзилади.', ara: 'Беморни топинг', json: 'Тузилган маълумотни юклаб олиш', yazdir: 'Чоп этиладиган саҳифа тайёрлаш', hazirlaniyor: 'Тайёрланмоқда…', hata: 'Экспортни тайёрлаб бўлмади. Қайта уриниб кўринг.', bulunamadi: 'Бу қидирувга мос беморингиз топилмади.', notlar: 'Тасдиқланган қабул ёзувлари', araclar: 'Сақланган восита натижалари', dogumTarihi: 'Туғилган сана: %' },
     dilBolumu: 'Тил',
     arayuzDili: 'Интерфейс тили',
     notDili: 'Кўрик қайдлари тили',
@@ -965,6 +969,8 @@ const RU: UygulamaMetni = {
   },
   ayarlar: {
     baslik: 'Настройки',
+    davet: { baslik: 'Пригласить коллегу', aciklama: 'Поделитесь ссылкой или штрих-кодом с врачом, которому может пригодиться эта программа.', kod: 'Ваш код', baglanti: 'Ваша ссылка', kopyala: 'Копировать ссылку', kopyalandi: 'Скопировано.', kosul: 'Для 15-дневного пробного периода не нужны ни код, ни карта. Когда коллега, зарегистрировавшийся по вашей ссылке, оплатит первый счёт, каждый из вас получит один месяц своего тарифа бесплатно (кредитом на следующие счета). Не более 12 месяцев в год; не для собственных аккаунтов и не внутри одной клиники.', sayac: 'Зарегистрировались: % · Оплатили: % · Бесплатных месяцев: %', yuklenemedi: 'Не удалось загрузить ваш код. Попробуйте ещё раз.' },
+    disaAktar: { baslik: 'Экспорт записей пациента', aciklama: 'Скачайте утверждённые записи приёмов и сохранённые результаты инструментов вашего пациента в виде структурированного файла международного формата или подготовьте страницу для печати и сохранения в виде документа. Черновики, национальный идентификатор и номер телефона не экспортируются. Каждый экспорт записывается в журнал аудита.', ara: 'Найдите пациента', json: 'Скачать структурированные данные', yazdir: 'Подготовить страницу для печати', hazirlaniyor: 'Подготовка…', hata: 'Не удалось подготовить экспорт. Попробуйте ещё раз.', bulunamadi: 'По этому запросу ваших пациентов не найдено.', notlar: 'Утверждённые записи приёмов', araclar: 'Сохранённые результаты инструментов', dogumTarihi: 'Дата рождения: %' },
     dilBolumu: 'Язык',
     arayuzDili: 'Язык интерфейса',
     notDili: 'Язык записей приёма',

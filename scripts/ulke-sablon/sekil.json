@@ -97,6 +97,30 @@
   },
   "ayarlar": {
    "baslik": "$m",
+   "davet": {
+    "baslik": "$m",
+    "aciklama": "$m",
+    "kod": "$m",
+    "baglanti": "$m",
+    "kopyala": "$m",
+    "kopyalandi": "$m",
+    "kosul": "$m",
+    "sayac": "$m:%",
+    "yuklenemedi": "$m"
+   },
+   "disaAktar": {
+    "baslik": "$m",
+    "aciklama": "$m",
+    "ara": "$m",
+    "json": "$m",
+    "yazdir": "$m",
+    "hazirlaniyor": "$m",
+    "hata": "$m",
+    "bulunamadi": "$m",
+    "notlar": "$m",
+    "araclar": "$m",
+    "dogumTarihi": "$m:%"
+   },
    "dilBolumu": "$m",
    "arayuzDili": "$m",
    "notDili": "$m",
@@ -953,9 +977,28 @@
    "yazdirHasta": "$m:%",
    "yazdirTarih": "$m:%",
    "yazdirImza": "$m",
+   "belgeNo": "$m:%",
+   "belgeRev": "$m:%",
+   "belgeTarih": "$m:%",
+   "belgeDogrula": "$m",
+   "belgeGerekce": "$m",
+   "belgeKayitsiz": "$m",
    "birimSec": {
     "$istege": "REQUIRED if the country accepts more than one unit for a laboratory value (araclar.labBirimleri with a list): under a number whose unit is not chosen yet, \"Choose the unit of this value.\""
    }
+  },
+  "dogrulama": {
+   "baslik": "$m",
+   "aciklama": "$m",
+   "belgeNo": "$m",
+   "rev": "$m",
+   "tarih": "$m",
+   "hekim": "$m",
+   "guncel": "$m",
+   "eski": "$m:%",
+   "ozet": "$m",
+   "bulunamadi": "$m",
+   "cokFazla": "$m"
   },
   "portal": {
    "nasil": "$m"

@@ -53,6 +53,17 @@ export type UygulamaMetni = {
     readonly kaydedilemedi: string
   }
   readonly ayarlar: {
+    /**
+     * REFERANS-01 — inviting a colleague: the account's own code, its link with a QR code, and what has come of it.
+     * `kosul` says the terms in plain words (the trial needs no code; one free month each after the colleague's first
+     * payment; at most 12 a year). `sayac` % invited, % paid, % months given. Optional: a pack without it has no card.
+     */
+    readonly davet?: { readonly baslik: string; readonly aciklama: string; readonly kod: string; readonly baglanti: string; readonly kopyala: string; readonly kopyalandi: string; readonly kosul: string; readonly sayac: string; readonly yuklenemedi: string }
+    /**
+     * HASTA-DISA-AKTAR-01 — one patient's record exported by the doctor: a structured file (FHIR R4 JSON) and a printable
+     * page. Every export is written to the audit log. Optional: a pack without it has no card.
+     */
+    readonly disaAktar?: { readonly baslik: string; readonly aciklama: string; readonly ara: string; readonly json: string; readonly yazdir: string; readonly hazirlaniyor: string; readonly hata: string; readonly bulunamadi: string; readonly notlar: string; readonly araclar: string; readonly dogumTarihi: string }
     /** Time zone of the account. REQUIRED where the pack lists more than one zone; not read otherwise. */
     readonly saatDilimi?: string
     readonly saatDilimiIzoh?: string
@@ -939,6 +950,8 @@ export type FormMetni = {
  * the pack's list (lib/ulke/araclar/tipler.ts → AracMetni), in every form at once.
  */
 export type AraclarMetni = {
+  /** BELGE-NO-01 — the public verification page (/verify?c=…): what it shows of a document, and nothing of its patient. */
+  readonly dogrulama?: { readonly baslik: string; readonly aciklama: string; readonly belgeNo: string; readonly rev: string; readonly tarih: string; readonly hekim: string; readonly guncel: string; readonly eski: string; readonly ozet: string; readonly bulunamadi: string; readonly cokFazla: string }
   readonly kabuk: {
     /** The link in the application's navigation. */
     readonly araclar: string
@@ -1011,6 +1024,19 @@ export type AraclarMetni = {
     readonly yazdirHasta?: string
     readonly yazdirTarih?: string
     readonly yazdirImza?: string
+    /**
+     * BELGE-NO-01 — THE DOCUMENT NUMBER ON A PRINTED RECORD: each printout is registered when it is printed and carries
+     * its number, revision, date and a QR code to the public verification page (which shows no patient data). Optional:
+     * a pack without them prints as before. `belgeGerekce` asks why a changed record is printed again (revision 1 on).
+     *   belgeNo % the number · belgeRev % the revision · belgeTarih % the date · belgeDogrula the line beside the QR ·
+     *   belgeKayitsiz the line when the printout could not be registered
+     */
+    readonly belgeNo?: string
+    readonly belgeRev?: string
+    readonly belgeTarih?: string
+    readonly belgeDogrula?: string
+    readonly belgeGerekce?: string
+    readonly belgeKayitsiz?: string
   }
   /** The patient portal's tile: how access is given, said in one or two sentences above the patient search. */
   readonly portal: {

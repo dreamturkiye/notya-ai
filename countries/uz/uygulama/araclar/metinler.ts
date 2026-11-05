@@ -67,7 +67,15 @@ const UZ_LATN: AraclarMetni = {
     yazdirHasta: 'Bemor: %',
     yazdirTarih: 'Sana: %',
     yazdirImza: 'Imzo',
+    belgeNo: 'Hujjat raqami: %',
+    belgeRev: 'Tahrir: %',
+    belgeTarih: 'Berilgan: %',
+    belgeDogrula: 'Hujjatni tekshirish uchun skanerlang (bemor maʼlumoti koʻrsatilmaydi).',
+    belgeGerekce: 'Bu yozuv oxirgi chop etilgandan beri oʻzgargan. Yangi tahrir sababini yozing:',
+    belgeKayitsiz: 'Bu nusxa roʻyxatdan oʻtmagan va hujjat raqamiga ega emas.',
   },
+  // BELGE-NO-01: the public verification page
+  dogrulama: { baslik: 'Hujjatni tekshirish', aciklama: 'Bu sahifa chop etilgan yozuv ushbu dastur orqali berilganini tasdiqlaydi. Bemor maʼlumoti koʻrsatilmaydi.', belgeNo: 'Hujjat raqami', rev: 'Tahrir', tarih: 'Berilgan', hekim: 'Bergan', guncel: 'Bu joriy tahrir.', eski: 'Bu tahrir eskirgan: joriy tahrir %.', ozet: 'Yaxlitlik xeshi', bulunamadi: 'Bu kodga mos hujjat topilmadi.', cokFazla: 'Soʻrovlar juda koʻp. Bir daqiqadan keyin qayta urinib koʻring.' },
   portal: {
     nasil: 'Bemorni toping va kartasini oching: «Bemor sahifasi» boʻlimida havola va PIN-kod yaratiladi, nimani ulashishni ham oʻsha yerda tanlaysiz.',
   },
@@ -149,7 +157,15 @@ const UZ_CYRL: AraclarMetni = {
     yazdirHasta: 'Бемор: %',
     yazdirTarih: 'Сана: %',
     yazdirImza: 'Имзо',
+    belgeNo: 'Ҳужжат рақами: %',
+    belgeRev: 'Таҳрир: %',
+    belgeTarih: 'Берилган: %',
+    belgeDogrula: 'Ҳужжатни текшириш учун сканерланг (бемор маълумоти кўрсатилмайди).',
+    belgeGerekce: 'Бу ёзув охирги чоп этилгандан бери ўзгарган. Янги таҳрир сабабини ёзинг:',
+    belgeKayitsiz: 'Бу нусха рўйхатдан ўтмаган ва ҳужжат рақамига эга эмас.',
   },
+  // BELGE-NO-01: the public verification page
+  dogrulama: { baslik: 'Ҳужжатни текшириш', aciklama: 'Бу саҳифа чоп этилган ёзув ушбу дастур орқали берилганини тасдиқлайди. Бемор маълумоти кўрсатилмайди.', belgeNo: 'Ҳужжат рақами', rev: 'Таҳрир', tarih: 'Берилган', hekim: 'Берган', guncel: 'Бу жорий таҳрир.', eski: 'Бу таҳрир эскирган: жорий таҳрир %.', ozet: 'Яхлитлик хеши', bulunamadi: 'Бу кодга мос ҳужжат топилмади.', cokFazla: 'Сўровлар жуда кўп. Бир дақиқадан кейин қайта уриниб кўринг.' },
   portal: {
     nasil: 'Беморни топинг ва картасини очинг: «Бемор саҳифаси» бўлимида ҳавола ва ПИН-код яратилади, нимани улашишни ҳам ўша ерда танлайсиз.',
   },
@@ -231,7 +247,15 @@ const RU: AraclarMetni = {
     yazdirHasta: 'Пациент: %',
     yazdirTarih: 'Дата: %',
     yazdirImza: 'Подпись',
+    belgeNo: 'Документ № %',
+    belgeRev: 'Редакция %',
+    belgeTarih: 'Выдан %',
+    belgeDogrula: 'Отсканируйте, чтобы проверить документ (данные пациента не показываются).',
+    belgeGerekce: 'Запись изменилась после последней печати. Укажите причину новой редакции:',
+    belgeKayitsiz: 'Эта распечатка не зарегистрирована и не имеет номера документа.',
   },
+  // BELGE-NO-01: the public verification page
+  dogrulama: { baslik: 'Проверка документа', aciklama: 'Эта страница подтверждает, что распечатанная запись выдана через эту программу. Данные пациента не показываются.', belgeNo: 'Номер документа', rev: 'Редакция', tarih: 'Выдан', hekim: 'Выдал', guncel: 'Это действующая редакция.', eski: 'Эта редакция заменена: действующая редакция %.', ozet: 'Хеш целостности', bulunamadi: 'Документ с таким кодом не найден.', cokFazla: 'Слишком много запросов. Повторите через минуту.' },
   portal: {
     nasil: 'Найдите пациента и откройте его карту: в разделе «Страница пациента» создаются ссылка и ПИН-код, там же вы выбираете, чем поделиться.',
   },

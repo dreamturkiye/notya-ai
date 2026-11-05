@@ -130,7 +130,7 @@ export const UZ_PAKETI: UlkePaketi = {
     // (app/password-reset/page.ulke.tsx) existed and built fine, but this allow-list is the second 404 gate
     // (lib/ulke/rotaKapisi.ts) and it answered "Page not found" for any path it does not list, login included
     // once, before this fix. Keep it next to '/login' so the two stay paired.
-    sayfalar: ['/', '/for-clinics', '/login', '/password-reset', '/signup', '/welcome', '/start', '/today', '/settings', '/patients', '/patients/new', '/patient', '/visit', '/calendar', '/portal', '/tools', '/medical', '/clinic', '/desk', '/privacy', '/terms', '/cookies', '/data-request', '/accessibility', '/medical-disclaimer', '/security', '/refund', '/copyright', '/demo'],
+    sayfalar: ['/', '/for-clinics', '/login', '/password-reset', '/signup', '/welcome', '/start', '/today', '/settings', '/patients', '/patients/new', '/patient', '/visit', '/calendar', '/portal', '/tools', '/medical', '/clinic', '/desk', '/privacy', '/terms', '/cookies', '/data-request', '/accessibility', '/medical-disclaimer', '/security', '/refund', '/copyright', '/demo', '/verify'],
     // STRIPE-NOTYA-UZ-02 (same gap AU had, AU-BUILD-FIX found it first): without this prefix,
     // /api/billing/checkout and /api/billing/webhook 404 at this gate before Next.js ever serves
     // them — the Stripe-side plumbing (UZS catalog, env vars, trial) built and verified earlier

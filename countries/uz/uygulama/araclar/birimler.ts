@@ -59,6 +59,8 @@ export const UZ_ARAC_BIRIMLERI: Readonly<Record<string, Uc>> = {
   mmHg: u('mm simob ustuni', 'мм симоб устуни', 'мм рт. ст.'),
   kcal: u('kkal', 'ккал', 'ккал'),
   g: u('g', 'г', 'г'),
+  // KD-OPERATOR-01: serum CA-125
+  'U/mL': u('XB/ml', 'ХБ/мл', 'Ед/мл'),
   // AMELIYAT-NOTU-01: Doppler velocity of the obstetric ultrasound report
   'cm/s': u('sm/s', 'см/с', 'см/с'),
 }

@@ -53,6 +53,7 @@ import { EN_ARACLAR_2 } from './arac2'
 import { EN_ARACLAR_3 } from './arac3'
 import { EN_ARACLAR_4 } from './arac4'
 import { EN_ARACLAR_5 } from './arac5'
+import { EN_ARACLAR_6 } from './arac6'
 import { araciBicimle, lisansiBicimle, type EnDegisen, type EnLisans, type HamArac } from './yardimci'
 import { enAracYuvalari, yuva } from './yuvalar'
 
@@ -74,6 +75,12 @@ export const EN_ROL_ARACLARI: readonly HamArac[] = [...EN_ARACLAR_1, ...EN_ARACL
  * (each country in its own release, in the same change set), so a pack is never changed by another country's release.
  */
 export const EN_AMELIYAT_ARACLARI: readonly HamArac[] = EN_ARACLAR_5
+/**
+ * KD-OPERATOR-01 (2026-11-05) — the operating surgeon's tools (./arac6.ts): the WHO checklist, Caprini and ASA for every
+ * surgical role; obstetrics and gynaecology's calculators, classifications and consent form. Switched on where a country
+ * states `operatorAraclari: true`, with its own national numbers (`parametreler`) and its sources (`degisen.not`).
+ */
+export const EN_OPERATOR_ARACLARI: readonly HamArac[] = EN_ARACLAR_6
 
 const TAKIP: Omit<HamArac, 'roller'> = {
   anahtar: 'takip-paneli',
@@ -123,6 +130,8 @@ export const EN_BIRIM_ADLARI: Readonly<Record<string, string>> = {
   cm2: 'cm²',
   // AMELIYAT-NOTU-01: Doppler velocity of the obstetric ultrasound report
   'cm/s': 'cm/s',
+  // KD-OPERATOR-01: serum CA-125
+  'U/mL': 'U/mL',
   '1/cm2': '/cm²',
   hafta: 'weeks',
 }
@@ -165,6 +174,8 @@ export type EnAraclarGirdisi = {
   kapali: Readonly<Record<string, { eksik: string; kimden: string }>>
   /** AMELIYAT-NOTU-01 / KD-RAPOR-01: true = the operation note and the obstetrics and gynaecology records of the set are on (EN_AMELIYAT_ARACLARI). */
   ameliyatKayitlari?: true
+  /** KD-OPERATOR-01: true = the operating surgeon's tools of the set are on (EN_OPERATOR_ARACLARI). */
+  operatorAraclari?: true
   /** Unit names this country writes differently: unit code → name. Used as written. */
   birimAdlari?: Readonly<Record<string, string>>
   /** Words of a tool this country writes differently: kit key → the words. Used as written. */
@@ -238,7 +249,7 @@ export function enAraclar(g: EnAraclarGirdisi): UlkeAraclari {
     return Object.keys(ek).length ? ek : undefined
   }
   const temel = EN_TEMEL_ARACLAR.map((a) => araciBicimle(a, bicim, g.degisen?.[a.anahtar], eki(a)))
-  const setinRolAraclari = g.ameliyatKayitlari ? [...EN_ROL_ARACLARI, ...EN_AMELIYAT_ARACLARI] : EN_ROL_ARACLARI
+  const setinRolAraclari = [...EN_ROL_ARACLARI, ...(g.ameliyatKayitlari ? EN_AMELIYAT_ARACLARI : []), ...(g.operatorAraclari ? EN_OPERATOR_ARACLARI : [])]
   const rol = setinRolAraclari.filter(acik).map((a) => araciBicimle(a, bicim, g.degisen?.[a.anahtar], eki(a)))
   const ekAraclar = g.ek?.araclar ?? []
   // THE FOLLOW-UP LIST: a role tool of every role that has a switched-on tool of its own, in the order of the role list.

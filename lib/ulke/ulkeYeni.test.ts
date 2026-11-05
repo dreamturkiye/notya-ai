@@ -96,7 +96,7 @@ describe('scripts/ulke-yeni.mjs — a new country from the template', () => {
     // which roles, is decided there with a clinician. No tool text of any country is copied.
     assert.match(yeniIndex, /^\s+araclar: true,$/m)
     const aracSekli = (JSON.parse(readFileSync(join(KOK, 'scripts/ulke-sablon/sekil.json'), 'utf8')) as { araclar: Record<string, unknown> }).araclar
-    assert.deepEqual(Object.keys(aracSekli).sort(), ['arac', 'izgara', 'kabuk', 'kayit', 'portal', 'takip'])
+    assert.deepEqual(Object.keys(aracSekli).sort(), ['arac', 'dogrulama', 'izgara', 'kabuk', 'kayit', 'portal', 'takip']) // BELGE-NO-01 (2026-11-05): the public verification page's words
     const yeniAraclar = oku(`countries/${K}/uygulama/araclar.ts`)
     for (const grup of Object.keys(aracSekli)) assert.match(yeniAraclar, new RegExp(`^  ${grup}: `, 'm'))
     assert.deepEqual([...yeniAraclar.matchAll(/anahtar: '([a-z0-9-]+)'/g)].map((m) => m[1]), ['hasta-portali', 'sablonlarim', 'konsultasyonlar'], 'a new country starts with the three base tiles that hold no clinical content, and no other tool')
