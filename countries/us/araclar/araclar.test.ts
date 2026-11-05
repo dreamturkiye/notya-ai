@@ -22,7 +22,7 @@ import { ptaBandi } from '@/lib/ulke/araclar/tanimlar/kalpKbb'
 import type { UlkeAraclari } from '@/lib/ulke/araclar/tipler'
 import { bantBul } from '@/lib/ulke/araclar/uyarlama'
 import { ORNEK_BUGUN, ornekGirdiler } from '@/lib/ulke/testing/aracOrnekleri'
-import { EN_AMELIYAT_ARACLARI, EN_ROL_ARACLARI } from '../../_dil/en/araclar'
+import { EN_AMELIYAT_ARACLARI, EN_OPERATOR_ARACLARI, EN_ROL_ARACLARI } from '../../_dil/en/araclar'
 import { US_ARAYUZ } from '../arayuz'
 import { US_GIRDI } from '../ayarlar'
 import { US_PAKETI } from '../index'
@@ -46,7 +46,7 @@ const calistir = (k: string, ham: Record<string, string | boolean>) => { const x
  * outline, both kidney tools), the dose calculator by this pack's own, earlier decision (weight is in pounds), and a
  * third kidney tool — new since then — off pending a clinician's sign-off.
  */
-const EMIRLE_KAPALI = ['akne-vade', 'doz-hesabi', 'esi-triyaj', 'kbh-risk-kategorisi', 'kdigo-evre', 'kdigo-serit', 'lazer-vade', 'rapor-taslagi']
+const EMIRLE_KAPALI = ['akne-vade', 'antibiyotik-profilaksi-kd', 'doz-hesabi', 'esi-triyaj', 'kbh-risk-kategorisi', 'kdigo-evre', 'kdigo-serit', 'lazer-vade', 'rapor-taslagi']
 /** The six tools of this country's own that every doctor role sees (the seventh, the ECOG grade, is for three specialties). */
 const CEKIRDEK = ['us-bmi', 'us-egfr-ckd-epi-2021', 'us-pack-years', 'us-blood-sugar-ranges', 'us-fall-risk-screen', 'us-phq-9']
 const PART_D = ['us-part-d-medicines', 'us-prescription-note', 'us-immunization-schedule', 'us-adult-immunization', 'us-notifiable-diseases', 'us-blue-button-link']
@@ -76,10 +76,11 @@ const GORENLER: Readonly<Record<string, readonly string[]>> = {
 describe('us tools 1: no tool of the shared set is switched on or off by this job', () => {
   it('the same tools of the set are on as before: every one but the five that were off, the patient\'s page and the follow-up list; beyond the set, the thirteen of this country\'s own', () => {
     // AMELIYAT-NOTU-01 / KD-RAPOR-01 (2026-11-05): the five operation-note and obstetrics and gynaecology records of the set are on too
-    const setten = ['hasta-portali', ...[...EN_ROL_ARACLARI, ...EN_AMELIYAT_ARACLARI].map((a) => a.anahtar).filter((k) => !EMIRLE_KAPALI.includes(k))]
+    const setten = ['hasta-portali', ...[...EN_ROL_ARACLARI, ...EN_AMELIYAT_ARACLARI, ...EN_OPERATOR_ARACLARI].map((a) => a.anahtar).filter((k) => !EMIRLE_KAPALI.includes(k))]
     assert.deepEqual(acik, [...setten, ...KENDI, 'takip-paneli'])
-    assert.equal(setten.length + 1, 62, 'the patient page, the open role tools and the follow-up list')
-    assert.equal(acik.length, 62 + 14)
+    // KD-OPERATOR-01 (2026-11-05): +16 operating surgeon's tools of the set
+    assert.equal(setten.length + 1, 77, 'the patient page, the open role tools and the follow-up list')
+    assert.equal(acik.length, 77 + 14)
     for (const k of acik) assert.equal(Boolean(kitAraci(k)), !KENDI.includes(k), `${k}: a tool of the kit, or one of the thirteen of this country's own`)
   })
 
@@ -125,7 +126,7 @@ describe('us tools 2: who sees which tool', () => {
     // THE AUDIOLOGIST: the hearing average and the next-session record
     assert.deepEqual(izgara('audiology'), ['hasta-portali', 'odyometri-pta', 'sonraki-seans', 'takip-paneli'])
     // THORACIC AND CARDIAC SURGERY: the checklist before a heart operation is new, and the six of every doctor role
-    assert.deepEqual(izgara('thoracic-surgery'), ['hasta-portali', 'toraks-preop', 'toraks-tup-yara', 'kalp-damar-preop', 'ameliyat-notu', ...CEKIRDEK, ...PART_D, 'takip-paneli'])
+    assert.deepEqual(izgara('thoracic-surgery'), ['hasta-portali', 'toraks-preop', 'toraks-tup-yara', 'kalp-damar-preop', 'ameliyat-notu', 'cerrahi-guvenlik-listesi', 'caprini', 'asa-siniflamasi', ...CEKIRDEK, ...PART_D, 'takip-paneli'])
     // a specialty the audit adds: radiation oncology, with the two oncology lists of the set and the ECOG grade
     assert.deepEqual(izgara('radiation-oncology'), ['hasta-portali', 'kur-sayaci', 'toksisite-listesi', ...CEKIRDEK, 'us-ecog-performance-status', ...PART_D, 'takip-paneli'])
     // CARDIOLOGY and PSYCHIATRY: before, the patient's page and nothing else; now the six of every doctor role
@@ -283,7 +284,7 @@ describe('us tools 3: the numbers a national source states — each read on 2026
   })
 
   it('only the two grade tables and the one range are this country\'s own: no other number, table or band is stated for any tool', () => {
-    assert.deepEqual(A.araclar.filter((p) => p.parametreler).map((p) => p.anahtar), ['hedef-boy'])
+    assert.deepEqual(A.araclar.filter((p) => p.parametreler).map((p) => p.anahtar).sort(), ['hedef-boy', 'kanama-izlem']) // KD-OPERATOR-01: the WHO thresholds, beside their source in ./operator.ts
     assert.deepEqual(A.araclar.filter((p) => p.uyarlama).map((p) => p.anahtar).sort(), ['das28', 'odyometri-pta'])
     assert.deepEqual(A.araclar.filter((p) => p.tablolar).map((p) => p.anahtar), [])
     // a tool held back by the patient's age: three of the country's own, none of the set

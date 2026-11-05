@@ -37,6 +37,8 @@ export default function DavetliKayitFormu({ dil, metin, anaSayfaAdi, diller, ana
   const [tamam, setTamam] = useState(false)
   const yaz = (ad: keyof typeof alan) => (e: { target: { value: string } }) => setAlan((a) => ({ ...a, [ad]: e.target.value }))
 
+  // REFERANS-01: a colleague's referral code from the sign-up link (`?ref=NTY-XXXX`). Optional; it never gates sign-up.
+  const refKodu = (): string | null => (typeof window === 'undefined' ? null : new URLSearchParams(window.location.search).get('ref'))
   async function gonder(e: FormEvent) {
     e.preventDefault()
     const adSoyad = alan.adSoyad.trim(), eposta = alan.eposta.toLowerCase().trim(), davetKodu = alan.davetKodu.trim()
@@ -50,7 +52,7 @@ export default function DavetliKayitFormu({ dil, metin, anaSayfaAdi, diller, ana
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         cache: 'no-store',
-        body: JSON.stringify({ adSoyad, eposta, sifre: alan.sifre, ...(kodGerekli ? { davetKodu } : {}), dil: alan.dil, ...(alan.meslekKaydi.trim() ? { meslekKaydi: alan.meslekKaydi.trim() } : {}) }),
+        body: JSON.stringify({ adSoyad, eposta, sifre: alan.sifre, ...(kodGerekli ? { davetKodu } : {}), ...(refKodu() ? { ref: refKodu() } : {}), dil: alan.dil, ...(alan.meslekKaydi.trim() ? { meslekKaydi: alan.meslekKaydi.trim() } : {}) }),
       })
       if (r.ok) { setTamam(true); return }
       const j = (await r.json().catch(() => ({}))) as { code?: string }

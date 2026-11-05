@@ -30,6 +30,7 @@ import { enRolSatirlari } from '../_dil/en/klinik/roller'
 import { usAcilacakEk } from './araclar/metinler'
 import { US_ROLLER, US_YENIDEN_ADLANANLAR } from './roller'
 import { US_BIRIMLER, US_VELI_YASI } from './temel'
+import { US_OPERATOR_DEGISEN, US_OPERATOR_PARAMETRELERI } from './operator'
 
 export { US_BIRIMLER, US_VELI_YASI } from './temel'
 
@@ -132,8 +133,13 @@ export const US_GIRDI: EnUlkeGirdisi = {
     // FOR A LOCAL CLINICAL LEAD: the tools of the shared set this country keeps switched off, and why.
     // AMELIYAT-NOTU-01 / KD-RAPOR-01 (2026-11-05): the operation note and obstetrics and gynaecology's printed records of the set
     ameliyatKayitlari: true,
+    // KD-OPERATOR-01 (2026-11-05): the operating surgeon's tools of the set, with this country's numbers and sources (./operator.ts)
+    operatorAraclari: true,
     kapali: {
       'doz-hesabi': { eksik: 'UNIT SAFETY. This pack measures body weight in pounds; the tool multiplies a dose stated per kilogram by the body weight. The kit converts a weight typed in pounds exactly, but a screen that shows the weight in pounds beside a dose per kilogram invites the very error the tool exists to prevent. Needed: a clinical decision on whether weight for dosing is entered in kilograms only in the United States, and a weight field in the kit that can be fixed to kilograms whatever the pack\'s unit. ' + DOZ_BUGUN, kimden: KLINISYEN },
+      // KD-OPERATOR-01 (2026-11-05): the same unit-safety decision as the dose calculator. The kit's prophylaxis tool takes the
+      // weight in kilograms only, but whether dosing weight is entered in kilograms in the United States is a clinical decision.
+      'antibiyotik-profilaksi-kd': { eksik: 'UNIT SAFETY, the same decision as the dose calculator: the tool works out antibiotic amounts by body weight (in kilograms only, whatever the pack\'s unit). The ACOG amounts are written beside it in ./operator.ts. Needed: a clinical decision that dosing weight is entered in kilograms in the United States. ' + DOZ_BUGUN, kimden: KLINISYEN },
       // switched off on 2026-10-10 by the order above (on in this pack until then):
       'esi-triyaj': { eksik: EMIR_ESI, kimden: HAK_SAHIBI },
       'kdigo-evre': { eksik: EMIR_BOBREK, kimden: KLINISYEN },
@@ -197,7 +203,7 @@ export const US_GIRDI: EnUlkeGirdisi = {
     // Children. Am Fam Physician. 2015;92(1):43-50, https://www.aafp.org/afp/2015/0701/p43.pdf: "within 10 cm (4 in),
     // or two standard deviations, of their midparental height"; its formula is the kit's (13 cm, or 5 in). Before this
     // the tool showed the expected height alone. FOR A US CLINICIAN.
-    parametreler: { 'hedef-boy': { aralik_cm: 10 } },
+    parametreler: { ...US_OPERATOR_PARAMETRELERI, 'hedef-boy': { aralik_cm: 10 } },
     // THE GRADE TABLES OF TWO SHARED TOOLS, STATED AS THIS COUNTRY'S OWN FROM ITS NATIONAL BODIES. Each is, limit for
     // limit, what the kit shows by itself today, so nothing changes on a screen; stated here, it is the United States'
     // table with its source, and a later change of the kit's own table does not move it.
@@ -219,6 +225,7 @@ export const US_GIRDI: EnUlkeGirdisi = {
     },
     // THE NAMES OF THOSE GRADES, as this country writes them (a country that states its own bands names them itself).
     degisen: {
+      ...US_OPERATOR_DEGISEN,
       // KD-RAPOR-01 (2026-11-05): the delivery discharge summary is a "postpartum" one here (ACOG's word); the person
       // giving the anesthetic is named as the anesthesia professional, since "anesthetist" usually means a nurse anesthetist.
       'dogum-epikrizi': { ad: 'Postpartum discharge summary', alanlar: { kontrol: 'Date of the postpartum visit (optional)' }, tarihler: { kontrol: 'Postpartum visit' } },

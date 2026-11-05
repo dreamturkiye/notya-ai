@@ -48,7 +48,7 @@ ingilizcePaketSinamasi({
   yabanci: /\b(NHS|NHI|GBP|CAD|AUD|NZD|United Kingdom|Canada|Canadian|provincial|Quebec|Australia|Australian|New Zealand|health card|General practice|Anaesthetics|Respirology|staff physician|consultant)\b|£/,
   // off by Kaan's order of 2026-10-10 (NOTYA-ULKE-ARAC-01b): all five; only 'doz-hesabi' was off here before that day.
   // A sixth, a third kidney tool added later, is off for an unrelated reason: a brand-new tool pending sign-off.
-  kapaliAraclar: ['akne-vade', 'doz-hesabi', 'esi-triyaj', 'kbh-risk-kategorisi', 'kdigo-evre', 'kdigo-serit', 'lazer-vade', 'rapor-taslagi'],
+  kapaliAraclar: ['akne-vade', 'antibiyotik-profilaksi-kd', 'doz-hesabi', 'esi-triyaj', 'kbh-risk-kategorisi', 'kdigo-evre', 'kdigo-serit', 'lazer-vade', 'rapor-taslagi'],
   birimler: BIRIMLER,
   labBirimleri: { ...LAB, crp: CRP },
   kidemliHekim: 'attending physician',
@@ -304,7 +304,33 @@ describe('us: held to the standards sheet of the localisation audit (2026-10-09)
         gorulen[`${x.anahtar}.${alan.anahtar}`] = kodlar.map(adi).join(' or ')
       }
     }
+    // KD-OPERATOR-01 (2026-11-05): the operating surgeon's tools; the prophylaxis weight is in kilograms in every country
     assert.deepEqual(gorulen, {
+      'histeroskopi-sivi.o1_cikan': 'mL',
+      'histeroskopi-sivi.o1_giren': 'mL',
+      'histeroskopi-sivi.o2_cikan': 'mL',
+      'histeroskopi-sivi.o2_giren': 'mL',
+      'histeroskopi-sivi.o3_cikan': 'mL',
+      'histeroskopi-sivi.o3_giren': 'mL',
+      'histeroskopi-sivi.o4_cikan': 'mL',
+      'histeroskopi-sivi.o4_giren': 'mL',
+      'histeroskopi-sivi.o5_cikan': 'mL',
+      'histeroskopi-sivi.o5_giren': 'mL',
+      'histeroskopi-sivi.o6_cikan': 'mL',
+      'histeroskopi-sivi.o6_giren': 'mL',
+      'kanama-izlem.amniyon_ml': 'mL',
+      'kanama-izlem.islak_g': 'g',
+      'kanama-izlem.kanister_ml': 'mL',
+      'kanama-izlem.kuru_g': 'g',
+      'kanama-izlem.sistolik': 'mmHg',
+      'kanama-izlem.tahmini_ml': 'mL',
+      'palm-coein.myom1_mm': 'mm',
+      'palm-coein.myom2_mm': 'mm',
+      'palm-coein.myom3_mm': 'mm',
+      'palm-coein.myom4_mm': 'mm',
+      'palm-coein.myom5_mm': 'mm',
+      'palm-coein.myom6_mm': 'mm',
+      'rmi.ca125': 'U/mL',
       'yara-dren-izlem.dren_cikis_ml': 'mL',
       'scorad.yayginlik': '%', 'antibiyotik-sure.sure_gun': 'days', 'inhaler-teknik.kontrol_ay': 'months',
       'odyometri-pta.e05': 'dB', 'odyometri-pta.e1': 'dB', 'odyometri-pta.e2': 'dB', 'odyometri-pta.e4': 'dB', 'odyometri-pta.onceki_pta': 'dB', 'odyometri-pta.karsi_pta': 'dB',
