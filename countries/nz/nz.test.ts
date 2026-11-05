@@ -320,7 +320,8 @@ describe('nz: who sees which tool — the audit\'s decisions, with existing tool
     assert.deepEqual(araclari('musculoskeletal-medicine'), ['icf-ozet', 'sakatlik-gunlugu', 'seans-plani', 'vas-fonksiyon'])
     assert.deepEqual(araclari('pain-medicine'), ['icf-ozet', 'postop-agri', 'seans-plani'])
     // AMELIYAT-NOTU-01 (2026-11-05): the operation note of every surgical role
-    assert.deepEqual(araclari('oral-maxillofacial-surgery'), ['ameliyat-notu', 'genel-preop', 'yara-dren-izlem'])
+    // KD-OPERATOR-01 (2026-11-05): the WHO checklist, Caprini and ASA follow the operation note's audience
+    assert.deepEqual(araclari('oral-maxillofacial-surgery'), ['ameliyat-notu', 'asa-siniflamasi', 'caprini', 'cerrahi-guvenlik-listesi', 'genel-preop', 'yara-dren-izlem'])
     assert.deepEqual(araclari('occupational-medicine'), ['kronik-izlem-kaydi'])
     assert.deepEqual(araclari('sexual-health-medicine'), ['gebelik-gun'])
     assert.deepEqual(araclari('family-planning-reproductive-health'), ['gebelik-gun'])

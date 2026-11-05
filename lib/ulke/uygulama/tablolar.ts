@@ -87,6 +87,8 @@ export const ULKE_ISLEVLERI = [
   'ulke_hasta_formu_iste',
   // NOTYA-ULKE-KLINIK-01 (migration 145)
   'ulke_klinik_kur', 'ulke_klinik_katil', 'ulke_klinik_uye_cikar', 'ulke_klinik_konum_degistir', 'ulke_klinik_yetki_ver', 'ulke_klinik_yetki_geri_al',
+  // BELGE-NO-01 / REFERANS-01 / HASTA-DISA-AKTAR-01 (migration 188, the same in every database: Türkiye passes 'tr')
+  'belge_surum_ekle', 'belge_dogrula', 'referans_kodu_al', 'referans_kaydet', 'referans_odul_hazirla', 'referans_odul_sonuc', 'referans_ozeti', 'hasta_disa_aktarim_kaydet',
 ] as const
 export type UlkeIslevi = (typeof ULKE_ISLEVLERI)[number]
 

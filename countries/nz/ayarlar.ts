@@ -25,6 +25,7 @@
 import type { EnUlkeGirdisi } from '../_dil/en/girdi'
 import type { EnRolDegisimi } from '../_dil/en/klinik/roller'
 import type { Birimler } from '@/lib/ulke/tipler'
+import { NZ_OPERATOR_DEGISEN, NZ_OPERATOR_PARAMETRELERI } from './operator'
 
 /**
  * GUARDIAN WORDING for a patient younger than this on the day of the visit ("who gave the history"), in every role.
@@ -206,6 +207,8 @@ export const NZ_GIRDI: EnUlkeGirdisi = {
     // FOR A LOCAL CLINICAL LEAD: the tools of the shared set this country keeps switched off, and why.
     // AMELIYAT-NOTU-01 / KD-RAPOR-01 (2026-11-05): the operation note and obstetrics and gynaecology's printed records of the set
     ameliyatKayitlari: true,
+    // KD-OPERATOR-01 (2026-11-05): the operating surgeon's tools of the set, with this country's numbers and sources (./operator.ts)
+    operatorAraclari: true,
     kapali: {
       // SOURCE-CHECKED: emergency departments here use the Australasian triage scale (Health New Zealand's public page
       // on emergency department triage), not the Emergency Severity Index. The audit's verdict for this tool is
@@ -220,6 +223,7 @@ export const NZ_GIRDI: EnUlkeGirdisi = {
     birimAdlari: { 'kg/m2': 'kg/m²', yil: 'years' },
     // ── WORDS OF A SHARED TOOL THIS COUNTRY WRITES DIFFERENTLY. MACHINE-WRITTEN, for a local clinician to read. ──
     degisen: {
+      ...NZ_OPERATOR_DEGISEN,
       // The caution names this country's own number of days (`parametreler` below), and the description says what the
       // national guidance does with two results. The guidance: the address beside `labBirimleri` above.
       'psa-hizi': {
@@ -233,6 +237,7 @@ export const NZ_GIRDI: EnUlkeGirdisi = {
     },
     // ── THE COUNTRY'S NUMBERS for the shared tools that take one (docs/araclar-denetim/DUZELTMELER.md). ──
     parametreler: {
+      ...NZ_OPERATOR_PARAMETRELERI,
       // PSA: THE CAUTION ABOUT TWO RESULTS CLOSE TOGETHER appears when they are FEWER THAN 42 DAYS apart (the kit's own
       // number is 90). 42 days = 6 weeks, the earliest repeat the national guidance asks for: "men should always have
       // a repeat PSA test after 6–12 weeks" — so a repeat taken 6 to 12 weeks (42 to 84 days) after the first no
