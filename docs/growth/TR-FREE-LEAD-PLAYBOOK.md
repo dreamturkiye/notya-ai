@@ -54,6 +54,8 @@ public listing → call-ready CSV
 Doctor-facing copy is **all Turkish** — no “free trial”, no “ABD’den görüntülü”.  
 Success metric this week: **booked demos + trial signups**, not “messages sent”.
 
+**Quiet hours (TR):** no cold WhatsApp after **20:00 Turkey time**. Resume ~**10:00–19:00**. See `TR-OUTREACH-DURUM.md` for live queue (next: Cengiz Sağıroğlu).
+
 ---
 
 ## How to start (Day 0 → first sends)

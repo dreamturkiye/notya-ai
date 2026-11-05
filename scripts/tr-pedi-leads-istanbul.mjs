@@ -20,18 +20,28 @@ const TRIAL = 'https://www.notya.io'
 const DS = 'https://www.doktorsitesi.com'
 const DT = 'https://www.doktortakvimi.com'
 
+const IST_ILCELER = [
+  'kadikoy', 'besiktas', 'sisli', 'uskudar', 'atasehir', 'bakirkoy', 'maltepe', 'pendik',
+  'umraniye', 'sariyer', 'beylikduzu', 'basaksehir', 'bahcelievler', 'fatih', 'kartal',
+  'gaziosmanpasa', 'kucukcekmece', 'avcilar', 'tuzla', 'cekmekoy', 'sancaktepe', 'eyupsultan',
+]
+
 /** @type {{ kaynak: string, brans: string, sehir: string, listBase: string, tip: 'ds'|'dt', maxPages: number }[]} */
 const LISTELER = [
-  // Doktortakvimi — denser private-practice phones
-  { kaynak: 'doktortakvimi', brans: 'pediatri', sehir: 'istanbul', tip: 'dt', maxPages: 25, listBase: `${DT}/cocuk-sagligi-ve-hastaliklari/istanbul` },
-  { kaynak: 'doktortakvimi', brans: 'pediatri', sehir: 'ankara', tip: 'dt', maxPages: 12, listBase: `${DT}/cocuk-sagligi-ve-hastaliklari/ankara` },
-  { kaynak: 'doktortakvimi', brans: 'pediatri', sehir: 'izmir', tip: 'dt', maxPages: 12, listBase: `${DT}/cocuk-sagligi-ve-hastaliklari/izmir` },
-  { kaynak: 'doktortakvimi', brans: 'kadin-dogum', sehir: 'istanbul', tip: 'dt', maxPages: 15, listBase: `${DT}/kadin-hastaliklari-ve-dogum/istanbul` },
-  { kaynak: 'doktortakvimi', brans: 'dermatoloji', sehir: 'istanbul', tip: 'dt', maxPages: 12, listBase: `${DT}/dermatoloji/istanbul` },
-  // Doktorsitesi — secondary merge
-  { kaynak: 'doktorsitesi', brans: 'pediatri', sehir: 'istanbul', tip: 'ds', maxPages: 15, listBase: `${DS}/uzmanlik-alanlari/cocuk-sagligi-ve-hastaliklari/istanbul` },
-  { kaynak: 'doktorsitesi', brans: 'kadin-dogum', sehir: 'istanbul', tip: 'ds', maxPages: 10, listBase: `${DS}/uzmanlik-alanlari/kadin-hastaliklari-ve-dogum/istanbul` },
-  { kaynak: 'doktorsitesi', brans: 'dermatoloji', sehir: 'istanbul', tip: 'ds', maxPages: 10, listBase: `${DS}/uzmanlik-alanlari/dermatoloji/istanbul` },
+  // İstanbul city-wide — deep pagination
+  { kaynak: 'doktortakvimi', brans: 'pediatri', sehir: 'istanbul', tip: 'dt', maxPages: 60, listBase: `${DT}/cocuk-sagligi-ve-hastaliklari/istanbul` },
+  { kaynak: 'doktortakvimi', brans: 'kadin-dogum', sehir: 'istanbul', tip: 'dt', maxPages: 50, listBase: `${DT}/kadin-hastaliklari-ve-dogum/istanbul` },
+  { kaynak: 'doktortakvimi', brans: 'dermatoloji', sehir: 'istanbul', tip: 'dt', maxPages: 40, listBase: `${DT}/dermatoloji/istanbul` },
+  // İstanbul ilçe listeleri (daha fazla tekil profil)
+  ...IST_ILCELER.flatMap((ilce) => [
+    { kaynak: 'doktortakvimi', brans: 'pediatri', sehir: 'istanbul', tip: 'dt', maxPages: 8, listBase: `${DT}/cocuk-sagligi-ve-hastaliklari/${ilce}` },
+    { kaynak: 'doktortakvimi', brans: 'kadin-dogum', sehir: 'istanbul', tip: 'dt', maxPages: 6, listBase: `${DT}/kadin-hastaliklari-ve-dogum/${ilce}` },
+    { kaynak: 'doktortakvimi', brans: 'dermatoloji', sehir: 'istanbul', tip: 'dt', maxPages: 5, listBase: `${DT}/dermatoloji/${ilce}` },
+  ]),
+  // Doktorsitesi İstanbul
+  { kaynak: 'doktorsitesi', brans: 'pediatri', sehir: 'istanbul', tip: 'ds', maxPages: 40, listBase: `${DS}/uzmanlik-alanlari/cocuk-sagligi-ve-hastaliklari/istanbul` },
+  { kaynak: 'doktorsitesi', brans: 'kadin-dogum', sehir: 'istanbul', tip: 'ds', maxPages: 30, listBase: `${DS}/uzmanlik-alanlari/kadin-hastaliklari-ve-dogum/istanbul` },
+  { kaynak: 'doktorsitesi', brans: 'dermatoloji', sehir: 'istanbul', tip: 'ds', maxPages: 25, listBase: `${DS}/uzmanlik-alanlari/dermatoloji/istanbul` },
 ]
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
