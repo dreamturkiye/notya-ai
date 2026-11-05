@@ -21,6 +21,7 @@ import { aktifUlke, dilSec, ozellikAcik, ulkePaketi } from '@/lib/ulke/ulke'
 import { saatDilimiMi, saatDilimleri } from '@/lib/ulke/uygulama/saatDilimi'
 import { dilTercihleriniOku } from '@/lib/ulke/uygulama/dilTercihleri'
 import { meslekKaydiOku } from '@/lib/ulke/uygulama/meslekKaydi'
+import { unvanOku } from '@/lib/ulke/uygulama/hekimUnvani'
 import { ulkeTablosu } from '@/lib/ulke/uygulama/tablolar'
 
 export const dynamic = 'force-dynamic'
@@ -48,5 +49,7 @@ export const GET = sinirda('hesap GET', async (req: NextRequest) => {
   const dilimler = saatDilimleri()
   const saatDilimi = dilimler.length > 1 ? { saatDilimi: saatDilimiMi(s.saat_dilimi) ? s.saat_dilimi : ulkePaketi().saatDilimi, saatDilimleri: dilimler } : {}
   const meslekKaydi = meslekKaydiOku(oturum.user.user_metadata)
-  return cevap({ ulke: aktifUlke(), dil: t.arayuzDili, durum: 'uygulama', ad, notDili: t.notDili, dilSoruldu: t.soruldu, ...saatDilimi, ...(meslekKaydi ? { meslekKaydi } : {}) }, 200)
+  // OP-DR-01: the title and post-nominals, only while they still have the accepted shape.
+  const u = unvanOku(oturum.user.user_metadata, ulkePaketi().hekimUnvani)
+  return cevap({ ulke: aktifUlke(), dil: t.arayuzDili, durum: 'uygulama', ad, notDili: t.notDili, dilSoruldu: t.soruldu, ...saatDilimi, ...(meslekKaydi ? { meslekKaydi } : {}), ...(u.unvan ? { unvan: u.unvan } : {}), ...(u.unvanEki ? { unvanEki: u.unvanEki } : {}) }, 200)
 })

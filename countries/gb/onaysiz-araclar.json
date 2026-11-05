@@ -80,6 +80,16 @@
       "lisans": "a link only: nothing is called. Registration, the Care Identity Service and a supplier onboard are not done.",
       "klinisyeninBakacagi": "that the tile is not read as a live connection to the Electronic Prescription Service",
       "klinisyen": null
+    },
+    {
+      "anahtar": "gb-ktg-nice",
+      "ad": "CTG: fetal heart rate features (NICE NG229)",
+      "kimGorur": "Obstetrics and gynaecology",
+      "acildi": "2026-11-05",
+      "kaynak": "NICE guideline NG229, Fetal monitoring in labour (December 2022), table \"Description of fetal heart rate features\" (https://www.nice.org.uk/guidance/ng229): feature colours only; written from the guideline as known to the job, NOT re-opened in this session",
+      "lisans": "NICE-KAYNAKLI: numbers and colour names credited to NICE, no NICE prose (./nice-kaynakli.json); the NICE terms on AI use are for the lawyer",
+      "klinisyeninBakacagi": "each threshold of the baseline and variability colours against NG229 as published; whether the deceleration colour should stay the clinician's reading (as built) or be worked out",
+      "klinisyen": null
     }
   ],
   "ayrica": [

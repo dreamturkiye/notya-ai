@@ -128,6 +128,42 @@ export function MeslekKaydiGorunumu({ m, deger, set, gonder, bekliyor, sonuc }: 
   )
 }
 
+/**
+ * OP-DR-01 — the title before the name and the post-nominals after it, as the doctor's printed records carry them
+ * (lib/ulke/uygulama/hekimUnvani.ts). Drawn only where the pack states `hekimUnvani` and words them.
+ */
+export function HekimUnvaniGorunumu({ m, dil, unvan, ek, setUnvan, setEk, gonder, bekliyor, sonuc }: {
+  m: UygulamaMetni; dil: DilKodu; unvan: string; ek: string; setUnvan: (v: string) => void; setEk: (v: string) => void; gonder: () => void; bekliyor: boolean; sonuc: 'tamam' | 'hata' | 'gecersiz' | null
+}) {
+  const a = m.ayarlar
+  const paket = ulkePaketi().hekimUnvani
+  if (!paket || !a.unvanBolumu || !a.unvan || !a.unvanYok || !a.unvanEki || !a.unvanIzoh || !a.unvanGecersiz) return null
+  const secenekler = Object.entries(paket.onEkler)
+  return (
+    <AyarSatiri emoji={'\u{1F3F7}'} ad={a.unvanBolumu} alan="hekim-unvani">
+      <form className="uza-form" onSubmit={(e) => { e.preventDefault(); gonder() }}>
+        {secenekler.length ? (
+          <div className="uza-alan">
+            <label className="uza-etiket" htmlFor="uza-hekim-unvani">{a.unvan}</label>
+            <select id="uza-hekim-unvani" className="uza-girdi" value={unvan} onChange={(e) => setUnvan(e.target.value)} data-alan="hekim-unvani-secim">
+              <option value="">{a.unvanYok}</option>
+              {secenekler.map(([k, ad]) => <option key={k} value={k}>{ad[dil] ?? Object.values(ad)[0]}</option>)}
+            </select>
+          </div>
+        ) : null}
+        <div className="uza-alan">
+          <label className="uza-etiket" htmlFor="uza-hekim-unvan-eki">{a.unvanEki}</label>
+          <input id="uza-hekim-unvan-eki" className="uza-girdi" value={ek} onChange={(e) => setEk(e.target.value)} autoComplete="off" maxLength={80} placeholder={paket.ekOrnegi[dil] ?? Object.values(paket.ekOrnegi)[0]} data-alan="hekim-unvan-eki" />
+        </div>
+        <p className="uza-ipucu">{a.unvanIzoh}</p>
+        <Hata>{sonuc === 'gecersiz' ? a.unvanGecersiz : sonuc === 'hata' ? a.kaydedilemedi : null}</Hata>
+        <Bilgi>{sonuc === 'tamam' ? a.kaydedildi : null}</Bilgi>
+        <button type="submit" className="uza-dugme" disabled={bekliyor} data-eylem="hekim-unvani-kaydet">{bekliyor ? a.kaydediliyor : a.kaydet}</button>
+      </form>
+    </AyarSatiri>
+  )
+}
+
 export default function Ayarlar() {
   const u = useUygulama('ayarlar')
   const [d, setD] = useState<AyarDurumu>(() => { const t = temelDil(ulkePaketi().varsayilanDil); return { arayuz: t, not: t, yazi: varsayilanYazi() } })
@@ -147,7 +183,12 @@ export default function Ayarlar() {
   const [meslekBekliyor, setMeslekBekliyor] = useState(false)
   const [meslekSonucu, setMeslekSonucu] = useState<'tamam' | 'hata' | 'gecersiz' | null>(null)
 
-  useEffect(() => { if (u.hesap && !hazir) { setD(ayarDurumu(u.hesap)); setRol(u.hesap.rol ?? ''); setDilim(u.hesap.saatDilimi ?? ''); setMeslek(u.hesap.meslekKaydi ?? ''); setHazir(true) } }, [u.hesap, hazir])
+  const [unvan, setUnvan] = useState('')
+  const [unvanEki, setUnvanEki] = useState('')
+  const [unvanBekliyor, setUnvanBekliyor] = useState(false)
+  const [unvanSonucu, setUnvanSonucu] = useState<'tamam' | 'hata' | 'gecersiz' | null>(null)
+
+  useEffect(() => { if (u.hesap && !hazir) { setD(ayarDurumu(u.hesap)); setRol(u.hesap.rol ?? ''); setDilim(u.hesap.saatDilimi ?? ''); setMeslek(u.hesap.meslekKaydi ?? ''); setUnvan(u.hesap.unvan ?? ''); setUnvanEki(u.hesap.unvanEki ?? ''); setHazir(true) } }, [u.hesap, hazir])
 
   if (!u.hesap) return <Yukleniyor m={u.m} dil={u.dil} />
 
@@ -185,6 +226,18 @@ export default function Ayarlar() {
     setMeslekBekliyor(false)
   }
 
+  async function unvanGonder() {
+    setUnvanBekliyor(true); setUnvanSonucu(null)
+    try {
+      const r = await u.api('/api/ulke/meslek-kaydi', { method: 'POST', govde: { unvan, unvanEki: unvanEki.trim() } })
+      if (r.ok) {
+        u.hesabiGuncelle({ unvan: typeof r.j.unvan === 'string' ? r.j.unvan : undefined, unvanEki: typeof r.j.unvanEki === 'string' ? r.j.unvanEki : undefined })
+        setUnvanSonucu('tamam')
+      } else setUnvanSonucu(r.j.code === 'GECERSIZ' ? 'gecersiz' : 'hata')
+    } catch { setUnvanSonucu('hata') }
+    setUnvanBekliyor(false)
+  }
+
   async function rolGonder() {
     if (!rolMu(rol)) { setRolSonucu('gerekli'); return }
     setRolBekliyor(true); setRolSonucu(null)
@@ -220,6 +273,7 @@ export default function Ayarlar() {
           {dilSecimiVarMi() ? <AyarlarGorunumu kart m={u.m} d={d} set={(yeni) => { setD(yeni); setSonuc(null) }} gonder={gonder} bekliyor={bekliyor} sonuc={sonuc} /> : null}
           {u.hesap.saatDilimleri && u.hesap.saatDilimleri.length > 1 ? <SaatDilimiGorunumu m={u.m} dilim={dilim} dilimler={u.hesap.saatDilimleri} sec={(z) => { setDilim(z); setDilimSonucu(null) }} gonder={dilimGonder} bekliyor={dilimBekliyor} sonuc={dilimSonucu} /> : null}
           {roller().length ? <RolAyariGorunumu m={u.m} rol={rol} kayitliRol={u.hesap.rol} setRol={(r) => { setRol(r); setRolSonucu(null) }} gonder={rolGonder} bekliyor={rolBekliyor} sonuc={rolSonucu} /> : null}
+          <HekimUnvaniGorunumu m={u.m} dil={u.dil} unvan={unvan} ek={unvanEki} setUnvan={(v) => { setUnvan(v); setUnvanSonucu(null) }} setEk={(v) => { setUnvanEki(v); setUnvanSonucu(null) }} gonder={unvanGonder} bekliyor={unvanBekliyor} sonuc={unvanSonucu} />
           <MeslekKaydiGorunumu m={u.m} deger={meslek} set={(v) => { setMeslek(v); setMeslekSonucu(null) }} gonder={meslekGonder} bekliyor={meslekBekliyor} sonuc={meslekSonucu} />
           {pano ? duvar('\u{1F4E5}', pano.belgeler, pano.belgeYukle) : null}
           {pano ? duvar('\u{1F4C4}', pano.raporlar, pano.epikriz) : null}

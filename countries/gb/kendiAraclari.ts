@@ -32,6 +32,7 @@
 import type { AracTanimi, PaketAraci } from '@/lib/ulke/araclar/tipler'
 import { ayEkle, BOS_SONUC, gunMu, isaret, secim, tarih } from '@/lib/ulke/araclar/yardimci'
 import { GB_TIBBI_ARACLARI, GB_TIBBI_TANIMLARI } from './tibbiAraclar'
+import { GB_KTG_NICE, GB_KTG_NICE_TANIMI } from './ktgNice'
 
 const D = 'en-GB'
 const m = (metin: string) => ({ [D]: metin })
@@ -240,8 +241,8 @@ const FRAX: PaketAraci = {
 }
 
 /** The mechanisms of the tools only this country has (a link-out tile has none). */
-export const GB_KENDI_TANIMLARI: readonly AracTanimi[] = [GB_FOUR_AT, GB_VALPROATE, ...GB_TIBBI_TANIMLARI]
+export const GB_KENDI_TANIMLARI: readonly AracTanimi[] = [GB_FOUR_AT, GB_VALPROATE, ...GB_TIBBI_TANIMLARI, GB_KTG_NICE_TANIMI]
 /** The tools only this country has, as the pack lists them, in the order the grid shows them. All switched on. */
-export const GB_KENDI_ARACLARI: readonly PaketAraci[] = [FOUR_AT, FRAX, VALPROATE, ...GB_TIBBI_ARACLARI]
+export const GB_KENDI_ARACLARI: readonly PaketAraci[] = [FOUR_AT, FRAX, VALPROATE, ...GB_TIBBI_ARACLARI, GB_KTG_NICE]
 /** Every key that is this country's alone, sorted: the list of countries/yasak-araclar.json under "gb". */
-export const GB_OZEL_ANAHTARLAR: readonly string[] = ['gb-eps-link', 'gb-four-at', 'gb-fracture-risk-link', 'gb-immunisation-schedule', 'gb-medicine-list', 'gb-notifiable-diseases', 'gb-prescription-note', 'gb-valproate-forms']
+export const GB_OZEL_ANAHTARLAR: readonly string[] = ['gb-eps-link', 'gb-four-at', 'gb-fracture-risk-link', 'gb-immunisation-schedule', 'gb-ktg-nice', 'gb-medicine-list', 'gb-notifiable-diseases', 'gb-prescription-note', 'gb-valproate-forms']

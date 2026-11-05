@@ -58,6 +58,8 @@ export const GB_ARACLAR: EnUlkeGirdisi['araclar'] = {
   // — "Trailing zeros should not appear i.e., 2.5 mg and NOT 2.50 mg." It is guidance on labels; the BNF's page on
   // prescription writing was not found by the audit. UNVERIFIED by a local clinical lead. THE DOSE CALCULATOR READS IT.
   dozYazimi: { sondaSifir: false },
+  // AMELIYAT-NOTU-01 / KD-RAPOR-01 (2026-11-05): the operation note and obstetrics and gynaecology's printed records of the set
+  ameliyatKayitlari: true,
   kapali: {
     'esi-triyaj': { eksik: 'The Emergency Severity Index is one triage scale among several, and the tools audit found that it is not the scale the national sources of the United Kingdom name (REMOVE for this country: it stays off). ' + EMIR_ESI, kimden: HAK_SAHIBI },
     'kdigo-evre': { eksik: 'The referral lines of the tool follow the list of the KDIGO guideline. The national guideline on chronic kidney disease (NICE NG203) has categories in mg/mmol and a referral list of its own, which the tools audit of 2026-10-10 found different (docs/araclar-denetim/GB.md): a doctor here follows the national list. Needed: a clinical decision on which list the tool shows. ' + EMIR_BOBREK, kimden: KLINISYEN },
@@ -96,6 +98,9 @@ export const GB_ARACLAR: EnUlkeGirdisi['araclar'] = {
     'kronik-izlem-kaydi': ['family-medicine', 'internal-medicine', 'geriatric-medicine'],
     'gebelik-gun': ['obstetrics-gynaecology', 'family-medicine', 'community-sexual-reproductive-health'],
     'sonraki-seans': ['clinical-psychology', 'audiology', 'speech-language-therapy'],
+    // AMELIYAT-NOTU-01 (2026-11-05): the operation note for every surgical role of the set, and this country's own
+    // oral and maxillofacial surgery (the set's list restated with it).
+    'ameliyat-notu': ['general-surgery', 'obstetrics-gynaecology', 'orthopaedics', 'urology', 'otolaryngology', 'ophthalmology', 'neurosurgery', 'cardiovascular-surgery', 'thoracic-surgery', 'plastic-surgery', 'paediatric-surgery', 'oral-maxillofacial-surgery', 'hair-transplant', 'aesthetic-surgery'],
   },
 
   // ───────────────────────── THE COUNTRY'S OWN NUMBERS FOR SHARED TOOLS ─────────────────────────

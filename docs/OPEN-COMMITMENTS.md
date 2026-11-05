@@ -1,5 +1,32 @@
 # OPEN COMMITMENTS — Notya AI
 
+## OP-DR-KD-PAKETI-01 (country port) — doctor's title, operation note, discharge summary after birth, ultrasound and CTG reports in all six country builds: what is open (Claude, 2026-11-05; this branch: gb)
+
+Shipped in the same change set on every release branch (au, ca, gb, nz, us, uz), one country kit for all six: the
+doctor's title and post-nominals in Settings (auth user_metadata, no column; each pack's own titles: GB Dr / Mr / Ms /
+Miss / Mrs / Mx / Prof with e.g. FRCOG, US Dr / Prof with e.g. MD, FACOG, CA Dr / Prof with e.g. MD, FRCSC, AU and NZ Dr /
+A/Prof (Assoc Prof) / Prof with FRANZCOG, UZ dotsent / professor with t.f.n. / к.м.н.), printed on the letterhead of every
+printed record; the operation note for every surgical role (core); for obstetrics and gynaecology the operation note with
+16 pre-filled operations, the obstetric and gynaecological ultrasound reports and the discharge summary after birth;
+each country's own CTG classification (GB NICE NG229 `gb-ktg-nice`, US NICHD three-tier `us-ctg-nichd`, CA SOGC No. 396
+`ca-fhs-sogc`, AU / NZ RANZCOG IFS `au-ctg-ranzcog` / `nz-ctg-ranzcog`, UZ FIGO 2015 `ktg-figo`). Migration 187 (the schema
+of Türkiye's 186, renumbered because Australia's 186 is taken) applied and verified on all six country databases.
+
+- **OP-DR-KD-CLINICIAN-01 — owner Claude to route, sign-off by a clinician of each country, opened 2026-11-05.** Every new
+  tool is machine-written. The CTG thresholds of NICHD (2008), SOGC No. 396 (2020) and RANZCOG IFS (2019) were written
+  from the job's knowledge and NOT re-opened in this session (each sits on its pack's list of tools without a sign-off).
+  The pre-filled operation steps write no dose and no number, but a gynaecologist of each country must read them.
+- **OP-DR-KD-UZ-NATIVE-01 — owner Claude to route, reading by a native speaker, opened 2026-11-05.** The Uzbek (Latin),
+  Russian and rule-derived Cyrillic words of the six tools (countries/uz/uygulama/araclar/rol7.ts) and of the title card
+  await a native reader, like every other tool text of the Uzbek pack.
+- **OP-DR-KD-TR-SCREENS-01 — owner Claude, opened 2026-11-05.** The Turkish screens of main's change (patient-file
+  "Ameliyat" tab, /api/doktor/ameliyat-notlari, /api/doktor/kd-raporlari, the structured sezaryen note, print pages) are
+  not on this branch: a country build never routes to the Turkish app, and the country equivalents are the kit tools
+  above. The tables exist (187) so the schema stays the Turkish one.
+- **AMELIYAT-NOTU-HIMENOPLASTI-01 — waits on Kaan.** No hymenoplasty note in any country (WHO / OHCHR / UN Women 2018;
+  an offence in the United Kingdom under the Health and Care Act 2022, s.149). Not offered anywhere unless Kaan decides
+  for Türkiye; no country build offers it either way.
+
 ## SES-OMURGA-V2 — voice/text assistant rebuild shipped + FOUNDER LOCK; what still needs Kaan (Claude, 2026-10-29)
 
 Kaan ordered "Ses Omurgası v2" on 2026-10-29 (Dr. Gökhan: voice unusable; diagnosis and research in the job brief).

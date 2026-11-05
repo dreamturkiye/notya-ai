@@ -46,6 +46,13 @@ export const GB_PAKETI: UlkePaketi = {
   varsayilanDil: 'en-GB',
   paraBirimi: { kod: 'GBP', simge: '£', ondalikHane: 2 },
   saatDilimi: 'Europe/London',
+  // OP-DR-01 (2026-11-05): titles before the name, in British style without a full stop. By surgical tradition in the
+  // United Kingdom a consultant surgeon (obstetrics and gynaecology included) uses Mr, Ms, Miss or Mrs rather than Dr;
+  // "Mx" is the title the NHS offers without a gender. Post-nominals (FRCOG, MRCOG, FRCS) are the doctor's own text.
+  hekimUnvani: {
+    onEkler: { dr: { 'en-GB': 'Dr' }, mr: { 'en-GB': 'Mr' }, ms: { 'en-GB': 'Ms' }, miss: { 'en-GB': 'Miss' }, mrs: { 'en-GB': 'Mrs' }, mx: { 'en-GB': 'Mx' }, prof: { 'en-GB': 'Professor' } },
+    ekOrnegi: { 'en-GB': 'e.g. MBBS, MRCOG, FRCOG' },
+  },
   bicim: { yerel: 'en-GB', tarihDeseni: 'DD/MM/YYYY', ondalikAyraci: '.', binlikAyraci: ',', haftaBasi: 1 },
   telefon: { ulkeOnEki: '+44', ulusalHane: 10, ornek: '+44 7700 900123', cepGecerliMi: gbCepGecerliMi },
   // THE PATIENT IDENTIFIER: an OPTIONAL FREE-TEXT field, stored encrypted and never validated (`dogrula: false`

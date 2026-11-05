@@ -428,6 +428,15 @@ SATIRLAR_5: {
 
 /** Tools of the kit that have no function to stand beside, and why. */
 const KARSILIKSIZ: Readonly<Record<string, string>> = {
+  // AMELIYAT-NOTU-01 / KD-RAPOR-01 (2026-11-05): their Türkiye counterparts are on main (lib/doktor/ameliyatNotu.ts,
+  // specialties/kadin-dogum/engines/usgRaporu.ts, nstKtg.ts, dogumEpikrizi.ts), not on this branch; the arithmetic is
+  // tested against its published thresholds in lib/ulke/araclar/kadinDogumCerrahi.test.ts instead.
+  'ameliyat-notu': 'a structured record (RCS Good Surgical Practice 2014): complete when every required item is filled; nothing is worked out',
+  'ameliyat-notu-kd': 'the same record with an operation choice whose standard steps the pack pre-fills',
+  'usg-obstetrik': 'INTERGROWTH-21st centiles (the same embedded tables), Hadlock EFW, MCA-PSV MoM (Mari 2000), CPR, liquor thresholds; tested in kadinDogumCerrahi.test.ts',
+  'usg-jinekolojik': 'ellipsoid volumes and the postmenopausal endometrium flag; tested in kadinDogumCerrahi.test.ts',
+  'dogum-epikrizi': 'a structured discharge record; the Türkiye counterpart builds it from the delivery spine, which country builds do not have',
+  'ktg-figo': 'FIGO 2015 classification; the Türkiye counterpart is nstKtg.ts on main; tested in kadinDogumCerrahi.test.ts',
   'takip-paneli': 'a screen, not arithmetic: one list of the follow-up days the doctor entered on kept results (migration 139). The pre-split application has a panel per specialty with columns of that specialty; there is no function to compare with.',
   'hasta-portali': 'a screen of the kit (a patient search that leads to the patient\'s file); it works nothing out',
   'sablonlarim': 'a screen of the kit, not arithmetic: the doctor\'s own reusable text blocks (migration 141). The pre-split application keeps its templates in its own table with its own screen; there is no function to compare with.',

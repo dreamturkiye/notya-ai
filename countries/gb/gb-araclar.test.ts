@@ -17,7 +17,7 @@ import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 import { readdirSync, readFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
-import { EN_ROL_ARACLARI } from '../_dil/en/araclar'
+import { EN_AMELIYAT_ARACLARI, EN_ROL_ARACLARI } from '../_dil/en/araclar'
 import { kitAraci } from '@/lib/ulke/araclar/katalog'
 import { aracCalistir, aracOzeti, hekimRolleri, hesabinAraci, hesabinAraclari, lisansBildirimi, paketinTanimi, sayiMetni } from '@/lib/ulke/araclar/paket'
 import { LISANS_ACIK, type AracGirdisi } from '@/lib/ulke/araclar/tipler'
@@ -107,6 +107,8 @@ describe('gb A: who sees which tool (decisions: `proposedSpecialties`; GB.md, "W
       'kronik-izlem-kaydi': ['family-medicine', 'internal-medicine', 'geriatric-medicine'],
       'gebelik-gun': ['obstetrics-gynaecology', 'family-medicine', 'community-sexual-reproductive-health'],
       'sonraki-seans': ['clinical-psychology', 'audiology', 'speech-language-therapy'],
+      // AMELIYAT-NOTU-01 (2026-11-05): every surgical role of the set, and oral and maxillofacial surgery
+      'ameliyat-notu': ['general-surgery', 'obstetrics-gynaecology', 'orthopaedics', 'urology', 'otolaryngology', 'ophthalmology', 'neurosurgery', 'cardiovascular-surgery', 'thoracic-surgery', 'plastic-surgery', 'paediatric-surgery', 'oral-maxillofacial-surgery', 'hair-transplant', 'aesthetic-surgery'],
     }
     assert.deepEqual(Object.keys(GB_ARACLAR.gorenler ?? {}).sort(), [...Object.keys(beklenen), 'antibiyotik-sure'].sort())
     for (const [k, roller] of Object.entries(beklenen)) assert.deepEqual(goren(k).sort(), [...roller].sort(), k)
@@ -130,7 +132,7 @@ describe('gb A: who sees which tool (decisions: `proposedSpecialties`; GB.md, "W
       // can be kept. The file gives it to doctors only; the audiologist has three such tools and therefore has it too.
       if (kit.some((k) => k !== 'hasta-portali' && k !== 'takip-paneli')) beklenen.add('takip-paneli'); else beklenen.delete('takip-paneli')
       // Structural records added after the decisions file. The file's tools stay; anything further must be one of these.
-      const yapisal = new Set(['endoskopi-kaydi', 'kronik-izlem-kaydi', 'birinci-acil-bayrak', 'gebelik-gun', 'kardiyo-not', 'inme-bayraklari', 'psikiyatri-guvenlik', 'seans-plani', 'icf-ozet', 'greft-tahmini', 'sac-bakim-vade', 'estetik-cerrahi-vade', 'estetik-islem-vade', 'infuzyon-guvenlik', 'makro-kaydi', 'sonraki-seans', 'vas-fonksiyon', 'plastik-yara-greft'])
+      const yapisal = new Set(['ameliyat-notu', 'ameliyat-notu-kd', 'usg-obstetrik', 'usg-jinekolojik', 'dogum-epikrizi', 'endoskopi-kaydi', 'kronik-izlem-kaydi', 'birinci-acil-bayrak', 'gebelik-gun', 'kardiyo-not', 'inme-bayraklari', 'psikiyatri-guvenlik', 'seans-plani', 'icf-ozet', 'greft-tahmini', 'sac-bakim-vade', 'estetik-cerrahi-vade', 'estetik-islem-vade', 'infuzyon-guvenlik', 'makro-kaydi', 'sonraki-seans', 'vas-fonksiyon', 'plastik-yara-greft'])
       for (const k of beklenen) assert.ok(kit.includes(k), `${s.key} lost ${k}`)
       for (const k of kit) if (!beklenen.has(k)) assert.ok(yapisal.has(k), `${s.key} gained ${k}`)
     }
@@ -275,7 +277,7 @@ describe('gb B: the country\'s own numbers, each from a source opened on 2026-10
 
 describe('gb C: the tools only this country has', () => {
   it('the tools only this country has, each with this country\'s code, each switched on, each on the register no other country may name', () => {
-    assert.deepEqual([...GB_OZEL_ANAHTARLAR], ['gb-eps-link', 'gb-four-at', 'gb-fracture-risk-link', 'gb-immunisation-schedule', 'gb-medicine-list', 'gb-notifiable-diseases', 'gb-prescription-note', 'gb-valproate-forms'])
+    assert.deepEqual([...GB_OZEL_ANAHTARLAR], ['gb-eps-link', 'gb-four-at', 'gb-fracture-risk-link', 'gb-immunisation-schedule', 'gb-ktg-nice', 'gb-medicine-list', 'gb-notifiable-diseases', 'gb-prescription-note', 'gb-valproate-forms'])
     assert.deepEqual(GB_KENDI_ARACLARI.map((p) => p.anahtar).sort(), [...GB_OZEL_ANAHTARLAR])
     assert.deepEqual(ulkeyeOzelAnahtarlar(A, 'gb'), [...GB_OZEL_ANAHTARLAR])
     assert.deepEqual(oku<Record<string, string[]>>('countries/yasak-araclar.json').gb, [...GB_OZEL_ANAHTARLAR])
@@ -296,7 +298,7 @@ describe('gb C: the tools only this country has', () => {
       assert.equal(x.ad, ad(x.anahtar), `${x.anahtar}: the list names the tool as the screen does`)
       assert.equal(x.klinisyen, null, `${x.anahtar}: nobody has signed it; a signed tool leaves the list`)
       assert.match(x.kaynak, /https:\/\//)
-      assert.ok(x.lisans.trim() && /^2026-10-1[04]$/.test(x.acildi))
+      assert.ok(x.lisans.trim() && /^2026-(10-1[04]|11-05)$/.test(x.acildi))
     }
     // the shared tool switched back on by the same order is named beside the list, and is on
     assert.deepEqual(liste.ayrica.map((x) => x.anahtar), ['doz-hesabi'])
@@ -427,8 +429,9 @@ describe('gb D: what stays off', () => {
     assert.deepEqual(Object.keys(GB_ARACLAR.kapali).sort(), kapali)
     for (const k of kapali) { assert.ok(!A.araclar.some((p) => p.anahtar === k), k); assert.ok(A.yuvalar.some((y) => y.anahtar === k), k); for (const r of [null, ...ROLLER]) assert.equal(hesabinAraci(A, r, k), null, `${k}: ${r}`) }
     // NO TOOL THAT WAS OFF IS ON, but the dose calculator: the switched-on tools are the set's tools minus the four, the two screens, and this country's three
-    assert.deepEqual(A.araclar.map((p) => p.anahtar).sort(), [...EN_ROL_ARACLARI.map((a) => a.anahtar).filter((k) => !kapali.includes(k)), 'hasta-portali', 'takip-paneli', ...GB_OZEL_ANAHTARLAR].sort())
-    assert.equal(A.araclar.length, 66)
+    assert.deepEqual(A.araclar.map((p) => p.anahtar).sort(), [...[...EN_ROL_ARACLARI, ...EN_AMELIYAT_ARACLARI].map((a) => a.anahtar).filter((k) => !kapali.includes(k)), 'hasta-portali', 'takip-paneli', ...GB_OZEL_ANAHTARLAR].sort())
+    // AMELIYAT-NOTU-01 (2026-11-05): +5 tools of the set (operation notes, ultrasound reports, discharge summary) and this country's CTG tool
+    assert.equal(A.araclar.length, 72)
   })
 
   it('EVERY TOOL THE DECISIONS MARK "remove" IS OFF in this country', () => {
@@ -447,7 +450,7 @@ describe('gb E: licence states', () => {
   it('"free" is stated for the tools whose rights holder\'s own notice was opened, and for no other; the two that need permission say so', () => {
     const belirtilen = A.araclar.filter((p) => p.lisans !== undefined).map((p) => p.anahtar).sort()
     assert.deepEqual(belirtilen, [...GB_OZEL_ANAHTARLAR])
-    for (const p of A.araclar.filter((q) => q.lisans)) { assert.ok(LISANS_ACIK.includes(p.lisans!.durum), p.anahtar); assert.match(p.lisans!.kaynak ?? '', /2026-10-1[04]/, `${p.anahtar}: where and when the notice was read`) }
+    for (const p of A.araclar.filter((q) => q.lisans)) { assert.ok(LISANS_ACIK.includes(p.lisans!.durum), p.anahtar); assert.match(p.lisans!.kaynak ?? '', /2026-(10-1[04]|11-05)/, `${p.anahtar}: where and when the notice was read`) }
     assert.deepEqual(A.yuvalar.filter((y) => y.lisans).map((y) => [y.anahtar, y.lisans!.durum]).sort(), [['esi-triyaj', 'izin-gerekli'], ['rapor-taslagi', 'izin-gerekli']])
     assert.notEqual(A.lisansTam, true, 'this country does not yet state the licence of every shared tool (countries/lisans-borcu.json)')
     assert.ok(oku<{ ulkeler: string[] }>('countries/lisans-borcu.json').ulkeler.includes('gb'))
@@ -466,7 +469,7 @@ describe('gb E: licence states', () => {
 describe('gb F: every NICE-derived item is on the list for the lawyer (./nice-kaynakli.json)', () => {
   it('each entry stands on the line it names, with its mark and its guidance number; no mark in the folder is without an entry', () => {
     const liste = oku<{ ogeler: { dosya: string; satir: number; kilavuz: string; adres: string; alinan: string }[] }>('countries/gb/nice-kaynakli.json')
-    assert.equal(liste.ogeler.length, 4)
+    assert.equal(liste.ogeler.length, 5)
     for (const o of liste.ogeler) {
       const satir = readFileSync(join(KOK, o.dosya), 'utf8').split('\n')[o.satir - 1] ?? ''
       assert.match(satir, /NICE-KAYNAKLI:/, `${o.dosya}:${o.satir}`)
