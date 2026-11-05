@@ -17,6 +17,7 @@ import { KVKK_ONAY_HATASI, KVKK_ONAY_KODU, kvkkKarari } from './kvkkOnay'
 export const UNVAN_ESLEME: Readonly<Record<string, DoctorTitle>> = {
   'Dr.': 'Dr.',
   'Uzm.Dr.': 'Uzm. Dr.',
+  'Op.Dr.': 'Op. Dr.',
   'Doç.Dr.': 'Doç. Dr.',
   'Prof.Dr.': 'Prof. Dr.',
 }

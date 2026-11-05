@@ -92,7 +92,8 @@ async function baslikKur(
 
 function imzaKur(hekim: string, brans: SpecialtyKey | null, tarihIso: string): string {
   const satirlar = [
-    hekim || 'Uzm. Dr.',
+    // OP-DR-01: the doctor's STORED title comes with the name (hekimAdi); plain "Dr." only when nothing is stored.
+    hekim || 'Dr.',
     epikrizUnvanSatiri(brans),
     `Tarih: ${trTarih(tarihIso) || trTarih(new Date().toISOString())}`,
   ].filter(Boolean);

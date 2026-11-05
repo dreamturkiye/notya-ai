@@ -9,6 +9,7 @@ import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import { AVATAR_IZINLI_MIME, AVATAR_MAX_BYTES, avatarDogrula, AvatarGecersizError } from '@/lib/doktor/avatar';
 import { CHROME_RENK, CHROME_FONT } from '@/lib/doktor/chromeTheme';
 import OturumKarti from '@/components/doktor/OturumKarti';
+import { DOKTOR_UNVANLARI } from '@/lib/address';
 
 const AVATAR_ONBELLEK = 'notya_doktor_avatar';
 const AVATAR_OLAY = 'notya-avatar-guncellendi';
@@ -27,6 +28,9 @@ export default function HesabimPage() {
   const [tekrar, setTekrar] = useState('');
   const [durum, setDurum] = useState<'bos' | 'kaydediyor' | 'kaydedildi' | 'hata'>('bos');
   const [hata, setHata] = useState('');
+  // OP-DR-01: the title printed on every letterhead (users.title) — chosen at onboarding, changed here.
+  const [unvan, setUnvan] = useState('');
+  const [unvanDurum, setUnvanDurum] = useState<'bos' | 'kaydediyor' | 'kaydedildi' | 'hata'>('bos');
 
   useEffect(() => {
     (async () => {
@@ -66,6 +70,7 @@ export default function HesabimPage() {
           const first = me?.data?.first_name || '';
           const last = me?.data?.last_name || '';
           setAdSoyad(`${first} ${last}`.trim() || me?.data?.full_name || '');
+          setUnvan(typeof me?.data?.title === 'string' ? me.data.title : '');
           setFotoUrl(av?.avatar?.dataUrl || null);
         }
       } catch { /* e-posta/foto gösterimi kritik değil */ }
@@ -150,6 +155,18 @@ export default function HesabimPage() {
     }
   };
 
+  async function unvanKaydet(yeniUnvan: string) {
+    setUnvan(yeniUnvan);
+    if (!yeniUnvan) return;
+    setUnvanDurum('kaydediyor');
+    try {
+      const t = await ensureDoctorAccessToken();
+      // The screen spelling without spaces ("Op.Dr.") is what profilDogrula maps; the stored spelling maps too.
+      const r = await fetch('/api/users/profile', { method: 'POST', headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ title: yeniUnvan }) });
+      setUnvanDurum(r.ok ? 'kaydedildi' : 'hata');
+    } catch { setUnvanDurum('hata'); }
+  }
+
   const kutu: React.CSSProperties = { width: '100%', background: '#FFFFFF', border: `1px solid ${CHROME_RENK.border}`, borderRadius: 8, color: CHROME_RENK.ink, fontSize: 14, padding: '10px 12px', boxSizing: 'border-box' };
   const dugme: React.CSSProperties = { background: CHROME_RENK.pine, border: 'none', color: '#FAF8F4', borderRadius: 999, padding: '9px 18px', fontSize: 13, fontWeight: 700, cursor: 'pointer' };
 
@@ -199,6 +216,17 @@ export default function HesabimPage() {
           <label style={{ fontSize: 12, color: CHROME_RENK.muted, display: 'block', marginBottom: 4 }}>Ad Soyad</label>
           <div style={{ ...kutu, color: CHROME_RENK.ink, background: '#F6F0E4' }}>{adSoyad || '—'}</div>
         </div>
+        {!sekreterMi && (
+          <div style={{ marginBottom: 20 }} data-hesap="unvan">
+            <label htmlFor="hesap-unvan" style={{ fontSize: 12, color: CHROME_RENK.muted, display: 'block', marginBottom: 4 }}>Unvan (reçete, rapor ve tüm çıktılarda)</label>
+            <select id="hesap-unvan" value={unvan} onChange={(e) => unvanKaydet(e.target.value)} disabled={unvanDurum === 'kaydediyor'} style={kutu}>
+              <option value="">Seçin</option>
+              {DOKTOR_UNVANLARI.map((u) => <option key={u} value={u}>{u}</option>)}
+            </select>
+            {unvanDurum === 'kaydedildi' && <p style={{ fontSize: 12, color: '#2E6E4E', marginTop: 6 }}>Unvanınız kaydedildi.</p>}
+            {unvanDurum === 'hata' && <p style={{ fontSize: 12, color: CHROME_RENK.warn, marginTop: 6 }}>Unvan kaydedilemedi. Lütfen tekrar deneyin.</p>}
+          </div>
+        )}
         <div style={{ marginBottom: 20 }}>
           <label style={{ fontSize: 12, color: CHROME_RENK.muted, display: 'block', marginBottom: 4 }}>E-posta</label>
           <div style={{ ...kutu, color: CHROME_RENK.ink, background: '#F6F0E4' }}>{eposta || '—'}</div>

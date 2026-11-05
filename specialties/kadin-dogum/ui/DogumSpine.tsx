@@ -7,6 +7,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { getAccessTokenAsync, toolsCard, toolsInput } from '@/lib/doktor/toolsUi';
 import { PARTOGRAF_ALANLARI, ANNE_KOMPLIKASYONLARI, BEBEK_KOMPLIKASYONLARI, ERKEK_BEBEK_EK, pretermOnerileri } from '../engines/dogum-spine';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
+import { SezaryenAmeliyatNotu } from './SezaryenAmeliyatNotu';
 
 type Gorev = { id: string; kod: string; ad: string; tur: string; hedef_baslangic: string; hedef_bitis: string; sert: boolean; kacirilinca: string | null; durum: string; not_metni: string | null };
 type Onam = { id: string; sablon_kodu: string; sablon_adi: string; ek_kutu_isaretli: boolean; hasta_onayladi: boolean; onay_at: string | null; created_at: string };
@@ -142,9 +143,11 @@ export function DogumSpine({ gebelikId, patientId }: { gebelikId: string; patien
           {d && (
             <>
               <div style={etiket}>Sezaryen paketi</div>
-              {(['preop', 'intraop', 'ssvd'] as const).map((b) => (
-                <details key={b} style={{ marginBottom: 6 }}><summary style={{ fontSize: 12, color: CHROME_RENK.ink, cursor: 'pointer' }}>{b === 'preop' ? 'Preop: CBC, kan grubu, kros, açlık, anestezi, antibiyotik' : b === 'intraop' ? 'Intraop: kesi, uterus, plasenta, kanama ml, komplikasyon, bebek çıkış saati, apgar, kilo' : 'SSVD: önceki kesi tipi, rüptür riski onamı'}</summary>
-                  <textarea rows={3} defaultValue={d[b] ? JSON.stringify(d[b], null, 1).replace(/[{}"]/g, '') : ''} onBlur={(e) => { const obj: Record<string, string> = {}; e.target.value.split('\n').forEach((l) => { const [k, ...r] = l.split(':'); if (k && r.length) obj[k.trim()] = r.join(':').trim(); }); calistir({ adim: b, dogumId: d.id, veri: obj }); }} placeholder={b === 'preop' ? 'cbc: yapıldı\nkan_grubu: A Rh+\nkros: 2Ü hazır\naclik: 8 saat\nanestezi: spinal\nantibiyotik: sefazolin 2 g (hekim)' : b === 'intraop' ? 'kesi: Pfannenstiel\nuterus: alt segment transvers\nplasenta: tam\nkanama_ml: 600\nkomplikasyon: yok\nbebek_cikis_saati: 10:42\napgar: 8/9\nkilo: 3250' : 'onceki_kesi_tipi: alt segment transvers\nruptur_onami: alındı'} style={{ ...toolsInput, width: '100%', fontFamily: 'monospace', fontSize: 11 }} />
+              {/* AMELIYAT-NOTU-01: the free-text Intraop box is replaced by the structured caesarean operation note (old record kept, read-only). */}
+              <SezaryenAmeliyatNotu patientId={patientId} dogumId={d.id} intraop={d.intraop} />
+              {(['preop', 'ssvd'] as const).map((b) => (
+                <details key={b} style={{ marginBottom: 6 }}><summary style={{ fontSize: 12, color: CHROME_RENK.ink, cursor: 'pointer' }}>{b === 'preop' ? 'Preop: CBC, kan grubu, kros, açlık, anestezi, antibiyotik' : 'SSVD: önceki kesi tipi, rüptür riski onamı'}</summary>
+                  <textarea rows={3} defaultValue={d[b] ? JSON.stringify(d[b], null, 1).replace(/[{}"]/g, '') : ''} onBlur={(e) => { const obj: Record<string, string> = {}; e.target.value.split('\n').forEach((l) => { const [k, ...r] = l.split(':'); if (k && r.length) obj[k.trim()] = r.join(':').trim(); }); calistir({ adim: b, dogumId: d.id, veri: obj }); }} placeholder={b === 'preop' ? 'cbc: yapıldı\nkan_grubu: A Rh+\nkros: 2Ü hazır\naclik: 8 saat\nanestezi: spinal\nantibiyotik: sefazolin 2 g (hekim)' : 'onceki_kesi_tipi: alt segment transvers\nruptur_onami: alındı'} style={{ ...toolsInput, width: '100%', fontFamily: 'monospace', fontSize: 11 }} />
                 </details>
               ))}
               <div style={etiket}>Postop 2 / 6 / 24 saat</div>

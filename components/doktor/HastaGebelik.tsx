@@ -4,6 +4,10 @@
  * Live gebelik_* CRUD is truth; chapter engines consume recorded izlemler.
  */
 import React, { useEffect, useState, useCallback } from 'react';
+import dinamikYukle from 'next/dynamic';
+import { kadinDogumBransi } from '@/lib/doktor/hastaDosyaSekmeleri';
+// KD-RAPOR-01: USG / NST reports + doğum epikrizi — KD doctors only, loaded only when mounted.
+const KdRaporlar = dinamikYukle(() => import('@/specialties/kadin-dogum/ui/KdRaporlar'), { ssr: false });
 import { JinekolojiSpine } from '@/specialties/kadin-dogum/ui/JinekolojiSpine'
 import { BugunkuJineMuayene } from '@/specialties/kadin-dogum/ui/BugunkuJineMuayene'
 import { TrTarihAlan } from '@/specialties/kadin-dogum/ui/TrTarihAlan'
@@ -101,7 +105,10 @@ function yerelIsoTarih() {
   return `${y}-${m}-${d}`;
 }
 
-export default function HastaGebelik({ patientId }: { patientId: string }) {
+export default function HastaGebelik({ patientId, doktorBransi }: { patientId: string; doktorBransi?: string | null }) {
+  // KD-RAPOR-01 (brans-alan-sizmasi): the structured USG / NST reports and the doğum epikrizi are the KD chapter's own;
+  // this section is also shared with aile hekimliği (birinci basamak DÖB), which does NOT get them.
+  const kdHekimi = kadinDogumBransi(doktorBransi);
   const [veri, setVeri] = useState<Veri | null>(null);
   const [yukleniyor, setYukleniyor] = useState(true);
   const [hata, setHata] = useState('');
@@ -200,7 +207,7 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
     setMesaj(''); setHata('');
     try {
       const usg: Record<string, string | number> = {};
-      for (const k of ['crl', 'bpd', 'hc', 'ac', 'fl', 'efw', 'amnion', 'plasenta', 'prezentasyon']) if (g[k]) usg[k] = g[k];
+      for (const k of ['crl', 'bpd', 'hc', 'ac', 'fl', 'efw', 'amnion', 'afi', 'dvp', 'plasenta', 'prezentasyon']) if (g[k]) usg[k] = g[k];
       const d = await post({
         action: 'izlem', gebelikId: veri.gebelik.id, tarih: g.tarih || undefined,
         kilo: sayi(g.kilo), tansiyonSistolik: sayi(g.ts), tansiyonDiastolik: sayi(g.td),
@@ -594,7 +601,7 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
               <div style={{ fontSize: 12, fontWeight: 700, color: CHROME_RENK.muted, margin: '14px 0 6px' }}>USG (isteğe bağlı — ölçümler kaydedilir; persentil yorumu hekimindir)</div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 10 }}>
                 {alan('crl', 'CRL (mm)', g, setG)}{alan('bpd', 'BPD (mm)', g, setG)}{alan('hc', 'HC (mm)', g, setG)}{alan('ac', 'AC (mm)', g, setG)}{alan('fl', 'FL (mm)', g, setG)}{alan('efw', 'EFW (g)', g, setG)}
-                {alan('amnion', 'Amnion (AFI/normal)', g, setG)}{alan('plasenta', 'Plasenta', g, setG)}{alan('prezentasyon', 'Prezentasyon', g, setG, 'text', 'Sefalik / Makat')}
+                {alan('afi', 'AFI (cm)', g, setG, 'number')}{alan('dvp', 'En derin cep (cm)', g, setG, 'number')}{alan('amnion', 'Amnion notu', g, setG)}{alan('plasenta', 'Plasenta', g, setG)}{alan('prezentasyon', 'Prezentasyon', g, setG, 'text', 'Sefalik / Makat')}
               </div>
               <label style={{ display: 'block', marginTop: 10 }}><span style={etiketS}>Not</span><textarea value={g.not || ''} onChange={(e) => { const v = e.target.value; setG((prev) => ({ ...prev, not: v })); }} style={{ ...giris, minHeight: 60 }} /></label>
               <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
@@ -931,6 +938,7 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
         </>
       )}
 
+      {kdHekimi && <KdRaporlar patientId={patientId} gebelikId={veri?.gebelik?.id ? String(veri.gebelik.id) : null} dogumVar={Boolean((veri?.gebelik as { dogum_tarihi?: string | null } | null | undefined)?.dogum_tarihi)} />}
       {etkinMod !== 'jinekoloji' && <KadinSagligiPaneli patientId={patientId} />}
 
       {veri && (

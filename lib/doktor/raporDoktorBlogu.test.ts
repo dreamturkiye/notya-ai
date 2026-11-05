@@ -87,4 +87,10 @@ describe('raporDoktorAlani', () => {
   it('değer varsa aynen döner', () => {
     assert.equal(raporDoktorAlani('12345'), '12345')
   })
+  it('OP-DR-01: the STORED title (users.title) is the one printed — "Op. Dr.", not a guessed or hard-coded one', async () => {
+    const sb = fakeSb({ full_name: 'Ayşe Kaya', title: 'Op. Dr.', specialty: 'kadin-dogum', clinic_name: null, recete_baslik: null, email: null }, null)
+    assert.equal((await raporDoktorBlogu(sb, 'd')).unvanliAdSoyad, 'Op. Dr. Ayşe Kaya')
+    const sb2 = fakeSb({ full_name: 'Dr. Ayşe Kaya', title: 'Doç. Dr.', specialty: 'kadin-dogum', clinic_name: null, recete_baslik: null, email: null }, null)
+    assert.equal((await raporDoktorBlogu(sb2, 'd')).unvanliAdSoyad, 'Doç. Dr. Ayşe Kaya', 'a title typed into the name is replaced, never doubled')
+  })
 })

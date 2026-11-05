@@ -1,5 +1,27 @@
 # OPEN COMMITMENTS — Notya AI
 
+## OP-DR-KD-PAKETI-01 — "Op. Dr.", ameliyat notu, doğum epikrizi, USG ve NST raporları: what is open after the 2026-11-05 change set (Claude, 2026-11-05)
+
+Shipped on main (Türkiye) the same day: users.title + "Op. Dr." (migration 186, applied and verified on production),
+every printout on the stored title, the core operation-note shell for every surgical branch (ameliyat_notlari, RLS),
+16 KD templates, the structured sezaryen note in the delivery spine (old intraop text kept read-only), doğum epikrizi,
+structured obstetric / gynaecological USG and NST reports (kd_raporlari, RLS), and the baş çevresi route gate.
+
+- **AMELIYAT-NOTU-HIMENOPLASTI-01 — waits on Kaan.** The benchmark private-practice site lists himenoplasti. No template
+  was written: WHO / OHCHR / UN Women ("Eliminating virginity testing", 2018) call for an end to virginity-related
+  procedures, and the United Kingdom made hymenoplasty an offence (Health and Care Act 2022, s.149). Whether Notya
+  offers a himenoplasti note in Türkiye is the owner's decision. vNOTES is not on the benchmark site and has no
+  template; the vaginal-hysterectomy template covers the vaginal route.
+- **KD-USG-DOPPLER-CENTILE-01 — owner Claude, 2026-11-05.** No GA-specific centile table for umbilical-artery PI,
+  uterine-artery PI or CPR is in the product; those values print as measured (CPR is flagged only below Gramellini's
+  1.08). Next step: embed a published open table (e.g. Ciobanu et al., UOG 2019 for CPR / UA PI; Gómez et al., UOG 2008
+  for uterine PI), after checking its licence, and test it like fetalBiyometri.ts.
+- **KD-EPIKRIZ-ESKI-GEBELIK-01 — owner Claude, 2026-11-05.** The doğum epikrizi print reads the pregnancy that
+  /api/doktor/gebelik returns (active, or delivered in the last 42 days). An epikriz for an older delivery cannot be
+  printed yet; add a `gebelikId` parameter to that route when a doctor needs it.
+- **OP-DR-TITLE-PORTAL-01 — owner Claude, 2026-11-05.** Printouts and letterheads carry the stored title. The patient
+  portal's doctor card (lib/portal/hekimKarti.ts) still derives "Dr." from the name; switch it to users.title too.
+
 ## ASI-ONAM-02 — remote vaccine "consent" downgraded to a pre-visit information acknowledgement; a compliant remote-consent flow is NOT built (Claude, 2026-11-01) — waits on Kaan
 
 Source read in full on 2026-11-01: Sağlık Bakanlığı, *Bilgilendirilmiş Rızanın Elektronik Ortamda Alınması Hakkında Yönetmelik*, Resmî Gazete 27.10.2026 sayı 33413 (resmigazete.gov.tr/eskiler/2026/10/20261027-4.htm), in force on publication (Madde 14). Turkey-only regulatory mechanic: no country build changed (none of the six release branches ships the vaccine consent system).

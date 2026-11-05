@@ -51,6 +51,7 @@ export type HastaDosyaSekmeId =
   | 'radyo'
   | 'konsultasyon'
   | 'fotograflar'
+  | 'ameliyat'
 
 export type HastaDosyaSekme = { id: HastaDosyaSekmeId; label: string }
 
@@ -374,7 +375,8 @@ export function birinciBasamakBransi(specialtyHam: string | null | undefined): b
 /** Kadın hastalıkları ve doğum + yan dalları (perinatoloji, jinekolojik onkoloji, üreme endokrinolojisi). */
 export function kadinDogumBransi(specialtyHam: string | null | undefined): boolean {
   const b = String(specialtyHam || '').trim().toLocaleLowerCase('tr-TR')
-  return /kadın.?doğum|kadin.?dogum|kadın hastalık|kadin hastalik|jinekolo|obstetri|perinatolo|üreme endokrin|ureme endokrin/.test(b)
+  // KD-ISIMLENDIRME-01: the canonical key 'kadin-hastaliklari-dogum' (hyphens) is the same branch as 'kadin-dogum' (KD-RAPOR-01 fix).
+  return /kadın.?doğum|kadin.?dogum|kadın hastalık|kadin hastalik|kadin-hastalik|jinekolo|obstetri|perinatolo|üreme endokrin|ureme endokrin/.test(b)
 }
 
 /**
@@ -502,6 +504,8 @@ export function hastaDosyaSekmeleri(opts: {
   acilTipUygun?: boolean
   /** RADYOLOJI-EXCEPTIONAL-01: doctor specialty radyoloji only */
   radyolojiUygun?: boolean
+  /** AMELIYAT-NOTU-01: CORE shell for every surgical branch — lib/doktor/ameliyatNotu.ts → ameliyatNotuBransi */
+  ameliyatUygun?: boolean
   pediatriUygun: boolean
   gebelikUygun: boolean
 }): HastaDosyaSekme[] {
@@ -516,6 +520,10 @@ export function hastaDosyaSekmeleri(opts: {
     { id: 'konsultasyon', label: 'Konsültasyonlar' },
     // FOTO-ARSIV-01: evrensel — klinik fotoğraf arşivi (zaman çizelgesi, karşılaştırma, notasyon); her branş, her yaş
     { id: 'fotograflar', label: 'Fotoğraflar' },
+  )
+  // AMELIYAT-NOTU-01: core for every surgical branch (30 + 10 written out in ameliyatNotu.ts), never for the others.
+  if (opts.ameliyatUygun) tabs.push({ id: 'ameliyat', label: 'Ameliyat Notları' })
+  tabs.push(
     { id: 'goruntuleme', label: 'Görüntüleme' },
     { id: 'ilaclar', label: 'İlaçlar' },
     { id: 'formu', label: 'Hasta Formu' },

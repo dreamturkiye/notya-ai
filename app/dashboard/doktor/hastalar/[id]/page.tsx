@@ -60,6 +60,7 @@ const AcilTipHome = dinamikYukle(() => import('@/specialties/acil-tip/ui/AcilTip
 const PatientDocumentVault = dinamikYukle(() => import('@/components/doktor/PatientDocumentVault'), { loading: SekmeYukleniyor });
 const HastaGoruntuler = dinamikYukle(() => import('@/components/doktor/HastaGoruntuler'), { loading: SekmeYukleniyor });
 const HastaKonsultasyonlar = dinamikYukle(() => import('@/components/doktor/HastaKonsultasyonlar'), { loading: SekmeYukleniyor });
+const HastaAmeliyatNotlari = dinamikYukle(() => import('@/components/doktor/HastaAmeliyatNotlari'), { loading: SekmeYukleniyor });
 const FotoArsivi = dinamikYukle(() => import('@/components/doktor/fotoArsivi/FotoArsivi'), { loading: SekmeYukleniyor });
 import HastaOzetDuzenlenebilir from '@/components/doktor/HastaOzetDuzenlenebilir';
 import HastaKlinikOzetler from '@/components/doktor/HastaKlinikOzetler';
@@ -67,6 +68,7 @@ import HastaIletisim from '@/components/doktor/iletisim/HastaIletisim';
 import KalkanTaslak from '@/components/doktor/iletisim/KalkanTaslak';
 import EnabizIzinKutusu from '@/components/doktor/seans/EnabizIzinKutusu';
 import { pediatriHedefBoyBransi } from '@/lib/clinical/hedefBoy';
+import { ameliyatNotuBransi } from '@/lib/doktor/ameliyatNotu';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { ensureDoctorAccessToken, DOKTOR_GIRIS } from '@/lib/doktor/clientAuth';
 import { yasHesapla } from '@/lib/doktor/yas';
@@ -239,7 +241,9 @@ export default function HastaProfilPage() {
     ? pediatriAracSekmesiUygun({ dogumIso: patient.dogum_tarihi, doktorBransi, pediatriDoktoru: pediatriAraci })
     : false;
   const dahiliyeUygun = dahiliyeAraci && !pediatriUygun;
-  const tabs = hastaDosyaSekmeleri({ pediatriUygun, gebelikUygun, dahiliyeUygun, gozUygun: gozAraci, deriUygun: deriAraci, psikiyatriUygun: psikAraci, kbbUygun: kbbAraci, kardiyolojiUygun: kardioAraci, gogusUygun: gogusAraci, norolojiUygun: noroAraci, urolojiUygun: uroAraci, ortopediUygun: ortoAraci, fizikTedaviUygun: ftrAraci, aileUygun: aileAraci, sporHekimligiUygun: sporAraci, endokrinolojiUygun: endoAraci, enfeksiyonUygun: enfAraci, gastroenterolojiUygun: gastroAraci, nefrolojiUygun: nefAraci, romatolojiUygun: romaAraci, onkolojiUygun: onkoAraci, gogusCerrahisiUygun: gogusCerrahiAraci, genelCerrahiUygun: gcAraci, plastikUygun: plastikAraci, beyinCerrahisiUygun: beyinAraci, cocukCerrahisiUygun: ccAraci, anesteziUygun: anesteziAraci, kalpDamarCerrahisiUygun: kdcAraci, acilTipUygun: acilAraci, radyolojiUygun: radyoAraci });
+  // AMELIYAT-NOTU-01: the tab button and the mount below read this ONE boolean (a ?tab=ameliyat link cannot bypass it).
+  const ameliyatUygun = ameliyatNotuBransi(doktorBransi);
+  const tabs = hastaDosyaSekmeleri({ pediatriUygun, gebelikUygun, dahiliyeUygun, gozUygun: gozAraci, deriUygun: deriAraci, psikiyatriUygun: psikAraci, kbbUygun: kbbAraci, kardiyolojiUygun: kardioAraci, gogusUygun: gogusAraci, norolojiUygun: noroAraci, urolojiUygun: uroAraci, ortopediUygun: ortoAraci, fizikTedaviUygun: ftrAraci, aileUygun: aileAraci, sporHekimligiUygun: sporAraci, endokrinolojiUygun: endoAraci, enfeksiyonUygun: enfAraci, gastroenterolojiUygun: gastroAraci, nefrolojiUygun: nefAraci, romatolojiUygun: romaAraci, onkolojiUygun: onkoAraci, gogusCerrahisiUygun: gogusCerrahiAraci, genelCerrahiUygun: gcAraci, plastikUygun: plastikAraci, beyinCerrahisiUygun: beyinAraci, cocukCerrahisiUygun: ccAraci, anesteziUygun: anesteziAraci, kalpDamarCerrahisiUygun: kdcAraci, acilTipUygun: acilAraci, radyolojiUygun: radyoAraci, ameliyatUygun });
 
   /** Keep ?tab= in the URL so Geri from lab/röntgen returns to Belgeler (not Özet).
    *  Kadın Sağlığı & Gebelik lives under Muayene Geçmişi — deep link ?tab=gebelik still works. */
@@ -269,7 +273,7 @@ export default function HastaProfilPage() {
     const bilinen: HastaDosyaSekmeId[] = [
       'ozet', 'muayene', 'buyume', 'belgeler', 'goruntuleme', 'ilaclar', 'formu', 'asilar',
       'mchat', 'gelisim', 'ayse', 'gebelik', 'deri', 'dahiliye', 'goz',
-      'psikiyatri', 'kbb', 'kardiyoloji', 'gogus', 'noroloji', 'uroloji', 'spor-hekimligi', 'ortopedi', 'fizik-tedavi', 'aile', 'endokrinoloji', 'enfeksiyon', 'gastroenteroloji', 'nefroloji', 'romatoloji', 'onkoloji', 'genel-cerrahi', 'plastik', 'beyin', 'gogus-cerrahisi', 'cocuk-cerrahisi', 'konsultasyon', 'fotograflar',
+      'psikiyatri', 'kbb', 'kardiyoloji', 'gogus', 'noroloji', 'uroloji', 'spor-hekimligi', 'ortopedi', 'fizik-tedavi', 'aile', 'endokrinoloji', 'enfeksiyon', 'gastroenteroloji', 'nefroloji', 'romatoloji', 'onkoloji', 'genel-cerrahi', 'plastik', 'beyin', 'gogus-cerrahisi', 'cocuk-cerrahisi', 'konsultasyon', 'fotograflar', 'ameliyat',
     ];
     if (!bilinen.includes(tabParam as HastaDosyaSekmeId)) return;
     if (tabParam === 'gebelik') {
@@ -677,7 +681,7 @@ export default function HastaProfilPage() {
             )}
             {muayeneAlti === 'gebelik' && gebelikUygun ? (
               <div style={{ padding: '8px 0 12px' }}>
-                <HastaGebelik patientId={patientId} />
+                <HastaGebelik patientId={patientId} doktorBransi={doktorBransi} />
               </div>
             ) : (
               <>
@@ -770,6 +774,7 @@ export default function HastaProfilPage() {
           <PatientDocumentVault patientId={patientId} specialtyGeri={vaultSpecialtyGeri} />
         )}
         {!loading && !error && activeTab === 'konsultasyon' && <HastaKonsultasyonlar patientId={patientId} yanitAc={searchParams?.get('yanit') || undefined} />}
+        {!loading && !error && activeTab === 'ameliyat' && ameliyatUygun && <HastaAmeliyatNotlari patientId={patientId} />}
         {!loading && !error && activeTab === 'fotograflar' && (
           <FotoArsivi
             patientId={patientId}

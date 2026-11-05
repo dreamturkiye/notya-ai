@@ -172,13 +172,14 @@ describe('POST /api/users/profile: new doctor (from public sign-up, consent on r
     assert.ok(!('kvkk_consent_at' in s) && !('kvkk_consent_version' in s))
   })
 
-  it('all four title options are written without violating the constraint', async () => {
-    for (const [ekran, kolon] of [['Dr.', 'Dr.'], ['Uzm.Dr.', 'Uzm. Dr.'], ['Doç.Dr.', 'Doç. Dr.'], ['Prof.Dr.', 'Prof. Dr.']]) {
+  it('all five title options are written without violating the constraint (OP-DR-01: Op. Dr.)', async () => {
+    for (const [ekran, kolon] of [['Dr.', 'Dr.'], ['Uzm.Dr.', 'Uzm. Dr.'], ['Op.Dr.', 'Op. Dr.'], ['Doç.Dr.', 'Doç. Dr.'], ['Prof.Dr.', 'Prof. Dr.']]) {
       const h = hesap({ meta: KAYIT_RIZASI })
       const { durum } = await gonder(h.token, { ...HEKIM, title: ekran })
       assert.equal(durum, 200, ekran)
       assert.equal(satir(h.id)!.title, kolon)
-      assert.ok(['Dr.', 'Uzm. Dr.', 'Doç. Dr.', 'Prof. Dr.'].includes(satir(h.id)!.title))
+      // the live users.title CHECK after migration 186 (lib/db/migrations/186_op_dr_unvan_ameliyat_notu_kd_rapor.sql)
+      assert.ok(['Dr.', 'Uzm. Dr.', 'Op. Dr.', 'Doç. Dr.', 'Prof. Dr.'].includes(satir(h.id)!.title))
     }
   })
 
@@ -238,7 +239,7 @@ describe('POST /api/users/profile: server-side validation', () => {
       [{ cepTelefonu: '+1 202 555 0143' }, 'cepTelefonu', DOKTOR_CEP_MESAJ.yurtDisi],
       [{ cepTelefonu: '0532' }, 'cepTelefonu', DOKTOR_CEP_MESAJ.gecersiz],
       [{ title: '' }, 'title', PROFIL_MESAJ.unvan],
-      [{ title: 'Op.Dr.' }, 'title', PROFIL_MESAJ.unvanGecersiz],
+      [{ title: 'Op.' }, 'title', PROFIL_MESAJ.unvanGecersiz],
       [{ gender: '' }, 'gender', PROFIL_MESAJ.cinsiyet],
       [{ gender: 'x' }, 'gender', PROFIL_MESAJ.cinsiyet],
       [{ addressingPreference: '' }, 'addressingPreference', PROFIL_MESAJ.hitap],

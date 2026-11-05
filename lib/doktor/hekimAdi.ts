@@ -8,15 +8,21 @@
  * Soyad" biçiminde tam isim tutuyor (unvan dahil), ayrı first/last_name yok.
  */
 import type { SupabaseClient } from '@supabase/supabase-js'
+import type { DoctorTitle } from '@/lib/address'
 
+/**
+ * OP-DR-01 (Kaan, 2026-11-05): the name every printout and letterhead carries is the doctor's name WITH THE STORED
+ * TITLE (users.title, the onboarding / Hesabım choice; the legacy users.unvan column as a fallback) — "Op. Dr. Ad Soyad",
+ * never a hard-coded "Uzm. Dr.". Plain "Dr." only when no title is stored.
+ */
 export async function hekimAdi(sb: SupabaseClient, doctorId: string): Promise<string> {
   try {
-    const { data } = await sb.from('users').select('full_name, unvan').eq('id', doctorId).maybeSingle()
+    const { data } = await sb.from('users').select('full_name, unvan, title').eq('id', doctorId).maybeSingle()
     if (!data) return ''
+    const unvan = kayitliUnvan(data.title) || kayitliUnvan(data.unvan)
     const tamAd = String(data.full_name || '').trim()
-    if (tamAd) return tamAd
-    const unvan = String(data.unvan || 'Dr.').trim()
-    return unvan
+    if (tamAd) return hekimUnvanli(tamAd, unvan)
+    return unvan || 'Dr.'
   } catch { return '' }
 }
 
@@ -39,8 +45,41 @@ export async function hekimBransi(sb: SupabaseClient, doctorId: string): Promise
  */
 const UNVAN_DESENI = /^(prof\.?\s*dr\.?|doç\.?\s*dr\.?|uzm\.?\s*dr\.?|op\.?\s*dr\.?|dr\.?|doç\.?|prof\.?|uzm\.?|op\.?)\s/i
 
-export function hekimUnvanli(ad: string | null | undefined): string {
+/** The five titles, spelled as users.title stores them (lib/address.ts DOKTOR_UNVANLARI). */
+const UNVAN_YAZIMI: ReadonlyArray<[RegExp, DoctorTitle]> = [
+  [/^prof\.?\s*dr\.?$/i, 'Prof. Dr.'],
+  [/^do[çc]\.?\s*dr\.?$/i, 'Doç. Dr.'],
+  [/^op\.?\s*dr\.?$/i, 'Op. Dr.'],
+  [/^uzm\.?\s*dr\.?$/i, 'Uzm. Dr.'],
+  [/^dr\.?$/i, 'Dr.'],
+]
+
+/** A stored title (users.title or the legacy users.unvan) in its canonical spelling, or null when none / not a title. */
+export function kayitliUnvan(ham: unknown): DoctorTitle | null {
+  const t = typeof ham === 'string' ? ham.trim() : ''
+  if (!t) return null
+  return UNVAN_YAZIMI.find(([re]) => re.test(t))?.[1] ?? null
+}
+
+/**
+ * OP-DR-01: with a STORED title (`unvan`), that title wins — a title typed into the name is replaced by it, never
+ * doubled ("Dr. Ayşe Kaya" + 'Op. Dr.' → "Op. Dr. Ayşe Kaya"). Without one, the old rule: keep a title the name already
+ * carries, otherwise "Dr. ".
+ */
+export function hekimUnvanli(ad: string | null | undefined, unvan?: string | null): string {
   const t = String(ad || '').trim()
   if (!t) return t
+  const kayitli = kayitliUnvan(unvan)
+  if (kayitli) {
+    let yalinAd = t
+    while (UNVAN_DESENI.test(yalinAd)) yalinAd = yalinAd.replace(UNVAN_DESENI, '').trim()
+    return yalinAd ? `${kayitli} ${yalinAd}` : kayitli
+  }
   return UNVAN_DESENI.test(t) ? t : `Dr. ${t}`
+}
+
+/** A users row → the titled name (users.title, then users.unvan). */
+export function hekimUnvanliSatirdan(row: { full_name?: unknown; title?: unknown; unvan?: unknown } | null | undefined): string {
+  if (!row) return ''
+  return hekimUnvanli(String(row.full_name ?? ''), kayitliUnvan(row.title) || kayitliUnvan(row.unvan))
 }

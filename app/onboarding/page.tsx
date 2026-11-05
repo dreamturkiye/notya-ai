@@ -27,7 +27,8 @@ const professions: Profession[] = [
   { id: 'psikolog', label: 'Psikolog/Terapist', emoji: '🧠', desc: 'Ruh sağlığı uzmanlığı' },
 ];
 
-const unvanOptions = ['Dr.', 'Uzm.Dr.', 'Doç.Dr.', 'Prof.Dr.'];
+// OP-DR-01: Op. Dr. (operatör doktor) — the order of lib/address.ts DOKTOR_UNVANLARI.
+const unvanOptions = ['Dr.', 'Uzm.Dr.', 'Op.Dr.', 'Doç.Dr.', 'Prof.Dr.'];
 
 // Full 30 medical specialties (+ a few klinik aesthetic extras)
 // NOTYA-KLINIK-ISIMLENDIRME-01 (Kaan 2026-10-18): aynı "Uzmanlık Alanı" dropdown'ı 30 tıbbi branş

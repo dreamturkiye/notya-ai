@@ -18,12 +18,12 @@
  * of forking a third.
  */
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { hekimUnvanli } from '@/lib/doktor/hekimAdi'
+import { hekimUnvanliSatirdan, kayitliUnvan } from '@/lib/doktor/hekimAdi'
 import { resmiUzmanlikAdi } from '@/lib/doktor/bransAdlari'
 import { hekimKartindanSatirlar } from '@/lib/portal/hekimKarti'
 
 export type RaporDoktorBlogu = {
-  /** "Dr. Ad Soyad" / "Prof. Dr. Ad Soyad" — hekimUnvanli (NOTYA-UNVAN-01), never doubled. */
+  /** "Op. Dr. Ad Soyad" / "Prof. Dr. Ad Soyad" — the STORED title (OP-DR-01), hekimUnvanli (NOTYA-UNVAN-01), never doubled. */
   unvanliAdSoyad: string
   /** Resmî uzmanlık adı ("Çocuk Sağlığı ve Hastalıkları") — boş branş için ''. */
   uzmanlik: string
@@ -44,6 +44,8 @@ function kolonYokMu(error: unknown): boolean {
 
 type DoktorBlokRow = {
   full_name?: string | null
+  title?: string | null
+  unvan?: string | null
   specialty?: string | null
   clinic_name?: string | null
   recete_baslik?: unknown
@@ -55,7 +57,7 @@ type DoktorBlokRow = {
 
 /** Her raporda aynı hekim/klinik bloğu — doktorun kendi profilinden, asla yer tutucu metinden. */
 export async function raporDoktorBlogu(sb: SupabaseClient, doctorId: string): Promise<RaporDoktorBlogu> {
-  const secim = 'full_name, specialty, clinic_name, recete_baslik, email, iletisim_telefon_varsayilan, iletisim_telefon_muayenehane, iletisim_whatsapp_muayenehane'
+  const secim = 'full_name, title, unvan, specialty, clinic_name, recete_baslik, email, iletisim_telefon_varsayilan, iletisim_telefon_muayenehane, iletisim_whatsapp_muayenehane'
   let row: DoktorBlokRow | null = null
   const q = await sb.from('users').select(secim).eq('id', doctorId).maybeSingle()
   if (q.error && kolonYokMu(q.error)) {
@@ -98,7 +100,8 @@ export async function raporDoktorBlogu(sb: SupabaseClient, doctorId: string): Pr
   })
 
   return {
-    unvanliAdSoyad: hekimUnvanli(row?.full_name || '') || 'Dr.',
+    // OP-DR-01: the stored title (users.title → users.unvan); plain "Dr." only when none is stored.
+    unvanliAdSoyad: hekimUnvanliSatirdan(row) || kayitliUnvan(row?.title) || kayitliUnvan(row?.unvan) || 'Dr.',
     uzmanlik: row?.specialty ? resmiUzmanlikAdi(String(row.specialty)) : '',
     klinikAdi: kart.klinik || null,
     adres: kart.adres || null,

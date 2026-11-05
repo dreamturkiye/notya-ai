@@ -1,6 +1,11 @@
 export type AddressContext = 'casual' | 'named' | 'formal' | 'written' | 'referral' | 'notification'
 export type AddressingPreference = 'hocam' | 'named_hocam' | 'first_name_only'
-export type DoctorTitle = 'Dr.' | 'Uzm. Dr.' | 'Doç. Dr.' | 'Prof. Dr.'
+export type DoctorTitle = 'Dr.' | 'Uzm. Dr.' | 'Op. Dr.' | 'Doç. Dr.' | 'Prof. Dr.'
+/**
+ * OP-DR-01 (Kaan, 2026-11-05): the five Turkish doctor titles, in their order. "Op. Dr." (operatör doktor) is the title
+ * of a surgical specialist. The users.title CHECK (migration 186) holds exactly this list.
+ */
+export const DOKTOR_UNVANLARI: readonly DoctorTitle[] = ['Dr.', 'Uzm. Dr.', 'Op. Dr.', 'Doç. Dr.', 'Prof. Dr.']
 export type Gender = 'male' | 'female'
 
 export interface AddressableUser {

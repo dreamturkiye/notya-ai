@@ -180,6 +180,7 @@ describe('BRANS-ALAN-SIZMASI · sentetik QA hekimleriyle gerçek rotalar', () =>
       intakeOlustur: await ice('app/api/doktor/intake-formlari/route'),
       intakeDetay: await ice('app/api/doktor/intake-formlari/[id]/route'),
       intake: await ice('app/api/intake/[token]/route'),
+      olcumler: await ice('app/api/doktor/hastalar/[id]/olcumler/route'),
     }
     IntakeBolumleri = (await import('../../components/intake/IntakeBolumleri')).default
     ;({ intakeFormBolumleri } = await import('../intake/coreAlanlar'))
@@ -363,6 +364,15 @@ describe('BRANS-ALAN-SIZMASI · sentetik QA hekimleriyle gerçek rotalar', () =>
       assert.equal(y.veliYakinligi, resit ? 'Baba' : undefined, `${k}: kaydedilen veli`)
       assert.equal(Object.keys(y).some((x) => x.startsWith('veli')), resit, `${k}: veli izi`)
       assert.ok(!Object.keys(y).some((x) => x.startsWith('acilKisi')), `${k}: boş acil kişi`)
+    }
+  })
+  it('7. Elle ölçüm (POST /api/doktor/hastalar/[id]/olcumler): baş çevresi yalnız pediatrik bağlamda kaydedilir; KD erişkin hastada reddedilir (OP-DR-01 denetimi)', async () => {
+    for (const [k, h] of hepsi()) {
+      const r = await json(R.olcumler.POST(iste('POST', `/api/doktor/hastalar/${h.hasta}/olcumler`, { token: h.token, govde: { tur: 'bas_cevresi', deger: '49' } }), prm({ id: h.hasta })))
+      assert.equal(r.status, PEDIATRIK.has(k) ? 201 : 400, `${k}: ${JSON.stringify(r.veri).slice(0, 160)}`)
+      // a universal measurement still works for everyone
+      const ates = await json(R.olcumler.POST(iste('POST', `/api/doktor/hastalar/${h.hasta}/olcumler`, { token: h.token, govde: { tur: 'ates', deger: '36.8' } }), prm({ id: h.hasta })))
+      assert.equal(ates.status, 201, `${k}: ateş`)
     }
   })
 })

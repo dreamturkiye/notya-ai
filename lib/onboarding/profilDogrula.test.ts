@@ -52,9 +52,11 @@ describe('mobile: Turkish mobile number, one stored form +905XXXXXXXXX', () => {
 })
 
 describe('title mapping: option on the screen → spelling of the users.title CHECK', () => {
-  it('all four options map to the spelling of the constraint', () => {
+  it('all five options map to the spelling of the constraint (OP-DR-01: Op. Dr.)', () => {
     assert.equal(unvanEsle('Dr.'), 'Dr.')
     assert.equal(unvanEsle('Uzm.Dr.'), 'Uzm. Dr.')
+    assert.equal(unvanEsle('Op.Dr.'), 'Op. Dr.')
+    assert.equal(unvanEsle('Op. Dr.'), 'Op. Dr.')
     assert.equal(unvanEsle('Doç.Dr.'), 'Doç. Dr.')
     assert.equal(unvanEsle('Prof.Dr.'), 'Prof. Dr.')
   })
@@ -64,12 +66,14 @@ describe('title mapping: option on the screen → spelling of the users.title CH
     assert.ok(m, 'unvanOptions not found')
     const secenekler = [...m![1].matchAll(/'([^']+)'/g)].map((x) => x[1])
     assert.deepEqual(Object.keys(UNVAN_ESLEME).sort(), [...secenekler].sort())
-    assert.deepEqual(Object.values(UNVAN_ESLEME).sort(), ['Doç. Dr.', 'Dr.', 'Prof. Dr.', 'Uzm. Dr.'])
+    assert.deepEqual(Object.values(UNVAN_ESLEME).sort(), ['Doç. Dr.', 'Dr.', 'Op. Dr.', 'Prof. Dr.', 'Uzm. Dr.'])
+    // OP-DR-01: the screen offers them in the order Dr., Uzm. Dr., Op. Dr., Doç. Dr., Prof. Dr. (lib/address.ts DOKTOR_UNVANLARI)
+    assert.deepEqual(secenekler.map((s) => unvanEsle(s)), ['Dr.', 'Uzm. Dr.', 'Op. Dr.', 'Doç. Dr.', 'Prof. Dr.'])
     for (const s of secenekler) assert.ok(unvanEsle(s), s)
   })
   it('the constraint spelling itself is accepted; anything not in the table is refused', () => {
-    for (const k of ['Dr.', 'Uzm. Dr.', 'Doç. Dr.', 'Prof. Dr.']) assert.equal(unvanEsle(k), k)
-    for (const k of ['', 'Op.Dr.', 'Dr', 'Prof', 'dr.', 'Uzm.Dr', null, undefined, 3]) assert.equal(unvanEsle(k), null, String(k))
+    for (const k of ['Dr.', 'Uzm. Dr.', 'Op. Dr.', 'Doç. Dr.', 'Prof. Dr.']) assert.equal(unvanEsle(k), k)
+    for (const k of ['', 'Op.', 'Dr', 'Prof', 'dr.', 'Uzm.Dr', 'Opr. Dr.', null, undefined, 3]) assert.equal(unvanEsle(k), null, String(k))
   })
   it('gender and form of address: screen value → constraint value', () => {
     assert.equal(cinsiyetEsle('Erkek'), 'male')
@@ -183,7 +187,7 @@ describe('body validation (server side)', () => {
   })
   it('invalid values are refused (as if the browser checks were bypassed)', () => {
     const ile = (ek: Record<string, unknown>) => profilGovdesiDogrula({ ...tam, ...ek }, ilk)
-    assert.deepEqual(ile({ title: 'Op.Dr.' }), { ok: false, hata: PROFIL_MESAJ.unvanGecersiz, alan: 'title' })
+    assert.deepEqual(ile({ title: 'Op.' }), { ok: false, hata: PROFIL_MESAJ.unvanGecersiz, alan: 'title' })
     assert.deepEqual(ile({ gender: 'x' }), { ok: false, hata: PROFIL_MESAJ.cinsiyet, alan: 'gender' })
     assert.deepEqual(ile({ addressingPreference: 'Sayın' }), { ok: false, hata: PROFIL_MESAJ.hitap, alan: 'addressingPreference' })
     assert.deepEqual(ile({ cepTelefonu: '0212 123 45 67' }), { ok: false, hata: DOKTOR_CEP_MESAJ.sabitHat, alan: 'cepTelefonu' })

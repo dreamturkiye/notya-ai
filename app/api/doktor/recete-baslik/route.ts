@@ -4,6 +4,7 @@
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { pratikOturum, sadeceDoktor } from '@/lib/doktor/pratikOturum'
+import { hekimUnvanliSatirdan } from '@/lib/doktor/hekimAdi'
 
 export const dynamic = 'force-dynamic'
 
@@ -20,6 +21,8 @@ export async function GET(req: NextRequest) {
   const rb = (data?.recete_baslik && typeof data.recete_baslik === 'object' ? data.recete_baslik : {}) as { satirlar?: string[]; diplomaNo?: string; logoDataUrl?: string }
   return NextResponse.json({
     hekim: String(data?.full_name || '').trim(),
+    // OP-DR-01: the name with the STORED title, for every letterhead that prints it (tetkik / istem pages).
+    unvanliAd: data?.full_name ? hekimUnvanliSatirdan(data) : '',
     unvan: String(data?.title || data?.unvan || 'Dr.'),
     brans: String(data?.specialty || ''),
     klinik: String(data?.clinic_name || ''),

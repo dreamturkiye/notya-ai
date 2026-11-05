@@ -155,6 +155,8 @@ type Hekim = {
   yuklenenBelge: string
   /** FOTO-ARSIV-01: two clinical photos of the doctor's patient (older + newer, same region), with archive metadata + a stored thumbnail */
   fotoBelge: string; fotoOnceki: string; fotoSeans: string
+  /** AMELIYAT-NOTU-01 / KD-RAPOR-01: an unsigned operation note and an NST report of the doctor's own patient (content encrypted, marker inside) */
+  ameliyatNotu: string; kdRapor: string
   /** Rows THIS doctor filed under the OTHER doctor's patient — the contamination a pre-fix IDOR left behind. */
   hileliSeans: string; hileliNot: string
 }
@@ -283,7 +285,9 @@ function hekimKur(harf: Harf): Hekim {
   const fotoOnceki = fotoEkle('onceki', 47, trGun(-47, 12).slice(0, 10))
   const fotoBelge = fotoEkle('yeni', 0, trGun(0, 12).slice(0, 10))
   db.ekle('hasta_foto_kucuk', { doctor_id: id, patient_id: hasta, belge_id: fotoBelge, mime: 'image/jpeg', genislik: 64, yukseklik: 48, veri_encrypted: encryptBytes(fotoGorsel.sentetikJpeg(`kucuk ${m}`)).toString('base64') })
-  return { fotoBelge, fotoOnceki, fotoSeans, yuklenenBelge, takip, defter, harf, id, token, hasta, seans, not, bekleyenNot, ilac, panel, belge, randevu, serbestRandevu, talep, hastaDerm, lezyon, dogum, bebekKart, portalToken, konu, asistanEylem, gozGoruntu, belgeAnaliz, dermAnaliz, konsultasyon, konsultasyonYanitli, kasaBelge, asiHatirlatma, eylemOneri, eylemKayit, sonlanmisIlac, kuyruk, gelenBelge, asistanOturum, hileliSeans: '', hileliNot: '' }
+  const ameliyatNotu = db.ekle('ameliyat_notlari', { doctor_id: id, patient_id: hasta, ameliyat_tarihi: '2026-10-01', sablon: null, dogum_id: null, veri_encrypted: encrypt(JSON.stringify({ baslangic: '2026-10-01T09:00', islem: `Islem ${m}`, bulgular: `Bulgu ${m}` })), imzalandi_at: null, created_at: dun, updated_at: dun }).id as string
+  const kdRapor = db.ekle('kd_raporlari', { doctor_id: id, patient_id: hasta, gebelik_id: null, tur: 'nst', rapor_tarihi: '2026-10-01', veri_encrypted: encrypt(JSON.stringify({ tarih: '2026-10-01', bazalFkh: 140, varyabiliteBpm: 10, sonuc: `NST ${m}` })), created_at: dun, updated_at: dun }).id as string
+  return { ameliyatNotu, kdRapor, fotoBelge, fotoOnceki, fotoSeans, yuklenenBelge, takip, defter, harf, id, token, hasta, seans, not, bekleyenNot, ilac, panel, belge, randevu, serbestRandevu, talep, hastaDerm, lezyon, dogum, bebekKart, portalToken, konu, asistanEylem, gozGoruntu, belgeAnaliz, dermAnaliz, konsultasyon, konsultasyonYanitli, kasaBelge, asiHatirlatma, eylemOneri, eylemKayit, sonlanmisIlac, kuyruk, gelenBelge, asistanOturum, hileliSeans: '', hileliNot: '' }
 }
 
 /** Contamination X planted under Y's patient before the fixes (anon-key session insert, unchecked POSTs). */
@@ -462,6 +466,38 @@ const VAKALAR: Vaka[] = [
     cagir: (r, a, h) => coz(r.buyume.GET(iste('GET', `/api/doktor/hastalar/${h.hasta}/buyume-egrileri`, { token: a.token }), prm({ id: h.hasta }))) },
   { ad: 'GET /api/doktor/hastalar/[id]/hedef-boy', red: 404,
     cagir: (r, a, h) => coz(r.hedefBoy.GET(iste('GET', `/api/doktor/hastalar/${h.hasta}/hedef-boy`, { token: a.token }), prm({ id: h.hasta }))) },
+  // AMELIYAT-NOTU-01 (core, every surgical branch): operation notes — patient first, then note / delivery ids bound to doctor + patient
+  { ad: 'GET /api/doktor/ameliyat-notlari (liste + şablonlar)', red: 404, okur: true,
+    cagir: (r, a, h) => coz(r.ameliyatNotlari.GET(iste('GET', `/api/doktor/ameliyat-notlari?patientId=${h.hasta}`, { token: a.token }))) },
+  { ad: 'GET /api/doktor/ameliyat-notlari?id (yazdırma + antet)', red: 404, okur: true,
+    cagir: (r, a, h) => coz(r.ameliyatNotlari.GET(iste('GET', `/api/doktor/ameliyat-notlari?patientId=${h.hasta}&id=${h.ameliyatNotu}`, { token: a.token }))) },
+  { ad: 'GET /api/doktor/ameliyat-notlari?id (kendi hastası + yabancı not kimliği)', red: 404,
+    cagir: (r, a, h) => coz(r.ameliyatNotlari.GET(iste('GET', `/api/doktor/ameliyat-notlari?patientId=${a.hasta}&id=${h.ameliyatNotu}`, { token: a.token }))) },
+  { ad: 'POST /api/doktor/ameliyat-notlari (yeni not)', red: 404,
+    yazdi: (a) => tablo('ameliyat_notlari').filter((x) => x.patient_id === a.hasta && x.doctor_id === a.id).length > 1,
+    cagir: (r, a, h) => coz(r.ameliyatNotlari.POST(iste('POST', '/api/doktor/ameliyat-notlari', { token: a.token, govde: { patientId: h.hasta, veri: { baslangic: '2026-11-05T10:00', islem: 'Sentetik islem' } } }))) },
+  { ad: 'POST /api/doktor/ameliyat-notlari (kendi hastası + yabancı not kimliği → güncelleme)', red: 404,
+    cagir: (r, a, h) => coz(r.ameliyatNotlari.POST(iste('POST', '/api/doktor/ameliyat-notlari', { token: a.token, govde: { patientId: a.hasta, id: h.ameliyatNotu, veri: { baslangic: '2026-11-05T10:00', islem: 'Ustune yazma' } } }))) },
+  { ad: 'POST /api/doktor/ameliyat-notlari (kendi hastası + yabancı doğum kimliği)', red: 404,
+    cagir: (r, a, h) => coz(r.ameliyatNotlari.POST(iste('POST', '/api/doktor/ameliyat-notlari', { token: a.token, govde: { patientId: a.hasta, dogumId: h.dogum, veri: { baslangic: '2026-11-05T10:00', islem: 'Sezaryen' } } }))) },
+  { ad: 'DELETE /api/doktor/ameliyat-notlari (taslak sil)', red: 404,
+    yazdi: (a) => !tablo('ameliyat_notlari').some((x) => x.id === a.ameliyatNotu),
+    cagir: (r, a, h) => coz(r.ameliyatNotlari.DELETE(iste('DELETE', `/api/doktor/ameliyat-notlari?patientId=${h.hasta}&id=${h.ameliyatNotu}`, { token: a.token }))) },
+  // KD-RAPOR-01 (KD chapter): structured USG / NST reports
+  { ad: 'GET /api/doktor/kd-raporlari (liste)', red: 404, okur: true,
+    cagir: (r, a, h) => coz(r.kdRaporlari.GET(iste('GET', `/api/doktor/kd-raporlari?patientId=${h.hasta}`, { token: a.token }))) },
+  { ad: 'GET /api/doktor/kd-raporlari?id (yazdırma + antet)', red: 404, okur: true,
+    cagir: (r, a, h) => coz(r.kdRaporlari.GET(iste('GET', `/api/doktor/kd-raporlari?patientId=${h.hasta}&id=${h.kdRapor}`, { token: a.token }))) },
+  { ad: 'GET /api/doktor/kd-raporlari?id (kendi hastası + yabancı rapor kimliği)', red: 404,
+    cagir: (r, a, h) => coz(r.kdRaporlari.GET(iste('GET', `/api/doktor/kd-raporlari?patientId=${a.hasta}&id=${h.kdRapor}`, { token: a.token }))) },
+  { ad: 'POST /api/doktor/kd-raporlari (yeni NST)', red: 404,
+    yazdi: (a) => tablo('kd_raporlari').filter((x) => x.patient_id === a.hasta && x.doctor_id === a.id).length > 1,
+    cagir: (r, a, h) => coz(r.kdRaporlari.POST(iste('POST', '/api/doktor/kd-raporlari', { token: a.token, govde: { patientId: h.hasta, tur: 'nst', veri: { tarih: '2026-11-05', bazalFkh: 135, varyabiliteBpm: 12 } } }))) },
+  { ad: 'POST /api/doktor/kd-raporlari (kendi hastası + yabancı rapor kimliği → güncelleme)', red: 404,
+    cagir: (r, a, h) => coz(r.kdRaporlari.POST(iste('POST', '/api/doktor/kd-raporlari', { token: a.token, govde: { patientId: a.hasta, id: h.kdRapor, tur: 'nst', veri: { tarih: '2026-11-05', bazalFkh: 135, varyabiliteBpm: 12 } } }))) },
+  { ad: 'DELETE /api/doktor/kd-raporlari', red: 404,
+    yazdi: (a) => !tablo('kd_raporlari').some((x) => x.id === a.kdRapor),
+    cagir: (r, a, h) => coz(r.kdRaporlari.DELETE(iste('DELETE', `/api/doktor/kd-raporlari?patientId=${h.hasta}&id=${h.kdRapor}`, { token: a.token }))) },
   // MOBIL-PERSONEL-01: asistan / doktor manual measurements
   { ad: 'GET /api/doktor/hastalar/[id]/olcumler', red: 404,
     cagir: (r, a, h) => coz(r.olcumler.GET(iste('GET', `/api/doktor/hastalar/${h.hasta}/olcumler`, { token: a.token }), prm({ id: h.hasta }))) },
@@ -829,6 +865,8 @@ describe('HASTA-İZOLASYON: doktor A ve doktor B birbirinin hastasına hiçbir r
       buyume: await ice('app/api/doktor/hastalar/[id]/buyume-egrileri/route'),
       hedefBoy: await ice('app/api/doktor/hastalar/[id]/hedef-boy/route'),
       olcumler: await ice('app/api/doktor/hastalar/[id]/olcumler/route'),
+      ameliyatNotlari: await ice('app/api/doktor/ameliyat-notlari/route'),
+      kdRaporlari: await ice('app/api/doktor/kd-raporlari/route'),
       notlar: await ice('app/api/notes/route'),
       notDetay: await ice('app/api/notes/[id]/route'),
       notOnay: await ice('app/api/notes/[id]/approve/route'),

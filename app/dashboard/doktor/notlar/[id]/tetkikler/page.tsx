@@ -66,12 +66,12 @@ export default function TetkiklerYazdirPage() {
         setOnayli(!!j.not?.approvedAt)
         if (baslikR.ok) {
           const p = await baslikR.json() as {
-            hekim?: string; unvan?: string; brans?: string; klinik?: string
+            hekim?: string; unvanliAd?: string; unvan?: string; brans?: string; klinik?: string
             satirlar?: string[]; diplomaNo?: string; logoDataUrl?: string
           }
           setBaslik({
             unvan: String(p.unvan || 'Dr.'),
-            ad: String(p.hekim || ''),
+            ad: String(p.unvanliAd || p.hekim || ''),
             brans: String(p.brans || ''),
             klinik: String(p.klinik || ''),
             satirlar: Array.isArray(p.satirlar) ? p.satirlar.map(String).filter(Boolean) : [],

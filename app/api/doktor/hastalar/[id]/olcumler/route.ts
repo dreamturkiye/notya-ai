@@ -11,6 +11,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { pratikOturum } from '@/lib/doktor/pratikOturum'
 import { hastaSahibiMi } from '@/lib/doktor/hastaSahipligi'
+import { notKapsamiGetir } from '@/lib/specialties/kapsamSunucu'
 
 export const dynamic = 'force-dynamic'
 
@@ -75,6 +76,16 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const b = (await req.json().catch(() => ({}))) as { tur?: unknown; deger?: unknown; ikinci?: unknown }
   const d = olcumDogrula(b.tur, b.deger, b.ikinci)
   if ('hata' in d) return NextResponse.json({ error: d.hata }, { status: 400 })
+  // BRANS-ALAN-SIZMASI (OP-DR-01 audit, 2026-11-05): baş çevresi is pediatric clinical content. It is accepted only where
+  // the SAME gate the vitals form and the voice action use says so (kapsam.ts → profile.olcumler, pediatrikBaglamMi:
+  // pediatri / çocuk cerrahisi always; aile hekimliği and branch-less for a patient known to be under 18; never for the
+  // other branches, never for an adult). A KD doctor's adult patient can no longer get a head circumference.
+  if (b.tur === 'bas_cevresi') {
+    const kapsam = await notKapsamiGetir(supabase, { doctorId: doktorId, patientId })
+    if (!kapsam.olcumler.some((o) => o.anahtar === 'basCevresi')) {
+      return NextResponse.json({ error: 'Baş çevresi bu hasta için kaydedilmez (yalnız pediatrik bağlam).' }, { status: 400 })
+    }
+  }
   const t = OLCUM_TURLERI[b.tur as OlcumTuru]
   const { data, error } = await supabase
     .from('cihaz_olcumleri')

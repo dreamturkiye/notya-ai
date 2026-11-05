@@ -4,6 +4,7 @@
  * şifreli intake formundan çözülür — modele hiçbir aşamada kimlik gitmemiştir.
  * Attestasyon verisi: onay tarihi + doktor adı + düzenleme sayısı (not_duzenlemeleri).
  */
+import { hekimUnvanliSatirdan } from '@/lib/doktor/hekimAdi'
 import { NextRequest, NextResponse } from 'next/server'
 import { pratikOturum } from '@/lib/doktor/pratikOturum'
 import { decrypt } from '@/lib/security/encryption'
@@ -93,8 +94,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   let ozelBaslikSatirlari: string[] = []
   let ozelLogo = ''
   try {
-    const { data: u } = await supabase.from('users').select('full_name, email, recete_baslik').eq('id', doktorId).maybeSingle()
-    doktorAd = String(u?.full_name || u?.email?.split('@')[0] || '')
+    const { data: u } = await supabase.from('users').select('full_name, title, unvan, email, recete_baslik').eq('id', doktorId).maybeSingle()
+    // OP-DR-01: the printout's signature carries the STORED title (hekimUnvanliSatirdan); a name-less account keeps its e-mail stem.
+    doktorAd = (u?.full_name ? hekimUnvanliSatirdan(u) : '') || String(u?.email?.split('@')[0] || '')
     // Kaan (2026-09-10): diploma no bir kez girilir (reçete başlığı), muayene notu çıktısında da imzanın altında basılır
     const rb = (u?.recete_baslik && typeof u.recete_baslik === 'object' ? u.recete_baslik : {}) as { diplomaNo?: string; satirlar?: string[]; logoDataUrl?: string }
     diplomaNo = String(rb.diplomaNo || '')

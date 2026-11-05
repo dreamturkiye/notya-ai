@@ -156,6 +156,9 @@ export const ROTA_YETKILERI: readonly Kural[] = [
   K('/api/doktor/hasta-foto/[id]/[id]/kucuk', 'hasta.dosya.oku', 'ek.ekle', { sekreterKapali: true }),
   { yol: '/api/doktor/hasta-foto/[id]/[id]/ai', okuKapali: true, yaz: null, sekreterKapali: true },
   { yol: '/api/doktor/hasta-foto/[id]/kalite', okuKapali: true, yaz: null, sekreterKapali: true },
+  // AMELIYAT-NOTU-01 / KD-RAPOR-01 (2026-11-05): the surgeon's signed operation note and the KD USG / NST reports — doctor only (sadeceDoktor).
+  { yol: '/api/doktor/ameliyat-notlari', okuKapali: true, yaz: null, sekreterKapali: true },
+  { yol: '/api/doktor/kd-raporlari', okuKapali: true, yaz: null, sekreterKapali: true },
 
   // ── intake + portal
   K('/api/doktor/intake-formlari', 'intake.oku', 'intake.yonet'),
