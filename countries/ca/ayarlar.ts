@@ -136,6 +136,8 @@ export const CA_GIRDI: EnUlkeGirdisi = {
     // one, so the calculator shows what the arithmetic gives, says so, and cautions below 1 mL.
     dozYazimi: { sondaSifir: false },
     // FOR A LOCAL CLINICAL LEAD: the tools of the shared set this country keeps switched off, and why.
+    // AMELIYAT-NOTU-01 / KD-RAPOR-01 (2026-11-05): the operation note and obstetrics and gynaecology's printed records of the set
+    ameliyatKayitlari: true,
     kapali: {
       // THE AUDIT'S ONE "REMOVE": another country's triage scale. It stays off; emergency departments here use another
       // scale, whose owner requires permission for a product (not built: ./araclar/, the report of 2026-10-10).
@@ -168,6 +170,8 @@ export const CA_GIRDI: EnUlkeGirdisi = {
     // Every list names the set's own role first, then the roles the audit adds. Each widening is the audit's
     // recommendation for a local lead, not a fact from a source. ──
     gorenler: {
+      // AMELIYAT-NOTU-01 (2026-11-05): the operation note for every surgical role of the set here, and this country's own vascular-surgery
+      'ameliyat-notu': ['general-surgery', 'obstetrics-gynaecology', 'orthopaedics', 'urology', 'otolaryngology', 'ophthalmology', 'neurosurgery', 'cardiovascular-surgery', 'thoracic-surgery', 'plastic-surgery', 'paediatric-surgery', 'hair-transplant', 'aesthetic-surgery', 'vascular-surgery'],
       // dose arithmetic by body weight (back on, see above): also family medicine and emergency medicine, for the children they see
       'doz-hesabi': ['paediatrics', 'family-medicine', 'emergency-medicine'],
       // antithrombotic treatment, review dates: also the other half of the split specialty, family medicine, internal medicine, cardiology and hematology
@@ -223,6 +227,8 @@ export const CA_GIRDI: EnUlkeGirdisi = {
       },
     },
     degisen: {
+      // KD-RAPOR-01 (2026-11-05): the delivery discharge summary is a "postpartum" one here (the SOGC's word).
+      'dogum-epikrizi': { ad: 'Postpartum discharge summary', alanlar: { kontrol: 'Date of the postpartum visit (optional)' }, tarihler: { kontrol: 'Postpartum visit' } },
       // THE NAMES OF THE HEARING GRADES (a country that states its own bands names them itself): the set's words.
       'odyometri-pta': { bantlar: { normal: 'Normal (up to 15 dB)', hafifce: 'Slight hearing loss (16 to 25 dB)', hafif: 'Mild hearing loss (26 to 40 dB)', orta: 'Moderate hearing loss (41 to 55 dB)', orta_ileri: 'Moderately severe hearing loss (56 to 70 dB)', ileri: 'Severe hearing loss (71 to 90 dB)', cok_ileri: 'Profound hearing loss (above 90 dB)' } },
       // PSA, THE LINE UNDER THE RESULT (the audit: "one line under the result, which this country's pack can add by

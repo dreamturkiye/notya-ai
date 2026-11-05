@@ -69,6 +69,13 @@ export const EN_UYGULAMA_TEMEL: Temel = {
     kaydedilemedi: 'Could not save. Please try again.',
     meslekKaydiIzoh: 'Optional. Stored on this account. Not checked against a register. A clinician and a lawyer have not read this wording.',
     meslekKaydiGecersiz: 'Use 2–40 letters, digits, spaces, full stops or hyphens.',
+    // OP-DR-01: the title and post-nominals printed on your records
+    unvanBolumu: 'Title and post-nominals',
+    unvan: 'Title before your name',
+    unvanYok: 'No title',
+    unvanEki: 'Post-nominals after your name',
+    unvanIzoh: 'Printed on the letterhead of your operation notes, reports and summaries. Optional. Not checked against a register.',
+    unvanGecersiz: 'Use up to 80 letters, digits, spaces, commas, full stops, brackets or hyphens, starting with a letter.',
   },
   arama: {
     etiket: 'Find a patient',

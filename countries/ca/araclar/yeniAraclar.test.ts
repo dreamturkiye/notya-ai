@@ -41,8 +41,9 @@ const ROLLER = CA_PAKETI.uygulama!.roller!
 const BUGUN = '2026-10-10'
 const ORTAM = { bugun: BUGUN, p: {} }
 const ILK_MEKANIZMA = ['ca-unit-converter', 'ca-egfr-ckd-epi-2021']
-const MEKANIZMA = [...ILK_MEKANIZMA, 'ca-narcotic-note', 'ca-dpd-lookup']
-const ANAHTARLAR = [...MEKANIZMA, 'ca-prescribeit-link']
+const MEKANIZMA = [...ILK_MEKANIZMA, 'ca-narcotic-note', 'ca-dpd-lookup', 'ca-fhs-sogc']
+/** KD-RAPOR-01 (2026-11-05): the SOGC tracing tool comes after the link-out tile in the grid's order. */
+const ANAHTARLAR = [...MEKANIZMA.slice(0, -1), 'ca-prescribeit-link', 'ca-fhs-sogc']
 const hesapla = (t: AracTanimi, g: AracGirdisi): AracSonucu => t.hesapla(g, ORTAM)
 const O: BirimOrtami = { birimler: CA_PAKETI.uygulama!.birimler, lab: A.labBirimleri, sayi: CA_PAKETI.bicim }
 const yazici: Yazici = { sayi: (deger, ondalik) => deger.toFixed(ondalik), tarih: (iso) => iso, birim: (kod) => A.birimler[kod]?.[D] ?? `?${kod}?` }
@@ -308,7 +309,10 @@ describe('ca new tools 4: the words and the licences', () => {
   })
 
   it('A LICENCE IS STATED "FREE" ONLY WITH THE RIGHTS HOLDER NAMED, THE NOTICE THAT WAS READ AND THE DAY — and the holder\'s credit stands under every result', () => {
-    for (const p of KENDI) {
+    // KD-RAPOR-01 (2026-11-05): the SOGC tracing tool restates a published guideline in the product's own words; its source was not re-opened (./onayBekleyen.ts)
+    const sogc = KENDI.find((p) => p.anahtar === 'ca-fhs-sogc')!
+    assert.equal(sogc.lisans?.durum, 'serbest'); assert.match(sogc.lisans?.kaynak ?? '', /Cited 2026-11-05/)
+    for (const p of KENDI.filter((x) => x.anahtar !== 'ca-fhs-sogc')) {
       assert.equal(p.lisans?.durum, 'serbest', p.anahtar)
       assert.ok(p.lisans?.hakSahibi?.trim(), p.anahtar)
       assert.match(p.lisans?.kaynak ?? '', /https:\/\/\S+, read 2026-10-1[04]$/, p.anahtar)

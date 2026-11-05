@@ -18,7 +18,7 @@
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 import { EN_ACILIS_TEMEL } from './acilis'
-import { EN_ROL_ARACLARI, EN_TEMEL_ARACLAR } from './araclar'
+import { EN_AMELIYAT_ARACLARI, EN_ROL_ARACLARI, EN_TEMEL_ARACLAR } from './araclar'
 import { EN_ARACLAR_METNI_TEMEL } from './araclarMetni'
 import { EN_CEKIRDEK_TEMEL } from './cekirdek'
 import { EN_FORM_TEMEL } from './form'
@@ -55,7 +55,7 @@ const TEMEL = {
   formDerinlik: Object.fromEntries(EN_ROLLER.map((rol) => [rol, derinSorular(rol, 'x')])),
   formAcilYok: VARSAYILAN_ACIL,
   formRizasi: EN_FORM_RIZASI,
-  araclar: Object.fromEntries([...EN_TEMEL_ARACLAR, ...EN_ROL_ARACLARI].map((a) => [a.anahtar, { ...a, roller: undefined }])),
+  araclar: Object.fromEntries([...EN_TEMEL_ARACLAR, ...EN_ROL_ARACLARI, ...EN_AMELIYAT_ARACLARI].map((a) => [a.anahtar, { ...a, roller: undefined }])),
   acilis: EN_ACILIS_TEMEL,
 }
 /** Internal keys of the intake form sit beside its texts; they are not text. */

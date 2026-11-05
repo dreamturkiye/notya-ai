@@ -41,7 +41,10 @@ import { alanAraligi, alanBirimi, alanBirimleri, birimAnahtari, type BirimOrtami
 import { birimiSecilmeyenler, girdiyiCoz, hamdanGosterilen, okunamayanAlanlar, type HamGirdi } from '@/lib/ulke/araclar/girdi'
 import { alanEtiketi, aracAra, aracCalistir, aracGorunurMu, aracinKapisi, aracOzeti, bicimli, hesabinAraci, hesabinAraclari, lisansBildirimi, paketinTanimi, sayiMetni, type GorunurArac, type Yazici } from '@/lib/ulke/araclar/paket'
 import type { AracAlani, UlkeAraclari } from '@/lib/ulke/araclar/tipler'
-import { alanVarMi, METIN_UZUNLUGU } from '@/lib/ulke/araclar/yardimci'
+import { alanVarMi, METIN_UZUNLUGU, metinSiniri } from '@/lib/ulke/araclar/yardimci'
+import { sablonuUygula } from '@/lib/ulke/araclar/sablon'
+import { unvanliAd } from '@/lib/ulke/uygulama/hekimUnvani'
+import { YazdirKagidi, yazdirSozleri, type YazdirAntet } from './YazdirKagidi'
 import type { DilKodu } from '@/lib/ulke/tipler'
 import { panoyaKopyala } from './pano'
 import { aracYolu, araclarYolu, birimOrtami, yazici } from './aracOrtak'
@@ -198,6 +201,10 @@ function Alan({ x, alan, dil, a, gm, ham, degistir, o, y, birimEksik }: { x: Gor
       </fieldset>
     )
   }
+  if (alan.tur === 'metin' && alan.uzun) {
+    // AMELIYAT-NOTU-01: a PARAGRAPH (an operation's steps, a report's conclusion): a text area, the pack's pre-filled words editable.
+    return <div className="uza-alan" data-alan={alan.anahtar}><label className="uza-etiket" htmlFor={id}>{etiket}</label><textarea id={id} rows={alan.anahtar === 'teknik' ? 12 : 4} maxLength={metinSiniri(alan)} className="uza-girdi" style={{ minHeight: 88, paddingTop: 10, lineHeight: 1.45, fontFamily: 'inherit' }} value={typeof v === 'string' ? v : ''} onChange={(e) => degistir(alan.anahtar, e.target.value)} /></div>
+  }
   if (alan.tur === 'metin') {
     return <div className="uza-alan" data-alan={alan.anahtar}><label className="uza-etiket" htmlFor={id}>{etiket}</label><input id={id} type="text" maxLength={METIN_UZUNLUGU} autoComplete="off" className="uza-girdi" value={typeof v === 'string' ? v : ''} onChange={(e) => degistir(alan.anahtar, e.target.value)} /></div>
   }
@@ -232,7 +239,7 @@ function Alan({ x, alan, dil, a, gm, ham, degistir, o, y, birimEksik }: { x: Gor
 }
 
 /** A tool with fields: what is asked, what comes out, and the summary to copy. Pure given `ham`; the state is the caller's. */
-export function AracGorunumu({ x, a, dil, notDili, icerik, ham, degistir, temizle, bugun, kopya, kopyalaTikla, kayit }: {
+export function AracGorunumu({ x, a, dil, notDili, icerik, ham, degistir, temizle, bugun, kopya, kopyalaTikla, kayit, antet }: {
   x: GorunurArac; a: AraclarMetni; dil: DilKodu; notDili: DilKodu; icerik: UlkeAraclari
   ham: HamGirdi; degistir: (k: string, v: string | boolean) => void; temizle: () => void
   /** Today in the account's time zone, YYYY-MM-DD. */
@@ -240,6 +247,8 @@ export function AracGorunumu({ x, a, dil, notDili, icerik, ham, degistir, temizl
   kopya: 'yok' | 'tamam' | 'hata'; kopyalaTikla: (metin: string) => void
   /** Where the tool was opened for a patient: the part that keeps the result, told whether there is one now. */
   kayit?: (tamam: boolean) => React.ReactNode
+  /** AMELIYAT-NOTU-01: the letterhead of a printed record (a tool marked `yazdirilir`). */
+  antet?: YazdirAntet
 }) {
   const o = birimOrtami(icerik)
   const y = yazici(icerik, dil)
@@ -287,7 +296,10 @@ export function AracGorunumu({ x, a, dil, notDili, icerik, ham, degistir, temizl
                 {sonuc.tarihler.map((d) => <React.Fragment key={d.anahtar}><dt>{bicimli(t.tarihler?.[d.anahtar], dil)}</dt><dd data-tarih={d.anahtar}>{y.tarih(d.tarih)}</dd></React.Fragment>)}
               </dl>
             ) : null}
-            <div className="uza-eylemler"><button type="button" className="uza-dugme uza-dugme-kucuk" style={ulkeAracStil.btn} onClick={() => kopyalaTikla(ozet)} data-eylem="kopyala">{a.arac.kopyala}</button></div>
+            <div className="uza-eylemler">
+              <button type="button" className="uza-dugme uza-dugme-kucuk" style={ulkeAracStil.btn} onClick={() => kopyalaTikla(ozet)} data-eylem="kopyala">{a.arac.kopyala}</button>
+              {x.tanim.yazdirilir && antet && yazdirSozleri(a) ? <YazdirKagidi baslik={bicimli(t.ad, notDili)} ozet={ozet} antet={antet} s={yazdirSozleri(a)!} /> : null}
+            </div>
             <Bilgi>{kopya === 'tamam' ? a.arac.kopyalandi : null}</Bilgi>
             <Hata>{kopya === 'hata' ? a.arac.kopyalanamadi : null}</Hata>
           </>
@@ -358,11 +370,16 @@ function AracEkrani({ x, a, u, dil, notDili, icerik, hasta, rol }: { rol: string
   const [kopya, setKopya] = useState<'yok' | 'tamam' | 'hata'>('yok')
   const bugun = useMemo(() => ulkeGunu(new Date(), hesapSaatDilimi()), [])
   const k = useAracKaydi(u.api, hasta?.id ?? null, x.tanim.anahtar)
+  // AMELIYAT-NOTU-01: the letterhead of a printed record — the account's name with the title and post-nominals it set.
+  const antet: YazdirAntet | undefined = x.tanim.yazdirilir && u.hesap
+    ? { hekim: unvanliAd(u.hesap.ad, u.hesap.unvan, u.hesap.unvanEki, ulkePaketi().hekimUnvani, notDili), hasta: hasta?.ad ?? null, tarih: yazici(icerik, notDili).tarih(bugun) }
+    : undefined
   return (
     <AracBasligi x={x} a={a} dil={dil} hastaId={hasta?.id} rol={rol}>
       {x.tanim.ekran === 'hastaPortali' ? <HastaPortaliAraci a={a} m={u.m} /> : x.tanim.ekran === 'takipPaneli' ? <TakipPaneli u={u} a={a} icerik={icerik} /> : x.tanim.ekran === 'sablonlarim' ? <Sablonlarim u={u} /> : x.tanim.ekran === 'konsultasyonlar' ? <Konsultasyonlar u={u} /> : x.tanim.tur === 'baglanti' ? <DisBaglantiAraci x={x} dil={dil} /> : hasta && aracinKapisi(x, hasta, bugun) === 'degil' ? <HastaKapisiKapali x={x} dil={dil} /> : (
         <AracGorunumu x={x} a={a} dil={dil} notDili={notDili} icerik={icerik} ham={ham} bugun={bugun} kopya={kopya}
-          degistir={(anahtar, v) => { setKopya('yok'); k.degisti(); setHam((eski) => ({ ...eski, [anahtar]: v })) }}
+          antet={antet}
+          degistir={(anahtar, v) => { setKopya('yok'); k.degisti(); setHam((eski) => sablonuUygula(x.paket, x.tanim, { ...eski, [anahtar]: v }, anahtar, v, notDili)) }}
           temizle={() => { setKopya('yok'); k.degisti(); setHam({}) }}
           kopyalaTikla={(metin) => { void panoyaKopyala(metin).then((tamam) => setKopya(tamam ? 'tamam' : 'hata')) }}
           kayit={hasta ? (tamam) => <AracKayitKarti a={a} g={u.m.girdi} hasta={hasta} tamam={tamam} takip={k.takip} takipDegistir={k.takipDegistir} kaydet={() => k.kaydet(ham)} durum={k.durum} /> : undefined} />

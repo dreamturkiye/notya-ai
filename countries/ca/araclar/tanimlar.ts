@@ -15,6 +15,7 @@
  * clinical, except where a line says the source states them.
  * ────────────────────────────────────────────────────────────────────────────────────────────────────────────
  */
+import { CA_KTG_SOGC } from './ktg'
 import type { AracTanimi } from '@/lib/ulke/araclar/tipler'
 import { BOS_SONUC, kontrolListesi, sayi, sayiMi, secim } from '@/lib/ulke/araclar/yardimci'
 import dpdHam from '../referans/dpd-onayli.json'
@@ -202,4 +203,4 @@ export const CA_DPD: AracTanimi = {
 }
 
 /** The mechanisms of the tools only this country has, in the order the grid shows them. */
-export const CA_TANIMLAR: readonly AracTanimi[] = [CA_BIRIM_CEVIRICI, CA_EGFR, CA_NARKOTIK, CA_DPD]
+export const CA_TANIMLAR: readonly AracTanimi[] = [CA_BIRIM_CEVIRICI, CA_EGFR, CA_NARKOTIK, CA_DPD, CA_KTG_SOGC]

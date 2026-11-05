@@ -25,6 +25,10 @@ export function kosullariUygula(alanlar: readonly AracAlani[], g: AracGirdisi): 
 }
 /** The length a free-text field keeps. */
 export const METIN_UZUNLUGU = 80
+/** AMELIYAT-NOTU-01 — the length a PARAGRAPH field (`uzun`) keeps: an operation's steps, a report's conclusion. */
+export const UZUN_METIN_UZUNLUGU = 4000
+/** The length a text field keeps: a paragraph's, or a few words'. */
+export const metinSiniri = (a: Pick<AracAlani, 'uzun'>): number => (a.uzun ? UZUN_METIN_UZUNLUGU : METIN_UZUNLUGU)
 
 /** The ticked keys of a list of tick-boxes, in the list's order. */
 export const isaretliler = (g: AracGirdisi, maddeler: readonly string[]): string[] => maddeler.filter((k) => g[k] === true)

@@ -63,6 +63,13 @@ export const CA_ONAY_BEKLEYEN: readonly OnayBekleyen[] = [
       'The tile only opens the homepage. The page says a standards working group is how the national prescribing standard is reached. This product has not joined. Is a link, with no registration, the right thing to show?',
     ],
   },
+  {
+    anahtar: 'ca-fhs-sogc',
+    sorular: [
+      'The three classes are written from SOGC guideline No. 396 (2020) as the job knew it; the guideline was NOT re-opened in this session. Check each threshold against the guideline\'s classification table.',
+      'Only the features that can be typed as numbers are classified; a complicated variable deceleration is the clinician\'s tick. Is that the reading wanted?',
+    ],
+  },
 ]
 
 /** The keys alone. */

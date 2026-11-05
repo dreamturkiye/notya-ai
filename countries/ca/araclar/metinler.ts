@@ -21,6 +21,7 @@
  *                The equation of the eGFR tool is taken from the institute's page as printed.
  * ────────────────────────────────────────────────────────────────────────────────────────────────────────────
  */
+import { caKtgAraci } from './ktg'
 import type { AracLisansi, PaketAraci } from '@/lib/ulke/araclar/tipler'
 import type { BicimliMetin } from '@/lib/ulke/arayuz/tipler'
 import { CA_DPD_SATIRLAR } from './tanimlar'
@@ -91,6 +92,8 @@ export function caKendiAraclari(r: CaRolleri): readonly PaketAraci[] {
     caNarkotik(r.hekimler),
     caDpd(r.hekimler),
     caPrescribeIt(r.hekimler),
+    // KD-RAPOR-01 (2026-11-05): SOGC intrapartum fetal health surveillance classification — obstetrics and gynaecology
+    caKtgAraci(['obstetrics-gynaecology']),
   ]
 }
 

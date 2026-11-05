@@ -45,6 +45,12 @@ export const CA_PAKETI: UlkePaketi = {
   paraBirimi: { kod: 'CAD', simge: '$', ondalikHane: 2 },
   // The default time zone of a new account. UNVERIFIED choice.
   saatDilimi: 'America/Toronto',
+  // OP-DR-01 (2026-11-05): "Dr." before the name; Royal College fellowship after it (FRCSC for a surgeon, obstetrics and
+  // gynaecology included). Post-nominals are the doctor's own text, never checked against a register.
+  hekimUnvani: {
+    onEkler: { dr: { 'en-CA': 'Dr.' }, prof: { 'en-CA': 'Prof.' } },
+    ekOrnegi: { 'en-CA': 'e.g. MD, FRCSC' },
+  },
   bicim: { yerel: 'en-CA', tarihDeseni: 'YYYY-MM-DD', ondalikAyraci: '.', binlikAyraci: ',', haftaBasi: 7 },
   // AUDIT 2026-10-09: the example is written as a number is written in Canada, with hyphens (./ayarlar.ts).
   telefon: { ulkeOnEki: '+1', ulusalHane: 10, ornek: '613-555-0123', cepGecerliMi: caTelefonGecerliMi },
