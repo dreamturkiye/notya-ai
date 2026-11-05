@@ -47,8 +47,10 @@ Uygunsa bir slot seçmeniz yeterli; “2 meslektaşınıza da iletin” demenizi
 rica ederiz — ürün ağızdan ağıza büyüsün diye.
 
 Saygılarımızla,
-Kaan · Notya · kaan@notya.io
+Kaan · Notya · merhaba@notya.io
 ```
+
+WhatsApp Business profil e-postası da `merhaba@notya.io` (`kaan@notya.io`’ya forward — çalışıyor).
 
 ## Free-trial only (demo istemeyen — Kaan)
 

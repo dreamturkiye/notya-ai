@@ -7,7 +7,8 @@
 
 | Role | Who | Does |
 |------|-----|------|
-| **Invites / outreach** | **Kaan (Notya)** | WhatsApp + e-posta from call-ready CSV |
+| **Invites / outreach** | **Kaan (Notya)** | WhatsApp Business + e-posta from call-ready CSV |
+| **Public e-posta** | **`merhaba@notya.io`** | Forwards to `kaan@notya.io` (live) |
 | **Demo host** | **Dr. Gökhan Mamur** | 60' remote video via Cal.com (US, visitor TZ) |
 | **Trial** | Notya / Kaan | Open account if they skip or after demo |
 
@@ -61,11 +62,11 @@ Success metric this week: **booked demos + trial signups**, not “messages sent
 1. **WhatsApp Business for Notya — yes, create one.**  
    - Use **WhatsApp Business** (app), not your personal WhatsApp, not the paid Cloud API yet.  
    - New SIM / number dedicated to Notya (TR `5xx` if you can). Display name: `Notya` or `Notya · Kaan`.  
-   - Business profile: short description (“Muayene notu + asistan — demo: notya.io/demo”), website `https://www.notya.io`, email `kaan@notya.io`, hours.  
+   - Business profile: short description (“Muayene notu + asistan — demo: notya.io/demo”), website `https://www.notya.io`, email `merhaba@notya.io`, hours.  
    - Why: doctors see a brand, not a random personal number; you keep work replies in one place; you can hand the phone to ops later.  
    - **Skip for now:** WhatsApp Business API / BSP (Twilio etc.) — overkill at ~20 manual messages/day. Upgrade only if volume or team needs it.
 
-2. **E-posta** — send from `kaan@notya.io` (or `hello@notya.io` with you in CC). Same templates. Use e-posta when the CSV has no good mobile, or as a same-day follow-up after WhatsApp.
+2. **E-posta** — public address is **`merhaba@notya.io`** (WhatsApp Business profile + outreach From/Reply-To). It **forwards to `kaan@notya.io`** and is live. Use e-posta when the CSV has no good mobile, or as a same-day follow-up after WhatsApp.
 
 3. **Align Gökhan (15 min call)**  
    - Confirm Cal.com `han-mamur-sugmbo/demo-tr` has enough open slots (TR evenings / weekends help — he’s US).  
