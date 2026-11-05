@@ -5,7 +5,7 @@ import { CalTakvim } from "@/components/demo/CalTakvim";
 import { demoBaglantisi } from "@/lib/demo/demoBaglantisi";
 
 /**
- * NOTYA-DEMO-01 — /demo: book a 60-minute video call with Dr. Gökhan Mamur through Cal.com.
+ * NOTYA-DEMO-01 — /demo: book a 30-minute video call with Dr. Gökhan Mamur through Cal.com.
  * Link from NEXT_PUBLIC_DEMO_BOOKING_URL; when it is empty or not a Cal.com address the page says booking
  * opens soon and embeds nothing. Cal.com's script/frame origins are allowed in the CSP of this path only
  * (middleware.ts, next.config.mjs).

@@ -13,7 +13,7 @@ export const LINKS = {
 export const DEMO = {
   cta: "Demo planla",
   title: "Demo planla",
-  lede: "Dr. Gökhan Mamur ile 60 dakikalık bir görüntülü görüşme. Saatler kendi saat diliminizde gösterilir.",
+  lede: "Dr. Gökhan Mamur ile 30 dakikalık bir görüntülü görüşme. Saatler kendi saat diliminizde gösterilir.",
   soonTitle: "Demo randevuları çok yakında açılıyor.",
   soonBody: "Takvim hazır olduğunda bu sayfadan doğrudan randevu alabileceksiniz.",
   provider: "Randevu işlemleri Cal.com üzerinden yürütülür.",
@@ -21,11 +21,11 @@ export const DEMO = {
   section: {
     eyebrow: "Demo",
     title: "Notya'yı bir hekimle birlikte görün.",
-    titleItalic: "60 dakikalık bir görüşmede.",
+    titleItalic: "30 dakikalık bir görüşmede.",
     body: "Dr. Gökhan Mamur ile görüntülü bir görüşme planlayın. Size uygun saati takvimden seçin; saatler kendi saat diliminizde gösterilir.",
     cardLabel: "Demo görüşmesi",
     rows: [
-      { k: "60 dakika", v: "Görüntülü görüşme" },
+      { k: "30 dakika", v: "Görüntülü görüşme" },
       { k: "Dr. Gökhan Mamur", v: "Sorularınızı birlikte konuşun" },
       { k: "Kendi saatinizle", v: "Takvim saat diliminize göre açılır" },
     ],

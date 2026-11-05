@@ -20,7 +20,7 @@ const outfit = Outfit({
 
 export const metadata: Metadata = {
   title: "Demo planla — Notya",
-  description: "Dr. Gökhan Mamur ile 60 dakikalık görüntülü demo görüşmesi planlayın.",
+  description: "Dr. Gökhan Mamur ile 30 dakikalık görüntülü demo görüşmesi planlayın.",
 };
 
 export default function DemoLayout({ children }: { children: ReactNode }) {

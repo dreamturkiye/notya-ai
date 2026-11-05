@@ -97,7 +97,7 @@ describe('landing + /demo, both states', () => {
     assert.equal(renderToStaticMarkup(createElement(DemoSection)), '')
     const s = renderToStaticMarkup(createElement(DemoPage))
     assert.match(s, /<h1[^>]*>Demo planla<\/h1>/)
-    assert.match(s, /Dr\. Gökhan Mamur ile 60 dakikalık bir görüntülü görüşme/)
+    assert.match(s, /Dr\. Gökhan Mamur ile 30 dakikalık bir görüntülü görüşme/)
     assert.match(s, /kendi saat diliminizde/)
     assert.match(s, /Demo randevuları çok yakında açılıyor\./)
     assert.match(s, /Randevu işlemleri Cal\.com üzerinden yürütülür\./)
