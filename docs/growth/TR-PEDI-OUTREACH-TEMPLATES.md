@@ -42,7 +42,14 @@ Tanıtıma vaktiniz yoksa da sorun değil, ücretsiz denemeyi hemen açabiliyoru
 İsterseniz kısaca bakabilirsiniz, uygun görürseniz devam ederiz.
 ```
 
-Pediatri (KD satırları yok) — genel pitch + `40’tan fazla branş` yeterli; ameliyat notu listesini yazma.
+**Dermatoloji satırı** (KD ameliyat listesi yerine):
+
+```
+Dermatolojide PASI/EASI, izotretinoin GÖP kapısı, fototerapi defteri, yama (D2/D4),
+dermoskopi/önce-sonra foto arşivi ve biyolojik SUT taslağı branşa özel ilerliyor.
+```
+
+Pediatri — genel pitch + `40’tan fazla branş`; KD/derm listelerini yazma.
 
 **Balon 2 — linkler:**
 
