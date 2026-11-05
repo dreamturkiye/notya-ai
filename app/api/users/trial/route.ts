@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { referansKaydet } from '@/lib/billing/referans'
 export const dynamic = 'force-dynamic'
 
 const sb = () => createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { global: { fetch: (u, o) => fetch(u, { ...o, cache: 'no-store' }) } })
@@ -51,6 +52,12 @@ export async function PUT(req: NextRequest) {
       updated_at: new Date().toISOString(),
     }, { onConflict: 'id', ignoreDuplicates: false })
   } catch { /* column may not exist yet - metadata is source of truth */ }
+
+  // REFERANS-01: the referral code the account signed up with (its own metadata, written at sign-up) is recorded once,
+  // here, when the trial starts. Optional and never blocking: no code, a wrong code or a failure changes nothing.
+  if (meta.ref_kodu) {
+    try { await referansKaydet((ad, a) => sb().rpc(ad, { ...a, p_ulke: 'tr' }), meta.ref_kodu, user.id) } catch { /* the first paid invoice records it instead */ }
+  }
 
   return NextResponse.json({
     ok: true,

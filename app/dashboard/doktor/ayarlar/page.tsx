@@ -22,6 +22,8 @@ const BOLUMLER = [
   { baslik: 'SGK Medula', aciklama: 'SGK Medula işlemleri', rota: '/doktor-tools/sgk-medula', ikon: '🏥' },
   { baslik: 'Araçlar', aciklama: 'ICD-10, e-reçete, epikriz ve diğer yardımcı araçlar', rota: '/doktor-tools', ikon: '🧰' },
   // HUKUK-01: yasal metinlerin uygulama içi kapısı.
+  { baslik: 'Hekim davet programı', aciklama: 'Davet kodunuz ve bağlantınız — davet ettiğiniz hekim ilk ücretli ayını ödediğinde ikinize de bir ay ücretsiz', rota: '/dashboard/doktor/ayarlar/davet', ikon: '🤝' },
+  { baslik: 'Hasta kayıtlarını dışa aktar', aciklama: 'Bir hastanın kaydını PDF ve yapılandırılmış veri (JSON) olarak indirin', rota: '/dashboard/doktor/ayarlar/disa-aktar', ikon: '📦' },
   { baslik: 'Yasal metinler', aciklama: 'Kullanım koşulları, gizlilik, KVKK, iade ve iptal, telif', rota: '/yasal', ikon: '📜' },
 ];
 

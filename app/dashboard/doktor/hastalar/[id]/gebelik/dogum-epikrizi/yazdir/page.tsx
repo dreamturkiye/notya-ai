@@ -44,6 +44,7 @@ export default function DogumEpikriziYazdir() {
   const KAN_KAYNAK = { ameliyat_notu: 'ameliyat notu', pph_kaydi: 'PPH kaydı', intraop_kaydi: 'intraoperatif kayıt' } as const;
   return (
     <AntetliKagit baslik="DOĞUM EPİKRİZİ" antet={ham.baslik} geriHref={`/dashboard/doktor/hastalar/${p.id}?tab=gebelik`} geriEtiket="Kadın Sağlığı & Gebelik"
+      belge={{ tur: 'dogum_epikrizi', kaynakId: `gebelik:${p.id}`, hastaId: p.id, icerik: e }}
       altBilgi="Kaynak: T.C. Sağlık Bakanlığı Doğum Sonu Bakım Yönetim Rehberi (lohusa izlemleri); WHO postnatal care recommendations (2022); WHO MEC (kontrasepsiyon). Klinik veriler hekimin kaydından alınmıştır.">
       <div className="yazdirma-gizle" style={{ fontFamily: 'system-ui', fontSize: 13, margin: '6px 0 10px' }}>
         <label><input type="checkbox" checked={emziriyor} onChange={(x) => setEmziriyor(x.target.checked)} /> Emziriyor (kontrasepsiyon önerisi buna göre)</label>

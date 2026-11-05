@@ -6,6 +6,7 @@
  * Kilitler: tanı / endikasyon / reçete otomatik seçilmez; her çıktı hekimin onaylayacağı TASLAKTIR; hiçbir şey nota yazılmaz.
  * Kaynak kuralı: SB / SGK / kanun = yasal taban; ACOG / SMFM = klinik derinlik sütunu. Doğrulanamayan eşik "öneri — hekim kilitler".
  */
+import { robsonSiniflandir } from '@/lib/clinical/dogumSalonu'
 import { addDays, diffDays, daysToGa, type GaWeeksDays } from './dates'
 import { naegeleEdd, crlToEdd } from './sat-edd'
 import { TEST_WINDOWS, windowStatus, antiDIndicated, aneuploidyScreenDual, type WindowId, type TestWindow } from './test-windows'
@@ -534,24 +535,19 @@ export type RobsonGirdi = {
 }
 
 export function robsonGrubu(g: RobsonGirdi): { grup: number | null; alt?: 'a' | 'b'; tanim: string; eksik: string[] } {
-  const eksik: string[] = []
-  if (!g.fetus) eksik.push('fetüs sayısı')
-  if (!g.prezentasyon) eksik.push('prezentasyon')
-  if (!g.parite) eksik.push('parite')
-  if (g.hafta == null) eksik.push('gebelik haftası')
-  if (!g.eylem) eksik.push('eylem başlangıcı')
-  if (g.fetus === 'cogul') return { grup: 8, tanim: 'Çoğul gebelik (önceki sezaryen dahil)', eksik: [] }
-  if (g.prezentasyon === 'transvers') return { grup: 9, tanim: 'Tekil, transvers / oblik (önceki sezaryen dahil)', eksik: [] }
-  if (g.prezentasyon === 'makat') {
-    if (!g.parite) return { grup: null, tanim: '', eksik }
-    return g.parite === 'nullipar' ? { grup: 6, tanim: 'Nullipar, tekil makat', eksik: [] } : { grup: 7, tanim: 'Multipar, tekil makat (önceki sezaryen dahil)', eksik: [] }
+  // KD-OPERATOR-01: one classification for every build — the shared engine (lib/clinical/dogumSalonu.ts) decides the group;
+  // this keeps the Türkiye wording of the group and of what is missing.
+  const r = robsonSiniflandir({ parite: g.parite, oncekiSezaryen: g.oncekiCs, fetus: g.fetus, prezentasyon: g.prezentasyon, hafta: g.hafta, eylem: g.eylem === 'eylem_oncesi_cs' ? 'eylem_oncesi_sezaryen' : g.eylem })
+  const EKSIK: Record<string, string> = { fetus: 'fetüs sayısı', prezentasyon: 'prezentasyon', parite: 'parite', hafta: 'gebelik haftası', eylem: 'eylem başlangıcı' }
+  if (r.grup == null) return { grup: null, tanim: '', eksik: r.eksik.map((k) => EKSIK[k] || k) }
+  const ek = r.alt === 'a' ? 'indüksiyon' : 'eylem öncesi sezaryen'
+  const TANIM: Record<number, string> = {
+    1: 'Nullipar, tekil baş, ≥ 37 hafta, spontan eylem', 2: `Nullipar, tekil baş, ≥ 37 hafta, ${ek}`,
+    3: 'Multipar (önceki sezaryen yok), tekil baş, ≥ 37 hafta, spontan eylem', 4: `Multipar (önceki sezaryen yok), tekil baş, ≥ 37 hafta, ${ek}`,
+    5: 'Önceki sezaryen, tekil baş, ≥ 37 hafta', 6: 'Nullipar, tekil makat', 7: 'Multipar, tekil makat (önceki sezaryen dahil)',
+    8: 'Çoğul gebelik (önceki sezaryen dahil)', 9: 'Tekil, transvers / oblik (önceki sezaryen dahil)', 10: 'Tekil baş, < 37 hafta (önceki sezaryen dahil)',
   }
-  if (eksik.length) return { grup: null, tanim: '', eksik }
-  if ((g.hafta as number) < 37) return { grup: 10, tanim: 'Tekil baş, < 37 hafta (önceki sezaryen dahil)', eksik: [] }
-  if (g.oncekiCs) return { grup: 5, tanim: 'Önceki sezaryen, tekil baş, ≥ 37 hafta', eksik: [] }
-  const alt = g.eylem === 'induksiyon' ? 'a' as const : g.eylem === 'eylem_oncesi_cs' ? 'b' as const : undefined
-  if (g.parite === 'nullipar') return g.eylem === 'spontan' ? { grup: 1, tanim: 'Nullipar, tekil baş, ≥ 37 hafta, spontan eylem', eksik: [] } : { grup: 2, alt, tanim: `Nullipar, tekil baş, ≥ 37 hafta, ${alt === 'a' ? 'indüksiyon' : 'eylem öncesi sezaryen'}`, eksik: [] }
-  return g.eylem === 'spontan' ? { grup: 3, tanim: 'Multipar (önceki sezaryen yok), tekil baş, ≥ 37 hafta, spontan eylem', eksik: [] } : { grup: 4, alt, tanim: `Multipar (önceki sezaryen yok), tekil baş, ≥ 37 hafta, ${alt === 'a' ? 'indüksiyon' : 'eylem öncesi sezaryen'}`, eksik: [] }
+  return { grup: r.grup, ...(r.alt ? { alt: r.alt } : {}), tanim: TANIM[r.grup], eksik: [] }
 }
 
 export { CS_ENDIKASYONLARI }

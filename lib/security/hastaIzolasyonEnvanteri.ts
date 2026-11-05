@@ -45,6 +45,10 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   'app/api/doktor/hastalar/[id]/sessions/[sessionId]/kalici-sil/route.ts': I('same session ownership check as arsivle (doctor_id + patient_id together, 404 otherwise), plus requires archived_at already set; every child-table delete is additionally scoped by ids derived from that owned session/note, never from raw request input'),
   'app/api/doktor/hastalar/[id]/buyume-egrileri/route.ts': T,
   'app/api/doktor/hastalar/[id]/hedef-boy/route.ts': T,
+  // HASTA-DISA-AKTAR-01: hastaSahibiMi before any read; doctor only; audit row before the answer
+  'app/api/doktor/hastalar/[id]/disa-aktar/route.ts': T,
+  // BELGE-NO-01: a named patient must be the doctor's own (hastaSahibiMi); only a hash is stored
+  'app/api/belgeler/kayit/route.ts': T,
   'app/api/doktor/hastalar/[id]/olcumler/route.ts': T,
   // AMELIYAT-NOTU-01 / KD-RAPOR-01 (2026-11-05): hastaSahibiMi first; note / report / delivery / pregnancy ids bound to doctor + patient
   'app/api/doktor/ameliyat-notlari/route.ts': T,

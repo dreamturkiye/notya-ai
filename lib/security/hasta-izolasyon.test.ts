@@ -466,6 +466,15 @@ const VAKALAR: Vaka[] = [
     cagir: (r, a, h) => coz(r.buyume.GET(iste('GET', `/api/doktor/hastalar/${h.hasta}/buyume-egrileri`, { token: a.token }), prm({ id: h.hasta }))) },
   { ad: 'GET /api/doktor/hastalar/[id]/hedef-boy', red: 404,
     cagir: (r, a, h) => coz(r.hedefBoy.GET(iste('GET', `/api/doktor/hastalar/${h.hasta}/hedef-boy`, { token: a.token }), prm({ id: h.hasta }))) },
+  // HASTA-DISA-AKTAR-01 (core): one patient's record export — own patient only, audit row written
+  { ad: 'GET /api/doktor/hastalar/[id]/disa-aktar?bicim=json', red: 404, okur: true,
+    cagir: (r, a, h) => coz(r.disaAktar.GET(iste('GET', `/api/doktor/hastalar/${h.hasta}/disa-aktar?bicim=json`, { token: a.token }), prm({ id: h.hasta }))) },
+  { ad: 'GET /api/doktor/hastalar/[id]/disa-aktar?bicim=pdf', red: 404, okur: true,
+    cagir: (r, a, h) => coz(r.disaAktar.GET(iste('GET', `/api/doktor/hastalar/${h.hasta}/disa-aktar?bicim=pdf`, { token: a.token }), prm({ id: h.hasta }))) },
+  // BELGE-NO-01 (core): a document registration naming a patient — the doctor's own patient only
+  { ad: 'POST /api/belgeler/kayit (hastaId)', red: 404,
+    yazdi: (a) => tablo('belgeler').some((x) => x.doctor_id === a.id && x.patient_id === a.hasta),
+    cagir: (r, a, h) => coz(r.belgeKayit.POST(iste('POST', '/api/belgeler/kayit', { token: a.token, govde: { tur: 'muayene_raporu', kaynakId: `test-${h.hasta.slice(0, 8)}`, hastaId: h.hasta, ozet: 'a'.repeat(64) } }))) },
   // AMELIYAT-NOTU-01 (core, every surgical branch): operation notes — patient first, then note / delivery ids bound to doctor + patient
   { ad: 'GET /api/doktor/ameliyat-notlari (liste + şablonlar)', red: 404, okur: true,
     cagir: (r, a, h) => coz(r.ameliyatNotlari.GET(iste('GET', `/api/doktor/ameliyat-notlari?patientId=${h.hasta}`, { token: a.token }))) },
@@ -867,6 +876,8 @@ describe('HASTA-İZOLASYON: doktor A ve doktor B birbirinin hastasına hiçbir r
       olcumler: await ice('app/api/doktor/hastalar/[id]/olcumler/route'),
       ameliyatNotlari: await ice('app/api/doktor/ameliyat-notlari/route'),
       kdRaporlari: await ice('app/api/doktor/kd-raporlari/route'),
+      disaAktar: await ice('app/api/doktor/hastalar/[id]/disa-aktar/route'),
+      belgeKayit: await ice('app/api/belgeler/kayit/route'),
       notlar: await ice('app/api/notes/route'),
       notDetay: await ice('app/api/notes/[id]/route'),
       notOnay: await ice('app/api/notes/[id]/approve/route'),

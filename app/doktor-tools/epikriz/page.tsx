@@ -1,5 +1,6 @@
 'use client';
 import HafifMarkdown from '@/components/asistan/HafifMarkdown';
+import BelgeKunyesi from '@/components/doktor/yazdir/BelgeKunyesi';
 import React, { useState, useEffect } from 'react';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import { HastaSecici } from '@/lib/doktor/aracUi';
@@ -493,6 +494,7 @@ export default function EpikrizPage() {
         Ekranda görünmez; yalnız @media print'te. */}
     {sonuc && (
       <div className="epikriz-kagit" style={{ display: 'none', background: 'white', color: '#111', fontFamily: 'Georgia, "Times New Roman", serif', maxWidth: 760, margin: '0 auto', padding: '36px 40px' }}>
+        <BelgeKunyesi tur="epikriz" kaynakId={`epikriz:${seciliHastaId || 'hasta-yok'}`} hastaId={seciliHastaId || null} icerik={sonuc} />
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '2px solid #111', paddingBottom: 14, marginBottom: 20 }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 5 }}>

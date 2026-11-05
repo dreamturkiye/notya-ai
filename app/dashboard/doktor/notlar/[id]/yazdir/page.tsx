@@ -9,6 +9,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
+import BelgeKunyesi from '@/components/doktor/yazdir/BelgeKunyesi';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import { anamnezParcala, fizikParcala } from '@/lib/doktor/anamnezBolumleri';
 import { htmlBelgeYap, metinBelgeYap, type BelgeGirdisi } from '@/lib/entegrasyon/belgeHtml';
@@ -202,6 +203,8 @@ export default function NotYazdir() {
           </div>
         </div>
 
+        {/* BELGE-NO-01: document number, revision, verify QR (no patient data in the QR). */}
+        <BelgeKunyesi tur="muayene_raporu" kaynakId={params.id} hastaId={hasta.patientId || null} icerik={{ not, hasta: { ad: hasta.ad, dogum: hasta.dogum }, duzenleme: veri?.duzenlemeSayisi ?? 0 }} />
         <table style={{ width: '100%', font: '12.5px system-ui', borderCollapse: 'collapse', marginBottom: 14 }}>
           <tbody>
             <tr>

@@ -12,6 +12,7 @@
  * kâğıt boyu A5/A4 seçilebilir ve hatırlanır. Ayşe'nin SUT/güvenlik uyarıları ekranda, kâğıtta değil.
  */
 import { useEffect, useState } from 'react';
+import BelgeKunyesi from '@/components/doktor/yazdir/BelgeKunyesi';
 import { useParams } from 'next/navigation';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import { BRANS_ETIKETLERI } from '@/lib/intake/bransSorulari';
@@ -269,6 +270,7 @@ export default function ReceteYazdirPage() {
       {/* Kâğıt */}
       {gruplar.map((g, gi) => (
       <div key={g.renk} className="recete-kagit" style={{ pageBreakAfter: gi < gruplar.length - 1 ? 'always' : 'auto', width: '100%', maxWidth: en, minHeight: boy, background: 'white', margin: '12px auto 32px', padding: kagit === 'A5' ? '28px 32px' : '40px 48px', boxShadow: '0 4px 24px rgba(0,0,0,0.15)', fontFamily: 'Georgia, "Times New Roman", serif', color: '#111', boxSizing: 'border-box', display: 'flex', flexDirection: 'column' }}>
+        <BelgeKunyesi tur="recete" kaynakId={params.id} icerik={{ satirlar, kutular, tanilar, renk: g.renk }} />
         <div style={{ textAlign: 'center', borderBottom: '1.5px solid #111', paddingBottom: 8, marginBottom: 12 }}>
           {baslik.ozel?.logoDataUrl && <img src={baslik.ozel.logoDataUrl} alt="" style={{ height: 44, marginBottom: 4 }} />}
           {/* Kaan (2026-09-10): doktor kendi başlığını yazdıysa İLK SATIR ad satırıdır — otomatik "Dr. ____" basılmaz */}

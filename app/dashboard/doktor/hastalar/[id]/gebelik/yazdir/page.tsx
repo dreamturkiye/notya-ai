@@ -5,6 +5,7 @@
  * doğum/lohusa bilgisi. Reçete/epikriz ile aynı letterhead ve kağıt dili. A4.
  */
 import React, { useEffect, useState } from 'react';
+import BelgeKunyesi from '@/components/doktor/yazdir/BelgeKunyesi';
 import { useParams } from 'next/navigation';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import { KADIN_HASTALIKLARI_DOGUM_ETIKETI } from '@/lib/doktor/specialties';
@@ -60,6 +61,7 @@ export default function GebeIzlemKartiYazdir() {
       </div>
 
       <div style={{ maxWidth: 760, margin: '0 auto', padding: '32px 40px' }}>
+        <BelgeKunyesi tur="gebelik_ozeti" kaynakId={`gebelik:${params.id}`} hastaId={params.id} icerik={{ gebelik: v.gebelik, izlemler: (v as { izlemler?: unknown }).izlemler ?? null }} />
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '2px solid #111', paddingBottom: 12, marginBottom: 16 }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 5 }}>

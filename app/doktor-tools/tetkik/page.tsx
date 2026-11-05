@@ -10,6 +10,7 @@ import {
   toolsShell,
   type HastaOption,
 } from '@/lib/doktor/toolsUi'
+import BelgeKunyesi from '@/components/doktor/yazdir/BelgeKunyesi'
 import React, { useEffect, useMemo, useState } from 'react'
 import { TETKIK_KATALOGU, TETKIK_PANELLERI, TETKIK_BOLUMU, NUMUNE_ADI, TUM_TETKIKLER, tetkikAra } from '@/lib/doktor/tetkikKatalogu'
 import { CHROME_RENK, CHROME_FONT } from '@/lib/doktor/chromeTheme'
@@ -345,6 +346,7 @@ export default function TetkikPage() {
                 flexDirection: 'column',
               }}
             >
+              <BelgeKunyesi tur="tetkik_istem" kaynakId={`tetkik:${selectedHastaId ? selectedHastaId.slice(0, 8) : 'x'}:${new Date().toISOString().slice(0, 10)}`} hastaId={selectedHastaId || null} icerik={{ selectedLabTests, customTests, klinikEndikasyon, activeTab }} />
               <div style={{ textAlign: 'center', borderBottom: '1.5px solid #111', paddingBottom: 8, marginBottom: 14 }}>
                 {baslik.logoDataUrl && <img src={baslik.logoDataUrl} alt="" style={{ height: 44, marginBottom: 4 }} />}
                 {baslik.satirlar.length > 0

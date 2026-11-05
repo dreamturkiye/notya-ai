@@ -24,6 +24,8 @@ export const KLINIK_ARACLARI: readonly KlinikArac[] = [
   { circleColor: '#2563EB', icon: 'GR', title: 'Donör greft bandı', desc: 'cm² × yoğunluk → greft bandı (karar desteği) — nihai greft uzmanında', route: '/ozel-branslar/sac-greft', dallar: ['sac-ekimi'] },
   { circleColor: '#1D4ED8', icon: 'YT', title: 'Yıkama takvimi', desc: 'Ameliyat günü → 1/3/10/14. gün bakım vadeleri', route: '/ozel-branslar/sac-takvim', dallar: ['sac-ekimi'] },
   { circleColor: '#1E40AF', icon: 'SK', title: 'Saç ekimi kohort', desc: 'Geciken yıkama · 10/14. gün kontrol · tek dokunuşla hatırlatma', route: '/ozel-branslar/sac-kohort', dallar: ['sac-ekimi'] },
+  // KD-OPERATOR-01: the core surgical-safety tool for the two surgical Özel Branşlar (same screen as /doktor-tools/cerrahi-guvenlik).
+  { circleColor: '#B91C1C', icon: 'CG', title: 'Cerrahi güvenlik & risk', desc: 'WHO kontrol listesi · Caprini VTE · ASA', route: '/ozel-branslar/cerrahi-guvenlik', dallar: ['sac-ekimi', 'estetik-cerrahi'] },
   { circleColor: '#E91E8C', icon: 'ON', title: 'Elektif onam / soğuma', desc: 'Ameliyat öncesi soğuma kaydı — kesi/implant yok', route: '/ozel-branslar/cerrahi-onam', dallar: ['estetik-cerrahi'] },
   { circleColor: '#DB2777', icon: 'PO', title: 'Ameliyat sonrası takvim', desc: '1 / 7 / 14 / 42. gün pansuman ve izlem', route: '/ozel-branslar/cerrahi-takvim', dallar: ['estetik-cerrahi'] },
   { circleColor: '#BE185D', icon: 'CK', title: 'Estetik cerrahi kohort', desc: 'Soğuma · geç izlem · emboli 112', route: '/ozel-branslar/cerrahi-kohort', dallar: ['estetik-cerrahi'] },

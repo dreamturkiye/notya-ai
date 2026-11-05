@@ -133,6 +133,12 @@ export const ROTA_YETKILERI: readonly Kural[] = [
   K('/api/doktor/hastalar/[id]/olcumler', 'olcum.ekle', 'olcum.ekle', { sekreterKapali: true }),
   // MOBIL-PERSONEL-04 (Kaan, 2026-10-16): a sekreter never reads clinical note content and never deletes a note.
   K('/api/doktor/son-notlar', 'not.oku', null, { sekreterKapali: true }),
+  // BELGE-NO-01 (2026-11-05): a printout registers its document number and revision under the doctor's own session (a staff
+  // member's printout shows that it is not registered). HASTA-DISA-AKTAR-01 and REFERANS-01
+  // are the doctor's own acts: closed to every staff role.
+  KAPALI('/api/belgeler/kayit'),
+  KAPALI('/api/doktor/hastalar/[id]/disa-aktar'),
+  KAPALI('/api/referans'),
   // YENI-DOKTOR-UX-2026-10: first-run checklist — the doctor's own setup state; staff have no setup card.
   K('/api/doktor/ilk-adimlar', 'hesap.kendi', null, { sekreterKapali: true }),
   K('/api/notes', 'not.oku', 'not.yaz', { sekreterKapali: true }),

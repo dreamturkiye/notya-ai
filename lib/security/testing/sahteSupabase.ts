@@ -270,6 +270,17 @@ export class SahteVeritabani {
           if (!satir) return { data: null, error: null }
           return { data: JSON.parse(JSON.stringify({ id: satir.id, messages: ((satir.messages as unknown[]) || []).slice(-Number(args.p_pencere || 40)), active_context: satir.active_context || {} })), error: null }
         }
+        // HASTA-DISA-AKTAR-01 / BELGE-NO-01 (migration 188): the audit row of an export, and a document registration.
+        if (ad === 'hasta_disa_aktarim_kaydet') {
+          db.ekle('audit_logs', { user_id: args.p_doctor_id, action: 'export', resource_type: 'hasta_disa_aktarim', resource_id: args.p_patient_id, new_values: { bicim: args.p_bicim, ulke: args.p_ulke }, success: true })
+          return { data: null, error: null }
+        }
+        if (ad === 'belge_surum_ekle') {
+          const b = db.tablo('belgeler').find((r) => r.ulke === args.p_ulke && r.doctor_id === args.p_doctor_id && r.tur === args.p_tur && r.kaynak_id === args.p_kaynak_id)
+            || db.ekle('belgeler', { ulke: args.p_ulke, belge_no: args.p_belge_no, doctor_id: args.p_doctor_id, patient_id: args.p_patient_id, tur: args.p_tur, kaynak_id: args.p_kaynak_id, guncel_rev: 0 })
+          const v = db.ekle('belge_surumleri', { belge_id: b.id, ulke: args.p_ulke, rev: 0, yazar_id: args.p_doctor_id, hekim: args.p_hekim, icerik_ozeti: args.p_ozet, dogrulama_kodu: args.p_kod, olusturuldu_at: new Date().toISOString() })
+          return { data: { durum: 'tamam', yeni: true, belge_no: b.belge_no, rev: 0, tarih: v.olusturuldu_at, kod: v.dogrulama_kodu, ozet: v.icerik_ozeti }, error: null }
+        }
         throw new Error(`[sahteSupabase] desteklenmeyen rpc: ${ad}`)
       },
     }

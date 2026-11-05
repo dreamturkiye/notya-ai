@@ -30,6 +30,7 @@ export default function AmeliyatNotuYazdir() {
   const saat = n.baslangic ? n.baslangic.slice(11, 16) : '';
   return (
     <AntetliKagit baslik="AMELİYAT NOTU" antet={v.baslik} geriHref={`/dashboard/doktor/hastalar/${p.id}?tab=ameliyat`} geriEtiket="Ameliyat Notları" tarih={v.not.ameliyat_tarihi}
+      belge={{ tur: 'ameliyat_notu', kaynakId: p.nid, hastaId: p.id, icerik: { not: v.not.veri, tarih: v.not.ameliyat_tarihi, imza: v.not.imzalandi_at } }}
       altBilgi={v.not.imzalandi_at ? `Elektronik olarak imzalandı: ${new Date(v.not.imzalandi_at).toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul' })}` : 'TASLAK — imzalanmamış ameliyat notu.'}>
       <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 6 }}>
         <tbody>

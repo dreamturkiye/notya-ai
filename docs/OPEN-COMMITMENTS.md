@@ -1,5 +1,61 @@
 # OPEN COMMITMENTS — Notya AI
 
+## KD-OPERATOR-01 / BELGE-NO-01 / REFERANS-01 / HASTA-DISA-AKTAR-01 — what is open after the 2026-11-05 change set (Claude, 2026-11-05)
+
+Shipped the same day on main and on all six country branches: the operating surgeon's tools (WHO checklist, Caprini and
+ASA for every surgical branch; antibiotic prophylaxis, IOTA Simple Rules, RMI I, PALM-COEIN with the fibroid map and
+myomectomy summary, rASRM, #Enzian, Bishop, Robson, caesarean urgency, blood loss with shock index, hysteroscopy fluid
+deficit, ERAS checklists and structured consent forms for the 16 operation-note procedures, for obstetrics and
+gynaecology only); document number, revision and verify QR on printouts with a public verify page (migration 188);
+per-doctor referral codes (migration 188); per-patient record export as PDF and FHIR R4 JSON with an audit row
+(migrations 188 and 189). Shared engines in lib/clinical/, lib/belge/, lib/billing/referans.ts are byte-identical on
+every branch.
+
+- **KD-OPERATOR-SOURCES-01 — owner Claude.** Not re-opened from a primary source in this session (written from the
+  published systems and listed here for a clinician's sign-off): the MFMU 2021 VBAC equation (coefficients conflicted
+  between secondary sources, so no probability is computed; the inputs are recorded with a link to the official MFMU
+  calculator, Türkiye only), the IOTA ADNEX model (not computed; inputs recorded), PALM-COEIN 2018, rASRM 1996, #Enzian
+  2021, the ERAS Society items, the WHO PPH bundle, the AAGL fluid limits, ACOG Committee Opinion 819 (US consent),
+  ACOG's reVITALize PPH definition (US uses WHO 500/1000 labelled international), NICE NG192 targets (taken as the
+  earlier KD job and the TR build cite them). Türkiye: no TJOD / Sağlık Bakanlığı source was found for any of these
+  tools; every TR source shown is labelled international. Canada: no SOGC antibiotic amount was opened, so ACOG's
+  amounts are stated and labelled international; replace with SOGC's when read. Uzbekistan: the pack switches on no
+  tool with numbers a local clinician has not supplied, so the prophylaxis tool states no amount (it says so) and the
+  haemorrhage tool gives no stage until the Uzbek Ministry of Health's numbers are read. United States: the
+  prophylaxis tool is kept as a slot, the same unit-safety decision as the dose calculator (dosing weight in kilograms
+  needs a US clinician's decision); its ACOG amounts are written beside it in countries/us/operator.ts. The WHO
+  checklist, Caprini and ASA follow each country's operation-note audience (vascular and oral-maxillofacial surgery
+  included where the country gives them the operation note). RMI, Bishop and caesarean-urgency numbers are stated only for the United Kingdom (NICE CG122, NG207
+  read 2026-11-05; NG192); every other country shows no cut-off or target until its own guidance is read (US ACOG,
+  RANZCOG, SOGC, Uzbek MoH).
+- **KD-ORADS-LISANS-01 — waits on Kaan.** O-RADS US v2022 is built on main (Türkiye) but not in any country build: the
+  American College of Radiology's terms for its reporting systems in commercial software were not settled (the same
+  block as BI-RADS in the country packs). Decide whether to obtain ACR's permission, or take O-RADS off main too.
+- **KD-CTG-RANZCOG-2025-01 — owner Claude.** RANZCOG published a new Intrapartum Fetal Surveillance edition in 2025 (a
+  Queensland flowchart aligned to it, read 2026-11-05, uses four levels: green, blue, yellow, red). The AU and NZ CTG
+  tools still classify by the 2019 edition. The extraction of the flowchart was not clean enough to rewrite the
+  classification safely; read RANZCOG's own 2025 table and rewrite countries/au and countries/nz ktg.ts. The GB tool
+  was corrected in this change set (NICE NG229 as amended November 2025: any late deceleration is a red feature);
+  NICHD (US) and SOGC 396 (CA) were re-checked and match.
+- **KD-ONAM-KLINISYEN-01 — owner Kaan (clinician review).** The consent forms list each operation's serious and
+  frequent risks from one shared list (lib/clinical/onamProsedurleri.ts) and leave every frequency blank for the
+  clinician ("Frequency discussed: ____"). A gynaecologist must read the lists in each language before a patient signs
+  one; Uzbek (Latin, Cyrillic by rule) and Russian are machine-written. Hymenoplasty stays not offered
+  (AMELIYAT-NOTU-HIMENOPLASTI-01).
+- **REFERANS-ULKE-FATURA-01 — owner Claude.** Country builds show the referral code, link and QR, and record a code at
+  sign-up, but no country build serves a Notya subscription checkout or Stripe webhook yet (country builds serve only
+  `*.ulke.ts` routes; app/api/billing/* there are plain route.ts files). The reward (one free month each, after the
+  invited doctor's first paid invoice, cap 12 a year) is granted by lib/billing/referans.ts from the Türkiye webhook
+  today; wire the same call into the country subscription webhook the day country billing ships.
+- **HASTA-DISA-AKTAR-TOPLU-01 — owner Claude.** Exporting every patient at once as a background job is not built: one
+  patient at a time only, in every build. A whole-practice archive needs a queued job with storage and a download link
+  inside the performance budget. Country exports read at most 50 approved notes per patient (one read per note);
+  batch the note reads if a doctor needs more.
+- **BELGE-NO-KAPSAM-01 — owner Claude.** Every Türkiye printout listed in the change set carries its number; in the
+  country builds every printed tool record and the patient export do. Country visit-note PDFs (components/ulke/
+  uygulama/pdfSayfalari.ts) do not carry a number yet. Staff (assistant, secretary) printouts in Türkiye show "not
+  registered": the registration route is the doctor's own (lib/doktor/personelYetki.ts).
+
 ## OP-DR-KD-PAKETI-01 — "Op. Dr.", ameliyat notu, doğum epikrizi, USG ve NST raporları: what is open after the 2026-11-05 change set (Claude, 2026-11-05)
 
 Shipped on main (Türkiye) the same day: users.title + "Op. Dr." (migration 186, applied and verified on production),

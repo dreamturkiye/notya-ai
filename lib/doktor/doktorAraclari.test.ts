@@ -24,8 +24,8 @@ test('shared tools appear for every branş; chapter tiles do not cross-leak', ()
     assert.ok(ped.some((a) => a.route === o.route), `pediatri missing shared ${o.route}`)
   }
 
-  assert.equal(goz.length, ORTAK_DOKTOR_ARACLARI.length + GOZ_ROTALARI.length)
-  assert.equal(kd.length, ORTAK_DOKTOR_ARACLARI.length + KD_ROTALARI.length)
+  assert.equal(goz.length, ORTAK_DOKTOR_ARACLARI.length + GOZ_ROTALARI.length + CERRAHI_ROTALARI.length)
+  assert.equal(kd.length, ORTAK_DOKTOR_ARACLARI.length + KD_ROTALARI.length + CERRAHI_ROTALARI.length)
   assert.equal(dah.length, ORTAK_DOKTOR_ARACLARI.length + DAH_ROTALARI.length)
   assert.ok(!goz.some((a) => a.route.includes('dahiliye') || a.route.includes('hedef-boy')))
   assert.ok(!kd.some((a) => a.route.includes('dahiliye') || a.route.includes('hedef-boy')))
@@ -313,7 +313,7 @@ test('PEDI-ARACLAR-02: aşı / gelişim / M-CHAT / kohort — pediatri tek anaht
 })
 
 // ─── Kadın Hastalıkları ve Doğum — specialty-only Araçlar ───────────────────────────────────────
-const KD_ROTALARI = ['/doktor-tools/kd-gebelik-takvim', '/doktor-tools/kd-dogum-rapor', '/doktor-tools/kd-mec', '/doktor-tools/kd-risk', '/doktor-tools/kd-kohort']
+const KD_ROTALARI = ['/doktor-tools/kd-gebelik-takvim', '/doktor-tools/kd-dogum-rapor', '/doktor-tools/kd-mec', '/doktor-tools/kd-risk', '/doktor-tools/kd-kohort', '/doktor-tools/kd-antibiyotik', '/doktor-tools/kd-adneks', '/doktor-tools/kd-siniflama', '/doktor-tools/kd-dogumhane', '/doktor-tools/kd-histeroskopi-eras', '/doktor-tools/kd-onam']
 
 test('KD-only Araçlar: KD sees all five (legacy + free-text keys); every other branş in BRANS_ETIKETLERI never', () => {
   for (const ham of ['kadin-hastaliklari-dogum', 'kadin-dogum', 'Kadın Hastalıkları ve Doğum', 'Jinekoloji ve Obstetrik']) {
@@ -519,7 +519,7 @@ test('KBB-only Araçlar: kulak burun boğaz sees all five (canonical + alias + o
       assert.ok(kbb.some((a) => a.route === r), `${ham} missing ${r}`)
       assert.equal(doktorAraciBransaUygun(r, ham), true, `${ham} deep-link ${r}`)
     }
-    assert.equal(kbb.length, ORTAK_DOKTOR_ARACLARI.length + KBB_ROTALARI.length)
+    assert.equal(kbb.length, ORTAK_DOKTOR_ARACLARI.length + KBB_ROTALARI.length + CERRAHI_ROTALARI.length)
   }
   for (const r of KBB_ROTALARI) {
     const arac = BRANS_DOKTOR_ARACLARI.find((a) => a.route === r)!
@@ -1980,4 +1980,27 @@ test('Radyoloji-only Araçlar: radyoloji sees all four; foreign never', () => {
   assert.doesNotMatch(landing, /RadyoKuyrukAraci|RadyoRaporAraci|RadyoKritikAraci|RadyoKohortAraci|radyo-exceptional-audit/)
   const kabuk = fs.readFileSync(path.join(kok, 'specialties/radyoloji/ui/araclar/RadyoAracKabugu.tsx'), 'utf8')
   assert.match(kabuk, /Bu araç yalnızca radyoloji için\./)
+})
+
+// KD-OPERATOR-01 (Kaan, 2026-11-05) — the surgical-safety tile is CORE FOR EVERY SURGICAL BRANCH: exactly the operation-note
+// shell's surgical list (lib/doktor/ameliyatNotu.ts), never a non-surgical branch.
+const CERRAHI_ROTALARI = ['/doktor-tools/cerrahi-guvenlik']
+test('surgical-safety tile: every surgical branch (operation-note list), no other branch', async () => {
+  const { AMELIYAT_NOTU_BRANSLARI } = await import('./ameliyatNotu')
+  const cerrahi = Object.entries(AMELIYAT_NOTU_BRANSLARI).filter(([, v]) => v).map(([k]) => k)
+  const digerleri = Object.entries(AMELIYAT_NOTU_BRANSLARI).filter(([, v]) => !v).map(([k]) => k)
+  assert.ok(cerrahi.length >= 11 && digerleri.length >= 15)
+  const arac = BRANS_DOKTOR_ARACLARI.find((a) => a.route === CERRAHI_ROTALARI[0])!
+  assert.deepEqual([...(arac.branslar || [])].sort(), [...cerrahi].sort())
+  for (const b of cerrahi) assert.ok(doktorAraclariListesi(b).some((a) => a.route === CERRAHI_ROTALARI[0]), b)
+  for (const b of digerleri) {
+    assert.ok(!doktorAraclariListesi(b).some((a) => a.route === CERRAHI_ROTALARI[0]), `${b} must not see the surgical tile`)
+    assert.equal(doktorAraciBransaUygun(CERRAHI_ROTALARI[0], b), false, b)
+  }
+})
+test('KD operator tiles: obstetrics and gynaecology only (not genel cerrahi, not üroloji, not pediatri)', () => {
+  for (const r of KD_ROTALARI.slice(5)) {
+    for (const b of ['genel-cerrahi', 'uroloji', 'pediatri', 'kardiyoloji']) assert.equal(doktorAraciBransaUygun(r, b), false, `${b} ${r}`)
+    assert.equal(doktorAraciBransaUygun(r, 'kadin-hastaliklari-dogum'), true, r)
+  }
 })

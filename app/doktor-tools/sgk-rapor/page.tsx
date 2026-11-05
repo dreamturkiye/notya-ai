@@ -1,5 +1,6 @@
 'use client'
 import HafifMarkdown from '@/components/asistan/HafifMarkdown';
+import BelgeKunyesi from '@/components/doktor/yazdir/BelgeKunyesi'
 import HastaTypeahead from '@/components/doktor/HastaTypeahead'
 import {
   getAccessTokenAsync,
@@ -318,6 +319,7 @@ export default function SgkRaporPage() {
               border: '1px solid #E5DFD0',
             }}
           >
+            <BelgeKunyesi tur="hasta_raporu" kaynakId={`rapor:${draftTip?.id || 'tip'}:${hastaId ? hastaId.slice(0, 8) : 'x'}`.replace(/[^A-Za-z0-9:_-]/g, '_')} hastaId={hastaId || null} icerik={rapor} />
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginBottom: 6 }}>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M8 19c1.6-5.8 3.4-9.6 7.2-14.2.8 3.4.8 6.4-.2 9.2-1.5 2.4-4 4-7 5z" stroke="#6a7563" strokeWidth="1.3"/></svg>
               <span style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 12, color: '#6d6055' }}>Notya</span>

@@ -5,6 +5,7 @@
  * Liste notes.content_tetkikler (yoksa plandan çıkarım); onayda elektronik kayda geçer.
  */
 import { useEffect, useState } from 'react'
+import BelgeKunyesi from '@/components/doktor/yazdir/BelgeKunyesi'
 import { useParams, useRouter } from 'next/navigation'
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth'
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme'
@@ -169,6 +170,7 @@ export default function TetkiklerYazdirPage() {
           display: 'flex', flexDirection: 'column',
         }}
       >
+        <BelgeKunyesi tur="tetkik_istem" kaynakId={params.id} icerik={yukleniyor ? null : { tetkikler, endikasyon }} />
         <div style={{ textAlign: 'center', borderBottom: '1.5px solid #111', paddingBottom: 8, marginBottom: 14 }}>
           {baslik.logoDataUrl ? <img src={baslik.logoDataUrl} alt="" style={{ height: 44, marginBottom: 4 }} /> : null}
           {baslik.satirlar.length > 0

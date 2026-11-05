@@ -71,6 +71,7 @@ export default function KdRaporYazdir() {
   }
   return (
     <AntetliKagit baslik={BASLIK[r.tur]} antet={v.baslik} geriHref={`/dashboard/doktor/hastalar/${p.id}?tab=gebelik`} geriEtiket="Kadın Sağlığı & Gebelik" tarih={r.rapor_tarihi}
+      belge={{ tur: r.tur === 'nst' ? 'nst' : r.tur === 'usg_obstetrik' ? 'usg_obstetrik' : 'usg_jinekolojik', kaynakId: p.rid, hastaId: p.id, icerik: { veri: r.veri, tarih: r.rapor_tarihi } }}
       altBilgi="Hesaplanan değerler yayımlanmış referanslara dayanır (INTERGROWTH-21st, Hadlock, Mari 2000, Gramellini 1992, SMFM/ACOG, FIGO 2015, ACOG PB 229); klinik yorum ve karar hekimindir.">
       {icerik}
     </AntetliKagit>

@@ -652,7 +652,14 @@ export function OrtakAracKabugu({
   baslik,
   aciklama,
   children,
-}: { route: string; baslik: string; aciklama: string; children: React.ReactNode }) {
+  izinVer,
+  ustEtiket = 'Araçlar',
+}: {
+  route: string; baslik: string; aciklama: string; children: React.ReactNode
+  /** KD-OPERATOR-01: a tool of SEVERAL branch families (e.g. every surgical branch, Özel Branşlar included) decides itself. */
+  izinVer?: (specialty: string | null | undefined) => boolean
+  ustEtiket?: string
+}) {
   const router = useRouter()
   const [izin, setIzin] = useState<boolean | null>(null)
   useEffect(() => {
@@ -663,12 +670,12 @@ export function OrtakAracKabugu({
         if (!t) { if (!iptal) { setIzin(false); router.replace('/doktor-tools') } return }
         const r = await fetch('/api/users/me', { headers: { Authorization: `Bearer ${t}` } })
         const j = r.ok ? await r.json() : null
-        const ok = doktorAraciBransaUygun(route, j?.data?.specialty)
+        const ok = izinVer ? izinVer(j?.data?.specialty) : doktorAraciBransaUygun(route, j?.data?.specialty)
         if (!iptal) { setIzin(ok); if (!ok) router.replace('/doktor-tools') }
       } catch { if (!iptal) { setIzin(false); router.replace('/doktor-tools') } }
     })()
     return () => { iptal = true }
-  }, [router, route])
+  }, [router, route, izinVer])
 
   return (
     <AracVurguSaglayici vurgu={VURGU_TEAL}>
@@ -679,7 +686,7 @@ export function OrtakAracKabugu({
           ) : (
             <>
               <div style={{ marginBottom: 18 }}>
-                <div style={{ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', fontSize: 15, color: '#6d6055', marginBottom: 4 }}>Araçlar</div>
+                <div style={{ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', fontSize: 15, color: '#6d6055', marginBottom: 4 }}>{ustEtiket}</div>
                 <h1 style={{ fontFamily: CHROME_FONT.serif, fontWeight: 500, fontSize: 30, color: '#2e251d', margin: 0, letterSpacing: '-0.02em', lineHeight: 1.15 }}>{baslik}</h1>
                 <p style={{ margin: '8px 0 0', fontSize: 15, color: CHROME_RENK.muted, lineHeight: 1.5, maxWidth: 680 }}>{aciklama}</p>
               </div>

@@ -15,6 +15,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { getStripe } from '@/lib/billing/stripeClient'
 import { syncSubscriptionToDb } from '@/lib/billing/stripeSync'
+import { faturaOdendiOdul, odulFaturasiMi, referansKaydet, type ReferansIslevi } from '@/lib/billing/referans'
 import type Stripe from 'stripe'
 
 export const dynamic = 'force-dynamic'
@@ -83,6 +84,32 @@ async function handleStripeEvent(req: NextRequest, rawBody: string, signature: s
       // logged + flagged for Kaan (see docs/OPEN-COMMITMENTS.md) rather than inventing one.
       const subscription = event.data.object as Stripe.Subscription
       console.log('[billing/webhook] trial_will_end:', subscription.id, 'customer:', subscription.customer)
+      break
+    }
+
+    case 'invoice.paid': {
+      // REFERANS-01 (Kaan, 2026-11-05): a paid invoice (amount_paid > 0) may grant the referral month to both doctors.
+      // Never blocks the webhook: every outcome is written to referans_odulleri; only keys reach the log.
+      const invoice = event.data.object as Stripe.Invoice
+      if (!odulFaturasiMi(invoice)) break
+      const musteri = typeof invoice.customer === 'string' ? invoice.customer : invoice.customer?.id
+      if (!musteri) break
+      const { data: odeyen } = await sb.from('users').select('id').eq('stripe_customer_id', musteri).maybeSingle()
+      if (!odeyen?.id) break
+      const islev: ReferansIslevi = (ad, a) => sb.rpc(ad, { ...a, p_ulke: 'tr' })
+      try {
+        // The code typed at sign-up (user metadata) is recorded now if onboarding never did (never gates anything).
+        const { data: kim } = await sb.auth.admin.getUserById(odeyen.id)
+        const kod = (kim?.user?.user_metadata as { ref_kodu?: unknown } | undefined)?.ref_kodu
+        if (kod) await referansKaydet(islev, kod, odeyen.id)
+        const sonuc = await faturaOdendiOdul({
+          islev, stripe, odeyenId: odeyen.id, aciklama: 'Notya hekim davet programı: 1 ay ücretsiz',
+          hekimBul: async (id) => (await sb.from('users').select('stripe_customer_id, stripe_subscription_id').eq('id', id).maybeSingle()).data ?? null,
+        })
+        if (sonuc.length) console.log('[billing/webhook] referans:', sonuc.join(','))
+      } catch (e) {
+        console.error('[billing/webhook] referans hatası:', e instanceof Error ? e.message : 'bilinmiyor')
+      }
       break
     }
 

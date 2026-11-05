@@ -7,6 +7,11 @@
  */
 import React from 'react';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
+import BelgeKunyesi from './BelgeKunyesi';
+import type { BelgeTuru } from '@/lib/belge/belge';
+
+/** BELGE-NO-01: the document this page prints (number, revision, verify QR). */
+export type YazdirBelgesi = { tur: BelgeTuru; kaynakId: string; hastaId?: string | null; icerik: unknown };
 
 export type Antet = { hastaAd: string; dogumTarihi: string | null; hekim: string; satirlar: string[]; logoDataUrl: string; diplomaNo: string };
 
@@ -18,8 +23,8 @@ export const KAGIT = {
   P: { fontSize: 12, lineHeight: 1.5, margin: '0 0 6px', whiteSpace: 'pre-wrap' } as React.CSSProperties,
 };
 
-export function AntetliKagit({ baslik, antet, geriHref, geriEtiket, tarih, altBilgi, children }: {
-  baslik: string; antet: Antet; geriHref: string; geriEtiket: string; tarih?: string | null; altBilgi?: string; children: React.ReactNode
+export function AntetliKagit({ baslik, antet, geriHref, geriEtiket, tarih, altBilgi, belge, children }: {
+  baslik: string; antet: Antet; geriHref: string; geriEtiket: string; tarih?: string | null; altBilgi?: string; belge?: YazdirBelgesi; children: React.ReactNode
 }) {
   return (
     <div style={{ background: 'white', color: '#111', minHeight: '100vh', fontFamily: 'Georgia, "Times New Roman", serif' }}>
@@ -48,6 +53,7 @@ export function AntetliKagit({ baslik, antet, geriHref, geriEtiket, tarih, altBi
           </div>
         </div>
         <h1 style={{ fontSize: 19, textAlign: 'center', margin: '14px 0 6px', letterSpacing: '0.04em' }}>{baslik}</h1>
+        {belge ? <BelgeKunyesi {...belge} /> : null}
         {children}
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 36 }}>
           <div style={{ borderTop: '1px solid #333', width: 240, paddingTop: 4, fontSize: 12, textAlign: 'center' }}>{antet.hekim || 'Dr.'} — İmza / Kaşe</div>

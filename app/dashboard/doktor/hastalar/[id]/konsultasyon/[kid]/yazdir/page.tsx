@@ -11,6 +11,7 @@
  * Hasta adı yalnız bu hekimin kendi ekranında çizilir (GET ?form, doctor_id kapsamlı); herkese açık HTML yok.
  */
 import React, { useEffect, useState } from 'react';
+import BelgeKunyesi from '@/components/doktor/yazdir/BelgeKunyesi';
 import { useParams } from 'next/navigation';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import KonsultasyonIstemFormuKagidi, { type IstemFormuVerisi } from '@/components/doktor/KonsultasyonIstemFormuKagidi';
@@ -48,6 +49,7 @@ export default function KonsultasyonIstemFormu() {
         <button type="button" onClick={() => window.print()} style={{ background: CHROME_RENK.pine, border: 'none', color: '#FAF8F4', borderRadius: 8, padding: '10px 18px', fontFamily: 'system-ui', fontSize: 14, fontWeight: 700, cursor: 'pointer', minHeight: 44 }}>🖨️ Yazdır / PDF (A4)</button>
       </div>
 
+      <div style={{ maxWidth: 780, margin: '0 auto', padding: '0 28px' }}><BelgeKunyesi tur="konsultasyon" kaynakId={params.kid} hastaId={params.id} icerik={k} /></div>
       <KonsultasyonIstemFormuKagidi v={v} />
     </div>
   );

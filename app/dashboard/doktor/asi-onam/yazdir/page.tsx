@@ -6,6 +6,7 @@
  * print time, never fetched, so nothing identifying sits in the URL.
  */
 import React, { Suspense, useState } from 'react';
+import BelgeKunyesi from '@/components/doktor/yazdir/BelgeKunyesi';
 import { useSearchParams } from 'next/navigation';
 import { asiOnamIcerigiGoster } from '@/lib/asi/onam/asiOnamMotoru';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
@@ -39,6 +40,7 @@ function AsiOnamYazdirIc() {
         <span style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 11, color: '#6d6055' }}>Notya</span>
       </div>
       <h1 style={{ fontSize: 20, fontWeight: 500, marginBottom: 4 }}>Aşı Bilgilendirme ve Onay Formu</h1>
+      <BelgeKunyesi tur="asi_onam" kaynakId={`asi:${asilar.join('|').replace(/[^A-Za-z0-9:_-]/g, '_').slice(0, 60)}${patientId ? `:${patientId.slice(0, 8)}` : ''}`} hastaId={patientId} icerik={{ asilar }} />
       <div style={{ fontSize: 12, color: '#555', marginBottom: 16 }}>Tarih: {new Date().toLocaleDateString('tr-TR')}</div>
       <p style={{ fontSize: 13 }}><b>Hasta:</b> {ad || '______________________'} &nbsp; <b>Hekim:</b> {hekim || '______________________'}</p>
 

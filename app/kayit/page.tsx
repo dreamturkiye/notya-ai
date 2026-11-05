@@ -2,6 +2,7 @@
 
 import React, { Suspense, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { referansKoduNormalize } from '@/lib/billing/referans';
 import { createClient } from '@supabase/supabase-js';
 import { CHROME_RENK, CHROME_FONT, CHROME_FONT_HREF } from '@/lib/doktor/chromeTheme';
 
@@ -35,6 +36,8 @@ function KayitForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const planKey = searchParams.get('plan') || '';
+  // REFERANS-01: an optional referral code from the link (?ref=NTY-XXXX). Never required, never a discount; only recorded.
+  const refKodu = referansKoduNormalize(searchParams.get('ref'));
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -90,6 +93,7 @@ function KayitForm() {
             kosullar_onay: true,
             kosullar_onay_tarihi: new Date().toISOString(),
             kosullar_metin_versiyonu: '2026-10-17-v1',
+            ...(refKodu ? { ref_kodu: refKodu } : {}),
           },
         },
       });

@@ -1,5 +1,6 @@
 'use client';
 import { dozCikar } from '@/components/doktor/IlacSecici'
+import BelgeKunyesi from '@/components/doktor/yazdir/BelgeKunyesi'
 import type { GruplanmisIlac } from '@/app/api/doktor/ilac-ara/route'
 import React, { useState, useEffect } from 'react'
 import { getDoctorAccessToken } from '@/lib/doktor/clientAuth';
@@ -498,6 +499,7 @@ const ERecetePage: React.FC = () => {
                 </div>
               ) : (
                 <div>
+                  <BelgeKunyesi tur="recete" kaynakId={`erecete:${selectedHasta ? String(selectedHasta).slice(0, 8) : 'x'}:${new Date().toISOString().slice(0, 10)}`} hastaId={selectedHasta || null} icerik={sonuc} />
                   <div
                     style={{
                       display: 'flex',

@@ -50,6 +50,11 @@ export const ORTAK_DOKTOR_ARACLARI: readonly DoktorArac[] = [
  * keep those in docs/ or repo paths, never on /doktor-tools.
  */
 export const BRANS_DOKTOR_ARACLARI: readonly DoktorArac[] = [
+  // KD-OPERATOR-01 (Kaan, 2026-11-05) — CORE FOR EVERY SURGICAL BRANCH (not base: non-surgical branches never see it).
+  // Visibility = the operation-note shell's own surgical list (lib/doktor/ameliyatNotu.ts AMELIYAT_NOTU_BRANSLARI): the 11
+  // surgical medical branches here; the two surgical Özel Branşlar (saç ekimi, estetik cerrahi) through KLINIK_ARACLARI.
+  // NOT kardiyoloji, NOT dahiliye, NOT pediatri, NOT anestezi (which keeps its own ASA tile).
+  { circleColor: '#B91C1C', icon: 'CG', title: 'Cerrahi güvenlik & risk', desc: 'WHO Cerrahi Güvenlik Kontrol Listesi · Caprini VTE skoru ve profilaksi planı · ASA sınıfı — ajan ve doz hekimde', route: '/doktor-tools/cerrahi-guvenlik', branslar: ['genel-cerrahi', 'kadin-hastaliklari-dogum', 'ortopedi', 'uroloji', 'kulak-burun-bogaz', 'goz-hastaliklari', 'beyin-cerrahisi', 'kalp-damar-cerrahisi', 'gogus-cerrahisi', 'plastik-cerrahi', 'cocuk-cerrahisi'] },
   { circleColor: '#A16207', icon: 'HB', title: 'Hedef Boy', desc: 'Anne-baba boyuna göre çocuğun tahmini erişkin boyu — açıp aileyle kullanın', route: '/doktor-tools/hedef-boy', branslar: ['pediatri'] },
   // Pediatri — specialty-only (not kardiyoloji / dahiliye / göz / KD / dermatoloji / …). Chapter engines: specialties/pediatri/engines.
   { circleColor: '#0D9488', icon: 'BP', title: 'Büyüme & Persentil', desc: 'Neyzi / WHO persentil ve z-skor, eğri, persentil kayması ve büyüme hızı (cm/yıl)', route: '/doktor-tools/pedi-buyume', branslar: ['pediatri'] },
@@ -85,6 +90,14 @@ export const BRANS_DOKTOR_ARACLARI: readonly DoktorArac[] = [
   { circleColor: '#7C3AED', icon: 'AR', title: 'Doğum & analık raporu', desc: 'TDT → SGK analık istirahati tarihleri, erken / geç doğumda yeniden hesap ve istirahat raporu taslağı', route: '/doktor-tools/kd-dogum-rapor', branslar: ['kadin-hastaliklari-dogum'] },
   { circleColor: '#059669', icon: 'MC', title: 'Kontrasepsiyon MEC', desc: 'Hasta faktörleri → yöntem başına WHO MEC 1–4 ve gerekçe · acil kontrasepsiyon · doğum sonrası başlama', route: '/doktor-tools/kd-mec', branslar: ['kadin-hastaliklari-dogum'] },
   { circleColor: '#E11D48', icon: 'OR', title: 'Obstetrik risk & sezaryen notu', desc: 'Preeklampsi → aspirin penceresi · GDM riski · SSVD alanları · hekim kilitli sezaryen endikasyon notu', route: '/doktor-tools/kd-risk', branslar: ['kadin-hastaliklari-dogum'] },
+  // KD-OPERATOR-01 (Kaan, 2026-11-05) — KD operatör araçları: specialty-only (kadın hastalıkları ve doğum). NOT genel-cerrahi,
+  // NOT uroloji, NOT pediatri, NOT kardiyoloji. Engines: lib/clinical (paylaşılan aritmetik); kelimeler: specialties/kadin-dogum.
+  { circleColor: '#0F766E', icon: 'AP', title: 'Antibiyotik profilaksisi (kiloya göre)', desc: 'Sezaryen · histerektomi · büyük jinekolojik cerrahi: kilo eşiği, alerji rejimi, tekrar doz uyarısı — kaynağıyla', route: '/doktor-tools/kd-antibiyotik', branslar: ['kadin-hastaliklari-dogum'] },
+  { circleColor: '#7C3AED', icon: 'AK', title: 'Adneksiyal kitle', desc: 'IOTA Basit Kurallar · O-RADS US v2022 · RMI I · ADNEX girdileri — tanı hekimde', route: '/doktor-tools/kd-adneks', branslar: ['kadin-hastaliklari-dogum'] },
+  { circleColor: '#BE185D', icon: 'FS', title: 'FIGO / endometriozis sınıflama', desc: 'PALM-COEIN ve myom tipleri (0–8) · rASRM evre · #Enzian · myomektomi planlama özeti', route: '/doktor-tools/kd-siniflama', branslar: ['kadin-hastaliklari-dogum'] },
+  { circleColor: '#DC2626', icon: 'DS', title: 'Doğumhane hesapları', desc: 'Bishop · Robson · sezaryen aciliyet kategorisi · ölçülen kan kaybı, şok indeksi, PPH paketi · SSVD (MFMU) girdileri', route: '/doktor-tools/kd-dogumhane', branslar: ['kadin-hastaliklari-dogum'] },
+  { circleColor: '#0891B2', icon: 'HE', title: 'Histeroskopi sıvı açığı & ERAS', desc: 'Sıvı açığı izlemi ve sınır uyarısı · ERAS kontrol listesi (jinekolojik / sezaryen)', route: '/doktor-tools/kd-histeroskopi-eras', branslar: ['kadin-hastaliklari-dogum'] },
+  { circleColor: '#9D174D', icon: 'ON', title: 'Ameliyat onam formları', desc: '16 işlem için işleme özgü bilgilendirilmiş onam: açıklama, yararlar, alternatifler, riskler — belge numaralı çıktı', route: '/doktor-tools/kd-onam', branslar: ['kadin-hastaliklari-dogum'] },
   { circleColor: '#EA580C', icon: 'KK', title: `${KADIN_HASTALIKLARI_DOGUM_KISA_ETIKETI} kohort paneli`, desc: 'Lohusa 1. / 6. hafta · kapanan tarama pencereleri · geciken izlem · OGTT / anti-D / GBS · smear · tek dokunuşla hatırlatma', route: '/doktor-tools/kd-kohort', branslar: ['kadin-hastaliklari-dogum'] },
   // Psikiyatri (Ruh Sağlığı ve Hastalıkları) — specialty-only (not pediatri / dahiliye / göz / dermatoloji / KD).
   // Chapter engines: specialties/psikiyatri/engines. Ölçek bandı karar desteğidir; tanı ve doz hekimde.
