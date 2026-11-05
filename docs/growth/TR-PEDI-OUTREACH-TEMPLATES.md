@@ -16,7 +16,8 @@ Stand yok. Lead: Doktortakvimi + Doktorsitesi (kamuya açık). Spam yok — her 
 ## WhatsApp / SMS (Kaan — birincil)
 
 ```
-Hocam merhaba, ben Kaan — Notya’dan yazıyorum. Muayene notu + asistanı tek üründe.
+Hocam merhaba, ben Kaan — Notya’dan yazıyorum. Muayene notu + asistanı tek üründe;
+yoğun günde 2 saate kadar zaman kazandırıyor, hastalarınıza bakım kalitesini artırıyor.
 Pediatride Dr. Gökhan Mamur 30 dk ücretsiz demo yapıyor; saatler sizin diliminizde.
 
 Takvim: https://cal.com/han-mamur-sugmbo/demo-tr
@@ -32,7 +33,8 @@ Demoya vakit yoksa ücretsiz denemeyi hemen açıyoruz: https://www.notya.io
 Sayın Dr. {İsim},
 
 Ben Kaan (Notya). {Şehir}’deki özel muayenehaneler için Notya’yı tanıtıyoruz:
-ziyaret kaydı → yapılandırılmış not → sizin onayınız.
+ziyaret kaydı → yapılandırılmış not → sizin onayınız. Yoğun bir günde 2 saate
+kadar zaman kazandırıyor; hastalarınıza sunduğunuz bakımın kalitesini artırıyor.
 
 Pediatride ürünü birlikte şekillendiren Dr. Gökhan Mamur 30 dakikalık
 ücretsiz demo veriyor; saatler sizin diliminizde.
