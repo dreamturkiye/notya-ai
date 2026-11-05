@@ -1,21 +1,21 @@
-# TR özel muayenehane — bedava outreach (Kaan davet · Gökhan demo)
+# TR özel muayenehane — bedava outreach (Kaan davet · Gökhan tanıtım)
 
 **Kim gönderir:** Kaan / Notya — WhatsApp ve/veya e-posta.  
-**Kim demo yapar:** Dr. Gökhan Mamur — 30 dk (Cal.com · Google Meet); saatler ziyaretçinin diliminde.  
-**Not:** Gökhan ~7 yıldır Türkiye dışında; sıcak meslektaş listesi yok. İlk temas Kaan’dan gider. Doktor mesajında ABD / görüntülü vurgusu yok.
+**Kim tanıtır:** Dr. Gökhan Mamur — 30 dk (Cal.com · Google Meet); saatler ziyaretçinin diliminde.  
+**Not:** Gökhan ~7 yıldır Türkiye dışında; sıcak meslektaş listesi yok. İlk temas Kaan’dan gider. Doktor mesajında ABD / görüntülü / “demo” / “free trial” yok.
 
-**Demo:** [notya.io/demo](https://www.notya.io/demo) · `https://cal.com/han-mamur-sugmbo/demo-tr`  
+**Tanıtım takvimi:** [notya.io/demo](https://www.notya.io/demo) · `https://cal.com/han-mamur-sugmbo/demo-tr`  
 **Ücretsiz deneme:** `https://www.notya.io`  
-**Hedef:** mümkün olduğunca çok Cal.com demo **ve/veya** ücretsiz deneme → ağızdan ağıza.
+**Hedef:** mümkün olduğunca çok tanıtım randevusu **ve/veya** ücretsiz deneme → ağızdan ağıza.
 
 Stand yok. Lead: Doktortakvimi + Doktorsitesi (kamuya açık). Spam yok — her mesaj Kaan onaylı.  
-**Doktorlara giden metinler tamamen Türkçe** — “free trial”, “Synced” vb. İngilizce yok.
+**Doktorlara giden metinler tamamen Türkçe.**
 
 ---
 
 ## WhatsApp / SMS (Kaan — birincil)
 
-WhatsApp’ta **iki baloncuk** gönder (önce metin, sonra link — Cal İngilizce önizlemesi metni ezmesin).
+WhatsApp’ta **iki baloncuk** gönder (önce metin, sonra link).
 
 **Balon 1 — sadece metin:**
 
@@ -27,23 +27,23 @@ Muayene notlarını ve asistanı tek yerde toplayan bir araç geliştirdik ve ku
 Yoğun günlerde not yazma süresini epey kısaltıyor — birçok hekim 1,5-2 saat civarı zaman kazandığını söylüyor.
 Asıl önemli kısmı da notların daha düzenli ve eksiksiz olması, bakım kalitesine de yansıyor.
 
-Dr. Gökhan Mamur 30 dakikalık kısa demolar yapıyor 🩺
+Dr. Gökhan Mamur 30 dakikalık kısa tanıtımlar yapıyor 🩺
 Saatler sizin uygunluğunuza göre ayarlanıyor.
 
-Demoya vaktiniz yoksa da sorun değil, ücretsiz denemeyi hemen açabiliyoruz.
+Tanıtıma vaktiniz yoksa da sorun değil, ücretsiz denemeyi hemen açabiliyoruz.
 İsterseniz kısaca bakabilirsiniz, uygun görürseniz devam ederiz.
 ```
 
 **Balon 2 — linkler:**
 
 ```
-📅 Takvim: https://cal.com/han-mamur-sugmbo/demo-tr
+📅 Tanıtım için takvim: https://cal.com/han-mamur-sugmbo/demo-tr
 🔗 Ücretsiz deneme: https://www.notya.io
 ```
 
 ## E-posta (Kaan)
 
-**Konu:** {Branş} muayenehanesi için 30 dk Notya demosu (Dr. Gökhan Mamur)
+**Konu:** {Branş} muayenehanesi için 30 dk Notya tanıtımı (Dr. Gökhan Mamur)
 
 ```
 Sayın Dr. {İsim},
@@ -53,12 +53,12 @@ ziyaret kaydı → yapılandırılmış not → sizin onayınız. Yoğun bir gü
 kadar zaman kazandırıyor; hastalarınıza sunduğunuz bakımın kalitesini artırıyor.
 
 Pediatride ürünü birlikte şekillendiren Dr. Gökhan Mamur 30 dakikalık
-ücretsiz demo veriyor; saatler sizin diliminizde.
+kısa tanıtım yapıyor; saatler sizin diliminizde.
 
-Demo takvimi: https://cal.com/han-mamur-sugmbo/demo-tr
+Tanıtım takvimi: https://cal.com/han-mamur-sugmbo/demo-tr
 Sayfa: https://www.notya.io/demo
 
-Demo istemezseniz ücretsiz deneme hesabı da açabiliyoruz: https://www.notya.io
+Tanıtıma vakit yoksa ücretsiz deneme hesabı da açabiliyoruz: https://www.notya.io
 Uygunsa bir slot seçmeniz yeterli; “2 meslektaşınıza da iletin” demenizi
 rica ederiz — ürün ağızdan ağıza büyüsün diye.
 
@@ -68,16 +68,16 @@ Kaan · Notya · merhaba@notya.io
 
 WhatsApp Business profil e-postası da `merhaba@notya.io` (`kaan@notya.io`’ya forward — çalışıyor).
 
-## Yalnızca ücretsiz deneme (demo istemeyen — Kaan)
+## Yalnızca ücretsiz deneme (tanıtım istemeyen — Kaan)
 
 ```
-Hocam, demoya vakit yoksa Notya ücretsiz denemesini hemen açabiliriz — {branş} şablonu hazır.
+Hocam, tanıtıma vakit yoksa Notya ücretsiz denemesini hemen açabiliriz — {branş} şablonu hazır.
 Bağlantı: https://www.notya.io
-Takıldığınız yerde Dr. Gökhan Mamur’un demosuna da dönebilirsiniz:
+Takıldığınız yerde Dr. Gökhan Mamur’un kısa tanıtımına da dönebilirsiniz:
 https://cal.com/han-mamur-sugmbo/demo-tr
 ```
 
-## Demo kapanış (Gökhan söyler veya Kaan yazar — ağızdan ağıza)
+## Tanıtım kapanış (Gökhan söyler veya Kaan yazar — ağızdan ağıza)
 
 ```
 Teşekkürler hocam. Ücretsiz deneme hesabınız açık / açıyoruz.
@@ -90,10 +90,10 @@ randevu alsın: https://cal.com/han-mamur-sugmbo/demo-tr
 
 ## Operasyon kuralları
 
-1. `tr-call-ready-leads.csv` → `ozel_muayenehane=evet` + telefon (önce İstanbul pediatri).
+1. `tr-call-ready-leads.csv` → `ozel_muayenehane=evet` + telefon (önce mobil `5xx`).
 2. **Gönderen = Kaan.** Günde max ~20 kişisel WhatsApp ve/veya e-posta.
-3. Gökhan = sadece demo host (Cal.com). Soğuk peer listesi yok.
-4. Cevap → Cal.com **veya** ücretsiz deneme; ikisi de başarı. “Synced / AI doktor” iddiası yok.
-5. “2 meslektaş davet et” her demo kapanışında + deneme açılışında.
-6. Doktor mesajında ABD / “görüntülü” vurgusu yok; saat dilimi yeterli.
-7. Kanal sırası: Kaan WhatsApp → Kaan e-posta.
+3. Gökhan = sadece tanıtım host (Cal.com). Soğuk peer listesi yok.
+4. Cevap → Cal.com **veya** ücretsiz deneme; ikisi de başarı.
+5. “2 meslektaş davet et” her tanıtım kapanışında + deneme açılışında.
+6. Doktor mesajında: ABD / görüntülü / demo / free trial yok.
+7. Kanal: iki baloncuk (metin → linkler).
