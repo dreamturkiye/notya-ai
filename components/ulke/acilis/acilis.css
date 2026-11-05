@@ -40,6 +40,18 @@
   text-decoration: none;
 }
 
+/* Filled colour buttons (e.g. "Demo planla" / "Book a demo"): `.uzl a { color: inherit }` can outrank the `text-white`
+   utility, so the label could fall back to dark ink. Keep it white in every state. */
+.uzl .dl-btn-light-text,
+.uzl .dl-btn-light-text:link,
+.uzl .dl-btn-light-text:visited,
+.uzl .dl-btn-light-text:hover,
+.uzl .dl-btn-light-text:focus,
+.uzl .dl-btn-light-text:focus-visible,
+.uzl .dl-btn-light-text:active {
+  color: #ffffff;
+}
+
 .uzl button,
 .uzl input,
 .uzl select,

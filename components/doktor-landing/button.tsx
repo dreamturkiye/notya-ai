@@ -7,7 +7,8 @@ const variants = {
   ink: "bg-ink text-cream hover:bg-ink-2",
   outline: "bg-transparent text-ink ring-1 ring-line hover:bg-paper-2",
   // Filled navy, against the pine and outline buttons, so "Book a demo" reads as its own action.
-  demo: "bg-[#1e3a8a] text-white hover:bg-[#172554]",
+  // dl-btn-light-text: white label in every link state (app/doktor/landing.css, components/ulke/acilis/acilis.css).
+  demo: "bg-[#1e3a8a] text-white hover:bg-[#172554] dl-btn-light-text",
 } as const;
 
 const sizes = {
