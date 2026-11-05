@@ -26,11 +26,13 @@ export type DavetliKayitFormuProps = {
   kodGerekli?: boolean
   /** Optional professional registration. From the signed-in catalogue, not a new key of the public sign-up surface. */
   meslek?: { etiket: string; izoh: string; gecersiz: string }
+  /** AU-ACIK-KAYIT-01: the sentence for "too many attempts" (the sign-in surface's own `cokDeneme`). */
+  cokDeneme?: string
 }
 
 const EPOSTA = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
 
-export default function DavetliKayitFormu({ dil, metin, anaSayfaAdi, diller, anaSayfa, giris, fiyat, kodGerekli = true, meslek }: DavetliKayitFormuProps) {
+export default function DavetliKayitFormu({ dil, metin, anaSayfaAdi, diller, anaSayfa, giris, fiyat, kodGerekli = true, meslek, cokDeneme }: DavetliKayitFormuProps) {
   const [alan, setAlan] = useState({ adSoyad: '', eposta: '', sifre: '', sifreTekrar: '', davetKodu: '', dil: dil as string, meslekKaydi: '' })
   const [bekliyor, setBekliyor] = useState(false)
   const [hata, setHata] = useState('')
@@ -50,11 +52,12 @@ export default function DavetliKayitFormu({ dil, metin, anaSayfaAdi, diller, ana
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         cache: 'no-store',
-        body: JSON.stringify({ adSoyad, eposta, sifre: alan.sifre, ...(kodGerekli ? { davetKodu } : {}), dil: alan.dil, ...(alan.meslekKaydi.trim() ? { meslekKaydi: alan.meslekKaydi.trim() } : {}) }),
+        // Open sign-up: the confirmation email's link returns to this site's sign-in page (the server accepts nothing else).
+        body: JSON.stringify({ adSoyad, eposta, sifre: alan.sifre, ...(kodGerekli ? { davetKodu } : { donus: `${window.location.origin}${giris}` }), dil: alan.dil, ...(alan.meslekKaydi.trim() ? { meslekKaydi: alan.meslekKaydi.trim() } : {}) }),
       })
       if (r.ok) { setTamam(true); return }
       const j = (await r.json().catch(() => ({}))) as { code?: string }
-      const kod: Record<string, string> = { EKSIK_ALAN: metin.eksikAlan, EPOSTA_GECERSIZ: metin.epostaGecersiz, SIFRE_KISA: metin.sifreKisa, KOD_GECERSIZ: metin.kodGecersiz, GECERSIZ: meslek?.gecersiz ?? metin.olusturulamadi }
+      const kod: Record<string, string> = { EKSIK_ALAN: metin.eksikAlan, EPOSTA_GECERSIZ: metin.epostaGecersiz, SIFRE_KISA: metin.sifreKisa, KOD_GECERSIZ: metin.kodGecersiz, COK_DENEME: cokDeneme ?? metin.olusturulamadi, GECERSIZ: meslek?.gecersiz ?? metin.olusturulamadi }
       setHata(kod[String(j.code)] ?? metin.olusturulamadi)
     } catch {
       setHata(metin.baglantiHatasi)

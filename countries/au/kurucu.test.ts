@@ -41,8 +41,10 @@ describe('AU founding page: every fact matches the settings that checkout and th
     assert.match(t, new RegExp(`\\b${AU.sesDakika!.denemeDakika} minutes of live voice`))
     assert.match(t, new RegExp(`\\b${AU.sesDakika!.aylikDakika} minutes a month`))
     assert.match(t, /no card/i)
-    assert.match(M.teklif.govde, /monthly founding price is not locked/)
-    assert.match(M.teklif.govde, /yearly founding price is locked for the year/)
+    // AU-HUKUK-YANIT-01 (2026-11-05): the lawyer-approved pricing and scarcity wording.
+    assert.match(M.teklif.govde, /Monthly prices may change with 30 days’ notice/)
+    assert.match(M.teklif.govde, /Annual prices are locked for the prepaid year/)
+    assert.match(M.teklif.govde, /while places remain/)
     assert.equal(M.birinciDugme, 'Start your free trial')
     assert.equal(M.ikinciDugme, 'Book a 30-minute private demo')
   })

@@ -1,5 +1,6 @@
 /**
- * NOTYA-ULKE-01 — POST /api/ulke/kayit: create an account with an invitation code.
+ * NOTYA-ULKE-01 — POST /api/ulke/kayit: create an account — with an invitation code, or, where the pack opens sign-up
+ * (`uygulama.kayitAcik: true`, AU-ACIK-KAYIT-01, Kaan 2026-11-05), without one.
  *
  * Only where the country's pack switches `davetliKayit` on; anywhere else 404. The account is created HERE, on the
  * server, with the service role — the browser never calls the auth service's public sign-up.
@@ -18,13 +19,18 @@
  *
  * Answers with machine codes only. An e-mail that already has an account gets the same answer as any other failure
  * to create one (no way to ask "is this address registered?").
- * E-mail is marked confirmed: the invitation is the verification, as for staff invitations (app/api/personel/kabul).
+ * With a code, the e-mail is marked confirmed: the invitation is the verification, as for staff invitations
+ * (app/api/personel/kabul). OPEN sign-up has no invitation, so the account is created UNCONFIRMED and the auth service
+ * sends its confirmation email (the same service that sends password-reset links); sign-in is refused until the
+ * address is confirmed. If that email cannot be sent, the account is removed again so the person can simply retry.
+ * Every attempt is counted per IP address (lib/ulke/kayitKorumasi.ts) → 429 COK_DENEME.
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { ulkeServisSupabase } from '@/lib/ulke/sunucuOturum'
 import { sinirda } from '@/lib/ulke/uygulama/sinir'
 import { aktifUlke, ozellikAcik, ulkePaketi } from '@/lib/ulke/ulke'
 import { davetKoduBicimiGecerli, davetKoduHash, kayitKoduGerekliMi } from '@/lib/ulke/davet'
+import { istemciIp, kayitDenemesiIzinli, onayDonusAdresi } from '@/lib/ulke/kayitKorumasi'
 import { meslekKaydiGecerli } from '@/lib/ulke/uygulama/meslekKaydi'
 import { ulkeIslevi, ulkeTablosu } from '@/lib/ulke/uygulama/tablolar'
 
@@ -36,6 +42,7 @@ const cevap = (govde: Record<string, unknown>, status: number) =>
 
 export const POST = sinirda('sign-up POST', async (req: NextRequest) => {
   if (!ozellikAcik('davetliKayit')) return cevap({ code: 'NOT_FOUND' }, 404)
+  if (!kayitDenemesiIzinli(istemciIp(req.headers))) return cevap({ code: 'COK_DENEME' }, 429)
 
   const g = (await req.json().catch(() => null)) as Record<string, unknown> | null
   const adSoyad = typeof g?.adSoyad === 'string' ? g.adSoyad.trim() : ''
@@ -71,7 +78,7 @@ export const POST = sinirda('sign-up POST', async (req: NextRequest) => {
   const { data: yeni, error: hesapHatasi } = await supabase.auth.admin.createUser({
     email: eposta,
     password: sifre,
-    email_confirm: true,
+    email_confirm: kodGerekli,
     app_metadata: { country: ulke },
     user_metadata: { full_name: adSoyad, ui_language: dil, davetli: kodGerekli, ...(meslek ? { meslekKaydi: meslek } : {}) },
   })
@@ -90,5 +97,17 @@ export const POST = sinirda('sign-up POST', async (req: NextRequest) => {
     return cevap({ code: 'OLUSTURULAMADI' }, 500)
   }
 
-  return cevap({ ok: true }, 200)
+  if (!kodGerekli) {
+    // Open sign-up: the auth service sends the confirmation email. Its link returns only to this site's own sign-in page.
+    const donus = onayDonusAdresi(g?.donus, req.headers.get('x-forwarded-host') ?? req.headers.get('host'))
+    const { error: postaHatasi } = await supabase.auth.resend({ type: 'signup', email: eposta, ...(donus ? { options: { emailRedirectTo: donus } } : {}) })
+    if (postaHatasi) {
+      try { await ulkeTablosu(supabase, 'ulke_hesaplari').delete().eq('id', userId) } catch { /* removed with the user below */ }
+      try { await supabase.auth.admin.deleteUser(userId) } catch { /* reported below either way */ }
+      console.error('[ulke/kayit] confirmation email could not be sent', { ulke, durum: postaHatasi.status ?? null })
+      return postaHatasi.status === 429 ? cevap({ code: 'COK_DENEME' }, 429) : cevap({ code: 'OLUSTURULAMADI' }, 500)
+    }
+  }
+
+  return cevap({ ok: true, ...(kodGerekli ? {} : { onay: true }) }, 200)
 })

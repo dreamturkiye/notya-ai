@@ -25,7 +25,21 @@ import { AU_VISIT_PREP_ROL } from './araclar/visitPrep'
 import { AU_UZANTI } from './uzanti'
 import { AU_BIRIMLER, AU_VELI_YASI } from './temel'
 
-const cekirdek = enCekirdek('en-AU')
+const cekirdekTemel = enCekirdek('en-AU')
+// AU-ACIK-KAYIT-01 (Kaan, 2026-11-05): open self-serve sign-up, no invitation codes. Only the sentences that spoke of a
+// code change; every other word of the sign-in and sign-up surfaces is the shared English set.
+const cekirdek = {
+  ...cekirdekTemel,
+  giris: { ...cekirdekTemel.giris, davetSorusu: 'New to Notya?' },
+  davetliKayit: {
+    ...cekirdekTemel.davetliKayit,
+    baslik: 'Create your Notya account',
+    aciklama: 'Start your 15-day free trial. No card needed.',
+    basarili: 'Your account has been created. We have sent you an email: confirm your email address, then sign in.',
+    kodYokSorusu: 'Want to see the plans first?',
+    fiyatBaglantisi: 'See plans',
+  },
+}
 const metin = paketMetinleri({
   acikDiller: ['en-AU'],
   yuzeyler: ['hesap', 'giris', 'davetliKayit', 'bekletme', 'sistem'],
@@ -208,7 +222,9 @@ export const AU_PAKETI: UlkePaketi = {
     adAlanlari: { ikinciAd: false },
     kimlikNumarasi: { dogrula: true },
     veliYasi: AU_VELI_YASI,
-    // SIGN-UP IS CLOSED: invitation code only. Only the owner opens it, after section A of the checklist passes.
-    kayitAcik: false,
+    // AU-ACIK-KAYIT-01 (Kaan, 2026-11-05): SIGN-UP IS OPEN — self-serve, no invitation codes. Anyone can create an
+    // account; it starts the 15-day no-card trial (lib/billing/ulkeTicari.ts). Email confirmation and a per-IP attempt
+    // limit stay in front of it (app/api/ulke/kayit).
+    kayitAcik: true,
   },
 }

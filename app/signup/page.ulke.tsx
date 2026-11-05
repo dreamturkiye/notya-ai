@@ -1,6 +1,6 @@
 /**
  * NOTYA-ULKE-01 — /signup: sign-up with an invitation code, for a country whose launch gates have not passed
- * (docs/COUNTRY-PACK-CHECKLIST.md, rule 9). Exists only where the pack switches `davetliKayit` on; anywhere else
+ * (docs/COUNTRY-PACK-CHECKLIST.md, rule 9) — or without one where the pack opens sign-up (`uygulama.kayitAcik`). Exists only where the pack switches `davetliKayit` on; anywhere else
  * this address is "not found", as it was before this page existed.
  */
 import React from 'react'
@@ -45,6 +45,7 @@ export default function SignupPage({ searchParams }: { searchParams?: AramaParam
       anaSayfa={dilliYol('/', dil)}
       giris={plan ? `${girisYolu}${girisYolu.includes('?') ? '&' : '?'}plan=${plan}${aralik ? `&interval=${aralik}` : ''}` : girisYolu}
       fiyat={dilliYol('/', dil, acilisCapasi('narx') ? `#${acilisCapasi('narx')}` : '')}
+      cokDeneme={yuzeyMetinleri('giris', dil).cokDeneme}
       meslek={ulkePaketi().uzanti?.muayenehane?.meslekKaydiTasi ? undefined : { etiket: a.meslekKaydi, izoh: a.meslekKaydiIzoh, gecersiz: a.meslekKaydiGecersiz }}
     />
   )

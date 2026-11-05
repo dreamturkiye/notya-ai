@@ -4892,14 +4892,14 @@ Built for Australia on release/au (AU-law driven: Ahpra AI guidance, state surve
 Shipped on release/au: `/founding`, the AU demo link as a per-country setting (`lib/billing/ulkeTicari.ts` `demo`; the Cal.com event is the Turkish site's `demo-tr` event, the only one found), the static preview image `public/og/au-1200x630.png`. The EN copy rule now allows accurate trial wording where a country has an in-app trial. Open:
 
 | Kaan: confirm the Cal.com event is the 30-minute one and whether AU needs an English-titled event (paste the new link into `ulkeTicari.au.demo`) | Claude: none until then | OPEN (2026-11-03) |
-| Kaan: decide whether the landing's "Prices are given by quote" line changes now that /founding shows prices, and whether the landing links to /founding | Claude: apply the decision in `countries/au/uzanti/acilisEk.ts` | OPEN (2026-11-03) |
+| Kaan: decide whether the landing's "Prices are given by quote" line changes now that /founding shows prices, and whether the landing links to /founding | Claude: apply the decision in `countries/au/uzanti/acilisEk.ts` | DONE 2026-11-05 — line removed; landing plans now point to the founding page's published pricing (AU-HUKUK-YANIT-01) |
 | Kaan: other countries still say "60-minute" demo and have no founding page; decide per country | Claude: apply | OPEN (2026-11-03) |
 
 ## AU-LEGAL-MEMO-2026-11 — health-lawyer review before public launch (Kaan, 2026-11-03)
 
 `docs/au/LEGAL-MEMO-2026-11.md`: TGA device status of the voice assistant and paediatric tools, APP 8 position and a DPA for practices, consent wording, Spam Act rules, and six risky lines in the current AU copy (not rewritten in this job). Positioning draft awaiting approval: `docs/au/LANDING-COPY-DRAFT.md`.
 
-| Kaan: instruct an Australian health lawyer with the memo | Claude: rewrite the flagged copy and policy items from the lawyer's answer | OPEN (2026-11-03) |
+| Kaan: instruct an Australian health lawyer with the memo | Claude: rewrite the flagged copy and policy items from the lawyer's answer | DONE 2026-11-05 — answers received; revised texts published (AU-HUKUK-YANIT-01 below) |
 
 ## AU-POLITIKA-01 — AU launch policies: follow-ups (Claude, 2026-11-03)
 
@@ -4913,6 +4913,24 @@ the top of `countries/au/uzanti/politikalar.ts`. What the code does NOT have yet
 | 2026-11-03 | **AU-POLITIKA-01b — provider terms.** Confirm and record each provider's retention / no-training / breach-notice terms and processing countries (ElevenLabs, OpenRouter + zero-data-retention routing, OpenAI, Anthropic, Vercel, Supabase DPA), then update /sub-processors. | Claude (research), Kaan (sign provider DPAs) | OPEN (2026-11-03) |
 | 2026-11-03 | **AU-POLITIKA-01c — Kaan decisions.** (1) Approve the DPA template `docs/au/DPA-TEMPLATE.md` before sending it; (2) dormant-account retention period (pages say records stay until deletion is requested); (3) governing law / courts clause for the AU terms (not set); (4) confirm privacy@ / security@ / billing@notya.io mailboxes exist (the new pages use kaan@notya.io; the Security page and security.txt still use security@notya.io); (5) whether /signup should show Terms/Privacy links (it shows none today; shared component, all countries). | Kaan | OPEN (2026-11-03) |
 | 2026-11-03 | **AU-POLITIKA-01d — breach drill and access logging.** Run one tabletop drill before the first paying AU practice; describe how founder/admin access to patient data is logged (memo section 5). | Claude (drill script), Kaan (run it) | OPEN (2026-11-03) |
+
+## AU-HUKUK-YANIT-01 / AU-ACIK-KAYIT-01 — lawyer's answers applied, open self-serve sign-up; remaining pre-public-launch items (Claude, 2026-11-05)
+
+Shipped on release/au 2026-11-05: the revised texts of the AU legal review pack (privacy, data storage, sub-processors,
+DPA summary, terms incl. limitation of liability / NSW law / dispute resolution, refunds, landing disclaimer, paediatric
+tools and pricing wording, founding scarcity and testimonial disclosure), collection notice `au-2026-11-05`, and OPEN
+self-serve sign-up with no invitation codes (Kaan's decision): email confirmation + per-IP attempt limit
+(`lib/ulke/kayitKorumasi.ts`). Notya's own Stripe invoices carry the non-resident supplier line (customer invoice footer).
+
+| Date | Item | Owner | Status |
+|---|---|---|---|
+| 2026-11-05 | **Decision record — AU assistant wording kept ACCURATE, not "retrieval-only".** Public pages and policies describe the assistant only as: "The assistant helps the practitioner find and read back information recorded in the patient's file. It does not make clinical decisions; every clinical decision stays with the practitioner." The pack sentence "It does not generate new clinical assessments, diagnoses or treatment recommendations" and any retrieval-only claim were NOT published. No assistant/voice code, prompt, routing, tool or ElevenLabs config was changed (voice lock manifest unchanged). | Kaan (decision, 2026-11-05) | RECORDED |
+| 2026-11-05 | **Confirm the final intended-purpose statements with counsel** (voice assistant wording above, which differs from the pack's "pure retrieval" description counsel answered on; paediatric tools "plot and record"). | Counsel (Kaan instructs) | OPEN — waits on Kaan |
+| 2026-11-05 | **Obtain and publish provider retention / no-training terms** (ElevenLabs, OpenRouter, OpenAI, Anthropic; Vercel, Supabase DPAs), then update /sub-processors and the privacy policy. Continues AU-POLITIKA-01b. | Claude (research), Kaan (signs) | OPEN |
+| 2026-11-05 | **Security review / penetration test** referenced in the privacy policy and Security page. | Kaan | OPEN — waits on Kaan |
+| 2026-11-05 | **State-by-state confirmation**: surveillance/listening-devices consent rules for recording, and mature-minor ages for consent to recording and AI processing. | Counsel (Kaan instructs) | OPEN — waits on Kaan |
+| 2026-11-05 | **Sign-up hardening follow-ups**: (1) the Supabase redirect allow-list must include `https://au.notya.io/login` (otherwise the confirmation link still confirms the address but lands on the auth service's default Site URL); (2) the sign-in page shows the generic error for an unconfirmed address — a dedicated "confirm your email first" sentence needs a new key in every country's sign-in words; (3) the limiter is per server instance (in memory) — a shared store if abuse appears. | Claude (Kaan: allow-list in Supabase dashboard if Claude cannot set it) | OPEN |
+| 2026-11-05 | **Country parity of the shared sign-up route changes** (per-IP limit; the open-sign-up confirmation path, which stays dormant while a pack keeps `kayitAcik: false`): carry `app/api/ulke/kayit`, `components/ulke/DavetliKayitFormu.tsx`, `app/signup/page.ulke.tsx` and `lib/ulke/kayitKorumasi.ts` to release/us, gb, ca, nz, uz. Open sign-up itself is AU-only by Kaan's decision. | Claude | OPEN |
 
 ## POLITIKA-ULKE-01 — equivalent launch policies for the other five countries (Claude, waits on Kaan, 2026-11-03)
 

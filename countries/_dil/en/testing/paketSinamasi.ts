@@ -187,7 +187,10 @@ export function ingilizcePaketSinamasi(s: EnPaketSinamasi): void {
       // The ONE exemption: the draft labels that DENY a claim ("Initial compliance draft – external legal review later.",
       // "initial compliance and clinical draft", "Initial Australian compliance and clinical content …"). Any other use of the word still fails.
       const TASLAK_ETIKETI = /initial (australian )?compliance (draft|and clinical (draft|content))/gi
-      const taranan = metinler.map((x) => ({ ...x, metin: x.metin.replace(TASLAK_ETIKETI, '') }))
+      // AU-HUKUK-YANIT-01 (2026-11-05): the lawyer-approved landing disclaimer DENIES a claim too ("Practices remain
+      // responsible for their own compliance obligations."): exempt those exact words only.
+      const SORUMLULUK = /Practices remain responsible for their own compliance obligations\./g
+      const taranan = metinler.map((x) => ({ ...x, metin: x.metin.replace(TASLAK_ETIKETI, '').replace(SORUMLULUK, '') }))
       const iddia = ulkeTicari(kod)?.deneme ? IDDIA_DENEMELI : IDDIA
       assert.deepEqual(taranan.filter((x) => iddia.test(x.metin)).map((x) => `${x.yer}: ${iddia.exec(x.metin)?.[0]}`), [])
     })
@@ -210,10 +213,11 @@ export function ingilizcePaketSinamasi(s: EnPaketSinamasi): void {
         for (const r of ROLLER) assert.equal(arayuz.asistan(r, bicim), null, r)
       }
     })
-    it('hidden from search; sign-up by invitation code only', () => {
+    it('hidden from search; sign-up by invitation code only (Australia: open sign-up)', () => {
       // AU-SEO-01: Australia is indexable by owner decision (2026-10-22); every other country is hidden by default.
       assert.equal(paket.aramaMotorlarinaGizli, paket.kod !== 'au')
-      assert.equal(paket.uygulama!.kayitAcik, false)
+      // AU-ACIK-KAYIT-01 (Kaan, 2026-11-05): Australia's sign-up is open, with no invitation code; every other country stays closed.
+      assert.equal(paket.uygulama!.kayitAcik, paket.kod === 'au')
     })
     it('only what the country kit has built is switched on', () => {
       assert.deepEqual(Object.keys(paket.ozellikler).sort(), ['acilisSayfasi', 'araclar', 'bekletmeSayfasi', 'cekirdekGiris', 'cekirdekMuayene', 'davetliKayit', ...(s.ekOzellikler ?? []), 'hastaFormu', 'hastaMesajlari', 'hastaPortali', 'klinikHesaplari', ...(s.konsultasyonAcik ? ['konsultasyon'] : []), 'randevu'].sort())

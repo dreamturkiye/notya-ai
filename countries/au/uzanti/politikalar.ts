@@ -30,7 +30,9 @@
 import type { UzantiBelgesi } from '@/lib/ulke/uzanti/tipler'
 import { AU_OPERATOR, AU_PRIVACY_OFFICER } from './gizlilik'
 
-export const AU_POLITIKA_TARIHI = '3 November 2026'
+// AU-HUKUK-YANIT-01 (Kaan, 2026-11-05): the revised texts after the Australian lawyer's answers (revised review pack of
+// 5 November 2026) are published; every page that carries this date was brought to that revision.
+export const AU_POLITIKA_TARIHI = '5 November 2026'
 export const AU_POLITIKA_EPOSTA = 'kaan@notya.io'
 // No "draft" label on the public pages (the owner removed them on 2026-10-24: AU_TASLAK_ETIKETI = ''); the review status is in
 // docs/au/LEGAL-MEMO-2026-11.md. The first line of each page is its last-updated date.
@@ -100,6 +102,19 @@ export const AU_PRATIK_ODEME = 'If a practice connects its own payment account (
 
 export const altIsleyenSatiri = (x: AuAltIsleyen): string => `${x.ad}: ${x.amac} Data: ${x.veri} Location: ${x.yer}`
 
+/** The summary table of the revised review pack (section 1.3): provider | purpose | location | notes. */
+export const AU_ALT_ISLEYEN_OZETI = [
+  'Supabase — Database, sign-in, file storage — Sydney (ap-southeast-2) — US company.',
+  'Vercel — Application hosting — Sydney functions (syd1); global edge — US company.',
+  'ElevenLabs — Speech-to-text and live voice — Overseas — Retention and training terms to be confirmed.',
+  'OpenRouter — Model routing — Overseas (US) — data_collection=deny set in code.',
+  'OpenAI — Language models (primary) — Overseas (US) — Via OpenRouter.',
+  'Anthropic — Language models (fallback) — Overseas (US) — Via OpenRouter.',
+  'Stripe — Practitioner subscription payments — Overseas (US) — No patient data.',
+  'Google Fonts — Public page fonts — Overseas — Visitor IP.',
+  'Cal.com — Demo booking — Overseas — Visitor-entered details.',
+] as const
+
 const TERMS_NOT = 'How long each overseas provider keeps what it receives, and whether it may use it to improve its services or train its models, is set by that provider’s own terms. Notya is confirming each provider’s retention and no-training terms and will publish what it confirms on this page.'
 
 export const AU_ALT_ISLEYEN_BELGESI: UzantiBelgesi = {
@@ -107,9 +122,11 @@ export const AU_ALT_ISLEYEN_BELGESI: UzantiBelgesi = {
   inceleme: AU_POLITIKA_INCELEME,
   bolumler: [
     { baslik: 'About this list', paragraflar: [
+      'The following providers process personal information for the Australian Notya service. We remain accountable under the Privacy Act for their handling of the information we send them.',
       `Notya is provided by ${AU_OPERATOR}. A practice that uses Notya decides what is recorded about its patients; Notya processes that information on the practice’s behalf, with the help of the service providers below.`,
       'We will update this page before we add or replace a provider that receives patient information, and practices that have a data processing agreement with us will be told by email at least 30 days before the change takes effect.',
     ] },
+    { baslik: 'Summary: provider — purpose — location — notes', paragraflar: [...AU_ALT_ISLEYEN_OZETI] },
     { baslik: 'Providers that process practice and patient information', paragraflar: AU_ALT_ISLEYENLER.map(altIsleyenSatiri) },
     { baslik: 'Retention and model training by providers', paragraflar: [TERMS_NOT] },
     { baslik: 'Website-only services', paragraflar: [...AU_SITE_HIZMETLERI] },
@@ -144,7 +161,8 @@ export const AU_VERI_SAKLAMA: UzantiBelgesi = {
       'A visit is recorded only after the practitioner confirms that the patient (or their parent or guardian) has agreed. The recording is deleted from storage once it has been turned into text. The transcript and the note are kept as part of the record.',
     ] },
     { baslik: 'How long information is kept', paragraflar: [
-      'While an account is open, its records are kept. A free trial that ends without a paid plan leaves the account read-only: nothing is deleted, and the practitioner can still see their records.',
+      'Records are kept while the practice’s account exists. We delete an account and its records within 30 days of a written request from the account holder. Backups expire on the provider’s schedule.',
+      'A free trial that ends without a paid plan leaves the account read-only: nothing is deleted, and the practitioner can still see their records.',
       'Notya does not delete records by itself after a set time. Records stay until the practice asks for them to be deleted, as described below.',
     ] },
     { baslik: 'Cancelling a subscription', paragraflar: [
@@ -170,19 +188,21 @@ export const AU_DPA_BELGESI: UzantiBelgesi = {
   inceleme: AU_POLITIKA_INCELEME,
   bolumler: [
     { baslik: 'Available on request', paragraflar: [
-      `Notya offers every practice a short data processing agreement. Email ${AU_POLITIKA_EPOSTA} to receive it for signature. A summary of what it says is below; the signed agreement is what applies.`,
+      `A data processing agreement is available on request. Notya offers every practice a short data processing agreement: email ${AU_POLITIKA_EPOSTA} to receive it for signature. A summary of what it says is below; the signed agreement is what applies.`,
     ] },
     { baslik: 'Roles', paragraflar: [
       'The practice decides what is collected about its patients and why. Notya LLC handles that information only to provide the Notya service to the practice, on the practice’s documented instructions, and for no other purpose. Notya does not sell it, does not use it for advertising, and does not use it to train its own models.',
+      'The application never makes clinical decisions; the practitioner remains responsible for all clinical decisions.',
     ] },
     { baslik: 'What Notya agrees to', paragraflar: [
       'Keep the information confidential and limit access to people who need it to provide the service.',
       'Keep the security measures described on the Data storage and retention and Security pages, and tell the practice about a material change.',
-      'Use only the providers listed on the Sub-processors page, under written terms that require them to protect the information, and give at least 30 days’ notice before adding or replacing a provider that receives patient information, so the practice can object or end the service.',
-      'Tell the practice without undue delay, and within 72 hours, after Notya confirms a data breach affecting the practice’s information, and help the practice assess it and notify the Office of the Australian Information Commissioner and the people affected where that is required.',
+      'Use only the providers listed on the Sub-processors page, under written terms that require them to protect the information, and give at least 30 days’ email notice before adding or replacing a provider that receives patient information. The practice may object and, if the objection cannot be resolved, end the service with a pro-rata refund of prepaid fees for the unused period.',
+      'Tell the practice without undue delay, and within 72 hours, after Notya confirms a data breach affecting the practice’s information, and help the practice assess it (within 30 days of suspicion) and notify the Office of the Australian Information Commissioner and the people affected where that is required.',
       'Help the practice answer patients’ requests to see or correct their information.',
-      'When the agreement ends, give the practice a copy of its information on request and then delete it, as described on the Data storage and retention page.',
-      'Answer the practice’s reasonable questions about how the information is handled.',
+      'On written request, or when the service ends, give the practice a copy of its information and then delete it from the live database within 30 days; backups expire on the provider’s schedule. Notya may keep billing records the law requires it to keep.',
+      'Answer the practice’s reasonable written questions about how the information is handled.',
+      'The agreement lasts as long as Notya handles the practice’s information.',
     ] },
     { baslik: 'What the practice agrees to', paragraflar: [
       'Have a lawful basis to collect its patients’ information, including their consent where it is needed; confirm consent before recording a visit; review and approve every draft note; and keep its own records for as long as the law requires.',

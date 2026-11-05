@@ -95,10 +95,10 @@ describe('practice details: empty is valid, invalid shows a sentence and is not 
 })
 
 describe('landing disclaimers, labels and honesty', () => {
-  it('the four disclaimers are exact (AU-POLITIKA-01: lines 2 and 3 rewritten from the legal memo)', () => {
+  it('the four disclaimers are exact (AU-POLITIKA-01: lines 2 and 3 rewritten from the legal memo; AU-HUKUK-YANIT-01: line 2 is the revised pack\'s landing disclaimer)', () => {
     assert.deepEqual([...AU_YASAL_SATIRLARI], [
       'Notya is a practice management and clinical documentation tool. It does not provide medical advice, diagnosis, or treatment. Clinical decisions remain the responsibility of the registered practitioner.',
-      'How Notya handles personal and health information, and which providers process it, is set out in our Privacy Policy. A visit is recorded only after the practitioner confirms the patient has agreed.',
+      'Notya is designed to help practices handle health information in a manner consistent with the Privacy Act 1988 (Cth) and the Australian Privacy Principles. Practices remain responsible for their own compliance obligations. Patient consent for recording and AI processing is obtained through the in-product consent process before any recording begins. Use of the public website does not constitute patient consent. How Notya handles personal and health information, and which providers process it, is set out in our Privacy Policy.',
       'Where Notya shows clinical reference content, it names the publicly available source it comes from. Notya is not affiliated with those organisations, and they have not reviewed Notya.',
       'Notya is not a substitute for professional medical advice. Always consult a registered Australian health practitioner for medical concerns.',
     ])
@@ -125,7 +125,8 @@ describe('landing disclaimers, labels and honesty', () => {
   })
   it('explicit consent is a separate, un-ticked action with a version', () => {
     assert.match(AU_GIZLILIK.riza.kutu, /consent/)
-    assert.match(AU_GIZLILIK.surum, /^au-\d{4}-\d{2}-\d{2}-draft-\d+$/)
+    // AU-HUKUK-YANIT-01 (2026-11-05): the version after the lawyer's answers has no "draft" suffix.
+    assert.match(AU_GIZLILIK.surum, /^au-\d{4}-\d{2}-\d{2}(-draft-\d+)?$/)
   })
   it('invoices: GST 10%, tax-free by default, ABN printed from the practice details', () => {
     assert.equal(AU_FATURA.oranYuzde, 10)

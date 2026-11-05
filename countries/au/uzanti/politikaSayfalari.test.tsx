@@ -25,7 +25,7 @@ describe('AU launch policy pages render', () => {
       const html = renderToStaticMarkup(React.createElement(uzantiBelgesi(slug).Sayfa))
       assert.ok(html.includes(b.baslik.replace(/&/g, '&amp;')), slug)
       for (const x of b.bolumler) assert.ok(html.includes(x.baslik), `${slug}: ${x.baslik}`)
-      assert.match(html, /Last updated 3 November 2026\./)
+      assert.match(html, /Last updated 5 November 2026\./)
     })
     it(`/${slug} has its page file and is an allowed route`, async () => {
       const kaynak = readFileSync(join(KOK, 'app', slug, 'page.ulke.tsx'), 'utf8')
@@ -85,7 +85,8 @@ describe('AU launch policy content', () => {
     const t = ulkeTicari('au')!
     const m = JSON.stringify(AU_YASAL.diller[0].belgeler.find((b) => b.anahtar === 'terms'))
     assert.ok(m.includes(`${t.deneme!.gun}-day free trial`))
-    assert.ok(m.includes(`up to ${t.deneme!.muayene} visits and ${t.sesDakika!.denemeDakika} minutes`))
+    // AU-HUKUK-YANIT-01 (2026-11-05): the revised wording of the trial limits.
+    assert.ok(m.includes(`limited to ${t.deneme!.muayene} recorded visits and ${t.sesDakika!.denemeDakika} live-voice minutes`))
     assert.ok(m.includes(`${t.sesDakika!.aylikDakika} minutes of the live voice assistant each month`))
     for (const f of [t.fiyatlar!.normal.month, t.fiyatlar!.normal.year, t.fiyatlar!.kurucu!.month, t.fiyatlar!.kurucu!.year]) assert.ok(m.includes(f), f)
     assert.match(m, /renews automatically/)

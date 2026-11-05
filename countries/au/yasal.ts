@@ -12,7 +12,7 @@
 import { ingilizceYasal } from '@/lib/ulke/yasal/ingilizce'
 import { YASAL_EPOSTA as E } from '@/lib/ulke/yasal/eposta'
 import type { YasalBelge, YasalKapisi } from '@/lib/ulke/yasal/tipler'
-import { AU_GIZLILIK, AU_OPERATOR, AU_PRIVACY_OFFICER, AU_TASLAK_ETIKETI } from './uzanti/gizlilik'
+import { AU_ASISTAN_TANIMI, AU_GIZLILIK, AU_OPERATOR, AU_PRIVACY_OFFICER, AU_TASLAK_ETIKETI } from './uzanti/gizlilik'
 import { AU_ALT_ISLEYENLER, AU_POLITIKA_EPOSTA, AU_POLITIKA_INCELEME, AU_PRATIK_ODEME, AU_SITE_HIZMETLERI, altIsleyenSatiri } from './uzanti/politikalar'
 
 const temel = ingilizceYasal({
@@ -34,7 +34,9 @@ const MEDICAL: YasalBelge = {
   bolumler: [
     { baslik: 'Intended purpose', paragraflar: [
       'Notya assists registered practitioners with documentation and practice administration. It records a visit with the patient’s agreement, turns what was said into a draft visit note, and keeps appointments, patient pages, forms and invoices. The practitioner reviews, corrects and approves every note before it becomes part of the record. Notya does not diagnose, does not suggest a diagnosis or a treatment, and does not replace the practitioner’s clinical judgement.',
-      'Reference tools (checklists, scales and calculators that work only on figures the practitioner enters, and links to published sources) are decision support only. The practitioner decides.',
+      AU_ASISTAN_TANIMI,
+      'Paediatric tools plot growth measurements and record immunisation dates against the Australian schedule. Other reference tools (checklists, scales and calculators) work only on figures the practitioner enters, and links open published sources. The practitioner reviews and interprets the information.',
+      'The application never makes clinical decisions for the practitioner. The practitioner remains responsible for all clinical decisions.',
     ] },
     { baslik: 'Drafts, not a decision', paragraflar: [
       'Notya is a practice management and clinical documentation tool. It records and organises what the practitioner says and enters, drafts a visit note for the practitioner to read, correct and approve, and keeps appointments, patient pages and invoices.',
@@ -75,7 +77,7 @@ const PRIVACY: YasalBelge = {
     ] },
     { baslik: 'Artificial intelligence', paragraflar: [
       'Visit notes: when a visit is recorded, the recording is sent to a speech provider to turn it into text, and the transcript is sent to a language-model provider to draft a note. The note is only a draft until the practitioner reads, corrects and approves it. The practitioner remains responsible for the record.',
-      'Live voice assistant: when a practitioner talks to the assistant, their voice is sent to the speech provider; Notya’s own server (in Sydney) reads the relevant parts of the patient’s file and sends them, with the question, to a language-model provider; the answer is sent back to the speech provider to be spoken. The assistant finds and reads back what is in the file; decisions remain with the practitioner.',
+      `Live voice assistant: when a practitioner talks to the assistant, their voice is sent to the speech provider; Notya’s own server (in Sydney) reads the relevant parts of the patient’s file and sends them, with the question, to a language-model provider; the answer is sent back to the speech provider to be spoken. ${AU_ASISTAN_TANIMI}`,
       'The practitioner can also ask for a plain-language summary of an approved note for the patient. Attached documents, scans and photos are not sent to an AI model in the Australian service.',
     ] },
     { baslik: 'Consent before recording', paragraflar: [
@@ -159,27 +161,27 @@ const TERMS: YasalBelge = {
       'Nothing in these terms excludes, restricts or modifies any right or remedy you have under the Australian Consumer Law, or any other law, that cannot lawfully be excluded, restricted or modified.',
     ] },
     { baslik: 'Who can use Notya', paragraflar: [
-      'Notya is for registered health practitioners and their practices. During the early-access period, an account is opened with an invitation code we provide. You keep your password private and do not share your account; you are responsible for the people you give access to in your practice.',
+      'Notya is for registered health practitioners and their practices. Accounts are opened through self-serve sign-up at au.notya.io; no invitation code is needed. The founding offer at au.notya.io/founding is available while founding places remain. You keep your password private and do not share your account; you are responsible for the people you give access to in your practice.',
     ] },
     { baslik: 'Your clinical responsibility', paragraflar: [
-      'Notya prepares drafts: a note, a summary, a reminder. You read, correct and approve every draft before it becomes part of a record. Diagnosis, treatment and what is said to a patient remain your responsibility. You confirm a patient’s consent before recording a visit, and you follow the recording, privacy and health records laws that apply to you. See the Medical disclaimer.',
+      'Notya prepares drafts: a note, a summary, a reminder. You read, correct and approve every draft before it becomes part of a record. Diagnosis, treatment and what is said to a patient remain your responsibility. The practitioner remains responsible for all clinical decisions. The application never makes clinical decisions for the practitioner. You confirm a patient’s consent before recording a visit, and you follow the recording, privacy and health records laws that apply to you. See the Medical disclaimer.',
     ] },
     { baslik: 'Free trial', paragraflar: [
-      'A new account starts with a 15-day free trial. No card is needed. The trial includes up to 40 visits and 60 minutes of the live voice assistant.',
-      'If you do not choose a paid plan by the end of day 15, the account becomes read-only: your records are kept and you can still view them and download patient records, but you cannot record new visits, use the live voice assistant or generate new drafts until you choose a plan.',
+      'A new account starts with a 15-day free trial. No card is needed. The trial is limited to 40 recorded visits and 60 live-voice minutes.',
+      'After day 15 the account becomes read-only until a paid plan is chosen: your records are kept and you can still view them and download patient records, but you cannot record new visits, use the live voice assistant or generate new drafts until you choose a plan.',
     ] },
     { baslik: 'Plans and prices', paragraflar: [
       'Standard plans: A$149 a month, or A$1,490 a year. Prices are in Australian dollars and are as shown at checkout.',
-      'Founding offer, for the first 20 practitioners who take it: A$79 a month, or A$948 a year. The founding monthly price is not fixed: we may change it by giving you at least 30 days’ notice by email, and you can cancel before the change takes effect. The founding yearly price is fixed for the year you have paid for.',
+      'Founding offer (first 20 doctors), while places remain: A$79 a month (the price may change with 30 days’ notice) or A$948 a year (locked for the prepaid year). A live counter on the founding page shows places remaining. If we change the founding monthly price, we tell you by email at least 30 days before, and you can cancel before the change takes effect.',
       'Paid plans include 150 minutes of the live voice assistant each month. The written assistant is not counted against these minutes.',
-      'We may change standard prices by giving you at least 30 days’ notice by email before the change applies to your next billing period.',
+      'Current pricing is published on the founding page. Monthly prices may change with 30 days’ notice by email before the change applies to your next billing period. Annual prices are locked for the prepaid year.',
     ] },
     { baslik: 'Billing and automatic renewal', paragraflar: [
-      'Payment is taken by Stripe at the start of each billing period. Your subscription renews automatically at the end of each month or year, at the price that applies then, until you cancel.',
+      'Subscriptions are paid through Stripe Checkout, and payment is taken at the start of each billing period. Your subscription renews automatically at the end of each month or year, at the price that applies then, until you cancel.',
       'If a payment cannot be collected, the account may become read-only until it is paid.',
     ] },
     { baslik: 'Cancelling', paragraflar: [
-      `You can cancel at any time by emailing ${AU_POLITIKA_EPOSTA} from your account’s email address. Cancelling stops the next renewal; the period you have already paid for continues to its end. After that, the account is read-only and your records are kept until you ask us to delete them, as described on the Data storage and retention page.`,
+      `Cancellation, export and deletion are currently handled by email to ${AU_POLITIKA_EPOSTA} from your account’s email address. We act within 30 days. You can cancel at any time; cancelling stops the next renewal; the period you have already paid for continues to its end. After that, the account is read-only and your records are kept until you ask us to delete them, as described on the Data storage and retention page.`,
       'Refunds are covered on the Refunds and cancellation page.',
     ] },
     { baslik: 'Your records', paragraflar: [
@@ -191,6 +193,15 @@ const TERMS: YasalBelge = {
     { baslik: 'The service', paragraflar: [
       'We work to keep Notya available and accurate, but it may sometimes be unavailable, and an AI draft can contain mistakes; that is why every draft needs your approval. We may change features over time; we will give at least 30 days’ notice of a change that materially reduces what your paid plan includes.',
       'We may suspend an account that breaches these terms or puts other users at risk; except in an urgent case we will tell you first and give you a chance to fix the problem.',
+    ] },
+    { baslik: 'Limitation of liability', paragraflar: [
+      'To the maximum extent permitted by law, Notya’s total liability arising out of or in connection with the Service is limited to the fees paid by the Practice in the 12 months preceding the claim. Nothing in these Terms excludes or limits liability that cannot be excluded under the Australian Consumer Law (including consumer guarantees).',
+    ] },
+    { baslik: 'Governing law and forum', paragraflar: [
+      'These Terms are governed by the laws of New South Wales, Australia. The parties submit to the non-exclusive jurisdiction of the courts of New South Wales. For small-business customers, the Australian Consumer Law applies to the extent it cannot be contracted out of.',
+    ] },
+    { baslik: 'Dispute resolution', paragraflar: [
+      'Before commencing proceedings, the parties must attempt good-faith negotiation for 14 days after written notice of a dispute. Either party may then refer the dispute to mediation in Sydney under the Resolution Institute rules. Court proceedings may be commenced if mediation does not resolve the dispute within 30 days.',
     ] },
     { baslik: 'Changes to these terms', paragraflar: ['We will post any change here with a new date, and email you at least 30 days before a change that affects you materially.'] },
     { baslik: 'Contact', paragraflar: [`${AU_OPERATOR}. Email: ${AU_POLITIKA_EPOSTA}.`] },
@@ -206,7 +217,8 @@ const REFUND: YasalBelge = {
       `You can cancel at any time by emailing ${AU_POLITIKA_EPOSTA} from your account’s email address. The period you have already paid for continues to the date it was paid for, and no further period begins after that date. Your records are kept, read-only, until you ask us to delete them.`,
     ] },
     { baslik: 'Refunds', paragraflar: [
-      'The free trial needs no payment, so you can try Notya before you pay. We do not normally refund the unused part of a month or year because you change your mind.',
+      `Refund requests are considered case by case: write to ${AU_POLITIKA_EPOSTA}. Consumer guarantees under the Australian Consumer Law are not excluded.`,
+      'The free trial needs no payment, so you can try Notya before you pay.',
       'This does not limit your rights under the Australian Consumer Law. Our services come with guarantees that cannot be excluded under that law. If the service has a major failure, you are entitled to cancel and to a refund for the unused part of what you paid, or to compensation for the drop in value; for a failure that is not major, we will fix it within a reasonable time, and if we do not, you may cancel and ask for a refund.',
     ] },
     { baslik: 'Billing questions', paragraflar: [`Write to ${AU_POLITIKA_EPOSTA}.`] },

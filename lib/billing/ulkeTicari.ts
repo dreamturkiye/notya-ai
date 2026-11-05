@@ -96,6 +96,11 @@ export interface UlkeTicariAyar {
   kurucuSayfasi?: KurucuSayfasiMetni
   /** The demo button's words where it appears outside /demo (founding page, upgrade prompt). */
   demoDugmesi?: string
+  /**
+   * AU-HUKUK-YANIT-01 (Kaan, 2026-11-05): the supplier line on Notya's OWN subscription invoices and receipts, set as the
+   * Stripe customer's invoice footer by app/api/billing/checkout. Absent = no footer is set (Türkiye unchanged).
+   */
+  faturaNotu?: string
 }
 
 export const ULKE_TICARI: Readonly<Record<string, UlkeTicariAyar>> = {
@@ -132,6 +137,8 @@ export const ULKE_TICARI: Readonly<Record<string, UlkeTicariAyar>> = {
     },
     demo: { adres: 'https://cal.com/han-mamur-sugmbo/demo-tr' },
     demoDugmesi: 'Book a 30-minute private demo',
+    // GST answer of the Australian lawyer (2026-11-05): invoices/receipts note that the supplier is a non-resident.
+    faturaNotu: 'Supplier: Notya LLC, a United States company (3424 Sollers Point Rd., Baltimore, MD 21222, USA). Notya LLC is a non-resident supplier with no Australian ABN.',
     // AU-KURUCU-01 (Kaan, 2026-11-03). Every fact here is a setting above (seats, prices, trial days and caps) and is
     // checked against them in lib/billing/kurucuSayfasi.test.ts. No diagnosis or treatment claim, no regulator, no competitor.
     kurucuSayfasi: {
@@ -153,7 +160,7 @@ export const ULKE_TICARI: Readonly<Record<string, UlkeTicariAyar>> = {
         ustBaslik: 'What founding doctors get',
         baslik: 'A founding price,',
         baslikVurgu: 'for the first 20 doctors only.',
-        govde: 'Choose monthly or yearly when you upgrade from your trial. The monthly founding price is not locked and can change with notice; the yearly founding price is locked for the year you pay for.',
+        govde: 'Available while places remain. Choose monthly or yearly when you upgrade from your trial. Monthly prices may change with 30 days’ notice. Annual prices are locked for the prepaid year.',
         maddeler: ['A$79 a month, or A$948 a year with the price locked for that year', 'Live voice: 150 minutes a month on any paid plan; the text assistant has no minute limit', 'A direct line to the founders for questions and requests', 'Everything you do in the trial carries over when you upgrade'],
         kartEtiketi: 'Founding offer',
         kartNot: 'From the 21st doctor the regular price applies: A$149 a month or A$1,490 a year.',
@@ -180,8 +187,8 @@ export const ULKE_TICARI: Readonly<Record<string, UlkeTicariAyar>> = {
         ustBaslik: 'What we ask in return',
         baslik: 'Your feedback,',
         baslikVurgu: 'and a few words if it helps you.',
-        govde: 'Founding doctors tell us what works and what does not, so we can fix it quickly. If Notya saves you time, we will ask for a short testimonial we may quote, with your permission and in your own words.',
-        maddeler: ['Tell us what to fix, by email or a short call', 'A short testimonial, only if you are happy with Notya and only with your written permission', 'No patient information is ever part of feedback or a testimonial'],
+        govde: 'Founding doctors tell us what works and what does not, so we can fix it quickly. If Notya saves you time, we will ask for a short testimonial we may quote, with your permission and in your own words. Wherever we quote a founding doctor, we say so: “Founding doctor — receives the founding pricing.”',
+        maddeler: ['Tell us what to fix, by email or a short call', 'A short testimonial, only if you are happy with Notya and only with your written permission', 'Every quote is labelled “Founding doctor — receives the founding pricing.”', 'No patient information is ever part of feedback or a testimonial'],
         kartEtiketi: 'In return',
         kartNot: 'You can stop at any time.',
       },

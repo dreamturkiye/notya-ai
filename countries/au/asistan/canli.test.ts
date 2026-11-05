@@ -90,7 +90,8 @@ describe('au live assistant', () => {
       assert.ok(!/microphone|aloud|spoken/i.test(metin()))
       Object.assign(process.env, ORTAM)
       assert.match(metin(), /Press the microphone on your home screen/)
-      assert.match(metin(), /not a diagnosis or a treatment decision/)
+      // AU-HUKUK-YANIT-01 (2026-11-05): the one agreed description of the assistant (landing wording only).
+      assert.match(metin(), /It does not make clinical decisions; every clinical decision stays with the practitioner\./)
       delete process.env.ELEVENLABS_AGENT_AU_FEMALE
       assert.ok(!/microphone/i.test(metin()))
     } finally {

@@ -110,11 +110,16 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    // AU-HUKUK-YANIT-01: the country's supplier line on Notya's own invoices and receipts (Stripe customer invoice footer).
+    const faturaNotu = ulkeTicari(ulke)?.faturaNotu
     let customerId = profile?.stripe_customer_id || null
     if (customerId) {
       // Verify it still exists on this Stripe account (switching accounts later would orphan it).
       try {
-        await stripe.customers.retrieve(customerId)
+        const mevcut = await stripe.customers.retrieve(customerId)
+        if (faturaNotu && !('deleted' in mevcut && mevcut.deleted) && (mevcut as { invoice_settings?: { footer?: string | null } }).invoice_settings?.footer !== faturaNotu) {
+          try { await stripe.customers.update(customerId, { invoice_settings: { footer: faturaNotu } }) } catch { /* the footer is a note; checkout goes on */ }
+        }
       } catch {
         customerId = null
       }
@@ -124,6 +129,7 @@ export async function POST(req: NextRequest) {
         email: profile?.email || user.email || undefined,
         name: profile?.full_name || undefined,
         metadata: { supabase_user_id: user.id },
+        ...(faturaNotu ? { invoice_settings: { footer: faturaNotu } } : {}),
       })
       customerId = customer.id
       await sb.from('users').update({ stripe_customer_id: customerId, updated_at: new Date().toISOString() }).eq('id', user.id)

@@ -20,9 +20,13 @@
  * deployment really holds both agents, the key and the secrets (lib/ulke/asistan/ajan.ts canliAjanlarVar), and never with a
  * claim of diagnosis, decision support, a regulator or a standard. [components/ulke/uygulama/AsistanCanli.tsx, app/api/ulke/asistan-canli/]
  * No competitor, no public demo of the product, no named integration other than the doctor's own Stripe account.
+ * AU-HUKUK-YANIT-01 (Kaan, 2026-11-05): the assistant is described ONLY with AU_ASISTAN_TANIMI (./gizlilik.ts) — no
+ * "reference information", answer, recommendation or decision-support claim; paediatric tools "plot and record"; sign-up
+ * is open and self-serve (no invitation code); pricing points to the founding page; "Prices are given by quote" removed.
  */
 import type { AcilisIcerigi, EkOzellikBolumu } from '@/lib/ulke/arayuz/acilisTipleri'
 import { canliAjanlarVar } from '@/lib/ulke/asistan/ajan'
+import { AU_ASISTAN_TANIMI } from './gizlilik'
 
 const EPOSTA = 'kaan@notya.io'
 
@@ -39,11 +43,11 @@ function ekBolumler(rolSayisi: number, sesli: boolean = SESLI()): EkOzellikBolum
       ustBaslik: 'Your assistant',
       baslik: 'An assistant with a name',
       baslikVurgu: 'for your specialty.',
-      govde: `Each of the ${rolSayisi} specialties and professions has an assistant with its own name. You meet it on your home screen, and it is named on the visit and on every note it drafts. The names are invented product names, not real clinicians.${sesli ? ' Press the microphone on your home screen and talk to it: you hear a short answer in an Australian voice, and the full written answer stays on your screen. It gives general reference information, not a diagnosis or a treatment decision.' : ''}`,
-      maddeler: ['A card on your home screen, set for the specialty you chose', 'Each draft says who wrote it: “Note drafted by …”', 'The assistant drafts and organises. It never approves anything for you', ...(sesli ? ['Ask out loud: a short spoken answer, the full text on your screen'] : [])],
+      govde: `Each of the ${rolSayisi} specialties and professions has an assistant with its own name. You meet it on your home screen, and it is named on the visit and on every note it drafts. The names are invented product names, not real clinicians.${sesli ? ` Press the microphone on your home screen and talk to it: you hear it in an Australian voice, and the full text stays on your screen. ${AU_ASISTAN_TANIMI}` : ''}`,
+      maddeler: ['A card on your home screen, set for the specialty you chose', 'Each draft says who wrote it: “Note drafted by …”', 'The assistant drafts and organises. It never approves anything for you', ...(sesli ? ['Ask out loud to find something in the patient’s file: it is read back to you, and the text stays on your screen'] : [])],
       kart: {
         etiket: 'Your assistant',
-        satirlar: [{ k: 'Home screen', v: 'Named for your role' }, { k: 'Visit screen', v: 'Says who drafts the note' }, { k: 'Drafted note', v: 'Marked “Draft written by …”' }, { k: 'Approval', mark: 'Yours' }, ...(sesli ? [{ k: 'Voice', v: 'Short answer aloud, full text on screen' }] : [])],
+        satirlar: [{ k: 'Home screen', v: 'Named for your role' }, { k: 'Visit screen', v: 'Says who drafts the note' }, { k: 'Drafted note', v: 'Marked “Draft written by …”' }, { k: 'Approval', mark: 'Yours' }, ...(sesli ? [{ k: 'Voice', v: 'Reads back the patient’s file' }] : [])],
         not: 'Change your specialty in Settings and the assistant changes with it.',
       },
     },
@@ -77,7 +81,7 @@ function ekBolumler(rolSayisi: number, sesli: boolean = SESLI()): EkOzellikBolum
       ustBaslik: 'Australian practice tools',
       baslik: 'Checklists and links',
       baslikVurgu: 'for Australian paperwork.',
-      govde: 'For doctors: checklists of the particulars that Australian legislation prescribes for a Medicare account, a PBS prescription and a GST tax invoice, a format check of Medicare card and provider numbers, an immunisation schedule shown as a calendar on the patient’s file, and links out to MBS Online and the PBS listings. Each tool shows its source.',
+      govde: 'For doctors: checklists of the particulars that Australian legislation prescribes for a Medicare account, a PBS prescription and a GST tax invoice, a format check of Medicare card and provider numbers, and links out to MBS Online and the PBS listings. Paediatric tools plot growth measurements and record immunisation dates against the Australian schedule. The practitioner reviews and interprets the information. Each tool shows its source.',
       maddeler: ['A tick is your own note; it does not decide that a benefit is payable', 'Nothing is lodged, claimed or sent: Notya is not connected to Medicare, the PBS or any government system', 'Link-outs open the official site in a new tab; only the term you typed is used', 'Tools for your specialty are drafts awaiting clinician review, and some are switched off until then'],
       kart: {
         etiket: 'In the tools area',
@@ -99,7 +103,7 @@ function klinikEk(): EkOzellikBolumu[] {
       maddeler: ['The front-desk workspace shows a doctor’s appointments, lets staff mark arrived, did not come or cancelled, find a patient, and, where the doctor allowed it, add a patient or hand out the patient-page link and PIN', 'The front desk never sees notes, visits, transcripts, form answers, appointment reasons or identity numbers', 'The clinic schedule shows when each member has an appointment, with nothing of any patient', 'Each clinician reads a record of every permission given and every use made of it', 'Doctors can ask a colleague in the same country for a view on an approved note or summary, with consent and with no patient name'],
       kart: {
         etiket: 'A clinic account',
-        satirlar: [{ k: 'Invitation codes', v: 'Shown once' }, { k: 'Positions' }, { k: 'Permissions', v: 'One at a time, withdrawable' }, { k: 'Front desk', v: 'Only what was granted' }, { k: 'Record of use', v: 'Yours to read' }],
+        satirlar: [{ k: 'One-time team codes', v: 'Shown once' }, { k: 'Positions' }, { k: 'Permissions', v: 'One at a time, withdrawable' }, { k: 'Front desk', v: 'Only what was granted' }, { k: 'Record of use', v: 'Yours to read' }],
         not: 'Each account sees only its own patients unless a permission says otherwise.',
       },
     },
@@ -144,27 +148,31 @@ export function auAcilisGuncelle(c: AcilisIcerigi, rolSayisi: number): AcilisIce
     narx: {
       ...c.narx,
       ustBaslik: '10 — Plans',
-      baslik: 'Early access.',
-      baslikVurgu: 'By quote.',
+      baslik: 'Open sign-up.',
+      baslikVurgu: 'Start with a free trial.',
+      sorovNarx: '15-day free trial',
+      sorovDugme: 'Contact us',
       gruplar: c.narx.gruplar.map((g) => ({
         ...g,
         rejalar: g.rejalar.map((r) => (r.id === 'doctor'
           ? { ...r, maddeler: planEk(r.maddeler, ['An assistant named for your specialty', 'Invoices in Australian dollars, paid into your own Stripe account', 'Privacy requests with a response timer', 'Checklists and links for Australian paperwork']) }
           : r)),
         izoh: g.id === 'clinic'
-          ? `Early access: accounts are opened with an invitation code while the first practices are set up. Ask for one at ${EPOSTA}. The price depends on the number of accounts.`
-          : `Early access: accounts are opened with an invitation code while the first practices are set up. Ask for one at ${EPOSTA}. Prices are given by quote.`,
+          ? `Anyone can create an account and start a 15-day free trial, no card needed. For a clinic with several accounts, write to ${EPOSTA}; the price depends on the number of accounts.`
+          : 'Anyone can create an account and start a 15-day free trial, no card needed. Current pricing is published on the founding page. Monthly prices may change with 30 days’ notice. Annual prices are locked for the prepaid year.',
       })),
     },
     sorov: {
       ...c.sorov,
-      govde: `Early access. Tell us the specialty and how you work and we will come back with a quote and an invitation code, or write to ${EPOSTA}.`,
+      govde: `Questions before you sign up? Tell us the specialty and how you work and we will get back to you, or write to ${EPOSTA}.`,
       formYok: `The request form opens soon. In the meantime, write to ${EPOSTA}.`,
+      davetSorusu: 'Ready to try it?',
     },
+    altBilgi: { ...c.altBilgi, kayit: 'Create an account' },
     klinik: {
       ...c.klinik,
       ekBolumler: klinikEk(),
-      cta: { ...c.klinik.cta, govde: `Early access: accounts are opened with an invitation code. Tell us the discipline and how many accounts you need, or write to ${EPOSTA}.` },
+      cta: { ...c.klinik.cta, govde: `Anyone can create an account and start a 15-day free trial, no card needed. For several accounts, tell us the discipline and how many you need, or write to ${EPOSTA}.` },
     },
   }
 }
