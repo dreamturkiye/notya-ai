@@ -24,4 +24,5 @@
 
 ## Liste büyütme
 
-Agent gece / ertesi sabaha kadar İstanbul pediatri + KD + dermatoloji public listing harvest + mobil enrich devam ediyor → `tr-call-ready-leads.csv` / `tr-whatsapp-next-batch.csv`.
+Harvest öncelik: **İstanbul (ana)** → Ankara + İzmir (ikincil), pediatri + KD + dermatoloji.  
+Public listing + WhatsApp mobil enrich → `tr-call-ready-leads.csv` / `tr-whatsapp-next-batch.csv`.

@@ -42,6 +42,19 @@ const LISTELER = [
   { kaynak: 'doktorsitesi', brans: 'pediatri', sehir: 'istanbul', tip: 'ds', maxPages: 40, listBase: `${DS}/uzmanlik-alanlari/cocuk-sagligi-ve-hastaliklari/istanbul` },
   { kaynak: 'doktorsitesi', brans: 'kadin-dogum', sehir: 'istanbul', tip: 'ds', maxPages: 30, listBase: `${DS}/uzmanlik-alanlari/kadin-hastaliklari-ve-dogum/istanbul` },
   { kaynak: 'doktorsitesi', brans: 'dermatoloji', sehir: 'istanbul', tip: 'ds', maxPages: 25, listBase: `${DS}/uzmanlik-alanlari/dermatoloji/istanbul` },
+  // Ankara + İzmir — secondary (İstanbul primary; lighter pagination)
+  { kaynak: 'doktortakvimi', brans: 'pediatri', sehir: 'ankara', tip: 'dt', maxPages: 25, listBase: `${DT}/cocuk-sagligi-ve-hastaliklari/ankara` },
+  { kaynak: 'doktortakvimi', brans: 'kadin-dogum', sehir: 'ankara', tip: 'dt', maxPages: 20, listBase: `${DT}/kadin-hastaliklari-ve-dogum/ankara` },
+  { kaynak: 'doktortakvimi', brans: 'dermatoloji', sehir: 'ankara', tip: 'dt', maxPages: 15, listBase: `${DT}/dermatoloji/ankara` },
+  { kaynak: 'doktortakvimi', brans: 'pediatri', sehir: 'izmir', tip: 'dt', maxPages: 25, listBase: `${DT}/cocuk-sagligi-ve-hastaliklari/izmir` },
+  { kaynak: 'doktortakvimi', brans: 'kadin-dogum', sehir: 'izmir', tip: 'dt', maxPages: 20, listBase: `${DT}/kadin-hastaliklari-ve-dogum/izmir` },
+  { kaynak: 'doktortakvimi', brans: 'dermatoloji', sehir: 'izmir', tip: 'dt', maxPages: 15, listBase: `${DT}/dermatoloji/izmir` },
+  { kaynak: 'doktorsitesi', brans: 'pediatri', sehir: 'ankara', tip: 'ds', maxPages: 15, listBase: `${DS}/uzmanlik-alanlari/cocuk-sagligi-ve-hastaliklari/ankara` },
+  { kaynak: 'doktorsitesi', brans: 'kadin-dogum', sehir: 'ankara', tip: 'ds', maxPages: 12, listBase: `${DS}/uzmanlik-alanlari/kadin-hastaliklari-ve-dogum/ankara` },
+  { kaynak: 'doktorsitesi', brans: 'dermatoloji', sehir: 'ankara', tip: 'ds', maxPages: 10, listBase: `${DS}/uzmanlik-alanlari/dermatoloji/ankara` },
+  { kaynak: 'doktorsitesi', brans: 'pediatri', sehir: 'izmir', tip: 'ds', maxPages: 15, listBase: `${DS}/uzmanlik-alanlari/cocuk-sagligi-ve-hastaliklari/izmir` },
+  { kaynak: 'doktorsitesi', brans: 'kadin-dogum', sehir: 'izmir', tip: 'ds', maxPages: 12, listBase: `${DS}/uzmanlik-alanlari/kadin-hastaliklari-ve-dogum/izmir` },
+  { kaynak: 'doktorsitesi', brans: 'dermatoloji', sehir: 'izmir', tip: 'ds', maxPages: 10, listBase: `${DS}/uzmanlik-alanlari/dermatoloji/izmir` },
 ]
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
