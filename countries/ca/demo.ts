@@ -9,10 +9,10 @@ import type { UlkeDemosu } from '@/lib/ulke/demo/tipler'
 
 export const CA_DEMO: UlkeDemosu = {
   'en-CA': {
-    meta: { baslik: 'Book a demo — Notya', aciklama: 'Book a 60-minute video call with Dr. Gokhan Mamur.' },
+    meta: { baslik: 'Book a demo — Notya', aciklama: 'Book a 30-minute video call with Dr. Gokhan Mamur.' },
     dugme: 'Book a demo',
     baslik: 'Book a demo',
-    giris: 'A 60-minute video call with Dr. Gokhan Mamur. Times are shown in your own time zone.',
+    giris: 'A 30-minute video call with Dr. Gokhan Mamur. Times are shown in your own time zone.',
     yakinda: 'Demo booking opens soon.',
     yakindaGovde: 'Once the calendar is ready, you will be able to book directly on this page.',
     saglayici: 'Booking is handled by Cal.com.',
@@ -21,11 +21,11 @@ export const CA_DEMO: UlkeDemosu = {
       ustBaslik: 'Book a demo',
       baslik: 'See Notya',
       baslikVurgu: 'in a live call',
-      govde: 'Dr. Gokhan Mamur walks you through a real visit on a video call — 60 minutes, at a time that works for you.',
+      govde: 'Dr. Gokhan Mamur walks you through a real visit on a video call — 30 minutes, at a time that works for you.',
       kartEtiketi: 'On the call',
       satirlar: [
         { k: 'A live walkthrough', v: 'A real visit, start to finish' },
-        { k: '60 minutes', v: 'Times shown in your own time zone' },
+        { k: '30 minutes', v: 'Times shown in your own time zone' },
         { k: 'Your own questions', v: 'Time set aside to ask them' },
       ],
     },

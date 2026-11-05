@@ -1,5 +1,5 @@
 /**
- * NOTYA-ULKE-DEMO-01 — /demo: book a 60-minute video call with Dr. Gökhan Mamur through Cal.com (Kaan, 2026-10-13:
+ * NOTYA-ULKE-DEMO-01 — /demo: book a 30-minute video call with Dr. Gökhan Mamur through Cal.com (Kaan, 2026-10-13:
  * every Notya site). The kit's page (components/ulke/demo) with the active pack's words, in the visitor's language.
  * No page when the landing page is off, the pack does not list /demo or brings no words for it → not found.
  * The booking link is NEXT_PUBLIC_DEMO_BOOKING_URL; without it the page says booking opens soon.
