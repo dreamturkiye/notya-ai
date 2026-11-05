@@ -49,16 +49,73 @@ public listing → call-ready CSV
            └─ skips demo → free trial link → soft Cal.com later
 ```
 
+**Primary CTA = demo booking.** Free trial is the soft alternative when they won’t take a call.  
 Success metric this week: **booked demos + trial signups**, not “messages sent”.
 
-## Daily loop (Kaan)
+---
 
-1. Open `tr-call-ready-leads.csv`, filter `brans=pediatri`, `sehir=istanbul`, `durum=yeni`.
-2. Personalize 15–20 WhatsApp and/or e-mails from templates (your name as sender; name + ilçe of doctor).
-3. Mark `durum=yazildi` in your working copy (don’t commit PII replies).
-4. Positive reply → Cal.com or trial only. No pitch deck dump.
-5. After each demo: trial + ask them to introduce 2 peers (you can send the invite text to those peers if they share contacts).
-6. End of day: count `demo_booked`, `trial_opened`, `peer_intros`.
+## How to start (Day 0 → first sends)
+
+### Day 0 — setup (do this once, before any message)
+
+1. **WhatsApp Business for Notya — yes, create one.**  
+   - Use **WhatsApp Business** (app), not your personal WhatsApp, not the paid Cloud API yet.  
+   - New SIM / number dedicated to Notya (TR `5xx` if you can). Display name: `Notya` or `Notya · Kaan`.  
+   - Business profile: short description (“Muayene notu + asistan — demo: notya.io/demo”), website `https://www.notya.io`, email `kaan@notya.io`, hours.  
+   - Why: doctors see a brand, not a random personal number; you keep work replies in one place; you can hand the phone to ops later.  
+   - **Skip for now:** WhatsApp Business API / BSP (Twilio etc.) — overkill at ~20 manual messages/day. Upgrade only if volume or team needs it.
+
+2. **E-posta** — send from `kaan@notya.io` (or `hello@notya.io` with you in CC). Same templates. Use e-posta when the CSV has no good mobile, or as a same-day follow-up after WhatsApp.
+
+3. **Align Gökhan (15 min call)**  
+   - Confirm Cal.com `han-mamur-sugmbo/demo-tr` has enough open slots (TR evenings / weekends help — he’s US).  
+   - He only demos; he does **not** send cold invites.  
+   - Agree: after each booked demo you ping him; after each completed demo he (or you) asks for 2 peer intros.
+
+4. **Tracking sheet** (Google Sheet copy of `tr-call-ready-leads.csv`)  
+   Columns to keep live: `durum` (`yeni` → `yazildi` → `cevap` → `demo_booked` / `trial` / `hayir`), `kanal` (wa/email), `tarih`, `not`.  
+   Do **not** commit reply PII back into the repo.
+
+5. **First cohort** — sort sheet: `brans=pediatri`, `sehir=istanbul`, prefer `5xx` mobiles over `0850`. Take the top **20**.
+
+### Day 1 — first outreach block (~45–60 min)
+
+1. Open templates: `TR-PEDI-OUTREACH-TEMPLATES.md` → WhatsApp block.  
+2. For each of the 20: personalize `{İsim}` + ilçe; **lead with Cal.com demo**; trial is the second line.  
+3. Send from Notya WhatsApp Business. Cap **~20/day**.  
+4. Mark `yazildi` + date.  
+5. Same day optional: e-posta to anyone with only `0850` / no WhatsApp delivery.
+
+### When they reply
+
+| Reply | You do |
+|-------|--------|
+| “Tamam / saat?” | Send **only** Cal.com link again; help them pick a slot. No deck. |
+| “Demo olmaz, bakarım” | Free trial link + offer Cal later. |
+| “İstemiyorum” | Soft stop; mark `hayir`. |
+| Silence 3–4 days | One short bump (WhatsApp or e-posta), then stop. |
+
+### After a demo is booked
+
+1. Confirm in Cal.com + ping Gökhan.  
+2. Day-of: short WhatsApp “Hocam, X’te görüşüyorsunuz — link Cal’de.”  
+3. After demo: open trial if not already; ask for **2 meslektaş**; you send those invites from Notya WhatsApp.
+
+### Days 2–7 rhythm
+
+- Each morning: 15–20 new `yeni` → WhatsApp (demo-first).  
+- Afternoon: reply queue + bump silences once.  
+- End of day tally: `demo_booked`, `trial_opened`, `peer_intros`.  
+- When pedi İstanbul `yeni` runs low → KD / derm rows, then re-harvest script.
+
+## Daily loop (Kaan) — short
+
+1. Sheet: `yeni` pedi İstanbul first.  
+2. 15–20 WhatsApp (demo-first) from Notya Business number.  
+3. Mark `yazildi`.  
+4. Positive → Cal.com (mostly) or trial.  
+5. Post-demo: trial + 2 peer intros (you send).  
+6. Tally demos + trials.
 
 ## Guardrails
 
