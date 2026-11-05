@@ -3,22 +3,28 @@
 // AES-256-GCM ile kişisel veri şifreleme
 // ============================================================
 
-import { createCipheriv, createDecipheriv, randomBytes, createHash, scryptSync } from 'crypto'
+import { createCipheriv, createDecipheriv, randomBytes, createHash, scryptSync, timingSafeEqual } from 'crypto'
 
 const ALGORITHM = 'aes-256-gcm'
 const KEY_LENGTH = 32 // 256 bit
 const IV_LENGTH = 16  // 128 bit
 const TAG_LENGTH = 16 // 128 bit auth tag
 
+// Fail closed: required secrets must be set. No hardcoded fallbacks.
+function requireEnv(name: string): string {
+  const value = process.env[name]
+  if (!value || value.trim().length === 0) {
+    throw new Error(`${name} ortam değişkeni tanımlı değil veya boş. Uygulama güvenlik nedeniyle başlatılamaz.`)
+  }
+  return value
+}
+
 // Ortam değişkeninden şifreleme anahtarı türet
 let onbellekliAnahtar: Buffer | null = null
 function getDerivedKey(): Buffer {
   if (onbellekliAnahtar) return onbellekliAnahtar
-  const masterKey = process.env.ENCRYPTION_MASTER_KEY
-  if (!masterKey) {
-    throw new Error('ENCRYPTION_MASTER_KEY ortam değişkeni tanımlı değil')
-  }
-  const salt = process.env.ENCRYPTION_SALT || 'notya-ai-kvkk-salt-2026'
+  const masterKey = requireEnv('ENCRYPTION_MASTER_KEY')
+  const salt = requireEnv('ENCRYPTION_SALT')
   onbellekliAnahtar = scryptSync(masterKey, salt, KEY_LENGTH)
   return onbellekliAnahtar
 }
@@ -78,7 +84,7 @@ export function decryptPII(encryptedBase64: string): string {
  */
 export function hashTCKimlik(tcKimlik: string): string {
   if (!tcKimlik) return ''
-  const pepper = process.env.TC_HASH_PEPPER || 'notya-tc-pepper-2026'
+  const pepper = requireEnv('TC_HASH_PEPPER')
   return createHash('sha256')
     .update(tcKimlik + pepper)
     .digest('hex')
@@ -93,24 +99,25 @@ export function generateSecureToken(length: number = 32): string {
 
 /**
  * Webhook imzasını doğrula (iyzico, Resend vb.)
+ * Timing-safe comparison.
  */
 export function verifyWebhookSignature(
   payload: string,
   signature: string,
   secret: string
 ): boolean {
+  if (!secret || !signature) return false
   const expected = createHash('sha256')
     .update(payload + secret)
     .digest('hex')
   
-  // Zamanlamaya karşı güvenli karşılaştırma
   if (expected.length !== signature.length) return false
   
-  let diff = 0
-  for (let i = 0; i < expected.length; i++) {
-    diff |= expected.charCodeAt(i) ^ signature.charCodeAt(i)
+  try {
+    return timingSafeEqual(Buffer.from(expected, 'utf8'), Buffer.from(signature, 'utf8'))
+  } catch {
+    return false
   }
-  return diff === 0
 }
 
 // ============================================================
