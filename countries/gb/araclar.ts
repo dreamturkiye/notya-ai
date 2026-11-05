@@ -20,6 +20,7 @@ import type { EnUlkeGirdisi } from '../_dil/en/girdi'
 import { enRolSatirlari } from '../_dil/en/klinik/roller'
 import { GB_KENDI_ARACLARI, GB_KENDI_TANIMLARI } from './kendiAraclari'
 import { GB_ROLLER } from './roller'
+import { GB_OPERATOR_DEGISEN, GB_OPERATOR_PARAMETRELERI } from './operator'
 
 const KLINISYEN = 'a clinical lead in the United Kingdom'
 
@@ -60,6 +61,8 @@ export const GB_ARACLAR: EnUlkeGirdisi['araclar'] = {
   dozYazimi: { sondaSifir: false },
   // AMELIYAT-NOTU-01 / KD-RAPOR-01 (2026-11-05): the operation note and obstetrics and gynaecology's printed records of the set
   ameliyatKayitlari: true,
+  // KD-OPERATOR-01 (2026-11-05): the operating surgeon's tools of the set, with this country's numbers and sources (./operator.ts)
+  operatorAraclari: true,
   kapali: {
     'esi-triyaj': { eksik: 'The Emergency Severity Index is one triage scale among several, and the tools audit found that it is not the scale the national sources of the United Kingdom name (REMOVE for this country: it stays off). ' + EMIR_ESI, kimden: HAK_SAHIBI },
     'kdigo-evre': { eksik: 'The referral lines of the tool follow the list of the KDIGO guideline. The national guideline on chronic kidney disease (NICE NG203) has categories in mg/mmol and a referral list of its own, which the tools audit of 2026-10-10 found different (docs/araclar-denetim/GB.md): a doctor here follows the national list. Needed: a clinical decision on which list the tool shows. ' + EMIR_BOBREK, kimden: KLINISYEN },
@@ -130,6 +133,7 @@ export const GB_ARACLAR: EnUlkeGirdisi['araclar'] = {
     das28: { bantlar: { sayi: 'das28', satirlar: [{ ust: 2.6, bant: 'remisyon' }, { ust: 3.2, bant: 'dusuk' }, { ust: 5.1, dahil: true, bant: 'orta' }, { ust: null, bant: 'yuksek' }] } },
   },
   parametreler: {
+    ...GB_OPERATOR_PARAMETRELERI,
     // EXPECTED HEIGHT: 7 cm EITHER SIDE. Sources opened 2026-10-10: UK growth charts, boys 2–18 years and girls 2–18
     // years (© RCPCH 2012), https://www.sign.ac.uk/media/1436/boys_2-18_years_growth_chart.pdf and
     // https://www.rcpch.ac.uk/sites/default/files/Girls_2-18_years_growth_chart.pdf — on both, four children out of
@@ -160,6 +164,7 @@ export const GB_ARACLAR: EnUlkeGirdisi['araclar'] = {
 
   // ───────────────────────── THE WORDS THAT GO WITH THOSE NUMBERS (this country's own, in British spelling) ─────────────────────────
   degisen: {
+    ...GB_OPERATOR_DEGISEN,
     'odyometri-pta': {
       // NICE-KAYNAKLI: the last sentence names NICE guideline NG98 (Hearing loss in adults: assessment and management;
       // the title as the tools audit recorded it), recommendation 1.3.2, opened 2026-10-10 at

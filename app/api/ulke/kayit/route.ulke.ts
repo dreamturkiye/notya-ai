@@ -26,6 +26,8 @@ import { sinirda } from '@/lib/ulke/uygulama/sinir'
 import { aktifUlke, ozellikAcik, ulkePaketi } from '@/lib/ulke/ulke'
 import { davetKoduBicimiGecerli, davetKoduHash, kayitKoduGerekliMi } from '@/lib/ulke/davet'
 import { meslekKaydiGecerli } from '@/lib/ulke/uygulama/meslekKaydi'
+import { referansKaydet, referansKoduNormalize } from '@/lib/billing/referans'
+import { referansIslevi } from '@/lib/ulke/belge/sunucu'
 import { ulkeIslevi, ulkeTablosu } from '@/lib/ulke/uygulama/tablolar'
 
 export const dynamic = 'force-dynamic'
@@ -67,12 +69,14 @@ export const POST = sinirda('sign-up POST', async (req: NextRequest) => {
     koduGeriVer = async () => { try { await ulkeIslevi(supabase, 'davet_kodu_iade', { p_hash: kodHash }) } catch { /* the code stays used: safe side */ } }
   }
 
+  // REFERANS-01: a referral code is optional and never gates sign-up; a malformed one is simply not kept.
+  const refKodu = referansKoduNormalize(g?.ref)
   const { data: yeni, error: hesapHatasi } = await supabase.auth.admin.createUser({
     email: eposta,
     password: sifre,
     email_confirm: true,
     app_metadata: { country: ulke },
-    user_metadata: { full_name: adSoyad, ui_language: dil, davetli: kodGerekli, ...(meslek ? { meslekKaydi: meslek } : {}) },
+    user_metadata: { full_name: adSoyad, ui_language: dil, davetli: kodGerekli, ...(meslek ? { meslekKaydi: meslek } : {}), ...(refKodu ? { ref_kodu: refKodu } : {}) },
   })
   const userId = yeni?.user?.id
   if (hesapHatasi || !userId) {
@@ -88,6 +92,9 @@ export const POST = sinirda('sign-up POST', async (req: NextRequest) => {
     console.error('[ulke/kayit] country account row could not be written', { ulke, kod: satirHatasi.code })
     return cevap({ code: 'OLUSTURULAMADI' }, 500)
   }
+
+  // REFERANS-01: recorded once the account exists (self-referral and one clinic are refused by the database function).
+  if (refKodu) { try { await referansKaydet(referansIslevi(supabase), refKodu, userId) } catch { /* the first paid invoice records it instead */ } }
 
   return cevap({ ok: true }, 200)
 })

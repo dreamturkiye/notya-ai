@@ -30,6 +30,9 @@ import { GB_ARAYUZ } from './arayuz'
 import { GB_PAKETI } from './index'
 import { GB_4AT_PUANLARI, GB_FOUR_AT, GB_FRAX_ADRESI, GB_KENDI_ARACLARI, GB_KENDI_TANIMLARI, GB_OZEL_ANAHTARLAR, GB_VALPROATE } from './kendiAraclari'
 import { GB_KLINIK } from './klinik'
+import { EN_OPERATOR_ARACLARI } from '../_dil/en/araclar'
+/** KD-OPERATOR-01 (2026-11-05): the operating surgeon's tools of the set, added after the decisions file. */
+const KD_OPERATOR_ANAHTARLARI = EN_OPERATOR_ARACLARI.map((a) => a.anahtar)
 
 const D = 'en-GB'
 const KOK = resolve(__dirname, '../..')
@@ -132,7 +135,7 @@ describe('gb A: who sees which tool (decisions: `proposedSpecialties`; GB.md, "W
       // can be kept. The file gives it to doctors only; the audiologist has three such tools and therefore has it too.
       if (kit.some((k) => k !== 'hasta-portali' && k !== 'takip-paneli')) beklenen.add('takip-paneli'); else beklenen.delete('takip-paneli')
       // Structural records added after the decisions file. The file's tools stay; anything further must be one of these.
-      const yapisal = new Set(['ameliyat-notu', 'ameliyat-notu-kd', 'usg-obstetrik', 'usg-jinekolojik', 'dogum-epikrizi', 'endoskopi-kaydi', 'kronik-izlem-kaydi', 'birinci-acil-bayrak', 'gebelik-gun', 'kardiyo-not', 'inme-bayraklari', 'psikiyatri-guvenlik', 'seans-plani', 'icf-ozet', 'greft-tahmini', 'sac-bakim-vade', 'estetik-cerrahi-vade', 'estetik-islem-vade', 'infuzyon-guvenlik', 'makro-kaydi', 'sonraki-seans', 'vas-fonksiyon', 'plastik-yara-greft'])
+      const yapisal = new Set(['ameliyat-notu', 'ameliyat-notu-kd', 'usg-obstetrik', 'usg-jinekolojik', 'dogum-epikrizi', 'endoskopi-kaydi', 'kronik-izlem-kaydi', 'birinci-acil-bayrak', 'gebelik-gun', 'kardiyo-not', 'inme-bayraklari', 'psikiyatri-guvenlik', 'seans-plani', 'icf-ozet', 'greft-tahmini', 'sac-bakim-vade', 'estetik-cerrahi-vade', 'estetik-islem-vade', 'infuzyon-guvenlik', 'makro-kaydi', 'sonraki-seans', 'vas-fonksiyon', 'plastik-yara-greft', ...KD_OPERATOR_ANAHTARLARI])
       for (const k of beklenen) assert.ok(kit.includes(k), `${s.key} lost ${k}`)
       for (const k of kit) if (!beklenen.has(k)) assert.ok(yapisal.has(k), `${s.key} gained ${k}`)
     }
@@ -429,9 +432,10 @@ describe('gb D: what stays off', () => {
     assert.deepEqual(Object.keys(GB_ARACLAR.kapali).sort(), kapali)
     for (const k of kapali) { assert.ok(!A.araclar.some((p) => p.anahtar === k), k); assert.ok(A.yuvalar.some((y) => y.anahtar === k), k); for (const r of [null, ...ROLLER]) assert.equal(hesabinAraci(A, r, k), null, `${k}: ${r}`) }
     // NO TOOL THAT WAS OFF IS ON, but the dose calculator: the switched-on tools are the set's tools minus the four, the two screens, and this country's three
-    assert.deepEqual(A.araclar.map((p) => p.anahtar).sort(), [...[...EN_ROL_ARACLARI, ...EN_AMELIYAT_ARACLARI].map((a) => a.anahtar).filter((k) => !kapali.includes(k)), 'hasta-portali', 'takip-paneli', ...GB_OZEL_ANAHTARLAR].sort())
+    assert.deepEqual(A.araclar.map((p) => p.anahtar).sort(), [...[...EN_ROL_ARACLARI, ...EN_AMELIYAT_ARACLARI, ...EN_OPERATOR_ARACLARI].map((a) => a.anahtar).filter((k) => !kapali.includes(k)), 'hasta-portali', 'takip-paneli', ...GB_OZEL_ANAHTARLAR].sort())
     // AMELIYAT-NOTU-01 (2026-11-05): +5 tools of the set (operation notes, ultrasound reports, discharge summary) and this country's CTG tool
-    assert.equal(A.araclar.length, 72)
+    // KD-OPERATOR-01 (2026-11-05): +16 operating surgeon's tools of the set
+    assert.equal(A.araclar.length, 88)
   })
 
   it('EVERY TOOL THE DECISIONS MARK "remove" IS OFF in this country', () => {
@@ -469,7 +473,7 @@ describe('gb E: licence states', () => {
 describe('gb F: every NICE-derived item is on the list for the lawyer (./nice-kaynakli.json)', () => {
   it('each entry stands on the line it names, with its mark and its guidance number; no mark in the folder is without an entry', () => {
     const liste = oku<{ ogeler: { dosya: string; satir: number; kilavuz: string; adres: string; alinan: string }[] }>('countries/gb/nice-kaynakli.json')
-    assert.equal(liste.ogeler.length, 5)
+    assert.equal(liste.ogeler.length, 8)
     for (const o of liste.ogeler) {
       const satir = readFileSync(join(KOK, o.dosya), 'utf8').split('\n')[o.satir - 1] ?? ''
       assert.match(satir, /NICE-KAYNAKLI:/, `${o.dosya}:${o.satir}`)

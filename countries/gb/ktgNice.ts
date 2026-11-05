@@ -7,7 +7,9 @@
  *   baseline       white 110 to 160 bpm; amber 100 to 109 or 161 to 180 bpm; red below 100 or above 180 bpm
  *   variability    white 5 to 25 bpm; amber below 5 bpm for 30 to 50 minutes, or above 25 bpm for 15 to 25 minutes;
  *                  red below 5 bpm for more than 50 minutes, above 25 bpm for more than 25 minutes, or sinusoidal
- *   decelerations  red: acute bradycardia or a single prolonged deceleration lasting 3 minutes or more; otherwise the
+ *   decelerations  red: any late deceleration (NG229 as amended in November 2025: late decelerations are a red feature
+ *                  whatever their duration; KD-OPERATOR-01 re-check, 2026-11-05), acute bradycardia, or a single prolonged
+ *                  deceleration lasting 3 minutes or more; otherwise the
  *                  colour the clinician reads from the NG229 table (the tool does not judge "concerning
  *                  characteristics" of a variable deceleration, which needs the trace itself)
  * The result is the WORST colour among the features, named as such: NG229 asks for a holistic assessment, and the tool
@@ -30,7 +32,7 @@ export function niceKtg(g: Readonly<Record<string, unknown>>): { bant: Renk; uya
   const bazal: Renk = b < 100 || b > 180 ? 'kirmizi' : b < 110 || b > 160 ? 'amber' : 'beyaz'
   const varyabilite: Renk = n0(g.azalmis_dk) > 50 || n0(g.artmis_dk) > 25 || n0(g.sinuzoidal_dk) > 0 ? 'kirmizi'
     : (v < 5 && n0(g.azalmis_dk) >= 30) || (v > 25 && n0(g.artmis_dk) >= 15) ? 'amber' : v >= 5 && v <= 25 ? 'beyaz' : 'amber'
-  const des: Renk = n0(g.en_uzun_des) >= 3 ? 'kirmizi' : g.des_renk === 'kirmizi' ? 'kirmizi' : g.des_renk === 'amber' ? 'amber' : 'beyaz'
+  const des: Renk = n0(g.en_uzun_des) >= 3 || n0(g.gec) > 0 ? 'kirmizi' : g.des_renk === 'kirmizi' ? 'kirmizi' : g.des_renk === 'amber' ? 'amber' : 'beyaz'
   const uyarilar = [
     ...(bazal !== 'beyaz' ? [`bazal_${bazal}`] : []),
     ...(varyabilite !== 'beyaz' ? [`varyabilite_${varyabilite}`] : []),
@@ -43,7 +45,7 @@ export const GB_KTG_NICE_TANIMI: AracTanimi = {
   anahtar: 'gb-ktg-nice', tur: 'olcek', yazdirilir: true,
   alanlar: [...KTG_ALANLARI.filter((a) => a.anahtar !== 'sonuc'), secim('des_renk', ['beyaz', 'amber', 'kirmizi'], true), ...KTG_ALANLARI.filter((a) => a.anahtar === 'sonuc')],
   cikti: { sayilar: [], bantlar: ['beyaz', 'amber', 'kirmizi'], uyarilar: ['bazal_amber', 'bazal_kirmizi', 'varyabilite_amber', 'varyabilite_kirmizi', 'des_amber', 'des_kirmizi'], tarihler: [] },
-  kaynak: 'NICE guideline NG229, Fetal monitoring in labour (December 2022): table "Description of fetal heart rate features". Cited 2026-11-05.',
+  kaynak: 'NICE guideline NG229, Fetal monitoring in labour (December 2022, amended November 2025): table "Description of fetal heart rate features". Cited 2026-11-05.',
   hesapla: (g) => {
     if (!gunMu(g.tarih) || !sayiMi(g.sure)) return BOS_SONUC
     const r = niceKtg(g)
@@ -79,7 +81,7 @@ export const GB_KTG_NICE: PaketAraci = {
     uyarilar: {
       bazal_amber: m('Baseline amber (100 to 109 or 161 to 180 bpm)'), bazal_kirmizi: m('Baseline red (below 100 or above 180 bpm)'),
       varyabilite_amber: m('Variability amber'), varyabilite_kirmizi: m('Variability red (below 5 bpm for more than 50 minutes, above 25 bpm for more than 25 minutes, or sinusoidal)'),
-      des_amber: m('Decelerations amber'), des_kirmizi: m('Decelerations red (including a single prolonged deceleration of 3 minutes or more)'),
+      des_amber: m('Decelerations amber'), des_kirmizi: m('Decelerations red (any late deceleration, or a single prolonged deceleration of 3 minutes or more)'),
     },
     not: m('Feature colours from NICE NG229, credited to NICE. The overall assessment, the escalation and every decision are the clinician\'s.'),
   },
