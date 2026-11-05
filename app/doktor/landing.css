@@ -18,6 +18,18 @@
   text-decoration: none;
 }
 
+/* Filled colour buttons (e.g. "Demo planla"): `.doktor-lp a { color: inherit }` outranks the `text-white` utility,
+   so the label fell back to near-black ink on blue. Keep it white in every state. */
+.doktor-lp .dl-btn-light-text,
+.doktor-lp .dl-btn-light-text:link,
+.doktor-lp .dl-btn-light-text:visited,
+.doktor-lp .dl-btn-light-text:hover,
+.doktor-lp .dl-btn-light-text:focus,
+.doktor-lp .dl-btn-light-text:focus-visible,
+.doktor-lp .dl-btn-light-text:active {
+  color: #ffffff;
+}
+
 .doktor-lp button {
   background: none;
   border: 0;

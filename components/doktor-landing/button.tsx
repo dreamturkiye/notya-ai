@@ -3,7 +3,8 @@ import { cn } from "./cn";
 
 const variants = {
   pine: "bg-pine text-cream hover:bg-pine-2",
-  blue: "bg-blue-600 text-white hover:bg-blue-700",
+  // dl-btn-light-text: white label in every link state (see app/doktor/landing.css; `.doktor-lp a` would otherwise win).
+  blue: "bg-blue-600 text-white hover:bg-blue-700 dl-btn-light-text",
   cream: "bg-cream text-ink hover:bg-paper",
   ink: "bg-ink text-cream hover:bg-ink-2",
   outline: "bg-transparent text-ink ring-1 ring-line hover:bg-paper-2",
