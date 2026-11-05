@@ -113,7 +113,7 @@ function Kahraman({ t, gorsel, c, demo }: { t: AcilisIcerigi['kahraman']; gorsel
             </Button>
             {/* NOTYA-ULKE-DEMO-01: booking a call with Dr. Mamur (/demo). Shown even when the calendar is not open yet. */}
             {demo ? (
-              <Button href={demo.href} variant="demo" size="lg" className="w-full sm:w-auto">
+              <Button href={demo.href} variant="blue" size="lg" className="w-full sm:w-auto">
                 {demo.etiket}
               </Button>
             ) : null}
@@ -161,7 +161,7 @@ function DemoBolumu({ dil, demo }: { dil: DilKodu; demo: { href: string; etiket:
           </h2>
           <p className="mt-6 max-w-md font-outfit text-lede font-light leading-relaxed text-ink-2">{b.govde}</p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
-            <Button href={demo.href} variant="demo" size="lg" className="w-full sm:w-auto">
+            <Button href={demo.href} variant="blue" size="lg" className="w-full sm:w-auto">
               {demo.etiket}
               <ArrowUpRight className="size-4" />
             </Button>
