@@ -87,7 +87,7 @@ export function UstCubuk({ metin, diller, girisHref, sorovHref, marka, markaEk, 
               {metin.giris}
             </a>
             {demo ? (
-              <Button href={demo.href} variant="demo" size="sm" className="hidden sm:inline-flex">
+              <Button href={demo.href} variant="blue" size="sm" className="hidden sm:inline-flex">
                 {demo.etiket}
               </Button>
             ) : null}
@@ -129,7 +129,7 @@ export function UstCubuk({ metin, diller, girisHref, sorovHref, marka, markaEk, 
                 {metin.sorov}
               </Button>
               {demo ? (
-                <Button href={demo.href} variant="demo" size="lg">
+                <Button href={demo.href} variant="blue" size="lg">
                   {demo.etiket}
                 </Button>
               ) : null}
