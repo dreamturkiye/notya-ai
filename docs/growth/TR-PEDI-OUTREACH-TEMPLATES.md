@@ -17,7 +17,7 @@ Doktor mesajında: ABD / görüntülü / demo / free trial yok. Tamamen Türkçe
 
 **İki baloncuk** (önce metin, sonra link).
 
-**Balon 1 — sadece metin** (KD / kadın doğum için; diğer branşta `{branş}` satırını uyarla):
+**Balon 1 — KD (kadın doğum) — kullan bunu:**
 
 ```
 Hocam merhaba 👋
@@ -25,13 +25,15 @@ Ben Kaan, Notya’dan yazıyorum.
 
 Notya, hekimler için yapay zekâ klinik asistanı: muayeneyi dinler, notunuzu yazar,
 reçete ve rapor taslağını hazırlar, hastanızı takipte tutar — hasta portalı dahil.
-Her karar sizin onayınızla.
+Her karar sizin onayınızla. 40’tan fazla branşı kendi ihtiyaçlarıyla destekliyoruz.
 
-Şu ara kadın doğum hekimleriyle birlikte ürünü derinleştiriyoruz; 40’tan fazla branşı
-kendi ihtiyaçlarıyla destekliyoruz.
+Kadın doğum tarafında operatör hekimlerle birlikte ilerliyoruz: sezaryen, histerektomi,
+myomektomi, laparoskopi, histeroskopi ve küretaj ameliyat notları; doğum epikrizi;
+Doppler’li obstetrik/jinekolojik USG raporu; yapılandırılmış NST — hepsi doğru başlıklı
+antetli kâğıda basılıyor.
 
 Yoğun günlerde not, reçete, takip ve ön büro işlerinden yaklaşık 1,5–2 saat kazandırıyor;
-notlar daha düzenli ve eksiksiz olduğu için bakım kalitesine de yansıyor.
+kayıtlar daha düzenli olduğu için bakım kalitesine de yansıyor.
 
 Dr. Gökhan Mamur 30 dakikalık kısa tanıtımlar yapıyor 🩺
 Saatler sizin uygunluğunuza göre ayarlanıyor.
@@ -40,7 +42,7 @@ Tanıtıma vaktiniz yoksa da sorun değil, ücretsiz denemeyi hemen açabiliyoru
 İsterseniz kısaca bakabilirsiniz, uygun görürseniz devam ederiz.
 ```
 
-Pediatri için KD satırı yerine: `Şu ara pediatri hekimleriyle birlikte ürünü derinleştiriyoruz; 40’tan fazla branşı kendi ihtiyaçlarıyla destekliyoruz.`
+Pediatri (KD satırları yok) — genel pitch + `40’tan fazla branş` yeterli; ameliyat notu listesini yazma.
 
 **Balon 2 — linkler:**
 
