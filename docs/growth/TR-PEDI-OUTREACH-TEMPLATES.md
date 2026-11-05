@@ -16,13 +16,25 @@ Stand yok. Lead: Doktortakvimi + Doktorsitesi (kamuya açık). Spam yok — her 
 ## WhatsApp / SMS (Kaan — birincil)
 
 ```
-Hocam merhaba, ben Kaan — Notya’dan yazıyorum. Muayene notu + asistanı tek üründe;
-yoğun günde 2 saate kadar zaman kazandırıyor, hastalarınıza bakım kalitesini artırıyor.
-Pediatride Dr. Gökhan Mamur 30 dk ücretsiz demo yapıyor; saatler sizin diliminizde.
+Hocam merhaba 👋
+Ben Kaan, Notya’dan yazıyorum.
 
-Takvim: https://cal.com/han-mamur-sugmbo/demo-tr
+Muayene notlarını ve asistanı tek yerde toplayan bir araç geliştirdik ve kullanıma açtık.
+Yoğun günlerde not yazma süresini epey kısaltıyor — birçok hekim 1,5-2 saat civarı zaman kazandığını söylüyor.
+Asıl önemli kısmı da notların daha düzenli ve eksiksiz olması, bakım kalitesine de yansıyor.
 
-Demoya vakit yoksa ücretsiz denemeyi hemen açıyoruz: https://www.notya.io
+Pediatri tarafında Dr. Gökhan Mamur 30 dakikalık kısa demolar yapıyor 🩺
+Saatler sizin uygunluğunuza göre ayarlanıyor.
+
+📅 Takvim:
+https://cal.com/han-mamur-sugmbo/demo-tr
+
+Demoya vaktiniz yoksa da sorun değil,
+ücretsiz denemeyi hemen açabiliyoruz:
+
+🔗 https://www.notya.io
+
+İsterseniz kısaca bakabilirsiniz, uygun görürseniz devam ederiz.
 ```
 
 ## E-posta (Kaan)
