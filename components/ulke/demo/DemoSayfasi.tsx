@@ -1,5 +1,5 @@
 /**
- * NOTYA-ULKE-DEMO-01 — the "Book a demo" page of a country (/demo): a 60-minute video call with Dr. Gökhan Mamur,
+ * NOTYA-ULKE-DEMO-01 — the "Book a demo" page of a country (/demo): a 30-minute video call with Dr. Gökhan Mamur,
  * booked through Cal.com's inline embed.
  *
  * SELF-CONTAINED on purpose: it reuses only the shared presentational pieces the landing page reuses (Button, the
