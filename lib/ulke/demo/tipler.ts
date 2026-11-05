@@ -12,7 +12,7 @@ export type DemoMetni = {
   dugme: string
   /** The heading of /demo. */
   baslik: string
-  /** One sentence: a 60-minute video call with Dr. Gökhan Mamur; times in the visitor's own time zone. */
+  /** One sentence: a 30-minute video call with Dr. Gökhan Mamur; times in the visitor's own time zone. */
   giris: string
   /** No link set: a short "booking opens soon" line and one sentence. No address, no e-mail. */
   yakinda: string

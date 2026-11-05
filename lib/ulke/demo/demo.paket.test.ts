@@ -65,12 +65,12 @@ describe('A. the pack', () => {
     assert.equal(D.demoSayfasiVar(), true)
   })
 
-  // AU-DEMO-02 (2026-11-03): Australia books the 30-minute private demo (Kaan, 2026-11-02); the others still say 60.
-  it('each form: a 30- or 60-minute video call with Dr. Gökhan Mamur, in the visitor\'s own time zone; booking by Cal.com; no claim, no address', () => {
+  // AU-DEMO-02 (2026-11-03): Australia books the 30-minute private demo (Kaan, 2026-11-02); every pack says 30 (2026-11-05).
+  it('each form: a 30-minute video call with Dr. Gökhan Mamur, in the visitor\'s own time zone; booking by Cal.com; no claim, no address', () => {
     if (!ACIK) return
     for (const d of FORMLAR) {
       const m = D.demoMetni(d)!
-      assert.match(m.giris, /\b(30|60)\b/, d)
+      assert.match(m.giris, /\b30\b/, d)
       assert.match(m.giris, /Mamur|Мамур/, d)
       assert.match(m.saglayici, /Cal\.com/, d)
       const duzlestir = (v: unknown): string[] => (typeof v === 'string' ? [v] : Array.isArray(v) ? v.flatMap(duzlestir) : v && typeof v === 'object' ? Object.values(v).flatMap(duzlestir) : [])
