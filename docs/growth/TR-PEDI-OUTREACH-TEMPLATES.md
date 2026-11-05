@@ -2,20 +2,20 @@
 
 **Kim gönderir:** Kaan / Notya — WhatsApp ve/veya e-posta.  
 **Kim tanıtır:** Dr. Gökhan Mamur — 30 dk (Cal.com · Google Meet); saatler ziyaretçinin diliminde.  
-**Not:** Gökhan ~7 yıldır Türkiye dışında; sıcak meslektaş listesi yok. İlk temas Kaan’dan gider. Doktor mesajında ABD / görüntülü / “demo” / “free trial” yok.
+**Ürün (repo / landing):** Notya = hekimler için **yapay zekâ klinik asistanı** — muayeneyi dinler, notu yazar, reçete ve rapor taslağı hazırlar, takip + hasta portalı; her karar hekim onayıyla. Sadece “muayene notu” değil.  
+Kaynak: `lib/seo/doktor.ts`, `components/doktor-landing/content.ts` (HERO).
 
 **Tanıtım takvimi:** [notya.io/demo](https://www.notya.io/demo) · `https://cal.com/han-mamur-sugmbo/demo-tr`  
 **Ücretsiz deneme:** `https://www.notya.io`  
-**Hedef:** mümkün olduğunca çok tanıtım randevusu **ve/veya** ücretsiz deneme → ağızdan ağıza.
+**Hedef:** tanıtım randevusu ve/veya ücretsiz deneme → ağızdan ağıza.
 
-Stand yok. Lead: Doktortakvimi + Doktorsitesi (kamuya açık). Spam yok — her mesaj Kaan onaylı.  
-**Doktorlara giden metinler tamamen Türkçe.**
+Doktor mesajında: ABD / görüntülü / demo / free trial yok. Tamamen Türkçe.
 
 ---
 
 ## WhatsApp / SMS (Kaan — birincil)
 
-WhatsApp’ta **iki baloncuk** gönder (önce metin, sonra link).
+**İki baloncuk** (önce metin, sonra link).
 
 **Balon 1 — sadece metin:**
 
@@ -23,9 +23,12 @@ WhatsApp’ta **iki baloncuk** gönder (önce metin, sonra link).
 Hocam merhaba 👋
 Ben Kaan, Notya’dan yazıyorum.
 
-Muayene notlarını ve asistanı tek yerde toplayan bir araç geliştirdik ve kullanıma açtık.
-Yoğun günlerde not yazma süresini epey kısaltıyor — birçok hekim 1,5-2 saat civarı zaman kazandığını söylüyor.
-Asıl önemli kısmı da notların daha düzenli ve eksiksiz olması, bakım kalitesine de yansıyor.
+Notya, hekimler için yapay zekâ klinik asistanı: muayeneyi dinler, notunuzu yazar,
+reçete ve rapor taslağını hazırlar, hastanızı takipte tutar — hasta portalı dahil.
+Her karar sizin onayınızla.
+
+Yoğun günlerde not, reçete, takip ve ön büro işlerinden yaklaşık 1,5–2 saat kazandırıyor;
+notlar daha düzenli ve eksiksiz olduğu için bakım kalitesine de yansıyor.
 
 Dr. Gökhan Mamur 30 dakikalık kısa tanıtımlar yapıyor 🩺
 Saatler sizin uygunluğunuza göre ayarlanıyor.
@@ -48,52 +51,48 @@ Tanıtıma vaktiniz yoksa da sorun değil, ücretsiz denemeyi hemen açabiliyoru
 ```
 Sayın Dr. {İsim},
 
-Ben Kaan (Notya). {Şehir}’deki özel muayenehaneler için Notya’yı tanıtıyoruz:
-ziyaret kaydı → yapılandırılmış not → sizin onayınız. Yoğun bir günde 2 saate
-kadar zaman kazandırıyor; hastalarınıza sunduğunuz bakımın kalitesini artırıyor.
+Ben Kaan (Notya). Notya, hekimler için yapay zekâ klinik asistanıdır: muayeneyi dinler,
+notunuzu yazar, reçete ve rapor taslağını hazırlar, hastanızı takipte tutar;
+hasta portalı dahildir. Her karar sizin onayınızla.
 
-Pediatride ürünü birlikte şekillendiren Dr. Gökhan Mamur 30 dakikalık
-kısa tanıtım yapıyor; saatler sizin diliminizde.
+Yoğun bir günde not, reçete, takip ve ön büro işlerinden yaklaşık 1,5–2 saat
+kazandırır; daha düzenli kayıtlarla bakım kalitesine de katkı sağlar.
+
+Dr. Gökhan Mamur 30 dakikalık kısa tanıtım yapıyor; saatler sizin diliminizde.
 
 Tanıtım takvimi: https://cal.com/han-mamur-sugmbo/demo-tr
 Sayfa: https://www.notya.io/demo
 
-Tanıtıma vakit yoksa ücretsiz deneme hesabı da açabiliyoruz: https://www.notya.io
-Uygunsa bir slot seçmeniz yeterli; “2 meslektaşınıza da iletin” demenizi
-rica ederiz — ürün ağızdan ağıza büyüsün diye.
+Tanıtıma vakit yoksa ücretsiz deneme: https://www.notya.io
+Uygunsa bir slot seçmeniz yeterli; iki meslektaşınıza da iletmenizi rica ederiz.
 
 Saygılarımızla,
 Kaan · Notya · merhaba@notya.io
 ```
 
-WhatsApp Business profil e-postası da `merhaba@notya.io` (`kaan@notya.io`’ya forward — çalışıyor).
-
-## Yalnızca ücretsiz deneme (tanıtım istemeyen — Kaan)
+## Yalnızca ücretsiz deneme
 
 ```
-Hocam, tanıtıma vakit yoksa Notya ücretsiz denemesini hemen açabiliriz — {branş} şablonu hazır.
+Hocam, tanıtıma vakit yoksa Notya ücretsiz denemesini hemen açabiliriz.
 Bağlantı: https://www.notya.io
-Takıldığınız yerde Dr. Gökhan Mamur’un kısa tanıtımına da dönebilirsiniz:
+Takıldığınız yerde kısa tanıtıma da dönebilirsiniz:
 https://cal.com/han-mamur-sugmbo/demo-tr
 ```
 
-## Tanıtım kapanış (Gökhan söyler veya Kaan yazar — ağızdan ağıza)
+## Tanıtım kapanış
 
 ```
 Teşekkürler hocam. Ücretsiz deneme hesabınız açık / açıyoruz.
-İki meslektaşınıza da bu bağlantıyı atmanızı rica ederiz — onlar da aynı takvimden
-randevu alsın: https://cal.com/han-mamur-sugmbo/demo-tr
-(veya bana WhatsApp’tan yazın, ben davet metnini ileteyim — Kaan)
+İki meslektaşınıza da bu bağlantıyı atmanızı rica ederiz:
+https://cal.com/han-mamur-sugmbo/demo-tr
+(veya bana WhatsApp’tan yazın — Kaan)
 ```
 
 ---
 
-## Operasyon kuralları
+## Operasyon
 
-1. `tr-call-ready-leads.csv` → `ozel_muayenehane=evet` + telefon (önce mobil `5xx`).
-2. **Gönderen = Kaan.** Günde max ~20 kişisel WhatsApp ve/veya e-posta.
-3. Gökhan = sadece tanıtım host (Cal.com). Soğuk peer listesi yok.
-4. Cevap → Cal.com **veya** ücretsiz deneme; ikisi de başarı.
-5. “2 meslektaş davet et” her tanıtım kapanışında + deneme açılışında.
-6. Doktor mesajında: ABD / görüntülü / demo / free trial yok.
-7. Kanal: iki baloncuk (metin → linkler).
+1. Önce mobil `5xx`; 0850 WhatsApp olmaz.  
+2. Gönderen = Kaan · Gökhan = tanıtım host.  
+3. İki baloncuk: metin → linkler.  
+4. Başarı = tanıtım randevusu veya ücretsiz deneme.
