@@ -1,7 +1,7 @@
 # TR özel muayenehane — bedava outreach (Kaan invites · Gökhan demos)
 
 **Who sends:** Kaan / Notya — WhatsApp and/or e-posta.  
-**Who demos:** Dr. Gökhan Mamur — ABD’den 60 dk görüntülü (Cal.com); saatler ziyaretçinin diliminde.  
+**Who demos:** Dr. Gökhan Mamur — ABD’den 30 dk görüntülü (Cal.com · Google Meet); saatler ziyaretçinin diliminde.  
 **Context:** Gökhan ~7 yıldır Türkiye dışında; şu an sıcak meslektaş listesi yok. Peer-forward **onun** WhatsApp’ından beklenmez — ilk temas Kaan’dan gider.
 
 **Demo:** [notya.io/demo](https://www.notya.io/demo) · `https://cal.com/han-mamur-sugmbo/demo-tr`  
@@ -16,7 +16,7 @@ Stand yok. Lead: Doktortakvimi + Doktorsitesi (kamuya açık). Spam yok — her 
 
 ```
 Hocam merhaba, ben Kaan — Notya’dan yazıyorum. Muayene notu + asistanı tek üründe.
-Pediatride Dr. Gökhan Mamur (ABD’den, görüntülü) 60 dk ücretsiz demo yapıyor;
+Pediatride Dr. Gökhan Mamur (ABD’den, görüntülü) 30 dk ücretsiz demo yapıyor;
 saatler sizin diliminizde.
 
 Takvim: https://cal.com/han-mamur-sugmbo/demo-tr
@@ -28,7 +28,7 @@ Beğenirseniz 2 meslektaşınıza da iletin — ürün böyle büyüsün.
 
 ## E-posta (Kaan)
 
-**Konu:** {Branş} muayenehanesi için 60 dk Notya demosu (Dr. Gökhan Mamur)
+**Konu:** {Branş} muayenehanesi için 30 dk Notya demosu (Dr. Gökhan Mamur)
 
 ```
 Sayın Dr. {İsim},
@@ -37,7 +37,7 @@ Ben Kaan (Notya). {Şehir}’deki özel muayenehaneler için Notya’yı tanıt�
 ziyaret kaydı → yapılandırılmış not → sizin onayınız.
 
 Ürünü pediatride birlikte şekillendiren Dr. Gökhan Mamur, ABD’den görüntülü
-60 dakikalık demo veriyor (saatler sizin saat diliminizde).
+30 dakikalık demo veriyor (saatler sizin saat diliminizde).
 
 Demo takvimi: https://cal.com/han-mamur-sugmbo/demo-tr
 Sayfa: https://www.notya.io/demo

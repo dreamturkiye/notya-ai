@@ -9,7 +9,7 @@
 |------|-----|------|
 | **Invites / outreach** | **Kaan (Notya)** | WhatsApp Business + e-posta from call-ready CSV |
 | **Public e-posta** | **`merhaba@notya.io`** | Forwards to `kaan@notya.io` (live) |
-| **Demo host** | **Dr. Gökhan Mamur** | 60' remote video via Cal.com (US, visitor TZ) |
+| **Demo host** | **Dr. Gökhan Mamur** | 30' remote video via Cal.com (US, visitor TZ · Google Meet) |
 | **Trial** | Notya / Kaan | Open account if they skip or after demo |
 
 Gökhan has lived outside Türkiye for ~**7 years** and does **not** have a warm peer list right now. Do **not** plan on him forwarding invites from his own WhatsApp. He demos; Kaan books the pipeline.
@@ -22,7 +22,7 @@ Gökhan has lived outside Türkiye for ~**7 years** and does **not** have a warm
 ## Live demo path (confirmed 2026-11-04)
 
 - App: `https://www.notya.io/demo` (mentions Gökhan Mamur + Cal.com)
-- Cal: `https://cal.com/han-mamur-sugmbo/demo-tr` (US host, visitor timezone)
+- Cal: `https://cal.com/han-mamur-sugmbo/demo-tr` (30 min, Google Meet, host TZ America/New_York, visitor picks local time)
 - Trial: `https://www.notya.io`
 
 ## Harvest snapshot (this pack)
@@ -46,7 +46,7 @@ Gökhan has lived outside Türkiye for ~**7 years** and does **not** have a warm
 ```
 public listing → call-ready CSV
       → Kaan WhatsApp and/or e-posta (max ~20/day)
-           ├─ books Cal.com → Gökhan 60' remote demo → trial + “invite 2 peers”
+           ├─ books Cal.com → Gökhan 30' remote demo → trial + “invite 2 peers”
            └─ skips demo → free trial link → soft Cal.com later
 ```
 
