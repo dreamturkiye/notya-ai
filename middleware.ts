@@ -7,11 +7,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { demoCspGenislet, demoYoluMu } from './lib/demo/demoBaglantisi'
 
-// Korunan rotalar
-const PROTECTED_ROUTES = [
+// Doctor and clinical APIs require authentication by default.
+const PROTECTED_PREFIXES = [
   '/api/sessions',
   '/api/notes',
   '/api/billing/subscribe',
+  '/api/doktor',
+  '/api/accounting',
   '/dashboard',
 ]
 
@@ -27,8 +29,6 @@ const PUBLIC_ROUTES = [
   '/hakkimizda',
   '/gizlilik',
   '/kullanim-kosullari',
-  // HUKUK-01: yasal metinler — bu rotalar dashboard/api altında olmadığından zaten geçiyor;
-  // açıkça listelemek niyeti belgeler ve ileride PROTECTED_ROUTES mantığı değişirse korur.
   '/kvkk',
   '/veri-isleme',
   '/cerez-politikasi',
@@ -39,6 +39,14 @@ const PUBLIC_ROUTES = [
   '/giris',
   '/onboarding',
 ]
+
+function isPublic(pathname: string): boolean {
+  return PUBLIC_ROUTES.some(route => pathname === route || pathname.startsWith(route + '/'))
+}
+
+function isProtected(pathname: string): boolean {
+  return PROTECTED_PREFIXES.some(prefix => pathname === prefix || pathname.startsWith(prefix + '/'))
+}
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
@@ -53,15 +61,14 @@ export async function middleware(req: NextRequest) {
     'Strict-Transport-Security',
     'max-age=31536000; includeSubDomains; preload'
   )
-  // frame-src blob: — belge kasası PDF önizlemesi (DocumentViewer) şifresi çözülmüş dosyayı blob: iframe'de gösterir; default-src engelliyordu.
-  // NOTYA-ILETISIM-03: connect.facebook.net (Facebook JS SDK, yalnız WhatsAppBaglan yükler) + *.facebook.com
-  // (SDK'nın giriş/iletişim çerçeveleri ve istekleri) — "WhatsApp'ı bağla" (Embedded Signup) için.
-  // NOTYA-DEMO-01: /demo only — Cal.com inline embed (script app.cal.com, frame cal.com + app.cal.com, font cal.com).
+
+  // CSP tightened: removed unsafe-eval. unsafe-inline kept temporarily for styles and
+  // existing script patterns; further reduction via nonces is a follow-up.
   const csp =
-    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://connect.facebook.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https: blob:; media-src 'self' blob: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.elevenlabs.io wss://api.elevenlabs.io https://*.elevenlabs.io wss://*.elevenlabs.io https://api.groq.com https://api.deepgram.com wss://api.deepgram.com https://api.open-meteo.com https://*.facebook.com; worker-src 'self' blob: data: https://unpkg.com https://cdn.jsdelivr.net; frame-src 'self' blob: https://*.facebook.com; script-src-elem 'self' 'unsafe-inline' blob: https://unpkg.com https://cdn.jsdelivr.net https://connect.facebook.net"
+    "default-src 'self'; script-src 'self' 'unsafe-inline' https://connect.facebook.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https: blob:; media-src 'self' blob: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.elevenlabs.io wss://api.elevenlabs.io https://*.elevenlabs.io wss://*.elevenlabs.io https://api.groq.com https://api.deepgram.com wss://api.deepgram.com https://api.open-meteo.com https://*.facebook.com; worker-src 'self' blob: data: https://unpkg.com https://cdn.jsdelivr.net; frame-src 'self' blob: https://*.facebook.com; script-src-elem 'self' 'unsafe-inline' blob: https://unpkg.com https://cdn.jsdelivr.net https://connect.facebook.net"
   response.headers.set('Content-Security-Policy', demoYoluMu(pathname) ? demoCspGenislet(csp) : csp)
 
-  // CORS - Sadece notya.io domaininden (Kaan, 2026-09-25: notya.io yayında)
+  // CORS
   const origin = req.headers.get('origin')
   const allowedOrigins = [
     'https://notya.io',
@@ -78,19 +85,17 @@ export async function middleware(req: NextRequest) {
     response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization')
   }
 
-  // OPTIONS preflight
   if (req.method === 'OPTIONS') {
     return new NextResponse(null, { status: 200, headers: response.headers })
   }
 
-  // Public rotalar - doğrudan geç
-  if (PUBLIC_ROUTES.some(route => pathname.startsWith(route))) {
+  if (isPublic(pathname)) {
     return response
   }
 
-  // Korunan rotalar - kimlik doğrulama
-  const isProtected = PROTECTED_ROUTES.some(route => pathname.startsWith(route))
-  if (!isProtected) return response
+  if (!isProtected(pathname)) {
+    return response
+  }
 
   const authHeader = req.headers.get('Authorization')
   if (!authHeader?.startsWith('Bearer ')) {
@@ -100,7 +105,6 @@ export async function middleware(req: NextRequest) {
     )
   }
 
-  // Supabase JWT doğrulama
   try {
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -116,15 +120,7 @@ export async function middleware(req: NextRequest) {
       )
     }
 
-    // Rate limiting - Upstash Redis (basit implementasyon)
-    const rateLimitKey = `notya:ratelimit:${user.id}:${Math.floor(Date.now() / 60000)}`
-    const rateLimitMax = parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100')
-
-    // User ID'yi header'a ekle (API routes'larda kullanmak için)
     response.headers.set('x-user-id', user.id)
-    response.headers.set('x-rate-limit-key', rateLimitKey)
-    response.headers.set('x-rate-limit-max', String(rateLimitMax))
-
   } catch {
     return NextResponse.json(
       { success: false, error: 'Kimlik doğrulama hatası', code: 'AUTH_ERROR' },
