@@ -15,6 +15,10 @@ Stand yok. Lead: Doktortakvimi + Doktorsitesi (kamuya açık). Spam yok — her 
 
 ## WhatsApp / SMS (Kaan — birincil)
 
+WhatsApp’ta **iki baloncuk** gönder (önce metin, sonra link — Cal İngilizce önizlemesi metni ezmesin).
+
+**Balon 1 — sadece metin:**
+
 ```
 Hocam merhaba 👋
 Ben Kaan, Notya’dan yazıyorum.
@@ -23,18 +27,18 @@ Muayene notlarını ve asistanı tek yerde toplayan bir araç geliştirdik ve ku
 Yoğun günlerde not yazma süresini epey kısaltıyor — birçok hekim 1,5-2 saat civarı zaman kazandığını söylüyor.
 Asıl önemli kısmı da notların daha düzenli ve eksiksiz olması, bakım kalitesine de yansıyor.
 
-Pediatri tarafında Dr. Gökhan Mamur 30 dakikalık kısa demolar yapıyor 🩺
+Dr. Gökhan Mamur 30 dakikalık kısa demolar yapıyor 🩺
 Saatler sizin uygunluğunuza göre ayarlanıyor.
 
-📅 Takvim:
-https://cal.com/han-mamur-sugmbo/demo-tr
-
-Demoya vaktiniz yoksa da sorun değil,
-ücretsiz denemeyi hemen açabiliyoruz:
-
-🔗 https://www.notya.io
-
+Demoya vaktiniz yoksa da sorun değil, ücretsiz denemeyi hemen açabiliyoruz.
 İsterseniz kısaca bakabilirsiniz, uygun görürseniz devam ederiz.
+```
+
+**Balon 2 — linkler:**
+
+```
+📅 Takvim: https://cal.com/han-mamur-sugmbo/demo-tr
+🔗 Ücretsiz deneme: https://www.notya.io
 ```
 
 ## E-posta (Kaan)
