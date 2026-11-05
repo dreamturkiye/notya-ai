@@ -44,7 +44,7 @@ import type { AracAlani, UlkeAraclari } from '@/lib/ulke/araclar/tipler'
 import { alanVarMi, METIN_UZUNLUGU, metinSiniri } from '@/lib/ulke/araclar/yardimci'
 import { sablonuUygula } from '@/lib/ulke/araclar/sablon'
 import { unvanliAd } from '@/lib/ulke/uygulama/hekimUnvani'
-import { YazdirKagidi, yazdirSozleri, type YazdirAntet } from './YazdirKagidi'
+import { YazdirKagidi, yazdirSozleri, type YazdirAntet, type YazdirBelgesi } from './YazdirKagidi'
 import type { DilKodu } from '@/lib/ulke/tipler'
 import { panoyaKopyala } from './pano'
 import { aracYolu, araclarYolu, birimOrtami, yazici } from './aracOrtak'
@@ -239,7 +239,7 @@ function Alan({ x, alan, dil, a, gm, ham, degistir, o, y, birimEksik }: { x: Gor
 }
 
 /** A tool with fields: what is asked, what comes out, and the summary to copy. Pure given `ham`; the state is the caller's. */
-export function AracGorunumu({ x, a, dil, notDili, icerik, ham, degistir, temizle, bugun, kopya, kopyalaTikla, kayit, antet }: {
+export function AracGorunumu({ x, a, dil, notDili, icerik, ham, degistir, temizle, bugun, kopya, kopyalaTikla, kayit, antet, belge }: {
   x: GorunurArac; a: AraclarMetni; dil: DilKodu; notDili: DilKodu; icerik: UlkeAraclari
   ham: HamGirdi; degistir: (k: string, v: string | boolean) => void; temizle: () => void
   /** Today in the account's time zone, YYYY-MM-DD. */
@@ -249,6 +249,8 @@ export function AracGorunumu({ x, a, dil, notDili, icerik, ham, degistir, temizl
   kayit?: (tamam: boolean) => React.ReactNode
   /** AMELIYAT-NOTU-01: the letterhead of a printed record (a tool marked `yazdirilir`). */
   antet?: YazdirAntet
+  /** BELGE-NO-01: how the printout is registered (document number, revision, verify QR). */
+  belge?: YazdirBelgesi
 }) {
   const o = birimOrtami(icerik)
   const y = yazici(icerik, dil)
@@ -298,7 +300,7 @@ export function AracGorunumu({ x, a, dil, notDili, icerik, ham, degistir, temizl
             ) : null}
             <div className="uza-eylemler">
               <button type="button" className="uza-dugme uza-dugme-kucuk" style={ulkeAracStil.btn} onClick={() => kopyalaTikla(ozet)} data-eylem="kopyala">{a.arac.kopyala}</button>
-              {x.tanim.yazdirilir && antet && yazdirSozleri(a) ? <YazdirKagidi baslik={bicimli(t.ad, notDili)} ozet={ozet} antet={antet} s={yazdirSozleri(a)!} /> : null}
+              {x.tanim.yazdirilir && antet && yazdirSozleri(a) ? <YazdirKagidi baslik={bicimli(t.ad, notDili)} ozet={ozet} antet={antet} s={yazdirSozleri(a)!} belge={belge} /> : null}
             </div>
             <Bilgi>{kopya === 'tamam' ? a.arac.kopyalandi : null}</Bilgi>
             <Hata>{kopya === 'hata' ? a.arac.kopyalanamadi : null}</Hata>
@@ -379,6 +381,7 @@ function AracEkrani({ x, a, u, dil, notDili, icerik, hasta, rol }: { rol: string
       {x.tanim.ekran === 'hastaPortali' ? <HastaPortaliAraci a={a} m={u.m} /> : x.tanim.ekran === 'takipPaneli' ? <TakipPaneli u={u} a={a} icerik={icerik} /> : x.tanim.ekran === 'sablonlarim' ? <Sablonlarim u={u} /> : x.tanim.ekran === 'konsultasyonlar' ? <Konsultasyonlar u={u} /> : x.tanim.tur === 'baglanti' ? <DisBaglantiAraci x={x} dil={dil} /> : hasta && aracinKapisi(x, hasta, bugun) === 'degil' ? <HastaKapisiKapali x={x} dil={dil} /> : (
         <AracGorunumu x={x} a={a} dil={dil} notDili={notDili} icerik={icerik} ham={ham} bugun={bugun} kopya={kopya}
           antet={antet}
+          belge={{ onEk: `arac:${x.tanim.anahtar}`, hastaId: hasta?.id ?? null, api: u.api }}
           degistir={(anahtar, v) => { setKopya('yok'); k.degisti(); setHam((eski) => sablonuUygula(x.paket, x.tanim, { ...eski, [anahtar]: v }, anahtar, v, notDili)) }}
           temizle={() => { setKopya('yok'); k.degisti(); setHam({}) }}
           kopyalaTikla={(metin) => { void panoyaKopyala(metin).then((tamam) => setKopya(tamam ? 'tamam' : 'hata')) }}

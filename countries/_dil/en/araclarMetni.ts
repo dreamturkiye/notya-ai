@@ -57,6 +57,27 @@ export const EN_ARACLAR_METNI_TEMEL: AraclarMetni = {
     yazdirHasta: 'Patient: %',
     yazdirTarih: 'Date: %',
     yazdirImza: 'Signature',
+    // BELGE-NO-01: the document number on a printed record, and the public verification page
+    belgeNo: 'Document no. %',
+    belgeRev: 'Revision %',
+    belgeTarih: 'Issued %',
+    belgeDogrula: 'Scan to verify this document (no patient data is shown).',
+    belgeGerekce: 'This record has changed since it was last printed. Give the reason for the new revision:',
+    belgeKayitsiz: 'This printout is not registered and carries no document number.',
+  },
+  // BELGE-NO-01: the public verification page
+  dogrulama: {
+    baslik: 'Document verification',
+    aciklama: 'This page confirms that a printed record was issued through Notya. It shows no patient information.',
+    belgeNo: 'Document number',
+    rev: 'Revision',
+    tarih: 'Issued',
+    hekim: 'Issued by',
+    guncel: 'This is the current revision.',
+    eski: 'This revision has been superseded: the current revision is %.',
+    ozet: 'Integrity hash (SHA-256)',
+    bulunamadi: 'No document matches this code.',
+    cokFazla: 'Too many requests. Please try again in a minute.',
   },
   portal: {
     nasil: 'Find the patient and open their file: the link and the PIN are created under "Patient\'s page", and that is also where you choose what to share.',

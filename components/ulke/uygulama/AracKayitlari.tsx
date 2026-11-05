@@ -119,7 +119,7 @@ export function AracKayitKarti({ a, g, hasta, tamam, takip, takipDegistir, kayde
 // ───────────────────────── on the patient's file ─────────────────────────
 
 /** The kept results of one patient. `kayitlar` null = not loaded (or could not be read): nothing is listed. Pure. */
-export function HastaAracKayitlariGorunumu({ a, dil, icerik, hastaId, kayitlar, antet }: { a: AraclarMetni; dil: DilKodu; icerik: UlkeAraclari; hastaId: string; kayitlar: readonly AracKaydi[] | null; /** AMELIYAT-NOTU-01: the letterhead a printed record carries. */ antet?: YazdirAntet }) {
+export function HastaAracKayitlariGorunumu({ a, dil, icerik, hastaId, kayitlar, antet, api }: { a: AraclarMetni; dil: DilKodu; icerik: UlkeAraclari; hastaId: string; kayitlar: readonly AracKaydi[] | null; /** AMELIYAT-NOTU-01: the letterhead a printed record carries. */ antet?: YazdirAntet; /** BELGE-NO-01: registers the printout. */ api?: Api }) {
   const k = a.kayit
   const sozler = yazdirSozleri(a)
   const o = birimOrtami(icerik), y = yazici(icerik, dil)
@@ -141,7 +141,7 @@ export function HastaAracKayitlariGorunumu({ a, dil, icerik, hastaId, kayitlar, 
                     {x.takipTarihi ? <span className="uza-rozet" data-takip-durum={x.kapandi ? 'kapandi' : 'acik'}>{yerine(x.kapandi ? k.takipKapandi : k.takipGunu, tarihYaz(x.takipTarihi))}</span> : null}
                   </summary>
                   {ozet ? <pre className="uza-arac-ozet">{ozet}</pre> : <p className="uza-ipucu" data-okunamadi>{k.okunamadi}</p>}
-                  {ozet && arac?.tanim.yazdirilir && antet && sozler ? <div className="uza-eylemler"><YazdirKagidi baslik={aracAdi(icerik, a, x.arac, dil)} ozet={ozet} antet={antet} s={sozler} /></div> : null}
+                  {ozet && arac?.tanim.yazdirilir && antet && sozler ? <div className="uza-eylemler"><YazdirKagidi baslik={aracAdi(icerik, a, x.arac, dil)} ozet={ozet} antet={antet} s={sozler} belge={api ? { kaynakId: `kayit:${x.id}`, hastaId, api } : undefined} /></div> : null}
                 </details>
               </li>
             )
@@ -166,7 +166,7 @@ export function HastaAracKayitlariKarti({ u, hastaId, hastaAdi }: { u: Uygulama;
   const icerik = arayuz().araclar
   if (!icerik) return null
   const antet: YazdirAntet | undefined = hesap ? { hekim: unvanliAd(hesap.ad, hesap.unvan, hesap.unvanEki, ulkePaketi().hekimUnvani, hesap.notDili), hasta: hastaAdi || null, tarih: yazici(icerik, u.dil).tarih(ulkeGunu(new Date(), hesapSaatDilimi())) } : undefined
-  return <HastaAracKayitlariGorunumu a={araclarMetni(u.dil)} dil={u.dil} icerik={icerik} hastaId={hastaId} kayitlar={kayitlar} antet={antet} />
+  return <HastaAracKayitlariGorunumu a={araclarMetni(u.dil)} dil={u.dil} icerik={icerik} hastaId={hastaId} kayitlar={kayitlar} antet={antet} api={u.api} />
 }
 
 // ───────────────────────── the follow-up list ─────────────────────────

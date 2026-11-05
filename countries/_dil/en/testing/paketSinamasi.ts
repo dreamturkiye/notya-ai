@@ -38,7 +38,7 @@ import type { UlkeArayuzu } from '@/lib/ulke/arayuz/tipler'
 import { paketiDenetle } from '@/lib/ulke/paketDenetimi'
 import { ornekGirdiler, ornekOrtam } from '@/lib/ulke/testing/aracOrnekleri'
 import type { UlkeKlinigi, UlkePaketi } from '@/lib/ulke/tipler'
-import { EN_AMELIYAT_ARACLARI, EN_ROL_ARACLARI } from '../araclar'
+import { EN_AMELIYAT_ARACLARI, EN_OPERATOR_ARACLARI, EN_ROL_ARACLARI } from '../araclar'
 import { enRolAnahtarlari, type EnRolDegisimi } from '../klinik/roller'
 import type { EnBicim } from '../varyant'
 import { bicimYazimSorunlari, tumMetinler } from './yazimDenetimi'
@@ -348,7 +348,10 @@ export function ingilizcePaketSinamasi(s: EnPaketSinamasi): void {
       // AMELIYAT-NOTU-01 / KD-RAPOR-01: the operation-note tools of the set are on all together where the country states them, or none is
       const ameliyat = EN_AMELIYAT_ARACLARI.map((x) => x.anahtar), ameliyatAcik = ameliyat.filter((k) => anahtarlar.includes(k) || s.kapaliAraclar.includes(k))
       assert.ok(ameliyatAcik.length === 0 || ameliyatAcik.length === ameliyat.length, 'the operation-note tools of the set: all of them, or none')
-      const SET = ameliyatAcik.length ? [...EN_ROL_ARACLARI, ...EN_AMELIYAT_ARACLARI] : EN_ROL_ARACLARI
+      // KD-OPERATOR-01: the operating surgeon's tools of the set, likewise all together or none
+      const operator = EN_OPERATOR_ARACLARI.map((x) => x.anahtar), operatorAcik = operator.filter((k) => anahtarlar.includes(k) || s.kapaliAraclar.includes(k))
+      assert.ok(operatorAcik.length === 0 || operatorAcik.length === operator.length, 'the operating surgeon\'s tools of the set: all of them, or none')
+      const SET = [...EN_ROL_ARACLARI, ...(ameliyatAcik.length ? EN_AMELIYAT_ARACLARI : []), ...(operatorAcik.length ? EN_OPERATOR_ARACLARI : [])]
       assert.deepEqual(SET.map((x) => x.anahtar).filter((k) => !anahtarlar.includes(k)).sort(), [...s.kapaliAraclar].sort())
       // … and beyond the set, exactly the tools the country's record states (none, for a country that states none)
       for (const k of ekAraclar) assert.ok(anahtarlar.includes(k), `${k} is stated as a tool of this country and is not switched on`)

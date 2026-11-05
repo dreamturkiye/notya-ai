@@ -125,7 +125,7 @@ describe('fault 1 — dose arithmetic: the volume is not rounded, and an amount 
     assert.deepEqual(s.sayilar.filter((x) => x.doz).map((x) => x.anahtar), ['doz_mg', 'gunluk_mg', 'doz_ml', 'gunluk_ml', 'tavanli_doz_mg', 'tavanli_doz_ml'])
     assert.equal(arac('doz-hesabi').dozYazar, true)
     // only this tool of the kit writes an amount of a medicine
-    assert.deepEqual(KIT_ARACLARI.filter((t) => t.dozYazar).map((t) => t.anahtar), ['doz-hesabi'])
+    assert.deepEqual(KIT_ARACLARI.filter((t) => t.dozYazar).map((t) => t.anahtar), ['doz-hesabi', 'antibiyotik-profilaksi-kd']) // KD-OPERATOR-01: the antibiotic prophylaxis writes the country's amounts
   })
 
   it('how a number is written: the rules themselves', () => {
@@ -605,7 +605,7 @@ describe('the kit as a whole after the corrections', () => {
       // the country states nothing: the environment is there (unless the tool ALSO needs numbers of the country)
       if (!(t.parametreler ?? []).length && !(t.tablolar ?? []).some((x) => !x.istege)) assert.deepEqual(ulkeOrtami(t, {}, BUGUN), { bugun: BUGUN, p: {} }, t.anahtar)
     }
-    assert.deepEqual(KIT_ARACLARI.filter((t) => t.secimlikParametreler?.length).map((t) => t.anahtar), ['odyometri-pta', 'hedef-boy', 'psa-hizi'])
+    assert.deepEqual(KIT_ARACLARI.filter((t) => t.secimlikParametreler?.length).map((t) => t.anahtar), ['odyometri-pta', 'hedef-boy', 'psa-hizi', 'antibiyotik-profilaksi-kd', 'rmi', 'bishop', 'sezaryen-aciliyeti', 'kanama-izlem', 'histeroskopi-sivi']) // KD-OPERATOR-01: national numbers a country may state
     assert.deepEqual(KIT_ARACLARI.filter((t) => (t.tablolar ?? []).some((x) => x.istege)).map((t) => t.anahtar), ['rtp-basamak'])
   })
 })

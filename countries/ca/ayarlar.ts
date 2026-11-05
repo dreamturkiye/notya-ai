@@ -36,6 +36,7 @@ import { caKendiAraclari } from './araclar/metinler'
 import { CA_TANIMLAR } from './araclar/tanimlar'
 import { CA_ROLLER, CA_YENIDEN_ADLANANLAR } from './roller'
 import { CA_BIRIMLER, CA_VELI_YASI } from './temel'
+import { CA_OPERATOR_DEGISEN, CA_OPERATOR_PARAMETRELERI } from './operator'
 
 export { CA_BIRIMLER, CA_VELI_YASI } from './temel'
 
@@ -138,6 +139,9 @@ export const CA_GIRDI: EnUlkeGirdisi = {
     // FOR A LOCAL CLINICAL LEAD: the tools of the shared set this country keeps switched off, and why.
     // AMELIYAT-NOTU-01 / KD-RAPOR-01 (2026-11-05): the operation note and obstetrics and gynaecology's printed records of the set
     ameliyatKayitlari: true,
+    // KD-OPERATOR-01 (2026-11-05): the operating surgeon's tools of the set, with this country's numbers and sources (./operator.ts)
+    operatorAraclari: true,
+    parametreler: CA_OPERATOR_PARAMETRELERI,
     kapali: {
       // THE AUDIT'S ONE "REMOVE": another country's triage scale. It stays off; emergency departments here use another
       // scale, whose owner requires permission for a product (not built: ./araclar/, the report of 2026-10-10).
@@ -227,6 +231,7 @@ export const CA_GIRDI: EnUlkeGirdisi = {
       },
     },
     degisen: {
+      ...CA_OPERATOR_DEGISEN,
       // KD-RAPOR-01 (2026-11-05): the delivery discharge summary is a "postpartum" one here (the SOGC's word).
       'dogum-epikrizi': { ad: 'Postpartum discharge summary', alanlar: { kontrol: 'Date of the postpartum visit (optional)' }, tarihler: { kontrol: 'Postpartum visit' } },
       // THE NAMES OF THE HEARING GRADES (a country that states its own bands names them itself): the set's words.
