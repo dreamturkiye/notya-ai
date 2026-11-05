@@ -204,6 +204,8 @@ export const NZ_GIRDI: EnUlkeGirdisi = {
     // — "never write a zero after a decimal point". UNVERIFIED by a local clinical lead.
     dozYazimi: { sondaSifir: false },
     // FOR A LOCAL CLINICAL LEAD: the tools of the shared set this country keeps switched off, and why.
+    // AMELIYAT-NOTU-01 / KD-RAPOR-01 (2026-11-05): the operation note and obstetrics and gynaecology's printed records of the set
+    ameliyatKayitlari: true,
     kapali: {
       // SOURCE-CHECKED: emergency departments here use the Australasian triage scale (Health New Zealand's public page
       // on emergency department triage), not the Emergency Severity Index. The audit's verdict for this tool is
@@ -258,6 +260,8 @@ export const NZ_GIRDI: EnUlkeGirdisi = {
     // `specialties[].tools` and `clinicSpecialties[].tools`, existing tools only). A tool that is not named here is
     // seen by the roles the set names for it. MACHINE-APPLIED; FOR A LOCAL CLINICAL LEAD. ──
     gorenler: {
+      // AMELIYAT-NOTU-01 (2026-11-05): the operation note for every surgical role of the set here, and this country's own oral-maxillofacial-surgery
+      'ameliyat-notu': ['general-surgery', 'obstetrics-gynaecology', 'orthopaedics', 'urology', 'otolaryngology', 'ophthalmology', 'neurosurgery', 'cardiovascular-surgery', 'thoracic-surgery', 'plastic-surgery', 'paediatric-surgery', 'hair-transplant', 'aesthetic-surgery', 'oral-maxillofacial-surgery'],
       'kritik-yol': ['emergency-medicine', 'urgent-care-medicine', 'rural-hospital-medicine'],
       'postop-agri': ['anaesthesia', 'pain-medicine'],
       'yara-dren-izlem': ['paediatric-surgery', 'general-surgery', 'oral-maxillofacial-surgery'],

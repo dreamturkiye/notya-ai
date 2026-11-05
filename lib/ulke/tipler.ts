@@ -209,6 +209,11 @@ export type UlkePaketi = {
   /** What each of the country's languages calls itself (for a language switch). */
   dilAdlari: Partial<Record<DilKodu, string>>
   /** Settings of the signed-in application. Present exactly where the feature `cekirdekMuayene` is on. */
+  /**
+   * OP-DR-01 — the doctor's title before the name and the post-nominals after it, as printed records carry them
+   * (lib/ulke/uygulama/hekimUnvani.ts). Absent = the account sets neither.
+   */
+  hekimUnvani?: import('./uygulama/hekimUnvani').HekimUnvaniPaketi
   uygulama?: UygulamaAyarlari
   /** BYO-PAYMENTS-01 — optional pack extensions: invoices and the bring-your-own payment connection (./uzanti/tipler.ts). */
   uzanti?: UlkeUzantisi

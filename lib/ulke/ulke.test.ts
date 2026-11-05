@@ -181,7 +181,8 @@ describe('every country pack: same shape, complete text, own content only', () =
     // feature is on (NOTYA-UZ-MUAYENE-01) — Türkiye's pack does not gain a field for a screen it does not have.
     // `yolOnEki` (path prefix) is the other: present only for a country served under a path of the main site.
     // `resmiGunler` is the calendar's public-day list. Türkiye keeps its own list and does not gain the field.
-    const anahtarlar = (p: UlkePaketi) => Object.keys(p).filter((k) => k !== 'uygulama' && k !== 'yolOnEki' && k !== 'resmiGunler' && k !== 'uzanti').sort()
+    // `hekimUnvani` (OP-DR-01, 2026-11-05): the titles a country offers before a doctor's name; Türkiye keeps users.title.
+    const anahtarlar = (p: UlkePaketi) => Object.keys(p).filter((k) => k !== 'uygulama' && k !== 'yolOnEki' && k !== 'resmiGunler' && k !== 'uzanti' && k !== 'hekimUnvani').sort()
     for (const [kod, p] of paketler) {
       assert.equal(p.kod, kod)
       assert.deepEqual(anahtarlar(p), anahtarlar(TUM_ULKELER.tr.paket), kod)

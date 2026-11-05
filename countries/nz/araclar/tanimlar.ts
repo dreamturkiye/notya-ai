@@ -21,6 +21,7 @@
  * payer tool); nothing that takes ethnicity or a deprivation score (the patient file holds neither); no instrument
  * whose rights holder asks for permission.
  */
+import { NZ_KTG_RANZCOG } from './ktg'
 import type { AracTanimi } from '@/lib/ulke/araclar/tipler'
 import { BOS_SONUC, isaret, kontrolListesi, metin, sayi, sayiMi, secim } from '@/lib/ulke/araclar/yardimci'
 import { NZ_KONTROLLU, NZ_RECETE, NZ_TAKVIM_LISTE, NZ_UST } from './pharmac'
@@ -210,4 +211,4 @@ export const NZ_PSA_THRESHOLDS: AracTanimi = {
   },
 }
 
-export const NZ_TANIMLAR: readonly AracTanimi[] = [NZ_BMI_WAIST, NZ_SMOKING_ABC, NZ_PSA_THRESHOLDS, NZ_UST, NZ_TAKVIM_LISTE, NZ_RECETE, NZ_KONTROLLU]
+export const NZ_TANIMLAR: readonly AracTanimi[] = [NZ_BMI_WAIST, NZ_SMOKING_ABC, NZ_PSA_THRESHOLDS, NZ_UST, NZ_TAKVIM_LISTE, NZ_RECETE, NZ_KONTROLLU, NZ_KTG_RANZCOG]

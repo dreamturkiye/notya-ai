@@ -20,7 +20,7 @@
 import { sayiCozKuralla } from '../arayuz/sayiOkuma'
 import { alanAraligi, birimAnahtari, birimSecilirMi, kanonigeCevir, seciliBirim, type BirimOrtami } from './birimler'
 import type { AracAlani, AracGirdisi } from './tipler'
-import { alanVarMi, kosullariUygula, METIN_UZUNLUGU } from './yardimci'
+import { alanVarMi, kosullariUygula, metinSiniri } from './yardimci'
 
 /**
  * The unit a laboratory value of an input was typed in, or — where the input does not say (a direct call with a value
@@ -44,7 +44,7 @@ export function hamiSuz(alanlar: readonly AracAlani[], ham: unknown): HamGirdi {
     if (!Object.prototype.hasOwnProperty.call(ham, a.anahtar)) continue
     const v = (ham as Record<string, unknown>)[a.anahtar]
     if (a.tur === 'isaret') { if (v === true) cikti[a.anahtar] = true; continue }
-    if (typeof v === 'string' && v.length <= METIN_UZUNLUGU * 2) cikti[a.anahtar] = v
+    if (typeof v === 'string' && v.length <= metinSiniri(a) * 2) cikti[a.anahtar] = v
   }
   return cikti
 }
@@ -57,7 +57,7 @@ export function girdiyiCoz(alanlar: readonly AracAlani[], ham: HamGirdi, o: Biri
     if (a.tur === 'isaret') { g[a.anahtar] = v === true; continue }
     if (a.tur === 'secim') { g[a.anahtar] = typeof v === 'string' && (a.secenekler ?? []).includes(v) ? v : null; continue }
     if (a.tur === 'tarih') { g[a.anahtar] = typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : null; continue }
-    if (a.tur === 'metin') { const t = typeof v === 'string' ? v.trim().slice(0, METIN_UZUNLUGU) : ''; g[a.anahtar] = t || null; continue }
+    if (a.tur === 'metin') { const t = typeof v === 'string' ? v.trim().slice(0, metinSiniri(a)) : ''; g[a.anahtar] = t || null; continue }
     const okuma = sayiCozKuralla(v, o.sayi)
     let n = okuma.tamam ? okuma.sayi : NaN
     // A HEIGHT TYPED IN METRES (Türkiye's parseBoyGirdi reads "1.65" as 165 cm): in a pack that works in centimetres no

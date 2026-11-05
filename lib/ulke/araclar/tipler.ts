@@ -119,6 +119,11 @@ export type AracAlani = {
    * such table the field has no option and is NOT THERE (`alanVarMi`), and the tool answers without it.
    */
   tablodan?: { tablo: string; sutun: string }
+  /**
+   * AMELIYAT-NOTU-01 — A PARAGRAPH (`tur: 'metin'` only): a text area that holds up to UZUN_METIN_UZUNLUGU characters
+   * (an operation's steps, a report's conclusion) instead of a few words. Never read by the arithmetic beyond "filled".
+   */
+  uzun?: boolean
   /** true = may be left empty; the tool still answers. */
   istege?: boolean
   /** Shown, and read, only while the choice field `alan` holds one of `degerler`. Otherwise the field is not there. */
@@ -256,6 +261,12 @@ export type AracTanimi = {
   sonucBirimleri?: readonly string[]
   /** Measures of the pack (length, weight) a RESULT is written in. */
   sonucOlculeri?: readonly ('boy' | 'agirlik')[]
+  /**
+   * AMELIYAT-NOTU-01 — A RECORD THAT IS PRINTED (an operation note, a report, a discharge summary): the result and every
+   * kept result of the tool offer "Print", on the doctor's letterhead (the account's name with the title and
+   * post-nominals the doctor set, lib/ulke/uygulama/hekimUnvani.ts). Nothing else changes.
+   */
+  yazdirilir?: boolean
 }
 
 // ───────────────────────── the pack's half ─────────────────────────
@@ -362,6 +373,13 @@ export type PaketAraci = {
    * value of a patient is ever put into it. The key is the pack's own; the kit has no definition of it.
    */
   baglanti?: { adres: string }
+  /**
+   * AMELIYAT-NOTU-01 — PRE-FILLED PARAGRAPHS, the pack's own words: choice field → option → paragraph field (`uzun`) →
+   * the words. Choosing the option fills each paragraph field that is still EMPTY; what the doctor wrote is never
+   * replaced, and every pre-filled word can be edited. The pack check holds every key to the tool's definition and asks
+   * for the words in every language form.
+   */
+  sablonlar?: Readonly<Record<string, Readonly<Record<string, Readonly<Record<string, BicimliMetin>>>>>>
 }
 
 /**

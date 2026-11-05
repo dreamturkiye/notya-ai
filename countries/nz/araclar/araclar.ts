@@ -24,6 +24,7 @@
  * credit, so each tool carries a notice (`bildirim`) under every result and in the summary that is copied. The notice
  * says whose the figures are and that the tool is not the Ministry's: it is credit, never a claim of approval.
  */
+import { nzKtgAraci } from './ktg'
 import { hekimRolleri } from '@/lib/ulke/araclar/paket'
 import type { PaketAraci } from '@/lib/ulke/araclar/tipler'
 import type { EnEkAraclar } from '../../_dil/en/araclar'
@@ -141,6 +142,8 @@ export const NZ_EK_ARACLAR: readonly PaketAraci[] = [
   },
   ...nzPharmacAraclari(HEKIMLER),
   nzNzeps(HEKIMLER),
+  // KD-RAPOR-01 (2026-11-05): CTG features by the RANZCOG intrapartum fetal surveillance guideline — obstetrics and gynaecology
+  nzKtgAraci(['obstetrics-gynaecology']),
 ]
 
 /** The tools this country has beyond the shared English set, as the set takes them (countries/_dil/en/araclar → `ek`). */

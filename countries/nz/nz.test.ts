@@ -319,7 +319,8 @@ describe('nz: who sees which tool — the audit\'s decisions, with existing tool
     assert.deepEqual(araclari('rural-hospital-medicine'), ['birinci-acil-bayrak', 'doz-hesabi', 'kritik-yol', 'kronik-izlem-kaydi'])
     assert.deepEqual(araclari('musculoskeletal-medicine'), ['icf-ozet', 'sakatlik-gunlugu', 'seans-plani', 'vas-fonksiyon'])
     assert.deepEqual(araclari('pain-medicine'), ['icf-ozet', 'postop-agri', 'seans-plani'])
-    assert.deepEqual(araclari('oral-maxillofacial-surgery'), ['genel-preop', 'yara-dren-izlem'])
+    // AMELIYAT-NOTU-01 (2026-11-05): the operation note of every surgical role
+    assert.deepEqual(araclari('oral-maxillofacial-surgery'), ['ameliyat-notu', 'genel-preop', 'yara-dren-izlem'])
     assert.deepEqual(araclari('occupational-medicine'), ['kronik-izlem-kaydi'])
     assert.deepEqual(araclari('sexual-health-medicine'), ['gebelik-gun'])
     assert.deepEqual(araclari('family-planning-reproductive-health'), ['gebelik-gun'])
@@ -422,7 +423,7 @@ describe('nz: country data for the shared tools — each from a national source 
 
   it('LICENCES: "free" is stated only for the three tools whose source prints its own free licence; "permission needed" for the two the owner\'s order names; nothing for any other', () => {
     const belirtilen = [...a.araclar.filter((p) => p.lisans).map((p) => `${p.anahtar}:${p.lisans!.durum}`), ...a.yuvalar.filter((y) => y.lisans).map((y) => `${y.anahtar}:${y.lisans!.durum}`)].sort()
-    assert.deepEqual(belirtilen, ['esi-triyaj:izin-gerekli', 'nz-bmi-waist:serbest', 'nz-controlled-drug-note:serbest', 'nz-nzeps-link:serbest', 'nz-pharmac-top-20:serbest', 'nz-prescription-note:serbest', 'nz-psa-thresholds:serbest', 'nz-schedule-medicines:serbest', 'nz-smoking-abc:serbest', 'rapor-taslagi:izin-gerekli'])
+    assert.deepEqual(belirtilen, ['esi-triyaj:izin-gerekli', 'nz-bmi-waist:serbest', 'nz-controlled-drug-note:serbest', 'nz-ctg-ranzcog:serbest', 'nz-nzeps-link:serbest', 'nz-pharmac-top-20:serbest', 'nz-prescription-note:serbest', 'nz-psa-thresholds:serbest', 'nz-schedule-medicines:serbest', 'nz-smoking-abc:serbest', 'rapor-taslagi:izin-gerekli'])
     assert.notEqual(a.lisansTam, true, 'this pack does not state every licence: it stays on countries/lisans-borcu.json')
   })
 })

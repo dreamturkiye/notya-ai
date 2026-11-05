@@ -64,6 +64,13 @@ export const NZ_PAKETI: UlkePaketi = {
   // ahead of UTC and the Chatham Islands keep their own time, 45 minutes ahead of it; both move by one hour for
   // daylight time. Nearly every account is on the main islands' time.
   saatDilimi: 'Pacific/Auckland',
+  // OP-DR-01 (2026-11-05): "Dr" before the name (no full stop), Associate Professor and Professor as academic titles;
+  // the college fellowship after it (FRANZCOG for obstetrics and gynaecology). The doctor's own text, never checked
+  // against the register of the Medical Council or a college.
+  hekimUnvani: {
+    onEkler: { dr: { 'en-NZ': 'Dr' }, aprof: { 'en-NZ': 'Assoc Prof' }, prof: { 'en-NZ': 'Prof' } },
+    ekOrnegi: { 'en-NZ': 'e.g. MBChB, FRANZCOG' },
+  },
   bicim: { yerel: 'en-NZ', tarihDeseni: 'DD/MM/YYYY', ondalikAyraci: '.', binlikAyraci: ',', haftaBasi: 1 },
   telefon: { ulkeOnEki: '+64', ulusalHane: 9, ornek: '+64 2X XXX XXXX', cepGecerliMi: nzCepGecerliMi },
   // THE PATIENT IDENTIFIER: an OPTIONAL FREE-TEXT field, stored encrypted and never validated (`dogrula: false`

@@ -12,7 +12,7 @@
  * clinician's name and the date. The test then still holds the two lists together to the pack.
  */
 export const NZ_ONAYSIZ_ARACLAR: readonly string[] = [
-  'nz-bmi-waist', 'nz-psa-thresholds', 'nz-smoking-abc',
+  'nz-bmi-waist', 'nz-ctg-ranzcog', 'nz-psa-thresholds', 'nz-smoking-abc',
   'nz-pharmac-top-20', 'nz-schedule-medicines', 'nz-prescription-note', 'nz-controlled-drug-note', 'nz-nzeps-link',
 ]
 

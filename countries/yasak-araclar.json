@@ -18,7 +18,8 @@
     "nz-schedule-medicines",
     "nz-prescription-note",
     "nz-controlled-drug-note",
-    "nz-nzeps-link"
+    "nz-nzeps-link",
+    "nz-ctg-ranzcog"
   ],
   "tr": [
     "sgk-medula",

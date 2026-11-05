@@ -28,6 +28,8 @@ export type HamArac = {
   tarihler?: Sozluk
   /** The line under every result: what the tool is not. */
   not: string
+  /** AMELIYAT-NOTU-01: pre-filled paragraphs, choice field → option → paragraph field → en-GB words (PaketAraci.sablonlar). */
+  sablonlar?: Readonly<Record<string, Readonly<Record<string, Sozluk>>>>
 }
 
 // ── the line under a result: what the tool is not ──
@@ -120,5 +122,6 @@ export function araciBicimle(a: HamArac, bicim: EnBicim, degisen?: EnDegisen, ek
     ...(ek?.uyarlama ? { uyarlama: ek.uyarlama } : {}),
     ...(ek?.hasta ? { hasta: ek.hasta.kapi } : {}),
     ...(ek?.lisans ? { lisans: lisansiBicimle(ek.lisans, bicim) } : {}),
+    ...(a.sablonlar ? { sablonlar: Object.fromEntries(Object.entries(a.sablonlar).map(([alan, sec]) => [alan, Object.fromEntries(Object.entries(sec).map(([o, al]) => [o, cevir(al, bicim)!]))])) } : {}),
   }
 }
