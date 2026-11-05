@@ -17,7 +17,7 @@ Doktor mesajında: ABD / görüntülü / demo / free trial yok. Tamamen Türkçe
 
 **İki baloncuk** (önce metin, sonra link).
 
-**Balon 1 — KD (kadın doğum) — kullan bunu:**
+**Balon 1 — KD (genel + riskli gebelik + operatör — harman; yalnız operatör değil):**
 
 ```
 Hocam merhaba 👋
@@ -27,10 +27,11 @@ Notya, hekimler için yapay zekâ klinik asistanı: muayeneyi dinler, notunuzu y
 reçete ve rapor taslağını hazırlar, hastanızı takipte tutar — hasta portalı dahil.
 Her karar sizin onayınızla. 40’tan fazla branşı kendi ihtiyaçlarıyla destekliyoruz.
 
-Kadın doğum tarafında operatör hekimlerle birlikte ilerliyoruz: sezaryen, histerektomi,
-myomektomi, laparoskopi, histeroskopi ve küretaj ameliyat notları; doğum epikrizi;
-Doppler’li obstetrik/jinekolojik USG raporu; yapılandırılmış NST — hepsi doğru başlıklı
-antetli kâğıda basılıyor.
+Kadın doğumda gebelik takvimi ve izlem, Doppler’li USG raporu, yapılandırılmış NST,
+obstetrik risk (preeklampsi / GDM / SSVD) ve sezaryen–ameliyat notlarından
+(histerektomi, myomektomi, laparoskopi, histeroskopi, küretaj) doğum epikrizi ve
+antetli baskıya kadar poliklinik + riskli gebelik + operatör işlerini birlikte
+topluyoruz.
 
 Yoğun günlerde not, reçete, takip ve ön büro işlerinden yaklaşık 1,5–2 saat kazandırıyor;
 kayıtlar daha düzenli olduğu için bakım kalitesine de yansıyor.
