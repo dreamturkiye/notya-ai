@@ -40,8 +40,9 @@ const A = US_ARAYUZ.araclar as UlkeAraclari
 const ROLLER = US_PAKETI.uygulama!.roller!
 const BUGUN = '2026-10-10'
 const ORTAM = { bugun: BUGUN, p: {} }
-const MEKANIZMA = ['us-bmi', 'us-egfr-ckd-epi-2021', 'us-pack-years', 'us-blood-sugar-ranges', 'us-fall-risk-screen', 'us-phq-9', 'us-ecog-performance-status', 'us-part-d-medicines', 'us-prescription-note', 'us-immunization-schedule', 'us-adult-immunization', 'us-notifiable-diseases']
-const ANAHTARLAR = [...MEKANIZMA, 'us-blue-button-link']
+const MEKANIZMA = ['us-bmi', 'us-egfr-ckd-epi-2021', 'us-pack-years', 'us-blood-sugar-ranges', 'us-fall-risk-screen', 'us-phq-9', 'us-ecog-performance-status', 'us-part-d-medicines', 'us-prescription-note', 'us-immunization-schedule', 'us-adult-immunization', 'us-notifiable-diseases', 'us-ctg-nichd']
+/** KD-RAPOR-01 (2026-11-05): the NICHD three-tier tracing tool comes after the link-out tile in the grid's order. */
+const ANAHTARLAR = [...MEKANIZMA.slice(0, -1), 'us-blue-button-link', 'us-ctg-nichd']
 const hesapla = (t: AracTanimi, g: AracGirdisi): AracSonucu => t.hesapla(g, ORTAM)
 
 /** The tools are in the pack itself: `B` is the pack's own tools area (the name is kept from the day they were tried outside it). */
@@ -402,8 +403,11 @@ describe('us new tools 4: the words and the licences', () => {
       'us-notifiable-diseases': [/Centers for Disease Control and Prevention/, 'https://www.cdc.gov/other/agencymaterials.html'],
       'us-blue-button-link': [/Centers for Medicare & Medicaid Services/, 'https://bluebutton.cms.gov/'],
     }
-    assert.deepEqual(Object.keys(beklenen).sort(), [...ANAHTARLAR].sort())
-    for (const p of araclar) {
+    // KD-RAPOR-01 (2026-11-05): the NICHD tracing tool restates a published consensus in the product's own words; its source was not re-opened (./onayBekleyen.ts)
+    assert.deepEqual(Object.keys(beklenen).sort(), ANAHTARLAR.filter((k) => k !== 'us-ctg-nichd').sort())
+    const nichd = araclar.find((p) => p.anahtar === 'us-ctg-nichd')!
+    assert.equal(nichd.lisans?.durum, 'serbest'); assert.match(nichd.lisans?.kaynak ?? '', /cited 2026-11-05/)
+    for (const p of araclar.filter((x) => x.anahtar !== 'us-ctg-nichd')) {
       const [sahip, adres] = beklenen[p.anahtar]
       assert.equal(p.lisans?.durum, 'serbest', p.anahtar)
       assert.match(p.lisans?.hakSahibi ?? '', sahip, p.anahtar)

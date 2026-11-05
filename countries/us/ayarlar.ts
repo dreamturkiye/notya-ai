@@ -130,6 +130,8 @@ export const US_GIRDI: EnUlkeGirdisi = {
     // after a decimal point". UNVERIFIED by a local clinical lead. (The dose tool is kept off here: see `kapali`.)
     dozYazimi: { sondaSifir: false },
     // FOR A LOCAL CLINICAL LEAD: the tools of the shared set this country keeps switched off, and why.
+    // AMELIYAT-NOTU-01 / KD-RAPOR-01 (2026-11-05): the operation note and obstetrics and gynaecology's printed records of the set
+    ameliyatKayitlari: true,
     kapali: {
       'doz-hesabi': { eksik: 'UNIT SAFETY. This pack measures body weight in pounds; the tool multiplies a dose stated per kilogram by the body weight. The kit converts a weight typed in pounds exactly, but a screen that shows the weight in pounds beside a dose per kilogram invites the very error the tool exists to prevent. Needed: a clinical decision on whether weight for dosing is entered in kilograms only in the United States, and a weight field in the kit that can be fixed to kilograms whatever the pack\'s unit. ' + DOZ_BUGUN, kimden: KLINISYEN },
       // switched off on 2026-10-10 by the order above (on in this pack until then):
@@ -162,6 +164,8 @@ export const US_GIRDI: EnUlkeGirdisi = {
     // set's own role first, then the roles the audit adds. Nothing here switches a tool on: all ten are on already.
     // (The audit also names the wound list for podiatry and visual acuity for optometry: neither role is added yet.)
     gorenler: {
+      // AMELIYAT-NOTU-01 (2026-11-05): the operation note for every surgical role of the set here, and this country's own colon-rectal-surgery
+      'ameliyat-notu': ['general-surgery', 'obstetrics-gynaecology', 'orthopaedics', 'urology', 'otolaryngology', 'ophthalmology', 'neurosurgery', 'cardiovascular-surgery', 'thoracic-surgery', 'plastic-surgery', 'paediatric-surgery', 'hair-transplant', 'aesthetic-surgery', 'colon-rectal-surgery'],
       // days since an injury: also emergency medicine, family medicine, neurology and pediatrics
       'rtp-basamak': ['sports-medicine', 'emergency-medicine', 'family-medicine', 'neurology', 'paediatrics'],
       // expected height: also family medicine
@@ -215,6 +219,11 @@ export const US_GIRDI: EnUlkeGirdisi = {
     },
     // THE NAMES OF THOSE GRADES, as this country writes them (a country that states its own bands names them itself).
     degisen: {
+      // KD-RAPOR-01 (2026-11-05): the delivery discharge summary is a "postpartum" one here (ACOG's word); the person
+      // giving the anesthetic is named as the anesthesia professional, since "anesthetist" usually means a nurse anesthetist.
+      'dogum-epikrizi': { ad: 'Postpartum discharge summary', alanlar: { kontrol: 'Date of the postpartum visit (optional)' }, tarihler: { kontrol: 'Postpartum visit' } },
+      'ameliyat-notu': { alanlar: { anestezist: 'Anesthesiologist or anesthesia professional' } },
+      'ameliyat-notu-kd': { alanlar: { anestezist: 'Anesthesiologist or anesthesia professional' } },
       'odyometri-pta': { bantlar: { normal: 'Normal (up to 15 dB)', hafifce: 'Slight hearing loss (16 to 25 dB)', hafif: 'Mild hearing loss (26 to 40 dB)', orta: 'Moderate hearing loss (41 to 55 dB)', orta_ileri: 'Moderately severe hearing loss (56 to 70 dB)', ileri: 'Severe hearing loss (71 to 90 dB)', cok_ileri: 'Profound hearing loss (above 90 dB)' } },
       das28: { bantlar: { remisyon: 'Remission (below 2.6)', dusuk: 'Low disease activity (2.6 to below 3.2)', orta: 'Moderate disease activity (3.2 to 5.1)', yuksek: 'High disease activity (above 5.1)' } },
       // ONE WORD OF TWO CHECKLISTS, the audit's decision ("the pack can change the label by itself"): the set says "the

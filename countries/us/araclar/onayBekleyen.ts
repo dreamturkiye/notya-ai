@@ -116,6 +116,13 @@ export const US_ONAY_BEKLEYEN: readonly OnayBekleyen[] = [
       'The tile only opens the CMS page. Nothing is connected. Is a link, with no sandbox account, the right thing to show?',
     ],
   },
+  {
+    anahtar: 'us-ctg-nichd',
+    sorular: [
+      'The three categories are written from the 2008 NICHD workshop report as the job knew it; the report was NOT re-opened in this session. Check each definition against Macones et al., Obstet Gynecol 2008, and ACOG Practice Bulletin 106.',
+      'Absent variability is entered as 0 bpm. Is a separate "undetectable" tick wanted instead?',
+    ],
+  },
 ]
 
 /** The keys alone. */

@@ -49,6 +49,13 @@ export const US_PAKETI: UlkePaketi = {
   paraBirimi: { kod: 'USD', simge: '$', ondalikHane: 2 },
   // The default time zone of a new account. UNVERIFIED choice.
   saatDilimi: 'America/New_York',
+  // OP-DR-01 (2026-11-05): in the United States the degree is written after the name ("Jane Doe, MD" or "John Roe, DO"),
+  // board certification after it ("MD, FACOG"); "Dr." before the name is the doctor's choice. Post-nominals are the
+  // doctor's own text, never checked against a board.
+  hekimUnvani: {
+    onEkler: { dr: { 'en-US': 'Dr.' }, prof: { 'en-US': 'Prof.' } },
+    ekOrnegi: { 'en-US': 'e.g. MD, FACOG or DO, FACOOG' },
+  },
   // HOW THIS COUNTRY WRITES A DAY AND A NUMBER. Sources read 2026-10-09 (the localisation audit, branch audit/us):
   // month, day, four-digit year — Medicare's claim form asks every date of birth as "MM | DD | CCYY"
   // (hhs.gov/guidance/sites/default/files/hhs-guidance-documents/CMS/clm104c26.pdf); a point for decimals and a comma

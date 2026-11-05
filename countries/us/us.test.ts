@@ -319,6 +319,12 @@ describe('us: held to the standards sheet of the localisation audit (2026-10-09)
       'us-bmi.boy_ft': 'ft', 'us-bmi.boy_in': 'in', 'us-bmi.agirlik_lb': 'lb',
       'us-egfr-ckd-epi-2021.kreatinin': 'mg/dL',
       'us-blood-sugar-ranges.a1c': '%', 'us-blood-sugar-ranges.glukoz': 'mg/dL',
+      // AMELIYAT-NOTU-01 / KD-RAPOR-01 (2026-11-05): sonography is measured in millimetres and centimetres, a birth weight in grams
+      'ameliyat-notu.kan_kaybi': 'mL', 'ameliyat-notu-kd.kan_kaybi': 'mL', 'dogum-epikrizi.bebek_agirlik': 'g', 'dogum-epikrizi.kan_kaybi': 'mL',
+      'usg-obstetrik.crl': 'mm', 'usg-obstetrik.bpd': 'mm', 'usg-obstetrik.hc': 'mm', 'usg-obstetrik.ac': 'mm', 'usg-obstetrik.fl': 'mm', 'usg-obstetrik.afi': 'cm', 'usg-obstetrik.dvp': 'cm', 'usg-obstetrik.mca_psv': 'cm/s', 'usg-obstetrik.nt': 'mm',
+      'usg-jinekolojik.uterus_u': 'mm', 'usg-jinekolojik.uterus_ap': 'mm', 'usg-jinekolojik.uterus_g': 'mm', 'usg-jinekolojik.endometrium': 'mm',
+      'usg-jinekolojik.over_sag_1': 'mm', 'usg-jinekolojik.over_sag_2': 'mm', 'usg-jinekolojik.over_sag_3': 'mm', 'usg-jinekolojik.over_sol_1': 'mm', 'usg-jinekolojik.over_sol_2': 'mm', 'usg-jinekolojik.over_sol_3': 'mm', 'usg-jinekolojik.lezyon_1_boyut': 'mm', 'usg-jinekolojik.lezyon_2_boyut': 'mm',
+      'us-ctg-nichd.sure': 'min', 'us-ctg-nichd.azalmis_dk': 'min', 'us-ctg-nichd.artmis_dk': 'min', 'us-ctg-nichd.sinuzoidal_dk': 'min', 'us-ctg-nichd.tasikardi_dk': 'min', 'us-ctg-nichd.tekrar_dk': 'min', 'us-ctg-nichd.en_uzun_des': 'min',
     })
     // no tool writes an amount of a medicine: weight-based dose arithmetic is off
     for (const x of a.araclar) assert.notEqual(paketinTanimi(a, x)?.dozYazar, true, x.anahtar)

@@ -22,7 +22,7 @@ import { ptaBandi } from '@/lib/ulke/araclar/tanimlar/kalpKbb'
 import type { UlkeAraclari } from '@/lib/ulke/araclar/tipler'
 import { bantBul } from '@/lib/ulke/araclar/uyarlama'
 import { ORNEK_BUGUN, ornekGirdiler } from '@/lib/ulke/testing/aracOrnekleri'
-import { EN_ROL_ARACLARI } from '../../_dil/en/araclar'
+import { EN_AMELIYAT_ARACLARI, EN_ROL_ARACLARI } from '../../_dil/en/araclar'
 import { US_ARAYUZ } from '../arayuz'
 import { US_GIRDI } from '../ayarlar'
 import { US_PAKETI } from '../index'
@@ -53,6 +53,8 @@ const PART_D = ['us-part-d-medicines', 'us-prescription-note', 'us-immunization-
 
 /** WHO SEES A TOOL OF THE SET HERE, where the audit's decision differs from the set: the set's role(s) first, then the roles the audit adds. */
 const GORENLER: Readonly<Record<string, readonly string[]>> = {
+  // AMELIYAT-NOTU-01 (2026-11-05)
+  'ameliyat-notu': ['general-surgery', 'obstetrics-gynaecology', 'orthopaedics', 'urology', 'otolaryngology', 'ophthalmology', 'neurosurgery', 'cardiovascular-surgery', 'thoracic-surgery', 'plastic-surgery', 'paediatric-surgery', 'hair-transplant', 'aesthetic-surgery', 'colon-rectal-surgery'],
   'rtp-basamak': ['sports-medicine', 'emergency-medicine', 'family-medicine', 'neurology', 'paediatrics'],
   'hedef-boy': ['paediatrics', 'family-medicine'],
   'inhaler-teknik': ['respiratory-medicine', 'family-medicine', 'paediatrics', 'allergy-immunology'],
@@ -73,10 +75,11 @@ const GORENLER: Readonly<Record<string, readonly string[]>> = {
 
 describe('us tools 1: no tool of the shared set is switched on or off by this job', () => {
   it('the same tools of the set are on as before: every one but the five that were off, the patient\'s page and the follow-up list; beyond the set, the thirteen of this country\'s own', () => {
-    const setten = ['hasta-portali', ...EN_ROL_ARACLARI.map((a) => a.anahtar).filter((k) => !EMIRLE_KAPALI.includes(k))]
+    // AMELIYAT-NOTU-01 / KD-RAPOR-01 (2026-11-05): the five operation-note and obstetrics and gynaecology records of the set are on too
+    const setten = ['hasta-portali', ...[...EN_ROL_ARACLARI, ...EN_AMELIYAT_ARACLARI].map((a) => a.anahtar).filter((k) => !EMIRLE_KAPALI.includes(k))]
     assert.deepEqual(acik, [...setten, ...KENDI, 'takip-paneli'])
-    assert.equal(setten.length + 1, 57, 'the patient page, the open role tools and the follow-up list')
-    assert.equal(acik.length, 57 + 13)
+    assert.equal(setten.length + 1, 62, 'the patient page, the open role tools and the follow-up list')
+    assert.equal(acik.length, 62 + 14)
     for (const k of acik) assert.equal(Boolean(kitAraci(k)), !KENDI.includes(k), `${k}: a tool of the kit, or one of the thirteen of this country's own`)
   })
 
@@ -101,7 +104,7 @@ describe('us tools 2: who sees which tool', () => {
       assert.deepEqual([...(araci(k).roller ?? [])], [...roller], k)
       for (const r of roller) assert.ok(ROLLER.includes(r), `${k}: ${r} is no role of this country`)
       // the set's own roles keep the tool: a role is only ever added
-      const set = EN_ROL_ARACLARI.find((a) => a.anahtar === k)!.roller ?? []
+      const set = [...EN_ROL_ARACLARI, ...EN_AMELIYAT_ARACLARI].find((a) => a.anahtar === k)!.roller ?? []
       for (const r of set) assert.ok(roller.includes(r), `${k}: ${r} lost the tool`)
       // and the grid agrees with the list
       assert.deepEqual(ROLLER.filter((r) => izgara(r).includes(k)).sort(), [...roller].sort(), k)
@@ -122,7 +125,7 @@ describe('us tools 2: who sees which tool', () => {
     // THE AUDIOLOGIST: the hearing average and the next-session record
     assert.deepEqual(izgara('audiology'), ['hasta-portali', 'odyometri-pta', 'sonraki-seans', 'takip-paneli'])
     // THORACIC AND CARDIAC SURGERY: the checklist before a heart operation is new, and the six of every doctor role
-    assert.deepEqual(izgara('thoracic-surgery'), ['hasta-portali', 'toraks-preop', 'toraks-tup-yara', 'kalp-damar-preop', ...CEKIRDEK, ...PART_D, 'takip-paneli'])
+    assert.deepEqual(izgara('thoracic-surgery'), ['hasta-portali', 'toraks-preop', 'toraks-tup-yara', 'kalp-damar-preop', 'ameliyat-notu', ...CEKIRDEK, ...PART_D, 'takip-paneli'])
     // a specialty the audit adds: radiation oncology, with the two oncology lists of the set and the ECOG grade
     assert.deepEqual(izgara('radiation-oncology'), ['hasta-portali', 'kur-sayaci', 'toksisite-listesi', ...CEKIRDEK, 'us-ecog-performance-status', ...PART_D, 'takip-paneli'])
     // CARDIOLOGY and PSYCHIATRY: before, the patient's page and nothing else; now the six of every doctor role

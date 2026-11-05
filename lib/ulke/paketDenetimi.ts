@@ -249,6 +249,10 @@ function kurallar(paket: UlkePaketi, arayuz: UlkeArayuzu | null, klinik: UlkeKli
       if (u.adAlanlari?.ikinciAd === true && !dolu(m.yeniHasta?.otaIsmi)) ekle(`arayuz.metinler[${d}].yeniHasta.otaIsmi`, 'the second name field is on and has no label')
       if (kimlikVar && !dolu(m.yeniHasta?.ulusalKimlik)) ekle(`arayuz.metinler[${d}].yeniHasta.ulusalKimlik`, 'the identity number is recorded and has no label')
       if (dilimler.length > 1 && !dolu(m.ayarlar?.saatDilimi)) ekle(`arayuz.metinler[${d}].ayarlar.saatDilimi`, 'the country has several time zones and the setting has no label')
+      // OP-DR-01 — the pack states the doctor's title and post-nominals: the settings card has every word in this form
+      if (paket.hekimUnvani) for (const k of ['unvanBolumu', 'unvan', 'unvanYok', 'unvanEki', 'unvanIzoh', 'unvanGecersiz'] as const) if (!dolu(m.ayarlar?.[k])) ekle(`arayuz.metinler[${d}].ayarlar.${k}`, 'the pack states the doctor\'s title and post-nominals and the settings card has no word for this')
+      if (paket.hekimUnvani) for (const [k, v] of Object.entries(paket.hekimUnvani.onEkler)) if (!dolu(v?.[d])) ekle(`hekimUnvani.onEkler.${k}[${d}]`, 'a title the pack offers has no words in this form')
+      if (paket.hekimUnvani && !dolu(paket.hekimUnvani.ekOrnegi?.[d])) ekle(`hekimUnvani.ekOrnegi[${d}]`, 'the example of post-nominals has no words in this form')
       // NOTYA-ULKE-DENETIM-01 — the words of the kit's own date, time and number fields (components/ulke/girdi/): every
       // one of them, and the two places for the examples in the sentence that asks for a number to be typed again.
       for (const k of GIRDI_ANAHTARLARI) if ((m.girdi as Record<string, unknown> | undefined)?.[k] === undefined) ekle(`arayuz.metinler[${d}].girdi.${k}`, 'the kit\'s own date, time and number fields have no word for this')

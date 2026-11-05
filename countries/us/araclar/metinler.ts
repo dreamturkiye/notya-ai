@@ -33,6 +33,7 @@ import { usBildirimAraci } from './bildirim'
 import { usBlueButton, usPartDAraclari } from './partD'
 import { usYetiskinAsiAraci } from './yetiskinAsi'
 import { US_TANIMLAR } from './tanimlar'
+import { usKtgAraci } from './ktg'
 
 const D = 'en-US'
 const m = (metin: string): BicimliMetin => ({ [D]: metin })
@@ -231,6 +232,8 @@ export function usKendiAraclari(r: UsRolleri): readonly PaketAraci[] {
     usYetiskinAsiAraci(r.hekimler),
     usBildirimAraci(r.hekimler),
     usBlueButton(r.hekimler),
+    // KD-RAPOR-01 (2026-11-05): NICHD three-tier fetal heart rate tracing — obstetrics and gynecology
+    usKtgAraci(['obstetrics-gynaecology']),
   ]
 }
 

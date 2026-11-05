@@ -28,6 +28,11 @@ import { aracOzeti, bicimli } from '@/lib/ulke/araclar/paket'
 import type { UlkeAraclari } from '@/lib/ulke/araclar/tipler'
 import type { DilKodu } from '@/lib/ulke/tipler'
 import { TarihGirisi } from '../girdi/TarihGirisi'
+import { YazdirKagidi, yazdirSozleri, type YazdirAntet } from './YazdirKagidi'
+import { unvanliAd } from '@/lib/ulke/uygulama/hekimUnvani'
+import { ulkePaketi } from '@/lib/ulke/ulke'
+import { ulkeGunu } from '@/lib/ulke/uygulama/gun'
+import { hesapSaatDilimi } from '@/lib/ulke/arayuz/bicim'
 
 /**
  * The patient a tool was opened for. `dogumTarihi` and `cinsiyet` are what a tool's patient gate reads
@@ -114,8 +119,9 @@ export function AracKayitKarti({ a, g, hasta, tamam, takip, takipDegistir, kayde
 // ───────────────────────── on the patient's file ─────────────────────────
 
 /** The kept results of one patient. `kayitlar` null = not loaded (or could not be read): nothing is listed. Pure. */
-export function HastaAracKayitlariGorunumu({ a, dil, icerik, hastaId, kayitlar }: { a: AraclarMetni; dil: DilKodu; icerik: UlkeAraclari; hastaId: string; kayitlar: readonly AracKaydi[] | null }) {
+export function HastaAracKayitlariGorunumu({ a, dil, icerik, hastaId, kayitlar, antet }: { a: AraclarMetni; dil: DilKodu; icerik: UlkeAraclari; hastaId: string; kayitlar: readonly AracKaydi[] | null; /** AMELIYAT-NOTU-01: the letterhead a printed record carries. */ antet?: YazdirAntet }) {
   const k = a.kayit
+  const sozler = yazdirSozleri(a)
   const o = birimOrtami(icerik), y = yazici(icerik, dil)
   return (
     <section className="uza-kart" data-alan="hasta-arac-kayitlari">
@@ -135,6 +141,7 @@ export function HastaAracKayitlariGorunumu({ a, dil, icerik, hastaId, kayitlar }
                     {x.takipTarihi ? <span className="uza-rozet" data-takip-durum={x.kapandi ? 'kapandi' : 'acik'}>{yerine(x.kapandi ? k.takipKapandi : k.takipGunu, tarihYaz(x.takipTarihi))}</span> : null}
                   </summary>
                   {ozet ? <pre className="uza-arac-ozet">{ozet}</pre> : <p className="uza-ipucu" data-okunamadi>{k.okunamadi}</p>}
+                  {ozet && arac?.tanim.yazdirilir && antet && sozler ? <div className="uza-eylemler"><YazdirKagidi baslik={aracAdi(icerik, a, x.arac, dil)} ozet={ozet} antet={antet} s={sozler} /></div> : null}
                 </details>
               </li>
             )
@@ -147,7 +154,7 @@ export function HastaAracKayitlariGorunumu({ a, dil, icerik, hastaId, kayitlar }
 }
 
 /** The card on the patient's file. The file is the file without it: if the list cannot be read, only the way in is drawn. */
-export function HastaAracKayitlariKarti({ u, hastaId }: { u: Uygulama; hastaId: string }) {
+export function HastaAracKayitlariKarti({ u, hastaId, hastaAdi }: { u: Uygulama; hastaId: string; /** AMELIYAT-NOTU-01: printed on a kept record's letterhead. */ hastaAdi?: string }) {
   const [kayitlar, setKayitlar] = useState<AracKaydi[] | null>(null)
   const { hesap, api } = u
   useEffect(() => {
@@ -158,7 +165,8 @@ export function HastaAracKayitlariKarti({ u, hastaId }: { u: Uygulama; hastaId: 
   }, [hesap, api, hastaId])
   const icerik = arayuz().araclar
   if (!icerik) return null
-  return <HastaAracKayitlariGorunumu a={araclarMetni(u.dil)} dil={u.dil} icerik={icerik} hastaId={hastaId} kayitlar={kayitlar} />
+  const antet: YazdirAntet | undefined = hesap ? { hekim: unvanliAd(hesap.ad, hesap.unvan, hesap.unvanEki, ulkePaketi().hekimUnvani, hesap.notDili), hasta: hastaAdi || null, tarih: yazici(icerik, u.dil).tarih(ulkeGunu(new Date(), hesapSaatDilimi())) } : undefined
+  return <HastaAracKayitlariGorunumu a={araclarMetni(u.dil)} dil={u.dil} icerik={icerik} hastaId={hastaId} kayitlar={kayitlar} antet={antet} />
 }
 
 // ───────────────────────── the follow-up list ─────────────────────────
