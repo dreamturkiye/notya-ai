@@ -66,7 +66,7 @@ export function KurucuSayfasi({ acilis: a, dil, kalan, gorsel }: { acilis: UlkeA
         <ArrowUpRight className="size-4" />
       </Button>
       {demo ? (
-        <Button href={demo.href} variant="demo" size="lg" className="w-full sm:w-auto">
+        <Button href={demo.href} variant="blue" size="lg" className="w-full sm:w-auto">
           {demo.etiket}
         </Button>
       ) : null}
