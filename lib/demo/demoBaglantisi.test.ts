@@ -3,6 +3,8 @@
  */
 import { describe, it, afterEach } from 'node:test'
 import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import React, { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { demoBaglantisiCoz, demoCspGenislet, demoYoluMu } from './demoBaglantisi'
@@ -136,5 +138,53 @@ describe('landing + /demo, both states', () => {
     assert.doesNotMatch(main, /KVKK|uyumlu|sertifika|onaylı|entegrasyon|₺|fiyat|garanti|%|Google|Meet|Zoom/i)
     const bolum = renderToStaticMarkup(createElement(DemoSection)).replace(/<[^>]+>/g, ' ')
     assert.doesNotMatch(bolum, /KVKK|uyumlu|sertifika|onaylı|entegrasyon|₺|fiyat|garanti|%|Google|Meet|Zoom/i)
+  })
+})
+
+/**
+ * NOTYA-DEMO-DIL-01 (Kaan, 2026-11-06): notya.io/demo is the Türkiye doctors' page — every word on it is Turkish.
+ * Checks the whole rendered page (bar, body, footer, aria-labels, titles) with the link set and not set, plus the
+ * <title> and meta description of app/demo/layout.tsx. Brand and provider names stay as they are.
+ * Not visible here: the Cal.com calendar inside the iframe — its language is the Cal.com event type's
+ * "Interface language" setting (docs/OPEN-COMMITMENTS.md, NOTYA-DEMO-DIL-01).
+ */
+describe('NOTYA-DEMO-DIL-01 — /demo is entirely Turkish', () => {
+  const INGILIZCE =
+    /\b(?:the|and|your|you|with|book|booking|schedule|select|choose|minutes?|video call|call|time ?zone|calendar|opens?|soon|handled|sign in|log ?in|free|trial|privacy|terms|pricing|security|branches|assistant|confirm|next|back)\b/i
+  const MARKALAR = /\b(?:notya|Notya|NOTYA|Cal\.com|Dr\.|AES-256|KVKK)\b/g
+  const sozler = (html: string) => {
+    const nitelikler = [...html.matchAll(/\b(?:aria-label|title|alt|placeholder)="([^"]*)"/g)].map((m) => m[1])
+    return [html.replace(/<[^>]+>/g, ' '), ...nitelikler]
+      .join('\n')
+      .replace(/&#x27;/g, "'")
+      .replace(/&quot;/g, '"')
+      .replace(/&amp;/g, '&')
+      .replace(MARKALAR, ' ')
+  }
+
+  it('the checker catches an English word', () => {
+    assert.match(sozler('<p>Demo planla — Book a demo</p>'), INGILIZCE)
+    assert.match(sozler('<div aria-label="Demo booking calendar"></div>'), INGILIZCE)
+    assert.doesNotMatch(sozler('<p>Randevu işlemleri Cal.com üzerinden yürütülür.</p>'), INGILIZCE)
+  })
+
+  it('page text and labels, link set and not set', () => {
+    for (const v of [undefined, 'https://cal.com/example']) {
+      if (v === undefined) delete process.env.NEXT_PUBLIC_DEMO_BOOKING_URL
+      else process.env.NEXT_PUBLIC_DEMO_BOOKING_URL = v
+      const s = sozler(renderToStaticMarkup(createElement(DemoPage)))
+      const yabanci = s.match(INGILIZCE)
+      assert.equal(yabanci, null, `${v ? 'link set' : 'no link'}: "${yabanci?.[0]}" is not Turkish`)
+    }
+  })
+
+  it('<title> and meta description (app/demo/layout.tsx)', () => {
+    const kaynak = readFileSync(join(__dirname, '../../app/demo/layout.tsx'), 'utf8')
+    const meta = kaynak.match(/export const metadata[\s\S]*?\n\};/)?.[0] ?? ''
+    const title = meta.match(/title:\s*"([^"]+)"/)?.[1]
+    const description = meta.match(/description:\s*"([^"]+)"/)?.[1]
+    assert.ok(title && description, 'metadata title and description found')
+    for (const metin of [title!, description!]) assert.doesNotMatch(metin.replace(MARKALAR, ' '), INGILIZCE, metin)
+    assert.match(description!, /[çğışöüİ]/, 'the description reads as Turkish')
   })
 })

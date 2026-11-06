@@ -1,5 +1,51 @@
 # OPEN COMMITMENTS — Notya AI
 
+## NOTYA-DEMO-DIL-01 — /demo pages fully in their own language; Cal.com calendar language; missing attendee e-mail (Claude, 2026-11-06)
+
+Checked live in Chrome on 2026-11-06. Our own words on www.notya.io/demo (bar, heading, body, footer, `<title>`, meta
+description) were already all Turkish, and those on us/uk/ca/nz/au `/demo` were all in the country's English. Everything that
+was not in the local language came from the **Cal.com calendar inside the iframe**: month and day names, "Fri 6th", the
+12h/24h toggle, "30m", the time format, and on the booking form "Your name", "Email address", "Additional notes", "Add
+guests", "Back", "Confirm" and the privacy line. Cal.com picks that language on its own server, in this order: the
+event type's **Interface language**, then the signed-in Cal user's language, then the visitor's browser language. All
+seven demo event types have Interface language **empty** (read from each public event page), so a visitor whose browser
+is set to English (as Kaan's is) sees English on the Türkiye page. Cal.com reads no URL parameter or embed option for
+this: `lng`, `locale` and `ui.locale` on the embed URL were tried and ignored, and Cal.com's source (2026-11) has no other
+path. So the link parser does not need to let any parameter through, and the fix is not in our code.
+Regression tests added (main: lib/demo/demoBaglantisi.test.ts; every country branch: lib/ulke/demo/demoDili.paket.test.ts)
+so a word in another language on our own part of these pages fails the test.
+
+- **NOTYA-DEMO-DIL-01a — waits on Kaan (Cal.com setting; Claude does not change Cal account settings).** In Cal.com →
+  Event Types → each event → Advanced → **Interface language**: `Demo-TR` → **Türkçe**; `Demo-USA`, `Demo-UK`, `Demo-CA`,
+  `Demo-NZ`, `Demo-AU` → **English**; `Demo-UZ` → **Русский**. Cal.com has no Uzbek, so Russian is the closest language it
+  supports for the UZ page in all three forms (Uzbek Latin, Uzbek Cyrillic, Russian), because one event type has one
+  interface language. Optional, same screen: event titles show as "Demo-TR", "Demo-USA" and so on. After the change,
+  Claude re-checks each page once.
+- **NOTYA-DEMO-DIL-01b — waits on Kaan's go, then Claude.** au.notya.io/au/demo embeds **`han-mamur-sugmbo/demo-tr`**: the
+  Turkish event, with its Turkish description "Notya'ya hoşgeldiniz!", on the Australian page. The Vercel project
+  `notya-au-preview` has `NEXT_PUBLIC_DEMO_BOOKING_URL` set to the TR event. Fix: set it to
+  `https://app.cal.com/han-mamur-sugmbo/demo-au` (the event exists, "Introducing Notya!") and redeploy release/au. The
+  value is inlined at build time, so the change needs a new build.
+- **NOTYA-DEMO-DIL-01c — owner Claude.** uz.notya.io (`/uz/demo`, `/demo`, …) answers Vercel's platform `404 NOT_FOUND`
+  on 2026-11-06, although the `uz` CNAME → cname.vercel-dns.com exists. The UZ page could not be checked live. Next step:
+  check the `uz.notya.io` domain binding and the latest production deployment of `notya-uz-preview`.
+- **NOTYA-DEMO-MAIL-01 — missing attendee e-mail on Kaan's test booking (Demo-TR, Fri 6 Nov 2026, confirmed in Cal; host
+  e-mail received, attendee e-mail never arrived).** Read-only checks of the public event data: `requiresConfirmation`
+  false, `metadata` {} (so `disableStandardEmails` is not set for host or attendee), `workflows` [] (no workflow replaces
+  the default e-mails), `requiresBookerEmailVerification` false. The e-mail field is Cal's own required system field.
+  Our embed passes only layout, theme and brand colour: no prefill, no e-mail. Cal.com sends the attendee e-mail from its
+  own sender address (the organizer's name on Cal.com's own sending domain, Reply-To the organizer), so notya.io's
+  SPF, DKIM and DMARC do not decide whether that message is delivered. **notya.io's DMARC was broken anyway and is
+  fixed (Kaan's written go, 2026-11-06):** `_dmarc.notya.io` was a CNAME to `autoconfig.purelymail.com.`, which resolves
+  to purelymail.com's own TXT records, so notya.io had no DMARC record at all. It is now a TXT record,
+  `v=DMARC1; p=none; rua=mailto:kaan@notya.io; adkim=r; aspf=r; fo=1`, and every other record is unchanged (backup
+  of all 22 records taken before the change). SPF (one record, `include:_spf.purelymail.com`), Purelymail DKIM
+  (purelymail1–3) and Resend DKIM (`resend._domainkey`, return path `send.` → forge.rmta.net) were already right. **Waits
+  on Kaan:** in Cal → Bookings, open the test booking and compare the attendee address character by character with the
+  inbox. If it is right, the drop happened at the receiving mailbox, not in a Cal or DNS setting. To confirm, make one
+  more booking to a Gmail address, which only Kaan may do, and see whether it arrives. Move DMARC to `p=quarantine` once a few weeks of rua
+  reports show only Purelymail and Resend sending as notya.io (owner Claude, once reports arrive).
+
 ## KD-OPERATOR-01 / BELGE-NO-01 / REFERANS-01 / HASTA-DISA-AKTAR-01 — what is open after the 2026-11-05 change set (Claude, 2026-11-05)
 
 Shipped the same day on main and on all six country branches: the operating surgeon's tools (WHO checklist, Caprini and
