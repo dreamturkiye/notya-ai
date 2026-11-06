@@ -1,43 +1,47 @@
 # TR özel muayenehane — bedava outreach (Kaan davet · Gökhan tanıtım)
 
 **Kim gönderir:** Kaan / Notya — WhatsApp ve/veya e-posta.  
-**Kim tanıtır:** Dr. Gökhan Mamur — 30 dk (Cal.com · Google Meet); saatler ziyaretçinin diliminde.  
-**Ürün (repo / landing):** Notya = hekimler için **yapay zekâ klinik asistanı** — muayeneyi dinler, notu yazar, reçete ve rapor taslağı hazırlar, takip + hasta portalı; her karar hekim onayıyla. Sadece “muayene notu” değil.  
-Kaynak: `lib/seo/doktor.ts`, `components/doktor-landing/content.ts` (HERO).
+**Kim tanıtır:** Dr. Gökhan Mamur — 30 dk; saatler ziyaretçinin diliminde.  
+**Ürün:** Notya = hekimler için yapay zekâ klinik asistanı (not, reçete, rapor, takip, portal; her karar hekim onayıyla).
 
-**Tanıtım takvimi:** [notya.io/demo](https://www.notya.io/demo) · `https://cal.com/han-mamur-sugmbo/demo-tr`  
-**Ücretsiz deneme:** `https://www.notya.io`  
-**Hedef:** tanıtım randevusu ve/veya ücretsiz deneme → ağızdan ağıza.
-
-Doktor mesajında: ABD / görüntülü / free trial yok. Tamamen Türkçe.  
-**Görsel ek yok** — tek WhatsApp metni; biçim `*kalın*` / madde işaretleri (WA native).
+**Tanıtım:** https://www.notya.io/demo · **Deneme:** https://www.notya.io  
+Doktor mesajında: ABD / free trial yok. Görsel ek yok. Tek mesaj.
 
 ---
 
-## WhatsApp / SMS (Kaan — birincil)
+## WhatsApp — iPhone / Android okunurluk
 
-**Tek mesaj.** Ham Cal.com yok (`notya.io/demo`). Önizleme rahatsız ederse X.
+Kopyala-yapıştır; gönder **önce** telefonda önizle (kalın + liste).
 
-WhatsApp biçimi: `*kalın*` · `_italik_` · `•` maddeler. Düz paragraf yığını yok.
+| Yap | Yapma |
+|-----|--------|
+| `*kalın*` (bitişik, boşluksuz `*`) | Satır başında `*` madde (kalınla karışır) |
+| Madde: `- ` + kısa satır (native WA listesi) | `•` veya uzun tek satır (iPhone’da satır kayınca girinti bozulur) |
+| Liste öncesi/sonrası boş satır | Madde altına girintili devam satırı |
+| Link **ayrı satırda** (dokunulabilir) | Linki cümle ortasına gömmek |
+| Tek boş satır bölümler arası | 3–4 boş satır (WA sıkıştırır) |
+| ASCII tire `1,5-2` | Gereksiz özel karakter / `·` yığını |
 
-**KD (genel + riskli gebelik + operatör harmanı):**
+**KD şablon** (isim: `{İsim} Hocam`):
 
 ```
-Hocam merhaba 👋
-Ben Kaan, *Notya*’dan yazıyorum.
+{İsim} Hocam merhaba 👋
+Ben Kaan, *Notya*'dan yazıyorum.
 
 *Notya* — hekimler için yapay zekâ klinik asistanı.
 Muayeneyi dinler, notunuzu yazar, reçete ve rapor taslağını hazırlar, hastanızı takipte tutar — hasta portalı dahil.
-Her karar *sizin onayınızla*. 40’tan fazla branşı kendi ihtiyaçlarıyla destekliyoruz.
+Her karar *sizin onayınızla*.
+40'tan fazla branşı kendi ihtiyaçlarıyla destekliyoruz.
 
 *Kadın doğumda*
-• Gebelik takvimi ve izlem
-• Doppler’li USG · yapılandırılmış NST
-• Obstetrik risk (preeklampsi / GDM / SSVD)
-• Sezaryen–ameliyat notları → doğum epikrizi · antetli baskı
-  (histerektomi, myomektomi, laparoskopi, histeroskopi, küretaj)
+- Gebelik takvimi ve izlem
+- Doppler'li USG ve yapılandırılmış NST
+- Obstetrik risk (preeklampsi, GDM, SSVD)
+- Sezaryen ve ameliyat notları
+- Doğum epikrizi ve antetli baskı
 
-Tipik bir günde yaklaşık *1,5–2 saat* kazanç; kayıtlar daha düzenli → bakım kalitesi de yükseliyor.
+Tipik bir günde yaklaşık *1,5-2 saat* kazanç.
+Kayıtlar daha düzenli → bakım kalitesi de yükseliyor.
 Meslektaşlarınız da bakmaya başladı — geride kalmamak için kısa bir bakış çoğu zaman yeterli.
 
 Dr. Gökhan Mamur *30 dk* kısa tanıtım yapıyor 🩺
@@ -45,21 +49,25 @@ Saatler size göre.
 
 Tanıtıma vakit yoksa ücretsiz denemeyi hemen açabiliyoruz.
 
-📅 *Tanıtım / Demo:* https://www.notya.io/demo
-🔗 *Ücretsiz deneme:* https://www.notya.io
+📅 *Tanıtım / Demo*
+https://www.notya.io/demo
+
+🔗 *Ücretsiz deneme*
+https://www.notya.io
 ```
 
-**Dermatoloji bloğu** (`*Kadın doğumda*` yerine):
+**Dermatoloji** (`*Kadın doğumda*` bloğu yerine):
 
 ```
 *Dermatolojide*
-• PASI / EASI
-• İzotretinoin GÖP kapısı · fototerapi defteri
-• Yama (D2/D4) · dermoskopi / önce-sonra foto
-• Biyolojik SUT taslağı
+- PASI / EASI
+- İzotretinoin GÖP kapısı
+- Fototerapi defteri
+- Yama (D2/D4) ve dermoskopi
+- Biyolojik SUT taslağı
 ```
 
-Pediatri — genel pitch + `40’tan fazla branş`; branş listesi yok. Aynı kapanış + iki link.
+Pediatri: branş maddeleri yok; genel pitch + kapanış + iki link.
 
 ## E-posta (Kaan)
 
@@ -72,45 +80,20 @@ Ben Kaan (Notya). Notya, hekimler için yapay zekâ klinik asistanıdır: muayen
 notunuzu yazar, reçete ve rapor taslağını hazırlar, hastanızı takipte tutar;
 hasta portalı dahildir. Her karar sizin onayınızla.
 
-Yoğun bir günde not, reçete, takip ve ön büro işlerinden yaklaşık 1,5–2 saat
-kazandırır; daha düzenli kayıtlarla bakım kalitesine de katkı sağlar.
-Branşınızdaki meslektaşlarınız da bakmaya başladı — geride kalmamak için
-kısa bir bakış çoğu zaman yeterli.
-
-Dr. Gökhan Mamur 30 dakikalık kısa tanıtım yapıyor; saatler sizin diliminizde.
+Yoğun bir günde yaklaşık 1,5-2 saat kazandırır; daha düzenli kayıtlarla bakım
+kalitesine de katkı sağlar. Branşınızdaki meslektaşlarınız da bakmaya başladı —
+geride kalmamak için kısa bir bakış çoğu zaman yeterli.
 
 Tanıtım / Demo: https://www.notya.io/demo
-
-Tanıtıma vakit yoksa ücretsiz deneme: https://www.notya.io
-Uygunsa bir slot seçmeniz yeterli; iki meslektaşınıza da iletmenizi rica ederiz.
+Ücretsiz deneme: https://www.notya.io
 
 Saygılarımızla,
 Kaan · Notya · merhaba@notya.io
 ```
 
-## Yalnızca ücretsiz deneme
-
-```
-Hocam, tanıtıma vakit yoksa Notya ücretsiz denemesini hemen açabiliriz.
-Bağlantı: https://www.notya.io
-Takıldığınız yerde kısa tanıtıma da dönebilirsiniz:
-https://www.notya.io/demo
-```
-
-## Tanıtım kapanış
-
-```
-Teşekkürler hocam. Ücretsiz deneme hesabınız açık / açıyoruz.
-İki meslektaşınıza da bu bağlantıyı atmanızı rica ederiz:
-https://www.notya.io/demo
-(veya bana WhatsApp’tan yazın — Kaan)
-```
-
----
-
 ## Operasyon
 
-1. Önce mobil `5xx`; 0850 WhatsApp olmaz.  
-2. Gönderen = Kaan · Gökhan = tanıtım host.  
-3. Tek mesaj (WA biçimli metin) — görsel ek yok.  
-4. Başarı = `notya.io/demo` veya ücretsiz deneme.
+1. Mobil `5xx`; 0850 WA olmaz.  
+2. Kaan gönderir · Gökhan tanıtır.  
+3. Tek mesaj · görsel yok · gönder öncesi telefonda biçim kontrol.  
+4. Başarı = demo veya deneme.

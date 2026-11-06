@@ -78,27 +78,29 @@ Tanıtıma vaktiniz yoksa da sorun değil, ücretsiz denemeyi hemen açabiliyoru
 ```
 
 ---
-## 3. Op. Dr. Cengiz Sağıroğlu ← SIRADAKİ
+## 3. Op. Dr. Cengiz Sağıroğlu ← 1. SIRADAKİ (dün kalan liste)
 **kadin-dogum** · Kadıköy · `+90 555 052 64 58` · WA: `+905550526458`
 
-**Tek mesaj (kopyala — `*…*` WhatsApp’ta kalın görünür):**
+**Gönder:** numarayı aç → metni yapıştır → iPhone’da kalın + madde listesi görünsün → Gönder.
 
 ```
 Cengiz Hocam merhaba 👋
-Ben Kaan, *Notya*’dan yazıyorum.
+Ben Kaan, *Notya*'dan yazıyorum.
 
 *Notya* — hekimler için yapay zekâ klinik asistanı.
 Muayeneyi dinler, notunuzu yazar, reçete ve rapor taslağını hazırlar, hastanızı takipte tutar — hasta portalı dahil.
-Her karar *sizin onayınızla*. 40’tan fazla branşı kendi ihtiyaçlarıyla destekliyoruz.
+Her karar *sizin onayınızla*.
+40'tan fazla branşı kendi ihtiyaçlarıyla destekliyoruz.
 
 *Kadın doğumda*
-• Gebelik takvimi ve izlem
-• Doppler’li USG · yapılandırılmış NST
-• Obstetrik risk (preeklampsi / GDM / SSVD)
-• Sezaryen–ameliyat notları → doğum epikrizi · antetli baskı
-  (histerektomi, myomektomi, laparoskopi, histeroskopi, küretaj)
+- Gebelik takvimi ve izlem
+- Doppler'li USG ve yapılandırılmış NST
+- Obstetrik risk (preeklampsi, GDM, SSVD)
+- Sezaryen ve ameliyat notları
+- Doğum epikrizi ve antetli baskı
 
-Tipik bir günde yaklaşık *1,5–2 saat* kazanç; kayıtlar daha düzenli → bakım kalitesi de yükseliyor.
+Tipik bir günde yaklaşık *1,5-2 saat* kazanç.
+Kayıtlar daha düzenli → bakım kalitesi de yükseliyor.
 Meslektaşlarınız da bakmaya başladı — geride kalmamak için kısa bir bakış çoğu zaman yeterli.
 
 Dr. Gökhan Mamur *30 dk* kısa tanıtım yapıyor 🩺
@@ -106,9 +108,13 @@ Saatler size göre.
 
 Tanıtıma vakit yoksa ücretsiz denemeyi hemen açabiliyoruz.
 
-📅 *Tanıtım / Demo:* https://www.notya.io/demo
-🔗 *Ücretsiz deneme:* https://www.notya.io
+📅 *Tanıtım / Demo*
+https://www.notya.io/demo
+
+🔗 *Ücretsiz deneme*
+https://www.notya.io
 ```
+
 
 ---
 ## 4. Op. Dr. Timuçin Timuroğlu

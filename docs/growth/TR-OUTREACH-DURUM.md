@@ -1,33 +1,25 @@
 # TR outreach durum (canlı)
 
-**Sessiz saat:** Türkiye **20:00 sonrası** soğuk WhatsApp yok. Güvenli pencere ~**10:00–19:00 TR**.
+**Sessiz saat:** TR **20:00+** soğuk WA yok. Pencere ~**10:00–19:00 TR**.
 
-## Şimdi — 2026-11-06
+## Şimdi — 2026-11-06 (~18:20 TR)
 
-- **Sıradaki:** Op. Dr. Cengiz Sağıroğlu (KD · Kadıköy · `+905550526458`) — **henüz yollanmadı**.
-- **Format:** tek mesaj · WA `*kalın*` + `•` maddeler · **görsel ek yok**.
-- Metin: `TR-WHATSAPP-GONDERIM-PAKETI.md` §3 / `TR-PEDI-OUTREACH-TEMPLATES.md`.
-- 20:00 TR’den önce Cengiz; sonra Timuçin → `tr-whatsapp-next-batch.csv`.
+**1. gönder:** Op. Dr. **Cengiz Sağıroğlu** · KD · Kadıköy · `+905550526458`  
+Metin: `TR-WHATSAPP-GONDERIM-PAKETI.md` §3 (iPhone-uyumlu: `*kalın*` + `- ` listesi).  
+Görsel yok. Gönder öncesi telefonda biçim kontrol.
 
-## Bugün / dün gidenler (WhatsApp)
+Sonra: Timuçin Timuroğlu → `tr-whatsapp-next-batch.csv` sırası.
+
+## Bugün / dün gidenler
 
 | # | İsim | Branş | Not |
 |---|------|-------|-----|
-| — | Berrin Arslan | pedi | WA yok |
-| 1 | İsmail Özdemir | KD | gitti (eski metin) |
-| 2 | Elif Dilasa Pala Köse | KD | gitti |
-| 3 | Hatice Gürsoy | KD | gitti |
-| 4 | Aylin Sema Tırpancı | derm | gitti |
-| 5 | Dilek Başaran | derm | gitti (`+905458150451`) |
-| 6 | Sema Süzen Çaypınar | KD | gitti |
-| 7 | Sinem Tekin | KD | gitti |
-| — | **Cengiz Sağıroğlu** | KD | **SIRADAKİ** |
+| 1–7 | İsmail … Sinem | KD/derm | gitti (önceki tur) |
+| — | Berrin | pedi | WA yok |
+| **8** | **Cengiz Sağıroğlu** | KD | **şimdi gönder** |
 
-## Liste büyütme
+## Format (mobil)
 
-- Korpus ~3 350 · call-ready ~1 655 · WA batch ~28
-- Ankara/İzmir harvest arka planda
-
-## Link
-
-Ham Cal.com yok → `https://www.notya.io/demo`
+- `- ` maddeler (native WA; iPhone wrap’te `•` kullanma)
+- Link ayrı satır
+- Tek mesaj, PNG yok
