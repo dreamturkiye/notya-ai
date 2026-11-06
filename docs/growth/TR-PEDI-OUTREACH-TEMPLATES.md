@@ -15,9 +15,10 @@ Doktor mesajında: ABD / görüntülü / demo / free trial yok. Tamamen Türkçe
 
 ## WhatsApp / SMS (Kaan — birincil)
 
-**İki baloncuk** (önce metin, sonra link).
+**Tek mesaj:** metin → boş satır → iki link. Ham Cal.com linki yok (`notya.io/demo`).  
+Önizleme kartı rahatsız ederse göndermeden X ile kapat.
 
-**Balon 1 — KD (genel + riskli gebelik + operatör — harman; yalnız operatör değil):**
+**KD (genel + riskli gebelik + operatör harmanı):**
 
 ```
 Hocam merhaba 👋
@@ -41,27 +42,19 @@ Saatler sizin uygunluğunuza göre ayarlanıyor.
 
 Tanıtıma vaktiniz yoksa da sorun değil, ücretsiz denemeyi hemen açabiliyoruz.
 İsterseniz kısaca bakabilirsiniz, uygun görürseniz devam ederiz.
+
+📅 Tanıtım / Demo: https://www.notya.io/demo
+🔗 Ücretsiz deneme: https://www.notya.io
 ```
 
-**Dermatoloji satırı** (KD ameliyat listesi yerine):
+**Dermatoloji satırı** (KD paragrafı yerine):
 
 ```
 Dermatolojide PASI/EASI, izotretinoin GÖP kapısı, fototerapi defteri, yama (D2/D4),
 dermoskopi/önce-sonra foto arşivi ve biyolojik SUT taslağı branşa özel ilerliyor.
 ```
 
-Pediatri — genel pitch + `40’tan fazla branş`; KD/derm listelerini yazma.
-
-**Balon 2 — linkler:**
-
-Doğrudan Cal.com **verme** (büyük İngilizce kart). Tanıtım için Notya sayfası:
-
-```
-📅 Tanıtım / Demo: https://www.notya.io/demo
-🔗 Ücretsiz deneme: https://www.notya.io
-```
-
-(`notya.io/demo` Cal’i gömülü açar; WhatsApp önizlemesi Notya markalı kalır. Kart yine büyükse X ile kapat.)
+Pediatri — genel pitch + `40’tan fazla branş`; KD/derm listelerini yazma. Sonuna aynı iki link.
 
 ## E-posta (Kaan)
 
