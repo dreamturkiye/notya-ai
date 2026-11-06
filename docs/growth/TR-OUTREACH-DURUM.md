@@ -1,12 +1,13 @@
 # TR outreach durum (canlı)
 
-**Sıradaki:** Op. Dr. **Tonguç Arslan** · KD · Üsküdar · `+905324864916` (düzeltildi)  
+**Sıradaki:** Op. Dr. **Vefa Yılmazer** · KD · Üsküdar · `+905077443817`  
 Yapıştır → kart varsa **X** → gönder.
 
-## Gidenler (bugün)
+## Gidenler (son)
 
-| # | İsim | Not |
-|---|------|-----|
-| 8 | Cengiz Sağıroğlu | OG kartlı |
-| 9 | Timuçin Timuroğlu | gitti |
-| **10** | **Tonguç Arslan** | **şimdi** |
+| İsim | Not |
+|------|-----|
+| Cengiz Sağıroğlu | OG kartlı |
+| Timuçin Timuroğlu | gitti |
+| Tonguç Arslan | gitti (`+905324864916`) |
+| **Vefa Yılmazer** | **şimdi** |
