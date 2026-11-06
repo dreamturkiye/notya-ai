@@ -29,7 +29,9 @@ describe('operation note (kit)', () => {
   it('the KD note is the same note with the operation choice', () => {
     const kd = kitAraci('ameliyat-notu-kd')!
     assert.equal(kd.alanlar[0].anahtar, 'sablon')
-    assert.deepEqual(kd.alanlar.slice(1).map((a) => a.anahtar), t.alanlar.map((a) => a.anahtar))
+    // GENITAL-ESTETIK-01: labiaplasty / perineoplasty on this note are medically indicated only (tick + reason, shown only for them)
+    assert.deepEqual(kd.alanlar.slice(1, 3).map((a) => a.anahtar), ['tibbi_endikasyon', 'tibbi_gerekce'])
+    assert.deepEqual(kd.alanlar.slice(3).map((a) => a.anahtar), t.alanlar.map((a) => a.anahtar))
     assert.equal(kd.hesapla({ ...NOT, sablon: 'sezaryen' }, ORT).tamam, true)
   })
   it('a paragraph field keeps a paragraph; a few-words field keeps a few words', () => {

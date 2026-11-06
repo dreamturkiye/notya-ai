@@ -31,6 +31,7 @@ import { usAcilacakEk } from './araclar/metinler'
 import { US_ROLLER, US_YENIDEN_ADLANANLAR } from './roller'
 import { US_BIRIMLER, US_VELI_YASI } from './temel'
 import { US_OPERATOR_DEGISEN, US_OPERATOR_PARAMETRELERI } from './operator'
+import { US_GENITAL_ESTETIK } from './genitalEstetik'
 
 export { US_BIRIMLER, US_VELI_YASI } from './temel'
 
@@ -135,6 +136,8 @@ export const US_GIRDI: EnUlkeGirdisi = {
     ameliyatKayitlari: true,
     // KD-OPERATOR-01 (2026-11-05): the operating surgeon's tools of the set, with this country's numbers and sources (./operator.ts)
     operatorAraclari: true,
+    // GENITAL-ESTETIK-01 (2026-11-06): cosmetic gynaecology, only what this country's law and regulator permit (./genitalEstetik.ts)
+    genitalEstetik: US_GENITAL_ESTETIK,
     kapali: {
       'doz-hesabi': { eksik: 'UNIT SAFETY. This pack measures body weight in pounds; the tool multiplies a dose stated per kilogram by the body weight. The kit converts a weight typed in pounds exactly, but a screen that shows the weight in pounds beside a dose per kilogram invites the very error the tool exists to prevent. Needed: a clinical decision on whether weight for dosing is entered in kilograms only in the United States, and a weight field in the kit that can be fixed to kilograms whatever the pack\'s unit. ' + DOZ_BUGUN, kimden: KLINISYEN },
       // KD-OPERATOR-01 (2026-11-05): the same unit-safety decision as the dose calculator. The kit's prophylaxis tool takes the

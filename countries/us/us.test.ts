@@ -305,7 +305,9 @@ describe('us: held to the standards sheet of the localisation audit (2026-10-09)
       }
     }
     // KD-OPERATOR-01 (2026-11-05): the operating surgeon's tools; the prophylaxis weight is in kilograms in every country
+    // GENITAL-ESTETIK-01 (2026-11-06): the adult genital operation note's blood loss, in millilitres like every operation note
     assert.deepEqual(gorulen, {
+      'ameliyat-notu-genital.kan_kaybi': 'mL',
       'histeroskopi-sivi.o1_cikan': 'mL',
       'histeroskopi-sivi.o1_giren': 'mL',
       'histeroskopi-sivi.o2_cikan': 'mL',
