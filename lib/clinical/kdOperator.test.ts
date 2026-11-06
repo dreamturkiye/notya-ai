@@ -185,7 +185,7 @@ test('hysteroscopy fluid deficit (AAGL 2013 limits)', () => {
 })
 
 test('consent forms: one structure per operation-note template, every risk keyed', () => {
-  assert.equal(ONAM_PROSEDURLERI.length, 16)
+  assert.equal(ONAM_PROSEDURLERI.length, 18) // GENITAL-ESTETIK-01: + labioplasti_klitoral, vajinoplasti
   assert.ok(!(ONAM_PROSEDURLERI as readonly string[]).some((k) => /himen/.test(k)))
   for (const k of ONAM_PROSEDURLERI) assert.ok(ONAM_YAPILARI[k].ciddi.length > 0 && ONAM_YAPILARI[k].sik.length > 0, k)
   assert.ok(ONAM_RISKLERI.every((r) => /^[a-z0-9_]+$/.test(r)))

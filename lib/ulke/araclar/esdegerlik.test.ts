@@ -428,6 +428,14 @@ SATIRLAR_5: {
 
 /** Tools of the kit that have no function to stand beside, and why. */
 const KARSILIKSIZ: Readonly<Record<string, string>> = {
+  // GENITAL-ESTETIK-01 (2026-11-06): cosmetic gynaecology records of the kit; the Türkiye counterpart is main's own screen
+  // (components/doktor/HastaGenitalEstetik.tsx) on the same shared engine (lib/clinical/genitalEstetik.ts), byte-identical here.
+  'ameliyat-notu-genital': 'the operation note with the indication class and body-image prompts; the Türkiye counterpart is the core operation note with its genital templates; tested in genitalEstetik.test.ts',
+  'genital-enerji-seansi': 'the shared engine (enerjiSeansiDogrula), identical on main; tested in lib/clinical/genitalEstetik.test.ts and genitalEstetik.test.ts',
+  'genital-enjeksiyon': 'the shared engine (enjeksiyonDogrula), identical on main; tested in lib/clinical/genitalEstetik.test.ts and genitalEstetik.test.ts',
+  'genital-beyazlatma': 'the shared engine (beyazlatmaDogrula), identical on main; tested in lib/clinical/genitalEstetik.test.ts and genitalEstetik.test.ts',
+  'genital-sonuc-olcegi': 'the shared engine (olcekToplamDegerlendir), identical on main; tested in lib/clinical/genitalEstetik.test.ts and genitalEstetik.test.ts',
+  'genital-foto-onam': 'a separate photo consent; main stores it as a record of its own screen; tested in genitalEstetik.test.ts',
   // KD-OPERATOR-01 (2026-11-05): the kit and the Türkiye build compute these with THE SAME engines (lib/clinical/
   // cerrahiGuvenlik.ts, antibiyotikProfilaksi.ts, adneksKitle.ts, jinekolojikSiniflama.ts, dogumSalonu.ts, histeroskopiEras.ts,
   // onamProsedurleri.ts: byte-identical on every branch), tested with known answers in lib/clinical/kdOperator.test.ts.

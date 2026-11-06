@@ -37,6 +37,7 @@ import { CA_TANIMLAR } from './araclar/tanimlar'
 import { CA_ROLLER, CA_YENIDEN_ADLANANLAR } from './roller'
 import { CA_BIRIMLER, CA_VELI_YASI } from './temel'
 import { CA_OPERATOR_DEGISEN, CA_OPERATOR_PARAMETRELERI } from './operator'
+import { CA_GENITAL_ESTETIK } from './genitalEstetik'
 
 export { CA_BIRIMLER, CA_VELI_YASI } from './temel'
 
@@ -141,6 +142,8 @@ export const CA_GIRDI: EnUlkeGirdisi = {
     ameliyatKayitlari: true,
     // KD-OPERATOR-01 (2026-11-05): the operating surgeon's tools of the set, with this country's numbers and sources (./operator.ts)
     operatorAraclari: true,
+    // GENITAL-ESTETIK-01 (2026-11-06): cosmetic gynaecology, only what this country's law and regulator permit (./genitalEstetik.ts)
+    genitalEstetik: CA_GENITAL_ESTETIK,
     parametreler: CA_OPERATOR_PARAMETRELERI,
     kapali: {
       // THE AUDIT'S ONE "REMOVE": another country's triage scale. It stays off; emergency departments here use another

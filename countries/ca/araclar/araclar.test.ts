@@ -21,7 +21,7 @@ import { kitAraci } from '@/lib/ulke/araclar/katalog'
 import { aracCalistir, hesabinAraclari, paketinAraci, sayiMetni, type Yazici } from '@/lib/ulke/araclar/paket'
 import type { UlkeAraclari } from '@/lib/ulke/araclar/tipler'
 import { sondakiSifirlariAt } from '@/lib/ulke/araclar/yazim'
-import { EN_AMELIYAT_ARACLARI, EN_OPERATOR_ARACLARI, EN_ROL_ARACLARI } from '../../_dil/en/araclar'
+import { EN_AMELIYAT_ARACLARI, EN_GENITAL_ESTETIK_ARACLARI, EN_OPERATOR_ARACLARI, EN_ROL_ARACLARI } from '../../_dil/en/araclar'
 import { CA_ARAYUZ } from '../arayuz'
 import { CA_GIRDI } from '../ayarlar'
 import { CA_PAKETI } from '../index'
@@ -72,10 +72,11 @@ const GORENLER: Readonly<Record<string, readonly string[]>> = {
 describe('ca tools 1: which tools of the shared set are on', () => {
   it('every tool of the set but the four the owner ordered off, the patient\'s page and the follow-up list; beyond the set, the two of this country\'s own', () => {
     // AMELIYAT-NOTU-01 / KD-RAPOR-01 (2026-11-05): the five operation-note and obstetrics and gynecology records of the set are on too
-    const setten = ['hasta-portali', ...[...EN_ROL_ARACLARI, ...EN_AMELIYAT_ARACLARI, ...EN_OPERATOR_ARACLARI].map((a) => a.anahtar).filter((k) => !EMIRLE_KAPALI.includes(k))]
+    const setten = ['hasta-portali', ...[...EN_ROL_ARACLARI, ...EN_AMELIYAT_ARACLARI, ...EN_OPERATOR_ARACLARI, ...EN_GENITAL_ESTETIK_ARACLARI].map((a) => a.anahtar).filter((k) => !EMIRLE_KAPALI.includes(k))]
     assert.deepEqual(acik, [...setten, ...KENDI, 'takip-paneli'])
     // KD-OPERATOR-01 (2026-11-05): +16 operating surgeon's tools of the set
-    assert.equal(acik.length, 87)
+    // GENITAL-ESTETIK-01 (2026-11-06): +6 cosmetic gynecology tools of the set, all offered here (../genitalEstetik.ts)
+    assert.equal(acik.length, 93)
     for (const k of acik) assert.equal(Boolean(kitAraci(k)), !KENDI.includes(k), `${k}: a tool of the kit, or one of this country's own`)
   })
 
@@ -161,7 +162,7 @@ describe('ca tools 2: who sees which tool', () => {
     assert.deepEqual(izgara('psychiatry'), ['hasta-portali', 'ca-unit-converter', 'psikiyatri-guvenlik', HEKIM, 'ca-narcotic-note', 'ca-dpd-lookup', 'ca-prescribeit-link', 'takip-paneli'])
     assert.deepEqual(izgara('neurology'), ['hasta-portali', 'ca-unit-converter', 'inme-bayraklari', HEKIM, 'ca-narcotic-note', 'ca-dpd-lookup', 'ca-prescribeit-link', 'takip-paneli'])
     assert.deepEqual(izgara('gastroenterology'), ['hasta-portali', 'ca-unit-converter', 'endoskopi-kaydi', HEKIM, 'ca-narcotic-note', 'ca-dpd-lookup', 'ca-prescribeit-link', 'takip-paneli'])
-    assert.deepEqual(izgara('obstetrics-gynaecology'), ['hasta-portali', 'ca-unit-converter', 'gebelik-gun', 'ameliyat-notu', 'ameliyat-notu-kd', 'usg-obstetrik', 'usg-jinekolojik', 'dogum-epikrizi', 'cerrahi-guvenlik-listesi', 'caprini', 'asa-siniflamasi', 'antibiyotik-profilaksi-kd', 'iota-basit-kurallar', 'rmi', 'palm-coein', 'rasrm-endometriozis', 'enzian', 'bishop', 'robson', 'sezaryen-aciliyeti', 'kanama-izlem', 'histeroskopi-sivi', 'eras-kd', 'onam-formu-kd', HEKIM, 'ca-narcotic-note', 'ca-dpd-lookup', 'ca-prescribeit-link', 'ca-fhs-sogc', 'takip-paneli'])
+    assert.deepEqual(izgara('obstetrics-gynaecology'), ['hasta-portali', 'ca-unit-converter', 'gebelik-gun', 'ameliyat-notu', 'ameliyat-notu-kd', 'usg-obstetrik', 'usg-jinekolojik', 'dogum-epikrizi', 'cerrahi-guvenlik-listesi', 'caprini', 'asa-siniflamasi', 'antibiyotik-profilaksi-kd', 'iota-basit-kurallar', 'rmi', 'palm-coein', 'rasrm-endometriozis', 'enzian', 'bishop', 'robson', 'sezaryen-aciliyeti', 'kanama-izlem', 'histeroskopi-sivi', 'eras-kd', 'onam-formu-kd', 'ameliyat-notu-genital', 'genital-enerji-seansi', 'genital-enjeksiyon', 'genital-beyazlatma', 'genital-sonuc-olcegi', 'genital-foto-onam', HEKIM, 'ca-narcotic-note', 'ca-dpd-lookup', 'ca-prescribeit-link', 'ca-fhs-sogc', 'takip-paneli'])
     assert.deepEqual(izgara('rehabilitation-medicine'), ['hasta-portali', 'ca-unit-converter', 'vas-fonksiyon', 'seans-plani', 'icf-ozet', HEKIM, 'ca-narcotic-note', 'ca-dpd-lookup', 'ca-prescribeit-link', 'takip-paneli'])
     assert.deepEqual(izgara('geriatric-medicine'), ['hasta-portali', 'ca-unit-converter', 'kronik-izlem-kaydi', HEKIM, 'ca-narcotic-note', 'ca-dpd-lookup', 'ca-prescribeit-link', 'takip-paneli'])
     assert.deepEqual(izgara('reproductive-endocrinology'), ['hasta-portali', 'ca-unit-converter', 'gebelik-gun', HEKIM, 'ca-narcotic-note', 'ca-dpd-lookup', 'ca-prescribeit-link', 'takip-paneli'])
@@ -320,7 +321,8 @@ describe('ca tools 4: licence states', () => {
     const borc = JSON.parse(readFileSync(join(KOK, 'countries/lisans-borcu.json'), 'utf8')) as { ulkeler: string[] }
     assert.ok(borc.ulkeler.includes('ca'))
     const belirtilen = [...A.araclar.filter((p) => p.lisans).map((p) => p.anahtar), ...A.yuvalar.filter((y) => y.lisans).map((y) => y.anahtar)].sort()
-    assert.deepEqual(belirtilen, [...KENDI, 'esi-triyaj', 'phq9-gad7', 'rapor-taslagi'].sort())
+    // GENITAL-ESTETIK-01 (2026-11-06): the four questionnaire item slots state their licence (permission needed or unclear)
+    assert.deepEqual(belirtilen, [...KENDI, 'esi-triyaj', 'phq9-gad7', 'rapor-taslagi', 'genital-cops-l-items', 'genital-fgsis-items', 'genital-fsfi-items', 'genital-vlq-item'].sort())
     // nothing that is switched on carries a state other than "free"
     for (const p of A.araclar) if (p.lisans) assert.equal(p.lisans.durum, 'serbest', p.anahtar)
   })
