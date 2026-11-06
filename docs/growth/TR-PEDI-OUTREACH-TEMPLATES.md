@@ -105,5 +105,5 @@ https://www.notya.io/demo
 
 1. Önce mobil `5xx`; 0850 WhatsApp olmaz.  
 2. Gönderen = Kaan · Gökhan = tanıtım host.  
-3. İki baloncuk: metin → linkler.  
-4. Başarı = tanıtım randevusu veya ücretsiz deneme.
+3. Tek mesaj: metin → boş satır → Tanıtım / Demo + ücretsiz deneme.  
+4. Başarı = `notya.io/demo` veya ücretsiz deneme.
