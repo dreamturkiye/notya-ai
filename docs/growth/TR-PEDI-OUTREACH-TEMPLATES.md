@@ -57,7 +57,7 @@ Pediatri — genel pitch + `40’tan fazla branş`; KD/derm listelerini yazma.
 Doğrudan Cal.com **verme** (büyük İngilizce kart). Tanıtım için Notya sayfası:
 
 ```
-📅 Tanıtım / randevu: https://www.notya.io/demo
+📅 Tanıtım demo: https://www.notya.io/demo
 🔗 Ücretsiz deneme: https://www.notya.io
 ```
 
@@ -79,7 +79,7 @@ kazandırır; daha düzenli kayıtlarla bakım kalitesine de katkı sağlar.
 
 Dr. Gökhan Mamur 30 dakikalık kısa tanıtım yapıyor; saatler sizin diliminizde.
 
-Tanıtım / randevu: https://www.notya.io/demo
+Tanıtım demo: https://www.notya.io/demo
 
 Tanıtıma vakit yoksa ücretsiz deneme: https://www.notya.io
 Uygunsa bir slot seçmeniz yeterli; iki meslektaşınıza da iletmenizi rica ederiz.
