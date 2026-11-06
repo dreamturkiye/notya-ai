@@ -78,10 +78,14 @@ Tanıtıma vaktiniz yoksa da sorun değil, ücretsiz denemeyi hemen açabiliyoru
 ```
 
 ---
-## 3. Op. Dr. Cengiz Sağıroğlu ← 1. SIRADAKİ (dün kalan liste)
+## 3. Op. Dr. Cengiz Sağıroğlu ← 1. SIRADAKİ
 **kadin-dogum** · Kadıköy · `+90 555 052 64 58` · WA: `+905550526458`
 
-**Gönder:** numarayı aç → metni yapıştır → iPhone’da kalın + madde listesi görünsün → Gönder.
+**Gönder (zorunlu sıra):**
+1. Metni yapıştır  
+2. Büyük “Demo planla — Notya” / site kartı çıkarsa → kartın **X**’ine bas (yazı kalsın, kart gitsin). İki link varsa iki X.  
+3. Kalın + madde listesi düzgün mü bak → **Gönder**  
+Kartı kapatmadan gönderme — alıcıda da aynı çirkin önizleme kalır. `https://` yok (bilerek).
 
 ```
 Cengiz Hocam merhaba 👋
@@ -108,12 +112,10 @@ Saatler size göre.
 
 Tanıtıma vakit yoksa ücretsiz denemeyi hemen açabiliyoruz.
 
-📅 *Tanıtım / Demo*
-https://www.notya.io/demo
-
-🔗 *Ücretsiz deneme*
-https://www.notya.io
+📅 *Tanıtım / Demo:* www.notya.io/demo
+🔗 *Ücretsiz deneme:* www.notya.io
 ```
+
 
 
 ---

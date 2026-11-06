@@ -18,7 +18,8 @@ Kopyala-yapıştır; gönder **önce** telefonda önizle (kalın + liste).
 | `*kalın*` (bitişik, boşluksuz `*`) | Satır başında `*` madde (kalınla karışır) |
 | Madde: `- ` + kısa satır (native WA listesi) | `•` veya uzun tek satır (iPhone’da satır kayınca girinti bozulur) |
 | Liste öncesi/sonrası boş satır | Madde altına girintili devam satırı |
-| Link **ayrı satırda** (dokunulabilir) | Linki cümle ortasına gömmek |
+| Link: `www.notya.io/...` (**`https://` yok**) | `https://` — büyük OG kartı tetikler |
+| Yapıştırınca çıkan kartı **X ile kapat**, sonra gönder | Kartlı göndermek (alıcıda da büyük önizleme) |
 | Tek boş satır bölümler arası | 3–4 boş satır (WA sıkıştırır) |
 | ASCII tire `1,5-2` | Gereksiz özel karakter / `·` yığını |
 
@@ -49,12 +50,13 @@ Saatler size göre.
 
 Tanıtıma vakit yoksa ücretsiz denemeyi hemen açabiliyoruz.
 
-📅 *Tanıtım / Demo*
-https://www.notya.io/demo
-
-🔗 *Ücretsiz deneme*
-https://www.notya.io
+📅 *Tanıtım / Demo:* www.notya.io/demo
+🔗 *Ücretsiz deneme:* www.notya.io
 ```
+
+**Link kartı (OG önizleme):** WhatsApp `https://` görünce “Demo planla — Notya” kartını mesajın *başına* yapıştırır.  
+İstemiyoruz. `www.` kullan + gönder **önce** kartın **X**’ine bas. Kart gitmeden gönderme.
+
 
 **Dermatoloji** (`*Kadın doğumda*` bloğu yerine):
 

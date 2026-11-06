@@ -5,8 +5,7 @@
 ## Şimdi — 2026-11-06 (~18:20 TR)
 
 **1. gönder:** Op. Dr. **Cengiz Sağıroğlu** · KD · Kadıköy · `+905550526458`  
-Metin: `TR-WHATSAPP-GONDERIM-PAKETI.md` §3 (iPhone-uyumlu: `*kalın*` + `- ` listesi).  
-Görsel yok. Gönder öncesi telefonda biçim kontrol.
+Metin: §3 · `https://` yok · yapıştırınca çıkan **büyük link kartını X ile kapat**, sonra gönder.
 
 Sonra: Timuçin Timuroğlu → `tr-whatsapp-next-batch.csv` sırası.
 
@@ -20,6 +19,6 @@ Sonra: Timuçin Timuroğlu → `tr-whatsapp-next-batch.csv` sırası.
 
 ## Format (mobil)
 
-- `- ` maddeler (native WA; iPhone wrap’te `•` kullanma)
-- Link ayrı satır
-- Tek mesaj, PNG yok
+- `- ` maddeler · tek mesaj · PNG yok
+- Link: `www.notya.io/...` — **asla `https://`**
+- OG kartı çıkarsa **X** (göndermeden önce) — aksi halde mesajın başında çirkin kart
