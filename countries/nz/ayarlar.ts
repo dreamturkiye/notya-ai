@@ -26,6 +26,7 @@ import type { EnUlkeGirdisi } from '../_dil/en/girdi'
 import type { EnRolDegisimi } from '../_dil/en/klinik/roller'
 import type { Birimler } from '@/lib/ulke/tipler'
 import { NZ_OPERATOR_DEGISEN, NZ_OPERATOR_PARAMETRELERI } from './operator'
+import { NZ_GENITAL_ESTETIK } from './genitalEstetik'
 
 /**
  * GUARDIAN WORDING for a patient younger than this on the day of the visit ("who gave the history"), in every role.
@@ -209,6 +210,8 @@ export const NZ_GIRDI: EnUlkeGirdisi = {
     ameliyatKayitlari: true,
     // KD-OPERATOR-01 (2026-11-05): the operating surgeon's tools of the set, with this country's numbers and sources (./operator.ts)
     operatorAraclari: true,
+    // GENITAL-ESTETIK-01 (2026-11-06): cosmetic gynaecology, only what this country's law and regulator permit (./genitalEstetik.ts)
+    genitalEstetik: NZ_GENITAL_ESTETIK,
     kapali: {
       // SOURCE-CHECKED: emergency departments here use the Australasian triage scale (Health New Zealand's public page
       // on emergency department triage), not the Emergency Severity Index. The audit's verdict for this tool is

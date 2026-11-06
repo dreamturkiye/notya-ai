@@ -38,7 +38,7 @@ ingilizcePaketSinamasi({
   // off by Kaan's order of 2026-10-10 (NOTYA-ULKE-ARAC-01b): these four. 'doz-hesabi' was switched off with them and
   // is ON again since his order of the same day ("Bring on all the tools"), its fault corrected in the kit (#615).
   // A third kidney tool, added later, is off for an unrelated reason: a brand-new tool pending a clinician's sign-off.
-  kapaliAraclar: ['esi-triyaj', 'kbh-risk-kategorisi', 'kdigo-evre', 'kdigo-serit', 'rapor-taslagi'],
+  kapaliAraclar: ['esi-triyaj', 'genital-enerji-seansi', 'kbh-risk-kategorisi', 'kdigo-evre', 'kdigo-serit', 'rapor-taslagi'],
   birimler: { agirlik: 'kg', boy: 'cm', sicaklik: 'C' },
   labBirimleri: { albuminKreatinin: 'mg/mmol', hemoglobin: 'g/L', kreatinin: 'umol/L', glukoz: 'mmol/L', kolesterol: 'mmol/L', hba1c: 'mmol/mol', crp: 'mg/L', psa: 'ug/L' },
   kidemliHekim: 'specialist',
@@ -423,7 +423,9 @@ describe('nz: country data for the shared tools — each from a national source 
   })
 
   it('LICENCES: "free" is stated only for the three tools whose source prints its own free licence; "permission needed" for the two the owner\'s order names; nothing for any other', () => {
-    const belirtilen = [...a.araclar.filter((p) => p.lisans).map((p) => `${p.anahtar}:${p.lisans!.durum}`), ...a.yuvalar.filter((y) => y.lisans).map((y) => `${y.anahtar}:${y.lisans!.durum}`)].sort()
+    const belirtilen = [...a.araclar.filter((p) => p.lisans).map((p) => `${p.anahtar}:${p.lisans!.durum}`), ...a.yuvalar.filter((y) => y.lisans && !y.anahtar.startsWith('genital-')).map((y) => `${y.anahtar}:${y.lisans!.durum}`)].sort()
+    // GENITAL-ESTETIK-01: the four questionnaires' item-level slots carry their licence state (not obtained)
+    assert.deepEqual(a.yuvalar.filter((y) => y.lisans && y.anahtar.startsWith('genital-')).map((y) => [y.anahtar, y.lisans!.durum]).sort(), [['genital-cops-l-items', 'izin-gerekli'], ['genital-fgsis-items', 'belirsiz'], ['genital-fsfi-items', 'izin-gerekli'], ['genital-vlq-item', 'belirsiz']])
     assert.deepEqual(belirtilen, ['esi-triyaj:izin-gerekli', 'nz-bmi-waist:serbest', 'nz-controlled-drug-note:serbest', 'nz-ctg-ranzcog:serbest', 'nz-nzeps-link:serbest', 'nz-pharmac-top-20:serbest', 'nz-prescription-note:serbest', 'nz-psa-thresholds:serbest', 'nz-schedule-medicines:serbest', 'nz-smoking-abc:serbest', 'rapor-taslagi:izin-gerekli'])
     assert.notEqual(a.lisansTam, true, 'this pack does not state every licence: it stays on countries/lisans-borcu.json')
   })
