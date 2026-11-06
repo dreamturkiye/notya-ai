@@ -14,6 +14,13 @@ import { u, type Uc } from './yardimci'
 const CERRAHI = ['genel-cerrahi', 'kadin-hastaliklari-dogum', 'ortopedi', 'uroloji', 'kulak-burun-bogaz', 'goz-hastaliklari', 'beyin-cerrahisi', 'kalp-damar-cerrahisi', 'damar-cerrahisi', 'gogus-cerrahisi', 'plastik-cerrahi', 'cocuk-cerrahisi', 'estetik-cerrahi']
 const KD = ['kadin-hastaliklari-dogum']
 
+/** The two new fields of the O&G operation note (./rol7.ts): labiaplasty / perineoplasty are medically indicated only there. */
+const UZ_KD_NOT_TIBBI: Record<string, Uc> = {
+  tibbi_endikasyon: u('Tibbiy koʻrsatma bilan (rekonstruktiv yoki funksional). Kosmetik operatsiya kattalar uchun genital estetik operatsiya bayonnomasida yoziladi.', 'Тиббий кўрсатма билан (реконструктив ёки функсионал). Косметик операция катталар учун генитал эстетик операция баённомасида ёзилади.', 'По медицинским показаниям (реконструктивная или функциональная). Косметическая операция записывается в протоколе генитальной эстетической операции для взрослых.'),
+  tibbi_gerekce: u('Tibbiy sabab, oʻz soʻzlaringiz bilan', 'Тиббий сабаб, ўз сўзларингиз билан', 'Медицинская причина, своими словами'),
+}
+
+
 /** Numbered steps, one per line, in each form. */
 const adim = (qadamlar: readonly Uc[]): Uc => {
   const bicim = (k: keyof Uc) => qadamlar.map((q, i) => `${i + 1}. ${q[k]}`).join('\n')
@@ -269,7 +276,7 @@ const SABLONLAR: Record<string, Record<string, Uc>> = {
     postop: u('Iplarni tekshirish oʻrgatildi. Qayta koʻrik: __ (birinchi hayzdan keyin). Qorinda kuchli ogʻriq, isitma, yoqimsiz hidli ajralma, iplar sezilmasa yoki homiladorlik gumon qilinsa qaytish aytildi. Almashtirish sanasi: __.', 'Ипларни текшириш ўргатилди. Қайта кўрик: __ (биринчи ҳайздан кейин). Қоринда кучли оғриқ, иситма, ёқимсиз ҳидли ажралма, иплар сезилмаса ёки ҳомиладорлик гумон қилинса қайтиш айтилди. Алмаштириш санаси: __.', 'Обучена проверке нитей. Повторный приём: __ (после первой менструации). Сказано вернуться при сильной боли в животе, лихорадке, выделениях с неприятным запахом, если нити не прощупываются или есть подозрение на беременность. Дата замены: __.'),
   },
   labioplasti: {
-    endikasyon: u('__ (funksional shikoyatlar / estetik istak). Maslahat va kutilmalar yozilgan; 18 yosh va undan katta; rozilik yozilgan.', '__ (функсионал шикоятлар / эстетик истак). Маслаҳат ва кутилмалар ёзилган; 18 ёш ва ундан катта; розилик ёзилган.', '__ (функциональные жалобы / эстетический запрос). Консультирование и ожидания записаны; возраст 18 лет и старше; согласие оформлено.'),
+    endikasyon: u('__ (tibbiy koʻrsatma: __). Maslahat va kutilmalar yozilgan; rozilik yozilgan.', '__ (тиббий кўрсатма: __). Маслаҳат ва кутилмалар ёзилган; розилик ёзилган.', '__ (медицинское показание: __). Консультирование и ожидания записаны; согласие записано.'),
     teknik: adim([
       u('Anesteziya __; litotomiya holati; teri ishlovi, choyshab yopish.', 'Анестезия __; литотомия ҳолати; тери ишлови, чойшаб ёпиш.', 'Анестезия __; литотомическое положение; обработка, отграничение.'),
       u('Kesish chegaralari ikki tomonda simmetrik belgilandi.', 'Кесиш чегаралари икки томонда симметрик белгиланди.', 'Границы резекции размечены симметрично с двух сторон.'),
@@ -335,7 +342,7 @@ export const UZ_ROL_ARACLARI_7: readonly PaketAraci[] = [
     metin: {
       ad: u('Operatsiya bayonnomasi: akusherlik va ginekologiya', 'Операция баённомаси: акушерлик ва гинекология', 'Протокол операции: акушерство и гинекология'),
       aciklama: qosh(NOT_ACIKLAMA, u('Standart bosqichlarni oldindan toʻldirish uchun operatsiyani tanlang, soʻng ularni bajarilganiga moslab tuzating.', 'Стандарт босқичларни олдиндан тўлдириш учун операцияни танланг, сўнг уларни бажарилганига мослаб тузатинг.', 'Выберите операцию, чтобы заполнить стандартные этапы, затем исправьте их по тому, что было сделано.')),
-      alanlar: { sablon: u('Operatsiya (standart bosqichlarni toʻldiradi; har bir soʻz tahrirlanadi)', 'Операция (стандарт босқичларни тўлдиради; ҳар бир сўз таҳрирланади)', 'Операция (заполняет стандартные этапы; каждое слово можно изменить)'), ...NOT_ALANLARI },
+      alanlar: { sablon: u('Operatsiya (standart bosqichlarni toʻldiradi; har bir soʻz tahrirlanadi)', 'Операция (стандарт босқичларни тўлдиради; ҳар бир сўз таҳрирланади)', 'Операция (заполняет стандартные этапы; каждое слово можно изменить)'), ...UZ_KD_NOT_TIBBI, ...NOT_ALANLARI },
       secenekler: {
         sablon: {
           sezaryen: u('Kesarcha kesish (pastki segmentda)', 'Кесарча кесиш (пастки сегментда)', 'Кесарево сечение (в нижнем сегменте)'),
@@ -447,3 +454,6 @@ export const UZ_ROL_ARACLARI_7: readonly PaketAraci[] = [
     },
   },
 ]
+
+// GENITAL-ESTETIK-01 (2026-11-06): the adult genital-aesthetics note (./rol9.ts) reuses these words and paragraphs.
+export { SABLONLAR as UZ_KD_SABLONLARI, NOT_ALANLARI as UZ_NOT_ALANLARI, NOT_SECENEKLERI as UZ_NOT_SECENEKLERI }

@@ -37,7 +37,7 @@ const FORMLAR = ['uz-Latn', 'uz-Cyrl', 'ru'] as const
  * and the authors of the obstetric references).
  */
 // KD-OPERATOR-01 (2026-11-05): the international abbreviations of the operating surgeon's tools
-const LATIN_KALABILIR = /\b(INTERGROWTH-21st|Hadlock|MCA-PSV|MCA|PSV|MoM|PI|RI|FIGO|O-RADS|IFCPC|rASRM|Enzian|POP-Q|Gramellini|WHO|MEC|ESI(?: [1-5])?|ASA(?: (?:I{1,3}|IV|VI|V))?|ABCDE|ST|PASI|EASI|SCORAD|KDIGO|G[1-5][ab]?(?:–G5)?|A[1-3](?:–A3)?|D[24]|logMAR|BI-RADS [0-6]|DAS28|K1|N\d+|I{1,3}|IV|VI|V|E|A|B|C|IOTA|RMI|CA-125|ACOG|AAGL|ERAS|CHEST|LLETZ|[BM][1-5])\b/g
+const LATIN_KALABILIR = /\b(ACOG Committee Opinion No\. 795|FSFI|FGSIS|COPS-L|Wiegel|Rosen|Herbenick|Reece|Millheiser|Veale|INTERGROWTH-21st|Hadlock|MCA-PSV|MCA|PSV|MoM|PI|RI|FIGO|O-RADS|IFCPC|rASRM|Enzian|POP-Q|Gramellini|WHO|MEC|ESI(?: [1-5])?|ASA(?: (?:I{1,3}|IV|VI|V))?|ABCDE|ST|PASI|EASI|SCORAD|KDIGO|G[1-5][ab]?(?:–G5)?|A[1-3](?:–A3)?|D[24]|logMAR|BI-RADS [0-6]|DAS28|K1|N\d+|I{1,3}|IV|VI|V|E|A|B|C|IOTA|RMI|CA-125|ACOG|AAGL|ERAS|CHEST|LLETZ|[BM][1-5])\b/g
 
 /**
  * Role → the role tools it sees, in the grid's order. Base tools are the same for every role and are listed apart.
@@ -58,6 +58,9 @@ const ON = 'ameliyat-notu'
 const KD_RAPORLARI = ['ameliyat-notu-kd', 'usg-obstetrik', 'usg-jinekolojik', 'dogum-epikrizi', 'ktg-figo'] as const
 /** KD-OPERATOR-01 (2026-11-05): the WHO checklist, Caprini and ASA of every surgical role; obstetrics and gynaecology's thirteen operating tools. */
 const CG = ['cerrahi-guvenlik-listesi', 'caprini', 'asa-siniflamasi'] as const
+/** GENITAL-ESTETIK-01 (2026-11-06): the cosmetic gynaecology tools Uzbekistan offers (energy, injection, whitening are slots). */
+const GE_ACIK = ['ameliyat-notu-genital', 'genital-sonuc-olcegi', 'genital-foto-onam'] as const
+const GE_YUVALARI = ['genital-enerji-seansi', 'genital-enjeksiyon', 'genital-beyazlatma', 'genital-fsfi-items', 'genital-fgsis-items', 'genital-vlq-item', 'genital-cops-l-items'] as const
 const KD_OP = ['antibiyotik-profilaksi-kd', 'iota-basit-kurallar', 'rmi', 'palm-coein', 'rasrm-endometriozis', 'enzian', 'bishop', 'robson', 'sezaryen-aciliyeti', 'kanama-izlem', 'histeroskopi-sivi', 'eras-kd', 'onam-formu-kd'] as const
 /** Off by Kaan's order of 2026-10-10, each with the role it was shown to until that day. */
 const KAPALI: Readonly<Record<string, string>> = { 'esi-triyaj': 'acil-tip', 'kdigo-evre': 'dahiliye', 'kdigo-serit': 'nefroloji', 'rapor-taslagi': 'radyoloji' }
@@ -79,7 +82,7 @@ const ROL_ARACLARI: Readonly<Record<string, readonly string[]>> = {
   endokrinoloji: ['rejim-karti', T, D, R, G, P_],
   'enfeksiyon-hastaliklari': ['antibiyotik-sure', T, D, R, G, P_],
   gastroenteroloji: ['endoskopi-kaydi', T, D, R, G, P_],
-  'kadin-hastaliklari-dogum': [ON, ...KD_RAPORLARI, ...CG, ...KD_OP, T, H, D, R, G, P_],
+  'kadin-hastaliklari-dogum': [ON, ...KD_RAPORLARI, ...CG, ...KD_OP, ...GE_ACIK, T, H, D, R, G, P_],
   'kalp-damar-cerrahisi': ['kalp-damar-preop', 'greft-yara-izlem', 'antikoagulan-vadeleri', ON, ...CG, T, D, R, G, P_],
   // the vascular half of the specialty the audit split: the same three tools
   'damar-cerrahisi': ['kalp-damar-preop', 'greft-yara-izlem', 'antikoagulan-vadeleri', ON, ...CG, T, D, R, G, P_],
@@ -173,7 +176,8 @@ describe('Uzbekistan — tools: who sees what, the three scripts, and what is de
     // and the four tools read from official texts on 2026-10-14 (flyer, annex, prescription note, narcotic ticks).
     const { UZ_KAPALI_ARACLAR } = await import('./index')
     // KD-OPERATOR-01 (2026-11-05): +16 operating surgeon's tools
-    assert.equal(icerik.araclar.length, 87)
+    // GENITAL-ESTETIK-01 (2026-11-06): +3 cosmetic gynaecology tools
+    assert.equal(icerik.araclar.length, 90)
     assert.deepEqual(icerik.araclar.filter((p) => p.anahtar.startsWith('uz-')).map((p) => p.anahtar), [T, H, E, A, D, R, G])
     assert.deepEqual(icerik.araclar.filter((p) => p.sinif === 'hekimler').map((p) => p.anahtar), [T, D, R, G])
     for (const k of UZ_KAPALI_ARACLAR) assert.ok(!icerik.araclar.some((p) => p.anahtar === k), k)
@@ -285,7 +289,10 @@ describe('Uzbekistan — tools: who sees what, the three scripts, and what is de
     // and the three tools only Uzbekistan has, which the pre-split application did not have and the section names above its table
     // Structural records added after the audit document. They are not rows of that document; the outcome section is left as it was.
     const yeniYapisal = ['akne-vade', 'birinci-acil-bayrak', 'endoskopi-kaydi', 'estetik-cerrahi-vade', 'estetik-islem-vade', 'icf-ozet', 'inme-bayraklari', 'kardiyo-not', 'kronik-izlem-kaydi', 'lazer-vade', 'makro-kaydi', 'psikiyatri-guvenlik', 'seans-plani', 'sonraki-seans', A, D, R, G, ON, ...KD_RAPORLARI, ...CG, ...KD_OP]
-    const belgesizEski = belgesiz.filter((k) => !yeniYapisal.includes(k))
+    const belgesizEski = belgesiz.filter((k) => !yeniYapisal.includes(k) && !(GE_ACIK as readonly string[]).includes(k) && !(GE_YUVALARI as readonly string[]).includes(k))
+    // GENITAL-ESTETIK-01: added after the audit; three on, seven slots (./rol9.ts)
+    for (const k of GE_ACIK) assert.ok(acik.has(k), `${k} is not switched on`)
+    for (const k of GE_YUVALARI) assert.ok(yuvalar.has(k) && !acik.has(k), `${k} is not a slot`)
     // kbh-risk-kategorisi is a slot too (YENI_KAPALI above), not switched on, so it belongs here rather than in yeniYapisal
     assert.deepEqual(belgesizEski.sort(), ['basdai', 'easi', 'iltihap-lab-izlem', 'kbh-risk-kategorisi', 'scorad', E, H, T].sort())
     for (const k of belgesizEski) assert.ok(sonuc.includes('`' + k + '`'), `${k} is in the pack and not mentioned in the outcome table`)

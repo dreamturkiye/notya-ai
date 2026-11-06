@@ -375,7 +375,9 @@ describe('Uzbekistan — the tools only this country has, in the pack: who sees 
     assert.deepEqual([anket.acik, anket.icerik], [false, null], 'a licence is not an authorised translation: the placeholder stays a placeholder')
     // EXACTLY THESE state a licence, and no further tool was switched off on licence grounds
     assert.deepEqual(icerik.araclar.filter((p) => p.lisans).map((p) => p.anahtar).sort(), ['uz-asosiy-dorilar', 'uz-emlash-qaydi', 'uz-emlash-taqvimi', 'uz-giyohvand-qoidalari', 'uz-homiladorlik-muddati', 'uz-retsept-qaydi', 'uz-tana-vazni-indeksi'])
-    assert.deepEqual(icerik.yuvalar.filter((y) => y.lisans).map((y) => [y.anahtar, y.lisans!.durum]).sort(), [['esi-triyaj', 'izin-gerekli'], ['phq9-gad7', 'serbest'], ['rapor-taslagi', 'izin-gerekli']])
+    // GENITAL-ESTETIK-01: the four questionnaires' item-level slots carry their licence state (not obtained)
+    assert.deepEqual(icerik.yuvalar.filter((y) => y.lisans && !y.anahtar.startsWith('genital-')).map((y) => [y.anahtar, y.lisans!.durum]).sort(), [['esi-triyaj', 'izin-gerekli'], ['phq9-gad7', 'serbest'], ['rapor-taslagi', 'izin-gerekli']])
+    assert.deepEqual(icerik.yuvalar.filter((y) => y.lisans && y.anahtar.startsWith('genital-')).map((y) => [y.anahtar, y.lisans!.durum]).sort(), [['genital-cops-l-items', 'izin-gerekli'], ['genital-fgsis-items', 'belirsiz'], ['genital-fsfi-items', 'izin-gerekli'], ['genital-vlq-item', 'belirsiz']])
     assert.notEqual(icerik.lisansTam, true, 'the pack does not claim that every licence is stated: the others are listed for the owner')
   })
 
