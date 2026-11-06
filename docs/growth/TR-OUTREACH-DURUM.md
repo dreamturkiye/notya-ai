@@ -2,23 +2,20 @@
 
 **Sessiz saat:** TR **20:00+** soğuk WA yok. Pencere ~**10:00–19:00 TR**.
 
-## Şimdi — 2026-11-06 (~18:20 TR)
+## Şimdi — 2026-11-06
 
-**1. gönder:** Op. Dr. **Cengiz Sağıroğlu** · KD · Kadıköy · `+905550526458`  
-Metin: §3 · `https://` yok · yapıştırınca çıkan **büyük link kartını X ile kapat**, sonra gönder.
+**Sıradaki:** Op. Dr. **Timuçin Timuroğlu** · KD · Kadıköy · `+905425153819`  
+Yapıştır → OG kartı varsa **X** → gönder (`www.` · `https://` yok).
 
-Sonra: Timuçin Timuroğlu → `tr-whatsapp-next-batch.csv` sırası.
-
-## Bugün / dün gidenler
+## Gidenler
 
 | # | İsim | Branş | Not |
 |---|------|-------|-----|
-| 1–7 | İsmail … Sinem | KD/derm | gitti (önceki tur) |
-| — | Berrin | pedi | WA yok |
-| **8** | **Cengiz Sağıroğlu** | KD | **şimdi gönder** |
+| 1–7 | İsmail … Sinem | KD/derm | önceki tur |
+| 8 | Cengiz Sağıroğlu | KD | gitti · **OG kartlı** (yenileme yok) |
+| **9** | **Timuçin Timuroğlu** | KD | **şimdi** |
 
-## Format (mobil)
+## Format
 
-- `- ` maddeler · tek mesaj · PNG yok
-- Link: `www.notya.io/...` — **asla `https://`**
-- OG kartı çıkarsa **X** (göndermeden önce) — aksi halde mesajın başında çirkin kart
+- Tek mesaj · `*kalın*` · `- ` liste · `www.notya.io/...`
+- Kart çıkarsa X; kartlı gönderme
