@@ -76,7 +76,7 @@ ingilizcePaketSinamasi({
   // off by Kaan's order of 2026-10-10 (NOTYA-ULKE-ARAC-01b): these four. The dose calculator is ON AGAIN by his later
   // order of the same day (its fault was corrected in the kit; the guard list no longer holds it). A third kidney
   // tool, added later, is off for an unrelated reason: a brand-new tool pending a clinician's sign-off.
-  kapaliAraclar: ['akne-vade', 'esi-triyaj', 'greft-tahmini', 'infuzyon-guvenlik', 'kbh-risk-kategorisi', 'kdigo-evre', 'kdigo-serit', 'lazer-vade', 'rapor-taslagi', 'sac-bakim-vade'],
+  kapaliAraclar: ['akne-vade', 'esi-triyaj', 'genital-beyazlatma', 'genital-enerji-seansi', 'genital-enjeksiyon', 'greft-tahmini', 'infuzyon-guvenlik', 'kbh-risk-kategorisi', 'kdigo-evre', 'kdigo-serit', 'lazer-vade', 'rapor-taslagi', 'sac-bakim-vade'],
   birimler: { agirlik: 'kg', boy: 'cm', sicaklik: 'C' },
   labBirimleri: LAB,
   kidemliHekim: 'specialist',

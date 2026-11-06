@@ -12,6 +12,7 @@
  * "Eliminating virginity testing", 2018; an offence in the United Kingdom under the Health and Care Act 2022, s.149).
  */
 import type { HamArac } from './yardimci'
+import { EN_KD_NOT_TIBBI } from './arac7'
 
 const CERRAHI_ROLLER = ['general-surgery', 'obstetrics-gynaecology', 'orthopaedics', 'urology', 'otolaryngology', 'ophthalmology', 'neurosurgery', 'cardiovascular-surgery', 'thoracic-surgery', 'plastic-surgery', 'paediatric-surgery', 'hair-transplant', 'aesthetic-surgery'] as const
 const KD = ['obstetrics-gynaecology'] as const
@@ -122,7 +123,7 @@ const ADIMLAR: Readonly<Record<string, Readonly<Record<string, string>>>> = {
     postop: 'Thread check taught. Review: __ (after the first period). Told to return with severe abdominal pain, fever, offensive discharge, threads not felt or a possible pregnancy. Replacement date: __.',
   },
   labioplasti: {
-    endikasyon: '__ (functional symptoms / cosmetic request). Counselling and expectations recorded; aged 18 or over; consent recorded.',
+    endikasyon: '__ (medical indication: __). Counselling and expectations recorded; consent recorded.',
     teknik: adim(['Anaesthesia __; lithotomy position; skin preparation, draping.', 'Resection margins marked symmetrically on both sides.', 'Local infiltration: __ (as the surgeon decides).', 'Marked tissue removed by __ technique; clitoral hood and frenulum preserved.', 'Haemostasis __.']),
     kapanis: 'Mucosal edges closed with absorbable sutures __.',
     postop: 'Cold compresses and hygiene advice. Restrictions on intercourse and tampons: as the surgeon decides. Review: __. Told to return with increasing swelling, bleeding, fever or discharge.',
@@ -159,7 +160,7 @@ export const EN_ARACLAR_5: readonly HamArac[] = [
     anahtar: 'ameliyat-notu-kd', roller: KD,
     ad: 'Operation note: obstetrics and gynaecology',
     aciklama: `${NOT_ACIKLAMA} Choose the operation to pre-fill its standard steps, then correct them to what was done.`,
-    alanlar: { sablon: 'Operation (pre-fills the standard steps; every word can be edited)', ...NOT_ALANLARI },
+    alanlar: { sablon: 'Operation (pre-fills the standard steps; every word can be edited)', ...EN_KD_NOT_TIBBI, ...NOT_ALANLARI },
     secenekler: {
       sablon: {
         sezaryen: 'Caesarean birth (lower-segment)', tlh: 'Total laparoscopic hysterectomy', tah: 'Total abdominal hysterectomy', vajinal_histerektomi: 'Vaginal hysterectomy',

@@ -53,6 +53,7 @@ import { auIncelemePlanlari } from './araclar/reviewPlans'
 import { AU_ROLLER } from './klinik/roller'
 import { AU_BIRIMLER, AU_VELI_YASI } from './temel'
 import { AU_OPERATOR_DEGISEN, AU_OPERATOR_PARAMETRELERI } from './operator'
+import { AU_GENITAL_ESTETIK } from './genitalEstetik'
 
 export { AU_BIRIMLER, AU_VELI_YASI } from './temel'
 
@@ -216,6 +217,8 @@ export const AU_GIRDI: EnUlkeGirdisi = {
     ameliyatKayitlari: true,
     // KD-OPERATOR-01 (2026-11-05): the operating surgeon's tools of the set, with this country's numbers and sources (./operator.ts)
     operatorAraclari: true,
+    // GENITAL-ESTETIK-01 (2026-11-06): cosmetic gynaecology, only what Australian law and the TGA permit (./genitalEstetik.ts)
+    genitalEstetik: AU_GENITAL_ESTETIK,
     kapali: {
       // REMOVED FOR AUSTRALIA by the audit's decision ("remove"): it is not this country's scale. It stays a slot only
       // because every tool of the shared set that is not on is recorded as one; it is never to be switched on here.

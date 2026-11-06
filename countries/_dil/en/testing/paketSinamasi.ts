@@ -38,7 +38,7 @@ import type { UlkeArayuzu } from '@/lib/ulke/arayuz/tipler'
 import { paketiDenetle } from '@/lib/ulke/paketDenetimi'
 import { ornekGirdiler, ornekOrtam } from '@/lib/ulke/testing/aracOrnekleri'
 import type { UlkeKlinigi, UlkePaketi } from '@/lib/ulke/tipler'
-import { EN_AMELIYAT_ARACLARI, EN_OPERATOR_ARACLARI, EN_ROL_ARACLARI } from '../araclar'
+import { EN_AMELIYAT_ARACLARI, EN_GENITAL_ESTETIK_ARACLARI, EN_OPERATOR_ARACLARI, EN_ROL_ARACLARI } from '../araclar'
 import { enRolAnahtarlari, type EnRolDegisimi } from '../klinik/roller'
 import type { EnBicim } from '../varyant'
 import { bicimYazimSorunlari, tumMetinler } from './yazimDenetimi'
@@ -377,7 +377,10 @@ export function ingilizcePaketSinamasi(s: EnPaketSinamasi): void {
       // KD-OPERATOR-01: the operating surgeon's tools of the set, likewise all together or none
       const operator = EN_OPERATOR_ARACLARI.map((x) => x.anahtar), operatorAcik = operator.filter((k) => anahtarlar.includes(k) || s.kapaliAraclar.includes(k))
       assert.ok(operatorAcik.length === 0 || operatorAcik.length === operator.length, 'the operating surgeon\'s tools of the set: all of them, or none')
-      const SET = [...EN_ROL_ARACLARI, ...(ameliyatAcik.length ? EN_AMELIYAT_ARACLARI : []), ...(operatorAcik.length ? EN_OPERATOR_ARACLARI : [])]
+      // GENITAL-ESTETIK-01: the cosmetic gynaecology tools of the set, likewise all together (on or kept as slots) or none
+      const genital = EN_GENITAL_ESTETIK_ARACLARI.map((x) => x.anahtar), genitalAcik = genital.filter((k) => anahtarlar.includes(k) || s.kapaliAraclar.includes(k))
+      assert.ok(genitalAcik.length === 0 || genitalAcik.length === genital.length, 'the cosmetic gynaecology tools of the set: all of them, or none')
+      const SET = [...EN_ROL_ARACLARI, ...(ameliyatAcik.length ? EN_AMELIYAT_ARACLARI : []), ...(operatorAcik.length ? EN_OPERATOR_ARACLARI : []), ...(genitalAcik.length ? EN_GENITAL_ESTETIK_ARACLARI : [])]
       assert.deepEqual(SET.map((x) => x.anahtar).filter((k) => !anahtarlar.includes(k)).sort(), [...s.kapaliAraclar].sort())
       // … and beyond the set, exactly the tools the country's record states (none, for a country that states none)
       for (const k of ekAraclar) assert.ok(anahtarlar.includes(k), `${k} is stated as a tool of this country and is not switched on`)
