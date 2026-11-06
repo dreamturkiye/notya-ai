@@ -5,6 +5,7 @@
  */
 import { kontrolDurumu } from '@/lib/klinik/telafi'
 import { vadeDurumu } from '@/lib/klinik/isoGun'
+import { seansVadesi } from '@/lib/clinical/genitalEstetik'
 
 export const HEKIM_KILIT = 'Lazer parametresi, fluence ve tanı hekimindir. Notya doz/skor yazmaz.'
 export const ACIL_METIN = 'Yaygın kabarcık, görme kaybı, nefes darlığı veya hızla yayılan kızarıklık+ateş: 112.'
@@ -19,9 +20,11 @@ export function lazerSeansVadesi(
   if (!/^\d{4}-\d{2}-\d{2}$/.test(sonIso) || !/^\d{4}-\d{2}-\d{2}$/.test(bugun)) {
     return { hata: 'Son seans ve bugün YYYY-MM-DD olmalı.' }
   }
-  if (!(aralikGun >= 14 && aralikGun <= 90)) return { hata: 'Aralık 14–90 gün (hekim protokolü). Fluence yok.' }
-  const dueMs = Date.parse(sonIso + 'T12:00:00Z') + aralikGun * 86400000
-  const due = new Date(dueMs).toISOString().slice(0, 10)
+  // GENITAL-ESTETIK-01: the 14–90 day rule is the SHARED core's (lib/clinical/genitalEstetik.ts → seansVadesi), also used by
+  // the KD energy-session note — deepened, not duplicated.
+  const v = seansVadesi(sonIso, aralikGun)
+  if ('hata' in v) return { hata: v.hata === 'aralik_gecersiz' ? 'Aralık 14–90 gün (hekim protokolü). Fluence yok.' : 'Son seans ve bugün YYYY-MM-DD olmalı.' }
+  const due = v.due
   const durum = vadeDurumu(bugun, due) || 'planli'
   return { due, durum, ozet: `Sonraki seans ${due} · ${durum}. Parametre hekimde. Öneri — hekim kilitler.` }
 }

@@ -157,6 +157,8 @@ type Hekim = {
   fotoBelge: string; fotoOnceki: string; fotoSeans: string
   /** AMELIYAT-NOTU-01 / KD-RAPOR-01: an unsigned operation note and an NST report of the doctor's own patient (content encrypted, marker inside) */
   ameliyatNotu: string; kdRapor: string
+  /** GENITAL-ESTETIK-01: an injection record (product name carries the marker) and an intimate photo (bytes carry the marker) */
+  geKayit: string; geFoto: string
   /** Rows THIS doctor filed under the OTHER doctor's patient — the contamination a pre-fix IDOR left behind. */
   hileliSeans: string; hileliNot: string
 }
@@ -287,7 +289,11 @@ function hekimKur(harf: Harf): Hekim {
   db.ekle('hasta_foto_kucuk', { doctor_id: id, patient_id: hasta, belge_id: fotoBelge, mime: 'image/jpeg', genislik: 64, yukseklik: 48, veri_encrypted: encryptBytes(fotoGorsel.sentetikJpeg(`kucuk ${m}`)).toString('base64') })
   const ameliyatNotu = db.ekle('ameliyat_notlari', { doctor_id: id, patient_id: hasta, ameliyat_tarihi: '2026-10-01', sablon: null, dogum_id: null, veri_encrypted: encrypt(JSON.stringify({ baslangic: '2026-10-01T09:00', islem: `Islem ${m}`, bulgular: `Bulgu ${m}` })), imzalandi_at: null, created_at: dun, updated_at: dun }).id as string
   const kdRapor = db.ekle('kd_raporlari', { doctor_id: id, patient_id: hasta, gebelik_id: null, tur: 'nst', rapor_tarihi: '2026-10-01', veri_encrypted: encrypt(JSON.stringify({ tarih: '2026-10-01', bazalFkh: 140, varyabiliteBpm: 10, sonuc: `NST ${m}` })), created_at: dun, updated_at: dun }).id as string
-  return { ameliyatNotu, kdRapor, fotoBelge, fotoOnceki, fotoSeans, yuklenenBelge, takip, defter, harf, id, token, hasta, seans, not, bekleyenNot, ilac, panel, belge, randevu, serbestRandevu, talep, hastaDerm, lezyon, dogum, bebekKart, portalToken, konu, asistanEylem, gozGoruntu, belgeAnaliz, dermAnaliz, konsultasyon, konsultasyonYanitli, kasaBelge, asiHatirlatma, eylemOneri, eylemKayit, sonlanmisIlac, kuyruk, gelenBelge, asistanOturum, hileliSeans: '', hileliNot: '' }
+  // GENITAL-ESTETIK-01: a photo consent (so an upload can land), an injection record and an intimate photo of the doctor's own patient
+  db.ekle('genital_estetik_kayitlari', { doctor_id: id, patient_id: hasta, tur: 'foto_onam', islem_tarihi: '2026-10-01', endikasyon: null, urun_adi: null, lot_no: null, sonraki_tarih: null, veri_encrypted: encrypt(JSON.stringify({ tarih: '2026-10-01', belgeleme: true, egitimYayin: false, geriCekildi: null })), created_at: dun, updated_at: dun })
+  const geKayit = db.ekle('genital_estetik_kayitlari', { doctor_id: id, patient_id: hasta, tur: 'enjeksiyon', islem_tarihi: '2026-10-02', endikasyon: 'medikal', urun_adi: `Urun ${m}`, lot_no: `LOT${harf}1`, sonraki_tarih: '2026-10-16', veri_encrypted: encrypt(JSON.stringify({ tarih: '2026-10-02', urunAdi: `Urun ${m}`, lot: `LOT${harf}1` })), created_at: dun, updated_at: dun }).id as string
+  const geFoto = db.ekle('genital_estetik_fotolar', { doctor_id: id, patient_id: hasta, gorunum: 'perine', cekim_tarihi: '2026-10-02', mime: 'image/jpeg', boyut: 20, sha256: '0'.repeat(64), veri_encrypted: encryptBytes(Buffer.from(`SENTETIK-FOTO ${m}`)).toString('base64'), created_at: dun }).id as string
+  return { geKayit, geFoto, ameliyatNotu, kdRapor, fotoBelge, fotoOnceki, fotoSeans, yuklenenBelge, takip, defter, harf, id, token, hasta, seans, not, bekleyenNot, ilac, panel, belge, randevu, serbestRandevu, talep, hastaDerm, lezyon, dogum, bebekKart, portalToken, konu, asistanEylem, gozGoruntu, belgeAnaliz, dermAnaliz, konsultasyon, konsultasyonYanitli, kasaBelge, asiHatirlatma, eylemOneri, eylemKayit, sonlanmisIlac, kuyruk, gelenBelge, asistanOturum, hileliSeans: '', hileliNot: '' }
 }
 
 /** Contamination X planted under Y's patient before the fixes (anon-key session insert, unchecked POSTs). */
@@ -405,7 +411,31 @@ const fotoAiGonder = (r: Rotalar, a: Hekim, h: Hekim, govde: Record<string, unkn
 const hamIste = (yontem: string, yol: string, token: string, govde: Buffer, tur: string) =>
   new NextRequestSinifi(`http://localhost${yol}`, { method: yontem, headers: { authorization: `Bearer ${token}`, 'content-type': tur }, body: new Uint8Array(govde) } as ConstructorParameters<typeof NextRequestSinifi>[1])
 
+/** GENITAL-ESTETIK-01: the package is KD-only; both synthetic doctors act as KD for the duration of one call. */
+async function kdOlarak<T>(f: () => Promise<T>): Promise<T> {
+  const u = tablo('users'), eski = u.map((x) => x.specialty)
+  u.forEach((x) => { x.specialty = 'kadin-dogum' })
+  try { return await f() } finally { u.forEach((x, i) => { x.specialty = eski[i] }) }
+}
+const GE_JPEG = 'data:image/jpeg;base64,' + Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46, 0x49, 0x46, 0x00, 0x01, 0x01, 0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x00, 0xff, 0xda, 0x00, 0x08, 0x01, 0x01, 0x00, 0x00, 0x3f, 0x00, 0xd2, 0xcf, 0x20, 0xff, 0xd9]).toString('base64')
+
 const VAKALAR: Vaka[] = [
+  // GENITAL-ESTETIK-01 — records, recall, intimate photos (KD only; foreign ids answer 404, never a byte or a name)
+  { ad: 'GET /api/doktor/genital-estetik (kayıtlar + foto metaverisi)', red: 404, okur: true,
+    cagir: (r, a, h) => kdOlarak(() => coz(r.genitalEstetik.GET(iste('GET', `/api/doktor/genital-estetik?patientId=${h.hasta}`, { token: a.token })))) },
+  { ad: 'GET /api/doktor/genital-estetik?lot (geri çağırma: yalnız kendi hastaları)',
+    cagir: (r, a, h) => kdOlarak(() => coz(r.genitalEstetik.GET(iste('GET', `/api/doktor/genital-estetik?lot=LOT${h.harf}1`, { token: a.token })))) },
+  { ad: 'POST /api/doktor/genital-estetik (tıbbi endikasyonlu seans, 18 yaş altı hasta)', red: 404,
+    yazdi: (a) => tablo('genital_estetik_kayitlari').some((x) => x.patient_id === a.hasta && x.doctor_id === a.id && x.tur === 'enerji'),
+    cagir: (r, a, h) => kdOlarak(() => coz(r.genitalEstetik.POST(iste('POST', '/api/doktor/genital-estetik', { token: a.token, govde: { patientId: h.hasta, tur: 'enerji', veri: { tarih: '2026-11-06', endikasyon: 'medikal', medikalGerekce: 'liken_skleroz', medikalAciklama: 'Biyopsiyle dogrulanmis liken skleroz', modalite: 'co2_lazer', cihaz: 'Sentetik', amac: 'liken_skleroz', bolgeler: ['vulva_labia'], gecis: 1, seansNo: 1, seriToplam: 1 } } })))) },
+  { ad: 'POST /api/doktor/genital-estetik/foto (yükleme)', red: 404,
+    yazdi: (a) => tablo('genital_estetik_fotolar').filter((x) => x.patient_id === a.hasta && x.doctor_id === a.id).length > 1,
+    cagir: (r, a, h) => kdOlarak(() => coz(r.genitalEstetikFoto.POST(iste('POST', '/api/doktor/genital-estetik/foto', { token: a.token, govde: { patientId: h.hasta, gorunum: 'perine', cekimTarihi: '2026-11-06', gorsel: GE_JPEG } })))) },
+  { ad: 'GET /api/doktor/genital-estetik/foto/[fotoId] (görüntüleme, denetim kaydı)', red: 404, okur: true,
+    yazdi: (a) => tablo('audit_logs').some((x) => x.resource_type === 'genital_estetik_foto' && x.resource_id === a.geFoto),
+    cagir: (r, a, h) => kdOlarak(() => coz(r.genitalEstetikFotoTek.GET(iste('GET', `/api/doktor/genital-estetik/foto/${h.geFoto}?patientId=${h.hasta}`, { token: a.token }), prm({ fotoId: h.geFoto })))) },
+  { ad: 'GET /api/doktor/genital-estetik/foto/[fotoId] (kendi hastası + yabancı foto kimliği)', red: 404,
+    cagir: (r, a, h) => kdOlarak(() => coz(r.genitalEstetikFotoTek.GET(iste('GET', `/api/doktor/genital-estetik/foto/${h.geFoto}?patientId=${a.hasta}`, { token: a.token }), prm({ fotoId: h.geFoto })))) },
   // Hasta kaydı
   { ad: 'GET /api/doktor/hastalar/[id] (hasta detayı)', red: 404, okur: true,
     cagir: (r, a, h) => coz(r.hastaDetay.GET(iste('GET', `/api/doktor/hastalar/${h.hasta}`, { token: a.token }), prm({ id: h.hasta }))) },
@@ -876,6 +906,9 @@ describe('HASTA-İZOLASYON: doktor A ve doktor B birbirinin hastasına hiçbir r
       olcumler: await ice('app/api/doktor/hastalar/[id]/olcumler/route'),
       ameliyatNotlari: await ice('app/api/doktor/ameliyat-notlari/route'),
       kdRaporlari: await ice('app/api/doktor/kd-raporlari/route'),
+      genitalEstetik: await ice('app/api/doktor/genital-estetik/route'),
+      genitalEstetikFoto: await ice('app/api/doktor/genital-estetik/foto/route'),
+      genitalEstetikFotoTek: await ice('app/api/doktor/genital-estetik/foto/[fotoId]/route'),
       disaAktar: await ice('app/api/doktor/hastalar/[id]/disa-aktar/route'),
       belgeKayit: await ice('app/api/belgeler/kayit/route'),
       notlar: await ice('app/api/notes/route'),

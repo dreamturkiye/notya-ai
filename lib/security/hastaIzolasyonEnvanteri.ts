@@ -52,6 +52,9 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   'app/api/doktor/hastalar/[id]/olcumler/route.ts': T,
   // AMELIYAT-NOTU-01 / KD-RAPOR-01 (2026-11-05): hastaSahibiMi first; note / report / delivery / pregnancy ids bound to doctor + patient
   'app/api/doktor/ameliyat-notlari/route.ts': T,
+  'app/api/doktor/genital-estetik/route.ts': T,
+  'app/api/doktor/genital-estetik/foto/route.ts': T,
+  'app/api/doktor/genital-estetik/foto/[fotoId]/route.ts': T,
   'app/api/doktor/kd-raporlari/route.ts': T,
   'app/api/doktor/hastalar/[id]/klinik-ozet/route.ts': I('hastaKlinikOzetleriGuncelle: reads/writes scoped doctor_id+patient_id; foreign patient → fail'),
   // ── Notlar / seanslar ──

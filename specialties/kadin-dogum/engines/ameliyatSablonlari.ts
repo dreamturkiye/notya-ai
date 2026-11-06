@@ -14,6 +14,9 @@
  * (sezaryen, histerektomi routes, myomektomi, laparoskopi for cyst / endometriosis, histeroskopi, D&C).
  *   - From the benchmark site: vakum_aspirasyon, kolposkopi_biyopsi_leep, ria_takilmasi, labioplasti,
  *     perineoplasti_kolporafi (vajinoplasti), and the laparoscopy group.
+ *   - GENITAL-ESTETIK-01 (2026-11-06): labioplasti_klitoral (clitoral-hood variant, ACOG CO 795 lists the procedure) and
+ *     vajinoplasti_kolpoperineorafi (dedicated vaginal-tightening template). Every "Genital estetik" template requires the
+ *     cosmetic / medically-indicated field; a cosmetic one is refused under 18 (lib/clinical/genitalEstetik.ts).
  *   - NOT templated: himenoplasti — WHO / OHCHR / UN Women ("Eliminating virginity testing", 2018) call for an end to
  *     virginity-related procedures and the United Kingdom made hymenoplasty an offence (Health and Care Act 2022, s.149);
  *     offering it is the owner's decision (docs/OPEN-COMMITMENTS.md, AMELIYAT-NOTU-HIMENOPLASTI-01). vNOTES is not on
@@ -325,11 +328,11 @@ export const KD_AMELIYAT_SABLONLARI: readonly AmeliyatSablonu[] = [
     },
   },
   {
-    kod: 'labioplasti', ad: 'Labioplasti (labia minora redüksiyonu)', grup: 'Genital estetik',
-    kaynak: 'ACOG Committee Opinion No. 795, Elective Female Genital Cosmetic Surgery (2020): danışmanlık, beklenti ve kanıt düzeyi ayrıca belgelenmelidir.',
+    kod: 'labioplasti', ad: 'Labioplasti (labia minora redüksiyonu)', grup: 'Genital estetik', endikasyonSinifiGerekli: true,
+    kaynak: 'ACOG Committee Opinion No. 795, Elective Female Genital Cosmetic Surgery (Obstet Gynecol 2020;135:e36–e42): danışmanlık, beden algısı değerlendirmesi, beklenti ve kanıt düzeyi ayrıca belgelenmelidir.',
     veri: {
       islem: 'Labioplasti (__: kenar rezeksiyonu / kama rezeksiyonu / deepitelizasyon)',
-      endikasyon: '__ (fonksiyonel yakınma / estetik talep). Danışmanlık ve beklenti değerlendirmesi yapıldı; 18 yaş üstü; bilgilendirilmiş onam alındı.',
+      endikasyon: '__ (fonksiyonel yakınma / estetik talep). Danışmanlık, beden algısı taraması (araç ve sonuç: __) ve beklenti değerlendirmesi yapıldı; bilgilendirilmiş onam alındı.',
       teknik: ADIM([
         'Anestezi __; litotomi pozisyonu; antisepsi, steril örtüm.',
         'Rezeksiyon sınırları her iki tarafta simetrik olarak işaretlendi.',
@@ -343,7 +346,46 @@ export const KD_AMELIYAT_SABLONLARI: readonly AmeliyatSablonu[] = [
     },
   },
   {
-    kod: 'perineoplasti_kolporafi', ad: 'Perineoplasti / kolporafi (vajinoplasti)', grup: 'Genital estetik',
+    kod: 'labioplasti_klitoral', ad: 'Labioplasti + klitoral başlık redüksiyonu', grup: 'Genital estetik', endikasyonSinifiGerekli: true,
+    kaynak: 'ACOG Committee Opinion No. 795 (2020): klitoral başlık redüksiyonu kadın genital kozmetik işlemler arasında sayılır; etkinlik ve güvenlik için yüksek kaliteli veri yoktur. Klitoris gövdesine ve glansa dokunulmaz.',
+    veri: {
+      islem: 'Labioplasti (__: kenar / kama / deepitelizasyon) + klitoral başlık redüksiyonu (__: lateral başlık fazlası eksizyonu)',
+      endikasyon: '__ (fonksiyonel yakınma / estetik talep). Danışmanlık, beden algısı taraması (araç ve sonuç: __) ve beklenti değerlendirmesi yapıldı; bilgilendirilmiş onam alındı.',
+      teknik: ADIM([
+        'Anestezi __; litotomi pozisyonu; antisepsi, steril örtüm.',
+        'İç dudak rezeksiyon sınırları ve başlık fazlası ayakta ve litotomide simetrik işaretlendi; glans korunacak şekilde başlığın orta hattı bırakıldı.',
+        'Lokal infiltrasyon: __ (hekim belirler).',
+        'İç dudak dokusu __ tekniği ile çıkarıldı; frenulum korundu.',
+        'Başlığın lateral fazlası __ ile eksize edildi; klitoris gövdesi, glans ve dorsal sinir bölgesine dokunulmadı.',
+        'Hemostaz __; glans açıklığı ve simetri kontrol edildi.',
+      ]),
+      patoloji: 'gonderilmedi',
+      kapanis: 'Mukoza ve başlık kenarları emilebilir sütürle __ kapatıldı.',
+      postopOrderlar: 'Soğuk uygulama ve hijyen önerileri verildi; hasta talimat sayfası verildi. Cinsel ilişki ve tampon kısıtlaması: __ hafta. Kontrol: __. Artan şişlik, kanama, ateş veya akıntıda başvuru anlatıldı.',
+    },
+  },
+  {
+    kod: 'vajinoplasti_kolpoperineorafi', ad: 'Vajinoplasti / kolpoperineorafi (vajinal daraltma)', grup: 'Genital estetik', endikasyonSinifiGerekli: true,
+    kaynak: 'ACOG Committee Opinion No. 795 (2020): kozmetik vajinoplasti tıbbi endikasyonsuzdur, güvenlik ve etkinliği belirlenmemiştir; NICE NG123 (2019) sarkma onarımında. Kozmetik amaçla yapılıyorsa ayrıca danışmanlık ve beden algısı taraması belgelenir.',
+    veri: {
+      islem: 'Vajinoplasti / kolpoperineorafi (__: posterior kolporafi + perineorafi / levator plikasyonu)',
+      endikasyon: '__ (vajinal laksite yakınması / POP-Q evresi __ / doğum hasarı). Pelvik taban kas egzersizleri: __. Danışmanlık ve beklenti değerlendirmesi yapıldı; bilgilendirilmiş onam alındı.',
+      teknik: ADIM([
+        'Anestezi __; litotomi pozisyonu; antisepsi, steril örtüm, mesane sondası.',
+        'Hedef introitus genişliği ilişki işlevi gözetilerek belirlendi (ölçüm: __ parmak / __ cm).',
+        'Arka vajen duvarında ve perinede __ şeklinde (üçgen / elmas) mukoza işaretlendi ve insize edildi.',
+        'Rektovajinal fasya disseke edildi; rektum korundu.',
+        'Rektovajinal fasya / levator kenarları __ ile orta hatta plike edildi (aşırı daraltmadan kaçınıldı).',
+        'Fazla mukoza eksize edildi; perineal cisim kasları (bulbokavernöz, transvers perineal) yeniden yaklaştırıldı.',
+        'Rektal tuşe: sütür rektuma geçmedi: __. Son introitus genişliği: __.',
+      ]),
+      patoloji: 'gonderilmedi',
+      kapanis: 'Vajinal mukoza ve perine cildi emilebilir sütürle kapatıldı; vajinal tampon: __.',
+      postopOrderlar: POSTOP_GENEL + ' Kabızlıktan kaçınma; ağır kaldırma ve cinsel ilişki kısıtlaması: __ hafta. Hasta talimat sayfası verildi.',
+    },
+  },
+  {
+    kod: 'perineoplasti_kolporafi', ad: 'Perineoplasti / kolporafi (sarkma ve doğum hasarı onarımı)', grup: 'Genital estetik', endikasyonSinifiGerekli: true,
     kaynak: 'NICE NG123 Urinary incontinence and pelvic organ prolapse in women: management (2019); ACOG Committee Opinion No. 795 (2020) for cosmetic indications.',
     veri: {
       islem: '__ (posterior kolporafi + perineoplasti / anterior kolporafi)',

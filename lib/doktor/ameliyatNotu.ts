@@ -116,6 +116,13 @@ export type AmeliyatNotuVeri = {
   antibiyotikProfilaksi: string
   vteProfilaksi: string
   postopOrderlar: string
+  /**
+   * GENITAL-ESTETIK-01: only for a template marked `endikasyonSinifiGerekli` (empty on every other note). 'kozmetik' or
+   * 'medikal'; a medical one names a structured reason (lib/clinical/genitalEstetik.ts GE_MEDIKAL_GEREKCE) and the doctor's words.
+   */
+  endikasyonSinifi: 'kozmetik' | 'medikal' | ''
+  medikalGerekce: string
+  medikalAciklama: string
 }
 
 export const BOS_AMELIYAT_NOTU: AmeliyatNotuVeri = {
@@ -123,9 +130,10 @@ export const BOS_AMELIYAT_NOTU: AmeliyatNotuVeri = {
   anesteziTuru: '', anestezist: '', endikasyon: '', bulgular: '', teknik: '', patoloji: '', patolojiMateryal: '',
   kanKaybiMl: null, siviTransfuzyon: '', drenler: '', komplikasyon: '', implantlar: '', kapanis: '',
   antibiyotikProfilaksi: '', vteProfilaksi: '', postopOrderlar: '',
+  endikasyonSinifi: '', medikalGerekce: '', medikalAciklama: '',
 }
 
-type MetinAlani = Exclude<keyof AmeliyatNotuVeri, 'kanKaybiMl' | 'aciliyet' | 'anesteziTuru' | 'patoloji' | 'baslangic' | 'bitis'>
+type MetinAlani = Exclude<keyof AmeliyatNotuVeri, 'kanKaybiMl' | 'aciliyet' | 'anesteziTuru' | 'patoloji' | 'baslangic' | 'bitis' | 'endikasyonSinifi' | 'medikalGerekce' | 'medikalAciklama'>
 /** Short lines (a diagnosis, a name) and long text (findings, technique). */
 export const KISA_ALANLAR: readonly MetinAlani[] = ['preopTani', 'postopTani', 'islem', 'cerrah', 'asistanlar', 'anestezist', 'patolojiMateryal', 'siviTransfuzyon', 'drenler', 'antibiyotikProfilaksi', 'vteProfilaksi']
 export const UZUN_ALANLAR: readonly MetinAlani[] = ['endikasyon', 'bulgular', 'teknik', 'komplikasyon', 'implantlar', 'kapanis', 'postopOrderlar']
@@ -163,7 +171,11 @@ export const AMELIYAT_NOTU_ETIKETLERI: Readonly<Record<keyof AmeliyatNotuVeri, s
   antibiyotikProfilaksi: 'Antibiyotik profilaksisi',
   vteProfilaksi: 'VTE profilaksisi',
   postopOrderlar: 'Postoperatif order / talimatlar',
+  endikasyonSinifi: 'Endikasyon sınıfı',
+  medikalGerekce: 'Tıbbi endikasyon gerekçesi',
+  medikalAciklama: 'Tıbbi endikasyon açıklaması',
 }
+export const ENDIKASYON_SINIFI_ETIKETLERI: Readonly<Record<'kozmetik' | 'medikal', string>> = { kozmetik: 'Kozmetik (tıbbi endikasyonsuz)', medikal: 'Tıbbi endikasyonlu (rekonstrüktif / fonksiyonel)' }
 export const ANESTEZI_ETIKETLERI: Readonly<Record<AnesteziTuru, string>> = {
   genel: 'Genel', spinal: 'Spinal', epidural: 'Epidural', kombine_spinal_epidural: 'Kombine spinal-epidural',
   rejyonel_blok: 'Rejyonel blok', sedasyon: 'Sedasyon', lokal: 'Lokal',
@@ -180,6 +192,12 @@ export type AmeliyatSablonu = {
   /** The published references the standard steps follow. */
   kaynak: string
   veri: Partial<AmeliyatNotuVeri>
+  /**
+   * GENITAL-ESTETIK-01: true = the note must say whether the operation is COSMETIC or MEDICALLY INDICATED (with a structured
+   * reason); a cosmetic one is refused for a patient under 18 (lib/clinical/genitalEstetik.ts → geKapi, checked again by the
+   * server). Absent on every other template, so every other note is exactly what it was.
+   */
+  endikasyonSinifiGerekli?: boolean
 }
 
 /** A template applied to a note: only EMPTY fields are filled, what the doctor already wrote is never overwritten. */
@@ -248,6 +266,14 @@ export function ameliyatNotuDogrula(ham: unknown, o: { imza: boolean }): Dogrula
     if (!Number.isFinite(n) || n < 0 || n > KAN_KAYBI_AZAMI) return { ok: false, hata: `Kan kaybı 0–${KAN_KAYBI_AZAMI} mL arasında bir sayı olmalı.`, alan: 'kanKaybiMl' }
     veri.kanKaybiMl = Math.round(n)
   }
+  if (g.endikasyonSinifi != null && g.endikasyonSinifi !== '') {
+    if (g.endikasyonSinifi !== 'kozmetik' && g.endikasyonSinifi !== 'medikal') return { ok: false, hata: 'Geçersiz endikasyon sınıfı.', alan: 'endikasyonSinifi' }
+    veri.endikasyonSinifi = g.endikasyonSinifi
+  }
+  const mg = metinTemizle(g.medikalGerekce, 60), ma = metinTemizle(g.medikalAciklama, UZUN_AZAMI)
+  if (mg === null || (mg && !/^[a-z_]+$/.test(mg))) return { ok: false, hata: 'Geçersiz tıbbi gerekçe.', alan: 'medikalGerekce' }
+  if (ma === null) return { ok: false, hata: `Açıklama en fazla ${UZUN_AZAMI} karakter olabilir.`, alan: 'medikalAciklama' }
+  if (veri.endikasyonSinifi === 'medikal') { veri.medikalGerekce = mg; veri.medikalAciklama = ma }
   if (!veri.islem) return { ok: false, hata: 'Yapılan işlem gerekli.', alan: 'islem' }
   if (o.imza) {
     for (const k of IMZA_ZORUNLU) {
@@ -267,6 +293,7 @@ export function ameliyatNotuOku(ham: unknown): AmeliyatNotuVeri {
   for (const k of Object.keys(BOS_AMELIYAT_NOTU) as (keyof AmeliyatNotuVeri)[]) {
     const v = g[k]
     if (k === 'kanKaybiMl') out.kanKaybiMl = typeof v === 'number' && Number.isFinite(v) ? v : null
+    else if (k === 'endikasyonSinifi') out.endikasyonSinifi = v === 'kozmetik' || v === 'medikal' ? v : ''
     else if (typeof v === 'string') (out as Record<string, unknown>)[k] = v
   }
   return out
@@ -278,12 +305,13 @@ export function ameliyatNotuOku(ham: unknown): AmeliyatNotuVeri {
  */
 export function ameliyatNotuBolumleri(v: AmeliyatNotuVeri): Array<{ anahtar: keyof AmeliyatNotuVeri; etiket: string; deger: string; uzun: boolean }> {
   const E = AMELIYAT_NOTU_ETIKETLERI
-  const sira: (keyof AmeliyatNotuVeri)[] = ['preopTani', 'postopTani', 'islem', 'endikasyon', 'bulgular', 'teknik', 'patoloji', 'kanKaybiMl', 'siviTransfuzyon', 'drenler', 'komplikasyon', 'implantlar', 'kapanis', 'antibiyotikProfilaksi', 'vteProfilaksi', 'postopOrderlar']
+  const sira: (keyof AmeliyatNotuVeri)[] = ['preopTani', 'postopTani', 'islem', 'endikasyonSinifi', 'endikasyon', 'bulgular', 'teknik', 'patoloji', 'kanKaybiMl', 'siviTransfuzyon', 'drenler', 'komplikasyon', 'implantlar', 'kapanis', 'antibiyotikProfilaksi', 'vteProfilaksi', 'postopOrderlar']
   const out: Array<{ anahtar: keyof AmeliyatNotuVeri; etiket: string; deger: string; uzun: boolean }> = []
   for (const k of sira) {
     let deger = ''
     if (k === 'patoloji') deger = v.patoloji === 'gonderildi' ? `Gönderildi${v.patolojiMateryal ? ` — ${v.patolojiMateryal}` : ''}` : v.patoloji === 'gonderilmedi' ? 'Gönderilmedi' : ''
     else if (k === 'kanKaybiMl') deger = v.kanKaybiMl == null ? '' : `${v.kanKaybiMl} mL`
+    else if (k === 'endikasyonSinifi') deger = v.endikasyonSinifi ? ENDIKASYON_SINIFI_ETIKETLERI[v.endikasyonSinifi] + (v.endikasyonSinifi === 'medikal' && v.medikalAciklama ? ` — ${v.medikalAciklama}` : '') : ''
     else deger = String(v[k] ?? '')
     const zorunlu = IMZA_ZORUNLU.includes(k)
     if (!deger && !zorunlu) continue

@@ -11,12 +11,17 @@
  * note statement carries doctor_id AND patient_id; a delivery id (sezaryen) is accepted only when that delivery is the
  * same doctor's and the same patient's. Doctor only (sadeceDoktor): the note is the surgeon's signed document.
  * A SIGNED note never changes (medico-legal record): a correction is a new note.
+ *
+ * GENITAL-ESTETIK-01 (2026-11-06): a note on a template marked `endikasyonSinifiGerekli` (KD "Genital estetik") must say
+ * cosmetic or medically indicated; a COSMETIC one is refused (422) for a patient under 18 or without a recorded birth date,
+ * on every save, draft included (lib/clinical/genitalEstetik.ts → geKapi). A medically indicated one is never age-blocked.
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { pratikOturum, sadeceDoktor } from '@/lib/doktor/pratikOturum'
 import { hastaSahibiMi } from '@/lib/doktor/hastaSahipligi'
 import { ameliyatNotuDogrula } from '@/lib/doktor/ameliyatNotu'
 import { ameliyatSablonlariBransIcin, doktorBransiOku, notuCoz, notuSifrele, sablonGecerliMi, yazdirmaBasligi } from '@/lib/doktor/ameliyatNotuSunucu'
+import { geKapi } from '@/lib/clinical/genitalEstetik'
 
 export const dynamic = 'force-dynamic'
 
@@ -50,7 +55,11 @@ export async function GET(req: NextRequest) {
     doktorBransiOku(supabase, doktorId),
   ])
   const sablonlar = await ameliyatSablonlariBransIcin(brans)
-  return NextResponse.json({ notlar: ((data || []) as Satir[]).map(disari), sablonlar })
+  // GENITAL-ESTETIK-01: the words of the indication field come with the templates that need it (chapter content stays out of the core form).
+  const endikasyonEtiketleri = sablonlar.some((s) => s.endikasyonSinifiGerekli)
+    ? await import('@/specialties/kadin-dogum/engines/genitalEstetikMetinleri').then((m) => ({ gerekce: m.GE_ETIKET.medikalGerekce, kapi: m.GE_KART.yasKilidi }))
+    : null
+  return NextResponse.json({ notlar: ((data || []) as Satir[]).map(disari), sablonlar, endikasyonEtiketleri })
 }
 
 export async function POST(req: NextRequest) {
@@ -74,7 +83,28 @@ export async function POST(req: NextRequest) {
     if (!dogum) return NextResponse.json({ error: 'Doğum kaydı bulunamadı.' }, { status: 404 })
     dogumId = String(dogum.id)
   }
-  const sablon = await sablonGecerliMi(await doktorBransiOku(supabase, doktorId), b.sablon)
+  const brans = await doktorBransiOku(supabase, doktorId)
+  const sablon = await sablonGecerliMi(brans, b.sablon)
+  // GENITAL-ESTETIK-01: the template of this save (the request's, or the stored note's) decides whether the gate applies.
+  let sablonKodu = sablon
+  if (!sablonKodu && typeof b.id === 'string' && b.id) {
+    const { data: eski } = await supabase.from('ameliyat_notlari').select('sablon').eq('id', b.id).eq('doctor_id', doktorId).eq('patient_id', patientId).maybeSingle()
+    sablonKodu = (eski?.sablon as string | null) ?? null
+  }
+  if (sablonKodu) {
+    const tpl = (await ameliyatSablonlariBransIcin(brans)).find((s) => s.kod === sablonKodu)
+    if (tpl?.endikasyonSinifiGerekli) {
+      const { data: h } = await supabase.from('patients').select('dob_encrypted').eq('id', patientId).eq('doctor_id', doktorId).maybeSingle()
+      const { decrypt } = await import('@/lib/security/encryption')
+      let dogum: string | null = null
+      try { dogum = h?.dob_encrypted ? decrypt(String(h.dob_encrypted)).slice(0, 10) : null } catch { dogum = null }
+      const k = geKapi({ dogumTarihi: dogum, gun: d.tarih, endikasyon: d.veri.endikasyonSinifi, medikalGerekce: d.veri.medikalGerekce, medikalAciklama: d.veri.medikalAciklama, tur: 'cerrahi' })
+      if (!k.izin) {
+        const { GE_HATA } = await import('@/specialties/kadin-dogum/engines/genitalEstetikMetinleri')
+        return NextResponse.json({ error: GE_HATA[k.neden], kod: k.neden, alan: 'endikasyonSinifi' }, { status: 422 })
+      }
+    }
+  }
   const simdi = new Date().toISOString()
   const yuk = { ameliyat_tarihi: d.tarih, veri_encrypted: notuSifrele(d.veri), updated_at: simdi, ...(imza ? { imzalandi_at: simdi } : {}) }
 

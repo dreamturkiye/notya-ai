@@ -164,6 +164,10 @@ export const ROTA_YETKILERI: readonly Kural[] = [
   { yol: '/api/doktor/hasta-foto/[id]/kalite', okuKapali: true, yaz: null, sekreterKapali: true },
   // AMELIYAT-NOTU-01 / KD-RAPOR-01 (2026-11-05): the surgeon's signed operation note and the KD USG / NST reports — doctor only (sadeceDoktor).
   { yol: '/api/doktor/ameliyat-notlari', okuKapali: true, yaz: null, sekreterKapali: true },
+  // GENITAL-ESTETIK-01: KD cosmetic gynaecology records and intimate photos — doctor only (sadeceDoktor), never staff.
+  { yol: '/api/doktor/genital-estetik', okuKapali: true, yaz: null, sekreterKapali: true },
+  { yol: '/api/doktor/genital-estetik/foto', okuKapali: true, yaz: null, sekreterKapali: true },
+  { yol: '/api/doktor/genital-estetik/foto/[id]', okuKapali: true, yaz: null, sekreterKapali: true },
   { yol: '/api/doktor/kd-raporlari', okuKapali: true, yaz: null, sekreterKapali: true },
 
   // ── intake + portal

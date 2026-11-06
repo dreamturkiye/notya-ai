@@ -183,7 +183,8 @@ describe('pratikOturum kullanan her rota sınıflandırılmış', () => {
     const NOT_KAPALI = (y: string) => y === '/api/doktor/son-notlar' || y === '/api/notes' || y.startsWith('/api/notes/')
     for (const yol of PRATIK_ROTALAR) {
       // FOTO-ARSIV-01: the clinical photo archive never served the secretary (closed to her on purpose).
-      if (YENI_ROTALAR.has(yol) || NOT_KAPALI(yol) || yol.startsWith('/api/doktor/hasta-foto')) continue
+      // GENITAL-ESTETIK-01: new KD routes, doctor only from the start (intimate photos and cosmetic records never reach staff).
+      if (YENI_ROTALAR.has(yol) || NOT_KAPALI(yol) || yol.startsWith('/api/doktor/hasta-foto') || yol.startsWith('/api/doktor/genital-estetik')) continue
       for (const m of ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']) {
         assert.equal(yolIzniVarMi('sekreter', yol, m).izin, true, `sekreter ${m} ${yol}`)
       }

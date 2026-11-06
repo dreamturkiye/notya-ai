@@ -1,5 +1,6 @@
 /** MEDIKAL-ESTETIK-EXCEPTIONAL-01 — botoks/dolgu/PRP. Doz hekimde. Plastik/derm gridine sızmaz. Gün sayıları ürün kararıdır. */
 import { kontrolDurumu } from '@/lib/klinik/telafi'
+import { lotNoDogrula } from '@/lib/clinical/genitalEstetik'
 export const HEKIM_KILIT = 'Ünite ve mL karar desteği bandıdır. Doz, ürün ve tanı hekimindir.'
 export const ACIL_METIN = 'Dolgu sonrası görme kaybı, livedo veya ani şiddetli ağrı = vasküler oklüzyon şüphesi: 112. Hyaluronidaz kararı hekimindir; Notya doz yazmaz.'
 
@@ -49,10 +50,15 @@ export function vaskulerAyrinti(gorme: boolean, livedo: boolean, agri: boolean, 
   }
 }
 
+/**
+ * GENITAL-ESTETIK-01: the lot check is the SHARED core's (lib/clinical/genitalEstetik.ts → lotNoDogrula), the same one the KD
+ * injection log keeps for recalls — deepened here, not duplicated. The lot is shown in its kept (recall-searchable) form.
+ */
 export function lotKaydi(lot: string, bolge: string): { ozet: string } | { hata: string } {
   if (!lot.trim() || !bolge.trim()) return { hata: 'Lot ve bölge yazın. Ünite ve mL yazılmaz.' }
-  if (/\d+\s*(ml|mL|ünite|unite)/i.test(lot)) return { hata: 'Lot alanına ünite veya mL yazılmaz.' }
-  return { ozet: `Lot kaydı: ${lot.trim()} · bölge ${bolge.trim()}. Doz yok.` }
+  const d = lotNoDogrula(lot)
+  if ('hata' in d) return { hata: d.hata === 'lot_doz_iceriyor' ? 'Lot alanına ünite veya mL yazılmaz.' : 'Lot numarası harf, rakam ve - / . içerir (2–40 karakter).' }
+  return { ozet: `Lot kaydı: ${d.lot} · bölge ${bolge.trim()}. Doz yok.` }
 }
 
 export const INTAKE_ACIL = [

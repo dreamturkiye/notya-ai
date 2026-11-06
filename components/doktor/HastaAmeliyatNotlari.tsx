@@ -12,8 +12,12 @@ import { getAccessTokenAsync, toolsCard, toolsInput } from '@/lib/doktor/toolsUi
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 import {
   ACILIYET, ACILIYET_ETIKETLERI, AMELIYAT_NOTU_ETIKETLERI as E, ANESTEZI_ETIKETLERI, ANESTEZI_TURLERI, BOS_AMELIYAT_NOTU,
-  KISA_ALANLAR, UZUN_ALANLAR, sablonUygula, type AmeliyatNotuVeri, type AmeliyatSablonu,
+  ENDIKASYON_SINIFI_ETIKETLERI, KISA_ALANLAR, UZUN_ALANLAR, sablonUygula, type AmeliyatNotuVeri, type AmeliyatSablonu,
 } from '@/lib/doktor/ameliyatNotu';
+import { GE_MEDIKAL_GEREKCE } from '@/lib/clinical/genitalEstetik';
+
+/** GENITAL-ESTETIK-01: the words of the indication field, sent by the server only with templates that need it. */
+export type EndikasyonEtiketleri = { gerekce: Record<string, string>; kapi: string } | null;
 
 export type AmeliyatNotuSatiri = { id: string; ameliyat_tarihi: string; sablon: string | null; dogum_id: string | null; imzalandi_at: string | null; veri: AmeliyatNotuVeri };
 
@@ -24,7 +28,7 @@ const izgara: React.CSSProperties = { display: 'grid', gridTemplateColumns: 'rep
 
 const simdiYerel = () => { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 16); };
 
-export function AmeliyatNotuFormu({ patientId, mevcut, sablonlar, sabitSablon, dogumId, eskiKayit, onKaydedildi, onVazgec }: {
+export function AmeliyatNotuFormu({ patientId, mevcut, sablonlar, sabitSablon, dogumId, eskiKayit, onKaydedildi, onVazgec, endikasyonEtiketleri }: {
   patientId: string
   mevcut?: AmeliyatNotuSatiri | null
   sablonlar: readonly AmeliyatSablonu[]
@@ -35,6 +39,7 @@ export function AmeliyatNotuFormu({ patientId, mevcut, sablonlar, sabitSablon, d
   eskiKayit?: string | null
   onKaydedildi: (n: AmeliyatNotuSatiri) => void
   onVazgec?: () => void
+  endikasyonEtiketleri?: EndikasyonEtiketleri
 }) {
   const ilkSablon = mevcut?.sablon || sabitSablon || '';
   const [sablon, setSablon] = useState(ilkSablon);
@@ -98,6 +103,25 @@ export function AmeliyatNotuFormu({ patientId, mevcut, sablonlar, sabitSablon, d
           {seciliSablon && <div style={{ fontSize: 11, color: CHROME_RENK.muted, marginTop: 4 }}>Kaynak: {seciliSablon.kaynak} · "__" yerlerini doldurun; doz ve sayı şablonda yazılmaz.</div>}
         </div>
       )}
+      {seciliSablon?.endikasyonSinifiGerekli && (
+        <div style={{ border: `1px solid ${CHROME_RENK.border}`, borderRadius: 10, padding: 10, marginBottom: 10, background: '#FBF7EF' }} data-ameliyat-notu="endikasyon">
+          <div style={izgara}>
+            <label><span style={etiketS}>{E.endikasyonSinifi}</span>
+              <select value={v.endikasyonSinifi} onChange={(e) => set('endikasyonSinifi', e.target.value as AmeliyatNotuVeri['endikasyonSinifi'])} style={{ ...toolsInput, width: '100%' }}>
+                <option value="">—</option>{(['kozmetik', 'medikal'] as const).map((a) => <option key={a} value={a}>{ENDIKASYON_SINIFI_ETIKETLERI[a]}</option>)}
+              </select></label>
+            {v.endikasyonSinifi === 'medikal' && (
+              <label><span style={etiketS}>{E.medikalGerekce}</span>
+                <select value={v.medikalGerekce} onChange={(e) => set('medikalGerekce', e.target.value)} style={{ ...toolsInput, width: '100%' }}>
+                  <option value="">—</option>{GE_MEDIKAL_GEREKCE.map((k) => <option key={k} value={k}>{endikasyonEtiketleri?.gerekce[k] || k}</option>)}
+                </select></label>
+            )}
+            {v.endikasyonSinifi === 'medikal' && metinAlani('medikalAciklama', true)}
+          </div>
+          {endikasyonEtiketleri?.kapi && <div style={{ fontSize: 11.5, color: CHROME_RENK.muted, marginTop: 6 }}>{endikasyonEtiketleri.kapi}</div>}
+          <a href={`/dashboard/doktor/hastalar/${patientId}/genital-estetik/yazdir?talimat=${encodeURIComponent(seciliSablon.kod)}`} target="_blank" rel="noreferrer" style={{ fontSize: 12, color: CHROME_RENK.pine, fontWeight: 600 }}>Hasta talimat sayfasını yazdır</a>
+        </div>
+      )}
       <div style={izgara}>
         <label><span style={etiketS}>{E.baslangic}</span><input type="datetime-local" value={v.baslangic} onChange={(e) => set('baslangic', e.target.value)} style={{ ...toolsInput, width: '100%' }} /></label>
         <label><span style={etiketS}>{E.bitis}</span><input type="time" value={v.bitis} onChange={(e) => set('bitis', e.target.value)} style={{ ...toolsInput, width: '100%' }} /></label>
@@ -147,6 +171,7 @@ export function AmeliyatNotuOzeti({ n, patientId, onDuzenle }: { n: AmeliyatNotu
 export default function HastaAmeliyatNotlari({ patientId }: { patientId: string }) {
   const [notlar, setNotlar] = useState<AmeliyatNotuSatiri[] | null>(null);
   const [sablonlar, setSablonlar] = useState<AmeliyatSablonu[]>([]);
+  const [endikasyonEtiketleri, setEndikasyonEtiketleri] = useState<EndikasyonEtiketleri>(null);
   const [acik, setAcik] = useState<'yeni' | string | null>(null);
   const [hata, setHata] = useState('');
 
@@ -156,7 +181,7 @@ export default function HastaAmeliyatNotlari({ patientId }: { patientId: string 
       const r = await fetch(`/api/doktor/ameliyat-notlari?patientId=${encodeURIComponent(patientId)}`, { headers: { Authorization: `Bearer ${t}` }, cache: 'no-store' });
       const j = await r.json().catch(() => ({}));
       if (!r.ok) { setHata(j.error || 'Yüklenemedi.'); return; }
-      setNotlar(j.notlar || []); setSablonlar(j.sablonlar || []);
+      setNotlar(j.notlar || []); setSablonlar(j.sablonlar || []); setEndikasyonEtiketleri(j.endikasyonEtiketleri || null);
     } catch { setHata('Yüklenemedi.'); }
   }, [patientId]);
   useEffect(() => { yukle(); }, [yukle]);
@@ -184,6 +209,7 @@ export default function HastaAmeliyatNotlari({ patientId }: { patientId: string 
           patientId={patientId}
           mevcut={duzenlenen}
           sablonlar={sablonlar}
+          endikasyonEtiketleri={endikasyonEtiketleri}
           onKaydedildi={() => { setAcik(null); yukle(); }}
           onVazgec={() => setAcik(null)}
         />
