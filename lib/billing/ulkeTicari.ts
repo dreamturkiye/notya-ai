@@ -58,7 +58,7 @@ export interface YukseltmeMetni {
 
 /**
  * AU-DEMO-02 (Kaan, 2026-11-03) - the country's own demo booking link: the 30-minute Cal.com event tied to Dr. Gokhan
- * Mamur (the same event as the Turkish site's NEXT_PUBLIC_DEMO_BOOKING_URL, read 2026-11-03). Wins over that env var
+ * Mamur (since 2026-11-06 the country's own Cal.com event, e.g. demo-au; until then the Turkish event). Wins over that env var
  * on this country's /demo page; the founding page and the upgrade prompt show their demo button only while it is a valid
  * Cal.com address (lib/ulke/demo). Absent = the env var alone, as before.
  */
@@ -135,7 +135,8 @@ export const ULKE_TICARI: Readonly<Record<string, UlkeTicariAyar>> = {
       saltOkunurBant: 'Read-only: your free trial has ended. Your patients and notes are safe.',
       yukseltDugme: 'Upgrade',
     },
-    demo: { adres: 'https://cal.com/han-mamur-sugmbo/demo-tr' },
+    // NOTYA-DEMO-DIL-01b (Kaan, 2026-11-06): the Australian page books Dr. Mamur's own AU event, not the Turkish one.
+    demo: { adres: 'https://app.cal.com/han-mamur-sugmbo/demo-au' },
     demoDugmesi: 'Book a 30-minute private demo',
     // GST answer of the Australian lawyer (2026-11-05): invoices/receipts note that the supplier is a non-resident.
     faturaNotu: 'Supplier: Notya LLC, a United States company (3424 Sollers Point Rd., Baltimore, MD 21222, USA). Notya LLC is a non-resident supplier with no Australian ABN.',
