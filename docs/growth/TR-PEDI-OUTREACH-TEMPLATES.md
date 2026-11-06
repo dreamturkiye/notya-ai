@@ -15,11 +15,13 @@ Doktor mesajında: ABD / görüntülü / demo / free trial yok. Tamamen Türkçe
 
 ## WhatsApp / SMS (Kaan — birincil)
 
-**Gönderim sırası (grafikli deneme):**
-1. Önce 2 görsel (galeriden): `docs/growth/outreach-assets/notya-wa-zaman.png` + `notya-wa-kalite.png`
-2. Sonra tek metin mesajı (aşağıdaki) — boş satır + Tanıtım / Demo + ücretsiz deneme.
+**Gönderim sırası (grafikli deneme — en fazla 2 görsel):**
+1. Galeriden **2 kart** seç:
+   - Varsayılan: `notya-wa-zaman.png` + `notya-wa-meslektas.png` (saat + meslektaş)
+   - Alternatif: `zaman` + `kalite` (saat + bakım)
+2. Sonra tek metin — boş satır + Tanıtım / Demo + ücretsiz deneme.
 
-Ham Cal.com yok. Önizleme kartı rahatsız ederse X ile kapat.
+Kartlar: `docs/growth/outreach-assets/` · Ham Cal.com yok. Önizleme rahatsız ederse X.
 
 **KD (genel + riskli gebelik + operatör harmanı):**
 
@@ -39,6 +41,8 @@ topluyoruz.
 
 Yoğun günlerde not, reçete, takip ve ön büro işlerinden yaklaşık 1,5–2 saat kazandırıyor;
 kayıtlar daha düzenli olduğu için bakım kalitesine de yansıyor.
+Branşınızdaki meslektaşlarınız da bakmaya başladı — geride kalmamak için
+kısa bir bakış çoğu zaman yeterli oluyor.
 
 Dr. Gökhan Mamur 30 dakikalık kısa tanıtımlar yapıyor 🩺
 Saatler sizin uygunluğunuza göre ayarlanıyor.
@@ -72,6 +76,8 @@ hasta portalı dahildir. Her karar sizin onayınızla.
 
 Yoğun bir günde not, reçete, takip ve ön büro işlerinden yaklaşık 1,5–2 saat
 kazandırır; daha düzenli kayıtlarla bakım kalitesine de katkı sağlar.
+Branşınızdaki meslektaşlarınız da bakmaya başladı — geride kalmamak için
+kısa bir bakış çoğu zaman yeterli.
 
 Dr. Gökhan Mamur 30 dakikalık kısa tanıtım yapıyor; saatler sizin diliminizde.
 

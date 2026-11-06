@@ -6,5 +6,7 @@ Kaan’ın soğuk WhatsApp’ına eklenen 1080×1080 PNG’ler — metinden önc
 |-------|--------|
 | `notya-wa-zaman.png` | Günde **1,5–2 saat** size kalsın |
 | `notya-wa-kalite.png` | Bakım kalitesi **sınıf atlar** |
+| `notya-wa-meslektas.png` | Meslektaşlarınız ilerlerken **geride kalmayın** |
 
-Renk: paper `#f5f1ea` · pine `#0e6b66`. JPG kopyaları yedek (GenerateImage); gönderimde **PNG** tercih.
+WhatsApp’ta **en fazla 2** kart: varsayılan `zaman` + `meslektas`.  
+Renk: paper `#f5f1ea` · pine `#0e6b66`. Gönderimde **PNG**.

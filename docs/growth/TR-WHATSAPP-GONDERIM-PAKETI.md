@@ -1,8 +1,9 @@
 # WhatsApp gönderim paketi — isimli metinler
 
-**Güncel gönderim (grafikli deneme):** 2 görsel → tek metin (içinde Tanıtım / Demo + ücretsiz deneme).  
-Görseller: `docs/growth/outreach-assets/notya-wa-zaman.png` + `notya-wa-kalite.png`  
-Eski “Balon 1 / Balon 2” metinleri yedek; Cengiz’den itibaren tek mesaj + görsel kullan.
+**Güncel gönderim (grafikli deneme):** en fazla **2 görsel** → tek metin (Tanıtım / Demo + ücretsiz deneme).  
+Varsayılan çift: `notya-wa-zaman.png` + `notya-wa-meslektas.png` (saat + meslektaş geride kalmama).  
+Alternatif: `zaman` + `kalite`. Klasör: `docs/growth/outreach-assets/`.  
+Eski “Balon 1 / Balon 2” yedek; Cengiz’den itibaren tek mesaj + görsel.
 
 Toplam: 30 kişi
 
@@ -82,7 +83,7 @@ Tanıtıma vaktiniz yoksa da sorun değil, ücretsiz denemeyi hemen açabiliyoru
 ## 3. Op. Dr. Cengiz Sağıroğlu ← SIRADAKİ (grafikli)
 **kadin-dogum** · Kadıköy · `+90 555 052 64 58` · WA: `+905550526458`
 
-**Sıra:** ① `notya-wa-zaman.png` ② `notya-wa-kalite.png` ③ tek metin (kopyala):
+**Sıra:** ① `notya-wa-zaman.png` ② `notya-wa-meslektas.png` ③ tek metin (kopyala):
 
 ```
 Cengiz Hocam merhaba 👋
@@ -100,6 +101,8 @@ topluyoruz.
 
 Yoğun günlerde not, reçete, takip ve ön büro işlerinden yaklaşık 1,5–2 saat kazandırıyor;
 kayıtlar daha düzenli olduğu için bakım kalitesine de yansıyor.
+Branşınızdaki meslektaşlarınız da bakmaya başladı — geride kalmamak için
+kısa bir bakış çoğu zaman yeterli oluyor.
 
 Dr. Gökhan Mamur 30 dakikalık kısa tanıtımlar yapıyor 🩺
 Saatler sizin uygunluğunuza göre ayarlanıyor.

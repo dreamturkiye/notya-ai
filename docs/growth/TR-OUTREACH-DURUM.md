@@ -5,7 +5,8 @@
 ## Şimdi — 2026-11-06 ~18:10 TR
 
 - **Sıradaki:** Op. Dr. Cengiz Sağıroğlu (KD · Kadıköy · `+905550526458`) — **henüz yollanmadı**.
-- **Grafikli deneme:** önce 2 PNG (`docs/growth/outreach-assets/`), sonra tek metin (`TR-WHATSAPP-GONDERIM-PAKETI.md` §3).
+- **Grafikli deneme:** `zaman` + `meslektas` → tek metin (§3). Kalite kartı yedek.
+- Metinde meslektaş satırı var (geride kalmama — sert FOMO yok).
 - 20:00 TR’den önce Cengiz’i bitir; sonra Timuçin → `tr-whatsapp-next-batch.csv`.
 
 ## Bugün / dün gidenler (WhatsApp)
@@ -33,4 +34,4 @@ Harvest: İstanbul ana → Ankara + İzmir. Sabah dalgası hâlâ koşuyor olabi
 
 - Ham Cal.com **yok** → `https://www.notya.io/demo`
 - WhatsApp önizleme rahatsız ederse X ile kapat
-- Kartlar: `notya-wa-zaman.png` (1,5–2 saat) + `notya-wa-kalite.png` (bakım kalitesi)
+- Kartlar: `zaman` · `kalite` · `meslektas` — gönderimde 2’si
