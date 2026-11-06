@@ -150,7 +150,8 @@ Tanıtıma vakit yoksa ücretsiz denemeyi hemen açabiliyoruz.
 
 ---
 ## 5. Op. Dr. Tonguç Arslan ← SIRADAKİ
-**kadin-dogum** · Üsküdar · `+90 523 721 44 32` · WA: `+905237214432`
+**kadin-dogum** · Üsküdar · `+90 532 486 49 16` · WA: `+905324864916`  
+*(numara düzeltildi — eski `+905237214432` yanlış)*
 
 **Gönder:** yapıştır → kart çıkarsa **X** → gönder.
 

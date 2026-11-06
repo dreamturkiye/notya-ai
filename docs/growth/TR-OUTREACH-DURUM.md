@@ -1,6 +1,6 @@
 # TR outreach durum (canlı)
 
-**Sıradaki:** Op. Dr. **Tonguç Arslan** · KD · Üsküdar · `+905237214432`  
+**Sıradaki:** Op. Dr. **Tonguç Arslan** · KD · Üsküdar · `+905324864916` (düzeltildi)  
 Yapıştır → kart varsa **X** → gönder.
 
 ## Gidenler (bugün)
