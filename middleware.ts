@@ -19,6 +19,8 @@ const PROTECTED_ROUTES = [
 const PUBLIC_ROUTES = [
   '/api/billing/webhook',
   '/api/whatsapp/webhook',
+  // NOTYA-DEMO-EPOSTA-01: Cal.com webhook (HMAC-signed; the route checks the signature itself).
+  '/api/demo/cal-webhook',
   '/api/auth',
   '/api/sandbox',
   '/sandbox',

@@ -21,14 +21,41 @@ so a word in another language on our own part of these pages fails the test.
   supports for the UZ page in all three forms (Uzbek Latin, Uzbek Cyrillic, Russian), because one event type has one
   interface language. Optional, same screen: event titles show as "Demo-TR", "Demo-USA" and so on. After the change,
   Claude re-checks each page once.
-- **NOTYA-DEMO-DIL-01b — waits on Kaan's go, then Claude.** au.notya.io/au/demo embeds **`han-mamur-sugmbo/demo-tr`**: the
+- **NOTYA-DEMO-DIL-01b — DONE 2026-11-06 (Kaan's go via the coordinator; Claude set the value, production only).** Was: au.notya.io/au/demo embeds **`han-mamur-sugmbo/demo-tr`**: the
   Turkish event, with its Turkish description "Notya'ya hoşgeldiniz!", on the Australian page. The Vercel project
   `notya-au-preview` has `NEXT_PUBLIC_DEMO_BOOKING_URL` set to the TR event. Fix: set it to
   `https://app.cal.com/han-mamur-sugmbo/demo-au` (the event exists, "Introducing Notya!") and redeploy release/au. The
   value is inlined at build time, so the change needs a new build.
-- **NOTYA-DEMO-DIL-01c — owner Claude.** uz.notya.io (`/uz/demo`, `/demo`, …) answers Vercel's platform `404 NOT_FOUND`
-  on 2026-11-06, although the `uz` CNAME → cname.vercel-dns.com exists. The UZ page could not be checked live. Next step:
-  check the `uz.notya.io` domain binding and the latest production deployment of `notya-uz-preview`.
+- **NOTYA-DEMO-DIL-01c — CLOSED 2026-11-06 (Claude): not a fault.** The 404 came from testing the wrong path. Uzbekistan's
+  build is served under the prefix `/uzbek` (countries/uz/derleme.mjs), not `/uz`: `uz.notya.io/` redirects to
+  `/uzbek` and the demo page is `uz.notya.io/uzbek/demo` (live, embeds `demo-uz`, verified in Chrome). The domain, the
+  project `notya-uz-preview` and its production deployment were all correct.
+- **NOTYA-DEMO-BASLIK-01 — CLOSED 2026-11-06 (Claude).** On www.notya.io/demo (and /doktor, /notya-klinik) the fixed
+  top bar was see-through: its class `bg-paper/92` has no Tailwind opacity step, so the compiled Türkiye sheet never
+  contained it and page text showed through the bar (Kaan's Safari screenshot). Fixed in app/doktor/landing.css with the
+  same rule the country sheet already has (components/ulke/acilis/acilis.css), so every country now has the same bar. A
+  test fails if a bar class has no CSS rule.
+- **NOTYA-DEMO-DIL-01a update (2026-11-06):** the coordinator reports these interface languages are now set in Cal.com
+  (TR Türkçe, the five English events English, UZ Russian; Demo-TR calendar event name `Notya Demo – {Scheduler}`).
+  Claude checked the TR page once after the deploy (see the final report).
+- **NOTYA-DEMO-EPOSTA-01 — our own demo-booking e-mail (Kaan's go, 2026-11-06). Shipped on main; waits on Kaan for
+  two settings before the first mail goes out.** Cal.com confirms bookings but sends the attendee nothing (tested with
+  iCloud and Gmail), so `POST https://www.notya.io/api/demo/cal-webhook` now receives Cal.com's BOOKING_CREATED,
+  BOOKING_RESCHEDULED and BOOKING_CANCELLED deliveries. It checks the HMAC signature (`X-Cal-Signature-256`, secret
+  `CAL_WEBHOOK_SECRET`), rate-limits per IP and sends one e-mail per attendee through Resend from `Notya <demo@notya.io>`
+  (Reply-To the doctor). The e-mail is idempotent per booking, event and recipient (Resend `Idempotency-Key`) and
+  stores nothing. It is written in the event's country language (lib/demo/calOnay/metinler.ts: TR Turkish with
+  Dr. Gökhan Mamur; US/UK/CA/NZ/AU English in local spelling with Dr. Han Mamur; UZ Uzbek Latin + Russian), with the
+  time in the attendee's own zone, the call link, an .ics file and Cal.com's cancel/reschedule links. The look is the
+  same as the intake e-mail. `CAL_WEBHOOK_SECRET` is set on `notya-ai` Production; the value is only in Claude's
+  scratch file for Kaan to paste.
+  **Waits on Kaan (1):** `RESEND_API_KEY` is **not set** on the `notya-ai` project (no Resend key exists in its env).
+  Until it is, the route answers 503 and sends nothing. In Resend, create an API key with sending access for the
+  domain notya.io and set it as `RESEND_API_KEY` (Production, sensitive) on `notya-ai`, then redeploy.
+  **Waits on Kaan (2):** in Cal.com → Settings → Developer → Webhooks → New: Subscriber URL
+  `https://www.notya.io/api/demo/cal-webhook`; triggers Booking Created, Booking Rescheduled, Booking Cancelled; Secret
+  = the value in the scratch file; payload template default. Optional (owner Claude, after the first live mail): drop
+  Cal.com's own attendee e-mail entirely if it ever starts working, so attendees don't get two.
 - **NOTYA-DEMO-MAIL-01 — missing attendee e-mail on Kaan's test booking (Demo-TR, Fri 6 Nov 2026, confirmed in Cal; host
   e-mail received, attendee e-mail never arrived).** Read-only checks of the public event data: `requiresConfirmation`
   false, `metadata` {} (so `disableStandardEmails` is not set for host or attendee), `workflows` [] (no workflow replaces

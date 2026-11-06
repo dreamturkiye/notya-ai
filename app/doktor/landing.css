@@ -128,3 +128,11 @@
     transform: none;
   }
 }
+
+/* NOTYA-DEMO-BASLIK-01 (Kaan, 2026-11-06): the fixed top bar (site-nav, klinik-landing nav, Notya Klinik shell) uses
+   `bg-paper/92`, but Tailwind has no opacity step 92, so the compiled utilities.css never had that class and the bar was
+   fully transparent — page text scrolled visibly through it (Safari and every other browser). The country landing sheet
+   writes the same rule (components/ulke/acilis/acilis.css); this is Türkiye's copy of it, same value. */
+.doktor-lp .bg-paper\/92 {
+  background-color: rgb(243 246 245 / 0.92);
+}
