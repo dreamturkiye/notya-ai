@@ -93,7 +93,12 @@ export function araciBicimle(a: HamArac, bicim: EnBicim, degisen?: EnDegisen, ek
   // The country's own bands replace the kit's, so their names are the country's alone; every other group is the set's with the country's words over it.
   const kendiBantlari = Boolean(ek?.uyarlama?.bantlar)
   const grup = (ad: 'alanlar' | 'sayilar' | 'bantlar' | 'uyarilar') => { const temel = ad === 'bantlar' && kendiBantlari ? undefined : cevir(a[ad], bicim); return temel || degisen?.[ad] ? { ...(temel ?? {}), ...kendi(degisen?.[ad]) } : undefined }
-  const secenekler = a.secenekler || degisen?.secenekler ? { ...Object.fromEntries(Object.entries(a.secenekler ?? {}).map(([k, v]) => [k, cevir(v, bicim)!])), ...Object.fromEntries(Object.entries(degisen?.secenekler ?? {}).map(([k, v]) => [k, kendi(v)])) } : undefined
+  // GENITAL-ESTETIK-01: a country that offers FEWER options of a field (`uyarlama.secenekler`) gets the names and the
+  // pre-filled paragraphs of exactly those options (the pack check refuses a word for an option the field does not have).
+  const kisit = ek?.uyarlama?.secenekler
+  const kisitla = <T,>(alan: string, o: Readonly<Record<string, T>>): Record<string, T> => (kisit?.[alan] ? Object.fromEntries(Object.entries(o).filter(([k]) => kisit[alan].includes(k))) : { ...o })
+  const secenekler0 = a.secenekler || degisen?.secenekler ? { ...Object.fromEntries(Object.entries(a.secenekler ?? {}).map(([k, v]) => [k, cevir(v, bicim)!])), ...Object.fromEntries(Object.entries(degisen?.secenekler ?? {}).map(([k, v]) => [k, kendi(v)])) } : undefined
+  const secenekler = secenekler0 ? Object.fromEntries(Object.entries(secenekler0).map(([k, v]) => [k, kisitla(k, v)])) : undefined
   const tarihler = a.tarihler || degisen?.tarihler ? { ...(cevir(a.tarihler, bicim) ?? {}), ...kendi(degisen?.tarihler) } : undefined
   // A COUNTRY THAT CHOOSES THE FIELDS OF A GROUP (`uyarlama.alanlar`, NOTYA-ULKE-ARAC-DUZELTME-01) keeps the set's words
   // only for the fields it has: a label for a field that is not on its screen would be refused by the pack check.
@@ -122,6 +127,6 @@ export function araciBicimle(a: HamArac, bicim: EnBicim, degisen?: EnDegisen, ek
     ...(ek?.uyarlama ? { uyarlama: ek.uyarlama } : {}),
     ...(ek?.hasta ? { hasta: ek.hasta.kapi } : {}),
     ...(ek?.lisans ? { lisans: lisansiBicimle(ek.lisans, bicim) } : {}),
-    ...(a.sablonlar ? { sablonlar: Object.fromEntries(Object.entries(a.sablonlar).map(([alan, sec]) => [alan, Object.fromEntries(Object.entries(sec).map(([o, al]) => [o, cevir(al, bicim)!]))])) } : {}),
+    ...(a.sablonlar ? { sablonlar: Object.fromEntries(Object.entries(a.sablonlar).map(([alan, sec]) => [alan, kisitla(alan, Object.fromEntries(Object.entries(sec).map(([o, al]) => [o, cevir(al, bicim)!])))])) } : {}),
   }
 }

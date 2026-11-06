@@ -9,7 +9,7 @@
  * Hymenoplasty is NOT a form here (Kaan's decision pending; it is not among the operation-note templates either).
  */
 
-export const ONAM_PROSEDURLERI = ['sezaryen', 'tlh', 'tah', 'vajinal_histerektomi', 'lap_myomektomi', 'abdominal_myomektomi', 'tanisal_laparoskopi', 'lap_over_kistektomi', 'lap_endometriozis', 'histeroskopi', 'dc_kuretaj', 'vakum_aspirasyon', 'kolposkopi_leep', 'ria', 'labioplasti', 'perineoplasti'] as const
+export const ONAM_PROSEDURLERI = ['sezaryen', 'tlh', 'tah', 'vajinal_histerektomi', 'lap_myomektomi', 'abdominal_myomektomi', 'tanisal_laparoskopi', 'lap_over_kistektomi', 'lap_endometriozis', 'histeroskopi', 'dc_kuretaj', 'vakum_aspirasyon', 'kolposkopi_leep', 'ria', 'labioplasti', 'perineoplasti', 'labioplasti_klitoral', 'vajinoplasti'] as const
 export type OnamProseduru = (typeof ONAM_PROSEDURLERI)[number]
 
 /** Risks grouped as the national consent series group them: serious (uncommon but grave) and frequent. */
@@ -35,8 +35,12 @@ export const ONAM_YAPILARI: Readonly<Record<OnamProseduru, OnamYapisi>> = {
   vakum_aspirasyon: { ciddi: ['uterus_perforasyonu', 'kanama_transfuzyon', 'servikal_yaralanma', 'intrauterin_yapisiklik'], sik: ['kanama', 'enfeksiyon', 'kalinti_doku_tekrar_islem'], ekIslemler: ['laparoskopi', 'tekrar_islem'] },
   kolposkopi_leep: { ciddi: ['ciddi_kanama', 'servikal_darlik', 'sonraki_gebelikte_erken_dogum'], sik: ['akinti', 'kanama', 'enfeksiyon', 'tekrar_tedavi'], ekIslemler: ['biyopsi', 'ek_eksizyon'] },
   ria: { ciddi: ['uterus_perforasyonu', 'ektopik_gebelik', 'pelvik_enfeksiyon'], sik: ['kramp_agri', 'duzensiz_kanama', 'ekspulsiyon'], ekIslemler: ['cikarma_icin_histeroskopi'] },
-  labioplasti: { ciddi: ['kanama_hematom', 'yara_ayrilmasi', 'his_degisikligi', 'asimetri_revizyon'], sik: ['sislik_agri', 'enfeksiyon', 'disparoni_gecici'], ekIslemler: ['revizyon'] },
+  labioplasti: { ciddi: ['kanama_hematom', 'yara_ayrilmasi', 'his_degisikligi', 'asimetri_revizyon', 'beklentiyle_uyumsuz_sonuc'], sik: ['sislik_agri', 'enfeksiyon', 'disparoni_gecici'], ekIslemler: ['revizyon'] },
   perineoplasti: { ciddi: ['kanama_hematom', 'rektum_yaralanmasi', 'disparoni', 'yara_ayrilmasi'], sik: ['agri', 'enfeksiyon', 'idrar_yolu_enfeksiyonu', 'tekrar'], ekIslemler: ['revizyon'] },
+  // GENITAL-ESTETIK-01 (2026-11-06): the clitoral-hood variant of labioplasty (ACOG Committee Opinion 795 lists clitoral hood
+  // reduction among female genital cosmetic procedures) and a dedicated vaginoplasty / colpoperineorrhaphy.
+  labioplasti_klitoral: { ciddi: ['kanama_hematom', 'yara_ayrilmasi', 'his_degisikligi', 'klitoral_his_degisikligi', 'asimetri_revizyon', 'beklentiyle_uyumsuz_sonuc'], sik: ['sislik_agri', 'enfeksiyon', 'disparoni_gecici'], ekIslemler: ['revizyon'] },
+  vajinoplasti: { ciddi: ['kanama_hematom', 'rektum_yaralanmasi', 'introitus_darligi', 'disparoni', 'yara_ayrilmasi', 'beklentiyle_uyumsuz_sonuc'], sik: ['agri', 'enfeksiyon', 'idrar_yolu_enfeksiyonu', 'tekrar'], ekIslemler: ['revizyon'] },
 }
 
 /** Every risk key used by any form: a build names each one (its test holds it to that). */

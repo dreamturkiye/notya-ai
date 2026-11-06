@@ -65,13 +65,24 @@ export const AMELIYAT_NOTU: AracTanimi = {
 
 /** The obstetric and gynaecological operations whose standard steps a pack may pre-fill (`PaketAraci.sablonlar.sablon`). */
 export const KD_AMELIYAT_SABLONLARI = ['sezaryen', 'tlh', 'tah', 'vajinal_histerektomi', 'lap_myomektomi', 'abdominal_myomektomi', 'tanisal_laparoskopi', 'lap_over_kistektomi', 'lap_endometriozis', 'histeroskopi', 'dc_kuretaj', 'vakum_aspirasyon', 'kolposkopi_leep', 'ria', 'labioplasti', 'perineoplasti'] as const
+/**
+ * GENITAL-ESTETIK-01 (2026-11-06): on this note — which has NO age gate, so that medically indicated surgery for a minor is
+ * never blocked — labiaplasty and perineoplasty are MEDICALLY INDICATED ONLY: the note is complete only with the tick and
+ * the reason. A cosmetic genital operation is written with the adult genital-aesthetics note (./genitalEstetik.ts), which
+ * every pack gates at 18 or over.
+ */
+export const KD_GENITAL_SABLONLARI: readonly string[] = ['labioplasti', 'perineoplasti']
+const KD_GENITAL_KOSUL = { alan: 'sablon', degerler: KD_GENITAL_SABLONLARI } as const
 /** THE SAME NOTE, with the choice of an obstetric or gynaecological operation whose steps the pack pre-fills. O&G roles only. */
 export const AMELIYAT_NOTU_KD: AracTanimi = {
   anahtar: 'ameliyat-notu-kd', tur: 'liste', yazdirilir: true,
-  alanlar: [secim('sablon', KD_AMELIYAT_SABLONLARI, true), ...AMELIYAT_ALANLARI],
+  alanlar: [secim('sablon', KD_AMELIYAT_SABLONLARI, true), { anahtar: 'tibbi_endikasyon', tur: 'isaret', kosul: KD_GENITAL_KOSUL }, paragraf('tibbi_gerekce', { kosul: KD_GENITAL_KOSUL }), ...AMELIYAT_ALANLARI],
   cikti: { sayilar: [], bantlar: [], uyarilar: [], tarihler: ['tarih'] },
   kaynak: AMELIYAT_KAYNAK,
-  hesapla: (g) => ameliyatNotuHesapla(g),
+  hesapla: (g) => {
+    if (typeof g.sablon === 'string' && KD_GENITAL_SABLONLARI.includes(g.sablon) && !(g.tibbi_endikasyon === true && dolu(g.tibbi_gerekce))) return BOS_SONUC
+    return ameliyatNotuHesapla(g)
+  },
 }
 
 // ───────────────────────── obstetric ultrasound ─────────────────────────

@@ -26,7 +26,7 @@ ingilizcePaketSinamasi({
   // off by Kaan's order of 2026-10-10 (NOTYA-ULKE-ARAC-01b): these four. The dose calculator was switched back on by his
   // order of the same day, after its fault was corrected in the kit (./araclar.ts). A third kidney tool, added later,
   // is off for an unrelated reason: a brand-new tool pending a clinician's sign-off.
-  kapaliAraclar: ['akne-vade', 'esi-triyaj', 'kbh-risk-kategorisi', 'kdigo-evre', 'kdigo-serit', 'lazer-vade', 'rapor-taslagi'],
+  kapaliAraclar: ['akne-vade', 'esi-triyaj', 'genital-beyazlatma', 'genital-enerji-seansi', 'genital-enjeksiyon', 'kbh-risk-kategorisi', 'kdigo-evre', 'kdigo-serit', 'lazer-vade', 'rapor-taslagi'],
   // the tools only this country has, all switched on (./kendiAraclari.ts; ./gb-araclar.test.ts tests each against its source)
   ekAraclar: ['gb-eps-link', 'gb-four-at', 'gb-fracture-risk-link', 'gb-immunisation-schedule', 'gb-ktg-nice', 'gb-medicine-list', 'gb-notifiable-diseases', 'gb-prescription-note', 'gb-valproate-forms'],
   birimler: { agirlik: 'kg', boy: 'cm', sicaklik: 'C' },
