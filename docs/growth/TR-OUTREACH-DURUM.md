@@ -22,7 +22,17 @@
 | 7 | Sinem Tekin | KD | gitti |
 | — | **Cengiz Sağıroğlu** | KD | **YARIN** |
 
-## Liste büyütme
+## Liste büyütme (2026-11-05 gece → 11-06 sabah)
 
-Harvest öncelik: **İstanbul (ana)** → Ankara + İzmir (ikincil), pediatri + KD + dermatoloji.  
-Public listing + WhatsApp mobil enrich → `tr-call-ready-leads.csv` / `tr-whatsapp-next-batch.csv`.
+Harvest öncelik: **İstanbul (ana)** → Ankara + İzmir (ikincil).
+
+**İstanbul dalgası bitti (20:18 UTC):**
+- **3 350** profil tarandı (pedi 1300 / KD 1319 / derm 731)
+- **1 696** özel muayenehane adayı
+- **1 655** call-ready (özel + telefon)
+- WhatsApp mobil batch hâlâ ~**28** (enrich yeni korpus üzerinde yeniden çalışıyor)
+- Ankara/İzmir dalgası sırada
+
+## Cal link önizlemesi
+
+Büyük Cal.com kartı **istemiyoruz** — Balon 2’de önizlemeyi X ile kapat veya `https://` olmadan düz URL yaz (`cal.com/...`).

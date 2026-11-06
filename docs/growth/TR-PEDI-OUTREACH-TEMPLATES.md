@@ -52,12 +52,17 @@ dermoskopi/önce-sonra foto arşivi ve biyolojik SUT taslağı branşa özel ile
 
 Pediatri — genel pitch + `40’tan fazla branş`; KD/derm listelerini yazma.
 
-**Balon 2 — linkler:**
+**Balon 2 — linkler (Cal büyük grafik istemiyoruz):**
+
+WhatsApp’ta Cal.com linki büyük İngilizce önizleme kartı açıyor; ana metinden çalıyor.  
+**Göndermeden önce önizlemeyi X ile kapat** veya `https://` olmadan düz yaz:
 
 ```
-📅 Tanıtım için takvim: https://cal.com/han-mamur-sugmbo/demo-tr
-🔗 Ücretsiz deneme: https://www.notya.io
+📅 Tanıtım takvimi: cal.com/han-mamur-sugmbo/demo-tr
+🔗 Ücretsiz deneme: www.notya.io
 ```
+
+(İstersen önce yalnız `www.notya.io`; takvim linkini cevap gelince ayrı at.)
 
 ## E-posta (Kaan)
 
