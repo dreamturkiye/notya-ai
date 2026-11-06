@@ -52,17 +52,16 @@ dermoskopi/önce-sonra foto arşivi ve biyolojik SUT taslağı branşa özel ile
 
 Pediatri — genel pitch + `40’tan fazla branş`; KD/derm listelerini yazma.
 
-**Balon 2 — linkler (Cal büyük grafik istemiyoruz):**
+**Balon 2 — linkler:**
 
-WhatsApp’ta Cal.com linki büyük İngilizce önizleme kartı açıyor; ana metinden çalıyor.  
-**Göndermeden önce önizlemeyi X ile kapat** veya `https://` olmadan düz yaz:
+Doğrudan Cal.com **verme** (büyük İngilizce kart). Tanıtım için Notya sayfası:
 
 ```
-📅 Tanıtım takvimi: cal.com/han-mamur-sugmbo/demo-tr
-🔗 Ücretsiz deneme: www.notya.io
+📅 Tanıtım / randevu: https://www.notya.io/demo
+🔗 Ücretsiz deneme: https://www.notya.io
 ```
 
-(İstersen önce yalnız `www.notya.io`; takvim linkini cevap gelince ayrı at.)
+(`notya.io/demo` Cal’i gömülü açar; WhatsApp önizlemesi Notya markalı kalır. Kart yine büyükse X ile kapat.)
 
 ## E-posta (Kaan)
 
@@ -80,8 +79,7 @@ kazandırır; daha düzenli kayıtlarla bakım kalitesine de katkı sağlar.
 
 Dr. Gökhan Mamur 30 dakikalık kısa tanıtım yapıyor; saatler sizin diliminizde.
 
-Tanıtım takvimi: https://cal.com/han-mamur-sugmbo/demo-tr
-Sayfa: https://www.notya.io/demo
+Tanıtım / randevu: https://www.notya.io/demo
 
 Tanıtıma vakit yoksa ücretsiz deneme: https://www.notya.io
 Uygunsa bir slot seçmeniz yeterli; iki meslektaşınıza da iletmenizi rica ederiz.
@@ -96,7 +94,7 @@ Kaan · Notya · merhaba@notya.io
 Hocam, tanıtıma vakit yoksa Notya ücretsiz denemesini hemen açabiliriz.
 Bağlantı: https://www.notya.io
 Takıldığınız yerde kısa tanıtıma da dönebilirsiniz:
-https://cal.com/han-mamur-sugmbo/demo-tr
+https://www.notya.io/demo
 ```
 
 ## Tanıtım kapanış
@@ -104,7 +102,7 @@ https://cal.com/han-mamur-sugmbo/demo-tr
 ```
 Teşekkürler hocam. Ücretsiz deneme hesabınız açık / açıyoruz.
 İki meslektaşınıza da bu bağlantıyı atmanızı rica ederiz:
-https://cal.com/han-mamur-sugmbo/demo-tr
+https://www.notya.io/demo
 (veya bana WhatsApp’tan yazın — Kaan)
 ```
 
