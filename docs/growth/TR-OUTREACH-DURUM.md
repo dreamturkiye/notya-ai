@@ -1,14 +1,14 @@
 # TR outreach durum (canlı)
 
-**Sessiz saat:** Türkiye **20:00 sonrası** soğuk WhatsApp yok. Güvenli pencere ~**10:00–19:00 TR**.
+**Sessiz saat:** Türkiye **20:00 sonrası** soğuk WhatsApp yok. Güvenli pencere ~**10:00–19:00 TR** (acil değilse 19:00’a kadar bitir).
 
-## Duraklatıldı — 2026-11-05 ~20:30 TR
+## Şimdi — 2026-11-06 ~18:10 TR
 
-- Sonraki gönderim: **Op. Dr. Cengiz Sağıroğlu** (KD · Kadıköy · `+905550526458`) — **henüz yollanmadı**.
-- **Yarın sabah (~10:00 TR)** Cengiz ile devam; sonra `tr-whatsapp-next-batch.csv` sırası (Timuçin → …).
-- KD metin: poliklinik + riskli gebelik + operatör harmanı (`TR-PEDI-OUTREACH-TEMPLATES.md`).
+- **Sıradaki:** Op. Dr. Cengiz Sağıroğlu (KD · Kadıköy · `+905550526458`) — **henüz yollanmadı**.
+- **Grafikli deneme:** önce 2 PNG (`docs/growth/outreach-assets/`), sonra tek metin (`TR-WHATSAPP-GONDERIM-PAKETI.md` §3).
+- 20:00 TR’den önce Cengiz’i bitir; sonra Timuçin → `tr-whatsapp-next-batch.csv`.
 
-## Bugün gidenler (WhatsApp)
+## Bugün / dün gidenler (WhatsApp)
 
 | # | İsim | Branş | Not |
 |---|------|-------|-----|
@@ -20,19 +20,17 @@
 | 5 | Dilek Başaran | derm | gitti (`+905458150451`) |
 | 6 | Sema Süzen Çaypınar | KD | gitti (yeni harman metin) |
 | 7 | Sinem Tekin | KD | gitti |
-| — | **Cengiz Sağıroğlu** | KD | **YARIN** |
+| — | **Cengiz Sağıroğlu** | KD | **SIRADAKİ · grafikli** |
 
-## Liste büyütme (2026-11-05 gece → 11-06 sabah)
+## Liste büyütme
 
-Harvest öncelik: **İstanbul (ana)** → Ankara + İzmir (ikincil).
+Harvest: İstanbul ana → Ankara + İzmir. Sabah dalgası hâlâ koşuyor olabilir.
 
-**İstanbul dalgası bitti (20:18 UTC):**
-- **3 350** profil tarandı (pedi 1300 / KD 1319 / derm 731)
-- **1 696** özel muayenehane adayı
-- **1 655** call-ready (özel + telefon)
-- WhatsApp mobil batch hâlâ ~**28** (enrich yeni korpus üzerinde yeniden çalışıyor)
-- Ankara/İzmir dalgası sırada
+- Korpus: **~3 350** profil · call-ready **~1 655**
+- WA mobil batch: `tr-whatsapp-next-batch.csv` (~28) — enrich devam
 
-## Cal link önizlemesi
+## Link / görsel notları
 
-Büyük Cal.com kartı **istemiyoruz** — Balon 2’de önizlemeyi X ile kapat veya `https://` olmadan düz URL yaz (`cal.com/...`).
+- Ham Cal.com **yok** → `https://www.notya.io/demo`
+- WhatsApp önizleme rahatsız ederse X ile kapat
+- Kartlar: `notya-wa-zaman.png` (1,5–2 saat) + `notya-wa-kalite.png` (bakım kalitesi)

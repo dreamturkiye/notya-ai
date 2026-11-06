@@ -1,5 +1,9 @@
 # WhatsApp gönderim paketi — isimli metinler
-Her kişi için: Balon 1 (metin) → Balon 2 (linkler). Numarayı yapıştır, gönder.
+
+**Güncel gönderim (grafikli deneme):** 2 görsel → tek metin (içinde Tanıtım / Demo + ücretsiz deneme).  
+Görseller: `docs/growth/outreach-assets/notya-wa-zaman.png` + `notya-wa-kalite.png`  
+Eski “Balon 1 / Balon 2” metinleri yedek; Cengiz’den itibaren tek mesaj + görsel kullan.
+
 Toplam: 30 kişi
 
 ---
@@ -75,10 +79,10 @@ Tanıtıma vaktiniz yoksa da sorun değil, ücretsiz denemeyi hemen açabiliyoru
 ```
 
 ---
-## 3. Op. Dr. Cengiz Sağıroğlu
+## 3. Op. Dr. Cengiz Sağıroğlu ← SIRADAKİ (grafikli)
 **kadin-dogum** · Kadıköy · `+90 555 052 64 58` · WA: `+905550526458`
 
-**Balon 1:**
+**Sıra:** ① `notya-wa-zaman.png` ② `notya-wa-kalite.png` ③ tek metin (kopyala):
 
 ```
 Cengiz Hocam merhaba 👋
@@ -88,10 +92,11 @@ Notya, hekimler için yapay zekâ klinik asistanı: muayeneyi dinler, notunuzu y
 reçete ve rapor taslağını hazırlar, hastanızı takipte tutar — hasta portalı dahil.
 Her karar sizin onayınızla. 40’tan fazla branşı kendi ihtiyaçlarıyla destekliyoruz.
 
-Kadın doğum tarafında operatör hekimlerle birlikte ilerliyoruz: sezaryen, histerektomi,
-myomektomi, laparoskopi, histeroskopi ve küretaj ameliyat notları; doğum epikrizi;
-Doppler’li obstetrik/jinekolojik USG raporu; yapılandırılmış NST — hepsi doğru başlıklı
-antetli kâğıda basılıyor.
+Kadın doğumda gebelik takvimi ve izlem, Doppler’li USG raporu, yapılandırılmış NST,
+obstetrik risk (preeklampsi / GDM / SSVD) ve sezaryen–ameliyat notlarından
+(histerektomi, myomektomi, laparoskopi, histeroskopi, küretaj) doğum epikrizi ve
+antetli baskıya kadar poliklinik + riskli gebelik + operatör işlerini birlikte
+topluyoruz.
 
 Yoğun günlerde not, reçete, takip ve ön büro işlerinden yaklaşık 1,5–2 saat kazandırıyor;
 kayıtlar daha düzenli olduğu için bakım kalitesine de yansıyor.
@@ -101,12 +106,8 @@ Saatler sizin uygunluğunuza göre ayarlanıyor.
 
 Tanıtıma vaktiniz yoksa da sorun değil, ücretsiz denemeyi hemen açabiliyoruz.
 İsterseniz kısaca bakabilirsiniz, uygun görürseniz devam ederiz.
-```
 
-**Balon 2:**
-
-```
-📅 Tanıtım için takvim: https://cal.com/han-mamur-sugmbo/demo-tr
+📅 Tanıtım / Demo: https://www.notya.io/demo
 🔗 Ücretsiz deneme: https://www.notya.io
 ```
 

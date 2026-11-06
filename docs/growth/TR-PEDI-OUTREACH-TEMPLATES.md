@@ -15,8 +15,11 @@ Doktor mesajında: ABD / görüntülü / demo / free trial yok. Tamamen Türkçe
 
 ## WhatsApp / SMS (Kaan — birincil)
 
-**Tek mesaj:** metin → boş satır → iki link. Ham Cal.com linki yok (`notya.io/demo`).  
-Önizleme kartı rahatsız ederse göndermeden X ile kapat.
+**Gönderim sırası (grafikli deneme):**
+1. Önce 2 görsel (galeriden): `docs/growth/outreach-assets/notya-wa-zaman.png` + `notya-wa-kalite.png`
+2. Sonra tek metin mesajı (aşağıdaki) — boş satır + Tanıtım / Demo + ücretsiz deneme.
+
+Ham Cal.com yok. Önizleme kartı rahatsız ederse X ile kapat.
 
 **KD (genel + riskli gebelik + operatör harmanı):**
 
