@@ -9,59 +9,57 @@ Kaynak: `lib/seo/doktor.ts`, `components/doktor-landing/content.ts` (HERO).
 **Ücretsiz deneme:** `https://www.notya.io`  
 **Hedef:** tanıtım randevusu ve/veya ücretsiz deneme → ağızdan ağıza.
 
-Doktor mesajında: ABD / görüntülü / demo / free trial yok. Tamamen Türkçe.
+Doktor mesajında: ABD / görüntülü / free trial yok. Tamamen Türkçe.  
+**Görsel ek yok** — tek WhatsApp metni; biçim `*kalın*` / madde işaretleri (WA native).
 
 ---
 
 ## WhatsApp / SMS (Kaan — birincil)
 
-**Gönderim sırası (grafikli deneme — en fazla 2 görsel):**
-1. Galeriden **2 kart** seç:
-   - Varsayılan: `notya-wa-zaman.png` + `notya-wa-meslektas.png` (saat + meslektaş)
-   - Alternatif: `zaman` + `kalite` (saat + bakım)
-2. Sonra tek metin — boş satır + Tanıtım / Demo + ücretsiz deneme.
+**Tek mesaj.** Ham Cal.com yok (`notya.io/demo`). Önizleme rahatsız ederse X.
 
-Kartlar: `docs/growth/outreach-assets/` · Ham Cal.com yok. Önizleme rahatsız ederse X.
+WhatsApp biçimi: `*kalın*` · `_italik_` · `•` maddeler. Düz paragraf yığını yok.
 
 **KD (genel + riskli gebelik + operatör harmanı):**
 
 ```
 Hocam merhaba 👋
-Ben Kaan, Notya’dan yazıyorum.
+Ben Kaan, *Notya*’dan yazıyorum.
 
-Notya, hekimler için yapay zekâ klinik asistanı: muayeneyi dinler, notunuzu yazar,
-reçete ve rapor taslağını hazırlar, hastanızı takipte tutar — hasta portalı dahil.
-Her karar sizin onayınızla. 40’tan fazla branşı kendi ihtiyaçlarıyla destekliyoruz.
+*Notya* — hekimler için yapay zekâ klinik asistanı.
+Muayeneyi dinler, notunuzu yazar, reçete ve rapor taslağını hazırlar, hastanızı takipte tutar — hasta portalı dahil.
+Her karar *sizin onayınızla*. 40’tan fazla branşı kendi ihtiyaçlarıyla destekliyoruz.
 
-Kadın doğumda gebelik takvimi ve izlem, Doppler’li USG raporu, yapılandırılmış NST,
-obstetrik risk (preeklampsi / GDM / SSVD) ve sezaryen–ameliyat notlarından
-(histerektomi, myomektomi, laparoskopi, histeroskopi, küretaj) doğum epikrizi ve
-antetli baskıya kadar poliklinik + riskli gebelik + operatör işlerini birlikte
-topluyoruz.
+*Kadın doğumda*
+• Gebelik takvimi ve izlem
+• Doppler’li USG · yapılandırılmış NST
+• Obstetrik risk (preeklampsi / GDM / SSVD)
+• Sezaryen–ameliyat notları → doğum epikrizi · antetli baskı
+  (histerektomi, myomektomi, laparoskopi, histeroskopi, küretaj)
 
-Yoğun günlerde not, reçete, takip ve ön büro işlerinden yaklaşık 1,5–2 saat kazandırıyor;
-kayıtlar daha düzenli olduğu için bakım kalitesine de yansıyor.
-Branşınızdaki meslektaşlarınız da bakmaya başladı — geride kalmamak için
-kısa bir bakış çoğu zaman yeterli oluyor.
+Tipik bir günde yaklaşık *1,5–2 saat* kazanç; kayıtlar daha düzenli → bakım kalitesi de yükseliyor.
+Meslektaşlarınız da bakmaya başladı — geride kalmamak için kısa bir bakış çoğu zaman yeterli.
 
-Dr. Gökhan Mamur 30 dakikalık kısa tanıtımlar yapıyor 🩺
-Saatler sizin uygunluğunuza göre ayarlanıyor.
+Dr. Gökhan Mamur *30 dk* kısa tanıtım yapıyor 🩺
+Saatler size göre.
 
-Tanıtıma vaktiniz yoksa da sorun değil, ücretsiz denemeyi hemen açabiliyoruz.
-İsterseniz kısaca bakabilirsiniz, uygun görürseniz devam ederiz.
+Tanıtıma vakit yoksa ücretsiz denemeyi hemen açabiliyoruz.
 
-📅 Tanıtım / Demo: https://www.notya.io/demo
-🔗 Ücretsiz deneme: https://www.notya.io
+📅 *Tanıtım / Demo:* https://www.notya.io/demo
+🔗 *Ücretsiz deneme:* https://www.notya.io
 ```
 
-**Dermatoloji satırı** (KD paragrafı yerine):
+**Dermatoloji bloğu** (`*Kadın doğumda*` yerine):
 
 ```
-Dermatolojide PASI/EASI, izotretinoin GÖP kapısı, fototerapi defteri, yama (D2/D4),
-dermoskopi/önce-sonra foto arşivi ve biyolojik SUT taslağı branşa özel ilerliyor.
+*Dermatolojide*
+• PASI / EASI
+• İzotretinoin GÖP kapısı · fototerapi defteri
+• Yama (D2/D4) · dermoskopi / önce-sonra foto
+• Biyolojik SUT taslağı
 ```
 
-Pediatri — genel pitch + `40’tan fazla branş`; KD/derm listelerini yazma. Sonuna aynı iki link.
+Pediatri — genel pitch + `40’tan fazla branş`; branş listesi yok. Aynı kapanış + iki link.
 
 ## E-posta (Kaan)
 
@@ -114,5 +112,5 @@ https://www.notya.io/demo
 
 1. Önce mobil `5xx`; 0850 WhatsApp olmaz.  
 2. Gönderen = Kaan · Gökhan = tanıtım host.  
-3. Tek mesaj: metin → boş satır → Tanıtım / Demo + ücretsiz deneme.  
+3. Tek mesaj (WA biçimli metin) — görsel ek yok.  
 4. Başarı = `notya.io/demo` veya ücretsiz deneme.

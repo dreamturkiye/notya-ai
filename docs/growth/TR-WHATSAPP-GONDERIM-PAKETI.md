@@ -1,9 +1,7 @@
 # WhatsApp gönderim paketi — isimli metinler
 
-**Güncel gönderim (grafikli deneme):** en fazla **2 görsel** → tek metin (Tanıtım / Demo + ücretsiz deneme).  
-Varsayılan çift: `notya-wa-zaman.png` + `notya-wa-meslektas.png` (saat + meslektaş geride kalmama).  
-Alternatif: `zaman` + `kalite`. Klasör: `docs/growth/outreach-assets/`.  
-Eski “Balon 1 / Balon 2” yedek; Cengiz’den itibaren tek mesaj + görsel.
+**Güncel:** tek mesaj · WA biçimi (`*kalın*`, `•` maddeler) · görsel ek yok · `notya.io/demo`.  
+Şablon: `TR-PEDI-OUTREACH-TEMPLATES.md`. Aşağıda Cengiz güncel; diğerleri eski yedek metin.
 
 Toplam: 30 kişi
 
@@ -80,38 +78,36 @@ Tanıtıma vaktiniz yoksa da sorun değil, ücretsiz denemeyi hemen açabiliyoru
 ```
 
 ---
-## 3. Op. Dr. Cengiz Sağıroğlu ← SIRADAKİ (grafikli)
+## 3. Op. Dr. Cengiz Sağıroğlu ← SIRADAKİ
 **kadin-dogum** · Kadıköy · `+90 555 052 64 58` · WA: `+905550526458`
 
-**Sıra:** ① `notya-wa-zaman.png` ② `notya-wa-meslektas.png` ③ tek metin (kopyala):
+**Tek mesaj (kopyala — `*…*` WhatsApp’ta kalın görünür):**
 
 ```
 Cengiz Hocam merhaba 👋
-Ben Kaan, Notya’dan yazıyorum.
+Ben Kaan, *Notya*’dan yazıyorum.
 
-Notya, hekimler için yapay zekâ klinik asistanı: muayeneyi dinler, notunuzu yazar,
-reçete ve rapor taslağını hazırlar, hastanızı takipte tutar — hasta portalı dahil.
-Her karar sizin onayınızla. 40’tan fazla branşı kendi ihtiyaçlarıyla destekliyoruz.
+*Notya* — hekimler için yapay zekâ klinik asistanı.
+Muayeneyi dinler, notunuzu yazar, reçete ve rapor taslağını hazırlar, hastanızı takipte tutar — hasta portalı dahil.
+Her karar *sizin onayınızla*. 40’tan fazla branşı kendi ihtiyaçlarıyla destekliyoruz.
 
-Kadın doğumda gebelik takvimi ve izlem, Doppler’li USG raporu, yapılandırılmış NST,
-obstetrik risk (preeklampsi / GDM / SSVD) ve sezaryen–ameliyat notlarından
-(histerektomi, myomektomi, laparoskopi, histeroskopi, küretaj) doğum epikrizi ve
-antetli baskıya kadar poliklinik + riskli gebelik + operatör işlerini birlikte
-topluyoruz.
+*Kadın doğumda*
+• Gebelik takvimi ve izlem
+• Doppler’li USG · yapılandırılmış NST
+• Obstetrik risk (preeklampsi / GDM / SSVD)
+• Sezaryen–ameliyat notları → doğum epikrizi · antetli baskı
+  (histerektomi, myomektomi, laparoskopi, histeroskopi, küretaj)
 
-Yoğun günlerde not, reçete, takip ve ön büro işlerinden yaklaşık 1,5–2 saat kazandırıyor;
-kayıtlar daha düzenli olduğu için bakım kalitesine de yansıyor.
-Branşınızdaki meslektaşlarınız da bakmaya başladı — geride kalmamak için
-kısa bir bakış çoğu zaman yeterli oluyor.
+Tipik bir günde yaklaşık *1,5–2 saat* kazanç; kayıtlar daha düzenli → bakım kalitesi de yükseliyor.
+Meslektaşlarınız da bakmaya başladı — geride kalmamak için kısa bir bakış çoğu zaman yeterli.
 
-Dr. Gökhan Mamur 30 dakikalık kısa tanıtımlar yapıyor 🩺
-Saatler sizin uygunluğunuza göre ayarlanıyor.
+Dr. Gökhan Mamur *30 dk* kısa tanıtım yapıyor 🩺
+Saatler size göre.
 
-Tanıtıma vaktiniz yoksa da sorun değil, ücretsiz denemeyi hemen açabiliyoruz.
-İsterseniz kısaca bakabilirsiniz, uygun görürseniz devam ederiz.
+Tanıtıma vakit yoksa ücretsiz denemeyi hemen açabiliyoruz.
 
-📅 Tanıtım / Demo: https://www.notya.io/demo
-🔗 Ücretsiz deneme: https://www.notya.io
+📅 *Tanıtım / Demo:* https://www.notya.io/demo
+🔗 *Ücretsiz deneme:* https://www.notya.io
 ```
 
 ---
