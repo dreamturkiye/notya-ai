@@ -1,7 +1,5 @@
 # TR outreach durum (canlı)
 
-**Sıradaki:** Doç. Dr. **Meryem Gencer** · KD · Başakşehir · `+905307238039`
+**Sıradaki:** Op. Dr. **Abdulkadir Güllüce** · KD · Beylikdüzü · `+905076220434`
 
-## WA yok / gitmedi
-- Yeşim Timuroğlu · `+905354675994`
-- Aysun Fırat · `+905017287587` (2026-11-07)
+WA yok: Yeşim, Aysun. Meryem gitti → **Abdulkadir şimdi**.
