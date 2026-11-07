@@ -1,6 +1,8 @@
 /**
  * GENITAL-ESTETIK-01 (Kaan, 2026-11-06) — Uzbekistan: ROLE TOOLS, ninth part. Cosmetic gynaecology / genital aesthetics
- * (lib/ulke/araclar/tanimlar/genitalEstetik.ts), obstetrics and gynaecology only.
+ * (lib/ulke/araclar/tanimlar/genitalEstetik.ts), obstetrics and gynaecology; the surgical part (the operation note, the
+ * photo consent, the consent form of the four operations, the COPS-L item slot) also for plastic surgery and the clinic's
+ * aesthetic surgery (owner's decision, 2026-11-06; both are "Plastik xirurgiya" in the Ministry of Health's order).
  *
  * MACHINE-WRITTEN. AWAITS NATIVE REVIEW (see ./index.ts), and a clinician's. Cyrillic derived from the Latin text by rule
  * (scripts/uz-kiril.mjs).
@@ -15,14 +17,20 @@
  *   OFF  the energy-based session, the injection log and the whitening record: no source of the Ministry of Health (device
  *        registration for a vaginal use, cosmetology licensing for genital procedures) was read in this session. Kept as
  *        slots (./yuvalar.ts) until a local lawyer and clinician supply one.
- * NO ITEM OF A PUBLISHED QUESTIONNAIRE: totals only. No validated Uzbek or Russian translation of FSFI, FGSIS, VLQ or COPS-L
+ * NO ITEM OF A PUBLISHED QUESTIONNAIRE: totals only. No validated Uzbek or Russian translation of FSFI, FGSIS or COPS-L
  * was verified in this session. Hymenoplasty is not offered.
  */
 import type { AracYuvasi, PaketAraci } from '@/lib/ulke/araclar/tipler'
 import { UZ_KD_SABLONLARI, UZ_NOT_ALANLARI, UZ_NOT_SECENEKLERI } from './rol7'
+import { UZ_ROL_ARACLARI_8 } from './rol8'
 import { u, type Uc } from './yardimci'
 
 const KD = ['kadin-hastaliklari-dogum']
+/** The surgical part: O&G, plastic surgery and the clinic's aesthetic surgery. */
+const CERRAHI = ['kadin-hastaliklari-dogum', 'plastik-cerrahi', 'estetik-cerrahi']
+const PLASTIK = ['plastik-cerrahi', 'estetik-cerrahi']
+const GE_ISLEMLER = ['labioplasti', 'labioplasti_klitoral', 'vajinoplasti', 'perineoplasti'] as const
+const sec = <T,>(r: Readonly<Record<string, T>> | undefined): Record<string, T> => Object.fromEntries(GE_ISLEMLER.map((k) => [k, (r ?? {})[k]]))
 type R = Record<string, Uc>
 const adim = (qadamlar: readonly Uc[]): Uc => {
   const bicim = (k: keyof Uc) => qadamlar.map((q, i) => `${i + 1}. ${q[k]}`).join('\n')
@@ -32,7 +40,7 @@ const qosh = (a: Uc, b: Uc): Uc => ({ 'uz-Latn': `${a['uz-Latn']} ${b['uz-Latn']
 const XALQARO = u('Xalqaro manba; Oʻzbekiston Sogʻliqni saqlash vazirligining bu amaliyotlar boʻyicha hujjati topilmadi.', 'Халқаро манба; Ўзбекистон Соғлиқни сақлаш вазирлигининг бу амалиётлар бўйича ҳужжати топилмади.', 'Международный источник; документ Министерства здравоохранения Узбекистана по этим процедурам не найден.')
 
 /** The patient gate sentence of the cosmetic-capable tool (18 or over, female). */
-export const UZ_GE_HASTA_KAPISI = u('Faqat 18 yosh va undan katta ayollar uchun: 18 yoshgacha boʻlgan yoki tugʻilgan sanasi yozilmagan bemorga kosmetik genital amaliyot hech qachon yozilmaydi. Yoshroq bemorga tibbiy koʻrsatma bilan operatsiya akusherlik-ginekologiya operatsiya bayonnomasida yoziladi.', 'Фақат 18 ёш ва ундан катта аёллар учун: 18 ёшгача бўлган ёки туғилган санаси ёзилмаган беморга косметик генитал амалиёт ҳеч қачон ёзилмайди. Ёшроқ беморга тиббий кўрсатма билан операция акушерлик-гинекология операция баённомасида ёзилади.', 'Только для женщин 18 лет и старше: косметическая генитальная процедура никогда не записывается пациентке младше 18 лет или без записанной даты рождения. Операция по медицинским показаниям у более юной пациентки записывается в протоколе акушерско-гинекологической операции.')
+export const UZ_GE_HASTA_KAPISI = u('Faqat 18 yosh va undan katta ayollar uchun: 18 yoshgacha boʻlgan yoki tugʻilgan sanasi yozilmagan bemorga kosmetik genital amaliyot hech qachon yozilmaydi. Yoshroq bemorga tibbiy koʻrsatma bilan operatsiya akusherlik-ginekologiya yoki umumiy operatsiya bayonnomasida yoziladi.', 'Фақат 18 ёш ва ундан катта аёллар учун: 18 ёшгача бўлган ёки туғилган санаси ёзилмаган беморга косметик генитал амалиёт ҳеч қачон ёзилмайди. Ёшроқ беморга тиббий кўрсатма билан операция акушерлик-гинекология ёки умумий операция баённомасида ёзилади.', 'Только для женщин 18 лет и старше: косметическая генитальная процедура никогда не записывается пациентке младше 18 лет или без записанной даты рождения. Операция по медицинским показаниям у более юной пациентки записывается в протоколе акушерско-гинекологической или общей операции.')
 
 const ENDIKASYON_ALANLARI: R = {
   endikasyon_sinifi: u('Koʻrsatma: kosmetik yoki tibbiy', 'Кўрсатма: косметик ёки тиббий', 'Показание: косметическое или медицинское'),
@@ -98,7 +106,7 @@ const GE_SABLONLARI: Record<string, R> = {
 
 export const UZ_ROL_ARACLARI_9: readonly PaketAraci[] = [
   {
-    anahtar: 'ameliyat-notu-genital', roller: KD,
+    anahtar: 'ameliyat-notu-genital', roller: CERRAHI,
     hasta: { enAzYas: 18, cinsiyet: 'female' },
     metin: {
       ad: u('Operatsiya bayonnomasi: genital estetik jarrohlik (kattalar)', 'Операция баённомаси: генитал эстетик жарроҳлик (катталар)', 'Протокол операции: генитальная эстетическая хирургия (взрослые)'),
@@ -135,13 +143,12 @@ export const UZ_ROL_ARACLARI_9: readonly PaketAraci[] = [
     anahtar: 'genital-sonuc-olcegi', roller: KD,
     metin: {
       ad: u('Natija shkalasi umumiy balli (oldin / keyin)', 'Натижа шкаласи умумий балли (олдин / кейин)', 'Сумма шкалы исходов (до / после)'),
-      aciklama: u('Bemorga berilgan ruxsat etilgan shakldan FSFI, FGSIS, Qin boʻshligi soʻrovnomasi yoki COPS-L umumiy balli, amaliyotdan oldin yoki keyin. Saqlangan natijalar oʻzgarishni koʻrsatadi. Hech qaysi soʻrovnoma bandi koʻrsatilmaydi.', 'Беморга берилган рухсат этилган шаклдан FSFI, FGSIS, Қин бўшлиги сўровномаси ёки COPS-L умумий балли, амалиётдан олдин ёки кейин. Сақланган натижалар ўзгаришни кўрсатади. Ҳеч қайси сўровнома банди кўрсатилмайди.', 'Сумма FSFI, FGSIS, опросника несостоятельности влагалища или COPS-L из разрешённой формы, выданной пациентке, до или после процедуры. Сохранённые результаты показывают динамику. Пункты опросников не показываются.'),
+      aciklama: u('Bemorga berilgan ruxsat etilgan shakldan FSFI, FGSIS yoki COPS-L umumiy balli, amaliyotdan oldin yoki keyin. Saqlangan natijalar oʻzgarishni koʻrsatadi. Hech qaysi soʻrovnoma bandi koʻrsatilmaydi.', 'Беморга берилган рухсат этилган шаклдан FSFI, FGSIS ёки COPS-L умумий балли, амалиётдан олдин ёки кейин. Сақланган натижалар ўзгаришни кўрсатади. Ҳеч қайси сўровнома банди кўрсатилмайди.', 'Сумма FSFI, FGSIS или COPS-L из разрешённой формы, выданной пациентке, до или после процедуры. Сохранённые результаты показывают динамику. Пункты опросников не показываются.'),
       alanlar: { tarih: u('Sana', 'Сана', 'Дата'), olcek: u('Vosita', 'Восита', 'Инструмент'), asama: u('Bosqich', 'Босқич', 'Этап'), toplam: u('Umumiy ball', 'Умумий балл', 'Общий балл') },
       secenekler: {
         olcek: {
           fsfi: u('FSFI (Ayollar jinsiy funksiyasi indeksi), 2–36', 'FSFI (Аёллар жинсий функцияси индекси), 2–36', 'FSFI (индекс женской сексуальной функции), 2–36'),
           fgsis: u('FGSIS (Ayolning genital oʻzini idrok etish shkalasi), 7–28', 'FGSIS (Аёлнинг генитал ўзини идрок этиш шкаласи), 7–28', 'FGSIS (шкала восприятия женщиной своих гениталий), 7–28'),
-          vlq: u('Qin boʻshligi soʻrovnomasi, 1–7 (rasmiy tasdiqlanmagan)', 'Қин бўшлиги сўровномаси, 1–7 (расмий тасдиқланмаган)', 'Опросник несостоятельности влагалища, 1–7 (формально не валидирован)'),
           cops_l: u('COPS-L (labioplastika uchun kosmetik amaliyot skriningi), 0–72', 'COPS-L (лабиопластика учун косметик амалиёт скрининги), 0–72', 'COPS-L (скрининговая шкала косметической процедуры для лабиопластики), 0–72'),
         },
         asama: { oncesi: u('Amaliyotdan oldin', 'Амалиётдан олдин', 'До процедуры'), sonrasi: u('Amaliyotdan keyin', 'Амалиётдан кейин', 'После процедуры'), izlem: u('Kuzatuv', 'Кузатув', 'Наблюдение') },
@@ -150,16 +157,15 @@ export const UZ_ROL_ARACLARI_9: readonly PaketAraci[] = [
       bantlar: {
         fsfi_kesim_alti: u('FSFI 26,55 va undan past: jinsiy disfunksiya oraligʻida (Wiegel va boshq. 2005)', 'FSFI 26,55 ва ундан паст: жинсий дисфункция оралиғида (Wiegel ва бошқ. 2005)', 'FSFI 26,55 и ниже: в диапазоне сексуальной дисфункции (Wiegel и соавт. 2005)'),
         fsfi_kesim_ustu: u('FSFI 26,55 dan yuqori', 'FSFI 26,55 дан юқори', 'FSFI выше 26,55'),
-        vlq_gevsek: u('Boʻsh tomonda (1–3)', 'Бўш томонда (1–3)', 'Сторона «свободно» (1–3)'), vlq_notr: u('Na boʻsh, na tor (4)', 'На бўш, на тор (4)', 'Ни свободно, ни туго (4)'), vlq_siki: u('Tor tomonda (5–7)', 'Тор томонда (5–7)', 'Сторона «туго» (5–7)'),
         cops_l_pozitif: u('COPS-L 40 va undan yuqori', 'COPS-L 40 ва ундан юқори', 'COPS-L 40 и выше'), cops_l_negatif: u('COPS-L 40 dan past', 'COPS-L 40 дан паст', 'COPS-L ниже 40'),
       },
       uyarilar: { cops_l_pozitif: u('COPS-L umumiy balli 40 va undan yuqori: dismorfofobiya ehtimoli. Har qanday kosmetik genital amaliyotdan oldin ruhiy salomatlik mutaxassisiga yoʻnaltirishni koʻrib chiqing. Bu tashxis emas va hech narsani toʻsmaydi; qaror sizniki.', 'COPS-L умумий балли 40 ва ундан юқори: дисморфофобия эҳтимоли. Ҳар қандай косметик генитал амалиётдан олдин руҳий саломатлик мутахассисига йўналтиришни кўриб чиқинг. Бу ташхис эмас ва ҳеч нарсани тўсмайди; қарор сизники.', 'Сумма COPS-L 40 и выше: возможно дисморфическое расстройство. Рассмотрите направление к специалисту по психическому здоровью до любой косметической генитальной процедуры. Это не диагноз и ничего не блокирует; решение за вами.') },
       tarihler: { tarih: u('Ball', 'Балл', 'Балл') },
-      not: u('Vositalar matni mualliflarga tegishli va tijoriy dasturda foydalanish uchun ruxsat olinmagan: hech qaysi band koʻrsatilmaydi. Tasdiqlangan oʻzbekcha yoki ruscha tarjima tekshirilmagan. Manbalar: FSFI, Rosen va boshq. 2000 (chegara Wiegel va boshq. 2005); FGSIS, Herbenick va Reece 2010; Qin boʻshligi soʻrovnomasi, Millheiser va boshq. 2010; COPS-L, Veale va boshq. 2013.', 'Воситалар матни муаллифларга тегишли ва тижорий дастурда фойдаланиш учун рухсат олинмаган: ҳеч қайси банд кўрсатилмайди. Тасдиқланган ўзбекча ёки русча таржима текширилмаган. Манбалар: FSFI, Rosen ва бошқ. 2000 (чегара Wiegel ва бошқ. 2005); FGSIS, Herbenick ва Reece 2010; Қин бўшлиги сўровномаси, Millheiser ва бошқ. 2010; COPS-L, Veale ва бошқ. 2013.', 'Текст инструментов принадлежит авторам, разрешение на использование в коммерческой программе не получено: пункты не показываются. Валидированный узбекский или русский перевод не проверен. Источники: FSFI, Rosen и соавт. 2000 (порог Wiegel и соавт. 2005); FGSIS, Herbenick и Reece 2010; опросник несостоятельности влагалища, Millheiser и соавт. 2010; COPS-L, Veale и соавт. 2013.'),
+      not: u('Vositalar matni mualliflarga tegishli va tijoriy dasturda foydalanish uchun ruxsat olinmagan: hech qaysi band koʻrsatilmaydi. Tasdiqlangan oʻzbekcha yoki ruscha tarjima tekshirilmagan. Manbalar: FSFI, Rosen va boshq. 2000 (chegara Wiegel va boshq. 2005); FGSIS, Herbenick va Reece 2010; COPS-L, Veale va boshq. 2013.', 'Воситалар матни муаллифларга тегишли ва тижорий дастурда фойдаланиш учун рухсат олинмаган: ҳеч қайси банд кўрсатилмайди. Тасдиқланган ўзбекча ёки русча таржима текширилмаган. Манбалар: FSFI, Rosen ва бошқ. 2000 (чегара Wiegel ва бошқ. 2005); FGSIS, Herbenick ва Reece 2010; COPS-L, Veale ва бошқ. 2013.', 'Текст инструментов принадлежит авторам, разрешение на использование в коммерческой программе не получено: пункты не показываются. Валидированный узбекский или русский перевод не проверен. Источники: FSFI, Rosen и соавт. 2000 (порог Wiegel и соавт. 2005); FGSIS, Herbenick и Reece 2010; COPS-L, Veale и соавт. 2013.'),
     },
   },
   {
-    anahtar: 'genital-foto-onam', roller: KD,
+    anahtar: 'genital-foto-onam', roller: CERRAHI,
     metin: {
       ad: u('Intim klinik suratlarga rozilik', 'Интим клиник суратларга розилик', 'Согласие на интимные клинические фотографии'),
       aciklama: u('Bemorning tibbiy hujjati uchun genital suratlarga ALOHIDA, aniq roziligi va rejalashtirilgan standart koʻrinishlar. Suratlar hech qachon avtomatik tahlilga yuborilmaydi.', 'Беморнинг тиббий ҳужжати учун генитал суратларга АЛОҲИДА, аниқ розилиги ва режалаштирилган стандарт кўринишлар. Суратлар ҳеч қачон автоматик таҳлилга юборилмайди.', 'ОТДЕЛЬНОЕ явное согласие пациентки на генитальные фотографии для её медицинской документации и запланированные стандартные проекции. Фотографии никогда не отправляются на автоматический анализ.'),
@@ -179,6 +185,23 @@ export const UZ_ROL_ARACLARI_9: readonly PaketAraci[] = [
       not: u('Suratga rozilik amaliyotga rozilikdan alohida va istalgan vaqtda qaytarib olinishi mumkin. Suratlar tibbiy hujjat: shifrlangan holda saqlanadi, faqat zarur boʻlganda koʻriladi, avtomatik tahlilga yuborilmaydi va siz qoʻshmaguningizcha eksportga kirmaydi.', 'Суратга розилик амалиётга розиликдан алоҳида ва исталган вақтда қайтариб олиниши мумкин. Суратлар тиббий ҳужжат: шифрланган ҳолда сақланади, фақат зарур бўлганда кўрилади, автоматик таҳлилга юборилмайди ва сиз қўшмагунингизча экспортга кирмайди.', 'Согласие на фотографии отдельно от согласия на процедуру и может быть отозвано в любое время. Фотографии — медицинская документация: хранятся в зашифрованном виде, просматриваются только при необходимости, не отправляются на автоматический анализ и не входят в экспорт, пока вы их не добавите.'),
     },
   },
+  // GENITAL-ESTETIK-01c: the O&G consent form, narrowed to the four operations, for plastic and aesthetic surgery
+  (() => {
+    const kd = UZ_ROL_ARACLARI_8.find((a) => a.anahtar === 'onam-formu-kd')!
+    return {
+      ...kd, anahtar: 'onam-formu-genital', roller: PLASTIK,
+      hasta: { enAzYas: 18, cinsiyet: 'female' as const },
+      sablonlar: { islem: sec(kd.sablonlar?.islem) },
+      metin: {
+        ...kd.metin,
+        ad: u('Rozilik shakli: genital estetik jarrohlik', 'Розилик шакли: генитал эстетик жарроҳлик', 'Форма согласия: генитальная эстетическая хирургия'),
+        aciklama: u('Labioplastika, klitor qalpoqchasini kichraytirish bilan labioplastika, vaginoplastika / kolpoperineorafiya yoki perineoplastikaga rozilik: nima ekani, foydasi, jiddiy va koʻp uchraydigan xavflari, zarur boʻlishi mumkin boʻlgan qoʻshimcha amaliyotlar, muqobillar va imzolar. Shaklni toʻldirish uchun operatsiyani tanlang, soʻng bemor bilan birga yakunlang.', 'Лабиопластика, клитор қалпоқчасини кичрайтириш билан лабиопластика, вагинопластика / колпоперинеорафия ёки перинеопластикага розилик: нима экани, фойдаси, жиддий ва кўп учрайдиган хавфлари, зарур бўлиши мумкин бўлган қўшимча амалиётлар, муқобиллар ва имзолар. Шаклни тўлдириш учун операцияни танланг, сўнг бемор билан бирга якунланг.', 'Согласие на лабиопластику, лабиопластику с уменьшением капюшона клитора, вагинопластику / кольпоперинеорафию или перинеопластику: что это, польза, серьёзные и частые риски, возможные дополнительные вмешательства, альтернативы и подписи. Выберите операцию, чтобы заполнить форму, затем завершите её вместе с пациенткой.'),
+        secenekler: { ...kd.metin.secenekler, islem: sec(kd.metin.secenekler?.islem) },
+        hastaKapisi: UZ_GE_HASTA_KAPISI,
+        not: u('Rozilik — suhbat, shakl uni qayd etadi. Kosmetik genital jarrohlik boʻyicha dalillar cheklangan: buni ayting, bemorning kutishlari va tana qiyofasini muhokama qiling, qaror uchun vaqt bering. Xavflar chastotasini shifokor shu bemor bilan muhokama qiladi va yozadi.', 'Розилик — суҳбат, шакл уни қайд этади. Косметик генитал жарроҳлик бўйича далиллар чекланган: буни айтинг, беморнинг кутишлари ва тана қиёфасини муҳокама қилинг, қарор учун вақт беринг. Хавфлар частотасини шифокор шу бемор билан муҳокама қилади ва ёзади.', 'Согласие — это беседа, форма её фиксирует. Доказательства по косметической генитальной хирургии ограничены: скажите об этом, обсудите ожидания пациентки и восприятие тела, дайте время на решение. Частоту рисков врач обсуждает с этой пациенткой и записывает.'),
+      },
+    } satisfies PaketAraci
+  })(),
 ]
 
 /** The tools Uzbekistan does not offer yet, and the item-level instruments: slots (English, like ./yuvalar.ts). */
@@ -189,6 +212,5 @@ export const UZ_GE_YUVALARI: readonly AracYuvasi[] = [
   { anahtar: 'genital-beyazlatma', acik: false, icerik: null, mekanizmaHazir: true, roller: KD, kimden: 'a lawyer in Uzbekistan, with the local clinical lead', eksik: `NOT OFFERED IN UZBEKISTAN YET. ${SABABSIZ} on cosmetology licensing for genital procedures.` },
   { anahtar: 'genital-fsfi-items', acik: false, icerik: null, mekanizmaHazir: false, roller: KD, kimden: 'the rights holder of the questionnaire, through the owner; the local clinical lead confirms the versions', eksik: 'Item-level entry of the FSFI: its wording belongs to its author (Raymond C. Rosen); no permission for commercial software and no validated Uzbek or Russian version verified. Only the total is recorded.', lisans: { durum: 'izin-gerekli', hakSahibi: 'Raymond C. Rosen (FSFI)' } },
   { anahtar: 'genital-fgsis-items', acik: false, icerik: null, mekanizmaHazir: false, roller: KD, kimden: 'the rights holder of the questionnaire, through the owner; the local clinical lead confirms the versions', eksik: 'Item-level entry of the FGSIS: terms for commercial software not found; no validated Uzbek or Russian version verified. Only the total is recorded.', lisans: { durum: 'belirsiz', hakSahibi: 'Debby Herbenick, Michael Reece' } },
-  { anahtar: 'genital-vlq-item', acik: false, icerik: null, mekanizmaHazir: false, roller: KD, kimden: 'the rights holder of the questionnaire, through the owner; the local clinical lead confirms the versions', eksik: 'The Vaginal Laxity Questionnaire item: not formally validated, terms unclear, no validated translation. Only the total is recorded.', lisans: { durum: 'belirsiz', hakSahibi: 'Millheiser et al. (2010)' } },
-  { anahtar: 'genital-cops-l-items', acik: false, icerik: null, mekanizmaHazir: false, roller: KD, kimden: 'the rights holder of the questionnaire, through the owner; the local clinical lead confirms the versions', eksik: 'Item-level entry of COPS-L: copyright D. Veale; translations need the holders\' permission. Only the total is recorded.', lisans: { durum: 'izin-gerekli', hakSahibi: 'David Veale' } },
+  { anahtar: 'genital-cops-l-items', acik: false, icerik: null, mekanizmaHazir: false, roller: CERRAHI, kimden: 'the rights holder of the questionnaire, through the owner; the local clinical lead confirms the versions', eksik: 'Item-level entry of COPS-L: copyright D. Veale; translations need the holders\' permission. Only the total is recorded.', lisans: { durum: 'izin-gerekli', hakSahibi: 'David Veale' } },
 ]

@@ -60,7 +60,9 @@ const KD_RAPORLARI = ['ameliyat-notu-kd', 'usg-obstetrik', 'usg-jinekolojik', 'd
 const CG = ['cerrahi-guvenlik-listesi', 'caprini', 'asa-siniflamasi'] as const
 /** GENITAL-ESTETIK-01 (2026-11-06): the cosmetic gynaecology tools Uzbekistan offers (energy, injection, whitening are slots). */
 const GE_ACIK = ['ameliyat-notu-genital', 'genital-sonuc-olcegi', 'genital-foto-onam'] as const
-const GE_YUVALARI = ['genital-enerji-seansi', 'genital-enjeksiyon', 'genital-beyazlatma', 'genital-fsfi-items', 'genital-fgsis-items', 'genital-vlq-item', 'genital-cops-l-items'] as const
+const GE_YUVALARI = ['genital-enerji-seansi', 'genital-enjeksiyon', 'genital-beyazlatma', 'genital-fsfi-items', 'genital-fgsis-items', 'genital-cops-l-items'] as const
+/** GENITAL-ESTETIK-01c (2026-11-06): the surgical part plastic surgery and the clinic's aesthetic surgery see. */
+const GE_CERRAHI = ['ameliyat-notu-genital', 'genital-foto-onam', 'onam-formu-genital'] as const
 const KD_OP = ['antibiyotik-profilaksi-kd', 'iota-basit-kurallar', 'rmi', 'palm-coein', 'rasrm-endometriozis', 'enzian', 'bishop', 'robson', 'sezaryen-aciliyeti', 'kanama-izlem', 'histeroskopi-sivi', 'eras-kd', 'onam-formu-kd'] as const
 /** Off by Kaan's order of 2026-10-10, each with the role it was shown to until that day. */
 const KAPALI: Readonly<Record<string, string>> = { 'esi-triyaj': 'acil-tip', 'kdigo-evre': 'dahiliye', 'kdigo-serit': 'nefroloji', 'rapor-taslagi': 'radyoloji' }
@@ -93,7 +95,7 @@ const ROL_ARACLARI: Readonly<Record<string, readonly string[]>> = {
   onkoloji: ['kur-sayaci', 'toksisite-listesi', T, D, R, G, P_],
   ortopedi: ['kirik-alci-takip', 'ortopedi-op-protokol', 'vas-fonksiyon', ON, ...CG, T, D, R, G, P_],
   pediatri: ['hedef-boy', 'doz-hesabi', T, E, A, D, R, G, P_],
-  'plastik-cerrahi': ['plastik-yara-greft', ON, ...CG, T, D, R, G, P_],
+  'plastik-cerrahi': ['plastik-yara-greft', ON, ...CG, ...GE_CERRAHI, T, D, R, G, P_],
   psikiyatri: ['psikiyatri-guvenlik', T, D, R, G, P_],
   radyoloji: ['tetkik-kuyrugu', T, D, R, G, P_],
   romatoloji: ['das28', 'eklem-28', T, D, R, G, P_],
@@ -106,7 +108,7 @@ const ROL_ARACLARI: Readonly<Record<string, readonly string[]>> = {
   // surdology (the doctor's specialty of hearing; an allied "audiologist" with base tools only before): the hearing average
   surdoloji: ['odyometri-pta', 'sonraki-seans', T, D, R, G, P_],
   // ── clinic doctors. Two carry the same specialty as a doctor role since the audit and see that specialty's tools:
-  'estetik-cerrahi': ['plastik-yara-greft', 'estetik-cerrahi-vade', ON, ...CG, T, D, R, G, P_],
+  'estetik-cerrahi': ['plastik-yara-greft', 'estetik-cerrahi-vade', ON, ...CG, ...GE_CERRAHI, T, D, R, G, P_],
   'klinik-dermatoloji': ['pasi', 'easi', 'scorad', 'yama-okuma', 'akne-vade', 'lazer-vade', T, D, R, G, P_],
   'medikal-estetik': ['estetik-islem-vade', T, D, R, G, P_],
   // allied professions: a session or safety record of their own, then the follow-up list
@@ -167,7 +169,7 @@ describe('Uzbekistan — tools: who sees what, the three scripts, and what is de
     // NOTHING ELSE MOVED among the tools of the kit: a tool's role list today is its list of before, plus only the roles
     // named in ONCE. (The follow-up list and the three tools of the country's own are every doctor role's or a named few's: below, and ./kendi/kendi.test.ts.)
     const yeni = new Set(Object.keys(ONCE))
-    const beklenenEk: Record<string, string[]> = { 'kalp-damar-preop': ['damar-cerrahisi'], 'greft-yara-izlem': ['damar-cerrahisi'], 'antikoagulan-vadeleri': ['damar-cerrahisi'], 'odyometri-pta': ['surdoloji'], pasi: ['klinik-dermatoloji'], easi: ['klinik-dermatoloji'], scorad: ['klinik-dermatoloji'], 'yama-okuma': ['klinik-dermatoloji'], 'plastik-yara-greft': ['estetik-cerrahi'], 'akne-vade': ['klinik-dermatoloji'], 'lazer-vade': ['klinik-dermatoloji'], 'estetik-cerrahi-vade': ['estetik-cerrahi'], 'makro-kaydi': ['diyetoloji'], 'sonraki-seans': ['surdoloji'], 'takip-paneli': Object.keys(ONCE), 'ameliyat-notu': ['damar-cerrahisi', 'estetik-cerrahi'], 'cerrahi-guvenlik-listesi': ['damar-cerrahisi', 'estetik-cerrahi'], caprini: ['damar-cerrahisi', 'estetik-cerrahi'], 'asa-siniflamasi': ['damar-cerrahisi', 'estetik-cerrahi'] }
+    const beklenenEk: Record<string, string[]> = { 'kalp-damar-preop': ['damar-cerrahisi'], 'greft-yara-izlem': ['damar-cerrahisi'], 'antikoagulan-vadeleri': ['damar-cerrahisi'], 'odyometri-pta': ['surdoloji'], pasi: ['klinik-dermatoloji'], easi: ['klinik-dermatoloji'], scorad: ['klinik-dermatoloji'], 'yama-okuma': ['klinik-dermatoloji'], 'plastik-yara-greft': ['estetik-cerrahi'], 'akne-vade': ['klinik-dermatoloji'], 'lazer-vade': ['klinik-dermatoloji'], 'estetik-cerrahi-vade': ['estetik-cerrahi'], 'makro-kaydi': ['diyetoloji'], 'sonraki-seans': ['surdoloji'], 'takip-paneli': Object.keys(ONCE), 'ameliyat-notu': ['damar-cerrahisi', 'estetik-cerrahi'], 'cerrahi-guvenlik-listesi': ['damar-cerrahisi', 'estetik-cerrahi'], caprini: ['damar-cerrahisi', 'estetik-cerrahi'], 'asa-siniflamasi': ['damar-cerrahisi', 'estetik-cerrahi'], 'ameliyat-notu-genital': ['estetik-cerrahi'], 'genital-foto-onam': ['estetik-cerrahi'], 'onam-formu-genital': ['estetik-cerrahi'] }
     for (const p of icerik.araclar) {
       if (p.roller === null || p.sinif === 'hekimler' || p.anahtar.startsWith('uz-')) continue
       assert.deepEqual(p.roller.filter((r) => yeni.has(r)).sort(), [...(beklenenEk[p.anahtar] ?? [])].sort(), `${p.anahtar}: the roles it gained`)
@@ -176,8 +178,8 @@ describe('Uzbekistan — tools: who sees what, the three scripts, and what is de
     // and the four tools read from official texts on 2026-10-14 (flyer, annex, prescription note, narcotic ticks).
     const { UZ_KAPALI_ARACLAR } = await import('./index')
     // KD-OPERATOR-01 (2026-11-05): +16 operating surgeon's tools
-    // GENITAL-ESTETIK-01 (2026-11-06): +3 cosmetic gynaecology tools
-    assert.equal(icerik.araclar.length, 90)
+    // GENITAL-ESTETIK-01 (2026-11-06): +3 cosmetic gynaecology tools, and the consent form of the four operations for plastic and aesthetic surgery
+    assert.equal(icerik.araclar.length, 91)
     assert.deepEqual(icerik.araclar.filter((p) => p.anahtar.startsWith('uz-')).map((p) => p.anahtar), [T, H, E, A, D, R, G])
     assert.deepEqual(icerik.araclar.filter((p) => p.sinif === 'hekimler').map((p) => p.anahtar), [T, D, R, G])
     for (const k of UZ_KAPALI_ARACLAR) assert.ok(!icerik.araclar.some((p) => p.anahtar === k), k)
@@ -289,7 +291,7 @@ describe('Uzbekistan — tools: who sees what, the three scripts, and what is de
     // and the three tools only Uzbekistan has, which the pre-split application did not have and the section names above its table
     // Structural records added after the audit document. They are not rows of that document; the outcome section is left as it was.
     const yeniYapisal = ['akne-vade', 'birinci-acil-bayrak', 'endoskopi-kaydi', 'estetik-cerrahi-vade', 'estetik-islem-vade', 'icf-ozet', 'inme-bayraklari', 'kardiyo-not', 'kronik-izlem-kaydi', 'lazer-vade', 'makro-kaydi', 'psikiyatri-guvenlik', 'seans-plani', 'sonraki-seans', A, D, R, G, ON, ...KD_RAPORLARI, ...CG, ...KD_OP]
-    const belgesizEski = belgesiz.filter((k) => !yeniYapisal.includes(k) && !(GE_ACIK as readonly string[]).includes(k) && !(GE_YUVALARI as readonly string[]).includes(k))
+    const belgesizEski = belgesiz.filter((k) => !yeniYapisal.includes(k) && !(GE_ACIK as readonly string[]).includes(k) && !(GE_CERRAHI as readonly string[]).includes(k) && !(GE_YUVALARI as readonly string[]).includes(k))
     // GENITAL-ESTETIK-01: added after the audit; three on, seven slots (./rol9.ts)
     for (const k of GE_ACIK) assert.ok(acik.has(k), `${k} is not switched on`)
     for (const k of GE_YUVALARI) assert.ok(yuvalar.has(k) && !acik.has(k), `${k} is not a slot`)

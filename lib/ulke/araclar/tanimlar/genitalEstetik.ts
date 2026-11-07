@@ -4,7 +4,9 @@
  * engine lib/clinical/genitalEstetik.ts, byte-identical with the Turkish build on main, so the same record is valid or
  * refused in every country for the same reason.
  *
- * Obstetrics and gynaecology only. WHICH TOOL EACH COUNTRY OFFERS is the country's decision under its own law and
+ * Obstetrics and gynaecology; the SURGICAL part (the adult genital-aesthetics operation note, the photo consent, the COPS-L
+ * item slot and a consent form of the four operations, `onam-formu-genital`) also for plastic and aesthetic surgery (owner's
+ * decision, 2026-11-06; the roles are the pack's). WHICH TOOL EACH COUNTRY OFFERS is the country's decision under its own law and
  * regulator (the regulatory recognition gate, .cursor/skills/ulke-paritesi-duzeltme): a tool a country does not permit
  * is kept as a slot (`kapali`) with its legal source; a template or a site a country does not permit is taken off the
  * options (`uyarlama.secenekler`, fields marked `secenekSerbest`).
@@ -24,6 +26,7 @@
 import type { AracAlani, AracSonucu, AracTanimi } from '../tipler'
 import { BOS_SONUC, gunMu, metin, sayi, sayiMi, secim, tarih } from '../yardimci'
 import { AMELIYAT_ALANLARI, ameliyatNotuHesapla } from './kadinDogumCerrahi'
+import { ONAM_FORMU } from './kdOperator'
 import {
   GE_ADVERS, GE_BEYAZLATMA_BOLGE, GE_BEYAZLATMA_YONTEM, GE_ENERJI_AMAC, GE_ENERJI_BOLGE, GE_ENERJI_MODALITE, GE_ENJEKSIYON_BOLGE, GE_ENJEKSIYON_TEKNIK,
   GE_ENJEKSIYON_URUN, GE_FOTO_GORUNUMLERI, GE_REAKSIYON, GE_MEDIKAL_GEREKCE, GE_OLCEKLER, COPS_L_KESIM,
@@ -188,7 +191,8 @@ export const BEYAZLATMA_SEANSI: AracTanimi = {
 
 // ───────────────────────── outcome measures (totals only) ─────────────────────────
 
-export const GE_OLCEK_BANTLARI = ['fsfi_kesim_alti', 'fsfi_kesim_ustu', 'vlq_gevsek', 'vlq_notr', 'vlq_siki', 'cops_l_pozitif', 'cops_l_negatif'] as const
+// The Vaginal Laxity Questionnaire was removed on 2026-11-06 (owner's decision): not formally validated.
+export const GE_OLCEK_BANTLARI = ['fsfi_kesim_alti', 'fsfi_kesim_ustu', 'cops_l_pozitif', 'cops_l_negatif'] as const
 export const SONUC_OLCEGI: AracTanimi = {
   anahtar: 'genital-sonuc-olcegi', tur: 'liste',
   alanlar: [tarih('tarih'), secim('olcek', GE_OLCEKLER), secim('asama', ['oncesi', 'sonrasi', 'izlem']), sayi('toplam', 0, 72)],
@@ -219,6 +223,20 @@ export const FOTO_ONAMI: AracTanimi = {
   },
 }
 
-export const GENITAL_ESTETIK_ARACLARI: readonly AracTanimi[] = [AMELIYAT_NOTU_GENITAL, ENERJI_SEANSI, ENJEKSIYON_KAYDI, BEYAZLATMA_SEANSI, SONUC_OLCEGI, FOTO_ONAMI]
+// ───────────────────────── consent form of the four operations (plastic and aesthetic surgery) ─────────────────────────
+
+/**
+ * GENITAL-ESTETIK-01c (2026-11-06): the O&G procedure consent form (./kdOperator.ts ONAM_FORMU, same arithmetic and
+ * paragraphs) narrowed to the four genital-aesthetic operations, so a plastic or aesthetic surgeon has the consent of the
+ * operations they write without receiving every gynaecological operation. Obstetrics and gynaecology keeps its own full form.
+ * A country may offer fewer operations (`secenekSerbest`), as on the operation note.
+ */
+export const ONAM_FORMU_GENITAL: AracTanimi = {
+  ...ONAM_FORMU,
+  anahtar: 'onam-formu-genital',
+  alanlar: ONAM_FORMU.alanlar.map((a) => (a.anahtar === 'islem' ? { ...secim('islem', GE_SABLONLARI), secenekSerbest: true } : a)),
+}
+
+export const GENITAL_ESTETIK_ARACLARI: readonly AracTanimi[] = [AMELIYAT_NOTU_GENITAL, ENERJI_SEANSI, ENJEKSIYON_KAYDI, BEYAZLATMA_SEANSI, SONUC_OLCEGI, FOTO_ONAMI, ONAM_FORMU_GENITAL]
 /** The tools that can record a COSMETIC procedure: every pack gives each a patient gate of 18 or over (female). */
-export const GE_KOZMETIK_ARACLARI: readonly string[] = ['ameliyat-notu-genital', 'genital-enerji-seansi', 'genital-enjeksiyon', 'genital-beyazlatma']
+export const GE_KOZMETIK_ARACLARI: readonly string[] = ['ameliyat-notu-genital', 'genital-enerji-seansi', 'genital-enjeksiyon', 'genital-beyazlatma', 'onam-formu-genital']
