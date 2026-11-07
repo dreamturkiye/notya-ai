@@ -1068,7 +1068,7 @@ Tanıtıma vakit yoksa ücretsiz denemeyi hemen açabiliyoruz.
 🔗 *Ücretsiz deneme:* www.notya.io
 ```
 
-## W2-2. Uzm. Dr. Sinem Karaca ← SIRADAKİ
+## W2-2. Uzm. Dr. Sinem Karaca ← GİTTİ
 **dermatoloji** · İzmir/Konak · `+90 542 510 50 65` · WA: `+905425105065`
 
 **Gönder:** yapıştır → kart çıkarsa **X** → gönder.
@@ -1088,6 +1088,40 @@ Her karar *sizin onayınızla*.
 - Fototerapi defteri
 - Yama (D2/D4) ve dermoskopi
 - Biyolojik SUT taslağı
+
+Tipik bir günde yaklaşık *1,5-2 saat* kazanç.
+Kayıtlar daha düzenli → bakım kalitesi de yükseliyor.
+Meslektaşlarınız da bakmaya başladı — geride kalmamak için kısa bir bakış çoğu zaman yeterli.
+
+Dr. Gökhan Mamur *30 dk* kısa tanıtım yapıyor 🩺
+Saatler size göre.
+
+Tanıtıma vakit yoksa ücretsiz denemeyi hemen açabiliyoruz.
+
+📅 *Tanıtım / Demo:* www.notya.io/demo
+🔗 *Ücretsiz deneme:* www.notya.io
+```
+
+## W2-3. Op. Dr. Bahar Selda Doğan ← SIRADAKİ
+**kadin-dogum** · İzmir/Konak · `+90 545 287 65 50` · WA: `+905452876550`
+
+**Gönder:** yapıştır → kart çıkarsa **X** → gönder.
+
+```
+Bahar Hocam merhaba 👋
+Ben Kaan, *Notya*'dan yazıyorum.
+
+*Notya* — hekimler için yapay zekâ klinik asistanı.
+Muayeneyi dinler, notunuzu yazar, reçete ve rapor taslağını hazırlar, hastanızı takipte tutar — hasta portalı dahil.
+Her karar *sizin onayınızla*.
+40'tan fazla branşı kendi ihtiyaçlarıyla destekliyoruz.
+
+*Kadın doğumda*
+- Gebelik takvimi ve izlem
+- Doppler'li USG ve yapılandırılmış NST
+- Obstetrik risk (preeklampsi, GDM, SSVD)
+- Sezaryen ve ameliyat notları
+- Doğum epikrizi ve antetli baskı
 
 Tipik bir günde yaklaşık *1,5-2 saat* kazanç.
 Kayıtlar daha düzenli → bakım kalitesi de yükseliyor.
