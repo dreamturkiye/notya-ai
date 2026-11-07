@@ -1,5 +1,5 @@
 # TR outreach durum (canlı)
 
-**Sıradaki:** Op. Dr. **Burcu Çetinkaya** · KD · Beyoğlu · `+905054504712`
+**Sıradaki:** Op. Dr. **Ece Meltem Şafak** · KD · Çekmeköy · `+905323655727`
 
-Abdulkadir gitti → **Burcu şimdi**. WA yok: Yeşim, Aysun.
+Burcu gitti → **Ece şimdi**. WA yok: Yeşim, Aysun.
