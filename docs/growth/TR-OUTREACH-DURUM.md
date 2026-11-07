@@ -1,5 +1,5 @@
 # TR outreach durum (canlı)
 
-**Sıradaki:** Uzm. Dr. **Aida Berenjian** · derm · Ataşehir · `+905333378299`
+**Sıradaki:** Uzm. Dr. **Deniz Küçükay** · derm · Kadıköy · `+905533015882`
 
-Mustafa gitti → **Aida şimdi** → sonra Deniz Küçükay.
+Aida gitti → **Deniz şimdi** → sonra Emine Dilek (paket sonu).
