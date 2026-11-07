@@ -1,7 +1,7 @@
 /**
  * GENITAL-ESTETIK-01 (2026-11-06) — Canada: the cosmetic gynaecology tools this country offers under its own law and
  * regulator, the slots (with the legal source) of those it does not, the 18+ gate of every cosmetic-capable tool, the
- * operations offered, and a clean pack check. Obstetrics and gynaecology only.
+ * operations offered, and a clean pack check. Obstetrics and gynaecology; the surgical part also plastic and aesthetic surgery.
  */
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
@@ -12,7 +12,7 @@ import { CA_ARAYUZ } from './arayuz'
 import { CA_PAKETI } from './index'
 
 const A = CA_ARAYUZ.araclar as UlkeAraclari
-const ACIK: readonly string[] = ["ameliyat-notu-genital", "genital-enerji-seansi", "genital-enjeksiyon", "genital-beyazlatma", "genital-sonuc-olcegi", "genital-foto-onam"]
+const ACIK: readonly string[] = ["ameliyat-notu-genital", "genital-enerji-seansi", "genital-enjeksiyon", "genital-beyazlatma", "genital-sonuc-olcegi", "genital-foto-onam", "onam-formu-genital"]
 const KAPALI: readonly string[] = []
 const SABLON: readonly string[] = ["labioplasti", "labioplasti_klitoral", "vajinoplasti", "perineoplasti"]
 const ARAC = (k: string) => A.araclar.find((p) => p.anahtar === k)
@@ -41,8 +41,25 @@ describe('GENITAL-ESTETIK-01 — Canada', () => {
     assert.deepEqual([...offered].sort(), [...SABLON].sort())
     for (const o of Object.keys(p!.sablonlar?.sablon ?? {})) assert.ok(SABLON.includes(o), o)
   })
-  it('obstetrics and gynaecology only', () => {
-    for (const k of ACIK) assert.ok((ARAC(k)!.roller ?? []).length > 0 && ARAC(k)!.roller!.every((r) => /obstetric|gyn|akusher|ginek|kadin/i.test(r)), k)
+  it('the records stay with obstetrics and gynaecology; the surgical part also reaches plastic and aesthetic surgery, nobody else', () => {
+    const KD = /obstetric|gyn|akusher|ginek|kadin/i, PLASTIK = /^(plastic-surgery|aesthetic-surgery|plastik-cerrahi|estetik-cerrahi)$/
+    const CERRAHI = ['ameliyat-notu-genital', 'genital-foto-onam']
+    for (const k of ACIK) {
+      const r = ARAC(k)!.roller ?? []
+      assert.ok(r.length > 0, k)
+      if (k === 'onam-formu-genital') assert.ok(r.every((x) => PLASTIK.test(x)), `${k}: plastic and aesthetic surgery only (O&G has its own full form)`)
+      else if (CERRAHI.includes(k)) assert.ok(r.some((x) => KD.test(x)) && r.every((x) => KD.test(x) || PLASTIK.test(x)), k)
+      else assert.ok(r.every((x) => KD.test(x)), `${k}: obstetrics and gynaecology only`)
+    }
+    const cops = A.yuvalar.find((y) => y.anahtar === 'genital-cops-l-items')!
+    assert.ok((cops.roller ?? []).every((x) => KD.test(x) || PLASTIK.test(x)))
+    for (const k of ['genital-fsfi-items', 'genital-fgsis-items']) assert.ok((A.yuvalar.find((y) => y.anahtar === k)!.roller ?? []).every((x) => KD.test(x)), k)
+    assert.ok(!A.yuvalar.some((y) => y.anahtar === 'genital-vlq-item'), 'the Vaginal Laxity Questionnaire is not in the package')
+  })
+  it('the consent form of the operations offers the same operations as the note', () => {
+    const p = ARAC('onam-formu-genital')!
+    const offered = p.uyarlama?.secenekler?.islem ?? ['labioplasti', 'labioplasti_klitoral', 'vajinoplasti', 'perineoplasti']
+    assert.deepEqual([...offered].sort(), [...SABLON].sort())
   })
   it('labiaplasty on the O&G note asks for the medical indication, in this pack\'s words', () => {
     const kd = ARAC('ameliyat-notu-kd')

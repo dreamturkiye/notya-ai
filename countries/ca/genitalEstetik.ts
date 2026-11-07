@@ -13,6 +13,9 @@
  *     and safety; most women requesting it have normal genitalia and counselling reassures most.
  *   ENERGY-BASED DEVICES: no notice of the Canadian federal medical devices regulator was found in this session; the United States Food and Drug Administration safety communication of 30 July
  *     2018 is shown, labelled international.
+ *   PLASTIC AND AESTHETIC SURGERY (owner's decision, 2026-11-06): those roles see the surgical part only (the adult
+ *     genital-aesthetics operation note, its consent form `onam-formu-genital`, the photo consent, the COPS-L item slot),
+ *     under exactly the same decisions and sources as obstetrics and gynaecology above.
  */
 import type { EnUlkeGirdisi } from '../_dil/en/girdi'
 

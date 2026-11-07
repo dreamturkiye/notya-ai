@@ -15,7 +15,7 @@ const NOT: AracGirdisi = { tarih: '2026-11-06', aciliyet: 'elektif', preop_tani:
 describe('genital aesthetics (kit)', () => {
   it('every tool is in the catalogue; the cosmetic-capable ones are named for the 18+ gate', () => {
     for (const t of GENITAL_ESTETIK_ARACLARI) assert.ok(kitAraci(t.anahtar), t.anahtar)
-    assert.deepEqual([...GE_KOZMETIK_ARACLARI].sort(), ['ameliyat-notu-genital', 'genital-beyazlatma', 'genital-enerji-seansi', 'genital-enjeksiyon'])
+    assert.deepEqual([...GE_KOZMETIK_ARACLARI].sort(), ['ameliyat-notu-genital', 'genital-beyazlatma', 'genital-enerji-seansi', 'genital-enjeksiyon', 'onam-formu-genital'])
     // no item of a published questionnaire anywhere in the package
     for (const t of GENITAL_ESTETIK_ARACLARI) assert.ok(!t.alanlar.some((a) => a.numarali), t.anahtar)
   })
@@ -79,8 +79,20 @@ describe('genital aesthetics (kit)', () => {
     assert.deepEqual([f.tamam, f.bant], [true, 'fsfi_kesim_alti'])
     const c = t.hesapla({ tarih: '2026-11-06', olcek: 'cops_l', asama: 'oncesi', toplam: 40 }, ORT)
     assert.deepEqual([c.bant, c.uyarilar], ['cops_l_pozitif', ['cops_l_pozitif']])
-    assert.equal(t.hesapla({ tarih: '2026-11-06', olcek: 'vlq', asama: 'oncesi', toplam: 9 }, ORT).tamam, false)
+    assert.equal(t.hesapla({ tarih: '2026-11-06', olcek: 'vlq', asama: 'oncesi', toplam: 4 }, ORT).tamam, false, 'the Vaginal Laxity Questionnaire is not in the package (removed 2026-11-06)')
+    assert.deepEqual(t.alanlar.find((a) => a.anahtar === 'olcek')?.secenekler, ['fsfi', 'fgsis', 'cops_l'])
     assert.equal(t.hesapla({ tarih: '2026-11-06', olcek: 'fgsis', asama: 'sonrasi', toplam: 30 }, ORT).tamam, false)
+  })
+
+  it('the consent form of the four operations: the O&G form\'s arithmetic, only the genital-aesthetic operations, fewer per country', () => {
+    const t = kitAraci('onam-formu-genital')!, kd = kitAraci('onam-formu-kd')!
+    const islem = t.alanlar.find((a) => a.anahtar === 'islem')!
+    assert.deepEqual(islem.secenekler, ['labioplasti', 'labioplasti_klitoral', 'vajinoplasti', 'perineoplasti'])
+    assert.equal(islem.secenekSerbest, true)
+    for (const k of islem.secenekler ?? []) assert.ok(kd.alanlar.find((a) => a.anahtar === 'islem')?.secenekler?.includes(k), k)
+    const g: AracGirdisi = { tarih: '2026-11-06', islem: 'vajinoplasti', aciklama: 'a', riskler: 'r', yazili_bilgi: true, sorular_yanitlandi: true }
+    assert.deepEqual(t.hesapla(g, ORT), kd.hesapla(g, ORT))
+    assert.equal(t.hesapla({ ...g, riskler: '' }, ORT).tamam, false)
   })
 
   it('photo consent: separate and explicit (the documentation tick is required)', () => {

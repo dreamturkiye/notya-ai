@@ -76,7 +76,8 @@ describe('ca tools 1: which tools of the shared set are on', () => {
     assert.deepEqual(acik, [...setten, ...KENDI, 'takip-paneli'])
     // KD-OPERATOR-01 (2026-11-05): +16 operating surgeon's tools of the set
     // GENITAL-ESTETIK-01 (2026-11-06): +6 cosmetic gynecology tools of the set, all offered here (../genitalEstetik.ts)
-    assert.equal(acik.length, 93)
+    // GENITAL-ESTETIK-01c (2026-11-06): +1, the consent form of the operations for plastic and aesthetic surgery
+    assert.equal(acik.length, 94)
     for (const k of acik) assert.equal(Boolean(kitAraci(k)), !KENDI.includes(k), `${k}: a tool of the kit, or one of this country's own`)
   })
 
@@ -322,7 +323,7 @@ describe('ca tools 4: licence states', () => {
     assert.ok(borc.ulkeler.includes('ca'))
     const belirtilen = [...A.araclar.filter((p) => p.lisans).map((p) => p.anahtar), ...A.yuvalar.filter((y) => y.lisans).map((y) => y.anahtar)].sort()
     // GENITAL-ESTETIK-01 (2026-11-06): the four questionnaire item slots state their licence (permission needed or unclear)
-    assert.deepEqual(belirtilen, [...KENDI, 'esi-triyaj', 'phq9-gad7', 'rapor-taslagi', 'genital-cops-l-items', 'genital-fgsis-items', 'genital-fsfi-items', 'genital-vlq-item'].sort())
+    assert.deepEqual(belirtilen, [...KENDI, 'esi-triyaj', 'phq9-gad7', 'rapor-taslagi', 'genital-cops-l-items', 'genital-fgsis-items', 'genital-fsfi-items'].sort())
     // nothing that is switched on carries a state other than "free"
     for (const p of A.araclar) if (p.lisans) assert.equal(p.lisans.durum, 'serbest', p.anahtar)
   })
