@@ -22,6 +22,9 @@
  *   Hymenoplasty is an offence (Health and Care Act 2022, ss.148-149) and is never offered.
  *   RCOG Ethical Opinion Paper (2013), Ethical considerations in relation to female genital cosmetic surgery: FGCS should not
  *     normally be carried out on girls under 18; women must be informed of the risks and of the lack of reliable evidence.
+ *   PLASTIC AND AESTHETIC SURGERY (owner's decision, 2026-11-06): those roles see the surgical part only (the adult
+ *     genital-aesthetics operation note, its consent form `onam-formu-genital`, the photo consent, the COPS-L item slot),
+ *     under exactly the same decisions and sources as obstetrics and gynaecology above.
  */
 import type { EnUlkeGirdisi } from '../_dil/en/girdi'
 
@@ -34,10 +37,14 @@ export const GB_GENITAL_ESTETIK: A = {
     'genital-enjeksiyon': { eksik: `NOT OFFERED IN THE UNITED KINGDOM. Labial sites: ${FGM} G-spot filler and genital PRP: not recognised by any UK national body.`, kimden: 'a UK health lawyer and RCOG guidance, then the owner' },
     'genital-beyazlatma': { eksik: `NOT OFFERED IN THE UNITED KINGDOM. Genital lightening of the labia: ${FGM} Not recognised by any UK national body.`, kimden: 'a UK health lawyer, then the owner' },
   },
-  uyarlama: { 'ameliyat-notu-genital': { secenekler: { sablon: ['vajinoplasti', 'perineoplasti'] } } },
+  uyarlama: {
+    'ameliyat-notu-genital': { secenekler: { sablon: ['vajinoplasti', 'perineoplasti'] } },
+    // the consent form of the operations, for plastic and aesthetic surgery: the same two (FGM Act 2003 s.1)
+    'onam-formu-genital': { secenekler: { islem: ['vajinoplasti', 'perineoplasti'] } },
+  },
   degisen: {
     'ameliyat-notu-genital': {
-      aciklama: 'Vaginoplasty / colpoperineorrhaphy and perineoplasty, with the indication (cosmetic or medically indicated), body-image screening and pre-filled standard steps you correct to what was done. Labiaplasty and clitoral hood reduction are not offered here for cosmetic reasons (Female Genital Mutilation Act 2003); a medically indicated labiaplasty is written with the obstetric and gynaecological operation note.',
+      aciklama: 'Vaginoplasty / colpoperineorrhaphy and perineoplasty, with the indication (cosmetic or medically indicated), body-image screening and pre-filled standard steps you correct to what was done. Labiaplasty and clitoral hood reduction are not offered here for cosmetic reasons (Female Genital Mutilation Act 2003); a medically indicated labiaplasty is written with the obstetric and gynaecological operation note (plastic and aesthetic surgery: the general operation note).',
       not: 'United Kingdom: RCOG, Ethical considerations in relation to female genital cosmetic surgery (2013): women must be informed of the risks and of the lack of reliable evidence of benefit; not normally for girls under 18. ACOG Committee Opinion No. 795 (2020), international. Hymenoplasty is an offence (Health and Care Act 2022) and is not offered. The note is the surgeon\'s record.',
     },
     'ameliyat-notu-kd': { alanlar: { tibbi_endikasyon: 'Medically indicated (necessary for physical or mental health, Female Genital Mutilation Act 2003, s.1(2)). A cosmetic operation on the labia or clitoris is not offered.', tibbi_gerekce: 'Why it is necessary for her physical or mental health (custom or ritual is not a reason, s.1(5))' } },

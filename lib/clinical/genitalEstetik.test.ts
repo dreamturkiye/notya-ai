@@ -1,7 +1,7 @@
 /**
  * GENITAL-ESTETIK-01 — known-answer tests of the shared engine (byte-identical on every branch): the cosmetic / medical gate
  * and the under-18 block, the records (lot numbers for recalls, expiry, series), the outcome measures (FSFI scoring
- * appendix, FGSIS, VLQ, COPS-L cut-off), before/after trend, photo consent and the fixed photo rules. Keys only.
+ * appendix, FGSIS, COPS-L cut-off), before/after trend, photo consent and the fixed photo rules. Keys only.
  */
 import test from 'node:test'
 import assert from 'node:assert/strict'
@@ -148,11 +148,9 @@ test('FGSIS known answers: 7 items 1-4 → 7-28, no cut-off', () => {
   assert.equal(olcekToplamDegerlendir('fgsis', 18.5).gecerli, false)
 })
 
-test('VLQ known answers: one item 1-7, bands loose / neutral / tight', () => {
-  const b = (n: number) => { const d = olcekToplamDegerlendir('vlq', n); return d.gecerli ? d.bant : null }
-  assert.deepEqual([b(1), b(3), b(4), b(5), b(7)], ['vlq_gevsek', 'vlq_gevsek', 'vlq_notr', 'vlq_siki', 'vlq_siki'])
-  assert.equal(olcekToplamDegerlendir('vlq', 0).gecerli, false)
-  assert.equal(olcekToplamDegerlendir('vlq', 8).gecerli, false)
+test('the Vaginal Laxity Questionnaire is not in the package (not formally validated; removed 2026-11-06)', () => {
+  assert.deepEqual([...GE_OLCEKLER], ['fsfi', 'fgsis', 'cops_l'])
+  assert.equal(olcekToplamDegerlendir('vlq' as never, 4).gecerli, false)
 })
 
 test('COPS-L: ≥40 sets the referral prompt; it never blocks and never diagnoses', () => {
@@ -175,9 +173,9 @@ test('before / after trend: oldest first, change from baseline', () => {
   assert.equal(olcekTrendi([]).ilk, null)
 })
 
-test('licences: no instrument opens item-level entry until a licence is recorded; VLQ marked not validated', () => {
+test('licences: no instrument opens item-level entry until a licence is recorded', () => {
   for (const o of GE_OLCEKLER) assert.equal(geMaddeGirisiAcik(o), false, o)
-  assert.equal(GE_OLCEK_LISANSLARI.vlq.dogrulanmis, false)
+  assert.equal(GE_OLCEK_LISANSLARI.fgsis.durum, 'belirsiz')
   assert.equal(GE_OLCEK_LISANSLARI.fsfi.durum, 'izin-gerekli')
   assert.equal(GE_OLCEK_LISANSLARI.cops_l.durum, 'izin-gerekli')
 })
