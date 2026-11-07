@@ -2,7 +2,10 @@
  * GENITAL-ESTETIK-01 (Kaan, 2026-11-06) — THE ENGLISH LANGUAGE SET: ROLE TOOLS, seventh part. Cosmetic gynaecology /
  * genital aesthetics for obstetrics and gynaecology (lib/ulke/araclar/tanimlar/genitalEstetik.ts): the adult
  * genital-aesthetics operation note, the energy-based session note, the injection log, the whitening record, outcome-measure
- * totals and the separate photo consent.
+ * totals and the separate photo consent; and, for plastic and aesthetic surgery, the consent form of the four operations.
+ * The surgical part (the operation note, the photo consent, the consent form, the COPS-L item slot) is seen by obstetrics and
+ * gynaecology, plastic surgery and aesthetic surgery; energy, injection, whitening and the outcome totals by O&G only
+ * (owner's decision, 2026-11-06).
  *
  * MACHINE-WRITTEN. AWAITS CLINICAL REVIEW IN EACH COUNTRY. Written in en-GB spelling. Switched on where a country states
  * `genitalEstetik` (each country in its own release), and only the tools its own law and regulator permit: the rest are
@@ -13,15 +16,21 @@
  * The pre-filled steps write no dose and no number: every "__" is the surgeon's.
  */
 import type { HamArac } from './yardimci'
+import { EN_ARACLAR_6, ISLEM_ADLARI, ONAM_SABLONLARI } from './arac6'
 import { yuva, ANKET } from './yuvalar'
 import type { AracYuvasi } from '@/lib/ulke/araclar/tipler'
 
 const KD = ['obstetrics-gynaecology'] as const
+/** The surgical part: O&G, plastic surgery and aesthetic surgery (a role a country does not have is not given). */
+const CERRAHI = ['obstetrics-gynaecology', 'plastic-surgery', 'aesthetic-surgery'] as const
+const PLASTIK = ['plastic-surgery', 'aesthetic-surgery'] as const
+const GE_ISLEMLER = ['labioplasti', 'labioplasti_klitoral', 'vajinoplasti', 'perineoplasti'] as const
+const sec = <T,>(r: Readonly<Record<string, T>>): Record<string, T> => Object.fromEntries(GE_ISLEMLER.map((k) => [k, r[k]]))
 type S = Readonly<Record<string, string>>
 const adim = (satirlar: string[]) => satirlar.map((s, i) => `${i + 1}. ${s}`).join('\n')
 
 /** The patient gate sentence every cosmetic-capable tool carries (the pack gives the gate: 18 or over, female). */
-export const EN_GE_HASTA_METNI = 'For adult women aged 18 and over only: a cosmetic genital procedure is never recorded for a patient under 18, or for a patient whose date of birth is not recorded. Medically indicated surgery for a younger patient is written with the obstetric and gynaecological operation note.'
+export const EN_GE_HASTA_METNI = 'For adult women aged 18 and over only: a cosmetic genital procedure is never recorded for a patient under 18, or for a patient whose date of birth is not recorded. Medically indicated surgery for a younger patient is written with the obstetric and gynaecological operation note, or the general operation note.'
 
 const ENDIKASYON_ALANLARI: S = { endikasyon_sinifi: 'Indication: cosmetic or medically indicated', medikal_gerekce: 'Medical reason', medikal_aciklama: 'Medical reason in your own words' }
 const ENDIKASYON_SECENEKLERI: Readonly<Record<string, S>> = {
@@ -83,7 +92,7 @@ const GE_ADIMLAR: Readonly<Record<string, S>> = {
 
 export const EN_ARACLAR_7: readonly HamArac[] = [
   {
-    anahtar: 'ameliyat-notu-genital', roller: KD,
+    anahtar: 'ameliyat-notu-genital', roller: CERRAHI,
     ad: 'Operation note: genital aesthetic surgery (adults)',
     aciklama: 'Labiaplasty, labiaplasty with clitoral hood reduction, vaginoplasty / colpoperineorrhaphy and perineoplasty, with the indication (cosmetic or medically indicated), body-image screening and pre-filled standard steps you correct to what was done. Printed on your letterhead with the patient\'s post-operative instructions.',
     alanlar: { sablon: 'Operation (pre-fills the standard steps; every word can be edited)', ...ENDIKASYON_ALANLARI, bdd_tarama: 'Body-image (body dysmorphic disorder) screening', cops_l_toplam: 'COPS-L total, if used (0 to 72)', ...NOT_ALANLARI },
@@ -160,20 +169,20 @@ export const EN_ARACLAR_7: readonly HamArac[] = [
   {
     anahtar: 'genital-sonuc-olcegi', roller: KD,
     ad: 'Outcome measure total (before / after)',
-    aciklama: 'The TOTAL of FSFI, FGSIS, the Vaginal Laxity Questionnaire or COPS-L, from the authorised form you gave the patient, before or after a procedure. Kept results show the trend. No item of any questionnaire is shown.',
+    aciklama: 'The TOTAL of FSFI, FGSIS or COPS-L, from the authorised form you gave the patient, before or after a procedure. Kept results show the trend. No item of any questionnaire is shown.',
     alanlar: { tarih: 'Date', olcek: 'Instrument', asama: 'Stage', toplam: 'Total score' },
     secenekler: {
-      olcek: { fsfi: 'FSFI (Female Sexual Function Index), total 2 to 36', fgsis: 'FGSIS (Female Genital Self-Image Scale), total 7 to 28', vlq: 'Vaginal Laxity Questionnaire, 1 to 7 (not formally validated)', cops_l: 'COPS-L (Cosmetic Procedure Screening Scale for Labiaplasty), total 0 to 72' },
+      olcek: { fsfi: 'FSFI (Female Sexual Function Index), total 2 to 36', fgsis: 'FGSIS (Female Genital Self-Image Scale), total 7 to 28', cops_l: 'COPS-L (Cosmetic Procedure Screening Scale for Labiaplasty), total 0 to 72' },
       asama: { oncesi: 'Before the procedure', sonrasi: 'After the procedure', izlem: 'Follow-up' },
     },
     sayilar: { toplam: 'Total' },
-    bantlar: { fsfi_kesim_alti: 'FSFI 26.55 or less: in the range of female sexual dysfunction (Wiegel et al. 2005)', fsfi_kesim_ustu: 'FSFI above 26.55', vlq_gevsek: 'Loose side (1 to 3)', vlq_notr: 'Neither loose nor tight (4)', vlq_siki: 'Tight side (5 to 7)', cops_l_pozitif: 'COPS-L 40 or more', cops_l_negatif: 'COPS-L below 40' },
+    bantlar: { fsfi_kesim_alti: 'FSFI 26.55 or less: in the range of female sexual dysfunction (Wiegel et al. 2005)', fsfi_kesim_ustu: 'FSFI above 26.55', cops_l_pozitif: 'COPS-L 40 or more', cops_l_negatif: 'COPS-L below 40' },
     uyarilar: { cops_l_pozitif: 'COPS-L total 40 or more: possible body dysmorphic disorder. Consider referral for a mental-health assessment before any cosmetic genital procedure. This is not a diagnosis and blocks nothing; the decision is yours.' },
     tarihler: { tarih: 'Score' },
-    not: 'The instruments\' wording belongs to their authors, and permission for use in commercial software has not been obtained: no item is shown here. Sources: FSFI, Rosen et al. 2000 (cut-off Wiegel et al. 2005); FGSIS, Herbenick and Reece 2010; Vaginal Laxity Questionnaire, Millheiser et al. 2010 (not formally validated, Polland et al. 2021); COPS-L, Veale et al. 2013.',
+    not: 'The instruments\' wording belongs to their authors, and permission for use in commercial software has not been obtained: no item is shown here. Sources: FSFI, Rosen et al. 2000 (cut-off Wiegel et al. 2005); FGSIS, Herbenick and Reece 2010; COPS-L, Veale et al. 2013.',
   },
   {
-    anahtar: 'genital-foto-onam', roller: KD,
+    anahtar: 'genital-foto-onam', roller: CERRAHI,
     ad: 'Consent to intimate clinical photographs',
     aciklama: 'The patient\'s SEPARATE, explicit consent to genital photographs for her clinical record, and the standard views planned. Photographs are never sent to any automated analysis.',
     alanlar: {
@@ -184,16 +193,25 @@ export const EN_ARACLAR_7: readonly HamArac[] = [
     tarihler: { tarih: 'Consent' },
     not: 'Consent to photographs is separate from consent to the procedure and can be withdrawn at any time. Photographs are clinical records: kept encrypted, viewed only when needed, never sent to automated analysis, and never in an export unless you include them.',
   },
+  // GENITAL-ESTETIK-01c: the O&G consent form's words, narrowed to the four operations, for plastic and aesthetic surgery
+  {
+    ...EN_ARACLAR_6.find((a) => a.anahtar === 'onam-formu-kd')!,
+    anahtar: 'onam-formu-genital', roller: PLASTIK,
+    ad: 'Procedure consent form: genital aesthetic surgery',
+    aciklama: 'A consent form for labiaplasty, labiaplasty with clitoral hood reduction, vaginoplasty / colpoperineorrhaphy or perineoplasty: what it is, its benefits, its serious and frequent risks, extra procedures that may be needed, the alternatives and the signatures. Choose the operation to pre-fill it, then complete it with the patient. Printed on your letterhead.',
+    secenekler: { islem: sec(ISLEM_ADLARI) },
+    sablonlar: { islem: sec(ONAM_SABLONLARI) },
+    not: 'Consent is a conversation: the form records it. The evidence on cosmetic genital surgery is limited: say so, discuss the patient\'s expectations and body image, and give her time to decide. Risk frequencies are the clinician\'s to discuss and write for this patient.',
+  },
 ]
 
-/** Item-level entry of the four instruments: slots until a licence is recorded (GE_OLCEK_LISANSLARI). */
+/** Item-level entry of the three instruments: slots until a licence is recorded (GE_OLCEK_LISANSLARI). */
 export function enGeYuvalari(): readonly AracYuvasi[] {
   const eksik = (ad: string, hak: string) => `Item-level entry and scoring of ${ad}: the questionnaire's wording belongs to ${hak}, and permission to show it in a commercial product has not been obtained. Until then only the total is recorded (outcome measure total).`
   return [
     { ...yuva('genital-fsfi-items', [...KD], eksik('the FSFI', 'its author (Raymond C. Rosen)'), ANKET), lisans: { durum: 'izin-gerekli', hakSahibi: 'Raymond C. Rosen (FSFI)' } },
     { ...yuva('genital-fgsis-items', [...KD], eksik('the FGSIS', 'its authors (Debby Herbenick, Michael Reece)'), ANKET), lisans: { durum: 'belirsiz', hakSahibi: 'Debby Herbenick, Michael Reece' } },
-    { ...yuva('genital-vlq-item', [...KD], eksik('the Vaginal Laxity Questionnaire (one item; not formally validated)', 'its authors (Millheiser et al. 2010)'), ANKET), lisans: { durum: 'belirsiz', hakSahibi: 'Millheiser et al. (2010)' } },
-    { ...yuva('genital-cops-l-items', [...KD], eksik('COPS-L', 'its author (David Veale)'), ANKET), lisans: { durum: 'izin-gerekli', hakSahibi: 'David Veale' } },
+    { ...yuva('genital-cops-l-items', [...CERRAHI], eksik('COPS-L', 'its author (David Veale)'), ANKET), lisans: { durum: 'izin-gerekli', hakSahibi: 'David Veale' } },
   ]
 }
 

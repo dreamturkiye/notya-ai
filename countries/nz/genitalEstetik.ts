@@ -11,6 +11,9 @@
  *     2019) strongly discourages laser procedures lacking peer-reviewed evidence outside a properly designed trial, under
  *     ethics-committee supervision. DECISION: OFF (not recognised for routine care).
  *   INJECTIONS AND WHITENING: lawful under s.204A as amended (cosmetic purposes); evidence limited, said on the tool.
+ *   PLASTIC AND AESTHETIC SURGERY (owner's decision, 2026-11-06): those roles see the surgical part only (the adult
+ *     genital-aesthetics operation note, its consent form `onam-formu-genital`, the photo consent, the COPS-L item slot),
+ *     under exactly the same decisions and sources as obstetrics and gynaecology above.
  */
 import type { EnUlkeGirdisi } from '../_dil/en/girdi'
 
