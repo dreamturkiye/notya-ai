@@ -69,7 +69,17 @@ Tanıtıma vakit yoksa ücretsiz denemeyi hemen açabiliyoruz.
 - Biyolojik SUT taslağı
 ```
 
-Pediatri: branş maddeleri yok; genel pitch + kapanış + iki link.
+**Pediatri** (`*Kadın doğumda*` / `*Dermatolojide*` yerine):
+
+```
+*Pediatride*
+- Büyüme ve persentil (Neyzi / WHO)
+- Hedef boy
+- Doz hesaplayıcı (mg/kg)
+- Aşı takvimi ve telafi
+- Gelişim ve tarama (M-CHAT dahil)
+```
+
 
 ## E-posta (Kaan)
 

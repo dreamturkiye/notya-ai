@@ -1139,7 +1139,7 @@ Tanıtıma vakit yoksa ücretsiz denemeyi hemen açabiliyoruz.
 ## W2-4. Uzm. Dr. Gonca Aslan ← SIRADAKİ
 **pediatri** · İzmir/Karşıyaka · `+90 544 282 33 75` · WA: `+905442823375`
 
-**Gönder:** yapıştır → kart çıkarsa **X** → gönder.
+**Gönder:** yapıştır → kart çıkarsa **X** → gönder. *(pedi araç listeli)*
 
 ```
 Gonca Hocam merhaba 👋
@@ -1149,6 +1149,13 @@ Ben Kaan, *Notya*'dan yazıyorum.
 Muayeneyi dinler, notunuzu yazar, reçete ve rapor taslağını hazırlar, hastanızı takipte tutar — hasta portalı dahil.
 Her karar *sizin onayınızla*.
 40'tan fazla branşı kendi ihtiyaçlarıyla destekliyoruz.
+
+*Pediatride*
+- Büyüme ve persentil (Neyzi / WHO)
+- Hedef boy
+- Doz hesaplayıcı (mg/kg)
+- Aşı takvimi ve telafi
+- Gelişim ve tarama (M-CHAT dahil)
 
 Tipik bir günde yaklaşık *1,5-2 saat* kazanç.
 Kayıtlar daha düzenli → bakım kalitesi de yükseliyor.
