@@ -80,8 +80,9 @@ describe('us tools 1: no tool of the shared set is switched on or off by this jo
     assert.deepEqual(acik, [...setten, ...KENDI, 'takip-paneli'])
     // KD-OPERATOR-01 (2026-11-05): +16 operating surgeon's tools of the set
     // GENITAL-ESTETIK-01 (2026-11-06): +6 cosmetic gynaecology tools of the set, all offered here (./genitalEstetik.ts)
-    assert.equal(setten.length + 1, 83, 'the patient page, the open role tools and the follow-up list')
-    assert.equal(acik.length, 83 + 14)
+    // GENITAL-ESTETIK-01c (2026-11-06): +1, the consent form of the operations for plastic and aesthetic surgery
+    assert.equal(setten.length + 1, 84, 'the patient page, the open role tools and the follow-up list')
+    assert.equal(acik.length, 84 + 14)
     for (const k of acik) assert.equal(Boolean(kitAraci(k)), !KENDI.includes(k), `${k}: a tool of the kit, or one of the thirteen of this country's own`)
   })
 
@@ -288,8 +289,8 @@ describe('us tools 3: the numbers a national source states — each read on 2026
     assert.deepEqual(A.araclar.filter((p) => p.parametreler).map((p) => p.anahtar).sort(), ['hedef-boy', 'kanama-izlem']) // KD-OPERATOR-01: the WHO thresholds, beside their source in ./operator.ts
     assert.deepEqual(A.araclar.filter((p) => p.uyarlama).map((p) => p.anahtar).sort(), ['das28', 'odyometri-pta'])
     assert.deepEqual(A.araclar.filter((p) => p.tablolar).map((p) => p.anahtar), [])
-    // a tool held back by the patient's age: three of the country's own, and the set's four cosmetic gynaecology tools (adult women only; GENITAL-ESTETIK-01)
-    assert.deepEqual(A.araclar.filter((p) => p.hasta).map((p) => p.anahtar).sort(), ['ameliyat-notu-genital', 'genital-beyazlatma', 'genital-enerji-seansi', 'genital-enjeksiyon', 'us-bmi', 'us-egfr-ckd-epi-2021', 'us-fall-risk-screen'])
+    // a tool held back by the patient's age: three of the country's own, and the set's five cosmetic genital-aesthetic tools (adult women only; GENITAL-ESTETIK-01)
+    assert.deepEqual(A.araclar.filter((p) => p.hasta).map((p) => p.anahtar).sort(), ['ameliyat-notu-genital', 'genital-beyazlatma', 'genital-enerji-seansi', 'genital-enjeksiyon', 'onam-formu-genital', 'us-bmi', 'us-egfr-ckd-epi-2021', 'us-fall-risk-screen'])
   })
 
   it('EVERY NUMBER STATED HERE STANDS BESIDE ITS SOURCE IN THE PACK: the address, the title and the day it was read', () => {

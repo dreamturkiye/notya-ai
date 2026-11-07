@@ -11,6 +11,9 @@
  *     5 September 2018; the Food and Drug Administration page itself could not be opened in this session): no device authorised for these
  *     uses; vaginal burns, scarring, pain during intercourse and recurring or chronic pain reported.
  *   ACOG Committee Opinion No. 795, Elective Female Genital Cosmetic Surgery (Obstet Gynecol 2020;135:e36-e42).
+ *   PLASTIC AND AESTHETIC SURGERY (owner's decision, 2026-11-06): those roles see the surgical part only (the adult
+ *     genital-aesthetics operation note, its consent form `onam-formu-genital`, the photo consent, the COPS-L item slot),
+ *     under exactly the same decisions and sources as obstetrics and gynaecology above.
  */
 import type { EnUlkeGirdisi } from '../_dil/en/girdi'
 
