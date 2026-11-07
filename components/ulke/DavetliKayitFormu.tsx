@@ -24,14 +24,21 @@ export type DavetliKayitFormuProps = {
   fiyat: string
   /** false = the country's sign-up is open (pack setting `uygulama.kayitAcik`): no code is asked. Default: a code is required. */
   kodGerekli?: boolean
+  /**
+   * KAYIT-BRANS-01 (Kaan, 2026-11-07): the REQUIRED specialty choice — this country's own roles (the pack's list, which
+   * already carries its regulatory gate), grouped and named in the visitor's language by the signed-in catalogue
+   * (`rol`). Absent only where the country has no roles. No preselected default; the button stays disabled until one
+   * is chosen, and the server (app/api/ulke/kayit) refuses a missing or unknown one.
+   */
+  brans?: { etiket: string; sec: string; gerekli: string; gruplar: readonly { ad: string; secenekler: readonly { anahtar: string; ad: string }[] }[] }
   /** Optional professional registration. From the signed-in catalogue, not a new key of the public sign-up surface. */
   meslek?: { etiket: string; izoh: string; gecersiz: string }
 }
 
 const EPOSTA = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
 
-export default function DavetliKayitFormu({ dil, metin, anaSayfaAdi, diller, anaSayfa, giris, fiyat, kodGerekli = true, meslek }: DavetliKayitFormuProps) {
-  const [alan, setAlan] = useState({ adSoyad: '', eposta: '', sifre: '', sifreTekrar: '', davetKodu: '', dil: dil as string, meslekKaydi: '' })
+export default function DavetliKayitFormu({ dil, metin, anaSayfaAdi, diller, anaSayfa, giris, fiyat, kodGerekli = true, meslek, brans }: DavetliKayitFormuProps) {
+  const [alan, setAlan] = useState({ adSoyad: '', eposta: '', sifre: '', sifreTekrar: '', davetKodu: '', dil: dil as string, meslekKaydi: '', rol: '' })
   const [bekliyor, setBekliyor] = useState(false)
   const [hata, setHata] = useState('')
   const [tamam, setTamam] = useState(false)
@@ -43,6 +50,7 @@ export default function DavetliKayitFormu({ dil, metin, anaSayfaAdi, diller, ana
     e.preventDefault()
     const adSoyad = alan.adSoyad.trim(), eposta = alan.eposta.toLowerCase().trim(), davetKodu = alan.davetKodu.trim()
     if (!adSoyad || !eposta || !alan.sifre || !alan.sifreTekrar || (kodGerekli && !davetKodu)) { setHata(metin.eksikAlan); return }
+    if (brans && !brans.gruplar.some((g) => g.secenekler.some((s) => s.anahtar === alan.rol))) { setHata(brans.gerekli); return }
     if (!EPOSTA.test(eposta)) { setHata(metin.epostaGecersiz); return }
     if (alan.sifre.length < 8) { setHata(metin.sifreKisa); return }
     if (alan.sifre !== alan.sifreTekrar) { setHata(metin.sifreUyusmuyor); return }
@@ -52,11 +60,11 @@ export default function DavetliKayitFormu({ dil, metin, anaSayfaAdi, diller, ana
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         cache: 'no-store',
-        body: JSON.stringify({ adSoyad, eposta, sifre: alan.sifre, ...(kodGerekli ? { davetKodu } : {}), ...(refKodu() ? { ref: refKodu() } : {}), dil: alan.dil, ...(alan.meslekKaydi.trim() ? { meslekKaydi: alan.meslekKaydi.trim() } : {}) }),
+        body: JSON.stringify({ adSoyad, eposta, sifre: alan.sifre, ...(kodGerekli ? { davetKodu } : {}), ...(refKodu() ? { ref: refKodu() } : {}), dil: alan.dil, ...(alan.meslekKaydi.trim() ? { meslekKaydi: alan.meslekKaydi.trim() } : {}), ...(brans ? { rol: alan.rol } : {}) }),
       })
       if (r.ok) { setTamam(true); return }
       const j = (await r.json().catch(() => ({}))) as { code?: string }
-      const kod: Record<string, string> = { EKSIK_ALAN: metin.eksikAlan, EPOSTA_GECERSIZ: metin.epostaGecersiz, SIFRE_KISA: metin.sifreKisa, KOD_GECERSIZ: metin.kodGecersiz, GECERSIZ: meslek?.gecersiz ?? metin.olusturulamadi }
+      const kod: Record<string, string> = { EKSIK_ALAN: metin.eksikAlan, EPOSTA_GECERSIZ: metin.epostaGecersiz, SIFRE_KISA: metin.sifreKisa, KOD_GECERSIZ: metin.kodGecersiz, GECERSIZ: meslek?.gecersiz ?? metin.olusturulamadi, ROL_GEREKLI: brans?.gerekli ?? metin.eksikAlan }
       setHata(kod[String(j.code)] ?? metin.olusturulamadi)
     } catch {
       setHata(metin.baglantiHatasi)
@@ -102,6 +110,19 @@ export default function DavetliKayitFormu({ dil, metin, anaSayfaAdi, diller, ana
           <label style={S.etiket} htmlFor="ulke-kayit-sifre2">{metin.sifreTekrar}</label>
           <input id="ulke-kayit-sifre2" type="password" value={alan.sifreTekrar} onChange={yaz('sifreTekrar')} autoComplete="new-password" maxLength={200} style={S.girdi} />
         </div>
+        {brans ? (
+          <div data-alan="brans-secimi">
+            <label style={S.etiket} htmlFor="ulke-kayit-rol">{brans.etiket}</label>
+            <select id="ulke-kayit-rol" name="rol" required aria-required="true" value={alan.rol} onChange={yaz('rol')} style={{ ...S.girdi, appearance: 'auto', color: alan.rol ? R.ink : R.muted }}>
+              <option value="" disabled>{brans.sec}</option>
+              {brans.gruplar.map((g) => (
+                <optgroup key={g.ad} label={g.ad}>
+                  {g.secenekler.map((s) => <option key={s.anahtar} value={s.anahtar} style={{ color: R.ink }}>{s.ad}</option>)}
+                </optgroup>
+              ))}
+            </select>
+          </div>
+        ) : null}
         {meslek ? (
           <div>
             <label style={S.etiket} htmlFor="ulke-kayit-meslek">{meslek.etiket}</label>
@@ -120,7 +141,7 @@ export default function DavetliKayitFormu({ dil, metin, anaSayfaAdi, diller, ana
           </div>
         ) : null}
         {hata ? <div role="alert" style={S.hata}>{hata}</div> : null}
-        <button type="submit" disabled={bekliyor} style={{ ...S.dugme, opacity: bekliyor ? 0.6 : 1 }}>
+        <button type="submit" disabled={bekliyor || (brans ? !alan.rol : false)} style={{ ...S.dugme, opacity: bekliyor || (brans ? !alan.rol : false) ? 0.6 : 1 }}>
           {bekliyor ? metin.gonderiliyor : metin.gonder}
         </button>
       </form>
