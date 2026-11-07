@@ -830,10 +830,8 @@ Tanıtıma vakit yoksa ücretsiz denemeyi hemen açabiliyoruz.
 
 
 ---
-## 25. Uzm. Dr. Gülcan Akverdi Buyruk ← SIRADAKİ
-**kadin-dogum** · Gaziosmanpaşa · `+90 589 309 41 33` · WA: `+905893094133`
-
-**Gönder:** yapıştır → kart çıkarsa **X** → gönder.
+## 25. Uzm. Dr. Gülcan Akverdi Buyruk ← WA YOK · GİTMEDİ
+**kadin-dogum** · Gaziosmanpaşa · `+90 589 309 41 33` · WA: yok (2026-11-07 denendi)
 
 ```
 Gülcan Hocam merhaba 👋
@@ -866,38 +864,40 @@ Tanıtıma vakit yoksa ücretsiz denemeyi hemen açabiliyoruz.
 
 
 ---
-## 26. Dr. Öğr. Üyesi Neslihan Fişek İzci
+## 26. Dr. Öğr. Üyesi Neslihan Fişek İzci ← SIRADAKİ (derm)
 **dermatoloji** · Kadıköy · `+90 532 290 39 00` · WA: `+905322903900`
 
-**Balon 1:**
+**Gönder:** yapıştır → kart çıkarsa **X** → gönder.
 
 ```
 Neslihan Hocam merhaba 👋
-Ben Kaan, Notya’dan yazıyorum.
+Ben Kaan, *Notya*'dan yazıyorum.
 
-Notya, hekimler için yapay zekâ klinik asistanı: muayeneyi dinler, notunuzu yazar,
-reçete ve rapor taslağını hazırlar, hastanızı takipte tutar — hasta portalı dahil.
-Her karar sizin onayınızla. 40’tan fazla branşı kendi ihtiyaçlarıyla destekliyoruz.
+*Notya* — hekimler için yapay zekâ klinik asistanı.
+Muayeneyi dinler, notunuzu yazar, reçete ve rapor taslağını hazırlar, hastanızı takipte tutar — hasta portalı dahil.
+Her karar *sizin onayınızla*.
+40'tan fazla branşı kendi ihtiyaçlarıyla destekliyoruz.
 
-Dermatolojide PASI/EASI, izotretinoin GÖP kapısı, fototerapi defteri, yama (D2/D4),
-dermoskopi/önce-sonra foto arşivi ve biyolojik SUT taslağı branşa özel ilerliyor.
+*Dermatolojide*
+- PASI / EASI
+- İzotretinoin GÖP kapısı
+- Fototerapi defteri
+- Yama (D2/D4) ve dermoskopi
+- Biyolojik SUT taslağı
 
-Yoğun günlerde not, reçete, takip ve ön büro işlerinden yaklaşık 1,5–2 saat kazandırıyor;
-kayıtlar daha düzenli olduğu için bakım kalitesine de yansıyor.
+Tipik bir günde yaklaşık *1,5-2 saat* kazanç.
+Kayıtlar daha düzenli → bakım kalitesi de yükseliyor.
+Meslektaşlarınız da bakmaya başladı — geride kalmamak için kısa bir bakış çoğu zaman yeterli.
 
-Dr. Gökhan Mamur 30 dakikalık kısa tanıtımlar yapıyor 🩺
-Saatler sizin uygunluğunuza göre ayarlanıyor.
+Dr. Gökhan Mamur *30 dk* kısa tanıtım yapıyor 🩺
+Saatler size göre.
 
-Tanıtıma vaktiniz yoksa da sorun değil, ücretsiz denemeyi hemen açabiliyoruz.
-İsterseniz kısaca bakabilirsiniz, uygun görürseniz devam ederiz.
+Tanıtıma vakit yoksa ücretsiz denemeyi hemen açabiliyoruz.
+
+📅 *Tanıtım / Demo:* www.notya.io/demo
+🔗 *Ücretsiz deneme:* www.notya.io
 ```
 
-**Balon 2:**
-
-```
-📅 Tanıtım için takvim: https://cal.com/han-mamur-sugmbo/demo-tr
-🔗 Ücretsiz deneme: https://www.notya.io
-```
 
 ---
 ## 27. Prof. Dr. Mustafa Özdemir
