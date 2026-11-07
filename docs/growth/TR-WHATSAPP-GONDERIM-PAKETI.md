@@ -1000,10 +1000,8 @@ Tanıtıma vakit yoksa ücretsiz denemeyi hemen açabiliyoruz.
 
 
 ---
-## 30. Uzm. Dr. Emine Dilek Bahçekapılı Yıldırım ← SIRADAKİ (derm · paket sonu)
+## 30. Uzm. Dr. Emine Dilek Bahçekapılı Yıldırım ← GİTTİ (isimli paket tamam)
 **dermatoloji** · Bakırköy · `+90 530 905 44 61` · WA: `+905309054461`
-
-**Gönder:** yapıştır → kart çıkarsa **X** → gönder.
 
 ```
 Emine Hocam merhaba 👋
@@ -1034,3 +1032,40 @@ Tanıtıma vakit yoksa ücretsiz denemeyi hemen açabiliyoruz.
 🔗 *Ücretsiz deneme:* www.notya.io
 ```
 
+
+---
+# Wave 2 (isimli paket sonrası)
+
+## W2-1. Uzm. Dr. Fatoş Polat ← SIRADAKİ
+**dermatoloji** · Ankara/Çankaya · `+90 530 020 56 86` · WA: `+905300205686`
+
+**Gönder:** yapıştır → kart çıkarsa **X** → gönder.
+
+```
+Fatoş Hocam merhaba 👋
+Ben Kaan, *Notya*'dan yazıyorum.
+
+*Notya* — hekimler için yapay zekâ klinik asistanı.
+Muayeneyi dinler, notunuzu yazar, reçete ve rapor taslağını hazırlar, hastanızı takipte tutar — hasta portalı dahil.
+Her karar *sizin onayınızla*.
+40'tan fazla branşı kendi ihtiyaçlarıyla destekliyoruz.
+
+*Dermatolojide*
+- PASI / EASI
+- İzotretinoin GÖP kapısı
+- Fototerapi defteri
+- Yama (D2/D4) ve dermoskopi
+- Biyolojik SUT taslağı
+
+Tipik bir günde yaklaşık *1,5-2 saat* kazanç.
+Kayıtlar daha düzenli → bakım kalitesi de yükseliyor.
+Meslektaşlarınız da bakmaya başladı — geride kalmamak için kısa bir bakış çoğu zaman yeterli.
+
+Dr. Gökhan Mamur *30 dk* kısa tanıtım yapıyor 🩺
+Saatler size göre.
+
+Tanıtıma vakit yoksa ücretsiz denemeyi hemen açabiliyoruz.
+
+📅 *Tanıtım / Demo:* www.notya.io/demo
+🔗 *Ücretsiz deneme:* www.notya.io
+```
