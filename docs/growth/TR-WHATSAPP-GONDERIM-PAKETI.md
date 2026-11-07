@@ -1036,13 +1036,45 @@ Tanıtıma vakit yoksa ücretsiz denemeyi hemen açabiliyoruz.
 ---
 # Wave 2 (isimli paket sonrası)
 
-## W2-1. Uzm. Dr. Fatoş Polat ← SIRADAKİ
+## W2-1. Uzm. Dr. Fatoş Polat ← GİTTİ
 **dermatoloji** · Ankara/Çankaya · `+90 530 020 56 86` · WA: `+905300205686`
+
+```
+Fatoş Hocam merhaba 👋
+Ben Kaan, *Notya*'dan yazıyorum.
+
+*Notya* — hekimler için yapay zekâ klinik asistanı.
+Muayeneyi dinler, notunuzu yazar, reçete ve rapor taslağını hazırlar, hastanızı takipte tutar — hasta portalı dahil.
+Her karar *sizin onayınızla*.
+40'tan fazla branşı kendi ihtiyaçlarıyla destekliyoruz.
+
+*Dermatolojide*
+- PASI / EASI
+- İzotretinoin GÖP kapısı
+- Fototerapi defteri
+- Yama (D2/D4) ve dermoskopi
+- Biyolojik SUT taslağı
+
+Tipik bir günde yaklaşık *1,5-2 saat* kazanç.
+Kayıtlar daha düzenli → bakım kalitesi de yükseliyor.
+Meslektaşlarınız da bakmaya başladı — geride kalmamak için kısa bir bakış çoğu zaman yeterli.
+
+Dr. Gökhan Mamur *30 dk* kısa tanıtım yapıyor 🩺
+Saatler size göre.
+
+Tanıtıma vakit yoksa ücretsiz denemeyi hemen açabiliyoruz.
+
+📅 *Tanıtım / Demo:* www.notya.io/demo
+🔗 *Ücretsiz deneme:* www.notya.io
+```
+
+## W2-2. Uzm. Dr. Sinem Karaca ← SIRADAKİ
+**dermatoloji** · İzmir/Konak · `+90 542 510 50 65` · WA: `+905425105065`
 
 **Gönder:** yapıştır → kart çıkarsa **X** → gönder.
 
 ```
-Fatoş Hocam merhaba 👋
+Sinem Hocam merhaba 👋
 Ben Kaan, *Notya*'dan yazıyorum.
 
 *Notya* — hekimler için yapay zekâ klinik asistanı.
