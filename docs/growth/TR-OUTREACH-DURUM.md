@@ -1,5 +1,5 @@
 # TR outreach durum (canlı)
 
-**Sıradaki:** Op. Dr. **Abdulkadir Güllüce** · KD · Beylikdüzü · `+905076220434`
+**Sıradaki:** Op. Dr. **Burcu Çetinkaya** · KD · Beyoğlu · `+905054504712`
 
-WA yok: Yeşim, Aysun. Meryem gitti → **Abdulkadir şimdi**.
+Abdulkadir gitti → **Burcu şimdi**. WA yok: Yeşim, Aysun.
