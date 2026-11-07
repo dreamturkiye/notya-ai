@@ -1,5 +1,5 @@
 # TR outreach durum (canlı)
 
-**Sıradaki:** Op. Dr. **Şerife Tuğba Kahraman** · KD · Küçükçekmece · `+905065351726`
+**Sıradaki:** Uzm. Dr. **Gülcan Akverdi Buyruk** · KD · Gaziosmanpaşa · `+905893094133`
 
-İrem gitti → **Şerife şimdi**. WA yok: Yeşim, Aysun, Elif Esra, Murat.
+Şerife gitti → **Gülcan şimdi**. Sonra derm bloğu başlar (Neslihan…).
