@@ -1,5 +1,5 @@
 # TR outreach durum (canlı)
 
-**Sıradaki:** Prof. Dr. **Mustafa Özdemir** · derm · Bakırköy · `+905522656436`
+**Sıradaki:** Uzm. Dr. **Aida Berenjian** · derm · Ataşehir · `+905333378299`
 
-Neslihan gitti → **Mustafa şimdi**.
+Mustafa gitti → **Aida şimdi** → sonra Deniz Küçükay.
