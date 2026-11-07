@@ -660,10 +660,8 @@ Tanıtıma vakit yoksa ücretsiz denemeyi hemen açabiliyoruz.
 
 
 ---
-## 20. Op. Dr. Murat Öztürk ← SIRADAKİ
-**kadin-dogum** · Bahçelievler · `+90 538 871 40 57` · WA: `+905388714057`
-
-**Gönder:** yapıştır → kart çıkarsa **X** → gönder.
+## 20. Op. Dr. Murat Öztürk ← WA YOK · GİTMEDİ
+**kadin-dogum** · Bahçelievler · `+90 538 871 40 57` · WA: yok (2026-11-07 denendi)
 
 ```
 Murat Hocam merhaba 👋
@@ -696,40 +694,40 @@ Tanıtıma vakit yoksa ücretsiz denemeyi hemen açabiliyoruz.
 
 
 ---
-## 21. Op. Dr. Sümeyra Okur Salman
+## 21. Op. Dr. Sümeyra Okur Salman ← SIRADAKİ
 **kadin-dogum** · Ümraniye · `+90 551 826 07 18` · WA: `+905518260718`
 
-**Balon 1:**
+**Gönder:** yapıştır → kart çıkarsa **X** → gönder.
 
 ```
 Sümeyra Hocam merhaba 👋
-Ben Kaan, Notya’dan yazıyorum.
+Ben Kaan, *Notya*'dan yazıyorum.
 
-Notya, hekimler için yapay zekâ klinik asistanı: muayeneyi dinler, notunuzu yazar,
-reçete ve rapor taslağını hazırlar, hastanızı takipte tutar — hasta portalı dahil.
-Her karar sizin onayınızla. 40’tan fazla branşı kendi ihtiyaçlarıyla destekliyoruz.
+*Notya* — hekimler için yapay zekâ klinik asistanı.
+Muayeneyi dinler, notunuzu yazar, reçete ve rapor taslağını hazırlar, hastanızı takipte tutar — hasta portalı dahil.
+Her karar *sizin onayınızla*.
+40'tan fazla branşı kendi ihtiyaçlarıyla destekliyoruz.
 
-Kadın doğum tarafında operatör hekimlerle birlikte ilerliyoruz: sezaryen, histerektomi,
-myomektomi, laparoskopi, histeroskopi ve küretaj ameliyat notları; doğum epikrizi;
-Doppler’li obstetrik/jinekolojik USG raporu; yapılandırılmış NST — hepsi doğru başlıklı
-antetli kâğıda basılıyor.
+*Kadın doğumda*
+- Gebelik takvimi ve izlem
+- Doppler'li USG ve yapılandırılmış NST
+- Obstetrik risk (preeklampsi, GDM, SSVD)
+- Sezaryen ve ameliyat notları
+- Doğum epikrizi ve antetli baskı
 
-Yoğun günlerde not, reçete, takip ve ön büro işlerinden yaklaşık 1,5–2 saat kazandırıyor;
-kayıtlar daha düzenli olduğu için bakım kalitesine de yansıyor.
+Tipik bir günde yaklaşık *1,5-2 saat* kazanç.
+Kayıtlar daha düzenli → bakım kalitesi de yükseliyor.
+Meslektaşlarınız da bakmaya başladı — geride kalmamak için kısa bir bakış çoğu zaman yeterli.
 
-Dr. Gökhan Mamur 30 dakikalık kısa tanıtımlar yapıyor 🩺
-Saatler sizin uygunluğunuza göre ayarlanıyor.
+Dr. Gökhan Mamur *30 dk* kısa tanıtım yapıyor 🩺
+Saatler size göre.
 
-Tanıtıma vaktiniz yoksa da sorun değil, ücretsiz denemeyi hemen açabiliyoruz.
-İsterseniz kısaca bakabilirsiniz, uygun görürseniz devam ederiz.
+Tanıtıma vakit yoksa ücretsiz denemeyi hemen açabiliyoruz.
+
+📅 *Tanıtım / Demo:* www.notya.io/demo
+🔗 *Ücretsiz deneme:* www.notya.io
 ```
 
-**Balon 2:**
-
-```
-📅 Tanıtım için takvim: https://cal.com/han-mamur-sugmbo/demo-tr
-🔗 Ücretsiz deneme: https://www.notya.io
-```
 
 ---
 ## 22. Op. Dr. Yasemin Çakar Kement
