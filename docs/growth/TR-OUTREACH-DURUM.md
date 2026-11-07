@@ -1,5 +1,5 @@
 # TR outreach durum (canlı)
 
-**Sıradaki:** Prof. Dr. **Eralp Başer** · KD · Şişli · `+905334330282`
+**Sıradaki:** Doç. Dr. **Aysun Fırat** · KD · Zeytinburnu · `+905017287587`
 
-Aynur gitti → **Eralp şimdi** → sonra Aysun Fırat. Yeşim: WA yok.
+Eralp gitti → **Aysun şimdi**. Yeşim: WA yok.
