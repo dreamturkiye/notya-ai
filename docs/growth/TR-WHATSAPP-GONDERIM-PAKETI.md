@@ -1102,7 +1102,7 @@ Tanıtıma vakit yoksa ücretsiz denemeyi hemen açabiliyoruz.
 🔗 *Ücretsiz deneme:* www.notya.io
 ```
 
-## W2-3. Op. Dr. Bahar Selda Doğan ← SIRADAKİ
+## W2-3. Op. Dr. Bahar Selda Doğan ← GİTTİ
 **kadin-dogum** · İzmir/Konak · `+90 545 287 65 50` · WA: `+905452876550`
 
 **Gönder:** yapıştır → kart çıkarsa **X** → gönder.
@@ -1122,6 +1122,33 @@ Her karar *sizin onayınızla*.
 - Obstetrik risk (preeklampsi, GDM, SSVD)
 - Sezaryen ve ameliyat notları
 - Doğum epikrizi ve antetli baskı
+
+Tipik bir günde yaklaşık *1,5-2 saat* kazanç.
+Kayıtlar daha düzenli → bakım kalitesi de yükseliyor.
+Meslektaşlarınız da bakmaya başladı — geride kalmamak için kısa bir bakış çoğu zaman yeterli.
+
+Dr. Gökhan Mamur *30 dk* kısa tanıtım yapıyor 🩺
+Saatler size göre.
+
+Tanıtıma vakit yoksa ücretsiz denemeyi hemen açabiliyoruz.
+
+📅 *Tanıtım / Demo:* www.notya.io/demo
+🔗 *Ücretsiz deneme:* www.notya.io
+```
+
+## W2-4. Uzm. Dr. Gonca Aslan ← SIRADAKİ
+**pediatri** · İzmir/Karşıyaka · `+90 544 282 33 75` · WA: `+905442823375`
+
+**Gönder:** yapıştır → kart çıkarsa **X** → gönder.
+
+```
+Gonca Hocam merhaba 👋
+Ben Kaan, *Notya*'dan yazıyorum.
+
+*Notya* — hekimler için yapay zekâ klinik asistanı.
+Muayeneyi dinler, notunuzu yazar, reçete ve rapor taslağını hazırlar, hastanızı takipte tutar — hasta portalı dahil.
+Her karar *sizin onayınızla*.
+40'tan fazla branşı kendi ihtiyaçlarıyla destekliyoruz.
 
 Tipik bir günde yaklaşık *1,5-2 saat* kazanç.
 Kayıtlar daha düzenli → bakım kalitesi de yükseliyor.

@@ -1,5 +1,5 @@
 # TR outreach durum (canlı)
 
-**Sıradaki:** Op. Dr. **Bahar Selda Doğan** · KD · İzmir/Konak · `+905452876550`
+**Sıradaki:** Uzm. Dr. **Gonca Aslan** · pedi · İzmir/Karşıyaka · `+905442823375`
 
-Sinem Karaca gitti → **Bahar şimdi** → Gonca (pedi) → Vedat (pedi).
+Bahar gitti → **Gonca şimdi** → Vedat Öztürk (pedi, wave2 son).
