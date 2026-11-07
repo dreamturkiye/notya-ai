@@ -26,6 +26,7 @@ import { getDoctorAccessToken, ensureDoctorAccessToken } from '@/lib/doktor/clie
 import { hekimProfilOturumOku, hekimProfilOturumSil, hekimProfilOturumYaz, hekimProfilTazeleBasligi, hekimProfilTazeleBitti } from '@/lib/doktor/hekimProfilIstemci';
 import { hekimUnvanli } from '@/lib/doktor/hekimAdi';
 import BransDegistir from './BransDegistir';
+import BransSecimKapisi from './BransSecimKapisi';
 import GelenBelgeBirak from './gelenBelgeler/GelenBelgeBirak';
 import { GELEN_OLAY, GELEN_SAYI_OLAY } from '@/lib/gelenBelgeler/istemci';
 import { CHROME_RENK, CHROME_FONT, saatTRT } from '@/lib/doktor/chromeTheme';
@@ -164,6 +165,9 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
   const [menuOpen, setMenuOpen] = useState(false);
   const [gizli, setGizli] = useState(false);
   const [kompakt, setKompakt] = useState(false);
+  // KAYIT-BRANS-01 (Kaan, 2026-11-07): the server says this doctor account has no branch → the app is replaced by the
+  // blocking "Branşınızı seçin" step until one is saved. Staff sessions never ask /api/users/me, so never see it.
+  const [bransGerekli, setBransGerekli] = useState(false);
 
   useEffect(() => {
     const metas = document.querySelectorAll('meta[name="theme-color"]')
@@ -239,10 +243,6 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
         if (onbellek?.full_name) setAd(String(onbellek.full_name))
         if (onbellek?.specialty) setBrans(String(onbellek.specialty))
       }
-      try {
-        const r = await fetch('/api/doktor/mesajlar/unread-count', { headers: { Authorization: `Bearer ${t}` } });
-        if (r.ok) { const d = await r.json(); setMesajUnread(Number(d.unreadCount) || 0); }
-      } catch { /* badge stays 0 */ }
       if (!sekreterOturum) try {
         const r = await fetch('/api/users/me', { headers: { Authorization: `Bearer ${t}`, ...tazele } });
         if (r.ok) {
@@ -251,9 +251,15 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
           const u = d?.data || d;
           setAd(String(u?.full_name || u?.first_name || '').trim());
           setBrans(String(u?.specialty || ''));
+          setBransGerekli(u?.brans_gerekli === true);
           hekimProfilOturumYaz({ specialty: u?.specialty, profession_type: u?.profession_type, full_name: u?.full_name || u?.first_name })
         }
       } catch { /* header just shows less */ }
+      // KAYIT-BRANS-01: asked after the profile (it used to be asked before) so the branch gate is decided first.
+      try {
+        const r = await fetch('/api/doktor/mesajlar/unread-count', { headers: { Authorization: `Bearer ${t}` } });
+        if (r.ok) { const d = await r.json(); setMesajUnread(Number(d.unreadCount) || 0); }
+      } catch { /* badge stays 0 */ }
       // NOTYA-SEKRETER-01: sekreter kendi avatarını; doktor kendi avatarını çeker.
       try {
         const yol = sekreterOturum ? '/api/personel/avatar' : '/api/doktor/profil/avatar';
@@ -339,6 +345,10 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
   });
   const sekmeOge = (item: NavItem): KabukOge => ({ ...oge(item), aktif: sekmeAktif(item.route, pathname), rozet: item.route === '/dashboard/doktor/mesajlar' ? mesajUnread : 0 });
   const asistanOge = (item: NavItem): KabukOge => ({ ...oge(item), label: 'Asistana sor' });
+
+  if (bransGerekli && rol === 'doktor') {
+    return <BransSecimKapisi onCikis={handleCikis} />;
+  }
 
   if (gizli) {
     // Aile / embed modu: sayfa kendi tam ekran deneyimini yönetir -- hiçbir sarmalayıcı yok,

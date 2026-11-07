@@ -5,6 +5,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { referansKoduNormalize } from '@/lib/billing/referans';
 import { createClient } from '@supabase/supabase-js';
 import { CHROME_RENK, CHROME_FONT, CHROME_FONT_HREF } from '@/lib/doktor/chromeTheme';
+import BransSecimi from '@/components/onboarding/BransSecimi';
+import { KAYIT_BRANS_MESAJ, kayitBransiMi } from '@/lib/onboarding/kayitBransi';
 
 // STRIPE-NOTYA-01 (2026-10-27): only the solo-doctor self-serve plans get driven straight into
 // Stripe Checkout from here. Klinik (multi-doctor: taban + per-seat koltuk, combined line items)
@@ -41,6 +43,10 @@ function KayitForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  // KAYIT-BRANS-01 (Kaan, 2026-11-07): the branch is a required choice of the free-trial sign-up — no preselected
+  // default; the button stays disabled until one of the 40 is chosen. The trial rules are unchanged (no card, no code).
+  const [brans, setBrans] = useState('');
+  const [bransHatasi, setBransHatasi] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
   // NOTYA-KVKK-01: explicit consent, captured before an account can exist. KVKK m.6 forbids
   // processing özel nitelikli veri (patient health data) without açık rıza, and m.10 requires
@@ -59,6 +65,12 @@ function KayitForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    if (!kayitBransiMi(brans)) {
+      setBransHatasi(KAYIT_BRANS_MESAJ.gerekli);
+      setError(KAYIT_BRANS_MESAJ.gerekli);
+      return;
+    }
 
     if (password !== confirmPassword) {
       setError('Şifreler eşleşmiyor.');
@@ -94,6 +106,10 @@ function KayitForm() {
             kosullar_onay_tarihi: new Date().toISOString(),
             kosullar_metin_versiyonu: '2026-10-17-v1',
             ...(refKodu ? { ref_kodu: refKodu } : {}),
+            // KAYIT-BRANS-01: the doctor's own choice, carried to onboarding (which preselects it) and to the
+            // "Branşınızı seçin" gate. Deliberately NOT `specialty`: that key would mark the account as onboarded
+            // (/api/users/me) before the rest of onboarding is done. The server validates it again on every write.
+            kayit_bransi: brans,
           },
         },
       });
@@ -208,8 +224,17 @@ function KayitForm() {
           <div style={{ marginBottom: 14 }}>
             <input type="password" placeholder="Şifreniz" aria-label="Şifreniz" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} required style={girdi} />
           </div>
-          <div style={{ marginBottom: 20 }}>
+          <div style={{ marginBottom: 14 }}>
             <input type="password" placeholder="Şifrenizi tekrar girin" aria-label="Şifrenizi tekrar girin" autoComplete="new-password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required style={girdi} />
+          </div>
+          <div style={{ marginBottom: 20 }}>
+            <BransSecimi
+              kimlik="kayit-brans"
+              deger={brans}
+              onDegis={(k) => { setBrans(k); setBransHatasi(null); if (error === KAYIT_BRANS_MESAJ.gerekli) setError(''); }}
+              hata={bransHatasi}
+              girdiStili={girdi}
+            />
           </div>
 
           {error && (
@@ -272,10 +297,10 @@ function KayitForm() {
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || !kayitBransiMi(brans)}
             style={{
               width: '100%', backgroundColor: R.pine, color: '#ffffff', fontSize: 15, fontWeight: 600, padding: 14,
-              border: 'none', borderRadius: 12, cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1,
+              border: 'none', borderRadius: 12, cursor: loading || !kayitBransiMi(brans) ? 'not-allowed' : 'pointer', opacity: loading || !kayitBransiMi(brans) ? 0.55 : 1,
               transition: 'all 0.2s ease', fontFamily: CHROME_FONT.sans, letterSpacing: 0.2,
             }}
           >

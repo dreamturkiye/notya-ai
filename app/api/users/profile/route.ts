@@ -5,6 +5,7 @@ import { bransDegistirebilir } from '@/lib/auth/superuserBranslar'
 import { hekimProfilDusur } from '@/lib/doktor/hekimProfilOnbellek'
 import { cepTelefonuKolonuYokMu, profilGovdesiDogrula } from '@/lib/onboarding/profilDogrula'
 import { kvkkKayitliMi, kvkkMetaDamgasi, kvkkSatirDamgasi } from '@/lib/onboarding/kvkkOnay'
+import { kayitBransiMi } from '@/lib/onboarding/kayitBransi'
 
 export const dynamic = 'force-dynamic'
 
@@ -35,9 +36,12 @@ export async function GET(req: NextRequest) {
     const o = await oturum(req)
     if (!o) return NextResponse.json({ error: OTURUM_YOK }, { status: 401 })
     const { data: kayit } = await getSupabase().from('users').select('kvkk_consent_at').eq('id', o.userId).maybeSingle()
+    // KAYIT-BRANS-01: the branch chosen on /kayit (auth metadata, written by the doctor's own sign-up), only when it is
+    // one of the 40 keys — onboarding preselects it; POST validates whatever is finally sent.
+    const kayitBransi = kayitBransiMi(o.existingMeta.kayit_bransi) ? o.existingMeta.kayit_bransi : null
     return NextResponse.json({
       success: true,
-      data: { email: o.userEmail || '', kvkk_onay_gerekli: !kvkkKayitliMi(kayit?.kvkk_consent_at, o.existingMeta) },
+      data: { email: o.userEmail || '', kvkk_onay_gerekli: !kvkkKayitliMi(kayit?.kvkk_consent_at, o.existingMeta), ...(kayitBransi ? { kayit_bransi: kayitBransi } : {}) },
     })
   } catch (error) {
     console.error('[profile] GET', error)
@@ -95,19 +99,18 @@ export async function POST(req: NextRequest) {
     if (büro_adi) updatePayload.büro_adi = büro_adi
     if (sehir) updatePayload.sehir = sehir
     if (bransYazilabilir) {
-      if (uzmanlik_alani) updatePayload.specialty = uzmanlik_alani
-      if (specialty && profession_type === 'doktor') updatePayload.specialty = specialty
-      if (specialty && (profession_type === 'klinik-uzman' || profession_type === 'saglik-uzmani' || profession_type === 'mali' || profession_type === 'psikolog')) {
-        const { klinikUzmanlikNorm } = await import('@/lib/specialties/klinikDikey')
-        updatePayload.specialty = (profession_type === 'klinik-uzman' || profession_type === 'saglik-uzmani' || profession_type === 'psikolog')
-          ? klinikUzmanlikNorm(specialty)
-          : specialty
+      if (v.specialty) {
+        // KAYIT-BRANS-01: a doctor-application profession — only the validated canonical key is ever written.
+        updatePayload.specialty = v.specialty
+      } else {
+        if (uzmanlik_alani) updatePayload.specialty = uzmanlik_alani
+        if (specialty && profession_type === 'mali') updatePayload.specialty = specialty
+        if (uzmanlik && profession_type === 'avukat') updatePayload.specialty = uzmanlik
       }
-      if (uzmanlik && profession_type === 'avukat') updatePayload.specialty = uzmanlik
     }
 
     const uzmanlikMetin = bransYazilabilir
-      ? (specialty || uzmanlik || existingMeta.specialty || null)
+      ? (v.specialty || specialty || uzmanlik || existingMeta.specialty || null)
       : (kayit?.specialty || existingMeta.specialty || null)
 
     // The users row first, auth metadata second. (The order used to be the reverse: when the row could not be

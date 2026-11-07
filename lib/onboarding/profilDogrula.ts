@@ -12,6 +12,7 @@
 import type { AddressingPreference, DoctorTitle, Gender } from '../address'
 import { doktorCepTelefonu } from './cepTelefonu'
 import { KVKK_ONAY_HATASI, KVKK_ONAY_KODU, kvkkKarari } from './kvkkOnay'
+import { HEKIM_MESLEKLERI, KAYIT_BRANS_MESAJ, profilBransiCoz } from './kayitBransi'
 
 /** Title options on the screen (no spaces) → the spelling of the users.title CHECK constraint. The ONE mapping table. */
 export const UNVAN_ESLEME: Readonly<Record<string, DoctorTitle>> = {
@@ -92,6 +93,8 @@ export const PROFIL_MESAJ = {
   meslek: 'Lütfen çalıştığınız alanı seçin.',
   uzmanlik: 'Lütfen uzmanlık alanınızı seçin.',
   uzmanlikGecersiz: 'Uzmanlık alanı anlaşılamadı. Lütfen listeden seçin.',
+  /** KAYIT-BRANS-01: a doctor-application profession sent a value that is not one of the 40 branches. */
+  bransGecersiz: KAYIT_BRANS_MESAJ.gecersiz,
   unvan: 'Lütfen unvanınızı seçin.',
   unvanGecersiz: 'Unvan anlaşılamadı. Lütfen listeden seçin.',
   kurum: 'Klinik / hastane adı çok uzun görünüyor. Lütfen kısaltın.',
@@ -112,6 +115,8 @@ export type ProfilBaglami = {
 
 /** Validated fields in the spelling of the users row. A missing field = not sent in the body, not written. */
 export type ProfilDegerleri = {
+  /** KAYIT-BRANS-01: the canonical branch key — only for a doctor-application profession (HEKIM_MESLEKLERI). */
+  specialty?: string
   firstName?: string
   lastName?: string
   title?: DoctorTitle
@@ -154,6 +159,16 @@ export function profilGovdesiDogrula(govde: unknown, baglam: ProfilBaglami): Pro
     if (typeof u !== 'string' || u.trim().length > 200) return { ok: false, hata: PROFIL_MESAJ.uzmanlikGecersiz, alan: 'specialty' }
   }
   if (zorunlu && !uzmanliklar.length) return { ok: false, hata: PROFIL_MESAJ.uzmanlik, alan: 'specialty' }
+  // KAYIT-BRANS-01 (Kaan, 2026-11-07): a profession that works in the doctor application must name one of the 40
+  // branches — checked HERE, on the server, so the onboarding form cannot be bypassed. Every specialty field the body
+  // carries must resolve; the canonical key is what gets written. (mali / avukat keep the shape-only check above.)
+  if (typeof b.profession_type === 'string' && HEKIM_MESLEKLERI.includes(b.profession_type)) {
+    for (const u of uzmanliklar) {
+      const k = profilBransiCoz(b.profession_type, u)
+      if (!k) return { ok: false, hata: PROFIL_MESAJ.bransGecersiz, alan: 'specialty' }
+      if (!deger.specialty) deger.specialty = k
+    }
+  }
 
   // Title (required for doctors only)
   if (dolu(b.title)) {

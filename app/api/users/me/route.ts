@@ -2,6 +2,15 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { hekimProfilOku, hekimProfilYaz } from '@/lib/doktor/hekimProfilOnbellek'
 import { klinikYuzuAcikMi } from '@/lib/klinik/klinikErisim'
+import { bransSecimiGerekli } from '@/lib/onboarding/bransKapisi'
+
+/**
+ * KAYIT-BRANS-01 (Kaan, 2026-11-07): `brans_gerekli` — true when this account has no branch the app can read and must
+ * choose one before it may use the doctor application (components/doktor/BransSecimKapisi.tsx). Decided here, on every
+ * answer (never cached with the profile): staff and non-medical professions are exempt (lib/onboarding/bransKapisi.ts).
+ */
+const bransGerekli = (govde: { specialty?: unknown; profession_type?: unknown }, meta: Record<string, unknown>) =>
+  bransSecimiGerekli({ specialty: govde.specialty, profession_type: govde.profession_type, personel: meta.personel === true })
 
 const getSupabase = () => createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -47,7 +56,7 @@ export async function GET(req: NextRequest) {
   const tazele = req.headers.get('x-profil-tazele') === '1'
   const onbellekte = tazele ? null : hekimProfilOku(user.id)
   if (onbellekte && typeof onbellekte === 'object') {
-    return NextResponse.json({ success: true, data: { ...(onbellekte as object), klinik_erisim: klinikYuzuAcikMi(user.id) } })
+    return NextResponse.json({ success: true, data: { ...(onbellekte as object), klinik_erisim: klinikYuzuAcikMi(user.id), brans_gerekli: bransGerekli(onbellekte as Record<string, unknown>, meta) } })
   }
 
   const { data: profile, error } = await getSupabase()
@@ -71,7 +80,7 @@ export async function GET(req: NextRequest) {
       onboarding_completed,
     }
     hekimProfilYaz(user.id, govde)
-    return NextResponse.json({ success: true, data: { ...govde, klinik_erisim: klinikYuzuAcikMi(user.id) } })
+    return NextResponse.json({ success: true, data: { ...govde, klinik_erisim: klinikYuzuAcikMi(user.id), brans_gerekli: bransGerekli(govde, meta) } })
   }
 
   const onboarding_completed = deriveOnboardingCompleted(profile as Record<string, unknown>, meta)
@@ -108,5 +117,5 @@ export async function GET(req: NextRequest) {
   }
 
   hekimProfilYaz(user.id, merged)
-  return NextResponse.json({ success: true, data: { ...merged, klinik_erisim: klinikYuzuAcikMi(user.id) } })
+  return NextResponse.json({ success: true, data: { ...merged, klinik_erisim: klinikYuzuAcikMi(user.id), brans_gerekli: bransGerekli(merged, meta) } })
 }

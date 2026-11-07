@@ -10,6 +10,8 @@ import KisiselBilgilerAdimi, { type KisiselAlan } from '@/components/onboarding/
 import { adDogrula } from '@/lib/onboarding/profilDogrula';
 import { doktorCepTelefonu } from '@/lib/onboarding/cepTelefonu';
 import { KVKK_ONAY_KODU } from '@/lib/onboarding/kvkkOnay';
+import BransSecimi from '@/components/onboarding/BransSecimi';
+import { kayitBransiMi } from '@/lib/onboarding/kayitBransi';
 
 interface Profession {
   id: string;
@@ -30,20 +32,9 @@ const professions: Profession[] = [
 // OP-DR-01: Op. Dr. (operatör doktor) — the order of lib/address.ts DOKTOR_UNVANLARI.
 const unvanOptions = ['Dr.', 'Uzm.Dr.', 'Op.Dr.', 'Doç.Dr.', 'Prof.Dr.'];
 
-// Full 30 medical specialties (+ a few klinik aesthetic extras)
-// NOTYA-KLINIK-ISIMLENDIRME-01 (Kaan 2026-10-18): aynı "Uzmanlık Alanı" dropdown'ı 30 tıbbi branş
-// ile Özel Branşlar'ı (buradaki 4'ü) tek, ayrışmamış düz liste olarak gösteriyordu — artık
-// render tarafında optgroup ile ayrılıyor (bkz. doctorSpecialtyGroups). Değerler/agentMapping aynı.
-const doctorMedicalSpecialties = [
-  'Pediatri', 'Kardiyoloji', 'Nöroloji', 'Dahiliye', 'Psikiyatri',
-  'Genel Cerrahi', 'Ortopedi', 'Dermatoloji', 'Kulak Burun Boğaz', 'Göz Hastalıkları',
-  'Kadın Hastalıkları ve Doğum', 'Üroloji', 'Radyoloji', 'Anestezi', 'Acil Tıp',
-  'Fizik Tedavi', 'Enfeksiyon Hastalıkları', 'Endokrinoloji', 'Gastroenteroloji', 'Nefroloji',
-  'Romatoloji', 'Onkoloji', 'Göğüs Hastalıkları', 'Göğüs Cerrahisi', 'Plastik Cerrahi',
-  'Beyin Cerrahisi', 'Kalp Damar Cerrahisi', 'Çocuk Cerrahisi', 'Aile Hekimliği', 'Spor Hekimliği',
-];
-const doctorOzelBranslar = ['Estetik & Plastik Cerrahi', 'Sac Ekimi', 'Medikal Estetik', 'Longevity & Wellness'];
-const doctorSpecialties = [...doctorMedicalSpecialties, ...doctorOzelBranslar, 'Diğer'];
+// KAYIT-BRANS-01 (Kaan, 2026-11-07): the doctor's "Uzmanlık Alanı" is the shared 40-branch select
+// (components/onboarding/BransSecimi.tsx — "Tıp Branşları" + "Özel Branşlar", value = canonical key). The old flat
+// label list with its "Diğer" option is gone: "Diğer" let an account finish onboarding with no branch at all.
 const klinikUzmanSpecialties = ['Estetik & Plastik Cerrahi', 'Sac Ekimi', 'Dermatoloji', 'Medikal Estetik', 'Longevity & Wellness'];
 const saglikUzmaniSpecialties = ['Fizyoterapi', 'Klinik Psikoloji', 'Diyetisyen', 'Ergoterapi', 'Odyoloji'];
 // KURAL — TÜRKÇE: 'Sac Ekimi' kayıtlı değer / eşleme anahtarıdır (klinikSlugCoz, personalar) — değişmez; yalnız ekranda doğru yazılır.
@@ -165,9 +156,17 @@ function OnboardingInner() {
           cache: 'no-store',
         })
         if (hesapRes.ok) {
-          const hesap = (await hesapRes.json().catch(() => ({}))) as { data?: { email?: string; kvkk_onay_gerekli?: boolean } }
+          const hesap = (await hesapRes.json().catch(() => ({}))) as { data?: { email?: string; kvkk_onay_gerekli?: boolean; kayit_bransi?: string } }
           setEposta(String(hesap.data?.email || ''))
           setKvkkGerekli(hesap.data?.kvkk_onay_gerekli === true)
+          // KAYIT-BRANS-01: the branch the doctor chose on /kayit is preselected here (their own choice, not a guess);
+          // it can still be changed, and the server validates it again.
+          const kayitBransi = hesap.data?.kayit_bransi
+          if (kayitBransiMi(kayitBransi) && (!validPreset || validPreset === 'doktor')) {
+            setSelectedProfession('doktor')
+            setSpecialty(kayitBransi)
+            setStep(2)
+          }
         }
       } catch {
         /* the box stays hidden; if the server requires consent it is revealed on submit */
@@ -209,7 +208,7 @@ function OnboardingInner() {
   
   const canProceedToStep3 = () => {
     if (selectedProfession === 'doktor') {
-      return !!unvan && !!specialty;
+      return !!unvan && kayitBransiMi(specialty);
     }
     if (selectedProfession === 'mali') {
       return selectedMaliChips.length > 0;
@@ -305,7 +304,7 @@ function OnboardingInner() {
       finalSpecialty = klinikMap[uzmanlikSecimi] || uzmanlikSecimi
     }
 
-    const agent = agentMapping[specialty] || agentMapping[uzmanlikSecimi] || 'default';
+    const agent = (profession_type === 'doktor' ? specialty : agentMapping[uzmanlikSecimi]) || 'default';
 
     const profilePayload = {
       profession_type,
@@ -388,23 +387,7 @@ function OnboardingInner() {
             </select>
           </div>
 
-          <div>
-            <label style={{ color: CHROME_RENK.muted, fontSize: '14px', marginBottom: '8px', display: 'block' }}>Uzmanlık Alanı</label>
-            <select
-              value={specialty}
-              onChange={(e) => setSpecialty(e.target.value)}
-              style={{ width: '100%', backgroundColor: CHROME_RENK.paper, color: CHROME_RENK.ink, border: '1px solid ' + CHROME_RENK.border, borderRadius: '8px', padding: '12px', fontSize: '15px' }}
-            >
-              <option value="">Seçiniz</option>
-              <optgroup label="Tıbbi Branşlar">
-                {doctorMedicalSpecialties.map(s => <option key={s} value={s}>{uzmanlikGorunen(s)}</option>)}
-              </optgroup>
-              <optgroup label="Özel Branşlar">
-                {doctorOzelBranslar.map(s => <option key={s} value={s}>{uzmanlikGorunen(s)}</option>)}
-              </optgroup>
-              <option value="Diğer">Diğer</option>
-            </select>
-          </div>
+          <BransSecimi kimlik="onboarding-brans" etiket="Uzmanlık Alanı" deger={specialty} onDegis={setSpecialty} />
 
           <div>
             <label style={{ color: CHROME_RENK.muted, fontSize: '14px', marginBottom: '8px', display: 'block' }}>Klinik / Hastane Adı</label>

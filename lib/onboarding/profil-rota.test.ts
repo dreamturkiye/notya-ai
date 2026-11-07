@@ -129,7 +129,7 @@ async function oku(token: string | null) {
 
 /** The body app/onboarding/page.tsx sends for a doctor (with the raw option values of the screen). */
 const HEKIM = {
-  profession_type: 'doktor', specialty: 'Kardiyoloji', title: 'Uzm.Dr.', hospital: 'QA Kliniği',
+  profession_type: 'doktor', specialty: 'kardiyoloji', title: 'Uzm.Dr.', hospital: 'QA Kliniği',
   firstName: 'Işıl', lastName: 'Öztürk', cepTelefonu: '0532 123 45 67', gender: 'Kadın', addressingPreference: '[isim] Hocam',
   trial_start: '2026-10-09T08:00:00.000Z', plan: 'professional', metadata: { agent: 'kardiyoloji' },
 }
@@ -157,7 +157,7 @@ describe('POST /api/users/profile: new doctor (from public sign-up, consent on r
     assert.equal(s.email, h.email)
     assert.equal(s.onboarding_completed, true)
     assert.equal(s.profession_type, 'doktor')
-    assert.equal(s.specialty, 'Kardiyoloji')
+    assert.equal(s.specialty, 'kardiyoloji', 'KAYIT-BRANS-01: the canonical key the select sends')
     assert.equal(s.full_name, 'Işıl Öztürk', 'full_name stays "First Last" (no title), as before')
     assert.equal(s.first_name, 'Işıl')
     assert.equal(s.last_name, 'Öztürk')
@@ -192,7 +192,7 @@ describe('POST /api/users/profile: new doctor (from public sign-up, consent on r
       user_metadata: {
         ...KAYIT_RIZASI, baska: 'korunur',
         gender: 'Kadın', addressing_preference: '[isim] Hocam', title: 'Uzm.Dr.', baro: null, yil: null,
-        hospital: 'QA Kliniği', specialty: 'Kardiyoloji', profession_type: 'doktor', onboarding_completed: true,
+        hospital: 'QA Kliniği', specialty: 'kardiyoloji', profession_type: 'doktor', onboarding_completed: true,
       },
     })
     assert.equal(metaYazimlari[0].user_metadata.kvkk_onay_tarihi, KAYIT_RIZASI.kvkk_onay_tarihi, 'the recorded consent date does not change')
@@ -244,6 +244,14 @@ describe('POST /api/users/profile: server-side validation', () => {
       [{ gender: 'x' }, 'gender', PROFIL_MESAJ.cinsiyet],
       [{ addressingPreference: '' }, 'addressingPreference', PROFIL_MESAJ.hitap],
       [{ specialty: '' }, 'specialty', PROFIL_MESAJ.uzmanlik],
+      // KAYIT-BRANS-01: the form cannot be bypassed — anything that is not one of the 40 keys is refused.
+      [{ specialty: 'Diğer' }, 'specialty', PROFIL_MESAJ.bransGecersiz],
+      [{ specialty: 'genel' }, 'specialty', PROFIL_MESAJ.bransGecersiz],
+      [{ specialty: 'Kardiyoloji' }, 'specialty', PROFIL_MESAJ.bransGecersiz],
+      [{ specialty: 'uydurma-brans' }, 'specialty', PROFIL_MESAJ.bransGecersiz],
+      [{ specialty: undefined, uzmanlik_alani: 'Diğer' }, 'specialty', PROFIL_MESAJ.bransGecersiz],
+      [{ uzmanlik_alani: 'uydurma' }, 'specialty', PROFIL_MESAJ.bransGecersiz],
+      [{ profession_type: 'saglik-uzmani', title: '', specialty: 'kardiyoloji' }, 'specialty', PROFIL_MESAJ.bransGecersiz],
       [{ profession_type: 'yonetici' }, 'profession_type', PROFIL_MESAJ.meslek],
     ]
     for (const [ek, alan, ileti] of durumlar) {
@@ -372,7 +380,7 @@ describe('POST /api/users/profile: users.cep_telefonu missing (migration 150 not
       assert.equal(s.hospital, 'QA Kliniği')
       assert.equal(s.gender, 'female')
       assert.equal(s.addressing_preference, 'named_hocam')
-      assert.equal(s.specialty, 'Kardiyoloji')
+      assert.equal(s.specialty, 'kardiyoloji')
       assert.equal(s.onboarding_completed, true)
       assert.equal(s.kvkk_consent_version, KVKK_METIN_VERSIYONU, 'consent is not lost either')
       assert.equal(metalar.get(h.id)!.onboarding_completed, true)
@@ -415,7 +423,8 @@ describe('POST /api/users/profile: other callers work as before', () => {
       if (profession_type === 'mali') assert.equal(s.specialty, specialty)
       else if (profession_type === 'avukat') assert.ok(!('specialty' in s), 'avukat: the route writes only the `uzmanlik` field (previous behaviour)')
       else assert.equal(s.specialty, klinikUzmanlikNorm(specialty))
-      assert.equal(metalar.get(h.id)!.specialty, specialty)
+      // KAYIT-BRANS-01: for the doctor-application professions metadata carries the same canonical key as the row.
+      assert.equal(metalar.get(h.id)!.specialty, profession_type === 'mali' || profession_type === 'avukat' ? specialty : klinikUzmanlikNorm(specialty))
     }
   })
 
@@ -434,11 +443,11 @@ describe('POST /api/users/profile: other callers work as before', () => {
 
   it('superuser who may switch branch: the branch is written although onboarding is finished; nothing else is required', async () => {
     const h = hesap({ id: SUPERUSER_BRANS_IDS[0], satir: { full_name: 'QA Süper', specialty: 'pediatri', profession_type: 'doktor', onboarding_completed: true } })
-    const { durum } = await gonder(h.token, { profession_type: 'doktor', specialty: 'kadin-dogum' })
+    const { durum } = await gonder(h.token, { profession_type: 'doktor', specialty: 'kadin-hastaliklari-dogum' })
     assert.equal(durum, 200)
-    assert.equal(satir(h.id)!.specialty, 'kadin-dogum')
+    assert.equal(satir(h.id)!.specialty, 'kadin-hastaliklari-dogum')
     assert.equal(satir(h.id)!.full_name, 'QA Süper')
-    assert.equal(metalar.get(h.id)!.specialty, 'kadin-dogum')
+    assert.equal(metalar.get(h.id)!.specialty, 'kadin-hastaliklari-dogum')
   })
 
   it('old body shape (unvan / büro_adi / sehir / full_name / uzmanlik_alani / baro / yil) is written as before for an already-onboarded account', async () => {

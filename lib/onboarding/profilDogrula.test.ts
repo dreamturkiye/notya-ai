@@ -159,7 +159,7 @@ describe('KVKK decision: the server decides; consent that was not ticked is neve
 
 describe('body validation (server side)', () => {
   const tam = {
-    profession_type: 'doktor', specialty: 'Kardiyoloji', title: 'Uzm.Dr.', hospital: '  QA   Kliniği ',
+    profession_type: 'doktor', specialty: 'kardiyoloji', title: 'Uzm.Dr.', hospital: '  QA   Kliniği ',
     firstName: ' Işıl ', lastName: 'Öztürk', cepTelefonu: '0532 123 45 67', gender: 'Kadın', addressingPreference: '[isim] Hocam',
   }
   const ilk = { ilkKayit: true, kvkkKayitli: true }
@@ -168,7 +168,7 @@ describe('body validation (server side)', () => {
     assert.deepEqual(profilGovdesiDogrula(tam, ilk), {
       ok: true,
       deger: {
-        kvkkDamgala: false, title: 'Uzm. Dr.', hospital: 'QA Kliniği', firstName: 'Işıl', lastName: 'Öztürk',
+        kvkkDamgala: false, specialty: 'kardiyoloji', title: 'Uzm. Dr.', hospital: 'QA Kliniği', firstName: 'Işıl', lastName: 'Öztürk',
         cepTelefonu: '+905321234567', gender: 'female', addressingPreference: 'named_hocam',
       },
     })
@@ -196,12 +196,15 @@ describe('body validation (server side)', () => {
     assert.deepEqual(ile({ profession_type: 'yonetici' }), { ok: false, hata: PROFIL_MESAJ.meslek, alan: 'profession_type' })
     assert.deepEqual(ile({ specialty: 'x'.repeat(201) }), { ok: false, hata: PROFIL_MESAJ.uzmanlikGecersiz, alan: 'specialty' })
     assert.deepEqual(ile({ specialty: { a: 1 } }), { ok: false, hata: PROFIL_MESAJ.uzmanlikGecersiz, alan: 'specialty' })
+    // KAYIT-BRANS-01: a doctor must name one of the 40 canonical keys.
+    for (const sp of ['Diğer', 'genel', 'Kardiyoloji', 'kadin-dogum', 'x']) assert.deepEqual(ile({ specialty: sp }), { ok: false, hata: PROFIL_MESAJ.bransGecersiz, alan: 'specialty' }, sp)
     assert.deepEqual(ile({ hospital: 'k'.repeat(161) }), { ok: false, hata: PROFIL_MESAJ.kurum, alan: 'hospital' })
     for (const g of [null, undefined, 'metin', 3, []]) assert.deepEqual(profilGovdesiDogrula(g, ilk), { ok: false, hata: PROFIL_MESAJ.govde, alan: 'govde' })
   })
   it('non-doctor professions: no title required; the other fields are the same', () => {
+    const uzmanlik: Record<string, string> = { 'klinik-uzman': 'sac-ekimi', 'saglik-uzmani': 'fizyoterapi', mali: 'Muhasebe', avukat: 'Ceza Hukuku', psikolog: 'Psikoloji' }
     for (const profession_type of ['klinik-uzman', 'saglik-uzmani', 'mali', 'avukat', 'psikolog']) {
-      const s = profilGovdesiDogrula({ ...tam, profession_type, title: '', hospital: '' }, ilk)
+      const s = profilGovdesiDogrula({ ...tam, profession_type, specialty: uzmanlik[profession_type], title: '', hospital: '' }, ilk)
       assert.ok(s.ok, profession_type)
       assert.equal(s.ok && s.deger.title, undefined)
       assert.equal(s.ok && s.deger.cepTelefonu, '+905321234567')
@@ -221,7 +224,7 @@ describe('body validation (server side)', () => {
   it('already-onboarded account: no field is required; a field that is sent is still validated', () => {
     const sonra = { ilkKayit: false, kvkkKayitli: false }
     assert.deepEqual(profilGovdesiDogrula({}, sonra), { ok: true, deger: { kvkkDamgala: false } })
-    assert.deepEqual(profilGovdesiDogrula({ profession_type: 'doktor', specialty: 'pediatri' }, sonra), { ok: true, deger: { kvkkDamgala: false } })
+    assert.deepEqual(profilGovdesiDogrula({ profession_type: 'doktor', specialty: 'pediatri' }, sonra), { ok: true, deger: { kvkkDamgala: false, specialty: 'pediatri' } })
     assert.deepEqual(profilGovdesiDogrula({ unvan: 'SMMM', büro_adi: 'QA Büro', sehir: 'İzmir', full_name: 'QA Müşavir' }, sonra), { ok: true, deger: { kvkkDamgala: false } })
     assert.deepEqual(profilGovdesiDogrula({ addressing_preference: 'hocam', gender: 'male' }, sonra), { ok: true, deger: { kvkkDamgala: false, gender: 'male', addressingPreference: 'hocam' } })
     assert.equal(profilGovdesiDogrula({ gender: 'x' }, sonra).ok, false)
