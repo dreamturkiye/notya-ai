@@ -21,6 +21,9 @@
  *   WHITENING: applied to the labia, within the FGM laws' uncertainty; no recognition found. DECISION: OFF.
  *   BODY-IMAGE SCREENING: the Medical Board of Australia's guidelines for cosmetic surgery require a validated psychological
  *     screening tool for body dysmorphic disorder (Medical Board FAQ on patient assessment and BDD screening, read 2026-11-06).
+ *   PLASTIC AND AESTHETIC SURGERY (owner's decision, 2026-11-06): those roles see the surgical part only (the adult
+ *     genital-aesthetics operation note, its consent form `onam-formu-genital`, the photo consent, the COPS-L item slot),
+ *     under exactly the same decisions and sources as obstetrics and gynaecology above.
  */
 import type { EnUlkeGirdisi } from '../_dil/en/girdi'
 
@@ -36,12 +39,14 @@ export const AU_GENITAL_ESTETIK: A = {
   uyarlama: {
     // Cosmetic labiaplasty and clitoral hood reduction are not offered (FGM laws); medically indicated labiaplasty: the O&G operation note.
     'ameliyat-notu-genital': { secenekler: { sablon: ['vajinoplasti', 'perineoplasti'] } },
+    // the consent form of the operations, for plastic and aesthetic surgery: the same two (state and territory FGM laws)
+    'onam-formu-genital': { secenekler: { islem: ['vajinoplasti', 'perineoplasti'] } },
   },
   degisen: {
     'ameliyat-notu-genital': {
-      aciklama: 'Vaginoplasty / colpoperineorrhaphy and perineoplasty, with the indication (cosmetic or medically indicated), body-image screening and pre-filled standard steps you correct to what was done. Labiaplasty and clitoral hood reduction are not offered here for cosmetic reasons (state and territory FGM laws); a medically indicated labiaplasty is written with the obstetric and gynaecological operation note.',
+      aciklama: 'Vaginoplasty / colpoperineorrhaphy and perineoplasty, with the indication (cosmetic or medically indicated), body-image screening and pre-filled standard steps you correct to what was done. Labiaplasty and clitoral hood reduction are not offered here for cosmetic reasons (state and territory FGM laws); a medically indicated labiaplasty is written with the obstetric and gynaecological operation note (plastic and aesthetic surgery: the general operation note).',
       not: 'Australia: the Medical Board of Australia\'s guidelines for cosmetic surgery require a validated psychological screening tool for body dysmorphic disorder, used by the surgeon. Evidence on cosmetic genital surgery is limited; RANZCOG strongly discourages procedures lacking peer-reviewed evidence and says they should not be promoted as enhancing sexual function (C-Gyn 24, 2019); ACOG Committee Opinion No. 795 (2020), international. The note is the surgeon\'s record.',
     },
-    'genital-sonuc-olcegi': { not: 'Australia: the Medical Board of Australia requires a validated screening tool for body dysmorphic disorder before cosmetic surgery. The instruments\' wording belongs to their authors and permission for commercial software has not been obtained: no item is shown. Sources: FSFI, Rosen et al. 2000 (cut-off Wiegel et al. 2005); FGSIS, Herbenick and Reece 2010; Vaginal Laxity Questionnaire, Millheiser et al. 2010 (not formally validated); COPS-L, Veale et al. 2013.' },
+    'genital-sonuc-olcegi': { not: 'Australia: the Medical Board of Australia requires a validated screening tool for body dysmorphic disorder before cosmetic surgery. The instruments\' wording belongs to their authors and permission for commercial software has not been obtained: no item is shown. Sources: FSFI, Rosen et al. 2000 (cut-off Wiegel et al. 2005); FGSIS, Herbenick and Reece 2010; COPS-L, Veale et al. 2013.' },
   },
 }

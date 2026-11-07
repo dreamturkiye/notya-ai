@@ -515,6 +515,7 @@ const KARSILIKSIZ: Readonly<Record<string, string>> = {
   'genital-beyazlatma': 'the shared engine (beyazlatmaDogrula), identical on main; tested in lib/clinical/genitalEstetik.test.ts and genitalEstetik.test.ts',
   'genital-sonuc-olcegi': 'the shared engine (olcekToplamDegerlendir), identical on main; tested in lib/clinical/genitalEstetik.test.ts and genitalEstetik.test.ts',
   'genital-foto-onam': 'a separate photo consent; main stores it as a record of its own screen; tested in genitalEstetik.test.ts',
+  'onam-formu-genital': 'the O&G consent form narrowed to the four genital-aesthetic operations (plastic and aesthetic surgery); main prints the same consent from its procedure page; tested in genitalEstetik.test.ts',
   // KD-OPERATOR-01 (2026-11-05): the kit and the Türkiye build compute these with THE SAME engines (lib/clinical/
   // cerrahiGuvenlik.ts, antibiyotikProfilaksi.ts, adneksKitle.ts, jinekolojikSiniflama.ts, dogumSalonu.ts, histeroskopiEras.ts,
   // onamProsedurleri.ts: byte-identical on every branch), tested with known answers in lib/clinical/kdOperator.test.ts.

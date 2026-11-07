@@ -17,9 +17,7 @@
  *                           clinician's).
  *   3. OUTCOME MEASURES     FSFI (Rosen et al., J Sex Marital Ther 2000;26:191-208; domain factors and ranges as printed in the
  *                           published scoring appendix; cut-off 26.55, Wiegel et al., J Sex Marital Ther 2005;31:1-20), FGSIS
- *                           (Herbenick & Reece, J Sex Med 2010; 7 items on a 4-point scale, total 7-28, no cut-off), the
- *                           Vaginal Laxity Questionnaire (Millheiser et al. 2010; ONE item, 1 very loose ... 7 very tight; not
- *                           a formally validated instrument, Polland et al., Sex Med 2021;9:100443) and COPS-L (Veale et al.,
+ *                           (Herbenick & Reece, J Sex Med 2010; 7 items on a 4-point scale, total 7-28, no cut-off) and COPS-L (Veale et al.,
  *                           J Psychosom Obstet Gynaecol 2013;34:46-52; total 0-72, 40 or more = likely body dysmorphic
  *                           disorder, the COPS cut-off of Veale et al. 2012/2013). NO ITEM TEXT IS HERE OR ANYWHERE IN THE
  *                           PRODUCT: the wording belongs to the authors and their permission for commercial software is not
@@ -336,7 +334,9 @@ export function beyazlatmaDogrula(ham: unknown): { ok: true; veri: BeyazlatmaKay
 
 // ───────────────────────── 3. outcome measures ─────────────────────────
 
-export const GE_OLCEKLER = ['fsfi', 'fgsis', 'vlq', 'cops_l'] as const
+// The Vaginal Laxity Questionnaire was removed on the owner's decision (Kaan, 2026-11-06): one item, not a formally
+// validated instrument (Polland et al., Sex Med 2021;9:100443), no validated translation.
+export const GE_OLCEKLER = ['fsfi', 'fgsis', 'cops_l'] as const
 export type GeOlcek = (typeof GE_OLCEKLER)[number]
 
 /**
@@ -349,8 +349,6 @@ export const GE_OLCEK_LISANSLARI: Readonly<Record<GeOlcek, { durum: 'serbest' | 
   fsfi: { durum: 'izin-gerekli', hakSahibi: 'Raymond C. Rosen (FSFI)', dogrulanmis: true },
   // Terms for commercial software not found.
   fgsis: { durum: 'belirsiz', hakSahibi: 'Debby Herbenick, Michael Reece', dogrulanmis: true },
-  // One item; described by its users as not a formally validated tool; no validated translation found.
-  vlq: { durum: 'belirsiz', hakSahibi: 'Millheiser et al. (2010)', dogrulanmis: false },
   // Copyright D. Veale (2009); translations are made with the copyright holders' permission.
   cops_l: { durum: 'izin-gerekli', hakSahibi: 'David Veale', dogrulanmis: true },
 }
@@ -360,7 +358,6 @@ export const geMaddeGirisiAcik = (o: GeOlcek): boolean => GE_OLCEK_LISANSLARI[o]
 export const GE_OLCEK_ARALIK: Readonly<Record<GeOlcek, { enAz: number; enCok: number; ondalik: number }>> = {
   fsfi: { enAz: 2, enCok: 36, ondalik: 2 },
   fgsis: { enAz: 7, enCok: 28, ondalik: 0 },
-  vlq: { enAz: 1, enCok: 7, ondalik: 0 },
   cops_l: { enAz: 0, enCok: 72, ondalik: 0 },
 }
 /** FSFI total at or below this = in the range of female sexual dysfunction (Wiegel et al. 2005). */
@@ -410,19 +407,19 @@ export function fgsisPuanla(maddeler: readonly unknown[]): number | null {
   return t
 }
 
-export type GeOlcekBandi = 'fsfi_kesim_alti' | 'fsfi_kesim_ustu' | 'vlq_gevsek' | 'vlq_notr' | 'vlq_siki' | 'cops_l_pozitif' | 'cops_l_negatif' | null
+export type GeOlcekBandi = 'fsfi_kesim_alti' | 'fsfi_kesim_ustu' | 'cops_l_pozitif' | 'cops_l_negatif' | null
 /**
  * A recorded TOTAL, checked against the instrument's range, with its band. COPS-L at or above the cut-off sets
  * `yonlendirmeOner`: the screen shows the clinician a prompt to consider referral. It blocks nothing.
  */
 export function olcekToplamDegerlendir(olcek: GeOlcek, ham: unknown): { gecerli: false } | { gecerli: true; toplam: number; bant: GeOlcekBandi; yonlendirmeOner: boolean } {
   const r = GE_OLCEK_ARALIK[olcek]
+  if (!r) return { gecerli: false }
   const n = sayiOku(ham)
   if (n === null || Number.isNaN(n) || n < r.enAz || n > r.enCok) return { gecerli: false }
   if (r.ondalik === 0 && !Number.isInteger(n)) return { gecerli: false }
   const toplam = yuvarla(n, r.ondalik)
   if (olcek === 'fsfi') return { gecerli: true, toplam, bant: toplam <= FSFI_KESIM ? 'fsfi_kesim_alti' : 'fsfi_kesim_ustu', yonlendirmeOner: false }
-  if (olcek === 'vlq') return { gecerli: true, toplam, bant: toplam <= 3 ? 'vlq_gevsek' : toplam === 4 ? 'vlq_notr' : 'vlq_siki', yonlendirmeOner: false }
   if (olcek === 'cops_l') { const poz = toplam >= COPS_L_KESIM; return { gecerli: true, toplam, bant: poz ? 'cops_l_pozitif' : 'cops_l_negatif', yonlendirmeOner: poz } }
   return { gecerli: true, toplam, bant: null, yonlendirmeOner: false }
 }
