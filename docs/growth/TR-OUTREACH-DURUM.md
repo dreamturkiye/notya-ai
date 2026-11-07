@@ -1,12 +1,9 @@
 # TR outreach durum (canlı)
 
-**Sıradaki:** Op. Dr. **Çiğdem Yavuz** · KD · Bakırköy · `+905347655393`  
-Yapıştır → kart varsa **X** → gönder.
+**Sıradaki:** Op. Dr. **Ömer İlker Göçmen** · KD · Ataşehir · `+905556959898`
 
 ## Notlar
-- **Yeşim Timuroğlu** · `+905354675994` → **WhatsApp yok** (2026-11-07).
-  Doktorsitesi `socialMedia.whatsapp` aynı numara (ölü). Profilde ayrıca `+908508110238` (0850 santral) var — WA olmaz.
-  Kendi sitesi/DT’te ayrı mobil çıkmadı; arama sürüyor.
+- **Yeşim Timuroğlu** · `+905354675994` → WA yok; alternatif henüz yok.
 
-## Son gidenler
-Vefa → (Yeşim skip) → **Çiğdem şimdi**
+## Son
+Çiğdem gitti → **Ömer şimdi** → sonra Aynur Erşahin
