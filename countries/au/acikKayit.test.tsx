@@ -39,6 +39,8 @@ function sahteCreateClient() {
     },
     rpc: async (ad: string) => { throw new Error(`open sign-up must not touch an invitation code (rpc ${ad})`) },
     from: (tablo: string) => {
+      // KAYIT-BRANS-01: the specialty chosen at sign-up is recorded in the account's role row.
+      if (tablo === 'hekim_rolu') return { upsert: async (g: Record<string, unknown>) => { olaylar.push({ tur: 'rol', veri: g }); return { data: null, error: null } } }
       assert.equal(tablo, 'ulke_hesaplari')
       const z: Record<string, unknown> = {
         insert: async (g: Record<string, unknown>) => { assert.equal(g.ulke, 'au'); olaylar.push({ tur: 'insert', veri: g }); return { data: null, error: null } },
@@ -79,6 +81,10 @@ describe('AU sign-up is open (no invitation code)', () => {
     assert.ok(!html.includes('ulke-kayit-kod'), 'no code field')
     assert.doesNotMatch(html, /invitation code/i)
     assert.match(html.replace(/&amp;/g, '&'), /\/login\?plan=sesli_pro_founding&interval=year/)
+    // KAYIT-BRANS-01: the specialty is a required choice — Australia's own roles, nothing preselected, button disabled.
+    assert.match(html, /<select id="ulke-kayit-rol"[^>]*required=""/)
+    assert.ok(html.includes('Specialty or profession'))
+    assert.match(html, /<button type="submit" disabled=""/)
   })
 })
 
@@ -114,7 +120,7 @@ describe('POST /api/ulke/kayit on the Australian build', () => {
     NextRequest = (await import('next/server')).NextRequest
   })
   beforeEach(sifirla)
-  const GOVDE = { adSoyad: 'QA Australian Doctor', eposta: 'QA-New@Notya.Test', sifre: 'a-long-password-9', dil: 'en-AU', donus: 'https://au.notya.test/login?plan=sesli_pro_founding&interval=year' }
+  const GOVDE = { adSoyad: 'QA Australian Doctor', eposta: 'QA-New@Notya.Test', sifre: 'a-long-password-9', dil: 'en-AU', rol: 'family-medicine', donus: 'https://au.notya.test/login?plan=sesli_pro_founding&interval=year' }
   const gonder = async (govde: unknown, ip = '203.0.113.10') => {
     const r = await rota.POST(new NextRequest('https://au.notya.test/api/ulke/kayit', { method: 'POST', body: JSON.stringify(govde), headers: { 'content-type': 'application/json', host: 'au.notya.test', 'x-forwarded-for': ip } }))
     return { s: r.status, j: await r.json() }
@@ -129,6 +135,18 @@ describe('POST /api/ulke/kayit on the Australian build', () => {
     assert.equal(yarat.user_metadata.davetli, false)
     assert.deepEqual(olaylar.find((o) => o.tur === 'resend')!.veri, { type: 'signup', email: 'qa-new@notya.test', options: { emailRedirectTo: 'https://au.notya.test/login?plan=sesli_pro_founding&interval=year' } })
     assert.ok(!olaylar.some((o) => o.tur === 'deleteUser'))
+    // KAYIT-BRANS-01: the chosen specialty is recorded with the account, stamped au.
+    const rol = olaylar.find((o) => o.tur === 'rol')!.veri as Record<string, unknown>
+    assert.equal(rol.rol, 'family-medicine')
+    assert.equal(rol.doctor_id, '20000000-0000-4000-8000-000000000001')
+    assert.equal(rol.ulke, 'au')
+  })
+
+  it('KAYIT-BRANS-01: no specialty, or one Australia does not offer, is refused before any account is created', async () => {
+    for (const [i, rol] of [undefined, '', 'pediatri', 'clinic-dermatology-xx', 7].entries()) {
+      assert.deepEqual(await gonder({ ...GOVDE, rol }, `203.0.113.${60 + i}`), { s: 400, j: { code: 'ROL_GEREKLI', alan: 'rol' } }, String(rol))
+    }
+    assert.deepEqual(olaylar, [])
   })
 
   it('a code is not needed and is ignored; a foreign return address is dropped', async () => {

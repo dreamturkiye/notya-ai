@@ -35,6 +35,7 @@ import { meslekKaydiGecerli } from '@/lib/ulke/uygulama/meslekKaydi'
 import { referansKaydet, referansKoduNormalize } from '@/lib/billing/referans'
 import { referansIslevi } from '@/lib/ulke/belge/sunucu'
 import { ulkeIslevi, ulkeTablosu } from '@/lib/ulke/uygulama/tablolar'
+import { hekimRolunuYaz, uygulamaRolleri, uygulamaRoluMu } from '@/lib/ulke/uygulama/rol'
 
 export const dynamic = 'force-dynamic'
 
@@ -62,6 +63,11 @@ export const POST = sinirda('sign-up POST', async (req: NextRequest) => {
   const tasindi = Boolean(ulkePaketi().uzanti?.muayenehane?.meslekKaydiTasi)
   const meslek = tasindi ? '' : meslekKaydiGecerli(g?.meslekKaydi)
   if (meslek === null) return cevap({ code: 'GECERSIZ', alan: 'meslekKaydi' }, 400)
+  // KAYIT-BRANS-01 (Kaan, 2026-11-07): the specialty is REQUIRED — exactly one of this country's roles (the pack's list,
+  // which carries its regulatory gate). Checked before the invitation is consumed, so a bad value leaves the code unused.
+  const rolGerekli = ozellikAcik('cekirdekMuayene') && uygulamaRolleri().length > 0
+  const rol = typeof g?.rol === 'string' ? g.rol : ''
+  if (rolGerekli && !uygulamaRoluMu(rol)) return cevap({ code: 'ROL_GEREKLI', alan: 'rol' }, 400)
   // The interface language must be one this country has switched on; anything else is the country's default.
   const paket = ulkePaketi()
   const dil = (paket.acikDiller as readonly string[]).includes(dilHam) ? dilHam : paket.varsayilanDil
@@ -111,6 +117,14 @@ export const POST = sinirda('sign-up POST', async (req: NextRequest) => {
       console.error('[ulke/kayit] confirmation email could not be sent', { ulke, durum: postaHatasi.status ?? null })
       return postaHatasi.status === 429 ? cevap({ code: 'COK_DENEME' }, 429) : cevap({ code: 'OLUSTURULAMADI' }, 500)
     }
+  }
+
+  // KAYIT-BRANS-01: recorded with the account (the same row /api/ulke/rol writes). A failed write does not undo the
+  // account: the first-login step (/start) still finds no role and asks for it before the application opens.
+  if (rolGerekli) {
+    let kaydedildi = false
+    try { kaydedildi = await hekimRolunuYaz(supabase, userId, rol) } catch { /* reported below */ }
+    if (!kaydedildi) console.error('[ulke/kayit] role could not be recorded; /start will ask', { ulke })
   }
 
   // REFERANS-01: recorded once the account exists (self-referral and one clinic are refused by the database function).

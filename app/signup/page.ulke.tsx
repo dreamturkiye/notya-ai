@@ -7,7 +7,7 @@ import React from 'react'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import DavetliKayitFormu from '@/components/ulke/DavetliKayitFormu'
-import { acilisCapasi, uygulamaMetni } from '@/lib/ulke/arayuz'
+import { acilisCapasi, rolAdi, rolGruplari, uygulamaMetni } from '@/lib/ulke/arayuz'
 import { kayitKoduGerekliMi } from '@/lib/ulke/davet'
 import { ozellikAcik, ulkePaketi } from '@/lib/ulke/ulke'
 import { yuzeyMetinleri } from '@/lib/ulke/metin'
@@ -27,6 +27,14 @@ export default function SignupPage({ searchParams }: { searchParams?: AramaParam
   if (!ozellikAcik('davetliKayit')) notFound()
   const dil = sayfaDili(searchParams)
   const a = uygulamaMetni(dil).ayarlar
+  // KAYIT-BRANS-01 (Kaan, 2026-11-07): the specialty is a required choice of sign-up — this country's roles only (the
+  // pack's list = its regulatory gate), in the pack's groups and the visitor's language. No roles → no question.
+  const r = uygulamaMetni(dil).rol
+  const grupAdi = { doktor: r.grupDoktor, 'klinik-hekim': r.grupKlinikHekim, 'klinik-muttefik': r.grupKlinikMuttefik } as const
+  const bransGruplari = ozellikAcik('cekirdekMuayene')
+    ? rolGruplari().map((g) => ({ ad: grupAdi[g.taraf], secenekler: g.roller.map((x) => ({ anahtar: x.anahtar, ad: rolAdi(x.anahtar, dil) ?? x.anahtar })) }))
+    : []
+  const brans = bransGruplari.length ? { etiket: r.etiket, sec: r.sec, gerekli: r.gerekli, gruplar: bransGruplari } : undefined
   // STRIPE-NOTYA-AU-02: /api/ulke/kayit creates the account server-side and returns no session (by design —
   // the browser never gets a service-role-issued token), so there is nowhere to call checkout from right here.
   // The doctor's first real session is their first /login right after. Carry the chosen plan forward on that
@@ -46,6 +54,7 @@ export default function SignupPage({ searchParams }: { searchParams?: AramaParam
       giris={plan ? `${girisYolu}${girisYolu.includes('?') ? '&' : '?'}plan=${plan}${aralik ? `&interval=${aralik}` : ''}` : girisYolu}
       fiyat={dilliYol('/', dil, acilisCapasi('narx') ? `#${acilisCapasi('narx')}` : '')}
       cokDeneme={yuzeyMetinleri('giris', dil).cokDeneme}
+      brans={brans}
       meslek={ulkePaketi().uzanti?.muayenehane?.meslekKaydiTasi ? undefined : { etiket: a.meslekKaydi, izoh: a.meslekKaydiIzoh, gecersiz: a.meslekKaydiGecersiz }}
     />
   )
