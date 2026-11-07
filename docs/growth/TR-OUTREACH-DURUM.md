@@ -1,5 +1,5 @@
 # TR outreach durum (canlı)
 
-**Sıradaki:** Op. Dr. **Yasemin Çakar Kement** · KD · Ümraniye · `+905527482045`
+**Sıradaki:** Op. Dr. **İrem Yengel** · KD · Küçükçekmece · `+905304702388`
 
-Sümeyra gitti → **Yasemin şimdi**. WA yok: Yeşim, Aysun, Elif Esra, Murat.
+Yasemin gitti → **İrem şimdi**. WA yok: Yeşim, Aysun, Elif Esra, Murat.
