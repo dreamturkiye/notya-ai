@@ -1,6 +1,7 @@
 /**
  * GENITAL-ESTETIK-01 — Türkiye build: the package's server and wiring.
- *   - LEAK GATE: the tab, the templates and the routes exist for KD only (brans-alan-sizmasi); no other branch, no Özel Branş.
+ *   - LEAK GATE: the tab, the templates and the routes exist for KD, plastik cerrahi and the Özel Branş estetik & plastik
+ *     cerrahi only (brans-alan-sizmasi); energy, injection, whitening, FSFI / FGSIS and the lot recall for KD only.
  *   - UNDER-18: the server refuses a cosmetic record / cosmetic genital operation note for a minor; a medical one passes.
  *   - PHOTO NEVER TO AI: no file that calls a model reads the intimate-photo table; the photo routes import no model client;
  *     the photo archive / document / portal / consultation / export code never names the table.
@@ -74,14 +75,37 @@ function veriTabani(dogumA = '1990-01-01') {
   } as Record<string, Satir[]>
 }
 
-describe('GENITAL-ESTETIK-01 leak gate: KD only', () => {
-  it('the branch decision: KD spellings yes; every other branch and every Özel Branş no', async () => {
-    const { genitalEstetikBransi } = await import('./genitalEstetikBrans')
-    for (const k of ['kadin-dogum', 'kadin-hastaliklari-dogum', 'Kadın Hastalıkları ve Doğum', 'jinekoloji']) assert.equal(genitalEstetikBransi(k), true, k)
+describe('GENITAL-ESTETIK-01 leak gate: KD (everything), plastic and aesthetic surgery (the surgical part), nobody else', () => {
+  it('the branch decision: KD spellings → full; plastik cerrahi and estetik & plastik cerrahi → surgical; every other branch and Özel Branş → none', async () => {
+    const { genitalEstetikBransi, genitalEstetikKapsami } = await import('./genitalEstetikBrans')
+    for (const k of ['kadin-dogum', 'kadin-hastaliklari-dogum', 'Kadın Hastalıkları ve Doğum', 'jinekoloji']) assert.equal(genitalEstetikKapsami(k), 'tam', k)
+    for (const k of ['plastik-cerrahi', 'Plastik, Rekonstrüktif ve Estetik Cerrahi', 'estetik-cerrahi', 'Estetik & Plastik Cerrahi']) assert.equal(genitalEstetikKapsami(k), 'cerrahi', k)
     const { BRANS_ETIKETLERI } = await import('@/lib/intake/bransSorulari')
-    const digerleri = [...Object.keys(BRANS_ETIKETLERI).filter((k) => k !== 'kadin-hastaliklari-dogum'), 'pediatri', 'uroloji', 'plastik-cerrahi', 'dermatoloji', 'genel-cerrahi', 'aile-hekimligi']
+    const digerleri = [...Object.keys(BRANS_ETIKETLERI).filter((k) => k !== 'kadin-hastaliklari-dogum' && k !== 'plastik-cerrahi'), 'pediatri', 'uroloji', 'dermatoloji', 'genel-cerrahi', 'aile-hekimligi']
     const { KLINIK_YENI_SLUGS } = await import('@/lib/specialties/klinikDikey')
-    for (const k of [...digerleri, ...KLINIK_YENI_SLUGS, null, '', 'genel']) assert.equal(genitalEstetikBransi(k as string), false, String(k))
+    for (const k of [...digerleri, ...KLINIK_YENI_SLUGS.filter((s) => s !== 'estetik-cerrahi'), 'medikal-estetik', null, '', 'genel']) {
+      assert.equal(genitalEstetikBransi(k as string), false, String(k))
+      assert.equal(genitalEstetikKapsami(k as string), null, String(k))
+    }
+  })
+  it('the surgical part never writes energy, injection, whitening, FSFI or FGSIS; KD writes everything', async () => {
+    const { geKayitAcik, geOlcekleriKapsam } = await import('./genitalEstetikBrans')
+    const { GE_OLCEKLER } = await import('@/lib/clinical/genitalEstetik')
+    for (const tur of ['enerji', 'enjeksiyon', 'beyazlatma']) { assert.equal(geKayitAcik('cerrahi', tur), false, tur); assert.equal(geKayitAcik('tam', tur), true, tur) }
+    for (const o of ['fsfi', 'fgsis']) { assert.equal(geKayitAcik('cerrahi', 'olcek', o), false, o); assert.equal(geKayitAcik('tam', 'olcek', o), true, o) }
+    assert.equal(geKayitAcik('cerrahi', 'olcek', 'cops_l'), true)
+    assert.equal(geKayitAcik('cerrahi', 'foto_onam'), true)
+    assert.equal(geKayitAcik(null, 'foto_onam'), false)
+    assert.deepEqual(geOlcekleriKapsam('cerrahi', GE_OLCEKLER), ['cops_l'])
+    assert.deepEqual(geOlcekleriKapsam('tam', GE_OLCEKLER), [...GE_OLCEKLER])
+    // the route enforces it before anything is written, and hides the KD-only records and the lot recall
+    const r = oku('app/api/doktor/genital-estetik/route.ts')
+    assert.match(r, /if \(!geKayitAcik\(k\.kapsam, String\(b\.tur \?\? ''\), olcek\)\) return yanit\(\{ error: GE_HATA\.yalniz_kd/)
+    assert.match(r, /if \(!geKayitAcik\(k\.kapsam, 'enjeksiyon'\)\) return yanit\(\{ error: GE_HATA\.yalniz_kd \}, 403\)/)
+    assert.match(r, /tumu\.filter\(\(r\) => geKayitAcik\(k\.kapsam, r\.tur, r\.veri\.olcek\)\)/)
+    // the screen shows the surgical scope only its own sections
+    const ui = oku('components/doktor/HastaGenitalEstetik.tsx')
+    assert.match(ui, /veri\.kapsam === 'tam' \? SEKMELER_TAM : SEKMELER_CERRAHI/)
   })
   it('the tab: present for KD, absent otherwise (the button and the mount read the same boolean)', async () => {
     const { hastaDosyaSekmeleri } = await import('./hastaDosyaSekmeleri')
@@ -92,15 +116,20 @@ describe('GENITAL-ESTETIK-01 leak gate: KD only', () => {
     assert.match(sayfa, /activeTab === 'genital-estetik' && genitalEstetikUygun && <HastaGenitalEstetik/)
     assert.match(sayfa, /genitalEstetikUygun = genitalEstetikBransi\(doktorBransi\)/)
   })
-  it('the templates: the two new ones and their flag reach a KD surgeon only', async () => {
+  it('the templates: the four genital ones with their indication flag reach KD, plastic and aesthetic surgery — no other branch', async () => {
     const { ameliyatSablonlariBransIcin } = await import('./ameliyatNotuSunucu')
-    const kd = await ameliyatSablonlariBransIcin('kadin-dogum')
-    for (const k of ['labioplasti', 'labioplasti_klitoral', 'vajinoplasti_kolpoperineorafi', 'perineoplasti_kolporafi']) assert.ok(kd.find((s) => s.kod === k)?.endikasyonSinifiGerekli, k)
-    assert.ok(!kd.some((s) => /himen|hymen/.test(s.kod)))
-    for (const b of ['plastik-cerrahi', 'uroloji', 'estetik-cerrahi', 'genel-cerrahi']) assert.equal((await ameliyatSablonlariBransIcin(b)).length, 0, b)
+    const GE = ['labioplasti', 'labioplasti_klitoral', 'vajinoplasti_kolpoperineorafi', 'perineoplasti_kolporafi']
+    for (const b of ['kadin-dogum', 'plastik-cerrahi', 'estetik-cerrahi']) {
+      const l = await ameliyatSablonlariBransIcin(b)
+      for (const k of GE) assert.ok(l.find((s) => s.kod === k)?.endikasyonSinifiGerekli, `${b}: ${k}`)
+      assert.ok(!l.some((s) => /himen|hymen/.test(s.kod)), b)
+    }
+    assert.equal((await ameliyatSablonlariBransIcin('plastik-cerrahi')).length, GE.length, 'plastic surgery: the four, nothing gynaecological')
+    for (const b of ['uroloji', 'genel-cerrahi', 'medikal-estetik', 'sac-ekimi']) assert.equal((await ameliyatSablonlariBransIcin(b)).length, 0, b)
   })
   it('every route asks the branch before anything else', () => {
-    for (const r of ['app/api/doktor/genital-estetik/route.ts', 'app/api/doktor/genital-estetik/foto/route.ts', 'app/api/doktor/genital-estetik/foto/[fotoId]/route.ts']) assert.match(oku(r), /genitalEstetikBransi\(await doktorBransi\(/, r)
+    assert.match(oku('app/api/doktor/genital-estetik/route.ts'), /const kapsam = genitalEstetikKapsami\(await doktorBransi\(/)
+    for (const r of ['app/api/doktor/genital-estetik/foto/route.ts', 'app/api/doktor/genital-estetik/foto/[fotoId]/route.ts']) assert.match(oku(r), /genitalEstetikBransi\(await doktorBransi\(/, r)
   })
 })
 

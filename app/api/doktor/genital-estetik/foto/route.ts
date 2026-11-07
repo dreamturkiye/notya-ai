@@ -1,5 +1,5 @@
 /**
- * GENITAL-ESTETIK-01 — upload ONE intimate photo of a patient (KD only, doctor only).
+ * GENITAL-ESTETIK-01 — upload ONE intimate photo of a patient (KD, plastik cerrahi, estetik & plastik cerrahi; doctor only).
  *   POST { patientId, gorunum, cekimTarihi?, gorsel: <JPEG/PNG data URL, ≤ 3 MB> }  → { foto }  (metadata only)
  * Requires a separate, valid photo consent of the patient (422 otherwise). Metadata (EXIF/GPS) is stripped, bytes are
  * encrypted into genital_estetik_fotolar (never the document vault). No thumbnail is made. Nothing is sent to a model.

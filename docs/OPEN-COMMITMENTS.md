@@ -5,23 +5,24 @@
 Shipped 2026-11-06 on main (Türkiye, KD only) and on the six release branches (each country only what its own law and
 regulator permit, with the source on each switched-off tool): vaginoplasty / colpoperineorrhaphy and labiaplasty +
 clitoral-hood templates with consent forms and patient instruction sheets; energy-based session note; injection log with
-recall-searchable lot numbers; whitening record; outcome-measure totals (FSFI, FGSIS, VLQ, COPS-L) with before/after trend
+recall-searchable lot numbers; whitening record; outcome-measure totals (FSFI, FGSIS, COPS-L; the VLQ was removed on 2026-11-06, not validated) with before/after trend
 and a COPS-L ≥ 40 referral prompt; separate photo consent and an isolated, encrypted intimate-photo store (no thumbnail,
 blurred until clicked, every view audited, never sent to any model, not in any export); hard block of every cosmetic
 record and cosmetic genital operation note under 18 or without a recorded birth date (medically indicated surgery is never
-age-blocked). Migration 190 on production and the six country databases. Hymenoplasty stays excluded.
+age-blocked). Migration 190 on production and the six country databases. Hymenoplasty stays excluded. Extended the same
+day (Kaan's decision) to plastik cerrahi and the Özel Branş estetik & plastik cerrahi for the surgical part only (01c).
 
 | Date | Item | Owner | Status |
 |---|---|---|---|
-| 2026-11-06 | **GENITAL-ESTETIK-01a — questionnaire licences.** No item text of any instrument ships; only TOTALS are recorded (from the authorised form the clinician administers) and item-level entry is closed (`lib/clinical/genitalEstetik.ts` GE_OLCEK_LISANSLARI; country builds: slots `genital-*-items`). FSFI: permission needed (the published form directs users to Raymond C. Rosen for the questionnaire and scoring algorithm). FGSIS (Herbenick & Reece): terms for commercial software not found. VLQ (Millheiser et al. 2010): one item, not formally validated (Polland et al. 2021), no validated Turkish / Uzbek / Russian translation found. COPS-L: copyright D. Veale (2009), translations need the holders' permission. Ask: permission for each in commercial software (and confirmation that recording a total is acceptable); then Claude sets the state to `izin-alindi` and opens item entry with the validated translations (TR: FSFI Aygin & Eti Aslan 2005; FGSIS Ellibeş Kaya et al. 2019). | Kaan | OPEN — waits on Kaan |
+| 2026-11-06 | **GENITAL-ESTETIK-01a — questionnaire licences.** No item text of any instrument ships; only TOTALS are recorded (from the authorised form the clinician administers) and item-level entry is closed (`lib/clinical/genitalEstetik.ts` GE_OLCEK_LISANSLARI; country builds: slots `genital-*-items`). FSFI: permission needed (Raymond C. Rosen; licensing route Mapi Research Trust ePROVIDE). FGSIS: terms for commercial software not published (Debby Herbenick, Indiana University). COPS-L: the author's page allows use with citation but does not address commercial software (David Veale, King's College London). **VLQ removed from the package on 2026-11-06 (Kaan's decision): one item, not formally validated (Polland et al., Sex Med 2021).** Permission-request e-mails to the three rights holders, with each address and its official source, are drafted (Claude's scratch file `questionnaire-licence-emails.md`, text handed to Kaan in the report). Nothing has been sent. When a permission arrives, Claude switches that instrument to 'izin-alindi' (opens item-level entry) and adds the validated translations it covers. | Kaan (send), Claude (apply) | drafts ready, Kaan to send |
 | 2026-11-06 | **GENITAL-ESTETIK-01b — Türkiye's own position.** No T.C. Sağlık Bakanlığı or TJOD statement on female genital cosmetic surgery, vaginal energy devices, G-spot filler or genital whitening was found; the TR screens show the international sources labelled "uluslararası kaynak" (ACOG CO 795, RCOG 2013, FDA 2018, NICE IPG696/697, TGA 2024). Ask TJOD / a health lawyer whether a national position exists; Claude adds it. | Kaan | OPEN — waits on Kaan |
-| 2026-11-06 | **GENITAL-ESTETIK-01c — other branşlar.** The package is KD only. Labiaplasty is also done by plastik cerrahi and the Özel Branş estetik & plastik cerrahi; whether they get the package (and which parts) is the owner's decision. Claude applies it (one line in `lib/doktor/genitalEstetikBrans.ts` + leak tests). | Kaan (decision), Claude | OPEN |
-| 2026-11-06 | **GENITAL-ESTETIK-01d — clinician review of every word** (TR, the English set, Uzbek Latin / Cyrillic / Russian), including the four post-op instruction sheets and the consent texts; Uzbek and Russian are machine-written. | Kaan (a gynaecologist reads) | OPEN — waits on Kaan |
+| 2026-11-06 | **GENITAL-ESTETIK-01c — other branşlar.** DONE 2026-11-06 (Kaan's decision): plastik cerrahi and the Özel Branş estetik & plastik cerrahi have the SURGICAL part: the four operation-note templates (labioplasty, labioplasty + clitoral hood, vaginoplasty / colpoperineorrhaphy, perineoplasty) with the indication field and the under-18 block, their consent forms and instruction sheets, the COPS-L body-image prompt and the protected photo documentation (TR: `lib/doktor/genitalEstetikBrans.ts`; country builds: role grids, plus a genital-only consent tool `onam-formu-genital` for those two roles). Energy, injection and whitening records, FSFI / FGSIS and the lot recall stay KD only. Same country gates as KD (GB / AU: cosmetic labioplasty and hood reduction off). Leak tests updated. | Claude | DONE |
+| 2026-11-06 | **GENITAL-ESTETIK-01d — clinician review of every word** (TR, the English set, Uzbek Latin / Cyrillic / Russian), including the four post-op instruction sheets and the consent texts. The Turkish text must be read by a **gynaecologist** (not Dr. Mamur, who is a paediatrician); the Uzbek and Russian (machine-written) by a **native-speaker clinical reviewer**. | Kaan | OPEN — waits on Kaan |
 | 2026-11-06 | **GENITAL-ESTETIK-01e — sources not opened directly.** The FDA safety communication page (fda.gov not reachable from this session; content verified through Medsafe's restatement of 5 Sep 2018 and IUGA's summary); the Canadian Criminal Code page (s.268(3) read through a quotation); the COPS-L cut-off (verified through the Polish COPS validation paper citing Veale 2012/2013, primary not opened); the Scottish FGM Act 2005 text; SOGC Guideline 423 full text (abstract only). Re-read each and correct if needed. | Claude | OPEN |
 | 2026-11-06 | **GENITAL-ESTETIK-01f — country builds: intimate-photo store.** The country builds have the separate photo consent and the standard-view checklist (`genital-foto-onam`) but no isolated encrypted photo store with blur, per-view audit and no-AI guarantee like main's `genital_estetik_fotolar` (the table exists in every country database, unused). Build the country store and viewer. | Claude | OPEN |
 | 2026-11-06 | **GENITAL-ESTETIK-01g — country builds: lot recall search.** The injection tool keeps the lot in the kept record (encrypted with the rest); a recall search across a doctor's kept injection records (decrypt-and-filter, bounded) is not built. | Claude | OPEN |
 | 2026-11-06 | **GENITAL-ESTETIK-01h — regulatory follow-ups per country.** UZ: energy, injection and whitening tools are off until an Uzbek Ministry of Health source (device registration, cosmetology licensing) is read with a local lawyer (Kaan). AU: injection tool off until an ARTG inclusion with a genital intended purpose is verified (Claude) and an Australian health lawyer confirms the labial sites under state FGM laws (Kaan). NZ: energy tool off per Medsafe 2018 / RANZCOG C-Gyn 24 — Kaan may decide a research-only mode. GB: energy, injection and whitening off (NICE research-only; FGM Act 2003 s.1 and statutory guidance 3.1.4 / 3.1.8) — a UK health lawyer should confirm. CA: no Health Canada notice on vaginal energy devices found (Claude re-checks). | Kaan / Claude as named | OPEN |
-| 2026-11-06 | **GENITAL-ESTETIK-01i — country builds: medically indicated energy / injection for a minor.** The country kit gates a whole tool by age, so a medically indicated energy session or injection (e.g. lichen sclerosus) for a patient under 18 cannot be recorded there; surgery for a minor is not blocked (O&G operation note). A per-record gate in the kit (patient age in the arithmetic) if Kaan wants it. | Kaan (decision), Claude | OPEN |
+| 2026-11-06 | **GENITAL-ESTETIK-01i — country builds: medically indicated energy / injection for a minor.** The country kit gates a whole tool by age, so a medically indicated energy session or injection for a patient under 18 cannot be recorded there; surgery for a minor is not blocked. **Decided 2026-11-06 (Kaan): not needed now — left as is.** | Kaan | CLOSED — decided 2026-11-06: not needed now |
 
 ## NOTYA-DEMO-DIL-01 — /demo pages fully in their own language; Cal.com calendar language; missing attendee e-mail (Claude, 2026-11-06)
 
@@ -44,11 +45,12 @@ so a word in another language on our own part of these pages fails the test.
   supports for the UZ page in all three forms (Uzbek Latin, Uzbek Cyrillic, Russian), because one event type has one
   interface language. Optional, same screen: event titles show as "Demo-TR", "Demo-USA" and so on. After the change,
   Claude re-checks each page once.
-- **NOTYA-DEMO-DIL-01b — DONE 2026-11-06 (Kaan's go via the coordinator; Claude set the value, production only).** Was: au.notya.io/au/demo embeds **`han-mamur-sugmbo/demo-tr`**: the
-  Turkish event, with its Turkish description "Notya'ya hoşgeldiniz!", on the Australian page. The Vercel project
-  `notya-au-preview` has `NEXT_PUBLIC_DEMO_BOOKING_URL` set to the TR event. Fix: set it to
-  `https://app.cal.com/han-mamur-sugmbo/demo-au` (the event exists, "Introducing Notya!") and redeploy release/au. The
-  value is inlined at build time, so the change needs a new build.
+- **NOTYA-DEMO-DIL-01b — DONE 2026-11-06.** Was: au.notya.io/au/demo embedded **`han-mamur-sugmbo/demo-tr`**: the
+  Turkish event, with its Turkish description "Notya'ya hoşgeldiniz!", on the Australian page. **Correction
+  (2026-11-06):** the fix was the AU code setting, not the environment variable. Australia's own booking address is set in
+  `lib/billing/ulkeTicari.ts` on release/au (commit d85cc32ca, "/demo books the AU Cal.com event, not the Turkish one"),
+  pointing to `https://app.cal.com/han-mamur-sugmbo/demo-au`. The note written earlier, that setting
+  `NEXT_PUBLIC_DEMO_BOOKING_URL` on `notya-au-preview` was the fix, was wrong.
 - **NOTYA-DEMO-DIL-01c — CLOSED 2026-11-06 (Claude): not a fault.** The 404 came from testing the wrong path. Uzbekistan's
   build is served under the prefix `/uzbek` (countries/uz/derleme.mjs), not `/uz`: `uz.notya.io/` redirects to
   `/uzbek` and the demo page is `uz.notya.io/uzbek/demo` (live, embeds `demo-uz`, verified in Chrome). The domain, the
@@ -72,13 +74,11 @@ so a word in another language on our own part of these pages fails the test.
   time in the attendee's own zone, the call link, an .ics file and Cal.com's cancel/reschedule links. The look is the
   same as the intake e-mail. `CAL_WEBHOOK_SECRET` is set on `notya-ai` Production; the value is only in Claude's
   scratch file for Kaan to paste.
-  **Waits on Kaan (1):** `RESEND_API_KEY` is **not set** on the `notya-ai` project (no Resend key exists in its env).
-  Until it is, the route answers 503 and sends nothing. In Resend, create an API key with sending access for the
-  domain notya.io and set it as `RESEND_API_KEY` (Production, sensitive) on `notya-ai`, then redeploy.
-  **Waits on Kaan (2):** in Cal.com → Settings → Developer → Webhooks → New: Subscriber URL
-  `https://www.notya.io/api/demo/cal-webhook`; triggers Booking Created, Booking Rescheduled, Booking Cancelled; Secret
-  = the value in the scratch file; payload template default. Optional (owner Claude, after the first live mail): drop
-  Cal.com's own attendee e-mail entirely if it ever starts working, so attendees don't get two.
+  **(1) `RESEND_API_KEY` and (2) the Cal.com webhook — NOT NEEDED (closed 2026-11-06):** Cal now sends Turkish
+  confirmations itself (verified 2026-11-06). Our receiver stays dormant as a backup. **Do NOT enable both** (setting
+  `RESEND_API_KEY` and adding the Cal.com webhook while Cal's own e-mails are on), or every booking gets duplicate
+  e-mails. Was: set `RESEND_API_KEY` on `notya-ai`, and add a Cal.com webhook to
+  `https://www.notya.io/api/demo/cal-webhook` with the secret in the scratch file.
 - **NOTYA-DEMO-MAIL-01 — missing attendee e-mail on Kaan's test booking (Demo-TR, Fri 6 Nov 2026, confirmed in Cal; host
   e-mail received, attendee e-mail never arrived).** Read-only checks of the public event data: `requiresConfirmation`
   false, `metadata` {} (so `disableStandardEmails` is not set for host or attendee), `workflows` [] (no workflow replaces

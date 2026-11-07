@@ -140,9 +140,13 @@ describe('AMELIYAT-NOTU-01 — KD templates never leave KD (brans-alan-sizmasi)'
       assert.equal(l.length, KD_AMELIYAT_SABLONLARI.length, b)
     }
   })
-  it('every other medical branch, every Özel Branş and an unknown branch receive none', async () => {
-    for (const b of Object.keys(BRANS_ETIKETLERI).filter((k) => k !== 'kadin-hastaliklari-dogum')) assert.equal((await ameliyatSablonlariBransIcin(b)).length, 0, b)
-    for (const b of KLINIK_YENI_SLUGS) assert.equal((await ameliyatSablonlariBransIcin(b)).length, 0, b)
+  it('every other medical branch, every Özel Branş and an unknown branch receive none — but the four genital-aesthetic templates for plastic and aesthetic surgery', async () => {
+    // GENITAL-ESTETIK-01 (Kaan, 2026-11-06): plastik cerrahi and the Özel Branş estetik & plastik cerrahi receive exactly the four genital-aesthetic templates
+    const GE = ['labioplasti', 'labioplasti_klitoral', 'perineoplasti_kolporafi', 'vajinoplasti_kolpoperineorafi']
+    for (const b of ['plastik-cerrahi', 'estetik-cerrahi', 'Plastik, Rekonstrüktif ve Estetik Cerrahi']) assert.deepEqual((await ameliyatSablonlariBransIcin(b)).map((s) => s.kod).sort(), GE, b)
+    assert.equal(await sablonGecerliMi('plastik-cerrahi', 'sezaryen'), null, 'plastic surgery never names a gynaecological template')
+    for (const b of Object.keys(BRANS_ETIKETLERI).filter((k) => k !== 'kadin-hastaliklari-dogum' && k !== 'plastik-cerrahi')) assert.equal((await ameliyatSablonlariBransIcin(b)).length, 0, b)
+    for (const b of KLINIK_YENI_SLUGS.filter((k) => k !== 'estetik-cerrahi')) assert.equal((await ameliyatSablonlariBransIcin(b)).length, 0, b)
     for (const b of [null, '', 'genel']) assert.equal((await ameliyatSablonlariBransIcin(b)).length, 0, String(b))
     assert.equal(await sablonGecerliMi('genel-cerrahi', 'sezaryen'), null, 'a non-KD note cannot name a KD template')
     assert.equal(await sablonGecerliMi('kadin-dogum', 'sezaryen'), 'sezaryen')

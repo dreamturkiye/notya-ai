@@ -507,7 +507,7 @@ export function hastaDosyaSekmeleri(opts: {
   radyolojiUygun?: boolean
   /** AMELIYAT-NOTU-01: CORE shell for every surgical branch — lib/doktor/ameliyatNotu.ts → ameliyatNotuBransi */
   ameliyatUygun?: boolean
-  /** GENITAL-ESTETIK-01: obstetrics and gynaecology only — lib/doktor/genitalEstetikBrans.ts */
+  /** GENITAL-ESTETIK-01: KD, plastik cerrahi and the Özel Branş estetik & plastik cerrahi — lib/doktor/genitalEstetikBrans.ts */
   genitalEstetikUygun?: boolean
   pediatriUygun: boolean
   gebelikUygun: boolean
@@ -526,7 +526,7 @@ export function hastaDosyaSekmeleri(opts: {
   )
   // AMELIYAT-NOTU-01: core for every surgical branch (30 + 10 written out in ameliyatNotu.ts), never for the others.
   if (opts.ameliyatUygun) tabs.push({ id: 'ameliyat', label: 'Ameliyat Notları' })
-  // GENITAL-ESTETIK-01: KD only (never another branch, whatever the patient).
+  // GENITAL-ESTETIK-01: KD, plastik cerrahi, estetik & plastik cerrahi (never another branch, whatever the patient).
   if (opts.genitalEstetikUygun) tabs.push({ id: 'genital-estetik', label: 'Genital Estetik' })
   tabs.push(
     { id: 'goruntuleme', label: 'Görüntüleme' },

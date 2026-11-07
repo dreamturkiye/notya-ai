@@ -9,15 +9,24 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { SpecialtyKey } from '@/lib/asistan/turkishSpecialtyRefs'
 import { bransAnahtari } from '@/lib/specialties/bransAnahtari'
+import { klinikSlugCoz, type KlinikYeniSlug } from '@/lib/specialties/klinikDikey'
 import { decrypt, encrypt } from '@/lib/security/encryption'
 import { ameliyatNotuOku, type AmeliyatNotuVeri, type AmeliyatSablonu } from './ameliyatNotu'
 
 const SABLON_SAGLAYICILARI: Partial<Record<SpecialtyKey, () => Promise<readonly AmeliyatSablonu[]>>> = {
   'kadin-hastaliklari-dogum': () => import('@/specialties/kadin-dogum/engines/ameliyatSablonlari').then((m) => m.KD_AMELIYAT_SABLONLARI),
+  // GENITAL-ESTETIK-01 (Kaan, 2026-11-06): the four genital-aesthetic templates (lib/doktor/genitalEstetikBrans.ts, scope 'cerrahi')
+  'plastik-cerrahi': () => import('@/specialties/kadin-dogum/engines/genitalEstetikSablonlari').then((m) => m.GE_AMELIYAT_SABLONLARI),
+}
+/** Özel Branşlar with templates of their own, written out (an Özel Branş never falls through to a medical branch's list). */
+const OZEL_SABLON_SAGLAYICILARI: Partial<Record<KlinikYeniSlug, () => Promise<readonly AmeliyatSablonu[]>>> = {
+  'estetik-cerrahi': () => import('@/specialties/kadin-dogum/engines/genitalEstetikSablonlari').then((m) => m.GE_AMELIYAT_SABLONLARI),
 }
 
 /** The templates of THIS doctor's branch (users.specialty, any stored spelling — 'kadin-dogum' included). Unknown = none. */
 export async function ameliyatSablonlariBransIcin(specialtyHam: string | null | undefined): Promise<readonly AmeliyatSablonu[]> {
+  const ozel = klinikSlugCoz(specialtyHam)
+  if (ozel) { const y = OZEL_SABLON_SAGLAYICILARI[ozel]; return y ? y() : [] }
   const k = bransAnahtari(specialtyHam)
   const yukle = k ? SABLON_SAGLAYICILARI[k] : undefined
   return yukle ? yukle() : []

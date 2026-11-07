@@ -1,7 +1,9 @@
 'use client';
 /**
- * GENITAL-ESTETIK-01 (Kaan, 2026-11-06) — "Genital Estetik" of the patient file. KD ONLY: the tab button and this mount read
- * the same boolean (lib/doktor/genitalEstetikSunucu.ts → genitalEstetikBransi), and every route checks the branch again.
+ * GENITAL-ESTETIK-01 (Kaan, 2026-11-06) — "Genital Estetik" of the patient file. The tab button and this mount read the same
+ * boolean (lib/doktor/genitalEstetikBrans.ts → genitalEstetikBransi), and every route checks the branch again. The SCOPE
+ * comes from the server (`kapsam`): KD ('tam') sees every section; plastik cerrahi and estetik & plastik cerrahi ('cerrahi')
+ * see the surgical part only — COPS-L, photos, consent forms and instruction sheets of the four operations.
  *
  * Energy-based sessions, the injection log (lot numbers, recall search), whitening sessions, outcome-measure totals with
  * before / after trend, and intimate photo documentation. Every record carries its indication (cosmetic / medically
@@ -18,12 +20,15 @@ import {
   GE_ENJEKSIYON_URUN, GE_FOTO_GORUNUMLERI, GE_MEDIKAL_GEREKCE, GE_OLCEKLER, GE_OLCEK_ARALIK, GE_OLCEK_LISANSLARI, GE_REAKSIYON, GE_YAS_SINIRI,
   geMedikalOlabilir, olcekToplamDegerlendir, olcekTrendi, type GeIslemTuru, type GeOlcek,
 } from '@/lib/clinical/genitalEstetik';
-import { GE_BOLUM_ADLARI, GE_COPS_YONLENDIRME, GE_ETIKET as L, GE_HATA, GE_KANIT, GE_KART, GE_KAYNAKLAR, GE_OLCEK_NOTU } from '@/specialties/kadin-dogum/engines/genitalEstetikMetinleri';
+import { GE_BELGELER, GE_BOLUM_ADLARI, GE_COPS_YONLENDIRME, GE_ETIKET as L, GE_HATA, GE_KANIT, GE_KART, GE_KAYNAKLAR, GE_OLCEK_NOTU } from '@/specialties/kadin-dogum/engines/genitalEstetikMetinleri';
+import { geOlcekleriKapsam, type GeKapsam } from '@/lib/doktor/genitalEstetikBrans';
 
 type Kayit = { id: string; tur: string; tarih: string; endikasyon: string | null; urunAdi: string | null; lot: string | null; sonrakiTarih: string | null; veri: Record<string, any> };
 type FotoMeta = { id: string; gorunum: string; cekimTarihi: string; boyut: number };
-type Veri = { kayitlar: Kayit[]; fotolar: FotoMeta[]; fotoOnamGecerli: boolean; yas: number | null; dogumTarihiVar: boolean };
-type Sekme = 'enerji' | 'enjeksiyon' | 'beyazlatma' | 'olcek' | 'foto' | 'lot';
+type Veri = { kapsam: GeKapsam; kayitlar: Kayit[]; fotolar: FotoMeta[]; fotoOnamGecerli: boolean; yas: number | null; dogumTarihiVar: boolean };
+type Sekme = 'enerji' | 'enjeksiyon' | 'beyazlatma' | 'olcek' | 'foto' | 'lot' | 'belgeler';
+const SEKMELER_TAM: [Sekme, string][] = [['enerji', 'Lazer / RF'], ['enjeksiyon', 'Enjeksiyon'], ['beyazlatma', 'Beyazlatma'], ['olcek', 'Ölçekler'], ['foto', 'Fotoğraflar'], ['belgeler', 'Onam ve talimat'], ['lot', 'Lot geri çağırma']];
+const SEKMELER_CERRAHI: [Sekme, string][] = [['olcek', 'Beden algısı (COPS-L)'], ['foto', 'Fotoğraflar'], ['belgeler', 'Onam ve talimat']];
 
 const btn: React.CSSProperties = { background: CHROME_RENK.pine, color: '#FAF8F4', border: 'none', borderRadius: 8, padding: '8px 14px', fontSize: 13, fontWeight: 700, cursor: 'pointer' };
 const ghost: React.CSSProperties = { ...btn, background: 'transparent', color: CHROME_RENK.ink, border: `1px solid ${CHROME_RENK.border}` };
@@ -175,7 +180,25 @@ function KayitListesi({ kayitlar, tur, patientId }: { kayitlar: Kayit[]; tur: st
   );
 }
 
-function Olcekler({ kayitlar, gonder }: { kayitlar: Kayit[]; gonder: (tur: string, veri: unknown) => Promise<string | null> }) {
+/** Consent forms and patient instruction sheets of the four genital-aesthetic operations (printable, on letterhead). */
+function Belgeler({ patientId }: { patientId: string }) {
+  const a: React.CSSProperties = { color: CHROME_RENK.pine, fontWeight: 600, fontSize: 13, textDecoration: 'none' };
+  return (
+    <div style={{ ...toolsCard, marginBottom: 12 }} data-ge-form="belgeler">
+      <div style={{ fontWeight: 700, color: CHROME_RENK.ink }}>{GE_BOLUM_ADLARI.belgeler}</div>
+      <div style={{ ...ince, margin: '6px 0' }}>{GE_BELGELER.not}</div>
+      {GE_BELGELER.islemler.map((x) => (
+        <div key={x.sablon} style={{ display: 'flex', gap: 14, flexWrap: 'wrap', alignItems: 'baseline', borderTop: `1px solid ${CHROME_RENK.border}`, padding: '8px 0' }}>
+          <div style={{ fontSize: 13, color: CHROME_RENK.ink, minWidth: 260, flex: 1 }}>{x.ad}</div>
+          <a href={`/dashboard/doktor/onam/yazdir?islem=${x.onam}&patientId=${encodeURIComponent(patientId)}&geri=genital-estetik`} target="_blank" rel="noreferrer" style={a}>Onam formu</a>
+          <a href={`/dashboard/doktor/hastalar/${patientId}/genital-estetik/yazdir?talimat=${x.sablon}`} target="_blank" rel="noreferrer" style={a}>Hasta talimat sayfası</a>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function Olcekler({ kayitlar, gonder, olcekler }: { kayitlar: Kayit[]; gonder: (tur: string, veri: unknown) => Promise<string | null>; olcekler: readonly GeOlcek[] }) {
   const [form, setForm] = useState<{ olcek: GeOlcek | ''; tarih: string; asama: string; toplam: string }>({ olcek: '', tarih: bugun(), asama: 'oncesi', toplam: '' });
   const [mesaj, setMesaj] = useState('');
   const onizleme = form.olcek ? olcekToplamDegerlendir(form.olcek, form.toplam) : null;
@@ -186,7 +209,7 @@ function Olcekler({ kayitlar, gonder }: { kayitlar: Kayit[]; gonder: (tur: strin
         <div style={{ fontWeight: 700, color: CHROME_RENK.ink }}>{GE_BOLUM_ADLARI.olcek}</div>
         <div style={{ ...ince, margin: '6px 0' }}>{GE_OLCEK_NOTU}</div>
         <div style={izgara}>
-          <Secim ad="Ölçek" deger={form.olcek} setDeger={(x) => setForm((f) => ({ ...f, olcek: x as GeOlcek }))} anahtarlar={GE_OLCEKLER} etiket={L.olcek} />
+          <Secim ad="Ölçek" deger={form.olcek} setDeger={(x) => setForm((f) => ({ ...f, olcek: x as GeOlcek }))} anahtarlar={olcekler} etiket={L.olcek} />
           <Alan ad="Tarih" tip="date" deger={form.tarih} setDeger={(x) => setForm((f) => ({ ...f, tarih: x }))} />
           <Secim ad="Aşama" deger={form.asama} setDeger={(x) => setForm((f) => ({ ...f, asama: x }))} anahtarlar={['oncesi', 'sonrasi', 'izlem']} etiket={L.asama} />
           <Alan ad={form.olcek ? `Toplam (${GE_OLCEK_ARALIK[form.olcek].enAz}–${GE_OLCEK_ARALIK[form.olcek].enCok})` : 'Toplam'} tip="number" deger={form.toplam} setDeger={(x) => setForm((f) => ({ ...f, toplam: x }))} />
@@ -196,7 +219,7 @@ function Olcekler({ kayitlar, gonder }: { kayitlar: Kayit[]; gonder: (tur: strin
         {mesaj && <div style={{ fontSize: 12.5, marginTop: 8, color: mesaj === 'Kaydedildi.' ? '#2E6E4E' : CHROME_RENK.warn }}>{mesaj}</div>}
         <div style={{ marginTop: 10 }}><button type="button" style={btn} onClick={kaydet}>Toplamı kaydet</button></div>
       </div>
-      {GE_OLCEKLER.map((o) => {
+      {olcekler.map((o) => {
         const noktalar = kayitlar.filter((k) => k.tur === 'olcek' && k.veri.olcek === o).map((k) => ({ tarih: k.tarih, toplam: Number(k.veri.toplam), asama: String(k.veri.asama), yonlendirme: !!k.veri.yonlendirmeOner }));
         const tr = olcekTrendi(noktalar);
         const lis = GE_OLCEK_LISANSLARI[o];
@@ -325,7 +348,7 @@ function LotGeriCagirma() {
 export default function HastaGenitalEstetik({ patientId }: { patientId: string }) {
   const [veri, setVeri] = useState<Veri | null>(null);
   const [hata, setHata] = useState('');
-  const [sekme, setSekme] = useState<Sekme>('enerji');
+  const [sekme, setSekme] = useState<Sekme | null>(null);
   const yukle = useCallback(async () => {
     try { const { ok, j } = await istek(`/api/doktor/genital-estetik?patientId=${encodeURIComponent(patientId)}`); if (!ok) { setHata(j.error || 'Yüklenemedi.'); return; } setVeri(j); } catch { setHata('Yüklenemedi.'); }
   }, [patientId]);
@@ -335,7 +358,9 @@ export default function HastaGenitalEstetik({ patientId }: { patientId: string }
     if (!ok) return j.error || 'Kaydedilemedi.';
     await yukle(); return null;
   }, [patientId, yukle]);
-  const sekmeler = useMemo(() => ([['enerji', 'Lazer / RF'], ['enjeksiyon', 'Enjeksiyon'], ['beyazlatma', 'Beyazlatma'], ['olcek', 'Ölçekler'], ['foto', 'Fotoğraflar'], ['lot', 'Lot geri çağırma']] as [Sekme, string][]), []);
+  const sekmeler = useMemo(() => (veri ? (veri.kapsam === 'tam' ? SEKMELER_TAM : SEKMELER_CERRAHI) : []), [veri]);
+  const olcekler = useMemo(() => geOlcekleriKapsam(veri?.kapsam ?? null, GE_OLCEKLER), [veri]);
+  const aktif: Sekme | null = sekme && sekmeler.some(([id]) => id === sekme) ? sekme : (sekmeler[0]?.[0] ?? null);
   if (hata) return <div style={{ ...toolsCard, color: CHROME_RENK.warn, fontSize: 13 }}>{hata}</div>;
   if (!veri) return <div style={{ ...toolsCard, color: CHROME_RENK.muted, fontSize: 13 }}>Yükleniyor…</div>;
   const kilit = veri.yas === null || veri.yas < GE_YAS_SINIRI;
@@ -343,19 +368,20 @@ export default function HastaGenitalEstetik({ patientId }: { patientId: string }
     <div data-sekme="genital-estetik">
       <div style={{ ...toolsCard, marginBottom: 12 }}>
         <div style={{ fontWeight: 700, color: CHROME_RENK.ink, fontSize: 16 }}>{GE_KART.baslik}</div>
-        <div style={{ fontSize: 12.5, color: CHROME_RENK.muted }}>{GE_KART.alt}</div>
+        <div style={{ fontSize: 12.5, color: CHROME_RENK.muted }}>{veri.kapsam === 'tam' ? GE_KART.alt : GE_KART.altCerrahi}</div>
         {kilit && <div style={{ marginTop: 8, fontSize: 12.5, color: CHROME_RENK.warn, fontWeight: 600 }} data-ge="yas-kilidi-ust">{veri.dogumTarihiVar ? GE_KART.yasKilidi : GE_HATA.dogum_tarihi_yok}</div>}
         <div style={{ ...ince, marginTop: 6 }}>{GE_KART.himen} {GE_KART.ulusalNot} Cerrahi işlemler "Ameliyat Notları" sekmesindeki genital estetik şablonlarıyla yazılır.</div>
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 10 }}>{sekmeler.map(([id, ad]) => <button key={id} type="button" onClick={() => setSekme(id)} style={sekme === id ? btn : ghost}>{ad}</button>)}</div>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 10 }}>{sekmeler.map(([id, ad]) => <button key={id} type="button" onClick={() => setSekme(id)} style={aktif === id ? btn : ghost}>{ad}</button>)}</div>
       </div>
-      {(sekme === 'enerji' || sekme === 'enjeksiyon' || sekme === 'beyazlatma') && (<>
-        <KayitFormu key={sekme} tur={sekme} yas={veri.yas} gonder={gonder} />
-        <KayitListesi kayitlar={veri.kayitlar} tur={sekme} patientId={patientId} />
-        <KaynakKutusu kaynaklar={[...GE_KAYNAKLAR[sekme], ...GE_KAYNAKLAR.genel]} not={GE_KART.ulusalNot} />
+      {(aktif === 'enerji' || aktif === 'enjeksiyon' || aktif === 'beyazlatma') && (<>
+        <KayitFormu key={aktif} tur={aktif} yas={veri.yas} gonder={gonder} />
+        <KayitListesi kayitlar={veri.kayitlar} tur={aktif} patientId={patientId} />
+        <KaynakKutusu kaynaklar={[...GE_KAYNAKLAR[aktif], ...GE_KAYNAKLAR.genel]} not={GE_KART.ulusalNot} />
       </>)}
-      {sekme === 'olcek' && <Olcekler kayitlar={veri.kayitlar} gonder={gonder} />}
-      {sekme === 'foto' && <Fotograflar veri={veri} patientId={patientId} gonder={gonder} yenile={yukle} />}
-      {sekme === 'lot' && <LotGeriCagirma />}
+      {aktif === 'olcek' && <Olcekler kayitlar={veri.kayitlar} gonder={gonder} olcekler={olcekler} />}
+      {aktif === 'foto' && <Fotograflar veri={veri} patientId={patientId} gonder={gonder} yenile={yukle} />}
+      {aktif === 'belgeler' && <Belgeler patientId={patientId} />}
+      {aktif === 'lot' && <LotGeriCagirma />}
     </div>
   );
 }

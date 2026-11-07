@@ -33,7 +33,7 @@ export type GeKayitTuru = (typeof GE_KAYIT_TURLERI)[number]
 export const LISTE_AZAMI = 300
 export const FOTO_LISTE_AZAMI = 200
 
-/** THE one branch decision (lib/doktor/genitalEstetikBrans.ts): obstetrics and gynaecology only. */
+/** THE one branch decision (lib/doktor/genitalEstetikBrans.ts): KD, plastik cerrahi and the Özel Branş estetik & plastik cerrahi. */
 export { genitalEstetikBransi }
 
 export async function doktorBransi(sb: SupabaseClient, doktorId: string): Promise<string | null> {

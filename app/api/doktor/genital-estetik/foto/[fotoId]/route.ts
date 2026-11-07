@@ -1,5 +1,5 @@
 /**
- * GENITAL-ESTETIK-01 — ONE VIEW of one intimate photo (KD only, doctor only).
+ * GENITAL-ESTETIK-01 — ONE VIEW of one intimate photo (KD, plastik cerrahi, estetik & plastik cerrahi; doctor only).
  *   GET ?patientId=<id>   → the image bytes, `private, no-store`, never cached, never a thumbnail
  * The photo is read with doctor_id AND patient_id (a foreign id = 404). Every view writes an audit_logs row FIRST; if it
  * cannot be written the photo is not served (500, fail closed).

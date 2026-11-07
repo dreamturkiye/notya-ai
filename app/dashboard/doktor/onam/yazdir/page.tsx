@@ -22,12 +22,16 @@ import BelgeKunyesi from '@/components/doktor/yazdir/BelgeKunyesi';
 /** The library's older forms that the structured procedure form now replaces. */
 const ESLEME: Record<string, OnamProseduru> = { sezaryen: 'sezaryen', kolposkopi: 'kolposkopi_leep' };
 
-function Ust({ patientId, ad, setAd, hekim, setHekim }: { patientId: string | null; ad: string; setAd: (x: string) => void; hekim: string; setHekim: (x: string) => void }) {
+/** GENITAL-ESTETIK-01: a form opened from the "Genital Estetik" tab (any branch that has it) goes back there, not to Gebelik. */
+const GE_GERI = 'genital-estetik';
+
+function Ust({ patientId, ad, setAd, hekim, setHekim, geri }: { patientId: string | null; ad: string; setAd: (x: string) => void; hekim: string; setHekim: (x: string) => void; geri?: string | null }) {
+  const ge = geri === GE_GERI && !!patientId;
   return (
     <>
       <style>{`@media print { .no-print { display: none } body { background: #fff } }`}</style>
       <div className="no-print" style={{ display: 'flex', gap: 8, marginBottom: 16, fontFamily: 'system-ui', fontSize: 13, alignItems: 'center', flexWrap: 'wrap' }}>
-        <a href={onamGeriHref(patientId)} style={{ color: CHROME_RENK.pine, fontWeight: 600, textDecoration: 'none', whiteSpace: 'nowrap' }}>{patientId ? '← Gebelik' : '← Geri'}</a>
+        <a href={ge ? `/dashboard/doktor/hastalar/${encodeURIComponent(patientId as string)}?tab=${GE_GERI}` : onamGeriHref(patientId)} style={{ color: CHROME_RENK.pine, fontWeight: 600, textDecoration: 'none', whiteSpace: 'nowrap' }}>{ge ? '← Genital Estetik' : patientId ? '← Gebelik' : '← Geri'}</a>
         <input value={ad} onChange={(e) => setAd(e.target.value)} placeholder="Hasta adı soyadı" style={{ padding: 6, flex: 1 }} />
         <input value={hekim} onChange={(e) => setHekim(e.target.value)} placeholder="Hekim" style={{ padding: 6, flex: 1 }} />
         <button type="button" onClick={() => window.print()} style={{ padding: '6px 14px', fontWeight: 700 }}>Yazdır / PDF</button>
@@ -50,7 +54,7 @@ function Imzalar() {
   );
 }
 
-function IslemOnami({ islem, patientId, ekKutu }: { islem: OnamProseduru; patientId: string | null; ekKutu?: string }) {
+function IslemOnami({ islem, patientId, ekKutu, geri }: { islem: OnamProseduru; patientId: string | null; ekKutu?: string; geri?: string | null }) {
   const [ad, setAd] = useState('');
   const [hekim, setHekim] = useState('');
   const p = ONAM_PROSEDUR[islem];
@@ -58,7 +62,7 @@ function IslemOnami({ islem, patientId, ekKutu }: { islem: OnamProseduru; patien
   const satir = (k: string) => <tr key={k}><td style={{ padding: '3px 6px', borderBottom: '1px solid #e5e5e5' }}>{ONAM_RISK_ADI[k] || k}</td><td style={{ padding: '3px 6px', borderBottom: '1px solid #e5e5e5', width: 160 }}>______________</td></tr>;
   return (
     <div style={{ maxWidth: 760, margin: '0 auto', padding: 32, fontFamily: 'Georgia, serif', color: '#111', background: '#fff' }}>
-      <Ust patientId={patientId} ad={ad} setAd={setAd} hekim={hekim} setHekim={setHekim} />
+      <Ust patientId={patientId} ad={ad} setAd={setAd} hekim={hekim} setHekim={setHekim} geri={geri} />
       <h1 style={{ fontSize: 20, fontWeight: 500, marginBottom: 4 }}>{p.ad} — Bilgilendirilmiş Onam Formu</h1>
       <div style={{ fontSize: 12, color: '#555', marginBottom: 8 }}>Tarih: {new Date().toLocaleDateString('tr-TR')}</div>
       <BelgeKunyesi tur="onam" kaynakId={`onam:${islem}${patientId ? `:${patientId.slice(0, 8)}` : ''}`} hastaId={patientId} icerik={{ islem, p, y }} />
@@ -89,7 +93,7 @@ function OnamYazdirIc() {
   const s = ONAM_KUTUPHANESI.find((o) => o.kod === kod);
   const [ad, setAd] = useState('');
   const [hekim, setHekim] = useState('');
-  if ((ONAM_PROSEDURLERI as readonly string[]).includes(islemHam)) return <IslemOnami islem={islemHam as OnamProseduru} patientId={patientId} ekKutu={s?.ekKutu} />;
+  if ((ONAM_PROSEDURLERI as readonly string[]).includes(islemHam)) return <IslemOnami islem={islemHam as OnamProseduru} patientId={patientId} ekKutu={s?.ekKutu} geri={sp.get('geri')} />;
   if (!s) return <div style={{ padding: 24, fontFamily: 'system-ui' }}>Onam şablonu bulunamadı. <a href={onamGeriHref(patientId)}>← Geri</a></div>;
   return (
     <div style={{ maxWidth: 760, margin: '0 auto', padding: 32, fontFamily: 'Georgia, serif', color: '#111', background: '#fff' }}>

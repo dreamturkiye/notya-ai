@@ -1,6 +1,6 @@
 /**
  * GENITAL-ESTETIK-01 (Kaan, 2026-11-06) — Türkiye build: every Turkish word of the cosmetic gynaecology / genital aesthetics
- * package (KD only). The engine (lib/clinical/genitalEstetik.ts) returns keys; this file names them.
+ * package (KD; the surgical part also for plastik cerrahi and estetik & plastik cerrahi). The engine (lib/clinical/genitalEstetik.ts) returns keys; this file names them.
  *
  * KANIT VE KAYNAK KURALI: her kart kaynağını (kurum, belge, yıl) gösterir. Türkiye'de bu işlemlere özgü bir T.C. Sağlık
  * Bakanlığı veya TJOD tutumu bu çalışmada bulunamadı (2026-11-06 arandı): uluslararası kaynaklar "uluslararası kaynak"
@@ -12,10 +12,22 @@ import type { GeIslemTuru } from '@/lib/clinical/genitalEstetik'
 
 export type GeKaynak = { kurum: string; belge: string; yil: string; tur: 'ulusal' | 'uluslararasi' }
 
-export const GE_BOLUM_ADLARI: Record<GeIslemTuru | 'olcek' | 'foto', string> = {
+export const GE_BOLUM_ADLARI: Record<GeIslemTuru | 'olcek' | 'foto' | 'belgeler', string> = {
   cerrahi: 'Cerrahi (ameliyat notu şablonları)', enerji: 'Enerji tabanlı seans (lazer / RF)', enjeksiyon: 'Enjeksiyon kaydı (lot izlenebilir)',
   beyazlatma: 'Genital beyazlatma seansı', olcek: 'Sonuç ölçekleri (öncesi / sonrası)', foto: 'Standart fotoğraf belgeleme',
+  belgeler: 'Onam formları ve hasta talimat sayfaları',
 }
+
+/** The four operations' consent form (lib/clinical/onamProsedurleri.ts key) and instruction sheet (template code). */
+export const GE_BELGELER = {
+  not: 'İşleme özgü bilgilendirilmiş onam formu ve hastaya verilecek talimat sayfası. Her ikisi de hekim tarafından hastaya açıklanarak kullanılır; "__" alanları elle doldurulur. Cerrahi notu "Ameliyat Notları" sekmesindeki şablonla yazılır (endikasyon alanı zorunlu; 18 yaş altında kozmetik işlem kaydedilemez).',
+  islemler: [
+    { sablon: 'labioplasti', onam: 'labioplasti', ad: 'Labioplasti (labia minora redüksiyonu)' },
+    { sablon: 'labioplasti_klitoral', onam: 'labioplasti_klitoral', ad: 'Labioplasti + klitoral başlık redüksiyonu' },
+    { sablon: 'vajinoplasti_kolpoperineorafi', onam: 'vajinoplasti', ad: 'Vajinoplasti / kolpoperineorafi' },
+    { sablon: 'perineoplasti_kolporafi', onam: 'perineoplasti', ad: 'Perineoplasti / kolporafi' },
+  ],
+} as const
 
 export const GE_ETIKET: Record<string, Record<string, string>> = {
   endikasyon: { kozmetik: 'Kozmetik (tıbbi endikasyonsuz)', medikal: 'Tıbbi endikasyonlu (rekonstrüktif / fonksiyonel)' },
@@ -37,11 +49,10 @@ export const GE_ETIKET: Record<string, Record<string, string>> = {
   beyBolge: { labia_majora: 'Labia majora', labia_minora: 'Labia minora', perine: 'Perine', perianal: 'Perianal', inguinal: 'Kasık', mons_pubis: 'Mons pubis' },
   advers: { yok: 'Yok', agri: 'Ağrı', kanama: 'Kanama', yanik: 'Yanık', skar: 'Skar', enfeksiyon: 'Enfeksiyon', disparoni: 'İlişkide ağrı', vaskuler_tikanma_suphesi: 'Damar tıkanması şüphesi', nodul: 'Nodül', asimetri: 'Asimetri', alerjik_reaksiyon: 'Alerjik reaksiyon', diger: 'Diğer' },
   reaksiyon: { yok: 'Yok', eritem: 'Kızarıklık', odem: 'Ödem', yanma_hissi: 'Yanma hissi', hiperpigmentasyon: 'Koyulaşma (hiperpigmentasyon)', hipopigmentasyon: 'Açılma (hipopigmentasyon)', vezikul_bul: 'Kabarcık / bül', enfeksiyon: 'Enfeksiyon', diger: 'Diğer' },
-  olcek: { fsfi: 'FSFI — Kadın Cinsel İşlev Ölçeği', fgsis: 'FGSIS — Kadın Genital Benlik İmajı Ölçeği', vlq: 'VLQ — Vajinal Gevşeklik Sorusu', cops_l: 'COPS-L — Labioplasti için Kozmetik İşlem Tarama Ölçeği (beden algısı)' },
+  olcek: { fsfi: 'FSFI — Kadın Cinsel İşlev Ölçeği', fgsis: 'FGSIS — Kadın Genital Benlik İmajı Ölçeği', cops_l: 'COPS-L — Labioplasti için Kozmetik İşlem Tarama Ölçeği (beden algısı)' },
   asama: { oncesi: 'İşlem öncesi', sonrasi: 'İşlem sonrası', izlem: 'İzlem' },
   bant: {
     fsfi_kesim_alti: '26,55 ve altı — cinsel işlev bozukluğu aralığında (Wiegel 2005)', fsfi_kesim_ustu: '26,55 üstü',
-    vlq_gevsek: 'Gevşek tarafta (1–3)', vlq_notr: 'Ne gevşek ne sıkı (4)', vlq_siki: 'Sıkı tarafta (5–7)',
     cops_l_pozitif: '40 ve üstü — beden algısı bozukluğu olasılığı', cops_l_negatif: '40 altı',
   },
   gorunum: { on_ayakta: 'Önden, ayakta', litotomi_istirahat: 'Litotomi — dinlenme', litotomi_ayrilmis: 'Litotomi — dudaklar nazikçe ayrılmış', perine: 'Perine', yakin_plan: 'Yakın plan (işlem bölgesi)' },
@@ -62,7 +73,7 @@ export const GE_HATA: Record<string, string> = {
   lot_doz_iceriyor: 'Lot alanına mL veya ünite yazılmaz.', son_kullanma_gecersiz: 'Son kullanma tarihi YYYY-AA veya YYYY-AA-GG olmalı.', urun_suresi_gecmis: 'Ürünün son kullanma tarihi geçmiş: kaydedilemez.',
   teknik_yok: 'Tekniği seçin.', yontem_yok: 'Yöntemi seçin.', ajan_yok: 'Ajanı yazın.', olcek_yok: 'Ölçeği seçin.', asama_yok: 'Aşamayı seçin.', foto_onam_kapsam_yok: 'Fotoğraf onamı belgeleme amacını kapsamalı.',
   foto_onam_yok: 'Bu hasta için geçerli, ayrı bir fotoğraf onamı yok: önce fotoğraf onamını kaydedin.', gorunum_yok: 'Standart görünümü seçin.', foto_gecersiz: 'Yalnız JPEG veya PNG, en çok 3 MB.',
-  ulkede_kapali: 'Bu işlem bu sürümde sunulmuyor.', kd_degil: 'Bu bölüm yalnız Kadın Hastalıkları ve Doğum içindir.',
+  ulkede_kapali: 'Bu işlem bu sürümde sunulmuyor.', kd_degil: 'Bu bölüm yalnız Kadın Hastalıkları ve Doğum ile plastik / estetik cerrahi içindir.', yalniz_kd: 'Bu kayıt yalnız Kadın Hastalıkları ve Doğum içindir.',
 }
 
 /** COPS-L ≥ 40: the clinician's prompt. Blocks nothing; diagnoses nothing. */
@@ -95,7 +106,6 @@ export const GE_KAYNAKLAR: Record<GeIslemTuru | 'olcek' | 'foto' | 'genel', GeKa
   olcek: [
     { kurum: 'Rosen R, et al.', belge: 'FSFI, J Sex Marital Ther 2000;26:191–208; kesim değeri Wiegel M, et al., J Sex Marital Ther 2005;31:1–20. Türkçe uyarlama: Aygin D, Eti Aslan F, Türkiye Klinikleri J Med Sci 2005;25:393–399', yil: '2000/2005', tur: 'uluslararasi' },
     { kurum: 'Herbenick D, Reece M', belge: 'FGSIS, J Sex Med 2010. Türkçe geçerlik: Ellibeş Kaya A, et al., Int Urogynecol J 2019;30:89–99', yil: '2010/2019', tur: 'uluslararasi' },
-    { kurum: 'Millheiser LS, et al.', belge: 'Vaginal Laxity Questionnaire (tek soru, 1 çok gevşek – 7 çok sıkı); biçimsel geçerlik çalışması yok (Polland A, et al., Sex Med 2021;9:100443). Doğrulanmış Türkçe çevirisi bulunamadı', yil: '2010', tur: 'uluslararasi' },
     { kurum: 'Veale D, et al.', belge: 'COPS-L, J Psychosom Obstet Gynaecol 2013;34:46–52 (toplam 0–72; ≥40 BDD olasılığı). Doğrulanmış Türkçe çevirisi bu çalışmada bulunamadı', yil: '2013', tur: 'uluslararasi' },
   ],
   foto: [
@@ -134,6 +144,7 @@ GE_TALIMATLAR.beyazlatma = { baslik: 'Genital beyazlatma seansı sonrası', madd
 export const GE_KART = {
   baslik: 'Genital Estetik',
   alt: 'Kozmetik jinekoloji kayıtları — yalnız Kadın Hastalıkları ve Doğum. Her kayıt endikasyon (kozmetik / tıbbi) taşır; 18 yaş altında kozmetik işlem kaydedilemez.',
+  altCerrahi: 'Genital estetik cerrahi: onam, talimat, beden algısı taraması (COPS-L) ve korumalı fotoğraf belgeleme. Her ameliyat notu endikasyon (kozmetik / tıbbi) taşır; 18 yaş altında kozmetik işlem kaydedilemez.',
   yasKilidi: '18 yaş altı: kozmetik genital işlemler kilitli. Tıbbi endikasyonlu işlemler gerekçeyle kaydedilebilir.',
   himen: 'Himenoplasti bu pakette yoktur.',
   fotoUyari: 'Fotoğraflar ayrı, şifreli bir alanda saklanır: listede küçük resim yoktur, tıklanana kadar bulanıktır, her görüntüleme denetim kaydına yazılır, hiçbir yapay zekâ değerlendirmesine gönderilmez ve dışa aktarıma girmez.',
