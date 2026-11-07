@@ -1,5 +1,6 @@
 # TR outreach durum (canlı)
 
-**Sıradaki:** Uzm. Dr. **Deniz Küçükay** · derm · Kadıköy · `+905533015882`
+**Sıradaki:** Uzm. Dr. **Emine Dilek Bahçekapılı Yıldırım** · derm · Bakırköy · `+905309054461`  
+→ bu isimli paket (**30**) son kişi. Sonrası: yeni WA batch / harvest.
 
-Aida gitti → **Deniz şimdi** → sonra Emine Dilek (paket sonu).
+Deniz gitti → **Emine şimdi**.
