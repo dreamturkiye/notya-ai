@@ -1,5 +1,5 @@
 # TR outreach durum (canlı)
 
-**Sıradaki:** Op. Dr. **Kadriye Şener** · KD · Ümraniye · `+905056222683`
+**Sıradaki:** Op. Dr. **Murat Öztürk** · KD · Bahçelievler · `+905388714057`
 
-Halil gitti → **Kadriye şimdi**. WA yok: Yeşim, Aysun, Elif Esra.
+Kadriye gitti → **Murat şimdi**. WA yok: Yeşim, Aysun, Elif Esra.
