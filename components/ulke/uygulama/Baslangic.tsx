@@ -69,8 +69,9 @@ export default function Baslangic() {
     try {
       const r = await u.api('/api/ulke/tercihler', { method: 'POST', govde: { arayuzDili: dil, notDili: dil } })
       if (r.ok) {
-        // A country without roles has no second question: straight to the home.
-        if (roller().length === 0) { window.location.assign(YOL.bugun); return }
+        // A country without roles has no second question: straight to the home. KAYIT-BRANS-01: neither has an account
+        // whose role was chosen at sign-up.
+        if (roller().length === 0 || rolMu(u.hesap?.rol)) { window.location.assign(YOL.bugun); return }
         // Saved: the next question is asked in the language just chosen.
         u.hesabiGuncelle({ dil, notDili: dil, dilSoruldu: true }); setAdim('rol')
       } else setHata(true)

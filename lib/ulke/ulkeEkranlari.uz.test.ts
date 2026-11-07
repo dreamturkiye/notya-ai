@@ -271,12 +271,20 @@ describe('an Uzbekistan build: screens', () => {
       temiz(html, `/login (${dil})`)
     })
 
-    it(`${dil}: sign-up page (invitation code)`, () => {
+    it(`${dil}: sign-up page (invitation code)`, async () => {
       const html = belge(Signup.default({ searchParams: sp(dil) }))
       const g = metin.yuzeyMetinleri('davetliKayit', dil)
       for (const s of [g.baslik, g.aciklama, g.davetKodu, g.adSoyad, g.eposta, g.sifre, g.sifreTekrar, g.dil, g.gonder]) assert.ok(html.includes(s), s)
       // The account chooses its interface language among the country's switched-on languages — and only those.
-      assert.deepEqual([...html.matchAll(/<option[^>]*value="([^"]+)"/g)].map((m) => m[1]), ['uz-Latn', 'ru'])
+      const secim = (id: string) => { const i = html.indexOf(`id="${id}"`); return i < 0 ? '' : html.slice(i, html.indexOf('</select>', i)) }
+      assert.deepEqual([...secim('ulke-kayit-dil').matchAll(/<option[^>]*value="([^"]+)"/g)].map((m) => m[1]), ['uz-Latn', 'ru'])
+      // KAYIT-BRANS-01: the specialty is a required choice — the pack's own roles only, nothing preselected, the button
+      // disabled until one is chosen; the role names are in the visitor's form.
+      const { uygulamaRolleri } = await import('./uygulama/rol')
+      assert.match(html, /<select id="ulke-kayit-rol"[^>]*required=""/)
+      assert.deepEqual([...secim('ulke-kayit-rol').matchAll(/<option[^>]*value="([^"]+)"/g)].map((m) => m[1]).sort(), [...uygulamaRolleri()].sort())
+      assert.match(secim('ulke-kayit-rol'), /<option value="" disabled="" selected="">/)
+      assert.match(html, /<button type="submit" disabled=""/)
       assert.doesNotMatch(html, /\/giris|\/kayit|\/kvkk|checkbox/)
       altinda(html, `/signup (${dil})`)
       temiz(html, `/signup (${dil})`)
@@ -538,7 +546,7 @@ describe('an Uzbekistan build: account API', () => {
     temiz(JSON.stringify(j), 'POST /api/ulke/kayit')
     return { s: r.status, j }
   }
-  const GECERLI = { adSoyad: 'QA Yangi Shifokor', eposta: 'QA-Yangi@Notya.Test', sifre: 'yangi-parol-9', davetKodu: 'qate-st00-0000-0001', dil: 'ru' }
+  const GECERLI = { adSoyad: 'QA Yangi Shifokor', eposta: 'QA-Yangi@Notya.Test', sifre: 'yangi-parol-9', davetKodu: 'qate-st00-0000-0001', dil: 'ru', rol: 'pediatri' }
 
   it('hesap: an Uzbek account gets its country, its languages and whether the language question was answered; nothing else', async () => {
     assert.deepEqual(await hesap('jeton-uz'), { s: 200, j: { ulke: 'uz', dil: 'uz-Latn', durum: 'uygulama', ad: 'QA Shifokor Bir', notDili: 'uz-Latn', dilSoruldu: false } })
@@ -591,6 +599,14 @@ describe('an Uzbekistan build: account API', () => {
     ]
     for (const [g, kod] of vakalar) assert.deepEqual(await kayit(g), { s: 400, j: { code: kod } }, JSON.stringify(g).slice(0, 60))
     assert.deepEqual(olaylar, [])
+  })
+
+  it('kayit: KAYIT-BRANS-01 — the specialty is required: missing, empty, unknown or another country\'s role is refused before the code is touched', async () => {
+    for (const rol of [undefined, '', 'Pediatri', 'family-medicine', 'diger', 42]) {
+      assert.deepEqual(await kayit({ ...GECERLI, rol }), { s: 400, j: { code: 'ROL_GEREKLI', alan: 'rol' } }, String(rol))
+    }
+    assert.deepEqual(olaylar, [])
+    assert.equal(kodlar.get(davetKoduHash(GECERLI_KOD))!.kalan, 1)
   })
 
   it('kayit: an invalid professional registration is refused before the invitation code is touched', async () => {
