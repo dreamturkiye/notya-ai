@@ -1,5 +1,7 @@
 # TR outreach durum (canlı)
 
-**Sıradaki:** Doç. Dr. **Aysun Fırat** · KD · Zeytinburnu · `+905017287587`
+**Sıradaki:** Doç. Dr. **Meryem Gencer** · KD · Başakşehir · `+905307238039`
 
-Eralp gitti → **Aysun şimdi**. Yeşim: WA yok.
+## WA yok / gitmedi
+- Yeşim Timuroğlu · `+905354675994`
+- Aysun Fırat · `+905017287587` (2026-11-07)
