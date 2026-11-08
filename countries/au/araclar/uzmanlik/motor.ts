@@ -118,16 +118,30 @@ export function bantOku(bantlar: readonly Bant[] | undefined, deger: number): st
   return b
 }
 
+/**
+ * A score of tick-boxes only, or a rule of tick-boxes only, has the field `hicbiri` ("none of these") beside its ticks: an
+ * empty form is not a result (the screen asks for the fields), and "none of these" with a tick is a contradiction.
+ */
+export const HICBIRI = 'hicbiri'
+function bosVeyaCeliskili(isaretler: readonly string[], g: AracGirdisi): boolean {
+  const n = isaretler.filter((k) => g[k] === true).length
+  return (n === 0 && g[HICBIRI] !== true) || (n > 0 && g[HICBIRI] === true)
+}
+export const sadeceIsaretToplam = (s: ToplamSatiri): boolean => s.alanlar.every(isaretMi)
+export const sadeceIsaretFormul = (s: FormulSatiri): boolean => s.alanlar.every((a) => a.tur === 'isaret')
+
 function toplamTanimi(s: ToplamSatiri): AracTanimi {
   const enCok = s.donustur?.enCok ?? enCokToplam(s.alanlar)
+  const yalniz = sadeceIsaretToplam(s)
   return {
     anahtar: anahtarOf(s),
     tur: 'olcek',
-    alanlar: s.alanlar.map(toplamAlani),
+    alanlar: [...s.alanlar.map(toplamAlani), ...(yalniz ? [{ anahtar: HICBIRI, tur: 'isaret' as const }] : [])],
     cikti: { sayilar: ['toplam'], bantlar: (s.bantlar ?? []).map((b) => b.k), uyarilar: (s.uyarilar ?? []).map((u) => u.k), tarihler: [] },
     kaynak: s.kaynak,
     ...(s.yazdirilir ? { yazdirilir: true } : {}),
     hesapla: (g): AracSonucu => {
+      if (yalniz && bosVeyaCeliskili(s.alanlar.map((x) => x.k), g)) return BOS_SONUC
       const ham = topla(s.alanlar, g)
       if (ham === null) return BOS_SONUC
       const deger = s.donustur ? Math.round(s.donustur.f(ham, g) * 10 ** s.donustur.ondalik) / 10 ** s.donustur.ondalik : ham
@@ -143,16 +157,18 @@ function toplamTanimi(s: ToplamSatiri): AracTanimi {
 }
 
 function formulTanimi(s: FormulSatiri): AracTanimi {
+  const yalniz = sadeceIsaretFormul(s)
   return {
     anahtar: anahtarOf(s),
     tur: s.tur ?? 'hesap',
-    alanlar: s.alanlar,
+    alanlar: [...s.alanlar, ...(yalniz ? [{ anahtar: HICBIRI, tur: 'isaret' as const }] : [])],
     cikti: { sayilar: Object.keys(s.sayiAdlari), bantlar: (s.bantlar ?? []).map((b) => b.k), uyarilar: (s.uyarilar ?? []).map((u) => u.k), tarihler: [] },
     kaynak: s.kaynak,
     ...(s.sonucBirimleri ? { sonucBirimleri: s.sonucBirimleri } : {}),
     ...(s.dozYazar ? { dozYazar: true } : {}),
     ...(s.yazdirilir ? { yazdirilir: true } : {}),
     hesapla: (g): AracSonucu => {
+      if (yalniz && bosVeyaCeliskili(s.alanlar.map((a) => a.anahtar), g)) return BOS_SONUC
       for (const a of s.alanlar) {
         const v = g[a.anahtar]
         const bos = v === null || v === undefined || v === ''
@@ -183,6 +199,7 @@ export function paketOf(s: UzmanlikSatiri): PaketAraci {
       else if (!('numarali' in a && a.numarali)) alanlar[a.k] = m(a.k)
       if (secimMi(a)) secenekler[a.k] = Object.fromEntries(a.s.map((x) => [x.k, m(x.e)]))
     }
+    if (sadeceIsaretToplam(s)) alanlar[HICBIRI] = m('None of these')
     sayilar = { toplam: m(s.toplamAdi ?? 'Total score') }
     bantlar = Object.fromEntries((s.bantlar ?? []).map((b) => [b.k, m(b.e)]))
     uyarilar = Object.fromEntries((s.uyarilar ?? []).map((u) => [u.k, m(u.e)]))
@@ -191,6 +208,7 @@ export function paketOf(s: UzmanlikSatiri): PaketAraci {
       alanlar[a.anahtar] = m(s.etiketler[a.anahtar] ?? a.anahtar)
       if (a.tur === 'secim') secenekler[a.anahtar] = Object.fromEntries((a.secenekler ?? []).map((k) => [k, m(s.secenekEtiketleri?.[a.anahtar]?.[k] ?? k)]))
     }
+    if (sadeceIsaretFormul(s)) alanlar[HICBIRI] = m('None of these')
     sayilar = Object.fromEntries(Object.entries(s.sayiAdlari).map(([k, v]) => [k, m(v)]))
     bantlar = Object.fromEntries((s.bantlar ?? []).map((b) => [b.k, m(b.e)]))
     uyarilar = Object.fromEntries((s.uyarilar ?? []).map((u) => [u.k, m(u.e)]))

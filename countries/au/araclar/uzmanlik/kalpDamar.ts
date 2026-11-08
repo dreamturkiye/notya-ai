@@ -32,7 +32,7 @@ export const KALP_DAMAR: readonly UzmanlikSatiri[] = [
     kaynak: 'Pisters R, Lane DA, Nieuwlaat R, et al. A novel user-friendly score (HAS-BLED) to assess 1-year risk of major bleeding in patients with atrial fibrillation: the Euro Heart Survey. Chest 2010;138:1093-100. Cited in the NHFA/CSANZ AF guideline 2018 (Heart Lung Circ 2018;27:1209-66). Score ≥3 = high risk.',
     alanlar: [t('htn', 'Hypertension (uncontrolled, systolic >160 mmHg)'), t('bobrek', 'Abnormal renal function (dialysis, transplant, creatinine ≥200 µmol/L)'), t('karaciger', 'Abnormal liver function (cirrhosis, or bilirubin >2× and AST/ALT >3× normal)'), t('inme', 'Prior stroke'), t('kanama', 'Prior major bleeding or predisposition'), t('inr', 'Labile INR (time in range <60%)'), t('yasli', 'Age over 65'), t('ilac', 'Drugs predisposing to bleeding (antiplatelets, NSAIDs)'), t('alkol', 'Alcohol ≥8 drinks a week')],
     bantlar: [b(0, 'dusuk', '0–2 — lower bleeding risk'), b(3, 'yuksek', '3 or more — high bleeding risk: review modifiable factors and follow up more closely')],
-    ornekler: [{ girdi: {}, toplam: 0, bant: 'dusuk' }, { girdi: { htn: true, yasli: true, ilac: true }, toplam: 3, bant: 'yuksek' }],
+    ornekler: [{ girdi: { hicbiri: true }, toplam: 0, bant: 'dusuk' }, { girdi: { htn: true, yasli: true, ilac: true }, toplam: 3, bant: 'yuksek' }],
   },
   {
     sekil: 'toplam', k: 'heart-score', roller: ['cardiology', 'emergency-medicine', 'family-medicine'],
@@ -132,7 +132,7 @@ export const KALP_DAMAR: readonly UzmanlikSatiri[] = [
     alanlar: [t('ihd', 'Ischaemic heart disease', 3), t('cvd', 'Cerebrovascular disease (stroke or TIA)', 3), t('kreatinin', 'Serum creatinine above 177 µmol/L', 2), t('pnomonektomi', 'Planned pneumonectomy', 3)],
     donustur: { f: (x) => x / 2, ondalik: 1, enCok: 5.5 },
     bantlar: [b(0, 'a', 'Class A (0)'), b(1, 'b', 'Class B (1–1.5)'), b(2, 'c', 'Class C (2–2.5)'), b(3, 'd', 'Class D (more than 2.5)')],
-    ornekler: [{ girdi: {}, toplam: 0, bant: 'a' }, { girdi: { ihd: true }, toplam: 1.5, bant: 'b' }, { girdi: { ihd: true, kreatinin: true }, toplam: 2.5, bant: 'c' }, { girdi: { ihd: true, cvd: true }, toplam: 3, bant: 'd' }],
+    ornekler: [{ girdi: { hicbiri: true }, toplam: 0, bant: 'a' }, { girdi: { ihd: true }, toplam: 1.5, bant: 'b' }, { girdi: { ihd: true, kreatinin: true }, toplam: 2.5, bant: 'c' }, { girdi: { ihd: true, cvd: true }, toplam: 3, bant: 'd' }],
   },
   {
     sekil: 'formul', k: 'abpi-tbi', roller: ['vascular-surgery', 'podiatry', 'family-medicine'],

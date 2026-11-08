@@ -313,7 +313,7 @@ export const RUHSAL_MUTTEFIK: readonly UzmanlikSatiri[] = [
       else if (l || p) k = 1
       return { sayilar: [{ anahtar: 'kategori', deger: k, ondalik: 0, enCok: 3 }], bant: `r${k}` }
     },
-    ornekler: [{ girdi: {}, bant: 'r0' }, { girdi: { lops: true }, bant: 'r1' }, { girdi: { lops: true, deformite: true }, bant: 'r2' }, { girdi: { pad: true, oyku: true }, bant: 'r3' }],
+    ornekler: [{ girdi: { hicbiri: true }, bant: 'r0' }, { girdi: { lops: true }, bant: 'r1' }, { girdi: { lops: true, deformite: true }, bant: 'r2' }, { girdi: { pad: true, oyku: true }, bant: 'r3' }],
   },
   {
     sekil: 'formul', k: 'ut-wound', roller: ['podiatry'],

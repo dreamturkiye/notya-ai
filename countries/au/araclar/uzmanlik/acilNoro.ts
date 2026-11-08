@@ -37,7 +37,7 @@ export const ACIL_NORO: readonly UzmanlikSatiri[] = [
     toplamAdi: 'Criteria present',
     alanlar: [t('yas', 'Age 50 or older'), t('nabiz', 'Heart rate 100 per minute or more'), t('spo2', 'Oxygen saturation below 95% on room air'), t('bacak', 'Unilateral leg swelling'), t('hemoptizi', 'Haemoptysis'), t('cerrahi', 'Surgery or trauma within 4 weeks'), t('onceki', 'Previous PE or DVT'), t('hormon', 'Oestrogen use (oral contraceptive or hormone therapy)')],
     bantlar: [b(0, 'negatif', 'PERC negative — no criterion present'), b(1, 'pozitif', 'PERC positive — the rule cannot exclude PE')],
-    ornekler: [{ girdi: {}, toplam: 0, bant: 'negatif' }, { girdi: { hormon: true }, toplam: 1, bant: 'pozitif' }],
+    ornekler: [{ girdi: { hicbiri: true }, toplam: 0, bant: 'negatif' }, { girdi: { hormon: true }, toplam: 1, bant: 'pozitif' }],
   },
   {
     sekil: 'toplam', k: 'wells-pe', roller: ['emergency-medicine', 'respiratory-medicine', 'internal-medicine'],
@@ -81,7 +81,7 @@ export const ACIL_NORO: readonly UzmanlikSatiri[] = [
       const o = ['amnezi', 'mekanizma'].filter((k) => g[k] === true).length
       return { sayilar: [{ anahtar: 'yuksek', deger: y, ondalik: 0, enCok: 5 }, { anahtar: 'orta', deger: o, ondalik: 0, enCok: 2 }], bant: y ? 'yuksek' : o ? 'orta' : 'gerekmez' }
     },
-    ornekler: [{ girdi: {}, bant: 'gerekmez' }, { girdi: { mekanizma: true }, bant: 'orta' }, { girdi: { yas65: true, amnezi: true }, bant: 'yuksek', sayilar: { yuksek: 1, orta: 1 } }],
+    ornekler: [{ girdi: { hicbiri: true }, bant: 'gerekmez' }, { girdi: { mekanizma: true }, bant: 'orta' }, { girdi: { yas65: true, amnezi: true }, bant: 'yuksek', sayilar: { yuksek: 1, orta: 1 } }],
   },
   {
     sekil: 'toplam', k: 'rcri', roller: ['anaesthesia', 'internal-medicine', 'geriatric-medicine'],
@@ -90,7 +90,7 @@ export const ACIL_NORO: readonly UzmanlikSatiri[] = [
     kaynak: 'Lee TH, Marcantonio ER, Mangione CM, et al. Derivation and prospective validation of a simple index for prediction of cardiac risk of major noncardiac surgery. Circulation 1999;100:1043-9 (classes I–IV for 0, 1, 2, ≥3 factors).',
     alanlar: [t('cerrahi', 'High-risk surgery (intraperitoneal, intrathoracic, suprainguinal vascular)'), t('ikh', 'Ischaemic heart disease'), t('kky', 'Heart failure'), t('svh', 'Cerebrovascular disease'), t('insulin', 'Diabetes treated with insulin'), t('kreatinin', 'Preoperative creatinine above 177 µmol/L')],
     bantlar: [b(0, 'i', 'Class I (0 factors)'), b(1, 'ii', 'Class II (1 factor)'), b(2, 'iii', 'Class III (2 factors)'), b(3, 'iv', 'Class IV (3 or more factors)')],
-    ornekler: [{ girdi: {}, toplam: 0, bant: 'i' }, { girdi: { cerrahi: true, insulin: true, kreatinin: true }, toplam: 3, bant: 'iv' }],
+    ornekler: [{ girdi: { hicbiri: true }, toplam: 0, bant: 'i' }, { girdi: { cerrahi: true, insulin: true, kreatinin: true }, toplam: 3, bant: 'iv' }],
   },
   {
     sekil: 'toplam', k: 'stop-bang', roller: ['anaesthesia', 'respiratory-medicine', 'otolaryngology'],

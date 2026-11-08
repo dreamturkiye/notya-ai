@@ -296,7 +296,7 @@ export const CERRAHI: readonly UzmanlikSatiri[] = [
       const n = ['yas', 'patella', 'fibula', 'fleksiyon', 'yuk'].filter((k) => g[k] === true).length
       return { sayilar: [{ anahtar: 'bulgu', deger: n, ondalik: 0, enCok: 5 }], bant: n ? 'gerekli' : 'gerekmez' }
     },
-    ornekler: [{ girdi: {}, bant: 'gerekmez' }, { girdi: { fibula: true }, bant: 'gerekli' }],
+    ornekler: [{ girdi: { hicbiri: true }, bant: 'gerekmez' }, { girdi: { fibula: true }, bant: 'gerekli' }],
   },
   {
     sekil: 'toplam', k: 'kellgren-lawrence', roller: ['orthopaedics', 'rheumatology'],
