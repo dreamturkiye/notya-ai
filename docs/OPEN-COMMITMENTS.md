@@ -1,5 +1,16 @@
 # OPEN COMMITMENTS — Notya AI
 
+## DENEME-BILDIRIM-01 / KURUCU-KONSOL-01 (country port) — trial-signup e-mail and founder-console endpoint: what is open (Claude, 2026-11-07; this branch: uz)
+
+Shipped 2026-11-07 on this branch in the same change set as main: the internal "New trial signup — UZ — <role>" e-mail to
+kaan@notya.io, once per account, when the role is first recorded (`/api/ulke/kayit`, `/api/ulke/rol`; migration 192 applied
+to this country's database and verified); `GET /api/internal/founder-stats` (HMAC-signed with FOUNDER_STATS_SECRET, 5-minute
+window, replay and rate limits; doctor-account metadata and counts only) for the console on the Türkiye site. Paid-plan
+onboarding (PLAN-ONBOARDING-01): N/A here — sign-up already asks name and role, `/start` gates every screen including the
+Stripe return page.
+
+| Kaan: add `RESEND_API_KEY` (Production) to this country's Vercel project once the key exists (see main's DENEME-BILDIRIM-01). Until then signups are recorded and counted, no e-mail is sent. | Claude: none until then | OPEN (2026-11-07) — waits on Kaan |
+
 ## GENITAL-ESTETIK-01 — cosmetic gynaecology / genital aesthetics package: what did not land, and what waits on whom (Claude, 2026-11-06)
 
 Shipped 2026-11-06 on main (Türkiye, KD only) and on the six release branches (each country only what its own law and

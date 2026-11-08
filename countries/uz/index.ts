@@ -135,7 +135,7 @@ export const UZ_PAKETI: UlkePaketi = {
     // /api/billing/checkout and /api/billing/webhook 404 at this gate before Next.js ever serves
     // them — the Stripe-side plumbing (UZS catalog, env vars, trial) built and verified earlier
     // today was never actually reachable from uz.notya.io. This is the fix.
-    apiOnEkleri: ['/api/ulke/', '/api/billing/'],
+    apiOnEkleri: ['/api/ulke/', '/api/billing/', '/api/internal/'],
   },
   // NOTYA-UZ-MUAYENE-01 (Kaan, 2026-10-08): served at notya.io/uzbek. The paths above are relative to this prefix.
   yolOnEki: '/uzbek',
