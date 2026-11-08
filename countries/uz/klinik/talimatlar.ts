@@ -40,6 +40,7 @@
  */
 import { NOT_ALANLARI_ANAHTARI, type DilKodu, type NotGirdisi, type NotIcerigi } from '@/lib/ulke/tipler'
 import { UZ_ROL_ADLARI, uzRolTarafi } from './rolAdlari'
+import { uzSoapKilidi } from './soapKilitleri'
 import { UZ_GENEL_SABLON, UZ_VASIY_ALANI, uzAlanAdi, uzResitDegilMi, uzRolSablonAlanlari, uzSablonMu } from './notSablonlari'
 
 export type UzNotDili = 'uz-Latn' | 'uz-Cyrl' | 'ru'
@@ -181,7 +182,10 @@ export function uzNotTalimati(dil: DilKodu, sablon: string): string | null {
   if (sablon === UZ_GENEL_SABLON) return [n.rol, n.kurallar, n.bolumler, n.genel, n.cevap].join('\n\n')
   const blok = uzRolBlogu(dil, sablon)
   // A role without a block has no instruction: its note is not written. Never another role's, never the general one's.
-  return blok ? [n.rol, n.kurallar, n.bolumler, blok, n.rolCevabi.replace('%', rolJsonKalibi(sablon))].join('\n\n') : null
+  if (!blok) return null
+  // ULKE-BRANS-DERINLIK-09: the role's own SOAP lock (./soapKilitleri.ts), in the note's form, before the answer format.
+  const kilit = uzSoapKilidi(dil, sablon)
+  return [n.rol, n.kurallar, n.bolumler, blok, ...(kilit ? [kilit] : []), n.rolCevabi.replace('%', rolJsonKalibi(sablon))].join('\n\n')
 }
 
 const YENIDEN: Record<UzNotDili, string> = {

@@ -89,7 +89,10 @@ describe('Uzbekistan — the patient portal: text in three forms, and the patien
 
   it('LOCAL CONTENT, UNVERIFIED: the ambulance number (103) and the link\'s 30 days are settings of the pack, said to be unconfirmed where they are set and in the record', async () => {
     const { ulkePaketi } = await import('@/lib/ulke/ulke')
-    assert.deepEqual(ulkePaketi().uygulama?.portal, { baglantiGecerlilikGun: 30, acilNumara: '103' })
+    const portal = ulkePaketi().uygulama?.portal
+    // ULKE-BRANS-DERINLIK-02 / -09 (2026-11-08): beside these two settings the portal carries each role's chapter and the preview words (./portalBolumleri.ts)
+    assert.deepEqual([portal?.baglantiGecerlilikGun, portal?.acilNumara], [30, '103'])
+    assert.deepEqual(Object.keys(portal ?? {}).sort(), ['acilNumara', 'baglantiGecerlilikGun', 'bolumlerDil', 'demo', 'durumEtiketDil', 'tarihEtiketDil'])
     const paket = readFileSync(join(KOK, 'countries/uz/index.ts'), 'utf8')
     // Country audit 2026-10-09 (docs/COUNTRY-AUDIT-UZBEKISTAN.md, A10): the number now names its official source where it
     // is set, and still says that nobody in the country has confirmed it. The record's row 78 is unchanged.

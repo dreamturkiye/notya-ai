@@ -1023,6 +1023,10 @@
    "araclariAc": "$m",
    "takipGunu": "$m:%",
    "takipKapandi": "$m:%",
+   "uzmanlikSekmesi": "$m:%",
+   "uzmanlikAciklama": "$m",
+   "uzmanlikBos": "$m",
+   "uzmanlikFark": "$m:%",
    "okunamadi": "$m",
    "aracYok": "$m"
   },

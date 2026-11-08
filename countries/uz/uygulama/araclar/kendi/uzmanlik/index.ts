@@ -10,8 +10,10 @@ import { UZ_OLCEKLER_1 } from './olcekler1'
 import { UZ_OLCEKLER_2 } from './olcekler2'
 import { UZ_OLCEKLER_3 } from './olcekler3'
 import { UZ_ONAM_RAPOR_ANAHTARLARI, UZ_ONAM_RAPOR_TANIMLAR, uzOnamRaporAraclari } from './onamRapor'
+import { UZ_DOZ_SIPARIS_ANAHTARLARI, UZ_DOZ_SIPARIS_TANIMLAR, uzDozSiparisAraclari } from './dozSiparis'
 
 export const UZ_UZMANLIK_SATIRLARI: readonly UzmanlikSatiri[] = [...UZ_OLCEKLER_1, ...UZ_OLCEKLER_2, ...UZ_OLCEKLER_3]
-export const UZ_UZMANLIK_TANIMLAR: readonly AracTanimi[] = [...UZ_UZMANLIK_SATIRLARI.map(tanimOf), ...UZ_ONAM_RAPOR_TANIMLAR]
-export const uzUzmanlikAraclari = (): readonly PaketAraci[] => [...UZ_UZMANLIK_SATIRLARI.map(paketOf), ...uzOnamRaporAraclari()]
-export const UZ_UZMANLIK_ANAHTARLARI: readonly string[] = [...UZ_UZMANLIK_SATIRLARI.map(anahtarOf), ...UZ_ONAM_RAPOR_ANAHTARLARI]
+/** ULKE-BRANS-DERINLIK-09: plus each role's dose engine and order presets (./dozSiparis.ts). */
+export const UZ_UZMANLIK_TANIMLAR: readonly AracTanimi[] = [...UZ_UZMANLIK_SATIRLARI.map(tanimOf), ...UZ_ONAM_RAPOR_TANIMLAR, ...UZ_DOZ_SIPARIS_TANIMLAR]
+export const uzUzmanlikAraclari = (): readonly PaketAraci[] => [...UZ_UZMANLIK_SATIRLARI.map(paketOf), ...uzOnamRaporAraclari(), ...uzDozSiparisAraclari()]
+export const UZ_UZMANLIK_ANAHTARLARI: readonly string[] = [...UZ_UZMANLIK_SATIRLARI.map(anahtarOf), ...UZ_ONAM_RAPOR_ANAHTARLARI, ...UZ_DOZ_SIPARIS_ANAHTARLARI]

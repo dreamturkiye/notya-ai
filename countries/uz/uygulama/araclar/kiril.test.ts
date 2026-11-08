@@ -46,6 +46,11 @@ const KOK = resolve(__dirname, '../../../..')
  */
 const DENETIM = 'country audit 2026-10-09, machine, awaits a native reader'
 const ELLE_DUZELTILEN: Readonly<Record<string, string>> = {
+  // ULKE-BRANS-DERINLIK-09 (2026-11-08): the role's own name in the title of its dose and order tools keeps the hand-spelled loan word of ../../klinik/rolAdlari.ts
+  'uz-goz-hastaliklari-doz.ad': 'ULKE-BRANS-DERINLIK-09, as the role name: Офтальмология (the rule: Офталмология)',
+  'uz-goz-hastaliklari-buyurtma.ad': 'ULKE-BRANS-DERINLIK-09, as the role name: Офтальмология (the rule: Офталмология)',
+  'uz-fizik-tedavi-doz.ad': 'ULKE-BRANS-DERINLIK-09, as the role name: физкультураси (the rule: физкултураси)',
+  'uz-fizik-tedavi-buyurtma.ad': 'ULKE-BRANS-DERINLIK-09, as the role name: физкультураси (the rule: физкултураси)',
   'easi.aciklama': `${DENETIM}: коэффициент (the rule: коэффитсиент)`,
   'scorad.sayilar.c': `${DENETIM}: субъектив (the rule: субектив)`,
   'yama-okuma.ad': `${DENETIM}: аппликацион (the rule: аппликатсион)`,

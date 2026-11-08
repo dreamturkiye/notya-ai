@@ -477,7 +477,12 @@ describe('tools — the screens', () => {
       assert.doesNotMatch(k, /[^\x00-\x7F]/, `a non-ASCII character in ${ad}`)
       assert.doesNotMatch(k, /fetch\(|localStorage|sessionStorage|document\.cookie|indexedDB/, `${ad} stores or sends something by itself`)
     }
-    assert.deepEqual([...new Set([...kayit.matchAll(/api\(([^,)]+)/g)].map((x) => x[1].trim().replace(/\$\{.*$/, '')))].sort(), ['ARAC_KAYDI_API', '`', '`/api/ulke/hasta?id='].sort())
+    // ULKE-BRANS-DERINLIK-09: the patient file's list of kept results is read through ./kayitOkuma.ts (one read shared with the specialty tab)
+    assert.deepEqual([...new Set([...kayit.matchAll(/api\(([^,)]+)/g)].map((x) => x[1].trim().replace(/\$\{.*$/, '')))].sort(), ['ARAC_KAYDI_API', '`/api/ulke/hasta?id='].sort())
+    const okuma = kod('components/ulke/uygulama/kayitOkuma.ts')
+    assert.doesNotMatch(okuma, /fetch\(|localStorage|sessionStorage|document\.cookie|indexedDB/)
+    assert.deepEqual([...new Set([...okuma.matchAll(/api\(([^,)]+)/g)].map((x) => x[1].trim().replace(/\$\{.*$/, '')))], ['`'])
+    assert.match(okuma, /api\(`\$\{ARAC_KAYDI_API\}\?hasta=/)
     assert.match(kod('components/ulke/UlkeUygulamaSayfasi.tsx'), /\(ekran !== 'araclar' \|\| ozellikAcik\('araclar'\)\)/)
     assert.match(kod('components/ulke/uygulama/Kabuk.tsx'), /ozellikAcik\('araclar'\) \? \[oge\('araclar', araclarMetni\(dil\)\.kabuk\.araclar, 'araclar', YOL\.araclar\)\] : \[\]/)
     assert.match(kod('components/ulke/uygulama/Bugun.tsx'), /ozellikAcik\('araclar'\) \? /)

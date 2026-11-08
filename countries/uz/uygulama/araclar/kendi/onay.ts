@@ -100,7 +100,7 @@ export const UZ_ONAYSIZ_YENI_ARACLAR: readonly UzOnaysizArac[] = [
   // ULKE-BRANS-DERINLIK-01 (2026-11-08): the specialty scores, consent records and conclusions of every role (./uzmanlik/)
   ...UZ_UZMANLIK_ANAHTARLARI.map((anahtar) => ({
     anahtar,
-    ne: anahtar.endsWith('-rozilik') ? 'Consent discussion record (Law No. 265-I, articles 24, 26, 27).' : anahtar.endsWith('-xulosa') ? 'Specialty conclusion printed with a document number.' : 'A published international score or calculator, tested with worked examples from its source.',
+    ne: anahtar.endsWith('-rozilik') ? 'Consent discussion record (Law No. 265-I, articles 24, 26, 27).' : anahtar.endsWith('-xulosa') ? 'Specialty conclusion printed with a document number.' : anahtar.endsWith('-doz') ? 'Specialty dose engine: arithmetic on amounts the doctor types (per kg, per m², fixed); no medicine, dose or ceiling of its own.' : anahtar.endsWith('-buyurtma') ? 'Specialty order presets: the role\'s own list of investigations and referrals to tick; orders and sends nothing.' : 'A published international score or calculator, tested with worked examples from its source.',
     teyit: [
       'A clinician of Uzbekistan confirms the cut-offs (or, for a record, the topics) match current national practice and Ministry of Health protocols.',
       'A native reader confirms the Uzbek (both scripts) and Russian wording; the Cyrillic is derived by rule.',

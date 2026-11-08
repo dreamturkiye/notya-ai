@@ -16,6 +16,7 @@ import { uzAramaKatla } from './arama'
 import { UZ_ROLLER } from './klinik/rolAdlari'
 import { UZ_VELI_YASI } from './ayarlar'
 import { UZ_RESMI_GUNLER } from './resmiGunler'
+import { UZ_PORTAL_BOLUMLERI } from './uygulama/portalBolumleri'
 import { UZ_ASISTAN_SESLERI } from './klinik/asistanSesi'
 import { UZ_ASISTAN_ADLARI } from './klinik/asistanAdlari'
 
@@ -191,7 +192,8 @@ export const UZ_PAKETI: UlkePaketi = {
     // (https://gov.uz/oz/advice/63/document/1090). The single dispatch number 112 also exists (Cabinet of Ministers
     // Resolution No. 304 of 29.05.2024, https://gov.uz/en/advice/502/document/3256); whether the patient's page should
     // name 112 beside or instead of 103 is for a local clinician and the owner. Not yet confirmed by a person in the country.
-    portal: { baglantiGecerlilikGun: 30, acilNumara: '103' },
+    // ULKE-BRANS-DERINLIK-02 / -09: each role's patient chapter in the three forms, and the doctor's preview words (./uygulama/portalBolumleri.ts).
+    portal: { baglantiGecerlilikGun: 30, acilNumara: '103', ...UZ_PORTAL_BOLUMLERI },
     // NOTYA-ULKE-MESAJ-01 — TELLING A PATIENT THAT THEIR DOCTOR WROTE: A SLOT, SWITCHED OFF. No provider is contracted
     // and the kit sends nothing to anybody; the doctor tells the patient. Waits on Kaan (which channel patients here
     // really use, which provider, at what cost) and, before any patient is written to, on a lawyer.

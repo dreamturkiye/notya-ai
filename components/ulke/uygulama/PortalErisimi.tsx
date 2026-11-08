@@ -20,6 +20,13 @@ import { yerine } from '@/lib/ulke/arayuz/yerTutucu'
 import { HEKIM_PORTAL_API } from '@/lib/ulke/portal/sabitler'
 import type { PortalErisimi, PortalKaydi, PortalOlayi } from '@/lib/ulke/portal/tipler'
 import { ulkeYolu } from '@/lib/ulke/yol'
+import dinamikYukle from 'next/dynamic'
+import { portalDemoMetni } from '@/lib/ulke/portal/demo'
+import { ulkeGunu } from '@/lib/ulke/uygulama/gun'
+import { hesapSaatDilimi } from '@/lib/ulke/arayuz/bicim'
+
+/** ULKE-BRANS-DERINLIK-09: the preview is loaded only when the doctor opens it. */
+const PortalOnizlemeKarti = dinamikYukle(() => import('./PortalOnizleme').then((m) => m.PortalOnizleme), { loading: () => <p className="uza-bos" role="status" aria-hidden="true" /> })
 
 export type ErisimVerisi = { erisim: PortalErisimi; kayitlar: PortalKaydi[] }
 /** What "give access" answered, kept on the screen until the doctor leaves it: the whole address, and the PIN. */
@@ -101,6 +108,7 @@ export function PortalErisimKarti({ u, hastaId }: { u: Uygulama; hastaId: string
   const [bekliyor, setBekliyor] = useState(false)
   const [bildirim, setBildirim] = useState<ErisimBildirimi>(null)
   const [kopuk, setKopuk] = useState(false)
+  const [onizleme, setOnizleme] = useState(false)
   const { hesap, api } = u
 
   const yukle = useCallback(async () => {
@@ -127,8 +135,18 @@ export function PortalErisimKarti({ u, hastaId }: { u: Uygulama; hastaId: string
     setBekliyor(false)
   }
 
+  // ULKE-BRANS-DERINLIK-09: the preview of the patient page with example data, where the pack brings its words.
+  const demo = portalDemoMetni(u.dil)
   return (
+    <>
+    {demo ? (
+      <div className="uza-eylemler" data-alan="portal-onizle">
+        <button type="button" className="uza-dugme uza-dugme-cizgi uza-dugme-kucuk" onClick={() => setOnizleme((x) => !x)} aria-expanded={onizleme} data-eylem="portal-onizle">{demo.onizle}</button>
+      </div>
+    ) : null}
+    {demo && onizleme ? <PortalOnizlemeKarti dil={u.dil} rol={hesap?.rol ?? null} hekimAdi={hesap?.ad ?? ''} bugun={ulkeGunu(new Date(), hesapSaatDilimi())} kapat={() => setOnizleme(false)} /> : null}
     <PortalErisimGorunumu p={portalMetni(u.dil)} veri={veri} yeni={yeni} bekliyor={bekliyor} bildirim={bildirim} baglantiHatasi={kopuk ? u.m.kabuk.hata : null} ver={() => { void ver() }} iptal={() => { void iptal() }}
       kopyala={(ne) => { if (yeni) void panoyaKopyala(ne === 'pin' ? yeni.pin : yeni.adres).then((tamam) => setBildirim(tamam ? (ne === 'pin' ? 'pin-kopyalandi' : 'baglanti-kopyalandi') : 'kopyalanamadi')) }} />
+    </>
   )
 }
