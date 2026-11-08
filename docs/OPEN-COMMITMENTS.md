@@ -9,7 +9,7 @@ window, replay and rate limits; doctor-account metadata and counts only) for the
 onboarding (PLAN-ONBOARDING-01): N/A here — sign-up already asks name and role, `/start` gates every screen including the
 Stripe return page.
 
-| Kaan: add `RESEND_API_KEY` (Production) to this country's Vercel project once the key exists (see main's DENEME-BILDIRIM-01). Until then signups are recorded and counted, no e-mail is sent. | Claude: none until then | OPEN (2026-11-07) — waits on Kaan |
+| ~~Kaan: add `RESEND_API_KEY` to this country's Vercel project.~~ Not needed (DENEME-BILDIRIM-02, Kaan, 2026-11-08: no Resend). This build never sends mail and never holds the mailbox password: it POSTs the alert (doctor-account details only) to the Türkiye build's `/api/internal/signup-notify`, signed with FOUNDER_STATS_SECRET (already set here), and Türkiye sends it from kaan@notya.io. The one open step (`SMTP_PASS` on `notya-ai`) is tracked on main under DENEME-BILDIRIM-02. | Claude: none | CLOSED (2026-11-08) |
 
 ## GENITAL-ESTETIK-01 — cosmetic gynaecology / genital aesthetics package: what did not land, and what waits on whom (Claude, 2026-11-06)
 
