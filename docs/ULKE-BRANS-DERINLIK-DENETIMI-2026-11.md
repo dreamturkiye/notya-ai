@@ -1,6 +1,6 @@
 # Country × specialty depth audit against the Pediatri gold standard (ULKE-BRANS-DERINLIK-2026-11)
 
-**Banner:** pre-work audit 2026-11-08 (Phase 1), with a status column updated after each build wave. **Latest checkpoint: the depth wave of 2026-11-08 for Australia and Uzbekistan (section below): AU mean 55 → 78, UZ 30 → 58, no role ≥90 yet.** Scope: every role offered
+**Banner:** pre-work audit 2026-11-08 (Phase 1), with a status column updated after each build wave. **Latest checkpoint: the third job of 2026-11-08 (section below): AU mean 78 → 89.7 with 37 of 44 roles ≥90; UZ 58 → 81.2 (29 of 42 ≥90 once Kaan switches the prepared UZ assistant on).** Scope: every role offered
 at sign-up in us, gb, ca, au, nz, uz — 290 roles — scored against `docs/ULKE-BRANS-ALTIN-STANDART.md` (12 items, weights total 100).
 Read from the live branch tips: release/us d61b7b29c, release/gb f39eaf778, release/ca 296902230, release/au 858f91015, release/nz 7c88a7ddb, release/uz 4a3c459ec; main 60edf1636.
 
@@ -27,6 +27,165 @@ their country's verified practice sources for the live assistant. No role reache
 (K2/K3), portal chapters (K6), specialty consent/report/prescription/views (K7–K10) and clinician validation (K12) remain
 the gap, logged as ULKE-BRANS-DERINLIK-01..08, ULKE-BRANS-KLINISYEN-01 and ULKE-BRANS-GATE-01 in docs/OPEN-COMMITMENTS.md.
 Wave commits: release/us 85f5316cb, release/gb 71e74d677, release/ca 57de04fcc, release/nz b53d6523e, release/au 074fa789e, release/uz 0067e1e3f.
+
+## Depth wave of 2026-11-08 (third job): shared infrastructure, Uzbekistan first, then Australia — status checkpoint
+
+Kaan's order (relayed 2026-11-08): AU and UZ first, bar 90+ against Pediatri; then the scope change "build the Uzbek ones as high
+as you can get them" (UZ first, a live UZ assistant through country data and config, the founder lock untouched).
+
+**Scoring rules re-checked before the work.** The two rules of the second job only count real, wired artifacts: K7 counts a
+role-specific consent record (`-consent`, `-rozilik`) that is a tool visible to that role only; K8 counts a role's own report or
+conclusion (`-report`, `-xulosa`) marked `yazdirilir`, which `components/ulke/uygulama/Araclar.tsx` and `AracKayitlari.tsx` print
+through `YazdirKagidi` with the BELGE-NO-01 number and verification QR (`/api/ulke/belge`), the print words present in en-AU and in
+all three UZ forms. Re-running the extraction on the unchanged release tips gives the same baseline: **AU 78, UZ 58** — no
+correction was needed. **Rules added this job (each reads a real artifact):** K1 Strong also where the role's note instruction
+carries its own SOAP lock (UZ); K6 Strong = the role's own patient chapter AND the portal demo fixture renders it; K9 Strong = the
+role's own dose engine AND its own order presets, Partial = order presets only; K10 Strong = the patient file's specialty tab
+exists for the role (pack words + at least two of the role's own scores or calculators), Partial = one; K4 for UZ needs a
+"BOOKS" section (no length shortcut), and is scored twice: as shipped (no assistant consumes it) and "after the go" (the prepared
+block, if Kaan switches the assistant on — ULKE-UZ-CANLI-01).
+
+**Built (shared, all six country builds, one look):** the specialty dose engine and per-role order presets
+(`lib/ulke/araclar/dozMotoru.ts`: per kg, per m² with Mosteller when no area is entered, fixed dose; the clinician enters every
+amount, concentration and ceiling — the founder rule of `specialties/pediatri/engines/doz.ts`; order presets are item names
+only); the patient file's specialty tab (`lib/ulke/araclar/uzmanlikSekmesi.ts`, `components/ulke/uygulama/UzmanlikSekmesi.tsx`,
+loaded with next/dynamic, sharing one read of the kept results with the Tools card through `kayitOkuma.ts`); the portal demo
+fixture (`lib/ulke/portal/demo.ts`) and the doctor's preview on the patient-access card, drawn with the patient page's own
+view; language-aware patient chapters (`lib/ulke/portal/bolum.ts`). Leak tests both ways: `lib/ulke/araclar/uzmanlikDerinlik.paket.test.ts`
+(run for every country), `lib/ulke/araclar/dozMotoru.test.ts`. **UZ:** SOAP lock per role in three forms
+(`countries/uz/klinik/soapKilitleri.ts`), dose/order tools (`countries/uz/uygulama/araclar/kendi/uzmanlik/dozSiparis.ts`),
+patient chapters and preview words (`countries/uz/uygulama/portalBolumleri.ts`), the live assistant's settings and per-role
+sources (`countries/uz/klinik/canli.ts`, `kaynaklar.ts`) — NOT switched on, see ULKE-UZ-CANLI-01. **AU:** dose/order tools
+(`countries/au/araclar/uzmanlik/dozSiparis.ts`), GPCCMP and MHTP records (`mbs.ts`), four practice notes corrected after a web
+check (DERINLIK-13). AU assistant code and prompts: untouched. Founder lock: no hashed file changed.
+
+| Country | Roles | Mean before → after | ≥90 before → after | Note |
+|---|---|---|---|---|
+| au | 44 | 78 → 89.7 | 0 → 37 | the 7 allied professions stop at 88 (K9 Partial: no medicine-dose engine — ULKE-BRANS-K9-MUTTEFIK) |
+| uz | 42 | 58 → 81.2 | 0 → 0 | after Kaan's go on the assistant: mean 89.0, **29 / 42 ≥90** |
+| us | 51 | 28.7 → 29.7 | 0 → 0 | shared infrastructure only (the specialty tab shows each role's own scores where it has any); per-role content OPEN |
+| gb | 53 | 34.4 → 35.3 | 0 → 0 | as us |
+| ca | 47 | 35.3 → 36.4 | 0 → 0 | as us |
+| nz | 53 | 28.5 → 29.3 | 0 → 0 | as us |
+
+Commits (one per branch, pushed 2026-11-08): release/uz d0e36609d, release/au b3d0f2f59, release/gb 105ff2494, release/ca 572e9b51d,
+release/nz e3261c1b9, release/us 5b1c3ff7d. Tests on every branch: `npm run test:ses` passes (lock manifest unchanged); tsc at its
+baseline (au 13, uz 2, gb 2, ca 2, nz 2, us 0); the country suite has no new failure against the same-tip baseline other than two
+load-sensitive tests that fail the same way on the untouched tips (Turkish-text ceiling script, one voice leak test), and fixes the
+stale English country records.
+
+**What stands between the remaining roles and 90.** AU: K5 Strong and K12 need a practising specialist's sign-off
+(ULKE-BRANS-KLINISYEN-01); for the 7 allied roles also the K9 decision. UZ: the live assistant (Kaan's go on the locked voice route,
+ULKE-UZ-CANLI-01) for every role; then for 13 roles DERINLIK-14 (own intake questions for 7 roles, more sourced scores for 4, a book
+for 2); K5 Strong and K12 need Uzbek clinicians. No role in any country can reach 100 without clinician validation.
+
+**Sources opened this job** — UZ: MoH national clinical protocols (gov.uz/ssv files on api-portal.gov.uz): order No. 195 of
+14.06.2024 (annex of eleven protocols: arterial hypertension, chronic IHD, asthma, COPD, diabetes types 1 and 2, viral cirrhosis,
+hepatitis B with/without delta, hepatitis C, antenatal care, family-planning guide), order No. 107 of 29.03.2024 (children's
+Hodgkin lymphoma), order No. 401 of 25.12.2024 (gestational diabetes, sarcoidosis, influenza/ARVI, developmental hip dislocation,
+ovarian cancer, atopic dermatitis), order No. 180 of 23.06.2025 (type 2 diabetes, acne); GEOTAR-Media "Национальные руководства"
+confirmed on geotar.ru, labirint.ru, mmbook.ru and medical-university library lists (kirovgma.ru, dgmu.ru, medbibl.igma.ru,
+rsmu.ru). Form 025's approving order: not found (lex.uz, gov.uz; three searches) — not shipped. AU: MBS Online "Upcoming
+Changes to Chronic Disease Management Framework – GPCCMPs"; RACGP "Changes to MBS mental health items from 1 November 2025";
+Medical Board of Australia cosmetic guidelines (1 July 2023) and its BDD-screening FAQ; COPE 2023 GP summary; Cancer Care Ontario
+carboplatin monograph; Mosteller 1987 (PubMed 3657876).
+
+### Australia — per role after this wave
+
+| Role | Before | After | K1 | K2 | K3 | K4 | K5 | K6 | K7 | K8 | K9 | K10 | K11 | K12 |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| `emergency-medicine` | 78 | 90 | S | S | S | S | P | S | P | S | S | S | S | M |
+| `family-medicine` | 81 | 90 | S | S | S | S | P | S | P | S | S | S | S | M |
+| `anaesthesia` | 78 | 90 | S | S | S | S | P | S | P | S | S | S | S | M |
+| `neurosurgery` | 78 | 90 | S | S | S | S | P | S | P | S | S | S | S | M |
+| `paediatric-surgery` | 78 | 90 | S | S | S | S | P | S | P | S | S | S | S | M |
+| `internal-medicine` | 78 | 90 | S | S | S | S | P | S | P | S | S | S | S | M |
+| `dermatology` | 78 | 90 | S | S | S | S | P | S | P | S | S | S | S | M |
+| `endocrinology` | 79 | 90 | S | S | S | S | P | S | P | S | S | S | S | M |
+| `infectious-diseases` | 79 | 90 | S | S | S | S | P | S | P | S | S | S | S | M |
+| `gastroenterology` | 78 | 90 | S | S | S | S | P | S | P | S | S | S | S | M |
+| `general-surgery` | 78 | 90 | S | S | S | S | P | S | P | S | S | S | S | M |
+| `cardio-thoracic-surgery` | 79 | 90 | S | S | S | S | P | S | P | S | S | S | S | M |
+| `respiratory-medicine` | 78 | 90 | S | S | S | S | P | S | P | S | S | S | S | M |
+| `ophthalmology` | 78 | 90 | S | S | S | S | P | S | P | S | S | S | S | M |
+| `obstetrics-gynaecology` | 78 | 90 | S | S | S | S | P | S | P | S | S | S | S | M |
+| `vascular-surgery` | 79 | 90 | S | S | S | S | P | S | P | S | S | S | S | M |
+| `cardiology` | 78 | 90 | S | S | S | S | P | S | P | S | S | S | S | M |
+| `otolaryngology` | 78 | 90 | S | S | S | S | P | S | P | S | S | S | S | M |
+| `nephrology` | 78 | 90 | S | S | S | S | P | S | P | S | S | S | S | M |
+| `neurology` | 78 | 90 | S | S | S | S | P | S | P | S | S | S | S | M |
+| `oncology` | 78 | 90 | S | S | S | S | P | S | P | S | S | S | S | M |
+| `radiation-oncology` | 78 | 90 | S | S | S | S | P | S | P | S | S | S | S | M |
+| `orthopaedics` | 78 | 90 | S | S | S | S | P | S | P | S | S | S | S | M |
+| `paediatrics` | 81 | 90 | S | S | S | S | P | S | P | S | S | S | S | M |
+| `plastic-surgery` | 78 | 90 | S | S | S | S | P | S | P | S | S | S | S | M |
+| `psychiatry` | 78 | 90 | S | S | S | S | P | S | P | S | S | S | S | M |
+| `radiology` | 78 | 90 | S | S | S | S | P | S | P | S | S | S | S | M |
+| `rheumatology` | 78 | 90 | S | S | S | S | P | S | P | S | S | S | S | M |
+| `urology` | 78 | 90 | S | S | S | S | P | S | P | S | S | S | S | M |
+| `sports-medicine` | 78 | 90 | S | S | S | S | P | S | P | S | S | S | S | M |
+| `rehabilitation-medicine` | 78 | 90 | S | S | S | S | P | S | P | S | S | S | S | M |
+| `geriatric-medicine` | 78 | 90 | S | S | S | S | P | S | P | S | S | S | S | M |
+| `immunology-and-allergy` | 78 | 90 | S | S | S | S | P | S | P | S | S | S | S | M |
+| `haematology` | 79 | 90 | S | S | S | S | P | S | P | S | S | S | S | M |
+| `pain-medicine` | 78 | 90 | S | S | S | S | P | S | P | S | S | S | S | M |
+| `aesthetic-surgery` | 78 | 90 | S | S | S | S | P | S | P | S | S | S | S | M |
+| `aesthetic-medicine` | 78 | 90 | S | S | S | S | P | S | P | S | S | S | S | M |
+| `physiotherapy` | 78 | 88 | S | S | S | S | P | S | P | S | P | S | S | M |
+| `clinical-psychology` | 78 | 88 | S | S | S | S | P | S | P | S | P | S | S | M |
+| `dietetics` | 79 | 88 | S | S | S | S | P | S | P | S | P | S | S | M |
+| `occupational-therapy` | 78 | 88 | S | S | S | S | P | S | P | S | P | S | S | M |
+| `audiology` | 78 | 88 | S | S | S | S | P | S | P | S | P | S | S | M |
+| `podiatry` | 78 | 88 | S | S | S | S | P | S | P | S | P | S | S | M |
+| `speech-pathology` | 78 | 88 | S | S | S | S | P | S | P | S | P | S | S | M |
+
+### Uzbekistan — per role after this wave
+
+| Role | Before | After | After the go | K1 | K2 | K3 | K4 | K5 | K6 | K7 | K8 | K9 | K10 | K11 | K12 |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| `acil-tip` | 59 | 82 | 90 | S | S | S | T | P | S | P | S | S | S | S | M |
+| `aile-hekimligi` | 59 | 82 | 90 | S | S | S | T | P | S | P | S | S | S | S | M |
+| `anestezi` | 59 | 82 | 90 | S | S | S | T | P | S | P | S | S | S | S | M |
+| `beyin-cerrahisi` | 59 | 82 | 90 | S | S | S | T | P | S | P | S | S | S | S | M |
+| `cocuk-cerrahisi` | 59 | 82 | 90 | S | S | S | T | P | S | P | S | S | S | S | M |
+| `dahiliye` | 59 | 82 | 90 | S | S | S | T | P | S | P | S | S | S | S | M |
+| `dermatoloji` | 59 | 82 | 90 | S | S | S | T | P | S | P | S | S | S | S | M |
+| `endokrinoloji` | 60 | 82 | 90 | S | S | S | T | P | S | P | S | S | S | S | M |
+| `enfeksiyon-hastaliklari` | 60 | 82 | 90 | S | S | S | T | P | S | P | S | S | S | S | M |
+| `gastroenteroloji` | 59 | 82 | 90 | S | S | S | T | P | S | P | S | S | S | S | M |
+| `genel-cerrahi` | 59 | 82 | 90 | S | S | S | T | P | S | P | S | S | S | S | M |
+| `gogus-cerrahisi` | 55 | 78 | 86 | S | S | P | T | P | S | P | S | S | S | S | M |
+| `gogus-hastaliklari` | 59 | 82 | 90 | S | S | S | T | P | S | P | S | S | S | S | M |
+| `goz-hastaliklari` | 59 | 82 | 90 | S | S | S | T | P | S | P | S | S | S | S | M |
+| `kadin-hastaliklari-dogum` | 59 | 82 | 90 | S | S | S | T | P | S | P | S | S | S | S | M |
+| `kalp-damar-cerrahisi` | 56 | 78 | 86 | S | S | P | T | P | S | P | S | S | S | S | M |
+| `damar-cerrahisi` | 58 | 80 | 88 | S | S | S | T | T | S | P | S | S | S | S | M |
+| `kardiyoloji` | 59 | 82 | 90 | S | S | S | T | P | S | P | S | S | S | S | M |
+| `kulak-burun-bogaz` | 59 | 82 | 90 | S | S | S | T | P | S | P | S | S | S | S | M |
+| `nefroloji` | 59 | 82 | 90 | S | S | S | T | P | S | P | S | S | S | S | M |
+| `noroloji` | 59 | 82 | 90 | S | S | S | T | P | S | P | S | S | S | S | M |
+| `onkoloji` | 59 | 82 | 90 | S | S | S | T | P | S | P | S | S | S | S | M |
+| `ortopedi` | 59 | 82 | 90 | S | S | S | T | P | S | P | S | S | S | S | M |
+| `pediatri` | 60 | 82 | 90 | S | S | S | T | P | S | P | S | S | S | S | M |
+| `plastik-cerrahi` | 59 | 82 | 86 | S | S | S | T | P | S | P | S | S | S | S | M |
+| `psikiyatri` | 59 | 82 | 90 | S | S | S | T | P | S | P | S | S | S | S | M |
+| `radyoloji` | 59 | 82 | 90 | S | S | S | T | P | S | P | S | S | S | S | M |
+| `romatoloji` | 59 | 82 | 90 | S | S | S | T | P | S | P | S | S | S | S | M |
+| `uroloji` | 59 | 82 | 90 | S | S | S | T | P | S | P | S | S | S | S | M |
+| `spor-hekimligi` | 59 | 82 | 90 | S | S | S | T | P | S | P | S | S | S | S | M |
+| `fizik-tedavi` | 59 | 82 | 90 | S | S | S | T | P | S | P | S | S | S | S | M |
+| `alerji-immunoloji` | 57 | 80 | 88 | S | S | S | T | T | S | P | S | S | S | S | M |
+| `reproduktoloji` | 57 | 80 | 88 | S | S | S | T | T | S | P | S | S | S | S | M |
+| `cocuk-norolojisi` | 57 | 80 | 88 | S | S | S | T | T | S | P | S | S | S | S | M |
+| `narkoloji` | 47 | 76 | 84 | S | S | P | T | T | S | P | S | S | S | S | M |
+| `diyetoloji` | 53 | 76 | 84 | S | S | P | T | T | S | P | S | S | S | S | M |
+| `surdoloji` | 57 | 80 | 88 | S | S | S | T | T | S | P | S | S | S | S | M |
+| `estetik-cerrahi` | 59 | 82 | 86 | S | S | S | T | P | S | P | S | S | S | S | M |
+| `medikal-estetik` | 59 | 82 | 90 | S | S | S | T | P | S | P | S | S | S | S | M |
+| `klinik-dermatoloji` | 59 | 82 | 90 | S | S | S | T | P | S | P | S | S | S | S | M |
+| `fizyoterapi` | 59 | 80 | 88 | S | S | S | T | P | S | P | S | P | S | S | M |
+| `klinik-psikolog` | 59 | 80 | 88 | S | S | S | T | P | S | P | S | P | S | S | M |
+
 
 ## Depth wave of 2026-11-08 (second job): Australia and Uzbekistan — status checkpoint
 
