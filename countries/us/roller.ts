@@ -27,6 +27,7 @@
  * ────────────────────────────────────────────────────────────────────────────────────────────────────────────
  */
 import type { EnRol, EnRolDegisimi } from '../_dil/en/klinik/roller'
+import type { EnEkTur } from '../_dil/en/klinik/ekRoller'
 
 /**
  * THE FIVE RENAMES of the audit (the key of each role stays; only the name shown changes), each as [ABMS] writes the
@@ -120,4 +121,42 @@ export function usRolunuCoz(ham: unknown, roller: readonly string[]): string | n
   if (roller.includes(ham)) return ham
   const yeni = Object.prototype.hasOwnProperty.call(US_ROL_GOCU, ham) ? US_ROL_GOCU[ham] : null
   return yeni !== null && roller.includes(yeni) ? yeni : null
+}
+
+/**
+ * ULKE-BRANS-DERINLIK-2026-11 — OWN CONTENT FOR EACH ROLE ONLY THIS COUNTRY HAS: the kind of role each one is, from which
+ * it takes note fields and intake questions of its own (countries/_dil/en/klinik/ekRoller.ts), instead of the template
+ * and questions of the shared role it behaves like. Its `gibi` stays as it was (nothing stored changes); the role's own
+ * content is found first (lib/ulke/arayuz/rolIcerigi.ts). The kind is this job's reading of the role, for a clinician of
+ * this country to confirm (docs/ULKE-BRANS-DERINLIK-DENETIMI-2026-11.md on main). Question keys carry the role's own prefix.
+ */
+export const US_EK_ROL_TURLERI: Readonly<Record<string, EnEkTur>> = {
+  'allergy-immunology': 'allergy',
+  'geriatric-medicine': 'geriatric',
+  'pain-medicine': 'pain',
+  'sleep-medicine': 'sleep',
+  'colon-rectal-surgery': 'colorectal',
+  'radiation-oncology': 'radiation-oncology',
+  'child-adolescent-psychiatry': 'child-psychiatry',
+  'addiction-medicine': 'addiction',
+  'hospice-palliative-medicine': 'palliative',
+  'reproductive-endocrinology-infertility': 'fertility',
+  'clinical-social-work': 'social-work',
+  'speech-language-pathology': 'speech-language',
+}
+
+/** The prefix of each such role's intake question keys (unique in the pack). */
+export const US_EK_ROL_ONEKLERI: Readonly<Record<string, string>> = {
+  'allergy-immunology': 'us_ai',
+  'geriatric-medicine': 'us_ger',
+  'pain-medicine': 'us_pm',
+  'sleep-medicine': 'us_sm',
+  'colon-rectal-surgery': 'us_crs',
+  'radiation-oncology': 'us_ro',
+  'child-adolescent-psychiatry': 'us_cap',
+  'addiction-medicine': 'us_adm',
+  'hospice-palliative-medicine': 'us_hpm',
+  'reproductive-endocrinology-infertility': 'us_rei',
+  'clinical-social-work': 'us_csw',
+  'speech-language-pathology': 'us_slp',
 }

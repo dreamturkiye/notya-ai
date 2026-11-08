@@ -32,7 +32,8 @@ import { US_ARAYUZ } from './arayuz'
 import { US_GIRDI, US_HEKIMLER } from './ayarlar'
 import { US_PAKETI } from './index'
 import { US_KLINIK } from './klinik'
-import { US_EKLENMEYEN_MESLEKLER, US_ROL_GOCU, US_ROLLER, US_YENIDEN_ADLANANLAR, usRolunuCoz } from './roller'
+import { US_EK_ROL_TURLERI, US_EKLENMEYEN_MESLEKLER, US_ROL_GOCU, US_ROLLER, US_YENIDEN_ADLANANLAR, usRolunuCoz } from './roller'
+import { EN_EK_SABLONLAR } from '../_dil/en/klinik/ekRoller'
 
 const D = 'en-US'
 const KOK = resolve(__dirname, '../..')
@@ -152,27 +153,24 @@ describe('us roles: an added role behaves like a shared role, under its own key 
   const v = US_ARAYUZ.notSablonlari
   const hepsi = [...EKLENEN_HEKIMLIKLER, ...EKLENEN_MESLEKLER]
 
-  it('its notes are written with that role\'s template; one profession brings fields of its own', () => {
+  it('its notes are written with a template of its own (ULKE-BRANS-DERINLIK-2026-11), not the borrowed one', () => {
     for (const [k, , gibi] of hepsi) {
       assert.equal(sablonMu(v, US_ARAYUZ.roller, k), true, k)
-      if (k === 'speech-language-pathology') continue
-      assert.equal(icerikAnahtari(US_ARAYUZ.roller, k, v.rolAlanlari), gibi, k)
-      assert.deepEqual([...rolSablonAlanlari(v, US_ARAYUZ.roller, k)], [...EN_ROL_ALANLARI[gibi as keyof typeof EN_ROL_ALANLARI]], k)
+      const tur = US_EK_ROL_TURLERI[k]
+      assert.ok(tur, `${k}: has a kind of its own`)
+      assert.equal(icerikAnahtari(US_ARAYUZ.roller, k, v.rolAlanlari), k, k)
+      assert.deepEqual([...rolSablonAlanlari(v, US_ARAYUZ.roller, k)], [...EN_EK_SABLONLAR[tur]], k)
+      assert.notDeepEqual([...rolSablonAlanlari(v, US_ARAYUZ.roller, k)], [...EN_ROL_ALANLARI[gibi as keyof typeof EN_ROL_ALANLARI]], `${k}: still the template of ${gibi}`)
     }
-    // the speech-language pathologist: the occupational therapist's fields that are not about the hand or the home
-    assert.equal(icerikAnahtari(US_ARAYUZ.roller, 'speech-language-pathology', v.rolAlanlari), 'speech-language-pathology')
-    const kendi = [...rolSablonAlanlari(v, US_ARAYUZ.roller, 'speech-language-pathology')]
-    assert.deepEqual(kendi, ['referral_diagnosis', 'functional_status', 'daily_activities', 'session_content', 'assistive_devices', 'rehab_goals'])
-    for (const alan of kendi) assert.ok(EN_ROL_ALANLARI['occupational-therapy'].includes(alan as never), `${alan} is not a field of the role it behaves like`)
     // every field of every template has a name on the screen
     for (const [k] of hepsi) for (const alan of rolSablonAlanlari(v, US_ARAYUZ.roller, k)) assert.ok(v.alanlar[alan]?.ad[D]?.trim(), `${k}.${alan}`)
   })
 
-  it('its intake form asks that role\'s questions', () => {
+  it('its intake form asks questions of its own (ULKE-BRANS-DERINLIK-2026-11)', () => {
     const f = US_KLINIK.hastaFormu!
-    for (const [k, , gibi] of hepsi) {
-      assert.equal(icerikAnahtari(US_ARAYUZ.roller, k, f.roller), gibi, k)
-      assert.ok(f.roller[gibi].sorular.length > 0, gibi)
+    for (const [k] of hepsi) {
+      assert.equal(icerikAnahtari(US_ARAYUZ.roller, k, f.roller), k, k)
+      assert.ok(f.roller[k].sorular.length >= 5, k)
     }
   })
 
@@ -259,7 +257,9 @@ describe('us roles: the pack, the role table and the other countries', () => {
   })
 
   it('THE DIFFERENCE IS THIS COUNTRY\'S ALONE: it is written in this folder, and the shared set still has its forty', () => {
-    assert.equal(US_GIRDI.roller, US_ROLLER)
+    // the same list, each own role carrying its own fields (ULKE-BRANS-DERINLIK-2026-11): keys, kinds and `gibi` unchanged
+    assert.deepEqual(US_GIRDI.roller!.cikar, US_ROLLER.cikar)
+    assert.deepEqual(US_GIRDI.roller!.ekle!.map((r) => [r.anahtar, r.taraf, r.ad, r.gibi]), US_ROLLER.ekle!.map((r) => [r.anahtar, r.taraf, r.ad, r.gibi]))
     assert.equal(EN_ROLLER.length, 40)
     assert.ok((EN_ROLLER as readonly string[]).includes('clinic-dermatology'))
     for (const [k] of [...EKLENEN_HEKIMLIKLER, ...EKLENEN_MESLEKLER]) assert.ok(!(EN_ROLLER as readonly string[]).includes(k), k)

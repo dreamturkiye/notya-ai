@@ -28,7 +28,8 @@ import { hekimRolleri } from '@/lib/ulke/araclar/paket'
 import type { EnUlkeGirdisi } from '../_dil/en/girdi'
 import { enRolSatirlari } from '../_dil/en/klinik/roller'
 import { usAcilacakEk } from './araclar/metinler'
-import { US_ROLLER, US_YENIDEN_ADLANANLAR } from './roller'
+import { US_EK_ROL_ONEKLERI, US_EK_ROL_TURLERI, US_ROLLER, US_YENIDEN_ADLANANLAR } from './roller'
+import { enEkRolIcerigi } from '../_dil/en/klinik/ekRoller'
 import { US_BIRIMLER, US_VELI_YASI } from './temel'
 import { US_OPERATOR_DEGISEN, US_OPERATOR_PARAMETRELERI } from './operator'
 import { US_GENITAL_ESTETIK } from './genitalEstetik'
@@ -97,7 +98,8 @@ export const US_GIRDI: EnUlkeGirdisi = {
   },
   // THE ROLE LIST OF THIS COUNTRY: the shared forty without "Dermatology (clinic)", with ten specialties and two
   // professions of its own, each saying which shared role it behaves like (./roller.ts).
-  roller: US_ROLLER,
+  // ULKE-BRANS-DERINLIK-2026-11: each role only this country has writes with note fields of its own (./roller.ts → US_EK_ROL_TURLERI).
+  roller: enEkRolIcerigi(US_ROLLER, 'en-US', US_EK_ROL_TURLERI, US_EK_ROL_ONEKLERI, { form: false }),
   veliYasi: US_VELI_YASI,
   birimler: US_BIRIMLER,
   surum: 'us-draft-2026-10-11',
