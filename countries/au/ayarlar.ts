@@ -46,6 +46,7 @@ import { AU_TANIMLAR } from './araclar/tanimlar'
 import { AU_EK_YUVALAR } from './araclar/yuvalarim'
 import { auAcilBayraklari } from './araclar/acilBayraklari'
 import { auDieteticsAraclari } from './araclar/dieteticsTools'
+import { auUzmanlikAraclari } from './araclar/uzmanlik'
 import { auBransKoclukAraclari } from './araclar/bransKocluk'
 import { auVisitPrepAraclari } from './araclar/visitPrep'
 import { auKohortAraclari } from './araclar/kohort'
@@ -208,6 +209,11 @@ export const AU_GIRDI: EnUlkeGirdisi = {
       'g/kg': 'g/kg',
       kJ: 'kJ',
       'mL/h': 'mL/h',
+      // ULKE-BRANS-DERINLIK-01 specialty tools
+      ms: 'ms', bpm: 'bpm', s: 's', '%': '%', mmHg: 'mmHg', 'mmol/L': 'mmol/L', 'g/L': 'g/L', 'mOsm/kg': 'mOsm/kg', 'mU/L': 'mU/L',
+      'µmol/L': 'µmol/L', 'mL/min': 'mL/min', 'U/L': 'U/L', '×10⁹/L': '×10⁹/L', h: 'h', L: 'L', cm: 'cm', 'm²': 'm²',
+      'mg/mL·min': 'mg/mL·min', mg: 'mg', Gy: 'Gy', 'mg/L': 'mg/L', 'µg/L': 'µg/L', ppb: 'ppb', mL: 'mL', m: 'm',
+      'mL/kg/min': 'mL/kg/min', HU: 'HU', 'mGy·cm': 'mGy·cm', mSv: 'mSv', daPa: 'daPa', 'dB HL': 'dB HL',
       // Dietetics nutrition-lab recorder (ferritin / B12 / folate — AU reporting units)
       'pmol/L': 'pmol/L',
       'nmol/L': 'nmol/L',
@@ -357,6 +363,9 @@ export const AU_GIRDI: EnUlkeGirdisi = {
         ...auBransKoclukAraclari(),
         // AU-GOLD-DEPTH-02 — per-role visit-prep ticks (all 44 roles). No dose/score.
         ...auVisitPrepAraclari(),
+        // ULKE-BRANS-DERINLIK-01 (2026-11-08) — specialty clinical tools per role: published scores and calculators with
+        // their sources and worked-example tests, and the per-role consent discussion record. Specialty-gated (≤3 roles each).
+        ...auUzmanlikAraclari(),
         AU_GROWTH_CHART_REFERENCE,
         AU_KIMLIK_KONTROL_ARACI,
         AU_GIZLILIK_ARACI,

@@ -15,6 +15,7 @@
  */
 import { AU_ACIL_ANAHTARLARI } from './acilBayraklari'
 import { AU_DIYET_ANAHTARLARI } from './dieteticsTools'
+import { AU_UZMANLIK_ANAHTARLARI } from './uzmanlik'
 import { AU_KOCLUK_ANAHTARLARI } from './bransKocluk'
 import { AU_VISIT_PREP_ANAHTARLARI } from './visitPrep'
 import { AU_KOHORT_ANAHTARLARI } from './kohort'
@@ -171,6 +172,12 @@ export const AU_ONAYSIZ_ACIK_ARACLAR: readonly OnaysizAcikArac[] = [
     oneri: 'AU clinical dietetics beta suite, 2026-10-28',
     klinisyen: null,
     bakilacak: 'Dietetics only. A practising dietitian should confirm MST score-only recording (questions not worded), kJ/kg starting estimates, IDDSI level labels, refeeding tick list, enteral rate arithmetic, and nutrition-lab value recording (no intervals) fit ordinary AU practice before relying on them with patients.',
+  })),
+  ...AU_UZMANLIK_ANAHTARLARI.map((anahtar) => ({
+    anahtar,
+    oneri: 'ULKE-BRANS-DERINLIK-01 — specialty clinical tools per role (scores, calculators, consent records), 2026-11-08',
+    klinisyen: null,
+    bakilacak: 'Each tool cites its published source and is tested with worked examples from that source. A clinician of each named specialty should confirm the cut-offs shown match current Australian practice (college guidance, eTG/AMH where they apply) before relying on them with patients.',
   })),
   ...AU_KOCLUK_ANAHTARLARI.map((anahtar) => ({
     anahtar,

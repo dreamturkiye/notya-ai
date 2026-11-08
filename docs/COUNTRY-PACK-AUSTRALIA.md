@@ -19,8 +19,8 @@ A pack that builds has every text and setting filled in. It says nothing about w
 
 ## What is in this pack, and where it comes from
 
-- **From the shared English set** (`countries/_dil/en/`, written once for five countries): 12297 texts as this pack shows them or hands the model (the country's own, counted in the next line, among them) — the screens, the role names, 40 note templates, the instructions to the model, the intake questions, 424 tools, the landing copy — written in `en-AU` spelling by the set's spelling table.
-- **This country's own** (`countries/au/`, six small files): 53 texts it writes itself (its consent sentence, identifier label, time sentence, date example, name, word for a senior doctor, role names where they differ, what its closed tools are missing and who decides, unit names and tool words it writes differently, the example phone number and the pattern of an amount) and the settings in the table below.
+- **From the shared English set** (`countries/_dil/en/`, written once for five countries): 18436 texts as this pack shows them or hands the model (the country's own, counted in the next line, among them) — the screens, the role names, 40 note templates, the instructions to the model, the intake questions, 655 tools, the landing copy — written in `en-AU` spelling by the set's spelling table.
+- **This country's own** (`countries/au/`, six small files): 84 texts it writes itself (its consent sentence, identifier label, time sentence, date example, name, word for a senior doctor, role names where they differ, what its closed tools are missing and who decides, unit names and tool words it writes differently, the example phone number and the pattern of an amount) and the settings in the table below.
 
 ## Settings — every one unverified
 
@@ -115,7 +115,7 @@ The keys are the shared English key set (`docs/COUNTRY-PACK-ROLE-KEYS.md`). The 
 
 ## Tools
 
-### Switched on (424) — with the unit each measured input takes
+### Switched on (655) — with the unit each measured input takes
 
 Units are a clinical-safety matter. A length or a weight is typed in this pack's unit and converted by the kit with the exact defined factors (1 in = 2.54 cm, 1 lb = 0.45359237 kg); a laboratory value is typed in the unit shown. `countries/au/au.test.ts` runs every tool below with this country's units against the kit's reference result. **Every tool's text is machine-written; each waits on a local clinical lead.**
 
@@ -482,6 +482,237 @@ Units are a clinical-safety matter. A length or a weight is typed in this pack's
 | `au-podiatry-visit-prep` | Foot care plan — visit prep | Podiatrist | no measured input |
 | `au-speech-pathology-visit-prep` | Speech and swallow plan — visit prep | Speech pathologist | no measured input |
 | `au-dietetics-visit-prep` | Nutrition visit prep | Dietitian | no measured input |
+| `au-cha2ds2-va` | CHA2DS2-VA stroke risk in atrial fibrillation | Cardiology, General practice, Geriatric medicine | no measured input |
+| `au-has-bled` | HAS-BLED bleeding risk on anticoagulation | Cardiology, Haematology, General practice | no measured input |
+| `au-heart-score` | HEART score for undifferentiated chest pain | Cardiology, Emergency medicine, General practice | no measured input |
+| `au-qtc` | Corrected QT interval (Bazett and Fridericia) | Cardiology, Psychiatry, Emergency medicine | Measured QT interval: **ms**; Heart rate: **bpm** · result in ms, s |
+| `au-nyha-class` | NYHA functional class (heart failure) | Cardiology, Cardio-thoracic surgery, General medicine | no measured input |
+| `au-ccs-angina` | CCS angina grade (exertional angina) | Cardiology, Cardio-thoracic surgery | no measured input |
+| `au-ppo-fev1` | Predicted postoperative FEV1 and DLCO (segment method) | Cardio-thoracic surgery, Respiratory and sleep medicine | Preoperative FEV1 (% predicted): **%**; Preoperative DLCO (% predicted): **%** · result in % |
+| `au-thrcri` | Thoracic Revised Cardiac Risk Index (ThRCRI) | Cardio-thoracic surgery | no measured input |
+| `au-abpi-tbi` | Ankle–brachial and toe–brachial index | Vascular surgery, Podiatrist, General practice | Higher brachial systolic pressure: **mmHg**; Higher ankle systolic pressure (this leg): **mmHg**; Toe systolic pressure (optional): **mmHg** |
+| `au-rutherford-class` | Rutherford category of chronic limb ischaemia | Vascular surgery, Podiatrist | no measured input |
+| `au-ceap-clinical` | CEAP clinical class (chronic venous disease) | Vascular surgery | no measured input |
+| `au-wells-dvt` | Wells score for deep vein thrombosis | Vascular surgery, General medicine, Haematology | no measured input |
+| `au-gcs` | Glasgow Coma Scale | Emergency medicine, Neurosurgery, Neurology | no measured input |
+| `au-qsofa` | qSOFA (quick Sequential Organ Failure Assessment) | Emergency medicine, Infectious diseases | no measured input |
+| `au-perc` | PERC rule (pulmonary embolism rule-out criteria) | Emergency medicine, Respiratory and sleep medicine | no measured input |
+| `au-wells-pe` | Wells score for pulmonary embolism | Emergency medicine, Respiratory and sleep medicine, General medicine | no measured input |
+| `au-ottawa-ankle` | Ottawa ankle and foot rules | Emergency medicine, Orthopaedic surgery, Sport and exercise medicine | no measured input |
+| `au-ct-head-rule` | CT head rule for minor head injury (Stiell 2001) | Emergency medicine, Neurosurgery | no measured input |
+| `au-rcri` | Revised Cardiac Risk Index (Lee) | Anaesthesia, General medicine, Geriatric medicine | no measured input |
+| `au-stop-bang` | STOP-Bang screen for obstructive sleep apnoea | Anaesthesia, Respiratory and sleep medicine, Otolaryngology – head and neck surgery | no measured input |
+| `au-apfel-ponv` | Simplified Apfel score for postoperative nausea and vomiting | Anaesthesia | no measured input |
+| `au-aldrete` | Modified Aldrete score (recovery-room discharge) | Anaesthesia | no measured input |
+| `au-mallampati` | Modified Mallampati class | Anaesthesia | no measured input |
+| `au-wfns-grade` | WFNS grade of subarachnoid haemorrhage | Neurosurgery | no measured input |
+| `au-spetzler-martin` | Spetzler–Martin grade of a brain arteriovenous malformation | Neurosurgery | no measured input |
+| `au-mrs` | Modified Rankin Scale | Neurology, Neurosurgery, Rehabilitation medicine | no measured input |
+| `au-mjoa` | Modified JOA score (cervical myelopathy) | Neurosurgery, Orthopaedic surgery | no measured input |
+| `au-nihss` | NIH Stroke Scale | Neurology, Emergency medicine | no measured input |
+| `au-abcd2` | ABCD2 score after transient ischaemic attack | Neurology, General practice | no measured input |
+| `au-barthel` | Barthel Index of activities of daily living | Rehabilitation medicine, Geriatric medicine, Occupational therapist | no measured input |
+| `au-fac` | Functional Ambulation Category | Rehabilitation medicine, Physiotherapist | no measured input |
+| `au-berg-balance` | Berg Balance Scale | Rehabilitation medicine, Physiotherapist, Geriatric medicine | no measured input |
+| `au-asia-ais` | ASIA Impairment Scale grade (spinal cord injury) | Rehabilitation medicine, Neurosurgery | no measured input |
+| `au-curb-65` | CURB-65 severity of community-acquired pneumonia | General medicine, Respiratory and sleep medicine, Infectious diseases | no measured input |
+| `au-corrected-calcium` | Albumin-adjusted calcium | General medicine, Endocrinology, Nephrology | Total calcium: **mmol/L**; Albumin: **g/L** · result in mmol/L |
+| `au-anion-gap` | Anion gap (with albumin adjustment) | General medicine, Nephrology, Endocrinology | Sodium: **mmol/L**; Chloride: **mmol/L**; Bicarbonate: **mmol/L**; Albumin (optional): **g/L** · result in mmol/L |
+| `au-calculated-osmolality` | Calculated serum osmolality and osmolal gap | General medicine, Endocrinology, Nephrology | Sodium: **mmol/L**; Glucose: **mmol/L**; Urea: **mmol/L**; Measured osmolality (optional): **mOsm/kg** · result in mOsm/kg |
+| `au-homa-ir` | HOMA-IR (homeostasis model assessment of insulin resistance) | Endocrinology | Fasting glucose: **mmol/L**; Fasting insulin: **mU/L** |
+| `au-burch-wartofsky` | Burch–Wartofsky point scale for thyroid storm | Endocrinology, Emergency medicine | no measured input |
+| `au-mascc` | MASCC risk index for febrile neutropenia | Infectious diseases, Medical oncology, Haematology | no measured input |
+| `au-pitt-bacteraemia` | Pitt bacteraemia score | Infectious diseases | no measured input |
+| `au-cockcroft-gault` | Creatinine clearance (Cockcroft–Gault) | Infectious diseases, Nephrology, Geriatric medicine | Weight: **kg**; Serum creatinine: **µmol/L** · result in mL/min |
+| `au-glasgow-blatchford` | Glasgow–Blatchford score (upper GI bleeding) | Gastroenterology and hepatology, Emergency medicine | no measured input |
+| `au-child-pugh` | Child–Pugh score (cirrhosis) | Gastroenterology and hepatology, General medicine | no measured input |
+| `au-meld-na` | MELD and MELD-Na | Gastroenterology and hepatology | Creatinine: **µmol/L**; Bilirubin: **µmol/L**; Sodium: **mmol/L** |
+| `au-fib-4` | FIB-4 index (liver fibrosis) | Gastroenterology and hepatology, General practice | AST: **U/L**; ALT: **U/L**; Platelet count: **×10⁹/L** |
+| `au-truelove-witts` | Truelove and Witts criteria (acute severe ulcerative colitis) | Gastroenterology and hepatology | no measured input |
+| `au-dialysis-adequacy` | Haemodialysis adequacy (single-pool Kt/V and URR) | Nephrology | Pre-dialysis urea: **mmol/L**; Post-dialysis urea: **mmol/L**; Session length: **h**; Ultrafiltration volume: **L**; Post-dialysis weight: **kg** · result in % |
+| `au-fena` | Fractional excretion of sodium | Nephrology, General medicine | Urine sodium: **mmol/L**; Plasma sodium: **mmol/L**; Urine creatinine: **mmol/L**; Plasma creatinine: **µmol/L** · result in % |
+| `au-four-ts` | 4Ts score for heparin-induced thrombocytopenia | Haematology, General medicine | no measured input |
+| `au-isth-dic` | ISTH overt DIC score | Haematology, General medicine | no measured input |
+| `au-khorana` | Khorana score (cancer-associated venous thromboembolism) | Medical oncology, Haematology | no measured input |
+| `au-bsa-mosteller` | Body surface area (Mosteller) | Medical oncology, Radiation oncology | Height: **cm**; Weight: **kg** · result in m² |
+| `au-calvert-carboplatin` | Carboplatin dose by the Calvert formula | Medical oncology | Target AUC: **mg/mL·min**; GFR estimate (as the protocol specifies): **mL/min** · result in mg |
+| `au-bed-eqd2` | Biologically effective dose and EQD2 | Radiation oncology | Total dose: **Gy**; α/β ratio: **Gy** · result in Gy |
+| `au-karnofsky` | Karnofsky performance status | Radiation oncology, Medical oncology | no measured input |
+| `au-gpa-brain-mets` | Graded Prognostic Assessment (brain metastases) | Radiation oncology | no measured input |
+| `au-rpa-brain-mets` | RTOG recursive partitioning analysis class (brain metastases) | Radiation oncology | no measured input |
+| `au-cdai` | Clinical Disease Activity Index (rheumatoid arthritis) | Rheumatology | no measured input |
+| `au-basdai` | BASDAI (axial spondyloarthritis activity) | Rheumatology | no measured input |
+| `au-asdas-crp` | ASDAS-CRP (axial spondyloarthritis) | Rheumatology | CRP: **mg/L** |
+| `au-acr-eular-ra-2010` | 2010 ACR/EULAR classification criteria for rheumatoid arthritis | Rheumatology | no measured input |
+| `au-spirometry-copd` | Spirometry: FEV1/FVC and COPD airflow grade | Respiratory and sleep medicine, General practice | Post-bronchodilator FEV1: **L**; Post-bronchodilator FVC: **L**; FEV1 % predicted: **%** |
+| `au-mmrc` | mMRC dyspnoea scale | Respiratory and sleep medicine, Cardio-thoracic surgery | no measured input |
+| `au-bode` | BODE index (COPD) | Respiratory and sleep medicine | no measured input |
+| `au-pen-fast` | PEN-FAST penicillin allergy decision rule | Immunology and allergy, Infectious diseases | no measured input |
+| `au-anaphylaxis-grade` | Anaphylaxis severity grade (Brown) | Immunology and allergy, Emergency medicine | no measured input |
+| `au-tryptase-rule` | Acute vs baseline tryptase (20% + 2 rule) | Immunology and allergy | Acute tryptase (1–4 hours after onset): **µg/L**; Baseline tryptase (24 hours or more after recovery): **µg/L** · result in µg/L |
+| `au-uas7` | Urticaria Activity Score over 7 days (UAS7) | Immunology and allergy, Dermatology | no measured input |
+| `au-feno` | FeNO interpretation (eosinophilic airway inflammation) | Immunology and allergy, Paediatrics and child health | FeNO: **ppb** · result in ppb |
+| `au-4at` | 4AT rapid assessment for delirium | Geriatric medicine, General medicine | no measured input |
+| `au-rudas` | Rowland Universal Dementia Assessment Scale (RUDAS) | Geriatric medicine, General practice | no measured input |
+| `au-abbey-pain` | Abbey Pain Scale (people who cannot verbalise) | Geriatric medicine, Pain medicine, Rehabilitation medicine | no measured input |
+| `au-clinical-frailty` | Clinical Frailty Scale level | Geriatric medicine, General medicine | no measured input |
+| `au-alvarado` | Alvarado score (acute appendicitis) | General surgery, Paediatric surgery | no measured input |
+| `au-bisap` | BISAP score (acute pancreatitis) | General surgery, Gastroenterology and hepatology | no measured input |
+| `au-glasgow-imrie` | Modified Glasgow (Imrie) criteria (acute pancreatitis) | General surgery, Gastroenterology and hepatology | no measured input |
+| `au-boey` | Boey score (perforated peptic ulcer) | General surgery | no measured input |
+| `au-hinchey` | Hinchey classification (perforated diverticulitis) | General surgery | no measured input |
+| `au-paediatric-appendicitis` | Paediatric Appendicitis Score | Paediatric surgery, Paediatrics and child health | no measured input |
+| `au-twist` | TWIST score (testicular torsion) | Urology, Paediatric surgery, Emergency medicine | no measured input |
+| `au-maintenance-fluids` | Maintenance fluid volume (Holliday–Segar) | Paediatrics and child health, Paediatric surgery | Weight: **kg** · result in mL, mL/h |
+| `au-westley-croup` | Westley croup score | Paediatrics and child health, General practice | no measured input |
+| `au-pecarn-head` | PECARN head injury rule (children) | Paediatrics and child health, Emergency medicine, Paediatric surgery | no measured input |
+| `au-burns-fluid` | Burns resuscitation fluid estimate | Plastic surgery, Emergency medicine | Weight: **kg**; Burn area (%TBSA, partial and full thickness): **%** · result in mL |
+| `au-vancouver-scar` | Vancouver Scar Scale | Plastic surgery, Cosmetic surgery, Dermatology | no measured input |
+| `au-baker-contracture` | Baker grade of capsular contracture (breast implant) | Plastic surgery, Cosmetic surgery | no measured input |
+| `au-pressure-injury-stage` | Pressure injury stage | Plastic surgery, Rehabilitation medicine, Geriatric medicine | no measured input |
+| `au-dysmorphic-concern` | Dysmorphic Concern Questionnaire (DCQ) | Cosmetic surgery, Non-surgical cosmetic procedures, Plastic surgery | no measured input |
+| `au-regnault-ptosis` | Regnault classification of breast ptosis | Cosmetic surgery, Plastic surgery | no measured input |
+| `au-dermoscopy-tds` | Dermoscopy ABCD rule (Total Dermoscopy Score) | Dermatology | no measured input |
+| `au-seven-point-checklist` | Seven-point dermoscopy checklist | Dermatology, General practice | no measured input |
+| `au-salt-alopecia` | SALT score (alopecia areata) | Dermatology, Non-surgical cosmetic procedures | Vertex — % hair loss: **%**; Right side — % hair loss: **%**; Left side — % hair loss: **%**; Posterior — % hair loss: **%** · result in % |
+| `au-fitzpatrick` | Fitzpatrick skin phototype | Dermatology, Non-surgical cosmetic procedures | no measured input |
+| `au-glogau` | Glogau photoageing classification | Non-surgical cosmetic procedures | no measured input |
+| `au-hair-loss-pattern` | Pattern hair loss stage (Norwood–Hamilton / Ludwig) | Non-surgical cosmetic procedures, Dermatology | no measured input |
+| `au-prostate-volume-psad` | Prostate volume (ellipsoid) and PSA density | Urology, Radiology | Length: **cm**; Width: **cm**; Height (antero-posterior): **cm**; PSA (optional): **µg/L** · result in mL |
+| `au-guys-stone` | Guy's stone score (percutaneous nephrolithotomy) | Urology | no measured input |
+| `au-ottawa-knee` | Ottawa knee rule | Orthopaedic surgery, Emergency medicine, Sport and exercise medicine | no measured input |
+| `au-kellgren-lawrence` | Kellgren–Lawrence radiographic grade (osteoarthritis) | Orthopaedic surgery, Rheumatology | no measured input |
+| `au-gustilo-anderson` | Gustilo–Anderson classification (open fractures) | Orthopaedic surgery, Plastic surgery | no measured input |
+| `au-beighton` | Beighton score (joint hypermobility) | Orthopaedic surgery, Sport and exercise medicine, Physiotherapist | no measured input |
+| `au-acwr` | Acute:chronic workload ratio | Sport and exercise medicine | no measured input |
+| `au-cooper-vo2` | Estimated VO2max from the Cooper 12-minute run | Sport and exercise medicine | Distance covered in 12 minutes: **m** · result in mL/kg/min |
+| `au-areds-simple` | AREDS simplified severity scale (AMD) | Ophthalmology | no measured input |
+| `au-dr-severity` | International clinical diabetic retinopathy severity | Ophthalmology, Endocrinology | no measured input |
+| `au-ocular-trauma-score` | Ocular Trauma Score | Ophthalmology, Emergency medicine | no measured input |
+| `au-van-herick` | Van Herick anterior chamber angle grade | Ophthalmology | no measured input |
+| `au-lund-mackay` | Lund–Mackay CT score (chronic rhinosinusitis) | Otolaryngology – head and neck surgery, Radiology | no measured input |
+| `au-house-brackmann` | House–Brackmann facial nerve grade | Otolaryngology – head and neck surgery, Neurology | no measured input |
+| `au-brodsky-tonsil` | Brodsky tonsil size grade | Otolaryngology – head and neck surgery, Paediatrics and child health | no measured input |
+| `au-mcisaac` | Centor score with McIsaac age adjustment (sore throat) | General practice, Otolaryngology – head and neck surgery, Paediatrics and child health | no measured input |
+| `au-adrenal-washout` | Adrenal washout (CT) | Radiology, Endocrinology | Unenhanced attenuation (optional): **HU**; Enhanced attenuation (60–70 s): **HU**; Delayed attenuation (15 min): **HU** · result in % |
+| `au-ct-effective-dose` | CT effective dose estimate from DLP | Radiology | Dose–length product: **mGy·cm** · result in mSv |
+| `au-bosniak` | Bosniak classification of cystic renal masses (2019) | Radiology, Urology | no measured input |
+| `au-audit` | AUDIT (Alcohol Use Disorders Identification Test) | Psychiatry, Psychologist, General practice | no measured input |
+| `au-epds` | Edinburgh Postnatal Depression Scale | Obstetrics and gynaecology, General practice, Psychiatry | no measured input |
+| `au-ciwa-ar` | CIWA-Ar (alcohol withdrawal) | Psychiatry, Emergency medicine, General medicine | no measured input |
+| `au-cows` | Clinical Opiate Withdrawal Scale (COWS) | Psychiatry, Pain medicine | no measured input |
+| `au-pcl-5` | PTSD Checklist for DSM-5 (PCL-5) | Psychologist, Psychiatry | no measured input |
+| `au-dass-21` | DASS-21 (Depression Anxiety Stress Scales) | Psychologist, Psychiatry | no measured input |
+| `au-reliable-change` | Reliable Change Index (Jacobson–Truax) | Psychologist | no measured input |
+| `au-dn4` | DN4 neuropathic pain questionnaire | Pain medicine, Neurology | no measured input |
+| `au-peg-pain` | PEG three-item pain scale | Pain medicine, General practice | no measured input |
+| `au-opioid-risk-tool` | Opioid Risk Tool | Pain medicine, General practice | no measured input |
+| `au-psfs` | Patient-Specific Functional Scale | Physiotherapist, Occupational therapist | no measured input |
+| `au-tug` | Timed Up and Go | Physiotherapist, Geriatric medicine | Time: **s** · result in s |
+| `au-six-minute-walk` | Six-minute walk distance vs predicted | Physiotherapist, Respiratory and sleep medicine | Distance walked: **m**; Height: **cm**; Weight: **kg** · result in m, % |
+| `au-modified-ashworth` | Modified Ashworth Scale (spasticity) | Physiotherapist, Occupational therapist, Rehabilitation medicine | no measured input |
+| `au-lawton-iadl` | Lawton Instrumental Activities of Daily Living | Occupational therapist, Geriatric medicine | no measured input |
+| `au-fes-i` | Falls Efficacy Scale – International (FES-I) | Occupational therapist, Physiotherapist | no measured input |
+| `au-home-fast` | HOME FAST home falls hazard screen | Occupational therapist | no measured input |
+| `au-tympanogram-type` | Tympanogram type (Jerger) | Audiologist, Otolaryngology – head and neck surgery | Peak pressure: **daPa**; Peak static admittance: **mL** · result in mL |
+| `au-hearing-grade-who` | Four-frequency average and WHO hearing grade | Audiologist, Otolaryngology – head and neck surgery | Right 0.5 kHz: **dB HL**; Right 1 kHz: **dB HL**; Right 2 kHz: **dB HL**; Right 4 kHz: **dB HL**; Left 0.5 kHz: **dB HL**; Left 1 kHz: **dB HL**; Left 2 kHz: **dB HL**; Left 4 kHz: **dB HL** · result in dB HL |
+| `au-hhie-s` | Hearing Handicap Inventory for the Elderly – Screening (HHIE-S) | Audiologist | no measured input |
+| `au-thi` | Tinnitus Handicap Inventory | Audiologist, Otolaryngology – head and neck surgery | no measured input |
+| `au-sinbad` | SINBAD diabetes-related foot ulcer score | Podiatrist, Vascular surgery | no measured input |
+| `au-iwgdf-risk` | IWGDF foot ulcer risk category and screening interval | Podiatrist, Endocrinology, General practice | no measured input |
+| `au-ut-wound` | University of Texas diabetic wound classification | Podiatrist | no measured input |
+| `au-fois` | Functional Oral Intake Scale | Speech pathologist, Dietitian | no measured input |
+| `au-penetration-aspiration` | Penetration–Aspiration Scale | Speech pathologist | no measured input |
+| `au-doss` | Dysphagia Outcome and Severity Scale | Speech pathologist | no measured input |
+| `au-vhi-10` | Voice Handicap Index-10 | Speech pathologist, Otolaryngology – head and neck surgery | no measured input |
+| `au-emergency-medicine-consent` | Emergency medicine: consent discussion record | Emergency medicine | no measured input |
+| `au-family-medicine-consent` | General practice: consent discussion record | General practice | no measured input |
+| `au-anaesthesia-consent` | Anaesthesia: consent discussion record | Anaesthesia | no measured input |
+| `au-neurosurgery-consent` | Neurosurgery: consent discussion record | Neurosurgery | no measured input |
+| `au-paediatric-surgery-consent` | Paediatric surgery: consent discussion record | Paediatric surgery | no measured input |
+| `au-internal-medicine-consent` | General medicine: consent discussion record | General medicine | no measured input |
+| `au-dermatology-consent` | Dermatology: consent discussion record | Dermatology | no measured input |
+| `au-endocrinology-consent` | Endocrinology: consent discussion record | Endocrinology | no measured input |
+| `au-infectious-diseases-consent` | Infectious diseases: consent discussion record | Infectious diseases | no measured input |
+| `au-gastroenterology-consent` | Gastroenterology and hepatology: consent discussion record | Gastroenterology and hepatology | no measured input |
+| `au-general-surgery-consent` | General surgery: consent discussion record | General surgery | no measured input |
+| `au-cardio-thoracic-surgery-consent` | Cardio-thoracic surgery: consent discussion record | Cardio-thoracic surgery | no measured input |
+| `au-respiratory-medicine-consent` | Respiratory and sleep medicine: consent discussion record | Respiratory and sleep medicine | no measured input |
+| `au-ophthalmology-consent` | Ophthalmology: consent discussion record | Ophthalmology | no measured input |
+| `au-obstetrics-gynaecology-consent` | Obstetrics and gynaecology: consent discussion record | Obstetrics and gynaecology | no measured input |
+| `au-vascular-surgery-consent` | Vascular surgery: consent discussion record | Vascular surgery | no measured input |
+| `au-cardiology-consent` | Cardiology: consent discussion record | Cardiology | no measured input |
+| `au-otolaryngology-consent` | Otolaryngology – head and neck surgery: consent discussion record | Otolaryngology – head and neck surgery | no measured input |
+| `au-nephrology-consent` | Nephrology: consent discussion record | Nephrology | no measured input |
+| `au-neurology-consent` | Neurology: consent discussion record | Neurology | no measured input |
+| `au-oncology-consent` | Medical oncology: consent discussion record | Medical oncology | no measured input |
+| `au-radiation-oncology-consent` | Radiation oncology: consent discussion record | Radiation oncology | no measured input |
+| `au-orthopaedics-consent` | Orthopaedic surgery: consent discussion record | Orthopaedic surgery | no measured input |
+| `au-paediatrics-consent` | Paediatrics and child health: consent discussion record | Paediatrics and child health | no measured input |
+| `au-plastic-surgery-consent` | Plastic surgery: consent discussion record | Plastic surgery | no measured input |
+| `au-psychiatry-consent` | Psychiatry: consent discussion record | Psychiatry | no measured input |
+| `au-radiology-consent` | Radiology: consent discussion record | Radiology | no measured input |
+| `au-rheumatology-consent` | Rheumatology: consent discussion record | Rheumatology | no measured input |
+| `au-urology-consent` | Urology: consent discussion record | Urology | no measured input |
+| `au-sports-medicine-consent` | Sport and exercise medicine: consent discussion record | Sport and exercise medicine | no measured input |
+| `au-rehabilitation-medicine-consent` | Rehabilitation medicine: consent discussion record | Rehabilitation medicine | no measured input |
+| `au-geriatric-medicine-consent` | Geriatric medicine: consent discussion record | Geriatric medicine | no measured input |
+| `au-immunology-and-allergy-consent` | Immunology and allergy: consent discussion record | Immunology and allergy | no measured input |
+| `au-haematology-consent` | Haematology: consent discussion record | Haematology | no measured input |
+| `au-pain-medicine-consent` | Pain medicine: consent discussion record | Pain medicine | no measured input |
+| `au-aesthetic-surgery-consent` | Cosmetic surgery: consent discussion record | Cosmetic surgery | no measured input |
+| `au-aesthetic-medicine-consent` | Non-surgical cosmetic procedures: consent discussion record | Non-surgical cosmetic procedures | no measured input |
+| `au-physiotherapy-consent` | Physiotherapy: consent discussion record | Physiotherapist | no measured input |
+| `au-clinical-psychology-consent` | Clinical psychology: consent discussion record | Psychologist | no measured input |
+| `au-dietetics-consent` | Dietetics: consent discussion record | Dietitian | no measured input |
+| `au-occupational-therapy-consent` | Occupational therapy: consent discussion record | Occupational therapist | no measured input |
+| `au-audiology-consent` | Audiology: consent discussion record | Audiologist | no measured input |
+| `au-podiatry-consent` | Podiatry: consent discussion record | Podiatrist | no measured input |
+| `au-speech-pathology-consent` | Speech pathology: consent discussion record | Speech pathologist | no measured input |
+| `au-emergency-medicine-report` | Emergency department discharge letter | Emergency medicine | no measured input |
+| `au-family-medicine-report` | GP referral letter | General practice | no measured input |
+| `au-anaesthesia-report` | Pre-anaesthetic assessment report | Anaesthesia | no measured input |
+| `au-neurosurgery-report` | Neurosurgical consultation report | Neurosurgery | no measured input |
+| `au-paediatric-surgery-report` | Paediatric surgical report | Paediatric surgery | no measured input |
+| `au-internal-medicine-report` | General medicine consultation report | General medicine | no measured input |
+| `au-dermatology-report` | Dermoscopy and skin examination report | Dermatology | no measured input |
+| `au-endocrinology-report` | Endocrinology report | Endocrinology | no measured input |
+| `au-infectious-diseases-report` | Infectious diseases consultation report | Infectious diseases | no measured input |
+| `au-gastroenterology-report` | Endoscopy report | Gastroenterology and hepatology | no measured input |
+| `au-general-surgery-report` | Surgical consultation report | General surgery | no measured input |
+| `au-cardio-thoracic-surgery-report` | Cardio-thoracic surgical report | Cardio-thoracic surgery | no measured input |
+| `au-respiratory-medicine-report` | Spirometry and lung function report | Respiratory and sleep medicine | no measured input |
+| `au-ophthalmology-report` | Ophthalmic examination report | Ophthalmology | no measured input |
+| `au-obstetrics-gynaecology-report` | Obstetric / gynaecological report | Obstetrics and gynaecology | no measured input |
+| `au-vascular-surgery-report` | Vascular assessment report | Vascular surgery | no measured input |
+| `au-cardiology-report` | Echocardiography and ECG report | Cardiology | no measured input |
+| `au-otolaryngology-report` | ENT examination report | Otolaryngology – head and neck surgery | no measured input |
+| `au-nephrology-report` | Nephrology report | Nephrology | no measured input |
+| `au-neurology-report` | Neurophysiology / neurology report | Neurology | no measured input |
+| `au-oncology-report` | Oncology treatment summary | Medical oncology | no measured input |
+| `au-radiation-oncology-report` | Radiation therapy summary | Radiation oncology | no measured input |
+| `au-orthopaedics-report` | Orthopaedic assessment report | Orthopaedic surgery | no measured input |
+| `au-paediatrics-report` | Paediatric report | Paediatrics and child health | no measured input |
+| `au-plastic-surgery-report` | Plastic surgery report | Plastic surgery | no measured input |
+| `au-psychiatry-report` | Psychiatric assessment report | Psychiatry | no measured input |
+| `au-radiology-report` | Imaging report | Radiology | no measured input |
+| `au-rheumatology-report` | Rheumatology report | Rheumatology | no measured input |
+| `au-urology-report` | Urology report | Urology | no measured input |
+| `au-sports-medicine-report` | Sports medicine assessment report | Sport and exercise medicine | no measured input |
+| `au-rehabilitation-medicine-report` | Rehabilitation assessment report | Rehabilitation medicine | no measured input |
+| `au-geriatric-medicine-report` | Comprehensive geriatric assessment report | Geriatric medicine | no measured input |
+| `au-immunology-and-allergy-report` | Allergy assessment report | Immunology and allergy | no measured input |
+| `au-haematology-report` | Haematology report | Haematology | no measured input |
+| `au-pain-medicine-report` | Pain medicine assessment report | Pain medicine | no measured input |
+| `au-aesthetic-surgery-report` | Cosmetic surgery consultation report | Cosmetic surgery | no measured input |
+| `au-aesthetic-medicine-report` | Cosmetic procedure record | Non-surgical cosmetic procedures | no measured input |
+| `au-physiotherapy-report` | Physiotherapy assessment report | Physiotherapist | no measured input |
+| `au-clinical-psychology-report` | Psychological assessment report | Psychologist | no measured input |
+| `au-dietetics-report` | Dietetic assessment report | Dietitian | no measured input |
+| `au-occupational-therapy-report` | Occupational therapy functional report | Occupational therapist | no measured input |
+| `au-audiology-report` | Audiological assessment report | Audiologist | no measured input |
+| `au-podiatry-report` | Podiatric assessment report | Podiatrist | no measured input |
+| `au-speech-pathology-report` | Swallowing / communication assessment report | Speech pathologist | no measured input |
 | `au-growth-chart-reference` | Which growth chart to use | every role | no measured input |
 | `au-identifier-check` | Medicare card and provider number check | every role | no measured input |
 | `au-privacy-principles` | Privacy Act record | every role | no measured input |
