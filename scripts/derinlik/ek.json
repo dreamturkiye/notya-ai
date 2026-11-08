@@ -1,0 +1,398 @@
+{
+ "us:allergy-immunology": {
+  "sizintiTesti": true
+ },
+ "us:geriatric-medicine": {
+  "sizintiTesti": true
+ },
+ "us:pain-medicine": {
+  "sizintiTesti": true
+ },
+ "us:sleep-medicine": {
+  "sizintiTesti": true
+ },
+ "us:colon-rectal-surgery": {
+  "sizintiTesti": true
+ },
+ "us:radiation-oncology": {
+  "sizintiTesti": true
+ },
+ "us:child-adolescent-psychiatry": {
+  "sizintiTesti": true
+ },
+ "us:addiction-medicine": {
+  "sizintiTesti": true
+ },
+ "us:hospice-palliative-medicine": {
+  "sizintiTesti": true
+ },
+ "us:reproductive-endocrinology-infertility": {
+  "sizintiTesti": true
+ },
+ "us:clinical-social-work": {
+  "sizintiTesti": true
+ },
+ "us:speech-language-pathology": {
+  "sizintiTesti": true
+ },
+ "gb:geriatric-medicine": {
+  "sizintiTesti": true
+ },
+ "gb:haematology": {
+  "sizintiTesti": true
+ },
+ "gb:clinical-oncology": {
+  "sizintiTesti": true
+ },
+ "gb:allergy": {
+  "sizintiTesti": true
+ },
+ "gb:genito-urinary-medicine": {
+  "sizintiTesti": true
+ },
+ "gb:community-sexual-reproductive-health": {
+  "sizintiTesti": true
+ },
+ "gb:occupational-medicine": {
+  "sizintiTesti": true
+ },
+ "gb:child-adolescent-psychiatry": {
+  "sizintiTesti": true
+ },
+ "gb:old-age-psychiatry": {
+  "sizintiTesti": true
+ },
+ "gb:oral-maxillofacial-surgery": {
+  "sizintiTesti": true
+ },
+ "gb:palliative-medicine": {
+  "sizintiTesti": true
+ },
+ "gb:audio-vestibular-medicine": {
+  "sizintiTesti": true
+ },
+ "gb:podiatry": {
+  "sizintiTesti": true
+ },
+ "gb:speech-language-therapy": {
+  "sizintiTesti": true
+ },
+ "ca:vascular-surgery": {
+  "sizintiTesti": true
+ },
+ "ca:clinical-immunology-allergy": {
+  "sizintiTesti": true
+ },
+ "ca:geriatric-medicine": {
+  "sizintiTesti": true
+ },
+ "ca:hematology": {
+  "sizintiTesti": true
+ },
+ "ca:pain-medicine": {
+  "sizintiTesti": true
+ },
+ "ca:reproductive-endocrinology": {
+  "sizintiTesti": true
+ },
+ "ca:psychotherapy": {
+  "sizintiTesti": true
+ },
+ "nz:rural-hospital-medicine": {
+  "sizintiTesti": true
+ },
+ "nz:musculoskeletal-medicine": {
+  "sizintiTesti": true
+ },
+ "nz:occupational-medicine": {
+  "sizintiTesti": true
+ },
+ "nz:pain-medicine": {
+  "sizintiTesti": true
+ },
+ "nz:sexual-health-medicine": {
+  "sizintiTesti": true
+ },
+ "nz:family-planning-reproductive-health": {
+  "sizintiTesti": true
+ },
+ "nz:palliative-medicine": {
+  "sizintiTesti": true
+ },
+ "nz:oral-maxillofacial-surgery": {
+  "sizintiTesti": true
+ },
+ "nz:podiatry": {
+  "sizintiTesti": true
+ },
+ "nz:osteopathy": {
+  "sizintiTesti": true
+ },
+ "nz:chiropractic": {
+  "sizintiTesti": true
+ },
+ "nz:psychotherapy": {
+  "sizintiTesti": true
+ },
+ "au:vascular-surgery": {
+  "sizintiTesti": true
+ },
+ "au:radiation-oncology": {
+  "sizintiTesti": true
+ },
+ "au:geriatric-medicine": {
+  "sizintiTesti": true
+ },
+ "au:immunology-and-allergy": {
+  "sizintiTesti": true
+ },
+ "au:haematology": {
+  "sizintiTesti": true
+ },
+ "au:pain-medicine": {
+  "sizintiTesti": true
+ },
+ "au:podiatry": {
+  "sizintiTesti": true
+ },
+ "uz:alerji-immunoloji": {
+  "sizintiTesti": true
+ },
+ "uz:reproduktoloji": {
+  "sizintiTesti": true
+ },
+ "uz:cocuk-norolojisi": {
+  "sizintiTesti": true
+ },
+ "uz:narkoloji": {
+  "sizintiTesti": true
+ },
+ "uz:diyetoloji": {
+  "sizintiTesti": true
+ },
+ "uz:surdoloji": {
+  "sizintiTesti": true
+ },
+ "uz:damar-cerrahisi": {
+  "sizintiTesti": true
+ },
+ "nz:urgent-care-medicine": {
+  "formKopya": true
+ },
+ "au:emergency-medicine": {
+  "sizintiTesti": true
+ },
+ "au:family-medicine": {
+  "sizintiTesti": true
+ },
+ "au:anaesthesia": {
+  "sizintiTesti": true
+ },
+ "au:neurosurgery": {
+  "sizintiTesti": true
+ },
+ "au:paediatric-surgery": {
+  "sizintiTesti": true
+ },
+ "au:internal-medicine": {
+  "sizintiTesti": true
+ },
+ "au:dermatology": {
+  "sizintiTesti": true
+ },
+ "au:endocrinology": {
+  "sizintiTesti": true
+ },
+ "au:infectious-diseases": {
+  "sizintiTesti": true
+ },
+ "au:gastroenterology": {
+  "sizintiTesti": true
+ },
+ "au:general-surgery": {
+  "sizintiTesti": true
+ },
+ "au:cardio-thoracic-surgery": {
+  "sizintiTesti": true
+ },
+ "au:respiratory-medicine": {
+  "sizintiTesti": true
+ },
+ "au:ophthalmology": {
+  "sizintiTesti": true
+ },
+ "au:obstetrics-gynaecology": {
+  "sizintiTesti": true
+ },
+ "au:cardiology": {
+  "sizintiTesti": true
+ },
+ "au:otolaryngology": {
+  "sizintiTesti": true
+ },
+ "au:nephrology": {
+  "sizintiTesti": true
+ },
+ "au:neurology": {
+  "sizintiTesti": true
+ },
+ "au:oncology": {
+  "sizintiTesti": true
+ },
+ "au:orthopaedics": {
+  "sizintiTesti": true
+ },
+ "au:paediatrics": {
+  "sizintiTesti": true
+ },
+ "au:plastic-surgery": {
+  "sizintiTesti": true
+ },
+ "au:psychiatry": {
+  "sizintiTesti": true
+ },
+ "au:radiology": {
+  "sizintiTesti": true
+ },
+ "au:rheumatology": {
+  "sizintiTesti": true
+ },
+ "au:urology": {
+  "sizintiTesti": true
+ },
+ "au:sports-medicine": {
+  "sizintiTesti": true
+ },
+ "au:rehabilitation-medicine": {
+  "sizintiTesti": true
+ },
+ "au:aesthetic-surgery": {
+  "sizintiTesti": true
+ },
+ "au:aesthetic-medicine": {
+  "sizintiTesti": true
+ },
+ "au:physiotherapy": {
+  "sizintiTesti": true
+ },
+ "au:clinical-psychology": {
+  "sizintiTesti": true
+ },
+ "au:dietetics": {
+  "sizintiTesti": true
+ },
+ "au:occupational-therapy": {
+  "sizintiTesti": true
+ },
+ "au:audiology": {
+  "sizintiTesti": true
+ },
+ "au:speech-pathology": {
+  "sizintiTesti": true
+ },
+ "uz:acil-tip": {
+  "sizintiTesti": true
+ },
+ "uz:aile-hekimligi": {
+  "sizintiTesti": true
+ },
+ "uz:anestezi": {
+  "sizintiTesti": true
+ },
+ "uz:beyin-cerrahisi": {
+  "sizintiTesti": true
+ },
+ "uz:cocuk-cerrahisi": {
+  "sizintiTesti": true
+ },
+ "uz:dahiliye": {
+  "sizintiTesti": true
+ },
+ "uz:dermatoloji": {
+  "sizintiTesti": true
+ },
+ "uz:endokrinoloji": {
+  "sizintiTesti": true
+ },
+ "uz:enfeksiyon-hastaliklari": {
+  "sizintiTesti": true
+ },
+ "uz:gastroenteroloji": {
+  "sizintiTesti": true
+ },
+ "uz:genel-cerrahi": {
+  "sizintiTesti": true
+ },
+ "uz:gogus-cerrahisi": {
+  "sizintiTesti": true
+ },
+ "uz:gogus-hastaliklari": {
+  "sizintiTesti": true
+ },
+ "uz:goz-hastaliklari": {
+  "sizintiTesti": true
+ },
+ "uz:kadin-hastaliklari-dogum": {
+  "sizintiTesti": true
+ },
+ "uz:kalp-damar-cerrahisi": {
+  "sizintiTesti": true
+ },
+ "uz:kardiyoloji": {
+  "sizintiTesti": true
+ },
+ "uz:kulak-burun-bogaz": {
+  "sizintiTesti": true
+ },
+ "uz:nefroloji": {
+  "sizintiTesti": true
+ },
+ "uz:noroloji": {
+  "sizintiTesti": true
+ },
+ "uz:onkoloji": {
+  "sizintiTesti": true
+ },
+ "uz:ortopedi": {
+  "sizintiTesti": true
+ },
+ "uz:pediatri": {
+  "sizintiTesti": true
+ },
+ "uz:plastik-cerrahi": {
+  "sizintiTesti": true
+ },
+ "uz:psikiyatri": {
+  "sizintiTesti": true
+ },
+ "uz:radyoloji": {
+  "sizintiTesti": true
+ },
+ "uz:romatoloji": {
+  "sizintiTesti": true
+ },
+ "uz:uroloji": {
+  "sizintiTesti": true
+ },
+ "uz:spor-hekimligi": {
+  "sizintiTesti": true
+ },
+ "uz:fizik-tedavi": {
+  "sizintiTesti": true
+ },
+ "uz:estetik-cerrahi": {
+  "sizintiTesti": true
+ },
+ "uz:medikal-estetik": {
+  "sizintiTesti": true
+ },
+ "uz:klinik-dermatoloji": {
+  "sizintiTesti": true
+ },
+ "uz:fizyoterapi": {
+  "sizintiTesti": true
+ },
+ "uz:klinik-psikolog": {
+  "sizintiTesti": true
+ }
+}

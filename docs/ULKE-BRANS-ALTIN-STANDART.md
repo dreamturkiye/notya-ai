@@ -45,6 +45,26 @@ memory. The scoring of every role in every country against it is in `docs/ULKE-B
 Overall pill per role: **Strong ≥85**, **Partial 55–84**, **Thin 20–54**, **Missing <20** (no own content: falls back to a mapped
 role or the general template). Pediatri on main scores 100 by construction (the bar).
 
+### K9 for professions that cannot prescribe (ULKE-BRANS-K9-MUTTEFIK — Kaan's written decision, 2026-11-08)
+
+K9 (prescription / dose engine) is **not applicable** for a profession that cannot prescribe medicines in that country. Such a
+role is scored over the other eleven items (95 points) and rescaled to 100: `score = Σ(weight × pill, K9 left out) / 95 × 100`.
+A profession that may prescribe under conditions (an endorsement, an annotation, a designated-prescriber scope, a state law)
+stays scored on K9 and needs a real, clinician-entered dose capability like the medical roles. Each country's list was checked
+against a source opened on 2026-11-08 — never assumed:
+
+| Country | K9 not applicable | Stays scored (and why) | Source opened |
+|---|---|---|---|
+| au | physiotherapy, clinical psychology, dietetics, occupational therapy, audiology, speech pathology (Kaan's list) | **podiatry** — endorsement for scheduled medicines (S2, S3, S4, S8 for podiatric conditions; registration standard in effect 1 Aug 2018); given `au-podiatry-dose` | Podiatry Board of Australia, "Endorsement for scheduled medicines" (podiatryboard.gov.au) |
+| uz | fizyoterapi, klinik-psikolog (non-physician roles) | — | Cabinet of Ministers Resolution No. 185 of 06.04.2017 (in force, amended), retail-sale regulation: a prescription is a physician's (vrach) instruction (lex.uz/docs/-3155768) |
+| gb | clinical psychology, occupational therapy, audiology, speech and language therapy | **physiotherapy, podiatry** (independent and supplementary prescribers), **dietetics** (supplementary prescribers) | HCPC, "Standards for prescribing": "These are the only professions we regulate that are eligible to become prescribers" (hcpc-uk.org) |
+| ca | physiotherapy, clinical psychology, dietetics, occupational therapy, audiology, psychotherapy | — | Ontario College of Pharmacists, "Prescriptions from other healthcare providers" (prescribers: chiropodists/podiatrists, dentists, midwives, naturopaths, nurses, optometrists, pharmacists, physicians; ocpinfo.com); Physiotherapy Alberta, Medications Guide (prescribing a Schedule 1 drug is a restricted activity physiotherapists cannot be authorised for; cpta.ab.ca). Other provinces not opened (OPEN-COMMITMENTS ULKE-BRANS-K9-CA-01). |
+| nz | clinical psychology, occupational therapy, audiology, osteopathy, chiropractic, psychotherapy | **dietetics** (designated prescribers, Medicines (Designated Prescriber—Dietitians) Regulations 2015), **podiatry** (designated prescriber regulations approved 2025), **physiotherapy** (may prescribe nicotine replacement after the ABC training — kept scored, conservatively) | Healthify NZ, "Prescribers" (healthify.nz); Physiotherapy Board of NZ, "Physiotherapists administering prescription medicines standard" (physioboard.org.nz); NZ Government release on podiatrist prescribers, 22 Apr 2025 (national.org.nz) |
+| us | physiotherapy, dietetics, occupational therapy, audiology, speech-language pathology, clinical social work | **clinical psychology** — appropriately trained psychologists may prescribe in Louisiana, New Mexico, Illinois, Iowa, Idaho and Colorado (and federal systems) | APA Monitor, "Prescriptive authority for psychologists" (Jun 2023, apa.org); DEA Diversion, "Mid-Level Practitioners Authorization by State" (updated 12/4/2024; no type for PT, dietitian, OT, SLP, audiologist or social worker); APTA draft prescriptive authority report 2024 (no state grants PTs medication prescribing; DoD/BOP federal privileges only) |
+
+The scoring script (`scripts/derinlik/skor.py`, `K9_YOK`; extraction `scripts/derinlik/cikar.mts`) carries this table; the per-role scores with it are in
+`docs/ULKE-BRANS-DERINLIK-DENETIMI-2026-11.md` (fourth job).
+
 ## Rules that bind the work, not just the score
 
 - Country content is re-sourced per country, never translated from Türkiye (`ulke-paritesi-duzeltme`,
