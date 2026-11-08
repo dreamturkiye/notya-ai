@@ -17,7 +17,7 @@ import { join, resolve } from 'node:path'
 import { sizintiTara } from '@/lib/ulke/testing/sizintiTarayici'
 import { uzKirillga, uzRuschaYozuvga } from '../yozuv'
 import { UZ_ASISTAN_ADLARI, uzAsistanAdi, type AsistanUnvani } from './asistanAdlari'
-import { uzAsistanKimligi } from './asistanKimligi'
+import { uzAsistanKimligi, uzSoyadCinsiyeti } from './asistanKimligi'
 import { UZ_ASISTAN_UNVANLARI } from './asistanUnvanlari'
 import { uzRolMu } from './rolAdlari'
 
@@ -108,7 +108,7 @@ test('full and short form, as the Turkish product writes them: "Prof. Dr. <given
   for (const a of GORUNEN) {
     const k = uzAsistanKimligi(a.bransAnahtari, 'uz-Latn')!
     const [tam, kisa] = a.unvan === 'prof-dr' ? ['Prof. Dr.', 'Prof.'] : a.unvan === 'dr' ? ['Dr.', 'Dr.'] : [a.meslekUnvani, a.meslekUnvani]
-    assert.deepEqual(k, { tamAd: `${tam} ${a.kisaAd} ${a.soyad}`, kisaAd: a.kisaAd, unvanliKisaAd: `${kisa} ${a.kisaAd}`, makineTuretimi: false }, a.bransAnahtari)
+    assert.deepEqual(k, { tamAd: `${tam} ${a.kisaAd} ${a.soyad}`, kisaAd: a.kisaAd, unvanliKisaAd: `${kisa} ${a.kisaAd}`, makineTuretimi: false, cinsiyet: uzSoyadCinsiyeti(a.soyad) }, a.bransAnahtari)
   }
   // In the other two forms: the title is the catalogue's word (or the profession's title converted by rule), the name is converted by rule.
   for (const f of ['uz-Cyrl', 'ru'] as const) {
@@ -116,7 +116,7 @@ test('full and short form, as the Turkish product writes them: "Prof. Dr. <given
     for (const a of GORUNEN) {
       const k = uzAsistanKimligi(a.bransAnahtari, f)!
       const u = a.unvan === 'meslek' ? { tam: cevir(a.meslekUnvani!), kisa: cevir(a.meslekUnvani!) } : UZ_ASISTAN_UNVANLARI[f][a.unvan]
-      assert.deepEqual(k, { tamAd: `${u.tam} ${cevir(a.kisaAd)} ${cevir(a.soyad)}`, kisaAd: cevir(a.kisaAd), unvanliKisaAd: `${u.kisa} ${cevir(a.kisaAd)}`, makineTuretimi: true }, `${a.bransAnahtari}/${f}`)
+      assert.deepEqual(k, { tamAd: `${u.tam} ${cevir(a.kisaAd)} ${cevir(a.soyad)}`, kisaAd: cevir(a.kisaAd), unvanliKisaAd: `${u.kisa} ${cevir(a.kisaAd)}`, makineTuretimi: true, cinsiyet: uzSoyadCinsiyeti(a.soyad) }, `${a.bransAnahtari}/${f}`)
       assert.doesNotMatch(k.tamAd + k.unvanliKisaAd, /[A-Za-z]/, `${a.bransAnahtari}/${f}: a Latin letter is left`)
     }
   }
