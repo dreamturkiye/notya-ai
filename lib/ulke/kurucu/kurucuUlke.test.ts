@@ -5,7 +5,9 @@
  *   1. GET /api/internal/founder-stats: no secret, no/garbage/wrong/expired/replayed/other-country signature → 404; a
  *      valid one → 200 with doctor-account metadata and counts only (no patient field, no note content); a burst → 429.
  *   2. Every statement carried this build's country (ulke = …).
- *   3. The trial-signup e-mail is claimed once per account and never for Kaan's test account or an unknown role.
+ *   3. The trial-signup alert is claimed once per account and never for Kaan's test account or an unknown role.
+ *   4. DENEME-BILDIRIM-02: this build sends no mail itself; it POSTs a body-signed doctor-account payload (no patient
+ *      field) to Türkiye's /api/internal/signup-notify, fire-and-forget; no secret → a logged no-op.
  */
 import { describe, it, before, beforeEach, mock } from 'node:test'
 import assert from 'node:assert/strict'
@@ -19,6 +21,7 @@ process.env.NOTYA_COUNTRY = ULKE
 process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://sahte.supabase.test'
 process.env.SUPABASE_SERVICE_ROLE_KEY = 'sahte-servis-anahtari'
 delete process.env.RESEND_API_KEY
+delete process.env.SMTP_PASS
 delete process.env.FOUNDER_EMAILS
 const GIZLI = 'k'.repeat(48)
 
@@ -149,17 +152,52 @@ describe(`founder-stats (${ULKE})`, () => {
   })
 })
 
-describe(`trial-signup e-mail (${ULKE})`, () => {
+describe(`trial-signup alert (${ULKE})`, () => {
   it('claimed once per account; Kaan\'s test account and an unknown role are left out', async () => {
     const { d1, rol } = tohum()
     tablolar.ulke_hesaplari[0].deneme_bildirim_at = null
     const sb = sahteCreateClient() as never
     if (!rol) { assert.equal(await kurucu.ulkeDenemeKaydiBildir(sb, { id: d1, email: 'qa-1@example.test' }, 'x'), 'disarida'); return }
-    assert.equal(await kurucu.ulkeDenemeKaydiBildir(sb, { id: d1, email: 'qa-1@example.test' }, rol), 'anahtar-yok')
+    assert.equal(await kurucu.ulkeDenemeKaydiBildir(sb, { id: d1, email: 'qa-1@example.test' }, rol, { gizli: '' }), 'gizli-yok')
     assert.equal(await kurucu.ulkeDenemeKaydiBildir(sb, { id: d1, email: 'qa-1@example.test' }, rol), 'zaten')
     assert.equal(await kurucu.ulkeDenemeKaydiBildir(sb, { id: d1, email: 'kaanari@mac.com' }, rol), 'disarida')
     assert.equal(await kurucu.ulkeDenemeKaydiBildir(sb, { id: d1, email: 'qa-1@example.test' }, 'not-a-role'), 'disarida')
     assert.deepEqual(ulkesizSorgu, [])
+  })
+  it('posts the alert to Türkiye, body-signed; the payload is doctor-account keys only; Türkiye accepts it, and only it', async () => {
+    const { d1, rol } = tohum()
+    if (!rol) return
+    tablolar.ulke_hesaplari[0].deneme_bildirim_at = null
+    const sb = sahteCreateClient() as never
+    const cagrilar: Array<{ url: string; init: RequestInit }> = []
+    const f = (async (url: string, init: RequestInit) => { cagrilar.push({ url, init }); return new Response('{"ok":true}', { status: 202 }) }) as unknown as typeof fetch
+    assert.equal(await kurucu.ulkeDenemeKaydiBildir(sb, { id: d1, email: 'qa-1@example.test', ad: 'QA Doctor' }, rol, { gizli: GIZLI, fetchFn: f }), 'iletildi')
+    assert.equal(cagrilar.length, 1)
+    assert.equal(cagrilar[0].url, 'https://www.notya.io/api/internal/signup-notify')
+    assert.equal(cagrilar[0].init.method, 'POST')
+    const govde = String(cagrilar[0].init.body)
+    const yuk = JSON.parse(govde) as Record<string, unknown>
+    const { BILDIRIM_YUKU_ANAHTARLARI, bildirimYukuCoz, SIGNUP_NOTIFY_AMAC } = await import('../../kurucu/denemeBildirimi')
+    assert.deepEqual(Object.keys(yuk).sort(), [...BILDIRIM_YUKU_ANAHTARLARI].sort())
+    for (const k of Object.keys(yuk)) assert.doesNotMatch(k, /hasta|patient|nhs|medicare|note|visit|diagnos|soap|transcript/i)
+    assert.equal(yuk.ulke, ULKE)
+    assert.equal(yuk.eposta, 'qa-1@example.test')
+    assert.ok(bildirimYukuCoz(yuk), 'Türkiye parses exactly this payload')
+    imza.imzaBellegiTemizle()
+    const baslik = (cagrilar[0].init.headers as Record<string, string>)[imza.IMZA_BASLIGI]
+    assert.deepEqual(imza.govdeImzaDogrula(GIZLI, baslik, SIGNUP_NOTIFY_AMAC, govde), { ok: true })
+    assert.equal(imza.govdeImzaDogrula(GIZLI, baslik, SIGNUP_NOTIFY_AMAC, govde.replace('QA Doctor', 'Other')).ok, false)
+    // A refused or failing post is logged, never thrown into the doctor's request.
+    tablolar.ulke_hesaplari[0].deneme_bildirim_at = null
+    const kotu = (async () => { throw new Error('down') }) as unknown as typeof fetch
+    assert.equal(await kurucu.ulkeDenemeKaydiBildir(sb, { id: d1, email: 'qa-1@example.test' }, rol, { gizli: GIZLI, fetchFn: kotu }), 'hata')
+  })
+  it('this build never sends mail itself and never reads a mailbox password', () => {
+    const kok = join(__dirname, '../../..')
+    for (const yol of ['lib/ulke/kurucu/kurucuUlke.ts', 'lib/kurucu/denemeBildirimi.ts', 'app/api/ulke/kayit/route.ulke.ts', 'app/api/ulke/rol/route.ulke.ts']) {
+      const k = readFileSync(join(kok, yol), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '')
+      assert.doesNotMatch(k, /nodemailer|SMTP_|RESEND_API_KEY|api\.resend\.com|from .resend.|smtpGonder/, yol)
+    }
   })
   it('the sign-up and role routes call it after their own write, through arkaPlanda', () => {
     const kok = join(__dirname, '../../..')
