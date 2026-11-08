@@ -9,6 +9,7 @@
  * Keep this file light: data and pure functions only (the middleware and the browser bundle load it).
  * EVERY VALUE IS UNVERIFIED until somebody in the United States confirms it (see ./ayarlar.ts).
  */
+import { EN_PORTAL_DEMO } from '../_dil/en/portalDemo'
 import { paketMetinleri, type UlkePaketi } from '@/lib/ulke/tipler'
 import { enCekirdek } from '../_dil/en/cekirdek'
 import { enKlinikHesaplari } from '../_dil/en/klinikHesaplari'
@@ -126,7 +127,7 @@ export const US_PAKETI: UlkePaketi = {
     // emergency, dial 911": 911.gov/calling-911). No person of the country has confirmed it for this product, and one
     // must before any patient sees the portal. The kit has room for ONE number: the suicide and crisis line 988
     // (fcc.gov/988-suicide-and-crisis-lifeline) is not named anywhere. null here = the patient's page names no number.
-    portal: { baglantiGecerlilikGun: 30, acilNumara: '911' },
+    portal: { baglantiGecerlilikGun: 30, acilNumara: '911', demo: { 'en-US': EN_PORTAL_DEMO } },
     // Messages stay on the patient's page. The outbound channel is a slot: nothing is sent. Machine-written; a lawyer
     // of this country has not read whether a doctor may write to a patient this way.
     mesaj: enMesajAyarlari('the United States'),

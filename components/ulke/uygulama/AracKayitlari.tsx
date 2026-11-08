@@ -30,6 +30,7 @@ import type { DilKodu } from '@/lib/ulke/tipler'
 import { TarihGirisi } from '../girdi/TarihGirisi'
 import { YazdirKagidi, yazdirSozleri, type YazdirAntet } from './YazdirKagidi'
 import { unvanliAd } from '@/lib/ulke/uygulama/hekimUnvani'
+import { hastaKayitlariniOku } from './kayitOkuma'
 import { ulkePaketi } from '@/lib/ulke/ulke'
 import { ulkeGunu } from '@/lib/ulke/uygulama/gun'
 import { hesapSaatDilimi } from '@/lib/ulke/arayuz/bicim'
@@ -160,7 +161,8 @@ export function HastaAracKayitlariKarti({ u, hastaId, hastaAdi }: { u: Uygulama;
   useEffect(() => {
     if (!hesap) return
     let iptal = false
-    api(`${ARAC_KAYDI_API}?hasta=${encodeURIComponent(hastaId)}`).then((r) => { if (!iptal && r.ok && Array.isArray(r.j.kayitlar)) setKayitlar(r.j.kayitlar) }).catch(() => { /* no list */ })
+    // ULKE-BRANS-DERINLIK-09: one read shared with the specialty tab (./kayitOkuma.ts).
+    hastaKayitlariniOku(api, hastaId).then((l) => { if (!iptal && l) setKayitlar(l) }).catch(() => { /* no list */ })
     return () => { iptal = true }
   }, [hesap, api, hastaId])
   const icerik = arayuz().araclar

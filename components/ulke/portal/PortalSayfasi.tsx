@@ -156,6 +156,22 @@ export function PortalSayfaGorunumu({ p, r, icerik, acilNumara, form, setForm, i
         <p className="uza-ipucu">{s.yalniz}</p>
       </section>
 
+      {i.bolum ? (
+        // ULKE-BRANS-DERINLIK-02: the chapter of the doctor's specialty — the pack's lines and the follow-up days kept.
+        <section className="uza-kart" data-alan="portal-bolum" data-bolum={i.bolum.anahtar}>
+          <h2 className="uza-h2">{i.bolum.baslik}</h2>
+          <ul className="uza-liste">{i.bolum.satirlar.map((satir, idx) => <li key={idx}><p className="uza-aciklama" style={{ margin: 0 }}>{satir}</p></li>)}</ul>
+          {i.bolum.tarihler.length ? (
+            <div data-alan="portal-bolum-tarihler">
+              <p className="uza-ipucu">{i.bolum.tarihEtiket}</p>
+              <ul className="uza-liste">
+                {i.bolum.tarihler.slice(0, 4).map((t) => <li key={t.gun} data-durum={t.durum}><span className="uza-saat">{gunYaz(t.gun)}</span> <span className="uza-rozet">{i.bolum!.durumEtiket[t.durum]}</span></li>)}
+              </ul>
+            </div>
+          ) : null}
+        </section>
+      ) : null}
+
       {formKarti ?? null}
       {mesajlar ?? null}
 

@@ -323,6 +323,34 @@ export type PortalAyarlari = {
    * is not for emergencies and names NO number. The catalogue holds the sentence, never the number.
    */
   acilNumara?: string | null
+  /**
+   * ULKE-BRANS-DERINLIK-02 — the patient's SPECIALTY CHAPTER, one per offered role (lib/ulke/portal/bolum.ts). Patient-facing:
+   * no diagnosis, no dose, no score. `bolumler` holds one language (a pack with one form); `bolumlerDil` one set per form of
+   * the page (a pack with several). The follow-up days the clinician kept are added by the portal, not here.
+   */
+  bolumler?: Readonly<Record<string, PortalBolumTanimi>>
+  bolumlerDil?: Readonly<Partial<Record<DilKodu, Readonly<Record<string, PortalBolumTanimi>>>>>
+  tarihEtiket?: string
+  tarihEtiketDil?: Readonly<Partial<Record<DilKodu, string>>>
+  durumEtiket?: Readonly<Record<'gecikti' | 'bugun' | 'yaklasiyor' | 'planli', string>>
+  durumEtiketDil?: Readonly<Partial<Record<DilKodu, Readonly<Record<'gecikti' | 'bugun' | 'yaklasiyor' | 'planli', string>>>>>
+  /** ULKE-BRANS-DERINLIK-09 — the words of the patient page's PREVIEW with example data (lib/ulke/portal/demo.ts), per form. */
+  demo?: Readonly<Partial<Record<DilKodu, PortalDemoMetni>>>
+}
+
+export type PortalBolumTanimi = { baslik: string; satirlar: readonly string[] }
+
+/** The doctor's preview of the patient page with example data: nothing in it is a patient's. */
+export type PortalDemoMetni = {
+  /** The button on the patient-access card. */
+  onizle: string
+  kapat: string
+  /** One line above the preview: example data, not this patient's. */
+  uyari: string
+  /** The example patient's name. */
+  hastaAdi: string
+  /** The example shared summary. */
+  ozet: string
 }
 
 /**
