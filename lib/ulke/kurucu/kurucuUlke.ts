@@ -6,10 +6,14 @@
  *                          and last sign-in time, onboarding done) and COUNTS of notes and visits per account for 7/30 days.
  *                          The activity reads select only `doctor_id, created_at`; no patient id or content is read, and the
  *                          rows leave as numbers (hesapSatiriTemizle keeps only the allowed keys).
- *   ulkeDenemeKaydiBildir  the internal "New trial signup" e-mail to kaan@notya.io, once per account, the moment the
+ *   ulkeDenemeKaydiBildir  the internal "New trial signup" alert to kaan@notya.io, once per account, the moment the
  *                          account's role (specialty) is first recorded — /api/ulke/kayit or /api/ulke/rol call it after
  *                          their own write, through arkaPlanda (never in the doctor's way). Exactly once:
  *                          ulke_hesaplari.deneme_bildirim_at is claimed atomically (migration 192).
+ *                          DENEME-BILDIRIM-02 (Kaan, 2026-11-08): this build never sends mail and never holds the mailbox
+ *                          password. It POSTs the alert payload (doctor-account details only, no patient field) to the
+ *                          Türkiye build's /api/internal/signup-notify, signed with FOUNDER_STATS_SECRET over the exact
+ *                          body (lib/kurucu/imza.ts govdeImzaUret); Türkiye sends the e-mail from kaan@notya.io.
  *
  * Left out of both: Kaan's test account and the founder addresses (named under testHesaplari), and front-desk members of a
  * clinic (they choose no role and are not doctors).
@@ -19,7 +23,8 @@ import { ulkeTablosu } from '@/lib/ulke/uygulama/tablolar'
 import { aktifUlke, ozellikAcik, ulkePaketi } from '@/lib/ulke/ulke'
 import { rolAdi, roller } from '@/lib/ulke/arayuz'
 import { uygulamaRoluMu } from '@/lib/ulke/uygulama/rol'
-import { bildirimDisiMi, bildirimEpostasi, bildirimGonder, KAAN_TEST_EPOSTASI, kurucuEpostalari, type BildirimUlkesi } from '@/lib/kurucu/denemeBildirimi'
+import { bildirimDisiMi, bildirimYuku, KAAN_TEST_EPOSTASI, kurucuEpostalari, SIGNUP_NOTIFY_AMAC, TR_SIGNUP_NOTIFY_URL, type BildirimUlkesi } from '@/lib/kurucu/denemeBildirimi'
+import { govdeImzaUret, IMZA_BASLIGI } from '@/lib/kurucu/imza'
 import { hesapSatiriTemizle, type KurucuHesap, type KurucuUlkeYaniti } from '@/lib/kurucu/tipler'
 
 const GUN = 24 * 60 * 60 * 1000
@@ -104,13 +109,13 @@ export async function ulkeKurucuVerisi(
   return { ulke: aktifUlke(), uretildi: new Date(simdi).toISOString(), hesaplar: sonuc, testHesaplari }
 }
 
-export type UlkeBildirimSonucu = 'disarida' | 'zaten' | 'gonderildi' | 'anahtar-yok' | 'hata'
+export type UlkeBildirimSonucu = 'disarida' | 'zaten' | 'iletildi' | 'gizli-yok' | 'hata'
 
 export async function ulkeDenemeKaydiBildir(
   supabase: SupabaseClient,
   hesap: { id: string; email?: string | null; ad?: string | null },
   rol: string,
-  ayar: { simdi?: Date; fetchFn?: typeof fetch } = {},
+  ayar: { simdi?: Date; fetchFn?: typeof fetch; gizli?: string; url?: string } = {},
 ): Promise<UlkeBildirimSonucu> {
   if (bildirimDisiMi(hesap.email) || !uygulamaRoluMu(rol)) return 'disarida'
   const simdi = ayar.simdi ?? new Date()
@@ -125,7 +130,7 @@ export async function ulkeDenemeKaydiBildir(
   const { data: sayilan } = await ulkeTablosu(supabase, 'ulke_hesaplari').select('id').not('deneme_bildirim_at', 'is', null).limit(100000)
   const count = Array.isArray(sayilan) ? sayilan.length : 1
   const ulke = aktifUlke() as BildirimUlkesi
-  const e = bildirimEpostasi({
+  const govde = JSON.stringify(bildirimYuku({
     ulke,
     ad: String(hesap.ad || (alinan[0] as { full_name?: unknown }).full_name || ''),
     eposta: String(hesap.email || ''),
@@ -134,9 +139,27 @@ export async function ulkeDenemeKaydiBildir(
     plan: 'trial',
     zaman: simdi,
     toplam: Math.max(1, Number(count ?? 1)),
-  })
-  const s = await bildirimGonder(e, `notya-deneme/${ulke}/${hesap.id}`, { fetchFn: ayar.fetchFn })
-  if (s.durum === 'anahtar-yok') console.warn('[deneme-bildirim] RESEND_API_KEY is not set: trial signup recorded, e-mail not sent (DENEME-BILDIRIM-01).')
-  else if (s.durum === 'hata') console.error('[deneme-bildirim] send failed', s.ayrinti)
-  return s.durum
+  }))
+  const gizli = ayar.gizli ?? process.env.FOUNDER_STATS_SECRET
+  if (!gizli || gizli.length < 32) {
+    console.warn('[deneme-bildirim] FOUNDER_STATS_SECRET is not set: trial signup recorded, alert not posted (DENEME-BILDIRIM-02).')
+    return 'gizli-yok'
+  }
+  try {
+    const r = await (ayar.fetchFn ?? fetch)(ayar.url ?? TR_SIGNUP_NOTIFY_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', [IMZA_BASLIGI]: govdeImzaUret(gizli, SIGNUP_NOTIFY_AMAC, govde) },
+      body: govde,
+      signal: AbortSignal.timeout(10_000),
+      cache: 'no-store',
+    })
+    if (!r.ok) {
+      console.error('[deneme-bildirim] alert post refused', `http ${r.status}`)
+      return 'hata'
+    }
+    return 'iletildi'
+  } catch (e) {
+    console.error('[deneme-bildirim] alert post failed', e instanceof Error ? e.name : 'network')
+    return 'hata'
+  }
 }
