@@ -61,7 +61,9 @@ describe('gb: the role list of the audited decisions, shipped active', () => {
       if (s.verdict === 'keep' && s.officialName && s.key !== 'gastroenterology') assert.equal(ad(s.key), s.officialName, s.key)
     }
     assert.equal(ad('gastroenterology'), 'Gastroenterology', 'kept without the hyphen of the regulator\'s list, as the decisions say')
-    assert.equal(ad('longevity'), 'Preventive and longevity medicine', 'verdict "unverified": left as it is')
+    // ULKE-BRANS-GATE-01 (Kaan, 2026-11-08: "keep them"): offered, named as a practice focus, not a specialty
+    assert.equal(ad('longevity'), 'Longevity medicine — practice focus for registered doctors (not a specialty)')
+    assert.equal(ad('hair-transplant'), 'Hair transplantation — practice focus for registered doctors (not a specialty)')
     // and nothing beyond the decisions: every role of the pack is a role the data file names
     const karardaki = new Set([...KARARLAR.specialties, ...KARARLAR.clinicSpecialties].map((s) => s.key))
     for (const r of ROLLER) assert.ok(karardaki.has(r), `${r} is a role of the pack and the decisions do not name it`)

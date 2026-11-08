@@ -59,6 +59,10 @@ export const GB_ROL_ADLARI: Readonly<Partial<Record<EnRol, string>>> = {
   orthopaedics: 'Trauma and orthopaedic surgery',
   psychiatry: 'General psychiatry',
   radiology: 'Clinical radiology',
+  // ULKE-BRANS-GATE-01 (Kaan, 2026-11-08: "keep them"): no regulator here lists these as a specialty; they stay offered,
+  // named as a PRACTICE FOCUS for registered doctors, not a specialty — on the sign-up select, onboarding and settings (all read this name).
+  longevity: 'Longevity medicine — practice focus for registered doctors (not a specialty)',
+  'hair-transplant': 'Hair transplantation — practice focus for registered doctors (not a specialty)',
 }
 
 /** WHERE THE ROLE LIST DIFFERS FROM THE SHARED FORTY. */
