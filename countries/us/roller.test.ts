@@ -103,7 +103,8 @@ describe('us roles: the list before and after', () => {
       'general-surgery': 'General surgery', ophthalmology: 'Ophthalmology', 'obstetrics-gynaecology': 'Obstetrics and gynecology', cardiology: 'Cardiology', otolaryngology: 'Otolaryngology (ENT)',
       nephrology: 'Nephrology', neurology: 'Neurology', orthopaedics: 'Orthopedic surgery', paediatrics: 'Pediatrics', 'plastic-surgery': 'Plastic surgery', psychiatry: 'Psychiatry',
       rheumatology: 'Rheumatology', urology: 'Urology', 'sports-medicine': 'Sports medicine', 'rehabilitation-medicine': 'Physical medicine and rehabilitation',
-      'hair-transplant': 'Hair transplantation', 'aesthetic-surgery': 'Cosmetic surgery', 'aesthetic-medicine': 'Aesthetic medicine', longevity: 'Preventive and longevity medicine',
+      // ULKE-BRANS-GATE-01 (2026-11-08): practice focus, not a specialty
+      'hair-transplant': 'Hair transplantation — practice focus for licensed physicians (not a specialty)', 'aesthetic-surgery': 'Cosmetic surgery', 'aesthetic-medicine': 'Aesthetic medicine', longevity: 'Longevity medicine — practice focus for licensed physicians (not a specialty)',
       physiotherapy: 'Physical therapist', 'clinical-psychology': 'Clinical psychologist', dietetics: 'Dietitian', 'occupational-therapy': 'Occupational therapist', audiology: 'Audiologist',
     }
     assert.equal(Object.keys(once).length, 25 + 9)

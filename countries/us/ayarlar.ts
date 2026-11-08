@@ -95,6 +95,10 @@ export const US_GIRDI: EnUlkeGirdisi = {
     'rehabilitation-medicine': 'Physical medicine and rehabilitation',
     physiotherapy: 'Physical therapist',
     ...US_YENIDEN_ADLANANLAR,
+  // ULKE-BRANS-GATE-01 (Kaan, 2026-11-08: "keep them"): no regulator here lists these as a specialty; they stay offered,
+  // named as a PRACTICE FOCUS for licensed physicians, not a specialty — on the sign-up select, onboarding and settings (all read this name).
+    longevity: 'Longevity medicine — practice focus for licensed physicians (not a specialty)',
+    'hair-transplant': 'Hair transplantation — practice focus for licensed physicians (not a specialty)',
   },
   // THE ROLE LIST OF THIS COUNTRY: the shared forty without "Dermatology (clinic)", with ten specialties and two
   // professions of its own, each saying which shared role it behaves like (./roller.ts).
