@@ -27,17 +27,22 @@
 - Agent free work: public directories + practice sites → call-ready CSV → AU-English templates with **AU Araçlar** → Kaan’s send queue.  
 - Specialty focus this wave: **paediatrics, obstetrics & gynaecology, dermatology, clinical dietetics (APD)**.
 
-## Harvest snapshot (seed pack, 2026-11-08)
+## Harvest snapshot (TR-scale HealthShare pull)
 
-| Bucket | File | Count | Notes |
-|--------|------|------:|-------|
-| **WhatsApp call-ready** | `au-whatsapp-call-ready.csv` | 16 | Contact-labelled `04xx` / listing mobile → `+614…` |
-| Email / landline queue | `au-email-landline-queue.csv` | 10 | Derm + O&G mostly; ask for mobile on reply |
-| ASDP paeds directory | `au-asdp-paeds-directory.csv` | 55 | Public ASDP Find-a-Specialist (all states); enrich for mobiles |
-| Re-harvest script | `scripts/au-wa-leads-harvest.py` | — | ASDP CSRF harvest + practice-site mobile scrape |
+Same shape as Türkiye’s Doktortakvimi harvest: **full specialty directory CSV** + **call-ready** (has phone) + **WhatsApp-ready** (`04xx` → `+614`).
 
-**Specialty mix (WA-ready seed):** paeds 8 · O&G 2 · dietetics 6 · dermatology 0 mobiles yet (in email queue).  
-**Gap:** dermatology WhatsApp numbers are scarce on public sites — keep enriching FACD clinic contact pages; use email meanwhile.
+| Bucket | File | Notes |
+|--------|------|-------|
+| **Full harvest** | `au-healthshare-leads.csv` (+ `.json`) | All HealthShare profiles in focus specialties |
+| **Call-ready** | `au-call-ready-leads.csv` | At least one phone on the profile |
+| **WhatsApp-ready** | `au-whatsapp-call-ready.csv` | AU mobile `+614…` |
+| Email / landline extras | `au-email-landline-queue.csv` | Manual FACD / rooms queue |
+| ASDP paeds supplement | `au-asdp-paeds-directory.csv` | College Find-a-Specialist |
+| Re-harvest | `scripts/au-wa-leads-harvest.py` | HealthShare A–Z × specialty + profile enrich |
+
+**Focus specialties:** paediatrics · obstetrics-gynaecology · dermatology · dietetics (APD).  
+**Source:** HealthShare public API (`specialty` filter + profile locations for phone/email/website).  
+**This pull (2026-11-08):** **7022** unique · **4405** with phone · **540** with AU mobile — ahead of TR’s ~5.6k full / ~3k call-ready on the phone tier; WA mobiles are scarcer on AU public listings than TR `5xx`.
 
 ## Funnel
 
@@ -70,8 +75,12 @@ No cold WhatsApp after **20:00 local** in the lead’s state (use NSW/VIC/QLD/�
 ## How to re-harvest
 
 ```bash
-python3 scripts/au-wa-leads-harvest.py
-# writes refresh under docs/growth/au/ (ASDP directory + optional site enrichment)
+# Full TR-scale pull (HealthShare search + profile phones). ~15–30 min.
+PYTHONUNBUFFERED=1 python3 -u scripts/au-wa-leads-harvest.py --asdp
+
+# Resume enrich from search checkpoint only:
+PYTHONUNBUFFERED=1 python3 -u scripts/au-wa-leads-harvest.py \
+  --resume-json docs/growth/au/au-healthshare-search.json
 ```
 
-Manual enrichment still wins for derm/O&G mobiles: open the practice **Contact** page, prefer numbers labelled Mobile / WhatsApp / after-hours.
+Start outreach from `au-whatsapp-call-ready.csv`, then `au-call-ready-leads.csv` (landline/email). Full list for scoring / filters: `au-healthshare-leads.csv`.

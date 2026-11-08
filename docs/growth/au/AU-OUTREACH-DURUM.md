@@ -4,13 +4,24 @@
 
 **Demo:** `www.au.notya.io/au/demo` · **Cal:** `www.cal.com/han-mamur-sugmbo/demo-au` · **Trial:** `www.au.notya.io`  
 **Templates:** `AU-OUTREACH-TEMPLATES.md`  
-**Queue CSV:** `au-whatsapp-call-ready.csv`
+**Full list:** `au-healthshare-leads.csv` (**7022** professionals)  
+**Call-ready:** `au-call-ready-leads.csv` (**4405** with phone)  
+**WA queue:** `au-whatsapp-call-ready.csv` (**540** with `+614` mobile)
+
+### Harvest mix (HealthShare)
+
+| Specialty | All | With phone | With mobile |
+|-----------|----:|-----------:|------------:|
+| paediatrics | 1622 | 1141 | 42 |
+| obstetrics-gynaecology | 1702 | 1384 | 31 |
+| dermatology | 683 | 634 | 8 |
+| dietetics | 3015 | 1246 | 459 |
 
 ## Quiet hours
 
 No cold WA after **20:00** in the lead’s Australian state.
 
-## Suggested first wave (high confidence)
+## Suggested first wave (named high-confidence from earlier site check; full WA CSV has 540)
 
 | # | Name | Specialty | State | WhatsApp | Status | Sent (local) | Notes |
 |---|------|-----------|-------|----------|--------|--------------|-------|
