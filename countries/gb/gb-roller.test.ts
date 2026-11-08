@@ -20,6 +20,8 @@ import { GB_ARAYUZ } from './arayuz'
 import { GB_PAKETI } from './index'
 import { GB_KLINIK } from './klinik'
 import { GB_KALDIRILAN_ROLLER, GB_ROL_ADLARI, GB_ROLLER } from './roller'
+import { EN_EK_SABLONLAR } from '../_dil/en/klinik/ekRoller'
+import { GB_EK_ROL_TURLERI } from './roller'
 
 // The two modules that ask "the active pack" (lib/ulke/uygulama/rol.ts, lib/ulke/arayuz) are loaded inside the test,
 // after this line: no import above reads the country, so this process is a build of the United Kingdom for them.
@@ -106,9 +108,9 @@ describe('gb: the role list of the audited decisions, shipped active', () => {
       assert.equal(sablonMu(GB_ARAYUZ.notSablonlari, GB_ARAYUZ.roller, r.anahtar), true, r.anahtar)
       assert.ok((GB_KLINIK.notTalimati(D, r.anahtar) ?? '').length > 200, r.anahtar)
       assert.ok(GB_KLINIK.sablonlar.includes(r.anahtar), r.anahtar)
-      assert.equal(icerikAnahtari(GB_ARAYUZ.roller, r.anahtar, GB_KLINIK.hastaFormu!.roller), r.gibi, `${r.anahtar}: asks the questions of the role it behaves like`)
-      // the fields: the role's own list where it brings one, otherwise the list of the role it behaves like
-      assert.deepEqual([...rolSablonAlanlari(GB_ARAYUZ.notSablonlari, GB_ARAYUZ.roller, r.anahtar)], [...(r.sablon ?? EN_ROL_ALANLARI[r.gibi!])], r.anahtar)
+      // ULKE-BRANS-DERINLIK-2026-11: every added role now asks questions of its own and writes with fields of its own
+      assert.equal(icerikAnahtari(GB_ARAYUZ.roller, r.anahtar, GB_KLINIK.hastaFormu!.roller), r.anahtar, `${r.anahtar}: asks questions of its own`)
+      assert.deepEqual([...rolSablonAlanlari(GB_ARAYUZ.notSablonlari, GB_ARAYUZ.roller, r.anahtar)], [...EN_EK_SABLONLAR[GB_EK_ROL_TURLERI[r.anahtar]]], r.anahtar)
     }
     // the instruction names the role by its own name
     assert.match(GB_KLINIK.notTalimati(D, 'geriatric-medicine') ?? '', /GERIATRIC MEDICINE|Geriatric medicine/)

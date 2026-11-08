@@ -4,10 +4,11 @@
  *
  * ON (Kaan, 2026-10-25, docs/OPEN-COMMITMENTS.md AU-ASSIST-ON-01): there is no opt-in switch; it is offered whenever its
  * environment prerequisites exist (lib/ulke/asistan/ajan.ts, fail closed). EVERY SENTENCE BELOW IS A LIMIT OR A FACT
- * THE ASSISTANT IS GIVEN, NOT A CLAIM ABOUT NOTYA. Not reviewed by a local clinician or lawyer yet. No per-role national source
- * block yet (kaynakBlogu is null): OPEN-Claude, AU-ASSIST-ON-02.
+ * THE ASSISTANT IS GIVEN, NOT A CLAIM ABOUT NOTYA. Not reviewed by a local clinician or lawyer yet. Per-role national source
+ * block: ./asistanKaynaklari.ts (ULKE-BRANS-DERINLIK-2026-11; closes AU-ASSIST-ON-02 for this country).
  */
 import { enCanliAsistan } from '../_dil/en/asistan/canli'
+import { gbAsistanKaynakBlogu } from './asistanKaynaklari'
 
 export const GB_CANLI_ASISTAN = enCanliAsistan({
   ulkeAdi: 'the United Kingdom',
@@ -26,5 +27,6 @@ export const GB_CANLI_ASISTAN = enCanliAsistan({
     'Never name a real clinician or say the persona is one. Do not promise accuracy; say what is uncertain.',
     'For an emergency, say to call 999 first, then give the immediate steps in a few words.',
   ],
-  kaynakBlogu: () => null,
+  // ULKE-BRANS-DERINLIK-2026-11: this country's own practice sources for each role (./asistanKaynaklari.ts, verified 2026-11-08).
+  kaynakBlogu: gbAsistanKaynakBlogu,
 })

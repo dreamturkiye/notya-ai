@@ -43,6 +43,7 @@
  * NOT DECIDED BY THE AUDIT AND LEFT AS IT IS: longevity ("Preventive and longevity medicine"), verdict "unverified".
  */
 import type { EnRol, EnRolDegisimi } from '../_dil/en/klinik/roller'
+import type { EnEkTur } from '../_dil/en/klinik/ekRoller'
 
 /** The names this country gives to SHARED roles, in the regulator's wording. */
 export const GB_ROL_ADLARI: Readonly<Partial<Record<EnRol, string>>> = {
@@ -100,3 +101,45 @@ export const GB_ROLLER: EnRolDegisimi = {
  * are not drawn (lib/ulke/arayuz/notSablonu.ts → sablonMu).
  */
 export const GB_KALDIRILAN_ROLLER: Readonly<Record<string, string>> = { 'clinic-dermatology': 'dermatology' }
+
+/**
+ * ULKE-BRANS-DERINLIK-2026-11 — OWN CONTENT FOR EACH ROLE ONLY THIS COUNTRY HAS: the kind of role each one is, from which
+ * it takes note fields and intake questions of its own (countries/_dil/en/klinik/ekRoller.ts), instead of the template
+ * and questions of the shared role it behaves like. Its `gibi` stays as it was (nothing stored changes); the role's own
+ * content is found first (lib/ulke/arayuz/rolIcerigi.ts). The kind is this job's reading of the role, for a clinician of
+ * this country to confirm (docs/ULKE-BRANS-DERINLIK-DENETIMI-2026-11.md on main). Question keys carry the role's own prefix.
+ */
+export const GB_EK_ROL_TURLERI: Readonly<Record<string, EnEkTur>> = {
+  'geriatric-medicine': 'geriatric',
+  'haematology': 'haematology',
+  'clinical-oncology': 'radiation-oncology',
+  'allergy': 'allergy',
+  'genito-urinary-medicine': 'sexual-health',
+  'community-sexual-reproductive-health': 'contraception',
+  'occupational-medicine': 'occupational',
+  'child-adolescent-psychiatry': 'child-psychiatry',
+  'old-age-psychiatry': 'old-age-psychiatry',
+  'oral-maxillofacial-surgery': 'oral-maxillofacial',
+  'palliative-medicine': 'palliative',
+  'audio-vestibular-medicine': 'audio-vestibular',
+  'podiatry': 'podiatry',
+  'speech-language-therapy': 'speech-language',
+}
+
+/** The prefix of each such role's intake question keys (unique in the pack). */
+export const GB_EK_ROL_ONEKLERI: Readonly<Record<string, string>> = {
+  'geriatric-medicine': 'gb_ger',
+  'haematology': 'gb_hae',
+  'clinical-oncology': 'gb_co',
+  'allergy': 'gb_al',
+  'genito-urinary-medicine': 'gb_gum',
+  'community-sexual-reproductive-health': 'gb_csrh',
+  'occupational-medicine': 'gb_om',
+  'child-adolescent-psychiatry': 'gb_cap',
+  'old-age-psychiatry': 'gb_oap',
+  'oral-maxillofacial-surgery': 'gb_omfs',
+  'palliative-medicine': 'gb_pal',
+  'audio-vestibular-medicine': 'gb_avm',
+  'podiatry': 'gb_pod',
+  'speech-language-therapy': 'gb_slt',
+}

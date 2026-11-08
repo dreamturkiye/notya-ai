@@ -14,7 +14,8 @@
  */
 import type { EnUlkeGirdisi } from '../_dil/en/girdi'
 import { GB_ARACLAR } from './araclar'
-import { GB_ROL_ADLARI, GB_ROLLER } from './roller'
+import { GB_EK_ROL_ONEKLERI, GB_EK_ROL_TURLERI, GB_ROL_ADLARI, GB_ROLLER } from './roller'
+import { enEkRolIcerigi } from '../_dil/en/klinik/ekRoller'
 import { GB_BIRIMLER, GB_KIMLIK_ETIKETI, GB_VELI_YASI } from './temel'
 
 // The guardian age, the units and the identifier label are in ./temel.ts (the pack's light file reads them too).
@@ -47,7 +48,8 @@ export const GB_GIRDI: EnUlkeGirdisi = {
   // THE NAMES OF THE SPECIALTIES, in the regulator's wording, and WHERE THE ROLE LIST DIFFERS FROM THE SHARED FORTY
   // (twelve specialties and two professions added, one clinic role taken out): ./roller.ts, with its sources.
   rolAdlari: GB_ROL_ADLARI,
-  roller: GB_ROLLER,
+  // ULKE-BRANS-DERINLIK-2026-11: each role only this country has writes with note fields of its own (./roller.ts → GB_EK_ROL_TURLERI).
+  roller: enEkRolIcerigi(GB_ROLLER, 'en-GB', GB_EK_ROL_TURLERI, GB_EK_ROL_ONEKLERI, { form: false }),
   veliYasi: GB_VELI_YASI,
   birimler: GB_BIRIMLER,
   surum: 'gb-draft-2026-10-11',

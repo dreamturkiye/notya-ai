@@ -12,9 +12,12 @@ import { GB_GIRDI } from '../ayarlar'
 import { GB_SES } from '../ses'
 import { GB_CANLI_ASISTAN } from '../canli'
 import { GB_ACIL_CUMLE, GB_CEKIRDEK_EK } from './formEk'
+import { enEkRolIcerigi } from '../../_dil/en/klinik/ekRoller'
+import { GB_EK_ROL_ONEKLERI, GB_EK_ROL_TURLERI, GB_ROLLER } from '../roller'
 
 export const GB_KLINIK: UlkeKlinigi = {
-  ...enKlinik({ ...GB_GIRDI, cekirdekEk: GB_CEKIRDEK_EK, acilCumle: GB_ACIL_CUMLE }),
+  // ULKE-BRANS-DERINLIK-2026-11: the same own note fields as the screens, and each such role's own intake questions.
+  ...enKlinik({ ...GB_GIRDI, roller: enEkRolIcerigi(GB_ROLLER, 'en-GB', GB_EK_ROL_TURLERI, GB_EK_ROL_ONEKLERI, { form: true }), cekirdekEk: GB_CEKIRDEK_EK, acilCumle: GB_ACIL_CUMLE }),
   ses: GB_SES,
   // Live spoken assistant: fails closed until the agents and secrets exist (lib/ulke/asistan/ajan.ts).
   canliAsistan: GB_CANLI_ASISTAN,
