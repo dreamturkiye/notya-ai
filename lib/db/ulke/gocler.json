@@ -22,6 +22,7 @@
     "145_ulke_klinik.sql",
     "151_ulke_odeme_canli_mod.sql",
     "152_ulke_guvenlik_sertlestirme.sql",
-    "180_ulke_randevu_tur_ve_kayitsiz.sql"
+    "180_ulke_randevu_tur_ve_kayitsiz.sql",
+    "192_ulke_deneme_bildirimi.sql"
   ]
 }
