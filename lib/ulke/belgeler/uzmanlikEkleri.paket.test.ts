@@ -7,6 +7,7 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, it } from 'node:test'
+import { AKTIF_ARAYUZ } from '@/countries/active/arayuz'
 import { roller, uygulamaMetni } from '@/lib/ulke/arayuz'
 import { ulkePaketi } from '@/lib/ulke/ulke'
 import { blokDili, EK_TEMEL_TURLERI, EK_TURLERI, ekTuruEtiketi, rolEkTurleri, turuOku } from './ekler'
@@ -15,10 +16,12 @@ import { EK_UZMANLIK_ROLLERI, EK_UZMANLIK_TURLERI } from './uzmanlikEkleri'
 
 const KOK = join(__dirname, '../../..')
 const paket = ulkePaketi()
-const ROLLER = roller().map((r) => r.anahtar)
+/** A pack without the shared screens (Türkiye's pre-split application) has no country upload step: nothing to check. */
+const EKRANLI = AKTIF_ARAYUZ !== null && paket.ozellikler.cekirdekMuayene === true
+const ROLLER = EKRANLI ? roller().map((r) => r.anahtar) : []
 const DILLER = (paket.uygulama?.diller ?? [paket.varsayilanDil]) as readonly string[]
 
-describe('specialty documents: the active pack', () => {
+describe('specialty documents: the active pack', { skip: !EKRANLI }, () => {
   it('every role keeps the shared seven; a specialty kind comes only from the role\'s own list', () => {
     for (const rol of ROLLER) {
       const t = rolEkTurleri(rol)
