@@ -12,9 +12,12 @@ import { CA_GIRDI } from '../ayarlar'
 import { CA_SES } from '../ses'
 import { CA_CANLI_ASISTAN } from '../canli'
 import { CA_ACIL_CUMLE, CA_CEKIRDEK_EK } from './formEk'
+import { enEkRolIcerigi } from '../../_dil/en/klinik/ekRoller'
+import { CA_EK_ROL_ONEKLERI, CA_EK_ROL_TURLERI, CA_ROLLER } from '../roller'
 
 export const CA_KLINIK: UlkeKlinigi = {
-  ...enKlinik({ ...CA_GIRDI, cekirdekEk: CA_CEKIRDEK_EK, acilCumle: CA_ACIL_CUMLE }),
+  // ULKE-BRANS-DERINLIK-2026-11: the same own note fields as the screens, and each such role's own intake questions.
+  ...enKlinik({ ...CA_GIRDI, roller: enEkRolIcerigi(CA_ROLLER, 'en-CA', CA_EK_ROL_TURLERI, CA_EK_ROL_ONEKLERI, { form: true }), cekirdekEk: CA_CEKIRDEK_EK, acilCumle: CA_ACIL_CUMLE }),
   ses: CA_SES,
   // Live spoken assistant: fails closed until the agents and secrets exist (lib/ulke/asistan/ajan.ts).
   canliAsistan: CA_CANLI_ASISTAN,

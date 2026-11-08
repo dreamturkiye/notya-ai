@@ -34,7 +34,8 @@ import type { EnUlkeGirdisi } from '../_dil/en/girdi'
 import { enRolSatirlari } from '../_dil/en/klinik/roller'
 import { caKendiAraclari } from './araclar/metinler'
 import { CA_TANIMLAR } from './araclar/tanimlar'
-import { CA_ROLLER, CA_YENIDEN_ADLANANLAR } from './roller'
+import { CA_EK_ROL_ONEKLERI, CA_EK_ROL_TURLERI, CA_ROLLER, CA_YENIDEN_ADLANANLAR } from './roller'
+import { enEkRolIcerigi } from '../_dil/en/klinik/ekRoller'
 import { CA_BIRIMLER, CA_VELI_YASI } from './temel'
 import { CA_OPERATOR_DEGISEN, CA_OPERATOR_PARAMETRELERI } from './operator'
 import { CA_GENITAL_ESTETIK } from './genitalEstetik'
@@ -104,7 +105,8 @@ export const CA_GIRDI: EnUlkeGirdisi = {
   },
   // THE ROLE LIST OF THIS COUNTRY: the shared forty, with six disciplines and one profession of its own, each saying
   // which shared role it behaves like (./roller.ts). Nothing was taken out.
-  roller: CA_ROLLER,
+  // ULKE-BRANS-DERINLIK-2026-11: each role only this country has writes with note fields of its own (./roller.ts → CA_EK_ROL_TURLERI).
+  roller: enEkRolIcerigi(CA_ROLLER, 'en-CA', CA_EK_ROL_TURLERI, CA_EK_ROL_ONEKLERI, { form: false }),
   veliYasi: CA_VELI_YASI,
   birimler: CA_BIRIMLER,
   surum: 'ca-draft-2026-10-11',

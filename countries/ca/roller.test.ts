@@ -40,7 +40,8 @@ import { CA_ARAYUZ } from './arayuz'
 import { CA_GIRDI, CA_HEKIMLER } from './ayarlar'
 import { CA_PAKETI } from './index'
 import { CA_KLINIK } from './klinik'
-import { CA_EKLENMEYEN_MESLEKLER, CA_ROL_GOCU, CA_ROLLER, CA_YENIDEN_ADLANANLAR, caRolunuCoz } from './roller'
+import { CA_EK_ROL_TURLERI, CA_EKLENMEYEN_MESLEKLER, CA_ROL_GOCU, CA_ROLLER, CA_YENIDEN_ADLANANLAR, caRolunuCoz } from './roller'
+import { EN_EK_SABLONLAR } from '../_dil/en/klinik/ekRoller'
 
 const D = 'en-CA'
 const KOK = resolve(__dirname, '../..')
@@ -141,7 +142,9 @@ describe('ca roles: the list before and after', () => {
     assert.equal(ROLLER.indexOf('vascular-surgery'), ROLLER.indexOf('cardiovascular-surgery') + 1)
     assert.equal(ROLLER[ROLLER.indexOf('vascular-surgery') + 1], 'cardiology')
     const v = CA_ARAYUZ.notSablonlari
-    assert.deepEqual([...rolSablonAlanlari(v, CA_ARAYUZ.roller, 'vascular-surgery')], [...rolSablonAlanlari(v, CA_ARAYUZ.roller, 'cardiovascular-surgery')])
+    // ULKE-BRANS-DERINLIK-2026-11: vascular surgery now writes with a vascular note of its own, without the cardiac examination
+    assert.deepEqual([...rolSablonAlanlari(v, CA_ARAYUZ.roller, 'vascular-surgery')], [...EN_EK_SABLONLAR.vascular])
+    assert.ok(rolSablonAlanlari(v, CA_ARAYUZ.roller, 'cardiovascular-surgery').includes('cardiac_exam') && !rolSablonAlanlari(v, CA_ARAYUZ.roller, 'vascular-surgery').includes('cardiac_exam'))
   })
 
   it('ADDED 1 profession of a clinic, beside a profession the set already has and framed the same way', () => {
@@ -173,21 +176,22 @@ describe('ca roles: an added role behaves like a shared role, under its own key 
   const v = CA_ARAYUZ.notSablonlari
   const hepsi = [...EKLENEN_HEKIMLIKLER, ...EKLENEN_MESLEKLER]
 
-  it('its notes are written with that role\'s template', () => {
+  it('its notes are written with a template of its own (ULKE-BRANS-DERINLIK-2026-11), not the borrowed one', () => {
     for (const [k, , gibi] of hepsi) {
       assert.equal(sablonMu(v, CA_ARAYUZ.roller, k), true, k)
-      assert.equal(icerikAnahtari(CA_ARAYUZ.roller, k, v.rolAlanlari), gibi, k)
-      assert.deepEqual([...rolSablonAlanlari(v, CA_ARAYUZ.roller, k)], [...EN_ROL_ALANLARI[gibi as keyof typeof EN_ROL_ALANLARI]], k)
+      assert.equal(icerikAnahtari(CA_ARAYUZ.roller, k, v.rolAlanlari), k, k)
+      assert.deepEqual([...rolSablonAlanlari(v, CA_ARAYUZ.roller, k)], [...EN_EK_SABLONLAR[CA_EK_ROL_TURLERI[k]]], k)
+      assert.notDeepEqual([...rolSablonAlanlari(v, CA_ARAYUZ.roller, k)], [...EN_ROL_ALANLARI[gibi as keyof typeof EN_ROL_ALANLARI]], k)
       // every field of the template has a name on the screen
       for (const alan of rolSablonAlanlari(v, CA_ARAYUZ.roller, k)) assert.ok(v.alanlar[alan]?.ad[D]?.trim(), `${k}.${alan}`)
     }
   })
 
-  it('its intake form asks that role\'s questions', () => {
+  it('its intake form asks questions of its own (ULKE-BRANS-DERINLIK-2026-11)', () => {
     const f = CA_KLINIK.hastaFormu!
-    for (const [k, , gibi] of hepsi) {
-      assert.equal(icerikAnahtari(CA_ARAYUZ.roller, k, f.roller), gibi, k)
-      assert.ok(f.roller[gibi].sorular.length > 0, gibi)
+    for (const [k] of hepsi) {
+      assert.equal(icerikAnahtari(CA_ARAYUZ.roller, k, f.roller), k, k)
+      assert.ok(f.roller[k].sorular.length >= 5, k)
     }
   })
 
@@ -272,7 +276,9 @@ describe('ca roles: the pack, the role table and the other countries', () => {
   })
 
   it('THE DIFFERENCE IS THIS COUNTRY\'S ALONE: it is written in this folder, and the shared set still has its forty under their own names', () => {
-    assert.equal(CA_GIRDI.roller, CA_ROLLER)
+    // the same list, each own role carrying its own fields (ULKE-BRANS-DERINLIK-2026-11): keys, kinds and `gibi` unchanged
+    assert.deepEqual(CA_GIRDI.roller!.cikar, CA_ROLLER.cikar)
+    assert.deepEqual(CA_GIRDI.roller!.ekle!.map((r) => [r.anahtar, r.taraf, r.ad, r.gibi]), CA_ROLLER.ekle!.map((r) => [r.anahtar, r.taraf, r.ad, r.gibi]))
     assert.equal(EN_ROLLER.length, 40)
     for (const [k] of [...EKLENEN_HEKIMLIKLER, ...EKLENEN_MESLEKLER]) assert.ok(!(EN_ROLLER as readonly string[]).includes(k), k)
     // the shared English set names no role this country added, and still writes the names this country changed

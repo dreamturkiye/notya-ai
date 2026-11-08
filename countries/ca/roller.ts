@@ -29,6 +29,7 @@
  * ────────────────────────────────────────────────────────────────────────────────────────────────────────────
  */
 import type { EnRol, EnRolDegisimi } from '../_dil/en/klinik/roller'
+import type { EnEkTur } from '../_dil/en/klinik/ekRoller'
 
 /**
  * THE SEVEN RENAMES of the audit (the key of each role stays; only the name shown changes).
@@ -125,4 +126,32 @@ export function caRolunuCoz(ham: unknown, roller: readonly string[]): string | n
   if (roller.includes(ham)) return ham
   const yeni = Object.prototype.hasOwnProperty.call(CA_ROL_GOCU, ham) ? CA_ROL_GOCU[ham] : null
   return yeni !== null && roller.includes(yeni) ? yeni : null
+}
+
+/**
+ * ULKE-BRANS-DERINLIK-2026-11 — OWN CONTENT FOR EACH ROLE ONLY THIS COUNTRY HAS: the kind of role each one is, from which
+ * it takes note fields and intake questions of its own (countries/_dil/en/klinik/ekRoller.ts), instead of the template
+ * and questions of the shared role it behaves like. Its `gibi` stays as it was (nothing stored changes); the role's own
+ * content is found first (lib/ulke/arayuz/rolIcerigi.ts). The kind is this job's reading of the role, for a clinician of
+ * this country to confirm (docs/ULKE-BRANS-DERINLIK-DENETIMI-2026-11.md on main). Question keys carry the role's own prefix.
+ */
+export const CA_EK_ROL_TURLERI: Readonly<Record<string, EnEkTur>> = {
+  'vascular-surgery': 'vascular',
+  'clinical-immunology-allergy': 'allergy',
+  'geriatric-medicine': 'geriatric',
+  'hematology': 'haematology',
+  'pain-medicine': 'pain',
+  'reproductive-endocrinology': 'fertility',
+  'psychotherapy': 'psychotherapy',
+}
+
+/** The prefix of each such role's intake question keys (unique in the pack). */
+export const CA_EK_ROL_ONEKLERI: Readonly<Record<string, string>> = {
+  'vascular-surgery': 'ca_vs',
+  'clinical-immunology-allergy': 'ca_cia',
+  'geriatric-medicine': 'ca_ger',
+  'hematology': 'ca_hem',
+  'pain-medicine': 'ca_pm',
+  'reproductive-endocrinology': 'ca_grei',
+  'psychotherapy': 'ca_psy',
 }
