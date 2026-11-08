@@ -1024,6 +1024,15 @@ export type AraclarMetni = {
     readonly takipGunu: string
     /** % the day */
     readonly takipKapandi: string
+    /**
+     * ULKE-BRANS-DERINLIK-09 — the specialty tab of the patient's file (components/ulke/uygulama/UzmanlikSekmesi.tsx).
+     * Optional: a pack without these words has no tab. `uzmanlikSekmesi`: the tab's name, % = the role's name;
+     * `uzmanlikFark`: the change against the result before, % = the signed number.
+     */
+    readonly uzmanlikSekmesi?: string
+    readonly uzmanlikAciklama?: string
+    readonly uzmanlikBos?: string
+    readonly uzmanlikFark?: string
     /** A kept result whose stored value cannot be read. */
     readonly okunamadi: string
     /** A kept result of a tool the application no longer has. */
