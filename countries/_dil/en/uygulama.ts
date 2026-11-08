@@ -446,7 +446,9 @@ export const EN_UYGULAMA_TEMEL: Temel = {
     birak: 'or drop files here',
     turEtiketi: 'Type',
     turOtomatik: 'Detect automatically',
-    turler: { ultrasound: 'Ultrasound', xray: 'X-ray', ct_mri: 'CT / MRI', ecg: 'ECG', lab: 'Lab report', photo: 'Photograph', other: 'Other document' },
+    turler: { ultrasound: 'Ultrasound', xray: 'X-ray', ct_mri: 'CT / MRI', ecg: 'ECG', lab: 'Lab report', photo: 'Photograph', other: 'Other document',
+      // ULKE-BRANS-DERINLIK-10: specialty documents — offered only to the roles that assess them (lib/ulke/belgeler/uzmanlikEkleri.ts).
+      echo: 'Echocardiogram', holter: 'Holter / ambulatory ECG', spirometry: 'Spirometry / lung function', audiogram: 'Audiogram', tympanogram: 'Tympanogram', dermoscopy: 'Dermoscopy image', eeg: 'EEG', sleep_study: 'Sleep study', ncs_emg: 'Nerve conduction / EMG', ctg: 'CTG', visual_field: 'Visual field', oct: 'OCT', fundus: 'Fundus photograph', semen: 'Semen analysis', endoscopy: 'Endoscopy', psychometric: 'Psychometric score sheet', gait_rom: 'Gait / range of motion' },
     durumBekliyor: 'Waiting',
     durumHazirlaniyor: 'Preparing…',
     durumGizleniyor: 'Hiding identifying details…',

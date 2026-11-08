@@ -19,7 +19,8 @@ import { modeldenBelge } from '../uygulama/notModeli'
 import { hastaGetir } from '../uygulama/hastalar'
 import { muayeneGetir } from '../uygulama/muayeneKaydi'
 import { ulkeTablosu } from '../uygulama/tablolar'
-import { EK_GORSEL_AZAMI_B64, EK_TURU_SECIMLERI, type EkSonucu, type EkTuruSecimi } from './ekler'
+import { EK_GORSEL_AZAMI_B64, EK_TURU_SECIMLERI, rolEkTurleri, type EkSonucu, type EkTuruSecimi } from './ekler'
+import { hekimRolunuOku } from '../uygulama/rol'
 import { belgeBaglami, belgeSonucunuOku, belgeTalimati } from './belgeTalimati'
 
 export type BelgeRetKodu = 'NOT_FOUND' | 'GECERSIZ' | 'HAZIR_DEGIL' | 'DEGERLENDIRILEMEDI' | 'DUSUK_KALITE'
@@ -57,9 +58,13 @@ export async function belgeDegerlendir(
   const mime = gorselTuru(b64)
   if (!mime) return { tamam: false, kod: 'GECERSIZ' }
 
-  // ISOLATION: the visit and its patient are each read with the doctor's id; a foreign id is "not found".
-  const muayene = await muayeneGetir(supabase, doktorId, g.seansId)
+  // ISOLATION: the visit and its patient are each read with the doctor's id; a foreign id is "not found". The doctor's own
+  // role (ULKE-BRANS-DERINLIK-10: which specialty kinds may be chosen and named) is read in the same round trip.
+  const [muayene, rol] = await Promise.all([muayeneGetir(supabase, doktorId, g.seansId), hekimRolunuOku(supabase, doktorId)])
   if (!muayene || !muayene.hasta) return { tamam: false, kod: 'NOT_FOUND' }
+  const turler = rolEkTurleri(rol)
+  // A specialty kind of another role is refused (brans-alan-sizmasi): only 'auto' or one of this role's kinds.
+  if (tur !== 'auto' && !turler.includes(tur)) return { tamam: false, kod: 'GECERSIZ' }
   const hasta = await hastaGetir(supabase, doktorId, muayene.hasta.id)
   if (!hasta) return { tamam: false, kod: 'NOT_FOUND' }
   const { data: kayit } = await ulkeTablosu(supabase, 'muayene_dil_kaydi').select('not_dili').eq('session_id', g.seansId).eq('doctor_id', doktorId).maybeSingle()
@@ -68,11 +73,11 @@ export async function belgeDegerlendir(
 
   const yas = yasHesapla(hasta.dogumTarihi)
   const yanit = await modeldenBelge({
-    talimat: belgeTalimati(notDili, tur),
+    talimat: belgeTalimati(notDili, tur, turler),
     baglam: belgeBaglami(yas?.yil ?? null, yas?.ay ?? null, hasta.cinsiyet),
     mime, base64: b64, doktorId, butceMs,
   })
-  const sonuc = yanit === null ? null : belgeSonucunuOku(yanit)
+  const sonuc = yanit === null ? null : belgeSonucunuOku(yanit, Date.now(), turler)
   if (!sonuc) return { tamam: false, kod: 'DEGERLENDIRILEMEDI' }
   if (sonuc.kalite === 'dusuk') return { tamam: false, kod: 'DUSUK_KALITE' }
   // The doctor's own choice of type wins over the reader's guess.
