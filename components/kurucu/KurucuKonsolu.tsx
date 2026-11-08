@@ -8,6 +8,7 @@
 import React, { useEffect, useState } from 'react'
 import { notFound } from 'next/navigation'
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth'
+import { kurucuVerisiniAl } from '@/lib/kurucu/oturumBekle'
 import { CHROME_FONT, CHROME_FONT_HREF, CHROME_RENK as R } from '@/lib/doktor/chromeTheme'
 import type { KurucuKonsolVerisi, KonsolUlkesi } from '@/lib/kurucu/konsol'
 import type { KurucuHesap, KurucuOzet } from '@/lib/kurucu/tipler'
@@ -117,15 +118,13 @@ export default function KurucuKonsolu() {
   useEffect(() => {
     let iptal = false
     ;(async () => {
-      const token = await ensureDoctorAccessToken().catch(() => null)
-      if (!token) { if (!iptal) setD({ tur: 'yok' }); return }
-      try {
-        const r = await fetch('/api/kurucu/ozet', { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' })
-        if (iptal) return
-        if (r.status === 404) { setD({ tur: 'yok' }); return }
-        if (!r.ok) { setD({ tur: 'hata' }); return }
-        setD({ tur: 'tamam', veri: (await r.json()) as KurucuKonsolVerisi })
-      } catch { if (!iptal) setD({ tur: 'hata' }) }
+      // KURUCU-KONSOL-02: wait for the stored session to hydrate, retry once with a forced refresh on 404 (lib/kurucu/oturumBekle.ts).
+      const sonuc = await kurucuVerisiniAl<KurucuKonsolVerisi>({
+        tokenAl: (o) => ensureDoctorAccessToken(o),
+        getir: (token) => fetch('/api/kurucu/ozet', { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' }),
+        iptalMi: () => iptal,
+      })
+      if (!iptal) setD(sonuc)
     })()
     return () => { iptal = true }
   }, [])

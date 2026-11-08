@@ -1,5 +1,22 @@
 # OPEN COMMITMENTS — Notya AI
 
+## KURUCU-KONSOL-02 — notya.io/kurucu showed 404 to the founder: cause, fix, what is open (Claude, 2026-11-08)
+
+**Cause (evidence, not a guess):** at ~12:25 UTC on 2026-11-08 the TR Supabase edge logs show no `/auth/v1/user` and no
+`/auth/v1/token` call at all, and the TR account `kaanari@mac.com` had no session activity since 2026-11-05 13:50 UTC; so the
+Safari tab on `https://notya.io` held no stored doctor session and the page decided "not found" on its single mount-time read
+without calling the API. `kaan@notya.io` (on FOUNDER_EMAILS) has **no account** in the TR project. Contributing: `notya.io`
+and `www.notya.io` both serve the app without a canonical redirect, so a login on one origin (or in the home-screen PWA,
+which Safari isolates) is invisible to the other.
+**Fixed in this change (main):** the console now waits ~2.6 s for the stored session to hydrate before deciding, retries
+once with a forced refresh when the API answers 404 to a token the browser still thinks is fresh, and the server accepts
+any-case `Bearer` (`lib/kurucu/oturumBekle.ts`, `components/kurucu/KurucuKonsolu.tsx`, `lib/kurucu/erisim.ts`; tests in
+`lib/kurucu/kurucu.test.ts`). Everyone without an allowed session still gets the standard 404; no login hint was added.
+Classification: founder-internal tool on the TR build only, not a doctor-product core change — no 40-branş / six-country propagation.
+- **Open — Kaan, 2026-11-08:** to use the console, log in at `https://notya.io/giris/doktor` in the same Safari (not the PWA)
+  with `kaanari@mac.com`, then open `https://notya.io/kurucu`; or create the `kaan@notya.io` TR account if that is the address meant.
+- **Open — Claude (needs Kaan's OK, infra), 2026-11-08:** make `www.notya.io` redirect to `notya.io` (one origin, one session store).
+
 ## ULKE-BRANS-DERINLIK-2026-11 — every role in every country build to the Pediatri gold depth: what is done, what is open (Claude, 2026-11-08)
 
 Kaan's order of 2026-11-08: every specialization offered in every country build reaches the Turkish golden Pediatri depth,

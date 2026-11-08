@@ -27,6 +27,7 @@ import { konsolVerisiTopla, ulkeIstatistigiCek } from './konsol'
 import { donusumSay, stripeDonusumuOku } from './stripeDonusum'
 import { trDenemeKaydiBildir } from './trDenemeBildir'
 import { TR_SOZLUK } from './trBildirimMetni'
+import { kurucuVerisiniAl, oturumTokeniniBekle, OTURUM_BEKLEME_ADIMLARI, type KurucuYanit } from './oturumBekle'
 
 process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://sahte.supabase.test'
 process.env.SUPABASE_SERVICE_ROLE_KEY = 'sahte-servis-anahtari'
@@ -349,3 +350,89 @@ describe('founder console', () => {
     assert.equal(r.durum, 'tamam')
   })
 })
+
+describe('founder console — session hydration and token path (KURUCU-KONSOL-02, 2026-11-08)', () => {
+  const anlik = async () => {}
+  const yanit = (status: number, govde: unknown = {}): KurucuYanit => ({ status, ok: status >= 200 && status < 300, json: async () => govde })
+
+  it('waits for a session that appears after mount instead of deciding 404 at once', async () => {
+    let okuma = 0
+    const t = await oturumTokeniniBekle(async () => (++okuma >= 4 ? 'gec-gelen' : null), anlik)
+    assert.equal(t, 'gec-gelen')
+    assert.equal(okuma, 4)
+  })
+  it('a logged-out visitor still ends on not-found after the whole wait, with no API call', async () => {
+    let okuma = 0
+    let cagri = 0
+    const bekleyisler: number[] = []
+    const s = await kurucuVerisiniAl({ tokenAl: async () => { okuma++; return null }, getir: async () => { cagri++; return yanit(200) }, bekle: async (ms) => { bekleyisler.push(ms) } })
+    assert.deepEqual(s, { tur: 'yok' })
+    assert.equal(okuma, OTURUM_BEKLEME_ADIMLARI.length)
+    assert.equal(cagri, 0)
+    assert.ok(bekleyisler.reduce((a, b) => a + b, 0) >= 2000, 'waits at least 2 s for hydration')
+  })
+  it('a storage read that throws is treated as "not yet", not as a crash', async () => {
+    let n = 0
+    const t = await oturumTokeniniBekle(async () => { if (++n < 2) throw new Error('storage blocked'); return 'tok' }, anlik)
+    assert.equal(t, 'tok')
+  })
+  it('the token is sent as a Bearer header and the founder gets the data', async () => {
+    const gonderilen: string[] = []
+    const s = await kurucuVerisiniAl<{ x: number }>({ tokenAl: async () => 'tok-1', getir: async (t) => { gonderilen.push(t); return yanit(200, { x: 1 }) }, bekle: anlik })
+    assert.deepEqual(s, { tur: 'tamam', veri: { x: 1 } })
+    assert.deepEqual(gonderilen, ['tok-1'])
+  })
+  it('a 404 on a stale token gets exactly one forced refresh and retry', async () => {
+    const istekler: Array<string | undefined> = []
+    const s = await kurucuVerisiniAl({
+      tokenAl: async (o) => (o?.forceRefresh ? 'yeni' : 'eski'),
+      getir: async (t) => { istekler.push(t); return t === 'yeni' ? yanit(200, { ok: 1 }) : yanit(404) },
+      bekle: anlik,
+    })
+    assert.equal(s.tur, 'tamam')
+    assert.deepEqual(istekler, ['eski', 'yeni'])
+  })
+  it('a non-founder stays on not-found after the one retry; a failed refresh does not loop', async () => {
+    let cagri = 0
+    assert.deepEqual(await kurucuVerisiniAl({ tokenAl: async (o) => (o?.forceRefresh ? 'yeni' : 'eski'), getir: async () => { cagri++; return yanit(404) }, bekle: anlik }), { tur: 'yok' })
+    assert.equal(cagri, 2)
+    cagri = 0
+    assert.deepEqual(await kurucuVerisiniAl({ tokenAl: async (o) => (o?.forceRefresh ? null : 'eski'), getir: async () => { cagri++; return yanit(404) }, bekle: anlik }), { tur: 'yok' })
+    assert.equal(cagri, 1)
+  })
+  it('a server error shows the retry message, never the console or a login hint', async () => {
+    assert.deepEqual(await kurucuVerisiniAl({ tokenAl: async () => 't', getir: async () => yanit(500), bekle: anlik }), { tur: 'hata' })
+    assert.deepEqual(await kurucuVerisiniAl({ tokenAl: async () => 't', getir: async () => { throw new Error('offline') }, bekle: anlik }), { tur: 'hata' })
+  })
+  it('unmounting stops the wait', async () => {
+    let iptal = false
+    let okuma = 0
+    const t = await oturumTokeniniBekle(async () => { okuma++; iptal = true; return null }, anlik, OTURUM_BEKLEME_ADIMLARI, () => iptal)
+    assert.equal(t, null)
+    assert.equal(okuma, 1)
+  })
+  it('server: lower-case "bearer", extra spaces and a mixed-case allowlist entry still admit the founder; others stay 404', async () => {
+    const onceki = process.env.FOUNDER_EMAILS
+    process.env.FOUNDER_EMAILS = ' Kaan@Notya.io , KAANARI@mac.com '
+    try {
+      db.kullanicilar.set('qa-mac', { id: randomUUID(), email: 'kaanari@mac.com' })
+      db.kullanicilar.set('qa-baska', { id: randomUUID(), email: 'baska@ornek.test' })
+      for (const h of ['Bearer qa-mac', 'bearer qa-mac', 'BEARER   qa-mac  ']) {
+        const y = await OZET.GET(new NextRequestSinifi('http://localhost/api/kurucu/ozet', { headers: { authorization: h } }))
+        assert.equal(y.status, 200, h)
+      }
+      const y = await OZET.GET(new NextRequestSinifi('http://localhost/api/kurucu/ozet', { headers: { authorization: 'bearer qa-baska' } }))
+      assert.equal(y.status, 404)
+    } finally {
+      if (onceki === undefined) delete process.env.FOUNDER_EMAILS
+      else process.env.FOUNDER_EMAILS = onceki
+    }
+  })
+  it('the console waits through the shared helper (no single-shot token read left in the component)', () => {
+    const src = readFileSync(join(process.cwd(), 'components/kurucu/KurucuKonsolu.tsx'), 'utf8')
+    assert.match(src, /kurucuVerisiniAl/)
+    assert.doesNotMatch(src, /if \(!token\) \{ if \(!iptal\) setD\(\{ tur: 'yok' \}\)/)
+    assert.doesNotMatch(src, /DOKTOR_GIRIS|\/giris|sign in|log in/i)
+  })
+})
+

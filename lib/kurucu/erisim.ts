@@ -17,7 +17,8 @@ export function kurucuEpostasiMi(eposta: unknown, liste: readonly string[] = kur
 
 export async function kurucuOturumu(req: NextRequest, supabase: SupabaseClient): Promise<User | null> {
   const auth = req.headers.get('authorization')
-  const token = auth?.startsWith('Bearer ') ? auth.slice(7).trim() : ''
+  const m = auth ? /^\s*bearer\s+(.+)$/i.exec(auth) : null
+  const token = m ? m[1].trim() : ''
   if (!token || token === 'null' || token === 'undefined' || token.length > 4096) return null
   try {
     const { data, error } = await supabase.auth.getUser(token)
