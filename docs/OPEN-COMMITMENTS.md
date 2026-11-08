@@ -1,5 +1,33 @@
 # OPEN COMMITMENTS — Notya AI
 
+## ULKE-BRANS-DERINLIK-2026-11 — every role in every country build to the Pediatri gold depth: what is done, what is open (Claude, 2026-11-08)
+
+Kaan's order of 2026-11-08: every specialization offered in every country build reaches the Turkish golden Pediatri depth,
+country-only roles included, each with its own country's references. Gold checklist: `docs/ULKE-BRANS-ALTIN-STANDART.md`.
+Audit of all 290 roles (us 51, gb 53, ca 47, au 44, nz 53, uz 42) with before/after scores and a status column:
+`docs/ULKE-BRANS-DERINLIK-DENETIMI-2026-11.md`. No role in any country reached Strong before or after; this is a multi-wave
+program, not a one-change close.
+
+**Wave 1 shipped 2026-11-08 (one commit per branch: release/us 85f5316cb, gb 71e74d677, ca 57de04fcc, nz b53d6523e, au 074fa789e, uz 0067e1e3f):** every role that exists only in one country now writes with note fields
+of its own and asks intake questions of its own instead of a mapped role's (shared set
+`countries/_dil/en/klinik/ekRoller.ts`, 26 kinds; us 12 roles, gb 14, ca 7, nz 12, au 7 templates + radiation oncology's
+questions, uz 7 templates in three scripts), with leak tests both directions; GB and CA live assistants now receive a
+per-role block of their own country's verified practice sources (`countries/gb|ca/asistanKaynaklari.ts`; closes AU-ASSIST-ON-02
+for gb and ca). AU: templates and data only, no assistant code or prompt changed. Founder lock untouched.
+
+| Date | Item | Owner | Status |
+|---|---|---|---|
+| 2026-11-08 | **ULKE-BRANS-DERINLIK-01** — K2/K3 per-role clinical tools and scales for every role in us, gb, ca, nz, uz (today 0–4 per shared role, 0 for most country-only roles). Port AU's per-role pattern (AU-GOLD-DEPTH-01d) country-adapted, each tool with its own country's published source; licensed scales only with permission recorded. | Claude | OPEN |
+| 2026-11-08 | **ULKE-BRANS-DERINLIK-02** — K6 per-role hasta portalı chapters for us, gb, ca, nz, uz (shared shell only today), on the shared Türkiye components (one look). | Claude | OPEN |
+| 2026-11-08 | **ULKE-BRANS-DERINLIK-03** — K4 references for us, nz, uz: these packs have no live assistant, so a reference block has no consumer. When the assistant is switched on there, add per-role verified national sources (us: ABMS boards, AAP, CDC, USPSTF; nz: bpac nz, Health NZ, NZ Formulary, MCNZ, colleges; uz: MoH clinical protocols on lex.uz), each verified on the web first. | Claude | OPEN |
+| 2026-11-08 | **ULKE-BRANS-DERINLIK-04** — UZ intake questions of their own (uz-Latn, uz-Cyrl, ru) for alerji-immunoloji, reproduktoloji, cocuk-norolojisi, narkoloji, diyetoloji, surdoloji, damar-cerrahisi (templates done in wave 1; questions still borrowed). | Claude | OPEN |
+| 2026-11-08 | **ULKE-BRANS-DERINLIK-05** — K7 specialty consent, K8 report/document types, K9 prescription/order presets, K10 patient-file specialty views per role in all six countries, country-adapted (only O&G, plastic/aesthetic and AU paediatrics/GP/dietetics have any today). | Claude | OPEN |
+| 2026-11-08 | **ULKE-BRANS-DERINLIK-06** — GB/CA bodies not verified this session and therefore left out (GB: SIGN, British Geriatrics Society, Association for Palliative Medicine, British Association of Audiovestibular Physicians, CSP, BDA, RCOT, BPS, British Academy of Audiology; CA: Canadian Cardiovascular Society, Canadian Geriatrics Society, Canadian Hematology Society, Dietitians of Canada, CAOT, Canadian Physiotherapy Association, SAC) and every textbook: verify on the web, then add. | Claude | OPEN |
+| 2026-11-08 | **ULKE-BRANS-DERINLIK-07** — NZ urgent care medicine still asks emergency medicine's questions (fit judged good); AU's 15 roles without a verified Australian-authored book (AU-KITAP-01) unchanged. | Claude | OPEN |
+| 2026-11-08 | **ULKE-BRANS-DERINLIK-08** — reconcile AU-40-PEDIATRI-AUDIT-03 ("44/44 Strong", mean 90) with this audit's method (AU before wave 1: 0 Strong, 12 Partial, 32 Thin; per-role tools mostly a templated structural set, few scales, nothing clinician-validated). | Claude | OPEN |
+| 2026-11-08 | **ULKE-BRANS-KLINISYEN-01** — every new clinical text of this program, in every language (the wave-1 note fields and intake questions in en-US, en-GB, en-CA, en-NZ, en-AU, uz-Latn, uz-Cyrl, ru, and the GB/CA source lists) must be reviewed by a practising clinician of that specialty in that country before Notya markets that role there. K12 cannot be closed by Claude. | Kaan | OPEN |
+| 2026-11-08 | **ULKE-BRANS-GATE-01** — regulatory gate decisions: (a) `longevity` and `hair-transplant` in us, gb, ca, nz and NZ "Cosmetic medicine" are not specialties any regulator lists (practised under general or another specialist registration) — keep, fold (UZ worked example) or drop, with local counsel; (b) CA psychotherapist / counselling therapist: protected title differs by province (ON/QC psychotherapist; NS/NB/PEI counselling therapist; unregulated elsewhere); (c) GB "Community sexual and reproductive health" vs the Order's "Community sexual health and reproduction" — naming for a UK lead; (d) recognised but not offered (market question): NZ vascular surgery and radiation oncology (MCNZ scopes), CA Palliative Medicine, Occupational Medicine, Child and Adolescent Psychiatry (Royal College subspecialties); (e) AU Medical Board specialty list could not be reopened this session (fetch allowlist) — the AU roles rest on the 2026-10-10 reading. Sources in the audit's gate table. | Kaan | OPEN |
+
 ## DENEME-BILDIRIM-02 — signup alerts from Kaan's own mailbox (Claude, 2026-11-08)
 
 Kaan decided 2026-11-08: no Resend. The trial-signup alert is sent over SMTP from `kaan@notya.io` (Purelymail, display
