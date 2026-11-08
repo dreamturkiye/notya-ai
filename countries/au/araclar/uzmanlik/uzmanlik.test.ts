@@ -131,3 +131,19 @@ describe('ULKE-BRANS-DERINLIK-11 — the GPCCMP and MHTP records (general practi
     assert.equal(AU_GPCCMP.yazdirilir, true); assert.equal(AU_MHTP.yazdirilir, true)
   })
 })
+
+describe('ULKE-BRANS-K9-MUTTEFIK — AU podiatry dose tool (endorsement for scheduled medicines)', () => {
+  it('podiatry has its own clinician-entered dose tool, for endorsed podiatrists only; the six non-prescribing allied professions have none', async () => {
+    const { auDozSiparisAraclari, auDozAnahtari } = await import('./dozSiparis')
+    const paketler = auDozSiparisAraclari()
+    const pod = paketler.find((p) => p.anahtar === auDozAnahtari('podiatry'))
+    assert.ok(pod, 'podiatry dose tool')
+    assert.deepEqual(pod!.roller, ['podiatry'])
+    assert.match(String(pod!.metin.not?.['en-AU'] ?? ''), /endorsement for scheduled medicines/)
+    for (const rol of ['physiotherapy', 'clinical-psychology', 'dietetics', 'occupational-therapy', 'audiology', 'speech-pathology']) {
+      assert.equal(paketler.some((p) => p.anahtar === auDozAnahtari(rol)), false, rol)
+    }
+    // Another medical role's note carries no endorsement line.
+    assert.doesNotMatch(String(paketler.find((p) => p.anahtar === auDozAnahtari('dermatology'))!.metin.not?.['en-AU'] ?? ''), /endorsement/)
+  })
+})

@@ -3,8 +3,12 @@
  * kit's engine (lib/ulke/araclar/dozMotoru.ts). Each prescribing medical role gets its own dose tool with its specialty's bases
  * (per kilogram, per square metre, fixed); every role gets its own order list. THE CLINICIAN ENTERS EVERY DOSE: no medicine,
  * default amount or ceiling is here (founder rule, specialties/pediatri/engines/doz.ts) — and nothing is taken from the AMH,
- * eTG or the PBS schedule. The allied professions (physiotherapy, clinical psychology, dietetics, occupational therapy,
- * audiology, podiatry, speech pathology) get the order list only: prescribing by an endorsed allied practitioner is not assumed.
+ * eTG or the PBS schedule. The non-prescribing allied professions (physiotherapy, clinical psychology, dietetics, occupational
+ * therapy, audiology, speech pathology) get the order list only. PODIATRY (ULKE-BRANS-K9-MUTTEFIK, Kaan 2026-11-08) also gets
+ * the dose tool: the Podiatry Board of Australia's endorsement for scheduled medicines lets an endorsed podiatrist "prescribe,
+ * supply and use certain scheduled medicines (Schedules 2, 3, 4 and 8) for podiatric conditions" (Registration standard:
+ * Endorsement for scheduled medicines, in effect 1 August 2018; podiatryboard.gov.au, read 2026-11-08). The tool says it is
+ * for endorsed podiatrists only, and like every role's it holds no medicine, no amount and no maximum.
  *
  * GENERATED (scratch uzgen/au.py). Specialty-only: every tool names exactly one role. Switched on without an Australian
  * clinician's sign-off (owner's order 2026-11-08), listed in ../onaysizAciklar.ts. AU assistant untouched.
@@ -59,7 +63,7 @@ export const AU_DOZ_SIPARIS_SATIRLARI: readonly Satir[] = [
   { rol: 'dietetics', temeller: [], kalemler: ["antropometriya", "qand", "lipid", "temir", "vitamin_d", "ovqat_kundalik"] },
   { rol: 'occupational-therapy', temeller: [], kalemler: ["funksional", "uy", "jihoz", "harakat_hajmi", "uy_mashq", "shifokor"] },
   { rol: 'audiology', temeller: [], kalemler: ["audiometriya", "timpanometriya", "otoakustik", "nutq_audio", "eshitish_apparati", "shifokor"] },
-  { rol: 'podiatry', temeller: [], kalemler: ["tpi", "monofilament", "yara", "ortez", "poyabzal", "shifokor"] },
+  { rol: 'podiatry', temeller: ["sabit", "kg"], kalemler: ["tpi", "monofilament", "yara", "ortez", "poyabzal", "shifokor"] },
   { rol: 'speech-pathology', temeller: [], kalemler: ["yutish", "instrumental", "nutq_baho", "ovqat_tekstura", "uy_mashq", "shifokor"] },
 ]
 
@@ -210,6 +214,11 @@ const DOZ_ALANLARI: Readonly<Record<string, string>> = {
   tavan_doz_mg: 'Your own maximum single dose (optional)', tavan_gun_mg: 'Your own maximum daily dose (optional)',
 }
 
+/** A line put before the tool's note for a role whose prescribing depends on an endorsement (ULKE-BRANS-K9-MUTTEFIK). */
+const ON_NOT: Readonly<Record<string, string>> = {
+  podiatry: 'For podiatrists whose registration carries the Podiatry Board of Australia\'s endorsement for scheduled medicines, within that endorsement and its national list only. ',
+}
+
 function dozPaketi(x: Satir): PaketAraci {
   const var_ = new Set(dozAraciTanimi(auDozAnahtari(x.rol), x.temeller).alanlar.map((a) => a.anahtar))
   const alanlar = Object.fromEntries(Object.entries(DOZ_ALANLARI).filter(([k]) => var_.has(k)).map(([k, v]) => [k, m(v)]))
@@ -231,7 +240,7 @@ function dozPaketi(x: Satir): PaketAraci {
         kilo_birim: m('The weight is unusually high: check the unit'), ml_yuvarlanmadi: m('The volume is arithmetic, not rounded to any measuring device: check that your device can measure it'),
         ml_kucuk: m('The volume of one dose is under one millilitre: a finely graduated device is needed'),
       },
-      not: m('Arithmetic on your numbers. The medicine, the dose and any maximum are the prescriber\'s decision and are checked against the product information and the current guideline by the prescriber.'),
+      not: m(`${ON_NOT[x.rol] ?? ''}Arithmetic on your numbers. The medicine, the dose and any maximum are the prescriber\'s decision and are checked against the product information and the current guideline by the prescriber.`),
     },
     lisans: { durum: 'serbest', hakSahibi: 'Notya', kaynak: 'Notya\'s own arithmetic (2026-11-08); body-surface area by Mosteller RD, N Engl J Med 1987;317(17):1098. No dose from the AMH, eTG or PBS is held.', bildirim: m('Arithmetic on the numbers you entered. The dose is the prescriber\'s.') },
   }
