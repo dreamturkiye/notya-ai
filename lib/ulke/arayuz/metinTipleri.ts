@@ -508,7 +508,7 @@ export type UygulamaMetni = {
     readonly birak: string
     readonly turEtiketi: string
     readonly turOtomatik: string
-    readonly turler: Readonly<Record<'ultrasound' | 'xray' | 'ct_mri' | 'ecg' | 'lab' | 'photo' | 'other', string>>
+    readonly turler: Readonly<Record<'ultrasound' | 'xray' | 'ct_mri' | 'ecg' | 'lab' | 'photo' | 'other' | 'echo' | 'holter' | 'spirometry' | 'audiogram' | 'tympanogram' | 'dermoscopy' | 'eeg' | 'sleep_study' | 'ncs_emg' | 'ctg' | 'visual_field' | 'oct' | 'fundus' | 'semen' | 'endoscopy' | 'psychometric' | 'gait_rom', string>>
     readonly durumBekliyor: string
     readonly durumHazirlaniyor: string
     readonly durumGizleniyor: string

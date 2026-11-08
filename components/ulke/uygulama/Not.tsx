@@ -270,7 +270,7 @@ export function Not({ u, notId }: { u: Uygulama; notId: string }) {
           this DRAFT in one write. What the server saved is merged into the text still being edited, so the doctor's own
           unsaved changes survive (blocks already on the screen are left alone). An approved note offers nothing. */}
       {!not.onayli && ozellikAcik('goruntuDegerlendirme') ? (
-        <EklerNotKarti m={u.m} api={api} notId={not.notId} seansId={not.seansId} hastaAdi={not.muayene.hasta ? tamAd(not.muayene.hasta) : ''}
+        <EklerNotKarti m={u.m} rol={u.hesap?.rol ?? null} api={api} notId={not.notId} seansId={not.seansId} hastaAdi={not.muayene.hasta ? tamAd(not.muayene.hasta) : ''}
           onEklendi={(o) => setMetinler((eski) => { const t = eski[not.dil] ?? not.icerik; return { ...eski, [not.dil]: { ...t, o: bloklariAktar(o, t.o) } } })} />
       ) : null}
       {/* NOTYA-ULKE-PORTAL-01: only an APPROVED note of a patient can have a summary for that patient; the server decides again. */}

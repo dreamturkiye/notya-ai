@@ -16,12 +16,25 @@
  */
 import type { BlokDili, BlokGirdi } from '@/core/belgeler/notaBlok'
 import { icdKoru } from '@/core/belgeler/notaBlok'
+import { EK_UZMANLIK_TURLERI, rolUzmanlikEkleri } from './uzmanlikEkleri'
 
-export const EK_TURLERI = ['ultrasound', 'xray', 'ct_mri', 'ecg', 'lab', 'photo', 'other'] as const
+/** The seven kinds every role has. */
+export const EK_TEMEL_TURLERI = ['ultrasound', 'xray', 'ct_mri', 'ecg', 'lab', 'photo', 'other'] as const
+/**
+ * ULKE-BRANS-DERINLIK-10: every kind the reader knows — the seven shared ones and the specialty kinds
+ * (./uzmanlikEkleri.ts), which are offered, read and labelled only for the roles that assess them.
+ */
+export const EK_TURLERI = [...EK_TEMEL_TURLERI, ...EK_UZMANLIK_TURLERI] as const
 export type EkTuru = (typeof EK_TURLERI)[number]
 /** What the doctor may choose for a file: let the reader decide, or name the type. */
 export type EkTuruSecimi = 'auto' | EkTuru
 export const EK_TURU_SECIMLERI: readonly EkTuruSecimi[] = ['auto', ...EK_TURLERI]
+
+/** The kinds a role may choose and the reader may name: the shared seven ('other' last) and that role's specialty kinds. */
+export function rolEkTurleri(rol: string | null | undefined): readonly EkTuru[] {
+  const temel = EK_TEMEL_TURLERI.filter((t) => t !== 'other')
+  return [...temel, ...rolUzmanlikEkleri(rol), 'other']
+}
 
 /** At most this many documents (images, or PDF pages) in one step / one request. */
 export const EK_AZAMI_ADET = 12
@@ -58,11 +71,16 @@ export function blokDili(dil: string): BlokDili {
   return 'en'
 }
 
+// Block headings in the note. Specialty kinds (ULKE-BRANS-DERINLIK-10): MACHINE-WRITTEN Russian and Uzbek, awaiting native review.
 const TUR_ETIKETI: Record<Exclude<BlokDili, 'tr'>, Record<EkTuru, string>> = {
-  en: { ultrasound: 'Ultrasound', xray: 'X-ray', ct_mri: 'CT / MRI', ecg: 'ECG', lab: 'Lab report', photo: 'Photo', other: 'Document' },
-  ru: { ultrasound: 'УЗИ', xray: 'Рентген', ct_mri: 'КТ / МРТ', ecg: 'ЭКГ', lab: 'Лабораторный анализ', photo: 'Фото', other: 'Документ' },
-  uz: { ultrasound: 'Ultratovush', xray: 'Rentgen', ct_mri: 'KT / MRT', ecg: 'EKG', lab: 'Laboratoriya tahlili', photo: 'Fotosurat', other: 'Hujjat' },
-  uzk: { ultrasound: 'Ультратовуш', xray: 'Рентген', ct_mri: 'КТ / МРТ', ecg: 'ЭКГ', lab: 'Лаборатория таҳлили', photo: 'Фотосурат', other: 'Ҳужжат' },
+  en: { ultrasound: 'Ultrasound', xray: 'X-ray', ct_mri: 'CT / MRI', ecg: 'ECG', lab: 'Lab report', photo: 'Photo', other: 'Document',
+    echo: 'Echocardiogram', holter: 'Holter / ambulatory ECG', spirometry: 'Spirometry / lung function', audiogram: 'Audiogram', tympanogram: 'Tympanogram', dermoscopy: 'Dermoscopy', eeg: 'EEG', sleep_study: 'Sleep study', ncs_emg: 'Nerve conduction / EMG', ctg: 'CTG', visual_field: 'Visual field', oct: 'OCT', fundus: 'Fundus photograph', semen: 'Semen analysis', endoscopy: 'Endoscopy', psychometric: 'Psychometric score sheet', gait_rom: 'Gait / range of motion' },
+  ru: { ultrasound: 'УЗИ', xray: 'Рентген', ct_mri: 'КТ / МРТ', ecg: 'ЭКГ', lab: 'Лабораторный анализ', photo: 'Фото', other: 'Документ',
+    echo: 'ЭхоКГ', holter: 'Холтер ЭКГ', spirometry: 'Спирометрия / ФВД', audiogram: 'Аудиограмма', tympanogram: 'Тимпанограмма', dermoscopy: 'Дерматоскопия', eeg: 'ЭЭГ', sleep_study: 'Исследование сна', ncs_emg: 'ЭНМГ', ctg: 'КТГ', visual_field: 'Поле зрения', oct: 'ОКТ', fundus: 'Снимок глазного дна', semen: 'Спермограмма', endoscopy: 'Эндоскопия', psychometric: 'Психометрическая шкала', gait_rom: 'Походка / объём движений' },
+  uz: { ultrasound: 'Ultratovush', xray: 'Rentgen', ct_mri: 'KT / MRT', ecg: 'EKG', lab: 'Laboratoriya tahlili', photo: 'Fotosurat', other: 'Hujjat',
+    echo: 'ExoKG', holter: 'Xolter EKG', spirometry: 'Spirometriya', audiogram: 'Audiogramma', tympanogram: 'Timpanogramma', dermoscopy: 'Dermatoskopiya', eeg: 'EEG', sleep_study: 'Uyqu tekshiruvi', ncs_emg: 'ENMG', ctg: 'KTG', visual_field: 'Ko\u02bbrish maydoni', oct: 'OKT', fundus: 'Ko\u02bbz tubi surati', semen: 'Spermogramma', endoscopy: 'Endoskopiya', psychometric: 'Psixometrik shkala', gait_rom: 'Yurish / harakat hajmi' },
+  uzk: { ultrasound: 'Ультратовуш', xray: 'Рентген', ct_mri: 'КТ / МРТ', ecg: 'ЭКГ', lab: 'Лаборатория таҳлили', photo: 'Фотосурат', other: 'Ҳужжат',
+    echo: 'ЭхоКГ', holter: 'Холтер ЭКГ', spirometry: 'Спирометрия', audiogram: 'Аудиограмма', tympanogram: 'Тимпанограмма', dermoscopy: 'Дерматоскопия', eeg: 'ЭЭГ', sleep_study: 'Уйқу текшируви', ncs_emg: 'ЭНМГ', ctg: 'КТГ', visual_field: 'Кўриш майдони', oct: 'ОКТ', fundus: 'Кўз туби сурати', semen: 'Спермограмма', endoscopy: 'Эндоскопия', psychometric: 'Психометрик шкала', gait_rom: 'Юриш / ҳаракат ҳажми' },
 }
 export const ekTuruEtiketi = (dil: BlokDili, tur: EkTuru): string => TUR_ETIKETI[dil === 'tr' ? 'en' : dil][tur]
 
@@ -96,8 +114,9 @@ export function sinavZamaniniSuz(ham: unknown, simdi: number = Date.now()): stri
   return t
 }
 
-export function turuOku(ham: unknown): EkTuru {
-  return (EK_TURLERI as readonly string[]).includes(ham as string) ? (ham as EkTuru) : 'other'
+/** A kind the reader or the browser named: one of `izinli` (default: every kind), else 'other'. */
+export function turuOku(ham: unknown, izinli: readonly EkTuru[] = EK_TURLERI): EkTuru {
+  return (izinli as readonly string[]).includes(ham as string) ? (ham as EkTuru) : 'other'
 }
 
 /** The date shown in a block heading, in the note's own form: '21/10/2026' (en-GB), '10/21/2026' (en-US), '21.10.2026' (ru). */
