@@ -228,6 +228,21 @@ export const UZ_ALANLAR: Readonly<Record<string, UzAlan>> = {
   tympanometry: alan('o', 'Timpanometriya natijalari (aytilgani boʻyicha)', 'Тимпанометрия натижалари (айтилгани бўйича)', 'Результаты тимпанометрии (со слов специалиста)'),
   hearing_aid: alan('p', 'Eshitish apparati (tanlash, sozlash)', 'Эшитиш аппарати (танлаш, созлаш)', 'Слуховой аппарат (подбор, настройка)'),
   balance_complaint: alan('s', 'Bosh aylanishi va muvozanat', 'Бош айланиши ва мувозанат', 'Головокружение и равновесие'),
+  // ULKE-BRANS-DERINLIK-2026-11 — fields of the seven roles that wrote with a borrowed template until 2026-11-08 (own templates below).
+  reaction_history: alan('s', 'Allergik reaksiyalar: sabab, vaqt va nima boʻlgani (aytilganidek)', 'Аллергик реакциялар: сабаб, вақт ва нима бўлгани (айтилганидек)', 'Аллергические реакции: причина, время и что произошло (со слов)'),
+  suspected_triggers: alan('s', 'Gumon qilingan omillar va taʼsir', 'Гумон қилинган омиллар ва таъсир', 'Предполагаемые провоцирующие факторы и контакт'),
+  allergy_tests: alan('o', 'Allergologik tekshiruv natijalari (shifokor aytganidek)', 'Аллергологик текширув натижалари (шифокор айтганидек)', 'Результаты аллергологического обследования (со слов врача)'),
+  emergency_plan: alan('p', 'Shoshilinch dori va harakat rejasi muhokamasi', 'Шошилинч дори ва ҳаракат режаси муҳокамаси', 'Обсуждённые экстренные препараты и план действий'),
+  fertility_history: alan('s', 'Homiladorlikka urinish davomiyligi va avvalgi davolash', 'Ҳомиладорликка уриниш давомийлиги ва аввалги даволаш', 'Длительность попыток зачатия и предыдущее лечение'),
+  partner_history: alan('s', 'Juft tarixi va tekshiruvlari (aytilganidek)', 'Жуфт тарихи ва текширувлари (айтилганидек)', 'Анамнез и обследования партнёра (со слов)'),
+  fertility_tests: alan('o', 'Fertillik tekshiruvi natijalari (shifokor aytganidek)', 'Фертиллик текшируви натижалари (шифокор айтганидек)', 'Результаты обследования фертильности (со слов врача)'),
+  treatment_cycle: alan('p', 'Davolash sikli va bosqichi (aytilganidek)', 'Даволаш цикли ва босқичи (айтилганидек)', 'Цикл и этап лечения (со слов)'),
+  substance_history: alan('s', 'Moddalar: qaysi, qancha, qanchalik tez-tez, oxirgi isteʼmol (aytilganidek)', 'Моддалар: қайси, қанча, қанчалик тез-тез, охирги истеъмол (айтилганидек)', 'Вещества: какие, сколько, как часто, последнее употребление (со слов)'),
+  withdrawal: alan('s', 'Abstinensiya belgilari (aytilganidek)', 'Абстиненция белгилари (айтилганидек)', 'Симптомы отмены (со слов)'),
+  support_programme_said: alan('p', 'Belgilangan davolash yoki yordam', 'Белгиланган даволаш ёки ёрдам', 'Назначенное лечение или поддержка'),
+  harm_reduction: alan('p', 'Zararni kamaytirish boʻyicha suhbat', 'Зарарни камайтириш бўйича суҳбат', 'Обсуждение снижения вреда'),
+  tinnitus: alan('s', 'Quloqdagi shovqin yoki jiringlash', 'Қулоқдаги шовқин ёки жиринглаш', 'Шум или звон в ушах'),
+  limb_symptoms: alan('s', 'Oyoq-qoʻl belgilari: yurganda ogʻriq, tinch holatda ogʻriq, shish', 'Оёқ-қўл белгилари: юрганда оғриқ, тинч ҳолатда оғриқ, шиш', 'Симптомы конечностей: боль при ходьбе, боль в покое, отёк'),
 }
 
 /**
@@ -272,6 +287,16 @@ export const UZ_ROL_ALANLARI: Readonly<Record<string, readonly string[]>> = {
   'klinik-psikolog': ['session_themes', 'mood', 'social_context', 'risk_statements', 'observed_behavior', 'interventions', 'homework'],
   diyetisyen: ['referral_diagnosis', 'diet_history', 'food_intolerances', 'weight_change', 'weight_height', 'body_composition', 'nutrition_plan', 'nutrition_goals'],
   odyoloji: ['referral_diagnosis', 'hearing_complaint', 'noise_exposure', 'balance_complaint', 'audiometry', 'tympanometry', 'hearing_aid'],
+  // ULKE-BRANS-DERINLIK-2026-11 — the seven roles that wrote with the template of the role they behave like (`gibi`) now have
+  // their own: an allergist's note had an internist's fields, a narcologist's a psychiatrist's. Their `gibi` is unchanged
+  // (nothing stored changes); a role's own template is found first. Machine-built, read by no clinician in Uzbekistan.
+  'alerji-immunoloji': ['reaction_history', 'suspected_triggers', 'allergies', 'regular_medicines', 'allergy_tests', 'emergency_plan'],
+  reproduktoloji: ['fertility_history', 'menstrual_history', 'obstetric_history', 'partner_history', 'fertility_tests', 'ultrasound_findings', 'treatment_cycle'],
+  'cocuk-norolojisi': ['birth_history', 'development', 'onset_course', 'seizures', 'headache', 'neuro_status', 'imaging_findings'],
+  narkoloji: ['substance_history', 'withdrawal', 'psychiatric_history', 'social_context', 'risk_statements', 'support_programme_said', 'harm_reduction'],
+  diyetoloji: ['chronic_conditions', 'diet_history', 'food_intolerances', 'weight_change', 'weight_height', 'body_composition', 'lab_results', 'nutrition_plan'],
+  surdoloji: ['hearing_complaint', 'tinnitus', 'noise_exposure', 'ear_exam', 'audiometry', 'tympanometry', 'hearing_aid'],
+  'damar-cerrahisi': ['limb_symptoms', 'surgical_history', 'peripheral_pulses', 'wound_status', 'imaging_findings', 'anticoagulation', 'surgery_plan', 'consent_discussion'],
 }
 
 /** The neutral template: the four shared sections and no role field. Used by an account that has chosen no role. */
