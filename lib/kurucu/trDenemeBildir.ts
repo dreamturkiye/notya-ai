@@ -1,6 +1,7 @@
 /**
  * DENEME-BILDIRIM-01 — Türkiye: the internal "new trial signup" e-mail, sent once when a doctor's specialty is first set.
  * Called (fire-and-forget, via arkaPlanda) by POST /api/users/profile and POST /api/users/brans after their own write.
+ * Sent over SMTP from Kaan's own mailbox (lib/kurucu/smtpGonder.ts, DENEME-BILDIRIM-02).
  *
  * Left out: invited staff (auth metadata `personel`, or a row in `personel`), accountant/lawyer accounts (mali, avukat),
  * Kaan's own test account and the founder addresses. Exactly once: users.deneme_bildirim_at is claimed with
@@ -8,15 +9,16 @@
  * Reads only the caller's own users row, plus one count. No patient table is touched.
  */
 import type { SupabaseClient, User } from '@supabase/supabase-js'
-import { bildirimDisiMi, bildirimEpostasi, bildirimGonder, type DenemeKaydi } from './denemeBildirimi'
+import { bildirimDisiMi, bildirimEpostasi, type DenemeKaydi } from './denemeBildirimi'
+import { bildirimGonder, gonderimiGunlukle, type TasiyiciKur } from './smtpGonder'
 import { kayitBransAdi } from '@/lib/onboarding/kayitBransi'
 import { TR_SOZLUK } from './trBildirimMetni'
 
 const BRANSSIZ = new Set(['mali', 'mali_musavirlik', 'avukat'])
 
-export type TrBildirimSonucu = 'disarida' | 'zaten' | 'gonderildi' | 'anahtar-yok' | 'hata'
+export type TrBildirimSonucu = 'disarida' | 'zaten' | 'gonderildi' | 'sifre-yok' | 'hata'
 
-export async function trDenemeKaydiBildir(supabase: SupabaseClient, user: Pick<User, 'id' | 'email' | 'user_metadata'>, ayar: { simdi?: Date; fetchFn?: typeof fetch } = {}): Promise<TrBildirimSonucu> {
+export async function trDenemeKaydiBildir(supabase: SupabaseClient, user: Pick<User, 'id' | 'email' | 'user_metadata'>, ayar: { simdi?: Date; env?: Record<string, string | undefined>; tasiyiciKur?: TasiyiciKur } = {}): Promise<TrBildirimSonucu> {
   const meta = (user.user_metadata || {}) as Record<string, unknown>
   if (meta.personel === true || bildirimDisiMi(user.email)) return 'disarida'
 
@@ -57,8 +59,7 @@ export async function trDenemeKaydiBildir(supabase: SupabaseClient, user: Pick<U
     zaman: simdi,
     toplam: Math.max(1, Number(count ?? 1)),
   }
-  const sonuc = await bildirimGonder(bildirimEpostasi(kayit, TR_SOZLUK), `notya-deneme/tr/${user.id}`, { fetchFn: ayar.fetchFn })
-  if (sonuc.durum === 'anahtar-yok') console.warn('[deneme-bildirim] RESEND_API_KEY is not set — trial signup recorded, e-mail not sent (DENEME-BILDIRIM-01).')
-  else if (sonuc.durum === 'hata') console.error('[deneme-bildirim] send failed', sonuc.ayrinti)
+  const sonuc = await bildirimGonder(bildirimEpostasi(kayit, TR_SOZLUK), `notya-deneme/tr/${user.id}`, { env: ayar.env, tasiyiciKur: ayar.tasiyiciKur })
+  gonderimiGunlukle(sonuc)
   return sonuc.durum
 }

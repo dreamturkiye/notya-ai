@@ -15,8 +15,14 @@
  * to land inside the same 5 minutes and only ever returns the same read-only doctor-account summary.
  *
  * Also here: a small per-instance rate limiter for the endpoint (no new service, no database round trip).
+ *
+ * DENEME-BILDIRIM-02 (Kaan, 2026-11-08) — the opposite direction: a country build POSTs a signup alert to the Türkiye
+ * build's /api/internal/signup-notify (only Türkiye holds the mailbox password). Same header, same secret, same window and
+ * replay memory, but the signed string also binds the purpose and the exact body:
+ *   signed  "<t>.<n>.<amac>.<sha256 hex of the body>"   (amac = 'signup-notify')
+ * so a signature cannot be lifted onto another body, and a founder-stats signature can never pass here (or the reverse).
  */
-import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto'
+import { createHash, createHmac, randomBytes, timingSafeEqual } from 'node:crypto'
 
 export const IMZA_BASLIGI = 'x-notya-kurucu-imza'
 export const IMZA_PENCERESI_MS = 5 * 60 * 1000
@@ -24,6 +30,9 @@ const GELECEK_TOLERANSI_MS = 60 * 1000
 
 const imzaHesapla = (gizli: string, t: number, n: string, ulke: string): string =>
   createHmac('sha256', gizli).update(`${t}.${n}.${ulke}`).digest('hex')
+
+const govdeOzeti = (govde: string): string => createHash('sha256').update(govde, 'utf8').digest('hex')
+const govdeBaglami = (amac: string, govde: string): string => `${amac}.${govdeOzeti(govde)}`
 
 /** The header value for one request to one country. */
 export function imzaUret(gizli: string, ulke: string, simdi: number = Date.now(), nonce: string = randomBytes(16).toString('hex')): string {
@@ -63,6 +72,16 @@ export function imzaDogrula(gizli: string | undefined, baslik: string | null | u
   if (gorulenler.has(n)) return { ok: false, neden: 'tekrar' }
   gorulenler.set(n, t + IMZA_PENCERESI_MS + GELECEK_TOLERANSI_MS)
   return { ok: true }
+}
+
+/** DENEME-BILDIRIM-02 — the header value for one POST whose exact body is `govde` (see the file header). */
+export function govdeImzaUret(gizli: string, amac: string, govde: string, simdi: number = Date.now(), nonce: string = randomBytes(16).toString('hex')): string {
+  return imzaUret(gizli, govdeBaglami(amac, govde), simdi, nonce)
+}
+
+/** DENEME-BILDIRIM-02 — checks a body-bound signature: everything imzaDogrula checks, plus purpose and body. */
+export function govdeImzaDogrula(gizli: string | undefined, baslik: string | null | undefined, amac: string, govde: string, simdi: number = Date.now()): ImzaSonucu {
+  return imzaDogrula(gizli, baslik, govdeBaglami(amac, govde), simdi)
 }
 
 /** Per-instance fixed-window limiter: at most `azami` calls per `pencereMs` for one key. */

@@ -4,7 +4,9 @@
  *
  *   1. Signature: a good one passes; a wrong, expired, future, replayed or other-country signature is refused.
  *   2. The internal e-mail: words, time zones, exclusions; it is claimed ONCE per account and never for staff, mali/avukat,
- *      Kaan's test account; no key → nothing sent; the send carries an idempotency key.
+ *      Kaan's test account; no SMTP_PASS → nothing sent; sent over SMTP from kaan@notya.io to kaan@notya.io.
+ *   2b. /api/internal/signup-notify (DENEME-BILDIRIM-02): 404 for unsigned, expired, replayed, re-bodied or extra-key
+ *      requests; a valid one is accepted and sent through the same SMTP sender; the payload carries no patient field.
  *   3. The console: unauthenticated and non-founder requests get 404; the founder gets data; a failing country shows
  *      "unavailable" and the page still renders; no patient field survives into the payload.
  */
@@ -17,8 +19,9 @@ import { pathToFileURL } from 'node:url'
 import { renderToStaticMarkup } from 'react-dom/server'
 import React from 'react'
 import { SahteVeritabani } from '../security/testing/sahteSupabase'
-import { imzaBellegiTemizle, imzaDogrula, imzaUret, IMZA_PENCERESI_MS, sinirlayici } from './imza'
-import { bildirimDisiMi, bildirimEpostasi, bildirimGonder, bildirimZamani, kurucuEpostalari } from './denemeBildirimi'
+import { govdeImzaDogrula, govdeImzaUret, IMZA_BASLIGI, imzaBellegiTemizle, imzaDogrula, imzaUret, IMZA_PENCERESI_MS, sinirlayici } from './imza'
+import { BILDIRIM_YUKU_ANAHTARLARI, bildirimDisiMi, bildirimEpostasi, bildirimYuku, bildirimYukuCoz, bildirimZamani, kurucuEpostalari, SIGNUP_NOTIFY_AMAC } from './denemeBildirimi'
+import { bildirimGonder, type TasiyiciKur } from './smtpGonder'
 import { hastaAlaniVarMi, hesapSatiriTemizle, ozetHesapla, ulkeYanitiTemizle, type KurucuUlkeYaniti } from './tipler'
 import { konsolVerisiTopla, ulkeIstatistigiCek } from './konsol'
 import { donusumSay, stripeDonusumuOku } from './stripeDonusum'
@@ -28,6 +31,7 @@ import { TR_SOZLUK } from './trBildirimMetni'
 process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://sahte.supabase.test'
 process.env.SUPABASE_SERVICE_ROLE_KEY = 'sahte-servis-anahtari'
 delete process.env.RESEND_API_KEY
+delete process.env.SMTP_PASS
 delete process.env.FOUNDER_STATS_SECRET
 delete process.env.STRIPE_SECRET_KEY
 delete process.env.FOUNDER_EMAILS
@@ -114,16 +118,30 @@ describe('the internal trial-signup e-mail', () => {
     assert.equal(bildirimDisiMi('kaan@notya.io'), true)
     assert.equal(bildirimDisiMi('qa@ornek.test'), false)
   })
-  it('no key → nothing is sent; with a key → one POST to Resend with an idempotency key', async () => {
-    assert.deepEqual(await bildirimGonder({ konu: 'k', metin: 'm', html: 'h' }, 'id-1', { apiAnahtari: '' }), { durum: 'anahtar-yok' })
-    const cagrilar: Array<{ url: string; init: RequestInit }> = []
-    const f = (async (url: string, init: RequestInit) => { cagrilar.push({ url, init }); return new Response('{"id":"x"}', { status: 200 }) }) as unknown as typeof fetch
-    assert.deepEqual(await bildirimGonder({ konu: 'k', metin: 'm', html: 'h' }, 'id-1', { apiAnahtari: 're_test', fetchFn: f }), { durum: 'gonderildi' })
-    assert.equal(cagrilar[0].url, 'https://api.resend.com/emails')
-    assert.equal((cagrilar[0].init.headers as Record<string, string>)['Idempotency-Key'], 'id-1')
-    assert.deepEqual(JSON.parse(String(cagrilar[0].init.body)).to, ['kaan@notya.io'])
-    const kotu = (async () => { throw new Error('down') }) as unknown as typeof fetch
-    assert.equal((await bildirimGonder({ konu: 'k', metin: 'm', html: 'h' }, 'id-1', { apiAnahtari: 're_test', fetchFn: kotu })).durum, 'hata')
+  it('no SMTP_PASS → a no-op that never connects; with it → one SMTP send from and to kaan@notya.io, "Notya Bildirim"', async () => {
+    let kuruldu = 0
+    const gonderilen: Array<Record<string, any>> = []
+    const ayarlar: Array<Record<string, any>> = []
+    const kur: TasiyiciKur = async (a) => { kuruldu += 1; ayarlar.push(a); return { sendMail: async (p) => { gonderilen.push(p as any) }, close: () => {} } }
+    assert.deepEqual(await bildirimGonder({ konu: 'k', metin: 'm', html: 'h' }, 'id-1', { env: {}, tasiyiciKur: kur }), { durum: 'sifre-yok' })
+    assert.deepEqual(await bildirimGonder({ konu: 'k', metin: 'm', html: 'h' }, 'id-1', { env: { SMTP_PASS: '' }, tasiyiciKur: kur }), { durum: 'sifre-yok' })
+    assert.equal(kuruldu, 0, 'without the password the transport is never even built')
+    assert.deepEqual(await bildirimGonder({ konu: 'k', metin: 'm', html: 'h' }, 'id-1', { env: { SMTP_PASS: 'test-only' }, tasiyiciKur: kur }), { durum: 'gonderildi' })
+    assert.deepEqual({ ...ayarlar[0], auth: { user: ayarlar[0].auth.user } }, { host: 'smtp.purelymail.com', port: 465, secure: true, auth: { user: 'kaan@notya.io' } })
+    assert.deepEqual(gonderilen[0].from, { name: 'Notya Bildirim', address: 'kaan@notya.io' })
+    assert.equal(gonderilen[0].to, 'kaan@notya.io')
+    assert.equal(gonderilen[0].subject, 'k')
+    assert.match(gonderilen[0].messageId, /^<deneme-[0-9a-f]{32}@notya\.io>$/)
+    const kotu: TasiyiciKur = async () => ({ sendMail: async () => { throw Object.assign(new Error('535 auth failed secret-echo'), { code: 'EAUTH' }) } })
+    const h = await bildirimGonder({ konu: 'k', metin: 'm', html: 'h' }, 'id-1', { env: { SMTP_PASS: 'test-only' }, tasiyiciKur: kotu })
+    assert.equal(h.durum, 'hata')
+    assert.doesNotMatch(String(h.ayrinti), /secret-echo|test-only/, 'the server reply and the password never reach the log')
+  })
+  it('no Resend path remains in the signup alert', () => {
+    for (const yol of ['lib/kurucu/denemeBildirimi.ts', 'lib/kurucu/smtpGonder.ts', 'lib/kurucu/trDenemeBildir.ts', 'app/api/internal/signup-notify/route.ts']) {
+      const k = readFileSync(join(__dirname, '../..', yol), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '')
+      assert.doesNotMatch(k, /resend|RESEND_API_KEY/i, yol)
+    }
   })
 
   const hekim = (o: { email?: string; meta?: Record<string, unknown>; satir?: Record<string, unknown> } = {}) => {
@@ -137,18 +155,20 @@ describe('the internal trial-signup e-mail', () => {
     const sb = db.istemci() as any
     const u = hekim()
     const gonderilen: string[] = []
-    const f = (async (_u: string, init: RequestInit) => { gonderilen.push(JSON.parse(String(init.body)).subject); return new Response('{}', { status: 200 }) }) as unknown as typeof fetch
-    process.env.RESEND_API_KEY = 're_test'
-    try {
-      assert.equal(await trDenemeKaydiBildir(sb, u, { fetchFn: f }), 'gonderildi')
-      assert.equal(await trDenemeKaydiBildir(sb, u, { fetchFn: f }), 'zaten')
-    } finally { delete process.env.RESEND_API_KEY }
+    const kur: TasiyiciKur = async () => ({ sendMail: async (p) => { gonderilen.push(p.subject) } })
+    const env = { SMTP_PASS: 'test-only' }
+    assert.equal(await trDenemeKaydiBildir(sb, u, { env, tasiyiciKur: kur }), 'gonderildi')
+    assert.equal(await trDenemeKaydiBildir(sb, u, { env, tasiyiciKur: kur }), 'zaten')
     assert.deepEqual(gonderilen, ['Yeni deneme kaydı — TR — Kardiyoloji'])
     assert.ok(db.tablo('users').find((r) => r.id === u.id)?.deneme_bildirim_at)
   })
-  it('without RESEND_API_KEY the account is still recorded (count stays right) and nothing is sent', async () => {
+  it('without SMTP_PASS the account is still recorded (count stays right) and nothing is sent', async () => {
     const sb = db.istemci() as any
-    assert.equal(await trDenemeKaydiBildir(sb, hekim()), 'anahtar-yok')
+    let kuruldu = 0
+    const u = hekim()
+    assert.equal(await trDenemeKaydiBildir(sb, u, { tasiyiciKur: async () => { kuruldu += 1; return { sendMail: async () => {} } } }), 'sifre-yok')
+    assert.equal(kuruldu, 0)
+    assert.ok(db.tablo('users').find((r) => r.id === u.id)?.deneme_bildirim_at)
   })
   it('staff, mali / avukat and Kaan\'s test account are left out (no claim)', async () => {
     const sb = db.istemci() as any
@@ -165,6 +185,75 @@ describe('the internal trial-signup e-mail', () => {
       const s = readFileSync(join(__dirname, '../..', yol), 'utf8')
       assert.match(s, /arkaPlanda\(\(\) => trDenemeKaydiBildir\(/, yol)
     }
+  })
+})
+
+describe('POST /api/internal/signup-notify (country alerts, sent from Türkiye only)', () => {
+  let ROTA: Record<string, any>
+  before(async () => { ROTA = await import('../../app/api/internal/signup-notify/route') })
+  let ipSayac = 0
+  const yuk = (o: Record<string, unknown> = {}) => ({ ...bildirimYuku({ ulke: 'au', ad: 'QA Doctor', eposta: 'qa-au@example.test', telefon: null, bransEtiketi: 'General practice', plan: 'trial', zaman: new Date('2026-11-08T10:00:00Z'), toplam: 4 }), ...o })
+  const istek = (govde: string, baslik?: string | null) => {
+    const h: Record<string, string> = { 'content-type': 'application/json', 'x-forwarded-for': `203.0.113.${(ipSayac++ % 250) + 1}` }
+    if (baslik) h[IMZA_BASLIGI] = baslik
+    return new NextRequestSinifi('https://www.notya.io/api/internal/signup-notify', { method: 'POST', headers: h, body: govde })
+  }
+  const imzali = (govde: string, t = Date.now()) => govdeImzaUret(GIZLI, SIGNUP_NOTIFY_AMAC, govde, t)
+
+  it('unsigned, wrongly signed, expired, replayed, re-bodied and GET requests all get 404', async () => {
+    process.env.FOUNDER_STATS_SECRET = GIZLI
+    try {
+      const govde = JSON.stringify(yuk())
+      assert.equal((await ROTA.POST(istek(govde))).status, 404, 'unsigned')
+      assert.equal((await ROTA.POST(istek(govde, govdeImzaUret('w'.repeat(48), SIGNUP_NOTIFY_AMAC, govde)))).status, 404, 'other secret')
+      assert.equal((await ROTA.POST(istek(govde, imzali(govde, Date.now() - IMZA_PENCERESI_MS - 1000)))).status, 404, 'expired')
+      assert.equal((await ROTA.POST(istek(govde, imzaUret(GIZLI, 'au')))).status, 404, 'a founder-stats signature is not a signup-notify signature')
+      assert.equal((await ROTA.POST(istek(JSON.stringify(yuk({ ad: 'Someone Else' })), imzali(govde)))).status, 404, 'signature lifted onto another body')
+      const b = imzali(govde)
+      assert.equal((await ROTA.POST(istek(govde, b))).status, 202, 'the first, valid one')
+      assert.equal((await ROTA.POST(istek(govde, b))).status, 404, 'replayed')
+      assert.equal((await ROTA.GET()).status, 404, 'GET')
+    } finally { delete process.env.FOUNDER_STATS_SECRET }
+  })
+  it('no secret configured → 404 even for a well-formed signature', async () => {
+    const govde = JSON.stringify(yuk())
+    assert.equal((await ROTA.POST(istek(govde, imzali(govde)))).status, 404)
+  })
+  it('the payload is exactly the doctor-account keys; any other key (a patient field included) is refused with 404', async () => {
+    assert.deepEqual(Object.keys(yuk()).sort(), [...BILDIRIM_YUKU_ANAHTARLARI].sort())
+    // (tipler.hastaAlaniVarMi is not used here: it also flags 'telefon', and the doctor's own phone is part of the alert by Kaan's spec.)
+    for (const k of Object.keys(yuk())) assert.doesNotMatch(k, /hasta|patient|tc|nhs|medicare|note|not$|visit|muayene|tani|diagnos/i)
+    assert.ok(bildirimYukuCoz(yuk()))
+    for (const fazla of [{ hasta_adi: 'X' }, { patient_name: 'X' }, { notes: 'x' }]) assert.equal(bildirimYukuCoz({ ...yuk(), ...fazla }), null)
+    assert.equal(bildirimYukuCoz({ ...yuk(), ulke: 'tr' }), null, 'Türkiye sends its own alerts directly')
+    assert.equal(bildirimYukuCoz({ ...yuk(), ad: 'a\r\nBcc: x@y.z' }), null, 'no header injection through a field')
+    process.env.FOUNDER_STATS_SECRET = GIZLI
+    try {
+      const govde = JSON.stringify({ ...yuk(), hasta_adi: 'Patient Name' })
+      assert.equal((await ROTA.POST(istek(govde, imzali(govde)))).status, 404)
+    } finally { delete process.env.FOUNDER_STATS_SECRET }
+  })
+  it('the endpoint is rate-limited per address', async () => {
+    const govde = JSON.stringify(yuk())
+    const h = { 'content-type': 'application/json', 'x-forwarded-for': '198.51.100.7' }
+    const durumlar: number[] = []
+    for (let i = 0; i < 32; i++) durumlar.push((await ROTA.POST(new NextRequestSinifi('https://www.notya.io/api/internal/signup-notify', { method: 'POST', headers: h, body: govde }))).status)
+    assert.equal(durumlar.slice(0, 30).every((d) => d === 404), true)
+    assert.equal(durumlar[31], 429)
+  })
+  it('a valid alert without SMTP_PASS is accepted (202) and is a logged no-op; it goes through the SMTP sender only', () => {
+    const k = readFileSync(join(__dirname, '../..', 'app/api/internal/signup-notify/route.ts'), 'utf8')
+    assert.match(k, /govdeImzaDogrula\(process\.env\.FOUNDER_STATS_SECRET/)
+    assert.match(k, /arkaPlanda\(async \(\) => \{\s*const s = await bildirimGonder\(bildirimEpostasi\(kayit\)/)
+    assert.match(k, /bildirimDisiMi\(kayit\.eposta\)/)
+  })
+  it('body-bound signatures: good passes once, a changed body or purpose fails', () => {
+    const t = 1_800_000_000_000
+    const b = govdeImzaUret(GIZLI, SIGNUP_NOTIFY_AMAC, '{"a":1}', t)
+    assert.deepEqual(govdeImzaDogrula(GIZLI, b, SIGNUP_NOTIFY_AMAC, '{"a":2}', t), { ok: false, neden: 'imza' })
+    assert.deepEqual(govdeImzaDogrula(GIZLI, b, 'other', '{"a":1}', t), { ok: false, neden: 'imza' })
+    assert.deepEqual(govdeImzaDogrula(GIZLI, b, SIGNUP_NOTIFY_AMAC, '{"a":1}', t), { ok: true })
+    assert.deepEqual(govdeImzaDogrula(GIZLI, b, SIGNUP_NOTIFY_AMAC, '{"a":1}', t), { ok: false, neden: 'tekrar' })
   })
 })
 

@@ -1,5 +1,16 @@
 # OPEN COMMITMENTS — Notya AI
 
+## DENEME-BILDIRIM-02 — signup alerts from Kaan's own mailbox (Claude, 2026-11-08)
+
+Kaan decided 2026-11-08: no Resend. The trial-signup alert is sent over SMTP from `kaan@notya.io` (Purelymail, display
+name "Notya Bildirim") to `kaan@notya.io`, by the Türkiye project only (`lib/kurucu/smtpGonder.ts`). The six country builds
+POST the alert payload to `https://www.notya.io/api/internal/signup-notify`, signed with FOUNDER_STATS_SECRET (body-bound,
+5-minute window, replay and rate limits); they never hold the mailbox password. `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER` are set
+on `notya-ai` Production. The Resend path and its RESEND_API_KEY entries are gone (the dormant `/api/demo/cal-webhook` is
+untouched and stays unregistered).
+
+| Kaan: add `SMTP_PASS` (Purelymail password for kaan@notya.io, ideally an app password if Purelymail offers one) to Vercel project `notya-ai` → Production; alerts start on the next deploy. Until then every send is a logged no-op; signups are still recorded, counted and shown on `/kurucu`. **Status at ship time:** an `SMTP_PASS` entry was already present on `notya-ai` (Production, also Preview and Development; added from Kaan's Vercel account on 2026-11-08, value not read by Claude), so the 2026-11-08 main deploy is the first that can send. If the first real signup brings no e-mail, the password (or app password) is the thing to re-check. | Claude: none (no value is ever read or set by Claude) | DONE ON KAAN'S SIDE (2026-11-08) — confirm with the first signup |
+
 ## PLAN-ONBOARDING-01 / DENEME-BILDIRIM-01 / KURUCU-KONSOL-01 — paid-plan onboarding, trial-signup e-mail, founder console: what is open (Claude, 2026-11-07)
 
 Shipped 2026-11-07 on main and the six release branches (one commit each). Paid plan: Stripe now returns the doctor to
@@ -10,8 +21,7 @@ first set (migration 191 on TR, 192 on the six country databases, applied and ve
 FOUNDER_EMAILS allowlist, 404 for everyone else; country data from each build's signed `/api/internal/founder-stats`
 (FOUNDER_STATS_SECRET set on all seven Vercel projects, Production).
 
-| Kaan: create a Resend API key for the verified notya.io domain (sender `bildirim@notya.io`) and add `RESEND_API_KEY` (Production) to `notya-ai` and the six country projects (`notya-us/uk/ca/au/nz/uz-preview`). Until then no e-mail goes out; every signup is still recorded (flag + count) and shown on `/kurucu`. The same key also switches on the dormant demo e-mail code, which stays unregistered in Cal. | Claude: none until then | OPEN (2026-11-07) — waits on Kaan |
-| Kaan: there is no `kaan@notya.io` login on the Türkiye site. Create it once (sign up at notya.io/kayit with that address, or tell Claude to send an invite), then open notya.io/kurucu while signed in. That address is excluded from every count and from the signup e-mail. | Claude: none | OPEN (2026-11-07) — waits on Kaan |
+| ~~Kaan: there is no `kaan@notya.io` login on the Türkiye site.~~ Superseded 2026-11-08: Kaan opens `/kurucu` with his existing login `kaanari@mac.com` (FOUNDER_EMAILS on `notya-ai` is now `kaan@notya.io,kaanari@mac.com`). That address stays excluded from every count and from the signup e-mail as his test account. | Claude: none | CLOSED (2026-11-08) |
 | Kaan: Dr. Gökhan Mamur is NOT on FOUNDER_EMAILS: the code knows two logins for him (dr.gokhan@notya.ai daily, dr.gokhanmamur@gmail.com older). Say which one, and Claude adds it to FOUNDER_EMAILS on `notya-ai`. | Claude: add it the same day | OPEN (2026-11-07) — waits on Kaan |
 | Claude: live smoke check of the six country endpoints from the console after the builds are live (this sandbox's egress proxy refuses *.notya.io, so it could not be called from here; see the 2026-11-07 report). | Kaan: open /kurucu once signed in; each country shows data or "Unavailable (reason)" | OPEN (2026-11-07) |
 
