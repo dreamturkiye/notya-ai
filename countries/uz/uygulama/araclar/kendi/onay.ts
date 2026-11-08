@@ -19,6 +19,8 @@
  * permission (../yuvalar.ts).
  */
 
+import { UZ_UZMANLIK_ANAHTARLARI } from './uzmanlik'
+
 export type UzOnaysizArac = {
   anahtar: string
   /** What the tool does, in one line. */
@@ -95,6 +97,15 @@ export const UZ_ONAYSIZ_YENI_ARACLAR: readonly UzOnaysizArac[] = [
       'A lawyer confirms that storing these requirements from the order is allowed, and a clinician confirms the wording of each tick.',
     ],
   },
+  // ULKE-BRANS-DERINLIK-01 (2026-11-08): the specialty scores, consent records and conclusions of every role (./uzmanlik/)
+  ...UZ_UZMANLIK_ANAHTARLARI.map((anahtar) => ({
+    anahtar,
+    ne: anahtar.endsWith('-rozilik') ? 'Consent discussion record (Law No. 265-I, articles 24, 26, 27).' : anahtar.endsWith('-xulosa') ? 'Specialty conclusion printed with a document number.' : 'A published international score or calculator, tested with worked examples from its source.',
+    teyit: [
+      'A clinician of Uzbekistan confirms the cut-offs (or, for a record, the topics) match current national practice and Ministry of Health protocols.',
+      'A native reader confirms the Uzbek (both scripts) and Russian wording; the Cyrillic is derived by rule.',
+    ],
+  })),
 ]
 
 export const UZ_ONAYSIZ_GERI_ACILAN: readonly UzOnaysizArac[] = [

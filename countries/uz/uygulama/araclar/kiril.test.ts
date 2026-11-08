@@ -15,6 +15,8 @@ import { join, resolve } from 'node:path'
 import { dosyayiDoldur, katalogCevir, katalogKaynagi, kirill } from '../../../../scripts/uz-kiril.mjs'
 import { UZ_KLINIK_LATN, UZ_KLINIK_METINLERI } from '../klinikMetinleri'
 import { UZ_ARACLAR } from './index'
+import { uzUzmanlikAraclari } from './kendi/uzmanlik'
+import { metinleriTopla } from './kendi/uzmanlik/onamRapor'
 import { UZ_ROL_ADLARI } from '../../klinik/rolAdlari'
 import { UZ_ROL_SATIRLARI } from '../../klinik/rolListesi'
 import { UZ_MESAJ_AGACI } from '../mesajMetinleri'
@@ -206,6 +208,14 @@ describe('Uzbek tools — Latin to Cyrillic by rule', () => {
     }
   })
 
+  it('ULKE-BRANS-DERINLIK-01: the Cyrillic map of the specialty tools (./kendi/uzmanlik/kiril.json) is exactly the rule\'s form of every Latin text — UZ_KIRIL_YAZ=1 writes it again', () => {
+    const yol = resolve(KOK, 'countries/uz/uygulama/araclar/kendi/uzmanlik/kiril.json')
+    const harita: Record<string, string> = {}
+    for (const p of uzUzmanlikAraclari()) for (const x of metinleriTopla(p)) harita[x['uz-Latn']] = kirill(x['uz-Latn'])
+    const beklenen = JSON.stringify(Object.fromEntries(Object.entries(harita).sort(([a], [b]) => a.localeCompare(b))), null, 1) + '\n'
+    if (process.env.UZ_KIRIL_YAZ === '1') writeFileSync(yol, beklenen)
+    assert.equal(readFileSync(yol, 'utf8'), beklenen)
+  })
   it('COUNTRY TOOLING ONLY: no build step, no application file and no other script imports or runs it', () => {
     const pkg = readFileSync(join(KOK, 'package.json'), 'utf8')
     assert.doesNotMatch(pkg, /uz-kiril/)

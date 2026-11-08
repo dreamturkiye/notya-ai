@@ -243,7 +243,10 @@ describe('Uzbekistan — the tools only this country has, in the pack: who sees 
   let roller: readonly string[]
   let P: typeof import('@/lib/ulke/araclar/paket')
   before(async () => {
-    icerik = (await import('../index')).UZ_ARACLAR
+    // ULKE-BRANS-DERINLIK-01 (2026-11-08): the specialty tools have their own test (./uzmanlik/uzmanlik.test.ts)
+    const tum = (await import('../index')).UZ_ARACLAR
+    const uzmanlik = new Set((await import('./uzmanlik')).UZ_UZMANLIK_ANAHTARLARI)
+    icerik = { ...tum, araclar: tum.araclar.filter((p) => !uzmanlik.has(p.anahtar)), kendiAraclari: (tum.kendiAraclari ?? []).filter((t) => !uzmanlik.has(t.anahtar)) }
     roller = (await import('../../../index')).UZ_PAKETI.uygulama!.roller!
     P = await import('@/lib/ulke/araclar/paket')
   })
@@ -317,13 +320,19 @@ describe('Uzbekistan — the tools only this country has, in the pack: who sees 
   it('SWITCHED ON WITHOUT A CLINICIAN\'S SIGN-OFF: the list and the pack\'s switched-on new tools match exactly — and the register of tools that are one country\'s alone lists the same three', async () => {
     const { ulkeyeOzelMi } = await import('@/lib/ulke/araclar/ulkeyeOzel')
     const acikYeni = icerik.araclar.map((p) => p.anahtar).filter((k) => ulkeyeOzelMi(k, 'uz')).sort()
-    const liste = UZ_ONAYSIZ_YENI_ARACLAR.map((x) => x.anahtar).sort()
+    // ULKE-BRANS-DERINLIK-01 (2026-11-08): the specialty tools are on the list too, and in the register; checked here, then set apart
+    const { UZ_UZMANLIK_ANAHTARLARI } = await import('./uzmanlik')
+    const uzm = new Set(UZ_UZMANLIK_ANAHTARLARI)
+    const tumListe = UZ_ONAYSIZ_YENI_ARACLAR.map((x) => x.anahtar)
+    for (const k of UZ_UZMANLIK_ANAHTARLARI) assert.ok(tumListe.includes(k), `${k} is not on the list of ./onay.ts`)
+    const liste = tumListe.filter((k) => !uzm.has(k)).sort()
     assert.deepEqual(liste, acikYeni, 'a new tool is switched on and not on the list of ./onay.ts, or is on the list and not switched on')
     assert.deepEqual(liste, ['uz-asosiy-dorilar', 'uz-emlash-qaydi', 'uz-emlash-taqvimi', 'uz-giyohvand-qoidalari', 'uz-homiladorlik-muddati', 'uz-retsept-qaydi', 'uz-tana-vazni-indeksi'])
     assert.deepEqual(UZ_KENDI_TANIMLAR.map((t) => t.anahtar).sort(), liste, 'a mechanism without a switched-on tool, or the other way round')
     assert.deepEqual(UZ_KENDI_ARACLAR.map((p) => p.anahtar).sort(), liste)
     const kayit = JSON.parse(readFileSync(join(KOK, 'countries/yasak-araclar.json'), 'utf8')) as Record<string, string[]>
-    assert.deepEqual(kayit.uz, liste)
+    assert.deepEqual(kayit.uz.filter((k) => !uzm.has(k)), liste)
+    for (const k of UZ_UZMANLIK_ANAHTARLARI) assert.ok(kayit.uz.includes(k), `${k} is not in the register`)
     // each entry says what a clinician has to confirm; nobody has: the pack still names no clinician
     for (const x of [...UZ_ONAYSIZ_YENI_ARACLAR, ...UZ_ONAYSIZ_GERI_ACILAN]) assert.ok(x.ne.length > 30 && x.teyit.length >= 2 && x.teyit.every((t) => t.length > 40), x.anahtar)
     assert.deepEqual(icerik.inceleme, { makineYazimi: true, klinisyen: null })

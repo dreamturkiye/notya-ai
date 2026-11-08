@@ -49,6 +49,7 @@ import { UZ_GE_YUVALARI, UZ_ROL_ARACLARI_9 } from './rol9'
 import { UZ_TAKIP_ARACLARI } from './takip'
 import { UZ_KENDI_ARACLAR } from './kendi/metinler'
 import { UZ_KENDI_TANIMLAR } from './kendi/tanimlar'
+import { UZ_UZMANLIK_TANIMLAR, uzUzmanlikAraclari } from './kendi/uzmanlik'
 import { UZ_ARAC_BIRIMLERI, UZ_DOZ_YAZIMI, UZ_LAB_BIRIMLERI } from './birimler'
 import { UZ_ARAC_YUVALARI } from './yuvalar'
 
@@ -80,9 +81,11 @@ const acikOlanlar = (liste: readonly PaketAraci[]): PaketAraci[] => liste.filter
 
 export const UZ_ARACLAR: UlkeAraclari = {
   metinler: UZ_ARACLAR_METINLERI,
-  araclar: [...UZ_TEMEL_ARACLAR, ...acikOlanlar([...UZ_ROL_ARACLARI_1, ...UZ_ROL_ARACLARI_2, ...UZ_ROL_ARACLARI_3, ...UZ_ROL_ARACLARI_4, ...UZ_ROL_ARACLARI_5, ...UZ_ROL_ARACLARI_6, ...UZ_ROL_ARACLARI_7, ...UZ_ROL_ARACLARI_8, ...UZ_ROL_ARACLARI_9]), ...UZ_KENDI_ARACLAR, ...UZ_TAKIP_ARACLARI],
+  araclar: [...UZ_TEMEL_ARACLAR, ...acikOlanlar([...UZ_ROL_ARACLARI_1, ...UZ_ROL_ARACLARI_2, ...UZ_ROL_ARACLARI_3, ...UZ_ROL_ARACLARI_4, ...UZ_ROL_ARACLARI_5, ...UZ_ROL_ARACLARI_6, ...UZ_ROL_ARACLARI_7, ...UZ_ROL_ARACLARI_8, ...UZ_ROL_ARACLARI_9]), ...UZ_KENDI_ARACLAR, ...UZ_TAKIP_ARACLARI,
+    // ULKE-BRANS-DERINLIK-01 (2026-11-08): specialty scores and calculators, consent record and conclusion of every role (./kendi/uzmanlik/)
+    ...uzUzmanlikAraclari()],
   // the mechanisms of the three tools only this country has; each key is listed for "uz" in countries/yasak-araclar.json
-  kendiAraclari: UZ_KENDI_TANIMLAR,
+  kendiAraclari: [...UZ_KENDI_TANIMLAR, ...UZ_UZMANLIK_TANIMLAR],
   birimler: UZ_ARAC_BIRIMLERI,
   labBirimleri: UZ_LAB_BIRIMLERI,
   dozYazimi: UZ_DOZ_YAZIMI,

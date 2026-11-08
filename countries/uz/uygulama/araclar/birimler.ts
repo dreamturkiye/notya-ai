@@ -63,6 +63,24 @@ export const UZ_ARAC_BIRIMLERI: Readonly<Record<string, Uc>> = {
   'U/mL': u('XB/ml', 'ХБ/мл', 'Ед/мл'),
   // AMELIYAT-NOTU-01: Doppler velocity of the obstetric ultrasound report
   'cm/s': u('sm/s', 'см/с', 'см/с'),
+  // ULKE-BRANS-DERINLIK-01 (2026-11-08): the units of the specialty scores and calculators (./kendi/uzmanlik/)
+  ms: u('ms', 'мс', 'мс'),
+  bpm: u('urish/daq', 'уриш/дақ', 'уд/мин'),
+  'mmol/L': u('mmol/l', 'ммол/л', 'ммоль/л'),
+  'g/L': u('g/l', 'г/л', 'г/л'),
+  'µmol/L': u('mkmol/l', 'мкмол/л', 'мкмоль/л'),
+  'mL/min': u('ml/daq', 'мл/дақ', 'мл/мин'),
+  'mU/L': u('mkXB/ml', 'мкХБ/мл', 'мкЕд/мл'),
+  'U/L': u('XB/l', 'ХБ/л', 'Ед/л'),
+  '×10⁹/L': u('×10⁹/l', '×10⁹/л', '×10⁹/л'),
+  h: u('soat', 'соат', 'ч'),
+  L: u('l', 'л', 'л'),
+  'm²': u('m²', 'м²', 'м²'),
+  'mg/mL·min': u('mg/ml·daq', 'мг/мл·дақ', 'мг/мл·мин'),
+  daPa: u('daPa', 'даПа', 'даПа'),
+  'mL/h': u('ml/soat', 'мл/соат', 'мл/ч'),
+  m: u('m', 'м', 'м'),
+  'mL/kg/min': u('ml/kg/daq', 'мл/кг/дақ', 'мл/кг/мин'),
 }
 
 /** One entry of the table below with where its unit was read; `kaynak: null` = no national text read states it. */
