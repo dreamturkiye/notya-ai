@@ -106,7 +106,7 @@ export async function portalIcerigi(o: PortalOturumu, simdi = Date.now()): Promi
     const { data } = await ulkeTablosu(supabase, 'ulke_arac_kayitlari').select('takip_tarihi').eq('doctor_id', doktorId).eq('patient_id', hastaId).is('kapandi_at', null).not('takip_tarihi', 'is', null)
     takipler = ((data as { takip_tarihi: string | null }[] | null) ?? []).flatMap((s) => (typeof s.takip_tarihi === 'string' ? [s.takip_tarihi] : []))
   }
-  const bolum = portalBolumu(rol, bugun, takipler)
+  const bolum = portalBolumu(rol, bugun, takipler, uygulamaDiliMi(dil) ? dil : paket.varsayilanDil)
   let beslenme: PortalIcerigi['beslenme'] | undefined
   // Dietetics meal plan OR per-role care-plan coaching — never an empty tab for a role without tools.
   const aracIcerik = ozellikAcik('araclar') ? aktifAracIcerigi() : null

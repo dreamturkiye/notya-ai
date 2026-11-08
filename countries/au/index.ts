@@ -9,6 +9,7 @@
  * Keep this file light: data and pure functions only (the middleware and the browser bundle load it).
  * EVERY VALUE IS UNVERIFIED until somebody in Australia confirms it (see ./ayarlar.ts).
  */
+import { EN_PORTAL_DEMO } from '../_dil/en/portalDemo'
 import { paketMetinleri, type UlkePaketi } from '@/lib/ulke/tipler'
 import { enCekirdek } from '../_dil/en/cekirdek'
 import { enKlinikHesaplari } from '../_dil/en/klinikHesaplari'
@@ -163,6 +164,8 @@ export const AU_PAKETI: UlkePaketi = {
       baglantiGecerlilikGun: 30,
       acilNumara: '000',
       bolumler: AU_PORTAL_BOLUMLERI,
+      // ULKE-BRANS-DERINLIK-09: the doctor's preview of the patient page with example data (lib/ulke/portal/demo.ts).
+      demo: { 'en-AU': EN_PORTAL_DEMO },
       // AU dietetics beta — meal plan, diary, goals and clinic weight on the patient portal (tool keys; shared UI never hard-codes them).
       beslenme: {
         planAraci: 'au-meal-plan',

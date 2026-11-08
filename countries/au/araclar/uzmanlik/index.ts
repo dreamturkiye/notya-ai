@@ -13,10 +13,12 @@ import { CERRAHI } from './cerrahi'
 import { RUHSAL_MUTTEFIK } from './ruhsalMuttefik'
 import { AU_ONAM_ANAHTARLARI, AU_ONAM_TANIMLAR, auOnamAraclari } from './onam'
 import { AU_RAPOR_ANAHTARLARI, AU_RAPOR_TANIMLAR, auRaporAraclari } from './rapor'
+import { AU_DOZ_SIPARIS_ANAHTARLARI, AU_DOZ_SIPARIS_TANIMLAR, auDozSiparisAraclari } from './dozSiparis'
+import { AU_MBS_ANAHTARLARI, AU_MBS_TANIMLAR, auMbsAraclari } from './mbs'
 
 export const AU_UZMANLIK_SATIRLARI: readonly UzmanlikSatiri[] = [...KALP_DAMAR, ...ACIL_NORO, ...DAHILIYE, ...CERRAHI, ...RUHSAL_MUTTEFIK]
 
-/** The scores and calculators (./motor.ts rows), then the per-role consent discussion record (./onam.ts) and specialty report (./rapor.ts). */
-export const AU_UZMANLIK_TANIMLAR: readonly AracTanimi[] = [...AU_UZMANLIK_SATIRLARI.map(tanimOf), ...AU_ONAM_TANIMLAR, ...AU_RAPOR_TANIMLAR]
-export const auUzmanlikAraclari = (): readonly PaketAraci[] => [...AU_UZMANLIK_SATIRLARI.map(paketOf), ...auOnamAraclari(), ...auRaporAraclari()]
-export const AU_UZMANLIK_ANAHTARLARI: readonly string[] = [...AU_UZMANLIK_SATIRLARI.map(anahtarOf), ...AU_ONAM_ANAHTARLARI, ...AU_RAPOR_ANAHTARLARI]
+/** The scores and calculators (./motor.ts rows), then the per-role consent discussion record (./onam.ts), specialty report (./rapor.ts), and (ULKE-BRANS-DERINLIK-09) dose engine and order presets (./dozSiparis.ts). */
+export const AU_UZMANLIK_TANIMLAR: readonly AracTanimi[] = [...AU_UZMANLIK_SATIRLARI.map(tanimOf), ...AU_ONAM_TANIMLAR, ...AU_RAPOR_TANIMLAR, ...AU_DOZ_SIPARIS_TANIMLAR, ...AU_MBS_TANIMLAR]
+export const auUzmanlikAraclari = (): readonly PaketAraci[] => [...AU_UZMANLIK_SATIRLARI.map(paketOf), ...auOnamAraclari(), ...auRaporAraclari(), ...auDozSiparisAraclari(), ...auMbsAraclari()]
+export const AU_UZMANLIK_ANAHTARLARI: readonly string[] = [...AU_UZMANLIK_SATIRLARI.map(anahtarOf), ...AU_ONAM_ANAHTARLARI, ...AU_RAPOR_ANAHTARLARI, ...AU_DOZ_SIPARIS_ANAHTARLARI, ...AU_MBS_ANAHTARLARI]

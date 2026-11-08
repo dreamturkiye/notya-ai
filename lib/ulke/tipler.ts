@@ -333,6 +333,21 @@ export type DilGrubu = {
 export type Birimler = { agirlik: 'kg' | 'lb'; boy: 'cm' | 'in'; sicaklik: 'C' | 'F' }
 
 /** What a pack says about the patient portal (feature `hastaPortali`). */
+export type PortalBolumTanimi = { baslik: string; satirlar: readonly string[] }
+
+/** ULKE-BRANS-DERINLIK-09 — the doctor's preview of the patient page with example data: nothing in it is a patient's. */
+export type PortalDemoMetni = {
+  /** The button on the patient-access card. */
+  onizle: string
+  kapat: string
+  /** One line above the preview: example data, not this patient's. */
+  uyari: string
+  /** The example patient's name. */
+  hastaAdi: string
+  /** The example shared summary. */
+  ozet: string
+}
+
 export type PortalAyarlari = {
   /** How many days a portal link stays valid from the moment the doctor creates it. Afterwards the doctor gives a new one. */
   baglantiGecerlilikGun: number
@@ -347,6 +362,12 @@ export type PortalAyarlari = {
    * The words are the pack's. The kit shows the chapter of the doctor's role and no other.
    */
   bolumler?: Readonly<Record<string, { baslik: string; satirlar: readonly string[] }>>
+  /** ULKE-BRANS-DERINLIK-02 — one set of chapters per form of the page (a pack with several forms); read by lib/ulke/portal/bolum.ts. */
+  bolumlerDil?: Readonly<Partial<Record<DilKodu, Readonly<Record<string, PortalBolumTanimi>>>>>
+  tarihEtiketDil?: Readonly<Partial<Record<DilKodu, string>>>
+  durumEtiketDil?: Readonly<Partial<Record<DilKodu, Readonly<Record<'gecikti' | 'bugun' | 'yaklasiyor' | 'planli', string>>>>>
+  /** ULKE-BRANS-DERINLIK-09 — the words of the patient page's PREVIEW with example data (lib/ulke/portal/demo.ts), per form. */
+  demo?: Readonly<Partial<Record<DilKodu, PortalDemoMetni>>>
   /**
    * AU-DIETETICS-MEAL-01 / portal coaching — optional: pack-named tool keys whose kept results the patient
    * portal shows for dietetics (meal plan, diary, agreed goals, clinic weight numbers), plus patient-facing

@@ -102,6 +102,11 @@ export const EN_ARACLAR_METNI_TEMEL: AraclarMetni = {
     araclariAc: 'Open the tools for this patient',
     takipGunu: 'Follow-up: %',
     takipKapandi: 'Follow-up (%) done',
+    // ULKE-BRANS-DERINLIK-09: the specialty tab of the patient's file
+    uzmanlikSekmesi: '% results',
+    uzmanlikAciklama: 'Your specialty\'s scores and calculators kept on this patient, newest first, with the change since the time before.',
+    uzmanlikBos: 'No specialty result has been kept on this patient yet.',
+    uzmanlikFark: 'Since last: %',
     okunamadi: 'This entry cannot be shown.',
     aracYok: 'A tool the system no longer has',
   },

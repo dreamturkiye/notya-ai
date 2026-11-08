@@ -117,3 +117,17 @@ describe('AU specialty report — one per role, printable with a document number
     }
   })
 })
+
+describe('ULKE-BRANS-DERINLIK-11 — the GPCCMP and MHTP records (general practice only)', () => {
+  it('GPCCMP: the six required parts, consent and a review date; the MHTP referral: four requirements and the six-service initial course', async () => {
+    const { AU_GPCCMP, AU_MHTP, auMbsAraclari } = await import('./mbs')
+    const O = { bugun: '2026-11-08', p: {} }
+    const tam = { kalem: 'p965', kosul: 'a', ihtiyac: 'b', hedef: 'c', eylem: 'd', tedavi: 'e', gozden_gecirme: 'f', gozden_gecirme_tarihi: '2027-02-08', onay: true }
+    assert.deepEqual(AU_GPCCMP.hesapla(tam, O).uyarilar, [])
+    assert.deepEqual([...AU_GPCCMP.hesapla({ kalem: 'r967', kosul: 'a' }, O).uyarilar].sort(), ['icerik_eksik', 'onay_yok', 'tarih_yok'])
+    assert.deepEqual(AU_MHTP.hesapla({ kalem: 'i2700', belirti: true, ilaclar: true, plan_beyani: true, hizmet: 6, hizmet_yazildi: true, onay: true }, O).uyarilar, [])
+    assert.ok(AU_MHTP.hesapla({ kalem: 'i2700', hizmet: 8, onay: true }, O).uyarilar.includes('ilk_kurs'))
+    for (const p of auMbsAraclari()) assert.deepEqual(p.roller, ['family-medicine'])
+    assert.equal(AU_GPCCMP.yazdirilir, true); assert.equal(AU_MHTP.yazdirilir, true)
+  })
+})

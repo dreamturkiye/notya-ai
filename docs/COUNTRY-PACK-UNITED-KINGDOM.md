@@ -19,7 +19,7 @@ A pack that builds has every text and setting filled in. It says nothing about w
 
 ## What is in this pack, and where it comes from
 
-- **From the shared English set** (`countries/_dil/en/`, written once for five countries): 2981 texts as this pack shows them or hands the model (the country's own, counted in the next line, among them) — the screens, the role names, 40 note templates, the instructions to the model, the intake questions, 61 tools, the landing copy — written in `en-GB` spelling by the set's spelling table.
+- **From the shared English set** (`countries/_dil/en/`, written once for five countries): 3281 texts as this pack shows them or hands the model (the country's own, counted in the next line, among them) — the screens, the role names, 40 note templates, the instructions to the model, the intake questions, 61 tools, the landing copy — written in `en-GB` spelling by the set's spelling table.
 - **This country's own** (`countries/gb/`, six small files): 71 texts it writes itself (its consent sentence, identifier label, time sentence, date example, name, word for a senior doctor, role names where they differ, what its closed tools are missing and who decides, unit names and tool words it writes differently, the example phone number and the pattern of an amount) and the settings in the table below.
 
 ## Settings — every one unverified
@@ -394,7 +394,7 @@ For each entry: official local name, what it governs, source link, date checked,
 - [ ] C12 Note template per language.
   - MACHINE-BUILT. 40 templates, read by no clinician of this country.
 - [ ] C13 Intake form per language.
-  - MACHINE-WRITTEN. 42 core questions and 342 role questions, read by no clinician of this country.
+  - MACHINE-WRITTEN. 42 core questions and 356 role questions, read by no clinician of this country.
 - [ ] C14 Reviewer name, date, sign-off; a specialty is switched on only after this.
   - NOBODY. No role is signed off.
 - [ ] C15 Owner and next review date for every source.

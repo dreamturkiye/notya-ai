@@ -19,7 +19,7 @@ A pack that builds has every text and setting filled in. It says nothing about w
 
 ## What is in this pack, and where it comes from
 
-- **From the shared English set** (`countries/_dil/en/`, written once for five countries): 2986 texts as this pack shows them or hands the model (the country's own, counted in the next line, among them) — the screens, the role names, 40 note templates, the instructions to the model, the intake questions, 63 tools, the landing copy — written in `en-NZ` spelling by the set's spelling table.
+- **From the shared English set** (`countries/_dil/en/`, written once for five countries): 3286 texts as this pack shows them or hands the model (the country's own, counted in the next line, among them) — the screens, the role names, 40 note templates, the instructions to the model, the intake questions, 63 tools, the landing copy — written in `en-NZ` spelling by the set's spelling table.
 - **This country's own** (`countries/nz/`, six small files): 36 texts it writes itself (its consent sentence, identifier label, time sentence, date example, name, word for a senior doctor, role names where they differ, what its closed tools are missing and who decides, unit names and tool words it writes differently, the example phone number and the pattern of an amount) and the settings in the table below.
 
 ## Settings — every one unverified
@@ -42,7 +42,7 @@ A pack that builds has every text and setting filled in. It says nothing about w
 | Recording-consent sentence | "The patient, or the person who can consent for them, has agreed to this visit being recorded." — stamp `nz-draft-2026-10-11`, NOT READ BY A LAWYER | **for a lawyer**. A draft sentence. What consent and notice a recording needs is open. |
 | Intake-form consent sentence | the shared draft — stamp `nz-draft-2026-10-11`, NOT READ BY A LAWYER | **for a lawyer** |
 | Word for a senior doctor (in the instructions to the model) | "specialist" | a local clinical lead |
-| Phone: prefix, example, rule | +64; +64 2X XXX XXXX; a format rule only | a local lead. THE EXAMPLE IS A SHAPE, NOT A NUMBER ("X" in place of digits): this job knows of no range New Zealand reserves for fiction with certainty. It cannot be dialled and can be nobody's. A number from a reserved range, if a local source names one, may replace it. Unverified. |
+| Phone: prefix, example, rule | +64; +64 21 123 4567; a format rule only | a local lead. THE EXAMPLE IS A SHAPE, NOT A NUMBER ("X" in place of digits): this job knows of no range New Zealand reserves for fiction with certainty. It cannot be dialled and can be nobody's. A number from a reserved range, if a local source names one, may replace it. Unverified. |
 | Appointment norms | 09:00–17:00, 30 min; no public holiday | a local clinical lead |
 | Speech: model, thresholds | scribe_v2; 0.8, -0.36, 40 characters | engineering, on real clinic audio of this country |
 | Assistant names | NONE. Every role shows the neutral line | **WAITING ON KAAN** |
@@ -395,7 +395,7 @@ For each entry: official local name, what it governs, source link, date checked,
 - [ ] C12 Note template per language.
   - MACHINE-BUILT. 40 templates, read by no clinician of this country.
 - [ ] C13 Intake form per language.
-  - MACHINE-WRITTEN. 42 core questions and 443 role questions, read by no clinician of this country.
+  - MACHINE-WRITTEN. 42 core questions and 457 role questions, read by no clinician of this country.
 - [ ] C14 Reviewer name, date, sign-off; a specialty is switched on only after this.
   - NOBODY. No role is signed off.
 - [ ] C15 Owner and next review date for every source.

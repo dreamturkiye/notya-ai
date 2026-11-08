@@ -9,6 +9,7 @@
  * Keep this file light: data and pure functions only (the middleware and the browser bundle load it).
  * EVERY VALUE IS UNVERIFIED until somebody in Canada confirms it (see ./ayarlar.ts).
  */
+import { EN_PORTAL_DEMO } from '../_dil/en/portalDemo'
 import { paketMetinleri, type UlkePaketi } from '@/lib/ulke/tipler'
 import { enCekirdek } from '../_dil/en/cekirdek'
 import { enKlinikHesaplari } from '../_dil/en/klinikHesaplari'
@@ -99,7 +100,7 @@ export const CA_PAKETI: UlkePaketi = {
     // A portal link works for 30 days: a STARTING VALUE the owner confirms; how long a patient's access may stand is
     // for a lawyer. THE EMERGENCY NUMBER IS UNVERIFIED LOCAL CONTENT: written from general knowledge, to be confirmed
     // by a local source before any patient sees the portal. null here = the patient's page names no number.
-    portal: { baglantiGecerlilikGun: 30, acilNumara: '911' },
+    portal: { baglantiGecerlilikGun: 30, acilNumara: '911', demo: { 'en-CA': EN_PORTAL_DEMO } },
     mesaj: enMesajAyarlari('Canada'),
     klinikHesaplari: enKlinikHesaplari(CA_ROLLER),
     // One language in one script: no account is asked a language question.

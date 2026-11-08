@@ -168,7 +168,7 @@ export const CERRAHI: readonly UzmanlikSatiri[] = [
   {
     sekil: 'toplam', k: 'dysmorphic-concern', roller: ['aesthetic-surgery', 'aesthetic-medicine', 'plastic-surgery'],
     ad: 'Dysmorphic Concern Questionnaire (DCQ)', aciklama: 'Seven items 0–3 from the DCQ form (wording read from the form). Australian-developed screen for body dysmorphic concern, used before cosmetic procedures.',
-    not: `${NOT} The Medical Board of Australia's cosmetic guidelines expect assessment for underlying psychological conditions such as body dysmorphic disorder before cosmetic surgery; a positive screen calls for assessment and referral, not a diagnosis.`,
+    not: `${NOT} Medical Board of Australia, Guidelines for registered medical practitioners who perform cosmetic surgery and procedures (from 1 July 2023): the surgeon assesses every patient for underlying psychological conditions such as body dysmorphic disorder, using a validated screening tool, and this cannot be delegated; where significant issues are found the patient is referred for evaluation to a psychologist, psychiatrist or general practitioner working independently of the surgeon, and the surgeon declines surgery that is not in the patient's best interests. A screen is not a diagnosis.`,
     kaynak: 'Oosthuizen P, Lambert T, Castle DJ. Dysmorphic concern: prevalence and associations with clinical variables. Aust N Z J Psychiatry 1998;32:129-32; Mancuso SG, Knoesen NP, Castle DJ. The Dysmorphic Concern Questionnaire: a screening measure for body dysmorphic disorder. Aust N Z J Psychiatry 2010;44:535-42 (9 or more indicates concern warranting assessment).',
     toplamAdi: 'DCQ total',
     alanlar: Array.from({ length: 7 }, (_, k) => i(`m${k + 1}`, 0, 3)),

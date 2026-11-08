@@ -9,6 +9,7 @@
  * Keep this file light: data and pure functions only (the middleware and the browser bundle load it).
  * EVERY VALUE IS UNVERIFIED until somebody in New Zealand confirms it (see ./ayarlar.ts).
  */
+import { EN_PORTAL_DEMO } from '../_dil/en/portalDemo'
 import { paketMetinleri, type UlkePaketi } from '@/lib/ulke/tipler'
 import { enCekirdek } from '../_dil/en/cekirdek'
 import { enKlinikHesaplari } from '../_dil/en/klinikHesaplari'
@@ -121,7 +122,7 @@ export const NZ_PAKETI: UlkePaketi = {
     // states that 111 is the emergency number for Police, Fire and Ambulance. Still to be confirmed by a person of
     // New Zealand before any patient sees the portal. null here = the patient's page names no number.
     // (The free health advice line is a different number and the kit has no place for it: see the audit document.)
-    portal: { baglantiGecerlilikGun: 30, acilNumara: '111' },
+    portal: { baglantiGecerlilikGun: 30, acilNumara: '111', demo: { 'en-NZ': EN_PORTAL_DEMO } },
     mesaj: enMesajAyarlari('New Zealand'),
     klinikHesaplari: enKlinikHesaplari(NZ_ROLLER),
     // One language in one script: no account is asked a language question.

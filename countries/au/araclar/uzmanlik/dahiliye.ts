@@ -303,7 +303,7 @@ export const DAHILIYE: readonly UzmanlikSatiri[] = [
   {
     sekil: 'formul', k: 'calvert-carboplatin', roller: ['oncology'],
     ad: 'Carboplatin dose by the Calvert formula', aciklama: 'Dose (mg) = target AUC × (GFR + 25). Enter the GFR estimate the protocol specifies.',
-    not: `${NOT} Check the result against the eviQ protocol, including any GFR cap it states, and the oncologist's order. Nothing is prescribed from this screen.`,
+    not: `${NOT} Check the result against the eviQ protocol and the oncologist's order. Many protocols cap the GFR at 125 mL/min for patients with normal renal function (Cancer Care Ontario carboplatin drug monograph: maximum dose = AUC × 150 mg). Nothing is prescribed from this screen.`,
     kaynak: 'Calvert AH, Newell DR, Gumbrell LA, et al. Carboplatin dosage: prospective evaluation of a simple formula based on renal function. J Clin Oncol 1989;7:1748-56.',
     alanlar: [s('auc', 1, 10, 'mg/mL·min'), s('gfr', 5, 250, 'mL/min')],
     etiketler: { auc: 'Target AUC', gfr: 'GFR estimate (as the protocol specifies)' },

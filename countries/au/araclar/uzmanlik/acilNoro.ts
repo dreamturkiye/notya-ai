@@ -193,7 +193,7 @@ export const ACIL_NORO: readonly UzmanlikSatiri[] = [
   {
     sekil: 'toplam', k: 'abcd2', roller: ['neurology', 'family-medicine'],
     ad: 'ABCD2 score after transient ischaemic attack', aciklama: 'Age, Blood pressure, Clinical features, Duration and Diabetes.',
-    not: `${NOT} Australian living stroke guidelines ask for urgent assessment of every suspected TIA; do not use this score alone to triage.`,
+    not: `${NOT} Do not use this score alone to decide how urgently a suspected TIA is assessed: follow the local TIA pathway (the NICE guideline on stroke and TIA in over 16s, 2019, advises against using scoring systems such as ABCD2 to assess risk; the Australian guideline's wording was not re-opened this session).`,
     kaynak: 'Johnston SC, Rothwell PM, Nguyen-Huynh MN, et al. Validation and refinement of scores to predict very early stroke risk after transient ischaemic attack. Lancet 2007;369:283-92 (0–3 low, 4–5 moderate, 6–7 high).',
     alanlar: [t('yas', 'Age 60 or older'), t('ta', 'Blood pressure ≥140/90 mmHg at first assessment'), c('klinik', 'Clinical features', [['diger', 'Other symptoms', 0], ['konusma', 'Speech disturbance without weakness', 1], ['guc', 'Unilateral weakness', 2]]), c('sure', 'Duration', [['alt10', 'Under 10 minutes', 0], ['10_59', '10–59 minutes', 1], ['60', '60 minutes or more', 2]]), t('dm', 'Diabetes')],
     bantlar: [b(0, 'dusuk', '0–3 — low'), b(4, 'orta', '4–5 — moderate'), b(6, 'yuksek', '6–7 — high')],

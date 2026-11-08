@@ -10,7 +10,7 @@ import dinamikYukle from 'next/dynamic'
 import { AramaFormu } from './Bugun'
 import { Bilgi, Cerceve, Hata, HAZIR, Secim, tarihYaz, useUygulama, YOL, Yukleniyor } from './Kabuk'
 import { saatAraligi, DurumRozeti, takvimYolu, type RandevuKaydi } from './randevuOrtak'
-import { dilAdi, dilBirlestir, metninDili, randevuMetni, rolAdi, uygulamaMetni, yaziSec, type UygulamaMetni } from '@/lib/ulke/arayuz'
+import { araclarMetni, arayuz, dilAdi, dilBirlestir, metninDili, randevuMetni, rolAdi, uygulamaMetni, yaziSec, type UygulamaMetni } from '@/lib/ulke/arayuz'
 import { ozellikAcik, ulkePaketi } from '@/lib/ulke/ulke'
 import { PortalErisimKarti } from './PortalErisimi'
 import { HastaFormuKarti } from './HastaFormuKarti'
@@ -24,6 +24,22 @@ import { TarihGirisi } from '../girdi/TarihGirisi'
 import { TelefonGirisi } from '../girdi/TelefonGirisi'
 import { telefonHatasi } from '@/lib/ulke/arayuz/telefon'
 import { Ipucu } from './Ipucu'
+import { uzmanlikSekmesiVar } from '@/lib/ulke/araclar/uzmanlikSekmesi'
+import { yerine } from '@/lib/ulke/arayuz/yerTutucu'
+
+/**
+ * ULKE-BRANS-DERINLIK-09 — the specialty tab's card is loaded behind its tab (PERF-SAGLAMLIK-2026-10: a tab-gated panel
+ * never joins the page's first load).
+ */
+const UzmanlikSonuclariKarti = dinamikYukle(() => import('./UzmanlikSekmesi').then((m) => m.UzmanlikSonuclariKarti), { loading: () => <p className="uza-bos" role="status" aria-hidden="true" /> })
+
+/** The specialty tab of this account's role, or null (no words in the pack, no role, or no specialty tool). */
+export function uzmanlikSekmesiAdi(dil: DilKodu, rol: string | null | undefined): string | null {
+  const icerik = arayuz().araclar
+  const k = araclarMetni(dil).kayit
+  if (!k.uzmanlikSekmesi || !rol || !uzmanlikSekmesiVar(icerik, rol)) return null
+  return yerine(k.uzmanlikSekmesi, rolAdi(rol, dil) ?? '')
+}
 
 /**
  * AU-ARAC-GORUNUM-01 / PERF-SAGLAMLIK-2026-10 — the calendar view is a tab-gated, additional card on an already
@@ -235,7 +251,7 @@ export function YeniHasta() {
 
 // ───────────────────────── one patient's file ─────────────────────────
 
-export function HastaDosyasiGorunumu({ m, hasta, muayeneler, bugun, randevular, portal, form, araclar, aracTakvimi, buyumeGrafigi, antropometriTrend, beslenmeDosya, takipOzeti, mesajlar, konsultasyon, fotograflar, duzenle }: {
+export function HastaDosyasiGorunumu({ m, hasta, muayeneler, bugun, randevular, portal, form, araclar, aracTakvimi, buyumeGrafigi, antropometriTrend, beslenmeDosya, takipOzeti, mesajlar, konsultasyon, fotograflar, duzenle, uzmanlik }: {
   m: UygulamaMetni; hasta: HastaKaydi; muayeneler: DosyaMuayenesi[]; bugun?: Date
   /** NOTYA-UZ-RANDEVU-01: this patient's appointments from today on. Absent = not loaded: no list is drawn. */
   randevular?: RandevuKaydi[] | null
@@ -263,6 +279,8 @@ export function HastaDosyasiGorunumu({ m, hasta, muayeneler, bugun, randevular, 
   fotograflar?: ReactNode
   /** Opens the editor for this patient's identity fields. */
   duzenle?: () => void
+  /** ULKE-BRANS-DERINLIK-09: the account's role's specialty tab (its name and its card), or none. */
+  uzmanlik?: { ad: string; icerik: ReactNode } | null
 }) {
   const r = randevuMetni(metninDili(m))
   const yas = yasYaz(m, hasta.dogumTarihi, bugun)
@@ -336,6 +354,7 @@ export function HastaDosyasiGorunumu({ m, hasta, muayeneler, bugun, randevular, 
     ) },
     ...(fotograflar ? [{ id: 'belgeler', ad: r.ek.sekmeBelgeler, icerik: fotograflar }] : []),
     ...(araclar ? [{ id: 'araclar', ad: r.ek.sekmeAraclar, icerik: araclar }] : []),
+    ...(uzmanlik ? [{ id: 'uzmanlik', ad: uzmanlik.ad, icerik: uzmanlik.icerik }] : []),
     ...(form || portal ? [{ id: 'formu', ad: r.ek.hastaFormu, icerik: <div id="hasta-formu">{form ?? null}{portal ?? null}</div> }] : []),
     ...(aracTakvimi || buyumeGrafigi || antropometriTrend || beslenmeDosya || takipOzeti ? [{ id: 'asilar', ad: r.ek.sekmeAsilar, icerik: <>{buyumeGrafigi ?? null}{antropometriTrend ?? null}{takipOzeti ?? null}{beslenmeDosya ?? null}{aracTakvimi ?? null}</> }] : []),
     ...(mesajlar || konsultasyon ? [{ id: 'iletisim', ad: r.ek.sekmeIletisim, icerik: <>{mesajlar ?? null}{konsultasyon ?? null}</> }] : []),
@@ -432,7 +451,7 @@ export function HastaDosyasi() {
       {durum === 'tamam' && veri ? <>
         <Bilgi>{kaydedildi ? u.m.hasta.duzenlendi : null}</Bilgi>
         {duzenleme ? <YeniHastaGorunumu m={u.m} dil={u.dil} a={alanlar} set={(yeni) => { setAlanlar(yeni); setHata(null) }} gonder={duzenleKaydet} bekliyor={bekliyor} hata={hata} telefonOrnek={ulkePaketi().telefon.ornek} baslik={u.m.hasta.duzenle} iptal={() => { setDuzenleme(false); setHata(null) }} /> : null}
-        <HastaDosyasiGorunumu m={u.m} hasta={veri.hasta} muayeneler={veri.muayeneler} randevular={randevular} duzenle={duzenleAc} portal={ozellikAcik('hastaPortali') ? <PortalErisimKarti u={u} hastaId={veri.hasta.id} /> : null} form={ozellikAcik('hastaPortali') && ozellikAcik('hastaFormu') ? <HastaFormuKarti u={u} hastaId={veri.hasta.id} /> : null} araclar={ozellikAcik('araclar') ? <HastaAracKayitlariKarti u={u} hastaId={veri.hasta.id} hastaAdi={[veri.hasta.ad, veri.hasta.otaIsmi].filter(Boolean).join(" ")} /> : null} aracTakvimi={ozellikAcik('araclar') ? <TakvimliListeKarti u={u} hastaId={veri.hasta.id} /> : null} buyumeGrafigi={ozellikAcik('araclar') ? <BuyumeGrafigiKarti u={u} hastaId={veri.hasta.id} cinsiyetVarsayilan={veri.hasta.cinsiyet || null} /> : null} antropometriTrend={ozellikAcik('araclar') ? <AntropometriTrendKarti u={u} hastaId={veri.hasta.id} /> : null} beslenmeDosya={ozellikAcik('araclar') ? <BeslenmeDosyaKarti u={u} hastaId={veri.hasta.id} /> : null} takipOzeti={ozellikAcik('araclar') ? <TakipOzetiKarti u={u} hastaId={veri.hasta.id} /> : null} mesajlar={ozellikAcik('hastaPortali') && ozellikAcik('hastaMesajlari') ? <HastaMesajKarti u={u} hastaId={veri.hasta.id} sablonlar={ozellikAcik('hekimSablonlari')} /> : null} konsultasyon={ozellikAcik('konsultasyon') ? <KonsultasyonKarti u={u} hastaId={veri.hasta.id} /> : null} fotograflar={ozellikAcik('fotoArsivi') ? <FotoArsivKarti u={u} hastaId={veri.hasta.id} /> : null} />
+        <HastaDosyasiGorunumu m={u.m} hasta={veri.hasta} muayeneler={veri.muayeneler} randevular={randevular} duzenle={duzenleAc} uzmanlik={(() => { const ad = ozellikAcik('araclar') ? uzmanlikSekmesiAdi(u.dil, u.hesap?.rol) : null; return ad ? { ad, icerik: <UzmanlikSonuclariKarti u={u} hastaId={veri.hasta.id} /> } : null })()} portal={ozellikAcik('hastaPortali') ? <PortalErisimKarti u={u} hastaId={veri.hasta.id} /> : null} form={ozellikAcik('hastaPortali') && ozellikAcik('hastaFormu') ? <HastaFormuKarti u={u} hastaId={veri.hasta.id} /> : null} araclar={ozellikAcik('araclar') ? <HastaAracKayitlariKarti u={u} hastaId={veri.hasta.id} hastaAdi={[veri.hasta.ad, veri.hasta.otaIsmi].filter(Boolean).join(" ")} /> : null} aracTakvimi={ozellikAcik('araclar') ? <TakvimliListeKarti u={u} hastaId={veri.hasta.id} /> : null} buyumeGrafigi={ozellikAcik('araclar') ? <BuyumeGrafigiKarti u={u} hastaId={veri.hasta.id} cinsiyetVarsayilan={veri.hasta.cinsiyet || null} /> : null} antropometriTrend={ozellikAcik('araclar') ? <AntropometriTrendKarti u={u} hastaId={veri.hasta.id} /> : null} beslenmeDosya={ozellikAcik('araclar') ? <BeslenmeDosyaKarti u={u} hastaId={veri.hasta.id} /> : null} takipOzeti={ozellikAcik('araclar') ? <TakipOzetiKarti u={u} hastaId={veri.hasta.id} /> : null} mesajlar={ozellikAcik('hastaPortali') && ozellikAcik('hastaMesajlari') ? <HastaMesajKarti u={u} hastaId={veri.hasta.id} sablonlar={ozellikAcik('hekimSablonlari')} /> : null} konsultasyon={ozellikAcik('konsultasyon') ? <KonsultasyonKarti u={u} hastaId={veri.hasta.id} /> : null} fotograflar={ozellikAcik('fotoArsivi') ? <FotoArsivKarti u={u} hastaId={veri.hasta.id} /> : null} />
       </> : (
         <section className="uza-kart">
           {durum === 'yukleniyor' ? <p className="uza-bos" role="status">{u.m.kabuk.yukleniyor}</p> : <Hata>{durum === 'yok' ? u.m.hasta.bulunamadi : u.m.kabuk.hata}</Hata>}

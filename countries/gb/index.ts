@@ -9,6 +9,7 @@
  * Keep this file light: data and pure functions only (the middleware and the browser bundle load it).
  * EVERY VALUE IS UNVERIFIED until somebody in the United Kingdom confirms it (see ./ayarlar.ts).
  */
+import { EN_PORTAL_DEMO } from '../_dil/en/portalDemo'
 import { paketMetinleri, type UlkePaketi } from '@/lib/ulke/tipler'
 import { enCekirdek } from '../_dil/en/cekirdek'
 import { enKlinikHesaplari } from '../_dil/en/klinikHesaplari'
@@ -102,7 +103,7 @@ export const GB_PAKETI: UlkePaketi = {
     // LOCALISATION AUDIT 2026-10-09: "999 is for life-threatening emergencies" was read on the health service's own page
     // (https://www.nhs.uk/nhs-services/urgent-and-emergency-care-services/when-to-call-999/). The non-emergency line
     // (111 in England, Scotland and Wales; none of that kind in Northern Ireland) has no place in the kit: reported.
-    portal: { baglantiGecerlilikGun: 30, acilNumara: '999' },
+    portal: { baglantiGecerlilikGun: 30, acilNumara: '999', demo: { 'en-GB': EN_PORTAL_DEMO } },
     mesaj: enMesajAyarlari('the United Kingdom'),
     klinikHesaplari: enKlinikHesaplari(GB_ROLLER),
     // One language in one script: no account is asked a language question.

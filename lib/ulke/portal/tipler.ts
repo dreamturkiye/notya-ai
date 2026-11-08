@@ -101,6 +101,8 @@ export type PortalIcerigi = {
     /** Clinic-recorded weight / waist / BMI points, newest first. Numbers only. */
     agirlik: readonly { gun: string; kiloKg: number | null; belCm: number | null; bmi: number | null }[]
   }
+  /** ULKE-BRANS-DERINLIK-09 — true = example data of the doctor's preview (lib/ulke/portal/demo.ts); never set on a patient's page. */
+  ornek?: boolean
   /** When this session ends. */
   bitis: string
 }
