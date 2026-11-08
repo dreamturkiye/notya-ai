@@ -501,6 +501,8 @@ describe('an Uzbekistan build: routes', () => {
       ['app/api/ulke/kayit/route.ulke.ts', ['creates the account: there is no session yet; guarded by the invitation code', /davet_kodu_kullan/]],
       ['app/api/ulke/portal/giris/route.ulke.ts', ['a PATIENT signs in: there is no session yet; guarded by the link\'s token and the PIN', /portalGiris\(/]],
       ['app/api/ulke/portal/cikis/route.ulke.ts', ['a PATIENT signs out: closes the session of the cookie it was sent, and nothing else', /portalCikis\(/]],
+      // KURUCU-KONSOL-01 (2026-11-07): called server-to-server by the founder console on the Türkiye site; no session exists.
+      ['app/api/internal/founder-stats/route.ulke.ts', ['the founder console calls it: no session; guarded by the HMAC signature (shared secret, 5-minute window, replay and rate limits)', /imzaDogrula\(/]],
     ])
     const d = ulkeRotaDosyalari()
     for (const a of d.api) {

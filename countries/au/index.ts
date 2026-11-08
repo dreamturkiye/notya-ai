@@ -125,7 +125,7 @@ export const AU_PAKETI: UlkePaketi = {
     // STRIPE-NOTYA-AU-02: without this prefix, /api/billing/checkout and /api/billing/webhook 404 at this
     // gate before Next.js ever serves them — the Stripe-side plumbing (catalog, env vars, trial) built and
     // verified earlier today was never actually reachable from au.notya.io. This is the fix.
-    apiOnEkleri: ['/api/ulke/', '/api/billing/'],
+    apiOnEkleri: ['/api/ulke/', '/api/billing/', '/api/internal/'],
   },
   // The path of the main site this country is served under.
   yolOnEki: '/au',
