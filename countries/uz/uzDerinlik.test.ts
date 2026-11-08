@@ -91,7 +91,7 @@ describe('Uzbekistan depth wave of 2026-11-08', () => {
     for (const a of UZ_ASISTAN_ADLARI) {
       const c = uzSoyadCinsiyeti(a.soyad)
       assert.ok(c === 'erkek' || c === 'kadin', a.bransAnahtari)
-      const tablo = UZ_ASISTAN_SESLERI.bransaGore[a.bransAnahtari]?.gender
+      const tablo = UZ_ASISTAN_SESLERI.bransaGore?.[a.bransAnahtari]?.gender
       if (tablo) assert.equal(c, tablo === 'female' ? 'kadin' : 'erkek', a.bransAnahtari)
       if (ROLLER.includes(a.bransAnahtari)) for (const f of FORMLAR) assert.equal(uzAsistanKimligi(a.bransAnahtari, f)?.cinsiyet, c)
     }
