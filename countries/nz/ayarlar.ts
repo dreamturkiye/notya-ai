@@ -203,8 +203,12 @@ export const NZ_GIRDI: EnUlkeGirdisi = {
     oncology: 'Medical oncology',
     'plastic-surgery': 'Plastic and reconstructive surgery',
     radiology: 'Diagnostic and interventional radiology',
-    'aesthetic-medicine': 'Cosmetic medicine',
     'clinic-dermatology': 'Dermatology',
+  // ULKE-BRANS-GATE-01 (Kaan, 2026-11-08: "keep them"): no regulator here lists these as a specialty; they stay offered,
+  // named as a PRACTICE FOCUS for registered doctors, not a specialty or vocational scope — on the sign-up select, onboarding and settings (all read this name).
+    'aesthetic-medicine': 'Cosmetic medicine — practice focus for registered doctors (not a specialty or vocational scope)',
+    longevity: 'Longevity medicine — practice focus for registered doctors (not a specialty or vocational scope)',
+    'hair-transplant': 'Hair transplantation — practice focus for registered doctors (not a specialty or vocational scope)',
   },
   // ULKE-BRANS-DERINLIK-2026-11: each role only this country has writes with note fields of its own (NZ_EK_ROL_TURLERI below).
   roller: enEkRolIcerigi(NZ_ROLLER, 'en-NZ', NZ_EK_ROL_TURLERI, NZ_EK_ROL_ONEKLERI, { form: false }),
