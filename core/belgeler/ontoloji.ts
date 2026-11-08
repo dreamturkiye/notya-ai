@@ -18,6 +18,8 @@ export type Modalite =
   | 'cxr' | 'xr_kemik' | 'xr_batin' | 'ct' | 'mr' | 'fundus' | 'oct' | 'dis_goz' | 'ekg' | 'eko'
   | 'derm' | 'dermatoskopi' | 'yara' | 'us' | 'mamografi' | 'patoloji' | 'yayma' | 'otoskopi' | 'endoskopi'
   | 'dental' | 'ses_akciger' | 'ses_kalp' | 'ses_oksuruk' | 'ses_konusma' | 'nst' | 'eeg' | 'pet' | 'video_yurume' | 'pdf_rapor' | 'serbest'
+  // ULKE-BRANS-DERINLIK-10 (2026-11-08): specialty documents Türkiye did not have yet (describe and copy printed values only)
+  | 'odyogram' | 'timpanogram' | 'spirometri' | 'holter' | 'psg' | 'semen' | 'perimetri' | 'emg' | 'psikometri'
 
 export const BULGULAR = {
   // Chest X-ray
@@ -153,7 +155,7 @@ export const BULGULAR = {
   'DENT.CARIES': { tr: 'Çürük paterni', icd10: 'K02', modalite: ['dental'] },
   'DENT.PERIAP': { tr: 'Periapikal lezyon', icd10: 'K04', modalite: ['dental'] },
   // Generic
-  'GEN.DESC': { tr: 'Serbest tarif', modalite: ['serbest', 'pdf_rapor', 'nst', 'eeg', 'pet', 'video_yurume', 'dis_goz'] },
+  'GEN.DESC': { tr: 'Serbest tarif', modalite: ['serbest', 'pdf_rapor', 'nst', 'eeg', 'pet', 'video_yurume', 'dis_goz', 'odyogram', 'timpanogram', 'spirometri', 'holter', 'psg', 'semen', 'perimetri', 'emg', 'psikometri'] },
   'GEN.LOWQ': { tr: 'Görüntü kalitesi düşük', modalite: ['serbest'] },
 } as const satisfies Record<string, BulguTanim>
 
@@ -180,4 +182,6 @@ export const MODALITE_TR: Record<Modalite, string> = {
   endoskopi: 'Endoskopi', dental: 'Dental grafi', ses_akciger: 'Akciğer sesi', ses_kalp: 'Kalp sesi',
   ses_oksuruk: 'Öksürük kaydı', ses_konusma: 'Ses / konuşma kaydı', nst: 'NST', eeg: 'EEG', pet: 'PET/BT',
   video_yurume: 'Yürüme videosu', pdf_rapor: 'Rapor (PDF)', serbest: 'Serbest görüntü',
+  odyogram: 'Odyogram', timpanogram: 'Timpanogram', spirometri: 'Spirometri / SFT', holter: 'Holter EKG raporu', psg: 'Uyku testi (PSG) raporu',
+  semen: 'Semen analizi (spermiyogram)', perimetri: 'Görme alanı (perimetri)', emg: 'EMG / sinir iletim raporu', psikometri: 'Psikometrik ölçek formu',
 }

@@ -94,7 +94,19 @@ Tanı kesinliği yok; "…düşündürür" dili.`
 Durağan kare ve sineden sayısal EF üretme. 16 yaş altı ve fetal ekoda erişkin bantlarını tanıya çevirme.
 Tamponad veya çökme/kollaps ifadesi varsa acil_bayrak true. Destek alanına motor adı yazma; "rapor metnindeki ölçüm" de.`
   }
-  return null
+  // ULKE-BRANS-DERINLIK-10 (2026-11-08): uzmanlık belgeleri — yalnız basılı değerleri AYNEN aktar; skor, evre, derece veya tanı üretme.
+  const uzmanlik: Partial<Record<Modalite, string>> = {
+    odyogram: 'ODYOGRAM — her kulak için frekans başına basılı eşikleri (dB HL), hava ve kemik yolu ayrı, maskeleme notuyla AYNEN yaz. Ortalama veya işitme kaybı derecesi basılı değilse hesaplama.',
+    timpanogram: 'TİMPANOGRAM — her kulak için basılı tip, kompliyans/admitans tepe değeri, orta kulak basıncı ve dış kulak yolu hacmini AYNEN yaz.',
+    spirometri: 'SPİROMETRİ / SFT — basılı FEV1, FVC, FEV1/FVC, beklenen yüzdesi, z-skoru ve bronkodilatör sonrası değişimi birimleriyle AYNEN yaz. Raporda basılı değilse ağırlık derecesi verme.',
+    holter: 'HOLTER — basılı kayıt süresi, kalp hızı aralığı, ektopik atım sayıları, duraklamalar ve hastanın işaretlediği olayları saatleriyle AYNEN yaz. Raporun söylemediği ritmi adlandırma.',
+    psg: 'UYKU TESTİ (PSG) — basılı indeksleri (AHİ, RDİ, ODİ, en düşük SpO2, toplam uyku süresi, uyku etkinliği) AYNEN yaz. Raporda yoksa ağırlık sınıflaması yapma.',
+    semen: 'SEMEN ANALİZİ — basılı parametreleri (hacim, konsantrasyon, total sayı, motilite, morfoloji, canlılık) birimleri ve laboratuvarın referans değerleriyle AYNEN yaz.',
+    perimetri: 'GÖRME ALANI (PERİMETRİ) — her göz için test stratejisini, güvenilirlik indekslerini ve global indeksleri (MD, PSD, VFI) basıldığı gibi yaz; glokom tanısı koyma.',
+    emg: 'EMG / SİNİR İLETİM — basılı latans, amplitüd, iletim hızları, iğne EMG bulguları ve raporun kendi sonucunu AYNEN yaz.',
+    psikometri: 'PSİKOMETRİK ÖLÇEK — ölçeğin adını, basılı toplam ve alt ölçek puanlarını ve tarihi AYNEN yaz. Maddeleri toplama, puan hesaplama, tanı koyma.',
+  }
+  return uzmanlik[modalite] ?? null
 }
 
 export function kullaniciPromptu(g: AnalizGirdi, f: FusionSonuc | null, motorlar: MotorCiktisi[], sesMetrikleri?: Record<string, number | string> | null): string {

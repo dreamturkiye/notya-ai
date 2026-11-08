@@ -27,32 +27,32 @@ const KEMIK_PED_B = ['grazpedwri-yolo', 'rsna-boneage']
 const KEMIK_B = ['fracatlas-yolo']
 
 export const BRANS_KURALLARI: Record<string, BransKurali> = {
-  aile: { ad: 'Aile Hekimliği', persona: 'genel', modaliteler: ['cxr', 'ekg', 'derm', 'fundus', 'ses_akciger', 'ses_kalp', 'otoskopi', 'pdf_rapor'], motorlar: { cxr: CXR_B, ekg: EKG_B, ses_akciger: AKC_SES_B, ses_kalp: KALP_SES_B } },
+  aile: { ad: 'Aile Hekimliği', persona: 'genel', modaliteler: ['cxr', 'ekg', 'derm', 'fundus', 'ses_akciger', 'ses_kalp', 'otoskopi', 'spirometri', 'holter', 'odyogram', 'pdf_rapor'], motorlar: { cxr: CXR_B, ekg: EKG_B, ses_akciger: AKC_SES_B, ses_kalp: KALP_SES_B } },
   acil: { ad: 'Acil Tıp', persona: 'genel', modaliteler: ['cxr', 'xr_kemik', 'xr_batin', 'ekg', 'ct', 'us', 'pdf_rapor'], motorlar: { cxr: CXR_B, ekg: EKG_B, xr_kemik: KEMIK_B } },
-  anestezi: { ad: 'Anestezi ve Reanimasyon', persona: 'genel', modaliteler: ['ekg', 'cxr', 'serbest', 'pdf_rapor'], motorlar: { cxr: CXR_B, ekg: EKG_B } },
-  beyin_cerrahisi: { ad: 'Beyin ve Sinir Cerrahisi', persona: 'elif', modaliteler: ['ct', 'mr', 'pdf_rapor'], motorlar: {} },
+  anestezi: { ad: 'Anestezi ve Reanimasyon', persona: 'genel', modaliteler: ['ekg', 'cxr', 'serbest', 'spirometri', 'pdf_rapor'], motorlar: { cxr: CXR_B, ekg: EKG_B } },
+  beyin_cerrahisi: { ad: 'Beyin ve Sinir Cerrahisi', persona: 'elif', modaliteler: ['ct', 'mr', 'emg', 'pdf_rapor'], motorlar: {} },
   cocuk_cerrahisi: { ad: 'Çocuk Cerrahisi', persona: 'ayse', modaliteler: ['xr_kemik', 'xr_batin', 'us', 'pdf_rapor'], motorlar: { xr_kemik: KEMIK_PED_B }, pediatrik: true },
-  pediatri: { ad: 'Çocuk Sağlığı ve Hastalıkları', persona: 'ayse', modaliteler: ['cxr', 'ekg', 'otoskopi', 'ses_akciger', 'ses_kalp', 'ses_oksuruk', 'xr_kemik', 'derm', 'pdf_rapor'], motorlar: { cxr: CXR_B, ekg: EKG_B, ses_akciger: AKC_SES_B, ses_kalp: KALP_SES_B, xr_kemik: KEMIK_PED_B }, pediatrik: true },
+  pediatri: { ad: 'Çocuk Sağlığı ve Hastalıkları', persona: 'ayse', modaliteler: ['cxr', 'ekg', 'otoskopi', 'ses_akciger', 'ses_kalp', 'ses_oksuruk', 'xr_kemik', 'derm', 'spirometri', 'odyogram', 'pdf_rapor'], motorlar: { cxr: CXR_B, ekg: EKG_B, ses_akciger: AKC_SES_B, ses_kalp: KALP_SES_B, xr_kemik: KEMIK_PED_B }, pediatrik: true },
   dermatoloji: { ad: 'Dermatoloji', persona: 'genel', modaliteler: ['dermatoskopi', 'derm', 'yara', 'pdf_rapor'], motorlar: {} },
   enfeksiyon: { ad: 'Enfeksiyon Hastalıkları', persona: 'elif', modaliteler: ['cxr', 'yara', 'yayma', 'pdf_rapor'], motorlar: { cxr: CXR_B } },
-  ftr: { ad: 'Fiziksel Tıp ve Rehabilitasyon', persona: 'genel', modaliteler: ['xr_kemik', 'video_yurume', 'pdf_rapor'], motorlar: { xr_kemik: KEMIK_B } },
+  ftr: { ad: 'Fiziksel Tıp ve Rehabilitasyon', persona: 'genel', modaliteler: ['xr_kemik', 'video_yurume', 'emg', 'pdf_rapor'], motorlar: { xr_kemik: KEMIK_B } },
   genel_cerrahi: { ad: 'Genel Cerrahi', persona: 'genel', modaliteler: ['xr_batin', 'ct', 'yara', 'cxr', 'pdf_rapor'], motorlar: { cxr: CXR_B } },
-  gogus: { ad: 'Göğüs Hastalıkları', persona: 'elif', modaliteler: ['cxr', 'ct', 'ses_akciger', 'ses_oksuruk', 'pdf_rapor'], motorlar: { cxr: CXR_B, ses_akciger: AKC_SES_B } },
-  gogus_cerrahisi: { ad: 'Göğüs Cerrahisi', persona: 'genel', modaliteler: ['cxr', 'ct', 'pdf_rapor'], motorlar: { cxr: CXR_B } },
-  goz: { ad: 'Göz Hastalıkları', persona: 'genel', modaliteler: ['fundus', 'oct', 'dis_goz', 'pdf_rapor'], motorlar: {}, goruntuOkumaKoprusu: true },
-  dahiliye: { ad: 'İç Hastalıkları', persona: 'elif', modaliteler: ['cxr', 'ekg', 'fundus', 'us', 'pdf_rapor'], motorlar: { cxr: CXR_B, ekg: EKG_B } },
-  kadin_dogum: { ad: KADIN_HASTALIKLARI_DOGUM_ETIKETI, persona: 'genel', modaliteler: ['us', 'nst', 'mamografi', 'pdf_rapor'], motorlar: {} },
-  kardiyoloji: { ad: 'Kardiyoloji', persona: 'mehmet', modaliteler: ['ekg', 'eko', 'ses_kalp', 'cxr', 'pdf_rapor'], motorlar: { ekg: EKG_B, ses_kalp: KALP_SES_B, cxr: CXR_B } },
+  gogus: { ad: 'Göğüs Hastalıkları', persona: 'elif', modaliteler: ['cxr', 'ct', 'ses_akciger', 'ses_oksuruk', 'spirometri', 'psg', 'pdf_rapor'], motorlar: { cxr: CXR_B, ses_akciger: AKC_SES_B } },
+  gogus_cerrahisi: { ad: 'Göğüs Cerrahisi', persona: 'genel', modaliteler: ['cxr', 'ct', 'spirometri', 'pdf_rapor'], motorlar: { cxr: CXR_B } },
+  goz: { ad: 'Göz Hastalıkları', persona: 'genel', modaliteler: ['fundus', 'oct', 'dis_goz', 'perimetri', 'pdf_rapor'], motorlar: {}, goruntuOkumaKoprusu: true },
+  dahiliye: { ad: 'İç Hastalıkları', persona: 'elif', modaliteler: ['cxr', 'ekg', 'fundus', 'us', 'spirometri', 'pdf_rapor'], motorlar: { cxr: CXR_B, ekg: EKG_B } },
+  kadin_dogum: { ad: KADIN_HASTALIKLARI_DOGUM_ETIKETI, persona: 'genel', modaliteler: ['us', 'nst', 'mamografi', 'semen', 'pdf_rapor'], motorlar: {} },
+  kardiyoloji: { ad: 'Kardiyoloji', persona: 'mehmet', modaliteler: ['ekg', 'eko', 'ses_kalp', 'cxr', 'holter', 'pdf_rapor'], motorlar: { ekg: EKG_B, ses_kalp: KALP_SES_B, cxr: CXR_B } },
   // Eko metin motoru (eko-ase) tarayıcı ONNX değildir; motorlar dizisine yazılmaz.
   kalp_damar: { ad: 'Kalp ve Damar Cerrahisi', persona: 'genel', modaliteler: ['eko', 'ekg', 'cxr', 'ct', 'pdf_rapor'], motorlar: { ekg: EKG_B, cxr: CXR_B } },
-  kbb: { ad: 'Kulak Burun Boğaz', persona: 'genel', modaliteler: ['otoskopi', 'endoskopi', 'ses_konusma', 'pdf_rapor'], motorlar: {} },
+  kbb: { ad: 'Kulak Burun Boğaz', persona: 'genel', modaliteler: ['otoskopi', 'endoskopi', 'ses_konusma', 'odyogram', 'timpanogram', 'psg', 'pdf_rapor'], motorlar: {} },
   nefroloji: { ad: 'Nefroloji', persona: 'elif', modaliteler: ['us', 'xr_batin', 'pdf_rapor'], motorlar: {} },
-  noroloji: { ad: 'Nöroloji', persona: 'elif', modaliteler: ['ct', 'mr', 'fundus', 'eeg', 'pdf_rapor'], motorlar: {} },
+  noroloji: { ad: 'Nöroloji', persona: 'elif', modaliteler: ['ct', 'mr', 'fundus', 'eeg', 'emg', 'psg', 'pdf_rapor'], motorlar: {} },
   ortopedi: { ad: 'Ortopedi ve Travmatoloji', persona: 'genel', modaliteler: ['xr_kemik', 'mr', 'pdf_rapor'], motorlar: { xr_kemik: KEMIK_B } },
   plastik: { ad: 'Plastik Cerrahi', persona: 'genel', modaliteler: ['yara', 'derm', 'pdf_rapor'], motorlar: {} },
-  psikiyatri: { ad: 'Psikiyatri', persona: 'genel', modaliteler: ['pdf_rapor'], motorlar: {}, engelli: true },
+  psikiyatri: { ad: 'Psikiyatri', persona: 'genel', modaliteler: ['psikometri', 'pdf_rapor'], motorlar: {}, engelli: true },
   radyoloji: { ad: 'Radyoloji', persona: 'genel', modaliteler: ['cxr', 'xr_kemik', 'xr_batin', 'ct', 'mr', 'us', 'mamografi', 'pet', 'pdf_rapor'], motorlar: { cxr: CXR_B, xr_kemik: KEMIK_B } },
-  uroloji: { ad: 'Üroloji', persona: 'genel', modaliteler: ['us', 'xr_batin', 'ct', 'pdf_rapor'], motorlar: {} },
+  uroloji: { ad: 'Üroloji', persona: 'genel', modaliteler: ['us', 'xr_batin', 'ct', 'semen', 'pdf_rapor'], motorlar: {} },
   patoloji: { ad: 'Patoloji', persona: 'genel', modaliteler: ['patoloji', 'pdf_rapor'], motorlar: {} },
   gastroenteroloji: { ad: 'Gastroenteroloji', persona: 'elif', modaliteler: ['endoskopi', 'us', 'pdf_rapor'], motorlar: {} },
   endokrinoloji: { ad: 'Endokrinoloji', persona: 'elif', modaliteler: ['fundus', 'us', 'pdf_rapor'], motorlar: {} },
@@ -60,6 +60,11 @@ export const BRANS_KURALLARI: Record<string, BransKurali> = {
   onkoloji: { ad: 'Tıbbi Onkoloji', persona: 'elif', modaliteler: ['ct', 'pet', 'patoloji', 'derm', 'pdf_rapor'], motorlar: {} },
   romatoloji: { ad: 'Romatoloji', persona: 'elif', modaliteler: ['xr_kemik', 'us', 'pdf_rapor'], motorlar: { xr_kemik: KEMIK_B } },
   dis: { ad: 'Diş Hekimliği', persona: 'genel', modaliteler: ['dental', 'pdf_rapor'], motorlar: {} },
+  // ULKE-BRANS-DERINLIK-10 (2026-11-08): Özel Branşlar that assess their own documents (before: 'genel', PDF report only).
+  odyoloji: { ad: 'Odyoloji', persona: 'genel', modaliteler: ['odyogram', 'timpanogram', 'otoskopi', 'pdf_rapor'], motorlar: {} },
+  klinik_psikoloji: { ad: 'Klinik Psikoloji', persona: 'genel', modaliteler: ['psikometri', 'pdf_rapor'], motorlar: {} },
+  fizyoterapi: { ad: 'Fizyoterapi', persona: 'genel', modaliteler: ['video_yurume', 'xr_kemik', 'pdf_rapor'], motorlar: {} },
+  ergoterapi: { ad: 'Ergoterapi', persona: 'genel', modaliteler: ['video_yurume', 'pdf_rapor'], motorlar: {} },
   genel: { ad: 'Genel', persona: 'genel', modaliteler: ['pdf_rapor'], motorlar: {} },
 }
 
@@ -76,6 +81,8 @@ export function bransAnahtari(specialty: string | null | undefined): string {
     [/plastik/, 'plastik'], [/psikiyatr/, 'psikiyatri'], [/radyo/, 'radyoloji'], [/üro|uro/, 'uroloji'], [/patolo/, 'patoloji'],
     [/gastro/, 'gastroenteroloji'], [/endokrin/, 'endokrinoloji'], [/hemato/, 'hematoloji'], [/onkolo/, 'onkoloji'],
     [/romato/, 'romatoloji'], [/diş|dis hek/, 'dis'],
+    // ULKE-BRANS-DERINLIK-10: Özel Branşlar with their own documents (after every medical branch, so none of those is taken over).
+    [/odyolo/, 'odyoloji'], [/klinik[\s-]*psikolo|^psikoloji$/, 'klinik_psikoloji'], [/fizyoterap/, 'fizyoterapi'], [/ergoterap/, 'ergoterapi'],
   ]
   for (const [re, k] of eslesme) if (re.test(s)) return k
   return 'genel'
