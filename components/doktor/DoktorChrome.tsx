@@ -251,6 +251,11 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
           const u = d?.data || d;
           setAd(String(u?.full_name || u?.first_name || '').trim());
           setBrans(String(u?.specialty || ''));
+          // PLAN-ONBOARDING-01 (Kaan, 2026-11-07): an account that never finished onboarding (nothing on record: no flag,
+          // no profession, no branch — e.g. it went /kayit?plan=… → Stripe → here) is sent to the same onboarding as the
+          // free trial, which asks name, mobile, branch and consent. The branch gate below stays for onboarded accounts
+          // that only lack a branch.
+          if (u && u.onboarding_completed === false) { router.replace('/onboarding?p=doktor'); return; }
           setBransGerekli(u?.brans_gerekli === true);
           hekimProfilOturumYaz({ specialty: u?.specialty, profession_type: u?.profession_type, full_name: u?.full_name || u?.first_name })
         }

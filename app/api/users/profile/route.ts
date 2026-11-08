@@ -6,6 +6,8 @@ import { hekimProfilDusur } from '@/lib/doktor/hekimProfilOnbellek'
 import { cepTelefonuKolonuYokMu, profilGovdesiDogrula } from '@/lib/onboarding/profilDogrula'
 import { kvkkKayitliMi, kvkkMetaDamgasi, kvkkSatirDamgasi } from '@/lib/onboarding/kvkkOnay'
 import { kayitBransiMi } from '@/lib/onboarding/kayitBransi'
+import { arkaPlanda } from '@/lib/kurucu/denemeBildirimi'
+import { trDenemeKaydiBildir } from '@/lib/kurucu/trDenemeBildir'
 
 export const dynamic = 'force-dynamic'
 
@@ -158,6 +160,11 @@ export async function POST(req: NextRequest) {
     if (metaHatasi) console.error('[profile] auth metadata could not be written', { userId, hata: metaHatasi.message })
 
     hekimProfilDusur(userId)
+    // DENEME-BILDIRIM-01: the specialty was just set → the internal "new trial signup" e-mail, once per account, after the
+    // response. Never blocks or fails this request (lib/kurucu/trDenemeBildir.ts).
+    if (typeof updatePayload.specialty === 'string' && updatePayload.specialty) {
+      arkaPlanda(() => trDenemeKaydiBildir(getSupabase(), { id: userId, email: userEmail || undefined, user_metadata: existingMeta }), 'deneme-bildirim/profile')
+    }
     return NextResponse.json({
       success: true,
       data: { ...result, onboarding_completed: true },

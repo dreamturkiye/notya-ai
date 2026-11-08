@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { referansKaydet } from '@/lib/billing/referans'
+import { onboardingAlanlariTamamMi } from '@/lib/onboarding/onboardingTamam'
 export const dynamic = 'force-dynamic'
 
 const sb = () => createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { global: { fetch: (u, o) => fetch(u, { ...o, cache: 'no-store' }) } })
@@ -30,6 +31,17 @@ export async function PUT(req: NextRequest) {
   const trialEnd = new Date(trialStart)
   trialEnd.setDate(trialEnd.getDate() + 15)
 
+  // PLAN-ONBOARDING-01 (Kaan, 2026-11-07): starting the trial does NOT mark the account onboarded by itself any more.
+  // Only an account whose required onboarding answers are on record (name, mobile, branch, title, form of address,
+  // consent — lib/onboarding/onboardingTamam.ts) gets onboarding_completed here. The trial itself is unchanged:
+  // 15 days, no card, no invitation code.
+  const { data: satir } = await sb()
+    .from('users')
+    .select('profession_type, specialty, title, first_name, last_name, cep_telefonu, gender, addressing_preference, kvkk_consent_at')
+    .eq('id', user.id)
+    .maybeSingle()
+  const tamam = onboardingAlanlariTamamMi(satir, meta)
+
   // Store trial in auth metadata
   await sb().auth.admin.updateUserById(user.id, {
     user_metadata: {
@@ -37,21 +49,17 @@ export async function PUT(req: NextRequest) {
       plan: 'professional',
       trial_start: trialStart.toISOString(),
       trial_ends: trialEnd.toISOString(),
-      onboarding_completed: true,
+      ...(tamam ? { onboarding_completed: true } : {}),
     }
   })
 
-  // Also store in users table if it has the columns
-  try {
-    await sb().from('users').upsert({
-      id: user.id,
-      email: user.email,
-      plan: 'professional',
-      trial_ends: trialEnd.toISOString(),
-      onboarding_completed: true,
-      updated_at: new Date().toISOString(),
-    }, { onConflict: 'id', ignoreDuplicates: false })
-  } catch { /* column may not exist yet - metadata is source of truth */ }
+  // The users row has no plan / trial_ends columns (auth metadata is the source of truth for the trial); only the
+  // onboarding flag is written there, and only when the required answers are on record.
+  if (tamam) {
+    try {
+      await sb().from('users').update({ onboarding_completed: true, updated_at: new Date().toISOString() }).eq('id', user.id)
+    } catch { /* metadata above already carries it */ }
+  }
 
   // REFERANS-01: the referral code the account signed up with (its own metadata, written at sign-up) is recorded once,
   // here, when the trial starts. Optional and never blocking: no code, a wrong code or a failure changes nothing.

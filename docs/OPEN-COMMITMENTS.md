@@ -1,5 +1,20 @@
 # OPEN COMMITMENTS — Notya AI
 
+## PLAN-ONBOARDING-01 / DENEME-BILDIRIM-01 / KURUCU-KONSOL-01 — paid-plan onboarding, trial-signup e-mail, founder console: what is open (Claude, 2026-11-07)
+
+Shipped 2026-11-07 on main and the six release branches (one commit each). Paid plan: Stripe now returns the doctor to
+`/onboarding` and the doctor app sends a never-onboarded account there; `PUT /api/users/trial` marks an account onboarded only
+when name, mobile, branch, title, form of address and consent are on record (country builds: N/A, their sign-up already asks
+name and role and `/start` gates every screen). Trial-signup e-mail to kaan@notya.io: once per account, when the specialty is
+first set (migration 191 on TR, 192 on the six country databases, applied and verified). Founder console: `/kurucu` (TR),
+FOUNDER_EMAILS allowlist, 404 for everyone else; country data from each build's signed `/api/internal/founder-stats`
+(FOUNDER_STATS_SECRET set on all seven Vercel projects, Production).
+
+| Kaan: create a Resend API key for the verified notya.io domain (sender `bildirim@notya.io`) and add `RESEND_API_KEY` (Production) to `notya-ai` and the six country projects (`notya-us/uk/ca/au/nz/uz-preview`). Until then no e-mail goes out; every signup is still recorded (flag + count) and shown on `/kurucu`. The same key also switches on the dormant demo e-mail code, which stays unregistered in Cal. | Claude: none until then | OPEN (2026-11-07) — waits on Kaan |
+| Kaan: there is no `kaan@notya.io` login on the Türkiye site. Create it once (sign up at notya.io/kayit with that address, or tell Claude to send an invite), then open notya.io/kurucu while signed in. That address is excluded from every count and from the signup e-mail. | Claude: none | OPEN (2026-11-07) — waits on Kaan |
+| Kaan: Dr. Gökhan Mamur is NOT on FOUNDER_EMAILS: the code knows two logins for him (dr.gokhan@notya.ai daily, dr.gokhanmamur@gmail.com older). Say which one, and Claude adds it to FOUNDER_EMAILS on `notya-ai`. | Claude: add it the same day | OPEN (2026-11-07) — waits on Kaan |
+| Claude: live smoke check of the six country endpoints from the console after the builds are live (this sandbox's egress proxy refuses *.notya.io, so it could not be called from here; see the 2026-11-07 report). | Kaan: open /kurucu once signed in; each country shows data or "Unavailable (reason)" | OPEN (2026-11-07) |
+
 ## GENITAL-ESTETIK-01 — cosmetic gynaecology / genital aesthetics package: what did not land, and what waits on whom (Claude, 2026-11-06)
 
 Shipped 2026-11-06 on main (Türkiye, KD only) and on the six release branches (each country only what its own law and

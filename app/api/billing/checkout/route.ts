@@ -88,7 +88,10 @@ export async function POST(req: NextRequest) {
         metadata: { supabase_user_id: user.id, notya_plan_key: plan.key, notya_interval: interval },
       },
       metadata: { supabase_user_id: user.id, notya_plan_key: plan.key, notya_interval: interval },
-      success_url: `${appUrl()}/dashboard/doktor?billing=success&plan=${plan.key}`,
+      // PLAN-ONBOARDING-01 (Kaan, 2026-11-07): back from Stripe, the doctor lands in the SAME onboarding as the free trial
+      // (name, mobile, branch, consent). An account that already finished onboarding is sent straight on to the app by
+      // the onboarding page itself. Checkout and the subscription are untouched (one session, one charge path).
+      success_url: `${appUrl()}/onboarding?p=doktor&billing=success&plan=${plan.key}`,
       cancel_url: `${appUrl()}/onboarding?billing=cancelled`,
       allow_promotion_codes: true,
     })

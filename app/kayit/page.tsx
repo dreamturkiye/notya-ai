@@ -110,6 +110,9 @@ function KayitForm() {
             // "Branşınızı seçin" gate. Deliberately NOT `specialty`: that key would mark the account as onboarded
             // (/api/users/me) before the rest of onboarding is done. The server validates it again on every write.
             kayit_bransi: brans,
+            // PLAN-ONBOARDING-01 / DENEME-BILDIRIM-01: the paid plan chosen on the landing page, recorded with the account
+            // (the internal sign-up e-mail says "paid plan chosen" even before Stripe's webhook arrives). Not a gate.
+            ...(SELF_SERVE_PLAN_KEYS.has(planKey) ? { kayit_plani: planKey } : {}),
           },
         },
       });

@@ -18,7 +18,8 @@ import { dogrulamaMesaji, turkceHataMesaji } from './dogrulamaMesaji'
 
 const KOK = resolve(__dirname, '../..')
 const KLASORLER = ['app', 'components']
-const HARIC = /(^|\/)(mali|mali-tools|avukat|sandbox)(\/|$)|(^|\/)(mali|avukat)-chat\/|\.test\.|\.d\.ts$/
+// KURUCU-KONSOL-01 (Kaan, 2026-11-07): /kurucu is the founder's internal console, in English by his rule (not doctor UI).
+const HARIC = /(^|\/)(mali|mali-tools|avukat|sandbox|kurucu)(\/|$)|(^|\/)(mali|avukat)-chat\/|\.test\.|\.d\.ts$/
 
 function dosyalar(klasor: string): string[] {
   const tam = join(KOK, klasor)

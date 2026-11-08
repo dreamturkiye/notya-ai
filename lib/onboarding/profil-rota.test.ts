@@ -384,8 +384,10 @@ describe('POST /api/users/profile: users.cep_telefonu missing (migration 150 not
       assert.equal(s.onboarding_completed, true)
       assert.equal(s.kvkk_consent_version, KVKK_METIN_VERSIYONU, 'consent is not lost either')
       assert.equal(metalar.get(h.id)!.onboarding_completed, true)
-      assert.equal(satirYazimlari.length, 2, 'once with the column, once without')
-      assert.ok('cep_telefonu' in satirYazimlari[0] && !('cep_telefonu' in satirYazimlari[1]))
+      // DENEME-BILDIRIM-01: the once-only trial-signup claim (deneme_bildirim_at) is a separate background write, not the route's.
+      const rotaYazimlari = satirYazimlari.filter((y) => !('deneme_bildirim_at' in y))
+      assert.equal(rotaYazimlari.length, 2, 'once with the column, once without')
+      assert.ok('cep_telefonu' in rotaYazimlari[0] && !('cep_telefonu' in rotaYazimlari[1]))
       const satirGunlugu = gunluk.find((g) => g.includes('cep_telefonu'))
       assert.ok(satirGunlugu && satirGunlugu.includes('migration 150') && satirGunlugu.includes(h.id))
       assert.ok(!gunluk.some((g) => g.includes('5321234567') || g.includes('532 123')), 'the number itself is never logged')

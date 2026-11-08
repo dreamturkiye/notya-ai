@@ -21,6 +21,8 @@ import { hekimProfilDusur } from '@/lib/doktor/hekimProfilOnbellek'
 import { bransDegistirebilir } from '@/lib/auth/superuserBranslar'
 import { KAYIT_BRANS_MESAJ, kayitBransiMi } from '@/lib/onboarding/kayitBransi'
 import { bransSecimiGerekli, etkinBrans } from '@/lib/onboarding/bransKapisi'
+import { arkaPlanda } from '@/lib/kurucu/denemeBildirimi'
+import { trDenemeKaydiBildir } from '@/lib/kurucu/trDenemeBildir'
 
 export const dynamic = 'force-dynamic'
 
@@ -55,6 +57,8 @@ export async function POST(req: NextRequest) {
     const { error: metaHatasi } = await supabase.auth.admin.updateUserById(user.id, { user_metadata: { ...meta, specialty: ham } })
     if (metaHatasi) console.error('[users/brans] auth metadata could not be written', { userId: user.id, hata: metaHatasi.message })
 
+    // DENEME-BILDIRIM-01: the first specialty of this account → the internal trial-signup e-mail, once, after the response.
+    arkaPlanda(() => trDenemeKaydiBildir(supabase, user), 'deneme-bildirim/brans')
     return NextResponse.json({ success: true, specialty: ham })
   } catch (e) {
     console.error('[users/brans]', e instanceof Error ? e.message : e)
