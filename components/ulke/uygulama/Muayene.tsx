@@ -442,7 +442,7 @@ function EklerSeansi({ u, seansId }: { u: ReturnType<typeof useUygulama>; seansI
       window.location.assign(`${YOL.muayene}?not=${n.j.notId}`)
       return true
     }
-    return <EklerAdimi m={u.m} api={api} seansId={seansId} hastaAdi={muayene.hasta ? tamAd(muayene.hasta) : ''} yaz={yaz} hataMetni={u.m.muayene.notYazilamadi} />
+    return <EklerAdimi m={u.m} rol={u.hesap?.rol ?? null} api={api} seansId={seansId} hastaAdi={muayene.hasta ? tamAd(muayene.hasta) : ''} yaz={yaz} hataMetni={u.m.muayene.notYazilamadi} />
   }
   return (
     <section className="uza-kart">

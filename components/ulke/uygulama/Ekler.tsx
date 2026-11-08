@@ -24,7 +24,7 @@ import { sinirliKuyruk } from '@/core/belgeler/otoBatch'
 import { ulkePaketi } from '@/lib/ulke/ulke'
 import { ulkeYolOnEki } from '@/lib/ulke/yol'
 import { yerine } from '@/lib/ulke/arayuz/yerTutucu'
-import { EK_AZAMI_ADET, EK_DOSYA_AZAMI, EK_KABUL, EK_PDF_AZAMI_SAYFA, EK_TURLERI, ekDosyaTuru, ekGonderimi, gonderilebilir, type EkGonderimi, type EkSonucu, type EkTuruSecimi } from '@/lib/ulke/belgeler/ekler'
+import { EK_AZAMI_ADET, EK_DOSYA_AZAMI, EK_KABUL, EK_PDF_AZAMI_SAYFA, ekDosyaTuru, rolEkTurleri, ekGonderimi, gonderilebilir, type EkGonderimi, type EkSonucu, type EkTuruSecimi } from '@/lib/ulke/belgeler/ekler'
 import type { UygulamaMetni } from '@/lib/ulke/arayuz'
 import { Bilgi, Hata, type Api } from './Kabuk'
 import { pdfSayfalariniCiz } from './pdfSayfalari'
@@ -183,10 +183,10 @@ function nedenMetni(m: UygulamaMetni, n: Neden | null): string | null {
 }
 
 /** The drop area, the list of documents with their types and states. Used by the step and by the note's card. */
-export function EklerListesi({ m, e }: { m: UygulamaMetni; e: Ekler }) {
+export function EklerListesi({ m, e, rol }: { m: UygulamaMetni; e: Ekler; /** ULKE-BRANS-DERINLIK-10: the account's role — its specialty kinds are offered, no other role's. */ rol?: string | null }) {
   const [surukle, setSurukle] = useState(false)
   const girdi = useRef<HTMLInputElement>(null)
-  const turSecenekleri = useMemo(() => [{ deger: 'auto' as EkTuruSecimi, ad: m.ekler.turOtomatik }, ...EK_TURLERI.map((t) => ({ deger: t as EkTuruSecimi, ad: m.ekler.turler[t] }))], [m])
+  const turSecenekleri = useMemo(() => [{ deger: 'auto' as EkTuruSecimi, ad: m.ekler.turOtomatik }, ...rolEkTurleri(rol).map((t) => ({ deger: t as EkTuruSecimi, ad: m.ekler.turler[t] }))], [m, rol])
   return (
     <div data-alan="ekler">
       <div
@@ -255,8 +255,8 @@ class Sinir extends Component<{ devam: () => void; yazi: string; children: React
  * The step. `yaz(ekler)` writes the note (the caller's: it posts the visit id and the documents and opens the note);
  * it answers false when the note could not be written, and the step stays so that it can be tried again.
  */
-export function EklerAdimi({ m, api, seansId, hastaAdi, yaz, hataMetni }: {
-  m: UygulamaMetni; api: Api; seansId: string; hastaAdi: string
+export function EklerAdimi({ m, api, seansId, hastaAdi, yaz, hataMetni, rol }: {
+  m: UygulamaMetni; api: Api; seansId: string; hastaAdi: string; rol?: string | null
   yaz: (ekler: EkGonderimi[]) => Promise<boolean>
   hataMetni: string
 }) {
@@ -280,7 +280,7 @@ export function EklerAdimi({ m, api, seansId, hastaAdi, yaz, hataMetni }: {
       <h1 className="uza-h1">{n.baslik}</h1>
       <p className="uza-aciklama" style={{ marginBottom: 14 }}>{n.aciklama}</p>
       <Sinir devam={() => void devam(true)} yazi={n.devamBelgesiz}>
-        <EklerListesi m={m} e={e} />
+        <EklerListesi m={m} e={e} rol={rol} />
       </Sinir>
       <Hata>{basarisiz ? hataMetni : null}</Hata>
       {yaziliyor && e.suruyor ? <Bilgi>{n.devamBekliyor}</Bilgi> : null}
@@ -302,8 +302,8 @@ const imza = (x: EkGonderimi): string => `${x.belgeId}\u0001${x.tur}\u0001${x.oz
  * them are done — one write per batch. `onEklendi(o)` gets the section as saved, for the screen to merge into the text
  * the doctor is still editing (core/belgeler/notaBlok.ts → bloklariAktar).
  */
-export function EklerNotKarti({ m, api, notId, seansId, hastaAdi, onEklendi }: {
-  m: UygulamaMetni; api: Api; notId: string; seansId: string; hastaAdi: string
+export function EklerNotKarti({ m, api, notId, seansId, hastaAdi, onEklendi, rol }: {
+  m: UygulamaMetni; api: Api; notId: string; seansId: string; hastaAdi: string; rol?: string | null
   onEklendi: (o: string) => void
 }) {
   const e = useEkler({ seansId, hastaAdi, api })
@@ -335,7 +335,7 @@ export function EklerNotKarti({ m, api, notId, seansId, hastaAdi, onEklendi }: {
     <section className="uza-kart" data-alan="ekler-not">
       <h2 className="uza-h2">{n.notBaslik}</h2>
       <p className="uza-ipucu" style={{ marginTop: 0 }}>{n.notAciklama}</p>
-      <EklerListesi m={m} e={e} />
+      <EklerListesi m={m} e={e} rol={rol} />
       <Hata>{kotu}</Hata>
       <Bilgi>{iyi}</Bilgi>
       {tekrar ? <div className="uza-eylemler"><button type="button" className="uza-dugme uza-dugme-cizgi" onClick={() => void gonder(sonuclar())} data-eylem="ekler-not-tekrar">{n.yeniden}</button></div> : null}
