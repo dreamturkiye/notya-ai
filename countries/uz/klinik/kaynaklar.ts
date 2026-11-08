@@ -19,6 +19,10 @@
  *   medical university library list opened 2026-11-08 (geotar.ru, labirint.ru, mmbook.ru, kirovgma.ru, dgmu.ru, igma.ru,
  *   rsmu.ru). No Uzbek-language textbook could be confirmed per specialty this session: none is listed (OPEN-COMMITMENTS
  *   ULKE-BRANS-DERINLIK-12).
+ *   ULKE-BRANS-DERINLIK-14 (2026-11-08): plastic and aesthetic surgery have no national guide in that series (searched
+ *   geotar.ru and booksellers); they cite the Russian-language plastic surgery course edited by K. P. Pshenisnov, confirmed
+ *   in the core reading list of a medical university programme (RUDN University, rudn.ru, opened 2026-11-08). Also a
+ *   Russian-language text, not an Uzbek national document.
  *
  * NOT FOUND (left out, logged): the Ministry's order approving outpatient medical record forms (form 025) could not be
  * opened on lex.uz or gov.uz in three searches — no form 025 structure or citation is in the product (DERINLIK-11).
@@ -71,6 +75,7 @@ const K = {
   gastro: 'Гастроэнтерология: национальное руководство / под ред. В. Т. Ивашкина, Т. Л. Лапиной. М.: ГЭОТАР-Медиа, 2018',
   pedi: 'Педиатрия: национальное руководство / под ред. А. А. Баранова. М.: ГЭОТАР-Медиа, 2009',
   neotlozh: 'Неотложная педиатрия: национальное руководство / под ред. Б. М. Блохина. М.: ГЭОТАР-Медиа, 2017',
+  plast: 'Курс пластической хирургии: руководство для врачей: в 2 т. / под ред. К. П. Пшениснова. Рыбинск: Рыбинский Дом печати, 2010',
   derm: 'Дерматовенерология: национальное руководство. Краткое издание / под ред. Ю. С. Бутова, Ю. К. Скрипкина, О. Л. Иванова. М.: ГЭОТАР-Медиа, 2020',
   nefro: 'Нефрология: национальное руководство / гл. ред. Н. А. Мухин. М.: ГЭОТАР-Медиа, 2009',
   uro: 'Урология: национальное руководство / под ред. Н. А. Лопаткина. М.: ГЭОТАР-Медиа, 2013',
@@ -118,7 +123,7 @@ export const UZ_ROL_KAYNAKLARI: Readonly<Record<string, UzRolKaynagi>> = {
   onkoloji: R([P.tuxumdon, P.xodjkin], [K.onko]),
   ortopedi: R([P.ddh], [K.ortop, K.travma]),
   pediatri: R([P.gripp, P.atopik, P.xodjkin], [K.pedi, K.neotlozh]),
-  'plastik-cerrahi': R([], []),
+  'plastik-cerrahi': R([], [K.plast]),
   psikiyatri: R([], [K.psix]),
   radyoloji: R([], [K.luch]),
   romatoloji: R([], [K.revma]),
@@ -131,7 +136,7 @@ export const UZ_ROL_KAYNAKLARI: Readonly<Record<string, UzRolKaynagi>> = {
   narkoloji: R([], [K.psix, K.toks]),
   diyetoloji: R([P.qd, P.gqd], [K.nutri]),
   surdoloji: R([], [K.lor]),
-  'estetik-cerrahi': R([], []),
+  'estetik-cerrahi': R([], [K.plast]),
   'medikal-estetik': R([P.husnbuzar], [K.derm]),
   'klinik-dermatoloji': R([P.husnbuzar, P.atopik], [K.derm]),
   fizyoterapi: R([], [K.fizio]),

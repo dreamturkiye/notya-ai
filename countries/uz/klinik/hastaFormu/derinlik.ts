@@ -23,7 +23,7 @@ const ACIL_XAVFSIZLIK = u(
   `${ACIL.ru} Врач просматривает этот ответ до приёма.`,
 )
 
-const GUVENLIK = new Set(['psikiyatri', 'klinik-psikolog'])
+const GUVENLIK = new Set(['psikiyatri', 'klinik-psikolog', 'narkoloji'])
 
 type Qator = readonly [string, string, string, string]
 const o = (satirlar: readonly Qator[]): Secenek[] => satirlar.map(([anahtar, lat, kir, ru]) => s(anahtar, lat, kir, ru))
@@ -159,6 +159,19 @@ const diyet = o([
   ['hush', 'Hushdan ketish', 'Ҳушдан кетиш', 'Обморок'],
   ['tomoq', 'Ovqatdan keyin til yoki tomoq shishishi', 'Овқатдан кейин тил ёки томоқ шишиши', 'Отёк языка или горла после еды'],
 ])
+// ULKE-BRANS-DERINLIK-14: allergy (anaphylaxis) and vascular red flags for the two roles that ask their own questions now.
+const alerji = o([
+  ['tomoq', 'Til, lab yoki tomoq shishishi', 'Тил, лаб ёки томоқ шишиши', 'Отёк языка, губ или горла'],
+  ['nafas', 'Nafas olishning qiyinlashishi yoki xirillash', 'Нафас олишнинг қийинлашиши ёки хириллаш', 'Затруднённое или свистящее дыхание'],
+  ['hush', 'Bosh aylanishi yoki hushdan ketish', 'Бош айланиши ёки ҳушдан кетиш', 'Головокружение или обморок'],
+  ['toshma', 'Tez tarqalayotgan eshakemi', 'Тез тарқалаётган эшакеми', 'Быстро распространяющаяся крапивница'],
+])
+const damar = o([
+  ['oyoq', 'Oyoq toʻsatdan sovuq, oqargan va ogʻriqli', 'Оёқ тўсатдан совуқ, оқарган ва оғриқли', 'Нога внезапно холодная, бледная и болит'],
+  ['shish', 'Bir oyoqning toʻsatdan shishishi nafas qisilishi bilan', 'Бир оёқнинг тўсатдан шишиши нафас қисилиши билан', 'Внезапный отёк одной ноги вместе с одышкой'],
+  ['qorin', 'Toʻsatdan kuchli qorin yoki bel ogʻrigʻi', 'Тўсатдан кучли қорин ёки бел оғриғи', 'Внезапная сильная боль в животе или пояснице'],
+  ['qon', 'Toʻxtamaydigan qon ketish', 'Тўхтамайдиган қон кетиш', 'Кровотечение, которое не останавливается'],
+])
 const odyo = o([
   ['eshitish', 'Eshitishning toʻsatdan yoʻqolishi', 'Эшитишнинг тўсатдан йўқолиши', 'Внезапная потеря слуха'],
   ['quloq', 'Bir quloqda toʻsatdan eshitish yoki gʻuvullashning yoʻqolishi', 'Бир қулоқда тўсатдан эшитиш ёки ғувуллашнинг йўқолиши', 'Внезапная потеря слуха или звона в одном ухе'],
@@ -202,8 +215,13 @@ const LISTE: Readonly<Record<string, Secenek[]>> = {
   'plastik-cerrahi': plastik,
   'estetik-cerrahi': plastik,
   'enfeksiyon-hastaliklari': genel,
-  diyetisyen: diyet,
-  odyoloji: odyo,
+  diyetoloji: diyet,
+  surdoloji: odyo,
+  'alerji-immunoloji': alerji,
+  'damar-cerrahisi': damar,
+  reproduktoloji: kadin,
+  'cocuk-norolojisi': noro,
+  narkoloji: psiki,
 }
 
 const kirmizi = (anahtar: string, secenekler: Secenek[]): Soru => cok(

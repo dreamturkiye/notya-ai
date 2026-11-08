@@ -163,19 +163,18 @@ describe('Uzbekistan — the intake form: questions of the core set and of the 4
     const gibiler = Object.fromEntries(UZ_ROL_TANIMLARI.flatMap((r) => { const g = rolunGibisi(UZ_ROL_TANIMLARI, r.anahtar); return g ? [[r.anahtar, g]] : [] }))
     assert.deepEqual(Object.keys(gibiler).sort(), ['alerji-immunoloji', 'cocuk-norolojisi', 'damar-cerrahisi', 'diyetoloji', 'narkoloji', 'reproduktoloji', 'surdoloji'])
     assert.deepEqual(formIcerigiSorunlari(UZ_HASTA_FORMU, UZ_ROLLER, FORMLAR, () => false, gibiler), [])
-    // without that table the kit would refuse the two sets kept under a key that is no role, and the seven roles without a set of their own
-    assert.equal(formIcerigiSorunlari(UZ_HASTA_FORMU, UZ_ROLLER, FORMLAR).length, 9)
+    // ULKE-BRANS-DERINLIK-14: every role has a set of its own now, so the kit finds nothing wrong even without that table
+    assert.deepEqual(formIcerigiSorunlari(UZ_HASTA_FORMU, UZ_ROLLER, FORMLAR), [])
   })
 
   it('THE 42 ROLES, one by one: a set for each — its own, or that of the role it behaves like — machine-written and read by no clinician, keys under one mark, never another set\'s question', () => {
     assert.equal(UZ_ROLLER.length, 42)
     /** THE SET A ROLE REALLY ASKS: the kit's own rule (lib/ulke/intake/form.ts asks the same function). */
     const setAnahtari = (rol: string) => icerikAnahtari(UZ_ROL_TANIMLARI, rol, UZ_HASTA_FORMU.roller)
-    // 37 sets for 42 roles: 35 under the role's own key, and the two kept for the doctor roles that behave like a key that is no role any more
-    const kendi = UZ_ROLLER.filter((r) => rolunGibisi(UZ_ROL_TANIMLARI, r) === null)
-    assert.equal(kendi.length, 35)
-    assert.deepEqual(Object.keys(UZ_HASTA_FORMU.roller).sort(), [...kendi, 'diyetisyen', 'odyoloji'].sort(), 'a set for each role that has its own, the two that are lent, and nothing else')
-    assert.deepEqual(Object.fromEntries(UZ_ROLLER.filter((r) => setAnahtari(r) !== r).map((r) => [r, setAnahtari(r)])), { 'damar-cerrahisi': 'kalp-damar-cerrahisi', 'alerji-immunoloji': 'dahiliye', reproduktoloji: 'kadin-hastaliklari-dogum', 'cocuk-norolojisi': 'noroloji', narkoloji: 'psikiyatri', diyetoloji: 'diyetisyen', surdoloji: 'odyoloji' })
+    // ULKE-BRANS-DERINLIK-14 (2026-11-08): 42 sets for 42 roles — every role asks its own questions, none borrows another's
+    assert.equal(UZ_ROLLER.filter((r) => rolunGibisi(UZ_ROL_TANIMLARI, r) === null).length, 35)
+    assert.deepEqual(Object.keys(UZ_HASTA_FORMU.roller).sort(), [...UZ_ROLLER].sort(), 'a set for each role, and nothing else')
+    assert.deepEqual(UZ_ROLLER.filter((r) => setAnahtari(r) !== r), [], 'no role borrows a set')
     for (const k of ['sac-ekimi', 'longevity', 'ergoterapi']) assert.equal(UZ_HASTA_FORMU.roller[k], undefined, `${k}: the set of a role the audit took out is still there`)
     const cekirdek = new Set(UZ_HASTA_FORMU.cekirdek.bolumler.flatMap((b) => b.sorular.map((q) => q.anahtar)))
     assert.equal(cekirdek.size, 42, 'the core questions')
@@ -228,8 +227,9 @@ describe('Uzbekistan — the intake form: questions of the core set and of the 4
       }
     }
     // 209 until 2026-10-11, then a red-flag box and two depth questions on every set, plus a safety question on psychiatry and psychology
-    assert.equal(toplam, 322, 'the role questions of the 37 sets')
-    assert.equal(isaretler.size, 37)
+    // ULKE-BRANS-DERINLIK-14: the seven own sets (+63 with their red flags and depth questions, +1 safety question) and minus the two retired sets
+    assert.equal(toplam, 370, 'the role questions of the 42 sets')
+    assert.equal(isaretler.size, 42)
     // A key that is no role any more gets no role section, though a set may still stand under it: the kit asks for a ROLE first.
     for (const k of ['sac-ekimi', 'longevity', 'ergoterapi', 'diyetisyen', 'odyoloji']) assert.equal(setAnahtari(k) !== null && UZ_ROLLER.includes(k), false, k)
     // A role the country does not have, and no role at all: the core questions only.

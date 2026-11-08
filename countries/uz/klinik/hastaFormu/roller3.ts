@@ -2,6 +2,8 @@
  * NOTYA-ULKE-INTAKE-01 — Uzbekistan: THE ROLE QUESTIONS of the intake form, part 3 of 3 — the clinic side: three
  * clinic doctors and two allied professions, and the two sets that two doctor roles now ask through `gibi`.
  *
+ * ULKE-BRANS-DERINLIK-14 (2026-11-08): the `diyetisyen` and `odyoloji` sets are gone — dietology and surdology ask
+ * questions of their own now (./roller4.ts), and no role asks those two.
  * NOTYA-ULKE-UYGULA-UZ (2026-10-10): the sets of the three roles the audit took out (hair transplantation,
  * preventive and anti-ageing medicine, occupational therapy) are gone. `diyetisyen` and `odyoloji` are no roles any
  * more: their sets stay, as the questions of the doctor roles that behave like them (diyetoloji, surdoloji;
@@ -117,50 +119,5 @@ export const UZ_ROL_SORULARI_3: Readonly<Record<string, RolSorulari>> = {
     ],
   },
 
-  diyetisyen: {
-    baslik: u('Ovqatlanish haqida', 'Овқатланиш ҳақида', 'О питании'),
-    inceleme: MAKINE,
-    sorular: [
-      tek('dt_maqsad', u('Murojaat maqsadi', 'Мурожаат мақсади', 'Цель обращения'), [
-        s('kamaytirish', 'Vaznni kamaytirish', 'Вазнни камайтириш', 'Снижение веса'),
-        s('oshirish', 'Vaznni oshirish', 'Вазнни ошириш', 'Набор веса'),
-        s('kasallik', 'Kasallik sababli parhez', 'Касаллик сабабли парҳез', 'Диета в связи с заболеванием'),
-        s('soglom', 'Sogʻlom ovqatlanish', 'Соғлом овқатланиш', 'Здоровое питание'),
-      ]),
-      tek('dt_vazn', u('Oxirgi yarim yilda vazn oʻzgardimi?', 'Охирги ярим йилда вазн ўзгардими?', 'Менялся ли вес за последние полгода?'), [
-        s('yoq', 'Oʻzgarmadi', 'Ўзгармади', 'Не менялся'),
-        s('kamaydi', 'Kamaydi', 'Камайди', 'Снизился'),
-        s('oshdi', 'Oshdi', 'Ошди', 'Увеличился'),
-      ]),
-      son('dt_ovqatlar', u('Kuniga necha marta ovqatlanasiz?', 'Кунига неча марта овқатланасиз?', 'Сколько раз в день вы едите?'), MARTA, 1, 12,
-        { veliMetni: u('Bola kuniga necha marta ovqatlanadi?', 'Бола кунига неча марта овқатланади?', 'Сколько раз в день ест ребёнок?') }),
-      son('dt_suv', u('Kuniga taxminan necha stakan suv ichiladi?', 'Кунига тахминан неча стакан сув ичилади?', 'Сколько примерно стаканов воды выпивается за день?'), STAKAN, 0, 30),
-      uzun('dt_parhez', u('Amal qilinayotgan parhez yoki ovqatlanish cheklovlari', 'Амал қилинаётган парҳез ёки овқатланиш чекловлари', 'Диета или ограничения в питании, которые соблюдаются')),
-      uzun('dt_yoqmas', u('Yeyilmaydigan yoki yoqmaydigan mahsulotlar', 'Ейилмайдиган ёки ёқмайдиган маҳсулотлар', 'Продукты, которые не едят или которые плохо переносятся')),
-      tek('dt_faollik', u('Jismoniy faollik', 'Жисмоний фаоллик', 'Физическая активность'), faollik()),
-    ],
-  },
 
-  odyoloji: {
-    baslik: u('Eshitish haqida', 'Эшитиш ҳақида', 'О слухе'),
-    inceleme: MAKINE,
-    sorular: [
-      tek('au_quloq', u('Eshitish qaysi quloqda pasaygan?', 'Эшитиш қайси қулоқда пасайган?', 'В каком ухе снижен слух?'), [
-        s('ong', 'Oʻng quloqda', 'Ўнг қулоқда', 'В правом'),
-        s('chap', 'Chap quloqda', 'Чап қулоқда', 'В левом'),
-        s('ikkala', 'Ikkala quloqda', 'Иккала қулоқда', 'В обоих'),
-        s('yoq', 'Pasaymagan', 'Пасаймаган', 'Не снижен'),
-      ]),
-      tek('au_tosatdan', u('Eshitish qanday pasaydi?', 'Эшитиш қандай пасайди?', 'Как снизился слух?'), [
-        s('tosatdan', 'Toʻsatdan, oxirgi kunlarda', 'Тўсатдан, охирги кунларда', 'Внезапно, в последние дни'),
-        s('asta', 'Asta-sekin', 'Аста-секин', 'Постепенно'),
-        s('yoq', 'Pasaymagan', 'Пасаймаган', 'Не снижался'),
-      ]),
-      eh('au_shovqin', u('Quloqda shovqin bormi?', 'Қулоқда шовқин борми?', 'Есть ли шум в ушах?')),
-      eh('au_muvozanat', u('Bosh aylanishi yoki muvozanat buzilishi bormi?', 'Бош айланиши ёки мувозанат бузилиши борми?', 'Есть ли головокружение или нарушение равновесия?')),
-      eh('au_ish', u('Ish yoki mashgʻulot baland shovqin bilan bogʻliqmi?', 'Иш ёки машғулот баланд шовқин билан боғлиқми?', 'Связана ли работа или занятия с сильным шумом?')),
-      eh('au_apparat', u('Eshitish apparati ishlatiladimi?', 'Эшитиш аппарати ишлатиладими?', 'Используется ли слуховой аппарат?'),
-        u('Qachondan beri va qaysi quloqda?', 'Қачондан бери ва қайси қулоқда?', 'С какого времени и на каком ухе?')),
-    ],
-  },
 }
