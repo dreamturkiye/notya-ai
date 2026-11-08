@@ -1,6 +1,6 @@
 # Country × specialty depth audit against the Pediatri gold standard (ULKE-BRANS-DERINLIK-2026-11)
 
-**Banner:** pre-work audit 2026-11-08 (Phase 1), with a status column updated after each build wave. Scope: every role offered
+**Banner:** pre-work audit 2026-11-08 (Phase 1), with a status column updated after each build wave. **Latest checkpoint: the depth wave of 2026-11-08 for Australia and Uzbekistan (section below): AU mean 55 → 78, UZ 30 → 58, no role ≥90 yet.** Scope: every role offered
 at sign-up in us, gb, ca, au, nz, uz — 290 roles — scored against `docs/ULKE-BRANS-ALTIN-STANDART.md` (12 items, weights total 100).
 Read from the live branch tips: release/us d61b7b29c, release/gb f39eaf778, release/ca 296902230, release/au 858f91015, release/nz 7c88a7ddb, release/uz 4a3c459ec; main 60edf1636.
 
@@ -27,6 +27,122 @@ their country's verified practice sources for the live assistant. No role reache
 (K2/K3), portal chapters (K6), specialty consent/report/prescription/views (K7–K10) and clinician validation (K12) remain
 the gap, logged as ULKE-BRANS-DERINLIK-01..08, ULKE-BRANS-KLINISYEN-01 and ULKE-BRANS-GATE-01 in docs/OPEN-COMMITMENTS.md.
 Wave commits: release/us 85f5316cb, release/gb 71e74d677, release/ca 57de04fcc, release/nz b53d6523e, release/au 074fa789e, release/uz 0067e1e3f.
+
+## Depth wave of 2026-11-08 (second job): Australia and Uzbekistan — status checkpoint
+
+Same extraction (`cikar.mts`, now also reading whether a role tool prints) and the same scoring script with two rule
+additions that only recognise real artifacts: **K7** also counts a role's consent record keyed `rozilik` (Uzbek), and **K8** is
+Strong when the role has its own specialty report/conclusion (`-report` / `-xulosa`) that prints on the letterhead with the
+BELGE-NO-01 document number and verification QR (print and share). **K11** is Strong for every AU and UZ role: each role's new
+tools are held by a role-specific leak test both ways (`countries/au/araclar/uzmanlik/uzmanlik.test.ts`,
+`countries/uz/uygulama/araclar/kendi/uzmanlik/uzmanlik.test.ts`). Commits: release/au d7b74b6e6 (tools, consent, report) and 280951046 (tick-only scores ask for their fields); release/uz 569aa9faa.
+
+| Country | Roles | Mean before → after | ≥90 before → after | Strong/Partial/Thin/Missing after |
+|---|---|---|---|---|
+| au | 44 | 55 → 78 | 0 → 0 | 0 / 44 / 0 / 0 |
+| uz | 42 | 30 → 58 | 0 → 0 | 0 / 40 / 2 / 0 |
+
+**Why no role reaches 90 yet.** AU: K6 (portal module with demo fixture), K9 (specialty dose engine + presets) and K10 (own
+patient-file tabs) need new shared infrastructure; K5 Strong and K12 need a practising specialist's sign-off. Ceiling without
+those: 92.8 with all of K6/K9/K10 Strong. UZ: additionally K1 (no per-role SOAP lock in the note instruction) and K4 (no live
+assistant, so no reference block has a consumer) — without an assistant the UZ ceiling is about 87. Logged as ULKE-BRANS-DERINLIK-02/-03/-05/-09.
+
+### Australia — per role after this wave
+
+| Role | Before | After | K1 | K2 | K3 | K4 | K5 | K6 | K7 | K8 | K9 | K10 | K11 | K12 | Status |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| `emergency-medicine` | 52 | 78 | S | S | S | S | P | P | P | S | M | T | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `family-medicine` | 68 | 81 | S | S | S | S | P | P | P | S | T | P | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `anaesthesia` | 52 | 78 | S | S | S | S | P | P | P | S | M | T | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `neurosurgery` | 52 | 78 | S | S | S | S | P | P | P | S | M | T | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `paediatric-surgery` | 52 | 78 | S | S | S | S | P | P | P | S | M | T | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `internal-medicine` | 52 | 78 | S | S | S | S | P | P | P | S | M | T | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `dermatology` | 58 | 78 | S | S | S | S | P | P | P | S | M | T | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `endocrinology` | 54 | 79 | S | S | S | S | P | P | P | S | T | T | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `infectious-diseases` | 54 | 79 | S | S | S | S | P | P | P | S | T | T | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `gastroenterology` | 52 | 78 | S | S | S | S | P | P | P | S | M | T | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `general-surgery` | 52 | 78 | S | S | S | S | P | P | P | S | M | T | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `cardio-thoracic-surgery` | 54 | 79 | S | S | S | S | P | P | P | S | T | T | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `respiratory-medicine` | 52 | 78 | S | S | S | S | P | P | P | S | M | T | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `ophthalmology` | 56 | 78 | S | S | S | S | P | P | P | S | M | T | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `obstetrics-gynaecology` | 74 | 78 | S | S | S | S | P | P | P | S | M | T | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `vascular-surgery` | 56 | 79 | S | S | S | S | P | P | P | S | T | T | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `cardiology` | 52 | 78 | S | S | S | S | P | P | P | S | M | T | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `otolaryngology` | 56 | 78 | S | S | S | S | P | P | P | S | M | T | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `nephrology` | 52 | 78 | S | S | S | S | P | P | P | S | M | T | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `neurology` | 52 | 78 | S | S | S | S | P | P | P | S | M | T | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `oncology` | 56 | 78 | S | S | S | S | P | P | P | S | M | T | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `radiation-oncology` | 57 | 78 | S | S | S | S | P | P | P | S | M | T | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `orthopaedics` | 54 | 78 | S | S | S | S | P | P | P | S | M | T | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `paediatrics` | 68 | 81 | S | S | S | S | P | P | P | S | T | P | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `plastic-surgery` | 58 | 78 | S | S | S | S | P | P | P | S | M | T | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `psychiatry` | 52 | 78 | S | S | S | S | P | P | P | S | M | T | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `radiology` | 52 | 78 | S | S | S | S | P | P | P | S | M | T | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `rheumatology` | 56 | 78 | S | S | S | S | P | P | P | S | M | T | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `urology` | 52 | 78 | S | S | S | S | P | P | P | S | M | T | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `sports-medicine` | 52 | 78 | S | S | S | S | P | P | P | S | M | T | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `rehabilitation-medicine` | 52 | 78 | S | S | S | S | P | P | P | S | M | T | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `geriatric-medicine` | 54 | 78 | S | S | S | S | P | P | P | S | M | T | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `immunology-and-allergy` | 50 | 78 | S | S | S | S | P | P | P | S | M | T | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `haematology` | 56 | 79 | S | S | S | S | P | P | P | S | T | T | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `pain-medicine` | 54 | 78 | S | S | S | S | P | P | P | S | M | T | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `aesthetic-surgery` | 58 | 78 | S | S | S | S | P | P | P | S | M | T | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `aesthetic-medicine` | 52 | 78 | S | S | S | S | P | P | P | S | M | T | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `physiotherapy` | 52 | 78 | S | S | S | S | P | P | P | S | M | T | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `clinical-psychology` | 52 | 78 | S | S | S | S | P | P | P | S | M | T | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `dietetics` | 70 | 79 | S | S | S | S | P | P | P | S | M | P | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `occupational-therapy` | 48 | 78 | S | S | S | S | P | P | P | S | M | T | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `audiology` | 56 | 78 | S | S | S | S | P | P | P | S | M | T | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `podiatry` | 50 | 78 | S | S | S | S | P | P | P | S | M | T | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `speech-pathology` | 52 | 78 | S | S | S | S | P | P | P | S | M | T | S | M | wave 2026-11-08: specialty tools + consent + report |
+
+### Uzbekistan — per role after this wave
+
+| Role | Before | After | K1 | K2 | K3 | K4 | K5 | K6 | K7 | K8 | K9 | K10 | K11 | K12 | Status |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| `acil-tip` | 26 | 59 | P | S | S | T | P | T | P | S | M | M | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `aile-hekimligi` | 34 | 59 | P | S | S | T | P | T | P | S | M | M | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `anestezi` | 34 | 59 | P | S | S | T | P | T | P | S | M | M | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `beyin-cerrahisi` | 26 | 59 | P | S | S | T | P | T | P | S | M | M | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `cocuk-cerrahisi` | 26 | 59 | P | S | S | T | P | T | P | S | M | M | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `dahiliye` | 26 | 59 | P | S | S | T | P | T | P | S | M | M | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `dermatoloji` | 46 | 59 | P | S | S | T | P | T | P | S | M | M | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `endokrinoloji` | 27 | 60 | P | S | S | T | P | T | P | S | T | M | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `enfeksiyon-hastaliklari` | 27 | 60 | P | S | S | T | P | T | P | S | T | M | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `gastroenteroloji` | 26 | 59 | P | S | S | T | P | T | P | S | M | M | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `genel-cerrahi` | 26 | 59 | P | S | S | T | P | T | P | S | M | M | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `gogus-cerrahisi` | 26 | 55 | P | S | P | T | P | T | P | S | M | M | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `gogus-hastaliklari` | 26 | 59 | P | S | S | T | P | T | P | S | M | M | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `goz-hastaliklari` | 32 | 59 | P | S | S | T | P | T | P | S | M | M | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `kadin-hastaliklari-dogum` | 55 | 59 | P | S | S | T | P | T | P | S | M | M | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `kalp-damar-cerrahisi` | 32 | 56 | P | S | P | T | P | T | P | S | T | M | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `damar-cerrahisi` | 31 | 58 | P | S | S | T | T | T | P | S | T | M | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `kardiyoloji` | 26 | 59 | P | S | S | T | P | T | P | S | M | M | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `kulak-burun-bogaz` | 37 | 59 | P | S | S | T | P | T | P | S | M | M | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `nefroloji` | 26 | 59 | P | S | S | T | P | T | P | S | M | M | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `noroloji` | 26 | 59 | P | S | S | T | P | T | P | S | M | M | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `onkoloji` | 26 | 59 | P | S | S | T | P | T | P | S | M | M | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `ortopedi` | 32 | 59 | P | S | S | T | P | T | P | S | M | M | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `pediatri` | 38 | 60 | P | S | S | T | P | T | P | S | T | M | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `plastik-cerrahi` | 35 | 59 | P | S | S | T | P | T | P | S | M | M | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `psikiyatri` | 26 | 59 | P | S | S | T | P | T | P | S | M | M | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `radyoloji` | 26 | 59 | P | S | S | T | P | T | P | S | M | M | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `romatoloji` | 32 | 59 | P | S | S | T | P | T | P | S | M | M | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `uroloji` | 26 | 59 | P | S | S | T | P | T | P | S | M | M | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `spor-hekimligi` | 29 | 59 | P | S | S | T | P | T | P | S | M | M | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `fizik-tedavi` | 30 | 59 | P | S | S | T | P | T | P | S | M | M | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `alerji-immunoloji` | 20 | 57 | P | S | S | T | T | T | P | S | M | M | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `reproduktoloji` | 20 | 57 | P | S | S | T | T | T | P | S | M | M | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `cocuk-norolojisi` | 20 | 57 | P | S | S | T | T | T | P | S | M | M | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `narkoloji` | 20 | 47 | P | P | P | T | T | T | P | S | M | M | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `diyetoloji` | 25 | 53 | P | S | P | T | T | T | P | S | M | M | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `surdoloji` | 31 | 57 | P | S | S | T | T | T | P | S | M | M | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `estetik-cerrahi` | 35 | 59 | P | S | S | T | P | T | P | S | M | M | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `medikal-estetik` | 26 | 59 | P | S | S | T | P | T | P | S | M | M | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `klinik-dermatoloji` | 46 | 59 | P | S | S | T | P | T | P | S | M | M | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `fizyoterapi` | 30 | 59 | P | S | S | T | P | T | P | S | M | M | S | M | wave 2026-11-08: specialty tools + consent + report |
+| `klinik-psikolog` | 26 | 59 | P | S | S | T | P | T | P | S | M | M | S | M | wave 2026-11-08: specialty tools + consent + report |
+
 
 ## Per-country summary
 
