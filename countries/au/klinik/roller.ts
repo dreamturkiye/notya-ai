@@ -27,6 +27,7 @@
 import type { EnEkRol, EnRolDegisimi } from '../../_dil/en/klinik/roller'
 import { cok, DEGERLER, eh, HICBIRI, ILAC_ADI, KIMDE, kisa, NE, NE_ZAMAN, PUAN, s, sayi, tek, TETKIK, uzun, type HamRol } from '../../_dil/en/klinik/hastaFormu/yardimci'
 import { AU_CIKAN_ROLLER, AU_EK_ROLLER, type AuEkRolAnahtari } from './rolListesi'
+import { enEkRolIcerigi, type EnEkTur } from '../../_dil/en/klinik/ekRoller'
 
 /** NOTE FIELDS a role brings itself: keys of the shared set's fields (countries/_dil/en/klinik/notSablonlari.ts → EN_ALANLAR). No field is new. */
 const SABLONLAR: Readonly<Partial<Record<AuEkRolAnahtari, readonly string[]>>> = {
@@ -109,10 +110,34 @@ const FORMLAR: Readonly<Partial<Record<AuEkRolAnahtari, HamRol>>> = {
 }
 
 /** WHERE AUSTRALIA'S ROLE LIST DIFFERS FROM THE SHARED FORTY: what both halves of the pack and its tools are handed. */
-export const AU_ROLLER: EnRolDegisimi = {
+const AU_ROLLER_TEMEL: EnRolDegisimi = {
   cikar: AU_CIKAN_ROLLER,
   ekle: AU_EK_ROLLER.map((r): EnEkRol => ({ ...r, ...(SABLONLAR[r.anahtar] ? { sablon: SABLONLAR[r.anahtar] } : {}), ...(FORMLAR[r.anahtar] ? { form: FORMLAR[r.anahtar] } : {}) })),
 }
 
 /** The roles only Australia has that bring intake questions of their own. */
 export const AU_KENDI_FORMLU_ROLLER: readonly string[] = Object.keys(FORMLAR)
+
+/**
+ * ULKE-BRANS-DERINLIK-2026-11 — OWN CONTENT FOR EACH ROLE ONLY THIS COUNTRY HAS: the kind of role each one is, from which
+ * it takes note fields and intake questions of its own (countries/_dil/en/klinik/ekRoller.ts), instead of the template
+ * and questions of the shared role it behaves like. Its `gibi` stays as it was (nothing stored changes); the role's own
+ * content is found first (lib/ulke/arayuz/rolIcerigi.ts). The kind is this job's reading of the role, for a clinician of
+ * this country to confirm (docs/ULKE-BRANS-DERINLIK-DENETIMI-2026-11.md on main). Question keys carry the role's own prefix.
+ */
+export const AU_EK_ROL_TURLERI: Readonly<Record<string, EnEkTur>> = {
+  'vascular-surgery': 'vascular',
+  'radiation-oncology': 'radiation-oncology',
+  'geriatric-medicine': 'geriatric',
+  'immunology-and-allergy': 'allergy',
+  'haematology': 'haematology',
+  'pain-medicine': 'pain',
+  'podiatry': 'podiatry',
+}
+
+/**
+ * THE ROLE LIST AS BOTH HALVES TAKE IT. ULKE-BRANS-DERINLIK-2026-11 (data only, no assistant code): the seven roles above
+ * that wrote with a borrowed template now write with note fields of their own; their own intake questions (FORMLAR)
+ * are unchanged, and radiation oncology, which had none, asks the set's radiotherapy questions under its own prefix. Field labels in Australian spelling.
+ */
+export const AU_ROLLER: EnRolDegisimi = enEkRolIcerigi(AU_ROLLER_TEMEL, 'en-AU', AU_EK_ROL_TURLERI, { 'radiation-oncology': 'au_ro' }, { form: true })

@@ -49,6 +49,7 @@ import { AU_KENDI_FORMLU_ROLLER, AU_ROLLER } from './klinik/roller'
 import { AU_CIKAN_ROLLER, AU_EK_ROLLER, AU_ESKI_ROL_ESLEMESI, AU_ROL_LISTESI } from './klinik/rolListesi'
 import { AU_SES } from './ses'
 import { AU_SIZINTI_TERIMLERI } from './sizintiTerimleri'
+import { EN_EK_SABLONLAR } from '../_dil/en/klinik/ekRoller'
 
 const D = 'en-AU'
 const LAB = { albuminKreatinin: 'mg/mmol', hemoglobin: 'g/L', kreatinin: 'umol/L', glukoz: 'mmol/L', kolesterol: 'mmol/L', crp: 'mg/L', psa: 'ug/L', hba1c: ['%', 'mmol/mol'] } as const
@@ -292,8 +293,10 @@ describe('au: its own role list — the Medical Board\'s wording, a split, one r
     for (const alan of EN_ROL_ALANLARI['thoracic-surgery']) assert.ok(kt.includes(alan), alan)
     for (const alan of ['cardiac_exam', 'anticoagulation']) assert.ok(kt.includes(alan), alan)
     assert.equal(kt.length, EN_ROL_ALANLARI['thoracic-surgery'].length + 2)
-    assert.deepEqual([...rolSablonAlanlari(v, AU_ARAYUZ.roller, 'vascular-surgery')], [...EN_ROL_ALANLARI['cardiovascular-surgery']])
-    // no field of the split roles is new: each is a field of the shared set
+    // ULKE-BRANS-DERINLIK-2026-11: vascular surgery now writes with a vascular note of its own (limb symptoms, pulses, wound), no cardiac examination
+    assert.deepEqual([...rolSablonAlanlari(v, AU_ARAYUZ.roller, 'vascular-surgery')], [...EN_EK_SABLONLAR.vascular])
+    assert.ok(!rolSablonAlanlari(v, AU_ARAYUZ.roller, 'vascular-surgery').includes('cardiac_exam'))
+    // no field of cardio-thoracic surgery is new: each is a field of the shared set
     for (const alan of kt) assert.ok(alan in v.alanlar, alan)
     // what the PATIENT reads names the right specialty
     const f = AU_KLINIK.hastaFormu!.roller
@@ -306,8 +309,9 @@ describe('au: its own role list — the Medical Board\'s wording, a split, one r
     const f = AU_KLINIK.hastaFormu!.roller
     assert.deepEqual([...AU_KENDI_FORMLU_ROLLER].sort(), ['cardio-thoracic-surgery', 'geriatric-medicine', 'haematology', 'immunology-and-allergy', 'pain-medicine', 'podiatry', 'speech-pathology', 'vascular-surgery'])
     assert.deepEqual(AU_KENDI_FORMLU_ROLLER.map((r) => f[r].baslik[D]).sort(), ['Before podiatry', 'Before speech pathology', 'For the geriatric medicine doctor', 'For the haematologist', 'For the heart and chest surgeon', 'For the immunology and allergy doctor', 'For the pain medicine doctor', 'For the vascular surgeon'])
-    // radiation oncology asks the oncologist's questions under the oncologist's heading, which is true of it
-    assert.equal(icerikAnahtari(AU_ARAYUZ.roller, 'radiation-oncology', f), 'oncology')
+    // ULKE-BRANS-DERINLIK-2026-11: radiation oncology asks radiotherapy questions of its own
+    assert.equal(icerikAnahtari(AU_ARAYUZ.roller, 'radiation-oncology', f), 'radiation-oncology')
+    assert.equal(f['radiation-oncology'].baslik[D], 'Before radiotherapy')
     // every question key is unique in the pack, and each set says it was written by a machine and read by nobody
     const anahtarlar = [...AU_KLINIK.hastaFormu!.cekirdek.bolumler.flatMap((b) => b.sorular), ...Object.values(f).flatMap((r) => r.sorular)].map((q) => q.anahtar)
     assert.equal(new Set(anahtarlar).size, anahtarlar.length)
