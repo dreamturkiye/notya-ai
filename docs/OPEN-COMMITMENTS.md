@@ -1,5 +1,24 @@
 # OPEN COMMITMENTS — Notya AI
 
+## KURUCU-KONSOL-03 — the real cause of the founder 404 is the two origins (Claude, 2026-11-08, ~18:20 UTC)
+
+**Cause (proven):** TR Supabase edge logs show Kaan's current Mac Safari session (auth.sessions row created 2026-11-05
+10:48:09, last refreshed 13:50:59 UTC) was made by `grant_type=password` with referer `https://www.notya.io/` at 10:48:08 and
+refreshed with referer `https://www.notya.io/` at 13:50:58. localStorage is per origin, so `https://notya.io/kurucu` reads an
+empty apex store: in 17:50–18:14 UTC on 2026-11-08 there is no `/auth/v1/token` (browser refresh) and no `/auth/v1/user`
+(the route's server-side check) — no token ever reached `/api/kurucu/ozet`. The page and the doctor app use the same
+client helper (`ensureDoctorAccessToken`, localStorage, Bearer) and the same server pattern; there is no cookie session in
+this app, FOUNDER_EMAILS is set on Production (`kaan@notya.io,kaanari@mac.com`), and the route is deployed
+(`x-matched-path: /api/kurucu/ozet`). On 2026-11-05, 14 of 18 browser token calls came from www, 4 from apex.
+**Fixed (main):** when the current origin holds no session at all, `/kurucu` hops once to the sibling origin
+(notya.io <-> www.notya.io, `#h` marker, no loop) and decides there (`kardesKokAdresi` in `lib/kurucu/oturumBekle.ts`,
+`components/kurucu/KurucuKonsolu.tsx`; tests in `lib/kurucu/kurucu.test.ts`). Non-founders and logged-out visitors still end
+on the standard 404 with no hint. Founder-internal, TR build only (country builds host no /kurucu) — no 40-branş /
+six-country propagation.
+- **Open — Kaan (decision), 2026-11-08:** a canonical host (one of notya.io / www.notya.io redirecting to the other) would
+  remove the split for every doctor too, but logs out once everyone whose session sits on the redirected origin and moves
+  home-screen apps installed from it. Most doctor traffic on 2026-11-05 was on www. Not changed without his OK.
+
 ## KURUCU-KONSOL-02 — notya.io/kurucu showed 404 to the founder: cause, fix, what is open (Claude, 2026-11-08)
 
 **Cause (evidence, not a guess):** at ~12:25 UTC on 2026-11-08 the TR Supabase edge logs show no `/auth/v1/user` and no
@@ -15,7 +34,7 @@ any-case `Bearer` (`lib/kurucu/oturumBekle.ts`, `components/kurucu/KurucuKonsolu
 Classification: founder-internal tool on the TR build only, not a doctor-product core change — no 40-branş / six-country propagation.
 - **Open — Kaan, 2026-11-08:** to use the console, log in at `https://notya.io/giris/doktor` in the same Safari (not the PWA)
   with `kaanari@mac.com`, then open `https://notya.io/kurucu`; or create the `kaan@notya.io` TR account if that is the address meant.
-- **Open — Claude (needs Kaan's OK, infra), 2026-11-08:** make `www.notya.io` redirect to `notya.io` (one origin, one session store).
+- **Superseded by KURUCU-KONSOL-03 (2026-11-08):** the canonical-host question is now Kaan's decision there (most doctor traffic is on www, not apex).
 
 ## ULKE-BRANS-DERINLIK-2026-11 — every role in every country build to the Pediatri gold depth: what is done, what is open (Claude, 2026-11-08)
 

@@ -58,3 +58,27 @@ export async function kurucuVerisiniAl<T>(d: {
     return { tur: 'hata' }
   }
 }
+
+/**
+ * KURUCU-KONSOL-03 (2026-11-08) — the real cause of the founder 404: notya.io and www.notya.io are two browser origins
+ * with two separate localStorage stores (both domains serve the app, no redirect between them). Kaan's current Mac Safari
+ * session was created by a password login on https://www.notya.io (Supabase edge log, 2026-11-05 10:48 UTC, referer www)
+ * and last refreshed there (13:50 UTC); https://notya.io/kurucu reads the apex store, finds nothing, and never calls the API.
+ *
+ * So when THIS origin holds no session at all, the console hops once to the sibling origin (notya.io <-> www.notya.io)
+ * and decides there. The '#h' fragment marks the hop (never sent to the server) so it can never loop. Any other host
+ * (preview, localhost) and any visitor whose session was read but refused go straight to not-found. Same 404 at the end
+ * for everyone without an allowed session; no login prompt, no text.
+ */
+export const KARDES_ISARETI = '#h'
+const KARDES: Readonly<Record<string, string>> = { 'notya.io': 'www.notya.io', 'www.notya.io': 'notya.io' }
+
+export function kardesKokAdresi(href: string, tokenGoruldu: boolean): string | null {
+  if (tokenGoruldu) return null
+  let u: URL
+  try { u = new URL(href) } catch { return null }
+  if (u.protocol !== 'https:' || u.hash === KARDES_ISARETI) return null
+  const kardes = KARDES[u.hostname.toLowerCase()]
+  if (!kardes) return null
+  return `https://${kardes}${u.pathname}${KARDES_ISARETI}`
+}
