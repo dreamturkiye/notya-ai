@@ -83,8 +83,9 @@ describe('live assistant: the active pack', () => {
   })
 
   it('the assistant page (ported from release/au for ULKE-UZ-CANLI-01): fail closed, the door on the home and the sidebar, the typed route', () => {
+    if (!canli) return assert.ok(true)
     const m = uygulamaMetni(ulkePaketi().varsayilanDil)
-    if (!canli || !m.asistanCanli) return assert.ok(true)
+    if (!m.asistanCanli) return assert.ok(true)
     const t = m.asistanCanli
     const yazili = { acik: false, mesajlar: [], girdi: '', bekliyor: false, dinliyor: false }
     const props = { t, unvan: 'Role', durum: 'bosta' as const, balonlar: [], hata: null, yazili, onYaziliAc: () => {}, onGirdi: () => {}, onGonder: () => {}, onBaslat: () => {}, onBitir: () => {}, onTemizle: () => {}, geriHref: '/today' }
