@@ -21,6 +21,8 @@ import { sinirda } from '@/lib/ulke/uygulama/sinir'
 import { ozellikAcik } from '@/lib/ulke/ulke'
 import { cevap, govdeOku, KOD } from '@/lib/ulke/uygulama/cevap'
 import { hekimRolunuOku, hekimRolunuYaz, uygulamaRoluMu } from '@/lib/ulke/uygulama/rol'
+import { arkaPlanda } from '@/lib/kurucu/denemeBildirimi'
+import { ulkeDenemeKaydiBildir } from '@/lib/ulke/kurucu/kurucuUlke'
 
 export const dynamic = 'force-dynamic'
 
@@ -38,5 +40,10 @@ export const POST = sinirda('rol POST', async (req: NextRequest) => {
   const g = await govdeOku(req)
   if (!uygulamaRoluMu(g.rol)) return KOD.gecersiz('rol')
   if (!(await hekimRolunuYaz(oturum.supabase, oturum.user.id, g.rol))) return KOD.basarisiz()
+  // DENEME-BILDIRIM-01: the first role of this account → the internal trial-signup e-mail, once (a later change in settings
+  // finds the flag already claimed and sends nothing). After the response; never in the doctor's way.
+  const { supabase, user } = oturum
+  const rol = g.rol
+  arkaPlanda(() => ulkeDenemeKaydiBildir(supabase, { id: user.id, email: user.email }, rol), 'deneme-bildirim/rol')
   return cevap({ ok: true, rol: g.rol })
 })
