@@ -102,6 +102,9 @@ export const CA_GIRDI: EnUlkeGirdisi = {
     radiology: 'Diagnostic radiology',
     'rehabilitation-medicine': 'Physical medicine and rehabilitation',
     ...CA_YENIDEN_ADLANANLAR,
+  // ULKE-BRANS-GATE-01 (Kaan, 2026-11-08: "keep them"): no regulator here lists these as a specialty; they stay offered,
+  // named as a PRACTICE FOCUS for licensed physicians, not a specialty — on the sign-up select, onboarding and settings (all read this name).
+    'hair-transplant': 'Hair transplantation — practice focus for licensed physicians (not a specialty)',
   },
   // THE ROLE LIST OF THIS COUNTRY: the shared forty, with six disciplines and one profession of its own, each saying
   // which shared role it behaves like (./roller.ts). Nothing was taken out.

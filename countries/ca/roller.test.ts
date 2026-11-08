@@ -87,7 +87,7 @@ describe('ca roles: the list before and after', () => {
       otolaryngology: 'Otolaryngology-Head and Neck Surgery',
       oncology: 'Medical Oncology',
       'clinic-dermatology': 'Dermatology',
-      longevity: 'Longevity medicine',
+      longevity: 'Longevity medicine — practice focus for licensed physicians (not a specialty)', // ULKE-BRANS-GATE-01 (2026-11-08)
       'clinical-psychology': 'Psychologist',
     })
     for (const [k, v] of Object.entries(CA_YENIDEN_ADLANANLAR)) { assert.ok(ROLLER.includes(k), k); assert.equal(ad(k), v) }
@@ -115,7 +115,8 @@ describe('ca roles: the list before and after', () => {
       'thoracic-surgery': 'Thoracic surgery', 'respiratory-medicine': 'Respirology', ophthalmology: 'Ophthalmology', 'obstetrics-gynaecology': 'Obstetrics and gynecology', cardiology: 'Cardiology',
       nephrology: 'Nephrology', neurology: 'Neurology', orthopaedics: 'Orthopedic surgery', paediatrics: 'Pediatrics', 'plastic-surgery': 'Plastic surgery', psychiatry: 'Psychiatry',
       radiology: 'Diagnostic radiology', rheumatology: 'Rheumatology', urology: 'Urology', 'sports-medicine': 'Sport and exercise medicine', 'rehabilitation-medicine': 'Physical medicine and rehabilitation',
-      'hair-transplant': 'Hair transplantation', 'aesthetic-surgery': 'Cosmetic surgery', 'aesthetic-medicine': 'Aesthetic medicine',
+      // ULKE-BRANS-GATE-01 (2026-11-08): practice focus, not a specialty
+      'hair-transplant': 'Hair transplantation — practice focus for licensed physicians (not a specialty)', 'aesthetic-surgery': 'Cosmetic surgery', 'aesthetic-medicine': 'Aesthetic medicine',
       physiotherapy: 'Physiotherapist', dietetics: 'Dietitian', 'occupational-therapy': 'Occupational therapist', audiology: 'Audiologist',
     }
     assert.equal(Object.keys(once).length, 26 + 7)

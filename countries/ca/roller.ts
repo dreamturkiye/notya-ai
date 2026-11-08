@@ -62,7 +62,7 @@ export const CA_YENIDEN_ADLANANLAR: Readonly<Partial<Record<EnRol, string>>> = {
   otolaryngology: 'Otolaryngology-Head and Neck Surgery',
   oncology: 'Medical Oncology',
   'clinic-dermatology': 'Dermatology',
-  longevity: 'Longevity medicine',
+  longevity: 'Longevity medicine — practice focus for licensed physicians (not a specialty)',
   'clinical-psychology': 'Psychologist',
 }
 
