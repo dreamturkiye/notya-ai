@@ -54,6 +54,20 @@ export type AsistanKimligi = {
   unvanliKisaAd: string
   /** true = the name in this form was derived by rule from the owner's Latin spelling and has not been read by a native reader. */
   makineTuretimi: boolean
+  /**
+   * ULKE-UZ-CANLI-01: the persona's gender, which picks one of the pack's two voices for the live assistant. Read from the
+   * owner's own surname by the Uzbek rule (-ova / -eva is a woman's surname, -ov / -ev a man's); a surname that follows
+   * neither gives no gender, and that role then has no live assistant (fail closed, lib/ulke/asistan/ajan.ts).
+   */
+  cinsiyet?: 'erkek' | 'kadin'
+}
+
+/** The gender the owner's Latin surname carries (Uzbek patronymic surnames), or undefined when it carries none. */
+export function uzSoyadCinsiyeti(soyad: string): 'erkek' | 'kadin' | undefined {
+  const s = soyad.trim().toLowerCase()
+  if (/(ova|eva)$/.test(s)) return 'kadin'
+  if (/(ov|ev)$/.test(s)) return 'erkek'
+  return undefined
 }
 
 /** A word of the owner's list (a name, a profession's title) in the form asked for. */
@@ -74,5 +88,6 @@ export function uzAsistanKimligi(rol: unknown, dil: unknown): AsistanKimligi | n
   // A profession's title has one form, before the full name and before the given name alike.
   const unvan = a.unvan === 'meslek' ? { tam: yaz(a.meslekUnvani ?? '', d), kisa: yaz(a.meslekUnvani ?? '', d) } : UZ_ASISTAN_UNVANLARI[d][a.unvan]
   const birlestir = (...parcalar: string[]) => parcalar.filter(Boolean).join(' ')
-  return { tamAd: birlestir(unvan.tam, kisaAd, soyad), kisaAd, unvanliKisaAd: birlestir(unvan.kisa, kisaAd), makineTuretimi: d !== 'uz-Latn' }
+  const cinsiyet = uzSoyadCinsiyeti(a.soyad)
+  return { tamAd: birlestir(unvan.tam, kisaAd, soyad), kisaAd, unvanliKisaAd: birlestir(unvan.kisa, kisaAd), makineTuretimi: d !== 'uz-Latn', ...(cinsiyet ? { cinsiyet } : {}) }
 }

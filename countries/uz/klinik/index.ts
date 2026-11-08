@@ -9,6 +9,7 @@
 import type { UlkeKlinigi } from '@/lib/ulke/tipler'
 import { UZ_SES } from '../ses'
 import { UZ_ACIK_SABLONLAR } from './branslar'
+import { UZ_CANLI_ASISTAN } from './canli'
 import { UZ_HASTA_FORMU } from './hastaFormu'
 import { uzHastaOzetiGirdisi, uzHastaOzetiTalimati } from './hastaOzeti'
 import { uzSablonAlanlari } from './notSablonlari'
@@ -62,4 +63,8 @@ export const UZ_KLINIK: UlkeKlinigi = {
   // NOTYA-ULKE-ASISTAN-SES-US-NZ-UZ-01 (2026-10-19): a RUSSIAN FALLBACK pair, not native Uzbek — see
   // ../ses.ts header for why (eleven_flash_v2_5 does not support Uzbek as a TTS language at all).
   ses: UZ_SES,
+  // ULKE-UZ-CANLI-01 (Kaan written go 2026-11-08): the live assistant — Uzbek (Latin by default; Cyrillic or Russian when
+  // the clinician uses them), the pack's national protocols and books per role (./kaynaklar.ts), every answer a draft
+  // the clinician approves (./canli.ts). Offered only where the deployment has both UZ agents and the secrets (lib/ulke/asistan/ajan.ts).
+  canliAsistan: UZ_CANLI_ASISTAN,
 }

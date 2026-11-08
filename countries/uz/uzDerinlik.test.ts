@@ -15,6 +15,9 @@ import { UZ_CANLI_ASISTAN } from './klinik/canli'
 import { UZ_ROL_KAYNAKLARI, uzKaynakBlogu } from './klinik/kaynaklar'
 import { UZ_KLINIK } from './klinik'
 import { canliIstem } from '@/lib/ulke/asistan/istem'
+import { UZ_ASISTAN_ADLARI } from './klinik/asistanAdlari'
+import { UZ_ASISTAN_SESLERI } from './klinik/asistanSesi'
+import { uzAsistanKimligi, uzSoyadCinsiyeti } from './klinik/asistanKimligi'
 
 const FORMLAR = ['uz-Latn', 'uz-Cyrl', 'ru'] as const
 const ROLLER = [...UZ_ROL_ANAHTARLARI].sort()
@@ -58,7 +61,7 @@ describe('Uzbekistan depth wave of 2026-11-08', () => {
     }
   })
 
-  it('K4 (ready, not switched on): the assistant\'s sources name every role, national protocols first, books labelled as Russian-language depth texts; "draft, clinician approves" is said', () => {
+  it('K4 (switched on 2026-11-08, ULKE-UZ-CANLI-01): the assistant\'s sources name every role, national protocols first, books labelled as Russian-language depth texts; "draft, clinician approves" is said', () => {
     assert.deepEqual(Object.keys(UZ_ROL_KAYNAKLARI).sort(), ROLLER)
     for (const rol of ROLLER) {
       const b = uzKaynakBlogu(rol)!
@@ -71,7 +74,29 @@ describe('Uzbekistan depth wave of 2026-11-08', () => {
     const istem = canliIstem({ canli: UZ_CANLI_ASISTAN, tamAd: 'Dr X', kisaAd: 'X', rolAdi: 'Kardiologiya', rol: 'kardiyoloji', acilNumara: '103' })
     assert.match(istem, /DRAFT for the clinician/); assert.match(istem, /Uzbek in the Latin script/); assert.match(istem, /Кардиология: национальное руководство/)
     assert.ok(UZ_CANLI_ASISTAN.ekranSozleri.liste(3).includes('3'))
-    // NOT switched on until Kaan's written go on the founder-locked voice route (docs/OPEN-COMMITMENTS.md ULKE-UZ-CANLI-01)
-    assert.equal(UZ_KLINIK.canliAsistan, undefined)
+    // Switched on under Kaan's written go (2026-11-08, ULKE-UZ-CANLI-01): the pack carries it, in its own speech language and model.
+    assert.equal(UZ_KLINIK.canliAsistan, UZ_CANLI_ASISTAN)
+    assert.equal(UZ_KLINIK.ses?.dilKodu, 'uz')
+    assert.equal(UZ_KLINIK.ses?.model, 'eleven_v4')
+    // The typed turn is told nothing is spoken; the voice turn is not.
+    assert.match(canliIstem({ canli: UZ_CANLI_ASISTAN, tamAd: 'Dr X', kisaAd: 'X', rolAdi: 'Kardiologiya', rol: 'kardiyoloji', acilNumara: '103', yazili: true }), /THIS TURN IS TYPED/)
+    assert.doesNotMatch(istem, /THIS TURN IS TYPED/)
+    // Answers in the UZ build's three languages; never a diagnosis or a decision for a patient; every answer a draft.
+    assert.match(istem, /Cyrillic script, or Russian/)
+    assert.match(istem, /Do not diagnose/)
+    assert.match(istem, /Every answer is a draft; the clinician approves it/)
+  })
+
+  it('ULKE-UZ-CANLI-01: every named persona has a gender from the owner\'s own surname, matching the voice table where it has one; a role without a persona has none', () => {
+    for (const a of UZ_ASISTAN_ADLARI) {
+      const c = uzSoyadCinsiyeti(a.soyad)
+      assert.ok(c === 'erkek' || c === 'kadin', a.bransAnahtari)
+      const tablo = UZ_ASISTAN_SESLERI.bransaGore[a.bransAnahtari]?.gender
+      if (tablo) assert.equal(c, tablo === 'female' ? 'kadin' : 'erkek', a.bransAnahtari)
+      if (ROLLER.includes(a.bransAnahtari)) for (const f of FORMLAR) assert.equal(uzAsistanKimligi(a.bransAnahtari, f)?.cinsiyet, c)
+    }
+    assert.equal(uzSoyadCinsiyeti('Karimova'), 'kadin'); assert.equal(uzSoyadCinsiyeti('Ergashev'), 'erkek'); assert.equal(uzSoyadCinsiyeti('Ali'), undefined)
+    // The five roles the owner has not named a persona for stay without one (no live assistant there until he names one).
+    for (const rol of ['damar-cerrahisi', 'alerji-immunoloji', 'reproduktoloji', 'cocuk-norolojisi', 'narkoloji']) assert.equal(uzAsistanKimligi(rol, 'uz-Latn'), null, rol)
   })
 })

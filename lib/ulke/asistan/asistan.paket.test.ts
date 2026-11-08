@@ -13,7 +13,10 @@ import { AKTIF_KLINIK } from '@/countries/active/klinik'
 import { asistanKimligi, roller, uygulamaMetni } from '@/lib/ulke/arayuz'
 import { ulkePaketi } from '@/lib/ulke/ulke'
 import { canliDurum } from './ajan'
+import { ajanModeli, motorKilidiGovdesi } from './motorKilidi'
+import { AJAN_DILI } from './sunucu'
 import { AsistanCanli, CanliPanel } from '@/components/ulke/uygulama/AsistanCanli'
+import { AsistanGorunumu } from '@/components/ulke/uygulama/AsistanSayfasi'
 
 const KOK = join(__dirname, '../../..')
 const SIR = 'q'.repeat(32)
@@ -44,6 +47,12 @@ describe('live assistant: the active pack', () => {
     assert.ok(sesler.size <= 2)
   })
 
+  it('ULKE-UZ-CANLI-01: the agent hears the pack\'s speech language and speaks with the pack\'s voice model', () => {
+    assert.equal(AJAN_DILI, ses?.dilKodu ?? 'en')
+    assert.equal(ajanModeli(), ses?.model ?? 'eleven_flash_v2_5')
+    assert.equal(motorKilidiGovdesi('x'.repeat(20)).conversation_config.tts.model_id, ses?.model ?? 'eleven_flash_v2_5')
+  })
+
   it('without agents and secrets the feature is off for every role', () => {
     const dil = ulkePaketi().varsayilanDil
     for (const r of roller()) {
@@ -71,5 +80,39 @@ describe('live assistant: the active pack', () => {
       assert.match(readFileSync(join(KOK, yol), 'utf8'), /canliLlmPost/)
     }
     void SIR
+  })
+
+  it('the assistant page (ported from release/au for ULKE-UZ-CANLI-01): fail closed, the door on the home and the sidebar, the typed route', () => {
+    const m = uygulamaMetni(ulkePaketi().varsayilanDil)
+    if (!canli || !m.asistanCanli) return assert.ok(true)
+    const t = m.asistanCanli
+    const yazili = { acik: false, mesajlar: [], girdi: '', bekliyor: false, dinliyor: false }
+    const props = { t, unvan: 'Role', durum: 'bosta' as const, balonlar: [], hata: null, yazili, onYaziliAc: () => {}, onGirdi: () => {}, onGonder: () => {}, onBaslat: () => {}, onBitir: () => {}, onTemizle: () => {}, geriHref: '/today' }
+    // Not asked yet / not available: no microphone control at all.
+    for (const hazir of [undefined, null]) assert.ok(!/aria-pressed/.test(renderToStaticMarkup(React.createElement(AsistanGorunumu, { ...props, hazir }))))
+    const hazir = { ad: 'Dr Name', kisaAd: 'Name', cinsiyet: 'kadin' as const }
+    const html = renderToStaticMarkup(React.createElement(AsistanGorunumu, { ...props, hazir, balonlar: [{ id: 'a', sira: 1, role: 'user' as const, text: 'Question?' }, { id: 'b', sira: 2, role: 'ai' as const, text: 'Answer.' }] }))
+    assert.match(html, /role="button"[^>]*aria-label="[^"]+"|aria-label="[^"]+"[^>]*role="button"/)
+    assert.ok(html.indexOf('Question?') < html.indexOf('Answer.'))
+    assert.match(html, /data-alan="asistan-canli-not"/)
+    const bos = renderToStaticMarkup(React.createElement(AsistanGorunumu, { ...props, hazir }))
+    assert.ok(html.includes(t.sayfa.baslatIpucu) && bos.includes(t.sayfa.bos) && html.includes('Dr Name'))
+    assert.ok(!/[çğıöşüİ]/.test(html), 'the page carries no Turkish text')
+    const konusur = renderToStaticMarkup(React.createElement(AsistanGorunumu, { ...props, hazir, durum: 'konusuyor' as const }))
+    assert.ok(konusur.includes(t.sayfa.konusuyorAd.replace(/\{ad\}|%/g, 'Dr Name')) && !konusur.includes('{ad}'), 'the name placeholder is filled in')
+    const acik = renderToStaticMarkup(React.createElement(AsistanGorunumu, { ...props, hazir, onMikrofon: () => {}, yazili: { ...yazili, acik: true, mesajlar: [{ rol: 'doktor' as const, icerik: 'Hi', sira: 3 }] } }))
+    assert.ok(acik.includes(t.sayfa.yaziIpucu) && acik.includes(t.sayfa.gonder))
+    // Same view as Türkiye: the kit's page imports the shared views, not a copy of them.
+    const kaynak = readFileSync(join(KOK, 'components/ulke/uygulama/AsistanSayfasi.tsx'), 'utf8')
+    assert.match(kaynak, /components\/asistan\/AsistanSayfaGorunumu/)
+    assert.match(kaynak, /components\/asistan\/YaziliSohbetGorunumu/)
+    assert.match(readFileSync(join(KOK, 'app/asistan/page.ulke.tsx'), 'utf8'), /ekran="asistan"/)
+    const yaziliRota = readFileSync(join(KOK, 'app/api/ulke/asistan-canli/yazili/route.ulke.ts'), 'utf8')
+    assert.match(yaziliRota, /ozellikAcik\('cekirdekMuayene'\)[\s\S]*ulkeOturum[\s\S]*canliYaziliCevabi/)
+    assert.ok(!/searchParams/.test(yaziliRota))
+    assert.match(readFileSync(join(KOK, 'components/ulke/uygulama/Kabuk.tsx'), 'utf8'), /asistanHazir\) asistan = oge\('asistan', p\.asistanaSor, 'asistan', YOL\.asistan/)
+    assert.match(readFileSync(join(KOK, 'components/ulke/uygulama/Bugun.tsx'), 'utf8'), /asistanYolu \? karo\(asistanYolu, m\.asistan\.etiket, 'asistan'\)/)
+    // The call is opened in the pack's own speech language (the server sends it), never a fixed English.
+    assert.match(readFileSync(join(KOK, 'components/ulke/uygulama/canliOturum.ts'), 'utf8'), /language: \(j\.language \|\| 'en'\)/)
   })
 })

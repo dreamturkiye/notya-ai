@@ -44,6 +44,9 @@ export const UZ_ARAYUZ: UlkeArayuzu = {
   klinikMetinleri: UZ_KLINIK_METINLERI,
   roller: UZ_ROL_TANIMLARI,
   asistan: uzAsistanKimligi,
+  // ULKE-UZ-CANLI-01 (Kaan written go 2026-11-08): the live assistant speaks; the screens offer it only once the
+  // server says it is ready (components/ulke/uygulama/asistanHazir.ts). Neutral labels, not provider voice names.
+  sesAdlari: { erkek: 'Erkak ovozi', kadin: 'Ayol ovozi' },
   notSablonlari: UZ_NOT_SABLONLARI,
   acilis: UZ_ACILIS,
 }

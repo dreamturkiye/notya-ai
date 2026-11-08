@@ -560,6 +560,8 @@ export const UYGULAMA_EKRANLARI = {
   klinik: '/clinic',
   /** NOTYA-ULKE-KLINIK-01 — the front-desk workspace: the doctors who gave the account a grant, their appointments, the minimal patient card. */
   onBuro: '/desk',
+  /** AU-CANLI-02 / ULKE-UZ-CANLI-01 — the assistant page (voice + typed chat). Only where the pack brings the live assistant. */
+  asistan: '/asistan',
 } as const
 export type UygulamaEkrani = keyof typeof UYGULAMA_EKRANLARI
 

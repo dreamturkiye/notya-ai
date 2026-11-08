@@ -13,7 +13,7 @@ import { ajanKimligi, ajanOrtamAdi, canliDurum } from './ajan'
 import { canliIstem } from './istem'
 import { canliJetonuDogrula, canliJetonuImzala, JETON_OMRU_MS, llmSirriGecerliMi } from './jeton'
 import { konusmaYap, SesAkisi } from './konusma'
-import { motorKilidiGerekli, motorKilidiGovdesi, motoruSabitle, motorOnbelleginiSil } from './motorKilidi'
+import { ajanModeli, motorKilidiGerekli, motorKilidiGovdesi, motoruSabitle, motorOnbelleginiSil } from './motorKilidi'
 import { sesMetni } from './okunus'
 import { modelMesajlari, vedaMi } from './sunucu'
 
@@ -140,7 +140,7 @@ describe('how clinical text is said', () => {
 })
 
 describe('the agent lock', () => {
-  const ok = { model_id: 'eleven_flash_v2_5', voice_id: SES.sesler.kadin.id, expressive_mode: false, speed: 1, stability: 0.55, similarity_boost: 0.75, suggested_audio_tags: [] }
+  const ok = { model_id: ajanModeli(), voice_id: SES.sesler.kadin.id, expressive_mode: false, speed: 1, stability: 0.55, similarity_boost: 0.75, suggested_audio_tags: [] }
   it('holds the pack voice and the fixed delivery', () => {
     assert.equal(motorKilidiGerekli(ok, SES.sesler.kadin.id), false)
     assert.equal(motorKilidiGerekli({ ...ok, voice_id: 'someOtherVoiceId12345' }, SES.sesler.kadin.id), true)
@@ -148,6 +148,10 @@ describe('the agent lock', () => {
     assert.equal(motorKilidiGerekli({ ...ok, speed: 0.9 }, SES.sesler.kadin.id), true)
     assert.equal(motorKilidiGerekli({ ...ok, model_id: 'eleven_v3_conversational' }, SES.sesler.kadin.id), true)
     assert.equal(motorKilidiGerekli(null, SES.sesler.kadin.id), true)
+    // ULKE-UZ-CANLI-01: a pack that names another voice model (UZ: eleven_v4) holds the agent to that model.
+    assert.equal(motorKilidiGerekli({ ...ok, model_id: 'eleven_v4' }, SES.sesler.kadin.id, 'eleven_v4'), false)
+    assert.equal(motorKilidiGerekli(ok, SES.sesler.kadin.id, 'eleven_v4'), true)
+    assert.equal(motorKilidiGovdesi(SES.sesler.kadin.id, null, 'eleven_v4').conversation_config.tts.model_id, 'eleven_v4')
     assert.equal(motorKilidiGovdesi(SES.sesler.erkek.id).conversation_config.tts.voice_id, SES.sesler.erkek.id)
   })
   it('writes a drifted agent back and never blocks the call', async () => {

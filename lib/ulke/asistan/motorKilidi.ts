@@ -2,14 +2,22 @@
  * AU-CANLI-01 — the agent's delivery and VOICE are re-read and, if they have drifted, written back before every call
  * (Türkiye's lib/asistan/sesMotoru.ts, NOTYA-SES-KILIT-01, for a country). Two things are held:
  *
- *   1. the delivery — Flash v2.5, fixed speed 1, no expressive mode (a dashboard change cannot stick), and
+ *   1. the delivery — the pack's voice model (Flash v2.5 unless the pack names another), fixed speed 1, no expressive
+ *      mode (a dashboard change cannot stick), and
  *   2. the VOICE — the agent's voice must be the pack's voice for that agent's gender. This is how "exactly two
  *      voices, never a third" is kept true in the provider's account and not only in this repository.
  *
  * A failed read or write never blocks the call (the call then starts as the agent is) but is logged by kind, never with
  * a body: the provider's error text may quote the prompt.
  */
+import { AKTIF_KLINIK } from '@/countries/active/klinik'
 import { SES_MODEL_ID, SES_SES_AYARLARI } from '../uygulama/sesSentez'
+
+/**
+ * The model the agent is held to: the pack's voice model (UZ: eleven_v4 — Flash v2.5 has no Uzbek), Flash v2.5 where
+ * the pack names none. ULKE-UZ-CANLI-01 — Kaan written go 2026-11-08.
+ */
+export const ajanModeli = (): string => AKTIF_KLINIK?.ses?.model ?? SES_MODEL_ID
 
 export type MotorGorunen = {
   model_id?: string
@@ -25,9 +33,9 @@ export type MotorGorunen = {
 const yakin = (a: unknown, b: number): boolean => typeof a === 'number' && Math.abs(a - b) < 0.001
 
 /** true = the agent is not the known-good delivery with the pack's voice. */
-export function motorKilidiGerekli(tts: MotorGorunen | null | undefined, sesId: string): boolean {
+export function motorKilidiGerekli(tts: MotorGorunen | null | undefined, sesId: string, model: string = ajanModeli()): boolean {
   if (!tts) return true
-  if (tts.model_id !== SES_MODEL_ID) return true
+  if (tts.model_id !== model) return true
   if (tts.voice_id !== sesId) return true
   if (tts.expressive_mode === true) return true
   if (!yakin(tts.speed ?? 1, SES_SES_AYARLARI.speed)) return true
@@ -38,11 +46,11 @@ export function motorKilidiGerekli(tts: MotorGorunen | null | undefined, sesId: 
 }
 
 /** The fields this code owns, and no others (spreading the whole object has been refused by the provider). */
-export function motorKilidiGovdesi(sesId: string, gorunen?: MotorGorunen | null) {
+export function motorKilidiGovdesi(sesId: string, gorunen?: MotorGorunen | null, model: string = ajanModeli()) {
   return {
     conversation_config: {
       tts: {
-        model_id: SES_MODEL_ID,
+        model_id: model,
         voice_id: sesId,
         expressive_mode: false,
         speed: SES_SES_AYARLARI.speed,

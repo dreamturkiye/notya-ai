@@ -23,7 +23,8 @@ import { ulkeYolu } from '@/lib/ulke/yol'
 import { useBitki } from './bitki'
 import KabukGorunumu, { type KabukOge } from '@/components/doktor/KabukGorunumu'
 import { CHROME_FONT, CHROME_FONT_HREF, CHROME_RENK as R } from '@/lib/doktor/chromeRenk'
-import { araclarMetni, klinikMetni, marka, metninDili, randevuMetni, roller, rolMu, uygulamaDili, uygulamaMetni, type UygulamaMetni } from '@/lib/ulke/arayuz'
+import { useAsistanHazir } from './asistanHazir'
+import { araclarMetni, asistanSesAdlari, klinikMetni, marka, metninDili, randevuMetni, roller, rolMu, uygulamaDili, uygulamaMetni, type UygulamaMetni } from '@/lib/ulke/arayuz'
 import { hesapSaatDilimi, hesapSaatDilimiAyarla, saatBicimi } from '@/lib/ulke/arayuz/bicim'
 import { ozellikAcik, ulkePaketi } from '@/lib/ulke/ulke'
 import type { DilKodu } from '@/lib/ulke/tipler'
@@ -220,6 +221,8 @@ function KabukCercevesi({ dil, m, ad, unvan, aktif, cikis, onBuro, kompakt, chil
   )
   const ev = onBuro ? (ozellikAcik('randevu') ? YOL.onBuro : YOL.klinik) : YOL.bugun
   const anaDil = metninDili(m)
+  // AU-LAUNCH-01g / ULKE-UZ-CANLI-01: the entry is drawn only once the status call says the live assistant is ready (hidden while unknown).
+  const asistanHazir = useAsistanHazir(Boolean(asistanSesAdlari()))
   let asistan: KabukOge | null = null
   let calisma: KabukOge[] = []
   let diger: KabukOge[] = []
@@ -229,7 +232,8 @@ function KabukCercevesi({ dil, m, ad, unvan, aktif, cikis, onBuro, kompakt, chil
     diger = [oge('ayarlar', k.ayarlar, 'ayarlar', YOL.ayarlar)]
   } else {
     const p = m.pano
-    if (p) asistan = oge('asistan', p.asistanaSor, 'asistan', null)
+    // The live assistant is drawn only once the status call says ready: while it is not the entry is not drawn at all, instead of a dead button.
+    if (p && asistanHazir) asistan = oge('asistan', p.asistanaSor, 'asistan', YOL.asistan)
     calisma = [
       oge('bugun', k.bugun, 'anaSayfa', YOL.bugun),
       ...(HAZIR.takvim ? [oge('takvim', randevuMetni(dil).kabuk.takvim, 'randevular', YOL.takvim)] : []),

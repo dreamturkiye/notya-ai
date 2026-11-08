@@ -16,6 +16,7 @@ import Takvim from './Takvim'
 import Araclar from './Araclar'
 import Klinik from './Klinik'
 import OnBuro from './OnBuro'
+import Asistan from './AsistanSayfasi'
 
 export const UYGULAMA_EKRAN_BILESENLERI: Readonly<Record<UygulamaEkrani, ComponentType>> = {
   baslangic: Baslangic,
@@ -33,4 +34,6 @@ export const UYGULAMA_EKRAN_BILESENLERI: Readonly<Record<UygulamaEkrani, Compone
   klinik: Klinik,
   // The front-desk workspace (features `klinikHesaplari` and `randevu`).
   onBuro: OnBuro,
+  // AU-CANLI-02 / ULKE-UZ-CANLI-01 — the assistant page (the pack's `canliAsistan`; components/ulke/UlkeUygulamaSayfasi.tsx).
+  asistan: Asistan,
 }

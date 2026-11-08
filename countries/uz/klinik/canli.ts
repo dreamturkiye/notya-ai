@@ -4,12 +4,11 @@
  * says for what the screen shows, and the opening line. Pure pack data: the kit's prompt builder (lib/ulke/asistan/istem.ts)
  * reads it. "Draft, clinician approves" is said in the opening line and held in the limits.
  *
- * NOT YET SWITCHED ON (UZ_KLINIK does not carry it). The country's voice route is locked (FOUNDER LOCK, lib/asistan/ses-kilit.json):
- * lib/ulke/asistan/sunucu.ts sends the agent an English speech language (AJAN_DILI = 'en') and lib/ulke/asistan/motorKilidi.ts
- * holds every agent to eleven_flash_v2_5, which has no Uzbek. Switching this on before those two lines read the pack's
- * language and model would open an assistant that hears Uzbek as English. The smallest change each locked file needs, and
- * the one unlocked line that then wires this object in, are in docs/OPEN-COMMITMENTS.md (ULKE-UZ-CANLI-01): Kaan's written
- * go is the only step left. A test (./canli.test.ts) holds the shape and the per-role sources now.
+ * SWITCHED ON 2026-11-08 under Kaan's written go (ULKE-UZ-CANLI-01): UZ_KLINIK carries it; the country voice route now reads
+ * the pack's speech language (lib/ulke/asistan/sunucu.ts, AJAN_DILI = 'uz') and holds the agent to the pack's voice model
+ * (lib/ulke/asistan/motorKilidi.ts, eleven_v4), re-hashed in lib/asistan/ses-kilit.json under that sign-off. The typed
+ * answer (POST /api/ulke/asistan-canli/yazili) uses the same prompt. A test (../uzDerinlik.test.ts) holds the shape and
+ * the per-role sources.
  *
  * MACHINE-WRITTEN (Uzbek Latin), AWAITS NATIVE AND CLINICAL REVIEW (ULKE-BRANS-KLINISYEN-01).
  */

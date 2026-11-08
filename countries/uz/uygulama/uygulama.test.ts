@@ -74,6 +74,9 @@ const ekranTemiz = (html: string, kaynak: string) => {
   assert.doesNotMatch(html, /[çğıİşĞŞ]/, `${kaynak}: a Turkish letter`)
   for (const m of html.matchAll(/(?:href|action)="([^"]+)"/g)) {
     if (m[1].startsWith('https://fonts.googleapis.com/')) continue
+    // ULKE-UZ-CANLI-01 (2026-11-08): /uzbek/asistan is the kit's own assistant page (app/asistan/page.ulke.tsx, listed in the
+    // pack's routes), not Türkiye's /asistan — the bare Turkish address stays forbidden below.
+    if (m[1] === '/uzbek/asistan') continue
     assert.doesNotMatch(m[1], TURKCE_ADRES, `${kaynak}: links to a page of the pre-split application: ${m[1]}`)
     // NOTYA-UZ-MUAYENE-01: the build is served under /uzbek — an address outside it is another country's site.
     const adres = m[1].split(/[?#]/)[0]

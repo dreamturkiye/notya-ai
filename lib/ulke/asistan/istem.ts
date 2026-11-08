@@ -20,6 +20,8 @@ export type IstemGirdisi = {
   rol: string
   /** The emergency number as dialled ("000"), or null. */
   acilNumara: string | null
+  /** true = a typed turn: the clinician reads the whole answer, nothing is spoken. */
+  yazili?: boolean
 }
 
 const madde = (liste: readonly string[]): string => liste.map((x) => `- ${x}`).join('\n')
@@ -59,5 +61,6 @@ export function canliIstem(g: IstemGirdisi): string {
       'Write units normally (mg, mL); the voice reads them out. No emoji. No filler such as "as an AI language model", and no holding phrases before the answer.',
       'If the clinician says goodbye or asks you to stop, answer in one short sentence.',
     ]),
+    ...(g.yazili ? ['', 'THIS TURN IS TYPED: the clinician reads your whole answer on the screen and nothing is spoken. Answer fully and clearly; lists and tables are welcome.'] : []),
   ].join('\n')
 }

@@ -7,6 +7,7 @@
  */
 import React, { useEffect, useState, type CSSProperties } from 'react'
 import { Cerceve, Hata, HAZIR, saatYaz, useUygulama, YOL, Yukleniyor } from './Kabuk'
+import { useAsistanHazir } from './asistanHazir'
 import { asistanAdi, asistanSatiri } from './Asistan'
 import { CHROME_FONT, CHROME_RENK as R } from '@/lib/doktor/chromeRenk'
 import { hesapSaatDilimi } from '@/lib/ulke/arayuz/bicim'
@@ -14,7 +15,7 @@ import { OkunmamisMesajlarKarti } from './HastaMesajlari'
 import { BekleyenKonsultasyonlarKarti } from './Konsultasyonlar'
 import { Istekler } from './PortalIstekleri'
 import { saatAraligi, DurumRozeti, muayeneBaslatilabilir, muayeneBaslatYolu, takvimYolu, type RandevuKaydi } from './randevuOrtak'
-import { araclarMetni, metninDili, randevuMetni, rolAdi, type UygulamaMetni } from '@/lib/ulke/arayuz'
+import { araclarMetni, asistanSesAdlari, metninDili, randevuMetni, rolAdi, type UygulamaMetni } from '@/lib/ulke/arayuz'
 import { ozellikAcik, ulkePaketi } from '@/lib/ulke/ulke'
 import { roller } from '@/lib/ulke/arayuz'
 import { Ipucu } from './Ipucu'
@@ -117,7 +118,9 @@ export function BugunGorunumu({ m, ad, muayeneler, hata, rol, randevular, mesajl
   const hastaSayi = new Set((muayeneler ?? []).map((v) => v.hastaId).filter(Boolean)).size
   const asistan = asistanAdi(m, rol)
   const satir = asistanSatiri(m, rol)
-  const asistanYolu: string | null = null
+  // ULKE-UZ-CANLI-01: the microphone tile and the quick link open the assistant page once the server says it is ready.
+  const asistanHazir = useAsistanHazir(Boolean(asistanSesAdlari()))
+  const asistanYolu = asistanHazir ? YOL.asistan : null
   const karo = (href: string | null, text: string, ikon: string, not?: string) => {
     const ic = (
       <>
@@ -151,7 +154,7 @@ export function BugunGorunumu({ m, ad, muayeneler, hata, rol, randevular, mesajl
         <div className="yg-masa-arac">
           <h2 style={ETIKET}>{p.hizliAraclar}</h2>
           <div style={S({ display: 'flex', gap: 18, flexWrap: 'wrap', alignItems: 'center', ...KART, borderRadius: 16, padding: '14px 20px', boxShadow: '0 8px 18px rgba(58,44,34,0.045)' })}>
-            {asistanYolu ? <a href={asistanYolu} style={{ ...ARAC, textDecoration: 'none' }}>{m.asistan.etiket} ›</a> : <span style={ARAC}>{m.asistan.etiket} ›</span>}
+            {asistanYolu ? <a href={asistanYolu} style={{ ...ARAC, textDecoration: 'none' }}>{m.asistan.etiket} ›</a> : null}
             <span style={ARAC}>{p.epikriz} ›</span>
             <span style={ARAC}>{p.kodlama} ›</span>
           </div>
@@ -162,7 +165,7 @@ export function BugunGorunumu({ m, ad, muayeneler, hata, rol, randevular, mesajl
         <div className="yg-mobil-ust">
           <h2 style={S({ ...ETIKET, fontSize: 12, marginBottom: 8 })}>{p.hizliErisim}</h2>
           <div style={S({ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 8 })}>
-            {karo(asistanYolu, m.asistan.etiket, 'asistan')}
+            {asistanYolu ? karo(asistanYolu, m.asistan.etiket, 'asistan') : null}
             {HAZIR.takvim ? karo(YOL.takvim, r.kabuk.takvim, 'takvim') : null}
             {karo(YOL.hastalar, m.kabuk.hastalar, 'hastalar')}
             {karo(null, p.belgeler, 'belge')}
@@ -227,7 +230,7 @@ export function BugunGorunumu({ m, ad, muayeneler, hata, rol, randevular, mesajl
           <div className="yg-erisim-izgara" style={S({ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10 })}>
             {[
               HAZIR.takvim ? { href: YOL.takvim, text: r.kabuk.takvim, ikon: 'takvim' } : null,
-              { href: asistanYolu, text: p.asistanAc, ikon: 'asistan' },
+              asistanYolu ? { href: asistanYolu, text: p.asistanAc, ikon: 'asistan' } : null,
               { href: YOL.yeniHasta, text: m.bugun.yeniHasta, ikon: 'hastaEkle' },
               arac ? { href: YOL.araclar, text: arac.izgara.baslik, ikon: 'araclar' } : null,
               { href: null, text: p.belgeYukle, ikon: 'belge' },

@@ -182,6 +182,14 @@ export function asistanKimligi(rol: unknown, dil: unknown): AsistanKimligi | nul
   return rolMu(rol) ? arayuz().asistan(rol, uygulamaDili(dil)) : null
 }
 
+/** The two voice names the assistant card may speak, or null when this pack does not speak from that card. */
+export function asistanSesAdlari(): { erkek: string; kadin: string } | null {
+  const s = arayuz().sesAdlari
+  const erkek = s?.erkek.trim() ?? ''
+  const kadin = s?.kadin.trim() ?? ''
+  return erkek && kadin ? { erkek, kadin } : null
+}
+
 // ───────────────────────── note templates ─────────────────────────
 
 const veliYasi = (): number | null => ulkePaketi().uygulama?.veliYasi ?? null

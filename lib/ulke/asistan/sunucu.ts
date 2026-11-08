@@ -5,6 +5,7 @@
  *                                                      only on `hazir: true`)
  *   canliBaglantiCevabi POST /api/ulke/asistan-canli  open a call: lock the agent, mint the one-time address and the call token
  *   canliLlmPost       POST /api/ulke/asistan-canli/ses-llm/v1/chat/completions   the agent's "brain" (Custom LLM, SSE)
+ *   canliYaziliCevabi  POST /api/ulke/asistan-canli/yazili   the TYPED turn of the assistant page (ported from release/au)
  *
  * The map of how Türkiye does the same is in docs/COUNTRY-PACK-HOWTO.md ("Live assistant"). Reused from core: the token
  * and secret check (lib/asistan/sesJetonu.ts), the model gateway (lib/ai/cagir.ts, ai-model-politikasi: no model name
@@ -27,7 +28,7 @@ import type { AiMesaj } from '@/lib/ai/cagir'
 import { modeldenAkis } from '@/lib/ulke/uygulama/notModeli'
 import { asistanKimligi, rolAdi } from '@/lib/ulke/arayuz'
 import { ulkePaketi } from '@/lib/ulke/ulke'
-import { cevap, KOD } from '@/lib/ulke/uygulama/cevap'
+import { cevap, govdeOku, KOD, metinAlani } from '@/lib/ulke/uygulama/cevap'
 import { KOVA_ASISTAN_BAGLANTI, KOVA_ASISTAN_TUR, kovaKotasiKullan } from '@/lib/ulke/uygulama/kota'
 import { hekimRolunuOku, uygulamaRoluMu } from '@/lib/ulke/uygulama/rol'
 import { ulkeServisSupabase } from '@/lib/ulke/sunucuOturum'
@@ -47,8 +48,13 @@ export const GUNLUK_BAGLANTI_LIMITI = 40
 /** The voice turn never runs longer than this; the model call is given the same budget. */
 export const TUR_BUTCESI_MS = 20_000
 export const EKRAN_ARACI = 'show_on_screen'
-/** The agent's speech language (ASR + soft-timeout filler); the same value the call start overrides. */
-export const AJAN_DILI = 'en'
+/**
+ * The agent's speech language (ASR + soft-timeout filler); the same value the call start overrides. The pack's own
+ * speech language (UZ: 'uz'), English where the pack names none. ULKE-UZ-CANLI-01 — Kaan written go 2026-11-08.
+ */
+export const AJAN_DILI = AKTIF_KLINIK?.ses?.dilKodu ?? 'en'
+/** A typed turn may take longer than a spoken one: nobody is waiting in silence. */
+export const YAZILI_BUTCE_MS = 40_000
 const GECMIS_TUR = 12
 const MESAJ_AZAMI = 2_000
 
@@ -98,6 +104,36 @@ export async function canliBaglantiCevabi(oturum: { user: User; supabase: Supaba
     asr_keywords: anahtarKelimeler.slice(0, 50),
     ekran_araci: EKRAN_ARACI,
   })
+}
+
+/**
+ * The TYPED turn of the assistant page (the written chat beside the voice). Same persona, same prompt, same gateway and the
+ * same daily turn ceiling as the voice; the whole answer comes back at once. The conversation is what the page sends
+ * (its own last lines, bounded and cleaned like the voice's); no id of any kind is read from the request. Like this
+ * country's voice turn, it reads no patient file and no desk (HASTA-IZOLASYON, header above).
+ * Ported from release/au (AU-CANLI-02) for ULKE-UZ-CANLI-01 — Kaan written go 2026-11-08.
+ *   200 { cevap }   400 GECERSIZ   401 OTURUM_YOK   404 NOT_FOUND (not available here)   429 LIMIT   502 BASARISIZ
+ */
+export async function canliYaziliCevabi(oturum: { user: User; supabase: SupabaseClient }, req: Request): Promise<Response> {
+  const rol = await hekimRolunuOku(oturum.supabase, oturum.user.id)
+  const { durum, kimlik } = durumOku(rol)
+  const canli = AKTIF_KLINIK?.canliAsistan
+  const paket = ulkePaketi()
+  const rolun = rol ? rolAdi(rol, paket.varsayilanDil) : null
+  if (!durum.hazir || !kimlik || !rol || !canli || !rolun || !uygulamaRoluMu(rol)) return KOD.yok()
+  const govde = await govdeOku(req)
+  const mesaj = metinAlani(govde.mesaj, 4000)
+  if (!mesaj) return KOD.gecersiz('mesaj')
+  const gecmis = Array.isArray(govde.gecmis) ? (govde.gecmis as { rol?: unknown; metin?: unknown }[]) : []
+  const ham = [
+    ...gecmis.slice(-GECMIS_TUR).map((g) => ({ role: g?.rol === 'asistan' ? 'assistant' : 'user', content: typeof g?.metin === 'string' ? g.metin : '' })),
+    { role: 'user', content: mesaj },
+  ]
+  if (!(await kovaKotasiKullan(oturum.supabase, oturum.user.id, KOVA_ASISTAN_TUR, canli.gunlukTurLimiti))) return cevap({ code: 'LIMIT' }, 429)
+  const istem = canliIstem({ canli, tamAd: kimlik.tamAd, kisaAd: kimlik.kisaAd, rolAdi: rolun, rol, acilNumara: paket.uygulama?.portal?.acilNumara ?? null, yazili: true })
+  const sonuc = await modeldenAkis({ talimat: istem, mesajlar: modelMesajlari(ham), doktorId: oturum.user.id, butceMs: YAZILI_BUTCE_MS }, () => {})
+  if (!sonuc || !sonuc.trim()) return cevap({ code: 'BASARISIZ' }, 502)
+  return cevap({ cevap: sonuc.trim().slice(0, 8000) })
 }
 
 // ───────────────────────── the agent's brain ─────────────────────────
