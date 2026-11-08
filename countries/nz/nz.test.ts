@@ -17,12 +17,13 @@ import { ingilizcePaketSinamasi, kaynakOku } from '../_dil/en/testing/paketSinam
 import { enYaz } from '../_dil/en/varyant'
 import { NZ_ONAYSIZ_ARACLAR } from './araclar/onaysiz'
 import { NZ_ARAYUZ } from './arayuz'
-import { NZ_GIRDI, NZ_ROLLER } from './ayarlar'
+import { NZ_GIRDI, NZ_ROLLER, NZ_EK_ROL_TURLERI } from './ayarlar'
 import derleme from './derleme.mjs'
 import { NZ_PAKETI, nzAramaKatla } from './index'
 import { NZ_KLINIK } from './klinik'
 import { NZ_ACIL_CUMLE } from './klinik/formEk'
 import { NZ_KENDI_BASLIKLI_ROLLER } from './klinik/hastaFormu'
+import { EN_EK_SABLONLAR } from '../_dil/en/klinik/ekRoller'
 
 const D = 'en-NZ'
 const BUGUN = '2026-10-10'
@@ -257,7 +258,9 @@ describe('nz: the role list is New Zealand\'s own — 53 roles, the shared forty
       const talimat = NZ_KLINIK.notTalimati(D, r.anahtar) ?? ''
       assert.ok(talimat.length > 0, `${r.anahtar}: no instruction`)
       const yetiskin = { dogumTarihi: '1980-01-01', muayeneTarihi: BUGUN }
-      assert.deepEqual([...NZ_KLINIK.notAlanlari!(r.anahtar, yetiskin)], [...NZ_KLINIK.notAlanlari!(r.gibi as string, yetiskin)], `${r.anahtar}: its note fields are those of ${r.gibi}`)
+      // ULKE-BRANS-DERINLIK-2026-11: a role with a kind of its own writes with its own fields; urgent care keeps emergency medicine's
+      if (NZ_EK_ROL_TURLERI[r.anahtar]) assert.deepEqual([...NZ_KLINIK.notAlanlari!(r.anahtar, yetiskin)], [...EN_EK_SABLONLAR[NZ_EK_ROL_TURLERI[r.anahtar]]], `${r.anahtar}: its own note fields`)
+      else assert.deepEqual([...NZ_KLINIK.notAlanlari!(r.anahtar, yetiskin)], [...NZ_KLINIK.notAlanlari!(r.gibi as string, yetiskin)], `${r.anahtar}: its note fields are those of ${r.gibi}`)
       assert.ok(NZ_KLINIK.notAlanlari!(r.anahtar, yetiskin).length > 0, `${r.anahtar}: no note fields`)
       assert.ok(talimat.includes(r.ad.toLocaleUpperCase('en')), `${r.anahtar}: the instruction names the role itself, not the one it behaves like`)
     }
@@ -265,11 +268,18 @@ describe('nz: the role list is New Zealand\'s own — 53 roles, the shared forty
     assert.match(NZ_KLINIK.notTalimati(D, 'urgent-care-medicine') ?? '', /^You are an experienced specialist\./)
   })
 
-  it('A PATIENT NEVER READS ANOTHER PROFESSION\'S NAME ABOVE THE QUESTIONS: eleven added roles ask the questions of the role they behave like under a heading and keys of their own', () => {
+  it('A PATIENT NEVER READS ANOTHER PROFESSION\'S NAME ABOVE THE QUESTIONS: urgent care asks the borrowed questions under its own heading and keys; every other added role asks questions of its own (ULKE-BRANS-DERINLIK-2026-11)', () => {
     const f = NZ_KLINIK.hastaFormu!
     const eklenen = NZ_ROLLER.ekle ?? []
     assert.equal(NZ_KENDI_BASLIKLI_ROLLER.length, 11)
-    for (const rol of NZ_KENDI_BASLIKLI_ROLLER) {
+    for (const rol of Object.keys(NZ_EK_ROL_TURLERI)) {
+      const kendi = f.roller[rol]
+      assert.ok(kendi && kendi.sorular.length >= 5, rol)
+      for (const q of kendi.sorular) assert.match(q.anahtar, /^nz_[a-z]+_[a-z0-9_]+$/, `${rol}: ${q.anahtar}`)
+      assert.doesNotMatch(kendi.baslik[D], /family doctor|physiotherap|plastic|rehabilitation|internal medicine|emergency|oncolog/i, rol)
+      assert.deepEqual(kendi.inceleme, { makineYazimi: true, klinisyen: null }, rol)
+    }
+    for (const rol of NZ_KENDI_BASLIKLI_ROLLER.filter((x) => !NZ_EK_ROL_TURLERI[x])) {
       const gibi = eklenen.find((r) => r.anahtar === rol)!.gibi as string
       const kendi = f.roller[rol], onun = f.roller[gibi]
       assert.ok(kendi && onun, rol)
@@ -281,13 +291,9 @@ describe('nz: the role list is New Zealand\'s own — 53 roles, the shared forty
       for (const q of kendi.sorular) assert.match(q.anahtar, /^nz_[a-z]+_[a-z0-9_]+$/, `${rol}: ${q.anahtar}`)
       assert.deepEqual(kendi.inceleme, { makineYazimi: true, klinisyen: null }, rol)
     }
-    assert.equal(f.roller['occupational-medicine'].baslik[D], 'For your doctor')
+    assert.equal(f.roller['occupational-medicine'].baslik[D], 'About your work')
     assert.equal(f.roller.podiatry.baslik[D], 'Before your appointment')
-    // the other two ask under the heading of the role they behave like, which names no other profession
-    const digerleri = eklenen.filter((r) => !NZ_KENDI_BASLIKLI_ROLLER.includes(r.anahtar))
-    assert.deepEqual(digerleri.map((r) => r.anahtar), ['family-planning-reproductive-health', 'psychotherapy'])
-    for (const r of digerleri) assert.equal(f.roller[r.anahtar], undefined, `${r.anahtar}: found through the role it behaves like`)
-    assert.deepEqual(digerleri.map((r) => f.roller[r.gibi as string].baslik[D]), ['Women\'s health', 'Before the first conversation'])
+    assert.equal(f.roller['urgent-care-medicine'].baslik[D], 'About today\'s problem')
     // every question key is still unique in the whole pack
     const anahtarlar = [...f.cekirdek.bolumler.flatMap((x) => x.sorular), ...Object.values(f.roller).flatMap((r) => r.sorular)].map((q) => q.anahtar)
     assert.equal(new Set(anahtarlar).size, anahtarlar.length)

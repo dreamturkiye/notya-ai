@@ -22,7 +22,8 @@
 import { EN_ROL_SORULARI } from '../../_dil/en/klinik/hastaFormu'
 import type { HamRol } from '../../_dil/en/klinik/hastaFormu/yardimci'
 import type { EnRol, EnRolDegisimi } from '../../_dil/en/klinik/roller'
-import { NZ_ROLLER } from '../ayarlar'
+import { NZ_EK_ROL_ONEKLERI, NZ_EK_ROL_TURLERI, NZ_ROLLER } from '../ayarlar'
+import { enEkRolIcerigi } from '../../_dil/en/klinik/ekRoller'
 
 /** role → [the prefix of its question keys, the heading a patient reads]. The questions are those of the role it behaves like. */
 const BASLIKLAR: Readonly<Record<string, readonly [string, string]>> = {
@@ -46,13 +47,16 @@ const kendiFormu = (onEk: string, baslik: string, gibi: EnRol): HamRol => ({ bas
  * THE ROLE LIST AS THE SERVER HALF TAKES IT: ../ayarlar.ts → NZ_ROLLER, each of the eleven roles above with its own
  * question set. The same keys, kinds and `gibi` as NZ_ROLLER — only the questions are added.
  */
-export const NZ_ROLLER_FORMLU: EnRolDegisimi = {
+export const NZ_ROLLER_FORMLU: EnRolDegisimi = enEkRolIcerigi({
   ...NZ_ROLLER,
   ekle: (NZ_ROLLER.ekle ?? []).map((r) => {
     const kendi = BASLIKLAR[r.anahtar]
     return kendi && r.gibi ? { ...r, form: kendiFormu(kendi[0], kendi[1], r.gibi) } : r
   }),
-}
+// ULKE-BRANS-DERINLIK-2026-11: a role with a kind of its own (../ayarlar.ts → NZ_EK_ROL_TURLERI) asks ITS OWN questions
+// and writes with its own fields; the relabelled copy above stays only for urgent care medicine, whose borrowed
+// emergency-medicine questions fit.
+}, 'en-NZ', NZ_EK_ROL_TURLERI, NZ_EK_ROL_ONEKLERI, { form: true })
 
 /** The roles of this country that ask under a heading of their own. */
 export const NZ_KENDI_BASLIKLI_ROLLER: readonly string[] = Object.keys(BASLIKLAR)

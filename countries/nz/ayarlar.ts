@@ -27,6 +27,7 @@ import type { EnRolDegisimi } from '../_dil/en/klinik/roller'
 import type { Birimler } from '@/lib/ulke/tipler'
 import { NZ_OPERATOR_DEGISEN, NZ_OPERATOR_PARAMETRELERI } from './operator'
 import { NZ_GENITAL_ESTETIK } from './genitalEstetik'
+import { enEkRolIcerigi, type EnEkTur } from '../_dil/en/klinik/ekRoller'
 
 /**
  * GUARDIAN WORDING for a patient younger than this on the day of the visit ("who gave the history"), in every role.
@@ -98,6 +99,44 @@ export const NZ_ROLLER: EnRolDegisimi = {
   ],
 }
 
+/**
+ * ULKE-BRANS-DERINLIK-2026-11 — OWN CONTENT FOR EACH ROLE ONLY THIS COUNTRY HAS: the kind of role each one is, from which
+ * it takes note fields and intake questions of its own (countries/_dil/en/klinik/ekRoller.ts), instead of the template
+ * and questions of the shared role it behaves like. Its `gibi` stays as it was (nothing stored changes); the role's own
+ * content is found first (lib/ulke/arayuz/rolIcerigi.ts). The kind is this job's reading of the role, for a clinician of
+ * this country to confirm (docs/ULKE-BRANS-DERINLIK-DENETIMI-2026-11.md on main). Question keys carry the role's own prefix.
+ */
+export const NZ_EK_ROL_TURLERI: Readonly<Record<string, EnEkTur>> = {
+  'rural-hospital-medicine': 'rural-hospital',
+  'musculoskeletal-medicine': 'musculoskeletal',
+  'occupational-medicine': 'occupational',
+  'pain-medicine': 'pain',
+  'sexual-health-medicine': 'sexual-health',
+  'family-planning-reproductive-health': 'contraception',
+  'palliative-medicine': 'palliative',
+  'oral-maxillofacial-surgery': 'oral-maxillofacial',
+  'podiatry': 'podiatry',
+  'osteopathy': 'osteopathy',
+  'chiropractic': 'chiropractic',
+  'psychotherapy': 'psychotherapy',
+}
+
+/** The prefix of each such role's intake question keys (unique in the pack). */
+export const NZ_EK_ROL_ONEKLERI: Readonly<Record<string, string>> = {
+  'rural-hospital-medicine': 'nz_rhm',
+  'musculoskeletal-medicine': 'nz_msm',
+  'occupational-medicine': 'nz_ocm',
+  'pain-medicine': 'nz_pmd',
+  'sexual-health-medicine': 'nz_shm',
+  'family-planning-reproductive-health': 'nz_fprh',
+  'palliative-medicine': 'nz_pal',
+  'oral-maxillofacial-surgery': 'nz_omf',
+  'podiatry': 'nz_pod',
+  'osteopathy': 'nz_osteo',
+  'chiropractic': 'nz_chiro',
+  'psychotherapy': 'nz_psy',
+}
+
 const KLINISYEN = 'a clinical lead in New Zealand'
 
 // ── NOTYA-ULKE-ARAC-01b — OFF BY KAAN'S ORDER OF 2026-10-10 ("Switch off the risky tools"), in every country: the ESI
@@ -167,7 +206,8 @@ export const NZ_GIRDI: EnUlkeGirdisi = {
     'aesthetic-medicine': 'Cosmetic medicine',
     'clinic-dermatology': 'Dermatology',
   },
-  roller: NZ_ROLLER,
+  // ULKE-BRANS-DERINLIK-2026-11: each role only this country has writes with note fields of its own (NZ_EK_ROL_TURLERI below).
+  roller: enEkRolIcerigi(NZ_ROLLER, 'en-NZ', NZ_EK_ROL_TURLERI, NZ_EK_ROL_ONEKLERI, { form: false }),
   veliYasi: NZ_VELI_YASI,
   birimler: NZ_BIRIMLER,
   surum: 'nz-draft-2026-10-11',
