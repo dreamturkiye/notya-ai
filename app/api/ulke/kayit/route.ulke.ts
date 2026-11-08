@@ -30,6 +30,8 @@ import { referansKaydet, referansKoduNormalize } from '@/lib/billing/referans'
 import { referansIslevi } from '@/lib/ulke/belge/sunucu'
 import { ulkeIslevi, ulkeTablosu } from '@/lib/ulke/uygulama/tablolar'
 import { hekimRolunuYaz, uygulamaRolleri, uygulamaRoluMu } from '@/lib/ulke/uygulama/rol'
+import { arkaPlanda } from '@/lib/kurucu/denemeBildirimi'
+import { ulkeDenemeKaydiBildir } from '@/lib/ulke/kurucu/kurucuUlke'
 
 export const dynamic = 'force-dynamic'
 
@@ -105,6 +107,8 @@ export const POST = sinirda('sign-up POST', async (req: NextRequest) => {
     let kaydedildi = false
     try { kaydedildi = await hekimRolunuYaz(supabase, userId, rol) } catch { /* reported below */ }
     if (!kaydedildi) console.error('[ulke/kayit] role could not be recorded; /start will ask', { ulke })
+    // DENEME-BILDIRIM-01: the role (specialty) is set → the internal "New trial signup" e-mail, once, after the response.
+    else arkaPlanda(() => ulkeDenemeKaydiBildir(supabase, { id: userId, email: eposta, ad: adSoyad }, rol), 'deneme-bildirim/kayit')
   }
 
   // REFERANS-01: recorded once the account exists (self-referral and one clinic are refused by the database function).
