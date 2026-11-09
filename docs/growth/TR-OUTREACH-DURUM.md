@@ -1,11 +1,11 @@
 # TR outreach durum (canlı)
 
-**Sıradaki:** Prof. Dr. **Mahir İğde** · pedi · Şişli · `+905335794080`  
+**Sıradaki:** Prof. Dr. **Sakine Işık** · pedi · Ataşehir · `+905338978090`  
 (WA-verified)
 
 ## Son (2026-11-09)
 
 | Kişi | Telefon | Sonuç |
 |------|---------|--------|
-| Prof. Dr. Erkan Çakır | `+905332911526` | **gitti** |
-| Uzm. Dr. Volkan Tektaş | `+905496060412` | gitti |
+| Prof. Dr. Mahir İğde | `+905335794080` | **gitti** |
+| Prof. Dr. Erkan Çakır | `+905332911526` | gitti |
