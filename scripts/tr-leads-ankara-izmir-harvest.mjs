@@ -86,10 +86,14 @@ function listLinks(html, tip) {
       const u = m[1].split('#')[0]
       if (/\/uzmanlik-alanlari\//.test(u)) continue
       if (/\/(blog|video|soru|hastane|poliklinik|arama)\//.test(u)) continue
-      // profile-like: host/slug/... 
+      // profile-like: host/slug/specialty...
       if (/doktorsitesi\.com\/[a-z0-9-]+\/[a-z0-9-]+/i.test(u)) out.push(u)
     }
   } else {
+    // DT list pages use absolute https://www.doktortakvimi.com/profil/...
+    for (const m of html.matchAll(/href="(https:\/\/www\.doktortakvimi\.com\/profil\/[^"?#]+)"/gi)) {
+      out.push(m[1])
+    }
     for (const m of html.matchAll(/href="(\/profil\/[^"?#]+)"/gi)) {
       out.push(`${DT}${m[1]}`)
     }
