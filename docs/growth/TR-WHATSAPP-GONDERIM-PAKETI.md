@@ -1192,8 +1192,11 @@ Wave3’te SIRADAKİ diye önerildi → **HATA**. Ledger + early seed’e işlen
 ## W4-6. Op. Dr. Matanat Chankaya ← WA YOK / GİTMEDİ
 **kadin-dogum** · İstanbul/Ümraniye · `+905652173900` — yanlış numara; atlandı.
 
-## W4-7. Prof. Dr. Mehmet Aytaç Yüksel ← SIRADAKİ
-**kadin-dogum** · İstanbul/Küçükçekmece · `+90 507 662 84 96` · WA: `+905076628496`
+## W4-7. Prof. Dr. Mehmet Aytaç Yüksel ← WA YOK / GİTMEDİ
+**kadin-dogum** · İstanbul/Küçükçekmece · `+905076628496` — yanlış numara; atlandı.
+
+## W4-8. Doç. Dr. Mehmet Şükrü Budak ← SIRADAKİ
+**kadin-dogum** · İstanbul/Bahçelievler · `+90 551 941 75 27` · WA: `+905519417527`
 
 **Ön kontrol:** ledger / early-batch / paket GİTTİ — temiz. Gönder: yapıştır → kart **X** → gönder.
 

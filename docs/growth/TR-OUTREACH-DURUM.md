@@ -1,10 +1,10 @@
 # TR outreach durum (canlı)
 
-**Sıradaki:** Prof. Dr. **Mehmet Aytaç Yüksel** · KD · Küçükçekmece · `+905076628496`
+**Sıradaki:** Doç. Dr. **Mehmet Şükrü Budak** · KD · Bahçelievler · `+905519417527`
 
 ## Son (2026-11-09)
 
 | Kişi | Telefon | Sonuç |
 |------|---------|--------|
-| Op. Dr. Matanat Chankaya | `+905652173900` | **wa_yok / gitmedi** (yanlış numara) |
-| Op. Dr. Tuğba İleri Yay | `+905324992960` | gitti |
+| Prof. Dr. Mehmet Aytaç Yüksel | `+905076628496` | **wa_yok / gitmedi** |
+| Op. Dr. Matanat Chankaya | `+905652173900` | wa_yok |
