@@ -1231,14 +1231,17 @@ Wave3’te SIRADAKİ diye önerildi → **HATA**. Ledger + early seed’e işlen
 ## W4b-9. Prof. Dr. Mahir İğde ← GİTTİ (2026-11-09, WA-verified)
 **pediatri** · İstanbul/Şişli · WA: `+905335794080`
 
-## W4b-10. Prof. Dr. Sakine Işık ← SIRADAKİ
-**pediatri** · İstanbul/Ataşehir · `+90 533 897 80 90` · WA: `+905338978090`  
+## W4b-10. Prof. Dr. Sakine Işık ← GİTTİ (2026-11-09, WA-verified)
+**pediatri** · İstanbul/Ataşehir · WA: `+905338978090`
+
+## W4b-11. Uzm. Dr. Emel Şen ← SIRADAKİ
+**pediatri** · İstanbul/Kadıköy · `+90 532 393 05 94` · WA: `+905323930594`  
 **Doğrulama:** DS `socialMedia[{type:whatsapp}]` eşleşti.
 
 **Ön kontrol:** ledger temiz. Gönder: yapıştır → kart **X** → gönder.
 
 ```
-Sakine Hocam merhaba 👋
+Emel Hocam merhaba 👋
 Ben Kaan, *Notya*'dan yazıyorum.
 
 *Notya* — hekimler için yapay zekâ klinik asistanı.

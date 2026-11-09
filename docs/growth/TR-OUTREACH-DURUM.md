@@ -1,11 +1,11 @@
 # TR outreach durum (canlı)
 
-**Sıradaki:** Prof. Dr. **Sakine Işık** · pedi · Ataşehir · `+905338978090`  
+**Sıradaki:** Uzm. Dr. **Emel Şen** · pedi · Kadıköy · `+905323930594`  
 (WA-verified)
 
 ## Son (2026-11-09)
 
 | Kişi | Telefon | Sonuç |
 |------|---------|--------|
-| Prof. Dr. Mahir İğde | `+905335794080` | **gitti** |
-| Prof. Dr. Erkan Çakır | `+905332911526` | gitti |
+| Prof. Dr. Sakine Işık | `+905338978090` | **gitti** |
+| Prof. Dr. Mahir İğde | `+905335794080` | gitti |
