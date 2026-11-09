@@ -18,3 +18,9 @@
 - Onay satırı: `Kaan-onay: 2026-11-09 Kaan written go 2026-11-09, ULKE-UZ-CANLI-03 (release/uz only): (a) sunucu.ts vedaMi ends the call on an Uzbek Latin, Uzbek Cyrillic or Russian goodbye, not only English; (b) motorKilidi.ts gets release/au's agent-setup fix (gecersizKilmaGerekli/gecersizKilmaGovdesi: a new agent allows the per-call greeting, language, voice and call token; voice-only fallback on a refused delivery write; 4 s budget) - copy only, no AU file edited`
 - Taban commit: `2c87a5d00`
 - Değişen kilitli dosyalar: `lib/ulke/asistan/motorKilidi.ts`, `lib/ulke/asistan/sunucu.ts`
+
+## 2026-11-09 — ULKE-UZ-CANLI-04: Kaan written go 2026-11-09 — fix 2 tsc errors in lib/ulke/asistan/motorKilidi.ts (release/uz only): removed the duplicate, identical 'export type MotorSonuc' declaration (TS2300); type-only, no runtime or behaviour change; eleven_v4 pack model and ULKE-UZ-CANLI-01/03 speech-language logic unchanged
+
+- Onay satırı: `Kaan-onay: 2026-11-09 ULKE-UZ-CANLI-04: Kaan written go 2026-11-09 — fix 2 tsc errors in lib/ulke/asistan/motorKilidi.ts (release/uz only): removed the duplicate, identical 'export type MotorSonuc' declaration (TS2300); type-only, no runtime or behaviour change; eleven_v4 pack model and ULKE-UZ-CANLI-01/03 speech-language logic unchanged`
+- Taban commit: `f22b71a59`
+- Değişen kilitli dosyalar: `lib/ulke/asistan/motorKilidi.ts`

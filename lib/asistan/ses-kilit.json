@@ -1,6 +1,6 @@
 {
   "kural": ".cursor/rules/ses-omurga-kilidi.mdc",
-  "onay": "Kaan-onay: 2026-11-09 Kaan written go 2026-11-09, ULKE-UZ-CANLI-03 (release/uz only): (a) sunucu.ts vedaMi ends the call on an Uzbek Latin, Uzbek Cyrillic or Russian goodbye, not only English; (b) motorKilidi.ts gets release/au's agent-setup fix (gecersizKilmaGerekli/gecersizKilmaGovdesi: a new agent allows the per-call greeting, language, voice and call token; voice-only fallback on a refused delivery write; 4 s budget) - copy only, no AU file edited",
+  "onay": "Kaan-onay: 2026-11-09 ULKE-UZ-CANLI-04: Kaan written go 2026-11-09 — fix 2 tsc errors in lib/ulke/asistan/motorKilidi.ts (release/uz only): removed the duplicate, identical 'export type MotorSonuc' declaration (TS2300); type-only, no runtime or behaviour change; eleven_v4 pack model and ULKE-UZ-CANLI-01/03 speech-language logic unchanged",
   "guncelleme": "2026-11-09",
   "dosyalar": {
     ".cursor/rules/ses-omurga-kilidi.mdc": "fa7dcef64483f66ea83cebd1b9b6286bfccd5b16ccabc611366ffcc257ef80fa",
@@ -40,7 +40,7 @@
     "lib/doktor/hastaDosyaKart.ts": "4f0f836e9de52eb6477d803132e4e41ea484f26484912b681ee126bcc603f834",
     "lib/doktor/ogrenme/dosyaOnbellek.ts": "248ce4e2096a87d8dda157f52d01101ce3445f48856c793829f05bcdaa1a4e33",
     "lib/ulke/asistan/konusma.ts": "998aa88fd78b18dce8297a72b9ede483643d341dd782e827c16b5ffdaabd1f2c",
-    "lib/ulke/asistan/motorKilidi.ts": "031b8fa7148370b3c2f9fd69ec76c1c7cce14af7033ba3b193ebfbeca75d0859",
+    "lib/ulke/asistan/motorKilidi.ts": "6e1be7312ba8fbd403ab37f06126e06a223a185b8c8fa0a43f60e52feaae2761",
     "lib/ulke/asistan/sesTur.test.ts": "cc1a6d439b2dce6e9316fea67b14fbb6133fa849fa504e071601f17c9fccee44",
     "lib/ulke/asistan/sesTur.ts": "a9d150d7f5746303168f75c826f017314cf004a46464d8d6fdcb280779f52698",
     "lib/ulke/asistan/sunucu.ts": "374cec2db3fad32fc8b8047e0fd5f8ad2d032ef8e0cb05d063c28ca7aee7eaef",

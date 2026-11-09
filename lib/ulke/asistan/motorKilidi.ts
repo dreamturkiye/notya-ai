@@ -127,8 +127,6 @@ export async function reddedilenAlanlar(r: Response): Promise<string> {
   } catch { return '' }
 }
 
-export type MotorSonuc = { durum: 'tamam' | 'onbellek' | 'okunamadi' | 'yazilamadi' | 'yok'; degisti: boolean }
-
 export async function motoruSabitle(ajan: string, sesId: string, anahtar: string, fetchFn: typeof fetch = fetch): Promise<MotorSonuc> {
   if (!ajan || !sesId || !anahtar) return { durum: 'yok', degisti: false }
   const simdi = Date.now()
