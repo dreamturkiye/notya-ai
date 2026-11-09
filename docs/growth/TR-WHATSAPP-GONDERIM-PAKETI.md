@@ -1204,14 +1204,17 @@ Wave3’te SIRADAKİ diye önerildi → **HATA**. Ledger + early seed’e işlen
 
 Önceki bare-5xx scrapeler yanlıştı. Bundan sonra numara = profildeki WhatsApp alanı.
 
-## W4b-1. Uzm. Dr. Hasan Alakbarov ← SIRADAKİ
-**dermatoloji** · İstanbul/Bakırköy · `+90 501 061 46 54` · WA: `+905010614654`  
+## W4b-1. Uzm. Dr. Hasan Alakbarov ← GİTTİ (2026-11-09, WA-verified)
+**dermatoloji** · İstanbul/Bakırköy · WA: `+905010614654`
+
+## W4b-2. Uzm. Dr. Kübra Esen ← SIRADAKİ
+**dermatoloji** · İstanbul/Kadıköy · `+90 543 963 00 43` · WA: `+905439630043`  
 **Doğrulama:** DS `socialMedia[{type:whatsapp}]` eşleşti.
 
 **Ön kontrol:** ledger temiz. Gönder: yapıştır → kart **X** → gönder.
 
 ```
-Hasan Hocam merhaba 👋
+Kübra Hocam merhaba 👋
 Ben Kaan, *Notya*'dan yazıyorum.
 
 *Notya* — hekimler için yapay zekâ klinik asistanı.
