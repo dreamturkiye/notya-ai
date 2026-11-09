@@ -114,7 +114,27 @@ export const UZ_ASISTAN_ADLARI: readonly AsistanAdi[] = [
   { taraf: 'klinik-muttefik', bransAnahtari: 'odyoloji', unvan: 'meslek', meslekUnvani: 'Audiolog', kisaAd: 'Rayhon', soyad: 'Alimova' },
 ]
 
-const ANAHTARA_GORE: ReadonlyMap<string, AsistanAdi> = new Map(UZ_ASISTAN_ADLARI.map((a) => [a.bransAnahtari, a]))
+/**
+ * ULKE-UZ-CANLI-02 (2026-11-09) — THE FIVE ROLES THE AUDIT ADDED, NAMED. Kaan delegated the choice in writing on
+ * 2026-11-09 ("Get all these done", covering "Persona names for the 5 UZ roles that have none … Kaan delegated the choice").
+ * Kept apart from the owner's own list above so that list, and its fingerprint, stay exactly as he wrote them.
+ *
+ * How they were chosen: common Uzbek given names and patronymic surnames, in the owner's convention (Uzbek Latin, one
+ * plain word each, Prof. Dr. like every doctor specialty, the Turkish product's title); no given name and no surname
+ * already used in the list above; the gender rule of ./asistanKimligi.ts (-ova/-eva a woman, -ov/-ev a man). Gender
+ * balance: the 37 named roles of the pack had 17 male and 20 female voices; four male and one female make it 21 and 21.
+ * No combination is the name of a well-known person (a web search on 2026-11-09 found none; surnames carried by public
+ * figures were left out). Machine-chosen, not owner-written: Kaan or a native reader may replace any of them.
+ */
+export const UZ_EK_ASISTAN_ADLARI: readonly AsistanAdi[] = [
+  { taraf: 'doktor', bransAnahtari: 'damar-cerrahisi', unvan: 'prof-dr', kisaAd: 'Davron', soyad: 'Normatov' },
+  { taraf: 'doktor', bransAnahtari: 'alerji-immunoloji', unvan: 'prof-dr', kisaAd: 'Ilhom', soyad: 'Sobirov' },
+  { taraf: 'doktor', bransAnahtari: 'reproduktoloji', unvan: 'prof-dr', kisaAd: 'Gavhar', soyad: 'Tojiboyeva' },
+  { taraf: 'doktor', bransAnahtari: 'cocuk-norolojisi', unvan: 'prof-dr', kisaAd: 'Abror', soyad: 'Ochilov' },
+  { taraf: 'doktor', bransAnahtari: 'narkoloji', unvan: 'prof-dr', kisaAd: 'Ravshan', soyad: 'Hamroyev' },
+]
+
+const ANAHTARA_GORE: ReadonlyMap<string, AsistanAdi> = new Map([...UZ_ASISTAN_ADLARI, ...UZ_EK_ASISTAN_ADLARI].map((a) => [a.bransAnahtari, a]))
 
 /**
  * A key the audit of 2026-10-10 renamed onto the doctor side → the owner's own key for the same profession

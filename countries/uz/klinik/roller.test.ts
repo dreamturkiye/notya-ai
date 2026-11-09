@@ -322,16 +322,22 @@ describe('42 roles: the assistant\'s identity', () => {
   it('no entry → no name. Never another role\'s name, never a persona of another country', () => {
     for (const ham of ['genel', 'kadin-dogum', 'yok-boyle-rol', '', null, undefined, 'Kardiyoloji']) for (const f of FORMLAR) assert.equal(K.uzAsistanKimligi(ham, f), null, `${String(ham)}/${f}`)
     // 35 of the owner's original list, plus diyetoloji and surdoloji (resolved 2026-10-18 to the identity the owner
-    // already gave the profession under its old key: diyetisyen, odyoloji).
-    assert.equal(ADLI.length, 37)
-    assert.equal(new Set(ADLI.map((r) => K.uzAsistanKimligi(r.rol, 'uz-Cyrl')!.tamAd)).size, 37)
+    // already gave the profession under its old key: diyetisyen, odyoloji), plus the five roles the audit added, named
+    // 2026-11-09 under Kaan's written delegation (ULKE-UZ-CANLI-02). Every role of the pack now has an assistant.
+    assert.equal(ADLI.length, 42)
+    assert.equal(ADSIZ.length, 0)
+    assert.equal(new Set(ADLI.map((r) => K.uzAsistanKimligi(r.rol, 'uz-Cyrl')!.tamAd)).size, 42)
   })
 
-  it('FIVE ROLES THE AUDIT ADDED HAVE NO ASSISTANT YET: no name in any form — not the name of the role they behave like, not a made-up one. TWO MORE WERE RENAMED, NOT ADDED, AND DO carry a name on (resolved 2026-10-18)', () => {
-    assert.deepEqual(ADSIZ.map((r) => r.rol), ['damar-cerrahisi', 'alerji-immunoloji', 'reproduktoloji', 'cocuk-norolojisi', 'narkoloji'])
-    for (const { rol } of ADSIZ) for (const f of FORMLAR) assert.equal(K.uzAsistanKimligi(rol, f), null, `${rol}/${f}`)
-    // the role each ADDED role behaves like has (or had) a name in the owner's list — and it is NOT handed on
-    for (const x of UZ_ROL_SATIRLARI.filter((y) => y.gibi && y.karar === 'add')) assert.ok(uzAsistanAdi(x.gibi!), x.anahtar)
+  it('THE FIVE ROLES THE AUDIT ADDED HAVE AN ASSISTANT OF THEIR OWN (named 2026-11-09, ULKE-UZ-CANLI-02) — never the one of the role they behave like. TWO MORE WERE RENAMED, NOT ADDED, AND DO carry a name on (resolved 2026-10-18)', () => {
+    const eklenen = UZ_ROL_SATIRLARI.filter((y) => y.karar === 'add' && !['diyetoloji', 'surdoloji'].includes(y.anahtar)).map((y) => y.anahtar)
+    for (const rol of ['damar-cerrahisi', 'alerji-immunoloji', 'reproduktoloji', 'cocuk-norolojisi', 'narkoloji']) for (const f of FORMLAR) assert.ok(K.uzAsistanKimligi(rol, f), `${rol}/${f}`)
+    // the role each ADDED role behaves like has a name in the owner's list — and it is NOT handed on: the added role's own differs
+    for (const x of UZ_ROL_SATIRLARI.filter((y) => y.gibi && (y.karar === 'add' || y.karar === 'split'))) {
+      assert.ok(uzAsistanAdi(x.gibi!), x.anahtar)
+      if (uzAsistanAdi(x.anahtar)) assert.notDeepEqual(uzAsistanAdi(x.anahtar), uzAsistanAdi(x.gibi!), x.anahtar)
+    }
+    assert.ok(eklenen.length >= 4)
     // the two MOVED roles behave like a role that IS handed on: that is the whole reconciliation
     for (const x of UZ_ROL_SATIRLARI.filter((y) => y.gibi && y.karar === 'moved')) assert.deepEqual(uzAsistanAdi(x.anahtar), uzAsistanAdi(x.gibi!), x.anahtar)
     assert.match(readFileSync(join(KOK, 'countries/uz/klinik/asistanKimligi.ts'), 'utf8'), /does NOT take that role's assistant/)

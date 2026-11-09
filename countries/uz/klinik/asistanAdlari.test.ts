@@ -16,7 +16,7 @@ import { readFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { sizintiTara } from '@/lib/ulke/testing/sizintiTarayici'
 import { uzKirillga, uzRuschaYozuvga } from '../yozuv'
-import { UZ_ASISTAN_ADLARI, uzAsistanAdi, type AsistanUnvani } from './asistanAdlari'
+import { UZ_ASISTAN_ADLARI, UZ_EK_ASISTAN_ADLARI, uzAsistanAdi, type AsistanUnvani } from './asistanAdlari'
 import { uzAsistanKimligi, uzSoyadCinsiyeti } from './asistanKimligi'
 import { UZ_ASISTAN_UNVANLARI } from './asistanUnvanlari'
 import { uzRolMu } from './rolAdlari'
@@ -166,7 +166,7 @@ test('lookup: known key answers, unknown key is null (no fallback to another spe
  * role the audit merely added. A role the audit added (narkoloji, say) still shows nobody: not a stale key, a
  * genuinely new one the owner has not named.
  */
-test('a renamed key carries the identity the owner already gave it; an added key still shows nobody', () => {
+test('a renamed key carries the identity the owner already gave it; an added key carries its own, never the one of the role it behaves like', () => {
   assert.equal(uzAsistanAdi('diyetoloji')?.meslekUnvani, 'Diyetolog')
   assert.equal(uzAsistanAdi('diyetoloji')?.kisaAd, 'Mahliyo')
   assert.equal(uzAsistanAdi('surdoloji')?.meslekUnvani, 'Audiolog')
@@ -176,5 +176,22 @@ test('a renamed key carries the identity the owner already gave it; an added key
   // the renamed key answers with the exact same underlying record as its old key (uzAsistanAdi has no role gate)
   assert.deepEqual(uzAsistanAdi('diyetoloji'), uzAsistanAdi('diyetisyen'))
   assert.deepEqual(uzAsistanAdi('surdoloji'), uzAsistanAdi('odyoloji'))
-  for (const f of FORMLAR) assert.equal(uzAsistanKimligi('narkoloji', f), null)
+  for (const f of FORMLAR) assert.ok(uzAsistanKimligi('narkoloji', f))
+  assert.notDeepEqual(uzAsistanAdi('narkoloji'), uzAsistanAdi('psikiyatri'))
+})
+
+test('ULKE-UZ-CANLI-02: the five added roles are named apart from the owner\'s list, in his convention, gender-balanced', () => {
+  assert.deepEqual(UZ_EK_ASISTAN_ADLARI.map((a) => a.bransAnahtari), ['damar-cerrahisi', 'alerji-immunoloji', 'reproduktoloji', 'cocuk-norolojisi', 'narkoloji'])
+  const sahibin = new Set(UZ_ASISTAN_ADLARI.flatMap((a) => [a.kisaAd, a.soyad.replace(/a$/, '')]))
+  for (const a of UZ_EK_ASISTAN_ADLARI) {
+    assert.equal(a.taraf, 'doktor'); assert.equal(a.unvan, 'prof-dr')
+    for (const x of [a.kisaAd, a.soyad]) assert.match(x, /^[A-Z][a-z]+$/, a.bransAnahtari)
+    assert.ok(!sahibin.has(a.kisaAd) && !sahibin.has(a.soyad.replace(/a$/, '')), `${a.bransAnahtari}: reuses a name of the owner's list`)
+    assert.ok(uzSoyadCinsiyeti(a.soyad), a.bransAnahtari)
+    assert.ok(!UZ_ASISTAN_ADLARI.some((o) => o.bransAnahtari === a.bransAnahtari), a.bransAnahtari)
+  }
+  const gorunen = [...UZ_ASISTAN_ADLARI, ...UZ_EK_ASISTAN_ADLARI].filter((a) => uzAsistanKimligi(a.bransAnahtari, 'uz-Latn') || ['diyetisyen', 'odyoloji'].includes(a.bransAnahtari))
+  const say = (c: string) => gorunen.filter((a) => uzSoyadCinsiyeti(a.soyad) === c).length
+  assert.equal(gorunen.length, 42)
+  assert.equal(say('erkek'), 21); assert.equal(say('kadin'), 21)
 })

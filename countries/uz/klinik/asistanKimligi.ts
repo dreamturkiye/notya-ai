@@ -29,10 +29,11 @@
  * no assistant: `null`, and the screen shows the neutral "Notya assistant". Never another role's name, never a
  * persona of another country.
  *
- * NOTYA-ULKE-UYGULA-UZ (2026-10-10) — FIVE OF THE SEVEN ROLES THE AUDIT ADDED HAVE NO NAME YET, and show the
- * neutral assistant: vascular surgery, allergology and clinical immunology, reproductology, paediatric neurology,
- * narcology (./rolListesi.ts). A name is the owner's to give: no machine invents one for these, and a role that
- * merely BEHAVES LIKE another (`gibi`, an "add") does NOT take that role's assistant.
+ * NOTYA-ULKE-UYGULA-UZ (2026-10-10) — five of the seven roles the audit added had no name: vascular surgery, allergology
+ * and clinical immunology, reproductology, paediatric neurology, narcology (./rolListesi.ts). NAMED 2026-11-09
+ * (ULKE-UZ-CANLI-02): Kaan delegated the choice in writing; the names are in ./asistanAdlari.ts (UZ_EK_ASISTAN_ADLARI),
+ * apart from his own list. A role that merely BEHAVES LIKE another (`gibi`, an "add")
+ * still does NOT take that role's assistant: each of the five has a persona of its own.
  * RECONCILED 2026-10-18 (docs/OPEN-COMMITMENTS.md) — the other two of the seven, dietology and surdology, are
  * different in kind: the audit did not add a new profession for them, it MOVED an existing, owner-named one
  * (diyetisyen, odyoloji) onto the doctor side under a new key (`karar: 'moved'`, not `'add'`). ./asistanAdlari.ts

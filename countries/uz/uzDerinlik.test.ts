@@ -15,7 +15,7 @@ import { UZ_CANLI_ASISTAN } from './klinik/canli'
 import { UZ_ROL_KAYNAKLARI, uzKaynakBlogu } from './klinik/kaynaklar'
 import { UZ_KLINIK } from './klinik'
 import { canliIstem } from '@/lib/ulke/asistan/istem'
-import { UZ_ASISTAN_ADLARI } from './klinik/asistanAdlari'
+import { UZ_ASISTAN_ADLARI, UZ_EK_ASISTAN_ADLARI } from './klinik/asistanAdlari'
 import { UZ_ASISTAN_SESLERI } from './klinik/asistanSesi'
 import { uzAsistanKimligi, uzSoyadCinsiyeti } from './klinik/asistanKimligi'
 
@@ -88,7 +88,7 @@ describe('Uzbekistan depth wave of 2026-11-08', () => {
   })
 
   it('ULKE-UZ-CANLI-01: every named persona has a gender from the owner\'s own surname, matching the voice table where it has one; a role without a persona has none', () => {
-    for (const a of UZ_ASISTAN_ADLARI) {
+    for (const a of [...UZ_ASISTAN_ADLARI, ...UZ_EK_ASISTAN_ADLARI]) {
       const c = uzSoyadCinsiyeti(a.soyad)
       assert.ok(c === 'erkek' || c === 'kadin', a.bransAnahtari)
       const tablo = UZ_ASISTAN_SESLERI.bransaGore?.[a.bransAnahtari]?.gender
@@ -96,7 +96,9 @@ describe('Uzbekistan depth wave of 2026-11-08', () => {
       if (ROLLER.includes(a.bransAnahtari)) for (const f of FORMLAR) assert.equal(uzAsistanKimligi(a.bransAnahtari, f)?.cinsiyet, c)
     }
     assert.equal(uzSoyadCinsiyeti('Karimova'), 'kadin'); assert.equal(uzSoyadCinsiyeti('Ergashev'), 'erkek'); assert.equal(uzSoyadCinsiyeti('Ali'), undefined)
-    // The five roles the owner has not named a persona for stay without one (no live assistant there until he names one).
-    for (const rol of ['damar-cerrahisi', 'alerji-immunoloji', 'reproduktoloji', 'cocuk-norolojisi', 'narkoloji']) assert.equal(uzAsistanKimligi(rol, 'uz-Latn'), null, rol)
+    // ULKE-UZ-CANLI-02 (2026-11-09): the five roles the audit added now have a persona, and with it a gender and a voice.
+    for (const rol of ['damar-cerrahisi', 'alerji-immunoloji', 'reproduktoloji', 'cocuk-norolojisi', 'narkoloji']) assert.ok(uzAsistanKimligi(rol, 'uz-Latn')?.cinsiyet, rol)
+    // every role of the pack has a live-assistant persona
+    for (const rol of ROLLER) assert.ok(uzAsistanKimligi(rol, 'uz-Latn')?.cinsiyet, rol)
   })
 })

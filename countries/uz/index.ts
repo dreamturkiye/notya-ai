@@ -18,7 +18,7 @@ import { UZ_VELI_YASI } from './ayarlar'
 import { UZ_RESMI_GUNLER } from './resmiGunler'
 import { UZ_PORTAL_BOLUMLERI } from './uygulama/portalBolumleri'
 import { UZ_ASISTAN_SESLERI } from './klinik/asistanSesi'
-import { UZ_ASISTAN_ADLARI } from './klinik/asistanAdlari'
+import { UZ_ASISTAN_ADLARI, UZ_EK_ASISTAN_ADLARI } from './klinik/asistanAdlari'
 
 const metin = paketMetinleri({
   acikDiller: ['uz-Latn', 'ru'],
@@ -160,7 +160,7 @@ export const UZ_PAKETI: UlkePaketi = {
   // lib/asistan/bransAsistanPersonasi.ts stops importing countries/uz/klinik/asistanAdlari directly (D1 —
   // that direct import was a second, separate wall violation found alongside the one Part 1 named).
   asistanAdlariBransaGore: Object.fromEntries(
-    UZ_ASISTAN_ADLARI.filter((a) => a.taraf === 'doktor').map((a) => [a.bransAnahtari, { unvan: a.unvan, kisaAd: a.kisaAd, soyad: a.soyad }])
+    [...UZ_ASISTAN_ADLARI, ...UZ_EK_ASISTAN_ADLARI].filter((a) => a.taraf === 'doktor').map((a) => [a.bransAnahtari, { unvan: a.unvan, kisaAd: a.kisaAd, soyad: a.soyad }])
   ),
   uygulama: {
     // Inside the signed-in application an account may also choose Uzbek in Cyrillic script: those screens are written
