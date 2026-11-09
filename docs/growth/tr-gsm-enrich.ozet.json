@@ -1,21 +1,28 @@
 {
-  "tarih": "2026-11-09T12:26:54.024149+00:00",
-  "mode": "whatsapp_social_only_verified",
-  "whatsapp_mobil_adet": 15,
+  "tarih": "2026-11-09T13:33:12.836Z",
+  "mode": "whatsapp_social_only",
+  "scanned": 130,
+  "fail": 0,
+  "profiles_with_wa": 1,
+  "whatsapp_mobil_adet": 1,
+  "call_ready_patched": 0,
   "brans": {
     "kadin-dogum": 0,
-    "dermatoloji": 7,
-    "pediatri": 8
+    "dermatoloji": 1,
+    "pediatri": 0
   },
   "siradaki": {
-    "skor": "95",
-    "isim": "Uzm. Dr. Hasan Alakbarov",
+    "skor": "90",
+    "isim": "Uzm. Dr. Şilan Naycı",
     "brans": "dermatoloji",
     "sehir": "istanbul",
-    "ilce": "Bakırköy",
-    "telefon": "+905010614654",
-    "url": "https://www.doktorsitesi.com/hasan-alakbarov/dermatoloji/istanbul",
-    "durum": "siradaki"
+    "ilce": "Başakşehir",
+    "telefon": "+905325180906",
+    "mobil_yeni": "+905325180906",
+    "url": "https://www.doktorsitesi.com/uzm-dr-silan-nayci/dermatoloji/istanbul",
+    "durum": "siradaki",
+    "kaynak_enrich": "whatsapp_social",
+    "gsm_score": 100
   },
-  "not": "Only DS socialMedia whatsapp; double-verified against live profiles"
+  "not": "Only Doktorsitesi socialMedia type=whatsapp (or ld+json GSM telephone). No bare 5xx scrapes."
 }

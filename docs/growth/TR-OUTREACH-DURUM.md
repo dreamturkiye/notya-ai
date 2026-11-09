@@ -1,11 +1,11 @@
 # TR outreach durum (canlı)
 
-**Sıradaki:** Uzm. Dr. **Münevver Bilgin** · pedi · Başakşehir · `+905304700789`  
-(WA-verified — wave4 son stok)
+**Sıradaki:** Uzm. Dr. **Şilan Naycı** · derm · Başakşehir · `+905325180906`  
+(WA-verified — wave5; İstanbul DS WA stoku bitince Ankara/İzmir DS 1729 profil eklendi, enrich sürüyor)
 
 ## Son (2026-11-09)
 
 | Kişi | Telefon | Sonuç |
 |------|---------|--------|
-| Uzm. Dr. Hale Molla | `+905300240488` | **gitti** |
-| Uzm. Dr. Alper Orhon | `+905521624926` | gitti |
+| Uzm. Dr. Münevver Bilgin | `+905304700789` | **gitti** |
+| Uzm. Dr. Hale Molla | `+905300240488` | gitti |

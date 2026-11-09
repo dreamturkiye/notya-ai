@@ -153,6 +153,7 @@ function loadQueue(blocked) {
   const sources = [
     join(OUT, 'tr-call-ready-leads.csv'),
     join(OUT, 'tr-istanbul-pedi-leads.csv'),
+    join(OUT, 'tr-ankara-izmir-leads.csv'),
   ]
   const byUrl = new Map()
   for (const p of sources) {
