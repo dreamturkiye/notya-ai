@@ -1222,14 +1222,17 @@ Wave3’te SIRADAKİ diye önerildi → **HATA**. Ledger + early seed’e işlen
 ## W4b-6. Uzm. Dr. İhsaniye Dönmez Çiçek ← GİTTİ (2026-11-09, WA-verified)
 **dermatoloji** · İstanbul/Kağıthane · WA: `+905435952071`
 
-## W4b-7. Uzm. Dr. Volkan Tektaş ← SIRADAKİ
-**dermatoloji** · İstanbul/Çekmeköy · `+90 549 606 04 12` · WA: `+905496060412`  
+## W4b-7. Uzm. Dr. Volkan Tektaş ← GİTTİ (2026-11-09, WA-verified)
+**dermatoloji** · İstanbul/Çekmeköy · WA: `+905496060412`
+
+## W4b-8. Prof. Dr. Erkan Çakır ← SIRADAKİ
+**pediatri** · İstanbul/Beşiktaş · `+90 533 291 15 26` · WA: `+905332911526`  
 **Doğrulama:** DS `socialMedia[{type:whatsapp}]` eşleşti.
 
 **Ön kontrol:** ledger temiz. Gönder: yapıştır → kart **X** → gönder.
 
 ```
-Volkan Hocam merhaba 👋
+Erkan Hocam merhaba 👋
 Ben Kaan, *Notya*'dan yazıyorum.
 
 *Notya* — hekimler için yapay zekâ klinik asistanı.
@@ -1237,12 +1240,12 @@ Muayeneyi dinler, notunuzu yazar, reçete ve rapor taslağını hazırlar, hasta
 Her karar *sizin onayınızla*.
 40'tan fazla branşı kendi ihtiyaçlarıyla destekliyoruz.
 
-*Dermatolojide*
-- PASI / EASI
-- İzotretinoin GÖP kapısı
-- Fototerapi defteri
-- Yama (D2/D4) ve dermoskopi
-- Biyolojik SUT taslağı
+*Pediatride*
+- Büyüme ve persentil (Neyzi / WHO)
+- Hedef boy
+- Doz hesaplayıcı (mg/kg)
+- Aşı takvimi ve telafi
+- Gelişim ve tarama (M-CHAT dahil)
 
 Tipik bir günde yaklaşık *1,5-2 saat* kazanç.
 Kayıtlar daha düzenli → bakım kalitesi de yükseliyor.
