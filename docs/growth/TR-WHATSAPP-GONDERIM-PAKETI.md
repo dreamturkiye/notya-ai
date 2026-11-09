@@ -1225,14 +1225,17 @@ Wave3’te SIRADAKİ diye önerildi → **HATA**. Ledger + early seed’e işlen
 ## W4b-7. Uzm. Dr. Volkan Tektaş ← GİTTİ (2026-11-09, WA-verified)
 **dermatoloji** · İstanbul/Çekmeköy · WA: `+905496060412`
 
-## W4b-8. Prof. Dr. Erkan Çakır ← SIRADAKİ
-**pediatri** · İstanbul/Beşiktaş · `+90 533 291 15 26` · WA: `+905332911526`  
+## W4b-8. Prof. Dr. Erkan Çakır ← GİTTİ (2026-11-09, WA-verified)
+**pediatri** · İstanbul/Beşiktaş · WA: `+905332911526`
+
+## W4b-9. Prof. Dr. Mahir İğde ← SIRADAKİ
+**pediatri** · İstanbul/Şişli · `+90 533 579 40 80` · WA: `+905335794080`  
 **Doğrulama:** DS `socialMedia[{type:whatsapp}]` eşleşti.
 
 **Ön kontrol:** ledger temiz. Gönder: yapıştır → kart **X** → gönder.
 
 ```
-Erkan Hocam merhaba 👋
+Mahir Hocam merhaba 👋
 Ben Kaan, *Notya*'dan yazıyorum.
 
 *Notya* — hekimler için yapay zekâ klinik asistanı.
