@@ -1258,14 +1258,17 @@ Wave3’te SIRADAKİ diye önerildi → **HATA**. Ledger + early seed’e işlen
 ## W5-3. Op. Dr. Alev Timur ← GİTTİ (2026-11-09, WA-verified)
 **kadın-doğum** · İzmir · WA: `+905465547595`
 
-## W5-4. Op. Dr. Alper Gümüşalan ← SIRADAKİ
-**kadın-doğum** · İzmir · `+90 541 969 35 35` · WA: `+905419693535`  
-**Doğrulama:** DS `socialMedia[{type:whatsapp, url:905419693535}]`.
+## W5-4. Op. Dr. Alper Gümüşalan ← GİTTİ (2026-11-09, WA-verified)
+**kadın-doğum** · İzmir · WA: `+905419693535`
+
+## W5-5. Op. Dr. Ayşe İnmez ← SIRADAKİ
+**kadın-doğum** · İzmir · `+90 535 208 37 08` · WA: `+905352083708`  
+**Doğrulama:** DS `socialMedia[{type:whatsapp, url:905352083708}]`.
 
 **Ön kontrol:** ledger temiz. Gönder: yapıştır → kart **X** → gönder.
 
 ```
-Alper Hocam merhaba 👋
+Ayşe Hocam merhaba 👋
 Ben Kaan, *Notya*'dan yazıyorum.
 
 *Notya* — hekimler için yapay zekâ klinik asistanı.
