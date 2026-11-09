@@ -1136,13 +1136,16 @@ Tanıtıma vakit yoksa ücretsiz denemeyi hemen açabiliyoruz.
 🔗 *Ücretsiz deneme:* www.notya.io
 ```
 
-## W2-4. Uzm. Dr. Gonca Aslan ← SIRADAKİ
+## W2-4. Uzm. Dr. Gonca Aslan ← GİTTİ (2026-11-09)
 **pediatri** · İzmir/Karşıyaka · `+90 544 282 33 75` · WA: `+905442823375`
 
-**Gönder:** yapıştır → kart çıkarsa **X** → gönder. *(pedi araç listeli)*
+## W2-5. Uzm. Dr. Vedat Öztürk ← SIRADAKİ
+**pediatri** · Ankara/Etimesgut · `+90 539 847 37 31` · WA: `+905398473731`
+
+**Gönder:** yapıştır → kart çıkarsa **X** → gönder. *(pedi araç listeli)* · wave2 son
 
 ```
-Gonca Hocam merhaba 👋
+Vedat Hocam merhaba 👋
 Ben Kaan, *Notya*'dan yazıyorum.
 
 *Notya* — hekimler için yapay zekâ klinik asistanı.

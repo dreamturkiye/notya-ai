@@ -1,5 +1,5 @@
 # TR outreach durum (canlı)
 
-**Sıradaki:** Uzm. Dr. **Gonca Aslan** · pedi · İzmir/Karşıyaka · `+905442823375`
+**Sıradaki:** Uzm. Dr. **Vedat Öztürk** · pedi · Ankara/Etimesgut · `+905398473731`
 
-Bahar gitti → **Gonca şimdi** → Vedat Öztürk (pedi, wave2 son).
+Gonca gitti (2026-11-09) → **Vedat şimdi** (wave2 son). Sonrası: yeni wave3 (call-ready’den taze `5xx`).
