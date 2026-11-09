@@ -24,6 +24,15 @@ export function usePortalLive() {
   return v
 }
 
+/**
+ * TR-PARITE-01 — the doctor's preview of the patient page (/portal/onizleme): the SAME context the live pages read, filled
+ * with example data (lib/portal/onizleme.ts). No fetch, no PIN, no write; refresh is a no-op.
+ */
+export function PortalOnizlemeProvider({ data, basePath, children }: { data: PortalBundle; basePath: string; children: React.ReactNode }) {
+  const [d, setD] = useState<PortalBundle>(data)
+  return <Ctx.Provider value={{ loading: false, error: null, data: d, basePath, token: 'onizleme', refresh: async () => undefined, setData: setD }}>{children}</Ctx.Provider>
+}
+
 type UnlockPhase = 'checking' | 'need_pin' | 'unlocked' | 'legacy'
 
 export function PortalLiveProvider({

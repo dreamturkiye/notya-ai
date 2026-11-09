@@ -24,9 +24,9 @@ test('shared tools appear for every branş; chapter tiles do not cross-leak', ()
     assert.ok(ped.some((a) => a.route === o.route), `pediatri missing shared ${o.route}`)
   }
 
-  assert.equal(goz.length, ORTAK_DOKTOR_ARACLARI.length + GOZ_ROTALARI.length + CERRAHI_ROTALARI.length)
-  assert.equal(kd.length, ORTAK_DOKTOR_ARACLARI.length + KD_ROTALARI.length + CERRAHI_ROTALARI.length)
-  assert.equal(dah.length, ORTAK_DOKTOR_ARACLARI.length + DAH_ROTALARI.length)
+  assert.equal(goz.length, ORTAK_DOKTOR_ARACLARI.length + GOZ_ROTALARI.length + CERRAHI_ROTALARI.length + DOZ_ROTALARI.length)
+  assert.equal(kd.length, ORTAK_DOKTOR_ARACLARI.length + KD_ROTALARI.length + CERRAHI_ROTALARI.length + DOZ_ROTALARI.length)
+  assert.equal(dah.length, ORTAK_DOKTOR_ARACLARI.length + DAH_ROTALARI.length + DOZ_ROTALARI.length)
   assert.ok(!goz.some((a) => a.route.includes('dahiliye') || a.route.includes('hedef-boy')))
   assert.ok(!kd.some((a) => a.route.includes('dahiliye') || a.route.includes('hedef-boy')))
 
@@ -53,7 +53,7 @@ test('dahiliye-only Araçlar: dahiliye sees all six; pediatri / kardiyoloji / g�
       assert.ok(dah.some((a) => a.route === r), `${ham} missing ${r}`)
       assert.equal(doktorAraciBransaUygun(r, ham), true, `${ham} deep-link ${r}`)
     }
-    assert.equal(dah.length, ORTAK_DOKTOR_ARACLARI.length + DAH_ROTALARI.length)
+    assert.equal(dah.length, ORTAK_DOKTOR_ARACLARI.length + DAH_ROTALARI.length + DOZ_ROTALARI.length)
   }
   for (const r of DAH_ROTALARI) {
     const arac = BRANS_DOKTOR_ARACLARI.find((a) => a.route === r)!
@@ -126,7 +126,7 @@ test('dermatoloji-only Araçlar: derm sees all six; pediatri / dahiliye / kardiy
     const arac = BRANS_DOKTOR_ARACLARI.find((a) => a.route === r)!
     assert.deepEqual(arac.branslar, ['dermatoloji'], r)
   }
-  assert.equal(derm.length, ORTAK_DOKTOR_ARACLARI.length + DERM_ROTALARI.length)
+  assert.equal(derm.length, ORTAK_DOKTOR_ARACLARI.length + DERM_ROTALARI.length + DOZ_ROTALARI.length)
   const yabanci = Object.keys(BRANS_ETIKETLERI).filter((b) => b !== 'dermatoloji')
   assert.ok(yabanci.length >= 25)
   for (const b of [...yabanci, 'pediatri', 'dahiliye', 'kardiyoloji', 'kadin-dogum', 'goz-hastaliklari', 'İç Hastalıkları', null, '']) {
@@ -372,7 +372,7 @@ test('psikiyatri-only Araçlar: psikiyatri sees all five (canonical + official t
       assert.ok(psik.some((a) => a.route === r), `${ham} missing ${r}`)
       assert.equal(doktorAraciBransaUygun(r, ham), true, `${ham} deep-link ${r}`)
     }
-    assert.equal(psik.length, ORTAK_DOKTOR_ARACLARI.length + PSIK_ROTALARI.length)
+    assert.equal(psik.length, ORTAK_DOKTOR_ARACLARI.length + PSIK_ROTALARI.length + DOZ_ROTALARI.length)
   }
   for (const r of PSIK_ROTALARI) {
     const arac = BRANS_DOKTOR_ARACLARI.find((a) => a.route === r)!
@@ -519,7 +519,7 @@ test('KBB-only Araçlar: kulak burun boğaz sees all five (canonical + alias + o
       assert.ok(kbb.some((a) => a.route === r), `${ham} missing ${r}`)
       assert.equal(doktorAraciBransaUygun(r, ham), true, `${ham} deep-link ${r}`)
     }
-    assert.equal(kbb.length, ORTAK_DOKTOR_ARACLARI.length + KBB_ROTALARI.length + CERRAHI_ROTALARI.length)
+    assert.equal(kbb.length, ORTAK_DOKTOR_ARACLARI.length + KBB_ROTALARI.length + CERRAHI_ROTALARI.length + DOZ_ROTALARI.length)
   }
   for (const r of KBB_ROTALARI) {
     const arac = BRANS_DOKTOR_ARACLARI.find((a) => a.route === r)!
@@ -708,7 +708,7 @@ test('GOGUS-only Araçlar: gogus-hastaliklari sees all five; gogus-cerrahisi and
       assert.ok(g.some((a) => a.route === r), `${ham} missing ${r}`)
       assert.equal(doktorAraciBransaUygun(r, ham), true, `${ham} deep-link ${r}`)
     }
-    assert.equal(g.length, ORTAK_DOKTOR_ARACLARI.length + GOGUS_ROTALARI.length)
+    assert.equal(g.length, ORTAK_DOKTOR_ARACLARI.length + GOGUS_ROTALARI.length + DOZ_ROTALARI.length)
   }
   for (const r of GOGUS_ROTALARI) {
     const arac = BRANS_DOKTOR_ARACLARI.find((a) => a.route === r)!
@@ -772,7 +772,7 @@ test('Nöroloji-only Araçlar: noroloji sees all four; foreign branşlar never',
       assert.ok(noro.some((a) => a.route === r), `${ham} missing ${r}`)
       assert.equal(doktorAraciBransaUygun(r, ham), true, `${ham} deep-link ${r}`)
     }
-    assert.equal(noro.length, ORTAK_DOKTOR_ARACLARI.length + NORO_ROTALARI.length)
+    assert.equal(noro.length, ORTAK_DOKTOR_ARACLARI.length + NORO_ROTALARI.length + DOZ_ROTALARI.length)
   }
   for (const r of NORO_ROTALARI) {
     const arac = BRANS_DOKTOR_ARACLARI.find((a) => a.route === r)!
@@ -1010,7 +1010,7 @@ test('FTR-only Araçlar: fizik-tedavi sees all four; foreign branşlar never', (
       assert.ok(liste.some((a) => a.route === r), `${ham} must see ${r}`)
       assert.equal(doktorAraciBransaUygun(r, ham), true, `${ham} deep-link ${r}`)
     }
-    assert.equal(liste.length, ORTAK_DOKTOR_ARACLARI.length + FTR_ROTALARI.length)
+    assert.equal(liste.length, ORTAK_DOKTOR_ARACLARI.length + FTR_ROTALARI.length + DOZ_ROTALARI.length)
   }
   for (const r of FTR_ROTALARI) {
     const arac = BRANS_DOKTOR_ARACLARI.find((a) => a.route === r)!
@@ -1985,6 +1985,8 @@ test('Radyoloji-only Araçlar: radyoloji sees all four; foreign never', () => {
 // KD-OPERATOR-01 (Kaan, 2026-11-05) — the surgical-safety tile is CORE FOR EVERY SURGICAL BRANCH: exactly the operation-note
 // shell's surgical list (lib/doktor/ameliyatNotu.ts), never a non-surgical branch.
 const CERRAHI_ROTALARI = ['/doktor-tools/cerrahi-guvenlik']
+// TR-PARITE-01: the dose calculator is on every medical branch's grid except Pediatri (which keeps pedi-doz).
+const DOZ_ROTALARI = ['/doktor-tools/doz-hesap']
 test('surgical-safety tile: every surgical branch (operation-note list), no other branch', async () => {
   const { AMELIYAT_NOTU_BRANSLARI } = await import('./ameliyatNotu')
   const cerrahi = Object.entries(AMELIYAT_NOTU_BRANSLARI).filter(([, v]) => v).map(([k]) => k)

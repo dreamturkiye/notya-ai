@@ -11,6 +11,7 @@ import { portalBransAnahtari } from '@/lib/portal/moduller'
 import { KADIN_HASTALIKLARI_DOGUM_KISA_ETIKETI } from '@/lib/doktor/specialties'
 import { bransEtiketi } from '@/lib/doktor/bransAdlari'
 import type { SpecialtyKey } from '@/lib/asistan/turkishSpecialtyRefs'
+import { DOZ_TUS_BRANSLARI } from '@/lib/doktor/dozHesap'
 
 export type DoktorArac = {
   circleColor: string
@@ -59,6 +60,10 @@ export const BRANS_DOKTOR_ARACLARI: readonly DoktorArac[] = [
   // Pediatri — specialty-only (not kardiyoloji / dahiliye / göz / KD / dermatoloji / …). Chapter engines: specialties/pediatri/engines.
   { circleColor: '#0D9488', icon: 'BP', title: 'Büyüme & Persentil', desc: 'Neyzi / WHO persentil ve z-skor, eğri, persentil kayması ve büyüme hızı (cm/yıl)', route: '/doktor-tools/pedi-buyume', branslar: ['pediatri'] },
   { circleColor: '#F97316', icon: 'DH', title: 'Doz Hesaplayıcı (mg/kg)', desc: 'Girdiğiniz mg/kg ve konsantrasyonla doz başına mg ve mL — günlük toplam ve tavan uyarısı', route: '/doktor-tools/pedi-doz', branslar: ['pediatri'] },
+  // TR-PARITE-01 (2026-11-09) — reçete yazan 29 tıp branşının doz hesaplayıcısı (kg · m² · sabit; hekim her sayıyı girer,
+  // araç ilaç ve doz bilmez). Pediatri GÖRMEZ: kendi motoru (pedi-doz) olduğu gibi kalır. Özel Branş hekim dalları
+  // KLINIK_ARACLARI'ndan aynı ekranı açar; müttefik meslekler reçete yazamaz → görmez.
+  { circleColor: '#F97316', icon: 'DZ', title: 'Doz Hesaplayıcı', desc: 'Kilo, vücut yüzey alanı veya sabit doz — miktarı, konsantrasyonu ve tavanı siz girersiniz; doz başına mg/mL ve günlük toplam', route: '/doktor-tools/doz-hesap', branslar: [...DOZ_TUS_BRANSLARI] },
   { circleColor: '#22C55E', icon: 'AT', title: 'Aşı Takvimi & Telafi', desc: 'SB ulusal takvimi: yapıldı · zamanı geldi · gecikti, bugün yapılabilecekler ve seriyi baştan başlatmayan telafi planı · özel aşılar ayrı', route: '/doktor-tools/pedi-asi', branslar: ['pediatri'] },
   { circleColor: '#6366F1', icon: 'GT', title: 'Gelişim & Tarama Paneli', desc: 'Bu vizitte hangi tarama: işitme, görme, GİDR, M-CHAT-R/F, D vitamini ve demir — işaretle, muayene formuna ekle', route: '/doktor-tools/pedi-gelisim', branslar: ['pediatri'] },
   // PEDI-MCHAT-EXCEPTIONAL-01 — M-CHAT-R/F ayrı stüdyo (Gelişim panelinde de gömülü kalır; burada tek dokunuş).

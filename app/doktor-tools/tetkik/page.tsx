@@ -16,6 +16,9 @@ import { TETKIK_KATALOGU, TETKIK_PANELLERI, TETKIK_BOLUMU, NUMUNE_ADI, TUM_TETKI
 import { CHROME_RENK, CHROME_FONT } from '@/lib/doktor/chromeTheme'
 import { BRANS_ETIKETLERI } from '@/lib/intake/bransSorulari'
 import { hekimUnvanli } from '@/lib/doktor/hekimAdi'
+import { bransIstemleri } from '@/lib/doktor/bransIstemleri'
+import { bransEtiketi } from '@/lib/doktor/bransAdlari'
+import { BransIstemSecici, type IstemGrubu } from '@/components/doktor/BransIstemSecici'
 
 
 const vucutBolgeleri = ['Baş', 'Boyun', 'Göğüs', 'Karın', 'Pelvis', 'Omurga', 'Kol', 'Bacak']
@@ -45,6 +48,9 @@ export default function TetkikPage() {
     logoDataUrl: string
   }>({ unvan: 'Dr.', ad: '', brans: '', klinik: '', satirlar: [], diplomaNo: '', logoDataUrl: '' })
   const [hastaYas, setHastaYas] = useState('')
+  // TR-PARITE-01: the doctor's own branch list (imaging / referral picks; lab picks go to selectedLabTests).
+  const [istemEkleri, setIstemEkleri] = useState<Record<string, IstemGrubu | undefined>>({})
+  const bransListesi = useMemo(() => bransIstemleri(baslik.brans), [baslik.brans])
 
   useEffect(() => {
     const load = async () => {
@@ -104,6 +110,17 @@ export default function TetkikPage() {
 
   const selectedHasta = hastalar.find((h) => h.id === selectedHastaId) || null
   const selectedTests = Object.keys(selectedLabTests).filter((t) => selectedLabTests[t])
+  const secilenGoruntuleme = Object.keys(istemEkleri).filter((k) => istemEkleri[k] === 'goruntuleme')
+  const secilenSevk = Object.keys(istemEkleri).filter((k) => istemEkleri[k] === 'sevk')
+  const istemSecili = (g: IstemGrubu, ad: string) => (g === 'lab' ? !!selectedLabTests[ad] : istemEkleri[ad] === g)
+  const istemDegistir = (g: IstemGrubu, ad: string) => {
+    if (g === 'lab') setSelectedLabTests((prev) => ({ ...prev, [ad]: !prev[ad] }))
+    else setIstemEkleri((prev) => ({ ...prev, [ad]: prev[ad] === g ? undefined : g }))
+  }
+  const istemHepsi = (g: IstemGrubu, adlar: readonly string[]) => {
+    if (g === 'lab') setSelectedLabTests((prev) => { const n = { ...prev }; adlar.forEach((t) => { n[t] = true }); return n })
+    else setIstemEkleri((prev) => { const n = { ...prev }; adlar.forEach((t) => { n[t] = g }); return n })
+  }
 
   const handleOlustur = () => {
     if (!selectedHastaId) {
@@ -185,6 +202,12 @@ export default function TetkikPage() {
             placeholder="Klinik endikasyon bilgilerini giriniz..."
             style={{ ...toolsInput, resize: 'vertical', marginBottom: 16 }}
           />
+
+          {bransListesi && (
+            <div style={{ marginBottom: 16 }}>
+              <BransIstemSecici bransAdi={bransEtiketi(baslik.brans)} liste={bransListesi.liste} secili={istemSecili} degistir={istemDegistir} hepsiniEkle={istemHepsi} />
+            </div>
+          )}
 
           {activeTab === 'lab' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -314,8 +337,8 @@ export default function TetkikPage() {
         const tarih = new Date().toLocaleDateString('tr-TR', { timeZone: 'Europe/Istanbul', day: '2-digit', month: '2-digit', year: 'numeric' })
         const hastaAd = [selectedHasta?.ad, selectedHasta?.soyad].filter(Boolean).join(' ') || selectedHasta?.label?.split(' — ')[0] || '________________'
         const tetkikler = activeTab === 'lab'
-          ? [...selectedTests, ...(customTests ? [customTests] : [])]
-          : [vucutBolgesi && modalite ? `${modalite} — ${vucutBolgesi}` : modalite || vucutBolgesi].filter(Boolean) as string[]
+          ? [...selectedTests, ...secilenGoruntuleme, ...(customTests ? [customTests] : [])]
+          : [...([vucutBolgesi && modalite ? `${modalite} — ${vucutBolgesi}` : modalite || vucutBolgesi].filter(Boolean) as string[]), ...secilenGoruntuleme]
         return (
         <div
           style={{
@@ -346,7 +369,7 @@ export default function TetkikPage() {
                 flexDirection: 'column',
               }}
             >
-              <BelgeKunyesi tur="tetkik_istem" kaynakId={`tetkik:${selectedHastaId ? selectedHastaId.slice(0, 8) : 'x'}:${new Date().toISOString().slice(0, 10)}`} hastaId={selectedHastaId || null} icerik={{ selectedLabTests, customTests, klinikEndikasyon, activeTab }} />
+              <BelgeKunyesi tur="tetkik_istem" kaynakId={`tetkik:${selectedHastaId ? selectedHastaId.slice(0, 8) : 'x'}:${new Date().toISOString().slice(0, 10)}`} hastaId={selectedHastaId || null} icerik={{ selectedLabTests, customTests, klinikEndikasyon, activeTab, istemEkleri }} />
               <div style={{ textAlign: 'center', borderBottom: '1.5px solid #111', paddingBottom: 8, marginBottom: 14 }}>
                 {baslik.logoDataUrl && <img src={baslik.logoDataUrl} alt="" style={{ height: 44, marginBottom: 4 }} />}
                 {baslik.satirlar.length > 0
@@ -388,6 +411,15 @@ export default function TetkikPage() {
                     )
                   })}
                 </ol>
+              )}
+
+              {secilenSevk.length > 0 && (
+                <div style={{ marginTop: 14, fontSize: 13 }} data-alan="istem-yonlendirme">
+                  <div style={{ fontWeight: 700, marginBottom: 6 }}>Yönlendirme / konsültasyon</div>
+                  <ol style={{ margin: 0, paddingLeft: 22, lineHeight: 1.55 }}>
+                    {secilenSevk.map((t) => <li key={t}>{t}</li>)}
+                  </ol>
+                </div>
               )}
 
               <div style={{ marginTop: 18, fontSize: 13 }}>

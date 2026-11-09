@@ -5,6 +5,7 @@
 import type { KlinikYeniSlug } from '@/lib/specialties/klinikDikey'
 import { klinikSlugCoz, muttefikAracGizliMi, muttefikMeslekMi } from '@/lib/specialties/klinikDikey'
 import { OZEL_ARACLAR } from '@/lib/klinik/ozelAracCalistir'
+import { DOZ_KLINIK_DALLARI } from '@/lib/doktor/dozHesap'
 
 export type KlinikArac = {
   circleColor: string
@@ -21,6 +22,10 @@ export const KLINIK_ARACLARI: readonly KlinikArac[] = [
   { circleColor: '#0F172A', icon: 'HP', title: 'Hasta Portalı', desc: 'Sağlığım linki + PIN — 10 dal, aynı kabuk', route: '/ozel-branslar/hasta-portali', dallar: ON_DAL },
   { circleColor: '#0F172A', icon: 'KK', title: 'Kayıt · rıza · KVKK', desc: 'SB / Hasta Hakları / KVKK kayıt checklist — 10 dal', route: '/ozel-branslar/kayit-kvkk', dallar: ON_DAL },
   { circleColor: '#0F9B8E', icon: 'EN', title: 'e-Nabız', desc: 'e-Nabız’a siz girersiniz; Notya alanları kopyalamaya hazırlar', route: '/ozel-branslar/enabiz', dallar: ON_DAL },
+  // TR-PARITE-01 (2026-11-09) — dalın kendi istem listesi (müttefik meslekte yalnız hekime yönlendirme — md.16) ve
+  // reçete yazan hekim dallarının doz hesaplayıcısı (Doktor Araçları'ndakiyle aynı ekran; hekim her sayıyı girer).
+  { circleColor: '#EA580C', icon: 'IL', title: 'İstem · yönlendirme listesi', desc: 'Dalınızın sık istem ve yönlendirmeleri — müttefik meslekte yalnız hekime yönlendirme', route: '/ozel-branslar/istem-listesi', dallar: ON_DAL },
+  { circleColor: '#F97316', icon: 'DZ', title: 'Doz hesaplayıcı', desc: 'Kilo · vücut yüzey alanı · sabit doz — miktar ve tavan sizde', route: '/ozel-branslar/doz-hesap', dallar: [...DOZ_KLINIK_DALLARI] },
   { circleColor: '#2563EB', icon: 'GR', title: 'Donör greft bandı', desc: 'cm² × yoğunluk → greft bandı (karar desteği) — nihai greft uzmanında', route: '/ozel-branslar/sac-greft', dallar: ['sac-ekimi'] },
   { circleColor: '#1D4ED8', icon: 'YT', title: 'Yıkama takvimi', desc: 'Ameliyat günü → 1/3/10/14. gün bakım vadeleri', route: '/ozel-branslar/sac-takvim', dallar: ['sac-ekimi'] },
   { circleColor: '#1E40AF', icon: 'SK', title: 'Saç ekimi kohort', desc: 'Geciken yıkama · 10/14. gün kontrol · tek dokunuşla hatırlatma', route: '/ozel-branslar/sac-kohort', dallar: ['sac-ekimi'] },

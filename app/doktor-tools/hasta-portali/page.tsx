@@ -123,6 +123,10 @@ export default function HastaPortaliPage() {
           30 gün geçerli Sağlığım linki + 6 haneli PIN oluşturun. PIN yalnızca bu ekranda bir kez
           gösterilir — hastaya link ile birlikte iletin.
         </p>
+        {/* TR-PARITE-01: the doctor's own branch, example data only (lib/portal/onizleme.ts). */}
+        <a href="/portal/onizleme" target="_blank" rel="noopener" data-eylem="portal-onizleme" style={{ display: 'inline-block', marginTop: 4, fontSize: 13, fontWeight: 600, color: CHROME_RENK.pine }}>
+          Hasta sayfasını önizle (örnek veri) →
+        </a>
 
         {error && <div style={toolsErrorBox}>{error}</div>}
 

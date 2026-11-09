@@ -90,6 +90,10 @@ function Ic() {
         Aynı Sağlığım kabuğu (PIN, mesajlar, ziyaretler, sonuçlar, ilaçlar, öykü) + bu dalın
         {' '}<b>{modulEtiket}</b> bölümü. Tanı ve doz yok. 30 gün geçerli link + 6 haneli PIN.
       </p>
+      {/* TR-PARITE-01: the doctor's own branch, example data only (lib/portal/onizleme.ts). */}
+      <a href="/portal/onizleme" target="_blank" rel="noopener" data-eylem="portal-onizleme" style={{ display: 'inline-block', marginBottom: 12, fontSize: 13, fontWeight: 600, color: '#2f4334' }}>
+        Hasta sayfasını önizle (örnek veri) →
+      </a>
       {error && <p style={{ color: '#a45b3e', fontSize: 13 }}>{error}</p>}
       <label style={{ display: 'block', fontSize: 12, fontWeight: 700, marginBottom: 6 }}>Hasta</label>
       <HastaTypeahead
