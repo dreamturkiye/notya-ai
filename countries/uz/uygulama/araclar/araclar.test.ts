@@ -38,7 +38,8 @@ const FORMLAR = ['uz-Latn', 'uz-Cyrl', 'ru'] as const
  */
 // KD-OPERATOR-01 (2026-11-05): the international abbreviations of the operating surgeon's tools
 // ULKE-BRANS-DERINLIK-01 (2026-11-08): international abbreviations of the specialty scores (./kendi/uzmanlik/), kept in Latin letters as Russian clinical texts write them
-const LATIN_KALABILIR = /\b(ACR\/EULAR|NRS-2002|PEN-FAST|CIWA-Ar|DASS-21|BASDAI|VO2max|AUDIT|PCL-5|CDAI|CEAP|COWS|EPDS|IIIA|IIIB|IIIC|PSFS|DLP|FAC|IIF|RCI|TUG|mFG|HU|CHA2DS2-VA|STOP-Bang|HAS-BLED|ppoFEV1|ppoDLCO|HOMA-IR|MELD-Na|CURB-65|Campeau|spKt\/V|HHIE-S|ThRCRI|PECARN|qSOFA|ABCD2|BISAP|TWIST|FIB-4|MASCC|NIHSS|AREDS|HEART|FENa|mMRC|WFNS|DLCO|ABCD|UAS7|PaO2|HCO3|FEV1|MELD|PERC|RCRI|SIRS|NYHA|SpO2|SALT|NIH|TDS|mRS|URR|VII|QTc|GCS|THI|AUC|4FA|DCQ|OTS|INR|5b|QT|6b|Cl|Ca|1b|1c|Hb|5a|Ad|1a|As|6a|Na|D|ACOG Committee Opinion No\. 795|FSFI|FGSIS|COPS-L|Wiegel|Rosen|Herbenick|Reece|Millheiser|Veale|INTERGROWTH-21st|Hadlock|MCA-PSV|MCA|PSV|MoM|PI|RI|FIGO|O-RADS|IFCPC|rASRM|Enzian|POP-Q|Gramellini|WHO|MEC|ESI(?: [1-5])?|ASA(?: (?:I{1,3}|IV|VI|V))?|ABCDE|ST|PASI|EASI|SCORAD|KDIGO|G[1-5][ab]?(?:–G5)?|A[1-3](?:–A3)?|D[24]|logMAR|BI-RADS [0-6]|DAS28|K1|N\d+|I{1,3}|IV|VI|V|E|A|B|C|IOTA|RMI|CA-125|ACOG|AAGL|ERAS|CHEST|LLETZ|[BM][1-5])\b/g
+// KD-TARAMA-01 (2026-11-09): the DSM-5-TR criterion letters and domain codes, and the abbreviations of its sources and tests
+const LATIN_KALABILIR = /\b(T4|DSM-5-TR|DRSP|SSRI|SMN1|SMA|HPV|PMDD|PMS|ATA|Thyroid|No|C[1-7]|D|F|G|ACR\/EULAR|NRS-2002|PEN-FAST|CIWA-Ar|DASS-21|BASDAI|VO2max|AUDIT|PCL-5|CDAI|CEAP|COWS|EPDS|IIIA|IIIB|IIIC|PSFS|DLP|FAC|IIF|RCI|TUG|mFG|HU|CHA2DS2-VA|STOP-Bang|HAS-BLED|ppoFEV1|ppoDLCO|HOMA-IR|MELD-Na|CURB-65|Campeau|spKt\/V|HHIE-S|ThRCRI|PECARN|qSOFA|ABCD2|BISAP|TWIST|FIB-4|MASCC|NIHSS|AREDS|HEART|FENa|mMRC|WFNS|DLCO|ABCD|UAS7|PaO2|HCO3|FEV1|MELD|PERC|RCRI|SIRS|NYHA|SpO2|SALT|NIH|TDS|mRS|URR|VII|QTc|GCS|THI|AUC|4FA|DCQ|OTS|INR|5b|QT|6b|Cl|Ca|1b|1c|Hb|5a|Ad|1a|As|6a|Na|D|ACOG Committee Opinion No\. 795|FSFI|FGSIS|COPS-L|Wiegel|Rosen|Herbenick|Reece|Millheiser|Veale|INTERGROWTH-21st|Hadlock|MCA-PSV|MCA|PSV|MoM|PI|RI|FIGO|O-RADS|IFCPC|rASRM|Enzian|POP-Q|Gramellini|WHO|MEC|ESI(?: [1-5])?|ASA(?: (?:I{1,3}|IV|VI|V))?|ABCDE|ST|PASI|EASI|SCORAD|KDIGO|G[1-5][ab]?(?:–G5)?|A[1-3](?:–A3)?|D[24]|logMAR|BI-RADS [0-6]|DAS28|K1|N\d+|I{1,3}|IV|VI|V|E|A|B|C|IOTA|RMI|CA-125|ACOG|AAGL|ERAS|CHEST|LLETZ|[BM][1-5])\b/g
 
 /**
  * Role → the role tools it sees, in the grid's order. Base tools are the same for every role and are listed apart.
@@ -70,6 +71,8 @@ const KAPALI: Readonly<Record<string, string>> = { 'esi-triyaj': 'acil-tip', 'kd
 /** A fifth tool is a slot too, but for a different reason: a brand-new mechanism, off pending a clinician's sign-off, not Kaan's order. */
 const YENI_KAPALI = 'kbh-risk-kategorisi'
 const YENI_KAPALI_ROLLER = ['nefroloji', 'dahiliye', 'aile-hekimligi', 'endokrinoloji', 'kardiyoloji', 'uroloji', 'onkoloji'] as const
+/** KD-TARAMA-01 (2026-11-09): thyroid in pregnancy, HPV vaccine record, SMA carrier screening, PMS / PMDD diary summary (./rol10.ts). */
+const KD_TARAMA = ['gebelik-tiroid', 'hpv-asi-kaydi', 'sma-tasiyicilik', 'pmdd-gunluk-ozeti'] as const
 const ROL_ARACLARI: Readonly<Record<string, readonly string[]>> = {
   'acil-tip': ['kritik-yol', T, D, R, G, P_],
   'aile-hekimligi': ['kronik-izlem-kaydi', 'birinci-acil-bayrak', T, H, E, A, D, R, G, P_],
@@ -85,7 +88,7 @@ const ROL_ARACLARI: Readonly<Record<string, readonly string[]>> = {
   endokrinoloji: ['rejim-karti', T, D, R, G, P_],
   'enfeksiyon-hastaliklari': ['antibiyotik-sure', T, D, R, G, P_],
   gastroenteroloji: ['endoskopi-kaydi', T, D, R, G, P_],
-  'kadin-hastaliklari-dogum': [ON, ...KD_RAPORLARI, ...CG, ...KD_OP, ...GE_ACIK, T, H, D, R, G, P_],
+  'kadin-hastaliklari-dogum': [ON, ...KD_RAPORLARI, ...CG, ...KD_OP, ...GE_ACIK, ...KD_TARAMA, T, H, D, R, G, P_],
   'kalp-damar-cerrahisi': ['kalp-damar-preop', 'greft-yara-izlem', 'antikoagulan-vadeleri', ON, ...CG, T, D, R, G, P_],
   // the vascular half of the specialty the audit split: the same three tools
   'damar-cerrahisi': ['kalp-damar-preop', 'greft-yara-izlem', 'antikoagulan-vadeleri', ON, ...CG, T, D, R, G, P_],
@@ -184,7 +187,8 @@ describe('Uzbekistan — tools: who sees what, the three scripts, and what is de
     const { UZ_KAPALI_ARACLAR } = await import('./index')
     // KD-OPERATOR-01 (2026-11-05): +16 operating surgeon's tools
     // GENITAL-ESTETIK-01 (2026-11-06): +3 cosmetic gynaecology tools, and the consent form of the four operations for plastic and aesthetic surgery
-    assert.equal(icerik.araclar.length, 91)
+    // KD-TARAMA-01 (2026-11-09): +4 obstetric records
+    assert.equal(icerik.araclar.length, 95)
     assert.deepEqual(icerik.araclar.filter((p) => p.anahtar.startsWith('uz-')).map((p) => p.anahtar), [T, H, E, A, D, R, G])
     assert.deepEqual(icerik.araclar.filter((p) => p.sinif === 'hekimler').map((p) => p.anahtar), [T, D, R, G])
     for (const k of UZ_KAPALI_ARACLAR) assert.ok(!icerik.araclar.some((p) => p.anahtar === k), k)
@@ -296,7 +300,7 @@ describe('Uzbekistan — tools: who sees what, the three scripts, and what is de
     // and the three tools only Uzbekistan has, which the pre-split application did not have and the section names above its table
     // Structural records added after the audit document. They are not rows of that document; the outcome section is left as it was.
     const yeniYapisal = ['akne-vade', 'birinci-acil-bayrak', 'endoskopi-kaydi', 'estetik-cerrahi-vade', 'estetik-islem-vade', 'icf-ozet', 'inme-bayraklari', 'kardiyo-not', 'kronik-izlem-kaydi', 'lazer-vade', 'makro-kaydi', 'psikiyatri-guvenlik', 'seans-plani', 'sonraki-seans', A, D, R, G, ON, ...KD_RAPORLARI, ...CG, ...KD_OP]
-    const belgesizEski = belgesiz.filter((k) => !yeniYapisal.includes(k) && !(GE_ACIK as readonly string[]).includes(k) && !(GE_CERRAHI as readonly string[]).includes(k) && !(GE_YUVALARI as readonly string[]).includes(k))
+    const belgesizEski = belgesiz.filter((k) => !yeniYapisal.includes(k) && !(KD_TARAMA as readonly string[]).includes(k) && !(GE_ACIK as readonly string[]).includes(k) && !(GE_CERRAHI as readonly string[]).includes(k) && !(GE_YUVALARI as readonly string[]).includes(k))
     // GENITAL-ESTETIK-01: added after the audit; three on, seven slots (./rol9.ts)
     for (const k of GE_ACIK) assert.ok(acik.has(k), `${k} is not switched on`)
     for (const k of GE_YUVALARI) assert.ok(yuvalar.has(k) && !acik.has(k), `${k} is not a slot`)

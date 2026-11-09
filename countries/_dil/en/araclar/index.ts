@@ -55,6 +55,7 @@ import { EN_ARACLAR_4 } from './arac4'
 import { EN_ARACLAR_5 } from './arac5'
 import { EN_ARACLAR_6 } from './arac6'
 import { EN_ARACLAR_7, EN_GE_HASTA_METNI, enGeYuvalari } from './arac7'
+import { EN_ARACLAR_8 } from './arac8'
 import { GE_KOZMETIK_ARACLARI } from '@/lib/ulke/araclar/tanimlar/genitalEstetik'
 import { araciBicimle, lisansiBicimle, type EnDegisen, type EnLisans, type HamArac } from './yardimci'
 import { enAracYuvalari, yuva } from './yuvalar'
@@ -88,6 +89,11 @@ export const EN_OPERATOR_ARACLARI: readonly HamArac[] = EN_ARACLAR_6
  * with ITS decision under its own law and regulator: tools kept as slots with the legal source, options taken off, sources.
  */
 export const EN_GENITAL_ESTETIK_ARACLARI: readonly HamArac[] = EN_ARACLAR_7
+/**
+ * KD-TARAMA-01 (2026-11-09) — thyroid in pregnancy, HPV vaccine record, SMA carrier screening, PMS / PMDD diary summary
+ * (./arac8.ts). Switched on where a country states `kdTaramalari`, with ITS numbers, HPV table and source lines.
+ */
+export const EN_KD_TARAMA_ARACLARI: readonly HamArac[] = EN_ARACLAR_8
 
 const TAKIP: Omit<HamArac, 'roller'> = {
   anahtar: 'takip-paneli',
@@ -189,6 +195,12 @@ export type EnAraclarGirdisi = {
    * not permit), `degisen` (its source lines). The set gives every cosmetic-capable tool the patient gate 18+ (female).
    */
   genitalEstetik?: { kapali?: EnAraclarGirdisi['kapali']; uyarlama?: EnAraclarGirdisi['uyarlama']; degisen?: EnAraclarGirdisi['degisen'] }
+  /**
+   * KD-TARAMA-01: the four O&G records of the set, with this country's numbers (`parametreler`: the thyroid fallback and
+   * follow-up its source states), its HPV schedule (`tablolar['hpv-asi-kaydi'].hpv_takvimi`), its source lines (`degisen`)
+   * and any tool it keeps as a slot (`kapali`).
+   */
+  kdTaramalari?: { kapali?: EnAraclarGirdisi['kapali']; degisen?: EnAraclarGirdisi['degisen']; parametreler?: EnAraclarGirdisi['parametreler']; tablolar?: EnAraclarGirdisi['tablolar'] }
   /** Unit names this country writes differently: unit code → name. Used as written. */
   birimAdlari?: Readonly<Record<string, string>>
   /** Words of a tool this country writes differently: kit key → the words. Used as written. */
@@ -248,7 +260,10 @@ export function enAraclar(g0: EnAraclarGirdisi): UlkeAraclari {
   // GENITAL-ESTETIK-01: the country's decision merged into its own lists; the cosmetic-capable tools get the 18+ gate here.
   const ge = g0.genitalEstetik
   const geHasta = ge ? Object.fromEntries(GE_KOZMETIK_ARACLARI.map((k) => [k, { kapi: { enAzYas: 18, cinsiyet: 'female' as const }, metin: enYaz(EN_GE_HASTA_METNI, g0.sozler.bicim) }])) : {}
-  const g: EnAraclarGirdisi = ge ? { ...g0, kapali: { ...g0.kapali, ...ge.kapali }, uyarlama: { ...g0.uyarlama, ...ge.uyarlama }, degisen: degisenBirlestir(g0.degisen, ge.degisen), hasta: { ...geHasta, ...g0.hasta } } : g0
+  const g1: EnAraclarGirdisi = ge ? { ...g0, kapali: { ...g0.kapali, ...ge.kapali }, uyarlama: { ...g0.uyarlama, ...ge.uyarlama }, degisen: degisenBirlestir(g0.degisen, ge.degisen), hasta: { ...geHasta, ...g0.hasta } } : g0
+  // KD-TARAMA-01: the country's numbers, HPV table, source lines and slots for the four O&G records, merged into its own lists.
+  const kt = g1.kdTaramalari
+  const g: EnAraclarGirdisi = kt ? { ...g1, kapali: { ...g1.kapali, ...kt.kapali }, degisen: degisenBirlestir(g1.degisen, kt.degisen), parametreler: { ...g1.parametreler, ...kt.parametreler }, tablolar: { ...g1.tablolar, ...kt.tablolar } } : g1
   const bicim = g.sozler.bicim
   const acik = (a: HamArac) => !(a.anahtar in g.kapali)
   // THE COUNTRY'S ROLES: the shared forty, or — where the country's list differs — its own. A role the country does
@@ -273,7 +288,7 @@ export function enAraclar(g0: EnAraclarGirdisi): UlkeAraclari {
     return Object.keys(ek).length ? ek : undefined
   }
   const temel = EN_TEMEL_ARACLAR.map((a) => araciBicimle(a, bicim, g.degisen?.[a.anahtar], eki(a)))
-  const setinRolAraclari = [...EN_ROL_ARACLARI, ...(g.ameliyatKayitlari ? EN_AMELIYAT_ARACLARI : []), ...(g.operatorAraclari ? EN_OPERATOR_ARACLARI : []), ...(g.genitalEstetik ? EN_GENITAL_ESTETIK_ARACLARI : [])]
+  const setinRolAraclari = [...EN_ROL_ARACLARI, ...(g.ameliyatKayitlari ? EN_AMELIYAT_ARACLARI : []), ...(g.operatorAraclari ? EN_OPERATOR_ARACLARI : []), ...(g.genitalEstetik ? EN_GENITAL_ESTETIK_ARACLARI : []), ...(g.kdTaramalari ? EN_KD_TARAMA_ARACLARI : [])]
   const rol = setinRolAraclari.filter(acik).map((a) => araciBicimle(a, bicim, g.degisen?.[a.anahtar], eki(a)))
   const ekAraclar = g.ek?.araclar ?? []
   // THE FOLLOW-UP LIST: a role tool of every role that has a switched-on tool of its own, in the order of the role list.
