@@ -1139,13 +1139,20 @@ Tanıtıma vakit yoksa ücretsiz denemeyi hemen açabiliyoruz.
 ## W2-4. Uzm. Dr. Gonca Aslan ← GİTTİ (2026-11-09)
 **pediatri** · İzmir/Karşıyaka · `+90 544 282 33 75` · WA: `+905442823375`
 
-## W2-5. Uzm. Dr. Vedat Öztürk ← SIRADAKİ
+## W2-5. Uzm. Dr. Vedat Öztürk ← GİTTİ (2026-11-09)
 **pediatri** · Ankara/Etimesgut · `+90 539 847 37 31` · WA: `+905398473731`
 
-**Gönder:** yapıştır → kart çıkarsa **X** → gönder. *(pedi araç listeli)* · wave2 son
+---
+
+# Wave 3 — taze `5xx` (call-ready, tekil mobil)
+
+## W3-1. Op. Dr. Özge Kaymaz Yılmaz ← SIRADAKİ
+**kadin-dogum** · İstanbul/Beşiktaş · `+90 566 882 20 42` · WA: `+905668822042`
+
+**Gönder:** yapıştır → kart çıkarsa **X** → gönder.
 
 ```
-Vedat Hocam merhaba 👋
+Özge Hocam merhaba 👋
 Ben Kaan, *Notya*'dan yazıyorum.
 
 *Notya* — hekimler için yapay zekâ klinik asistanı.
@@ -1153,12 +1160,12 @@ Muayeneyi dinler, notunuzu yazar, reçete ve rapor taslağını hazırlar, hasta
 Her karar *sizin onayınızla*.
 40'tan fazla branşı kendi ihtiyaçlarıyla destekliyoruz.
 
-*Pediatride*
-- Büyüme ve persentil (Neyzi / WHO)
-- Hedef boy
-- Doz hesaplayıcı (mg/kg)
-- Aşı takvimi ve telafi
-- Gelişim ve tarama (M-CHAT dahil)
+*Kadın doğumda*
+- Gebelik takvimi ve izlem
+- Doppler'li USG ve yapılandırılmış NST
+- Obstetrik risk (preeklampsi, GDM, SSVD)
+- Sezaryen ve ameliyat notları
+- Doğum epikrizi ve antetli baskı
 
 Tipik bir günde yaklaşık *1,5-2 saat* kazanç.
 Kayıtlar daha düzenli → bakım kalitesi de yükseliyor.

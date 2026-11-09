@@ -1,5 +1,5 @@
 # TR outreach durum (canlı)
 
-**Sıradaki:** Uzm. Dr. **Vedat Öztürk** · pedi · Ankara/Etimesgut · `+905398473731`
+**Sıradaki:** Op. Dr. **Özge Kaymaz Yılmaz** · KD · İstanbul/Beşiktaş · `+905668822042`
 
-Gonca gitti (2026-11-09) → **Vedat şimdi** (wave2 son). Sonrası: yeni wave3 (call-ready’den taze `5xx`).
+Vedat gitti (2026-11-09) → wave2 bitti → **wave3 #1 Özge şimdi**.
