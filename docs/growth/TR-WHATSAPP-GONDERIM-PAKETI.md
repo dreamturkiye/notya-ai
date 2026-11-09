@@ -1176,13 +1176,16 @@ Wave3’te SIRADAKİ diye önerildi → **HATA**. Ledger + early seed’e işlen
 ## W4-1. Dr. Öğr. Üyesi Hazel Çağın Kuzey ← GİTTİ (2026-11-09)
 **kadin-dogum** · İstanbul/Küçükçekmece · WA: `+905051615779`
 
-## W4-2. Doç. Dr. Mert Turğal ← SIRADAKİ
-**kadin-dogum** · İstanbul/Zeytinburnu · `+90 505 517 11 94` · WA: `+905055171194`
+## W4-2. Doç. Dr. Mert Turğal ← GİTTİ (2026-11-09)
+**kadin-dogum** · İstanbul/Zeytinburnu · WA: `+905055171194`
+
+## W4-3. Op. Dr. Burcu Gülşah Balcı ← SIRADAKİ
+**kadin-dogum** · İstanbul/Esenler · `+90 511 334 99 26` · WA: `+905113349926`
 
 **Ön kontrol:** ledger / early-batch / paket GİTTİ — temiz. Gönder: yapıştır → kart **X** → gönder.
 
 ```
-Mert Hocam merhaba 👋
+Burcu Hocam merhaba 👋
 Ben Kaan, *Notya*'dan yazıyorum.
 
 *Notya* — hekimler için yapay zekâ klinik asistanı.
