@@ -16,8 +16,8 @@
  * Turkish base agent once (an existing agent of that name is updated instead). Each copy is then set to:
  *   - LLM = custom-llm → <site>/api/ulke/asistan-canli/ses-llm/v1 (the provider adds /chat/completions), API key = the
  *     workspace secret; the browser's signed call token goes through as the extra body,
- *   - language en, an English opening, the Turkish pronunciation dictionary removed,
- *   - TTS = Flash v2.5, the pack's voice id, speed 1, stability 0.55, similarity 0.75, expressive mode off
+ *   - the pack's speech language (UZ: uz; default en) and an opening in it, the Turkish pronunciation dictionary removed,
+ *   - TTS = the pack's voice model (UZ: eleven_v4; default Flash v2.5), the pack's voice id, speed 1, stability 0.55, similarity 0.75, expressive mode off
  *     (the same lock lib/ulke/asistan/motorKilidi.ts re-asserts on every call),
  *   - one client tool, show_on_screen(text), expects no response: the full written answer for the screen,
  *   - the built-in end_call system tool on.
@@ -54,11 +54,15 @@ if (!KEY) dur('ELEVENLABS_API_KEY is required (.env.local or the environment)')
 const SIR = String(process.env.NOTYA_SES_LLM_SECRET || '').trim()
 
 type Ses = { ad: string; id: string }
-type Paket = { yerel: string; dilKodu: string; sesler: { erkek: Ses; kadin: Ses } }
+type Paket = { yerel: string; dilKodu: string; model?: string; sesler: { erkek: Ses; kadin: Ses } }
 const modul = await import(`../countries/${kod}/ses`)
 const ses = Object.values(modul).find((v) => v && typeof v === 'object' && 'sesler' in (v as object)) as Paket | undefined
 if (!ses) dur(`countries/${kod}/ses.ts has no voices: this country has no live assistant to provision`)
 const SES = ses as Paket
+// ULKE-UZ-CANLI-ENV (2026-11-09): the agent is made in the pack's own speech language and voice model (UZ: uz, eleven_v4);
+// a pack that names none keeps the first country's values (English, Flash v2.5).
+const DIL = SES.dilKodu || 'en'
+const MODEL = SES.model || 'eleven_flash_v2_5'
 
 async function el<T>(method: string, yol: string, govde?: unknown): Promise<T> {
   const r = await fetch(`${API}${yol}`, { method, headers: { 'xi-api-key': KEY!, 'content-type': 'application/json' }, body: govde === undefined ? undefined : JSON.stringify(govde) })
@@ -111,8 +115,8 @@ async function ajanHazirla(cinsiyet: 'erkek' | 'kadin', sablon: string, sirId: s
     name: ad,
     conversation_config: {
       agent: {
-        language: 'en',
-        first_message: 'Hello. How can I help?',
+        language: DIL,
+        first_message: DIL === 'uz' ? 'Assalomu alaykum. Qanday yordam bera olaman?' : 'Hello. How can I help?',
         prompt: {
           // The real prompt is built per call on our server; this one only exists so the agent is valid.
           prompt: 'You are the Notya assistant. Your instructions are supplied by the server for every turn.',
@@ -123,11 +127,13 @@ async function ajanHazirla(cinsiyet: 'erkek' | 'kadin', sablon: string, sirId: s
           built_in_tools: { end_call: { type: 'system', name: 'end_call', description: 'End the call when the clinician says goodbye or asks to stop.', params: { system_tool_type: 'end_call' } } },
         },
       },
-      tts: { model_id: 'eleven_flash_v2_5', voice_id: v.id, stability: 0.55, similarity_boost: 0.75, speed: 1, expressive_mode: false, suggested_audio_tags: [], pronunciation_dictionary_locators: [] },
+      tts: { model_id: MODEL, voice_id: v.id, stability: 0.55, similarity_boost: 0.75, speed: 1, expressive_mode: false, suggested_audio_tags: [], pronunciation_dictionary_locators: [] },
     },
-    platform_settings: { overrides: { ...(t.platform_settings?.overrides || {}), custom_llm_extra_body: true } },
+    // The per-call greeting, language, voice and call token must be allowed, or a call on a fresh agent closes at once
+    // (AU-CANLI-03; lib/ulke/asistan/motorKilidi.ts re-asserts the same switches on every call start).
+    platform_settings: { overrides: { ...(t.platform_settings?.overrides || {}), conversation_config_override: { agent: { first_message: true, language: true }, tts: { voice_id: true } }, custom_llm_extra_body: true } },
   }
-  if (!UYGULA) { console.log(`  [plan] ${ad}: custom-llm ${url}, voice ${v.ad} (${v.id}), language en, tool ${ARAC_ADI}, end_call`); return ajan }
+  if (!UYGULA) { console.log(`  [plan] ${ad}: custom-llm ${url}, voice ${v.ad} (${v.id}), language ${DIL}, model ${MODEL}, tool ${ARAC_ADI}, end_call`); return ajan }
   try { await el('PATCH', `/agents/${ajan}`, govde) } catch (e) {
     // The built-in tool block is the part of the schema most likely to differ by account/version: retry without it, then say so.
     console.log(`    full patch refused (${String(e).slice(0, 200)}); retrying without end_call`)

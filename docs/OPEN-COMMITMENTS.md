@@ -1,5 +1,20 @@
 # OPEN COMMITMENTS — Notya AI
 
+## ULKE-UZ-CANLI-02 / -03 / -ENV — the Uzbek assistant: what is done and the one step left (Claude, 2026-11-09)
+
+- **-03 DONE (Kaan's written go 2026-11-09, release/uz only):** `lib/ulke/asistan/sunucu.ts` — a whole closing utterance in
+  Uzbek Latin, Uzbek Cyrillic or Russian ends the call (not only English); `lib/ulke/asistan/motorKilidi.ts` — release/au's
+  agent-setup fix copied in (a new agent is switched to allow the per-call greeting, language, voice and call token; a
+  refused delivery write falls back to the voice alone). Manifest re-hashed (docs/SES-KILIT-ONAYLARI.md). No AU file edited.
+- **-02 DONE:** the five roles the audit added have personas (`UZ_EK_ASISTAN_ADLARI`, Kaan delegated the choice), so all 42
+  roles have a live-assistant identity with a gender (21 male, 21 female).
+- `scripts/ulke-asistan-ajanlari.mts` now makes an agent in the pack's own language and model (UZ: uz, eleven_v4) and
+  switches the per-call overrides on, so creating the two UZ agents is one command.
+- **-ENV OPEN — waits on Kaan, 2026-11-09:** the agents need `ELEVENLABS_API_KEY` (Claude does not hold it) and this session's
+  Vercel connector cannot see the UZ project (`notya-uz-preview`, prj_WzKsb7Su7VoGTitlIS844CXmtyE9). Until
+  `ELEVENLABS_AGENT_UZ_MALE` / `_FEMALE` are set the server answers `hazir: false` and nothing is drawn (fail closed).
+  Click-by-click steps: main's docs/OPEN-COMMITMENTS.md, entry ULKE-UZ-CANLI-ENV-2026-11-09.
+
 ## DENEME-BILDIRIM-01 / KURUCU-KONSOL-01 (country port) — trial-signup e-mail and founder-console endpoint: what is open (Claude, 2026-11-07; this branch: uz)
 
 Shipped 2026-11-07 on this branch in the same change set as main: the internal "New trial signup — UZ — <role>" e-mail to
