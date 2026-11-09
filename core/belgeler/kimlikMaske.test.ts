@@ -65,7 +65,7 @@ test('confidence policy: no text on ultrasound or low confidence -> fallback; no
   assert.equal(kimlikKutulari([satir(10, 'Siemens', 'ACUSON')], { genislik: W, yukseklik: H, modalite: 'us' }).durum, 'dusuk_guven')
 })
 
-import { adKarsilastir, kimlikBulgulari, satirlariBirlestir } from './kimlikMaske'
+import { adKarsilastir, satirlariBirlestir } from './kimlikMaske'
 
 test('noisy labels are still detected and masked ("Hasla", "Protokoi"), exam date stays visible', () => {
   const s1 = satir(10, 'Hasla:', 'AYSE', 'DEMIR')

@@ -507,6 +507,12 @@ SATIRLAR_5: {
 
 /** Tools of the kit that have no function to stand beside, and why. */
 const KARSILIKSIZ: Readonly<Record<string, string>> = {
+  // KD-TARAMA-01 (2026-11-09): the four O&G records; the Türkiye counterpart is main's KD panel (specialties/kadin-dogum/ui/KdTaramalar.tsx)
+  // on the same shared engine (lib/clinical/kdTaramalar.ts), byte-identical here; tested in lib/clinical/kdTaramalar.test.ts and kdTaramalar.test.ts.
+  'gebelik-tiroid': 'the shared engine (tiroidDegerlendir, tiroidTakipNoktalari), identical on main',
+  'hpv-asi-kaydi': 'the shared engine (hpvPlani), identical on main',
+  'sma-tasiyicilik': 'the shared engine (smaDegerlendir), identical on main',
+  'pmdd-gunluk-ozeti': 'the shared engine (pmddDonguSonucu, pmddKontrolListesi), identical on main',
   // GENITAL-ESTETIK-01 (2026-11-06): cosmetic gynaecology records of the kit; the Türkiye counterpart is main's own screen
   // (components/doktor/HastaGenitalEstetik.tsx) on the same shared engine (lib/clinical/genitalEstetik.ts), byte-identical here.
   'ameliyat-notu-genital': 'the operation note with the indication class and body-image prompts; the Türkiye counterpart is the core operation note with its genital templates; tested in genitalEstetik.test.ts',

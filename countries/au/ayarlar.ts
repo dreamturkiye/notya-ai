@@ -55,6 +55,7 @@ import { AU_ROLLER } from './klinik/roller'
 import { AU_BIRIMLER, AU_VELI_YASI } from './temel'
 import { AU_OPERATOR_DEGISEN, AU_OPERATOR_PARAMETRELERI } from './operator'
 import { AU_GENITAL_ESTETIK } from './genitalEstetik'
+import { AU_KD_TARAMALARI } from './kdTaramalar'
 
 export { AU_BIRIMLER, AU_VELI_YASI } from './temel'
 
@@ -225,6 +226,8 @@ export const AU_GIRDI: EnUlkeGirdisi = {
     operatorAraclari: true,
     // GENITAL-ESTETIK-01 (2026-11-06): cosmetic gynaecology, only what Australian law and the TGA permit (./genitalEstetik.ts)
     genitalEstetik: AU_GENITAL_ESTETIK,
+    // KD-TARAMA-01 (2026-11-09): thyroid in pregnancy, HPV vaccine record, SMA carrier screening, PMS / PMDD diary — with this country's numbers and sources (./kdTaramalar.ts)
+    kdTaramalari: AU_KD_TARAMALARI,
     kapali: {
       // REMOVED FOR AUSTRALIA by the audit's decision ("remove"): it is not this country's scale. It stays a slot only
       // because every tool of the shared set that is not on is recorded as one; it is never to be switched on here.
