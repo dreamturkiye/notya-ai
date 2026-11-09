@@ -1158,13 +1158,16 @@ Tanıtıma vakit yoksa ücretsiz denemeyi hemen açabiliyoruz.
 ## W3-4. Uzm. Dr. Dilek Başaran ← GİTTİ (2026-11-09, doğru numara)
 **dermatoloji** · WA: `+905305910620` · (listing’deki `+905162223828` yanlış — wa_yok)
 
-## W3-5. Op. Dr. Elif Dilasa Pala Köse ← SIRADAKİ
-**kadin-dogum** · `+90 554 904 28 83` · WA: `+905549042883`
+## W3-5. Op. Dr. Elif Dilasa Pala Köse ← GİTTİ (2026-11-09, doğru numara)
+**kadin-dogum** · WA: `+905397938221` · (listing `+905549042883` yanlış — wa_yok)
+
+## W3-6. Op. Dr. Hatice Gürsoy ← SIRADAKİ
+**kadin-dogum** · İstanbul/Ümraniye · `+90 534 848 90 34` · WA: `+905348489034`
 
 **Ön kontrol:** ledger’da yok. Gönder: yapıştır → kart **X** → gönder.
 
 ```
-Elif Hocam merhaba 👋
+Hatice Hocam merhaba 👋
 Ben Kaan, *Notya*'dan yazıyorum.
 
 *Notya* — hekimler için yapay zekâ klinik asistanı.
