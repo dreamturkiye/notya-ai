@@ -1243,14 +1243,17 @@ Wave3’te SIRADAKİ diye önerildi → **HATA**. Ledger + early seed’e işlen
 ## W4b-13. Uzm. Dr. Alper Orhon ← GİTTİ (2026-11-09, WA-verified)
 **pediatri** · İstanbul/Çekmeköy · WA: `+905521624926`
 
-## W4b-14. Uzm. Dr. Hale Molla ← SIRADAKİ
-**pediatri** · İstanbul/Başakşehir · `+90 530 024 04 88` · WA: `+905300240488`  
+## W4b-14. Uzm. Dr. Hale Molla ← GİTTİ (2026-11-09, WA-verified)
+**pediatri** · İstanbul/Başakşehir · WA: `+905300240488`
+
+## W4b-15. Uzm. Dr. Münevver Bilgin ← SIRADAKİ
+**pediatri** · İstanbul/Başakşehir · `+90 530 470 07 89` · WA: `+905304700789`  
 **Doğrulama:** DS `socialMedia[{type:whatsapp}]` eşleşti.
 
 **Ön kontrol:** ledger temiz. Gönder: yapıştır → kart **X** → gönder.
 
 ```
-Hale Hocam merhaba 👋
+Münevver Hocam merhaba 👋
 Ben Kaan, *Notya*'dan yazıyorum.
 
 *Notya* — hekimler için yapay zekâ klinik asistanı.
