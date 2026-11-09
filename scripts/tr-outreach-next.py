@@ -241,17 +241,19 @@ def propose(n: int = 5) -> list[dict]:
 
 
 def mark(isim: str, phone: str, durum: str, note: str = "", brans: str = "", url: str = "") -> None:
+    """Upsert by phone when provided. Same name + different phone → new row (eski numara)."""
     rows = load_ledger()
     tel = e164(phone)
     nn = norm_name(isim)
     found = False
     for r in rows:
-        if (tel and digits(r.get("telefon")) == digits(tel)) or norm_name(r.get("isim", "")) == nn:
+        # Phone match wins — never collapse two numbers into one person-row by name alone
+        if tel and digits(r.get("telefon") or "") == digits(tel):
             r["durum"] = durum
             r["tarih"] = date.today().isoformat()
             r["not"] = note or r.get("not", "")
             r["isim"] = isim or r.get("isim")
-            r["telefon"] = tel or r.get("telefon")
+            r["telefon"] = tel
             r["isim_norm"] = nn
             if brans:
                 r["brans"] = brans
@@ -260,6 +262,21 @@ def mark(isim: str, phone: str, durum: str, note: str = "", brans: str = "", url
             r["kaynak"] = r.get("kaynak") or "cli"
             found = True
             break
+    if not found and not tel:
+        for r in rows:
+            if norm_name(r.get("isim", "")) == nn:
+                r["durum"] = durum
+                r["tarih"] = date.today().isoformat()
+                r["not"] = note or r.get("not", "")
+                r["isim"] = isim or r.get("isim")
+                r["isim_norm"] = nn
+                if brans:
+                    r["brans"] = brans
+                if url:
+                    r["url"] = url
+                r["kaynak"] = r.get("kaynak") or "cli"
+                found = True
+                break
     if not found:
         rows.append(
             {

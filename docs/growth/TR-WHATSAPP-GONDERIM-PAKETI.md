@@ -1182,13 +1182,17 @@ Wave3’te SIRADAKİ diye önerildi → **HATA**. Ledger + early seed’e işlen
 ## W4-3. Op. Dr. Burcu Gülşah Balcı ← WA YOK / GİTMEDİ
 **kadin-dogum** · İstanbul/Esenler · `+905113349926` — WhatsApp yok; atlandı.
 
-## W4-4. Op. Dr. Merve Akın ← SIRADAKİ
-**kadin-dogum** · İstanbul/Esenyurt · `+90 563 877 41 36` · WA: `+905638774136`
+## W4-4. Op. Dr. Merve Akın ← GİTTİ (2026-11-09, doğru numara)
+**kadin-dogum** · İstanbul/Esenyurt · WA: `+905300747664`  
+(listing `+905638774136` yanlış — wa_yok)
+
+## W4-5. Op. Dr. Tuğba İleri Yay ← SIRADAKİ
+**kadin-dogum** · İstanbul/Ümraniye · `+90 532 499 29 60` · WA: `+905324992960`
 
 **Ön kontrol:** ledger / early-batch / paket GİTTİ — temiz. Gönder: yapıştır → kart **X** → gönder.
 
 ```
-Merve Hocam merhaba 👋
+Tuğba Hocam merhaba 👋
 Ben Kaan, *Notya*'dan yazıyorum.
 
 *Notya* — hekimler için yapay zekâ klinik asistanı.
