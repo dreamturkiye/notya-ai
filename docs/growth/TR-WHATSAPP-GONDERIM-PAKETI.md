@@ -1249,14 +1249,17 @@ Wave3’te SIRADAKİ diye önerildi → **HATA**. Ledger + early seed’e işlen
 ## W4b-15. Uzm. Dr. Münevver Bilgin ← GİTTİ (2026-11-09, WA-verified)
 **pediatri** · İstanbul/Başakşehir · WA: `+905304700789`
 
-## W5-1. Uzm. Dr. Şilan Naycı ← SIRADAKİ
-**dermatoloji** · İstanbul/Başakşehir · `+90 532 518 09 06` · WA: `+905325180906`  
-**Doğrulama:** DS `socialMedia[{type:whatsapp, url:9005325180906}]` → norm `+905325180906`.
+## W5-1. Uzm. Dr. Şilan Naycı ← GİTTİ (2026-11-09, WA-verified)
+**dermatoloji** · İstanbul/Başakşehir · WA: `+905325180906`
+
+## W5-2. Prof. Dr. Ahmet Zeki Işık ← SIRADAKİ
+**kadın-doğum** · İzmir · `+90 549 411 81 80` · WA: `+905494118180`  
+**Doğrulama:** DS `socialMedia[{type:whatsapp, url:905494118180}]`.
 
 **Ön kontrol:** ledger temiz. Gönder: yapıştır → kart **X** → gönder.
 
 ```
-Şilan Hocam merhaba 👋
+Ahmet Zeki Hocam merhaba 👋
 Ben Kaan, *Notya*'dan yazıyorum.
 
 *Notya* — hekimler için yapay zekâ klinik asistanı.
@@ -1264,12 +1267,12 @@ Muayeneyi dinler, notunuzu yazar, reçete ve rapor taslağını hazırlar, hasta
 Her karar *sizin onayınızla*.
 40'tan fazla branşı kendi ihtiyaçlarıyla destekliyoruz.
 
-*Dermatolojide*
-- PASI / EASI
-- İzotretinoin GÖP kapısı
-- Fototerapi defteri
-- Yama (D2/D4) ve dermoskopi
-- Biyolojik SUT taslağı
+*Kadın doğumda*
+- Gebelik takvimi ve izlem
+- Doppler'li USG ve yapılandırılmış NST
+- Obstetrik risk (preeklampsi, GDM, SSVD)
+- Sezaryen ve ameliyat notları
+- Doğum epikrizi ve antetli baskı
 
 Tipik bir günde yaklaşık *1,5-2 saat* kazanç.
 Kayıtlar daha düzenli → bakım kalitesi de yükseliyor.
