@@ -1,5 +1,5 @@
 # TR outreach durum (canlı)
 
-**Sıradaki:** Uzm. Dr. **Aylin Sema Tırpancı** · derm · İstanbul/Başakşehir · `+905058498433`
+**Sıradaki:** Prof. Dr. **İsmail Özdemir** · KD · İstanbul/Şişli · `+905448358595`
 
-Özge Kaymaz Yılmaz **gitmedi** (numara kötü / WA yok) → **Aylin şimdi**.
+Aylin Sema Tırpancı **zaten gönderilmiş** — atlandı (tekrar yok). Özge wa_yok. → **İsmail şimdi**.
