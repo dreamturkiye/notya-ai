@@ -27,6 +27,7 @@ import type { EnRolDegisimi } from '../_dil/en/klinik/roller'
 import type { Birimler } from '@/lib/ulke/tipler'
 import { NZ_OPERATOR_DEGISEN, NZ_OPERATOR_PARAMETRELERI } from './operator'
 import { NZ_GENITAL_ESTETIK } from './genitalEstetik'
+import { NZ_KD_TARAMALARI } from './kdTaramalar'
 import { enEkRolIcerigi, type EnEkTur } from '../_dil/en/klinik/ekRoller'
 
 /**
@@ -256,6 +257,8 @@ export const NZ_GIRDI: EnUlkeGirdisi = {
     operatorAraclari: true,
     // GENITAL-ESTETIK-01 (2026-11-06): cosmetic gynaecology, only what this country's law and regulator permit (./genitalEstetik.ts)
     genitalEstetik: NZ_GENITAL_ESTETIK,
+    // KD-TARAMA-01 (2026-11-09): thyroid in pregnancy, HPV vaccine record, SMA carrier screening, PMS / PMDD diary — with this country's numbers and sources (./kdTaramalar.ts)
+    kdTaramalari: NZ_KD_TARAMALARI,
     kapali: {
       // SOURCE-CHECKED: emergency departments here use the Australasian triage scale (Health New Zealand's public page
       // on emergency department triage), not the Emergency Severity Index. The audit's verdict for this tool is

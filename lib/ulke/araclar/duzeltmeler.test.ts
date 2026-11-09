@@ -605,7 +605,7 @@ describe('the kit as a whole after the corrections', () => {
       // the country states nothing: the environment is there (unless the tool ALSO needs numbers of the country)
       if (!(t.parametreler ?? []).length && !(t.tablolar ?? []).some((x) => !x.istege)) assert.deepEqual(ulkeOrtami(t, {}, BUGUN), { bugun: BUGUN, p: {} }, t.anahtar)
     }
-    assert.deepEqual(KIT_ARACLARI.filter((t) => t.secimlikParametreler?.length).map((t) => t.anahtar), ['odyometri-pta', 'hedef-boy', 'psa-hizi', 'antibiyotik-profilaksi-kd', 'rmi', 'bishop', 'sezaryen-aciliyeti', 'kanama-izlem', 'histeroskopi-sivi']) // KD-OPERATOR-01: national numbers a country may state
-    assert.deepEqual(KIT_ARACLARI.filter((t) => (t.tablolar ?? []).some((x) => x.istege)).map((t) => t.anahtar), ['rtp-basamak'])
+    assert.deepEqual(KIT_ARACLARI.filter((t) => t.secimlikParametreler?.length).map((t) => t.anahtar), ['odyometri-pta', 'hedef-boy', 'psa-hizi', 'antibiyotik-profilaksi-kd', 'rmi', 'bishop', 'sezaryen-aciliyeti', 'kanama-izlem', 'histeroskopi-sivi', 'gebelik-tiroid']) // KD-OPERATOR-01: national numbers a country may state; KD-TARAMA-01: the thyroid fallback and follow-up
+    assert.deepEqual(KIT_ARACLARI.filter((t) => (t.tablolar ?? []).some((x) => x.istege)).map((t) => t.anahtar), ['rtp-basamak', 'hpv-asi-kaydi']) // KD-TARAMA-01: the country's HPV schedule
   })
 })
