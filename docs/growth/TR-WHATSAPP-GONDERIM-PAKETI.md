@@ -1155,13 +1155,16 @@ Tanıtıma vakit yoksa ücretsiz denemeyi hemen açabiliyoruz.
 ## W3-3. Prof. Dr. İsmail Özdemir ← ZATEN GİTTİ (duplicate — yazma)
 **kadin-dogum** · İstanbul/Şişli · `+90 544 835 85 95` — daha önce ulaşılmış; atlandı.
 
-## W3-4. Uzm. Dr. Dilek Başaran ← SIRADAKİ
-**dermatoloji** · `+90 516 222 38 28` · WA: `+905162223828`
+## W3-4. Uzm. Dr. Dilek Başaran ← GİTTİ (2026-11-09, doğru numara)
+**dermatoloji** · WA: `+905305910620` · (listing’deki `+905162223828` yanlış — wa_yok)
 
-**Ön kontrol:** `tr-outreach-ledger.csv` içinde yok. Gönder: yapıştır → kart **X** → gönder.
+## W3-5. Op. Dr. Elif Dilasa Pala Köse ← SIRADAKİ
+**kadin-dogum** · `+90 554 904 28 83` · WA: `+905549042883`
+
+**Ön kontrol:** ledger’da yok. Gönder: yapıştır → kart **X** → gönder.
 
 ```
-Dilek Hocam merhaba 👋
+Elif Hocam merhaba 👋
 Ben Kaan, *Notya*'dan yazıyorum.
 
 *Notya* — hekimler için yapay zekâ klinik asistanı.
@@ -1169,12 +1172,12 @@ Muayeneyi dinler, notunuzu yazar, reçete ve rapor taslağını hazırlar, hasta
 Her karar *sizin onayınızla*.
 40'tan fazla branşı kendi ihtiyaçlarıyla destekliyoruz.
 
-*Dermatolojide*
-- PASI / EASI
-- İzotretinoin GÖP kapısı
-- Fototerapi defteri
-- Yama (D2/D4) ve dermoskopi
-- Biyolojik SUT taslağı
+*Kadın doğumda*
+- Gebelik takvimi ve izlem
+- Doppler'li USG ve yapılandırılmış NST
+- Obstetrik risk (preeklampsi, GDM, SSVD)
+- Sezaryen ve ameliyat notları
+- Doğum epikrizi ve antetli baskı
 
 Tipik bir günde yaklaşık *1,5-2 saat* kazanç.
 Kayıtlar daha düzenli → bakım kalitesi de yükseliyor.

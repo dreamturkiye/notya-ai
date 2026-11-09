@@ -1,24 +1,17 @@
 # TR outreach durum (canlı)
 
-**Kaynak doğruluk:** `tr-outreach-ledger.csv` — gönderilen / gitmeyen / zaten yazılmış herkes burada.  
-Yeni ad önermeden önce ledger’da **isim + telefon** bak. Varsa önerme.
+**Kaynak doğruluk:** `tr-outreach-ledger.csv` — gönderilen / gitmeyen / zaten yazılmış herkes.  
+Yeni ad önermeden önce ledger’da **isim + telefon** bak.
 
-**Sıradaki:** Uzm. Dr. **Dilek Başaran** · derm · `+905162223828`  
+**Sıradaki:** Op. Dr. **Elif Dilasa Pala Köse** · KD · `+905549042883`  
 (ledger’da yok — ilk kez)
 
-## Son düzeltmeler (2026-11-09)
+## Son (2026-11-09)
 
-| Kişi | Sonuç |
-|------|--------|
-| Özge Kaymaz Yılmaz | wa_yok / gitmedi |
-| Aylin Sema Tırpancı | zaten_gitti (daha önce yazılmış) |
-| Prof. Dr. İsmail Özdemir | zaten_gitti (duplicate — yazma) |
-| Vedat Öztürk | gitti |
-
-## Ledger özeti
-
-- `gitti`: 30  
-- `wa_yok` / gitmedi: 6  
-- `zaten_gitti`: 2 (Aylin, İsmail)  
-- Dosya: `docs/growth/tr-outreach-ledger.csv`  
-- Call-ready eşlemesi: `tr-call-ready-leads.csv` → `outreach_durum` / `outreach_tarih`
+| Kişi | Telefon | Sonuç |
+|------|---------|--------|
+| Uzm. Dr. Dilek Başaran | `+905305910620` | **gitti** (doğru yeni numara) |
+| Dilek (eski listing) | `+905162223828` | wa_yok — kullanma |
+| İsmail Özdemir | `+905448358595` | zaten_gitti |
+| Aylin Sema Tırpancı | `+905058498433` | zaten_gitti |
+| Özge Kaymaz Yılmaz | `+905668822042` | wa_yok |
