@@ -174,7 +174,16 @@ export function sonKullaniciCumlesi(ham: unknown): string | null {
 }
 
 const VEDA = /^(?:ok(?:ay)?[,.]?\s+|thanks?[,.]?\s+|thank you[,.]?\s+)?(?:goodbye|good bye|bye(?:\s+bye)?|that'?s all|that will be all|end (?:the )?(?:call|conversation)|stop (?:the )?(?:assistant|call)|hang up|close (?:the )?assistant)(?:\s+(?:for now|thanks|thank you|please))*[.!]?$/i
-export const vedaMi = (m: string): boolean => VEDA.test(m.trim())
+// ULKE-UZ-CANLI-03 (a), Kaan's written go 2026-11-09: the same whole-utterance farewell in Uzbek (Latin and Cyrillic) and Russian.
+// Only a short closing utterance matches; a farewell word inside a clinical sentence never ends the call.
+const VEDA_UZ_LATN = /^(?:(?:rahmat|katta rahmat|yaxshi|xo'p|mayli|ok)[,.!]?\s+)?(?:xayr|hozircha xayr|ko'rishguncha(?:\s+xayr)?|salomat bo'ling|hammasi shu|shu yetarli|suhbatni tugat(?:ing)?|qo'ng'iroqni (?:tugat(?:ing)?|yoping|yop)|yordamchini yoping)(?:[,.]?\s+(?:rahmat|katta rahmat|xayr))*[.!]?$/i
+const VEDA_UZ_KIRIL = /^(?:(?:раҳмат|рахмат|катта раҳмат|яхши|хўп|майли)[,.!]?\s+)?(?:хайр|ҳозирча хайр|кўришгунча(?:\s+хайр)?|саломат бўлинг|ҳаммаси шу|шу етарли|суҳбатни тугат(?:инг)?|қўнғироқни (?:тугат(?:инг)?|ёпинг|ёп))(?:[,.]?\s+(?:раҳмат|рахмат|хайр))*[.!]?$/iu
+const VEDA_RU = /^(?:(?:спасибо|хорошо|ладно|окей|ок)[,.!]?\s+)?(?:до свидания|пока(?:[- ]пока)?|всего доброго|всего хорошего|на этом все|это все|закончи(?:те)? (?:звонок|разговор)|заверши(?:те)? (?:звонок|разговор)|положи(?:те)? трубку|отключи(?:сь|тесь))(?:[,.]?\s+(?:спасибо|пожалуйста|до свидания))*[.!]?$/iu
+const vedaBicim = (m: string): string => m.trim().replace(/\s+/g, ' ').replace(/[\u02BB\u02BC\u2018\u2019`\u00B4]/g, "'").replace(/ё/g, 'е').replace(/Ё/g, 'Е')
+export const vedaMi = (m: string): boolean => {
+  const t = vedaBicim(m)
+  return VEDA.test(t) || VEDA_UZ_LATN.test(t) || VEDA_UZ_KIRIL.test(t) || VEDA_RU.test(t)
+}
 
 export async function canliLlmPost(req: NextRequest): Promise<Response> {
   const paket = ulkePaketi()

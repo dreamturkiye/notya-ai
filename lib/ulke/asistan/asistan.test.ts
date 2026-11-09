@@ -13,7 +13,7 @@ import { ajanKimligi, ajanOrtamAdi, canliDurum } from './ajan'
 import { canliIstem } from './istem'
 import { canliJetonuDogrula, canliJetonuImzala, JETON_OMRU_MS, llmSirriGecerliMi } from './jeton'
 import { konusmaYap, SesAkisi } from './konusma'
-import { ajanModeli, motorKilidiGerekli, motorKilidiGovdesi, motoruSabitle, motorOnbelleginiSil } from './motorKilidi'
+import { ajanModeli, gecersizKilmaGerekli, gecersizKilmaGovdesi, motorKilidiGerekli, motorKilidiGovdesi, motoruSabitle, motorOnbelleginiSil } from './motorKilidi'
 import { sesMetni } from './okunus'
 import { modelMesajlari, vedaMi } from './sunucu'
 
@@ -163,11 +163,58 @@ describe('the agent lock', () => {
       return new Response('{}', { status: 200 })
     }) as unknown as typeof fetch
     const s = await motoruSabitle(AJAN_K, SES.sesler.kadin.id, 'key', sahte)
-    assert.deepEqual(cagrilar, ['GET', 'PATCH'])
+    // The fake agent has no override switches either: they are written first, then the voice (ULKE-UZ-CANLI-03 b).
+    assert.deepEqual(cagrilar, ['GET', 'PATCH', 'PATCH'])
     assert.equal(s.degisti, true)
     motorOnbelleginiSil()
     const kirik = (async () => { throw new Error('offline') }) as unknown as typeof fetch
     assert.equal((await motoruSabitle(AJAN_K, SES.sesler.kadin.id, 'key', kirik)).durum, 'okunamadi')
+  })
+})
+
+describe('live assistant: a new agent accepts the per-call language and voice (ULKE-UZ-CANLI-03 b, ported from release/au)', () => {
+  it('a fresh agent refuses the greeting, language, voice and call token; the lock switches all of them on', () => {
+    assert.equal(gecersizKilmaGerekli(undefined), true)
+    assert.equal(gecersizKilmaGerekli({ overrides: { conversation_config_override: { agent: { first_message: true, language: true }, tts: { voice_id: false } } } }), true)
+    const sadece3 = { overrides: { conversation_config_override: { agent: { first_message: true, language: true }, tts: { voice_id: true } } } }
+    assert.equal(gecersizKilmaGerekli(sadece3), true)
+    assert.equal(gecersizKilmaGovdesi().platform_settings.overrides.custom_llm_extra_body, true)
+    assert.equal(gecersizKilmaGerekli(gecersizKilmaGovdesi().platform_settings), false)
+  })
+  it('an agent that already allows them is left alone (one read, no write)', async () => {
+    motorOnbelleginiSil()
+    const ok = motorKilidiGovdesi(SES.sesler.kadin.id).conversation_config.tts
+    const cagrilar: string[] = []
+    const sahte = (async (_u: string, o?: RequestInit) => {
+      cagrilar.push(o?.method ?? 'GET')
+      return new Response(JSON.stringify({ conversation_config: { tts: ok }, platform_settings: gecersizKilmaGovdesi().platform_settings }), { status: 200 })
+    }) as unknown as typeof fetch
+    await motoruSabitle(AJAN_K, SES.sesler.kadin.id, 'key', sahte)
+    assert.deepEqual(cagrilar, ['GET'])
+    motorOnbelleginiSil()
+  })
+  it('a refused delivery write (400) falls back to the voice alone, and the log names the field, never the value', async () => {
+    motorOnbelleginiSil()
+    const govdeler: string[] = []
+    const gunluk: string[] = []
+    const eski = console.error
+    console.error = (m: unknown) => { gunluk.push(String(m)) }
+    try {
+      const sahte = (async (_u: string, o?: RequestInit) => {
+        if (!o?.method) return new Response(JSON.stringify({ conversation_config: { tts: { model_id: 'eleven_v3_conversational', voice_id: 'someOtherVoiceId12345' } }, platform_settings: gecersizKilmaGovdesi().platform_settings }), { status: 200 })
+        govdeler.push(String(o.body))
+        if (govdeler.length === 1) return new Response(JSON.stringify({ detail: [{ loc: ['body', 'conversation_config', 'tts', 'speed'], type: 'value_error', msg: 'secret prompt text', input: 'secret' }] }), { status: 400 })
+        return new Response('{}', { status: 200 })
+      }) as unknown as typeof fetch
+      const s = await motoruSabitle(AJAN_K, SES.sesler.kadin.id, 'key', sahte)
+      assert.equal(s.durum, 'tamam')
+      assert.equal(govdeler.length, 2)
+      assert.deepEqual(Object.keys(JSON.parse(govdeler[1]).conversation_config.tts).sort(), ['model_id', 'voice_id'])
+      const yazi = gunluk.join('\n')
+      assert.match(yazi, /body\.conversation_config\.tts\.speed\(value_error\)/)
+      assert.ok(!/secret/.test(yazi))
+    } finally { console.error = eski }
+    motorOnbelleginiSil()
   })
 })
 
@@ -198,6 +245,20 @@ describe('the prompt and the conversation the model sees', () => {
   it('recognises goodbye and nothing else', () => {
     for (const s of ['Goodbye', 'okay, that\'s all', 'End the call.', 'thanks bye']) assert.equal(vedaMi(s), true, s)
     for (const s of ['What is the dose', 'goodbye the patient is allergic', '']) assert.equal(vedaMi(s), false, s)
+  })
+  it('recognises an Uzbek (Latin and Cyrillic) and a Russian goodbye, and only a whole closing utterance (ULKE-UZ-CANLI-03)', () => {
+    const ha = [
+      'Xayr', 'Rahmat, xayr.', 'Hozircha xayr', "Ko'rishguncha!", 'Ko\u2018rishguncha', 'Salomat bo\u02BBling', 'Hammasi shu, rahmat',
+      "Qo'ng'iroqni tugating", 'Suhbatni tugat',
+      'Хайр', 'Раҳмат, хайр', 'Кўришгунча', 'Ҳаммаси шу', 'Қўнғироқни тугатинг',
+      'До свидания', 'Спасибо, до свидания.', 'Пока', 'Пока-пока', 'Всего доброго', 'На этом всё', 'Это всё, спасибо', 'Завершите звонок', 'Положи трубку',
+    ]
+    for (const s of ha) assert.equal(vedaMi(s), true, s)
+    const yoq = [
+      'Xayr, bemorning allergiyasi bor', 'Amoksitsillin dozasi qancha?', 'Bemor xayr deb ketdi',
+      'Хайр, беморда аллергия бор', 'Пока пациент ждёт, какая доза?', 'До свидания пациенту я уже сказал, проверь давление', 'Это всё пациенту назначено?',
+    ]
+    for (const s of yoq) assert.equal(vedaMi(s), false, s)
   })
 })
 

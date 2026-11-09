@@ -12,3 +12,9 @@
 - Onay satırı: `Kaan-onay: 2026-11-08 Kaan written go 2026-11-08, ULKE-UZ-CANLI-01 (release/uz only): sunucu.ts reads the pack speech language (AJAN_DILI = AKTIF_KLINIK?.ses?.dilKodu ?? 'en') and carries the typed answer ported from release/au (canliYaziliCevabi); motorKilidi.ts holds the agent to the pack voice model (eleven_v4 for UZ) instead of eleven_flash_v2_5`
 - Taban commit: `d0e36609d`
 - Değişen kilitli dosyalar: `lib/ulke/asistan/motorKilidi.ts`, `lib/ulke/asistan/sunucu.ts`
+
+## 2026-11-09 — Kaan written go 2026-11-09, ULKE-UZ-CANLI-03 (release/uz only): (a) sunucu.ts vedaMi ends the call on an Uzbek Latin, Uzbek Cyrillic or Russian goodbye, not only English; (b) motorKilidi.ts gets release/au's agent-setup fix (gecersizKilmaGerekli/gecersizKilmaGovdesi: a new agent allows the per-call greeting, language, voice and call token; voice-only fallback on a refused delivery write; 4 s budget) - copy only, no AU file edited
+
+- Onay satırı: `Kaan-onay: 2026-11-09 Kaan written go 2026-11-09, ULKE-UZ-CANLI-03 (release/uz only): (a) sunucu.ts vedaMi ends the call on an Uzbek Latin, Uzbek Cyrillic or Russian goodbye, not only English; (b) motorKilidi.ts gets release/au's agent-setup fix (gecersizKilmaGerekli/gecersizKilmaGovdesi: a new agent allows the per-call greeting, language, voice and call token; voice-only fallback on a refused delivery write; 4 s budget) - copy only, no AU file edited`
+- Taban commit: `2c87a5d00`
+- Değişen kilitli dosyalar: `lib/ulke/asistan/motorKilidi.ts`, `lib/ulke/asistan/sunucu.ts`
