@@ -6,7 +6,7 @@
 Toplam: 30 kişi
 
 ---
-## 1. Doç. Dr. Sema Süzen Çaypınar
+## 1. Doç. Dr. Sema Süzen Çaypınar ← GİTTİ (2026-11-05 early)
 **kadin-dogum** · Bakırköy · `+90 545 132 14 19` · WA: `+905451321419`
 
 **Balon 1:**
@@ -42,7 +42,7 @@ Tanıtıma vaktiniz yoksa da sorun değil, ücretsiz denemeyi hemen açabiliyoru
 ```
 
 ---
-## 2. Doç. Dr. Sinem Tekin
+## 2. Doç. Dr. Sinem Tekin ← GİTTİ (2026-11-05 early)
 **kadin-dogum** · Ataşehir · `+90 505 790 05 71` · WA: `+905057900571`
 
 **Balon 1:**
@@ -1155,19 +1155,24 @@ Tanıtıma vakit yoksa ücretsiz denemeyi hemen açabiliyoruz.
 ## W3-3. Prof. Dr. İsmail Özdemir ← ZATEN GİTTİ (duplicate — yazma)
 **kadin-dogum** · İstanbul/Şişli · `+90 544 835 85 95` — daha önce ulaşılmış; atlandı.
 
-## W3-4. Uzm. Dr. Dilek Başaran ← GİTTİ (2026-11-09, doğru numara)
-**dermatoloji** · WA: `+905305910620` · (listing’deki `+905162223828` yanlış — wa_yok)
+## W3-4. Uzm. Dr. Dilek Başaran ← ZATEN GİTTİ (2026-11-05 asıl: `+905458150451`)
+**dermatoloji** · Asıl WA: `+905458150451` (erken batch).  
+`+905305910620` = 2026-11-09 yanlış/yeniden deneme — yazma. `+905162223828` = wa_yok.
 
-## W3-5. Op. Dr. Elif Dilasa Pala Köse ← GİTTİ (2026-11-09, doğru numara)
-**kadin-dogum** · WA: `+905397938221` · (listing `+905549042883` yanlış — wa_yok)
+## W3-5. Op. Dr. Elif Dilasa Pala Köse ← ZATEN GİTTİ (2026-11-05 early + 09 log)
+**kadin-dogum** · WA: `+905397938221` · erken batch’te gitti — tekrar yazma. Listing `+905549042883` wa_yok.
 
-## W3-6. Op. Dr. Hatice Gürsoy ← SIRADAKİ
-**kadin-dogum** · İstanbul/Ümraniye · `+90 534 848 90 34` · WA: `+905348489034`
+## W3-6. Op. Dr. Hatice Gürsoy ← ZATEN GİTTİ (2026-11-05 early — ~2 gün önce)
+**kadin-dogum** · İstanbul/Ümraniye · `+90 534 848 90 34` · WA: `+905348489034`  
+Wave3’te SIRADAKİ diye önerildi → **HATA**. Ledger + early seed’e işlendi. **TEKRAR YAZMA.**
 
-**Ön kontrol:** ledger’da yok. Gönder: yapıştır → kart **X** → gönder.
+## W3-7. Prof. Dr. Süha Sönmez ← SIRADAKİ
+**kadin-dogum** · İstanbul/Bahçelievler · `+90 541 441 81 95` · WA: `+905414418195`
+
+**Ön kontrol:** ledger / early-batch / paket GİTTİ — temiz. Gönder: yapıştır → kart **X** → gönder.
 
 ```
-Hatice Hocam merhaba 👋
+Süha Hocam merhaba 👋
 Ben Kaan, *Notya*'dan yazıyorum.
 
 *Notya* — hekimler için yapay zekâ klinik asistanı.

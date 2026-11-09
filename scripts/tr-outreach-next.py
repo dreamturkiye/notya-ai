@@ -1,11 +1,17 @@
 #!/usr/bin/env python3
 """
-Propose the next TR WhatsApp lead that is NOT in the outreach ledger.
+Propose the next TR WhatsApp lead that is NOT already contacted.
+
+Source of truth for "already contacted":
+  1) docs/growth/tr-outreach-ledger.csv  (gitti / zaten_gitti / wa_yok / gitmedi)
+  2) docs/growth/TR-WHATSAPP-GONDERIM-PAKETI.md headings marked GİTTİ / ZATEN / WA YOK
+  3) Early 2026-11-05 batch (hard seed — must never reappear as SIRADAKİ)
 
 Usage:
   python3 scripts/tr-outreach-next.py
   python3 scripts/tr-outreach-next.py --mark-gitti "Uzm. Dr. …" --phone +905… [--note "…"]
   python3 scripts/tr-outreach-next.py --mark-wa-yok "…" --phone +905…
+  python3 scripts/tr-outreach-next.py --mark-zaten "…" --phone +905…
 """
 
 from __future__ import annotations
@@ -22,6 +28,33 @@ ROOT = Path(__file__).resolve().parents[1]
 GROWTH = ROOT / "docs" / "growth"
 LEDGER = GROWTH / "tr-outreach-ledger.csv"
 CALL_READY = GROWTH / "tr-call-ready-leads.csv"
+PAKET = GROWTH / "TR-WHATSAPP-GONDERIM-PAKETI.md"
+
+# 2026-11-05 early WhatsApp batch (before named paket / Cengiz). Never re-propose.
+EARLY_BATCH_NAMES = {
+    "ismail ozdemir",
+    "elif dilasa pala kose",
+    "hatice gursoy",
+    "aylin sema tirpanci",
+    "dilek basaran",
+    "sema suzen caypinar",
+    "sinem tekin",
+    "berrin arslan",
+}
+EARLY_BATCH_PHONES = {
+    "5448358595",  # İsmail
+    "5348489034",  # Hatice
+    "5058498433",  # Aylin
+    "5458150451",  # Dilek ORIGINAL
+    "5305910620",  # Dilek later attempt
+    "5162223828",  # Dilek bad listing
+    "5397938221",  # Elif
+    "5549042883",  # Elif bad listing
+    "5451321419",  # Sema
+    "5057900571",  # Sinem
+}
+
+CONTACTED_DURUM = {"gitti", "zaten_gitti", "wa_yok", "gitmedi"}
 
 
 def digits(t: str) -> str:
@@ -55,12 +88,16 @@ def norm_name(n: str) -> str:
     for a, b in tr.items():
         n = n.replace(a, b)
     n = re.sub(r"\s+", " ", n)
+    n = re.sub(r"^\d+\.\s*", "", n)
+    n = re.sub(r"^w\d+-\d+\.\s*", "", n)
     n = re.sub(
-        r"^(doc\.?\s*dr\.?|prof\.?\s*dr\.?|op\.?\s*dr\.?|uzm\.?\s*dr\.?|dr\.?\s*ogr\.?\s*uyesi|dr\.?)\s*",
+        r"^(doc\.?\s*dr\.?|prof\.?\s*dr\.?|op\.?\s*dr\.?|uzm\.?\s*dr\.?|"
+        r"dr\.?\s*ogr\.?\s*uyesi|dr\.?)\s*",
         "",
         n,
     )
-    return n.strip()
+    n = re.sub(r"\s*\(.*\)$", "", n).strip()
+    return n
 
 
 def load_ledger() -> list[dict]:
@@ -90,22 +127,75 @@ def save_ledger(rows: list[dict]) -> None:
             w.writerow({k: r.get(k, "") for k in fields})
 
 
+def parse_paket_contacted() -> tuple[set[str], set[str]]:
+    """Names + phones from paket headings marked already contacted (not SIRADAKİ)."""
+    phones: set[str] = set()
+    names: set[str] = set()
+    if not PAKET.exists():
+        return phones, names
+    text = PAKET.read_text(encoding="utf-8")
+    # ## [W3-6. ]Name ← STATUS — stop phone grab at next ## so we don't bleed
+    for m in re.finditer(
+        r"^##\s+(?:W\d+-\d+\.\s+)?([^\n←]+?)\s*←\s*"
+        r"(GİTTİ|GITTI|ZATEN[^\n]*|WA YOK[^\n]*|GİTMEDİ[^\n]*)",
+        text,
+        re.M | re.I,
+    ):
+        raw = m.group(1).strip()
+        names.add(norm_name(raw))
+        rest = text[m.end() :]
+        nxt = re.search(r"^##\s+", rest, re.M)
+        chunk = rest[: nxt.start()] if nxt else rest[:400]
+        # Only header meta lines (before first fenced ``` message body)
+        fence = chunk.find("\n```")
+        if fence != -1:
+            chunk = chunk[:fence]
+        for ph in re.findall(r"\+90[\d\s]+", chunk):
+            d = digits(ph)
+            if d:
+                phones.add(d)
+    return phones, names
+
+
 def contacted_sets(rows: list[dict]) -> tuple[set[str], set[str]]:
-    phones, names = set(), set()
+    phones, names = set(EARLY_BATCH_PHONES), set(EARLY_BATCH_NAMES)
     for r in rows:
-        if r.get("durum") in {"gitti", "zaten_gitti", "wa_yok", "gitmedi"}:
+        if r.get("durum") in CONTACTED_DURUM:
             if r.get("telefon"):
                 phones.add(digits(r["telefon"]))
-            if r.get("isim_norm"):
-                names.add(r["isim_norm"])
-            else:
-                names.add(norm_name(r.get("isim", "")))
+            nn = r.get("isim_norm") or norm_name(r.get("isim", ""))
+            if nn:
+                names.add(nn)
+    p_paket, n_paket = parse_paket_contacted()
+    phones |= p_paket
+    names |= n_paket
     return phones, names
 
 
 def is_mobile(t: str) -> bool:
     d = digits(t)
     return len(d) == 10 and d.startswith("5") and not d.startswith(("850", "588"))
+
+
+def name_blocked(nn: str, excl_n: set[str]) -> bool:
+    if nn in excl_n:
+        return True
+    # Also block if any excluded full name equals this name, or is a
+    # multi-token subset (catches "ali suha sonmez" vs "suha sonmez").
+    tokens = nn.split()
+    for blocked in excl_n:
+        bt = blocked.split()
+        if not bt:
+            continue
+        if nn == blocked:
+            return True
+        if len(bt) >= 2 and len(tokens) >= 2:
+            # last two tokens match (surname + final given) OR blocked tokens ⊆ candidate
+            if tokens[-2:] == bt[-2:]:
+                return True
+            if set(bt).issubset(set(tokens)) and len(bt) >= 2:
+                return True
+    return False
 
 
 def propose(n: int = 5) -> list[dict]:
@@ -117,14 +207,15 @@ def propose(n: int = 5) -> list[dict]:
     cands = []
     for r in cr:
         od = (r.get("outreach_durum") or r.get("durum") or "").lower()
-        if od in {"gitti", "zaten_gitti", "wa_yok", "gitmedi"}:
+        if od in CONTACTED_DURUM:
             continue
         if not is_mobile(r.get("telefon", "")):
             continue
         tel = digits(r["telefon"])
         if tel in bad:
             continue
-        if norm_name(r.get("isim", "")) in excl_n:
+        nn = norm_name(r.get("isim", ""))
+        if name_blocked(nn, excl_n):
             continue
         if (r.get("ozel_muayenehane") or "").lower() not in {"evet", "yes", "true"}:
             continue
@@ -211,7 +302,7 @@ def main() -> None:
     if not nxt:
         print("No safe next lead (ledger covers available unique mobiles).", file=sys.stderr)
         sys.exit(1)
-    print("\nSAFE NEXT (not in tr-outreach-ledger.csv):")
+    print("\nSAFE NEXT (not in ledger / paket GİTTİ / early 2026-11-05 batch):")
     for i, r in enumerate(nxt, 1):
         print(f"{i}. {r['isim']} · {r['brans']} · {r.get('sehir')} · {r['telefon']}")
 
