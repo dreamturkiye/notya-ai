@@ -19,7 +19,7 @@ A pack that builds has every text and setting filled in. It says nothing about w
 
 ## What is in this pack, and where it comes from
 
-- **From the shared English set** (`countries/_dil/en/`, written once for five countries): 6500 texts as this pack shows them or hands the model (the country's own, counted in the next line, among them) — the screens, the role names, 40 note templates, the instructions to the model, the intake questions, 92 tools, the landing copy — written in `en-GB` spelling by the set's spelling table.
+- **From the shared English set** (`countries/_dil/en/`, written once for five countries): 6686 texts as this pack shows them or hands the model (the country's own, counted in the next line, among them) — the screens, the role names, 40 note templates, the instructions to the model, the intake questions, 96 tools, the landing copy — written in `en-GB` spelling by the set's spelling table.
 - **This country's own** (`countries/gb/`, six small files): 81 texts it writes itself (its consent sentence, identifier label, time sentence, date example, name, word for a senior doctor, role names where they differ, what its closed tools are missing and who decides, unit names and tool words it writes differently, the example phone number and the pattern of an amount) and the settings in the table below.
 
 ## Settings — every one unverified
@@ -122,7 +122,7 @@ The keys are the shared English key set (`docs/COUNTRY-PACK-ROLE-KEYS.md`). The 
 
 ## Tools
 
-### Switched on (92) — with the unit each measured input takes
+### Switched on (96) — with the unit each measured input takes
 
 Units are a clinical-safety matter. A length or a weight is typed in this pack's unit and converted by the kit with the exact defined factors (1 in = 2.54 cm, 1 lb = 0.45359237 kg); a laboratory value is typed in the unit shown. `countries/gb/gb.test.ts` runs every tool below with this country's units against the kit's reference result. **Every tool's text is machine-written; each waits on a local clinical lead.**
 
@@ -210,6 +210,10 @@ Units are a clinical-safety matter. A length or a weight is typed in this pack's
 | `genital-sonuc-olcegi` | Outcome measure total (before / after) | Obstetrics and gynaecology | no measured input |
 | `genital-foto-onam` | Consent to intimate clinical photographs | Obstetrics and gynaecology, Plastic surgery, Cosmetic surgery | no measured input |
 | `onam-formu-genital` | Procedure consent form: genital aesthetic surgery | Plastic surgery, Cosmetic surgery | no measured input |
+| `gebelik-tiroid` | Thyroid in pregnancy: TSH and free T4 by trimester | Obstetrics and gynaecology | no measured input |
+| `hpv-asi-kaydi` | HPV vaccine record | Obstetrics and gynaecology | no measured input |
+| `sma-tasiyicilik` | SMA carrier screening (prenatal record) | Obstetrics and gynaecology | no measured input |
+| `pmdd-gunluk-ozeti` | PMS / PMDD: two-cycle diary summary and DSM-5-TR checklist | Obstetrics and gynaecology | no measured input |
 | `gb-four-at` | 4AT: rapid assessment test for delirium | Emergency medicine, General practice, Anaesthetics, Neurosurgery, Paediatric surgery, General (internal) medicine, Dermatology, Endocrinology and diabetes mellitus, Infectious diseases, Gastroenterology, General surgery, Cardio-thoracic surgery, Respiratory medicine, Ophthalmology, Obstetrics and gynaecology, Vascular surgery, Cardiology, Otolaryngology, Renal medicine, Neurology, Medical oncology, Clinical oncology, Trauma and orthopaedic surgery, Paediatrics, Plastic surgery, General psychiatry, Clinical radiology, Rheumatology, Urology, Sport and exercise medicine, Rehabilitation medicine, Geriatric medicine, Haematology, Allergy, Genito-urinary medicine, Community sexual and reproductive health, Occupational medicine, Child and adolescent psychiatry, Old age psychiatry, Oral and maxillo-facial surgery, Palliative medicine, Audio vestibular medicine, Hair transplantation — practice focus for registered doctors (not a specialty), Cosmetic surgery, Aesthetic medicine, Longevity medicine — practice focus for registered doctors (not a specialty) | no measured input |
 | `gb-fracture-risk-link` | Fracture risk: the FRAX calculator (link) | Emergency medicine, General practice, Anaesthetics, Neurosurgery, Paediatric surgery, General (internal) medicine, Dermatology, Endocrinology and diabetes mellitus, Infectious diseases, Gastroenterology, General surgery, Cardio-thoracic surgery, Respiratory medicine, Ophthalmology, Obstetrics and gynaecology, Vascular surgery, Cardiology, Otolaryngology, Renal medicine, Neurology, Medical oncology, Clinical oncology, Trauma and orthopaedic surgery, Paediatrics, Plastic surgery, General psychiatry, Clinical radiology, Rheumatology, Urology, Sport and exercise medicine, Rehabilitation medicine, Geriatric medicine, Haematology, Allergy, Genito-urinary medicine, Community sexual and reproductive health, Occupational medicine, Child and adolescent psychiatry, Old age psychiatry, Oral and maxillo-facial surgery, Palliative medicine, Audio vestibular medicine, Hair transplantation — practice focus for registered doctors (not a specialty), Cosmetic surgery, Aesthetic medicine, Longevity medicine — practice focus for registered doctors (not a specialty) | no measured input |
 | `gb-valproate-forms` | Valproate: risk acknowledgement form and annual review | Neurology, General psychiatry, Child and adolescent psychiatry, General practice | no measured input |

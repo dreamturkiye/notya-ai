@@ -22,6 +22,7 @@ import { GB_KENDI_ARACLARI, GB_KENDI_TANIMLARI } from './kendiAraclari'
 import { GB_ROLLER } from './roller'
 import { GB_OPERATOR_DEGISEN, GB_OPERATOR_PARAMETRELERI } from './operator'
 import { GB_GENITAL_ESTETIK } from './genitalEstetik'
+import { GB_KD_TARAMALARI } from './kdTaramalar'
 
 const KLINISYEN = 'a clinical lead in the United Kingdom'
 
@@ -66,6 +67,8 @@ export const GB_ARACLAR: EnUlkeGirdisi['araclar'] = {
   operatorAraclari: true,
   // GENITAL-ESTETIK-01 (2026-11-06): cosmetic gynaecology, only what this country's law and regulator permit (./genitalEstetik.ts)
   genitalEstetik: GB_GENITAL_ESTETIK,
+  // KD-TARAMA-01 (2026-11-09): thyroid in pregnancy, HPV vaccine record, SMA carrier screening, PMS / PMDD diary — with this country's numbers and sources (./kdTaramalar.ts)
+  kdTaramalari: GB_KD_TARAMALARI,
   kapali: {
     'esi-triyaj': { eksik: 'The Emergency Severity Index is one triage scale among several, and the tools audit found that it is not the scale the national sources of the United Kingdom name (REMOVE for this country: it stays off). ' + EMIR_ESI, kimden: HAK_SAHIBI },
     'kdigo-evre': { eksik: 'The referral lines of the tool follow the list of the KDIGO guideline. The national guideline on chronic kidney disease (NICE NG203) has categories in mg/mmol and a referral list of its own, which the tools audit of 2026-10-10 found different (docs/araclar-denetim/GB.md): a doctor here follows the national list. Needed: a clinical decision on which list the tool shows. ' + EMIR_BOBREK, kimden: KLINISYEN },

@@ -17,7 +17,7 @@ import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 import { readdirSync, readFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
-import { EN_AMELIYAT_ARACLARI, EN_ROL_ARACLARI } from '../_dil/en/araclar'
+import { EN_AMELIYAT_ARACLARI, EN_KD_TARAMA_ARACLARI, EN_ROL_ARACLARI } from '../_dil/en/araclar'
 import { kitAraci } from '@/lib/ulke/araclar/katalog'
 import { aracCalistir, aracOzeti, hekimRolleri, hesabinAraci, hesabinAraclari, lisansBildirimi, paketinTanimi, sayiMetni } from '@/lib/ulke/araclar/paket'
 import { LISANS_ACIK, type AracGirdisi } from '@/lib/ulke/araclar/tipler'
@@ -135,7 +135,8 @@ describe('gb A: who sees which tool (decisions: `proposedSpecialties`; GB.md, "W
       // can be kept. The file gives it to doctors only; the audiologist has three such tools and therefore has it too.
       if (kit.some((k) => k !== 'hasta-portali' && k !== 'takip-paneli')) beklenen.add('takip-paneli'); else beklenen.delete('takip-paneli')
       // Structural records added after the decisions file. The file's tools stay; anything further must be one of these.
-      const yapisal = new Set(['ameliyat-notu', 'ameliyat-notu-kd', 'usg-obstetrik', 'usg-jinekolojik', 'dogum-epikrizi', 'endoskopi-kaydi', 'kronik-izlem-kaydi', 'birinci-acil-bayrak', 'gebelik-gun', 'kardiyo-not', 'inme-bayraklari', 'psikiyatri-guvenlik', 'seans-plani', 'icf-ozet', 'greft-tahmini', 'sac-bakim-vade', 'estetik-cerrahi-vade', 'estetik-islem-vade', 'infuzyon-guvenlik', 'makro-kaydi', 'sonraki-seans', 'vas-fonksiyon', 'plastik-yara-greft', ...KD_OPERATOR_ANAHTARLARI, 'ameliyat-notu-genital', 'genital-sonuc-olcegi', 'genital-foto-onam', 'onam-formu-genital'])
+      // KD-TARAMA-01 (2026-11-09): the four obstetric records, added after the decisions file
+      const yapisal = new Set(['gebelik-tiroid', 'hpv-asi-kaydi', 'sma-tasiyicilik', 'pmdd-gunluk-ozeti', 'ameliyat-notu', 'ameliyat-notu-kd', 'usg-obstetrik', 'usg-jinekolojik', 'dogum-epikrizi', 'endoskopi-kaydi', 'kronik-izlem-kaydi', 'birinci-acil-bayrak', 'gebelik-gun', 'kardiyo-not', 'inme-bayraklari', 'psikiyatri-guvenlik', 'seans-plani', 'icf-ozet', 'greft-tahmini', 'sac-bakim-vade', 'estetik-cerrahi-vade', 'estetik-islem-vade', 'infuzyon-guvenlik', 'makro-kaydi', 'sonraki-seans', 'vas-fonksiyon', 'plastik-yara-greft', ...KD_OPERATOR_ANAHTARLARI, 'ameliyat-notu-genital', 'genital-sonuc-olcegi', 'genital-foto-onam', 'onam-formu-genital'])
       for (const k of beklenen) assert.ok(kit.includes(k), `${s.key} lost ${k}`)
       for (const k of kit) if (!beklenen.has(k)) assert.ok(yapisal.has(k), `${s.key} gained ${k}`)
     }
@@ -434,12 +435,13 @@ describe('gb D: what stays off', () => {
     assert.deepEqual(Object.keys(GB_ARACLAR.kapali).sort(), kapali)
     for (const k of kapali) { assert.ok(!A.araclar.some((p) => p.anahtar === k), k); assert.ok(A.yuvalar.some((y) => y.anahtar === k), k); for (const r of [null, ...ROLLER]) assert.equal(hesabinAraci(A, r, k), null, `${k}: ${r}`) }
     // NO TOOL THAT WAS OFF IS ON, but the dose calculator: the switched-on tools are the set's tools minus the four, the two screens, and this country's three
-    assert.deepEqual(A.araclar.map((p) => p.anahtar).sort(), [...[...EN_ROL_ARACLARI, ...EN_AMELIYAT_ARACLARI, ...EN_OPERATOR_ARACLARI].map((a) => a.anahtar).filter((k) => !kapali.includes(k)), 'hasta-portali', 'takip-paneli', ...GB_OZEL_ANAHTARLAR, ...GB_GENITAL_ACIK].sort())
+    assert.deepEqual(A.araclar.map((p) => p.anahtar).sort(), [...[...EN_ROL_ARACLARI, ...EN_AMELIYAT_ARACLARI, ...EN_OPERATOR_ARACLARI].map((a) => a.anahtar).filter((k) => !kapali.includes(k)), 'hasta-portali', 'takip-paneli', ...GB_OZEL_ANAHTARLAR, ...GB_GENITAL_ACIK, ...EN_KD_TARAMA_ARACLARI.map((a) => a.anahtar)].sort())
     // AMELIYAT-NOTU-01 (2026-11-05): +5 tools of the set (operation notes, ultrasound reports, discharge summary) and this country's CTG tool
     // KD-OPERATOR-01 (2026-11-05): +16 operating surgeon's tools of the set
     // GENITAL-ESTETIK-01 (2026-11-06): +3 cosmetic gynaecology tools (adult genital note, outcome totals, photo consent); energy, injection and whitening stay off (./genitalEstetik.ts)
     // GENITAL-ESTETIK-01c (2026-11-06): +1, the consent form of the operations for plastic and aesthetic surgery
-    assert.equal(A.araclar.length, 92)
+    // KD-TARAMA-01 (2026-11-09): +4 obstetric records (thyroid in pregnancy, HPV vaccine, SMA carrier screening, PMDD diary summary)
+    assert.equal(A.araclar.length, 96)
   })
 
   it('EVERY TOOL THE DECISIONS MARK "remove" IS OFF in this country', () => {
