@@ -1,27 +1,21 @@
 {
-  "tarih": "2026-11-09T11:37:10.320Z",
-  "scanned": 153,
-  "fail": 0,
-  "whatsapp_mobil_adet": 37,
-  "profile_new": 28,
-  "call_ready_patched": 32,
+  "tarih": "2026-11-09T12:26:54.024149+00:00",
+  "mode": "whatsapp_social_only_verified",
+  "whatsapp_mobil_adet": 15,
   "brans": {
-    "kadin-dogum": 9,
-    "dermatoloji": 15,
-    "pediatri": 13
+    "kadin-dogum": 0,
+    "dermatoloji": 7,
+    "pediatri": 8
   },
   "siradaki": {
-    "skor": "90",
-    "isim": "Dr. Öğr. Üyesi Hazel Çağın Kuzey",
-    "brans": "kadin-dogum",
+    "skor": "95",
+    "isim": "Uzm. Dr. Hasan Alakbarov",
+    "brans": "dermatoloji",
     "sehir": "istanbul",
-    "ilce": "Küçükçekmece",
-    "telefon": "+905051615779",
-    "mobil_yeni": "+905051615779",
-    "url": "https://www.doktorsitesi.com/dr-ogr-uyesi-hazel-cagin-kuzey/kadin-hastaliklari-ve-dogum/istanbul",
-    "durum": "siradaki",
-    "gsm_score": 100,
-    "kaynak_enrich": "seed"
+    "ilce": "Bakırköy",
+    "telefon": "+905010614654",
+    "url": "https://www.doktorsitesi.com/hasan-alakbarov/dermatoloji/istanbul",
+    "durum": "siradaki"
   },
-  "not": "GSM-only enrich (5xx). 0850/588 rejected. Ledger excluded. Mobiles usually have WhatsApp."
+  "not": "Only DS socialMedia whatsapp; double-verified against live profiles"
 }

@@ -1195,13 +1195,23 @@ Wave3’te SIRADAKİ diye önerildi → **HATA**. Ledger + early seed’e işlen
 ## W4-7. Prof. Dr. Mehmet Aytaç Yüksel ← WA YOK / GİTMEDİ
 **kadin-dogum** · İstanbul/Küçükçekmece · `+905076628496` — yanlış numara; atlandı.
 
-## W4-8. Doç. Dr. Mehmet Şükrü Budak ← SIRADAKİ
-**kadin-dogum** · İstanbul/Bahçelievler · `+90 551 941 75 27` · WA: `+905519417527`
+## W4-8. Doç. Dr. Mehmet Şükrü Budak ← WA YOK / GİTMEDİ
+**kadin-dogum** · `+905519417527` — enrich gürültüsü (WhatsApp social yok); atlandı.
 
-**Ön kontrol:** ledger / early-batch / paket GİTTİ — temiz. Gönder: yapıştır → kart **X** → gönder.
+---
+
+# Wave 4b — yalnız Doktorsitesi `socialMedia type=whatsapp` (doğrulanmış GSM)
+
+Önceki bare-5xx scrapeler yanlıştı. Bundan sonra numara = profildeki WhatsApp alanı.
+
+## W4b-1. Uzm. Dr. Hasan Alakbarov ← SIRADAKİ
+**dermatoloji** · İstanbul/Bakırköy · `+90 501 061 46 54` · WA: `+905010614654`  
+**Doğrulama:** DS `socialMedia[{type:whatsapp}]` eşleşti.
+
+**Ön kontrol:** ledger temiz. Gönder: yapıştır → kart **X** → gönder.
 
 ```
-Mehmet Hocam merhaba 👋
+Hasan Hocam merhaba 👋
 Ben Kaan, *Notya*'dan yazıyorum.
 
 *Notya* — hekimler için yapay zekâ klinik asistanı.
@@ -1209,12 +1219,12 @@ Muayeneyi dinler, notunuzu yazar, reçete ve rapor taslağını hazırlar, hasta
 Her karar *sizin onayınızla*.
 40'tan fazla branşı kendi ihtiyaçlarıyla destekliyoruz.
 
-*Kadın doğumda*
-- Gebelik takvimi ve izlem
-- Doppler'li USG ve yapılandırılmış NST
-- Obstetrik risk (preeklampsi, GDM, SSVD)
-- Sezaryen ve ameliyat notları
-- Doğum epikrizi ve antetli baskı
+*Dermatolojide*
+- PASI / EASI
+- İzotretinoin GÖP kapısı
+- Fototerapi defteri
+- Yama (D2/D4) ve dermoskopi
+- Biyolojik SUT taslağı
 
 Tipik bir günde yaklaşık *1,5-2 saat* kazanç.
 Kayıtlar daha düzenli → bakım kalitesi de yükseliyor.
