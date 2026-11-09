@@ -31,11 +31,27 @@ Gökhan has lived outside Türkiye for ~**7 years** and does **not** have a warm
 - **~98 call-ready** = özel muayenehane + valid phone (pedi 31 / KD 40 / derm 27, all İstanbul)
 - Many `0850…` lines are Doktortakvimi click-to-call — still reach the practice; prefer `5xx` mobile when present
 
+## Outreach ledger (no duplicates)
+
+**Source of truth for “already messaged”:** `tr-outreach-ledger.csv`
+
+| `durum` | Meaning |
+|---------|---------|
+| `gitti` | WhatsApp sent (Kaan said gitti) |
+| `wa_yok` / `gitmedi` | Number bad / no WA — do not retry same number |
+| `zaten_gitti` | Already reached earlier (even if not logged at the time) |
+
+**Before proposing the next name:** check ledger by **phone and normalized name**. If present → skip.  
+After each send, log the row (isim, telefon, durum, tarih, not).  
+Call-ready mirror columns: `outreach_durum`, `outreach_tarih`.  
+Live pointer: `TR-OUTREACH-DURUM.md`. Helper: `python3 scripts/tr-outreach-next.py`.
+
 ## Assets in this folder
 
 | File | Use |
 |------|-----|
-| `tr-call-ready-leads.csv` | **Start here** — private practice + phone |
+| `tr-outreach-ledger.csv` | **Who we already wrote / tried** — never resend |
+| `tr-call-ready-leads.csv` | Scraped private practice + phone (+ outreach_* tags) |
 | `tr-istanbul-pedi-leads.csv` | Full harvest (all scores / hospital-mixed) |
 | `tr-istanbul-pedi-leads.json` | Same + `ozet.oncelik_hedef` top 40 |
 | `TR-PEDI-OUTREACH-TEMPLATES.md` | Kaan WhatsApp / e-posta / trial-only / demo close |

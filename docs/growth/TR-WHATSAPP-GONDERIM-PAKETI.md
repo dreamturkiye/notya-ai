@@ -1152,13 +1152,16 @@ Tanıtıma vakit yoksa ücretsiz denemeyi hemen açabiliyoruz.
 ## W3-2. Uzm. Dr. Aylin Sema Tırpancı ← ZATEN GİTTİ (tekrar yok)
 **dermatoloji** · İstanbul/Başakşehir · `+90 505 849 84 33` — daha önce mesaj gitmiş; atlandı.
 
-## W3-3. Prof. Dr. İsmail Özdemir ← SIRADAKİ
-**kadin-dogum** · İstanbul/Şişli · `+90 544 835 85 95` · WA: `+905448358595`
+## W3-3. Prof. Dr. İsmail Özdemir ← ZATEN GİTTİ (duplicate — yazma)
+**kadin-dogum** · İstanbul/Şişli · `+90 544 835 85 95` — daha önce ulaşılmış; atlandı.
 
-**Gönder:** yapıştır → kart çıkarsa **X** → gönder. *(pakette ilk kez)*
+## W3-4. Uzm. Dr. Dilek Başaran ← SIRADAKİ
+**dermatoloji** · `+90 516 222 38 28` · WA: `+905162223828`
+
+**Ön kontrol:** `tr-outreach-ledger.csv` içinde yok. Gönder: yapıştır → kart **X** → gönder.
 
 ```
-İsmail Hocam merhaba 👋
+Dilek Hocam merhaba 👋
 Ben Kaan, *Notya*'dan yazıyorum.
 
 *Notya* — hekimler için yapay zekâ klinik asistanı.
@@ -1166,12 +1169,12 @@ Muayeneyi dinler, notunuzu yazar, reçete ve rapor taslağını hazırlar, hasta
 Her karar *sizin onayınızla*.
 40'tan fazla branşı kendi ihtiyaçlarıyla destekliyoruz.
 
-*Kadın doğumda*
-- Gebelik takvimi ve izlem
-- Doppler'li USG ve yapılandırılmış NST
-- Obstetrik risk (preeklampsi, GDM, SSVD)
-- Sezaryen ve ameliyat notları
-- Doğum epikrizi ve antetli baskı
+*Dermatolojide*
+- PASI / EASI
+- İzotretinoin GÖP kapısı
+- Fototerapi defteri
+- Yama (D2/D4) ve dermoskopi
+- Biyolojik SUT taslağı
 
 Tipik bir günde yaklaşık *1,5-2 saat* kazanç.
 Kayıtlar daha düzenli → bakım kalitesi de yükseliyor.
