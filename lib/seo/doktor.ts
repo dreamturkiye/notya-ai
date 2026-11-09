@@ -25,7 +25,7 @@ const COUNTRY_HOMES: Readonly<Record<string, string>> = {
   "en-GB": "https://uk.notya.io/",
   "en-CA": "https://ca.notya.io/",
   "en-NZ": "https://nz.notya.io/",
-  "uz-Latn": "https://notya.io/uzbek",
+  "uz-Latn": "https://uz.notya.io/uzbek",
 };
 
 /** hreflang alternates for /doktor: itself, x-default, and the six country homes. */

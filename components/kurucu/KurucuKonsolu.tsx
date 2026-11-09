@@ -8,7 +8,7 @@
 import React, { useEffect, useState } from 'react'
 import { notFound } from 'next/navigation'
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth'
-import { kurucuVerisiniAl, kardesKokAdresi, KARDES_ISARETI } from '@/lib/kurucu/oturumBekle'
+import { kurucuVerisiniAl } from '@/lib/kurucu/oturumBekle'
 import { CHROME_FONT, CHROME_FONT_HREF, CHROME_RENK as R } from '@/lib/doktor/chromeTheme'
 import type { KurucuKonsolVerisi, KonsolUlkesi } from '@/lib/kurucu/konsol'
 import type { KurucuHesap, KurucuOzet } from '@/lib/kurucu/tipler'
@@ -118,23 +118,13 @@ export default function KurucuKonsolu() {
   useEffect(() => {
     let iptal = false
     ;(async () => {
-      // KURUCU-KONSOL-03: read the hop marker, then drop it from the address bar.
-      const href = window.location.href
-      if (window.location.hash === KARDES_ISARETI) {
-        try { window.history.replaceState(null, '', window.location.pathname + window.location.search) } catch { /* cosmetic */ }
-      }
-      let tokenGoruldu = false
       // KURUCU-KONSOL-02: wait for the stored session to hydrate, retry once with a forced refresh on 404 (lib/kurucu/oturumBekle.ts).
       const sonuc = await kurucuVerisiniAl<KurucuKonsolVerisi>({
-        tokenAl: async (o) => { const t = await ensureDoctorAccessToken(o); if (t) tokenGoruldu = true; return t },
+        tokenAl: (o) => ensureDoctorAccessToken(o),
         getir: (token) => fetch('/api/kurucu/ozet', { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' }),
         iptalMi: () => iptal,
       })
-      if (iptal) return
-      // KURUCU-KONSOL-03: no session on this origin at all → decide on the sibling origin (notya.io <-> www.notya.io), once.
-      const kardes = sonuc.tur === 'yok' ? kardesKokAdresi(href, tokenGoruldu) : null
-      if (kardes) { window.location.replace(kardes); return }
-      setD(sonuc)
+      if (!iptal) setD(sonuc)
     })()
     return () => { iptal = true }
   }, [])

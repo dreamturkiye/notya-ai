@@ -27,7 +27,7 @@ import { konsolVerisiTopla, ulkeIstatistigiCek } from './konsol'
 import { donusumSay, stripeDonusumuOku } from './stripeDonusum'
 import { trDenemeKaydiBildir } from './trDenemeBildir'
 import { TR_SOZLUK } from './trBildirimMetni'
-import { kurucuVerisiniAl, oturumTokeniniBekle, OTURUM_BEKLEME_ADIMLARI, kardesKokAdresi, type KurucuYanit } from './oturumBekle'
+import { kurucuVerisiniAl, oturumTokeniniBekle, OTURUM_BEKLEME_ADIMLARI, type KurucuYanit } from './oturumBekle'
 
 process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://sahte.supabase.test'
 process.env.SUPABASE_SERVICE_ROLE_KEY = 'sahte-servis-anahtari'
@@ -436,54 +436,3 @@ describe('founder console — session hydration and token path (KURUCU-KONSOL-02
   })
 })
 
-describe('founder console — notya.io and www.notya.io are two session stores (KURUCU-KONSOL-03, 2026-11-08)', () => {
-  const anlik = async () => {}
-  const yanit = (status: number, govde: unknown = {}): KurucuYanit => ({ status, ok: status >= 200 && status < 300, json: async () => govde })
-
-  it('no session on this origin → exactly one hop to the sibling origin, marked so it cannot loop', () => {
-    assert.equal(kardesKokAdresi('https://notya.io/kurucu', false), 'https://www.notya.io/kurucu#h')
-    assert.equal(kardesKokAdresi('https://www.notya.io/kurucu', false), 'https://notya.io/kurucu#h')
-    assert.equal(kardesKokAdresi('https://WWW.notya.io/kurucu?x=1', false), 'https://notya.io/kurucu#h')
-    assert.equal(kardesKokAdresi('https://www.notya.io/kurucu#h', false), null, 'already hopped → not-found here')
-    assert.equal(kardesKokAdresi('https://notya.io/kurucu#h', false), null)
-  })
-  it('a session that was read but refused (non-founder) gets no hop; previews, localhost and junk get none either', () => {
-    assert.equal(kardesKokAdresi('https://notya.io/kurucu', true), null)
-    assert.equal(kardesKokAdresi('https://notya-ai-getvelacom.vercel.app/kurucu', false), null)
-    assert.equal(kardesKokAdresi('http://localhost:3000/kurucu', false), null)
-    assert.equal(kardesKokAdresi('http://notya.io/kurucu', false), null)
-    assert.equal(kardesKokAdresi('not a url', false), null)
-  })
-  it('founder logged in only on www: apex finds no token (hop), www finds it and the founder gets the console', async () => {
-    const depolar: Record<string, string | null> = { 'notya.io': null, 'www.notya.io': 'tok-www' }
-    const ac = async (href: string) => {
-      let goruldu = false
-      const host = new URL(href).hostname
-      const s = await kurucuVerisiniAl<{ ok: number }>({
-        tokenAl: async () => { const t = depolar[host]; if (t) goruldu = true; return t },
-        getir: async (t) => (t === 'tok-www' ? yanit(200, { ok: 1 }) : yanit(404)),
-        bekle: anlik,
-      })
-      return { s, kardes: s.tur === 'yok' ? kardesKokAdresi(href, goruldu) : null }
-    }
-    const apex = await ac('https://notya.io/kurucu')
-    assert.deepEqual(apex, { s: { tur: 'yok' }, kardes: 'https://www.notya.io/kurucu#h' })
-    const www = await ac(apex.kardes!)
-    assert.deepEqual(www, { s: { tur: 'tamam', veri: { ok: 1 } }, kardes: null })
-  })
-  it('logged out on both origins: one hop, then the standard not-found; a non-founder session: not-found with no hop', async () => {
-    const bos = await kurucuVerisiniAl({ tokenAl: async () => null, getir: async () => yanit(200), bekle: anlik })
-    assert.deepEqual(bos, { tur: 'yok' })
-    assert.equal(kardesKokAdresi('https://www.notya.io/kurucu#h', false), null)
-    let goruldu = false
-    const baska = await kurucuVerisiniAl({ tokenAl: async () => { goruldu = true; return 'baska' }, getir: async () => yanit(404), bekle: anlik })
-    assert.deepEqual(baska, { tur: 'yok' })
-    assert.equal(kardesKokAdresi('https://notya.io/kurucu', goruldu), null)
-  })
-  it('the console hops through the shared helper and still carries no login hint', () => {
-    const src = readFileSync(join(process.cwd(), 'components/kurucu/KurucuKonsolu.tsx'), 'utf8')
-    assert.match(src, /kardesKokAdresi\(href, tokenGoruldu\)/)
-    assert.match(src, /ensureDoctorAccessToken/)
-    assert.doesNotMatch(src, /DOKTOR_GIRIS|\/giris|sign in|log in/i)
-  })
-})

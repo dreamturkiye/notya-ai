@@ -38,6 +38,27 @@ daily diary in the country portals is OPEN (e).
   Recommendations 11 and 33) written as week 20; ATA's late-first-trimester fallback applied from week 7 to week 13; the
   diary's reading (0–1 minimal, ≥2 present, 4–5 marked, every day of both 7-day windows rated, portal entry for today or
   yesterday only).
+## CANONICAL-HOST-01 — notya.io → www.notya.io, permanent 308 (Claude, 2026-11-09)
+
+**Done:** Vercel project `notya-ai` → project routing rule `apex-to-www` (first rule, regex `^/(.*)$`, `has host = notya.io`,
+308, `Location: https://www.notya.io/$1`). Routing rules apply without a build. Verified with the Vercel fetch tool:
+`https://notya.io/some/path?x=1&y=two` → `308` → `https://www.notya.io/some/path?x=1&y=two`; `https://www.notya.io/giris` → 200.
+Anyone logged in only on the bare domain is logged out once (Kaan accepted this).
+
+**Checked, nothing to repoint:** Stripe (StopThreatAI, live) Notya endpoint is already `https://www.notya.io/api/billing/webhook`;
+Stripe success/cancel URLs come from `NEXT_PUBLIC_APP_URL`, which is `https://www.notya.io` in Production (seen in deployed
+metadata); Cal.com webhook target is `https://www.notya.io/api/demo/cal-webhook`; WhatsApp (Meta) webhook, Android SMS gateway
+STOP URL, e-mail OAuth callbacks and e-mail links all build on www; the six country builds post to
+`https://www.notya.io/api/internal/signup-notify` (`TR_SIGNUP_NOTIFY_URL`), and TR calls the countries' own hosts for
+`/api/internal/founder-stats`, so neither crosses the apex. No `accounting_payments` rows exist (bank/iyzico callbacks unaffected).
+Code fix in the same change: the Turkish page's `uz-Latn` hreflang pointed at `https://notya.io/uzbek` (a 404 on TR even before
+the redirect); now `https://uz.notya.io/uzbek`, matching the founder console and demo e-mail tables.
+
+- **Open — Kaan, 2026-11-09:** Supabase Auth URL settings for TR (`anjayzospuurymjmmtim`) cannot be read or set with this
+  session's tools (no auth-config endpoint). Today the app uses password login and builds the reset link from the page's own
+  origin, which is now always www. In Supabase → Authentication → URL Configuration: Site URL `https://www.notya.io`;
+  Additional Redirect URLs: `https://www.notya.io/**` and keep `https://notya.io/**`. (Same open item as the 2026-10-20
+  password-reset entry for the country projects.)
 
 ## KURUCU-KONSOL-03 — the real cause of the founder 404 is the two origins (Claude, 2026-11-08, ~18:20 UTC)
 
@@ -54,9 +75,8 @@ this app, FOUNDER_EMAILS is set on Production (`kaan@notya.io,kaanari@mac.com`),
 `components/kurucu/KurucuKonsolu.tsx`; tests in `lib/kurucu/kurucu.test.ts`). Non-founders and logged-out visitors still end
 on the standard 404 with no hint. Founder-internal, TR build only (country builds host no /kurucu) — no 40-branş /
 six-country propagation.
-- **Open — Kaan (decision), 2026-11-08:** a canonical host (one of notya.io / www.notya.io redirecting to the other) would
-  remove the split for every doctor too, but logs out once everyone whose session sits on the redirected origin and moves
-  home-screen apps installed from it. Most doctor traffic on 2026-11-05 was on www. Not changed without his OK.
+- **CLOSED 2026-11-09 (Kaan approved, see CANONICAL-HOST-01 below):** notya.io now 308-redirects to www.notya.io, so the
+  sibling-origin hop is dead code and was removed (`kardesKokAdresi`, its marker handling and its tests).
 
 ## KURUCU-KONSOL-02 — notya.io/kurucu showed 404 to the founder: cause, fix, what is open (Claude, 2026-11-08)
 
