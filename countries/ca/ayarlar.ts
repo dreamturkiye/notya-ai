@@ -39,6 +39,7 @@ import { enEkRolIcerigi } from '../_dil/en/klinik/ekRoller'
 import { CA_BIRIMLER, CA_VELI_YASI } from './temel'
 import { CA_OPERATOR_DEGISEN, CA_OPERATOR_PARAMETRELERI } from './operator'
 import { CA_GENITAL_ESTETIK } from './genitalEstetik'
+import { CA_KD_TARAMALARI } from './kdTaramalar'
 
 export { CA_BIRIMLER, CA_VELI_YASI } from './temel'
 
@@ -149,6 +150,8 @@ export const CA_GIRDI: EnUlkeGirdisi = {
     operatorAraclari: true,
     // GENITAL-ESTETIK-01 (2026-11-06): cosmetic gynaecology, only what this country's law and regulator permit (./genitalEstetik.ts)
     genitalEstetik: CA_GENITAL_ESTETIK,
+    // KD-TARAMA-01 (2026-11-09): thyroid in pregnancy, HPV vaccine record, SMA carrier screening, PMS / PMDD diary — with this country's numbers and sources (./kdTaramalar.ts)
+    kdTaramalari: CA_KD_TARAMALARI,
     parametreler: CA_OPERATOR_PARAMETRELERI,
     kapali: {
       // THE AUDIT'S ONE "REMOVE": another country's triage scale. It stays off; emergency departments here use another
