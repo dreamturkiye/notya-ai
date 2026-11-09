@@ -1,5 +1,44 @@
 # OPEN COMMITMENTS — Notya AI
 
+## KD-TARAMA-01 — thyroid in pregnancy, HPV vaccine record, SMA carrier screening, PMS/PMDD diary: what is open (Claude, 2026-11-09)
+
+Kadın Hastalıkları ve Doğum only (branş-specific; leak tests both ways). Shared engine `lib/clinical/kdTaramalar.ts`
+(byte-identical on main and the six release branches); Türkiye panel `specialties/kadin-dogum/ui/KdTaramalar.tsx` + portal
+diary; country kit tools `lib/ulke/araclar/tanimlar/kdTaramalar.ts` with each pack's numbers and sources
+(`countries/<cc>/kdTaramalar.ts`, Uzbekistan `countries/uz/uygulama/araclar/rol10.ts`). Migration 193 applied and verified on
+the Türkiye database and all six country databases (RLS on, doctor policy + restrictive patient ownership, no anon grant,
+ledger row). Per country: tr APPLIED · us APPLIED · gb APPLIED (thyroid source international, see f) · ca APPLIED (thyroid
+source international, see f) · au APPLIED · nz APPLIED · uz APPLIED (thyroid: laboratory ranges only, see f). The patient-side
+daily diary in the country portals is OPEN (e).
+
+- **KD-TARAMA-01a — clinical review — waits on Kaan (Dr. Gökhan for Türkiye; a clinician per country), 2026-11-09.** Every
+  module is machine-written: the thyroid fallback order, follow-up points, HPV schedule rows, SMA wording and the diary.
+- **KD-TARAMA-01b — Türkiye's HPV national position — waits on Kaan, 2026-11-09.** The only official Ministry document that
+  could be opened is the 2020 childhood schedule brochure (asi.saglik.gov.tr), which has no HPV; asi.saglik.gov.tr itself is
+  not reachable from this environment. Press (bianet, 12 January 2026) says the 2025 pledge was not implemented. The build
+  therefore marks HPV as NOT a national-programme vaccine and uses the WHO 2022 schedule, labelled international. If the
+  Ministry has published an HPV schedule, send the link: Claude adds it as Türkiye's rule (one file).
+- **KD-TARAMA-01c — Türkiye thyroid numbers — waits on Dr. Gökhan, 2026-11-09.** TEMD 2023 gives no reference numbers (only
+  "trimester-specific" ranges, targets <2.5 / <3 mU/L and universal booking screening); the fallback range is ATA 2017's
+  (first trimester from week 7: non-pregnant range −0.4 / −0.5 mU/L, or upper ~4.0 mU/L; no number for trimesters 2–3).
+- **KD-TARAMA-01d — DRSP licence — waits on Kaan, 2026-11-09.** The DRSP form read carries "© pending, Jean Endicott, Ph.D.
+  and Wilma Harrison, M.D." with no terms of use; it was NOT used. An original diary mapped to the DSM-5-TR criterion
+  groups ships instead. If Kaan obtains a commercial licence, the diary's items can be swapped (words only).
+- **KD-TARAMA-01e — patient-side daily diary in the six country portals — owner Claude, 2026-11-09.** The country builds
+  carry the clinician's two-cycle summary + DSM-5-TR checklist tool; the patient's own daily entry needs a portal route on
+  the `app/api/ulke/portal/beslenme` pattern plus a portal screen in each pack's languages. Not built in this change set.
+- **KD-TARAMA-01f — country sources not opened in this session — owner Claude, 2026-11-09.** gb: no NICE / RCOG / BTA thyroid
+  position opened (ATA 2017 used, labelled international). ca: no SOGC thyroid guideline opened (ATA, labelled). us: ACOG PB
+  223 and CO 691 read only through secondary summaries (ObG Project 2020; Quest Diagnostics 2025). au: the NIP HPV funding
+  page (health.gov.au) refused robots — the Immunisation Handbook table is used, no funding line. nz: Immunisation Handbook
+  2025 ch. 10 (immunocompromised HPV) not opened — no row. uz: no Ministry thyroid protocol; the Uzbek rule allows no
+  country numbers without a local clinician, so the thyroid tool flags only against the laboratory's own range.
+- **KD-TARAMA-01g — interpretations to confirm — waits on a clinician per country, 2026-11-09.** RANZCOG C-Obs 46 "0.5 mU/L less
+  than the non-pregnant range in first trimester" applied to both limits (au, nz); "mid-gestation / mid-pregnancy" (ATA
+  Recommendations 11 and 33) written as week 20; ATA's late-first-trimester fallback applied from week 7 to week 13; the
+  diary's reading (0–1 minimal, ≥2 present, 4–5 marked, every day of both 7-day windows rated, portal entry for today or
+  yesterday only).
+
 ## KURUCU-KONSOL-03 — the real cause of the founder 404 is the two origins (Claude, 2026-11-08, ~18:20 UTC)
 
 **Cause (proven):** TR Supabase edge logs show Kaan's current Mac Safari session (auth.sessions row created 2026-11-05

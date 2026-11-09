@@ -56,6 +56,8 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   'app/api/doktor/genital-estetik/foto/route.ts': T,
   'app/api/doktor/genital-estetik/foto/[fotoId]/route.ts': T,
   'app/api/doktor/kd-raporlari/route.ts': T,
+  // KD-TARAMA-01 (2026-11-09): hastaSahibiMi first; diary ids read with doctor_id + patient_id
+  'app/api/doktor/kd-tarama/route.ts': T,
   'app/api/doktor/hastalar/[id]/klinik-ozet/route.ts': I('hastaKlinikOzetleriGuncelle: reads/writes scoped doctor_id+patient_id; foreign patient → fail'),
   // ── Notlar / seanslar ──
   'app/api/notes/route.ts': T,
@@ -359,6 +361,8 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   // doctor's token answers 404 (brans-alan-sizmasi gate doubles as a route gate here).
   'app/api/portal/hasta/[token]/asi-onam/route.ts': I('resolvePortalToken fixes doctor_id+patient_id from the PIN-unlocked token; talep/kayit reads and writes scoped by both; asiOnamBransUygunMu(brans) 404s a non-Pediatri token'),
   'app/api/portal/hasta/[token]/dahiliye-anket/route.ts': I('token → (patient_id, doctor_id); every read/write scoped by both'),
+  // KD-TARAMA-01: the PMS/PMDD diary — open only for a KD doctor's token with an open diary of that same (doctor, patient)
+  'app/api/portal/hasta/[token]/kd-gunluk/route.ts': I('resolvePortalToken fixes doctor_id+patient_id; the open diary is found by both; every diary read/upsert carries doctor_id, patient_id and that diary id; a non-KD token answers uygun:false / 404'),
   'app/api/portal/hasta/[token]/unlock/route.ts': I('PIN check for the token row only'),
   'app/api/intake/[token]/route.ts': I('token → form row; patient from that row (form was created after an ownership check); NOTYA-ILETISIM-01 / NOTYA-GELEN-BELGELER consent writes scoped by that row\'s patient_id AND doktor_id'),
   // ── Entegrasyon / cron (oturumsuz, sunucu içi) ──

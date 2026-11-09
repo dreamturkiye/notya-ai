@@ -169,6 +169,8 @@ export const ROTA_YETKILERI: readonly Kural[] = [
   { yol: '/api/doktor/genital-estetik/foto', okuKapali: true, yaz: null, sekreterKapali: true },
   { yol: '/api/doktor/genital-estetik/foto/[id]', okuKapali: true, yaz: null, sekreterKapali: true },
   { yol: '/api/doktor/kd-raporlari', okuKapali: true, yaz: null, sekreterKapali: true },
+  // KD-TARAMA-01: thyroid in pregnancy, HPV doses, SMA carrier screening, PMS/PMDD diary — doctor only (sadeceDoktor), never staff.
+  { yol: '/api/doktor/kd-tarama', okuKapali: true, yaz: null, sekreterKapali: true },
 
   // ── intake + portal
   K('/api/doktor/intake-formlari', 'intake.oku', 'intake.yonet'),

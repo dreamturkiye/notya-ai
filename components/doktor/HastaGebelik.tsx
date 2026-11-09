@@ -8,6 +8,8 @@ import dinamikYukle from 'next/dynamic';
 import { kadinDogumBransi } from '@/lib/doktor/hastaDosyaSekmeleri';
 // KD-RAPOR-01: USG / NST reports + doğum epikrizi — KD doctors only, loaded only when mounted.
 const KdRaporlar = dinamikYukle(() => import('@/specialties/kadin-dogum/ui/KdRaporlar'), { ssr: false });
+// KD-TARAMA-01: gebelikte tiroid · HPV aşısı · SMA taşıyıcılık · PMS/PMDD — KD doctors only, loaded only when mounted.
+const KdTaramalar = dinamikYukle(() => import('@/specialties/kadin-dogum/ui/KdTaramalar'), { ssr: false });
 import { JinekolojiSpine } from '@/specialties/kadin-dogum/ui/JinekolojiSpine'
 import { BugunkuJineMuayene } from '@/specialties/kadin-dogum/ui/BugunkuJineMuayene'
 import { TrTarihAlan } from '@/specialties/kadin-dogum/ui/TrTarihAlan'
@@ -939,6 +941,7 @@ export default function HastaGebelik({ patientId, doktorBransi }: { patientId: s
       )}
 
       {kdHekimi && <KdRaporlar patientId={patientId} gebelikId={veri?.gebelik?.id ? String(veri.gebelik.id) : null} dogumVar={Boolean((veri?.gebelik as { dogum_tarihi?: string | null } | null | undefined)?.dogum_tarihi)} />}
+      {kdHekimi && <KdTaramalar patientId={patientId} />}
       {etkinMod !== 'jinekoloji' && <KadinSagligiPaneli patientId={patientId} />}
 
       {veri && (

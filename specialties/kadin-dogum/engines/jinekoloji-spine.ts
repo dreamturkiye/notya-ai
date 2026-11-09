@@ -25,7 +25,7 @@ export function dueHesapla(g: DueGirdi): Due[] {
   if (y != null && y >= 65) { const due = g.sonDxa ? ekleAy(g.sonDxa, 24) : g.bugun; out.push({ kod: 'dxa', ad: 'DXA (65+ veya risk)', due, durum: durum(due), not: 'Risk faktörü varsa daha erken — hekim kararı.', takvim: 'ofis' }) }
   if (g.riaTakildi && g.riaTipi) { const yil = { cu5: 5, cu10: 10, lng5: 5, lng8: 8 }[g.riaTipi]; const due = ekleAy(g.riaTakildi, yil * 12); out.push({ kod: 'ria', ad: `RİA süresi (${g.riaTipi.toUpperCase()}, ${yil} yıl)`, due, durum: durum(due), not: 'Son kullanım tarihi; değişim/çıkarım planı.', takvim: 'ofis' }) }
   if (g.hrt && g.hrtBaslangic) { const due = ekleAy(g.hrtBaslangic, 12); const yilDonumu = due < g.bugun ? ekleAy(g.bugun, 0) : due; out.push({ kod: 'hrt_yillik', ad: 'HRT yıllık güvenlik kontrolü (MG, TVUS ET, TA, VTE)', due: yilDonumu, durum: durum(yilDonumu), not: 'HRT devam ederken her yıl.', takvim: 'ofis' }) }
-  if (y != null && y >= 9 && y <= 26) out.push({ kod: 'hpv_asi', ad: 'HPV aşısı (9–14 ideal, 26\'ya kadar yakalama)', due: null, durum: 'planli', not: 'Öneri; 2026\'da ulusal programa tam alınmadı — zorunlu olarak işaretlenmez.', takvim: 'ofis' })
+  if (y != null && y >= 9 && y <= 26) out.push({ kod: 'hpv_asi', ad: 'HPV aşısı (9–14 ideal, 26\'ya kadar yakalama)', due: null, durum: 'planli', not: 'Öneri; T.C. SB 2020 çocukluk dönemi takviminde HPV yok, güncel resmî takvim doğrulanamadı — zorunlu/ulusal program aşısı olarak işaretlenmez. Dozlar: Tarama ve takip kayıtları › HPV aşısı (DSÖ 2022 şeması).', takvim: 'ofis' })
   return out
 }
 

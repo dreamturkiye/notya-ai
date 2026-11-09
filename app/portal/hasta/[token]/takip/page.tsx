@@ -13,10 +13,15 @@ export default function HastaTrackingPage() {
   const [anket, setAnket] = useState(false)
   const dahiliyeModulu = portalModulAktif(data, 'dahiliye')
   useEffect(() => { if (!dahiliyeModulu) return; fetch(`/api/portal/hasta/${encodeURIComponent(token)}/dahiliye-anket`, { credentials: 'include' }).then((r) => (r.ok ? r.json() : null)).then((j) => setAnket(!!j?.uygun)).catch(() => undefined) }, [token, dahiliyeModulu])
+  // KD-TARAMA-01: Kadın Hastalıkları ve Doğum hekiminin açtığı PMS/PMDD semptom günlüğü (uygunluğu API karar verir: KD + açık günlük).
+  const [gunluk, setGunluk] = useState(false)
+  const jineModulu = portalModulAktif(data, 'jinekoloji')
+  useEffect(() => { if (!jineModulu) return; fetch(`/api/portal/hasta/${encodeURIComponent(token)}/kd-gunluk`, { credentials: 'include' }).then((r) => (r.ok ? r.json() : null)).then((j) => setGunluk(!!j?.uygun)).catch(() => undefined) }, [token, jineModulu])
   return (
     <>
       {/* MOBILE-REVIEW: .sg-fade parent gives the panel the portal's side inset; sg-hero-cta is a white hero pill (invisible on a white panel) */}
       {anket && <div className="sg-fade"><SoftPanel style={{ marginBottom: 12 }}><b>Muayene öncesi anket</b> — ev tansiyonu, şeker, kilo ve şikâyetlerinizi randevudan önce doktorunuza iletin.<div style={{ marginTop: 10 }}><Link href={`${basePath}/on-anket`} className="sg-pin-btn" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', color: '#f4f8fa' }}>Anketi doldur</Link></div></SoftPanel></div>}
+      {gunluk && <div className="sg-fade"><SoftPanel style={{ marginBottom: 12 }}><b>Semptom günlüğü</b> — doktorunuzun istediği günlük; her gün bir dakikada doldurun.<div style={{ marginTop: 10 }}><Link href={`${basePath}/semptom-gunlugu`} className="sg-pin-btn" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', color: '#f4f8fa' }}>Günlüğü doldur</Link></div></SoftPanel></div>}
       <TrackingView data={data} />
     </>
   )

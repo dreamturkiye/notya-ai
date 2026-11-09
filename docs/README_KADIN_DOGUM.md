@@ -33,3 +33,17 @@ Tables (migration 030): `jine_vizitler`, `serviks_taramalari`, `cybh_episodlari`
 
 ## Not in V1 (by spec)
 IVF (placeholder in Jinekoloji), national registry integration, e-imza, anestezi cross-view of C/S preop (data is there; visibility rule later), genel cerrahi reuse of the PPH shell.
+
+## KD-TARAMA-01 (2026-11-09) — gebelikte tiroid, HPV aşısı, SMA taşıyıcılık, PMS/PMDD günlüğü
+
+**Sınıf:** branşa özgü (yalnız Kadın Hastalıkları ve Doğum). **Kapı:** `kdTaramaBransi` (= `kadinDogumBransi`, doktorun kendi `users.specialty`'si) — `HastaGebelik` içinde `kdHekimi &&` (aile hekimliği aynı bölümü paylaşır ve görmez), `/api/doktor/kd-tarama` 403, portal günlüğü yalnız KD token'ı + açık günlükte. Testler: `lib/doktor/kdTaramalar.test.ts` (30/30 branş + Özel Branşlar döngüsü, iki yön), `lib/clinical/kdTaramalar.test.ts` (motor bilinen yanıtları), `lib/security/hasta-izolasyon.test.ts` (4 vaka).
+
+**Önceden olan (denetim):** TSH yalnız ilk vizit laboratuvarı olarak (`LabPaneli` tsh, `dogum-spine` tsh_1 0–8 hf, `test-windows` notu) — trimester aralığı/bayrak/sT4/izlem/LT4 yoktu. HPV yalnız `dueHesapla` içinde 9–26 yaş öneri satırı (kaynaksız "ulusal programa alınmadı" notu düzeltildi) — doz kaydı yoktu. SMA yalnız yenidoğan taraması (NTP SMA) ve tetkik kataloğunda "SMA taşıyıcılık (SMN1)" satırı — prenatal kayıt yoktu. PMS/PMDD hiç yoktu.
+
+**Kurulan:**
+- Paylaşılan motor `lib/clinical/kdTaramalar.ts` (yedi dalda birebir): kod döner, sayı/eşik tutmaz — her kural kaynağıyla çağırandan gelir.
+- Türkiye kuralları `specialties/kadin-dogum/protocols/kd-taramalar-tr.ts`: aralık sırası laboratuvar gebelik aralığı → ATA 2017 yedeği (1. trimester, 7. haftadan: gebelik dışı aralık −0,4/−0,5) → ATA Öneri 26 üst ~4,0 (1. trimester); 2.–3. trimester için ATA sayı vermez → bayrak yok. sT4 yalnız laboratuvarın yönteme özgü aralığı. İlk vizit TSH istemi TEMD 2023 Öneri 23A (evrensel). LT4 hedefi TEMD 23D (<2,5 / <3). İzlem: TEMD (ilk 24 hf 4 haftada bir, postpartum 6. hf) + ATA Öneri 33 (30. hf) + Öneri 48a/52 (hipertiroidi, TRAb 18–22 / 30–34). LT4: yalnız hekimin kendi notu.
+- HPV: doz kaydı (tip, tarih, doz no, bağışıklık durumu), şema DSÖ 2022 (ulusal program resmî kaynaktan doğrulanamadı; SB 2020 takviminde HPV yok), serviks tarama geçmişi aynı sekmede. Pediatri Dijital Aşı Onam sistemi kullanılmaz.
+- SMA: durum (önerilmedi/önerildi/istemedi/yapıldı), laboratuvar sonucu ve SMN1 kopya sayısı rapordaki gibi (yorumlanmaz), eş testi istemi, genetik danışma istemi; SB Evlilik Öncesi SMA Taşıyıcılık Taraması metni (saglik.gov.tr, 18.09.2023).
+- PMS/PMDD: DRSP ticari lisansı doğrulanamadı → Notya'nın özgün prospektif günlüğü (11 alan = DSM-5-TR B1–B4/C1–C7, 3 işlev alanı, 0–5 ölçek). Hasta Sağlığım › Takip › Semptom günlüğü'nden yalnız bugün/dün için doldurur. Döngü puanlama: adetten önceki 7 gün ve kanama bittikten sonraki 7 gün, her gün puanlanmış olmalı; B "belirgin" (4–5), C "var" (≥2), sonra "çok az/yok" (0–1) — günlüğün tasarım seçimi, doğrulanmış kesim değil. DSM-5-TR A–G kontrol listesi hekim işaretler (F yoksa "geçici"); yönetim seçenekleri ACOG CPG 7 (doz yok).
+- Migration 193 (`kd_tarama_kayitlari`, `kd_semptom_gunlugu`): yedi veritabanında uygulandı ve doğrulandı.

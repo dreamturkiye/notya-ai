@@ -159,6 +159,8 @@ type Hekim = {
   ameliyatNotu: string; kdRapor: string
   /** GENITAL-ESTETIK-01: an injection record (product name carries the marker) and an intimate photo (bytes carry the marker) */
   geKayit: string; geFoto: string
+  /** KD-TARAMA-01: a thyroid status record (risk list carries no marker) + an LT4 note carrying the marker, and an open PMS/PMDD diary */
+  kdTarama: string; kdGunluk: string
   /** Rows THIS doctor filed under the OTHER doctor's patient — the contamination a pre-fix IDOR left behind. */
   hileliSeans: string; hileliNot: string
 }
@@ -293,7 +295,11 @@ function hekimKur(harf: Harf): Hekim {
   db.ekle('genital_estetik_kayitlari', { doctor_id: id, patient_id: hasta, tur: 'foto_onam', islem_tarihi: '2026-10-01', endikasyon: null, urun_adi: null, lot_no: null, sonraki_tarih: null, veri_encrypted: encrypt(JSON.stringify({ tarih: '2026-10-01', belgeleme: true, egitimYayin: false, geriCekildi: null })), created_at: dun, updated_at: dun })
   const geKayit = db.ekle('genital_estetik_kayitlari', { doctor_id: id, patient_id: hasta, tur: 'enjeksiyon', islem_tarihi: '2026-10-02', endikasyon: 'medikal', urun_adi: `Urun ${m}`, lot_no: `LOT${harf}1`, sonraki_tarih: '2026-10-16', veri_encrypted: encrypt(JSON.stringify({ tarih: '2026-10-02', urunAdi: `Urun ${m}`, lot: `LOT${harf}1` })), created_at: dun, updated_at: dun }).id as string
   const geFoto = db.ekle('genital_estetik_fotolar', { doctor_id: id, patient_id: hasta, gorunum: 'perine', cekim_tarihi: '2026-10-02', mime: 'image/jpeg', boyut: 20, sha256: '0'.repeat(64), veri_encrypted: encryptBytes(Buffer.from(`SENTETIK-FOTO ${m}`)).toString('base64'), created_at: dun }).id as string
-  return { geKayit, geFoto, ameliyatNotu, kdRapor, fotoBelge, fotoOnceki, fotoSeans, yuklenenBelge, takip, defter, harf, id, token, hasta, seans, not, bekleyenNot, ilac, panel, belge, randevu, serbestRandevu, talep, hastaDerm, lezyon, dogum, bebekKart, portalToken, konu, asistanEylem, gozGoruntu, belgeAnaliz, dermAnaliz, konsultasyon, konsultasyonYanitli, kasaBelge, asiHatirlatma, eylemOneri, eylemKayit, sonlanmisIlac, kuyruk, gelenBelge, asistanOturum, hileliSeans: '', hileliNot: '' }
+  // KD-TARAMA-01: an LT4 note whose words carry the marker, and an open PMS/PMDD diary with one day
+  const kdTarama = db.ekle('kd_tarama_kayitlari', { doctor_id: id, patient_id: hasta, gebelik_id: null, tur: 'lt4_not', kayit_tarihi: '2026-10-01', veri: { tarih: '2026-10-01', metin: `Hekim notu ${m}`, hafta: null }, created_at: dun, updated_at: dun }).id as string
+  const kdGunluk = db.ekle('kd_tarama_kayitlari', { doctor_id: id, patient_id: hasta, gebelik_id: null, tur: 'pmdd_gunluk', kayit_tarihi: '2026-10-01', veri: { tarih: '2026-10-01', durum: 'acik' }, created_at: dun, updated_at: dun }).id as string
+  db.ekle('kd_semptom_gunlugu', { doctor_id: id, patient_id: hasta, gunluk_id: kdGunluk, tarih: '2026-10-02', adet: false, puan: { b1: 4 }, islev: {}, kaynak: 'portal', created_at: dun, updated_at: dun })
+  return { kdTarama, kdGunluk, geKayit, geFoto, ameliyatNotu, kdRapor, fotoBelge, fotoOnceki, fotoSeans, yuklenenBelge, takip, defter, harf, id, token, hasta, seans, not, bekleyenNot, ilac, panel, belge, randevu, serbestRandevu, talep, hastaDerm, lezyon, dogum, bebekKart, portalToken, konu, asistanEylem, gozGoruntu, belgeAnaliz, dermAnaliz, konsultasyon, konsultasyonYanitli, kasaBelge, asiHatirlatma, eylemOneri, eylemKayit, sonlanmisIlac, kuyruk, gelenBelge, asistanOturum, hileliSeans: '', hileliNot: '' }
 }
 
 /** Contamination X planted under Y's patient before the fixes (anon-key session insert, unchecked POSTs). */
@@ -428,6 +434,17 @@ const VAKALAR: Vaka[] = [
   { ad: 'POST /api/doktor/genital-estetik (tıbbi endikasyonlu seans, 18 yaş altı hasta)', red: 404,
     yazdi: (a) => tablo('genital_estetik_kayitlari').some((x) => x.patient_id === a.hasta && x.doctor_id === a.id && x.tur === 'enerji'),
     cagir: (r, a, h) => kdOlarak(() => coz(r.genitalEstetik.POST(iste('POST', '/api/doktor/genital-estetik', { token: a.token, govde: { patientId: h.hasta, tur: 'enerji', veri: { tarih: '2026-11-06', endikasyon: 'medikal', medikalGerekce: 'liken_skleroz', medikalAciklama: 'Biyopsiyle dogrulanmis liken skleroz', modalite: 'co2_lazer', cihaz: 'Sentetik', amac: 'liken_skleroz', bolgeler: ['vulva_labia'], gecis: 1, seansNo: 1, seriToplam: 1 } } })))) },
+  // KD-TARAMA-01 (2026-11-09): KD-only records; both synthetic doctors act as KD for the call
+  { ad: 'GET /api/doktor/kd-tarama (tiroid/HPV/SMA/PMDD)', red: 404, okur: true,
+    cagir: (r, a, h) => kdOlarak(() => coz(r.kdTarama.GET(iste('GET', `/api/doktor/kd-tarama?patientId=${h.hasta}`, { token: a.token })))) },
+  { ad: 'POST /api/doktor/kd-tarama (tiroid sonucu)', red: 404,
+    yazdi: (a) => tablo('kd_tarama_kayitlari').some((x) => x.patient_id === a.hasta && x.doctor_id === a.id && x.tur === 'tiroid_olcum'),
+    cagir: (r, a, h) => kdOlarak(() => coz(r.kdTarama.POST(iste('POST', '/api/doktor/kd-tarama', { token: a.token, govde: { patientId: h.hasta, tur: 'tiroid_olcum', veri: { tarih: '2026-11-01', hafta: 10, tsh: 2.1 } } })))) },
+  { ad: 'POST /api/doktor/kd-tarama (günlük günü: hasta + günlük kimliği)', red: 404,
+    yazdi: (a) => tablo('kd_semptom_gunlugu').some((x) => x.gunluk_id === a.kdGunluk && x.doctor_id === a.id && x.kaynak === 'klinik'),
+    cagir: (r, a, h) => kdOlarak(() => coz(r.kdTarama.POST(iste('POST', '/api/doktor/kd-tarama', { token: a.token, govde: { patientId: h.hasta, islem: 'gunluk_gunu', gunlukId: h.kdGunluk, gun: { tarih: '2026-11-01', adet: false, puan: { b2: 3 } } } })))) },
+  { ad: 'POST /api/doktor/kd-tarama (kendi hastası + yabancı günlük kimliği)', red: 404,
+    cagir: (r, a, h) => kdOlarak(() => coz(r.kdTarama.POST(iste('POST', '/api/doktor/kd-tarama', { token: a.token, govde: { patientId: a.hasta, islem: 'gunluk_gunu', gunlukId: h.kdGunluk, gun: { tarih: '2026-11-01', adet: false, puan: { b2: 3 } } } })))) },
   { ad: 'POST /api/doktor/genital-estetik/foto (yükleme)', red: 404,
     yazdi: (a) => tablo('genital_estetik_fotolar').filter((x) => x.patient_id === a.hasta && x.doctor_id === a.id).length > 1,
     cagir: (r, a, h) => kdOlarak(() => coz(r.genitalEstetikFoto.POST(iste('POST', '/api/doktor/genital-estetik/foto', { token: a.token, govde: { patientId: h.hasta, gorunum: 'perine', cekimTarihi: '2026-11-06', gorsel: GE_JPEG } })))) },
@@ -907,6 +924,7 @@ describe('HASTA-İZOLASYON: doktor A ve doktor B birbirinin hastasına hiçbir r
       ameliyatNotlari: await ice('app/api/doktor/ameliyat-notlari/route'),
       kdRaporlari: await ice('app/api/doktor/kd-raporlari/route'),
       genitalEstetik: await ice('app/api/doktor/genital-estetik/route'),
+      kdTarama: await ice('app/api/doktor/kd-tarama/route'),
       genitalEstetikFoto: await ice('app/api/doktor/genital-estetik/foto/route'),
       genitalEstetikFotoTek: await ice('app/api/doktor/genital-estetik/foto/[fotoId]/route'),
       disaAktar: await ice('app/api/doktor/hastalar/[id]/disa-aktar/route'),
