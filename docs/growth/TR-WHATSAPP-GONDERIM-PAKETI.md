@@ -1252,14 +1252,17 @@ Wave3’te SIRADAKİ diye önerildi → **HATA**. Ledger + early seed’e işlen
 ## W5-1. Uzm. Dr. Şilan Naycı ← GİTTİ (2026-11-09, WA-verified)
 **dermatoloji** · İstanbul/Başakşehir · WA: `+905325180906`
 
-## W5-2. Prof. Dr. Ahmet Zeki Işık ← SIRADAKİ
-**kadın-doğum** · İzmir · `+90 549 411 81 80` · WA: `+905494118180`  
-**Doğrulama:** DS `socialMedia[{type:whatsapp, url:905494118180}]`.
+## W5-2. Prof. Dr. Ahmet Zeki Işık ← GİTTİ (2026-11-09, WA-verified)
+**kadın-doğum** · İzmir · WA: `+905494118180`
+
+## W5-3. Op. Dr. Alev Timur ← SIRADAKİ
+**kadın-doğum** · İzmir · `+90 546 554 75 95` · WA: `+905465547595`  
+**Doğrulama:** DS `socialMedia[{type:whatsapp, url:5465547595}]`.
 
 **Ön kontrol:** ledger temiz. Gönder: yapıştır → kart **X** → gönder.
 
 ```
-Ahmet Zeki Hocam merhaba 👋
+Alev Hocam merhaba 👋
 Ben Kaan, *Notya*'dan yazıyorum.
 
 *Notya* — hekimler için yapay zekâ klinik asistanı.

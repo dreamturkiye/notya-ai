@@ -1,11 +1,11 @@
 # TR outreach durum (canlı)
 
-**Sıradaki:** Prof. Dr. **Ahmet Zeki Işık** · KD · İzmir · `+905494118180`  
-(WA-verified · wave5 Ankara/İzmir DS · 14 stok)
+**Sıradaki:** Op. Dr. **Alev Timur** · KD · İzmir · `+905465547595`  
+(WA-verified)
 
 ## Son (2026-11-09)
 
 | Kişi | Telefon | Sonuç |
 |------|---------|--------|
-| Uzm. Dr. Şilan Naycı | `+905325180906` | **gitti** |
-| Uzm. Dr. Münevver Bilgin | `+905304700789` | gitti |
+| Prof. Dr. Ahmet Zeki Işık | `+905494118180` | **gitti** |
+| Uzm. Dr. Şilan Naycı | `+905325180906` | gitti |
