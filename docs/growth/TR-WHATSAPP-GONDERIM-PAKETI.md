@@ -1216,14 +1216,17 @@ Wave3’te SIRADAKİ diye önerildi → **HATA**. Ledger + early seed’e işlen
 ## W4b-4. Uzm. Dr. Büşra Demirci ← GİTTİ (2026-11-09, WA-verified)
 **dermatoloji** · İstanbul/Sultangazi · WA: `+905539452762`
 
-## W4b-5. Uzm. Dr. Hülya Sağlam ← SIRADAKİ
-**dermatoloji** · İstanbul/Zeytinburnu · `+90 553 794 26 00` · WA: `+905537942600`  
+## W4b-5. Uzm. Dr. Hülya Sağlam ← GİTTİ (2026-11-09, WA-verified)
+**dermatoloji** · İstanbul/Zeytinburnu · WA: `+905537942600`
+
+## W4b-6. Uzm. Dr. İhsaniye Dönmez Çiçek ← SIRADAKİ
+**dermatoloji** · İstanbul/Kağıthane · `+90 543 595 20 71` · WA: `+905435952071`  
 **Doğrulama:** DS `socialMedia[{type:whatsapp}]` eşleşti.
 
 **Ön kontrol:** ledger temiz. Gönder: yapıştır → kart **X** → gönder.
 
 ```
-Hülya Hocam merhaba 👋
+İhsaniye Hocam merhaba 👋
 Ben Kaan, *Notya*'dan yazıyorum.
 
 *Notya* — hekimler için yapay zekâ klinik asistanı.
