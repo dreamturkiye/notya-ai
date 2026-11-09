@@ -1146,13 +1146,16 @@ Tanıtıma vakit yoksa ücretsiz denemeyi hemen açabiliyoruz.
 
 # Wave 3 — taze `5xx` (call-ready, tekil mobil)
 
-## W3-1. Op. Dr. Özge Kaymaz Yılmaz ← SIRADAKİ
-**kadin-dogum** · İstanbul/Beşiktaş · `+90 566 882 20 42` · WA: `+905668822042`
+## W3-1. Op. Dr. Özge Kaymaz Yılmaz ← WA YOK / GİTMEDİ
+**kadin-dogum** · İstanbul/Beşiktaş · `+90 566 882 20 42` — numara kötü, atlandı.
+
+## W3-2. Uzm. Dr. Aylin Sema Tırpancı ← SIRADAKİ
+**dermatoloji** · İstanbul/Başakşehir · `+90 505 849 84 33` · WA: `+905058498433`
 
 **Gönder:** yapıştır → kart çıkarsa **X** → gönder.
 
 ```
-Özge Hocam merhaba 👋
+Aylin Hocam merhaba 👋
 Ben Kaan, *Notya*'dan yazıyorum.
 
 *Notya* — hekimler için yapay zekâ klinik asistanı.
@@ -1160,12 +1163,12 @@ Muayeneyi dinler, notunuzu yazar, reçete ve rapor taslağını hazırlar, hasta
 Her karar *sizin onayınızla*.
 40'tan fazla branşı kendi ihtiyaçlarıyla destekliyoruz.
 
-*Kadın doğumda*
-- Gebelik takvimi ve izlem
-- Doppler'li USG ve yapılandırılmış NST
-- Obstetrik risk (preeklampsi, GDM, SSVD)
-- Sezaryen ve ameliyat notları
-- Doğum epikrizi ve antetli baskı
+*Dermatolojide*
+- PASI / EASI
+- İzotretinoin GÖP kapısı
+- Fototerapi defteri
+- Yama (D2/D4) ve dermoskopi
+- Biyolojik SUT taslağı
 
 Tipik bir günde yaklaşık *1,5-2 saat* kazanç.
 Kayıtlar daha düzenli → bakım kalitesi de yükseliyor.
