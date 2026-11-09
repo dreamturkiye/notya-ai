@@ -1,29 +1,32 @@
 skor,isim,brans,sehir,ilce,telefon,mobil_yeni,url,durum
-"90","Doç. Dr. Aysun Fırat","kadin-dogum","istanbul","Zeytinburnu","+905017287587","+905017287587","https://www.doktorsitesi.com/aysun-firat/kadin-hastaliklari-ve-dogum/istanbul","wa_yok"
-"90","Doç. Dr. Meryem Gencer","kadin-dogum","istanbul","Başakşehir","+905307238039","+905307238039","https://www.doktorsitesi.com/doc-dr-meryem-gencer/kadin-hastaliklari-ve-dogum/istanbul","yeni"
-"90","Op. Dr. Abdulkadir Güllüce","kadin-dogum","istanbul","Beylikdüzü","+905076220434","+905076220434","https://www.doktorsitesi.com/op-dr-abdulkadir-gulluce/kadin-hastaliklari-ve-dogum/istanbul","yeni"
-"90","Op. Dr. Burcu Çetinkaya","kadin-dogum","istanbul","Beyoğlu","+905054504712","+905054504712","https://www.doktorsitesi.com/op-dr-burcu-cetinkaya/kadin-hastaliklari-ve-dogum/istanbul","yeni"
-"95","Op. Dr. Cengiz Sağıroğlu","kadin-dogum","istanbul","Kadıköy","+905550526458","+905550526458","https://www.doktorsitesi.com/op-dr-cengiz-sagiroglu/kadin-hastaliklari-ve-dogum-perinatoloji-ureme-endokrinolojisi-ve-infertilite/istanbul","yeni"
-"95","Op. Dr. Çiğdem Yavuz","kadin-dogum","istanbul","Bakırköy","+905347655393","+905347655393","https://www.doktorsitesi.com/op-dr-cigdem-yavuz-yurtsever/kadin-hastaliklari-ve-dogum/istanbul","yeni"
-"90","Op. Dr. Ece Meltem Şafak","kadin-dogum","istanbul","Çekmeköy","+905323655727","+905323655727","https://www.doktorsitesi.com/op-dr-ece-meltem-safak/kadin-hastaliklari-ve-dogum/istanbul","yeni"
-"90","Op. Dr. Elif Esra Uyar","kadin-dogum","istanbul","Pendik","+905734667487","+905734667487","https://www.doktorsitesi.com/op-dr-elif-esra-uyar/kadin-hastaliklari-ve-dogum/istanbul","wa_yok"
-"90","Op. Dr. Halil Abdülrezzak","kadin-dogum","istanbul","Büyükçekmece","+905077011090","+905077011090","https://www.doktorsitesi.com/op-dr-halil-abdulrezzak/kadin-hastaliklari-ve-dogum/istanbul","yeni"
-"90","Op. Dr. İrem Yengel","kadin-dogum","istanbul","Küçükçekmece","+905304702388","+905304702388","https://www.doktorsitesi.com/op-dr-irem-yengel/kadin-hastaliklari-ve-dogum/istanbul","yeni"
-"90","Op. Dr. Kadriye Şener","kadin-dogum","istanbul","Ümraniye","+905056222683","+905056222683","https://www.doktorsitesi.com/op-dr-kadriye-sener/kadin-hastaliklari-ve-dogum/istanbul","yeni"
-"90","Op. Dr. Murat Öztürk","kadin-dogum","istanbul","Bahçelievler","+905388714057","+905388714057","https://www.doktorsitesi.com/op-dr-doktor-murat-ozturk/kadin-hastaliklari-ve-dogum/istanbul","wa_yok"
-"95","Op. Dr. Ömer İlker Göçmen","kadin-dogum","istanbul","Ataşehir","+905556959898","+905556959898","https://www.doktorsitesi.com/op-dr-omer-ilker-gocmen/kadin-hastaliklari-ve-dogum/istanbul","yeni"
-"90","Op. Dr. Sümeyra Okur Salman","kadin-dogum","istanbul","Ümraniye","+905518260718","+905518260718","https://www.doktorsitesi.com/op-dr-sumeyra-okur-salman/kadin-hastaliklari-ve-dogum/istanbul","yeni"
-"90","Op. Dr. Şerife Tuğba Kahraman","kadin-dogum","istanbul","Küçükçekmece","+905065351726","+905065351726","https://www.doktorsitesi.com/op-dr-serife-tugba-kahraman/kadin-hastaliklari-ve-dogum/istanbul","yeni"
-"95","Op. Dr. Timuçin Timuroğlu","kadin-dogum","istanbul","Kadıköy","+905425153819","+905425153819","https://www.doktorsitesi.com/op-dr-timucin-timuroglu/kadin-hastaliklari-ve-dogum/istanbul","yeni"
-"95","Op. Dr. Tonguç Arslan","kadin-dogum","istanbul","Üsküdar","+905324864916","+905324864916","https://www.doktorsitesi.com/op-dr-tonguc-arslan/kadin-hastaliklari-ve-dogum/istanbul","yeni"
-"95","Op. Dr. Vefa Yılmazer","kadin-dogum","istanbul","Üsküdar","+905077443817","+905077443817","https://www.doktorsitesi.com/op-dr-vefa-yilmazer/kadin-hastaliklari-ve-dogum/istanbul","yeni"
-"90","Op. Dr. Yasemin Çakar Kement","kadin-dogum","istanbul","Ümraniye","+905527482045","+905527482045","https://www.doktorsitesi.com/op-dr-yasemin-cakar-kement/kadin-hastaliklari-ve-dogum/istanbul","yeni"
-"95","Op. Dr. Yeşim Timuroğlu","kadin-dogum","istanbul","Üsküdar","+905354675994","+905354675994","https://www.doktorsitesi.com/yesim-timuroglu/kadin-hastaliklari-ve-dogum/istanbul","wa_yok"
-"95","Prof. Dr. Aynur Erşahin","kadin-dogum","istanbul","Şişli","+905056449643","+905056449643","https://www.doktorsitesi.com/prof-dr-aynur-ersahin/kadin-hastaliklari-ve-dogum/istanbul","yeni"
-"95","Prof. Dr. Eralp Başer","kadin-dogum","istanbul","Şişli","+905334330282","+905334330282","https://www.doktorsitesi.com/prof-dr-eralp-baser/kadin-hastaliklari-ve-dogum-jinekolojik-onkoloji/istanbul","yeni"
-"90","Uzm. Dr. Gülcan Akverdi Buyruk","kadin-dogum","istanbul","Gaziosmanpaşa","+905893094133","+905893094133","https://www.doktorsitesi.com/uzm-dr-gulcan-akverdi-buyruk/kadin-hastaliklari-ve-dogum/istanbul","wa_yok"
-"95","Dr. Öğr. Üyesi Neslihan Fişek İzci","dermatoloji","istanbul","Kadıköy","+905322903900","+905322903900","https://www.doktorsitesi.com/uzm-dr-neslihan-fisek-izci/dermatoloji/istanbul","yeni"
-"95","Prof. Dr. Mustafa Özdemir","dermatoloji","istanbul","Bakırköy","+905522656436","+905522656436","https://www.doktorsitesi.com/prof-dr-mustafa-ozdemir/dermatoloji/istanbul","yeni"
-"95","Uzm. Dr. Aida Berenjian","dermatoloji","istanbul","Ataşehir","+905333378299","+905333378299","https://www.doktorsitesi.com/uzm-dr-aida-berenjian/dermatoloji/istanbul","yeni"
-"95","Uzm. Dr. Deniz Küçükay","dermatoloji","istanbul","Kadıköy","+905533015882","+905533015882","https://www.doktorsitesi.com/uzm-dr-deniz-kucukay/dermatoloji/istanbul","yeni"
-"95","Uzm. Dr. Emine Dilek Bahçekapılı Yıldırım","dermatoloji","istanbul","Bakırköy","+905309054461","+905309054461","https://www.doktorsitesi.com/uzm-dr-emine-dilek-bahcekapili-yildirim/dermatoloji/istanbul","yeni"
+90,Dr. Öğr. Üyesi Hazel Çağın Kuzey,kadin-dogum,istanbul,Küçükçekmece,+905051615779,+905051615779,https://www.doktorsitesi.com/dr-ogr-uyesi-hazel-cagin-kuzey/kadin-hastaliklari-ve-dogum/istanbul,siradaki
+90,Doç. Dr. Mert Turğal,kadin-dogum,istanbul,Zeytinburnu,+905055171194,+905055171194,https://www.doktorsitesi.com/doc-dr-mert-turgal/kadin-hastaliklari-ve-dogum-perinatoloji/istanbul,yeni
+90,Op. Dr. Burcu Gülşah Balcı,kadin-dogum,istanbul,Esenler,+905113349926,+905113349926,https://www.doktorsitesi.com/op-dr-burcu-gulsah-balci/kadin-hastaliklari-ve-dogum/istanbul,yeni
+90,Op. Dr. Merve Akın,kadin-dogum,istanbul,Esenyurt,+905638774136,+905638774136,https://www.doktorsitesi.com/merve-akin/kadin-hastaliklari-ve-dogum/istanbul,yeni
+90,Op. Dr. Tuğba İleri Yay,kadin-dogum,istanbul,Ümraniye,+905324992960,+905324992960,https://www.doktorsitesi.com/op-dr-tugba-ileri-yay/kadin-hastaliklari-ve-dogum/istanbul,yeni
+90,Op. Dr. Matanat Chankaya,kadin-dogum,istanbul,Ümraniye,+905652173900,+905652173900,https://www.doktorsitesi.com/op-dr-matanat-chankaya/kadin-hastaliklari-ve-dogum/istanbul,yeni
+90,Prof. Dr. Mehmet Aytaç Yüksel,kadin-dogum,istanbul,Küçükçekmece,+905076628496,+905076628496,https://www.doktorsitesi.com/prof-dr-mehmet-aytac-yuksel/kadin-hastaliklari-ve-dogum/istanbul,yeni
+65,Doç. Dr. Mehmet Şükrü Budak,kadin-dogum,istanbul,Bahçelievler,+905519417527,+905519417527,https://www.doktorsitesi.com/doc-dr-mehmet-sukru-budak/kadin-hastaliklari-ve-dogum/istanbul,yeni
+95,Uzm. Dr. Hasan Alakbarov,dermatoloji,istanbul,Bakırköy,+905010614654,+905010614654,https://www.doktorsitesi.com/hasan-alakbarov/dermatoloji/istanbul,yeni
+95,Uzm. Dr. Kübra Esen,dermatoloji,istanbul,Kadıköy,+905439630043,+905439630043,https://www.doktorsitesi.com/kubra-esen/dermatoloji/istanbul,yeni
+90,Uzm. Dr. İhsaniye Dönmez Çiçek,dermatoloji,istanbul,Kağıthane,+905435952071,+905435952071,https://www.doktorsitesi.com/uzm-dr-ihsaniye-donmez-cicek/dermatoloji/istanbul,yeni
+90,Uzm. Dr. Şilan Naycı,dermatoloji,istanbul,Başakşehir,+905325180906,+905325180906,https://www.doktorsitesi.com/uzm-dr-silan-nayci/dermatoloji/istanbul,yeni
+90,Dr. Bahar Sevimli Dikicier,dermatoloji,istanbul,Küçükçekmece,+905695272022,+905695272022,https://www.doktorsitesi.com/bahar-sevimli-dikicier/dermatoloji/istanbul,yeni
+90,Dr. Öğr. Üyesi Seher Küçükoğlu Cesur,dermatoloji,istanbul,Bahçelievler,+905302099311,+905302099311,https://www.doktorsitesi.com/dr-ogr-uyesi-seher-kucukoglu-cesur/dermatoloji/istanbul,yeni
+90,Prof. Dr. Ali Balevi,dermatoloji,istanbul,Bağcılar,+905110887657,+905110887657,https://www.doktorsitesi.com/ali-balevi/dermatoloji/istanbul,yeni
+90,Uzm. Dr. Ayşenur Durdu,dermatoloji,istanbul,Küçükçekmece,+905086546310,+905086546310,https://www.doktorsitesi.com/aysenur-durdu/dermatoloji/istanbul,yeni
+90,Uzm. Dr. Büşra Demirci,dermatoloji,istanbul,Sultangazi,+905539452762,+905539452762,https://www.doktorsitesi.com/busra-demirci/dermatoloji/istanbul,yeni
+90,Uzm. Dr. Hülya Sağlam,dermatoloji,istanbul,Zeytinburnu,+905537942600,+905537942600,https://www.doktorsitesi.com/uzm-dr-hulya-saglam/dermatoloji/istanbul,yeni
+90,Uzm. Dr. Volkan Tektaş,dermatoloji,istanbul,Çekmeköy,+905496060412,+905496060412,https://www.doktorsitesi.com/uzm-dr-volkan-tektas/dermatoloji/istanbul,yeni
+95,Prof. Dr. Erkan Çakır,pediatri,istanbul,Beşiktaş,+905332911526,+905332911526,https://www.doktorsitesi.com/prof-dr-erkan-cakir/cocuk-sagligi-ve-hastaliklari-cocuk-gogus-hastaliklari/istanbul,yeni
+95,Prof. Dr. Mahir İğde,pediatri,istanbul,Şişli,+905335794080,+905335794080,https://www.doktorsitesi.com/prof-dr-mahir-igde/cocuk-sagligi-ve-hastaliklari-cocuk-immunolojisi-ve-alerji-hastaliklari/istanbul,yeni
+95,Prof. Dr. Sakine Işık,pediatri,istanbul,Ataşehir,+905338978090,+905338978090,https://www.doktorsitesi.com/prof-dr-sakine-isik/cocuk-sagligi-ve-hastaliklari-cocuk-immunolojisi-ve-alerji-hastaliklari/istanbul,yeni
+95,Uzm. Dr. Emel Şen,pediatri,istanbul,Kadıköy,+905323930594,+905323930594,https://www.doktorsitesi.com/uzm-dr-emel-sen/cocuk-sagligi-ve-hastaliklari/istanbul,yeni
+90,Prof. Dr. Kürşad Aydın,pediatri,istanbul,Küçükçekmece,+905714285700,+905714285700,https://www.doktorsitesi.com/prof-dr-kursad-aydin/cocuk-sagligi-ve-hastaliklari-cocuk-norolojisi/istanbul,yeni
+90,Prof. Dr. İlhan Asya Tanju,pediatri,istanbul,Maltepe,+905415438776,+905415438776,https://www.doktorsitesi.com/prof-dr-ilhan-asya-tanju/cocuk-sagligi-ve-hastaliklari/istanbul,yeni
+90,Uzm. Dr. Alper Orhon,pediatri,istanbul,Çekmeköy,+905521624926,+905521624926,https://www.doktorsitesi.com/uzm-dr-alper-orhon/cocuk-sagligi-ve-hastaliklari/istanbul,yeni
+90,Uzm. Dr. Dora Selda Seçim,pediatri,istanbul,Küçükçekmece,+905790533361,+905790533361,https://www.doktorsitesi.com/dora-selda-secim/cocuk-sagligi-ve-hastaliklari/istanbul,yeni
+90,Uzm. Dr. Hale Molla,pediatri,istanbul,Başakşehir,+905300240488,+905300240488,https://www.doktorsitesi.com/uzm-dr-hale-molla/cocuk-sagligi-ve-hastaliklari/istanbul,yeni
+90,Uzm. Dr. Münevver Bilgin,pediatri,istanbul,Başakşehir,+905304700789,+905304700789,https://www.doktorsitesi.com/uzm-dr-munevver-bilgin/cocuk-sagligi-ve-hastaliklari-akupunktur-sertifikali-medikal-estetik/istanbul,yeni
+70,Prof. Dr. Eda Kepenekli,pediatri,istanbul,Kadıköy,+905401779096,+905401779096,https://www.doktorsitesi.com/prof-dr-eda-kepenekli/cocuk-sagligi-ve-hastaliklari-cocuk-enfeksiyon-hastaliklari/istanbul,yeni
+65,Uzm. Dr. Beyhan Küçükbayrak,pediatri,istanbul,Bağcılar,+905475430688,+905475430688,https://www.doktorsitesi.com/uzm-dr-beyhan-kucukbayrak/cocuk-sagligi-ve-hastaliklari/istanbul,yeni

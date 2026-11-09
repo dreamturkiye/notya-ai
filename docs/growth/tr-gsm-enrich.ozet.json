@@ -1,0 +1,27 @@
+{
+  "tarih": "2026-11-09T11:37:10.320Z",
+  "scanned": 153,
+  "fail": 0,
+  "whatsapp_mobil_adet": 37,
+  "profile_new": 28,
+  "call_ready_patched": 32,
+  "brans": {
+    "kadin-dogum": 9,
+    "dermatoloji": 15,
+    "pediatri": 13
+  },
+  "siradaki": {
+    "skor": "90",
+    "isim": "Dr. Öğr. Üyesi Hazel Çağın Kuzey",
+    "brans": "kadin-dogum",
+    "sehir": "istanbul",
+    "ilce": "Küçükçekmece",
+    "telefon": "+905051615779",
+    "mobil_yeni": "+905051615779",
+    "url": "https://www.doktorsitesi.com/dr-ogr-uyesi-hazel-cagin-kuzey/kadin-hastaliklari-ve-dogum/istanbul",
+    "durum": "siradaki",
+    "gsm_score": 100,
+    "kaynak_enrich": "seed"
+  },
+  "not": "GSM-only enrich (5xx). 0850/588 rejected. Ledger excluded. Mobiles usually have WhatsApp."
+}

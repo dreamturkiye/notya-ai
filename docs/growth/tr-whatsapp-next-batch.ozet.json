@@ -1,10 +1,20 @@
 {
-  "tarih": "2026-11-06T15:00:27.148Z",
-  "whatsapp_mobil_adet": 28,
+  "tarih": "2026-11-09T11:38:27.892686+00:00",
+  "whatsapp_mobil_adet": 31,
   "brans": {
-    "kadin-dogum": 23,
-    "dermatoloji": 5,
-    "pediatri": 0
+    "kadin-dogum": 8,
+    "dermatoloji": 11,
+    "pediatri": 12
   },
-  "sonraki": "Cengiz Sağıroğlu yarın 10:00 TR; sessiz saat 20:00+"
+  "siradaki": {
+    "skor": "90",
+    "isim": "Dr. Öğr. Üyesi Hazel Çağın Kuzey",
+    "brans": "kadin-dogum",
+    "sehir": "istanbul",
+    "ilce": "Küçükçekmece",
+    "telefon": "+905051615779",
+    "url": "https://www.doktorsitesi.com/dr-ogr-uyesi-hazel-cagin-kuzey/kadin-hastaliklari-ve-dogum/istanbul",
+    "durum": "siradaki"
+  },
+  "not": "GSM enrich Doktorsitesi; Ankara+Izmir harvest running merge-safe"
 }
