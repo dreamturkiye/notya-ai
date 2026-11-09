@@ -1189,13 +1189,16 @@ Wave3’te SIRADAKİ diye önerildi → **HATA**. Ledger + early seed’e işlen
 ## W4-5. Op. Dr. Tuğba İleri Yay ← GİTTİ (2026-11-09)
 **kadin-dogum** · İstanbul/Ümraniye · WA: `+905324992960`
 
-## W4-6. Op. Dr. Matanat Chankaya ← SIRADAKİ
-**kadin-dogum** · İstanbul/Ümraniye · `+90 565 217 39 00` · WA: `+905652173900`
+## W4-6. Op. Dr. Matanat Chankaya ← WA YOK / GİTMEDİ
+**kadin-dogum** · İstanbul/Ümraniye · `+905652173900` — yanlış numara; atlandı.
+
+## W4-7. Prof. Dr. Mehmet Aytaç Yüksel ← SIRADAKİ
+**kadin-dogum** · İstanbul/Küçükçekmece · `+90 507 662 84 96` · WA: `+905076628496`
 
 **Ön kontrol:** ledger / early-batch / paket GİTTİ — temiz. Gönder: yapıştır → kart **X** → gönder.
 
 ```
-Matanat Hocam merhaba 👋
+Mehmet Hocam merhaba 👋
 Ben Kaan, *Notya*'dan yazıyorum.
 
 *Notya* — hekimler için yapay zekâ klinik asistanı.
