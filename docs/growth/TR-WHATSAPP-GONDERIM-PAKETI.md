@@ -1166,13 +1166,20 @@ Tanıtıma vakit yoksa ücretsiz denemeyi hemen açabiliyoruz.
 **kadin-dogum** · İstanbul/Ümraniye · `+90 534 848 90 34` · WA: `+905348489034`  
 Wave3’te SIRADAKİ diye önerildi → **HATA**. Ledger + early seed’e işlendi. **TEKRAR YAZMA.**
 
-## W3-7. Prof. Dr. Süha Sönmez ← SIRADAKİ
-**kadin-dogum** · İstanbul/Bahçelievler · `+90 541 441 81 95` · WA: `+905414418195`
+## W3-7. Prof. Dr. Süha Sönmez ← GİTTİ (2026-11-09)
+**kadin-dogum** · İstanbul/Bahçelievler · WA: `+905414418195`
+
+---
+
+# Wave 4 — enrich (Doktorsitesi profil WA / tel, ledger-temiz)
+
+## W4-1. Dr. Öğr. Üyesi Hazel Çağın Kuzey ← SIRADAKİ
+**kadin-dogum** · İstanbul/Küçükçekmece · `+90 505 161 57 79` · WA: `+905051615779`
 
 **Ön kontrol:** ledger / early-batch / paket GİTTİ — temiz. Gönder: yapıştır → kart **X** → gönder.
 
 ```
-Süha Hocam merhaba 👋
+Hazel Hocam merhaba 👋
 Ben Kaan, *Notya*'dan yazıyorum.
 
 *Notya* — hekimler için yapay zekâ klinik asistanı.
