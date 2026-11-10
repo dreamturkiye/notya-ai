@@ -10,6 +10,10 @@
  * close it; the trigger is a 40px target; on a narrow phone the brief docks above the bottom of the screen so it
  * can never overflow. Seen state and the Settings switch live in the browser, per device (no table, no migration —
  * deliberate v1, same decision as the Turkish product's lib/doktor/ipucu/ipucuDurumu.ts).
+ *
+ * IPUCU-TETIK-01 (2026-11-10, core, the same look as Türkiye's components/doktor/IpucuBaloncugu.tsx): the trigger is
+ * a small inline "?" icon (22px visual, 44px hit area via negative margins so it never pushes the heading onto a new
+ * line), muted chrome ink on a transparent ground. Accessible name and tooltip: the pack's `ipuclari.sayfa`.
  */
 
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
@@ -128,10 +132,13 @@ export function Ipucu({ m, bolum }: { m: UygulamaMetni; bolum: UlkeIpucuBolumu }
   }, [acik, kapat])
 
   if (!sozler || !icerik || !etkin) return null
+  const etiket = sozler.sayfa ?? sozler.ac.replace('%', icerik.baslik)
 
   return (
     <span ref={kokRef} className="uza-ipucu-kok" data-alan="ipucu" data-bolum={bolum} style={{ position: 'relative', display: 'inline-flex', verticalAlign: 'middle' }}>
       <style>{`
+        .uza-ipucu-tetik:focus-visible .uza-ipucu-ikon { outline: 2px solid var(--uza-cam); outline-offset: 2px; }
+        .uza-ipucu-tetik:hover .uza-ipucu-ikon { color: var(--uza-cam); }
         @media (max-width: 480px) {
           .uza-ipucu-balon {
             position: fixed !important;
@@ -146,33 +153,60 @@ export function Ipucu({ m, bolum }: { m: UygulamaMetni; bolum: UlkeIpucuBolumu }
       `}</style>
       <button
         type="button"
-        aria-label={sozler.ac.replace('%', icerik.baslik)}
+        className="uza-ipucu-tetik"
+        aria-label={etiket}
         aria-expanded={acik}
+        title={etiket}
         data-eylem="ipucu-ac"
         onClick={() => {
           gorulduIsaretle(bolum)
           setAcik((v) => !v)
         }}
         style={{
-          width: 40,
-          height: 40,
-          minWidth: 40,
+          // 44px hit area, 22px visual: the negative margin keeps the footprint at 22px, so the icon stays on the
+          // heading's line instead of wrapping under it as a large lone circle.
+          width: 44,
+          height: 44,
+          minWidth: 44,
+          margin: -11,
+          padding: 0,
+          border: 'none',
+          background: 'transparent',
           borderRadius: 999,
-          border: '1.5px solid var(--uza-cizgi)',
-          background: acik ? '#E4F3F1' : 'rgba(255,255,255,0.72)',
-          color: acik ? 'var(--uza-cam)' : 'var(--uza-soluk)',
-          fontSize: 16,
-          fontWeight: 700,
-          fontFamily: 'var(--uza-sans)',
           cursor: 'pointer',
           display: 'inline-flex',
           alignItems: 'center',
           justifyContent: 'center',
           flexShrink: 0,
-          lineHeight: 1,
+          verticalAlign: 'middle',
+          WebkitTapHighlightColor: 'transparent',
         }}
       >
-        ?
+        <span
+          aria-hidden="true"
+          className="uza-ipucu-ikon"
+          style={{
+            width: 22,
+            height: 22,
+            boxSizing: 'border-box',
+            borderRadius: 999,
+            border: '1.5px solid currentColor',
+            background: acik ? '#E4F3F1' : 'transparent',
+            color: acik ? 'var(--uza-cam)' : 'var(--uza-soluk)',
+            opacity: acik ? 1 : 0.85,
+            fontSize: 12.5,
+            fontWeight: 700,
+            fontStyle: 'normal',
+            letterSpacing: 0,
+            fontFamily: 'var(--uza-sans)',
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            lineHeight: 1,
+          }}
+        >
+          ?
+        </span>
       </button>
 
       {acik && (
@@ -194,6 +228,13 @@ export function Ipucu({ m, bolum }: { m: UygulamaMetni; bolum: UlkeIpucuBolumu }
             padding: '14px 16px 12px',
             fontFamily: 'var(--uza-sans)',
             textAlign: 'left',
+            // The trigger may sit inside a heading (IPUCU-TETIK-01): never inherit its size, weight, spacing or nowrap.
+            whiteSpace: 'normal',
+            letterSpacing: 'normal',
+            fontWeight: 400,
+            fontStyle: 'normal',
+            lineHeight: 1.4,
+            color: 'var(--uza-murekkep)',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>

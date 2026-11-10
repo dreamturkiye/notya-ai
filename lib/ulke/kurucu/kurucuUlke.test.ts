@@ -29,6 +29,9 @@ type Satir = Record<string, unknown>
 let tablolar: Record<string, Satir[]> = {}
 let authHesaplari: Satir[] = []
 let ulkesizSorgu: string[] = []
+// ZIYARET-SAYACI-01: the visit counter's stats function (migration 194), answered by the stand-in.
+let rpcCagrilari: Array<{ ad: string; args: Record<string, unknown> }> = []
+const ORNEK_ZIYARET = { ilkGun: '2026-11-10', bugun: '2026-11-10', gunluk: [{ d: '2026-11-10', v: 4, p: 6 }], haftalik: [], sayfalar: [{ ad: '/', v: 4, p: 6 }], kaynaklar: [], cihazlar: [] }
 
 /** A small stand-in: select/update with eq / is / not-is / gte / limit, count+head, and a check that ulke = <country> is on every statement. */
 function sorgu(ad: string) {
@@ -60,7 +63,7 @@ function sorgu(ad: string) {
   return q
 }
 function sahteCreateClient() {
-  return { from: (t: string) => sorgu(t), rpc: async () => ({ data: null, error: null }), auth: { admin: { listUsers: async () => ({ data: { users: authHesaplari }, error: null }) }, getUser: async () => ({ data: { user: null }, error: { message: 'no' } }) } }
+  return { from: (t: string) => sorgu(t), rpc: async (ad: string, args: Record<string, unknown>) => { rpcCagrilari.push({ ad, args }); return ad === 'site_visit_stats' ? { data: ORNEK_ZIYARET, error: null } : { data: null, error: null } }, auth: { admin: { listUsers: async () => ({ data: { users: authHesaplari }, error: null }) }, getUser: async () => ({ data: { user: null }, error: { message: 'no' } }) } }
 }
 {
   const pkgYolu = require.resolve('@supabase/supabase-js/package.json')
@@ -88,7 +91,7 @@ before(async () => {
 })
 
 let ipSayaci = 0
-beforeEach(() => { tablolar = {}; authHesaplari = []; ulkesizSorgu = []; imza.imzaBellegiTemizle(); process.env.FOUNDER_STATS_SECRET = GIZLI })
+beforeEach(() => { tablolar = {}; authHesaplari = []; ulkesizSorgu = []; rpcCagrilari = []; imza.imzaBellegiTemizle(); process.env.FOUNDER_STATS_SECRET = GIZLI })
 
 function tohum() {
   const simdi = new Date().toISOString()
@@ -114,6 +117,21 @@ async function iste(baslik?: string, ip = `10.0.0.${++ipSayaci % 250}`) {
 }
 
 describe(`founder-stats (${ULKE})`, () => {
+  it('ZIYARET-SAYACI-01: the visit summary goes only to a valid signature — refused requests get 404, no visitor data, no stats query', async () => {
+    tohum()
+    for (const b of [undefined, 'garbage', imza.imzaUret('z'.repeat(48), ULKE)]) {
+      const r = await iste(b)
+      assert.equal(r.durum, 404)
+      assert.equal(JSON.stringify(r.veri).includes('gunluk'), false)
+    }
+    assert.equal(rpcCagrilari.length, 0)
+    const { durum, veri } = await iste(imza.imzaUret(GIZLI, ULKE))
+    assert.equal(durum, 200)
+    assert.deepEqual(rpcCagrilari.map((c) => [c.ad, c.args.p_ulke]), [['site_visit_stats', ULKE]])
+    assert.equal(veri.ziyaret.ilkGun, '2026-11-10')
+    assert.equal(tipler.ulkeYanitiTemizle(ULKE, veri)!.ziyaret!.gunluk[0].v, 4)
+    assert.equal(typeof veri.denemeVar, 'boolean')
+  })
   it('refuses a missing, garbage, wrong-secret, expired, replayed or other-country signature with 404', async () => {
     tohum()
     assert.equal((await iste()).durum, 404)

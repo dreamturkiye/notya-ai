@@ -12,6 +12,8 @@ import { sayfaMeta } from '@/lib/ulke/seo/meta'
 import { acilis } from '@/lib/ulke/arayuz'
 import { sayfaDili, type AramaParametreleri } from '@/lib/ulke/sayfaDili'
 import { ozellikAcik } from '@/lib/ulke/ulke'
+import ZiyaretSayaci from '@/components/ziyaret/ZiyaretSayaci'
+import { ulkeYolOnEki } from '@/lib/ulke/yol'
 
 export const dynamic = 'force-dynamic'
 
@@ -29,11 +31,14 @@ export default function UlkeKlinikAcilisSayfasi({ searchParams }: { searchParams
   if (!icerik || !ozellikAcik('acilisSayfasi')) notFound()
   const ham = searchParams?.dil
   return (
-    <UlkeKlinikSayfasi
-      acilis={icerik}
-      dil={sayfaDili(searchParams)}
-      istenenDil={(Array.isArray(ham) ? ham[0] : ham) ?? null}
-      iletisimEposta={process.env.NOTYA_ILETISIM_EPOSTA?.trim() || null}
-    />
+    <>
+      <ZiyaretSayaci onEk={ulkeYolOnEki()} />
+      <UlkeKlinikSayfasi
+        acilis={icerik}
+        dil={sayfaDili(searchParams)}
+        istenenDil={(Array.isArray(ham) ? ham[0] : ham) ?? null}
+        iletisimEposta={process.env.NOTYA_ILETISIM_EPOSTA?.trim() || null}
+      />
+    </>
   )
 }
