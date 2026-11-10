@@ -1285,14 +1285,17 @@ Wave3’te SIRADAKİ diye önerildi → **HATA**. Ledger + early seed’e işlen
 ## W5-12. Op. Dr. Çiğdem Demirel ← GİTTİ (2026-11-10, WA-verified)
 **kadın-doğum** · Ankara · WA: `+905333608913`
 
-## W5-13. Op. Dr. Dilek Alihanoğlu ← SIRADAKİ
-**kadın-doğum** · İzmir · `+90 532 526 96 95` · WA: `+905325269695`  
-**Doğrulama:** DS `socialMedia[{type:whatsapp, url:905325269695}]`.
+## W5-13. Op. Dr. Dilek Alihanoğlu ← GİTTİ (2026-11-10, WA-verified)
+**kadın-doğum** · İzmir · WA: `+905325269695`
 
-**Ön kontrol:** ledger temiz (≠ early-batch Dilek Başaran). Gönder: yapıştır → kart **X** → gönder.
+## W5-14. Doç. Dr. Doğukan Özkan ← SIRADAKİ
+**kadın-doğum** · Ankara · `+90 545 101 51 88` · WA: `+905451015188`  
+**Doğrulama:** DS `socialMedia[{type:whatsapp, url:905451015188}]`.
+
+**Ön kontrol:** ledger temiz. Gönder: yapıştır → kart **X** → gönder.
 
 ```
-Dilek Hocam merhaba 👋
+Doğukan Hocam merhaba 👋
 Ben Kaan, *Notya*'dan yazıyorum.
 
 *Notya* — hekimler için yapay zekâ klinik asistanı.

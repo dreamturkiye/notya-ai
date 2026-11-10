@@ -1,11 +1,11 @@
 # TR outreach durum (canlı)
 
-**Sıradaki:** Op. Dr. **Dilek Alihanoğlu** · KD · İzmir · `+905325269695`  
-(WA-verified · ≠ early-batch Dilek Başaran)
+**Sıradaki:** Doç. Dr. **Doğukan Özkan** · KD · Ankara · `+905451015188`  
+(WA-verified · wave5’te 1 kişi daha kaldı: Emel Keleştemur)
 
 ## Son (2026-11-10)
 
 | Kişi | Telefon | Sonuç |
 |------|---------|--------|
-| Op. Dr. Çiğdem Demirel | `+905333608913` | **gitti** |
-| Doç. Dr. Ceren Gölbaşı | `+905303686380` | gitti |
+| Op. Dr. Dilek Alihanoğlu | `+905325269695` | **gitti** |
+| Op. Dr. Çiğdem Demirel | `+905333608913` | gitti |
