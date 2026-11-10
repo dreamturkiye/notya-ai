@@ -1,5 +1,55 @@
 # OPEN COMMITMENTS — Notya AI
 
+## ZIYARET-SAYACI-01 — public-site visitor numbers in /kurucu: what is open (Claude, 2026-11-10)
+
+Our own cookie-free counter (no third-party service, no consent banner). Beacon `components/ziyaret/ZiyaretSayaci.tsx` on the
+public pages only (Türkiye: /doktor, /notya-klinik, /home, /avukat, /mali, /kayit, /giris + its four sub-pages, /demo; every
+country build: /, /for-clinics, /login, /signup, /demo, and in AU /founding and /dietitian-beta) → `POST /api/internal/visit`
+(same handler `lib/ziyaret/ziyaret.ts` in all seven builds) → migration 194 (`site_visits_daily`, `site_visit_uniques`,
+`site_visit_salts`, three service-role-only functions). The founder console's "Ziyaretçiler" section reads each build's SQL
+summary through the existing founder-stats mechanism. Classification: core site infrastructure, not branş-specific; no
+doctor or patient data. Per country: tr APPLIED · us APPLIED · gb APPLIED · ca APPLIED · au APPLIED · nz APPLIED · uz APPLIED
+(code and privacy text); database: see (a).
+
+- **ZIYARET-SAYACI-01a — migration 194 is NOT applied on any database yet — waits on Kaan's approval, then Claude, 2026-11-10.**
+  The Supabase tool's confirmation was cancelled automatically in the session that built this (twice; nothing ran), and
+  again in the recovery job of the same day (once more, 0.6 s after it was sent; nothing ran — verified afterwards that no
+  `site_visit%` table and no ledger row 194 exist on any of the seven databases). The code is deployed and safe without
+  it. Kaan: approve the Supabase prompt (or tell Claude to retry in a session where the prompt can be answered). Apply
+  `lib/db/migrations/194_site_ziyaret_sayaci.sql` to Türkiye (anjayzospuurymjmmtim) and the six country projects (AU
+  sllwiuhobuagumwbvulf, UZ pzleklfytbigsurumekn, GB gscfutmlozfvwrndwecw, CA urdxvmsertgnxtapypig, NZ itcrfagsjzwzupqlzbqe,
+  US xmoxiprwisegunbrpstw), then verify the three tables (RLS on, no anon/authenticated grant) and the ledger row. No new
+  build is needed. Until then the beacon is answered 204 and nothing is counted; the console says "visit counter not
+  reporting yet". Counting starts on the day the migration lands — there is no history before it, by design.
+- **ZIYARET-SAYACI-01b — a NEW country database runs 194 after its baseline — owner Claude, 2026-11-10.** 194 is site
+  infrastructure (no doctor key), so it is not in `lib/db/ulke/gocler.json` and not in the generated baseline.
+- **ZIYARET-SAYACI-01c — founder exclusion is per browser — waits on Kaan if he wants more, 2026-11-10.** A server-side
+  founder-session check per page view was not cheap (the session lives in browser storage, not a cookie: it would cost an
+  auth round trip per hit), so /kurucu sets a constant flag in the founder's browser on www.notya.io and the beacon skips
+  that browser there. Kaan's visits to the country hosts (us.notya.io …) and from other devices are counted.
+- **ZIYARET-SAYACI-01d — privacy paragraphs are drafts like the rest of each country's legal text — waits on Kaan (lawyer
+  review per country), 2026-11-10.** Türkiye `app/(yasal)/gizlilik`, US/GB/CA/NZ `lib/ulke/yasal/ingilizce.ts`, AU
+  `countries/au/yasal.ts`, UZ `countries/uz/yasal.ts` (uz-Latn, uz-Cyrl, ru).
+- **ZIYARET-SAYACI-01e — the founder console has no dark theme — waits on Kaan, 2026-11-10.** The new section matches the
+  console's existing light cream/pine look; a dark mode for the whole console is a separate job if wanted.
+
+## IPUCU-TETIK-01 — the "?" tip trigger: what is open (Claude, 2026-11-10)
+
+Core (all 40 branches through the shared `components/doktor/IpucuBaloncugu.tsx`): the trigger is a small inline icon
+(22px visual, 44px hit area), aria-label and title "Bu sayfa hakkında ipucu", muted chrome ink; on the home page it sits
+inside the h1 after the last word. Country builds: the same visual in `components/ulke/uygulama/Ipucu.tsx`, label from the
+pack (`ipuclari.sayfa`: en "Tip about this page"; uz-Latn, uz-Cyrl, ru), home (`Bugun.tsx`) fixed the same way.
+Per country: tr APPLIED · us APPLIED · gb APPLIED · ca APPLIED · au APPLIED · nz APPLIED · uz APPLIED.
+
+- **IPUCU-TETIK-01a — four country screens place the trigger in a right-aligned row above the screen, not beside a
+  heading — owner Claude, 2026-11-10.** `components/ulke/uygulama/Araclar.tsx` (tools), `Takvim.tsx` (calendar), the
+  `Klinik.tsx` fallback row and the `OnBuro.tsx` loading row, in all six builds. They now show the small icon (no longer a
+  large circle), but moving each next to its screen's heading means threading it into sub-views (tool grid, calendar
+  views, clinic and front-desk headers); Türkiye's equivalents already sit beside their h1. Next country UI pass.
+- **IPUCU-TETIK-01b — the doctor chrome has no dark theme — waits on Kaan, 2026-11-10.** The icon uses a transparent
+  ground and the chrome's muted ink (currentColor border), so it follows whatever surface it sits on; a dark mode for the
+  doctor application as a whole is a separate job (same as ZIYARET-SAYACI-01e for the founder console).
+
 ## KD-TARAMA-01 — thyroid in pregnancy, HPV vaccine record, SMA carrier screening, PMS/PMDD diary: what is open (Claude, 2026-11-09)
 
 Kadın Hastalıkları ve Doğum only (branş-specific; leak tests both ways). Shared engine `lib/clinical/kdTaramalar.ts`

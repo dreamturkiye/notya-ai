@@ -8,6 +8,7 @@ import { Fraunces, Outfit } from "next/font/google";
 // (masa) and must not inherit doktor-lp.
 import "../../doktor/utilities.css";
 import "../../doktor/landing.css";
+import ZiyaretSayaci from '@/components/ziyaret/ZiyaretSayaci'
 
 const fraunces = Fraunces({
   subsets: ["latin", "latin-ext"],
@@ -31,6 +32,7 @@ export default function KlinikVitrinLayout({ children }: { children: ReactNode }
   return (
     <div className={`doktor-lp ${fraunces.variable} ${outfit.variable}`}>
       {children}
+      <ZiyaretSayaci />
     </div>
   );
 }

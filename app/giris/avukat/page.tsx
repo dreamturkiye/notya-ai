@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@supabase/supabase-js'
+import ZiyaretSayaci from '@/components/ziyaret/ZiyaretSayaci'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://anjayzospuurymjmmtim.supabase.co',
@@ -57,6 +58,7 @@ export default function Giris() {
 
   return (
     <div style={{minHeight:'100dvh',background:'#0A1628',display:'flex',alignItems:'center',justifyContent:'center',padding:'calc(24px + env(safe-area-inset-top, 0px)) 16px calc(24px + env(safe-area-inset-bottom, 0px))',fontFamily:'system-ui,sans-serif',boxSizing:'border-box'}}>
+      <ZiyaretSayaci />
       <div style={{background:'#111827',borderRadius:'20px',padding:'clamp(24px, 6vw, 40px)',maxWidth:'420px',width:'100%',border:'1px solid rgba(255,255,255,0.08)',boxSizing:'border-box'}}>
         <div style={{textAlign:'center',marginBottom:'28px'}}>
           <div style={{fontSize:'36px',marginBottom:'8px'}}>&#9878;&#65039;</div>

@@ -6,6 +6,7 @@
  * `hesapSatiriTemizle` keeps exactly the keys listed in HESAP_ALANLARI and drops everything else, and the tests assert
  * that no patient-shaped key ever leaves (hastaAlaniVarMi).
  */
+import { ziyaretOzetiTemizle, type ZiyaretOzeti } from '@/lib/ziyaret/tipler'
 
 export type KurucuPlan = 'trial' | 'paid'
 
@@ -37,6 +38,13 @@ export type KurucuUlkeYaniti = {
   hesaplar: KurucuHesap[]
   /** Accounts left out of every count (Kaan's own test account): e-mail only, so the console can name them. */
   testHesaplari: string[]
+  /**
+   * ZIYARET-SAYACI-01 (2026-11-10): this build's public-site visit summary, aggregated in SQL (lib/ziyaret/tipler.ts);
+   * null when the counter is not installed or could not be read. Absent in an answer from a build without the counter.
+   */
+  ziyaret?: ZiyaretOzeti | null
+  /** ZIYARET-SAYACI-01: whether this build runs a trial model at all (the funnel's "trials" step is "—" otherwise). */
+  denemeVar?: boolean
 }
 
 export const HESAP_ALANLARI = [
@@ -77,6 +85,8 @@ export function ulkeYanitiTemizle(ulke: string, ham: unknown): KurucuUlkeYaniti 
     uretildi: metin(y.uretildi, 40),
     hesaplar: y.hesaplar.filter((h): h is Record<string, unknown> => !!h && typeof h === 'object').slice(0, 5000).map(hesapSatiriTemizle),
     testHesaplari: Array.isArray(y.testHesaplari) ? y.testHesaplari.filter((e): e is string => typeof e === 'string').slice(0, 20).map((e) => e.slice(0, 200)) : [],
+    ziyaret: ziyaretOzetiTemizle(y.ziyaret),
+    denemeVar: y.denemeVar === true,
   }
 }
 

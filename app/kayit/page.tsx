@@ -7,6 +7,7 @@ import { createClient } from '@supabase/supabase-js';
 import { CHROME_RENK, CHROME_FONT, CHROME_FONT_HREF } from '@/lib/doktor/chromeTheme';
 import BransSecimi from '@/components/onboarding/BransSecimi';
 import { KAYIT_BRANS_MESAJ, kayitBransiMi } from '@/lib/onboarding/kayitBransi';
+import ZiyaretSayaci from '@/components/ziyaret/ZiyaretSayaci'
 
 // STRIPE-NOTYA-01 (2026-10-27): only the solo-doctor self-serve plans get driven straight into
 // Stripe Checkout from here. Klinik (multi-doctor: taban + per-seat koltuk, combined line items)
@@ -329,6 +330,7 @@ export default function KayitPage() {
   // "loading" state to show before the form mounts.
   return (
     <Suspense fallback={null}>
+      <ZiyaretSayaci />
       <KayitForm />
     </Suspense>
   );

@@ -39,10 +39,17 @@ delete process.env.FOUNDER_EMAILS
 
 let db = new SahteVeritabani()
 let authListesi: Array<Record<string, unknown>> = []
+// ZIYARET-SAYACI-01: the visit counter's stats function (migration 194), answered by the stand-in.
+let rpcCagrilari: Array<{ ad: string; args: Record<string, unknown> }> = []
+const ORNEK_ZIYARET = { ilkGun: '2026-11-10', bugun: '2026-11-10', gunluk: [{ d: '2026-11-10', v: 3, p: 5 }], haftalik: [{ w: '2026-W46', bas: '2026-11-09', v: 3, p: 5 }], sayfalar: [{ ad: '/doktor', v: 3, p: 5 }], kaynaklar: [], cihazlar: [] }
 function sahteCreateClient(_u?: string, _k?: string, opts?: { global?: { headers?: Record<string, string> } }) {
   const c = () => db.istemci(opts)
   return {
     from: (t: string) => c().from(t),
+    rpc: async (ad: string, args: Record<string, unknown>) => {
+      rpcCagrilari.push({ ad, args })
+      return ad === 'site_visit_stats' ? { data: ORNEK_ZIYARET, error: null } : { data: null, error: { message: 'unknown function' } }
+    },
     auth: {
       getUser: async (jwt?: string) => c().auth.getUser(jwt),
       admin: { listUsers: async () => ({ data: { users: authListesi }, error: null }) },
@@ -66,7 +73,7 @@ before(async () => {
   NextRequestSinifi = (await import('next/server')).NextRequest
   OZET = await import('../../app/api/kurucu/ozet/route')
 })
-beforeEach(() => { db = new SahteVeritabani(); authListesi = []; imzaBellegiTemizle() })
+beforeEach(() => { db = new SahteVeritabani(); authListesi = []; rpcCagrilari = []; imzaBellegiTemizle() })
 
 describe('signature between the console and a country build', () => {
   it('a fresh signature for this country passes once', () => {
@@ -261,6 +268,24 @@ describe('POST /api/internal/signup-notify (country alerts, sent from Türkiye o
 const ornekHesap = (o: Record<string, unknown> = {}) => hesapSatiriTemizle({ ad: 'QA', eposta: 'qa@example.test', brans: 'family-medicine', bransEtiketi: 'General practice', plan: 'trial', onboardingTamam: true, denemeKalanGun: 2, bransSecildi: true, kayit: new Date().toISOString(), sonGiris: null, not7: 1, not30: 2, muayene7: 3, muayene30: 4, ...o })
 
 describe('founder console', () => {
+  it('ZIYARET-SAYACI-01: visitor stats only for the founder — non-founders get 404, no visitor data and no stats query', async () => {
+    db.kullanicilar.set('qa-doktor', { id: randomUUID(), email: 'qa-doktor@ornek.test' })
+    for (const baslik of [{}, { authorization: 'Bearer yanlis' }, { authorization: 'Bearer qa-doktor' }] as Record<string, string>[]) {
+      const y = await OZET.GET(new NextRequestSinifi('http://localhost/api/kurucu/ozet', { headers: baslik }))
+      assert.equal(y.status, 404, JSON.stringify(baslik))
+      assert.doesNotMatch(await y.text(), /gunluk|ziyaret|ilkGun/)
+    }
+    assert.equal(rpcCagrilari.length, 0)
+    db.kullanicilar.set('qa-kurucu', { id: randomUUID(), email: 'kaan@notya.io' })
+    const y = await OZET.GET(new NextRequestSinifi('http://localhost/api/kurucu/ozet', { headers: { authorization: 'Bearer qa-kurucu' } }))
+    assert.equal(y.status, 200)
+    const tr = (await y.json()).ulkeler.find((u: any) => u.ulke === 'tr')
+    assert.deepEqual(rpcCagrilari.map((c) => [c.ad, c.args.p_ulke]), [['site_visit_stats', 'tr']])
+    assert.equal(tr.veri.ziyaret.ilkGun, '2026-11-10')
+    assert.equal(tr.veri.ziyaret.gunluk[0].v, 3)
+    assert.equal(tr.veri.denemeVar, true)
+    assert.ok(Array.isArray(tr.kayitlar))
+  })
   it('GET /api/kurucu/ozet: no token, a bad token and a non-founder account all get 404', async () => {
     db.kullanicilar.set('qa-doktor', { id: randomUUID(), email: 'qa-doktor@ornek.test' })
     for (const baslik of [{}, { authorization: 'Bearer yanlis' }, { authorization: 'Bearer null' }, { authorization: 'Bearer qa-doktor' }] as Record<string, string>[]) {

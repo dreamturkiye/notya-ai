@@ -1,11 +1,13 @@
 
 import Link from "next/link"
+import ZiyaretSayaci from '@/components/ziyaret/ZiyaretSayaci'
 export default function AvukatPage() {
   const HERO_IMG    = "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=1600&q=80&fit=crop&crop=center"
   const CONSULT_IMG = "https://images.unsplash.com/photo-1521791055366-0d553872952f?w=900&q=80&fit=crop"
   const LEARNING_IMG= "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=900&q=80&fit=crop"
   return (
     <main style={{margin:0,padding:0,background:"#F4F7F6",color:"#1F2937",fontFamily:"'Lato','Helvetica Neue',Arial,sans-serif",overflowX:"hidden"}}>
+      <ZiyaretSayaci />
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&family=Merriweather:ital,wght@0,400;0,700;1,400&display=swap');
         * { box-sizing: border-box; }

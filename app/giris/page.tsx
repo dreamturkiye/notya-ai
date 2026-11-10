@@ -3,6 +3,7 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { authHataMesaji } from "./authHataMesaji"
 import { CHROME_RENK, CHROME_FONT, CHROME_FONT_HREF } from "@/lib/doktor/chromeTheme"
+import ZiyaretSayaci from '@/components/ziyaret/ZiyaretSayaci'
 
 const SUPA_URL = "https://anjayzospuurymjmmtim.supabase.co"
 const SUPA_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFuamF5em9zcHV1cnltam1tdGltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA2NDc5NzIsImV4cCI6MjA5NjIyMzk3Mn0.J4qRde2QJxxErFIWsO6Zb2TPN8GEIFXloLRpdac4GxE"
@@ -73,6 +74,7 @@ export default function LoginPage() {
   const hazir = Boolean(email && password) && !loading
   return (
     <div style={{ minHeight: "100dvh", background: R.cream, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: CHROME_FONT.sans, color: R.ink, padding: "calc(20px + env(safe-area-inset-top, 0px)) 16px calc(20px + env(safe-area-inset-bottom, 0px))", boxSizing: "border-box" }}>
+      <ZiyaretSayaci />
       {/* eslint-disable-next-line @next/next/no-page-custom-font */}
       <link rel="stylesheet" href={CHROME_FONT_HREF} />
       <div style={{ background: R.paper, borderRadius: 24, padding: "clamp(28px, 6vw, 44px)", width: "100%", maxWidth: 420, boxSizing: "border-box", border: `1px solid ${R.border}`, boxShadow: "0 18px 50px rgba(58,44,34,0.08)" }}>

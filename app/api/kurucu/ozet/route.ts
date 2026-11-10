@@ -13,6 +13,7 @@ import { kurucuOturumu, yokCevabi } from '@/lib/kurucu/erisim'
 import { konsolVerisiTopla, ulkeIstatistigiCek } from '@/lib/kurucu/konsol'
 import { trKurucuVerisi } from '@/lib/kurucu/trVeri'
 import { stripeDonusumuOku } from '@/lib/kurucu/stripeDonusum'
+import { ziyaretOzetiOku } from '@/lib/ziyaret/depo'
 
 export const dynamic = 'force-dynamic'
 
@@ -21,7 +22,8 @@ export async function GET(req: NextRequest) {
   const kurucu = await kurucuOturumu(req, supabase)
   if (!kurucu) return yokCevabi()
   const veri = await konsolVerisiTopla({
-    tr: () => trKurucuVerisi(supabase),
+    // ZIYARET-SAYACI-01: Türkiye's visit summary (aggregated in SQL, migration 194) in parallel with its accounts.
+    tr: () => Promise.all([trKurucuVerisi(supabase), ziyaretOzetiOku(supabase, 'tr')]).then(([v, ziyaret]) => ({ ...v, ziyaret, denemeVar: true })),
     ulke: (ulke, taban) => ulkeIstatistigiCek(ulke, taban),
     stripe: () => stripeDonusumuOku(),
   })

@@ -6,12 +6,20 @@
  * (lib/doktor/chromeTheme.ts). Read-only: one GET, no write, no patient data in anything it receives.
  */
 import React, { useEffect, useState } from 'react'
+import dynamic from 'next/dynamic'
 import { notFound } from 'next/navigation'
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth'
 import { kurucuVerisiniAl } from '@/lib/kurucu/oturumBekle'
 import { CHROME_FONT, CHROME_FONT_HREF, CHROME_RENK as R } from '@/lib/doktor/chromeTheme'
 import type { KurucuKonsolVerisi, KonsolUlkesi } from '@/lib/kurucu/konsol'
 import type { KurucuHesap, KurucuOzet } from '@/lib/kurucu/tipler'
+import { ZIYARET_HARIC_ANAHTARI } from '@/lib/ziyaret/sabitler'
+
+// ZIYARET-SAYACI-01 (2026-11-10): the visitor section and its charts load only here, on demand (never in a public bundle).
+const ZiyaretcilerBolumu = dynamic(() => import('./ZiyaretcilerBolumu'), {
+  ssr: false,
+  loading: () => <p style={{ color: R.muted, marginTop: 28 }}>Loading visitors…</p>,
+})
 
 type Durum = { tur: 'yukleniyor' } | { tur: 'yok' } | { tur: 'hata' } | { tur: 'tamam'; veri: KurucuKonsolVerisi }
 
@@ -88,6 +96,7 @@ export function KonsolGorunumu({ veri }: { veri: KurucuKonsolVerisi }) {
         <h2 style={{ fontFamily: CHROME_FONT.serif, fontSize: 22, color: R.ink, margin: '0 0 10px' }}>All countries</h2>
         <OzetKutulari o={veri.toplam} />
       </section>
+      <ZiyaretcilerBolumu ulkeler={veri.ulkeler} />
       <section style={{ marginTop: 28 }}>
         <h2 style={{ fontFamily: CHROME_FONT.serif, fontSize: 22, color: R.ink, margin: '0 0 10px' }}>Conversions (Stripe)</h2>
         {s.durum === 'bagli-degil' ? <p style={{ color: R.muted, fontSize: 14 }}>Not connected.</p>
@@ -125,6 +134,9 @@ export default function KurucuKonsolu() {
         iptalMi: () => iptal,
       })
       if (!iptal) setD(sonuc)
+      // ZIYARET-SAYACI-01: the server has just confirmed the founder — this browser's own public-page visits are not
+      // counted from now on (a constant flag, no identifier; lib/ziyaret, components/ziyaret/ZiyaretSayaci.tsx).
+      if (sonuc.tur === 'tamam') { try { window.localStorage.setItem(ZIYARET_HARIC_ANAHTARI, '1') } catch { /* storage blocked */ } }
     })()
     return () => { iptal = true }
   }, [])

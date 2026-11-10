@@ -5,6 +5,7 @@ import { Fraunces, Outfit } from "next/font/google";
 // `doktor-lp` scope) so it reads as part of the same site. Listed in tailwind.doktor.config.js `content`.
 import "../doktor/utilities.css";
 import "../doktor/landing.css";
+import ZiyaretSayaci from '@/components/ziyaret/ZiyaretSayaci'
 
 const fraunces = Fraunces({
   subsets: ["latin", "latin-ext"],
@@ -27,6 +28,7 @@ export default function DemoLayout({ children }: { children: ReactNode }) {
   return (
     <div className={`doktor-lp ${fraunces.variable} ${outfit.variable}`}>
       {children}
+      <ZiyaretSayaci />
     </div>
   );
 }

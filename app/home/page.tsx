@@ -1,6 +1,7 @@
 'use client'
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
+import ZiyaretSayaci from '@/components/ziyaret/ZiyaretSayaci'
 
 interface Profession {
   id: string; href: string; label: string; accent: string; img: string; imgPosition: string;
@@ -117,6 +118,7 @@ export default function HomePage() {
 
   return (
     <main style={{ margin: 0, padding: 0, background: '#FAFAF9', color: '#0A0A0A', fontFamily: 'Inter, system-ui, sans-serif', minHeight: '100vh', overflowX: 'hidden' }}>
+      <ZiyaretSayaci />
 
       <nav style={{ position: 'fixed', top: 'var(--sat)', left: 0, right: 0, zIndex: 100, padding: '20px 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: scrolled ? 'rgba(250,250,249,0.92)' : 'transparent', backdropFilter: scrolled ? 'blur(10px)' : 'none', borderBottom: scrolled ? '1px solid rgba(10,10,10,0.08)' : '1px solid transparent', transition: 'all .3s ease' }}>
         <div style={{ fontSize: '14px', fontWeight: 700, letterSpacing: '0.02em' }}>NOTYA<span style={{ fontSize: '9px', verticalAlign: 'super', opacity: 0.5 }}>™</span></div>

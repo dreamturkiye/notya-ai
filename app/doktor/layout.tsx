@@ -4,6 +4,7 @@ import { Fraunces, Outfit } from "next/font/google";
 import "./utilities.css";
 import "./landing.css";
 import { DOKTOR_DESCRIPTION, DOKTOR_TITLE, DOKTOR_URL, doktorHreflang } from "@/lib/seo/doktor";
+import ZiyaretSayaci from '@/components/ziyaret/ZiyaretSayaci'
 
 const fraunces = Fraunces({
   subsets: ["latin", "latin-ext"],
@@ -45,6 +46,7 @@ export default function DoktorLayout({ children }: { children: ReactNode }) {
   return (
     <div className={`doktor-lp ${fraunces.variable} ${outfit.variable}`}>
       {children}
+      <ZiyaretSayaci />
     </div>
   );
 }

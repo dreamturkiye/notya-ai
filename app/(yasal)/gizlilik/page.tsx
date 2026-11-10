@@ -70,6 +70,13 @@ export default function GizlilikPage() {
         Reklam veya izleme çerezi kullanmayız. Oturumunuz tarayıcınızın yerel depolamasında tutulur.
         Ayrıntı: <Link href="/cerez-politikasi" style={YS.baglanti}>Çerez Politikası</Link>.
       </p>
+      <p style={YS.p}>
+        Sitemizin herkese açık sayfalarına (tanıtım, kayıt ve giriş sayfaları) yapılan ziyaretleri çerez kullanmadan ve
+        anonim olarak sayarız. IP adresinizi ve tarayıcı bilginizi saklamayız: bunlar, her gün yenilenen rastgele bir
+        değerle (önceki günün değeri silinir) tek yönlü bir koda dönüştürülür; bu kod yalnızca aynı ziyaretçiyi bir günde
+        bir kez saymak için kullanılır ve iki gün içinde silinir. Saklanan yalnızca günlük toplam sayılardır: sayfa,
+        yönlendiren sitenin adı ve cihaz türü (mobil veya masaüstü) bazında ziyaret adedi.
+      </p>
 
       <h2 style={YS.h2}>8. Haklarınız</h2>
       <p style={YS.p}>

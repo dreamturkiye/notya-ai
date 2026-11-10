@@ -9,6 +9,9 @@
  *  - Asla engellemez: dışarı tıklama, Escape, "Anladım" ve "Bir daha gösterme" ile kapanır.
  *  - Ayarlar › "İpuçlarını göster" kapalıysa tetikleyici de görünmez (IPUCU_AYAR_OLAYI dinlenir).
  *  - Dokunma hedefleri ≥ 40px; 390px genişlikte balon ekrana sığar (dar ekranda alta sabitlenir).
+ *  - IPUCU-TETIK-01 (2026-11-10, core, all 40 branches): the trigger is a small inline "?" icon (22px visual,
+ *    44px hit area via negative margins so it never pushes the heading onto a new line), muted chrome ink on a
+ *    transparent ground, placed in or right after the section heading. aria-label/title: IPUCU_TETIK_ETIKETI.
  *
  * Kalıcılık v1: localStorage (lib/doktor/ipucu/ipucuDurumu.ts — oradaki başlık yorumuna bakın).
  */
@@ -22,6 +25,9 @@ import {
   ipuclariAcikMi,
   otomatikGosterilsinMi,
 } from '@/lib/doktor/ipucu/ipucuDurumu'
+
+/** The trigger's accessible name and tooltip (IPUCU-TETIK-01). */
+export const IPUCU_TETIK_ETIKETI = 'Bu sayfa hakkında ipucu'
 
 export default function IpucuBaloncugu({
   bolum,
@@ -104,6 +110,8 @@ export default function IpucuBaloncugu({
   return (
     <span ref={kokRef} className="notya-ipucu" style={{ position: 'relative', display: 'inline-flex', verticalAlign: 'middle' }}>
       <style>{`
+        .notya-ipucu-tetik:focus-visible .notya-ipucu-ikon { outline: 2px solid ${CHROME_RENK.pine}; outline-offset: 2px; }
+        .notya-ipucu-tetik:hover .notya-ipucu-ikon { color: ${CHROME_RENK.pine}; }
         @media (max-width: 480px) {
           .notya-ipucu-balon {
             position: fixed !important;
@@ -118,33 +126,60 @@ export default function IpucuBaloncugu({
       `}</style>
       <button
         type="button"
-        aria-label={`İpucu: ${icerik.baslik}`}
+        className="notya-ipucu-tetik"
+        data-ipucu-tetik={bolum}
+        aria-label={IPUCU_TETIK_ETIKETI}
         aria-expanded={acik}
-        title="İpucu"
+        title={IPUCU_TETIK_ETIKETI}
         onClick={() => {
           gorulduIsaretle(bolum)
           setAcik((v) => !v)
         }}
         style={{
-          width: 40,
-          height: 40,
-          minWidth: 40,
+          // 44px hit area, 22px visual: the negative margin keeps the footprint at 22px, so the icon stays on the
+          // heading's line instead of wrapping under it as a large lone circle (seen at 390px on the home page).
+          width: 44,
+          height: 44,
+          minWidth: 44,
+          margin: -11,
+          padding: 0,
+          border: 'none',
+          background: 'transparent',
           borderRadius: 999,
-          border: `1.5px solid ${CHROME_RENK.border}`,
-          background: acik ? '#E4F3F1' : 'rgba(255,255,255,0.72)',
-          color: acik ? CHROME_RENK.pine : CHROME_RENK.muted,
-          fontSize: 16,
-          fontWeight: 700,
-          fontFamily: CHROME_FONT.sans,
           cursor: 'pointer',
           display: 'inline-flex',
           alignItems: 'center',
           justifyContent: 'center',
           flexShrink: 0,
-          lineHeight: 1,
+          verticalAlign: 'middle',
+          WebkitTapHighlightColor: 'transparent',
         }}
       >
-        ?
+        <span
+          aria-hidden="true"
+          className="notya-ipucu-ikon"
+          style={{
+            width: 22,
+            height: 22,
+            boxSizing: 'border-box',
+            borderRadius: 999,
+            border: '1.5px solid currentColor',
+            background: acik ? '#E4F3F1' : 'transparent',
+            color: acik ? CHROME_RENK.pine : CHROME_RENK.muted,
+            opacity: acik ? 1 : 0.85,
+            fontSize: 12.5,
+            fontWeight: 700,
+            fontStyle: 'normal',
+            letterSpacing: 0,
+            fontFamily: CHROME_FONT.sans,
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            lineHeight: 1,
+          }}
+        >
+          ?
+        </span>
       </button>
 
       {acik && (
@@ -166,6 +201,13 @@ export default function IpucuBaloncugu({
             padding: '14px 16px 12px',
             fontFamily: CHROME_FONT.sans,
             textAlign: 'left',
+            // The trigger may sit inside a heading (IPUCU-TETIK-01): never inherit its size, weight, spacing or nowrap.
+            whiteSpace: 'normal',
+            letterSpacing: 'normal',
+            fontWeight: 400,
+            fontStyle: 'normal',
+            lineHeight: 1.4,
+            color: CHROME_RENK.ink,
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>

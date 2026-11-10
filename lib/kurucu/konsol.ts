@@ -4,14 +4,18 @@
  *   US … UZ   from each country build's /api/internal/founder-stats, signed (imza.ts), all six IN PARALLEL with a short
  *             timeout each; a country that fails or times out is "unavailable" and the page still renders
  *   Stripe    trial → paid counts, read-only (stripeDonusum.ts)
+ *   Visitors  ZIYARET-SAYACI-01 (2026-11-10): each build's answer carries its own SQL-aggregated visit summary
+ *             (`veri.ziyaret`); signups and trials per day (`kayitlar`) are counted here from the account rows the
+ *             console already loads, so no new raw rows travel.
  * Runs only behind the founder check of GET /api/kurucu/ozet. No doctor-facing path calls any of this.
  */
 import { imzaUret, IMZA_BASLIGI } from './imza'
 import { KURUCU_ISTATISTIK_YOLU, KURUCU_ULKELERI, ozetHesapla, ulkeYanitiTemizle, type KurucuHesap, type KurucuOzet, type KurucuUlkeYaniti } from './tipler'
 import type { StripeDonusumu } from './stripeDonusum'
+import { kayitGunlugu, type KayitGunu } from '@/lib/ziyaret/grafik'
 
 export type KonsolUlkesi =
-  | { ulke: string; ad: string; durum: 'tamam'; veri: KurucuUlkeYaniti; ozet: KurucuOzet }
+  | { ulke: string; ad: string; durum: 'tamam'; veri: KurucuUlkeYaniti; ozet: KurucuOzet; kayitlar: KayitGunu[] }
   | { ulke: string; ad: string; durum: 'erisilemez'; neden: string }
 
 export type KurucuKonsolVerisi = {
@@ -61,7 +65,9 @@ export async function konsolVerisiTopla(d: {
   ])
   const kalemler = [{ ulke: 'tr', ad: 'TR', sonuc: tr }, ...KURUCU_ULKELERI.map((u, i) => ({ ulke: u.ulke, ad: u.ad, sonuc: digerleri[i] }))]
   const ulkeler: KonsolUlkesi[] = kalemler.map(({ ulke, ad, sonuc }) =>
-    sonuc.ok ? { ulke, ad, durum: 'tamam', veri: sonuc.veri, ozet: ozetHesapla(sonuc.veri.hesaplar, simdi) } : { ulke, ad, durum: 'erisilemez', neden: sonuc.neden })
+    sonuc.ok
+      ? { ulke, ad, durum: 'tamam', veri: sonuc.veri, ozet: ozetHesapla(sonuc.veri.hesaplar, simdi), kayitlar: kayitGunlugu(sonuc.veri.hesaplar) }
+      : { ulke, ad, durum: 'erisilemez', neden: sonuc.neden })
   const hepsi: KurucuHesap[] = ulkeler.flatMap((u) => (u.durum === 'tamam' ? u.veri.hesaplar : []))
   const testHesaplari = [...new Set(ulkeler.flatMap((u) => (u.durum === 'tamam' ? u.veri.testHesaplari.map((e) => `${e} (${u.ad})`) : [])))]
   return { uretildi: new Date(simdi).toISOString(), ulkeler, toplam: ozetHesapla(hepsi, simdi), stripe, testHesaplari }

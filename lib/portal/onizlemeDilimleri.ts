@@ -649,17 +649,20 @@ export function onizlemeGorevDilimleri(bundle: PortalBundle, aktif: ReadonlySet<
     const gorevQ = { data: gorevler['sporum'] || [] }
     const bolumQ = { data: { next_kontrol: kontrol, kuyruk: null } }
     const rtpQ = { data: ORNEK_KUYRUK(bugun) }
+    // Type-only fix (2026-11-10, unblocks the main build broken since 83e2e5f78): the preview's sample queue is a list and
+    // carries no RTP step, so this was always undefined → null at runtime; the behaviour is unchanged.
+    const rtpBasamakHam = (rtpQ.data as unknown as { basamak?: unknown } | null)?.basamak
     const hatirlatmalar = sporumHatirlatmalari({
       bugun,
       gorevler: (gorevQ.data || []).map((g) => ({ kod: String(g.kod || ''), due: g.due ? String(g.due).slice(0, 10) : null })),
       sonrakiKontrolIso: bolumQ.data?.next_kontrol ? String(bolumQ.data.next_kontrol).slice(0, 10) : null,
-      rtpBasamak: rtpQ.data?.basamak != null ? Number(rtpQ.data.basamak) : null,
+      rtpBasamak: rtpBasamakHam != null ? Number(rtpBasamakHam) : null,
     })
     bundle.spor = {
       sonrakiKontrol: sporSonrakiKontrol(hatirlatmalar),
       hatirlatmalar: hatirlatmalar.map((h) => ({ ad: h.ad, due: h.due, durum: h.durum })),
       planHatirlatma: sporPlanHatirlatmalari(hatirlatmalar),
-      rtpOzet: rtpHastaOzeti(rtpQ.data?.basamak != null ? Number(rtpQ.data.basamak) : null),
+      rtpOzet: rtpHastaOzeti(rtpBasamakHam != null ? Number(rtpBasamakHam) : null),
       bakimIpuclari: [...SPOR_BAKIM_IPUCLARI],
       not: SPORUM_NOTU,
     }

@@ -1,5 +1,9 @@
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
+import { readFileSync, readdirSync, statSync } from 'node:fs'
+import { join } from 'node:path'
+import React from 'react'
+import { renderToStaticMarkup } from 'react-dom/server'
 import { IPUCLARI, IPUCU_BOLUMLERI, type IpucuBolumu } from './ipuclari'
 import {
   IPUCU_ACIK_ANAHTAR,
@@ -126,5 +130,49 @@ describe('ipucuDurumu (görünürlük durumu)', () => {
     assert.equal(gorulduMu('ayarlar', bozukDepo), false)
     assert.doesNotThrow(() => gorulduIsaretle('ayarlar', bozukDepo))
     assert.doesNotThrow(() => ipuclariAyarla(false, bozukDepo))
+  })
+})
+
+// IPUCU-TETIK-01 (2026-11-10, core): the "?" trigger is a small labelled icon inside or right after the section heading.
+describe('ipucu tetikleyicisi (IPUCU-TETIK-01)', () => {
+  const KOK = join(__dirname, '..', '..', '..')
+
+  it('renders a labelled 44px button with a 22px visual, muted, with a title tooltip', async () => {
+    const { default: IpucuBaloncugu, IPUCU_TETIK_ETIKETI } = await import('../../../components/doktor/IpucuBaloncugu')
+    const html = renderToStaticMarkup(React.createElement(IpucuBaloncugu, { bolum: 'ana-sayfa' }))
+    assert.equal(IPUCU_TETIK_ETIKETI, 'Bu sayfa hakkında ipucu')
+    assert.match(html, /<button[^>]*aria-label="Bu sayfa hakkında ipucu"/)
+    assert.match(html, /<button[^>]*title="Bu sayfa hakkında ipucu"/)
+    assert.match(html, /<button[^>]*width:44px;height:44px/)
+    assert.match(html, /class="notya-ipucu-ikon"[^>]*width:22px;height:22px/)
+    assert.match(html, /aria-expanded="false"/)
+  })
+
+  it('every call site puts the trigger inside or right after its heading (home: inside the h1, never alone below it)', () => {
+    const kullananlar: string[] = []
+    const gez = (d: string) => {
+      for (const ad of readdirSync(d)) {
+        if (ad === 'node_modules' || ad === '.next') continue
+        const yol = join(d, ad)
+        if (statSync(yol).isDirectory()) gez(yol)
+        else if (/\.tsx$/.test(ad) && !/IpucuBaloncugu\.tsx$/.test(ad) && /<IpucuBaloncugu\b/.test(readFileSync(yol, 'utf8'))) kullananlar.push(yol)
+      }
+    }
+    for (const d of ['app', 'components']) gez(join(KOK, d))
+    assert.ok(kullananlar.length >= 10, `only ${kullananlar.length} call sites found`)
+    for (const f of kullananlar) {
+      const satirlar = readFileSync(f, 'utf8').split('\n')
+      satirlar.forEach((s, i) => {
+        if (!/<IpucuBaloncugu\b/.test(s)) return
+        // Passed as a prop to a page header that renders it beside its title, or within three lines after a heading.
+        const onceki = satirlar.slice(Math.max(0, i - 6), i + 1).join('\n')
+        const yaninda = /ipucu=\{<IpucuBaloncugu/.test(s) || /<h[1-3]\b|fontFamily: CHROME_FONT\.serif[^\n]*>[^<\n]*<\/div>|<\/h[1-3]>/.test(onceki)
+        assert.ok(yaninda, `${f}:${i + 1} — the tip trigger is not beside a heading`)
+      })
+    }
+    const ana = readFileSync(join(KOK, 'app/dashboard/doktor/page.tsx'), 'utf8')
+    const h1 = ana.slice(ana.indexOf('<h1'), ana.indexOf('</h1>'))
+    assert.match(h1, /Hoş geldiniz, Dr\./)
+    assert.match(h1, /whiteSpace: 'nowrap'[^\n]*<IpucuBaloncugu bolum="ana-sayfa" \/>/)
   })
 })
