@@ -1270,14 +1270,17 @@ Wave3’te SIRADAKİ diye önerildi → **HATA**. Ledger + early seed’e işlen
 ## W5-7. Doç. Dr. Barış Büke ← GİTTİ (2026-11-10, WA-verified)
 **kadın-doğum** · İzmir · WA: `+905323407378`
 
-## W5-8. Prof. Dr. Berfu Demir ← SIRADAKİ
-**kadın-doğum** · Ankara · `+90 532 747 02 46` · WA: `+905327470246`  
-**Doğrulama:** DS `socialMedia[{type:whatsapp, url:905327470246}]`.
+## W5-8. Prof. Dr. Berfu Demir ← GİTTİ (2026-11-10, WA-verified)
+**kadın-doğum** · Ankara · WA: `+905327470246`
+
+## W5-9. Prof. Dr. Burcu Kısa ← SIRADAKİ
+**kadın-doğum** · Ankara · `+90 533 687 78 53` · WA: `+905336877853`  
+**Doğrulama:** DS `socialMedia[{type:whatsapp, url:905336877853}]`.
 
 **Ön kontrol:** ledger temiz. Gönder: yapıştır → kart **X** → gönder.
 
 ```
-Berfu Hocam merhaba 👋
+Burcu Hocam merhaba 👋
 Ben Kaan, *Notya*'dan yazıyorum.
 
 *Notya* — hekimler için yapay zekâ klinik asistanı.
