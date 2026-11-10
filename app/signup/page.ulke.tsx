@@ -13,6 +13,8 @@ import { ozellikAcik, ulkePaketi } from '@/lib/ulke/ulke'
 import { yuzeyMetinleri } from '@/lib/ulke/metin'
 import { dilliYol, dilSecenekleri, sayfaDili, type AramaParametreleri } from '@/lib/ulke/sayfaDili'
 import { ulkeKabukViewport } from '@/lib/ulke/kabuk'
+import ZiyaretSayaci from '@/components/ziyaret/ZiyaretSayaci'
+import { ulkeYolOnEki } from '@/lib/ulke/yol'
 
 export const dynamic = 'force-dynamic'
 export const viewport = ulkeKabukViewport()
@@ -44,18 +46,21 @@ export default function SignupPage({ searchParams }: { searchParams?: AramaParam
   const aralik = searchParams?.interval === 'year' ? 'year' : null
   const girisYolu = dilliYol('/login', dil)
   return (
-    <DavetliKayitFormu
-      kodGerekli={kayitKoduGerekliMi(ulkePaketi())}
-      dil={dil}
-      metin={yuzeyMetinleri('davetliKayit', dil)}
-      anaSayfaAdi={yuzeyMetinleri('giris', dil).anaSayfa}
-      diller={dilSecenekleri('/signup')}
-      anaSayfa={dilliYol('/', dil)}
-      giris={plan ? `${girisYolu}${girisYolu.includes('?') ? '&' : '?'}plan=${plan}${aralik ? `&interval=${aralik}` : ''}` : girisYolu}
-      fiyat={dilliYol('/', dil, acilisCapasi('narx') ? `#${acilisCapasi('narx')}` : '')}
-      cokDeneme={yuzeyMetinleri('giris', dil).cokDeneme}
-      brans={brans}
-      meslek={ulkePaketi().uzanti?.muayenehane?.meslekKaydiTasi ? undefined : { etiket: a.meslekKaydi, izoh: a.meslekKaydiIzoh, gecersiz: a.meslekKaydiGecersiz }}
-    />
+    <>
+      <ZiyaretSayaci onEk={ulkeYolOnEki()} />
+      <DavetliKayitFormu
+        kodGerekli={kayitKoduGerekliMi(ulkePaketi())}
+        dil={dil}
+        metin={yuzeyMetinleri('davetliKayit', dil)}
+        anaSayfaAdi={yuzeyMetinleri('giris', dil).anaSayfa}
+        diller={dilSecenekleri('/signup')}
+        anaSayfa={dilliYol('/', dil)}
+        giris={plan ? `${girisYolu}${girisYolu.includes('?') ? '&' : '?'}plan=${plan}${aralik ? `&interval=${aralik}` : ''}` : girisYolu}
+        fiyat={dilliYol('/', dil, acilisCapasi('narx') ? `#${acilisCapasi('narx')}` : '')}
+        cokDeneme={yuzeyMetinleri('giris', dil).cokDeneme}
+        brans={brans}
+        meslek={ulkePaketi().uzanti?.muayenehane?.meslekKaydiTasi ? undefined : { etiket: a.meslekKaydi, izoh: a.meslekKaydiIzoh, gecersiz: a.meslekKaydiGecersiz }}
+      />
+    </>
   )
 }

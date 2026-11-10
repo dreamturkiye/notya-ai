@@ -7,6 +7,10 @@
  *   404                    anything else (no secret configured, missing/bad/expired/replayed signature) — no hint why
  *   429                    more than 20 calls in 5 minutes from one address (per instance)
  *
+ * ZIYARET-SAYACI-01 (2026-11-10): the answer also carries this build's public-site visit summary (`ziyaret`, aggregated in
+ * SQL by site_visit_stats, migration 194; null when the counter is not installed) and `denemeVar` (whether this build runs
+ * a trial model), read in parallel with the accounts.
+ *
  * Doctor-account metadata and aggregate counts only; never a patient field (lib/ulke/kurucu/kurucuUlke.ts). Takes no id.
  */
 import { NextRequest, NextResponse } from 'next/server'
@@ -14,6 +18,7 @@ import { imzaDogrula, IMZA_BASLIGI, sinirlayici } from '@/lib/kurucu/imza'
 import { ulkeKurucuVerisi } from '@/lib/ulke/kurucu/kurucuUlke'
 import { ulkeServisSupabase } from '@/lib/ulke/sunucuOturum'
 import { aktifUlke } from '@/lib/ulke/ulke'
+import { ziyaretOzetiOku } from '@/lib/ziyaret/depo'
 import { denemeOku } from '@/lib/ulke/uygulama/deneme'
 
 export const dynamic = 'force-dynamic'
@@ -28,14 +33,14 @@ export async function GET(req: NextRequest) {
   if (!imza.ok) return NextResponse.json({ code: 'NOT_FOUND' }, { status: 404, headers: BASLIK })
   try {
     const supabase = ulkeServisSupabase()
-    const veri = await ulkeKurucuVerisi(supabase, {
+    const [veri, ziyaret] = await Promise.all([ulkeKurucuVerisi(supabase, {
       // AU runs an in-app trial (lib/ulke/uygulama/deneme.ts): days left and paid status per account, one read each.
       deneme: async (id) => {
         const o = await denemeOku(supabase, id, aktifUlke())
         return o ? { kalanGun: o.durum.tur === 'deneme' ? o.durum.kalanGun : null, ucretli: o.durum.tur === 'ucretli' } : null
       },
-    })
-    return NextResponse.json(veri, { headers: BASLIK })
+    }), ziyaretOzetiOku(supabase, aktifUlke())])
+    return NextResponse.json({ ...veri, ziyaret, denemeVar: true }, { headers: BASLIK })
   } catch (e) {
     console.error('[internal/founder-stats] failed', e instanceof Error ? e.name : 'error')
     return NextResponse.json({ code: 'BASARISIZ' }, { status: 500, headers: BASLIK })

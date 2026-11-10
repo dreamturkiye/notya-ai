@@ -70,6 +70,10 @@ const PRIVACY: YasalBelge = {
       'Patient page users: what a patient enters on their own page (form answers, messages, consent choices, requests to see or correct information), and a short-lived session so the page stays open after the PIN is entered.',
       'Website visitors: what you send us when you write to us or book a demo. We do not use advertising or analytics cookies (see the Cookie policy).',
     ] },
+    // ZIYARET-SAYACI-01 (2026-11-10): what the visit counter does (lib/ziyaret/ziyaret.ts, migration 194) — no more, no less.
+    { baslik: 'Website visit counting', paragraflar: [
+      "We count visits to the public pages of this website (the home, sign-up and sign-in pages) anonymously and without cookies. We do not store your IP address or your browser details: they are turned, together with a random value that is replaced every day (the previous day's value is deleted), into a one-way code that is used only to count a visitor once per day and is deleted within two days. What we keep are daily totals: the number of visits per page, per referring website (its name only) and per device type (mobile or desktop).",
+    ] },
     { baslik: 'How we use it', paragraflar: [
       'To provide the service to the practice: keep clinical records; turn a visit recording into text and draft a visit note; answer the practitioner’s questions from the patient’s file through the assistant; book and show appointments; let a patient see what the practitioner shares; prepare invoices; and keep the service secure and working.',
       'To run the practitioner’s account: sign-in, the free trial and plan limits, billing, support and service messages.',

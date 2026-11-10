@@ -18,6 +18,8 @@ import { ulkeTicari } from '@/lib/billing/ulkeTicari'
 import { kurucuKalanKoltuk, type FiyatStripe } from '@/lib/billing/kurucuTeklifi'
 import { getStripe } from '@/lib/billing/stripeClient'
 import type { DilKodu } from '@/lib/ulke/tipler'
+import ZiyaretSayaci from '@/components/ziyaret/ZiyaretSayaci'
+import { ulkeYolOnEki } from '@/lib/ulke/yol'
 
 export const dynamic = 'force-dynamic'
 
@@ -41,5 +43,5 @@ export default async function UlkeKurucuSayfasi() {
   let stripe: FiyatStripe | null = null
   try { stripe = getStripe() as unknown as FiyatStripe } catch { stripe = null }
   const kalan = await kurucuKalanKoltuk(stripe, ulkePaketi().kod as string)
-  return <UlkeKurucuGorseli acilis={s.a} dil={s.dil} kalan={kalan} />
+  return <><ZiyaretSayaci onEk={ulkeYolOnEki()} /><UlkeKurucuGorseli acilis={s.a} dil={s.dil} kalan={kalan} /></>
 }

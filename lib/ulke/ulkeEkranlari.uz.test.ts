@@ -503,6 +503,9 @@ describe('an Uzbekistan build: routes', () => {
       ['app/api/ulke/portal/cikis/route.ulke.ts', ['a PATIENT signs out: closes the session of the cookie it was sent, and nothing else', /portalCikis\(/]],
       // KURUCU-KONSOL-01 (2026-11-07): called server-to-server by the founder console on the Türkiye site; no session exists.
       ['app/api/internal/founder-stats/route.ulke.ts', ['the founder console calls it: no session; guarded by the HMAC signature (shared secret, 5-minute window, replay and rate limits)', /imzaDogrula\(/]],
+      // ZIYARET-SAYACI-01 (2026-11-10): the public-page visit beacon; a visitor has no session. Writes only an aggregate count
+      // through the shared handler (bots dropped, public paths only, daily-salted hash, per-visitor rate limit), answers 204.
+      ['app/api/internal/visit/route.ulke.ts', ['the visit beacon of the public pages: no session exists; writes only aggregate counts through ziyaretIsle', /ziyaretIsle\(/]],
     ])
     const d = ulkeRotaDosyalari()
     for (const a of d.api) {

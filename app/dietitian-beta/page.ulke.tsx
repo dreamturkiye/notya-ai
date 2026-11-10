@@ -10,6 +10,8 @@ import { DietitianBetaLanding } from '@/components/ulke/dietitian-beta/Dietitian
 import { PORTAL_SAYFASI } from '@/lib/ulke/portal/sabitler'
 import { rotaAcikMi } from '@/lib/ulke/rotaKapisi'
 import { ulkePaketi } from '@/lib/ulke/ulke'
+import ZiyaretSayaci from '@/components/ziyaret/ZiyaretSayaci'
+import { ulkeYolOnEki } from '@/lib/ulke/yol'
 
 export const dynamic = 'force-dynamic'
 
@@ -43,8 +45,11 @@ export default function DietitianBetaSayfasi() {
   if (!rotaAcikMi(paket.rotalar, YOL)) notFound()
   if (!rotaAcikMi(paket.rotalar, PORTAL_SAYFASI)) notFound()
   return (
-    <div className={`${syne.variable} ${literata.variable}`}>
-      <DietitianBetaLanding />
-    </div>
+    <>
+      <ZiyaretSayaci onEk={ulkeYolOnEki()} />
+      <div className={`${syne.variable} ${literata.variable}`}>
+        <DietitianBetaLanding />
+      </div>
+    </>
   )
 }

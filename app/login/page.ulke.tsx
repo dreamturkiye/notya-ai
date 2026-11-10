@@ -13,7 +13,8 @@ import { yuzeyMetinleri } from '@/lib/ulke/metin'
 import { dilliYol, dilSecenekleri, sayfaDili, type AramaParametreleri } from '@/lib/ulke/sayfaDili'
 import { ulkeKabukViewport } from '@/lib/ulke/kabuk'
 import { UYGULAMA_EKRANLARI } from '@/lib/ulke/tipler'
-import { ulkeYolu } from '@/lib/ulke/yol'
+import { ulkeYolOnEki, ulkeYolu } from '@/lib/ulke/yol'
+import ZiyaretSayaci from '@/components/ziyaret/ZiyaretSayaci'
 
 export const dynamic = 'force-dynamic'
 export const viewport = ulkeKabukViewport()
@@ -25,16 +26,19 @@ export default function LoginPage({ searchParams }: { searchParams?: AramaParame
   // STRIPE-NOTYA-AU-02: carried from /signup's post-registration "giriş yap" link — see that page's comment.
   const planHam = typeof searchParams?.plan === 'string' ? searchParams.plan : null
   return (
-    <GirisFormu
-      dil={dil}
-      metin={yuzeyMetinleri('giris', dil)}
-      ret={yuzeyMetinleri('hesap', dil).girisReddi}
-      diller={dilSecenekleri('/login')}
-      anaSayfa={dilliYol('/', dil)}
-      kayit={ozellikAcik('davetliKayit') ? dilliYol('/signup', dil) : null}
-      sonra={ulkeYolu(ozellikAcik('cekirdekMuayene') ? UYGULAMA_EKRANLARI.bugun : '/welcome')}
-      planKey={planHam}
-      planInterval={searchParams?.interval === 'year' ? 'year' : 'month'}
-    />
+    <>
+      <ZiyaretSayaci onEk={ulkeYolOnEki()} />
+      <GirisFormu
+        dil={dil}
+        metin={yuzeyMetinleri('giris', dil)}
+        ret={yuzeyMetinleri('hesap', dil).girisReddi}
+        diller={dilSecenekleri('/login')}
+        anaSayfa={dilliYol('/', dil)}
+        kayit={ozellikAcik('davetliKayit') ? dilliYol('/signup', dil) : null}
+        sonra={ulkeYolu(ozellikAcik('cekirdekMuayene') ? UYGULAMA_EKRANLARI.bugun : '/welcome')}
+        planKey={planHam}
+        planInterval={searchParams?.interval === 'year' ? 'year' : 'month'}
+      />
+    </>
   )
 }

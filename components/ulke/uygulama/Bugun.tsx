@@ -143,8 +143,12 @@ export function BugunGorunumu({ m, ad, muayeneler, hata, rol, randevular, mesajl
         {/* Same kicker, title and assistant line as Türkiye's home (app/dashboard/doktor/page.tsx), the same inline style. */}
         <div style={S({ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', fontSize: 18, color: '#6d6055', marginBottom: 2 })}>{p ? `${gunSelami(p, tz)}, ${uzunGun(tz)}` : m.bugun.selam}</div>
         <div style={S({ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' })}>
-          <h1 style={S({ fontFamily: CHROME_FONT.serif, fontWeight: 500, fontSize: 'clamp(28px, 8vw, 48px)', letterSpacing: '-0.03em', lineHeight: 1.05, color: '#2e251d', margin: 0 })}>{m.bugun.selam}, {ad}</h1>
-          <Ipucu m={m} bolum="bugun" />
+          <h1 style={S({ fontFamily: CHROME_FONT.serif, fontWeight: 500, fontSize: 'clamp(28px, 8vw, 48px)', letterSpacing: '-0.03em', lineHeight: 1.05, color: '#2e251d', margin: 0 })}>{(() => {
+            // IPUCU-TETIK-01: the tip icon sits inline after the last word (never wraps alone under the heading), as in Türkiye.
+            const metin = `${m.bugun.selam}, ${ad}`
+            const k = metin.lastIndexOf(' ')
+            return <>{metin.slice(0, k + 1)}<span style={{ whiteSpace: 'nowrap' }}>{metin.slice(k + 1)} <Ipucu m={m} bolum="bugun" /></span></>
+          })()}</h1>
         </div>
         {/* The Turkish home names the assistant in one line under the title ("Ayşe: …"); no card, no source lists, no voice buttons. The nav button and "Your assistant" open the assistant page. */}
         <div id="asistan" className={satir ? undefined : 'uza-ekran-disi'} style={S({ marginTop: 12, fontSize: 15, color: R.ink, lineHeight: 1.55, maxWidth: 720 })}>

@@ -15,6 +15,8 @@ import { JsonLd } from '@/components/ulke/JsonLd'
 import { acilis } from '@/lib/ulke/arayuz'
 import { ozellikAcik } from '@/lib/ulke/ulke'
 import { sayfaDili, type AramaParametreleri } from '@/lib/ulke/sayfaDili'
+import ZiyaretSayaci from '@/components/ziyaret/ZiyaretSayaci'
+import { ulkeYolOnEki } from '@/lib/ulke/yol'
 
 export const dynamic = 'force-dynamic'
 
@@ -32,5 +34,5 @@ export default function UlkeKokSayfasi({ searchParams }: { searchParams?: AramaP
   if (!icerik || !ozellikAcik('acilisSayfasi')) notFound()
   // Where "request a price" messages go is a setting of the deployment, never a default in code.
   const ham = searchParams?.dil
-  return <><JsonLd veri={yapisalVeri()} /><UlkeAcilisSayfasi acilis={icerik} dil={sayfaDili(searchParams)} istenenDil={(Array.isArray(ham) ? ham[0] : ham) ?? null} iletisimEposta={process.env.NOTYA_ILETISIM_EPOSTA?.trim() || null} /></>
+  return <><ZiyaretSayaci onEk={ulkeYolOnEki()} /><JsonLd veri={yapisalVeri()} /><UlkeAcilisSayfasi acilis={icerik} dil={sayfaDili(searchParams)} istenenDil={(Array.isArray(ham) ? ham[0] : ham) ?? null} iletisimEposta={process.env.NOTYA_ILETISIM_EPOSTA?.trim() || null} /></>
 }
