@@ -13,7 +13,8 @@ import { yuzeyMetinleri } from '@/lib/ulke/metin'
 import { dilliYol, dilSecenekleri, sayfaDili, type AramaParametreleri } from '@/lib/ulke/sayfaDili'
 import { ulkeKabukViewport } from '@/lib/ulke/kabuk'
 import { UYGULAMA_EKRANLARI } from '@/lib/ulke/tipler'
-import { ulkeYolu } from '@/lib/ulke/yol'
+import { ulkeYolOnEki, ulkeYolu } from '@/lib/ulke/yol'
+import ZiyaretSayaci from '@/components/ziyaret/ZiyaretSayaci'
 
 export const dynamic = 'force-dynamic'
 export const viewport = ulkeKabukViewport()
@@ -23,14 +24,17 @@ export default function LoginPage({ searchParams }: { searchParams?: AramaParame
   if (!ozellikAcik('cekirdekGiris')) notFound()
   const dil = sayfaDili(searchParams)
   return (
-    <GirisFormu
-      dil={dil}
-      metin={yuzeyMetinleri('giris', dil)}
-      ret={yuzeyMetinleri('hesap', dil).girisReddi}
-      diller={dilSecenekleri('/login')}
-      anaSayfa={dilliYol('/', dil)}
-      kayit={ozellikAcik('davetliKayit') ? dilliYol('/signup', dil) : null}
-      sonra={ulkeYolu(ozellikAcik('cekirdekMuayene') ? UYGULAMA_EKRANLARI.bugun : '/welcome')}
-    />
+    <>
+      <ZiyaretSayaci onEk={ulkeYolOnEki()} />
+      <GirisFormu
+        dil={dil}
+        metin={yuzeyMetinleri('giris', dil)}
+        ret={yuzeyMetinleri('hesap', dil).girisReddi}
+        diller={dilSecenekleri('/login')}
+        anaSayfa={dilliYol('/', dil)}
+        kayit={ozellikAcik('davetliKayit') ? dilliYol('/signup', dil) : null}
+        sonra={ulkeYolu(ozellikAcik('cekirdekMuayene') ? UYGULAMA_EKRANLARI.bugun : '/welcome')}
+      />
+    </>
   )
 }

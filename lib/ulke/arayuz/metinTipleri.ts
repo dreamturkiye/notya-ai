@@ -378,8 +378,10 @@ export type UygulamaMetni = {
     readonly anladim: string
     /** The second closing button; also marks the screen's tip as seen ("Don't show this again"). */
     readonly birDaha: string
-    /** Accessible name of the "?" trigger; % is the tip's heading. */
+    /** Accessible name of the "?" trigger; % is the tip's heading. Used only when `sayfa` is absent. */
     readonly ac: string
+    /** IPUCU-TETIK-01 (2026-11-10): accessible name and tooltip of the "?" trigger ("Tip about this page"). */
+    readonly sayfa?: string
     /** The Settings switch row: its label and the line under it. */
     readonly ayarEtiket: string
     readonly ayarIzoh: string
