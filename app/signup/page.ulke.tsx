@@ -13,6 +13,8 @@ import { ozellikAcik, ulkePaketi } from '@/lib/ulke/ulke'
 import { yuzeyMetinleri } from '@/lib/ulke/metin'
 import { dilliYol, dilSecenekleri, sayfaDili, type AramaParametreleri } from '@/lib/ulke/sayfaDili'
 import { ulkeKabukViewport } from '@/lib/ulke/kabuk'
+import ZiyaretSayaci from '@/components/ziyaret/ZiyaretSayaci'
+import { ulkeYolOnEki } from '@/lib/ulke/yol'
 
 export const dynamic = 'force-dynamic'
 export const viewport = ulkeKabukViewport()
@@ -31,17 +33,20 @@ export default function SignupPage({ searchParams }: { searchParams?: AramaParam
     : []
   const brans = bransGruplari.length ? { etiket: r.etiket, sec: r.sec, gerekli: r.gerekli, gruplar: bransGruplari } : undefined
   return (
-    <DavetliKayitFormu
-      kodGerekli={kayitKoduGerekliMi(ulkePaketi())}
-      dil={dil}
-      metin={yuzeyMetinleri('davetliKayit', dil)}
-      anaSayfaAdi={yuzeyMetinleri('giris', dil).anaSayfa}
-      diller={dilSecenekleri('/signup')}
-      anaSayfa={dilliYol('/', dil)}
-      giris={dilliYol('/login', dil)}
-      fiyat={dilliYol('/', dil, acilisCapasi('narx') ? `#${acilisCapasi('narx')}` : '')}
-      brans={brans}
-      meslek={{ etiket: a.meslekKaydi, izoh: a.meslekKaydiIzoh, gecersiz: a.meslekKaydiGecersiz }}
-    />
+    <>
+      <ZiyaretSayaci onEk={ulkeYolOnEki()} />
+      <DavetliKayitFormu
+        kodGerekli={kayitKoduGerekliMi(ulkePaketi())}
+        dil={dil}
+        metin={yuzeyMetinleri('davetliKayit', dil)}
+        anaSayfaAdi={yuzeyMetinleri('giris', dil).anaSayfa}
+        diller={dilSecenekleri('/signup')}
+        anaSayfa={dilliYol('/', dil)}
+        giris={dilliYol('/login', dil)}
+        fiyat={dilliYol('/', dil, acilisCapasi('narx') ? `#${acilisCapasi('narx')}` : '')}
+        brans={brans}
+        meslek={{ etiket: a.meslekKaydi, izoh: a.meslekKaydiIzoh, gecersiz: a.meslekKaydiGecersiz }}
+      />
+    </>
   )
 }

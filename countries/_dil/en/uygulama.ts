@@ -347,6 +347,7 @@ export const EN_UYGULAMA_TEMEL: Temel = {
     anladim: 'Got it',
     birDaha: 'Don’t show this again',
     ac: 'Tip: %',
+    sayfa: 'Tip about this page',
     ayarEtiket: 'Show tips',
     ayarIzoh: 'The small “?” briefs on each screen, and a one-time introduction the first time a screen opens.',
     bolumler: {

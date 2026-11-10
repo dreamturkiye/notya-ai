@@ -5,6 +5,10 @@
  */
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
+import React from 'react'
+import { renderToStaticMarkup } from 'react-dom/server'
 import { EN_UYGULAMA_TEMEL } from './uygulama'
 import type { UlkeIpucuBolumu } from '@/lib/ulke/arayuz/metinTipleri'
 
@@ -34,5 +38,24 @@ describe('en: in-place tips (YENI-DOKTOR-UX-2026-10)', () => {
       assert.ok(k!.adimlar[anahtar].etiket.trim().length >= 3, `${anahtar}: empty label`)
       assert.ok(k!.adimlar[anahtar].aciklama.trim().length >= 3, `${anahtar}: empty line`)
     }
+  })
+})
+
+// IPUCU-TETIK-01 (2026-11-10, core): the same small labelled "?" icon as Türkiye, inside or right after the heading.
+describe('en: the tip trigger (IPUCU-TETIK-01)', () => {
+  const KOK = join(__dirname, '..', '..', '..')
+  it('renders a labelled 44px button with a 22px visual and a title tooltip', async () => {
+    const { Ipucu } = await import('@/components/ulke/uygulama/Ipucu')
+    assert.equal(EN_UYGULAMA_TEMEL.ipuclari!.sayfa, 'Tip about this page')
+    const html = renderToStaticMarkup(React.createElement(Ipucu, { m: EN_UYGULAMA_TEMEL as never, bolum: 'bugun' }))
+    assert.match(html, /<button[^>]*aria-label="Tip about this page"/)
+    assert.match(html, /<button[^>]*title="Tip about this page"/)
+    assert.match(html, /<button[^>]*width:44px;height:44px/)
+    assert.match(html, /class="uza-ipucu-ikon"[^>]*width:22px;height:22px/)
+  })
+  it('home: the trigger is inside the h1, on the line of its last word', () => {
+    const b = readFileSync(join(KOK, 'components/ulke/uygulama/Bugun.tsx'), 'utf8')
+    const h1 = b.slice(b.indexOf("fontSize: 'clamp(28px, 8vw, 48px)'"), b.indexOf('</h1>', b.indexOf("fontSize: 'clamp(28px, 8vw, 48px)'")))
+    assert.match(h1, /whiteSpace: 'nowrap'[^\n]*<Ipucu m=\{m\} bolum="bugun" \/>/)
   })
 })
