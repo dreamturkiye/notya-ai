@@ -1348,14 +1348,17 @@ Wave3’te SIRADAKİ diye önerildi → **HATA**. Ledger + early seed’e işlen
 ## W6-18. Doç. Dr. Hatice Ender Soydinç ← GİTTİ (2026-11-10, WA-verified)
 **kadın-doğum** · Gaziantep · WA: `+905331659073`
 
-## W6-19. Doç. Dr. Meral Tuğba Çimşir ← SIRADAKİ
-**kadın-doğum** · Antalya · `+90 546 811 13 16` · WA: `+905468111316`  
-**Doğrulama:** DS `socialMedia[{type:whatsapp, url:905468111316}]`.
+## W6-19. Doç. Dr. Meral Tuğba Çimşir ← GİTTİ (2026-11-10, WA-verified)
+**kadın-doğum** · Antalya · WA: `+905468111316`
 
-**Ön kontrol:** ledger temiz.
+## W6-20. Doç. Dr. Sabri Berkem Ökten ← SIRADAKİ
+**kadın-doğum** · İstanbul · `+90 535 663 07 57` · WA: `+905356630757`  
+**Doğrulama:** DS `socialMedia[{type:whatsapp, url:905356630757}]`.
+
+**Ön kontrol:** ledger temiz. Pool ~147 / queue ~133.
 
 ```
-Tuğba Hocam merhaba 👋
+Berkem Hocam merhaba 👋
 Ben Kaan, *Notya*'dan yazıyorum.
 
 *Notya* — hekimler için yapay zekâ klinik asistanı.

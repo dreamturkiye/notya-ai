@@ -1,10 +1,10 @@
 {
-  "tarih": "2026-11-10T11:38:57.475Z",
+  "tarih": "2026-11-10T11:45:50.204Z",
   "scanned_this_pass": 200,
   "fail": 0,
-  "profiles_with_wa": 24,
-  "new_unique_wa": 23,
-  "pool_total": 133,
-  "wave_appended": 23,
-  "unscanned_left": 2866
+  "profiles_with_wa": 16,
+  "new_unique_wa": 14,
+  "pool_total": 147,
+  "wave_appended": 14,
+  "unscanned_left": 2666
 }
