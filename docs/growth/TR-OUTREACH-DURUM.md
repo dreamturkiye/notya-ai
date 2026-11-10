@@ -1,11 +1,11 @@
 # TR outreach durum (canlı)
 
-**Sıradaki:** Op. Dr. **Canan Tapkan** · KD · Ankara · `+905517211235`  
+**Sıradaki:** Doç. Dr. **Ceren Gölbaşı** · KD · İzmir · `+905303686380`  
 (WA-verified)
 
 ## Son (2026-11-10)
 
 | Kişi | Telefon | Sonuç |
 |------|---------|--------|
-| Prof. Dr. Burcu Kısa | `+905336877853` | **gitti** |
-| Prof. Dr. Berfu Demir | `+905327470246` | gitti |
+| Op. Dr. Canan Tapkan | `+905517211235` | **gitti** |
+| Prof. Dr. Burcu Kısa | `+905336877853` | gitti |
