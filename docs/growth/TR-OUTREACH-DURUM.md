@@ -1,15 +1,15 @@
 # TR outreach durum (canlı)
 
-**Sıradaki:** Prof. Dr. **Esra Aktepe Keskin** · KD · Ankara · `+905053574358`  
+**Sıradaki:** Op. Dr. **Feyza Ağaca Güler** · KD · İzmir · `+905306414850`  
 (WA-verified)
 
 ## Continuous scraper
 
-Çalışıyor — multi-city DS harvest + WA enrich (Konya listelerinde). Pool henüz yazılmadı (harvest fazı).
+Enrich fazında (~98/200, waHits=2) — pool’a yazmaya başladı.
 
 ## Son (2026-11-10)
 
 | Kişi | Telefon | Sonuç |
 |------|---------|--------|
-| Doç. Dr. Eser Çolak | `+905315138184` | **gitti** |
-| Op. Dr. Ertan Öztürk | `+905301732245` | gitti |
+| Prof. Dr. Esra Aktepe Keskin | `+905053574358` | **gitti** |
+| Doç. Dr. Eser Çolak | `+905315138184` | gitti |
