@@ -358,6 +358,7 @@ const UZ_LATN: UygulamaMetni = {
     anladim: 'Tushundim',
     birDaha: 'Qayta koʻrsatma',
     ac: 'Maslahat: %',
+    sayfa: 'Bu sahifa haqida maslahat',
     ayarEtiket: 'Maslahatlarni koʻrsatish',
     ayarIzoh: 'Har bir ekrandagi kichik “?” orqali ochiladigan qisqa maslahatlar; ekran birinchi marta ochilganda faqat bir marta oʻzi koʻrinadi.',
     bolumler: {
@@ -852,6 +853,7 @@ const UZ_CYRL: UygulamaMetni = {
     anladim: 'Тушундим',
     birDaha: 'Қайта кўрсатма',
     ac: 'Маслаҳат: %',
+    sayfa: 'Бу саҳифа ҳақида маслаҳат',
     ayarEtiket: 'Маслаҳатларни кўрсатиш',
     ayarIzoh: 'Ҳар бир экрандаги кичик “?” орқали очиладиган қисқа маслаҳатлар; экран биринчи марта очилганда фақат бир марта ўзи кўринади.',
     bolumler: {
@@ -1345,6 +1347,7 @@ const RU: UygulamaMetni = {
     anladim: 'Понятно',
     birDaha: 'Больше не показывать',
     ac: 'Совет: %',
+    sayfa: 'Подсказка об этой странице',
     ayarEtiket: 'Показывать советы',
     ayarIzoh: 'Небольшие подсказки «?» на каждом экране; при первом открытии экрана совет показывается один раз сам.',
     bolumler: {

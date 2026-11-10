@@ -66,6 +66,8 @@ export function ingilizceYasal(o: {
             'A lawyer sets the retention periods. Until that review, the draft says: an account is kept while it is open, and a patient record is kept until the clinician deletes it or the account closes.',
           ],
         },
+        // ZIYARET-SAYACI-01 (2026-11-10): what the visit counter does (lib/ziyaret/ziyaret.ts, migration 194) — no more, no less.
+        { baslik: 'Website visit counting', paragraflar: ["We count visits to the public pages of this website (the home, sign-up and sign-in pages) anonymously and without cookies. We do not store your IP address or your browser details: they are turned, together with a random value that is replaced every day (the previous day's value is deleted), into a one-way code that is used only to count a visitor once per day and is deleted within two days. What we keep are daily totals: the number of visits per page, per referring website (its name only) and per device type (mobile or desktop)."] },
         { baslik: 'Your request', paragraflar: [`Write to ${E.privacy} to ask for a copy, a correction or a deletion. The data-request page says what to include.`] },
         posta('Addresses'),
       ],

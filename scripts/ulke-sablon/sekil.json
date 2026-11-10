@@ -421,6 +421,7 @@
    "anladim": "$m",
    "birDaha": "$m",
    "ac": "$m:%",
+   "sayfa": "$m",
    "ayarEtiket": "$m",
    "ayarIzoh": "$m",
    "bolumler": {

@@ -12,6 +12,8 @@ import { UlkeDemoSayfasi, demoFormu } from '@/components/ulke/demo'
 import { acilis } from '@/lib/ulke/arayuz'
 import { demoMetni, demoSayfasiVar } from '@/lib/ulke/demo'
 import { sayfaDili, type AramaParametreleri } from '@/lib/ulke/sayfaDili'
+import ZiyaretSayaci from '@/components/ziyaret/ZiyaretSayaci'
+import { ulkeYolOnEki } from '@/lib/ulke/yol'
 
 export const dynamic = 'force-dynamic'
 
@@ -32,5 +34,5 @@ export function generateMetadata({ searchParams }: { searchParams?: AramaParamet
 export default function UlkeDemoRotasi({ searchParams }: { searchParams?: AramaParametreleri }) {
   const s = sayfa(searchParams)
   if (!s) notFound()
-  return <UlkeDemoSayfasi acilis={s.a} metin={s.metin} dil={s.d} />
+  return <><ZiyaretSayaci onEk={ulkeYolOnEki()} /><UlkeDemoSayfasi acilis={s.a} metin={s.metin} dil={s.d} /></>
 }
