@@ -1,15 +1,15 @@
 # TR outreach durum (canlı)
 
-**Sıradaki:** Op. Dr. **Adnan Şahin** · KD · Bursa · `+905491483565`  
-(WA-verified · continuous scraper — Bursa)
+**Sıradaki:** Op. Dr. **Atılım Gülçiçek** · KD · Gaziantep · `+905534070455`  
+(WA-verified · continuous scraper)
 
 ## Continuous scraper
 
-Pool: 2+ WA hits merged; re-harvesting Ankara pedi lists.
+Pass 2 enrich ~32/200, waHits=10 — pool büyüyor.
 
 ## Son (2026-11-10)
 
 | Kişi | Telefon | Sonuç |
 |------|---------|--------|
-| Op. Dr. Feyza Arman | `+905053272741` | **gitti** |
-| Op. Dr. Feyza Ağaca Güler | `+905306414850` | gitti |
+| Op. Dr. Adnan Şahin | `+905491483565` | **gitti** |
+| Op. Dr. Feyza Arman | `+905053272741` | gitti |
