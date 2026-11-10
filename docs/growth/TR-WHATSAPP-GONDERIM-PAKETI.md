@@ -1327,14 +1327,17 @@ Wave3’te SIRADAKİ diye önerildi → **HATA**. Ledger + early seed’e işlen
 ## W6-11. Doç. Dr. Emre Destegül ← GİTTİ (2026-11-10, WA-verified)
 **kadın-doğum** · Adana · WA: `+905323115484`
 
-## W6-12. Doç. Dr. Fatma Nurgül Taşgöz ← SIRADAKİ
-**kadın-doğum** · Bursa · `+90 532 332 60 56` · WA: `+905323326056`  
-**Doğrulama:** DS `socialMedia[{type:whatsapp, url:905323326056}]`.
+## W6-12. Doç. Dr. Fatma Nurgül Taşgöz ← GİTTİ (2026-11-10, WA-verified)
+**kadın-doğum** · Bursa · WA: `+905323326056`
 
-**Ön kontrol:** ledger temiz. Pool ~82 / queue ~76.
+## W6-13. Doç. Dr. Feyza Bayram ← SIRADAKİ
+**kadın-doğum** · Bursa · `+90 546 193 83 43` · WA: `+905461938343`  
+**Doğrulama:** DS `socialMedia[{type:whatsapp, url:905461938343}]`.
+
+**Ön kontrol:** ledger temiz (≠ Feyza Ağaca Güler / Feyza Arman).
 
 ```
-Nurgül Hocam merhaba 👋
+Feyza Hocam merhaba 👋
 Ben Kaan, *Notya*'dan yazıyorum.
 
 *Notya* — hekimler için yapay zekâ klinik asistanı.
