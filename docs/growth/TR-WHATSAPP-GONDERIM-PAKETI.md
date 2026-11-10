@@ -1315,14 +1315,17 @@ Wave3’te SIRADAKİ diye önerildi → **HATA**. Ledger + early seed’e işlen
 ## W6-7. Op. Dr. Atılım Gülçiçek ← GİTTİ (2026-11-10, WA-verified)
 **kadın-doğum** · Gaziantep · WA: `+905534070455`
 
-## W6-8. Doç. Dr. Gonca Çoban Şerbetçioğlu ← SIRADAKİ
-**kadın-doğum** · İzmir · `+90 533 249 00 35` · WA: `+905332490035`  
-**Doğrulama:** DS `socialMedia[{type:whatsapp, url:905332490035}]`.
+## W6-8. Doç. Dr. Gonca Çoban Şerbetçioğlu ← GİTTİ (2026-11-10, WA-verified)
+**kadın-doğum** · İzmir · WA: `+905332490035`
 
-**Ön kontrol:** ledger temiz.
+## W6-9. Doç. Dr. Cevdet Adıgüzel ← SIRADAKİ
+**kadın-doğum** · Adana · `+90 543 804 74 62` · WA: `+905438047462`  
+**Doğrulama:** DS `socialMedia[{type:whatsapp, url:905438047462}]` (continuous pool).
+
+**Ön kontrol:** ledger temiz. Pool ~21 / queue ~27.
 
 ```
-Gonca Hocam merhaba 👋
+Cevdet Hocam merhaba 👋
 Ben Kaan, *Notya*'dan yazıyorum.
 
 *Notya* — hekimler için yapay zekâ klinik asistanı.
