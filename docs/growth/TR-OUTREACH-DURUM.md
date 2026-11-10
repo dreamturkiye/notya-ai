@@ -1,15 +1,15 @@
 # TR outreach durum (canlı)
 
-**Sıradaki:** Op. Dr. **Atılım Gülçiçek** · KD · Gaziantep · `+905534070455`  
-(WA-verified · continuous scraper)
+**Sıradaki:** Doç. Dr. **Gonca Çoban Şerbetçioğlu** · KD · İzmir · `+905332490035`  
+(WA-verified)
 
 ## Continuous scraper
 
-Pass 2 enrich ~32/200, waHits=10 — pool büyüyor.
+Pass 2 enrich ~89/200, waHits=15.
 
 ## Son (2026-11-10)
 
 | Kişi | Telefon | Sonuç |
 |------|---------|--------|
-| Op. Dr. Adnan Şahin | `+905491483565` | **gitti** |
-| Op. Dr. Feyza Arman | `+905053272741` | gitti |
+| Op. Dr. Atılım Gülçiçek | `+905534070455` | **gitti** |
+| Op. Dr. Adnan Şahin | `+905491483565` | gitti |
