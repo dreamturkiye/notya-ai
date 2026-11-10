@@ -1264,14 +1264,17 @@ Wave3’te SIRADAKİ diye önerildi → **HATA**. Ledger + early seed’e işlen
 ## W5-5. Op. Dr. Ayşe İnmez ← GİTTİ (2026-11-10, WA-verified)
 **kadın-doğum** · İzmir · WA: `+905352083708`
 
-## W5-6. Op. Dr. Ayşegül Baylas Şahin ← SIRADAKİ
-**kadın-doğum** · Ankara · `+90 541 591 80 00` · WA: `+905415918000`  
-**Doğrulama:** DS `socialMedia[{type:whatsapp, url:905415918000}]`.
+## W5-6. Op. Dr. Ayşegül Baylas Şahin ← GİTTİ (2026-11-10, WA-verified)
+**kadın-doğum** · Ankara · WA: `+905415918000`
+
+## W5-7. Doç. Dr. Barış Büke ← SIRADAKİ
+**kadın-doğum** · İzmir · `+90 532 340 73 78` · WA: `+905323407378`  
+**Doğrulama:** DS `socialMedia[{type:whatsapp, url:905323407378}]`.
 
 **Ön kontrol:** ledger temiz. Gönder: yapıştır → kart **X** → gönder.
 
 ```
-Ayşegül Hocam merhaba 👋
+Barış Hocam merhaba 👋
 Ben Kaan, *Notya*'dan yazıyorum.
 
 *Notya* — hekimler için yapay zekâ klinik asistanı.
