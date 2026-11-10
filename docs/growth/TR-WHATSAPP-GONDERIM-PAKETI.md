@@ -1303,11 +1303,14 @@ Wave3’te SIRADAKİ diye önerildi → **HATA**. Ledger + early seed’e işlen
 ## W6-3. Prof. Dr. Esra Aktepe Keskin ← GİTTİ (2026-11-10, WA-verified)
 **kadın-doğum** · Ankara · WA: `+905053574358`
 
-## W6-4. Op. Dr. Feyza Ağaca Güler ← SIRADAKİ
-**kadın-doğum** · İzmir · `+90 530 641 48 50` · WA: `+905306414850`  
-**Doğrulama:** DS `socialMedia[{type:whatsapp, url:905306414850}]`.
+## W6-4. Op. Dr. Feyza Ağaca Güler ← GİTTİ (2026-11-10, WA-verified)
+**kadın-doğum** · İzmir · WA: `+905306414850`
 
-**Ön kontrol:** ledger temiz.
+## W6-5. Op. Dr. Feyza Arman ← SIRADAKİ
+**kadın-doğum** · İzmir · `+90 505 327 27 41` · WA: `+905053272741`  
+**Doğrulama:** DS `socialMedia[{type:whatsapp, url:905053272741}]`.
+
+**Ön kontrol:** ledger temiz (≠ Feyza Ağaca Güler).
 
 ```
 Feyza Hocam merhaba 👋

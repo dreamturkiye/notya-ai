@@ -1,15 +1,15 @@
 # TR outreach durum (canlı)
 
-**Sıradaki:** Op. Dr. **Feyza Ağaca Güler** · KD · İzmir · `+905306414850`  
-(WA-verified)
+**Sıradaki:** Op. Dr. **Feyza Arman** · KD · İzmir · `+905053272741`  
+(WA-verified · ≠ Feyza Ağaca Güler)
 
 ## Continuous scraper
 
-Enrich fazında (~98/200, waHits=2) — pool’a yazmaya başladı.
+Enrich ~170/200, waHits=2 — hâlâ tarıyor.
 
 ## Son (2026-11-10)
 
 | Kişi | Telefon | Sonuç |
 |------|---------|--------|
-| Prof. Dr. Esra Aktepe Keskin | `+905053574358` | **gitti** |
-| Doç. Dr. Eser Çolak | `+905315138184` | gitti |
+| Op. Dr. Feyza Ağaca Güler | `+905306414850` | **gitti** |
+| Prof. Dr. Esra Aktepe Keskin | `+905053574358` | gitti |
