@@ -1291,14 +1291,17 @@ Wave3’te SIRADAKİ diye önerildi → **HATA**. Ledger + early seed’e işlen
 ## W5-14. Doç. Dr. Doğukan Özkan ← GİTTİ (2026-11-10, WA-verified)
 **kadın-doğum** · Ankara · WA: `+905451015188`
 
-## W5-15. Op. Dr. Emel Keleştemur ← SIRADAKİ
-**kadın-doğum** · Ankara · `+90 507 471 36 13` · WA: `+905074713613`  
-**Doğrulama:** DS `socialMedia[{type:whatsapp, url:905074713613}]`.
+## W5-15. Op. Dr. Emel Keleştemur ← GİTTİ (2026-11-10, WA-verified)
+**kadın-doğum** · Ankara · WA: `+905074713613`
 
-**Ön kontrol:** ledger temiz (≠ Emel Şen pedi). Wave5 son stok; wave6 enrich arka planda.
+## W6-1. Op. Dr. Ertan Öztürk ← SIRADAKİ
+**kadın-doğum** · Ankara · `+90 530 173 22 45` · WA: `+905301732245`  
+**Doğrulama:** DS `socialMedia[{type:whatsapp, url:905301732245}]`.
+
+**Ön kontrol:** ledger temiz. Wave6: 14 WA-verified KD (Ankara/İzmir).
 
 ```
-Emel Hocam merhaba 👋
+Ertan Hocam merhaba 👋
 Ben Kaan, *Notya*'dan yazıyorum.
 
 *Notya* — hekimler için yapay zekâ klinik asistanı.

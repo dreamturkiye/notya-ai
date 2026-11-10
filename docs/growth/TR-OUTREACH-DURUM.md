@@ -1,11 +1,11 @@
 # TR outreach durum (canlı)
 
-**Sıradaki:** Op. Dr. **Emel Keleştemur** · KD · Ankara · `+905074713613`  
-(WA-verified · wave5 son · ≠ Emel Şen pedi; wave6 enrich sürüyor)
+**Sıradaki:** Op. Dr. **Ertan Öztürk** · KD · Ankara · `+905301732245`  
+(WA-verified · wave6 · 14 stok)
 
 ## Son (2026-11-10)
 
 | Kişi | Telefon | Sonuç |
 |------|---------|--------|
-| Doç. Dr. Doğukan Özkan | `+905451015188` | **gitti** |
-| Op. Dr. Dilek Alihanoğlu | `+905325269695` | gitti |
+| Op. Dr. Emel Keleştemur | `+905074713613` | **gitti** |
+| Doç. Dr. Doğukan Özkan | `+905451015188` | gitti |
