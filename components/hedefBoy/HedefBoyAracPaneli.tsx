@@ -37,6 +37,8 @@ export function HedefBoyAracPaneli({
   const [mesaj, setMesaj] = useState('')
   const [yukleniyor, setYukleniyor] = useState(false)
   const [aileGoster, setAileGoster] = useState(false)
+  // Once the doctor types a height, a patient's stored values must never overwrite it.
+  const elleGirildi = useRef(false)
 
   useEffect(() => {
     onAileModu?.(aileGoster)
@@ -46,10 +48,6 @@ export function HedefBoyAracPaneli({
     () => hesaplaHedefBoy({ anneBoy: anne, babaBoy: baba, cinsiyet }),
     [anne, baba, cinsiyet],
   )
-
-  useEffect(() => {
-    if (canli.ok) setSonuc(canli.sonuc)
-  }, [canli])
 
   useEffect(() => {
     if (!aileGoster) return
@@ -76,11 +74,14 @@ export function HedefBoyAracPaneli({
       const d = await r.json()
       if (!r.ok) throw new Error(d.error || 'Hasta yüklenemedi')
       setHastaAd(d.ad || '')
-      setCinsiyet(cinsiyetHedefBoy(d.cinsiyet) === 'kiz' ? 'Kadın' : 'Erkek')
-      setAnne(d.anneBoyCm != null ? String(d.anneBoyCm) : '')
-      setBaba(d.babaBoyCm != null ? String(d.babaBoyCm) : '')
-      setSonuc(d.sonuc || null)
-      setKayitli(Boolean(d.sonuc))
+      const cins = cinsiyetHedefBoy(d.cinsiyet)
+      if (cins) setCinsiyet(cins === 'kiz' ? 'Kadın' : 'Erkek')
+      if (!elleGirildi.current) {
+        setAnne(d.anneBoyCm != null ? String(d.anneBoyCm) : '')
+        setBaba(d.babaBoyCm != null ? String(d.babaBoyCm) : '')
+        setSonuc(d.sonuc || null)
+      }
+      setKayitli(Boolean(d.sonuc) && !elleGirildi.current)
     } catch (e) {
       setHata(e instanceof Error ? e.message : 'Yüklenemedi')
     }
@@ -137,7 +138,9 @@ export function HedefBoyAracPaneli({
     }
   }
 
-  const gorsel = canli.ok ? canli.sonuc : sonuc
+  // Typed values always win. A half-typed or invalid entry shows the empty stage, never a stale result.
+  const yazilmis = anne.trim() !== '' || baba.trim() !== ''
+  const gorsel = canli.ok ? canli.sonuc : yazilmis ? null : sonuc
 
   return (
     <div>
@@ -160,7 +163,7 @@ export function HedefBoyAracPaneli({
             <input
               style={{ ...toolsInput, fontSize: 18, fontWeight: 700, letterSpacing: '-0.02em' }}
               value={baba}
-              onChange={(e) => setBaba(e.target.value)}
+              onChange={(e) => { elleGirildi.current = true; setKayitli(false); setBaba(e.target.value) }}
               placeholder="182 veya 1.82"
               inputMode="decimal"
               autoComplete="off"
@@ -171,7 +174,7 @@ export function HedefBoyAracPaneli({
             <input
               style={{ ...toolsInput, fontSize: 18, fontWeight: 700, letterSpacing: '-0.02em' }}
               value={anne}
-              onChange={(e) => setAnne(e.target.value)}
+              onChange={(e) => { elleGirildi.current = true; setKayitli(false); setAnne(e.target.value) }}
               placeholder="165 veya 1.65"
               inputMode="decimal"
               autoComplete="off"
