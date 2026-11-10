@@ -1,7 +1,6 @@
 skor,isim,brans,sehir,ilce,telefon,url,durum
-85,Doç. Dr. Emine Öztürk,kadin-dogum,istanbul,,+905421944646,https://www.doktorsitesi.com/doc-dr-emine-ozturk/kadin-hastaliklari-ve-dogum/istanbul,gitti
-85,Doç. Dr. Emre Destegül,kadin-dogum,adana,,+905323115484,https://www.doktorsitesi.com/doc-dr-emre-destegul/kadin-hastaliklari-ve-dogum/adana,siradaki
-85,Doç. Dr. Fatma Nurgul Tasgoz,kadin-dogum,bursa,,+905323326056,https://www.doktorsitesi.com/doc-dr-fatma-nurgul-tasgoz/kadin-hastaliklari-ve-dogum/bursa,yeni
+85,Doç. Dr. Emre Destegül,kadin-dogum,adana,,+905323115484,https://www.doktorsitesi.com/doc-dr-emre-destegul/kadin-hastaliklari-ve-dogum/adana,gitti
+85,Doç. Dr. Fatma Nurgül Taşgöz,kadin-dogum,bursa,,+905323326056,https://www.doktorsitesi.com/doc-dr-fatma-nurgul-tasgoz/kadin-hastaliklari-ve-dogum/bursa,siradaki
 85,Doç. Dr. Feyza Bayram,kadin-dogum,bursa,,+905461938343,https://www.doktorsitesi.com/doc-dr-feyza-bayram/kadin-hastaliklari-ve-dogum/bursa,yeni
 85,Doç. Dr. Fikriye Isil Adiguzel,kadin-dogum,adana,,+905411842839,https://www.doktorsitesi.com/doc-dr-fikriye-isil-adiguzel/kadin-hastaliklari-ve-dogum/adana,yeni
 85,Doç. Dr. Gonul Ozer,kadin-dogum,istanbul,,+905326945549,https://www.doktorsitesi.com/doc-dr-gonul-ozer/kadin-hastaliklari-ve-dogum/istanbul,yeni
@@ -31,10 +30,54 @@ skor,isim,brans,sehir,ilce,telefon,url,durum
 85,Kulal Cukurova,kadin-dogum,izmir,,+905305000802,https://www.doktorsitesi.com/op-dr-kulal-cukurova/kadin-hastaliklari-ve-dogum/izmir,yeni
 85,Medine Meltem Adalioglu,kadin-dogum,izmir,,+905441382088,https://www.doktorsitesi.com/op-dr-medine-meltem-adalioglu/kadin-hastaliklari-ve-dogum/izmir,yeni
 85,Mehmet Cinar,kadin-dogum,ankara,,+905334570452,https://www.doktorsitesi.com/prof-dr-mehmet-cinar/kadin-hastaliklari-ve-dogum/ankara,yeni
+85,Mehmet Rifat Goklu,kadin-dogum,izmir,,+905077610020,https://www.doktorsitesi.com/doc-dr-mehmet-rifat-goklu/kadin-hastaliklari-ve-dogum/izmir,yeni
+85,Melik Yazir,kadin-dogum,izmir,,+905422439096,https://www.doktorsitesi.com/op-dr-melik-yazir/kadin-hastaliklari-ve-dogum/izmir,yeni
+85,Meltem Antalyali,kadin-dogum,ankara,,+905013236323,https://www.doktorsitesi.com/op-dr-meltem-antalyali/kadin-hastaliklari-ve-dogum/ankara,yeni
+85,Mine Genc,kadin-dogum,izmir,,+905416244832,https://www.doktorsitesi.com/doc-dr-mine-genc/kadin-hastaliklari-ve-dogum/izmir,yeni
+85,Mujdegul Zkaraca,kadin-dogum,ankara,,+905344250343,https://www.doktorsitesi.com/op-dr-mujdegul-zkaraca/kadin-hastaliklari-ve-dogum/ankara,yeni
+85,Murat Dede,kadin-dogum,ankara,,+905326421307,https://www.doktorsitesi.com/prof-dr-murat-dede/kadin-hastaliklari-ve-dogum/ankara,yeni
+85,Mustafa Sahin 2,kadin-dogum,antalya,,+905537814459,https://www.doktorsitesi.com/mustafa-sahin-2/kadin-hastaliklari-ve-dogum/antalya,yeni
+85,Nagehan Ikiz,kadin-dogum,izmir,,+905308688808,https://www.doktorsitesi.com/op-dr-nagehan-ikiz/kadin-hastaliklari-ve-dogum/izmir,yeni
+85,Neslihan Seckin,kadin-dogum,ankara,,+905322424654,https://www.doktorsitesi.com/doc-dr-neslihan-seckin/kadin-hastaliklari-ve-dogum/ankara,yeni
+85,Nihat Farisogullari,kadin-dogum,bursa,,+905445368570,https://www.doktorsitesi.com/nihat-farisogullari/kadin-hastaliklari-ve-dogum/bursa,yeni
+85,Nurdan Yildiz,kadin-dogum,izmir,,+905428332047,https://www.doktorsitesi.com/op-dr-nurdan-yildiz/kadin-hastaliklari-ve-dogum/izmir,yeni
+85,Olcay Ilhan,kadin-dogum,bursa,,+905411324228,https://www.doktorsitesi.com/olcay-ilhan/kadin-hastaliklari-ve-dogum/bursa,yeni
+85,Onur Suleyman Aldemir,kadin-dogum,izmir,,+905462917929,https://www.doktorsitesi.com/op-dr-onur-suleyman-aldemir/kadin-hastaliklari-ve-dogum/izmir,yeni
+85,Op. Dr. Ahmet Yilmaz,kadin-dogum,bursa,,+905414529617,https://www.doktorsitesi.com/op-dr-ahmet-yilmaz/kadin-hastaliklari-ve-dogum/bursa,yeni
+85,Op. Dr. Alev Ozlem Ozdemir Karabag,kadin-dogum,eskisehir,,+905462282600,https://www.doktorsitesi.com/op-dr-alev-ozlem-ozdemir-karabag/kadin-hastaliklari-ve-dogum/eskisehir,yeni
+85,Op. Dr. Asiya Sadigzade,kadin-dogum,istanbul,,+905387358520,https://www.doktorsitesi.com/op-dr-asiya-sadigzade/kadin-hastaliklari-ve-dogum/istanbul,yeni
+85,Op. Dr. Aysu Nida Dai,kadin-dogum,gaziantep,,+905496780324,https://www.doktorsitesi.com/op-dr-aysu-nida-dai/kadin-hastaliklari-ve-dogum/gaziantep,yeni
+85,Op. Dr. Barbaros Atesli,kadin-dogum,bursa,,+905301096010,https://www.doktorsitesi.com/op-dr-barbaros-atesli/kadin-hastaliklari-ve-dogum/bursa,yeni
+85,Op. Dr. Betul Kalay,kadin-dogum,istanbul,,+905423596233,https://www.doktorsitesi.com/op-dr-betul-kalay/kadin-hastaliklari-ve-dogum/istanbul,yeni
+85,Op. Dr. Cansu Kubra Nergisli Kasli,kadin-dogum,bursa,,+905443769211,https://www.doktorsitesi.com/op-dr-cansu-kubra-nergisli-kasli/kadin-hastaliklari-ve-dogum/bursa,yeni
+85,Op. Dr. Demet Dikmen,kadin-dogum,istanbul,,+905398402069,https://www.doktorsitesi.com/op-dr-demet-dikmen/kadin-hastaliklari-ve-dogum/istanbul,yeni
+85,Op. Dr. Dilek Dogan Bas,kadin-dogum,bursa,,+905468150199,https://www.doktorsitesi.com/op-dr-dilek-dogan-bas/kadin-hastaliklari-ve-dogum/bursa,yeni
+85,Op. Dr. Elif Hizal,kadin-dogum,bursa,,+905532904232,https://www.doktorsitesi.com/op-dr-elif-hizal/kadin-hastaliklari-ve-dogum/bursa,yeni
+85,Op. Dr. Elif Sahin,kadin-dogum,bursa,,+905534104100,https://www.doktorsitesi.com/op-dr-elif-sahin/kadin-hastaliklari-ve-dogum/bursa,yeni
+85,Op. Dr. Emel Arslan Yildirim,kadin-dogum,bursa,,+905523027923,https://www.doktorsitesi.com/op-dr-emel-arslan-yildirim/kadin-hastaliklari-ve-dogum/bursa,yeni
+85,Op. Dr. Esra Unal,kadin-dogum,antalya,,+905332861451,https://www.doktorsitesi.com/op-dr-esra-unal/kadin-hastaliklari-ve-dogum/antalya,yeni
+85,Op. Dr. Fatma Gencturk Ozer,kadin-dogum,istanbul,,+905533130859,https://www.doktorsitesi.com/op-dr-fatma-gencturk-ozer/kadin-hastaliklari-ve-dogum/istanbul,yeni
+85,Op. Dr. Fusun Yuksel Yakut,kadin-dogum,antalya,,+905327923700,https://www.doktorsitesi.com/op-dr-fusun-yuksel-yakut/kadin-hastaliklari-ve-dogum/antalya,yeni
+85,Op. Dr. Gayem Inayet Turgay,kadin-dogum,antalya,,+905013449029,https://www.doktorsitesi.com/op-dr-gayem-inayet-turgay/kadin-hastaliklari-ve-dogum/antalya,yeni
+85,Op. Dr. Gizem Yildirim,kadin-dogum,bursa,,+905333155297,https://www.doktorsitesi.com/op-dr-gizem-yildirim/kadin-hastaliklari-ve-dogum/bursa,yeni
 85,Op. Dr. Gokben Yuksel,kadin-dogum,izmir,,+905076680468,https://www.doktorsitesi.com/op-dr-gokben-yuksel/kadin-hastaliklari-ve-dogum/izmir,yeni
+85,Op. Dr. Gokcen Gokgoz,kadin-dogum,istanbul,,+905066544646,https://www.doktorsitesi.com/op-dr-gokcen-gokgoz/kadin-hastaliklari-ve-dogum/istanbul,yeni
+85,Op. Dr. Gonca Ogurlu Pakay,kadin-dogum,bursa,,+905072313238,https://www.doktorsitesi.com/op-dr-gonca-ogurlu-pakay/kadin-hastaliklari-ve-dogum/bursa,yeni
+85,Op. Dr. Gulay Genc,kadin-dogum,eskisehir,,+905528422383,https://www.doktorsitesi.com/op-dr-gulay-genc/kadin-hastaliklari-ve-dogum/eskisehir,yeni
+85,Op. Dr. Hakan Sade,kadin-dogum,adana,,+905065435070,https://www.doktorsitesi.com/op-dr-hakan-sade/kadin-hastaliklari-ve-dogum/adana,yeni
+85,Op. Dr. Hakan Sager,kadin-dogum,bursa,,+905394630972,https://www.doktorsitesi.com/op-dr-hakan-sager/kadin-hastaliklari-ve-dogum/bursa,yeni
+85,Op. Dr. Hakan Yaz,kadin-dogum,gaziantep,,+905327180991,https://www.doktorsitesi.com/op-dr-hakan-yaz/kadin-hastaliklari-ve-dogum/gaziantep,yeni
 85,Op. Dr. Hayri Aksut,kadin-dogum,izmir,,+905522840905,https://www.doktorsitesi.com/op-dr-hayri-aksut/kadin-hastaliklari-ve-dogum/izmir,yeni
+85,Op. Dr. Hicran Giris,kadin-dogum,adana,,+905338900125,https://www.doktorsitesi.com/op-dr-hicran-giris/kadin-hastaliklari-ve-dogum/adana,yeni
+85,Op. Dr. Huseyin Kilic 1,kadin-dogum,adana,,+905324338719,https://www.doktorsitesi.com/op-dr-huseyin-kilic-1/kadin-hastaliklari-ve-dogum/adana,yeni
+85,Op. Dr. Irfan Tarhan,kadin-dogum,istanbul,,+905424237981,https://www.doktorsitesi.com/op-dr-irfan-tarhan/kadin-hastaliklari-ve-dogum/istanbul,yeni
+85,Op. Dr. Korkut Arslan,kadin-dogum,istanbul,,+905335719019,https://www.doktorsitesi.com/op-dr-korkut-arslan/kadin-hastaliklari-ve-dogum/istanbul,yeni
+85,Op. Dr. Mehmet Bekir Sen,kadin-dogum,istanbul,,+905469052216,https://www.doktorsitesi.com/op-dr-mehmet-bekir-sen/kadin-hastaliklari-ve-dogum/istanbul,yeni
+85,Op. Dr. Melek Buyukkinaci Erol,kadin-dogum,antalya,,+905462028744,https://www.doktorsitesi.com/op-dr-melek-buyukkinaci-erol/kadin-hastaliklari-ve-dogum/antalya,yeni
+85,Op. Dr. Melih Aygun,kadin-dogum,istanbul,,+905421703060,https://www.doktorsitesi.com/op-dr-melih-aygun/kadin-hastaliklari-ve-dogum/istanbul,yeni
 85,Prof. Dr. Ibrahim Alanbay,kadin-dogum,ankara,,+905058027254,https://www.doktorsitesi.com/prof-dr-ibrahim-alanbay/kadin-hastaliklari-ve-dogum/ankara,yeni
 85,Doç. Dr. Cevdet Adıgüzel,kadin-dogum,adana,,+905438047462,https://www.doktorsitesi.com/doc-dr-cevdet-adiguzel/kadin-hastaliklari-ve-dogum/adana,gitti
+85,Doç. Dr. Emine Öztürk,kadin-dogum,istanbul,,+905421944646,https://www.doktorsitesi.com/doc-dr-emine-ozturk/kadin-hastaliklari-ve-dogum/istanbul,gitti
 85,Doç. Dr. Eser Çolak,kadin-dogum,izmir,,+905315138184,https://www.doktorsitesi.com/eser-colak/kadin-hastaliklari-ve-dogum/izmir,gitti
 85,Doç. Dr. Gonca Çoban Şerbetçioğlu,kadin-dogum,izmir,,+905332490035,https://www.doktorsitesi.com/doc-dr-gonca-coban-serbetcioglu/kadin-hastaliklari-ve-dogum/izmir,gitti
 85,Op. Dr. Adnan Şahin,kadin-dogum,bursa,,+905491483565,https://www.doktorsitesi.com/adnan-sahin-1/kadin-hastaliklari-ve-dogum/bursa,gitti
