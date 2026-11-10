@@ -1321,14 +1321,17 @@ Wave3’te SIRADAKİ diye önerildi → **HATA**. Ledger + early seed’e işlen
 ## W6-9. Doç. Dr. Cevdet Adıgüzel ← GİTTİ (2026-11-10, WA-verified)
 **kadın-doğum** · Adana · WA: `+905438047462`
 
-## W6-10. Doç. Dr. Emine Öztürk ← SIRADAKİ
-**kadın-doğum** · İstanbul · `+90 542 194 46 46` · WA: `+905421944646`  
-**Doğrulama:** DS `socialMedia[{type:whatsapp, url:905421944646}]`.
+## W6-10. Doç. Dr. Emine Öztürk ← GİTTİ (2026-11-10, WA-verified)
+**kadın-doğum** · İstanbul · WA: `+905421944646`
 
-**Ön kontrol:** ledger temiz.
+## W6-11. Doç. Dr. Emre Destegül ← SIRADAKİ
+**kadın-doğum** · Adana · `+90 532 311 54 84` · WA: `+905323115484`  
+**Doğrulama:** DS `socialMedia[{type:whatsapp, url:905323115484}]`.
+
+**Ön kontrol:** ledger temiz. Pool ~39 / queue ~34.
 
 ```
-Emine Hocam merhaba 👋
+Emre Hocam merhaba 👋
 Ben Kaan, *Notya*'dan yazıyorum.
 
 *Notya* — hekimler için yapay zekâ klinik asistanı.
