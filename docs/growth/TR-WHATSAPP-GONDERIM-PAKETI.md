@@ -1306,14 +1306,17 @@ Wave3’te SIRADAKİ diye önerildi → **HATA**. Ledger + early seed’e işlen
 ## W6-4. Op. Dr. Feyza Ağaca Güler ← GİTTİ (2026-11-10, WA-verified)
 **kadın-doğum** · İzmir · WA: `+905306414850`
 
-## W6-5. Op. Dr. Feyza Arman ← SIRADAKİ
-**kadın-doğum** · İzmir · `+90 505 327 27 41` · WA: `+905053272741`  
-**Doğrulama:** DS `socialMedia[{type:whatsapp, url:905053272741}]`.
+## W6-5. Op. Dr. Feyza Arman ← GİTTİ (2026-11-10, WA-verified)
+**kadın-doğum** · İzmir · WA: `+905053272741`
 
-**Ön kontrol:** ledger temiz (≠ Feyza Ağaca Güler).
+## W6-6. Op. Dr. Adnan Şahin ← SIRADAKİ
+**kadın-doğum** · Bursa · `+90 549 148 35 65` · WA: `+905491483565`  
+**Doğrulama:** DS `socialMedia[{type:whatsapp, url:905491483565}]` (continuous scraper — Bursa).
+
+**Ön kontrol:** ledger temiz.
 
 ```
-Feyza Hocam merhaba 👋
+Adnan Hocam merhaba 👋
 Ben Kaan, *Notya*'dan yazıyorum.
 
 *Notya* — hekimler için yapay zekâ klinik asistanı.
