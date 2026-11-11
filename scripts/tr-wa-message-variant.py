@@ -89,7 +89,7 @@ VALUE = [
         "Branşınızdaki meslektaşlar da denemeye başladı; kısa bir bakış genelde yeterli oluyor."
     ),
     (
-        "Pratikte: günde *1,5-2 saat*lik idari yük azalması.\n"
+        "Pratikte: günde yaklaşık *1,5-2 saat* idari yük azalması.\n"
         "Epikriz ve raporlar antetli, düzenli kalıyor.\n"
         "Kısa bir bakış çoğu hekim için karar vermeye yetiyor."
     ),

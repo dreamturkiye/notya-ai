@@ -593,8 +593,8 @@ def main() -> None:
     )
     args = ap.parse_args()
 
-    st = pace_status()
     if args.check_pace:
+        st = pace_status()
         print_pace(st)
         sys.exit(0 if st["ok"] else 2)
 
@@ -614,17 +614,35 @@ def main() -> None:
     elif args.mark_zaten:
         mark(args.mark_zaten, args.phone, "zaten_gitti", args.note, args.brans, city=args.city)
 
+    # Recompute after mark-gitti so the send-log gap is visible immediately
+    st = pace_status()
     print_pace(st)
 
-    if not st["ok"] and not args.force_pace and not (
-        args.mark_gitti or args.mark_wa_yok or args.mark_zaten
-    ):
+    if not st["ok"] and not args.force_pace:
         print(
             "\nBLOCKED: anti-ban pace gate. Do not send the next doctor yet.\n"
-            f"Wait {st['wait_human']}, then re-run. (See docs/growth/TR-WHATSAPP-ANTI-BAN.md)\n"
-            "Override only with --force-pace if you accept ban risk.",
+            f"Wait {st['wait_human']}, then re-run with --with-message.\n"
+            "(See docs/growth/TR-WHATSAPP-ANTI-BAN.md) Override only with --force-pace.",
             file=sys.stderr,
         )
+        # Still show who is queued so the operator can prepare copy offline
+        nxt = propose(args.n)
+        if nxt:
+            print("\nQUEUED (send only after wait):")
+            for i, r in enumerate(nxt, 1):
+                src = r.get("kaynak") or ""
+                print(
+                    f"{i}. {r['isim']} · {r['brans']} · {r.get('sehir')} · {r['telefon']}"
+                    + (f" · [{src}]" if src else "")
+                )
+            if args.with_message:
+                top = nxt[0]
+                body, vid = build_variant(
+                    top["isim"], top.get("brans") or "", top.get("telefon") or ""
+                )
+                print(f"\n--- PREP MESSAGE variant_id={vid} (do not send until pace OK) ---")
+                print(body)
+                print("--- END ---")
         sys.exit(3)
 
     nxt = propose(args.n)
