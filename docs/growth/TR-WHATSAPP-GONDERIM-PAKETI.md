@@ -1371,31 +1371,35 @@ Wave3’te SIRADAKİ diye önerildi → **HATA**. Ledger + early seed’e işlen
 ## W6-25. Dr. Hatice Tevrizci ← GİTTİ (2026-11-11, WA-verified)
 **kadın-doğum** · Bursa · WA: `+905496245005` · variant `kd-C-9776`
 
-## W6-26. Dr. Öğr. Üyesi Çağdaş Demiroğlu ← SIRADAKİ
-**kadın-doğum** · Gaziantep · `+90 534 630 51 63` · WA: `+905346305163`  
-**Doğrulama:** DS `socialMedia` whatsapp.  
-**Anti-ban:** Hatice’den sonra **≥20 dk** bekle. Soft restart (bugün **5/6** — bu +1 sonra günlük kapı). variant `kd-C-0005`.
+## W6-26. Dr. Öğr. Üyesi Çağdaş Demiroğlu ← GİTTİ (2026-11-11, WA-verified)
+**kadın-doğum** · Gaziantep · WA: `+905346305163` · variant `kd-C-0005`
 
-**Gönder:** yapıştır → kart çıkarsa **X** → gönder.
+## W6-27. Dr. Volkan Aktemur ← SIRADAKİ (yarın — günlük soft cap 6/6)
+**kadın-doğum** · İstanbul · `+90 532 368 40 69` · WA: `+905323684069`  
+**Doğrulama:** DS `socialMedia` whatsapp.  
+**Anti-ban:** bugün soft restart **6/6 doldu**. Gönderme **2026-11-12 ≥09:30 TR** (America/New_York: Nov 12 ≥01:30). variant `kd-B-5765`.
+
+**Gönder (yarın):** yapıştır → kart çıkarsa **X** → gönder.
 
 ```
-Merhaba Çağdaş Hocam 👋
-Kaan (Notya). Kısa bir not bırakıyorum.
-
-Kısaca *Notya*: muayene odasında sizinle çalışan bir klinik asistan.
-Not, reçete, rapor, takip ve hasta portalı tek yerde — kararlar yine *sizde*.
-40'tan fazla branşı kendi dilinde destekliyoruz.
-
-Yoğun günlerde not / reçete / takip işlerinden yaklaşık *1,5-2 saat* geri geliyor.
-Daha düzenli kayıt = daha temiz takip.
-Branşınızdaki meslektaşlar da denemeye başladı; kısa bir bakış genelde yeterli oluyor.
+Volkan Hocam merhaba 👋
+Ben Kaan, *Notya*'dan yazıyorum.
 
 *Kadın doğumda*
-- Obstetrik risk (preeklampsi, GDM, SSVD)
 - Sezaryen ve ameliyat notları
-- Doppler'li USG ve yapılandırılmış NST
-- Gebelik takvimi ve izlem
 - Doğum epikrizi ve antetli baskı
+- Gebelik takvimi ve izlem
+- Jinekolojik operasyon notları (histerektomi, myomektomi, laparoskopi)
+- Obstetrik risk (preeklampsi, GDM, SSVD)
+
+*Notya* — hekimler için yapay zekâ klinik asistanı.
+Muayeneyi dinler, notunuzu yazar, reçete ve rapor taslağını hazırlar, hastanızı takipte tutar — hasta portalı dahil.
+Her karar *sizin onayınızla*.
+40'tan fazla branşı kendi ihtiyaçlarıyla destekliyoruz.
+
+Pratikte: günde yaklaşık *1,5-2 saat* idari yük azalması.
+Epikriz ve raporlar antetli, düzenli kalıyor.
+Kısa bir bakış çoğu hekim için karar vermeye yetiyor.
 
 Dr. Gökhan Mamur sizin için *30 dk’lık* kısa bir tur yapıyor; uygun saati siz seçiyorsunuz.
 Şimdilik sadece bakmak isterseniz ücretsiz deneme de açık.
