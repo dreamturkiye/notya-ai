@@ -1368,38 +1368,38 @@ Wave3’te SIRADAKİ diye önerildi → **HATA**. Ledger + early seed’e işlen
 ## W6-24. Dr. Hakan Nazik ← GİTTİ (2026-11-11, WA-verified)
 **kadın-doğum** · Adana · WA: `+905011124040` · variant `kd-C-0003`
 
-## W6-25. Dr. Hatice Tevrizci ← SIRADAKİ
-**kadın-doğum** · Bursa · `+90 549 624 50 05` · WA: `+905496245005`  
+## W6-25. Dr. Hatice Tevrizci ← GİTTİ (2026-11-11, WA-verified)
+**kadın-doğum** · Bursa · WA: `+905496245005` · variant `kd-C-9776`
+
+## W6-26. Dr. Öğr. Üyesi Çağdaş Demiroğlu ← SIRADAKİ
+**kadın-doğum** · Gaziantep · `+90 534 630 51 63` · WA: `+905346305163`  
 **Doğrulama:** DS `socialMedia` whatsapp.  
-**Anti-ban:** Hakan’dan sonra **≥20 dk** bekle. Soft restart (bugün 4/6). variant `kd-C-9776`.
+**Anti-ban:** Hatice’den sonra **≥20 dk** bekle. Soft restart (bugün **5/6** — bu +1 sonra günlük kapı). variant `kd-C-0005`.
 
 **Gönder:** yapıştır → kart çıkarsa **X** → gönder.
 
 ```
-Hatice Hocam, merhaba.
-Ben Kaan — *Notya*'dan ulaşıyorum.
+Merhaba Çağdaş Hocam 👋
+Kaan (Notya). Kısa bir not bırakıyorum.
 
-*Notya* — hekimler için yapay zekâ klinik asistanı.
-Muayeneyi dinler, notunuzu yazar, reçete ve rapor taslağını hazırlar, hastanızı takipte tutar — hasta portalı dahil.
-Her karar *sizin onayınızla*.
-40'tan fazla branşı kendi ihtiyaçlarıyla destekliyoruz.
+Kısaca *Notya*: muayene odasında sizinle çalışan bir klinik asistan.
+Not, reçete, rapor, takip ve hasta portalı tek yerde — kararlar yine *sizde*.
+40'tan fazla branşı kendi dilinde destekliyoruz.
 
-Tipik bir günde yaklaşık *1,5-2 saat* kazanç.
-Kayıtlar daha düzenli → bakım kalitesi de yükseliyor.
-Meslektaşlarınız da bakmaya başladı — geride kalmamak için kısa bir bakış çoğu zaman yeterli.
+Yoğun günlerde not / reçete / takip işlerinden yaklaşık *1,5-2 saat* geri geliyor.
+Daha düzenli kayıt = daha temiz takip.
+Branşınızdaki meslektaşlar da denemeye başladı; kısa bir bakış genelde yeterli oluyor.
 
 *Kadın doğumda*
-- Doğum epikrizi ve antetli baskı
-- Gebelik takvimi ve izlem
-- Jinekolojik operasyon notları (histerektomi, myomektomi, laparoskopi)
 - Obstetrik risk (preeklampsi, GDM, SSVD)
+- Sezaryen ve ameliyat notları
 - Doppler'li USG ve yapılandırılmış NST
+- Gebelik takvimi ve izlem
+- Doğum epikrizi ve antetli baskı
 
-Dr. Gökhan Mamur *30 dk* kısa tanıtım yapıyor 🩺
-Saatler size göre.
+Dr. Gökhan Mamur sizin için *30 dk’lık* kısa bir tur yapıyor; uygun saati siz seçiyorsunuz.
+Şimdilik sadece bakmak isterseniz ücretsiz deneme de açık.
 
-Tanıtıma vakit yoksa ücretsiz denemeyi hemen açabiliyoruz.
-
-📅 *Tanıtım / Demo:* www.notya.io/demo
-🔗 *Ücretsiz deneme:* www.notya.io
+*Tanıtım:* www.notya.io/demo
+*Deneme:* www.notya.io
 ```

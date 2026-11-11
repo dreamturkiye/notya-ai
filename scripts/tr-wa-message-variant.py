@@ -146,11 +146,15 @@ def short_name(name: str) -> str:
     n = (name or "").strip()
     n = re.sub(
         r"^(do[cç]\.?\s*dr\.?|prof\.?\s*dr\.?|op\.?\s*dr\.?|uzm\.?\s*dr\.?|"
-        r"dr\.?\s*[oö]gr\.?\s*[uü]yesi|doktor\.?|dr\.?)\s*",
+        r"dr\.?\s*[oö][gğ]r\.?\s*[uü]yesi|"
+        r"[oö][gğ]r\.?\s*[uü]yesi|"
+        r"doktor\.?|dr\.?)\s*",
         "",
         n,
         flags=re.I,
     )
+    # Second pass: leftover "Öğr. Üyesi" / "Ogr Uyesi" if Dr. was already gone
+    n = re.sub(r"^[oö][gğ]r\.?\s*[uü]yesi\s*", "", n, flags=re.I)
     n = re.sub(r"\s+", " ", n).strip()
     parts = n.split()
     return parts[0] if parts else n
