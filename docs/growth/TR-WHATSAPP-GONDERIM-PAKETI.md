@@ -1,9 +1,11 @@
 # WhatsApp gönderim paketi — isimli metinler
 
-**Güncel:** tek mesaj · WA biçimi (`*kalın*`, `•` maddeler) · görsel ek yok · `notya.io/demo`.  
-Şablon: `TR-PEDI-OUTREACH-TEMPLATES.md`. Aşağıda Cengiz güncel; diğerleri eski yedek metin.
+**Anti-ban (2026-11-10 sonrası zorunlu):** soft restart → max **6/gün**, **≥20 dk** aralık, her SIRADAKİ için **yeni variant** (`scripts/tr-wa-message-variant.py`). Gate: `python3 scripts/tr-outreach-next.py --check-pace`. Playbook: `TR-WHATSAPP-ANTI-BAN.md`. Eski balonlar / emoji / aynı gövdeyi peş peşe kullanma.
 
-Toplam: 30 kişi
+**Güncel:** tek mesaj · WA biçimi · görsel ek yok · `www.` link (OG kartı X).  
+Şablon üretici: `scripts/tr-wa-message-variant.py`. Aşağıda eski GİTTİ kayıtları arşiv; SIRADAKİ güncel variant.
+
+Toplam: 30+ kişi
 
 ---
 ## 1. Doç. Dr. Sema Süzen Çaypınar ← GİTTİ (2026-11-05 early)
@@ -1358,33 +1360,22 @@ Wave3’te SIRADAKİ diye önerildi → **HATA**. Ledger + early seed’e işlen
 **kadın-doğum** · Adana · `+90 533 962 76 36` · WA: `+905339627636`  
 **Doğrulama:** DS `socialMedia[{type:whatsapp, url:905339627636}]`.
 
-**Ön kontrol:** ledger temiz.
+**Ön kontrol:** ledger temiz.  
+**Anti-ban (zorunlu):** ban kalkmış olmalı. Soft restart: bugün max **6**, aralar **≥20 dk**, bu gövdeyi **bir daha kullanma**. Ayrıntı: `TR-WHATSAPP-ANTI-BAN.md`.  
+**variant_id:** `kd-C-4000`
 
 ```
-Songül Hocam merhaba 👋
-Ben Kaan, *Notya*'dan yazıyorum.
+Dr. Songül merhaba, Notya (klinik asistan) tarafındayım.
 
-*Notya* — hekimler için yapay zekâ klinik asistanı.
-Muayeneyi dinler, notunuzu yazar, reçete ve rapor taslağını hazırlar, hastanızı takipte tutar — hasta portalı dahil.
-Her karar *sizin onayınızla*.
-40'tan fazla branşı kendi ihtiyaçlarıyla destekliyoruz.
+Branşınıza uygun başlıklar:
+• sezaryen ve ameliyat notu
+• muayene sırasında asistan desteği
+• hasta portalı (randevu + sonuçlar)
+• USG / NST rapor taslağı
 
-*Kadın doğumda*
-- Gebelik takvimi ve izlem
-- Doppler'li USG ve yapılandırılmış NST
-- Obstetrik risk (preeklampsi, GDM, SSVD)
-- Sezaryen ve ameliyat notları
-- Doğum epikrizi ve antetli baskı
+Kısaca: branşa özel muayene ekranı + hasta portalı + asistan.
+→ www.notya.ai/kadin-dogum
 
-Tipik bir günde yaklaşık *1,5-2 saat* kazanç.
-Kayıtlar daha düzenli → bakım kalitesi de yükseliyor.
-Meslektaşlarınız da bakmaya başladı — geride kalmamak için kısa bir bakış çoğu zaman yeterli.
-
-Dr. Gökhan Mamur *30 dk* kısa tanıtım yapıyor 🩺
-Saatler size göre.
-
-Tanıtıma vakit yoksa ücretsiz denemeyi hemen açabiliyoruz.
-
-📅 *Tanıtım / Demo:* www.notya.io/demo
-🔗 *Ücretsiz deneme:* www.notya.io
+Uygun olursa 10 dk’lık kısa bir bakış ayarlayabilirim — ister misiniz?
+Teşekkürler, iyi günler
 ```

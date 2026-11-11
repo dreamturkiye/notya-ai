@@ -1,0 +1,14 @@
+{
+  "restriction_ended_at": "2026-11-11T12:00:00+03:00",
+  "note": "24h WhatsApp Business ban ended ~2026-11-11 after rapid identical cold sends on 2026-11-10. Soft restart for 48h.",
+  "soft_restart_hours": 48,
+  "min_gap_minutes": 12,
+  "soft_min_gap_minutes": 20,
+  "max_per_day": 12,
+  "soft_max_per_day": 6,
+  "max_per_hour": 4,
+  "quiet_hours_start": 9,
+  "quiet_hours_start_minute": 30,
+  "quiet_hours_end": 19,
+  "tz": "Europe/Istanbul"
+}

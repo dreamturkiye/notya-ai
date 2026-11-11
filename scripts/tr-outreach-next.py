@@ -7,28 +7,41 @@ Source of truth for "already contacted":
   2) docs/growth/TR-WHATSAPP-GONDERIM-PAKETI.md headings marked GİTTİ / ZATEN / WA YOK
   3) Early 2026-11-05 batch (hard seed — must never reappear as SIRADAKİ)
 
+Anti-ban pacing (docs/growth/TR-WHATSAPP-ANTI-BAN.md):
+  - Prefer WA-verified pool (tr-whatsapp-wa-pool.csv)
+  - Enforce min gap / daily / hourly caps via tr-wa-send-log.csv + tr-wa-pace-state.json
+  - Emit a structural message variant (not name-only swap)
+
 Usage:
   python3 scripts/tr-outreach-next.py
-  python3 scripts/tr-outreach-next.py --mark-gitti "Uzm. Dr. …" --phone +905… [--note "…"]
+  python3 scripts/tr-outreach-next.py --check-pace
+  python3 scripts/tr-outreach-next.py --with-message
+  python3 scripts/tr-outreach-next.py --mark-gitti "Uzm. Dr. …" --phone +905… [--note "…"] [--variant-id kd-A-1234]
   python3 scripts/tr-outreach-next.py --mark-wa-yok "…" --phone +905…
   python3 scripts/tr-outreach-next.py --mark-zaten "…" --phone +905…
+  python3 scripts/tr-outreach-next.py --force-pace   # override pace gate (emergency only)
 """
 
 from __future__ import annotations
 
 import argparse
 import csv
+import json
 import re
 import sys
 from collections import Counter
-from datetime import date
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 ROOT = Path(__file__).resolve().parents[1]
 GROWTH = ROOT / "docs" / "growth"
 LEDGER = GROWTH / "tr-outreach-ledger.csv"
 CALL_READY = GROWTH / "tr-call-ready-leads.csv"
+WA_POOL = GROWTH / "tr-whatsapp-wa-pool.csv"
 PAKET = GROWTH / "TR-WHATSAPP-GONDERIM-PAKETI.md"
+SEND_LOG = GROWTH / "tr-wa-send-log.csv"
+PACE_STATE = GROWTH / "tr-wa-pace-state.json"
 
 # 2026-11-05 early WhatsApp batch (before named paket / Cengiz). Never re-propose.
 EARLY_BATCH_NAMES = {
@@ -55,6 +68,20 @@ EARLY_BATCH_PHONES = {
 }
 
 CONTACTED_DURUM = {"gitti", "zaten_gitti", "wa_yok", "gitmedi"}
+
+DEFAULT_PACE = {
+    "restriction_ended_at": None,
+    "soft_restart_hours": 48,
+    "min_gap_minutes": 12,
+    "soft_min_gap_minutes": 20,
+    "max_per_day": 12,
+    "soft_max_per_day": 6,
+    "max_per_hour": 4,
+    "quiet_hours_start": 9,
+    "quiet_hours_start_minute": 30,
+    "quiet_hours_end": 19,
+    "tz": "Europe/Istanbul",
+}
 
 
 def digits(t: str) -> str:
@@ -127,6 +154,164 @@ def save_ledger(rows: list[dict]) -> None:
             w.writerow({k: r.get(k, "") for k in fields})
 
 
+def load_pace() -> dict:
+    cfg = dict(DEFAULT_PACE)
+    if PACE_STATE.exists():
+        try:
+            cfg.update(json.loads(PACE_STATE.read_text(encoding="utf-8")))
+        except json.JSONDecodeError:
+            pass
+    return cfg
+
+
+def load_send_log() -> list[dict]:
+    if not SEND_LOG.exists():
+        return []
+    return list(csv.DictReader(SEND_LOG.open()))
+
+
+def append_send_log(
+    *,
+    name: str,
+    phone: str,
+    city: str = "",
+    specialty: str = "",
+    variant_id: str = "",
+    notes: str = "",
+) -> None:
+    fields = ["sent_at_iso", "name", "phone", "city", "specialty", "variant_id", "notes"]
+    rows = load_send_log()
+    now = datetime.now(timezone.utc).isoformat()
+    rows.append(
+        {
+            "sent_at_iso": now,
+            "name": name,
+            "phone": e164(phone) or phone,
+            "city": city,
+            "specialty": specialty,
+            "variant_id": variant_id,
+            "notes": notes,
+        }
+    )
+    with SEND_LOG.open("w", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=fields)
+        w.writeheader()
+        for r in rows:
+            w.writerow({k: r.get(k, "") for k in fields})
+
+
+def parse_iso(s: str) -> datetime | None:
+    if not s:
+        return None
+    try:
+        dt = datetime.fromisoformat(s.replace("Z", "+00:00"))
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt
+    except ValueError:
+        return None
+
+
+def pace_status(now: datetime | None = None) -> dict:
+    """Return pacing decision for the next cold send."""
+    cfg = load_pace()
+    tz = ZoneInfo(cfg.get("tz") or "Europe/Istanbul")
+    now = now or datetime.now(tz)
+    if now.tzinfo is None:
+        now = now.replace(tzinfo=tz)
+    else:
+        now = now.astimezone(tz)
+
+    soft = False
+    soft_until = None
+    ended = parse_iso(cfg.get("restriction_ended_at") or "")
+    if ended:
+        soft_until = ended.astimezone(tz) + timedelta(hours=int(cfg.get("soft_restart_hours") or 48))
+        soft = now < soft_until
+
+    min_gap = int(cfg["soft_min_gap_minutes"] if soft else cfg["min_gap_minutes"])
+    max_day = int(cfg["soft_max_per_day"] if soft else cfg["max_per_day"])
+    max_hour = int(cfg["max_per_hour"])
+
+    q_h = int(cfg.get("quiet_hours_start") or 9)
+    q_m = int(cfg.get("quiet_hours_start_minute") or 0)
+    q_end = int(cfg.get("quiet_hours_end") or 19)
+    in_quiet = (now.hour, now.minute) < (q_h, q_m) or now.hour >= q_end
+
+    sends = []
+    for r in load_send_log():
+        dt = parse_iso(r.get("sent_at_iso") or "")
+        if dt:
+            sends.append(dt.astimezone(tz))
+    sends.sort()
+
+    last = sends[-1] if sends else None
+    day_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    hour_ago = now - timedelta(hours=1)
+    day_count = sum(1 for s in sends if s >= day_start)
+    hour_count = sum(1 for s in sends if s >= hour_ago)
+
+    blockers: list[str] = []
+    wait_seconds = 0
+
+    if in_quiet:
+        if now.hour >= q_end:
+            nxt = (day_start + timedelta(days=1)).replace(hour=q_h, minute=q_m)
+        else:
+            nxt = day_start.replace(hour=q_h, minute=q_m)
+        wait_seconds = max(wait_seconds, int((nxt - now).total_seconds()))
+        blockers.append(
+            f"quiet hours (allowed {q_h:02d}:{q_m:02d}–{q_end:02d}:00 Europe/Istanbul)"
+        )
+
+    if last:
+        earliest = last + timedelta(minutes=min_gap)
+        if now < earliest:
+            wait_seconds = max(wait_seconds, int((earliest - now).total_seconds()))
+            blockers.append(f"min gap {min_gap} min since last send ({last.isoformat()})")
+
+    if day_count >= max_day:
+        nxt = day_start + timedelta(days=1)
+        nxt = nxt.replace(hour=q_h, minute=q_m)
+        wait_seconds = max(wait_seconds, int((nxt - now).total_seconds()))
+        blockers.append(f"daily cap {day_count}/{max_day}" + (" (soft restart)" if soft else ""))
+
+    if hour_count >= max_hour:
+        # wait until oldest in-hour send ages out
+        in_hour = [s for s in sends if s >= hour_ago]
+        if in_hour:
+            release = in_hour[0] + timedelta(hours=1)
+            wait_seconds = max(wait_seconds, int((release - now).total_seconds()))
+        blockers.append(f"hourly cap {hour_count}/{max_hour}")
+
+    ok = not blockers
+    return {
+        "ok": ok,
+        "soft_restart": soft,
+        "soft_until": soft_until.isoformat() if soft_until else None,
+        "min_gap_minutes": min_gap,
+        "max_per_day": max_day,
+        "max_per_hour": max_hour,
+        "day_count": day_count,
+        "hour_count": hour_count,
+        "last_send": last.isoformat() if last else None,
+        "wait_seconds": wait_seconds,
+        "wait_human": _fmt_wait(wait_seconds),
+        "blockers": blockers,
+        "now_local": now.isoformat(),
+    }
+
+
+def _fmt_wait(sec: int) -> str:
+    if sec <= 0:
+        return "0m"
+    m, s = divmod(sec, 60)
+    h, m = divmod(m, 60)
+    if h:
+        return f"{h}h {m}m"
+    return f"{m}m {s}s"
+
+
 def parse_paket_contacted() -> tuple[set[str], set[str]]:
     """Names + phones from paket headings marked already contacted (not SIRADAKİ)."""
     phones: set[str] = set()
@@ -134,7 +319,6 @@ def parse_paket_contacted() -> tuple[set[str], set[str]]:
     if not PAKET.exists():
         return phones, names
     text = PAKET.read_text(encoding="utf-8")
-    # ## [W3-6. ]Name ← STATUS — stop phone grab at next ## so we don't bleed
     for m in re.finditer(
         r"^##\s+(?:W\d+-\d+\.\s+)?([^\n←]+?)\s*←\s*"
         r"(GİTTİ|GITTI|ZATEN[^\n]*|WA YOK[^\n]*|GİTMEDİ[^\n]*)",
@@ -146,7 +330,6 @@ def parse_paket_contacted() -> tuple[set[str], set[str]]:
         rest = text[m.end() :]
         nxt = re.search(r"^##\s+", rest, re.M)
         chunk = rest[: nxt.start()] if nxt else rest[:400]
-        # Only header meta lines (before first fenced ``` message body)
         fence = chunk.find("\n```")
         if fence != -1:
             chunk = chunk[:fence]
@@ -180,8 +363,6 @@ def is_mobile(t: str) -> bool:
 def name_blocked(nn: str, excl_n: set[str]) -> bool:
     if nn in excl_n:
         return True
-    # Also block if any excluded full name equals this name, or is a
-    # multi-token subset (catches "ali suha sonmez" vs "suha sonmez").
     tokens = nn.split()
     for blocked in excl_n:
         bt = blocked.split()
@@ -190,7 +371,6 @@ def name_blocked(nn: str, excl_n: set[str]) -> bool:
         if nn == blocked:
             return True
         if len(bt) >= 2 and len(tokens) >= 2:
-            # last two tokens match (surname + final given) OR blocked tokens ⊆ candidate
             if tokens[-2:] == bt[-2:]:
                 return True
             if set(bt).issubset(set(tokens)) and len(bt) >= 2:
@@ -198,12 +378,59 @@ def name_blocked(nn: str, excl_n: set[str]) -> bool:
     return False
 
 
-def propose(n: int = 5) -> list[dict]:
+def propose_from_wa_pool(n: int = 5) -> list[dict]:
+    """WA-verified Doktorsitesi leads first (anti false-positive bare 5xx)."""
+    if not WA_POOL.exists():
+        return []
     ledger = load_ledger()
     excl_p, excl_n = contacted_sets(ledger)
+    rows = list(csv.DictReader(WA_POOL.open()))
+    out, seen = [], set()
+    for r in rows:
+        if not is_mobile(r.get("telefon", "")):
+            continue
+        tel = digits(r["telefon"])
+        if tel in excl_p or tel in seen:
+            continue
+        nn = norm_name(r.get("isim", ""))
+        if name_blocked(nn, excl_n):
+            continue
+        # Prefer whatsapp_social enrichment
+        src = (r.get("kaynak_enrich") or "").lower()
+        if src and "whatsapp" not in src and "wa" not in src:
+            continue
+        seen.add(tel)
+        out.append(
+            {
+                "isim": r.get("isim") or "",
+                "brans": r.get("brans") or "",
+                "sehir": r.get("sehir") or "",
+                "ilce": r.get("ilce") or "",
+                "telefon": e164(r.get("telefon") or ""),
+                "url": r.get("url") or "",
+                "skor": r.get("skor") or "0",
+                "kaynak": "wa_pool",
+                "ozel_muayenehane": "evet",
+            }
+        )
+        if len(out) >= n:
+            break
+    return out
+
+
+def propose(n: int = 5) -> list[dict]:
+    wa = propose_from_wa_pool(n)
+    if len(wa) >= n:
+        return wa
+    ledger = load_ledger()
+    excl_p, excl_n = contacted_sets(ledger)
+    # already have wa phones
+    have = {digits(r["telefon"]) for r in wa}
+    if not CALL_READY.exists():
+        return wa
     cr = list(csv.DictReader(CALL_READY.open()))
     counts = Counter(digits(r.get("telefon")) for r in cr)
-    bad = {p for p, c in counts.items() if c >= 3} | excl_p | {"5885648727"}
+    bad = {p for p, c in counts.items() if c >= 3} | excl_p | {"5885648727"} | have
     cands = []
     for r in cr:
         od = (r.get("outreach_durum") or r.get("durum") or "").lower()
@@ -228,7 +455,8 @@ def propose(n: int = 5) -> list[dict]:
             r.get("isim") or "",
         )
     )
-    out, seen = [], set()
+    out = list(wa)
+    seen = set(have)
     for r in cands:
         tel = digits(r["telefon"])
         if tel in seen:
@@ -240,14 +468,33 @@ def propose(n: int = 5) -> list[dict]:
     return out
 
 
-def mark(isim: str, phone: str, durum: str, note: str = "", brans: str = "", url: str = "") -> None:
+def build_variant(name: str, specialty: str, phone: str) -> tuple[str, str]:
+    import importlib.util
+
+    path = ROOT / "scripts" / "tr-wa-message-variant.py"
+    spec = importlib.util.spec_from_file_location("tr_wa_message_variant", path)
+    assert spec and spec.loader
+    m = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(m)
+    return m.build_message(name=name, specialty=specialty, phone=phone)
+
+
+def mark(
+    isim: str,
+    phone: str,
+    durum: str,
+    note: str = "",
+    brans: str = "",
+    url: str = "",
+    variant_id: str = "",
+    city: str = "",
+) -> None:
     """Upsert by phone when provided. Same name + different phone → new row (eski numara)."""
     rows = load_ledger()
     tel = e164(phone)
     nn = norm_name(isim)
     found = False
     for r in rows:
-        # Phone match wins — never collapse two numbers into one person-row by name alone
         if tel and digits(r.get("telefon") or "") == digits(tel):
             r["durum"] = durum
             r["tarih"] = date.today().isoformat()
@@ -283,7 +530,7 @@ def mark(isim: str, phone: str, durum: str, note: str = "", brans: str = "", url
                 "isim": isim,
                 "isim_norm": nn,
                 "brans": brans,
-                "sehir": "",
+                "sehir": city,
                 "ilce": "",
                 "telefon": tel,
                 "durum": durum,
@@ -295,6 +542,35 @@ def mark(isim: str, phone: str, durum: str, note: str = "", brans: str = "", url
         )
     save_ledger(rows)
     print(f"ledger: {isim} {tel} → {durum}")
+    if durum == "gitti":
+        append_send_log(
+            name=isim,
+            phone=tel,
+            city=city,
+            specialty=brans,
+            variant_id=variant_id,
+            notes=note or "gitti",
+        )
+        print(f"send-log: appended {tel}")
+
+
+def print_pace(st: dict) -> None:
+    mode = "SOFT RESTART" if st["soft_restart"] else "normal"
+    print(f"\nPACE [{mode}] now={st['now_local']}")
+    print(
+        f"  caps: gap≥{st['min_gap_minutes']}m · {st['max_per_hour']}/h · {st['max_per_day']}/day"
+    )
+    print(
+        f"  used: {st['hour_count']}/h · {st['day_count']}/day · last={st['last_send'] or 'none'}"
+    )
+    if st["soft_until"]:
+        print(f"  soft until: {st['soft_until']}")
+    if st["ok"]:
+        print("  status: OK to send")
+    else:
+        print(f"  status: WAIT {st['wait_human']}")
+        for b in st["blockers"]:
+            print(f"    - {b}")
 
 
 def main() -> None:
@@ -305,23 +581,74 @@ def main() -> None:
     ap.add_argument("--phone", default="")
     ap.add_argument("--note", default="")
     ap.add_argument("--brans", default="")
+    ap.add_argument("--city", default="")
+    ap.add_argument("--variant-id", default="")
     ap.add_argument("-n", type=int, default=5)
+    ap.add_argument("--check-pace", action="store_true")
+    ap.add_argument("--with-message", action="store_true")
+    ap.add_argument(
+        "--force-pace",
+        action="store_true",
+        help="Propose even if pace gate blocks (do not use casually)",
+    )
     args = ap.parse_args()
 
+    st = pace_status()
+    if args.check_pace:
+        print_pace(st)
+        sys.exit(0 if st["ok"] else 2)
+
     if args.mark_gitti:
-        mark(args.mark_gitti, args.phone, "gitti", args.note, args.brans)
+        # Still allow marking even if pace was violated (user already sent)
+        mark(
+            args.mark_gitti,
+            args.phone,
+            "gitti",
+            args.note,
+            args.brans,
+            variant_id=args.variant_id,
+            city=args.city,
+        )
     elif args.mark_wa_yok:
-        mark(args.mark_wa_yok, args.phone, "wa_yok", args.note, args.brans)
+        mark(args.mark_wa_yok, args.phone, "wa_yok", args.note, args.brans, city=args.city)
     elif args.mark_zaten:
-        mark(args.mark_zaten, args.phone, "zaten_gitti", args.note, args.brans)
+        mark(args.mark_zaten, args.phone, "zaten_gitti", args.note, args.brans, city=args.city)
+
+    print_pace(st)
+
+    if not st["ok"] and not args.force_pace and not (
+        args.mark_gitti or args.mark_wa_yok or args.mark_zaten
+    ):
+        print(
+            "\nBLOCKED: anti-ban pace gate. Do not send the next doctor yet.\n"
+            f"Wait {st['wait_human']}, then re-run. (See docs/growth/TR-WHATSAPP-ANTI-BAN.md)\n"
+            "Override only with --force-pace if you accept ban risk.",
+            file=sys.stderr,
+        )
+        sys.exit(3)
 
     nxt = propose(args.n)
     if not nxt:
         print("No safe next lead (ledger covers available unique mobiles).", file=sys.stderr)
         sys.exit(1)
-    print("\nSAFE NEXT (not in ledger / paket GİTTİ / early 2026-11-05 batch):")
+    print("\nSAFE NEXT (WA-pool preferred; not in ledger / paket GİTTİ / early batch):")
     for i, r in enumerate(nxt, 1):
-        print(f"{i}. {r['isim']} · {r['brans']} · {r.get('sehir')} · {r['telefon']}")
+        src = r.get("kaynak") or ""
+        print(
+            f"{i}. {r['isim']} · {r['brans']} · {r.get('sehir')} · {r['telefon']}"
+            + (f" · [{src}]" if src else "")
+        )
+
+    if args.with_message and nxt:
+        top = nxt[0]
+        body, vid = build_variant(top["isim"], top.get("brans") or "", top.get("telefon") or "")
+        print(f"\n--- MESSAGE variant_id={vid} ---")
+        print(body)
+        print("--- END ---")
+        print(
+            "\nSEND RULES: save contact first · dismiss OG card · wait full pace gap · "
+            "never reuse this body for another doctor."
+        )
 
 
 if __name__ == "__main__":
