@@ -1365,31 +1365,35 @@ Wave3’te SIRADAKİ diye önerildi → **HATA**. Ledger + early seed’e işlen
 ## W6-23. Op. Dr. Koray Duman ← GİTTİ (2026-11-11, WA-verified)
 **kadın-doğum** · Antalya · WA: `+905327453878` · variant `kd-C-0002`
 
-## W6-24. Dr. Hakan Nazik ← SIRADAKİ
-**kadın-doğum** · Adana · `+90 501 112 40 40` · WA: `+905011124040`  
+## W6-24. Dr. Hakan Nazik ← GİTTİ (2026-11-11, WA-verified)
+**kadın-doğum** · Adana · WA: `+905011124040` · variant `kd-C-0003`
+
+## W6-25. Dr. Hatice Tevrizci ← SIRADAKİ
+**kadın-doğum** · Bursa · `+90 549 624 50 05` · WA: `+905496245005`  
 **Doğrulama:** DS `socialMedia` whatsapp.  
-**Anti-ban:** Koray’dan sonra **≥20 dk** bekle. Soft restart 6/gün (bugün 3/6). variant `kd-C-0003`.
+**Anti-ban:** Hakan’dan sonra **≥20 dk** bekle. Soft restart (bugün 4/6). variant `kd-C-9776`.
 
 **Gönder:** yapıştır → kart çıkarsa **X** → gönder.
 
 ```
-Hakan Hocam, merhaba.
+Hatice Hocam, merhaba.
 Ben Kaan — *Notya*'dan ulaşıyorum.
 
-Kısaca *Notya*: muayene odasında sizinle çalışan bir klinik asistan.
-Not, reçete, rapor, takip ve hasta portalı tek yerde — kararlar yine *sizde*.
-40'tan fazla branşı kendi dilinde destekliyoruz.
+*Notya* — hekimler için yapay zekâ klinik asistanı.
+Muayeneyi dinler, notunuzu yazar, reçete ve rapor taslağını hazırlar, hastanızı takipte tutar — hasta portalı dahil.
+Her karar *sizin onayınızla*.
+40'tan fazla branşı kendi ihtiyaçlarıyla destekliyoruz.
 
-Pratikte: günde yaklaşık *1,5-2 saat* idari yük azalması.
-Epikriz ve raporlar antetli, düzenli kalıyor.
-Kısa bir bakış çoğu hekim için karar vermeye yetiyor.
+Tipik bir günde yaklaşık *1,5-2 saat* kazanç.
+Kayıtlar daha düzenli → bakım kalitesi de yükseliyor.
+Meslektaşlarınız da bakmaya başladı — geride kalmamak için kısa bir bakış çoğu zaman yeterli.
 
 *Kadın doğumda*
-- Doppler'li USG ve yapılandırılmış NST
+- Doğum epikrizi ve antetli baskı
 - Gebelik takvimi ve izlem
 - Jinekolojik operasyon notları (histerektomi, myomektomi, laparoskopi)
-- Sezaryen ve ameliyat notları
-- Doğum epikrizi ve antetli baskı
+- Obstetrik risk (preeklampsi, GDM, SSVD)
+- Doppler'li USG ve yapılandırılmış NST
 
 Dr. Gökhan Mamur *30 dk* kısa tanıtım yapıyor 🩺
 Saatler size göre.
