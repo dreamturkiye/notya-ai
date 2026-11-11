@@ -146,7 +146,7 @@ def short_name(name: str) -> str:
     n = (name or "").strip()
     n = re.sub(
         r"^(do[cç]\.?\s*dr\.?|prof\.?\s*dr\.?|op\.?\s*dr\.?|uzm\.?\s*dr\.?|"
-        r"dr\.?\s*[oö]gr\.?\s*[uü]yesi|dr\.?)\s*",
+        r"dr\.?\s*[oö]gr\.?\s*[uü]yesi|doktor\.?|dr\.?)\s*",
         "",
         n,
         flags=re.I,
