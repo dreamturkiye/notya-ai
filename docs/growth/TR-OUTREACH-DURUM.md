@@ -5,7 +5,7 @@ Caps: **≥20 dk** aralık · **4/saat** · **6/gün**. Her gönderi unique vari
 Playbook: `TR-WHATSAPP-ANTI-BAN.md` · log: `tr-wa-send-log.csv` · gate: `python3 scripts/tr-outreach-next.py --check-pace`
 
 **Sıradaki:** Doç. Dr. **Songül Alemdaroğlu** · KD · Adana · `+905339627636`  
-(WA-verified · variant `kd-C-4000` · paket W6-21)
+(WA-verified · variant `kd-A-0001` · paket W6-21 · full KD template quality)
 
 **Göndermeden önce:**
 1. WhatsApp Business yasağının kalktığını doğrula.
@@ -13,7 +13,7 @@ Playbook: `TR-WHATSAPP-ANTI-BAN.md` · log: `tr-wa-send-log.csv` · gate: `pytho
 3. Kişiyi rehbere kaydet → mesajı yapıştır → OG kartı **X** → gönder.
 4. Sonraki doktor için **en az 20 dk bekle**; aynı metni tekrar kullanma.
 5. `gitti` işaretle:  
-   `python3 scripts/tr-outreach-next.py --mark-gitti "Doç. Dr. Songül Alemdaroğlu" --phone +905339627636 --brans kadin-dogum --city Adana --variant-id kd-C-4000`
+   `python3 scripts/tr-outreach-next.py --mark-gitti "Doç. Dr. Songül Alemdaroğlu" --phone +905339627636 --brans kadin-dogum --city Adana --variant-id kd-A-0001`
 
 ## Continuous scraper
 

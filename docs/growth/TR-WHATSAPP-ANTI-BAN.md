@@ -23,9 +23,9 @@ WhatsApp does **not** publish exact thresholds. Official Business Messaging Poli
 ## Copy rules (similarity signal)
 
 1. **Never** paste the same body twice in a day (name-only swap counts as near-identical).
-2. Every SIRADAKİ pack uses `scripts/tr-wa-message-variant.py` — structural variants (opening, bullet order, CTA wording).
-3. Keep specialty bullets, but shuffle order / pick 4 of 5.
-4. Prefer one soft question (boosts reply rate): e.g. “Kısa bir bakış ister misiniz?”
+2. Every SIRADAKİ pack uses `scripts/tr-wa-message-variant.py` — **full-quality** variants of `TR-PEDI-OUTREACH-TEMPLATES.md` (opening / product / bullet order / CTA rotate). Thin “bullet + link” stubs are forbidden.
+3. Keep specialty clinical depth (KD: Doppler USG, NST, sezaryen, epikriz… — not generic filler).
+4. Always include: who you are (Kaan/Notya), what it does, branş list, time-save, Gökhan 30 dk, demo + deneme links.
 5. Links stay `www.` (no `https://`); dismiss OG card **X** before send.
 6. Do **not** send follow-up/apology if first message was delivered — looks spammy.
 

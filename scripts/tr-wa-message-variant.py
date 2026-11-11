@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Generate structurally unique TR WhatsApp cold-outreach copy.
+"""Generate high-quality, structurally unique TR WhatsApp cold-outreach copy.
 
-Anti-ban: name-only swaps of the same body look identical to spam detectors.
-This script rotates openings, bullet order/subset, and CTA wording so each
-send differs in structure — not just the doctor name.
+Quality bar = docs/growth/TR-PEDI-OUTREACH-TEMPLATES.md (Kaan voice, branş depth,
+Gökhan 30 dk, demo + deneme). Anti-ban uniqueness comes from rotating openings,
+bridge lines, bullet order, soft CTAs and section order — never by gutting the message
+into a thin “bullet + link” stub.
 """
 from __future__ import annotations
 
@@ -14,66 +15,107 @@ import re
 import sys
 from datetime import datetime, timezone
 
-# Specialty bullet pools (Turkish). Pick 4 of N and shuffle.
+# Full specialty bullet pools (keep clinical specificity).
 BULLETS: dict[str, list[str]] = {
     "kd": [
-        "gebelik takvimi ve izlem notları",
-        "USG / NST rapor taslağı",
-        "sezaryen ve ameliyat notu",
-        "doğum epikrizi ve antetli baskı",
-        "hasta portalı (randevu + sonuçlar)",
-        "muayene sırasında asistan desteği",
+        "Gebelik takvimi ve izlem",
+        "Doppler'li USG ve yapılandırılmış NST",
+        "Obstetrik risk (preeklampsi, GDM, SSVD)",
+        "Sezaryen ve ameliyat notları",
+        "Doğum epikrizi ve antetli baskı",
+        "Jinekolojik operasyon notları (histerektomi, myomektomi, laparoskopi)",
     ],
     "derm": [
-        "dermatolojik muayene notları",
-        "lezyon / takip fotoğrafları",
-        "reçete ve kontrol hatırlatmaları",
-        "hasta portalı (randevu + sonuçlar)",
-        "muayene sırasında asistan desteği",
+        "PASI / EASI",
+        "İzotretinoin GÖP kapısı",
+        "Fototerapi defteri",
+        "Yama (D2/D4) ve dermoskopi",
+        "Biyolojik SUT taslağı",
     ],
     "pedi": [
-        "çocuk muayene ve büyüme notları",
-        "aşı / kontrol hatırlatmaları",
-        "reçete akışı",
-        "veli portalı (randevu + sonuçlar)",
-        "muayene sırasında asistan desteği",
+        "Büyüme ve persentil (Neyzi / WHO)",
+        "Hedef boy",
+        "Doz hesaplayıcı (mg/kg)",
+        "Aşı takvimi ve telafi",
+        "Gelişim ve tarama (M-CHAT dahil)",
     ],
 }
 
-OPENINGS = [
-    "Merhaba Dr. {ad}, Notya’dan yazıyorum.",
-    "Dr. {ad}, merhaba — Notya ekibinden ulaşıyorum.",
-    "İyi günler Dr. {ad}. Notya’dan kısaca yazmak istedim.",
-    "Merhaba Dr. {ad}. Klinik temposunu koruyan bir asistan üzerine kısa not.",
-    "Dr. {ad} merhaba, Notya (klinik asistan) tarafındayım.",
-]
-
-BRIDGES = [
-    "Özetle: muayene notu, takip ve hasta iletişimi tek yerde — her karar sizin onayınızla.",
-    "Kısaca: branşa özel muayene ekranı + hasta portalı + asistan.",
-    "Amaç: kağıt / dağınık WhatsApp notunu azaltıp muayene temposunu korumak.",
-    "Notya, branşınıza özel akışı tek ekranda topluyor; kayıtlar daha düzenli kalıyor.",
-]
-
-CTAS = [
-    "Uygun olursa 10 dk’lık kısa bir bakış ayarlayabilirim — ister misiniz?",
-    "İlginiz olursa size özel kısa bir demo planlarım. Uygun mu?",
-    "Kısa bir bakış ister misiniz, yoksa şimdilik geçeyim mi?",
-    "Uygun bir zamanınız olursa bir cümleyle dönüş yeterli.",
-    "İsterseniz sayfaya bakıp “tamam” yazmanız yeter; detayı sonra konuşuruz.",
-]
-
-CLOSINGS = [
-    "Saygılarımla",
-    "İyi çalışmalar",
-    "Teşekkürler, iyi günler",
-]
-
-LINKS = {
-    "kd": "www.notya.ai/kadin-dogum",
-    "derm": "www.notya.ai/dermatoloji",
-    "pedi": "www.notya.ai/pediatri",
+BRANCH_LABEL = {
+    "kd": "Kadın doğumda",
+    "derm": "Dermatolojide",
+    "pedi": "Pediatride",
 }
+
+# Openings — always name + Kaan/Notya identity (proven voice).
+OPENINGS = [
+    "{ad} Hocam merhaba 👋\nBen Kaan, *Notya*'dan yazıyorum.",
+    "{ad} Hocam, merhaba.\nBen Kaan — *Notya*'dan ulaşıyorum.",
+    "Merhaba {ad} Hocam 👋\nKaan (Notya). Kısa bir not bırakıyorum.",
+    "{ad} Hocam iyi günler.\nBen Kaan, *Notya* ekibinden yazıyorum.",
+]
+
+# What Notya is — rotate wording, keep substance.
+PRODUCT = [
+    (
+        "*Notya* — hekimler için yapay zekâ klinik asistanı.\n"
+        "Muayeneyi dinler, notunuzu yazar, reçete ve rapor taslağını hazırlar, "
+        "hastanızı takipte tutar — hasta portalı dahil.\n"
+        "Her karar *sizin onayınızla*.\n"
+        "40'tan fazla branşı kendi ihtiyaçlarıyla destekliyoruz."
+    ),
+    (
+        "*Notya*, hekimler için yapay zekâ klinik asistanı:\n"
+        "muayeneyi dinler → not + reçete + rapor taslağı → hasta takibi ve portal.\n"
+        "Her adım *sizin onayınızla* ilerler.\n"
+        "40+ branşta, her branşın kendi ihtiyacıyla."
+    ),
+    (
+        "Kısaca *Notya*: muayene odasında sizinle çalışan bir klinik asistan.\n"
+        "Not, reçete, rapor, takip ve hasta portalı tek yerde — kararlar yine *sizde*.\n"
+        "40'tan fazla branşı kendi dilinde destekliyoruz."
+    ),
+]
+
+VALUE = [
+    (
+        "Tipik bir günde yaklaşık *1,5-2 saat* kazanç.\n"
+        "Kayıtlar daha düzenli → bakım kalitesi de yükseliyor.\n"
+        "Meslektaşlarınız da bakmaya başladı — geride kalmamak için kısa bir bakış çoğu zaman yeterli."
+    ),
+    (
+        "Yoğun günlerde not / reçete / takip işlerinden yaklaşık *1,5-2 saat* geri geliyor.\n"
+        "Daha düzenli kayıt = daha temiz takip.\n"
+        "Branşınızdaki meslektaşlar da denemeye başladı; kısa bir bakış genelde yeterli oluyor."
+    ),
+    (
+        "Pratikte: günde *1,5-2 saat*lik idari yük azalması.\n"
+        "Epikriz ve raporlar antetli, düzenli kalıyor.\n"
+        "Kısa bir bakış çoğu hekim için karar vermeye yetiyor."
+    ),
+]
+
+CTA_BLOCK = [
+    (
+        "Dr. Gökhan Mamur *30 dk* kısa tanıtım yapıyor 🩺\n"
+        "Saatler size göre.\n\n"
+        "Tanıtıma vakit yoksa ücretsiz denemeyi hemen açabiliyoruz.\n\n"
+        "📅 *Tanıtım / Demo:* www.notya.io/demo\n"
+        "🔗 *Ücretsiz deneme:* www.notya.io"
+    ),
+    (
+        "İsterseniz Dr. Gökhan Mamur *30 dakikalık* kısa bir tanıtım ayarlıyor — saat sizin diliminiz.\n"
+        "Tanıtıma şimdi vakit yoksa ücretsiz denemeyi de hemen açabilirsiniz.\n\n"
+        "📅 Demo: www.notya.io/demo\n"
+        "🔗 Deneme: www.notya.io"
+    ),
+    (
+        "Dr. Gökhan Mamur sizin için *30 dk’lık* kısa bir tur yapıyor; uygun saati siz seçiyorsunuz.\n"
+        "Şimdilik sadece bakmak isterseniz ücretsiz deneme de açık.\n\n"
+        "*Tanıtım:* www.notya.io/demo\n"
+        "*Deneme:* www.notya.io"
+    ),
+]
 
 
 def specialty_key(raw: str) -> str:
@@ -84,7 +126,6 @@ def specialty_key(raw: str) -> str:
         return "derm"
     if s in ("pedi", "pediatri", "çocuk", "cocuk"):
         return "pedi"
-    # default from Turkish specialty labels in ledger
     if "kadın" in s or "doğum" in s or "dogum" in s:
         return "kd"
     if "derma" in s:
@@ -124,45 +165,31 @@ def build_message(
 ) -> tuple[str, str]:
     key = specialty_key(specialty)
     short = short_name(name)
-
     rng = random.Random(seed if seed is not None else variant_seed(name, phone))
+
     opening = rng.choice(OPENINGS).format(ad=short)
-    bridge = rng.choice(BRIDGES)
+    product = rng.choice(PRODUCT)
+    value = rng.choice(VALUE)
+    cta = rng.choice(CTA_BLOCK)
+
     bullets = list(BULLETS[key])
     rng.shuffle(bullets)
-    chosen = bullets[:4]
-    bullet_block = "\n".join(f"• {b}" for b in chosen)
-    cta = rng.choice(CTAS)
-    close = rng.choice(CLOSINGS)
-    link = LINKS[key]
+    # Always show 5 when pool is large enough; keep depth.
+    n_bullets = 5 if len(bullets) >= 5 else len(bullets)
+    chosen = bullets[:n_bullets]
+    label = BRANCH_LABEL[key]
+    bullet_block = f"*{label}*\n" + "\n".join(f"- {b}" for b in chosen)
 
-    # Two layout families to break fingerprint further
     layout = rng.choice(["A", "B", "C"])
     if layout == "A":
-        body = (
-            f"{opening}\n\n"
-            f"{bridge}\n\n"
-            f"{bullet_block}\n\n"
-            f"Sayfa: {link}\n\n"
-            f"{cta}\n\n"
-            f"{close}"
-        )
+        # Classic: product → branş → value → CTA
+        body = f"{opening}\n\n{product}\n\n{bullet_block}\n\n{value}\n\n{cta}"
     elif layout == "B":
-        body = (
-            f"{opening} {bridge}\n\n"
-            f"Öne çıkanlar:\n{bullet_block}\n\n"
-            f"{cta}\n"
-            f"{link}\n\n"
-            f"{close}"
-        )
+        # Branş first (specialty-forward), then product, value, CTA
+        body = f"{opening}\n\n{bullet_block}\n\n{product}\n\n{value}\n\n{cta}"
     else:
-        body = (
-            f"{opening}\n\n"
-            f"Branşınıza uygun başlıklar:\n{bullet_block}\n\n"
-            f"{bridge}\n"
-            f"→ {link}\n\n"
-            f"{cta}\n{close}"
-        )
+        # Product → value → branş → CTA (social proof earlier)
+        body = f"{opening}\n\n{product}\n\n{value}\n\n{bullet_block}\n\n{cta}"
 
     vid = f"{key}-{layout}-{seed if seed is not None else variant_seed(name, phone) % 10000:04d}"
     return body.strip(), vid

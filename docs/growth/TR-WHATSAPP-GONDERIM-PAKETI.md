@@ -1,8 +1,8 @@
 # WhatsApp gönderim paketi — isimli metinler
 
-**Anti-ban (2026-11-10 sonrası zorunlu):** soft restart → max **6/gün**, **≥20 dk** aralık, her SIRADAKİ için **yeni variant** (`scripts/tr-wa-message-variant.py`). Gate: `python3 scripts/tr-outreach-next.py --check-pace`. Playbook: `TR-WHATSAPP-ANTI-BAN.md`. Eski balonlar / emoji / aynı gövdeyi peş peşe kullanma.
+**Anti-ban (2026-11-10 sonrası zorunlu):** soft restart → max **6/gün**, **≥20 dk** aralık, her SIRADAKİ için **yeni full-quality variant** (`scripts/tr-wa-message-variant.py` = `TR-PEDI-OUTREACH-TEMPLATES.md` kalitesi, ince stub yasak). Gate: `python3 scripts/tr-outreach-next.py --check-pace`. Playbook: `TR-WHATSAPP-ANTI-BAN.md`. Aynı gövdeyi peş peşe kullanma.
 
-**Güncel:** tek mesaj · WA biçimi · görsel ek yok · `www.` link (OG kartı X).  
+**Güncel:** tek mesaj · WA biçimi (`*kalın*`, `- ` liste) · görsel ek yok · `www.` link (OG kartı X).  
 Şablon üretici: `scripts/tr-wa-message-variant.py`. Aşağıda eski GİTTİ kayıtları arşiv; SIRADAKİ güncel variant.
 
 Toplam: 30+ kişi
@@ -1362,20 +1362,32 @@ Wave3’te SIRADAKİ diye önerildi → **HATA**. Ledger + early seed’e işlen
 
 **Ön kontrol:** ledger temiz.  
 **Anti-ban (zorunlu):** ban kalkmış olmalı. Soft restart: bugün max **6**, aralar **≥20 dk**, bu gövdeyi **bir daha kullanma**. Ayrıntı: `TR-WHATSAPP-ANTI-BAN.md`.  
-**variant_id:** `kd-C-4000`
+**variant_id:** `kd-A-0001` · kalite çubuğu = `TR-PEDI-OUTREACH-TEMPLATES.md` (kısa stub yasak).
+
+**Gönder:** yapıştır → kart çıkarsa **X** → gönder.
 
 ```
-Dr. Songül merhaba, Notya (klinik asistan) tarafındayım.
+Songül Hocam, merhaba.
+Ben Kaan — *Notya*'dan ulaşıyorum.
 
-Branşınıza uygun başlıklar:
-• sezaryen ve ameliyat notu
-• muayene sırasında asistan desteği
-• hasta portalı (randevu + sonuçlar)
-• USG / NST rapor taslağı
+Kısaca *Notya*: muayene odasında sizinle çalışan bir klinik asistan.
+Not, reçete, rapor, takip ve hasta portalı tek yerde — kararlar yine *sizde*.
+40'tan fazla branşı kendi dilinde destekliyoruz.
 
-Kısaca: branşa özel muayene ekranı + hasta portalı + asistan.
-→ www.notya.ai/kadin-dogum
+*Kadın doğumda*
+- Jinekolojik operasyon notları (histerektomi, myomektomi, laparoskopi)
+- Obstetrik risk (preeklampsi, GDM, SSVD)
+- Doppler'li USG ve yapılandırılmış NST
+- Doğum epikrizi ve antetli baskı
+- Sezaryen ve ameliyat notları
 
-Uygun olursa 10 dk’lık kısa bir bakış ayarlayabilirim — ister misiniz?
-Teşekkürler, iyi günler
+Tipik bir günde yaklaşık *1,5-2 saat* kazanç.
+Kayıtlar daha düzenli → bakım kalitesi de yükseliyor.
+Meslektaşlarınız da bakmaya başladı — geride kalmamak için kısa bir bakış çoğu zaman yeterli.
+
+İsterseniz Dr. Gökhan Mamur *30 dakikalık* kısa bir tanıtım ayarlıyor — saat sizin diliminiz.
+Tanıtıma şimdi vakit yoksa ücretsiz denemeyi de hemen açabilirsiniz.
+
+📅 Demo: www.notya.io/demo
+🔗 Deneme: www.notya.io
 ```
