@@ -1389,16 +1389,20 @@ Wave3’te SIRADAKİ diye önerildi → **HATA**. Ledger + early seed’e işlen
 ## W6-31. Op. Dr. Gökben Yüksel ← GİTTİ (2026-11-12, WA-verified)
 **kadın-doğum** · İzmir · WA: `+905076680468` · variant `kd-C-0007`
 
-## W6-32. Gülşah Dalgacı ← SIRADAKİ
-**kadın-doğum** · Adana · `+90 530 117 48 01` · WA: `+905301174801`  
-**Doğrulama:** DS `socialMedia` whatsapp.  
-**Anti-ban:** Gökben’den sonra **≥20 dk**. Soft restart (bugün **5/6** — Gülşah sonrası günlük kapı dolar). variant `kd-C-0009`.
+## W6-32. Gülşah Dalgacı ← GİTTİ (2026-11-12, WA-verified)
+**kadın-doğum** · Adana · WA: `+905301174801` · variant `kd-C-0009`
 
-**Gönder:** yapıştır → kart çıkarsa **X** → gönder.
+## W6-33. Halil İbrahim Altıncı ← SIRADAKİ (yarın — günlük soft cap 6/6)
+**kadın-doğum** · Adana · `+90 544 926 53 41` · WA: `+905449265341`  
+**Doğrulama:** DS `socialMedia` whatsapp.  
+**Not:** Pool’da sıradaki Gülşah Tanas Sarıkas atlandı (az önce Gülşah Dalgacı — aynı isim peş peşe yok).  
+**Anti-ban:** bugün **6/6**. Gönder **2026-11-13 ≥09:30 TR**. variant `kd-C-0005`.
+
+**Gönder (yarın):** yapıştır → kart çıkarsa **X** → gönder.
 
 ```
-Gülşah Hocam iyi günler.
-Ben Kaan, *Notya* ekibinden yazıyorum.
+Merhaba Halil Hocam 👋
+Kaan (Notya). Kısa bir not bırakıyorum.
 
 Kısaca *Notya*: muayene odasında sizinle çalışan bir klinik asistan.
 Not, reçete, rapor, takip ve hasta portalı tek yerde — kararlar yine *sizde*.
@@ -1409,15 +1413,15 @@ Daha düzenli kayıt = daha temiz takip.
 Branşınızdaki meslektaşlar da denemeye başladı; kısa bir bakış genelde yeterli oluyor.
 
 *Kadın doğumda*
-- Sezaryen ve ameliyat notları
 - Obstetrik risk (preeklampsi, GDM, SSVD)
-- Doğum epikrizi ve antetli baskı
+- Sezaryen ve ameliyat notları
+- Doppler'li USG ve yapılandırılmış NST
 - Gebelik takvimi ve izlem
-- Jinekolojik operasyon notları (histerektomi, myomektomi, laparoskopi)
+- Doğum epikrizi ve antetli baskı
 
-İsterseniz Dr. Gökhan Mamur *30 dakikalık* kısa bir tanıtım ayarlıyor — saat sizin diliminiz.
-Tanıtıma şimdi vakit yoksa ücretsiz denemeyi de hemen açabilirsiniz.
+Dr. Gökhan Mamur sizin için *30 dk’lık* kısa bir tur yapıyor; uygun saati siz seçiyorsunuz.
+Şimdilik sadece bakmak isterseniz ücretsiz deneme de açık.
 
-📅 Demo: www.notya.io/demo
-🔗 Deneme: www.notya.io
+*Tanıtım:* www.notya.io/demo
+*Deneme:* www.notya.io
 ```
