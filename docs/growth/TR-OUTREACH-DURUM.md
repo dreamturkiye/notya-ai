@@ -2,11 +2,11 @@
 
 **Anti-ban:** soft **16**/gün · gap **≥12 dk** · **5/saat**.
 
-**Sıradaki:** Op. Dr. Hüseyin Aytuğ Avşar · KD · İzmir · `+905405202378`  
-(variant `kd-A-0001` · paket W6-36 · bugün **9/16** · FOMO+portal copy)
+**Sıradaki:** Prof. Dr. İbrahim Alanbay · KD · Ankara · `+905058027254`  
+(variant `kd-C-0007` · paket W6-37 · bugün **10/16**)
 
-**Pace:** Hayri gitti → **≥12 dk**.
+**Pace:** Hüseyin gitti → **≥12 dk**.
 
 ```bash
-python3 scripts/tr-outreach-next.py --mark-gitti "Op. Dr. Hüseyin Aytuğ Avşar" --phone +905405202378 --brans kadin-dogum --city İzmir --variant-id kd-A-0001
+python3 scripts/tr-outreach-next.py --mark-gitti "Prof. Dr. İbrahim Alanbay" --phone +905058027254 --brans kadin-dogum --city Ankara --variant-id kd-C-0007
 ```

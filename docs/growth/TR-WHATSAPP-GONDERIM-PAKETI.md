@@ -1401,35 +1401,39 @@ Wave3’te SIRADAKİ diye önerildi → **HATA**. Ledger + early seed’e işlen
 ## W6-35. Op. Dr. Hayri Aksüt ← GİTTİ (2026-11-12, WA-verified)
 **kadın-doğum** · İzmir · WA: `+905522840905` · variant `kd-C-0011`
 
-## W6-36. Op. Dr. Hüseyin Aytuğ Avşar ← SIRADAKİ
-**kadın-doğum** · İzmir · `+90 540 520 23 78` · WA: `+905405202378`  
+## W6-36. Op. Dr. Hüseyin Aytuğ Avşar ← GİTTİ (2026-11-12, WA-verified)
+**kadın-doğum** · İzmir · WA: `+905405202378` · variant `kd-A-0001`
+
+## W6-37. Prof. Dr. İbrahim Alanbay ← SIRADAKİ
+**kadın-doğum** · Ankara · `+90 505 802 72 54` · WA: `+905058027254`  
 **Doğrulama:** DS `socialMedia` whatsapp · unvan DS og:title.  
-**Anti-ban:** Hayri’den **≥12 dk**. Soft 9/16. variant `kd-A-0001` · FOMO + portal kalite satırı.
+**Anti-ban:** Hüseyin’den **≥12 dk**. Soft 10/16. variant `kd-C-0007`.
 
 **Gönder:** yapıştır → kart çıkarsa **X** → gönder.
 
 ```
-Hüseyin Hocam, merhaba.
-Ben Kaan — *Notya*'dan ulaşıyorum.
+Merhaba İbrahim Hocam 👋
+Kaan (Notya). Kısa bir not bırakıyorum.
 
-Kısaca *Notya*: muayene odasında sizinle çalışan bir klinik asistan.
-Not, reçete, rapor, takip ve hasta portalı tek yerde — kararlar yine *sizde*.
-40'tan fazla branşı kendi dilinde destekliyoruz.
+*Notya* — hekimler için yapay zekâ klinik asistanı.
+Muayeneyi dinler, notunuzu yazar, reçete ve rapor taslağını hazırlar, hastanızı takipte tutar — hasta portalı dahil.
+Her karar *sizin onayınızla*.
+40'tan fazla branşı kendi ihtiyaçlarıyla destekliyoruz.
+
+Zaman kazancı tek başına değil: portal ve düzenli takip hastaya verdiğiniz kaliteyi de artırıyor.
+Hastalar artık daha modern, daha erişilebilir hekimlerle çalışmak istiyor.
+Geride kalmamak için 10 dk’lık bir bakış çoğu zaman karar verdiriyor.
 
 *Kadın doğumda*
-- Jinekolojik operasyon notları (histerektomi, myomektomi, laparoskopi)
 - Obstetrik risk (preeklampsi, GDM, SSVD)
+- Sezaryen ve ameliyat notları
 - Doppler'li USG ve yapılandırılmış NST
 - Doğum epikrizi ve antetli baskı
-- Sezaryen ve ameliyat notları
+- Jinekolojik operasyon notları (histerektomi, myomektomi, laparoskopi)
 
-Tipik bir günde yaklaşık *1,5-2 saat* kazanç.
-Hasta portalı gibi özellikler hem zaman kazandırır hem hastaya verdiğiniz hizmetin kalitesini yükseltir.
-Geri kalmamak önemli: hastalar giderek daha modern çalışan hekimleri tercih ediyor.
+Dr. Gökhan Mamur sizin için *30 dk’lık* kısa bir tur yapıyor; uygun saati siz seçiyorsunuz.
+Şimdilik sadece bakmak isterseniz ücretsiz deneme de açık.
 
-İsterseniz Dr. Gökhan Mamur *30 dakikalık* kısa bir tanıtım ayarlıyor — saat sizin diliminiz.
-Tanıtıma şimdi vakit yoksa ücretsiz denemeyi de hemen açabilirsiniz.
-
-📅 Demo: www.notya.io/demo
-🔗 Deneme: www.notya.io
+*Tanıtım:* www.notya.io/demo
+*Deneme:* www.notya.io
 ```
