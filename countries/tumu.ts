@@ -26,6 +26,13 @@ import { NZ_YASAL } from './nz/yasal'
 import { US_YASAL } from './us/yasal'
 import { UZ_YASAL } from './uz/yasal'
 import type { YasalKapisi } from '@/lib/ulke/yasal/tipler'
+import type { OnBuroDili } from '@/lib/iletisim/onburo/dil/tipler'
+import { AU_ON_BURO } from './au/onBuro'
+import { CA_ON_BURO } from './ca/onBuro'
+import { GB_ON_BURO } from './gb/onBuro'
+import { NZ_ON_BURO } from './nz/onBuro'
+import { US_ON_BURO } from './us/onBuro'
+import { UZ_ON_BURO } from './uz/onBuro'
 
 export type UlkeKaydi = { paket: UlkePaketi; sizintiTerimleri: readonly SizintiTerimi[]; sizintiHarfleri: string }
 
@@ -48,3 +55,6 @@ export const YASAL_PAKETLERI: Record<Exclude<UlkeKodu, 'tr'>, YasalKapisi> = {
   nz: NZ_YASAL,
   uz: UZ_YASAL,
 }
+
+/** WHATSAPP-ONBURO-01 — every country's front-desk language pack (lib/iletisim/onburo). Tests and scripts only. */
+export const ON_BURO_PAKETLERI: Record<'au' | 'ca' | 'gb' | 'nz' | 'us' | 'uz', OnBuroDili> = { au: AU_ON_BURO, ca: CA_ON_BURO, gb: GB_ON_BURO, nz: NZ_ON_BURO, us: US_ON_BURO, uz: UZ_ON_BURO }
