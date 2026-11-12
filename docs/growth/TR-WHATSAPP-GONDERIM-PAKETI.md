@@ -1392,13 +1392,13 @@ Wave3’te SIRADAKİ diye önerildi → **HATA**. Ledger + early seed’e işlen
 ## W6-32. Gülşah Dalgacı ← GİTTİ (2026-11-12, WA-verified)
 **kadın-doğum** · Adana · WA: `+905301174801` · variant `kd-C-0009`
 
-## W6-33. Halil İbrahim Altıncı ← SIRADAKİ (yarın — günlük soft cap 6/6)
+## W6-33. Halil İbrahim Altıncı ← SIRADAKİ
 **kadın-doğum** · Adana · `+90 544 926 53 41` · WA: `+905449265341`  
 **Doğrulama:** DS `socialMedia` whatsapp.  
 **Not:** Pool’da sıradaki Gülşah Tanas Sarıkas atlandı (az önce Gülşah Dalgacı — aynı isim peş peşe yok).  
-**Anti-ban:** bugün **6/6**. Gönder **2026-11-13 ≥09:30 TR**. variant `kd-C-0005`.
+**Anti-ban:** phase-2 soft **16**/gün (bugün 6/16). Gap ≥12 dk. variant `kd-C-0005`.
 
-**Gönder (yarın):** yapıştır → kart çıkarsa **X** → gönder.
+**Gönder:** yapıştır → kart çıkarsa **X** → gönder.
 
 ```
 Merhaba Halil Hocam 👋

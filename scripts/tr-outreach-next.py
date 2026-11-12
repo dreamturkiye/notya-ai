@@ -72,11 +72,11 @@ CONTACTED_DURUM = {"gitti", "zaten_gitti", "wa_yok", "gitmedi"}
 DEFAULT_PACE = {
     "restriction_ended_at": None,
     "soft_restart_hours": 48,
-    "min_gap_minutes": 12,
-    "soft_min_gap_minutes": 20,
-    "max_per_day": 12,
-    "soft_max_per_day": 6,
-    "max_per_hour": 4,
+    "min_gap_minutes": 10,
+    "soft_min_gap_minutes": 12,
+    "max_per_day": 22,
+    "soft_max_per_day": 16,
+    "max_per_hour": 5,
     "quiet_hours_start": 9,
     "quiet_hours_start_minute": 30,
     "quiet_hours_end": 19,
@@ -378,14 +378,31 @@ def name_blocked(nn: str, excl_n: set[str]) -> bool:
     return False
 
 
+def last_sent_first_name() -> str:
+    """First given-name token of the most recent cold send (for back-to-back skip)."""
+    sends = load_send_log()
+    if not sends:
+        return ""
+    # last non-empty row
+    for r in reversed(sends):
+        nm = (r.get("name") or "").strip()
+        if not nm:
+            continue
+        nn = norm_name(nm)
+        return nn.split()[0] if nn else ""
+    return ""
+
+
 def propose_from_wa_pool(n: int = 5) -> list[dict]:
     """WA-verified Doktorsitesi leads first (anti false-positive bare 5xx)."""
     if not WA_POOL.exists():
         return []
     ledger = load_ledger()
     excl_p, excl_n = contacted_sets(ledger)
+    skip_first = last_sent_first_name()
     rows = list(csv.DictReader(WA_POOL.open()))
     out, seen = [], set()
+    deferred: list[dict] = []
     for r in rows:
         if not is_mobile(r.get("telefon", "")):
             continue
@@ -399,22 +416,34 @@ def propose_from_wa_pool(n: int = 5) -> list[dict]:
         src = (r.get("kaynak_enrich") or "").lower()
         if src and "whatsapp" not in src and "wa" not in src:
             continue
+        cand = {
+            "isim": r.get("isim") or "",
+            "brans": r.get("brans") or "",
+            "sehir": r.get("sehir") or "",
+            "ilce": r.get("ilce") or "",
+            "telefon": e164(r.get("telefon") or ""),
+            "url": r.get("url") or "",
+            "skor": r.get("skor") or "0",
+            "kaynak": "wa_pool",
+            "ozel_muayenehane": "evet",
+        }
+        # Don't stack same first name right after the last send (Fatma/Fatma, Gülşah/Gülşah)
+        if skip_first and nn.split() and nn.split()[0] == skip_first:
+            deferred.append(cand)
+            continue
         seen.add(tel)
-        out.append(
-            {
-                "isim": r.get("isim") or "",
-                "brans": r.get("brans") or "",
-                "sehir": r.get("sehir") or "",
-                "ilce": r.get("ilce") or "",
-                "telefon": e164(r.get("telefon") or ""),
-                "url": r.get("url") or "",
-                "skor": r.get("skor") or "0",
-                "kaynak": "wa_pool",
-                "ozel_muayenehane": "evet",
-            }
-        )
+        out.append(cand)
         if len(out) >= n:
             break
+    if len(out) < n:
+        for cand in deferred:
+            tel = digits(cand["telefon"])
+            if tel in seen:
+                continue
+            seen.add(tel)
+            out.append(cand)
+            if len(out) >= n:
+                break
     return out
 
 
