@@ -3,19 +3,19 @@
 **Anti-ban:** soft restart **2026-11-13 12:00 TR** · **≥20 dk** · **4/saat** · **6/gün**.  
 Gate: `python3 scripts/tr-outreach-next.py --check-pace`
 
-**Sıradaki:** **Duygu Ersoy** · KD · İstanbul · `+905336036166`  
-(WA-verified · variant `kd-C-0002` · paket W6-28)
+**Sıradaki:** **Fatma Elif Işık Eryılmaz** · KD · Antalya · `+905322754326`  
+(WA-verified · variant `kd-C-4823` · paket W6-29)
 
-**Pace:** Volkan gitti → **≥20 dk bekle** (bugün **1/6** → Duygu sonrası 2/6).
+**Pace:** Duygu gitti → **≥20 dk bekle** (bugün **2/6**).
 
 **Gönderince:**
 ```bash
-python3 scripts/tr-outreach-next.py --mark-gitti "Duygu Ersoy" --phone +905336036166 --brans kadin-dogum --city İstanbul --variant-id kd-C-0002
+python3 scripts/tr-outreach-next.py --mark-gitti "Fatma Elif Işık Eryılmaz" --phone +905322754326 --brans kadin-dogum --city Antalya --variant-id kd-C-4823
 ```
 
 ## Son
 
 | Kişi | Telefon | Sonuç |
 |------|---------|--------|
-| Dr. Volkan Aktemur | `+905323684069` | **gitti** (2026-11-12) |
-| Dr. Öğr. Üyesi Çağdaş Demiroğlu | `+905346305163` | gitti (2026-11-11) |
+| Duygu Ersoy | `+905336036166` | **gitti** (2026-11-12) |
+| Dr. Volkan Aktemur | `+905323684069` | gitti (2026-11-12) |
