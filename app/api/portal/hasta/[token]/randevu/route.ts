@@ -13,6 +13,7 @@
  * doktor_id + patient_id together; an appointment id from the body is re-resolved with both before any write.
  */
 import { NextRequest, NextResponse } from 'next/server'
+import { baglantiAtfi } from '@/lib/geriCagirma/sayac'
 import { servisSupabase } from '@/lib/doktor/serverAuth'
 import { resolvePortalToken } from '@/lib/portal/messages'
 import { requirePortalUnlock } from '@/lib/portal/requireUnlock'
@@ -94,7 +95,7 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
   if ('hata' in o) return o.hata
   const { sb, doktorId, patientId } = o
 
-  const b = (await req.json().catch(() => ({}))) as { islem?: string; tur?: string; baslangic?: string; randevuId?: string; teklifId?: string }
+  const b = (await req.json().catch(() => ({}))) as { islem?: string; tur?: string; baslangic?: string; randevuId?: string; teklifId?: string; gc?: unknown }
   const islem = String(b.islem || '')
 
   // PR3 waitlist: join / leave for one own appointment; accept an earlier-slot offer made to this patient.
@@ -121,6 +122,10 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
       : null
   if (!s) return NextResponse.json({ error: 'Geçersiz istek.' }, { status: 400 })
   if (!s.ok) return NextResponse.json({ error: s.hata }, { status: s.durum })
+
+  // GERI-CAGIRMA-01: a booking made through a recall's own tagged link is credited to that recall — only when it is
+  // THIS token's doctor's recall of THIS token's patient (lib/geriCagirma/sayac.ts baglantiAtfi). No tag → no query.
+  if (islem === 'talep' && b.gc) await baglantiAtfi(sb, { doktorId, patientId, gc: b.gc, randevuId: s.randevu.id })
 
   await isleriCalistir(sb, { randevuId: s.randevu.id, doktorId, limit: 5, bitis: Date.now() + 15_000 })
   await googleaGonder(sb, doktorId, s.randevu.id)

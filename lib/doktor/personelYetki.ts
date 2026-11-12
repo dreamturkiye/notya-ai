@@ -177,6 +177,8 @@ export const ROTA_YETKILERI: readonly Kural[] = [
 
   // ── communication
   K('/api/doktor/iletisim/toplu', 'iletisim.toplu', 'iletisim.toplu'),
+  // GERI-CAGIRMA-01: the recall list and one-tap send are bulk patient communication (same capability); the cool-down PUT is doctor-only in the route.
+  K('/api/doktor/geri-cagirma', 'iletisim.toplu', 'iletisim.toplu'),
   K('/api/doktor/iletisim/ayarlar', 'iletisim.gonder', 'ayar'),
   K('/api/doktor/iletisim', 'iletisim.gonder', 'iletisim.gonder'),
   K('/api/doktor/mesajlar', 'mesaj', 'mesaj'),

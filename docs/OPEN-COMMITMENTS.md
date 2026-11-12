@@ -1,5 +1,68 @@
 # OPEN COMMITMENTS — Notya AI
 
+## GERI-CAGIRMA-01 — recall engine with a counter: what is built, what is open (Claude, 2026-11-12)
+
+Kaan, 2026-11-12: "Recall engine with a revenue counter … one-tap recall, and show 'Notya brought back 14 patients this
+month' on the home page." Built on `main` (Türkiye): one recall source over the 30 branş kohort engines, the Özel Branşlar
+plan dates and the doctor's own follow-up dates (`lib/geriCagirma/`), the `Geri çağırma` screen and base tile, one-tap
+sending through the existing WhatsApp / SMS / e-mail senders, the attribution rule and stored monthly counters, the home
+card, and "Bu listeyi geri çağır" on every kohort panel. Map and rules: `lib/geriCagirma/README.md`. Classification: engine,
+screen, sending, attribution and counter are CORE (all 40 branches); recall reasons are branş-specific and gated.
+Per country: tr APPLIED (inert until 196 is applied) · us OPEN GAP · gb OPEN GAP · ca OPEN GAP · au OPEN GAP · nz OPEN GAP ·
+uz OPEN GAP — see (c).
+
+- **GERI-CAGIRMA-01a — migration 196 is NOT applied on any database — waits on Kaan + the main session, 2026-11-12.** The job
+  that built this was told not to apply it (the Supabase confirmation cancels itself in an unattended job). Apply
+  `lib/db/migrations/196_geri_cagirma.sql` (rollback: `lib/db/migrations/geri-al/196_geri_cagirma.geri-al.sql`) to Türkiye
+  (anjayzospuurymjmmtim) and — the file is the same and safe there — the six country projects (AU sllwiuhobuagumwbvulf, UZ
+  pzleklfytbigsurumekn, GB gscfutmlozfvwrndwecw, CA urdxvmsertgnxtapypig, NZ itcrfagsjzwzupqlzbqe, US xmoxiprwisegunbrpstw).
+  Then verify: three tables (`geri_cagirma_kayitlari`, `geri_cagirma_ayarlari`, `geri_cagirma_aylik`), RLS on, no anon grant,
+  no write grant for `authenticated`, ledger row 196. Until then every read answers "not installed": no list, no home card,
+  nothing is sent. No new build is needed after applying.
+- **GERI-CAGIRMA-01b — which flags are recallable needs a clinician's eye — waits on Kaan (Dr. Gökhan Mamur), 2026-11-12.**
+  `lib/geriCagirma/nedenler.ts` lists, per branş, the kohort flags treated as "due / overdue". Clinical-state and safety
+  flags are excluded on purpose. Judgement calls that want a clinician: dermatoloji `beta_hcg` and `biyolojik_lab`; KD
+  `anti_d_zamani`, `gbs_zamani`, `ogtt_zamani`, `tarama_kapaniyor`, `lohusa_1hf`; kardiyoloji `yuksek_risk_izlem`; KDC
+  `antikoag_vade`; and whether onkoloji `kur_gecikmis` and nefroloji `diyaliz_gecikmis` (now excluded) should stay phone-only.
+  The message itself never names a reason in any case.
+- **GERI-CAGIRMA-01c — the six country builds do NOT have the feature — OPEN GAP, owner Claude, 2026-11-12.** What landed on
+  every release branch in this change set: the same migration 196 and the two world-neutral core files
+  (`lib/geriCagirma/tipler.ts`, `atif.ts`) with their tests — the schema and the attribution rule are identical everywhere.
+  What did NOT land: the country kit's own source, screen, Today card and pack strings. The inventory explains why it is a
+  job of its own, not a port: a country build is the country kit (its own tables `ulke_hastalar` / `ulke_randevulari` /
+  `ulke_faturalar`, its own screens, strings from the packs, the wall tests); the Turkish kohort engines are not offered
+  there (`YALNIZ_TR`); the only due date a kit records is a kept tool result's "next review" date
+  (`ulke_arac_kayitlari` → `tarihler.sonraki`, `lib/ulke/portal/incelemeOzeti.ts` on AU); and **the kit has no outbound
+  channel at all** ("NOTHING LEAVES THE PRODUCT", `lib/ulke/mesaj/mesaj.ts`) — so a country recall today can only be a
+  call list with a "phoned" mark (the `elle` channel the engine already supports), attribution from `ulke_randevulari`,
+  and recorded payments from `ulke_faturalar` (absent on UZ). To build per country: the kit source adapter, the routes
+  (`route.ulke.ts`), the kit screen and Today card, registration of the three tables in `lib/ulke/uygulama/tablolar.ts`,
+  strings in `countries/_dil/en` and the three Uzbek/Russian forms, the pack record docs. Not started.
+- **GERI-CAGIRMA-01d — legal review per country before any recall MESSAGE is sent outside Türkiye — waits on Kaan (lawyer),
+  2026-11-12.** Marketing-consent law differs (Spam Act 2003 AU, PECR / UK GDPR, CASL, TCPA / CAN-SPAM, the NZ Unsolicited
+  Electronic Messages Act, Uzbekistan's personal-data law; İYS / ETK in Türkiye). The engine keeps a recall to an
+  informational reminder to the practice's own patient with recorded per-channel consent and an opt-out, and the UI claims
+  no compliance. Türkiye too: whether a "kontrol zamanınız geldi" reminder to an existing patient needs İYS registration is
+  a lawyer's call; nothing in the product says it is compliant.
+- **GERI-CAGIRMA-01e — WhatsApp recall carries no booking link — waits on Kaan (Meta approval), 2026-11-12.** WhatsApp recalls
+  use the already-approved generic template `genel_bildirim` ("… bir bildiriminiz var …"), which fits but has no link, so a
+  WhatsApp recall is attributed by rule (b) only. A dedicated utility template with a booking button would need a new
+  definition in `lib/iletisim/otomatik/whatsapp/sablonlar.ts` and Meta approval per doctor; not added (that directory was
+  being changed by the parallel WhatsApp front-desk job).
+- **GERI-CAGIRMA-01f — deferred, owner Claude, 2026-11-12.** (1) Founder console: aggregate recall counts per country are
+  not shown; the reader exists (`lib/geriCagirma/sayac.ts` `ulkeToplami`, counts only) but is not wired into
+  `/api/kurucu/ozet` or the console. (2) The optional "tahmini" (estimate) line from the price catalogue is not built; the
+  column `tahmini_goster` exists and is off. (3) "Bu listeyi geri çağır" passes the panel's SOURCE as the filter, not the
+  flag chips the doctor ticked inside the panel (those live in ~40 forked panel components). (4) Patients with consent but
+  no connected sender are shown as "gönderim hesabı bağlı değil — arayın"; the one-tap manual send (`GonderDugmesi`) is not
+  embedded in the list. (5) No quiet-hours rule: like bulk messaging, a recall goes when a person presses the button.
+  (6) `patients` has no archived or deceased mark other than `is_active`; the exclusion uses that. (7) Attribution reads
+  recalls of the last ~7 months; an appointment more than that after its recall is not re-evaluated. (8) A walk-in with no
+  appointment is not counted (conservative).
+- **GERI-CAGIRMA-01g — not verified in a browser, 2026-11-12.** The screen, the home card and the portal tag were verified by
+  type check, unit and route-level tests against the stand-in database, not by a signed-in session on production (the
+  tables do not exist there yet). First real check after 196 is applied: open Araçlar › Geri çağırma with a test doctor.
+
 ## ZIYARET-SAYACI-01 — public-site visitor numbers in /kurucu: what is open (Claude, 2026-11-10)
 
 Our own cookie-free counter (no third-party service, no consent banner). Beacon `components/ziyaret/ZiyaretSayaci.tsx` on the

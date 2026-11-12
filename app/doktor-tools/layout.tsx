@@ -6,6 +6,7 @@
  */
 import DoktorChrome from '@/components/doktor/DoktorChrome';
 import { CHROME_FONT_HREF, doktorViewport } from '@/lib/doktor/chromeTheme';
+import KohortBaglantisi from '@/components/doktor/geriCagirma/KohortBaglantisi';
 
 export const viewport = doktorViewport;
 
@@ -13,7 +14,11 @@ export default function DoktorToolsLayout({ children }: { children: React.ReactN
   return (
     <>
       <link rel="stylesheet" href={CHROME_FONT_HREF} />
-      <DoktorChrome>{children}</DoktorChrome>
+      <DoktorChrome>
+        {children}
+        {/* GERI-CAGIRMA-01: "Bu listeyi geri çağır" — renders only on a kohort panel route (lib/geriCagirma/nedenler.ts). */}
+        <KohortBaglantisi />
+      </DoktorChrome>
     </>
   );
 }

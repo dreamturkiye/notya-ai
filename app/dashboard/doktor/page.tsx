@@ -23,6 +23,7 @@ import TakipPaneli from '@/components/doktor/TakipPaneli'
 import PaketSayacSeridi from '@/components/doktor/seans/PaketSayacSeridi'
 import HazirMesajlar from '@/components/doktor/iletisim/HazirMesajlar'
 import RandevuTalepleri from '@/components/doktor/randevu/RandevuTalepleri'
+import GeriCagirmaKarti from '@/components/doktor/geriCagirma/GeriCagirmaKarti'
 import GelenBelgelerKarti from '@/components/doktor/gelenBelgeler/GelenBelgelerKarti'
 import SekreterMasa from '@/components/doktor/SekreterMasa'
 import { CHROME_RENK, CHROME_FONT, gunKickerTRT } from '@/lib/doktor/chromeTheme'
@@ -385,6 +386,9 @@ export default function DoktorDashboard() {
 
       {/* NOTYA-RANDEVU-V2: Sağlığım appointment requests — hidden when there are none */}
       <RandevuTalepleri />
+
+      {/* GERI-CAGIRMA-01: this month's recall numbers from stored counters — hidden until there is something to show */}
+      <GeriCagirmaKarti />
 
       {/* NOTYA-GELEN-BELGELER: "N yeni belge" — hidden when 0 */}
       <GelenBelgelerKarti />

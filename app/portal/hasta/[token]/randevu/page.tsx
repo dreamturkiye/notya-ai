@@ -23,6 +23,23 @@ type Randevu = {
   bekleme?: { kayitli: boolean; teklif: { id: string; gun: string; saat: string } | null }
 }
 
+/**
+ * GERI-CAGIRMA-01 — the recall tag of this visit to the page: read from the address (?gc=<id>) and kept for this tab
+ * (the PIN step may drop the query). Only a well-formed id is kept; it is sent with a new booking request, never shown.
+ */
+function geriCagirmaEtiketi(token: string): string | null {
+  if (typeof window === 'undefined') return null
+  const anahtar = `gc:${token}`
+  const uygun = (v: string | null) => (v && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v) ? v : null)
+  try {
+    const adresten = uygun(new URLSearchParams(window.location.search).get('gc'))
+    if (adresten) { window.sessionStorage.setItem(anahtar, adresten); return adresten }
+    return uygun(window.sessionStorage.getItem(anahtar))
+  } catch {
+    return null
+  }
+}
+
 const gunAdi = (gun: string) =>
   new Intl.DateTimeFormat('tr-TR', { timeZone: 'UTC', weekday: 'short', day: 'numeric', month: 'short' }).format(new Date(`${gun}T12:00:00Z`))
 
@@ -55,6 +72,8 @@ function SaatSecici({ gunler, onSec, mesgul }: { gunler: Gun[]; onSec: (bas: str
 export default function HastaRandevuPage() {
   const { token } = usePortalLive()
   const api = `/api/portal/hasta/${encodeURIComponent(token)}/randevu`
+  // GERI-CAGIRMA-01: remember the recall tag of this visit as soon as the page mounts.
+  useEffect(() => { geriCagirmaEtiketi(token) }, [token])
   const [yuk, setYuk] = useState(true)
   const [acik, setAcik] = useState(false)
   const [turler, setTurler] = useState<Tur[]>([])
@@ -96,7 +115,10 @@ export default function HastaRandevuPage() {
   const gonder = async (govde: Record<string, unknown>, basari: (j: { onayBekliyor?: boolean }) => string) => {
     setMesgul(true); setHata(''); setMesaj('')
     try {
-      const r = await fetch(api, { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(govde) })
+      // GERI-CAGIRMA-01: a booking opened from a recall message carries the recall's tag (?gc=…) so the practice can see
+      // that the reminder led to it. The tag is an opaque id; the server ignores one that is not this patient's own.
+      const gc = govde.islem === 'talep' ? geriCagirmaEtiketi(token) : null
+      const r = await fetch(api, { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(gc ? { ...govde, gc } : govde) })
       const j = await r.json().catch(() => ({}))
       if (!r.ok) { setHata(j.error || 'İşlem yapılamadı.'); return }
       setMesaj(basari(j)); setTur(turler.length === 1 ? turler[0].tur : ''); setErtele('')

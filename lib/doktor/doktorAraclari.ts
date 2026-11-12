@@ -43,6 +43,10 @@ export const ORTAK_DOKTOR_ARACLARI: readonly DoktorArac[] = [
   // → send, SMS + e-posta, doktor/asistan/sekreter aynı erişimle. Base, every branş — classified
   // per .cursor/skills/specialty-doktor-araclari/SKILL.md (this is not a chapter/clinical tool).
   { circleColor: '#2563EB', icon: 'HI', title: 'Hasta İletişimi', desc: 'Birden çok hastaya SMS ve/veya e-posta ile toplu bilgilendirme — şablon seç, önizle, onayla, gönder', route: '/doktor-tools/hasta-iletisimi', branslar: null },
+  // GERI-CAGIRMA-01 (2026-11-12) — BASE, every branş (classified per .cursor/skills/specialty-doktor-araclari/SKILL.md):
+  // the list, the one-tap send, attribution and the counter are the same tool for all 40 branches. Only the recall
+  // REASONS differ, and those are gated to the doctor's own branş on the server (lib/geriCagirma/nedenler.ts).
+  { circleColor: '#2F4334', icon: 'GÇ', title: 'Geri çağırma', desc: 'Kontrol ya da takip zamanı gelen hastalar tek listede — tek dokunuşla genel bir hatırlatma, sonrasında alınan randevular sayılır', route: '/doktor-tools/geri-cagirma', branslar: null },
 ]
 
 /**

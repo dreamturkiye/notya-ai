@@ -10,6 +10,7 @@ import { klinikMevzuat, klinikMevzuatOzet, KLINIK_ORTAK_KANUNLAR, KLINIK_ORTAK_K
 import { KLINIK_ETIKET } from '@/lib/specialties/klinikDikey'
 import { ozelAracBul } from '@/lib/klinik/ozelAracCalistir'
 import OzelStudyo from './OzelStudyo'
+import { KohortBaglantisiGorunumu } from '@/components/doktor/geriCagirma/KohortBaglantisi'
 
 const V: Record<string, AracVurgu> = {
   sac: { ana: '#2563EB', anaMetin: '#EFF6FF', yumusak: '#2563EB', baslik: '#2563EB' },
@@ -154,7 +155,8 @@ export default function KlinikAracSayfa({ route }: { route: string }) {
       : route === '/ozel-branslar/kayit-kvkk'
         ? <KayitKvkkPanel />
         : route.endsWith('-kohort')
-          ? <KlinikKohortPanel />
+          // GERI-CAGIRMA-01: the same "Bu listeyi geri çağır" link every kohort panel carries (shared component).
+          ? <><KlinikKohortPanel /><KohortBaglantisiGorunumu yol={route} /></>
           : tanim
             ? <Suspense fallback={null}><OzelStudyo tanim={tanim} /></Suspense>
             : <KlinikBolumHome slug={m.slug} panel={PANEL[route]} />
