@@ -1380,35 +1380,41 @@ Wave3’te SIRADAKİ diye önerildi → **HATA**. Ledger + early seed’e işlen
 ## W6-28. Duygu Ersoy ← GİTTİ (2026-11-12, WA-verified)
 **kadın-doğum** · İstanbul · WA: `+905336036166` · variant `kd-C-0002`
 
-## W6-29. Fatma Elif Işık Eryılmaz ← SIRADAKİ
-**kadın-doğum** · Antalya · `+90 532 275 43 26` · WA: `+905322754326`  
+## W6-29. Fatma Elif Işık Eryılmaz ← GİTTİ (2026-11-12, WA-verified)
+**kadın-doğum** · Antalya · WA: `+905322754326` · variant `kd-C-4823`
+
+## W6-30. Fatma Özlü Akkuş ← SIRADAKİ
+**kadın-doğum** · Antalya · `+90 530 264 67 76` · WA: `+905302646776`  
 **Doğrulama:** DS `socialMedia` whatsapp.  
-**Anti-ban:** Duygu’dan sonra **≥20 dk** bekle. Soft restart (bugün 2/6). variant `kd-C-4823`.
+**Anti-ban:** Fatma Elif’ten sonra **≥20 dk** bekle. Soft restart (bugün 3/6). variant `kd-B-0006` (branş-önce — önceki Fatma’dan farklı iskelet).
 
 **Gönder:** yapıştır → kart çıkarsa **X** → gönder.
 
 ```
-Merhaba Fatma Hocam 👋
-Kaan (Notya). Kısa bir not bırakıyorum.
+Fatma Hocam merhaba 👋
+Ben Kaan, *Notya*'dan yazıyorum.
 
-Kısaca *Notya*: muayene odasında sizinle çalışan bir klinik asistan.
-Not, reçete, rapor, takip ve hasta portalı tek yerde — kararlar yine *sizde*.
-40'tan fazla branşı kendi dilinde destekliyoruz.
+*Kadın doğumda*
+- Jinekolojik operasyon notları (histerektomi, myomektomi, laparoskopi)
+- Doğum epikrizi ve antetli baskı
+- Obstetrik risk (preeklampsi, GDM, SSVD)
+- Sezaryen ve ameliyat notları
+- Doppler'li USG ve yapılandırılmış NST
+
+*Notya*, hekimler için yapay zekâ klinik asistanı:
+muayeneyi dinler → not + reçete + rapor taslağı → hasta takibi ve portal.
+Her adım *sizin onayınızla* ilerler.
+40+ branşta, her branşın kendi ihtiyacıyla.
 
 Yoğun günlerde not / reçete / takip işlerinden yaklaşık *1,5-2 saat* geri geliyor.
 Daha düzenli kayıt = daha temiz takip.
 Branşınızdaki meslektaşlar da denemeye başladı; kısa bir bakış genelde yeterli oluyor.
 
-*Kadın doğumda*
-- Jinekolojik operasyon notları (histerektomi, myomektomi, laparoskopi)
-- Gebelik takvimi ve izlem
-- Doppler'li USG ve yapılandırılmış NST
-- Obstetrik risk (preeklampsi, GDM, SSVD)
-- Sezaryen ve ameliyat notları
+Dr. Gökhan Mamur *30 dk* kısa tanıtım yapıyor 🩺
+Saatler size göre.
 
-İsterseniz Dr. Gökhan Mamur *30 dakikalık* kısa bir tanıtım ayarlıyor — saat sizin diliminiz.
-Tanıtıma şimdi vakit yoksa ücretsiz denemeyi de hemen açabilirsiniz.
+Tanıtıma vakit yoksa ücretsiz denemeyi hemen açabiliyoruz.
 
-📅 Demo: www.notya.io/demo
-🔗 Deneme: www.notya.io
+📅 *Tanıtım / Demo:* www.notya.io/demo
+🔗 *Ücretsiz deneme:* www.notya.io
 ```
