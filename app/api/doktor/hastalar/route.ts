@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { pratikOturum } from '@/lib/doktor/pratikOturum';
-import { encrypt, decrypt } from '@/lib/security/encryption';
+import { decrypt } from '@/lib/security/encryption';
 import { hastaDosyaAra, klinikAramaMi } from '@/lib/doktor/hastaDosyaAra';
-import { hastaAramaIndeksiniGuncelle } from '@/lib/doktor/hastaAramaIndeksi'
+import { hastaKaydiOlustur } from '@/lib/doktor/hastaOlustur'
 import { izinVarMi } from '@/lib/doktor/personelYetki'
 
 export const dynamic = 'force-dynamic';
@@ -98,39 +98,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'E-posta adresi geçersiz.' }, { status: 400 });
   }
 
-  const tcHash = tcKimlikNo ? require('crypto').createHash('sha256').update(String(tcKimlikNo)).digest('hex') : null;
-
-  const encryptedAd = encrypt(JSON.stringify({ ad: adSoyad }));
-  const encryptedDob = dogumTarihi ? encrypt(dogumTarihi) : null;
-  const encryptedGender = cinsiyet ? encrypt(cinsiyet) : null;
-  const encryptedPhone = telefon ? encrypt(telefon) : null;
-  const encryptedEmail = eposta ? encrypt(String(eposta).trim()) : null;
-  const notesPayload = klinikYazabilir
+  // The single patient-create write (shared with the WhatsApp front-desk approval — lib/doktor/hastaOlustur.ts).
+  const notlar = klinikYazabilir
     ? { sehir, kanGrubu, kronikHastaliklar, alerjiler, suregenIlaclar, sigaraAlkol }
     : { sehir };
-  const encryptedNotes = encrypt(JSON.stringify(notesPayload));
-
-  const { data, error } = await supabase
-    .from('patients')
-    .insert({
-      doctor_id: doktorId,
-      tc_kimlik_hash: tcHash,
-      name_encrypted: encryptedAd,
-      dob_encrypted: encryptedDob,
-      gender_encrypted: encryptedGender,
-      phone_encrypted: encryptedPhone,
-      email_encrypted: encryptedEmail,
-      notes_encrypted: encryptedNotes,
-      is_active: true
-    })
-    .select()
-    .single();
-
-  if (error) {
-    console.error('patients insert error:', error.message, error.details, error.hint);
-    return NextResponse.json({ error: 'Hasta oluşturulamadı: ' + error.message }, { status: 500 });
+  const s = await hastaKaydiOlustur(supabase, doktorId, { adSoyad, tcKimlikNo, dogumTarihi, cinsiyet, telefon, eposta, notlar });
+  if (!s.ok) {
+    console.error('patients insert error:', s.hata);
+    return NextResponse.json({ error: 'Hasta oluşturulamadı: ' + s.hata }, { status: 500 });
   }
-
-  await hastaAramaIndeksiniGuncelle(supabase, doktorId, data.id, adSoyad);
+  const data = s.patient;
   return NextResponse.json({ patient: data });
 }

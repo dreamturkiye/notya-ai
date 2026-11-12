@@ -178,10 +178,21 @@ async function kosulluGuncelle(sb: Sb, r: V2Randevu, alanlar: Record<string, unk
 
 // ── Patient: request ─────────────────────────────────────────────────────────────────────────────────
 
-export async function talepOlustur(sb: Sb, g: { doktorId: string; patientId: string; tur: string; baslangic: string; simdi?: number }): Promise<Islem> {
+/**
+ * The ONE create path for a patient-made booking. The portal calls it as before. WHATSAPP-ONBURO-01: a booking made in the
+ * WhatsApp chat ("Ayşe ön büro") calls it with `kanal: 'whatsapp'` — same type / duration / notice / max-days / open-request
+ * limits, same slot re-check, same event log and the same queued confirmation + reminder jobs; only two things differ:
+ * the gate is the doctor's WhatsApp front-desk switch (checked by the caller) instead of `randevu_portal_ayarlari.acik`,
+ * and `onay` states the doctor's chosen mode ('zorunlu' = always a request, 'yok' = booked at once) instead of onay_modu.
+ */
+export async function talepOlustur(
+  sb: Sb,
+  g: { doktorId: string; patientId: string; tur: string; baslangic: string; simdi?: number; kanal?: 'portal' | 'whatsapp'; onay?: 'ayar' | 'zorunlu' | 'yok' },
+): Promise<Islem> {
   const simdi = g.simdi ?? Date.now()
+  const kanal = g.kanal ?? 'portal'
   const ayar = await ayarGetir(sb, g.doktorId)
-  if (!ayar.acik) return hata(403, MESAJ.kapali)
+  if (kanal === 'portal' && !ayar.acik) return hata(403, MESAJ.kapali)
   if (!portalTuruMu(g.tur) || !ayar.turler[g.tur].acik) return hata(400, MESAJ.tur)
   if (!g.baslangic) return hata(400, MESAJ.saat)
 
@@ -196,7 +207,7 @@ export async function talepOlustur(sb: Sb, g: { doktorId: string; patientId: str
   const slot = slotUygunMu(girdi, g.baslangic)
   if (!slot) return hata(409, MESAJ.dolu)
 
-  const onay = onayGerekirMi(ayar, await mevcutHastaMi(sb, g.doktorId, g.patientId))
+  const onay = g.onay === 'zorunlu' ? true : g.onay === 'yok' ? false : onayGerekirMi(ayar, await mevcutHastaMi(sb, g.doktorId, g.patientId))
   const { data, error } = await sb.from('randevular').insert({
     doktor_id: g.doktorId,
     patient_id: g.patientId,
@@ -204,12 +215,12 @@ export async function talepOlustur(sb: Sb, g: { doktorId: string; patientId: str
     bitis: slot.son,
     tur: g.tur,
     durum: onay ? 'talep' : 'onaylandi',
-    kaynak: 'portal',
+    kaynak: kanal,
     talep_at: new Date(simdi).toISOString(),
   }).select(RANDEVU_ALANLARI).single()
   if (error || !data) return cakismaHatasiMi(error) ? hata(409, MESAJ.dolu) : hata(500, MESAJ.hata)
   const r = data as unknown as V2Randevu
-  await olayYaz(sb, { randevuId: r.id, doktorId: g.doktorId, olay: onay ? 'talep' : 'otomatik_onay', yapan: 'hasta', detay: { baslangic: r.baslangic, tur: r.tur } })
+  await olayYaz(sb, { randevuId: r.id, doktorId: g.doktorId, olay: onay ? 'talep' : 'otomatik_onay', yapan: 'hasta', detay: { baslangic: r.baslangic, tur: r.tur, ...(kanal === 'whatsapp' ? { kanal } : {}) } })
   if (!onay) await isEkle(sb, r, onayIsleri(r.baslangic, simdi))
   return { ok: true, randevu: r }
 }

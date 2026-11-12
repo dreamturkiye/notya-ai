@@ -18,6 +18,8 @@
  *      ("müsait değilim") never cancels: the card is flagged zayif_iptal and the propose-slots flow runs.
  *      Everything else (questions, anything the LLM labelled, ambiguous numbers or appointments) only becomes a card.
  *   6. a card row (whatsapp_yanitlar) is written for matched patients and for anything that is not plain chatter.
+ * WHATSAPP-ONBURO-01: between steps 4 and 5 the front desk (lib/iletisim/onburo/isle.ts) may take the message — a new
+ * appointment by chat, or an answer from the doctor's own practice sheet. Per-doctor switches, default OFF.
  *
  * Crash safety: the card row is written BEFORE the actions and `eylem_sonucu` is set after them. A webhook retry (Meta
  * re-delivers until it gets 200) resumes a row whose `eylem_sonucu` is empty; the actions are idempotent and every reply is
@@ -37,6 +39,8 @@ import { niyetBul, slotSecimi, type Niyet, type NiyetSonucu, type SiniflandirmaF
 import { IPTAL_NEDENI, hedefRandevu, randevuIptal, randevuTeyit, slotOner, type HedefRandevu, type OnerilenSlot } from './randevuEylem'
 import { iptalOnayMetni, oturumMetniGonder, SABIT, OTURUM_PENCERESI_MS } from './serbest'
 import { randevuSonrasi } from './sonrasi'
+import { onBuroIsle } from '@/lib/iletisim/onburo/isle'
+import type { BilgiModeli } from '@/lib/iletisim/onburo/bilgi'
 
 export const YANITLAR = 'whatsapp_yanitlar'
 
@@ -44,6 +48,8 @@ export interface YanitDeps {
   llm?: SiniflandirmaFn
   fetch?: FetchFn
   simdi?: Date
+  /** WHATSAPP-ONBURO-01 test seam: the model behind the practice-sheet answers (lib/iletisim/onburo/bilgi.ts). */
+  bilgiModeli?: BilgiModeli
 }
 
 export interface YanitOzeti {
@@ -126,6 +132,15 @@ async function birMesaj(sb: SupabaseClient, o: KalkanHam, deps: YanitDeps): Prom
     ayrinti: { tip: o.tip, eslesme: es.eslesme },
   })
   if (!denetim.ok && !denetim.tekrar) throw new Error('gunluk_yazilamadi')
+
+  // 4b) WHATSAPP-ONBURO-01 — "Ayşe ön büro" (per-doctor switches, default OFF): a new appointment by chat and answers from
+  //     the doctor's own practice sheet. It either handles the message completely (own card, own replies) or steps aside
+  //     and everything below runs exactly as before. STOP / DUR and confirm / cancel / reschedule words stay below.
+  const ob = await onBuroIsle(sb, {
+    doktorId, phoneNumberId: o.phoneNumberId, tokenSifreli: String(bag.token_encrypted || ''), olay: o, numara, hastalar: es.hastalar, eslesme: es.eslesme,
+    onceki: onceki ? { id: onceki.id, otomatik_eylem: onceki.otomatik_eylem } : null, simdi, fetch: deps.fetch, model: deps.bilgiModeli,
+  })
+  if (ob.ele) return { islendi: true, kart: ob.kart, yanitlandi: ob.yanitlandi }
 
   // 5) Intent. A bare "1/2/3" right after our proposal is a slot choice, not a question for the model.
   let secim: { oneri: { id: string; slotlar: OnerilenSlot[]; randevuId: string | null }; sira: number } | null = null

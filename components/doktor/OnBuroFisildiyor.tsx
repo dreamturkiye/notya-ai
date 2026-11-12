@@ -31,7 +31,11 @@ const CTA: Record<OnBuroFisiltiItem['kaynak'], string> = {
   form: 'Dosyayı aç',
   takip: 'Takibi aç',
   iptal: 'Takvimi aç',
+  onburo: 'Takvimi aç',
 }
+
+/** WHATSAPP-ONBURO-01: one-tap actions of an "Ayşe ön büro" item. */
+const OB_DUGME: Record<string, string> = { ob_onayla: 'Onayla', ob_reddet: 'Reddet', ob_geri_al: 'Geri al', ob_gordum: 'Gördüm' }
 
 export default function OnBuroFisildiyor() {
   const router = useRouter()
@@ -70,6 +74,23 @@ export default function OnBuroFisildiyor() {
     void yukle()
   }, [yukle])
 
+  // WHATSAPP-ONBURO-01: the desk approves / declines a WhatsApp request, undoes a booking Ayşe made, or marks it seen.
+  const [obMesaj, setObMesaj] = useState<string | null>(null)
+  const obEylem = useCallback(async (kartId: string, eylem: string) => {
+    if (eylem === 'ob_geri_al' && !window.confirm('Ayşe’nin verdiği randevu iptal edilsin mi? Hastaya bildirilir.')) return
+    if (eylem === 'ob_reddet' && !window.confirm('Randevu talebi reddedilsin mi? Hastaya bildirilir.')) return
+    try {
+      const t = await ensureDoctorAccessToken()
+      if (!t) return
+      const r = await fetch('/api/doktor/on-buro-fisilti/on-buro', {
+        method: 'POST', headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ kartId, eylem }),
+      })
+      const j = await r.json().catch(() => ({}))
+      setObMesaj(r.ok ? String(j.mesaj || '') : String(j.error || 'İşlem yapılamadı.'))
+    } catch { setObMesaj('İşlem yapılamadı.') }
+    void yukle()
+  }, [yukle])
+
   if (yukleniyor) return null
 
   const S = (s: Record<string, unknown>) => s as React.CSSProperties
@@ -93,6 +114,7 @@ export default function OnBuroFisildiyor() {
         <div style={S({ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', fontSize: 17, lineHeight: 1.3, fontWeight: 500, color: FISILTI_INK })}>
           Ön büroda bekleyen bir iş yok — masanız güncel.
         </div>
+        {obMesaj && <div role="status" style={S({ marginTop: 8, fontSize: 13, color: FISILTI_INK })}>{obMesaj}</div>}
       </div>
     )
   }
@@ -140,6 +162,28 @@ export default function OnBuroFisildiyor() {
         >
           {CTA[item.kaynak]} ›
         </button>
+        {item.kaynak === 'onburo' && item.kartId && (item.obEylemler || []).map((e) => (
+          <button
+            key={e}
+            type="button"
+            onClick={() => void obEylem(item.kartId as string, e)}
+            style={S({
+              marginLeft: 8,
+              background: 'transparent',
+              border: `1px solid ${FISILTI_BORDER}`,
+              borderRadius: 999,
+              color: FISILTI_INK,
+              fontSize: 12,
+              padding: '6px 12px',
+              minHeight: 32,
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+              fontWeight: e === 'ob_onayla' ? 600 : 400,
+            })}
+          >
+            {OB_DUGME[e]}
+          </button>
+        ))}
         {item.kaynak === 'iptal' && item.kartId && (
           <button
             type="button"
@@ -161,6 +205,7 @@ export default function OnBuroFisildiyor() {
           </button>
         )}
       </div>
+      {obMesaj && <div role="status" style={S({ marginTop: 10, fontSize: 13, color: FISILTI_INK })}>{obMesaj}</div>}
     </div>
   )
 }

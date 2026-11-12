@@ -129,6 +129,8 @@ type Hekim = {
   portalToken: string; konu: string; asistanEylem: string
   /** NOTYA-RANDEVU-V2: a pending Sağlığım appointment request (durum 'talep') of the doctor's own patient */
   talep: string
+  /** WHATSAPP-ONBURO-01: an "Ayşe ön büro" inbox card (an appointment Ayşe booked for the doctor's own patient) */
+  obKart: string; obRandevu: string
   /** GOZ-EXCEPTIONAL-01: göz OCT görüntüsü + fundus Belge analizi (dual-sign köprüsü) */
   gozGoruntu: string; belgeAnaliz: string
   /** DERM-EXCEPTIONAL-01: dermatoskopi Belge analizi (derm dual-sign köprüsü) */
@@ -211,6 +213,10 @@ function hekimKur(harf: Harf): Hekim {
   // NOTYA-RANDEVU-V2: 'Hasta Portalı Randevu' ON + one pending request from the doctor's own patient (outside trAralik)
   db.ekle('randevu_portal_ayarlari', { doktor_id: id, acik: true })
   const talep = db.ekle('randevular', { doktor_id: id, patient_id: hasta, baslangic: trGun(5, 10), bitis: dakikaSonra(trGun(5, 10), 20), durum: 'talep', tur: 'muayene', kaynak: 'portal', talep_at: new Date().toISOString(), oneri_at: null, eskalasyon_at: null, hasta_teyit_at: null }).id
+  // WHATSAPP-ONBURO-01: the doctor's front-desk settings (the practice sheet carries the marker) and one front-desk card
+  db.ekle('whatsapp_on_buro_ayarlari', { doctor_id: id, randevu_modu: 'otomatik', yanit_acik: true, bilgi: { adres: `Adres ${m}` } })
+  const obRandevu = db.ekle('randevular', { doktor_id: id, patient_id: hasta, baslangic: trGun(4, 10), bitis: dakikaSonra(trGun(4, 10), 20), durum: 'onaylandi', tur: 'muayene', kaynak: 'whatsapp', talep_at: new Date().toISOString(), oneri_at: null, eskalasyon_at: null, hasta_teyit_at: null, iptal_nedeni: null, hatirlatma_gonderildi: false }).id
+  const obKart = db.ekle('whatsapp_yanitlar', { doctor_id: id, patient_id: hasta, randevu_id: obRandevu, wamid: `wamid.OB-${harf}`, karsi_taraf_hash: `hash-${harf}`, niyet: 'randevu', niyet_kaynagi: 'kural', eslesme: 'bilinen_hasta', durum: 'yeni', otomatik_eylem: 'ob_otomatik_randevu', eylem_sonucu: 'randevu_olustu', secilen_slot: trGun(4, 10), on_buro: { tur: 'muayene' } }).id
   const hastaDerm = db.ekle('hasta_derm', { patient_id: hasta, doctor_id: id, unit: 'genel', visit_type: 'genel-poliklinik' }).id
   const lezyon = db.ekle('derm_lezyonlar', { hasta_derm_id: hastaDerm, region: `Bolge ${m}`, morphology: 'unspecified', resmi_tani: null }).id
   const dogum = db.ekle('dogum_olaylari', { doctor_id: id, patient_id: hasta, gebelik_id: null }).id
@@ -299,7 +305,7 @@ function hekimKur(harf: Harf): Hekim {
   const kdTarama = db.ekle('kd_tarama_kayitlari', { doctor_id: id, patient_id: hasta, gebelik_id: null, tur: 'lt4_not', kayit_tarihi: '2026-10-01', veri: { tarih: '2026-10-01', metin: `Hekim notu ${m}`, hafta: null }, created_at: dun, updated_at: dun }).id as string
   const kdGunluk = db.ekle('kd_tarama_kayitlari', { doctor_id: id, patient_id: hasta, gebelik_id: null, tur: 'pmdd_gunluk', kayit_tarihi: '2026-10-01', veri: { tarih: '2026-10-01', durum: 'acik' }, created_at: dun, updated_at: dun }).id as string
   db.ekle('kd_semptom_gunlugu', { doctor_id: id, patient_id: hasta, gunluk_id: kdGunluk, tarih: '2026-10-02', adet: false, puan: { b1: 4 }, islev: {}, kaynak: 'portal', created_at: dun, updated_at: dun })
-  return { kdTarama, kdGunluk, geKayit, geFoto, ameliyatNotu, kdRapor, fotoBelge, fotoOnceki, fotoSeans, yuklenenBelge, takip, defter, harf, id, token, hasta, seans, not, bekleyenNot, ilac, panel, belge, randevu, serbestRandevu, talep, hastaDerm, lezyon, dogum, bebekKart, portalToken, konu, asistanEylem, gozGoruntu, belgeAnaliz, dermAnaliz, konsultasyon, konsultasyonYanitli, kasaBelge, asiHatirlatma, eylemOneri, eylemKayit, sonlanmisIlac, kuyruk, gelenBelge, asistanOturum, hileliSeans: '', hileliNot: '' }
+  return { obKart, obRandevu, kdTarama, kdGunluk, geKayit, geFoto, ameliyatNotu, kdRapor, fotoBelge, fotoOnceki, fotoSeans, yuklenenBelge, takip, defter, harf, id, token, hasta, seans, not, bekleyenNot, ilac, panel, belge, randevu, serbestRandevu, talep, hastaDerm, lezyon, dogum, bebekKart, portalToken, konu, asistanEylem, gozGoruntu, belgeAnaliz, dermAnaliz, konsultasyon, konsultasyonYanitli, kasaBelge, asiHatirlatma, eylemOneri, eylemKayit, sonlanmisIlac, kuyruk, gelenBelge, asistanOturum, hileliSeans: '', hileliNot: '' }
 }
 
 /** Contamination X planted under Y's patient before the fixes (anon-key session insert, unchecked POSTs). */
@@ -625,6 +631,24 @@ const VAKALAR: Vaka[] = [
   { ad: 'POST /api/doktor/randevu-portal/talepler (reddet)', red: 404,
     yazdi: (a) => tablo('randevular').find((x) => x.id === a.talep)?.durum === 'iptal',
     cagir: (r, a, h) => coz(r.randevuTalepleri.POST(iste('POST', '/api/doktor/randevu-portal/talepler', { token: a.token, govde: { id: h.talep, islem: 'reddet' } }))) },
+  // WHATSAPP-ONBURO-01 — Ayşe ön büro. The settings + practice sheet are the practice's own; a foreign front-desk card
+  // cannot be acted on from the Ön büro fısıltısı (doctor + secretary) or from the doctor's inbox.
+  { ad: 'GET /api/doktor/iletisim/on-buro (ayar + muayenehane bilgileri)', okur: true,
+    cagir: (r, a) => coz(r.onBuroAyar.GET(iste('GET', '/api/doktor/iletisim/on-buro', { token: a.token }))) },
+  { ad: 'PUT /api/doktor/iletisim/on-buro (yalnız kendi satırı)',
+    yazdi: (a) => tablo('whatsapp_on_buro_ayarlari').find((x) => x.doctor_id === a.id)?.randevu_modu === 'onay',
+    cagir: (r, a) => coz(r.onBuroAyar.PUT(iste('PUT', '/api/doktor/iletisim/on-buro', { token: a.token, govde: { randevuModu: 'onay', yanitAcik: true, bilgi: { adres: `Adres ${isaret(a.harf)}` } } }))) },
+  { ad: 'POST /api/doktor/iletisim/on-buro/onizleme (hiçbir şey yazmaz)', okur: true,
+    cagir: (r, a) => coz(r.onBuroOnizleme.POST(iste('POST', '/api/doktor/iletisim/on-buro/onizleme', { token: a.token, govde: { metin: 'adresiniz nedir' } }))) },
+  { ad: 'POST /api/doktor/on-buro-fisilti/on-buro (yabancı ön büro kartı)', red: 404,
+    yazdi: (a) => tablo('whatsapp_yanitlar').find((x) => x.id === a.obKart)?.durum === 'goruldu',
+    cagir: (r, a, h) => coz(r.onBuroMasa.POST(iste('POST', '/api/doktor/on-buro-fisilti/on-buro', { token: a.token, govde: { kartId: h.obKart, eylem: 'ob_gordum' } }))) },
+  { ad: 'POST /api/doktor/on-buro-fisilti/on-buro geri al (yabancı randevuyu iptal etme)', red: 404,
+    yazdi: (a) => tablo('randevular').find((x) => x.id === a.obRandevu)?.durum === 'iptal',
+    cagir: (r, a, h) => coz(r.onBuroMasa.POST(iste('POST', '/api/doktor/on-buro-fisilti/on-buro', { token: a.token, govde: { kartId: h.obKart, eylem: 'ob_geri_al' } }))) },
+  { ad: 'POST /api/doktor/iletisim/whatsapp/yanitlar/[id] ob_geri_al (yabancı ön büro kartı)', red: 404,
+    yazdi: (a) => tablo('randevular').find((x) => x.id === a.obRandevu)?.durum === 'iptal',
+    cagir: (r, a, h) => coz(r.whatsappYanit.POST(iste('POST', `/api/doktor/iletisim/whatsapp/yanitlar/${h.obKart}`, { token: a.token, govde: { eylem: 'ob_geri_al' } }), prm({ id: h.obKart }))) },
   { ad: 'GET /api/doktor/randevu-portal/ayar',
     cagir: (r, a) => coz(r.randevuPortalAyar.GET(iste('GET', '/api/doktor/randevu-portal/ayar', { token: a.token }))) },
   // NOTYA-EYLEM — Ayşe hazırlar, hekim onaylar. Yabancı bir öneri okunamaz, onaylanamaz, geri alınamaz.
@@ -1012,6 +1036,10 @@ describe('HASTA-İZOLASYON: doktor A ve doktor B birbirinin hastasına hiçbir r
       konsultan: await ice('app/api/konsultan/route'),
       randevuTalepleri: await ice('app/api/doktor/randevu-portal/talepler/route'),
       randevuPortalAyar: await ice('app/api/doktor/randevu-portal/ayar/route'),
+      onBuroAyar: await ice('app/api/doktor/iletisim/on-buro/route'),
+      onBuroOnizleme: await ice('app/api/doktor/iletisim/on-buro/onizleme/route'),
+      onBuroMasa: await ice('app/api/doktor/on-buro-fisilti/on-buro/route'),
+      whatsappYanit: await ice('app/api/doktor/iletisim/whatsapp/yanitlar/[id]/route'),
       MCHAT_R_SORULARI: (await import('../clinical/mchatR')).MCHAT_R_SORULARI,
       RESMI_TANI_SECENEKLERI: (await import('../../specialties/dermatoloji/engines/derm-spine')).RESMI_TANI_SECENEKLERI,
     }

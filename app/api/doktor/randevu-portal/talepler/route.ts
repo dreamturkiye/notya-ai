@@ -14,6 +14,7 @@ import { pratikOturum } from '@/lib/doktor/pratikOturum'
 import { gunlereAyir } from '@/lib/randevu/v2/slot'
 import { ayarGetir, isleriCalistir, musaitSlotlar, pratikIslem, talepListesi, type PratikIslemi } from '@/lib/randevu/v2/sunucu'
 import { googleaGonder } from '@/lib/randevu/v2/google/senk'
+import { talepSonucuBildir } from '@/lib/iletisim/onburo/eylem'
 
 export const dynamic = 'force-dynamic'
 
@@ -56,5 +57,10 @@ export async function POST(req: NextRequest) {
   // Tell the patient now rather than at the next cron tick (quiet hours still hold it until morning).
   await isleriCalistir(supabase, { randevuId: s.randevu.id, doktorId, limit: 5, bitis: Date.now() + 15_000 })
   await googleaGonder(supabase, doktorId, s.randevu.id)
+  // WHATSAPP-ONBURO-01: a request the patient made in the WhatsApp chat is answered on WhatsApp too (and its inbox card
+  // closes). A portal request has no such card: nothing is sent. Best effort — the e-mail notice above already left.
+  if (islem !== 'oner') {
+    await talepSonucuBildir(supabase, { doktorId, randevuId: s.randevu.id, sonuc: islem === 'onayla' ? 'onaylandi' : 'reddedildi', yapanId: user.id }).catch(() => undefined)
+  }
   return NextResponse.json({ ok: true, durum: s.randevu.durum, baslangic: s.randevu.baslangic })
 }

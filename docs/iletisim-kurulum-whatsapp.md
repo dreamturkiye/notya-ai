@@ -204,6 +204,21 @@ Once his number is connected (source: onboarding-business-app-users link above):
 - To disconnect from the phone: WhatsApp Business › Ayarlar › Hesap › Business Platform › Bağlantıyı kes. Meta sends `account_update` / `PARTNER_REMOVED`, and Notya deletes the row and the encrypted token. **Bağlantıyı kaldır** in Notya only removes Notya's subscription. The number and chats stay in the app, because coexistence numbers cannot be deregistered through the API.
 - **History sync:** Meta requires the partner to start contact and history sync within 24 hours, or the account is offboarded. Notya starts it and discards everything. In the signup window the doctor can choose **not** to share chat history. Recommend that, since Notya does not need it.
 
+## 9b. Ayşe ön büro (WHATSAPP-ONBURO-01)
+
+Nothing to configure in Meta: the front desk answers inside the patient's 24-hour session window with ordinary text
+messages (service conversations) and uses the existing `genel_bildirim` template when the desk answers a request after the
+window has closed. What it needs:
+
+1. Migration `lib/db/migrations/195_whatsapp_on_buro.sql` applied (after 116 and 169). Until then the card on
+   Ayarlar › İletişim says the feature is not available and nothing runs.
+2. The doctor opens "Ayşe ön büro (WhatsApp)" on Ayarlar › İletişim, fills "Muayenehane bilgileri", tries a few messages in
+   the test box (nothing is sent) and chooses a booking mode and/or switches the answers on. Both are off by default.
+3. Booking uses the appointment settings the portal booking uses (visit types and durations, notice, max days ahead,
+   buffer, working plan, holidays). It does not require the portal booking itself to be switched on.
+
+The model behind the non-rule answers goes through `lib/ai/cagir.ts` (12-second budget; a failure is a holding reply).
+
 ## 10. Open points, unverified with Meta
 
 - **Turkey availability of coexistence:** Meta's current page has no country list. Third parties say it was rolled out globally by April 2026, and Turkey was on the early exclusion list. **Test with a real +90 number** (Dr. Gökhan) before announcing.

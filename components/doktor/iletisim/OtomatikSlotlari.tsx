@@ -13,11 +13,14 @@
 import React from 'react'
 import EpostaBaglan from './EpostaBaglan'
 import WhatsAppBaglan from './WhatsAppBaglan'
+import OnBuroKarti from './OnBuroKarti'
 
 export default function OtomatikSlotlari() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       <WhatsAppBaglan />
+      {/* WHATSAPP-ONBURO-01: Ayşe ön büro — booking by chat and answers from the practice sheet (default off). */}
+      <OnBuroKarti />
       <EpostaBaglan />
     </div>
   )

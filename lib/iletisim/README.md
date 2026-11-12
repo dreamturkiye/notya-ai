@@ -131,3 +131,60 @@ Setup and Meta console steps: `docs/iletisim-kurulum-whatsapp.md`.
 - **Cron**: `/api/cron/whatsapp-bakim` hourly at :17.
 - **Isolation (hasta-izolasyon)**: the receiving `phone_number_id` decides the doctor; every read/write carries `doctor_id`; card
   actions re-resolve the appointment with the doctor id AND the card's own patient id. Tests: `lib/iletisim/whatsapp/whatsapp-api.test.ts`.
+
+## WHATSAPP-ONBURO-01 (2026-11-12) — "Ayşe ön büro": a new appointment by chat, answers from the practice sheet
+
+Code: `lib/iletisim/onburo/`. Classification: CORE (shared patient-communication workflow — all 40 branches through the
+one pipeline). Per-doctor switches, **default OFF**; inert until migration `195_whatsapp_on_buro.sql` is applied (a
+missing settings table reads as OFF). Entry point: `yanit.ts` calls `onBuroIsle` after the doctor was derived from the
+receiving `phone_number_id`, the sender was matched inside that doctor's roster and the audit row was written. It either
+handles the message completely (own card, own replies) or returns `ele: false` and the existing pipeline runs unchanged.
+
+| File | What |
+|------|------|
+| `ayar.ts` | Settings (`randevuModu`: kapali / onay / otomatik; `yanitAcik`) and the "Muayenehane bilgileri" sheet. Pure. |
+| `dil/tipler.ts`, `dil/tr.ts`, `dil/aktif.ts` | The language pack contract and the Turkish pack: booking-intent rules, day / part-of-day words, medical + emergency guard lists, emergency number, every fixed sentence, date labels. A country build swaps `dil/aktif.ts`. |
+| `slot.ts` | Chooses up to three of the slot engine's free times (one per day; a named day is spread over that day). Pure. |
+| `bilgi.ts` | Answers: emergency guard → medical guard → deterministic rules → the model (select / compose from the sheet only; cited keys validated). |
+| `sunucu.ts` | Settings read / save, working-hours default, reply caps and the daily model budget (counted from the audit log). |
+| `isle.ts` | The inbound handler (decision by rules, card claimed first, crash-safe booking). |
+| `eylem.ts` | Desk actions: approve / decline a request, undo an automatic booking; `talepSonucuBildir` for the calendar's request list. |
+| `fisilti.ts` | Ön büro fısıltısı items (read-only): new-patient request, booked by Ayşe, emergency-worded message. |
+| `onizleme.ts` | The settings card's test box — same rules, nothing sent or stored. |
+
+**Booking.** A matched patient with no upcoming appointment who asks for one (rule-recognised only — typos, Turkish case
+folding, negation / question / past-tense guards; cancel and reschedule wording stays with `iptalNiyeti.ts`) gets up to
+three free times (`musaitSlotlar`: working plan, holidays, external busy, visit types and durations, notice and
+max-days limits of the appointment settings). "1/2/3" picks; "başka gün / daha geç / sabah / salı / 15 kasım" re-proposes
+(at most `ONERI_SINIRI` proposals, then the desk takes over). `onay` → `talepOlustur(kanal 'whatsapp', onay 'zorunlu')`:
+an appointment row in state `talep` that appears in the calendar's existing request list (doctor + secretary); `otomatik`
+→ the same function with `onay 'yok'`: confirmed at once, event log + confirmation and reminder jobs queued, Google push.
+Both write `randevular.kaynak = 'whatsapp'`. A patient who already has an upcoming appointment is left to the doctor.
+
+**Unknown number.** Never a patient row from the chat. Privacy notice first, then the full name, then the same proposal;
+the pick becomes an `ob_yeni_hasta_talebi` card (name encrypted). The desk's approval creates the patient through
+`lib/doktor/hastaOlustur.ts` (the write `POST /api/doktor/hastalar` uses) — or links the one patient the number now
+belongs to — and books. **Two patients on one number** → "for whom?" with first names only, from this doctor's matches.
+
+**Answers.** Only from the sheet. Rules answer the obvious questions; otherwise `aiCagir` (task `kisa-yanit`, no model
+name here) receives the pseudonymised question and the sheet — never a patient record, note, appointment or name — and
+must return `{alanlar, yanit}`. Every cited key must exist and be non-empty; a number or link not present in the cited
+fields, or medical wording, discards the model's sentence in favour of the doctor's own text. No answer / failure /
+timeout → the holding sentence and a card. Medical wording → fixed sentence + flagged card; emergency wording → the fixed
+sentence with the country's emergency number + urgent card. Both guards run before the model and are rule lists.
+
+**Limits.** STOP / DUR is checked first and always belongs to the opt-out flow. `NUMARA_SAATLIK` automatic replies per
+number per hour (also the loop guard) and `DOKTOR_SAATLIK` per doctor; `MODEL_GUNLUK` model calls per doctor per day. At a
+cap the card says so and nothing is sent. All replies are session messages (`oturumMetniGonder`, 24-hour window); a desk
+notice outside the window falls back to the approved `genel_bildirim` template.
+
+**Cards** (`whatsapp_yanitlar.otomatik_eylem`, `ob_*`; state in `on_buro` jsonb, answers and names encrypted):
+`ob_slot_onerildi`, `ob_talep`, `ob_otomatik_randevu`, `ob_yeni_hasta_talebi`, `ob_kisi_soruldu`, `ob_ad_soruldu`,
+`ob_yanit`, `ob_cevapsiz`, `ob_tibbi`, `ob_acil`, `ob_sinir` (+ the closed forms). One card per inbound wamid.
+
+**Routes.** `GET/PUT /api/doktor/iletisim/on-buro` (GET: doctor + secretary; PUT: doctor), `POST …/on-buro/onizleme`
+(doctor), `POST /api/doktor/on-buro-fisilti/on-buro` (desk actions, pratikOturum), the inbox card route (`ob_*` actions),
+and a hook in `/api/doktor/randevu-portal/talepler` that answers a chat-made request on WhatsApp.
+
+**Not built** (docs/OPEN-COMMITMENTS.md WHATSAPP-ONBURO-01): intake in the chat; the six country builds (no inbound
+WhatsApp pipeline there yet); live Meta verification; clinician / legal review of the guard lists and the privacy notice.

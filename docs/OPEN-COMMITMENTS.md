@@ -1,5 +1,76 @@
 # OPEN COMMITMENTS — Notya AI
 
+## WHATSAPP-ONBURO-01 — "Ayşe ön büro": a new appointment by WhatsApp chat and answers from the practice sheet — what is open (Claude, 2026-11-12)
+
+Built on WHATSAPP-API-01 / WHATSAPP-CANCEL-01, not beside them: `lib/iletisim/onburo/` is called from `yanit.ts` after the
+doctor is derived from the receiving `phone_number_id`. Per-doctor switches on Ayarlar › İletişim, **default OFF**; contract
+and limits in `lib/iletisim/README.md` (section WHATSAPP-ONBURO-01). Classification: CORE (shared patient-communication
+workflow) — all 40 branches through the one pipeline. Verified only against an injected `fetch`, an injected model and the
+in-memory Supabase stand-in (`lib/iletisim/onburo/*.test.ts`, the cross-doctor harness). **Nothing has run against real
+Meta or the real model.** Per country: tr APPLIED (code; database see a) · us OPEN GAP · gb OPEN GAP · ca OPEN GAP ·
+au OPEN GAP · nz OPEN GAP · uz OPEN GAP (see d).
+
+- **WHATSAPP-ONBURO-01a — migration `lib/db/migrations/195_whatsapp_on_buro.sql` is NOT applied — waits on Kaan + the main
+  session, 2026-11-12.** Written only (an unattended job cannot answer the Supabase confirmation). Apply to **Türkiye
+  (`anjayzospuurymjmmtim`)** — checked read-only on 2026-11-12: `whatsapp_yanitlar` and `randevu_portal_ayarlari` exist
+  there (169 and 116 are in), the ledger is at 194, `whatsapp_on_buro_ayarlari` does not exist. After applying, verify:
+  table `whatsapp_on_buro_ayarlari` (RLS on, own-row select policy, no anon grant), column `whatsapp_yanitlar.on_buro`,
+  `whatsapp_yanitlar_niyet_check` lists `randevu`, `randevular_kaynak_check` lists `whatsapp`, ledger row 195; then run
+  `EXPLAIN` on the open-step lookup (`doctor_id, karsi_taraf_hash, created_at desc`) for the performance log. Rollback:
+  `lib/db/migrations/geri-al/195_whatsapp_on_buro.geri-al.sql`. Until it is applied the card says the feature is not
+  available, nothing can be saved and no new code path runs. **Not for the six country databases yet**: checked read-only,
+  AU / UZ / GB have no `whatsapp_yanitlar` (no WhatsApp inbox schema); the file is on every release branch and is safe to
+  run there (it skips what is missing), but a country table that carries a doctor key belongs to that country's own
+  rollout list — it goes in with the pipeline port (d).
+- **WHATSAPP-ONBURO-01b — clinician and legal review of the word lists and sentences — waits on Kaan (Dr. Gökhan for the
+  clinical part, a lawyer for the notice), 2026-11-12.** (1) The Turkish MEDICAL guard list and EMERGENCY guard list in
+  `lib/iletisim/onburo/dil/tr.ts` (`TIBBI`, `ACIL`) were written by Claude. They decide when Ayşe stays silent on a
+  medical matter; a phrase they miss could be answered from the sheet or left as an ordinary card. A clinician must read
+  both lists before a doctor outside the pilot switches the answers on. (2) The fixed sentences a patient receives
+  (`metin.tibbi`, `metin.acil` with 112, `metin.bekleme`). (3) The notice sent to an UNKNOWN number before the name is
+  asked (`metin.gizlilik`): one factual sentence (name and number are recorded for the request) plus the existing
+  `KVKK_ONAY_KISA` line — no new legal text was written, and whether that is a sufficient KVKK aydınlatma for a person
+  who is not yet a patient is a lawyer's call. (4) Per country, the same three items for `countries/_dil/en/onBuro.ts`
+  (five English-speaking countries; emergency numbers 000 / 111 / 999 / 911 / 911 come from each pack's own setting) and
+  `countries/uz/onBuro.ts` (Uzbek Latin, Uzbek Cyrillic, Russian; 103): all machine-written, no native reader, no
+  clinician, and their notice sentence is a plain statement, not a privacy notice under that country's law.
+- **WHATSAPP-ONBURO-01c — Part 3, intake in the chat, is NOT built — owner Claude, decision Kaan, 2026-11-12.** Neither
+  the conversational collection of the form's core questions nor an automatic intake link after a chat booking. Why not
+  in this job: (1) intake answers are saved by the public form route against a one-time token with the form's own schema,
+  consent rows and branch form — a chat path would be a second writer of the same record, not a call into an existing save
+  function; (2) the existing invitation is created and sent by a person (one tap on the appointment) and carries the
+  patient's Sağlığım link and a login PIN — sending that by itself over WhatsApp is a product and security decision, and
+  no approved WhatsApp template exists for it. What works today: an appointment made in the chat is an ordinary
+  appointment, so the desk's existing "Bilgi formu gönder" on it is unchanged. Needed from Kaan: may the intake link (with
+  the PIN) leave automatically after a chat booking, and which questions count as the "short core" for a chat form.
+- **WHATSAPP-ONBURO-01d — the six country builds do not run this feature — OPEN GAP ×6, owner Claude after Kaan's decision
+  HASTA-ILETISIMI-ULKE-01, 2026-11-12.** None of the release branches carries the inbound WhatsApp pipeline
+  (`lib/iletisim/whatsapp/*`, the inbox, the audit log, the cancel flow — WHATSAPP-API-01 "Country parity" and
+  HASTA-ILETISIMI-ULKE-01, both open since 2026-10-16, pending which countries and channels). Porting that pipeline (about
+  95 files, Meta templates per language, each country's consent wording) is a separate job and was not hidden inside
+  this one. What DID land on every release branch in this change set, so the port has nothing to translate for the front
+  desk: the same migration file; the shared pure engine (`lib/iletisim/onburo/{ayar,slot,bilgi,dil/tipler}.ts`, identical
+  to main); the language packs (`countries/_dil/en/onBuro.ts` + one file per English-speaking country,
+  `countries/uz/onBuro.ts` in three languages) with booking-intent rules, day words, guard lists, each country's emergency
+  number and payer words, date formats; and their tests. No settings card and no route were added there — a switch that
+  does nothing would be a false promise. Wiring = `countries/active/onBuro.ts` + `lib/iletisim/onburo/dil/aktif.ts` +
+  the handler, once the pipeline exists.
+- **WHATSAPP-ONBURO-01e — live checks on the first connected doctor — Kaan / Claude, 2026-11-12.** One real conversation
+  per path: a known patient books (Onayımla, then Otomatik), "başka gün", a slot taken in between, two patients on one
+  number, an unknown number through to the desk's approval, an address question, a fee question with the field empty, a
+  medical question, an emergency phrase, DUR. Check the Google Calendar push and the reminder jobs of a chat-made
+  appointment, and the `genel_bildirim` fallback when the desk approves after the 24-hour window.
+- **WHATSAPP-ONBURO-01f — smaller open points — owner Claude, 2026-11-12.** (1) "Başka saat öner" from the calendar's
+  request list on a chat-made request notifies by the existing e-mail path only (no WhatsApp sentence for a counter-offer
+  yet). (2) The secretary can READ the practice sheet through the API (`GET /api/doktor/iletisim/on-buro`, pratikOturum)
+  and acts on front-desk items in the Ön büro fısıltısı, but has no screen that shows the sheet (Ayarlar › İletişim is the
+  doctor's). (3) A patient who already has an upcoming appointment and asks for another is left to the doctor as before
+  (no automatic second booking). (4) The reply caps (8 per number per hour, 200 per doctor per hour, 100 model calls per
+  doctor per day, 4 proposals per conversation) are first guesses — review after the first real month. (5) The model path
+  is tested with an injected model only; the real model's adherence to the JSON contract is unobserved (a broken answer is
+  a holding reply, by test). (6) The booking flow needs the appointment settings' visit types; a doctor with every type
+  switched off gets the "no free time" sentence and a card.
+
 ## GERI-CAGIRMA-01 — recall engine with a counter: what is built, what is open (Claude, 2026-11-12)
 
 Kaan, 2026-11-12: "Recall engine with a revenue counter … one-tap recall, and show 'Notya brought back 14 patients this

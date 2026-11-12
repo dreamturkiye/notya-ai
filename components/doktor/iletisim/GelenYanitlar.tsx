@@ -25,7 +25,11 @@ export type YanitKarti = {
   zaman: string
   eylemYapilabilir: boolean
   yanitlanabilir: boolean
+  /** WHATSAPP-ONBURO-01: what "Ayşe ön büro" did on this card (null for every other card). */
+  onBuro?: { yanit: string | null; alanlar: string[]; kaynak: string | null; ad: string | null; eylemler: string[] } | null
 }
+
+export type KartEylemAdi = 'onayla' | 'iptal' | 'yeniden_planla' | 'yanitla' | 'goruldu' | 'geri_al' | 'ob_onayla' | 'ob_reddet' | 'ob_geri_al'
 
 const OTOMATIK_ETIKET: Record<string, string> = {
   onaylandi: 'Randevu otomatik onaylandı',
@@ -37,7 +41,27 @@ const OTOMATIK_ETIKET: Record<string, string> = {
   randevu_iptal_gec: 'Hasta iptal süre sınırı içinde iptal etti; randevu iptal edildi ve saat boşaldı. Hastaya onay mesajı gitti.',
   randevu_iptal_geri_alindi: 'Bu iptal geri alındı; randevu yeniden geçerli.',
   zayif_iptal: 'Hasta gelemeyebileceğini yazdı ama net iptal etmedi; randevu iptal EDİLMEDİ. Hastayı arayıp netleştirin.',
+  // WHATSAPP-ONBURO-01 — Ayşe ön büro (lib/iletisim/onburo/isle.ts OB).
+  ob_slot_onerildi: 'Ayşe yeni randevu için boş saatler önerdi; hastanın seçimi bekleniyor.',
+  ob_talep: 'Randevu talebi: hasta bu saati seçti. Onayınızı bekliyor; hastaya onay beklendiği bildirildi.',
+  ob_talep_onaylandi: 'Randevu talebi onaylandı; hastaya bildirildi.',
+  ob_talep_reddedildi: 'Randevu talebi reddedildi; hastaya bildirildi.',
+  ob_otomatik_randevu: 'Ayşe bu saate randevu verdi; hastaya bildirildi. Uygun değilse geri alabilirsiniz.',
+  ob_randevu_geri_alindi: 'Ayşe’nin verdiği randevu geri alındı; hastaya bildirildi.',
+  ob_kisi_soruldu: 'Numara birden fazla hastaya kayıtlı; Ayşe randevunun kimin için olduğunu sordu (yalnızca adlarla).',
+  ob_ad_soruldu: 'Kayıtlı olmayan bir numara randevu istedi; Ayşe bilgilendirme metnini gönderip ad soyad sordu.',
+  ob_yeni_hasta_talebi: 'Yeni hasta randevu talebi. Onaylarsanız hasta kaydı açılır ve randevu verilir.',
+  ob_yeni_hasta_onaylandi: 'Yeni hasta talebi onaylandı; hasta kaydı açıldı.',
+  ob_istek_birakildi: 'Hasta randevu isteğinden vazgeçti; işlem yapılmadı.',
+  ob_yanit: 'Ayşe, muayenehane bilgilerinizden yanıtladı.',
+  ob_cevapsiz: 'Muayenehane bilgilerinizde yanıtı yok. Ayşe “sorunuzu ilettik” dedi; yanıtı sizden bekliyor.',
+  ob_tibbi: 'Tıbbi soru: Ayşe yanıt vermedi, hastaya sorusunun size iletildiğini bildirdi.',
+  ob_acil: 'ACİL ifade içeren mesaj: Ayşe acil numarasını bildirdi. Hastayı arayın.',
+  ob_sinir: 'Otomatik yanıt sınırına ulaşıldı; Ayşe bu mesaja yanıt vermedi. Konuşma sizde.',
 }
+
+const OB_VURGULU = ['ob_acil', 'ob_tibbi', 'ob_cevapsiz', 'ob_sinir']
+const OB_DUGME: Record<string, string> = { ob_onayla: 'Onayla', ob_reddet: 'Reddet', ob_geri_al: 'Randevuyu geri al' }
 
 const dugme: React.CSSProperties = {
   minHeight: 44, padding: '8px 14px', borderRadius: 10, border: `1px solid ${CHROME_RENK.border}`, background: '#fff',
@@ -52,13 +76,14 @@ export function YanitKartiGorunumu(props: {
   k: YanitKarti
   mesgul?: boolean
   mesaj?: string | null
-  onEylem?: (eylem: 'onayla' | 'iptal' | 'yeniden_planla' | 'yanitla' | 'goruldu' | 'geri_al', ek?: { metin?: string; baslangic?: string }) => void
+  onEylem?: (eylem: KartEylemAdi, ek?: { metin?: string; baslangic?: string }) => void
 }) {
   const { k, mesgul } = props
   const [yanitAcik, setYanitAcik] = useState(false)
   const [metin, setMetin] = useState('')
   const kapali = !!mesgul
-  const kim = k.hasta || (k.numara ? `Bilinmeyen numara ${k.numara}` : 'Bilinmeyen gönderen')
+  const kim = k.hasta || (k.onBuro?.ad ? `${k.onBuro.ad} (kayıtlı değil${k.numara ? `, ${k.numara}` : ''})` : k.numara ? `Bilinmeyen numara ${k.numara}` : 'Bilinmeyen gönderen')
+  const ob = k.onBuro || null
   return (
     <li data-whatsapp-yanit={k.id} style={{ listStyle: 'none', padding: '14px 0', borderTop: `1px solid ${CHROME_RENK.border}` }}>
       <div style={{ display: 'flex', gap: 8, alignItems: 'baseline', flexWrap: 'wrap' }}>
@@ -68,10 +93,18 @@ export function YanitKartiGorunumu(props: {
       </div>
       <p style={{ margin: '6px 0 0', fontSize: 14, lineHeight: 1.45, whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{k.metin || '—'}</p>
       {k.otomatikEylem && OTOMATIK_ETIKET[k.otomatikEylem] && (
-        <p style={{ margin: '6px 0 0', fontSize: 13, color: CHROME_RENK.pine }}>{OTOMATIK_ETIKET[k.otomatikEylem]}</p>
+        <p data-on-buro-kart={ob ? k.otomatikEylem : undefined} style={{ margin: '6px 0 0', fontSize: 13, color: OB_VURGULU.includes(k.otomatikEylem) ? CHROME_RENK.warn : CHROME_RENK.pine, fontWeight: k.otomatikEylem === 'ob_acil' ? 700 : 400 }}>{OTOMATIK_ETIKET[k.otomatikEylem]}</p>
       )}
+      {ob?.yanit && (
+        <div data-ayse-yaniti style={{ margin: '8px 0 0', padding: '10px 12px', borderRadius: 10, background: CHROME_RENK.cream, fontSize: 14, lineHeight: 1.45 }}>
+          <div style={{ fontSize: 12, fontWeight: 600, color: CHROME_RENK.pine }}>Ayşe yanıtladı{ob.alanlar.length ? ` · Kaynak: ${ob.alanlar.join(', ')}` : ''}</div>
+          <div style={{ marginTop: 4, whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{ob.yanit}</div>
+          <div style={{ marginTop: 4, fontSize: 12, color: CHROME_RENK.muted }}>Yanlışsa “Yanıtla” ile düzeltebilir, bilgiyi Ayarlar › İletişim › Muayenehane bilgileri’nden güncelleyebilirsiniz.</div>
+        </div>
+      )}
+      {ob && k.secilenSlot && <p style={{ margin: '6px 0 0', fontSize: 13 }}>Seçilen saat: <strong>{zamanMetni(k.secilenSlot)}</strong></p>}
       {k.eslesme === 'coklu' && <p style={{ margin: '6px 0 0', fontSize: 13, color: CHROME_RENK.warn }}>Bu numara birden fazla hastaya kayıtlı; lütfen hastayı kendiniz seçin.</p>}
-      {k.onerilenSlotlar && k.onerilenSlotlar.length > 0 && (
+      {!ob && k.onerilenSlotlar && k.onerilenSlotlar.length > 0 && (
         <div style={{ marginTop: 8, display: 'flex', flexWrap: 'wrap', gap: 8 }}>
           {k.onerilenSlotlar.map((s) => (
             <button key={s.bas} type="button" disabled={kapali || !k.eylemYapilabilir} style={dugme} onClick={() => props.onEylem?.('yeniden_planla', { baslangic: s.bas })}>
@@ -91,6 +124,9 @@ export function YanitKartiGorunumu(props: {
         {k.eylemYapilabilir && (k.otomatikEylem === 'randevu_iptal' || k.otomatikEylem === 'randevu_iptal_gec') && (
           <button type="button" disabled={kapali} style={dugme} onClick={() => props.onEylem?.('geri_al')}>İptali geri al</button>
         )}
+        {(ob?.eylemler || []).map((e) => OB_DUGME[e] && (
+          <button key={e} type="button" disabled={kapali} style={dugme} onClick={() => props.onEylem?.(e as KartEylemAdi)}>{OB_DUGME[e]}</button>
+        ))}
         {k.yanitlanabilir && <button type="button" disabled={kapali} style={dugme} onClick={() => setYanitAcik(!yanitAcik)}>Yanıtla</button>}
         {k.durum === 'yeni' && <button type="button" disabled={kapali} style={{ ...dugme, fontWeight: 400, color: CHROME_RENK.muted }} onClick={() => props.onEylem?.('goruldu')}>Görüldü</button>}
       </div>
@@ -125,6 +161,8 @@ export default function GelenYanitlar(props: { yeni?: number }) {
 
   const eylem = async (id: string, e: string, ek?: { metin?: string; baslangic?: string }) => {
     if (e === 'iptal' && !window.confirm('Randevu iptal edilsin mi? Hastaya bildirim gider.')) return
+    if (e === 'ob_geri_al' && !window.confirm('Ayşe’nin verdiği randevu iptal edilsin mi? Hastaya bildirilir.')) return
+    if (e === 'ob_reddet' && !window.confirm('Randevu talebi reddedilsin mi? Hastaya bildirilir.')) return
     if (e === 'geri_al' && !window.confirm('Hastanın WhatsApp ile yaptığı iptal geri alınsın mı? Hastaya randevusunun yeniden geçerli olduğu bildirilir.')) return
     setMesgul(true)
     try {

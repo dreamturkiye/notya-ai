@@ -27,7 +27,8 @@
 
 import { iptalSiniflandir, yenidenRandevuMu } from './iptalNiyeti'
 
-export type Niyet = 'onay' | 'iptal' | 'yeniden_planla' | 'soru' | 'vazgec' | 'diger'
+/** 'randevu' (WHATSAPP-ONBURO-01): a new-appointment conversation handled by lib/iletisim/onburo — written only by that module. */
+export type Niyet = 'onay' | 'iptal' | 'yeniden_planla' | 'soru' | 'vazgec' | 'diger' | 'randevu'
 export type NiyetKaynagi = 'kural' | 'yapay_zeka' | 'varsayilan'
 export interface NiyetSonucu {
   niyet: Niyet
@@ -47,6 +48,7 @@ export const NIYET_ETIKETI: Record<Niyet, string> = {
   yeniden_planla: 'Yeniden planla',
   soru: 'Soru',
   vazgec: 'Mesaj istemiyor',
+  randevu: 'Randevu isteği',
   diger: 'Diğer',
 }
 

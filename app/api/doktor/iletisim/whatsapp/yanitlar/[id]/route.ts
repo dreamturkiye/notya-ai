@@ -1,5 +1,6 @@
 /**
- * WHATSAPP-API-01 — one-tap actions on a "Gelen Yanıtlar" card: onayla | iptal | yeniden_planla | yanitla | goruldu.
+ * WHATSAPP-API-01 — one-tap actions on a "Gelen Yanıtlar" card: onayla | iptal | yeniden_planla | yanitla | goruldu
+ * (+ WHATSAPP-ONBURO-01: ob_onayla | ob_reddet | ob_geri_al | ob_gordum on an "Ayşe ön büro" card).
  * Doctor-only (doktorOturum). The card is loaded with id AND doctor_id; the appointment with doktor_id AND the card's own
  * patient_id (lib/iletisim/whatsapp/eylem.ts, randevuEylem.ts). The request carries only the card id, the action, an
  * optional free-text reply and an optional time that must pass the doctor's slot engine.
@@ -7,6 +8,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { doktorOturum } from '@/lib/doktor/serverAuth'
 import { KART_EYLEMLERI, kartEylemi, type KartEylemi } from '@/lib/iletisim/whatsapp/eylem'
+import { obEylemiMi, onBuroKartEylemi } from '@/lib/iletisim/onburo/eylem'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 30
@@ -19,6 +21,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const { id } = await params
   if (!UUID.test(id)) return NextResponse.json({ error: 'Yanıt bulunamadı.' }, { status: 404 })
   const g = (await req.json().catch(() => null)) as { eylem?: unknown; metin?: unknown; baslangic?: unknown } | null
+  // WHATSAPP-ONBURO-01: the front-desk cards (request / automatic booking / seen) have their own actions; same scoping.
+  if (obEylemiMi(g?.eylem)) {
+    const o = await onBuroKartEylemi(oturum.supabase, { doktorId: oturum.user.id, yapanId: oturum.user.id, yapan: 'doktor', kartId: id, eylem: g.eylem })
+    if (!o.ok) return NextResponse.json({ error: o.hata }, { status: o.durum })
+    return NextResponse.json(o)
+  }
   const eylem = String(g?.eylem || '') as KartEylemi
   if (!KART_EYLEMLERI.includes(eylem)) return NextResponse.json({ error: 'Geçersiz işlem.' }, { status: 400 })
   const baslangic = typeof g?.baslangic === 'string' && Number.isFinite(Date.parse(g.baslangic)) ? new Date(g.baslangic).toISOString() : undefined

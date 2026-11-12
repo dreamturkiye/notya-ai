@@ -24,8 +24,9 @@ import {
 } from '@/lib/doktor/takip'
 import { bugunTrIso } from '@/lib/iletisim/sablonlar'
 import { iptalKartlari, iptalOgeleri } from '@/lib/iletisim/whatsapp/onBuro'
+import { onBuroMasaKartlari, onBuroMasaOgeleri } from '@/lib/iletisim/onburo/fisilti'
 
-export type OnBuroKaynak = 'mesaj' | 'talep' | 'belge' | 'telefon' | 'gelmedi' | 'form' | 'takip' | 'iptal'
+export type OnBuroKaynak = 'mesaj' | 'talep' | 'belge' | 'telefon' | 'gelmedi' | 'form' | 'takip' | 'iptal' | 'onburo'
 
 export interface OnBuroFisiltiItem {
   id: string
@@ -42,6 +43,8 @@ export interface OnBuroFisiltiItem {
   toplamBekleyen?: number
   /** WHATSAPP-CANCEL-01: the inbox card behind an 'iptal' item — what the desk's "Gördüm" acknowledges. */
   kartId?: string
+  /** WHATSAPP-ONBURO-01: the one-tap actions of an 'onburo' item (approve / decline a request, undo a booking, seen). */
+  obEylemler?: Array<'ob_onayla' | 'ob_reddet' | 'ob_geri_al' | 'ob_gordum'>
 }
 
 /** TR calendar day (Europe/Istanbul) as YYYY-MM-DD. */
@@ -419,6 +422,11 @@ export async function onBuroFisiltiOgeleri(
   try {
     ogeler.push(...iptalOgeleri(await iptalKartlari(supabase, doktorId)))
   } catch { /* soft before migration 169 */ }
+
+  // WHATSAPP-ONBURO-01: "Ayşe ön büro" — a new-patient request, an appointment Ayşe booked, an emergency-worded message
+  try {
+    ogeler.push(...onBuroMasaOgeleri(await onBuroMasaKartlari(supabase, doktorId)))
+  } catch { /* soft before migration 195 */ }
 
   return onBuroSirala(ogeler)
 }
