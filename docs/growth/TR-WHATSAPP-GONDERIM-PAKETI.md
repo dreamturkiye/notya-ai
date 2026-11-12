@@ -1392,36 +1392,41 @@ Wave3’te SIRADAKİ diye önerildi → **HATA**. Ledger + early seed’e işlen
 ## W6-32. Gülşah Dalgacı ← GİTTİ (2026-11-12, WA-verified)
 **kadın-doğum** · Adana · WA: `+905301174801` · variant `kd-C-0009`
 
-## W6-33. Halil İbrahim Altıncı ← SIRADAKİ
-**kadın-doğum** · Adana · `+90 544 926 53 41` · WA: `+905449265341`  
-**Doğrulama:** DS `socialMedia` whatsapp.  
-**Not:** Pool’da sıradaki Gülşah Tanas Sarıkas atlandı (az önce Gülşah Dalgacı — aynı isim peş peşe yok).  
-**Anti-ban:** phase-2 soft **16**/gün (bugün 6/16). Gap ≥12 dk. variant `kd-C-0005`.
+## W6-33. Op. Dr. Halil İbrahim Altıncı ← GİTTİ (2026-11-12, WA-verified)
+**kadın-doğum** · Adana · WA: `+905449265341` · variant `kd-C-0005`
+
+## W6-34. Op. Dr. Gülşah Tanas Sarıkaş ← SIRADAKİ
+**kadın-doğum** · İzmir · `+90 553 008 62 51` · WA: `+905530086251`  
+**Doğrulama:** DS `socialMedia` whatsapp · unvan DS og:title.  
+**Anti-ban:** Halil’den **≥12 dk**. Soft 7/16. variant `kd-C-0008`.
 
 **Gönder:** yapıştır → kart çıkarsa **X** → gönder.
 
 ```
-Merhaba Halil Hocam 👋
-Kaan (Notya). Kısa bir not bırakıyorum.
+Gülşah Hocam, merhaba.
+Ben Kaan — *Notya*'dan ulaşıyorum.
 
-Kısaca *Notya*: muayene odasında sizinle çalışan bir klinik asistan.
-Not, reçete, rapor, takip ve hasta portalı tek yerde — kararlar yine *sizde*.
-40'tan fazla branşı kendi dilinde destekliyoruz.
+*Notya*, hekimler için yapay zekâ klinik asistanı:
+muayeneyi dinler → not + reçete + rapor taslağı → hasta takibi ve portal.
+Her adım *sizin onayınızla* ilerler.
+40+ branşta, her branşın kendi ihtiyacıyla.
 
 Yoğun günlerde not / reçete / takip işlerinden yaklaşık *1,5-2 saat* geri geliyor.
 Daha düzenli kayıt = daha temiz takip.
 Branşınızdaki meslektaşlar da denemeye başladı; kısa bir bakış genelde yeterli oluyor.
 
 *Kadın doğumda*
+- Jinekolojik operasyon notları (histerektomi, myomektomi, laparoskopi)
 - Obstetrik risk (preeklampsi, GDM, SSVD)
 - Sezaryen ve ameliyat notları
-- Doppler'li USG ve yapılandırılmış NST
-- Gebelik takvimi ve izlem
 - Doğum epikrizi ve antetli baskı
+- Gebelik takvimi ve izlem
 
-Dr. Gökhan Mamur sizin için *30 dk’lık* kısa bir tur yapıyor; uygun saati siz seçiyorsunuz.
-Şimdilik sadece bakmak isterseniz ücretsiz deneme de açık.
+Dr. Gökhan Mamur *30 dk* kısa tanıtım yapıyor 🩺
+Saatler size göre.
 
-*Tanıtım:* www.notya.io/demo
-*Deneme:* www.notya.io
+Tanıtıma vakit yoksa ücretsiz denemeyi hemen açabiliyoruz.
+
+📅 *Tanıtım / Demo:* www.notya.io/demo
+🔗 *Ücretsiz deneme:* www.notya.io
 ```

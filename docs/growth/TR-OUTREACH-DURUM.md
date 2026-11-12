@@ -1,24 +1,12 @@
 # TR outreach durum (canlı)
 
-**Anti-ban (phase 2):** soft **16**/gün · normal **22**/gün · gap **≥10–12 dk** · **5/saat**.  
-Playbook: `TR-WHATSAPP-ANTI-BAN.md` · gate: `python3 scripts/tr-outreach-next.py --check-pace`
+**Anti-ban:** soft **16**/gün · gap **≥12 dk** · **5/saat**. Gate: `python3 scripts/tr-outreach-next.py --check-pace`
 
-**Bugün:** soft **6 → 16** (araştırmaya göre 6, 10–20 dk aralık varken gereksiz düşüktü). Kalan slotlar açık.
+**Sıradaki:** Op. Dr. Gülşah Tanas Sarıkaş · KD · İzmir · `+905530086251`  
+(variant `kd-C-0008` · paket W6-34 · bugün **7/16**)
 
-**Sıradaki:** KD · Adana · `+905449265341` · variant `kd-C-0005` · paket W6-33  
-Gap: son gönderiden **≥12 dk** (soft).
+**Pace:** Halil gitti → **≥12 dk** bekle.
 
 ```bash
-python3 scripts/tr-outreach-next.py --mark-gitti "Halil İbrahim Altıncı" --phone +905449265341 --brans kadin-dogum --city Adana --variant-id kd-C-0005
+python3 scripts/tr-outreach-next.py --mark-gitti "Op. Dr. Gülşah Tanas Sarıkaş" --phone +905530086251 --brans kadin-dogum --city İzmir --variant-id kd-C-0008
 ```
-
-## Son (2026-11-12)
-
-| Kişi | Telefon | Sonuç |
-|------|---------|--------|
-| Gülşah Dalgacı | `+905301174801` | **gitti** |
-| Op. Dr. Gökben Yüksel | `+905076680468` | gitti |
-| Fatma Özlü Akkuş | `+905302646776` | gitti |
-| Fatma Elif Işık Eryılmaz | `+905322754326` | gitti |
-| Duygu Ersoy | `+905336036166` | gitti |
-| Dr. Volkan Aktemur | `+905323684069` | gitti |
