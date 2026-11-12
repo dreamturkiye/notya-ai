@@ -1386,36 +1386,38 @@ Wave3’te SIRADAKİ diye önerildi → **HATA**. Ledger + early seed’e işlen
 ## W6-30. Fatma Özlü Akkuş ← GİTTİ (2026-11-12, WA-verified)
 **kadın-doğum** · Antalya · WA: `+905302646776` · variant `kd-B-0006`
 
-## W6-31. Op. Dr. Gökben Yüksel ← SIRADAKİ
-**kadın-doğum** · İzmir · `+90 507 668 04 68` · WA: `+905076680468`  
+## W6-31. Op. Dr. Gökben Yüksel ← GİTTİ (2026-11-12, WA-verified)
+**kadın-doğum** · İzmir · WA: `+905076680468` · variant `kd-C-0007`
+
+## W6-32. Gülşah Dalgacı ← SIRADAKİ
+**kadın-doğum** · Adana · `+90 530 117 48 01` · WA: `+905301174801`  
 **Doğrulama:** DS `socialMedia` whatsapp.  
-**Anti-ban:** Özlü’den sonra **≥20 dk** (+ saatlik 4/4 dolu — aynı pencere). Soft restart (bugün 4/6). variant `kd-C-0007`.
+**Anti-ban:** Gökben’den sonra **≥20 dk**. Soft restart (bugün **5/6** — Gülşah sonrası günlük kapı dolar). variant `kd-C-0009`.
 
 **Gönder:** yapıştır → kart çıkarsa **X** → gönder.
 
 ```
-Merhaba Gökben Hocam 👋
-Kaan (Notya). Kısa bir not bırakıyorum.
+Gülşah Hocam iyi günler.
+Ben Kaan, *Notya* ekibinden yazıyorum.
 
-*Notya* — hekimler için yapay zekâ klinik asistanı.
-Muayeneyi dinler, notunuzu yazar, reçete ve rapor taslağını hazırlar, hastanızı takipte tutar — hasta portalı dahil.
-Her karar *sizin onayınızla*.
-40'tan fazla branşı kendi ihtiyaçlarıyla destekliyoruz.
+Kısaca *Notya*: muayene odasında sizinle çalışan bir klinik asistan.
+Not, reçete, rapor, takip ve hasta portalı tek yerde — kararlar yine *sizde*.
+40'tan fazla branşı kendi dilinde destekliyoruz.
 
 Yoğun günlerde not / reçete / takip işlerinden yaklaşık *1,5-2 saat* geri geliyor.
 Daha düzenli kayıt = daha temiz takip.
 Branşınızdaki meslektaşlar da denemeye başladı; kısa bir bakış genelde yeterli oluyor.
 
 *Kadın doğumda*
-- Obstetrik risk (preeklampsi, GDM, SSVD)
 - Sezaryen ve ameliyat notları
-- Doppler'li USG ve yapılandırılmış NST
+- Obstetrik risk (preeklampsi, GDM, SSVD)
 - Doğum epikrizi ve antetli baskı
+- Gebelik takvimi ve izlem
 - Jinekolojik operasyon notları (histerektomi, myomektomi, laparoskopi)
 
-Dr. Gökhan Mamur sizin için *30 dk’lık* kısa bir tur yapıyor; uygun saati siz seçiyorsunuz.
-Şimdilik sadece bakmak isterseniz ücretsiz deneme de açık.
+İsterseniz Dr. Gökhan Mamur *30 dakikalık* kısa bir tanıtım ayarlıyor — saat sizin diliminiz.
+Tanıtıma şimdi vakit yoksa ücretsiz denemeyi de hemen açabilirsiniz.
 
-*Tanıtım:* www.notya.io/demo
-*Deneme:* www.notya.io
+📅 Demo: www.notya.io/demo
+🔗 Deneme: www.notya.io
 ```
