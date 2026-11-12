@@ -1,5 +1,27 @@
 # OPEN COMMITMENTS — Notya AI
 
+## GERI-CAGIRMA-01 — recall engine with a counter: NOT in this build yet (Claude, 2026-11-12)
+
+Kaan, 2026-11-12: "Recall engine with a revenue counter … one-tap recall, and show 'Notya brought back 14 patients this
+month' on the home page." Built in Türkiye (`main`: `lib/geriCagirma/`, Araçlar › Geri çağırma, the home card). Status of
+this build (uz): **OPEN GAP — owner Claude, 2026-11-12.**
+
+- **What landed here in the same change set.** Migration `lib/db/migrations/196_geri_cagirma.sql` (the same file as on `main`;
+  rollback in `geri-al/`) and the two world-neutral core files `lib/geriCagirma/tipler.ts` and `atif.ts` with their tests:
+  the schema and the attribution rule are identical in every build. Nothing in this build reads or writes the tables.
+- **What did not land, and why it is a job of its own.** A country build is the country kit: its own tables
+  (`ulke_hastalar`, `ulke_randevulari`, …), its own screens, strings from the packs, the wall tests. Türkiye's kohort
+  engines are not offered here. The only due date the kit records is a kept tool result's "next review" date
+  (`ulke_arac_kayitlari`, `tarihler.sonraki`). **The kit has no outbound channel** (`lib/ulke/mesaj/mesaj.ts`: "nothing
+  leaves the product"), so a recall here can only be a call list with a "phoned" mark until a channel exists. To build:
+  the kit's source adapter, routes (`route.ulke.ts`), the recall screen and the Today card, the three tables registered in
+  `lib/ulke/uygulama/tablolar.ts`, strings in the language packs, the pack record docs. Not started.
+- **Migration 196 is not applied on this country's database — waits on Kaan + the main session, 2026-11-12.** Safe to apply
+  (additive; no reader yet). Project ids and verification: `docs/OPEN-COMMITMENTS.md` on `main`, GERI-CAGIRMA-01a.
+- **Legal review before any recall MESSAGE is sent from this build — waits on Kaan (lawyer), 2026-11-12.** A recall must stay
+  an informational reminder to the practice's own patient with recorded consent and an opt-out; this country's own
+  electronic-message and health-advertising rules decide the rest. No compliance is claimed anywhere in the product.
+
 ## KD-TARAMA-01 — thyroid in pregnancy, HPV vaccine record, SMA carrier screening, PMS/PMDD diary: what is open (Claude, 2026-11-09)
 
 Kadın Hastalıkları ve Doğum only (branş-specific; leak tests both ways). Shared engine `lib/clinical/kdTaramalar.ts`
