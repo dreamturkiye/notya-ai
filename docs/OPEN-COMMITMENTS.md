@@ -1,5 +1,38 @@
 # OPEN COMMITMENTS — Notya AI
 
+## WHATSAPP-ONBURO-01 — "Ayşe ön büro" (a new appointment by chat, answers from the practice sheet): OPEN GAP in this build (Claude, 2026-11-12)
+
+Türkiye (main) shipped the front desk on its WhatsApp inbound pipeline on 2026-11-12. **This build does not run it**: no
+release branch carries that pipeline (`lib/iletisim/whatsapp/*`, the inbox, the audit log — HASTA-ILETISIMI-ULKE-01, a
+pending decision of Kaan's on which countries and channels get patient messaging). Porting the pipeline is a separate job;
+it was not hidden inside this one, and no settings card, route or switch was added here — a switch that does nothing
+would be a false promise. Status per country: us OPEN GAP · gb OPEN GAP · ca OPEN GAP · au OPEN GAP · nz OPEN GAP ·
+uz OPEN GAP (owner: Claude, after Kaan's decision).
+
+What IS on this branch, so that the port has nothing left to translate for the front desk:
+
+- `lib/db/migrations/195_whatsapp_on_buro.sql` (+ `geri-al/`), the same file as on main. **Not applied, and not to be
+  applied to a country database yet**: it creates a table with a doctor key, which belongs in this country's own rollout
+  list together with the WhatsApp inbox schema. It is safe if run (it skips tables that do not exist).
+- The shared pure engine, identical to main: `lib/iletisim/onburo/ayar.ts` (settings + practice sheet), `slot.ts`
+  (which free times to offer), `bilgi.ts` (emergency guard → medical guard → rules → model limited to the sheet, cited
+  keys validated), `dil/tipler.ts` (the language pack contract).
+- The language packs: `countries/_dil/en/onBuro.ts` and `countries/{us,gb,ca,au,nz}/onBuro.ts` (English in each
+  country's form, each pack's own emergency number and payer words, day-first / month-first dates), and
+  `countries/uz/onBuro.ts` (Uzbek Latin, Uzbek Cyrillic and Russian; answers in the language of the conversation).
+  Tests: `lib/iletisim/onburo/onburo-ulke.test.ts`, `countries/uz/onBuro.test.ts`.
+
+Open, owned and dated:
+
+- **(a) Port the inbound pipeline, then wire the packs** (`countries/active/onBuro.ts`, `lib/iletisim/onburo/dil/aktif.ts`,
+  the handler, the settings card with the Türkiye look) — Claude, after HASTA-ILETISIMI-ULKE-01 is decided by Kaan.
+- **(b) Native reader and clinician** — every sentence of the packs is MACHINE-WRITTEN and patient-facing; the emergency
+  and medical word lists decide when the assistant stays silent on a medical matter. Nobody who reads the language
+  natively and no clinician of the country has read them. Kaan arranges; nothing answers a patient before that.
+- **(c) Privacy notice for an unknown number** — the packs carry one plain sentence (the clinic records the name and the
+  number for the request). It is NOT a privacy notice under this country's law; the wording is the country lawyer's.
+- **(d) The cancel / reschedule words of this language** (WHATSAPP-CANCEL-06) are still not written; the packs only keep
+  such messages OUT of the booking flow.
 ## GERI-CAGIRMA-01 — recall engine with a counter: NOT in this build yet (Claude, 2026-11-12)
 
 Kaan, 2026-11-12: "Recall engine with a revenue counter … one-tap recall, and show 'Notya brought back 14 patients this
