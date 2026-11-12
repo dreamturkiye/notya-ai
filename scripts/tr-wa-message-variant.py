@@ -80,18 +80,23 @@ PRODUCT = [
 VALUE = [
     (
         "Tipik bir günde yaklaşık *1,5-2 saat* kazanç.\n"
-        "Kayıtlar daha düzenli → bakım kalitesi de yükseliyor.\n"
-        "Meslektaşlarınız da bakmaya başladı — geride kalmamak için kısa bir bakış çoğu zaman yeterli."
+        "Hasta portalı gibi özellikler hem zaman kazandırır hem hastaya verdiğiniz hizmetin kalitesini yükseltir.\n"
+        "Geri kalmamak önemli: hastalar giderek daha modern çalışan hekimleri tercih ediyor."
     ),
     (
         "Yoğun günlerde not / reçete / takip işlerinden yaklaşık *1,5-2 saat* geri geliyor.\n"
-        "Daha düzenli kayıt = daha temiz takip.\n"
-        "Branşınızdaki meslektaşlar da denemeye başladı; kısa bir bakış genelde yeterli oluyor."
+        "Portal + düzenli kayıt = daha iyi hasta deneyimi, daha yüksek bakım kalitesi.\n"
+        "Branşta tempo değişiyor — geride kalan muayenehaneler hastayı daha modern rakiplere kaptırıyor."
     ),
     (
         "Pratikte: günde yaklaşık *1,5-2 saat* idari yük azalması.\n"
-        "Epikriz ve raporlar antetli, düzenli kalıyor.\n"
-        "Kısa bir bakış çoğu hekim için karar vermeye yetiyor."
+        "Hasta portalı hem sizin sürenizi korur hem hastanın aldığı hizmeti güçlendirir.\n"
+        "Kısa bir bakış çoğu hekim için yeterli; bekleyen çoğu zaman kaybediyor."
+    ),
+    (
+        "Zaman kazancı tek başına değil: portal ve düzenli takip hastaya verdiğiniz kaliteyi de artırıyor.\n"
+        "Hastalar artık daha modern, daha erişilebilir hekimlerle çalışmak istiyor.\n"
+        "Geride kalmamak için 10 dk’lık bir bakış çoğu zaman karar verdiriyor."
     ),
 ]
 

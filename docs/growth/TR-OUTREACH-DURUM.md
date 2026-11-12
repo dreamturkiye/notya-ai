@@ -2,11 +2,11 @@
 
 **Anti-ban:** soft **16**/gün · gap **≥12 dk** · **5/saat**.
 
-**Sıradaki:** Op. Dr. Hayri Aksüt · KD · İzmir · `+905522840905`  
-(variant `kd-C-0011` · paket W6-35 · bugün **8/16**)
+**Sıradaki:** Op. Dr. Hüseyin Aytuğ Avşar · KD · İzmir · `+905405202378`  
+(variant `kd-A-0001` · paket W6-36 · bugün **9/16** · FOMO+portal copy)
 
-**Pace:** Gülşah Tanas gitti → **≥12 dk**.
+**Pace:** Hayri gitti → **≥12 dk**.
 
 ```bash
-python3 scripts/tr-outreach-next.py --mark-gitti "Op. Dr. Hayri Aksüt" --phone +905522840905 --brans kadin-dogum --city İzmir --variant-id kd-C-0011
+python3 scripts/tr-outreach-next.py --mark-gitti "Op. Dr. Hüseyin Aytuğ Avşar" --phone +905405202378 --brans kadin-dogum --city İzmir --variant-id kd-A-0001
 ```

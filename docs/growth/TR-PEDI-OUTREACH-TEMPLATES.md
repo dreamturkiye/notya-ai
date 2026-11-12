@@ -42,8 +42,8 @@ Her karar *sizin onayınızla*.
 - Doğum epikrizi ve antetli baskı
 
 Tipik bir günde yaklaşık *1,5-2 saat* kazanç.
-Kayıtlar daha düzenli → bakım kalitesi de yükseliyor.
-Meslektaşlarınız da bakmaya başladı — geride kalmamak için kısa bir bakış çoğu zaman yeterli.
+Hasta portalı gibi özellikler hem zaman kazandırır hem hastaya verdiğiniz hizmetin kalitesini yükseltir.
+Geri kalmamak önemli: hastalar giderek daha modern çalışan hekimleri tercih ediyor.
 
 Dr. Gökhan Mamur *30 dk* kısa tanıtım yapıyor 🩺
 Saatler size göre.

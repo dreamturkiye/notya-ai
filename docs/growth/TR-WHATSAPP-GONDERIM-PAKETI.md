@@ -1398,31 +1398,34 @@ Wave3’te SIRADAKİ diye önerildi → **HATA**. Ledger + early seed’e işlen
 ## W6-34. Op. Dr. Gülşah Tanas Sarıkaş ← GİTTİ (2026-11-12, WA-verified)
 **kadın-doğum** · İzmir · WA: `+905530086251` · variant `kd-C-0008`
 
-## W6-35. Op. Dr. Hayri Aksüt ← SIRADAKİ
-**kadın-doğum** · İzmir · `+90 552 284 09 05` · WA: `+905522840905`  
+## W6-35. Op. Dr. Hayri Aksüt ← GİTTİ (2026-11-12, WA-verified)
+**kadın-doğum** · İzmir · WA: `+905522840905` · variant `kd-C-0011`
+
+## W6-36. Op. Dr. Hüseyin Aytuğ Avşar ← SIRADAKİ
+**kadın-doğum** · İzmir · `+90 540 520 23 78` · WA: `+905405202378`  
 **Doğrulama:** DS `socialMedia` whatsapp · unvan DS og:title.  
-**Anti-ban:** Gülşah Tanas’tan **≥12 dk**. Soft 8/16. variant `kd-C-0011`.
+**Anti-ban:** Hayri’den **≥12 dk**. Soft 9/16. variant `kd-A-0001` · FOMO + portal kalite satırı.
 
 **Gönder:** yapıştır → kart çıkarsa **X** → gönder.
 
 ```
-Hayri Hocam iyi günler.
-Ben Kaan, *Notya* ekibinden yazıyorum.
+Hüseyin Hocam, merhaba.
+Ben Kaan — *Notya*'dan ulaşıyorum.
 
 Kısaca *Notya*: muayene odasında sizinle çalışan bir klinik asistan.
 Not, reçete, rapor, takip ve hasta portalı tek yerde — kararlar yine *sizde*.
 40'tan fazla branşı kendi dilinde destekliyoruz.
 
-Yoğun günlerde not / reçete / takip işlerinden yaklaşık *1,5-2 saat* geri geliyor.
-Daha düzenli kayıt = daha temiz takip.
-Branşınızdaki meslektaşlar da denemeye başladı; kısa bir bakış genelde yeterli oluyor.
-
 *Kadın doğumda*
-- Obstetrik risk (preeklampsi, GDM, SSVD)
-- Sezaryen ve ameliyat notları
-- Gebelik takvimi ve izlem
-- Doppler'li USG ve yapılandırılmış NST
 - Jinekolojik operasyon notları (histerektomi, myomektomi, laparoskopi)
+- Obstetrik risk (preeklampsi, GDM, SSVD)
+- Doppler'li USG ve yapılandırılmış NST
+- Doğum epikrizi ve antetli baskı
+- Sezaryen ve ameliyat notları
+
+Tipik bir günde yaklaşık *1,5-2 saat* kazanç.
+Hasta portalı gibi özellikler hem zaman kazandırır hem hastaya verdiğiniz hizmetin kalitesini yükseltir.
+Geri kalmamak önemli: hastalar giderek daha modern çalışan hekimleri tercih ediyor.
 
 İsterseniz Dr. Gökhan Mamur *30 dakikalık* kısa bir tanıtım ayarlıyor — saat sizin diliminiz.
 Tanıtıma şimdi vakit yoksa ücretsiz denemeyi de hemen açabilirsiniz.
