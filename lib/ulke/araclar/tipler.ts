@@ -56,6 +56,7 @@
 import type { BicimliMetin } from '../arayuz/tipler'
 import type { AraclarMetni } from '../arayuz/metinTipleri'
 import type { DilKodu } from '../tipler'
+import type { PrematurPaketi } from '../prematur/paket'
 
 /**
  * A laboratory quantity whose UNIT is the country's choice (the pack states it; the kit converts before it computes).
@@ -254,7 +255,7 @@ export type AracTanimi = {
   /** The published source of the arithmetic, as a citation; null where the tool is a list of the product's own. Shown under the result. */
   kaynak: string | null
   /** For `tur: 'ekran'`: the kit screen that is the tool (it has no fields). */
-  ekran?: 'hastaPortali' | 'takipPaneli' | 'sablonlarim' | 'konsultasyonlar'
+  ekran?: 'hastaPortali' | 'takipPaneli' | 'sablonlarim' | 'konsultasyonlar' | 'prematurTakip' | 'prematurKohort' | 'erkenDogum'
   /** true = the tool WRITES AN AMOUNT OF A MEDICINE (a result number marked `doz`): the pack must state how a dose is written (`UlkeAraclari.dozYazimi`). */
   dozYazar?: boolean
   /** Unit codes the RESULT's numbers carry (the fields' units are on the fields). The pack names each. */
@@ -437,4 +438,11 @@ export type UlkeAraclari = {
    * Every new country starts with it. (A tool of the country's own, and a link-out tile, state it in every pack.)
    */
   lisansTam?: boolean
+  /**
+   * PREMATUR-ULKE-01 — THE PREMATURITY MODULE (the baby's follow-up plan, the early-birth record): this country's follow-up table
+   * and thresholds, each rule with its source and how it was read — or "follow your local protocol" — the roles that open each
+   * record and the words of both screens. Absent = the pack has no prematurity tool. The pack check holds the table to the module's
+   * rule: nothing is invented (lib/ulke/prematur/dogrulama.ts).
+   */
+  prematur?: PrematurPaketi
 }

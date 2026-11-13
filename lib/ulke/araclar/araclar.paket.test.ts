@@ -335,8 +335,8 @@ describe('tools — the screens', () => {
         // a link-out tile works nothing out: its own screen is tested where a pack has one (lib/ulke/ornekUlkeEkranlari.test.ts)
         if (t.tur === 'baglanti') continue
         // the follow-up list has its own section below (F)
-        // "my templates" and consultation have their own tests (lib/ulke/sablon/, lib/ulke/konsultasyon/, components/ulke/*Ekranlari.paket.test.ts)
-        if (t.tur === 'ekran') { assert.ok(t.ekran === 'takipPaneli' || t.ekran === 'sablonlarim' || t.ekran === 'konsultasyonlar', `${p.anahtar}: a screen tool this test does not know`); continue }
+        // "my templates" and consultation have their own tests (lib/ulke/sablon/, lib/ulke/konsultasyon/, components/ulke/*Ekranlari.paket.test.ts); the prematurity screens: lib/ulke/prematur/prematur.paket.test.ts
+        if (t.tur === 'ekran') { assert.ok(t.ekran === 'takipPaneli' || t.ekran === 'sablonlarim' || t.ekran === 'konsultasyonlar' || t.ekran === 'prematurTakip' || t.ekran === 'prematurKohort' || t.ekran === 'erkenDogum', `${p.anahtar}: a screen tool this test does not know`); continue }
         const ortak = { x, a, dil, notDili: dil, icerik, degistir: () => {}, temizle: () => {}, bugun: '2026-10-09', kopya: 'yok' as const, kopyalaTikla: () => {} }
         const bosHtml = cerceve(dil, h(Ekran.AracGorunumu, { ...ortak, ham: {} }))
         const bosMetin = gorunurMetin(bosHtml)
