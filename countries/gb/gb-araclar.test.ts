@@ -136,7 +136,7 @@ describe('gb A: who sees which tool (decisions: `proposedSpecialties`; GB.md, "W
       if (kit.some((k) => k !== 'hasta-portali' && k !== 'takip-paneli')) beklenen.add('takip-paneli'); else beklenen.delete('takip-paneli')
       // Structural records added after the decisions file. The file's tools stay; anything further must be one of these.
       // KD-TARAMA-01 (2026-11-09): the four obstetric records, added after the decisions file
-      const yapisal = new Set(['gebelik-tiroid', 'hpv-asi-kaydi', 'sma-tasiyicilik', 'pmdd-gunluk-ozeti', 'ameliyat-notu', 'ameliyat-notu-kd', 'usg-obstetrik', 'usg-jinekolojik', 'dogum-epikrizi', 'endoskopi-kaydi', 'kronik-izlem-kaydi', 'birinci-acil-bayrak', 'gebelik-gun', 'kardiyo-not', 'inme-bayraklari', 'psikiyatri-guvenlik', 'seans-plani', 'icf-ozet', 'greft-tahmini', 'sac-bakim-vade', 'estetik-cerrahi-vade', 'estetik-islem-vade', 'infuzyon-guvenlik', 'makro-kaydi', 'sonraki-seans', 'vas-fonksiyon', 'plastik-yara-greft', ...KD_OPERATOR_ANAHTARLARI, 'ameliyat-notu-genital', 'genital-sonuc-olcegi', 'genital-foto-onam', 'onam-formu-genital'])
+      const yapisal = new Set(['prematur-takip', 'prematur-kohort', 'erken-dogum', 'gebelik-tiroid', 'hpv-asi-kaydi', 'sma-tasiyicilik', 'pmdd-gunluk-ozeti', 'ameliyat-notu', 'ameliyat-notu-kd', 'usg-obstetrik', 'usg-jinekolojik', 'dogum-epikrizi', 'endoskopi-kaydi', 'kronik-izlem-kaydi', 'birinci-acil-bayrak', 'gebelik-gun', 'kardiyo-not', 'inme-bayraklari', 'psikiyatri-guvenlik', 'seans-plani', 'icf-ozet', 'greft-tahmini', 'sac-bakim-vade', 'estetik-cerrahi-vade', 'estetik-islem-vade', 'infuzyon-guvenlik', 'makro-kaydi', 'sonraki-seans', 'vas-fonksiyon', 'plastik-yara-greft', ...KD_OPERATOR_ANAHTARLARI, 'ameliyat-notu-genital', 'genital-sonuc-olcegi', 'genital-foto-onam', 'onam-formu-genital'])
       for (const k of beklenen) assert.ok(kit.includes(k), `${s.key} lost ${k}`)
       for (const k of kit) if (!beklenen.has(k)) assert.ok(yapisal.has(k), `${s.key} gained ${k}`)
     }
@@ -435,13 +435,14 @@ describe('gb D: what stays off', () => {
     assert.deepEqual(Object.keys(GB_ARACLAR.kapali).sort(), kapali)
     for (const k of kapali) { assert.ok(!A.araclar.some((p) => p.anahtar === k), k); assert.ok(A.yuvalar.some((y) => y.anahtar === k), k); for (const r of [null, ...ROLLER]) assert.equal(hesabinAraci(A, r, k), null, `${k}: ${r}`) }
     // NO TOOL THAT WAS OFF IS ON, but the dose calculator: the switched-on tools are the set's tools minus the four, the two screens, and this country's three
-    assert.deepEqual(A.araclar.map((p) => p.anahtar).sort(), [...[...EN_ROL_ARACLARI, ...EN_AMELIYAT_ARACLARI, ...EN_OPERATOR_ARACLARI].map((a) => a.anahtar).filter((k) => !kapali.includes(k)), 'hasta-portali', 'takip-paneli', ...GB_OZEL_ANAHTARLAR, ...GB_GENITAL_ACIK, ...EN_KD_TARAMA_ARACLARI.map((a) => a.anahtar)].sort())
+    assert.deepEqual(A.araclar.map((p) => p.anahtar).sort(), [...[...EN_ROL_ARACLARI, ...EN_AMELIYAT_ARACLARI, ...EN_OPERATOR_ARACLARI].map((a) => a.anahtar).filter((k) => !kapali.includes(k)), 'hasta-portali', 'takip-paneli', ...GB_OZEL_ANAHTARLAR, ...GB_GENITAL_ACIK, ...EN_KD_TARAMA_ARACLARI.map((a) => a.anahtar), 'prematur-takip', 'prematur-kohort', 'erken-dogum'].sort())
+    // PREMATUR-ULKE-01 (2026-11-13): +3, the preterm baby's follow-up plan and list (paediatrics) and the early-birth record (obstetrics and gynaecology)
     // AMELIYAT-NOTU-01 (2026-11-05): +5 tools of the set (operation notes, ultrasound reports, discharge summary) and this country's CTG tool
     // KD-OPERATOR-01 (2026-11-05): +16 operating surgeon's tools of the set
     // GENITAL-ESTETIK-01 (2026-11-06): +3 cosmetic gynaecology tools (adult genital note, outcome totals, photo consent); energy, injection and whitening stay off (./genitalEstetik.ts)
     // GENITAL-ESTETIK-01c (2026-11-06): +1, the consent form of the operations for plastic and aesthetic surgery
     // KD-TARAMA-01 (2026-11-09): +4 obstetric records (thyroid in pregnancy, HPV vaccine, SMA carrier screening, PMDD diary summary)
-    assert.equal(A.araclar.length, 96)
+    assert.equal(A.araclar.length, 99)
   })
 
   it('EVERY TOOL THE DECISIONS MARK "remove" IS OFF in this country', () => {
@@ -481,7 +482,7 @@ describe('gb E: licence states', () => {
 describe('gb F: every NICE-derived item is on the list for the lawyer (./nice-kaynakli.json)', () => {
   it('each entry stands on the line it names, with its mark and its guidance number; no mark in the folder is without an entry', () => {
     const liste = oku<{ ogeler: { dosya: string; satir: number; kilavuz: string; adres: string; alinan: string }[] }>('countries/gb/nice-kaynakli.json')
-    assert.equal(liste.ogeler.length, 8)
+    assert.equal(liste.ogeler.length, 9)
     for (const o of liste.ogeler) {
       const satir = readFileSync(join(KOK, o.dosya), 'utf8').split('\n')[o.satir - 1] ?? ''
       assert.match(satir, /NICE-KAYNAKLI:/, `${o.dosya}:${o.satir}`)

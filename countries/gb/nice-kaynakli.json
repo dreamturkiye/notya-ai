@@ -3,7 +3,7 @@
   "ogeler": [
     {
       "dosya": "countries/gb/araclar.ts",
-      "satir": 47,
+      "satir": 48,
       "kilavuz": "NG203, NG12",
       "baslik": "NG203 Chronic kidney disease: assessment and management; NG12 Suspected cancer: recognition and referral",
       "adres": "https://www.nice.org.uk/guidance/ng203/chapter/Recommendations ; https://www.nice.org.uk/guidance/ng12/documents/draft-guideline-4",
@@ -12,7 +12,7 @@
     },
     {
       "dosya": "countries/gb/araclar.ts",
-      "satir": 134,
+      "satir": 137,
       "kilavuz": "TA195",
       "baslik": "NICE technology appraisal guidance TA195 (rheumatoid arthritis after the failure of a TNF inhibitor), section 2 Clinical need and practice, paragraph 2.10",
       "adres": "https://www.nice.org.uk/guidance/ta195/chapter/2-clinical-need-and-practice",
@@ -21,7 +21,7 @@
     },
     {
       "dosya": "countries/gb/araclar.ts",
-      "satir": 190,
+      "satir": 193,
       "kilavuz": "TA195",
       "baslik": "as above",
       "adres": "https://www.nice.org.uk/guidance/ta195/chapter/2-clinical-need-and-practice",
@@ -30,7 +30,7 @@
     },
     {
       "dosya": "countries/gb/araclar.ts",
-      "satir": 175,
+      "satir": 178,
       "kilavuz": "NG98",
       "baslik": "NICE guideline NG98 Hearing loss in adults: assessment and management, recommendation 1.3.2",
       "adres": "https://www.nice.org.uk/guidance/NG98/chapter/recommendations",
@@ -72,6 +72,15 @@
       "adres": "https://www.nice.org.uk/guidance/ng192",
       "okundu": "as cited by the earlier KD job and the TR build (2026-11-05); not reopened in this session",
       "alinan": "the decision-to-birth targets: category 1 within 30 minutes, category 2 within 75 minutes (numbers)."
+    },
+    {
+      "dosya": "countries/gb/prematur.ts",
+      "satir": 49,
+      "kilavuz": "QS135",
+      "baslik": "QS135 Preterm labour and birth (quality standard), statements 2, 5 and 6",
+      "adres": "https://www.nice.org.uk/guidance/QS135/chapter/quality-statements",
+      "okundu": "2026-11-13 (prematurity module job); the guideline NG25 behind the statements was not opened",
+      "alinan": "numbers only, for the early-birth record: a cervical length of 25 mm or less measured between 16+0 and 24+0 weeks (statement 2); the window 24+0 to 33+6 weeks for antenatal corticosteroids (statement 5). The window 24+0 to 29+6 weeks for magnesium sulfate (statement 6) was read and is not used. No NICE prose."
     }
   ]
 }
