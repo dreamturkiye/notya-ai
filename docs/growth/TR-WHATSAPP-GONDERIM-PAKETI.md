@@ -1407,31 +1407,35 @@ Wave3’te SIRADAKİ diye önerildi → **HATA**. Ledger + early seed’e işlen
 ## W6-37. Prof. Dr. İbrahim Alanbay ← GİTTİ (2026-11-13, WA-verified)
 **kadın-doğum** · Ankara · WA: `+905058027254` · variant `kd-C-0007`
 
-## W6-38. Prof. Dr. İkbal Kaygusuz ← SIRADAKİ
-**kadın-doğum** · Ankara · `+90 530 051 90 23` · WA: `+905300519023`  
+## W6-38. Prof. Dr. İkbal Kaygusuz ← GİTTİ (2026-11-13, WA-verified)
+**kadın-doğum** · Ankara · WA: `+905300519023` · variant `kd-B-0003`
+
+## W6-39. Op. Dr. İpek Demir ← SIRADAKİ
+**kadın-doğum** · İzmir · `+90 530 354 93 90` · WA: `+905303549390`  
 **Doğrulama:** DS `socialMedia` whatsapp · unvan DS og:title.  
-**Anti-ban:** soft bitti → normal **22**/gün, gap **≥10 dk**. Bugün 1/22. variant `kd-B-0003`.
+**Anti-ban:** İkbal’den **≥10 dk**. Bugün 2/22. variant `kd-C-0002`.
 
 **Gönder:** yapıştır → kart çıkarsa **X** → gönder.
 
 ```
-İkbal Hocam, merhaba.
-Ben Kaan — *Notya*'dan ulaşıyorum.
+İpek Hocam merhaba 👋
+Ben Kaan, *Notya*'dan yazıyorum.
+
+*Notya* — hekimler için yapay zekâ klinik asistanı.
+Muayeneyi dinler, notunuzu yazar, reçete ve rapor taslağını hazırlar, hastanızı takipte tutar — hasta portalı dahil.
+Her karar *sizin onayınızla*.
+40'tan fazla branşı kendi ihtiyaçlarıyla destekliyoruz.
+
+Tipik bir günde yaklaşık *1,5-2 saat* kazanç.
+Hasta portalı gibi özellikler hem zaman kazandırır hem hastaya verdiğiniz hizmetin kalitesini yükseltir.
+Geri kalmamak önemli: hastalar giderek daha modern çalışan hekimleri tercih ediyor.
 
 *Kadın doğumda*
-- Doppler'li USG ve yapılandırılmış NST
 - Jinekolojik operasyon notları (histerektomi, myomektomi, laparoskopi)
-- Obstetrik risk (preeklampsi, GDM, SSVD)
 - Gebelik takvimi ve izlem
 - Sezaryen ve ameliyat notları
-
-Kısaca *Notya*: muayene odasında sizinle çalışan bir klinik asistan.
-Not, reçete, rapor, takip ve hasta portalı tek yerde — kararlar yine *sizde*.
-40'tan fazla branşı kendi dilinde destekliyoruz.
-
-Yoğun günlerde not / reçete / takip işlerinden yaklaşık *1,5-2 saat* geri geliyor.
-Portal + düzenli kayıt = daha iyi hasta deneyimi, daha yüksek bakım kalitesi.
-Branşta tempo değişiyor — geride kalan muayenehaneler hastayı daha modern rakiplere kaptırıyor.
+- Doğum epikrizi ve antetli baskı
+- Obstetrik risk (preeklampsi, GDM, SSVD)
 
 İsterseniz Dr. Gökhan Mamur *30 dakikalık* kısa bir tanıtım ayarlıyor — saat sizin diliminiz.
 Tanıtıma şimdi vakit yoksa ücretsiz denemeyi de hemen açabilirsiniz.

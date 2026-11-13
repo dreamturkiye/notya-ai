@@ -1,12 +1,12 @@
 # TR outreach durum (canlı)
 
-**Anti-ban:** soft bitti → **22**/gün · gap **≥10 dk** · **5/saat**.
+**Anti-ban:** **22**/gün · gap **≥10 dk** · **5/saat**.
 
-**Sıradaki:** Prof. Dr. İkbal Kaygusuz · KD · Ankara · `+905300519023`  
-(variant `kd-B-0003` · paket W6-38 · bugün **1/22**)
+**Sıradaki:** Op. Dr. İpek Demir · KD · İzmir · `+905303549390`  
+(variant `kd-C-0002` · paket W6-39 · bugün **2/22**)
 
-**Pace:** İbrahim gitti → **≥10 dk**.
+**Pace:** İkbal gitti → **≥10 dk**.
 
 ```bash
-python3 scripts/tr-outreach-next.py --mark-gitti "Prof. Dr. İkbal Kaygusuz" --phone +905300519023 --brans kadin-dogum --city Ankara --variant-id kd-B-0003
+python3 scripts/tr-outreach-next.py --mark-gitti "Op. Dr. İpek Demir" --phone +905303549390 --brans kadin-dogum --city İzmir --variant-id kd-C-0002
 ```
