@@ -58,4 +58,4 @@ export function prematurKurucu(bicim: EnBicim) {
 }
 
 /** The corrected-age rule of every English-speaking pack: the product's own, the same as the Turkish module's, not taken from a national source. */
-export const DUZELTME_KAYNAGI = 'Corrected age: born before 37 weeks, corrected up to 24 months of age. The definition the Turkish module uses (AAP Committee on Fetus and Newborn, Engle 2004, Pediatrics 114:1362; CDC growth-chart guidance, MMWR 2010;59 RR-9), as cited there; not re-read for this country and not taken from a national source.'
+export const DUZELTME_KAYNAGI = 'Corrected age: born before 37 weeks, corrected up to 24 months of age. The product\'s own definition, the one its existing module for another country uses (AAP Committee on Fetus and Newborn, Engle 2004; CDC growth-chart guidance, MMWR 2010;59 RR-9), as cited there; not re-read for this country and not taken from a national source.'
