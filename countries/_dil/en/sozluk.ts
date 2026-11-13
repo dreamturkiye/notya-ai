@@ -151,6 +151,8 @@ export const KORUNAN: readonly string[] = [
   // published names
   'Generalized Anxiety Disorder', 'Eczema Area and Severity Index', 'Psoriasis Area and Severity Index', 'Emergency Severity Index',
   'American Society of Anesthesiologists', 'Kidney Disease: Improving Global Outcomes', 'European League Against Rheumatism',
+  // PREMATUR-ULKE-01 (2026-11-13): the names the Canadian prematurity table cites, as their owners spell them
+  'Canadian Paediatric Society', 'Society of Obstetricians and Gynaecologists of Canada', 'Paediatr Child Health', 'J Obstet Gynaecol Can',
 ]
 
 /**

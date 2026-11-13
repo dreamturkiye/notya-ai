@@ -40,6 +40,7 @@ import { CA_BIRIMLER, CA_VELI_YASI } from './temel'
 import { CA_OPERATOR_DEGISEN, CA_OPERATOR_PARAMETRELERI } from './operator'
 import { CA_GENITAL_ESTETIK } from './genitalEstetik'
 import { CA_KD_TARAMALARI } from './kdTaramalar'
+import { CA_PREMATUR } from './prematur'
 
 export { CA_BIRIMLER, CA_VELI_YASI } from './temel'
 
@@ -152,6 +153,8 @@ export const CA_GIRDI: EnUlkeGirdisi = {
     genitalEstetik: CA_GENITAL_ESTETIK,
     // KD-TARAMA-01 (2026-11-09): thyroid in pregnancy, HPV vaccine record, SMA carrier screening, PMS / PMDD diary — with this country's numbers and sources (./kdTaramalar.ts)
     kdTaramalari: CA_KD_TARAMALARI,
+    // PREMATUR-ULKE-01 (2026-11-13): the preterm baby's follow-up table and the early-birth thresholds, each with its source (./prematur.ts)
+    prematur: CA_PREMATUR,
     parametreler: CA_OPERATOR_PARAMETRELERI,
     kapali: {
       // THE AUDIT'S ONE "REMOVE": another country's triage scale. It stays off; emergency departments here use another

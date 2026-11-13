@@ -19,7 +19,7 @@ A pack that builds has every text and setting filled in. It says nothing about w
 
 ## What is in this pack, and where it comes from
 
-- **From the shared English set** (`countries/_dil/en/`, written once for five countries): 11002 texts as this pack shows them or hands the model (the country's own, counted in the next line, among them) — the screens, the role names, 40 note templates, the instructions to the model, the intake questions, 98 tools, the landing copy — written in `en-CA` spelling by the set's spelling table.
+- **From the shared English set** (`countries/_dil/en/`, written once for five countries): 11313 texts as this pack shows them or hands the model (the country's own, counted in the next line, among them) — the screens, the role names, 40 note templates, the instructions to the model, the intake questions, 101 tools, the landing copy — written in `en-CA` spelling by the set's spelling table.
 - **This country's own** (`countries/ca/`, six small files): 56 texts it writes itself (its consent sentence, identifier label, time sentence, date example, name, word for a senior doctor, role names where they differ, what its closed tools are missing and who decides, unit names and tool words it writes differently, the example phone number and the pattern of an amount) and the settings in the table below.
 
 ## Settings — every one unverified
@@ -118,7 +118,7 @@ The keys are the shared English key set (`docs/COUNTRY-PACK-ROLE-KEYS.md`). The 
 
 ## Tools
 
-### Switched on (98) — with the unit each measured input takes
+### Switched on (101) — with the unit each measured input takes
 
 Units are a clinical-safety matter. A length or a weight is typed in this pack's unit and converted by the kit with the exact defined factors (1 in = 2.54 cm, 1 lb = 0.45359237 kg); a laboratory value is typed in the unit shown. `countries/ca/ca.test.ts` runs every tool below with this country's units against the kit's reference result. **Every tool's text is machine-written; each waits on a local clinical lead.**
 
@@ -215,6 +215,9 @@ Units are a clinical-safety matter. A length or a weight is typed in this pack's
 | `hpv-asi-kaydi` | HPV vaccine record | Obstetrics and gynecology | no measured input |
 | `sma-tasiyicilik` | SMA carrier screening (prenatal record) | Obstetrics and gynecology | no measured input |
 | `pmdd-gunluk-ozeti` | PMS / PMDD: two-cycle diary summary and DSM-5-TR checklist | Obstetrics and gynecology | no measured input |
+| `prematur-takip` | Preterm follow-up plan | Pediatrics | no measured input |
+| `prematur-kohort` | Preterm babies list | Pediatrics | no measured input |
+| `erken-dogum` | Early-birth record | Obstetrics and gynecology | no measured input |
 | `ca-unit-converter` | Unit converter: pounds, feet and inches | every role | Weight (optional): **lb**; Height: feet (optional): **ft**; Height: inches (enter 0 if there are none): **in** · result in kg, cm |
 | `ca-egfr-ckd-epi-2021` | Estimated GFR (2021 CKD-EPI creatinine equation) | Emergency medicine, Family medicine, Anesthesiology, Neurosurgery, Pediatric surgery, Internal Medicine, Dermatology, Endocrinology and metabolism, Infectious diseases, Gastroenterology, General surgery, Thoracic surgery, Respirology, Ophthalmology, Obstetrics and gynecology, Cardiac Surgery, Vascular Surgery, Cardiology, Otolaryngology-Head and Neck Surgery, Nephrology, Neurology, Medical Oncology, Orthopedic surgery, Pediatrics, Plastic surgery, Psychiatry, Diagnostic radiology, Rheumatology, Urology, Sport and exercise medicine, Physical medicine and rehabilitation, Clinical Immunology and Allergy, Geriatric Medicine, Hematology, Pain Medicine, Gynecologic Reproductive Endocrinology and Infertility, Hair transplantation — practice focus for licensed physicians (not a specialty), Cosmetic surgery, Aesthetic medicine, Dermatology, Longevity medicine — practice focus for licensed physicians (not a specialty) | Serum creatinine: **µmol/L** · result in mL/min/1.73 m² |
 | `ca-narcotic-note` | Narcotic order: points the regulation names | Emergency medicine, Family medicine, Anesthesiology, Neurosurgery, Pediatric surgery, Internal Medicine, Dermatology, Endocrinology and metabolism, Infectious diseases, Gastroenterology, General surgery, Thoracic surgery, Respirology, Ophthalmology, Obstetrics and gynecology, Cardiac Surgery, Vascular Surgery, Cardiology, Otolaryngology-Head and Neck Surgery, Nephrology, Neurology, Medical Oncology, Orthopedic surgery, Pediatrics, Plastic surgery, Psychiatry, Diagnostic radiology, Rheumatology, Urology, Sport and exercise medicine, Physical medicine and rehabilitation, Clinical Immunology and Allergy, Geriatric Medicine, Hematology, Pain Medicine, Gynecologic Reproductive Endocrinology and Infertility, Hair transplantation — practice focus for licensed physicians (not a specialty), Cosmetic surgery, Aesthetic medicine, Dermatology, Longevity medicine — practice focus for licensed physicians (not a specialty) | no measured input |
