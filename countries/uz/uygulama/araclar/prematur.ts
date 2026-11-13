@@ -19,7 +19,7 @@ import type { PaketAraci } from '@/lib/ulke/araclar/tipler'
 import type { PrematurPaketi } from '@/lib/ulke/prematur/paket'
 import type { ErkenDogumProtokolu } from '@/lib/ulke/prematur/erkenDogum'
 import { URUN_PARAMETRELERI, type KuralKategori, type PrematurKural, type PrematurProtokol } from '@/lib/ulke/prematur/tipler'
-import { UZ_PREMATUR_METINLERI } from '../prematurMetinleri'
+import { UZ_PREMATUR_AGACI, UZ_PREMATUR_METINLERI } from '../prematurMetinleri'
 import { u, type Uc } from './yardimci'
 
 const PEDI = ['pediatri']
@@ -116,3 +116,22 @@ export const UZ_PREMATUR: PrematurPaketi = {
   roller: { bebek: PEDI, gebelik: KD },
   metinler: UZ_PREMATUR_METINLERI,
 }
+
+/**
+ * THE RUSSIAN FORM OF THIS MODULE IS THE UZBEK LATIN TEXT (no Russian was written: Kaan's order of 2026-11-13). This set holds every such text
+ * — each text of the module whose Russian form is its Latin form — so that the Russian conformity test of the pack
+ * (countries/uz/standartlar.test.ts) can name the exemption exactly and exempt nothing else.
+ */
+export const UZ_PREMATUR_RUSCA_LATINCE: ReadonlySet<string> = (() => {
+  const topla = (x: unknown, cikti: Set<string>): void => {
+    if (!x || typeof x !== 'object') return
+    const o = x as Record<string, unknown>
+    if (typeof o['uz-Latn'] === 'string' && typeof o.ru === 'string') { if (o.ru === o['uz-Latn']) cikti.add(o.ru); return }
+    for (const v of Object.values(o)) topla(v, cikti)
+  }
+  const s = new Set<string>()
+  topla(UZ_PREMATUR_ARACLARI, s)
+  topla(UZ_PREMATUR, s)
+  topla(UZ_PREMATUR_AGACI, s)
+  return s
+})()

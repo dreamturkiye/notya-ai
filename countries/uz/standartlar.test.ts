@@ -18,6 +18,7 @@ import { UZ_PAKETI } from './index'
 import { UZ_ARAYUZ } from './arayuz'
 import * as KLINIK from './klinik/index'
 import { uzJshshirNazoratRaqami, uzJshshirYapisiGecerliMi } from './kimlik'
+import { UZ_PREMATUR_RUSCA_LATINCE } from './uygulama/araclar/prematur'
 
 type Bicim = 'uz-Latn' | 'uz-Cyrl' | 'ru'
 type Metin = { yol: string; s: string }
@@ -187,7 +188,10 @@ describe('Uzbekistan — mechanical conformity of every text (A18; machine-writt
   })
 
   it('RUSSIAN: none of the four letters only Uzbek has, no word that mixes the two scripts, «» and never straight quotes, a dash and never a spaced hyphen', () => {
-    const l = M.ru
+    // PREMATUR-ULKE-01 (2026-11-13): the prematurity module has NO Russian text (Kaan's order): its Russian form is the Uzbek Latin text, and exactly
+    // those texts (./uygulama/araclar/prematur.ts → UZ_PREMATUR_RUSCA_LATINCE) are left out here. Any other Russian text is held to the rules below.
+    const l = M.ru.filter((x) => !UZ_PREMATUR_RUSCA_LATINCE.has(x.s))
+    assert.ok(M.ru.length - l.length >= 100, 'the exemption names the prematurity module\'s texts, and they are there')
     assert.deepEqual(bul(l, /[ўқғҳЎҚҒҲ]/), [], 'an Uzbek letter in Russian text')
     assert.deepEqual(bul(l, /[ʻʼ]/), [])
     assert.deepEqual(karisikSozler(l), [])
