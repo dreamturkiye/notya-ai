@@ -4,6 +4,7 @@
  * (ulke → dil). No other component forks: one page, injected words (gorunum-paritesi-ulke).
  * Client-safe, pure.
  */
+import { aktifUlke } from '@/lib/ulke/ulke'
 export type OgrenmeDil = 'tr' | 'en' | 'uz'
 
 export interface OgrenmeMetni {
@@ -191,6 +192,6 @@ export function ogrenmeDili(ulke: string | undefined | null): OgrenmeDil {
   return 'en'
 }
 
-export function ogrenmeMetni(ulke: string | undefined | null = process.env.NOTYA_COUNTRY): OgrenmeMetni {
+export function ogrenmeMetni(ulke: string | undefined | null = aktifUlke()): OgrenmeMetni {
   return OGRENME_METINLERI[ogrenmeDili(ulke)]
 }
