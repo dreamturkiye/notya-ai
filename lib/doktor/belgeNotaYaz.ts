@@ -74,7 +74,7 @@ export async function belgeleriNotaYaz(sb: SupabaseClient, doktorId: string, ana
     const onceki = (not as { content_objektif: string | null }).content_objektif || ''
     const uy = notaBloklariUygula(onceki, girdiler, dil)
     if (uy.degisti) {
-      const { error } = await sb.from('notes').update({ content_objektif: uy.metin }).eq('id', noteId)
+      const { error } = await sb.from('notes').update({ content_objektif: uy.metin }).eq('id', noteId).eq('doctor_id', doktorId)
       if (error) { for (const g of grup) sonuclar.push({ analizId: g.analiz.id, durum: 'not_yok' }); continue }
       yazimSayisi++
       await Promise.all([
@@ -85,7 +85,7 @@ export async function belgeleriNotaYaz(sb: SupabaseClient, doktorId: string, ana
     const islemMap = new Map(uy.islemler.map((i) => [i.belgeId, i.islem]))
     for (const g of grup) {
       sonuclar.push({ analizId: g.analiz.id, durum: islemMap.get(g.analiz.belge_id || g.analiz.id) || 'ayni', noteId })
-      await sb.from('belge_analizleri').update({ durum: 'onaylandi', note_id: noteId, onaylandi_at: new Date().toISOString(), guncellendi: new Date().toISOString() }).eq('id', g.analiz.id)
+      await sb.from('belge_analizleri').update({ durum: 'onaylandi', note_id: noteId, onaylandi_at: new Date().toISOString(), guncellendi: new Date().toISOString() }).eq('id', g.analiz.id).eq('doctor_id', doktorId)
     }
   }
   return { sonuclar, yazimSayisi }
