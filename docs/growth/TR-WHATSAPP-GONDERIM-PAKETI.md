@@ -1422,31 +1422,35 @@ Wave3’te SIRADAKİ diye önerildi → **HATA**. Ledger + early seed’e işlen
 ## W6-42. Op. Dr. Külal Çukurova ← GİTTİ (2026-11-13, WA-verified)
 **kadın-doğum** · İzmir · WA: +905305000802 · variant kd-B-0006
 
-## W6-43. Op. Dr. Medine Meltem Adalıoğlu ← SIRADAKİ
-**kadın-doğum** · İzmir · WA: +905441382088 · variant kd-B-0003 · 6/22 · ≥10 dk (saatlik 5/5)
+## W6-43. Op. Dr. Medine Meltem Adalıoğlu ← GİTTİ (2026-11-13, WA-verified)
+**kadın-doğum** · İzmir · WA: +905441382088 · variant kd-B-0003
+
+## W6-44. Prof. Dr. Mehmet Çınar ← SIRADAKİ
+**kadın-doğum** · Ankara · WA: +905334570452 · variant kd-A-0004 · 7/22 · ≥10 dk
 
 ```
-Medine Hocam, merhaba.
+Mehmet Hocam, merhaba.
 Ben Kaan — *Notya*'dan ulaşıyorum.
 
+*Notya*, hekimler için yapay zekâ klinik asistanı:
+muayeneyi dinler → not + reçete + rapor taslağı → hasta takibi ve portal.
+Her adım *sizin onayınızla* ilerler.
+40+ branşta, her branşın kendi ihtiyacıyla.
+
 *Kadın doğumda*
-- Doppler'li USG ve yapılandırılmış NST
-- Jinekolojik operasyon notları (histerektomi, myomektomi, laparoskopi)
+- Doğum epikrizi ve antetli baskı
 - Obstetrik risk (preeklampsi, GDM, SSVD)
 - Gebelik takvimi ve izlem
-- Sezaryen ve ameliyat notları
+- Doppler'li USG ve yapılandırılmış NST
+- Jinekolojik operasyon notları (histerektomi, myomektomi, laparoskopi)
 
-Kısaca *Notya*: muayene odasında sizinle çalışan bir klinik asistan.
-Not, reçete, rapor, takip ve hasta portalı tek yerde — kararlar yine *sizde*.
-40'tan fazla branşı kendi dilinde destekliyoruz.
+Tipik bir günde yaklaşık *1,5-2 saat* kazanç.
+Hasta portalı gibi özellikler hem zaman kazandırır hem hastaya verdiğiniz hizmetin kalitesini yükseltir.
+Geri kalmamak önemli: hastalar giderek daha modern çalışan hekimleri tercih ediyor.
 
-Yoğun günlerde not / reçete / takip işlerinden yaklaşık *1,5-2 saat* geri geliyor.
-Portal + düzenli kayıt = daha iyi hasta deneyimi, daha yüksek bakım kalitesi.
-Branşta tempo değişiyor — geride kalan muayenehaneler hastayı daha modern rakiplere kaptırıyor.
+Dr. Gökhan Mamur sizin için *30 dk’lık* kısa bir tur yapıyor; uygun saati siz seçiyorsunuz.
+Şimdilik sadece bakmak isterseniz ücretsiz deneme de açık.
 
-İsterseniz Dr. Gökhan Mamur *30 dakikalık* kısa bir tanıtım ayarlıyor — saat sizin diliminiz.
-Tanıtıma şimdi vakit yoksa ücretsiz denemeyi de hemen açabilirsiniz.
-
-📅 Demo: www.notya.io/demo
-🔗 Deneme: www.notya.io
+*Tanıtım:* www.notya.io/demo
+*Deneme:* www.notya.io
 ```
