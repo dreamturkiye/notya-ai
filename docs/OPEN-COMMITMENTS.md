@@ -9,12 +9,32 @@ Classification: BRANŞ-SPECIFIC (Pediatri + KD only). Shipped for Türkiye: pedi
   could not be downloaded in this environment (egress policy), and numbers are never typed from memory. Until verified tables exist, preterm babies below corrected age 0 get an explicit
   "not available in this version" message and no percentile. To close: place the official tables (with source URL and licence) in the repo, add a spot-check test against published
   reference values at 3 ages and a failing-on-mismatch hash test, then enable the chart for GA 22–50 weeks. Needed from Kaan: permission to fetch the official table files, or the files.
-- **PREMATUR-ULKE-01 — country port us, gb, ca, au, nz, uz — owner Claude, target: next country sprint, opened 2026-11-13.** The engine is country-neutral (`lib/clinical/prematur/*`, injected protocol via
-  `prematurProtokolu(ulke)`); only `PROTOKOL_TR` exists. To do per country: (1) apply migration `199_prematur_modul.sql` to the country database first — it adds `gebelikler.erken_dogum`,
-  `bebek_kartlari.erken_dogum_ozeti` and `pedi_prematur_kayit`; the country code already tolerates the columns being absent (best-effort writes), but the plan and the KD panel will not save
-  without it; (2) a protocol table from that country's own bodies (e.g. AAP/ACOG/ACIP for us, NICE/BAPM for gb, CPS for ca, RANZCOG/PSANZ for au/nz) with the same verification-level discipline;
-  (3) country-adapted copy (en; uz copy for uz — no Russian). Do NOT apply to country databases or push release branches without Kaan's go. Regulatory recognition gate: neonatology follow-up is
-  a paediatric activity everywhere, so no branş gating issue is expected, to be checked per country.
+- **PREMATUR-ULKE-01 — country port us, gb, ca, au, nz, uz — SHIPPED 2026-11-13 (Claude, Kaan's order of 2026-11-13), follow-ups open below.** BRANŞ-SPECIFIC (pediatri + kadın doğum), applied in all six
+  country builds in the same change set, pushed once to `release/us|gb|ca|au|nz|uz`. Kit: `lib/ulke/prematur/*` (country-neutral engine, protocol validators, server record keeping), routes
+  `/api/ulke/prematur` and `/api/ulke/erken-dogum`, the three tiles (`prematur-takip`, `prematur-kohort` for pediatri; `erken-dogum` for kadın doğum, nothing for any other role), screens that write no
+  sentence of their own (every word is the pack's, once per language form). Country migration **200** (`lib/db/migrations/200_ulke_prematur.sql`, rollback in `geri-al/`; the Türkiye tables of the module are
+  migration 199 and were not touched) applied by Claude on 2026-11-13 to each country's own Supabase project (us xmoxiprwisegunbrpstw, gb gscfutmlozfvwrndwecw, ca urdxvmsertgnxtapypig, au sllwiuhobuagumwbvulf,
+  nz itcrfagsjzwzupqlzbqe, uz pzleklfytbigsurumekn; project name checked against country first; `anjayzospuurymjmmtim` not touched) and verified on each: both tables exist, RLS on, zero policies, no
+  anon/authenticated grant, trigger present, `schema_migrations` row 200; security advisor run once per database: only the expected "RLS enabled, no policy" notice on the two new tables.
+  Per country, what the table states (a criterion or a date appears only where its source was read; everything else says "follow your local protocol" and carries no number):
+  **us** (2026-11-13) — ROP (AAP/AAO 2018), cranial ultrasound (AAN/CNS 2002), hearing (JCIH 2019), RSV flag (CDC 2023, age only), iron (AAP 2010, read through a summary); BPD and bone health local protocol;
+  early-birth: cervical length (ACOG 2021) and steroid windows (ACOG), progesterone threshold none. **gb** (2026-11-13) — ROP (RCPCH 2022/2024, timings derived with NNUH), early-birth cervical length and steroid
+  window from NICE QS135 (the guideline NG25 behind it was not opened); hearing, cranial ultrasound, RSV, iron, BPD, bone: local protocol. **ca** (2026-11-13) — ROP (CPS 2026), steroid window (SOGC no. 364);
+  cervical length and everything else: local protocol. **au** (2026-11-13) — every item local protocol: the two local ROP sources read disagree (SESLHD, Safer Care Victoria) and the RANZCO guideline itself
+  was not read; the Liggins steroid guideline sets no lowest gestation. **nz** (2026-11-13) — every item local protocol: only a hospital page (Starship) and the Liggins guideline were read.
+  **uz** (2026-11-13) — every item local protocol, no source listed: no national document of Uzbekistan was found and read. Uzbek Latin machine-written, Cyrillic derived by rule (`kiril.test.ts` holds it),
+  and **no Russian text was written: the Russian form shows the Uzbek Latin text** (the Russian conformity test names that exemption exactly).
+  Open from this port (each owner Claude unless stated): (a) **PREMATUR-ULKE-02 — sources to read** for au, nz, uz (national ROP/steroid/cervical documents), for ca (CPS/SOGC for cervical length, hearing,
+  cranial ultrasound, RSV, iron) and for gb (BAPM, NHSP, Green-top 60, NG25 at the primary text); until read, those items stay local protocol — owner Claude + a clinician of each country, target next country
+  sprint. (b) **PREMATUR-ULKE-03 — clinical and native review**: no clinician of any country has read the tables; Uzbek Latin/Cyrillic and the English forms are machine-written — owner Dr. Gökhan / Kaan to
+  name a reviewer per country. (c) **PREMATUR-ULKE-04 — not ported** (the country builds have no such tables): the KD → pediatri hand-off (`bebek_kartlari.erken_dogum_ozeti`), closing a plan item from
+  the screening records (`pedi_taramalar`), and the vaccine / growth / developmental-screening corrected-age integrations; the country screens use the doctor's own entries only — owner Claude, opens with
+  the country growth/vaccine tools. (d) **PREMATUR-ULKE-05 — Türkiye tiles on the release branches**: the country gorunum test carries a `MAIN_BEKLEYEN` skip for the Türkiye tiles `pedi-prematur-takip` /
+  `kd-erken-dogum` that the release branches do not have yet; remove the pin at the next main → release merge. (e) **PREMATUR-ULKE-06 — gb NICE legal review**: one line of `countries/gb/prematur.ts` carries
+  numbers from NICE QS135 and is listed in `countries/gb/nice-kaynakli.json` for the lawyer (no NICE prose) — owner Kaan. (f) **PREMATUR-ULKE-07 — Fenton/Olsen** stays not shipped in any country
+  (PREMATUR-FENTON-01). Not done and not claimed: no real-traffic check in any country (as PREMATUR-GERCEK-01). Pre-existing failures met on the way, same on the baseline and not touched: hasta-izolasyon
+  inventory (belge / disa-aktar / fatura), `ulkeEkranlari.uz.test` (4), uz `randevu.test` "NOTHING IS SENT" (route list), `paket.paket.test` root-layout string, au pack tests (6) and au
+  `araclar.paket.test` (3: `au-review-cohort`, `au-nutrition-goals`), the Turkish-text ceiling (1714 > 1698).
 - **PREMATUR-KAYNAK-01 — sources not read at the primary text — owner Claude + Dr. Gökhan (clinical review), 2026-11-13.** ACOG PB 234, FIGO 2015, ACOG CO 713, AAP Hand 2020, JCIH 2019, AAP 2014 RSV,
   TND RSV, SB iron protocol were read through summaries (shown as "ikincil-ozet" in the UI). ACOG CO 455 (magnesium), ACOG PB 217 (PPROM), AAN/CNS 2002 (cranial US) and AAP 2013 (bone metabolism)
   are citation only: they produce no date or threshold. Close by reading the primary texts and promoting the level, or by Dr. Gökhan's written confirmation.
