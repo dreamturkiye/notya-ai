@@ -45,3 +45,9 @@ Telemetri (PII yok) `lib/telemetri/kullanim.ts` → `POST /api/doktor/kullanim` 
 ## Session-10 simülasyonu
 
 `npx tsx scripts/meslektas/seans10.mts` — 10 sentetik gün: ≥3 UYGULANIR, `uygulananKurallar` dolu, meslektaş selamı, SonrakiAdim, ilk hasta paketi taze.
+
+## Öğrenme V3 (2026-11-13, Kaan'ın GO'su)
+
+1. **İvme** — `ivme.ts` + `metrik.ts`: onaylı not başına gerçek düzeltme sayısı (`doktor_ogrenme_metrik`, migration 197). <3 not boş durum; yön ≥6 notta (ilk 3 vs son 3, ±%15). Haftalık satır: son 7 gün, geçen hafta ≥2 not varsa karşılaştırma.
+2. **Önizleme** — `onizleme.ts`: kuralın `kanit_not_idler` notlarının `not_duzenlemeleri` satırlarından deterministik fark; LLM yok. Doz değeri asla kural → önizleme yok.
+3. **Klinik ortak üslup** — `klinikUslup.ts`: varsayılan KAPALI, açık rıza; yalnız uzunluk/sıra ve izin listesindeki terim kuralları; branşa göre bölünür; yazar kimliği istemciye dönmez; ayrılınca satırlar silinir. Alan doktor kendi kuralını önce, klinik kuralını sonra alır (`uygulanirKurallariYukle`, `klinik:` slug); kapatılabilir.

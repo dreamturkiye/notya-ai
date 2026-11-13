@@ -9,6 +9,8 @@ import { deltalardanAdaylar, kuraliBirlesitir, type HafizaKuralSatiri } from '..
 import { meslektasSelamSatiri } from '../../lib/doktor/ogrenme/selam.ts'
 import { rutinTuret, sonrakiAday, type HamOlay } from '../../lib/doktor/ogrenme/rutinTuret.ts'
 import { surumHash, tazeMi, onbellekAnahtari } from '../../lib/doktor/ogrenme/dosyaOnbellek.ts'
+import { ivmeHesapla } from '../../lib/doktor/ogrenme/ivme.ts'
+import { kuralOnizlemesiKur } from '../../lib/doktor/ogrenme/onizleme.ts'
 import { doktorKurallariBlogu, uygulananKurallariSuz } from '../../lib/doktor/soapUret.ts'
 
 const ciftler: [Record<string, string>, Record<string, string>][] = [
@@ -41,6 +43,15 @@ const kurallar = uygulanir.slice(0, 12).map((k) => ({ slug: k.anahtar, satir: k.
 assert.match(doktorKurallariBlogu(kurallar), /DOKTORUN KURALLARI/)
 const uygulananKurallar = uygulananKurallariSuz(kurallar.map((k) => k.slug), kurallar)
 assert.ok(uygulananKurallar.length > 0, 'uygulananKurallar boş')
+
+// AYSE-OGRENME-V3: ivme (gerçek düzeltme sayıları) + kural önizleme (kendi kanıt notlarından, LLM yok)
+const metrikler = ciftler.map(([taslak, son], i) => ({ note_id: `n${i + 1}`, duzeltme_sayisi: duzeltmeAnaliz(taslak, son).length, onay_at: new Date(Date.UTC(2026, 10, 1 + i)).toISOString() }))
+const ivme = ivmeHesapla(metrikler)
+assert.ok(ivme.yeterli && ivme.n === ciftler.length, 'ivme: 10 onaylı not yeterli olmalı')
+assert.ok(ivme.seri.every((x) => Number.isInteger(x.duzeltme) && x.duzeltme >= 0), 'ivme: yalnız gerçek sayılar')
+const duzenlemeler = ciftler.flatMap(([taslak, son], i) => Object.keys(taslak).map((alan) => ({ note_id: `n${i + 1}`, alan, onceki: taslak[alan], sonraki: son[alan] })))
+const onizlenen = uygulanir.filter((k) => kuralOnizlemesiKur({ anahtar: k.anahtar, kanit_not_idler: k.kanit_not_idler }, duzenlemeler).var)
+assert.ok(onizlenen.length >= 1, 'önizleme: en az bir UYGULANIR kuralın kendi notundan örneği olmalı')
 
 const selam = meslektasSelamSatiri({ seans: 10, dahaOnceGosterildi: false, kuralSayisi: uygulanir.length, rutinBaslangic: '09:00' })
 assert.ok(selam && /10\. seansımız Hocam/.test(selam), `selam: ${selam}`)
