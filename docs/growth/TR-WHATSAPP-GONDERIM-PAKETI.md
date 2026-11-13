@@ -1416,31 +1416,37 @@ Wave3’te SIRADAKİ diye önerildi → **HATA**. Ledger + early seed’e işlen
 ## W6-40. Prof. Dr. Korhan Kahraman ← GİTTİ (2026-11-13, WA-verified)
 **kadın-doğum** · Ankara · WA: `+905354643222` · variant `kd-A-0004`
 
-## W6-41. Op. Dr. Kübra Bağcı ← SIRADAKİ
-**kadın-doğum** · İzmir · WA: `+905323995170` · variant `kd-C-0005` · ≥10 dk · 4/22
+## W6-41. Op. Dr. Kübra Bağcı ← GİTTİ (2026-11-13, WA-verified)
+**kadın-doğum** · İzmir · WA: +905323995170 · variant kd-C-0005
 
-```
-Merhaba Kübra Hocam 👋
-Kaan (Notya). Kısa bir not bırakıyorum.
+## W6-42. Op. Dr. Külal Çukurova ← SIRADAKİ
+**kadın-doğum** · İzmir · WA: +905305000802 · variant kd-B-0006 · 5/22
 
-Kısaca *Notya*: muayene odasında sizinle çalışan bir klinik asistan.
-Not, reçete, rapor, takip ve hasta portalı tek yerde — kararlar yine *sizde*.
-40'tan fazla branşı kendi dilinde destekliyoruz.
+Merhaba metin (tek paket):
+
+Külal Hocam merhaba 👋
+Ben Kaan, *Notya*'dan yazıyorum.
+
+*Kadın doğumda*
+- Jinekolojik operasyon notları (histerektomi, myomektomi, laparoskopi)
+- Doğum epikrizi ve antetli baskı
+- Obstetrik risk (preeklampsi, GDM, SSVD)
+- Sezaryen ve ameliyat notları
+- Doppler'li USG ve yapılandırılmış NST
+
+*Notya*, hekimler için yapay zekâ klinik asistanı:
+muayeneyi dinler → not + reçete + rapor taslağı → hasta takibi ve portal.
+Her adım *sizin onayınızla* ilerler.
+40+ branşta, her branşın kendi ihtiyacıyla.
 
 Pratikte: günde yaklaşık *1,5-2 saat* idari yük azalması.
 Hasta portalı hem sizin sürenizi korur hem hastanın aldığı hizmeti güçlendirir.
 Kısa bir bakış çoğu hekim için yeterli; bekleyen çoğu zaman kaybediyor.
 
-*Kadın doğumda*
-- Obstetrik risk (preeklampsi, GDM, SSVD)
-- Sezaryen ve ameliyat notları
-- Doppler'li USG ve yapılandırılmış NST
-- Gebelik takvimi ve izlem
-- Doğum epikrizi ve antetli baskı
+Dr. Gökhan Mamur *30 dk* kısa tanıtım yapıyor 🩺
+Saatler size göre.
 
-Dr. Gökhan Mamur sizin için *30 dk’lık* kısa bir tur yapıyor; uygun saati siz seçiyorsunuz.
-Şimdilik sadece bakmak isterseniz ücretsiz deneme de açık.
+Tanıtıma vakit yoksa ücretsiz denemeyi hemen açabiliyoruz.
 
-*Tanıtım:* www.notya.io/demo
-*Deneme:* www.notya.io
-```
+📅 *Tanıtım / Demo:* www.notya.io/demo
+🔗 *Ücretsiz deneme:* www.notya.io
