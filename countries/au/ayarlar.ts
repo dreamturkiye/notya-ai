@@ -56,6 +56,7 @@ import { AU_BIRIMLER, AU_VELI_YASI } from './temel'
 import { AU_OPERATOR_DEGISEN, AU_OPERATOR_PARAMETRELERI } from './operator'
 import { AU_GENITAL_ESTETIK } from './genitalEstetik'
 import { AU_KD_TARAMALARI } from './kdTaramalar'
+import { AU_PREMATUR } from './prematur'
 
 export { AU_BIRIMLER, AU_VELI_YASI } from './temel'
 
@@ -228,6 +229,8 @@ export const AU_GIRDI: EnUlkeGirdisi = {
     genitalEstetik: AU_GENITAL_ESTETIK,
     // KD-TARAMA-01 (2026-11-09): thyroid in pregnancy, HPV vaccine record, SMA carrier screening, PMS / PMDD diary — with this country's numbers and sources (./kdTaramalar.ts)
     kdTaramalari: AU_KD_TARAMALARI,
+    // PREMATUR-ULKE-01 (2026-11-13): the preterm baby's follow-up table and the early-birth thresholds, each with its source (./prematur.ts)
+    prematur: AU_PREMATUR,
     kapali: {
       // REMOVED FOR AUSTRALIA by the audit's decision ("remove"): it is not this country's scale. It stays a slot only
       // because every tool of the shared set that is not on is recorded as one; it is never to be switched on here.
