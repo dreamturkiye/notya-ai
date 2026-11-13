@@ -9,10 +9,10 @@ import { AU_UZMANLIK_SATIRLARI, AU_UZMANLIK_TANIMLAR, auUzmanlikAraclari } from 
 import { anahtarOf, tanimOf } from './motor'
 import { AU_ONAM_SATIRLARI, AU_ONAM_TANIMLAR, anahtar as onamAnahtari } from './onam'
 import { AU_RAPOR_SATIRLARI, AU_RAPOR_TANIMLAR } from './rapor'
-import { AKTIF_ARAYUZ } from '@/countries/active/arayuz'
+import { AU_ARAYUZ } from '../../arayuz' // the pack's own door: a pack test must not reach countries/active (wall D3)
 
 const ORTAM = { bugun: '2026-11-08', p: {} }
-const ROLLER: string[] = (AKTIF_ARAYUZ?.roller ?? []).map((r) => r.anahtar)
+const ROLLER: string[] = (AU_ARAYUZ.roller ?? []).map((r) => r.anahtar)
 
 it('the active pack is Australia (44 roles)', () => assert.equal(ROLLER.length, 44))
 
