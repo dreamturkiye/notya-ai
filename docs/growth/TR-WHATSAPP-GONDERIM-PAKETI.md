@@ -1428,24 +1428,26 @@ Wave3’te SIRADAKİ diye önerildi → **HATA**. Ledger + early seed’e işlen
 ## W6-44. Prof. Dr. Mehmet Çınar ← GİTTİ (2026-11-13, WA-verified)
 **kadın-doğum** · Ankara · WA: +905334570452 · variant kd-A-0004
 
-## W6-45. Op. Dr. Melik Yazır ← SIRADAKİ
-**kadın-doğum** · İzmir · WA: +905422439096 · variant kd-B-0000 · 8/22 · ≥10 dk
+## W6-45. Op. Dr. Melik Yazır ← GİTTİ (2026-11-13, WA-verified)
+**kadın-doğum** · İzmir · WA: +905422439096 · variant kd-B-0000
+
+## W6-46. Doç. Dr. Mehmet Rıfat Göklü ← SIRADAKİ
+**kadın-doğum** · İzmir · WA: +905077610020 · variant kd-A-0001 · 9/22 · ≥10 dk
 
 ```
-Melik Hocam iyi günler.
-Ben Kaan, *Notya* ekibinden yazıyorum.
+Mehmet Hocam, merhaba.
+Ben Kaan — *Notya*'dan ulaşıyorum.
+
+Kısaca *Notya*: muayene odasında sizinle çalışan bir klinik asistan.
+Not, reçete, rapor, takip ve hasta portalı tek yerde — kararlar yine *sizde*.
+40'tan fazla branşı kendi dilinde destekliyoruz.
 
 *Kadın doğumda*
-- Gebelik takvimi ve izlem
+- Jinekolojik operasyon notları (histerektomi, myomektomi, laparoskopi)
 - Obstetrik risk (preeklampsi, GDM, SSVD)
 - Doppler'li USG ve yapılandırılmış NST
-- Jinekolojik operasyon notları (histerektomi, myomektomi, laparoskopi)
+- Doğum epikrizi ve antetli baskı
 - Sezaryen ve ameliyat notları
-
-*Notya*, hekimler için yapay zekâ klinik asistanı:
-muayeneyi dinler → not + reçete + rapor taslağı → hasta takibi ve portal.
-Her adım *sizin onayınızla* ilerler.
-40+ branşta, her branşın kendi ihtiyacıyla.
 
 Tipik bir günde yaklaşık *1,5-2 saat* kazanç.
 Hasta portalı gibi özellikler hem zaman kazandırır hem hastaya verdiğiniz hizmetin kalitesini yükseltir.
