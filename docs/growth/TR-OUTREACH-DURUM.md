@@ -2,9 +2,9 @@
 
 **Anti-ban:** **22**/gün · gap **≥10 dk** · **5/saat**.
 
-**Sıradaki:** Prof. Dr. Korhan Kahraman · KD · Ankara · `+905354643222`  
-(variant `kd-A-0004` · paket W6-40 · bugün **3/22**)
+**Sıradaki:** Op. Dr. Kübra Bağcı · KD · İzmir · `+905323995170`  
+(variant `kd-C-0005` · paket W6-41 · bugün **4/22**)
 
 ```bash
-python3 scripts/tr-outreach-next.py --mark-gitti "Prof. Dr. Korhan Kahraman" --phone +905354643222 --brans kadin-dogum --city Ankara --variant-id kd-A-0004
+python3 scripts/tr-outreach-next.py --mark-gitti "Op. Dr. Kübra Bağcı" --phone +905323995170 --brans kadin-dogum --city İzmir --variant-id kd-C-0005
 ```

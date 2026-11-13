@@ -1413,29 +1413,30 @@ Wave3’te SIRADAKİ diye önerildi → **HATA**. Ledger + early seed’e işlen
 ## W6-39. Op. Dr. İpek Demir ← GİTTİ (2026-11-13, WA-verified)
 **kadın-doğum** · İzmir · WA: `+905303549390` · variant `kd-C-0002`
 
-## W6-40. Prof. Dr. Korhan Kahraman ← SIRADAKİ
-**kadın-doğum** · Ankara · `+90 535 464 32 22` · WA: `+905354643222`  
-**Doğrulama:** DS og:title. Anti-ban: ≥10 dk · bugün 3/22 · variant `kd-A-0004`.
+## W6-40. Prof. Dr. Korhan Kahraman ← GİTTİ (2026-11-13, WA-verified)
+**kadın-doğum** · Ankara · WA: `+905354643222` · variant `kd-A-0004`
+
+## W6-41. Op. Dr. Kübra Bağcı ← SIRADAKİ
+**kadın-doğum** · İzmir · WA: `+905323995170` · variant `kd-C-0005` · ≥10 dk · 4/22
 
 ```
-Korhan Hocam, merhaba.
-Ben Kaan — *Notya*'dan ulaşıyorum.
+Merhaba Kübra Hocam 👋
+Kaan (Notya). Kısa bir not bırakıyorum.
 
-*Notya*, hekimler için yapay zekâ klinik asistanı:
-muayeneyi dinler → not + reçete + rapor taslağı → hasta takibi ve portal.
-Her adım *sizin onayınızla* ilerler.
-40+ branşta, her branşın kendi ihtiyacıyla.
+Kısaca *Notya*: muayene odasında sizinle çalışan bir klinik asistan.
+Not, reçete, rapor, takip ve hasta portalı tek yerde — kararlar yine *sizde*.
+40'tan fazla branşı kendi dilinde destekliyoruz.
+
+Pratikte: günde yaklaşık *1,5-2 saat* idari yük azalması.
+Hasta portalı hem sizin sürenizi korur hem hastanın aldığı hizmeti güçlendirir.
+Kısa bir bakış çoğu hekim için yeterli; bekleyen çoğu zaman kaybediyor.
 
 *Kadın doğumda*
-- Doğum epikrizi ve antetli baskı
 - Obstetrik risk (preeklampsi, GDM, SSVD)
-- Gebelik takvimi ve izlem
+- Sezaryen ve ameliyat notları
 - Doppler'li USG ve yapılandırılmış NST
-- Jinekolojik operasyon notları (histerektomi, myomektomi, laparoskopi)
-
-Tipik bir günde yaklaşık *1,5-2 saat* kazanç.
-Hasta portalı gibi özellikler hem zaman kazandırır hem hastaya verdiğiniz hizmetin kalitesini yükseltir.
-Geri kalmamak önemli: hastalar giderek daha modern çalışan hekimleri tercih ediyor.
+- Gebelik takvimi ve izlem
+- Doğum epikrizi ve antetli baskı
 
 Dr. Gökhan Mamur sizin için *30 dk’lık* kısa bir tur yapıyor; uygun saati siz seçiyorsunuz.
 Şimdilik sadece bakmak isterseniz ücretsiz deneme de açık.
