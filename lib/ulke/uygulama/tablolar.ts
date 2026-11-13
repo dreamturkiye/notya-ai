@@ -68,6 +68,13 @@ export const ULKE_TABLOLARI = [
   'ulke_faturalar',
   'ulke_odeme_baglantilari',
   'ulke_odeme_olaylari',
+  // AYSE-OGRENME-V3f — learning momentum (migration 198): the draft kept until approval, the edit log, the correction
+  // count per approved note, the consent to the clinic's shared style and its pool. Server only.
+  'ulke_not_taslaklari',
+  'ulke_not_duzenlemeleri',
+  'ulke_ogrenme_metrik',
+  'ulke_klinik_uslup_katilim',
+  'ulke_klinik_ortak_uslup',
 ] as const
 export type UlkeTablosu = (typeof ULKE_TABLOLARI)[number]
 
@@ -76,7 +83,7 @@ export type UlkeTablosu = (typeof ULKE_TABLOLARI)[number]
  * Only the server's routes reach them. (Every other country table lets a signed-in account read its own rows of its
  * own country, as a second line behind the server.)
  */
-export const YALNIZ_SUNUCU_TABLOLARI: readonly UlkeTablosu[] = ['ulke_kullanim', 'ulke_kullanim_olcumu', 'ulke_portal_erisimleri', 'ulke_portal_oturumlari', 'ulke_hasta_ozetleri', 'ulke_portal_kayitlari', 'ulke_randevu_istekleri', 'ulke_hasta_formlari', 'ulke_arac_kayitlari', 'ulke_mesaj_yazismalari', 'ulke_hasta_mesajlari', 'ulke_hekim_sablonlari', 'ulke_konsultasyon_kodlari', 'ulke_konsultasyonlar', 'ulke_klinikler', 'ulke_klinik_uyeleri', 'ulke_klinik_davetleri', 'ulke_klinik_yetkileri', 'ulke_klinik_erisim_kayitlari', 'ulke_faturalar', 'ulke_odeme_baglantilari', 'ulke_odeme_olaylari']
+export const YALNIZ_SUNUCU_TABLOLARI: readonly UlkeTablosu[] = ['ulke_kullanim', 'ulke_kullanim_olcumu', 'ulke_portal_erisimleri', 'ulke_portal_oturumlari', 'ulke_hasta_ozetleri', 'ulke_portal_kayitlari', 'ulke_randevu_istekleri', 'ulke_hasta_formlari', 'ulke_arac_kayitlari', 'ulke_mesaj_yazismalari', 'ulke_hasta_mesajlari', 'ulke_hekim_sablonlari', 'ulke_konsultasyon_kodlari', 'ulke_konsultasyonlar', 'ulke_klinikler', 'ulke_klinik_uyeleri', 'ulke_klinik_davetleri', 'ulke_klinik_yetkileri', 'ulke_klinik_erisim_kayitlari', 'ulke_faturalar', 'ulke_odeme_baglantilari', 'ulke_odeme_olaylari', 'ulke_not_taslaklari', 'ulke_not_duzenlemeleri', 'ulke_ogrenme_metrik', 'ulke_klinik_uslup_katilim', 'ulke_klinik_ortak_uslup']
 
 /** Database functions a country build may call. Each takes the country as `p_ulke`. */
 export const ULKE_ISLEVLERI = [

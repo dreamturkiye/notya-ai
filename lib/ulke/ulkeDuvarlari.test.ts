@@ -273,6 +273,10 @@ describe('build-time selection: the entry point and the import graph', () => {
       neden: 'Shared identity-label matching (NOTYA-ULKE-EKLER-01). Turkish text: the Turkish spellings of identity labels and a Turkish case-folding, used only to RECOGNISE what to hide on a picture; nothing in it is output.',
       azamiSatir: 3,
     },
+    'lib/doktor/ogrenme/duzeltmeAnaliz.ts': {
+      neden: 'AYSE-OGRENME-V3f. The shared pure comparison of a draft with the approved text (no model, no database, no imports), reused so a country counts corrections the way Türkiye does instead of keeping a second, drifting copy. Turkish text: regular expressions that RECOGNISE Turkish section labels, dose units and capitalised names in the input; nothing in it is output, and a country build uses only the count of what it finds.',
+      azamiSatir: 5,
+    },
     'core/belgeler/otoBatch.ts': {
       neden: 'Shared bounded work queue (NOTYA-ULKE-EKLER-01). Turkish text: the default status words of the Turkish document step; a country build uses only the queue function (sinirliKuyruk) and writes its own status words from its language catalogue.',
       azamiSatir: 3,
