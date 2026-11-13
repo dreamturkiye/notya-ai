@@ -1404,36 +1404,38 @@ Wave3’te SIRADAKİ diye önerildi → **HATA**. Ledger + early seed’e işlen
 ## W6-36. Op. Dr. Hüseyin Aytuğ Avşar ← GİTTİ (2026-11-12, WA-verified)
 **kadın-doğum** · İzmir · WA: `+905405202378` · variant `kd-A-0001`
 
-## W6-37. Prof. Dr. İbrahim Alanbay ← SIRADAKİ
-**kadın-doğum** · Ankara · `+90 505 802 72 54` · WA: `+905058027254`  
+## W6-37. Prof. Dr. İbrahim Alanbay ← GİTTİ (2026-11-13, WA-verified)
+**kadın-doğum** · Ankara · WA: `+905058027254` · variant `kd-C-0007`
+
+## W6-38. Prof. Dr. İkbal Kaygusuz ← SIRADAKİ
+**kadın-doğum** · Ankara · `+90 530 051 90 23` · WA: `+905300519023`  
 **Doğrulama:** DS `socialMedia` whatsapp · unvan DS og:title.  
-**Anti-ban:** Hüseyin’den **≥12 dk**. Soft 10/16. variant `kd-C-0007`.
+**Anti-ban:** soft bitti → normal **22**/gün, gap **≥10 dk**. Bugün 1/22. variant `kd-B-0003`.
 
 **Gönder:** yapıştır → kart çıkarsa **X** → gönder.
 
 ```
-Merhaba İbrahim Hocam 👋
-Kaan (Notya). Kısa bir not bırakıyorum.
-
-*Notya* — hekimler için yapay zekâ klinik asistanı.
-Muayeneyi dinler, notunuzu yazar, reçete ve rapor taslağını hazırlar, hastanızı takipte tutar — hasta portalı dahil.
-Her karar *sizin onayınızla*.
-40'tan fazla branşı kendi ihtiyaçlarıyla destekliyoruz.
-
-Zaman kazancı tek başına değil: portal ve düzenli takip hastaya verdiğiniz kaliteyi de artırıyor.
-Hastalar artık daha modern, daha erişilebilir hekimlerle çalışmak istiyor.
-Geride kalmamak için 10 dk’lık bir bakış çoğu zaman karar verdiriyor.
+İkbal Hocam, merhaba.
+Ben Kaan — *Notya*'dan ulaşıyorum.
 
 *Kadın doğumda*
-- Obstetrik risk (preeklampsi, GDM, SSVD)
-- Sezaryen ve ameliyat notları
 - Doppler'li USG ve yapılandırılmış NST
-- Doğum epikrizi ve antetli baskı
 - Jinekolojik operasyon notları (histerektomi, myomektomi, laparoskopi)
+- Obstetrik risk (preeklampsi, GDM, SSVD)
+- Gebelik takvimi ve izlem
+- Sezaryen ve ameliyat notları
 
-Dr. Gökhan Mamur sizin için *30 dk’lık* kısa bir tur yapıyor; uygun saati siz seçiyorsunuz.
-Şimdilik sadece bakmak isterseniz ücretsiz deneme de açık.
+Kısaca *Notya*: muayene odasında sizinle çalışan bir klinik asistan.
+Not, reçete, rapor, takip ve hasta portalı tek yerde — kararlar yine *sizde*.
+40'tan fazla branşı kendi dilinde destekliyoruz.
 
-*Tanıtım:* www.notya.io/demo
-*Deneme:* www.notya.io
+Yoğun günlerde not / reçete / takip işlerinden yaklaşık *1,5-2 saat* geri geliyor.
+Portal + düzenli kayıt = daha iyi hasta deneyimi, daha yüksek bakım kalitesi.
+Branşta tempo değişiyor — geride kalan muayenehaneler hastayı daha modern rakiplere kaptırıyor.
+
+İsterseniz Dr. Gökhan Mamur *30 dakikalık* kısa bir tanıtım ayarlıyor — saat sizin diliminiz.
+Tanıtıma şimdi vakit yoksa ücretsiz denemeyi de hemen açabilirsiniz.
+
+📅 Demo: www.notya.io/demo
+🔗 Deneme: www.notya.io
 ```
