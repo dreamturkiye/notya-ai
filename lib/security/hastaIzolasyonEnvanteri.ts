@@ -56,6 +56,7 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   'app/api/doktor/asilar/hatirlatma/route.ts': T,
   'app/api/doktor/belgeler/lab/route.ts': T,
   'app/api/doktor/belgeler/analiz/route.ts': I('document via vault getDocumentMeta(doctorId) (assertPatientOwned); analyses by doctor_id'),
+  'app/api/doktor/belgeler/analiz/otomatik-ekle/route.ts': I('doktorOturum; analizIds are only ever resolved with doctor_id = session user (belge_analizleri, medical_documents, sessions, notes all read with doctor_id); a foreign id yields no row and is skipped as not_yok; the note update and the analysis status update are also scoped by doctor_id (defence in depth, 2026-11-13)'),
   'app/api/doktor/belgeler/analiz/onayla/route.ts': I('analysis by id AND doctor_id; target note by id AND doctor_id'),
   'app/api/doktor/belgeler/ingest/route.ts': T,
   // KONSULTASYON-01 — kapalı döngü konsültasyon (sevkler + Kasa belgesi + bugünkü not + Sağlığım hatırlatması)
