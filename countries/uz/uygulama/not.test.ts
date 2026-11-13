@@ -509,7 +509,13 @@ describe('Uzbekistan note: write, rewrite in the other language, edit, approve (
     vt.sorgular.length = 0
     const r = await onayla('jeton-a', govde)
     assert.equal(r.s, 200)
-    assert.deepEqual(yazmalar(), ['rpc rpc:ulke_not_onayla'])
+    // The learning step (edit log and correction count) runs in the background AFTER a successful approval and only
+    // writes its own three tables; the approval's own part is still the one call, and it comes first.
+    await new Promise((bitti) => setTimeout(bitti, 25))
+    const OGRENME = ['ulke_not_taslaklari', 'ulke_not_duzenlemeleri', 'ulke_ogrenme_metrik']
+    const yazilan = vt.sorgular.filter((q) => q.islem !== 'select')
+    assert.equal(`${yazilan[0].islem} ${yazilan[0].tablo}`, 'rpc rpc:ulke_not_onayla')
+    assert.deepEqual(yazilan.slice(1).filter((q) => !OGRENME.includes(q.tablo)), [], 'the learning step wrote outside its own tables')
     const [n] = vt.tablo('ulke_notlar'); const [d] = vt.tablo('not_dil_kaydi')
     assert.deepEqual([n.content_degerlendirme, n.approved_at, n.approved_by, d.alanlar, d.not_dili], ['EKRANDAGI TASHXIS', r.j.onayTarihi, A, ekran, 'uz-Latn'])
   })
