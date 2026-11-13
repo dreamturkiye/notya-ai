@@ -30,6 +30,7 @@
     "182_ulke_konsultan_defteri.sql",
     "186_ulke_hesap_muafiyeti.sql",
     "192_ulke_deneme_bildirimi.sql",
-    "198_ulke_ayse_ogrenme.sql"
+    "198_ulke_ayse_ogrenme.sql",
+    "200_ulke_prematur.sql"
   ]
 }

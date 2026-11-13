@@ -83,6 +83,9 @@ export const ULKE_TABLOLARI = [
   'ulke_ogrenme_metrik',
   'ulke_klinik_uslup_katilim',
   'ulke_klinik_ortak_uslup',
+  // PREMATUR-ULKE-01 — the baby's prematurity record and the pregnancy's early-birth record (migration 200). Server only.
+  'ulke_prematur_kayitlari',
+  'ulke_erken_dogum_kayitlari',
 ] as const
 export type UlkeTablosu = (typeof ULKE_TABLOLARI)[number]
 
@@ -92,7 +95,7 @@ export type UlkeTablosu = (typeof ULKE_TABLOLARI)[number]
  * own country, as a second line behind the server.)
  */
 export const YALNIZ_SUNUCU_TABLOLARI: readonly UlkeTablosu[] = ['ulke_kullanim', 'ulke_kullanim_olcumu', 'ulke_portal_erisimleri', 'ulke_portal_oturumlari', 'ulke_hasta_ozetleri', 'ulke_portal_kayitlari', 'ulke_randevu_istekleri', 'ulke_hasta_formlari', 'ulke_arac_kayitlari', 'ulke_mesaj_yazismalari', 'ulke_hasta_mesajlari', 'ulke_hekim_sablonlari', 'ulke_hekim_avatarlari',
-  'ulke_konsultan_defteri', 'ulke_konsultasyon_kodlari', 'ulke_konsultasyonlar', 'ulke_klinikler', 'ulke_klinik_uyeleri', 'ulke_klinik_davetleri', 'ulke_klinik_yetkileri', 'ulke_klinik_erisim_kayitlari', 'ulke_muayene_ekleri', 'ulke_hasta_fotograflari', 'ulke_riza_kayitlari', 'ulke_erisim_talepleri', 'ulke_faturalar', 'ulke_odeme_baglantilari', 'ulke_odeme_olaylari', 'ulke_not_taslaklari', 'ulke_not_duzenlemeleri', 'ulke_ogrenme_metrik', 'ulke_klinik_uslup_katilim', 'ulke_klinik_ortak_uslup']
+  'ulke_konsultan_defteri', 'ulke_konsultasyon_kodlari', 'ulke_konsultasyonlar', 'ulke_klinikler', 'ulke_klinik_uyeleri', 'ulke_klinik_davetleri', 'ulke_klinik_yetkileri', 'ulke_klinik_erisim_kayitlari', 'ulke_muayene_ekleri', 'ulke_hasta_fotograflari', 'ulke_riza_kayitlari', 'ulke_erisim_talepleri', 'ulke_faturalar', 'ulke_odeme_baglantilari', 'ulke_odeme_olaylari', 'ulke_not_taslaklari', 'ulke_not_duzenlemeleri', 'ulke_ogrenme_metrik', 'ulke_klinik_uslup_katilim', 'ulke_klinik_ortak_uslup', 'ulke_prematur_kayitlari', 'ulke_erken_dogum_kayitlari']
 
 /** Database functions a country build may call. Each takes the country as `p_ulke`. */
 export const ULKE_ISLEVLERI = [
