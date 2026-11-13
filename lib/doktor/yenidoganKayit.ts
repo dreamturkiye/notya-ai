@@ -7,6 +7,7 @@
  * and /api/doktor/yenidogan.
  */
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { erkenDogumTemizle, kartOzeti } from '@/specialties/kadin-dogum/engines/erkenDogum'
 import { decrypt, encrypt } from '@/lib/security/encryption'
 import { hastaAramaIndeksiniGuncelle } from '@/lib/doktor/hastaAramaIndeksi'
 import { uploadDocument } from '@/lib/vault/service'
@@ -166,12 +167,34 @@ export type CanliDogumGirdi = {
   mevcutKartId?: string | null
 }
 
-export async function olusturCanliDogum(sb: Sb, g: CanliDogumGirdi): Promise<{
+type CanliDogumSonucu = {
   bebekPatientId: string
   dogumId: string
   kartId: string
   zatenVar: boolean
-}> {
+}
+
+/**
+ * PREMATURE-MODUL: the KD discharge packet carries the pregnancy's preterm-birth record to the baby card
+ * (bebek_kartlari.erken_dogum_ozeti: gestational week at birth, steroid course yes/no, PPROM, magnesium) so the pediatric
+ * prematurity plan pre-fills. Wraps the core so EVERY return path of the core (new card, existing card, already created) is covered.
+ * Best effort: a missing record or column (country databases before migration 199) never blocks the birth.
+ */
+export async function olusturCanliDogum(sb: Sb, g: CanliDogumGirdi): Promise<CanliDogumSonucu> {
+  const sonuc = await olusturCanliDogumCekirdek(sb, g)
+  try {
+    const { data: geb } = await sb.from('gebelikler').select('erken_dogum').eq('id', g.gebelikId).eq('doctor_id', g.doktorId).maybeSingle()
+    const ham = (geb as { erken_dogum?: unknown } | null)?.erken_dogum
+    if (ham) {
+      const kayit = erkenDogumTemizle(ham, new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 10)).kayit
+      const ozet = kartOzeti(kayit, g.gestHafta ?? null)
+      if (ozet) await sb.from('bebek_kartlari').update({ erken_dogum_ozeti: ozet }).eq('id', sonuc.kartId).eq('doctor_id', g.doktorId)
+    }
+  } catch { /* özet isteğe bağlıdır */ }
+  return sonuc
+}
+
+async function olusturCanliDogumCekirdek(sb: Sb, g: CanliDogumGirdi): Promise<CanliDogumSonucu> {
   const { data: gebelik } = await sb.from('gebelikler').select('patient_id, yenidogan_patient_id').eq('id', g.gebelikId).eq('doctor_id', g.doktorId).maybeSingle()
   if (!gebelik?.patient_id) throw new Error('Gebelik bulunamadı.')
   if (String(gebelik.patient_id) !== String(g.anneId)) throw new Error('Hasta bulunamadı.')

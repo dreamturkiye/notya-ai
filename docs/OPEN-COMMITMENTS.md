@@ -1,5 +1,32 @@
 # OPEN COMMITMENTS — Notya AI
 
+## PREMATUR-MODUL — prematurity support for Pediatri and Kadın Doğum: what is open (Claude, 2026-11-13, Kaan's order 2026-11-13)
+
+Classification: BRANŞ-SPECIFIC (Pediatri + KD only). Shipped for Türkiye: pediatri plan / corrected age / cohort, KD erken doğum paneli, the KD → pediatri hand-off, migration 199
+(applied and verified on `anjayzospuurymjmmtim`). Full description: `docs/PREMATURE-MODUL.md`. Open items, each with an owner and a date:
+
+- **PREMATUR-FENTON-01 — Fenton / Olsen preterm growth charts NOT shipped — owner Claude, waits on Kaan (data source) — opened 2026-11-13.** The official open data tables (Fenton 2013 / Olsen 2010)
+  could not be downloaded in this environment (egress policy), and numbers are never typed from memory. Until verified tables exist, preterm babies below corrected age 0 get an explicit
+  "not available in this version" message and no percentile. To close: place the official tables (with source URL and licence) in the repo, add a spot-check test against published
+  reference values at 3 ages and a failing-on-mismatch hash test, then enable the chart for GA 22–50 weeks. Needed from Kaan: permission to fetch the official table files, or the files.
+- **PREMATUR-ULKE-01 — country port us, gb, ca, au, nz, uz — owner Claude, target: next country sprint, opened 2026-11-13.** The engine is country-neutral (`lib/clinical/prematur/*`, injected protocol via
+  `prematurProtokolu(ulke)`); only `PROTOKOL_TR` exists. To do per country: (1) apply migration `199_prematur_modul.sql` to the country database first — it adds `gebelikler.erken_dogum`,
+  `bebek_kartlari.erken_dogum_ozeti` and `pedi_prematur_kayit`; the country code already tolerates the columns being absent (best-effort writes), but the plan and the KD panel will not save
+  without it; (2) a protocol table from that country's own bodies (e.g. AAP/ACOG/ACIP for us, NICE/BAPM for gb, CPS for ca, RANZCOG/PSANZ for au/nz) with the same verification-level discipline;
+  (3) country-adapted copy (en; uz copy for uz — no Russian). Do NOT apply to country databases or push release branches without Kaan's go. Regulatory recognition gate: neonatology follow-up is
+  a paediatric activity everywhere, so no branş gating issue is expected, to be checked per country.
+- **PREMATUR-KAYNAK-01 — sources not read at the primary text — owner Claude + Dr. Gökhan (clinical review), 2026-11-13.** ACOG PB 234, FIGO 2015, ACOG CO 713, AAP Hand 2020, JCIH 2019, AAP 2014 RSV,
+  TND RSV, SB iron protocol were read through summaries (shown as "ikincil-ozet" in the UI). ACOG CO 455 (magnesium), ACOG PB 217 (PPROM), AAN/CNS 2002 (cranial US) and AAP 2013 (bone metabolism)
+  are citation only: they produce no date or threshold. Close by reading the primary texts and promoting the level, or by Dr. Gökhan's written confirmation.
+- **PREMATUR-ULUSAL-01 — national criteria to verify — owner Dr. Gökhan / Kaan, 2026-11-13.** SGK reimbursement criteria for RSV prophylaxis, and Turkish national (TND / Sağlık Bakanlığı) documents for hearing
+  and cranial ultrasound follow-up, were not checked; the international sources are used and shown as such, and the RSV row asks the doctor to confirm.
+- **PREMATUR-KD-02 — KD flag is clinical only — decision for Kaan, 2026-11-13.** `erken_dogum_riski` never produces a patient message and is excluded from the recall engine's reasons. If Kaan wants a
+  patient-facing reminder for the cervical-length window (16–24 weeks), it needs a clinical wording review first.
+- **PREMATUR-GERCEK-01 — not measured on real traffic — Claude, 2026-11-13.** Verified by unit tests and the in-memory isolation harness only. Check once on production with a mock patient (GA 29 weeks,
+  1100 g): plan items appear, the corrected age shows in the growth chart, the KD → pediatri hand-off pre-fills.
+- **Pre-existing, found while testing (not caused by this change):** `lib/security/hasta-izolasyon.test.ts` "POST /api/asistan/fish-tur — pozitif kontrol" (voice-turn path, FOUNDER LOCK) and
+  `lib/turkce/turkceDenetim.test.ts` "görünür <input type=file>" (HastaGenitalEstetik.tsx:316, SacFotoDosya.tsx:112) fail on a clean HEAD. Not touched.
+
 ## AYSE-OGRENME-V3 — Ayşe's learning made visible and shareable: what is open (Claude, 2026-11-13, Kaan's GO 2026-11-13)
 
 MERGED to main 2026-11-13 (commit 19ae2ce64); deployment status: see the main session report. Classification: CORE (shared doctor workflow) — all 40 branches through

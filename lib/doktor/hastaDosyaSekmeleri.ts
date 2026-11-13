@@ -53,6 +53,7 @@ export type HastaDosyaSekmeId =
   | 'fotograflar'
   | 'ameliyat'
   | 'genital-estetik'
+  | 'prematur'
 
 export type HastaDosyaSekme = { id: HastaDosyaSekmeId; label: string }
 
@@ -509,6 +510,11 @@ export function hastaDosyaSekmeleri(opts: {
   ameliyatUygun?: boolean
   /** GENITAL-ESTETIK-01: KD, plastik cerrahi and the Özel Branş estetik & plastik cerrahi — lib/doktor/genitalEstetikBrans.ts */
   genitalEstetikUygun?: boolean
+  /**
+   * PREMATURE-MODUL: Prematüre Planı sekmesi — yalnız pediatri hekimi VE hasta kapsamda (gestasyon < 37 hf ya da ≤ 1500 g, kronolojik
+   * 36 aydan küçük). Çağıran bunu pediatri bayrağı + sunucu özetinden türetir; başka hiçbir branş bu sekmeyi görmez.
+   */
+  prematurUygun?: boolean
   pediatriUygun: boolean
   gebelikUygun: boolean
 }): HastaDosyaSekme[] {
@@ -537,6 +543,8 @@ export function hastaDosyaSekmeleri(opts: {
   if (opts.pediatriUygun) {
     tabs.push({ id: 'mchat', label: 'M-CHAT-R/F' }, { id: 'gelisim', label: 'Gelişim Taraması' })
   }
+  // PREMATURE-MODUL: pediatri + kapsamdaki bebek — pediatrik araç kapısının (pediatriUygun) üstüne ek kapı.
+  if (opts.prematurUygun && opts.pediatriUygun) tabs.push({ id: 'prematur', label: 'Prematüre Planı' })
   if (opts.gozUygun) tabs.push({ id: 'goz', label: 'Göz' })
   // Ayşe'ye Danış artık sekme değil — sekmeler ile içerik arasında şerit (HastaKonsult).
   // Kadın Sağlığı & Gebelik: top-level değil — Muayene Geçmişi altında (Boss 2026-09-18)

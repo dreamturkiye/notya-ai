@@ -27,6 +27,7 @@ const HastaIntake = dinamikYukle(() => import('@/components/doktor/HastaIntake')
 const HastaAsilar = dinamikYukle(() => import('@/components/doktor/HastaAsilar'), { loading: SekmeYukleniyor });
 const HastaBuyumeEgrileri = dinamikYukle(() => import('@/components/doktor/HastaBuyumeEgrileri'), { loading: SekmeYukleniyor });
 const HastaMchat = dinamikYukle(() => import('@/components/doktor/HastaMchat'), { loading: SekmeYukleniyor });
+const PrematurPlanPaneli = dinamikYukle(() => import('@/specialties/pediatri/ui/araclar/PrematurPlanPaneli'), { loading: SekmeYukleniyor });
 const HastaGelisimTaramasi = dinamikYukle(() => import('@/components/doktor/HastaGelisimTaramasi'), { loading: SekmeYukleniyor });
 const HastaGebelik = dinamikYukle(() => import('@/components/doktor/HastaGebelik'), { loading: SekmeYukleniyor });
 const HastaDermatoloji = dinamikYukle(() => import('@/components/doktor/HastaDermatoloji'), { loading: SekmeYukleniyor });
@@ -238,6 +239,27 @@ export default function HastaProfilPage() {
     })();
     return () => { iptal = true; };
   }, [patient?.id, patient?.cinsiyet]);
+  // PREMATURE-MODUL: Prematüre Planı sekmesi yalnız pediatri hekimi + kapsamdaki (prematüre / ≤ 1500 g, < 36 ay) bebek için.
+  // Sunucu özeti (ozet=1) branş kapısından geçer; pediatri dışında hiç istek atılmaz.
+  const [prematurKapsamda, setPrematurKapsamda] = useState(false);
+  useEffect(() => {
+    const pid = patient?.id;
+    const dogum = patient?.dogum_tarihi ? Date.parse(patient.dogum_tarihi) : NaN;
+    const yasAy = Number.isFinite(dogum) ? (Date.now() - dogum) / (30.4375 * 86_400_000) : NaN;
+    if (!pid || !pediatriAraci || !(yasAy >= 0 && yasAy < 37)) { setPrematurKapsamda(false); return; }
+    let iptal = false;
+    void (async () => {
+      try {
+        const token = await ensureDoctorAccessToken();
+        if (!token) return;
+        const r = await fetch(`/api/doktor/pediatri/prematur?patientId=${encodeURIComponent(pid)}&ozet=1`, { headers: { Authorization: `Bearer ${token}` } });
+        if (!r.ok) return;
+        const j = await r.json();
+        if (!iptal) setPrematurKapsamda(!!j?.kapsamda);
+      } catch { /* sekme isteğe bağlı */ }
+    })();
+    return () => { iptal = true; };
+  }, [patient?.id, patient?.dogum_tarihi, pediatriAraci]);
   const gebelikUygun = patient ? gebelikSekmesiUygun({ cinsiyet: patient.cinsiyet, dogumIso: patient.dogum_tarihi, doktorBransi }) : false;
   const pediatriUygun = patient
     ? pediatriAracSekmesiUygun({ dogumIso: patient.dogum_tarihi, doktorBransi, pediatriDoktoru: pediatriAraci })
@@ -247,7 +269,7 @@ export default function HastaProfilPage() {
   const ameliyatUygun = ameliyatNotuBransi(doktorBransi);
   // GENITAL-ESTETIK-01: KD only; the tab button and the mount read this one boolean.
   const genitalEstetikUygun = genitalEstetikBransi(doktorBransi);
-  const tabs = hastaDosyaSekmeleri({ pediatriUygun, gebelikUygun, dahiliyeUygun, gozUygun: gozAraci, deriUygun: deriAraci, psikiyatriUygun: psikAraci, kbbUygun: kbbAraci, kardiyolojiUygun: kardioAraci, gogusUygun: gogusAraci, norolojiUygun: noroAraci, urolojiUygun: uroAraci, ortopediUygun: ortoAraci, fizikTedaviUygun: ftrAraci, aileUygun: aileAraci, sporHekimligiUygun: sporAraci, endokrinolojiUygun: endoAraci, enfeksiyonUygun: enfAraci, gastroenterolojiUygun: gastroAraci, nefrolojiUygun: nefAraci, romatolojiUygun: romaAraci, onkolojiUygun: onkoAraci, gogusCerrahisiUygun: gogusCerrahiAraci, genelCerrahiUygun: gcAraci, plastikUygun: plastikAraci, beyinCerrahisiUygun: beyinAraci, cocukCerrahisiUygun: ccAraci, anesteziUygun: anesteziAraci, kalpDamarCerrahisiUygun: kdcAraci, acilTipUygun: acilAraci, radyolojiUygun: radyoAraci, ameliyatUygun, genitalEstetikUygun });
+  const tabs = hastaDosyaSekmeleri({ pediatriUygun, gebelikUygun, dahiliyeUygun, gozUygun: gozAraci, deriUygun: deriAraci, psikiyatriUygun: psikAraci, kbbUygun: kbbAraci, kardiyolojiUygun: kardioAraci, gogusUygun: gogusAraci, norolojiUygun: noroAraci, urolojiUygun: uroAraci, ortopediUygun: ortoAraci, fizikTedaviUygun: ftrAraci, aileUygun: aileAraci, sporHekimligiUygun: sporAraci, endokrinolojiUygun: endoAraci, enfeksiyonUygun: enfAraci, gastroenterolojiUygun: gastroAraci, nefrolojiUygun: nefAraci, romatolojiUygun: romaAraci, onkolojiUygun: onkoAraci, gogusCerrahisiUygun: gogusCerrahiAraci, genelCerrahiUygun: gcAraci, plastikUygun: plastikAraci, beyinCerrahisiUygun: beyinAraci, cocukCerrahisiUygun: ccAraci, anesteziUygun: anesteziAraci, kalpDamarCerrahisiUygun: kdcAraci, acilTipUygun: acilAraci, radyolojiUygun: radyoAraci, ameliyatUygun, genitalEstetikUygun, prematurUygun: prematurKapsamda });
 
   /** Keep ?tab= in the URL so Geri from lab/röntgen returns to Belgeler (not Özet).
    *  Kadın Sağlığı & Gebelik lives under Muayene Geçmişi — deep link ?tab=gebelik still works. */
@@ -276,7 +298,7 @@ export default function HastaProfilPage() {
     }
     const bilinen: HastaDosyaSekmeId[] = [
       'ozet', 'muayene', 'buyume', 'belgeler', 'goruntuleme', 'ilaclar', 'formu', 'asilar',
-      'mchat', 'gelisim', 'ayse', 'gebelik', 'deri', 'dahiliye', 'goz',
+      'mchat', 'gelisim', 'prematur', 'ayse', 'gebelik', 'deri', 'dahiliye', 'goz',
       'psikiyatri', 'kbb', 'kardiyoloji', 'gogus', 'noroloji', 'uroloji', 'spor-hekimligi', 'ortopedi', 'fizik-tedavi', 'aile', 'endokrinoloji', 'enfeksiyon', 'gastroenteroloji', 'nefroloji', 'romatoloji', 'onkoloji', 'genel-cerrahi', 'plastik', 'beyin', 'gogus-cerrahisi', 'cocuk-cerrahisi', 'konsultasyon', 'fotograflar', 'ameliyat', 'genital-estetik',
     ];
     if (!bilinen.includes(tabParam as HastaDosyaSekmeId)) return;
@@ -803,6 +825,7 @@ export default function HastaProfilPage() {
         )}
         {!loading && !error && pediatriUygun && activeTab === 'mchat' && <HastaMchat patientId={patientId} />}
         {!loading && !error && pediatriUygun && activeTab === 'gelisim' && <HastaGelisimTaramasi patientId={patientId} />}
+        {!loading && !error && pediatriUygun && prematurKapsamda && activeTab === 'prematur' && <PrematurPlanPaneli patientId={patientId} />}
         {/* Ayşe şeritte — ayrı sekme içeriği yok */}
         {/* BRANS-ALAN-SIZMASI: ?tab=dahiliye / ?tab=deri derin bağlantısı bölüm içeriğini branş kapısı olmadan açıyordu */}
         {!loading && !error && activeTab === 'dahiliye' && dahiliyeUygun && <DahiliyeHome patientId={patientId} />}

@@ -9,6 +9,7 @@
  */
 import { asiPlani, onerilenDonem, dozKisa, type AsiKaydi } from './asiPlan'
 import { vizitPlani, type TaramaKaydi, type MchatKaydi, type GidrKaydi } from './gelisimPlan'
+import { gestasyonGunu } from '@/lib/clinical/prematur/duzeltilmisYas'
 import { olcumSatirlari, persentilKaymalari, persentilKisa, PARAM_AD, type Olcum } from './buyume'
 import { gunFarki, tarihGoster, yasMetni } from './girdi'
 import type { Cinsiyet } from '@/lib/clinical/buyumeEgrisi'
@@ -117,7 +118,7 @@ export function pediKohortSatiri(g: PediKohortGirdi, bugun: string): PediKohortS
 
   // ─── Persentil kayması (Neyzi) ───────────────────────────────────────────────────────────────
   if (g.cinsiyet && g.olcumler.length >= 2) {
-    const satirlar = olcumSatirlari('neyzi', g.cinsiyet, g.dogumIso, g.olcumler)
+    const satirlar = olcumSatirlari('neyzi', g.cinsiyet, g.dogumIso, g.olcumler, gestasyonGunu(g.gebelikHaftasi))
     const sonT = satirlar[satirlar.length - 1]?.tarih
     const kaymalar = persentilKaymalari(satirlar).filter((k) => k.sonTarih === sonT && gunFarki(k.sonTarih, bugun) <= 365)
     if (kaymalar.length) {

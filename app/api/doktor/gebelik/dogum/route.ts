@@ -25,6 +25,7 @@ import { gununNotunaEkle } from '@/lib/doktor/gununNotunaEkle'
 import { gorevleriUret, gorevDurumu, ONAM_KUTUPHANESI, CS_ENDIKASYONLARI, taburcuKurali, bebekGorevleri, pphKarti, partografUyari, LOHUSA_ZIYARETLERI, type Gorev, type TaburcuChecklist, type TaburcuIstisna } from '@/specialties/kadin-dogum/engines/dogum-spine'
 import { baglaLohusaVeTakvim } from '@/lib/doktor/yenidoganKayit'
 import { pretermOrLbw } from '@/lib/clinical/yenidogan'
+import { erkenDogumTemizle, gestasyonGunuTarihte, kartOzeti } from '@/specialties/kadin-dogum/engines/erkenDogum'
 
 export const dynamic = 'force-dynamic'
 const bugun = () => new Date().toISOString().slice(0, 10)
@@ -131,10 +132,20 @@ export async function POST(req: NextRequest) {
     await sb.from('gebelikler').update({ durum: canli ? 'dogum_yapti' : 'olu_dogum', dogum_tarihi: dogumZamani.slice(0, 10) }).eq('id', d!.gebelik_id).eq('doctor_id', user.id)
     const bebekler = (Array.isArray(b.bebekler) ? b.bebekler : [{}]) as Record<string, unknown>[]
     const olusan: string[] = []
+    // PREMATURE-MODUL: the doctor's gestational week wins; when it is not entered the week comes from the pregnancy dating (SAT / corrected TDT)
+    // at the birth date — a preterm baby is no longer stored as 40 weeks by default. The preterm-birth record travels to the card as a summary.
+    const { data: gebDat } = await sb.from('gebelikler').select('sat, tdt').eq('id', d!.gebelik_id).eq('doctor_id', user.id).maybeSingle()
+    const datingGun = gestasyonGunuTarihte(gebDat?.sat ? String(gebDat.sat).slice(0, 10) : null, gebDat?.tdt ? String(gebDat.tdt).slice(0, 10) : null, dogumZamani.slice(0, 10))
+    const datingHafta = datingGun != null && datingGun >= 20 * 7 && datingGun <= 45 * 7 ? Math.round((datingGun / 7) * 100) / 100 : null
+    let erkenKayit: ReturnType<typeof erkenDogumTemizle>['kayit'] | null = null
+    try {
+      const { data: ed } = await sb.from('gebelikler').select('erken_dogum').eq('id', d!.gebelik_id).eq('doctor_id', user.id).maybeSingle()
+      if ((ed as { erken_dogum?: unknown } | null)?.erken_dogum) erkenKayit = erkenDogumTemizle((ed as { erken_dogum: unknown }).erken_dogum, bugun()).kayit
+    } catch { /* column absent before migration 199 */ }
     for (let i = 0; i < bebekler.length; i++) {
       const bb = bebekler[i]
       const cins = bb.cinsiyet === 'E' ? 'E' : bb.cinsiyet === 'K' ? 'K' : null
-      const hafta = Number(bb.hafta) || 40, kilo = bb.kilo == null || bb.kilo === '' ? null : Number(bb.kilo)
+      const hafta = Number(bb.hafta) || datingHafta || 40, kilo = bb.kilo == null || bb.kilo === '' ? null : Number(bb.kilo)
       const komp = Array.isArray(bb.komplikasyonlar) ? bb.komplikasyonlar.map(String) : []
       let bebekPatientId: string | null = null
       if (canli) {
@@ -148,6 +159,10 @@ export async function POST(req: NextRequest) {
       }
       const gorevler = bebekGorevleri({ hafta, kiloGram: kilo, cinsiyet: cins, komplikasyonlar: komp, canli }).map((g) => ({ ...g, tamam: false }))
       const { data: bk } = await sb.from('bebek_kartlari').insert({ dogum_id: d!.id, gebelik_id: d!.gebelik_id, anne_patient_id: d!.patient_id, bebek_patient_id: bebekPatientId, doctor_id: user.id, sira: i + 1, cinsiyet: cins, dogum_zamani: dogumZamani, gebelik_haftasi: hafta, kilo_gram: kilo, apgar1: bb.apgar1 == null || bb.apgar1 === '' ? null : Number(bb.apgar1), apgar5: bb.apgar5 == null || bb.apgar5 === '' ? null : Number(bb.apgar5), canli, gorevler, komplikasyonlar: komp, erkek_ek: cins === 'E' ? { sunnet_onam_id: null, uroloji_gorevi: komp.some((k) => /hipospadias|inmemiş/i.test(k)) } : null }).select('id').single()
+      if (bk && canli && erkenKayit) {
+        const ozet = kartOzeti(erkenKayit, hafta)
+        if (ozet) await sb.from('bebek_kartlari').update({ erken_dogum_ozeti: ozet }).eq('id', bk.id).eq('doctor_id', user.id)
+      }
       if (bk) { olusan.push(bk.id); if (canli) await sb.from('taburcu_checklist').insert({ dogum_id: d!.id, bebek_id: bk.id, doctor_id: user.id, maddeler: {} }) }
       if (canli && bebekPatientId && bk) {
         await sb.from('gebelikler').update({ yenidogan_patient_id: bebekPatientId }).eq('id', d!.gebelik_id)

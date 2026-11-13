@@ -12,12 +12,15 @@ import { SB_IZLEM_WINDOWS, completedSbIzlemNos } from './izlem-calendar'
 import { LOHUSA_ZIYARETLERI } from './dogum-spine'
 import { dueHesapla } from './jinekoloji-spine'
 import { KAPANIYOR_GUN, trTarih } from './araclar'
+import { erkenDogumDegerlendir, type ErkenDogumKaydi } from './erkenDogum'
 
 export type KdKohortBayrak =
   | 'lohusa_1hf' | 'lohusa_6hf'
   | 'tarama_kapaniyor' | 'izlem_gecikti'
   | 'ogtt_zamani' | 'anti_d_zamani' | 'gbs_zamani'
   | 'serviks_tarama'
+  /** PREMATURE-MODUL: kısa serviks / PPROM / önceki spontan erken doğumda pencerede serviks ölçümü yok (erkenDogum.ts). Klinik bayrak: hastaya mesaj gitmez. */
+  | 'erken_dogum_riski'
 
 export const KD_BAYRAK_AD: Record<KdKohortBayrak, string> = {
   lohusa_1hf: 'Lohusa 1. hafta kontrolü',
@@ -28,7 +31,12 @@ export const KD_BAYRAK_AD: Record<KdKohortBayrak, string> = {
   anti_d_zamani: 'Anti-D zamanı',
   gbs_zamani: 'GBS zamanı',
   serviks_tarama: 'Smear / HPV gecikti',
+  erken_dogum_riski: 'Erken doğum riski',
 }
+
+/** Hasta mesajına dönüşmeyen klinik bayraklar (içerik hekime aittir; hasta mesajı tanı / değer taşımaz). */
+export const HASTAYA_MESAJ_YOK: readonly KdKohortBayrak[] = ['erken_dogum_riski']
+export const kdHatirlatilabilir = (b: readonly KdKohortBayrak[]): KdKohortBayrak[] => b.filter((x) => !HASTAYA_MESAJ_YOK.includes(x))
 
 export const LOHUSA_BAYRAKLARI: readonly KdKohortBayrak[] = ['lohusa_1hf', 'lohusa_6hf']
 
@@ -48,6 +56,8 @@ export type KdKohortGirdi = {
     izlemHaftalari: number[]
     yapilanlar: WindowId[]
     lohusaGunleri: number[]
+    /** PREMATURE-MODUL: gebelikler.erken_dogum (temizlenmiş) + çoğul gebelik tipi; yoksa bayrak hesaplanmaz. */
+    erkenDogum?: { kayit: ErkenDogumKaydi; cogulTipi: string | null }
   }
   serviks: null | { sonTarama: string | null; histerektomi?: boolean }
   sonVizit: string | null
@@ -116,6 +126,10 @@ export function kdKohortSatiri(g: KdKohortGirdi, bugun: string): KdKohortSatir {
         if (ilk != null && ilk > w.week_hi) continue
         ekle('izlem_gecikti', `DÖBYR ${w.izlem_no}. izlem (${w.week_lo === 0 ? '≤ 14' : `${w.week_lo}–${w.week_hi}`}. hf) kaydı yok — şu an ${hafta}`, addDays(lmp, kap), 3)
       }
+      if (gb.erkenDogum) {
+        const e = erkenDogumDegerlendir({ sat: gb.sat, tdt: gb.tdt, cogulTipi: gb.erkenDogum.cogulTipi, durum: 'aktif', kayit: gb.erkenDogum.kayit }, bugun)
+        if (e.kohortNedenleri.length) ekle('erken_dogum_riski', e.kohortNedenleri.join(' · '), null, 2)
+      }
       const pen = (id: WindowId) => TEST_WINDOWS.find((w) => w.id === id)!
       const durum = (id: WindowId) => windowStatus(pen(id), { weeks: Math.floor(ga / 7), days: ga % 7, totalDays: ga }, yap.has(id))
       const kalan = (id: WindowId) => tokenGun(pen(id).close) - ga
@@ -162,7 +176,8 @@ export function kdKohortSatirlari(girdiler: KdKohortGirdi[], bugun: string): KdK
 export const KD_HATIRLATMA_KONU = 'Kontrol hatırlatması'
 
 /** Hasta-güvenli hatırlatma: tanı, değer, ilaç yok — yalnız "zamanı geldi / randevu alın" + acil yönlendirmesi. */
-export function kdHatirlatmaMesaji(bayraklar: readonly KdKohortBayrak[]): { konu: string; metin: string } {
+export function kdHatirlatmaMesaji(tumBayraklar: readonly KdKohortBayrak[]): { konu: string; metin: string } {
+  const bayraklar = kdHatirlatilabilir(tumBayraklar)
   const s: string[] = []
   if (bayraklar.some((b) => LOHUSA_BAYRAKLARI.includes(b))) s.push('Doğum sonrası kontrolünüzün zamanı geldi. Bu kontrol, doğumdan sonraki haftalarda sizin sağlığınız için önemlidir.')
   if (bayraklar.includes('izlem_gecikti')) s.push('Gebelik kontrol randevunuzun zamanı geçti.')

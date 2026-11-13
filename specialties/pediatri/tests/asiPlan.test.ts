@@ -135,6 +135,16 @@ describe('aşı planı — durum ve telafi', () => {
     const q = asiPlani({ dogumIso: '2026-03-01', bugunIso: '2026-09-15', donem: 'altili', kayitlar: [] })
     assert.ok(q.seriler.find((s) => s.seri === 'bcg')!.oneriler.some((o) => /PPD/.test(o)))
   })
+  it('PREMATURE-MODUL: prematüre + doğum ağırlığı yok → hekim doğrulaması notu; term ya da ağırlık varsa not yok; aşılar kronolojik yaşta kalır', () => {
+    const eksik = asiPlani({ dogumIso: '2026-07-01', bugunIso: '2026-09-15', donem: 'altili', gebelikHaftasi: 30, kayitlar: [] })
+    assert.ok(eksik.notlar.some((x) => /Doğum ağırlığı kayıtlı değil/.test(x)))
+    for (const g of [{ gebelikHaftasi: 30, dogumKiloGr: 1400 }, { gebelikHaftasi: 39 }, { gebelikHaftasi: null }]) {
+      assert.ok(!asiPlani({ dogumIso: '2026-07-01', bugunIso: '2026-09-15', donem: 'altili', ...g, kayitlar: [] }).notlar.some((x) => /Doğum ağırlığı kayıtlı değil/.test(x)), JSON.stringify(g))
+    }
+    // vaccines follow the chronological age: a 30-week baby's 2-month dose is due at 2 months of calendar age, not at corrected age
+    const p = asiPlani({ dogumIso: '2026-07-01', bugunIso: '2026-09-15', donem: 'altili', gebelikHaftasi: 30, dogumKiloGr: 1400, kayitlar: [] })
+    assert.ok(p.notlar.some((x) => /kronolojik/.test(x)) && p.notlar.some((x) => /düzeltilmiş yaş kullanılmaz/.test(x)))
+  })
   it('BCG, KKK sonrası 4 hafta beklenir (GBP)', () => {
     const p = asiPlani({ dogumIso: '2025-08-01', bugunIso: '2026-09-15', donem: 'altili', kayitlar: [k('KKK', '2026-09-05')] })
     assert.equal(doz(p, 'bcg', 1).plan, '2026-10-03')

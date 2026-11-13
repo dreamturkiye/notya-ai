@@ -20,6 +20,8 @@ interface Yanit {
   mevcutYasAy: number | null;
   cinsiyet: 'male' | 'female' | null;
   parametreler: { kilo?: ParamVeri; boy?: ParamVeri; basCevresi?: ParamVeri; vki?: ParamVeri | null };
+  /** Prematüre bebek: 24 aya kadar noktalar düzeltilmiş yaşa göre çizilir (gestasyon "32+4"). */
+  duzeltme?: { gestasyon: string } | null;
 }
 
 function yasEtiketi(ay: number): string {
@@ -222,6 +224,7 @@ export default function HastaBuyumeEgrileri({ patientId, hedefBoyGoster = false 
     <div style={{ display: 'grid', gap: 16 }}>
       <div style={{ fontSize: 13, color: CHROME_RENK.muted, display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
         <span>Neyzi Türk çocukları büyüme standartları · {veri.cinsiyet === 'female' ? 'Kız' : 'Erkek'} · {yasMetni}</span>
+        {veri.duzeltme && <span style={{ fontWeight: 700, color: '#7A5B1E' }}>Düzeltilmiş yaşa göre çizildi (doğumda {veri.duzeltme.gestasyon} hafta) — 24 aya kadar</span>}
         <span style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 12 }}>
           <span><span style={{ color: RENK_NOKTA, fontWeight: 700 }}>●</span> ölçüm</span>
           <span><span style={{ color: RENK_50, fontWeight: 700 }}>—</span> 50p</span>

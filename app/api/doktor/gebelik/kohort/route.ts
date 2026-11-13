@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { doktorOturum } from '@/lib/doktor/serverAuth'
 import { kdKohortVerisi } from '../_kohort'
 import { kdHatirlatmaGonder } from '../_kohortHatirlatma'
+import { kdHatirlatilabilir } from '@/specialties/kadin-dogum/engines/kd-kohort'
 
 export const dynamic = 'force-dynamic'
 const bugun = () => new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 10)
@@ -29,7 +30,10 @@ export async function POST(req: NextRequest) {
   const { satirlar } = await kdKohortVerisi(sb, user.id, bugun(), ids)
   let gonderilen = 0, atlanan = 0
   for (const s of satirlar) {
-    const r = await kdHatirlatmaGonder(sb, user.id, s.patientId, s.bayraklar)
+    // Yalnız klinik bayrağı (erken doğum riski) olan hastaya mesaj gitmez: içerik hekime aittir.
+    const hatirlatilacak = kdHatirlatilabilir(s.bayraklar)
+    if (!hatirlatilacak.length) { atlanan++; continue }
+    const r = await kdHatirlatmaGonder(sb, user.id, s.patientId, hatirlatilacak)
     if (r === 'gonderildi') gonderilen++; else atlanan++
   }
   // Seçilip kohortta olmayan (bayraksız / başka hekimin) kimlikler sessizce atlanır.

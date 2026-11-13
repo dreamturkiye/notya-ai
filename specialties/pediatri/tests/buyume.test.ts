@@ -5,7 +5,7 @@ import { persentilHesapla } from '@/lib/clinical/buyumeEgrisi'
 import { WHO_LMS } from '@/lib/clinical/whoBuyumeLms'
 
 const satir = (tarih: string, ay: number, p: Partial<Record<'kilo' | 'boy' | 'basCevresi', [number, number]>>): OlcumSatiri => ({
-  tarih, ay,
+  tarih, ay, egriAy: ay, duzeltilmis: false, termOncesi: false,
   deger: Object.fromEntries(Object.entries(p).map(([k, v]) => [k, v![0]])),
   sonuc: Object.fromEntries(Object.entries(p).map(([k, v]) => [k, { persentil: v![1], z: 0 }])),
 })

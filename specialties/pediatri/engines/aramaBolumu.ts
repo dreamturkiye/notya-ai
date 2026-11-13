@@ -4,6 +4,7 @@
  */
 import { asiPlani, onerilenDonem, dozKisa, type SeriKod } from './asiPlan'
 import { persentilKaymalari, olcumSatirlari } from './buyume'
+import { gestasyonGunu } from '@/lib/clinical/prematur/duzeltilmisYas'
 import { gunFarki } from './girdi'
 import type { PediKohortGirdi, PediKohortBayrak } from './kohort'
 import { pediKohortSatiri } from './kohort'
@@ -80,7 +81,7 @@ export function pediAramaUygula(
 
     if (q.persentilEsik != null) {
       if (!g.cinsiyet || g.olcumler.length < 2) continue
-      const satirlar = olcumSatirlari('neyzi', g.cinsiyet, g.dogumIso, g.olcumler)
+      const satirlar = olcumSatirlari('neyzi', g.cinsiyet, g.dogumIso, g.olcumler, gestasyonGunu(g.gebelikHaftasi))
       const altiAy = gunEkleGun(bugun, -180)
       const kayma = persentilKaymalari(satirlar, q.persentilEsik).filter((k) => k.sonTarih >= altiAy)
       if (!kayma.length) continue

@@ -110,7 +110,7 @@ export default function GelisimPaneli() {
               <input value={kiloHam} onChange={(e) => setKiloHam(e.target.value)} placeholder="gram" aria-label="Doğum ağırlığı" inputMode="decimal" style={input} />
             </Alan>
           </div>
-          <div style={{ ...kucuk, marginTop: 8 }}>≤ 37 haftada doğanlarda gelişim (GİDR) düzeltilmiş yaşla değerlendirilir; aşılar takvim yaşıyla. ≤ 32 hafta ya da ≤ 1500 g: ROP yönlendirmesi, &lt; 2500 g: demir 2. aydan.</div>
+          <div style={{ ...kucuk, marginTop: 8 }}>&lt; 37 haftada doğanlarda gelişim (GİDR) kronolojik 24. aya kadar düzeltilmiş yaşla değerlendirilir (AAP · CDC); aşılar takvim yaşıyla. ≤ 32 hafta ya da ≤ 1500 g: ROP yönlendirmesi, &lt; 2500 g: demir 2. aydan.</div>
         </Katlanir>
       </div>
 
@@ -119,7 +119,7 @@ export default function GelisimPaneli() {
           <div style={{ ...kucuk, fontSize: 14 }}>Doğum tarihini (ya da yaşı) yazın — bu vizitte gereken taramalar yazdıkça listelenir.</div>
         ) : (
           <>
-            <div style={{ fontSize: 13, color: CHROME_RENK.muted, marginBottom: 4 }}>{yasMetni(dogumIso!, bugun)}{plan.duzeltilmisGun != null ? ` · düzeltilmiş ${plan.duzeltilmisGun < 31 ? `${plan.duzeltilmisGun} gün` : `${Math.floor(plan.duzeltilmisGun / 30.4375)} ay`} (gelişim için)` : ''}</div>
+            <div style={{ fontSize: 13, color: CHROME_RENK.muted, marginBottom: 4 }}>{yasMetni(dogumIso!, bugun)}{plan.duzeltilmisGun != null ? ` · düzeltilmiş ${plan.duzeltilmisGun < 31 ? `${plan.duzeltilmisGun} gün` : `${Math.floor(plan.duzeltilmisGun / 30.4375)} ay`} (gelişim için; kronolojik yaş yukarıda)` : ''}</div>
             <div style={{ fontSize: 22, fontWeight: 800, color: CHROME_RENK.ink, letterSpacing: '-0.3px' }}>
               {plan.simdikiVizit ? `${plan.simdikiVizit.etiket} izlemi` : 'İzlem penceresi dışında'}
             </div>

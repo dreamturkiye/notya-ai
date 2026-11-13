@@ -10,6 +10,7 @@ import { decrypt } from '@/lib/security/encryption'
 import { aktifGebelikDurumu } from '@/lib/clinical/gebelikDurum'
 import { doneWindowIdsFromClinic } from '@/specialties/kadin-dogum/engines/clinic-fit'
 import { addDays } from '@/specialties/kadin-dogum/engines/dates'
+import { erkenDogumTemizle } from '@/specialties/kadin-dogum/engines/erkenDogum'
 import { kdKohortSatirlari, LOHUSA_GORUNUR_GUN, type KdKohortGirdi } from '@/specialties/kadin-dogum/engines/kd-kohort'
 import { arsivsizSeanslar } from '@/lib/doktor/arsiv'
 
@@ -17,13 +18,13 @@ export type Sb = Awaited<ReturnType<typeof doktorOturum>> extends infer T ? (T e
 
 type GebelikSatiri = {
   id: string; patient_id: string; sat: string | null; tdt: string | null; durum: string | null; rh_negatif: boolean | null
-  dogum_tarihi: string | null; kan_grubu: string | null; lab_panel: unknown; destek_asi: unknown; anti_d_uygulamalari: unknown; created_at: string | null
+  dogum_tarihi: string | null; kan_grubu: string | null; lab_panel: unknown; destek_asi: unknown; anti_d_uygulamalari: unknown; cogul_gebelik_tipi?: string | null; erken_dogum?: unknown; created_at: string | null
 }
 
 const gun = (v: unknown) => (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}/.test(v) ? v.slice(0, 10) : null)
 
 export async function kdKohortVerisi(sb: Sb, doctorId: string, bugun: string, sadece?: string[]) {
-  let gQ = sb.from('gebelikler').select('id, patient_id, sat, tdt, durum, rh_negatif, dogum_tarihi, kan_grubu, lab_panel, destek_asi, anti_d_uygulamalari, created_at').eq('doctor_id', doctorId)
+  let gQ = sb.from('gebelikler').select('id, patient_id, sat, tdt, durum, rh_negatif, dogum_tarihi, kan_grubu, lab_panel, destek_asi, anti_d_uygulamalari, cogul_gebelik_tipi, erken_dogum, created_at').eq('doctor_id', doctorId)
   let kQ = sb.from('kadin_sagligi').select('patient_id, son_serviks_tarama').eq('doctor_id', doctorId)
   if (sadece) { gQ = gQ.in('patient_id', sadece); kQ = kQ.in('patient_id', sadece) }
   const [{ data: gebHam }, { data: ksHam }] = await Promise.all([gQ.limit(3000), kQ.limit(3000)])
@@ -83,6 +84,7 @@ export async function kdKohortVerisi(sb: Sb, doctorId: string, bugun: string, sa
           antiD: Array.isArray(g.anti_d_uygulamalari) ? g.anti_d_uygulamalari : [],
         }),
         lohusaGunleri: (loh.get(g.id) || []).map((x) => Number(x.dogum_sonrasi_gun)).filter((x) => Number.isFinite(x)),
+        erkenDogum: g.erken_dogum ? { kayit: erkenDogumTemizle(g.erken_dogum, bugun).kayit, cogulTipi: g.cogul_gebelik_tipi ?? null } : undefined,
       }
     }
     const h = hasta.get(id)!

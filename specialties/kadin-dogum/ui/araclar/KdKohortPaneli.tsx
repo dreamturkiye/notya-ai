@@ -9,7 +9,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { getAccessTokenAsync } from '@/lib/doktor/toolsUi';
 import { hastaDosyaHref } from '@/lib/doktor/geriNavigasyon';
 import { KADIN_HASTALIKLARI_DOGUM_KISA_ETIKETI } from '@/lib/doktor/specialties';
-import { KD_BAYRAK_AD, LOHUSA_BAYRAKLARI, kdHatirlatmaMesaji, type KdKohortBayrak, type KdKohortSatir } from '../../engines/kd-kohort';
+import { KD_BAYRAK_AD, LOHUSA_BAYRAKLARI, kdHatirlatmaMesaji, kdHatirlatilabilir, type KdKohortBayrak, type KdKohortSatir } from '../../engines/kd-kohort';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 import GonderDugmesi from '@/components/doktor/iletisim/GonderDugmesi';
 
@@ -63,7 +63,8 @@ export default function KdKohortPaneli() {
       <span style={{ fontSize: 13, color: CHROME_RENK.muted, flex: '1 1 100%' }}>{s.detay.join(' · ')}{s.sonVizit ? ` · son vizit ${s.sonVizit.split('-').reverse().join('.')}` : ''}{s.portalVar ? '' : ' · portal bağlantısı yok (mesaj portal açılınca görünür)'}</span>
       <span style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         <a href={hastaDosyaHref(s.patientId, 'gebelik')} style={ghost}>Dosyayı aç</a>
-        <GonderDugmesi sessiz tur="serbest" patientId={s.patientId} metin={kdHatirlatmaMesaji(s.bayraklar).metin} etiket="WhatsApp / e-posta ile gönder" />
+        {s.bayraklar.includes('erken_dogum_riski') && <a href={`/doktor-tools/kd-erken-dogum?hasta=${encodeURIComponent(s.patientId)}`} style={ghost}>Erken doğum paneli</a>}
+        {kdHatirlatilabilir(s.bayraklar).length > 0 && <GonderDugmesi sessiz tur="serbest" patientId={s.patientId} metin={kdHatirlatmaMesaji(s.bayraklar).metin} etiket="WhatsApp / e-posta ile gönder" />}
       </span>
     </div>
   );

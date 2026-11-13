@@ -10,6 +10,7 @@ import {
 } from '@/lib/clinical/buyumeEgrisi'
 import { WHO_LMS, WHO_UST_AY } from '@/lib/clinical/whoBuyumeLms'
 import { gunFarki, ondalikAy } from './girdi'
+import { duzeltilmisYas } from '@/lib/clinical/prematur/duzeltilmisYas'
 
 export type Referans = 'neyzi' | 'who'
 export const REFERANS_AD: Record<Referans, string> = { neyzi: 'Neyzi (Türk çocukları, 2015)', who: 'WHO (2006 standart · 2007 referans)' }
@@ -55,25 +56,45 @@ export interface Olcum { tarih: string; kilo?: number | null; boy?: number | nul
 
 export interface OlcumSatiri {
   tarih: string
+  /** Kronolojik yaş (ondalık ay). Kayma başlangıcı ve görüntülenen "yaş" bunu kullanır — değişmedi. */
   ay: number
+  /**
+   * Persentilin hesaplandığı ve eğri üzerinde çizilen yaş (ondalık ay). Düzeltilmemişse `ay` ile aynı.
+   * Doğumda < 37 hafta olan bebekte kronolojik 24. aya kadar düzeltilmiş yaştır (lib/clinical/prematur/duzeltilmisYas.ts).
+   * Düzeltilmiş yaş < 0 (bebek henüz 40. haftaya ulaşmadı) ise null: Neyzi/WHO referansı uygulanamaz (Fenton gerekir).
+   */
+  egriAy: number | null
+  /** Persentil düzeltilmiş yaşla mı hesaplandı. */
+  duzeltilmis: boolean
+  /** Düzeltilmiş yaş < 0 — referans uygulanamadı, persentil yok. */
+  termOncesi: boolean
   deger: Partial<Record<BuyumeParametre, number>>
   sonuc: Partial<Record<BuyumeParametre, Degerlendirme | null>>
 }
 
-export function olcumSatirlari(ref: Referans, cinsiyet: Cinsiyet, dogumIso: string, olcumler: Olcum[]): OlcumSatiri[] {
+/**
+ * `gestasyonGun` (doğumdaki gestasyon, gün) verilmezse davranış eskisiyle aynıdır (kronolojik yaş). Verilir ve < 37 hafta ise
+ * her ölçüm için, o ölçüm tarihindeki kronolojik yaş 24 aydan küçük olduğu sürece düzeltilmiş yaşla değerlendirilir.
+ * Term (≥ 37 hf) bebekler hiçbir zaman düzeltilmez.
+ */
+export function olcumSatirlari(ref: Referans, cinsiyet: Cinsiyet, dogumIso: string, olcumler: Olcum[], gestasyonGun: number | null = null): OlcumSatiri[] {
   return olcumler
     .filter((o) => o.tarih && gunFarki(dogumIso, o.tarih) >= 0)
     .sort((a, b) => a.tarih.localeCompare(b.tarih))
     .map((o) => {
       const ay = ondalikAy(dogumIso, o.tarih)
+      const yas = gestasyonGun != null ? duzeltilmisYas({ dogumIso, gestasyonGun, tarihIso: o.tarih }) : null
+      const duzeltilmis = !!yas && yas.gecerli && yas.buyume.duzeltilmis
+      const termOncesi = duzeltilmis && yas!.buyume.termOncesi
+      const egriAy = !duzeltilmis ? ay : termOncesi ? null : yas!.buyume.gun / 30.4375
       const deger: Partial<Record<BuyumeParametre, number>> = {}
       if (o.kilo) deger.kilo = o.kilo
       if (o.boy) deger.boy = o.boy
       if (o.basCevresi) deger.basCevresi = o.basCevresi
       if (o.kilo && o.boy) deger.vki = vki(o.kilo, o.boy)
       const sonuc: OlcumSatiri['sonuc'] = {}
-      for (const p of Object.keys(deger) as BuyumeParametre[]) sonuc[p] = degerlendir(ref, p, cinsiyet, ay, deger[p]!)
-      return { tarih: o.tarih.slice(0, 10), ay, deger, sonuc }
+      for (const p of Object.keys(deger) as BuyumeParametre[]) sonuc[p] = egriAy == null ? null : degerlendir(ref, p, cinsiyet, egriAy, deger[p]!)
+      return { tarih: o.tarih.slice(0, 10), ay, egriAy, duzeltilmis, termOncesi, deger, sonuc }
     })
 }
 

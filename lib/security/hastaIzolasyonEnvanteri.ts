@@ -160,6 +160,8 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   'app/api/doktor/gebelik/route.ts': T,
   'app/api/doktor/gebelik/dogum/route.ts': T,
   'app/api/doktor/gebelik/kohort/route.ts': T,
+  // PREMATURE-MODUL — KD erken doğum paneli: kadinDogumBransi gate + hastaSahibiMi; gebelik read and write both .eq(doctor_id)
+  'app/api/doktor/gebelik/erken-dogum/route.ts': T,
   'app/api/doktor/gebelik/_kohort.ts': I('patient ids drawn only from gebelikler / kadin_sagligi rows with doctor_id = doctorId; every secondary read (patients, izlem, genetik, lohusa, sessions, portal) doctor_id-scoped (read-only — kdHatirlatmaGonder lives in _kohortHatirlatma.ts, NOTYA-EYLEM-24)'),
   'app/api/doktor/gebelik/_kohortHatirlatma.ts': I('kdHatirlatmaGonder — split out of _kohort.ts (NOTYA-EYLEM-24); runs only on ids that passed kdKohortVerisi(doctorId) in kohort/route.ts'),
   'app/api/doktor/yenidogan/route.ts': I('baby card fetched by patient AND doctor_id; every derived id comes from that card; patient reads doctor-scoped; canli-dogum-onar goes through olusturCanliDogum which requires gebelik.patient_id = body anne AND patients.doctor_id before any name decrypt or write'),
@@ -173,6 +175,10 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   'app/api/doktor/pediatri/_ortak.ts': I('pediHasta: patients by id AND doctor_id — the gate every pediatri handler passes first; pediOturum = doktorOturum + users.specialty pediatri'),
   'app/api/doktor/pediatri/tarama/route.ts': T,
   'app/api/doktor/pediatri/kohort/route.ts': T,
+  // PREMATURE-MODUL — prematüre planı: pediHasta gate on every method; hekim işareti / profil rows keyed (doctor_id, patient_id)
+  'app/api/doktor/pediatri/prematur/route.ts': T,
+  'app/api/doktor/pediatri/prematur/kohort/route.ts': T,
+  'app/api/doktor/pediatri/_prematur.ts': I('prematurKaynakVeri / profilKaydet / ogeKaydet / prematurKohortGirdileri: every query .eq(doctor_id).eq(patient_id) (pedi_prematur_kayit, bebek_kartlari, gebelikler, pedi_taramalar); callers gate the id with pediHasta first'),
   'app/api/doktor/fisilti/route.ts': I('via lib/doktor/fisiltiTopla: proxies exactly one branş kohort route (+ mesajlar?unread=1) via an internal same-origin fetch, forwarding the SAME caller bearer token unchanged -- that downstream route re-runs doktorOturum + its own doctor_id scoping independently (see its own entry above/below); its own Supabase reads (users by id = user.id, fisilti_sessizler and fisilti_gizlenen) are all .eq(doctor_id, user.id); takes no patient id from request input and identifies the target branş only from users.specialty of the AUTHENTICATED doctor'),
   'app/api/doktor/fisilti/gizle/route.ts': I('NOTYA-FISILTI-GIZLE-01: POST hides only an item found in the doctor\'s OWN freshly-built fisiltiOgeleri list (patient_id + facts hash taken from that item, never from the body) and inserts with doctor_id = user.id; GET lists only those items filtered by fisilti_gizlenen .eq(doctor_id, user.id); PATCH restores by id AND doctor_id = user.id (404 for a foreign row)'),
   'app/api/doktor/fisilti/kalkan/route.ts': T,

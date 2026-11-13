@@ -10,6 +10,7 @@ import { decrypt } from '@/lib/security/encryption'
 import { persentilEgrileri, ayFarki, type Cinsiyet } from '@/lib/clinical/buyumeEgrisi'
 import { cmCoz, kiloCoz } from '@/lib/clinical/olcumCoz'
 import { arsivsizNotlar } from '@/lib/doktor/arsiv'
+import { duzeltilmisYas, gestasyonGunu, gestasyonMetni } from '@/lib/clinical/prematur/duzeltilmisYas'
 
 export const dynamic = 'force-dynamic'
 
@@ -42,6 +43,14 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
   const mevcutYasAy = ayFarki(dogumIso) ?? 0
 
+  // Düzeltilmiş yaş (PREMATURE-MODUL): hekimin kendi bebek kartı (doctor_id kapsamlı) doğumda < 37 hafta diyorsa, kronolojik 24 aya
+  // kadar olan ölçümler düzeltilmiş yaşa göre çizilir. Kart yoksa / term ise davranış eskisi gibi (kronolojik).
+  const { data: kartlar } = await supabase.from('bebek_kartlari').select('gebelik_haftasi')
+    .eq('doctor_id', doktorId).eq('bebek_patient_id', patientId).order('created_at', { ascending: false }).limit(1)
+  const kartHf = (kartlar?.[0] as { gebelik_haftasi?: number | string | null } | undefined)?.gebelik_haftasi
+  const gestGun = gestasyonGunu(kartHf != null ? Number(kartHf) : null)
+  let duzeltmeVar = false
+
   // Onaylı notlardan vitaller + tarih — hastanın kendi büyüme noktaları
   // NOTYA-ARSIV-01: arşivlenmiş muayenenin ölçümü eğriye nokta olarak girmez.
   const { data: notlar } = await arsivsizNotlar(supabase, 'created_at, vitaller, sessions!inner(patient_id)')
@@ -50,8 +59,16 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
   const noktalar: Record<'kilo' | 'boy' | 'basCevresi' | 'vki', { ay: number; deger: number; tarih: string }[]> = { kilo: [], boy: [], basCevresi: [], vki: [] }
   for (const n of (notlar || []) as { created_at: string; vitaller: unknown }[]) {
-    const ay = ayFarki(dogumIso, n.created_at)
+    let ay = ayFarki(dogumIso, n.created_at)
     if (ay === null) continue
+    if (gestGun != null) {
+      const y = duzeltilmisYas({ dogumIso, gestasyonGun: gestGun, tarihIso: n.created_at })
+      if (y.gecerli && y.buyume.duzeltilmis) {
+        if (y.buyume.termOncesi) continue // term öncesi: Neyzi eğrisi uygulanamaz, nokta çizilmez
+        ay = y.buyume.gun / 30.4375
+        duzeltmeVar = true
+      }
+    }
     const v = (n.vitaller || {}) as Record<string, unknown>
     const kilo = sayi(v.kilo, 'kilo'), boy = sayi(v.boy, 'cm'), bas = sayi(v.basCevresi, 'cm')
     if (kilo != null) noktalar.kilo.push({ ay, deger: kilo, tarih: n.created_at })
@@ -76,5 +93,5 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       : null,
   }
 
-  return NextResponse.json({ dogumBilinmiyor: false, mevcutYasAy, cinsiyet, parametreler })
+  return NextResponse.json({ dogumBilinmiyor: false, mevcutYasAy, cinsiyet, parametreler, duzeltme: duzeltmeVar && gestGun != null ? { gestasyon: gestasyonMetni(gestGun) } : null })
 }

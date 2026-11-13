@@ -233,7 +233,8 @@ test('Araçlar landing is a card grid only — Hedef Boy opens as its own page',
 })
 
 // PEDI-ARACLAR-01 / -02 — pediatri-only Araçlar (same shape as the göz block above). Pediatri sees all five studios.
-const PEDI_YENI_ROTALAR = ['/doktor-tools/pedi-asi', '/doktor-tools/pedi-gelisim', '/doktor-tools/pedi-mchat', '/doktor-tools/pedi-kohort']
+// PREMATURE-MODUL adds three pediatri-only tiles (takip planı, düzeltilmiş yaş, prematüre kohort).
+const PEDI_YENI_ROTALAR = ['/doktor-tools/pedi-asi', '/doktor-tools/pedi-gelisim', '/doktor-tools/pedi-mchat', '/doktor-tools/pedi-kohort', '/doktor-tools/pedi-prematur-takip', '/doktor-tools/pedi-duzeltilmis-yas', '/doktor-tools/pedi-prematur-kohort']
 const PEDI_ROTALAR = ['/doktor-tools/pedi-buyume', '/doktor-tools/pedi-doz', ...PEDI_YENI_ROTALAR]
 
 test('pediatri-only Araçlar: pediatri sees all; dahiliye / kardiyoloji / göz / KD / derm and every other branş never', () => {
@@ -283,9 +284,9 @@ test('pediatri studio pages: guarded by PediAracKabugu, card-opened, never on th
 })
 
 test('PEDI-ARACLAR-02: aşı / gelişim / M-CHAT / kohort — pediatri tek anahtar; 30/30 döngüde her yabancı branş görmez ve derin linki reddedilir', () => {
-  assert.equal(PEDI_ROTALAR.length, 6)
+  assert.equal(PEDI_ROTALAR.length, 9)
   const ped = doktorAraclariListesi('pediatri')
-  for (const r of PEDI_ROTALAR) assert.ok(ped.some((a) => a.route === r), `pediatri altısını da görmeli: ${r}`)
+  for (const r of PEDI_ROTALAR) assert.ok(ped.some((a) => a.route === r), `pediatri dokuzunu da görmeli: ${r}`)
   for (const r of PEDI_YENI_ROTALAR) {
     const arac = TUM_DOKTOR_ARACLARI.find((a) => a.route === r)!
     assert.ok(arac, r)
@@ -313,7 +314,7 @@ test('PEDI-ARACLAR-02: aşı / gelişim / M-CHAT / kohort — pediatri tek anaht
 })
 
 // ─── Kadın Hastalıkları ve Doğum — specialty-only Araçlar ───────────────────────────────────────
-const KD_ROTALARI = ['/doktor-tools/kd-gebelik-takvim', '/doktor-tools/kd-dogum-rapor', '/doktor-tools/kd-mec', '/doktor-tools/kd-risk', '/doktor-tools/kd-kohort', '/doktor-tools/kd-antibiyotik', '/doktor-tools/kd-adneks', '/doktor-tools/kd-siniflama', '/doktor-tools/kd-dogumhane', '/doktor-tools/kd-histeroskopi-eras', '/doktor-tools/kd-onam']
+const KD_ROTALARI = ['/doktor-tools/kd-gebelik-takvim', '/doktor-tools/kd-dogum-rapor', '/doktor-tools/kd-mec', '/doktor-tools/kd-risk', '/doktor-tools/kd-kohort', '/doktor-tools/kd-antibiyotik', '/doktor-tools/kd-adneks', '/doktor-tools/kd-siniflama', '/doktor-tools/kd-dogumhane', '/doktor-tools/kd-histeroskopi-eras', '/doktor-tools/kd-onam', '/doktor-tools/kd-erken-dogum']
 
 test('KD-only Araçlar: KD sees all five (legacy + free-text keys); every other branş in BRANS_ETIKETLERI never', () => {
   for (const ham of ['kadin-hastaliklari-dogum', 'kadin-dogum', 'Kadın Hastalıkları ve Doğum', 'Jinekoloji ve Obstetrik']) {

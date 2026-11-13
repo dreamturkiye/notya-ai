@@ -15,6 +15,7 @@
  */
 import { gidrBasamakBul, type GelisimYasBasamagi } from '@/lib/clinical/gelisimTaramasi'
 import { gunEkle, gunFarki } from './girdi'
+import { duzeltilmisYas, gestasyonGunu } from '@/lib/clinical/prematur/duzeltilmisYas'
 
 export interface IzlemVizit { id: string; etiket: string; basGun: number; sonGun: number; dogrulandi: boolean }
 
@@ -85,7 +86,7 @@ export interface IzlemDurumu extends IzlemVizit { durum: 'yapildi' | 'kacirildi'
 
 export interface VizitPlani {
   yasGun: number
-  /** ≤ 37 haftada doğanlarda gelişim değerlendirmesi için düzeltilmiş yaş (gün); aşıda KULLANILMAZ. */
+  /** < 37 haftada doğanlarda, kronolojik 24. aya kadar gelişim değerlendirmesi için düzeltilmiş yaş (gün); aşıda KULLANILMAZ. */
   duzeltilmisGun: number | null
   simdikiVizit: IzlemDurumu | null
   sonrakiVizit: IzlemDurumu | null
@@ -130,8 +131,10 @@ function pencereSec(yasGun: number, dogumIso: string, tarihler: string[], pencer
 export function vizitPlani(g: VizitGirdisi): VizitPlani {
   const yasGun = gunFarki(g.dogumIso, g.bugunIso)
   const preterm = g.gebelikHaftasi != null && g.gebelikHaftasi < 37
-  const duzeltilmisGun = g.gebelikHaftasi != null && g.gebelikHaftasi <= 37 && yasGun < 3 * 365
-    ? Math.max(0, yasGun - Math.round((40 - g.gebelikHaftasi) * 7)) : null
+  // PREMATURE-MODUL: tek kaynak lib/clinical/prematur/duzeltilmisYas (< 37 hafta, kronolojik 24. aya kadar; term bebek düzeltilmez).
+  // Term öncesi (düzeltilmiş yaş < 0) GİDR basamağı için 0'a sabitlenir.
+  const yasHesap = duzeltilmisYas({ dogumIso: g.dogumIso, gestasyonGun: gestasyonGunu(g.gebelikHaftasi), tarihIso: g.bugunIso })
+  const duzeltilmisGun = yasHesap.gecerli && yasHesap.gelisim.duzeltilmis ? Math.max(0, yasHesap.gelisim.gun) : null
   const taramalar = g.taramalar || []
   const tarihleri = (tur: TaramaTur) => taramalar.filter((t) => t.tur === tur).map((t) => t.tarih)
   const sonKayit = (tur: TaramaTur) => taramalar.filter((t) => t.tur === tur).sort((a, b) => a.tarih.localeCompare(b.tarih)).pop() || null

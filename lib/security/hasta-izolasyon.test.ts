@@ -230,6 +230,8 @@ function hekimKur(harf: Harf): Hekim {
   db.ekle('kadin_sagligi', { doctor_id: id, patient_id: hasta, notlar: `KS ${m}` })
   // KD kohort (Araçlar): synthetic lohusa episode — delivered 4 days ago, no lohusa izlem → 'lohusa_1hf' row for this doctor only
   db.ekle('gebelikler', { doctor_id: id, patient_id: hasta, durum: 'tamamlandi', sat: new Date(Date.now() - 284 * 86400e3).toISOString().slice(0, 10), dogum_tarihi: new Date(Date.now() - 4 * 86400e3).toISOString().slice(0, 10), created_at: new Date(Date.now() - 200 * 86400e3).toISOString() })
+  // PREMATURE-MODUL (KD erken doğum paneli): an ACTIVE pregnancy, newer than the lohusa episode above
+  db.ekle('gebelikler', { doctor_id: id, patient_id: hasta, durum: 'aktif', sat: new Date(Date.now() - 150 * 86400e3).toISOString().slice(0, 10), created_at: new Date(Date.now() - 100 * 86400e3).toISOString() })
   db.ekle('goz_kontroller', { doctor_id: id, patient_id: hasta, tarih: '2026-01-05', neden: `Goz kontrol ${m}`, dilatasyon: false, durum: 'planli' })
   const gozGoruntu = db.ekle('hasta_goruntulemeler', { doctor_id: id, patient_id: hasta, modalite: 'oct', vucut_bolgesi: 'sag', rapor_metni: `OCT ${m}`, goruntuleme_tarihi: '2026-09-01', dosya_url: 'https://sahte.supabase.test/oct' }).id
   const belgeAnaliz = db.ekle('belge_analizleri', { belge_id: belge, doctor_id: id, patient_id: hasta, brans: 'goz', modality_final: 'fundus', durum: 'taslak', de_id_hash: 'sentetik', engine_set: 'tierA-v1', motor_ciktilari: [], fusion: { capPct: 85 }, sonuc: { modalite: 'Fundus', kalite: 'iyi', ozet: `Ozet ${m}`, bulgular: [], tanilar: [], acil_bayrak: false, oneri: '', sinirlar: [], hekim_tanisi: [], engines_used: [] } }).id
@@ -788,6 +790,21 @@ const VAKALAR: Vaka[] = [
   { ad: 'POST /api/doktor/pediatri/kohort (1-tap veli hatırlatması)',
     yazdi: (a) => tablo('hasta_mesaj_konulari').some((x) => x.patient_id === a.hasta && x.doctor_id === a.id && x.konu === 'Çocuğunuzun kontrol hatırlatması'),
     cagir: (r, a, h) => coz(r.pediKohort.POST(iste('POST', '/api/doktor/pediatri/kohort', { token: a.token, govde: { patientIds: [h.hasta] } }))) },
+  // PREMATURE-MODUL — Pediatri prematüre planı (profil = pedi_prematur_kayit) ve KD erken doğum paneli (gebelikler.erken_dogum)
+  { ad: 'GET /api/doktor/pediatri/prematur (prematüre takip planı)', red: 404,
+    cagir: (r, a, h) => coz(r.pediPrematur.GET(iste('GET', `/api/doktor/pediatri/prematur?patientId=${h.hasta}`, { token: a.token }))) },
+  { ad: 'GET /api/doktor/pediatri/prematur?ozet=1 (hasta dosyası sekmesi özeti)', red: 404,
+    cagir: (r, a, h) => coz(r.pediPrematur.GET(iste('GET', `/api/doktor/pediatri/prematur?patientId=${h.hasta}&ozet=1`, { token: a.token }))) },
+  { ad: 'PUT /api/doktor/pediatri/prematur (NICU öyküsü profili)', red: 404,
+    yazdi: (a) => tablo('pedi_prematur_kayit').some((x) => x.patient_id === a.hasta && x.doctor_id === a.id),
+    cagir: (r, a, h) => coz(r.pediPrematur.PUT(iste('PUT', '/api/doktor/pediatri/prematur', { token: a.token, govde: { patientId: h.hasta, profil: { gestasyonHafta: 30, dogumKiloGr: 1300 } } }))) },
+  { ad: 'GET /api/doktor/pediatri/prematur/kohort (prematüre kohort listesi)',
+    cagir: (r, a) => coz(r.pediPrematurKohort.GET(iste('GET', '/api/doktor/pediatri/prematur/kohort', { token: a.token }))) },
+  { ad: 'GET /api/doktor/gebelik/erken-dogum (KD erken doğum paneli)', red: 404,
+    cagir: (r, a, h) => kdOlarak(() => coz(r.erkenDogum.GET(iste('GET', `/api/doktor/gebelik/erken-dogum?patientId=${h.hasta}`, { token: a.token })))) },
+  { ad: 'PUT /api/doktor/gebelik/erken-dogum (serviks günlüğü, öykü, steroid kürü)', red: 404,
+    yazdi: (a) => tablo('gebelikler').some((x) => x.patient_id === a.hasta && x.doctor_id === a.id && x.durum === 'aktif' && (x.erken_dogum as { oncekiSpontanPreterm?: boolean } | undefined)?.oncekiSpontanPreterm === true),
+    cagir: (r, a, h) => kdOlarak(() => coz(r.erkenDogum.PUT(iste('PUT', '/api/doktor/gebelik/erken-dogum', { token: a.token, govde: { patientId: h.hasta, kayit: { oncekiSpontanPreterm: true, serviks: [{ tarih: '2026-11-01', gestasyonGun: 150, mm: 22, yontem: 'transvajinal' }] } } })))) },
   { ad: 'GET /api/doktor/gebelik/kohort (KD kohort listesi)', okur: true,
     cagir: (r, a) => coz(r.kdKohort.GET(iste('GET', '/api/doktor/gebelik/kohort', { token: a.token }))) },
   { ad: 'POST /api/doktor/gebelik/kohort (KD 1-tap hatırlatma)',
@@ -992,6 +1009,9 @@ describe('HASTA-İZOLASYON: doktor A ve doktor B birbirinin hastasına hiçbir r
       pedi: await ice('app/api/doktor/pediatri/route'),
       pediTarama: await ice('app/api/doktor/pediatri/tarama/route'),
       pediKohort: await ice('app/api/doktor/pediatri/kohort/route'),
+      pediPrematur: await ice('app/api/doktor/pediatri/prematur/route'),
+      pediPrematurKohort: await ice('app/api/doktor/pediatri/prematur/kohort/route'),
+      erkenDogum: await ice('app/api/doktor/gebelik/erken-dogum/route'),
       jine: await ice('app/api/doktor/jinekoloji/route'),
       goruntuleme: await ice('app/api/doktor/goruntuleme/route'),
       goruntulemeYukle: await ice('app/api/doktor/goruntuleme/yukle/route'),

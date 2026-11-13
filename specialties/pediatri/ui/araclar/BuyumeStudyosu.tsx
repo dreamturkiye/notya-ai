@@ -13,7 +13,8 @@ import {
   olcumSatirlari, persentilKaymalari, buyumeHizlari, egriler, vkiSinifi, zMetni, persentilKisa, buyumeOzetMetni,
   REFERANS_AD, REFERANS_UST_AY, PARAM_AD, PARAM_BIRIM, type Referans, type Olcum,
 } from '../../engines/buyume';
-import { cmCoz, kiloCoz, tarihCoz, tarihGoster, yasMetni, ondalikAy, tr } from '../../engines/girdi';
+import { cmCoz, kiloCoz, tarihCoz, tarihGoster, yasMetni, ondalikAy, tr, gebelikHaftasiCoz } from '../../engines/girdi';
+import { duzeltilmisYas, duzeltilmisYasMetni, gestasyonGunu, gestasyonMetni, VARSAYILAN_DUZELTME_KURALI } from '@/lib/clinical/prematur/duzeltilmisYas';
 import { pediStil, Alan, Segment, Katlanir, TaslakNotu, KopyalaButonu, MuayeneFormunaEkle, OncekiVizit, PediHastaSecici, usePediHasta } from './PediAracKabugu';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
@@ -34,6 +35,7 @@ export default function BuyumeStudyosu() {
   const [hastaId, setHastaId] = useState('');
   const { ozet, hata: hastaHata } = usePediHasta(hastaId);
   const [dogumHam, setDogumHam] = useState('');
+  const [gestHam, setGestHam] = useState('');
   const [cinsiyet, setCinsiyet] = useState<Cinsiyet | ''>('');
   const [ref, setRef] = useState<Referans>('neyzi');
   const [bugunSatir, setBugunSatir] = useState<Satir>(() => yeniSatir(tarihGoster(bugun())));
@@ -45,6 +47,8 @@ export default function BuyumeStudyosu() {
     if (!ozet) return;
     if (ozet.dogumIso) setDogumHam(tarihGoster(ozet.dogumIso));
     if (ozet.cinsiyet) setCinsiyet(ozet.cinsiyet);
+    const gh = ozet.dogumBilgisi?.gebelikHaftasi;
+    setGestHam(gh != null ? String(gh).replace('.', ',') : '');
   }, [ozet]);
 
   // Hasta seçilince geçmiş ölçümler: onaylı notların vitalleri (/api/doktor/hastalar/[id]/buyume-egrileri).
@@ -75,10 +79,11 @@ export default function BuyumeStudyosu() {
 
   const dogumIso = tarihCoz(dogumHam);
   const hazir = !!dogumIso && !!cinsiyet;
+  const gestGun = gestasyonGunu(gebelikHaftasiCoz(gestHam));
   const olcumler: Olcum[] = useMemo(() => [...gecmis, bugunSatir]
     .map((s) => ({ tarih: tarihCoz(s.tarih) || '', kilo: kiloCoz(s.kilo), boy: cmCoz(s.boy), basCevresi: cmCoz(s.bas) }))
     .filter((o) => o.tarih && (o.kilo || o.boy || o.basCevresi)), [gecmis, bugunSatir]);
-  const satirlar = useMemo(() => (hazir ? olcumSatirlari(ref, cinsiyet as Cinsiyet, dogumIso!, olcumler) : []), [hazir, ref, cinsiyet, dogumIso, olcumler]);
+  const satirlar = useMemo(() => (hazir ? olcumSatirlari(ref, cinsiyet as Cinsiyet, dogumIso!, olcumler, gestGun) : []), [hazir, ref, cinsiyet, dogumIso, olcumler, gestGun]);
   const kaymalar = useMemo(() => persentilKaymalari(satirlar), [satirlar]);
   const hizlar = useMemo(() => buyumeHizlari(satirlar), [satirlar]);
   const son = satirlar[satirlar.length - 1];
@@ -86,8 +91,8 @@ export default function BuyumeStudyosu() {
 
   const grafikVeri = useMemo(() => {
     if (!hazir || !satirlar.length) return null;
-    const noktalar = satirlar.filter((s) => s.deger[param] != null && s.ay <= REFERANS_UST_AY[ref][param]).map((s) => ({ ay: s.ay, deger: s.deger[param]!, tarih: s.tarih }));
-    const maxAy = Math.max(24, ...satirlar.map((s) => s.ay)) + 6;
+    const noktalar = satirlar.filter((s) => s.deger[param] != null && s.egriAy != null && s.egriAy <= REFERANS_UST_AY[ref][param]).map((s) => ({ ay: s.egriAy!, deger: s.deger[param]!, tarih: s.tarih }));
+    const maxAy = Math.max(24, ...satirlar.map((s) => s.egriAy ?? s.ay)) + 6;
     let e = egriler(ref, param, cinsiyet as Cinsiyet, maxAy);
     if (param === 'vki') e = e.map((x) => ({ ...x, noktalar: x.noktalar.filter((n) => n.ay >= 24 || ref === 'who') }));
     return { birim: PARAM_BIRIM[param], egriler: e, noktalar };
@@ -115,6 +120,9 @@ export default function BuyumeStudyosu() {
           </Alan>
           <Alan etiket="Cinsiyet">
             <Segment etiket="Cinsiyet" deger={cinsiyet} set={setCinsiyet} secenekler={[['female', 'Kız'], ['male', 'Erkek']]} />
+          </Alan>
+          <Alan etiket="Doğumdaki gebelik haftası" ipucu={gestHam && gestGun == null ? 'Okunamadı — ör. 32+4' : gestGun != null && gestGun < VARSAYILAN_DUZELTME_KURALI.baslangicHafta * 7 ? `Prematüre (${gestasyonMetni(gestGun)}) — düzeltilmiş yaş kullanılır` : 'boş bırakılırsa düzeltme yapılmaz (term)'}>
+            <input value={gestHam} onChange={(e) => setGestHam(e.target.value)} placeholder="32+4" aria-label="Doğumdaki gebelik haftası" inputMode="decimal" style={input} />
           </Alan>
           <Alan etiket="Referans">
             <Segment etiket="Referans" deger={ref} set={setRef} secenekler={[['neyzi', 'Neyzi'], ['who', 'WHO']]} />
@@ -158,7 +166,8 @@ export default function BuyumeStudyosu() {
           <div style={{ ...kucuk, fontSize: 14 }}>Kilo, boy veya baş çevresi girin.</div>
         ) : (
           <>
-            <div style={{ ...kucuk, marginBottom: 10 }}>{tarihGoster(son.tarih)} · {yasMetni(dogumIso!, son.tarih)} ({tr(son.ay, 1)} ay)</div>
+            <div style={{ ...kucuk, marginBottom: 10 }}>{tarihGoster(son.tarih)} · {yasMetni(dogumIso!, son.tarih)} ({tr(son.ay, 1)} ay){son.duzeltilmis && gestGun != null && !son.termOncesi && <> · <b>düzeltilmiş yaş {duzeltilmisYasMetni(duzeltilmisYas({ dogumIso: dogumIso!, gestasyonGun: gestGun, tarihIso: son.tarih }), son.tarih)}</b> ({tr(son.egriAy!, 1)} ay) — persentil düzeltilmiş yaşa göre</>}</div>
+            {son.termOncesi && <div style={{ ...uyari, marginBottom: 10 }}>Bebek henüz tahmini term tarihine (40. hafta) ulaşmadı; Neyzi ve WHO eğrileri bu yaşta uygulanamaz — prematüre büyüme eğrisi (Fenton / Olsen) gerekir bu sürümde bulunmuyor. Ölçümler kayda alınır, persentil verilmez.</div>}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 10 }}>
               {(['kilo', 'boy', 'basCevresi', 'vki'] as BuyumeParametre[]).filter((p) => son.deger[p] != null).map((p) => {
                 const r = son.sonuc[p];
