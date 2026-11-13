@@ -51,7 +51,18 @@ const SABLONLARIM: AracTanimi = { anahtar: 'sablonlarim', tur: 'ekran', ekran: '
  */
 const KONSULTASYONLAR: AracTanimi = { anahtar: 'konsultasyonlar', tur: 'ekran', ekran: 'konsultasyonlar', alanlar: [], cikti: { sayilar: [], bantlar: [], uyarilar: [], tarihler: [] }, kaynak: null, hesapla: () => BOS_SONUC }
 
-export const KIT_ARACLARI: readonly AracTanimi[] = [HASTA_PORTALI, TAKIP_PANELI, SABLONLARIM, KONSULTASYONLAR, ...ACIL_ANESTEZI_BEYIN, ...CERRAHI_DAHILIYE_DERM, ...ENDO_ENFEKSIYON_GASTRO, ...CERRAHI_GOGUS_GOZ, ...KALP_KBB, ...NEFRO_ONKO, ...ORTO_PEDI_RADYO_ROMA, ...BOSLUK_ARACLARI, ...KADIN_DOGUM_CERRAHI, ...KD_OPERATOR_ARACLARI, ...GENITAL_ESTETIK_ARACLARI, ...KD_TARAMA_ARACLARI]
+/**
+ * PREMATUR-ULKE-01 — the prematurity module as three tiles (migration 200; lib/ulke/prematur/): the preterm baby's follow-up plan
+ * (for a patient), the doctor's own list of such babies, and obstetrics and gynaecology's early-birth record. The screens are the
+ * kit's own; the tools have no fields and work nothing out in the tool engine: the table, the thresholds and the words are the
+ * PACK's (`UlkeAraclari.prematur`), each rule with its source or "follow your local protocol". Paediatric roles see the first two,
+ * obstetrics and gynaecology the third (the pack lists the roles; the leak test holds it).
+ */
+const PREMATUR_TAKIP: AracTanimi = { anahtar: 'prematur-takip', tur: 'ekran', ekran: 'prematurTakip', alanlar: [], cikti: { sayilar: [], bantlar: [], uyarilar: [], tarihler: [] }, kaynak: null, hesapla: () => BOS_SONUC }
+const PREMATUR_KOHORT: AracTanimi = { anahtar: 'prematur-kohort', tur: 'ekran', ekran: 'prematurKohort', alanlar: [], cikti: { sayilar: [], bantlar: [], uyarilar: [], tarihler: [] }, kaynak: null, hesapla: () => BOS_SONUC }
+const ERKEN_DOGUM: AracTanimi = { anahtar: 'erken-dogum', tur: 'ekran', ekran: 'erkenDogum', alanlar: [], cikti: { sayilar: [], bantlar: [], uyarilar: [], tarihler: [] }, kaynak: null, hesapla: () => BOS_SONUC }
+
+export const KIT_ARACLARI: readonly AracTanimi[] = [HASTA_PORTALI, TAKIP_PANELI, SABLONLARIM, KONSULTASYONLAR, PREMATUR_TAKIP, PREMATUR_KOHORT, ERKEN_DOGUM, ...ACIL_ANESTEZI_BEYIN, ...CERRAHI_DAHILIYE_DERM, ...ENDO_ENFEKSIYON_GASTRO, ...CERRAHI_GOGUS_GOZ, ...KALP_KBB, ...NEFRO_ONKO, ...ORTO_PEDI_RADYO_ROMA, ...BOSLUK_ARACLARI, ...KADIN_DOGUM_CERRAHI, ...KD_OPERATOR_ARACLARI, ...GENITAL_ESTETIK_ARACLARI, ...KD_TARAMA_ARACLARI]
 
 const DIZIN: ReadonlyMap<string, AracTanimi> = new Map(KIT_ARACLARI.map((a) => [a.anahtar, a]))
 

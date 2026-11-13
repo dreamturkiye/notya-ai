@@ -78,6 +78,9 @@ export const TR_ROZETLERI: Readonly<Record<string, AracRozeti>> = {
   'roma-lab-izlem': { renk: '#F59E0B', simge: 'EH' },
   'cc-prepost-op': { renk: '#0891B2', simge: 'PP' },
   'tetkik': { renk: '#EA580C', simge: 'TX' },
+  'pedi-prematur-takip': { renk: '#0F766E', simge: 'PT' },
+  'pedi-prematur-kohort': { renk: '#0891B2', simge: 'PH' },
+  'kd-erken-dogum': { renk: '#BE185D', simge: 'ED' },
 }
 
 /** Kit tool key → the Türkiye tile (route name) that does the same job. */
@@ -100,6 +103,7 @@ export const ESLENIK: Readonly<Record<string, string>> = {
   'rtp-basamak': 'spor-rtp', 'sakatlik-gunlugu': 'spor-sakatlik', 'psa-hizi': 'uro-psa', ipss: 'uro-ipss',
   'endoskopi-kaydi': 'gastro-endoskopi', 'kronik-izlem-kaydi': 'aile-kronik', 'birinci-acil-bayrak': 'aile-sevk',
   'gebelik-gun': 'kd-gebelik-takvim', 'inme-bayraklari': 'noro-inme', 'psikiyatri-guvenlik': 'psik-risk', 'seans-plani': 'ftr-seans',
+  'prematur-takip': 'pedi-prematur-takip', 'prematur-kohort': 'pedi-prematur-kohort', 'erken-dogum': 'kd-erken-dogum',
   'icf-ozet': 'ftr-vas-odi', phq9: 'psik-phq-gad', gad7: 'psik-phq-gad', midas: 'noro-migren', odi: 'ftr-vas-odi',
 }
 
