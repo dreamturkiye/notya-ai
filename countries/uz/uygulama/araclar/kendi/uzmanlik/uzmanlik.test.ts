@@ -7,13 +7,13 @@
 process.env.NOTYA_COUNTRY = 'uz'
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
-import { AKTIF_ARAYUZ } from '@/countries/active/arayuz'
+import { UZ_ARAYUZ } from '../../../../arayuz' // the pack's own door: a pack test must not reach countries/active (wall D3)
 import { UZ_UZMANLIK_SATIRLARI, UZ_UZMANLIK_TANIMLAR, uzUzmanlikAraclari } from './index'
 import { anahtarOf, tanimOf } from './motor'
 import { metinleriTopla, rozilikAnahtari, xulosaAnahtari, UZ_ONAM_SATIRLARI } from './onamRapor'
 
 const ORTAM = { bugun: '2026-11-08', p: {} }
-const ROLLER: string[] = (AKTIF_ARAYUZ?.roller ?? []).map((r) => r.anahtar)
+const ROLLER: string[] = (UZ_ARAYUZ.roller ?? []).map((r) => r.anahtar)
 
 it('the active pack is Uzbekistan (42 roles)', () => assert.equal(ROLLER.length, 42))
 

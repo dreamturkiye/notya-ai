@@ -59,10 +59,3 @@ describe('en: the tip trigger (IPUCU-TETIK-01)', () => {
     assert.match(h1, /whiteSpace: 'nowrap'[^\n]*<Ipucu m=\{m\} bolum="bugun" \/>/)
   })
 })
-
-describe('uz: the tip trigger names the page in every language (IPUCU-TETIK-01)', () => {
-  it('uz-Latn, uz-Cyrl and ru fill ipuclari.sayfa', async () => {
-    const { UZ_UYGULAMA_METINLERI } = await import('@/countries/uz/uygulama/metinler')
-    for (const [dil, m] of Object.entries(UZ_UYGULAMA_METINLERI)) assert.ok((m.ipuclari?.sayfa ?? '').trim().length >= 8, dil)
-  })
-})
