@@ -1431,27 +1431,31 @@ Wave3’te SIRADAKİ diye önerildi → **HATA**. Ledger + early seed’e işlen
 ## W6-45. Op. Dr. Melik Yazır ← GİTTİ (2026-11-13, WA-verified)
 **kadın-doğum** · İzmir · WA: +905422439096 · variant kd-B-0000
 
-## W6-46. Doç. Dr. Mehmet Rıfat Göklü ← SIRADAKİ
-**kadın-doğum** · İzmir · WA: +905077610020 · variant kd-A-0001 · 9/22 · ≥10 dk
+## W6-46. Doç. Dr. Mehmet Rıfat Göklü ← GİTTİ (2026-11-13, WA-verified)
+**kadın-doğum** · İzmir · WA: +905077610020 · variant kd-A-0001
+
+## W6-47. Op. Dr. Meltem Antalyalı ← SIRADAKİ
+**kadın-doğum** · Ankara · WA: +905013236323 · variant kd-C-0002 · 10/22 · ≥10 dk
 
 ```
-Mehmet Hocam, merhaba.
-Ben Kaan — *Notya*'dan ulaşıyorum.
+Meltem Hocam merhaba 👋
+Ben Kaan, *Notya*'dan yazıyorum.
 
-Kısaca *Notya*: muayene odasında sizinle çalışan bir klinik asistan.
-Not, reçete, rapor, takip ve hasta portalı tek yerde — kararlar yine *sizde*.
-40'tan fazla branşı kendi dilinde destekliyoruz.
-
-*Kadın doğumda*
-- Jinekolojik operasyon notları (histerektomi, myomektomi, laparoskopi)
-- Obstetrik risk (preeklampsi, GDM, SSVD)
-- Doppler'li USG ve yapılandırılmış NST
-- Doğum epikrizi ve antetli baskı
-- Sezaryen ve ameliyat notları
+*Notya* — hekimler için yapay zekâ klinik asistanı.
+Muayeneyi dinler, notunuzu yazar, reçete ve rapor taslağını hazırlar, hastanızı takipte tutar — hasta portalı dahil.
+Her karar *sizin onayınızla*.
+40'tan fazla branşı kendi ihtiyaçlarıyla destekliyoruz.
 
 Tipik bir günde yaklaşık *1,5-2 saat* kazanç.
 Hasta portalı gibi özellikler hem zaman kazandırır hem hastaya verdiğiniz hizmetin kalitesini yükseltir.
 Geri kalmamak önemli: hastalar giderek daha modern çalışan hekimleri tercih ediyor.
+
+*Kadın doğumda*
+- Jinekolojik operasyon notları (histerektomi, myomektomi, laparoskopi)
+- Gebelik takvimi ve izlem
+- Sezaryen ve ameliyat notları
+- Doğum epikrizi ve antetli baskı
+- Obstetrik risk (preeklampsi, GDM, SSVD)
 
 İsterseniz Dr. Gökhan Mamur *30 dakikalık* kısa bir tanıtım ayarlıyor — saat sizin diliminiz.
 Tanıtıma şimdi vakit yoksa ücretsiz denemeyi de hemen açabilirsiniz.

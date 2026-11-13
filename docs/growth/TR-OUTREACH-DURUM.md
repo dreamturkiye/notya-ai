@@ -2,9 +2,9 @@
 
 **Anti-ban:** 22/gün · gap ≥10 dk · 5/saat.
 
-**Sıradaki:** Doç. Dr. Mehmet Rıfat Göklü · KD · İzmir · +905077610020
-(variant kd-A-0001 · paket W6-46 · bugün 9/22)
+**Sıradaki:** Op. Dr. Meltem Antalyalı · KD · Ankara · +905013236323
+(variant kd-C-0002 · paket W6-47 · bugün 10/22)
 
 ```bash
-python3 scripts/tr-outreach-next.py --mark-gitti "Doç. Dr. Mehmet Rıfat Göklü" --phone +905077610020 --brans kadin-dogum --city İzmir --variant-id kd-A-0001
+python3 scripts/tr-outreach-next.py --mark-gitti "Op. Dr. Meltem Antalyalı" --phone +905013236323 --brans kadin-dogum --city Ankara --variant-id kd-C-0002
 ```
