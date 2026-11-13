@@ -6,6 +6,8 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { duzeltmeAnaliz, type AlanMetinleri } from './duzeltmeAnaliz'
 import { duzeltmeKurallariniKaydet } from './kuralKaydet'
+import { onayMetrigiYaz } from './metrik'
+import { klinikHavuzuSenkronla } from './klinikUslup'
 
 export function arkaPlandaSurdur(p: Promise<unknown>): void {
   try {
@@ -57,8 +59,13 @@ export async function duzeltmedenOgren(
   doctorId: string,
   noteId: string,
   loglar: { alan: string; onceki: string; sonraki: string }[],
+  secenek: { metrik?: boolean } = {},
 ): Promise<number> {
   if (!loglar.length) return 0
+  const { taslak, son } = loglardanAlanlar(loglar)
+  const deltolar = duzeltmeAnaliz(taslak, son)
+  // V3 ivme: onaylı notun gerçek düzeltme sayısı (not başına tek satır, yeniden onayda son hali).
+  if (secenek.metrik !== false) await onayMetrigiYaz(sb, doctorId, noteId, deltolar.length)
   const ozet = revizyonOzeti(loglar)
   const { error: kilit } = await sb.from('doktor_ogrenme_islemleri').insert({
     doctor_id: doctorId,
@@ -66,9 +73,9 @@ export async function duzeltmedenOgren(
     revizyon_ozet: ozet,
   })
   if (kilit) return 0
-  const { taslak, son } = loglardanAlanlar(loglar)
-  const deltolar = duzeltmeAnaliz(taslak, son)
-  return duzeltmeKurallariniKaydet(sb, doctorId, deltolar, noteId)
+  const n = await duzeltmeKurallariniKaydet(sb, doctorId, deltolar, noteId)
+  if (n > 0) await klinikHavuzuSenkronla(sb, doctorId)
+  return n
 }
 
 export async function stilProfiliArkaPlan(
@@ -109,10 +116,16 @@ export function onaySonrasiOgren(
   doctorId: string,
   noteId: string,
   loglar: { alan: string; onceki: string; sonraki: string }[],
+  secenek: { metrik?: boolean } = {},
 ): void {
   if (!loglar.length) return
   arkaPlandaSurdur((async () => {
-    try { await duzeltmedenOgren(sb, doctorId, noteId, loglar) } catch (e) { console.error('[ogrenme] kural', e) }
+    try { await duzeltmedenOgren(sb, doctorId, noteId, loglar, secenek) } catch (e) { console.error('[ogrenme] kural', e) }
     try { await stilProfiliArkaPlan(sb, doctorId, loglar.length) } catch (e) { console.error('[ogrenme] damitma', e) }
   })())
+}
+
+/** Düzeltmesiz onay: ivme için sıfır düzeltmeli not. İstek yolunda beklenmez (waitUntil). */
+export function duzeltmesizOnayMetrigi(sb: SupabaseClient, doctorId: string, noteId: string): void {
+  arkaPlandaSurdur(onayMetrigiYaz(sb, doctorId, noteId, 0).catch((e) => console.error('[ogrenme] metrik', e)))
 }
