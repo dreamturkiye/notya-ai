@@ -19,7 +19,7 @@ A pack that builds has every text and setting filled in. It says nothing about w
 
 ## What is in this pack, and where it comes from
 
-- **From the shared English set** (`countries/_dil/en/`, written once for five countries): 6810 texts as this pack shows them or hands the model (the country's own, counted in the next line, among them) — the screens, the role names, 40 note templates, the instructions to the model, the intake questions, 100 tools, the landing copy — written in `en-NZ` spelling by the set's spelling table.
+- **From the shared English set** (`countries/_dil/en/`, written once for five countries): 7104 texts as this pack shows them or hands the model (the country's own, counted in the next line, among them) — the screens, the role names, 40 note templates, the instructions to the model, the intake questions, 103 tools, the landing copy — written in `en-NZ` spelling by the set's spelling table.
 - **This country's own** (`countries/nz/`, six small files): 42 texts it writes itself (its consent sentence, identifier label, time sentence, date example, name, word for a senior doctor, role names where they differ, what its closed tools are missing and who decides, unit names and tool words it writes differently, the example phone number and the pattern of an amount) and the settings in the table below.
 
 ## Settings — every one unverified
@@ -123,7 +123,7 @@ The keys are the shared English key set (`docs/COUNTRY-PACK-ROLE-KEYS.md`). The 
 
 ## Tools
 
-### Switched on (100) — with the unit each measured input takes
+### Switched on (103) — with the unit each measured input takes
 
 Units are a clinical-safety matter. A length or a weight is typed in this pack's unit and converted by the kit with the exact defined factors (1 in = 2.54 cm, 1 lb = 0.45359237 kg); a laboratory value is typed in the unit shown. `countries/nz/nz.test.ts` runs every tool below with this country's units against the kit's reference result. **Every tool's text is machine-written; each waits on a local clinical lead.**
 
@@ -219,6 +219,9 @@ Units are a clinical-safety matter. A length or a weight is typed in this pack's
 | `hpv-asi-kaydi` | HPV vaccine record | Obstetrics and gynaecology | no measured input |
 | `sma-tasiyicilik` | SMA carrier screening (prenatal record) | Obstetrics and gynaecology | no measured input |
 | `pmdd-gunluk-ozeti` | PMS / PMDD: two-cycle diary summary and DSM-5-TR checklist | Obstetrics and gynaecology | no measured input |
+| `prematur-takip` | Preterm follow-up plan | Paediatrics | no measured input |
+| `prematur-kohort` | Preterm babies list | Paediatrics | no measured input |
+| `erken-dogum` | Early-birth record | Obstetrics and gynaecology | no measured input |
 | `nz-bmi-waist` | Body mass index and waist | Emergency medicine, General practice, Anaesthesia, Neurosurgery, Internal medicine, Dermatology, Endocrinology, Infectious diseases, Gastroenterology, General surgery, Cardiothoracic surgery, Respiratory medicine, Ophthalmology, Obstetrics and gynaecology, Vascular surgery, Cardiology, Otolaryngology, head and neck surgery, Nephrology, Neurology, Medical oncology, Orthopaedic surgery, Plastic and reconstructive surgery, Psychiatry, Diagnostic and interventional radiology, Rheumatology, Urology, Sport and exercise medicine, Rehabilitation medicine, Urgent care medicine, Rural hospital medicine, Musculoskeletal medicine, Occupational medicine, Pain medicine, Sexual health medicine, Family planning and reproductive health, Palliative medicine, Oral and maxillofacial surgery, Hair transplantation — practice focus for registered doctors (not a specialty or vocational scope), Cosmetic surgery, Cosmetic medicine — practice focus for registered doctors (not a specialty or vocational scope), Dermatology, Longevity medicine — practice focus for registered doctors (not a specialty or vocational scope), Dietitian | Weight: **kg**; Height: **cm**; Waist circumference (optional): **cm** · result in kg/m² |
 | `nz-smoking-abc` | Smoking: record of the ABC steps | Emergency medicine, General practice, Anaesthesia, Neurosurgery, Paediatric surgery, Internal medicine, Dermatology, Endocrinology, Infectious diseases, Gastroenterology, General surgery, Cardiothoracic surgery, Respiratory medicine, Ophthalmology, Obstetrics and gynaecology, Vascular surgery, Cardiology, Otolaryngology, head and neck surgery, Nephrology, Neurology, Medical oncology, Orthopaedic surgery, Paediatrics, Plastic and reconstructive surgery, Psychiatry, Diagnostic and interventional radiology, Rheumatology, Urology, Sport and exercise medicine, Rehabilitation medicine, Urgent care medicine, Rural hospital medicine, Musculoskeletal medicine, Occupational medicine, Pain medicine, Sexual health medicine, Family planning and reproductive health, Palliative medicine, Oral and maxillofacial surgery, Hair transplantation — practice focus for registered doctors (not a specialty or vocational scope), Cosmetic surgery, Cosmetic medicine — practice focus for registered doctors (not a specialty or vocational scope), Dermatology, Longevity medicine — practice focus for registered doctors (not a specialty or vocational scope) | no measured input |
 | `nz-psa-thresholds` | Prostate-specific antigen: level by age and referral group | General practice, Urology | Age: **years**; PSA result: **µg/L** · result in µg/L |

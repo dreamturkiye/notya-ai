@@ -28,6 +28,7 @@ import type { Birimler } from '@/lib/ulke/tipler'
 import { NZ_OPERATOR_DEGISEN, NZ_OPERATOR_PARAMETRELERI } from './operator'
 import { NZ_GENITAL_ESTETIK } from './genitalEstetik'
 import { NZ_KD_TARAMALARI } from './kdTaramalar'
+import { NZ_PREMATUR } from './prematur'
 import { enEkRolIcerigi, type EnEkTur } from '../_dil/en/klinik/ekRoller'
 
 /**
@@ -259,6 +260,8 @@ export const NZ_GIRDI: EnUlkeGirdisi = {
     genitalEstetik: NZ_GENITAL_ESTETIK,
     // KD-TARAMA-01 (2026-11-09): thyroid in pregnancy, HPV vaccine record, SMA carrier screening, PMS / PMDD diary — with this country's numbers and sources (./kdTaramalar.ts)
     kdTaramalari: NZ_KD_TARAMALARI,
+    // PREMATUR-ULKE-01 (2026-11-13): the preterm baby's follow-up table and the early-birth thresholds, each with its source (./prematur.ts)
+    prematur: NZ_PREMATUR,
     kapali: {
       // SOURCE-CHECKED: emergency departments here use the Australasian triage scale (Health New Zealand's public page
       // on emergency department triage), not the Emergency Severity Index. The audit's verdict for this tool is
