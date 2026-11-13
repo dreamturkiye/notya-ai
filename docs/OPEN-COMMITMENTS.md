@@ -1,5 +1,41 @@
 # OPEN COMMITMENTS — Notya AI
 
+## AYSE-OGRENME-V3 — Ayşe's learning made visible and shareable: what is open (Claude, 2026-11-13, Kaan's GO 2026-11-13)
+
+Branch `feat/ayse-ogrenme-v3` (not merged, not deployed). Classification: CORE (shared doctor workflow) — all 40 branches through
+the one pipeline (`lib/doktor/ogrenme/*`); the klinik toggle is a core code path surfaced in Notya Klinik members. Three parts:
+(1) **Öğrenme ivmesi** — `doktor_ogrenme_metrik` (real correction count per approved note, written in `waitUntil`; zero-edit approvals
+count as 0), shown on `/dashboard/doktor/ayarlar/ayse-hafizasi` with a weekly line; <3 approved notes = empty state, direction only
+from ≥6 notes (first 3 vs last 3). Notes approved before migration 197 have no measurement and are not backfilled (honest: it starts
+counting from the apply date). (2) **Kural önizleme** — rebuilt from the doctor's own `not_duzenlemeleri` of the rule's
+`kanit_not_idler` with the deterministic diff; no schema, no LLM; doz değeri has none. (3) **Klinik ortak üslup** — default OFF,
+explicit consent, pool split by branş, leaving deletes the doctor's rows. Voice/text path (FOUNDER LOCK) untouched; model policy untouched.
+Per country: tr APPLIED (code; database see a) · us OPEN GAP · gb OPEN GAP · ca OPEN GAP · au OPEN GAP · nz OPEN GAP · uz OPEN GAP
+(code is country-ready — copy in `lib/doktor/ogrenme/metinler.ts` has tr/en/uz, no Turkish in country builds from these files — but
+nothing is on a `release/<cc>` branch yet; see c).
+
+- **AYSE-OGRENME-V3a — migration `lib/db/migrations/197_ayse_ogrenme_v3.sql` is NOT applied — waits on the operator (main session), 2026-11-13.**
+  Apply to Türkiye first, then the six country databases (the file only adds three tables; it needs `users`, `clinics`, `clinic_members`
+  — verify those exist in each country DB before running; if a country DB has no `clinics`, run only the `doktor_ogrenme_metrik` part
+  and the app treats the clinic tables as "feature off"). Verify: three tables, RLS on, no anon grant, `doktor_ogrenme_metrik` PK
+  (doctor_id, note_id). Rollback `lib/db/migrations/geri-al/197_ayse_ogrenme_v3.geri-al.sql`. Until applied: ivme shows its empty state, the
+  clinic section does not render, notes are written exactly as before (every V3 read/write is guarded).
+- **AYSE-OGRENME-V3b — terminology sharing is limited to a closed allow-list — waits on Kaan + Dr. Gökhan (clinical review), 2026-11-13.**
+  A drug-name deny-list cannot reliably catch "amoksisilin→augmentin"-type substitutions, so a `terim` rule enters the clinic pool only if
+  every word is in `TERIM_IZIN_LISTESI` (`lib/doktor/ogrenme/klinikUslup.ts`, ~70 generic prose words tr/en/uz). Uzunluk and sıra
+  rules always qualify; ilaç, doz biçimi and silme/ekleme/yeniden-yazma (they quote note text) never. Needs a clinical review pass to widen the list per language.
+- **AYSE-OGRENME-V3c — port to the six release branches — Claude, next batch (one push per branch, `[skip ci]`-free because code), 2026-11-13.**
+  Cherry-pick this branch's commit(s) to `release/us|gb|ca|au|nz|uz` after migration 197 is applied there. Checks per country: the
+  `ayse-hafizasi` page was Turkish in country builds before V3; this change localizes the whole page from the copy object, but the
+  Ayarlar tile ("Ayşe'nin hafızası") and the "Sizin tarzınızla yazıldı" chip are still Turkish there — same gap, not introduced here.
+  UZ doctors may use Russian (`ui_language: ru`): the copy object has no `ru` set yet (falls to uz) — **waits on Kaan** (is ru required for the doctor UI?).
+- **AYSE-OGRENME-V3d — not measured on real traffic — Claude, 2026-11-13.** All verification is unit tests + the in-memory stand-in
+  (`ivme`, `onizleme`, `klinikUslup` tests, `scripts/meslektas/seans10.mts`); nothing ran against a real database. After apply, one
+  production check: approve one note with an edit and one without → two rows in `doktor_ogrenme_metrik`; time `uygulanirKurallariYukle`
+  (it now does one extra PK lookup for every doctor, more only for opted-in ones) for the performance log.
+
+| Claude: port (c), post-apply check (d) | Kaan / operator: apply 197 (a) · Kaan + Dr. Gökhan: terim allow-list (b), ru copy (c) |
+
 ## WHATSAPP-ONBURO-01 — "Ayşe ön büro": a new appointment by WhatsApp chat and answers from the practice sheet — what is open (Claude, 2026-11-12)
 
 Built on WHATSAPP-API-01 / WHATSAPP-CANCEL-01, not beside them: `lib/iletisim/onburo/` is called from `yanit.ts` after the

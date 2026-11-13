@@ -134,7 +134,7 @@ export async function POST(req: NextRequest) {
     ])
     try {
       const { onaySonrasiOgren } = await import('@/lib/doktor/ogrenme/arkaPlandaOgren')
-      onaySonrasiOgren(supabase, user.id, noteId, [{ alan: 'objektif', onceki: onceki.slice(0, 2000), sonraki: sonraki.slice(0, 2000) }])
+      onaySonrasiOgren(supabase, user.id, noteId, [{ alan: 'objektif', onceki: onceki.slice(0, 2000), sonraki: sonraki.slice(0, 2000) }], { metrik: false })
     } catch { /* öğrenme kritik değil */ }
     return NextResponse.json({ ok: true, noteId })
   }
@@ -154,7 +154,7 @@ export async function POST(req: NextRequest) {
     ])
     try {
       const { onaySonrasiOgren } = await import('@/lib/doktor/ogrenme/arkaPlandaOgren')
-      onaySonrasiOgren(supabase, user.id, noteId, [{ alan: 'plan', onceki: (not.content_plan || '').slice(0, 2000), sonraki: yeniPlan.slice(0, 2000) }])
+      onaySonrasiOgren(supabase, user.id, noteId, [{ alan: 'plan', onceki: (not.content_plan || '').slice(0, 2000), sonraki: yeniPlan.slice(0, 2000) }], { metrik: false })
     } catch { /* öğrenme kritik değil */ }
   }
   await Promise.all([
