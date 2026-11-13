@@ -56,6 +56,9 @@ import { EN_ARACLAR_5 } from './arac5'
 import { EN_ARACLAR_6 } from './arac6'
 import { EN_ARACLAR_7, EN_GE_HASTA_METNI, enGeYuvalari } from './arac7'
 import { EN_ARACLAR_8 } from './arac8'
+import { EN_ARACLAR_9 } from './arac9'
+import { enPrematurMetni } from '../prematurMetni'
+import type { PrematurPaketi } from '@/lib/ulke/prematur/paket'
 import { GE_KOZMETIK_ARACLARI } from '@/lib/ulke/araclar/tanimlar/genitalEstetik'
 import { araciBicimle, lisansiBicimle, type EnDegisen, type EnLisans, type HamArac } from './yardimci'
 import { enAracYuvalari, yuva } from './yuvalar'
@@ -94,6 +97,11 @@ export const EN_GENITAL_ESTETIK_ARACLARI: readonly HamArac[] = EN_ARACLAR_7
  * (./arac8.ts). Switched on where a country states `kdTaramalari`, with ITS numbers, HPV table and source lines.
  */
 export const EN_KD_TARAMA_ARACLARI: readonly HamArac[] = EN_ARACLAR_8
+/**
+ * PREMATUR-ULKE-01 (2026-11-13) — the prematurity module's three tiles (./arac9.ts). Switched on where a country states `prematur`,
+ * with ITS follow-up table and ITS early-birth thresholds, each with its source and how it was read (or "follow your local protocol").
+ */
+export const EN_PREMATUR_ARACLARI: readonly HamArac[] = EN_ARACLAR_9
 /** The three tools of every surgical role among them: they follow the operation note's audience. */
 const CERRAHI_ORTAK: readonly string[] = ['cerrahi-guvenlik-listesi', 'caprini', 'asa-siniflamasi']
 
@@ -203,6 +211,12 @@ export type EnAraclarGirdisi = {
    * and any tool it keeps as a slot (`kapali`).
    */
   kdTaramalari?: { kapali?: EnAraclarGirdisi['kapali']; degisen?: EnAraclarGirdisi['degisen']; parametreler?: EnAraclarGirdisi['parametreler']; tablolar?: EnAraclarGirdisi['tablolar'] }
+  /**
+   * PREMATUR-ULKE-01: the prematurity module (the preterm baby's follow-up plan and list, the early-birth record) with THIS country's
+   * follow-up table and early-birth thresholds. The roles and the words are the set's. A table or a block the country could not
+   * source is stated as "follow your local protocol" (`yerel` rules, `serviks`/`steroid` null), never invented.
+   */
+  prematur?: Pick<PrematurPaketi, 'protokol' | 'erkenDogum'>
   /** Unit names this country writes differently: unit code → name. Used as written. */
   birimAdlari?: Readonly<Record<string, string>>
   /** Words of a tool this country writes differently: kit key → the words. Used as written. */
@@ -293,7 +307,7 @@ export function enAraclar(g0: EnAraclarGirdisi): UlkeAraclari {
     return Object.keys(ek).length ? ek : undefined
   }
   const temel = EN_TEMEL_ARACLAR.map((a) => araciBicimle(a, bicim, g.degisen?.[a.anahtar], eki(a)))
-  const setinRolAraclari = [...EN_ROL_ARACLARI, ...(g.ameliyatKayitlari ? EN_AMELIYAT_ARACLARI : []), ...(g.operatorAraclari ? EN_OPERATOR_ARACLARI : []), ...(g.genitalEstetik ? EN_GENITAL_ESTETIK_ARACLARI : []), ...(g.kdTaramalari ? EN_KD_TARAMA_ARACLARI : [])]
+  const setinRolAraclari = [...EN_ROL_ARACLARI, ...(g.ameliyatKayitlari ? EN_AMELIYAT_ARACLARI : []), ...(g.operatorAraclari ? EN_OPERATOR_ARACLARI : []), ...(g.genitalEstetik ? EN_GENITAL_ESTETIK_ARACLARI : []), ...(g.kdTaramalari ? EN_KD_TARAMA_ARACLARI : []), ...(g.prematur ? EN_PREMATUR_ARACLARI : [])]
   const rol = setinRolAraclari.filter(acik).map((a) => araciBicimle(a, bicim, g.degisen?.[a.anahtar], eki(a)))
   const ekAraclar = g.ek?.araclar ?? []
   // THE FOLLOW-UP LIST: a role tool of every role that has a switched-on tool of its own, in the order of the role list.
@@ -327,6 +341,7 @@ export function enAraclar(g0: EnAraclarGirdisi): UlkeAraclari {
     dozYazimi: g.dozYazimi,
     yuvalar: [...yuvalar, ...(g.genitalEstetik ? enGeYuvalari() : []), ...(g.ek?.yuvalar ?? [])],
     inceleme: { makineYazimi: true, klinisyen: null },
+    ...(g.prematur ? { prematur: { protokol: g.prematur.protokol, erkenDogum: g.prematur.erkenDogum, roller: { bebek: buUlkede(['paediatrics']), gebelik: buUlkede(['obstetrics-gynaecology']) }, metinler: { [bicim]: enPrematurMetni(bicim) } } } : {}),
     ...(g.ek?.tanimlar?.length ? { kendiAraclari: g.ek.tanimlar } : {}),
     ...(g.ek?.olculer ? { olculer: g.ek.olculer } : {}),
     ...(g.lisansTam !== undefined ? { lisansTam: g.lisansTam } : {}),
