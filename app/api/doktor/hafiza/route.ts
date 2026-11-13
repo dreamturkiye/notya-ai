@@ -10,6 +10,9 @@ import { hafizaYukle, hafizaYukleTum, hafizaBloguSes, karsilamaSecimi, hafizaKay
 import { gunVerisiDerle, gunFazi, gunOzetiMetni, gunBlogu } from '@/lib/doktor/gunOzeti'
 import { meslektasSelamSatiri, ogrenmeSelamSatiri } from '@/lib/doktor/ogrenme/selam'
 import { kuralKapat } from '@/lib/doktor/ogrenme/kuralKaydet'
+import { kuralOnizlemesiYukle } from '@/lib/doktor/ogrenme/onizleme'
+import { klinikHavuzuSenkronla } from '@/lib/doktor/ogrenme/klinikUslup'
+import { arkaPlandaSurdur } from '@/lib/doktor/ogrenme/arkaPlandaOgren'
 import { toAddressableUser, type DoctorProfile } from '@/lib/userProfile'
 import { dahiliyeKilidi, dahiliyeMi } from '@/specialties/dahiliye/prompts'
 import { kadinDogumKilidi, kadinDogumMi } from '@/specialties/kadin-dogum/prompts'
@@ -101,6 +104,7 @@ export async function POST(req: NextRequest) {
   try {
     if (body.kapat || (body.durum === 'kapali' && body.anahtar)) {
       await kuralKapat(supabase, doktorId, anahtarSlug(body.kapat || body.anahtar || ''))
+      arkaPlandaSurdur(klinikHavuzuSenkronla(supabase, doktorId))
       return NextResponse.json({ ok: true, kapali: body.kapat || body.anahtar })
     }
     if (body.durum === 'uygulanir' && body.anahtar) {
@@ -108,12 +112,16 @@ export async function POST(req: NextRequest) {
       await supabase.from('doktor_hafiza').update({
         durum: 'uygulanir', aktif: true, kesin: true, updated_at: new Date().toISOString(),
       }).eq('doctor_id', doktorId).eq('anahtar', slug)
-      return NextResponse.json({ ok: true, durum: 'uygulanir' })
+      arkaPlandaSurdur(klinikHavuzuSenkronla(supabase, doktorId))
+      // V3: kural UYGULANIR olunca doktorun kendi kanıt notlarından önce/sonra örneği (saklı veri; LLM yok).
+      const onizleme = await kuralOnizlemesiYukle(supabase, doktorId, slug).catch(() => ({ var: false, ciftler: [] }))
+      return NextResponse.json({ ok: true, durum: 'uygulanir', onizleme })
     }
     if (body.unut) {
       await hafizaUnut(supabase, doktorId, body.unut)
       await supabase.from('doktor_hafiza').update({ durum: 'kapali', updated_at: new Date().toISOString() })
         .eq('doctor_id', doktorId).eq('anahtar', anahtarSlug(body.unut))
+      arkaPlandaSurdur(klinikHavuzuSenkronla(supabase, doktorId))
       return NextResponse.json({ ok: true, unutuldu: body.unut })
     }
     if (!body.kategori || !KATEGORILER.includes(body.kategori as HafizaKategori) || !body.anahtar || !body.deger) {
