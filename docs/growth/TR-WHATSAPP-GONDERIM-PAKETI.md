@@ -1410,36 +1410,36 @@ Wave3’te SIRADAKİ diye önerildi → **HATA**. Ledger + early seed’e işlen
 ## W6-38. Prof. Dr. İkbal Kaygusuz ← GİTTİ (2026-11-13, WA-verified)
 **kadın-doğum** · Ankara · WA: `+905300519023` · variant `kd-B-0003`
 
-## W6-39. Op. Dr. İpek Demir ← SIRADAKİ
-**kadın-doğum** · İzmir · `+90 530 354 93 90` · WA: `+905303549390`  
-**Doğrulama:** DS `socialMedia` whatsapp · unvan DS og:title.  
-**Anti-ban:** İkbal’den **≥10 dk**. Bugün 2/22. variant `kd-C-0002`.
+## W6-39. Op. Dr. İpek Demir ← GİTTİ (2026-11-13, WA-verified)
+**kadın-doğum** · İzmir · WA: `+905303549390` · variant `kd-C-0002`
 
-**Gönder:** yapıştır → kart çıkarsa **X** → gönder.
+## W6-40. Prof. Dr. Korhan Kahraman ← SIRADAKİ
+**kadın-doğum** · Ankara · `+90 535 464 32 22` · WA: `+905354643222`  
+**Doğrulama:** DS og:title. Anti-ban: ≥10 dk · bugün 3/22 · variant `kd-A-0004`.
 
 ```
-İpek Hocam merhaba 👋
-Ben Kaan, *Notya*'dan yazıyorum.
+Korhan Hocam, merhaba.
+Ben Kaan — *Notya*'dan ulaşıyorum.
 
-*Notya* — hekimler için yapay zekâ klinik asistanı.
-Muayeneyi dinler, notunuzu yazar, reçete ve rapor taslağını hazırlar, hastanızı takipte tutar — hasta portalı dahil.
-Her karar *sizin onayınızla*.
-40'tan fazla branşı kendi ihtiyaçlarıyla destekliyoruz.
+*Notya*, hekimler için yapay zekâ klinik asistanı:
+muayeneyi dinler → not + reçete + rapor taslağı → hasta takibi ve portal.
+Her adım *sizin onayınızla* ilerler.
+40+ branşta, her branşın kendi ihtiyacıyla.
+
+*Kadın doğumda*
+- Doğum epikrizi ve antetli baskı
+- Obstetrik risk (preeklampsi, GDM, SSVD)
+- Gebelik takvimi ve izlem
+- Doppler'li USG ve yapılandırılmış NST
+- Jinekolojik operasyon notları (histerektomi, myomektomi, laparoskopi)
 
 Tipik bir günde yaklaşık *1,5-2 saat* kazanç.
 Hasta portalı gibi özellikler hem zaman kazandırır hem hastaya verdiğiniz hizmetin kalitesini yükseltir.
 Geri kalmamak önemli: hastalar giderek daha modern çalışan hekimleri tercih ediyor.
 
-*Kadın doğumda*
-- Jinekolojik operasyon notları (histerektomi, myomektomi, laparoskopi)
-- Gebelik takvimi ve izlem
-- Sezaryen ve ameliyat notları
-- Doğum epikrizi ve antetli baskı
-- Obstetrik risk (preeklampsi, GDM, SSVD)
+Dr. Gökhan Mamur sizin için *30 dk’lık* kısa bir tur yapıyor; uygun saati siz seçiyorsunuz.
+Şimdilik sadece bakmak isterseniz ücretsiz deneme de açık.
 
-İsterseniz Dr. Gökhan Mamur *30 dakikalık* kısa bir tanıtım ayarlıyor — saat sizin diliminiz.
-Tanıtıma şimdi vakit yoksa ücretsiz denemeyi de hemen açabilirsiniz.
-
-📅 Demo: www.notya.io/demo
-🔗 Deneme: www.notya.io
+*Tanıtım:* www.notya.io/demo
+*Deneme:* www.notya.io
 ```
