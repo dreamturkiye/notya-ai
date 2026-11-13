@@ -89,6 +89,32 @@ export type UygulamaMetni = {
      * page. Every export is written to the audit log. Optional: a pack without it has no card.
      */
     readonly disaAktar?: { readonly baslik: string; readonly aciklama: string; readonly ara: string; readonly json: string; readonly yazdir: string; readonly hazirlaniyor: string; readonly hata: string; readonly bulunamadi: string; readonly notlar: string; readonly araclar: string; readonly dogumTarihi: string }
+    /**
+     * AYSE-OGRENME-V3f — the assistant's memory in Settings: the learning momentum (corrections per approved note, with
+     * its empty state). Türkiye's Ayarlar › Ayşe'nin hafızası, in the country's words. Numbered placeholders where a
+     * sentence carries more than one value (%1 %2 %3); a single value is a plain %. Optional: a pack form without it has no row.
+     */
+    readonly ayseHafizasi?: {
+      readonly baslik: string
+      readonly aciklama: string
+      readonly ivmeBaslik: string
+      /** % = the approved notes so far (of 3). */
+      readonly ivmeBos: string
+      readonly ivmeErken: string
+      /** %1 = notes measured, %2 = first average, %3 = last average. */
+      readonly ivmeSatir: string
+      readonly ivmeAzaliyor: string
+      readonly ivmeSabit: string
+      readonly ivmeArtiyor: string
+      /** % = notes measured. */
+      readonly ivmeNot: string
+      readonly ivmeBirim: string
+      /** %1 = this week's average, %2 = notes this week. */
+      readonly haftalik: string
+      /** The same with last week's average as %3. */
+      readonly haftalikOnceki: string
+      readonly yuklenemedi: string
+    }
     /** Time zone of the account. REQUIRED where the pack lists more than one zone; not read otherwise. */
     readonly saatDilimi?: string
     readonly saatDilimiIzoh?: string
