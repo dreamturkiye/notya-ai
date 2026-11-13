@@ -397,6 +397,12 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       const { onaySonrasiOgren } = await import('@/lib/doktor/ogrenme/arkaPlandaOgren')
       onaySonrasiOgren(supabase, user.id, noteId, loglar)
     } catch (e) { console.error('[ogrenme] kanca', e) }
+  } else {
+    // AYSE-OGRENME-V3: düzeltmesiz onay da ivme ölçümüne girer (0 düzeltme); waitUntil, yanıtı geciktirmez.
+    try {
+      const { duzeltmesizOnayMetrigi } = await import('@/lib/doktor/ogrenme/arkaPlandaOgren')
+      duzeltmesizOnayMetrigi(supabase, user.id, noteId)
+    } catch (e) { console.error('[ogrenme] metrik', e) }
   }
 
   // NOTYA-RANDEVU-V2 PR3: "N hafta sonra kontrol" in the approved plan → a kontrol randevusu card for the doctor

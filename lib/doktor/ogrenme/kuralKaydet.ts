@@ -7,6 +7,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import type { HafizaKategori } from '@/lib/doktor/hafiza'
 import { deltalardanAdaylar, kuraliBirlesitir, type HafizaKuralSatiri, type KuralDurum } from './kuralTuret'
 import type { DuzeltmeDelta } from './duzeltmeAnaliz'
+import { klinikKurallariYukle, klinikSlugMetinleri } from './klinikUslup'
 
 export async function duzeltmeKurallariniKaydet(
   sb: SupabaseClient,
@@ -71,21 +72,26 @@ export async function uygulanirKurallariYukle(
   doctorId: string,
   limit = 12,
 ): Promise<{ slug: string; satir: string }[]> {
-  const { data } = await sb
-    .from('doktor_hafiza')
-    .select('anahtar, deger, kanit_sayisi, durum, aktif, kategori')
-    .eq('doctor_id', doctorId)
-    .eq('aktif', true)
-    .eq('kaynak', 'duzeltme')
-    .eq('durum', 'uygulanir')
-    .in('kategori', ['uslup', 'klinik', 'uygulama'])
-    .order('kanit_sayisi', { ascending: false })
-    .limit(40)
-  const satirlar = (data || []) as { anahtar: string; deger: string; kanit_sayisi: number; durum?: string; aktif?: boolean }[]
-  return satirlar
+  // AYSE-OGRENME-V3: klinik ortak üslup (açık rızalı) kendi kurallarından SONRA gelir; kendi kuralı her zaman önce.
+  const [sahipRes, klinik] = await Promise.all([
+    sb
+      .from('doktor_hafiza')
+      .select('anahtar, deger, kanit_sayisi, durum, aktif, kategori')
+      .eq('doctor_id', doctorId)
+      .eq('aktif', true)
+      .eq('kaynak', 'duzeltme')
+      .eq('durum', 'uygulanir')
+      .in('kategori', ['uslup', 'klinik', 'uygulama'])
+      .order('kanit_sayisi', { ascending: false })
+      .limit(40),
+    klinikKurallariYukle(sb, doctorId, limit),
+  ])
+  const satirlar = (sahipRes.data || []) as { anahtar: string; deger: string; kanit_sayisi: number; durum?: string; aktif?: boolean }[]
+  const kendi = satirlar
     .filter((k) => k.durum !== 'kapali' && k.aktif !== false)
     .slice(0, limit)
     .map((k) => ({ slug: k.anahtar, satir: k.deger }))
+  return [...kendi, ...klinik].slice(0, limit)
 }
 
 export async function kuralMetinleriniCoz(
@@ -95,12 +101,15 @@ export async function kuralMetinleriniCoz(
 ): Promise<{ slug: string; deger: string }[]> {
   const temiz = [...new Set(slugs.map((s) => String(s || '').trim()).filter(Boolean))].slice(0, 12)
   if (!temiz.length) return []
-  const { data } = await sb
-    .from('doktor_hafiza')
-    .select('anahtar, deger')
-    .eq('doctor_id', doctorId)
-    .in('anahtar', temiz)
-  const map = new Map((data || []).map((r) => [String((r as { anahtar: string }).anahtar), String((r as { deger: string }).deger)]))
+  const kendiSlugs = temiz.filter((s) => !s.startsWith('klinik:'))
+  const [kendiRes, klinikMap] = await Promise.all([
+    kendiSlugs.length
+      ? sb.from('doktor_hafiza').select('anahtar, deger').eq('doctor_id', doctorId).in('anahtar', kendiSlugs)
+      : Promise.resolve({ data: [] as { anahtar: string; deger: string }[] }),
+    klinikSlugMetinleri(sb, doctorId, temiz),
+  ])
+  const map = new Map((kendiRes.data || []).map((r) => [String((r as { anahtar: string }).anahtar), String((r as { deger: string }).deger)]))
+  for (const [k, v] of klinikMap) map.set(k, v)
   return temiz.map((slug) => ({ slug, deger: map.get(slug) || slug }))
 }
 
