@@ -64,6 +64,7 @@ function sifirla() {
 }
 
 const FORMLAR = ['uz-Latn', 'uz-Cyrl', 'ru'] as const
+const RUSCASIZ = /^ayarlar\.ayseHafizasi\./
 type Form = (typeof FORMLAR)[number]
 const temiz = (metin: string, kaynak: string) => assert.deepEqual(sizintiTara(metin, { hedefUlke: 'uz', kaynak }), [])
 /** Addresses and words of the pre-split application that must never appear on a screen of this build. */
@@ -113,13 +114,17 @@ describe('Uzbekistan application: text in three forms', () => {
     assert.ok(anahtarlar.length > 100, `catalogue looks too small: ${anahtarlar.length}`)
     for (const f of FORMLAR) {
       const y = yaprak(M.UZ_UYGULAMA_METINLERI[f])
-      assert.deepEqual(y.map(([k]) => k), anahtarlar, f)
+      // The Ayşe memory words are written in the two Uzbek scripts only; the Russian form has none (founder: no Russian
+      // copy), and the Settings row is simply not shown in it (a pack form without those words has no row).
+      assert.deepEqual(y.map(([k]) => k), f === 'ru' ? anahtarlar.filter((k) => !RUSCASIZ.test(k)) : anahtarlar, f)
       for (const [k, v] of y) assert.ok(v.trim().length > 0, `${f}/${k} empty`)
     }
   })
 
   it('each form is written in its own script, and none is a copy of another', () => {
-    const [lat, kir, ru] = FORMLAR.map((f) => yaprak(M.UZ_UYGULAMA_METINLERI[f]))
+    const [lat0, kir0, ru] = FORMLAR.map((f) => yaprak(M.UZ_UYGULAMA_METINLERI[f]))
+    // Compared key by key: the Ayşe memory words exist in the two Uzbek scripts only (see above).
+    const lat = lat0.filter(([k]) => !RUSCASIZ.test(k)); const kir = kir0.filter(([k]) => !RUSCASIZ.test(k))
     for (let i = 0; i < lat.length; i++) {
       const [k, l] = lat[i]
       assert.doesNotMatch(l, /[Ѐ-ӿ]/, `uz-Latn/${k} has a Cyrillic letter`)
@@ -130,8 +135,8 @@ describe('Uzbekistan application: text in three forms', () => {
       assert.notEqual(kir[i][1], ru[i][1] === kir[i][1] && kir[i][1].length > 12 ? kir[i][1] : '', `uz-Cyrl/${k} is the Russian sentence`)
     }
     // Uzbek Cyrillic is Uzbek: across the catalogue it uses the letters Russian does not have.
-    assert.match(kir.map(([, v]) => v).join(' '), /ў/); assert.match(kir.map(([, v]) => v).join(' '), /қ/)
-    assert.match(kir.map(([, v]) => v).join(' '), /ғ/); assert.match(kir.map(([, v]) => v).join(' '), /ҳ/)
+    assert.match(kir0.map(([, v]) => v).join(' '), /ў/); assert.match(kir0.map(([, v]) => v).join(' '), /қ/)
+    assert.match(kir0.map(([, v]) => v).join(' '), /ғ/); assert.match(kir0.map(([, v]) => v).join(' '), /ҳ/)
     temiz(FORMLAR.flatMap((f) => yaprak(M.UZ_UYGULAMA_METINLERI[f]).map(([, v]) => v)).join('\n'), 'application catalogue')
   })
 

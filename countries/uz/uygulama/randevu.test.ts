@@ -473,7 +473,11 @@ describe('Uzbekistan appointments: from appointment to visit, and the home', () 
     vt.sorgular.length = 0
     assert.equal((await oku(await R.onayla.POST(istek('/api/ulke/not/onayla', 'jeton-a', { notId, dil: 'uz-Latn', ...UZ_NOT })))).s, 200)
     assert.equal(satirlar()[0].durum, 'tamamlandi')
-    assert.deepEqual(vt.sorgular.filter((q) => q.islem !== 'select').map((q) => q.tablo), ['rpc:ulke_not_onayla'])
+    // The approval is the one call and comes first; the learning step then writes only its own tables, in the background.
+    await new Promise((bitti) => setTimeout(bitti, 25))
+    const yazilan = vt.sorgular.filter((q) => q.islem !== 'select').map((q) => q.tablo)
+    assert.equal(yazilan[0], 'rpc:ulke_not_onayla')
+    assert.deepEqual(yazilan.slice(1).filter((t) => !['ulke_not_taslaklari', 'ulke_not_duzenlemeleri', 'ulke_ogrenme_metrik'].includes(t)), [])
     // A finished appointment with its visit cannot be reopened by hand.
     for (const d of ['geldi', 'planlandi', 'iptal', 'gelmedi']) assert.deepEqual(await degistir('jeton-a', { id, durum: d }), { s: 409, j: { code: 'GECIS_YOK' } }, d)
   })
