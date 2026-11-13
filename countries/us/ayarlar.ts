@@ -34,6 +34,7 @@ import { US_BIRIMLER, US_VELI_YASI } from './temel'
 import { US_OPERATOR_DEGISEN, US_OPERATOR_PARAMETRELERI } from './operator'
 import { US_GENITAL_ESTETIK } from './genitalEstetik'
 import { US_KD_TARAMALARI } from './kdTaramalar'
+import { US_PREMATUR } from './prematur'
 
 export { US_BIRIMLER, US_VELI_YASI } from './temel'
 
@@ -147,6 +148,8 @@ export const US_GIRDI: EnUlkeGirdisi = {
     genitalEstetik: US_GENITAL_ESTETIK,
     // KD-TARAMA-01 (2026-11-09): thyroid in pregnancy, HPV vaccine record, SMA carrier screening, PMS / PMDD diary — with this country's numbers and sources (./kdTaramalar.ts)
     kdTaramalari: US_KD_TARAMALARI,
+    // PREMATUR-ULKE-01 (2026-11-13): the preterm baby's follow-up table and the early-birth thresholds, each with its source (./prematur.ts)
+    prematur: US_PREMATUR,
     kapali: {
       'doz-hesabi': { eksik: 'UNIT SAFETY. This pack measures body weight in pounds; the tool multiplies a dose stated per kilogram by the body weight. The kit converts a weight typed in pounds exactly, but a screen that shows the weight in pounds beside a dose per kilogram invites the very error the tool exists to prevent. Needed: a clinical decision on whether weight for dosing is entered in kilograms only in the United States, and a weight field in the kit that can be fixed to kilograms whatever the pack\'s unit. ' + DOZ_BUGUN, kimden: KLINISYEN },
       // KD-OPERATOR-01 (2026-11-05): the same unit-safety decision as the dose calculator. The kit's prophylaxis tool takes the
