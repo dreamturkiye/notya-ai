@@ -22,6 +22,7 @@ import { UZ_ROL_SATIRLARI } from '../../klinik/rolListesi'
 import { UZ_MESAJ_AGACI } from '../mesajMetinleri'
 import { UZ_SABLON_AGACI } from '../sablonMetinleri'
 import { UZ_KONSULTASYON_AGACI } from '../konsultasyonMetinleri'
+import { UZ_PREMATUR_AGACI } from '../prematurMetinleri'
 
 /**
  * NOTYA-ULKE-MESAJ-01 — catalogues of the pack that are written as one tree in the three forms (../uclu.ts): their
@@ -31,6 +32,8 @@ const UC_BICIMLI_KATALOGLAR: readonly { ad: string; dosya: string; agac: unknown
   { ad: 'mesaj', dosya: 'countries/uz/uygulama/mesajMetinleri.ts', agac: UZ_MESAJ_AGACI, enAz: 49 },
   { ad: 'sablon', dosya: 'countries/uz/uygulama/sablonMetinleri.ts', agac: UZ_SABLON_AGACI, enAz: 29 },
   { ad: 'konsultasyon', dosya: 'countries/uz/uygulama/konsultasyonMetinleri.ts', agac: UZ_KONSULTASYON_AGACI, enAz: 82 },
+  // PREMATUR-ULKE-01 (2026-11-13): the words of the two prematurity screens
+  { ad: 'prematur', dosya: 'countries/uz/uygulama/prematurMetinleri.ts', agac: UZ_PREMATUR_AGACI, enAz: 200 },
 ]
 
 const KOK = resolve(__dirname, '../../../..')
@@ -106,6 +109,8 @@ describe('Uzbek tools — Latin to Cyrillic by rule', () => {
     }
     for (const a of UZ_ARACLAR.araclar) gez(a.metin, a.anahtar)
     gez(UZ_ARACLAR.birimler, 'birimler')
+    // PREMATUR-ULKE-01: the prematurity table's own words (rule titles, scope line, thresholds note)
+    gez({ protokol: UZ_ARACLAR.prematur?.protokol, erkenDogum: UZ_ARACLAR.prematur?.erkenDogum }, 'prematur')
     assert.ok(sayi > 500, `only ${sayi} texts were compared`)
     assert.deepEqual(farkli, [])
   })

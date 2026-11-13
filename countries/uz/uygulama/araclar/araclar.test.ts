@@ -134,7 +134,9 @@ describe('Uzbekistan — tools: who sees what, the three scripts, and what is de
     // words, leak gate, the 42-role coverage: ./kendi/uzmanlik/uzmanlik.test.ts); this file keeps checking everything else
     const tum = (await import('./index')).UZ_ARACLAR
     const uzmanlik = new Set((await import('./kendi/uzmanlik')).UZ_UZMANLIK_ANAHTARLARI)
-    icerik = { ...tum, araclar: tum.araclar.filter((p) => !uzmanlik.has(p.anahtar)), kendiAraclari: (tum.kendiAraclari ?? []).filter((t) => !uzmanlik.has(t.anahtar)) }
+    // PREMATUR-ULKE-01 (2026-11-13): the three prematurity tiles have their own test (./prematur.test.ts)
+    const prematur = new Set(['prematur-takip', 'prematur-kohort', 'erken-dogum'])
+    icerik = { ...tum, araclar: tum.araclar.filter((p) => !uzmanlik.has(p.anahtar) && !prematur.has(p.anahtar)), kendiAraclari: (tum.kendiAraclari ?? []).filter((t) => !uzmanlik.has(t.anahtar)) }
     roller = (await import('../../index')).UZ_PAKETI.uygulama!.roller!
     P = await import('@/lib/ulke/araclar/paket')
   })

@@ -48,6 +48,7 @@ import { UZ_ROL_ARACLARI_8 } from './rol8'
 import { UZ_GE_YUVALARI, UZ_ROL_ARACLARI_9 } from './rol9'
 import { UZ_ROL_ARACLARI_10 } from './rol10'
 import { UZ_TAKIP_ARACLARI } from './takip'
+import { UZ_PREMATUR, UZ_PREMATUR_ARACLARI } from './prematur'
 import { UZ_KENDI_ARACLAR } from './kendi/metinler'
 import { UZ_KENDI_TANIMLAR } from './kendi/tanimlar'
 import { UZ_UZMANLIK_TANIMLAR, uzUzmanlikAraclari } from './kendi/uzmanlik'
@@ -84,7 +85,9 @@ export const UZ_ARACLAR: UlkeAraclari = {
   metinler: UZ_ARACLAR_METINLERI,
   araclar: [...UZ_TEMEL_ARACLAR, ...acikOlanlar([...UZ_ROL_ARACLARI_1, ...UZ_ROL_ARACLARI_2, ...UZ_ROL_ARACLARI_3, ...UZ_ROL_ARACLARI_4, ...UZ_ROL_ARACLARI_5, ...UZ_ROL_ARACLARI_6, ...UZ_ROL_ARACLARI_7, ...UZ_ROL_ARACLARI_8, ...UZ_ROL_ARACLARI_9, ...UZ_ROL_ARACLARI_10]), ...UZ_KENDI_ARACLAR, ...UZ_TAKIP_ARACLARI,
     // ULKE-BRANS-DERINLIK-01 (2026-11-08): specialty scores and calculators, consent record and conclusion of every role (./kendi/uzmanlik/)
-    ...uzUzmanlikAraclari()],
+    ...uzUzmanlikAraclari(),
+    // PREMATUR-ULKE-01 (2026-11-13): the preterm baby's follow-up plan and list (paediatrics), the early-birth record (obstetrics and gynaecology): ./prematur.ts
+    ...UZ_PREMATUR_ARACLARI],
   // the mechanisms of the three tools only this country has; each key is listed for "uz" in countries/yasak-araclar.json
   kendiAraclari: [...UZ_KENDI_TANIMLAR, ...UZ_UZMANLIK_TANIMLAR],
   birimler: UZ_ARAC_BIRIMLERI,
@@ -92,5 +95,7 @@ export const UZ_ARACLAR: UlkeAraclari = {
   dozYazimi: UZ_DOZ_YAZIMI,
   // GENITAL-ESTETIK-01: the energy, injection and whitening tools wait for an Uzbek source; item-level instruments wait for a licence (./rol9.ts)
   yuvalar: [...UZ_ARAC_YUVALARI, ...UZ_GE_YUVALARI],
+  // PREMATUR-ULKE-01: the follow-up table (every item "follow your local protocol": no national source was read), the thresholds and the words of both screens
+  prematur: UZ_PREMATUR,
   inceleme: { makineYazimi: true, klinisyen: null },
 }
