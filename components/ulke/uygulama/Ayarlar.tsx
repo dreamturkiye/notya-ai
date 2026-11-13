@@ -11,6 +11,7 @@
  */
 import { AyarSatiri } from './AyarSatiri'
 import { DavetSatiri, DisaAktarimSatiri } from './DavetVeDisaAktarim'
+import { AyseHafizasiSatiri } from './AyseHafizasi'
 import React, { useEffect, useState } from 'react'
 import { Bilgi, Cerceve, Hata, useUygulama, YOL, Yukleniyor, type Hesap } from './Kabuk'
 import { DilSecimi, YaziSecimi } from './DilFormu'
@@ -291,6 +292,8 @@ export default function Ayarlar() {
             </a>
           ) : null}
           {/* REFERANS-01 / HASTA-DISA-AKTAR-01 (2026-11-05): the same two rows as Türkiye's Settings, where the pack has their words. */}
+          {/* AYSE-OGRENME-V3f: the assistant's memory (learning momentum), where the pack has its words. */}
+          {u.hesap.onBuro ? null : <AyseHafizasiSatiri u={u} />}
           {u.hesap.onBuro ? null : <DavetSatiri u={u} />}
           {u.hesap.onBuro ? null : <DisaAktarimSatiri u={u} />}
           {/* YENI-DOKTOR-UX-2026-10: the switch for the in-place tips (default ON). */}
