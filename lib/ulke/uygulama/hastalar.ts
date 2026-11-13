@@ -210,3 +210,14 @@ export async function hastaAdlari(supabase: SupabaseClient, doktorId: string, id
   const { data } = await ulkeTablosu(supabase, 'ulke_hastalar').select('id, name_encrypted').eq('doctor_id', doktorId).in('id', tekil)
   return new Map(((data as { id: string; name_encrypted: string | null }[] | null) ?? []).map((h) => [h.id, adCoz(h.name_encrypted)]))
 }
+
+/**
+ * Name and birth date of the given patients of THIS doctor, in ONE statement (for a cohort list: no query per patient). An id that
+ * is not the doctor's is simply not in the answer.
+ */
+export async function hastaOzetleri(supabase: SupabaseClient, doktorId: string, idler: string[]): Promise<Map<string, { ad: string; dogumTarihi: string }>> {
+  const tekil = [...new Set(idler.filter(Boolean))]
+  if (!tekil.length) return new Map()
+  const { data } = await ulkeTablosu(supabase, 'ulke_hastalar').select('id, name_encrypted, dob_encrypted').eq('doctor_id', doktorId).in('id', tekil)
+  return new Map(((data as { id: string; name_encrypted: string | null; dob_encrypted: string | null }[] | null) ?? []).map((h) => [h.id, { ad: adCoz(h.name_encrypted), dogumTarihi: coz(h.dob_encrypted) }]))
+}
