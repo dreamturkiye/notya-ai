@@ -1425,32 +1425,35 @@ Wave3’te SIRADAKİ diye önerildi → **HATA**. Ledger + early seed’e işlen
 ## W6-43. Op. Dr. Medine Meltem Adalıoğlu ← GİTTİ (2026-11-13, WA-verified)
 **kadın-doğum** · İzmir · WA: +905441382088 · variant kd-B-0003
 
-## W6-44. Prof. Dr. Mehmet Çınar ← SIRADAKİ
-**kadın-doğum** · Ankara · WA: +905334570452 · variant kd-A-0004 · 7/22 · ≥10 dk
+## W6-44. Prof. Dr. Mehmet Çınar ← GİTTİ (2026-11-13, WA-verified)
+**kadın-doğum** · Ankara · WA: +905334570452 · variant kd-A-0004
+
+## W6-45. Op. Dr. Melik Yazır ← SIRADAKİ
+**kadın-doğum** · İzmir · WA: +905422439096 · variant kd-B-0000 · 8/22 · ≥10 dk
 
 ```
-Mehmet Hocam, merhaba.
-Ben Kaan — *Notya*'dan ulaşıyorum.
+Melik Hocam iyi günler.
+Ben Kaan, *Notya* ekibinden yazıyorum.
+
+*Kadın doğumda*
+- Gebelik takvimi ve izlem
+- Obstetrik risk (preeklampsi, GDM, SSVD)
+- Doppler'li USG ve yapılandırılmış NST
+- Jinekolojik operasyon notları (histerektomi, myomektomi, laparoskopi)
+- Sezaryen ve ameliyat notları
 
 *Notya*, hekimler için yapay zekâ klinik asistanı:
 muayeneyi dinler → not + reçete + rapor taslağı → hasta takibi ve portal.
 Her adım *sizin onayınızla* ilerler.
 40+ branşta, her branşın kendi ihtiyacıyla.
 
-*Kadın doğumda*
-- Doğum epikrizi ve antetli baskı
-- Obstetrik risk (preeklampsi, GDM, SSVD)
-- Gebelik takvimi ve izlem
-- Doppler'li USG ve yapılandırılmış NST
-- Jinekolojik operasyon notları (histerektomi, myomektomi, laparoskopi)
-
 Tipik bir günde yaklaşık *1,5-2 saat* kazanç.
 Hasta portalı gibi özellikler hem zaman kazandırır hem hastaya verdiğiniz hizmetin kalitesini yükseltir.
 Geri kalmamak önemli: hastalar giderek daha modern çalışan hekimleri tercih ediyor.
 
-Dr. Gökhan Mamur sizin için *30 dk’lık* kısa bir tur yapıyor; uygun saati siz seçiyorsunuz.
-Şimdilik sadece bakmak isterseniz ücretsiz deneme de açık.
+İsterseniz Dr. Gökhan Mamur *30 dakikalık* kısa bir tanıtım ayarlıyor — saat sizin diliminiz.
+Tanıtıma şimdi vakit yoksa ücretsiz denemeyi de hemen açabilirsiniz.
 
-*Tanıtım:* www.notya.io/demo
-*Deneme:* www.notya.io
+📅 Demo: www.notya.io/demo
+🔗 Deneme: www.notya.io
 ```
