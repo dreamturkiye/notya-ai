@@ -53,7 +53,7 @@ export function sahteVeritabani() {
   const depo = new Map<string, Blob>()
   const sorgular: SorguKaydi[] = []
   /** Table name → make the next write (or read) on it fail. */
-  const boz: { yaz: Set<string>; oku: Set<string> } = { yaz: new Set(), oku: new Set() }
+  const boz: { yaz: Set<string>; oku: Set<string>; eksik: Set<string> } = { yaz: new Set(), oku: new Set(), eksik: new Set() }
   const tablo = (ad: string) => (tablolar[ad] ??= [])
 
   /**
@@ -227,7 +227,7 @@ export function sahteVeritabani() {
       if (digerleri.some((x) => x.ulke === yeni.ulke && x.kod_hash === yeni.kod_hash)) return hata('23505', 'duplicate key value violates unique constraint "ulke_konsultasyon_kodlari_kod_tekil"')
       return null
     }
-    const PORTAL = ['ulke_hasta_ozetleri', 'ulke_portal_erisimleri', 'ulke_portal_oturumlari', 'ulke_portal_kayitlari', 'ulke_randevu_istekleri', 'ulke_hasta_formlari', 'ulke_arac_kayitlari', 'ulke_mesaj_yazismalari', 'ulke_hasta_mesajlari', 'ulke_konsultasyonlar']
+    const PORTAL = ['ulke_hasta_ozetleri', 'ulke_portal_erisimleri', 'ulke_portal_oturumlari', 'ulke_portal_kayitlari', 'ulke_randevu_istekleri', 'ulke_hasta_formlari', 'ulke_arac_kayitlari', 'ulke_mesaj_yazismalari', 'ulke_hasta_mesajlari', 'ulke_konsultasyonlar', 'ulke_prematur_kayitlari', 'ulke_erken_dogum_kayitlari']
     // (A row a test writes without these columns is not a portal row yet; the database would refuse it for a missing column.)
     if (!PORTAL.includes(ad) || yeni.patient_id === undefined) return null
     if (!tablo('ulke_hastalar').some((h) => h.id === yeni.patient_id && h.doctor_id === yeni.doctor_id && h.ulke === yeni.ulke)) return hata('23503', `insert or update on table "${ad}" violates foreign key constraint "${ad}_hasta_fk"`)
@@ -637,6 +637,8 @@ export function sahteVeritabani() {
       const satirlar = tablo(this.ad)
       const uyan = (s: Satir) => this.filtreler.every((f) => f.f(s))
       const yazma = this.islem !== 'select'
+      // PREMATUR-ULKE-01: `boz.eksik` = the table is not on the database at all (a migration not applied yet): the code a real database gives.
+      if (boz.eksik.has(this.ad)) return { data: null, error: { message: `relation "public.${this.ad}" does not exist`, code: '42P01' } }
       if ((yazma ? boz.yaz : boz.oku).has(this.ad)) return { data: null, error: { message: `stand-in: ${this.ad} ${this.islem} failed`, code: 'XX000' } }
       let sonuc: Satir[]
       if (this.islem === 'select') sonuc = satirlar.filter(uyan)

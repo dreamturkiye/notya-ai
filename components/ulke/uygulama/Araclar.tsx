@@ -51,6 +51,8 @@ import { aracYolu, araclarYolu, birimOrtami, yazici } from './aracOrtak'
 import { AracKayitKarti, TakipPaneli, useAracHastasi, useAracKaydi, type AracHastasi } from './AracKayitlari'
 import { Sablonlarim } from './Sablonlarim'
 import { Konsultasyonlar } from './Konsultasyonlar'
+import { PrematurPaneli } from './PrematurPaneli'
+import { ErkenDogumPaneli } from './ErkenDogumPaneli'
 import { HedefBoyKarti } from './HedefBoyKarti'
 import { AracKabugu, AracIkiKolon, SonucSayisi, ulkeAracStil } from './AracKabugu'
 import { SayiGirisi } from '../girdi/SayiGirisi'
@@ -378,7 +380,7 @@ function AracEkrani({ x, a, u, dil, notDili, icerik, hasta, rol }: { rol: string
     : undefined
   return (
     <AracBasligi x={x} a={a} dil={dil} hastaId={hasta?.id} rol={rol}>
-      {x.tanim.ekran === 'hastaPortali' ? <HastaPortaliAraci a={a} m={u.m} /> : x.tanim.ekran === 'takipPaneli' ? <TakipPaneli u={u} a={a} icerik={icerik} /> : x.tanim.ekran === 'sablonlarim' ? <Sablonlarim u={u} /> : x.tanim.ekran === 'konsultasyonlar' ? <Konsultasyonlar u={u} /> : x.tanim.tur === 'baglanti' ? <DisBaglantiAraci x={x} dil={dil} /> : hasta && aracinKapisi(x, hasta, bugun) === 'degil' ? <HastaKapisiKapali x={x} dil={dil} /> : (
+      {x.tanim.ekran === 'hastaPortali' ? <HastaPortaliAraci a={a} m={u.m} /> : x.tanim.ekran === 'takipPaneli' ? <TakipPaneli u={u} a={a} icerik={icerik} /> : x.tanim.ekran === 'sablonlarim' ? <Sablonlarim u={u} /> : x.tanim.ekran === 'konsultasyonlar' ? <Konsultasyonlar u={u} /> : x.tanim.ekran === 'prematurTakip' || x.tanim.ekran === 'prematurKohort' ? (icerik.prematur ? <PrematurPaneli u={u} hastaId={hasta?.id ?? null} paket={icerik.prematur} mod={x.tanim.ekran === 'prematurKohort' ? 'kohort' : 'takip'} /> : null) : x.tanim.ekran === 'erkenDogum' ? (icerik.prematur ? <ErkenDogumPaneli u={u} hastaId={hasta?.id ?? null} paket={icerik.prematur} /> : null) : x.tanim.tur === 'baglanti' ? <DisBaglantiAraci x={x} dil={dil} /> : hasta && aracinKapisi(x, hasta, bugun) === 'degil' ? <HastaKapisiKapali x={x} dil={dil} /> : (
         <AracGorunumu x={x} a={a} dil={dil} notDili={notDili} icerik={icerik} ham={ham} bugun={bugun} kopya={kopya}
           antet={antet}
           belge={{ onEk: `arac:${x.tanim.anahtar}`, hastaId: hasta?.id ?? null, api: u.api }}
