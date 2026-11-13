@@ -36,6 +36,7 @@ import { llmBelgeBlokTemizle, notaBloklariUygula } from '@/core/belgeler/notaBlo
 import { blokDili, ekGirdileriniOku } from '../belgeler/ekler'
 import type { DilKodu, NotIcerigi } from '../tipler'
 import { uygulamaDiliMi } from '../ulke'
+import { taslagiArkaPlandaKaydet } from '../ogrenme/kayit'
 import { hastaGetir } from './hastalar'
 import { hekimDilleri, muayeneGetir, type MuayeneDetayi } from './muayeneKaydi'
 import { ALAN_AZAMI, alanlariOku, BOLUM_AZAMI, modeldenNot, notModelEtiketi } from './notModeli'
@@ -185,6 +186,9 @@ export async function notYaz(supabase: SupabaseClient, doktorId: string, seansId
     try { await ulkeTablosu(supabase, 'ulke_notlar').delete().eq('id', notId).eq('doctor_id', doktorId).is('approved_at', null) } catch { /* reported as a failure either way */ }
     return ret('BASARISIZ')
   }
+  // AYSE-OGRENME-V3f: the model's draft is kept until the doctor approves, so the approval can count what was changed.
+  // In the background (waitUntil): no latency on this request, and a failure here never touches the note.
+  taslagiArkaPlandaKaydet(supabase, doktorId, notId, notDili, icerik)
   return { tamam: true, notId }
 }
 

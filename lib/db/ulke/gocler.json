@@ -23,6 +23,7 @@
     "148_ulke_muayene_ekleri_ve_foto.sql",
     "152_ulke_guvenlik_sertlestirme.sql",
     "180_ulke_randevu_tur_ve_kayitsiz.sql",
-    "192_ulke_deneme_bildirimi.sql"
+    "192_ulke_deneme_bildirimi.sql",
+    "198_ulke_ayse_ogrenme.sql"
   ]
 }

@@ -63,7 +63,7 @@ export function sahteVeritabani() {
    * is decided here, not by the application's earlier read.
    */
   /** Tables whose key is not a generated `id` (their key is the account, the patient, the visit or the note). */
-  const KIMLIKSIZ = new Set(['hasta_ulke_bilgisi', 'hekim_dil_tercihleri', 'hekim_rolu', 'muayene_dil_kaydi', 'not_dil_kaydi', 'hekim_calisma_duzeni', 'ulke_kullanim', 'ulke_kullanim_olcumu'])
+  const KIMLIKSIZ = new Set(['hasta_ulke_bilgisi', 'hekim_dil_tercihleri', 'hekim_rolu', 'muayene_dil_kaydi', 'not_dil_kaydi', 'hekim_calisma_duzeni', 'ulke_kullanim', 'ulke_kullanim_olcumu', 'ulke_not_taslaklari', 'ulke_ogrenme_metrik', 'ulke_klinik_uslup_katilim'])
   const YER_TUTAN = ['planlandi', 'geldi', 'tamamlandi']
   const cakisma = (ad: string, yeni: Satir, digerleri: Satir[]): { message: string; code: string } | null => {
     if (ad !== 'ulke_randevulari' || !YER_TUTAN.includes(String(yeni.durum ?? 'planlandi'))) return null
@@ -192,6 +192,9 @@ export function sahteVeritabani() {
     for (const u of uyeler) {
       tablolar.ulke_klinik_yetkileri = tablo('ulke_klinik_yetkileri').filter((y) => !(y.ulke === u.ulke && y.klinik_id === u.klinik_id && (y.doctor_id === u.doctor_id || y.alan_id === u.doctor_id)))
       tablolar.ulke_klinik_davetleri = tablo('ulke_klinik_davetleri').filter((d) => !(d.ulke === u.ulke && d.klinik_id === u.klinik_id && d.doctor_id === u.doctor_id))
+      // migration 198: the consent to the clinic's shared style and the rules this member put in its pool go with the membership, by key.
+      tablolar.ulke_klinik_uslup_katilim = tablo('ulke_klinik_uslup_katilim').filter((k) => !(k.ulke === u.ulke && k.klinik_id === u.klinik_id && k.doctor_id === u.doctor_id))
+      tablolar.ulke_klinik_ortak_uslup = tablo('ulke_klinik_ortak_uslup').filter((k) => !(k.ulke === u.ulke && k.klinik_id === u.klinik_id && k.doctor_id === u.doctor_id))
     }
     return null
   }
