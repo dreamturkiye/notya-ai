@@ -121,6 +121,22 @@
     "araclar": "$m",
     "dogumTarihi": "$m:%"
    },
+   "ayseHafizasi": {
+    "baslik": "$m",
+    "aciklama": "$m",
+    "ivmeBaslik": "$m",
+    "ivmeBos": "$m:%",
+    "ivmeErken": "$m",
+    "ivmeSatir": "$m:%1,%2,%3",
+    "ivmeAzaliyor": "$m",
+    "ivmeSabit": "$m",
+    "ivmeArtiyor": "$m",
+    "ivmeNot": "$m:%",
+    "ivmeBirim": "$m",
+    "haftalik": "$m:%1,%2",
+    "haftalikOnceki": "$m:%1,%2,%3",
+    "yuklenemedi": "$m"
+   },
    "dilBolumu": "$m",
    "arayuzDili": "$m",
    "notDili": "$m",
