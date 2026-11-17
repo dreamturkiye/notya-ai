@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="110 120 1120 1050">
+<defs><linearGradient id="gBLs" x1="300" y1="760" x2="1000" y2="170" gradientUnits="userSpaceOnUse">
+<stop offset="0" stop-color="#e5765a"/><stop offset=".55" stop-color="#ef9a5c"/><stop offset="1" stop-color="#f1b544"/></linearGradient></defs>
+<path d="M 905 505 C 990 410, 1020 330, 985 255 C 945 170, 840 160, 760 195 C 705 220, 670 265, 650 295 C 630 265, 595 220, 540 195 C 460 160, 355 170, 315 255 C 270 350, 320 440, 400 535 L 600 735 C 640 772, 690 772, 735 740 L 800 688" fill="none" stroke="url(#gBLs)" stroke-width="58" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 455 470 H 560 L 600 380 L 655 565 L 712 412 L 742 470 H 850" fill="none" stroke="#0e6b66" stroke-width="34" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="875" cy="640" r="82" fill="#fbf6ee" stroke="#0a4a47" stroke-width="44"/>
+<circle cx="875" cy="640" r="30" fill="#0a4a47" opacity=".18"/>
+<text x="670" y="1105" text-anchor="middle" font-family="Poppins" font-weight="600" font-size="236" letter-spacing="-5" fill="#0a4a47">Notya<tspan fill="#e5765a">.io</tspan></text></svg>
