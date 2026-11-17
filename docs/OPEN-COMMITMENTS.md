@@ -5434,3 +5434,8 @@ Parked by Kaan on 2026-10-30 ("we will look into that later"). Nothing built.
 - **Gap check (Claude, when Kaan says go):** reminders already exist (lib/doktor/takip, cron takip-hatirlatma / randevu-hatirlatma / iletisim-otomatik / odeme-hatirlatma). Missing per file survey, unconfirmed by code reading: a two-way agent that acts on patient replies (book / move / no-show recovery) and automatic vaccine-due reminders to parents.
 - **Phone answering** only after Dr. Gökhan confirms Ses Omurgası v2 in a live session; any change on the voice path needs Kaan's go (founder lock).
 - **Scheduled quality agents (waits on Kaan's go):** nightly production QA (Gökhan failure cases + İlk 10 set) and a release guard after every push (all 6 country builds green and serving).
+
+## PRATIK-KART-KD-DERM — marketing cards saved in docs/pazarlama (logged 2026-11-17)
+
+- 2026-11-17: KD (`docs/pazarlama/kd-gebelik-takip-karti-2026.pdf`) and derm (`docs/pazarlama/dermatoloji-sistemik-tedavi-izlem-karti-2026.pdf`) Pratik Kartları published live at Kaan's instruction (source: dreamturkiye/notya-growth `scripts/build-pratik-kart.mjs`); Dr. Gökhan reviews after publishing (waits on Gökhan); revise on his notes.
+- 2026-11-17: Edition check for the KD chapter (waits on Gökhan to confirm, then Claude aligns): the KD card follows SB Doğum Öncesi Bakım Yönetim Rehberi 2018 (SB Yayın No. 925), where izlem 3 is 24–28. hafta. `specialties/kadin-dogum` cites "DÖBYR 2026, HSGM Yayın No. 1402" with izlem 3 at 28–32. hafta (`engines/izlem-calendar.ts`), and that edition could not be found online. Core/branş note: KD-specific; if the app changes, it is a KD-branş change in all six country builds where KD exists.
