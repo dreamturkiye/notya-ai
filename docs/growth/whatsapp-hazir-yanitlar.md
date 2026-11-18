@@ -105,6 +105,19 @@ Hocam kart işinize yaradı mı? Eksik ya da eklenmesini istediğiniz bir şey o
 
 ---
 
+## Red — doktor istemedi
+
+Doktor “hayır / teşekkürler ihtiyacımız yok” dediğinde. Durum → `reddetti` (cevapsız `ilgilenmiyor` değil).
+`red_tarihi` = bugün · `yanit` = doktorun cümlesi. Bir daha **asla** yazma; gelecek batch ve eski-120 re-send listelerinden telefon **ve** isimle çıkar.
+
+### /tesekkur
+
+```
+Anladım Hocam, yanıtınız için çok teşekkür ederim. Bir daha rahatsız etmeyeceğim; iyi çalışmalar dilerim 🙏
+```
+
+---
+
 ## Durum makinesi
 
 | durum | anlam | tipik sıradaki adım |
@@ -115,6 +128,7 @@ Hocam kart işinize yaradı mı? Eksik ya da eklenmesini istediğiniz bir şey o
 | `demo_teklif` | STEP 2 (/demo-*) gitti | `/saat` `/deneme` `/onay` · 5g → `/takip` |
 | `demo` | slot onaylandı | bekle (Gökhan link) |
 | `deneme` | ücretsiz deneme linki gitti | bekle |
-| `ilgilenmiyor` | takip sonrası / ret | **yazma** |
+| `ilgilenmiyor` | 5g sessiz / takip sonrası | **yazma** |
+| `reddetti` | açık ret (/tesekkur) | **YOK — takip etme** |
 
 Eski `/evet` ve `/demo` kısayolları kaldırıldı — branşlı `/evet-*` ve `/demo-*` kullan.

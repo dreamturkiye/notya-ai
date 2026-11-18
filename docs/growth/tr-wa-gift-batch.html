@@ -43,11 +43,24 @@
     padding: 2px 10px; font-size: .8rem; font-weight: 600;
   }
   .pill.durum { background: #eff6ff; color: #1d4ed8; }
+  .counts {
+    display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 14px;
+  }
+  .counts span {
+    background: #fff; border: 1px solid var(--line); border-radius: 999px;
+    padding: 6px 12px; font-size: .85rem;
+  }
+  .counts span.red, .counts span.red b { color: #b91c1c; }
   .next {
     background: #fff7ed; border: 1px solid #fed7aa; color: #9a3412;
     border-radius: 10px; padding: 10px 12px; margin-bottom: 10px; font-weight: 600;
   }
+  .next.red {
+    background: #fef2f2; border-color: #fecaca; color: #b91c1c;
+  }
   .next .label { display: block; font-size: .75rem; color: #c2410c; font-weight: 700; letter-spacing: .02em; }
+  .next.red .label { color: #991b1b; }
+  .card.reddetti { opacity: .55; filter: grayscale(.35); background: #fafafa; }
   .muted { color: var(--muted); font-size: .9rem; }
   .msg {
     white-space: pre-wrap; background: #fafaf9; border: 1px solid var(--line);
@@ -63,7 +76,8 @@
 </head>
 <body>
   <h1>Gift-first WhatsApp batch</h1>
-  <p class="sub">4 adım: kart → merak → demo/deneme · Demo slotları: Perşembe 20:00 / Cuma 13:00 · hazır yanıtlar: whatsapp-hazir-yanitlar.md</p>
+  <p class="sub">4 adım: kart → merak → demo/deneme · Demo slotları: Perşembe 20:00 / Cuma 13:00 · hazır yanıtlar: whatsapp-hazir-yanitlar.md · red → /tesekkur</p>
+  <div class="counts"><span>teklif edildi <b>1</b></span><span>kart gönderildi <b>1</b></span><span>demo <b>0</b></span><span>deneme <b>0</b></span><span class="red">reddetti <b>1</b></span><span>cevapsız <b>0</b></span><span>hazır <b>37</b></span></div>
   <div class="toolbar">
     <span id="progress"></span>
     <button type="button" id="hide-sent">Gönderilenleri gizle</button>
@@ -85,12 +99,13 @@
     <span class="muted">Mersin · +905333752572</span>
   </div>
   <div class="next"><span class="label">Sıradaki adım</span> bekle (STEP 1 soru) · 2g sonra /demo-ped</div>
+  
   <pre class="msg">Ali Hocam merhaba, ben Kaan, Dr. Gökhan Mamur&#x27;un ekibinden.
 Çocuk hekimleri için 4 sayfalık, her satırı kaynaklı ve yazdırılabilir bir Pediatri Pratik Kartı hazırladık: aşı takvimi ve telafi ilkeleri, prematüre izlemi, düzeltilmiş yaş.
 Ücretsiz; isterseniz PDF olarak buradan göndereyim?</pre>
   <a class="wa" href="https://wa.me/905333752572?text=Ali%20Hocam%20merhaba%2C%20ben%20Kaan%2C%20Dr.%20G%C3%B6khan%20Mamur%27un%20ekibinden.%0A%C3%87ocuk%20hekimleri%20i%C3%A7in%204%20sayfal%C4%B1k%2C%20her%20sat%C4%B1r%C4%B1%20kaynakl%C4%B1%20ve%20yazd%C4%B1r%C4%B1labilir%20bir%20Pediatri%20Pratik%20Kart%C4%B1%20haz%C4%B1rlad%C4%B1k%3A%20a%C5%9F%C4%B1%20takvimi%20ve%20telafi%20ilkeleri%2C%20premat%C3%BCre%20izlemi%2C%20d%C3%BCzeltilmi%C5%9F%20ya%C5%9F.%0A%C3%9Ccretsiz%3B%20isterseniz%20PDF%20olarak%20buradan%20g%C3%B6ndereyim%3F" target="_blank" rel="noopener">WhatsApp'ta aç (mesaj_1)</a>
 </article>
-<article class="card" data-phone="5344250343" data-i="1" data-durum="teklif_edildi">
+<article class="card reddetti" data-phone="5344250343" data-i="1" data-durum="reddetti">
   <label class="check">
     <input type="checkbox" class="sent" data-phone="5344250343" />
     <span>İşaretle</span>
@@ -99,14 +114,15 @@
     <strong>Müjdegül Z.Karaca</strong>
     <span class="pill">kadin-dogum</span>
     <span class="pill">A</span>
-    <span class="pill durum">teklif_edildi</span>
+    <span class="pill durum">reddetti</span>
     <span class="muted">Ankara · +905344250343</span>
   </div>
-  <div class="next"><span class="label">Sıradaki adım</span> bekle — evet gelince /evet-kd</div>
+  <div class="next red"><span class="label">Sıradaki adım</span> YOK — takip etme</div>
+  <div class="muted">Red: 2026-11-18 · “Teşekkürler böyle bir şey ihtiyacımız yok”</div>
   <pre class="msg">Müjdegül Hocam merhaba, ben Kaan, Dr. Gökhan Mamur&#x27;un ekibinden.
 Kadın doğum hekimleri için 4 sayfalık, her satırı kaynaklı ve yazdırılabilir bir Gebelik Takip Kartı hazırladık: TDT hesabı, izlem ve tarama takvimi, gebelikte aşılar.
 Ücretsiz; isterseniz PDF olarak buradan göndereyim?</pre>
-  <a class="wa" href="https://wa.me/905344250343?text=M%C3%BCjdeg%C3%BCl%20Hocam%20merhaba%2C%20ben%20Kaan%2C%20Dr.%20G%C3%B6khan%20Mamur%27un%20ekibinden.%0AKad%C4%B1n%20do%C4%9Fum%20hekimleri%20i%C3%A7in%204%20sayfal%C4%B1k%2C%20her%20sat%C4%B1r%C4%B1%20kaynakl%C4%B1%20ve%20yazd%C4%B1r%C4%B1labilir%20bir%20Gebelik%20Takip%20Kart%C4%B1%20haz%C4%B1rlad%C4%B1k%3A%20TDT%20hesab%C4%B1%2C%20izlem%20ve%20tarama%20takvimi%2C%20gebelikte%20a%C5%9F%C4%B1lar.%0A%C3%9Ccretsiz%3B%20isterseniz%20PDF%20olarak%20buradan%20g%C3%B6ndereyim%3F" target="_blank" rel="noopener">WhatsApp'ta aç (mesaj_1)</a>
+  <span class='wa muted'>WhatsApp kapalı — reddetti</span>
 </article>
 <article class="card" data-phone="5324533071" data-i="2" data-durum="teklif_edildi">
   <label class="check">
@@ -121,6 +137,7 @@ Kadın doğum hekimleri için 4 sayfalık, her satırı kaynaklı ve yazdırıla
     <span class="muted">Izmir · +905324533071</span>
   </div>
   <div class="next"><span class="label">Sıradaki adım</span> bekle — evet gelince /evet-derm</div>
+  
   <pre class="msg">Ayda Hocam merhaba, ben Kaan, Dr. Gökhan Mamur&#x27;un ekibinden.
 Dermatoloji hekimleri için 4 sayfalık, her satırı kaynaklı ve yazdırılabilir bir Sistemik Tedavi İzlem Kartı hazırladık: izotretinoin, metotreksat, siklosporin ve biyolojik öncesi tarama.
 Ücretsiz; isterseniz PDF olarak buradan göndereyim?</pre>
@@ -139,6 +156,7 @@ Dermatoloji hekimleri için 4 sayfalık, her satırı kaynaklı ve yazdırılabi
     <span class="muted">Adana · +905466144501</span>
   </div>
   <div class="next"><span class="label">Sıradaki adım</span> mesaj_1 gönder (kart teklifi)</div>
+  
   <pre class="msg">Ali Hocam merhaba 🙂 Kısa bir sorum var: masanızda aşı takvimi ve telafi ilkeleri, prematüre izlemi, düzeltilmiş yaş için kısa bir başvuru kartı ister misiniz?
 Her satırı kaynaklı bir Pediatri Pratik Kartı hazırladık, ücretsiz. &quot;Evet&quot; yazmanız yeterli, PDF&#x27;i hemen göndereyim.
 — Kaan, Dr. Gökhan Mamur&#x27;un ekibinden</pre>
@@ -157,6 +175,7 @@ Her satırı kaynaklı bir Pediatri Pratik Kartı hazırladık, ücretsiz. &quot
     <span class="muted">Ankara · +905326421307</span>
   </div>
   <div class="next"><span class="label">Sıradaki adım</span> mesaj_1 gönder (kart teklifi)</div>
+  
   <pre class="msg">Murat Hocam merhaba 🙂 Kısa bir sorum var: masanızda TDT hesabı, izlem ve tarama takvimi, gebelikte aşılar için kısa bir başvuru kartı ister misiniz?
 Her satırı kaynaklı bir Gebelik Takip Kartı hazırladık, ücretsiz. &quot;Evet&quot; yazmanız yeterli, PDF&#x27;i hemen göndereyim.
 — Kaan, Dr. Gökhan Mamur&#x27;un ekibinden</pre>
@@ -175,6 +194,7 @@ Her satırı kaynaklı bir Gebelik Takip Kartı hazırladık, ücretsiz. &quot;E
     <span class="muted">Izmir · +905300681892</span>
   </div>
   <div class="next"><span class="label">Sıradaki adım</span> mesaj_1 gönder (kart teklifi)</div>
+  
   <pre class="msg">Ayse Hocam merhaba 🙂 Kısa bir sorum var: masanızda izotretinoin, metotreksat, siklosporin ve biyolojik öncesi tarama için kısa bir başvuru kartı ister misiniz?
 Her satırı kaynaklı bir Sistemik Tedavi İzlem Kartı hazırladık, ücretsiz. &quot;Evet&quot; yazmanız yeterli, PDF&#x27;i hemen göndereyim.
 — Kaan, Dr. Gökhan Mamur&#x27;un ekibinden</pre>
@@ -193,6 +213,7 @@ Her satırı kaynaklı bir Sistemik Tedavi İzlem Kartı hazırladık, ücretsiz
     <span class="muted">Ankara · +905517176564</span>
   </div>
   <div class="next"><span class="label">Sıradaki adım</span> mesaj_1 gönder (kart teklifi)</div>
+  
   <pre class="msg">Armagan Hocam merhaba, ben Kaan, Dr. Gökhan Mamur&#x27;un ekibinden.
 Çocuk hekimleri için 4 sayfalık, her satırı kaynaklı ve yazdırılabilir bir Pediatri Pratik Kartı hazırladık: aşı takvimi ve telafi ilkeleri, prematüre izlemi, düzeltilmiş yaş.
 Ücretsiz; isterseniz PDF olarak buradan göndereyim?</pre>
@@ -211,6 +232,7 @@ Her satırı kaynaklı bir Sistemik Tedavi İzlem Kartı hazırladık, ücretsiz
     <span class="muted">Antalya · +905537814459</span>
   </div>
   <div class="next"><span class="label">Sıradaki adım</span> mesaj_1 gönder (kart teklifi)</div>
+  
   <pre class="msg">Mustafa Hocam merhaba, ben Kaan, Dr. Gökhan Mamur&#x27;un ekibinden.
 Kadın doğum hekimleri için 4 sayfalık, her satırı kaynaklı ve yazdırılabilir bir Gebelik Takip Kartı hazırladık: TDT hesabı, izlem ve tarama takvimi, gebelikte aşılar.
 Ücretsiz; isterseniz PDF olarak buradan göndereyim?</pre>
@@ -229,6 +251,7 @@ Kadın doğum hekimleri için 4 sayfalık, her satırı kaynaklı ve yazdırıla
     <span class="muted">Ankara · +905325221143</span>
   </div>
   <div class="next"><span class="label">Sıradaki adım</span> mesaj_1 gönder (kart teklifi)</div>
+  
   <pre class="msg">Baris Hocam merhaba, ben Kaan, Dr. Gökhan Mamur&#x27;un ekibinden.
 Dermatoloji hekimleri için 4 sayfalık, her satırı kaynaklı ve yazdırılabilir bir Sistemik Tedavi İzlem Kartı hazırladık: izotretinoin, metotreksat, siklosporin ve biyolojik öncesi tarama.
 Ücretsiz; isterseniz PDF olarak buradan göndereyim?</pre>
@@ -247,6 +270,7 @@ Dermatoloji hekimleri için 4 sayfalık, her satırı kaynaklı ve yazdırılabi
     <span class="muted">Ankara · +905470370606</span>
   </div>
   <div class="next"><span class="label">Sıradaki adım</span> mesaj_1 gönder (kart teklifi)</div>
+  
   <pre class="msg">Atilla Hocam merhaba 🙂 Kısa bir sorum var: masanızda aşı takvimi ve telafi ilkeleri, prematüre izlemi, düzeltilmiş yaş için kısa bir başvuru kartı ister misiniz?
 Her satırı kaynaklı bir Pediatri Pratik Kartı hazırladık, ücretsiz. &quot;Evet&quot; yazmanız yeterli, PDF&#x27;i hemen göndereyim.
 — Kaan, Dr. Gökhan Mamur&#x27;un ekibinden</pre>
@@ -265,6 +289,7 @@ Her satırı kaynaklı bir Pediatri Pratik Kartı hazırladık, ücretsiz. &quot
     <span class="muted">Izmir · +905308688808</span>
   </div>
   <div class="next"><span class="label">Sıradaki adım</span> mesaj_1 gönder (kart teklifi)</div>
+  
   <pre class="msg">Nagehan Hocam merhaba 🙂 Kısa bir sorum var: masanızda TDT hesabı, izlem ve tarama takvimi, gebelikte aşılar için kısa bir başvuru kartı ister misiniz?
 Her satırı kaynaklı bir Gebelik Takip Kartı hazırladık, ücretsiz. &quot;Evet&quot; yazmanız yeterli, PDF&#x27;i hemen göndereyim.
 — Kaan, Dr. Gökhan Mamur&#x27;un ekibinden</pre>
@@ -283,6 +308,7 @@ Her satırı kaynaklı bir Gebelik Takip Kartı hazırladık, ücretsiz. &quot;E
     <span class="muted">Izmir · +905523614988</span>
   </div>
   <div class="next"><span class="label">Sıradaki adım</span> mesaj_1 gönder (kart teklifi)</div>
+  
   <pre class="msg">Berkant Hocam merhaba 🙂 Kısa bir sorum var: masanızda izotretinoin, metotreksat, siklosporin ve biyolojik öncesi tarama için kısa bir başvuru kartı ister misiniz?
 Her satırı kaynaklı bir Sistemik Tedavi İzlem Kartı hazırladık, ücretsiz. &quot;Evet&quot; yazmanız yeterli, PDF&#x27;i hemen göndereyim.
 — Kaan, Dr. Gökhan Mamur&#x27;un ekibinden</pre>
@@ -301,6 +327,7 @@ Her satırı kaynaklı bir Sistemik Tedavi İzlem Kartı hazırladık, ücretsiz
     <span class="muted">Izmir · +905336191800</span>
   </div>
   <div class="next"><span class="label">Sıradaki adım</span> mesaj_1 gönder (kart teklifi)</div>
+  
   <pre class="msg">Ayse Hocam merhaba, ben Kaan, Dr. Gökhan Mamur&#x27;un ekibinden.
 Çocuk hekimleri için 4 sayfalık, her satırı kaynaklı ve yazdırılabilir bir Pediatri Pratik Kartı hazırladık: aşı takvimi ve telafi ilkeleri, prematüre izlemi, düzeltilmiş yaş.
 Ücretsiz; isterseniz PDF olarak buradan göndereyim?</pre>
@@ -319,6 +346,7 @@ Her satırı kaynaklı bir Sistemik Tedavi İzlem Kartı hazırladık, ücretsiz
     <span class="muted">Ankara · +905322424654</span>
   </div>
   <div class="next"><span class="label">Sıradaki adım</span> mesaj_1 gönder (kart teklifi)</div>
+  
   <pre class="msg">Neslihan Hocam merhaba, ben Kaan, Dr. Gökhan Mamur&#x27;un ekibinden.
 Kadın doğum hekimleri için 4 sayfalık, her satırı kaynaklı ve yazdırılabilir bir Gebelik Takip Kartı hazırladık: TDT hesabı, izlem ve tarama takvimi, gebelikte aşılar.
 Ücretsiz; isterseniz PDF olarak buradan göndereyim?</pre>
@@ -337,6 +365,7 @@ Kadın doğum hekimleri için 4 sayfalık, her satırı kaynaklı ve yazdırıla
     <span class="muted">Izmir · +905072695559</span>
   </div>
   <div class="next"><span class="label">Sıradaki adım</span> mesaj_1 gönder (kart teklifi)</div>
+  
   <pre class="msg">Derya Hocam merhaba, ben Kaan, Dr. Gökhan Mamur&#x27;un ekibinden.
 Dermatoloji hekimleri için 4 sayfalık, her satırı kaynaklı ve yazdırılabilir bir Sistemik Tedavi İzlem Kartı hazırladık: izotretinoin, metotreksat, siklosporin ve biyolojik öncesi tarama.
 Ücretsiz; isterseniz PDF olarak buradan göndereyim?</pre>
@@ -355,6 +384,7 @@ Dermatoloji hekimleri için 4 sayfalık, her satırı kaynaklı ve yazdırılabi
     <span class="muted">Istanbul · +905435688644</span>
   </div>
   <div class="next"><span class="label">Sıradaki adım</span> mesaj_1 gönder (kart teklifi)</div>
+  
   <pre class="msg">Bihter Hocam merhaba 🙂 Kısa bir sorum var: masanızda aşı takvimi ve telafi ilkeleri, prematüre izlemi, düzeltilmiş yaş için kısa bir başvuru kartı ister misiniz?
 Her satırı kaynaklı bir Pediatri Pratik Kartı hazırladık, ücretsiz. &quot;Evet&quot; yazmanız yeterli, PDF&#x27;i hemen göndereyim.
 — Kaan, Dr. Gökhan Mamur&#x27;un ekibinden</pre>
@@ -373,6 +403,7 @@ Her satırı kaynaklı bir Pediatri Pratik Kartı hazırladık, ücretsiz. &quot
     <span class="muted">Bursa · +905445368570</span>
   </div>
   <div class="next"><span class="label">Sıradaki adım</span> mesaj_1 gönder (kart teklifi)</div>
+  
   <pre class="msg">Nihat Hocam merhaba 🙂 Kısa bir sorum var: masanızda TDT hesabı, izlem ve tarama takvimi, gebelikte aşılar için kısa bir başvuru kartı ister misiniz?
 Her satırı kaynaklı bir Gebelik Takip Kartı hazırladık, ücretsiz. &quot;Evet&quot; yazmanız yeterli, PDF&#x27;i hemen göndereyim.
 — Kaan, Dr. Gökhan Mamur&#x27;un ekibinden</pre>
@@ -391,6 +422,7 @@ Her satırı kaynaklı bir Gebelik Takip Kartı hazırladık, ücretsiz. &quot;E
     <span class="muted">Istanbul · +905333892371</span>
   </div>
   <div class="next"><span class="label">Sıradaki adım</span> mesaj_1 gönder (kart teklifi)</div>
+  
   <pre class="msg">Ayse Hocam merhaba 🙂 Kısa bir sorum var: masanızda izotretinoin, metotreksat, siklosporin ve biyolojik öncesi tarama için kısa bir başvuru kartı ister misiniz?
 Her satırı kaynaklı bir Sistemik Tedavi İzlem Kartı hazırladık, ücretsiz. &quot;Evet&quot; yazmanız yeterli, PDF&#x27;i hemen göndereyim.
 — Kaan, Dr. Gökhan Mamur&#x27;un ekibinden</pre>
@@ -409,6 +441,7 @@ Her satırı kaynaklı bir Sistemik Tedavi İzlem Kartı hazırladık, ücretsiz
     <span class="muted">Ankara · +905372723692</span>
   </div>
   <div class="next"><span class="label">Sıradaki adım</span> mesaj_1 gönder (kart teklifi)</div>
+  
   <pre class="msg">Dilsah Hocam merhaba, ben Kaan, Dr. Gökhan Mamur&#x27;un ekibinden.
 Çocuk hekimleri için 4 sayfalık, her satırı kaynaklı ve yazdırılabilir bir Pediatri Pratik Kartı hazırladık: aşı takvimi ve telafi ilkeleri, prematüre izlemi, düzeltilmiş yaş.
 Ücretsiz; isterseniz PDF olarak buradan göndereyim?</pre>
@@ -427,6 +460,7 @@ Her satırı kaynaklı bir Sistemik Tedavi İzlem Kartı hazırladık, ücretsiz
     <span class="muted">Izmir · +905428332047</span>
   </div>
   <div class="next"><span class="label">Sıradaki adım</span> mesaj_1 gönder (kart teklifi)</div>
+  
   <pre class="msg">Nurdan Hocam merhaba, ben Kaan, Dr. Gökhan Mamur&#x27;un ekibinden.
 Kadın doğum hekimleri için 4 sayfalık, her satırı kaynaklı ve yazdırılabilir bir Gebelik Takip Kartı hazırladık: TDT hesabı, izlem ve tarama takvimi, gebelikte aşılar.
 Ücretsiz; isterseniz PDF olarak buradan göndereyim?</pre>
@@ -445,6 +479,7 @@ Kadın doğum hekimleri için 4 sayfalık, her satırı kaynaklı ve yazdırıla
     <span class="muted">Istanbul · +905449556777</span>
   </div>
   <div class="next"><span class="label">Sıradaki adım</span> mesaj_1 gönder (kart teklifi)</div>
+  
   <pre class="msg">Ozge Hocam merhaba, ben Kaan, Dr. Gökhan Mamur&#x27;un ekibinden.
 Dermatoloji hekimleri için 4 sayfalık, her satırı kaynaklı ve yazdırılabilir bir Sistemik Tedavi İzlem Kartı hazırladık: izotretinoin, metotreksat, siklosporin ve biyolojik öncesi tarama.
 Ücretsiz; isterseniz PDF olarak buradan göndereyim?</pre>
@@ -463,6 +498,7 @@ Dermatoloji hekimleri için 4 sayfalık, her satırı kaynaklı ve yazdırılabi
     <span class="muted">Bursa · +905436661426</span>
   </div>
   <div class="next"><span class="label">Sıradaki adım</span> mesaj_1 gönder (kart teklifi)</div>
+  
   <pre class="msg">Erdal Hocam merhaba 🙂 Kısa bir sorum var: masanızda aşı takvimi ve telafi ilkeleri, prematüre izlemi, düzeltilmiş yaş için kısa bir başvuru kartı ister misiniz?
 Her satırı kaynaklı bir Pediatri Pratik Kartı hazırladık, ücretsiz. &quot;Evet&quot; yazmanız yeterli, PDF&#x27;i hemen göndereyim.
 — Kaan, Dr. Gökhan Mamur&#x27;un ekibinden</pre>
@@ -481,6 +517,7 @@ Her satırı kaynaklı bir Pediatri Pratik Kartı hazırladık, ücretsiz. &quot
     <span class="muted">Bursa · +905411324228</span>
   </div>
   <div class="next"><span class="label">Sıradaki adım</span> mesaj_1 gönder (kart teklifi)</div>
+  
   <pre class="msg">Olcay Hocam merhaba 🙂 Kısa bir sorum var: masanızda TDT hesabı, izlem ve tarama takvimi, gebelikte aşılar için kısa bir başvuru kartı ister misiniz?
 Her satırı kaynaklı bir Gebelik Takip Kartı hazırladık, ücretsiz. &quot;Evet&quot; yazmanız yeterli, PDF&#x27;i hemen göndereyim.
 — Kaan, Dr. Gökhan Mamur&#x27;un ekibinden</pre>
@@ -499,6 +536,7 @@ Her satırı kaynaklı bir Gebelik Takip Kartı hazırladık, ücretsiz. &quot;E
     <span class="muted">Adana · +905425023938</span>
   </div>
   <div class="next"><span class="label">Sıradaki adım</span> mesaj_1 gönder (kart teklifi)</div>
+  
   <pre class="msg">Sibel Hocam merhaba 🙂 Kısa bir sorum var: masanızda izotretinoin, metotreksat, siklosporin ve biyolojik öncesi tarama için kısa bir başvuru kartı ister misiniz?
 Her satırı kaynaklı bir Sistemik Tedavi İzlem Kartı hazırladık, ücretsiz. &quot;Evet&quot; yazmanız yeterli, PDF&#x27;i hemen göndereyim.
 — Kaan, Dr. Gökhan Mamur&#x27;un ekibinden</pre>
@@ -517,6 +555,7 @@ Her satırı kaynaklı bir Sistemik Tedavi İzlem Kartı hazırladık, ücretsiz
     <span class="muted">Bursa · +905382780086</span>
   </div>
   <div class="next"><span class="label">Sıradaki adım</span> mesaj_1 gönder (kart teklifi)</div>
+  
   <pre class="msg">Fatih Hocam merhaba, ben Kaan, Dr. Gökhan Mamur&#x27;un ekibinden.
 Çocuk hekimleri için 4 sayfalık, her satırı kaynaklı ve yazdırılabilir bir Pediatri Pratik Kartı hazırladık: aşı takvimi ve telafi ilkeleri, prematüre izlemi, düzeltilmiş yaş.
 Ücretsiz; isterseniz PDF olarak buradan göndereyim?</pre>
@@ -535,6 +574,7 @@ Her satırı kaynaklı bir Sistemik Tedavi İzlem Kartı hazırladık, ücretsiz
     <span class="muted">Izmir · +905462917929</span>
   </div>
   <div class="next"><span class="label">Sıradaki adım</span> mesaj_1 gönder (kart teklifi)</div>
+  
   <pre class="msg">Onur Hocam merhaba, ben Kaan, Dr. Gökhan Mamur&#x27;un ekibinden.
 Kadın doğum hekimleri için 4 sayfalık, her satırı kaynaklı ve yazdırılabilir bir Gebelik Takip Kartı hazırladık: TDT hesabı, izlem ve tarama takvimi, gebelikte aşılar.
 Ücretsiz; isterseniz PDF olarak buradan göndereyim?</pre>
@@ -553,6 +593,7 @@ Kadın doğum hekimleri için 4 sayfalık, her satırı kaynaklı ve yazdırıla
     <span class="muted">Ankara · +905384459111</span>
   </div>
   <div class="next"><span class="label">Sıradaki adım</span> mesaj_1 gönder (kart teklifi)</div>
+  
   <pre class="msg">Ercan Hocam merhaba, ben Kaan, Dr. Gökhan Mamur&#x27;un ekibinden.
 Dermatoloji hekimleri için 4 sayfalık, her satırı kaynaklı ve yazdırılabilir bir Sistemik Tedavi İzlem Kartı hazırladık: izotretinoin, metotreksat, siklosporin ve biyolojik öncesi tarama.
 Ücretsiz; isterseniz PDF olarak buradan göndereyim?</pre>
@@ -571,6 +612,7 @@ Dermatoloji hekimleri için 4 sayfalık, her satırı kaynaklı ve yazdırılabi
     <span class="muted">Bursa · +905417429916</span>
   </div>
   <div class="next"><span class="label">Sıradaki adım</span> mesaj_1 gönder (kart teklifi)</div>
+  
   <pre class="msg">Osman Hocam merhaba 🙂 Kısa bir sorum var: masanızda aşı takvimi ve telafi ilkeleri, prematüre izlemi, düzeltilmiş yaş için kısa bir başvuru kartı ister misiniz?
 Her satırı kaynaklı bir Pediatri Pratik Kartı hazırladık, ücretsiz. &quot;Evet&quot; yazmanız yeterli, PDF&#x27;i hemen göndereyim.
 — Kaan, Dr. Gökhan Mamur&#x27;un ekibinden</pre>
@@ -589,6 +631,7 @@ Her satırı kaynaklı bir Pediatri Pratik Kartı hazırladık, ücretsiz. &quot
     <span class="muted">Bursa · +905414529617</span>
   </div>
   <div class="next"><span class="label">Sıradaki adım</span> mesaj_1 gönder (kart teklifi)</div>
+  
   <pre class="msg">Ahmet Hocam merhaba 🙂 Kısa bir sorum var: masanızda TDT hesabı, izlem ve tarama takvimi, gebelikte aşılar için kısa bir başvuru kartı ister misiniz?
 Her satırı kaynaklı bir Gebelik Takip Kartı hazırladık, ücretsiz. &quot;Evet&quot; yazmanız yeterli, PDF&#x27;i hemen göndereyim.
 — Kaan, Dr. Gökhan Mamur&#x27;un ekibinden</pre>
@@ -607,6 +650,7 @@ Her satırı kaynaklı bir Gebelik Takip Kartı hazırladık, ücretsiz. &quot;E
     <span class="muted">Izmir · +905458261955</span>
   </div>
   <div class="next"><span class="label">Sıradaki adım</span> mesaj_1 gönder (kart teklifi)</div>
+  
   <pre class="msg">Gaye Hocam merhaba 🙂 Kısa bir sorum var: masanızda izotretinoin, metotreksat, siklosporin ve biyolojik öncesi tarama için kısa bir başvuru kartı ister misiniz?
 Her satırı kaynaklı bir Sistemik Tedavi İzlem Kartı hazırladık, ücretsiz. &quot;Evet&quot; yazmanız yeterli, PDF&#x27;i hemen göndereyim.
 — Kaan, Dr. Gökhan Mamur&#x27;un ekibinden</pre>
@@ -625,6 +669,7 @@ Her satırı kaynaklı bir Sistemik Tedavi İzlem Kartı hazırladık, ücretsiz
     <span class="muted">Izmir · +905323736750</span>
   </div>
   <div class="next"><span class="label">Sıradaki adım</span> mesaj_1 gönder (kart teklifi)</div>
+  
   <pre class="msg">Erturk Hocam merhaba, ben Kaan, Dr. Gökhan Mamur&#x27;un ekibinden.
 Çocuk hekimleri için 4 sayfalık, her satırı kaynaklı ve yazdırılabilir bir Pediatri Pratik Kartı hazırladık: aşı takvimi ve telafi ilkeleri, prematüre izlemi, düzeltilmiş yaş.
 Ücretsiz; isterseniz PDF olarak buradan göndereyim?</pre>
@@ -643,6 +688,7 @@ Her satırı kaynaklı bir Sistemik Tedavi İzlem Kartı hazırladık, ücretsiz
     <span class="muted">Eskisehir · +905462282600</span>
   </div>
   <div class="next"><span class="label">Sıradaki adım</span> mesaj_1 gönder (kart teklifi)</div>
+  
   <pre class="msg">Alev Hocam merhaba, ben Kaan, Dr. Gökhan Mamur&#x27;un ekibinden.
 Kadın doğum hekimleri için 4 sayfalık, her satırı kaynaklı ve yazdırılabilir bir Gebelik Takip Kartı hazırladık: TDT hesabı, izlem ve tarama takvimi, gebelikte aşılar.
 Ücretsiz; isterseniz PDF olarak buradan göndereyim?</pre>
@@ -661,6 +707,7 @@ Kadın doğum hekimleri için 4 sayfalık, her satırı kaynaklı ve yazdırıla
     <span class="muted">Ankara · +905326710514</span>
   </div>
   <div class="next"><span class="label">Sıradaki adım</span> mesaj_1 gönder (kart teklifi)</div>
+  
   <pre class="msg">H Hocam merhaba, ben Kaan, Dr. Gökhan Mamur&#x27;un ekibinden.
 Dermatoloji hekimleri için 4 sayfalık, her satırı kaynaklı ve yazdırılabilir bir Sistemik Tedavi İzlem Kartı hazırladık: izotretinoin, metotreksat, siklosporin ve biyolojik öncesi tarama.
 Ücretsiz; isterseniz PDF olarak buradan göndereyim?</pre>
@@ -679,6 +726,7 @@ Dermatoloji hekimleri için 4 sayfalık, her satırı kaynaklı ve yazdırılabi
     <span class="muted">Izmir · +905308131020</span>
   </div>
   <div class="next"><span class="label">Sıradaki adım</span> mesaj_1 gönder (kart teklifi)</div>
+  
   <pre class="msg">Esen Hocam merhaba 🙂 Kısa bir sorum var: masanızda aşı takvimi ve telafi ilkeleri, prematüre izlemi, düzeltilmiş yaş için kısa bir başvuru kartı ister misiniz?
 Her satırı kaynaklı bir Pediatri Pratik Kartı hazırladık, ücretsiz. &quot;Evet&quot; yazmanız yeterli, PDF&#x27;i hemen göndereyim.
 — Kaan, Dr. Gökhan Mamur&#x27;un ekibinden</pre>
@@ -697,6 +745,7 @@ Her satırı kaynaklı bir Pediatri Pratik Kartı hazırladık, ücretsiz. &quot
     <span class="muted">Istanbul · +905387358520</span>
   </div>
   <div class="next"><span class="label">Sıradaki adım</span> mesaj_1 gönder (kart teklifi)</div>
+  
   <pre class="msg">Asiya Hocam merhaba 🙂 Kısa bir sorum var: masanızda TDT hesabı, izlem ve tarama takvimi, gebelikte aşılar için kısa bir başvuru kartı ister misiniz?
 Her satırı kaynaklı bir Gebelik Takip Kartı hazırladık, ücretsiz. &quot;Evet&quot; yazmanız yeterli, PDF&#x27;i hemen göndereyim.
 — Kaan, Dr. Gökhan Mamur&#x27;un ekibinden</pre>
@@ -715,6 +764,7 @@ Her satırı kaynaklı bir Gebelik Takip Kartı hazırladık, ücretsiz. &quot;E
     <span class="muted">Izmir · +905322927020</span>
   </div>
   <div class="next"><span class="label">Sıradaki adım</span> mesaj_1 gönder (kart teklifi)</div>
+  
   <pre class="msg">Hacer Hocam merhaba 🙂 Kısa bir sorum var: masanızda izotretinoin, metotreksat, siklosporin ve biyolojik öncesi tarama için kısa bir başvuru kartı ister misiniz?
 Her satırı kaynaklı bir Sistemik Tedavi İzlem Kartı hazırladık, ücretsiz. &quot;Evet&quot; yazmanız yeterli, PDF&#x27;i hemen göndereyim.
 — Kaan, Dr. Gökhan Mamur&#x27;un ekibinden</pre>
@@ -733,6 +783,7 @@ Her satırı kaynaklı bir Sistemik Tedavi İzlem Kartı hazırladık, ücretsiz
     <span class="muted">Ankara · +905436899607</span>
   </div>
   <div class="next"><span class="label">Sıradaki adım</span> mesaj_1 gönder (kart teklifi)</div>
+  
   <pre class="msg">Faruk Hocam merhaba, ben Kaan, Dr. Gökhan Mamur&#x27;un ekibinden.
 Çocuk hekimleri için 4 sayfalık, her satırı kaynaklı ve yazdırılabilir bir Pediatri Pratik Kartı hazırladık: aşı takvimi ve telafi ilkeleri, prematüre izlemi, düzeltilmiş yaş.
 Ücretsiz; isterseniz PDF olarak buradan göndereyim?</pre>
@@ -751,6 +802,7 @@ Her satırı kaynaklı bir Sistemik Tedavi İzlem Kartı hazırladık, ücretsiz
     <span class="muted">Gaziantep · +905496780324</span>
   </div>
   <div class="next"><span class="label">Sıradaki adım</span> mesaj_1 gönder (kart teklifi)</div>
+  
   <pre class="msg">Aysu Hocam merhaba, ben Kaan, Dr. Gökhan Mamur&#x27;un ekibinden.
 Kadın doğum hekimleri için 4 sayfalık, her satırı kaynaklı ve yazdırılabilir bir Gebelik Takip Kartı hazırladık: TDT hesabı, izlem ve tarama takvimi, gebelikte aşılar.
 Ücretsiz; isterseniz PDF olarak buradan göndereyim?</pre>
@@ -769,6 +821,7 @@ Kadın doğum hekimleri için 4 sayfalık, her satırı kaynaklı ve yazdırıla
     <span class="muted">Izmir · +905301817976</span>
   </div>
   <div class="next"><span class="label">Sıradaki adım</span> mesaj_1 gönder (kart teklifi)</div>
+  
   <pre class="msg">Hatice Hocam merhaba, ben Kaan, Dr. Gökhan Mamur&#x27;un ekibinden.
 Dermatoloji hekimleri için 4 sayfalık, her satırı kaynaklı ve yazdırılabilir bir Sistemik Tedavi İzlem Kartı hazırladık: izotretinoin, metotreksat, siklosporin ve biyolojik öncesi tarama.
 Ücretsiz; isterseniz PDF olarak buradan göndereyim?</pre>
@@ -787,6 +840,7 @@ Dermatoloji hekimleri için 4 sayfalık, her satırı kaynaklı ve yazdırılabi
     <span class="muted">Izmir · +905494452324</span>
   </div>
   <div class="next"><span class="label">Sıradaki adım</span> mesaj_1 gönder (kart teklifi)</div>
+  
   <pre class="msg">Fikret Hocam merhaba 🙂 Kısa bir sorum var: masanızda aşı takvimi ve telafi ilkeleri, prematüre izlemi, düzeltilmiş yaş için kısa bir başvuru kartı ister misiniz?
 Her satırı kaynaklı bir Pediatri Pratik Kartı hazırladık, ücretsiz. &quot;Evet&quot; yazmanız yeterli, PDF&#x27;i hemen göndereyim.
 — Kaan, Dr. Gökhan Mamur&#x27;un ekibinden</pre>

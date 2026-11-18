@@ -55,7 +55,8 @@ MAX_BATCH = 40
 
 # Contacted statuses from the old pitch era.
 ESKI_DURUM = {"gitti", "zaten_gitti", "eski_mesaj_gonderildi"}
-SKIP_DURUM = ESKI_DURUM | {"wa_yok", "gitmedi", "ilgilenmiyor"}
+SKIP_DURUM = ESKI_DURUM | {"wa_yok", "gitmedi", "ilgilenmiyor", "reddetti"}
+OUT_RED = GROWTH / "tr-wa-reddetti.csv"
 
 KART = {
     "pediatri": {
@@ -96,6 +97,7 @@ VALID_DURUM = {
     "demo",
     "deneme",
     "ilgilenmiyor",
+    "reddetti",
 }
 
 CSV_COLUMNS = [
@@ -112,6 +114,7 @@ CSV_COLUMNS = [
     "yanit",
     "notlar",
     "siradaki_adim",
+    "red_tarihi",
 ]
 
 TITLE_RE = re.compile(
@@ -412,14 +415,120 @@ def iter_pool_rows() -> list[dict]:
     return rows
 
 
+def load_reddetti_exclusions() -> tuple[set[str], set[str], list[dict]]:
+    """Phones + names that said no — never message again (any list)."""
+    phones: set[str] = set()
+    names: set[str] = set()
+    rows: list[dict] = []
+
+    def add(isim: str, telefon: str, brans: str = "", yanit: str = "", red_tarihi: str = "", kaynak: str = "") -> None:
+        ph = digits(telefon)
+        nm = norm_name(isim)
+        if ph:
+            phones.add(ph)
+        if nm:
+            names.add(nm)
+            # also first+last tokens alone help match ASCII-folded pool rows
+            for tok in nm.split():
+                if len(tok) >= 4:
+                    names.add(tok)
+        rows.append(
+            {
+                "isim": isim,
+                "telefon": e164(telefon) if telefon else "",
+                "brans": brans,
+                "yanit": yanit,
+                "red_tarihi": red_tarihi,
+                "kaynak": kaynak,
+            }
+        )
+
+    if OUT_CSV.exists():
+        with OUT_CSV.open(encoding="utf-8") as f:
+            for r in csv.DictReader(f):
+                if (r.get("durum") or "") == "reddetti":
+                    full = f"{r.get('ad') or ''} {r.get('soyad') or ''}".strip()
+                    add(
+                        full,
+                        r.get("telefon") or "",
+                        r.get("brans") or "",
+                        r.get("yanit") or "",
+                        r.get("red_tarihi") or "",
+                        "gift-batch",
+                    )
+
+    if LEDGER.exists():
+        with LEDGER.open(encoding="utf-8") as f:
+            for r in csv.DictReader(f):
+                if (r.get("durum") or "") == "reddetti":
+                    add(
+                        r.get("isim") or r.get("isim_norm") or "",
+                        r.get("telefon") or "",
+                        r.get("brans") or "",
+                        r.get("not") or "",
+                        r.get("tarih") or "",
+                        "ledger",
+                    )
+
+    if OUT_RED.exists():
+        with OUT_RED.open(encoding="utf-8") as f:
+            for r in csv.DictReader(f):
+                add(
+                    r.get("isim") or "",
+                    r.get("telefon") or "",
+                    r.get("brans") or "",
+                    r.get("yanit") or "",
+                    r.get("red_tarihi") or "",
+                    "red-csv",
+                )
+
+    return phones, names, rows
+
+
+def sync_reddetti_csv() -> int:
+    """Rewrite tr-wa-reddetti.csv from batch + ledger (dedupe by phone)."""
+    _phones, _names, rows = load_reddetti_exclusions()
+    seen: set[str] = set()
+    out: list[dict] = []
+    for r in rows:
+        ph = digits(r.get("telefon") or "")
+        key = ph or norm_name(r.get("isim") or "")
+        if not key or key in seen:
+            continue
+        seen.add(key)
+        out.append(
+            {
+                "isim": r.get("isim") or "",
+                "telefon": e164(ph) if ph else "",
+                "brans": r.get("brans") or "",
+                "yanit": r.get("yanit") or "",
+                "red_tarihi": r.get("red_tarihi") or "",
+                "durum": "reddetti",
+            }
+        )
+    with OUT_RED.open("w", encoding="utf-8", newline="") as f:
+        w = csv.DictWriter(
+            f,
+            fieldnames=["isim", "telefon", "brans", "yanit", "red_tarihi", "durum"],
+        )
+        w.writeheader()
+        w.writerows(out)
+    return len(out)
+
+
 def build_candidates(
-    eski_phones: set[str], eski_names: set[str]
+    eski_phones: set[str],
+    eski_names: set[str],
+    red_phones: set[str] | None = None,
+    red_names: set[str] | None = None,
 ) -> tuple[list[dict], list[dict], dict]:
     """Return (eligible target rows, hold rows, stats)."""
     eligible: list[dict] = []
     hold: list[dict] = []
     stats = Counter()
     seen_phones: set[str] = set()
+    red_phones = red_phones or set()
+    red_names = red_names or set()
 
     for r in iter_pool_rows():
         ph = digits(r.get("telefon") or "")
@@ -434,6 +543,13 @@ def build_candidates(
             stats["dup_phone"] += 1
             continue
         seen_phones.add(ph)
+
+        # Declined: match phone OR any name token (same doctor on another list).
+        if ph in red_phones or nm in red_names or any(
+            tok in red_names for tok in nm.split() if len(tok) >= 4
+        ):
+            stats["excluded_reddetti"] += 1
+            continue
 
         if ph in eski_phones or nm in eski_names:
             stats["excluded_eski"] += 1
@@ -514,6 +630,7 @@ def allocate_batch(eligible: list[dict], limit: int) -> list[dict]:
                 "yanit": "",
                 "notlar": "",
                 "siradaki_adim": "",
+                "red_tarihi": "",
             }
             row["siradaki_adim"] = compute_siradaki_adim(row)
             batch.append(row)
@@ -547,6 +664,8 @@ def compute_siradaki_adim(row: dict, today: date | None = None) -> str:
     age = (today - sent).days if sent else None
     suf = brans_qr_suffix(row.get("brans") or "")
 
+    if durum == "reddetti":
+        return "YOK — takip etme"
     if durum == "hazir":
         return "mesaj_1 gönder (kart teklifi)"
     if durum == "teklif_edildi":
@@ -588,14 +707,38 @@ def write_csv(path: Path, rows: list[dict], fieldnames: list[str]) -> None:
 
 
 def write_html(path: Path, rows: list[dict]) -> None:
+    counts = Counter((r.get("durum") or "") for r in rows)
+    counter_html = (
+        f'<div class="counts">'
+        f'<span>teklif edildi <b>{counts.get("teklif_edildi", 0)}</b></span>'
+        f'<span>kart gönderildi <b>{counts.get("kart_gonderildi", 0)}</b></span>'
+        f'<span>demo <b>{counts.get("demo", 0) + counts.get("demo_teklif", 0)}</b></span>'
+        f'<span>deneme <b>{counts.get("deneme", 0)}</b></span>'
+        f'<span class="red">reddetti <b>{counts.get("reddetti", 0)}</b></span>'
+        f'<span>cevapsız <b>{counts.get("ilgilenmiyor", 0)}</b></span>'
+        f'<span>hazır <b>{counts.get("hazir", 0)}</b></span>'
+        f"</div>"
+    )
     cards = []
     for i, r in enumerate(rows):
         key = digits(r["telefon"])
         adim = r.get("siradaki_adim") or compute_siradaki_adim(r)
-        done = r.get("durum") not in ("hazir",)
+        durum = r.get("durum") or ""
+        cls = "card"
+        if durum == "reddetti":
+            cls += " reddetti"
+        elif durum in ("ilgilenmiyor", "demo", "deneme"):
+            cls += " done"
+        next_cls = "next red" if durum == "reddetti" else "next"
+        red_line = ""
+        if durum == "reddetti":
+            red_line = (
+                f'<div class="muted">Red: {html.escape(r.get("red_tarihi") or "")} · '
+                f'“{html.escape(r.get("yanit") or "")}”</div>'
+            )
         cards.append(
             f"""
-<article class="card{' done' if done and r.get('durum') in ('ilgilenmiyor','demo','deneme') else ''}" data-phone="{html.escape(key)}" data-i="{i}" data-durum="{html.escape(r.get('durum') or '')}">
+<article class="{cls}" data-phone="{html.escape(key)}" data-i="{i}" data-durum="{html.escape(durum)}">
   <label class="check">
     <input type="checkbox" class="sent" data-phone="{html.escape(key)}" />
     <span>İşaretle</span>
@@ -604,12 +747,13 @@ def write_html(path: Path, rows: list[dict]) -> None:
     <strong>{html.escape(r['ad'])} {html.escape(r['soyad'])}</strong>
     <span class="pill">{html.escape(r['brans'])}</span>
     <span class="pill">{html.escape(r['varyant'])}</span>
-    <span class="pill durum">{html.escape(r.get('durum') or '')}</span>
+    <span class="pill durum">{html.escape(durum)}</span>
     <span class="muted">{html.escape(r['sehir'])} · {html.escape(r['telefon'])}</span>
   </div>
-  <div class="next"><span class="label">Sıradaki adım</span> {html.escape(adim)}</div>
+  <div class="{next_cls}"><span class="label">Sıradaki adım</span> {html.escape(adim)}</div>
+  {red_line}
   <pre class="msg">{html.escape(r['mesaj_1'])}</pre>
-  <a class="wa" href="{html.escape(r['wa_link'])}" target="_blank" rel="noopener">WhatsApp'ta aç (mesaj_1)</a>
+  {"<span class='wa muted'>WhatsApp kapalı — reddetti</span>" if durum == "reddetti" else f'<a class="wa" href="{html.escape(r["wa_link"])}" target="_blank" rel="noopener">WhatsApp\'ta aç (mesaj_1)</a>'}
 </article>"""
         )
 
@@ -658,11 +802,24 @@ def write_html(path: Path, rows: list[dict]) -> None:
     padding: 2px 10px; font-size: .8rem; font-weight: 600;
   }}
   .pill.durum {{ background: #eff6ff; color: #1d4ed8; }}
+  .counts {{
+    display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 14px;
+  }}
+  .counts span {{
+    background: #fff; border: 1px solid var(--line); border-radius: 999px;
+    padding: 6px 12px; font-size: .85rem;
+  }}
+  .counts span.red, .counts span.red b {{ color: #b91c1c; }}
   .next {{
     background: #fff7ed; border: 1px solid #fed7aa; color: #9a3412;
     border-radius: 10px; padding: 10px 12px; margin-bottom: 10px; font-weight: 600;
   }}
+  .next.red {{
+    background: #fef2f2; border-color: #fecaca; color: #b91c1c;
+  }}
   .next .label {{ display: block; font-size: .75rem; color: #c2410c; font-weight: 700; letter-spacing: .02em; }}
+  .next.red .label {{ color: #991b1b; }}
+  .card.reddetti {{ opacity: .55; filter: grayscale(.35); background: #fafafa; }}
   .muted {{ color: var(--muted); font-size: .9rem; }}
   .msg {{
     white-space: pre-wrap; background: #fafaf9; border: 1px solid var(--line);
@@ -678,7 +835,8 @@ def write_html(path: Path, rows: list[dict]) -> None:
 </head>
 <body>
   <h1>Gift-first WhatsApp batch</h1>
-  <p class="sub">4 adım: kart → merak → demo/deneme · Demo slotları: {html.escape(SECENEK1)} / {html.escape(SECENEK2)} · hazır yanıtlar: whatsapp-hazir-yanitlar.md</p>
+  <p class="sub">4 adım: kart → merak → demo/deneme · Demo slotları: {html.escape(SECENEK1)} / {html.escape(SECENEK2)} · hazır yanıtlar: whatsapp-hazir-yanitlar.md · red → /tesekkur</p>
+  {counter_html}
   <div class="toolbar">
     <span id="progress"></span>
     <button type="button" id="hide-sent">Gönderilenleri gizle</button>
@@ -779,12 +937,15 @@ def apply_followups(path: Path = OUT_CSV) -> dict:
         durum = (r.get("durum") or "").strip()
         yanit = (r.get("yanit") or "").strip()
         notlar = (r.get("notlar") or "").strip()
+        if durum == "reddetti":
+            r["siradaki_adim"] = "YOK — takip etme"
+            stats["reddetti_skip"] += 1
+            continue
         sent = parse_iso_date(r.get("gonderim_tarihi") or "")
         if not sent:
             r["siradaki_adim"] = compute_siradaki_adim(r, today)
             continue
         age = (today - sent).days
-        suf = brans_qr_suffix(r.get("brans") or "")
 
         if durum == "teklif_edildi" and not yanit and age >= 5:
             r["durum"] = "ilgilenmiyor"
@@ -850,16 +1011,17 @@ def write_durum(batch: list[dict], summary: dict) -> None:
             r
             for r in batch
             if "gönder" in (r.get("siradaki_adim") or "")
-            and r.get("durum") not in ("hazir", "ilgilenmiyor")
+            and r.get("durum") not in ("hazir", "ilgilenmiyor", "reddetti")
         ),
         None,
     )
+    red_n = sum(1 for r in batch if r.get("durum") == "reddetti")
     lines = [
         "# TR outreach durum (canlı) — gift-first (4 adım)",
         "",
         f"**Demo slotları (placeholder):** {SECENEK1} · {SECENEK2}",
         f"**Batch:** {len(batch)} satır · CSV `{OUT_CSV.name}` · HTML `{OUT_HTML.name}`",
-        f"**Eski pitch hariç:** {summary.get('excluded_eski', 0)} · **Hold:** {summary.get('hold', 0)}",
+        f"**Eski pitch hariç:** {summary.get('excluded_eski', 0)} · **Reddetti:** {red_n} · **Hold:** {summary.get('hold', 0)}",
         "",
     ]
     if first:
@@ -900,11 +1062,13 @@ def main() -> int:
 
     if args.refresh_status:
         stats = refresh_batch_status()
+        sync_reddetti_csv()
         print(json.dumps(stats, ensure_ascii=False, indent=2))
         return 0
 
     if args.apply_followups:
         stats = apply_followups()
+        sync_reddetti_csv()
         print(json.dumps(stats, ensure_ascii=False, indent=2))
         return 0
 
@@ -921,9 +1085,13 @@ def main() -> int:
         eski_phones, eski_names, eski_rows = load_eski_phones_and_names()
         write_eski_csv(eski_rows, eski_phones)
 
-    eligible, hold, stats = build_candidates(eski_phones, eski_names)
+    red_phones, red_names, _red_rows = load_reddetti_exclusions()
+    eligible, hold, stats = build_candidates(
+        eski_phones, eski_names, red_phones, red_names
+    )
     limit = max(1, min(args.limit, MAX_BATCH))
     batch = allocate_batch(eligible, limit)
+    sync_reddetti_csv()
 
     write_csv(OUT_CSV, batch, CSV_COLUMNS)
     write_html(OUT_HTML, batch)
