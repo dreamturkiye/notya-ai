@@ -1,10 +1,11 @@
-# TR outreach durum (canlı)
+# TR outreach durum (canlı) — gift-first
 
-**Anti-ban:** 22/gün · gap ≥10 dk · 5/saat.
+**Akış:** ücretsiz branş kartı teklifi (link / fiyat / FOMO yok).
+**Batch:** 40 satır · CSV `tr-wa-gift-batch.csv` · HTML `tr-wa-gift-batch.html`
+**Eski pitch hariç:** 43 · **Hold:** 0
 
-**Sıradaki:** Doç. Dr. Mine Genç · KD · İzmir · +905416244832
-(variant kd-B-0003 · paket W6-48 · bugün 11/22)
+**Sıradaki:** Ali Demirhan · pediatri · Mersin · +905333752572 · varyant A
 
-```bash
-python3 scripts/tr-outreach-next.py --mark-gitti "Doç. Dr. Mine Genç" --phone +905416244832 --brans kadin-dogum --city İzmir --variant-id kd-B-0003
-```
+HTML’de büyük **WhatsApp'ta aç** butonu → Send.
+
+Hazır yanıtlar: `docs/growth/whatsapp-hazir-yanitlar.md`
