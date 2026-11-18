@@ -189,15 +189,16 @@ def mesaj_1(ad: str, brans: str, varyant: str) -> str:
     given = capitalize_given(ad)
     if varyant == "A":
         return (
-            f"{given} Hocam merhaba, ben Kaan, Dr. Gökhan Mamur'un ekibinden. "
+            f"{given} Hocam merhaba, ben Kaan, Dr. Gökhan Mamur'un ekibinden.\n"
             f"{meta['okunus']} hekimleri için 4 sayfalık, her satırı kaynaklı ve yazdırılabilir bir "
-            f"{meta['kart']} hazırladık: {meta['icerik']}. "
+            f"{meta['kart']} hazırladık: {meta['icerik']}.\n"
             f"Ücretsiz; isterseniz PDF olarak buradan göndereyim?"
         )
     return (
         f"{given} Hocam merhaba 🙂 Kısa bir sorum var: masanızda {meta['icerik']} "
-        f"için kısa bir başvuru kartı ister misiniz? Her satırı kaynaklı bir "
-        f"{meta['kart']} hazırladık, ücretsiz. \"Evet\" yazmanız yeterli, PDF'i hemen göndereyim.\n"
+        f"için kısa bir başvuru kartı ister misiniz?\n"
+        f"Her satırı kaynaklı bir {meta['kart']} hazırladık, ücretsiz. "
+        f"\"Evet\" yazmanız yeterli, PDF'i hemen göndereyim.\n"
         f"— Kaan, Dr. Gökhan Mamur'un ekibinden"
     )
 

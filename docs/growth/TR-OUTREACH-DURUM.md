@@ -1,5 +1,5 @@
 # TR outreach durum (canlı) — gift-first
 
-**Sıradaki:** Doç. Dr. Ayda Acar · Dermatoloji · Izmir · +905324533071 · varyant A
+**Sıradaki:** Uzm. Dr. Ali Kütük · Pediatri · Adana · +905466144501 · varyant B
 
-Son gitti: Müjdegül Z.Karaca (2026-11-18)
+Son gitti: Ayda Acar (2026-11-18)
