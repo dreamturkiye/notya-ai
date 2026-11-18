@@ -56,6 +56,7 @@ MAX_BATCH = 40
 # Contacted statuses from the old pitch era.
 ESKI_DURUM = {"gitti", "zaten_gitti", "eski_mesaj_gonderildi"}
 SKIP_DURUM = ESKI_DURUM | {"wa_yok", "gitmedi", "ilgilenmiyor", "reddetti"}
+# wa_yok also lives on gift-batch rows (no WhatsApp number).
 OUT_RED = GROWTH / "tr-wa-reddetti.csv"
 
 KART = {
@@ -98,6 +99,7 @@ VALID_DURUM = {
     "deneme",
     "ilgilenmiyor",
     "reddetti",
+    "wa_yok",
 }
 
 CSV_COLUMNS = [
@@ -666,6 +668,8 @@ def compute_siradaki_adim(row: dict, today: date | None = None) -> str:
 
     if durum == "reddetti":
         return "YOK — takip etme"
+    if durum == "wa_yok":
+        return "YOK — WA yok"
     if durum == "hazir":
         return "mesaj_1 gönder (kart teklifi)"
     if durum == "teklif_edildi":
