@@ -190,13 +190,13 @@ def mesaj_1(ad: str, brans: str, varyant: str) -> str:
     if varyant == "A":
         return (
             f"{given} Hocam merhaba, ben Kaan, Dr. Gökhan Mamur'un ekibinden. "
-            f"{meta['okunus']} hekimleri için tek sayfalık, her satırı kaynaklı bir "
+            f"{meta['okunus']} hekimleri için 4 sayfalık, her satırı kaynaklı ve yazdırılabilir bir "
             f"{meta['kart']} hazırladık: {meta['icerik']}. "
             f"Ücretsiz; isterseniz PDF olarak buradan göndereyim?"
         )
     return (
         f"{given} Hocam merhaba 🙂 Kısa bir sorum var: masanızda {meta['icerik']} "
-        f"için tek sayfalık bir başvuru kartı ister misiniz? Her satırı kaynaklı bir "
+        f"için kısa bir başvuru kartı ister misiniz? Her satırı kaynaklı bir "
         f"{meta['kart']} hazırladık, ücretsiz. \"Evet\" yazmanız yeterli, PDF'i hemen göndereyim.\n"
         f"— Kaan, Dr. Gökhan Mamur'un ekibinden"
     )
@@ -225,6 +225,8 @@ def forbidden_in_first_message(text: str) -> list[str]:
         "ücretli",
         "fiyat",
         "tl/",
+        "tek sayfa",
+        "teksayfa",
     ):
         if bad in low:
             hits.append(bad)
