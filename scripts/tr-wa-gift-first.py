@@ -217,15 +217,17 @@ def mesaj_1(ad: str, brans: str, varyant: str) -> str:
         return (
             f"{given} Hocam merhaba, ben Kaan, Dr. Gökhan Mamur'un ekibinden.\n"
             f"{meta['okunus']} hekimleri için 4 sayfalık, her satırı kaynaklı ve yazdırılabilir bir "
-            f"{meta['kart']} hazırladık: {meta['icerik']}.\n"
-            f"Ücretsiz; isterseniz PDF olarak buradan göndereyim?"
+            f"{meta['kart']} hazırladık: {meta['icerik']}.\n\n"
+            f"Ücretsiz; isterseniz PDF olarak buradan göndereyim?\n\n"
+            f"www.notya.io"
         )
     return (
         f"{given} Hocam merhaba 🙂 Kısa bir sorum var: masanızda {meta['icerik']} "
-        f"için kısa bir başvuru kartı ister misiniz?\n"
+        f"için kısa bir başvuru kartı ister misiniz?\n\n"
         f"Her satırı kaynaklı bir {meta['kart']} hazırladık, ücretsiz. "
-        f"\"Evet\" yazmanız yeterli, PDF'i hemen göndereyim.\n"
-        f"— Kaan, Dr. Gökhan Mamur'un ekibinden"
+        f"\"Evet\" yazmanız yeterli, PDF'i hemen göndereyim.\n\n"
+        f"— Kaan, Dr. Gökhan Mamur'un ekibinden\n"
+        f"www.notya.io"
     )
 
 
@@ -237,14 +239,13 @@ def wa_link(telefon: str, message: str) -> str:
 
 
 def forbidden_in_first_message(text: str) -> list[str]:
-    """Hard guard: first message must not pitch / pressure / link."""
+    """Hard guard: first message must not pitch / pressure / https links.
+
+    Plain www.notya.io at the end is allowed (brand line).
+    """
     hits: list[str] = []
     low = text.lower()
     for bad in (
-        "http://",
-        "https://",
-        "www.",
-        "notya.io",
         "1,5-2",
         "1.5-2",
         "geri kalmamak",
@@ -254,9 +255,12 @@ def forbidden_in_first_message(text: str) -> list[str]:
         "tl/",
         "tek sayfa",
         "teksayfa",
+        "notya.io/demo",
     ):
         if bad in low:
             hits.append(bad)
+    if "http://" in low or "https://" in low:
+        hits.append("url")
     return hits
 
 
