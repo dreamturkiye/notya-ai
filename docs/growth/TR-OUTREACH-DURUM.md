@@ -1,7 +1,5 @@
 # TR outreach durum (canlı) — gift-first
 
-**Akış:** 4 sayfalık ücretsiz branş kartı teklifi (link / fiyat / FOMO yok).
+**Sıradaki:** Doç. Dr. Ayda Acar · Dermatoloji · Izmir · +905324533071 · varyant A
 
-**Sıradaki:** Op. Dr. Müjdegül Z.Karaca · KD · Ankara · +905344250343 · varyant A
-
-Son gitti: Ali Demirhan (2026-11-18)
+Son gitti: Müjdegül Z.Karaca (2026-11-18)
