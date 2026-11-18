@@ -669,6 +669,8 @@ def compute_siradaki_adim(row: dict, today: date | None = None) -> str:
     if durum == "hazir":
         return "mesaj_1 gönder (kart teklifi)"
     if durum == "teklif_edildi":
+        if "red_sonrasi_yanit" in notlar:
+            return "Yanıtla — kendisi yazdı"
         return "bekle — evet gelince /evet-" + suf
     if durum == "kart_gonderildi":
         if yanit and any(
@@ -947,7 +949,12 @@ def apply_followups(path: Path = OUT_CSV) -> dict:
             continue
         age = (today - sent).days
 
-        if durum == "teklif_edildi" and not yanit and age >= 5:
+        if (
+            durum == "teklif_edildi"
+            and not yanit
+            and age >= 5
+            and "red_sonrasi_yanit" not in notlar
+        ):
             r["durum"] = "ilgilenmiyor"
             r["notlar"] = (notlar + " | auto_ilgilenmiyor_5g_teklif").strip(" |")
             stats["ilgilenmiyor_teklif"] += 1
@@ -972,6 +979,64 @@ def apply_followups(path: Path = OUT_CSV) -> dict:
     write_csv(path, rows, CSV_COLUMNS)
     write_html(OUT_HTML, rows)
     return dict(stats)
+
+
+def mark_red_reply(*, phone: str, yanit: str) -> dict:
+    """Doctor wrote back after /tesekkur → reopen as manual reply, not auto-follow-up."""
+    if not OUT_CSV.exists():
+        return {"error": "no batch"}
+    ph = digits(phone)
+    yanit = (yanit or "").strip()
+    if not ph or not yanit:
+        return {"error": "phone and yanit required"}
+    with OUT_CSV.open(encoding="utf-8") as f:
+        rows = list(csv.DictReader(f))
+    hit = None
+    for r in rows:
+        for col in CSV_COLUMNS:
+            r.setdefault(col, "")
+        if digits(r.get("telefon") or "") != ph:
+            continue
+        r["durum"] = "teklif_edildi"
+        r["yanit"] = yanit
+        note = (r.get("notlar") or "").strip()
+        if "red_sonrasi_yanit" not in note:
+            r["notlar"] = (note + " | red_sonrasi_yanit").strip(" |")
+        # Keep red_tarihi for history; leave exclusion until sync (no longer reddetti).
+        r["siradaki_adim"] = compute_siradaki_adim(r)
+        hit = r
+        break
+    if not hit:
+        return {"error": f"phone not in batch: {e164(ph)}"}
+    write_csv(OUT_CSV, rows, CSV_COLUMNS)
+    write_html(OUT_HTML, rows)
+    sync_reddetti_csv()
+    # ledger
+    if LEDGER.exists():
+        with LEDGER.open(encoding="utf-8") as f:
+            ledger = list(csv.DictReader(f))
+            fields = list(ledger[0].keys()) if ledger else []
+        for row in ledger:
+            if digits(row.get("telefon") or "") == ph:
+                row["durum"] = "teklif_edildi"
+                row["not"] = (
+                    (row.get("not") or "").strip()
+                    + f"; red_sonrasi_yanit: {yanit}"
+                ).strip("; ")
+        if fields:
+            with LEDGER.open("w", encoding="utf-8", newline="") as f:
+                w = csv.DictWriter(f, fieldnames=fields)
+                w.writeheader()
+                w.writerows(ledger)
+    return {
+        "ok": True,
+        "ad": hit.get("ad"),
+        "soyad": hit.get("soyad"),
+        "telefon": hit.get("telefon"),
+        "durum": hit.get("durum"),
+        "siradaki_adim": hit.get("siradaki_adim"),
+        "yanit": hit.get("yanit"),
+    }
 
 
 def refresh_batch_status(path: Path = OUT_CSV) -> dict:
@@ -1053,11 +1118,22 @@ def main() -> int:
         help="recompute siradaki_adim on existing batch (no reshuffle)",
     )
     ap.add_argument("--init-docs-only", action="store_true")
+    ap.add_argument(
+        "--mark-red-reply",
+        action="store_true",
+        help="doctor wrote back after reddetti → teklif_edildi + Yanıtla — kendisi yazdı",
+    )
+    ap.add_argument("--phone", default="")
+    ap.add_argument("--yanit", default="")
     args = ap.parse_args()
 
     write_quick_replies()
     if args.init_docs_only:
         print(f"ok {QUICK_REPLIES}")
+        return 0
+
+    if args.mark_red_reply:
+        print(json.dumps(mark_red_reply(phone=args.phone, yanit=args.yanit), ensure_ascii=False, indent=2))
         return 0
 
     if args.refresh_status:

@@ -108,12 +108,18 @@ Hocam kart işinize yaradı mı? Eksik ya da eklenmesini istediğiniz bir şey o
 ## Red — doktor istemedi
 
 Doktor “hayır / teşekkürler ihtiyacımız yok” dediğinde. Durum → `reddetti` (cevapsız `ilgilenmiyor` değil).
-`red_tarihi` = bugün · `yanit` = doktorun cümlesi. Bir daha **asla** yazma; gelecek batch ve eski-120 re-send listelerinden telefon **ve** isimle çıkar.
+`red_tarihi` = bugün · `yanit` = doktorun cümlesi. Bizden takip **yok**; gelecek batch ve eski-120 re-send listelerinden telefon **ve** isimle çıkar.
+
+**İstisna:** doktor `/tesekkur` sonrası **kendi** yazarsa → durum `teklif_edildi`, `notlar` += `red_sonrasi_yanit`, `siradaki_adim` = `Yanıtla — kendisi yazdı` (elle cevapla; otomatik STEP/takip yok).
+
+```bash
+python3 scripts/tr-wa-gift-first.py --mark-red-reply --phone +905… --yanit "doktorun yeni mesajı"
+```
 
 ### /tesekkur
 
 ```
-Anladım Hocam, yanıtınız için çok teşekkür ederim. Bir daha rahatsız etmeyeceğim; iyi çalışmalar dilerim 🙏
+Anladım Hocam, yanıtınız için çok teşekkür ederim 🙏 Kart dışında, muayene notunu siz konuşurken yazan ve hasta takibini üstlenen Notya'yı da geliştiriyoruz; bir gün merak ederseniz www.notya.io adresinde. Bir daha rahatsız etmeyeceğim, iyi çalışmalar dilerim.
 ```
 
 ---
@@ -130,5 +136,6 @@ Anladım Hocam, yanıtınız için çok teşekkür ederim. Bir daha rahatsız et
 | `deneme` | ücretsiz deneme linki gitti | bekle |
 | `ilgilenmiyor` | 5g sessiz / takip sonrası | **yazma** |
 | `reddetti` | açık ret (/tesekkur) | **YOK — takip etme** |
+| `teklif_edildi` + `red_sonrasi_yanit` | red sonrası doktor yazdı | **Yanıtla — kendisi yazdı** |
 
 Eski `/evet` ve `/demo` kısayolları kaldırıldı — branşlı `/evet-*` ve `/demo-*` kullan.
