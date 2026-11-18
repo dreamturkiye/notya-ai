@@ -78,6 +78,26 @@ KART = {
     },
 }
 
+# Demo slot placeholders (Türkiye saati) — mirror docs/growth/whatsapp-hazir-yanitlar.md
+SECENEK1 = "Perşembe 20:00"
+SECENEK2 = "Cuma 13:00"
+
+BRANS_SUFFIX = {
+    "pediatri": "ped",
+    "kadin-dogum": "kd",
+    "dermatoloji": "derm",
+}
+
+VALID_DURUM = {
+    "hazir",
+    "teklif_edildi",
+    "kart_gonderildi",
+    "demo_teklif",
+    "demo",
+    "deneme",
+    "ilgilenmiyor",
+}
+
 CSV_COLUMNS = [
     "ad",
     "soyad",
@@ -91,6 +111,7 @@ CSV_COLUMNS = [
     "gonderim_tarihi",
     "yanit",
     "notlar",
+    "siradaki_adim",
 ]
 
 TITLE_RE = re.compile(
@@ -479,26 +500,84 @@ def allocate_batch(eligible: list[dict], limit: int) -> list[dict]:
             bad = forbidden_in_first_message(msg)
             if bad:
                 raise RuntimeError(f"forbidden tokens in mesaj_1: {bad}")
-            batch.append(
-                {
-                    "ad": src["ad"],
-                    "soyad": src["soyad"],
-                    "brans": b,
-                    "sehir": src["sehir"],
-                    "telefon": src["telefon"],
-                    "varyant": varyant,
-                    "mesaj_1": msg,
-                    "wa_link": wa_link(src["telefon"], msg),
-                    "durum": "hazir",
-                    "gonderim_tarihi": "",
-                    "yanit": "",
-                    "notlar": "",
-                }
-            )
+            row = {
+                "ad": src["ad"],
+                "soyad": src["soyad"],
+                "brans": b,
+                "sehir": src["sehir"],
+                "telefon": src["telefon"],
+                "varyant": varyant,
+                "mesaj_1": msg,
+                "wa_link": wa_link(src["telefon"], msg),
+                "durum": "hazir",
+                "gonderim_tarihi": "",
+                "yanit": "",
+                "notlar": "",
+                "siradaki_adim": "",
+            }
+            row["siradaki_adim"] = compute_siradaki_adim(row)
+            batch.append(row)
             progressed = True
         if not progressed:
             break
     return batch
+
+
+def parse_iso_date(raw: str) -> date | None:
+    s = (raw or "").strip()
+    if not s:
+        return None
+    try:
+        return date.fromisoformat(s[:10])
+    except ValueError:
+        return None
+
+
+def brans_qr_suffix(brans: str) -> str:
+    return BRANS_SUFFIX.get(brans, "ped")
+
+
+def compute_siradaki_adim(row: dict, today: date | None = None) -> str:
+    """What to send next, from durum + dates + notlar flags."""
+    today = today or date.today()
+    durum = (row.get("durum") or "").strip()
+    yanit = (row.get("yanit") or "").strip()
+    notlar = (row.get("notlar") or "").strip()
+    sent = parse_iso_date(row.get("gonderim_tarihi") or "")
+    age = (today - sent).days if sent else None
+    suf = brans_qr_suffix(row.get("brans") or "")
+
+    if durum == "hazir":
+        return "mesaj_1 gönder (kart teklifi)"
+    if durum == "teklif_edildi":
+        return "bekle — evet gelince /evet-" + suf
+    if durum == "kart_gonderildi":
+        if yanit and any(
+            k in yanit.lower()
+            for k in ("cevap", "hesap", "takip", "yanit", "yanıt", "nasıl")
+        ):
+            return f"STEP 2 gönder → /demo-{suf}"
+        if age is not None and age >= 2:
+            return f"STEP 2 gönder → /demo-{suf} (2g sessiz)"
+        return f"bekle (STEP 1 soru) · 2g sonra /demo-{suf}"
+    if durum == "demo_teklif":
+        if "takip_gonderildi" in notlar:
+            return "bekle — sonra ilgilenmiyor"
+        if age is not None and age >= 5:
+            return "STEP 3 gönder → /takip (bir kez)"
+        return "bekle — /saat · /deneme · /onay · 5g → /takip"
+    if durum == "demo":
+        return "bekle (Gökhan toplantı linki)"
+    if durum == "deneme":
+        return "bekle (ücretsiz deneme)"
+    if durum == "ilgilenmiyor":
+        return "yazma"
+    return "bekle"
+
+
+def refresh_siradaki(rows: list[dict], today: date | None = None) -> None:
+    for r in rows:
+        r["siradaki_adim"] = compute_siradaki_adim(r, today)
 
 
 def write_csv(path: Path, rows: list[dict], fieldnames: list[str]) -> None:
@@ -512,21 +591,25 @@ def write_html(path: Path, rows: list[dict]) -> None:
     cards = []
     for i, r in enumerate(rows):
         key = digits(r["telefon"])
+        adim = r.get("siradaki_adim") or compute_siradaki_adim(r)
+        done = r.get("durum") not in ("hazir",)
         cards.append(
             f"""
-<article class="card" data-phone="{html.escape(key)}" data-i="{i}">
+<article class="card{' done' if done and r.get('durum') in ('ilgilenmiyor','demo','deneme') else ''}" data-phone="{html.escape(key)}" data-i="{i}" data-durum="{html.escape(r.get('durum') or '')}">
   <label class="check">
     <input type="checkbox" class="sent" data-phone="{html.escape(key)}" />
-    <span>Gönderildi</span>
+    <span>İşaretle</span>
   </label>
   <div class="meta">
     <strong>{html.escape(r['ad'])} {html.escape(r['soyad'])}</strong>
     <span class="pill">{html.escape(r['brans'])}</span>
     <span class="pill">{html.escape(r['varyant'])}</span>
+    <span class="pill durum">{html.escape(r.get('durum') or '')}</span>
     <span class="muted">{html.escape(r['sehir'])} · {html.escape(r['telefon'])}</span>
   </div>
+  <div class="next"><span class="label">Sıradaki adım</span> {html.escape(adim)}</div>
   <pre class="msg">{html.escape(r['mesaj_1'])}</pre>
-  <a class="wa" href="{html.escape(r['wa_link'])}" target="_blank" rel="noopener">WhatsApp'ta aç</a>
+  <a class="wa" href="{html.escape(r['wa_link'])}" target="_blank" rel="noopener">WhatsApp'ta aç (mesaj_1)</a>
 </article>"""
         )
 
@@ -574,6 +657,12 @@ def write_html(path: Path, rows: list[dict]) -> None:
     background: #ecfdf5; color: #065f46; border-radius: 999px;
     padding: 2px 10px; font-size: .8rem; font-weight: 600;
   }}
+  .pill.durum {{ background: #eff6ff; color: #1d4ed8; }}
+  .next {{
+    background: #fff7ed; border: 1px solid #fed7aa; color: #9a3412;
+    border-radius: 10px; padding: 10px 12px; margin-bottom: 10px; font-weight: 600;
+  }}
+  .next .label {{ display: block; font-size: .75rem; color: #c2410c; font-weight: 700; letter-spacing: .02em; }}
   .muted {{ color: var(--muted); font-size: .9rem; }}
   .msg {{
     white-space: pre-wrap; background: #fafaf9; border: 1px solid var(--line);
@@ -589,7 +678,7 @@ def write_html(path: Path, rows: list[dict]) -> None:
 </head>
 <body>
   <h1>Gift-first WhatsApp batch</h1>
-  <p class="sub">Kart teklifi · link/fiyat/FOMO yok · işaretledikleriniz telefonda kalır (localStorage)</p>
+  <p class="sub">4 adım: kart → merak → demo/deneme · Demo slotları: {html.escape(SECENEK1)} / {html.escape(SECENEK2)} · hazır yanıtlar: whatsapp-hazir-yanitlar.md</p>
   <div class="toolbar">
     <span id="progress"></span>
     <button type="button" id="hide-sent">Gönderilenleri gizle</button>
@@ -651,55 +740,32 @@ refresh();
 
 
 def write_quick_replies() -> None:
-    text = """# WhatsApp Business — hazır yanıtlar (gift-first)
+    """Keep docs/growth/whatsapp-hazir-yanitlar.md as the source of truth.
 
-Hızlı yanıt kısayolları. Kart PDF’lerini `/evet` sonrası branşa göre ekleyin.
-
-## /evet
-
-```
-Buyurun Hocam. Bu kartta elle baktığınız hesapları Notya her hastanız için muayene sırasında kendisi takip ediyor, hatırlatmalar dahil. Merak ederseniz 15 dakikada gösterebiliriz.
-```
-
-### Eklenecek PDF (branşa göre)
-
-| Branş | Kart | PDF |
-|------|------|-----|
-| pediatri | Pediatri Pratik Kartı | https://notya-growth.vercel.app/pratik-kart/pediatri-pratik-karti-2026.pdf |
-| kadın doğum | Gebelik Takip Kartı | https://notya-growth.vercel.app/pratik-kart/kd-gebelik-takip-karti-2026.pdf |
-| dermatoloji | Sistemik Tedavi İzlem Kartı | https://notya-growth.vercel.app/pratik-kart/dermatoloji-sistemik-tedavi-izlem-karti-2026.pdf |
-
-## /takip
-
-```
-Hocam kart işinize yaradı mı? Eksik ya da eklenmesini istediğiniz bir şey olursa yazın, düzeltiyoruz.
-```
-
-Kullanım: `durum = kart_gonderildi`, `gonderim_tarihi` ≥ 3 gün önce, `yanit` boş → `notlar` içine `takip_gunu` yazılır; `/takip` **bir kez**.
-
-## /demo
-
-```
-Harika Hocam. Size uygun saati buradan seçebilirsiniz: https://www.notya.io/demo — Dr. Gökhan Mamur bizzat gösterecek.
-```
-
-## Durum makinesi
-
-| durum | anlam |
-|-------|--------|
-| `hazir` | Batch’te, henüz teklif edilmedi |
-| `teklif_edildi` | mesaj_1 gönderildi |
-| `kart_gonderildi` | PDF gitti |
-| `demo` | demo linki / randevu |
-| `ilgilenmiyor` | 5 gün yanıtsız teklif veya ret |
-
-Kural: `teklif_edildi` + 5 gün + `yanit` boş → `ilgilenmiyor` (bir daha yazma).
-"""
-    QUICK_REPLIES.write_text(text, encoding="utf-8")
+    This helper only guards against accidental old /evet|/demo stubs.
+    Full text lives in the markdown file (edited by hand / this PR).
+    """
+    if not QUICK_REPLIES.exists():
+        raise FileNotFoundError(
+            f"Missing {QUICK_REPLIES} — restore from git before generating."
+        )
+    text = QUICK_REPLIES.read_text(encoding="utf-8")
+    # Block legacy stubs from creeping back.
+    if re.search(r"^## /evet\s*$", text, re.M) and "/evet-ped" not in text:
+        raise RuntimeError("legacy /evet found without /evet-ped — refuse to proceed")
+    if "Harika Hocam. Size uygun saati buradan seçebilirsiniz: https://www.notya.io/demo — Dr. Gökhan Mamur bizzat gösterecek." in text:
+        raise RuntimeError("legacy /demo one-liner still present — refuse to proceed")
 
 
 def apply_followups(path: Path = OUT_CSV) -> dict:
-    """Mutate batch CSV for takip_gunu / ilgilenmiyor rules."""
+    """Flag next steps from dates; after /takip once → ilgilenmiyor.
+
+    Rules:
+      kart_gonderildi + ≥2g + no reply → siradaki_adim suggests /demo-*
+      kart_gonderildi|demo_teklif + ≥5g + no reply + no takip_gonderildi → /takip
+      after takip_gonderildi flagged and still silent → ilgilenmiyor
+      teklif_edildi + ≥5g + no reply → ilgilenmiyor
+    """
     if not path.exists():
         return {"error": "no batch"}
     with path.open(encoding="utf-8") as f:
@@ -707,45 +773,104 @@ def apply_followups(path: Path = OUT_CSV) -> dict:
     today = date.today()
     stats = Counter()
     for r in rows:
+        # migrate old column sets
+        if "siradaki_adim" not in r:
+            r["siradaki_adim"] = ""
         durum = (r.get("durum") or "").strip()
         yanit = (r.get("yanit") or "").strip()
-        g = (r.get("gonderim_tarihi") or "").strip()
         notlar = (r.get("notlar") or "").strip()
-        if not g:
-            continue
-        try:
-            sent = date.fromisoformat(g[:10])
-        except ValueError:
-            stats["bad_date"] += 1
+        sent = parse_iso_date(r.get("gonderim_tarihi") or "")
+        if not sent:
+            r["siradaki_adim"] = compute_siradaki_adim(r, today)
             continue
         age = (today - sent).days
-        if durum == "kart_gonderildi" and not yanit and age >= 3:
-            if "takip_gunu" not in notlar:
-                r["notlar"] = (notlar + " | takip_gunu").strip(" |")
-                stats["takip_gunu"] += 1
+        suf = brans_qr_suffix(r.get("brans") or "")
+
         if durum == "teklif_edildi" and not yanit and age >= 5:
             r["durum"] = "ilgilenmiyor"
-            r["notlar"] = (notlar + " | auto_ilgilenmiyor_5g").strip(" |")
-            stats["ilgilenmiyor"] += 1
+            r["notlar"] = (notlar + " | auto_ilgilenmiyor_5g_teklif").strip(" |")
+            stats["ilgilenmiyor_teklif"] += 1
+            notlar = r["notlar"]
+
+        if durum == "kart_gonderildi" and not yanit and age >= 2:
+            if "step2_due" not in notlar:
+                r["notlar"] = (notlar + " | step2_due").strip(" |")
+                stats["step2_due"] += 1
+                notlar = r["notlar"]
+
+        if durum in ("kart_gonderildi", "demo_teklif") and not yanit and age >= 5:
+            if "takip_gonderildi" in notlar:
+                r["durum"] = "ilgilenmiyor"
+                r["notlar"] = (notlar + " | auto_ilgilenmiyor_after_takip").strip(" |")
+                stats["ilgilenmiyor_after_takip"] += 1
+            elif "takip_due" not in notlar:
+                r["notlar"] = (notlar + " | takip_due").strip(" |")
+                stats["takip_due"] += 1
+
+        r["siradaki_adim"] = compute_siradaki_adim(r, today)
     write_csv(path, rows, CSV_COLUMNS)
+    write_html(OUT_HTML, rows)
     return dict(stats)
 
 
+def refresh_batch_status(path: Path = OUT_CSV) -> dict:
+    """Recompute siradaki_adim for existing batch without reshuffling doctors."""
+    if not path.exists():
+        return {"error": "no batch"}
+    with path.open(encoding="utf-8") as f:
+        rows = list(csv.DictReader(f))
+    for r in rows:
+        for col in CSV_COLUMNS:
+            r.setdefault(col, "")
+        # drop legacy notlar flags that no longer apply
+        if "takip_gunu" in (r.get("notlar") or ""):
+            r["notlar"] = (
+                (r.get("notlar") or "")
+                .replace("takip_gunu", "takip_due")
+                .replace("||", "|")
+                .strip(" |")
+            )
+    refresh_siradaki(rows)
+    write_csv(path, rows, CSV_COLUMNS)
+    write_html(OUT_HTML, rows)
+    return {
+        "rows": len(rows),
+        "by_durum": dict(Counter(r.get("durum") for r in rows)),
+        "by_siradaki": dict(Counter(r.get("siradaki_adim") for r in rows)),
+    }
+
+
 def write_durum(batch: list[dict], summary: dict) -> None:
-    first = batch[0] if batch else None
+    # Prefer first hazir row as "Sıradaki"; else first row.
+    first = next((r for r in batch if r.get("durum") == "hazir"), None) or (
+        batch[0] if batch else None
+    )
+    action = next(
+        (
+            r
+            for r in batch
+            if "gönder" in (r.get("siradaki_adim") or "")
+            and r.get("durum") not in ("hazir", "ilgilenmiyor")
+        ),
+        None,
+    )
     lines = [
-        "# TR outreach durum (canlı) — gift-first",
+        "# TR outreach durum (canlı) — gift-first (4 adım)",
         "",
-        "**Akış:** ücretsiz branş kartı teklifi (link / fiyat / FOMO yok).",
+        f"**Demo slotları (placeholder):** {SECENEK1} · {SECENEK2}",
         f"**Batch:** {len(batch)} satır · CSV `{OUT_CSV.name}` · HTML `{OUT_HTML.name}`",
         f"**Eski pitch hariç:** {summary.get('excluded_eski', 0)} · **Hold:** {summary.get('hold', 0)}",
         "",
     ]
     if first:
         lines += [
-            f"**Sıradaki:** {first['ad']} {first['soyad']} · {first['brans']} · {first['sehir']} · {first['telefon']} · varyant {first['varyant']}",
+            f"**Sıradaki (mesaj_1):** {first['ad']} {first['soyad']} · {first['brans']} · {first['sehir']} · {first['telefon']} · {first['varyant']}",
+            f"  → {first.get('siradaki_adim')}",
             "",
-            "HTML’de büyük **WhatsApp'ta aç** butonu → Send.",
+        ]
+    if action:
+        lines += [
+            f"**Aksiyon bekleyen:** {action['ad']} {action['soyad']} · {action.get('durum')} · {action.get('siradaki_adim')}",
             "",
         ]
     lines += [
@@ -760,12 +885,22 @@ def main() -> int:
     ap.add_argument("--limit", type=int, default=MAX_BATCH)
     ap.add_argument("--mark-eski", action="store_true", help="ledger gitti→eski_mesaj_gonderildi")
     ap.add_argument("--apply-followups", action="store_true")
+    ap.add_argument(
+        "--refresh-status",
+        action="store_true",
+        help="recompute siradaki_adim on existing batch (no reshuffle)",
+    )
     ap.add_argument("--init-docs-only", action="store_true")
     args = ap.parse_args()
 
     write_quick_replies()
     if args.init_docs_only:
-        print(f"wrote {QUICK_REPLIES}")
+        print(f"ok {QUICK_REPLIES}")
+        return 0
+
+    if args.refresh_status:
+        stats = refresh_batch_status()
+        print(json.dumps(stats, ensure_ascii=False, indent=2))
         return 0
 
     if args.apply_followups:
