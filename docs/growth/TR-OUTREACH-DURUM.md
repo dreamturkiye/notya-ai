@@ -1,10 +1,12 @@
-# TR outreach durum (canlı)
+# TR outreach durum (canlı) — gift-first (4 adım)
 
-**Anti-ban:** 22/gün · gap ≥10 dk · 5/saat.
+**Demo slotları (placeholder):** Perşembe 20:00 · Cuma 13:00
+**Batch:** 40 satır · CSV `tr-wa-gift-batch.csv` · HTML `tr-wa-gift-batch.html`
+**Eski pitch hariç:** 0 · **Reddetti:** 1 · **Hold:** 0
 
-**Sıradaki:** Doç. Dr. Mine Genç · KD · İzmir · +905416244832
-(variant kd-B-0003 · paket W6-48 · bugün 11/22)
+**Sıradaki (mesaj_1):** Berkant Oman · dermatoloji · Izmir · +905523614988 · B
+  → mesaj_1 gönder (seminar daveti)
 
-```bash
-python3 scripts/tr-outreach-next.py --mark-gitti "Doç. Dr. Mine Genç" --phone +905416244832 --brans kadin-dogum --city İzmir --variant-id kd-B-0003
-```
+**Aksiyon bekleyen:** Ali Demirhan · kart_gonderildi · STEP 2 gönder → /demo-ped (2g sessiz)
+
+Hazır yanıtlar: `docs/growth/whatsapp-hazir-yanitlar.md`

@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""Generate high-quality, structurally unique TR WhatsApp cold-outreach copy.
+"""DEPRECATED for cold first-touch (2026-11-18).
 
-Quality bar = docs/growth/TR-PEDI-OUTREACH-TEMPLATES.md (Kaan voice, branş depth,
-Gökhan 30 dk, demo + deneme). Anti-ban uniqueness comes from rotating openings,
-bridge lines, bullet order, soft CTAs and section order — never by gutting the message
-into a thin “bullet + link” stub.
+Gift-first flow replaced this long pitch (0 replies / ~120 doctors).
+Use: scripts/tr-wa-gift-first.py → docs/growth/tr-wa-gift-batch.csv|.html
+
+This module remains only for historical reference / old-batch rebuilds.
+Do not use for new first messages (no links/FOMO/time claims allowed).
 """
 from __future__ import annotations
 
