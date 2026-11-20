@@ -116,6 +116,7 @@ import DoktorGeriLink from '@/components/doktor/DoktorGeriLink';
 import IpucuBaloncugu from '@/components/doktor/IpucuBaloncugu';
 import { hastaDosyaHref } from '@/lib/doktor/geriNavigasyon';
 import { CHROME_RENK, CHROME_FONT } from '@/lib/doktor/chromeTheme';
+import { cinsiyetKanonik } from '@/lib/utils/cinsiyet'
 
 export const dynamic = 'force-dynamic';
 
@@ -225,7 +226,7 @@ export default function HastaProfilPage() {
   const [gebeBayrak, setGebeBayrak] = useState<string | null>(null);
   useEffect(() => {
     const pid = patient?.id;
-    if (!pid || patient?.cinsiyet !== 'Kadın') { setGebeBayrak(null); return; }
+    if (!pid || cinsiyetKanonik(patient?.cinsiyet) !== 'female') { setGebeBayrak(null); return; }
     let iptal = false;
     void (async () => {
       try {

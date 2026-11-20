@@ -1,3 +1,4 @@
+import { cinsiyetKanonik } from '@/lib/utils/cinsiyet'
 /**
  * NOTYA-HASTA-ODAK-01 — post-model lock for Asistan (yazı + ses).
  *
@@ -76,11 +77,11 @@ function dosyaAsiOzeti(dosya: string, ad: string): string {
 
 function baskaDemografik(metin: string, aktif: AktifHastaOdak): boolean {
   const t = kucuk(metin)
-  const cins = kucuk(aktif.cinsiyet || '')
-  if ((cins === 'e' || cins === 'erkek' || cins === 'male' || cins === 'm') && /\b(kız|kiz çocu[gğ]|5 yaşında kız)\b/.test(t)) {
+  const cins = cinsiyetKanonik(aktif.cinsiyet)
+  if (cins === 'male' && /\b(kız|kiz çocu[gğ]|5 yaşında kız)\b/.test(t)) {
     return true
   }
-  if ((cins === 'k' || cins === 'kadın' || cins === 'female' || cins === 'f' || cins === 'kız') && /\b(erkek çocu[gğ]|oğlan)\b/.test(t) && !t.includes(kucuk(ilkAd(aktif.ad)))) {
+  if (cins === 'female' && /\b(erkek çocu[gğ]|oğlan)\b/.test(t) && !t.includes(kucuk(ilkAd(aktif.ad)))) {
     return true
   }
   if (aktif.yasMetin) {

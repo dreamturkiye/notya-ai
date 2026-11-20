@@ -11,6 +11,7 @@ import { persentilEgrileri, ayFarki, type Cinsiyet } from '@/lib/clinical/buyume
 import { cmCoz, kiloCoz } from '@/lib/clinical/olcumCoz'
 import { arsivsizNotlar } from '@/lib/doktor/arsiv'
 import { duzeltilmisYas, gestasyonGunu, gestasyonMetni } from '@/lib/clinical/prematur/duzeltilmisYas'
+import { cinsiyetKanonik } from '@/lib/utils/cinsiyet'
 
 export const dynamic = 'force-dynamic'
 
@@ -35,8 +36,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   if (!hasta) return NextResponse.json({ error: 'Hasta bulunamadı.' }, { status: 404 })
 
   const dogumIso = guvenliCoz(hasta.dob_encrypted) || null
-  const cinsiyetHam = guvenliCoz(hasta.gender_encrypted)
-  const cinsiyet: Cinsiyet | null = cinsiyetHam === 'male' || cinsiyetHam === 'female' ? (cinsiyetHam as Cinsiyet) : null
+  // CINSIYET-NORMAL-01: "Kadın" / "Erkek" / K / E … (manual form, birth flow, imports) all resolve — never only 'male' | 'female'.
+  const cinsiyet: Cinsiyet | null = cinsiyetKanonik(guvenliCoz(hasta.gender_encrypted))
   if (!dogumIso || !cinsiyet) {
     return NextResponse.json({ dogumBilinmiyor: true, mevcutYasAy: null, cinsiyet: null, parametreler: {} })
   }

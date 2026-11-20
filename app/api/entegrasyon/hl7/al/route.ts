@@ -17,6 +17,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { encryptPII } from '@/lib/security/encryption'
 import { hastaAramaIndeksiniGuncelle } from '@/lib/doktor/hastaAramaIndeksi'
+import { cinsiyetSakla } from '@/lib/utils/cinsiyet'
 
 const getSupabase = () => createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -72,7 +73,7 @@ export async function POST(req: NextRequest) {
   const adSoyad = coz([adBilesen[1], adBilesen[0]].filter(Boolean).join(' ').trim())
   const dob = (p[7] || '').slice(0, 8) // YYYYMMDD
   const cinsiyetKod = (p[8] || '').trim().toUpperCase()
-  const cinsiyet = cinsiyetKod === 'M' ? 'erkek' : cinsiyetKod === 'F' ? 'kadın' : ''
+  const cinsiyet = cinsiyetSakla(cinsiyetKod) ?? '' // CINSIYET-NORMAL-01: stored canonical
   if (!mrn || !adSoyad) return ack('AE', ctrlId, 'PID-3 (MRN) ve PID-5 (ad) zorunlu')
 
   // Hekim eşleme: PV1-7 ilk bileşen = kurumun doktor kodu

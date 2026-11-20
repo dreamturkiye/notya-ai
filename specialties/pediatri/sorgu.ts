@@ -146,7 +146,12 @@ function asi(olaylar: DosyaOlayi[], hasta: DosyaHastasi) {
   const kayitlar: AsiKaydi[] = olaylar.filter((o) => o.kaynak === 'asi').map((o) => ({
     id: o.kaynakId, ad: o.metin.replace(/\s*\(.*$/, ''), dozNo: o.doz ?? null, tarih: o.tarih === '0000-00-00' ? null : o.tarih, kaynak: 'kayit' as const,
   }))
-  const plan = asiPlani({ dogumIso: hasta.dogumIso, bugunIso: hasta.bugunIso, donem: onerilenDonem(hasta.dogumIso, kayitlar), kayitlar })
+  // ASI-TAKVIM-TEK-01: the same engine input the öneriler cohort (engines/kohort.ts) uses — birth weight (< 2000 g Hep B)
+  // and gestational week (< 34 wk BCG) — so Ayşe and the cohort never disagree on which dose is due.
+  const plan = asiPlani({
+    dogumIso: hasta.dogumIso, bugunIso: hasta.bugunIso, donem: onerilenDonem(hasta.dogumIso, kayitlar),
+    dogumKiloGr: hasta.dogumKiloGr ?? null, gebelikHaftasi: hasta.gebelikHaftasi ?? null, kayitlar,
+  })
   const dozlar: AsiDoz[] = plan.seriler.flatMap((s) => s.dozlar.map((d) => ({
     seri: s.seri, no: d.no, ad: `${SERI_AD[s.seri]} ${d.etiket}`, durum: d.durum === 'yapildi' ? 'uygulandi' as const : d.durum,
     onerilen: d.onerilen || null, uygulamaTarihi: d.kayit?.tarih ?? null, telafi: d.telafi,

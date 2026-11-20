@@ -88,7 +88,8 @@ describe('yenidogan calendar', () => {
     const hepb1 = tasks.find((t) => t.asi_kod === 'HEPB1')
     assert.equal(hepb1?.due_at, '2026-09-01')
     const hepa2 = tasks.find((t) => t.asi_kod === 'HEPA2')
-    assert.equal(hepa2?.due_at, addDays('2026-09-01', 730))
+    // ASI-TAKVIM-TEK-01: a 6'lı karma baby's vaccine tasks use the engine's calendar months (24. ay), not day 730.
+    assert.equal(hepa2?.due_at, '2028-09-01')
     assert.ok(tasks.some((t) => t.kind === 'izlem' && t.title.includes('9. ay')))
     assert.ok(tasks.some((t) => t.kind === 'lohusa_anne'))
     assert.equal(tasks.some((t) => t.kind === 'kalca_us'), false)

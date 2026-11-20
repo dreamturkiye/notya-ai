@@ -20,6 +20,7 @@ import { epikrizKapsamliSistem, epikrizKlinikSatiri, epikrizTekVizitSistem, epik
 import { notKapsamiGetir } from '@/lib/specialties/kapsamSunucu';
 import { hastaSahibiMi } from '@/lib/doktor/hastaSahipligi';
 import { arsivsizNotlar } from '@/lib/doktor/arsiv';
+import { cinsiyetKanonik } from '@/lib/utils/cinsiyet'
 
 export const dynamic = 'force-dynamic';
 /** Same value vercel.json gives every API route; named here so the model call can budget against it. */
@@ -51,7 +52,8 @@ function yasHesapla(dogumIso: string | null): string {
   return ay < 24 ? `${Math.max(0, ay)} aylık` : `${Math.floor(ay / 12)} yaşında`;
 }
 function cinsiyetTr(ham: string): string {
-  return ham === 'female' ? 'Kız/Kadın' : ham === 'male' ? 'Erkek' : 'Belirtilmemiş';
+  const c = cinsiyetKanonik(ham); // CINSIYET-NORMAL-01
+  return c === 'female' ? 'Kız/Kadın' : c === 'male' ? 'Erkek' : 'Belirtilmemiş';
 }
 
 /** Reçete sayfasında kaydedilen başlık (logo/adres/telefon/diploma no) — epikriz PDF'inde de aynı. */

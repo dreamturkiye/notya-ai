@@ -27,6 +27,7 @@ import {
   olumsuzBulgulariAyikla,
 } from '@/lib/doktor/hastaAramaFiltre'
 import { aramaBolumuAc, bolumBayraklari, cevapTuru, BOLUM_AD, type AramaCevapTur } from '@/lib/doktor/aramaBolum'
+import { cinsiyetKanonik } from '@/lib/utils/cinsiyet'
 
 export type { AramaIstatistik, SorguAyik } from '@/lib/doktor/hastaAramaFiltre'
 export {
@@ -159,9 +160,9 @@ function seansSureSn(s: { duration_seconds?: number | null; started_at?: string 
 function cinsiyetCoz(enc: string | null | undefined): 'kadin' | 'erkek' | null {
   if (!enc) return null
   try {
-    const v = decrypt(enc).toLowerCase()
-    if (v === 'female' || v === 'kadin' || v === 'kız' || v === 'kiz') return 'kadin'
-    if (v === 'male' || v === 'erkek') return 'erkek'
+    const v = cinsiyetKanonik(decrypt(enc))
+    if (v === 'female') return 'kadin'
+    if (v === 'male') return 'erkek'
   } catch { /* */ }
   return null
 }

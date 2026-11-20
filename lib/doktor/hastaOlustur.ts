@@ -10,6 +10,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { createHash } from 'crypto'
 import { encrypt } from '@/lib/security/encryption'
 import { hastaAramaIndeksiniGuncelle } from '@/lib/doktor/hastaAramaIndeksi'
+import { cinsiyetSakla } from '@/lib/utils/cinsiyet'
 
 export interface YeniHasta {
   adSoyad: string
@@ -25,6 +26,9 @@ export interface YeniHasta {
 export async function hastaKaydiOlustur(
   supabase: SupabaseClient, doktorId: string, h: YeniHasta,
 ): Promise<{ ok: true; patient: Record<string, unknown> & { id: string } } | { ok: false; hata: string }> {
+  // CINSIYET-NORMAL-01: the form sends "Kadın" / "Erkek"; the row stores the canonical 'female' / 'male'
+  // (an unrecognised value is kept as typed rather than dropped).
+  const cinsiyet = cinsiyetSakla(h.cinsiyet) ?? (String(h.cinsiyet ?? '').trim() || null)
   const { data, error } = await supabase
     .from('patients')
     .insert({
@@ -32,7 +36,7 @@ export async function hastaKaydiOlustur(
       tc_kimlik_hash: h.tcKimlikNo ? createHash('sha256').update(String(h.tcKimlikNo)).digest('hex') : null,
       name_encrypted: encrypt(JSON.stringify({ ad: h.adSoyad })),
       dob_encrypted: h.dogumTarihi ? encrypt(h.dogumTarihi) : null,
-      gender_encrypted: h.cinsiyet ? encrypt(h.cinsiyet) : null,
+      gender_encrypted: cinsiyet ? encrypt(cinsiyet) : null,
       phone_encrypted: h.telefon ? encrypt(h.telefon) : null,
       email_encrypted: h.eposta ? encrypt(String(h.eposta).trim()) : null,
       notes_encrypted: encrypt(JSON.stringify(h.notlar ?? {})),

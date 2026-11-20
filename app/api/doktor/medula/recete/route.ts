@@ -14,6 +14,7 @@ import { BRANS_SGK } from '@/lib/medula/brans'
 import { ayarBransKodu } from '@/lib/medula/ayar'
 import { TEST_ORTAMI, SGK_BRANS_KODU } from '@/lib/medula/tipler'
 import { arsivsizIlaclar, seansArsivdeMi } from '@/lib/doktor/arsiv'
+import { cinsiyetKanonik } from '@/lib/utils/cinsiyet'
 
 export const dynamic = 'force-dynamic'
 export const fetchCache = 'force-no-store'
@@ -54,7 +55,7 @@ async function taslakUret(supabase: ReturnType<typeof Object>, doktorId: string,
   const taslak = medulaTaslagiHazirla({
     ilaclar: ilacKaynagi,
     tanilar: kodlar,
-    hasta: { ad, soyad, dogumTarihi: coz(hasta?.dob_encrypted) || null, cinsiyet: cins === 'male' || cins === 'female' ? cins : null },
+    hasta: { ad, soyad, dogumTarihi: coz(hasta?.dob_encrypted) || null, cinsiyet: cinsiyetKanonik(cins) },
     doktor: { ad: doktor?.first_name || '', soyad: doktor?.last_name || '', bransKodu: ayarBransKodu(doktor?.erecete_ayar) ?? BRANS_SGK[String(doktor?.specialty || '')] ?? null },
     // NOTYA-PROTOKOL-NO-01: the muayenenin REAL protokol numarası (was a fake `NOTYA-<noteId
     // slice>` placeholder) — this is exactly the clinic protokol numarası Medula's own

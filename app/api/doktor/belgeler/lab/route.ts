@@ -25,6 +25,7 @@ import { rotaButcesiMs } from '@/lib/ai/cagir'
 import { labRaporKaynaklari } from '@/specialties/dahiliye/engines/labKaynak'
 import { ENABIZ_TALIMAT, satirTarihiDogrula, tekrarAyikla, panelTarihi } from '@/core/lab/enabiz'
 import { muhtemelNtpPanel, ntpBelgeSahibi, ntpKeyFromRaw, yorumNtp, NTP_DISCLAIMER } from '@/lib/clinical/yenidogan'
+import { cinsiyetKodu, cinsiyetTr } from '@/lib/utils/cinsiyet'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 120
@@ -213,7 +214,7 @@ export async function POST(req: NextRequest) {
     for (const s of satirlar) if (s.canonical_key) s.prior_series = onc.filter((o) => o.canonical_key === s.canonical_key && o.kanonik_deger != null).slice(0, 10).map((o) => ({ tarih: o.numune_tarihi, deger: o.kanonik_deger as number })).reverse()
     let yasAy: number | null = null, cinsiyet: string | null = null
     try { if (hasta?.dob_encrypted) { const d = new Date(decrypt(String(hasta.dob_encrypted))); if (!isNaN(d.getTime())) { const n = new Date(); yasAy = Math.max(0, (n.getFullYear() - d.getFullYear()) * 12 + (n.getMonth() - d.getMonth())) } } } catch { yasAy = null }
-    try { if (hasta?.gender_encrypted) cinsiyet = decrypt(String(hasta.gender_encrypted)) } catch { cinsiyet = null }
+    try { if (hasta?.gender_encrypted) cinsiyet = cinsiyetTr(decrypt(String(hasta.gender_encrypted))) || null } catch { cinsiyet = null }
     const bransKey = bransAnahtari(doktor?.specialty); const kural = bransKurali(bransKey)
     const ilaclar = String(sonNot?.content_plan || '').split('\n').filter((l: string) => /mg|tablet|tb|damla|şurup|surup|kapsül|x\s*\d/i.test(l)).slice(0, 8).map((l: string) => l.trim())
     const oncekiVar = onc.length > 0
@@ -248,7 +249,7 @@ export async function POST(req: NextRequest) {
     // DAH-LAB-BELGELER (rubric C4): dahiliye — every suggested tanı and the öneri carry a golden ref_code (Kaynak toggle).
     const kaynak = bransKey === 'dahiliye' && !ntp ? labRaporKaynaklari(satirlar, rapor.tanilar) : undefined
     const sonuc = { modalite: 'lab', kalite: panel.kalite, ozet: rapor.ozet, bulgular: [...ozelSatirlar.map((k) => `Hesap: ${k}`), ...rapor.kritik.map((k) => `KRİTİK: ${k}`), ...rapor.yeni_bozulanlar.map((k) => `Yeni bozulan: ${k}`), ...rapor.duzelenler.map((k) => `Düzelen: ${k}`), ...rapor.kronik.map((k) => `Kronik: ${k}`)], tanilar: rapor.tanilar.map((t) => ({ ...t, karsi: [] })), acil_bayrak: rapor.acil_bayrak, oneri: [rapor.klinik_iliski, rapor.oneri, rapor.recete_ipucu ? `Reçete ipucu (öneri): ${rapor.recete_ipucu}` : ''].filter(Boolean).join('\n'), sinirlar: rapor.sinirlar, hekim_tanisi: [], engines_used: ntp ? ['lab-trend-engine', 'ntp-kural', 'claude-writer'] : ['lab-trend-engine', 'claude-writer'], lab: { ...rapor, ozel: ozelSatirlar, ntp: ntp || undefined, kaynak } }
-    const { data: analiz, error } = await sb.from('belge_analizleri').insert({ belge_id: panel.belge_id, doctor_id: user.id, patient_id: panel.patient_id, brans: ntpMi ? 'pediatri' : bransKey, modality_final: 'lab', yas_ay: yasAy, cinsiyet: cinsiyet ? cinsiyet[0]?.toUpperCase() : null, de_id_hash: `lab:${panel.id}`, engine_set: `lab-v1(${(panel.kaynaklar || []).join('+')}${ntp ? '+ntp' : ''})`, durum: 'taslak', sonuc, motor_ciktilari: [{ motor: 'lab-trend-engine', surum: '1', tier: 'A', dogrulanmis: true, labels: [] }], fusion: { capPct: oncekiVar ? 85 : 70, acilNedenler: kritik, duzeltmeler, ham: yazim.ham.slice(0, 4000) } }).select('id').single()
+    const { data: analiz, error } = await sb.from('belge_analizleri').insert({ belge_id: panel.belge_id, doctor_id: user.id, patient_id: panel.patient_id, brans: ntpMi ? 'pediatri' : bransKey, modality_final: 'lab', yas_ay: yasAy, cinsiyet: cinsiyetKodu(cinsiyet), de_id_hash: `lab:${panel.id}`, engine_set: `lab-v1(${(panel.kaynaklar || []).join('+')}${ntp ? '+ntp' : ''})`, durum: 'taslak', sonuc, motor_ciktilari: [{ motor: 'lab-trend-engine', surum: '1', tier: 'A', dogrulanmis: true, labels: [] }], fusion: { capPct: oncekiVar ? 85 : 70, acilNedenler: kritik, duzeltmeler, ham: yazim.ham.slice(0, 4000) } }).select('id').single()
     if (error || !analiz) return NextResponse.json({ error: 'Rapor kaydedilemedi' }, { status: 500 })
     await sb.from('lab_paneller').update({ analiz_id: analiz.id, durum: 'raporlandi', updated_at: new Date().toISOString() }).eq('id', panel.id)
     return NextResponse.json({ ok: true, analizId: analiz.id, acil: rapor.acil_bayrak })

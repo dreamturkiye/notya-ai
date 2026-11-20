@@ -1,3 +1,4 @@
+import { cinsiyetKanonik } from '@/lib/utils/cinsiyet'
 /**
  * Hasta dosyası tab visibility — specialty-first (universal chrome for all ~29 branşlar).
  *
@@ -442,7 +443,7 @@ export function gebelikSekmesiUygun(input: {
   /** Verilirse branş kuralı uygulanır (BRANS-SIZMASI-KD). */
   doktorBransi?: string | null
 }, nowMs = Date.now()): boolean {
-  if (!input.cinsiyet || input.cinsiyet !== 'Kadın') return false
+  if (cinsiyetKanonik(input.cinsiyet) !== 'female') return false
   // BRANS-SIZMASI-KD (Kaan, 2026-09-25): tam KD bölümü yalnız kadın doğum + birinci basamak (aile hekimi DÖB'ü paylaşır).
   if ('doktorBransi' in input && !kadinSagligiBolumuBransi(input.doktorBransi)) return false
   const y = yasYilKesir(input.dogumIso, nowMs)

@@ -17,6 +17,7 @@ import {
   gorevUrgency,
   redKaydi,
   taburcuGate,
+  yenidoganAsiListesi,
 } from '@/lib/clinical/yenidogan'
 import {
   asObj,
@@ -110,7 +111,13 @@ export async function GET(req: NextRequest) {
     : { data: [] }
 
   const bugun = new Date().toISOString().slice(0, 10)
-  const gorevUi = (gorevler || []).map((g) => ({
+  // ASI-TAKVIM-TEK-01: rows written from the pre-2025 list for a 6'lı karma baby (Hep B 2./3. doz, duplicate KPA rapel)
+  // are not shown as open — the bebek kartı agrees with the shared engine. A dose already given is always shown.
+  // No data migration: read-side only.
+  const gecerliAsi = new Set<string>(yenidoganAsiListesi({ dogumAt: String(dogum?.dogum_zamani || kart.dogum_zamani || bugun), kiloGram: kart.kilo_gram == null ? null : Number(kart.kilo_gram) }).map((a) => a.kod))
+  const asiGecerli = (kod: unknown, yapildi: boolean) => yapildi || !kod || gecerliAsi.has(String(kod))
+  const asilarUi = (asilar || []).filter((a) => asiGecerli(a.kod, Boolean(a.given_at)))
+  const gorevUi = (gorevler || []).filter((g) => g.kind !== 'asi' || asiGecerli(g.asi_kod, g.status === 'yapildi')).map((g) => ({
     ...g,
     urgency: g.status === 'yapildi' || g.status === 'red' ? 'ok' : gorevUrgency(g.due_at, bugun, g.due_end_at),
   }))
@@ -125,7 +132,7 @@ export async function GET(req: NextRequest) {
 
   const ntp2 = gorevUi.find((g) => g.kind === 'ntp2')
   const sonrakiIzlem = gorevUi.find((g) => g.kind === 'izlem' && g.status === 'bekliyor')
-  const sonrakiAsi = (asilar || []).find((a) => !a.given_at)
+  const sonrakiAsi = asilarUi.find((a) => !a.given_at)
   const taburcuUi = taburcuUiFromRow(taburcu)
 
   const [{ data: bebekRow }, { data: anneRow }] = await Promise.all([
@@ -160,7 +167,7 @@ export async function GET(req: NextRequest) {
     lohusa,
     gate: { ok: gate.ok, eksik: gate.eksik, neden: gate.neden, tamamlandi: Boolean(taburcu?.kapatildi) },
     gorevler: rol === 'anne' ? gorevUi.filter((g) => g.kind === 'lohusa_anne' || g.kind === 'yeni_bebek') : gorevUi,
-    asilar: asilar || [],
+    asilar: asilarUi,
     ntp: (ntpPaneller || []).map((p) => ({
       ...p,
       satirlar: (ntpSatirlar || []).filter((s) => s.panel_id === p.id),
@@ -169,7 +176,7 @@ export async function GET(req: NextRequest) {
       ntp1: Boolean(maddeler.ntp1 || maddeler.ntp1_alindi_at || tarama.ntp1),
       ntp2: ntp2 ? { ...ntp2 } : null,
       isitme: maddeler.isitme_sonuc || tarama.isitme || null,
-      hepb1: Boolean(maddeler.hepb1 || maddeler.hepb1_at || tarama.hepb1) || Boolean((asilar || []).find((a) => a.kod === 'HEPB1' && a.given_at)),
+      hepb1: Boolean(maddeler.hepb1 || maddeler.hepb1_at || tarama.hepb1) || Boolean(asilarUi.find((a) => a.kod === 'HEPB1' && a.given_at)),
       dvit: Boolean(maddeler.dvit || maddeler.dvit_baslandi || tarama.dvit) || gorevUi.some((g) => g.kind === 'dvit' && g.status === 'yapildi'),
       sonrakiIzlem: sonrakiIzlem || null,
       sonrakiAsi: sonrakiAsi || null,

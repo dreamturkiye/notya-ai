@@ -25,6 +25,7 @@ import { kayitSerisi } from '@/specialties/pediatri/engines/asiPlan'
 import { kanonikTr } from '@/core/lab/kanonik'
 import { trAramaNormalize } from '@/lib/utils/turkceArama'
 import { metindenOlcumCikar, olcumGosterimi } from '@/lib/clinical/olcumMetni'
+import { cinsiyetKanonik } from '@/lib/utils/cinsiyet'
 
 export type OlayKaynagi = 'not' | 'ilac' | 'asi' | 'lab' | 'belge' | 'cihaz' | 'randevu' | 'konsultasyon' | 'intake' | 'olcum'
 export type OlayDurumu =
@@ -61,6 +62,8 @@ export interface DosyaOlayi {
   /** İlaç: planlanan süre (gün), kullanım, etken madde — Soru 6. */
   sureGun?: number | null
   etken?: string | null
+  /** Aşı satırı: hekimin aşı kartına yazdığı sonraki doz tarihi (asilar.sonraki_doz_tarihi) — hatırlatma ile aynı kaynak. */
+  planTarihi?: string | null
 }
 
 export interface DosyaHastasi {
@@ -71,6 +74,9 @@ export interface DosyaHastasi {
   /** users.specialty (ham) — parametre seçimi (lib/asistan/dosyaSorgu/parametreler.ts). */
   brans: string | null
   bugunIso: string
+  /** ASI-TAKVIM-TEK-01: bebek kartı (yoksa ilk kayıt formu) — < 2000 g Hep B ve < 34 hafta BCG kuralı öneriler ile aynı girdiyle. */
+  dogumKiloGr?: number | null
+  gebelikHaftasi?: number | null
 }
 
 // ─── Ham dosya (DB satırları ya da fikstür) ─────────────────────────────────────────────────────────────
@@ -94,7 +100,9 @@ export interface HamDosya {
   intake?: Record<string, unknown> | null
   intakeTarih?: string | null
   vizitler: HamVizit[]
-  asilar?: { id: string; asi_adi: string | null; doz_no: number | null; uygulama_tarihi: string | null; kaynak?: string | null }[]
+  asilar?: { id: string; asi_adi: string | null; doz_no: number | null; uygulama_tarihi: string | null; kaynak?: string | null; sonraki_doz_tarihi?: string | null }[]
+  /** Hekimin bebek kartı (doctor_id kapsamlı) — doğum ağırlığı ve gebelik haftası. */
+  bebekKarti?: { gebelik_haftasi?: number | string | null; kilo_gram?: number | string | null } | null
   ilaclar?: { id: string; ilac_adi: string; etken_madde?: string | null; doz?: string | null; kullanim_sikli?: string | null; baslangic_tarihi?: string | null; bitis_tarihi?: string | null; aktif?: boolean | null; notlar?: string | null; created_at?: string | null }[]
   lablar?: { id: string; canonical_key: string; kanonik_deger?: number | null; kanonik_birim?: string | null; value_text?: string | null; numune_tarihi: string | null; ref_low?: number | null; ref_high?: number | null }[]
   randevular?: { id: string; baslangic: string; tur?: string | null; durum?: string | null }[]
@@ -313,6 +321,7 @@ export function olaylariKur(ham: HamDosya, bugunIso: string): DosyaOlayi[] {
       tarih: gun(a.uygulama_tarihi) || '0000-00-00', kaynak: 'asi', tur: 'asi', durum: 'uygulandi',
       metin: `${ad}${a.doz_no ? ` ${a.doz_no}. doz` : ''}${beyan ? ' (karne / beyan kaydı)' : ''}${a.uygulama_tarihi ? '' : ' (tarihsiz)'}`,
       anahtar: kayitSerisi(ad), doz: a.doz_no ?? null, kaynakId: a.id, guven: 'kayit',
+      ...(gun(a.sonraki_doz_tarihi) ? { planTarihi: gun(a.sonraki_doz_tarihi) } : {}),
     })
   }
 
@@ -372,14 +381,24 @@ export function olaylariKur(ham: HamDosya, bugunIso: string): DosyaOlayi[] {
   return o.sort((a, b) => a.tarih.localeCompare(b.tarih))
 }
 
+/** Doğum ağırlığı (g) ve gebelik haftası: hekimin bebek kartı önce, yoksa ilk kayıt formu ("3,2" kg ya da "3200" g). */
+export function dogumBilgisi(ham: HamDosya): { dogumKiloGr: number | null; gebelikHaftasi: number | null } {
+  const y = ham.intake || {}
+  const kartKilo = sayi(ham.bebekKarti?.kilo_gram), kartHafta = sayi(ham.bebekKarti?.gebelik_haftasi)
+  const formKilo = sayi(y.dogumKilosuPed)
+  const gram = kartKilo ?? (formKilo == null ? null : formKilo < 10 ? Math.round(formKilo * 1000) : formKilo)
+  const hafta = kartHafta ?? sayi(y.gebelikHaftasiPed || y.gebelikHaftasi)
+  return { dogumKiloGr: gram != null && gram > 200 && gram < 7000 ? gram : null, gebelikHaftasi: hafta != null && hafta >= 20 && hafta <= 45 ? hafta : null }
+}
+
 export function hastaKur(ham: HamDosya, bugunIso: string): DosyaHastasi {
-  const c = trAramaNormalize(ham.hasta.cinsiyet)
   return {
     ad: ham.hasta.ad,
     dogumIso: gun(ham.hasta.dogumIso) || null,
-    cinsiyet: /^(erk|male|e$|m$)/.test(c) ? 'male' : /^(kad|kiz|female|k$|f$)/.test(c) ? 'female' : null,
+    cinsiyet: cinsiyetKanonik(ham.hasta.cinsiyet),
     brans: ham.brans,
     bugunIso,
+    ...dogumBilgisi(ham),
   }
 }
 
@@ -406,10 +425,10 @@ export async function dosyaSorguHamDerle(sb: SupabaseClient, doktorId: string, p
   const h = hasta as Record<string, string | null>
   const bos = { data: [] as unknown[] }
   const yut = <T,>(p: PromiseLike<T>) => Promise.resolve(p).catch(() => bos as unknown as T)
-  const [seansQ, ilacQ, asiQ, intakeQ, labQ, randevuQ, sevkQ, mchatQ, gidrQ, taramaQ, cihazQ, belgeQ, hekimQ] = await Promise.all([
+  const [seansQ, ilacQ, asiQ, intakeQ, labQ, randevuQ, sevkQ, mchatQ, gidrQ, taramaQ, cihazQ, belgeQ, hekimQ, kartQ] = await Promise.all([
     yut(arsivsizSeanslar(sb, 'id, created_at').eq('patient_id', patientId).eq('doctor_id', doktorId).order('created_at', { ascending: true })),
     yut(arsivsizIlaclar(sb, 'id, ilac_adi, etken_madde, doz, kullanim_sikli, baslangic_tarihi, bitis_tarihi, aktif, notlar, created_at').eq('patient_id', patientId).eq('doctor_id', doktorId)),
-    yut(arsivsizAsilar(sb, 'id, asi_adi, doz_no, uygulama_tarihi, kaynak').eq('patient_id', patientId).eq('doktor_id', doktorId)),
+    yut(arsivsizAsilar(sb, 'id, asi_adi, doz_no, uygulama_tarihi, kaynak, sonraki_doz_tarihi').eq('patient_id', patientId).eq('doktor_id', doktorId)),
     yut(sb.from('hasta_intake_formlari').select('form_data_encrypted, created_at').eq('patient_id', patientId).eq('doktor_id', doktorId).order('created_at', { ascending: false }).limit(1)),
     yut(sb.from('lab_satirlar').select('id, canonical_key, kanonik_deger, kanonik_birim, value_text, numune_tarihi, ref_low, ref_high').eq('patient_id', patientId).eq('doctor_id', doktorId).eq('onayli', true).not('canonical_key', 'is', null).order('numune_tarihi', { ascending: true }).limit(300)),
     yut(sb.from('randevular').select('id, baslangic, tur, durum').eq('patient_id', patientId).eq('doktor_id', doktorId).order('baslangic', { ascending: true }).limit(60)),
@@ -420,6 +439,8 @@ export async function dosyaSorguHamDerle(sb: SupabaseClient, doktorId: string, p
     yut(sb.from('cihaz_olcumleri').select('id, tur, deger, birim, alindi').eq('patient_id', patientId).eq('doctor_id', doktorId).eq('onaylandi', true).limit(60)),
     yut(sb.from('belge_analizleri').select('id, modality_final, hekim_ozet, onaylandi_at').eq('patient_id', patientId).eq('doctor_id', doktorId).in('durum', ['onaylandi', 'muayene_onaylandi']).limit(20)),
     yut(sb.from('users').select('specialty').eq('id', doktorId).maybeSingle()),
+    // ASI-TAKVIM-TEK-01: same parallel batch (no extra round trip) — the öneriler cohort reads the same card.
+    yut(sb.from('bebek_kartlari').select('gebelik_haftasi, kilo_gram').eq('doctor_id', doktorId).eq('bebek_patient_id', patientId).order('created_at', { ascending: false }).limit(1)),
   ])
 
   const seanslar = ((seansQ as { data: unknown[] | null }).data || []) as { id: string; created_at: string }[]
@@ -466,6 +487,7 @@ export async function dosyaSorguHamDerle(sb: SupabaseClient, doktorId: string, p
     vizitler,
     asilar: veri(asiQ), ilaclar: veri(ilacQ), lablar: veri(labQ), randevular: veri(randevuQ), sevkler: veri(sevkQ),
     mchat: veri(mchatQ), gidr: veri(gidrQ), taramalar: veri(taramaQ), cihaz: veri(cihazQ), belgeler: veri(belgeQ),
+    bebekKarti: (veri<HamDosya['bebekKarti']>(kartQ)[0]) ?? null,
   }
 }
 

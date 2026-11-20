@@ -1,3 +1,4 @@
+import { cinsiyetKanonik } from '@/lib/utils/cinsiyet'
 /**
  * Anne-baba boylarına göre hedef boy (mid-parental height).
  *
@@ -28,11 +29,8 @@ export const BOY_CM_MIN = 130
 export const BOY_CM_MAX = 230
 
 export function cinsiyetHedefBoy(v: string | null | undefined): HedefBoyCinsiyet | null {
-  const t = String(v || '').trim().toLowerCase()
-  if (!t) return null
-  if (t === 'female' || t === 'f' || t === 'kadın' || t === 'kadin' || t === 'kız' || t === 'kiz') return 'kiz'
-  if (t === 'male' || t === 'm' || t === 'erkek') return 'erkek'
-  return null
+  const c = cinsiyetKanonik(v)
+  return c === 'female' ? 'kiz' : c === 'male' ? 'erkek' : null
 }
 
 /** Accepts TR clinic input: 182, 182.5, 1.82, 1,82, 1.82 m, 182cm. */

@@ -17,6 +17,7 @@ import {
   tetkikNumuneEtiketi,
   type NotTetkik,
 } from '@/lib/doktor/notTetkikler'
+import { cinsiyetKodu } from '@/lib/utils/cinsiyet'
 
 type Baslik = {
   unvan: string
@@ -106,7 +107,7 @@ export default function TetkiklerYazdirPage() {
   const bransAd = (BRANS_ETIKETLERI[baslik.brans as keyof typeof BRANS_ETIKETLERI] || baslik.brans || '').replace(/\s*\(.*\)\s*$/, '')
   const hekimSatir = hekimUnvanli(baslik.ad || `${baslik.unvan}`.trim()) || '________________'
   const tarih = new Date().toLocaleDateString('tr-TR', { timeZone: 'Europe/Istanbul', day: '2-digit', month: '2-digit', year: 'numeric' })
-  const yasCins = [hasta.yas, hasta.cinsiyet === 'Erkek' ? 'E' : hasta.cinsiyet === 'Kadın' || hasta.cinsiyet === 'Kız' ? 'K' : ''].filter(Boolean).join(' · ')
+  const yasCins = [hasta.yas, cinsiyetKodu(hasta.cinsiyet) ?? ''].filter(Boolean).join(' · ')
 
   return (
     <div style={{ minHeight: '100vh', background: '#E8E0D4', padding: '16px 12px 48px' }}>

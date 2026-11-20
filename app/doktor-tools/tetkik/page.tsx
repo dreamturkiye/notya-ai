@@ -19,6 +19,7 @@ import { hekimUnvanli } from '@/lib/doktor/hekimAdi'
 import { bransIstemleri } from '@/lib/doktor/bransIstemleri'
 import { bransEtiketi } from '@/lib/doktor/bransAdlari'
 import { BransIstemSecici, type IstemGrubu } from '@/components/doktor/BransIstemSecici'
+import { cinsiyetKodu } from '@/lib/utils/cinsiyet'
 
 
 const vucutBolgeleri = ['Baş', 'Boyun', 'Göğüs', 'Karın', 'Pelvis', 'Omurga', 'Kol', 'Bacak']
@@ -101,7 +102,7 @@ export default function TetkikPage() {
         const ay = Math.floor((Date.now() - d.getTime()) / (30.44 * 86400000))
         const yas = ay < 24 ? `${ay} aylık` : `${Math.floor(ay / 12)} yaş`
         const cins = j.patient?.cinsiyet
-        const c = cins === 'male' || cins === 'Erkek' ? 'E' : cins === 'female' || cins === 'Kadın' || cins === 'Kız/Kadın' ? 'K' : ''
+        const c = cinsiyetKodu(cins) ?? ''
         if (!iptal) setHastaYas(c ? `${yas} · ${c}` : yas)
       } catch { /* yaş kâğıtta boş kalır */ }
     })()

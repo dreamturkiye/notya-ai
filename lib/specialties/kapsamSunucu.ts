@@ -9,6 +9,7 @@ import { decrypt } from '@/lib/security/encryption'
 import { hekimBransi } from '@/lib/doktor/hekimAdi'
 import { bransKapsami, type BransKapsami } from './kapsam'
 import type { Cinsiyet } from '@/lib/clinical/buyumeEgrisi'
+import { cinsiyetKanonik } from '@/lib/utils/cinsiyet'
 
 export async function hastaDogumIso(sb: SupabaseClient, doctorId: string, patientId: string | null | undefined): Promise<string | null> {
   if (!patientId) return null
@@ -25,7 +26,7 @@ export async function hastaCinsiyet(sb: SupabaseClient, doctorId: string, patien
   try {
     const { data } = await sb.from('patients').select('gender_encrypted').eq('id', patientId).eq('doctor_id', doctorId).maybeSingle()
     const g = data?.gender_encrypted ? decrypt(String(data.gender_encrypted)) : ''
-    return g === 'male' || g === 'female' ? g : null
+    return cinsiyetKanonik(g)
   } catch { return null }
 }
 

@@ -19,6 +19,7 @@
  */
 import type { DosyaHastasi, DosyaOlayi } from '@/lib/doktor/dosyaOlaylari'
 import { trGun } from '@/lib/doktor/dosyaOlaylari'
+import { YAKLASAN_PENCERE_GUN, gunFarkiIso, sonrakiDozKarsilandiMi } from '@/lib/asi/hatirlatma'
 import { asiPlanSatiri, planKarsiligi, planOlaylari } from '@/lib/doktor/planTakibi'
 import { seriAdi } from '@/lib/doktor/notAsilari'
 import { eksikDozEtiketi, type AsiDoz, type AsiDurumu, type AsiTutarsizligi, type BransSorguParametreleri } from '@/lib/asistan/dosyaSorgu/parametreler'
@@ -77,6 +78,19 @@ export interface AsiKaniti {
   /** Tutarsız serilerde takvime göre açık görünen dozlar — durumu bilinmiyor. */
   bilinmeyen: AsiDoz[]
   yaklasan: AsiDoz[]
+  /**
+   * ASI-TAKVIM-TEK-01: the next open schedule dose(s) — always named with their date, even beyond the "yaklaşan" window,
+   * so "nothing due" is never the whole answer (2026-11-20, Elif case: 2. ay doses due 21.12.2026 were not mentioned).
+   */
+  siradaki: AsiDoz[]
+  /**
+   * ASI-TAKVIM-TEK-01: next-dose dates the doctor wrote on the aşı kartı (asilar.sonraki_doz_tarihi) with no later dose of
+   * that vaccine series recorded — the SAME open-check the hatırlatma list uses (lib/asi/hatirlatma.ts
+   * sonrakiDozKarsilandiMi), so the aşı kartı, the reminders and Ayşe say the same thing.
+   */
+  hekimPlani: HekimPlanliDoz[]
+  /** Onaylı belge değerlendirmesi sayısı (kanıtta "belgeler karşılaştırıldı" ancak varsa denir). */
+  belgeSayisi: number
   /** Telafi (catch-up) planı gereken dozlar. */
   telafi: AsiDoz[]
   /** Takvim dışı / risk bazlı / özel aşılar (ör. mevsimsel influenza) — rutinden AYRI, eksik sayılmaz. */
@@ -88,6 +102,36 @@ export interface AsiKaniti {
 }
 
 const ACIK = new Set(['gecikti', 'zamani_geldi', 'bugun'])
+
+export interface HekimPlanliDoz {
+  /** Aşı kartındaki ad ("Hepatit B 1. doz" satırının aşısı). */
+  ad: string
+  /** Planın yazıldığı satırın uygulama tarihi. */
+  sonUygulama: string
+  plan: string
+  /** gecikti: plan tarihi geçti · bugun · yaklasiyor: ≤ 30 gün (hatırlatma penceresi) · ileride */
+  durum: 'gecikti' | 'bugun' | 'yaklasiyor' | 'ileride'
+  gunFarki: number
+}
+
+/** Hekimin yazdığı sonraki doz tarihleri — hatırlatma listesiyle AYNI açıklık kontrolü (aynı seride sonraki kayıt yoksa açık). */
+export function hekimPlanliDozlar(olaylar: DosyaOlayi[], bugunIso: string): HekimPlanliDoz[] {
+  const satirlar = olaylar.filter((o) => o.kaynak === 'asi').map((o) => ({
+    id: o.kaynakId, patient_id: 'h', asi_adi: o.metin.replace(/\s+\d+\. doz.*$/, '').replace(/\s*\((?:karne|tarihsiz).*$/, '').trim(),
+    uygulama_tarihi: o.tarih === '0000-00-00' ? null : o.tarih, sonraki_doz_tarihi: o.planTarihi ?? null,
+  }))
+  const out: HekimPlanliDoz[] = []
+  for (const s of satirlar) {
+    if (!s.sonraki_doz_tarihi || sonrakiDozKarsilandiMi(s, satirlar)) continue
+    const fark = gunFarkiIso(bugunIso, s.sonraki_doz_tarihi)
+    const durum: HekimPlanliDoz['durum'] = fark < 0 ? 'gecikti' : fark === 0 ? 'bugun' : fark <= YAKLASAN_PENCERE_GUN ? 'yaklasiyor' : 'ileride'
+    out.push({ ad: s.asi_adi, sonUygulama: s.uygulama_tarihi ?? 'tarihsiz', plan: s.sonraki_doz_tarihi, durum, gunFarki: fark })
+  }
+  return out.sort((a, b) => a.plan.localeCompare(b.plan))
+}
+
+const hekimPlanDurumu = (h: HekimPlanliDoz) => h.durum === 'gecikti' ? `tarihi ${-h.gunFarki} gün önce geçti` : h.durum === 'bugun' ? 'bugün' : h.durum === 'yaklasiyor' ? `${h.gunFarki} gün sonra` : 'ileride'
+export const hekimPlanSatiri = (h: HekimPlanliDoz) => `${h.ad} — hekimin aşı kartına yazdığı sonraki doz tarihi ${trGun(h.plan)} (${hekimPlanDurumu(h)}); bu doz için uygulama kaydı yok`
 
 /** Branşın takvimi yoksa (ya da doğum tarihi yoksa) null — çağıran eski yolu kullanır. */
 export function asiKaniti(olaylar: DosyaOlayi[], hasta: DosyaHastasi, p: BransSorguParametreleri, hazir?: AsiDurumu | null): AsiKaniti | null {
@@ -119,11 +163,25 @@ export function asiKaniti(olaylar: DosyaOlayi[], hasta: DosyaHastasi, p: BransSo
     eksik,
     bilinmeyen: acik.filter((d) => tutarsizSeri.has(d.seri)),
     yaklasan: asi.dozlar.filter((d) => d.durum === 'yaklasiyor'),
+    siradaki: siradakiDozlar(asi.dozlar, tutarsizSeri),
+    hekimPlani: hekimPlanliDozlar(olaylar, hasta.bugunIso),
+    belgeSayisi: olaylar.filter((o) => o.kaynak === 'belge').length,
     telafi: eksik.filter((d) => d.telafi),
     riskBazli: asi.riskBazli, eslesmeyen: asi.eslesmeyen, notlar: asi.notlar,
     kayitYok: kayitlar.length === 0,
   }
 }
+
+/** Earliest not-yet-due schedule dose(s) (same recommended date) — the next vaccine visit. */
+function siradakiDozlar(dozlar: AsiDoz[], tutarsizSeri: Set<string>): AsiDoz[] {
+  const acikOlmayan = dozlar.filter((d) => (d.durum === 'yaklasiyor' || d.durum === 'bekliyor') && d.onerilen && !tutarsizSeri.has(d.seri))
+    .sort((a, b) => a.onerilen!.localeCompare(b.onerilen!))
+  if (!acikOlmayan.length) return []
+  const ilk = acikOlmayan[0].onerilen!
+  return acikOlmayan.filter((d) => d.onerilen === ilk)
+}
+const siradakiMetni = (k: AsiKaniti) => k.siradaki.length ? `Sıradaki takvim dozları: ${k.siradaki.map((d) => d.ad).join(', ')} — önerilen ${trGun(k.siradaki[0].onerilen)}.` : ''
+const hekimAcik = (k: AsiKaniti) => k.hekimPlani.filter((h) => h.durum !== 'ileride')
 
 const seriAdiKisa = (o: DosyaOlayi) => `${o.anahtar ? seriAdi(o.anahtar) : 'Aşı'}${o.doz ? ` ${o.doz}. doz` : ''}`
 const eksikSatiri = (d: AsiDoz, bugunIso: string) => `${d.ad} — ${eksikDozEtiketi(d, bugunIso)} (önerilen ${trGun(d.onerilen)})${d.telafi ? ', telafi planı gerekir' : ''}`
@@ -132,13 +190,19 @@ export const tutarsizSatiri = (t: AsiTutarsizligi) => `${t.ad}: ${trGun(t.tarih)
 /** Kayda göre tek cümlelik sonuç — cevabın ilk cümlesi bundan kurulur. */
 export function asiSonucu(k: AsiKaniti): string {
   if (k.kayitYok) return 'Aşı tablosunda hiç uygulama kaydı yok; aşılar başka merkezde uygulanmış olabilir — karne / e-Nabız kaydı görülmeden "tam" ya da "eksik" denmez.'
+  // ASI-TAKVIM-TEK-01: a next-dose date the doctor wrote on the aşı kartı is part of the answer (same as the reminder list);
+  // the next schedule visit is always named with its date, so "nothing due" never ends the answer.
+  const hekim = hekimAcik(k)
+  const hekimMetni = hekim.length ? ` Hekimin aşı kartına yazdığı sonraki doz tarihi: ${hekim.map((h) => `${h.ad} ${trGun(h.plan)} (${hekimPlanDurumu(h)})`).join('; ')} — uygulama kaydı yok.` : ''
+  const sira = siradakiMetni(k)
   if (k.tutarsiz.length) {
-    return `Kesin söylenemez: ${k.tutarsiz.length} aşı kaydı tutarsız (aşağıda); bu serilerde "tam" da "gecikti" de denmez, kayıt kontrol edilmeli.${k.eksik.length ? ` Ayrıca ${k.eksik.length} takvim dozu için uygulama kaydı yok.` : ''}`
+    return `Kesin söylenemez: ${k.tutarsiz.length} aşı kaydı tutarsız (aşağıda); bu serilerde "tam" da "gecikti" de denmez, kayıt kontrol edilmeli.${k.eksik.length ? ` Ayrıca ${k.eksik.length} takvim dozu için uygulama kaydı yok.` : ''}${hekimMetni}`
   }
   const plansiz = k.planlar.filter((p) => p.karsilik !== 'kayit').length
-  if (k.eksik.length) return `Yaşına göre ${k.eksik.length} takvim dozu için uygulandığına dair kayıt yok (aşağıda)${plansiz ? `; ${plansiz} doz notta planlanmış ama uygulama kaydı görünmüyor` : ''}.`
-  if (plansiz) return `Takvime göre zamanı gelmiş açık doz yok; ancak ${plansiz} doz notta planlanmış / önerilmiş, uygulandığına dair kayıt görünmüyor.`
-  return 'Aşı tablosuna göre bugüne kadar önerilen rutin takvim dozlarının hepsi belgelenmiş; eksik ya da zamanı gelmiş doz saptanmadı.'
+  if (k.eksik.length) return `Yaşına göre ${k.eksik.length} takvim dozu için uygulandığına dair kayıt yok (aşağıda)${plansiz ? `; ${plansiz} doz notta planlanmış ama uygulama kaydı görünmüyor` : ''}.${hekimMetni}`
+  if (plansiz) return `Takvime göre zamanı gelmiş açık doz yok; ancak ${plansiz} doz notta planlanmış / önerilmiş, uygulandığına dair kayıt görünmüyor.${hekimMetni}${sira ? ` ${sira}` : ''}`
+  if (hekim.length) return `Ulusal takvime göre zamanı gelmiş takvim dozu yok; ancak${hekimMetni.replace(/^ Hekimin/, ' hekimin')}${sira ? ` ${sira}` : ''}`
+  return `Aşı tablosuna göre bugüne kadar önerilen rutin takvim dozlarının hepsi belgelenmiş; eksik ya da zamanı gelmiş doz saptanmadı.${sira ? ` ${sira}` : ''}`
 }
 
 /** Soru 4 — tam aşı kanıtı (kategoriler ayrı, standarttaki sırayla). */
@@ -146,7 +210,9 @@ export function asiKanitSatirlari(k: AsiKaniti): string[] {
   const out: string[] = []
   out.push(`Takvim: ${k.surum}. Doğum tarihi ${trGun(k.dogumIso)} → bugün (${trGun(k.bugunIso)}) kesin yaş: ${k.yas}.`)
   out.push(`SONUÇ (kayda göre): ${asiSonucu(k)}`)
-  out.push('Karşılaştırılan kaynaklar: aşı tablosu (aşı kartı / elektronik kayıt), vizit notlarının metni, yüklenen belgeler. Kategoriler AYRIDIR — planlandı / önerildi / reçete edildi / randevu verildi / uygulandığı söylendi / uygulandığı belgelenmiş / durumu belirsiz.')
+  // ASI-TAKVIM-TEK-01 (grounding): only sources that exist are named — "yüklenen belgeler" was listed for a patient with no
+  // documents and the model answered that medication / allergy information "exists in documents".
+  out.push(`Karşılaştırılan kaynaklar: aşı tablosu (aşı kartı / elektronik kayıt), vizit notlarının metni${k.belgeSayisi ? `, ${k.belgeSayisi} onaylı belge değerlendirmesi` : ''}.${k.belgeSayisi ? '' : ' Onaylı belge değerlendirmesi YOK — "belgelerde" diye bir kaynak anma.'} Kategoriler AYRIDIR — planlandı / önerildi / reçete edildi / randevu verildi / uygulandığı söylendi / uygulandığı belgelenmiş / durumu belirsiz.`)
   out.push('UYGULANDIĞI BELGELENMİŞ (aşı tablosu):')
   out.push(...(k.belgeli.length || k.tutarsizSeriSatirlari.length ? k.belgeli.map((d) => `- ${d.ad} — uygulandı (${trGun(d.uygulamaTarihi)}, aşı kaydı)`) : ['- (aşı tablosunda takvim dozu yok)']))
   out.push(...k.tutarsizSeriSatirlari.map((s) => `- ${s.ad} — aşı tablosundaki satırlar: ${s.metin} (kayıt tutarsız; dozlar takvimle eşleştirilmeden, kayıttaki haliyle — aşağıya bakın)`))
@@ -171,7 +237,12 @@ export function asiKanitSatirlari(k: AsiKaniti): string[] {
   }
   out.push('EKSİK / ZAMANI GELMİŞ (takvime göre, aşı tablosunda kayıt yok):')
   out.push(...(k.eksik.length ? k.eksik.map((d) => `- ${eksikSatiri(d, k.bugunIso)}`) : ['- (yok)']))
+  if (k.hekimPlani.length) {
+    out.push('HEKİMİN AŞI KARTINA YAZDIĞI SONRAKİ DOZ TARİHİ (hatırlatma listesiyle aynı kaynak; takvim hesabı değil):')
+    out.push(...k.hekimPlani.map((h) => `- ${hekimPlanSatiri(h)}`))
+  }
   if (k.yaklasan.length) { out.push('YAKLAŞAN:'); out.push(...k.yaklasan.map((d) => `- ${d.ad} — önerilen ${trGun(d.onerilen)}`)) }
+  if (k.siradaki.length) out.push(`SIRADAKİ TAKVİM DOZLARI (bir sonraki aşı ziyareti): ${k.siradaki.map((d) => d.ad).join(', ')} — önerilen ${trGun(k.siradaki[0].onerilen)}.`)
   out.push(k.telafi.length
     ? `TELAFİ (catch-up) GEREKSİNİMİ: var — ${k.telafi.map((d) => d.ad).join(', ')}. Seri baştan başlatılmaz; kalan dozlar takvimdeki minimum aralıklarla planlanır (hekim onaylar).`
     : `TELAFİ (catch-up) GEREKSİNİMİ: ${k.eksik.length ? 'zamanı gelmiş dozlar önerilen tarihinde / bugün uygulanabilir; ayrıca aralık kaydırması gerekmiyor' : k.tutarsiz.length ? 'kayıt düzeltilmeden hesaplanmadı' : 'yok'}.`)
@@ -193,5 +264,8 @@ export function asiOzetSatirlari(k: AsiKaniti): string[] {
   if (k.tutarsiz.length) out.push(`AŞI (kayıt tutarsız — "gecikti" değil): ${k.tutarsiz.map(tutarsizSatiri).join('; ')}.`)
   if (k.telafi.length) out.push(`AŞI (telafi gerekir): ${k.telafi.map((d) => d.ad).join(', ')}.`)
   if (k.yaklasan.length) out.push(`AŞI (yaklaşan): ${k.yaklasan.map((d) => `${d.ad} (${trGun(d.onerilen)})`).join(', ')}.`)
+  const hekim = hekimAcik(k)
+  if (hekim.length) out.push(`AŞI (hekimin yazdığı sonraki doz tarihi): ${hekim.map((h) => `${h.ad} ${trGun(h.plan)} (${hekimPlanDurumu(h)})`).join('; ')}.`)
+  else if (!k.yaklasan.length && k.siradaki.length) out.push(`AŞI (sıradaki): ${k.siradaki.map((d) => d.ad).join(', ')} — önerilen ${trGun(k.siradaki[0].onerilen)}.`)
   return out
 }

@@ -2,6 +2,7 @@
 import type { doktorOturum } from '@/lib/doktor/serverAuth'
 import { decrypt } from '@/lib/security/encryption'
 import type { SgkLab } from '@/specialties/dahiliye/engines/sgkRapor'
+import { cinsiyetKanonik } from '@/lib/utils/cinsiyet'
 
 export type Sb = Awaited<ReturnType<typeof doktorOturum>> extends infer T ? (T extends { supabase: infer S } ? S : never) : never
 export type LabSatir = { canonical_key: string; kanonik_deger: number | null; value_text: string | null; numune_tarihi: string | null }
@@ -28,7 +29,7 @@ export async function hastaBilgi(sb: Sb, doctorId: string, patientId: string) {
   if (!data) return null
   let yas: number | null = null, kadin = false
   try { if (data.dob_encrypted) { const d = new Date(decrypt(String(data.dob_encrypted))); const a = new Date(); yas = a.getFullYear() - d.getFullYear() - (a.getMonth() < d.getMonth() || (a.getMonth() === d.getMonth() && a.getDate() < d.getDate()) ? 1 : 0) } } catch { yas = null }
-  try { kadin = data.gender_encrypted ? /^k|^f/i.test(decrypt(String(data.gender_encrypted))) : false } catch { kadin = false }
+  try { kadin = data.gender_encrypted ? cinsiyetKanonik(decrypt(String(data.gender_encrypted))) === 'female' : false } catch { kadin = false }
   return { id: data.id, yas, kadin }
 }
 

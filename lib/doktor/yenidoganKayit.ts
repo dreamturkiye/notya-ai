@@ -12,7 +12,7 @@ import { decrypt, encrypt } from '@/lib/security/encryption'
 import { hastaAramaIndeksiniGuncelle } from '@/lib/doktor/hastaAramaIndeksi'
 import { uploadDocument } from '@/lib/vault/service'
 import {
-  ASI_V1,
+  yenidoganAsiListesi,
   NTP2_SMS,
   NTP_DISCLAIMER,
   NTP_ETIKET,
@@ -26,6 +26,7 @@ import {
   type TaburcuChecks,
   type TaburcuIstisna,
 } from '@/lib/clinical/yenidogan'
+import { cinsiyetKodu, cinsiyetSakla } from '@/lib/utils/cinsiyet'
 
 type Sb = SupabaseClient
 
@@ -303,7 +304,8 @@ async function olusturCanliDogumCekirdek(sb: Sb, g: CanliDogumGirdi): Promise<Ca
     } catch { /* ad çözülemedi */ }
 
     const bebekAdi = String(g.bebekAdi || '').trim() || `Yenidoğan${anneSoyad ? ' ' + anneSoyad : ''}`
-    const cinsiyet = g.cinsiyet ? String(g.cinsiyet) : null
+    // CINSIYET-NORMAL-01: the baby row stores the canonical 'female' / 'male' (the form sends K / E).
+    const cinsiyet = cinsiyetSakla(g.cinsiyet ? String(g.cinsiyet) : null)
     const notlar = {
       dogumBilgisi: true,
       apgar1: g.apgar1 ?? null,
@@ -399,10 +401,7 @@ async function olusturCanliDogumCekirdek(sb: Sb, g: CanliDogumGirdi): Promise<Ca
 }
 
 function cinsiyetKod(v: unknown): 'K' | 'E' | null {
-  const s = String(v || '').toLowerCase()
-  if (s === 'e' || s === 'erkek' || s === 'male' || s === 'm') return 'E'
-  if (s === 'k' || s === 'kız' || s === 'kiz' || s === 'female' || s === 'f') return 'K'
-  return null
+  return cinsiyetKodu(v == null ? null : String(v))
 }
 
 /** After spine or visit-first live birth: lohusa checklist + calendar (idempotent). */
@@ -509,11 +508,14 @@ export async function takvimiYaz(sb: Sb, input: {
   dogumAt: string
   pretermOrLbw: boolean
   gkdRisk: boolean
+  /** Birth weight (g) — selects the < 2000 g Hep B schedule (ASI-TAKVIM-TEK-01). */
+  kiloGram?: number | null
   extra?: ReturnType<typeof generateCalendar>
 }): Promise<{ gorev: number; asi: number }> {
   const plan = [
     ...generateCalendar({
       dogumAt: input.dogumAt,
+      kiloGram: input.kiloGram ?? null,
       pretermOrLbw: input.pretermOrLbw,
       gkdRisk: input.gkdRisk,
       skipHastaneLohusa: true,
@@ -541,7 +543,8 @@ export async function takvimiYaz(sb: Sb, input: {
 
   const { data: mevcutAsi } = await sb.from('asi_dozlari').select('kod').eq('bebek_id', input.bebekId)
   const asiVar = new Set((mevcutAsi || []).map((a) => a.kod))
-  const yeniAsi = ASI_V1.filter((a) => !asiVar.has(a.kod)).map((a) => ({
+  // ASI-TAKVIM-TEK-01: the vaccine rows follow the same (current GBP) list as the tasks — never the pre-2025 ASI_V1 for a 6'lı karma baby.
+  const yeniAsi = yenidoganAsiListesi({ dogumAt: input.dogumAt, kiloGram: input.kiloGram ?? null }).filter((a) => !asiVar.has(a.kod)).map((a) => ({
     doctor_id: input.doktorId,
     bebek_id: input.bebekId,
     kod: a.kod,
@@ -678,6 +681,7 @@ export async function tamamlaTaburcu(sb: Sb, input: {
     dogumAt: String(dogum.dogum_zamani || dogumGun),
     pretermOrLbw: preterm,
     gkdRisk: Boolean(maddeler.gkd_risk ?? maddeler.gkd ?? tarama.gkd),
+    kiloGram: kart.kilo_gram == null ? null : Number(kart.kilo_gram),
     extra: gate.gorevler,
   })
 

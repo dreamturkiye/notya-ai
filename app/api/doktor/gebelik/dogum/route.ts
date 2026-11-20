@@ -26,6 +26,7 @@ import { gorevleriUret, gorevDurumu, ONAM_KUTUPHANESI, CS_ENDIKASYONLARI, taburc
 import { baglaLohusaVeTakvim } from '@/lib/doktor/yenidoganKayit'
 import { pretermOrLbw } from '@/lib/clinical/yenidogan'
 import { erkenDogumTemizle, gestasyonGunuTarihte, kartOzeti } from '@/specialties/kadin-dogum/engines/erkenDogum'
+import { cinsiyetKodu } from '@/lib/utils/cinsiyet'
 
 export const dynamic = 'force-dynamic'
 const bugun = () => new Date().toISOString().slice(0, 10)
@@ -144,7 +145,7 @@ export async function POST(req: NextRequest) {
     } catch { /* column absent before migration 199 */ }
     for (let i = 0; i < bebekler.length; i++) {
       const bb = bebekler[i]
-      const cins = bb.cinsiyet === 'E' ? 'E' : bb.cinsiyet === 'K' ? 'K' : null
+      const cins = cinsiyetKodu(bb.cinsiyet == null ? null : String(bb.cinsiyet))
       const hafta = Number(bb.hafta) || datingHafta || 40, kilo = bb.kilo == null || bb.kilo === '' ? null : Number(bb.kilo)
       const komp = Array.isArray(bb.komplikasyonlar) ? bb.komplikasyonlar.map(String) : []
       let bebekPatientId: string | null = null
@@ -153,7 +154,7 @@ export async function POST(req: NextRequest) {
         const { data: anne } = await sb.from('patients').select('name_encrypted').eq('id', d!.patient_id).eq('doctor_id', user.id).maybeSingle()
         let anneAd = 'Anne'; try { anneAd = anne?.name_encrypted ? ((JSON.parse(decrypt(String(anne.name_encrypted))) as { ad?: string }).ad || 'Anne') : 'Anne' } catch { anneAd = 'Anne' }
         const bebekAd = `${anneAd.split(' ')[0]} Bebeği${bebekler.length > 1 ? ` ${i + 1}` : ''}`
-        const { data: bp } = await sb.from('patients').insert({ doctor_id: user.id, name_encrypted: encrypt(JSON.stringify({ ad: bebekAd })), dob_encrypted: encrypt(dogumZamani.slice(0, 10)), gender_encrypted: cins ? encrypt(cins === 'E' ? 'Erkek' : 'Kız') : null, is_active: true }).select('id').single()
+        const { data: bp } = await sb.from('patients').insert({ doctor_id: user.id, name_encrypted: encrypt(JSON.stringify({ ad: bebekAd })), dob_encrypted: encrypt(dogumZamani.slice(0, 10)), gender_encrypted: cins ? encrypt(cins === 'E' ? 'male' : 'female') : null, is_active: true }).select('id').single()
         bebekPatientId = bp?.id || null
         if (bebekPatientId) await hastaAramaIndeksiniGuncelle(sb, user.id, bebekPatientId, bebekAd)
       }

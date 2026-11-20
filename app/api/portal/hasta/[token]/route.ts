@@ -248,6 +248,7 @@ import type {
   PortalResult,
   PortalVisit,
 } from '@/lib/portal/types'
+import { cinsiyetKanonik } from '@/lib/utils/cinsiyet'
 
 export const dynamic = 'force-dynamic'
 
@@ -730,7 +731,7 @@ export async function GET(
 
   // Büyüme Eğrileri (Neyzi standartları) — doktor tarafındakiyle aynı hesap, hasta portalında da
   if (modulAktif('buyume')) {
-    const cinsiyet = cinsiyetHam === 'male' || cinsiyetHam === 'female' ? cinsiyetHam : null
+    const cinsiyet = cinsiyetKanonik(cinsiyetHam)
     if (dogumIso && cinsiyet) {
       const mevcutYasAy = ayFarki(dogumIso) ?? 0
       const ustSinir = Math.max(24, mevcutYasAy + 6)
@@ -795,8 +796,8 @@ export async function GET(
   if (modulAktif('jinekoloji')) try {
     const { dueHesapla } = await import('@/specialties/kadin-dogum/engines/jinekoloji-spine')
     const dob = dogumIso ? dogumIso.slice(0, 10) : null
-    const gender = String(hastaRow?.gender || '').toLowerCase()
-    if (gender.includes('kadın') || gender.includes('kadin') || gender.includes('female') || gender === 'f' || ks) {
+    // CINSIYET-NORMAL-01: patients has no plain `gender` column — the decrypted gender_encrypted value decides.
+    if (cinsiyetKanonik(cinsiyetHam) === 'female' || ks) {
       const bugun = new Date().toISOString().slice(0, 10)
       const ria = kontr && String(kontr.yontem).startsWith('ria_') ? (String(kontr.yontem).slice(4) as 'cu5' | 'cu10' | 'lng5' | 'lng8') : null
       const due = dueHesapla({

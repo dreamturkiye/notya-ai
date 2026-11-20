@@ -21,6 +21,7 @@ import RrsPaneli from '@/components/doktor/RrsPaneli';
 import EReceteDurum from '@/components/doktor/EReceteDurum';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme'
 import { DosyaSecDugmesi } from '@/components/core/DosyaSecDugmesi'
+import { cinsiyetKodu } from '@/lib/utils/cinsiyet'
 
 type Yol = 'kagit' | 'mbys';
 interface Satir { ilacAdi: string; etkenMadde: string; dozMetni: string; kullanimOzeti: string; gunSayisi: number | null; kutu: number }
@@ -295,7 +296,7 @@ export default function ReceteYazdirPage() {
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 14, gap: 12 }}>
           <div>
             <div><b>Hasta:</b> {baslik.hasta.ad || '________________'}</div>
-            <div><b>Yaş:</b> {yas(baslik.hasta.dogum) || '____'}{baslik.hasta.cinsiyet ? ` · ${baslik.hasta.cinsiyet === 'male' ? 'E' : 'K'}` : ''}</div>
+            <div><b>Yaş:</b> {yas(baslik.hasta.dogum) || '____'}{cinsiyetKodu(baslik.hasta.cinsiyet) ? ` · ${cinsiyetKodu(baslik.hasta.cinsiyet)}` : ''}</div>
           </div>
           <div style={{ textAlign: 'right' }}>
             <div><b>Tarih:</b> {trTarih(baslik.tarih)}</div>

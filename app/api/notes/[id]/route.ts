@@ -10,7 +10,7 @@ import { pratikOturum } from '@/lib/doktor/pratikOturum'
 import { decrypt } from '@/lib/security/encryption'
 import { yasHesapla } from '@/lib/doktor/yas'
 import { yasGosterim } from '@/lib/doktor/sinavHastaBilgisi'
-import { cinsiyetTr } from '@/lib/utils/cinsiyet'
+import { cinsiyetKanonik, cinsiyetTr } from '@/lib/utils/cinsiyet'
 import { buyumePersentilleriniHesapla, buyumeYorumunuEkle, type Cinsiyet } from '@/lib/clinical/buyumeEgrisi'
 import { vitalOlcumleriniNormallestir } from '@/lib/clinical/olcumCoz'
 import { eriskinVkiVitalerden } from '@/lib/clinical/eriskinVki'
@@ -72,7 +72,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       hasta.cinsiyet = cinsiyetTr(coz(p.gender_encrypted))
       // Kaan (2026-09-13): büyüme persentili için ham doğum tarihi + cinsiyet saklanır (Neyzi standartları)
       dogumIso = dogum || null
-      cinsiyetHam = coz(p.gender_encrypted) === 'male' || coz(p.gender_encrypted) === 'female' ? (coz(p.gender_encrypted) as 'male' | 'female') : null
+      cinsiyetHam = cinsiyetKanonik(coz(p.gender_encrypted))
     }
     // TC yalnız intake formunda (şifreli) tutuluyor — varsa oradan çöz
     try {

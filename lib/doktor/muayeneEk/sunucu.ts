@@ -35,6 +35,7 @@ import { kasaKategorisi } from './kategori'
 import { sinifla, ogrenmeSinyali, type SiniflandirGirdi } from './siniflandir'
 import { degerlendirmeOku, degerlendirmeYaz, girdiHash, ogrenmeIsaretle, ogrenmeKaydet, ogrenmeYukle } from './saklama'
 import { ekTuruMu, type EkAsiSatiri, type EkKaynak, type EkSonuc, type EkTuru, type SiniflandirmaSonucu } from './tipler'
+import { cinsiyetKodu } from '@/lib/utils/cinsiyet'
 
 export const EK_ROTA_SURESI_SN = 120
 
@@ -70,10 +71,7 @@ export async function baglamYukle(sb: SupabaseClient, doktorId: string, sessionI
   let cinsiyet: 'K' | 'E' | null = null
   try { if (hasta?.dob_encrypted) dogumIso = decrypt(String(hasta.dob_encrypted)).slice(0, 10) } catch { dogumIso = null }
   try {
-    if (hasta?.gender_encrypted) {
-      const g = decrypt(String(hasta.gender_encrypted)).toLocaleLowerCase('tr-TR')
-      cinsiyet = g.startsWith('k') || g.startsWith('f') ? 'K' : g.startsWith('e') || g.startsWith('m') ? 'E' : null
-    }
+    if (hasta?.gender_encrypted) cinsiyet = cinsiyetKodu(decrypt(String(hasta.gender_encrypted)))
   } catch { cinsiyet = null }
   let yasAy: number | null = null
   if (dogumIso) {

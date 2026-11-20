@@ -12,6 +12,7 @@ import { hastaSahibiMi, seansSahibi } from '@/lib/doktor/hastaSahipligi'
 import { vizitHastayaUygunMu } from '@/lib/doktor/gorselYakalama'
 import { attachToVisit } from '@/specialties/dermatoloji/imaging/vision-tools'
 import type { PhotoAsset } from '@/specialties/dermatoloji/schema'
+import { cinsiyetKanonik } from '@/lib/utils/cinsiyet'
 
 export const dynamic = 'force-dynamic'
 const bugun = () => new Date().toISOString().slice(0, 10)
@@ -41,7 +42,7 @@ export async function POST(req: NextRequest) {
   const adim = String(b.adim)
   const { data: hasta } = await sb.from('patients').select('id, gender_encrypted').eq('id', String(b.patientId || '')).eq('doctor_id', user.id).maybeSingle()
   if (!hasta) return NextResponse.json({ error: 'Hasta bulunamadı' }, { status: 404 })
-  const kadin = (() => { try { return hasta.gender_encrypted ? /^k|^f/i.test(decrypt(String(hasta.gender_encrypted))) : false } catch { return false } })()
+  const kadin = (() => { try { return hasta.gender_encrypted ? cinsiyetKanonik(decrypt(String(hasta.gender_encrypted))) === 'female' : false } catch { return false } })()
   // HASTA-IZOLASYON-01: a lezyonId from the body must belong to THIS patient's (doctor-scoped) derm
   // episode. derm_lezyonlar has no doctor_id of its own — it was updated by bare id, so any doctor
   // could overwrite another doctor's lesion assessment or official diagnosis.

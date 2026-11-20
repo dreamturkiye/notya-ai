@@ -43,7 +43,7 @@ import { aiCagir, rotaButcesiMs, yanitMetni, type AiMesaj } from '@/lib/ai/cagir
 import { aiKotaKullan } from '@/lib/doktor/hizLimiti'
 import { downloadDocument } from '@/lib/vault/service'
 import { yasHesapla } from '@/lib/doktor/yas'
-import { cinsiyetTr } from '@/lib/utils/cinsiyet'
+import { cinsiyetKanonik, cinsiyetTr } from '@/lib/utils/cinsiyet'
 import { doktorOturum } from '@/lib/doktor/serverAuth'
 import { hastaSahibiMi } from '@/lib/doktor/hastaSahipligi'
 import { arsivsizIlaclar, arsivsizNotlar, arsivsizSeanslar } from '@/lib/doktor/arsiv'
@@ -384,7 +384,7 @@ export async function GET(req: NextRequest) {
       hasta: {
         adSoyad: adCoz(hasta.name_encrypted),
         dogumTarihi: dogumIso,
-        cinsiyet: cins === 'female' ? 'Kadın' : cins === 'male' ? 'Erkek' : '',
+        cinsiyet: cinsiyetKanonik(cins) === 'female' ? 'Kadın' : cinsiyetKanonik(cins) === 'male' ? 'Erkek' : '',
         // VELI-YASAL-ONAM: hitap yaşa bağlı — 18 yaş altı her branşta veli / yasal temsilci satırı
         veliSatiri: veliDiliMi({ doktorBransi: u?.specialty || null, hastaDogumIso: dogumIso }),
       },

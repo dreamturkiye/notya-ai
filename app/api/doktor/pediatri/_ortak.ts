@@ -8,6 +8,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { doktorOturum } from '@/lib/doktor/serverAuth'
 import { doktorAracBransi } from '@/lib/doktor/doktorAraclari'
 import { decrypt } from '@/lib/security/encryption'
+import { cinsiyetKanonik } from '@/lib/utils/cinsiyet'
 
 export function guvenliCoz(v: string | null | undefined): string {
   if (!v) return ''
@@ -35,7 +36,7 @@ export async function pediHasta(sb: SupabaseClient, doktorId: string, patientId:
   if (error || !data) return null
   const dob = guvenliCoz(data.dob_encrypted as string).slice(0, 10)
   const g = guvenliCoz(data.gender_encrypted as string)
-  return { id: String(data.id), dogumIso: /^\d{4}-\d{2}-\d{2}$/.test(dob) ? dob : null, cinsiyet: g === 'male' || g === 'female' ? g : null }
+  return { id: String(data.id), dogumIso: /^\d{4}-\d{2}-\d{2}$/.test(dob) ? dob : null, cinsiyet: cinsiyetKanonik(g) }
 }
 
 export const bulunamadi = () => NextResponse.json({ error: 'Hasta bulunamadı.' }, { status: 404 })

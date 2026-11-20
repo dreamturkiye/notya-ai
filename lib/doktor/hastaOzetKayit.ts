@@ -79,13 +79,8 @@ export function saglikGecmisiEksikMi(p: Pick<HastaOzetKayit, 'kronik_hastaliklar
   )
 }
 
-/** UI Kadın/Erkek → saklama male/female. */
-export function cinsiyetSakla(v: string | null | undefined): string | null {
-  const t = cinsiyetTr(v)
-  if (t === 'Kadın') return 'female'
-  if (t === 'Erkek') return 'male'
-  return null
-}
+/** UI Kadın/Erkek (or any stored variant) → saklama male/female — the shared helper (CINSIYET-NORMAL-01). */
+export { cinsiyetSakla } from '@/lib/utils/cinsiyet'
 
 /**
  * PUT gövdesinden notes_encrypted güncellemesi.

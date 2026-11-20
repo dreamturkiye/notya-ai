@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import IdCardCapture from '@/components/doktor/IdCardCapture';
 import { getDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme'
+import { cinsiyetKanonik } from '@/lib/utils/cinsiyet'
 
 export const dynamic = 'force-dynamic';
 
@@ -176,13 +177,9 @@ export default function HastaEklePage() {
             .filter(Boolean)
             .join(' ')
       ).trim();
-      const genderRaw = String((profile as { gender?: string }).gender || '').toLowerCase();
-      const cinsiyet =
-        genderRaw === 'male' || genderRaw === 'erkek'
-          ? 'Erkek'
-          : genderRaw === 'female' || genderRaw === 'kadın' || genderRaw === 'kadin'
-            ? 'Kadın'
-            : '';
+      // CINSIYET-NORMAL-01: every stored variant (male / Erkek / E / M …) through the shared helper.
+      const genderKanonik = cinsiyetKanonik(String((profile as { gender?: string }).gender || ''));
+      const cinsiyet = genderKanonik === 'male' ? 'Erkek' : genderKanonik === 'female' ? 'Kadın' : '';
 
       if (!fullName) {
         setBanner({ type: 'error', message: 'Profilinizde ad soyad yok.' });

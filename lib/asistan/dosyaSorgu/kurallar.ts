@@ -15,6 +15,7 @@ export const GENEL_KURALLAR: readonly string[] = [
   'Çelişen kayıt varsa gizleme, hekime açıkça belirt.',
   'Planlandı / önerildi / istendi / reçete edildi / uygulanacak ile uygulandı / yapıldı AYNI DEĞİLDİR.',
   'Dosyada olmayanı üretme; emin değilsen veya kayıt yetersizse bunu açıkça söyle.',
+  'Kanıtın KAYIT SINIRI satırında kayıtlı olmadığı yazan bir kaynak (belge, ilaç, alerji) için "belgelerde / dosyada var" DEME; "kayıtlı değil" de.',
   'Kayıt yoksa "yapılmadı" DEME; "yapıldığına / uygulandığına / sonuçlandığına dair kayıt bulamadım" de. Bu yasak seçenek cümlelerinde de geçerlidir: "ya hiç yapılmadı ya da başka yerde yapıldı" DEME; "uygulandığına dair kayıt yok; başka merkezde yapılmış olabilir" de. "yapılmadı / uygulanmadı / yapılmamış / uygulanmamış" kelimeleri cevabında hiç geçmesin.',
   'Soru 9 ve Soru 10 cevaplarında açık iş varsa "Dikkat / Eksik kayıt / Takip" başlığını mutlaka kullan; yoksa standardın "saptamadım" cümlesini yaz.',
   'Kronolojik yaşı (gerekirse düzeltilmiş yaşı), cinsiyeti ve kiloyu dikkate al.',
@@ -51,7 +52,7 @@ export const SORU_SABLONLARI: Record<SoruTuru, { no: number; soru: string; sablo
   },
   asi: {
     no: 4, soru: 'Aşıları yaşına göre tam mı? Eksik aşısı var mı?',
-    sablon: 'İlk cümle kanıttaki "SONUÇ (kayda göre)" satırıdır; kesin yaşı (doğum tarihinden) söyle. Aşı tablosu + not metni + belgeler karşılaştırılır. Kategoriler AYRI: planlandı / önerildi / reçete edildi / randevu verildi / uygulandığı söylendi / UYGULANDIĞI BELGELENMİŞ / durumu belirsiz. Örnek: notta "Bugün Hepatit B ikinci dozunu yapacağız" yazıyor ama uygulama kaydı yoksa → "Hepatit B ikinci dozu planlanmış; uygulanmış olduğuna dair kayıt göremiyorum". Sıra: 1) eksik / zamanı gelmiş dozlar ADIYLA ve önerilen tarihiyle; 2) planlanmış ama uygulama kaydı olmayanlar; 3) kayıt tutarsızlığı ("gecikti" deme, "kayıt tutarsız" de); 4) yaklaşan dozlar; 5) telafi (catch-up) gereksinimi; 6) rutin takvimden AYRI olarak risk bazlı / özel aşılar. Belgelenmiş dozların hepsini tek tek sayma (sayısını ver; tablo ekrandadır).',
+    sablon: 'İlk cümle kanıttaki "SONUÇ (kayda göre)" satırıdır; kesin yaşı (doğum tarihinden) söyle. Aşı tablosu + not metni (+ onaylı belge değerlendirmesi, YALNIZ kanıtta varsa) karşılaştırılır; hekimin aşı kartına yazdığı sonraki doz tarihi kanıtta varsa onu da tarihiyle söyle; eksik doz yoksa kanıttaki SIRADAKİ takvim dozlarını önerilen tarihiyle söyle. Kategoriler AYRI: planlandı / önerildi / reçete edildi / randevu verildi / uygulandığı söylendi / UYGULANDIĞI BELGELENMİŞ / durumu belirsiz. Örnek: notta "Bugün Hepatit B ikinci dozunu yapacağız" yazıyor ama uygulama kaydı yoksa → "Hepatit B ikinci dozu planlanmış; uygulanmış olduğuna dair kayıt göremiyorum". Sıra: 1) eksik / zamanı gelmiş dozlar ADIYLA ve önerilen tarihiyle; 2) planlanmış ama uygulama kaydı olmayanlar; 3) kayıt tutarsızlığı ("gecikti" deme, "kayıt tutarsız" de); 4) yaklaşan dozlar; 5) telafi (catch-up) gereksinimi; 6) rutin takvimden AYRI olarak risk bazlı / özel aşılar. Belgelenmiş dozların hepsini tek tek sayma (sayısını ver; tablo ekrandadır).',
   },
   lab: {
     no: 5, soru: 'Son lab sonuçlarında dikkat etmem gereken bir şey var mı?',

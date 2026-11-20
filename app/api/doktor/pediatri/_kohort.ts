@@ -13,6 +13,7 @@ import type { TaramaKaydi, TaramaSonuc, TaramaTur } from '@/specialties/pediatri
 import type { Olcum } from '@/specialties/pediatri/engines/buyume'
 import { gunFarki } from '@/specialties/pediatri/engines/girdi'
 import { arsivsizAsilar, arsivsizIlaclar, arsivsizNotlar, arsivsizSeanslar } from '@/lib/doktor/arsiv'
+import { cinsiyetKanonik } from '@/lib/utils/cinsiyet'
 
 const cozum = (v: unknown): string => { if (!v) return ''; try { return decrypt(String(v)) } catch { return '' } }
 const gun = (v: unknown) => String(v || '').slice(0, 10)
@@ -43,7 +44,7 @@ export async function pediKohortGirdileri(sb: SupabaseClient, doktorId: string, 
     let ad = 'Hasta'
     try { const j = JSON.parse(cozum(p.name_encrypted)); ad = `${j.ad || ''} ${j.soyad || ''}`.trim() || 'Hasta' } catch { /* varsayılan */ }
     const g = cozum(p.gender_encrypted)
-    cocuklar.push({ id: String(p.id), ad, dogumIso: dob, cinsiyet: g === 'male' || g === 'female' ? g : null })
+    cocuklar.push({ id: String(p.id), ad, dogumIso: dob, cinsiyet: cinsiyetKanonik(g) })
     if (cocuklar.length >= KOHORT_UST_SINIR) break
   }
   const ids = cocuklar.map((c) => c.id)

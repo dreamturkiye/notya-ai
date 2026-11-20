@@ -1,7 +1,7 @@
 {
   "kural": ".cursor/rules/ses-omurga-kilidi.mdc",
-  "onay": "Kaan-onay: 2026-10-29 Ses Omurgası v2 (A–I) + founder lock — ordered and signed off by Kaan in the job brief",
-  "guncelleme": "2026-10-29",
+  "onay": "Kaan-onay: 2026-11-20 ASI-TAKVIM-TEK-01 bug 2 — Ayşe kayıt sınırı güvencesi: dosyada belge yokken cevaptaki 'belgelerde var' cümlesi gerçek cümleyle değiştirilir (lib/asistan/ayseCevapla.ts, tek ekleme; Kaan: 'Go and fix and ensure this does not happen in real life live version from now on.' + 'go')",
+  "guncelleme": "2026-11-20",
   "dosyalar": {
     ".cursor/rules/ses-omurga-kilidi.mdc": "fa7dcef64483f66ea83cebd1b9b6286bfccd5b16ccabc611366ffcc257ef80fa",
     "app/api/asistan/ses-ekran/route.ts": "4fa0f2e003a5e8312c3b7fc3cbc8199cd5a962d4ef02f8d82e6214348671f1e3",
@@ -9,7 +9,7 @@
     "app/api/asistan/signed-url/route.ts": "63706277a766f49d907e07460f6641fee88e3996ef91176bee106c1febe94ca5",
     "components/asistan/AsistanOturumContext.tsx": "ebf5a1630a2acfb2f21a7ea6582fb13b3757d7b47834cd3fd9c5e70b89586903",
     "lib/ai/modeller.ts": "f6f8c7b2e7d1224fd3dd829f425b2fdf1cf7e00bbd5e2b1d353ac372cf109a9c",
-    "lib/asistan/ayseCevapla.ts": "b9f3a6fc0df020bbe8e47d84b73d558f4f9975aef038809899766d39fe550068",
+    "lib/asistan/ayseCevapla.ts": "7367e5a3a6ed9aed8b2d3b19f07feff1453b1a8eec4f76feeddd3b12a4373917",
     "lib/asistan/duraklama.ts": "a799f5be7a0b21e684bc21a33c53d0e5f5fc7ec125ac725fe56ac2c04cdc17bd",
     "lib/asistan/elevenKapi.ts": "982862e089985f755a5eb2e33380121fdefba977f5a1b1f18dec4d220a22856e",
     "lib/asistan/elevenMetni.ts": "5cc18820401c98df7fe4603f423f5cdd2296e79cf1999a49ec252e33ebbde3ca",

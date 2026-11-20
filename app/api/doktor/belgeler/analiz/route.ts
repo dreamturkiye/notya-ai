@@ -21,6 +21,7 @@ import { MODALITE_TR, type Modalite } from '@/core/belgeler/ontoloji'
 import { ekoAseDegerlendir, ekoDogrulamayiUygula, ekoMetniMi, ekoMotorRaporu, ekoRaporunuZenginlestir, EKO_ASE_MOTOR } from '@/core/belgeler/ekoAse'
 import type { BelgeRaporu, FusionSonuc, MotorCiktisi } from '@/core/belgeler/types'
 import type { ClaudeGorselGirdi } from '@/core/belgeler/yazar'
+import { cinsiyetKodu } from '@/lib/utils/cinsiyet'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 120
@@ -60,7 +61,7 @@ export async function POST(req: NextRequest) {
 
   let dobIso: string | null = null, cinsiyet: 'K' | 'E' | null = null
   try { if (hasta.dob_encrypted) dobIso = decrypt(String(hasta.dob_encrypted)) } catch { dobIso = null }
-  try { if (hasta.gender_encrypted) { const g = decrypt(String(hasta.gender_encrypted)).toLocaleLowerCase('tr-TR'); cinsiyet = g.startsWith('k') || g.startsWith('f') ? 'K' : g.startsWith('e') || g.startsWith('m') ? 'E' : null } } catch { cinsiyet = null }
+  try { if (hasta.gender_encrypted) cinsiyet = cinsiyetKodu(decrypt(String(hasta.gender_encrypted))) } catch { cinsiyet = null }
   const yasAy = yasAyHesapla(dobIso)
 
   // NOTYA-BELGE-OTO-01: 'auto' = unclassified upload in the automatic flow -> the branch's default image modality (config in belgeAkisi)

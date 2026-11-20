@@ -39,6 +39,7 @@ export {
   asiKodlari,
   eksikKalemGorevleri,
   generateCalendar,
+  yenidoganAsiListesi,
   gorevUrgency,
   gunFarki,
   isoGun,

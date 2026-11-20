@@ -13,6 +13,7 @@ import { vitalOlcumleriniNormallestir } from '@/lib/clinical/olcumCoz'
 import { bransKapsami } from '@/lib/specialties/kapsam'
 import { hekimBransi } from '@/lib/doktor/hekimAdi'
 import { arsivsizNotlar } from '@/lib/doktor/arsiv'
+import { cinsiyetKanonik } from '@/lib/utils/cinsiyet'
 
 export const dynamic = 'force-dynamic'
 
@@ -137,9 +138,9 @@ export async function GET(req: NextRequest) {
       } catch { /* ad çözülemedi → maske */ }
       try {
         const dob = decrypt(String(h.dob_encrypted || ''))
-        const gnd = decrypt(String(h.gender_encrypted || ''))
+        const gnd = cinsiyetKanonik(decrypt(String(h.gender_encrypted || '')))
         if (dob) dogumlar.set(h.id, dob)
-        if (gnd === 'male' || gnd === 'female') cinsiyetler.set(h.id, gnd)
+        if (gnd) cinsiyetler.set(h.id, gnd)
       } catch { /* doğum/cinsiyet çözülemedi — persentil hesaplanmaz */ }
     }
   }

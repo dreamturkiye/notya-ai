@@ -11,6 +11,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { encrypt, decrypt } from '@/lib/security/encryption'
 import { parseBoyGirdi } from '@/lib/clinical/hedefBoy'
 import { formAlerjiBeyani } from '@/lib/doktor/hastaKayitAlanlari'
+import { cinsiyetSakla } from '@/lib/utils/cinsiyet'
 
 function coz(v: string | null | undefined): string { if (!v) return ''; try { return decrypt(v) } catch { return '' } }
 function metin(v: unknown): string { return Array.isArray(v) ? v.filter(Boolean).join(', ') : String(v ?? '').trim() }
@@ -25,8 +26,8 @@ export async function intakeYanitlariniHastayaAktar(sb: SupabaseClient, doktorId
   const dogum = metin(y.dogumTarihi)
   if (!coz(p.dob_encrypted) && /^\d{4}-\d{2}-\d{2}$/.test(dogum)) { guncelleme.dob_encrypted = encrypt(dogum); doldurulan.push('dogumTarihi') }
 
-  const cins = metin(y.cinsiyet)
-  if (!coz(p.gender_encrypted) && (cins === 'Kadın' || cins === 'Erkek')) { guncelleme.gender_encrypted = encrypt(cins === 'Kadın' ? 'female' : 'male'); doldurulan.push('cinsiyet') }
+  const cins = cinsiyetSakla(metin(y.cinsiyet))
+  if (!coz(p.gender_encrypted) && cins) { guncelleme.gender_encrypted = encrypt(cins); doldurulan.push('cinsiyet') }
 
   // NOTYA-INTAKE-EMAIL-01: formdaki iletişim, randevudaki / eski kart değerinin üzerine yazılır (daha ayrıntılı kaynak).
   const eposta = metin(y.eposta)

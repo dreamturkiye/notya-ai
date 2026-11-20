@@ -319,6 +319,20 @@ function vizitOlcumBolumu(olaylar: DosyaOlayi[], hasta: DosyaHastasi, p: BransSo
   return vizitOlcumKanitSatirlari(vizitOlcumKaniti(soru, olaylar, hasta))
 }
 
+/**
+ * ASI-TAKVIM-TEK-01 (grounding, 2026-11-20): Ayşe answered a vaccine question for a patient with no documents, no
+ * medication and no allergy record that medication and allergy information "exists in documents". Every evidence block
+ * now names what is NOT on file, so the model has a sentence to say instead of a source to invent.
+ */
+export function kayitSiniriSatiri(olaylar: DosyaOlayi[]): string {
+  const yok = [
+    olaylar.some((o) => o.kaynak === 'belge') ? '' : 'onaylı belge değerlendirmesi',
+    olaylar.some((o) => o.kaynak === 'ilac') ? '' : 'ilaç / reçete kaydı',
+    olaylar.some((o) => o.tur === 'alerji') ? '' : 'alerji kaydı',
+  ].filter(Boolean)
+  return `KAYIT SINIRI: yalnız bu kanıtta ve hasta dosyasında yazanı söyle; dosyada olmayan bir veri ya da kaynak ("belgelerde var", "dosyada mevcut") YAZMA.${yok.length ? ` Bu hastada kayıtlı OLMAYANLAR: ${yok.join(', ')} — konusu geçerse "kayıtlı değil" de.` : ''}`
+}
+
 export function kanitBlogu(tur: SoruTuru, olaylar: DosyaOlayi[], hasta: DosyaHastasi, ek: KanitEki = {}): string {
   const p = parametreSec(hasta.brans, hasta.dogumIso, hasta.bugunIso)
   const s = SORU_SABLONLARI[tur]
@@ -327,7 +341,8 @@ export function kanitBlogu(tur: SoruTuru, olaylar: DosyaOlayi[], hasta: DosyaHas
   const bas = [
     `=== DOSYA SORGUSU — Soru ${s.no}: "${s.soru}" ===`,
     `Hasta: ${yasMetni(hasta.dogumIso, hasta.bugunIso)}${hasta.cinsiyet ? `, ${hasta.cinsiyet === 'male' ? (yasAy != null && yasAy < 216 ? 'erkek çocuk' : 'erkek') : (yasAy != null && yasAy < 216 ? 'kız çocuk' : 'kadın')}` : ''}; bugün ${trGun(hasta.bugunIso)}; parametre seti: ${p.ad}.`,
-    `Kaynak: ${v.length} onaylı vizit${v.length ? ` (${trGun(v[0].tarih)} – ${trGun(v[v.length - 1].tarih)})` : ''}, ${olaylar.filter((o) => o.kaynak === 'lab').length} lab satırı, ${olaylar.filter((o) => o.kaynak === 'asi').length} aşı kaydı, ${olaylar.filter((o) => o.kaynak === 'ilac' && o.tur === 'ilac').length} ilaç kaydı.`,
+    `Kaynak: ${v.length} onaylı vizit${v.length ? ` (${trGun(v[0].tarih)} – ${trGun(v[v.length - 1].tarih)})` : ''}, ${olaylar.filter((o) => o.kaynak === 'lab').length} lab satırı, ${olaylar.filter((o) => o.kaynak === 'asi').length} aşı kaydı, ${olaylar.filter((o) => o.kaynak === 'ilac' && o.tur === 'ilac').length} ilaç kaydı, ${olaylar.filter((o) => o.kaynak === 'belge').length} onaylı belge değerlendirmesi.`,
+    kayitSiniriSatiri(olaylar),
     '[KANIT — durumlar açık: planlandı / önerildi / istendi / reçete edildi ≠ uygulandı / sonuçlandı]',
   ]
   let govde: string[] = []

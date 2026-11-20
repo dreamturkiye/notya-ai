@@ -87,6 +87,7 @@ import { sonOlcumlerSorusuMu, vizitOlcumCevabi, vizitOlcumKaniti, vizitOlcumSoru
 import { ebeveynBoyCevabi, ebeveynBoyuSorusu } from "@/lib/asistan/ebeveynBoy"
 import { dosyaSorguKuralBlogu } from "@/lib/asistan/dosyaSorgu/kurallar"
 import { vizitOzetHedefiBul, vizitOzetiGuvenceyeAl, vizitOzetiSec, vizitOzetSozu, type VizitOzeti } from "@/lib/asistan/dosyaSorgu/vizitOzeti"
+import { kayitsizKaynakGuvencesi } from "@/lib/asistan/dosyaSorgu/kayitSiniri"
 import type { DosyaHastasi, DosyaOlayi } from "@/lib/doktor/dosyaOlaylari"
 import { hastaOdakTemizle } from "@/lib/asistan/hastaOdakKilidi"
 import { hastaOzetiKisa } from "@/lib/doktor/hastaDosyaKisa"
@@ -1299,6 +1300,11 @@ ${ilacBaglamMetni(drugs[0])}`
     const guvence = vizitOzetiGuvenceyeAl(String(aiData.speech || ""), vizitOzeti, odakAd)
     if (guvence.degisti) console.warn("[asistan/chat] muayene özeti güvencesi", { kanal: g.kanal, neden: guvence.neden })
     aiData.speech = guvence.metin
+  }
+  // ASI-TAKVIM-TEK-01 (Kaan-onay 2026-11-20): no "it is in the documents" for a patient whose chart has no document.
+  if (odakAd && dosyaGuvenlikMetni) {
+    const kayit = kayitsizKaynakGuvencesi(String(aiData.speech || ""), dosyaGuvenlikMetni)
+    if (kayit.degisti) { console.warn("[asistan/chat] kayıt sınırı güvencesi", { kanal: g.kanal }); aiData.speech = kayit.metin }
   }
   if (takvimRecantMi(aiData.speech)) {
     const sonTakvim = [...messages].reverse().find((m) => m.role === "assistant" && sonTakvimCevabiMi(m.content))

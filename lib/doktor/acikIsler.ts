@@ -15,7 +15,7 @@ import { eksikDozEtiketi, parametreSec, type AsiDurumu } from '@/lib/asistan/dos
 import { SIKAYET_GRUPLARI, terimlerdenBiriGeciyor } from '@/lib/klinik/sikayetEsanlam'
 import { asiPlanSatiri, durumAdi, labAdlari, planKarsiligi, planOlaylari } from '@/lib/doktor/planTakibi'
 import { alerjiUyarilari } from '@/core/eylemler/ilacUyari'
-import { asiKaniti, tutarsizSatiri } from '@/lib/asistan/dosyaSorgu/asiKaniti'
+import { asiKaniti, hekimPlanSatiri, tutarsizSatiri } from '@/lib/asistan/dosyaSorgu/asiKaniti'
 import { dozBayraklari, dozGuvenligi } from '@/lib/doktor/dozGuvenligi'
 
 export type AcikIsOnceligi = 'bugun' | 'yakinda' | 'rutin'
@@ -191,6 +191,11 @@ export function acikIsleriBul(olaylar: DosyaOlayi[], yasAy: number | null, brans
         }
       }
       for (const d of kanit.yaklasan) ekle({ oncelik: 'rutin', tur: 'asi-yaklasan', metin: `${d.ad} — yaklaşıyor (önerilen ${trGun(d.onerilen)}).` })
+      // ASI-TAKVIM-TEK-01: the doctor's own next-dose date on the aşı kartı (same source as the reminder list).
+      for (const h of kanit.hekimPlani) {
+        if (h.durum === 'gecikti' || h.durum === 'bugun') ekle({ oncelik: 'bugun', tur: 'asi-eksik', tarih: h.plan, metin: `${hekimPlanSatiri(h)}.` })
+        else if (h.durum === 'yaklasiyor') ekle({ oncelik: 'yakinda', tur: 'asi-yaklasan', tarih: h.plan, metin: `${hekimPlanSatiri(h)}.` })
+      }
       for (const c of asiBeyanCeliskileri(olaylar, asi)) ekle(c)
     } else if (asi) {
       const planli = planOlaylari(olaylar).filter((o) => o.tur === 'asi')
