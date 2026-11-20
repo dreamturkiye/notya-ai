@@ -18,6 +18,7 @@
  * Age is in whole years on `bugun` — the day in the account's own time zone, as everywhere in the tools area.
  */
 import type { HastaKapisi } from './tipler'
+import { cinsiyetKanonik } from '@/lib/utils/cinsiyet'
 
 /** What the gate needs of a patient: both as the patient's file holds them ('' or null = not recorded). */
 export type AracHastaBilgisi = { dogumTarihi?: string | null; cinsiyet?: string | null }
@@ -45,7 +46,7 @@ export function kapiSonucu(kapi: HastaKapisi | null | undefined, hasta: AracHast
   const k = kapi as HastaKapisi
   if (k.cinsiyet === 'female' || k.cinsiyet === 'male') {
     // not recorded = not known = does not pass
-    if (hasta.cinsiyet !== k.cinsiyet) return 'degil'
+    if (cinsiyetKanonik(hasta.cinsiyet, { turkce: false }) !== k.cinsiyet) return 'degil'
   }
   if (typeof k.enAzYas === 'number' || typeof k.enCokYas === 'number') {
     const yas = tamYas(hasta.dogumTarihi, bugun)
