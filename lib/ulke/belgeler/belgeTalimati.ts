@@ -8,6 +8,7 @@
  */
 import { jsonOnarDetay } from '@/lib/ai/jsonOnar'
 import { EK_TEMEL_TURLERI, EK_TURLERI, ekMetniSuz, EK_BULGU_ADEDI, EK_BULGU_AZAMI, EK_OZET_AZAMI, sinavZamaniniSuz, turuOku, type EkSonucu, type EkTuru, type EkTuruSecimi } from './ekler'
+import { cinsiyetKanonik } from '@/lib/utils/cinsiyet'
 
 /** The language of the answer, as the instruction names it. */
 export function cevapDiliAdi(dil: string): string {
@@ -106,7 +107,7 @@ export function belgeTalimati(dil: string, tur: EkTuruSecimi, turler: readonly E
 /** The patient context line: age and sex only (no name, no number, no date of birth). */
 export function belgeBaglami(yasYil: number | null, yasAy: number | null, cinsiyet: string): string {
   const yas = yasYil === null ? '' : yasYil < 2 && yasAy !== null ? `${yasAy} months` : `${yasYil} years`
-  const parcalar = [yas && `age ${yas}`, cinsiyet === 'male' || cinsiyet === 'female' ? cinsiyet : ''].filter(Boolean)
+  const parcalar = [yas && `age ${yas}`, cinsiyetKanonik(cinsiyet, { turkce: false }) ?? ''].filter(Boolean)
   return parcalar.length ? `Patient: ${parcalar.join(', ')}. Describe the attached document.` : 'Describe the attached document.'
 }
 
