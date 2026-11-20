@@ -218,30 +218,82 @@ SEMINAR_LINK = (
 SEMINAR_TARIH = "25 Kasım Çarşamba"
 SEMINAR_SAAT = "20:00 Türkiye saati"
 
+# Branş-specific Notya capabilities shown in the seminar invite (bullets).
+SEMINAR_OZELLIK = {
+    "pediatri": {
+        "baslik": "Pediatri'de Notya",
+        "maddeler": (
+            "Muayeneyi dinler, notu siz konuşurken yazar",
+            "Aşısı geciken çocukta telafi tarihlerini hesaplar",
+            "Aileye aşı / kontrol hatırlatması gönderir",
+            "Prematüre ve düzeltilmiş yaş izlemini takip eder",
+        ),
+    },
+    "kadin-dogum": {
+        "baslik": "Kadın doğumda Notya",
+        "maddeler": (
+            "Muayeneyi dinler, notu siz konuşurken yazar",
+            "Her gebe için haftayı, sıradaki izlem ve taramayı takip eder",
+            "Hatırlatmayı hastaya / sekretere gönderir",
+            "TDT hesabı ve gebelikte aşı takvimini yanında tutar",
+        ),
+    },
+    "dermatoloji": {
+        "baslik": "Dermatoloji'de Notya",
+        "maddeler": (
+            "Muayeneyi dinler, notu siz konuşurken yazar",
+            "İzotretinoin / metotreksat / siklosporin / biyolojik tahlil-kontrolünü takip eder",
+            "Hatırlatmayı hastaya gönderir",
+            "Sistemik tedavi öncesi tarama checklist'ini yanında tutar",
+        ),
+    },
+}
+
+
+def _brans_bullets(brans: str) -> str:
+    oz = SEMINAR_OZELLIK.get(brans) or SEMINAR_OZELLIK["pediatri"]
+    lines = [f"{oz['baslik']}:"]
+    for m in oz["maddeler"]:
+        lines.append(f"• {m}")
+    return "\n".join(lines)
+
 
 def mesaj_1(ad: str, brans: str, varyant: str) -> str:
-    """First-touch: invite to free live group demo (25 Kasım)."""
+    """First-touch: branş-detaylı canlı grup demo daveti (25 Kasım) — must-attend ton."""
     given = capitalize_given(ad)
-    _ = brans  # branş-neutral seminar invite
+    br = brans if brans in SEMINAR_OZELLIK else "pediatri"
+    bullets = _brans_bullets(br)
     if varyant == "A":
         return (
             f"{given} Hocam merhaba, ben Kaan — Dr. Gökhan Mamur'un ekibinden.\n\n"
-            f"Notya'yı canlı izleyin: muayeneyi dinleyip notu hazırlayan, "
-            f"hasta takibini yapan asistanı 45 dakikada görün.\n\n"
+            f"Bu oturumu kaçırmayın: {SEMINAR_TARIH} · {SEMINAR_SAAT}. "
+            f"Notya'yı Dr. Gökhan Mamur ile canlı göreceksiniz.\n\n"
+            f"Katılan hekim günde 2 saate kadar kazanıyor; hastasına verdiği hizmet "
+            f"bir gömlek yükseliyor ve klinik yeni bir sınıfa çıkıyor. "
+            f"Katılmayan, notu elle yazmaya ve takibi tek başına taşımaya devam ediyor.\n\n"
+            f"Notya en son teknoloji üründür — Türk doktorları tarafından "
+            f"Türk hekimleri için hazırlanmıştır.\n\n"
+            f"{bullets}\n\n"
             f"📅 {SEMINAR_TARIH}\n"
             f"🕐 {SEMINAR_SAAT}\n"
-            f"📍 Online Google Meet · ücretsiz\n"
+            f"📍 Online Google Meet · ücretsiz · soru-cevap var\n"
             f"🩺 Sunum: Dr. Gökhan Mamur\n\n"
-            f"Kayıt: {SEMINAR_LINK}"
+            f"Kontenjan sınırlı — yerinizi şimdi alın:\n"
+            f"{SEMINAR_LINK}"
         )
     return (
         f"{given} Hocam merhaba 🙂\n"
         f"Kaan — Dr. Gökhan Mamur'un ekibinden.\n\n"
-        f"Ücretsiz canlı demo: Notya muayeneyi dinler, notu yazar, "
-        f"aşı / gebelik / kontrol takibini üstlenir. Sonunda soru-cevap var.\n\n"
+        f"{SEMINAR_TARIH} saat {SEMINAR_SAAT} — ücretsiz canlı grup demosu. "
+        f"Burada olmayan hekim, muayene notu ve hasta takibinde geride kalır; "
+        f"katılanlar günde 2 saate kadar kazanır ve hasta hizmetini yeni bir sınıfa taşır.\n\n"
+        f"Notya, Türk doktorları tarafından Türk hekimleri için üretilmiş "
+        f"en son teknoloji asistanıdır.\n\n"
+        f"{bullets}\n\n"
         f"📅 {SEMINAR_TARIH} · {SEMINAR_SAAT}\n"
-        f"📍 Online Google Meet\n\n"
-        f"Kayıt için: {SEMINAR_LINK}"
+        f"📍 Online Google Meet · Dr. Gökhan Mamur\n\n"
+        f"Kaçırmayın — kayıt:\n"
+        f"{SEMINAR_LINK}"
     )
 
 
@@ -253,17 +305,14 @@ def wa_link(telefon: str, message: str) -> str:
 
 
 def forbidden_in_first_message(text: str) -> list[str]:
-    """Hard guard: no FOMO / price / time-saving claims.
+    """Hard guard: no price / one-page-card leftovers.
 
+    Seminar FOMO + günde 2 saat claim are intentional (25 Kasım webinar).
     Seminar registration https (cal.com) is allowed.
     """
     hits: list[str] = []
     low = text.lower()
     for bad in (
-        "1,5-2",
-        "1.5-2",
-        "geri kalmamak",
-        "geride kalan",
         "ücretli",
         "fiyat",
         "tl/",
@@ -692,7 +741,7 @@ def compute_siradaki_adim(row: dict, today: date | None = None) -> str:
     if durum == "wa_yok":
         return "YOK — WA yok"
     if durum == "hazir":
-        return "mesaj_1 gönder (kart teklifi)"
+        return "mesaj_1 gönder (seminar daveti)"
     if durum == "teklif_edildi":
         if "red_sonrasi_yanit" in notlar:
             return "Yanıtla — kendisi yazdı"
@@ -1091,6 +1140,59 @@ def refresh_batch_status(path: Path = OUT_CSV) -> dict:
     }
 
 
+def rewrite_hazir_messages(path: Path = OUT_CSV) -> dict:
+    """Regenerate mesaj_1 + wa_link for durum=hazir only (keep sent rows intact)."""
+    if not path.exists():
+        return {"error": "no batch"}
+    with path.open(encoding="utf-8") as f:
+        rows = list(csv.DictReader(f))
+    rewritten = 0
+    for r in rows:
+        for col in CSV_COLUMNS:
+            r.setdefault(col, "")
+        if (r.get("durum") or "").strip() != "hazir":
+            continue
+        msg = mesaj_1(r.get("ad") or "", r.get("brans") or "", r.get("varyant") or "A")
+        bad = forbidden_in_first_message(msg)
+        if bad:
+            raise RuntimeError(f"forbidden tokens in mesaj_1 ({r.get('ad')}): {bad}")
+        r["mesaj_1"] = msg
+        r["wa_link"] = wa_link(r.get("telefon") or "", msg)
+        note = (r.get("notlar") or "").strip()
+        if "seminar_25kasim" not in note:
+            r["notlar"] = (note + "|seminar_25kasim").strip("|")
+        rewritten += 1
+    refresh_siradaki(rows)
+    write_csv(path, rows, CSV_COLUMNS)
+    write_html(OUT_HTML, rows)
+    write_durum(
+        rows,
+        {
+            "excluded_eski": 0,
+            "hold": 0,
+        },
+    )
+    next_row = next((r for r in rows if r.get("durum") == "hazir"), None)
+    return {
+        "rewritten": rewritten,
+        "rows": len(rows),
+        "by_durum": dict(Counter(r.get("durum") for r in rows)),
+        "next": (
+            {
+                "ad": next_row["ad"],
+                "soyad": next_row["soyad"],
+                "brans": next_row["brans"],
+                "sehir": next_row["sehir"],
+                "telefon": next_row["telefon"],
+                "varyant": next_row["varyant"],
+                "mesaj_1": next_row["mesaj_1"],
+            }
+            if next_row
+            else None
+        ),
+    }
+
+
 def write_durum(batch: list[dict], summary: dict) -> None:
     # Prefer first hazir row as "Sıradaki"; else first row.
     first = next((r for r in batch if r.get("durum") == "hazir"), None) or (
@@ -1142,6 +1244,11 @@ def main() -> int:
         action="store_true",
         help="recompute siradaki_adim on existing batch (no reshuffle)",
     )
+    ap.add_argument(
+        "--rewrite-hazir",
+        action="store_true",
+        help="regenerate mesaj_1/wa_link for hazir rows only (keep teklif/red intact)",
+    )
     ap.add_argument("--init-docs-only", action="store_true")
     ap.add_argument(
         "--mark-red-reply",
@@ -1165,6 +1272,20 @@ def main() -> int:
         stats = refresh_batch_status()
         sync_reddetti_csv()
         print(json.dumps(stats, ensure_ascii=False, indent=2))
+        return 0
+
+    if args.rewrite_hazir:
+        stats = rewrite_hazir_messages()
+        sync_reddetti_csv()
+        print(json.dumps(stats, ensure_ascii=False, indent=2))
+        if stats.get("next"):
+            n = stats["next"]
+            print(
+                f"NEXT: {n['ad']} {n['soyad']} · {n['brans']} · {n['sehir']} · "
+                f"{n['telefon']} · {n['varyant']}"
+            )
+            print("--- mesaj_1 ---")
+            print(n["mesaj_1"])
         return 0
 
     if args.apply_followups:

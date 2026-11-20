@@ -1,7 +1,12 @@
-# TR outreach — canlı grup demosu (25 Kasım)
+# TR outreach durum (canlı) — gift-first (4 adım)
 
-**Akış:** seminer daveti (kart teklifi değil) · kayıt: cal.com
+**Demo slotları (placeholder):** Perşembe 20:00 · Cuma 13:00
+**Batch:** 40 satır · CSV `tr-wa-gift-batch.csv` · HTML `tr-wa-gift-batch.html`
+**Eski pitch hariç:** 0 · **Reddetti:** 1 · **Hold:** 0
 
-**Sıradaki:** Uzm. Dr. Berkant Oman · dermatoloji · Izmir · +905523614988 · B
+**Sıradaki (mesaj_1):** Berkant Oman · dermatoloji · Izmir · +905523614988 · B
+  → mesaj_1 gönder (seminar daveti)
 
-📅 25 Kasım Çarşamba · 20:00 Türkiye saati · Google Meet · Dr. Gökhan Mamur
+**Aksiyon bekleyen:** Ali Demirhan · kart_gonderildi · STEP 2 gönder → /demo-ped (2g sessiz)
+
+Hazır yanıtlar: `docs/growth/whatsapp-hazir-yanitlar.md`
