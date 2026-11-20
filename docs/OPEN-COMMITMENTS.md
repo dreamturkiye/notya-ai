@@ -5217,3 +5217,7 @@ sub-processor facts, under the same one-look page components.
 | 2026-11-03 | nz — Privacy Act 2020 and Health Information Privacy Code 2020 (notifiable privacy breaches to the OPC) | Claude (draft), Kaan (go + lawyer) | OPEN — waits on Kaan |
 | 2026-11-03 | us — HIPAA posture: Business Associate Agreement for covered entities, BAAs with providers, breach notification rule, state laws | Claude (draft), Kaan (go + lawyer) | OPEN — waits on Kaan |
 | 2026-11-03 | uz — Law on Personal Data (localisation of citizens' data) | Claude (draft), Kaan (go + lawyer) | OPEN — waits on Kaan |
+
+## ASI-TAKVIM-TEK-01 — NIP cohort due day for births on the 29th–31st (logged 2026-11-20, owner: Claude to research, Kaan decides)
+
+The country kit's `ayEkle` (`lib/ulke/araclar/yardimci.ts`) deliberately runs a 29th–31st into the next month (31 Oct + 4 months = 3 Mar); Türkiye's vaccine engine clamps to the month end (= 28 Feb). Australia's overdue-immunisation cohort therefore flags such a baby up to 3 days later than a month-end rule would. Not changed: needs the Australian Immunisation Register's own due-date convention as a cited source first. `countries/au/araclar/asiKohortSinir.test.ts` pins the current behaviour.

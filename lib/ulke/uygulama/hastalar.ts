@@ -21,8 +21,11 @@ import { decrypt, encrypt } from '@/lib/security/encryption'
 import { ulkePaketi } from '../ulke'
 import { telefonKaydi, ulkeTelefonu } from '../arayuz/telefon'
 import { ulkeTablosu } from './tablolar'
+import { cinsiyetKanonik } from '@/lib/utils/cinsiyet'
 
 export type Cinsiyet = 'male' | 'female'
+/** CINSIYET-NORMAL-01: a country build reads sex without Turkish forms (lib/utils/cinsiyet.ts). */
+const ULKE = { turkce: false } as const
 
 export type Hasta = {
   id: string
@@ -62,7 +65,8 @@ export function hastaGirdisiHatasi(g: HastaGirdisi): keyof HastaGirdisi | null {
   if (g.dogumTarihi && !dogumTarihiGecerli(g.dogumTarihi)) return 'dogumTarihi'
   // The phone is checked by the country's one rule (lib/telefon/dogrula.ts) — here, so every route that records a patient has it.
   if (g.telefon && !ulkeTelefonu(g.telefon).tamam) return 'telefon'
-  if (g.cinsiyet && g.cinsiyet !== 'male' && g.cinsiyet !== 'female') return 'cinsiyet'
+  // CINSIYET-NORMAL-01: any stored / typed variant (F, Female, the country's own words) resolves; Turkish forms and unknown text are refused.
+  if (g.cinsiyet && !cinsiyetKanonik(g.cinsiyet, ULKE)) return 'cinsiyet'
   if (!hastaDilleri().includes(g.dil)) return 'dil'
   // NOTYA-ULKE-SABLON-01: the identity number is checked only where the pack says its rule is to be applied
   // (`uygulama.kimlikNumarasi.dogrula`); elsewhere it is stored as typed. An empty value is always acceptable.
@@ -78,7 +82,7 @@ export function hastaGirdisiHatasi(g: HastaGirdisi): keyof HastaGirdisi | null {
  */
 export function hastaGirdisiniSuz(g: HastaGirdisi): HastaGirdisi {
   const p = ulkePaketi()
-  return { ...g, telefon: telefonKaydi(g.telefon), otaIsmi: p.uygulama?.adAlanlari.ikinciAd ? g.otaIsmi : '', ulusalKimlik: p.ulusalKimlik ? g.ulusalKimlik : '' }
+  return { ...g, cinsiyet: cinsiyetKanonik(g.cinsiyet, ULKE) ?? '', telefon: telefonKaydi(g.telefon), otaIsmi: p.uygulama?.adAlanlari.ikinciAd ? g.otaIsmi : '', ulusalKimlik: p.ulusalKimlik ? g.ulusalKimlik : '' }
 }
 
 const coz = (ham: unknown): string => {
@@ -102,7 +106,7 @@ function birlestir(h: HastaSatiri, ek: EkSatiri | undefined): Hasta {
     ad: adCoz(h.name_encrypted),
     otaIsmi: coz(ek?.ota_ismi_encrypted),
     dogumTarihi: coz(h.dob_encrypted),
-    cinsiyet: cinsiyet === 'male' || cinsiyet === 'female' ? cinsiyet : '',
+    cinsiyet: cinsiyetKanonik(cinsiyet, ULKE) ?? '',
     telefon: coz(h.phone_encrypted),
     dil: hastaDilleri().includes(String(ek?.dil ?? '')) ? String(ek?.dil) : '',
     ulusalKimlik: coz(ek?.ulusal_kimlik_encrypted),

@@ -138,6 +138,8 @@ async function hastaDosyasi(sb: SupabaseClient, doktorId: string, h: Hasta, bugu
       satir.push(`Note of ${m.baslangic.slice(0, 10)} (${n.onayli ? 'approved' : 'draft'}): S: ${kes(b.s, NOT_BOLUMU_AZAMI)} | O: ${kes(b.o, NOT_BOLUMU_AZAMI)} | A: ${kes(b.a, NOT_BOLUMU_AZAMI)} | P: ${kes(b.p, NOT_BOLUMU_AZAMI)}`)
     }
   } else satir.push('Visits: could not be read this turn.')
+  // ASI-TAKVIM-TEK-01 (grounding): the block names what it does NOT hold, so nothing is claimed from a source that is not here.
+  satir.push('Not in this file block: vaccinations, documents, medicines, allergies. If asked, say they are not shown here; never say they are on file or in the documents.')
   if (randevular) satir.push(`Upcoming appointments: ${randevular.filter((r) => r.durum !== 'iptal').length ? randevular.filter((r) => r.durum !== 'iptal').slice(0, 5).map((r) => `${r.gun} ${r.saat}`).join(', ') : 'none'}`)
   return satir
 }
