@@ -278,8 +278,8 @@ def mesaj_1(ad: str, brans: str, varyant: str) -> str:
             f"🕐 {SEMINAR_SAAT}\n"
             f"📍 Online Google Meet · ücretsiz · soru-cevap var\n"
             f"🩺 Sunum: Dr. Gökhan Mamur\n\n"
-            f"Kontenjan sınırlı — yerinizi şimdi alın:\n"
-            f"{SEMINAR_LINK}"
+            f"Kontenjan sınırlı. Yerinizi ayırmak için sadece \"kayıt\" yazın — "
+            f"linki hemen gönderirim."
         )
     return (
         f"{given} Hocam merhaba 🙂\n"
@@ -292,8 +292,7 @@ def mesaj_1(ad: str, brans: str, varyant: str) -> str:
         f"{bullets}\n\n"
         f"📅 {SEMINAR_TARIH} · {SEMINAR_SAAT}\n"
         f"📍 Online Google Meet · Dr. Gökhan Mamur\n\n"
-        f"Kaçırmayın — kayıt:\n"
-        f"{SEMINAR_LINK}"
+        f"Kaçırmayın — yeriniz için \"kayıt\" yazmanız yeterli, linki hemen iletirim."
     )
 
 
@@ -305,10 +304,11 @@ def wa_link(telefon: str, message: str) -> str:
 
 
 def forbidden_in_first_message(text: str) -> list[str]:
-    """Hard guard: no price / one-page-card leftovers.
+    """Hard guard: no price / one-page leftovers / no URL preview junk.
 
+    First-touch must NOT include http(s) links — WhatsApp pulls cal.com
+    OG image/logo and the preview looks bad. Send link only via /kayit.
     Seminar FOMO + günde 2 saat claim are intentional (25 Kasım webinar).
-    Seminar registration https (cal.com) is allowed.
     """
     hits: list[str] = []
     low = text.lower()
@@ -318,15 +318,12 @@ def forbidden_in_first_message(text: str) -> list[str]:
         "tl/",
         "tek sayfa",
         "teksayfa",
+        "cal.com",
     ):
         if bad in low:
             hits.append(bad)
-    # Allow only the seminar cal.com link (or plain www.notya.io).
     for m in re.finditer(r"https?://\S+", text):
-        url = m.group(0).lower()
-        if "cal.com/han-mamur" in url or url.rstrip("/").endswith("www.notya.io"):
-            continue
-        hits.append("url:" + url[:40])
+        hits.append("url:" + m.group(0).lower()[:40])
     return hits
 
 

@@ -3,6 +3,20 @@
 Kısa mesajlar · tek hedef · fiyat / süre iddiası / baskı yok.
 Amaç: doktor Notya’ya merak edip **30 dk ücretsiz demo** veya **ücretsiz deneme** açsın.
 
+## Seminer (25 Kasım) — kayıt linki
+
+`mesaj_1` içinde **URL yok** (WhatsApp cal.com önizlemesi / logo çirkin görünüyor).
+Doktor “kayıt / link / katılmak istiyorum” yazınca:
+
+### /kayit
+
+```
+Buyurun Hocam, kayıt linki:
+https://cal.com/han-mamur-sugmbo/canli-grup-demosu?utm_source=instagram&utm_content=webinar
+```
+
+WhatsApp’ta gönderirken mümkünse “önizlemeyi kaldır / link preview off” kullanın.
+
 ## Demo saatleri (sen doldur)
 
 ```
