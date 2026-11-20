@@ -210,24 +210,38 @@ def capitalize_given(ad: str) -> str:
     return low[:1].upper() + low[1:]
 
 
+# Live group demo — 25 Kasım 2026 (flyer). Registration link for WA outreach.
+SEMINAR_LINK = (
+    "https://cal.com/han-mamur-sugmbo/canli-grup-demosu"
+    "?utm_source=instagram&utm_content=webinar"
+)
+SEMINAR_TARIH = "25 Kasım Çarşamba"
+SEMINAR_SAAT = "20:00 Türkiye saati"
+
+
 def mesaj_1(ad: str, brans: str, varyant: str) -> str:
-    meta = KART[brans]
+    """First-touch: invite to free live group demo (25 Kasım)."""
     given = capitalize_given(ad)
+    _ = brans  # branş-neutral seminar invite
     if varyant == "A":
         return (
-            f"{given} Hocam merhaba, ben Kaan, Dr. Gökhan Mamur'un ekibinden.\n"
-            f"{meta['okunus']} hekimleri için 4 sayfalık, her satırı kaynaklı ve yazdırılabilir bir "
-            f"{meta['kart']} hazırladık: {meta['icerik']}.\n\n"
-            f"Ücretsiz; isterseniz PDF olarak buradan göndereyim?\n\n"
-            f"www.notya.io"
+            f"{given} Hocam merhaba, ben Kaan — Dr. Gökhan Mamur'un ekibinden.\n\n"
+            f"Notya'yı canlı izleyin: muayeneyi dinleyip notu hazırlayan, "
+            f"hasta takibini yapan asistanı 45 dakikada görün.\n\n"
+            f"📅 {SEMINAR_TARIH}\n"
+            f"🕐 {SEMINAR_SAAT}\n"
+            f"📍 Online Google Meet · ücretsiz\n"
+            f"🩺 Sunum: Dr. Gökhan Mamur\n\n"
+            f"Kayıt: {SEMINAR_LINK}"
         )
     return (
-        f"{given} Hocam merhaba 🙂 Kısa bir sorum var: masanızda {meta['icerik']} "
-        f"için kısa bir başvuru kartı ister misiniz?\n\n"
-        f"Her satırı kaynaklı bir {meta['kart']} hazırladık, ücretsiz. "
-        f"\"Evet\" yazmanız yeterli, PDF'i hemen göndereyim.\n\n"
-        f"— Kaan, Dr. Gökhan Mamur'un ekibinden\n"
-        f"www.notya.io"
+        f"{given} Hocam merhaba 🙂\n"
+        f"Kaan — Dr. Gökhan Mamur'un ekibinden.\n\n"
+        f"Ücretsiz canlı demo: Notya muayeneyi dinler, notu yazar, "
+        f"aşı / gebelik / kontrol takibini üstlenir. Sonunda soru-cevap var.\n\n"
+        f"📅 {SEMINAR_TARIH} · {SEMINAR_SAAT}\n"
+        f"📍 Online Google Meet\n\n"
+        f"Kayıt için: {SEMINAR_LINK}"
     )
 
 
@@ -239,9 +253,9 @@ def wa_link(telefon: str, message: str) -> str:
 
 
 def forbidden_in_first_message(text: str) -> list[str]:
-    """Hard guard: first message must not pitch / pressure / https links.
+    """Hard guard: no FOMO / price / time-saving claims.
 
-    Plain www.notya.io at the end is allowed (brand line).
+    Seminar registration https (cal.com) is allowed.
     """
     hits: list[str] = []
     low = text.lower()
@@ -255,12 +269,15 @@ def forbidden_in_first_message(text: str) -> list[str]:
         "tl/",
         "tek sayfa",
         "teksayfa",
-        "notya.io/demo",
     ):
         if bad in low:
             hits.append(bad)
-    if "http://" in low or "https://" in low:
-        hits.append("url")
+    # Allow only the seminar cal.com link (or plain www.notya.io).
+    for m in re.finditer(r"https?://\S+", text):
+        url = m.group(0).lower()
+        if "cal.com/han-mamur" in url or url.rstrip("/").endswith("www.notya.io"):
+            continue
+        hits.append("url:" + url[:40])
     return hits
 
 
