@@ -9,6 +9,7 @@ import { VAULT_MAX_BYTES } from '@/lib/vault/types'
 import { belgeleriOtomatikIsle } from '@/core/belgeler/otoIstemci'
 import { sinirliHavuz, type BelgeAsama } from '@/core/belgeler/otoBatch'
 import { deIdMetin } from '@/core/belgeler/deidMetin'
+import type { KimlikBulgulari } from '@/core/belgeler/kimlikMaske'
 import { aktifUlke } from '@/lib/ulke/ulke'
 
 type Ek = {
@@ -34,12 +35,15 @@ const btn: React.CSSProperties = {
 export default function MuayeneEkleri({
   hastaId,
   visitId,
+  hastaAdi = null,
   kompakt = false,
   onYuklendi,
   onNotaEklendi,
 }: {
   hastaId: string | null
   visitId: string | null
+  /** For the non-blocking wrong-patient warning (name found on the image vs this patient). Local only, never sent. */
+  hastaAdi?: string | null
   kompakt?: boolean
   onYuklendi?: () => void
   /** Called after the batch wrote blocks to the saved note (e.g. so the revision page can merge them). */
@@ -69,6 +73,10 @@ export default function MuayeneEkleri({
 
   // NOTYA-BELGE-OTO-01: batch-first. N files -> upload (3 at a time) -> mask (outbound copy only) -> evaluate -> ONE note write.
   const [satirlar, setSatirlar] = useState<{ id: string; ad: string; asama: BelgeAsama | 'yuklendi'; not?: string }[]>([])
+  // NOTYA-BELGE-DEID-03 (2026-11-20): this path always masked the outbound copy, but showed nothing. Standard UI now:
+  // one quiet line, chips for what was found, non-blocking wrong-patient warning (same as the Belgeler page and the Ekler step).
+  const [bulgular, setBulgular] = useState<Record<string, { bulgu: KimlikBulgulari; ad: 'eslesir' | 'eslesmiyor' | 'belirsiz' }>>({})
+  const [maskeCalisti, setMaskeCalisti] = useState(false)
   const deMetin = deIdMetin(aktifUlke())
   const ASAMA_ETIKET: Record<string, string> = { bekliyor: 'Sırada', yukleniyor: 'Yükleniyor', yuklendi: 'Yüklendi', maskeleniyor: 'Kimlik taranıyor', degerlendiriliyor: 'Değerlendiriliyor', nota_eklendi: 'Nota eklendi', atlandi: 'Otomatik değerlendirilmedi', hata: 'Hata' }
 
@@ -105,7 +113,11 @@ export default function MuayeneEkleri({
       onYuklendi?.()
       const gorseller = yuklenen.filter((y) => y.dosya.type.startsWith('image/'))
       if (visitId && gorseller.length) {
-        const sonuc = await belgeleriOtomatikIsle(gorseller, { token, onDurum: satirGuncelle })
+        setMaskeCalisti(true); setBulgular({})
+        const sonuc = await belgeleriOtomatikIsle(gorseller, {
+          token, hastaAdi, onDurum: satirGuncelle,
+          onBulgu: (belgeId, bulgu, ad) => setBulgular((b) => ({ ...b, [belgeId]: { bulgu, ad } })),
+        })
         const g = sonuc.genel
         if (g.eklenen > 0) onNotaEklendi?.()
         setMesaj(`${g.eklenen}/${g.toplam} belge muayene notuna eklendi${g.atlanan ? `; ${g.atlanan} belge: ${deMetin.atlandi}` : ''}${g.hatali ? `; ${g.hatali} hata` : ''}.`)
@@ -143,9 +155,23 @@ export default function MuayeneEkleri({
       </div>
       {satirlar.length > 0 && (
         <ul style={{ margin: '6px 0 0', paddingLeft: 18, fontSize: 12, color: '#8b7d70' }}>
-          {satirlar.map((x) => (<li key={x.id}>{x.ad} — {ASAMA_ETIKET[x.asama] || x.asama}{x.not ? ` (${x.not})` : ''}</li>))}
+          {satirlar.map((x) => {
+            const b = bulgular[x.id]
+            const chip: React.CSSProperties = { border: '1px solid rgba(0,0,0,0.15)', borderRadius: 10, padding: '0 6px', marginLeft: 4, fontSize: 11 }
+            return (
+              <li key={x.id}>
+                {x.ad} — {ASAMA_ETIKET[x.asama] || x.asama}{x.not ? ` (${x.not})` : ''}
+                {b?.bulgu.ad && <span style={chip}>{deMetin.chipAd}</span>}
+                {b?.bulgu.muayeneTarihi && <span style={chip}>{deMetin.chipMuayene(b.bulgu.muayeneTarihi)}</span>}
+                {b?.bulgu.dogum && <span style={chip}>{deMetin.chipDogum}</span>}
+                {b?.bulgu.protokol && <span style={chip}>{deMetin.chipProtokol}</span>}
+                {b?.ad === 'eslesmiyor' && <div style={{ color: '#a45b3e', fontWeight: 700 }}>{deMetin.adUyusmuyor}</div>}
+              </li>
+            )
+          })}
         </ul>
       )}
+      {maskeCalisti && <div data-bildirim="kopyada-gizli" style={{ fontSize: 11, color: '#8b7d70', marginTop: 4, opacity: 0.85 }}>{deMetin.kopyadaGizli}</div>}
       {ekler.length > 0 && (
         <ul style={{ margin: '6px 0 0', paddingLeft: 18, fontSize: 12, color: '#8b7d70' }}>
           {ekler.map((e) => (
