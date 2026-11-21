@@ -27,6 +27,7 @@ import { araclarMetni, klinikMetni, marka, metninDili, randevuMetni, roller, rol
 import { hesapSaatDilimi, hesapSaatDilimiAyarla, saatBicimi } from '@/lib/ulke/arayuz/bicim'
 import { ozellikAcik, ulkePaketi } from '@/lib/ulke/ulke'
 import type { DilKodu } from '@/lib/ulke/tipler'
+import { ulkeFetch, ulkeOturumDoldu, ulkeOturumuCanliTut } from '@/lib/ulke/oturumFetch'
 
 /**
  * ADDRESSES of the application's screens: the routes of UYGULAMA_EKRANLARI under the country's path prefix
@@ -85,21 +86,18 @@ export function useUygulama(ekran: UygulamaEkrani): Uygulama {
   }, [])
 
   const api = useCallback<Api>(async (yol, secenek) => {
-    // The session may have been refreshed since the page loaded: always ask for the current token.
-    try {
-      const { data } = (await ulkeIstemciSupabase()?.auth.getSession()) ?? { data: { session: null } }
-      if (data.session?.access_token) jeton.current = data.session.access_token
-    } catch { /* keep the last known token */ }
-    const r = await fetch(ulkeYolu(yol), {
+    // NOTYA-OTURUM-01: the shared request path — the CURRENT token, one refresh + one retry on a 401, and a session
+    // that cannot be renewed goes to /login with a return path and the notice (never a silent sign-out mid-work).
+    const r = await ulkeFetch(ulkeYolu(yol), {
       method: secenek?.method ?? 'GET',
-      headers: { Authorization: `Bearer ${jeton.current}`, ...(secenek?.govde !== undefined ? { 'Content-Type': 'application/json' } : {}) },
+      headers: secenek?.govde !== undefined ? { 'Content-Type': 'application/json' } : undefined,
       body: secenek?.govde !== undefined ? JSON.stringify(secenek.govde) : undefined,
       cache: 'no-store',
     })
     const j = (await r.json().catch(() => ({}))) as Record<string, unknown>
-    if (r.status === 401) { void cikis() }
+    if (r.status === 401) ulkeOturumDoldu()
     return { ok: r.ok, status: r.status, j }
-  }, [cikis])
+  }, [])
 
   useEffect(() => {
     let iptal = false
@@ -107,7 +105,8 @@ export function useUygulama(ekran: UygulamaEkrani): Uygulama {
       const supabase = ulkeIstemciSupabase()
       if (!supabase) { window.location.replace(GIRIS); return }
       const { data } = await supabase.auth.getSession()
-      if (!data.session?.access_token) { window.location.replace(GIRIS); return }
+      if (!data.session?.access_token) { ulkeOturumDoldu(); return }
+      ulkeOturumuCanliTut()
       jeton.current = data.session.access_token
       let r: ApiCevabi
       try { r = await api('/api/ulke/hesap') } catch { return } // offline: stay on "loading"; a reload tries again
