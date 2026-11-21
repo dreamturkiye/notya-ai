@@ -3,6 +3,7 @@
  * Kapalı kurala dokunulmaz. Aynı nota ikinci kez bakılmaz.
  */
 
+import { uslupKuraliGuvenliMi } from './hastaOlguKapisi'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { HafizaKategori } from '@/lib/doktor/hafiza'
 import { deltalardanAdaylar, kuraliBirlesitir, type HafizaKuralSatiri, type KuralDurum } from './kuralTuret'
@@ -91,7 +92,9 @@ export async function uygulanirKurallariYukle(
     .filter((k) => k.durum !== 'kapali' && k.aktif !== false)
     .slice(0, limit)
     .map((k) => ({ slug: k.anahtar, satir: k.deger }))
-  return [...kendi, ...klinik].slice(0, limit)
+    // HASTA-KARISMA-01: rows stored before the guard (ekleme / yeniden / clinical quantities) never load.
+    .filter((k) => uslupKuraliGuvenliMi(k))
+  return [...kendi, ...klinik.filter((k) => uslupKuraliGuvenliMi(k))].slice(0, limit)
 }
 
 export async function kuralMetinleriniCoz(

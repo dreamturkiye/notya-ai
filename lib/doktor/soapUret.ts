@@ -33,6 +33,7 @@ import { KLINIK_ETIKET } from '@/lib/specialties/klinikDikey'
 import { ozelBransKilidi, ozelBransSlug, ozelBransSoapKilidi } from '@/lib/klinik/ozelPrompt'
 import { bransKapsami, pediatrikBaglamMi, veliDiliMi, vitalleriKapsamaGoreSuz } from '@/lib/specialties/kapsam'
 import { vitalOlcumleriniNormallestir } from '@/lib/clinical/olcumCoz'
+import { bolumIskeleti, doktorDuzeyiMetniSuz, iskeletSuz, uslupKuraliGuvenliMi } from '@/lib/doktor/ogrenme/hastaOlguKapisi'
 
 export interface ReceteOnerisi {
   etkenMadde?: string
@@ -219,7 +220,7 @@ export interface SoapGirdi {
   transcript: string
   specialty: string
   klinikBaglam?: string // yaş/cinsiyet/alerji/sürekli ilaç — KİMLİKSİZ
-  stilOrnekleri?: string // doktorun onayladığı önceki notlardan üslup örnekleri
+  stilOrnekleri?: string // HASTA-KARISMA-01: onaylı notların İSKELETİ (yalnız bölüm başlıkları) — içerik yok
   stilProfili?: string // NOTYA-OGRENME-02: düzeltme geçmişinden damıtılmış doktor tercihleri
   doktorAdi?: string // Kaan 2026-09-10: veli özetinde "Doktorunuz" yerine "Dr. Ad Soyad"
   doktorBransi?: string | null // DAH-PROMPTS-LOCK: users.specialty — seans bağlamı branş göndermese de kilit uygulanır
@@ -273,8 +274,14 @@ export function ozelNotSlug(girdi: Pick<SoapGirdi, 'specialty' | 'doktorBransi'>
   return ozelBransSlug(girdi.specialty, girdi.doktorBransi)
 }
 
+/** HASTA-KARISMA-01: only pure phrasing rules reach a prompt — a rule carrying another patient's content is dropped here
+ * even if a loader let it through (hard guard; lib/doktor/ogrenme/hastaOlguKapisi.ts). */
+export function guvenliKurallar(kurallar: { slug: string; satir: string }[] | undefined): { slug: string; satir: string }[] {
+  return (kurallar || []).filter((k) => k.slug && k.satir && uslupKuraliGuvenliMi(k)).slice(0, 12)
+}
+
 export function doktorKurallariBlogu(kurallar: { slug: string; satir: string }[] | undefined): string {
-  const liste = (kurallar || []).filter((k) => k.slug && k.satir).slice(0, 12)
+  const liste = guvenliKurallar(kurallar)
   if (!liste.length) return ''
   const satirlar = liste.map((k) => `- [${k.slug}] ${k.satir}`).join('\n')
   return `\nDOKTORUN KURALLARI (düzeltmelerinden — UYGULA, sorma; klinik güvenlik uyarısını gevşetme):\n${satirlar}\nuygulananKurallar dizisine bu notta gerçekten uyguladığın slug'ları yaz. Listede olmayan slug uydurma.`
@@ -308,10 +315,15 @@ export function soapSistemBloklari(girdi: SoapGirdi): SistemBlogu[] {
     soapKurallari(pediatrikKapsam(girdi.specialty, girdi.doktorBransi, girdi.hastaDogumIso), veliDiliMi({ seansBransi: girdi.specialty, doktorBransi: girdi.doktorBransi, hastaDogumIso: girdi.hastaDogumIso })),
     ozelKilit || tusKilit,
   ]
+  // HASTA-KARISMA-01: doctor-level text reaches every patient's note → never another patient's facts. Style examples
+  // must be skeleton-shaped (labels only), profile / memory lines with a clinical quantity are dropped, rules are
+  // filtered in doktorKurallariBlogu. Patient context (klinikBaglam) is this patient's own and is not touched.
+  const stilIskeleti = iskeletSuz(girdi.stilOrnekleri)
+  const stilProfili = doktorDuzeyiMetniSuz(girdi.stilProfili)
   const degisken = [
     girdi.klinikBaglam ? `\nHASTANIN BİLİNEN KLİNİK BAĞLAMI (kimliksiz — alerji ve sürekli ilaçlara reçete önerirken MUTLAKA dikkat et):\n${girdi.klinikBaglam}` : '',
-    girdi.stilOrnekleri ? `\nDOKTORUN ONAYLADIĞI ÖNCEKİ NOTLARDAN ÜSLUP ÖRNEKLERİ (içeriği değil, ÜSLUBU ve ayrıntı düzeyini taklit et):\n${girdi.stilOrnekleri}` : '',
-    girdi.stilProfili ? `\nDOKTORUN ÖĞRENİLMİŞ TERCİHLERİ (kendi düzeltmelerinden damıtıldı — bu kurallara MUTLAKA uy):\n${girdi.stilProfili}` : '',
+    stilIskeleti ? `\nDOKTORUN ONAYLADIĞI NOTLARIN BÖLÜM İSKELETİ (yalnız başlık düzeni; içerik başka hastalara aittir ve buraya konmadı — bu notun içeriği YALNIZ transkriptten ve bu hastanın bağlamından gelir):\n${stilIskeleti}` : '',
+    stilProfili ? `\nDOKTORUN ÖĞRENİLMİŞ TERCİHLERİ (kendi düzeltmelerinden damıtıldı — yalnız üslup; klinik bilgi taşımaz):\n${stilProfili}` : '',
     doktorKurallariBlogu(girdi.doktorKurallari),
     girdi.doktorAdi ? `\nHEKİM ADI: ${girdi.doktorAdi}. hasta_ozeti ve alarmBulgulari metinlerinde "doktorunuz" / "hekiminiz" yerine bu adı kullan (örn. "${girdi.doktorAdi} antibiyotik başladı", "şu durumlarda ${girdi.doktorAdi} ile temas kurun").` : '',
     ...(girdi.cekListeBlogu ? [girdi.cekListeBlogu] : []),
@@ -479,7 +491,7 @@ export async function soapNotuUret(girdi: SoapGirdi, secenek: SoapSecenek = {}):
   if (secenek.oneriAyri) secenek.oneriAyri(oneriSozu)
 
   const veri: SoapNotu = await govdeyiAl(govdeCagrisi, await govdeSozu)
-  veri.uygulananKurallar = uygulananKurallariSuz(veri.uygulananKurallar, girdi.doktorKurallari)
+  veri.uygulananKurallar = uygulananKurallariSuz(veri.uygulananKurallar, guvenliKurallar(girdi.doktorKurallari))
   for (const k of ONERI_ALANLARI) delete (veri as Record<string, unknown>)[k]
   // BRANS-ALAN-SIZMASI: a non-pediatric note never keeps a pediatric-only vital the model filled (fetal "baş çevresi"
   // dictated during an obstetric USG is not the mother's vital sign).
@@ -495,14 +507,17 @@ export async function soapNotuUret(girdi: SoapGirdi, secenek: SoapSecenek = {}):
   return oneriyiBirlestir(not, await oneriSozu)
 }
 
-/** Doktorun onayladığı son notlardan kısa üslup örnekleri derler (few-shot stil öğrenmesi).
- * 10. seansta Ayşe'nin "keskinleşmesinin" v1 mekanizması: doktor neyi nasıl yazıyorsa onu görür. */
+/** Doktorun onayladığı son notların BÖLÜM İSKELETİ (format öğrenmesi).
+ * HASTA-KARISMA-01 (2026-11-20): bu notlar BAŞKA hastalara aittir. Eskiden S ve P'nin ilk 400 karakteri ham olarak
+ * her yeni nota "üslup örneği" diye giriyordu — 2 aylık bir bebeğin "yalnız anne sütü alıyor, 2–3 saatte bir emiyor"
+ * cümlesi 2 yaşındaki başka bir hastanın promptunda duruyordu. Artık yalnız başlık etiketleri ve plan numaralandırması
+ * ("Şikayet: …", "1. …") geçer; tek bir klinik içerik kelimesi geçmez (soapSistemBloklari ayrıca iskeletSuz uygular). */
 export function stilOrnekleriDerle(notlar: { content_subjektif?: string | null; content_plan?: string | null }[]): string {
   const parcalar: string[] = []
   for (const n of notlar.slice(0, 2)) {
-    const s = String(n.content_subjektif || '').slice(0, 400)
-    const p = String(n.content_plan || '').slice(0, 400)
-    if (s || p) parcalar.push(`--- Onaylı not örneği ---\nS: ${s}\nP: ${p}`)
+    const s = bolumIskeleti(n.content_subjektif)
+    const p = bolumIskeleti(n.content_plan)
+    if (s || p) parcalar.push(['--- Onaylı not iskeleti ---', ...(s ? ['S:', s] : []), ...(p ? ['P:', p] : [])].join('\n'))
   }
   return parcalar.join('\n')
 }
