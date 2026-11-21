@@ -120,7 +120,11 @@ describe('42 roles: the decisions of the audit of 2026-10-10, as applied (./rolL
       'estetik-cerrahi': 'Plastik xirurgiya', 'medikal-estetik': 'Tibbiy kosmetologiya', 'klinik-dermatoloji': 'Dermatovenerologiya',
     }
     assert.deepEqual(UZ_ROL_SATIRLARI.filter((x) => x.karar === 'rename').map((x) => x.anahtar).sort(), Object.keys(beklenen).sort())
-    for (const [k, ad] of Object.entries(beklenen)) { assert.equal(satir(k).resmiAd, ad, k); assert.equal(R.UZ_ROL_ADLARI[k]['uz-Latn'], ad, k); assert.equal(satir(k).gibi, undefined, k) }
+    // the two clinic roles that share a specialty with a doctor role are named as practice types (Kaan, 2026-11-21)
+    const markaz = new Set(['estetik-cerrahi', 'klinik-dermatoloji'])
+    for (const [k, ad] of Object.entries(beklenen)) { assert.equal(satir(k).resmiAd, ad, k); assert.equal(R.UZ_ROL_ADLARI[k]['uz-Latn'], markaz.has(k) ? `${ad} markazi` : ad, k); assert.equal(satir(k).gibi, undefined, k) }
+    // no clinic role carries a doctor role's name
+    for (const k of markaz) assert.notEqual(R.UZ_ROL_ADLARI[k]['uz-Latn'], R.UZ_ROL_ADLARI[k === 'estetik-cerrahi' ? 'plastik-cerrahi' : 'dermatoloji']['uz-Latn'], k)
     // the names of before are gone from the catalogue
     const hepsi = Object.values(R.UZ_ROL_ADLARI).flatMap((a) => Object.values(a)).join(' | ')
     for (const eski of ['Oilaviy tibbiyot', 'ichki kasalliklar', 'Umumiy xirurgiya', 'nur tashxisi', 'Tibbiy reabilitatsiya', 'Estetik xirurgiya', 'estetik tibbiyot', 'Dermatologiya (klinika)', 'Yurak-qon tomir', 'Общая хирургия', 'внутренние болезни', 'Эстетическая', 'Сердечно-сосудистая']) assert.ok(!hepsi.includes(eski), `"${eski}" is still a name`)
@@ -237,17 +241,13 @@ describe('42 roles: the catalogue of names', () => {
     })
   }
 
-  it('no two roles of one group share a name in any form; across the groups exactly two pairs do, and they are the pairs the order has one specialty for', () => {
+  it('no two roles share a name in any form; the clinic roles of the two specialties the order has once are named as practice types', () => {
     // INSIDE A GROUP of the role question a name is unique: a shared name there would hide which template is used.
     for (const g of R.UZ_ROL_GRUPLARI) for (const f of FORMLAR) assert.equal(new Set(g.roller.map((r) => R.UZ_ROL_ADLARI[r][f])).size, g.roller.length, `${g.taraf}/${f}`)
-    // ACROSS THE GROUPS: the clinic-side roles the audit renamed carry the name of the doctor role of the same specialty.
-    for (const f of FORMLAR) {
-      const ayni = ROLLER.filter((a) => ROLLER.some((b) => b.rol !== a.rol && R.UZ_ROL_ADLARI[b.rol][f] === R.UZ_ROL_ADLARI[a.rol][f])).map((r) => r.rol).sort()
-      assert.deepEqual(ayni, ['dermatoloji', 'estetik-cerrahi', 'klinik-dermatoloji', 'plastik-cerrahi'], f)
-      assert.equal(new Set(ROLLER.map((r) => R.UZ_ROL_ADLARI[r.rol][f])).size, 40, f)
-    }
-    for (const [a, b] of [['plastik-cerrahi', 'estetik-cerrahi'], ['dermatoloji', 'klinik-dermatoloji']]) { assert.deepEqual(R.UZ_ROL_ADLARI[a], R.UZ_ROL_ADLARI[b]); assert.notEqual(R.uzRolTarafi(a), R.uzRolTarafi(b)) }
-    assert.match(readFileSync(join(KOK, 'countries/uz/klinik/rolAdlari.ts'), 'utf8'), /TWO PAIRS OF ROLES NOW CARRY THE SAME NAME/)
+    // ACROSS THE GROUPS too (Kaan, 2026-11-21): estetik-cerrahi and klinik-dermatoloji carry the specialty name + "markazi".
+    for (const f of FORMLAR) assert.equal(new Set(ROLLER.map((r) => R.UZ_ROL_ADLARI[r.rol][f])).size, ROLLER.length, f)
+    for (const [a, b] of [['plastik-cerrahi', 'estetik-cerrahi'], ['dermatoloji', 'klinik-dermatoloji']]) { assert.ok(R.UZ_ROL_ADLARI[b]['uz-Latn'].startsWith(R.UZ_ROL_ADLARI[a]['uz-Latn']), b); assert.notEqual(R.uzRolTarafi(a), R.uzRolTarafi(b)) }
+    assert.match(readFileSync(join(KOK, 'countries/uz/klinik/rolAdlari.ts'), 'utf8'), /TWO PAIRS OF ROLES SHARE ONE SPECIALTY/)
     // Uzbek Cyrillic is Uzbek, not the Russian list copied: across the catalogue it uses letters Russian does not have.
     assert.match(ROLLER.map((r) => R.UZ_ROL_ADLARI[r.rol]['uz-Cyrl']).join(' '), /[ўқғҳ]/)
   })
