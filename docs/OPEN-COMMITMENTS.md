@@ -5581,3 +5581,35 @@ Pre-existing failures met (not caused here, identical on baseline): Türkiye —
 - 2026-11-20 · Date mismatch (Claude, needs Kaan's call on which clock wins): Ayşe called 20 Nov "today" and 21 Nov "tomorrow" while the calendar showed 21 Nov as "Bugün" (Ayşe follows the doctor's US local time, the calendar follows Türkiye time).
 - 2026-11-20 · "AI" wording in the doctor UI (waits on Kaan): "Notu AI ile yeniden değerlendir", "Klinik değerlendirme (AI · hastaya görünmez)", footer "© Notya AI". Kaan's marketing rule avoids "AI/yapay zekâ"; decide whether the product copy follows it.
 - 2026-11-20 · Demo account leftovers (Claude): Elif Yılmaz's note still carries the old evaluation block labelled "Röntgen (akciğer grafisi)" from before dfef72f1; Can Demir has an unapproved draft note made from a demo script that reused Elif's lines (not a product leak — see "Hasta karışması olay notu"); re-record Can's demo with a clean script if the learning scene is redone.
+
+## DIKTE-TIBBI-01 — medical dictation accuracy (KBB doctor's feedback, logged 2026-11-21)
+
+Classification: CORE (dictation of every one of the 30 + 10 Özel Branşlar). Shipped on main 2026-11-21: deterministic medical repair of the dictated
+transcript (`lib/dikte`: branş lexicons for all 40 — KBB in depth — + SGK drug names next to a dose + the doctor's own pairs; original kept in
+`sessions.transcript_raw`), Scribe keyterms + scribe_v2 on audio upload (fallback scribe_v1 on 4xx; +20 % provider cost), per-doctor vocabulary learned from
+note / transcript corrections (`doktor_dikte_sozlugu`, migration 201 applied to the Türkiye project), "Dikte sözlüğüm" in Ayşe'nin hafızası. Country builds:
+Scribe keyterms per role (English packs, Uzbekistan in Russian) on every release branch. Founder voice lock untouched (`npm run test:ses` green).
+
+Open items:
+1. **DIKTE-TIBBI-01-KILIT — Ayşe / persona ("Emre") consultation dictation. Waits on Kaan's explicit "go" (founder lock).** The same improvement there needs
+   changes to locked files: (a) `lib/asistan/sesAnahtarKelime.ts` — add the branş's top KBB terms + the doctor's own terms to the per-call ElevenLabs
+   `overrides.asr.keywords` (max 50; set once at call start, no per-turn latency); (b) `components/asistan/AsistanOturumContext.tsx` — run `tibbiDuzelt`
+   (a few ms, lazy chunk) on the browser "Konuş" transcript before it is sent; (c) optionally the same repair on the text entering `lib/asistan/ayseCevapla.ts`.
+   The patient-file strip ("Konuş" in `components/doktor/HastaKonsult.tsx` → `/api/doktor/konsult`) is not hash-locked but was left unchanged as part of the
+   persona consultation path; it can take (b) in the same change once Kaan says go.
+2. **DIKTE-TIBBI-01-MUAYENE-AC — Ayşe offering to create today's muayene** instead of "Dosyada bugün için kayıtlı muayene bulunmadığından muayene notuna ekleme
+   hazırlayamıyorum". Waits on Kaan (locked). Needs: a new confirm-card action (e.g. `muayene_olustur`: today's `sessions` row + draft note, doctor-scoped) in
+   `core/eylemler` (not locked), and offering it from the assistant — tool set `lib/asistan/okumaAraclari.ts`, prompt `lib/asistan/onbellekBloklari.ts`, router
+   `lib/asistan/ayseCevapla.ts` (all locked). By the v2 contract the voice tool set stays read-only, so in a voice turn Ayşe would only offer it and the card
+   is confirmed on screen.
+3. **DIKTE-TIBBI-01-MEDIKAL — A/B `scribe_v2` vs `scribe_v2_medical` on Turkish** (ElevenLabs says same languages; Turkish not named for the medical model).
+   Owner Claude; needs one consented real KBB recording. Switch is env-only (`NOTYA_STT_MODEL`).
+4. **DIKTE-TIBBI-01-CANLI — live muayene dictation runs on the browser's own recogniser (Web Speech API, no provider biasing).** Moving it to Scribe realtime
+   (keyterms ≤ 50) is a cost/latency product decision — waits on Kaan. Separate from Ayşe's voice path. Also noticed (not changed, owner Claude to verify on a
+   device): `app/session/new/page.tsx` `onresult` walks `e.results` from 0, which can repeat earlier final chunks on some browsers.
+5. **DIKTE-TIBBI-01-SOZLUK — branş lexicons other than KBB are seeds** (≈ 25–60 terms each). Owner Claude: grow them from the doctors' corrections; owner Kaan:
+   a clinical read by Dr. Gökhan / branş doctors when convenient.
+6. **DIKTE-TIBBI-01-ULKE-KISISEL — country builds: personal vocabulary + transcript repair.** Owner Claude. Needs the table in the six country databases and a
+   hook in the country note edit flow (`lib/ulke/uygulama/notlar.ts`); English Scribe output needs repair far less than the Turkish browser recogniser, keyterms
+   shipped first.
+7. **DIKTE-TIBBI-01-UZ — Uzbek (Latin) medical keyterms** are a 15-word draft; not read by a native clinician. Waits on Kaan (a native reviewer).

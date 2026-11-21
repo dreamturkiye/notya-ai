@@ -122,7 +122,23 @@ export function onaySonrasiOgren(
   arkaPlandaSurdur((async () => {
     try { await duzeltmedenOgren(sb, doctorId, noteId, loglar, secenek) } catch (e) { console.error('[ogrenme] kural', e) }
     try { await stilProfiliArkaPlan(sb, doctorId, loglar.length) } catch (e) { console.error('[ogrenme] damitma', e) }
+    try { await dikteTerimleriniOgren(sb, doctorId, loglar) } catch (e) { console.error('[ogrenme] dikte', e) }
   })())
+}
+
+/** Note fields whose edits can show a misheard term (free text written from the dictation). */
+const DIKTE_ALANLARI = new Set(['subjektif', 'objektif', 'degerlendirme', 'plan', 'basvuruYakinmasi', 'basvuru_yakinmasi', 'content_subjektif', 'content_objektif', 'content_degerlendirme', 'content_plan', 'content_anamnez', 'content_fizik_muayene', 'content_tani', 'content_tedavi'])
+
+/**
+ * DIKTE-TIBBI-01 (c): a misheard term the doctor corrected in the note ("Wirthon ofisleri" → "Wharton orifisleri")
+ * becomes a personal dictation pair, used from the next dictation on. Terms only (lib/dikte/ogren.ts rules); never
+ * shared across doctors. After the approval response, like the rest of the learning.
+ */
+export async function dikteTerimleriniOgren(sb: SupabaseClient, doctorId: string, loglar: { alan: string; onceki: string; sonraki: string }[]): Promise<number> {
+  const parcalar = loglar.filter((l) => DIKTE_ALANLARI.has(l.alan) && typeof l.onceki === 'string' && typeof l.sonraki === 'string').map((l) => ({ once: l.onceki, sonra: l.sonraki }))
+  if (!parcalar.length) return 0
+  const [{ hekimBransi }, { duzeltmedenDikteOgren }] = await Promise.all([import('@/lib/doktor/hekimAdi'), import('@/lib/dikte/sunucu')])
+  return duzeltmedenDikteOgren(sb, doctorId, await hekimBransi(sb, doctorId), parcalar, 'not_duzeltme')
 }
 
 /** Düzeltmesiz onay: ivme için sıfır düzeltmeli not. İstek yolunda beklenmez (waitUntil). */

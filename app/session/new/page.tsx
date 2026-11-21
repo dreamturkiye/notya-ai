@@ -185,6 +185,13 @@ function NewSessionInner() {
   const timerRef = useRef<ReturnType<typeof setInterval>|null>(null)
   const recognitionRef = useRef<SpeechRecognitionInstance|null>(null)
   const transcriptRef = useRef("")  // Keep ref in sync for speech callbacks
+  // DIKTE-TIBBI-01 (KBB feedback, 2026-11-21): each dictated chunk is repaired in the browser (branş lexicon + the
+  // doctor's own terms, a few ms, lazy-loaded on the first 🎤). `dikteHamRef` keeps what the recogniser heard
+  // (stored as sessions.transcript_raw); `dikteMetniRef` what the dictation wrote, so the doctor's own fixes in the
+  // text box teach his personal vocabulary. The server repairs the whole transcript again at "Seansı Bitir".
+  const duzelticiRef = useRef<((metin: string) => string) | null>(null)
+  const dikteHamRef = useRef("")
+  const dikteMetniRef = useRef("")
   /** NOTYA-BETA-0925 (d): sunucunun açıkça başarısız dediği seans — tekrar denemede yeniden kullanılır. */
   const basarisizSeansRef = useRef<{ id: string; anahtar: string } | null>(null)
   // MUAYENE-EKLERI-01: kill switch (sunucu NOTYA_MUAYENE_EKLERI, varsayılan açık) istemciye yansıtılır. Durum alınamazsa
@@ -336,6 +343,23 @@ function NewSessionInner() {
   // Sayfadan çıkınca mikrofonu bırak.
   useEffect(() => () => { istenenKayitRef.current = false; try { recognitionRef.current?.stop() } catch { /* yok */ } }, [])
 
+  function dikteDuzelticiHazirla() {
+    if (duzelticiRef.current) return
+    void (async () => {
+      try {
+        const [{ tibbiDuzelt }, { dikteSozluguYukle }] = await Promise.all([import("@/lib/dikte/duzelt"), import("@/lib/dikte/sozluk")])
+        const sozluk = await dikteSozluguYukle(specialty)
+        let kisisel: { duyulan: string; dogru: string }[] = []
+        try {
+          const r = await doktorFetch("/api/doktor/dikte-sozlugu", { cache: "no-store" })
+          const j = await r.json()
+          if (Array.isArray(j?.ciftler)) kisisel = j.ciftler.map((c: { duyulan: string; dogru: string }) => ({ duyulan: String(c.duyulan), dogru: String(c.dogru) }))
+        } catch { /* kişisel sözlük yoksa dal sözlüğü yine çalışır */ }
+        duzelticiRef.current = (metin: string) => tibbiDuzelt(metin, { sozluk, kisisel }).metin
+      } catch { /* düzeltici yüklenemezse dikte eskisi gibi çalışır; sunucu yine düzeltir */ }
+    })()
+  }
+
   function toggleVoice() {
     if (isRecordingVoice) {
       istenenKayitRef.current = false
@@ -352,6 +376,7 @@ function NewSessionInner() {
     r.continuous = true
     r.interimResults = false
     r.lang = "tr-TR"
+    dikteDuzelticiHazirla()
 
     r.onresult = (e: SpeechRecognitionEvent) => {
       let newText = ""
@@ -359,6 +384,13 @@ function NewSessionInner() {
         if (e.results[i].isFinal) newText += e.results[i][0].transcript + " "
       }
       if (newText.trim()) {
+        // DIKTE-TIBBI-01: repaired chunk on screen; the recogniser's own words kept aside
+        const ham = newText.trim()
+        let duzgun = ham
+        try { duzgun = duzelticiRef.current ? duzelticiRef.current(ham) : ham } catch { duzgun = ham }
+        dikteHamRef.current = (dikteHamRef.current + " " + ham).trim()
+        dikteMetniRef.current = (dikteMetniRef.current + " " + duzgun).trim()
+        newText = duzgun
         // Append to existing transcript
         const updated = (transcriptRef.current + " " + newText).trim()
         transcriptRef.current = updated
@@ -474,6 +506,7 @@ function NewSessionInner() {
         body: JSON.stringify({
           segments: [{ speaker: "doktor", text: transcript, start_ms: 0, end_ms: seconds*1000, confidence: 0.9 }],
           transcript, duration_seconds: seconds, profession: "doktor",
+          ...(dikteHamRef.current ? { dikteHam: dikteHamRef.current, dikteMetni: dikteMetniRef.current } : {}),
           context: { specialty, session_type: sessionType },
           cekListe: cekIsaret,
           ...(ekPayload && ekPayload.ekler.length ? { ekler: ekPayload.ekler, asiOnay: ekPayload.asiOnay } : {}),
@@ -663,7 +696,7 @@ function NewSessionInner() {
               style={S({width:"100%",minHeight:"180px",padding:"12px",border:"1.5px solid #e5ddd0",borderRadius:"10px",fontSize:"16px",fontFamily:CHROME_FONT.sans,resize:"vertical",marginBottom:"16px",color:"#3b2e24",lineHeight:"1.6",outline:"none",boxSizing:"border-box"})}
             />
             <SeansEylemSatiri sinif="notya-seans-aksiyon" vazgecMetni="İptal"
-              onVazgec={()=>{istenenKayitRef.current=false;stopTimer();recognitionRef.current?.stop();setIsRecordingVoice(false);setStep("setup");setSeconds(0);setTranscript("");setKayitHedefDk(KAYIT_VARSAYILAN_DK);uyariCalindiRef.current=false;setSureUyari(false);setSureDoldu(false);setKayitDurdu(false)}}
+              onVazgec={()=>{dikteHamRef.current="";dikteMetniRef.current="";istenenKayitRef.current=false;stopTimer();recognitionRef.current?.stop();setIsRecordingVoice(false);setStep("setup");setSeconds(0);setTranscript("");setKayitHedefDk(KAYIT_VARSAYILAN_DK);uyariCalindiRef.current=false;setSureUyari(false);setSureDoldu(false);setKayitDurdu(false)}}
               bitirMetni="⏹ Seansı Bitir → Not Oluştur" onBitir={() => void seansiBitir()} bitirPasif={!transcript.trim()} />
             <div style={S({textAlign:"center",marginTop:"10px",fontSize:"11px",color:"#8b7d70"})}>
               Notları yazdıktan sonra "Seansı Bitir" butonuna basın

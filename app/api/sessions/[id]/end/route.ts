@@ -92,9 +92,27 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     } catch (e) { console.error(`[sessions/end] takılı seans taraması: ${soapHataLogMetni(e)}`) }
 
     // Build transcript from segments or use raw text
-    const transcript = segments
+    let transcript: string = segments
       ?.map((s: { speaker: string; text: string }) => `[${s.speaker?.toUpperCase() || "DOKTOR"}]: ${s.text}`)
       .join("\n") || body.transcript || "Transkript mevcut değil"
+
+    // DIKTE-TIBBI-01 (KBB feedback, 2026-11-21): deterministic medical repair of the dictated transcript before the
+    // note (branş lexicon + SGK drug names + the doctor's own terms; no model call, a few ms). The recogniser's own
+    // words go to sessions.transcript_raw (the browser sends what it heard before its live repair as `dikteHam`).
+    // The doctor's own edits of the dictated text (dikteMetni → transcript) teach his personal vocabulary, after the
+    // response. Accounting sessions are not medical dictation.
+    let transcriptRaw: string | null = null
+    if (!(body.profession === 'muhasebeci' || context?.profession === 'muhasebeci')) {
+      const dikteBransi = context?.specialty || null
+      const { transkriptiDuzelt, duzeltmedenDikteOgren } = await import('@/lib/dikte/sunucu')
+      const duzeltme = await transkriptiDuzelt(getSupabase(), user.id, dikteBransi, transcript)
+      transcriptRaw = typeof body.dikteHam === 'string' && body.dikteHam.trim() ? String(body.dikteHam).slice(0, 200000) : transcript
+      transcript = duzeltme.metin
+      if (typeof body.dikteMetni === 'string' && body.dikteMetni.trim() && typeof body.transcript === 'string' && body.transcript !== body.dikteMetni) {
+        const { arkaPlandaSurdur } = await import('@/lib/doktor/ogrenme/arkaPlandaOgren')
+        arkaPlandaSurdur(duzeltmedenDikteOgren(getSupabase(), user.id, dikteBransi, [{ once: String(body.dikteMetni), sonra: String(body.transcript) }], 'transkript_duzeltme').catch(() => 0))
+      }
+    }
 
     // Update session as processing
     await getSupabase().from("sessions").update({
@@ -103,6 +121,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       error_message: null,
       ended_at: new Date().toISOString(),
       transcript_cleaned: transcript,
+      ...(transcriptRaw !== null ? { transcript_raw: transcriptRaw } : {}),
       duration_seconds: body.duration_seconds || 0,
       ...(gecmisTarihIso ? { started_at: gecmisTarihIso } : {}),
       ...(protokolAtamasi || {}),

@@ -9,6 +9,7 @@ import { haftalikSatiri, ivmeYonMetni, type HaftalikOzet, type IvmeSonucu } from
 import type { KuralOnizlemesi } from '@/lib/doktor/ogrenme/onizleme'
 import type { HafizaKayit } from '@/lib/doktor/hafiza'
 import { doktorFetch, oturumSuresiDoldu } from '@/lib/doktor/oturumFetch'
+import DikteSozluguBolumu from '@/components/doktor/DikteSozluguBolumu'
 
 // AYSE-OGRENME-V3: bu sayfanın tüm kelimeleri ülke başına tek metin nesnesinden gelir (TR varsayılan, görünüm aynı).
 const T = ogrenmeMetni()
@@ -194,6 +195,9 @@ export default function AyseHafizasiPage() {
           })}
         </section>
       ))}
+
+      {/* DIKTE-TIBBI-01: the doctor's personal dictation terms (heard → correct), deletable */}
+      <DikteSozluguBolumu />
 
       {klinik?.uye && (
         <section style={{ background: '#fff', border: `1px solid ${CHROME_RENK.border}`, borderRadius: 14, padding: '14px 16px', marginBottom: 22 }}>

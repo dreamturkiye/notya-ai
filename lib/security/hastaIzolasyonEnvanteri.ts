@@ -291,6 +291,8 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   'app/api/doktor/erecete-ayar/route.ts': I('users row of doktorId only'),
   'app/api/doktor/recete-baslik/route.ts': I('GET/POST users row of doktorId only — letterhead, no patient id'),
   'app/api/doktor/hafiza/route.ts': I('doktor_hafiza scoped by doctor_id; no patient data'),
+  // DIKTE-TIBBI-01 — personal dictation vocabulary (terms only; no patient id taken or stored)
+  'app/api/doktor/dikte-sozlugu/route.ts': I('doktor_dikte_sozlugu scoped by doctor_id (delete by id AND doctor_id); takes no patient id; terms only, no digits'),
   'app/api/doktor/hafiza/ivme/route.ts': I('doktor_ogrenme_metrik scoped by doktorId; counts only, no patient id or note text'),
   'app/api/doktor/hafiza/onizleme/route.ts': I('kanit note ids read only from the doctor\'s OWN doktor_hafiza row; not_duzenlemeleri filtered by doctor_id AND note_id; takes no note/patient id from the client'),
   'app/api/doktor/hafiza/klinik-uslup/route.ts': I('consent row + style-rule pool scoped by doktorId / own clinic; pool returns counts only, never author ids; no patient data'),

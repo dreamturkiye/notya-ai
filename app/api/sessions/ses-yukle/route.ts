@@ -65,21 +65,50 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Ses dosyası okunamadı. Yüklemeyi tekrar deneyin.' }, { status: 400 })
   }
 
+  const brans = specialty || 'genel'
+
+  // DIKTE-TIBBI-01 (KBB feedback, 2026-11-21): the doctor's personal terms + the branş lexicon, loaded once — they
+  // bias Scribe (keyterms) and repair the transcript afterwards. Fails soft: empty lists, the upload goes on. Loaded
+  // inside the try below so the raw audio is deleted in `finally` whatever happens here (KVKK).
+  let kisisel: { duyulan: string; dogru: string }[] = []
+  let keyterms: string[] = []
+
   // 2) ElevenLabs Scribe ile transkript (Türkçe)
   let transcript = ''
   try {
-    const fd = new FormData()
-    fd.append('model_id', 'scribe_v1')
-    fd.append('language_code', 'tr')
-    fd.append('file', sesBlob, 'muayene-kaydi')
-    const r = await fetch('https://api.elevenlabs.io/v1/speech-to-text', {
-      method: 'POST',
-      headers: { 'xi-api-key': process.env.ELEVENLABS_API_KEY! },
-      body: fd,
-      // SAGLAMLIK-2026-10: asılı kalan STT, maxDuration (300 sn) boyunca fonksiyonu kilitlemesin;
-      // aşım mevcut ağ-hatası yoluna düşer (502 + ham ses finally'de yine silinir).
-      signal: AbortSignal.timeout(240_000),
-    })
+    try {
+      const { kisiselSozlukYukle } = await import('@/lib/dikte/sunucu')
+      kisisel = await kisiselSozlukYukle(supabase, doktorId)
+      if (process.env.NOTYA_STT_ANAHTAR_TERIM !== '0') {
+        const [{ dikteSozluguYukle }, { anahtarTerimler }] = await Promise.all([import('@/lib/dikte/sozluk'), import('@/lib/dikte/anahtarTerim')])
+        keyterms = anahtarTerimler({ sozluk: await dikteSozluguYukle(brans), kisisel })
+      }
+    } catch { keyterms = [] }
+    // DIKTE-TIBBI-01: keyterm biasing needs Scribe v2 (scribe_v2 / scribe_v2_medical / scribe_v3 — API reference,
+    // 2026-11-21; +20 % on this transcription). NOTYA_STT_MODEL switches the model without a deploy. If the provider
+    // refuses the request (4xx), ONE retry with the previous settings (scribe_v1, no keyterms) keeps uploads working.
+    const scribe = (model: string, terimler: string[], ms: number) => {
+      const fd = new FormData()
+      fd.append('model_id', model)
+      fd.append('language_code', 'tr')
+      for (const t of terimler) fd.append('keyterms', t)
+      fd.append('file', sesBlob, 'muayene-kaydi')
+      return fetch('https://api.elevenlabs.io/v1/speech-to-text', {
+        method: 'POST',
+        headers: { 'xi-api-key': process.env.ELEVENLABS_API_KEY! },
+        body: fd,
+        // SAGLAMLIK-2026-10: asılı kalan STT, maxDuration (300 sn) boyunca fonksiyonu kilitlemesin;
+        // aşım mevcut ağ-hatası yoluna düşer (502 + ham ses finally'de yine silinir).
+        signal: AbortSignal.timeout(ms),
+      })
+    }
+    const baslangic = Date.now()
+    const model = (process.env.NOTYA_STT_MODEL || 'scribe_v2').trim()
+    let r = await scribe(model, keyterms, 180_000)
+    if (!r.ok && r.status >= 400 && r.status < 500 && r.status !== 401 && r.status !== 429) {
+      console.error(`[ses-yukle] elevenlabs ${r.status} (${model}, ${keyterms.length} keyterms) — retrying with scribe_v1`)
+      r = await scribe('scribe_v1', [], Math.max(20_000, 230_000 - (Date.now() - baslangic)))
+    }
     const veri = await r.json()
     if (!r.ok) {
       console.error('[ses-yukle] elevenlabs', JSON.stringify(veri).slice(0, 300))
@@ -94,7 +123,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Kayıtta yeterli konuşma bulunamadı.' }, { status: 400 })
   }
 
-  const brans = specialty || 'genel'
+  // DIKTE-TIBBI-01 (b): deterministic medical repair before the note (no model call, a few ms). The recogniser's own
+  // text is kept in sessions.transcript_raw.
+  const { transkriptiDuzelt } = await import('@/lib/dikte/sunucu')
+  const duzeltme = await transkriptiDuzelt(supabase, doktorId, brans, transcript, kisisel)
+  const hamTranskript = transcript
+  transcript = duzeltme.metin
 
   // NOTYA-PROTOKOL-NO-01: atomically reserved BEFORE the insert, then written into the SAME
   // insert() payload — same pattern as app/api/sessions/start/route.ts and
@@ -117,6 +151,7 @@ export async function POST(req: NextRequest) {
       session_type: sessionType,
       status: 'completed',
       transcript_cleaned: transcript,
+      transcript_raw: hamTranskript,
       protokol_no: protokol.protokolNo,
       protokol_scope_id: protokol.scopeId,
       ...(gecmisTarihIso ? { started_at: gecmisTarihIso } : {}),
