@@ -283,6 +283,7 @@ function DoktorMesajlarIcerik() {
       {kaydetEk ? (
         <div
           role="dialog"
+          aria-modal="true"
           aria-label="Belgeler'e kaydet"
           style={{
             position: 'fixed',

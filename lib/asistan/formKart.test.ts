@@ -166,6 +166,16 @@ describe('form → hasta kartı aktarımı (gönderim anında, yalnız boş alan
     assert.equal(kart(id).kanGrubu, '0 Rh+')
   })
 
+  it('FORM-DOSYA-AKTAR-01: adres, doğum yeri, acil kişi, sigorta boş karta yazılır; dolu olan ezilmez', async () => {
+    const s = sahneKur()
+    const id = hastaEkle(s.doktor.id, 'QA Hasta Aktar', { notlar: { adres: 'Doktorun yazdığı adres' } })
+    const yazilan = await aktar(ortam.db.istemci() as never, s.doktor.id, id, { adres: 'Formdaki adres', dogumYeri: 'Konya', acilKisiAdi: 'QA Acil', acilKisiTelefon: '05320000000', sigortaTuru: 'SGK' })
+    assert.deepEqual([...yazilan].sort(), ['acilKisiAdi', 'acilKisiTelefon', 'dogumYeri', 'sigorta'])
+    assert.equal(kart(id).adres, 'Doktorun yazdığı adres')
+    assert.equal(kart(id).dogumYeri, 'Konya')
+    assert.equal(kart(id).sigorta, 'SGK')
+  })
+
   it('formun doktoru hastanın doktoru değilse karta yazılmaz', async () => {
     const s = sahneKur()
     const id = hastaEkle(s.doktor.id, 'QA Hasta Aktar')

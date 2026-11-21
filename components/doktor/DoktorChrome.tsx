@@ -15,8 +15,9 @@
  * allowed to quietly disappear under a reskin.
  *
  * Everything else — doctor photo, name, specialty, clock, weather — is real. Weather: browser
- * geolocation + Open-Meteo (free, keyless) — no fabricated numbers; if the doctor declines the
- * location prompt or the fetch fails, the weather chip simply doesn't render.
+ * geolocation + Open-Meteo (free, keyless) — no fabricated numbers. HAVA-KONUM-01: location is asked
+ * only on a tap of the weather chip and remembered on the device; if the doctor declines, it is never
+ * asked again and the chip is not offered.
  */
 
 import { TELEFON_DOKUNMA_CSS } from '@/lib/doktor/telefonStil';
@@ -37,6 +38,7 @@ import KabukGorunumu, { type KabukOge } from './KabukGorunumu';
 import { SAAT_DILIMI_CEREZ, tarayiciSaatDilimi } from '@/lib/doktor/selam';
 import { izinVarMi, ROL_KISA_ETIKETI_TR, ROL_ONBURO_ETIKETI_TR, type PratikRol, type Yetki } from '@/lib/doktor/personelYetki';
 import { doktorFetch, oturumSuresiDoldu } from '@/lib/doktor/oturumFetch'
+import { useHavaKonum } from '@/lib/doktor/havaKonum'
 
 /**
  * A page rendered under a chrome-owning layout (e.g. hedef-boy's "aile" / family-facing embed
@@ -163,7 +165,6 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
   const [brans, setBrans] = useState('');
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [saat, setSaat] = useState('');
-  const [hava, setHava] = useState<{ sicaklik: number; kod: number } | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [gizli, setGizli] = useState(false);
   const [kompakt, setKompakt] = useState(false);
@@ -197,27 +198,10 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
     return () => clearInterval(t);
   }, []);
 
-  // Kaan (2026-09-24): iPhone-style weather chip under the clock. Real geolocation + Open-Meteo
-  // (free, no API key). Silent no-render on denial/failure -- never a fabricated number.
-  useEffect(() => {
-    if (typeof navigator === 'undefined' || !navigator.geolocation) return;
-    let iptal = false;
-    navigator.geolocation.getCurrentPosition(
-      (konum) => {
-        const { latitude, longitude } = konum.coords;
-        fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code`)
-          .then((r) => (r.ok ? r.json() : null))
-          .then((d) => {
-            if (iptal || !d?.current) return;
-            setHava({ sicaklik: Math.round(d.current.temperature_2m), kod: Number(d.current.weather_code) });
-          })
-          .catch(() => {});
-      },
-      () => {}, // izin reddedildi / konum alınamadı -- sessizce yok say
-      { timeout: 8000, maximumAge: 30 * 60 * 1000 },
-    );
-    return () => { iptal = true; };
-  }, []);
+  // Kaan (2026-09-24): iPhone-style weather chip under the clock (Open-Meteo, never a fabricated number).
+  // HAVA-KONUM-01 (2026-11-21): the browser is asked for a location only when the doctor taps the chip, once; the
+  // decision and the rounded place are remembered on the device (lib/doktor/havaKonum.ts) — no prompt on every page.
+  const { hava, istenebilir: havaIstenebilir, iste: havaIste } = useHavaKonum();
 
   useEffect(() => {
     const onbellek = hekimProfilOturumOku()
@@ -389,6 +373,7 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
         avatarEtiketi: 'Profil fotoğrafını düzenle',
         saat,
         hava,
+        havaIste: havaIstenebilir ? { etiket: 'Hava durumu', onIste: havaIste } : null,
         cikis: 'Çıkış Yap',
         onHesap: () => handleNav('/dashboard/doktor/hesap'),
         onCikis: handleCikis,

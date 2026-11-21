@@ -12,6 +12,8 @@ import { encrypt, decrypt } from '@/lib/security/encryption'
 import { parseBoyGirdi } from '@/lib/clinical/hedefBoy'
 import { formAlerjiBeyani } from '@/lib/doktor/hastaKayitAlanlari'
 import { cinsiyetSakla } from '@/lib/utils/cinsiyet'
+import { formdanKartDegerleri } from '@/lib/intake/formdanDosyaya'
+import { EK_DEMOGRAFI_NOT_ANAHTARI, type EkDemografiAlani } from '@/lib/doktor/hastaOzetKayit'
 
 function coz(v: string | null | undefined): string { if (!v) return ''; try { return decrypt(v) } catch { return '' } }
 function metin(v: unknown): string { return Array.isArray(v) ? v.filter(Boolean).join(', ') : String(v ?? '').trim() }
@@ -61,6 +63,13 @@ export async function intakeYanitlariniHastayaAktar(sb: SupabaseClient, doktorId
   yaz('sehir', metin(y.il))
   yaz('anneAdi', metin(y.anneAdi))
   yaz('babaAdi', metin(y.babaAdi))
+  // FORM-DOSYA-AKTAR-01 (2026-11-21): address, birth place, guardian, emergency contact and insurance now have a place on
+  // the card — filled the same way (empty card fields only). Different values are offered to the doctor on the card.
+  const ek = formdanKartDegerleri(y)
+  for (const [alan, anahtar] of Object.entries(EK_DEMOGRAFI_NOT_ANAHTARI) as [EkDemografiAlani, string][]) {
+    const v = ek[alan]
+    if (typeof v === 'string') yaz(anahtar, v.slice(0, 500))
+  }
   const anneBoy = parseBoyGirdi(metin(y.anneBoyPed) || metin(y.anneBoy))
   const babaBoy = parseBoyGirdi(metin(y.babaBoyPed) || metin(y.babaBoy))
   if (bos('anneBoyCm') && anneBoy.ok) { notlar.anneBoyCm = anneBoy.cm; doldurulan.push('anneBoyCm') }

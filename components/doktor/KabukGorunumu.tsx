@@ -15,7 +15,8 @@
  * and does nothing.
  */
 
-import React from 'react';
+import React, { useEffect } from 'react';
+import { sayiAlaniOdak } from '@/lib/doktor/sayiGirdi';
 import { CHROME_RENK, CHROME_FONT } from '@/lib/doktor/chromeRenk';
 
 export interface KabukOge {
@@ -43,6 +44,11 @@ export interface KabukHesap {
   avatarEtiketi: string;
   saat: string;
   hava: { sicaklik: number; kod: number } | null;
+  /**
+   * HAVA-KONUM-01: with no reading on screen, the chip offers itself and asks the browser for a location ONLY on this tap
+   * (lib/doktor/havaKonum.ts). null / absent = nothing is offered (declined before, or no geolocation).
+   */
+  havaIste?: { etiket: string; onIste: () => void } | null;
   cikis: string;
   onHesap: () => void;
   onCikis: () => void;
@@ -205,6 +211,12 @@ function SatirOge({ oge, vurgu, onGit }: { oge: KabukOge; vurgu?: boolean; onGit
 }
 
 export default function KabukGorunumu(p: KabukProps) {
+  // SURE-SECIM-01: a number field with a prefilled value selects it on focus, so typing replaces it ("20" + "30" was
+  // "2030"). One listener for every number field the frame hosts — Türkiye and every country build.
+  useEffect(() => {
+    document.addEventListener('focusin', sayiAlaniOdak);
+    return () => document.removeEventListener('focusin', sayiAlaniOdak);
+  }, []);
   const { hesap } = p;
   const satir = (oge: KabukOge, vurgu = false) => <SatirOge key={oge.id} oge={oge} vurgu={vurgu} onGit={p.onGit} />;
 
@@ -243,6 +255,11 @@ export default function KabukGorunumu(p: KabukProps) {
     </>
   );
 
+  // ALT-SAYFA-01 (beta, iPhone 2026-11-21) — two rules in the sheet below:
+  //  · .notya-icerik has NO z-index: a stacking context there painted every page modal (z 200…) UNDER the phone tab bar
+  //    (z 38), so "Randevuyu kaydet" could not be tapped. The content still paints above the plant (earlier in the tree).
+  //  · while any aria-modal dialog is open (components/doktor/AltSayfa.tsx and every page modal), the tab bar and the
+  //    floating bars step aside. The attribute selector is unquoted: React escapes quotes inside <style> text.
   return (
     <>
     <style>{`
@@ -257,7 +274,7 @@ export default function KabukGorunumu(p: KabukProps) {
         margin: 0 auto;
         padding: calc(22px + env(safe-area-inset-top, 0px)) 0 48px;
         position: relative;
-        z-index: 1;
+        z-index: auto;
         box-sizing: border-box;
         min-height: 100dvh;
         display: flex;
@@ -342,6 +359,8 @@ export default function KabukGorunumu(p: KabukProps) {
           margin: 12px 8px calc(12px + env(safe-area-inset-bottom, 0px)) !important;
         }
       }
+      body:has([aria-modal=true]) .notya-alt-nav,
+      body:has([aria-modal=true]) .notya-alt-yuzer { display: none !important; }
       @media print {
         .notya-alt-nav, .notya-telefon-menu, .notya-telefon-perde { display: none !important; }
       }
@@ -421,12 +440,22 @@ export default function KabukGorunumu(p: KabukProps) {
               <div style={S({ width: 1, height: 40, background: 'rgba(58,44,34,0.16)' })} />
               <div>
                 <div style={S({ fontVariantNumeric: 'tabular-nums', fontSize: 22, fontWeight: 600, color: CHROME_RENK.ink, lineHeight: 1 })}>{hesap.saat}</div>
-                {hesap.hava && (
+                {hesap.hava ? (
                   <div style={S({ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4, fontSize: 22, fontWeight: 600, color: '#8a7b6c', lineHeight: 1 })}>
                     <span style={S({ fontSize: 22 })}>{havaIkonu(hesap.hava.kod)}</span>
                     <span>{hesap.hava.sicaklik}°</span>
                   </div>
-                )}
+                ) : hesap.havaIste ? (
+                  <button
+                    type="button"
+                    className="notya-hava-iste"
+                    onClick={hesap.havaIste.onIste}
+                    style={S({ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4, padding: '3px 9px', borderRadius: 999, border: '1px solid rgba(58,44,34,0.18)', background: 'transparent', color: '#8a7b6c', fontSize: 12.5, fontWeight: 650, cursor: 'pointer', fontFamily: 'inherit', lineHeight: 1.2 })}
+                  >
+                    <span aria-hidden="true" style={S({ fontSize: 15 })}>🌤️</span>
+                    <span>{hesap.havaIste.etiket}</span>
+                  </button>
+                ) : null}
               </div>
               <div style={S({ width: 1, height: 40, background: 'rgba(58,44,34,0.16)' })} />
               <button

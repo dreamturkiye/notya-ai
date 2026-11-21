@@ -9,6 +9,8 @@ import {
 } from '@/lib/doktor/hastaOzetKayit'
 import { klinikOzetleriNotesOku } from '@/lib/doktor/hastaKlinikOzet'
 import { izinVarMi } from '@/lib/doktor/personelYetki'
+import { FORM_AKTARIM_ILETISIM, formdanDosyayaFark } from '@/lib/intake/formdanDosyaya'
+import { veliDiliMi } from '@/lib/specialties/kapsam'
 
 export const dynamic = 'force-dynamic'
 
@@ -72,6 +74,29 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   })
   const klinik = klinikOzetleriNotesOku(notesData)
 
+  // FORM-DOSYA-AKTAR-01 (2026-11-21): "Formdan dosyaya aktar" — on request only (never on the patient-file hot path):
+  // the latest submitted Hasta Bilgi Formu of THIS patient under THIS doctor (patient already proven ours above), as a
+  // diff against the card. Decrypted here; nothing is written — the doctor confirms rows and they go through PUT.
+  if (req.nextUrl.searchParams.get('formAktarim') === '1') {
+    if (!izinVarMi(rol, 'hasta.dosya.yaz') && !izinVarMi(rol, 'hasta.dosya.oku')) return NextResponse.json({ formAktarim: null })
+    const { data: formlar } = await supabase
+      .from('hasta_intake_formlari')
+      .select('id, form_data_encrypted, dolduruldu_at, created_at')
+      .eq('patient_id', patient.id)
+      .eq('doktor_id', doktorId)
+      .not('form_data_encrypted', 'is', null)
+      .order('created_at', { ascending: false })
+      .limit(1)
+    const form = (formlar?.[0] ?? null) as { id: string; form_data_encrypted: string | null; dolduruldu_at: string | null; created_at: string | null } | null
+    if (!form?.form_data_encrypted) return NextResponse.json({ formAktarim: { formVar: false, satirlar: [] } })
+    let yanit: Record<string, unknown> = {}
+    try { yanit = JSON.parse(decrypt(form.form_data_encrypted) || '{}') } catch { yanit = {} }
+    let satirlar = formdanDosyayaFark(yanit, ozet, { veli: veliDiliMi({ hastaDogumIso: ozet.dogum_tarihi }) })
+    // A role that may not write the clinical file is offered identity + contact rows only (same rule as PUT).
+    if (!izinVarMi(rol, 'hasta.dosya.yaz')) satirlar = satirlar.filter((s) => FORM_AKTARIM_ILETISIM.includes(s.alan))
+    return NextResponse.json({ formAktarim: { formVar: true, formTarihi: form.dolduruldu_at || form.created_at, satirlar } })
+  }
+
   // MOBIL-PERSONEL-01: a role that may not read the clinical file (hasta_danismani) gets identity + contact only —
   // no history, allergies, medications, clinical summaries or parental heights.
   if (!izinVarMi(rol, 'hasta.dosya.oku')) {
@@ -86,6 +111,14 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
         sehir: ozet.sehir,
         anne_adi: ozet.anne_adi,
         baba_adi: ozet.baba_adi,
+        adres: ozet.adres,
+        dogum_yeri: ozet.dogum_yeri,
+        veli_adi: ozet.veli_adi,
+        veli_yakinlik: ozet.veli_yakinlik,
+        veli_telefon: ozet.veli_telefon,
+        acil_kisi_adi: ozet.acil_kisi_adi,
+        acil_kisi_yakinlik: ozet.acil_kisi_yakinlik,
+        acil_kisi_telefon: ozet.acil_kisi_telefon,
         is_active: patient.is_active,
         created_at: patient.created_at,
       },
@@ -125,7 +158,9 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 
   const bodyHam = await req.json()
   // MOBIL-PERSONEL-01: without clinical-file write access only identity + contact fields are accepted.
-  const ILETISIM_ALANLARI = ['ad_soyad', 'dogum_tarihi', 'cinsiyet', 'telefon', 'eposta', 'sehir', 'anne_adi', 'baba_adi']
+  const ILETISIM_ALANLARI = ['ad_soyad', 'dogum_tarihi', 'cinsiyet', 'telefon', 'eposta', 'sehir', 'anne_adi', 'baba_adi',
+    // FORM-DOSYA-AKTAR-01: the card's new contact fields (insurance stays clinical-file only).
+    'adres', 'dogum_yeri', 'veli_adi', 'veli_yakinlik', 'veli_telefon', 'acil_kisi_adi', 'acil_kisi_yakinlik', 'acil_kisi_telefon']
   const body = izinVarMi(rol, 'hasta.dosya.yaz')
     ? bodyHam
     : Object.fromEntries(Object.entries(bodyHam || {}).filter(([k]) => ILETISIM_ALANLARI.includes(k)))

@@ -55,7 +55,7 @@ export default function KlinikIstemPaneli() {
       <textarea value={not} onChange={(e) => setNot(e.target.value)} rows={3} style={{ width: '100%', boxSizing: 'border-box', border: '1px solid rgba(58,44,34,0.15)', borderRadius: 10, padding: 10, fontFamily: 'inherit', fontSize: 13 }} />
       <button type="button" onClick={() => setKagit(true)} disabled={!Object.values(secim).some(Boolean)} style={{ marginTop: 12, padding: '10px 16px', borderRadius: 8, border: 'none', background: '#2f4334', color: '#fff', fontWeight: 600, cursor: 'pointer', opacity: Object.values(secim).some(Boolean) ? 1 : 0.5 }}>Form oluştur</button>
       {kagit && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(58,44,34,0.45)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+        <div role="dialog" aria-modal="true" aria-label="İstem kâğıdı" style={{ position: 'fixed', inset: 0, background: 'rgba(58,44,34,0.45)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
           <div style={{ maxHeight: '92dvh', overflow: 'auto', width: '100%', maxWidth: 560 }}>
             <div id="print-area" style={{ background: 'white', color: '#111', padding: '36px 40px', fontFamily: 'Georgia, "Times New Roman", serif', minHeight: 600 }}>
               <BelgeKunyesi tur="tetkik_istem" kaynakId={`istem:${slug}:${new Date().toISOString().slice(0, 10)}`} hastaId={null} icerik={{ slug, secim, not }} />

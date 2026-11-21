@@ -10,10 +10,28 @@ import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth'
 import {
   demografiEksikMi,
   saglikGecmisiEksikMi,
+  type EkDemografiAlani,
   type HastaOzetKayit,
 } from '@/lib/doktor/hastaOzetKayit'
+import type { FormAktarimSatiri } from '@/lib/intake/formdanDosyaya'
+import { veliDiliMi } from '@/lib/specialties/kapsam'
+
+/** FORM-DOSYA-AKTAR-01: the card's extra demographic fields, in display order. */
+const EK_ALANLAR: [EkDemografiAlani, string][] = [
+  ['adres', 'Adres'], ['dogum_yeri', 'Doğum yeri'],
+  ['veli_adi', 'Veli / yasal temsilci'], ['veli_yakinlik', 'Velinin yakınlığı'], ['veli_telefon', 'Veli telefonu'],
+  ['acil_kisi_adi', 'Acil durum kişisi'], ['acil_kisi_yakinlik', 'Acil kişinin yakınlığı'], ['acil_kisi_telefon', 'Acil kişi telefonu'],
+  ['sigorta', 'Sağlık güvencesi'],
+]
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 import { doktorFetch } from '@/lib/doktor/oturumFetch'
+import KanGrubuSecici from '@/components/doktor/KanGrubuSecici'
+import dinamik from 'next/dynamic'
+import { hekimProfilOturumOku } from '@/lib/doktor/hekimProfilIstemci'
+
+// KRONIK-SECIM-01: the picker (and its condition list) loads only when the card is edited — the patient-file bundle
+// stays within the performance budget.
+const KronikHastalikSecici = dinamik(() => import('@/components/doktor/KronikHastalikSecici'), { ssr: false })
 
 // NOTYA-YENI-GORUNUM-03 (Kaan, 2026-09-24): this whole card (both demographic and health-history
 // panels) was still dark-navy with white-based translucent fills -- recolored to the cream/pine
@@ -86,10 +104,16 @@ export default function HastaOzetDuzenlenebilir({ patientId, patient, dogumGoste
   const [kan, setKan] = useState(patient.kan_grubu || '')
   const [anne, setAnne] = useState(patient.anne_adi || '')
   const [baba, setBaba] = useState(patient.baba_adi || '')
-  const [kronik, setKronik] = useState((patient.kronik_hastaliklar || []).join(', '))
+  const [kronik, setKronik] = useState<string[]>(patient.kronik_hastaliklar || [])
   const [alerji, setAlerji] = useState(patient.alerjiler || '')
   const [ilac, setIlac] = useState(patient.surekli_ilaclar || '')
   const [sigara, setSigara] = useState(patient.sigara_alkol || '')
+  const [brans, setBrans] = useState<string | null>(null)
+  // FORM-DOSYA-AKTAR-01: the form's other demographic answers have a place on the card.
+  const ekBos = (p: HastaOzetKayit) => Object.fromEntries(EK_ALANLAR.map(([k]) => [k, String(p[k] ?? '')])) as Record<EkDemografiAlani, string>
+  const [ek, setEk] = useState<Record<EkDemografiAlani, string>>(() => ekBos(patient))
+  const [aktarim, setAktarim] = useState<null | { yukleniyor: boolean; mesaj?: string; satirlar: FormAktarimSatiri[]; secili: string[]; formTarihi?: string | null }>(null)
+  React.useEffect(() => { setBrans(hekimProfilOturumOku()?.specialty ?? null) }, [])
 
   const syncForm = (p: HastaOzetKayit) => {
     setAdSoyad(p.ad_soyad || '')
@@ -101,10 +125,11 @@ export default function HastaOzetDuzenlenebilir({ patientId, patient, dogumGoste
     setKan(p.kan_grubu || '')
     setAnne(p.anne_adi || '')
     setBaba(p.baba_adi || '')
-    setKronik((p.kronik_hastaliklar || []).join(', '))
+    setKronik(p.kronik_hastaliklar || [])
     setAlerji(p.alerjiler || '')
     setIlac(p.surekli_ilaclar || '')
     setSigara(p.sigara_alkol || '')
+    setEk(ekBos(p))
   }
 
   const kaydet = async (tur: 'demografi' | 'saglik') => {
@@ -125,6 +150,7 @@ export default function HastaOzetDuzenlenebilir({ patientId, patient, dogumGoste
               kan_grubu: kan,
               anne_adi: anne,
               baba_adi: baba,
+              ...ek,
             }
           : {
               kronik_hastaliklar: kronik,
@@ -155,6 +181,49 @@ export default function HastaOzetDuzenlenebilir({ patientId, patient, dogumGoste
       setKaydediyor(false)
     }
   }
+
+  // FORM-DOSYA-AKTAR-01: the latest submitted Hasta Bilgi Formu, as a diff against this card. Empty card fields are
+  // pre-ticked; a field the card already holds differently is shown with both values and left unticked.
+  const formuGetir = async () => {
+    setAktarim({ yukleniyor: true, satirlar: [], secili: [] })
+    try {
+      const r = await doktorFetch(`/api/doktor/hastalar/${patientId}?formAktarim=1`, {})
+      const d = await r.json().catch(() => ({}))
+      const fa = (d as { formAktarim?: { formVar?: boolean; satirlar?: FormAktarimSatiri[]; formTarihi?: string | null } | null }).formAktarim
+      if (!r.ok || !fa) { setAktarim({ yukleniyor: false, satirlar: [], secili: [], mesaj: 'Form okunamadı.' }); return }
+      if (!fa.formVar) { setAktarim({ yukleniyor: false, satirlar: [], secili: [], mesaj: 'Bu hastanın doldurulmuş bir Hasta Bilgi Formu yok.' }); return }
+      const satirlar = fa.satirlar || []
+      if (!satirlar.length) { setAktarim({ yukleniyor: false, satirlar: [], secili: [], mesaj: 'Formdaki bilgiler dosyada zaten var — aktarılacak yeni bilgi yok.' }); return }
+      setAktarim({ yukleniyor: false, satirlar, secili: satirlar.filter((s) => s.durum === 'bos').map((s) => s.alan), formTarihi: fa.formTarihi })
+    } catch {
+      setAktarim({ yukleniyor: false, satirlar: [], secili: [], mesaj: 'Form okunamadı.' })
+    }
+  }
+  const formuAktar = async () => {
+    if (!aktarim) return
+    const govde = Object.fromEntries(aktarim.satirlar.filter((s) => aktarim.secili.includes(s.alan)).map((s) => [s.alan, s.formda]))
+    if (!Object.keys(govde).length) return
+    setKaydediyor(true)
+    setHata('')
+    try {
+      const res = await doktorFetch(`/api/doktor/hastalar/${patientId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(govde) })
+      if (!res.ok) throw new Error(((await res.json().catch(() => ({}))) as { error?: string }).error || 'Aktarım başarısız')
+      const get = await doktorFetch(`/api/doktor/hastalar/${patientId}`, {})
+      const data = await get.json()
+      if (!get.ok) throw new Error(data.error || 'Güncel kayıt okunamadı')
+      onKaydedildi(data.patient as HastaOzetKayit)
+      syncForm(data.patient as HastaOzetKayit)
+      setAktarim(null)
+    } catch (e) {
+      setHata(e instanceof Error ? e.message : 'Aktarım başarısız')
+    } finally {
+      setKaydediyor(false)
+    }
+  }
+  // "Veli" follows the patient's AGE (brans-alan-sizmasi): the guardian fields exist only for a patient under 18.
+  const veliGoster = veliDiliMi({ doktorBransi: brans, hastaDogumIso: dogum || patient.dogum_tarihi })
+  const ekAlanlar = EK_ALANLAR.filter(([k]) => veliGoster || !k.startsWith('veli_'))
+  const degerYaz = (v: string | string[] | null) => (Array.isArray(v) ? v.join(', ') : v || '—')
 
   const demografiEksik = demografiEksikMi(patient)
   const saglikEksik = saglikGecmisiEksikMi(patient)
@@ -194,6 +263,16 @@ export default function HastaOzetDuzenlenebilir({ patientId, patient, dogumGoste
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8, marginBottom: 8 }}>
           <div style={{ fontSize: 14, fontWeight: 700, color: CHROME_RENK.ink }}>Demografik bilgiler</div>
           {!demografiAcik ? (
+            <span style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+            <button
+              type="button"
+              data-testid="formdan-dosyaya-aktar"
+              disabled={aktarim?.yukleniyor}
+              onClick={(e) => { e.stopPropagation(); void formuGetir() }}
+              style={{ background: 'transparent', border: '1px solid rgba(47,67,52,0.35)', color: CHROME_RENK.pine, borderRadius: 999, padding: '3px 10px', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
+            >
+              {aktarim?.yukleniyor ? 'Form okunuyor…' : 'Formdan dosyaya aktar'}
+            </button>
             <button
               type="button"
               onClick={(e) => {
@@ -205,8 +284,50 @@ export default function HastaOzetDuzenlenebilir({ patientId, patient, dogumGoste
             >
               Düzenle
             </button>
+            </span>
           ) : null}
         </div>
+        {aktarim && !aktarim.yukleniyor && (
+          <div data-testid="form-aktarim-paneli" onClick={(e) => e.stopPropagation()} style={{ border: `1px solid ${CHROME_RENK.border}`, background: '#F6F0E4', borderRadius: 12, padding: 12, margin: '6px 0 10px' }}>
+            {aktarim.mesaj ? (
+              <div style={{ fontSize: 13, color: CHROME_RENK.ink }}>{aktarim.mesaj}</div>
+            ) : (
+              <>
+                <div style={{ fontSize: 13, fontWeight: 700, color: CHROME_RENK.ink, marginBottom: 4 }}>Hasta Bilgi Formu’ndan dosyaya aktarılacaklar</div>
+                <div style={{ fontSize: 12, color: CHROME_RENK.muted, marginBottom: 8 }}>
+                  Dosyada boş olanlar işaretli. Dosyada farklı yazan bir bilgi yalnız siz işaretlerseniz değişir.
+                </div>
+                {aktarim.satirlar.map((s) => (
+                  <label key={s.alan} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', padding: '8px 0', borderTop: `1px solid ${CHROME_RENK.border}`, cursor: 'pointer' }}>
+                    <input
+                      type="checkbox"
+                      checked={aktarim.secili.includes(s.alan)}
+                      onChange={(e) => setAktarim({ ...aktarim, secili: e.target.checked ? [...aktarim.secili, s.alan] : aktarim.secili.filter((x) => x !== s.alan) })}
+                      style={{ width: 20, height: 20, marginTop: 2, flexShrink: 0 }}
+                    />
+                    <span style={{ fontSize: 13.5, lineHeight: 1.4, color: CHROME_RENK.ink, minWidth: 0 }}>
+                      <strong>{s.etiket}</strong>
+                      <span style={{ display: 'block' }}>Formda: {degerYaz(s.formda)}</span>
+                      {s.durum === 'farkli' && <span style={{ display: 'block', color: '#B45309' }}>Dosyada şu an: {degerYaz(s.dosyada)}</span>}
+                    </span>
+                  </label>
+                ))}
+              </>
+            )}
+            <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
+              {!aktarim.mesaj && (
+                <button type="button" data-testid="form-aktarim-onayla" disabled={kaydediyor || aktarim.secili.length === 0} onClick={() => void formuAktar()}
+                  style={{ background: CHROME_RENK.pine, border: 'none', color: '#fff', borderRadius: 999, padding: '9px 16px', fontSize: 13, fontWeight: 700, cursor: 'pointer', opacity: kaydediyor || aktarim.secili.length === 0 ? 0.6 : 1 }}>
+                  {kaydediyor ? 'Aktarılıyor…' : `Seçilenleri dosyaya aktar (${aktarim.secili.length})`}
+                </button>
+              )}
+              <button type="button" onClick={() => setAktarim(null)}
+                style={{ background: 'transparent', border: `1px solid ${CHROME_RENK.border}`, color: CHROME_RENK.muted, borderRadius: 999, padding: '9px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+                {aktarim.mesaj ? 'Kapat' : 'Vazgeç'}
+              </button>
+            </div>
+          </div>
+        )}
         {demografiEksik && !demografiAcik && (
           <div style={{ fontSize: 12, color: '#B45309', marginBottom: 6 }}>Eksik alan var — tıklayarak doldurun; kayıt tüm sisteme yazılır.</div>
         )}
@@ -221,6 +342,7 @@ export default function HastaOzetDuzenlenebilir({ patientId, patient, dogumGoste
             {bilgiSatiri('E-posta', patient.eposta)}
             {bilgiSatiri('Şehir', patient.sehir)}
             {bilgiSatiri('Kan grubu', patient.kan_grubu ? cipListesi([patient.kan_grubu], CHROME_RENK.warn, '#EF4444') : null)}
+            {ekAlanlar.filter(([k]) => String(patient[k] ?? '').trim()).map(([k, etiket]) => <React.Fragment key={k}>{bilgiSatiri(etiket, patient[k])}</React.Fragment>)}
           </>
         ) : (
           <div onClick={(e) => e.stopPropagation()}>
@@ -239,7 +361,14 @@ export default function HastaOzetDuzenlenebilir({ patientId, patient, dogumGoste
             {alan('Telefon', <input style={inp} value={telefon} onChange={(e) => setTelefon(e.target.value)} placeholder="05xx xxx xx xx" />)}
             {alan('E-posta', <input style={inp} type="email" value={eposta} onChange={(e) => setEposta(e.target.value)} />)}
             {alan('Şehir', <input style={inp} value={sehir} onChange={(e) => setSehir(e.target.value)} />)}
-            {alan('Kan grubu', <input style={inp} value={kan} onChange={(e) => setKan(e.target.value)} placeholder="Örn. B Rh+" />)}
+            {alan('Kan grubu', <KanGrubuSecici style={inp} deger={kan} degistir={setKan} bosEtiket="—" />)}
+            {ekAlanlar.map(([k, etiket]) => (
+              <React.Fragment key={k}>
+                {alan(etiket, k === 'adres'
+                  ? <textarea style={{ ...inp, minHeight: 56, resize: 'vertical' }} value={ek[k]} onChange={(e) => setEk({ ...ek, [k]: e.target.value })} />
+                  : <input style={inp} value={ek[k]} inputMode={k.endsWith('telefon') ? 'tel' : undefined} onChange={(e) => setEk({ ...ek, [k]: e.target.value })} />)}
+              </React.Fragment>
+            ))}
             <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
               <button
                 type="button"
@@ -317,7 +446,11 @@ export default function HastaOzetDuzenlenebilir({ patientId, patient, dogumGoste
           </>
         ) : (
           <div onClick={(e) => e.stopPropagation()}>
-            {alan('Kronik hastalıklar', <input style={inp} value={kronik} onChange={(e) => setKronik(e.target.value)} placeholder="Virgülle ayırın; yoksa boş bırakın" />)}
+            {/* KRONIK-SECIM-01: aranabilir liste + serbest ekleme, çoklu seçim, kaldırılabilir çipler. */}
+            <div style={{ marginBottom: 10 }}>
+              <span style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#0F766E', marginBottom: 4 }}>Kronik hastalıklar</span>
+              <KronikHastalikSecici secili={kronik} degistir={setKronik} brans={brans} />
+            </div>
             {alan('Alerjiler', <input style={inp} value={alerji} onChange={(e) => setAlerji(e.target.value)} placeholder="Örn. Bilinen alerjisi yok" />)}
             {alan('Sürekli ilaçlar', <textarea style={{ ...inp, minHeight: 64, resize: 'vertical' }} value={ilac} onChange={(e) => setIlac(e.target.value)} />)}
             {alan('Sigara / Alkol', <input style={inp} value={sigara} onChange={(e) => setSigara(e.target.value)} placeholder="Örn. Ailede sigara: Hayır" />)}

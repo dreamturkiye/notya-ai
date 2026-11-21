@@ -411,6 +411,8 @@ type Vaka = {
   okur?: boolean
   /** Positive: the write must have landed on the caller's own data. */
   yazdi?: (arayan: Hekim) => boolean
+  /** Extra data this case needs, added to BOTH doctors right after the scene is built (before any snapshot). */
+  kur?: (A: Hekim, B: Hekim) => void
 }
 const tablo = (ad: string) => db.tablo(ad)
 const trAralik = `baslangic=${encodeURIComponent(trGun(-1, 0))}&bitis=${encodeURIComponent(trGun(3, 0))}`
@@ -464,6 +466,14 @@ const VAKALAR: Vaka[] = [
   // Hasta kaydı
   { ad: 'GET /api/doktor/hastalar/[id] (hasta detayı)', red: 404, okur: true,
     cagir: (r, a, h) => coz(r.hastaDetay.GET(iste('GET', `/api/doktor/hastalar/${h.hasta}`, { token: a.token }), prm({ id: h.hasta }))) },
+  // FORM-DOSYA-AKTAR-01 — "Formdan dosyaya aktar": the diff of the patient's own latest Hasta Bilgi Formu. The target
+  // patient's form is seeded here (its own marker in the address); a foreign patient id is 404 and shows none of it.
+  { ad: 'GET /api/doktor/hastalar/[id]?formAktarim=1 (formdan dosyaya aktar farkı)', red: 404, okur: true,
+    kur: (A, B) => {
+      for (const x of [A, B]) db.ekle('hasta_intake_formlari', { doktor_id: x.id, patient_id: x.hasta, durum: 'dolduruldu', created_at: '2026-11-20T09:00:00.000Z', dolduruldu_at: '2026-11-20T09:00:00.000Z',
+        form_data_encrypted: encrypt(JSON.stringify({ adres: `Adres ${isaret(x.harf)}`, kanGrubu: 'A Rh+' })) })
+    },
+    cagir: (r, a, h) => coz(r.hastaDetay.GET(iste('GET', `/api/doktor/hastalar/${h.hasta}?formAktarim=1`, { token: a.token }), prm({ id: h.hasta }))) },
   { ad: 'PUT /api/doktor/hastalar/[id] (hasta düzenleme)',
     yazdi: (a) => tablo('patients').some((p) => p.id === a.hasta && decrypt(p.name_encrypted).includes('QA Duzenlendi')),
     cagir: (r, a, h) => coz(r.hastaDetay.PUT(iste('PUT', `/api/doktor/hastalar/${h.hasta}`, { token: a.token, govde: { ad_soyad: 'QA Duzenlendi' } }), prm({ id: h.hasta }))) },
@@ -1068,7 +1078,8 @@ describe('HASTA-İZOLASYON: doktor A ve doktor B birbirinin hastasına hiçbir r
   for (const v of VAKALAR) {
     describe(v.ad, () => {
       it('pozitif kontrol: doktor kendi verisine ulaşır (harness rotayı gerçekten çalıştırıyor)', async () => {
-        const { A } = sahneKur()
+        const { A, B } = sahneKur()
+        v.kur?.(A, B)
         const y = await v.cagir(R, A, A)
         assert.ok(y.status >= 200 && y.status < 300, `kendi verisinde ${y.status} döndü: ${y.metin.slice(0, 300)}`)
         if (v.okur) assert.ok(y.metin.includes(isaret('A')), `kendi işareti yanıtta yok: ${y.metin.slice(0, 300)}`)
@@ -1077,6 +1088,7 @@ describe('HASTA-İZOLASYON: doktor A ve doktor B birbirinin hastasına hiçbir r
       for (const [saldiran, kurbanHarf] of [['A', 'B'], ['B', 'A']] as const) {
         it(`${saldiran} → ${kurbanHarf}: okuyamaz, yazamaz`, async () => {
           const s = sahneKur()
+          v.kur?.(s.A, s.B)
           const arayan = s[saldiran], kurban = s[kurbanHarf]
           const once = anlikGoruntu(kurban)
           const aiOnce = aiBaglamlari.length

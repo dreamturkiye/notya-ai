@@ -252,10 +252,16 @@ export default function EntegrasyonlarPage() {
           onClick={() => setActive(null)}
         >
           <div
+            role="dialog"
+            aria-modal="true"
+            aria-label={LABELS[active].title}
             onClick={(e) => e.stopPropagation()}
             style={{
               width: '100%',
               maxWidth: 520,
+              maxHeight: '88dvh',
+              overflowY: 'auto',
+              boxSizing: 'border-box',
               background: '#FAF8F4',
               borderTopLeftRadius: 20,
               borderTopRightRadius: 20,

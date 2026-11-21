@@ -14,6 +14,8 @@
  * sığar.
  */
 
+import AltSayfa from '@/components/doktor/AltSayfa';
+import SureSecici from '@/components/doktor/SureSecici';
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
@@ -1379,19 +1381,30 @@ export default function RandevularPage() {
         </div>
 
         {formAcik && (
-          <div
-            role="presentation"
-            // Arka plana dokunarak kapatmak da "Vazgeç" ile aynı şey olmalı: eskiden yalnızca
-            // formAcik=false yapıyor, modalIptalAcik gibi bayrakları bir sonraki açılışa taşıyordu.
-            onClick={() => { setFormAcik(false); formuSifirla(); }}
-            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', zIndex: 200 }}
+          // ALT-SAYFA-01 (beta, iPhone 2026-11-21): the shared bottom sheet — the save button sits in a footer that never
+          // scrolls away and is never covered by the phone tab bar. Arka plana dokunarak kapatmak da "Vazgeç" ile aynı
+          // şey olmalı: eskiden yalnızca formAcik=false yapıyor, modalIptalAcik gibi bayrakları bir sonraki açılışa taşıyordu.
+          <AltSayfa
+            etiket={duzenlenenId ? 'Randevuyu Düzenle' : 'Yeni Randevu'}
+            testId="randevu-formu"
+            onKapat={() => { setFormAcik(false); formuSifirla(); }}
+            onSubmit={kaydet}
+            eylemler={
+              <>
+                {hata && <div className="ni-error" style={{ marginBottom: 8 }}>{hata}</div>}
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button type="submit" className="ni-btn" data-testid="randevu-kaydet" disabled={kaydediliyor} style={{ flex: 1 }}>
+                    {kaydediliyor ? 'Kaydediliyor…' : duzenlenenId ? 'Güncelle' : 'Randevuyu Kaydet'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setFormAcik(false); formuSifirla(); }}
+                    style={{ background: 'rgba(58,44,34,0.08)', border: 'none', color: CHROME_RENK.ink, borderRadius: 10, padding: '0 20px', minHeight: 44 }}
+                  >Vazgeç</button>
+                </div>
+              </>
+            }
           >
-            <form
-              onSubmit={kaydet}
-              onClick={(e) => e.stopPropagation()}
-              className="ni-card"
-              style={{ width: '100%', maxWidth: 480, maxHeight: '88vh', overflowY: 'auto', borderRadius: '16px 16px 0 0', margin: 0 }}
-            >
               <h3 className="ni-h3">{duzenlenenId ? 'Randevuyu Düzenle' : 'Yeni Randevu'} — {tarihBaslikStr(gun)}</h3>
 
               {resmiTatilMi(gun) && (
@@ -1720,9 +1733,10 @@ export default function RandevularPage() {
                     })()}
                   </select>
                 </div>
-                <div className="ni-field">
-                  <label className="ni-label">Süre (dk) *</label>
-                  <input className="ni-input" type="number" min={5} step={5} value={sureDk} onChange={(e) => setSureDk(Math.max(5, Number(e.target.value) || 20))} />
+                {/* SURE-SECIM-01: hızlı seçim (10/15/20/30/45/60 + Diğer) — "20"nin sonuna "30" eklenip "2030" olmaz. */}
+                <div className="ni-field" style={{ gridColumn: '1 / -1' }}>
+                  <label className="ni-label" id="randevu-sure-etiketi">Süre (dk) *</label>
+                  <SureSecici deger={sureDk} degistir={setSureDk} birim="dk" digerEtiketi="Diğer" etiketId="randevu-sure-etiketi" />
                 </div>
                 <div className="ni-field">
                   <label className="ni-label">Tür</label>
@@ -1788,20 +1802,7 @@ export default function RandevularPage() {
                 <textarea className="ni-input" value={notlar} onChange={(e) => setNotlar(e.target.value)} placeholder="İsteğe bağlı" rows={3} style={{ resize: 'vertical', minHeight: 64 }} />
               </div>
 
-              {hata && <div className="ni-error">{hata}</div>}
-
-              <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-                <button type="submit" className="ni-btn" disabled={kaydediliyor} style={{ flex: 1 }}>
-                  {kaydediliyor ? 'Kaydediliyor…' : duzenlenenId ? 'Güncelle' : 'Randevuyu Kaydet'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setFormAcik(false); formuSifirla(); }}
-                  style={{ background: 'rgba(58,44,34,0.08)', border: 'none', color: CHROME_RENK.ink, borderRadius: 10, padding: '0 20px' }}
-                >Vazgeç</button>
-              </div>
-            </form>
-          </div>
+          </AltSayfa>
         )}
 
         {/* NOTYA-BETA-0925: kayıttan sonra tek, sakin soru — Hasta Bilgi Formu WhatsApp'tan gitsin mi? Gönderim

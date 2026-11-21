@@ -1,6 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import KanGrubuSecici from '@/components/doktor/KanGrubuSecici';
+import React, { useEffect, useState } from 'react';
+import KronikHastalikSecici from '@/components/doktor/KronikHastalikSecici';
+import { hekimProfilOturumOku } from '@/lib/doktor/hekimProfilIstemci';
 import IdCardCapture from '@/components/doktor/IdCardCapture';
 import { getDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme'
@@ -210,13 +213,9 @@ export default function HastaEklePage() {
     setPhase('review');
   };
 
-  const toggleKronikHastalik = (hastalik: string) => {
-    const current = formData.kronikHastaliklar;
-    const updated = current.includes(hastalik)
-      ? current.filter((h) => h !== hastalik)
-      : [...current, hastalik];
-    updateFormData('kronikHastaliklar', updated);
-  };
+  // KRONIK-SECIM-01: the doctor's own branş puts its common chronic conditions on top of the picker.
+  const [doktorBransi, setDoktorBransi] = useState<string | null>(null);
+  useEffect(() => { setDoktorBransi(hekimProfilOturumOku()?.specialty ?? null); }, []);
 
   const handleSubmit = async () => {
     if (!formData.kvkkOnay) {
@@ -487,12 +486,13 @@ export default function HastaEklePage() {
               <option value="Kadın">Kadın</option>
             </select>
             <div style={{ height: 16 }} />
-            <input
-              type="text"
-              placeholder="Kan Grubu"
-              value={formData.kanGrubu}
-              onChange={(e) => updateFormData('kanGrubu', e.target.value)}
-              style={inputStyle()}
+            {/* KAN-GRUBU-SECIM-01: seçenekli (8 grup + Bilinmiyor), serbest metin değil. */}
+            <KanGrubuSecici
+              deger={formData.kanGrubu}
+              degistir={(v) => updateFormData('kanGrubu', v)}
+              bosEtiket="Kan Grubu"
+              ariaLabel="Kan Grubu"
+              style={{ ...inputStyle(), color: formData.kanGrubu ? CHROME_RENK.ink : '#a89a86' }}
             />
             {banner && (
               <div style={{ marginTop: 12, color: '#a45b3e', fontSize: 14 }}>{banner.message}</div>
@@ -598,12 +598,12 @@ export default function HastaEklePage() {
                 <option value="Kadın">Kadın</option>
               </select>
               <div style={{ height: 12 }} />
-              <input
-                type="text"
-                placeholder="Kan Grubu (opsiyonel)"
-                value={formData.kanGrubu}
-                onChange={(e) => updateFormData('kanGrubu', e.target.value)}
-                style={inputStyle()}
+              <KanGrubuSecici
+                deger={formData.kanGrubu}
+                degistir={(v) => updateFormData('kanGrubu', v)}
+                bosEtiket="Kan Grubu (opsiyonel)"
+                ariaLabel="Kan Grubu"
+                style={{ ...inputStyle(), color: formData.kanGrubu ? CHROME_RENK.ink : '#a89a86' }}
               />
             </div>
 
@@ -648,26 +648,12 @@ export default function HastaEklePage() {
             <h2 style={{ fontSize: 22, fontWeight: 600, color: CHROME_RENK.ink, marginBottom: 24 }}>Sağlık Geçmişi</h2>
             <div style={{ marginBottom: 20 }}>
               <div style={{ color: CHROME_RENK.ink, marginBottom: 10, fontSize: 15 }}>Kronik Hastalıklar</div>
-              {['Diyabet', 'Hipertansiyon', 'Astım', 'Kalp Hastalığı'].map((h) => (
-                <button
-                  key={h}
-                  type="button"
-                  onClick={() => toggleKronikHastalik(h)}
-                  style={{
-                    padding: '8px 16px',
-                    margin: '4px 6px 4px 0',
-                    borderRadius: 20,
-                    border: `1px solid ${CHROME_RENK.pine}`,
-                    backgroundColor: formData.kronikHastaliklar.includes(h)
-                      ? CHROME_RENK.pine
-                      : '#F6F0E4',
-                    color: formData.kronikHastaliklar.includes(h) ? '#FAF8F4' : CHROME_RENK.ink,
-                    fontSize: 14,
-                  }}
-                >
-                  {h}
-                </button>
-              ))}
+              {/* KRONIK-SECIM-01: branşın sık hastalıkları üstte + aranabilir ICD-10 listesi + serbest ekleme. */}
+              <KronikHastalikSecici
+                secili={formData.kronikHastaliklar}
+                degistir={(liste) => updateFormData('kronikHastaliklar', liste)}
+                brans={doktorBransi}
+              />
             </div>
             <input
               type="text"
@@ -807,6 +793,7 @@ export default function HastaEklePage() {
 
       {showNviSheet && (
         <div
+          role="presentation"
           style={{
             position: 'fixed',
             inset: 0,
@@ -819,10 +806,16 @@ export default function HastaEklePage() {
           onClick={() => setShowNviSheet(false)}
         >
           <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="NVI bağlı değil"
             onClick={(e) => e.stopPropagation()}
             style={{
               width: '100%',
               maxWidth: 520,
+              maxHeight: '88dvh',
+              overflowY: 'auto',
+              boxSizing: 'border-box',
               background: '#FAF8F4',
               borderTopLeftRadius: 20,
               borderTopRightRadius: 20,

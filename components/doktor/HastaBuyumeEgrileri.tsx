@@ -130,7 +130,7 @@ export function BuyumeEgrileriGorunumu({ veri, hedefKart, baslangicBuyuk = null 
     const [anahtar, pVeri] = paramlar[buyukIndex];
     const dugme: CSSProperties = { background: 'rgba(58,44,34,0.06)', border: 'none', color: CHROME_RENK.ink, borderRadius: 999, padding: '9px 16px', cursor: 'pointer', fontSize: 14, fontWeight: 600, minHeight: 40 };
     return (
-      <div style={{ position: 'fixed', inset: 0, background: CHROME_RENK.cream, zIndex: 200, display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
+      <div role="dialog" aria-modal="true" aria-label="Büyüme eğrisi" style={{ position: 'fixed', inset: 0, background: CHROME_RENK.cream, zIndex: 200, display: 'flex', flexDirection: 'column', overflowY: 'auto', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
         <div className="buyume-buyuk-bas" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 24px', gap: 10, flexWrap: 'wrap' }}>
           <button type="button" onClick={() => setBuyukIndex(null)} style={{ ...dugme, background: 'transparent', color: CHROME_RENK.muted }}>← Geri</button>
           <div style={{ fontSize: 13, color: CHROME_RENK.muted }}>{altBilgi}{veri.duzeltme ? ` · düzeltilmiş yaş (doğumda ${veri.duzeltme.gestasyon} hafta)` : ''}</div>

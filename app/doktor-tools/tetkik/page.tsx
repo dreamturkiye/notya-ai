@@ -343,6 +343,9 @@ export default function TetkikPage() {
           : [...([vucutBolgesi && modalite ? `${modalite} — ${vucutBolgesi}` : modalite || vucutBolgesi].filter(Boolean) as string[]), ...secilenGoruntuleme]
         return (
         <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Tetkik istem kâğıdı"
           style={{
             position: 'fixed',
             inset: 0,

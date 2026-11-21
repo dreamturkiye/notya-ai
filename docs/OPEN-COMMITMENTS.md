@@ -1,5 +1,35 @@
 # OPEN COMMITMENTS — Notya AI
 
+## BETA-KBB-2026-11-21 — iPhone beta feedback (KBB doctor): location prompt, hidden save button, number fields, blood group, chronic picker, form → file (Claude, 2026-11-21)
+
+Classification: all six items CORE (all 30 medical branches + 10 Özel Branşlar; one shared component each). Shipped on main + release/us, gb, ca, au, nz, uz.
+1. HAVA-KONUM-01 — the frame never asks for location on mount; only a tap on the weather chip asks, once; decision + rounded place remembered in localStorage
+   (`lib/doktor/havaKonum.ts`, shared by `DoktorChrome` and every country `Kabuk`). Declined → never asked again, chip not offered. No guessed default place.
+2. ALT-SAYFA-01 — root cause: `.notya-icerik` had `z-index: 1`, so every page modal (z 200) painted UNDER the phone tab bar (z 38). Fixed in the shared frame
+   (`KabukGorunumu`): no stacking context; tab bar + floating bars hidden while any `aria-modal` dialog is open. Shared bottom sheet `components/doktor/AltSayfa.tsx`
+   (scrolling body, fixed action footer above safe-area-inset-bottom) used by the appointment sheet; every other doctor-app overlay marked `aria-modal` with a scroll limit.
+   Test: `lib/doktor/altSayfaMobil.test.ts` (headless Chrome at 390/414/430 px, incl. a control that reproduces the old trap and must fail).
+3. SURE-SECIM-01 — "Süre (dk)" is chips 10/15/20/30/45/60 + Diğer (`SureSecici`); every number field in the frame selects its value on focus (one listener in
+   `KabukGorunumu`, so country number fields get it too).
+4. KAN-GRUBU-SECIM-01 — 8 groups + Bilinmiyor as a select on Hasta ekle (2 places), Özet card, Gebelik card (ABO only); stored text = the intake's option text;
+   old free text is read (`b+` → `B Rh+`) or kept as its own option, never dropped.
+5. KRONIK-SECIM-01 — branş suggestions on top (all 40 branches), searchable list with ICD-10 codes, free-text add, removable chips (`KronikHastalikSecici`).
+   Allergies / medications were already free text (no fixed list) — no change needed.
+6. FORM-DOSYA-AKTAR-01 — submission auto-fill now also fills address, birth place, guardian (under 18 only), emergency contact, insurance (empty card fields only);
+   "Formdan dosyaya aktar" on the Demografik bilgiler card shows the latest submitted form as a diff (empty = pre-ticked, different = both values, unticked),
+   writes only confirmed rows via the card PUT; new notes keys kept out of model context.
+Per country (us, gb, ca, au, nz, uz): items 1–3 APPLIED (shared frame + country `Kabuk`, chip label from each pack: en / uz-Latn / uz-Cyrl / ru); items 4–6 N/A —
+the country patient record has no blood-group, chronic-condition, allergy or address/guardian/insurance fields, and the country appointment form is a full page whose
+duration is already a select.
+- **Country patient records lack blood group / chronic conditions / allergies / address-guardian-insurance fields, so items 4–6 have nothing to carry there — waits on
+  Kaan (decide whether country records should hold them; then Claude builds them country-adapted). Opened 2026-11-21.**
+- **Live check on iPhone Safari of the six fixes on main (Randevular → new appointment, weather chip, Hasta ekle, Özet card) — owner Dr. Gökhan / the KBB beta
+  doctor; report misses to Claude. Opened 2026-11-21.**
+- **Pre-existing red tests, not caused by this change (same result on clean main 56008ee0): `hasta-izolasyon` "POST /api/sessions/[id]/end (SOAP üret)" and
+  "Ayşe okuma araçları (hasta_bul, randevu_takvim)" — owner Claude. Opened 2026-11-21.**
+
+- 2026-11-21 · Türkiye patient-data hosting move to BurtiNET (Istanbul, Mars Data Center, VPS-3, Ubuntu 24.04) — waits on Kaan: open the BurtiNET account, check VPS-3 (>=8 GB RAM, 4 vCPU, daily backups/snapshots, ISO 27001/Tier III, price incl. KDV) and buy it, then add the SSH public key Claude provides. Then Claude: self-host Supabase, daily backups to a second TR location, migrate DB + storage + auth users in one maintenance window, switch env, verify. Kaan said 2026-11-21: do not start before the account exists. Lawyer still needed for processing abroad (LLM, ElevenLabs, Vercel).
+
 ## Hasta karışması olay notu — HASTA-KARISMA-01: another patient's note text in the note-generation prompt (Claude, 2026-11-20, owner Kaan)
 
 Classification: CORE (all 30 + 10 Özel Branşlar; every note written by `soapNotuUret`). Repro: demo doctor (pediatri, production), Note A 306c2f02… (2-month infant,

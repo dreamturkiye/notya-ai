@@ -35,7 +35,9 @@ function coz(v: string | null | undefined): string {
  * alerji… ama AYNI ZAMANDA anne / baba adı, şehir). Eskiden tamamı "Doktor notu" olarak modele gidiyordu — kimlik
  * anahtarları atılır; düz metin not (eski kayıtlar) aynen kalır.
  */
-const NOT_KIMLIK_ANAHTARLARI = new Set(['anneAdi', 'babaAdi', 'dogumYeri', 'sehir', 'adres', 'telefon', 'eposta', 'anneId', 'anneGebelikId'])
+// FORM-DOSYA-AKTAR-01: the card's guardian / emergency-contact / insurance keys are identity too — never sent to a model.
+const NOT_KIMLIK_ANAHTARLARI = new Set(['anneAdi', 'babaAdi', 'dogumYeri', 'sehir', 'adres', 'telefon', 'eposta', 'anneId', 'anneGebelikId',
+  'veliAdi', 'veliYakinlik', 'veliTelefon', 'acilKisiAdi', 'acilKisiYakinlik', 'acilKisiTelefon', 'sigorta'])
 function modeleGidenNot(ham: string): string {
   if (!ham.trim().startsWith('{')) return ham
   try {

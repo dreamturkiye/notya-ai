@@ -60,6 +60,7 @@ export default function MesajEkViewer({ ekId, fileName, fileType, onClose }: Pro
   return (
     <div
       role="dialog"
+      aria-modal="true"
       aria-label={fileName}
       style={{
         position: 'fixed',

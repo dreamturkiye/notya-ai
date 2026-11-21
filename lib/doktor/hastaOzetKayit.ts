@@ -18,7 +18,31 @@ export type HastaOzetKayit = {
   alerjiler: string | null
   surekli_ilaclar: string | null
   sigara_alkol: string | null
+  // FORM-DOSYA-AKTAR-01 (2026-11-21): the form's other demographic answers now have a place on the card.
+  adres?: string | null
+  dogum_yeri?: string | null
+  veli_adi?: string | null
+  veli_yakinlik?: string | null
+  veli_telefon?: string | null
+  acil_kisi_adi?: string | null
+  acil_kisi_yakinlik?: string | null
+  acil_kisi_telefon?: string | null
+  sigorta?: string | null
 }
+
+/** FORM-DOSYA-AKTAR-01: card field → key in the encrypted notes blob (same keys the intake form uses where it has one). */
+export const EK_DEMOGRAFI_NOT_ANAHTARI = {
+  adres: 'adres',
+  dogum_yeri: 'dogumYeri',
+  veli_adi: 'veliAdi',
+  veli_yakinlik: 'veliYakinlik',
+  veli_telefon: 'veliTelefon',
+  acil_kisi_adi: 'acilKisiAdi',
+  acil_kisi_yakinlik: 'acilKisiYakinlik',
+  acil_kisi_telefon: 'acilKisiTelefon',
+  sigorta: 'sigorta',
+} as const
+export type EkDemografiAlani = keyof typeof EK_DEMOGRAFI_NOT_ANAHTARI
 
 export function kronikListesi(notes: Record<string, unknown>): string[] {
   const raw = notes.kronikHastaliklar
@@ -53,6 +77,9 @@ export function notlardanOzetAlanlari(
     alerjiler: notes.alerjiler != null ? String(notes.alerjiler) || null : null,
     surekli_ilaclar: notes.suregenIlaclar != null ? String(notes.suregenIlaclar) || null : null,
     sigara_alkol: notes.sigaraAlkol != null ? String(notes.sigaraAlkol) || null : null,
+    ...(Object.fromEntries(
+      (Object.entries(EK_DEMOGRAFI_NOT_ANAHTARI) as [EkDemografiAlani, string][]).map(([alan, anahtar]) => [alan, notes[anahtar] != null ? String(notes[anahtar]) || null : null]),
+    ) as Record<EkDemografiAlani, string | null>),
   }
 }
 
@@ -104,6 +131,9 @@ export function notesOzetGuncelle(
   if (body.alerjiler !== undefined) yaz('alerjiler', String(body.alerjiler || '').trim())
   if (body.surekli_ilaclar !== undefined) yaz('suregenIlaclar', String(body.surekli_ilaclar || '').trim())
   if (body.sigara_alkol !== undefined) yaz('sigaraAlkol', String(body.sigara_alkol || '').trim())
+  for (const [alan, anahtar] of Object.entries(EK_DEMOGRAFI_NOT_ANAHTARI)) {
+    if (body[alan] !== undefined) yaz(anahtar, String(body[alan] || '').trim().slice(0, 500))
+  }
   if (body.kronik_hastaliklar !== undefined) {
     const raw = body.kronik_hastaliklar
     const liste = Array.isArray(raw)

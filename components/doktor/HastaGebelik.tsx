@@ -3,6 +3,8 @@
  * NOTYA-KHD-01 + clinic-fit — visit-first Kadın Sağlığı & Gebelik.
  * Live gebelik_* CRUD is truth; chapter engines consume recorded izlemler.
  */
+import KanGrubuSecici from '@/components/doktor/KanGrubuSecici';
+import { ABO_GRUPLARI } from '@/lib/doktor/kanGrubu';
 import React, { useEffect, useState, useCallback } from 'react';
 import dinamikYukle from 'next/dynamic';
 import { kadinDogumBransi } from '@/lib/doktor/hastaDosyaSekmeleri';
@@ -466,7 +468,9 @@ export default function HastaGebelik({ patientId, doktorBransi }: { patientId: s
                   </select>
                 </label>
                 {alan('gebelikOncesiKilo', 'Gebelik öncesi kilo (kg)', f, setF, 'number')}{alan('boy', 'Boy (cm)', f, setF, 'number')}
-                {alan('kanGrubu', 'Kan grubu', f, setF, 'text', 'A, B, AB, 0')}
+                <label style={{ display: 'block' }}><span style={etiketS}>Kan grubu</span>
+                  {/* KAN-GRUBU-SECIM-01: ABO seçenekli; Rh yandaki kendi alanında. */}
+                  <KanGrubuSecici style={giris} deger={f.kanGrubu || ''} degistir={(v) => setF((prev) => ({ ...prev, kanGrubu: v === 'Bilinmiyor' ? '' : v }))} bosEtiket="—" liste={ABO_GRUPLARI} /></label>
                 <label style={{ display: 'block' }}><span style={etiketS}>Rh</span>
                   <select value={f.rh || ''} onChange={(e) => { const v = e.target.value; setF((prev) => ({ ...prev, rh: v })); }} style={giris}><option value="">—</option><option value="pozitif">Rh (+)</option><option value="negatif">Rh (−)</option></select></label>
                 {alan('csSayisi', 'Önceki sezaryen sayısı', f, setF, 'number')}
