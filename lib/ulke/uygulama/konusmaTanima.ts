@@ -13,6 +13,10 @@
  *   4. The caller records that a second pass ran (it costs a second transcription), and whether confidence is
  *      still low after it, so the note screen can ask the doctor to check the note carefully.
  *
+ * DIKTE-TIBBI-01 (2026-11-21): each pass carries the role's medical keyterms (./konusmaTerimleri.ts) — Scribe's own
+ * biasing for terms it mishears. If the provider refuses them (4xx), the same pass is sent once without them, and that
+ * resend COUNTS as a pass: the two-pass ceiling below still holds. NOTYA_STT_ANAHTAR_TERIM=0 turns keyterms off.
+ *
  * Provider: ElevenLabs Scribe (POST /v1/speech-to-text, multipart). The answer carries `language_code`,
  * `language_probability`, `text` and per-word `logprob`. Its error bodies are never read into an answer or a log:
  * they may quote the audio's content. No key configured = "not ready", never a guess and never another provider.
@@ -96,14 +100,18 @@ export function gecisSec(ilk: Gecis, ikinci: Gecis | null): 1 | 2 {
   return ikinci.ortalamaLogOlasilik > ilk.ortalamaLogOlasilik ? 2 : 1
 }
 
-async function saglayiciyaGonder(ses: Blob, a: KonusmaTanimaAyarlari, anahtar: string, dilKodu: string | null): Promise<Gecis | null> {
+async function saglayiciyaGonder(ses: Blob, a: KonusmaTanimaAyarlari, anahtar: string, dilKodu: string | null, terimler: readonly string[] = []): Promise<Gecis | null | 'reddedildi'> {
   const form = new FormData()
   form.append('model_id', a.model)
   if (dilKodu) form.append('language_code', dilKodu)
+  for (const t of terimler) form.append('keyterms', t)
   form.append('file', ses, 'recording')
   try {
     const r = await fetch(ADRES, { method: 'POST', headers: { 'xi-api-key': anahtar }, body: form, signal: AbortSignal.timeout(ZAMAN_ASIMI_MS) })
-    if (!r.ok) { console.error(`[ulke/konusma] provider answered ${r.status} (pass ${dilKodu ? 2 : 1})`); return null }
+    if (!r.ok) {
+      console.error(`[ulke/konusma] provider answered ${r.status} (pass ${dilKodu ? 2 : 1})`)
+      return terimler.length && (r.status === 400 || r.status === 422) ? 'reddedildi' : null
+    }
     return gecisOku((await r.json()) as ScribeCevabi)
   } catch (e) {
     console.error(`[ulke/konusma] provider unreachable (pass ${dilKodu ? 2 : 1}): ${e instanceof Error ? e.name : typeof e}`)
@@ -116,13 +124,21 @@ export function konusmaTanimaHazir(): boolean {
   return Boolean(AKTIF_KLINIK?.konusma && process.env.ELEVENLABS_API_KEY?.trim())
 }
 
-export async function konusmayiTani(ses: Blob, notDili: DilKodu): Promise<TanimaSonucu> {
+export async function konusmayiTani(ses: Blob, notDili: DilKodu, anahtarTerimler: readonly string[] = []): Promise<TanimaSonucu> {
   const a = AKTIF_KLINIK?.konusma
   const anahtar = process.env.ELEVENLABS_API_KEY?.trim()
   if (!a || !anahtar) return { durum: 'hazir-degil' }
 
   let gecisSayisi = 1
-  const ilk = await saglayiciyaGonder(ses, a, anahtar, null)
+  let terimler = process.env.NOTYA_STT_ANAHTAR_TERIM === '0' ? [] : anahtarTerimler
+  let ilkCevap = await saglayiciyaGonder(ses, a, anahtar, null, terimler)
+  // Keyterms refused: the same pass once without them. It is a pass: `gecisSayisi` reaches the ceiling, no third send.
+  if (ilkCevap === 'reddedildi' && gecisSayisi < AZAMI_GECIS) {
+    gecisSayisi += 1
+    terimler = []
+    ilkCevap = await saglayiciyaGonder(ses, a, anahtar, null)
+  }
+  const ilk = ilkCevap === 'reddedildi' ? null : ilkCevap
   if (!ilk) return { durum: 'okunamadi' }
 
   let ikinci: Gecis | null = null
@@ -132,7 +148,8 @@ export async function konusmayiTani(ses: Blob, notDili: DilKodu): Promise<Tanima
   if (ikinciGecisGerekliMi(ilk, a) && zorlanacak && gecisSayisi < AZAMI_GECIS) {
     gecisSayisi += 1
     ikinciGecisDili = zorlanacak
-    ikinci = await saglayiciyaGonder(ses, a, anahtar, zorlanacak)
+    const c = await saglayiciyaGonder(ses, a, anahtar, zorlanacak, terimler)
+    ikinci = c === 'reddedildi' ? null : c
   }
 
   const secilenGecis = gecisSec(ilk, ikinci)
@@ -143,7 +160,8 @@ export async function konusmayiTani(ses: Blob, notDili: DilKodu): Promise<Tanima
   return {
     durum: 'tamam', secilen, secilenGecis,
     taninanDil: ilk.dilKodu, dilOlasiligi: ilk.dilOlasiligi,
-    ikinciGecis: gecisSayisi > 1, ikinciGecisDili, dusukGuven, gecisSayisi,
+    // a keyterm resend (DIKTE-TIBBI-01) is a send, not a language pass: only the forced-language pass is "second pass"
+    ikinciGecis: ikinciGecisDili !== null, ikinciGecisDili, dusukGuven, gecisSayisi,
     gecisSureleri: { ilk: ilk.sureSn, ...(ikinci ? { ikinci: ikinci.sureSn } : {}) },
   }
 }
