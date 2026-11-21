@@ -11,6 +11,7 @@ import {
 import { WHO_LMS, WHO_UST_AY } from '@/lib/clinical/whoBuyumeLms'
 import { gunFarki, ondalikAy } from './girdi'
 import { duzeltilmisYas } from '@/lib/clinical/prematur/duzeltilmisYas'
+import { MAJOR_PERSENTILLER, cizgiGecisi, KAYMA_BASLANGIC_AY } from '@/lib/clinical/buyumeGrafik'
 
 export type Referans = 'neyzi' | 'who'
 export const REFERANS_AD: Record<Referans, string> = { neyzi: 'Neyzi (Türk çocukları, 2015)', who: 'WHO (2006 standart · 2007 referans)' }
@@ -21,8 +22,8 @@ export const REFERANS_UST_AY: Record<Referans, Record<BuyumeParametre, number>> 
 export const PARAM_AD: Record<BuyumeParametre, string> = { kilo: 'Kilo', boy: 'Boy', basCevresi: 'Baş çevresi', vki: 'VKİ' }
 export const PARAM_BIRIM: Record<BuyumeParametre, string> = { kilo: 'kg', boy: 'cm', basCevresi: 'cm', vki: 'kg/m²' }
 
-/** Eğri çizgileri = kayma sayımında "majör çizgi" (stüdyo ve hasta dosyası grafiğinde çizilen 7 çizgi). */
-export const MAJOR_PERSENTILLER = [3, 10, 25, 50, 75, 90, 97] as const
+/** Eğri çizgileri = kayma sayımında "majör çizgi" (stüdyo ve hasta dosyası grafiğinde çizilen 7 çizgi). Tek kaynak: lib/clinical/buyumeGrafik.ts. */
+export { MAJOR_PERSENTILLER, cizgiGecisi, KAYMA_BASLANGIC_AY }
 
 const whoTablo = (param: BuyumeParametre, cinsiyet: Cinsiyet): LMSNokta[] =>
   WHO_LMS[param][cinsiyet].map(([ay, L, M, S]) => ({ ay, L, M, S }))
@@ -98,13 +99,6 @@ export function olcumSatirlari(ref: Referans, cinsiyet: Cinsiyet, dogumIso: stri
     })
 }
 
-/** a ile b persentilleri arasında kalan majör çizgi sayısı (işaretli: + yukarı, − aşağı). */
-export function cizgiGecisi(pOnce: number, pSonra: number): number {
-  const alt = Math.min(pOnce, pSonra), ust = Math.max(pOnce, pSonra)
-  const n = MAJOR_PERSENTILLER.filter((c) => c > alt && c < ust).length
-  return pSonra >= pOnce ? n : -n
-}
-
 export interface Kayma { param: BuyumeParametre; oncekiTarih: string; sonTarih: string; pOnce: number; pSon: number; cizgi: number }
 
 /**
@@ -134,9 +128,9 @@ export function persentilKaymalari(satirlar: OlcumSatiri[], esik = 2, baslangicA
 /**
  * NOTYA-KADEMELI-01d (Dr. Gökhan via Kaan, 2026-10-02) — the percentile-crossing assessment of a chart answer starts
  * here: a large newborn settling toward the middle in the first months is physiological catch-down, so a birth value
- * is history, never the start of a drift. Months of age (decimal, as OlcumSatiri.ay).
+ * is history, never the start of a drift. Months of age (decimal, as OlcumSatiri.ay). KAYMA_BASLANGIC_AY is re-exported
+ * above from lib/clinical/buyumeGrafik.ts (one source with the patient-file chart).
  */
-export const KAYMA_BASLANGIC_AY = 6
 
 export type OlcumParametresi = 'kilo' | 'boy' | 'basCevresi'
 export interface TutarsizOlcum {

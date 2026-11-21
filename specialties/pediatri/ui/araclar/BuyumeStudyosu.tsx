@@ -3,11 +3,11 @@
  * PEDI-ARACLAR-01 — Araçlar › Büyüme & persentil stüdyosu (engines/buyume.ts → lib/clinical/buyumeEgrisi + WHO LMS).
  * En kısa yol: doğum tarihi + cinsiyet + bugünkü ölçüm → persentil ve z-skor anında. Önceki ölçümler (hasta seçiliyse
  * onaylı notlardan otomatik; değilse elle) → eğri, persentil kayması (≥ 2 majör çizgi) ve büyüme hızı (cm/yıl).
- * Referans Neyzi (varsayılan) ↔ WHO. Grafik hasta dosyasındakiyle aynı bileşen (HastaBuyumeEgrileri.Grafik).
+ * Referans Neyzi (varsayılan) ↔ WHO. Grafik hasta dosyasındakiyle aynı bileşen (components/doktor/buyume/BuyumeGrafigi.tsx).
  */
 import React, { useEffect, useMemo, useState } from 'react';
 import { getAccessTokenAsync } from '@/lib/doktor/toolsUi';
-import { Grafik } from '@/components/doktor/HastaBuyumeEgrileri';
+import { Grafik, GrafikAnahtari } from '@/components/doktor/buyume/BuyumeGrafigi';
 import type { BuyumeParametre, Cinsiyet } from '@/lib/clinical/buyumeEgrisi';
 import {
   olcumSatirlari, persentilKaymalari, buyumeHizlari, egriler, vkiSinifi, zMetni, persentilKisa, buyumeOzetMetni,
@@ -91,7 +91,7 @@ export default function BuyumeStudyosu() {
 
   const grafikVeri = useMemo(() => {
     if (!hazir || !satirlar.length) return null;
-    const noktalar = satirlar.filter((s) => s.deger[param] != null && s.egriAy != null && s.egriAy <= REFERANS_UST_AY[ref][param]).map((s) => ({ ay: s.egriAy!, deger: s.deger[param]!, tarih: s.tarih }));
+    const noktalar = satirlar.filter((s) => s.deger[param] != null && s.egriAy != null && s.egriAy <= REFERANS_UST_AY[ref][param]).map((s) => ({ ay: s.egriAy!, deger: s.deger[param]!, tarih: s.tarih, persentil: s.sonuc[param]?.persentil ?? null }));
     const maxAy = Math.max(24, ...satirlar.map((s) => s.egriAy ?? s.ay)) + 6;
     let e = egriler(ref, param, cinsiyet as Cinsiyet, maxAy);
     if (param === 'vki') e = e.map((x) => ({ ...x, noktalar: x.noktalar.filter((n) => n.ay >= 24 || ref === 'who') }));
@@ -217,7 +217,7 @@ export default function BuyumeStudyosu() {
               {grafikVeri.noktalar.length || grafikVeri.egriler.length ? <Grafik veri={grafikVeri} birim={grafikVeri.birim} /> : <div style={kucuk}>Bu ölçüm için eğri yok.</div>}
             </div>
           </div>
-          <div style={{ ...kucuk, marginTop: 6 }}><span style={{ color: '#F59E0B', fontWeight: 700 }}>●</span> ölçümler · <span style={{ color: '#0F9B8E', fontWeight: 700 }}>—</span> 50. persentil · kesikli 3/10/25/75/90/97</div>
+          <GrafikAnahtari stil={{ marginTop: 8 }} />
         </div>
       )}
 
