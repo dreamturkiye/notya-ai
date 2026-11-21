@@ -71,4 +71,6 @@ export type AnalizGirdi = {
   yasAy?: number | null
   cinsiyet?: 'K' | 'E' | null
   klinikNot?: string | null   // doctor's one-line context ("3 gündür ateş, öksürük")
+  /** NOTYA-BELGE-TUR-01: the doctor did not classify the upload; the evaluator determines the document type itself. */
+  modaliteOtomatik?: boolean
 }
