@@ -28,6 +28,7 @@ import { hesapSaatDilimi, hesapSaatDilimiAyarla, saatBicimi } from '@/lib/ulke/a
 import { ozellikAcik, ulkePaketi } from '@/lib/ulke/ulke'
 import type { DilKodu } from '@/lib/ulke/tipler'
 import { ulkeFetch, ulkeOturumDoldu, ulkeOturumuCanliTut } from '@/lib/ulke/oturumFetch'
+import { useHavaKonum } from '@/lib/doktor/havaKonum'
 
 /**
  * ADDRESSES of the application's screens: the routes of UYGULAMA_EKRANLARI under the country's path prefix
@@ -160,10 +161,9 @@ export function useUygulama(ekran: UygulamaEkrani): Uygulama {
 
 export type Sekme = 'bugun' | 'takvim' | 'hastalar' | 'araclar' | 'klinik' | 'onBuro' | 'ayarlar' | 'fatura' | 'asistan'
 
-/** The clock (in the account's zone) and, when the browser shares a place, the weather: the same two values the Türkiye chrome shows. */
+/** The clock (in the account's zone) and the weather once the doctor has tapped to share a place: the same two values the Türkiye chrome shows. */
 function useSaatHava() {
   const [saat, setSaat] = useState('')
-  const [hava, setHava] = useState<{ sicaklik: number; kod: number } | null>(null)
   useEffect(() => {
     const yaz = () => {
       const tz = hesapSaatDilimi()
@@ -174,26 +174,11 @@ function useSaatHava() {
     const t = setInterval(yaz, 30000)
     return () => clearInterval(t)
   }, [])
-  useEffect(() => {
-    if (typeof navigator === 'undefined' || !navigator.geolocation) return
-    let iptal = false
-    navigator.geolocation.getCurrentPosition(
-      (konum) => {
-        const { latitude, longitude } = konum.coords
-        fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code`)
-          .then((r) => (r.ok ? r.json() : null))
-          .then((d: { current?: { temperature_2m?: number; weather_code?: number } } | null) => {
-            if (iptal || !d?.current || typeof d.current.temperature_2m !== 'number') return
-            setHava({ sicaklik: Math.round(d.current.temperature_2m), kod: Number(d.current.weather_code) })
-          })
-          .catch(() => {})
-      },
-      () => {},
-      { timeout: 8000, maximumAge: 30 * 60 * 1000 },
-    )
-    return () => { iptal = true }
-  }, [])
-  return { saat, hava }
+  // HAVA-KONUM-01 (beta, 2026-11-21): the browser is never asked on mount — every screen here is a full page load, so it
+  // asked on every screen. Location is asked only on a tap of the weather chip, once; the decision and the rounded place
+  // are remembered on the device (lib/doktor/havaKonum.ts, shared with Türkiye).
+  const { hava, istenebilir, iste } = useHavaKonum()
+  return { saat, hava, istenebilir, iste }
 }
 
 function harfler(ad: string): string {
@@ -210,7 +195,7 @@ function KabukCercevesi({ dil, m, ad, unvan, aktif, cikis, onBuro, kompakt, chil
   dil: DilKodu; m: UygulamaMetni; ad?: string; unvan?: string; aktif?: Sekme | null; cikis?: () => void; onBuro?: boolean; kompakt?: boolean; children: ReactNode
 }) {
   const bitkiSrc = useBitki() || ulkeYolu('/doktor-chrome/plant.jpg')
-  const { saat, hava } = useSaatHava()
+  const { saat, hava, istenebilir: havaIstenebilir, iste: havaIste } = useSaatHava()
   const [menuAcik, setMenuAcik] = useState(false)
   const k = m.kabuk
   const git = (yol: string) => { window.location.assign(yol) }
@@ -262,7 +247,7 @@ function KabukCercevesi({ dil, m, ad, unvan, aktif, cikis, onBuro, kompakt, chil
         onGit={git}
         hesap={{
           harfler: harfler(ad ?? ''), avatarUrl: null, ad: ad || '\u00A0', alt: unvan || '\u00A0', avatarAd: ad ?? '', avatarBasligi: ad ? `${ad}` : (k.hesabim ?? k.ayarlar), avatarEtiketi: k.hesabim ?? k.ayarlar,
-          saat, hava, cikis: k.cikis, onHesap: () => git(YOL.ayarlar), onCikis: () => { cikis?.() },
+          saat, hava, havaIste: havaIstenebilir && k.havaGoster ? { etiket: k.havaGoster, onIste: havaIste } : null, cikis: k.cikis, onHesap: () => git(YOL.ayarlar), onCikis: () => { cikis?.() },
         }}
         sekme={sekme}
         menu={{ asistan: asistan ? [asistan] : [], ogeler: menuOgeleri }}
