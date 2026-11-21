@@ -99,7 +99,10 @@ Tamponad veya çökme/kollaps ifadesi varsa acil_bayrak true. Destek alanına mo
 
 export function kullaniciPromptu(g: AnalizGirdi, f: FusionSonuc | null, motorlar: MotorCiktisi[], sesMetrikleri?: Record<string, number | string> | null): string {
   const parcalar: string[] = []
-  parcalar.push(`Branş: ${g.brans}. Doktorun seçtiği modalite: ${MODALITE_TR[g.modality_final] || g.modality_final}.`)
+  parcalar.push(g.modaliteOtomatik
+    // NOTYA-BELGE-TUR-01: no default modality is suggested (a wrong default biased the reading and the note heading).
+    ? `Branş: ${g.brans}. Doktor belge türünü seçmedi: belgenin ne olduğunu (ör. kalça ultrasonu raporu, akciğer grafisi, laboratuvar raporu, EKG) görüntüden sen belirle ve "modalite" alanına kısa Türkçe adıyla yaz; emin değilsen "Görüntüleme raporu" yaz.`
+    : `Branş: ${g.brans}. Doktorun seçtiği modalite: ${MODALITE_TR[g.modality_final] || g.modality_final}.`)
   if (typeof g.yasAy === 'number') parcalar.push(`Hasta yaşı: ${g.yasAy < 24 ? `${g.yasAy} ay` : `${Math.floor(g.yasAy / 12)} yaş`}${g.cinsiyet ? `, cinsiyet ${g.cinsiyet}` : ''}.`)
   if (g.klinikNot) parcalar.push(`Klinik not: ${g.klinikNot.slice(0, 400)}`)
   const rehber = modaliteRehberi(g.modality_final)
