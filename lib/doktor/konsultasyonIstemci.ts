@@ -155,7 +155,7 @@ export const yanitTaslagiIste = (id: string, belgeId: string, deid?: { mime: str
 
 /**
  * Fotoğraf rapor: sunucu "deid_gerekli" derse (mevcut belge değerlendirmesi yok) tarayıcı kasadaki görüntüyü indirir,
- * EXIF'siz küçültülmüş türevini çıkarır (core/belgeler/deid — NOTYA-BELGE-01 sözleşmesi) ve yeniden ister.
+ * kimliği maskelenmiş türevini çıkarır (core/belgeler/deid — OCR maskesi; maskelenemezse gönderilmez) ve yeniden ister.
  */
 export async function yanitTaslagiIsteVeGerekirseKimliksizlestir(id: string, belgeId: string): Promise<TaslakYaniti> {
   const ilk = await yanitTaslagiIste(id, belgeId)
@@ -164,9 +164,12 @@ export async function yanitTaslagiIsteVeGerekirseKimliksizlestir(id: string, bel
     const t = await getAccessTokenAsync()
     const r = await doktorFetch(`/api/doktor/documents/${encodeURIComponent(belgeId)}/download`, { cache: 'no-store' })
     if (!r.ok) return { ok: false, mesaj: TASLAK_OLUSTURULAMADI }
-    const { gorseliKimliksizlestir } = await import('@/core/belgeler/deid')
-    const d = await gorseliKimliksizlestir(await r.blob())
-    return yanitTaslagiIste(id, belgeId, { mime: d.mime, base64: d.base64 })
+    // NOTYA-BELGE-DEID-03 (2026-11-20): was an EXIF-only re-encode (burned-in name / DOB / protocol no left visible). Now the same
+    // OCR mask as every document path; masking failed -> nothing is sent.
+    const { gorseliOtomatikKimliksizlestir } = await import('@/core/belgeler/deid')
+    const m = await gorseliOtomatikKimliksizlestir(await r.blob(), { modalite: 'us' })
+    if (m.maske.durum !== 'maskelendi') return { ok: false, mesaj: TASLAK_OLUSTURULAMADI }
+    return yanitTaslagiIste(id, belgeId, { mime: m.gorsel.mime, base64: m.gorsel.base64 })
   } catch {
     return { ok: false, mesaj: TASLAK_OLUSTURULAMADI }
   }

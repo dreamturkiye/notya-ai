@@ -13,7 +13,7 @@ import { createHash } from 'crypto'
 import { doktorOturum } from '@/lib/doktor/serverAuth'
 import { getDocumentMeta } from '@/lib/vault/service'
 import { decrypt } from '@/lib/security/encryption'
-import { varsayilanGoruntuModalitesi } from '@/core/belgeler/belgeAkisi'
+import { modaliteMetindenKod } from '@/core/belgeler/modaliteTespit'
 import { bransAnahtari, bransKurali, etkinModalite, SES_MODALITELERI } from '@/core/belgeler/router'
 import { tierAYazVeFuzyonla } from '@/core/belgeler/tierA'
 import { fusionYap } from '@/core/belgeler/fusion'
@@ -64,8 +64,11 @@ export async function POST(req: NextRequest) {
   try { if (hasta.gender_encrypted) cinsiyet = cinsiyetKodu(decrypt(String(hasta.gender_encrypted))) } catch { cinsiyet = null }
   const yasAy = yasAyHesapla(dobIso)
 
-  // NOTYA-BELGE-OTO-01: 'auto' = unclassified upload in the automatic flow -> the branch's default image modality (config in belgeAkisi)
-  let { modalite, serbest } = etkinModalite(bransKey, body.modalityFinal === 'auto' ? varsayilanGoruntuModalitesi(bransKey) : body.modalityFinal)
+  // NOTYA-BELGE-TUR-01 (2026-11-20): 'auto' = unclassified upload in the automatic flow. No branch default is imposed any more
+  // (pediatri's default "akciğer grafisi" labelled a hip ultrasound as a chest X-ray): the writer determines the document type and
+  // the final modality is resolved from what it detected (modaliteCoz below), falling back to 'serbest' (describe only).
+  const otomatik = body.modalityFinal === 'auto'
+  let { modalite, serbest } = otomatik ? { modalite: 'serbest' as Modalite, serbest: false } : etkinModalite(bransKey, body.modalityFinal as Modalite)
   const sesMi = SES_MODALITELERI.includes(modalite)
   const pdfMi = meta.fileType === 'application/pdf'
 
@@ -113,12 +116,13 @@ export async function POST(req: NextRequest) {
     tierB.push(ekoMotor)
   }
 
-  const girdi = { brans: kural.ad, modality_final: modalite, yasAy, cinsiyet, klinikNot: body.klinikNot || null }
+  const girdi = { brans: kural.ad, modality_final: modalite, yasAy, cinsiyet, klinikNot: body.klinikNot || null, modaliteOtomatik: otomatik }
 
   // Tier A: one shared path (core/belgeler/tierA) — also used by Göz › Görüntü › Asistana raporla.
-  let sonucA: { rapor: BelgeRaporu; fusion: FusionSonuc; motorlar: MotorCiktisi[]; duzeltmeler: string[]; ham: string }
+  let sonucA: { rapor: BelgeRaporu; fusion: FusionSonuc; motorlar: MotorCiktisi[]; duzeltmeler: string[]; ham: string; modalite?: Modalite }
   try {
-    sonucA = await tierAYazVeFuzyonla({ persona: kural.persona, girdi, gorsel, tierB, modalite, yasAy, fitzpatrickBilinmiyor: body.fitzpatrickBilinmiyor, tekAlanFundus: body.tekAlanFundus, serbest, sesMetrikleri: sesMi ? body.sesMetrikleri || null : null, doctorId: user.id })
+    sonucA = await tierAYazVeFuzyonla({ persona: kural.persona, girdi, gorsel, tierB, modalite, yasAy, fitzpatrickBilinmiyor: body.fitzpatrickBilinmiyor, tekAlanFundus: body.tekAlanFundus, serbest, sesMetrikleri: sesMi ? body.sesMetrikleri || null : null, doctorId: user.id,
+      ...(otomatik ? { modaliteCoz: (r: BelgeRaporu) => { const k = modaliteMetindenKod(r.modalite); return k ? etkinModalite(bransKey, k) : { modalite: 'serbest' as Modalite, serbest: true } } } : {}) })
   } catch (e) {
     const ekoMotor = tierB.find((m) => m.motor === EKO_ASE_MOTOR)
     const olcum = Number(ekoMotor?.metrikler?.olcumSayisi || 0)
@@ -134,6 +138,7 @@ export async function POST(req: NextRequest) {
     }
   }
   let { rapor, fusion, motorlar, duzeltmeler } = sonucA
+  if (otomatik && sonucA.modalite) { modalite = sonucA.modalite; serbest = modalite === 'serbest' }
   const ekoKaydi = motorlar.find((m) => m.motor === EKO_ASE_MOTOR)
   if (ekoKaydi) {
     const once = rapor.kalite
@@ -144,7 +149,7 @@ export async function POST(req: NextRequest) {
 
   // Modality mismatch: the writer saw something else than the doctor chose
   const secilenTr = MODALITE_TR[modalite] || modalite
-  const uyusmazlik = !serbest && rapor.modalite && !rapor.modalite.toLocaleLowerCase('tr-TR').includes(secilenTr.toLocaleLowerCase('tr-TR').split(' ')[0]) && !secilenTr.toLocaleLowerCase('tr-TR').includes(rapor.modalite.toLocaleLowerCase('tr-TR').split(' ')[0])
+  const uyusmazlik = !otomatik && !serbest && rapor.modalite && !rapor.modalite.toLocaleLowerCase('tr-TR').includes(secilenTr.toLocaleLowerCase('tr-TR').split(' ')[0]) && !secilenTr.toLocaleLowerCase('tr-TR').includes(rapor.modalite.toLocaleLowerCase('tr-TR').split(' ')[0])
   const durum = rapor.kalite === 'dusuk' ? 'kalite_dusuk' : uyusmazlik ? 'modalite_uyusmazlik' : 'taslak'
   const engineSet = tierB.length ? `tierA+${tierB.map((m) => m.motor).join('+')}-v1` : 'tierA-v1'
 

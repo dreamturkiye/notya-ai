@@ -733,7 +733,7 @@ export default function NotSayfasi() {
           <textarea value={ozet} onChange={(e) => isaretle(setOzet)(e.target.value)} rows={4} style={kutu} />
         </div>
         {/* MUAYENE-EKLERI-07: visit uploads as links; the viewer opens beside the report (no navigation, no unmount). */}
-        <MuayeneEkleri hastaId={veri.hasta.patientId} visitId={not.sessionId ?? null} onYuklendi={() => setEkSayac((n) => n + 1)} onNotaEklendi={() => { void ekBloklariniAl(); }} />
+        <MuayeneEkleri hastaId={veri.hasta.patientId} visitId={not.sessionId ?? null} hastaAdi={veri.hasta.ad} onYuklendi={() => setEkSayac((n) => n + 1)} onNotaEklendi={() => { void ekBloklariniAl(); }} />
         <YuklenenDosyalar key={ekSayac} sessionId={not.sessionId} />
       </NotDuzeni>
     </div>

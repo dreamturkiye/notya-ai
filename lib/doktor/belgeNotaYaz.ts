@@ -4,7 +4,7 @@
  * Never creates sessions/notes: when no target note exists the document is left in Belgeler (reported as `not_yok`).
  */
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { MODALITE_TR, type Modalite } from '@/core/belgeler/ontoloji'
+import { belgeEtiketi } from '@/core/belgeler/modaliteTespit'
 import type { BelgeRaporu } from '@/core/belgeler/types'
 import { notaBloklariUygula, type BlokDili, type BlokGirdi } from '@/core/belgeler/notaBlok'
 import { arsivsizNotlar, arsivsizSeanslar } from '@/lib/doktor/arsiv'
@@ -62,7 +62,7 @@ export async function belgeleriNotaYaz(sb: SupabaseClient, doktorId: string, ana
       const r = a.sonuc as BelgeRaporu
       return {
         belgeId: a.belge_id || a.id,
-        etiket: MODALITE_TR[a.modality_final as Modalite] || a.modality_final,
+        etiket: belgeEtiketi(r.modalite, a.modality_final, dil), // NOTYA-BELGE-TUR-01: the evaluator's detected type, generic fallback
         tarih: new Date(a.olusturuldu).toLocaleDateString(dil === 'tr' ? 'tr-TR' : dil === 'ru' ? 'ru-RU' : 'en-GB'),
         yuklemeSirasi: sira,
         ozet: a.hekim_ozet || r.ozet,

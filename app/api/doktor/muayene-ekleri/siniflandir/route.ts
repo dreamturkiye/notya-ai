@@ -11,12 +11,15 @@ export const dynamic = 'force-dynamic'
 export const maxDuration = 60
 
 export async function POST(req: NextRequest) {
-  const body = (await req.json().catch(() => null)) as { sessionId?: unknown; belgeId?: unknown; kaynak?: unknown; ipucuTur?: unknown } | null
+  const body = (await req.json().catch(() => null)) as { sessionId?: unknown; belgeId?: unknown; kaynak?: unknown; ipucuTur?: unknown; deid?: { mime?: unknown; base64?: unknown } | null } | null
   const on = await ekRotaOnKosul(req, body?.sessionId, body?.belgeId)
   if ('hata' in on) return on.hata
   const kaynak: EkKaynak = body?.kaynak === 'kamera' || body?.kaynak === 'barkod' ? body.kaynak : 'dosya'
   try {
-    const s = await belgeyiSiniflandir(on.baglam, kaynak, ekTuruMu(body?.ipucuTur) ? body.ipucuTur : null)
+    // NOTYA-BELGE-DEID-03: an image is classified by AI only from the browser's masked copy (never the vault original).
+    const deid = body?.deid && typeof body.deid.base64 === 'string' && body.deid.base64.length < 8_000_000
+      ? { mime: String(body.deid.mime || 'image/jpeg'), base64: body.deid.base64 } : null
+    const s = await belgeyiSiniflandir(on.baglam, kaynak, ekTuruMu(body?.ipucuTur) ? body.ipucuTur : null, deid)
     return NextResponse.json({ siniflandirma: s })
   } catch {
     console.error('[muayene-ekleri] siniflandir basarisiz')

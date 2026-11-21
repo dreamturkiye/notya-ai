@@ -1,5 +1,27 @@
 # OPEN COMMITMENTS — Notya AI
 
+## NOTYA-BELGE-TUR-01 + NOTYA-BELGE-DEID-03 — wrong document-type label; masking audit of every document send path (Claude, 2026-11-20)
+
+Classification: CORE (all 30 + 10 Özel Branşlar). Repro: pediatri, note 306c2f02…, hip ultrasound report uploaded on the note page ("Belge / foto / ses ekle") was headed "Röntgen (akciğer grafisi)".
+Shipped on main: (1) unclassified ("auto") uploads no longer get the branch default modality (pediatri default was chest X-ray); the writer determines the type, the
+note label comes from its detected modality (`core/belgeler/modaliteTespit.ts` `belgeEtiketi`), generic fallback "Görüntüleme raporu" (en/ru/uz variants), same in the
+manual onayla path. (2) Note-page upload (`MuayeneEkleri`) always masked the outbound copy (no unmasked image was sent on that path) but rendered no line: now shows the
+standard quiet line, chips and the wrong-patient warning. (3) PRIVACY DEFECT FOUND AND FIXED in the post-dictation Ekler step: the server sent the vault ORIGINAL image to the
+model for the AI type guess and for lab / aşı / epikriz / diğer images (only röntgen/EKG/foto were masked). Now every image is masked on the device before classification and
+evaluation, the server refuses images without the masked copy (`lib/doktor/muayeneEk/icerik.ts`). (4) Consultation reply draft sent an EXIF-only re-encode (burned-in identity
+visible): now OCR-masked, not sent when masking fails. (5) Göz "Asistana raporla": OCR mask added before send (doctor attestation kept as fallback). Guard:
+`core/belgeler/maskesizGonderim.test.ts`.
+Per country: us, gb, ca, au, nz, uz — their document flow is the separate NOTYA-ULKE-EKLER-01 implementation, which already masks first, shows the privacy line and labels by
+the reader's detected kind (neither defect present there); the shared core files present on each release branch received the same change set and the guard test.
+Open items:
+- **DEID-03-a — Belgeler lab page and aşı karnesi reader still send the vault original image to the model** (`app/api/doktor/belgeler/lab/route.ts`, `app/api/doktor/asilar/karne/route.ts`;
+  outside the muayene document flow; pinned in the guard test's ACIK_KALAN list, which may only shrink). Fix: mask on the device in the lab page / karne flow and send the masked copy.
+  Owner: Claude. Opened 2026-11-20.
+- **DEID-03-b — the Ekler step still auto-reads PDFs (lab / aşı / epikriz / görüntü) without de-identification** (extends the 2026-10-21 "text-layer de-identification for PDFs" item).
+  Owner: Claude. Opened 2026-11-20.
+- **DEID-03-c — audio-file sessions have no post-dictation Ekler step.** The skill does not require it there: the note page offers the Belgeler-upload entry (same mask -> evaluate -> note
+  pipeline, images only; lab / aşı / epikriz typing exists only in the Ekler step). Waits on Kaan: say if the Ekler step should also follow "Ses dosyası yükle". Opened 2026-11-20.
+
 ## PREMATUR-MODUL — prematurity support for Pediatri and Kadın Doğum: what is open (Claude, 2026-11-13, Kaan's order 2026-11-13)
 
 Classification: BRANŞ-SPECIFIC (Pediatri + KD only). Shipped for Türkiye: pediatri plan / corrected age / cohort, KD erken doğum paneli, the KD → pediatri hand-off, migration 199

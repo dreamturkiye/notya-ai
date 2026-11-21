@@ -36,6 +36,10 @@ import { sinifla, ogrenmeSinyali, type SiniflandirGirdi } from './siniflandir'
 import { degerlendirmeOku, degerlendirmeYaz, girdiHash, ogrenmeIsaretle, ogrenmeKaydet, ogrenmeYukle } from './saklama'
 import { ekTuruMu, type EkAsiSatiri, type EkKaynak, type EkSonuc, type EkTuru, type SiniflandirmaSonucu } from './tipler'
 import { cinsiyetKodu } from '@/lib/utils/cinsiyet'
+import { KIMLIK_GIZLENEMEDI } from '@/core/belgeler/otoBatch'
+import { deidMime, gorselBelgeMi, icerikBlogu, type DeidGorsel } from './icerik'
+
+export type { DeidGorsel } from './icerik'
 
 export const EK_ROTA_SURESI_SN = 120
 
@@ -88,13 +92,6 @@ lab (laboratuvar/tahlil sonucu), asi (aşı karnesi, aşı belgesi, aşı flakon
 Emin değilsen düşük güven ver; tahmin yürütme. Hasta adı, T.C. no gibi kimlik bilgisini YAZMA.
 Yalnız JSON: {"tur": "lab"|"asi"|"foto"|"rontgen"|"ekg"|"epikriz"|"diger", "guven": 0-1 arası sayı}`
 
-function icerikBlogu(meta: DocumentMeta, bytes: Buffer): unknown | null {
-  const b64 = bytes.toString('base64')
-  if (meta.fileType === 'application/pdf') return { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: b64 } }
-  if (['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(meta.fileType)) return { type: 'image', source: { type: 'base64', media_type: meta.fileType, data: b64 } }
-  return null
-}
-
 function jsonAyikla(ham: string): Record<string, unknown> | null {
   const t = ham.replace(/```json|```/g, '')
   const a = t.indexOf('{'), z = t.lastIndexOf('}')
@@ -102,8 +99,8 @@ function jsonAyikla(ham: string): Record<string, unknown> | null {
   try { const j = JSON.parse(t.slice(a, z + 1)); return j && typeof j === 'object' && !Array.isArray(j) ? j as Record<string, unknown> : null } catch { return null }
 }
 
-async function aiSiniflandir(c: EkBaglam, bytes: Buffer): Promise<{ tur: EkTuru; guven: number } | null> {
-  const blok = icerikBlogu(c.meta, bytes)
+async function aiSiniflandir(c: EkBaglam, bytes: Buffer, deid: DeidGorsel | null): Promise<{ tur: EkTuru; guven: number } | null> {
+  const blok = icerikBlogu(c.meta, bytes, deid) // image without a masked copy -> no AI guess; the doctor picks the type
   if (!blok) return null
   try {
     const y = await aiCagir({
@@ -129,7 +126,7 @@ async function metinCikar(meta: DocumentMeta, bytes: Buffer): Promise<string | n
 export interface SiniflandirCikti extends SiniflandirmaSonucu { ogrenmeAcik: boolean }
 
 /** Belgeyi sınıflandırır; kasa kategorisini yalnız belirsiz değilse yazar. AI yalnız sezgisel güven eşiğin altındaysa çağrılır. */
-export async function belgeyiSiniflandir(c: EkBaglam, kaynak: EkKaynak, ipucuTur: EkTuru | null): Promise<SiniflandirCikti> {
+export async function belgeyiSiniflandir(c: EkBaglam, kaynak: EkKaynak, ipucuTur: EkTuru | null, deid: DeidGorsel | null = null): Promise<SiniflandirCikti> {
   const { bytes } = await downloadDocument({ supabase: c.sb }, c.doktorId, c.meta.id)
   const brans = c.bransKey
   const [ogrenme, metin] = await Promise.all([ogrenmeYukle(c.sb, c.doktorId, brans), metinCikar(c.meta, bytes)])
@@ -139,7 +136,7 @@ export async function belgeyiSiniflandir(c: EkBaglam, kaynak: EkKaynak, ipucuTur
   if (sonuc.sor) {
     const kota = await aiKotaKullan(c.sb, c.doktorId, 'ek')
     if (kota.izin) {
-      aiTahmini = await aiSiniflandir(c, bytes)
+      aiTahmini = await aiSiniflandir(c, bytes, deid)
       if (aiTahmini) { girdi.ai = aiTahmini; sonuc = sinifla(girdi, ogrenme) }
     }
   }
@@ -192,8 +189,9 @@ async function aliaslar(sb: SupabaseClient, doctorId: string): Promise<Record<st
   try { const { data } = await sb.from('lab_takma_adlar').select('raw_norm, canonical_key').eq('doctor_id', doctorId); return Object.fromEntries((data || []).map((r) => [r.raw_norm, r.canonical_key])) } catch { return {} }
 }
 
-async function labDegerlendir(c: EkBaglam, bytes: Buffer): Promise<EkSonuc> {
+async function labDegerlendir(c: EkBaglam, bytes: Buffer, deid: DeidGorsel | null): Promise<EkSonuc> {
   const ft = c.meta.fileType
+  if (gorselBelgeMi(c.meta) && !deid?.base64) return atlandiSonucu('lab', KIMLIK_GIZLENEMEDI)
   const butce = rotaButcesiMs(EK_ROTA_SURESI_SN)
   let yapi: CikarimSonucu | null = null, gorsel: CikarimSonucu | null = null
   try {
@@ -202,7 +200,7 @@ async function labDegerlendir(c: EkBaglam, bytes: Buffer): Promise<EkSonuc> {
   } catch { yapi = null }
   try {
     if (ft === 'application/pdf') gorsel = await gorselCikar({ tip: 'pdf', base64: bytes.toString('base64') }, undefined, c.doktorId, undefined, butce)
-    else if (ft.startsWith('image/')) gorsel = await gorselCikar({ tip: 'image', mime: ft, base64: bytes.toString('base64') }, undefined, c.doktorId, undefined, butce)
+    else if (gorselBelgeMi(c.meta) && deid?.base64) gorsel = await gorselCikar({ tip: 'image', mime: deidMime(deid), base64: deid.base64 }, undefined, c.doktorId, undefined, butce) // masked copy only
   } catch { gorsel = null }
   if (!yapi && !gorsel) return hataSonucu('lab', 'Bu dosyadan laboratuvar tablosu çıkarılamadı.')
 
@@ -231,8 +229,6 @@ async function labDegerlendir(c: EkBaglam, bytes: Buffer): Promise<EkSonuc> {
   } catch { rapor = null }
   return labSonucu({ satirlar, rapor, labAdi: gorsel?.lab_adi || yapi?.lab_adi || null, numuneTarihi: gorsel?.numune_tarihi || yapi?.numune_tarihi || null, kimlikUyarisi })
 }
-
-export interface DeidGorsel { mime: string; base64: string; hash?: string }
 
 async function goruntuDegerlendir(c: EkBaglam, bytes: Buffer, tur: 'rontgen' | 'ekg' | 'foto', deid: DeidGorsel | null): Promise<EkSonuc> {
   const kural = bransKurali(c.bransKey)
@@ -263,7 +259,7 @@ Yalnız JSON: {"etiket": true|false, "asi_adi": string|null, "lot_no": string|nu
 
 const ISO = /^\d{4}-\d{2}-\d{2}$/
 
-async function asiDegerlendir(c: EkBaglam, bytes: Buffer): Promise<EkSonuc> {
+async function asiDegerlendir(c: EkBaglam, bytes: Buffer, deid: DeidGorsel | null): Promise<EkSonuc> {
   const bugun = bugunTr()
   const ft = c.meta.fileType
   // (a) Barkod metni (kamera/okuyucu): GS1 çözümü + hekimin kendi stok kaydı. Ad bulunamazsa uydurulmaz.
@@ -285,8 +281,8 @@ async function asiDegerlendir(c: EkBaglam, bytes: Buffer): Promise<EkSonuc> {
     if (asiAdi) satir.eslesme = karneSatirlariniCevir([{ anahtar: 'x', asiAdi, dozNo: null, uygulamaTarihi: null, okunamadi: false, okunamadiNedeni: null, hamMetin: null }], 'bu_muayene', bugun)[0].eslesme
     return asiSonucu({ satirlar: [satir], bugunIso: bugun })
   }
-  const blok = icerikBlogu(c.meta, bytes)
-  if (!blok) return hataSonucu('asi', 'Bu dosya biçiminden aşı bilgisi okunamadı.')
+  const blok = icerikBlogu(c.meta, bytes, deid)
+  if (!blok) return gorselBelgeMi(c.meta) ? atlandiSonucu('asi', KIMLIK_GIZLENEMEDI) : hataSonucu('asi', 'Bu dosya biçiminden aşı bilgisi okunamadı.')
   const butce = rotaButcesiMs(EK_ROTA_SURESI_SN)
   // (b) Karne / belge
   try {
@@ -321,9 +317,10 @@ const GENEL_SISTEM = (epikriz: boolean) => `Sen bir tıbbi belge okuyucususun ($
 Uydurma yok: belgede olmayan tanı, değer, tarih, ilaç yazma; okuyamadığın bölümü "okunamayan" listesine ekle. Kişi adı, T.C. no AKTARMA.
 Yalnız JSON: {"belge_turu": string|null, "tarih": "GG.AA.YYYY"|null, "ozet": string, "onemli_bulgular": string[], "ilaclar": string[], "takip": string[], "okunamayan": string[]}`
 
-async function genelDegerlendir(c: EkBaglam, bytes: Buffer, tur: 'epikriz' | 'diger'): Promise<EkSonuc> {
+async function genelDegerlendir(c: EkBaglam, bytes: Buffer, tur: 'epikriz' | 'diger', deid: DeidGorsel | null): Promise<EkSonuc> {
   const ft = c.meta.fileType
-  let blok = icerikBlogu(c.meta, bytes)
+  if (gorselBelgeMi(c.meta) && !deid?.base64) return atlandiSonucu(tur, KIMLIK_GIZLENEMEDI)
+  let blok = icerikBlogu(c.meta, bytes, deid)
   if (!blok && (ft === 'text/plain' || /csv/.test(ft))) blok = { type: 'text', text: bytes.toString('utf8').slice(0, 20_000) }
   if (!blok) return atlandiSonucu(tur, 'Bu dosya biçimi için otomatik değerlendirme yok.')
   const y = await aiCagir({
@@ -363,10 +360,11 @@ export async function ekiDegerlendir(c: EkBaglam, o: DegerlendirSecenek): Promis
 
     let sonuc: EkSonuc
     switch (tur) {
-      case 'lab': sonuc = await labDegerlendir(c, bytes); break
-      case 'asi': sonuc = await asiDegerlendir(c, bytes); break
+      // NOTYA-BELGE-DEID-03: every type gets the masked copy; no image path reads the vault original into a model call.
+      case 'lab': sonuc = await labDegerlendir(c, bytes, o.deid ?? null); break
+      case 'asi': sonuc = await asiDegerlendir(c, bytes, o.deid ?? null); break
       case 'rontgen': case 'ekg': case 'foto': sonuc = await goruntuDegerlendir(c, bytes, tur, o.deid ?? null); break
-      default: sonuc = await genelDegerlendir(c, bytes, tur)
+      default: sonuc = await genelDegerlendir(c, bytes, tur, o.deid ?? null)
     }
     await degerlendirmeYaz(c.sb, {
       doktorId: c.doktorId, patientId: c.patientId, sessionId: c.sessionId, belgeId: c.meta.id, tur, turGuven: 1,

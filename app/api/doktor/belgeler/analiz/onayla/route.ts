@@ -8,12 +8,12 @@
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { doktorOturum } from '@/lib/doktor/serverAuth'
-import { MODALITE_TR, type Modalite } from '@/core/belgeler/ontoloji'
 import type { BelgeRaporu } from '@/core/belgeler/types'
 import { arsivsizNotlar, arsivsizSeanslar } from '@/lib/doktor/arsiv'
 import { protokolNumarasiAta } from '@/lib/doktor/protokolNo'
 import { notaBloklariUygula, afisTemizle } from '@/core/belgeler/notaBlok'
 import { ulkeDili } from '@/lib/doktor/belgeNotaYaz'
+import { belgeEtiketi } from '@/core/belgeler/modaliteTespit'
 
 export const dynamic = 'force-dynamic'
 
@@ -116,7 +116,7 @@ export async function POST(req: NextRequest) {
       const r = a.sonuc as BelgeRaporu
       const dil = ulkeDili()
       const uy = notaBloklariUygula(onceki, [{
-        belgeId: a.belge_id || a.id, etiket: MODALITE_TR[a.modality_final as Modalite] || a.modality_final,
+        belgeId: a.belge_id || a.id, etiket: belgeEtiketi(r.modalite, a.modality_final, dil), // NOTYA-BELGE-TUR-01: what the document is, not a default
         tarih: new Date(a.olusturuldu).toLocaleDateString(dil === 'tr' ? 'tr-TR' : dil === 'ru' ? 'ru-RU' : 'en-GB'), yuklemeSirasi: 0,
         ozet: a.hekim_ozet || r.ozet, bulgular: r.bulgular || [],
         hekimTanisi: (a.hekim_tanisi || []).map((t: { ad: string; icd10?: string | null }) => (t.icd10 ? `${t.ad} (${t.icd10})` : t.ad)), acil: !!r.acil_bayrak,

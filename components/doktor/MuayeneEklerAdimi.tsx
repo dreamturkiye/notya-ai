@@ -145,6 +145,21 @@ function Ic({ sessionId, patientId, transcript, pediatrik, hata, onDevam }: Prop
     setOgeler((l) => l.map((o) => (o.key === key ? { ...o, ...y } : o)))
   }, [])
 
+  // NOTYA-BELGE-DEID-03 (2026-11-20): ONE masked outbound copy per image, made on the device before ANY server AI call
+  // (type guess and every evaluation type: lab, aşı, epikriz, görüntü). Masking failed -> null -> nothing is sent.
+  const maskeler = useRef<Map<string, Promise<{ mime: string; base64: string } | null>>>(new Map())
+  const maskeliKopya = useCallback((key: string, dosya: Blob | undefined): Promise<{ mime: string; base64: string } | null> => {
+    if (!dosya || !dosya.type.startsWith("image/")) return Promise.resolve(null)
+    let p = maskeler.current.get(key)
+    if (!p) {
+      p = gorseliOtomatikKimliksizlestir(dosya, { modalite: "us" })
+        .then((m) => (m.maske.durum === "maskelendi" ? { mime: m.gorsel.mime, base64: m.gorsel.base64 } : null))
+        .catch(() => null)
+      maskeler.current.set(key, p)
+    }
+    return p
+  }, [])
+
   // NOTYA-BELGE-OTO-02: warm the on-device OCR engine as soon as the step opens (first image no longer waits for it).
   useEffect(() => { void import("@/core/belgeler/ocrKimlik").then((m) => m.ocrIsit()).catch(() => undefined) }, [])
 
@@ -187,15 +202,16 @@ function Ic({ sessionId, patientId, transcript, pediatrik, hata, onDevam }: Prop
     const y = await yukle(k.blob, k.ad, patientId, sessionId, tok, (yuzde) => guncelle(key, { yuzde }))
     if (!y.id) { guncelle(key, { durum: "yukleme_hata", hata: y.hata || "Yüklenemedi" }); return }
     guncelle(key, { belgeId: y.id, yuzde: 100, durum: "siniflaniyor" })
+    const deid = await maskeliKopya(key, k.blob) // image: masked copy or null (then the server makes no AI guess)
     const s = await api<{ siniflandirma?: { tur: EkTuru; guven: number; adaylar: { tur: EkTuru; guven: number }[]; sor: boolean } }>(
-      "/api/doktor/muayene-ekleri/siniflandir", { sessionId, belgeId: y.id, kaynak, ipucuTur: ipucu })
+      "/api/doktor/muayene-ekleri/siniflandir", { sessionId, belgeId: y.id, kaynak, ipucuTur: ipucu, deid })
     const c = s.veri?.siniflandirma
     if (!s.ok || !c) guncelle(key, { durum: "tur_sor", adaylar: [], tur: undefined })
     else {
       guncelle(key, { tur: c.tur, adaylar: c.adaylar, durum: c.sor ? "tur_sor" : "hazir" })
       if (!c.sor) otoBaslat(key, c.tur)
     }
-  }, [guncelle, patientId, sessionId])
+  }, [guncelle, maskeliKopya, patientId, sessionId])
 
   // Yükleme havuzu: aynı anda en fazla 3
   const kuyrukRef = useRef<Promise<void>>(Promise.resolve())
@@ -219,14 +235,12 @@ function Ic({ sessionId, patientId, transcript, pediatrik, hata, onDevam }: Prop
     const o = ogelerRef.current.find((x) => x.key === key)
     const tur = o?.tur ?? turIpucu
     if (!o?.belgeId || !tur) return
-    // NOTYA-BELGE-OTO-01: images are masked ON DEVICE; only the masked copy is sent. Masking failure -> skipped, never sent unmasked.
+    // NOTYA-BELGE-OTO-01 / DEID-03: EVERY image (any type, not only röntgen/EKG/foto) is masked ON DEVICE; only the masked copy
+    // is sent. Masking failure -> skipped, never sent unmasked.
     let maskeli: { mime: string; base64: string } | null = null
-    if (GORSEL_TURLERI.includes(tur) && o.dosya && o.dosya.type.startsWith("image/")) {
+    if (o.dosya && o.dosya.type.startsWith("image/")) {
       guncelle(key, { durum: "maskeleniyor", hata: undefined })
-      try {
-        const m = await gorseliOtomatikKimliksizlestir(o.dosya, { modalite: "us" })
-        if (m.maske.durum === "maskelendi") maskeli = { mime: m.gorsel.mime, base64: m.gorsel.base64 }
-      } catch { maskeli = null }
+      maskeli = await maskeliKopya(key, o.dosya)
       if (!maskeli) {
         guncelle(key, { durum: "atlandi", sonuc: atlaSonucu(tur, KIMLIK_GIZLENEMEDI), hata: `${KIMLIK_GIZLENEMEDI} — Belgeler bölümünden elle değerlendirebilirsiniz.` })
         return
@@ -449,7 +463,7 @@ function Ic({ sessionId, patientId, transcript, pediatrik, hata, onDevam }: Prop
         </div>
       ))}
 
-      {ogeler.some((o) => o.tur && GORSEL_TURLERI.includes(o.tur)) && (
+      {ogeler.some((o) => (o.tur && GORSEL_TURLERI.includes(o.tur)) || o.dosya?.type.startsWith("image/")) && (
         <div style={{ fontSize: 12, margin: "8px 0", opacity: 0.75 }}>{deIdMetin(process.env.NOTYA_COUNTRY).kopyadaGizli}</div>
       )}
 
