@@ -109,3 +109,73 @@ test('unlabelled name line + ID/DOB/Exam Date header; noisy speckle words do not
   assert.equal(b.dogum, '12.03.1992')
   assert.equal(b.muayeneTarihi, '21.10.2026')
 })
+
+// ─── DEID-03 (2026-11-20): lab sheet / vaccine card (synthetic fixtures — no real patient data) ──────────────────────
+import { belgeDurumu, kimlikSatiriMi, metniKimliksizlestir } from './kimlikMaske'
+
+test('lab sheet: patient block masked; sample date, column header and every result row stay readable', () => {
+  const s1 = satir(20, 'ÖRNEK', 'LABORATUVARI')
+  const s2 = satir(60, 'Adı', 'Soyadı:', 'AYSE', 'YILMAZ', 'Numune', 'Tarihi:', '12.11.2026')
+  const s3 = satir(90, 'T.C.', 'Kimlik', 'No:', '12345678901', 'Cinsiyet:', 'K')
+  const s4 = satir(120, 'Doğum', 'Tarihi:', '03.04.2015', 'Protokol:', 'P-7781')
+  const s5 = satir(170, 'Tetkik', 'Adı', 'Sonuç', 'Birim', 'Referans')
+  const s6 = satir(200, 'Hemoglobin', '12.3', 'g/dL', '11.5-15.5')
+  const s7 = satir(230, 'Lökosit', '7.8', '10^3/uL', '4.5-13.5')
+  const r = kimlikKutulari([s1, s2, s3, s4, s5, s6, s7], { genislik: W, yukseklik: H, modalite: 'lab' })
+  assert.equal(r.durum, 'ok')
+  assert.equal(r.ustBantUygulandi, false, 'no whole-band blackout on a lab sheet')
+  assert.ok(kapsar(r.kutular, s2, 2) && kapsar(r.kutular, s2, 3), 'name masked')
+  assert.ok(kapsar(r.kutular, s3, 3), 'TC masked')
+  assert.ok(kapsar(r.kutular, s4, 2) && kapsar(r.kutular, s4, 4), 'DOB and protocol masked')
+  assert.equal(kapsar(r.kutular, s2, 6), false, 'sample date readable')
+  assert.equal(kapsar(r.kutular, s3, 5), false, 'sex readable')
+  for (const s of [s5, s6, s7]) for (let i = 0; i < s.kelimeler.length; i++) assert.equal(kapsar(r.kutular, s, i), false, s.kelimeler[i].text)
+})
+
+test('vaccine card: name (even handwritten = unread) masked; "Aşı Adı" header and vaccine rows stay readable', () => {
+  const s1 = satir(30, 'AŞI', 'KARTI')
+  const s2 = satir(60, 'Adı', 'Soyadı:') // handwritten value: OCR returned no words
+  const s3 = satir(90, 'Doğum', 'Tarihi:', '01.02.2024')
+  const s4 = satir(140, 'Aşı', 'Adı', 'Doz', 'Tarih')
+  const s5 = satir(170, 'Hepatit', 'B', '1', '01.02.2024')
+  const s6 = satir(200, 'BCG', '1', '01.04.2024')
+  const r = kimlikKutulari([s1, s2, s3, s4, s5, s6], { genislik: W, yukseklik: H, modalite: 'asi' })
+  assert.equal(r.durum, 'ok')
+  const label = s2.kelimeler[1]
+  assert.ok(r.kutular.some((k) => k.x0 <= label.x1 + 1 && k.x1 >= W - 1 && k.y0 <= label.y0 && k.y1 >= label.y1), 'rest of the unreadable name line blacked out')
+  assert.ok(kapsar(r.kutular, s3, 2), 'DOB masked')
+  for (const s of [s4, s5, s6]) for (let i = 0; i < s.kelimeler.length; i++) assert.equal(kapsar(r.kutular, s, i), false, s.kelimeler[i].text)
+})
+
+test('document confidence: no identity label anywhere / unreadable page -> not sent; blank pages do not block', () => {
+  const sadeceTablo = kimlikKutulari([satir(200, 'Hemoglobin', '12.3', 'g/dL')], { genislik: W, yukseklik: H, modalite: 'lab' })
+  assert.equal(sadeceTablo.durum, 'dusuk_guven')
+  assert.equal(belgeDurumu([{ kimlikEtiketiVar: true, ortalamaGuven: 100, kelimeSayisi: 40 }, { kimlikEtiketiVar: false, ortalamaGuven: 0, kelimeSayisi: 0 }]), 'ok')
+  assert.equal(belgeDurumu([{ kimlikEtiketiVar: true, ortalamaGuven: 100, kelimeSayisi: 40 }, { kimlikEtiketiVar: false, ortalamaGuven: 30, kelimeSayisi: 12 }]), 'dusuk_guven')
+  assert.equal(belgeDurumu([{ kimlikEtiketiVar: false, ortalamaGuven: 0, kelimeSayisi: 0 }]), 'ocr_yok')
+})
+
+test('structured rows: identity lines are dropped, lab rows kept', () => {
+  assert.equal(kimlikSatiriMi('TC Kimlik No', '12345678901'), true)
+  assert.equal(kimlikSatiriMi('Hasta Adı', 'AYSE YILMAZ'), true)
+  assert.equal(kimlikSatiriMi('Telefon', '0532 123 45 67'), true)
+  assert.equal(kimlikSatiriMi('Hemoglobin', '12.3'), false)
+  assert.equal(kimlikSatiriMi('Trombosit', '250.000'), false)
+  assert.equal(kimlikSatiriMi('Tetkik Adı', 'Sonuç'), false)
+})
+
+test('plain text: identity values replaced, clinical text untouched', () => {
+  const r = metniKimliksizlestir('Hasta Adı: AYSE YILMAZ\nT.C. 12345678901\nTanı: Akut otitis media\nHemoglobin 12.3 g/dL')
+  assert.ok(!/AYSE|YILMAZ|12345678901/.test(r.metin), r.metin)
+  assert.match(r.metin, /Akut otitis media/)
+  assert.match(r.metin, /Hemoglobin 12\.3 g\/dL/)
+  assert.ok(r.gizlenen >= 3)
+})
+
+test('numbers that are clinical stay readable: dose + date, value + range, wide reference range', () => {
+  const s1 = satir(300, 'Trombosit', '250', '150-450')
+  const s2 = satir(330, 'Hepatit', 'B', '1', '01.02.2024')
+  const s3 = satir(360, 'PLT', '250000', '150000-450000')
+  const r = kimlikKutulari([s1, s2, s3], { genislik: W, yukseklik: H, modalite: 'derm' })
+  for (const s of [s1, s2, s3]) for (let i = 0; i < s.kelimeler.length; i++) assert.equal(kapsar(r.kutular, s, i), false, s.kelimeler[i].text)
+})
