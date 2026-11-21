@@ -335,17 +335,19 @@ SADECE geçerli JSON döndür, başka hiçbir şey yazma:
 
     // NOTYA-OGRENME-03: sesli muayene doktorun Ayşe'yle EN SIK konuştuğu yüzeydir, ama yazılı sohbet
     // dışında hiçbir yerden öğrenme çalışmıyordu — bu doktor için hafıza pratikte hep boş kalıyordu.
-    // Yalnız DOKTOR etiketli segmentleri kullan (hasta konuşması alınmaz); segment yoksa (tek blok
-    // transkript) tüm metni doktorun kendi anlatımı say — muayenelerde diyalog nadir, çoğu doktor
-    // narrasyonu. sohbettenOgren zaten "yalnız doktorun kendi ağzından, genellenebilir" diye filtreler.
+    // Yalnız açıkça DOKTOR etiketli segmentler kullanılır (hasta/veli konuşması alınmaz); etiketsiz segment ya da tek
+    // blok transkript öğrenmeye GİRMEZ (HASTA-KARISMA-01).
     try {
       const { ogrenmeyeDeger, sohbettenOgren } = await import('@/lib/doktor/hafiza')
+      // HASTA-KARISMA-01 (2026-11-20): ONLY segments explicitly labelled as the doctor. An unlabelled segment or an
+      // undiarised transcript also holds the parent's / patient's words, which must never become a doctor-level memory
+      // line (that block goes into every other patient's note).
       const doktorSozleri = Array.isArray(segments) && segments.length
         ? segments
-            .filter((s: { speaker?: string }) => !s?.speaker || /doktor|hekim/i.test(String(s.speaker)))
+            .filter((s: { speaker?: string }) => Boolean(s?.speaker) && /doktor|hekim/i.test(String(s.speaker)))
             .map((s: { text?: string }) => String(s?.text || ''))
             .join('\n')
-        : String(transcript || '')
+        : ''
       if (doktorSozleri && ogrenmeyeDeger(doktorSozleri)) {
         const { arkaPlandaSurdur } = await import('@/lib/doktor/ogrenme/arkaPlandaOgren')
         arkaPlandaSurdur(sohbettenOgren(getSupabase(), user.id, [{ role: 'user', content: doktorSozleri }]))
