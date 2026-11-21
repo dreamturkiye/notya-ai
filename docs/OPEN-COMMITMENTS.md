@@ -1,5 +1,40 @@
 # OPEN COMMITMENTS — Notya AI
 
+## Hasta karışması olay notu — HASTA-KARISMA-01: another patient's note text in the note-generation prompt (Claude, 2026-11-20, owner Kaan)
+
+Classification: CORE (all 30 + 10 Özel Branşlar; every note written by `soapNotuUret`). Repro: demo doctor (pediatri, production), Note A 306c2f02… (2-month infant,
+"yalnız anne sütü alıyor, 2–3 saatte bir emiyor"), edited "doğal" → "olağan", re-approved, rule applied; Note B db3ad2bf… (2-year-old, different patient, audio upload)
+showed the same feeding sentence.
+
+**What produced Note B's sentence (certain, from stored metadata):** the transcript stored for Note B's session (`sessions.transcript_cleaned`, written verbatim from the
+ElevenLabs Scribe response in `ses-yukle`, no prompt/context sent to Scribe, no other writer of that column) itself contains "Sadece anne sütü alıyor. İki-üç saatte bir
+emiyor." — the uploaded Can recording says it (it shares several scripted lines with the Elif recording). The note faithfully wrote what the audio said, and Ayşe's comment
+correctly flagged the contradiction for a 2-year-old. The "olağan" wording came from the applied rule `terim-dogal-olagan` (correct). No session object, cache, intake or
+patient context crossed.
+
+**Real defects found while tracing exactly what Note B's prompt contained (fixed today):**
+1. **Style examples = another patient's raw note text.** Since NOTYA-SOAP-02 (cf6ca3f7, 2026-09-02; audio upload c8b3dacf, 2026-09-03) every note prompt got the first
+   400 characters of S and P of the doctor's last two approved notes of ANY patient. Note B's prompt therefore did contain Note A's feeding sentence (Note A approved
+   01:37 UTC, Note B generated 01:42 UTC). Production, excluding the demo doctor: 22 notes by 4 doctors were generated while the last approved notes belonged to a
+   different patient. Fixed: only a de-patientised skeleton (section labels, plan numbering) is sent; `soapSistemBloklari` drops any non-skeleton line (hard guard).
+2. **Correction rules that copy content.** Since NOTYA-MESLEKTAS-V2-01 (65527a9b, 2026-09-27) `ekleme` / `yeniden_yazma` diffs were stored as rules ("Şu satırı ekle:
+   Büyüme (Neyzi): kilo 49.", "Bebeğiniz 3 aydan küçük…", "D vitamini 400 ünite"); "Uygula" promoted any of them with one click into every patient's note.
+   Production, excluding the demo doctor: correction-rule rows exist for 1 doctor (357 rows); that doctor (an internal notya.io pediatri account) has 27 applied rules,
+   10 of them content-carrying (5 ekleme, 5 yeniden), and 4 notes recorded applied rules; 119 more content rows were candidates. Fixed: such rules are never created,
+   never loaded, never offered, "Uygula" refuses them (422), and `soapSistemBloklari` filters them (hard guard). Existing rows are left in the table, inert.
+3. **Memory learned from consultation transcripts.** Since #353 (48688cd7, 2026-09-22) the audio-upload and undiarised session paths fed the whole transcript (parent's
+   words included) to memory extraction as the doctor's own words; kesin klinik/üslup lines go into every note. Production, excluding the demo doctor: 30 kesin
+   klinik/üslup "doktor_soyledi" lines across 3 doctors (source per line is not stored, content not read). Fixed: no learning from uploads; sessions/end learns only
+   from segments explicitly labelled doktor/hekim. The memory/profile block now drops any line with a clinical quantity (2 doctors have a distilled style profile).
+Guard: `lib/doktor/ogrenme/hastaOlguKapisi.ts`; repro test `lib/doktor/ogrenme/hastaKarisma.test.ts` (red on the old code: 7 of 8; green now) in `npm test`.
+Per country: us, gb, ca, au, nz, uz — their own visit-note path (`lib/ulke/uygulama/notModeli.ts`) sends only the pack instruction + transcript (no doctor-level text,
+mechanism absent); the shared core files present on each release branch received the same change set and the test.
+Open items:
+- **Review the 30 kesin memory lines and the 2 style profiles of real doctors for patient content — waits on Kaan (decision: who may read them), then Claude. Opened 2026-11-20.**
+- **Chat / voice memory blocks (`hafizaBloguSohbet`, `hafizaBloguSes`) are not filtered by the new guard** — chat is served by the founder-locked `lib/asistan/ayseCevapla.ts`.
+  New content rules can no longer become kesin, so only pre-existing rows are affected (the internal account above). Waits on Kaan's written go for the locked path, or his
+  decision to deactivate the 10 content rules of that account in the database. Opened 2026-11-20.
+
 ## WHATSAPP-ONBURO-01 — "Ayşe ön büro" (a new appointment by chat, answers from the practice sheet): OPEN GAP in this build (Claude, 2026-11-12)
 
 Türkiye (main) shipped the front desk on its WhatsApp inbound pipeline on 2026-11-12. **This build does not run it**: no

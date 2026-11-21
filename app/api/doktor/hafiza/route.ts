@@ -13,6 +13,7 @@ import { kuralKapat } from '@/lib/doktor/ogrenme/kuralKaydet'
 import { kuralOnizlemesiYukle } from '@/lib/doktor/ogrenme/onizleme'
 import { klinikHavuzuSenkronla } from '@/lib/doktor/ogrenme/klinikUslup'
 import { arkaPlandaSurdur } from '@/lib/doktor/ogrenme/arkaPlandaOgren'
+import { uslupKuraliGuvenliMi } from '@/lib/doktor/ogrenme/hastaOlguKapisi'
 import { toAddressableUser, type DoctorProfile } from '@/lib/userProfile'
 import { dahiliyeKilidi, dahiliyeMi } from '@/specialties/dahiliye/prompts'
 import { kadinDogumKilidi, kadinDogumMi } from '@/specialties/kadin-dogum/prompts'
@@ -53,7 +54,7 @@ export async function GET(req: NextRequest) {
     const bugun = bugunTRT()
     const sonSelam = h.iliski.ogrenme_selam_gunu || null
     const yeniKurallar = h.kesinKayitlar
-      .filter((k) => k.kaynak === 'duzeltme' && k.durum !== 'kapali' && k.son_gorulme && (!sonSelam || String(k.son_gorulme).slice(0, 10) > sonSelam) && String(k.son_gorulme).slice(0, 10) !== bugun)
+      .filter((k) => k.kaynak === 'duzeltme' && k.durum !== 'kapali' && uslupKuraliGuvenliMi({ anahtar: k.anahtar, deger: k.deger }) && k.son_gorulme && (!sonSelam || String(k.son_gorulme).slice(0, 10) > sonSelam) && String(k.son_gorulme).slice(0, 10) !== bugun)
       .slice(0, 2)
     const ogrenmeSatir = ogrenmeSelamSatiri({ asama: h.asama, yeniKurallar })
     const meslektasSatir = meslektasSelamSatiri({
@@ -84,7 +85,9 @@ export async function GET(req: NextRequest) {
       karsilama: karsilamaSecimi(h.iliski),
       sesBlogu: [hafizaBloguSes(h), sesKilidi((doktorRow as { specialty?: string } | null)?.specialty)].filter(Boolean).join('\n\n'),
       gun,
-      kayitlar: tum && tumKayit ? tumKayit : [...h.kesinKayitlar, ...h.belirsizKayitlar],
+      // HASTA-KARISMA-01: correction rows that carry note content are not offered as rules (no "Uygula" for them).
+      kayitlar: (tum && tumKayit ? tumKayit : [...h.kesinKayitlar, ...h.belirsizKayitlar])
+        .filter((k) => k.kaynak !== 'duzeltme' || uslupKuraliGuvenliMi({ anahtar: k.anahtar, deger: k.deger })),
     })
   } catch (e) {
     console.error('[hafiza] get', e)
@@ -109,6 +112,12 @@ export async function POST(req: NextRequest) {
     }
     if (body.durum === 'uygulanir' && body.anahtar) {
       const slug = anahtarSlug(body.anahtar)
+      // HASTA-KARISMA-01: "Uygula" never promotes a rule that copies one patient's note content into every note.
+      const { data: satir } = await supabase.from('doktor_hafiza').select('anahtar, deger, kaynak')
+        .eq('doctor_id', doktorId).eq('anahtar', slug).maybeSingle()
+      if (satir && satir.kaynak === 'duzeltme' && !uslupKuraliGuvenliMi({ anahtar: String(satir.anahtar), deger: String(satir.deger || '') })) {
+        return NextResponse.json({ error: 'Bu madde bir hastanın notundaki içeriği taşıyor; kural olarak uygulanamaz. Yalnız yazım/üslup kuralları uygulanır.' }, { status: 422 })
+      }
       await supabase.from('doktor_hafiza').update({
         durum: 'uygulanir', aktif: true, kesin: true, updated_at: new Date().toISOString(),
       }).eq('doctor_id', doktorId).eq('anahtar', slug)
