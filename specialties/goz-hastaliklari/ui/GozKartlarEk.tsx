@@ -381,7 +381,7 @@ export function GlokomOneriDugmeleri({ oneriler, etiketMetni, secili, sec, kayna
 }
 
 // ────────────────────────────── Görüntü › Asistana raporla (Belge Tier A ile aynı yol) ──────────────────────────────
-/** Görüntü tarayıcıda kimliksizleştirilir (EXIF temizlenir, küçültülür); hekim kimlik bilgisi olmadığını onaylar; OD/OS zorunlu. */
+/** Görüntü tarayıcıda kimliksizleştirilir (OCR ile kimlik maskelenir, EXIF temizlenir, küçültülür); hekim kimlik bilgisi olmadığını onaylar; OD/OS zorunlu. */
 export function AsistanaRaporla({ g, calistir }: { g: { id: string; modalite: string; goz: string | null; url: string | null }; calistir: Calistir }) {
   const [acik, setAcik] = useState(false);
   const [kimlikYok, setKimlikYok] = useState(false);
@@ -398,8 +398,10 @@ export function AsistanaRaporla({ g, calistir }: { g: { id: string; modalite: st
       setDurum('hazirlaniyor');
       const r = await fetch(g.url!, { cache: 'no-store' });
       if (!r.ok) throw new Error('Görüntü indirilemedi');
-      const { gorseliKimliksizlestir } = await import('@/core/belgeler/deid');
-      const deid = await gorseliKimliksizlestir(await r.blob());
+      // NOTYA-BELGE-DEID-03 (2026-11-20): device headers (name / DOB / ID) are OCR-masked first, as on every document path; the
+      // doctor's no-identity confirmation above stays as the fallback when OCR cannot read the header.
+      const { gorseliOtomatikKimliksizlestir } = await import('@/core/belgeler/deid');
+      const deid = (await gorseliOtomatikKimliksizlestir(await r.blob(), { modalite: g.modalite })).gorsel;
       setDurum('yaziyor');
       const j = await calistir({ adim: 'goruntu_okuma', eylem: 'asistana_raporla', goruntuId: g.id, goz, kimlikYok: true, tekAlanFundus: g.modalite === 'fundus' ? tekAlan : undefined, deid: { mime: deid.mime, base64: deid.base64, hash: deid.hash } }, 'Asistan taslağı eklendi — uzman onayı bekliyor.');
       if (j) setAcik(false);
