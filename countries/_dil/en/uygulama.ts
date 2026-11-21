@@ -40,6 +40,7 @@ export const EN_UYGULAMA_TEMEL: Temel = {
     diger: 'Other',
     kas: 'DOCTOR',
     onBuroKas: 'FRONT DESK',
+    havaGoster: 'Show weather',
     hesabim: 'My account',
     menuKisa: 'Menu',
     menuKapat: 'Close menu',
