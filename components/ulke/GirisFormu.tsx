@@ -9,7 +9,7 @@
  * password gets.
  */
 import React from 'react'
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { ulkeIstemciSupabase } from '@/lib/ulke/istemciSupabase'
 import { hesapBuUlkedeMi } from '@/lib/ulke/hesapUlkesi'
 import { ulkeYolu } from '@/lib/ulke/yol'
@@ -17,6 +17,8 @@ import { dilliYol } from '@/lib/ulke/sayfaDili'
 import type { DilKodu, YuzeyMetinleri } from '@/lib/ulke/tipler'
 import { ULKE_STIL as S, UlkeKart, type DilSecenegi } from './UlkeKart'
 import { sifreSifirlaMetni } from './sifreSifirlaMetinleri'
+import { ulkeFetch, ulkeGirisSorgusu } from '@/lib/ulke/oturumFetch'
+import { oturumDolduMetni } from '@/components/ulke/oturumDolduMetinleri'
 
 export type GirisFormuProps = {
   dil: DilKodu
@@ -41,6 +43,15 @@ export default function GirisFormu({ dil, metin, ret, diller, anaSayfa, kayit, s
   const [fpAcik, setFpAcik] = useState(false)
   const [fpDurum, setFpDurum] = useState<'bos' | 'gonderiliyor' | 'gonderildi' | 'hata'>('bos')
   const m = sifreSifirlaMetni(dil)
+  // NOTYA-OTURUM-01: ?oturum=expired shows the notice in this page's language; ?next= (this build's own paths only)
+  // is where the doctor returns after signing in.
+  const [oturumDoldu, setOturumDoldu] = useState(false)
+  const [donus, setDonus] = useState<string | null>(null)
+  useEffect(() => {
+    const q = ulkeGirisSorgusu(window.location.search)
+    setOturumDoldu(q.doldu)
+    setDonus(q.next)
+  }, [])
 
   async function sifreSifirlaGonder() {
     if (!supabase || !eposta.trim()) return
@@ -66,9 +77,9 @@ export default function GirisFormu({ dil, metin, ret, diller, anaSayfa, kayit, s
       }
       const reddet = async () => { await supabase.auth.signOut(); setHata(ret); setBekliyor(false) }
       if (!hesapBuUlkedeMi(data.user)) { await reddet(); return }
-      const r = await fetch(ulkeYolu('/api/ulke/hesap'), { headers: { Authorization: `Bearer ${data.session.access_token}` }, cache: 'no-store' })
+      const r = await ulkeFetch(ulkeYolu('/api/ulke/hesap'), { cache: 'no-store' })
       if (!r.ok) { await reddet(); return }
-      window.location.assign(sonra)
+      window.location.assign(donus || sonra)
     } catch {
       setHata(metin.baglantiHatasi)
       setBekliyor(false)
@@ -77,6 +88,7 @@ export default function GirisFormu({ dil, metin, ret, diller, anaSayfa, kayit, s
 
   return (
     <UlkeKart dil={dil} altBaslik={metin.altBaslik} diller={diller} anaSayfa={{ href: anaSayfa, ad: metin.anaSayfa }}>
+      {oturumDoldu ? <div role="status" style={{ ...S.bilgi, marginBottom: 14 }}>{oturumDolduMetni(dil).notice}</div> : null}
       <form onSubmit={gonder} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
         <div>
           <label style={S.etiket} htmlFor="ulke-giris-eposta">{metin.eposta}</label>
