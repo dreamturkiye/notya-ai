@@ -5,6 +5,7 @@
 
 import { anahtarSlug } from '@/lib/doktor/hafiza'
 import type { DeltaTur, DuzeltmeDelta } from './duzeltmeAnaliz'
+import { uslupKuraliGuvenliMi } from './hastaOlguKapisi'
 
 export type KuralKategori = 'uslup' | 'klinik' | 'uygulama'
 export type KuralDurum = 'aday' | 'uygulanir' | 'kapali'
@@ -93,6 +94,9 @@ export function deltalardanAdaylar(deltolar: DuzeltmeDelta[], noteId?: string): 
     if (!deger) continue
     const slug = anahtarSlug(slugKaynak(d))
     if (!slug || gorulen.has(slug)) continue
+    // HASTA-KARISMA-01: a rule reaches every patient's note — content (ekleme / yeniden_yazma, any clinical quantity)
+    // copied from this patient's note is never stored as a rule.
+    if (!uslupKuraliGuvenliMi({ slug, deger, tur: d.tur })) continue
     gorulen.add(slug)
     out.push({
       anahtarSlug: slug,

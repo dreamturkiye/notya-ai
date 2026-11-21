@@ -30,6 +30,7 @@
  * (mevcut 5-seans çağrısına binen ek metin, yeni bir LLM çağrısı değil).
  */
 
+import { doktorDuzeyiMetniSuz, uslupKuraliGuvenliMi } from './ogrenme/hastaOlguKapisi'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { aiCagir } from '@/lib/ai/cagir'
 import { jsonCikar, jsonOnar } from '@/lib/ai/jsonOnar'
@@ -384,11 +385,14 @@ export function hafizaBloguSes(h: HafizaOzeti): string {
 
 /** Not üretimi için: stil profili + kesin klinik/üslup kayıtları tek metinde
  *  (soapUret.stilProfili "MUTLAKA uy" alanına gider — belirsizler girmez). */
+/** HASTA-KARISMA-01: this block goes into EVERY patient's note — content-carrying correction rows and any line with a
+ * clinical quantity (another patient's age, feeding, weight, percentile, dose…) are dropped (hastaOlguKapisi). */
 export function hafizaBloguNot(h: HafizaOzeti): string {
   const ek = h.kesinKayitlar
     .filter((k) => k.kategori === 'klinik' || k.kategori === 'uslup')
+    .filter((k) => k.kaynak !== 'duzeltme' || uslupKuraliGuvenliMi({ anahtar: k.anahtar, deger: k.deger }))
     .map((k) => `• ${k.deger}`)
-  return [h.stilProfili, ek.length ? ek.join('\n') : ''].filter(Boolean).join('\n')
+  return doktorDuzeyiMetniSuz([h.stilProfili, ek.length ? ek.join('\n') : ''].filter(Boolean).join('\n'))
 }
 
 /** Aşamaya göre karşılama — tanışmada tanıtır, meslektaşta doğrudan işe girer. */
