@@ -114,7 +114,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Seans kaydı oluşturulamadı.' }, { status: 500 })
   }
 
-  // 4) Aynı Ayşe Kaya motoru: kimliksiz klinik bağlam + önceki plan sürekliliği + stil örnekleri
+  // 4) Aynı Ayşe Kaya motoru: kimliksiz klinik bağlam + önceki plan sürekliliği + stil iskeleti (HASTA-KARISMA-01: içerik yok)
   let klinikBaglam = ''
   try {
     if (patientId) {
@@ -212,15 +212,10 @@ export async function POST(req: NextRequest) {
     // NOTYA-NOT-HIZ-03: öneri arka planda sürer; bitince yalnız bu notun (id + doktor) boş öneri sütunlarını doldurur.
     if (oneri.soz) oneriyiArkaPlandaYaz(supabase, { noteId: String(note.id), doktorId, oneriSozu: oneri.soz, etiket: 'ses-yukle' })
 
-    // NOTYA-OGRENME-03: bu da bir "doktor konuştu" yüzeyi — seans/end ile aynı kanca (bkz. oradaki not).
-    // Scribe burada diarizasyon döndürmez, tek blok transkript doktorun kendi anlatımı sayılır.
-    try {
-      const { ogrenmeyeDeger, sohbettenOgren } = await import('@/lib/doktor/hafiza')
-      if (ogrenmeyeDeger(transcript)) {
-        const { arkaPlandaSurdur } = await import('@/lib/doktor/ogrenme/arkaPlandaOgren')
-        arkaPlandaSurdur(sohbettenOgren(supabase, doktorId, [{ role: 'user', content: transcript }]))
-      }
-    } catch (e) { console.error('[hafiza] ses-yukle', e) }
+    // HASTA-KARISMA-01 (2026-11-20): no memory learning from an uploaded recording. Scribe returns one undiarised block —
+    // the parent's / patient's words ("Sadece anne sütü alıyor…") would be read as the DOCTOR's own statements and could
+    // be stored as a doctor-level memory line that then goes into every other patient's note. The doctor teaches Ayşe
+    // in chat and through corrections; never through a consultation transcript.
 
     return NextResponse.json({ success: true, noteId: note.id, sessionId: seans.id })
   } catch (e) {
