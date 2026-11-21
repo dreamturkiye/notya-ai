@@ -13,6 +13,7 @@ import type { DilKodu, YuzeyMetinleri } from '@/lib/ulke/tipler'
 import { ulkeYolu } from '@/lib/ulke/yol'
 import { CHROME_FONT, CHROME_RENK as R } from '@/lib/doktor/chromeRenk'
 import { ULKE_STIL as S, UlkeKart } from './UlkeKart'
+import { ulkeFetch } from '@/lib/ulke/oturumFetch'
 
 export type BekletmeEkraniProps = {
   varsayilanDil: DilKodu
@@ -33,7 +34,7 @@ export default function BekletmeEkrani({ varsayilanDil, metinler, giris }: Bekle
       const jeton = data.session?.access_token
       if (!jeton) { window.location.replace(giris); return }
       try {
-        const r = await fetch(ulkeYolu('/api/ulke/hesap'), { headers: { Authorization: `Bearer ${jeton}` }, cache: 'no-store' })
+        const r = await ulkeFetch(ulkeYolu('/api/ulke/hesap'), { cache: 'no-store' })
         if (!r.ok) { await cik(); return }
         const j = (await r.json()) as { dil?: string; ad?: string }
         const dil = (j.dil && metinler[j.dil as DilKodu] ? j.dil : varsayilanDil) as DilKodu

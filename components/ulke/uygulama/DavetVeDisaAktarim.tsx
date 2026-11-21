@@ -20,6 +20,7 @@ import { YazdirKagidi, yazdirSozleri } from './YazdirKagidi'
 import type { UlkeDisaAktarim } from '@/lib/ulke/belge/sunucu'
 import { ulkeYolu } from '@/lib/ulke/yol'
 import { ulkeIstemciSupabase } from '@/lib/ulke/istemciSupabase'
+import { ulkeFetch } from '@/lib/ulke/oturumFetch'
 
 type Davet = { kod: string; baglanti: string; davet?: number; odeyen?: number; verilen?: number }
 
@@ -90,7 +91,7 @@ export function DisaAktarimSatiri({ u }: { u: Uygulama }) {
     setBekliyor(true); setHata(false)
     try {
       const { data } = (await ulkeIstemciSupabase()?.auth.getSession()) ?? { data: { session: null } }
-      const r = await fetch(ulkeYolu(`/api/ulke/disa-aktar?hasta=${encodeURIComponent(secili.id)}&bicim=json`), { headers: { Authorization: `Bearer ${data.session?.access_token ?? ''}` }, cache: 'no-store' })
+      const r = await ulkeFetch(ulkeYolu(`/api/ulke/disa-aktar?hasta=${encodeURIComponent(secili.id)}&bicim=json`), { cache: 'no-store' })
       if (!r.ok) throw new Error()
       const ad = /filename="([^"]+)"/.exec(r.headers.get('Content-Disposition') || '')?.[1] || 'notya-patient.fhir.json'
       const a = document.createElement('a'); a.href = URL.createObjectURL(await r.blob()); a.download = ad; a.click(); URL.revokeObjectURL(a.href)
