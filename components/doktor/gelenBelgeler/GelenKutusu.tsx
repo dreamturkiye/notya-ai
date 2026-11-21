@@ -111,11 +111,13 @@ function OgeKarti({ o, rol, turler, bitti }: { o: GelenOge; rol: 'doktor' | 'sek
         } catch { ek = ' Konsültasyona bağlanamadı; hasta dosyasından bağlayabilirsiniz.' }
       }
       const lab = rol === 'doktor' && j.belgeTuru === 'Lab Sonucu' && ['pdf', 'gorsel', 'excel'].includes(o.bicim)
-      if (lab) {
-        // Existing lab pipeline — reads the table so it is ready when the doctor opens the file.
+      if (lab && o.bicim === 'excel') {
+        // Existing lab pipeline — a spreadsheet is parsed on the server without any model call, so it can be ready in advance.
         void gelenIstek('/api/doktor/belgeler/lab', { method: 'POST', govde: { adim: 'cikar', documentId: j.belgeId } }).catch(() => {})
         ek = ek || ' Tahlil tablosu hazırlanıyor.'
       }
+      // DEID-03: a photo / PDF lab sheet is read when the doctor opens it — the lab page masks it on the device first.
+      else if (lab) ek = ek || ' Tahlil tablosu dosyayı açtığınızda okunur.'
       const yol = `/dashboard/doktor/hastalar/${j.patientId}/belgeler/${j.belgeId}${lab ? '/lab' : ''}`
       setSonuc({ yol, metin: `${hasta.ad} dosyasına eklendi.${ek}` })
       gelenSayiDegisti()

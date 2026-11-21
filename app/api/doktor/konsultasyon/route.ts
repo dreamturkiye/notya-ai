@@ -37,11 +37,11 @@
  *   • nota ekleme gununNotunaEkle(doktorId, patientId) — hekimin kendi seansı/notu.
  * HEKİM KİLİDİ: yanit_ozeti hekimin kendi cümlesidir; Notya tanı iddia etmez. Nota yazma yalnız 'nota_ekle' ile.
  */
+import { deidBloklari, deidCoz } from '@/lib/doktor/muayeneEk/icerik'
 import { NextRequest, NextResponse } from 'next/server'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { aiCagir, rotaButcesiMs, yanitMetni, type AiMesaj } from '@/lib/ai/cagir'
 import { aiKotaKullan } from '@/lib/doktor/hizLimiti'
-import { downloadDocument } from '@/lib/vault/service'
 import { yasHesapla } from '@/lib/doktor/yas'
 import { cinsiyetKanonik, cinsiyetTr } from '@/lib/utils/cinsiyet'
 import { doktorOturum } from '@/lib/doktor/serverAuth'
@@ -152,9 +152,6 @@ const taslakYok = (neden: Parameters<typeof taslakHataMesaji>[0], yon: 'istem' |
   NextResponse.json({ ok: false, neden, error: taslakHataMesaji(neden, yon) })
 /** İlk kayıt formundan modele GİTMEYEN alanlar — kimlik, iletişim, sigorta, veli/yakın kimliği (hastaDosyaDerleyici ile aynı). */
 const INTAKE_GIZLI = new Set(['tcKimlik', 'ad', 'soyad', 'telefon', 'eposta', 'adres', 'acilKisiAdi', 'acilKisiTelefon', 'acilKisiYakinlik', 'policeNo', 'kurumAdi', 'veliAd', 'veliSoyad', 'veliTelefon', 'veliDigerAdSoyad', 'veliKimlikTeyidi', 'veliYakinligi', 'sigorta', 'sigortaTuru'])
-const GORSEL_MIME = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'] as const
-const PDF_TAVAN_BAYT = 15 * 1024 * 1024
-const DEID_TAVAN_KARAKTER = 8 * 1024 * 1024
 
 const dizi = (v: unknown): unknown[] => (Array.isArray(v) ? v : [])
 function vitalMetni(v: unknown): string {
@@ -297,26 +294,22 @@ async function yanitTaslagi(sb: SupabaseClient, doktorId: string, b: Record<stri
     if (t.ok) return NextResponse.json({ ok: true, taslak: t.metin, kaynak: 'belge_analizi', belgeDurumu: String(analiz!.durum || ''), dozUyarisi: t.dozlar })
   }
 
-  let blok: Record<string, unknown>
-  if (belge.file_type === 'application/pdf') {
-    let bytes: Buffer
-    try { bytes = (await downloadDocument({ supabase: sb }, doktorId, belge.id)).bytes } catch { return taslakYok('ai', 'yanit') }
-    if (bytes.length > PDF_TAVAN_BAYT) return taslakYok('belge_buyuk', 'yanit')
-    blok = { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: bytes.toString('base64') } }
-  } else if (belge.file_type.startsWith('image/')) {
-    // NOTYA-BELGE-01: özgün görüntü kasadan çıkmaz — tarayıcı EXIF'siz, küçültülmüş türevi gönderir.
-    const d = (b?.deid && typeof b.deid === 'object' ? b.deid : {}) as { mime?: string; base64?: string }
-    // İlk istek türevsiz gelir (önce belge_analizleri denenir); tarayıcı bu yanıtla türevi hazırlayıp yeniden ister.
-    if (!d.base64 || typeof d.base64 !== 'string') return NextResponse.json({ ok: false, neden: 'deid_gerekli', error: taslakHataMesaji('ai', 'yanit') })
-    if (d.base64.length > DEID_TAVAN_KARAKTER) return taslakYok('belge_buyuk', 'yanit')
-    const mime = (GORSEL_MIME as readonly string[]).includes(String(d.mime)) ? String(d.mime) : 'image/jpeg'
-    blok = { type: 'image', source: { type: 'base64', media_type: mime, data: d.base64 } }
+  let bloklar: unknown[]
+  if (belge.file_type === 'application/pdf' || belge.file_type.startsWith('image/')) {
+    // NOTYA-BELGE-01 / DEID-03 (2026-11-20): neither the original image nor the PDF leaves the vault for a model. The browser sends the
+    // copy masked on the device (an image, or the PDF's masked page pictures). The first request comes without it (the existing
+    // document evaluation is tried first); the browser then prepares the masked copy and asks again.
+    const ham = b?.deid as { base64?: unknown; ekSayfalar?: unknown[] } | undefined
+    if (!ham || typeof ham.base64 !== 'string' || !ham.base64) return NextResponse.json({ ok: false, neden: 'deid_gerekli', error: taslakHataMesaji('ai', 'yanit') })
+    const d = deidCoz(ham)
+    if (!d) return taslakYok('belge_buyuk', 'yanit')
+    bloklar = deidBloklari(d)
   } else return taslakYok('belge_turu', 'yanit')
 
   const kota = await aiKotaKullan(sb, doktorId, 'konsult')
   if (!kota.izin) return taslakYok('kota', 'yanit')
   const soru = istemOzu(s.klinik_soru) || String(s.not_metni || '')
-  const mesaj: AiMesaj = { role: 'user', content: [blok, { type: 'text', text: `İstenen branş: ${s.hedef_brans && hedefBransGecerli(s.hedef_brans) ? specialtyProfile(s.hedef_brans).resmiUnvan : hedefEtiketi(s)}\nHekimin klinik sorusu: ${soru.slice(0, 1200) || 'belirtilmemiş'}\n\nBu konsültan raporunun sonucunu özet taslağı olarak yaz.` }] }
+  const mesaj: AiMesaj = { role: 'user', content: [...bloklar, { type: 'text', text: `İstenen branş: ${s.hedef_brans && hedefBransGecerli(s.hedef_brans) ? specialtyProfile(s.hedef_brans).resmiUnvan : hedefEtiketi(s)}\nHekimin klinik sorusu: ${soru.slice(0, 1200) || 'belirtilmemiş'}\n\nBu konsültan raporunun sonucunu özet taslağı olarak yaz.` }] }
   let ham = '', kesildi = false
   try {
     // Düzyazı özet (JSON değil) — G2 (d) JSON kontrolü kapalı.

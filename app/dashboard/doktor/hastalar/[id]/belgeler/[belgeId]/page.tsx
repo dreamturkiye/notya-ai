@@ -12,7 +12,7 @@ import DocumentViewer from '@/components/doktor/DocumentViewer';
 import { getAccessTokenAsync, toolsShell, toolsCard, toolsInput } from '@/lib/doktor/toolsUi';
 import { MODALITE_TR, type Modalite } from '@/core/belgeler/ontoloji';
 import { bransKurali, tierBMotorlari, SES_MODALITELERI } from '@/core/belgeler/router';
-import { gorseliOtomatikKimliksizlestir, sesiHazirla, type DeIdGorsel, type OtomatikDeId } from '@/core/belgeler/deid';
+import { belgeyiOtomatikKimliksizlestir, gidenDeid, gorseliOtomatikKimliksizlestir, sesiHazirla, type DeIdGorsel, type OtomatikDeId } from '@/core/belgeler/deid';
 import { deIdMetin } from '@/core/belgeler/deidMetin';
 import { adKarsilastir, type KimlikBulgulari } from '@/core/belgeler/kimlikMaske';
 import { tierBCalistir, tarayiciYetenek } from '@/core/belgeler/tarayiciMotor';
@@ -143,7 +143,26 @@ export default function BelgeAnalizPage() {
     const token = await getAccessTokenAsync();
     try {
       let deid: DeIdGorsel | null = null; let sesMetrikleri: Record<string, number | string> | null = null; let tierB: MotorCiktisi[] = [];
-      if (!pdfMi) {
+      if (pdfMi) {
+        // NOTYA-BELGE-DEID-03-b: the PDF is drawn and masked page by page on this device; only the masked pages are sent.
+        const r = await doktorFetch(`/api/doktor/documents/${doc.id}/download`, {});
+        if (!r.ok) throw new Error('Belge indirilemedi');
+        const onb = deidOnbellek.current;
+        const o = onb && onb.docId === doc.id ? onb.o : await belgeyiOtomatikKimliksizlestir(await r.blob(), { ad: doc.fileName });
+        if (!o) throw new Error('Belge açılamadı');
+        deidOnbellek.current = { docId: doc.id, o };
+        setBulguBilgi({ bulgu: o.bulgu, ad: adKarsilastir(o.bulgu.ad, hastaAdi) });
+        if (o.maske.durum === 'pdf_okunamadi' || o.maske.durum === 'cok_buyuk' || !o.gorsel.base64) {
+          setYedekGerek(false); setDurum('hata');
+          setMesaj(o.maske.durum === 'cok_buyuk' ? `${deMetin.atlandi}: PDF çok uzun (${o.maske.sayfa || ''} sayfa). Bölümlere ayırıp yükleyin ya da elle değerlendirin.` : `${deMetin.atlandi}: PDF açılamadı.`);
+          return;
+        }
+        deid = o.gorsel;
+        if (o.maske.durum !== 'maskelendi') {
+          setYedekGerek(true);
+          if (!kimlikYok) { setMesaj(deMetin.yedekUyari); setDurum('hazir'); return; }
+        } else setYedekGerek(false);
+      } else {
         const r = await doktorFetch(`/api/doktor/documents/${doc.id}/download`, {});
         if (!r.ok) throw new Error('Belge indirilemedi');
         let blob: Blob = await r.blob();
@@ -178,7 +197,7 @@ export default function BelgeAnalizPage() {
           ? `Göz: ${fundusGoz === 'sag' ? 'OD (sağ)' : fundusGoz === 'sol' ? 'OS (sol)' : 'OU (iki göz)'}.`
           : '';
       const klinikBirlesik = [gozNot, klinikNot].filter(Boolean).join(' ').trim();
-      const r = await doktorFetch('/api/doktor/belgeler/analiz', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ documentId: doc.id, modalityFinal: modalite, klinikNot: klinikBirlesik || undefined, deid: deid ? { mime: deid.mime, base64: deid.base64, hash: deid.hash } : null, sesMetrikleri, tierB, fitzpatrickBilinmiyor: !fitzQ, tekAlanFundus: modalite === 'fundus' ? tekAlanFundus : undefined }) });
+      const r = await doktorFetch('/api/doktor/belgeler/analiz', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ documentId: doc.id, modalityFinal: modalite, klinikNot: klinikBirlesik || undefined, deid: deid ? gidenDeid(deid) : null, sesMetrikleri, tierB, fitzpatrickBilinmiyor: !fitzQ, tekAlanFundus: modalite === 'fundus' ? tekAlanFundus : undefined }) });
       const j = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(j.error || 'Taslak üretilemedi');
       if (j.uyusmazlik) setUyusmazlik(`Asistan görüntüyü "${MODALITE_TR[j.analiz?.sonuc?.modalite as Modalite] || j.analiz?.sonuc?.modalite}" olarak gördü; siz "${MODALITE_TR[j.secilenModalite as Modalite] || j.secilenModalite}" seçtiniz. Modaliteyi kontrol edip yeniden raporlayın veya taslağı bu haliyle değerlendirin.`);
@@ -341,7 +360,7 @@ export default function BelgeAnalizPage() {
                   <span>Tek alan fundus fotoğrafı (güven üst sınırı %70 — TR poliklinik standardı: OD ve OS ayrı yükleyin).</span>
                 </label>
               )}
-              {!pdfMi && (
+              {doc && (
                 <div style={{ marginTop: 8, fontSize: 12, color: CHROME_RENK.muted }}>
                   <div>{deMetin.kopyadaGizli}</div>
                   {bulguBilgi && (bulguBilgi.bulgu.ad || bulguBilgi.bulgu.muayeneTarihi || bulguBilgi.bulgu.dogum || bulguBilgi.bulgu.protokol) && (
@@ -355,7 +374,7 @@ export default function BelgeAnalizPage() {
                   {bulguBilgi?.ad === 'eslesmiyor' && <div style={{ color: '#a45b3e', fontWeight: 700, marginTop: 4 }}>{deMetin.adUyusmuyor}</div>}
                 </div>
               )}
-              {!pdfMi && yedekGerek && (
+              {yedekGerek && (
                 <label style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginTop: 8, fontSize: 12, color: CHROME_RENK.muted, cursor: 'pointer' }}>
                   <input type="checkbox" checked={kimlikYok} onChange={(e) => setKimlikYok(e.target.checked)} />
                   <span>{deMetin.yedekOnay}</span>

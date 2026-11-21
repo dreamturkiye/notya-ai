@@ -1,13 +1,14 @@
 /**
  * NOTYA-BELGE-01 — "Asistana raporla" (Tier A + Tier B results).
  *
- * POST  body: { documentId, modalityFinal, klinikNot?, deid: { mime, base64, hash } | null, sesMetrikleri?, tierB?: MotorCiktisi[],
+ * POST  body: { documentId, modalityFinal, klinikNot?, deid: { mime, base64, hash, ekSayfalar? } (masked copy; PDF = masked pages), sesMetrikleri?, tierB?: MotorCiktisi[],
  *               fitzpatrickBilinmiyor?, tekAlanFundus? }
  *       The client sends the DE-IDENTIFIED derivative (EXIF stripped, downscaled, doctor confirmed no burned-in
  *       identity) — the original never leaves the vault. Audio arrives as a spectrogram PNG + metrics.
  * GET   ?documentId= → latest analysis for that document
  * PATCH body: { analizId, alan: 'ozet'|'hekim_tanisi'|'tanilar', sonraki } → doctor edit + revision log
  */
+import { deidCoz, deidMime } from '@/lib/doktor/muayeneEk/icerik'
 import { NextRequest, NextResponse } from 'next/server'
 import { createHash } from 'crypto'
 import { doktorOturum } from '@/lib/doktor/serverAuth'
@@ -39,7 +40,7 @@ export async function POST(req: NextRequest) {
   const { user, supabase } = oturum
   const body = (await req.json().catch(() => null)) as {
     documentId?: string; modalityFinal?: Modalite | 'auto'; klinikNot?: string
-    deid?: { mime: string; base64: string; hash: string } | null
+    deid?: unknown
     sesMetrikleri?: Record<string, number | string> | null
     tierB?: MotorCiktisi[]
     fitzpatrickBilinmiyor?: boolean; tekAlanFundus?: boolean
@@ -72,22 +73,18 @@ export async function POST(req: NextRequest) {
   const sesMi = SES_MODALITELERI.includes(modalite)
   const pdfMi = meta.fileType === 'application/pdf'
 
-  // What the writer sees: de-identified image / spectrogram PNG / PDF bytes. PDF goes as-is (vault-decrypted, doctor-scoped).
+  // What the writer sees: the masked copy made on the device — one masked image / spectrogram PNG, or a PDF's masked page pictures
+  // (NOTYA-BELGE-DEID-03: the PDF itself is never sent; its text layer is only parsed here, locally, for the eko measurements).
   let gorsel: ClaudeGorselGirdi | null = null
   let deIdHash = ''
   let pdfBytes: Buffer | null = null
+  const deid = deidCoz(body.deid)
+  if (!deid) return NextResponse.json({ error: 'Kimliksizleştirilmiş görüntü (deid) gerekli' }, { status: 400 })
+  gorsel = { tip: 'image', mime: deidMime(deid), base64: deid.base64, ...(deid.ekSayfalar ? { ekSayfalar: deid.ekSayfalar } : {}) }
+  deIdHash = deid.hash || createHash('sha256').update(deid.base64).digest('hex')
   if (pdfMi) {
     const { downloadDocument } = await import('@/lib/vault/service')
-    const { bytes } = await downloadDocument({ supabase }, user.id, body.documentId)
-    pdfBytes = bytes
-    gorsel = { tip: 'pdf', base64: bytes.toString('base64') }
-    deIdHash = createHash('sha256').update(bytes).digest('hex')
-  } else if (body.deid?.base64) {
-    const mime = (['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(body.deid.mime) ? body.deid.mime : 'image/jpeg') as 'image/jpeg' | 'image/png' | 'image/webp' | 'image/gif'
-    gorsel = { tip: 'image', mime, base64: body.deid.base64 }
-    deIdHash = body.deid.hash || createHash('sha256').update(body.deid.base64).digest('hex')
-  } else {
-    return NextResponse.json({ error: 'Kimliksizleştirilmiş görüntü (deid) gerekli' }, { status: 400 })
+    pdfBytes = (await downloadDocument({ supabase }, user.id, body.documentId)).bytes
   }
 
   const tierB: MotorCiktisi[] = Array.isArray(body.tierB) ? body.tierB.filter((m) => m && typeof m.motor === 'string' && m.motor !== EKO_ASE_MOTOR && Array.isArray(m.labels)).map((m) => ({ ...m, tier: 'B' as const })) : []

@@ -2,6 +2,7 @@
  * MUAYENE-EKLERI-01 — yüklenen ekin türünü tahmin eder (sezgisel + gerekirse AI). Kimlik: sessionId + belgeId;
  * baglamYukle seans sahipliği + belge visit/hasta eşleşmesini doğrular (HASTA-IZOLASYON).
  */
+import { deidCoz } from '@/lib/doktor/muayeneEk/icerik'
 import { NextRequest, NextResponse } from 'next/server'
 import { ekRotaOnKosul } from '@/lib/doktor/muayeneEk/rotaOn'
 import { belgeyiSiniflandir } from '@/lib/doktor/muayeneEk/sunucu'
@@ -11,14 +12,13 @@ export const dynamic = 'force-dynamic'
 export const maxDuration = 60
 
 export async function POST(req: NextRequest) {
-  const body = (await req.json().catch(() => null)) as { sessionId?: unknown; belgeId?: unknown; kaynak?: unknown; ipucuTur?: unknown; deid?: { mime?: unknown; base64?: unknown } | null } | null
+  const body = (await req.json().catch(() => null)) as { sessionId?: unknown; belgeId?: unknown; kaynak?: unknown; ipucuTur?: unknown; deid?: unknown } | null
   const on = await ekRotaOnKosul(req, body?.sessionId, body?.belgeId)
   if ('hata' in on) return on.hata
   const kaynak: EkKaynak = body?.kaynak === 'kamera' || body?.kaynak === 'barkod' ? body.kaynak : 'dosya'
   try {
     // NOTYA-BELGE-DEID-03: an image is classified by AI only from the browser's masked copy (never the vault original).
-    const deid = body?.deid && typeof body.deid.base64 === 'string' && body.deid.base64.length < 8_000_000
-      ? { mime: String(body.deid.mime || 'image/jpeg'), base64: body.deid.base64 } : null
+    const deid = deidCoz(body?.deid) // masked copy only (image, or a PDF's masked pages); malformed / oversized -> none
     const s = await belgeyiSiniflandir(on.baglam, kaynak, ekTuruMu(body?.ipucuTur) ? body.ipucuTur : null, deid)
     return NextResponse.json({ siniflandirma: s })
   } catch {

@@ -24,6 +24,9 @@ import {
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 import { TrTarihAlan } from '@/specialties/kadin-dogum/ui/TrTarihAlan';
 import { doktorFetch } from '@/lib/doktor/oturumFetch'
+import KimlikGizlemeSatiri from '@/components/doktor/KimlikGizlemeSatiri';
+import type { OtomatikDeId } from '@/core/belgeler/deid';
+import { deIdMetin } from '@/core/belgeler/deidMetin';
 
 type TaslakSatir = KarneSatiri & { eslesme: KarneEslesme; hekimDuzeltti: boolean };
 
@@ -62,6 +65,11 @@ const girdi: React.CSSProperties = { width: '100%', background: '#FFFFFF', borde
 const ikincilDugme: React.CSSProperties = { background: '#F6F0E4', color: CHROME_RENK.muted, border: '1px solid rgba(58,44,34,0.16)', borderRadius: 8, padding: '10px 14px', fontSize: 13, cursor: 'pointer', minHeight: 44 };
 
 export default function AsiKarnesiOkuma({ patientId, onKaydedildi }: { patientId: string; onKaydedildi: (adet: number) => void }) {
+  // NOTYA-BELGE-DEID-03-a: the card is masked ON THIS DEVICE (photo, or every PDF page); only the masked copy is read by the model.
+  const [maskeli, setMaskeli] = useState<{ belgeId: string; o: OtomatikDeId } | null>(null);
+  const [yedekGerek, setYedekGerek] = useState(false);
+  const [kimlikYok, setKimlikYok] = useState(false);
+  const deMetin = deIdMetin(process.env.NOTYA_COUNTRY);
   const kameraRef = useRef<HTMLInputElement>(null);
   const dosyaRef = useRef<HTMLInputElement>(null);
   const [asama, setAsama] = useState<'bos' | 'yukleniyor' | 'okunuyor' | 'onay' | 'kaydediliyor'>('bos');
@@ -70,14 +78,14 @@ export default function AsiKarnesiOkuma({ patientId, onKaydedildi }: { patientId
   const [satirlar, setSatirlar] = useState<TaslakSatir[]>([]);
 
   function sifirla() {
-    setAsama('bos'); setOkuma(null); setSatirlar([]);
+    setAsama('bos'); setOkuma(null); setSatirlar([]); setMaskeli(null); setYedekGerek(false); setKimlikYok(false);
   }
 
   async function dosyaSecildi(e: React.ChangeEvent<HTMLInputElement>) {
     const secilen = e.target.files?.[0];
     e.target.value = '';
     if (!secilen) return;
-    setHata('');
+    setHata(''); setMaskeli(null); setYedekGerek(false); setKimlikYok(false);
     try {
       const t = await ensureDoctorAccessToken();
       if (!t) { setHata('Oturum bulunamadı.'); return; }
@@ -92,10 +100,28 @@ export default function AsiKarnesiOkuma({ patientId, onKaydedildi }: { patientId
       if (!y.ok || !yj.document?.id) { setHata(yj.error || 'Karne yüklenemedi.'); setAsama('bos'); return; }
 
       setAsama('okunuyor');
+      // loaded on demand: the masking engine stays out of the patient-file page bundle (performans-butcesi-koruma)
+      const { belgeyiOtomatikKimliksizlestir } = await import('@/core/belgeler/deid');
+      const m = await belgeyiOtomatikKimliksizlestir(dosya, { modalite: 'asi', ad: dosya.name }).catch(() => null);
+      if (!m || m.maske.durum === 'pdf_okunamadi' || m.maske.durum === 'cok_buyuk' || !m.gorsel.base64) { setHata(`${deMetin.atlandi}. Aşıları elle girebilirsiniz; karne Kasa'ya kaydedildi (Belgeler).`); setAsama('bos'); return; }
+      setMaskeli({ belgeId: String(yj.document.id), o: m });
+      if (m.maske.durum !== 'maskelendi') { setYedekGerek(true); setHata(`${deMetin.atlandi}. Aşıları elle girebilirsiniz; karne Kasa'ya kaydedildi (Belgeler).`); setAsama('bos'); return; }
+      await oku(String(yj.document.id), m);
+    } catch {
+      setHata('Karne yüklenemedi.');
+      setAsama('bos');
+    }
+  }
+
+  /** Reads the MASKED copy only (after a failed mask: only once the doctor attested that no identity is visible). */
+  async function oku(belgeId: string, m: OtomatikDeId) {
+    setHata(''); setAsama('okunuyor');
+    try {
+      const { gidenDeid } = await import('@/core/belgeler/deid');
       const o = await doktorFetch('/api/doktor/asilar/karne', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ adim: 'oku', belgeId: yj.document.id }),
+        body: JSON.stringify({ adim: 'oku', belgeId, deid: gidenDeid(m.gorsel) }),
       });
       const oj = (await o.json().catch(() => ({}))) as Partial<OkumaYaniti> & { error?: string };
       if (!o.ok || !Array.isArray(oj.satirlar)) {
@@ -107,7 +133,7 @@ export default function AsiKarnesiOkuma({ patientId, onKaydedildi }: { patientId
       setSatirlar(oj.satirlar.map((s) => ({ ...s, hekimDuzeltti: false })));
       setAsama('onay');
     } catch {
-      setHata('Karne yüklenemedi.');
+      setHata('Karne okunamadı. Aşıları elle girebilirsiniz.');
       setAsama('bos');
     }
   }
@@ -205,6 +231,10 @@ export default function AsiKarnesiOkuma({ patientId, onKaydedildi }: { patientId
             <button type="button" onClick={() => kameraRef.current?.click()} style={{ background: '#0F9B8E', color: 'white', border: 'none', borderRadius: 8, padding: '10px 16px', fontSize: 13, fontWeight: 700, cursor: 'pointer', minHeight: 44 }}>📷 Fotoğraf çek</button>
             <button type="button" onClick={() => dosyaRef.current?.click()} style={ikincilDugme}>Dosya seç (fotoğraf / PDF)</button>
           </div>
+          <KimlikGizlemeSatiri bulgu={maskeli?.o.bulgu} yedekGerek={yedekGerek} kimlikYok={kimlikYok} onKimlikYok={setKimlikYok} renk="#8b7d70" uyariRenk={CHROME_RENK.warn} />
+          {yedekGerek && maskeli && kimlikYok && (
+            <div><button type="button" onClick={() => void oku(maskeli.belgeId, maskeli.o)} style={ikincilDugme}>Karneyi okut</button></div>
+          )}
         </div>
       )}
 

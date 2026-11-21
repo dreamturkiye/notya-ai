@@ -14,13 +14,50 @@ visible): now OCR-masked, not sent when masking fails. (5) Göz "Asistana raporl
 Per country: us, gb, ca, au, nz, uz — their document flow is the separate NOTYA-ULKE-EKLER-01 implementation, which already masks first, shows the privacy line and labels by
 the reader's detected kind (neither defect present there); the shared core files present on each release branch received the same change set and the guard test.
 Open items:
-- **DEID-03-a — Belgeler lab page and aşı karnesi reader still send the vault original image to the model** (`app/api/doktor/belgeler/lab/route.ts`, `app/api/doktor/asilar/karne/route.ts`;
-  outside the muayene document flow; pinned in the guard test's ACIK_KALAN list, which may only shrink). Fix: mask on the device in the lab page / karne flow and send the masked copy.
-  Owner: Claude. Opened 2026-11-20.
-- **DEID-03-b — the Ekler step still auto-reads PDFs (lab / aşı / epikriz / görüntü) without de-identification** (extends the 2026-10-21 "text-layer de-identification for PDFs" item).
-  Owner: Claude. Opened 2026-11-20.
+- **DEID-03-a — CLOSED 2026-11-20 (Claude).** Belgeler lab page (incl. the dahiliye e-Nabız PDF import and the inbox auto-extract) and the aşı karnesi reader now mask
+  on the device (photo or every PDF page) and send only the masked copy; both routes refuse without it (`deid_gerekli`) and no longer read the vault original for a model
+  call. Standard quiet line + chips + wrong-patient warning (`components/doktor/KimlikGizlemeSatiri.tsx`); on failure nothing is sent and the doctor-attestation fallback
+  is offered (lab page, karne reader; karne also "elle girin"). Masking rules for documents (modality 'lab'/'asi'/'belge'): identity label required, no whole-band
+  blackout, sample date / sex / column headers / result rows / vaccine rows stay readable, unreadable (handwritten) value after a name label blacked out to the line end,
+  dose+date and value+range no longer joined as an "ID" (synthetic fixtures in `core/belgeler/kimlikMaske.test.ts`). Structural PDF/CSV rows that are identity lines are
+  dropped before storage / interpretation. The inbox no longer pre-extracts photo/PDF lab sheets (the lab page does it, masked, when opened); spreadsheets unchanged.
+- **DEID-03-b — CLOSED 2026-11-20 (Claude).** PDFs are de-identified on the device before any model call (`core/belgeler/pdfMaske.ts`: pages drawn with the self-hosted
+  pdf.js now also on main under `public/pdfjs`; text layer used as exact OCR, scanned pages OCR'd; masked pictures only). Applied to every path that could send a PDF to
+  a model: Ekler step (type guess, lab, aşı, epikriz/diğer, görüntü), Belgeler [belgeId] analysis, lab page, aşı karnesi reader, consultation reply draft. Plain text /
+  CSV in the Ekler step goes through the same rules as text (`metniKimliksizlestir`). Guard `core/belgeler/maskesizGonderim.test.ts`: exception list removed, PDF
+  document blocks / `tip: 'pdf'` now fail the inventory. Limits: >20 pages or >3.6 MB of masked pictures -> not sent (split the PDF); not yet exercised in a real
+  browser with real documents — first live check owner Kaan / Dr. Gökhan on main, report misses to Claude (2026-11-20).
+- **DEID-03-d — Gelen Belgeler inbox reading sends incoming photos and PDFs to the model unmasked, by design — waits on Kaan (decision), then Claude. Opened 2026-11-20.**
+  `lib/gelenBelgeler/okuma.ts` (+ `donustur.ts`, `sunucu.ts`) reads each incoming document on the server (photos re-encoded without metadata, pixels not masked; PDFs as-is)
+  and asks the model for the printed name / birth date / TC to suggest the patient. Not changed tonight: masking would remove the patient matching. Options: (1) read the
+  identity locally (text layer / on-device OCR at upload; server OCR for email/WhatsApp capture) and send only a masked copy for type + summary; (2) keep it and record the
+  KVKK basis. Outside the guard's scope directories until decided. (The `lib/ingestion` path is the müşavir/accounting product, not patient data: N/A.)
 - **DEID-03-c — audio-file sessions have no post-dictation Ekler step.** The skill does not require it there: the note page offers the Belgeler-upload entry (same mask -> evaluate -> note
   pipeline, images only; lab / aşı / epikriz typing exists only in the Ekler step). Waits on Kaan: say if the Ekler step should also follow "Ses dosyası yükle". Opened 2026-11-20.
+
+## DEID-03 olay notu — which upload paths sent unmasked images / PDFs to which model provider, and when each was closed (Claude, 2026-11-20, owner Kaan)
+
+Written from code and git history only (no production data read). Purpose: input for Kaan's decision on a KVKK assessment. No statement is made about specific
+patients or volumes (not visible from code). "Unmasked" = burned-in identity text (name, TC, birth date, protocol no) was not blacked out; photo metadata was stripped
+on most image paths.
+
+Model provider (all calls go through `lib/ai/cagir.ts`; which one ran depends on the environment, the production setting was not checked here):
+until 2026-09-26 Anthropic API directly (Claude); from 2026-09-26 (`6f93a6c8`, NOTYA-MODEL-LUNA-01) OpenRouter when `OPENROUTER_API_KEY` is set, image tasks on
+Claude Sonnet 5; from 2026-09-27 (`72706af5`, LUNAPRO-01) primary `openai/gpt-6-luna-pro` via OpenRouter (OpenAI), Claude Sonnet 5 as fallback / guardian;
+without `OPENROUTER_API_KEY` Anthropic directly.
+
+| Path | What was sent unmasked | Since | Closed |
+|---|---|---|---|
+| Belgeler lab page `app/api/doktor/belgeler/lab/route.ts` (incl. dahiliye e-Nabız PDF import, inbox auto-extract) | vault original image; PDF as-is | 2026-09-15 `7c873cef` (e-Nabız import 2026-09-17 `7bf8d74a`, inbox auto-extract 2026-09-25 `7e5ccc90`) | 2026-11-20, DEID-03-a (this change) |
+| Aşı karnesi reader `app/api/doktor/asilar/karne/route.ts` | vault original image; PDF as-is | 2026-09-19 `d9748bbc` | 2026-11-20, DEID-03-a (this change) |
+| Belgeler analysis `app/api/doktor/belgeler/analiz/route.ts` | PDF as-is. Images: EXIF-free copy with burned-in text, sent on the doctor's "no identity in the image" attestation, until OCR masking | PDF 2026-09-15 `03b93ae2`; images attestation-only 2026-09-15 → 2026-10-21 | images 2026-10-21 `041c6078` (DEID-02); PDF 2026-11-20 DEID-03-b (this change) |
+| Ekler step `lib/doktor/muayeneEk/sunucu.ts` | all images unmasked (downscaled copy) at first; from 2026-10-21 röntgen/EKG/foto masked but the AI type guess and lab / aşı / epikriz / diğer images used the vault original; PDFs as-is | 2026-10-16 `1477f5c5` | images 2026-11-20 `dfef72f1`; PDFs 2026-11-20 DEID-03-b (this change) |
+| Consultation reply draft `app/api/doktor/konsultasyon/route.ts` (`yanit_taslagi`) | images: EXIF-only copy (burned-in text visible); PDF as-is | 2026-09-19 `7a61e9ef` | images 2026-11-20 `dfef72f1`; PDF 2026-11-20 DEID-03-b (this change) |
+| Göz "Asistana raporla" | EXIF-only copy on doctor attestation | 2026-09-18 `3a62c827` | 2026-11-20 `dfef72f1` (OCR mask added, attestation kept as fallback) |
+| Gelen Belgeler inbox reading `lib/gelenBelgeler/okuma.ts` | incoming photos (metadata stripped, pixels unmasked) and PDFs as-is; identity read on purpose for patient matching | 2026-09-25 `7e5ccc90` | OPEN — DEID-03-d (waits on Kaan) |
+
+Country builds (us, gb, ca, au, nz, uz): the Türkiye routes above are not built there (split build, `*.ulke.ts(x)` only). The country document path
+(`/api/ulke/belge-degerlendir`, from 2026-10-21) accepts only the on-device masked copy; PDFs are drawn and masked page by page on the device. No unmasked send found.
 
 ## PREMATUR-MODUL — prematurity support for Pediatri and Kadın Doğum: what is open (Claude, 2026-11-13, Kaan's order 2026-11-13)
 

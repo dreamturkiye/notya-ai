@@ -86,10 +86,13 @@ KURALLAR: Hiçbir değer, birim veya referans aralığı UYDURMA; sayfada yoksa 
 ŞEMA: {"lab_adi": string|null, "numune_tarihi": "YYYY-MM-DD"|null, "rapor_tarihi": "YYYY-MM-DD"|null, "kimlik": {"ad": string|null, "dogum": "YYYY-MM-DD"|null, "tc_son4": string|null}, "satirlar": [{"raw_name": string, "value": string, "unit": string|null, "ref_low": string|null, "ref_high": string|null, "flag_printed": string|null, "page": number}], "not": string|null}
 Mikrobiyoloji/kültür: organizma ve duyarlılıkları "not" alanına düz metin olarak yaz, satır uydurma.`
 
-export async function gorselCikar(girdi: { tip: 'pdf'; base64: string } | { tip: 'image'; mime: string; base64: string }, ekTalimat?: string, doctorId?: string | null, istemci?: AiIstemci, butceMs?: number): Promise<CikarimSonucu> {
+/**
+ * Vision pass over the MASKED pictures of a lab report (NOTYA-BELGE-DEID-03): one image, or a PDF's masked pages in order
+ * (`ekSayfalar`). The vault original / a raw PDF cannot be passed here on purpose; "page" in the answer = picture order.
+ */
+export async function gorselCikar(girdi: { tip: 'image'; mime: string; base64: string; ekSayfalar?: { mime: string; base64: string }[] }, ekTalimat?: string, doctorId?: string | null, istemci?: AiIstemci, butceMs?: number): Promise<CikarimSonucu> {
   const icerik: unknown[] = []
-  if (girdi.tip === 'pdf') icerik.push({ type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: girdi.base64 } })
-  else icerik.push({ type: 'image', source: { type: 'base64', media_type: girdi.mime, data: girdi.base64 } })
+  for (const s of [girdi, ...(girdi.ekSayfalar || [])]) icerik.push({ type: 'image', source: { type: 'base64', media_type: s.mime, data: s.base64 } })
   icerik.push({ type: 'text', text: `Bu laboratuvar raporundaki TÜM satırları şemaya göre çıkar. Yalnızca JSON.${ekTalimat ? `\n${ekTalimat}` : ''}` })
   // NOTYA-MALIYET-01: lab PDF/görsel okuma (goruntu-inceleme; LUNAPRO-01: birincil Luna-Pro)
   const y = await aiCagir({ istemci, gorev: 'goruntu-inceleme', maxTokens: ekTalimat ? 16000 : 6000, temperature: 0, doctorId, system: CIKARIM_SISTEM, messages: [{ role: 'user', content: icerik }], ...(butceMs ? { butceMs } : {}) })

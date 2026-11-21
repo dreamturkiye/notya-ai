@@ -150,7 +150,7 @@ export async function taslakIste(govde: Record<string, unknown>, api: Api = kons
 export const istemTaslagiIste = (patientId: string, hedefBrans: string, not?: string, api?: Api) =>
   taslakIste({ islem: 'istem_taslagi', patientId, hedefBrans, ...(not ? { not } : {}) }, api)
 
-export const yanitTaslagiIste = (id: string, belgeId: string, deid?: { mime: string; base64: string } | null, api?: Api) =>
+export const yanitTaslagiIste = (id: string, belgeId: string, deid?: { mime: string; base64: string; ekSayfalar?: { mime: string; base64: string }[] } | null, api?: Api) =>
   taslakIste({ islem: 'yanit_taslagi', id, belgeId, ...(deid ? { deid } : {}) }, api)
 
 /**
@@ -164,12 +164,13 @@ export async function yanitTaslagiIsteVeGerekirseKimliksizlestir(id: string, bel
     const t = await getAccessTokenAsync()
     const r = await doktorFetch(`/api/doktor/documents/${encodeURIComponent(belgeId)}/download`, { cache: 'no-store' })
     if (!r.ok) return { ok: false, mesaj: TASLAK_OLUSTURULAMADI }
-    // NOTYA-BELGE-DEID-03 (2026-11-20): was an EXIF-only re-encode (burned-in name / DOB / protocol no left visible). Now the same
-    // OCR mask as every document path; masking failed -> nothing is sent.
-    const { gorseliOtomatikKimliksizlestir } = await import('@/core/belgeler/deid')
-    const m = await gorseliOtomatikKimliksizlestir(await r.blob(), { modalite: 'us' })
-    if (m.maske.durum !== 'maskelendi') return { ok: false, mesaj: TASLAK_OLUSTURULAMADI }
-    return yanitTaslagiIste(id, belgeId, { mime: m.gorsel.mime, base64: m.gorsel.base64 })
+    // NOTYA-BELGE-DEID-03 (2026-11-20): was an EXIF-only re-encode (burned-in name / DOB / protocol no left visible), and a PDF report
+    // went to the model as-is. Now the same on-device mask as every document path (PDF: every page drawn and masked); masking failed
+    // -> nothing is sent.
+    const { belgeyiOtomatikKimliksizlestir, gidenDeid } = await import('@/core/belgeler/deid')
+    const m = await belgeyiOtomatikKimliksizlestir(await r.blob(), { modalite: 'us' })
+    if (!m || m.maske.durum !== 'maskelendi') return { ok: false, mesaj: TASLAK_OLUSTURULAMADI }
+    return yanitTaslagiIste(id, belgeId, gidenDeid(m.gorsel))
   } catch {
     return { ok: false, mesaj: TASLAK_OLUSTURULAMADI }
   }

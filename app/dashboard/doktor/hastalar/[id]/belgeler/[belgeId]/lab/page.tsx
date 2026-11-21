@@ -17,6 +17,11 @@ import { UYARI_SERIDI } from '@/core/belgeler/yazar';
 import { REF_ACIKLAMA } from '@/specialties/dahiliye/engines/dahiliye';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme'
 import { doktorFetch } from '@/lib/doktor/oturumFetch'
+import KimlikGizlemeSatiri from '@/components/doktor/KimlikGizlemeSatiri';
+import { gidenDeid, type OtomatikDeId } from '@/core/belgeler/deid';
+import { deIdMetin } from '@/core/belgeler/deidMetin';
+import { adKarsilastir } from '@/core/belgeler/kimlikMaske';
+import { kasaBelgesiniMaskele, maskeKopyasiYok } from '@/lib/doktor/maskeliKopyaIstemci';
 
 type Doc = { id: string; fileName: string; fileType: string };
 type Satir = { id: string; numune_tarihi?: string | null; raw_name: string; canonical_key: string | null; value_num: number | null; value_text: string | null; unit: string | null; ref_low: number | null; ref_high: number | null; flag: string; kritik: boolean; kritik_neden: string | null; prior_value: number | null; prior_date: string | null; delta_pct: number | null; trend: string; dogrulanacak: boolean; dogrulama_notu: string | null; doctor_corrected: boolean; page: number | null };
@@ -53,6 +58,12 @@ export default function LabPage() {
   const [kayitMesaj, setKayitMesaj] = useState('');
   const [kayitDurum, setKayitDurum] = useState<'hazir' | 'kaydediyor'>('hazir');
   const autoCikarRef = useRef(false);
+  // NOTYA-BELGE-DEID-03-a: the lab sheet (photo or PDF) is masked ON THIS DEVICE; only the masked copy goes to the model.
+  const maskeRef = useRef<OtomatikDeId | null>(null);
+  const [maske, setMaske] = useState<OtomatikDeId | null>(null);
+  const [yedekGerek, setYedekGerek] = useState(false);
+  const [kimlikYok, setKimlikYok] = useState(false);
+  const deMetin = deIdMetin(process.env.NOTYA_COUNTRY);
   // HASTA-KIMLIK-SERIDI-01: hangi hastanın dosyası açık, her zaman görünür (Dr. Gökhan Mamur, 2026-10-26).
   const [hastaAdi, setHastaAdi] = useState<string | null>(null);
   const [hastaDogum, setHastaDogum] = useState<string | null>(null);
@@ -91,7 +102,21 @@ export default function LabPage() {
   }, [patientId, belgeId]);
   useEffect(() => { yukle(); }, [yukle]);
 
-  const cikar = async () => { setDurum('cikariyor'); setMesaj(''); try { const j = await api({ adim: 'cikar', documentId: belgeId }); setMesaj(`Belge eklendi. Tablo henüz onaylanmadı. ${j.ozet.toplam} satır · ${j.kaynaklar.length === 2 ? 'iki kaynak uzlaştırıldı' : 'tek kaynak'}${j.uyusmazlik ? ` · ${j.uyusmazlik} hücre doğrulanacak` : ''}`); await yukle(); } catch (e) { setMesaj(e instanceof Error ? e.message : 'Hata'); } setDurum('hazir'); };
+  const tabloDosyasi = !!doc && /csv|excel|spreadsheet/.test(doc.fileType);
+  const cikar = async () => { setDurum('cikariyor'); setMesaj(''); try {
+    let ek: Record<string, unknown> = {};
+    if (doc && !tabloDosyasi) {
+      setMesaj(deMetin.yukleniyor);
+      const o = maskeRef.current || await kasaBelgesiniMaskele(belgeId, { ad: doc.fileName, modalite: 'lab' });
+      maskeRef.current = o; setMaske(o);
+      if (maskeKopyasiYok(o)) { setYedekGerek(false); setMesaj(`${deMetin.atlandi}${o?.maske.durum === 'cok_buyuk' ? ': PDF çok uzun — bölümlere ayırıp yükleyin' : ''}. Belge Belgeler'de kaldı; elle değerlendirebilirsiniz.`); setDurum('hazir'); return; }
+      if (o!.maske.durum !== 'maskelendi') {
+        setYedekGerek(true);
+        if (!kimlikYok) { setMesaj(`${deMetin.atlandi}.`); setDurum('hazir'); return; }
+      } else setYedekGerek(false);
+      ek = { deid: gidenDeid(o!.gorsel), kimlikEslesme: adKarsilastir(o!.bulgu.ad, hastaAdi) };
+    }
+    const j = await api({ adim: 'cikar', documentId: belgeId, ...ek }); setMesaj(`Belge eklendi. Tablo henüz onaylanmadı. ${j.ozet.toplam} satır · ${j.kaynaklar.length === 2 ? 'iki kaynak uzlaştırıldı' : 'tek kaynak'}${j.uyusmazlik ? ` · ${j.uyusmazlik} hücre doğrulanacak` : ''}`); await yukle(); } catch (e) { setMesaj(e instanceof Error ? e.message : 'Hata'); } setDurum('hazir'); };
 
   // Opening "Laboratuvarı değerlendir" should start extraction — not leave an empty right panel.
   useEffect(() => {
@@ -200,12 +225,13 @@ export default function LabPage() {
               </div>
               {doc && !/csv|excel|spreadsheet/.test(doc.fileType) && <div style={{ marginTop: 8 }}><DocumentViewer documentId={doc.id} fileName={doc.fileName} fileType={doc.fileType} /></div>}
               {doc && /csv|excel|spreadsheet/.test(doc.fileType) && <div style={{ fontSize: 12, color: CHROME_RENK.muted, marginTop: 8 }}>Tablo dosyası — satırlar sağda.</div>}
+              {doc && !tabloDosyasi && <KimlikGizlemeSatiri bulgu={maske?.bulgu} ad={maske ? adKarsilastir(maske.bulgu.ad, hastaAdi) : null} yedekGerek={yedekGerek} kimlikYok={kimlikYok} onKimlikYok={setKimlikYok} renk={CHROME_RENK.muted} />}
               <div style={{ marginTop: 10, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                 <button type="button" onClick={cikar} disabled={durum !== 'hazir' || kilitli} style={{ ...btn, opacity: durum !== 'hazir' ? 0.6 : 1 }}>{durum === 'cikariyor' ? 'Tablo çıkarılıyor…' : panel ? 'Tabloyu yeniden çıkar' : 'Tabloyu çıkar'}</button>
                 {panel && <span style={{ fontSize: 11, color: CHROME_RENK.muted }}>{panel.lab_adi || ''}{panel.numune_tarihi ? ` · numune ${new Date(panel.numune_tarihi).toLocaleDateString('tr-TR')}` : ''} · kaynak: {panel.kaynaklar?.join(' + ') || '—'} · kalite {panel.kalite === 'dusuk' ? 'düşük' : panel.kalite}</span>}
               </div>
               {mesaj && (
-                <div style={{ marginTop: 8, fontSize: 12, color: /Hata|amadı|eşleşmiyor/.test(mesaj) ? '#a45b3e' : CHROME_RENK.pine }}>
+                <div style={{ marginTop: 8, fontSize: 12, color: /Hata|amadı|emedi|eşleşmiyor/.test(mesaj) ? '#a45b3e' : CHROME_RENK.pine }}>
                   {mesaj}
                   {/* NOTYA-LAB-KIMLIK-CTA: the identity-mismatch error can surface here (via
                       onaylaVeDegerlendir -> raporla's server-side gate) as well as in the

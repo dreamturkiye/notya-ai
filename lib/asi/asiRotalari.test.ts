@@ -191,7 +191,12 @@ describe('ASI-KARNESI-01 — karne okuma ve toplu onay (gerçek rota)', () => {
   it("'oku': birincil model (LUNAPRO-01), görüntü modele gider; asilar'a HİÇBİR şey yazılmaz; okunamayan satır uydurulmaz", async () => {
     const { A } = sahneKur()
     modelYaniti = OKUMA
-    const y = await coz(karne.POST(iste('POST', '/api/doktor/asilar/karne', { token: A.token, govde: { adim: 'oku', belgeId: A.karne } })))
+    // DEID-03-a: without the on-device masked copy nothing is sent (400, no model call); with it, only the masked picture goes.
+    const yok = await coz(karne.POST(iste('POST', '/api/doktor/asilar/karne', { token: A.token, govde: { adim: 'oku', belgeId: A.karne } })))
+    assert.equal(yok.status, 400, yok.metin)
+    assert.equal(yok.json.neden, 'deid_gerekli')
+    assert.equal(modelIstekleri.length, 0, 'no masked copy -> no model call')
+    const y = await coz(karne.POST(iste('POST', '/api/doktor/asilar/karne', { token: A.token, govde: { adim: 'oku', belgeId: A.karne, deid: { mime: 'image/jpeg', base64: Buffer.from('MASKELI-KARNE').toString('base64') } } })))
     assert.equal(y.status, 200, y.metin)
     assert.equal(asilar().length, 0, 'okuma adımı kayıt açmamalı')
     assert.equal(y.json.taslak, true)
@@ -202,6 +207,7 @@ describe('ASI-KARNESI-01 — karne okuma ve toplu onay (gerçek rota)', () => {
     assert.notEqual(modelIstekleri[0].model, dogrudanModelAdi(gucluModel()))
     const icerik = JSON.stringify(modelIstekleri[0].messages)
     assert.ok(icerik.includes('"type":"image"'), 'karne görüntüsü modele gitmeli')
+    assert.ok(icerik.includes(Buffer.from('MASKELI-KARNE').toString('base64')), 'only the masked copy is sent')
     assert.ok(!icerik.includes('QA Çocuk'), 'hasta adı modele gitmez')
     const [hep, kpa, rota] = y.json.satirlar
     assert.deepEqual([hep.asiAdi, hep.dozNo, hep.uygulamaTarihi, hep.okunamadi], ['Hepatit B', 1, '2024-03-10', false])
@@ -266,7 +272,7 @@ describe('ASI-KARNESI-01 — karne okuma ve toplu onay (gerçek rota)', () => {
   it('başka hekimin karnesi: okunamaz, onaylanamaz (404), modele gitmez', async () => {
     const { A, B } = sahneKur()
     modelYaniti = OKUMA
-    const oku = await coz(karne.POST(iste('POST', '/api/doktor/asilar/karne', { token: A.token, govde: { adim: 'oku', belgeId: B.karne } })))
+    const oku = await coz(karne.POST(iste('POST', '/api/doktor/asilar/karne', { token: A.token, govde: { adim: 'oku', belgeId: B.karne, deid: { mime: 'image/jpeg', base64: 'eA==' } } })))
     const onay = await coz(karne.POST(iste('POST', '/api/doktor/asilar/karne', { token: A.token, govde: { adim: 'onayla', belgeId: B.karne, hekimOnayi: true, satirlar: [{ asiAdi: 'KKK', dozNo: 1, uygulamaTarihi: '2025-03-12' }] } })))
     assert.equal(oku.status, 404)
     assert.equal(onay.status, 404)

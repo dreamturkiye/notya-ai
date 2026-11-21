@@ -214,18 +214,23 @@ describe('AYSE-KONSULTASYON-01 — yanıt özeti taslağı (gerçek rota)', () =
     A = hekimKur('A'); B = hekimKur('B')
   })
 
-  it("PDF rapor: kasadan (hekim kapsamlı) okunur, 'goruntu-inceleme' → birincil (LUNAPRO-01), sabit prompt önbellekli; taslak kaydedilmez, durum değişmez", async () => {
-    const y = await post(A.token, { islem: 'yanit_taslagi', id: A.konsultasyon })
+  it("PDF rapor (DEID-03): önce cihazda maskelenmiş sayfalar istenir; kasadaki özgün PDF modele gitmez; 'goruntu-inceleme' → birincil (LUNAPRO-01), sabit prompt önbellekli; taslak kaydedilmez, durum değişmez", async () => {
+    const ilk = await post(A.token, { islem: 'yanit_taslagi', id: A.konsultasyon })
+    assert.deepEqual({ ok: ilk.j.ok, neden: ilk.j.neden }, { ok: false, neden: 'deid_gerekli' })
+    assert.equal(istekler.length, 0)
+    const sayfa = Buffer.from('maskeli-sayfa').toString('base64')
+    const y = await post(A.token, { islem: 'yanit_taslagi', id: A.konsultasyon, deid: { mime: 'image/jpeg', base64: sayfa, ekSayfalar: [{ mime: 'image/jpeg', base64: sayfa }] } })
     assert.equal(y.status, 200, JSON.stringify(y.j))
     assert.deepEqual({ ok: y.j.ok, taslak: y.j.taslak, kaynak: y.j.kaynak }, { ok: true, taslak: 'İşitme kaybı saptanmadı; odyometri ve timpanometri normal.', kaynak: 'ayse' })
-    assert.deepEqual(indirilen, [`${A.id}:${A.belge}`])
+    assert.deepEqual(indirilen, [], 'the vault original is not read for the model call')
     const i = istekler[0]
     assert.equal(i.model, S.dogrudanModelAdi(M.hizliModel()))
     assert.deepEqual(i.system[0].cache_control, { type: 'ephemeral' })
     assert.equal(i.system[0].text, T.YANIT_TASLAK_SISTEMI)
-    assert.equal(i.messages[0].content[0].type, 'document')
-    assert.ok(i.messages[0].content[1].text.includes('İşitme kaybı açısından konsültasyonunuzu rica ederim.'), 'klinik soru mektubun özünden')
-    assert.ok(i.messages[0].content[1].text.includes('Kulak Burun Boğaz Hastalıkları'))
+    assert.deepEqual(i.messages[0].content.slice(0, 2).map((b: { type: string }) => b.type), ['image', 'image'], 'masked page pictures, never a document block')
+    assert.ok(!JSON.stringify(i.messages).includes('application/pdf'))
+    assert.ok(i.messages[0].content[2].text.includes('İşitme kaybı açısından konsültasyonunuzu rica ederim.'), 'klinik soru mektubun özünden')
+    assert.ok(i.messages[0].content[2].text.includes('Kulak Burun Boğaz Hastalıkları'))
     const s = db.tablo('sevkler').find((x) => x.id === A.konsultasyon)!
     assert.equal(s.durum, 'yanit_bekleniyor', 'hekim onaylamadan yanıtlandı olmaz')
     assert.equal(s.yanit_ozeti ?? null, null)
@@ -254,11 +259,12 @@ describe('AYSE-KONSULTASYON-01 — yanıt özeti taslağı (gerçek rota)', () =
 
   it('HATA YOLU: rapor okunamadı / model hatası → ok:false "elle yazabilirsiniz"; hekim özeti elle yazıp kaydedebilir', async () => {
     modelDavranisi = () => metinYanit(T.RAPOR_OKUNAMADI)
-    const a = await post(A.token, { islem: 'yanit_taslagi', id: A.konsultasyon })
+    const deid = { mime: 'image/jpeg', base64: Buffer.from('maskeli').toString('base64') }
+    const a = await post(A.token, { islem: 'yanit_taslagi', id: A.konsultasyon, deid })
     assert.deepEqual({ ok: a.j.ok, neden: a.j.neden }, { ok: false, neden: 'yetersiz' })
     assert.match(a.j.error, /elle yazabilirsiniz/i)
     modelDavranisi = () => { throw new Error('ağ') }
-    const b = await post(A.token, { islem: 'yanit_taslagi', id: A.konsultasyon })
+    const b = await post(A.token, { islem: 'yanit_taslagi', id: A.konsultasyon, deid })
     assert.deepEqual({ ok: b.j.ok, error: b.j.error }, { ok: false, error: T.TASLAK_OLUSTURULAMADI })
     assert.equal((await patch(A.token, { id: A.konsultasyon, islem: 'yanit', yanitOzeti: 'Elle yazılmış özet.' })).j.konsultasyon.durum, 'yanitlandi')
   })

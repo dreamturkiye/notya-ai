@@ -12,7 +12,7 @@
 import { Component, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react"
 import { CHROME_FONT, CHROME_RENK } from "@/lib/doktor/chromeTheme"
 import { ensureDoctorAccessToken } from "@/lib/doktor/clientAuth"
-import { gorseliOtomatikKimliksizlestir } from "@/core/belgeler/deid"
+import { belgeyiOtomatikKimliksizlestir, gidenDeid, pdfDosyasiMi, type GidenDeid } from "@/core/belgeler/deid"
 import { deIdMetin } from "@/core/belgeler/deidMetin"
 import { KIMLIK_GIZLENEMEDI, sinirliKuyruk } from "@/core/belgeler/otoBatch"
 import { bitmapKalitesi } from "@/components/doktor/fotoArsivi/istemciGorsel"
@@ -32,6 +32,9 @@ interface Oge {
   dosya?: Blob; gorselB64?: string; gorselMime?: string; ipucu?: EkTuru | null
   asiOnay?: boolean; asiSatirlari?: EkAsiSatiri[]
 }
+
+/** Images and PDFs reach a model only as their on-device masked copy (DEID-03). */
+const maskelenirMi = (b: Blob) => b.type.startsWith("image/") || pdfDosyasiMi(b)
 
 const GORSEL_TURLERI: EkTuru[] = ["rontgen", "ekg", "foto"]
 const AZAMI_BAYT = 3.8 * 1024 * 1024
@@ -145,15 +148,15 @@ function Ic({ sessionId, patientId, transcript, pediatrik, hata, onDevam }: Prop
     setOgeler((l) => l.map((o) => (o.key === key ? { ...o, ...y } : o)))
   }, [])
 
-  // NOTYA-BELGE-DEID-03 (2026-11-20): ONE masked outbound copy per image, made on the device before ANY server AI call
-  // (type guess and every evaluation type: lab, aşı, epikriz, görüntü). Masking failed -> null -> nothing is sent.
-  const maskeler = useRef<Map<string, Promise<{ mime: string; base64: string } | null>>>(new Map())
-  const maskeliKopya = useCallback((key: string, dosya: Blob | undefined): Promise<{ mime: string; base64: string } | null> => {
-    if (!dosya || !dosya.type.startsWith("image/")) return Promise.resolve(null)
+  // NOTYA-BELGE-DEID-03 (2026-11-20): ONE masked outbound copy per image AND per PDF (pages drawn and masked on the device), made
+  // before ANY server AI call (type guess and every evaluation type: lab, aşı, epikriz, görüntü). Masking failed -> null -> not sent.
+  const maskeler = useRef<Map<string, Promise<GidenDeid | null>>>(new Map())
+  const maskeliKopya = useCallback((key: string, dosya: Blob | undefined): Promise<GidenDeid | null> => {
+    if (!dosya || !maskelenirMi(dosya)) return Promise.resolve(null)
     let p = maskeler.current.get(key)
     if (!p) {
-      p = gorseliOtomatikKimliksizlestir(dosya, { modalite: "us" })
-        .then((m) => (m.maske.durum === "maskelendi" ? { mime: m.gorsel.mime, base64: m.gorsel.base64 } : null))
+      p = belgeyiOtomatikKimliksizlestir(dosya, { modalite: "us" }) // images: header-band safety net on; PDFs: document rules
+        .then((m) => (m && m.maske.durum === "maskelendi" ? gidenDeid(m.gorsel) : null))
         .catch(() => null)
       maskeler.current.set(key, p)
     }
@@ -202,7 +205,7 @@ function Ic({ sessionId, patientId, transcript, pediatrik, hata, onDevam }: Prop
     const y = await yukle(k.blob, k.ad, patientId, sessionId, tok, (yuzde) => guncelle(key, { yuzde }))
     if (!y.id) { guncelle(key, { durum: "yukleme_hata", hata: y.hata || "Yüklenemedi" }); return }
     guncelle(key, { belgeId: y.id, yuzde: 100, durum: "siniflaniyor" })
-    const deid = await maskeliKopya(key, k.blob) // image: masked copy or null (then the server makes no AI guess)
+    const deid = await maskeliKopya(key, k.blob) // image / PDF: masked copy or null (then the server makes no AI guess)
     const s = await api<{ siniflandirma?: { tur: EkTuru; guven: number; adaylar: { tur: EkTuru; guven: number }[]; sor: boolean } }>(
       "/api/doktor/muayene-ekleri/siniflandir", { sessionId, belgeId: y.id, kaynak, ipucuTur: ipucu, deid })
     const c = s.veri?.siniflandirma
@@ -237,8 +240,8 @@ function Ic({ sessionId, patientId, transcript, pediatrik, hata, onDevam }: Prop
     if (!o?.belgeId || !tur) return
     // NOTYA-BELGE-OTO-01 / DEID-03: EVERY image (any type, not only röntgen/EKG/foto) is masked ON DEVICE; only the masked copy
     // is sent. Masking failure -> skipped, never sent unmasked.
-    let maskeli: { mime: string; base64: string } | null = null
-    if (o.dosya && o.dosya.type.startsWith("image/")) {
+    let maskeli: GidenDeid | null = null
+    if (o.dosya && maskelenirMi(o.dosya)) {
       guncelle(key, { durum: "maskeleniyor", hata: undefined })
       maskeli = await maskeliKopya(key, o.dosya)
       if (!maskeli) {

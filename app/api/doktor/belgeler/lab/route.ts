@@ -1,7 +1,10 @@
 /**
  * NOTYA-LAB-01 — Lab pipeline API.
  * POST body.adim:
- *   'cikar'    { documentId, kaynak? }              → EXTRACT (structural + vision, reconciled) → lab_paneller + lab_satirlar
+ *   'cikar'    { documentId, kaynak?, deid? }       → EXTRACT (structural + vision, reconciled) → lab_paneller + lab_satirlar
+ *              NOTYA-BELGE-DEID-03-a (2026-11-20): an image / PDF is read by the model ONLY through `deid`, the copy masked on the
+ *              device (image, or the PDF's masked page pictures). Without it: 400 `deid_gerekli`, nothing is sent. The vault original
+ *              is read here only for the local structural parse (PDF text layer / CSV / Excel), and identity rows are dropped from it.
  *              kaynak='enabiz' (DAH-WOW-NEXT C5): e-Nabız geçmiş PDF — yalnız görsel geçiş, satır başına basılı numune tarihi, panel_type 'enabiz_gecmis'
  *   'satir'    { panelId, satirId, alan, deger }    → doctor cell edit (OCR fix) → recompute the row, doctor_corrected=true
  *   'takma_ad' { panelId, satirId, canonical_key }  → "bunu ALT say" alias; re-map + recompute the row
@@ -11,6 +14,9 @@
  * GET ?documentId= → latest panel + rows + analysis
  * Onayla / Muayeneyi onayla reuse /api/doktor/belgeler/analiz/onayla (lab-aware block).
  */
+import { deidCoz, deidMime, maskeliBelgeMi } from '@/lib/doktor/muayeneEk/icerik'
+import { kimlikSatiriMi } from '@/core/belgeler/kimlikMaske'
+import { KIMLIK_GIZLENEMEDI } from '@/core/belgeler/otoBatch'
 import { NextRequest, NextResponse } from 'next/server'
 import { doktorOturum } from '@/lib/doktor/serverAuth'
 import { getDocumentMeta, downloadDocument } from '@/lib/vault/service'
@@ -50,12 +56,14 @@ export async function POST(req: NextRequest) {
   const oturum = await doktorOturum(req)
   if ('hata' in oturum) return oturum.hata
   const { user, supabase: sb } = oturum
-  const body = (await req.json().catch(() => null)) as Record<string, string> | null
+  const body = (await req.json().catch(() => null)) as Record<string, string> | null // `deid` is an object: read through deidCoz
   if (!body?.adim) return NextResponse.json({ error: 'adım gerekli' }, { status: 400 })
 
   if (body.adim === 'cikar') {
     if (!body.documentId) return NextResponse.json({ error: 'documentId gerekli' }, { status: 400 })
     let meta; try { meta = await getDocumentMeta({ supabase: sb }, user.id, body.documentId) } catch { return NextResponse.json({ error: 'Belge bulunamadı' }, { status: 404 }) }
+    const deid = deidCoz((body as Record<string, unknown>).deid)
+    if (maskeliBelgeMi(meta) && !deid) return NextResponse.json({ error: KIMLIK_GIZLENEMEDI, neden: 'deid_gerekli' }, { status: 400 })
     const { bytes } = await downloadDocument({ supabase: sb }, user.id, body.documentId)
     const ft = meta.fileType
     const enabiz = body.kaynak === 'enabiz'
@@ -65,10 +73,11 @@ export async function POST(req: NextRequest) {
       if (/csv|excel|spreadsheet/.test(ft)) yapi = csvXlsxCoz(bytes, ft)
       else if (ft === 'application/pdf') { const p = await pdfMetinCoz(bytes); yapi = p.satirlar.length ? p : null; if (!p.metin.trim()) yapi = null }
     } catch (e) { yapi = null; console.error('lab yapi', e) }
+    // An identity line parsed as a "row" (TC / name / phone) is never stored as a result nor sent to the interpretation call.
+    if (yapi) yapi = { ...yapi, satirlar: yapi.satirlar.filter((r) => !kimlikSatiriMi(r.raw_name, r.value)) }
     try {
-      if (ft === 'application/pdf') gorsel = await gorselCikar({ tip: 'pdf', base64: bytes.toString('base64') }, enabiz ? ENABIZ_TALIMAT : undefined, user.id, undefined, rotaButcesiMs(maxDuration))
-      else if (ft.startsWith('image/')) gorsel = await gorselCikar({ tip: 'image', mime: ft, base64: bytes.toString('base64') }, undefined, user.id, undefined, rotaButcesiMs(maxDuration))
-    } catch (e) { gorsel = null; console.error('lab gorsel', e) }
+      if (deid) gorsel = await gorselCikar({ tip: 'image', mime: deidMime(deid), base64: deid.base64, ekSayfalar: deid.ekSayfalar }, enabiz ? ENABIZ_TALIMAT : undefined, user.id, undefined, rotaButcesiMs(maxDuration)) // masked copy only
+    } catch (e) { gorsel = null; console.error('lab gorsel', e instanceof Error ? e.message : 'hata') }
     if (!yapi && !gorsel) return NextResponse.json({ error: 'Bu dosyadan tablo çıkarılamadı.' }, { status: 422 })
 
     let ham: HamSatir[]; let uyusmazlik: ReturnType<typeof uzlastir>['uyusmazlik'] = []
@@ -90,9 +99,15 @@ export async function POST(req: NextRequest) {
     const numune = enabiz ? panelTarihi(satirTarih) : gorsel?.numune_tarihi || yapi?.numune_tarihi || null
     const satirlar = ham.map((h, i) => { const s = satirKur(h, onc, al); const dis = uyusmazlik.filter((u) => u.raw_name === h.raw_name); if (dis.length) { s.dogrulanacak = true; s.dogrulama_notu = dis.map((d) => `${d.alan}: yapı "${d.yapi ?? '—'}" / görsel "${d.gorsel ?? '—'}"`).join('; ') } if (kaynaklar.length === 1) s.dogrulama_notu = s.dogrulama_notu || 'tek çıkarım kaynağı'; if (enabiz && tarihNot[i]) { s.dogrulanacak = true; s.dogrulama_notu = `${tarihNot[i]}; ${s.dogrulama_notu || ''}`.replace(/; $/, '') } return s })
 
-    // Identity guard: printed name/DOB vs this patient (compared once, only a boolean + masked hint stored)
+    // Identity guard: printed name/DOB vs this patient (compared once, only a boolean + masked hint stored).
+    // DEID-03: the model only sees the masked copy, so the comparison is made ON THE DEVICE (adKarsilastir on the OCR / text-layer
+    // name vs this patient's name) and arrives as `kimlikEslesme`; whatever the model "reads" in a blacked-out header is ignored.
     let kimlikUyari: { eslesme: boolean | null; ipucu: string | null } = { eslesme: null, ipucu: null }
-    if (gorsel?.kimlik && (gorsel.kimlik.ad || gorsel.kimlik.dogum)) {
+    const cihazEslesme = (body as Record<string, unknown>).kimlikEslesme
+    if (deid) {
+      if (cihazEslesme === 'eslesmiyor') kimlikUyari = { eslesme: false, ipucu: 'Belgedeki ad bu hastayla eşleşmiyor.' }
+      else if (cihazEslesme === 'eslesir') kimlikUyari = { eslesme: true, ipucu: null }
+    } else if (gorsel?.kimlik && (gorsel.kimlik.ad || gorsel.kimlik.dogum)) {
       let ad = '', dob = ''
       try { ad = hastaQ.data?.name_encrypted ? ((JSON.parse(decrypt(String(hastaQ.data.name_encrypted))) as { ad?: string }).ad || '') : '' } catch { ad = '' }
       try { dob = hastaQ.data?.dob_encrypted ? decrypt(String(hastaQ.data.dob_encrypted)).slice(0, 10) : '' } catch { dob = '' }

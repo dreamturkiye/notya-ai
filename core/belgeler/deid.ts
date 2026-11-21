@@ -7,10 +7,14 @@
  * (ocrKimlik.ts) and blacked out BEFORE encoding (kimlikMaske.ts holds the pure rules). Only the masked copy is returned;
  * the checkbox is a fallback for when OCR fails or is not confident. Face blur remains the doctor's call.
  */
-import { kimlikKutulari, kimlikBulgulari, satirlariBirlestir, type KimlikBulgulari, type MaskeSonuc } from './kimlikMaske'
-import { kimlikMetniOku } from './ocrKimlik'
+import { kimlikKutulari, kimlikBulgulari, type KimlikBulgulari, type MaskeSonuc } from './kimlikMaske'
+import { ikiGecisliOku } from './ocrKimlik'
 
-export type DeIdGorsel = { mime: 'image/jpeg' | 'image/png'; base64: string; hash: string; genislik: number; yukseklik: number; kalite: { bulanik: boolean; laplacianVar: number; parlaklik: number } }
+export type DeIdGorsel = {
+  mime: 'image/jpeg' | 'image/png'; base64: string; hash: string; genislik: number; yukseklik: number; kalite: { bulanik: boolean; laplacianVar: number; parlaklik: number }
+  /** DEID-03: a PDF's masked pages 2..N (page 1 is `base64`). Absent for a single image. */
+  ekSayfalar?: { mime: 'image/jpeg'; base64: string }[]
+}
 export type SesHazirlik = { spektrogram: DeIdGorsel; metrikler: Record<string, number | string>; kaliteDusuk: boolean; neden: string | null }
 
 async function sha256(b64: string): Promise<string> {
@@ -39,7 +43,7 @@ export type OtomatikDeId = {
   /** The OUTBOUND copy (identity text blacked out, EXIF-free). Never shown to the doctor; the original stays untouched. */
   gorsel: DeIdGorsel
   /** 'maskelendi' = OCR ran confidently (boxes may be 0); 'ocr_basarisiz' / 'dusuk_guven' = skip auto flow / checkbox fallback. */
-  maske: { durum: 'maskelendi' | 'ocr_basarisiz' | 'dusuk_guven'; kutuSayisi: number; ustBant: boolean }
+  maske: { durum: 'maskelendi' | 'ocr_basarisiz' | 'dusuk_guven' | 'pdf_okunamadi' | 'cok_buyuk'; kutuSayisi: number; ustBant: boolean; sayfa?: number }
   /** What the OCR found (local only; used for chips and the wrong-patient guard). */
   bulgu: KimlikBulgulari
 }
@@ -55,15 +59,9 @@ export async function gorseliOtomatikKimliksizlestir(dosya: Blob, o: { modalite?
   const ocrOlcek = Math.min(1, 2400 / Math.max(bmp.width, bmp.height))
   const oc = document.createElement('canvas'); oc.width = Math.max(1, Math.round(bmp.width * ocrOlcek)); oc.height = Math.max(1, Math.round(bmp.height * ocrOlcek))
   oc.getContext('2d')!.drawImage(bmp, 0, 0, oc.width, oc.height)
-  // Pass 2: top 30% band upscaled 2x (small header overlays); coordinates are mapped back into the full-image space.
-  const bantH = Math.max(1, Math.round(oc.height * 0.3))
-  const bc = document.createElement('canvas'); bc.width = oc.width * 2; bc.height = bantH * 2
-  const bctx = bc.getContext('2d')!; bctx.imageSmoothingQuality = 'high'
-  bctx.drawImage(oc, 0, 0, oc.width, bantH, 0, 0, bc.width, bc.height)
-  const [tam, bant] = [await kimlikMetniOku(oc), await kimlikMetniOku(bc)]
-  const bantGeri = bant && bant.map((s) => ({ kelimeler: s.kelimeler.map((w) => ({ ...w, x0: w.x0 / 2, y0: w.y0 / 2, x1: w.x1 / 2, y1: w.y1 / 2 })) }))
-  // Either pass failing alone is tolerated; both failing = OCR failed (caller skips the auto flow).
-  const satirlar = satirlariBirlestir(tam, bantGeri)
+  // Full image + top 30% band upscaled 2x (small header overlays), merged. Either pass failing alone is tolerated; both failing =
+  // OCR failed (caller skips the auto flow).
+  const satirlar = await ikiGecisliOku(oc)
   let sonuc: MaskeSonuc | null = null
   let durum: OtomatikDeId['maske']['durum'] = 'ocr_basarisiz'
   if (satirlar) {
@@ -97,7 +95,28 @@ export async function gorseliKimliksizlestir(dosya: Blob, maxKenar = 1568, maske
   return { mime: 'image/jpeg', base64, hash: await sha256(base64), genislik: w, yukseklik: h, kalite: { bulanik: v < 40, laplacianVar: Math.round(v), parlaklik: Math.round(mean) } }
 }
 
-export async function pdfHazirla(): Promise<null> { return null } // PDF is sent server-side from the vault (no pixels to de-id)
+/**
+ * DEID-03 (2026-11-20) — ONE entry point for every outbound document copy: an image is masked as above; a PDF is drawn page by page
+ * on the device and each page masked with the same rules (text layer as exact OCR, OCR for scanned pages — `pdfMaske.ts`).
+ * Anything else (audio, CSV, Word) -> null: it has no pixels and is not sent through this path. Callers send `gidenDeid(r.gorsel)`
+ * ONLY when `r.maske.durum === 'maskelendi'` (the doctor-attested fallback on the Belgeler pages is the one exception).
+ */
+export async function belgeyiOtomatikKimliksizlestir(dosya: Blob, o: { modalite?: string; ad?: string } = {}): Promise<OtomatikDeId | null> {
+  if (pdfDosyasiMi(dosya, o.ad)) {
+    const { pdfiOtomatikKimliksizlestir } = await import('./pdfMaske')
+    return pdfiOtomatikKimliksizlestir(dosya)
+  }
+  if (dosya.type.startsWith('image/')) return gorseliOtomatikKimliksizlestir(dosya, { modalite: o.modalite })
+  return null
+}
+
+export const pdfDosyasiMi = (dosya: Blob, ad?: string) => dosya.type === 'application/pdf' || (!dosya.type && /\.pdf$/i.test(ad || ''))
+
+/** The JSON shape every server route takes as `deid` (masked pixels only; never the original). */
+export type GidenDeid = { mime: string; base64: string; hash: string; ekSayfalar?: { mime: string; base64: string }[] }
+export function gidenDeid(g: DeIdGorsel): GidenDeid {
+  return { mime: g.mime, base64: g.base64, hash: g.hash, ...(g.ekSayfalar?.length ? { ekSayfalar: g.ekSayfalar.map((s) => ({ mime: s.mime, base64: s.base64 })) } : {}) }
+}
 
 /** Mono log-spectrogram as a PNG the writer can look at, plus quality metrics. */
 export async function sesiHazirla(dosya: Blob): Promise<SesHazirlik> {

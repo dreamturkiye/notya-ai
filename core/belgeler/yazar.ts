@@ -136,9 +136,12 @@ export function kullaniciPromptu(g: AnalizGirdi, f: FusionSonuc | null, motorlar
   return parcalar.join('\n')
 }
 
+/**
+ * What the writer sees: masked pictures only (NOTYA-BELGE-DEID-03). A PDF arrives as its masked page pictures (`ekSayfalar` = pages
+ * 2..N, drawn and masked on the device); a raw PDF / vault original is not representable here on purpose.
+ */
 export type ClaudeGorselGirdi =
-  | { tip: 'image'; mime: 'image/jpeg' | 'image/png' | 'image/webp' | 'image/gif'; base64: string }
-  | { tip: 'pdf'; base64: string }
+  { tip: 'image'; mime: 'image/jpeg' | 'image/png' | 'image/webp' | 'image/gif'; base64: string; ekSayfalar?: { mime: string; base64: string }[] }
 
 export async function claudeIleYaz(
   persona: string,
@@ -150,8 +153,10 @@ export async function claudeIleYaz(
   doctorId?: string | null
 ): Promise<{ rapor: BelgeRaporu; bulguKodlari: { kod: string; p: number }[]; ham: string }> {
   const icerik: unknown[] = []
-  if (gorsel?.tip === 'image') icerik.push({ type: 'image', source: { type: 'base64', media_type: gorsel.mime, data: gorsel.base64 } })
-  if (gorsel?.tip === 'pdf') icerik.push({ type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: gorsel.base64 } })
+  if (gorsel?.tip === 'image') {
+    icerik.push({ type: 'image', source: { type: 'base64', media_type: gorsel.mime, data: gorsel.base64 } })
+    for (const s of gorsel.ekSayfalar || []) icerik.push({ type: 'image', source: { type: 'base64', media_type: ['image/png', 'image/webp', 'image/gif'].includes(s.mime) ? s.mime : 'image/jpeg', data: s.base64 } })
+  }
   icerik.push({ type: 'text', text: kullaniciPromptu(girdi, fusion, motorlar, sesMetrikleri) })
   // NOTYA-MALIYET-01: görüntü/belge yorumu (goruntu-inceleme; LUNAPRO-01: birincil Luna-Pro); model adı politikadan
   const yanit = await aiCagir({ gorev: 'goruntu-inceleme', maxTokens: 3000, temperature: 0.2, doctorId, system: sistemPromptu(persona), messages: [{ role: 'user', content: icerik }] })

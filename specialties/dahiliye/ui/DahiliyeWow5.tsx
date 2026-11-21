@@ -7,6 +7,7 @@ import { Kaynak } from './DahiliyeWow2';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 import { DosyaSecDugmesi } from '@/components/core/DosyaSecDugmesi';
 import { doktorFetch } from '@/lib/doktor/oturumFetch'
+import { deIdMetin } from '@/core/belgeler/deidMetin'
 
 type Props = { sekme: string; w5: Wow5Veri; patientId: string; kaynak: boolean; refler: Record<string, string>; calistir: (body: Record<string, unknown>, ok?: string) => Promise<Record<string, unknown> | null> };
 
@@ -154,8 +155,16 @@ export default function DahiliyeWow5({ sekme, w5, patientId, kaynak, refler, cal
         const up = await doktorFetch('/api/doktor/documents', { method: 'POST', body: form });
         const uj = await up.json().catch(() => ({}));
         if (!up.ok || !uj.document?.id) throw new Error(uj.error || 'Yüklenemedi');
+        // NOTYA-BELGE-DEID-03: the PDF is drawn and masked page by page on this device; only the masked pages are read by the model.
+        setYukleme(deIdMetin(process.env.NOTYA_COUNTRY).yukleniyor);
+        const { belgeyiOtomatikKimliksizlestir, gidenDeid } = await import('@/core/belgeler/deid') // on demand: not in the page bundle
+        const m = await belgeyiOtomatikKimliksizlestir(file, { ad: file.name }).catch(() => null);
+        if (!m || m.maske.durum !== 'maskelendi') {
+          setYukleme(`${deIdMetin(process.env.NOTYA_COUNTRY).atlandi}${m?.maske.durum === 'cok_buyuk' ? ' (PDF çok uzun — bölümlere ayırıp yükleyin)' : ''}. PDF Belgeler'e kaydedildi; oradan elle değerlendirebilirsiniz.`)
+          return
+        }
         setYukleme('Çıkarılıyor (satır başına tarih)…');
-        const c = await doktorFetch('/api/doktor/belgeler/lab', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ adim: 'cikar', documentId: uj.document.id, kaynak: 'enabiz' }) });
+        const c = await doktorFetch('/api/doktor/belgeler/lab', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ adim: 'cikar', documentId: uj.document.id, kaynak: 'enabiz', deid: gidenDeid(m.gorsel) }) });
         const cj = await c.json().catch(() => ({}));
         if (!c.ok) throw new Error(cj.error || 'Çıkarılamadı');
         window.location.href = `/dashboard/doktor/hastalar/${patientId}/belgeler/${uj.document.id}/lab?geriTab=dahiliye`;

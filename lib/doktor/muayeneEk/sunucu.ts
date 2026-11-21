@@ -37,7 +37,8 @@ import { degerlendirmeOku, degerlendirmeYaz, girdiHash, ogrenmeIsaretle, ogrenme
 import { ekTuruMu, type EkAsiSatiri, type EkKaynak, type EkSonuc, type EkTuru, type SiniflandirmaSonucu } from './tipler'
 import { cinsiyetKodu } from '@/lib/utils/cinsiyet'
 import { KIMLIK_GIZLENEMEDI } from '@/core/belgeler/otoBatch'
-import { deidMime, gorselBelgeMi, icerikBlogu, type DeidGorsel } from './icerik'
+import { deidMime, icerikBloklari, maskeliBelgeMi, type DeidGorsel } from './icerik'
+import { kimlikSatiriMi, metniKimliksizlestir } from '@/core/belgeler/kimlikMaske'
 
 export type { DeidGorsel } from './icerik'
 
@@ -100,13 +101,14 @@ function jsonAyikla(ham: string): Record<string, unknown> | null {
 }
 
 async function aiSiniflandir(c: EkBaglam, bytes: Buffer, deid: DeidGorsel | null): Promise<{ tur: EkTuru; guven: number } | null> {
-  const blok = icerikBlogu(c.meta, bytes, deid) // image without a masked copy -> no AI guess; the doctor picks the type
-  if (!blok) return null
+  void bytes
+  const bloklar = icerikBloklari(c.meta, deid) // image / PDF without a masked copy -> no AI guess; the doctor picks the type
+  if (!bloklar) return null
   try {
     const y = await aiCagir({
       gorev: 'goruntu-inceleme', maxTokens: 200, temperature: 0, jsonBekleniyor: true, doctorId: c.doktorId,
       system: [{ metin: SINIF_SISTEM, onbellek: true }],
-      messages: [{ role: 'user', content: [blok, { type: 'text', text: 'Bu belgenin türünü JSON olarak ver.' }] }],
+      messages: [{ role: 'user', content: [...bloklar, { type: 'text', text: 'Bu belgenin türünü JSON olarak ver.' }] }],
       butceMs: 35_000,
     })
     const j = jsonAyikla(yanitMetni(y as { content?: unknown }, '\n'))
@@ -191,16 +193,18 @@ async function aliaslar(sb: SupabaseClient, doctorId: string): Promise<Record<st
 
 async function labDegerlendir(c: EkBaglam, bytes: Buffer, deid: DeidGorsel | null): Promise<EkSonuc> {
   const ft = c.meta.fileType
-  if (gorselBelgeMi(c.meta) && !deid?.base64) return atlandiSonucu('lab', KIMLIK_GIZLENEMEDI)
+  // DEID-03: an image or a PDF is only read through its masked copy (a PDF's text layer is parsed here, locally, and never sent).
+  if (maskeliBelgeMi(c.meta) && !deid?.base64) return atlandiSonucu('lab', KIMLIK_GIZLENEMEDI)
   const butce = rotaButcesiMs(EK_ROTA_SURESI_SN)
   let yapi: CikarimSonucu | null = null, gorsel: CikarimSonucu | null = null
   try {
     if (/csv|excel|spreadsheet/.test(ft)) yapi = csvXlsxCoz(bytes, ft)
     else if (ft === 'application/pdf') { const p = await pdfMetinCoz(bytes); yapi = p.satirlar.length && p.metin.trim() ? p : null }
   } catch { yapi = null }
+  // An identity line parsed as a "row" (TC / name / phone) never reaches the interpretation call.
+  if (yapi) yapi = { ...yapi, satirlar: yapi.satirlar.filter((r) => !kimlikSatiriMi(r.raw_name, r.value)) }
   try {
-    if (ft === 'application/pdf') gorsel = await gorselCikar({ tip: 'pdf', base64: bytes.toString('base64') }, undefined, c.doktorId, undefined, butce)
-    else if (gorselBelgeMi(c.meta) && deid?.base64) gorsel = await gorselCikar({ tip: 'image', mime: deidMime(deid), base64: deid.base64 }, undefined, c.doktorId, undefined, butce) // masked copy only
+    if (maskeliBelgeMi(c.meta) && deid?.base64) gorsel = await gorselCikar({ tip: 'image', mime: deidMime(deid), base64: deid.base64, ekSayfalar: deid.ekSayfalar }, undefined, c.doktorId, undefined, butce) // masked copy only
   } catch { gorsel = null }
   if (!yapi && !gorsel) return hataSonucu('lab', 'Bu dosyadan laboratuvar tablosu çıkarılamadı.')
 
@@ -233,13 +237,12 @@ async function labDegerlendir(c: EkBaglam, bytes: Buffer, deid: DeidGorsel | nul
 async function goruntuDegerlendir(c: EkBaglam, bytes: Buffer, tur: 'rontgen' | 'ekg' | 'foto', deid: DeidGorsel | null): Promise<EkSonuc> {
   const kural = bransKurali(c.bransKey)
   if (kural.engelli) return atlandiSonucu(tur, 'Bu branşta görüntü analizi kapalıdır.')
+  void bytes
   const pdfMi = c.meta.fileType === 'application/pdf'
   let gorsel: Parameters<typeof tierAYazVeFuzyonla>[0]['gorsel']
-  if (pdfMi) gorsel = { tip: 'pdf', base64: bytes.toString('base64') }
-  else if (deid?.base64) {
-    const mime = (['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(deid.mime) ? deid.mime : 'image/jpeg') as 'image/jpeg' | 'image/png' | 'image/webp' | 'image/gif'
-    gorsel = { tip: 'image', mime, base64: deid.base64 }
-  } else return atlandiSonucu(tur, 'Kimliksizleştirilmiş görüntü gerekli — görselde hasta kimliği olmadığını onaylayın.')
+  // DEID-03: images AND PDFs go as their masked pictures only (a PDF = its masked pages).
+  if (maskeliBelgeMi(c.meta) && deid?.base64) gorsel = { tip: 'image', mime: deidMime(deid), base64: deid.base64, ekSayfalar: deid.ekSayfalar }
+  else return atlandiSonucu(tur, KIMLIK_GIZLENEMEDI)
 
   const ad = c.meta.fileName.toLocaleLowerCase('tr-TR')
   const secilen: Modalite = tur === 'ekg' ? 'ekg' : tur === 'foto' ? 'derm' : pdfMi ? 'pdf_rapor' : /akciğer|akciger|cxr|\bpa\b/.test(ad) ? 'cxr' : 'serbest'
@@ -281,14 +284,14 @@ async function asiDegerlendir(c: EkBaglam, bytes: Buffer, deid: DeidGorsel | nul
     if (asiAdi) satir.eslesme = karneSatirlariniCevir([{ anahtar: 'x', asiAdi, dozNo: null, uygulamaTarihi: null, okunamadi: false, okunamadiNedeni: null, hamMetin: null }], 'bu_muayene', bugun)[0].eslesme
     return asiSonucu({ satirlar: [satir], bugunIso: bugun })
   }
-  const blok = icerikBlogu(c.meta, bytes, deid)
-  if (!blok) return gorselBelgeMi(c.meta) ? atlandiSonucu('asi', KIMLIK_GIZLENEMEDI) : hataSonucu('asi', 'Bu dosya biçiminden aşı bilgisi okunamadı.')
+  const bloklar = icerikBloklari(c.meta, deid)
+  if (!bloklar) return maskeliBelgeMi(c.meta) ? atlandiSonucu('asi', KIMLIK_GIZLENEMEDI) : hataSonucu('asi', 'Bu dosya biçiminden aşı bilgisi okunamadı.')
   const butce = rotaButcesiMs(EK_ROTA_SURESI_SN)
   // (b) Karne / belge
   try {
     const y = await aiCagir({
       gorev: 'goruntu-inceleme', system: [{ metin: KARNE_SISTEM, onbellek: true }], temperature: 0, doctorId: c.doktorId, butceMs: butce,
-      messages: [{ role: 'user', content: [blok, { type: 'text', text: KARNE_KULLANICI_METNI }] }],
+      messages: [{ role: 'user', content: [...bloklar, { type: 'text', text: KARNE_KULLANICI_METNI }] }],
     })
     if ((y as { stop_reason?: string | null }).stop_reason === 'max_tokens') return hataSonucu('asi', 'Karne çok uzun — iki parça hâlinde yükleyin.')
     const k = karneYanitiniCoz(yanitMetni(y as { content?: unknown }, '\n'), { bugunIso: bugun, dogumIso: c.dogumIso })
@@ -299,7 +302,7 @@ async function asiDegerlendir(c: EkBaglam, bytes: Buffer, deid: DeidGorsel | nul
   // (c) Flakon / kutu / etiket fotoğrafı
   const y2 = await aiCagir({
     gorev: 'goruntu-inceleme', system: [{ metin: ETIKET_SISTEM, onbellek: true }], temperature: 0, doctorId: c.doktorId, butceMs: butce, jsonBekleniyor: true, maxTokens: 800,
-    messages: [{ role: 'user', content: [blok, { type: 'text', text: 'Etiketteki aşı adı, lot ve son kullanma tarihini çıkar. Yalnızca JSON.' }] }],
+    messages: [{ role: 'user', content: [...bloklar, { type: 'text', text: 'Etiketteki aşı adı, lot ve son kullanma tarihini çıkar. Yalnızca JSON.' }] }],
   })
   const j = jsonAyikla(yanitMetni(y2 as { content?: unknown }, '\n'))
   if (!j || j.etiket === false) return asiSonucu({ satirlar: [], bugunIso: bugun })
@@ -319,14 +322,15 @@ Yalnız JSON: {"belge_turu": string|null, "tarih": "GG.AA.YYYY"|null, "ozet": st
 
 async function genelDegerlendir(c: EkBaglam, bytes: Buffer, tur: 'epikriz' | 'diger', deid: DeidGorsel | null): Promise<EkSonuc> {
   const ft = c.meta.fileType
-  if (gorselBelgeMi(c.meta) && !deid?.base64) return atlandiSonucu(tur, KIMLIK_GIZLENEMEDI)
-  let blok = icerikBlogu(c.meta, bytes, deid)
-  if (!blok && (ft === 'text/plain' || /csv/.test(ft))) blok = { type: 'text', text: bytes.toString('utf8').slice(0, 20_000) }
-  if (!blok) return atlandiSonucu(tur, 'Bu dosya biçimi için otomatik değerlendirme yok.')
+  if (maskeliBelgeMi(c.meta) && !deid?.base64) return atlandiSonucu(tur, KIMLIK_GIZLENEMEDI)
+  let bloklar = icerikBloklari(c.meta, deid)
+  // Plain text / CSV: the same identity rules on the text itself (values after name / TC / DOB labels, ID-like numbers) before sending.
+  if (!bloklar && (ft === 'text/plain' || /csv/.test(ft))) bloklar = [{ type: 'text', text: metniKimliksizlestir(bytes.toString('utf8').slice(0, 20_000)).metin }]
+  if (!bloklar) return atlandiSonucu(tur, 'Bu dosya biçimi için otomatik değerlendirme yok.')
   const y = await aiCagir({
     gorev: 'goruntu-inceleme', system: [{ metin: GENEL_SISTEM(tur === 'epikriz'), onbellek: true }], temperature: 0, doctorId: c.doktorId, jsonBekleniyor: true, maxTokens: 3000,
     butceMs: rotaButcesiMs(EK_ROTA_SURESI_SN),
-    messages: [{ role: 'user', content: [blok, { type: 'text', text: 'Belgeyi kurallara göre özetle. Yalnızca JSON.' }] }],
+    messages: [{ role: 'user', content: [...bloklar, { type: 'text', text: 'Belgeyi kurallara göre özetle. Yalnızca JSON.' }] }],
   })
   const j = jsonAyikla(yanitMetni(y as { content?: unknown }, '\n'))
   if (!j) return hataSonucu(tur, 'Belge okunamadı.')

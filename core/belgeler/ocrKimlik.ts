@@ -7,7 +7,7 @@
  * failed and every image was skipped ("Kimlik gizlenemedi"). Assets are now same-origin (public/tesseract) and ONE shared
  * worker serves all images (serialised queue, retried once, released after an idle period).
  */
-import type { OcrSatir } from './kimlikMaske'
+import { satirlariBirlestir, type OcrSatir } from './kimlikMaske'
 
 type TessKelime = { text?: string; confidence?: number; bbox?: { x0: number; y0: number; x1: number; y1: number } }
 type TessSatir = { words?: TessKelime[] }
@@ -30,6 +30,9 @@ export function ocrAyarla(o: { varlikOnEki?: string; diller?: string }): void {
   if (typeof o.varlikOnEki === 'string' && /^(\/[a-z0-9][a-z0-9-]*)?$/.test(o.varlikOnEki)) VARLIK_ON_EKI = o.varlikOnEki
   if (typeof o.diller === 'string' && /^[a-z]{3}(\+[a-z]{3})*$/.test(o.diller)) OCR_DILLERI = o.diller
 }
+
+/** The build's path prefix for same-origin engine files ('' on the Türkiye build); the PDF page renderer uses the same one. */
+export function varlikOnEki(): string { return VARLIK_ON_EKI }
 
 /** Same-origin engine files (never a CDN): public/tesseract/{worker.min.js, tesseract-core*.wasm.js, lang/*.traineddata.gz}. */
 export function tesseractVarliklari(origin: string = typeof window !== 'undefined' ? window.location.origin : '', onEk: string = VARLIK_ON_EKI): { workerPath: string; corePath: string; langPath: string; gzip: boolean } {
@@ -102,4 +105,19 @@ export function kimlikMetniOku(kaynak: HTMLCanvasElement, _diller: string = DILL
   const is = sira.then(() => oku(kaynak))
   sira = is.catch(() => null)
   return is
+}
+
+/**
+ * The standard two-pass read used before any masking: the whole canvas + its top 30% band upscaled 2x (small header overlays),
+ * merged into one set of lines in the canvas' pixel space. Either pass failing alone is tolerated; both failing -> null.
+ */
+export async function ikiGecisliOku(oc: HTMLCanvasElement, o: { yalnizBant?: boolean } = {}): Promise<OcrSatir[] | null> {
+  const bantH = Math.max(1, Math.round(oc.height * 0.3))
+  const bc = document.createElement('canvas'); bc.width = oc.width * 2; bc.height = bantH * 2
+  const bctx = bc.getContext('2d')!; bctx.imageSmoothingQuality = 'high'
+  bctx.drawImage(oc, 0, 0, oc.width, bantH, 0, 0, bc.width, bc.height)
+  const tam = o.yalnizBant ? null : await kimlikMetniOku(oc)
+  const bant = await kimlikMetniOku(bc)
+  const bantGeri = bant && bant.map((s) => ({ kelimeler: s.kelimeler.map((w) => ({ ...w, x0: w.x0 / 2, y0: w.y0 / 2, x1: w.x1 / 2, y1: w.y1 / 2 })) }))
+  return satirlariBirlestir(tam, bantGeri)
 }

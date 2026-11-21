@@ -43,7 +43,7 @@ test('static check: nobody opts out, and no specialty folder forks the document 
 test('static check: every entry point uses the shared core, not its own copy', () => {
   const oku = (f: string) => readFileSync(join(KOK, f), 'utf8')
   assert.match(oku('components/doktor/MuayeneEkleri.tsx'), /belgeleriOtomatikIsle/)
-  assert.match(oku('components/doktor/MuayeneEklerAdimi.tsx'), /gorseliOtomatikKimliksizlestir/)
+  assert.match(oku('components/doktor/MuayeneEklerAdimi.tsx'), /belgeyiOtomatikKimliksizlestir/) // DEID-03: images and PDFs, shared core entry point
   assert.match(oku('app/api/sessions/[id]/end/route.ts'), /notaBloklariUygula/)
   assert.match(oku('lib/doktor/belgeNotaYaz.ts'), /notaBloklariUygula/)
   assert.match(oku('app/api/doktor/belgeler/analiz/onayla/route.ts'), /notaBloklariUygula/)

@@ -7,9 +7,11 @@
  * GET ?patientId=… — NOTYA-ASI-GOZLEM-01: hekim/sekreter salt-okunur karne JSON'u (gözlem sayfası).
  *   Sağlığım / PDF ile AYNI veri (asiKarnesiVerisi). Düzenleme yok.
  *
- * POST { adim: 'oku', belgeId }
- *   → Kasa belgesi (hekime kapsanmış) modele gider: görev 'goruntu-inceleme' (lib/ai/modeller.ts; LUNAPRO-01:
- *     birincil Luna-Pro, Sonnet 5 yalnız koruyucu). Dönen satırlar TASLAKTIR: `asilar`a HİÇBİR ŞEY yazılmaz.
+ * POST { adim: 'oku', belgeId, deid }
+ *   → NOTYA-BELGE-DEID-03-a (2026-11-20): modele YALNIZ cihazda maskelenmiş kopya (`deid`: fotoğraf ya da PDF'in maskeli sayfaları)
+ *     gider; Kasa'daki özgün karne model çağrısı için OKUNMAZ. `deid` yoksa 400 `deid_gerekli`, hiçbir şey gönderilmez.
+ *     Görev 'goruntu-inceleme' (lib/ai/modeller.ts; LUNAPRO-01: birincil Luna-Pro, Sonnet 5 yalnız koruyucu).
+ *     Dönen satırlar TASLAKTIR: `asilar`a HİÇBİR ŞEY yazılmaz.
  * POST { adim: 'onayla', belgeId, hekimOnayi: true, satirlar: [{ asiAdi, dozNo, uygulamaTarihi, okunamadi?, hekimDuzeltti? }] }
  *   → yalnız hekim (sekreter değil), yalnız açık onayla; hekimin düzelttiği değerler aynen, kaynak='beyan',
  *     belge_id + hekim_onay_at kanıt iziyle yazılır. Kural ihlalinde hiçbir satır yazılmaz.
@@ -20,7 +22,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { pratikOturum, sadeceDoktor } from '@/lib/doktor/pratikOturum'
 import { hastaSahibiMi } from '@/lib/doktor/hastaSahipligi'
-import { getDocumentMeta, downloadDocument } from '@/lib/vault/service'
+import { getDocumentMeta } from '@/lib/vault/service'
+import { deidBloklari, deidCoz } from '@/lib/doktor/muayeneEk/icerik'
+import { KIMLIK_GIZLENEMEDI } from '@/core/belgeler/otoBatch'
 import { decrypt } from '@/lib/security/encryption'
 import { aiCagir, rotaButcesiMs, yanitMetni } from '@/lib/ai/cagir'
 import { aiKotaKullan, KOTA_MESAJI } from '@/lib/doktor/hizLimiti'
@@ -60,7 +64,7 @@ export async function POST(req: NextRequest) {
   if (yasak) return yasak
   const { supabase, doktorId } = oturum
 
-  const body = (await req.json().catch(() => null)) as { adim?: string; belgeId?: string; hekimOnayi?: unknown; satirlar?: unknown } | null
+  const body = (await req.json().catch(() => null)) as { adim?: string; belgeId?: string; hekimOnayi?: unknown; satirlar?: unknown; deid?: unknown } | null
   if (!body?.adim || !body.belgeId) return NextResponse.json({ error: 'adım ve belgeId zorunludur.' }, { status: 400 })
 
   let meta
@@ -76,14 +80,12 @@ export async function POST(req: NextRequest) {
   if (body.adim === 'oku') {
     const pdfMi = meta.fileType === 'application/pdf'
     if (!pdfMi && !GORSEL_MIME.includes(meta.fileType)) return NextResponse.json({ error: 'Karne fotoğraf (JPEG/PNG/WebP) ya da PDF olmalı.' }, { status: 400 })
+    const deid = deidCoz(body.deid)
+    if (!deid) return NextResponse.json({ error: `${KIMLIK_GIZLENEMEDI}. Aşıları elle girebilirsiniz.`, neden: 'deid_gerekli' }, { status: 400 })
     const kota = await aiKotaKullan(supabase, doktorId, 'konsult')
     if (!kota.izin) return NextResponse.json({ error: KOTA_MESAJI }, { status: 429 })
 
-    let bytes: Buffer
-    try { ({ bytes } = await downloadDocument({ supabase }, doktorId, meta.id)) } catch { return NextResponse.json({ error: 'Belge açılamadı.' }, { status: 404 }) }
-    const blok = pdfMi
-      ? { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: bytes.toString('base64') } }
-      : { type: 'image', source: { type: 'base64', media_type: meta.fileType, data: bytes.toString('base64') } }
+    const bloklar = deidBloklari(deid) // masked copy only (photo, or the PDF's masked pages)
 
     let sonuc
     try {
@@ -91,7 +93,7 @@ export async function POST(req: NextRequest) {
       const y = await aiCagir({
         gorev: 'goruntu-inceleme',
         system: [{ metin: KARNE_SISTEM, onbellek: true }],
-        messages: [{ role: 'user', content: [blok, { type: 'text', text: KARNE_KULLANICI_METNI }] }],
+        messages: [{ role: 'user', content: [...bloklar, { type: 'text', text: KARNE_KULLANICI_METNI }] }],
         temperature: 0,
         doctorId: doktorId,
         // NOTYA-AYSE-GERI-07: two 60 s primary attempts equalled the route limit — the guard was never reached.

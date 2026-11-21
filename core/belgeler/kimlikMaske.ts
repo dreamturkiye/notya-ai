@@ -56,7 +56,20 @@ const KIMLIK_CIFT = new Set([
 const DUR_ETIKET = new Set([
   'ga', 'lmp', 'edd', 'ys', 'fhr', 'crl', 'bpd', 'fl', 'hc', 'ac', 'ofd', 'efw', 'afi', 'nt', 'gs', 'cm', 'mm', 'mhz', 'db', 'mi', 'tis', 'gain', 'depth', 'freq', 'fr', 'hz', 'bpm',
   'tarih', 'date', 'exam', 'muayene', 'time', 'saat', 'sana', 'vaqt', 'время', 'weeks', 'hafta', 'days', 'gun', 'wk', 'gw',
+  // DEID-03 (2026-11-20): lab sheet / vaccine card column and sample words. A sample date or the result table must stay readable
+  // when it shares a line with the patient block ("Adı Soyadı: X  Numune Tarihi: 12.11.2026"). Sex is clinical (reference ranges).
+  'numune', 'sonuc', 'birim', 'referans', 'tetkik', 'parametre', 'cinsiyet', 'sex', 'gender', 'result', 'unit', 'reference', 'range',
+  'specimen', 'sample', 'collected', 'doz', 'dose',
 ])
+
+/** "Adı" after one of these names a test / vaccine / institution column, not a person ("Tetkik Adı", "Aşı Adı", "Hastane Adı"). */
+const ADI_KURUM_ONEKI = new Set([
+  'tetkik', 'test', 'asi', 'ilac', 'parametre', 'islem', 'lab', 'laboratuvar', 'kurum', 'hastane', 'firma', 'urun', 'birim', 'bolum',
+  'klinik', 'merkez', 'tahlil', 'analiz', 'kurulus', 'tesis', 'okul', 'vaccine',
+])
+/** Document modalities (lab sheet, vaccine card, PDF report page): identity is EXPECTED somewhere, but no whole-band blackout
+ *  (the result table / vaccine rows often start right under the patient block and must stay readable). */
+export const BELGE_MODALITELERI = ['belge', 'lab', 'asi']
 
 /** Long, distinctive labels that tolerate one OCR slip ("Hasla", "Protokoi", "Doktar"). Short labels stay exact. */
 const BULANIK_ETIKETLER = ['hasta', 'protokol', 'doktor', 'patient', 'dogum', 'hekim', 'accession', 'birth']
@@ -90,6 +103,9 @@ function kimlikBenzeriMi(t: string): boolean {
   const s = t.trim()
   if (!s) return false
   if (SSN.test(s) || NHI.test(s)) return true
+  // DEID-03: a reference range ("150000-450000", "3.5-5.0") is two numbers, not one identifier
+  const aralik = s.split(/\s*[-–]\s*/)
+  if (aralik.length === 2 && aralik.every((p) => /^[<>≤≥]?\d[\d.,]*$/.test(p) && p.replace(/\D/g, '').length <= 7)) return false
   const digits = s.replace(/\D/g, '')
   return digits.length >= 9 && RAKAM_UZUN.test(s)
 }
@@ -145,6 +161,7 @@ export function kimlikKutulari(
     let maskeAcik = sonrakiSatiriMaskele
     sonrakiSatiriMaskele = false
     let sonEtiketBos = false
+    let sonEtiket: OcrKelime | null = null
     for (let i = 0; i < ks.length; i++) {
       const w = ks[i]
       const a = asciiNorm(w.text)
@@ -153,7 +170,9 @@ export function kimlikKutulari(
       const iki = w.text.indexOf(':')
       const onEk = iki > 0 ? asciiNorm(w.text.slice(0, iki)) : ''
       const gommaDeger = iki > 0 && iki < w.text.length - 1 && etiketMi(onEk, '') > 0
-      const e = gommaDeger ? 1 : etiketMi(a, sonraki)
+      const onceki = i > 0 ? asciiNorm(ks[i - 1].text) : ''
+      const kurumAdi = a === 'adi' && ADI_KURUM_ONEKI.has(onceki)
+      const e = kurumAdi ? 0 : gommaDeger ? 1 : etiketMi(a, sonraki)
       if (e > 0) {
         kimlikEtiketiVar = true
         maskeAcik = true
@@ -161,6 +180,7 @@ export function kimlikKutulari(
         const ustte = w.y0 < o.yukseklik * UST_BOLGE_ORANI
         if (ustte) { ustEtiket = true; ustEtiketAlt = Math.max(ustEtiketAlt, w.y1) }
         if (gommaDeger) { kutular.push({ x0: w.x0 + (w.x1 - w.x0) * (iki / w.text.length), y0: w.y0 - pad, x1: w.x1 + pad, y1: w.y1 + pad }); sonEtiketBos = false }
+        sonEtiket = e === 2 && ks[i + 1] ? ks[i + 1] : w
         if (e === 2) i++ // consume the second word of the label
         continue
       }
@@ -179,6 +199,11 @@ export function kimlikKutulari(
     }
     // a label that stood alone at the end of its line: its value is on the next line
     if (sonEtiketBos && maskeAcik) sonrakiSatiriMaskele = true
+    // DEID-03: ...or it is there but unreadable (handwritten name on a vaccine card, stamp): black out the rest of the line too.
+    if (sonEtiketBos && maskeAcik && sonEtiket) {
+      const h = sonEtiket.y1 - sonEtiket.y0
+      kutular.push({ x0: sonEtiket.x1, y0: sonEtiket.y0 - h * 0.6, x1: o.genislik, y1: sonEtiket.y1 + h * 0.6 })
+    }
   }
 
   // Digit runs split across several OCR words ("123 456 789 01") on one line
@@ -193,7 +218,9 @@ export function kimlikKutulari(
       }
       tampon = []
     }
-    for (const w of ks) { if (/^[\d.\-/]+$/.test(w.text)) tampon.push(w); else bosalt() }
+    // DEID-03: only bare digit groups join ("123 456 789 01", "0532 123 45 67"); a dose number next to a date, a value next to
+    // its reference range ("1 01.02.2024", "250 150-450") are separate clinical numbers and must stay readable.
+    for (const w of ks) { if (/^\d+$/.test(w.text)) tampon.push(w); else bosalt() }
     bosalt()
   }
 
@@ -218,8 +245,10 @@ export function kimlikKutulari(
   const guvenler = (baslikKelimeleri.length >= 3 ? baslikKelimeleri : tum).map((w) => w.conf).filter((c) => Number.isFinite(c))
   const ort = guvenler.length ? guvenler.reduce((a, b) => a + b, 0) / guvenler.length : 0
   const baslikBeklenir = !!o.modalite && BASLIK_MODALITELERI.includes(o.modalite)
+  const belgeMi = !!o.modalite && BELGE_MODALITELERI.includes(o.modalite)
   let durum: MaskeSonuc['durum'] = 'ok'
-  if (!tum.length) durum = baslikBeklenir ? 'ocr_yok' : 'ok'
+  if (belgeMi) durum = belgeDurumu([{ kimlikEtiketiVar, ortalamaGuven: ort, kelimeSayisi: tum.length }])
+  else if (!tum.length) durum = baslikBeklenir ? 'ocr_yok' : 'ok'
   else if (ort < MIN_GUVEN && !(kimlikEtiketiVar && ustBantUygulandi && ort >= 40)) durum = 'dusuk_guven' // whole header band is blacked out: safe
   else if (baslikBeklenir && !kimlikEtiketiVar && tum.some((w) => w.y0 < o.yukseklik * UST_BOLGE_ORANI)) {
     // header text exists but no identity label was recognised: we cannot be sure it is clinical-only text
@@ -315,4 +344,56 @@ export function adKarsilastir(bulunan: string | undefined, hastaAdi: string | un
   const esle = (x: string, y: string) => x === y || (x.length >= 4 && y.length >= 4 && editMesafe1(x, y))
   const ortak = a.filter((t) => h.some((u) => esle(t, u))).length
   return ortak > 0 ? 'eslesir' : 'eslesmiyor'
+}
+
+
+// ─── DEID-03 (2026-11-20): documents (lab sheet, vaccine card, multi-page PDF) ────────────────────────────
+/**
+ * Whole-document verdict for document modalities. 'ok' only when an identity label / ID-like number was found on at least one page
+ * (a lab report or vaccine card always prints whose it is — if nothing was recognised we cannot know the name was hidden) and every
+ * page that has text was read confidently. Pages without any text (blank page, ECG tracing) do not block.
+ */
+export function belgeDurumu(sayfalar: Pick<MaskeSonuc, 'kimlikEtiketiVar' | 'ortalamaGuven' | 'kelimeSayisi'>[]): MaskeSonuc['durum'] {
+  const yazili = sayfalar.filter((s) => s.kelimeSayisi > 0)
+  if (!yazili.length) return 'ocr_yok'
+  if (yazili.some((s) => s.ortalamaGuven < MIN_GUVEN)) return 'dusuk_guven'
+  if (!sayfalar.some((s) => s.kimlikEtiketiVar)) return 'dusuk_guven'
+  return 'ok'
+}
+
+/** A structurally parsed table row (PDF text layer / CSV / Excel) that is really an identity line ("TC Kimlik No | 12345678901"). */
+export function kimlikSatiriMi(ad: string, deger: string | null | undefined): boolean {
+  const ks = String(ad || '').split(/\s+/).filter(Boolean)
+  for (let i = 0; i < ks.length; i++) {
+    const a = asciiNorm(ks[i]).replace(/\s/g, '')
+    const onceki = i > 0 ? asciiNorm(ks[i - 1]) : ''
+    if (a === 'adi' && ADI_KURUM_ONEKI.has(onceki)) continue
+    if (etiketMi(a, ks[i + 1] ? asciiNorm(ks[i + 1]) : '') > 0) return true
+  }
+  // a bare 10+ digit value (TC, phone, protocol / barcode no) is never a lab result; "250.000" style counts keep their separators
+  const kimlikNo = (t: string) => /^[\d\s-]{10,}$/.test(t.trim()) && t.replace(/\D/g, '').length >= 10
+  return kimlikNo(String(deger ?? '')) || kimlikNo(String(ad || '')) || SSN.test(String(deger ?? '').trim())
+}
+
+/**
+ * Plain text (pasted / .txt / .csv) with the same rules: words that the image masker would black out become "[gizlendi]".
+ * Lines are laid out on a synthetic grid so label -> value, "label alone, value on the next line" and long digit runs behave
+ * exactly as on an image.
+ */
+export function metniKimliksizlestir(metin: string): { metin: string; gizlenen: number } {
+  const satirlarHam = String(metin || '').split(/\r?\n/)
+  const satirlar: OcrSatir[] = satirlarHam.map((l, y) => {
+    let x = 0
+    return { kelimeler: l.split(/(\s+)/).filter((t) => t && !/^\s+$/.test(t)).map((t) => { const k = { text: t, x0: x, y0: y * 20, x1: x + t.length * 10, y1: y * 20 + 14, conf: 100 }; x += t.length * 10 + 10; return k }) }
+  })
+  const genislik = Math.max(10, ...satirlar.flatMap((s) => s.kelimeler.map((k) => k.x1))) + 10
+  const r = kimlikKutulari(satirlar, { genislik, yukseklik: Math.max(20, satirlarHam.length * 20) })
+  let gizlenen = 0
+  const icinde = (k: OcrKelime) => r.kutular.some((b) => { const cx = (k.x0 + k.x1) / 2, cy = (k.y0 + k.y1) / 2; return cx >= b.x0 && cx <= b.x1 && cy >= b.y0 && cy <= b.y1 })
+  const cikti = satirlarHam.map((l, y) => {
+    const ks = satirlar[y].kelimeler
+    if (!ks.some(icinde)) return l
+    return ks.map((k) => { if (icinde(k)) { gizlenen++; return '[gizlendi]' } return k.text }).join(' ')
+  })
+  return { metin: cikti.join('\n'), gizlenen }
 }
