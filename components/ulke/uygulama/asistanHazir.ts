@@ -9,6 +9,7 @@
 import { useEffect, useState } from 'react'
 import { ulkeIstemciSupabase } from '@/lib/ulke/istemciSupabase'
 import { ulkeYolu } from '@/lib/ulke/yol'
+import { ulkeFetch } from '@/lib/ulke/oturumFetch'
 
 const ANAHTAR = 'notya-asistan-hazir'
 let bilinen: boolean | null = null
@@ -44,7 +45,7 @@ export async function asistanHazirSor(): Promise<boolean> {
         const { data } = (await ulkeIstemciSupabase()?.auth.getSession()) ?? { data: { session: null } }
         const jeton = data.session?.access_token
         if (!jeton) return true // can not ask yet (phone, token not ready): keep the entry, the page itself says what is wrong
-        const r = await fetch(ulkeYolu('/api/ulke/asistan-canli'), { headers: { Authorization: `Bearer ${jeton}` }, cache: 'no-store' })
+        const r = await ulkeFetch(ulkeYolu('/api/ulke/asistan-canli'), { cache: 'no-store' })
         if (!r.ok) return true // an error is not a "no": keep the entry
         const ok = hazirMi(await r.json().catch(() => null))
         yaz(ok)

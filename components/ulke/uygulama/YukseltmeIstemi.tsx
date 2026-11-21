@@ -21,6 +21,7 @@ import { aktifUlke } from '@/lib/ulke/ulke'
 import { ulkeTicari } from '@/lib/billing/ulkeTicari'
 import { istemIcerigi, type Istem, type IstemNedeni } from '@/lib/billing/deneme'
 import { demoIstegi } from '@/lib/ulke/demo'
+import { ulkeFetch } from '@/lib/ulke/oturumFetch'
 
 export const YUKSELT_OLAYI = 'notya-yukselt'
 const DURUM_ANAHTARI = 'notya-deneme-durumu'
@@ -56,7 +57,7 @@ async function durumGetir(yenile: boolean): Promise<Durum | null> {
   const j = await jeton()
   if (!j) return null
   try {
-    const r = await fetch(ulkeYolu('/api/ulke/deneme'), { headers: { Authorization: `Bearer ${j}` }, cache: 'no-store' })
+    const r = await ulkeFetch(ulkeYolu('/api/ulke/deneme'), { cache: 'no-store' })
     if (!r.ok) return null
     const d = (await r.json()) as Durum
     yaz('session', DURUM_ANAHTARI, JSON.stringify({ t: Date.now(), d }))
@@ -114,9 +115,9 @@ export default function YukseltmeIstemi() {
     setBekliyor(true); setHata('')
     try {
       const j = await jeton()
-      const r = await fetch(ulkeYolu('/api/billing/checkout'), {
+      const r = await ulkeFetch(ulkeYolu('/api/billing/checkout'), {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${j}` },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ plan_key: planKey, interval: aralik }),
       })
       const c = (await r.json().catch(() => null)) as { success?: boolean; data?: { checkout_url?: string } } | null

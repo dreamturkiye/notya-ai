@@ -32,6 +32,7 @@ import { arayuz, araclarMetni, asistanSesAdlari, klinikMetni, marka, metninDili,
 import { hesapSaatDilimi, hesapSaatDilimiAyarla, saatBicimi } from '@/lib/ulke/arayuz/bicim'
 import { ozellikAcik, ulkePaketi } from '@/lib/ulke/ulke'
 import type { DilKodu } from '@/lib/ulke/tipler'
+import { ulkeFetch, ulkeOturumDoldu, ulkeOturumuCanliTut } from '@/lib/ulke/oturumFetch'
 
 /**
  * ADDRESSES of the application's screens: the routes of UYGULAMA_EKRANLARI under the country's path prefix
@@ -90,25 +91,18 @@ export function useUygulama(ekran: UygulamaEkrani): Uygulama {
   }, [])
 
   const api = useCallback<Api>(async (yol, secenek) => {
-    // The session may have been refreshed since the page loaded: always ask for the current token.
-    try {
-      const { data } = (await ulkeIstemciSupabase()?.auth.getSession()) ?? { data: { session: null } }
-      if (data.session?.access_token) jeton.current = data.session.access_token
-    } catch { /* keep the last known token */ }
-    const r = await fetch(ulkeYolu(yol), {
+    // NOTYA-OTURUM-01: the shared request path — the CURRENT token, one refresh + one retry on a 401, and a session
+    // that cannot be renewed goes to /login with a return path and the notice (never a silent sign-out mid-work).
+    const r = await ulkeFetch(ulkeYolu(yol), {
       method: secenek?.method ?? 'GET',
-      headers: { Authorization: `Bearer ${jeton.current}`, ...(secenek?.govde !== undefined ? { 'Content-Type': 'application/json' } : {}) },
+      headers: secenek?.govde !== undefined ? { 'Content-Type': 'application/json' } : undefined,
       body: secenek?.govde !== undefined ? JSON.stringify(secenek.govde) : undefined,
       cache: 'no-store',
     })
     const j = (await r.json().catch(() => ({}))) as Record<string, unknown>
-    if (r.status === 401) { void cikis() }
-    // STRIPE-NOTYA-AU-05 trial model: a refusal for the trial's limits (read-only, visit cap, voice minutes) opens the
-    // upgrade prompt, whatever screen asked. The screen still shows its own refusal.
-    const neden = yanittanIstem(r.status, j)
-    if (neden) { try { window.dispatchEvent(new CustomEvent(YUKSELT_OLAYI, { detail: { neden } })) } catch { /* no prompt */ } }
+    if (r.status === 401) ulkeOturumDoldu()
     return { ok: r.ok, status: r.status, j }
-  }, [cikis])
+  }, [])
 
   useEffect(() => {
     let iptal = false
@@ -116,7 +110,8 @@ export function useUygulama(ekran: UygulamaEkrani): Uygulama {
       const supabase = ulkeIstemciSupabase()
       if (!supabase) { window.location.replace(GIRIS); return }
       const { data } = await supabase.auth.getSession()
-      if (!data.session?.access_token) { window.location.replace(GIRIS); return }
+      if (!data.session?.access_token) { ulkeOturumDoldu(); return }
+      ulkeOturumuCanliTut()
       jeton.current = data.session.access_token
       let r: ApiCevabi
       try { r = await api('/api/ulke/hesap') } catch { return } // offline: stay on "loading"; a reload tries again
@@ -220,7 +215,7 @@ function useMesajRozeti(acik: boolean): number {
         const { data } = (await ulkeIstemciSupabase()?.auth.getSession()) ?? { data: { session: null } }
         const jeton = data.session?.access_token
         if (!jeton) return
-        const r = await fetch(ulkeYolu(HEKIM_MESAJ_API), { headers: { Authorization: `Bearer ${jeton}` }, cache: 'no-store' })
+        const r = await ulkeFetch(ulkeYolu(HEKIM_MESAJ_API), { cache: 'no-store' })
         if (!r.ok) return
         const j = (await r.json().catch(() => ({}))) as { okunmamis?: unknown }
         if (!iptal && Array.isArray(j.okunmamis)) setN(j.okunmamis.length)
@@ -244,7 +239,7 @@ function useAvatar(acik: boolean): string | null {
         const { data } = (await ulkeIstemciSupabase()?.auth.getSession()) ?? { data: { session: null } }
         const jeton = data.session?.access_token
         if (!jeton) return
-        const r = await fetch(ulkeYolu('/api/ulke/hesap/avatar'), { headers: { Authorization: `Bearer ${jeton}` }, cache: 'no-store' })
+        const r = await ulkeFetch(ulkeYolu('/api/ulke/hesap/avatar'), { cache: 'no-store' })
         if (!r.ok) return
         const j = (await r.json().catch(() => ({}))) as { avatar?: unknown }
         if (!iptal && typeof j.avatar === 'string') setUrl(j.avatar)

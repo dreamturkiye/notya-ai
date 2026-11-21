@@ -12,6 +12,7 @@ import { ulkeIstemciSupabase } from '@/lib/ulke/istemciSupabase'
 import { ulkeYolu } from '@/lib/ulke/yol'
 import { rolAdi } from '@/lib/ulke/arayuz'
 import { Cerceve, Yukleniyor, harfler, useUygulama, YOL } from './Kabuk'
+import { ulkeFetch } from '@/lib/ulke/oturumFetch'
 
 const AVATAR_OLAY = 'notya-avatar-guncellendi'
 const AVATAR_AZAMI = 4 * 1024 * 1024
@@ -101,7 +102,7 @@ export default function Hesabim() {
     setAvatarDurum('kaydediyor')
     try {
       const form = new FormData(); form.append('file', dosya)
-      const r = await fetch(ulkeYolu('/api/ulke/hesap/avatar'), { method: 'POST', headers: { Authorization: `Bearer ${await jeton()}` }, body: form })
+      const r = await ulkeFetch(ulkeYolu('/api/ulke/hesap/avatar'), { method: 'POST', body: form })
       const j = (await r.json().catch(() => ({}))) as { avatar?: unknown; code?: string; alan?: string }
       if (!r.ok || typeof j.avatar !== 'string') { setAvatarHata(j.alan === 'tur' ? h.fotoTur : j.alan === 'boyut' ? h.fotoBoyut : h.fotoHata); setAvatarDurum('bos'); return }
       setFotoUrl(j.avatar); duyur(j.avatar); setAvatarDurum('kaydedildi')
