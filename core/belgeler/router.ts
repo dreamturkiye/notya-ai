@@ -49,7 +49,7 @@ export const BRANS_KURALLARI: Record<string, BransKurali> = {
   nefroloji: { ad: 'Nefroloji', persona: 'elif', modaliteler: ['us', 'xr_batin', 'pdf_rapor'], motorlar: {} },
   noroloji: { ad: 'Nöroloji', persona: 'elif', modaliteler: ['ct', 'mr', 'fundus', 'eeg', 'emg', 'psg', 'pdf_rapor'], motorlar: {} },
   ortopedi: { ad: 'Ortopedi ve Travmatoloji', persona: 'genel', modaliteler: ['xr_kemik', 'mr', 'pdf_rapor'], motorlar: { xr_kemik: KEMIK_B } },
-  plastik: { ad: 'Plastik Cerrahi', persona: 'genel', modaliteler: ['yara', 'derm', 'pdf_rapor'], motorlar: {} },
+  plastik: { ad: 'Plastik, Rekonstrüktif ve Estetik Cerrahi', persona: 'genel', modaliteler: ['yara', 'derm', 'pdf_rapor'], motorlar: {} },
   psikiyatri: { ad: 'Psikiyatri', persona: 'genel', modaliteler: ['psikometri', 'pdf_rapor'], motorlar: {}, engelli: true },
   radyoloji: { ad: 'Radyoloji', persona: 'genel', modaliteler: ['cxr', 'xr_kemik', 'xr_batin', 'ct', 'mr', 'us', 'mamografi', 'pet', 'pdf_rapor'], motorlar: { cxr: CXR_B, xr_kemik: KEMIK_B } },
   uroloji: { ad: 'Üroloji', persona: 'genel', modaliteler: ['us', 'xr_batin', 'ct', 'semen', 'pdf_rapor'], motorlar: {} },

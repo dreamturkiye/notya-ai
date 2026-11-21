@@ -39,7 +39,8 @@ const unvanOptions = ['Dr.', 'Uzm.Dr.', 'Op.Dr.', 'Doç.Dr.', 'Prof.Dr.'];
 const klinikUzmanSpecialties = ['Estetik & Plastik Cerrahi', 'Sac Ekimi', 'Dermatoloji', 'Medikal Estetik', 'Longevity & Wellness'];
 const saglikUzmaniSpecialties = ['Fizyoterapi', 'Klinik Psikoloji', 'Diyetisyen', 'Ergoterapi', 'Odyoloji'];
 // KURAL — TÜRKÇE: 'Sac Ekimi' kayıtlı değer / eşleme anahtarıdır (klinikSlugCoz, personalar) — değişmez; yalnız ekranda doğru yazılır.
-const UZMANLIK_GORUNEN: Record<string, string> = { 'Sac Ekimi': 'Saç Ekimi', 'Noroloji': 'Nöroloji', 'Diger': 'Diğer' };
+// 'Estetik & Plastik Cerrahi' / 'Dermatoloji' stay the stored klinik-uzman values; on screen they are the Özel Branş practice names (Kaan, 2026-11-21).
+const UZMANLIK_GORUNEN: Record<string, string> = { 'Sac Ekimi': 'Saç Ekimi', 'Noroloji': 'Nöroloji', 'Diger': 'Diğer', 'Estetik & Plastik Cerrahi': 'Estetik Cerrahi Merkezi', 'Dermatoloji': 'Dermatoloji Merkezi' };
 const uzmanlikGorunen = (s: string) => UZMANLIK_GORUNEN[s] || s;
 
 const maliChips = ['Vergi Danışmanlığı', 'Bağımsız Denetim', 'Muhasebe', 'Mali Hukuk', 'KDV İadesi', 'Transfer Fiyatlandırması'];
@@ -71,6 +72,7 @@ const agentMapping: Record<string, string> = {
   'Göğüs Hastalıkları': 'gogus-hastaliklari',
   'Göğüs Cerrahisi': 'gogus-cerrahisi',
   'Plastik Cerrahi': 'plastik-cerrahi',
+  'Plastik, Rekonstrüktif ve Estetik Cerrahi': 'plastik-cerrahi',
   'Beyin Cerrahisi': 'beyin-cerrahisi',
   'Kalp Damar Cerrahisi': 'kalp-damar-cerrahisi',
   'Çocuk Cerrahisi': 'cocuk-cerrahisi',

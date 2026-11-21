@@ -80,7 +80,7 @@ export const BRANCHES = [
   "Onkoloji",
   "Göğüs Hastalıkları",
   "Göğüs Cerrahisi",
-  "Plastik Cerrahi",
+  "Plastik, Rekonstrüktif ve Estetik Cerrahi",
   "Beyin Cerrahisi",
   "Kalp Damar Cerrahisi",
   "Çocuk Cerrahisi",

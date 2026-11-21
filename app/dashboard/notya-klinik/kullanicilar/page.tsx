@@ -12,7 +12,7 @@ const OZEL_BRANSLAR = ['Estetik & Plastik Cerrahi','Dermatoloji','Sac Ekimi','Me
 const DIGER_BRANSLAR = ['Kardiyoloji','Pediatri','Noroloji','Dahiliye','Diger']
 const SPECIALTIES = [...OZEL_BRANSLAR, ...DIGER_BRANSLAR]
 // Değerler DB'de saklanıyor (klinikUzmanlikNorm eşler) — yalnız ekranda Türkçe karakterli etiket.
-const UZMANLIK_ETIKET: Record<string, string> = { 'Sac Ekimi': 'Saç Ekimi', 'Noroloji': 'Nöroloji', 'Diger': 'Diğer' }
+const UZMANLIK_ETIKET: Record<string, string> = { 'Sac Ekimi': 'Saç Ekimi', 'Noroloji': 'Nöroloji', 'Diger': 'Diğer', 'Estetik & Plastik Cerrahi': 'Estetik Cerrahi Merkezi', 'Dermatoloji': 'Dermatoloji Merkezi' }
 const uzmanlikEtiket = (s: string) => UZMANLIK_ETIKET[s] || s
 const ROL_ETIKET: Record<string, string> = { member: 'Üye', admin: 'Yönetici' }
 

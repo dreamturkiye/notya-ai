@@ -47,6 +47,8 @@ describe('KLINIK-10-EXCEPTIONAL — 10 dal Klinik kategorisi', () => {
     assert.equal(bransAnahtari('estetik-cerrahi'), null)
     assert.equal(bransAnahtari('Dermatoloji'), 'dermatoloji')
     assert.equal(bransAnahtari('Plastik Cerrahi'), 'plastik-cerrahi')
+    assert.equal(bransAnahtari('Plastik, Rekonstrüktif ve Estetik Cerrahi'), 'plastik-cerrahi')
+    assert.equal(bransAnahtari('Estetik Cerrahi Merkezi'), null)
   })
 
   it('motorlar: greft / soğuma / cerrahi / lazer / ICF / seans / makro / GYA / PTA', () => {

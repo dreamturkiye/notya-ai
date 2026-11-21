@@ -13,7 +13,7 @@ import { BASELINE_OLCUMLER, BASELINE_BELGELER } from './profile'
 
 export const PLASTIK_CERRAHI_PROFILE: SpecialtyProfile = {
   key: 'plastik-cerrahi',
-  etiket: 'Plastik Cerrahi',
+  etiket: 'Plastik, Rekonstrüktif ve Estetik Cerrahi',
   resmiUnvan: 'Plastik, Rekonstrüktif ve Estetik Cerrahi',
   // Yetişkin ayaktan plastik: baş çevresi / Neyzi / sağlam çocuk içeriği asla girmez.
   // 18 yaş altı hastada veli / yasal temsilci dili yaşa göre ayrıca açılır (veliDiliMi — VELI-YASAL-ONAM).

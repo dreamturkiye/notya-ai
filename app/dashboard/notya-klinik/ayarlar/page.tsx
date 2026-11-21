@@ -12,7 +12,7 @@ const OZEL_BRANSLAR = ['Estetik & Plastik Cerrahi','Dermatoloji','Sac Ekimi','Me
 const DIGER_BRANSLAR = ['Kardiyoloji','Pediatri','Noroloji','Dahiliye']
 
 // Değerler DB'de saklanıyor (klinikUzmanlikNorm eşler) — yalnız ekranda Türkçe karakterli etiket.
-const UZMANLIK_ETIKET: Record<string, string> = { 'Sac Ekimi': 'Saç Ekimi', 'Noroloji': 'Nöroloji' }
+const UZMANLIK_ETIKET: Record<string, string> = { 'Sac Ekimi': 'Saç Ekimi', 'Noroloji': 'Nöroloji', 'Estetik & Plastik Cerrahi': 'Estetik Cerrahi Merkezi', 'Dermatoloji': 'Dermatoloji Merkezi' }
 
 export default function AyarlarPage() {
   const router = useRouter()

@@ -22,6 +22,9 @@ describe('KLINIK-10-EXCEPTIONAL dikey', () => {
   it('landing 10 dal kanonik Klinik slug olur', () => {
     assert.equal(klinikSlugCoz('Sac Ekimi'), 'sac-ekimi')
     assert.equal(klinikSlugCoz('Estetik & Plastik Cerrahi'), 'estetik-cerrahi')
+    // Display labels from 2026-11-21 (practice types, not the medical branch) resolve to the same Özel Branş.
+    assert.equal(klinikSlugCoz('Estetik Cerrahi Merkezi'), 'estetik-cerrahi')
+    assert.equal(klinikSlugCoz('Dermatoloji Merkezi'), 'klinik-dermatoloji')
     assert.equal(klinikSlugCoz('estetik-cerrahi'), 'estetik-cerrahi')
     assert.equal(klinikSlugCoz('Medikal Estetik'), 'medikal-estetik')
     assert.equal(klinikSlugCoz('klinik-dermatoloji'), 'klinik-dermatoloji')

@@ -16,7 +16,7 @@ export interface KlinikUzmanPersona {
 }
 
 export const KlinikUzmanPersonas: Record<string, KlinikUzmanPersona> = {
-  "estetik-cerrahi": { name: "Prof. Dr. Leyla Arslan", title: "Plastik & Estetik Cerrah", specialty: "Estetik & Plastik Cerrahi", systemPrompt: "Plastik ve Estetik Cerrah olarak rinoplasti, liposuction, meme estetiği ve yüz germe konularında uzmansın. Ameliyat öncesi risk değerlendirmesi, ameliyat sonrası bakım planı oluşturursun." + kaynakKilidi('estetik-cerrahi', false), color: "#E91E8C", voice: "professional", gender: "female", voiceId: TR_VOICES.tugbaSelin.voiceId, emoji: "✨", greeting: "Merhaba, ben Prof. Dr. Leyla Arslan. Estetik ve plastik cerrahi konusunda yanınızdayım." },
+  "estetik-cerrahi": { name: "Prof. Dr. Leyla Arslan", title: "Plastik & Estetik Cerrah", specialty: "Estetik Cerrahi Merkezi", systemPrompt: "Plastik ve Estetik Cerrah olarak rinoplasti, liposuction, meme estetiği ve yüz germe konularında uzmansın. Ameliyat öncesi risk değerlendirmesi, ameliyat sonrası bakım planı oluşturursun." + kaynakKilidi('estetik-cerrahi', false), color: "#E91E8C", voice: "professional", gender: "female", voiceId: TR_VOICES.tugbaSelin.voiceId, emoji: "✨", greeting: "Merhaba, ben Prof. Dr. Leyla Arslan. Estetik ve plastik cerrahi konusunda yanınızdayım." },
   "sac-ekimi": { name: "Dr. Emre Kaya", title: "Saç Ekimi Uzmanı", specialty: "Saç Ekimi", systemPrompt: "FUE, DHI ve Safir FUE tekniklerinde uzmansın. Donör alan değerlendirmesi, greft hesaplama, hairline tasarımı ve PRP protokolleri konusunda rehberlik sağlarsın." + kaynakKilidi('sac-ekimi', false), color: "#2563EB", voice: "confident", gender: "male", voiceId: TR_VOICES.gokhan.voiceId, emoji: "💇", greeting: "Merhaba, ben Dr. Emre Kaya. Saç ekimi planlaması için buradayım." },
   "dermatoloji": { name: "Dr. Selin Çelik", title: "Dermatoloji Uzmanı", specialty: "Dermatoloji", systemPrompt: "Özel muayenehane sahibi Klinik Dermatoloji hekimisin. Lazer ve akne bakım ritüelinde uzmansın. TUS Derim / biyolojik rapor yazmazsın." + kaynakKilidi('klinik-dermatoloji', false), color: "#F59E0B", voice: "warm", gender: "female", voiceId: TR_VOICES.gulrizElif.voiceId, emoji: "🧴", greeting: "Merhaba, ben Dr. Selin Çelik. Dermatoloji konusunda size yardımcı oluyorum." },
   "medikal-estetik": { name: "Dr. Ceren Yıldız", title: "Medikal Estetik Doktoru", specialty: "Medikal Estetik", systemPrompt: "Medikal estetik sertifikalı hekimsin. Botoks, hyalüronik asit dolgu, PRP ve mezoterapi uygulamalarında uzmansın. Ünite/mL yazmazsın." + kaynakKilidi('medikal-estetik', false), color: "#9333EA", voice: "elegant", gender: "female", voiceId: TR_VOICES.pinarZeynep.voiceId, emoji: "💉", greeting: "Merhaba, ben Dr. Ceren Yıldız. Medikal estetik uygulamalarında yanınızdayım." },
@@ -30,12 +30,13 @@ export const KlinikUzmanPersonas: Record<string, KlinikUzmanPersona> = {
 
 KlinikUzmanPersonas["klinik-dermatoloji"] = {
   ...KlinikUzmanPersonas["dermatoloji"],
-  specialty: "Klinik Dermatoloji",
+  specialty: "Dermatoloji Merkezi",
 }
 
 export const KLINIK_AGENT_MAPPING: Record<string, string> = {
   "Dermatoloji": "dermatoloji",
   "Estetik & Plastik Cerrahi": "estetik-cerrahi",
+  "Estetik Cerrahi Merkezi": "estetik-cerrahi",
   "Sac Ekimi": "sac-ekimi",
   "Medikal Estetik": "medikal-estetik",
   "Longevity & Wellness": "longevity",

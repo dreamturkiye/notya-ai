@@ -53,9 +53,9 @@ export const KLINIK_LANDING_ALIAS: Record<string, KlinikYeniSlug> = {
 
 export const KLINIK_ETIKET: Record<KlinikYeniSlug, string> = {
   'sac-ekimi': 'Saç Ekimi',
-  'estetik-cerrahi': 'Estetik & Plastik Cerrahi',
+  'estetik-cerrahi': 'Estetik Cerrahi Merkezi',
   'medikal-estetik': 'Medikal Estetik',
-  'klinik-dermatoloji': 'Dermatoloji (Klinik)',
+  'klinik-dermatoloji': 'Dermatoloji Merkezi',
   longevity: 'Longevity & Wellness',
   fizyoterapi: 'Fizyoterapi',
   'klinik-psikolog': 'Klinik Psikoloji',
@@ -71,12 +71,15 @@ const ETIKET_SLUG: Record<string, KlinikYeniSlug> = {
   'estetik-cerrahi': 'estetik-cerrahi',
   'estetik & plastik cerrahi': 'estetik-cerrahi',
   'estetik ve plastik cerrahi': 'estetik-cerrahi',
+  // Display label from 2026-11-21 (Kaan): Özel Branş names are practice types, not the medical branch.
+  'estetik cerrahi merkezi': 'estetik-cerrahi',
   'medikal estetik': 'medikal-estetik',
   'medikal-estetik': 'medikal-estetik',
   'klinik-dermatoloji': 'klinik-dermatoloji',
   'klinik dermatoloji': 'klinik-dermatoloji',
   'klinik dermatolojisi': 'klinik-dermatoloji',
   'dermatoloji (klinik)': 'klinik-dermatoloji',
+  'dermatoloji merkezi': 'klinik-dermatoloji',
   longevity: 'longevity',
   'longevity & wellness': 'longevity',
   'longevity ve wellness': 'longevity',

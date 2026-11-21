@@ -2,8 +2,8 @@ import { BASELINE_OLCUMLER, BASELINE_BELGELER } from './profile'
 
 export const ESTETIK_CERRAHI_PROFILE = {
   key: 'estetik-cerrahi',
-  etiket: 'Estetik & Plastik Cerrahi',
-  resmiUnvan: 'Estetik & Plastik Cerrahi',
+  etiket: 'Estetik Cerrahi Merkezi',
+  resmiUnvan: 'Estetik Cerrahi Merkezi',
   pediatrikBaglam: 'asla',
   olcumler: BASELINE_OLCUMLER,
   hesaplayicilar: [
