@@ -22,10 +22,11 @@
  * NOT A TRANSLATION of the Turkish product's labels: each name is the one the specialty goes by here (for example
  * trauma and orthopaedics are one specialty, and so are obstetrics and gynaecology).
  *
- * TWO PAIRS OF ROLES NOW CARRY THE SAME NAME, one on the doctor side and one on the clinic side: "Plastik xirurgiya"
- * (plastik-cerrahi and estetik-cerrahi) and "Dermatovenerologiya" (dermatoloji and klinik-dermatoloji). The order has
- * one specialty for each pair and no word "estetik"; the audit renamed the clinic roles and kept them. The role
- * question shows them under different group headings; inside one group no two roles share a name.
+ * TWO PAIRS OF ROLES SHARE ONE SPECIALTY of the order, one on the doctor side and one on the clinic side: "Plastik
+ * xirurgiya" (plastik-cerrahi and estetik-cerrahi) and "Dermatovenerologiya" (dermatoloji and klinik-dermatoloji). The
+ * order has one specialty for each pair and no word "estetik". Since 2026-11-21 (Kaan) the clinic role is named as a
+ * practice type, the specialty name + "markazi" ("Plastik xirurgiya markazi", "Dermatovenerologiya markazi"), so no
+ * two roles share a name anywhere.
  *
  * The KEYS are the product's internal identifiers, the list of ./rolListesi.ts (the single list of roles). A key is
  * never shown: a screen shows the name from here, in the account's form.
@@ -87,9 +88,11 @@ export const UZ_ROL_ADLARI: Readonly<Record<string, UcBicim>> = {
   diyetoloji: ad('Diyetologiya', 'Диетология', 'Диетология'),
   surdoloji: ad('Surdologiya', 'Сурдология', 'Сурдология'),
   // ── clinic doctors (3)
-  'estetik-cerrahi': ad('Plastik xirurgiya', 'Пластик хирургия', 'Пластическая хирургия'),
+  // Practice types, not the specialty (Kaan, 2026-11-21): the order's specialty name + "markazi", so no clinic role
+  // carries the same name as a doctor role.
+  'estetik-cerrahi': ad('Plastik xirurgiya markazi', 'Пластик хирургия маркази', 'Центр пластической хирургии'),
   'medikal-estetik': ad('Tibbiy kosmetologiya', 'Тиббий косметология', 'Медицинская косметология'),
-  'klinik-dermatoloji': ad('Dermatovenerologiya', 'Дерматовенерология', 'Дерматовенерология'),
+  'klinik-dermatoloji': ad('Dermatovenerologiya markazi', 'Дерматовенерология маркази', 'Дерматовенерологический центр'),
   // ── clinic allied professions (2)
   fizyoterapi: ad('Jismoniy reabilitatsiya mutaxassisi', 'Жисмоний реабилитация мутахассиси', 'Специалист по физической реабилитации'),
   'klinik-psikolog': ad('Klinik psixolog', 'Клиник психолог', 'Клинический психолог'),

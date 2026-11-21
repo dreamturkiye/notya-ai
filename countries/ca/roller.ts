@@ -44,9 +44,10 @@ import type { EnEkTur } from '../_dil/en/klinik/ekRoller'
  *                           tools, treatment cycles and side effects, are a medical oncologist's)
  *
  * Three clinic roles:
- *   clinic-dermatology      "Dermatology (clinic)"                  → "Dermatology"         [RC, Specialty]. The name is the
- *                           same as the specialty's; the two stand under different headings of the role question
- *                           ("Medical specialty", "Clinic doctor") and see the same dermatology tools.
+ *   clinic-dermatology      "Dermatology (clinic)"                  → "Dermatology centre"  [RC, Specialty]. Since 2026-11-21
+ *                           (Kaan) named as a practice type, the specialty's name + "centre", so it no longer carries
+ *                           the specialty role's name; it stands under the "Clinic doctor" heading and sees the same
+ *                           dermatology tools.
  *   longevity               "Preventive and longevity medicine"     → "Longevity medicine". The audit's decision is only
  *                           that the word "Preventive" goes: [RC] has a specialty "Public Health and Preventive
  *                           Medicine", which is another thing. NOT A DISCIPLINE ON [RC]; THE FINAL WORDING IS FOR A
@@ -61,7 +62,7 @@ export const CA_YENIDEN_ADLANANLAR: Readonly<Partial<Record<EnRol, string>>> = {
   'cardiovascular-surgery': 'Cardiac Surgery',
   otolaryngology: 'Otolaryngology-Head and Neck Surgery',
   oncology: 'Medical Oncology',
-  'clinic-dermatology': 'Dermatology',
+  'clinic-dermatology': 'Dermatology centre',
   longevity: 'Longevity medicine — practice focus for licensed physicians (not a specialty)',
   'clinical-psychology': 'Psychologist',
 }

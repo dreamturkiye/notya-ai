@@ -86,7 +86,7 @@ describe('ca roles: the list before and after', () => {
       'cardiovascular-surgery': 'Cardiac Surgery',
       otolaryngology: 'Otolaryngology-Head and Neck Surgery',
       oncology: 'Medical Oncology',
-      'clinic-dermatology': 'Dermatology',
+      'clinic-dermatology': 'Dermatology centre',
       longevity: 'Longevity medicine — practice focus for licensed physicians (not a specialty)', // ULKE-BRANS-GATE-01 (2026-11-08)
       'clinical-psychology': 'Psychologist',
     })
@@ -98,14 +98,14 @@ describe('ca roles: the list before and after', () => {
     for (const r of CA_ARAYUZ.roller) { assert.doesNotMatch(r.ad[D] ?? '', /general internal medicine/i, r.anahtar); assert.doesNotMatch(r.ad[D] ?? '', /preventive/i, r.anahtar) }
   })
 
-  it('"Dermatology" is one specialty under two headings: the specialty role and the clinic role carry the same name and are told apart by their kind', () => {
+  it('"Dermatology" is one specialty under two headings: the clinic role is named as a practice type, so the two never share a name', () => {
     assert.equal(ad('dermatology'), 'Dermatology')
-    assert.equal(ad('clinic-dermatology'), 'Dermatology')
+    assert.equal(ad('clinic-dermatology'), 'Dermatology centre')
     assert.equal(tanim('dermatology')?.taraf, 'doktor')
     assert.equal(tanim('clinic-dermatology')?.taraf, 'klinik-hekim')
-    // no other name is carried by two roles
+    // no name is carried by two roles
     const adlar = CA_ARAYUZ.roller.map((r) => r.ad[D])
-    assert.deepEqual(adlar.filter((x, i) => adlar.indexOf(x) !== i), ['Dermatology'])
+    assert.deepEqual(adlar.filter((x, i) => adlar.indexOf(x) !== i), [])
   })
 
   it('KEPT 26 specialties and 7 clinic roles: the same key and the same name as before this job', () => {
