@@ -20,6 +20,7 @@ import { bransIstemleri } from '@/lib/doktor/bransIstemleri'
 import { bransEtiketi } from '@/lib/doktor/bransAdlari'
 import { BransIstemSecici, type IstemGrubu } from '@/components/doktor/BransIstemSecici'
 import { cinsiyetKodu } from '@/lib/utils/cinsiyet'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 
 const vucutBolgeleri = ['Baş', 'Boyun', 'Göğüs', 'Karın', 'Pelvis', 'Omurga', 'Kol', 'Bacak']
@@ -59,8 +60,8 @@ export default function TetkikPage() {
       if (!token) return
       try {
         const [hastaR, baslikR] = await Promise.all([
-          fetch('/api/doktor/hastalar', { headers: { Authorization: `Bearer ${token}` } }),
-          fetch('/api/doktor/recete-baslik', { headers: { Authorization: `Bearer ${token}` } }),
+          doktorFetch('/api/doktor/hastalar', {}),
+          doktorFetch('/api/doktor/recete-baslik', {}),
         ])
         if (hastaR.ok) setHastalar(normalizeHastalar(await hastaR.json()))
         if (baslikR.ok) {
@@ -92,7 +93,7 @@ export default function TetkikPage() {
       const token = await getAccessTokenAsync()
       if (!token) return
       try {
-        const r = await fetch(`/api/doktor/hastalar/${encodeURIComponent(selectedHastaId)}`, { headers: { Authorization: `Bearer ${token}` } })
+        const r = await doktorFetch(`/api/doktor/hastalar/${encodeURIComponent(selectedHastaId)}`, {})
         if (!r.ok || iptal) return
         const j = await r.json() as { patient?: { dogum_tarihi?: string | null; cinsiyet?: string | null } }
         const dogum = j.patient?.dogum_tarihi || ''

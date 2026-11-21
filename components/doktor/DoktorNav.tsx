@@ -1,11 +1,12 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { getDoctorAccessToken, ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
+import { getDoctorAccessToken, ensureDoctorAccessToken, doktorOturumuSil } from '@/lib/doktor/clientAuth';
 import { hekimProfilOturumSil } from '@/lib/doktor/hekimProfilIstemci';
 import BransDegistir from './BransDegistir';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 import { izinVarMi, type PratikRol, type Yetki } from '@/lib/doktor/personelYetki';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 interface NavItem {
   label: string;
@@ -60,11 +61,11 @@ export default function DoktorNav() {
       const t = await ensureDoctorAccessToken();
       if (!t) return;
       try {
-        const r = await fetch('/api/personel/me', { headers: { Authorization: `Bearer ${t}` } });
+        const r = await doktorFetch('/api/personel/me', {});
         if (r.ok) { const d = await r.json(); if (d.rol && d.rol !== 'doktor') setRol(d.rol); }
       } catch { /* stays 'doktor' on failure — least surprising default */ }
       try {
-        const r = await fetch('/api/doktor/mesajlar/unread-count', { headers: { Authorization: `Bearer ${t}` } });
+        const r = await doktorFetch('/api/doktor/mesajlar/unread-count', {});
         if (r.ok) {
           const d = await r.json();
           setMesajUnread(Number(d.unreadCount) || 0);
@@ -86,8 +87,7 @@ export default function DoktorNav() {
   // Kaan/Gökhan (2026-09-14): "Uygulamadan nasıl çıkış yapılır?" — hiçbir yerde çıkış yoktu.
   const handleCikis = () => {
     if (typeof window !== 'undefined') {
-      const key = Object.keys(localStorage).find((k) => k.includes('auth-token')) || '';
-      if (key) localStorage.removeItem(key);
+      doktorOturumuSil()
       hekimProfilOturumSil()
     }
     window.location.href = '/giris/doktor';

@@ -11,13 +11,14 @@ import { epostaAcilisMi } from '@/lib/iletisim/tipler'
 import { baglantiyiAc, cihazEpostaAcilisi } from '@/lib/iletisim/istemci'
 import { TASLAK_OLUSTURULAMADI } from '@/lib/doktor/konsultasyonTaslagi'
 import { epostaDurumMetni } from '@/lib/doktor/konsultasyonEposta'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function konsultasyonApi(yol: string, init?: { method?: string; govde?: unknown }): Promise<{ ok: boolean; j: Record<string, any> }> {
   const t = await getAccessTokenAsync()
-  const r = await fetch(yol, {
+  const r = await doktorFetch(yol, {
     method: init?.method || 'GET',
-    headers: { Authorization: `Bearer ${t}`, ...(init?.govde !== undefined ? { 'Content-Type': 'application/json' } : {}) },
+    headers: { ...(init?.govde !== undefined ? { 'Content-Type': 'application/json' } : {}) },
     body: init?.govde !== undefined ? JSON.stringify(init.govde) : undefined,
     cache: 'no-store',
   })
@@ -161,7 +162,7 @@ export async function yanitTaslagiIsteVeGerekirseKimliksizlestir(id: string, bel
   if (ilk.ok || ilk.neden !== 'deid_gerekli') return ilk
   try {
     const t = await getAccessTokenAsync()
-    const r = await fetch(`/api/doktor/documents/${encodeURIComponent(belgeId)}/download`, { headers: { Authorization: `Bearer ${t}` }, cache: 'no-store' })
+    const r = await doktorFetch(`/api/doktor/documents/${encodeURIComponent(belgeId)}/download`, { cache: 'no-store' })
     if (!r.ok) return { ok: false, mesaj: TASLAK_OLUSTURULAMADI }
     const { gorseliKimliksizlestir } = await import('@/core/belgeler/deid')
     const d = await gorseliKimliksizlestir(await r.blob())

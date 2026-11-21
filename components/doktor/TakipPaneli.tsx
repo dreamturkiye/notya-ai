@@ -7,6 +7,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { CHROME_FONT, CHROME_RENK } from '@/lib/doktor/chromeTheme'
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 const R = CHROME_RENK
 
@@ -30,8 +31,7 @@ export default function TakipPaneli({ kartStili }: { kartStili?: React.CSSProper
     try {
       const t = await ensureDoctorAccessToken()
       if (!t) return
-      const r = await fetch('/api/doktor/takip', {
-        headers: { Authorization: `Bearer ${t}` },
+      const r = await doktorFetch('/api/doktor/takip', {
         cache: 'no-store',
       })
       if (!r.ok) { setOgeler([]); return }
@@ -48,9 +48,9 @@ export default function TakipPaneli({ kartStili }: { kartStili?: React.CSSProper
     try {
       const t = await ensureDoctorAccessToken()
       if (!t) return
-      const r = await fetch('/api/doktor/takip', {
+      const r = await doktorFetch('/api/doktor/takip', {
         method: 'PATCH',
-        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, islem: 'kapat' }),
       })
       if (r.ok) await yukle()

@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react'
 import { getAccessTokenAsync } from '@/lib/doktor/toolsUi'
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 type Props = {
   ekId: string
@@ -29,9 +30,7 @@ export default function MesajEkViewer({ ekId, fileName, fileType, onClose }: Pro
       try {
         const token = await getAccessTokenAsync()
         if (!token) throw new Error('Oturum bulunamadı.')
-        const res = await fetch(`/api/doktor/mesajlar/ek/${encodeURIComponent(ekId)}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        })
+        const res = await doktorFetch(`/api/doktor/mesajlar/ek/${encodeURIComponent(ekId)}`, {})
         if (!res.ok) {
           const d = await res.json().catch(() => ({}))
           throw new Error(d.error || 'Dosya açılamadı')

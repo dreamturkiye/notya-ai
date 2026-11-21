@@ -3,6 +3,7 @@ import React, { useMemo, useState } from 'react'
 import { getAccessTokenAsync } from '@/lib/doktor/toolsUi'
 import { kdcStil, KdcHastaSecici, KopyalaButonu, Istatistik, TaslakNotu, useUrlHasta } from './KdcAracKabugu'
 import { greftYaraSkorla, GREFT_YARA_TIPLERI, GREFT_YARA_DURUMLARI, type GreftYaraTip, type GreftYaraDurum } from '../../engines/greftYara'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 export default function KdcGreftYaraAraci() {
   const [tip, setTip] = useState<GreftYaraTip>('greft')
@@ -22,9 +23,9 @@ export default function KdcGreftYaraAraci() {
     if (!sonuc.tamamMi) { setHata(sonuc.ozet); return }
     try {
       const t = await getAccessTokenAsync()
-      const r = await fetch('/api/doktor/kalp-damar-cerrahisi', {
+      const r = await doktorFetch('/api/doktor/kalp-damar-cerrahisi', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ patientId: hastaId, adim: 'greft_yara', kart: sonuc.kart, hekimKilit: true }),
       })
       const j = await r.json().catch(() => ({}))

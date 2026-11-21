@@ -3,6 +3,7 @@ import React, { useMemo, useState } from 'react'
 import { getAccessTokenAsync } from '@/lib/doktor/toolsUi'
 import { bcStil, BcHastaSecici, KopyalaButonu, Istatistik, TaslakNotu, useUrlHasta } from './BcAracKabugu'
 import { goruntuSkorla } from '../../engines/goruntu'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 export default function BcGoruntuAraci() {
   const [etiket, setEtiket] = useState('BT / MR kontrolü')
@@ -21,9 +22,9 @@ export default function BcGoruntuAraci() {
     if (!sonuc.tamamMi) { setHata(sonuc.ozet); return }
     try {
       const t = await getAccessTokenAsync()
-      const r = await fetch('/api/doktor/beyin-cerrahisi', {
+      const r = await doktorFetch('/api/doktor/beyin-cerrahisi', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ patientId: hastaId, adim: 'goruntu', ...sonuc.kart }),
       })
       const j = await r.json().catch(() => ({}))

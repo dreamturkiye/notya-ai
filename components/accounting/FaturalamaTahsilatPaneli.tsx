@@ -12,6 +12,7 @@ import { CHROME_RENK, CHROME_FONT } from '@/lib/doktor/chromeTheme'
 import IpucuBaloncugu from '@/components/doktor/IpucuBaloncugu'
 import { formatTRY } from '@/lib/accounting/ledger/money'
 import { DosyaSecDugmesi } from '@/components/core/DosyaSecDugmesi'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 const TEAL = CHROME_RENK.pine
 const CARD = '#FFFFFF'
@@ -115,9 +116,9 @@ function submitRedirectForm(url: string, fields: Record<string, string>) {
 
 async function api(path: string, opts: RequestInit = {}) {
   const token = getDoctorAccessToken()
-  const res = await fetch(`/api/accounting${path}`, {
+  const res = await doktorFetch(`/api/accounting${path}`, {
     ...opts,
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}`, ...(opts.headers || {}) },
+    headers: { 'Content-Type': 'application/json', ...(opts.headers || {}) },
   })
   const json = await res.json().catch(() => ({}))
   if (!res.ok || json.success === false) throw new Error(json.error || 'İşlem başarısız.')
@@ -581,7 +582,7 @@ export default function FaturalamaTahsilatPaneli() {
       const path = raporGranularity === 'gun'
         ? `/api/accounting/reports/daily-export?year=${musavirYear}&month=${musavirMonth}&day=${musavirDay}`
         : `/api/accounting/reports/musavir-export?year=${musavirYear}&month=${musavirMonth}`
-      const res = await fetch(path, { headers: { Authorization: `Bearer ${token}` } })
+      const res = await doktorFetch(path, {})
       if (!res.ok) {
         const json = await res.json().catch(() => ({}))
         throw new Error(json.error || 'Rapor oluşturulamadı.')
@@ -715,7 +716,7 @@ export default function FaturalamaTahsilatPaneli() {
                             const token = getDoctorAccessToken()
                             const form = new FormData()
                             form.append('file', file)
-                            const res = await fetch('/api/accounting/tax-profile/logo', { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: form })
+                            const res = await doktorFetch('/api/accounting/tax-profile/logo', { method: 'POST', body: form })
                             const json = await res.json()
                             if (!res.ok) throw new Error(json.error || 'Logo yüklenemedi.')
                             setLogoDataUrl(json.data?.dataUrl || null)
@@ -1070,7 +1071,7 @@ export default function FaturalamaTahsilatPaneli() {
                             void (async () => {
                               try {
                                 const token = getDoctorAccessToken()
-                                const res = await fetch(`/api/accounting/invoices/${inv.id}/pdf`, { headers: { Authorization: `Bearer ${token}` } })
+                                const res = await doktorFetch(`/api/accounting/invoices/${inv.id}/pdf`, {})
                                 if (!res.ok) { const j = await res.json().catch(() => ({})); throw new Error(j.error || 'PDF oluşturulamadı.') }
                                 const blob = await res.blob()
                                 window.open(URL.createObjectURL(blob), '_blank')

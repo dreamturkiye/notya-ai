@@ -13,13 +13,14 @@ import { klinikDefterOku, klinikDefterYaz } from '@/lib/klinik/klinikKayitIstemc
 import { SEANS_ARAC, seansListesiCoz } from '@/lib/klinik/seansDefter'
 import { IkiNushaDosya } from '@/components/klinik/IkiNushaDosya'
 import type { NushaRol } from '@/lib/klinik/ikiNusha'
+import { doktorFetch, oturumSuresiDoldu } from '@/lib/doktor/oturumFetch'
+import { getDoctorAccessToken } from '@/lib/doktor/clientAuth'
 
 export const dynamic = 'force-dynamic'
 
 function token(): string {
   try {
-    const raw = localStorage.getItem('auth-token')
-    return raw ? (JSON.parse(raw).access_token || '') : ''
+    return getDoctorAccessToken()
   } catch { return '' }
 }
 
@@ -46,11 +47,11 @@ function SeansIc() {
     let iptal = false
     ;(async () => {
       const t = token()
-      if (!t) { router.push('/giris'); return }
+      if (!t) { oturumSuresiDoldu(); return }
       const [me, p, plan] = await Promise.all([
-        fetch('/api/users/me', { headers: { Authorization: `Bearer ${t}` } }),
-        patientId ? fetch(`/api/doktor/hastalar/${patientId}`, { headers: { Authorization: `Bearer ${t}` } }) : Promise.resolve(null),
-        patientId ? fetch(`/api/ozel-brans/plan?patientId=${encodeURIComponent(patientId)}`, { headers: { Authorization: `Bearer ${t}` } }) : Promise.resolve(null),
+        doktorFetch('/api/users/me', {}),
+        patientId ? doktorFetch(`/api/doktor/hastalar/${patientId}`, {}) : Promise.resolve(null),
+        patientId ? doktorFetch(`/api/ozel-brans/plan?patientId=${encodeURIComponent(patientId)}`, {}) : Promise.resolve(null),
       ])
       const mj = me.ok ? await me.json() : null
       const uid = String(mj?.data?.id || mj?.data?.user_id || '')
@@ -88,9 +89,9 @@ function SeansIc() {
                 : ''
     if (sorun || !dal) { setKayitHata(true); setKayit(sorun || 'Dal / oturum çözülemedi.'); return }
     const yerel = klinikDefterOku(userId)[patientId]?.seanslar || []
-    const yanit = await fetch('/api/ozel-brans/seans', {
+    const yanit = await doktorFetch('/api/ozel-brans/seans', {
       method: 'POST',
-      headers: { Authorization: `Bearer ${token()}`, 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         patientId,
         metin: not.trim(),

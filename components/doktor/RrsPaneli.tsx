@@ -6,6 +6,7 @@
 import React, { useEffect, useState } from 'react'
 import { getDoctorAccessToken } from '@/lib/doktor/clientAuth'
 import { rrsMetni, RRS_URL, RRS_ADIMLARI, type RrsRenk, type RrsSatir } from '@/lib/doktor/rrs'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 interface Kayit { id: string; rrs_recete_no: string | null; durum: string }
 
@@ -22,7 +23,7 @@ export default function RrsPaneli(props: { noteId: string; renk: RrsRenk; satirl
     ;(async () => {
       const t = await getDoctorAccessToken()
       if (!t) return
-      const r = await fetch('/api/doktor/rrs', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` }, body: JSON.stringify({ noteId: props.noteId, renk: props.renk, satirlar: props.satirlar }) })
+      const r = await doktorFetch('/api/doktor/rrs', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ noteId: props.noteId, renk: props.renk, satirlar: props.satirlar }) })
       const j = await r.json().catch(() => ({}))
       if (!iptal && j.kayit) { setKayit(j.kayit); setNo(j.kayit.rrs_recete_no || '') }
     })()
@@ -38,7 +39,7 @@ export default function RrsPaneli(props: { noteId: string; renk: RrsRenk; satirl
     if (!kayit) return
     const t = await getDoctorAccessToken()
     if (!t) return
-    const r = await fetch('/api/doktor/rrs', { method: 'PATCH', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` }, body: JSON.stringify({ id: kayit.id, rrsReceteNo: no }) })
+    const r = await doktorFetch('/api/doktor/rrs', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: kayit.id, rrsReceteNo: no }) })
     const j = await r.json().catch(() => ({}))
     if (j.kayit) { setKayit(j.kayit); setMesaj(j.kayit.durum === 'duzenlendi' ? 'RRS numarası kaydedildi — kayıt kapandı.' : 'Numara silindi — kayıt bekliyor.') }
     else setMesaj(j.error || 'Kaydedilemedi.')

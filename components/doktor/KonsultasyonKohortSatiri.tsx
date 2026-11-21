@@ -14,6 +14,7 @@ import { useAracStil, Rozet } from '@/lib/doktor/aracUi';
 import { beklemeVurgusu, trGun, type BekleyenKonsultasyon } from '@/lib/doktor/konsultasyon';
 import { BEKLEYEN_KONSULTASYONLAR_ROTASI, konsultasyonDosyaYolu } from '@/lib/doktor/konsultasyonIstemci';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 export type { BekleyenKonsultasyon };
 export type YanitSuresi = { adet: number; medyanGun: number | null; enUzunGun: number | null }
@@ -62,7 +63,7 @@ export default function KonsultasyonKohortSatiri() {
     (async () => {
       try {
         const t = await getAccessTokenAsync();
-        const r = await fetch('/api/doktor/konsultasyon?bekleyen=1', { headers: { Authorization: `Bearer ${t}` }, cache: 'no-store' });
+        const r = await doktorFetch('/api/doktor/konsultasyon?bekleyen=1', { cache: 'no-store' });
         const j = (await r.json().catch(() => ({}))) as { bekleyenler?: BekleyenKonsultasyon[]; yanitSuresi?: YanitSuresi; tabloHazir?: boolean };
         if (iptal) return;
         setBekleyenler(Array.isArray(j.bekleyenler) ? j.bekleyenler : []);

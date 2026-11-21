@@ -14,6 +14,7 @@ import { useEffect, useState } from 'react';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 import { ILAC_UYUM_ISTEK, ilacDetayMetni, ilacOnerisiCoz, type IlacSatiri } from '@/lib/doktor/receteAktarim';
 import { notunKestigiIlaclariCikar } from '@/lib/doktor/ilacSonlandirMetin';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 export type IlacUyumDurumu =
   | { tur: 'kontrol' }
@@ -30,9 +31,9 @@ export async function planaGoreIlacOnerisi(token: string, noteId: string, taslak
   const kontrolor = new AbortController();
   const zamanAsimi = setTimeout(() => kontrolor.abort(), 25000);
   try {
-    const r = await fetch('/api/doktor/not-konsult', {
+    const r = await doktorFetch('/api/doktor/not-konsult', {
       method: 'POST',
-      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json' },
       signal: kontrolor.signal,
       body: JSON.stringify({ noteId, taslak, mesajlar: [{ rol: 'doktor', icerik: ILAC_UYUM_ISTEK }] }),
     });

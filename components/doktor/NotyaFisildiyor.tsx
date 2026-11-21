@@ -26,6 +26,7 @@ import { useRouter } from 'next/navigation'
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth'
 import { CHROME_FONT } from '@/lib/doktor/chromeTheme'
 import type { FisiltiItem } from '@/lib/doktor/fisiltiOrtak'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 // Sampled from public/doktor-chrome/plant.jpg (blue-green leaf tones), not a design-system token --
 // this box is deliberately its own accent, separate from the page's pine.
@@ -56,7 +57,7 @@ const tarihGoster = (iso: string) => new Date(iso).toLocaleDateString('tr-TR', {
 async function istek(yol: string, init?: RequestInit): Promise<Response | null> {
   const t = await ensureDoctorAccessToken()
   if (!t) return null
-  return fetch(yol, { ...init, cache: 'no-store', headers: { ...(init?.headers || {}), Authorization: `Bearer ${t}`, ...(init?.body ? { 'Content-Type': 'application/json' } : {}) } })
+  return doktorFetch(yol, { ...init, cache: 'no-store', headers: { ...(init?.headers || {}), ...(init?.body ? { 'Content-Type': 'application/json' } : {}) } })
 }
 
 export default function NotyaFisildiyor({ specialty }: { specialty: string }) {

@@ -3,6 +3,7 @@ import React, { useMemo, useState } from 'react'
 import { getAccessTokenAsync } from '@/lib/doktor/toolsUi'
 import { nefStil, NefHastaSecici, KopyalaButonu, Istatistik, TaslakNotu, useUrlHasta } from './NefAracKabugu'
 import { anemiSkorla, ANEMI_KONTROL_LISTESI } from '../../engines/anemi'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 export default function NefAnemiAraci() {
   const [hb, setHb] = useState('')
@@ -20,9 +21,9 @@ export default function NefAnemiAraci() {
     if (!sonuc.tamamMi) { setHata(sonuc.ozet); return }
     try {
       const t = await getAccessTokenAsync()
-      const r = await fetch('/api/doktor/nefroloji', {
+      const r = await doktorFetch('/api/doktor/nefroloji', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ patientId: hastaId, adim: 'anemi', hb: Number(hb), ferritin: ferritin === '' ? null : Number(ferritin), hekimKilit: true }),
       })
       const j = await r.json().catch(() => ({}))

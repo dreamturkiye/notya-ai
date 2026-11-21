@@ -3,6 +3,7 @@ import React, { useMemo, useState } from 'react'
 import { getAccessTokenAsync } from '@/lib/doktor/toolsUi'
 import { plastikStil, PlastikHastaSecici, KopyalaButonu, Istatistik, TaslakNotu, useUrlHasta } from './PlastikAracKabugu'
 import { yaraSkorla, YARA_TIP_AD, pansumanOneri, type YaraTip } from '../../engines/yara'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 const TIPLER = Object.keys(YARA_TIP_AD) as YaraTip[]
 
@@ -26,9 +27,9 @@ export default function PlastikYaraAraci() {
     if (!sonuc.tamamMi) { setHata(sonuc.ozet); return }
     try {
       const t = await getAccessTokenAsync()
-      const r = await fetch('/api/doktor/plastik-cerrahi', {
+      const r = await doktorFetch('/api/doktor/plastik-cerrahi', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ patientId: hastaId, adim: 'yara', yara: sonuc.kart, hekimKilit: true }),
       })
       const j = await r.json().catch(() => ({}))

@@ -28,6 +28,7 @@ import AsiKarnesiEylemleri from '@/components/doktor/AsiKarnesiEylemleri';
 import AsiHatirlatmaListesi from '@/components/doktor/AsiHatirlatmaListesi';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 import { TrTarihAlan } from '@/specialties/kadin-dogum/ui/TrTarihAlan';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 interface Asi {
   id: string;
@@ -144,7 +145,7 @@ export default function HastaAsilar({
     try {
       const t = await token();
       if (!t) { setHata('Oturum bulunamadı.'); return; }
-      const r = await fetch(`/api/doktor/asilar?patientId=${patientId}`, { headers: { Authorization: `Bearer ${t}` } });
+      const r = await doktorFetch(`/api/doktor/asilar?patientId=${patientId}`, {});
       if (!r.ok) { setHata('Aşı kayıtları alınamadı.'); return; }
       const d = await r.json();
       setAsilar(d.asilar || []);
@@ -179,9 +180,9 @@ export default function HastaAsilar({
     try {
       const t = await token();
       if (!t) return;
-      const r = await fetch('/api/doktor/asilar', {
+      const r = await doktorFetch('/api/doktor/asilar', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           patientId, asiAdi, dozNo: dozNo ? Number(dozNo) : null, kategori,
           uygulamaTarihi: uygulamaTarihi || null, sonrakiDozTarihi: sonrakiDozTarihi || null, kaynak,
@@ -206,7 +207,7 @@ export default function HastaAsilar({
     try {
       const t = await token();
       if (!t) return;
-      await fetch(`/api/doktor/asilar/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${t}` } });
+      await doktorFetch(`/api/doktor/asilar/${id}`, { method: 'DELETE' });
       await yukle();
     } catch { /* ignore */ }
   }
@@ -216,9 +217,9 @@ export default function HastaAsilar({
     try {
       const t = await token();
       if (!t) { setHata('Oturum bulunamadı.'); return; }
-      const r = await fetch(`/api/doktor/asilar/${id}`, {
+      const r = await doktorFetch(`/api/doktor/asilar/${id}`, {
         method: 'PATCH',
-        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(govde),
       });
       if (!r.ok) {

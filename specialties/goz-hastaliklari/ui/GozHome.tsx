@@ -12,6 +12,7 @@ import { AcilSablon, RefraksiyonAlanlari } from './GozKartlarEk';
 import MuayeneFormunaDon from '@/components/doktor/MuayeneFormunaDon';
 import { eklenenNotId } from '@/lib/doktor/muayeneFormuYolu';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 const { btn, ghost, etiket, kucuk, satir } = stil;
 const ALANLAR = [['uzak_sc', 'Uzak sc'], ['uzak_cc', 'Uzak cc'], ['yakin', 'Yakın']] as const;
@@ -35,7 +36,7 @@ export default function GozHome({ patientId }: { patientId: string }) {
 
   const yukle = useCallback(async () => {
     const token = await getAccessTokenAsync();
-    const r = await fetch(`/api/doktor/goz?patientId=${encodeURIComponent(patientId)}`, { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' });
+    const r = await doktorFetch(`/api/doktor/goz?patientId=${encodeURIComponent(patientId)}`, { cache: 'no-store' });
     const j = await r.json().catch(() => ({}));
     if (r.ok) setV(j); else setMesaj(j.error || 'Göz verisi yüklenemedi');
   }, [patientId, setMesaj]);
@@ -45,7 +46,7 @@ export default function GozHome({ patientId }: { patientId: string }) {
     setMesaj('');
     try {
       const token = await getAccessTokenAsync();
-      const r = await fetch('/api/doktor/goz', { method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ patientId, ...body }) });
+      const r = await doktorFetch('/api/doktor/goz', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ patientId, ...body }) });
       const j = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(j.error || 'Hata');
       setMesaj(ok || 'Kaydedildi.'); setEklenenNot(eklenenNotId(j)); await yukle(); return j;

@@ -10,6 +10,7 @@
 import React, { useEffect, useState } from 'react'
 import { CHROME_FONT, CHROME_RENK } from '@/lib/doktor/chromeTheme'
 import { getDoctorAccessToken } from '@/lib/doktor/clientAuth'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 const R = CHROME_RENK
 const kutu: React.CSSProperties = { background: '#FFFFFF', border: `1px solid ${R.border}`, borderRadius: 16, padding: '18px 18px 20px', boxShadow: '0 8px 18px rgba(58,44,34,0.045)', marginBottom: 14 }
@@ -39,7 +40,7 @@ export default function SmsAyarKarti() {
 
   const baslik = () => {
     const t = getDoctorAccessToken()
-    return t ? { Authorization: `Bearer ${t}` } : undefined
+    return t ? ({} as Record<string, string>) : undefined
   }
 
   useEffect(() => {
@@ -47,7 +48,7 @@ export default function SmsAyarKarti() {
       const h = baslik()
       if (!h) return
       try {
-        const r = await fetch('/api/doktor/iletisim/toplu/sms-ayarlari', { headers: h })
+        const r = await doktorFetch('/api/doktor/iletisim/toplu/sms-ayarlari', { headers: h })
         if (r.status === 403) return // sekreter — bu kart hekim-only
         setGorunur(true)
         const d = await r.json()
@@ -66,7 +67,7 @@ export default function SmsAyarKarti() {
     if (!h) return
     setKaydediliyor(true); setHata(''); setMesaj(''); setUyari('')
     try {
-      const r = await fetch('/api/doktor/iletisim/toplu/sms-ayarlari', {
+      const r = await doktorFetch('/api/doktor/iletisim/toplu/sms-ayarlari', {
         method: 'POST',
         headers: { ...h, 'Content-Type': 'application/json' },
         body: JSON.stringify({ saglayici, tabanUrl, kullaniciAdi, sifre: sifre || null, aktif, test, netgsmKullaniciKodu: ngKod, netgsmSifre: ngSifre || null, netgsmBaslik: ngBaslik }),

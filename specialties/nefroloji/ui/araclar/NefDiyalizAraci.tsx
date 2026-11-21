@@ -3,6 +3,7 @@ import React, { useState } from 'react'
 import { getAccessTokenAsync } from '@/lib/doktor/toolsUi'
 import { nefStil, NefHastaSecici, KopyalaButonu, TaslakNotu, useUrlHasta } from './NefAracKabugu'
 import { MODALITE_AD, diyalizSkorla, DIYALIZ_KONTROL_LISTESI, type DiyalizModalite } from '../../engines/diyaliz'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 export default function NefDiyalizAraci() {
   const [modalite, setModalite] = useState<DiyalizModalite>('hd')
@@ -21,9 +22,9 @@ export default function NefDiyalizAraci() {
     if (!sonuc.tamamMi) { setHata(sonuc.ozet); return }
     try {
       const t = await getAccessTokenAsync()
-      const r = await fetch('/api/doktor/nefroloji', {
+      const r = await doktorFetch('/api/doktor/nefroloji', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ patientId: hastaId, adim: 'diyaliz', modalite, tarih, sonrakiSeans: sonraki || null }),
       })
       const j = await r.json().catch(() => ({}))

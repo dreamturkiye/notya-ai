@@ -3,6 +3,7 @@ import React, { useMemo, useState } from 'react'
 import { getAccessTokenAsync } from '@/lib/doktor/toolsUi'
 import { nefStil, NefHastaSecici, KopyalaButonu, Istatistik, TaslakNotu, useUrlHasta } from './NefAracKabugu'
 import { egfrSkorla, ILAC_DOZ_UYARI_LISTESI } from '../../engines/egfr'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 export default function NefEgfrAraci() {
   const [egfr, setEgfr] = useState('')
@@ -20,9 +21,9 @@ export default function NefEgfrAraci() {
     if (!sonuc.tamamMi) { setHata(sonuc.ozet); return }
     try {
       const t = await getAccessTokenAsync()
-      const r = await fetch('/api/doktor/nefroloji', {
+      const r = await doktorFetch('/api/doktor/nefroloji', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ patientId: hastaId, adim: 'egfr', egfr: Number(egfr), uacr: uacr === '' ? null : Number(uacr), hekimKilit: true }),
       })
       const j = await r.json().catch(() => ({}))

@@ -7,6 +7,7 @@ import { getAccessTokenAsync } from '@/lib/doktor/toolsUi'
 import { belgeDegerlendirmeCtalari, belgeKategoriEtiket, belgeYenidoganTaburcuEpikriziMi } from '@/lib/doktor/belgeTur'
 import MuayeneEkleri from '@/components/doktor/MuayeneEkleri'
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 type VaultDoc = {
   id: string
@@ -45,13 +46,11 @@ export default function PatientDocumentVault({
     try {
       const token = await getAccessTokenAsync()
       if (!token) throw new Error('Oturum bulunamadı.')
-      const res = await fetch(`/api/doktor/documents?patientId=${encodeURIComponent(patientId)}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+      const res = await doktorFetch(`/api/doktor/documents?patientId=${encodeURIComponent(patientId)}`, {})
       if (!res.ok) throw new Error('Belgeler yüklenemedi')
       const data = await res.json()
-      fetch(`/api/doktor/belgeler/lab?patientId=${encodeURIComponent(patientId)}`, { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' }).then((r) => (r.ok ? r.json() : { ozet: {} })).then((j) => setLabOzet(j.ozet || {})).catch(() => {})
-      fetch(`/api/doktor/belgeler/analiz?patientId=${encodeURIComponent(patientId)}`, { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' })
+      doktorFetch(`/api/doktor/belgeler/lab?patientId=${encodeURIComponent(patientId)}`, { cache: 'no-store' }).then((r) => (r.ok ? r.json() : { ozet: {} })).then((j) => setLabOzet(j.ozet || {})).catch(() => {})
+      doktorFetch(`/api/doktor/belgeler/analiz?patientId=${encodeURIComponent(patientId)}`, { cache: 'no-store' })
         .then((r) => (r.ok ? r.json() : { analizler: [] }))
         .then((j) => {
           const map: Record<string, string> = {}
@@ -90,7 +89,7 @@ export default function PatientDocumentVault({
     ;(async () => {
       const token = await getAccessTokenAsync()
       if (!token) return
-      const r = await fetch(`/api/doktor/hastalar/${encodeURIComponent(patientId)}/sessions`, { headers: { Authorization: `Bearer ${token}` } })
+      const r = await doktorFetch(`/api/doktor/hastalar/${encodeURIComponent(patientId)}/sessions`, {})
       if (!r.ok) return
       const j = await r.json()
       const liste = (j.sessions || []).map((s: { id: string; created_at?: string; notes?: { basvuru_yakinmasi?: string | null }[] }) => ({
@@ -109,9 +108,8 @@ export default function PatientDocumentVault({
     try {
       const token = await getAccessTokenAsync()
       if (!token) throw new Error('Oturum bulunamadı.')
-      const res = await fetch(`/api/doktor/documents/${d.id}`, {
+      const res = await doktorFetch(`/api/doktor/documents/${d.id}`, {
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
       })
       if (!res.ok) {
         const j = await res.json().catch(() => ({}))

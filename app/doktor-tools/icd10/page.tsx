@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { getDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import { useRouter } from 'next/navigation';
 import { CHROME_RENK, CHROME_FONT } from '@/lib/doktor/chromeTheme';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 export const dynamic = 'force-dynamic';
 
@@ -56,11 +57,10 @@ export default function ICD10Page() {
     try {
       const token = getDoctorAccessToken(); // NOTYA-AUTH-01
 
-      const res = await fetch('/api/doktor/araclar/icd10', {
+      const res = await doktorFetch('/api/doktor/araclar/icd10', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({ query: searchQuery })
       });

@@ -13,6 +13,7 @@ import { duzeltilmisYasMetni, postmenstrualMetni } from '@/lib/clinical/prematur
 import type { TakipPlani, TakipOgesi, OgeGorunum, HekimDurumu } from '@/lib/clinical/prematur/takipPlani';
 import type { Kaynak, KaynakDurumu, PrematurProfil } from '@/lib/clinical/prematur/protokol';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 const { kutu, etiket, kucuk, input, btn, ghost, uyari, kirmizi } = pediStil;
 
@@ -86,8 +87,8 @@ export default function PrematurPlanPaneli({ patientId }: { patientId: string })
 
   const cagir = useCallback(async (yontem: 'GET' | 'PUT' | 'POST', govde?: Record<string, unknown>) => {
     const t = await getAccessTokenAsync();
-    const r = await fetch(yontem === 'GET' ? `/api/doktor/pediatri/prematur?patientId=${encodeURIComponent(patientId)}` : '/api/doktor/pediatri/prematur', {
-      method: yontem, headers: { Authorization: `Bearer ${t}`, ...(govde ? { 'Content-Type': 'application/json' } : {}) }, body: govde ? JSON.stringify({ patientId, ...govde }) : undefined, cache: 'no-store',
+    const r = await doktorFetch(yontem === 'GET' ? `/api/doktor/pediatri/prematur?patientId=${encodeURIComponent(patientId)}` : '/api/doktor/pediatri/prematur', {
+      method: yontem, headers: { ...(govde ? { 'Content-Type': 'application/json' } : {}) }, body: govde ? JSON.stringify({ patientId, ...govde }) : undefined, cache: 'no-store',
     });
     const j = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error(j.error || 'İşlem yapılamadı');

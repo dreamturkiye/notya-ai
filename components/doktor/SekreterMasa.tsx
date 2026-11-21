@@ -18,6 +18,7 @@ import GelenBelgelerKarti from '@/components/doktor/gelenBelgeler/GelenBelgelerK
 import OnBuroFisildiyor from '@/components/doktor/OnBuroFisildiyor'
 import TakipPaneli from '@/components/doktor/TakipPaneli'
 import { izinVarMi, personelRoluMu, ROL_KISA_ETIKETI_TR, type PratikRol } from '@/lib/doktor/personelYetki'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 type RandevuSatir = {
   id: string
@@ -81,11 +82,11 @@ export default function SekreterMasa() {
   const yukle = useCallback(async () => {
     const token = await ensureDoctorAccessToken()
     if (!token) { router.push(DOKTOR_GIRIS); return }
-    const hdr = { Authorization: `Bearer ${token}` }
+    const hdr = {}
 
     let meRol: PratikRol = 'sekreter'
     try {
-      const me = await fetch('/api/personel/me', { headers: hdr, cache: 'no-store' }).then((r) => (r.ok ? r.json() : null))
+      const me = await doktorFetch('/api/personel/me', { headers: hdr, cache: 'no-store' }).then((r) => (r.ok ? r.json() : null))
       if (!me || !personelRoluMu(me.rol)) {
         // Doktor yanlışlıkla buraya düşerse kendi ana sayfasına dönmesin — parent zaten dallanır.
         setKisaAd('')
@@ -103,7 +104,7 @@ export default function SekreterMasa() {
     const bit = new Date(`${bugun}T23:59:59+03:00`).toISOString()
 
     await Promise.all([
-      fetch(`/api/doktor/randevular?baslangic=${encodeURIComponent(bas)}&bitis=${encodeURIComponent(bit)}`, { headers: hdr })
+      doktorFetch(`/api/doktor/randevular?baslangic=${encodeURIComponent(bas)}&bitis=${encodeURIComponent(bit)}`, { headers: hdr })
         .then((r) => (r.ok ? r.json() : null))
         .then((j) => {
           const liste = ((j?.randevular || []) as RandevuSatir[])
@@ -113,13 +114,13 @@ export default function SekreterMasa() {
         })
         .catch(() => setRandevular([])),
       izinVarMi(meRol, 'mesaj')
-        ? fetch('/api/doktor/mesajlar?unread=1', { headers: hdr })
+        ? doktorFetch('/api/doktor/mesajlar?unread=1', { headers: hdr })
             .then((r) => (r.ok ? r.json() : null))
             .then((j) => setMesajlar(Array.isArray(j?.threads) ? j.threads.slice(0, 4) : []))
             .catch(() => setMesajlar([]))
         : Promise.resolve(),
       izinVarMi(meRol, 'gelen_belge')
-        ? fetch('/api/doktor/gelen-belgeler?sayi=1', { headers: hdr, cache: 'no-store' })
+        ? doktorFetch('/api/doktor/gelen-belgeler?sayi=1', { headers: hdr, cache: 'no-store' })
             .then((r) => (r.ok ? r.json() : null))
             .then((j) => setGelenSayi(j?.erisim === true ? Number(j.sayi) || 0 : 0))
             .catch(() => setGelenSayi(0))

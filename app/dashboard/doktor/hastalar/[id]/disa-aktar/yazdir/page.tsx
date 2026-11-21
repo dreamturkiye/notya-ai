@@ -9,6 +9,7 @@ import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 import BelgeKunyesi from '@/components/doktor/yazdir/BelgeKunyesi';
 import type { DisaAktarimVerisi } from '@/lib/doktor/hastaDisaAktarim';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 const tarih = (x: string | null) => (x ? new Date(x.length === 10 ? `${x}T12:00:00Z` : x).toLocaleDateString('tr-TR', { timeZone: 'Europe/Istanbul' }) : '—');
 
@@ -20,7 +21,7 @@ export default function DisaAktarYazdir() {
     (async () => {
       try {
         const t = await ensureDoctorAccessToken();
-        const r = await fetch(`/api/doktor/hastalar/${encodeURIComponent(p.id)}/disa-aktar?bicim=pdf`, { headers: { Authorization: `Bearer ${t}` }, cache: 'no-store' });
+        const r = await doktorFetch(`/api/doktor/hastalar/${encodeURIComponent(p.id)}/disa-aktar?bicim=pdf`, { cache: 'no-store' });
         const j = await r.json();
         if (!r.ok) throw new Error(j.error || 'Yüklenemedi');
         setV(j.veri);

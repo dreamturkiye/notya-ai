@@ -11,6 +11,7 @@ import { skorla as ipssSkorla, IPSS_MADDELER } from '../engines/ipss'
 import { skorla as psaSkorla } from '../engines/psa'
 import type { UroSerit } from '../engines/serit'
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 type Veri = {
   serit: UroSerit
@@ -67,7 +68,7 @@ export default function UrolojiHome({ patientId }: { patientId: string }) {
 
   const api = useCallback(async (body: Record<string, unknown>) => {
     const token = await getAccessTokenAsync()
-    const r = await fetch('/api/doktor/uroloji', { method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ patientId, ...body }) })
+    const r = await doktorFetch('/api/doktor/uroloji', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ patientId, ...body }) })
     const j = await r.json().catch(() => ({}))
     if (!r.ok) throw new Error(j.error || 'Hata')
     return j as Record<string, unknown>
@@ -75,7 +76,7 @@ export default function UrolojiHome({ patientId }: { patientId: string }) {
 
   const yukle = useCallback(async () => {
     const token = await getAccessTokenAsync()
-    const r = await fetch(`/api/doktor/uroloji?patientId=${encodeURIComponent(patientId)}`, { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' })
+    const r = await doktorFetch(`/api/doktor/uroloji?patientId=${encodeURIComponent(patientId)}`, { cache: 'no-store' })
     if (r.ok) setV(await r.json())
   }, [patientId])
 

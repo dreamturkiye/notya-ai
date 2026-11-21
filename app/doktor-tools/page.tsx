@@ -16,6 +16,7 @@ import { doktorAraclariGruplu, type AracGrubu } from '@/lib/doktor/doktorAraclar
 import { hekimProfilOturumOku, hekimProfilOturumYaz, hekimProfilTazeleBasligi, hekimProfilTazeleBitti } from '@/lib/doktor/hekimProfilIstemci'
 import { CHROME_RENK, CHROME_FONT } from '@/lib/doktor/chromeTheme'
 import IpucuBaloncugu from '@/components/doktor/IpucuBaloncugu'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 export const dynamic = 'force-dynamic';
 
@@ -47,7 +48,7 @@ export default function DoktorToolsPage() {
           if (!iptal) setGruplar(doktorAraclariGruplu(null))
           return
         }
-        const r = await fetch('/api/users/me', { headers: { Authorization: `Bearer ${t}`, ...tazele } })
+        const r = await doktorFetch('/api/users/me', { headers: { ...tazele } })
         const j = r.ok ? await r.json() : null
         if (r.ok) hekimProfilTazeleBitti()
         if (!iptal) {

@@ -17,6 +17,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth'
 import { CHROME_RENK, CHROME_FONT } from '@/lib/doktor/chromeTheme'
 import { formatTRY } from '@/lib/accounting/ledger/money'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 const INK = CHROME_RENK.ink
 const MUTED = CHROME_RENK.muted
@@ -34,9 +35,9 @@ interface EditableLine {
 
 async function api(path: string, opts: RequestInit = {}) {
   const token = await ensureDoctorAccessToken()
-  const res = await fetch(path, {
+  const res = await doktorFetch(path, {
     ...opts,
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}`, ...(opts.headers || {}) },
+    headers: { 'Content-Type': 'application/json', ...(opts.headers || {}) },
   })
   const json = await res.json().catch(() => ({}))
   if (!res.ok || json.success === false) throw new Error(json.error || 'İşlem başarısız.')

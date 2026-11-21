@@ -15,6 +15,7 @@ import {
   PREZENTASYONLAR, UA_EDF, USG_ETIKET, jinekolojikUsgHesapla, obstetrikUsgHesapla, type JinekolojikUsg, type ObstetrikUsg,
 } from '../engines/usgRaporu';
 import { BOS_NST, NST_ETIKET, nstSiniflandir, type NstGirdi } from '../engines/nstKtg';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 type Tur = 'usg_obstetrik' | 'usg_jinekolojik' | 'nst';
 type Rapor = { id: string; tur: Tur; rapor_tarihi: string; veri: Record<string, unknown> };
@@ -220,7 +221,7 @@ export default function KdRaporlar({ patientId, gebelikId, dogumVar }: { patient
 
   const yukle = useCallback(async () => {
     const t = await getAccessTokenAsync();
-    const r = await fetch(`/api/doktor/kd-raporlari?patientId=${encodeURIComponent(patientId)}`, { headers: { Authorization: `Bearer ${t}` }, cache: 'no-store' });
+    const r = await doktorFetch(`/api/doktor/kd-raporlari?patientId=${encodeURIComponent(patientId)}`, { cache: 'no-store' });
     const j = await r.json().catch(() => ({}));
     setRaporlar(r.ok ? j.raporlar || [] : []);
   }, [patientId]);
@@ -239,7 +240,7 @@ export default function KdRaporlar({ patientId, gebelikId, dogumVar }: { patient
     if (!acik) return;
     setMesaj('');
     const t = await getAccessTokenAsync();
-    const r = await fetch('/api/doktor/kd-raporlari', { method: 'POST', headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ patientId, id: acik.id, tur: acik.tur, gebelikId: acik.tur === 'usg_jinekolojik' ? undefined : gebelikId || undefined, veri }) });
+    const r = await doktorFetch('/api/doktor/kd-raporlari', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ patientId, id: acik.id, tur: acik.tur, gebelikId: acik.tur === 'usg_jinekolojik' ? undefined : gebelikId || undefined, veri }) });
     const j = await r.json().catch(() => ({}));
     if (!r.ok) { setMesaj(j.error || 'Kaydedilemedi.'); return; }
     setAcik(null); yukle();

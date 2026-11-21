@@ -17,6 +17,7 @@ import {
   aracStil, Alan, HastaSecici, Istatistik, Katlanir, KopyalaButonu,
   MuayeneFormunaEkle, Rozet, TaslakNotu, VURGU_TEAL,
 } from '@/lib/doktor/aracUi';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 const stil = aracStil(VURGU_TEAL);
 const { kutu, etiket, kucuk, metin, satir, btn, ghost, input, hata: hataStil } = stil;
@@ -39,7 +40,7 @@ export default function Sablonlarim() {
     setHata('');
     try {
       const t = await getAccessTokenAsync();
-      const r = await fetch('/api/doktor/araclar/sablonlarim', { headers: { Authorization: `Bearer ${t}` }, cache: 'no-store' });
+      const r = await doktorFetch('/api/doktor/araclar/sablonlarim', { cache: 'no-store' });
       const j = await r.json().catch(() => ({}));
       if (!r.ok) { setHata(j.error || 'Şablonlar yüklenemedi.'); setListe([]); return; }
       setListe(sablonSirala((j.sablonlar || []) as DoktorSablonu[]));
@@ -61,9 +62,9 @@ export default function Sablonlarim() {
     setKaydediyor(true); setMesaj('');
     try {
       const t = await getAccessTokenAsync();
-      const r = await fetch('/api/doktor/araclar/sablonlarim', {
+      const r = await doktorFetch('/api/doktor/araclar/sablonlarim', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...(duzenlenen ? { id: duzenlenen } : {}), ...taslak }),
       });
       const j = await r.json().catch(() => ({}));
@@ -79,7 +80,7 @@ export default function Sablonlarim() {
     setMesaj('');
     try {
       const t = await getAccessTokenAsync();
-      const r = await fetch(`/api/doktor/araclar/sablonlarim?id=${encodeURIComponent(id)}`, { method: 'DELETE', headers: { Authorization: `Bearer ${t}` } });
+      const r = await doktorFetch(`/api/doktor/araclar/sablonlarim?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
       const j = await r.json().catch(() => ({}));
       setMesaj(r.ok ? 'Şablon silindi.' : j.error || 'Silinemedi.');
       if (acik === id) setAcik(null);
@@ -92,9 +93,9 @@ export default function Sablonlarim() {
     setAcik(s.id);
     try {
       const t = await getAccessTokenAsync();
-      await fetch('/api/doktor/araclar/sablonlarim', {
+      await doktorFetch('/api/doktor/araclar/sablonlarim', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: s.id, kullanildi: true }),
       });
       await yukle();

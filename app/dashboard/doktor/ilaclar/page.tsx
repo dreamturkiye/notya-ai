@@ -16,6 +16,7 @@ import {
   type HastaOption,
 } from '@/lib/doktor/toolsUi';
 import { CHROME_RENK, CHROME_FONT } from '@/lib/doktor/chromeTheme';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 interface Ilac {
   id: string;
@@ -132,9 +133,7 @@ export default function DoktorIlaclarPage() {
           return;
         }
 
-        const res = await fetch('/api/doktor/hastalar', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await doktorFetch('/api/doktor/hastalar', {});
 
         if (!res.ok) {
           if (!cancelled) setError('Hasta listesi alınamadı.');
@@ -168,9 +167,7 @@ export default function DoktorIlaclarPage() {
 
     try {
       const token = await getAccessTokenAsync();
-      const res = await fetch(`/api/doktor/ilaclar?hastaId=${encodeURIComponent(hastaId)}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await doktorFetch(`/api/doktor/ilaclar?hastaId=${encodeURIComponent(hastaId)}`, {});
 
       if (!res.ok) {
         setIlaclar([]);
@@ -211,11 +208,10 @@ export default function DoktorIlaclarPage() {
     setSaving(true);
     try {
       const token = await getAccessTokenAsync();
-      const res = await fetch('/api/doktor/ilaclar', {
+      const res = await doktorFetch('/api/doktor/ilaclar', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           hastaId: selectedHastaId,
@@ -261,11 +257,10 @@ export default function DoktorIlaclarPage() {
     setInfo('');
     try {
       const token = await getAccessTokenAsync();
-      const res = await fetch(`/api/doktor/ilaclar/${id}`, {
+      const res = await doktorFetch(`/api/doktor/ilaclar/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ aktif }),
       });
@@ -308,11 +303,10 @@ export default function DoktorIlaclarPage() {
     setSaving(true);
     try {
       const token = await getAccessTokenAsync();
-      const res = await fetch(`/api/doktor/ilaclar/${duzenId}`, {
+      const res = await doktorFetch(`/api/doktor/ilaclar/${duzenId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           ad: duzenIlac.ad.trim(),
@@ -365,9 +359,8 @@ export default function DoktorIlaclarPage() {
     setInfo('');
     try {
       const token = await getAccessTokenAsync();
-      const res = await fetch(`/api/doktor/ilaclar/${id}`, {
+      const res = await doktorFetch(`/api/doktor/ilaclar/${id}`, {
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
       });
 
       if (!res.ok) {

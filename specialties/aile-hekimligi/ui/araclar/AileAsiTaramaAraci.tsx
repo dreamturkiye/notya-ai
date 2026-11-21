@@ -3,6 +3,7 @@ import React, { useState } from 'react'
 import { getAccessTokenAsync } from '@/lib/doktor/toolsUi'
 import { aileStil, AileHastaSecici, Onay, KopyalaButonu, TaslakNotu, useUrlHasta } from './AileAracKabugu'
 import { ASI_TARAMA_PAKETLER, asiTaramaOzeti, type AsiTaramaKod } from '../../engines/asiTarama'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 export default function AileAsiTaramaAraci() {
   const [secili, setSecili] = useState<AsiTaramaKod[]>([])
@@ -19,9 +20,9 @@ export default function AileAsiTaramaAraci() {
     if (!secili.length) { setHata('En az bir paket seçin.'); return }
     try {
       const t = await getAccessTokenAsync()
-      const r = await fetch('/api/doktor/aile-hekimligi', {
+      const r = await doktorFetch('/api/doktor/aile-hekimligi', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ patientId: hastaId, adim: 'asi_tarama', paketKodlari: secili, hekimKilit: true }),
       })
       const j = await r.json().catch(() => ({}))

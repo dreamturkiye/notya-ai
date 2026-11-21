@@ -6,6 +6,7 @@ import { NOTYA_KLINIK_AD } from '@/lib/specialties/klinikDikey'
 import { MasaSahne } from '@/components/klinik/katman/KlinikKabuk'
 import { Button } from '@/components/doktor-landing/button'
 import { dakikaSaat, istanbulAn } from '@/lib/randevu/v2/zaman'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 type Satir = { id: string; doktorId: string; doktorAd: string; odaId: string | null; bas: string; son: string; tur: string; durum: string; hasta: string }
 type Kart = { sonZiyaretler: { doktorId: string; tarih: string; ozet: string }[]; acikTakipler: { sahip: string; metin: string }[]; paket: { ad: string; kalanSeans: number } | null; gelmediRiski: string }
@@ -25,7 +26,7 @@ export default function KlinikTakvim() {
   async function yukle(g = gun) {
     const token = await ensureDoctorAccessToken()
     if (!token) { setOturumYok(true); return }
-    const res = await fetch(`/api/klinik/takvim?gun=${g}`, { headers: { Authorization: `Bearer ${token}` } })
+    const res = await doktorFetch(`/api/klinik/takvim?gun=${g}`, {})
     const json = await res.json()
     if (!res.ok) { setHata(json.error || 'Takvim okunamadı.'); return }
     setRandevular(json.randevular || [])
@@ -40,7 +41,7 @@ export default function KlinikTakvim() {
   async function hafiza(id: string) {
     setSecili(id)
     const token = await ensureDoctorAccessToken()
-    const res = await fetch(`/api/klinik/hafiza?randevuId=${id}`, { headers: { Authorization: `Bearer ${token}` } })
+    const res = await doktorFetch(`/api/klinik/hafiza?randevuId=${id}`, {})
     const json = await res.json()
     if (!res.ok) { setHata(json.error || 'Kart okunamadı.'); return }
     setKart(json.kart)
@@ -49,9 +50,9 @@ export default function KlinikTakvim() {
   async function kapat(geldi: boolean) {
     if (!secili) return
     const token = await ensureDoctorAccessToken()
-    const res = await fetch('/api/klinik/kapanis', {
+    const res = await doktorFetch('/api/klinik/kapanis', {
       method: 'POST',
-      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ randevuId: secili, geldi, paketDus: false, takipNotu: '' }),
     })
     const json = await res.json()

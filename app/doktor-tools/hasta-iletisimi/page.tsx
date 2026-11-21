@@ -13,6 +13,7 @@ import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { getDoctorAccessToken } from '@/lib/doktor/clientAuth'
 import { CHROME_RENK, CHROME_FONT } from '@/lib/doktor/chromeTheme'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 const R = CHROME_RENK
 const BORDER = R.border
@@ -88,7 +89,7 @@ function HastaIletisimiIcerik() {
   }, [asiAdi])
 
   const token = () => getDoctorAccessToken()
-  const basliklar = () => { const t = token(); return t ? { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' } : null }
+  const basliklar = () => { const t = token(); return t ? { 'Content-Type': 'application/json' } : null }
 
   const filtre = useMemo(() => {
     const f: Record<string, unknown> = {}
@@ -112,7 +113,7 @@ function HastaIletisimiIcerik() {
     const h = basliklar(); if (!h) return
     setOnizleniyor(true); setHata(''); setOnayAsamasi(false); setSonuc(null)
     try {
-      const r = await fetch('/api/doktor/iletisim/toplu/onizleme', { method: 'POST', headers: h, body: JSON.stringify({ filtre }) })
+      const r = await doktorFetch('/api/doktor/iletisim/toplu/onizleme', { method: 'POST', headers: h, body: JSON.stringify({ filtre }) })
       const d = await r.json()
       if (!r.ok) { setHata(d?.error || 'Önizleme alınamadı.'); return }
       setOnizleme(d)
@@ -124,7 +125,7 @@ function HastaIletisimiIcerik() {
     const h = basliklar(); if (!h) return
     setGonderiliyor(true); setHata('')
     try {
-      const r = await fetch('/api/doktor/iletisim/toplu/gonder', {
+      const r = await doktorFetch('/api/doktor/iletisim/toplu/gonder', {
         method: 'POST', headers: h,
         body: JSON.stringify({
           filtre, kanal, konu, govde, sablonAnahtari, idempotencyKey: idemKey,
@@ -159,7 +160,7 @@ function HastaIletisimiIcerik() {
   const gecmisiYukle = async () => {
     const h = basliklar(); if (!h) return
     try {
-      const r = await fetch('/api/doktor/iletisim/toplu/gecmis', { headers: h })
+      const r = await doktorFetch('/api/doktor/iletisim/toplu/gecmis', { headers: h })
       const d = await r.json()
       if (r.ok) setGecmis(d.kampanyalar || [])
     } catch { /* fail soft */ }
@@ -171,7 +172,7 @@ function HastaIletisimiIcerik() {
     void (async () => {
       const h = basliklar(); if (!h) return
       try {
-        const r = await fetch('/api/doktor/iletisim/toplu/sms-durum', { headers: h })
+        const r = await doktorFetch('/api/doktor/iletisim/toplu/sms-durum', { headers: h })
         if (r.ok) setSmsDurum(await r.json())
       } catch { /* fail soft — the banner just does not show */ }
     })()

@@ -14,6 +14,7 @@ import { hastaDosyaHref } from '@/lib/doktor/geriNavigasyon';
 import { getAccessTokenAsync } from '@/lib/doktor/toolsUi';
 import { ckdDegerlendir, nefroSevkPaketi, type Renk } from '../../engines/ckd';
 import { dahStil, Segment, Alan, Onay, Sayi, Istatistik, Katlanir, KayitButonu, MuayeneFormunaEkle, OncekiVizit, Rozet, TaslakNotu, DahHastaSecici, KopyalaButonu } from './DahiliyeAracKabugu';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 const { kutu, etiket, kucuk, metin, satir, btn } = dahStil;
 
@@ -50,7 +51,7 @@ export default function CkdAraci() {
     if (!id) return;
     try {
       const t = await getAccessTokenAsync();
-      const r = await fetch(`/api/doktor/dahiliye?patientId=${encodeURIComponent(id)}`, { headers: { Authorization: `Bearer ${t}` }, cache: 'no-store' });
+      const r = await doktorFetch(`/api/doktor/dahiliye?patientId=${encodeURIComponent(id)}`, { cache: 'no-store' });
       const j = await r.json().catch(() => ({}));
       if (!r.ok) { setKayitHata(j.error || 'Hasta kaydı okunamadı.'); return; }
       const c = j.wow?.ckd as { egfr?: number | null; uacr?: number | null; uacr_tarih?: string | null; ras_blokeri?: boolean; sglt2?: boolean; nsaii?: boolean } | undefined;
@@ -197,9 +198,9 @@ export default function CkdAraci() {
           ipucu="UACR (hekim girişi) ve RAS blokeri / SGLT2 / NSAİİ bağlamı hastanın dahiliye kaydına yazılır."
           kaydet={async () => {
             const t = await getAccessTokenAsync();
-            const r = await fetch('/api/doktor/dahiliye', {
+            const r = await doktorFetch('/api/doktor/dahiliye', {
               method: 'POST',
-              headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+              headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ adim: 'ckd', patientId: hasta.id, rasBlokeri: ras, sglt2, nsaii, ...(sayi(uacr) != null ? { uacr: sayi(uacr), uacrTarih: bugunTarih } : {}) }),
             });
             const j = await r.json().catch(() => ({}));

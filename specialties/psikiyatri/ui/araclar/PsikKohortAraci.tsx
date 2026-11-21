@@ -10,6 +10,7 @@ import { getAccessTokenAsync } from '@/lib/doktor/toolsUi';
 import { psikStil, Istatistik, TaslakNotu, Rozet } from './PsikAracKabugu';
 import { PSIK_BAYRAK_AD, psikKohortFiltre, type PsikKohortBayrak, type PsikKohortSatir } from '../../engines/kohort';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 const BAYRAKLAR = Object.keys(PSIK_BAYRAK_AD) as PsikKohortBayrak[];
 
@@ -26,7 +27,7 @@ export default function PsikKohortAraci() {
     setHata('');
     try {
       const t = await getAccessTokenAsync();
-      const r = await fetch('/api/doktor/psikiyatri/kohort', { headers: { Authorization: `Bearer ${t}` }, cache: 'no-store' });
+      const r = await doktorFetch('/api/doktor/psikiyatri/kohort', { cache: 'no-store' });
       const j = await r.json().catch(() => ({}));
       if (!r.ok) { setHata(j.error || 'Kohort yüklenemedi'); setSatirlar([]); return; }
       setSatirlar(j.satirlar || []);
@@ -42,9 +43,9 @@ export default function PsikKohortAraci() {
     setDurum(''); setHata(''); setGonderiliyor(true);
     try {
       const t = await getAccessTokenAsync();
-      const r = await fetch('/api/doktor/psikiyatri/kohort', {
+      const r = await doktorFetch('/api/doktor/psikiyatri/kohort', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ patientIds: secili }),
       });
       const j = await r.json().catch(() => ({}));

@@ -7,6 +7,7 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import { CHROME_FONT, CHROME_RENK } from '@/lib/doktor/chromeTheme'
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 const R = CHROME_RENK
 type Oneri = { id: string; tur: 'tasindi' | 'silindi'; eskiBaslangic: string | null; yeniBaslangic: string | null }
@@ -29,7 +30,7 @@ export default function GoogleTakvimOnerileri({ kartStili }: { kartStili?: React
   const yukle = useCallback(async () => {
     try {
       const t = await ensureDoctorAccessToken()
-      const r = await fetch('/api/doktor/google-takvim/oneriler', { headers: { Authorization: `Bearer ${t}` } })
+      const r = await doktorFetch('/api/doktor/google-takvim/oneriler', {})
       const j = await r.json().catch(() => ({}))
       setOneriler(r.ok ? j.oneriler || [] : [])
     } catch { setOneriler([]) }
@@ -40,7 +41,7 @@ export default function GoogleTakvimOnerileri({ kartStili }: { kartStili?: React
     setMesgul(true); setHata('')
     try {
       const t = await ensureDoctorAccessToken()
-      const r = await fetch('/api/doktor/google-takvim/oneriler', { method: 'POST', headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ id, islem }) })
+      const r = await doktorFetch('/api/doktor/google-takvim/oneriler', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, islem }) })
       const j = await r.json().catch(() => ({}))
       if (!r.ok) setHata(j.error || 'İşlem yapılamadı.')
       await yukle()

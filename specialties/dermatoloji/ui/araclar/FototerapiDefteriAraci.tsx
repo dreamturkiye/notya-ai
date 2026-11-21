@@ -13,6 +13,7 @@ import { DERM_PHOTO_DEVICE, dermLabel } from '../labels';
 import { getAccessTokenAsync } from '@/lib/doktor/toolsUi';
 import { dermStil, Secim, Kutu, Istatistik, Katlanir, MuayeneFormunaEkle, Rozet, TaslakNotu, DermHastaSecici, KopyalaButonu, KayitButonu } from './DermAracKabugu';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 const { kutu, etiket, kucuk, metin, satir, btn, ghost, kaydir } = dermStil;
 const bugun = () => new Date().toISOString().slice(0, 10);
@@ -167,9 +168,9 @@ export default function FototerapiDefteriAraci() {
             const son = cihazSeanslari[cihazSeanslari.length - 1];
             if (!son) return 'Kaydedilecek seans yok.';
             const t = await getAccessTokenAsync();
-            const r = await fetch('/api/doktor/dermatoloji', {
+            const r = await doktorFetch('/api/doktor/dermatoloji', {
               method: 'POST',
-              headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+              headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 patientId: hasta.id, action: 'fototerapi-seans',
                 date: son.date, device: son.device, j_cm2: son.j_cm2,

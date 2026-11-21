@@ -4,8 +4,9 @@
  * "Tüm cihazlardan çıkış yap" (revokes every refresh token of the account). Doctor and staff alike.
  */
 import { useEffect, useState } from 'react'
-import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth'
+import { ensureDoctorAccessToken, doktorOturumuSil } from '@/lib/doktor/clientAuth'
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 type Bilgi = { sonGiris: string | null; hesapOlusturma: string | null; buCihaz: string }
 
@@ -20,7 +21,7 @@ export default function OturumKarti() {
       const t = await ensureDoctorAccessToken()
       if (!t) return
       try {
-        const r = await fetch('/api/doktor/hesap/oturum', { headers: { Authorization: `Bearer ${t}` }, cache: 'no-store' })
+        const r = await doktorFetch('/api/doktor/hesap/oturum', { cache: 'no-store' })
         if (r.ok && !iptal) setBilgi(await r.json())
       } catch { /* kart bilgi göstermez */ }
     })()
@@ -32,10 +33,9 @@ export default function OturumKarti() {
     setMesgul(true); setHata('')
     try {
       const t = await ensureDoctorAccessToken()
-      const r = await fetch('/api/doktor/hesap/oturum', { method: 'DELETE', headers: { Authorization: `Bearer ${t}` } })
+      const r = await doktorFetch('/api/doktor/hesap/oturum', { method: 'DELETE' })
       if (!r.ok) { const j = await r.json().catch(() => ({})); setHata(j.error || 'Oturumlar kapatılamadı.'); return }
-      const key = Object.keys(localStorage).find((k) => k.includes('auth-token')) || ''
-      if (key) localStorage.removeItem(key)
+      doktorOturumuSil()
       window.location.href = '/giris/doktor'
     } catch {
       setHata('Oturumlar kapatılamadı. Bağlantınızı kontrol edin.')

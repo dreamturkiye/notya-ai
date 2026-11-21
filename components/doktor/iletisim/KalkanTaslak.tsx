@@ -4,6 +4,7 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import { CHROME_FONT, CHROME_RENK } from '@/lib/doktor/chromeTheme'
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 const R = CHROME_RENK
 
@@ -15,7 +16,7 @@ export default function KalkanTaslak({ patientId }: { patientId: string }) {
     try {
       const token = await ensureDoctorAccessToken()
       if (!token) return
-      const r = await fetch(`/api/doktor/fisilti/kalkan?hastaId=${encodeURIComponent(patientId)}`, { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' })
+      const r = await doktorFetch(`/api/doktor/fisilti/kalkan?hastaId=${encodeURIComponent(patientId)}`, { cache: 'no-store' })
       if (!r.ok) return
       const j = await r.json()
       const ilk = Array.isArray(j.taslaklar) ? j.taslaklar[0] : null
@@ -30,7 +31,7 @@ export default function KalkanTaslak({ patientId }: { patientId: string }) {
     setHata('')
     const token = await ensureDoctorAccessToken()
     if (!token) return
-    const r = await fetch('/api/doktor/fisilti/kalkan', { method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ islem: 'onayla', taslakId: satir.id }) })
+    const r = await doktorFetch('/api/doktor/fisilti/kalkan', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ islem: 'onayla', taslakId: satir.id }) })
     if (!r.ok) { const j = await r.json().catch(() => ({})); setHata(j.error || 'Kaydedilemedi.'); return }
     setSatir(null)
   }

@@ -4,6 +4,7 @@ import { getAccessTokenAsync } from '@/lib/doktor/toolsUi'
 import { romaStil, RomaHastaSecici, KopyalaButonu, Istatistik, TaslakNotu, useUrlHasta } from './RomaAracKabugu'
 import { labSkorla, LAB_TUR_ETIKET, type LabTur } from '../../engines/labIzlem'
 import { EKLEM_28, EKLEM_28_ETIKET, eklemSay } from '../../engines/eklemHaritasi'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 const TURLER: LabTur[] = ['crp', 'esr', 'rf', 'anti_ccp']
 
@@ -32,18 +33,18 @@ export default function RomaLabIzlemAraci() {
       const t = await getAccessTokenAsync()
       if (sekme === 'lab') {
         if (!labSonuc.tamamMi) { setHata(labSonuc.ozet); return }
-        const r = await fetch('/api/doktor/romatoloji', {
+        const r = await doktorFetch('/api/doktor/romatoloji', {
           method: 'POST',
-          headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ patientId: hastaId, adim: 'lab', tur, deger: Number(deger), hekimKilit: true }),
         })
         const j = await r.json().catch(() => ({}))
         if (!r.ok) { setHata(j.error || 'Kaydedilemedi'); return }
         setDurum('Lab izlem kaydedildi.')
       } else {
-        const r = await fetch('/api/doktor/romatoloji', {
+        const r = await doktorFetch('/api/doktor/romatoloji', {
           method: 'POST',
-          headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ patientId: hastaId, adim: 'eklem', hassas, siskin, hekimKilit: true }),
         })
         const j = await r.json().catch(() => ({}))

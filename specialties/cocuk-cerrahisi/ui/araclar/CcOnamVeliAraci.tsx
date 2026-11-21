@@ -3,6 +3,7 @@ import React, { useMemo, useState } from 'react'
 import { getAccessTokenAsync } from '@/lib/doktor/toolsUi'
 import { ccStil, CcHastaSecici, KopyalaButonu, Istatistik, TaslakNotu, useUrlHasta } from './CcAracKabugu'
 import { onamSkorla, onamMaddeleri, type OnamKod } from '../../engines/onam'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 export default function CcOnamVeliAraci() {
   const [yas, setYas] = useState('8')
@@ -23,9 +24,9 @@ export default function CcOnamVeliAraci() {
     if (!sonuc.tamamMi) { setHata(sonuc.ozet); return }
     try {
       const t = await getAccessTokenAsync()
-      const r = await fetch('/api/doktor/cocuk-cerrahisi', {
+      const r = await doktorFetch('/api/doktor/cocuk-cerrahisi', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ patientId: hastaId, adim: 'onam', secilen: sonuc.secilen, yasYil: sonuc.yasYil, not, hekimKilit: true }),
       })
       const j = await r.json().catch(() => ({}))

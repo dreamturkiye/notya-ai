@@ -3,6 +3,7 @@ import React, { useCallback, useEffect, useState } from 'react'
 import { getAccessTokenAsync } from '@/lib/doktor/toolsUi'
 import { aileStil, Istatistik, TaslakNotu, Rozet } from './AileAracKabugu'
 import { AILE_BAYRAK_AD, aileKohortFiltre, type AileKohortBayrak, type AileKohortSatir } from '../../engines/kohort'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 const S = aileStil
 const BAYRAKLAR = Object.keys(AILE_BAYRAK_AD) as AileKohortBayrak[]
@@ -20,7 +21,7 @@ export default function AileKohortAraci() {
     setHata('')
     try {
       const t = await getAccessTokenAsync()
-      const r = await fetch('/api/doktor/aile-hekimligi/kohort', { headers: { Authorization: `Bearer ${t}` }, cache: 'no-store' })
+      const r = await doktorFetch('/api/doktor/aile-hekimligi/kohort', { cache: 'no-store' })
       const j = await r.json().catch(() => ({}))
       if (!r.ok) { setHata(j.error || 'Kohort yüklenemedi'); setSatirlar([]); return }
       setSatirlar(j.satirlar || [])
@@ -36,9 +37,9 @@ export default function AileKohortAraci() {
     setDurum(''); setHata(''); setGonderiliyor(true)
     try {
       const t = await getAccessTokenAsync()
-      const r = await fetch('/api/doktor/aile-hekimligi/kohort', {
+      const r = await doktorFetch('/api/doktor/aile-hekimligi/kohort', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ patientIds: secili }),
       })
       const j = await r.json().catch(() => ({}))

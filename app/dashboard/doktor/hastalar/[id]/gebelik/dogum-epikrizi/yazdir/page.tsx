@@ -11,6 +11,7 @@ import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import { AntetliKagit, KAGIT, type Antet } from '@/components/doktor/yazdir/AntetliKagit';
 import { dogumEpikriziKur, type EpikrizGirdi } from '@/specialties/kadin-dogum/engines/dogumEpikrizi';
 import type { AmeliyatNotuVeri } from '@/lib/doktor/ameliyatNotu';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 type Ham = { gebelik: EpikrizGirdi['gebelik'] & { id: string }; baslik: Antet; dogum: (EpikrizGirdi['dogum'] & { id: string }) | null; bebekler: EpikrizGirdi['bebekler']; komplikasyonlar: EpikrizGirdi['komplikasyonlar']; ilaclar: EpikrizGirdi['ilaclar']; not: AmeliyatNotuVeri | null };
 
@@ -22,14 +23,13 @@ export default function DogumEpikriziYazdir() {
   useEffect(() => {
     (async () => {
       try {
-        const t = await ensureDoctorAccessToken();
-        const h = { headers: { Authorization: `Bearer ${t}` } };
-        const g = await fetch(`/api/doktor/gebelik?patientId=${encodeURIComponent(p.id)}`, h).then((r) => r.json());
+        const h = {};
+        const g = await doktorFetch(`/api/doktor/gebelik?patientId=${encodeURIComponent(p.id)}`, h).then((r) => r.json());
         if (!g?.gebelik) throw new Error('Bu hastada doğum kaydı olan bir gebelik yok.');
         const [dg, an, il] = await Promise.all([
-          fetch(`/api/doktor/gebelik/dogum?gebelikId=${encodeURIComponent(g.gebelik.id)}`, h).then((r) => r.json()),
-          fetch(`/api/doktor/ameliyat-notlari?patientId=${encodeURIComponent(p.id)}`, h).then((r) => (r.ok ? r.json() : { notlar: [] })),
-          fetch(`/api/doktor/ilaclar?hastaId=${encodeURIComponent(p.id)}`, h).then((r) => (r.ok ? r.json() : {})) as Promise<unknown[] | { ilaclar?: unknown[]; data?: unknown[] }>,
+          doktorFetch(`/api/doktor/gebelik/dogum?gebelikId=${encodeURIComponent(g.gebelik.id)}`, h).then((r) => r.json()),
+          doktorFetch(`/api/doktor/ameliyat-notlari?patientId=${encodeURIComponent(p.id)}`, h).then((r) => (r.ok ? r.json() : { notlar: [] })),
+          doktorFetch(`/api/doktor/ilaclar?hastaId=${encodeURIComponent(p.id)}`, h).then((r) => (r.ok ? r.json() : {})) as Promise<unknown[] | { ilaclar?: unknown[]; data?: unknown[] }>,
         ]);
         if (!dg?.dogum?.dogum_zamani) throw new Error('Doğum henüz kaydedilmedi (Doğum sekmesi → Doğumu kaydet).');
         const not = ((an?.notlar || []) as Array<{ dogum_id: string | null; veri: AmeliyatNotuVeri }>).find((n) => n.dogum_id === dg.dogum.id)?.veri || null;

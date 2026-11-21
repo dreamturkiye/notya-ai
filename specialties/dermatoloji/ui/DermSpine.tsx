@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { getAccessTokenAsync, toolsCard, toolsInput } from '@/lib/doktor/toolsUi';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 type Lez = { id: string; region: string | null; morphology: string | null; size_mm: number | null; abcde: Record<string, boolean> | null; degerlendirme: { abcdePuan: number; melanomSuphesi: boolean; oneri: string[]; not: string } | null; resmi_tani: string | null; acil: boolean; patoloji_sonuc: string | null; created_at: string };
 type Veri = { lezyonlar: Lez[]; islemler: { id: string; tur: string; tarih: string; lezyon_id: string | null; onam_id: string | null; patoloji_sonuc: string | null; yara_bakimi: string[] }[]; ilacGuvenlik: { id: string; ilac: string; baslangic: string | null; aylik_due: string | null; kapisi: { eksik?: string[]; uyari?: string[] } }[]; gorevler: { id: string; ad: string; due: string | null; kaynak: string }[]; onamlar: { id: string; sablon_adi: string; hasta_onayladi: boolean }[]; bebekBagli: boolean; kutuphane: { islemler: { kod: string; ad: string; notAlanlari: string[] }[]; onamlar: { kod: string; ad: string }[]; taniSecenekleri: readonly string[]; pediatrik: { kod: string; ad: string; maddeler: string[] }[] } };
@@ -21,8 +22,8 @@ export function DermSpine({ patientId }: { patientId: string }) {
   const [mesaj, setMesaj] = useState('');
   const [f, setF] = useState<Record<string, unknown>>({});
   const s = (k: string) => (f[k] as string) ?? ''; const b = (k: string) => !!f[k]; const set = (k: string, x: unknown) => setF((p) => ({ ...p, [k]: x }));
-  const api = useCallback(async (body: Record<string, unknown>) => { const token = await getAccessTokenAsync(); const r = await fetch('/api/doktor/dermatoloji/spine', { method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ patientId, ...body }) }); const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error || 'Hata'); return j; }, [patientId]);
-  const yukle = useCallback(async () => { const token = await getAccessTokenAsync(); const r = await fetch(`/api/doktor/dermatoloji/spine?patientId=${encodeURIComponent(patientId)}`, { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' }); if (r.ok) setV(await r.json()); }, [patientId]);
+  const api = useCallback(async (body: Record<string, unknown>) => { const token = await getAccessTokenAsync(); const r = await doktorFetch('/api/doktor/dermatoloji/spine', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ patientId, ...body }) }); const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error || 'Hata'); return j; }, [patientId]);
+  const yukle = useCallback(async () => { const token = await getAccessTokenAsync(); const r = await doktorFetch(`/api/doktor/dermatoloji/spine?patientId=${encodeURIComponent(patientId)}`, { cache: 'no-store' }); if (r.ok) setV(await r.json()); }, [patientId]);
   useEffect(() => { yukle(); }, [yukle]);
   const calistir = async (body: Record<string, unknown>, ok?: string) => { setMesaj(''); try { const j = await api(body); setMesaj(ok || 'Kaydedildi.'); await yukle(); return j; } catch (e) { setMesaj(e instanceof Error ? e.message : 'Hata'); return null; } };
   if (!v) return <div style={{ ...toolsCard, color: CHROME_RENK.muted, fontSize: 12 }}>Dermatoloji paneli yükleniyor…</div>;

@@ -39,6 +39,7 @@ import IlkAdimlarKarti from '@/components/doktor/IlkAdimlarKarti'
 import IpucuBaloncugu from '@/components/doktor/IpucuBaloncugu'
 import { useRutinPaket } from '@/lib/doktor/ogrenme/rutinIstemci'
 import { tarayiciSaatDilimi } from '@/lib/doktor/selam'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 interface KpiData {
   bugunkuMuayene: number
@@ -153,7 +154,7 @@ export default function DoktorDashboard() {
       const token = await ensureDoctorAccessToken()
       if (!token) { router.push(DOKTOR_GIRIS); return }
       try {
-        const r = await fetch('/api/personel/me', { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' })
+        const r = await doktorFetch('/api/personel/me', { cache: 'no-store' })
         if (r.ok) {
           const d = await r.json()
           if (!iptal && d.rol && d.rol !== 'doktor') { setSekreterMi(true); setRolHazir(true); setLoading(false); return }
@@ -169,11 +170,11 @@ export default function DoktorDashboard() {
     const initDashboard = async () => {
       const token = await ensureDoctorAccessToken()
       if (!token) { router.push(DOKTOR_GIRIS); return }
-      void fetch('/api/doktor/onbellek-isin', { method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ bugun: true }), keepalive: true })
+      void doktorFetch('/api/doktor/onbellek-isin', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ bugun: true }), keepalive: true })
 
       try {
-        const meRes = await fetch('/api/users/me', { headers: { Authorization: `Bearer ${token}` } })
-        fetch('/api/doktor/hafiza', { headers: { Authorization: `Bearer ${token}` } })
+        const meRes = await doktorFetch('/api/users/me', {})
+        doktorFetch('/api/doktor/hafiza', {})
           .then((r) => (r.ok ? r.json() : null))
           .then((j) => { if (j?.gun?.metin) setAyseAcilis(String(j.gun.metin)) })
           .catch(() => {})
@@ -191,7 +192,7 @@ export default function DoktorDashboard() {
       } catch {}
 
       try {
-        const raporRes = await fetch('/api/doktor/raporlar?ozet=1', { headers: { Authorization: `Bearer ${token}` } })
+        const raporRes = await doktorFetch('/api/doktor/raporlar?ozet=1', {})
         if (raporRes.ok) {
           const raporData = await raporRes.json()
           const src = raporData?.data && typeof raporData.data === 'object' ? raporData.data : raporData
@@ -208,7 +209,7 @@ export default function DoktorDashboard() {
         setKpi({ bugunkuMuayene: 0, bekleyenOnay: 0, buAyToplam: 0, aktifHasta: 0 })
       }
 
-      fetch('/api/doktor/gun-programi', { headers: { Authorization: `Bearer ${token}` } })
+      doktorFetch('/api/doktor/gun-programi', {})
         .then((r) => (r.ok ? r.json() : null))
         .then((j) => { if (j?.program) setGunProgrami(j.program as ProgramSatiri[]) })
         .catch(() => {})
@@ -216,9 +217,7 @@ export default function DoktorDashboard() {
         const haftaGunleri = buHaftaninGunleri()
         const baslangic = new Date(yerelGunAnahtari(haftaGunleri[0]) + 'T00:00:00+03:00')
         const bitis = new Date(yerelGunAnahtari(haftaGunleri[6]) + 'T23:59:59+03:00')
-        const rRes = await fetch(`/api/doktor/randevular?baslangic=${encodeURIComponent(baslangic.toISOString())}&bitis=${encodeURIComponent(bitis.toISOString())}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        })
+        const rRes = await doktorFetch(`/api/doktor/randevular?baslangic=${encodeURIComponent(baslangic.toISOString())}&bitis=${encodeURIComponent(bitis.toISOString())}`, {})
         if (rRes.ok) {
           const rData = await rRes.json()
           const sirali = (rData.randevular || [])
@@ -233,7 +232,7 @@ export default function DoktorDashboard() {
       }
 
       try {
-        const snRes = await fetch('/api/doktor/son-notlar', { headers: { Authorization: `Bearer ${token}` } })
+        const snRes = await doktorFetch('/api/doktor/son-notlar', {})
         if (snRes.ok) {
           const sn = await snRes.json()
           type SnSatir = { id: string; created_at: string; specialty: string; hastaAdi: string; ozet: string; approved_at?: string | null }
@@ -252,7 +251,7 @@ export default function DoktorDashboard() {
 
       // NOTYA-FISILTI-MESAJ (Kaan, 2026-09-24): unread patient-portal messages, right on Ana Sayfa --
       // "Bugün" was showing only randevular before; new messages belong in that same at-a-glance zone.
-      fetch('/api/doktor/mesajlar?unread=1', { headers: { Authorization: `Bearer ${token}` } })
+      doktorFetch('/api/doktor/mesajlar?unread=1', {})
         .then((r) => (r.ok ? r.json() : null))
         .then((j) => { if (Array.isArray(j?.threads)) setYeniMesajlar(j.threads.slice(0, 4)) })
         .catch(() => {})

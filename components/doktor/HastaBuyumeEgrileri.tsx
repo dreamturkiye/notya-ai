@@ -13,6 +13,7 @@ import { CHROME_FONT, CHROME_RENK } from '@/lib/doktor/chromeTheme';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import { Grafik, GrafikAnahtari, BUYUME_RENK, tarihTR, type GrafikVerisi } from '@/components/doktor/buyume/BuyumeGrafigi';
 import { bantDisiMi, degerMetni, egilimMetni, persentilEgilimi, persentilEtiketi, yasMetni, yasPenceresi } from '@/lib/clinical/buyumeGrafik';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 /** Araçlar › Büyüme stüdyosu draws with the same chart. */
 export { Grafik } from '@/components/doktor/buyume/BuyumeGrafigi';
@@ -255,9 +256,9 @@ export default function HastaBuyumeEgrileri({ patientId, hedefBoyGoster = false 
     (async () => {
       try {
         const t = await ensureDoctorAccessToken();
-        const r = await fetch(`/api/doktor/hastalar/${patientId}/buyume-egrileri`, { headers: { Authorization: `Bearer ${t}` } });
+        const r = await doktorFetch(`/api/doktor/hastalar/${patientId}/buyume-egrileri`, {});
         if (hedefBoyGoster) {
-          const hr = await fetch(`/api/doktor/hastalar/${patientId}/hedef-boy`, { headers: { Authorization: `Bearer ${t}` } });
+          const hr = await doktorFetch(`/api/doktor/hastalar/${patientId}/hedef-boy`, {});
           if (hr.ok) {
             const hd = await hr.json();
             if (hd.arac !== false) setHedef(hd.sonuc || null);

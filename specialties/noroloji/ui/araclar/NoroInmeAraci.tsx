@@ -4,6 +4,7 @@ import { getAccessTokenAsync } from '@/lib/doktor/toolsUi'
 import { noroStil, NoroHastaSecici, Onay, KopyalaButonu, Istatistik, TaslakNotu, useUrlHasta } from './NoroAracKabugu'
 import { acilTara, hekimOnayiGerekliMi, ACIL_KODLARI, ACIL_KONTROL_LISTESI, HASTA_ACIL_METNI, type AcilKod } from '../../engines/acil'
 import { ACIL_YONLENDIRME_METNI } from '../../engines/noroloji'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 export default function NoroInmeAraci() {
   const [isaretli, setIsaretli] = useState<AcilKod[]>([])
@@ -29,9 +30,9 @@ export default function NoroInmeAraci() {
     if (!hastaId) { setHata('Kaydetmek için hasta seçin.'); return }
     try {
       const t = await getAccessTokenAsync()
-      const r = await fetch('/api/doktor/noroloji', {
+      const r = await doktorFetch('/api/doktor/noroloji', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           patientId: hastaId, adim: 'risk', bayraklar: isaretli, metin,
           eylem: [eylem, ...liste.map((i) => ACIL_KONTROL_LISTESI[i])].filter(Boolean).join(' | '),

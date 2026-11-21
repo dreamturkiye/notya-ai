@@ -11,6 +11,8 @@ import { KLINIK_ETIKET } from '@/lib/specialties/klinikDikey'
 import { ozelAracBul } from '@/lib/klinik/ozelAracCalistir'
 import OzelStudyo from './OzelStudyo'
 import { KohortBaglantisiGorunumu } from '@/components/doktor/geriCagirma/KohortBaglantisi'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
+import { getDoctorAccessToken } from '@/lib/doktor/clientAuth'
 
 const V: Record<string, AracVurgu> = {
   sac: { ana: '#2563EB', anaMetin: '#EFF6FF', yumusak: '#2563EB', baslik: '#2563EB' },
@@ -102,9 +104,8 @@ function KayitKvkkPanel() {
   useEffect(() => {
     ;(async () => {
       try {
-        const raw = localStorage.getItem('auth-token')
-        const t = raw ? (JSON.parse(raw).access_token || '') : ''
-        const r = await fetch('/api/users/me', { headers: { Authorization: `Bearer ${t}` } })
+        const t = getDoctorAccessToken()
+        const r = await doktorFetch('/api/users/me', {})
         const j = r.ok ? await r.json() : null
         setSlug(String(j?.data?.specialty || ''))
       } catch {

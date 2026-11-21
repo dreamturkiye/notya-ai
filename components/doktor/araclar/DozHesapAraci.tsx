@@ -9,6 +9,7 @@ import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth'
 import { toolsCard, toolsInput, toolsLabel } from '@/lib/doktor/toolsUi'
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme'
 import { DOZ_UYARI_METNI, dozAraciTemelleri, dozHesapla, fmtDoz, type DozTemeli } from '@/lib/doktor/dozHesap'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 const TEMEL_ADI: Record<DozTemeli, string> = { kg: 'mg/kg', m2: 'mg/m²', sabit: 'Sabit doz (mg)' }
 const SIKLIK = [1, 2, 3, 4, 6]
@@ -35,7 +36,7 @@ export default function DozHesapAraci() {
     ;(async () => {
       try {
         const t = await ensureDoctorAccessToken()
-        const r = t ? await fetch('/api/users/me', { headers: { Authorization: `Bearer ${t}` } }) : null
+        const r = t ? await doktorFetch('/api/users/me', {}) : null
         const j = r?.ok ? await r.json() : null
         const l = dozAraciTemelleri(j?.data?.specialty)
         if (!iptal) { setTemeller(l); if (l?.length) setTemel(l[0]) }

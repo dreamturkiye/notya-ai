@@ -10,6 +10,7 @@ import { tarihGoster } from '../../engines/girdi';
 import type { PrematurKohortSatiri } from '../../engines/prematurKohort';
 import { pediStil, Istatistik, Rozet, TaslakNotu } from './PediAracKabugu';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 const { kutu, etiket, kucuk, ghost } = pediStil;
 const DURUM: Record<string, { ad: string; ton: 'kirmizi' | 'uyari' | 'bilgi' | 'notr' }> = {
@@ -25,7 +26,7 @@ export default function PrematurKohortPaneli() {
     setHata('');
     try {
       const t = await getAccessTokenAsync();
-      const r = await fetch('/api/doktor/pediatri/prematur/kohort', { headers: { Authorization: `Bearer ${t}` }, cache: 'no-store' });
+      const r = await doktorFetch('/api/doktor/pediatri/prematur/kohort', { cache: 'no-store' });
       const j = await r.json().catch(() => ({}));
       if (r.ok) setV(j); else setHata(j.error || 'Kohort yüklenemedi');
     } catch { setHata('Kohort yüklenemedi — bağlantıyı kontrol edin.'); }

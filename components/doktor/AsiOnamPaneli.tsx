@@ -27,6 +27,7 @@ import { ASI_ONAM_ICERIGI_ADLARI } from '@/lib/asi/onam/asiOnamIcerigi';
 import { asiOnamIcerigiGoster } from '@/lib/asi/onam/asiOnamMotoru';
 import { ASI_ONAM_GORUNEN_ETIKET, ASI_ONAM_YONTEM_KISA, asiOnamGorunenDurumu, asiOnamMuayeneOnami, bekleyenUzaktanBilgilendirme, type AsiOnamGorunenDurum } from '@/lib/asi/onam/asiOnamDurum';
 import { DosyaSecDugmesi } from '@/components/core/DosyaSecDugmesi';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 interface AsiOnamKaydi {
   id: string;
@@ -67,7 +68,7 @@ export default function AsiOnamPaneli({ patientId, sessionId }: { patientId: str
     try {
       const t = await ensureDoctorAccessToken();
       if (!t) { setHata('Oturum bulunamadı.'); return; }
-      const r = await fetch(`/api/doktor/asi-onam?patientId=${patientId}`, { headers: { Authorization: `Bearer ${t}` } });
+      const r = await doktorFetch(`/api/doktor/asi-onam?patientId=${patientId}`, {});
       const j = await r.json().catch(() => ({}));
       if (!r.ok) { setHata(j.error || 'Yüklenemedi.'); return; }
       setKayitlar(j.kayitlar || []);
@@ -96,9 +97,9 @@ export default function AsiOnamPaneli({ patientId, sessionId }: { patientId: str
     try {
       const t = await ensureDoctorAccessToken();
       if (!t) { setHata('Oturum bulunamadı.'); return; }
-      const r = await fetch('/api/doktor/asi-onam', {
+      const r = await doktorFetch('/api/doktor/asi-onam', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           patientId, sessionId, asilar: secilenAsilar, durum, kimlikDogrulandi,
           onayEden: { ad: onayEdenAd.trim(), yakinlik: onayEdenYakinlik, telefon: onayEdenTelefon.trim() || null },
@@ -120,9 +121,9 @@ export default function AsiOnamPaneli({ patientId, sessionId }: { patientId: str
     try {
       const t = await ensureDoctorAccessToken();
       if (!t) { setHata('Oturum bulunamadı.'); return; }
-      const r = await fetch('/api/doktor/asi-onam/talep', {
+      const r = await doktorFetch('/api/doktor/asi-onam/talep', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ patientId, sessionId, asilar: secilenAsilar, bildirimKanali: uzaktanKanal }),
       });
       const j = await r.json().catch(() => ({}));
@@ -153,7 +154,7 @@ export default function AsiOnamPaneli({ patientId, sessionId }: { patientId: str
       fd.append('onayEdenYakinlik', onayEdenYakinlik);
       if (onayEdenTelefon.trim()) fd.append('onayEdenTelefon', onayEdenTelefon.trim());
       fd.append('kimlikDogrulandi', kimlikDogrulandi ? 'true' : 'false');
-      const r = await fetch('/api/doktor/asi-onam/kagit', { method: 'POST', headers: { Authorization: `Bearer ${t}` }, body: fd });
+      const r = await doktorFetch('/api/doktor/asi-onam/kagit', { method: 'POST', body: fd });
       const j = await r.json().catch(() => ({}));
       if (!r.ok) { setHata(j.error || 'Yüklenemedi.'); return; }
       setKagitAcik(false);

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth'
 import { pediatriHedefBoyBransi } from '@/lib/clinical/hedefBoy'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 /** null = still resolving specialty. */
 export function usePediatriHedefBoy(): boolean | null {
@@ -16,7 +17,7 @@ export function usePediatriHedefBoy(): boolean | null {
           if (!iptal) setUygun(false)
           return
         }
-        const r = await fetch('/api/users/me', { headers: { Authorization: `Bearer ${t}` } })
+        const r = await doktorFetch('/api/users/me', {})
         const j = r.ok ? await r.json() : null
         if (!iptal) setUygun(pediatriHedefBoyBransi(j?.data?.specialty))
       } catch {

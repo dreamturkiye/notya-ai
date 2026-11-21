@@ -22,6 +22,7 @@ import {
 import type { Modalite } from '@/core/belgeler/ontoloji'
 import { MODALITE_TR } from '@/core/belgeler/ontoloji'
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 type Calisma = {
   id: string
@@ -61,8 +62,8 @@ export default function HastaGoruntuler({ patientId }: { patientId: string }) {
   const yukle = useCallback(async () => {
     const token = await getAccessTokenAsync()
     const [cr, ar] = await Promise.all([
-      fetch(`/api/doktor/goruntuler?patientId=${encodeURIComponent(patientId)}`, { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' }),
-      fetch(`/api/doktor/belgeler/analiz?patientId=${encodeURIComponent(patientId)}`, { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' }),
+      doktorFetch(`/api/doktor/goruntuler?patientId=${encodeURIComponent(patientId)}`, { cache: 'no-store' }),
+      doktorFetch(`/api/doktor/belgeler/analiz?patientId=${encodeURIComponent(patientId)}`, { cache: 'no-store' }),
     ])
     if (cr.ok) {
       const j = await cr.json()
@@ -85,7 +86,7 @@ export default function HastaGoruntuler({ patientId }: { patientId: string }) {
     if (!secili) { setOncekiler([]); setSeri([]); return }
     void (async () => {
       const token = await getAccessTokenAsync()
-      const r = await fetch(`/api/doktor/goruntuler/${secili}`, { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' })
+      const r = await doktorFetch(`/api/doktor/goruntuler/${secili}`, { cache: 'no-store' })
       if (!r.ok) return
       const j = await r.json()
       setOncekiler(j.oncekiler || [])
@@ -105,7 +106,7 @@ export default function HastaGoruntuler({ patientId }: { patientId: string }) {
     if (alt) fd.set('modalite', alt)
     if (bolge.trim()) fd.set('bolge', bolge.trim())
     if (satir && satir.tip === tip) fd.set('calismaId', satir.calisma_id)
-    const r = await fetch('/api/doktor/goruntuler', { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: fd })
+    const r = await doktorFetch('/api/doktor/goruntuler', { method: 'POST', body: fd })
     const j = await r.json().catch(() => ({}))
     setYukleniyor(false)
     if (!r.ok) { setMesaj(j.error || 'Yüklenemedi'); return }
@@ -124,9 +125,9 @@ export default function HastaGoruntuler({ patientId }: { patientId: string }) {
       return
     }
     const token = await getAccessTokenAsync()
-    const r = await fetch(`/api/doktor/goruntuler/${satir.id}`, {
+    const r = await doktorFetch(`/api/doktor/goruntuler/${satir.id}`, {
       method: 'PATCH',
-      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         onay_durum: 'hasta_paylas',
         ...(yorum ? { hekim_yorum: yorum } : {}),
@@ -266,7 +267,7 @@ function GoruntuIzleyici({ belgeId, tip, ikiUp }: { belgeId: string | null; tip:
     let iptal = false
     const al = async (id: string) => {
       const token = await getAccessTokenAsync()
-      const r = await fetch(`/api/doktor/documents/${id}/download`, { headers: { Authorization: `Bearer ${token}` } })
+      const r = await doktorFetch(`/api/doktor/documents/${id}/download`, {})
       if (!r.ok) return null
       const blob = await r.blob()
       const u = URL.createObjectURL(blob)

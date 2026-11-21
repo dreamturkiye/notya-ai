@@ -117,6 +117,7 @@ import IpucuBaloncugu from '@/components/doktor/IpucuBaloncugu';
 import { hastaDosyaHref } from '@/lib/doktor/geriNavigasyon';
 import { CHROME_RENK, CHROME_FONT } from '@/lib/doktor/chromeTheme';
 import { cinsiyetKanonik } from '@/lib/utils/cinsiyet'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 export const dynamic = 'force-dynamic';
 
@@ -232,7 +233,7 @@ export default function HastaProfilPage() {
       try {
         const token = await ensureDoctorAccessToken();
         if (!token) return;
-        const r = await fetch(`/api/doktor/gebelik?patientId=${pid}&ozet=1`, { headers: { Authorization: `Bearer ${token}` } });
+        const r = await doktorFetch(`/api/doktor/gebelik?patientId=${pid}&ozet=1`, {});
         if (!r.ok) return;
         const j = await r.json();
         if (!iptal) setGebeBayrak(j?.aktif ? gebeBayrakMetni({ sat: j.sat, tdt: j.tdt }) : null);
@@ -253,7 +254,7 @@ export default function HastaProfilPage() {
       try {
         const token = await ensureDoctorAccessToken();
         if (!token) return;
-        const r = await fetch(`/api/doktor/pediatri/prematur?patientId=${encodeURIComponent(pid)}&ozet=1`, { headers: { Authorization: `Bearer ${token}` } });
+        const r = await doktorFetch(`/api/doktor/pediatri/prematur?patientId=${encodeURIComponent(pid)}&ozet=1`, {});
         if (!r.ok) return;
         const j = await r.json();
         if (!iptal) setPrematurKapsamda(!!j?.kapsamda);
@@ -325,15 +326,13 @@ export default function HastaProfilPage() {
         const token = await ensureDoctorAccessToken();
         if (!token) { router.push(DOKTOR_GIRIS); return; }
         const [resp, meRes] = await Promise.all([
-          fetch(`/api/doktor/hastalar/${patientId}`, {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          fetch('/api/users/me', { headers: { Authorization: `Bearer ${token}` } }),
+          doktorFetch(`/api/doktor/hastalar/${patientId}`, {}),
+          doktorFetch('/api/users/me', {}),
         ]);
         const data = await resp.json();
         if (!resp.ok) { setError(data.error || 'Hasta bilgisi alınamadı'); return; }
         setPatient(data.patient);
-        void fetch('/api/doktor/onbellek-isin', { method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ patientId }), keepalive: true })
+        void doktorFetch('/api/doktor/onbellek-isin', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ patientId }), keepalive: true })
         // NOTYA-OZET-CIFT-01: boşsa veya eski kisaltma (…) ile kesilmişse yeniden üret.
         const genelHam = String(data.patient?.genel_ozet || '').trim()
         const sonHam = String(data.patient?.son_muayene_ozeti || '').trim()
@@ -348,9 +347,8 @@ export default function HastaProfilPage() {
         }
         if (!genelHam || !sonHam || ozetKesik || ozetEski) {
           setKlinikOzetYukleniyor(true)
-          void fetch(`/api/doktor/hastalar/${patientId}/klinik-ozet`, {
+          void doktorFetch(`/api/doktor/hastalar/${patientId}/klinik-ozet`, {
             method: 'POST',
-            headers: { Authorization: `Bearer ${token}` },
           })
             .then(async (r) => (r.ok ? r.json() : null))
             .then((j) => {
@@ -413,7 +411,7 @@ export default function HastaProfilPage() {
     setSeansYukleniyor(true);
     try {
       const token = await ensureDoctorAccessToken();
-      const r = await fetch(`/api/doktor/hastalar/${patientId}/sessions${arsivListesi ? '?arsiv=1' : ''}`, { headers: { Authorization: `Bearer ${token}` } });
+      const r = await doktorFetch(`/api/doktor/hastalar/${patientId}/sessions${arsivListesi ? '?arsiv=1' : ''}`, {});
       const d = await r.json();
       const liste = Array.isArray(d.sessions) ? d.sessions : Array.isArray(d.data) ? d.data : Array.isArray(d) ? d : [];
       setSeanslar(liste);
@@ -433,7 +431,7 @@ export default function HastaProfilPage() {
     (async () => {
       try {
         const token = await ensureDoctorAccessToken();
-        const r = await fetch(`/api/doktor/araclar/enabiz/mbys?hastaId=${encodeURIComponent(patientId)}`, { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' });
+        const r = await doktorFetch(`/api/doktor/araclar/enabiz/mbys?hastaId=${encodeURIComponent(patientId)}`, { cache: 'no-store' });
         const d = await r.json().catch(() => ({}));
         if (r.ok && d.durumlar && typeof d.durumlar === 'object') setMbysDurumlari(d.durumlar);
       } catch { /* durum rozeti isteğe bağlı */ }
@@ -446,7 +444,7 @@ export default function HastaProfilPage() {
     setArsivleniyor(sessionId);
     try {
       const token = await ensureDoctorAccessToken();
-      const r = await fetch(`/api/doktor/hastalar/${patientId}/sessions/${sessionId}/arsivle`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
+      const r = await doktorFetch(`/api/doktor/hastalar/${patientId}/sessions/${sessionId}/arsivle`, { method: 'POST' });
       if (r.ok) setSeanslar((prev) => (prev || []).filter((s) => s.id !== sessionId));
     } finally {
       setArsivleniyor(null);
@@ -458,7 +456,7 @@ export default function HastaProfilPage() {
     setArsivleniyor(sessionId);
     try {
       const token = await ensureDoctorAccessToken();
-      const r = await fetch(`/api/doktor/hastalar/${patientId}/sessions/${sessionId}/arsivden-cikar`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
+      const r = await doktorFetch(`/api/doktor/hastalar/${patientId}/sessions/${sessionId}/arsivden-cikar`, { method: 'POST' });
       const j = await r.json().catch(() => ({}));
       if (r.ok) setSeanslar((prev) => (prev || []).filter((s) => s.id !== sessionId));
       else window.alert(j.error || 'Arşivden çıkarılamadı');
@@ -473,7 +471,7 @@ export default function HastaProfilPage() {
     setSilinenSeans(sessionId);
     try {
       const token = await ensureDoctorAccessToken();
-      const r = await fetch(`/api/doktor/hastalar/${patientId}/sessions/${sessionId}/kalici-sil`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
+      const r = await doktorFetch(`/api/doktor/hastalar/${patientId}/sessions/${sessionId}/kalici-sil`, { method: 'POST' });
       const j = await r.json().catch(() => ({}));
       if (r.ok) setSeanslar((prev) => (prev || []).filter((s) => s.id !== sessionId));
       else window.alert(j.error || 'Silinemedi');

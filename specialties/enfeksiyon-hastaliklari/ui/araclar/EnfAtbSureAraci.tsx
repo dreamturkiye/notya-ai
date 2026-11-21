@@ -3,6 +3,7 @@ import React, { useMemo, useState } from 'react'
 import { getAccessTokenAsync } from '@/lib/doktor/toolsUi'
 import { enfStil, EnfHastaSecici, KopyalaButonu, Istatistik, TaslakNotu, useUrlHasta } from './EnfAracKabugu'
 import { atbHesapla, atbDozIceriyorMu } from '../../engines/atbSure'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 export default function EnfAtbSureAraci() {
   const [baslangic, setBaslangic] = useState('')
@@ -27,9 +28,9 @@ export default function EnfAtbSureAraci() {
     if (!sonuc.tamamMi) { setHata(sonuc.ozet); return }
     try {
       const t = await getAccessTokenAsync()
-      const r = await fetch('/api/doktor/enfeksiyon-hastaliklari', {
+      const r = await doktorFetch('/api/doktor/enfeksiyon-hastaliklari', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           patientId: hastaId, adim: 'atb',
           baslangic, sureGun: Number(sureGun), kontrol: kontrol || undefined,

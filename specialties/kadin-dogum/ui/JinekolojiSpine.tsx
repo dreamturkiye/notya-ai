@@ -10,6 +10,7 @@ import { JinekolojiV2Sekmeler } from './JinekolojiV2Sekmeler';
 import { TrTarihAlan } from './TrTarihAlan';
 import { JinekolojiWowSekmeler, WOW_SEKME, type WowVeri } from './JinekolojiWowSekmeler';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 type Due = { kod: string; ad: string; due: string | null; durum: string; not: string; takvim: string };
 type Gorev = { id: string; kod: string; ad: string; due: string | null; kaynak: string };
 type Serviks = { id: string; tarih: string; pap_sonuc: string | null; hpv: string | null; taslak_aksiyon: { adim: string; sonrakiAy: number | null; guven: number; gerekce: string; kolposkopi: boolean } | null; resmi_plan: string | null; sonraki_due: string | null; hekim_onayladi: boolean; kolposkopi: Record<string, unknown> | null };
@@ -37,8 +38,8 @@ export function JinekolojiSpine({ patientId, ofisModulleri }: { patientId: strin
   const b = (k: string) => !!f[k];
   const set = (k: string, x: unknown) => setF((p) => ({ ...p, [k]: x }));
 
-  const api = useCallback(async (body: Record<string, unknown>) => { const token = await getAccessTokenAsync(); const r = await fetch('/api/doktor/jinekoloji', { method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ patientId, ...body }) }); const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error || 'Hata'); return j; }, [patientId]);
-  const yukle = useCallback(async () => { const token = await getAccessTokenAsync(); const r = await fetch(`/api/doktor/jinekoloji?patientId=${encodeURIComponent(patientId)}`, { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' }); if (r.ok) setV(await r.json()); }, [patientId]);
+  const api = useCallback(async (body: Record<string, unknown>) => { const token = await getAccessTokenAsync(); const r = await doktorFetch('/api/doktor/jinekoloji', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ patientId, ...body }) }); const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error || 'Hata'); return j; }, [patientId]);
+  const yukle = useCallback(async () => { const token = await getAccessTokenAsync(); const r = await doktorFetch(`/api/doktor/jinekoloji?patientId=${encodeURIComponent(patientId)}`, { cache: 'no-store' }); if (r.ok) setV(await r.json()); }, [patientId]);
   useEffect(() => { yukle(); }, [yukle]);
   const calistir = async (body: Record<string, unknown>, ok?: string) => { setMesaj(''); try { const j = await api(body); setMesaj(ok || 'Kaydedildi.'); await yukle(); return j; } catch (e) { setMesaj(e instanceof Error ? e.message : 'Hata'); return null; } };
 

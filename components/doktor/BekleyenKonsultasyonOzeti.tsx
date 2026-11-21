@@ -11,6 +11,7 @@ import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth'
 import { beklemeVurgusu, type BekleyenOzeti } from '@/lib/doktor/konsultasyon'
 import { BEKLEYEN_KONSULTASYONLAR_ROTASI } from '@/lib/doktor/konsultasyonIstemci'
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 const VURGU_RENK = { kirmizi: CHROME_RENK.warn, uyari: '#7A5B1E', notr: CHROME_RENK.muted } as const
 
@@ -40,7 +41,7 @@ export default function BekleyenKonsultasyonOzeti() {
       try {
         const t = await ensureDoctorAccessToken()
         if (!t) return
-        const r = await fetch('/api/doktor/konsultasyon?bekleyen=sayi', { headers: { Authorization: `Bearer ${t}` }, cache: 'no-store' })
+        const r = await doktorFetch('/api/doktor/konsultasyon?bekleyen=sayi', { cache: 'no-store' })
         if (!r.ok) return
         const j = await r.json()
         if (!iptal && typeof j?.sayi === 'number') setOzet(j as BekleyenOzeti)

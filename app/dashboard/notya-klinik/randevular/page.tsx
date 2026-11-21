@@ -2,6 +2,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import KlinikNav from '@/components/klinik/KlinikNav'
+import { doktorFetch, oturumSuresiDoldu } from '@/lib/doktor/oturumFetch'
+import { getDoctorAccessToken } from '@/lib/doktor/clientAuth'
 
 export const dynamic = 'force-dynamic'
 
@@ -9,8 +11,7 @@ type Rv = { id: string; baslangic: string; bitis: string; hastaAdi: string; pati
 
 function token(): string {
   try {
-    const raw = localStorage.getItem('auth-token')
-    return raw ? (JSON.parse(raw).access_token || '') : ''
+    return getDoctorAccessToken()
   } catch { return '' }
 }
 
@@ -35,10 +36,8 @@ export default function KlinikRandevularPage() {
 
   async function yukle() {
     const t = token()
-    if (!t) { router.push('/giris'); return }
-    const r = await fetch(`/api/doktor/randevular?baslangic=${encodeURIComponent(aralik.baslangic)}&bitis=${encodeURIComponent(aralik.bitis)}`, {
-      headers: { Authorization: `Bearer ${t}` },
-    })
+    if (!t) { oturumSuresiDoldu(); return }
+    const r = await doktorFetch(`/api/doktor/randevular?baslangic=${encodeURIComponent(aralik.baslangic)}&bitis=${encodeURIComponent(aralik.bitis)}`, {})
     const j = await r.json().catch(() => ({}))
     if (!r.ok) { setHata(j.error || 'Randevular alınamadı.'); return }
     setListe(j.randevular || [])
@@ -52,9 +51,9 @@ export default function KlinikRandevularPage() {
     if (!ad.trim()) { setHata('Hasta adı zorunlu.'); return }
     const bas = new Date(`${gun}T${saat}:00`)
     const bit = new Date(bas.getTime() + 30 * 60000)
-    const r = await fetch('/api/doktor/randevular', {
+    const r = await doktorFetch('/api/doktor/randevular', {
       method: 'POST',
-      headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ hastaAdiSerbest: ad.trim(), baslangic: bas.toISOString(), bitis: bit.toISOString(), tur: 'seans' }),
     })
     const j = await r.json().catch(() => ({}))

@@ -18,6 +18,7 @@ import {
   type NotTetkik,
 } from '@/lib/doktor/notTetkikler'
 import { cinsiyetKodu } from '@/lib/utils/cinsiyet'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 type Baslik = {
   unvan: string
@@ -52,8 +53,8 @@ export default function TetkiklerYazdirPage() {
       try {
         const t = await ensureDoctorAccessToken()
         const [notR, baslikR] = await Promise.all([
-          fetch(`/api/notes/${params.id}`, { headers: { Authorization: `Bearer ${t}` } }),
-          fetch('/api/doktor/recete-baslik', { headers: { Authorization: `Bearer ${t}` } }),
+          doktorFetch(`/api/notes/${params.id}`, {}),
+          doktorFetch('/api/doktor/recete-baslik', {}),
         ])
         const j = await notR.json()
         if (!notR.ok) throw new Error(j.error || 'Not alınamadı')

@@ -13,6 +13,7 @@ import { CHROME_FONT, CHROME_RENK } from '@/lib/doktor/chromeTheme'
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth'
 import { cagrilabilirCumlesi, SAYIM_KURALI, sayacCumlesi } from '@/lib/geriCagirma/metin'
 import type { GeriCagirmaOzeti } from '@/lib/geriCagirma/tipler'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 const R = CHROME_RENK
 export const GERI_CAGIRMA_YOLU = '/doktor-tools/geri-cagirma'
@@ -62,7 +63,7 @@ export default function GeriCagirmaKarti() {
       try {
         const t = await ensureDoctorAccessToken()
         if (!t) return null
-        const r = await fetch(yol, { method, headers: { Authorization: `Bearer ${t}` }, cache: 'no-store' })
+        const r = await doktorFetch(yol, { method, cache: 'no-store' })
         return r.ok ? ((await r.json()) as GeriCagirmaOzeti) : null
       } catch { return null }
     }

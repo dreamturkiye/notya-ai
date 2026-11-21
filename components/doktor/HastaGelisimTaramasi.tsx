@@ -10,6 +10,7 @@ import { GELISIM_ALAN_BASLIK, GIDR_3_YAS_SONRASI_REHBERLIK, type GelisimYasBasam
 import MuayeneFormunaDon from '@/components/doktor/MuayeneFormunaDon';
 import { eklenenNotId } from '@/lib/doktor/muayeneFormuYolu';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 interface GecmisTarama { id: string; ay_yas: number; yas_basamak_etiket: string; ai_yorum: string | null; sevk_onerisi: boolean; created_at: string }
 
@@ -29,7 +30,7 @@ export default function HastaGelisimTaramasi({ patientId }: { patientId: string 
     setYukleniyor(true);
     try {
       const t = await ensureDoctorAccessToken();
-      const r = await fetch(`/api/doktor/gelisim-taramasi?patientId=${patientId}`, { headers: { Authorization: `Bearer ${t}` } });
+      const r = await doktorFetch(`/api/doktor/gelisim-taramasi?patientId=${patientId}`, {});
       const d = await r.json();
       setBasamak(d.basamak || null);
       setMevcutYasAy(d.mevcutYasAy ?? null);
@@ -51,8 +52,8 @@ export default function HastaGelisimTaramasi({ patientId }: { patientId: string 
     try {
       const t = await ensureDoctorAccessToken();
       const yanitDizisi = basamak.maddeler.map((m) => ({ alan: m.alan, madde: m.madde, yapiyor: !!yanitlar[`${m.alan}::${m.madde}`] }));
-      const r = await fetch('/api/doktor/gelisim-taramasi', {
-        method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
+      const r = await doktorFetch('/api/doktor/gelisim-taramasi', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ patientId, yanitlar: yanitDizisi }),
       });
       const d = await r.json();
@@ -71,8 +72,8 @@ export default function HastaGelisimTaramasi({ patientId }: { patientId: string 
     try {
       const t = await ensureDoctorAccessToken();
       const yanitDizisi = basamak.maddeler.map((m) => ({ alan: m.alan, madde: m.madde, yapiyor: !!yanitlar[`${m.alan}::${m.madde}`] }));
-      const r = await fetch('/api/doktor/gelisim-taramasi', {
-        method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
+      const r = await doktorFetch('/api/doktor/gelisim-taramasi', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ patientId, yanitlar: yanitDizisi, muayeneFormunaEkle: true }),
       });
       const d = await r.json();

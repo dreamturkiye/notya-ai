@@ -27,7 +27,8 @@ describe('istemci katmanı', () => {
       assert.ok(!/localStorage|sessionStorage|indexedDB/.test(s), `${f} tarayıcı depolaması kullanıyor (klinik görüntü/not asla)`)
     }
     assert.match(oku('api.ts'), /ensureDoctorAccessToken/)
-    assert.match(oku('api.ts'), /Authorization: `Bearer \$\{t\}`/)
+    // NOTYA-OTURUM-01: the header and the 401 refresh/retry come from the shared doctor request path.
+    assert.match(oku('api.ts'), /doktorFetch\(/)
   })
   it('branş alanı sızmaz: ortak sekmede pediatri/çocuk cerrahisi sözcüğü sabit yazılı değil', () => {
     for (const f of dosyalar) {

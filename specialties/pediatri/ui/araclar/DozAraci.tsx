@@ -10,6 +10,7 @@ import { dozHesapla, dozOzetMetni, konsantrasyonCoz, fmt, type DozModu } from '.
 import { kiloCoz, sayiCoz, tarihGoster } from '../../engines/girdi';
 import { pediStil, Alan, Segment, Katlanir, TaslakNotu, KopyalaButonu, MuayeneFormunaEkle, PediHastaSecici } from './PediAracKabugu';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 const { kutu, etiket, kucuk, input, uyari, kirmizi } = pediStil;
 const SIKLIK: Array<[number, string]> = [[1, '1×'], [2, '2×'], [3, '3×'], [4, '4×'], [6, '6×']];
@@ -35,7 +36,7 @@ export default function DozAraci() {
     (async () => {
       try {
         const t = await getAccessTokenAsync();
-        const r = await fetch(`/api/doktor/hastalar/${encodeURIComponent(hastaId)}/buyume-egrileri`, { headers: { Authorization: `Bearer ${t}` }, cache: 'no-store' });
+        const r = await doktorFetch(`/api/doktor/hastalar/${encodeURIComponent(hastaId)}/buyume-egrileri`, { cache: 'no-store' });
         const j = await r.json().catch(() => ({}));
         const n = (j?.parametreler?.kilo?.noktalar || []) as Array<{ deger: number; tarih: string }>;
         const son = n[n.length - 1];

@@ -7,6 +7,7 @@ import { MasaSahne } from '@/components/klinik/katman/KlinikKabuk'
 import { Button } from '@/components/doktor-landing/button'
 import { varsayilanHafta, varsayilanRezervasyon } from '@/lib/klinik/katman/kurulum'
 import { KLINIK_MODULLERI, KLINIK_ROLLERI, varsayilanYetkiler, type YetkiSatiri } from '@/lib/klinik/katman/yetki'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 type Klinik = {
   id: string
@@ -42,9 +43,9 @@ const ROL_AD: Record<string, string> = { sekreter: 'Sekreter', asistan: 'Asistan
 
 async function iste(yol: string, method: string, govde?: unknown) {
   const token = await ensureDoctorAccessToken()
-  const res = await fetch(yol, {
+  const res = await doktorFetch(yol, {
     method,
-    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json' },
     body: govde ? JSON.stringify(govde) : undefined,
   })
   const json = await res.json().catch(() => ({}))
@@ -80,7 +81,7 @@ export default function KlinikAyarlar() {
     const token = await ensureDoctorAccessToken()
     if (!token) { setOturum('yok'); return }
     setOturum('var')
-    const res = await fetch('/api/klinik/kurulum', { headers: { Authorization: `Bearer ${token}` } })
+    const res = await doktorFetch('/api/klinik/kurulum', {})
     const json = await res.json()
     if (!res.ok) { setHata(json.error || 'Okunamadı.'); return }
     if (json.klinik && !json.klinik.calisma) json.klinik.calisma = varsayilanHafta()

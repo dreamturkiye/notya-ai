@@ -23,6 +23,7 @@ import {
 } from '@/lib/asi/karneOkuma';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 import { TrTarihAlan } from '@/specialties/kadin-dogum/ui/TrTarihAlan';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 type TaslakSatir = KarneSatiri & { eslesme: KarneEslesme; hekimDuzeltti: boolean };
 
@@ -86,14 +87,14 @@ export default function AsiKarnesiOkuma({ patientId, onKaydedildi }: { patientId
       fd.append('file', dosya);
       fd.append('patientId', patientId);
       fd.append('category', KARNE_BELGE_KATEGORISI);
-      const y = await fetch('/api/doktor/documents', { method: 'POST', headers: { Authorization: `Bearer ${t}` }, body: fd });
+      const y = await doktorFetch('/api/doktor/documents', { method: 'POST', body: fd });
       const yj = await y.json().catch(() => ({}));
       if (!y.ok || !yj.document?.id) { setHata(yj.error || 'Karne yüklenemedi.'); setAsama('bos'); return; }
 
       setAsama('okunuyor');
-      const o = await fetch('/api/doktor/asilar/karne', {
+      const o = await doktorFetch('/api/doktor/asilar/karne', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ adim: 'oku', belgeId: yj.document.id }),
       });
       const oj = (await o.json().catch(() => ({}))) as Partial<OkumaYaniti> & { error?: string };
@@ -132,9 +133,9 @@ export default function AsiKarnesiOkuma({ patientId, onKaydedildi }: { patientId
     try {
       const t = await ensureDoctorAccessToken();
       if (!t) { setHata('Oturum bulunamadı.'); setAsama('onay'); return; }
-      const r = await fetch('/api/doktor/asilar/karne', {
+      const r = await doktorFetch('/api/doktor/asilar/karne', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           adim: 'onayla',
           belgeId: okuma.belgeId,

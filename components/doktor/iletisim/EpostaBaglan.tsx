@@ -11,6 +11,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { CHROME_FONT, CHROME_RENK } from '@/lib/doktor/chromeTheme';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 type Saglayici = 'google' | 'microsoft';
 type Baglanti = { saglayici: Saglayici; adres: string; durum: 'bagli' | 'yenilenmeli' };
@@ -70,7 +71,7 @@ const kucuk: React.CSSProperties = {
 async function istek(yol: string, init?: RequestInit): Promise<Response | null> {
   const jeton = await ensureDoctorAccessToken();
   if (!jeton) return null;
-  return fetch(yol, { ...init, headers: { ...(init?.headers ?? {}), Authorization: `Bearer ${jeton}` }, cache: 'no-store' });
+  return doktorFetch(yol, { ...init, headers: { ...(init?.headers ?? {}) }, cache: 'no-store' });
 }
 
 export default function EpostaBaglan() {

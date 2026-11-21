@@ -13,6 +13,7 @@ import {
   type HastaOzetKayit,
 } from '@/lib/doktor/hastaOzetKayit'
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 // NOTYA-YENI-GORUNUM-03 (Kaan, 2026-09-24): this whole card (both demographic and health-history
 // panels) was still dark-navy with white-based translucent fills -- recolored to the cream/pine
@@ -131,18 +132,16 @@ export default function HastaOzetDuzenlenebilir({ patientId, patient, dogumGoste
               surekli_ilaclar: ilac,
               sigara_alkol: sigara,
             }
-      const res = await fetch(`/api/doktor/hastalar/${patientId}`, {
+      const res = await doktorFetch(`/api/doktor/hastalar/${patientId}`, {
         method: 'PUT',
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(govde),
       })
       if (!res.ok) {
         const j = await res.json().catch(() => ({}))
         throw new Error((j as { error?: string }).error || 'Kayıt başarısız')
       }
-      const get = await fetch(`/api/doktor/hastalar/${patientId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+      const get = await doktorFetch(`/api/doktor/hastalar/${patientId}`, {})
       const data = await get.json()
       if (!get.ok) throw new Error(data.error || 'Güncel kayıt okunamadı')
       const p = data.patient as HastaOzetKayit

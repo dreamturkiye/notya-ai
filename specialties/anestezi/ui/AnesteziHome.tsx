@@ -13,6 +13,7 @@ import { ASA_MADDELER, type AsaKod, type AsaSinif } from '../engines/asa'
 import { HAVA_YOLU_BAYRAKLAR, type HavaYoluBayrak } from '../engines/havaYolu'
 import { AGRI_BAYRAKLAR, type AgriBayrak } from '../engines/agri'
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 type Veri = {
   serit: AnesteziSerit
@@ -76,7 +77,7 @@ export default function AnesteziHome({ patientId }: { patientId: string }) {
 
   const api = useCallback(async (body: Record<string, unknown>) => {
     const token = await getAccessTokenAsync()
-    const r = await fetch('/api/doktor/anestezi', { method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ patientId, ...body }) })
+    const r = await doktorFetch('/api/doktor/anestezi', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ patientId, ...body }) })
     const j = await r.json().catch(() => ({}))
     if (!r.ok) throw new Error(j.error || 'Hata')
     return j as Record<string, unknown>
@@ -84,7 +85,7 @@ export default function AnesteziHome({ patientId }: { patientId: string }) {
 
   const yukle = useCallback(async () => {
     const token = await getAccessTokenAsync()
-    const r = await fetch(`/api/doktor/anestezi?patientId=${encodeURIComponent(patientId)}`, { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' })
+    const r = await doktorFetch(`/api/doktor/anestezi?patientId=${encodeURIComponent(patientId)}`, { cache: 'no-store' })
     if (r.ok) {
       const j = await r.json()
       setV(j)

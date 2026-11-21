@@ -3,6 +3,7 @@ import React, { useMemo, useState } from 'react'
 import { getAccessTokenAsync } from '@/lib/doktor/toolsUi'
 import { enfStil, EnfHastaSecici, KopyalaButonu, Istatistik, TaslakNotu, useUrlHasta } from './EnfAracKabugu'
 import { viralPlanla, VIRAL_TUR_ETIKET, type ViralTur } from '../../engines/viralIzlem'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 const TURLER = Object.keys(VIRAL_TUR_ETIKET) as ViralTur[]
 
@@ -23,9 +24,9 @@ export default function EnfViralIzlemAraci() {
     if (!plan.tamamMi) { setHata(plan.ozet); return }
     try {
       const t = await getAccessTokenAsync()
-      const r = await fetch('/api/doktor/enfeksiyon-hastaliklari', {
+      const r = await doktorFetch('/api/doktor/enfeksiyon-hastaliklari', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ patientId: hastaId, adim: 'viral', tur, sonTarih, hekimKilit: true }),
       })
       const j = await r.json().catch(() => ({}))

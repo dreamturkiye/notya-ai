@@ -6,6 +6,7 @@ import {
   biyolojikSutKontrol, BIYO_ENDIKASYON_ADI, type BiyolojikEndikasyon,
 } from '../../engines/biyolojikSut'
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 const ENDIKASYONLAR = Object.keys(BIYO_ENDIKASYON_ADI) as BiyolojikEndikasyon[]
 
@@ -34,9 +35,9 @@ export default function RomaBiyolojikSutAraci() {
     if (sonuc.dozIceriyorMu) { setHata('Doz / infüzyon HIS ifadesi kaldırılsın.'); return }
     try {
       const t = await getAccessTokenAsync()
-      const r = await fetch('/api/doktor/romatoloji', {
+      const r = await doktorFetch('/api/doktor/romatoloji', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           patientId: hastaId, adim: 'sut', endikasyon, etkenSinif, oncekiCsDmard,
           tbTarama, hbvTarama, hcvTarama, akcigerGrafisi, canliAsiBilgi, hekimKilit,

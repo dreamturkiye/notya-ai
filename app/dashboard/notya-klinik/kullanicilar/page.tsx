@@ -2,6 +2,8 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import KlinikNav from '@/components/klinik/KlinikNav'
+import { doktorFetch, oturumSuresiDoldu } from '@/lib/doktor/oturumFetch'
+import { getDoctorAccessToken } from '@/lib/doktor/clientAuth'
 
 // NOTYA-KLINIK-ISIMLENDIRME-01 (Kaan 2026-10-18): Özel Branşlar (10 modül) ve diğer branşlar
 // aynı dropdown'da ama artık ayrı optgroup altında — tek, ayrışmamış düz liste değil. Değerler
@@ -31,8 +33,8 @@ export default function KullanicilarPage() {
 
   useEffect(() => {
     let t = ''
-    try { const raw = localStorage.getItem('auth-token'); if (raw) t = JSON.parse(raw).access_token || '' } catch {}
-    if (!t) { router.push('/giris'); return }
+    t = getDoctorAccessToken()
+    if (!t) { oturumSuresiDoldu(); return }
     setToken(t)
     fetchData(t)
   }, [router])
@@ -41,8 +43,8 @@ export default function KullanicilarPage() {
     setLoading(true)
     try {
       const [meRes, membersRes] = await Promise.all([
-        fetch('/api/klinik/me', { headers: { Authorization: `Bearer ${t}` } }),
-        fetch('/api/klinik/members', { headers: { Authorization: `Bearer ${t}` } })
+        doktorFetch('/api/klinik/me', {}),
+        doktorFetch('/api/klinik/members', {})
       ])
       const me = await meRes.json()
       const mem = await membersRes.json()
@@ -56,9 +58,9 @@ export default function KullanicilarPage() {
     if (!email) return
     setInviting(true); setInviteMsg(''); setInviteToken('')
     try {
-      const res = await fetch('/api/klinik/members', {
+      const res = await doktorFetch('/api/klinik/members', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, specialty, role })
       })
       const data = await res.json()
@@ -73,9 +75,9 @@ export default function KullanicilarPage() {
 
   async function handleRemove(userId: string) {
     if (!confirm('Bu kullanıcıyı kaldıracaksınız. Emin misiniz?')) return
-    await fetch('/api/klinik/members', {
+    await doktorFetch('/api/klinik/members', {
       method: 'DELETE',
-      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ user_id: userId })
     })
     fetchData(token)

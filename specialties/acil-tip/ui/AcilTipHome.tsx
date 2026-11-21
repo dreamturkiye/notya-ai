@@ -13,6 +13,7 @@ import { ESI_KAYNAKLAR, type EsiKaynak, type EsiSeviye } from '../engines/esi'
 import { KRITIK_YOLLAR, KRITIK_MADDELER, type KritikYol, type KritikMadde } from '../engines/kritikYol'
 import { SEVK_HEDEFLER, SEVK_MADDELER, type SevkHedef, type SevkMadde } from '../engines/sevk'
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 type Veri = {
   serit: AtSerit
@@ -73,7 +74,7 @@ export default function AcilTipHome({ patientId }: { patientId: string }) {
 
   const api = useCallback(async (body: Record<string, unknown>) => {
     const token = await getAccessTokenAsync()
-    const r = await fetch('/api/doktor/acil-tip', { method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ patientId, ...body }) })
+    const r = await doktorFetch('/api/doktor/acil-tip', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ patientId, ...body }) })
     const j = await r.json().catch(() => ({}))
     if (!r.ok) throw new Error(j.error || 'Hata')
     return j as Record<string, unknown>
@@ -81,7 +82,7 @@ export default function AcilTipHome({ patientId }: { patientId: string }) {
 
   const yukle = useCallback(async () => {
     const token = await getAccessTokenAsync()
-    const r = await fetch(`/api/doktor/acil-tip?patientId=${encodeURIComponent(patientId)}`, { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' })
+    const r = await doktorFetch(`/api/doktor/acil-tip?patientId=${encodeURIComponent(patientId)}`, { cache: 'no-store' })
     if (r.ok) {
       const j = await r.json()
       setV(j)

@@ -3,6 +3,7 @@ import React, { useMemo, useState } from 'react'
 import { getAccessTokenAsync } from '@/lib/doktor/toolsUi'
 import { endoStil, EndoHastaSecici, KopyalaButonu, Istatistik, TaslakNotu, useUrlHasta } from './EndoAracKabugu'
 import { labSkorla, LAB_TUR_ETIKET, type LabTur } from '../../engines/labIzlem'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 const TURLER: LabTur[] = ['hba1c', 'tsh', 'ft4']
 
@@ -23,9 +24,9 @@ export default function EndoLabIzlemAraci() {
     if (!sonuc.tamamMi) { setHata(sonuc.ozet); return }
     try {
       const t = await getAccessTokenAsync()
-      const r = await fetch('/api/doktor/endokrinoloji', {
+      const r = await doktorFetch('/api/doktor/endokrinoloji', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ patientId: hastaId, adim: 'lab', tur, deger: Number(deger), hekimKilit: true }),
       })
       const j = await r.json().catch(() => ({}))

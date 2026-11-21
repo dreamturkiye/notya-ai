@@ -4,6 +4,7 @@ import { getAccessTokenAsync } from '@/lib/doktor/toolsUi'
 import { ftrStil, FtrHastaSecici, Alan, Sayi, Istatistik, TaslakNotu, KopyalaButonu, MuayeneFormunaEkle, useUrlHasta } from './FtrAracKabugu'
 import { egzersizRecetesi, EGZERSIZ_ORNEKLERI } from '../../engines/egzersiz'
 import { REF_ACIKLAMA } from '../../engines/fizik-tedavi'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 type Satir = { ad: string; set: string; tekrar: string; not: string }
 
@@ -26,9 +27,9 @@ export default function FtrEgzersizAraci() {
     if (!sonuc.tamamMi) { setHata(sonuc.ozet); return }
     try {
       const t = await getAccessTokenAsync()
-      const r = await fetch('/api/doktor/fizik-tedavi', {
+      const r = await doktorFetch('/api/doktor/fizik-tedavi', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           patientId: hasta, adim: 'egzersiz', hekimKilit: true,
           maddeler: satirlar.map((s) => ({

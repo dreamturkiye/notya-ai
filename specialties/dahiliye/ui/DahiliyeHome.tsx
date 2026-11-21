@@ -11,6 +11,7 @@ import { gosterimSayi, type VizitSeridi } from '../engines/serit';
 import MuayeneFormunaDon from '@/components/doktor/MuayeneFormunaDon';
 import { eklenenNotId } from '@/lib/doktor/muayeneFormuYolu';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 type L = { kanonik_deger: number | null; numune_tarihi: string | null } | null;
 type Dip = { ref: string; not: string };
@@ -46,8 +47,8 @@ export default function DahiliyeHome({ patientId }: { patientId: string }) {
   const [eklenenNot, setEklenenNot] = useState<string | null>(null); // NOTYA-MUAYENEYE-DON-01
   const [f, setF] = useState<Record<string, unknown>>({});
   const s = (k: string) => (f[k] as string) ?? ''; const b = (k: string) => !!f[k]; const set = (k: string, x: unknown) => setF((p) => ({ ...p, [k]: x }));
-  const api = useCallback(async (body: Record<string, unknown>) => { const token = await getAccessTokenAsync(); const r = await fetch('/api/doktor/dahiliye', { method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ patientId, ...body }) }); const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error || 'Hata'); return j; }, [patientId]);
-  const yukle = useCallback(async () => { const token = await getAccessTokenAsync(); const r = await fetch(`/api/doktor/dahiliye?patientId=${encodeURIComponent(patientId)}`, { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' }); if (r.ok) setV(await r.json()); }, [patientId]);
+  const api = useCallback(async (body: Record<string, unknown>) => { const token = await getAccessTokenAsync(); const r = await doktorFetch('/api/doktor/dahiliye', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ patientId, ...body }) }); const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error || 'Hata'); return j; }, [patientId]);
+  const yukle = useCallback(async () => { const token = await getAccessTokenAsync(); const r = await doktorFetch(`/api/doktor/dahiliye?patientId=${encodeURIComponent(patientId)}`, { cache: 'no-store' }); if (r.ok) setV(await r.json()); }, [patientId]);
   useEffect(() => { yukle(); }, [yukle]);
   // NOTYA-MUAYENEYE-DON-01: nota yazan adımlar yanıtta notId döndürüyor; her çağrıda sıfırlanır,
   // yalnız gerçekten nota eklenmişse "Muayene Formuna Dön" bağlantısı çıkar.

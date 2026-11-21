@@ -6,17 +6,18 @@ import { TrackingView } from '../../../_components/TrackingView'
 import { usePortalLive } from '../../../_components/PortalLiveProvider'
 import { SoftPanel } from '../../../_components/ui'
 import { portalModulAktif } from '@/lib/portal/moduller'
+import { portalFetch } from '@/lib/portal/portalFetch'
 
 export default function HastaTrackingPage() {
   const { data, token, basePath } = usePortalLive()
   // NOTYA-DAH-WOW W2.7: iç hastalıkları takibi olan hastaya muayene öncesi anket kısayolu (yalnız PIN sonrası API ile).
   const [anket, setAnket] = useState(false)
   const dahiliyeModulu = portalModulAktif(data, 'dahiliye')
-  useEffect(() => { if (!dahiliyeModulu) return; fetch(`/api/portal/hasta/${encodeURIComponent(token)}/dahiliye-anket`, { credentials: 'include' }).then((r) => (r.ok ? r.json() : null)).then((j) => setAnket(!!j?.uygun)).catch(() => undefined) }, [token, dahiliyeModulu])
+  useEffect(() => { if (!dahiliyeModulu) return; portalFetch(`/api/portal/hasta/${encodeURIComponent(token)}/dahiliye-anket`, { credentials: 'include' }).then((r) => (r.ok ? r.json() : null)).then((j) => setAnket(!!j?.uygun)).catch(() => undefined) }, [token, dahiliyeModulu])
   // KD-TARAMA-01: Kadın Hastalıkları ve Doğum hekiminin açtığı PMS/PMDD semptom günlüğü (uygunluğu API karar verir: KD + açık günlük).
   const [gunluk, setGunluk] = useState(false)
   const jineModulu = portalModulAktif(data, 'jinekoloji')
-  useEffect(() => { if (!jineModulu) return; fetch(`/api/portal/hasta/${encodeURIComponent(token)}/kd-gunluk`, { credentials: 'include' }).then((r) => (r.ok ? r.json() : null)).then((j) => setGunluk(!!j?.uygun)).catch(() => undefined) }, [token, jineModulu])
+  useEffect(() => { if (!jineModulu) return; portalFetch(`/api/portal/hasta/${encodeURIComponent(token)}/kd-gunluk`, { credentials: 'include' }).then((r) => (r.ok ? r.json() : null)).then((j) => setGunluk(!!j?.uygun)).catch(() => undefined) }, [token, jineModulu])
   return (
     <>
       {/* MOBILE-REVIEW: .sg-fade parent gives the panel the portal's side inset; sg-hero-cta is a white hero pill (invisible on a white panel) */}

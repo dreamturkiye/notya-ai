@@ -12,6 +12,7 @@ import { useState } from 'react';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 import GorselYakalaPaneli, { type GorselYakalamaSonucu } from '@/components/doktor/gorsel/GorselYakalaPaneli';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 const PLASTIK_GORUNUMLER = [
   { value: 'frontal', label: 'Frontal' },
@@ -70,9 +71,9 @@ export default function PlastikNotGorselYakala({ patientId, visitId }: { patient
       if (!t) { setHata('Oturum bulunamadı.'); return; }
       const deid = await dosyayiBase64Yap(bekleyenGoruntu.dosya_url);
       if (!deid) { setHata('Görüntü okunamadı.'); return; }
-      const r = await fetch('/api/doktor/plastik-cerrahi', {
+      const r = await doktorFetch('/api/doktor/plastik-cerrahi', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           adim: 'goruntu_okuma', eylem: 'asistana_raporla', patientId,
           gorunum, procedureKategori: procedureKategori || null,
@@ -92,9 +93,9 @@ export default function PlastikNotGorselYakala({ patientId, visitId }: { patient
     if (!taslak?.visionReadId) return;
     const t = await ensureDoctorAccessToken();
     if (!t) return;
-    const r = await fetch('/api/doktor/plastik-cerrahi', {
+    const r = await doktorFetch('/api/doktor/plastik-cerrahi', {
       method: 'POST',
-      headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ adim: 'goruntu_okuma', eylem: 'onayla', patientId, id: taslak.visionReadId }),
     });
     setTaslak((s) => (s ? { ...s, onayAsamasi: r.ok ? 'onaylandi' : 'hata' } : s));

@@ -26,6 +26,7 @@ import { motorAfisiTemizle } from '@/core/belgeler/yazar'
 import SeansKapilari from '@/components/doktor/seans/SeansKapilari'
 import YuklenenDosyalar from '@/components/doktor/YuklenenDosyalar'
 import { YUKLENEN_DOSYALAR_BASLIGI, yazdirSatirlari, type YuklenenDosya } from '@/lib/doktor/muayeneEk/yuklenenDosyalar'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 interface NotVeri {
   not: {
@@ -70,7 +71,7 @@ export default function NotYazdir() {
     setMedulaDurum('yukleniyor');
     try {
       const t = await ensureDoctorAccessToken();
-      const r = await fetch(`/api/doktor/medula/recete?noteId=${params.id}`, { headers: { Authorization: `Bearer ${t}` } });
+      const r = await doktorFetch(`/api/doktor/medula/recete?noteId=${params.id}`, {});
       const j = await r.json();
       if (!r.ok || !j.metin) throw new Error(j.error || 'Reçete hazırlanamadı');
       await navigator.clipboard.writeText(j.metin);
@@ -84,7 +85,7 @@ export default function NotYazdir() {
     (async () => {
       try {
         const t = await ensureDoctorAccessToken();
-        const r = await fetch(`/api/notes/${params.id}`, { headers: { Authorization: `Bearer ${t}` } });
+        const r = await doktorFetch(`/api/notes/${params.id}`, {});
         const d = await r.json();
         if (!r.ok) throw new Error(d.error || 'Not yüklenemedi.');
         setVeri(d);

@@ -3,6 +3,7 @@ import React, { useCallback, useEffect, useState } from 'react'
 import { getAccessTokenAsync } from '@/lib/doktor/toolsUi'
 import { plastikStil, Istatistik, TaslakNotu, Rozet } from './PlastikAracKabugu'
 import { PLASTIK_BAYRAK_AD, plastikKohortFiltre, type PlastikKohortBayrak, type PlastikKohortSatir } from '../../engines/kohort'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 const S = plastikStil
 const BAYRAKLAR = Object.keys(PLASTIK_BAYRAK_AD) as PlastikKohortBayrak[]
@@ -20,7 +21,7 @@ export default function PlastikKohortAraci() {
     setHata('')
     try {
       const t = await getAccessTokenAsync()
-      const r = await fetch('/api/doktor/plastik-cerrahi/kohort', { headers: { Authorization: `Bearer ${t}` }, cache: 'no-store' })
+      const r = await doktorFetch('/api/doktor/plastik-cerrahi/kohort', { cache: 'no-store' })
       const j = await r.json().catch(() => ({}))
       if (!r.ok) { setHata(j.error || 'Kohort yüklenemedi'); setSatirlar([]); return }
       setSatirlar(j.satirlar || [])
@@ -36,9 +37,9 @@ export default function PlastikKohortAraci() {
     setDurum(''); setHata(''); setGonderiliyor(true)
     try {
       const t = await getAccessTokenAsync()
-      const r = await fetch('/api/doktor/plastik-cerrahi/kohort', {
+      const r = await doktorFetch('/api/doktor/plastik-cerrahi/kohort', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ patientIds: secili }),
       })
       const j = await r.json().catch(() => ({}))

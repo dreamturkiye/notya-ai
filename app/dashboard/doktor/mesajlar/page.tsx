@@ -15,6 +15,7 @@ import { EKOKARDIYOGRAFI, ORTAK_BELGE_TURLERI } from '@/lib/doktor/belgeTurleri'
 import { belgeEkoMi } from '@/lib/doktor/belgeTur'
 import { hastaDosyaHref } from '@/lib/doktor/geriNavigasyon'
 import { MesajSayfaBasligi, MesajKartlari, MesajListeBos, MesajKonuListesi, MesajPanelBos, MesajPanelBasligi, MesajBalonlari, MesajBalonu, MesajBalonEylemi, MesajEkListesi, MesajEkKutusu, MesajYazmaKutusu, mesajEkDugmeStili } from '@/components/doktor/MesajlarGorunumu'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 type Ek = {
   id: string
@@ -72,12 +73,12 @@ function DoktorMesajlarIcerik() {
   const authHeaders = useCallback(async () => {
     const t = await ensureDoctorAccessToken()
     if (!t) throw new Error('Oturum gerekli')
-    return { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' }
+    return { 'Content-Type': 'application/json' }
   }, [])
 
   const loadList = useCallback(async () => {
     const headers = await authHeaders()
-    const res = await fetch('/api/doktor/mesajlar', { headers })
+    const res = await doktorFetch('/api/doktor/mesajlar', { headers })
     const json = await res.json()
     if (!res.ok) throw new Error(json?.error || 'Yüklenemedi')
     setThreads(json.threads || [])
@@ -89,7 +90,7 @@ function DoktorMesajlarIcerik() {
       setActiveId(id)
       setError(null)
       const headers = await authHeaders()
-      const res = await fetch(`/api/doktor/mesajlar/${encodeURIComponent(id)}`, { headers })
+      const res = await doktorFetch(`/api/doktor/mesajlar/${encodeURIComponent(id)}`, { headers })
       const json = await res.json()
       if (!res.ok) throw new Error(json?.error || 'Konu açılamadı')
       setThreadMeta({ konu: json.thread.konu, hastaAdi: json.thread.hastaAdi })
@@ -124,7 +125,7 @@ function DoktorMesajlarIcerik() {
     setError(null)
     try {
       const headers = await authHeaders()
-      const res = await fetch(`/api/doktor/mesajlar/${encodeURIComponent(activeId)}`, {
+      const res = await doktorFetch(`/api/doktor/mesajlar/${encodeURIComponent(activeId)}`, {
         method: 'POST',
         headers,
         body: JSON.stringify({ metin: reply.trim() }),
@@ -148,7 +149,7 @@ function DoktorMesajlarIcerik() {
     setError(null)
     try {
       const headers = await authHeaders()
-      const res = await fetch(`/api/doktor/mesajlar/${encodeURIComponent(activeId)}`, {
+      const res = await doktorFetch(`/api/doktor/mesajlar/${encodeURIComponent(activeId)}`, {
         method: 'DELETE',
         headers,
         body: JSON.stringify({ mesajId }),
@@ -177,7 +178,7 @@ function DoktorMesajlarIcerik() {
     setError(null)
     try {
       const headers = await authHeaders()
-      const res = await fetch(`/api/doktor/mesajlar/ek/${encodeURIComponent(kaydetEk.id)}`, {
+      const res = await doktorFetch(`/api/doktor/mesajlar/ek/${encodeURIComponent(kaydetEk.id)}`, {
         method: 'POST',
         headers,
         body: JSON.stringify({ action: 'belgeye-kaydet', category: kategori }),

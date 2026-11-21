@@ -4,6 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useState, type Dispa
 import type { PortalBundle } from '@/lib/portal/types'
 import { emptyPortalBundle } from '@/lib/portal/emptyBundle'
 import { PinGate } from './PinGate'
+import { PORTAL_PIN_GEREKLI_OLAYI } from '@/lib/portal/portalFetch'
 import { turkceHataMesaji } from '@/lib/turkce/dogrulamaMesaji'
 
 type LiveState = {
@@ -133,6 +134,16 @@ export function PortalLiveProvider({
       cancelled = true
     }
   }, [checkUnlock, loadBundle])
+
+  // NOTYA-OTURUM-01: the unlock lapsed on any portal screen (portalFetch) → back to the PIN screen, never a dead end.
+  useEffect(() => {
+    const kilitlendi = () => {
+      setData(emptyPortalBundle())
+      setUnlockPhase((p) => (p === 'legacy' ? p : 'need_pin'))
+    }
+    window.addEventListener(PORTAL_PIN_GEREKLI_OLAYI, kilitlendi)
+    return () => window.removeEventListener(PORTAL_PIN_GEREKLI_OLAYI, kilitlendi)
+  }, [])
 
   const onUnlocked = () => {
     setUnlockPhase('unlocked')

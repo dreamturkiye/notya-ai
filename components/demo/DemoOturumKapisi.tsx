@@ -8,6 +8,7 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 export const DEMO_GIRIS = '/giris'
 
@@ -24,7 +25,7 @@ export function DemoOturumKapisi({ children }: { children: ReactNode }) {
         return
       }
       try {
-        const res = await fetch('/api/users/me', { headers: { Authorization: 'Bearer ' + token } })
+        const res = await doktorFetch('/api/users/me', {})
         if (iptal) return
         if (!res.ok) {
           router.replace(DEMO_GIRIS)

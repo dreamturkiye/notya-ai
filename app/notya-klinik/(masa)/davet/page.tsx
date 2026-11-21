@@ -6,6 +6,7 @@ import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth'
 import { NOTYA_KLINIK_AD } from '@/lib/specialties/klinikDikey'
 import { MasaSahne } from '@/components/klinik/katman/KlinikKabuk'
 import { Button } from '@/components/doktor-landing/button'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 function DavetFormu() {
   const token = useSearchParams().get('t') || ''
@@ -14,9 +15,9 @@ function DavetFormu() {
   async function kabul() {
     const erisim = await ensureDoctorAccessToken()
     if (!erisim) { setMesaj('Önce hekim olarak giriş yapın.'); return }
-    const res = await fetch('/api/klinik/davet', {
+    const res = await doktorFetch('/api/klinik/davet', {
       method: 'POST',
-      headers: { Authorization: `Bearer ${erisim}`, 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ token }),
     })
     const json = await res.json()

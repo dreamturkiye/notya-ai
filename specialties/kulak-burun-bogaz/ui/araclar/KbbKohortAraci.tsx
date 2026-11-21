@@ -11,6 +11,7 @@ import { getAccessTokenAsync } from '@/lib/doktor/toolsUi';
 import { kbbStil, Istatistik, TaslakNotu, Rozet } from './KbbAracKabugu';
 import { KBB_BAYRAK_AD, kbbKohortFiltre, type KbbKohortBayrak, type KbbKohortSatir } from '../../engines/kohort';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 const S = kbbStil;
 const BAYRAKLAR = Object.keys(KBB_BAYRAK_AD) as KbbKohortBayrak[];
@@ -28,7 +29,7 @@ export default function KbbKohortAraci() {
     setHata('');
     try {
       const t = await getAccessTokenAsync();
-      const r = await fetch('/api/doktor/kulak-burun-bogaz/kohort', { headers: { Authorization: `Bearer ${t}` }, cache: 'no-store' });
+      const r = await doktorFetch('/api/doktor/kulak-burun-bogaz/kohort', { cache: 'no-store' });
       const j = await r.json().catch(() => ({}));
       if (!r.ok) { setHata(j.error || 'Kohort yüklenemedi'); setSatirlar([]); return; }
       setSatirlar(j.satirlar || []);
@@ -44,9 +45,9 @@ export default function KbbKohortAraci() {
     setDurum(''); setHata(''); setGonderiliyor(true);
     try {
       const t = await getAccessTokenAsync();
-      const r = await fetch('/api/doktor/kulak-burun-bogaz/kohort', {
+      const r = await doktorFetch('/api/doktor/kulak-burun-bogaz/kohort', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ patientIds: secili }),
       });
       const j = await r.json().catch(() => ({}));

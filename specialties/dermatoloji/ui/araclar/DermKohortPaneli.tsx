@@ -11,6 +11,7 @@ import { DERM_BAYRAK_AD, dermHatirlatmaMesaji, type DermKohortBayrak, type DermK
 import { dermStil, Istatistik, Rozet } from './DermAracKabugu';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 import GonderDugmesi from '@/components/doktor/iletisim/GonderDugmesi';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 const BAYRAKLAR = Object.keys(DERM_BAYRAK_AD) as DermKohortBayrak[];
 const muted: React.CSSProperties = { fontSize: 14, color: CHROME_RENK.muted, lineHeight: 1.5 };
@@ -30,7 +31,7 @@ export default function DermKohortPaneli() {
     setHata('');
     try {
       const t = await getAccessTokenAsync();
-      const r = await fetch('/api/doktor/dermatoloji/kohort', { headers: { Authorization: `Bearer ${t}` }, cache: 'no-store' });
+      const r = await doktorFetch('/api/doktor/dermatoloji/kohort', { cache: 'no-store' });
       const j = await r.json().catch(() => ({}));
       if (r.ok) setV(j); else setHata(j.error || 'Kohort yüklenemedi');
     } catch { setHata('Kohort yüklenemedi — bağlantıyı kontrol edin.'); }
@@ -43,7 +44,7 @@ export default function DermKohortPaneli() {
     setMesaj(''); setGonderiyor(true);
     try {
       const t = await getAccessTokenAsync();
-      const r = await fetch('/api/doktor/dermatoloji/kohort', { method: 'POST', headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ patientIds: secili }) });
+      const r = await doktorFetch('/api/doktor/dermatoloji/kohort', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ patientIds: secili }) });
       const j = await r.json().catch(() => ({}));
       setMesaj(r.ok ? `${j.gonderilen} hastaya hatırlatma gönderildi (Sağlığım › Mesajlar)${j.atlanan ? `; ${j.atlanan} atlandı (son 7 günde gönderilmiş veya listede değil)` : ''}.` : j.error || 'Gönderilemedi');
       setSecili([]);

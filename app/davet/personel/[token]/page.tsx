@@ -4,7 +4,8 @@
 
 import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { createClient } from '@supabase/supabase-js';
+import { girisIstemcisi } from '@/lib/doktor/girisIstemcisi';
+import { saveDoctorSession } from '@/lib/doktor/clientAuth';
 import { CHROME_RENK, CHROME_FONT, CHROME_FONT_HREF } from "@/lib/doktor/chromeTheme";
 import { personelRoluMu, ROL_KISA_ETIKETI_TR, ROL_DAVET_CUMLESI_TR } from '@/lib/doktor/personelYetki';
 
@@ -102,17 +103,10 @@ export default function DavetKabulPage() {
       const email = String(d.email || bilgi?.email || '').trim().toLowerCase();
       if (email) {
         try {
-          const supabase = createClient(
-            'https://anjayzospuurymjmmtim.supabase.co',
-            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFuamF5em9zcHV1cnltam1tdGltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA2NDc5NzIsImV4cCI6MjA5NjIyMzk3Mn0.J4qRde2QJxxErFIWsO6Zb2TPN8GEIFXloLRpdac4GxE',
-          );
+          const supabase = girisIstemcisi();
           const { data: oturum, error: girisHata } = await supabase.auth.signInWithPassword({ email, password: sifre });
           if (!girisHata && oturum.session) {
-            localStorage.setItem('auth-token', JSON.stringify({
-              access_token: oturum.session.access_token,
-              refresh_token: oturum.session.refresh_token,
-              expires_at: oturum.session.expires_at,
-            }));
+            saveDoctorSession(oturum.session);
             setDurum('tamamlandi');
             router.replace('/dashboard/doktor');
             return;

@@ -11,6 +11,7 @@ import { getAccessTokenAsync } from '@/lib/doktor/toolsUi';
 import { kdStil, KdHastaSecici, Rozet, TaslakNotu, Katlanir, KopyalaButonu, useUrlHasta } from './KdAracKabugu';
 import { gestasyonCoz, gestasyonMetni } from '../../engines/erkenDogum';
 import type { Bayrak, BayrakDurum, ErkenDogumKaydi, ErkenDogumSonuc, Kaynak, KaynakDurumu, Yontem } from '../../engines/erkenDogum';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 const { kutu, etiket, kucuk, metin, input, btn, ghost, hata: hataStil, uyari } = kdStil;
 
@@ -96,7 +97,7 @@ export default function ErkenDogumPaneli() {
     (async () => {
       try {
         const t = await getAccessTokenAsync();
-        const r = await fetch(`/api/doktor/gebelik/erken-dogum?patientId=${encodeURIComponent(hastaId)}`, { headers: { Authorization: `Bearer ${t}` }, cache: 'no-store' });
+        const r = await doktorFetch(`/api/doktor/gebelik/erken-dogum?patientId=${encodeURIComponent(hastaId)}`, { cache: 'no-store' });
         const j = await r.json().catch(() => ({}));
         if (!r.ok) throw new Error(j.error || 'Panel yüklenemedi');
         if (!iptal) uygula(j as Cevap);
@@ -113,7 +114,7 @@ export default function ErkenDogumPaneli() {
     setKaydediliyor(true); setHata('');
     try {
       const t = await getAccessTokenAsync();
-      const r = await fetch('/api/doktor/gebelik/erken-dogum', { method: 'PUT', headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ patientId: hastaId, kayit }), cache: 'no-store' });
+      const r = await doktorFetch('/api/doktor/gebelik/erken-dogum', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ patientId: hastaId, kayit }), cache: 'no-store' });
       const j = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(j.error || 'Kaydedilemedi');
       uygula(j as Cevap);

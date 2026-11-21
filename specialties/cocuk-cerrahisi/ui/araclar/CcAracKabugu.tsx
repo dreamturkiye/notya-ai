@@ -11,6 +11,7 @@ import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth'
 import { doktorAraciBransaUygun } from '@/lib/doktor/doktorAraclari'
 import { AracVurguSaglayici, aracStil, HastaSecici, type AracVurgu } from '@/lib/doktor/aracUi'
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 export const CC_VURGU: AracVurgu = { ana: '#0891B2', anaMetin: '#ECFEFF', yumusak: '#0F766E', baslik: '#0F766E' }
 export const ccStil = aracStil(CC_VURGU)
@@ -33,7 +34,7 @@ export default function CcAracKabugu({ route, baslik, aciklama, children }: { ro
       try {
         const t = await ensureDoctorAccessToken()
         if (!t) { if (!iptal) { setIzin(false); router.replace('/doktor-tools') } return }
-        const r = await fetch('/api/users/me', { headers: { Authorization: `Bearer ${t}` } })
+        const r = await doktorFetch('/api/users/me', {})
         const j = r.ok ? await r.json() : null
         const ok = doktorAraciBransaUygun(route, j?.data?.specialty)
         if (!iptal) { setIzin(ok); if (!ok) router.replace('/doktor-tools') }

@@ -23,6 +23,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import type { GruplanmisIlac, SunumSecenegi } from '@/app/api/doktor/ilac-ara/route';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 interface Ilac {
   id: string;
@@ -93,7 +94,7 @@ export default function HastaIlaclar({ patientId }: { patientId: string }) {
       try {
         const t = await token();
         if (!t) return;
-        const r = await fetch(`/api/doktor/ilac-ara?q=${encodeURIComponent(q)}`, { headers: { Authorization: `Bearer ${t}` } });
+        const r = await doktorFetch(`/api/doktor/ilac-ara?q=${encodeURIComponent(q)}`, {});
         if (!r.ok || iptal) return;
         const d = await r.json();
         if (!iptal) setSonuclar(d.sonuclar || []);
@@ -113,9 +114,9 @@ export default function HastaIlaclar({ patientId }: { patientId: string }) {
     setDozOneriYukleniyor(true);
     try {
       const t = await token();
-      const r = await fetch('/api/doktor/ilaclar/doz-oner', {
+      const r = await doktorFetch('/api/doktor/ilaclar/doz-oner', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ patientId, ilacAdi, etkenMadde: etken }),
       });
       const d = await r.json().catch(() => ({}));
@@ -137,7 +138,7 @@ export default function HastaIlaclar({ patientId }: { patientId: string }) {
     try {
       const t = await token();
       if (!t) { setHata('Oturum bulunamadı. Lütfen tekrar giriş yapın.'); return; }
-      const r = await fetch(`/api/doktor/ilaclar?hastaId=${patientId}`, { headers: { Authorization: `Bearer ${t}` } });
+      const r = await doktorFetch(`/api/doktor/ilaclar?hastaId=${patientId}`, {});
       if (!r.ok) {
         // Distinguish an expired session from a real failure: telling a doctor "list could not be
         // retrieved" when the fix is "log in again" sends them looking for a fault that is not there.
@@ -214,9 +215,9 @@ export default function HastaIlaclar({ patientId }: { patientId: string }) {
     try {
       const t = await token();
       if (!t) { setHata('Oturum bulunamadı. Lütfen tekrar giriş yapın.'); return; }
-      const r = await fetch('/api/doktor/ilaclar', {
+      const r = await doktorFetch('/api/doktor/ilaclar', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           hastaId: patientId,
           ad: ad.trim(),
@@ -256,9 +257,9 @@ export default function HastaIlaclar({ patientId }: { patientId: string }) {
     try {
       const t = await token();
       if (!t) { setHata('Oturum bulunamadı. Lütfen tekrar giriş yapın.'); return; }
-      const r = await fetch(`/api/doktor/ilaclar/${id}`, {
+      const r = await doktorFetch(`/api/doktor/ilaclar/${id}`, {
         method: 'PUT',
-        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(
           karar === 'aktif'
             ? { onay_durumu: 'onayli', aktif: true }
@@ -281,7 +282,7 @@ export default function HastaIlaclar({ patientId }: { patientId: string }) {
     try {
       const t = await token();
       if (!t) { setHata('Oturum bulunamadı. Lütfen tekrar giriş yapın.'); return; }
-      const r = await fetch(`/api/doktor/ilaclar/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${t}` } });
+      const r = await doktorFetch(`/api/doktor/ilaclar/${id}`, { method: 'DELETE' });
       if (!r.ok) { setHata('İlaç silinemedi.'); return; }
       if (duzenId === id) setDuzenId(null);
       await listele();
@@ -315,9 +316,9 @@ export default function HastaIlaclar({ patientId }: { patientId: string }) {
     try {
       const t = await token();
       if (!t) { setHata('Oturum bulunamadı. Lütfen tekrar giriş yapın.'); return; }
-      const r = await fetch(`/api/doktor/ilaclar/${duzenId}`, {
+      const r = await doktorFetch(`/api/doktor/ilaclar/${duzenId}`, {
         method: 'PUT',
-        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ad: duzen.ad.trim(),
           etkenMadde: duzen.etkenMadde.trim() || duzen.ad.trim(),

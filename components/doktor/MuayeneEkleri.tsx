@@ -9,6 +9,7 @@ import { VAULT_MAX_BYTES } from '@/lib/vault/types'
 import { belgeleriOtomatikIsle } from '@/core/belgeler/otoIstemci'
 import { sinirliHavuz, type BelgeAsama } from '@/core/belgeler/otoBatch'
 import { deIdMetin } from '@/core/belgeler/deidMetin'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 type Ek = {
   id: string
@@ -57,7 +58,7 @@ export default function MuayeneEkleri({
     const q = visitId
       ? `patientId=${encodeURIComponent(hastaId)}&visitId=${encodeURIComponent(visitId)}`
       : `patientId=${encodeURIComponent(hastaId)}`
-    const r = await fetch(`/api/doktor/documents?${q}`, { headers: { Authorization: `Bearer ${token}` } })
+    const r = await doktorFetch(`/api/doktor/documents?${q}`, {})
     if (!r.ok) return
     const j = await r.json()
     const docs = (j.documents || []) as Ek[]
@@ -93,7 +94,7 @@ export default function MuayeneEkleri({
           fd.append('file', dosya); fd.append('patientId', hastaId)
           if (visitId) fd.append('visitId', visitId)
           fd.append('category', dosya.type.startsWith('audio/') ? 'Muayene ses kaydı' : 'Muayene görüntüsü')
-          const r = await fetch('/api/doktor/documents', { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: fd })
+          const r = await doktorFetch('/api/doktor/documents', { method: 'POST', body: fd })
           const j = await r.json().catch(() => ({}))
           if (!r.ok || !j?.document?.id) { satirGuncelle(gid, 'hata', j?.error || 'Yüklenemedi'); return }
           yuklenen.push({ belgeId: String(j.document.id), ad: dosya.name, dosya })

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { PortalShell } from '../../_components/PortalShell'
 import { LiveGate, PortalLiveProvider, usePortalLive } from '../../_components/PortalLiveProvider'
 import type { PortalNavOge } from '@/lib/portal/types'
+import { portalFetch } from '@/lib/portal/portalFetch'
 
 /** NOTYA-RANDEVU-V2: 'Randevu' joins the nav only while the doctor's 'Hasta Portalı Randevu' is ON. */
 const RANDEVU_NAV: PortalNavOge = { key: 'randevu', label: 'Randevu', path: '/randevu' }
@@ -14,7 +15,7 @@ function ModulluShell({ token, children }: { token: string; children: React.Reac
   const [randevuAcik, setRandevuAcik] = useState(false)
   useEffect(() => {
     if (loading) return
-    fetch(`/api/portal/hasta/${encodeURIComponent(token)}/randevu`, { credentials: 'include' })
+    portalFetch(`/api/portal/hasta/${encodeURIComponent(token)}/randevu`, { credentials: 'include' })
       .then((r) => (r.ok ? r.json() : null))
       .then((j) => setRandevuAcik(!!j?.acik))
       .catch(() => undefined)

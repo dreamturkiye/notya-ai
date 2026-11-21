@@ -19,6 +19,7 @@ import { KlinikUzmanPersonas, type KlinikUzmanPersona } from '@/lib/ai/personas/
 import { KLINIK_YENI_SLUGS } from '@/lib/specialties/klinikDikey'
 import { SES_CALAR } from '@/lib/asistan/sesCalar'
 import { CHROME_RENK, CHROME_FONT, CHROME_FONT_HREF } from '@/lib/doktor/chromeTheme'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 type CS = 'idle'|'connecting'|'listening'|'speaking'|'error'
 type Msg = { id: string; role: 'user'|'ai'; text: string }
@@ -96,7 +97,7 @@ function KlinikAsistanInner() {
     await endConv()
     setStatus('connecting'); setErrorMsg(''); setMessages([])
     try {
-      const r = await fetch(`/api/asistan/klinik-signed-url?persona=${slug}`, { headers: { Authorization: 'Bearer ' + token } })
+      const r = await doktorFetch(`/api/asistan/klinik-signed-url?persona=${slug}`, {})
       if (!r.ok) { const b = await r.json().catch(() => ({})); throw new Error((b as {error?:string}).error || 'Sunucu hatası: ' + r.status) }
       const body = await r.json()
       if (!body.signed_url) throw new Error('Bağlantı adresi alınamadı')

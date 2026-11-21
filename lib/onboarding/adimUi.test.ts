@@ -113,7 +113,7 @@ describe('Onboarding page: source checks', () => {
   })
   it('submit order: profile (POST) first, then trial (PUT); no other call', () => {
     const govde = sayfa.slice(sayfa.indexOf('const handleSubmit'), sayfa.indexOf('const renderStep2'))
-    const cagri = [...govde.matchAll(/fetch\('([^']+)'/g)].map((m) => m[1])
+    const cagri = [...govde.matchAll(/(?:doktorFetch|fetch)\('([^']+)'/g)].map((m) => m[1])
     assert.deepEqual(cagri, ['/api/users/profile', '/api/users/trial'])
   })
   it('step 3 uses the shared component; the box opens only on the server answer; consent is sent only when ticked', () => {

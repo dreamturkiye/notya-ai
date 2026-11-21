@@ -4,6 +4,7 @@ import { getAccessTokenAsync } from '@/lib/doktor/toolsUi'
 import { ftrStil, FtrHastaSecici, Alan, Sayi, Onay, Istatistik, TaslakNotu, KopyalaButonu, MuayeneFormunaEkle, useUrlHasta } from './FtrAracKabugu'
 import { seansPlani, FTR_MODALITELER } from '../../engines/seans'
 import { REF_ACIKLAMA } from '../../engines/fizik-tedavi'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 export default function FtrSeansAraci() {
   const [hasta, setHasta] = useState('')
@@ -29,9 +30,9 @@ export default function FtrSeansAraci() {
     if (!sonuc.tamamMi) { setHata(sonuc.ozet); return }
     try {
       const t = await getAccessTokenAsync()
-      const r = await fetch('/api/doktor/fizik-tedavi', {
+      const r = await doktorFetch('/api/doktor/fizik-tedavi', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           patientId: hasta, adim: 'seans', bolge, modaliteler: modal,
           seansSayisi: Number(seansSayisi), haftalikSiklik: Number(siklik), not, hekimKilit: true,

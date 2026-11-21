@@ -7,6 +7,7 @@ import type { KohortSatir, KohortBayrak } from '../engines/kohort';
 import { BAYRAK_AD } from '../engines/kohort';
 import { Kaynak } from './DahiliyeWow2';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 const kucuk: React.CSSProperties = { fontSize: 11, color: CHROME_RENK.muted };
 const btn: React.CSSProperties = { background: '#0F9B8E', color: '#fff', border: 'none', borderRadius: 8, padding: '5px 10px', fontSize: 12, fontWeight: 700, cursor: 'pointer' };
@@ -76,14 +77,14 @@ export function KohortPanel() {
   const [filtre, setFiltre] = useState<KohortBayrak[]>([]);
   const [secili, setSecili] = useState<string[]>([]);
   const [mesaj, setMesaj] = useState('');
-  const yukle = useCallback(async () => { const token = await getAccessTokenAsync(); const r = await fetch('/api/doktor/dahiliye/kohort', { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' }); const j = await r.json().catch(() => ({})); if (r.ok) setV(j); else setMesaj(j.error || 'Yüklenemedi'); }, []);
+  const yukle = useCallback(async () => { const token = await getAccessTokenAsync(); const r = await doktorFetch('/api/doktor/dahiliye/kohort', { cache: 'no-store' }); const j = await r.json().catch(() => ({})); if (r.ok) setV(j); else setMesaj(j.error || 'Yüklenemedi'); }, []);
   useEffect(() => { yukle(); }, [yukle]);
   const gorunen = (v?.satirlar || []).filter((s) => !filtre.length || filtre.some((b) => s.bayraklar.includes(b)));
   const gonder = async () => {
     if (!secili.length) return;
     setMesaj('');
     const token = await getAccessTokenAsync();
-    const r = await fetch('/api/doktor/dahiliye/kohort', { method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ patientIds: secili }) });
+    const r = await doktorFetch('/api/doktor/dahiliye/kohort', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ patientIds: secili }) });
     const j = await r.json().catch(() => ({}));
     setMesaj(r.ok ? `${j.gonderilen} hastaya hatırlatma gönderildi (Sağlığım › Mesajlar)${j.atlanan ? `; ${j.atlanan} atlandı (son 7 günde gönderilmiş)` : ''}.` : j.error || 'Gönderilemedi');
     setSecili([]);

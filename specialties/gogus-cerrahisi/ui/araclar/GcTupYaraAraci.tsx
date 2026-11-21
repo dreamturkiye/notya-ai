@@ -3,6 +3,7 @@ import React, { useMemo, useState } from 'react'
 import { getAccessTokenAsync } from '@/lib/doktor/toolsUi'
 import { gcStil, GcHastaSecici, KopyalaButonu, Istatistik, TaslakNotu, useUrlHasta } from './GcAracKabugu'
 import { tupYaraSkorla, TUP_YARA_TIPLERI, TUP_YARA_DURUMLARI, type TupYaraTip, type TupYaraDurum } from '../../engines/tupYara'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 export default function GcTupYaraAraci() {
   const [tip, setTip] = useState<TupYaraTip>('toraks_tup')
@@ -22,9 +23,9 @@ export default function GcTupYaraAraci() {
     if (!sonuc.tamamMi) { setHata(sonuc.ozet); return }
     try {
       const t = await getAccessTokenAsync()
-      const r = await fetch('/api/doktor/gogus-cerrahisi', {
+      const r = await doktorFetch('/api/doktor/gogus-cerrahisi', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ patientId: hastaId, adim: 'tup_yara', kart: sonuc.kart, hekimKilit: true }),
       })
       const j = await r.json().catch(() => ({}))

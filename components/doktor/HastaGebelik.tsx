@@ -64,6 +64,7 @@ import { tehlikeDanismanlikMetni } from '@/specialties/kadin-dogum/protocols/teh
 import TaburcuPaketi from '@/specialties/kadin-dogum/ui/TaburcuPaketi';
 import LohusaPaketi from '@/specialties/kadin-dogum/ui/LohusaPaketi';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 type Uyari = { seviye: 'kritik' | 'dikkat' | 'bilgi'; metin: string };
 type Pencere = { no: number; etiket: string; haftaBas: number; haftaSon: number; maddeler: string[]; durum: 'tamamlandi' | 'zamani' | 'gecikmis' | 'ileride' };
@@ -153,7 +154,7 @@ export default function HastaGebelik({ patientId, doktorBransi }: { patientId: s
     setYukleniyor(true); setHata('');
     try {
       const t = await ensureDoctorAccessToken();
-      const r = await fetch(`/api/doktor/gebelik?patientId=${patientId}`, { headers: { Authorization: `Bearer ${t}` } });
+      const r = await doktorFetch(`/api/doktor/gebelik?patientId=${patientId}`, {});
       const d = await r.json();
       if (!r.ok) throw new Error(d.error || 'Yüklenemedi');
       setVeri(d);
@@ -165,7 +166,7 @@ export default function HastaGebelik({ patientId, doktorBransi }: { patientId: s
       if (d.lohusa) setMod('lohusa');
       else if (!geb) setMod('jinekoloji');
       if (d.lohusa || geb?.yenidogan_patient_id) {
-        const yr = await fetch(`/api/doktor/yenidogan?patientId=${patientId}`, { headers: { Authorization: `Bearer ${t}` } });
+        const yr = await doktorFetch(`/api/doktor/yenidogan?patientId=${patientId}`, {});
         if (yr.ok) setYn(await yr.json());
       } else setYn(null);
     } catch (e) { setHata(e instanceof Error ? e.message : 'Yüklenemedi'); } finally { setYukleniyor(false); }
@@ -174,7 +175,7 @@ export default function HastaGebelik({ patientId, doktorBransi }: { patientId: s
 
   const post = async (body: Record<string, unknown>) => {
     const t = await ensureDoctorAccessToken();
-    const r = await fetch('/api/doktor/gebelik', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` }, body: JSON.stringify({ patientId, ...body }) });
+    const r = await doktorFetch('/api/doktor/gebelik', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ patientId, ...body }) });
     const d = await r.json();
     if (!r.ok) throw new Error(d.error || 'İşlem başarısız');
     return d;
@@ -182,7 +183,7 @@ export default function HastaGebelik({ patientId, doktorBransi }: { patientId: s
 
   const ynPost = async (body: Record<string, unknown>) => {
     const t = await ensureDoctorAccessToken();
-    const r = await fetch('/api/doktor/yenidogan', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` }, body: JSON.stringify(body) });
+    const r = await doktorFetch('/api/doktor/yenidogan', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
     const d = await r.json();
     if (!r.ok) throw new Error(d.error || 'İşlem başarısız');
     return d;
@@ -299,9 +300,9 @@ export default function HastaGebelik({ patientId, doktorBransi }: { patientId: s
       const bitisD = new Date(`${tarih}T${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}:00`);
       bitisD.setMinutes(bitisD.getMinutes() + 20);
       const bitis = `${tarih}T${String(bitisD.getHours()).padStart(2, '0')}:${String(bitisD.getMinutes()).padStart(2, '0')}:00`;
-      const r = await fetch('/api/doktor/randevular', {
+      const r = await doktorFetch('/api/doktor/randevular', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ patientId, baslangic, bitis, tur: 'muayene', notlar: 'Gebelik izlemi' }),
       });
       const j = await r.json();
@@ -973,7 +974,7 @@ function KadinSagligiPaneli({ patientId }: { patientId: string }) {
   const yukle = useCallback(async () => {
     try {
       const t = await ensureDoctorAccessToken();
-      const r = await fetch(`/api/doktor/kadin-sagligi?patientId=${patientId}`, { headers: { Authorization: `Bearer ${t}` } });
+      const r = await doktorFetch(`/api/doktor/kadin-sagligi?patientId=${patientId}`, {});
       const j = await r.json(); if (r.ok) { setD(j); const k = j.kayit || {}; setF(Object.fromEntries(Object.entries(k).map(([a, b]) => [a, b == null ? '' : String(b)]))); }
     } catch { /* panel kritik değil */ }
   }, [patientId]);
@@ -981,7 +982,7 @@ function KadinSagligiPaneli({ patientId }: { patientId: string }) {
   const kaydet = async () => {
     try {
       const t = await ensureDoctorAccessToken();
-      const r = await fetch('/api/doktor/kadin-sagligi', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` }, body: JSON.stringify({ patientId, sonServiksTarama: f.son_serviks_tarama, sonServiksSonuc: f.son_serviks_sonuc, sonMamografi: f.son_mamografi, sonMamografiSonuc: f.son_mamografi_sonuc, sonKolorektal: f.son_kolorektal, kontrasepsiyonYontemi: f.kontrasepsiyon_yontemi, kontrasepsiyonBaslangic: f.kontrasepsiyon_baslangic, menarsYasi: f.menarş_yasi ? Number(f.menarş_yasi) : null, adetDuzeni: f.adet_duzeni, sonAdetTarihi: f.son_adet_tarihi, menopozDurumu: f.menopoz_durumu, menopozYasi: f.menopoz_yasi ? Number(f.menopoz_yasi) : null, notlar: f.notlar }) });
+      const r = await doktorFetch('/api/doktor/kadin-sagligi', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ patientId, sonServiksTarama: f.son_serviks_tarama, sonServiksSonuc: f.son_serviks_sonuc, sonMamografi: f.son_mamografi, sonMamografiSonuc: f.son_mamografi_sonuc, sonKolorektal: f.son_kolorektal, kontrasepsiyonYontemi: f.kontrasepsiyon_yontemi, kontrasepsiyonBaslangic: f.kontrasepsiyon_baslangic, menarsYasi: f.menarş_yasi ? Number(f.menarş_yasi) : null, adetDuzeni: f.adet_duzeni, sonAdetTarihi: f.son_adet_tarihi, menopozDurumu: f.menopoz_durumu, menopozYasi: f.menopoz_yasi ? Number(f.menopoz_yasi) : null, notlar: f.notlar }) });
       setMesaj(r.ok ? 'Kaydedildi.' : 'Kaydedilemedi.'); setAcik(false); yukle();
     } catch { setMesaj('Kaydedilemedi.'); }
   };

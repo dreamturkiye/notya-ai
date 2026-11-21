@@ -10,6 +10,7 @@ import { getAccessTokenAsync } from '@/lib/doktor/toolsUi';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 import type { AmeliyatSablonu } from '@/lib/doktor/ameliyatNotu';
 import { AmeliyatNotuFormu, AmeliyatNotuOzeti, type AmeliyatNotuSatiri } from '@/components/doktor/HastaAmeliyatNotlari';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 /** The legacy free-text record as readable lines ("kesi: Pfannenstiel"), or null when there is none. */
 export function eskiIntraopMetni(intraop: Record<string, unknown> | null | undefined): string | null {
@@ -24,7 +25,7 @@ export function SezaryenAmeliyatNotu({ patientId, dogumId, intraop }: { patientI
   const [acik, setAcik] = useState<string | 'yeni' | null>(null);
   const yukle = useCallback(async () => {
     const t = await getAccessTokenAsync();
-    const r = await fetch(`/api/doktor/ameliyat-notlari?patientId=${encodeURIComponent(patientId)}`, { headers: { Authorization: `Bearer ${t}` }, cache: 'no-store' });
+    const r = await doktorFetch(`/api/doktor/ameliyat-notlari?patientId=${encodeURIComponent(patientId)}`, { cache: 'no-store' });
     const j = await r.json().catch(() => ({}));
     setNotlar(((j.notlar || []) as AmeliyatNotuSatiri[]).filter((n) => n.dogum_id === dogumId));
     setSablonlar(j.sablonlar || []);

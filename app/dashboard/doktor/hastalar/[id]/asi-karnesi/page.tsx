@@ -28,6 +28,7 @@ import { lotYerTemizle, LOT_AZAMI, YER_AZAMI } from '@/lib/asi/asiLotYeri';
 import { trTarih, type AsiKaynakTuru } from '@/lib/asi/karneOkuma';
 import { dosyaPaylasimiVar, pdfYazdir } from '@/lib/asi/karnePaylasim';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 const DOSYA_ADI_YEDEK = 'asi-karnesi.pdf';
 
@@ -72,8 +73,7 @@ export default function AsiKarnesiGozlemSayfasi() {
       try {
         const t = await ensureDoctorAccessToken();
         if (!t) { setHata('Oturum bulunamadı.'); return; }
-        const r = await fetch(`/api/doktor/asilar/karne?patientId=${encodeURIComponent(patientId)}`, {
-          headers: { Authorization: `Bearer ${t}` },
+        const r = await doktorFetch(`/api/doktor/asilar/karne?patientId=${encodeURIComponent(patientId)}`, {
           cache: 'no-store',
         });
         const j = await r.json().catch(() => ({}));
@@ -101,8 +101,7 @@ export default function AsiKarnesiGozlemSayfasi() {
       try {
         const t = await ensureDoctorAccessToken();
         if (!t || iptal) return;
-        const r = await fetch(`/api/doktor/asilar/karne/pdf?patientId=${encodeURIComponent(patientId)}`, {
-          headers: { Authorization: `Bearer ${t}` },
+        const r = await doktorFetch(`/api/doktor/asilar/karne/pdf?patientId=${encodeURIComponent(patientId)}`, {
           cache: 'no-store',
         });
         if (!r.ok || iptal) return;
@@ -117,8 +116,7 @@ export default function AsiKarnesiGozlemSayfasi() {
     if (hazirPdf) return hazirPdf;
     const t = await ensureDoctorAccessToken();
     if (!t) { setEylemHata('Oturum bulunamadı.'); return null; }
-    const r = await fetch(`/api/doktor/asilar/karne/pdf?patientId=${encodeURIComponent(patientId)}`, {
-      headers: { Authorization: `Bearer ${t}` },
+    const r = await doktorFetch(`/api/doktor/asilar/karne/pdf?patientId=${encodeURIComponent(patientId)}`, {
       cache: 'no-store',
     });
     if (!r.ok) {

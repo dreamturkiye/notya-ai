@@ -12,6 +12,7 @@ import {
   ONCEKI_BASAMAK_ADI, type BiyolojikSablon, type BiyolojikEndikasyon, type OncekiBasamak,
 } from '../../engines/biyolojikSutRapor';
 import { dermStil, Secim, Onay, Istatistik, KayitButonu, KopyalaButonu, Rozet, TaslakNotu, DermHastaSecici } from './DermAracKabugu';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 const { kutu, etiket, kucuk, metin, satir, btn } = dermStil;
 const bugun = () => new Date().toISOString().slice(0, 10);
 const ENDIKASYONLAR = Object.entries(BIYOLOJIK_ENDIKASYON_ADI) as Array<[BiyolojikEndikasyon, string]>;
@@ -96,9 +97,9 @@ export default function BiyolojikSutAraci() {
           ipucu="Deri sekmesindeki biyolojik rapor kaydıyla aynı API."
           kaydet={async () => {
             const t = await getAccessTokenAsync();
-            const r = await fetch('/api/doktor/dermatoloji', {
+            const r = await doktorFetch('/api/doktor/dermatoloji', {
               method: 'POST',
-              headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+              headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 patientId: hasta.id, action: 'biyolojik-rapor',
                 sablon, endikasyon, etkenMadde: etken || null,

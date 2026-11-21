@@ -8,6 +8,7 @@ import { getAccessTokenAsync, toolsCard, toolsInput } from '@/lib/doktor/toolsUi
 import { PARTOGRAF_ALANLARI, ANNE_KOMPLIKASYONLARI, BEBEK_KOMPLIKASYONLARI, ERKEK_BEBEK_EK, pretermOnerileri } from '../engines/dogum-spine';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 import { SezaryenAmeliyatNotu } from './SezaryenAmeliyatNotu';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 type Gorev = { id: string; kod: string; ad: string; tur: string; hedef_baslangic: string; hedef_bitis: string; sert: boolean; kacirilinca: string | null; durum: string; not_metni: string | null };
 type Onam = { id: string; sablon_kodu: string; sablon_adi: string; ek_kutu_isaretli: boolean; hasta_onayladi: boolean; onay_at: string | null; created_at: string };
@@ -32,14 +33,14 @@ export function DogumSpine({ gebelikId, patientId }: { gebelikId: string; patien
 
   const api = useCallback(async (body: Record<string, unknown>) => {
     const token = await getAccessTokenAsync();
-    const r = await fetch('/api/doktor/gebelik/dogum', { method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    const r = await doktorFetch('/api/doktor/gebelik/dogum', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
     const j = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error(j.error || 'Hata');
     return j;
   }, []);
   const yukle = useCallback(async () => {
     const token = await getAccessTokenAsync();
-    const r = await fetch(`/api/doktor/gebelik/dogum?gebelikId=${encodeURIComponent(gebelikId)}`, { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' });
+    const r = await doktorFetch(`/api/doktor/gebelik/dogum?gebelikId=${encodeURIComponent(gebelikId)}`, { cache: 'no-store' });
     if (r.ok) setV(await r.json());
   }, [gebelikId]);
   useEffect(() => { yukle(); }, [yukle]);

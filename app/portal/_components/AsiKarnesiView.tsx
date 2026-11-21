@@ -27,6 +27,7 @@ import { lotYerTemizle, LOT_AZAMI, YER_AZAMI } from '@/lib/asi/asiLotYeri'
 import { trTarih, type AsiKaynakTuru } from '@/lib/asi/karneOkuma'
 import { dosyaPaylasimiVar } from '@/lib/asi/karnePaylasim'
 import { EmptyState, SectionHeader, SoftPanel } from './ui'
+import { portalFetch } from '@/lib/portal/portalFetch'
 
 const ALT_BASLIK = 'Doktorunuzun muayenehanesinde kayıtlı aşılarınız. PDF olarak indirebilir, paylaşabilir ya da yazdırabilirsiniz.'
 
@@ -54,7 +55,7 @@ function Eylemler({ pdfUrl, dosyaAdi }: { pdfUrl: string | null; dosyaAdi: strin
     if (!pdfUrl || !dosyaPaylasimiVar(dosyaAdi)) { setPaylasim('yok'); return }
     // iOS Safari share()'i yalnız dokunuşun hemen ardından kabul eder — PDF önceden hazırlanır, dokunuşta bekleme olmaz.
     let iptal = false
-    fetch(pdfUrl, { credentials: 'same-origin', cache: 'no-store' })
+    portalFetch(pdfUrl, { credentials: 'same-origin', cache: 'no-store' })
       .then((r) => (r.ok ? r.blob() : Promise.reject(new Error(String(r.status)))))
       .then((b) => { if (!iptal) { setPdf(new File([b], dosyaAdi, { type: 'application/pdf' })); setPaylasim('var') } })
       .catch(() => { if (!iptal) setPaylasim('yok') })

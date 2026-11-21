@@ -12,6 +12,7 @@ import { DERM_PATCH_STATUS, dermLabel } from '../labels';
 import { getAccessTokenAsync } from '@/lib/doktor/toolsUi';
 import { dermStil, Istatistik, Katlanir, MuayeneFormunaEkle, Rozet, TaslakNotu, DermHastaSecici, KopyalaButonu, KayitButonu } from './DermAracKabugu';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 const { kutu, etiket, kucuk, metin, satir, btn, ghost, kaydir } = dermStil;
 const bugun = () => new Date().toISOString().slice(0, 10);
@@ -144,9 +145,9 @@ export default function YamaAraci() {
           ipucu="Aynı API (yama) Deri sekmesinde kullanılır."
           kaydet={async () => {
             const t = await getAccessTokenAsync();
-            const r = await fetch('/api/doktor/dermatoloji', {
+            const r = await doktorFetch('/api/doktor/dermatoloji', {
               method: 'POST',
-              headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+              headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 patientId: hasta.id, action: 'yama',
                 appliedAt: uygulama, series: 'european_baseline',

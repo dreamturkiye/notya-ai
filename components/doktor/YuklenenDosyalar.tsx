@@ -17,6 +17,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth'
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme'
 import { YUKLENEN_DOSYALAR_BASLIGI, boyutMetni, yazdirSatirlari, type YuklenenDosya } from '@/lib/doktor/muayeneEk/yuklenenDosyalar'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 const YOL = '/api/doktor/muayene-ekleri/yuklenenler'
 const ZOOM_MIN = 1
@@ -46,7 +47,7 @@ type Durum = { tur: 'bos' } | { tur: 'yukleniyor' } | { tur: 'hazir'; blob: Blob
 
 async function dosyaGetir(sessionId: string, id: string, indir: boolean, sinyal?: AbortSignal): Promise<Blob> {
   const t = await ensureDoctorAccessToken()
-  const r = await fetch(`${YOL}/${encodeURIComponent(id)}?sessionId=${encodeURIComponent(sessionId)}${indir ? '&indir=1' : ''}`, { headers: { Authorization: `Bearer ${t}` }, signal: sinyal })
+  const r = await doktorFetch(`${YOL}/${encodeURIComponent(id)}?sessionId=${encodeURIComponent(sessionId)}${indir ? '&indir=1' : ''}`, { signal: sinyal })
   if (!r.ok) throw new Error(r.status === 404 ? 'Dosya bulunamadı.' : 'Dosya açılamadı.')
   return r.blob()
 }
@@ -92,7 +93,7 @@ export default function YuklenenDosyalar({ sessionId, onListe, yazdirSayfasi }: 
     ;(async () => {
       try {
         const t = await ensureDoctorAccessToken()
-        const r = await fetch(`${YOL}?sessionId=${encodeURIComponent(sessionId)}`, { headers: { Authorization: `Bearer ${t}` } })
+        const r = await doktorFetch(`${YOL}?sessionId=${encodeURIComponent(sessionId)}`, {})
         if (!r.ok) throw new Error('liste yok')
         const j = await r.json() as { dosyalar?: YuklenenDosya[] }
         if (iptal) return

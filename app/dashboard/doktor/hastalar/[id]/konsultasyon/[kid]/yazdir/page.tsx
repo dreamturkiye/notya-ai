@@ -16,6 +16,7 @@ import { useParams } from 'next/navigation';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import KonsultasyonIstemFormuKagidi, { type IstemFormuVerisi } from '@/components/doktor/KonsultasyonIstemFormuKagidi';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 type Veri = IstemFormuVerisi;
 
@@ -27,7 +28,7 @@ export default function KonsultasyonIstemFormu() {
     (async () => {
       try {
         const t = await ensureDoctorAccessToken();
-        const r = await fetch(`/api/doktor/konsultasyon?form=${encodeURIComponent(params.kid)}`, { headers: { Authorization: `Bearer ${t}` }, cache: 'no-store' });
+        const r = await doktorFetch(`/api/doktor/konsultasyon?form=${encodeURIComponent(params.kid)}`, { cache: 'no-store' });
         const d = await r.json(); if (!r.ok) throw new Error(d.error || 'Yüklenemedi'); setV(d);
       } catch (e) { setHata(e instanceof Error ? e.message : 'Yüklenemedi'); }
     })();

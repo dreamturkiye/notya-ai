@@ -9,6 +9,7 @@ import React, { useState } from 'react';
 import { HastaSecici } from '@/lib/doktor/aracUi';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import { CHROME_FONT, CHROME_RENK } from '@/lib/doktor/chromeTheme';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 export default function DisaAktarSayfasi() {
   const [hasta, setHasta] = useState('');
@@ -19,7 +20,7 @@ export default function DisaAktarSayfasi() {
     setDurum('iniyor'); setHata('');
     try {
       const t = await ensureDoctorAccessToken();
-      const r = await fetch(`/api/doktor/hastalar/${encodeURIComponent(hasta)}/disa-aktar?bicim=json`, { headers: { Authorization: `Bearer ${t}` }, cache: 'no-store' });
+      const r = await doktorFetch(`/api/doktor/hastalar/${encodeURIComponent(hasta)}/disa-aktar?bicim=json`, { cache: 'no-store' });
       if (!r.ok) { const j = await r.json().catch(() => ({})); throw new Error(j.error || 'Dışa aktarılamadı'); }
       const blob = await r.blob();
       const ad = /filename="([^"]+)"/.exec(r.headers.get('Content-Disposition') || '')?.[1] || 'notya-hasta.fhir.json';

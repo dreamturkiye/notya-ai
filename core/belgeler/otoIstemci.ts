@@ -7,6 +7,7 @@ import { gorseliOtomatikKimliksizlestir, type DeIdGorsel } from './deid'
 import { adKarsilastir, type KimlikBulgulari } from './kimlikMaske'
 import { KIMLIK_GIZLENEMEDI, topluIsle, type BatchSonuc, type BelgeAsama } from './otoBatch'
 import type { BlokGirdi } from './notaBlok'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 export interface OtoBelge { belgeId: string; ad: string; dosya: Blob }
 export interface OtoSecenek {
@@ -22,7 +23,7 @@ const gorselMi = (b: Blob) => b.type.startsWith('image/')
 export async function belgeleriOtomatikIsle(belgeler: OtoBelge[], o: OtoSecenek): Promise<BatchSonuc & { analizIdleri: Record<string, string> }> {
   const analizIdleri: Record<string, string> = {}
   const dosyalar = new Map(belgeler.map((b) => [b.belgeId, b.dosya]))
-  const baslik = { Authorization: `Bearer ${o.token}`, 'Content-Type': 'application/json' }
+  const baslik = { 'Content-Type': 'application/json' }
   const sonuc = await topluIsle<DeIdGorsel>(
     belgeler.map((b, i) => ({ belgeId: b.belgeId, ad: b.ad, yuklemeSirasi: i })),
     {
@@ -37,14 +38,14 @@ export async function belgeleriOtomatikIsle(belgeler: OtoBelge[], o: OtoSecenek)
         return { ok: true, yuk: m.gorsel }
       },
       degerlendir: async (b, g) => {
-        const r = await fetch('/api/doktor/belgeler/analiz', { method: 'POST', headers: baslik, body: JSON.stringify({ documentId: b.belgeId, modalityFinal: 'auto', deid: { mime: g.mime, base64: g.base64, hash: g.hash } }) })
+        const r = await doktorFetch('/api/doktor/belgeler/analiz', { method: 'POST', headers: baslik, body: JSON.stringify({ documentId: b.belgeId, modalityFinal: 'auto', deid: { mime: g.mime, base64: g.base64, hash: g.hash } }) })
         const j = await r.json().catch(() => ({}))
         if (!r.ok || !j?.analiz?.id) return { ok: false, neden: (j && j.error) || 'Değerlendirilemedi' }
         analizIdleri[b.belgeId] = j.analiz.id
         return { ok: true, girdi: { belgeId: b.belgeId, etiket: '', tarih: '', yuklemeSirasi: b.yuklemeSirasi } as BlokGirdi }
       },
       yaz: async (girdiler) => {
-        const r = await fetch('/api/doktor/belgeler/analiz/otomatik-ekle', { method: 'POST', headers: baslik, body: JSON.stringify({ analizIds: girdiler.map((g) => analizIdleri[g.belgeId]).filter(Boolean) }) })
+        const r = await doktorFetch('/api/doktor/belgeler/analiz/otomatik-ekle', { method: 'POST', headers: baslik, body: JSON.stringify({ analizIds: girdiler.map((g) => analizIdleri[g.belgeId]).filter(Boolean) }) })
         if (!r.ok) throw new Error('yazilamadi')
       },
     },

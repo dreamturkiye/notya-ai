@@ -5,6 +5,8 @@ import OzelBranslarBaslik from '@/components/klinik/OzelBranslarBaslik'
 import { klinikAraciDalaUygun } from '@/lib/klinik/klinikAraclari'
 import { klinikMevzuatOzet } from '@/lib/klinik/klinikMevzuat'
 import type { AracVurgu } from '@/lib/doktor/aracUi'
+import { doktorFetch, oturumSuresiDoldu } from '@/lib/doktor/oturumFetch'
+import { getDoctorAccessToken } from '@/lib/doktor/clientAuth'
 
 export default function KlinikAracKabugu({
   route, baslik, aciklama, etiket, vurgu, children,
@@ -23,10 +25,9 @@ export default function KlinikAracKabugu({
     let iptal = false
     ;(async () => {
       try {
-        const raw = localStorage.getItem('auth-token')
-        const t = raw ? (JSON.parse(raw).access_token || '') : ''
-        if (!t) { if (!iptal) { setIzin(false); router.replace('/giris') } return }
-        const r = await fetch('/api/users/me', { headers: { Authorization: `Bearer ${t}` } })
+        const t = getDoctorAccessToken()
+        if (!t) { if (!iptal) { setIzin(false); oturumSuresiDoldu() } return }
+        const r = await doktorFetch('/api/users/me', {})
         const j = r.ok ? await r.json() : null
         const tip = String(j?.data?.profession_type || '')
         const ok = Boolean(j?.data?.klinik_erisim) || ((tip === 'klinik-uzman' || tip === 'saglik-uzmani') && klinikAraciDalaUygun(route, j?.data?.specialty))

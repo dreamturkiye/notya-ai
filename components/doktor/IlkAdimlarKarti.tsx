@@ -19,6 +19,7 @@ import {
   kartGorunurMu,
   type IlkAdimlar,
 } from '@/lib/doktor/ilkAdimlar'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 export default function IlkAdimlarKarti() {
   const router = useRouter()
@@ -37,7 +38,7 @@ export default function IlkAdimlarKarti() {
       try {
         const t = await ensureDoctorAccessToken()
         if (!t) return
-        const r = await fetch('/api/doktor/ilk-adimlar', { headers: { Authorization: `Bearer ${t}` }, cache: 'no-store' })
+        const r = await doktorFetch('/api/doktor/ilk-adimlar', { cache: 'no-store' })
         if (!r.ok) return
         const d = await r.json()
         if (iptal || !d?.adimlar) return

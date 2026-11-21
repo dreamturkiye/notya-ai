@@ -1,3 +1,4 @@
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 /**
  * NOTYA-MESLEKTAS-V2 Faz 2 — sayfa/eylem telemetrisi.
  * Hasta kimliği, ad, metin yok. Yalnız sayfa tipi + eylem.
@@ -113,9 +114,9 @@ async function bosalt(): Promise<void> {
       const ok = navigator.sendBeacon('/api/doktor/kullanim', new Blob([govde], { type: 'application/json' }))
       if (ok) return
     }
-    void fetch('/api/doktor/kullanim', {
+    void doktorFetch('/api/doktor/kullanim', {
       method: 'POST',
-      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ olaylar }),
       keepalive: true,
     })

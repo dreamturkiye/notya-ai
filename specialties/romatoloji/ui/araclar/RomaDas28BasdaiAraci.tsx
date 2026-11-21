@@ -3,6 +3,7 @@ import React, { useMemo, useState } from 'react'
 import { getAccessTokenAsync } from '@/lib/doktor/toolsUi'
 import { romaStil, RomaHastaSecici, KopyalaButonu, Istatistik, TaslakNotu, useUrlHasta } from './RomaAracKabugu'
 import { das28Skorla, basdaiSkorla, BASDAI_MADDELER } from '../../engines/das28Basdai'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 type Mod = 'das28_crp' | 'das28_esr' | 'basdai'
 
@@ -44,9 +45,9 @@ export default function RomaDas28BasdaiAraci() {
         if (mod === 'das28_crp') body.crp = Number(crp)
         else body.esr = Number(esr)
       }
-      const r = await fetch('/api/doktor/romatoloji', {
+      const r = await doktorFetch('/api/doktor/romatoloji', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       })
       const j = await r.json().catch(() => ({}))

@@ -3,6 +3,7 @@ import React, { useMemo, useState } from 'react'
 import { getAccessTokenAsync } from '@/lib/doktor/toolsUi'
 import { onkoStil, OnkoHastaSecici, KopyalaButonu, TaslakNotu, useUrlHasta } from './OnkoAracKabugu'
 import { toksisiteSkorla, TOKSISITE_MADDELER, type ToksisiteKod } from '../../engines/toksisite'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 export default function OnkoToksisiteAraci() {
   const [secilen, setSecilen] = useState<ToksisiteKod[]>([])
@@ -23,9 +24,9 @@ export default function OnkoToksisiteAraci() {
     if (!sonuc.tamamMi) { setHata(sonuc.ozet); return }
     try {
       const t = await getAccessTokenAsync()
-      const r = await fetch('/api/doktor/onkoloji', {
+      const r = await doktorFetch('/api/doktor/onkoloji', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ patientId: hastaId, adim: 'toksisite', secilen, not: not || null, due: due || null }),
       })
       const j = await r.json().catch(() => ({}))

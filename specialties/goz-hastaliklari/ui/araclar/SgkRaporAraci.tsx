@@ -16,6 +16,7 @@ import { hastaDosyaHref } from '@/lib/doktor/geriNavigasyon';
 import { getAccessTokenAsync } from '@/lib/doktor/toolsUi';
 import { gozStil, Secim, Segment, Etiketli, Onay, Istatistik, Katlanir, KopyalaButonu, MuayeneFormunaEkle, Rozet, TaslakNotu, GozHastaSecici } from './GozAracKabugu';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 const { kutu, etiket, kucuk, metin, satir, input, ghost } = gozStil;
 const bugun = () => new Date().toISOString().slice(0, 10);
@@ -40,7 +41,7 @@ export default function SgkRaporAraci() {
     if (!id) { setGecmis([]); setKatarakt([]); return; }
     try {
       const t = await getAccessTokenAsync();
-      const r = await fetch(`/api/doktor/goz?patientId=${encodeURIComponent(id)}`, { headers: { Authorization: `Bearer ${t}` }, cache: 'no-store' });
+      const r = await doktorFetch(`/api/doktor/goz?patientId=${encodeURIComponent(id)}`, { cache: 'no-store' });
       const j = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(j.error || 'Hasta verisi yüklenemedi');
       setGecmis(j.enjeksiyonlar || []);

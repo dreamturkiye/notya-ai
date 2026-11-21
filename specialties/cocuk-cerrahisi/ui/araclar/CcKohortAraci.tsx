@@ -3,6 +3,7 @@ import React, { useCallback, useEffect, useState } from 'react'
 import { getAccessTokenAsync } from '@/lib/doktor/toolsUi'
 import { ccStil, Istatistik, TaslakNotu, Rozet } from './CcAracKabugu'
 import { CC_BAYRAK_AD, ccKohortFiltre, type CcKohortBayrak, type CcKohortSatir } from '../../engines/kohort'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 const S = ccStil
 const BAYRAKLAR = Object.keys(CC_BAYRAK_AD) as CcKohortBayrak[]
@@ -20,7 +21,7 @@ export default function CcKohortAraci() {
     setHata('')
     try {
       const t = await getAccessTokenAsync()
-      const r = await fetch('/api/doktor/cocuk-cerrahisi/kohort', { headers: { Authorization: `Bearer ${t}` }, cache: 'no-store' })
+      const r = await doktorFetch('/api/doktor/cocuk-cerrahisi/kohort', { cache: 'no-store' })
       const j = await r.json().catch(() => ({}))
       if (!r.ok) { setHata(j.error || 'Kohort yüklenemedi'); setSatirlar([]); return }
       setSatirlar(j.satirlar || [])
@@ -36,9 +37,9 @@ export default function CcKohortAraci() {
     setDurum(''); setHata(''); setGonderiliyor(true)
     try {
       const t = await getAccessTokenAsync()
-      const r = await fetch('/api/doktor/cocuk-cerrahisi/kohort', {
+      const r = await doktorFetch('/api/doktor/cocuk-cerrahisi/kohort', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ patientIds: secili }),
       })
       const j = await r.json().catch(() => ({}))

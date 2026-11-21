@@ -18,6 +18,9 @@ import { iletisimIstek } from '@/lib/iletisim/istemci'
 import { KANAL_ETIKETI, TUR_ETIKETI, type IletisimKanali, type MesajTuru } from '@/lib/iletisim/tipler'
 import GonderDugmesi from '@/components/doktor/iletisim/GonderDugmesi'
 import React, { useCallback, useEffect, useState } from 'react'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
+import OturumUyarisi from '@/components/doktor/OturumUyarisi'
+import { oturumMesajiMi } from '@/lib/doktor/oturumYolu'
 
 type Kayit = { id: string; hastaAdi: string; kanal: IletisimKanali; tur: MesajTuru; durum: 'acildi' | 'gonderildi'; gonderen: string; tarih: string }
 
@@ -46,10 +49,10 @@ export default function HatirlatmaPage() {
   useEffect(() => {
     void (async () => {
       const token = await ensureDoctorAccessToken()
-      if (!token) { setError('Oturum süresi dolmuş. Lütfen tekrar giriş yapın.'); return }
+      if (!token) { setError('Oturumunuzun süresi doldu. Lütfen tekrar giriş yapın.'); return }
       try {
-        const hRes = await fetch('/api/doktor/hastalar', { headers: { Authorization: `Bearer ${token}` } })
-        if (hRes.status === 401) { setError('Oturum geçersiz. Lütfen tekrar giriş yapın.'); return }
+        const hRes = await doktorFetch('/api/doktor/hastalar', {})
+        if (hRes.status === 401) { setError('Oturumunuzun süresi doldu. Lütfen tekrar giriş yapın.'); return }
         setHastalar(hRes.ok ? normalizeHastalar(await hRes.json()) : [])
       } catch { setError('Hastalar alınamadı.') }
       await kayitlariYukle()
@@ -109,7 +112,7 @@ export default function HatirlatmaPage() {
             ) : (
               <div style={{ fontSize: 13, color: CHROME_RENK.muted }}>Hasta seçip mesajı yazın; sonra kendi WhatsApp’ınızdan ya da e-postanızdan gönderin.</div>
             )}
-            {error && <div style={toolsErrorBox}>{error}</div>}
+            {error && (oturumMesajiMi(error) ? <OturumUyarisi mesaj={error} /> : <div style={toolsErrorBox}>{error}</div>)}
           </div>
 
           <div style={toolsCard}>

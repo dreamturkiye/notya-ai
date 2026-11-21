@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { usePortalLive } from '../../../_components/PortalLiveProvider'
 import { SectionHeader, SoftPanel } from '../../../_components/ui'
 import type { AnketSablon } from '@/specialties/dahiliye/engines/anket'
+import { portalFetch } from '@/lib/portal/portalFetch'
 
 type Kb = { sbp: string; dbp: string }
 const girdi: React.CSSProperties = { border: '1px solid var(--sg-line, #E6EAF0)', borderRadius: 10, padding: '8px 10px', fontSize: 15, width: 90 }
@@ -23,13 +24,13 @@ export default function OnAnketPage() {
   const [durum, setDurum] = useState<{ ok?: boolean; mesaj?: string; acil?: string | null } | null>(null)
 
   useEffect(() => {
-    fetch(`/api/portal/hasta/${encodeURIComponent(token)}/dahiliye-anket`, { credentials: 'include' }).then((r) => r.json()).then((j) => { setUygun(!!j.uygun); setSablon(j.sablon || null) }).catch(() => setUygun(false))
+    portalFetch(`/api/portal/hasta/${encodeURIComponent(token)}/dahiliye-anket`, { credentials: 'include' }).then((r) => r.json()).then((j) => { setUygun(!!j.uygun); setSablon(j.sablon || null) }).catch(() => setUygun(false))
   }, [token])
 
   const gonder = async () => {
     setDurum(null)
     const body = { kb: kb.filter((k) => k.sbp && k.dbp).map((k) => ({ sbp: Number(k.sbp), dbp: Number(k.dbp) })), glukoz: glukoz ? glukoz.split(/[ ,;]+/).filter(Boolean).map((x) => ({ deger: Number(x) })) : [], kilo: kilo || null, kacirilanDoz: doz || null, yanEtki: yanEtki || null, semptomlar: semptom, sorular: sorular || null }
-    const r = await fetch(`/api/portal/hasta/${encodeURIComponent(token)}/dahiliye-anket`, { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+    const r = await portalFetch(`/api/portal/hasta/${encodeURIComponent(token)}/dahiliye-anket`, { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
     const j = await r.json().catch(() => ({}))
     if (!r.ok) return setDurum({ ok: false, mesaj: j.error || 'Gönderilemedi' })
     setDurum({ ok: true, mesaj: `Teşekkürler, yanıtlarınız doktorunuza iletildi.${j.uyarilar?.length ? ` Not: ${j.uyarilar.join(' ')}` : ''}`, acil: j.acilMetni })

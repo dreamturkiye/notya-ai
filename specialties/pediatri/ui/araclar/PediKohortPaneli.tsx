@@ -12,6 +12,7 @@ import { PEDI_BAYRAK_AD, pediHatirlatmaMesaji, type PediKohortBayrak, type PediK
 import { tarihGoster } from '../../engines/girdi';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 import GonderDugmesi from '@/components/doktor/iletisim/GonderDugmesi';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 const BAYRAKLAR = Object.keys(PEDI_BAYRAK_AD) as PediKohortBayrak[];
 const muted: React.CSSProperties = { fontSize: 14, color: CHROME_RENK.muted, lineHeight: 1.5 };
@@ -32,7 +33,7 @@ export default function PediKohortPaneli() {
     setHata('');
     try {
       const t = await getAccessTokenAsync();
-      const r = await fetch('/api/doktor/pediatri/kohort', { headers: { Authorization: `Bearer ${t}` }, cache: 'no-store' });
+      const r = await doktorFetch('/api/doktor/pediatri/kohort', { cache: 'no-store' });
       const j = await r.json().catch(() => ({}));
       if (r.ok) setV(j); else setHata(j.error || 'Kohort yüklenemedi');
     } catch { setHata('Kohort yüklenemedi — bağlantıyı kontrol edin.'); }
@@ -46,7 +47,7 @@ export default function PediKohortPaneli() {
     setMesaj(''); setGonderiyor(true);
     try {
       const t = await getAccessTokenAsync();
-      const r = await fetch('/api/doktor/pediatri/kohort', { method: 'POST', headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ patientIds: secili }) });
+      const r = await doktorFetch('/api/doktor/pediatri/kohort', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ patientIds: secili }) });
       const j = await r.json().catch(() => ({}));
       setMesaj(r.ok ? `${j.gonderilen} aileye hatırlatma gönderildi (Sağlığım › Mesajlar)${j.atlanan ? `; ${j.atlanan} atlandı (son 7 günde gönderilmiş veya listede değil)` : ''}.` : j.error || 'Gönderilemedi');
       setSecili([]);

@@ -1,7 +1,9 @@
 'use client'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@supabase/supabase-js'
+import { girisIstemcisi } from '@/lib/doktor/girisIstemcisi'
+import { saveDoctorSession } from '@/lib/doktor/clientAuth'
+import { girisSorgusu, OTURUM_DOLDU_MESAJI } from '@/lib/doktor/oturumYolu'
 import { authHataMesaji } from '../authHataMesaji'
 import { CHROME_RENK, CHROME_FONT, CHROME_FONT_HREF } from '@/lib/doktor/chromeTheme'
 import ZiyaretSayaci from '@/components/ziyaret/ZiyaretSayaci'
@@ -15,11 +17,19 @@ export default function KlinikGiris() {
   const [sifremiUnuttum, setSifremiUnuttum] = useState(false)
   const [fpEmail, setFpEmail] = useState('')
   const [fpDurum, setFpDurum] = useState<'bos'|'gonderiliyor'|'gonderildi'|'hata'>('bos')
+  // NOTYA-OTURUM-01: expired-session notice + return path (internal paths only).
+  const [oturumDoldu, setOturumDoldu] = useState(false)
+  const [donus, setDonus] = useState<string | null>(null)
+  useEffect(() => {
+    const q = girisSorgusu(window.location.search)
+    setOturumDoldu(q.doldu)
+    setDonus(q.next)
+  }, [])
 
   // NOTYA-SIFRE-SIFIRLA-01 (Kaan, 2026-10-20): real Supabase recovery email, not the old static message.
   async function sifreSifirlaGonder() {
     setFpDurum('gonderiliyor')
-    const istemci = createClient('https://anjayzospuurymjmmtim.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFuamF5em9zcHV1cnltam1tdGltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA2NDc5NzIsImV4cCI6MjA5NjIyMzk3Mn0.J4qRde2QJxxErFIWsO6Zb2TPN8GEIFXloLRpdac4GxE')
+    const istemci = girisIstemcisi()
     const { error } = await istemci.auth.resetPasswordForEmail(fpEmail.toLowerCase().trim(), {
       redirectTo: `${window.location.origin}${window.location.pathname.replace(/\/giris.*$/, '')}/sifre-sifirla`,
     })
@@ -30,20 +40,16 @@ export default function KlinikGiris() {
     e.preventDefault()
     if (!email.trim() || !password.trim()) { setError('E-posta ve şifre gereklidir'); return }
     setLoading(true); setError('')
-    const supabase = createClient('https://anjayzospuurymjmmtim.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFuamF5em9zcHV1cnltam1tdGltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA2NDc5NzIsImV4cCI6MjA5NjIyMzk3Mn0.J4qRde2QJxxErFIWsO6Zb2TPN8GEIFXloLRpdac4GxE')
+    const supabase = girisIstemcisi()
     const { data, error: ae } = await supabase.auth.signInWithPassword({ email: email.toLowerCase().trim(), password })
     if (ae || !data.session) {
       setError(authHataMesaji(ae?.message, 'Giriş başarısız. Lütfen tekrar deneyin.'))
       setLoading(false)
       return
     }
-    localStorage.setItem('auth-token', JSON.stringify({
-      access_token: data.session.access_token,
-      refresh_token: data.session.refresh_token,
-      expires_at: data.session.expires_at,
-    }))
+    saveDoctorSession(data.session)
     // Aynı hesap Doktor / Notya Klinik / Avukat yüzlerini açar — meslek tipi buradan geri çevirmez.
-    router.replace('/dashboard/notya-klinik')
+    router.replace(donus || '/dashboard/notya-klinik')
   }
 
   // NOTYA-GIRIS-GORUNUM-01 (Kaan, 2026-09-27): klinik girişi de doktor arayüzünün krem/çam görünümünde (pembe vurgu bırakıldı).
@@ -61,6 +67,9 @@ export default function KlinikGiris() {
           <div style={{ fontFamily: CHROME_FONT.serif, fontSize: 34, fontWeight: 560, letterSpacing: -0.5, color: R.pine, lineHeight: 1.1 }}>Notya</div>
           <div style={{ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', fontSize: 16, color: R.muted, marginTop: 6 }}>Notya Klinik girişi</div>
         </div>
+        {oturumDoldu && (
+          <div role="status" style={{ background: R.cream, border: `1px solid ${R.border}`, borderRadius: 10, padding: '10px 12px', color: R.ink, fontSize: 13.5, marginBottom: 14 }}>{OTURUM_DOLDU_MESAJI}</div>
+        )}
         <form onSubmit={handleLogin} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           <div>
             <label style={etiket}>E-posta</label>

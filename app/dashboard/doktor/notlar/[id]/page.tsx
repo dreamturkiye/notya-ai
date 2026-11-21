@@ -60,6 +60,7 @@ import { bloklariAktar } from '@/core/belgeler/notaBlok'
 import { useRutinPaket } from '@/lib/doktor/ogrenme/rutinIstemci'
 import { kullanimEylem } from '@/lib/telemetri/kullanim'
 import { oneriGeldiMi, oneriYoklamasiGerekli, oneriyiYokla } from '@/lib/doktor/oneriBekle';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 interface IcdOner { code?: string; description?: string; description_tr?: string; is_primary?: boolean }
 interface ReceteOner { etkenMadde?: string; ticariOrnek?: string; doz?: string; kullanim?: string; sure?: string; not?: string; sgkListesinde?: boolean }
@@ -177,7 +178,7 @@ export default function NotSayfasi() {
     (async () => {
       try {
         const t = await ensureDoctorAccessToken();
-        const r = await fetch('/api/accounting/module', { headers: { Authorization: `Bearer ${t}` } });
+        const r = await doktorFetch('/api/accounting/module', {});
         const j = await r.json();
         setFaturalamaAcik(!!(r.ok && j.data?.enabled));
       } catch { setFaturalamaAcik(false); }
@@ -188,7 +189,7 @@ export default function NotSayfasi() {
     (async () => {
       try {
         const t = await ensureDoctorAccessToken();
-        const r = await fetch(`/api/notes/${params.id}`, { headers: { Authorization: `Bearer ${t}` } });
+        const r = await doktorFetch(`/api/notes/${params.id}`, {});
         const j = await r.json();
         if (!r.ok) throw new Error(j.error || 'Not alınamadı');
         atlaOtomatikRef.current = true;
@@ -231,7 +232,7 @@ export default function NotSayfasi() {
       const gelen = await oneriyiYokla<NotVeri['not']>({
         getir: async () => {
           const t = await ensureDoctorAccessToken();
-          const r = await fetch(`/api/notes/${params.id}`, { headers: { Authorization: `Bearer ${t}` } });
+          const r = await doktorFetch(`/api/notes/${params.id}`, {});
           if (!r.ok) return null;
           return ((await r.json()) as NotVeri).not;
         },
@@ -256,7 +257,7 @@ export default function NotSayfasi() {
   const ekBloklariniAl = async () => {
     try {
       const t = await ensureDoctorAccessToken();
-      const r = await fetch(`/api/notes/${params.id}`, { headers: { Authorization: `Bearer ${t}` } });
+      const r = await doktorFetch(`/api/notes/${params.id}`, {});
       if (!r.ok) return;
       const j = (await r.json()) as NotVeri;
       const sunucu = satirBasiNumarala(motorAfisiTemizle(j.not.objektif || ''));
@@ -292,9 +293,9 @@ export default function NotSayfasi() {
     const zamanAsimi = setTimeout(() => kontrolor.abort(), 30000);
     try {
       const t = await ensureDoctorAccessToken();
-      const r = await fetch('/api/doktor/not-konsult', {
+      const r = await doktorFetch('/api/doktor/not-konsult', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         signal: kontrolor.signal,
         body: JSON.stringify({
           noteId: params.id,
@@ -430,7 +431,7 @@ export default function NotSayfasi() {
     if (!window.confirm('Bu taslak not silinsin mi? Bu işlem geri alınamaz.')) return;
     try {
       const t = await ensureDoctorAccessToken();
-      const r = await fetch(`/api/notes/${params.id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${t}` } });
+      const r = await doktorFetch(`/api/notes/${params.id}`, { method: 'DELETE' });
       if (!r.ok) { const j = await r.json().catch(() => null); window.alert(j?.error || 'Not silinemedi.'); return; }
       router.push(hasta.patientId ? hastaDosyasiYolu(hasta.patientId, 'muayene') : '/dashboard/doktor');
     } catch { window.alert('Not silinemedi.'); }
@@ -465,7 +466,7 @@ export default function NotSayfasi() {
     setDurum('kaydediyor');
     try {
       const t = await ensureDoctorAccessToken();
-      const r = await fetch(`/api/notes/${params.id}/approve`, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
+      const r = await doktorFetch(`/api/notes/${params.id}/approve`, { method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           duzenlemeler: {
             ...taslak,

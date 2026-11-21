@@ -6,6 +6,7 @@ import React, { useState, useEffect } from 'react'
 import { getDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import RrsBekleyenler from '@/components/doktor/RrsBekleyenler'
 import { CHROME_RENK, CHROME_FONT } from '@/lib/doktor/chromeTheme'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 interface Hasta {
   id: string
@@ -74,7 +75,7 @@ const ERecetePage: React.FC = () => {
     const t = setTimeout(async () => {
       try {
         const token = getDoctorAccessToken()
-        const r = await fetch(`/api/doktor/ilac-ara?q=${encodeURIComponent(q)}`, { headers: { Authorization: `Bearer ${token}` } })
+        const r = await doktorFetch(`/api/doktor/ilac-ara?q=${encodeURIComponent(q)}`, {})
         const d = await r.json()
         if (!iptal) setOneriler((d.sonuclar || []).slice(0, 8))
       } catch { if (!iptal) setOneriler([]) }
@@ -106,9 +107,8 @@ const ERecetePage: React.FC = () => {
       const tokenData = { access_token: getDoctorAccessToken() } // NOTYA-AUTH-01
       if (!tokenData.access_token) return
       try {
-        const res = await fetch('/api/doktor/hastalar', {
+        const res = await doktorFetch('/api/doktor/hastalar', {
           headers: {
-            Authorization: `Bearer ${tokenData.access_token}`,
             'Content-Type': 'application/json',
           },
         })
@@ -165,10 +165,9 @@ const ERecetePage: React.FC = () => {
     }
 
     try {
-      const res = await fetch('/api/doktor/araclar/erecete', {
+      const res = await doktorFetch('/api/doktor/araclar/erecete', {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${tokenData.access_token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(payload),

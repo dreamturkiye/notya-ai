@@ -10,6 +10,7 @@ import { AntetliKagit, KAGIT, type Antet } from '@/components/doktor/yazdir/Ante
 import { ANATOMI_ALANLARI, BOS_JINEKOLOJIK_USG, BOS_OBSTETRIK_USG, USG_ETIKET, type JinekolojikUsg, type ObstetrikUsg } from '@/specialties/kadin-dogum/engines/usgRaporu';
 import { BOS_NST, type NstGirdi } from '@/specialties/kadin-dogum/engines/nstKtg';
 import { JinekolojikUsgSonucu, NstSonucu, ObstetrikUsgSonucu } from '@/specialties/kadin-dogum/ui/KdRaporlar';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 type Veri = { rapor: { id: string; tur: 'usg_obstetrik' | 'usg_jinekolojik' | 'nst'; rapor_tarihi: string; veri: Record<string, unknown> }; baslik: Antet };
 const BASLIK = { usg_obstetrik: 'OBSTETRİK ULTRASONOGRAFİ RAPORU', usg_jinekolojik: 'JİNEKOLOJİK ULTRASONOGRAFİ RAPORU', nst: 'NST / KARDİYOTOKOGRAFİ RAPORU' } as const;
@@ -27,7 +28,7 @@ export default function KdRaporYazdir() {
     (async () => {
       try {
         const t = await ensureDoctorAccessToken();
-        const r = await fetch(`/api/doktor/kd-raporlari?patientId=${encodeURIComponent(p.id)}&id=${encodeURIComponent(p.rid)}`, { headers: { Authorization: `Bearer ${t}` } });
+        const r = await doktorFetch(`/api/doktor/kd-raporlari?patientId=${encodeURIComponent(p.id)}&id=${encodeURIComponent(p.rid)}`, {});
         const j = await r.json(); if (!r.ok) throw new Error(j.error || 'Yüklenemedi'); setV(j);
       } catch (e) { setHata(e instanceof Error ? e.message : 'Yüklenemedi'); }
     })();

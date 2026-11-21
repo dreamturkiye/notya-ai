@@ -9,6 +9,7 @@ import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { getDoctorAccessToken } from '@/lib/doktor/clientAuth'
 import { CHROME_RENK, CHROME_FONT } from '@/lib/doktor/chromeTheme'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 const CARD = '#FFFFFF'
 const BORDER = CHROME_RENK.border
@@ -23,7 +24,7 @@ export default function FaturalamaKarti() {
   useEffect(() => {
     const token = getDoctorAccessToken()
     if (!token) return
-    fetch('/api/accounting/module', { headers: { Authorization: `Bearer ${token}` } })
+    doktorFetch('/api/accounting/module', {})
       .then((r) => r.json())
       .then((d) => setEnabled(!!d?.data?.enabled))
       .catch(() => setEnabled(null))

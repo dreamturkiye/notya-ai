@@ -7,6 +7,7 @@ import { toolsCard, toolsPrimaryBtn } from '@/lib/doktor/toolsUi'
 import { CHROME_FONT, CHROME_RENK } from '@/lib/doktor/chromeTheme'
 import IpucuBaloncugu from '@/components/doktor/IpucuBaloncugu'
 import { ENABIZ_PORTAL, MASA_KISA_REHBER, type EnabizMasaTur } from '@/lib/enabiz/masa'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 type Alan = { id: string; etiket: string; deger: string; eksik: boolean }
 type Cikti = { tur: EnabizMasaTur; ad: string; alanlar: Alan[]; topluMetin: string; eksikler: string[] }
@@ -33,7 +34,7 @@ export default function EnabizMasa({ gizliBaslik }: { gizliBaslik?: boolean }) {
   const yukleListe = useCallback(async () => {
     const t = await ensureDoctorAccessToken()
     if (!t) return
-    const r = await fetch('/api/doktor/araclar/enabiz', { headers: { Authorization: `Bearer ${t}` }, cache: 'no-store' })
+    const r = await doktorFetch('/api/doktor/araclar/enabiz', { cache: 'no-store' })
     const j = await r.json().catch(() => ({}))
     if (r.ok && Array.isArray(j.hastalar)) setHastalar(j.hastalar)
   }, [])
@@ -50,7 +51,7 @@ export default function EnabizMasa({ gizliBaslik }: { gizliBaslik?: boolean }) {
       if (nid) u.set('notId', nid)
       if (sid) u.set('seansId', sid)
       if (tTur) u.set('tur', tTur)
-      const r = await fetch(`/api/doktor/araclar/enabiz?${u}`, { headers: { Authorization: `Bearer ${t}` }, cache: 'no-store' })
+      const r = await doktorFetch(`/api/doktor/araclar/enabiz?${u}`, { cache: 'no-store' })
       const j = await r.json().catch(() => ({}))
       if (!r.ok) { setHata(j.error || 'Hasta bulunamadı.'); setCikti(null); return }
       setHastaId(String(j.hastaId || hid))

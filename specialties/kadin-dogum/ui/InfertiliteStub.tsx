@@ -5,6 +5,7 @@ import { kutu, btn, etiketS } from './clinic-styles'
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme'
 import { getAccessTokenAsync } from '@/lib/doktor/toolsUi'
 import { INFERTILITE_ADIM1_FULL, infertiliteSevkPaketi } from '../engines/kd-klinik-wow'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 /**
  * KD-EXCEPTIONAL-01 — İnfertilite sekmesi artık boş stub değil: 1. basamak sevk checklist'i
@@ -23,9 +24,9 @@ export function InfertiliteStub({ patientId }: { patientId?: string }) {
     setMesaj('')
     try {
       const t = await getAccessTokenAsync()
-      const r = await fetch('/api/doktor/jinekoloji', {
+      const r = await doktorFetch('/api/doktor/jinekoloji', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ patientId, adim: 'infertilite_sevk', tamamlanan: tamam }),
       })
       const j = await r.json().catch(() => ({}))

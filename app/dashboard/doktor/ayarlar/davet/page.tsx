@@ -9,6 +9,7 @@ import QrKod from '@/components/belge/QrKod';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import { CHROME_FONT, CHROME_RENK } from '@/lib/doktor/chromeTheme';
 import { panoyaKopyala } from '@/lib/doktor/aracUi';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 type Ozet = { kod: string; adres: string; davet: number; odeyen: number; verilen: number; son12ay: number; bekleyen: number; sinir: number };
 
@@ -20,7 +21,7 @@ export default function DavetSayfasi() {
     (async () => {
       try {
         const t = await ensureDoctorAccessToken();
-        const r = await fetch('/api/referans', { headers: { Authorization: `Bearer ${t}` }, cache: 'no-store' });
+        const r = await doktorFetch('/api/referans', { cache: 'no-store' });
         const j = await r.json();
         if (!r.ok) throw new Error(j.error || 'Yüklenemedi');
         setO(j);

@@ -22,6 +22,7 @@ import EReceteDurum from '@/components/doktor/EReceteDurum';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme'
 import { DosyaSecDugmesi } from '@/components/core/DosyaSecDugmesi'
 import { cinsiyetKodu } from '@/lib/utils/cinsiyet'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 type Yol = 'kagit' | 'mbys';
 interface Satir { ilacAdi: string; etkenMadde: string; dozMetni: string; kullanimOzeti: string; gunSayisi: number | null; kutu: number }
@@ -71,8 +72,8 @@ export default function ReceteYazdirPage() {
       try {
         const t = await ensureDoctorAccessToken();
         const [r, h] = await Promise.all([
-          fetch(`/api/doktor/medula/recete?noteId=${params.id}`, { headers: { Authorization: `Bearer ${t}` } }),
-          fetch('/api/doktor/hafiza', { headers: { Authorization: `Bearer ${t}` } }),
+          doktorFetch(`/api/doktor/medula/recete?noteId=${params.id}`, {}),
+          doktorFetch('/api/doktor/hafiza', {}),
         ]);
         const j = await r.json();
         if (!r.ok) throw new Error(j.error || 'Reçete alınamadı');
@@ -99,7 +100,7 @@ export default function ReceteYazdirPage() {
     setYol(secim);
     try {
       const t = await ensureDoctorAccessToken();
-      await fetch('/api/doktor/hafiza', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
+      await doktorFetch('/api/doktor/hafiza', { method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ kategori: 'uygulama', anahtar: 'recete-yolu', deger: secim === 'kagit' ? 'Reçeteyi kâğıda yazdırır (kâğıt reçete)' : 'Reçeteyi MBYS/Medula programına girer (kopyala-yapıştır)' }) });
     } catch { /* tercih kritik değil */ }
   };
@@ -107,7 +108,7 @@ export default function ReceteYazdirPage() {
     setKagit(b);
     try {
       const t = await ensureDoctorAccessToken();
-      await fetch('/api/doktor/hafiza', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
+      await doktorFetch('/api/doktor/hafiza', { method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ kategori: 'uygulama', anahtar: 'recete-kagit-boyu', deger: `Reçeteyi ${b} kâğıda basar` }) });
     } catch { /* tercih kritik değil */ }
   };
@@ -129,7 +130,7 @@ export default function ReceteYazdirPage() {
     setBKaydediyor(true);
     try {
       const t = await ensureDoctorAccessToken();
-      const r = await fetch('/api/doktor/recete-baslik', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
+      const r = await doktorFetch('/api/doktor/recete-baslik', { method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ satirlar: bSatirlar.split('\n'), diplomaNo: bDiploma, logoDataUrl: bLogo }) });
       const j = await r.json();
       if (!r.ok) throw new Error(j.error || 'Kaydedilemedi');

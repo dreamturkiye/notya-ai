@@ -18,7 +18,7 @@ test('Profesyonel giriş listesinde Notya Klinik var; /giris/notya-klinik aynı 
   assert.match(chooser, />Notya Klinik</)
   const sayfa = readFileSync('app/giris/notya-klinik/page.tsx', 'utf8')
   assert.match(sayfa, /\/dashboard\/notya-klinik/)
-  assert.match(sayfa, /auth-token/)
+  assert.match(sayfa, /saveDoctorSession\(data\.session\)/) // NOTYA-OTURUM-01: one session owner (clientAuth)
   assert.doesNotMatch(sayfa, /profession_type\s*!==\s*'klinik/)
   const me = readFileSync('app/api/klinik/me/route.ts', 'utf8')
   assert.match(me, /klinikYuzuAcikMi/)

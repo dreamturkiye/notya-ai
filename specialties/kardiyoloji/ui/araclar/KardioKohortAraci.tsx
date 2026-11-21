@@ -7,6 +7,7 @@ import { getAccessTokenAsync } from '@/lib/doktor/toolsUi';
 import { kardioStil, Istatistik, TaslakNotu, Rozet } from './KardioAracKabugu';
 import { KARDIO_BAYRAK_AD, kardioKohortFiltre, type KardioKohortBayrak, type KardioKohortSatir } from '../../engines/kohort';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 const S = kardioStil;
 const BAYRAKLAR = Object.keys(KARDIO_BAYRAK_AD) as KardioKohortBayrak[];
@@ -24,7 +25,7 @@ export default function KardioKohortAraci() {
     setHata('');
     try {
       const t = await getAccessTokenAsync();
-      const r = await fetch('/api/doktor/kardiyoloji/kohort', { headers: { Authorization: `Bearer ${t}` }, cache: 'no-store' });
+      const r = await doktorFetch('/api/doktor/kardiyoloji/kohort', { cache: 'no-store' });
       const j = await r.json().catch(() => ({}));
       if (!r.ok) { setHata(j.error || 'Kohort yüklenemedi'); setSatirlar([]); return; }
       setSatirlar(j.satirlar || []);
@@ -40,9 +41,9 @@ export default function KardioKohortAraci() {
     setDurum(''); setHata(''); setGonderiliyor(true);
     try {
       const t = await getAccessTokenAsync();
-      const r = await fetch('/api/doktor/kardiyoloji/kohort', {
+      const r = await doktorFetch('/api/doktor/kardiyoloji/kohort', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ patientIds: secili }),
       });
       const j = await r.json().catch(() => ({}));

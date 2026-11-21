@@ -9,6 +9,7 @@ import { TuvalAlanlari } from '@/components/klinik/TuvalAlanlari'
 import { OZEL_STUDYO } from '@/lib/klinik/ozelStudyoKaydi'
 import { KuralDefteri } from '@/components/klinik/KuralDefteri'
 import { SacFotoDosya } from '@/components/klinik/SacFotoDosya'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 export default function OzelStudyo({ tanim }: { tanim: AracTanim }) {
   const hasta = useSearchParams().get('patientId') || ''
@@ -26,7 +27,7 @@ export default function OzelStudyo({ tanim }: { tanim: AracTanim }) {
     ;(async () => {
       const t = await ensureDoctorAccessToken()
       if (!t) return
-      const r = await fetch(`/api/ozel-brans/plan?patientId=${encodeURIComponent(hasta)}`, { headers: { Authorization: `Bearer ${t}` } })
+      const r = await doktorFetch(`/api/ozel-brans/plan?patientId=${encodeURIComponent(hasta)}`, {})
       if (!r.ok) return
       const j = await r.json().catch(() => ({}))
       const satir = (j.planlar || []).find((p: { arac?: string }) => p.arac === tanim.route)
@@ -45,9 +46,9 @@ export default function OzelStudyo({ tanim }: { tanim: AracTanim }) {
     if (!hasta) { setKayit('Hasta seçilmedi. Dosyadan aracı açın.'); return }
     const t = await ensureDoctorAccessToken()
     if (!t) { setKayit('Oturum yok.'); return }
-    const r = await fetch('/api/ozel-brans/plan', {
+    const r = await doktorFetch('/api/ozel-brans/plan', {
       method: 'POST',
-      headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ patientId: hasta, route: tanim.route, girdi }),
     })
     const j = await r.json().catch(() => ({}))

@@ -10,6 +10,7 @@ import { psikStil, PsikHastaSecici, PsikOnay, PsikKopyala, Istatistik, TaslakNot
 import { acilTara, hekimOnayiGerekliMi, ACIL_KODLARI, GUVENLIK_KONTROL_LISTESI, HASTA_ACIL_METNI, type AcilKod } from '../../engines/acil';
 import { ACIL_YONLENDIRME_METNI } from '../../engines/psikiyatri';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 export default function RiskAraci() {
   const [isaretli, setIsaretli] = useState<AcilKod[]>([]);
@@ -35,9 +36,9 @@ export default function RiskAraci() {
     if (!hastaId) { setHata('Kaydetmek için hasta seçin.'); return; }
     try {
       const t = await getAccessTokenAsync();
-      const r = await fetch('/api/doktor/psikiyatri', {
+      const r = await doktorFetch('/api/doktor/psikiyatri', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           patientId: hastaId, adim: 'risk', bayraklar: isaretli, metin,
           eylem: [eylem, ...liste.map((i) => GUVENLIK_KONTROL_LISTESI[i])].filter(Boolean).join(' | '),

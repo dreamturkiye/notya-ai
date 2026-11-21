@@ -3,6 +3,7 @@ import React, { useMemo, useState } from 'react'
 import { getAccessTokenAsync } from '@/lib/doktor/toolsUi'
 import { endoStil, EndoHastaSecici, KopyalaButonu, TaslakNotu, useUrlHasta } from './EndoAracKabugu'
 import { rejimNormalize, rejimOzeti, rejimDozIceriyorMu } from '../../engines/rejim'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 export default function EndoRejimAraci() {
   const [insulinBaslangic, setInsulinBaslangic] = useState('')
@@ -24,9 +25,9 @@ export default function EndoRejimAraci() {
     if (rejimDozIceriyorMu(not)) { setHata('Not alanında doz / ünite / mcg yazılamaz — yalnız tarih ve kısa klinik not.'); return }
     try {
       const t = await getAccessTokenAsync()
-      const r = await fetch('/api/doktor/endokrinoloji', {
+      const r = await doktorFetch('/api/doktor/endokrinoloji', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ patientId: hastaId, adim: 'rejim', rejim: kart }),
       })
       const j = await r.json().catch(() => ({}))

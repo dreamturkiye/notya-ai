@@ -3,6 +3,10 @@ import { useSearchParams } from 'next/navigation'
 import { Suspense, useEffect, useState } from 'react'
 import HastaTypeahead from '@/components/doktor/HastaTypeahead'
 import { klinikPortalNav, klinikPortalModulu } from '@/lib/klinik/klinikPortal'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
+import { getDoctorAccessToken } from '@/lib/doktor/clientAuth'
+import OturumUyarisi from '@/components/doktor/OturumUyarisi'
+import { oturumMesajiMi } from '@/lib/doktor/oturumYolu'
 
 type PortalPaylasim = {
   onayliZiyaret: number
@@ -17,8 +21,7 @@ type PortalPaylasim = {
 
 function token(): string {
   try {
-    const raw = localStorage.getItem('auth-token')
-    return raw ? (JSON.parse(raw).access_token || '') : ''
+    return getDoctorAccessToken()
   } catch { return '' }
 }
 
@@ -43,7 +46,7 @@ function Ic() {
     ;(async () => {
       const t = token()
       if (!t) return
-      const r = await fetch('/api/users/me', { headers: { Authorization: `Bearer ${t}` } })
+      const r = await doktorFetch('/api/users/me', {})
       const j = r.ok ? await r.json() : null
       const nav = klinikPortalNav(klinikPortalModulu(j?.data?.specialty) || 'sacim')
       if (nav) setModulEtiket(nav.label)
@@ -66,9 +69,9 @@ function Ic() {
     try {
       const t = token()
       if (!t) { setError('Oturum bulunamadı. Lütfen tekrar giriş yapın.'); return }
-      const res = await fetch('/api/doktor/araclar/hasta-portali', {
+      const res = await doktorFetch('/api/doktor/araclar/hasta-portali', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ hastaId: selectedHasta, ...(trimmed ? { pin: trimmed } : {}) }),
       })
       const data = await res.json().catch(() => ({}))
@@ -94,7 +97,7 @@ function Ic() {
       <a href="/portal/onizleme" target="_blank" rel="noopener" data-eylem="portal-onizleme" style={{ display: 'inline-block', marginBottom: 12, fontSize: 13, fontWeight: 600, color: '#2f4334' }}>
         Hasta sayfasını önizle (örnek veri) →
       </a>
-      {error && <p style={{ color: '#a45b3e', fontSize: 13 }}>{error}</p>}
+      {error && (oturumMesajiMi(error) ? <OturumUyarisi mesaj={error} /> : <p style={{ color: '#a45b3e', fontSize: 13 }}>{error}</p>)}
       <label style={{ display: 'block', fontSize: 12, fontWeight: 700, marginBottom: 6 }}>Hasta</label>
       <HastaTypeahead
         id="klinik-hasta-portali-picker"

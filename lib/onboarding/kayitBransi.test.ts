@@ -153,7 +153,7 @@ describe('the "Branşınızı seçin" gate of the doctor application', async () 
   })
   it('the gate saves through the server route; it never writes a branch itself', () => {
     const kapi = oku('components/doktor/BransSecimKapisi.tsx')
-    assert.match(kapi, /fetch\('\/api\/users\/brans'/)
+    assert.match(kapi, /doktorFetch\('\/api\/users\/brans'/)
     assert.ok(!kapi.includes('supabase'))
   })
 })

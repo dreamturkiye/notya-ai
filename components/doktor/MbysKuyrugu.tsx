@@ -21,6 +21,7 @@ import {
   type MbysKayitTuru,
 } from '@/lib/enabiz/mbys/kontrol'
 import { MBYS_ADRES, yardimciKuruluMu, yardimciyaGonder } from '@/lib/enabiz/mbys/yardimci'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 type KimlikOzet = { kayitTuru: MbysKayitTuru | ''; ad: string; soyad: string; cinsiyet: string; dogumTarihi: string; uyruk: string }
 type Satir = { notId: string; hastaId: string; hastaAd: string; saat: string; durum: MbysDurum; eksikler: MbysEksik[]; kimlik: KimlikOzet }
@@ -51,7 +52,7 @@ function gunAdi(gun: string): string {
 async function yetkili(yol: string, init?: RequestInit) {
   const t = await ensureDoctorAccessToken()
   if (!t) throw new Error('Oturum bulunamadı.')
-  const r = await fetch(yol, { ...init, headers: { ...(init?.headers || {}), Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' }, cache: 'no-store' })
+  const r = await doktorFetch(yol, { ...init, headers: { ...(init?.headers || {}), 'Content-Type': 'application/json' }, cache: 'no-store' })
   const j = await r.json().catch(() => ({}))
   if (!r.ok) throw new Error(String(j.error || 'İşlem yapılamadı.'))
   return j

@@ -22,7 +22,8 @@
 import { TELEFON_DOKUNMA_CSS } from '@/lib/doktor/telefonStil';
 import React, { useEffect, useState, createContext, useContext } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { getDoctorAccessToken, ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
+import OturumBekcisi from '@/components/doktor/OturumBekcisi';
+import { getDoctorAccessToken, ensureDoctorAccessToken, doktorOturumuSil } from '@/lib/doktor/clientAuth';
 import { hekimProfilOturumOku, hekimProfilOturumSil, hekimProfilOturumYaz, hekimProfilTazeleBasligi, hekimProfilTazeleBitti } from '@/lib/doktor/hekimProfilIstemci';
 import { hekimUnvanli } from '@/lib/doktor/hekimAdi';
 import BransDegistir from './BransDegistir';
@@ -35,6 +36,7 @@ import KullanimIzle from './KullanimIzle';
 import KabukGorunumu, { type KabukOge } from './KabukGorunumu';
 import { SAAT_DILIMI_CEREZ, tarayiciSaatDilimi } from '@/lib/doktor/selam';
 import { izinVarMi, ROL_KISA_ETIKETI_TR, ROL_ONBURO_ETIKETI_TR, type PratikRol, type Yetki } from '@/lib/doktor/personelYetki';
+import { doktorFetch, oturumSuresiDoldu } from '@/lib/doktor/oturumFetch'
 
 /**
  * A page rendered under a chrome-owning layout (e.g. hedef-boy's "aile" / family-facing embed
@@ -225,7 +227,7 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
       if (!t) return;
       let sekreterOturum = false
       try {
-        const r = await fetch('/api/personel/me', { headers: { Authorization: `Bearer ${t}` }, cache: 'no-store' });
+        const r = await doktorFetch('/api/personel/me', { cache: 'no-store' });
         if (r.ok) {
           const d = await r.json();
           if (d.rol && d.rol !== 'doktor') {
@@ -244,7 +246,7 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
         if (onbellek?.specialty) setBrans(String(onbellek.specialty))
       }
       if (!sekreterOturum) try {
-        const r = await fetch('/api/users/me', { headers: { Authorization: `Bearer ${t}`, ...tazele } });
+        const r = await doktorFetch('/api/users/me', { headers: { ...tazele } });
         if (r.ok) {
           hekimProfilTazeleBitti()
           const d = await r.json();
@@ -262,13 +264,13 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
       } catch { /* header just shows less */ }
       // KAYIT-BRANS-01: asked after the profile (it used to be asked before) so the branch gate is decided first.
       try {
-        const r = await fetch('/api/doktor/mesajlar/unread-count', { headers: { Authorization: `Bearer ${t}` } });
+        const r = await doktorFetch('/api/doktor/mesajlar/unread-count', {});
         if (r.ok) { const d = await r.json(); setMesajUnread(Number(d.unreadCount) || 0); }
       } catch { /* badge stays 0 */ }
       // NOTYA-SEKRETER-01: sekreter kendi avatarını; doktor kendi avatarını çeker.
       try {
         const yol = sekreterOturum ? '/api/personel/avatar' : '/api/doktor/profil/avatar';
-        const r = await fetch(yol, { headers: { Authorization: `Bearer ${t}` } });
+        const r = await doktorFetch(yol, {});
         if (r.ok) { const d = await r.json(); if (d?.avatar?.dataUrl) setAvatarUrl(d.avatar.dataUrl); }
       } catch { /* falls back to initials */ }
     })();
@@ -290,7 +292,7 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
       const t = await ensureDoctorAccessToken();
       if (!t) return;
       try {
-        const r = await fetch('/api/doktor/gelen-belgeler?sayi=1', { headers: { Authorization: `Bearer ${t}` }, cache: 'no-store' });
+        const r = await doktorFetch('/api/doktor/gelen-belgeler?sayi=1', { cache: 'no-store' });
         if (r.ok) { const d = await r.json(); setGelenErisim(d.erisim === true); setGelenSayi(Number(d.sayi) || 0); }
       } catch { /* no badge */ }
     };
@@ -300,24 +302,20 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
     return () => { window.removeEventListener(GELEN_OLAY, yukle); window.removeEventListener(GELEN_SAYI_OLAY, yukle); };
   }, []);
 
-  useEffect(() => {
-    const raw = getDoctorAccessToken();
-    if (!raw) window.location.href = '/giris/doktor';
-  }, []);
+  // NOTYA-OTURUM-01: the session check / keep-alive / expired-session redirect lives in <OturumBekcisi /> below.
 
   // NOTYA-ASISTAN-YUZEN-01: istemci tarafı gezinme — window.location tam sayfa yüklemesi yapıp
   // AsistanOturumProvider'ı (sesli seans + sohbet) öldürüyordu.
   function handleNav(route: string) {
     const raw = getDoctorAccessToken();
-    if (!raw) { router.push('/giris/doktor'); return; }
+    if (!raw) { oturumSuresiDoldu(); return; }
     router.push(route);
     setMenuOpen(false);
   }
 
   function handleCikis() {
     if (typeof window !== 'undefined') {
-      const key = Object.keys(localStorage).find((k) => k.includes('auth-token')) || '';
-      if (key) localStorage.removeItem(key);
+      doktorOturumuSil()
       hekimProfilOturumSil()
     }
     window.location.href = '/giris/doktor';
@@ -360,6 +358,7 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
     // yalnız içerik. Görünürlük geri değiştiğinde (useChromeGizle temizlenince) normale döner.
     return (
       <ChromeGizleContext.Provider value={setGizli}>
+        <OturumBekcisi />
         {children}
       </ChromeGizleContext.Provider>
     );
@@ -368,6 +367,7 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
   return (
     <ChromeGizleContext.Provider value={setGizli}>
     <ChromeKompaktContext.Provider value={setKompakt}>
+    <OturumBekcisi />
     <KullanimIzle />
     {gelenErisim && <GelenBelgeBirak />}
     <KabukGorunumu

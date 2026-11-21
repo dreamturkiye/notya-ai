@@ -22,6 +22,7 @@ import {
 } from '@/lib/clinical/genitalEstetik';
 import { GE_BELGELER, GE_BOLUM_ADLARI, GE_COPS_YONLENDIRME, GE_ETIKET as L, GE_HATA, GE_KANIT, GE_KART, GE_KAYNAKLAR, GE_OLCEK_NOTU } from '@/specialties/kadin-dogum/engines/genitalEstetikMetinleri';
 import { geOlcekleriKapsam, type GeKapsam } from '@/lib/doktor/genitalEstetikBrans';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 type Kayit = { id: string; tur: string; tarih: string; endikasyon: string | null; urunAdi: string | null; lot: string | null; sonrakiTarih: string | null; veri: Record<string, any> };
 type FotoMeta = { id: string; gorunum: string; cekimTarihi: string; boyut: number };
@@ -40,7 +41,7 @@ const trTarih = (g: string | null | undefined) => (g ? new Date(`${g}T12:00:00Z`
 
 async function istek(yol: string, govde?: unknown): Promise<{ ok: boolean; j: any }> {
   const t = await getAccessTokenAsync();
-  const r = await fetch(yol, govde === undefined ? { headers: { Authorization: `Bearer ${t}` }, cache: 'no-store' } : { method: 'POST', headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' }, body: JSON.stringify(govde) });
+  const r = await doktorFetch(yol, govde === undefined ? { cache: 'no-store' } : { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(govde) });
   return { ok: r.ok, j: await r.json().catch(() => ({})) };
 }
 
@@ -252,7 +253,7 @@ function MahremFoto({ f, patientId }: { f: FotoMeta; patientId: string }) {
     setHata('');
     try {
       const t = await getAccessTokenAsync();
-      const r = await fetch(`/api/doktor/genital-estetik/foto/${f.id}?patientId=${encodeURIComponent(patientId)}`, { headers: { Authorization: `Bearer ${t}` }, cache: 'no-store' });
+      const r = await doktorFetch(`/api/doktor/genital-estetik/foto/${f.id}?patientId=${encodeURIComponent(patientId)}`, { cache: 'no-store' });
       if (!r.ok) { setHata('Gösterilemedi.'); return; }
       setUrl(URL.createObjectURL(await r.blob()));
     } catch { setHata('Gösterilemedi.'); }

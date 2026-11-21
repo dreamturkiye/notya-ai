@@ -13,6 +13,7 @@ import {
   toolsPrimaryBtn,
 } from '@/lib/doktor/toolsUi'
 import { hesaplaHedefBoy, parseBoyGirdi, formatBoyCm, cinsiyetHedefBoy, type HedefBoySonuc } from '@/lib/clinical/hedefBoy'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 function ipucu(raw: string): string {
   const p = parseBoyGirdi(raw)
@@ -68,9 +69,7 @@ export function HedefBoyAracPaneli({
     if (!id) return
     try {
       const t = await getAccessTokenAsync()
-      const r = await fetch(`/api/doktor/hastalar/${id}/hedef-boy`, {
-        headers: { Authorization: `Bearer ${t}` },
-      })
+      const r = await doktorFetch(`/api/doktor/hastalar/${id}/hedef-boy`, {})
       const d = await r.json()
       if (!r.ok) throw new Error(d.error || 'Hasta yüklenemedi')
       setHastaAd(d.ad || '')
@@ -106,9 +105,9 @@ export function HedefBoyAracPaneli({
     setYukleniyor(true)
     try {
       const t = await getAccessTokenAsync()
-      const r = await fetch(`/api/doktor/hastalar/${hastaId}/hedef-boy`, {
+      const r = await doktorFetch(`/api/doktor/hastalar/${hastaId}/hedef-boy`, {
         method: 'PUT',
-        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ anneBoy: anne, babaBoy: baba, cinsiyet: cinsiyet || 'Erkek' }),
       })
       const d = await r.json()

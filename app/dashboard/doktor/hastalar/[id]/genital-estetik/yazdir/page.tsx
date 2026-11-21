@@ -9,6 +9,7 @@ import { useParams, useSearchParams } from 'next/navigation';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import { AntetliKagit, KAGIT, type Antet } from '@/components/doktor/yazdir/AntetliKagit';
 import { GE_KANIT, GE_KAYNAKLAR, GE_TALIMATLAR } from '@/specialties/kadin-dogum/engines/genitalEstetikMetinleri';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 function Sayfa() {
   const p = useParams<{ id: string }>();
@@ -19,7 +20,7 @@ function Sayfa() {
     (async () => {
       try {
         const t = await ensureDoctorAccessToken();
-        const r = await fetch(`/api/doktor/genital-estetik?patientId=${encodeURIComponent(p.id)}&baslik=1`, { headers: { Authorization: `Bearer ${t}` }, cache: 'no-store' });
+        const r = await doktorFetch(`/api/doktor/genital-estetik?patientId=${encodeURIComponent(p.id)}&baslik=1`, { cache: 'no-store' });
         const d = await r.json(); if (!r.ok) throw new Error(d.error || 'Yüklenemedi'); setAntet(d.baslik);
       } catch (e) { setHata(e instanceof Error ? e.message : 'Yüklenemedi'); }
     })();

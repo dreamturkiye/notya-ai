@@ -1,5 +1,7 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
+import { getDoctorAccessToken } from '@/lib/doktor/clientAuth'
 
 interface HelpWidgetProps {
   professionType: 'doktor' | 'mali_müşavirlik' | 'avukat'
@@ -53,28 +55,17 @@ export default function HelpWidget({ professionType, userName, isFirstLogin }: H
 
     try {
       let accessToken = ''
-      try {
-        const raw = localStorage.getItem('auth-token')
-        if (raw) accessToken = JSON.parse(raw)?.access_token || ''
-        if (!accessToken) {
-          const sbKey = Object.keys(localStorage).find((k) => k.startsWith('sb-') && k.endsWith('-auth-token'))
-          if (sbKey) {
-            const parsed = JSON.parse(localStorage.getItem(sbKey) || '{}')
-            accessToken = parsed?.access_token || parsed?.currentSession?.access_token || ''
-          }
-        }
-      } catch { /* ignore */ }
+      accessToken = getDoctorAccessToken()
 
       if (!accessToken) {
         setMessages((prev) => [...prev, { role: 'assistant', content: 'Yardım için önce giriş yapmanız gerekir.' }])
         return
       }
 
-      const response = await fetch('/api/help/chat', {
+      const response = await doktorFetch('/api/help/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`,
         },
         body: JSON.stringify({
           message: input,

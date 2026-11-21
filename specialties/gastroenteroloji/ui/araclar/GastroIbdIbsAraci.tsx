@@ -3,6 +3,7 @@ import React, { useMemo, useState } from 'react'
 import { getAccessTokenAsync } from '@/lib/doktor/toolsUi'
 import { gastroStil, GastroHastaSecici, KopyalaButonu, Istatistik, TaslakNotu, useUrlHasta } from './GastroAracKabugu'
 import { skorHesapla, SKOR_TUR_ETIKET, type SkorTur } from '../../engines/ibdIbs'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 const TURLER: SkorTur[] = ['mayo_kismi', 'hbi', 'ibs_sss']
 
@@ -23,9 +24,9 @@ export default function GastroIbdIbsAraci() {
     if (!sonuc.tamamMi) { setHata(sonuc.ozet); return }
     try {
       const t = await getAccessTokenAsync()
-      const r = await fetch('/api/doktor/gastroenteroloji', {
+      const r = await doktorFetch('/api/doktor/gastroenteroloji', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ patientId: hastaId, adim: 'skor', tur, skor: Number(skor), hekimKilit: true }),
       })
       const j = await r.json().catch(() => ({}))

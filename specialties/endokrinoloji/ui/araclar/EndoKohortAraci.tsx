@@ -3,6 +3,7 @@ import React, { useCallback, useEffect, useState } from 'react'
 import { getAccessTokenAsync } from '@/lib/doktor/toolsUi'
 import { endoStil, Istatistik, TaslakNotu, Rozet } from './EndoAracKabugu'
 import { ENDO_BAYRAK_AD, endoKohortFiltre, type EndoKohortBayrak, type EndoKohortSatir } from '../../engines/kohort'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 const S = endoStil
 const BAYRAKLAR = Object.keys(ENDO_BAYRAK_AD) as EndoKohortBayrak[]
@@ -20,7 +21,7 @@ export default function EndoKohortAraci() {
     setHata('')
     try {
       const t = await getAccessTokenAsync()
-      const r = await fetch('/api/doktor/endokrinoloji/kohort', { headers: { Authorization: `Bearer ${t}` }, cache: 'no-store' })
+      const r = await doktorFetch('/api/doktor/endokrinoloji/kohort', { cache: 'no-store' })
       const j = await r.json().catch(() => ({}))
       if (!r.ok) { setHata(j.error || 'Kohort yüklenemedi'); setSatirlar([]); return }
       setSatirlar(j.satirlar || [])
@@ -36,9 +37,9 @@ export default function EndoKohortAraci() {
     setDurum(''); setHata(''); setGonderiliyor(true)
     try {
       const t = await getAccessTokenAsync()
-      const r = await fetch('/api/doktor/endokrinoloji/kohort', {
+      const r = await doktorFetch('/api/doktor/endokrinoloji/kohort', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ patientIds: secili }),
       })
       const j = await r.json().catch(() => ({}))

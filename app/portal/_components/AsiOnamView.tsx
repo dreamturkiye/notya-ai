@@ -11,6 +11,7 @@
 import { useEffect, useState } from 'react'
 import { EmptyState, formatTrDate, SectionHeader, SoftPanel } from './ui'
 import { ASI_ONAM_GORUNEN_ETIKET, ASI_ONAM_YONTEM_KISA, asiOnamGorunenDurumu, type AsiOnamGorunenDurum } from '@/lib/asi/onam/asiOnamDurum'
+import { portalFetch } from '@/lib/portal/portalFetch'
 
 interface IcerikGosterim { ad: string; korur: string; yanEtkiler: string[]; onamCumlesi: string; kaynak: string }
 interface Talep { id: string; asilar: string[]; bildirim_kanali: string }
@@ -35,7 +36,7 @@ export function AsiOnamView({ token, basePath }: { token: string; basePath: stri
     let aktif = true
     void (async () => {
       try {
-        const r = await fetch(api, { credentials: 'include' })
+        const r = await portalFetch(api, { credentials: 'include' })
         const j = await r.json().catch(() => ({}))
         if (!aktif) return
         if (!r.ok) { setHata(j.error || 'Yüklenemedi.'); return }
@@ -55,7 +56,7 @@ export function AsiOnamView({ token, basePath }: { token: string; basePath: stri
     setGonderiliyor(true)
     setHata('')
     try {
-      const r = await fetch(api, {
+      const r = await portalFetch(api, {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },

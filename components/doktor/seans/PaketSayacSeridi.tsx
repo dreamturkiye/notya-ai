@@ -4,6 +4,7 @@
 import React, { useEffect, useState } from 'react'
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth'
 import { CHROME_FONT, CHROME_RENK } from '@/lib/doktor/chromeTheme'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 export default function PaketSayacSeridi() {
   const [metin, setMetin] = useState('')
@@ -14,7 +15,7 @@ export default function PaketSayacSeridi() {
     void (async () => {
       try {
         const t = await ensureDoctorAccessToken()
-        const r = await fetch('/api/doktor/seans-paketi/bugun', { headers: { Authorization: `Bearer ${t}` }, cache: 'no-store' })
+        const r = await doktorFetch('/api/doktor/seans-paketi/bugun', { cache: 'no-store' })
         if (!r.ok) return
         const j = await r.json()
         if (!j.goster) return

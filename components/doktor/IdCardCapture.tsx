@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useEffect, useRef, useState } from 'react'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 type Props = {
   onParsed: (fields: {
@@ -84,11 +85,10 @@ export default function IdCardCapture({ onParsed, onCancel, getToken }: Props) {
       }
 
       const token = getToken()
-      const res = await fetch('/api/doktor/id-card/parse', {
+      const res = await doktorFetch('/api/doktor/id-card/parse', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           ocrText: ocrText || undefined,

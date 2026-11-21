@@ -15,6 +15,7 @@ import {
 } from '@/lib/doktor/toolsUi'
 import { trParcaEslesir } from '@/lib/utils/turkceArama'
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 /**
  * Match query against full label or any name-part prefix (ad / soyad initials).
@@ -68,14 +69,12 @@ export default function HastaTypeahead({
           }
           return
         }
-        const res = await fetch('/api/doktor/hastalar', {
-          headers: { Authorization: `Bearer ${token}` },
-        })
+        const res = await doktorFetch('/api/doktor/hastalar', {})
         const data = await res.json().catch(() => ({}))
         if (cancelled) return
         if (res.status === 401) {
           setHastalar([])
-          onLoadError?.('Oturum geçersiz. Lütfen tekrar giriş yapın.')
+          onLoadError?.('Oturumunuzun süresi doldu. Lütfen tekrar giriş yapın.')
           return
         }
         if (!res.ok) {

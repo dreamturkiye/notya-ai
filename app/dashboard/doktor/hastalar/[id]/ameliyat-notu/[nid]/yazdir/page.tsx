@@ -8,6 +8,7 @@ import { useParams } from 'next/navigation';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import { AntetliKagit, KAGIT, yazdirTarih, type Antet } from '@/components/doktor/yazdir/AntetliKagit';
 import { ACILIYET_ETIKETLERI, ANESTEZI_ETIKETLERI, ameliyatNotuBolumleri, type AmeliyatNotuVeri } from '@/lib/doktor/ameliyatNotu';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 type Veri = { not: { id: string; ameliyat_tarihi: string; imzalandi_at: string | null; veri: AmeliyatNotuVeri }; baslik: Antet };
 
@@ -19,7 +20,7 @@ export default function AmeliyatNotuYazdir() {
     (async () => {
       try {
         const t = await ensureDoctorAccessToken();
-        const r = await fetch(`/api/doktor/ameliyat-notlari?patientId=${encodeURIComponent(p.id)}&id=${encodeURIComponent(p.nid)}`, { headers: { Authorization: `Bearer ${t}` } });
+        const r = await doktorFetch(`/api/doktor/ameliyat-notlari?patientId=${encodeURIComponent(p.id)}&id=${encodeURIComponent(p.nid)}`, {});
         const d = await r.json(); if (!r.ok) throw new Error(d.error || 'Yüklenemedi'); setV(d);
       } catch (e) { setHata(e instanceof Error ? e.message : 'Yüklenemedi'); }
     })();

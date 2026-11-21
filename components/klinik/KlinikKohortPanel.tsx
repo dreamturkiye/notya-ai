@@ -6,11 +6,12 @@ import { klinikDefterOku } from '@/lib/klinik/klinikKayitIstemci'
 import { defterSunucuIle } from '@/lib/klinik/seansDefter'
 import { ozelKohortBirlestir } from '@/lib/klinik/ozelKohort'
 import { klinikSlugCoz } from '@/lib/specialties/klinikDikey'
+import { doktorFetch, oturumSuresiDoldu } from '@/lib/doktor/oturumFetch'
+import { getDoctorAccessToken } from '@/lib/doktor/clientAuth'
 
 function token(): string {
   try {
-    const raw = localStorage.getItem('auth-token')
-    return raw ? (JSON.parse(raw).access_token || '') : ''
+    return getDoctorAccessToken()
   } catch { return '' }
 }
 
@@ -39,17 +40,15 @@ export default function KlinikKohortPanel() {
     let iptal = false
     ;(async () => {
       const t = token()
-      if (!t) { router.push('/giris'); return }
+      if (!t) { oturumSuresiDoldu(); return }
       const bugun = new Date().toISOString().slice(0, 10)
       const bas = new Date(); bas.setDate(bas.getDate() - 21)
       const bit = new Date(); bit.setDate(bit.getDate() + 14)
       const [me, p, rv, plan] = await Promise.all([
-        fetch('/api/users/me', { headers: { Authorization: `Bearer ${t}` } }),
-        fetch('/api/doktor/hastalar', { headers: { Authorization: `Bearer ${t}` } }),
-        fetch(`/api/doktor/randevular?baslangic=${encodeURIComponent(bas.toISOString())}&bitis=${encodeURIComponent(bit.toISOString())}`, {
-          headers: { Authorization: `Bearer ${t}` },
-        }),
-        fetch('/api/ozel-brans/plan', { headers: { Authorization: `Bearer ${t}` } }),
+        doktorFetch('/api/users/me', {}),
+        doktorFetch('/api/doktor/hastalar', {}),
+        doktorFetch(`/api/doktor/randevular?baslangic=${encodeURIComponent(bas.toISOString())}&bitis=${encodeURIComponent(bit.toISOString())}`, {}),
+        doktorFetch('/api/ozel-brans/plan', {}),
       ])
       const mj = me.ok ? await me.json() : null
       const pj = p.ok ? await p.json() : null

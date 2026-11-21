@@ -10,6 +10,7 @@ import { useParams } from 'next/navigation';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import { KADIN_HASTALIKLARI_DOGUM_ETIKETI } from '@/lib/doktor/specialties';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 type Bio = { deger: number; persentil: number };
 type Veri = {
@@ -38,7 +39,7 @@ export default function GebeIzlemKartiYazdir() {
     (async () => {
       try {
         const t = await ensureDoctorAccessToken();
-        const r = await fetch(`/api/doktor/gebelik?patientId=${params.id}`, { headers: { Authorization: `Bearer ${t}` } });
+        const r = await doktorFetch(`/api/doktor/gebelik?patientId=${params.id}`, {});
         const d = await r.json(); if (!r.ok) throw new Error(d.error || 'Yüklenemedi'); setV(d);
       } catch (e) { setHata(e instanceof Error ? e.message : 'Yüklenemedi'); }
     })();

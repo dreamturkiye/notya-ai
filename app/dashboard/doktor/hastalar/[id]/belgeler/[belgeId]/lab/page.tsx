@@ -16,6 +16,7 @@ import { getAccessTokenAsync, toolsShell, toolsCard, toolsInput } from '@/lib/do
 import { UYARI_SERIDI } from '@/core/belgeler/yazar';
 import { REF_ACIKLAMA } from '@/specialties/dahiliye/engines/dahiliye';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 type Doc = { id: string; fileName: string; fileType: string };
 type Satir = { id: string; numune_tarihi?: string | null; raw_name: string; canonical_key: string | null; value_num: number | null; value_text: string | null; unit: string | null; ref_low: number | null; ref_high: number | null; flag: string; kritik: boolean; kritik_neden: string | null; prior_value: number | null; prior_date: string | null; delta_pct: number | null; trend: string; dogrulanacak: boolean; dogrulama_notu: string | null; doctor_corrected: boolean; page: number | null };
@@ -60,7 +61,7 @@ export default function LabPage() {
     (async () => {
       try {
         const t = await getAccessTokenAsync();
-        const r = await fetch(`/api/doktor/hastalar/${patientId}`, { headers: { Authorization: `Bearer ${t}` } });
+        const r = await doktorFetch(`/api/doktor/hastalar/${patientId}`, {});
         const d = await r.json().catch(() => null);
         if (!iptal && d?.patient?.ad_soyad) setHastaAdi(String(d.patient.ad_soyad));
         if (!iptal && d?.patient?.dogum_tarihi) setHastaDogum(String(d.patient.dogum_tarihi));
@@ -71,7 +72,7 @@ export default function LabPage() {
 
   const api = useCallback(async (body: Record<string, unknown>) => {
     const token = await getAccessTokenAsync();
-    const r = await fetch('/api/doktor/belgeler/lab', { method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    const r = await doktorFetch('/api/doktor/belgeler/lab', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
     const j = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error(j.error || 'Hata');
     return j;
@@ -80,9 +81,9 @@ export default function LabPage() {
   const yukle = useCallback(async () => {
     const token = await getAccessTokenAsync();
     const [dr, lr, ar] = await Promise.all([
-      fetch(`/api/doktor/documents?patientId=${encodeURIComponent(patientId)}`, { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' }),
-      fetch(`/api/doktor/belgeler/lab?documentId=${encodeURIComponent(belgeId)}`, { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' }),
-      fetch(`/api/doktor/belgeler/analiz?documentId=${encodeURIComponent(belgeId)}`, { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' }),
+      doktorFetch(`/api/doktor/documents?patientId=${encodeURIComponent(patientId)}`, { cache: 'no-store' }),
+      doktorFetch(`/api/doktor/belgeler/lab?documentId=${encodeURIComponent(belgeId)}`, { cache: 'no-store' }),
+      doktorFetch(`/api/doktor/belgeler/analiz?documentId=${encodeURIComponent(belgeId)}`, { cache: 'no-store' }),
     ]);
     if (dr.ok) { const j = await dr.json(); const list: Doc[] = j.documents || []; setDoc(list.find((d) => d.id === belgeId) || null); }
     if (lr.ok) { const j = await lr.json(); setPanel(j.panel); setSatirlar(j.satirlar || []); setAnaliz(j.analiz || null); setKanonik(j.kanonik || {}); if (j.analiz?.hekim_tanisi?.length) setTaniTaslak(j.analiz.hekim_tanisi.map((t: { ad: string; icd10?: string | null }) => t.icd10 ? `${t.ad} (${t.icd10})` : t.ad).join('\n')); setOzetTaslak(j.analiz?.hekim_ozet || j.analiz?.sonuc?.ozet || ''); }
@@ -137,7 +138,7 @@ export default function LabPage() {
     try {
       const token = await getAccessTokenAsync();
       if (!token) throw new Error('Oturum bulunamadı — yeniden giriş yapın.');
-      const r = await fetch('/api/doktor/belgeler/analiz', { method: 'PATCH', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ analizId: analiz.id, alan, sonraki }) });
+      const r = await doktorFetch('/api/doktor/belgeler/analiz', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ analizId: analiz.id, alan, sonraki }) });
       const j = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(j.error || 'Kaydedilemedi');
       const okMsg = alan === 'ozet' ? 'Özet kaydedildi.' : 'Resmi tanı kilitlendi.';
@@ -161,7 +162,7 @@ export default function LabPage() {
         if (yerel.length) { const ok = await kaydet('hekim_tanisi'); if (!ok) { setDurum('hazir'); return; } }
       }
       const token = await getAccessTokenAsync();
-      const r = await fetch('/api/doktor/belgeler/analiz/onayla', { method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ analizId: analiz.id, adim, plan: adim === 'muayene_onayla' ? plan : undefined }) });
+      const r = await doktorFetch('/api/doktor/belgeler/analiz/onayla', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ analizId: analiz.id, adim, plan: adim === 'muayene_onayla' ? plan : undefined }) });
       const j = await r.json().catch(() => ({})); setDurum('hazir');
       if (!r.ok) { setMesaj(j.error || 'Onaylanamadı'); return; }
       setMesaj(adim === 'onayla' ? 'Son muayenenin Objektif bölümüne eklendi; bu panel artık hastanın onaylı geçmişinde.' : 'Muayene onaylandı; plan revizyonu kaydedildi.'); setPlanAcik(false); await yukle();

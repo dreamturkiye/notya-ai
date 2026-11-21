@@ -17,6 +17,49 @@ import { intakeGelenBelgeIzni, intakeIzinleri } from '@/lib/iletisim/izinMetni'
 
 export const dynamic = 'force-dynamic'
 
+type Sb = ReturnType<typeof servisSupabase>
+
+/** The doctor's display name exactly as the form and its thank-you screen show it. */
+async function doktorAdiAl(supabase: Sb, doktorId: string): Promise<string> {
+  const { data: doktor } = await supabase.from('users').select('first_name, last_name, title').eq('id', doktorId).maybeSingle()
+  return doktor ? [doktor.title, doktor.first_name, doktor.last_name].filter(Boolean).join(' ') : ''
+}
+
+/**
+ * NOTYA-INTAKE-ALINDI-01 (Kaan, 2026-11-20) — the patient's Sağlığım link, only when a PIN-protected, unexpired portal
+ * link already exists for THIS form's doctor AND patient (both columns in the same query — hasta-izolasyon). The PIN
+ * still guards the portal; nothing is minted here.
+ */
+async function portalYoluAl(supabase: Sb, doktorId: string, hastaId: string): Promise<string | null> {
+  try {
+    const { data } = await supabase
+      .from('hasta_portal_tokens')
+      .select('token_hash, pin_hash, expires_at')
+      .eq('doctor_id', doktorId)
+      .eq('patient_id', hastaId)
+      .not('pin_hash', 'is', null)
+      .gt('expires_at', new Date().toISOString())
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+    return data?.token_hash ? `/portal/hasta/${encodeURIComponent(String(data.token_hash))}` : null
+  } catch {
+    return null
+  }
+}
+
+/** Practice name + phone for a link that can no longer be used (optional columns; absent = no contact line). */
+async function klinikIletisimAl(supabase: Sb, doktorId: string): Promise<{ ad: string; telefon: string } | null> {
+  try {
+    const { data } = await supabase.from('users').select('clinic_name, iletisim_telefon_muayenehane').eq('id', doktorId).maybeSingle()
+    const ad = String(data?.clinic_name || '').trim()
+    const telefon = String(data?.iletisim_telefon_muayenehane || '').trim()
+    return ad || telefon ? { ad, telefon } : null
+  } catch {
+    return null
+  }
+}
+
 export async function GET(_req: NextRequest, { params }: { params: { token: string } }) {
   const tokenHash = createHash('sha256').update(params.token).digest('hex')
   const supabase = servisSupabase()
@@ -27,12 +70,15 @@ export async function GET(_req: NextRequest, { params }: { params: { token: stri
     .eq('token_hash', tokenHash)
     .maybeSingle()
 
-  if (!form) return NextResponse.json({ error: 'Form bulunamad\u0131.' }, { status: 404 })
-  if (form.token_expires_at && new Date(form.token_expires_at) < new Date()) {
-    return NextResponse.json({ error: 'Bu form linkinin s\u00fcresi dolmu\u015f. L\u00fctfen klini\u011finizle ileti\u015fime ge\u00e7in.' }, { status: 400 })
-  }
+  if (!form) return NextResponse.json({ durum: 'gecersiz', error: 'Bu form bağlantısı geçerli değil. Bağlantıyı size gönderen kliniğe danışabilirsiniz.' }, { status: 404 })
+  // NOTYA-INTAKE-ALINDI-01: an already-submitted form is a confirmation, not an error (no dead end, no "Form Kullanılamıyor").
   if (form.durum !== 'gonderildi') {
-    return NextResponse.json({ error: 'Bu form zaten dolduruldu.' }, { status: 400 })
+    const [doktorAdi, portalYolu] = await Promise.all([doktorAdiAl(supabase, form.doktor_id), portalYoluAl(supabase, form.doktor_id, form.patient_id)])
+    return NextResponse.json({ durum: 'dolduruldu', doktorAdi, portalYolu, error: 'Bu form zaten dolduruldu.' }, { status: 409 })
+  }
+  if (form.token_expires_at && new Date(form.token_expires_at) < new Date()) {
+    const iletisim = await klinikIletisimAl(supabase, form.doktor_id)
+    return NextResponse.json({ durum: 'suresi_doldu', iletisim, error: 'Bu form bağlantısının süresi dolmuş. Yeni bir bağlantı için kliniğinizle iletişime geçebilirsiniz.' }, { status: 400 })
   }
 
   const { data: hasta } = await supabase
@@ -43,12 +89,7 @@ export async function GET(_req: NextRequest, { params }: { params: { token: stri
   let hastaAdi = ''
   try { if (hasta?.name_encrypted) hastaAdi = (JSON.parse(decrypt(hasta.name_encrypted)).ad || '').trim() } catch { /* leave blank */ }
 
-  const { data: doktor } = await supabase
-    .from('users')
-    .select('first_name, last_name, title')
-    .eq('id', form.doktor_id)
-    .maybeSingle()
-  const doktorAdi = doktor ? [doktor.title, doktor.first_name, doktor.last_name].filter(Boolean).join(' ') : ''
+  const doktorAdi = await doktorAdiAl(supabase, form.doktor_id)
 
   const bransBolumu = intakeBransBolumu(form.brans)
   const bransEtiket = intakeBransEtiketi(form.brans)

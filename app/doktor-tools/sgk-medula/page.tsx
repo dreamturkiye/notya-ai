@@ -5,6 +5,7 @@ import { getDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { CHROME_RENK, CHROME_FONT } from '@/lib/doktor/chromeTheme';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 interface ProvizyonResult {
   maskedName: string;
@@ -42,9 +43,7 @@ export default function SGKMedulaPage() {
     const token = getDoctorAccessToken();
     if (!token) return;
     try {
-      const res = await fetch('/api/doktor/integrations/medula', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await doktorFetch('/api/doktor/integrations/medula', {});
       const data = await res.json().catch(() => ({}));
       if (!res.ok) return;
       const connected = Boolean((data as { connected?: boolean }).connected);

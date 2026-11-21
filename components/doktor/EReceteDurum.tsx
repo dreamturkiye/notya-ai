@@ -2,6 +2,7 @@
 /** NOTYA-ERECETE-01 — reçete sayfasında Medula durumu: ayar eksikse yönlendirir, hazırsa gönderim durumunu söyler. */
 import React, { useEffect, useState } from 'react'
 import { getDoctorAccessToken } from '@/lib/doktor/clientAuth'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 interface Goruntu { hazir: boolean; gonderebilir: boolean; eksikler: string[]; sonTest: { durum: string } | null; imzaYontemi: string }
 
@@ -12,7 +13,7 @@ export default function EReceteDurum(props: { en: number }) {
     ;(async () => {
       const t = await getDoctorAccessToken()
       if (!t) return
-      const r = await fetch('/api/doktor/erecete-ayar', { headers: { Authorization: `Bearer ${t}` } })
+      const r = await doktorFetch('/api/doktor/erecete-ayar', {})
       const j = await r.json().catch(() => ({}))
       if (!iptal) setG(j.ayar || null)
     })()

@@ -1,7 +1,8 @@
 "use client"
 export const dynamic = "force-dynamic"
 import { useState, useRef, useEffect, Suspense } from "react"
-import { createClient } from "@supabase/supabase-js"
+import type { SupabaseClient } from "@supabase/supabase-js"
+import { doktorSupabase, doktorKullaniciId } from "@/lib/doktor/doktorSupabase"
 import { anamnezParcala, fizikParcala } from "@/lib/doktor/anamnezBolumleri"
 import { motorAfisiTemizle } from "@/core/belgeler/yazar"
 import { useRouter, useSearchParams } from "next/navigation"
@@ -27,6 +28,8 @@ import {
   type CekDogrulamaSatir,
 } from "@/lib/doktor/muayeneCekListesi"
 import type { SaglamCocukKayitlari } from "@/specialties/pediatri/engines/saglamCocukCek"
+import { doktorFetch, oturumSuresiDoldu, oturumYonlendirmesiniErtele } from '@/lib/doktor/oturumFetch'
+import OturumBekcisi from '@/components/doktor/OturumBekcisi'
 
 // Kaan (2026-09-10): 30 branşın tamamı, kanonik anahtarlarla (BRANS_ETIKETLERI ile aynı) —
 // böylece profil branşı hangi branş olursa olsun kilitlenir; eski alt-çizgili anahtarlar eşlenir.
@@ -96,7 +99,7 @@ function NewSessionInner() {
         const { ensureDoctorAccessToken } = await import('@/lib/doktor/clientAuth')
         const token = await ensureDoctorAccessToken()
         if (!token) return
-        const r = await fetch("/api/users/me", { headers: { Authorization: `Bearer ${token}` } })
+        const r = await doktorFetch("/api/users/me", {})
         if (!r.ok) return
         const d = await r.json()
         const b = d?.data?.specialty || d?.specialty
@@ -120,8 +123,8 @@ function NewSessionInner() {
         const token = await ensureDoctorAccessToken()
         if (!token || iptal) return
         const [hastaR, taramaR] = await Promise.all([
-          fetch(`/api/doktor/hastalar/${patientId}`, { headers: { Authorization: `Bearer ${token}` } }),
-          fetch(`/api/doktor/pediatri/tarama?patientId=${encodeURIComponent(patientId)}`, { headers: { Authorization: `Bearer ${token}` } }),
+          doktorFetch(`/api/doktor/hastalar/${patientId}`, {}),
+          doktorFetch(`/api/doktor/pediatri/tarama?patientId=${encodeURIComponent(patientId)}`, {}),
         ])
         if (iptal) return
         if (hastaR.ok) {
@@ -198,7 +201,7 @@ function NewSessionInner() {
         const { ensureDoctorAccessToken } = await import('@/lib/doktor/clientAuth')
         const t = await ensureDoctorAccessToken()
         if (!t) return
-        const r = await fetch('/api/doktor/muayene-ekleri/durum', { headers: { Authorization: `Bearer ${t}` }, signal: denetim.signal })
+        const r = await doktorFetch('/api/doktor/muayene-ekleri/durum', { signal: denetim.signal })
         if (!r.ok) return
         const d = await r.json().catch(() => null)
         if (!iptal && d?.acik === true) setEkAcik(true)
@@ -250,16 +253,15 @@ function NewSessionInner() {
         userId = payloadB64 ? (JSON.parse(atob(payloadB64)) as { sub?: string }).sub || null : null
       } catch { /* aşağıda null kontrolü yakalar */ }
       if (!userId) throw new Error("Oturum bulunamadı. Yeniden giriş yapın.")
-      const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
-        global: { headers: { Authorization: `Bearer ${authToken}` } },
-      })
+      // NOTYA-OTURUM-01: token-backed client (no session of its own, never refreshes behind clientAuth's back).
+      const sb = doktorSupabase()
       const guvenliAd = dosya.name.replace(/[^a-zA-Z0-9_.-]/g, "_").slice(-60) || "kayit"
       const yol = `${userId}/${Date.now()}-${guvenliAd}`
       const { error: yuklemeHatasi } = await sb.storage.from("ses-kayitlari").upload(yol, dosya, { contentType: dosya.type || "audio/mpeg" })
       if (yuklemeHatasi) throw new Error("Ses dosyası yüklenemedi. Bağlantınızı kontrol edip tekrar deneyin.")
-      const resp = await fetch("/api/sessions/ses-yukle", {
+      const resp = await doktorFetch("/api/sessions/ses-yukle", {
         method: "POST",
-        headers: { "Authorization": `Bearer ${authToken}`, "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ path: yol, patientId: patientId || null, specialty, sessionType, ...(efektifTarihIso ? { tarih: efektifTarihIso } : {}) }),
       })
       const d = await resp.json()
@@ -272,7 +274,6 @@ function NewSessionInner() {
       setSesYukleniyor(false)
     }
   }
-  const getSB = () => createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
 
   // Keep ref in sync with state
   useEffect(() => { transcriptRef.current = transcript }, [transcript])
@@ -400,7 +401,7 @@ function NewSessionInner() {
 
   /** Seans satırı: önce ek adımında açılmış olan, sonra başarısız denemeden kalan, yoksa yeni (eski davranış). */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async function seansKaydiHazirla(supabase: ReturnType<typeof createClient<any>>, userId: string): Promise<{ id: string }> {
+  async function seansKaydiHazirla(supabase: SupabaseClient, userId: string): Promise<{ id: string }> {
     const anahtar = [patientId || "", specialty, sessionType, efektifTarihIso || ""].join("|")
     const ek = ekSeansRef.current
     if (ek && ek.anahtar === anahtar) return { id: ek.id }
@@ -426,10 +427,10 @@ function NewSessionInner() {
     stopTimer()
     if (!transcript.trim()) { setError("Lütfen önce muayene notlarını yazın veya sesle kaydedin."); return }
     try {
-      const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user || !patientId) return processSession()
-      const s = await seansKaydiHazirla(supabase, user.id)
+      const supabase = doktorSupabase()
+      const kullaniciId = await doktorKullaniciId()
+      if (!kullaniciId || !patientId) return processSession()
+      const s = await seansKaydiHazirla(supabase, kullaniciId)
       ekSeansRef.current = { id: s.id, anahtar: [patientId || "", specialty, sessionType, efektifTarihIso || ""].join("|") }
       setError("")
       setStep("ekler")
@@ -454,25 +455,22 @@ function NewSessionInner() {
     setError("")
 
     try {
-      const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) { router.push("/giris"); return }
+      const supabase = doktorSupabase()
+      const kullaniciId = await doktorKullaniciId()
+      // NOTYA-OTURUM-01: no renewable session → the shared path (login with ?next=, or the banner while recording).
+      if (!kullaniciId) { oturumSuresiDoldu(); throw new Error("Oturumunuzun süresi doldu. Lütfen tekrar giriş yapın.") }
 
       // NOTYA-BETA-0925 (d): "Seansı Bitir"e yeniden basmak her seferinde YENİ bir seans satırı açıyordu; ilki
       // processing'de takılı kalıyordu. Sunucu açıkça "not oluşturulamadı" dediyse (JSON hata yanıtı — not
       // kaydedilmedi, seans failed işaretlendi) aynı hasta / branş / tür / tarih için aynı seans yeniden kullanılır.
       // Sonucu bilinmeyen yanıtta (504, bağlantı koptu) not kaydedilmiş olabilir — o zaman eskisi gibi yeni seans.
       const anahtar = [patientId || "", specialty, sessionType, efektifTarihIso || ""].join("|")
-      const session = await seansKaydiHazirla(supabase, user.id)
+      const session = await seansKaydiHazirla(supabase, kullaniciId)
       basarisizSeansRef.current = null
 
-      const { data: { session: authSession } } = await (async () => { const raw = localStorage.getItem(Object.keys(localStorage).find(k=>k.includes('auth-token'))||''); return raw ? { data: { session: JSON.parse(raw) } } : { data: { session: null } } })()
-      const authToken = authSession?.access_token
-      if (!authToken) throw new Error("Oturum bulunamadı")
-
-      const resp = await fetch(`/api/sessions/${session.id}/end`, {
+      const resp = await doktorFetch(`/api/sessions/${session.id}/end`, {
         method: "POST",
-        headers: { "Authorization": `Bearer ${authToken}`, "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           segments: [{ speaker: "doktor", text: transcript, start_ms: 0, end_ms: seconds*1000, confidence: 0.9 }],
           transcript, duration_seconds: seconds, profession: "doktor",
@@ -524,11 +522,7 @@ function NewSessionInner() {
     if (!noteId) { setOnayHata("Not kimliği bulunamadı — Not Revizyonu'ndan onaylayabilirsiniz."); return }
     setOnayDurumu("gonderiliyor"); setOnayHata("")
     try {
-      const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
-      const { data: { session: authSession } } = await sb.auth.getSession()
-      const authToken = authSession?.access_token
-      if (!authToken) throw new Error("Oturum bulunamadı")
-      const r = await fetch(`/api/notes/${noteId}/approve`, { method: "POST", headers: { Authorization: `Bearer ${authToken}` } })
+      const r = await doktorFetch(`/api/notes/${noteId}/approve`, { method: "POST" })
       const d = await r.json().catch(() => ({}))
       if (!r.ok || d.success === false) throw new Error(d.error || "Onaylanamadı")
       setOnayDurumu("onaylandi")
@@ -544,8 +538,17 @@ function NewSessionInner() {
 
   const S = (s: Record<string,unknown>) => s as React.CSSProperties
 
+  // NOTYA-OTURUM-01: never navigate away from a running recording / unsent note — while one is open an expired session
+  // shows the "Giriş yap" banner (OturumBekcisi) instead of the redirect; the doctor's transcript stays on screen.
+  const kayitAcik = isRecordingVoice || step === "recording" || step === "ekler" || step === "processing"
+  useEffect(() => {
+    if (!kayitAcik) return
+    return oturumYonlendirmesiniErtele()
+  }, [kayitAcik])
+
   return (
     <SeansSayfasi geri="Geri" onGeri={()=>router.push(seansGeriHref(patientId))} baslik="Yeni Seans" ipucu={<IpucuBaloncugu bolum="yeni-muayene" />} genis={step === "recording" || step === "done"} hata={error}>
+      <OturumBekcisi />
 
         {patientId && hastaKarti && (step === "setup" || step === "recording") && (
           <SinavHastaBilgisi bilgi={sinavHastaBilgisi({ ...hastaKarti, dogumIso: hastaDogumIso, seansBransi: specialty, nowMs: efektifTarihIso ? new Date(efektifTarihIso).getTime() : undefined })} />

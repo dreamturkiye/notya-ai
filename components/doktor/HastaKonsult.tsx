@@ -26,6 +26,7 @@ import {
   sesliGirisDesteklenmiyorMu,
   sesliGirisHataMetni,
 } from '@/lib/asistan/sesliGirisYardimci'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 // NOTYA-EYLEM: an assistant turn may carry confirm cards. They live ON the message so they stay in
 // place as the conversation grows — a card that jumps to the bottom is a card tapped for the wrong turn.
@@ -113,7 +114,7 @@ export default function HastaKonsult({
       try {
         const t = await ensureDoctorAccessToken()
         if (!t) return
-        const r = await fetch(`/api/doktor/eylem?hastaId=${encodeURIComponent(patientId)}`, { headers: { Authorization: `Bearer ${t}` } })
+        const r = await doktorFetch(`/api/doktor/eylem?hastaId=${encodeURIComponent(patientId)}`, {})
         if (!r.ok) return
         const d = await r.json()
         if (iptal) return
@@ -191,9 +192,9 @@ export default function HastaKonsult({
     setBekliyor(true)
     try {
       const t = await ensureDoctorAccessToken()
-      const r = await fetch('/api/doktor/konsult', {
+      const r = await doktorFetch('/api/doktor/konsult', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ patientId, mesajlar: yeniGecmis }),
       })
       const d = await r.json()

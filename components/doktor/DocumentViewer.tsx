@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 import { getAccessTokenAsync } from '@/lib/doktor/toolsUi'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 type Props = {
   documentId: string
@@ -30,9 +31,7 @@ export default function DocumentViewer({ documentId, fileName, fileType, onClose
       try {
         const token = await getAccessTokenAsync()
         if (!token) throw new Error('Oturum bulunamadı. Lütfen tekrar giriş yapın.')
-        const res = await fetch(`/api/doktor/documents/${documentId}/download`, {
-          headers: { Authorization: `Bearer ${token}` },
-        })
+        const res = await doktorFetch(`/api/doktor/documents/${documentId}/download`, {})
         if (!res.ok) {
           const d = await res.json().catch(() => ({}))
           throw new Error(d.error || 'Dosya yüklenemedi')

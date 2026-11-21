@@ -6,6 +6,7 @@ import {
   kuyrukSkorla, RADYO_MODALITELER, RADYO_ONCELIKLER, RADYO_DURUMLAR,
   type RadyoModalite, type RadyoOncelik, type RadyoDurum,
 } from '../../engines/kuyruk'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 export default function RadyoKuyrukAraci() {
   const [modalite, setModalite] = useState<RadyoModalite>('xray')
@@ -25,9 +26,9 @@ export default function RadyoKuyrukAraci() {
     if (!sonuc.tamamMi) { setHata(sonuc.ozet); return }
     try {
       const t = await getAccessTokenAsync()
-      const r = await fetch('/api/doktor/radyoloji', {
+      const r = await doktorFetch('/api/doktor/radyoloji', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ patientId: hastaId, adim: 'kuyruk', modalite, oncelik, durum, tarih: tarih || null, hekimKilit: true }),
       })
       const j = await r.json().catch(() => ({}))

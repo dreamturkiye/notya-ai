@@ -2,6 +2,8 @@
 import { useRouter, usePathname } from 'next/navigation'
 import { CHROME_FONT_HREF } from '@/lib/doktor/chromeTheme'
 import { hekimProfilOturumSil } from '@/lib/doktor/hekimProfilIstemci'
+import { doktorOturumuSil } from '@/lib/doktor/clientAuth'
+import OturumBekcisi from '@/components/doktor/OturumBekcisi'
 
 interface KlinikNavProps {
   clinicName?: string
@@ -25,13 +27,14 @@ export default function KlinikNav({ clinicName, adminName }: KlinikNavProps) {
   const pathname = usePathname()
 
   function logout() {
-    try { localStorage.removeItem('auth-token') } catch {}
+    doktorOturumuSil()
     hekimProfilOturumSil()
-    router.push('/giris')
+    router.push('/giris/notya-klinik')
   }
 
   return (
     <>
+    <OturumBekcisi />
     {/* eslint-disable-next-line @next/next/no-page-custom-font */}
     <link rel="stylesheet" href={CHROME_FONT_HREF} />
     <nav style={{

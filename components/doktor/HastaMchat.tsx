@@ -11,6 +11,7 @@ import { MCHAT_R_SORULARI, mchatPuanla, type MchatSonuc } from '@/lib/clinical/m
 import MuayeneFormunaDon from '@/components/doktor/MuayeneFormunaDon';
 import { eklenenNotId } from '@/lib/doktor/muayeneFormuYolu';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 interface GecmisTest { id: string; toplam_puan: number; risk_seviyesi: string; sonuc_metni: string; created_at: string }
 
@@ -32,7 +33,7 @@ export default function HastaMchat({ patientId }: { patientId: string }) {
   const yukle = useCallback(async () => {
     try {
       const t = await ensureDoctorAccessToken();
-      const r = await fetch(`/api/doktor/mchat?patientId=${patientId}`, { headers: { Authorization: `Bearer ${t}` } });
+      const r = await doktorFetch(`/api/doktor/mchat?patientId=${patientId}`, {});
       const d = await r.json();
       setGecmis(d.testler || []);
     } catch { /* geçmiş kritik değil */ }
@@ -55,8 +56,8 @@ export default function HastaMchat({ patientId }: { patientId: string }) {
       const t = await ensureDoctorAccessToken();
       const cevaplarStr: Record<string, boolean> = {};
       MCHAT_R_SORULARI.forEach((s) => { cevaplarStr[String(s.no)] = !!cevaplar[s.no]; });
-      const r = await fetch('/api/doktor/mchat', {
-        method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
+      const r = await doktorFetch('/api/doktor/mchat', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ patientId, cevaplar: cevaplarStr, muayeneFormunaEkle }),
       });
       const d = await r.json();

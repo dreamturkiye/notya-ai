@@ -29,6 +29,7 @@ import GeriLink from '@/components/navigasyon/GeriLink'
 import { DOKTOR_ANA, hastaBelgelerHref } from '@/lib/doktor/geriNavigasyon'
 import KasaKonsultasyonBaglantisi, { BOS_KONSULTASYON_SECIMI, konsultasyonaBagla, type KasaKonsultasyonSecimi } from '@/components/doktor/KasaKonsultasyonBaglantisi'
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 type VaultDoc = {
   id: string
@@ -72,9 +73,7 @@ export default function BelgelerPage() {
     }
     const token = await getAccessTokenAsync()
     if (!token) return
-    const res = await fetch(`/api/doktor/documents?patientId=${encodeURIComponent(patientId)}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
+    const res = await doktorFetch(`/api/doktor/documents?patientId=${encodeURIComponent(patientId)}`, {})
     if (!res.ok) return
     const data = await res.json()
     setDocs(
@@ -101,8 +100,8 @@ export default function BelgelerPage() {
           return
         }
         const [res, meRes] = await Promise.all([
-          fetch('/api/doktor/hastalar', { headers: { Authorization: `Bearer ${token}` } }),
-          fetch('/api/users/me', { headers: { Authorization: `Bearer ${token}` } }),
+          doktorFetch('/api/doktor/hastalar', {}),
+          doktorFetch('/api/users/me', {}),
         ])
         if (!res.ok) {
           if (!cancelled) setError('Hasta listesi alınamadı.')
@@ -141,7 +140,7 @@ export default function BelgelerPage() {
     ;(async () => {
       const token = await getAccessTokenAsync()
       if (!token) return
-      const r = await fetch(`/api/doktor/hastalar/${encodeURIComponent(hastaId)}/sessions`, { headers: { Authorization: `Bearer ${token}` } })
+      const r = await doktorFetch(`/api/doktor/hastalar/${encodeURIComponent(hastaId)}/sessions`, {})
       if (!r.ok) return
       const j = await r.json()
       const liste: SeansSecim[] = (j.sessions || []).map((s: { id: string; created_at?: string; notes?: { basvuru_yakinmasi?: string | null }[] }) => {
@@ -218,9 +217,8 @@ export default function BelgelerPage() {
     try {
       const token = await getAccessTokenAsync()
       if (!token) throw new Error('Oturum bulunamadı.')
-      const res = await fetch(`/api/doktor/documents/${d.id}`, {
+      const res = await doktorFetch(`/api/doktor/documents/${d.id}`, {
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
       })
       if (!res.ok) {
         const j = await res.json().catch(() => ({}))
@@ -266,7 +264,7 @@ export default function BelgelerPage() {
             form.append('category', belgeType)
             if (visitId) form.append('visitId', visitId)
             if (notes.trim()) form.append('notes', notes.trim())
-            const res = await fetch('/api/doktor/documents', { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: form })
+            const res = await doktorFetch('/api/doktor/documents', { method: 'POST', body: form })
             const d = await res.json().catch(() => ({}))
             if (!res.ok) { hatali.push({ ad: f.name, neden: d.error || 'yüklenemedi' }); continue }
             basarili.push({

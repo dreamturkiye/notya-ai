@@ -11,6 +11,7 @@ import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth'
 import { doktorAraciBransaUygun } from '@/lib/doktor/doktorAraclari'
 import { AracVurguSaglayici, aracStil, HastaSecici, type AracVurgu } from '@/lib/doktor/aracUi'
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 /** Üroloji vurgusu — teal gövde, emerald başlık (KBB indigo'dan ayrışır). */
 export const URO_VURGU: AracVurgu = { ana: '#0D9488', anaMetin: '#F0FDFA', yumusak: '#047857', baslik: '#047857' }
@@ -34,7 +35,7 @@ export default function UroAracKabugu({ route, baslik, aciklama, children }: { r
       try {
         const t = await ensureDoctorAccessToken()
         if (!t) { if (!iptal) { setIzin(false); router.replace('/doktor-tools') } return }
-        const r = await fetch('/api/users/me', { headers: { Authorization: `Bearer ${t}` } })
+        const r = await doktorFetch('/api/users/me', {})
         const j = r.ok ? await r.json() : null
         const ok = doktorAraciBransaUygun(route, j?.data?.specialty)
         if (!iptal) { setIzin(ok); if (!ok) router.replace('/doktor-tools') }

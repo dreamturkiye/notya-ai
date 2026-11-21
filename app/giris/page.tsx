@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation"
 import { authHataMesaji } from "./authHataMesaji"
 import { CHROME_RENK, CHROME_FONT, CHROME_FONT_HREF } from "@/lib/doktor/chromeTheme"
 import ZiyaretSayaci from '@/components/ziyaret/ZiyaretSayaci'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 const SUPA_URL = "https://anjayzospuurymjmmtim.supabase.co"
 const SUPA_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFuamF5em9zcHV1cnltam1tdGltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA2NDc5NzIsImV4cCI6MjA5NjIyMzk3Mn0.J4qRde2QJxxErFIWsO6Zb2TPN8GEIFXloLRpdac4GxE"
@@ -51,9 +52,7 @@ export default function LoginPage() {
         expires_at: Math.floor(Date.now() / 1000) + data.expires_in,
         token_type: "bearer", user: data.user
       }))
-      const profileResp = await fetch("/api/users/me", {
-        headers: { Authorization: "Bearer " + data.access_token }
-      })
+      const profileResp = await doktorFetch("/api/users/me", {})
       let profileData: {data?: {profession_type?: string; onboarding_completed?: boolean}} = {}
       try { profileData = await profileResp.json() } catch { profileData = {} }
       const profType = profileData.data?.profession_type

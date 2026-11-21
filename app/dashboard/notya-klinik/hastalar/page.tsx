@@ -2,6 +2,8 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import KlinikNav from '@/components/klinik/KlinikNav'
+import { doktorFetch, oturumSuresiDoldu } from '@/lib/doktor/oturumFetch'
+import { getDoctorAccessToken } from '@/lib/doktor/clientAuth'
 
 export const dynamic = 'force-dynamic'
 
@@ -9,8 +11,7 @@ type Hasta = { id: string; name: string; last_visit?: string; is_active?: boolea
 
 function token(): string {
   try {
-    const raw = localStorage.getItem('auth-token')
-    return raw ? (JSON.parse(raw).access_token || '') : ''
+    return getDoctorAccessToken()
   } catch { return '' }
 }
 
@@ -24,8 +25,8 @@ export default function KlinikHastalarPage() {
 
   async function yukle() {
     const t = token()
-    if (!t) { router.push('/giris'); return }
-    const r = await fetch('/api/doktor/hastalar', { headers: { Authorization: `Bearer ${t}` } })
+    if (!t) { oturumSuresiDoldu(); return }
+    const r = await doktorFetch('/api/doktor/hastalar', {})
     const j = await r.json().catch(() => ({}))
     if (!r.ok) { setHata(j.error || 'Hastalar alınamadı.'); setYukleniyor(false); return }
     setHastalar(j.patients || [])
@@ -38,9 +39,9 @@ export default function KlinikHastalarPage() {
     setHata('')
     const t = token()
     if (!ad.trim()) { setHata('Ad soyad zorunlu.'); return }
-    const r = await fetch('/api/doktor/hastalar', {
+    const r = await doktorFetch('/api/doktor/hastalar', {
       method: 'POST',
-      headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ adSoyad: ad.trim() }),
     })
     const j = await r.json().catch(() => ({}))

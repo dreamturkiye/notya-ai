@@ -7,6 +7,7 @@ import RandevuPortalKarti from '@/components/doktor/randevu/RandevuPortalKarti'
 import GoogleTakvimKarti from '@/components/doktor/randevu/GoogleTakvimKarti'
 import FaturalamaKarti from '@/components/accounting/FaturalamaKarti'
 import AsiStokKarti from '@/components/doktor/AsiStokKarti'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 type Provider = 'medula' | 'nvi_kps'
 
@@ -62,9 +63,7 @@ export default function EntegrasyonlarPage() {
     }
     setLoading(true)
     try {
-      const res = await fetch('/api/doktor/integrations', {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+      const res = await doktorFetch('/api/doktor/integrations', {})
       const data = await res.json().catch(() => ({}))
       if (!res.ok) {
         setError(String((data as { error?: string }).error || 'Yüklenemedi'))
@@ -113,11 +112,10 @@ export default function EntegrasyonlarPage() {
             }
           : { username: nviForm.username, password: nviForm.password }
 
-      const res = await fetch(`/api/doktor/integrations/${active}`, {
+      const res = await doktorFetch(`/api/doktor/integrations/${active}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(body),
       })
@@ -140,9 +138,8 @@ export default function EntegrasyonlarPage() {
     if (!token) return
     setSaving(true)
     try {
-      await fetch(`/api/doktor/integrations/${p}`, {
+      await doktorFetch(`/api/doktor/integrations/${p}`, {
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
       })
       setActive(null)
       await load()

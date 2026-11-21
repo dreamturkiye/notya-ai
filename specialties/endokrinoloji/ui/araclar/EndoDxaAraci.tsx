@@ -3,6 +3,7 @@ import React, { useMemo, useState } from 'react'
 import { getAccessTokenAsync } from '@/lib/doktor/toolsUi'
 import { endoStil, EndoHastaSecici, Onay, KopyalaButonu, Istatistik, TaslakNotu, useUrlHasta } from './EndoAracKabugu'
 import { dxaPlanla, DXA_RISK_AD, DXA_KONTROL_LISTESI, type DxaRisk } from '../../engines/dxa'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 const RISLER = Object.keys(DXA_RISK_AD) as DxaRisk[]
 
@@ -28,9 +29,9 @@ export default function EndoDxaAraci() {
     if (!sonuc.tamamMi || !sonuc.sonrakiTarih) { setHata(sonuc.ozet); return }
     try {
       const t = await getAccessTokenAsync()
-      const r = await fetch('/api/doktor/endokrinoloji', {
+      const r = await doktorFetch('/api/doktor/endokrinoloji', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           patientId: hastaId, adim: 'dxa', sonDxa, risk, sonraki: sonuc.sonrakiTarih,
           not: liste.map((i) => DXA_KONTROL_LISTESI[i]).join(' | '),

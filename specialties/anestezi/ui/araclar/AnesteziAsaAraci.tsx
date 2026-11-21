@@ -3,6 +3,7 @@ import React, { useMemo, useState } from 'react'
 import { getAccessTokenAsync } from '@/lib/doktor/toolsUi'
 import { anesteziStil, AnesteziHastaSecici, KopyalaButonu, Istatistik, TaslakNotu, useUrlHasta } from './AnesteziAracKabugu'
 import { asaSkorla, ASA_MADDELER, type AsaKod, type AsaSinif } from '../../engines/asa'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 const ASA_SINIFLAR: AsaSinif[] = ['I', 'II', 'III', 'IV', 'V', 'VI']
 
@@ -23,9 +24,9 @@ export default function AnesteziAsaAraci() {
     if (!sonuc.tamamMi) { setHata(sonuc.ozet); return }
     try {
       const t = await getAccessTokenAsync()
-      const r = await fetch('/api/doktor/anestezi', {
+      const r = await doktorFetch('/api/doktor/anestezi', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ patientId: hastaId, adim: 'asa', secilen, asaSinif: asaSinif || null, due: due || null, hekimKilit: true }),
       })
       const j = await r.json().catch(() => ({}))

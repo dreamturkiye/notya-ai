@@ -5,6 +5,7 @@ import IdCardCapture from '@/components/doktor/IdCardCapture';
 import { getDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme'
 import { cinsiyetKanonik } from '@/lib/utils/cinsiyet'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 export const dynamic = 'force-dynamic';
 
@@ -107,11 +108,10 @@ export default function HastaEklePage() {
     setBanner(null);
     try {
       const token = getDoctorAccessToken();
-      const response = await fetch('/api/doktor/mernis-lookup', {
+      const response = await doktorFetch('/api/doktor/mernis-lookup', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ tc: formData.tcKimlikNo }),
       });
@@ -166,9 +166,7 @@ export default function HastaEklePage() {
         setBanner({ type: 'error', message: 'Oturum bulunamadı.' });
         return;
       }
-      const resp = await fetch('/api/users/me', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const resp = await doktorFetch('/api/users/me', {});
       const body = await resp.json().catch(() => ({}));
       const profile = (body as { data?: Record<string, unknown> }).data || body;
       const fullName = String(
@@ -229,11 +227,10 @@ export default function HastaEklePage() {
     setSubmitError('');
     try {
       const token = getDoctorAccessToken();
-      const response = await fetch('/api/doktor/hastalar', {
+      const response = await doktorFetch('/api/doktor/hastalar', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(formData),
       });

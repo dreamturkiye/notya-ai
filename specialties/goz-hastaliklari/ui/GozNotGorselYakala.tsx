@@ -13,6 +13,7 @@ import { useState } from 'react';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 import GorselYakalaPaneli, { type GorselYakalamaSonucu } from '@/components/doktor/gorsel/GorselYakalaPaneli';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 const GOZ_MODALITELER = [
   { value: 'fundus', label: 'Fundus fotoğrafı' },
@@ -44,9 +45,9 @@ export default function GozNotGorselYakala({ patientId, visitId }: { patientId: 
     try {
       const t = await ensureDoctorAccessToken();
       if (!t) { setHata('Oturum bulunamadı.'); return; }
-      const r = await fetch('/api/doktor/goz', {
+      const r = await doktorFetch('/api/doktor/goz', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ adim: 'goruntu_okuma', eylem: 'ayse_taslak', patientId, goruntuId: bekleyenGoruntu.id, goz }),
       });
       const j = await r.json().catch(() => ({}));

@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { CHROME_FONT, CHROME_RENK } from '@/lib/doktor/chromeTheme'
 import { tarzCipiMetni } from '@/lib/doktor/ogrenme/selam'
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 export type TarzKurali = { slug: string; deger: string }
 
@@ -15,9 +16,9 @@ export default function SizinTarzinizChip({ kurallar }: { kurallar: TarzKurali[]
   const kapat = async (slug: string) => {
     try {
       const t = await ensureDoctorAccessToken()
-      await fetch('/api/doktor/hafiza', {
+      await doktorFetch('/api/doktor/hafiza', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ kapat: slug }),
       })
       setListe((l) => l.filter((k) => k.slug !== slug))

@@ -8,6 +8,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { usePortalLive } from '../../../_components/PortalLiveProvider'
 import { SectionHeader, SoftPanel } from '../../../_components/ui'
+import { portalFetch } from '@/lib/portal/portalFetch'
 
 type Tur = { tur: string; ad: string; sure: number }
 type Slot = { bas: string; saat: string }
@@ -87,7 +88,7 @@ export default function HastaRandevuPage() {
   const [mesgul, setMesgul] = useState(false)
 
   const yukle = useCallback(async () => {
-    const r = await fetch(api, { credentials: 'include' })
+    const r = await portalFetch(api, { credentials: 'include' })
     const j = await r.json().catch(() => ({}))
     setYuk(false)
     if (!r.ok || !j.acik) { setAcik(false); return }
@@ -102,13 +103,13 @@ export default function HastaRandevuPage() {
   useEffect(() => {
     if (!tur) { setGunler(null); return }
     setGunler(null)
-    fetch(`${api}?tur=${encodeURIComponent(tur)}`, { credentials: 'include' })
+    portalFetch(`${api}?tur=${encodeURIComponent(tur)}`, { credentials: 'include' })
       .then((r) => r.json()).then((j) => setGunler(j.gunler || [])).catch(() => setGunler([]))
   }, [api, tur])
 
   useEffect(() => {
     if (!ertele) { setErteleGunler(null); return }
-    fetch(`${api}?randevuId=${encodeURIComponent(ertele)}`, { credentials: 'include' })
+    portalFetch(`${api}?randevuId=${encodeURIComponent(ertele)}`, { credentials: 'include' })
       .then((r) => r.json()).then((j) => setErteleGunler(j.gunler || [])).catch(() => setErteleGunler([]))
   }, [api, ertele])
 
@@ -118,7 +119,7 @@ export default function HastaRandevuPage() {
       // GERI-CAGIRMA-01: a booking opened from a recall message carries the recall's tag (?gc=…) so the practice can see
       // that the reminder led to it. The tag is an opaque id; the server ignores one that is not this patient's own.
       const gc = govde.islem === 'talep' ? geriCagirmaEtiketi(token) : null
-      const r = await fetch(api, { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(gc ? { ...govde, gc } : govde) })
+      const r = await portalFetch(api, { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(gc ? { ...govde, gc } : govde) })
       const j = await r.json().catch(() => ({}))
       if (!r.ok) { setHata(j.error || 'İşlem yapılamadı.'); return }
       setMesaj(basari(j)); setTur(turler.length === 1 ? turler[0].tur : ''); setErtele('')

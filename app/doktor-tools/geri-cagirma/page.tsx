@@ -15,6 +15,7 @@ import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth'
 import { CHROME_FONT, CHROME_RENK } from '@/lib/doktor/chromeTheme'
 import { GONDERICI_YOK_ETIKETI, IZIN_YOK_ETIKETI, KANAL_ADI, SAYIM_KURALI } from '@/lib/geriCagirma/metin'
 import type { GeriCagirmaAdayi, GeriCagirmaKanali } from '@/lib/geriCagirma/tipler'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 const R = CHROME_RENK
 const kutu: React.CSSProperties = { background: '#FFFFFF', border: `1px solid ${R.border}`, borderRadius: 16, padding: 18, marginBottom: 16 }
@@ -38,7 +39,7 @@ const yeniAnahtar = () => `gc-${Date.now().toString(36)}-${Math.random().toStrin
 
 async function istek<T>(yol: string, init?: RequestInit): Promise<T> {
   const t = await ensureDoctorAccessToken()
-  const r = await fetch(yol, { ...init, cache: 'no-store', headers: { ...(init?.headers || {}), Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' } })
+  const r = await doktorFetch(yol, { ...init, cache: 'no-store', headers: { ...(init?.headers || {}), 'Content-Type': 'application/json' } })
   const j = await r.json().catch(() => ({}))
   if (!r.ok) throw new Error((j as { error?: string }).error || 'İşlem yapılamadı.')
   return j as T

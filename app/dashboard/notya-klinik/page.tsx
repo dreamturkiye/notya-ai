@@ -2,6 +2,8 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import KlinikNav from '@/components/klinik/KlinikNav'
+import { doktorFetch, oturumSuresiDoldu } from '@/lib/doktor/oturumFetch'
+import { getDoctorAccessToken } from '@/lib/doktor/clientAuth'
 
 interface Member {
   id: string
@@ -36,22 +38,11 @@ export default function KlinikDashboard() {
 
   useEffect(() => {
     const init = async () => {
-      let token = ''
-      try {
-        const raw = localStorage.getItem('auth-token')
-        if (raw) { const p = JSON.parse(raw); token = p.access_token || '' }
-        if (!token) {
-          const key = Object.keys(localStorage).find((k) => k.includes('auth-token') || k.startsWith('sb-'))
-          if (key) {
-            const p = JSON.parse(localStorage.getItem(key) || '')
-            token = p?.access_token || p?.session?.access_token || ''
-          }
-        }
-      } catch {}
-      if (!token) { router.push('/giris/notya-klinik'); return }
+      const token = getDoctorAccessToken()
+      if (!token) { oturumSuresiDoldu(); return }
 
       try {
-        const res = await fetch('/api/klinik/me', { headers: { Authorization: `Bearer ${token}` } })
+        const res = await doktorFetch('/api/klinik/me', {})
         if (res.status === 401 || res.status === 403) { router.push('/giris/notya-klinik'); return }
         const data = await res.json()
         if (data.success) {

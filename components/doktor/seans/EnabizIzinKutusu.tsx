@@ -4,6 +4,7 @@
 import React, { useEffect, useState } from 'react'
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth'
 import { CHROME_FONT, CHROME_RENK } from '@/lib/doktor/chromeTheme'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 export default function EnabizIzinKutusu({ patientId }: { patientId: string }) {
   const [istemiyor, setIstiyor] = useState(false)
@@ -13,7 +14,7 @@ export default function EnabizIzinKutusu({ patientId }: { patientId: string }) {
     void (async () => {
       try {
         const t = await ensureDoctorAccessToken()
-        const r = await fetch(`/api/doktor/seans-paketi?hastaId=${encodeURIComponent(patientId)}`, { headers: { Authorization: `Bearer ${t}` }, cache: 'no-store' })
+        const r = await doktorFetch(`/api/doktor/seans-paketi?hastaId=${encodeURIComponent(patientId)}`, { cache: 'no-store' })
         if (!r.ok) return
         const j = await r.json()
         if (j.kaydedilebilir === false) return
@@ -28,7 +29,7 @@ export default function EnabizIzinKutusu({ patientId }: { patientId: string }) {
   const degis = async (v: boolean) => {
     setIstiyor(v)
     const t = await ensureDoctorAccessToken()
-    await fetch('/api/doktor/seans-paketi', { method: 'POST', headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ islem: 'izin', hastaId: patientId, istemiyor: v }) })
+    await doktorFetch('/api/doktor/seans-paketi', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ islem: 'izin', hastaId: patientId, istemiyor: v }) })
   }
 
   return (

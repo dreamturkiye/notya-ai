@@ -6,6 +6,7 @@ import type { Wow5Veri } from '@/app/api/doktor/dahiliye/_wow5';
 import { Kaynak } from './DahiliyeWow2';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 import { DosyaSecDugmesi } from '@/components/core/DosyaSecDugmesi';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 type Props = { sekme: string; w5: Wow5Veri; patientId: string; kaynak: boolean; refler: Record<string, string>; calistir: (body: Record<string, unknown>, ok?: string) => Promise<Record<string, unknown> | null> };
 
@@ -150,11 +151,11 @@ export default function DahiliyeWow5({ sekme, w5, patientId, kaynak, refler, cal
       try {
         const token = await getAccessTokenAsync();
         const form = new FormData(); form.append('file', file); form.append('patientId', patientId); form.append('category', 'lab');
-        const up = await fetch('/api/doktor/documents', { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: form });
+        const up = await doktorFetch('/api/doktor/documents', { method: 'POST', body: form });
         const uj = await up.json().catch(() => ({}));
         if (!up.ok || !uj.document?.id) throw new Error(uj.error || 'Yüklenemedi');
         setYukleme('Çıkarılıyor (satır başına tarih)…');
-        const c = await fetch('/api/doktor/belgeler/lab', { method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ adim: 'cikar', documentId: uj.document.id, kaynak: 'enabiz' }) });
+        const c = await doktorFetch('/api/doktor/belgeler/lab', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ adim: 'cikar', documentId: uj.document.id, kaynak: 'enabiz' }) });
         const cj = await c.json().catch(() => ({}));
         if (!c.ok) throw new Error(cj.error || 'Çıkarılamadı');
         window.location.href = `/dashboard/doktor/hastalar/${patientId}/belgeler/${uj.document.id}/lab?geriTab=dahiliye`;

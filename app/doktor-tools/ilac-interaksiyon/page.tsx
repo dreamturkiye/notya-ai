@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { getDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import type { GruplanmisIlac } from '@/app/api/doktor/ilac-ara/route';
 import { CHROME_RENK, CHROME_FONT } from '@/lib/doktor/chromeTheme';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 export const dynamic = 'force-dynamic';
 
 interface Interaction {
@@ -36,7 +37,7 @@ const Page: React.FC = () => {
     const t = setTimeout(async () => {
       try {
         const token = getDoctorAccessToken();
-        const r = await fetch(`/api/doktor/ilac-ara?q=${encodeURIComponent(q)}`, { headers: { Authorization: `Bearer ${token}` } });
+        const r = await doktorFetch(`/api/doktor/ilac-ara?q=${encodeURIComponent(q)}`, {});
         const d = await r.json();
         if (!iptal) { setOneriler((d.sonuclar || []).slice(0, 8)); setOneriAcik(true); }
       } catch { if (!iptal) setOneriler([]); }
@@ -90,11 +91,10 @@ const Page: React.FC = () => {
     try {
       const token = getDoctorAccessToken(); // NOTYA-AUTH-01
 
-      const res = await fetch('/api/doktor/araclar/ilac-interaksiyon', {
+      const res = await doktorFetch('/api/doktor/araclar/ilac-interaksiyon', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           ilaclar,

@@ -11,6 +11,7 @@ export const dynamic = 'force-dynamic';
 import { useEffect, useState } from 'react';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import { CHROME_RENK, CHROME_FONT, CHROME_FONT_HREF } from '@/lib/doktor/chromeTheme';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 interface Kurum { id: string; ad: string; fhir_base_url: string; hedef: string; aktif: boolean }
 interface Ozet { sent: number; failed: number; pending: number }
@@ -26,7 +27,7 @@ export default function EntegrasyonlarPage() {
   async function yukle() {
     try {
       const token = await ensureDoctorAccessToken();
-      const r = await fetch('/api/entegrasyon/yonetim', { headers: { Authorization: `Bearer ${token}` } });
+      const r = await doktorFetch('/api/entegrasyon/yonetim', {});
       const d = await r.json();
       if (!r.ok) throw new Error(d.error || 'Yüklenemedi');
       setKurumlar(d.kurumlar || []);
@@ -42,9 +43,9 @@ export default function EntegrasyonlarPage() {
 
   async function anahtar(k: Kurum) {
     const token = await ensureDoctorAccessToken();
-    await fetch('/api/entegrasyon/yonetim', {
+    await doktorFetch('/api/entegrasyon/yonetim', {
       method: 'PATCH',
-      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ kurumId: k.id, aktif: !k.aktif }),
     });
     yukle();

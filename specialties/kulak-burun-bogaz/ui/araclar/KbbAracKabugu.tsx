@@ -16,6 +16,7 @@ import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import { doktorAraciBransaUygun } from '@/lib/doktor/doktorAraclari';
 import { AracVurguSaglayici, aracStil, HastaSecici, Segment, type AracVurgu } from '@/lib/doktor/aracUi';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 /** KBB vurgusu — indigo gövde, teal başlık (psikiyatri indigo'sundan ayrışır). */
 export const KBB_VURGU: AracVurgu = { ana: '#4F46E5', anaMetin: '#EEF2FF', yumusak: '#0F766E', baslik: '#0F9B8E' };
@@ -47,7 +48,7 @@ export default function KbbAracKabugu({ route, baslik, aciklama, children }: { r
       try {
         const t = await ensureDoctorAccessToken();
         if (!t) { if (!iptal) { setIzin(false); router.replace('/doktor-tools'); } return; }
-        const r = await fetch('/api/users/me', { headers: { Authorization: `Bearer ${t}` } });
+        const r = await doktorFetch('/api/users/me', {});
         const j = r.ok ? await r.json() : null;
         const ok = doktorAraciBransaUygun(route, j?.data?.specialty);
         if (!iptal) { setIzin(ok); if (!ok) router.replace('/doktor-tools'); }

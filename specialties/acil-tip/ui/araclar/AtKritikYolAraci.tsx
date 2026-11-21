@@ -3,6 +3,7 @@ import React, { useMemo, useState } from 'react'
 import { getAccessTokenAsync } from '@/lib/doktor/toolsUi'
 import { atStil, AtHastaSecici, KopyalaButonu, Istatistik, TaslakNotu, useUrlHasta } from './AtAracKabugu'
 import { kritikYolSkorla, KRITIK_YOLLAR, KRITIK_MADDELER, type KritikYol, type KritikMadde } from '../../engines/kritikYol'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 export default function AtKritikYolAraci() {
   const [yollar, setYollar] = useState<KritikYol[]>([])
@@ -20,9 +21,9 @@ export default function AtKritikYolAraci() {
     if (!sonuc.tamamMi) { setHata(sonuc.ozet); return }
     try {
       const t = await getAccessTokenAsync()
-      const r = await fetch('/api/doktor/acil-tip', {
+      const r = await doktorFetch('/api/doktor/acil-tip', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ patientId: hastaId, adim: 'kritik', yollar, maddeler, hekimKilit: true }),
       })
       const j = await r.json().catch(() => ({}))

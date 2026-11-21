@@ -7,6 +7,7 @@
 import { useState } from 'react';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 export type IlacSonlandirmaBilgisi = { noteId: string; mesaj: string; ilacIds: string[] };
 
@@ -30,9 +31,9 @@ export default function IlacSonlandirmaSatiri({ bilgi, onKapat, devamHref }: {
     setDurum('bekliyor');
     try {
       const t = await ensureDoctorAccessToken();
-      const r = await fetch(`/api/notes/${bilgi.noteId}/ilac-sonlandir-geri-al`, {
+      const r = await doktorFetch(`/api/notes/${bilgi.noteId}/ilac-sonlandir-geri-al`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ilacIds: bilgi.ilacIds }),
       });
       const j = await r.json().catch(() => ({}));

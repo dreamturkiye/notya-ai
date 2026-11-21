@@ -8,6 +8,7 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import { CHROME_FONT, CHROME_RENK } from '@/lib/doktor/chromeTheme'
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 const R = CHROME_RENK
 
@@ -30,7 +31,7 @@ const gunAdi = (gun: string) =>
 
 async function istek<T>(yol: string, init?: RequestInit): Promise<T> {
   const t = await ensureDoctorAccessToken()
-  const r = await fetch(yol, { ...init, headers: { ...(init?.headers || {}), Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' } })
+  const r = await doktorFetch(yol, { ...init, headers: { ...(init?.headers || {}), 'Content-Type': 'application/json' } })
   const j = await r.json().catch(() => ({}))
   if (!r.ok) throw new Error((j as { error?: string }).error || 'İşlem yapılamadı.')
   return j as T

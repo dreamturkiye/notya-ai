@@ -15,6 +15,7 @@ import {
   ENDIKASYON_SINIFI_ETIKETLERI, KISA_ALANLAR, UZUN_ALANLAR, sablonUygula, type AmeliyatNotuVeri, type AmeliyatSablonu,
 } from '@/lib/doktor/ameliyatNotu';
 import { GE_MEDIKAL_GEREKCE } from '@/lib/clinical/genitalEstetik';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 /** GENITAL-ESTETIK-01: the words of the indication field, sent by the server only with templates that need it. */
 export type EndikasyonEtiketleri = { gerekce: Record<string, string>; kapi: string } | null;
@@ -63,8 +64,8 @@ export function AmeliyatNotuFormu({ patientId, mevcut, sablonlar, sabitSablon, d
     setMesaj(''); setKaydediyor(true);
     try {
       const t = await getAccessTokenAsync();
-      const r = await fetch('/api/doktor/ameliyat-notlari', {
-        method: 'POST', headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+      const r = await doktorFetch('/api/doktor/ameliyat-notlari', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ patientId, id: mevcut?.id, sablon: sablon || null, dogumId: dogumId || undefined, veri: v, imzala }),
       });
       const j = await r.json().catch(() => ({}));
@@ -178,7 +179,7 @@ export default function HastaAmeliyatNotlari({ patientId }: { patientId: string 
   const yukle = useCallback(async () => {
     try {
       const t = await getAccessTokenAsync();
-      const r = await fetch(`/api/doktor/ameliyat-notlari?patientId=${encodeURIComponent(patientId)}`, { headers: { Authorization: `Bearer ${t}` }, cache: 'no-store' });
+      const r = await doktorFetch(`/api/doktor/ameliyat-notlari?patientId=${encodeURIComponent(patientId)}`, { cache: 'no-store' });
       const j = await r.json().catch(() => ({}));
       if (!r.ok) { setHata(j.error || 'Yüklenemedi.'); return; }
       setNotlar(j.notlar || []); setSablonlar(j.sablonlar || []); setEndikasyonEtiketleri(j.endikasyonEtiketleri || null);

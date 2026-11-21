@@ -11,6 +11,7 @@ import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth'
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme'
 import { MBYS_ADRES, yardimciyaGonder } from '@/lib/enabiz/mbys/yardimci'
 import type { MbysEksik, MbysKayit } from '@/lib/enabiz/mbys/kontrol'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 const API = '/api/doktor/araclar/enabiz/mbys/bildir'
 
@@ -19,7 +20,7 @@ type Onizleme = { hastaAd: string; onayli: boolean; kilit: boolean; eksikler: Mb
 async function yetkili(yol: string, init?: RequestInit) {
   const t = await ensureDoctorAccessToken()
   if (!t) throw new Error('Oturum bulunamadı.')
-  const r = await fetch(yol, { ...init, headers: { ...(init?.headers || {}), Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' }, cache: 'no-store' })
+  const r = await doktorFetch(yol, { ...init, headers: { ...(init?.headers || {}), 'Content-Type': 'application/json' }, cache: 'no-store' })
   const j = await r.json().catch(() => ({}))
   if (!r.ok) throw new Error(String(j.error || 'İşlem yapılamadı.'))
   return j

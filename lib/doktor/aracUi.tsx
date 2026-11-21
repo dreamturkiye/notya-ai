@@ -22,6 +22,7 @@ import { eklenenNotId } from '@/lib/doktor/muayeneFormuYolu';
 import MuayeneFormunaDon from '@/components/doktor/MuayeneFormunaDon';
 import { doktorBasHarfleri } from '@/lib/doktor/avatar';
 import { CHROME_RENK, CHROME_FONT } from '@/lib/doktor/chromeTheme';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 /** Bir branşın renk vurgusu — birincil düğme, etiket ve sayfa üst şeridi. */
 export type AracVurgu = {
@@ -297,7 +298,7 @@ export function HastaSecici({ secili, sec, bosEtiket = 'Hasta seçilmedi' }: { s
     (async () => {
       try {
         const t = await getAccessTokenAsync();
-        const r = await fetch('/api/doktor/hastalar', { headers: { Authorization: `Bearer ${t}` }, cache: 'no-store' });
+        const r = await doktorFetch('/api/doktor/hastalar', { cache: 'no-store' });
         const j = await r.json().catch(() => ({}));
         if (!iptal) { if (r.ok) setListe(normalizeHastalar(j)); else setHata(j.error || 'Hasta listesi yüklenemedi'); }
       } catch { if (!iptal) setHata('Hasta listesi yüklenemedi'); }
@@ -312,7 +313,7 @@ export function HastaSecici({ secili, sec, bosEtiket = 'Hasta seçilmedi' }: { s
     const t = window.setTimeout(async () => {
       try {
         const token = await getAccessTokenAsync();
-        const r = await fetch(`/api/doktor/hastalar?q=${encodeURIComponent(query)}`, { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' });
+        const r = await doktorFetch(`/api/doktor/hastalar?q=${encodeURIComponent(query)}`, { cache: 'no-store' });
         const j = await r.json().catch(() => ({}));
         if (!iptal && r.ok) setKlinikListe(normalizeHastalar(j));
       } catch { /* ad listesi durur */ }
@@ -461,7 +462,7 @@ export function useHastaVerisi<T>(
     (async () => {
       try {
         const t = await getAccessTokenAsync();
-        const r = await fetch(yol(patientId), { headers: { Authorization: `Bearer ${t}` }, cache: 'no-store' });
+        const r = await doktorFetch(yol(patientId), { cache: 'no-store' });
         const j = await r.json().catch(() => ({}));
         if (!iptal) { if (r.ok) setVeri(j as T); else setHata(j.error || hataMetni); }
       } catch { if (!iptal) setHata(`${hataMetni} — bağlantıyı kontrol edin.`); }
@@ -519,9 +520,9 @@ export function MuayeneFormunaEkle({
     setGonderiyor(true); setMesaj(''); setIyiMi(false); setNotId(null)
     try {
       const t = await getAccessTokenAsync()
-      const r = await fetch('/api/doktor/araclar/nota-ekle', {
+      const r = await doktorFetch('/api/doktor/araclar/nota-ekle', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ patientId: hastaId, arac, satirlar: temiz, alan }),
       })
       const j = (await r.json().catch(() => ({}))) as { ok?: boolean; notId?: string; error?: string }
@@ -668,7 +669,7 @@ export function OrtakAracKabugu({
       try {
         const t = await ensureDoctorAccessToken()
         if (!t) { if (!iptal) { setIzin(false); router.replace('/doktor-tools') } return }
-        const r = await fetch('/api/users/me', { headers: { Authorization: `Bearer ${t}` } })
+        const r = await doktorFetch('/api/users/me', {})
         const j = r.ok ? await r.json() : null
         const ok = izinVer ? izinVer(j?.data?.specialty) : doktorAraciBransaUygun(route, j?.data?.specialty)
         if (!iptal) { setIzin(ok); if (!ok) router.replace('/doktor-tools') }

@@ -17,6 +17,7 @@ import { useState } from 'react';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 import GorselYakalaPaneli, { type GorselYakalamaSonucu } from '@/components/doktor/gorsel/GorselYakalaPaneli';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 const DERM_MODALITELER = [
   { value: 'derm', label: 'Deri lezyonu fotoğrafı' },
@@ -66,9 +67,9 @@ export default function DermNotGorselYakala({ patientId, visitId }: { patientId:
     if (t) {
       // attachToVisit() wiring — bağlar, tanı yazmaz. Lezyon seçimi bu ekranda yok (hızlı yakalama);
       // Deri sekmesinde lezyona bağlama/isim verme yapılabilir.
-      await fetch('/api/doktor/dermatoloji/spine', {
+      await doktorFetch('/api/doktor/dermatoloji/spine', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ adim: 'foto_vizit', patientId, coreImageId: row.id, visitId, bolge: row.vucut_bolgesi }),
       }).catch(() => undefined);
     }
@@ -84,9 +85,9 @@ export default function DermNotGorselYakala({ patientId, visitId }: { patientId:
       if (!t) { setHata('Oturum bulunamadı.'); return; }
       const deid = await dosyayiBase64Yap(bekleyenGoruntu.dosya_url);
       if (!deid) { setHata('Görüntü okunamadı.'); return; }
-      const r = await fetch('/api/doktor/dermatoloji', {
+      const r = await doktorFetch('/api/doktor/dermatoloji', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'goruntu-okuma', eylem: 'asistana_raporla', patientId,
           coreImageId: bekleyenGoruntu.id, bolge: sonBolge || 'belirtilmedi',
@@ -105,9 +106,9 @@ export default function DermNotGorselYakala({ patientId, visitId }: { patientId:
     if (!taslak?.visionReadId) return;
     const t = await ensureDoctorAccessToken();
     if (!t) return;
-    const r = await fetch('/api/doktor/dermatoloji', {
+    const r = await doktorFetch('/api/doktor/dermatoloji', {
       method: 'POST',
-      headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'vision', patientId, id: taslak.visionReadId, onay: true, drafted_by: 'asistan' }),
     });
     setTaslak((s) => (s ? { ...s, onayAsamasi: r.ok ? 'onaylandi' : 'hata' } : s));

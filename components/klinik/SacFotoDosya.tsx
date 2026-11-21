@@ -5,6 +5,7 @@ import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth'
 import { durumSozcugu } from '@/lib/klinik/telafi'
 import { vadeDurumu } from '@/lib/klinik/isoGun'
 import { FOTO_ROLLERI, type FotoRol } from '@/specialties/sac-ekimi/engines/fotoDosya'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 type Slot = { id: string; rol: FotoRol; islem: string; cekim: string }
 type Durum = {
@@ -31,9 +32,9 @@ export function SacFotoDosya({ patientId, islemBaslangic = '' }: { patientId: st
     ;(async () => {
       const t = await ensureDoctorAccessToken()
       if (!t || iptal) return
-      await fetch('/api/ozel-brans/foto', {
+      await doktorFetch('/api/ozel-brans/foto', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ patientId, islem }),
       })
     })()
@@ -47,7 +48,7 @@ export function SacFotoDosya({ patientId, islemBaslangic = '' }: { patientId: st
     ;(async () => {
       const t = await ensureDoctorAccessToken()
       if (!t || iptal) return
-      const r = await fetch(`/api/ozel-brans/foto?patientId=${encodeURIComponent(patientId)}&islem=${encodeURIComponent(islem)}`, { headers: { Authorization: `Bearer ${t}` } })
+      const r = await doktorFetch(`/api/ozel-brans/foto?patientId=${encodeURIComponent(patientId)}&islem=${encodeURIComponent(islem)}`, {})
       const j = await r.json().catch(() => null)
       if (iptal || !r.ok) return
       const liste = (j.dosyalar || []) as Slot[]
@@ -55,7 +56,7 @@ export function SacFotoDosya({ patientId, islemBaslangic = '' }: { patientId: st
       setDurum(j.durum || null)
       const urls: Record<string, string> = {}
       for (const d of liste) {
-        const g = await fetch(`/api/doktor/documents/${d.id}/download`, { headers: { Authorization: `Bearer ${t}` } })
+        const g = await doktorFetch(`/api/doktor/documents/${d.id}/download`, {})
         if (!g.ok) continue
         const url = URL.createObjectURL(await g.blob())
         acilan.push(url)
@@ -86,7 +87,7 @@ export function SacFotoDosya({ patientId, islemBaslangic = '' }: { patientId: st
     form.set('cekim', cekim)
     form.set('riza', '1')
     form.set('file', file)
-    const r = await fetch('/api/ozel-brans/foto', { method: 'POST', headers: { Authorization: `Bearer ${t}` }, body: form })
+    const r = await doktorFetch('/api/ozel-brans/foto', { method: 'POST', body: form })
     const j = await r.json().catch(() => ({}))
     setMesaj(r.ok ? 'Dosyaya yazıldı.' : (j.error || 'Fotoğraf yazılamadı.'))
   }

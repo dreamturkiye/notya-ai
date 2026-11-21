@@ -12,6 +12,7 @@ import { doktorCepTelefonu } from '@/lib/onboarding/cepTelefonu';
 import { KVKK_ONAY_KODU } from '@/lib/onboarding/kvkkOnay';
 import BransSecimi from '@/components/onboarding/BransSecimi';
 import { kayitBransiMi } from '@/lib/onboarding/kayitBransi';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 interface Profession {
   id: string;
@@ -116,8 +117,7 @@ function OnboardingInner() {
         return
       }
       try {
-        const personelRes = await fetch('/api/personel/me', {
-          headers: { Authorization: `Bearer ${token}` },
+        const personelRes = await doktorFetch('/api/personel/me', {
           cache: 'no-store',
         })
         if (personelRes.ok) {
@@ -129,9 +129,7 @@ function OnboardingInner() {
         }
       } catch { /* doktor onboarding */ }
       try {
-        const res = await fetch('/api/users/me', {
-          headers: { Authorization: `Bearer ${token}` },
-        })
+        const res = await doktorFetch('/api/users/me', {})
         if (res.status === 401) {
           setChecking(false)
           return
@@ -151,8 +149,7 @@ function OnboardingInner() {
       }
       // NOTYA-ONBOARDING-01: the sign-in e-mail (shown read-only) and whether the KVKK box is needed — the server decides.
       try {
-        const hesapRes = await fetch('/api/users/profile', {
-          headers: { Authorization: `Bearer ${token}` },
+        const hesapRes = await doktorFetch('/api/users/profile', {
           cache: 'no-store',
         })
         if (hesapRes.ok) {
@@ -326,11 +323,10 @@ function OnboardingInner() {
     setGonderiliyor(true);
     try {
       // POST profile
-      const profileRes = await fetch('/api/users/profile', {
+      const profileRes = await doktorFetch('/api/users/profile', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${access_token}`,
         },
         body: JSON.stringify(profilePayload),
       });
@@ -350,11 +346,8 @@ function OnboardingInner() {
       hekimProfilTazeleIsaretle()
 
       // Activate trial
-      await fetch('/api/users/trial', {
+      await doktorFetch('/api/users/trial', {
         method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${access_token}`,
-        },
       });
 
       const redirectPath = getRedirectPath(profession_type);

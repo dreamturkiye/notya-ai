@@ -9,6 +9,7 @@
  */
 import { SES_PROFILI_AYAR, SES_PROFILI_BOYUT, SES_PROFILI_MODEL_SURUMU, SES_PROFILI_MODEL_YOLU, type ProfilKarari } from '@/lib/asistan/sesProfili/ayar'
 import { bolumSesi, dogrulamaAdimi, dogrulamaBaslat, puanGeldi, sayacBaslat, sayacEkle, tamponBaslat, tamponEkle, type DogrulamaDurumu, type ProfilSayac } from '@/lib/asistan/sesProfili/eslesme'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 const PUAN_ZAMAN_ASIMI_MS = 2500
 const GOMME_ZAMAN_ASIMI_MS = 30_000
@@ -79,7 +80,7 @@ export type SesProfiliKaydi = { var: boolean; profil: Float32Array | null; model
 
 export async function sesProfiliGetir(jeton: string): Promise<SesProfiliKaydi | null> {
   try {
-    const r = await fetch('/api/doktor/ses-profili', { headers: { Authorization: `Bearer ${jeton}` }, cache: 'no-store' })
+    const r = await doktorFetch('/api/doktor/ses-profili', { cache: 'no-store' })
     if (!r.ok) return null
     const j = (await r.json()) as { var?: boolean; profil?: number[]; model_surumu?: string; riza_zamani?: string; created_at?: string; updated_at?: string }
     const profil = Array.isArray(j.profil) && j.profil.length === SES_PROFILI_BOYUT ? Float32Array.from(j.profil) : null
@@ -91,9 +92,9 @@ export async function sesProfiliGetir(jeton: string): Promise<SesProfiliKaydi | 
 
 export async function sesProfiliKaydet(jeton: string, profil: Float32Array): Promise<boolean> {
   try {
-    const r = await fetch('/api/doktor/ses-profili', {
+    const r = await doktorFetch('/api/doktor/ses-profili', {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${jeton}` },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ profil: Array.from(profil), model_surumu: SES_PROFILI_MODEL_SURUMU, riza: true }),
     })
     return r.ok
@@ -104,7 +105,7 @@ export async function sesProfiliKaydet(jeton: string, profil: Float32Array): Pro
 
 export async function sesProfiliSil(jeton: string): Promise<boolean> {
   try {
-    const r = await fetch('/api/doktor/ses-profili', { method: 'DELETE', headers: { Authorization: `Bearer ${jeton}` } })
+    const r = await doktorFetch('/api/doktor/ses-profili', { method: 'DELETE' })
     return r.ok
   } catch {
     return false
@@ -115,9 +116,9 @@ export async function sesProfiliSil(jeton: string): Promise<boolean> {
 export function sayaclariGonder(jeton: string | null, s: ProfilSayac): void {
   if (!jeton || !(s.kabul || s.red || s.belirsiz || s.kisa)) return
   try {
-    void fetch('/api/asistan/ses-profili-sayac', {
+    void doktorFetch('/api/asistan/ses-profili-sayac', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${jeton}` },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ...s, model_surumu: SES_PROFILI_MODEL_SURUMU }),
       keepalive: true,
     }).catch(() => undefined)

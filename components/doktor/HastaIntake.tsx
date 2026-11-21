@@ -17,6 +17,7 @@ import { intakeBransBolumu, intakeBransEtiketi, intakeFormBransi, intakeFormBran
 import { coreBolumlerIcin } from '@/lib/intake/coreAlanlar';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 import GonderDugmesi from '@/components/doktor/iletisim/GonderDugmesi';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 interface IntakeFormOzet {
   id: string;
@@ -64,7 +65,7 @@ export default function HastaIntake({ patientId }: { patientId: string }) {
     (async () => {
       try {
         const t = await ensureDoctorAccessToken();
-        const r = await fetch('/api/users/me', { headers: { Authorization: `Bearer ${t}` } });
+        const r = await doktorFetch('/api/users/me', {});
         const j = await r.json();
         const sp = String(j?.data?.specialty || '');
         // BRANS-ALAN-SIZMASI / KD-ISIMLENDIRME-01: gerçek KD profilleri 'kadin-dogum' taşır (BRANS_ETIKETLERI anahtarı değil) — tek çözücüyle kanonik anahtara çöz
@@ -90,7 +91,7 @@ export default function HastaIntake({ patientId }: { patientId: string }) {
     try {
       const t = await token();
       if (!t) { setHata('Oturum bulunamadı.'); return; }
-      const r = await fetch(`/api/doktor/intake-formlari?patientId=${patientId}`, { headers: { Authorization: `Bearer ${t}` } });
+      const r = await doktorFetch(`/api/doktor/intake-formlari?patientId=${patientId}`, {});
       if (!r.ok) { setHata('Formlar alınamadı.'); return; }
       const d = await r.json();
       setFormlar(d.formlar || []);
@@ -110,9 +111,9 @@ export default function HastaIntake({ patientId }: { patientId: string }) {
     try {
       const t = await token();
       if (!t) { setHata('Oturum bulunamadı.'); return; }
-      const r = await fetch('/api/doktor/intake-formlari', {
+      const r = await doktorFetch('/api/doktor/intake-formlari', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ patientId, brans: secilenBrans }),
       });
       const d = await r.json();
@@ -133,7 +134,7 @@ export default function HastaIntake({ patientId }: { patientId: string }) {
     try {
       const t = await token();
       if (!t) return;
-      const r = await fetch(`/api/doktor/intake-formlari/${formId}`, { headers: { Authorization: `Bearer ${t}` } });
+      const r = await doktorFetch(`/api/doktor/intake-formlari/${formId}`, {});
       const d = await r.json();
       if (r.ok) setAcikFormDetay({ yanitlar: d.form.yanitlar, durum: d.form.durum });
     } catch { /* ignore */ }
@@ -144,7 +145,7 @@ export default function HastaIntake({ patientId }: { patientId: string }) {
     try {
       const t = await token();
       if (!t) return;
-      await fetch(`/api/doktor/intake-formlari/${formId}`, { method: 'PATCH', headers: { Authorization: `Bearer ${t}` } });
+      await doktorFetch(`/api/doktor/intake-formlari/${formId}`, { method: 'PATCH' });
       await yukle();
       setAcikFormId(null);
     } catch { /* ignore */ }

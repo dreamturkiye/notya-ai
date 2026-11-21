@@ -5,6 +5,7 @@ import { getAccessTokenAsync } from '@/lib/doktor/toolsUi'
 import { kutu, btn, giris } from './clinic-styles'
 import { belgeAnalizHref, belgeDurumEtiket, belgeHekimOnayli, belgelerTabHref, type DermBelgeOzet } from '../engines/clinic-fit'
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 /** DERM-EXCEPTIONAL-01 — köprüden geçen modaliteler (imaging/belgeKopru ile aynı liste). */
 const KOPRU_MODALITELERI = ['dermatoskopi', 'derm', 'yara']
@@ -34,9 +35,9 @@ export function BelgeAnalizOzet({
     setMesaj((m) => ({ ...m, [analizId]: '' }))
     try {
       const token = await getAccessTokenAsync()
-      const r = await fetch('/api/doktor/dermatoloji', {
+      const r = await doktorFetch('/api/doktor/dermatoloji', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'goruntu-okuma', eylem: 'belge_taslak', patientId, analizId, bolge: bolge[analizId] || '' }),
       })
       const j = await r.json().catch(() => ({}))

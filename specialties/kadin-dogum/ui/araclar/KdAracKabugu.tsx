@@ -19,6 +19,7 @@ import { AracVurguSaglayici, aracStil, HastaSecici, panoyaKopyala, VURGU_KD } fr
 import { doneWindowIdsFromClinic } from '../../engines/clinic-fit';
 import type { WindowId } from '../../engines/test-windows';
 import type { PencereDurum } from '../../engines/araclar';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 export const KD_VURGU = VURGU_KD;
 export const kdStil = aracStil(KD_VURGU);
@@ -81,7 +82,7 @@ const isoGun = (v: unknown) => (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}/.te
 
 export async function kdHastaOzeti(patientId: string): Promise<KdHastaOzeti> {
   const t = await getAccessTokenAsync();
-  const r = await fetch(`/api/doktor/gebelik?patientId=${encodeURIComponent(patientId)}`, { headers: { Authorization: `Bearer ${t}` }, cache: 'no-store' });
+  const r = await doktorFetch(`/api/doktor/gebelik?patientId=${encodeURIComponent(patientId)}`, { cache: 'no-store' });
   const j = await r.json().catch(() => ({}));
   if (!r.ok) throw new Error(j.error || 'Hasta verisi yüklenemedi');
   const g = j.gebelik as Record<string, unknown> | null;
@@ -122,7 +123,7 @@ export default function KdAracKabugu({ route, baslik, aciklama, children }: { ro
       try {
         const t = await ensureDoctorAccessToken();
         if (!t) { if (!iptal) { setIzin(false); router.replace('/doktor-tools'); } return; }
-        const r = await fetch('/api/users/me', { headers: { Authorization: `Bearer ${t}` } });
+        const r = await doktorFetch('/api/users/me', {});
         const j = r.ok ? await r.json() : null;
         const ok = doktorAraciBransaUygun(route, j?.data?.specialty);
         if (!iptal) { setIzin(ok); if (!ok) router.replace('/doktor-tools'); }

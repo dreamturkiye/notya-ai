@@ -24,6 +24,7 @@ import { belgeEkoMi, belgeLabMi, belgeRontgenMi, belgeUsgMi } from '@/lib/doktor
 import { hastaBelgelerHref, hastaDosyaHref } from '@/lib/doktor/geriNavigasyon';
 import type { HastaDosyaSekmeId } from '@/lib/doktor/hastaDosyaSekmeleri';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 type Doc = { id: string; fileName: string; fileType: string; fileSize: number; category: string | null; createdAt: string };
 type Analiz = { id: string; durum: string; sonuc: BelgeRaporu | null; fusion: { fused: { kod: string; label_tr: string; p: number; sources: string[]; karsi: string[] }[]; capPct: number; acilNedenler: string[]; duzeltmeler: string[] } | null; motor_ciktilari: MotorCiktisi[]; hekim_tanisi: { ad: string; icd10?: string | null }[]; hekim_ozet: string | null; note_id: string | null; onaylandi_at: string | null; olusturuldu: string; modality_final: string };
@@ -66,7 +67,7 @@ export default function BelgeAnalizPage() {
     (async () => {
       try {
         const t = await getAccessTokenAsync();
-        const r = await fetch(`/api/doktor/hastalar/${patientId}`, { headers: { Authorization: `Bearer ${t}` } });
+        const r = await doktorFetch(`/api/doktor/hastalar/${patientId}`, {});
         const d = await r.json().catch(() => null);
         if (!iptal && d?.patient?.ad_soyad) setHastaAdi(String(d.patient.ad_soyad));
         if (!iptal && d?.patient?.dogum_tarihi) setHastaDogum(String(d.patient.dogum_tarihi));
@@ -98,8 +99,8 @@ export default function BelgeAnalizPage() {
   const yukle = useCallback(async () => {
     const token = await getAccessTokenAsync();
     const [dr, ar] = await Promise.all([
-      fetch(`/api/doktor/documents?patientId=${encodeURIComponent(patientId)}`, { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' }),
-      fetch(`/api/doktor/belgeler/analiz?documentId=${encodeURIComponent(belgeId)}`, { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' }),
+      doktorFetch(`/api/doktor/documents?patientId=${encodeURIComponent(patientId)}`, { cache: 'no-store' }),
+      doktorFetch(`/api/doktor/belgeler/analiz?documentId=${encodeURIComponent(belgeId)}`, { cache: 'no-store' }),
     ]);
     if (dr.ok) { const j = await dr.json(); const list: Doc[] = j.documents || j.docs || j || []; setDoc(Array.isArray(list) ? list.find((d) => d.id === belgeId) || null : null); }
     if (ar.ok) { const j = await ar.json(); setAnaliz(j.analiz || null); setBransKey(j.bransKey || 'genel'); if (j.analiz?.modality_final === 'eko') { setModalite('eko'); setModaliteGuvenli(true) } if (j.analiz?.hekim_tanisi?.length) setTaniTaslak(j.analiz.hekim_tanisi.map((t: { ad: string; icd10?: string | null }) => t.icd10 ? `${t.ad} (${t.icd10})` : t.ad).join('\n')); setOzetTaslak(j.analiz?.hekim_ozet || j.analiz?.sonuc?.ozet || ''); }
@@ -143,7 +144,7 @@ export default function BelgeAnalizPage() {
     try {
       let deid: DeIdGorsel | null = null; let sesMetrikleri: Record<string, number | string> | null = null; let tierB: MotorCiktisi[] = [];
       if (!pdfMi) {
-        const r = await fetch(`/api/doktor/documents/${doc.id}/download`, { headers: { Authorization: `Bearer ${token}` } });
+        const r = await doktorFetch(`/api/doktor/documents/${doc.id}/download`, {});
         if (!r.ok) throw new Error('Belge indirilemedi');
         let blob: Blob = await r.blob();
         let dicomNotu = '';
@@ -177,13 +178,13 @@ export default function BelgeAnalizPage() {
           ? `Göz: ${fundusGoz === 'sag' ? 'OD (sağ)' : fundusGoz === 'sol' ? 'OS (sol)' : 'OU (iki göz)'}.`
           : '';
       const klinikBirlesik = [gozNot, klinikNot].filter(Boolean).join(' ').trim();
-      const r = await fetch('/api/doktor/belgeler/analiz', { method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ documentId: doc.id, modalityFinal: modalite, klinikNot: klinikBirlesik || undefined, deid: deid ? { mime: deid.mime, base64: deid.base64, hash: deid.hash } : null, sesMetrikleri, tierB, fitzpatrickBilinmiyor: !fitzQ, tekAlanFundus: modalite === 'fundus' ? tekAlanFundus : undefined }) });
+      const r = await doktorFetch('/api/doktor/belgeler/analiz', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ documentId: doc.id, modalityFinal: modalite, klinikNot: klinikBirlesik || undefined, deid: deid ? { mime: deid.mime, base64: deid.base64, hash: deid.hash } : null, sesMetrikleri, tierB, fitzpatrickBilinmiyor: !fitzQ, tekAlanFundus: modalite === 'fundus' ? tekAlanFundus : undefined }) });
       const j = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(j.error || 'Taslak üretilemedi');
       if (j.uyusmazlik) setUyusmazlik(`Asistan görüntüyü "${MODALITE_TR[j.analiz?.sonuc?.modalite as Modalite] || j.analiz?.sonuc?.modalite}" olarak gördü; siz "${MODALITE_TR[j.secilenModalite as Modalite] || j.secilenModalite}" seçtiniz. Modaliteyi kontrol edip yeniden raporlayın veya taslağı bu haliyle değerlendirin.`);
       // NOTYA-BELGE-OTO-01: no approval step -- the evaluation goes straight into the exam note (replaces this document's own block on re-run).
       if (j.analiz?.id && j.analiz.durum !== 'kalite_dusuk' && !j.uyusmazlik && modalite !== 'eko') {
-        const ar = await fetch('/api/doktor/belgeler/analiz/otomatik-ekle', { method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ analizIds: [j.analiz.id] }) });
+        const ar = await doktorFetch('/api/doktor/belgeler/analiz/otomatik-ekle', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ analizIds: [j.analiz.id] }) });
         const aj = await ar.json().catch(() => ({}));
         const d0 = aj?.sonuclar?.[0]?.durum;
         setOnayMesaj(!ar.ok ? 'Nota eklenemedi.' : d0 === 'not_yok' ? 'Muayene notu bulunamadı: değerlendirme Belgeler bölümünde kaldı.' : 'Değerlendirme muayene notuna eklendi (Fizik Muayene / Bulgular).');
@@ -196,7 +197,7 @@ export default function BelgeAnalizPage() {
     if (!analiz || !kopruGoz) return;
     setKopruMesaj('');
     const token = await getAccessTokenAsync();
-    const r = await fetch('/api/doktor/goz', { method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ adim: 'goruntu_okuma', eylem: 'belge_taslak', patientId, analizId: analiz.id, goz: kopruGoz, tekAlan: analiz.modality_final === 'fundus' ? tekAlanFundus : undefined }) });
+    const r = await doktorFetch('/api/doktor/goz', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ adim: 'goruntu_okuma', eylem: 'belge_taslak', patientId, analizId: analiz.id, goz: kopruGoz, tekAlan: analiz.modality_final === 'fundus' ? tekAlanFundus : undefined }) });
     const j = await r.json().catch(() => ({}));
     setKopruMesaj(r.ok ? 'Taslak gönderildi — uzman onayı bekliyor.' : j.error || 'Aktarılamadı');
   };
@@ -221,7 +222,7 @@ export default function BelgeAnalizPage() {
     try {
       const token = await getAccessTokenAsync();
       if (!token) throw new Error('Oturum bulunamadı — yeniden giriş yapın.');
-      const r = await fetch('/api/doktor/belgeler/analiz', { method: 'PATCH', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ analizId: analiz.id, alan, sonraki }) });
+      const r = await doktorFetch('/api/doktor/belgeler/analiz', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ analizId: analiz.id, alan, sonraki }) });
       const j = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(j.error || 'Kaydedilemedi');
       const msg = alan === 'ozet' ? 'Özet kaydedildi.' : 'Resmi tanı kilitlendi.';
@@ -257,7 +258,7 @@ export default function BelgeAnalizPage() {
         }
       }
       const token = await getAccessTokenAsync();
-      const r = await fetch('/api/doktor/belgeler/analiz/onayla', { method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ analizId: analiz.id, adim, plan: adim === 'muayene_onayla' ? plan : undefined }) });
+      const r = await doktorFetch('/api/doktor/belgeler/analiz/onayla', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ analizId: analiz.id, adim, plan: adim === 'muayene_onayla' ? plan : undefined }) });
       const j = await r.json().catch(() => ({}));
       if (!r.ok) {
         const err = j.error || 'Onaylanamadı';

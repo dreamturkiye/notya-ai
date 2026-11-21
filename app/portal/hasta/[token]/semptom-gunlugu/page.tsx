@@ -8,6 +8,7 @@ import Link from 'next/link'
 import { usePortalLive } from '../../../_components/PortalLiveProvider'
 import { SectionHeader, SoftPanel } from '../../../_components/ui'
 import { PMDD_ALAN_HASTA, PMDD_ISLEV_HASTA, PMDD_OLCEK_ETIKET } from '@/specialties/kadin-dogum/engines/kdTaramaMetinleri'
+import { portalFetch } from '@/lib/portal/portalFetch'
 
 type Durum = { uygun: boolean; alanlar?: string[]; islevAlanlari?: string[]; bugun?: string; sonGunler?: Array<{ tarih: string; adet: boolean }> }
 
@@ -19,7 +20,7 @@ export default function SemptomGunluguPage() {
   const [puan, setPuan] = useState<Record<string, number>>({})
   const [islev, setIslev] = useState<Record<string, number>>({})
   const [mesaj, setMesaj] = useState<{ ok: boolean; metin: string } | null>(null)
-  const yukle = () => fetch(`/api/portal/hasta/${encodeURIComponent(token)}/kd-gunluk`, { credentials: 'include' }).then((r) => r.json()).then(setD).catch(() => setD({ uygun: false }))
+  const yukle = () => portalFetch(`/api/portal/hasta/${encodeURIComponent(token)}/kd-gunluk`, { credentials: 'include' }).then((r) => r.json()).then(setD).catch(() => setD({ uygun: false }))
   useEffect(() => { yukle() }, [token]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const tarih = (): string => {
@@ -29,7 +30,7 @@ export default function SemptomGunluguPage() {
   }
   const gonder = async () => {
     setMesaj(null)
-    const r = await fetch(`/api/portal/hasta/${encodeURIComponent(token)}/kd-gunluk`, { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tarih: tarih(), adet, puan, islev }) })
+    const r = await portalFetch(`/api/portal/hasta/${encodeURIComponent(token)}/kd-gunluk`, { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tarih: tarih(), adet, puan, islev }) })
     const j = await r.json().catch(() => ({}))
     if (!r.ok) return setMesaj({ ok: false, metin: j.error || 'Kaydedilemedi' })
     setMesaj({ ok: true, metin: 'Kaydedildi. Doktorunuz günlüğünüzü muayenede görür.' }); setPuan({}); setIslev({}); setAdet(false); yukle()

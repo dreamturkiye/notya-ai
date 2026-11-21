@@ -30,6 +30,7 @@ import GoogleTakvimOnerileri from '@/components/doktor/randevu/GoogleTakvimOneri
 import GonderDugmesi from '@/components/doktor/iletisim/GonderDugmesi';
 import { cepTelefonuDogrula, TELEFON_MESAJ } from '@/lib/iletisim/cepTelefonu';
 import { muayeneBaslatYolu } from '@/lib/doktor/oneriPaneli';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 export const dynamic = 'force-dynamic';
 
@@ -236,9 +237,7 @@ export default function RandevularPage() {
       const grid = ayIzgarasi(ay);
       const baslangic = new Date(yerelGunAnahtari(grid[0]) + 'T00:00:00+03:00');
       const bitis = new Date(yerelGunAnahtari(grid[grid.length - 1]) + 'T23:59:59+03:00');
-      const r = await fetch(`/api/doktor/randevular?baslangic=${encodeURIComponent(baslangic.toISOString())}&bitis=${encodeURIComponent(bitis.toISOString())}`, {
-        headers: { Authorization: `Bearer ${t}` },
-      });
+      const r = await doktorFetch(`/api/doktor/randevular?baslangic=${encodeURIComponent(baslangic.toISOString())}&bitis=${encodeURIComponent(bitis.toISOString())}`, {});
       if (!r.ok) { setHata('Randevular alınamadı.'); return; }
       const d = await r.json();
       const grup: Record<string, Randevu[]> = {};
@@ -261,9 +260,7 @@ export default function RandevularPage() {
       const t = await token();
       if (!t) { setHata('Oturum bulunamadı. Lütfen tekrar giriş yapın.'); return; }
       const { baslangic, bitis } = gunBaslangicBitis(gun);
-      const r = await fetch(`/api/doktor/randevular?baslangic=${encodeURIComponent(baslangic)}&bitis=${encodeURIComponent(bitis)}`, {
-        headers: { Authorization: `Bearer ${t}` },
-      });
+      const r = await doktorFetch(`/api/doktor/randevular?baslangic=${encodeURIComponent(baslangic)}&bitis=${encodeURIComponent(bitis)}`, {});
       if (!r.ok) { setHata('Randevular alınamadı.'); return; }
       const d = await r.json();
       setGunlukRandevular(d.randevular || []);
@@ -280,9 +277,7 @@ export default function RandevularPage() {
   const araligiCek = useCallback(async (baslangic: Date, bitis: Date): Promise<Randevu[] | null> => {
     const t = await token();
     if (!t) { setHata('Oturum bulunamadı. Lütfen tekrar giriş yapın.'); return null; }
-    const r = await fetch(`/api/doktor/randevular?baslangic=${encodeURIComponent(baslangic.toISOString())}&bitis=${encodeURIComponent(bitis.toISOString())}`, {
-      headers: { Authorization: `Bearer ${t}` },
-    });
+    const r = await doktorFetch(`/api/doktor/randevular?baslangic=${encodeURIComponent(baslangic.toISOString())}&bitis=${encodeURIComponent(bitis.toISOString())}`, {});
     if (!r.ok) { setHata('Randevular alınamadı.'); return null; }
     const d = await r.json();
     return (d.randevular || []) as Randevu[];
@@ -360,7 +355,7 @@ export default function RandevularPage() {
       const t = await token();
       if (!t) return;
       try {
-        const r = await fetch('/api/personel/me', { headers: { Authorization: `Bearer ${t}` } });
+        const r = await doktorFetch('/api/personel/me', {});
         if (r.ok) { const d = await r.json(); setRol(d.rol); }
       } catch { /* nav still works without this */ }
     })();
@@ -379,7 +374,7 @@ export default function RandevularPage() {
       try {
         const t = await token();
         if (!t) return;
-        const r = await fetch('/api/doktor/hastalar', { headers: { Authorization: `Bearer ${t}` } });
+        const r = await doktorFetch('/api/doktor/hastalar', {});
         const d = await r.json();
         if (!iptal) {
           setTumHastalar(
@@ -404,9 +399,7 @@ export default function RandevularPage() {
         const t = await token()
         if (!t) return
         const { baslangic, bitis } = gunBaslangicBitis(gun)
-        const r = await fetch(`/api/doktor/randevular?baslangic=${encodeURIComponent(baslangic)}&bitis=${encodeURIComponent(bitis)}`, {
-          headers: { Authorization: `Bearer ${t}` },
-        })
+        const r = await doktorFetch(`/api/doktor/randevular?baslangic=${encodeURIComponent(baslangic)}&bitis=${encodeURIComponent(bitis)}`, {})
         if (!r.ok || iptal) return
         const d = await r.json()
         if (!iptal) setGunlukRandevular(d.randevular || [])
@@ -470,7 +463,7 @@ export default function RandevularPage() {
       try {
         const t = await token();
         if (!t) return;
-        const r = await fetch(`/api/doktor/iletisim/izin?patientId=${encodeURIComponent(seciliHastaId)}`, { headers: { Authorization: `Bearer ${t}` } });
+        const r = await doktorFetch(`/api/doktor/iletisim/izin?patientId=${encodeURIComponent(seciliHastaId)}`, {});
         const d = await r.json().catch(() => ({}));
         if (iptal || !r.ok) return;
         const tel = String(d.telefon || '');
@@ -492,9 +485,9 @@ export default function RandevularPage() {
     try {
       const t = await token();
       if (!t) { setFormLinkiHata('Oturum bulunamadı. Lütfen tekrar giriş yapın.'); return; }
-      const r = await fetch('/api/doktor/intake-formlari', {
+      const r = await doktorFetch('/api/doktor/intake-formlari', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ patientId: formSorusu.patientId, randevuId: formSorusu.randevuId, kanal: 'whatsapp' }),
       });
       const d = await r.json().catch(() => ({}));
@@ -518,7 +511,7 @@ export default function RandevularPage() {
     try {
       const t = await token();
       if (!t) return false;
-      const r = await fetch(`/api/doktor/intake-formlari?patientId=${encodeURIComponent(patientId)}`, { headers: { Authorization: `Bearer ${t}` } });
+      const r = await doktorFetch(`/api/doktor/intake-formlari?patientId=${encodeURIComponent(patientId)}`, {});
       const d = await r.json().catch(() => ({}));
       return (d.formlar || []).some((f: { durum?: string }) => f.durum === 'dolduruldu' || f.durum === 'incelendi');
     } catch { return false; }
@@ -674,9 +667,9 @@ export default function RandevularPage() {
 
       const url = duzenlenenId ? `/api/doktor/randevular/${duzenlenenId}` : '/api/doktor/randevular';
       const yontem = duzenlenenId ? 'PATCH' : 'POST';
-      const r = await fetch(url, {
+      const r = await doktorFetch(url, {
         method: yontem,
-        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(govde),
       });
       const j = await r.json().catch(() => ({}));
@@ -716,9 +709,9 @@ export default function RandevularPage() {
     try {
       const t = await token();
       if (!t) { setHata('Oturum bulunamadı. Lütfen tekrar giriş yapın.'); return false; }
-      const r = await fetch(`/api/doktor/randevular/${id}`, {
+      const r = await doktorFetch(`/api/doktor/randevular/${id}`, {
         method: 'PATCH',
-        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ durum, iptalNedeni: neden }),
       });
       const sonuc = await r.json().catch(() => ({}));
@@ -792,9 +785,9 @@ export default function RandevularPage() {
     try {
       const t = await token();
       if (!t) { setHata('Oturum bulunamadı. Lütfen tekrar giriş yapın.'); return; }
-      const r = await fetch(`/api/doktor/randevular/${hedefId}`, {
+      const r = await doktorFetch(`/api/doktor/randevular/${hedefId}`, {
         method: 'PATCH',
-        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ hastaKaydiOlustur: true }),
       });
       const j = await r.json().catch(() => ({}));
@@ -834,7 +827,7 @@ export default function RandevularPage() {
     try {
       const t = await token();
       if (!t) { setHata('Oturum bulunamadı. Lütfen tekrar giriş yapın.'); return false; }
-      const r = await fetch(`/api/doktor/randevular/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${t}` } });
+      const r = await doktorFetch(`/api/doktor/randevular/${id}`, { method: 'DELETE' });
       if (!r.ok) {
         const j = await r.json().catch(() => ({}));
         setHata(j.error || 'Randevu silinemedi.');
@@ -929,9 +922,9 @@ export default function RandevularPage() {
     try {
       const t = await token();
       if (!t) return;
-      const r = await fetch(`/api/doktor/randevular/${id}`, {
+      const r = await doktorFetch(`/api/doktor/randevular/${id}`, {
         method: 'PATCH',
-        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ baslangic: yeniB.toISOString(), bitis: yeniS.toISOString() }),
       });
       if (!r.ok) {

@@ -7,6 +7,9 @@ import { klinikAramaMi } from '@/lib/doktor/hastaAramaFiltre';
 import { useRouter } from 'next/navigation';
 import { CHROME_RENK, CHROME_FONT } from '@/lib/doktor/chromeTheme';
 import IpucuBaloncugu from '@/components/doktor/IpucuBaloncugu';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
+import OturumUyarisi from '@/components/doktor/OturumUyarisi'
+import { oturumMesajiMi } from '@/lib/doktor/oturumYolu'
 
 export const dynamic = 'force-dynamic';
 
@@ -46,19 +49,17 @@ export default function HastalarPage() {
         if (!token) {
           if (!cancelled) {
             setPatients([]);
-            setLoadError('Oturum süresi dolmuş. Lütfen tekrar giriş yapın.');
+            setLoadError('Oturumunuzun süresi doldu. Lütfen tekrar giriş yapın.');
             setLoading(false);
           }
           return;
         }
-        const res = await fetch('/api/doktor/hastalar', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await doktorFetch('/api/doktor/hastalar', {});
         const d = await res.json().catch(() => ({}));
         if (cancelled) return;
         if (res.status === 401) {
           setPatients([]);
-          setLoadError('Oturum geçersiz. Lütfen tekrar giriş yapın.');
+          setLoadError('Oturumunuzun süresi doldu. Lütfen tekrar giriş yapın.');
           return;
         }
         if (!res.ok) {
@@ -114,7 +115,7 @@ export default function HastalarPage() {
     const t = window.setTimeout(async () => {
       const token = await ensureDoctorAccessToken();
       if (!token || iptal) return;
-      const res = await fetch(`/api/doktor/hastalar?q=${encodeURIComponent(q)}`, { headers: { Authorization: `Bearer ${token}` } });
+      const res = await doktorFetch(`/api/doktor/hastalar?q=${encodeURIComponent(q)}`, {});
       const d = await res.json().catch(() => ({}));
       if (iptal || !res.ok) return;
       const list = Array.isArray(d?.patients) ? d.patients : [];
@@ -183,7 +184,7 @@ export default function HastalarPage() {
           <div style={{ color: CHROME_RENK.muted, padding: '24px 4px' }}>Hastalar yükleniyor...</div>
         )}
         {!loading && loadError && (
-          <div style={{ color: CHROME_RENK.warn, padding: '24px 4px' }}>{loadError}</div>
+          (oturumMesajiMi(loadError) ? <div style={{ padding: '24px 0' }}><OturumUyarisi mesaj={loadError} /></div> : <div style={{ color: CHROME_RENK.warn, padding: '24px 4px' }}>{loadError}</div>)
         )}
         {!loading && !loadError && filtered.length === 0 && (
           search.trim() ? (

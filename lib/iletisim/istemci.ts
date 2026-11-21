@@ -10,6 +10,7 @@
  */
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth'
 import { epostaAcilisMi, kanalMi, type EpostaAcilis, type IletisimKanali } from './tipler'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 const ACILIS_ANAHTARI = 'notya.iletisim.epostaAcilis'
 const SON_KANAL_ANAHTARI = (patientId: string) => `notya.iletisim.sonKanal.${patientId}`
@@ -64,9 +65,9 @@ export class IletisimHatasi extends Error {
 export async function iletisimIstek<T>(yol: string, init?: { method?: string; govde?: unknown }): Promise<T> {
   const token = await ensureDoctorAccessToken()
   if (!token) throw new IletisimHatasi('Oturum süresi doldu. Lütfen yeniden giriş yapın.', 401)
-  const r = await fetch(yol, {
+  const r = await doktorFetch(yol, {
     method: init?.method || 'GET',
-    headers: { Authorization: `Bearer ${token}`, ...(init?.govde !== undefined ? { 'Content-Type': 'application/json' } : {}) },
+    headers: { ...(init?.govde !== undefined ? { 'Content-Type': 'application/json' } : {}) },
     body: init?.govde !== undefined ? JSON.stringify(init.govde) : undefined,
     cache: 'no-store',
   })

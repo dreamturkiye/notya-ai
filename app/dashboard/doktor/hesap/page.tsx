@@ -5,11 +5,12 @@
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import DoktorAvatar from '@/components/doktor/DoktorAvatar';
-import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
+import { ensureDoctorAccessToken, doktorOturumuSil } from '@/lib/doktor/clientAuth';
 import { AVATAR_IZINLI_MIME, AVATAR_MAX_BYTES, avatarDogrula, AvatarGecersizError } from '@/lib/doktor/avatar';
 import { CHROME_RENK, CHROME_FONT } from '@/lib/doktor/chromeTheme';
 import OturumKarti from '@/components/doktor/OturumKarti';
 import { DOKTOR_UNVANLARI } from '@/lib/address';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 const AVATAR_ONBELLEK = 'notya_doktor_avatar';
 const AVATAR_OLAY = 'notya-avatar-guncellendi';
@@ -37,8 +38,7 @@ export default function HesabimPage() {
       try {
         const t = await ensureDoctorAccessToken();
         if (!t) return;
-        const personelRes = await fetch('/api/personel/me', {
-          headers: { Authorization: `Bearer ${t}` },
+        const personelRes = await doktorFetch('/api/personel/me', {
           cache: 'no-store',
         });
         const pm = personelRes.ok
@@ -51,19 +51,19 @@ export default function HesabimPage() {
           const adTam = String(pm?.personelAdi || pm?.personelKisaAdi || '').trim() || 'Sekreter';
           setAd(String(pm?.personelKisaAdi || adTam.split(/\s+/)[0] || 'Sekreter'));
           setAdSoyad(adTam);
-          const av = await fetch('/api/personel/avatar', { headers: { Authorization: `Bearer ${t}` } })
+          const av = await doktorFetch('/api/personel/avatar', {})
             .then((r) => (r.ok ? r.json() : null))
             .catch(() => null);
           setFotoUrl(av?.avatar?.dataUrl || null);
           // E-posta auth'tan — users satırı olmayabilir.
-          const me = await fetch('/api/users/me', { headers: { Authorization: `Bearer ${t}` } })
+          const me = await doktorFetch('/api/users/me', {})
             .then((r) => (r.ok ? r.json() : null))
             .catch(() => null);
           setEposta(me?.data?.email || '');
         } else {
           const [me, av] = await Promise.all([
-            fetch('/api/users/me', { headers: { Authorization: `Bearer ${t}` } }).then((r) => r.json()).catch(() => null),
-            fetch('/api/doktor/profil/avatar', { headers: { Authorization: `Bearer ${t}` } }).then((r) => r.json()).catch(() => null),
+            doktorFetch('/api/users/me', {}).then((r) => r.json()).catch(() => null),
+            doktorFetch('/api/doktor/profil/avatar', {}).then((r) => r.json()).catch(() => null),
           ]);
           setEposta(me?.data?.email || '');
           setAd(me?.data?.first_name || me?.data?.full_name || 'Doktor');
@@ -101,7 +101,7 @@ export default function HesabimPage() {
       const form = new FormData();
       form.append('file', dosya);
       const yol = sekreterMi ? '/api/personel/avatar' : '/api/doktor/profil/avatar';
-      const r = await fetch(yol, { method: 'POST', headers: { Authorization: `Bearer ${t}` }, body: form });
+      const r = await doktorFetch(yol, { method: 'POST', body: form });
       const j = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(j.error || 'Fotoğraf yüklenemedi');
       setFotoUrl(j.avatar.dataUrl);
@@ -122,7 +122,7 @@ export default function HesabimPage() {
     try {
       const t = await ensureDoctorAccessToken();
       const yol = sekreterMi ? '/api/personel/avatar' : '/api/doktor/profil/avatar';
-      const r = await fetch(yol, { method: 'DELETE', headers: { Authorization: `Bearer ${t}` } });
+      const r = await doktorFetch(yol, { method: 'DELETE' });
       if (!r.ok) throw new Error('Fotoğraf kaldırılamadı');
       setFotoUrl(null);
       onbellegeYaz(null);
@@ -140,9 +140,9 @@ export default function HesabimPage() {
     setDurum('kaydediyor');
     try {
       const t = await ensureDoctorAccessToken();
-      const r = await fetch('/api/doktor/hesap/sifre-degistir', {
+      const r = await doktorFetch('/api/doktor/hesap/sifre-degistir', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ yeniSifre: yeni }),
       });
       const j = await r.json();
@@ -162,7 +162,7 @@ export default function HesabimPage() {
     try {
       const t = await ensureDoctorAccessToken();
       // The screen spelling without spaces ("Op.Dr.") is what profilDogrula maps; the stored spelling maps too.
-      const r = await fetch('/api/users/profile', { method: 'POST', headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ title: yeniUnvan }) });
+      const r = await doktorFetch('/api/users/profile', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: yeniUnvan }) });
       setUnvanDurum(r.ok ? 'kaydedildi' : 'hata');
     } catch { setUnvanDurum('hata'); }
   }
@@ -246,8 +246,7 @@ export default function HesabimPage() {
         <button
           type="button"
           onClick={() => {
-            const key = Object.keys(localStorage).find((k) => k.includes('auth-token')) || '';
-            if (key) localStorage.removeItem(key);
+            doktorOturumuSil()
             window.location.href = '/giris/doktor';
           }}
           style={{ marginTop: 24, background: 'transparent', border: `1px solid ${CHROME_RENK.warn}55`, color: CHROME_RENK.warn, borderRadius: 8, padding: '10px 18px', fontWeight: 600, cursor: 'pointer', width: '100%' }}

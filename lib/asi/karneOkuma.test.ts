@@ -188,7 +188,7 @@ describe('UI ve rota kilitleri (kaynak)', () => {
     const ui = oku('components/doktor/AsiKarnesiOkuma.tsx')
     assert.match(ui, /type="file" accept="image\/\*" capture="environment"/)
     assert.match(ui, /application\/pdf/)
-    assert.match(ui, /fetch\('\/api\/doktor\/documents'/, 'yeni saklama yolu açılmaz — Kasa')
+    assert.match(ui, /doktorFetch\('\/api\/doktor\/documents'/, 'yeni saklama yolu açılmaz — Kasa')
     assert.match(ui, /hekimOnayi: true/)
     assert.match(ui, /Hepsini onayla ve kaydet/)
     assert.match(ui, /Özel \/ takvim dışı aşılar/)

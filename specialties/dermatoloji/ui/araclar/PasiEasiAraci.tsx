@@ -14,6 +14,7 @@ import { getAccessTokenAsync } from '@/lib/doktor/toolsUi';
 import { pasi, easi, scorad, pasiBandi, easiBandi, scoradBandi, type PasiRegion } from '../../engines/score-calculator';
 import { dermStil, Alan, Segment, Istatistik, Katlanir, KayitButonu, MuayeneFormunaEkle, OncekiVizit, Rozet, TaslakNotu, DermHastaSecici, KopyalaButonu } from './DermAracKabugu';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 const { kutu, etiket, kucuk, metin, satir, btn, ghost } = dermStil;
 
@@ -88,7 +89,7 @@ export default function PasiEasiAraci() {
     if (!id) return;
     try {
       const t = await getAccessTokenAsync();
-      const r = await fetch(`/api/doktor/dermatoloji?patientId=${encodeURIComponent(id)}`, { headers: { Authorization: `Bearer ${t}` }, cache: 'no-store' });
+      const r = await doktorFetch(`/api/doktor/dermatoloji?patientId=${encodeURIComponent(id)}`, { cache: 'no-store' });
       const j = await r.json().catch(() => ({}));
       if (!r.ok) { setKayitHata(j.error || 'Hasta kaydı okunamadı.'); return; }
       const son = ((j.skorlar || []) as Array<{ recorded_at: string; pasi?: number; easi?: number; scorad?: number; ek?: Record<string, unknown> }>)
@@ -211,9 +212,9 @@ export default function PasiEasiAraci() {
           ipucu="Skor hastanın deri kaydına (skor anları) yazılır; bölge dökümü de saklanır, sonraki vizitte geri yüklenir."
           kaydet={async () => {
             const t = await getAccessTokenAsync();
-            const r = await fetch('/api/doktor/dermatoloji', {
+            const r = await doktorFetch('/api/doktor/dermatoloji', {
               method: 'POST',
-              headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+              headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 patientId: hasta.id, action: 'skor',
                 recorded_at: new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 10),

@@ -21,6 +21,7 @@ import {
   pediStil, Alan, Katlanir, TaslakNotu, KopyalaButonu, PediHastaSecici, usePediHasta, useUrlHasta, Rozet, OneriRozet, Istatistik,
 } from './PediAracKabugu';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 const { kutu, etiket, kucuk, input, ghost, btn, uyari } = pediStil;
 const bugunTr = () => new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 10);
@@ -61,7 +62,7 @@ export default function GelisimPaneli() {
     if (!id) { setVeri(null); return; }
     try {
       const t = await getAccessTokenAsync();
-      const r = await fetch(`/api/doktor/pediatri/tarama?patientId=${encodeURIComponent(id)}`, { headers: { Authorization: `Bearer ${t}` }, cache: 'no-store' });
+      const r = await doktorFetch(`/api/doktor/pediatri/tarama?patientId=${encodeURIComponent(id)}`, { cache: 'no-store' });
       const j = await r.json().catch(() => ({}));
       if (r.ok) setVeri(j); else setVeriHata(j.error || 'Tarama kayıtları alınamadı.');
     } catch { setVeriHata('Tarama kayıtları alınamadı — bağlantıyı kontrol edin.'); }
@@ -198,7 +199,7 @@ function KalemKarti({ k, hastaId, bugun, dogumIso, acikArac, setAcikArac, yerelI
     setGonderiyor(true); setMesaj(''); setNotId(null);
     try {
       const t = await getAccessTokenAsync();
-      const r = await fetch('/api/doktor/pediatri/tarama', { method: 'POST', headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ patientId: hastaId, tur, sonuc: secim, tarih: tarihIso, not: notHam, muayeneFormunaEkle: notaEkle }) });
+      const r = await doktorFetch('/api/doktor/pediatri/tarama', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ patientId: hastaId, tur, sonuc: secim, tarih: tarihIso, not: notHam, muayeneFormunaEkle: notaEkle }) });
       const j = await r.json().catch(() => ({}));
       if (!r.ok) { setMesaj(j.error || 'Kaydedilemedi — tekrar deneyin.'); return; }
       setMesaj(notaEkle ? (j.notEkleme?.eklendi ? 'Kaydedildi ve bugünkü muayene formuna eklendi.' : `Kaydedildi; nota eklenemedi: ${j.notEkleme?.sebep || 'bugünkü muayene bulunamadı'}`) : 'Kaydedildi.');

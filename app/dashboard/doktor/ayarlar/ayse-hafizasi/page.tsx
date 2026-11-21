@@ -8,6 +8,7 @@ import { ogrenmeMetni } from '@/lib/doktor/ogrenme/metinler'
 import { haftalikSatiri, ivmeYonMetni, type HaftalikOzet, type IvmeSonucu } from '@/lib/doktor/ogrenme/ivme'
 import type { KuralOnizlemesi } from '@/lib/doktor/ogrenme/onizleme'
 import type { HafizaKayit } from '@/lib/doktor/hafiza'
+import { doktorFetch, oturumSuresiDoldu } from '@/lib/doktor/oturumFetch'
 
 // AYSE-OGRENME-V3: bu sayfanın tüm kelimeleri ülke başına tek metin nesnesinden gelir (TR varsayılan, görünüm aynı).
 const T = ogrenmeMetni()
@@ -58,14 +59,14 @@ export default function AyseHafizasiPage() {
 
   const baslik = async () => {
     const t = await ensureDoctorAccessToken()
-    if (!t) { window.location.href = DOKTOR_GIRIS; return null }
-    return { Authorization: `Bearer ${t}` }
+    if (!t) { oturumSuresiDoldu(); return null }
+    return {} as Record<string, string>
   }
 
   const yukle = async () => {
     const h = await baslik()
     if (!h) return
-    const r = await fetch('/api/doktor/hafiza?tum=1', { headers: h, cache: 'no-store' })
+    const r = await doktorFetch('/api/doktor/hafiza?tum=1', { headers: h, cache: 'no-store' })
     const j = await r.json()
     setKayitlar(Array.isArray(j.kayitlar) ? j.kayitlar : [])
     setYukleniyor(false)
@@ -76,8 +77,8 @@ export default function AyseHafizasiPage() {
     if (!h) return
     try {
       const [a, b] = await Promise.all([
-        fetch('/api/doktor/hafiza/ivme', { headers: h, cache: 'no-store' }).then((r) => r.json()),
-        fetch('/api/doktor/hafiza/klinik-uslup', { headers: h, cache: 'no-store' }).then((r) => r.json()),
+        doktorFetch('/api/doktor/hafiza/ivme', { headers: h, cache: 'no-store' }).then((r) => r.json()),
+        doktorFetch('/api/doktor/hafiza/klinik-uslup', { headers: h, cache: 'no-store' }).then((r) => r.json()),
       ])
       setIvme(a?.ivme || null)
       setHaftalik(a?.haftalik || null)
@@ -89,9 +90,9 @@ export default function AyseHafizasiPage() {
 
   const post = async (body: Record<string, unknown>) => {
     const t = await ensureDoctorAccessToken()
-    const r = await fetch('/api/doktor/hafiza', {
+    const r = await doktorFetch('/api/doktor/hafiza', {
       method: 'POST',
-      headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     })
     const j = await r.json().catch(() => ({}))
@@ -110,7 +111,7 @@ export default function AyseHafizasiPage() {
     const h = await baslik()
     if (!h) return
     try {
-      const r = await fetch(`/api/doktor/hafiza/onizleme?anahtar=${encodeURIComponent(anahtar)}`, { headers: h, cache: 'no-store' })
+      const r = await doktorFetch(`/api/doktor/hafiza/onizleme?anahtar=${encodeURIComponent(anahtar)}`, { headers: h, cache: 'no-store' })
       const j = await r.json()
       setOnizlemeler((o) => ({ ...o, [anahtar]: (j?.onizleme as KuralOnizlemesi) || { var: false, ciftler: [] } }))
     } catch { setOnizlemeler((o) => ({ ...o, [anahtar]: { var: false, ciftler: [] } })) }
@@ -119,7 +120,7 @@ export default function AyseHafizasiPage() {
   const klinikDegistir = async (ac: boolean) => {
     const h = await baslik()
     if (!h) return
-    const r = await fetch('/api/doktor/hafiza/klinik-uslup', { method: 'POST', headers: { ...h, 'Content-Type': 'application/json' }, body: JSON.stringify({ ac }) })
+    const r = await doktorFetch('/api/doktor/hafiza/klinik-uslup', { method: 'POST', headers: { ...h, 'Content-Type': 'application/json' }, body: JSON.stringify({ ac }) })
     const j = await r.json().catch(() => null)
     if (j && typeof j.uye === 'boolean') setKlinik(j)
   }

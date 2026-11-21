@@ -7,6 +7,7 @@ import { getAccessTokenAsync } from '@/lib/doktor/toolsUi'
 import { uroStil, Istatistik, TaslakNotu, Rozet } from './UroAracKabugu'
 import { URO_BAYRAK_AD, uroKohortFiltre, type UroKohortBayrak, type UroKohortSatir } from '../../engines/kohort'
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 const S = uroStil
 const BAYRAKLAR = Object.keys(URO_BAYRAK_AD) as UroKohortBayrak[]
@@ -24,7 +25,7 @@ export default function UroKohortAraci() {
     setHata('')
     try {
       const t = await getAccessTokenAsync()
-      const r = await fetch('/api/doktor/uroloji/kohort', { headers: { Authorization: `Bearer ${t}` }, cache: 'no-store' })
+      const r = await doktorFetch('/api/doktor/uroloji/kohort', { cache: 'no-store' })
       const j = await r.json().catch(() => ({}))
       if (!r.ok) { setHata(j.error || 'Kohort yüklenemedi'); setSatirlar([]); return }
       setSatirlar(j.satirlar || [])
@@ -40,9 +41,9 @@ export default function UroKohortAraci() {
     setDurum(''); setHata(''); setGonderiliyor(true)
     try {
       const t = await getAccessTokenAsync()
-      const r = await fetch('/api/doktor/uroloji/kohort', {
+      const r = await doktorFetch('/api/doktor/uroloji/kohort', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ patientIds: secili }),
       })
       const j = await r.json().catch(() => ({}))

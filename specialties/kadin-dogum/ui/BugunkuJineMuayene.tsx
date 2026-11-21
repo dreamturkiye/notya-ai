@@ -22,6 +22,7 @@ import {
 import type { Due } from '../engines/jinekoloji-spine'
 import type { ColpoImage } from '../schema'
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 type VizitSatir = { id: string; tur: string; alanlar: Record<string, unknown> | null; soap?: unknown; kontrol_tarihi?: string | null; kontrol_neden?: string | null; created_at: string }
 type Veri = {
@@ -75,7 +76,7 @@ export function BugunkuJineMuayene({
 
   const yukle = useCallback(async () => {
     const token = await getAccessTokenAsync()
-    const r = await fetch(`/api/doktor/jinekoloji?patientId=${encodeURIComponent(patientId)}`, { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' })
+    const r = await doktorFetch(`/api/doktor/jinekoloji?patientId=${encodeURIComponent(patientId)}`, { cache: 'no-store' })
     if (!r.ok) return
     const j = await r.json() as Veri
     setV(j)
@@ -106,9 +107,9 @@ export function BugunkuJineMuayene({
     const govde = { ...soap, degerlendirme: { ...soap.degerlendirme, plan } }
     try {
       const token = await getAccessTokenAsync()
-      const r = await fetch('/api/doktor/jinekoloji', {
+      const r = await doktorFetch('/api/doktor/jinekoloji', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ patientId, adim: 'ofis_vizit', soap: govde, muayeneFormunaEkle }),
       })
       const j = await r.json().catch(() => ({}))
@@ -131,9 +132,9 @@ export function BugunkuJineMuayene({
       const [hh, mm] = randevuSaat.split(':').map(Number)
       const bitisD = new Date(`${tarih}T${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}:00`)
       bitisD.setMinutes(bitisD.getMinutes() + 20)
-      const r = await fetch('/api/doktor/randevular', {
+      const r = await doktorFetch('/api/doktor/randevular', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           patientId,
           baslangic: `${tarih}T${randevuSaat}:00`,

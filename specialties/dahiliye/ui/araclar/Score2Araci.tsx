@@ -15,6 +15,7 @@ import { getAccessTokenAsync } from '@/lib/doktor/toolsUi';
 import { kvrDegerlendir, type Bolge, type Cinsiyet, type KvrKova } from '../../engines/score2';
 import { dahStil, Secim, Segment, Alan, Onay, Sayi, Istatistik, Katlanir, KayitButonu, MuayeneFormunaEkle, OncekiVizit, Rozet, TaslakNotu, DahHastaSecici, KopyalaButonu } from './DahiliyeAracKabugu';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 const { kutu, etiket, kucuk, metin, satir, btn } = dahStil;
 
@@ -63,7 +64,7 @@ export default function Score2Araci() {
     if (!id) return;
     try {
       const t = await getAccessTokenAsync();
-      const r = await fetch(`/api/doktor/dahiliye?patientId=${encodeURIComponent(id)}`, { headers: { Authorization: `Bearer ${t}` }, cache: 'no-store' });
+      const r = await doktorFetch(`/api/doktor/dahiliye?patientId=${encodeURIComponent(id)}`, { cache: 'no-store' });
       const j = await r.json().catch(() => ({}));
       if (!r.ok) { setKayitHata(j.error || 'Hasta kaydı okunamadı.'); return; }
       const k = j.wow?.kvr as { sigara?: boolean; askvh?: boolean; dm_tod?: boolean; statin_yogunluk?: string; ezetimib?: boolean; dm_tani_yasi?: number | null } | undefined;
@@ -198,9 +199,9 @@ export default function Score2Araci() {
           ipucu="Sigara · ASKVH · diyabet hedef organ hasarı · statin yoğunluğu · ezetimib · diyabet tanı yaşı hastanın dahiliye kaydına yazılır."
           kaydet={async () => {
             const t = await getAccessTokenAsync();
-            const r = await fetch('/api/doktor/dahiliye', {
+            const r = await doktorFetch('/api/doktor/dahiliye', {
               method: 'POST',
-              headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+              headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ adim: 'kvr', patientId: hasta.id, sigara, askvh, dmTod: dm && dmTod, statinYogunluk: statin, ezetimib, ...(dmTaniYasi.trim() ? { dmTaniYasi: dmTaniYasi.trim() } : {}) }),
             });
             const j = await r.json().catch(() => ({}));

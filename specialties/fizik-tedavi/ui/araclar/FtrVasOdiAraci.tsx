@@ -4,6 +4,7 @@ import { getAccessTokenAsync } from '@/lib/doktor/toolsUi'
 import { ftrStil, FtrHastaSecici, Alan, Sayi, Istatistik, TaslakNotu, KopyalaButonu, MuayeneFormunaEkle, useUrlHasta } from './FtrAracKabugu'
 import { skorlaVas, skorlaOdi, ODI_MADDELER } from '../../engines/vasOdi'
 import { REF_ACIKLAMA } from '../../engines/fizik-tedavi'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 export default function FtrVasOdiAraci() {
   const [hasta, setHasta] = useState('')
@@ -25,9 +26,9 @@ export default function FtrVasOdiAraci() {
       const body = tip === 'vas'
         ? { patientId: hasta, adim: 'vas', deger: Number(vas), hekimKilit: true }
         : { patientId: hasta, adim: 'odi', maddeler: maddeler.map(Number), hekimKilit: true }
-      const r = await fetch('/api/doktor/fizik-tedavi', {
+      const r = await doktorFetch('/api/doktor/fizik-tedavi', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       })
       const j = await r.json().catch(() => ({}))

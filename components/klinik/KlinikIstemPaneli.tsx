@@ -12,9 +12,11 @@ import { BransIstemSecici, type IstemGrubu } from '@/components/doktor/BransIste
 import { bransIstemleri, ISTEM_MUTTEFIK } from '@/lib/doktor/bransIstemleri'
 import { KLINIK_ETIKET, klinikSlugCoz } from '@/lib/specialties/klinikDikey'
 import { TUM_TETKIKLER, NUMUNE_ADI } from '@/lib/doktor/tetkikKatalogu'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
+import { getDoctorAccessToken } from '@/lib/doktor/clientAuth'
 
 function jeton(): string {
-  try { const raw = localStorage.getItem('auth-token'); return raw ? (JSON.parse(raw).access_token || '') : '' } catch { return '' }
+  return getDoctorAccessToken()
 }
 
 export default function KlinikIstemPaneli() {
@@ -27,7 +29,7 @@ export default function KlinikIstemPaneli() {
     let iptal = false
     ;(async () => {
       try {
-        const r = await fetch('/api/users/me', { headers: { Authorization: `Bearer ${jeton()}` } })
+        const r = await doktorFetch('/api/users/me', {})
         const j = r.ok ? await r.json() : null
         if (!iptal) { setUzmanlik(String(j?.data?.specialty || '')); setHekim(String(j?.data?.full_name || j?.data?.name || '')) }
       } catch { if (!iptal) setUzmanlik('') }

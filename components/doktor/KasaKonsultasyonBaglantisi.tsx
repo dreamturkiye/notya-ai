@@ -10,6 +10,7 @@
 import React, { useEffect, useState } from 'react'
 import { getAccessTokenAsync, toolsInput, toolsLabel } from '@/lib/doktor/toolsUi'
 import { durumGrubu, hedefEtiketi, istemOzu, trGun, KONSULTASYON_SINIRLARI, type KonsultasyonSatiri } from '@/lib/doktor/konsultasyon'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 export type KasaKonsultasyonSecimi = { acik: boolean; id: string; ozet: string }
 export const BOS_KONSULTASYON_SECIMI: KasaKonsultasyonSecimi = { acik: false, id: '', ozet: '' }
@@ -19,9 +20,9 @@ export async function konsultasyonaBagla(secim: KasaKonsultasyonSecimi, belgeId:
   if (!secim.acik || !secim.id || !belgeId) return { hata: null, yanitlandi: false }
   const ozet = secim.ozet.trim()
   const t = await getAccessTokenAsync()
-  const r = await fetch('/api/doktor/konsultasyon', {
+  const r = await doktorFetch('/api/doktor/konsultasyon', {
     method: 'PATCH',
-    headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(ozet ? { id: secim.id, islem: 'yanit', belgeId, yanitOzeti: ozet } : { id: secim.id, islem: 'belge_bagla', belgeId }),
   })
   const j = (await r.json().catch(() => ({}))) as { error?: string }
@@ -42,7 +43,7 @@ export default function KasaKonsultasyonBaglantisi({ hastaId, secim, setSecim }:
     ;(async () => {
       try {
         const t = await getAccessTokenAsync()
-        const r = await fetch(`/api/doktor/konsultasyon?patientId=${encodeURIComponent(hastaId)}`, { headers: { Authorization: `Bearer ${t}` }, cache: 'no-store' })
+        const r = await doktorFetch(`/api/doktor/konsultasyon?patientId=${encodeURIComponent(hastaId)}`, { cache: 'no-store' })
         const j = (await r.json().catch(() => ({}))) as { konsultasyonlar?: KonsultasyonSatiri[] }
         // Rapor bekleyenler: yanıt bekleyen ya da yanıtsız kapatılmış (geç rapor) ya da raporu henüz bağlanmamış yanıtlı kayıt
         const uygun = (j.konsultasyonlar || []).filter((k) => durumGrubu(k.durum) !== 'yanitlandi' || !k.belge_id)

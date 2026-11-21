@@ -12,6 +12,7 @@ import QrKod from '@/components/belge/QrKod';
 import { butunlukOzeti, dogrulamaAdresi, type BelgeKunyesi as Kunye, type BelgeTuru } from '@/lib/belge/belge';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 type Durum = { tur: 'bekliyor' } | { tur: 'tamam'; kunye: Kunye } | { tur: 'gerekce'; kunye: Kunye } | { tur: 'hata' };
 
@@ -24,9 +25,9 @@ export default function BelgeKunyesi({ tur, kaynakId, hastaId, icerik }: { tur: 
   async function kaydet(ozet: string, neden?: string) {
     const t = await ensureDoctorAccessToken();
     if (!t) { setDurum({ tur: 'hata' }); return; }
-    const r = await fetch('/api/belgeler/kayit', {
+    const r = await doktorFetch('/api/belgeler/kayit', {
       method: 'POST',
-      headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ tur, kaynakId, hastaId: hastaId || null, ozet, gerekce: neden || null }),
     });
     const j = (await r.json().catch(() => ({}))) as { durum?: string; kunye?: Kunye };

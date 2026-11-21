@@ -3,6 +3,7 @@ import React, { useMemo, useState } from 'react'
 import { getAccessTokenAsync } from '@/lib/doktor/toolsUi'
 import { radyoStil, RadyoHastaSecici, KopyalaButonu, Istatistik, TaslakNotu, useUrlHasta } from './RadyoAracKabugu'
 import { kritikSkorla, KRITIK_BAYRAKLAR, BILDIRIM_MADDELER, type KritikBayrak, type BildirimMadde } from '../../engines/kritik'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 export default function RadyoKritikAraci() {
   const [bayraklar, setBayraklar] = useState<KritikBayrak[]>([])
@@ -22,9 +23,9 @@ export default function RadyoKritikAraci() {
     if (!onay) { setHata('Hekim onayı gerekir.'); return }
     try {
       const t = await getAccessTokenAsync()
-      const r = await fetch('/api/doktor/radyoloji', {
+      const r = await doktorFetch('/api/doktor/radyoloji', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ patientId: hastaId, adim: 'kritik', bayraklar, bildirim, hekimOnay: true }),
       })
       const j = await r.json().catch(() => ({}))

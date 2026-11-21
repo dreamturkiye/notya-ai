@@ -24,6 +24,7 @@ import React, { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth'
 import { baslangicSecimi, ciddiVarMi, dugmeMetni, eksikAlanlar, sayim, topluGovde, TOPLU_METIN_TR, type TopluDuzeltme, type TopluMetin } from './topluSecim'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 export interface EylemAlan {
   anahtar: string
@@ -201,9 +202,9 @@ export function EylemKarti({
   async function cagir(govde: Record<string, unknown>): Promise<{ ok: boolean; veri: Record<string, unknown> }> {
     const t = await tokenAl()
     if (!t) return { ok: false, veri: { error: 'Oturum bulunamadı. Lütfen tekrar giriş yapın.' } }
-    const r = await fetch('/api/doktor/eylem', {
+    const r = await doktorFetch('/api/doktor/eylem', {
       method: 'POST',
-      headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(govde),
     })
     return { ok: r.ok, veri: (await r.json().catch(() => ({}))) as Record<string, unknown> }
@@ -402,9 +403,9 @@ export function EylemToplu({
       setDurum('acik')
       return
     }
-    const r = await fetch('/api/doktor/eylem', {
+    const r = await doktorFetch('/api/doktor/eylem', {
       method: 'POST',
-      headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(topluGovde(oneriler, secili, duzeltme, gorulen)),
     })
     const d = (await r.json().catch(() => ({}))) as { sonuclar?: { oneriId: string; ok: boolean; hata?: string }[] }

@@ -9,6 +9,7 @@ import React, { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { getDoctorAccessToken } from '@/lib/doktor/clientAuth'
 import { CHROME_RENK, CHROME_FONT } from '@/lib/doktor/chromeTheme'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 const TEAL = CHROME_RENK.pine
 const AMBER = '#B4832F'
@@ -51,8 +52,8 @@ export default function AsiStokPage() {
     setYukleniyor(true)
     try {
       const [modulR, stokR] = await Promise.all([
-        fetch('/api/doktor/asi-stok/modul', { headers: { Authorization: `Bearer ${t}` } }).then((r) => r.json()),
-        fetch('/api/doktor/asi-stok', { headers: { Authorization: `Bearer ${t}` } }),
+        doktorFetch('/api/doktor/asi-stok/modul', {}).then((r) => r.json()),
+        doktorFetch('/api/doktor/asi-stok', {}),
       ])
       setModulDurumu(modulR)
       if (stokR.status === 403) { setLotlar([]); setHata('') }
@@ -73,9 +74,9 @@ export default function AsiStokPage() {
   const modulAc = async (aktif: boolean | null) => {
     const t = token()
     if (!t) return
-    const r = await fetch('/api/doktor/asi-stok/modul', {
+    const r = await doktorFetch('/api/doktor/asi-stok/modul', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ aktif }),
     })
     if (r.ok) await yukle()
@@ -88,9 +89,9 @@ export default function AsiStokPage() {
     setKaydediliyor(true)
     setHata('')
     try {
-      const r = await fetch('/api/doktor/asi-stok', {
+      const r = await doktorFetch('/api/doktor/asi-stok', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           asiAdi: form.asiAdi,
           barkod: form.barkod,

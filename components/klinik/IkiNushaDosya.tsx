@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import type { CSSProperties } from 'react'
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth'
 import { NUSHA_ROLLERI, type NushaRol } from '@/lib/klinik/ikiNusha'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 type Nusha = { id: string; rol: NushaRol; iso: string }
 
@@ -24,7 +25,7 @@ export function IkiNushaDosya({ patientId, baslangic, yenile = 0 }: { patientId:
         if (!iptal && baslangic?.length) setListe(baslangic)
         return
       }
-      const r = await fetch(`/api/ozel-brans/nusha?patientId=${encodeURIComponent(patientId)}`, { headers: { Authorization: `Bearer ${t}` } })
+      const r = await doktorFetch(`/api/ozel-brans/nusha?patientId=${encodeURIComponent(patientId)}`, {})
       const j = await r.json().catch(() => null)
       if (iptal || !r.ok) return
       const gelen = (j?.nushalar || []) as Nusha[]
@@ -40,7 +41,7 @@ export function IkiNushaDosya({ patientId, baslangic, yenile = 0 }: { patientId:
   async function indir(id: string, ad: string) {
     const t = await ensureDoctorAccessToken()
     if (!t) { setMesaj('Oturum yok.'); return }
-    const r = await fetch(`/api/doktor/documents/${id}/download`, { headers: { Authorization: `Bearer ${t}` } })
+    const r = await doktorFetch(`/api/doktor/documents/${id}/download`, {})
     if (!r.ok) { setMesaj('Nüsha açılamadı.'); return }
     const url = URL.createObjectURL(await r.blob())
     const a = document.createElement('a')

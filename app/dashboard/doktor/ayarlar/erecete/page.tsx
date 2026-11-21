@@ -6,6 +6,7 @@
 import React, { useEffect, useState } from 'react';
 import { getDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import { CHROME_RENK, CHROME_FONT } from '@/lib/doktor/chromeTheme';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 interface Goruntu { tesisKodu: number | null; bransKodu: number | null; doktorTcMaske: string; sifreVar: boolean; ortam: 'test' | 'gercek'; imzaYontemi: 'token' | 'mobil' | 'yok'; sonTest: { tarih: string; durum: string; mesaj: string } | null; eksikler: string[]; hazir: boolean; gonderebilir: boolean }
 
@@ -30,7 +31,7 @@ export default function EReceteAyarPage() {
   const yukle = async () => {
     const t = await getDoctorAccessToken();
     if (!t) return;
-    const r = await fetch('/api/doktor/erecete-ayar', { headers: { Authorization: `Bearer ${t}` } });
+    const r = await doktorFetch('/api/doktor/erecete-ayar', {});
     const j = await r.json().catch(() => ({}));
     if (j.ayar) {
       setG(j.ayar); setVarsayilanBrans(j.varsayilanBransKodu ?? null);
@@ -48,7 +49,7 @@ export default function EReceteAyarPage() {
     const body: Record<string, string> = { tesisKodu, bransKodu, ortam, imzaYontemi: imza };
     if (doktorTc.trim()) body.doktorTc = doktorTc.trim();
     if (sifre) body.sifre = sifre;
-    const r = await fetch('/api/doktor/erecete-ayar', { method: 'PUT', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` }, body: JSON.stringify(body) });
+    const r = await doktorFetch('/api/doktor/erecete-ayar', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
     const j = await r.json().catch(() => ({}));
     if (j.ayar) { setG(j.ayar); setSifre(''); setDoktorTc(''); setMesaj('Kaydedildi. Şifre ve TC şifreli olarak saklandı.'); }
     else setMesaj(j.error || 'Kaydedilemedi.');
@@ -59,7 +60,7 @@ export default function EReceteAyarPage() {
     setMesgul(true); setMesaj('SGK\'ya bağlanılıyor…');
     const t = await getDoctorAccessToken();
     if (!t) { setMesgul(false); return; }
-    const r = await fetch('/api/doktor/erecete-ayar', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` }, body: JSON.stringify({ islem: 'test' }) });
+    const r = await doktorFetch('/api/doktor/erecete-ayar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ islem: 'test' }) });
     const j = await r.json().catch(() => ({}));
     if (j.ayar) setG(j.ayar);
     setMesaj(j.mesaj || j.error || 'Test tamamlanamadı.');

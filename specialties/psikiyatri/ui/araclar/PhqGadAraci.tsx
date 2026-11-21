@@ -12,6 +12,7 @@ import { PHQ9_MADDELER, PHQ9_SIKLIK, PHQ9_YONERGE, PHQ9_ISLEVSELLIK_SORUSU, PHQ9
 import { GAD7_MADDELER, GAD7_YONERGE, GAD7_TARAMA_ESIGI, skorla as gad7Skorla } from '../../engines/gad7';
 import { HASTA_ACIL_METNI } from '../../engines/acil';
 import { HEKIM_KILIT_METNI } from '../../engines/psikiyatri';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 type Tip = 'phq9' | 'gad7';
 
@@ -38,9 +39,9 @@ export default function PhqGadAraci() {
     if (!aktif.tamamMi) { setHata('Tüm maddeler doldurulmadan kaydedilmez.'); return; }
     try {
       const t = await getAccessTokenAsync();
-      const r = await fetch('/api/doktor/psikiyatri', {
+      const r = await doktorFetch('/api/doktor/psikiyatri', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           patientId: hastaId, adim: 'olcek', tip,
           maddeler: tip === 'phq9' ? phq : gad,

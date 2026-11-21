@@ -12,6 +12,7 @@ import { KADIN_HASTALIKLARI_DOGUM_KISA_ETIKETI } from '@/lib/doktor/specialties'
 import { KD_BAYRAK_AD, LOHUSA_BAYRAKLARI, kdHatirlatmaMesaji, kdHatirlatilabilir, type KdKohortBayrak, type KdKohortSatir } from '../../engines/kd-kohort';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 import GonderDugmesi from '@/components/doktor/iletisim/GonderDugmesi';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 const BAYRAKLAR = Object.keys(KD_BAYRAK_AD) as KdKohortBayrak[];
 const muted: React.CSSProperties = { fontSize: 14, color: CHROME_RENK.muted, lineHeight: 1.5 };
@@ -31,7 +32,7 @@ export default function KdKohortPaneli() {
     setHata('');
     try {
       const t = await getAccessTokenAsync();
-      const r = await fetch('/api/doktor/gebelik/kohort', { headers: { Authorization: `Bearer ${t}` }, cache: 'no-store' });
+      const r = await doktorFetch('/api/doktor/gebelik/kohort', { cache: 'no-store' });
       const j = await r.json().catch(() => ({}));
       if (r.ok) setV(j); else setHata(j.error || 'Kohort yüklenemedi');
     } catch { setHata('Kohort yüklenemedi — bağlantıyı kontrol edin.'); }
@@ -45,7 +46,7 @@ export default function KdKohortPaneli() {
     setMesaj(''); setGonderiyor(true);
     try {
       const t = await getAccessTokenAsync();
-      const r = await fetch('/api/doktor/gebelik/kohort', { method: 'POST', headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ patientIds: secili }) });
+      const r = await doktorFetch('/api/doktor/gebelik/kohort', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ patientIds: secili }) });
       const j = await r.json().catch(() => ({}));
       setMesaj(r.ok ? `${j.gonderilen} hastaya hatırlatma gönderildi (Sağlığım › Mesajlar)${j.atlanan ? `; ${j.atlanan} atlandı (son 7 günde gönderilmiş veya listede değil)` : ''}.` : j.error || 'Gönderilemedi');
       setSecili([]);

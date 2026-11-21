@@ -16,6 +16,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import type { GruplanmisIlac, SunumSecenegi } from '@/app/api/doktor/ilac-ara/route';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 export interface IlacSecim {
   ad: string;
@@ -53,7 +54,7 @@ export default function IlacSecici({ onSelect, inputStyle, labelStyle }: Props) 
       setAraniyor(true);
       try {
         const token = await ensureDoctorAccessToken();
-        const r = await fetch(`/api/doktor/ilac-ara?q=${encodeURIComponent(s)}`, { headers: { Authorization: `Bearer ${token}` } });
+        const r = await doktorFetch(`/api/doktor/ilac-ara?q=${encodeURIComponent(s)}`, {});
         const d = await r.json();
         if (!iptal) { setSonuclar(d.sonuclar || []); setAcik(true); }
       } catch { if (!iptal) setSonuclar([]); }

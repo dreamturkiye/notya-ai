@@ -11,6 +11,7 @@ import { psikStil, PsikHastaSecici, PsikKopyala, Istatistik, TaslakNotu, Muayene
 import { PSIK_IZLEM_KURALLARI } from '../../engines/ilacIzlem';
 import { HEKIM_KILIT_METNI } from '../../engines/psikiyatri';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 type Gorev = { kod: string; ad: string; due: string; labs: string[]; ilac: string; kaynak: string };
 type Veri = { izlem: Gorev[]; ilaclar: Array<{ id: string; ilac_adi: string; etken_madde: string | null }> };
@@ -27,7 +28,7 @@ export default function IlacIzlemAraci() {
     if (!id) return;
     try {
       const t = await getAccessTokenAsync();
-      const r = await fetch(`/api/doktor/psikiyatri?patientId=${encodeURIComponent(id)}`, { headers: { Authorization: `Bearer ${t}` }, cache: 'no-store' });
+      const r = await doktorFetch(`/api/doktor/psikiyatri?patientId=${encodeURIComponent(id)}`, { cache: 'no-store' });
       const j = await r.json().catch(() => ({}));
       if (!r.ok) { setHata(j.error || 'Yüklenemedi'); return; }
       setVeri({ izlem: j.izlem || [], ilaclar: j.ilaclar || [] });
@@ -38,9 +39,9 @@ export default function IlacIzlemAraci() {
     setDurum(''); setHata('');
     try {
       const t = await getAccessTokenAsync();
-      const r = await fetch('/api/doktor/psikiyatri', {
+      const r = await doktorFetch('/api/doktor/psikiyatri', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ patientId: hastaId, adim: 'ilac_izlem' }),
       });
       const j = await r.json().catch(() => ({}));

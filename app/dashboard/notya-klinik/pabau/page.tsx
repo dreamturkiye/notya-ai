@@ -17,6 +17,7 @@ import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import KlinikNav from '@/components/klinik/KlinikNav'
 import { ensureDoctorAccessToken, DOKTOR_GIRIS } from '@/lib/doktor/clientAuth'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 interface Status { connected: boolean; keyHint: string | null; lastSyncedAt: string | null }
 interface Randevu { id?: string; customer_name?: string; service?: string; staff_name?: string; start_date?: string; start_time?: string; appointment_status?: string }
@@ -52,7 +53,7 @@ function KlinikPabauInner() {
   }, [])
 
   async function refresh(t: string) {
-    const r = await fetch('/api/pabau/connect-key', { headers: { Authorization: 'Bearer ' + t } })
+    const r = await doktorFetch('/api/pabau/connect-key', {})
     if (r.ok) {
       const b = await r.json()
       setStatus(b.data)
@@ -61,7 +62,7 @@ function KlinikPabauInner() {
   }
 
   async function loadRandevular(t: string) {
-    const r = await fetch('/api/pabau/appointments', { headers: { Authorization: 'Bearer ' + t } })
+    const r = await doktorFetch('/api/pabau/appointments', {})
     if (!r.ok) { setRandevular([]); return }
     const b = await r.json()
     const raw = b.data?.appointments ?? b.data ?? []
@@ -72,9 +73,9 @@ function KlinikPabauInner() {
     if (!token || !apiKey.trim()) return
     setBusy(true); setError('')
     try {
-      const r = await fetch('/api/pabau/connect-key', {
+      const r = await doktorFetch('/api/pabau/connect-key', {
         method: 'POST',
-        headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ apiKey: apiKey.trim() }),
       })
       const b = await r.json().catch(() => ({}))
@@ -89,7 +90,7 @@ function KlinikPabauInner() {
     if (!confirm('Pabau bağlantısını kaldırmak istiyor musunuz? Kayıtlı anahtar silinir.')) return
     setBusy(true)
     try {
-      await fetch('/api/pabau/connect-key', { method: 'DELETE', headers: { Authorization: 'Bearer ' + token } })
+      await doktorFetch('/api/pabau/connect-key', { method: 'DELETE' })
       setRandevular(null)
       await refresh(token)
     } finally { setBusy(false) }

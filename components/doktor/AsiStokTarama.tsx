@@ -16,6 +16,7 @@
 import React, { useEffect, useState } from 'react'
 import { getDoctorAccessToken } from '@/lib/doktor/clientAuth'
 import { CHROME_RENK, CHROME_FONT } from '@/lib/doktor/chromeTheme'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 const BORDER = CHROME_RENK.border
 const INK = CHROME_RENK.ink
@@ -42,7 +43,7 @@ export default function AsiStokTarama({ patientId, sessionId }: { patientId: str
   useEffect(() => {
     const t = getDoctorAccessToken()
     if (!t) return
-    fetch('/api/doktor/asi-stok/modul', { headers: { Authorization: `Bearer ${t}` } })
+    doktorFetch('/api/doktor/asi-stok/modul', {})
       .then((r) => r.json())
       .then((d) => setModulAcikMi(!!d?.etkinAktif))
       .catch(() => setModulAcikMi(false))
@@ -58,9 +59,9 @@ export default function AsiStokTarama({ patientId, sessionId }: { patientId: str
     setHata('')
     setSonuc('')
     try {
-      const r = await fetch('/api/doktor/asi-stok/tara', {
+      const r = await doktorFetch('/api/doktor/asi-stok/tara', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ barkod }),
       })
       const d = await r.json()
@@ -83,9 +84,9 @@ export default function AsiStokTarama({ patientId, sessionId }: { patientId: str
     setDurum('uyguluyor')
     setHata('')
     try {
-      const r = await fetch('/api/doktor/asi-stok/uygula', {
+      const r = await doktorFetch('/api/doktor/asi-stok/uygula', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ lotId: tarama.lot.id, patientId, sessionId, uygulamaBolgesi: bolge || null, faturayaEkle }),
       })
       const d = await r.json()

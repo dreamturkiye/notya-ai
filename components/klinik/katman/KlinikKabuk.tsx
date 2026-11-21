@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import OturumBekcisi from '@/components/doktor/OturumBekcisi'
 import { usePathname } from 'next/navigation'
 import { NOTYA_KLINIK_AD } from '@/lib/specialties/klinikDikey'
 import { cn } from '@/components/doktor-landing/cn'
@@ -46,6 +47,7 @@ export default function KlinikKabuk({ children }: { children: React.ReactNode })
   const yol = usePathname()
   return (
     <div className="min-h-screen bg-paper text-ink">
+      <OturumBekcisi />
       <header className="fixed inset-x-0 top-0 z-40 border-b border-line bg-paper/92">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-5 sm:px-8">
           <Link href="/notya-klinik" className="font-display text-2xl italic leading-none tracking-tight" aria-label={NOTYA_KLINIK_AD}>

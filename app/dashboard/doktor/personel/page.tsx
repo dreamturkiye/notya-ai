@@ -10,6 +10,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import { CHROME_RENK, CHROME_FONT } from '@/lib/doktor/chromeTheme';
 import { PERSONEL_ROLLERI, personelRoluMu, ROL_ETIKETI_TR, ROL_KISA_ETIKETI_TR, ROL_ACIKLAMASI_TR, type PersonelRol } from '@/lib/doktor/personelYetki';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 export const dynamic = 'force-dynamic';
 
@@ -45,7 +46,7 @@ export default function PersonelPage() {
     try {
       const t = await token();
       if (!t) { setHata('Oturum bulunamadı. Lütfen tekrar giriş yapın.'); return; }
-      const r = await fetch('/api/doktor/personel', { headers: { Authorization: `Bearer ${t}` } });
+      const r = await doktorFetch('/api/doktor/personel', {});
       if (r.status === 403) { setHata('Bu sayfa yalnızca doktor hesabı içindir.'); setListe([]); return; }
       if (!r.ok) { setHata('Personel listesi alınamadı.'); return; }
       const d = await r.json();
@@ -71,9 +72,9 @@ export default function PersonelPage() {
     try {
       const t = await token();
       if (!t) { setHata('Oturum bulunamadı. Lütfen tekrar giriş yapın.'); return; }
-      const r = await fetch('/api/doktor/personel', {
+      const r = await doktorFetch('/api/doktor/personel', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ad: ad.trim(), soyad: soyad.trim(), email: email.trim(), rol: yeniRol }),
       });
       const d = await r.json();
@@ -93,9 +94,9 @@ export default function PersonelPage() {
     try {
       const t = await token();
       if (!t) return;
-      await fetch(`/api/doktor/personel/${id}`, {
+      await doktorFetch(`/api/doktor/personel/${id}`, {
         method: 'PATCH',
-        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ aktif }),
       });
       await yukle();
@@ -109,9 +110,9 @@ export default function PersonelPage() {
     try {
       const t = await token();
       if (!t) return;
-      const r = await fetch(`/api/doktor/personel/${id}`, {
+      const r = await doktorFetch(`/api/doktor/personel/${id}`, {
         method: 'PATCH',
-        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ rol }),
       });
       if (!r.ok) { const d = await r.json().catch(() => ({})); setHata(d.error || 'Rol değiştirilemedi.'); }
@@ -124,7 +125,7 @@ export default function PersonelPage() {
     try {
       const t = await token();
       if (!t) return;
-      await fetch(`/api/doktor/personel/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${t}` } });
+      await doktorFetch(`/api/doktor/personel/${id}`, { method: 'DELETE' });
       await yukle();
     } catch { /* ignore */ }
   }

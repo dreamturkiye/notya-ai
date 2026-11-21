@@ -14,6 +14,7 @@ import { CHROME_FONT, CHROME_FONT_HREF, CHROME_RENK as R } from '@/lib/doktor/ch
 import type { KurucuKonsolVerisi, KonsolUlkesi } from '@/lib/kurucu/konsol'
 import type { KurucuHesap, KurucuOzet } from '@/lib/kurucu/tipler'
 import { ZIYARET_HARIC_ANAHTARI } from '@/lib/ziyaret/sabitler'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 // ZIYARET-SAYACI-01 (2026-11-10): the visitor section and its charts load only here, on demand (never in a public bundle).
 const ZiyaretcilerBolumu = dynamic(() => import('./ZiyaretcilerBolumu'), {
@@ -130,7 +131,7 @@ export default function KurucuKonsolu() {
       // KURUCU-KONSOL-02: wait for the stored session to hydrate, retry once with a forced refresh on 404 (lib/kurucu/oturumBekle.ts).
       const sonuc = await kurucuVerisiniAl<KurucuKonsolVerisi>({
         tokenAl: (o) => ensureDoctorAccessToken(o),
-        getir: (token) => fetch('/api/kurucu/ozet', { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' }),
+        getir: (token) => doktorFetch('/api/kurucu/ozet', { cache: 'no-store' }),
         iptalMi: () => iptal,
       })
       if (!iptal) setD(sonuc)

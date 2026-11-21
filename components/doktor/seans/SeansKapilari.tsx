@@ -4,6 +4,7 @@
 import React, { useEffect, useState } from 'react'
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth'
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 const R = CHROME_RENK
 
@@ -22,7 +23,7 @@ export default function SeansKapilari({ noteId, onKilit }: { noteId: string; onK
     void (async () => {
       try {
         const t = await ensureDoctorAccessToken()
-        const r = await fetch(`/api/doktor/seans-paketi?noteId=${encodeURIComponent(noteId)}`, { headers: { Authorization: `Bearer ${t}` }, cache: 'no-store' })
+        const r = await doktorFetch(`/api/doktor/seans-paketi?noteId=${encodeURIComponent(noteId)}`, { cache: 'no-store' })
         if (!r.ok) return
         const j = await r.json()
         if (j.kapali || j.kapi === 'kapali') { onKilit?.(false); return }
@@ -40,7 +41,7 @@ export default function SeansKapilari({ noteId, onKilit }: { noteId: string; onK
   const yineDe = async () => {
     setHata('')
     const t = await ensureDoctorAccessToken()
-    const r = await fetch('/api/doktor/seans-paketi', { method: 'POST', headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ islem: 'yine_de_yaz', noteId, gerekce }) })
+    const r = await doktorFetch('/api/doktor/seans-paketi', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ islem: 'yine_de_yaz', noteId, gerekce }) })
     const j = await r.json().catch(() => ({}))
     if (!r.ok) { setHata(j.error || 'Kaydedilemedi.'); return }
     setKilit(false)
@@ -53,7 +54,7 @@ export default function SeansKapilari({ noteId, onKilit }: { noteId: string; onK
       await navigator.clipboard.writeText(mbys)
       setKopya('Kopyalandı')
       const t = await ensureDoctorAccessToken()
-      await fetch('/api/doktor/seans-paketi', { method: 'POST', headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ islem: 'mbys_kopyalandi', noteId }) })
+      await doktorFetch('/api/doktor/seans-paketi', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ islem: 'mbys_kopyalandi', noteId }) })
     } catch { setHata('Kopyalanamadı.') }
   }
 

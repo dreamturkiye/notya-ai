@@ -17,6 +17,7 @@ import { cmCoz, kiloCoz, tarihCoz, tarihGoster, yasMetni, ondalikAy, tr, gebelik
 import { duzeltilmisYas, duzeltilmisYasMetni, gestasyonGunu, gestasyonMetni, VARSAYILAN_DUZELTME_KURALI } from '@/lib/clinical/prematur/duzeltilmisYas';
 import { pediStil, Alan, Segment, Katlanir, TaslakNotu, KopyalaButonu, MuayeneFormunaEkle, OncekiVizit, PediHastaSecici, usePediHasta } from './PediAracKabugu';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 const { kutu, etiket, kucuk, input, ghost, uyari, kirmizi, kaydir } = pediStil;
 const bugun = () => new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 10);
@@ -59,7 +60,7 @@ export default function BuyumeStudyosu() {
     (async () => {
       try {
         const t = await getAccessTokenAsync();
-        const r = await fetch(`/api/doktor/hastalar/${encodeURIComponent(hastaId)}/buyume-egrileri`, { headers: { Authorization: `Bearer ${t}` }, cache: 'no-store' });
+        const r = await doktorFetch(`/api/doktor/hastalar/${encodeURIComponent(hastaId)}/buyume-egrileri`, { cache: 'no-store' });
         const j = await r.json().catch(() => ({}));
         if (!r.ok) { if (!iptal) setGecmisHata(j.error || 'Geçmiş ölçümler alınamadı'); return; }
         const tarihe = new Map<string, Satir>();

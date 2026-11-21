@@ -4,6 +4,7 @@ import { getAccessTokenAsync } from '@/lib/doktor/toolsUi'
 import { nefStil, Istatistik, TaslakNotu, Rozet } from './NefAracKabugu'
 import { NEF_BAYRAK_AD, nefKohortFiltre, type NefKohortBayrak, type NefKohortSatir } from '../../engines/kohort'
 import { ILAC_DOZ_UYARI_LISTESI } from '../../engines/egfr'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 const S = nefStil
 const BAYRAKLAR = Object.keys(NEF_BAYRAK_AD) as NefKohortBayrak[]
@@ -21,7 +22,7 @@ export default function NefKohortAraci() {
     setHata('')
     try {
       const t = await getAccessTokenAsync()
-      const r = await fetch('/api/doktor/nefroloji/kohort', { headers: { Authorization: `Bearer ${t}` }, cache: 'no-store' })
+      const r = await doktorFetch('/api/doktor/nefroloji/kohort', { cache: 'no-store' })
       const j = await r.json().catch(() => ({}))
       if (!r.ok) { setHata(j.error || 'Kohort yüklenemedi'); setSatirlar([]); return }
       setSatirlar(j.satirlar || [])
@@ -37,9 +38,9 @@ export default function NefKohortAraci() {
     setDurum(''); setHata(''); setGonderiliyor(true)
     try {
       const t = await getAccessTokenAsync()
-      const r = await fetch('/api/doktor/nefroloji/kohort', {
+      const r = await doktorFetch('/api/doktor/nefroloji/kohort', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ patientIds: secili }),
       })
       const j = await r.json().catch(() => ({}))

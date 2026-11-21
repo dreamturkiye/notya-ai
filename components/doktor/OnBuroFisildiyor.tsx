@@ -10,6 +10,7 @@ import { useRouter } from 'next/navigation'
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth'
 import { CHROME_FONT } from '@/lib/doktor/chromeTheme'
 import type { OnBuroFisiltiItem } from '@/lib/doktor/onBuroFisilti'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 const FISILTI_KOYU = '#d0d8d5'
 const FISILTI_KOYU2 = '#dde3e0'
@@ -47,8 +48,7 @@ export default function OnBuroFisildiyor() {
     try {
       const t = await ensureDoctorAccessToken()
       if (!t) return
-      const r = await fetch('/api/doktor/on-buro-fisilti', {
-        headers: { Authorization: `Bearer ${t}` },
+      const r = await doktorFetch('/api/doktor/on-buro-fisilti', {
         cache: 'no-store',
       })
       if (!r.ok) return
@@ -67,8 +67,8 @@ export default function OnBuroFisildiyor() {
     try {
       const t = await ensureDoctorAccessToken()
       if (!t) return
-      await fetch('/api/doktor/on-buro-fisilti/iptal', {
-        method: 'POST', headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ kartId }),
+      await doktorFetch('/api/doktor/on-buro-fisilti/iptal', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ kartId }),
       })
     } catch { /* the next load shows the truth */ }
     void yukle()
@@ -82,8 +82,8 @@ export default function OnBuroFisildiyor() {
     try {
       const t = await ensureDoctorAccessToken()
       if (!t) return
-      const r = await fetch('/api/doktor/on-buro-fisilti/on-buro', {
-        method: 'POST', headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ kartId, eylem }),
+      const r = await doktorFetch('/api/doktor/on-buro-fisilti/on-buro', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ kartId, eylem }),
       })
       const j = await r.json().catch(() => ({}))
       setObMesaj(r.ok ? String(j.mesaj || '') : String(j.error || 'İşlem yapılamadı.'))

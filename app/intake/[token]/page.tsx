@@ -35,7 +35,10 @@ export default function IntakeFormPage() {
   const params = useParams();
   const token = String(params?.token || '');
 
-  const [durum, setDurum] = useState<'yukleniyor' | 'gecerli' | 'gecersiz' | 'tamamlandi'>('yukleniyor');
+  const [durum, setDurum] = useState<'yukleniyor' | 'gecerli' | 'gecersiz' | 'tamamlandi' | 'alindi'>('yukleniyor');
+  // NOTYA-INTAKE-ALINDI-01: reopening a submitted form = a confirmation (doctor's name, optional Sağlığım link).
+  const [alindi, setAlindi] = useState<{ doktorAdi: string; portalYolu: string | null } | null>(null);
+  const [iletisim, setIletisim] = useState<{ ad: string; telefon: string } | null>(null);
   const [hataMesaji, setHataMesaji] = useState('');
   const [sema, setSema] = useState<FormSemasi | null>(null);
   const [yanitlar, setYanitlar] = useState<Record<string, unknown>>({});
@@ -49,7 +52,11 @@ export default function IntakeFormPage() {
       try {
         const r = await fetch(`/api/intake/${encodeURIComponent(token)}`);
         const d = await r.json();
-        if (!r.ok) { setHataMesaji(d.error || 'Form bulunamadı.'); setDurum('gecersiz'); return; }
+        if (!r.ok) {
+          if (d.durum === 'dolduruldu') { setAlindi({ doktorAdi: String(d.doktorAdi || ''), portalYolu: typeof d.portalYolu === 'string' && d.portalYolu.startsWith('/portal/hasta/') ? d.portalYolu : null }); setDurum('alindi'); return; }
+          setIletisim(d.iletisim && (d.iletisim.ad || d.iletisim.telefon) ? { ad: String(d.iletisim.ad || ''), telefon: String(d.iletisim.telefon || '') } : null);
+          setHataMesaji(d.error || 'Bu form bağlantısı geçerli değil.'); setDurum('gecersiz'); return;
+        }
         setSema(d);
         setDurum('gecerli');
       } catch {
@@ -120,8 +127,28 @@ export default function IntakeFormPage() {
 
       {durum === 'gecersiz' && (
         <div style={kutu}>
-          <h2 style={{ fontSize: 20, marginBottom: 8, color: R.ink, fontFamily: CHROME_FONT.serif }}>Form Kullanılamıyor</h2>
-          <p style={{ color: R.warn, fontSize: 14 }}>{hataMesaji}</p>
+          <h2 style={{ fontSize: 20, marginBottom: 8, color: R.ink, fontFamily: CHROME_FONT.serif }}>Bu bağlantı kullanılamıyor</h2>
+          <p style={{ color: R.muted, fontSize: 14 }}>{hataMesaji}</p>
+          {iletisim && (
+            <p style={{ color: R.ink, fontSize: 14, marginTop: 10 }}>
+              {iletisim.ad}{iletisim.ad && iletisim.telefon ? ' · ' : ''}
+              {iletisim.telefon && <a href={`tel:${iletisim.telefon.replace(/[^\d+]/g, '')}`} style={{ color: R.pine, fontWeight: 600 }}>{iletisim.telefon}</a>}
+            </p>
+          )}
+        </div>
+      )}
+
+      {durum === 'alindi' && alindi && (
+        <div style={kutu}>
+          <h2 style={{ fontSize: 20, marginBottom: 8, color: R.ink, fontFamily: CHROME_FONT.serif }}>Formunuz alındı</h2>
+          <p style={{ color: R.muted, fontSize: 14 }}>
+            Teşekkürler, bu formu daha önce gönderdiniz. {alindi.doktorAdi ? `${alindi.doktorAdi} yanıtlarınızı randevunuzdan önce inceleyecek` : 'Doktorunuz yanıtlarınızı randevunuzdan önce inceleyecek'}. Bu sayfayı kapatabilirsiniz.
+          </p>
+          {alindi.portalYolu && (
+            <p style={{ marginTop: 14, fontSize: 13 }}>
+              <a href={alindi.portalYolu} style={{ color: R.pine, textDecoration: 'underline' }}>Sağlığım portalına git</a>
+            </p>
+          )}
         </div>
       )}
 

@@ -10,6 +10,7 @@ import GeriLink from '@/components/navigasyon/GeriLink';
 import { DOKTOR_ANA, hastaDosyaHref, hastaGoruntulemeHref } from '@/lib/doktor/geriNavigasyon';
 import type { HastaDosyaSekmeId } from '@/lib/doktor/hastaDosyaSekmeleri';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 interface Goruntuleme {
   id: string;
@@ -107,9 +108,7 @@ const Page = () => {
 
   const fetchPatients = async () => {
     const token = await getAccessTokenAsync();
-    const res = await fetch('/api/doktor/hastalar', {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const res = await doktorFetch('/api/doktor/hastalar', {});
     if (res.ok) {
       const data = await res.json();
       setPatients(normalizeHastalar(data));
@@ -120,7 +119,7 @@ const Page = () => {
   const fetchDoktorBransi = async () => {
     try {
       const token = await getAccessTokenAsync();
-      const res = await fetch('/api/users/me', { headers: { Authorization: `Bearer ${token}` } });
+      const res = await doktorFetch('/api/users/me', {});
       if (res.ok) {
         const me = await res.json();
         setDoktorBransi(bransAnahtari(me?.data?.specialty));
@@ -135,8 +134,7 @@ const Page = () => {
     const url = hastaId
       ? `/api/doktor/goruntuleme?hastaId=${encodeURIComponent(hastaId)}`
       : '/api/doktor/goruntuleme';
-    const res = await fetch(url, {
-      headers: { Authorization: `Bearer ${token}` },
+    const res = await doktorFetch(url, {
       cache: 'no-store',
     });
     if (res.ok) {
@@ -219,9 +217,8 @@ const Page = () => {
         setUploadProgress((p) => (p >= 90 ? p : p + 4));
       }, 400);
 
-      const res = await fetch('/api/doktor/goruntuleme/yukle', {
+      const res = await doktorFetch('/api/doktor/goruntuleme/yukle', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
         body: formData,
         signal: ctrl.signal,
       });
@@ -260,9 +257,8 @@ const Page = () => {
   const handleDelete = async (id: string) => {
     if (!window.confirm('Bu görüntüyü arşivden silmek istediğinize emin misiniz?')) return;
     const token = await getAccessTokenAsync();
-    const res = await fetch(`/api/doktor/goruntuleme/${id}`, {
+    const res = await doktorFetch(`/api/doktor/goruntuleme/${id}`, {
       method: 'DELETE',
-      headers: { Authorization: `Bearer ${token}` },
     });
     if (!res.ok) {
       const j = await res.json().catch(() => ({}));

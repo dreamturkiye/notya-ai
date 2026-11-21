@@ -40,6 +40,7 @@ import {
   NOT_YENIDEN_DEGERLENDIR_ISTEK,
   yenidenDegerlendirDuzenlemeTemizle,
 } from '@/lib/doktor/notYenidenDegerlendir';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 interface IlacOner { ad?: string; doz?: string; kullanim?: string; sure?: string }
 interface IcdOner { code?: string; description_tr?: string; description?: string; is_primary?: boolean }
@@ -203,7 +204,7 @@ export default function IncelemePage() {
       const gelen = await oneriyiYokla<{ hastaOzeti?: string; alarmBulgulari?: string[]; receteOnerisi?: ReceteOner[]; kritikBulgular?: string[]; aiDegerlendirme?: string }>({
         getir: async () => {
           const token = await getAccessTokenAsync();
-          const r = await fetch(`/api/notes/${encodeURIComponent(id)}`, { headers: { Authorization: `Bearer ${token}` } });
+          const r = await doktorFetch(`/api/notes/${encodeURIComponent(id)}`, {});
           if (!r.ok) return null;
           return ((await r.json()) as { not?: Record<string, unknown> }).not ?? null;
         },
@@ -250,9 +251,9 @@ export default function IncelemePage() {
     setKBekliyor(true);
     try {
       const token = await getAccessTokenAsync();
-      const res = await fetch('/api/doktor/not-konsult', {
+      const res = await doktorFetch('/api/doktor/not-konsult', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ noteId: note.id, taslak: { ...taslak, basvuruYakinmasi: basvuruTaslak, vitaller: vitalTaslak, alarmBulgulari: alarmTaslak.split('\n').map((x) => x.replace(/^[•\-\*]\s*/, '').trim()).filter(Boolean), hastaOzeti: ozetTaslak, ilaclar: ilacMetniniCoz(ilacTaslak), icdKodlari: icdTaslak, receteOnerisi: receteTaslak, aiDegerlendirme: aiDegTaslak }, mesajlar: yeni }),
       });
       const d = await res.json();
@@ -326,9 +327,9 @@ export default function IncelemePage() {
       const notlar = e.tur === 'takip_aramasi'
         ? `📞 Takip araması (${e.kim === 'sekreter' ? 'sekreter/hemşire arayacak' : 'doktor arayacak'})${e.aciklama ? `: ${e.aciklama}` : ''} — arama notunu buraya yazın.`
         : `Kontrol muayenesi${e.aciklama ? `: ${e.aciklama}` : ''}`;
-      const res = await fetch('/api/doktor/randevular', {
+      const res = await doktorFetch('/api/doktor/randevular', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ patientId: note.patientId, baslangic: baslangic.toISOString(), bitis: bitis.toISOString(), tur, notlar }),
       });
       if (!res.ok) throw new Error();
@@ -352,9 +353,7 @@ export default function IncelemePage() {
           return;
         }
 
-        const res = await fetch('/api/notes?pending=true', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await doktorFetch('/api/notes?pending=true', {});
 
         const data = await res.json().catch(() => null);
 
@@ -447,9 +446,9 @@ export default function IncelemePage() {
     setBusyId(id);
     try {
       const token = await getAccessTokenAsync();
-      const res = await fetch(`/api/notes/${id}/approve`, {
+      const res = await doktorFetch(`/api/notes/${id}/approve`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(acikId === id ? { duzenlemeler: { ...taslak, basvuruYakinmasi: basvuruTaslak, vitaller: vitalTaslak, alarmBulgulari: alarmTaslak.split('\n').map((x) => x.replace(/^[•\-\*]\s*/, '').trim()).filter(Boolean), hastaOzeti: ozetTaslak, ilaclar: ilacMetniniCoz(ilacMetni), icdKodlari: icdTaslak, receteOnerisi: receteTaslak, aiDegerlendirme: aiDegTaslak } } : {}),
       });
 

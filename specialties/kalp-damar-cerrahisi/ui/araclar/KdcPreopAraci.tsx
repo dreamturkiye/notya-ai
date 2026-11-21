@@ -4,6 +4,7 @@ import { getAccessTokenAsync } from '@/lib/doktor/toolsUi'
 import { kdcStil, KdcHastaSecici, KopyalaButonu, Istatistik, TaslakNotu, useUrlHasta } from './KdcAracKabugu'
 import { PREOP_MADDELER, preopSkorla, type PreopKod } from '../../engines/preop'
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 export default function KdcPreopAraci() {
   const [secilen, setSecilen] = useState<PreopKod[]>([])
@@ -24,9 +25,9 @@ export default function KdcPreopAraci() {
     if (!sonuc.tamamMi) { setHata(sonuc.ozet); return }
     try {
       const t = await getAccessTokenAsync()
-      const r = await fetch('/api/doktor/kalp-damar-cerrahisi', {
+      const r = await doktorFetch('/api/doktor/kalp-damar-cerrahisi', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ patientId: hastaId, adim: 'preop', secilen, hekimKilit: true }),
       })
       const j = await r.json().catch(() => ({}))

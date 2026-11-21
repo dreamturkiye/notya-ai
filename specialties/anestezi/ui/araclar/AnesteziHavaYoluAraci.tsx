@@ -3,6 +3,7 @@ import React, { useMemo, useState } from 'react'
 import { getAccessTokenAsync } from '@/lib/doktor/toolsUi'
 import { anesteziStil, AnesteziHastaSecici, KopyalaButonu, Istatistik, TaslakNotu, useUrlHasta } from './AnesteziAracKabugu'
 import { havaYoluSkorla, HAVA_YOLU_BAYRAKLAR, type HavaYoluBayrak } from '../../engines/havaYolu'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 export default function AnesteziHavaYoluAraci() {
   const [bayraklar, setBayraklar] = useState<HavaYoluBayrak[]>([])
@@ -20,9 +21,9 @@ export default function AnesteziHavaYoluAraci() {
     if (!sonuc.tamamMi) { setHata(sonuc.ozet); return }
     try {
       const t = await getAccessTokenAsync()
-      const r = await fetch('/api/doktor/anestezi', {
+      const r = await doktorFetch('/api/doktor/anestezi', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ patientId: hastaId, adim: 'havaYolu', bayraklar, tarih: tarih || null, hekimKilit: true }),
       })
       const j = await r.json().catch(() => ({}))

@@ -12,6 +12,7 @@ import {
   type RaporAralik,
   type TaniSatiri,
 } from '@/lib/doktor/raporHesap'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 export const dynamic = 'force-dynamic'
 
@@ -71,7 +72,7 @@ export default function RaporlarSayfasi() {
     ;(async () => {
       try {
         const token = (await ensureDoctorAccessToken()) || ''
-        const res = await fetch(`/api/doktor/raporlar?aralik=${aralik}`, { headers: { Authorization: `Bearer ${token}` } })
+        const res = await doktorFetch(`/api/doktor/raporlar?aralik=${aralik}`, {})
         if (!res.ok) throw new Error('yuklenemedi')
         const json = await res.json()
         if (!iptal) setVeri(json)
@@ -88,9 +89,9 @@ export default function RaporlarSayfasi() {
     setPdf(true)
     try {
       const token = (await ensureDoctorAccessToken()) || ''
-      const res = await fetch('/api/doktor/raporlar/pdf', {
+      const res = await doktorFetch('/api/doktor/raporlar/pdf', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ aralik }),
       })
       if (!res.ok) throw new Error('pdf')

@@ -7,6 +7,7 @@ import { MESAJ_EK_ACCEPT, MESAJ_EK_AZAMI } from '@/lib/portal/mesajEk'
 import { formatTrDate } from './ui'
 import { turkceHataMesaji } from '@/lib/turkce/dogrulamaMesaji'
 import { PortalMesajlarGorunumu, type PortalMesajGonderimi, type PortalMesajSonucu, type PortalMesajSozleri } from '@/components/doktor/portal/PortalMesajlarGorunumu'
+import { portalFetch } from '@/lib/portal/portalFetch'
 
 type Props = {
   data: PortalBundle
@@ -72,7 +73,7 @@ export function MessagesView({ data, token, onMessagesUpdated }: Props) {
 
     if (!token) return
     try {
-      const res = await fetch(`/api/portal/hasta/${encodeURIComponent(token)}/mesajlar`, {
+      const res = await portalFetch(`/api/portal/hasta/${encodeURIComponent(token)}/mesajlar`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -98,13 +99,13 @@ export function MessagesView({ data, token, onMessagesUpdated }: Props) {
         if (payload.konu) fd.set('konu', payload.konu)
         fd.set('metin', payload.metin)
         for (const f of payload.ekler.slice(0, MESAJ_EK_AZAMI)) fd.append('ek', f)
-        res = await fetch(`/api/portal/hasta/${encodeURIComponent(token)}/mesajlar`, {
+        res = await portalFetch(`/api/portal/hasta/${encodeURIComponent(token)}/mesajlar`, {
           method: 'POST',
           credentials: 'include',
           body: fd,
         })
       } else {
-        res = await fetch(`/api/portal/hasta/${encodeURIComponent(token)}/mesajlar`, {
+        res = await portalFetch(`/api/portal/hasta/${encodeURIComponent(token)}/mesajlar`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',

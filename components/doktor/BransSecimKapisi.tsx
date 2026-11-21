@@ -6,6 +6,7 @@ import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import { hekimProfilTazeleIsaretle } from '@/lib/doktor/hekimProfilIstemci';
 import BransSecimi from '@/components/onboarding/BransSecimi';
 import { KAYIT_BRANS_MESAJ, kayitBransiMi } from '@/lib/onboarding/kayitBransi';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 /**
  * KAYIT-BRANS-01 (Kaan, 2026-11-07) — "Branşınızı seçin": the blocking first step of the doctor application for an
@@ -27,9 +28,9 @@ export default function BransSecimKapisi({ onCikis }: { onCikis: () => void }) {
     try {
       const t = await ensureDoctorAccessToken();
       if (!t) { window.location.href = '/giris/doktor'; return; }
-      const r = await fetch('/api/users/brans', {
+      const r = await doktorFetch('/api/users/brans', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ specialty: brans }),
       });
       const j = (await r.json().catch(() => ({}))) as { error?: string };

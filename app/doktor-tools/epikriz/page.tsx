@@ -5,6 +5,7 @@ import React, { useState, useEffect } from 'react';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import { HastaSecici } from '@/lib/doktor/aracUi';
 import { CHROME_RENK, CHROME_FONT } from '@/lib/doktor/chromeTheme';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 export const dynamic = 'force-dynamic';
 
@@ -59,9 +60,7 @@ export default function EpikrizPage() {
     }
 
     try {
-      const res = await fetch(`/api/doktor/hastalar/${hastaId}/sessions`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await doktorFetch(`/api/doktor/hastalar/${hastaId}/sessions`, {});
       if (res.status === 404) {
         setSeansError('Seans bulunamadı');
         setSeanslar([]);
@@ -102,11 +101,10 @@ export default function EpikrizPage() {
     }
 
     try {
-      const res = await fetch('/api/doktor/araclar/epikriz', {
+      const res = await doktorFetch('/api/doktor/araclar/epikriz', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(
           mod === 'tumSeanslar'

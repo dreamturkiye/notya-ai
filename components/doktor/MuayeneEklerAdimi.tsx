@@ -18,6 +18,7 @@ import { KIMLIK_GIZLENEMEDI, sinirliKuyruk } from "@/core/belgeler/otoBatch"
 import { bitmapKalitesi } from "@/components/doktor/fotoArsivi/istemciGorsel"
 import { ekHatirlaticilar, eksikHatirlaticilar, type Hatirlatici } from "@/lib/doktor/muayeneEk/hatirlatici"
 import { EK_DEGERLENDIRME_SURUMU, EK_TURLERI, EK_TUR_ETIKETI, type EkAsiSatiri, type EkSonuc, type EkTuru } from "@/lib/doktor/muayeneEk/tipler"
+import { doktorFetch, xhrYetkisiEkle } from '@/lib/doktor/oturumFetch'
 
 export interface EkPayload {
   ekler: { belgeId: string; sonuc: EkSonuc }[]
@@ -41,9 +42,9 @@ async function token(): Promise<string> { try { return (await ensureDoctorAccess
 async function api<T>(yol: string, govde?: unknown, imza?: AbortSignal): Promise<{ ok: boolean; durum: number; veri: T | null }> {
   const t = await token()
   try {
-    const r = await fetch(yol, {
+    const r = await doktorFetch(yol, {
       method: govde === undefined ? "GET" : "POST", signal: imza,
-      headers: { Authorization: `Bearer ${t}`, ...(govde === undefined ? {} : { "Content-Type": "application/json" }) },
+      headers: { ...(govde === undefined ? {} : { "Content-Type": "application/json" }) },
       ...(govde === undefined ? {} : { body: JSON.stringify(govde) }),
     })
     const veri = (await r.json().catch(() => null)) as T | null
@@ -77,7 +78,7 @@ function yukle(blob: Blob, ad: string, patientId: string, sessionId: string, tok
     const form = new FormData()
     form.append("file", blob, ad); form.append("patientId", patientId); form.append("visitId", sessionId)
     x.open("POST", "/api/doktor/documents")
-    x.setRequestHeader("Authorization", `Bearer ${tok}`)
+    xhrYetkisiEkle(x, tok)
     x.upload.onprogress = (e) => { if (e.lengthComputable) ilerleme(Math.round((e.loaded / e.total) * 100)) }
     x.onload = () => {
       try { const j = JSON.parse(x.responseText); if (x.status < 300 && j?.document?.id) return res({ id: String(j.document.id) }); res({ hata: String(j?.error || "Yüklenemedi") }) }

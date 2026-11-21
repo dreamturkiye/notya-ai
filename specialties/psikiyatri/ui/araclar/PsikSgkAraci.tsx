@@ -8,6 +8,7 @@ import React, { useMemo, useState } from 'react';
 import { getAccessTokenAsync } from '@/lib/doktor/toolsUi';
 import { psikStil, PsikHastaSecici, PsikOnay, PsikSecim, PsikKopyala, Istatistik, TaslakNotu, Rozet, MuayeneFormunaEkle } from './PsikAracKabugu';
 import { psikRaporTaslagi, PSIK_RAPOR_SABLONLARI, type PsikRaporSablon } from '../../engines/sgkRapor';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 export default function PsikSgkAraci() {
   const [hastaId, setHastaId] = useState('');
@@ -26,7 +27,7 @@ export default function PsikSgkAraci() {
     if (!id) return;
     try {
       const t = await getAccessTokenAsync();
-      const r = await fetch(`/api/doktor/psikiyatri?patientId=${encodeURIComponent(id)}`, { headers: { Authorization: `Bearer ${t}` }, cache: 'no-store' });
+      const r = await doktorFetch(`/api/doktor/psikiyatri?patientId=${encodeURIComponent(id)}`, { cache: 'no-store' });
       const j = await r.json().catch(() => ({}));
       if (!r.ok) { setHata(j.error || 'Yüklenemedi'); return; }
       setIlaclar((j.ilaclar || []).map((i: { ilac_adi: string; etken_madde: string | null }) => ({ ad: String(i.ilac_adi), etken: i.etken_madde, aktif: true })));

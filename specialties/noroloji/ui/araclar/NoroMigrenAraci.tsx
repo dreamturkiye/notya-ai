@@ -4,6 +4,7 @@ import { getAccessTokenAsync } from '@/lib/doktor/toolsUi'
 import { noroStil, NoroHastaSecici, Alan, Sayi, Istatistik, TaslakNotu, KopyalaButonu, MuayeneFormunaEkle, useUrlHasta } from './NoroAracKabugu'
 import { skorla, MIGREN_MADDELER } from '../../engines/migren'
 import { REF_ACIKLAMA } from '../../engines/noroloji'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 export default function NoroMigrenAraci() {
   const [hasta, setHasta] = useState('')
@@ -19,9 +20,9 @@ export default function NoroMigrenAraci() {
     if (!sonuc.tamamMi) { setHata(sonuc.ozet); return }
     try {
       const t = await getAccessTokenAsync()
-      const r = await fetch('/api/doktor/noroloji', {
+      const r = await doktorFetch('/api/doktor/noroloji', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ patientId: hasta, adim: 'migren', maddeler: maddeler.map(Number), hekimKilit: true }),
       })
       const j = await r.json().catch(() => ({}))

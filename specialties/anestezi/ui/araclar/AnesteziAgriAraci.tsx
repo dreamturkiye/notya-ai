@@ -3,6 +3,7 @@ import React, { useMemo, useState } from 'react'
 import { getAccessTokenAsync } from '@/lib/doktor/toolsUi'
 import { anesteziStil, AnesteziHastaSecici, KopyalaButonu, Istatistik, TaslakNotu, useUrlHasta } from './AnesteziAracKabugu'
 import { agriSkorla, AGRI_BAYRAKLAR, type AgriBayrak } from '../../engines/agri'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 export default function AnesteziAgriAraci() {
   const [bayraklar, setBayraklar] = useState<AgriBayrak[]>([])
@@ -24,9 +25,9 @@ export default function AnesteziAgriAraci() {
     if (!sonuc.tamamMi) { setHata(sonuc.ozet); return }
     try {
       const t = await getAccessTokenAsync()
-      const r = await fetch('/api/doktor/anestezi', {
+      const r = await doktorFetch('/api/doktor/anestezi', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           patientId: hastaId, adim: 'agri', bayraklar,
           agriSkor: agriSkor === '' ? null : Number(agriSkor),

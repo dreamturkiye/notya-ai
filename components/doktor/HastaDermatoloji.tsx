@@ -75,6 +75,7 @@ import {
 import { acilBandMetni, dermAcilTara, type DermAcilKod } from '@/specialties/dermatoloji/engines/acil'
 import type { BzbhKind } from '@/specialties/dermatoloji/protocols/endemic-bzbh'
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 const panel: React.CSSProperties = {
   background: '#FFFFFF',
@@ -164,9 +165,7 @@ export default function HastaDermatoloji({
     setHata('')
     try {
       const t = await ensureDoctorAccessToken()
-      const r = await fetch(`/api/doktor/dermatoloji?patientId=${patientId}`, {
-        headers: { Authorization: `Bearer ${t}` },
-      })
+      const r = await doktorFetch(`/api/doktor/dermatoloji?patientId=${patientId}`, {})
       const d = await r.json()
       if (!r.ok) throw new Error(d.error || 'Dermatoloji yüklenemedi')
       setVeri(d)
@@ -184,9 +183,9 @@ export default function HastaDermatoloji({
 
   const post = async (body: Record<string, unknown>) => {
     const t = await ensureDoctorAccessToken()
-    const r = await fetch('/api/doktor/dermatoloji', {
+    const r = await doktorFetch('/api/doktor/dermatoloji', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ patientId, ...body }),
     })
     const d = await r.json().catch(() => ({}))

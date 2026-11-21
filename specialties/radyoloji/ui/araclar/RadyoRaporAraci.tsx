@@ -3,6 +3,7 @@ import React, { useMemo, useState } from 'react'
 import { getAccessTokenAsync } from '@/lib/doktor/toolsUi'
 import { radyoStil, RadyoHastaSecici, KopyalaButonu, Istatistik, TaslakNotu, useUrlHasta } from './RadyoAracKabugu'
 import { raporSkorla, BIRADS_KATEGORILER, RAPOR_SABLON, type BiradsKategori, type RaporSablonKod } from '../../engines/rapor'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 export default function RadyoRaporAraci() {
   const [kategori, setKategori] = useState<BiradsKategori>('genel')
@@ -20,9 +21,9 @@ export default function RadyoRaporAraci() {
     if (!sonuc.tamamMi) { setHata(sonuc.ozet); return }
     try {
       const t = await getAccessTokenAsync()
-      const r = await fetch('/api/doktor/radyoloji', {
+      const r = await doktorFetch('/api/doktor/radyoloji', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ patientId: hastaId, adim: 'rapor', kategori, secilen, hekimKilit: true }),
       })
       const j = await r.json().catch(() => ({}))

@@ -4,6 +4,7 @@ import { getAccessTokenAsync } from '@/lib/doktor/toolsUi'
 import { gcStil, GcHastaSecici, KopyalaButonu, Istatistik, TaslakNotu, useUrlHasta } from './GcAracKabugu'
 import { patolojiSkorla } from '../../engines/patoloji'
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 export default function GcPatolojiAraci() {
   const [ornekTarihi, setOrnek] = useState('')
@@ -22,9 +23,9 @@ export default function GcPatolojiAraci() {
     if (!sonuc.tamamMi) { setHata(sonuc.ozet); return }
     try {
       const t = await getAccessTokenAsync()
-      const r = await fetch('/api/doktor/gogus-cerrahisi', {
+      const r = await doktorFetch('/api/doktor/gogus-cerrahisi', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ patientId: hastaId, adim: 'patoloji', kart: sonuc.kart, hekimKilit: true }),
       })
       const j = await r.json().catch(() => ({}))

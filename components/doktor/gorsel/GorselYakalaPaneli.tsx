@@ -19,6 +19,7 @@ import {
   GORSEL_YAKALAMA_PDF_AZAMI_BAYT,
   gorselYakalamaTuru,
 } from '@/lib/doktor/gorselYakalama';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 export interface GorselYakalamaSonucu {
   id: string;
@@ -112,7 +113,7 @@ export default function GorselYakalaPaneli({
       fd.append('modalite', modalite);
       if (bolge.trim()) fd.append('vucut_bolgesi', bolge.trim());
       if (visitId) fd.append('visitId', visitId);
-      const r = await fetch('/api/doktor/goruntuleme/yukle', { method: 'POST', headers: { Authorization: `Bearer ${t}` }, body: fd });
+      const r = await doktorFetch('/api/doktor/goruntuleme/yukle', { method: 'POST', body: fd });
       const j = await r.json().catch(() => ({}));
       if (!r.ok || !j.goruntuleme?.id) {
         setHata(j.error || 'Yüklenemedi.');

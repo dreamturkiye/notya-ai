@@ -6,6 +6,7 @@ import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth'
 import type { ArsivListesi } from '@/lib/doktor/fotoArsiv/sunucu'
 import type { FotoMeta, MetaYamasi } from '@/lib/doktor/fotoArsiv/meta'
 import type { KarsilastirmaYaniti, TekDegerlendirmeYaniti, KaliteYaniti, GeriBildirimYaniti } from '@/lib/doktor/muayeneEk/foto/fotoServis'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 export class ApiHatasi extends Error {
   constructor(public durum: number, mesaj: string, public govde?: unknown) { super(mesaj) }
@@ -20,7 +21,7 @@ const kok = (patientId: string): string => `/api/doktor/hasta-foto/${encodeURICo
 async function istek(yol: string, init: RequestInit = {}): Promise<Response> {
   const t = await ensureDoctorAccessToken()
   if (!t) throw new ApiHatasi(401, 'Oturum bulunamadı. Lütfen yeniden giriş yapın.')
-  return fetch(yol, { cache: 'no-store', ...init, headers: { Authorization: `Bearer ${t}`, ...(init.headers || {}) } })
+  return doktorFetch(yol, { cache: 'no-store', ...init, headers: { ...(init.headers || {}) } })
 }
 
 export function hataMesaji(durum: number, govde: unknown): string {

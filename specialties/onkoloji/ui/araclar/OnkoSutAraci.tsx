@@ -3,6 +3,7 @@ import React, { useMemo, useState } from 'react'
 import { getAccessTokenAsync } from '@/lib/doktor/toolsUi'
 import { onkoStil, OnkoHastaSecici, KopyalaButonu, TaslakNotu, useUrlHasta } from './OnkoAracKabugu'
 import { sutTaslagi, SUT_AMAC_ETIKET, type SutAmac } from '../../engines/sut'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 const AMACLAR = Object.keys(SUT_AMAC_ETIKET) as SutAmac[]
 
@@ -27,9 +28,9 @@ export default function OnkoSutAraci() {
     if (!sonuc.tamamMi) { setHata(sonuc.ozet); return }
     try {
       const t = await getAccessTokenAsync()
-      const r = await fetch('/api/doktor/onkoloji', {
+      const r = await doktorFetch('/api/doktor/onkoloji', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           patientId: hastaId, adim: 'sut', amac,
           endikasyonOzet: endikasyon, oncekiTedaviOzet: onceki || null, labOzet: lab || null, hekimNot: hekimNot || null,

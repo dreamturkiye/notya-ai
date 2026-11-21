@@ -12,6 +12,9 @@ import React, { useState } from 'react'
 import { CHROME_RENK, CHROME_FONT } from '@/lib/doktor/chromeTheme'
 import IpucuBaloncugu from '@/components/doktor/IpucuBaloncugu'
 import GonderDugmesi from '@/components/doktor/iletisim/GonderDugmesi'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
+import OturumUyarisi from '@/components/doktor/OturumUyarisi'
+import { oturumMesajiMi } from '@/lib/doktor/oturumYolu'
 
 type PortalPaylasim = {
   onayliZiyaret: number
@@ -56,10 +59,9 @@ export default function HastaPortaliPage() {
         setError('Oturum bulunamadı. Lütfen tekrar giriş yapın.')
         return
       }
-      const res = await fetch('/api/doktor/araclar/hasta-portali', {
+      const res = await doktorFetch('/api/doktor/araclar/hasta-portali', {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -128,7 +130,7 @@ export default function HastaPortaliPage() {
           Hasta sayfasını önizle (örnek veri) →
         </a>
 
-        {error && <div style={toolsErrorBox}>{error}</div>}
+        {error && (oturumMesajiMi(error) ? <OturumUyarisi mesaj={error} /> : <div style={toolsErrorBox}>{error}</div>)}
 
         <div style={{ ...toolsCard, marginTop: 20 }}>
           <label style={toolsLabel} htmlFor="hasta-portali-picker">

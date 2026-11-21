@@ -14,6 +14,7 @@ import {
   HPV_TIP_ETIKET, PMDD_ALAN_KISA, PMDD_KRITER_ETIKET, PMDD_OLCEK_ETIKET, SMA_DURUM_ETIKET, SMA_ES_ETIKET, SMA_SONUC_ETIKET,
   TIROID_BAYRAK_ETIKET, TIROID_DURUM_ETIKET, TIROID_KAYNAK_ETIKET, TIROID_RISK_ETIKET, TIROID_TAKIP_ETIKET,
 } from '../engines/kdTaramaMetinleri'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 type Sekme = 'tiroid' | 'hpv' | 'sma' | 'pmdd'
 const kutu: React.CSSProperties = { border: '1px solid rgba(58,44,34,0.12)', borderRadius: 12, padding: '10px 14px', display: 'grid', gap: 10 }
@@ -40,7 +41,7 @@ export default function KdTaramalar({ patientId }: { patientId: string }) {
 
   const yukle = useCallback(async () => {
     const t = await ensureDoctorAccessToken()
-    const r = await fetch(`/api/doktor/kd-tarama?patientId=${encodeURIComponent(patientId)}`, { headers: { Authorization: `Bearer ${t}` } })
+    const r = await doktorFetch(`/api/doktor/kd-tarama?patientId=${encodeURIComponent(patientId)}`, {})
     if (r.ok) { const d = (await r.json()) as KdTaramaOzeti; setVeri(d); setRiskler(d.tiroid.riskler) }
   }, [patientId])
   useEffect(() => { yukle() }, [yukle])
@@ -48,7 +49,7 @@ export default function KdTaramalar({ patientId }: { patientId: string }) {
   const gonder = async (govde: Record<string, unknown>, tamam: string) => {
     setMesaj('')
     const t = await ensureDoctorAccessToken()
-    const r = await fetch('/api/doktor/kd-tarama', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` }, body: JSON.stringify({ patientId, ...govde }) })
+    const r = await doktorFetch('/api/doktor/kd-tarama', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ patientId, ...govde }) })
     const j = await r.json().catch(() => ({}))
     if (!r.ok) { setMesaj(j.error || 'Kaydedilemedi'); return }
     setMesaj(tamam); setF({}); await yukle()

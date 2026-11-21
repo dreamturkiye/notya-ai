@@ -38,6 +38,9 @@ import {
   type CozgerDuzey,
   type CozgerGecerlilikTipi,
 } from '@/lib/doktor/cozgerTakip'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
+import OturumUyarisi from '@/components/doktor/OturumUyarisi'
+import { oturumMesajiMi } from '@/lib/doktor/oturumYolu'
 
 export default function SgkRaporPage() {
   const [hastaId, setHastaId] = useState('')
@@ -71,7 +74,7 @@ export default function SgkRaporPage() {
       try {
         const token = await getAccessTokenAsync()
         if (!token) return
-        const r = await fetch('/api/users/me', { headers: { Authorization: `Bearer ${token}` } })
+        const r = await doktorFetch('/api/users/me', {})
         const j = r.ok ? await r.json() : null
         if (!iptal) setCocukBrans(cocukHastaRaporuBransiMi(j?.data?.specialty ?? null))
       } catch { if (!iptal) setCocukBrans(false) }
@@ -103,11 +106,10 @@ export default function SgkRaporPage() {
         setError('Oturum bulunamadı. Tekrar giriş yapın.')
         return
       }
-      const res = await fetch('/api/doktor/araclar/sgk-rapor', {
+      const res = await doktorFetch('/api/doktor/araclar/sgk-rapor', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           hastaId,
@@ -149,7 +151,7 @@ export default function SgkRaporPage() {
           SGK Medula taslakları ile özel muayenehane belgelerini ayrı tutun. Canlı Medula gönderimi değildir.
         </p>
 
-        {error && <div style={toolsErrorBox}>{error}</div>}
+        {error && (oturumMesajiMi(error) ? <OturumUyarisi mesaj={error} /> : <div style={toolsErrorBox}>{error}</div>)}
 
         <div style={{ ...toolsCard, marginTop: 20 }} className="no-print">
           <label style={toolsLabel}>Rapor Tipi</label>
@@ -569,9 +571,9 @@ export default function SgkRaporPage() {
                   setError('')
                   try {
                     const token = await getAccessTokenAsync()
-                    const res = await fetch('/api/doktor/araclar/sgk-rapor/pdf', {
+                    const res = await doktorFetch('/api/doktor/araclar/sgk-rapor/pdf', {
                       method: 'POST',
-                      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                      headers: { 'Content-Type': 'application/json' },
                       body: JSON.stringify({ hastaId, raporTipiId: draftTip.id, rapor, sure }),
                     })
                     if (!res.ok) {
@@ -701,9 +703,7 @@ function CocukHastaRaporlariBolumu({
     setIndiriliyor(mod)
     try {
       const token = await getAccessTokenAsync()
-      const res = await fetch(`/api/doktor/documents/${sonuc.documentId}/download${mod === 'indir' ? '?download=1' : ''}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+      const res = await doktorFetch(`/api/doktor/documents/${sonuc.documentId}/download${mod === 'indir' ? '?download=1' : ''}`, {})
       if (!res.ok) { onError('Belge açılamadı.'); return }
       const blob = await res.blob()
       const url = URL.createObjectURL(blob)
@@ -824,9 +824,9 @@ function CocukHastaRaporlariBolumu({
           setSonuc(null)
           try {
             const token = await getAccessTokenAsync()
-            const res = await fetch('/api/doktor/araclar/cocuk-rapor', {
+            const res = await doktorFetch('/api/doktor/araclar/cocuk-rapor', {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+              headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 hastaId,
                 raporTipiId: tip.id,
@@ -914,9 +914,7 @@ function CozgerTakipBolumu({
     setYukleniyor(true)
     try {
       const token = await getAccessTokenAsync()
-      const r = await fetch(`/api/doktor/araclar/cozger-takip?hastaId=${encodeURIComponent(id)}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+      const r = await doktorFetch(`/api/doktor/araclar/cozger-takip?hastaId=${encodeURIComponent(id)}`, {})
       const j = await r.json().catch(() => ({}))
       if (!r.ok) { onError(String(j.error || 'ÇÖZGER takip kaydı alınamadı.')); return }
       setTakip((j as { takip: CozgerTakipKaydi | null }).takip || null)
@@ -938,9 +936,9 @@ function CozgerTakipBolumu({
     onError('')
     try {
       const token = await getAccessTokenAsync()
-      const r = await fetch('/api/doktor/araclar/cozger-takip', {
+      const r = await doktorFetch('/api/doktor/araclar/cozger-takip', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ hastaId, kurumAdi: kurumAdiTaslak, basvuruTarihi: basvuruTarihiTaslak }),
       })
       const j = await r.json().catch(() => ({}))
@@ -959,9 +957,9 @@ function CozgerTakipBolumu({
     onError('')
     try {
       const token = await getAccessTokenAsync()
-      const r = await fetch('/api/doktor/araclar/cozger-takip', {
+      const r = await doktorFetch('/api/doktor/araclar/cozger-takip', {
         method: 'PATCH',
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ hastaId, ...alanlar }),
       })
       const j = await r.json().catch(() => ({}))
@@ -980,9 +978,9 @@ function CozgerTakipBolumu({
     onError('')
     try {
       const token = await getAccessTokenAsync()
-      const res = await fetch('/api/doktor/araclar/cozger-takip/pdf', {
+      const res = await doktorFetch('/api/doktor/araclar/cozger-takip/pdf', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ hastaId }),
       })
       if (!res.ok) {

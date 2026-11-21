@@ -4,19 +4,22 @@ import { useRouter } from 'next/navigation'
 import { CHROME_FONT_HREF } from '@/lib/doktor/chromeTheme'
 import { hekimProfilOturumSil } from '@/lib/doktor/hekimProfilIstemci'
 import { NOTYA_KLINIK_AD, OZEL_BRANS_KATEGORI } from '@/lib/specialties/klinikDikey'
+import { doktorOturumuSil } from '@/lib/doktor/clientAuth'
+import OturumBekcisi from '@/components/doktor/OturumBekcisi'
 
 /** Özel Branşlar kabuğu. Notya Klinik masasının menüsünü taşımaz. */
 export default function OzelBranslarBaslik() {
   const router = useRouter()
 
   function logout() {
-    try { localStorage.removeItem('auth-token') } catch { /* oturum zaten yok */ }
+    doktorOturumuSil()
     hekimProfilOturumSil()
-    router.push('/giris')
+    router.push('/giris/notya-klinik')
   }
 
   return (
     <>
+    <OturumBekcisi />
       {/* eslint-disable-next-line @next/next/no-page-custom-font */}
       <link rel="stylesheet" href={CHROME_FONT_HREF} />
       <nav style={{

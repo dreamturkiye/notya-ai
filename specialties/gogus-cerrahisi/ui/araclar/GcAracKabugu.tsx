@@ -10,6 +10,7 @@ import { toolsShell } from '@/lib/doktor/toolsUi'
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth'
 import { doktorAraciBransaUygun } from '@/lib/doktor/doktorAraclari'
 import { AracVurguSaglayici, aracStil, HastaSecici, type AracVurgu } from '@/lib/doktor/aracUi'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 export const GC_VURGU: AracVurgu = { ana: '#B91C1C', anaMetin: '#FEF2F2', yumusak: CHROME_RENK.warn, baslik: '#B42318' }
 export const gcStil = aracStil(GC_VURGU)
@@ -32,7 +33,7 @@ export default function GcAracKabugu({ route, baslik, aciklama, children }: { ro
       try {
         const t = await ensureDoctorAccessToken()
         if (!t) { if (!iptal) { setIzin(false); router.replace('/doktor-tools') } return }
-        const r = await fetch('/api/users/me', { headers: { Authorization: `Bearer ${t}` } })
+        const r = await doktorFetch('/api/users/me', {})
         const j = r.ok ? await r.json() : null
         const ok = doktorAraciBransaUygun(route, j?.data?.specialty)
         if (!iptal) { setIzin(ok); if (!ok) router.replace('/doktor-tools') }

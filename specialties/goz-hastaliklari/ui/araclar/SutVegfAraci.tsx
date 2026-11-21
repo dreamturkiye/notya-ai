@@ -10,6 +10,7 @@ import { GOZ_KAYNAKLAR } from '../../protocols/sources';
 import { hastaDosyaHref } from '@/lib/doktor/geriNavigasyon';
 import { getAccessTokenAsync } from '@/lib/doktor/toolsUi';
 import { gozStil, Secim, Segment, Alan, Onay, Istatistik, Katlanir, MuayeneFormunaEkle, Rozet, TaslakNotu, GozHastaSecici } from './GozAracKabugu';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 const { kutu, etiket, kucuk, metin, satir, input, btn, ghost, kaydir } = gozStil;
 const bugun = () => new Date().toISOString().slice(0, 10);
@@ -31,7 +32,7 @@ export default function SutVegfAraci() {
     if (!id) { setGecmis([]); return; }
     try {
       const t = await getAccessTokenAsync();
-      const r = await fetch(`/api/doktor/goz?patientId=${encodeURIComponent(id)}`, { headers: { Authorization: `Bearer ${t}` }, cache: 'no-store' });
+      const r = await doktorFetch(`/api/doktor/goz?patientId=${encodeURIComponent(id)}`, { cache: 'no-store' });
       const j = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(j.error || 'Hasta verisi yüklenemedi');
       const liste = (j.enjeksiyonlar || []) as Enjeksiyon[];

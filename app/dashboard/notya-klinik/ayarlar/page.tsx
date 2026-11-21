@@ -2,6 +2,8 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import KlinikNav from '@/components/klinik/KlinikNav'
+import { doktorFetch, oturumSuresiDoldu } from '@/lib/doktor/oturumFetch'
+import { getDoctorAccessToken } from '@/lib/doktor/clientAuth'
 
 // NOTYA-KLINIK-ISIMLENDIRME-01 (Kaan 2026-10-18): Özel Branşlar (10 modül) ayrı grup başlığı
 // altında gösterilir — tek, ayrışmamış düz liste değil. Değerler DB'de saklanıyor
@@ -28,12 +30,12 @@ export default function AyarlarPage() {
 
   useEffect(() => {
     let t = ''
-    try { const raw = localStorage.getItem('auth-token'); if (raw) t = JSON.parse(raw).access_token || '' } catch {}
-    if (!t) { router.push('/giris'); return }
+    t = getDoctorAccessToken()
+    if (!t) { oturumSuresiDoldu(); return }
     setToken(t)
     Promise.all([
-      fetch('/api/klinik/settings', { headers: { Authorization: `Bearer ${t}` } }),
-      fetch('/api/klinik/me', { headers: { Authorization: `Bearer ${t}` } })
+      doktorFetch('/api/klinik/settings', {}),
+      doktorFetch('/api/klinik/me', {})
     ]).then(async ([sr, mr]) => {
       const sd = await sr.json(); const md = await mr.json()
       if (sd.success && sd.data) {
@@ -49,9 +51,9 @@ export default function AyarlarPage() {
   async function handleSave(e: React.FormEvent) {
     e.preventDefault(); setSaving(true); setMsg('')
     try {
-      const res = await fetch('/api/klinik/settings', {
+      const res = await doktorFetch('/api/klinik/settings', {
         method: 'PUT',
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, city, phone, website, logo_url: logoUrl, specialty_focus: selectedSpecialties })
       })
       const data = await res.json()

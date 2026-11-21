@@ -5,6 +5,8 @@ import OzelBranslarBaslik from '@/components/klinik/OzelBranslarBaslik'
 import { klinikAraclariHepsi, klinikAraclariListesi, type KlinikArac } from '@/lib/klinik/klinikAraclari'
 import { klinikSlugCoz, KLINIK_ETIKET } from '@/lib/specialties/klinikDikey'
 import { hekimProfilOturumOku, hekimProfilOturumYaz, hekimProfilTazeleBasligi, hekimProfilTazeleBitti } from '@/lib/doktor/hekimProfilIstemci'
+import { doktorFetch, oturumSuresiDoldu } from '@/lib/doktor/oturumFetch'
+import { getDoctorAccessToken } from '@/lib/doktor/clientAuth'
 
 export const dynamic = 'force-dynamic'
 
@@ -28,10 +30,9 @@ export default function KlinikToolsPage() {
     let iptal = false
     ;(async () => {
       try {
-        const raw = localStorage.getItem('auth-token')
-        const token = raw ? (JSON.parse(raw).access_token || '') : ''
-        if (!token) { router.push('/giris'); return }
-        const r = await fetch('/api/users/me', { headers: { Authorization: `Bearer ${token}`, ...tazele } })
+        const token = getDoctorAccessToken()
+        if (!token) { oturumSuresiDoldu(); return }
+        const r = await doktorFetch('/api/users/me', { headers: { ...tazele } })
         const j = r.ok ? await r.json() : null
         if (r.ok) hekimProfilTazeleBitti()
         const tip = String(j?.data?.profession_type || '')

@@ -15,6 +15,7 @@ import { onizlemePaketi } from '@/lib/portal/onizleme'
 import { PortalShell } from '../../_components/PortalShell'
 import { PortalOnizlemeProvider } from '../../_components/PortalLiveProvider'
 import { SectionHeader } from '../../_components/ui'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 const TABAN = '/portal/onizleme'
 
@@ -76,7 +77,7 @@ export default function PortalOnizlemePage({ params }: { params: { yol?: string[
       const t = await ensureDoctorAccessToken()
       if (!t) { router.replace('/giris'); return }
       try {
-        const r = await fetch('/api/users/me', { headers: { Authorization: 'Bearer ' + t } })
+        const r = await doktorFetch('/api/users/me', {})
         if (!r.ok) { router.replace('/giris'); return }
         const j = await r.json()
         const paket = onizlemePaketi(j?.data?.specialty, new Date().toISOString().slice(0, 10))

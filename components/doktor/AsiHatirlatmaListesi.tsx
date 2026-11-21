@@ -16,6 +16,7 @@ import { trTarih } from '@/lib/asi/karneOkuma';
 import type { AsiHatirlatmaSatiri } from '@/lib/asi/hatirlatma';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 import GonderDugmesi from '@/components/doktor/iletisim/GonderDugmesi';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 export const asiDosyaYolu = (patientId: string) => `/dashboard/doktor/hastalar/${encodeURIComponent(patientId)}?tab=asilar`;
 
@@ -93,7 +94,7 @@ export default function AsiHatirlatmaListesi({ patientId, yenile = 0 }: { patien
   const yukle = useCallback(async () => {
     try {
       const t = await getAccessTokenAsync();
-      const r = await fetch(`/api/doktor/asilar/hatirlatma${patientId ? `?patientId=${encodeURIComponent(patientId)}` : ''}`, { headers: { Authorization: `Bearer ${t}` }, cache: 'no-store' });
+      const r = await doktorFetch(`/api/doktor/asilar/hatirlatma${patientId ? `?patientId=${encodeURIComponent(patientId)}` : ''}`, { cache: 'no-store' });
       const j = (await r.json().catch(() => ({}))) as { satirlar?: AsiHatirlatmaSatiri[] };
       setSatirlar(Array.isArray(j.satirlar) ? j.satirlar : []);
     } catch { setSatirlar([]); }
@@ -104,7 +105,7 @@ export default function AsiHatirlatmaListesi({ patientId, yenile = 0 }: { patien
     setHata(''); setGonderilen(asiId);
     try {
       const t = await getAccessTokenAsync();
-      const r = await fetch('/api/doktor/asilar/hatirlatma', { method: 'POST', headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ asiId, hekimOnayi: true }) });
+      const r = await doktorFetch('/api/doktor/asilar/hatirlatma', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ asiId, hekimOnayi: true }) });
       const j = await r.json().catch(() => ({}));
       if (!r.ok && r.status !== 409) { setHata(j.error || 'Hatırlatma gönderilemedi.'); return; }
       setAcik(null);

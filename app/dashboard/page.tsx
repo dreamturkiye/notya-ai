@@ -3,20 +3,17 @@ export const dynamic = 'force-dynamic'
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { CHROME_RENK, CHROME_FONT, CHROME_FONT_HREF } from '@/lib/doktor/chromeTheme'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
+import { getDoctorAccessToken } from '@/lib/doktor/clientAuth'
 
 export default function DashboardRedirect() {
   const router = useRouter()
   useEffect(() => {
-    const tokenKey = Object.keys(localStorage).find(k => k.includes('auth-token') || k.startsWith('sb-'))
-    if (!tokenKey) { router.push('/giris/doktor'); return }
-    const raw = localStorage.getItem(tokenKey)
-    if (!raw) { router.push('/giris/doktor'); return }
-    let token: string | null = null
-    try { const parsed = JSON.parse(raw); token = parsed?.access_token || parsed?.session?.access_token || null } catch { token = raw }
+    const token = getDoctorAccessToken()
     if (!token) { router.push('/giris/doktor'); return }
     const go = async () => {
       try {
-        const res = await fetch('/api/users/me', { headers: { Authorization: 'Bearer ' + token } })
+        const res = await doktorFetch('/api/users/me', {})
         if (!res.ok) { router.push('/giris/doktor'); return }
         const json = await res.json()
         const profile = json.data || json

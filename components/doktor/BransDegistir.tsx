@@ -12,6 +12,7 @@ import React, { useEffect, useState } from 'react'
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth'
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme'
 import { hekimProfilOturumOku, hekimProfilOturumYaz, hekimProfilTazeleIsaretle } from '@/lib/doktor/hekimProfilIstemci'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 type Secenek = { anahtar: string; etiket: string }
 
@@ -27,7 +28,7 @@ export default function BransDegistir({ mobil = false }: { mobil?: boolean }) {
       const token = await ensureDoctorAccessToken()
       if (!token) return
       try {
-        const r = await fetch('/api/users/superuser-brans', { headers: { Authorization: `Bearer ${token}` } })
+        const r = await doktorFetch('/api/users/superuser-brans', {})
         if (!r.ok) return
         const d = await r.json()
         if (!d?.yetkili) return
@@ -47,9 +48,9 @@ export default function BransDegistir({ mobil = false }: { mobil?: boolean }) {
     try {
       const token = await ensureDoctorAccessToken()
       if (!token) { setHata('Oturum bulunamadı.'); setKaydediliyor(false); return }
-      const r = await fetch('/api/users/superuser-brans', {
+      const r = await doktorFetch('/api/users/superuser-brans', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ brans: yeni }),
       })
       if (!r.ok) {

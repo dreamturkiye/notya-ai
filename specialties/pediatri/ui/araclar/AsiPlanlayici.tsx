@@ -17,6 +17,7 @@ import {
   pediStil, Alan, Segment, Katlanir, TaslakNotu, KopyalaButonu, MuayeneFormunaEkle, PediHastaSecici, usePediHasta, useUrlHasta, Rozet, OneriRozet, Istatistik,
 } from './PediAracKabugu';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 const { kutu, etiket, kucuk, input, ghost, btn, uyari, kirmizi } = pediStil;
 const bugunTr = () => new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 10);
@@ -71,7 +72,7 @@ export default function AsiPlanlayici() {
     setYukleniyor(true);
     try {
       const t = await getAccessTokenAsync();
-      const r = await fetch(`/api/doktor/asilar?patientId=${encodeURIComponent(id)}`, { headers: { Authorization: `Bearer ${t}` }, cache: 'no-store' });
+      const r = await doktorFetch(`/api/doktor/asilar?patientId=${encodeURIComponent(id)}`, { cache: 'no-store' });
       const j = await r.json().catch(() => ({}));
       if (iptal?.v) return;
       if (r.ok) setSunucu(Array.isArray(j.asilar) ? j.asilar : []); else setKayitHata(j.error || 'Aşı kayıtları alınamadı.');
@@ -135,8 +136,8 @@ export default function AsiPlanlayici() {
         const d = s?.dozlar.find((x) => x.no === Number(no));
         if (!s || !d) continue;
         const sonraki = s.dozlar.find((x) => x.no > d.no && x.durum !== 'yapildi' && x.plan);
-        const r = await fetch('/api/doktor/asilar', {
-          method: 'POST', headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        const r = await doktorFetch('/api/doktor/asilar', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ patientId: hastaId, asiAdi: d.urun, dozNo: d.no, kategori: 'pediatrik', uygulamaTarihi: v.tarih, kaynak: v.kaynak, sonrakiDozTarihi: hatirlatmaYaz && sonraki?.plan ? sonraki.plan : undefined, notlar: 'Aşı planlayıcıdan (hekim işaretledi)' }),
         });
         if (r.ok) tamam++; else hata++;

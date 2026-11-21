@@ -3,11 +3,13 @@
 import React, { Suspense, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { referansKoduNormalize } from '@/lib/billing/referans';
-import { createClient } from '@supabase/supabase-js';
+import { girisIstemcisi } from '@/lib/doktor/girisIstemcisi';
+import { saveDoctorSession } from '@/lib/doktor/clientAuth';
 import { CHROME_RENK, CHROME_FONT, CHROME_FONT_HREF } from '@/lib/doktor/chromeTheme';
 import BransSecimi from '@/components/onboarding/BransSecimi';
 import { KAYIT_BRANS_MESAJ, kayitBransiMi } from '@/lib/onboarding/kayitBransi';
 import ZiyaretSayaci from '@/components/ziyaret/ZiyaretSayaci'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 // STRIPE-NOTYA-01 (2026-10-27): only the solo-doctor self-serve plans get driven straight into
 // Stripe Checkout from here. Klinik (multi-doctor: taban + per-seat koltuk, combined line items)
@@ -30,10 +32,8 @@ export const dynamic = 'force-dynamic';
 // useSearchParams() in <Suspense>. Kept the dynamic export too — harmless, and correct for a
 // per-visitor form with nothing to statically cache.
 
-const supabase = createClient(
-  'https://anjayzospuurymjmmtim.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFuamF5em9zcHV1cnltam1tdGltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA2NDc5NzIsImV4cCI6MjA5NjIyMzk3Mn0.J4qRde2QJxxErFIWsO6Zb2TPN8GEIFXloLRpdac4GxE'
-);
+// NOTYA-OTURUM-01: non-persisting client — clientAuth (saveDoctorSession) is the session's only refresher.
+const supabase = girisIstemcisi();
 
 function KayitForm() {
   const router = useRouter();
@@ -144,7 +144,7 @@ function KayitForm() {
       }
 
       if (data.session) {
-        localStorage.setItem('auth-token', JSON.stringify({ access_token: data.session.access_token }));
+        saveDoctorSession(data.session);
 
         // STRIPE-NOTYA-01: a doctor who clicked a priced plan on the landing page goes straight
         // into Stripe Checkout (15-day trial already applied server-side) instead of silently
@@ -152,11 +152,10 @@ function KayitForm() {
         // must never block account creation that already succeeded — fall back to onboarding.
         if (SELF_SERVE_PLAN_KEYS.has(planKey)) {
           try {
-            const res = await fetch('/api/billing/checkout', {
+            const res = await doktorFetch('/api/billing/checkout', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
-                Authorization: `Bearer ${data.session.access_token}`,
               },
               body: JSON.stringify({ plan_key: planKey, interval: 'month' }),
             });

@@ -14,13 +14,14 @@ import { KuralDosya } from '@/components/klinik/KuralDefteri'
 import { SacFotoDosya } from '@/components/klinik/SacFotoDosya'
 import { IkiNushaDosya } from '@/components/klinik/IkiNushaDosya'
 import { SAC_FOTO_ARAC } from '@/specialties/sac-ekimi/engines/fotoDosya'
+import { doktorFetch, oturumSuresiDoldu } from '@/lib/doktor/oturumFetch'
+import { getDoctorAccessToken } from '@/lib/doktor/clientAuth'
 
 export const dynamic = 'force-dynamic'
 
 function token(): string {
   try {
-    const raw = localStorage.getItem('auth-token')
-    return raw ? (JSON.parse(raw).access_token || '') : ''
+    return getDoctorAccessToken()
   } catch { return '' }
 }
 
@@ -40,11 +41,11 @@ export default function KlinikHastaDosyaPage() {
     let iptal = false
     ;(async () => {
       const t = token()
-      if (!t) { router.push('/giris'); return }
+      if (!t) { oturumSuresiDoldu(); return }
       const [p, me, plan] = await Promise.all([
-        fetch(`/api/doktor/hastalar/${id}`, { headers: { Authorization: `Bearer ${t}` } }),
-        fetch('/api/users/me', { headers: { Authorization: `Bearer ${t}` } }),
-        fetch(`/api/ozel-brans/plan?patientId=${encodeURIComponent(id)}`, { headers: { Authorization: `Bearer ${t}` } }),
+        doktorFetch(`/api/doktor/hastalar/${id}`, {}),
+        doktorFetch('/api/users/me', {}),
+        doktorFetch(`/api/ozel-brans/plan?patientId=${encodeURIComponent(id)}`, {}),
       ])
       if (p.status === 404) { if (!iptal) setHata('Hasta bulunamadı.'); return }
       const pj = p.ok ? await p.json() : null

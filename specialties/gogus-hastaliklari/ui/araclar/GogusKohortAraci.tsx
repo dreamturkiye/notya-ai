@@ -7,6 +7,7 @@ import { gogusStil, Rozet } from './GogusAracKabugu'
 import { getAccessTokenAsync } from '@/lib/doktor/toolsUi'
 import { GOGUS_BAYRAK_AD, type GogusKohortBayrak } from '../../engines/kohort'
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 const S = gogusStil
 
@@ -29,7 +30,7 @@ export default function GogusKohortAraci() {
     setYukleniyor(true)
     try {
       const token = await getAccessTokenAsync()
-      const r = await fetch('/api/doktor/gogus-hastaliklari/kohort', { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' })
+      const r = await doktorFetch('/api/doktor/gogus-hastaliklari/kohort', { cache: 'no-store' })
       const j = await r.json().catch(() => ({}))
       if (r.ok) setSatirlar(j.satirlar || [])
       else setMesaj(j.error || 'Yüklenemedi')
@@ -43,9 +44,9 @@ export default function GogusKohortAraci() {
     setMesaj('')
     try {
       const token = await getAccessTokenAsync()
-      const r = await fetch('/api/doktor/gogus-hastaliklari/kohort', {
+      const r = await doktorFetch('/api/doktor/gogus-hastaliklari/kohort', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ patientId }),
       })
       const j = await r.json().catch(() => ({}))

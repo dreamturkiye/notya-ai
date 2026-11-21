@@ -11,6 +11,7 @@
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth'
 import { bicimBelirle } from './bicim'
 import { EN_BUYUK_BAYT, type GelenKaynak } from './tipler'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 export const GELEN_OLAY = 'notya:gelen-belge'
 export const gelenDegisti = () => { try { window.dispatchEvent(new Event(GELEN_OLAY)) } catch { /* SSR */ } }
@@ -38,9 +39,9 @@ export class GelenHatasi extends Error {
 export async function gelenIstek<T>(yol: string, init?: { method?: string; govde?: unknown; form?: FormData }): Promise<T> {
   const token = await ensureDoctorAccessToken()
   if (!token) throw new GelenHatasi('Oturum süresi doldu. Lütfen yeniden giriş yapın.', 401)
-  const r = await fetch(yol, {
+  const r = await doktorFetch(yol, {
     method: init?.method || 'GET',
-    headers: { Authorization: `Bearer ${token}`, ...(init?.govde !== undefined ? { 'Content-Type': 'application/json' } : {}) },
+    headers: { ...(init?.govde !== undefined ? { 'Content-Type': 'application/json' } : {}) },
     body: init?.form ?? (init?.govde !== undefined ? JSON.stringify(init.govde) : undefined),
     cache: 'no-store',
   })

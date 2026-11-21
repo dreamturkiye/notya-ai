@@ -7,6 +7,7 @@ import React, { useEffect, useState } from 'react'
 import { getDoctorAccessToken } from '@/lib/doktor/clientAuth'
 import { receteRengi } from '@/lib/doktor/receteRengi'
 import { RRS_URL, RRS_ETIKET, type RrsRenk } from '@/lib/doktor/rrs'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 interface Kayit { id: string; note_id: string | null; renk: RrsRenk; satirlar: { ilacAdi?: string }[]; created_at: string; hastaAd: string }
 
@@ -17,7 +18,7 @@ export default function RrsBekleyenler(props: { ilacAdlari: string[] }) {
     ;(async () => {
       const t = await getDoctorAccessToken()
       if (!t) return
-      const r = await fetch('/api/doktor/rrs', { headers: { Authorization: `Bearer ${t}` } })
+      const r = await doktorFetch('/api/doktor/rrs', {})
       const j = await r.json().catch(() => ({}))
       if (!iptal && Array.isArray(j.kayitlar)) setKayitlar(j.kayitlar)
     })()

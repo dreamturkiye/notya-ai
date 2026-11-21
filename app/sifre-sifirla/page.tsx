@@ -37,7 +37,10 @@ export default function SifreSifirla() {
     setYukleniyor(false)
     if (error) { setHata('Şifre güncellenemedi. Bağlantının süresi dolmuş olabilir — yeniden isteyin.'); return }
     setTamam(true)
-    setTimeout(() => router.replace('/giris'), 2200)
+    // NOTYA-OTURUM-01: end the recovery client's session and leave with a full page load, so its SDK auto-refresh
+    // cannot keep running next to clientAuth after the doctor signs in again.
+    try { await supabase.auth.signOut({ scope: 'local' }) } catch { /* already gone */ }
+    setTimeout(() => window.location.replace('/giris'), 2200)
   }
 
   const R = CHROME_RENK

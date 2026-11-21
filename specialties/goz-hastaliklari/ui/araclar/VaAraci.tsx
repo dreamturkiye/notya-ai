@@ -10,6 +10,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { vaKarsilastir, type VaSatir } from '../../engines/araclar';
 import { getAccessTokenAsync } from '@/lib/doktor/toolsUi';
 import { gozStil, Alan, GozHastaSecici, Istatistik, Katlanir, KayitButonu, KopyalaButonu, MuayeneFormunaEkle, OncekiVizit, Rozet, Segment, TaslakNotu } from './GozAracKabugu';
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 const { kutu, etiket, kucuk, metin, satir, input, ghost, hata, kaydir } = gozStil;
 const ORNEKLER = ['1,0', '0,8', '0,5', '6/12', '20/40', 'PS 1m', 'EH', 'IH', 'IHY'];
@@ -47,7 +48,7 @@ export default function VaAraci() {
     setYukleniyor(true);
     try {
       const t = await getAccessTokenAsync();
-      const r = await fetch(`/api/doktor/goz?patientId=${encodeURIComponent(id)}`, { headers: { Authorization: `Bearer ${t}` }, cache: 'no-store' });
+      const r = await doktorFetch(`/api/doktor/goz?patientId=${encodeURIComponent(id)}`, { cache: 'no-store' });
       const j = await r.json().catch(() => ({}));
       if (!r.ok) { setKayitHata(j.error || 'Hasta kaydı okunamadı.'); return; }
       const liste = (j.muayeneler || []) as Muayene[];
@@ -68,9 +69,9 @@ export default function VaAraci() {
     const va: Record<string, Record<string, string>> = {};
     if (d.odSimdi.trim()) va.sag = { [vaAlani]: d.odSimdi.trim() };
     if (d.osSimdi.trim()) va.sol = { [vaAlani]: d.osSimdi.trim() };
-    const r = await fetch('/api/doktor/goz', {
+    const r = await doktorFetch('/api/doktor/goz', {
       method: 'POST',
-      headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ adim: 'olcum', patientId: hastaId, olcum: { tarih: bugunIso(), va, gibSag: sayiVeya(gib.sag), gibSol: sayiVeya(gib.sol) } }),
     });
     const j = await r.json().catch(() => ({}));
