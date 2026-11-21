@@ -26,6 +26,7 @@ import { MUAYENE_SES_KOVASI, type DilKodu } from '../tipler'
 import { dilTercihleriniOku } from './dilTercihleri'
 import { hastaGetir, type Hasta } from './hastalar'
 import { konusmaTanimaHazir, konusmayiTani } from './konusmaTanima'
+import { konusmaAnahtarTerimleri } from './konusmaTerimleri'
 import { muayeneKotasiKullan } from './kota'
 import { kullanimEkle } from './kullanimOlcumu'
 import { randevuMuayeneyeUygun, randevuyuMuayeneyeBagla } from './randevular'
@@ -101,7 +102,8 @@ export async function muayeneKaydet(supabase: SupabaseClient, doktorId: string, 
     if (sesHatasi || !ses) return { tamam: false, kod: 'SES_OKUNAMADI' }
 
     const { notDili } = await hekimDilleri(supabase, doktorId)
-    const t = await konusmayiTani(ses, notDili)
+    // DIKTE-TIBBI-01: the role's medical terms bias the recogniser (Scribe keyterms); pure, no extra round trip.
+    const t = await konusmayiTani(ses, notDili, konusmaAnahtarTerimleri(notDili, g.sablon))
     if (t.durum === 'hazir-degil') return { tamam: false, kod: 'HAZIR_DEGIL' }
     if (t.durum === 'okunamadi') return { tamam: false, kod: 'SES_OKUNAMADI' }
     // NOTYA-ULKE-PORTAL-01 — usage: every pass the provider answered, with the seconds it reported. Recorded here,
