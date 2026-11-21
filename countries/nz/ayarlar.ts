@@ -205,7 +205,8 @@ export const NZ_GIRDI: EnUlkeGirdisi = {
     oncology: 'Medical oncology',
     'plastic-surgery': 'Plastic and reconstructive surgery',
     radiology: 'Diagnostic and interventional radiology',
-    'clinic-dermatology': 'Dermatology',
+    // Practice type, not the vocational scope (Kaan, 2026-11-21): "Dermatology" is the doctor role's name.
+    'clinic-dermatology': 'Dermatology centre',
   // ULKE-BRANS-GATE-01 (Kaan, 2026-11-08: "keep them"): no regulator here lists these as a specialty; they stay offered,
   // named as a PRACTICE FOCUS for registered doctors, not a specialty or vocational scope — on the sign-up select, onboarding and settings (all read this name).
     'aesthetic-medicine': 'Cosmetic medicine — practice focus for registered doctors (not a specialty or vocational scope)',

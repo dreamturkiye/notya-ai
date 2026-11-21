@@ -202,7 +202,7 @@ describe('nz: the role list is New Zealand\'s own — 53 roles, the shared forty
     const adlar = NZ_ARAYUZ.roller.map((r) => r.ad[D])
     for (const eski of ['General medicine', 'Thoracic surgery', 'Cardiac and vascular surgery', 'Oncology', 'Plastic surgery', 'Radiology', 'Family medicine', 'Dermatology (clinic)']) assert.ok(!adlar.includes(eski), eski)
     // the dermatology clinic role is the same scope as the doctor role, and carries the scope's name
-    assert.equal(ad('clinic-dermatology'), 'Dermatology')
+    assert.equal(ad('clinic-dermatology'), 'Dermatology centre')
   })
 
   it('the allied professions are named as the profession: the set\'s five, and the four regulated professions this country adds', () => {
