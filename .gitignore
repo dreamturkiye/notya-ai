@@ -165,3 +165,8 @@ smoke-out/
 
 # ayse-denetim: real patient names / ids for the {{...}} placeholders in sorular-*.json (never committed)
 scripts/ayse-denetim/adlar.local.json
+
+# AU growth harvest intermediates (re-build via scripts/au-wa-leads-harvest.py)
+docs/growth/au/au-healthshare-profiles.json
+docs/growth/au/au-healthshare-search.json
+docs/growth/au/au-healthshare-leads.json
