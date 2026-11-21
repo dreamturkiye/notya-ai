@@ -38,6 +38,8 @@ export type UygulamaMetni = {
     readonly menuKapat?: string
     /** Footer line of every signed-in screen. */
     readonly haklar?: string
+    /** HAVA-KONUM-01: the weather chip's tap-to-show label (asks for a location once). Absent = the chip is not offered. */
+    readonly havaGoster?: string
   }
   /** The name of each language of the country (key: the language's code in the pack's `dilGruplari`, e.g. 'uz', 'en'). */
   readonly diller: Readonly<Record<string, string>>
