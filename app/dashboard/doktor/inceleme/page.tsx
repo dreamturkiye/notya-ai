@@ -600,7 +600,7 @@ export default function IncelemePage() {
                           degerler={vitalTaslak}
                           onDegis={(k, v) => setVitalTaslak({ ...vitalTaslak, [k]: v })}
                           persentiller={note.buyumePersentilleri}
-                          eriskinVkiGoster={!note.bransKapsami.pediatrik}
+                          eriskinVkiGoster={!note.bransKapsami.pediatrik && !note.bransKapsami.veliDili}
                         />
                       </div>
                       {/* NOTYA-ASI-ONAM-01 — Pediatri'ye ÖZEL (brans-alan-sizmasi): tab/panel mount'u

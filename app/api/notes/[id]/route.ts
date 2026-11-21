@@ -11,7 +11,7 @@ import { decrypt } from '@/lib/security/encryption'
 import { yasHesapla } from '@/lib/doktor/yas'
 import { yasGosterim } from '@/lib/doktor/sinavHastaBilgisi'
 import { cinsiyetKanonik, cinsiyetTr } from '@/lib/utils/cinsiyet'
-import { buyumePersentilleriniHesapla, buyumeYorumunuEkle, type Cinsiyet } from '@/lib/clinical/buyumeEgrisi'
+import { ayFarki, buyumePersentilleriniHesapla, buyumeYorumunuEkle, type Cinsiyet } from '@/lib/clinical/buyumeEgrisi'
 import { vitalOlcumleriniNormallestir } from '@/lib/clinical/olcumCoz'
 import { eriskinVkiVitalerden } from '@/lib/clinical/eriskinVki'
 import { notKapsamiGetir } from '@/lib/specialties/kapsamSunucu'
@@ -119,6 +119,11 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   // PEDIATRI-SINAV-01: pediatrik notta yaş yıl+ay ("2 yaş 3 ay") — Tetkik İstek Formu "Yaş" satırı bunu basar; diğerleri yasHesapla'da kalır.
   if (kapsam.pediatrik && dogumIso) hasta.yas = yasGosterim(dogumIso, Date.parse(not.created_at) || Date.now()) || hasta.yas
   const buyume = kapsam.pediatrik ? buyumePersentilleriniHesapla(not.vitaller, dogumIso, cinsiyetHam, not.created_at) : null
+  // DEMO-1121 bug 2: adult WHO BMI category never under 18 — decided by the patient's AGE, not the branş. Under 2 y no
+  // BMI category at all; 2–18 y the category is the age/sex percentile (Neyzi, pediatric context only — BRANS-ALAN-SIZMASI
+  // keeps it out of other branşlar, so a child seen there gets no BMI category rather than an adult one).
+  const yasAy = dogumIso ? ayFarki(dogumIso, not.created_at || undefined) : null
+  const cocukHasta = kapsam.veliDili || (yasAy != null && yasAy < 216)
 
   // NOTYA-CEK-DOGRULA-02: çek listesi girdileri — sayfa paneli notun GÜNCEL alanlarından her düzenlemede yeniden hesaplar.
   // Yalnız kayıtlı ÇEK LİSTESİ bloğu olan notlarda (panel kapsamı değişmez).
@@ -177,7 +182,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       // Neyzi persentili pediatrik içeriktir — yalnız pediatrik bağlamda
       buyumePersentilleri: buyume,
       // Erişkin VKİ (WHO) — muayene raporunda otomatik; çocukta Neyzi kullanılır
-      eriskinVki: kapsam.pediatrik ? null : eriskinVkiVitalerden(not.vitaller && typeof not.vitaller === 'object' ? not.vitaller as Record<string, unknown> : null),
+      eriskinVki: kapsam.pediatrik || cocukHasta ? null : eriskinVkiVitalerden(not.vitaller && typeof not.vitaller === 'object' ? not.vitaller as Record<string, unknown> : null, yasAy),
       bransKapsami,
       hastaOzeti: not.hasta_ozeti || '',
       aiDegerlendirme: buyumeYorumunuEkle(not.ai_degerlendirme || '', buyume),

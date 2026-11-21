@@ -273,6 +273,51 @@ describe('NOTYA-ARSIV-02 — arsivsizIlaclar + re-prescription keeps the row on 
   })
 })
 
+describe('DEMO-1121 bug 3 — an archived muayene never feeds the note writer (dossier context)', () => {
+  // sessions/end builds the note writer's clinical context from hastaDosyasiniDerle (cut before VİZİT GEÇMİŞİ);
+  // the same dossier is Ayşe's file. Archived visit → its vaccines (kaynak_note_id or session_id) and the document
+  // evaluations approved in it must be absent; hand-entered rows and live visits stay.
+  it('drops archived-visit vaccines (kaynak_note_id + session_id) and its document evaluations; keeps live/manual rows', async () => {
+    const { encrypt } = await import('../security/encryption')
+    const { hastaDosyasiniDerle } = await import('./hastaDosyaDerleyici')
+    const { arsivsizBelgeAnalizleri } = await import('./arsiv')
+    const db = new SahteVeritabani()
+    const d = randomUUID()
+    const p = db.ekle('patients', { doctor_id: d, name_encrypted: encrypt('QA Bebek'), dob_encrypted: encrypt('2026-09-21'), gender_encrypted: encrypt('male'), is_active: true }).id
+    const canli = db.ekle('sessions', { doctor_id: d, patient_id: p, archived_at: null, created_at: '2026-11-21T22:36:00Z', status: 'completed', specialty: 'pediatri' })
+    const arsiv = db.ekle('sessions', { doctor_id: d, patient_id: p, archived_at: '2026-11-21T22:31:00Z', created_at: '2026-11-21T00:52:00Z', status: 'completed', specialty: 'pediatri' })
+    db.ekle('notes', { session_id: canli.id, doctor_id: d, created_at: '2026-11-21T22:37:00Z', approved_at: null, content_plan: 'CANLI-PLAN' })
+    const nArsiv = db.ekle('notes', { session_id: arsiv.id, doctor_id: d, created_at: '2026-11-21T00:53:00Z', approved_at: '2026-11-21T01:37:00Z', content_plan: 'ARSIV-PLAN' })
+    db.ekle('asilar', { doktor_id: d, patient_id: p, asi_adi: 'BCG (verem)', uygulama_tarihi: '2026-11-21', kaynak: 'kayit', kaynak_note_id: nArsiv.id, session_id: null })
+    db.ekle('asilar', { doktor_id: d, patient_id: p, asi_adi: 'KPA-STOK', uygulama_tarihi: '2026-11-21', kaynak: 'kayit', kaynak_note_id: null, session_id: arsiv.id })
+    db.ekle('asilar', { doktor_id: d, patient_id: p, asi_adi: 'Hepatit B', uygulama_tarihi: '2026-09-20', kaynak: 'beyan', kaynak_note_id: null, session_id: null })
+    db.ekle('asilar', { doktor_id: d, patient_id: p, asi_adi: 'OPA-CANLI-STOK', uygulama_tarihi: '2026-11-21', kaynak: 'kayit', kaynak_note_id: null, session_id: canli.id })
+    db.ekle('belge_analizleri', { doctor_id: d, patient_id: p, note_id: nArsiv.id, durum: 'muayene_onaylandi', modality_final: 'serbest', hekim_ozet: 'ARSIV-KALCA-USG', onaylandi_at: '2026-11-21T01:45:00Z' })
+    db.ekle('belge_analizleri', { doctor_id: d, patient_id: p, note_id: null, durum: 'onaylandi', modality_final: 'serbest', hekim_ozet: 'CANLI-BELGE', onaylandi_at: '2026-11-21T22:39:00Z' })
+    const sb = db.istemci() as never
+
+    const dosya = await hastaDosyasiniDerle(sb, d, p)
+    assert.ok(dosya, 'dossier built')
+    const notBaglami = dosya!.split('## VİZİT GEÇMİŞİ')[0]
+    for (const metin of [dosya!, notBaglami]) {
+      assert.ok(!metin.includes('BCG'), 'vaccine written by the archived note is not in the context')
+      assert.ok(!metin.includes('KPA-STOK'), 'vaccine tied to the archived visit by session_id is not in the context')
+      assert.ok(!metin.includes('ARSIV-KALCA-USG'), 'document evaluation approved in the archived visit is not in the context')
+      assert.ok(!metin.includes('ARSIV-PLAN'), 'archived visit note is not in the context')
+    }
+    assert.ok(notBaglami.includes('Hepatit B'), 'hand-entered vaccine stays')
+    assert.ok(notBaglami.includes('OPA-CANLI-STOK'), 'stok vaccine of a live visit stays')
+    assert.ok(notBaglami.includes('CANLI-BELGE'), 'evaluation outside any visit stays')
+
+    // unarchive → everything is back (read filter, rows untouched)
+    db.tablo('sessions').find((x) => x.id === arsiv.id)!.archived_at = null
+    const geri = await hastaDosyasiniDerle(sb, d, p)
+    assert.ok(geri!.includes('BCG') && geri!.includes('KPA-STOK') && geri!.includes('ARSIV-KALCA-USG'))
+    const { data } = await arsivsizBelgeAnalizleri(sb, 'id').eq('doctor_id', d)
+    assert.equal((data as unknown[]).length, 2)
+  })
+})
+
 describe("NOTYA-RECETE-02 — revizyonla düşülen ilaç hasta_ilaclar'da sonlandırılır", () => {
   // Kaan (2026-09-24), canlı hata raporu: "tedavimi değiştirdikten sonra ... reçete
   // bölümünde eski ilaçlar devam ediyordu ... Ayşe'ye sordum, o da reçetedeki (eski) ilacı

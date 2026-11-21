@@ -16,21 +16,34 @@ import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 type Durum = { tur: 'bekliyor' } | { tur: 'tamam'; kunye: Kunye } | { tur: 'gerekce'; kunye: Kunye } | { tur: 'hata' };
 
-export default function BelgeKunyesi({ tur, kaynakId, hastaId, icerik }: { tur: BelgeTuru; kaynakId: string; hastaId?: string | null; icerik: unknown }) {
+/**
+ * `eskiIcerik` (optional): the content as this page hashed it BEFORE its hashed content was narrowed (DEMO-1121: the
+ * muayene report now hashes only printed content). A document registered under the old hash is not shown as "changed"
+ * just because the hash format changed: on a mismatch the old-format hash is tried once; if it matches the registered
+ * revision, that revision stands. A real change still asks for a reason (for the new-format hash).
+ */
+export default function BelgeKunyesi({ tur, kaynakId, hastaId, icerik, eskiIcerik }: { tur: BelgeTuru; kaynakId: string; hastaId?: string | null; icerik: unknown; eskiIcerik?: unknown }) {
   const [durum, setDurum] = useState<Durum>({ tur: 'bekliyor' });
   const [gerekce, setGerekce] = useState('');
   const [gonderiliyor, setGonderiliyor] = useState(false);
   const sonOzet = useRef<string | null>(null);
 
-  async function kaydet(ozet: string, neden?: string) {
+  async function kaydet(ozet: string, neden?: string, eskiOzet?: string | null) {
     const t = await ensureDoctorAccessToken();
     if (!t) { setDurum({ tur: 'hata' }); return; }
-    const r = await doktorFetch('/api/belgeler/kayit', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ tur, kaynakId, hastaId: hastaId || null, ozet, gerekce: neden || null }),
-    });
-    const j = (await r.json().catch(() => ({}))) as { durum?: string; kunye?: Kunye };
+    const gonder = async (o: string) => {
+      const r = await doktorFetch('/api/belgeler/kayit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tur, kaynakId, hastaId: hastaId || null, ozet: o, gerekce: neden || null }),
+      });
+      return { r, j: (await r.json().catch(() => ({}))) as { durum?: string; kunye?: Kunye } };
+    };
+    let { r, j } = await gonder(ozet);
+    if (r.ok && j.durum === 'gerekce_gerekli' && !neden && eskiOzet && eskiOzet !== ozet) {
+      const eski = await gonder(eskiOzet);
+      if (eski.r.ok && eski.j.durum === 'tamam' && eski.j.kunye) ({ r, j } = eski);
+    }
     if (r.ok && j.durum === 'tamam' && j.kunye) setDurum({ tur: 'tamam', kunye: j.kunye });
     else if (r.ok && j.durum === 'gerekce_gerekli' && j.kunye) setDurum({ tur: 'gerekce', kunye: j.kunye });
     else setDurum({ tur: 'hata' });
@@ -44,7 +57,9 @@ export default function BelgeKunyesi({ tur, kaynakId, hastaId, icerik }: { tur: 
         const ozet = await butunlukOzeti({ tur, kaynakId, icerik });
         if (iptal || ozet === sonOzet.current) return;
         sonOzet.current = ozet;
-        await kaydet(ozet);
+        const eskiOzet = eskiIcerik != null ? await butunlukOzeti({ tur, kaynakId, icerik: eskiIcerik }) : null;
+        if (iptal) return;
+        await kaydet(ozet, undefined, eskiOzet);
       } catch { if (!iptal) setDurum({ tur: 'hata' }); }
     }, 500);
     return () => { iptal = true; clearTimeout(zaman); };
