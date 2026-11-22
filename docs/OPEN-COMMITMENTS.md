@@ -1,5 +1,28 @@
 # OPEN COMMITMENTS — Notya AI
 
+## DEMO-1121 — four bugs found while filming in the demo account (Claude, 2026-11-21)
+
+Classification: all four CORE (all 30 medical branches + 10 Özel Branşlar; shared code paths). Shipped on main + release/us, gb, ca, au, nz, uz.
+1. Consultation WhatsApp 500 — `gecisIzinli` had no `whatsapp_metni` entry (undefined → crash on `izin.ok`). Same rule as e-mail; still a draft for the
+   doctor's own WhatsApp, the server never sends. Tests: `konsultasyon.test.ts`, `konsultasyon-rota.test.ts`.
+2. Adult BMI on an infant — the print page re-computed an adult WHO BMI on the client when the API sent none ("VKİ 15,7 — Zayıf" on a 2-month-old).
+   Adult categories gated on patient age (`eriskinVkiHesapla(yasAy)`, API `cocukHasta`, form `eriskinVkiGoster` + `veliDili`); client fallback removed.
+   Under 2 y no category; 2–18 y only the Neyzi percentile in pediatric context. Test: `lib/clinical/eriskinVki.test.ts` (now in `npm test`).
+3. Archived muayene in the note writer's context — production check (demo patient, 2026-11-21): the vaccines in the new note were dictated again in the new
+   transcript and the archived note's aşı rows were correctly hidden; the real leak was the archived visit's approved document evaluations
+   (`belge_analizleri.note_id`) still entering the dossier `sessions/end` feeds to the note writer and Ayşe. Fixed with `arsivsizBelgeAnalizleri`
+   (dossier, dosya arama, dosya olayları) + vaccines tied to an archived visit by `asilar.session_id` dropped in the dossier. Test: `arsiv.test.ts`.
+4. "Rev. 0 sürümünden farklı" after re-approval without a change — the stamp hashed the whole note object (approvedAt, edit count, metadata). Now hashes
+   printed content only (`lib/belge/muayeneRaporIcerigi.ts`); old-format hash tried once so earlier registered documents keep their revision.
+Per country: 1–3 APPLIED (identical shared files, cherry-picked); 4 N/A — the document stamp (BELGE-NO-01, `BelgeKunyesi`) exists only in the Türkiye build.
+- **`arsivsizAsilar` (aşı kartı, çek listesi, kohort, portal) still shows a vaccine tied to an archived visit only by `asilar.session_id` (Aşı Stok/barkod
+  flow, no `kaynak_note_id`). Production has 0 such rows today; the dossier path is fixed. Extending the shared helper needs a combined PostgREST
+  `or(and(...))` filter verified against production PostgREST (not reachable from the build sandbox) — owner Claude. Opened 2026-11-21.**
+- **A muayene report printed BEFORE this deploy and re-approved AFTER it may still ask for a revision reason once (its registered hash is the old
+  full-object format, which includes the approval time). New prints are not affected — owner Claude to watch; no action needed unless reported. Opened 2026-11-21.**
+- **Pre-existing red tests, not caused by this change (same on clean main e147b2f0): `arsiv.test.ts` guard (raw reads in `lib/doktor/belgeNotaYaz.ts`,
+  `lib/kurucu/trVeri.ts`), `muayeneCekListesi.test.ts` "evrensel kutu, branşa özel madde", `hasta-izolasyon` "doktor A ve doktor B…" — owner Claude. Opened 2026-11-21.**
+
 ## BETA-KBB-2026-11-21 — iPhone beta feedback (KBB doctor): location prompt, hidden save button, number fields, blood group, chronic picker, form → file (Claude, 2026-11-21)
 
 Classification: all six items CORE (all 30 medical branches + 10 Özel Branşlar; one shared component each). Shipped on main + release/us, gb, ca, au, nz, uz.
