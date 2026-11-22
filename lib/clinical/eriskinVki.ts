@@ -1,6 +1,12 @@
 /**
  * Adult BMI (VKİ) — WHO classification for muayene notes / vitals.
  * Pediatric VKİ uses Neyzi percentiles (lib/clinical/buyumeEgrisi); do not use this for <18.
+ *
+ * DEMO-1121 bug 2 (2026-11-21): a printed report labelled a 2-month-old "VKİ 15,7 — Zayıf". Adult WHO cut-offs are
+ * never applied under 18 years: pass the patient's age in months and this returns null for a child (unknown age keeps
+ * the old behaviour — adult branş screens without a birth date). Under 2 years there is no BMI category at all (no
+ * weight-for-length table in the code); 2–18 years the category comes only from the age/sex BMI percentile
+ * (buyumePersentilleriniHesapla → vki / vkiSinif, pediatric context) — elsewhere no category is shown.
  */
 import { cmCoz, kiloCoz } from './olcumCoz'
 export type EriskinVkiSinif = 'zayif' | 'normal' | 'fazla_kilolu' | 'obez'
@@ -12,6 +18,14 @@ export type EriskinVkiSonuc = {
   etiket: string
   /** Compact: "24,2 — Normal" */
   ozet: string
+}
+
+/** 18 years in months — below it adult BMI categories are never used. */
+export const ERISKIN_VKI_ALT_AY = 216
+
+/** Adult WHO BMI category allowed for this age? Unknown age (null) → true (legacy adult behaviour). */
+export function eriskinVkiYasUygun(yasAy: number | null | undefined): boolean {
+  return yasAy == null || !Number.isFinite(yasAy) || yasAy >= ERISKIN_VKI_ALT_AY
 }
 
 function sayi(raw: unknown, tur: 'kilo' | 'cm'): number | null {
@@ -28,7 +42,8 @@ export function eriskinVkiSiniflandir(vki: number): Pick<EriskinVkiSonuc, 'sinif
   return { sinif: 'obez', etiket: 'Obez (sınıf III)' }
 }
 
-export function eriskinVkiHesapla(kiloKg: unknown, boyCm: unknown): EriskinVkiSonuc | null {
+export function eriskinVkiHesapla(kiloKg: unknown, boyCm: unknown, yasAy?: number | null): EriskinVkiSonuc | null {
+  if (!eriskinVkiYasUygun(yasAy)) return null
   const kilo = sayi(kiloKg, 'kilo')
   const boy = sayi(boyCm, 'cm')
   if (kilo == null || boy == null || boy < 50) return null
@@ -41,7 +56,7 @@ export function eriskinVkiHesapla(kiloKg: unknown, boyCm: unknown): EriskinVkiSo
 }
 
 /** From a vitals bag (string or number kilo/boy). */
-export function eriskinVkiVitalerden(vitaller: Record<string, unknown> | null | undefined): EriskinVkiSonuc | null {
+export function eriskinVkiVitalerden(vitaller: Record<string, unknown> | null | undefined, yasAy?: number | null): EriskinVkiSonuc | null {
   if (!vitaller) return null
-  return eriskinVkiHesapla(vitaller.kilo, vitaller.boy)
+  return eriskinVkiHesapla(vitaller.kilo, vitaller.boy, yasAy)
 }

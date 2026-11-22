@@ -18,7 +18,7 @@
 import { vizitGunu, vizitGununeGoreSirala } from '@/lib/doktor/vizitTarihi'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { decrypt } from '@/lib/security/encryption'
-import { arsivsizAsilar, arsivsizIlaclar, arsivsizNotlar, arsivsizSeanslar } from '@/lib/doktor/arsiv'
+import { arsivsizAsilar, arsivsizBelgeAnalizleri, arsivsizIlaclar, arsivsizNotlar, arsivsizSeanslar } from '@/lib/doktor/arsiv'
 import { hastaAdiCoz } from '@/lib/doktor/hastaCozumleyici'
 import { planIfadeleriniCikar, asiTamBeyaniMi } from '@/lib/doktor/planIfadesi'
 import { kayitSerisi } from '@/specialties/pediatri/engines/asiPlan'
@@ -418,7 +418,7 @@ export async function dosyaSorguHamDerle(sb: SupabaseClient, doktorId: string, p
     yut(sb.from('gelisim_taramalari').select('id, created_at, ay_yas, yas_basamak_etiket, sevk_onerisi').eq('patient_id', patientId).eq('doctor_id', doktorId)),
     yut(sb.from('pedi_taramalar').select('id, tur, tarih, sonuc, not_metni').eq('patient_id', patientId).eq('doctor_id', doktorId)),
     yut(sb.from('cihaz_olcumleri').select('id, tur, deger, birim, alindi').eq('patient_id', patientId).eq('doctor_id', doktorId).eq('onaylandi', true).limit(60)),
-    yut(sb.from('belge_analizleri').select('id, modality_final, hekim_ozet, onaylandi_at').eq('patient_id', patientId).eq('doctor_id', doktorId).in('durum', ['onaylandi', 'muayene_onaylandi']).limit(20)),
+    yut(arsivsizBelgeAnalizleri(sb, 'id, modality_final, hekim_ozet, onaylandi_at').eq('patient_id', patientId).eq('doctor_id', doktorId).in('durum', ['onaylandi', 'muayene_onaylandi']).limit(20)),
     yut(sb.from('users').select('specialty').eq('id', doktorId).maybeSingle()),
   ])
 
