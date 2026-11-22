@@ -263,6 +263,25 @@ describe('the messages\' screens — the doctor\'s side', () => {
       temiz(gorunurMetin(html), `home messages ${dil}`)
     }
   })
+
+  it('ZARF-ROZET-01 — THE TOP-BAR ENVELOPE: on every doctor screen, in the desktop row and the phone header, in the pack\'s words, linking to the messages', async () => {
+    if (!ACIK) return
+    const { ozellikAcik } = await import('@/lib/ulke/ulke')
+    const yollar = Kabuk.YOL as unknown as Record<string, string>
+    const hedef = yollar.mesajlar ?? `${Kabuk.YOL.bugun}#mesajlar`
+    const kacis = (t: string) => t.replace(/[.*+?^${}()|[\]\\/#]/g, '\\$&')
+    for (const dil of FORMLAR) {
+      const k = A.uygulamaMetni(dil).kabuk
+      assert.ok(k.okunmamisMesaj && /%(?!\d)/.test(k.okunmamisMesaj), `${dil}: no envelope sentence with a place for the count`)
+      temiz(k.okunmamisMesaj, `envelope ${dil}`)
+      const html = hekimEkrani(dil, h('p', null, 'x'))
+      if (!ozellikAcik('hastaMesajlari')) { assert.equal(say(html, /class="notya-zarf/g), 0); continue }
+      const etiket = esc(Y.yerine(k.okunmamisMesaj, 0))
+      assert.equal(say(html, new RegExp(`<a href="${kacis(hedef)}" class="notya-zarf notya-zarf-(masa|telefon)" aria-label="${kacis(etiket)}"`, 'g')), 2, `${dil}: the envelope`)
+      assert.doesNotMatch(html, /class="notya-zarf-rozet"/, `${dil}: a badge before any count is known`)
+      assert.doesNotMatch(html, /Okunmamış/, `${dil}: Turkish on a country screen`)
+    }
+  })
 })
 
 describe('the messages\' screens — rules', () => {

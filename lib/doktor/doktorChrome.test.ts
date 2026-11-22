@@ -34,4 +34,9 @@ describe('Turkiye doctor chrome through the shared view: markup unchanged', asyn
   it('every stored scenario is still run', () => {
     assert.deepEqual(Object.keys(BAZ).sort(), CHROME_SENARYOLARI.map((s) => s.ad).sort())
   })
+  it('ZARF-ROZET-01: the doctor sees the envelope (desktop row + phone header) with the Turkish label and no badge at 0', () => {
+    const h = olustur('/dashboard/doktor/hastalar')
+    assert.equal((h.match(/aria-label="Okunmamış mesajlar: 0"/g) ?? []).length, 2)
+    assert.doesNotMatch(h, /notya-zarf-rozet"/)
+  })
 })
