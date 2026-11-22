@@ -131,7 +131,13 @@ describe('hasta dosya derleyici — kart başta kalır, izolasyon', () => {
 
   it('her tablo sorgusu doktor kolonuna kilitli', () => {
     const fromlar = [...derle.matchAll(/\.from\('([^']+)'\)/g)]
-    assert.ok(fromlar.length >= 10, 'derleme tabloları eksik')
+    // DEMO-1121: belge_analizleri moved to arsivsizBelgeAnalizleri (archived muayene's evaluations hidden) → one direct read fewer.
+    assert.ok(fromlar.length >= 9, 'derleme tabloları eksik')
+    {
+      const i = derle.indexOf('arsivsizBelgeAnalizleri(supabase')
+      assert.ok(i > 0, 'arsivsizBelgeAnalizleri okuması yok')
+      assert.ok(/doctor_id|doktor_id/.test(derle.slice(i, i + 280)), 'arsivsizBelgeAnalizleri doktor filtresi yok')
+    }
     for (const m of fromlar) {
       const parca = derle.slice(m.index ?? 0, (m.index ?? 0) + 280)
       if (m[1] === 'users') {

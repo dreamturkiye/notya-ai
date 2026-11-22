@@ -256,7 +256,7 @@ export function yanitDogrula(
   return { yanit_ozeti: ozet, yanit_tarihi: tarih }
 }
 
-export type KonsultasyonIslemi = 'yanit' | 'belge_bagla' | 'kapat' | 'nota_ekle' | 'hatirlat' | 'duzenle' | 'sil' | 'onayla' | 'hastaya_ver' | 'eposta_gonder'
+export type KonsultasyonIslemi = 'yanit' | 'belge_bagla' | 'kapat' | 'nota_ekle' | 'hatirlat' | 'duzenle' | 'sil' | 'onayla' | 'hastaya_ver' | 'eposta_gonder' | 'whatsapp_metni'
 
 /** İstem KİLİDİ (AYSE-KONSULTASYON-01): yanıt gelmiş kayıtta istem metni değişmez — yalnız yanıt tarafı işlenir. */
 export const ISTEM_KILITLI_YANITLANDI = 'Yanıtlanmış konsültasyonun istemi kilitlidir — yalnız yanıt özeti düzeltilebilir.'
@@ -285,6 +285,10 @@ export function gecisIzinli(durum: string, islem: KonsultasyonIslemi): { ok: tru
       return g === 'bekliyor' ? { ok: true } : { ok: false, hata: 'Yalnız yanıt bekleyen konsültasyon için hatırlatma gönderilir.' }
     case 'eposta_gonder':
       return g === 'bekliyor' ? { ok: true } : { ok: false, hata: 'Yalnız yanıt bekleyen konsültasyona e-posta gönderilir.' }
+    case 'whatsapp_metni':
+      // DEMO-1121 bug 1: the WhatsApp action had no entry here, so gecisIzinli returned undefined and the PATCH route
+      // crashed on `izin.ok` (500). Same rule as e-mail: a DRAFT for the doctor's own WhatsApp — the server never sends.
+      return g === 'bekliyor' ? { ok: true } : { ok: false, hata: 'Yalnız yanıt bekleyen konsültasyona WhatsApp mesajı hazırlanır.' }
     case 'onayla':
       return g === 'yanitlandi' || g === 'bekliyor'
         ? { ok: true }
