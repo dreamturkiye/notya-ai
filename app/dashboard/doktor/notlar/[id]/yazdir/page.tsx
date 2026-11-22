@@ -16,7 +16,6 @@ import type { BransKapsami } from '@/lib/specialties/kapsam';
 import { istemciKapsami } from '@/lib/specialties/kapsamIstemci';
 import { bransEtiketi } from '@/lib/doktor/bransAdlari';
 import { YASAMSAL_BULGULAR_BASLIK, yasamsalBulguSatirlari } from '@/lib/clinical/yasamsalBulgular';
-import { eriskinVkiVitalerden } from '@/lib/clinical/eriskinVki';
 import { hastaDosyasiYolu } from '@/lib/doktor/onaySonrasiYol';
 import { satirBasiNumarala } from '@/lib/doktor/satirBasiNumarala';
 import { hekimUnvanli } from '@/lib/doktor/hekimAdi';
@@ -133,8 +132,9 @@ export default function NotYazdir() {
   if (bp?.boy) persentilParcalar.push(`Boy ${bp.boy}`);
   if (bp?.basCevresi) persentilParcalar.push(`Baş çevresi ${bp.basCevresi}`);
   if (bp?.vki) persentilParcalar.push(`VKİ ${bp.vki}${bp.vkiSinif ? ` (${bp.vkiSinif})` : ''}`);
-  // Erişkin VKİ (WHO) — kilo+boy varsa otomatik; çocukta Neyzi öncelikli
-  const eriskin = not.eriskinVki || eriskinVkiVitalerden(v as Record<string, unknown> | null);
+  // Erişkin VKİ (WHO) — yalnız API'nin yaşa göre verdiği değer. DEMO-1121 bug 2: buradaki istemci yeniden hesabı
+  // pediatrik notta (API null döner) 2 aylık bebeğe "Zayıf" bastırıyordu — kaldırıldı; <18 yaşta erişkin etiketi yok.
+  const eriskin = not.eriskinVki ?? null;
   if (!bp?.vki && eriskin) vitalParcalar.push(`VKİ: ${eriskin.ozet}`);
 
   return (

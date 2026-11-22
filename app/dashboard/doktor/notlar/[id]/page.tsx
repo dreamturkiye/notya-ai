@@ -590,7 +590,7 @@ export default function NotSayfasi() {
             persentiller={veri.not.buyumePersentilleri}
             girdiStili={{ ...kutu, width: 76, padding: '6px 8px' }}
             persentilRengi={CHROME_RENK.pine}
-            eriskinVkiGoster={!kapsam.pediatrik}
+            eriskinVkiGoster={!kapsam.pediatrik && !kapsam.veliDili}
           />
         </div>
         {BOLUM.map(([k, ad]) => (

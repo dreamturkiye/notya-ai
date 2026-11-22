@@ -100,6 +100,13 @@ describe('KONSULTASYON-01 — durumlar ve geçişler', () => {
     assert.equal(gecisIzinli('yanitlandi', 'sil').ok, false, 'yanıtlanmış kanıt silinmez')
     assert.equal(gecisIzinli('yanit_bekleniyor', 'eposta_gonder').ok, true, 'bekleyen isteme e-posta')
     assert.equal(gecisIzinli('yanitlandi', 'eposta_gonder').ok, false)
+    // DEMO-1121 bug 1: the WhatsApp draft action is in the allow-list like e-mail (no entry = undefined = 500 in the route).
+    assert.deepEqual(gecisIzinli('yanit_bekleniyor', 'whatsapp_metni'), { ok: true }, 'bekleyen isteme WhatsApp taslağı')
+    assert.deepEqual(gecisIzinli('acik', 'whatsapp_metni'), { ok: true })
+    for (const d of ['yanitlandi', 'kapandi_yanitsiz']) {
+      const r = gecisIzinli(d, 'whatsapp_metni')
+      assert.ok(r && r.ok === false && r.hata.length > 5, `${d}: defined refusal, never undefined`)
+    }
   })
   it('yanıt: hekimin cümlesi zorunlu; tarih istemden önce ya da ileri olamaz', () => {
     const s = satir()

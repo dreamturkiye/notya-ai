@@ -599,7 +599,7 @@ export default function IncelemePage() {
                           degerler={vitalTaslak}
                           onDegis={(k, v) => setVitalTaslak({ ...vitalTaslak, [k]: v })}
                           persentiller={note.buyumePersentilleri}
-                          eriskinVkiGoster={!note.bransKapsami.pediatrik}
+                          eriskinVkiGoster={!note.bransKapsami.pediatrik && !note.bransKapsami.veliDili}
                         />
                       </div>
                       {(['subjektif', 'objektif', 'degerlendirme', 'plan'] as const).map((alan) => (

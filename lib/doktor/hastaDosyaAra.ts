@@ -6,7 +6,7 @@
  */
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { decrypt } from '@/lib/security/encryption'
-import { arsivsizAsilar, arsivsizIlaclar, arsivsizNotlar, arsivsizSeanslar } from '@/lib/doktor/arsiv'
+import { arsivsizAsilar, arsivsizBelgeAnalizleri, arsivsizIlaclar, arsivsizNotlar, arsivsizSeanslar } from '@/lib/doktor/arsiv'
 import { hastaAdiCoz } from '@/core/eylemler/hasta'
 import { trAramaNormalize } from '@/lib/utils/turkceArama'
 import {
@@ -305,9 +305,8 @@ export async function klinikAramaYurut(
     .order('created_at', { ascending: false })
     .limit(80)
 
-  const analizQ = supabase
-    .from('belge_analizleri')
-    .select('patient_id, hekim_ozet, sonuc, onaylandi_at')
+  // DEMO-1121 bug 3: an evaluation approved inside an archived muayene is not searchable / not in Ayşe's answers.
+  const analizQ = arsivsizBelgeAnalizleri(supabase, 'patient_id, hekim_ozet, sonuc, onaylandi_at')
     .eq('doctor_id', doktorId)
     .in('durum', ['onaylandi', 'muayene_onaylandi'])
     .order('onaylandi_at', { ascending: false })
