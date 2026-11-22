@@ -1,0 +1,16 @@
+---
+description: Verify in the repo and the running app before answering whether a feature exists or how it behaves
+alwaysApply: true
+---
+
+# Önce doğrula — repo + uygulama (Kaan, 2026-11-22, permanent)
+
+Kaan, verbatim intent: "Always check the repo and the application functionality before you answer and tell me if something is there or not."
+
+Before answering any question about Notya, or making any claim about it — whether a feature exists, how it behaves, what a user sees, what gets sent where — the agent MUST:
+
+1. **Check the repo on current `origin/main`** (and the country release branch if the question is about a country build). Look at the UI component, the API route, and the lib/side effects end to end, not just one file.
+2. **Check the running application** when the claim is about what a doctor or patient sees (production or the demo account), if it can be reached.
+3. **Answer plainly:** "Var / mevcut" or "Yok", with the file paths or screen that prove it. If only part exists, say exactly which part.
+4. **Never describe a feature from assumption, memory or a partial code read.** Never call something missing, or "not in-app only", until the whole flow has been traced. Example of the failure this rule prevents: portal patient→doctor messages were described as an external WhatsApp send, when the primary channel is the in-app notification at the top right of the doctor app. The WhatsApp ping is an optional extra, only when `whatsapp_enabled` and `whatsapp_number` are set.
+5. Briefs to sub-agents and video/marketing scripts follow the same rule: the narration may only claim what the code and the app actually do.
