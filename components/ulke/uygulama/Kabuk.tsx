@@ -20,6 +20,8 @@ import React, { useCallback, useEffect, useRef, useState, type CSSProperties, ty
 import { ulkeIstemciSupabase } from '@/lib/ulke/istemciSupabase'
 import { UYGULAMA_EKRANLARI, type UygulamaEkrani } from '@/lib/ulke/tipler'
 import { ulkeYolu } from '@/lib/ulke/yol'
+import { yerine } from '@/lib/ulke/arayuz/yerTutucu'
+import { HEKIM_MESAJ_API } from '@/lib/ulke/mesaj/sabitler'
 import { useBitki } from './bitki'
 import KabukGorunumu, { type KabukOge } from '@/components/doktor/KabukGorunumu'
 import { CHROME_FONT, CHROME_FONT_HREF, CHROME_RENK as R } from '@/lib/doktor/chromeRenk'
@@ -182,6 +184,34 @@ function useSaatHava() {
   return { saat, hava, istenebilir, iste }
 }
 
+/**
+ * ZARF-ROZET-01 — the unread count of the doctor's patients' messages (the Messages item's badge and the top-bar envelope)
+ * and, when exactly one patient has unread messages, that patient (the envelope then opens their messages). One request
+ * when the frame opens, like Türkiye's chrome; no model, no text — ids and counts only. 0 while unknown.
+ */
+function useMesajRozeti(acik: boolean): { n: number; tek: string | null } {
+  const [d, setD] = useState<{ n: number; tek: string | null }>({ n: 0, tek: null })
+  useEffect(() => {
+    if (!acik) return
+    let iptal = false
+    ;(async () => {
+      try {
+        const { data } = (await ulkeIstemciSupabase()?.auth.getSession()) ?? { data: { session: null } }
+        if (!data.session?.access_token) return
+        const r = await ulkeFetch(ulkeYolu(HEKIM_MESAJ_API), { cache: 'no-store' })
+        if (!r.ok) return
+        const j = (await r.json().catch(() => ({}))) as { okunmamis?: unknown }
+        if (iptal || !Array.isArray(j.okunmamis)) return
+        const liste = j.okunmamis as { hastaId?: unknown }[]
+        const ilk = liste[0]?.hastaId
+        setD({ n: liste.length, tek: liste.length === 1 && typeof ilk === 'string' ? ilk : null })
+      } catch { /* the badge stays 0 */ }
+    })()
+    return () => { iptal = true }
+  }, [acik])
+  return d
+}
+
 function harfler(ad: string): string {
   const p = ad.trim().split(/\s+/).filter(Boolean)
   return ((p[0]?.[0] ?? '') + (p[1]?.[0] ?? '')).toUpperCase()
@@ -200,6 +230,8 @@ function KabukCercevesi({ dil, m, ad, unvan, aktif, cikis, onBuro, kompakt, chil
   const [menuAcik, setMenuAcik] = useState(false)
   const k = m.kabuk
   const git = (yol: string) => { window.location.assign(yol) }
+  const mesajAcik = Boolean(m.pano) && !onBuro && ozellikAcik('hastaMesajlari')
+  const mesaj = useMesajRozeti(mesajAcik)
   const oge = (id: Sekme | 'mesaj' | 'rapor' | 'odeme', label: string, ikon: string, href: string | null, aktifMi?: boolean): KabukOge => (
     { id: String(id), label, ikon, aktif: aktifMi ?? aktif === id, ...(href ? { href } : { pasif: true, isaret: String(id) }) }
   )
@@ -222,7 +254,7 @@ function KabukCercevesi({ dil, m, ad, unvan, aktif, cikis, onBuro, kompakt, chil
       oge('bugun', k.bugun, 'anaSayfa', YOL.bugun),
       ...(HAZIR.takvim ? [oge('takvim', randevuMetni(dil).kabuk.takvim, 'randevular', YOL.takvim)] : []),
       oge('hastalar', k.hastalar, 'hastalar', YOL.hastalar),
-      ...(p ? [oge('mesaj', p.mesajlar, 'mesajlar', ozellikAcik('hastaMesajlari') ? `${YOL.bugun}#mesajlar` : null, false)] : []),
+      ...(p ? [{ ...oge('mesaj', p.mesajlar, 'mesajlar', ozellikAcik('hastaMesajlari') ? `${YOL.bugun}#mesajlar` : null, false), ...(mesaj.n > 0 ? { rozet: mesaj.n } : {}) }] : []),
     ]
     diger = [
       ...(p ? [oge('rapor', p.raporlar, 'raporlar', null, false), oge('odeme', p.odeme, 'belge', null, false)] : []),
@@ -248,6 +280,11 @@ function KabukCercevesi({ dil, m, ad, unvan, aktif, cikis, onBuro, kompakt, chil
         calisma={calisma.length > 0 ? { baslik: k.calismaAlani ?? '', ogeler: calisma } : null}
         diger={diger.length > 0 ? { baslik: k.diger ?? '', ogeler: diger } : null}
         onGit={git}
+        zarf={mesajAcik ? {
+          sayi: mesaj.n,
+          etiket: k.okunmamisMesaj ? yerine(k.okunmamisMesaj, mesaj.n) : `${m.pano?.mesajlar ?? ''}: ${mesaj.n}`,
+          href: mesaj.tek ? `${YOL.hasta}?id=${encodeURIComponent(mesaj.tek)}#mesajlar` : `${YOL.bugun}#mesajlar`,
+        } : null}
         hesap={{
           harfler: harfler(ad ?? ''), avatarUrl: null, ad: ad || '\u00A0', alt: unvan || '\u00A0', avatarAd: ad ?? '', avatarBasligi: ad ? `${ad}` : (k.hesabim ?? k.ayarlar), avatarEtiketi: k.hesabim ?? k.ayarlar,
           saat, hava, havaIste: havaIstenebilir && k.havaGoster ? { etiket: k.havaGoster, onIste: havaIste } : null, cikis: k.cikis, onHesap: () => git(YOL.ayarlar), onCikis: () => { cikis?.() },

@@ -41,6 +41,7 @@ export const EN_UYGULAMA_TEMEL: Temel = {
     kas: 'DOCTOR',
     onBuroKas: 'FRONT DESK',
     havaGoster: 'Show weather',
+    okunmamisMesaj: 'Unread messages: %',
     hesabim: 'My account',
     menuKisa: 'Menu',
     menuKapat: 'Close menu',

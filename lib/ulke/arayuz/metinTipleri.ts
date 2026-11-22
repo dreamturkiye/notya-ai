@@ -40,6 +40,8 @@ export type UygulamaMetni = {
     readonly haklar?: string
     /** HAVA-KONUM-01: the weather chip's tap-to-show label (asks for a location once). Absent = the chip is not offered. */
     readonly havaGoster?: string
+    /** ZARF-ROZET-01: aria-label / tooltip of the top-bar message envelope; % = the unread count. Absent = the pack's messages word and the count. */
+    readonly okunmamisMesaj?: string
   }
   /** The name of each language of the country (key: the language's code in the pack's `dilGruplari`, e.g. 'uz', 'en'). */
   readonly diller: Readonly<Record<string, string>>
