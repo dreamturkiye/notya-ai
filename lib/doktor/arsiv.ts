@@ -88,6 +88,31 @@ export function arsivsizTetkikler(sb: Istemci, secim: string, o?: Sayim) {
     .or('kaynak_note_id.is.null,arsiv_kaynak.not.is.null')
 }
 
+/**
+ * DEMO-1121 bug 3 (2026-11-21): a document evaluation approved INSIDE a muayene (`belge_analizleri.note_id`, durum
+ * 'muayene_onaylandi' / 'onaylandi') kept feeding the patient dossier after that muayene was archived — the dossier is
+ * the note writer's clinical context (sessions/end → hastaDosyasiniDerle) and Ayşe's file. Same read filter as
+ * arsivsizIlaclar: an analysis whose note's muayene is archived is hidden; `note_id` NULL (Belgeler upload outside a
+ * visit) stays visible. Read filter only — rows are never changed; unarchive brings it back.
+ */
+export const BELGE_ANALIZ_ARSIV_GOMME = 'arsiv_kaynak:notes!note_id(arsiv_seans:sessions!inner(archived_at))'
+
+/** `belge_analizleri` read without evaluations tied to an archived muayene's note. Chain filters as usual after it. */
+export function arsivsizBelgeAnalizleri(sb: Istemci, secim: string, o?: Sayim) {
+  return sb.from('belge_analizleri').select(`${secim}, ${BELGE_ANALIZ_ARSIV_GOMME}` as '*', o)
+    .is('arsiv_kaynak.arsiv_seans.archived_at', null)
+    .or('note_id.is.null,arsiv_kaynak.not.is.null')
+}
+
+/**
+ * DEMO-1121 bug 3: `asilar.session_id` (Aşı Stok / barkod flow, migration 165) ties a vaccine to the muayene it was
+ * given in without a `kaynak_note_id`, so arsivsizAsilar cannot hide it. Callers that already hold the patient's
+ * live (non-archived) session ids drop those rows with this — no extra query.
+ */
+export function arsivliSeansAsilariniAyikla<T extends { session_id?: unknown }>(satirlar: readonly T[], canliSeansIdleri: ReadonlySet<string>): T[] {
+  return satirlar.filter((a) => a.session_id == null || a.session_id === '' || canliSeansIdleri.has(String(a.session_id)))
+}
+
 /** Embedded `sessions` value (object or 1-element array) → is that muayene archived? */
 export function seansArsivdeMi(seans: unknown): boolean {
   const s = (Array.isArray(seans) ? seans[0] : seans) as { archived_at?: string | null } | null | undefined

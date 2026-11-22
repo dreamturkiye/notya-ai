@@ -20,7 +20,7 @@ import { bransAnahtari } from '@/lib/specialties/bransAnahtari'
 import { yasamsalBulguOzeti } from '@/lib/clinical/yasamsalBulgular'
 import { bosKart, kartBosMu, kartMetin, type HastaDosyaKart } from '@/lib/doktor/hastaDosyaKart'
 import { pediatrikBaglamMi } from '@/lib/specialties/kapsam'
-import { arsivsizAsilar, arsivsizIlaclar, arsivsizNotlar, arsivsizSeanslar } from '@/lib/doktor/arsiv'
+import { arsivliSeansAsilariniAyikla, arsivsizAsilar, arsivsizBelgeAnalizleri, arsivsizIlaclar, arsivsizNotlar, arsivsizSeanslar } from '@/lib/doktor/arsiv'
 import { hastaAdiCoz } from '@/lib/doktor/hastaCozumleyici'
 import { BIRLESTIRILEN_FORM_SAYISI, formlariBirlestir, sifreliFormlariCoz } from '@/lib/intake/formBirlestir'
 import { motorAfisiTemizle } from '@/core/belgeler/yazar'
@@ -73,7 +73,8 @@ export async function hastaDosyaPaketiniDerle(
     supabase.from('hasta_goruntulemeler').select('*').eq('patient_id', patientId).eq('doctor_id', doktorId).order('created_at', { ascending: false }).limit(20),
     supabase.from('hasta_belgeler').select('*').eq('patient_id', patientId).eq('doctor_id', doktorId).order('created_at', { ascending: false }).limit(20),
     // NOTYA-BELGE-05: onaylı belge değerlendirmeleri Ayşe'nin bağlamına girer
-    supabase.from('belge_analizleri').select('modality_final, durum, sonuc, hekim_tanisi, hekim_ozet, onaylandi_at').eq('patient_id', patientId).eq('doctor_id', doktorId).in('durum', ['onaylandi', 'muayene_onaylandi']).order('onaylandi_at', { ascending: false }).limit(5),
+    // DEMO-1121 bug 3: an evaluation approved inside an ARCHIVED muayene no longer reaches the note writer / Ayşe.
+    arsivsizBelgeAnalizleri(supabase, 'modality_final, durum, sonuc, hekim_tanisi, hekim_ozet, onaylandi_at').eq('patient_id', patientId).eq('doctor_id', doktorId).in('durum', ['onaylandi', 'muayene_onaylandi']).order('onaylandi_at', { ascending: false }).limit(5),
     supabase.from('users').select('specialty').eq('id', doktorId).maybeSingle(),
     supabase.from('randevular').select('baslangic, tur, durum').eq('patient_id', patientId).eq('doktor_id', doktorId).neq('durum', 'iptal').order('baslangic', { ascending: true }).limit(20),
     supabase.from('lab_satirlar').select('canonical_key, kanonik_deger, value_text, numune_tarihi').eq('patient_id', patientId).eq('doctor_id', doktorId).eq('onayli', true).not('canonical_key', 'is', null).order('numune_tarihi', { ascending: false }).limit(40),
@@ -146,7 +147,8 @@ export async function hastaDosyaPaketiniDerle(
   }
 
   b.push('\n## AŞILAR')
-  const asilar = asilarQ.data || []
+  // DEMO-1121 bug 3: a vaccine tied to an archived muayene by session_id (stok/barkod flow) is hidden too.
+  const asilar = arsivliSeansAsilariniAyikla((asilarQ.data || []) as { session_id?: unknown; asi_adi?: string; doz_no?: number; uygulama_tarihi?: string }[], new Set(seanslar.map((s: { id: string }) => String(s.id))))
   if (asilar.length === 0) b.push('- Kayıtlı aşı yok.')
   for (const a of asilar) {
     b.push(`- ${a.asi_adi || '?'}${a.doz_no ? ` (${a.doz_no}. doz)` : ''} — ${trTarih(a.uygulama_tarihi)}`)
@@ -269,7 +271,7 @@ export async function hastaDosyaPaketiniDerle(
     cinsiyet,
     yanitlar,
     ilaclar: ilaclarQ.data || [],
-    asilar: asilarQ.data || [],
+    asilar: asilar as Record<string, unknown>[],
     seanslar,
     notlar,
     cihaz: [],

@@ -317,6 +317,21 @@ describe('KONSULTASYON-01 — kapalı döngü (gerçek rota, sahte veritabanı)'
     assert.ok(!JSON.stringify(sayi.j).includes('QA'), 'sayı modunda hasta adı yok')
   })
 
+  // ── DEMO-1121 bug 1: WhatsApp button returned 500 (no allow-list entry) ──
+  it('WHATSAPP: bekleyen istemde taslak metin + portal linki döner (sunucu göndermez); yanıtlanınca 409, asla 500', async () => {
+    const k = (await coz(R.konsultasyon.POST(iste('POST', '/api/doktor/konsultasyon', s.token, { patientId: s.hasta, hedefBrans: 'kulak-burun-bogaz', klinikSoru: 'İşitme kaybı var mı?', aciliyet: 'rutin' })))).j.konsultasyon
+    const patch = (g: Record<string, unknown>) => coz(R.konsultasyon.PATCH(iste('PATCH', '/api/doktor/konsultasyon', s.token, { id: k.id, ...g })))
+    const w = await patch({ islem: 'whatsapp_metni' })
+    assert.equal(w.status, 200, JSON.stringify(w.j))
+    assert.equal(w.j.ok, true)
+    assert.ok(typeof w.j.metin === 'string' && w.j.metin.length > 20, 'draft text for the doctor to send')
+    assert.ok(typeof w.j.portalLink === 'string' && w.j.metin.includes(w.j.portalLink), 'text carries the consultant portal link')
+    assert.equal(w.j.gonderildi, undefined, 'no server-side send flag — the doctor taps Send in their own WhatsApp')
+    await patch({ islem: 'yanit', yanitOzeti: 'İşitme normal.' })
+    const sonra = await patch({ islem: 'whatsapp_metni' })
+    assert.equal(sonra.status, 409, JSON.stringify(sonra.j))
+  })
+
   // ── AYSE-KONSULTASYON-01 (A): istem düzenlenebilir, yanıt gelince KİLİTLİ; düzenleme izi kaybolmaz ──
   it('İSTEM DÜZENLEME: yanıt beklerken düzenlenir, önceki metin izde kalır; yanıtlanınca SUNUCU reddeder', async () => {
     const ilk = 'İşitme kaybı var mı? Okul performansında düşüş.'
