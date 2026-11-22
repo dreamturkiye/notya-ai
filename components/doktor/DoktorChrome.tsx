@@ -297,6 +297,22 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
     setMenuOpen(false);
   }
 
+  // ZARF-ROZET-01: the top-bar envelope. No request on load (the count is mesajUnread above); only on a tap with exactly
+  // one unread conversation it asks the same list Ana Sayfa uses, to open that conversation directly.
+  async function zarfAc() {
+    if (mesajUnread === 1) {
+      try {
+        const r = await doktorFetch('/api/doktor/mesajlar?unread=1', {});
+        if (r.ok) {
+          const j = await r.json();
+          const konular = Array.isArray(j?.threads) ? j.threads : [];
+          if (konular.length === 1 && konular[0]?.id) { handleNav(`/dashboard/doktor/mesajlar?konu=${encodeURIComponent(String(konular[0].id))}`); return; }
+        }
+      } catch { /* falls through to the inbox */ }
+    }
+    handleNav('/dashboard/doktor/mesajlar');
+  }
+
   function handleCikis() {
     if (typeof window !== 'undefined') {
       doktorOturumuSil()
@@ -318,6 +334,8 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
   const sekmeItems = SEKME_YOLLARI.map((route) => gorunurItems.find((i) => i.route === route)).filter((i): i is NonNullable<typeof i> => Boolean(i));
   const menuItems = gorunurItems.filter((i) => !(SEKME_YOLLARI as readonly string[]).includes(i.route));
   const geri = mobilGeri(pathname);
+  // Same gate as the Mesajlar item: doctor, secretary, and a new staff role only with the 'mesaj' capability.
+  const mesajYetkili = gorunurItems.some((i) => i.route === '/dashboard/doktor/mesajlar');
   const menuAktif = menuOpen || menuItems.some((i) => sekmeAktif(i.route, pathname));
 
   useEffect(() => { setMenuOpen(false); }, [pathname]);
@@ -361,6 +379,7 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
       calisma={calismaItems.length > 0 ? { baslik: 'Çalışma alanı', ogeler: calismaItems.map(oge) } : null}
       diger={digerItems.length > 0 ? { baslik: 'Diğer', ogeler: digerItems.map(oge) } : null}
       onGit={handleNav}
+      zarf={mesajYetkili ? { sayi: mesajUnread, etiket: `Okunmamış mesajlar: ${mesajUnread}`, onAc: () => { void zarfAc(); } } : null}
       hesap={{
         harfler: initials,
         avatarUrl,

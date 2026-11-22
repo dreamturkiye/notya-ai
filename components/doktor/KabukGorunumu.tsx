@@ -15,7 +15,7 @@
  * and does nothing.
  */
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { sayiAlaniOdak } from '@/lib/doktor/sayiGirdi';
 import { CHROME_RENK, CHROME_FONT } from '@/lib/doktor/chromeRenk';
 
@@ -54,6 +54,20 @@ export interface KabukHesap {
   onCikis: () => void;
 }
 
+/**
+ * ZARF-ROZET-01 (Kaan, 2026-11-22) — the message envelope in the top bar: desktop identity row (just before the clock) and the
+ * phone header (top right), on every page. The count is the caller's existing unread number; the view only draws it.
+ */
+export interface KabukZarf {
+  /** Unread conversations. 0 = the envelope with no badge. */
+  sayi: number;
+  /** aria-label / tooltip, already written with the number (Türkiye: "Okunmamış mesajlar: 3"). */
+  etiket: string;
+  /** A country's link form (its pages are separate documents); without it the button calls `onAc`. */
+  href?: string;
+  onAc?: () => void;
+}
+
 export interface KabukProps {
   marka: string;
   kicker: string;
@@ -63,6 +77,8 @@ export interface KabukProps {
   diger: { baslik: string; ogeler: KabukOge[] } | null;
   onGit: (id: string) => void;
   hesap: KabukHesap;
+  /** The message envelope in the top bar; null / absent = not drawn (a role without the message capability). */
+  zarf?: KabukZarf | null;
   /** What sits under the sidebar (the specialty switch); null in a country. */
   yanAlt?: React.ReactNode;
   /** Phone tab bar, the phone menu and the phone header. */
@@ -154,6 +170,62 @@ export function havaIkonu(kod: number): string {
 }
 
 const S = (s: Record<string, unknown>) => s as React.CSSProperties;
+
+/** Line-art envelope: one rounded body, one soft flap. Stroke 1.6, round joins — the same hand as the sidebar icons. */
+export const ZARF_IKON = (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">
+    <rect x="3.25" y="5.25" width="17.5" height="13.5" rx="2.75" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+    <path d="m4.4 7.4 6.45 4.9a1.9 1.9 0 0 0 2.3 0l6.45-4.9" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+/**
+ * The envelope button. 44px tap target, cream-paper disc, pine line, warn (amber) badge with tabular numerals, "9+" above
+ * nine. When the count RISES the icon and the badge give one short pulse (class added for 700 ms); prefers-reduced-motion
+ * turns it off (stylesheet below). The first render never carries the pulse class, so server markup is stable.
+ */
+function ZarfDugmesi({ zarf, yer }: { zarf: KabukZarf; yer: 'masa' | 'telefon' }) {
+  const sayi = Math.max(0, Math.floor(zarf.sayi || 0));
+  const onceki = useRef(sayi);
+  const [nabiz, setNabiz] = useState(false);
+  useEffect(() => {
+    if (sayi > onceki.current) {
+      setNabiz(true);
+      const t = setTimeout(() => setNabiz(false), 700);
+      onceki.current = sayi;
+      return () => clearTimeout(t);
+    }
+    onceki.current = sayi;
+    return undefined;
+  }, [sayi]);
+  const stil = S({
+    position: 'relative', flexShrink: 0, width: 44, height: 44, borderRadius: '50%', boxSizing: 'border-box',
+    display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: 0, cursor: 'pointer',
+    background: CHROME_RENK.paper, border: '1px solid rgba(58,44,34,0.12)', color: CHROME_RENK.pine,
+    boxShadow: '0 1px 2px rgba(58,44,34,0.06)', textDecoration: 'none', fontFamily: 'inherit',
+  });
+  const govde = (
+    <>
+      {ZARF_IKON}
+      {sayi > 0 && (
+        <span className="notya-zarf-rozet" aria-hidden="true" style={S({
+          position: 'absolute', top: 1, right: -1, minWidth: 18, height: 18, padding: '0 5px', boxSizing: 'border-box',
+          borderRadius: 999, background: CHROME_RENK.warn, color: '#FAF8F4', fontSize: 10.5, fontWeight: 800, lineHeight: 1,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', fontVariantNumeric: 'tabular-nums',
+          letterSpacing: '-0.01em', boxShadow: `0 0 0 2px ${CHROME_RENK.cream}`,
+        })}>
+          {sayi > 9 ? '9+' : sayi}
+        </span>
+      )}
+    </>
+  );
+  const sinif = nabiz ? `notya-zarf notya-zarf-${yer} notya-zarf-nabiz` : `notya-zarf notya-zarf-${yer}`;
+  return zarf.href ? (
+    <a href={zarf.href} className={sinif} aria-label={zarf.etiket} title={zarf.etiket} style={stil}>{govde}</a>
+  ) : (
+    <button type="button" onClick={zarf.onAc} className={sinif} aria-label={zarf.etiket} title={zarf.etiket} style={stil}>{govde}</button>
+  );
+}
 
 /** One row of the sidebar (or of the phone menu): `vurgu` is the pine "ask the assistant" button. */
 function SatirOge({ oge, vurgu, onGit }: { oge: KabukOge; vurgu?: boolean; onGit: (id: string) => void }) {
@@ -359,6 +431,17 @@ export default function KabukGorunumu(p: KabukProps) {
           margin: 12px 8px calc(12px + env(safe-area-inset-bottom, 0px)) !important;
         }
       }
+      .notya-zarf { transition: background-color .18s ease, border-color .18s ease, box-shadow .18s ease, transform .18s ease; }
+      .notya-zarf:hover { background: #fffdf8 !important; border-color: rgba(47,67,52,0.3) !important; box-shadow: 0 4px 14px rgba(58,44,34,0.1) !important; }
+      .notya-zarf:active { transform: scale(0.96); }
+      .notya-zarf:focus-visible { outline: 2px solid ${CHROME_RENK.pine}; outline-offset: 2px; }
+      @keyframes notyaZarfNabiz { 0% { transform: scale(1); } 35% { transform: scale(1.14) rotate(-4deg); } 100% { transform: scale(1); } }
+      @keyframes notyaZarfRozet { 0% { transform: scale(0.4); opacity: 0; } 60% { transform: scale(1.18); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+      .notya-zarf-nabiz svg { animation: notyaZarfNabiz .6s ease-out; }
+      .notya-zarf-nabiz .notya-zarf-rozet { animation: notyaZarfRozet .5s cubic-bezier(.3,1.4,.5,1); }
+      @media (prefers-reduced-motion: reduce) {
+        .notya-zarf, .notya-zarf svg, .notya-zarf .notya-zarf-rozet { transition: none !important; animation: none !important; }
+      }
       body:has([aria-modal=true]) .notya-alt-nav,
       body:has([aria-modal=true]) .notya-alt-yuzer { display: none !important; }
       @media print {
@@ -438,6 +521,7 @@ export default function KabukGorunumu(p: KabukProps) {
                 </small>
               </div>
               <div style={S({ width: 1, height: 40, background: 'rgba(58,44,34,0.16)' })} />
+              {p.zarf ? <ZarfDugmesi zarf={p.zarf} yer="masa" /> : null}
               <div>
                 <div style={S({ fontVariantNumeric: 'tabular-nums', fontSize: 22, fontWeight: 600, color: CHROME_RENK.ink, lineHeight: 1 })}>{hesap.saat}</div>
                 {hesap.hava ? (
@@ -482,8 +566,13 @@ export default function KabukGorunumu(p: KabukProps) {
                     <div style={S({ fontFamily: CHROME_FONT.serif, fontSize: 24, fontWeight: 500, letterSpacing: '-0.02em', color: CHROME_RENK.ink })}>{p.marka}</div>
                   </div>
                 )}
-                {p.geri && (
-                  <div onClick={() => p.onGit(p.anaSayfaId)} style={S({ fontFamily: CHROME_FONT.serif, fontSize: 18, fontWeight: 500, color: CHROME_RENK.ink, cursor: 'pointer', minHeight: 44, display: 'flex', alignItems: 'center' })}>{p.marka}</div>
+                {(p.geri || p.zarf) && (
+                  <div style={S({ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 })}>
+                    {p.geri && (
+                      <div onClick={() => p.onGit(p.anaSayfaId)} style={S({ fontFamily: CHROME_FONT.serif, fontSize: 18, fontWeight: 500, color: CHROME_RENK.ink, cursor: 'pointer', minHeight: 44, display: 'flex', alignItems: 'center' })}>{p.marka}</div>
+                    )}
+                    {p.zarf ? <ZarfDugmesi zarf={p.zarf} yer="telefon" /> : null}
+                  </div>
                 )}
               </header>
 
