@@ -81,7 +81,7 @@ describe('NOTYA-ASI-ONAM-02 · onam kapısı uzaktan bilgilendirmeyle geçmez', 
   })
 
   it('aşı kaydetme / uygulama rotaları onam kaydına bakmaz — uzaktan bilgilendirmeye dayanan bir geçiş yolu yok', () => {
-    for (const p of ['app/api/doktor/asilar/route.ts', 'app/api/doktor/asi-stok/uygula/route.ts', 'app/api/notes/[id]/approve/route.ts']) {
+    for (const p of ['app/api/doktor/asilar/route.ts', 'app/api/doktor/asi-stok/uygula/route.ts', 'app/api/notes/[id]/approve/route.ts', 'lib/doktor/notOnayla.ts']) {
       assert.doesNotMatch(oku(p), /asi_onam|asiOnam/, p)
     }
   })

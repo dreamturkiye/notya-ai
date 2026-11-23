@@ -63,7 +63,7 @@ describe('(c) wired into the runtime call paths', () => {
     assert.ok(kaynak('app/api/doktor/hafiza/route.ts').includes("kadinDogumKilidi('ses')"))
     assert.ok(kaynak('lib/doktor/soapUret.ts').includes("kadinDogumKilidi('soap')"))
     assert.ok(kaynak('lib/doktor/soapUret.ts').includes("kadinDogumKilidi('ogrenme')"))
-    assert.ok(kaynak('app/api/notes/[id]/approve/route.ts').includes('hekimBransi(supabase, user.id)'))
+    assert.ok(kaynak('lib/doktor/notOnayla.ts').includes('hekimBransi(supabase, doktorId)') /* ESNEK-MUAYENE-A: approval body moved here */)
     assert.ok(kaynak('lib/doktor/ogrenme/arkaPlandaOgren.ts').includes('hekimBransi'))
     assert.ok(kaynak('next.config.mjs').includes('./specialties/kadin-dogum/prompts/*.md'))
     // KD-ISIMLENDIRME-01: session branch key comes from the single resolver ('kadin-dogum' → 'kadin-hastaliklari-dogum', kd-isim-esdegerligi.test.ts)
