@@ -14,6 +14,7 @@ const BOLUMLER = [
   { baslik: 'Entegrasyonlar', aciklama: 'Takvim, e-posta ve dış sistem bağlantıları', rota: '/dashboard/doktor/entegrasyonlar', ikon: '🔌' },
   { baslik: 'Hesabım', aciklama: 'E-posta ve şifre', rota: '/dashboard/doktor/hesap', ikon: '🔑' },
   { baslik: 'İletişim', aciklama: 'Hastalarınıza kendi WhatsApp ve e-postanızdan tek dokunuşla yazın', rota: '/dashboard/doktor/ayarlar/iletisim', ikon: '💬' },
+  { baslik: 'Esnek muayene ve el notları', aciklama: 'Kağıda yazdığınız notlar: kim hazırlasın, onayınız gereksin mi, kısaltma sözlüğünüz, form şablonlarınız', rota: '/dashboard/doktor/ayarlar/el-notu', ikon: '✍️' },
   { baslik: 'Gelen Belgeler', aciklama: 'Sekreterinizin gelen belgeleri görüp dosyalamasına izin verin', rota: '/dashboard/doktor/ayarlar/gelen-belgeler', ikon: '📥' },
   { baslik: 'Personel',aciklama: 'Çalışanların hesapları ve erişim yetkileri', rota: '/dashboard/doktor/personel', ikon: '👥' },
   { baslik: 'Ses profili', aciklama: 'İsteğe bağlı — Ayşe sesinizi odadaki diğer seslerden ayırt etsin', rota: '/dashboard/doktor/ayarlar/ses-profili', ikon: '🎙️' },

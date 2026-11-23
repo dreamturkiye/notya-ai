@@ -314,10 +314,20 @@ SADECE geçerli JSON döndür, başka hiçbir şey yazma:
     // NOTYA-BELGE-OTO-01: imaging results are inserted deterministically into Fizik Muayene / Bulgular below (labelled block), so they are not
     // re-narrated by the model; lab / aşı / general documents keep the existing prompt path.
     try { const _ek = ekHazir.ekler.filter((e) => !['rontgen', 'ekg', 'foto'].includes(e.sonuc.tur)); if (_ek.length) ekBlogu = (await import('@/lib/doktor/muayeneEk/rapor')).ekPromptBlogu(_ek) } catch { ekBlogu = '' }
+    // ESNEK-MUAYENE-A: the visit's hand-note / typed-note sources (if any) join the transcript as sources of ONE note
+    // (Muayene Derleyici authority rules + provenance). No hand-note source → byte-identical transcript-only path.
+    let elKaynaklari: import('@/core/elNotu/derleyici').DerlemeKaynagi[] = []
+    try {
+      const { kaynaklariHazirla } = await import('@/lib/elNotu/derlemeServisi')
+      const { EL_NOTU_TR } = await import('@/core/elNotu/metinTr')
+      const k = await kaynaklariHazirla(getSupabase(), user.id, sessionId, EL_NOTU_TR, transcript)
+      if (k.some((x) => x.tur !== 'transkript')) elKaynaklari = k
+    } catch { console.error('[el-notu] sessions/end kaynaklar yüklenemedi, yalnız transkript') }
+    const kaynakGirdisi = elKaynaklari.length ? { kaynaklar: elKaynaklari, transcript: elKaynaklari.map((k) => k.metin).join('\n') } : {}
     // NOTYA-NOT-HIZ-03: not gövdesi (A) hazır olunca döner; Ayşe'nin önerisi (B) ayrı sözle gelir (son denemeninki).
     const oneri: { soz?: Promise<SoapOnerisi | null> } = {}
     const { sonuc: noteData } = await soapUretYeniden(
-      () => soapNotuUret({ transcript, specialty, klinikBaglam, stilOrnekleri, stilProfili, doktorKurallari, doktorAdi, doktorBransi, hastaDogumIso: dogumIso, doctorId: user.id, cekListeBlogu: cekListePromptBlogu(cekVeri.maddeler, isaretler), ...(ekBlogu ? { ekBlogu } : {}) }, { oneriAyri: (soz) => { oneri.soz = soz } }),
+      () => soapNotuUret({ transcript, specialty, klinikBaglam, stilOrnekleri, stilProfili, doktorKurallari, doktorAdi, doktorBransi, hastaDogumIso: dogumIso, doctorId: user.id, cekListeBlogu: cekListePromptBlogu(cekVeri.maddeler, isaretler), ...(ekBlogu ? { ekBlogu } : {}), ...kaynakGirdisi }, { oneriAyri: (soz) => { oneri.soz = soz } }),
       { baslangicMs, sureSiniriMs: maxDuration * 1000, uyar: (satir) => console.warn(satir) },
     )
     // NOTYA-ASI-NOT-01: yalnız bu vizitte uygulandığı söylenen aşılar, vizit tarihiyle; söylenmeyen doz karttan hesaplanır.
@@ -420,6 +430,12 @@ SADECE geçerli JSON döndür, başka hiçbir şey yazma:
     }).select().single()
 
     if (noteError) throw new Error("Not kaydedilemedi: " + noteError.message)
+    if (elKaynaklari.length) {
+      try {
+        const { notaKaynaklariBagla } = await import('@/lib/elNotu/derlemeServisi')
+        await notaKaynaklariBagla(getSupabase(), { doktorId: user.id, sessionId, noteId: String(note.id), hastaId, kaynaklar: elKaynaklari, not: noteData as never, aktor: { userId: user.id, rol: 'doktor' } })
+      } catch { console.error('[el-notu] sessions/end kaynak bağlama atlandı') }
+    }
     if (ekHazir.ekler.length) {
       try { const { notaBagla } = await import('@/lib/doktor/muayeneEk/saklama'); await notaBagla(getSupabase(), user.id, sessionId, String(note.id)) }
       catch { console.error('[muayene-ekleri] nota baglama atlandi') }

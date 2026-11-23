@@ -40,6 +40,8 @@ import IpucuBaloncugu from '@/components/doktor/IpucuBaloncugu'
 import { useRutinPaket } from '@/lib/doktor/ogrenme/rutinIstemci'
 import { tarayiciSaatDilimi } from '@/lib/doktor/selam'
 import { doktorFetch } from '@/lib/doktor/oturumFetch'
+import GunlukSureSatiri from '@/components/elNotu/GunlukSureSatiri'
+import { EL_NOTU_TR } from '@/core/elNotu/metinTr'
 
 interface KpiData {
   bugunkuMuayene: number
@@ -295,6 +297,8 @@ export default function DoktorDashboard() {
           }
         }
         .yg-mobil-ust { display: none; }`}</style>
+      {/* ESNEK-MUAYENE-A: honest daily time line (measured documentation time; gain only against the doctor's own baseline). Hidden on a day with no measurement. */}
+      <GunlukSureSatiri metin={EL_NOTU_TR} getir={(u, i) => doktorFetch(u, i || {})} api="/api/doktor/el-notu" />
 
       {/* Kicker + title */}
       <div>

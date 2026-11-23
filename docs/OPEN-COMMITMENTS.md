@@ -5669,3 +5669,58 @@ Open items:
 7. **DIKTE-TIBBI-01-UZ — Uzbek (Latin) medical keyterms** are a 15-word draft; not read by a native clinician. Waits on Kaan (a native reviewer).
 
 - 2026-11-22 — **Supabase cost (ON HOLD, waits on Kaan's decision).** 7 Supabase projects on Pro ≈ $85/month, ~$60 of it the six country DBs with test data only. Pro projects cannot be paused. Kaan's choice: keep Türkiye, Uzbekistan and Australia; US, UK, Canada and New Zealand are candidates for removal. Agreed path when he says go: export each of the four (data + auth users) into an archive on the BurtiNET VPS (stored, not served — foreign patient data must not be served from Türkiye), then delete the four projects (~$40/month saved), rebuild in-region from archive + repo migrations when that country's first doctor signs. Also waits on the BurtiNET server details. Owner: Kaan (decision), then Claude.
+
+## 2026-11-23 — ESNEK-MUAYENE-A (El Notu Okuyucu + Muayene Derleyici) — open items
+
+Shipped on main in this change: core/elNotu (on-device preprocessing, privacy gate, layout, two-read reader, protected
+classes, lexicon + KBB / general Turkish seeds, personal handwriting memory, drawings, compiler, time meter), lib/elNotu
+(server), app/api/doktor/el-notu/* (14 routes), migration 202, El Notları workspace, settings, capture in the muayene flow /
+patient file / Gelen Belgeler, batch upload, Doğrula with crops, secretary finalize per the doctor's preference, harness
+`scripts/el-notu-degerlendir.mts`. Open:
+
+1. **ESNEK-A-MIGRATION — migration 202 is NOT applied anywhere yet.** Owner: Claude, waits on Kaan. On 2026-11-23 every
+   Supabase project (Notya Ai `anjayzospuurymjmmtim` and the six country projects) reported status INACTIVE and refused SQL
+   ("Database is possibly not accessible"). Not restored by Claude (cost / infra decision, see the 2026-11-22 Supabase cost
+   entry). When Kaan reactivates production: apply `lib/db/migrations/202_esnek_muayene.sql` with the Supabase MCP tools and
+   verify the 8 tables, the notes columns, RLS on and the policies. Until then the code fails soft: approval retries without
+   `hekim_onayi_bekliyor`, sessions/end falls back to transcript-only, preferences read as defaults.
+2. **ESNEK-A-EVAL — reading accuracy on the KBB doctor's 9 sample pages is NOT measured yet.** Owner: Claude. The harness ran
+   on all 9 pages for the device half (privacy + layout: 9/9 pages packaged, 0 identity leaks found by the OCR leak check,
+   template matched 4/4 full form photos ≥ 0.80, the oblique close-up masked by OCR labels). No model credentials exist in
+   the build environment (no OPENROUTER_API_KEY / ANTHROPIC_API_KEY), so the reading pass could not run. Next step (needs
+   Kaan's OK to use the production key outside Vercel, or a run on a machine that has it):
+   `npx tsx scripts/el-notu-degerlendir.mts --klasor <pages outside the repo> --sablon <form>.json --serbest --model canli --cikti <out>`
+   then iterate prompts / thresholds against the clinical ground truth (facts, invented = 0, Doğrula per page).
+3. **ESNEK-A-ORNEKLER — the KBB doctor will send many more handwritten pages (via Dr. Gökhan)** for accuracy work. Owner:
+   Claude (evaluation), Kaan / Dr. Gökhan (collecting, consent). Keep them outside the repo; add clinical-only ground truth.
+4. **ESNEK-A-ULKE — six-country application.** Owner: Claude. Status for us, gb, ca, au, nz, uz: OPEN GAP. The core
+   (core/elNotu, components/elNotu) is country-neutral (words, API prefix, seeds, drug matcher injected; prompts English), but
+   the country builds run their own visit / note pipeline and their own database (ulke_* tables through ulkeTablosu), so the
+   port is its own change: country migration (ulke_muayene_kaynaklari, ulke_hekim_el_sozlugu, ulke_hekim_el_yazisi_hafizasi,
+   ulke_el_notu_sablonlari, ulke_esnek_muayene_ayarlari, ulke_okuma_dogrulamalari, ulke_dokumantasyon_sureleri,
+   ulke_muayene_not_denetimi — encrypted values per the country pattern) + gocler.json + baseline; /api/ulke/el-notu/*;
+   sources joined into `lib/ulke/uygulama/notlar.ts` notYaz (hand-note-only visit without a recording); capture + Doğrula in
+   `components/ulke/uygulama/Muayene.tsx` / `Not.tsx` with the shared components; country words (en; uz Latin / Cyrillic /
+   ru); seeds (English ENT + general English; Uzbek/Russian LOR + general); drug matcher from countries/<cc>/referans/ilaclar;
+   secretary rights through the country clinic roles; approval guard for ⟦…⟩ placeholders in the country notOnayla.
+   e-Reçete / MBYS remain Türkiye-only (exempt).
+5. **ESNEK-A-IZOLASYON-T — the 14 El Notu routes are classified 'incelendi' (reviewed by hand) in the isolation inventory.**
+   Owner: Claude. Promote to 'test' with A↔B cases in lib/security/hasta-izolasyon.test.ts (sahteSupabase needs the new
+   tables).
+6. **ESNEK-A-SEED — branş seed lexicons beyond KBB.** Owner: Claude. Every branch gets the general Turkish seed and learns
+   the doctor's own abbreviations through Doğrula; dedicated seeds for the other 39 branches are data to add. Clinical read of
+   the KBB seed by Dr. Gökhan when convenient (owner Kaan).
+7. **ESNEK-A-PERF — measure the patient-file bundle with `next build`** after merge (the change logged an esbuild estimate).
+   Owner: Claude.
+
+### Later phases (logged 2026-11-23, owner Claude)
+
+- **Phase B — shadow mode and autonomy.** Notya drafts in the background from the pages the secretary already types,
+  compares with the secretary's own note, sends the doctor a daily one-line match report, and offers to take over at
+  ≥ 90% content match. Overnight learning loop with a regression test against the doctor's past approved notes.
+  Field-level autonomy ladder: B0 draft → B1 highlighted differences → B2 one-tap approval after 20 uncorrected notes →
+  B3 daily batch approval; protected items (side, negation, numbers, doses, drugs, allergies) always manual. Follow-up
+  "fark notu" (what changed since the last visit). Suggestion profile per doctor. A "Notya sizi böyle tanıyor" card
+  (his abbreviations, habits and form, editable).
+- **Phase C — tablet digital paper.** The doctor's own printed form on a tablet screen, pencil strokes captured directly
+  (no photo step, exact positions on the drawing regions, no masking needed for the header — it is typed from the record).

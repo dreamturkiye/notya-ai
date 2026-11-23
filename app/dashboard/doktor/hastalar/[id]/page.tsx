@@ -118,6 +118,9 @@ import { hastaDosyaHref } from '@/lib/doktor/geriNavigasyon';
 import { CHROME_RENK, CHROME_FONT } from '@/lib/doktor/chromeTheme';
 import { cinsiyetKanonik } from '@/lib/utils/cinsiyet'
 import { doktorFetch } from '@/lib/doktor/oturumFetch'
+import dynamicImport from 'next/dynamic'
+// ESNEK-MUAYENE-A: the capture modal (and the on-device reader behind it) loads only on tap — the patient-file bundle is unchanged.
+const ElNotuYakala = dynamicImport(() => import('@/components/elNotu/ElNotuYakala'), { ssr: false })
 
 export const dynamic = 'force-dynamic';
 
@@ -171,6 +174,8 @@ function trTarih(iso: string): string {
 
 export default function HastaProfilPage() {
   const router = useRouter();
+  const [elNotu, setElNotu] = useState<'kapali' | 'acik' | 'derleniyor'>('kapali');
+  const [elNotuHata, setElNotuHata] = useState('');
   const params = useParams();
   const searchParams = useSearchParams();
   const patientId = params?.id as string;
@@ -555,7 +560,20 @@ export default function HastaProfilPage() {
               >
                 🩺 Muayeneyi Başlat
               </button>
+              <button
+                onClick={() => { setElNotuHata(''); setElNotu('acik') }}
+                disabled={elNotu === 'derleniyor'}
+                style={{ padding: '10px 18px', background: '#FFFFFF', color: CHROME_RENK.pine, border: `1.5px solid ${CHROME_RENK.pine}`, borderRadius: 999, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
+              >
+                ✍️ {elNotu === 'derleniyor' ? 'Not oluşturuluyor…' : 'El notu ekle'}
+              </button>
+              {elNotuHata && <span role="alert" style={{ fontSize: 12, color: '#B42318', alignSelf: 'center' }}>{elNotuHata}</span>}
             </div>
+          )}
+          {patient && elNotu === 'acik' && (
+            <ElNotuYakalaKapsayici patientId={String(patient.id)} onKapat={() => setElNotu('kapali')}
+              onHazir={(noteId) => { setElNotu('kapali'); router.push(`/dashboard/doktor/notlar/${encodeURIComponent(noteId)}`) }}
+              onDerleniyor={() => setElNotu('derleniyor')} onHata={(m) => { setElNotu('kapali'); setElNotuHata(m) }} />
           )}
         </div>
 
@@ -860,4 +878,21 @@ export default function HastaProfilPage() {
       </div>
     </div>
   );
+}
+
+/** ESNEK-MUAYENE-A: "El notu ekle" from the patient file — pages → a visit dated now → the note compiled from them. */
+function ElNotuYakalaKapsayici(p: { patientId: string; onKapat: () => void; onHazir: (noteId: string) => void; onDerleniyor: () => void; onHata: (m: string) => void }) {
+  const [baglam, setBaglam] = useState<typeof import('@/components/elNotu/trBaglam') | null>(null)
+  useEffect(() => { void import('@/components/elNotu/trBaglam').then(setBaglam) }, [])
+  if (!baglam) return null
+  return (
+    <ElNotuYakala metin={baglam.TR_METIN} getir={baglam.trGetir} api={baglam.TR_API} patientId={p.patientId} kanal="kamera" onKapat={p.onKapat}
+      onTamam={async (s) => {
+        if (!s.sessionId) { p.onKapat(); return }
+        p.onDerleniyor()
+        const r = await baglam.trGetir(`${baglam.TR_API}/derle`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ sessionId: s.sessionId }) }).catch(() => null)
+        const j = r ? await r.json().catch(() => ({})) : {}
+        if (r && r.ok && j.noteId) p.onHazir(String(j.noteId)); else p.onHata(j.error || baglam.TR_METIN.hata.genel)
+      }} />
+  )
 }

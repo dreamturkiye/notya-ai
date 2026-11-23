@@ -11,6 +11,9 @@
  * the patient file; when the patient has an open consultation request, "yanıt olarak bağla" links the report to it via
  * the existing konsültasyon route ('belge_bagla') — the doctor still writes the reply sentence (hekim kilidi).
  */
+import ElNotuYakala from '@/components/elNotu/ElNotuYakala'
+import { doktorFetch } from '@/lib/doktor/oturumFetch'
+import { EL_NOTU_TR } from '@/core/elNotu/metinTr'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { CHROME_FONT, CHROME_RENK } from '@/lib/doktor/chromeTheme'
 import IpucuBaloncugu from '@/components/doktor/IpucuBaloncugu'
@@ -97,6 +100,36 @@ function OgeKarti({ o, rol, turler, bitti }: { o: GelenOge; rol: 'doktor' | 'sek
   }, [arama, seciyor])
 
   const sec = (h: Hasta, k: Kesinlik | null = null) => { setHasta(h); setKesinlik(k); setSeciyor(false); setArama(''); setHata('') }
+
+  // ESNEK-MUAYENE-A: a handwritten page that arrived by WhatsApp / e-posta → an el notu of a muayene (read on THIS device,
+  // masked, then the original is filed into the patient's vault by the same filing path as "Dosyaya ekle").
+  const [elNotuDosya, setElNotuDosya] = useState<File | null>(null)
+  const elNotuOlarakTikla = async () => {
+    if (!hasta) { setSeciyor(true); return }
+    if (!o.url) return
+    setHata('')
+    try {
+      const b = await (await fetch(o.url)).blob()
+      setElNotuDosya(new File([b], o.bicim === 'pdf' ? 'el-notu.pdf' : 'el-notu.jpg', { type: b.type || (o.bicim === 'pdf' ? 'application/pdf' : 'image/jpeg') }))
+    } catch { setHata('Belge açılamadı.') }
+  }
+  const elNotuBitti = async (sessionId: string | null) => {
+    setElNotuDosya(null)
+    if (!hasta) return
+    setIsleniyor(true)
+    try {
+      await gelenIstek(`/api/doktor/gelen-belgeler/${o.id}`, { method: 'PATCH', govde: { islem: 'dosyala', patientId: hasta.id, belgeTuru: tur } })
+      let yol = `/dashboard/doktor/el-notlari`
+      if (sessionId) {
+        const r = await doktorFetch('/api/doktor/el-notu/derle', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ sessionId }) })
+        const j = await r.json().catch(() => ({}))
+        if (r.ok && j.noteId && rol === 'doktor') yol = `/dashboard/doktor/notlar/${encodeURIComponent(String(j.noteId))}`
+      }
+      setSonuc({ yol, metin: `${hasta.ad} — el notu okundu, muayene notu hazırlandı.` })
+      gelenSayiDegisti()
+      setTimeout(() => { bitti(o.id); gelenDegisti() }, 7000)
+    } catch (e) { setHata(e instanceof Error ? e.message : 'Dosyalanamadı.') } finally { setIsleniyor(false) }
+  }
 
   const dosyalaTikla = async () => {
     if (!hasta) { setSeciyor(true); return }
@@ -239,7 +272,14 @@ function OgeKarti({ o, rol, turler, bitti }: { o: GelenOge; rol: 'doktor' | 'sek
           >
             {isleniyor ? 'Ekleniyor…' : 'Dosyaya ekle'}
           </button>
+          {(o.bicim === 'gorsel' || o.bicim === 'pdf') && o.url && (
+            <button type="button" onClick={() => void elNotuOlarakTikla()} disabled={isleniyor} style={sessizDugme}>✍️ El notu olarak dosyala</button>
+          )}
           <button type="button" onClick={() => setSeciyor((v) => !v)} style={sessizDugme}>{seciyor ? 'Vazgeç' : 'Başka hasta seç'}</button>
+          {elNotuDosya && hasta && (
+            <ElNotuYakala metin={EL_NOTU_TR} getir={(u, i) => doktorFetch(u, i || {})} api="/api/doktor/el-notu" patientId={hasta.id} kanal="gelen_belge" gelenBelgeId={o.id}
+              ilkDosyalar={[elNotuDosya]} onKapat={() => setElNotuDosya(null)} onTamam={(r) => void elNotuBitti(r.sessionId)} />
+          )}
           <span style={{ flex: 1 }} />
           {siliniyor ? (
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 14, color: R.muted }}>

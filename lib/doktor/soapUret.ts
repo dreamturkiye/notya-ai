@@ -34,6 +34,7 @@ import { ozelBransKilidi, ozelBransSlug, ozelBransSoapKilidi } from '@/lib/klini
 import { bransKapsami, pediatrikBaglamMi, veliDiliMi, vitalleriKapsamaGoreSuz } from '@/lib/specialties/kapsam'
 import { vitalOlcumleriniNormallestir } from '@/lib/clinical/olcumCoz'
 import { bolumIskeleti, doktorDuzeyiMetniSuz, iskeletSuz, uslupKuraliGuvenliMi } from '@/lib/doktor/ogrenme/hastaOlguKapisi'
+import { DERLEME_KURALLARI, celiskileriAyikla, dosyaOnerileriniAyikla, izleriAyikla, kaynakBlogu, type Celiski, type DerlemeKaynagi, type DosyaOnerisi, type KaynakIzleri } from '@/core/elNotu/derleyici'
 
 export interface ReceteOnerisi {
   etkenMadde?: string
@@ -214,6 +215,12 @@ export interface SoapNotu {
   ai_confidence?: number
   /** NOTYA-MESLEKTAS-V2: bu notta uygulanan kural slugs (sunulan listeden). */
   uygulananKurallar?: string[]
+  /** ESNEK-MUAYENE-A: provenance (sentence → source line tags), only for a multi-source note. */
+  kaynakIzleri?: KaynakIzleri
+  /** ESNEK-MUAYENE-A: facts two sources disagree on — left out of the body, asked (Doğrula 'celiski'). */
+  celiskiler?: Celiski[]
+  /** ESNEK-MUAYENE-A: proposed patient-file updates (allergy, habit, chronic disease, regular medicine), each confirmed by the doctor. */
+  dosyaOnerileri?: DosyaOnerisi[]
 }
 
 export interface SoapGirdi {
@@ -231,6 +238,12 @@ export interface SoapGirdi {
   cekListeBlogu?: string // hekim çek listesi — gövdeye uydurma yasağı
   /** UYGULANIR kurallar — değişken (önbelleksiz) blok. En fazla 12. */
   doktorKurallari?: { slug: string; satir: string }[]
+  /**
+   * ESNEK-MUAYENE-A (Muayene Derleyici): the visit's sources — handwritten pages, typed note, the transcript as ONE of them.
+   * Given → the note is built from all of them with the authority rules (core/elNotu/derleyici.ts); `transcript` must then
+   * hold every source's text (the dose / invention locks check against it). Absent → unchanged transcript-only behaviour.
+   */
+  kaynaklar?: DerlemeKaynagi[]
 }
 
 /** AUDIT-2026-09-03 (canlı olay, 16:27): uzun muayenelerde model çıktısı token tavanında
@@ -452,7 +465,8 @@ export interface SoapSecenek {
 export async function soapNotuUret(girdi: SoapGirdi, secenek: SoapSecenek = {}): Promise<SoapNotu> {
   const system = soapSistemBloklari(girdi)
   const bas = Date.now()
-  const transkript = `Muayene transkripti:\n\n${girdi.transcript}`
+  const cokKaynak = Boolean(girdi.kaynaklar?.length)
+  const transkript = cokKaynak ? `Muayene kaynakları:\n\n${kaynakBlogu(girdi.kaynaklar!)}` : `Muayene transkripti:\n\n${girdi.transcript}`
 
   // NOTYA-MALIYET-01: muayene/SOAP notu. LUNAPRO-01: birincil Luna-Pro; klinik bağlam (alerji, sürekli ilaç) system'de —
   // transkriptle birlikte güvenlik taramasına girer. 'soap' yapılandırılmış görevdir (G2 d: bozuk/kesik JSON → Sonnet 5).
@@ -463,7 +477,7 @@ export async function soapNotuUret(girdi: SoapGirdi, secenek: SoapSecenek = {}):
     doctorId: girdi.doctorId ?? null,
     system,
     guvenlikBaglami: girdi.klinikBaglam,
-    messages: [{ role: 'user', content: `${transkript}\n\n${GOVDE_CAGRISI}` }],
+    messages: [{ role: 'user', content: cokKaynak ? `${transkript}\n\n${DERLEME_KURALLARI}\n\n${GOVDE_CAGRISI}` : `${transkript}\n\n${GOVDE_CAGRISI}` }],
   }
   const govdeSozu = aiCagir(govdeCagrisi)
   // Klinik öneri (ayırıcı tanı, reçete önerisi, kırmızı bayrak, hasta özeti) — klinik-analiz, JSON (G2 d), kendi politika satırıyla.
@@ -491,6 +505,15 @@ export async function soapNotuUret(girdi: SoapGirdi, secenek: SoapSecenek = {}):
   if (secenek.oneriAyri) secenek.oneriAyri(oneriSozu)
 
   const veri: SoapNotu = await govdeyiAl(govdeCagrisi, await govdeSozu)
+  let cokKaynakEki: Pick<SoapNotu, 'kaynakIzleri' | 'celiskiler' | 'dosyaOnerileri'> = {}
+  if (cokKaynak) {
+    // ‹K1.3› tags → provenance map; the saved sections never carry a tag
+    const hamVeri = veri as SoapNotu & { celiskiler?: unknown; dosyaOnerileri?: unknown }
+    const { soap, izler } = izleriAyikla(veri.soap)
+    veri.soap = { ...veri.soap, ...soap }
+    cokKaynakEki = { kaynakIzleri: izler, celiskiler: celiskileriAyikla(hamVeri.celiskiler), dosyaOnerileri: dosyaOnerileriniAyikla(hamVeri.dosyaOnerileri) }
+    delete hamVeri.celiskiler; delete hamVeri.dosyaOnerileri
+  }
   veri.uygulananKurallar = uygulananKurallariSuz(veri.uygulananKurallar, guvenliKurallar(girdi.doktorKurallari))
   for (const k of ONERI_ALANLARI) delete (veri as Record<string, unknown>)[k]
   // BRANS-ALAN-SIZMASI: a non-pediatric note never keeps a pediatric-only vital the model filled (fetal "baş çevresi"
@@ -499,7 +522,7 @@ export async function soapNotuUret(girdi: SoapGirdi, secenek: SoapSecenek = {}):
   const numarali = soapNumaraliAlanlariDuzenle(kilitle(veri, girdi))
   // NOTYA-NOT-HIZ-01: prose columns derived from the already locked / numbered SOAP sections (dose lock runs once, not
   // twice on the same text); the F4 cleaner then runs over both — they stay identical.
-  const not = notMetinleriniTemizle({ ...numarali, ...turkceBolumleriTuret(numarali.soap), uygulananKurallar: veri.uygulananKurallar })
+  const not = { ...notMetinleriniTemizle({ ...numarali, ...turkceBolumleriTuret(numarali.soap), uygulananKurallar: veri.uygulananKurallar }), ...cokKaynakEki }
   void import('@/lib/doktor/ogrenme/hizOlc').then((m) => m.hizYazSessiz({
     doctorId: girdi.doctorId, gorev: 'soap', sureMs: Date.now() - bas, onbellekli: Boolean(girdi.doktorKurallari?.length),
   })).catch(() => { /* ölçüm */ })

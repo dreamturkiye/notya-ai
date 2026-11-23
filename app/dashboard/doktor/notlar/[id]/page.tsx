@@ -55,6 +55,8 @@ import { motorAfisiTemizle } from '@/core/belgeler/yazar'
 import SizinTarzinizChip from '@/components/doktor/SizinTarzinizChip'
 import SonrakiAdim from '@/components/doktor/SonrakiAdim'
 import YuklenenDosyalar from '@/components/doktor/YuklenenDosyalar'
+import NotKaynaklariKarti from '@/components/elNotu/NotKaynaklariKarti'
+import { TR_API, TR_METIN, trGetir } from '@/components/elNotu/trBaglam'
 import MuayeneEkleri from '@/components/doktor/MuayeneEkleri'
 import { bloklariAktar } from '@/core/belgeler/notaBlok'
 import { useRutinPaket } from '@/lib/doktor/ogrenme/rutinIstemci'
@@ -602,6 +604,8 @@ export default function NotSayfasi() {
         </div>
       )}
 
+      {/* ESNEK-MUAYENE-A: hand-note sources, Doğrula with crops, conflicts, proposed file updates, provenance (nothing for a transcript-only note). */}
+      {!onayli ? <NotKaynaklariKarti metin={TR_METIN} getir={trGetir} api={TR_API} noteId={params.id} onDegisti={() => { if (!degisti) window.location.reload() }} /> : null}
       <NotDuzeni yan={cekVar ? (
         <NotYanKutu baslik={eksikler.length ? `Eksik kalanlar (${eksikler.length})` : 'Çek listesi tamam'} alt="Çek listesi · notu düzenledikçe güncellenir · karar desteği, hekim değerlendirir">
           {eksikler.length ? (

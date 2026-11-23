@@ -16,6 +16,21 @@ const T = { durum: 'test' } as const
 const I = (kapsam: string): Siniflama => ({ durum: 'incelendi', kapsam })
 
 export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
+  // ── ESNEK-MUAYENE-A — El Notu (pratikOturum → doktorId; every row read/written with doctor_id; prologue lib/elNotu/rota.ts) ──
+  'app/api/doktor/el-notu/kaynak/route.ts': I('POST: patientId via hastaSahibiMi and sessionId via seansSahibi (+ session patient === patientId) inside kaynakOlustur before any write; idempotency lookup by doctor_id + isleme; GET: sessionId via seansSahibi / patientId via hastaSahibiMi first, rows by doctor_id; names via hastaAdlari (doctor_id-scoped)'),
+  'app/api/doktor/el-notu/oku/route.ts': I('kaynak by id AND doctor_id (kaynakAl); the original vault id is kept only when getDocumentMeta(doctor) says it is the same patient; vault writes re-check patient + visit ownership (uploadDocument)'),
+  'app/api/doktor/el-notu/dogrula/route.ts': I('kaynak by id AND doctor_id; question rows by doctor_id + kaynak_id; conflict answers: note by id AND doctor_id, doctor only'),
+  'app/api/doktor/el-notu/sablon/route.ts': I('takes no patient id; template rows by doctor_id (create/update/deactivate scoped by id AND doctor_id); example pages read from the doctor\'s own sources only'),
+  'app/api/doktor/el-notu/sozluk/route.ts': I('takes no patient id; lexicon rows by doctor_id; writes doctor only'),
+  'app/api/doktor/el-notu/ayar/route.ts': I('takes no patient id; one row keyed by doctor_id (pratikOturum doktorId); PUT doctor only'),
+  'app/api/doktor/el-notu/sure/route.ts': I('every patient / session / note / source id is verified (hastaSahibiMi, seansSahibi, notes id+doctor_id, kaynakAl) before it is stored; GET sums the doctor\'s own rows'),
+  'app/api/doktor/el-notu/derle/route.ts': I('seansSahibi(doctor, session) in muayeneDerle before anything is read; sources / notes / questions by doctor_id + session_id; patient context via the doctor-scoped hastaDosyasiniDerle'),
+  'app/api/doktor/el-notu/taslak/route.ts': I('note by id AND doctor_id; staff only for notes built from hand-note sources; questions / sources by doctor_id; list query by doctor_id, names via hastaAdlari'),
+  'app/api/doktor/el-notu/kesinlestir/route.ts': I('note by id AND doctor_id; approval through notOnayla (id AND doctor_id on every read/write, patient re-checked with hastaSahibiMi before any transfer)'),
+  'app/api/doktor/el-notu/onay-bekleyen/route.ts': I('doctor only; notes by doctor_id; patient names only for patients.doctor_id = doctor'),
+  'app/api/doktor/el-notu/gorsel/route.ts': I('downloadDocument(doctor, id) scopes by doctor_id (foreign id = 404); only El Notu masked pages / crops are served'),
+  'app/api/doktor/el-notu/orijinal/route.ts': I('kaynak by id AND doctor_id; uploadDocument re-checks patient and visit ownership'),
+  'app/api/doktor/el-notu/dosya-onerisi/route.ts': I('doctor only; note by id AND doctor_id; patient via hastaSahibiMi; patient row updated with id AND doctor_id'),
   // ── MUAYENE-EKLERI-01 ──
   'app/api/doktor/muayene-ekleri/durum/route.ts': I('takes no id; returns only the feature-flag state to an authenticated user'),
   'app/api/doktor/muayene-ekleri/siniflandir/route.ts': I('sessionId + belgeId resolved by baglamYukle: seansSahibi(doctor, session) then getDocumentMeta(doctor, belge) with visitId === session and patientId === the session patient; 404 otherwise; doctor-only'),

@@ -37,7 +37,20 @@ const IZINLI: Record<string, { adet: number; neden: string }> = {
   'app/api/doktor/seans-paketi/route.ts': { adet: 2, neden: 'open one note by id (GET and POST), ownership-scoped — same print page as Medula; does not list visits' },
   'app/api/doktor/araclar/enabiz/mbys/route.ts': { adet: 1, neden: 'MBYS-YARDIMCI-01 "Kaydettim / Aktarıldı" status write: ownership check of the ONE note the doctor marks, by id + doctor_id (then seansSahibi), before the mbys_aktarimlar upsert; nothing of the note is returned. The queue and the record view in the same file use arsivsizNotlar / arsivsizSeanslar' },
   'app/api/doktor/araclar/enabiz/route.ts': { adet: 1, neden: 'open one note by id (deep-link from seans/reçete); visit list uses arsivsizSeanslar/arsivsizNotlar' },
-  'app/api/notes/[id]/approve/route.ts': { adet: 2, neden: 'doctor action on one note by id (approve) + content_tetkikler re-read before merge, both ownership-scoped' },
+  // ESNEK-MUAYENE-A: the approval body moved, unchanged, into lib/doktor/notOnayla.ts (the route is now auth + call)
+  'lib/doktor/notOnayla.ts': { adet: 2, neden: 'doctor action on one note by id (approve) + content_tetkikler re-read before merge, both ownership-scoped' },
+  // ESNEK-MUAYENE-A — El Notu: each read is ONE note or the visit's own session, by id AND doctor_id (a specific visit the
+  // user is working on, never a history list, so an archived visit is not resurfaced by any of them)
+  'app/api/doktor/el-notu/dogrula/route.ts': { adet: 1, neden: 'the source\'s own session (specialty), by id + doctor_id' },
+  'app/api/doktor/el-notu/dosya-onerisi/route.ts': { adet: 1, neden: 'one note by id + doctor_id the doctor is reviewing' },
+  'app/api/doktor/el-notu/kesinlestir/route.ts': { adet: 1, neden: 'one draft note by id + doctor_id being finalized' },
+  'app/api/doktor/el-notu/oku/route.ts': { adet: 2, neden: 'the source\'s own note (approved?) and session (specialty), by id + doctor_id' },
+  'app/api/doktor/el-notu/onay-bekleyen/route.ts': { adet: 1, neden: 'drafts flagged hekim_onayi_bekliyor (live work queue; an archived visit is never sent for approval)' },
+  'app/api/doktor/el-notu/sure/route.ts': { adet: 1, neden: 'ownership check of one note id before a time record' },
+  'app/api/doktor/el-notu/taslak/route.ts': { adet: 3, neden: 'unapproved hand-note drafts (live work list) + one draft by id + doctor_id (GET / PATCH)' },
+  'lib/elNotu/derlemeServisi.ts': { adet: 2, neden: 'the visit being compiled: its session row and its own draft note, by session id + doctor_id' },
+  'lib/elNotu/dogrulaServisi.ts': { adet: 2, neden: 'the visit\'s unapproved draft (placeholder fill) and one note by id for a conflict answer, doctor-scoped' },
+  'lib/elNotu/sunucu.ts': { adet: 1, neden: 'vocabulary of the doctor\'s own approved notes (word counts only, no content kept)' },
   'app/api/notes/[id]/ilac-sonlandir-geri-al/route.ts': { adet: 1, neden: 'Geri al after approving one note by id, ownership-scoped (same note as approve)' },
   'app/api/doktor/not-konsult/route.ts': { adet: 1, neden: 'the note the doctor has open, by id; its patient context comes from hastaDosyaDerleyici (archive-filtered)' },
   'app/api/doktor/rrs/route.ts': { adet: 1, neden: 'note by id → patient ownership check' },

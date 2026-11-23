@@ -273,7 +273,7 @@ describe('NOTYA-CEK-DOGRULA-02 — çek listesi doğru ve canlı', () => {
   it('tek kaynak: sayfa, onay ve not üretimi aynı fonksiyonu kullanır; LLM bloğu yazamaz', () => {
     const oku = (y: string) => readFileSync(new URL(`../../${y}`, import.meta.url), 'utf8')
     const sayfa = oku('app/dashboard/doktor/notlar/[id]/page.tsx')
-    const onay = oku('app/api/notes/[id]/approve/route.ts')
+    const onay = oku('lib/doktor/notOnayla.ts') // ESNEK-MUAYENE-A: the approve route's body lives here (one approval path)
     const son = oku('app/api/sessions/[id]/end/route.ts')
     const get = oku('app/api/notes/[id]/route.ts')
     const konsult = oku('app/api/doktor/not-konsult/route.ts')

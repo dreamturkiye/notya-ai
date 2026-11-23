@@ -38,7 +38,7 @@ describe('kill switch — bağlantı sözleşmesi (kaynak)', () => {
     assert.match(s, /\.\.\.\(ekBlogu \? \{ ekBlogu \} : \{\}\)/, 'ekBlogu boşsa soapNotuUret girdisi değişmemeli')
   })
   it('approve rotası: yönlendirme bayrakla korunur, hata onayı bozmaz', () => {
-    const s = oku('app/api/notes/[id]/approve/route.ts')
+    const s = oku('lib/doktor/notOnayla.ts') // ESNEK-MUAYENE-A: the approve route's body lives here (one approval path)
     const i = s.indexOf('muayeneEkleriAcikMi()')
     assert.ok(i > 0 && s.indexOf('onayliEkleriYonlendir', i) > i)
     assert.match(s.slice(i, i + 700), /catch/)

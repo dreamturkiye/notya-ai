@@ -35,7 +35,7 @@ const var_ = (f: string) => existsSync(join(KOK, f))
 const TR_EKLER = var_('lib/doktor/muayeneEk/sunucu.ts')
 const ULKE_EKLER = var_('components/ulke/uygulama/Ekler.tsx')
 
-const KAPSAM = ['app/api/doktor', 'app/api/sessions', 'app/api/portal', 'app/api/ulke', 'lib/doktor', 'lib/asi', 'lib/ulke', 'core/belgeler', 'core/lab']
+const KAPSAM = ['app/api/doktor', 'app/api/sessions', 'app/api/portal', 'app/api/ulke', 'lib/doktor', 'lib/asi', 'lib/ulke', 'core/belgeler', 'core/lab', 'core/elNotu', 'lib/elNotu']
 
 test('inventory: no patient-document server path builds a model block from the vault original (image or PDF)', () => {
   const ihlal = new Set<string>()

@@ -30,6 +30,8 @@ import {
 import type { SaglamCocukKayitlari } from "@/specialties/pediatri/engines/saglamCocukCek"
 import { doktorFetch, oturumSuresiDoldu, oturumYonlendirmesiniErtele } from '@/lib/doktor/oturumFetch'
 import OturumBekcisi from '@/components/doktor/OturumBekcisi'
+import ElNotuYakala, { type ElNotuSonucu } from '@/components/elNotu/ElNotuYakala'
+import { TR_API, TR_METIN, trGetir } from '@/components/elNotu/trBaglam'
 
 // Kaan (2026-09-10): 30 branşın tamamı, kanonik anahtarlarla (BRANS_ETIKETLERI ile aynı) —
 // böylece profil branşı hangi branş olursa olsun kilitlenir; eski alt-çizgili anahtarlar eşlenir.
@@ -199,6 +201,10 @@ function NewSessionInner() {
   const [ekAcik, setEkAcik] = useState(false)
   /** Ek adımı için önceden açılmış seans satırı (ekler bu seansa bağlı yüklenir). */
   const ekSeansRef = useRef<{ id: string; anahtar: string } | null>(null)
+  // ESNEK-MUAYENE-A: handwritten pages of THIS visit (a source of the note next to — or instead of — the dictation)
+  const [elNotuAcik, setElNotuAcik] = useState(false)
+  const [elNotu, setElNotu] = useState<{ sayfa: number; acik: number } | null>(null)
+  const [elNotuSeans, setElNotuSeans] = useState<string | null>(null)
   useEffect(() => {
     let iptal = false
     const denetim = new AbortController()
@@ -450,7 +456,38 @@ function NewSessionInner() {
   }
 
   /** "Seansı Bitir": kill switch kapalıysa ya da ek adımı herhangi bir nedenle kurulamazsa eski yol (doğrudan not). */
+  /** ESNEK-MUAYENE-A: opens the visit row (same key as the Ekler step) so the pages attach to this muayene. */
+  async function elNotuBaslat() {
+    try {
+      const supabase = doktorSupabase()
+      const kullaniciId = await doktorKullaniciId()
+      if (!kullaniciId || !patientId) { setError(TR_METIN.hata.genel); return }
+      const s = await seansKaydiHazirla(supabase, kullaniciId)
+      ekSeansRef.current = { id: s.id, anahtar: [patientId || "", specialty, sessionType, efektifTarihIso || ""].join("|") }
+      setElNotuSeans(s.id)
+      setElNotuAcik(true)
+    } catch { setError(TR_METIN.hata.genel) }
+  }
+
+  /** Hand-note-only visit: no dictation → the note is compiled from the pages (Muayene Derleyici). */
+  async function elNotundanNot() {
+    const sessionId = elNotuSeans || ekSeansRef.current?.id
+    if (!sessionId || notIstegiSuruyorRef.current) return
+    notIstegiSuruyorRef.current = true
+    setStep("processing"); setError("")
+    try {
+      const r = await trGetir(`${TR_API}/derle`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ sessionId }) })
+      const j = await r.json().catch(() => ({}))
+      if (!r.ok || !j.noteId) throw new Error(j.error || TR_METIN.hata.genel)
+      router.replace(muayeneFormuYolu(String(j.noteId)))
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : TR_METIN.hata.genel)
+      setStep("recording")
+    } finally { notIstegiSuruyorRef.current = false }
+  }
+
   async function seansiBitir() {
+    if (!transcript.trim() && elNotu) return elNotundanNot()
     if (!ekAcik) return processSession()
     if (notIstegiSuruyorRef.current) return
     istenenKayitRef.current = false
@@ -619,6 +656,12 @@ function NewSessionInner() {
               style={S({width:"100%",padding:"16px",background:"#2f4334",color:"#fff",border:"none",borderRadius:"12px",fontSize:"16px",fontWeight:"600",cursor:"pointer"})}>
               🎙️ Seansa Başla
             </button>
+            {patientId && (
+              <button type="button" onClick={()=>{cekListeSifirla(patientId);setCekIsaret({});setSeconds(0);setStep("recording");void elNotuBaslat()}}
+                style={S({width:"100%",marginTop:"10px",padding:"14px",background:"#fff",color:"#2f4334",border:"1.5px solid #2f4334",borderRadius:"12px",fontSize:"15px",fontWeight:"600",cursor:"pointer"})}>
+                ✍️ {TR_METIN.masa.yalnizElNotu}
+              </button>
+            )}
             {/* NOTYA-RANDEVU-TARIH-01: randevudan gelindiyse otomatik tarih — SALT-OKUNUR, düzenlenemez. */}
             {randevuTarihIso && !gecmisTarih && (
               <div style={S({marginTop:"14px",padding:"10px 12px",background:"#ECFDF5",border:"1px solid #6EE7B7",borderRadius:"10px",fontSize:"12px",color:"#065F46"})}>
@@ -697,7 +740,14 @@ function NewSessionInner() {
             />
             <SeansEylemSatiri sinif="notya-seans-aksiyon" vazgecMetni="İptal"
               onVazgec={()=>{dikteHamRef.current="";dikteMetniRef.current="";istenenKayitRef.current=false;stopTimer();recognitionRef.current?.stop();setIsRecordingVoice(false);setStep("setup");setSeconds(0);setTranscript("");setKayitHedefDk(KAYIT_VARSAYILAN_DK);uyariCalindiRef.current=false;setSureUyari(false);setSureDoldu(false);setKayitDurdu(false)}}
-              bitirMetni="⏹ Seansı Bitir → Not Oluştur" onBitir={() => void seansiBitir()} bitirPasif={!transcript.trim()} />
+              bitirMetni="⏹ Seansı Bitir → Not Oluştur" onBitir={() => void seansiBitir()} bitirPasif={!transcript.trim() && !elNotu} />
+            {/* ESNEK-MUAYENE-A: the doctor's handwritten pages are a source of this note (with or without dictation). */}
+            {patientId && (
+              <div style={S({display:"flex",alignItems:"center",justifyContent:"center",gap:"10px",marginTop:"12px",flexWrap:"wrap"})}>
+                <button type="button" onClick={() => void elNotuBaslat()} style={S({padding:"10px 16px",background:"#fff",color:"#2f4334",border:"1.5px solid #2f4334",borderRadius:"20px",fontSize:"13px",fontWeight:"600",cursor:"pointer"})}>✍️ {TR_METIN.elNotuEkle}</button>
+                {elNotu && <span style={S({fontSize:"12px",color:"#2f4334"})}>{TR_METIN.okundu}: {elNotu.sayfa} {TR_METIN.sayfalar}{elNotu.acik ? ` · ${TR_METIN.dogrula.baslik}: ${elNotu.acik}` : ''}</span>}
+              </div>
+            )}
             <div style={S({textAlign:"center",marginTop:"10px",fontSize:"11px",color:"#8b7d70"})}>
               Notları yazdıktan sonra "Seansı Bitir" butonuna basın
             </div>
@@ -800,6 +850,11 @@ function NewSessionInner() {
             )}
           </div>
         )}
+      {elNotuAcik && patientId && elNotuSeans && (
+        <ElNotuYakala metin={TR_METIN} getir={trGetir} api={TR_API} patientId={patientId} sessionId={elNotuSeans} kanal="kamera"
+          onKapat={() => setElNotuAcik(false)}
+          onTamam={(s: ElNotuSonucu) => { setElNotuAcik(false); setElNotu((e) => ({ sayfa: (e?.sayfa || 0) + s.okunan, acik: s.acik })) }} />
+      )}
     </SeansSayfasi>
   )
 }

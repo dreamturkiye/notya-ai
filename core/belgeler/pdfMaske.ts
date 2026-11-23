@@ -65,7 +65,7 @@ type PdfBelge = { numPages: number; getPage: (n: number) => Promise<PdfSayfa>; d
 type PdfModulu = { getDocument: (o: { data: Uint8Array; isEvalSupported?: boolean }) => { promise: Promise<PdfBelge> }; GlobalWorkerOptions: { workerSrc: string } }
 
 let modulSozu: Promise<PdfModulu> | null = null
-function pdfModulu(): Promise<PdfModulu> {
+export function pdfModulu(): Promise<PdfModulu> {
   if (!modulSozu) {
     const taban = `${window.location.origin}${varlikOnEki()}/pdfjs`
     const s = (import(/* webpackIgnore: true */ `${taban}/pdf.min.mjs`) as Promise<PdfModulu>).then((m) => { m.GlobalWorkerOptions.workerSrc = `${taban}/pdf.worker.min.mjs`; return m })

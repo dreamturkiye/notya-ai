@@ -54,12 +54,15 @@ export type Yetki =
   | 'recete'               // e-reçete, SGK, MBYS, clinical AI actions
   | 'ai.asistan'           // the AI assistant (Ayşe) actions
   | 'hesap.kendi'          // own profile / password / avatar
+  | 'elnotu.hazirla'       // ESNEK-MUAYENE-A: ingest the doctor's handwritten pages, answer READING questions, edit a hand-note draft
+                           //   (only when the doctor chose "el notlarımı sekreterim hazırlasın" — checked in lib/elNotu/sunucu.ts)
+  | 'elnotu.kesinlestir'   // ESNEK-MUAYENE-A: finalize a hand-note draft — only when the doctor turned "hekim onayı gerekli" OFF
 
 export const TUM_YETKILER: readonly Yetki[] = [
   'randevu.gor', 'randevu.yonet', 'hasta.liste', 'hasta.kayit', 'hasta.dosya.oku', 'hasta.dosya.yaz',
   'not.oku', 'not.yaz', 'not.onayla', 'olcum.ekle', 'ek.ekle', 'iletisim.gonder', 'iletisim.toplu',
   'mesaj', 'intake.oku', 'intake.yonet', 'portal.baglanti', 'gelen_belge', 'onburo', 'fatura', 'ayar',
-  'personel.yonet', 'recete', 'ai.asistan', 'hesap.kendi',
+  'personel.yonet', 'recete', 'ai.asistan', 'hesap.kendi', 'elnotu.hazirla', 'elnotu.kesinlestir',
 ]
 
 /**
@@ -75,9 +78,13 @@ export const ROL_YETKILERI: Record<PratikRol, readonly Yetki[]> = {
     'randevu.gor', 'randevu.yonet', 'hasta.liste', 'hasta.kayit', 'hasta.dosya.oku', 'hasta.dosya.yaz',
     'olcum.ekle', 'iletisim.gonder', 'iletisim.toplu', 'mesaj', 'intake.oku',
     'intake.yonet', 'portal.baglanti', 'gelen_belge', 'onburo', 'fatura', 'ayar', 'ai.asistan', 'hesap.kendi',
+    // ESNEK-MUAYENE-A (Kaan, 2026-11-23): the secretary already types the doctor's handwritten notes into MBYS; in Notya she
+    // drafts them from the pages and confirms readings — gated per doctor by his own choice (lib/elNotu/sunucu.ts).
+    'elnotu.hazirla', 'elnotu.kesinlestir',
   ],
   asistan: [
     'randevu.gor', 'hasta.liste', 'hasta.dosya.oku', 'not.oku', 'olcum.ekle', 'ek.ekle', 'intake.oku', 'hesap.kendi',
+    'elnotu.hazirla',
   ],
   hasta_danismani: [
     'randevu.gor', 'randevu.yonet', 'hasta.liste', 'hasta.kayit', 'iletisim.gonder', 'mesaj', 'intake.oku',
@@ -171,6 +178,15 @@ export const ROTA_YETKILERI: readonly Kural[] = [
   { yol: '/api/doktor/kd-raporlari', okuKapali: true, yaz: null, sekreterKapali: true },
   // KD-TARAMA-01: thyroid in pregnancy, HPV doses, SMA carrier screening, PMS/PMDD diary — doctor only (sadeceDoktor), never staff.
   { yol: '/api/doktor/kd-tarama', okuKapali: true, yaz: null, sekreterKapali: true },
+
+  // ESNEK-MUAYENE-A — El Notu: drafting from handwritten pages (doctor's choice decides in-route), finalizing only when the
+  // doctor does not require approval; settings and the approval queue are the doctor's own.
+  K('/api/doktor/el-notu', 'elnotu.hazirla', 'elnotu.hazirla'),
+  K('/api/doktor/el-notu/kesinlestir', 'elnotu.hazirla', 'elnotu.kesinlestir'),
+  K('/api/doktor/el-notu/ayar', 'elnotu.hazirla', null),
+  K('/api/doktor/el-notu/gorsel', 'elnotu.hazirla', null),
+  { yol: '/api/doktor/el-notu/onay-bekleyen', okuKapali: true, yaz: null, sekreterKapali: true },
+  { yol: '/api/doktor/el-notu/dosya-onerisi', okuKapali: true, yaz: null, sekreterKapali: true },
 
   // ── intake + portal
   K('/api/doktor/intake-formlari', 'intake.oku', 'intake.yonet'),

@@ -21,8 +21,11 @@ const BEKLENEN: Record<PratikRol, Yetki[]> = {
     'randevu.gor', 'randevu.yonet', 'hasta.liste', 'hasta.kayit', 'hasta.dosya.oku', 'hasta.dosya.yaz',
     'olcum.ekle', 'iletisim.gonder', 'iletisim.toplu', 'mesaj', 'intake.oku', 'intake.yonet', 'portal.baglanti', 'gelen_belge',
     'onburo', 'fatura', 'ayar', 'ai.asistan', 'hesap.kendi',
+    // ESNEK-MUAYENE-A (Kaan, 2026-11-23): hand-note drafting / reading confirmation / finalize-when-the-doctor-allows.
+    // Still gated in-route by the doctor's own preferences (lib/elNotu/sunucu.ts elNotuErisimi).
+    'elnotu.hazirla', 'elnotu.kesinlestir',
   ],
-  asistan: ['randevu.gor', 'hasta.liste', 'hasta.dosya.oku', 'not.oku', 'olcum.ekle', 'ek.ekle', 'intake.oku', 'hesap.kendi'],
+  asistan: ['randevu.gor', 'hasta.liste', 'hasta.dosya.oku', 'not.oku', 'olcum.ekle', 'ek.ekle', 'intake.oku', 'hesap.kendi', 'elnotu.hazirla'],
   hasta_danismani: ['randevu.gor', 'randevu.yonet', 'hasta.liste', 'hasta.kayit', 'iletisim.gonder', 'mesaj', 'intake.oku', 'intake.yonet', 'portal.baglanti', 'hesap.kendi'],
 }
 
@@ -165,7 +168,7 @@ function rotaYolu(dosya: string): string {
   return r.replace(/\[[^\]]+\]/g, '[id]')
 }
 const PRATIK_ROTALAR = dosyalar(join(KOK, 'app/api'))
-  .filter((d) => /pratikOturum/.test(readFileSync(d, 'utf8')) || /gelenBelgeOturum|muayeneEk\/rotaOn/.test(readFileSync(d, 'utf8')))
+  .filter((d) => /pratikOturum/.test(readFileSync(d, 'utf8')) || /gelenBelgeOturum|muayeneEk\/rotaOn|elNotuIstegi/.test(readFileSync(d, 'utf8')))
   .map(rotaYolu)
 
 describe('pratikOturum kullanan her rota sınıflandırılmış', () => {
@@ -185,6 +188,8 @@ describe('pratikOturum kullanan her rota sınıflandırılmış', () => {
       // FOTO-ARSIV-01: the clinical photo archive never served the secretary (closed to her on purpose).
       // GENITAL-ESTETIK-01: new KD routes, doctor only from the start (intimate photos and cosmetic records never reach staff).
       // KD-TARAMA-01: the KD screening records route, doctor only from the start (sadeceDoktor) — no existing secretary access lost.
+      // ESNEK-MUAYENE-A: the approval queue and patient-file proposals are new doctor-only routes (no existing access lost).
+      if (yol === '/api/doktor/el-notu/onay-bekleyen' || yol === '/api/doktor/el-notu/dosya-onerisi') continue
       if (YENI_ROTALAR.has(yol) || NOT_KAPALI(yol) || yol.startsWith('/api/doktor/hasta-foto') || yol.startsWith('/api/doktor/genital-estetik') || yol === '/api/doktor/kd-tarama') continue
       for (const m of ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']) {
         assert.equal(yolIzniVarMi('sekreter', yol, m).izin, true, `sekreter ${m} ${yol}`)
@@ -220,7 +225,8 @@ describe('pratikOturum kullanan her rota sınıflandırılmış', () => {
     }
     assert.deepEqual(
       [...yazilabilen].sort(),
-      ['/api/doktor/documents', '/api/doktor/hasta-foto/[id]/[id]/kucuk', '/api/doktor/hastalar/[id]/olcumler', '/api/doktor/hesap/oturum', '/api/doktor/hesap/sifre-degistir', '/api/personel/avatar', '/api/personel/me'],
+      // ESNEK-MUAYENE-A: + the El Notu drafting routes ('elnotu.hazirla' — still gated in-route by the doctor's own choice)
+      ['/api/doktor/documents', '/api/doktor/el-notu/derle', '/api/doktor/el-notu/dogrula', '/api/doktor/el-notu/kaynak', '/api/doktor/el-notu/oku', '/api/doktor/el-notu/orijinal', '/api/doktor/el-notu/sablon', '/api/doktor/el-notu/sozluk', '/api/doktor/el-notu/sure', '/api/doktor/el-notu/taslak', '/api/doktor/hasta-foto/[id]/[id]/kucuk', '/api/doktor/hastalar/[id]/olcumler', '/api/doktor/hesap/oturum', '/api/doktor/hesap/sifre-degistir', '/api/personel/avatar', '/api/personel/me'],
     )
   })
 })

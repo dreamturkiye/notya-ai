@@ -91,6 +91,8 @@ const navItems: (NavItem & { grup: 'asistan' | 'calisma' | 'diger' })[] = [
   { label: 'Hastalar', route: '/dashboard/doktor/hastalar', yetki: 'hasta.liste', grup: 'calisma' },
   { label: 'Mesajlar', route: '/dashboard/doktor/mesajlar', yetki: 'mesaj', grup: 'calisma' },
   { label: 'Gelen Belgeler', route: '/dashboard/doktor/gelen-belgeler', gelenBelge: true, grup: 'calisma' },
+  // ESNEK-MUAYENE-A: the paper-and-pen workspace (doctor; staff by 'elnotu.hazirla' — the page itself honours the doctor's choice).
+  { label: 'El Notları', route: '/dashboard/doktor/el-notlari', yetki: 'elnotu.hazirla', grup: 'calisma' },
   // KONSULTASYONLAR-02: sekreter ofis saatleri / telefon notlarını defterden görür ve günceller.
   { label: 'Konsültan defteri', route: '/doktor-tools/konsultasyonlar', sadeceSekreter: true, grup: 'calisma' },
   { label: 'Raporlar', route: '/dashboard/doktor/raporlar', sadeceDoktor: true, grup: 'diger' },
@@ -107,6 +109,7 @@ const NAV_IKON_ANAHTARI: Record<string, string> = {
   '/dashboard/doktor/hastalar': 'hastalar',
   '/dashboard/doktor/mesajlar': 'mesajlar',
   '/dashboard/doktor/gelen-belgeler': 'gelenBelgeler',
+  '/dashboard/doktor/el-notlari': 'belge',
   '/dashboard/doktor/raporlar': 'raporlar',
   '/doktor-tools/enabiz': 'belge',
   '/doktor-tools': 'araclar',
