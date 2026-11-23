@@ -5666,3 +5666,5 @@ Open items:
    hook in the country note edit flow (`lib/ulke/uygulama/notlar.ts`); English Scribe output needs repair far less than the Turkish browser recogniser, keyterms
    shipped first.
 7. **DIKTE-TIBBI-01-UZ — Uzbek (Latin) medical keyterms** are a 15-word draft; not read by a native clinician. Waits on Kaan (a native reviewer).
+
+- 2026-11-22 — **Supabase cost (ON HOLD, waits on Kaan's decision).** 7 Supabase projects on Pro ≈ $85/month, ~$60 of it the six country DBs with test data only. Pro projects cannot be paused. Kaan's choice: keep Türkiye, Uzbekistan and Australia; US, UK, Canada and New Zealand are candidates for removal. Agreed path when he says go: export each of the four (data + auth users) into an archive on the BurtiNET VPS (stored, not served — foreign patient data must not be served from Türkiye), then delete the four projects (~$40/month saved), rebuild in-region from archive + repo migrations when that country's first doctor signs. Also waits on the BurtiNET server details. Owner: Kaan (decision), then Claude.
