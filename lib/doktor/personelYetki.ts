@@ -187,6 +187,10 @@ export const ROTA_YETKILERI: readonly Kural[] = [
   K('/api/doktor/el-notu/gorsel', 'elnotu.hazirla', null),
   { yol: '/api/doktor/el-notu/onay-bekleyen', okuKapali: true, yaz: null, sekreterKapali: true },
   { yol: '/api/doktor/el-notu/dosya-onerisi', okuKapali: true, yaz: null, sekreterKapali: true },
+  // ESNEK-MUAYENE-B — the shadow-mode upload (/api/doktor/el-notu/golge*) follows the El Notu rule above ('elnotu.hazirla',
+  // in-route: only while the doctor's shadow mode is in force). The doctor's own learned profile, autonomy ladder, batch
+  // approval, fark notu and suggestion profile are new doctor-only routes (sadeceDoktor) — no existing staff access lost.
+  { yol: '/api/doktor/esnek', okuKapali: true, yaz: null, sekreterKapali: true },
 
   // ── intake + portal
   K('/api/doktor/intake-formlari', 'intake.oku', 'intake.yonet'),

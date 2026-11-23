@@ -57,6 +57,9 @@ import SonrakiAdim from '@/components/doktor/SonrakiAdim'
 import YuklenenDosyalar from '@/components/doktor/YuklenenDosyalar'
 import NotKaynaklariKarti from '@/components/elNotu/NotKaynaklariKarti'
 import { TR_API, TR_METIN, trGetir } from '@/components/elNotu/trBaglam'
+import OzerklikSeridi from '@/components/esnek/OzerklikSeridi'
+import OneriListesi from '@/components/esnek/OneriListesi'
+import { ESNEK_API, ESNEK_TR } from '@/components/esnek/trEsnek'
 import MuayeneEkleri from '@/components/doktor/MuayeneEkleri'
 import { bloklariAktar } from '@/core/belgeler/notaBlok'
 import { useRutinPaket } from '@/lib/doktor/ogrenme/rutinIstemci'
@@ -571,6 +574,11 @@ export default function NotSayfasi() {
         </>}
       />
 
+      {/* ESNEK-MUAYENE-B3: field-level autonomy ladder (green / yellow / auto-accepted; protected items always yellow) — CORE, every branş */}
+      {!onayli && !not.arsivde && (
+        <div style={{ margin: '0 16px' }}><OzerklikSeridi metin={ESNEK_TR} getir={trGetir} api={ESNEK_API} noteId={not.id} /></div>
+      )}
+
       {not.arsivde && (
         <div role="status" style={{ margin: '12px 16px 0', padding: '10px 14px', borderRadius: 10, background: 'rgba(139,125,112,0.12)', border: '1px solid rgba(139,125,112,0.35)', color: '#6d6055', fontSize: 13 }}>
           <b>Arşivde</b> — bu muayene arşivlendi; panoda, listelerde, aramada ve hasta portalında görünmez. Geri almak için Muayene Geçmişi › Arşivlenenler › <b>Arşivden çıkar</b>.
@@ -666,7 +674,10 @@ export default function NotSayfasi() {
         {aiDegGorunen.trim() ? (
           <div>
             <div style={etiket}>Klinik değerlendirme (AI · hastaya görünmez)</div>
-            <div style={{ ...kutu, whiteSpace: 'pre-wrap', color: CHROME_RENK.ink }}>{aiDegGorunen}</div>
+            {/* ESNEK-MUAYENE-B5: the doctor's suggestion profile (quiet always-rejected types, emphasise accepted; safety never quieted) */}
+            <div style={{ ...kutu, color: CHROME_RENK.ink }}>
+              <OneriListesi metin={ESNEK_TR} getir={trGetir} api={ESNEK_API} aiDegerlendirme={aiDegGorunen} varsayilan={<div style={{ whiteSpace: 'pre-wrap' }}>{aiDegGorunen}</div>} />
+            </div>
           </div>
         ) : null}
         <div>

@@ -325,11 +325,14 @@ class Sorgu {
     return this
   }
   insert(y: Satir | Satir[]) { this.islem = 'insert'; this.yuk = Array.isArray(y) ? y : [y]; return this }
-  upsert(y: Satir | Satir[], o?: { onConflict?: string }) {
+  upsert(y: Satir | Satir[], o?: { onConflict?: string; ignoreDuplicates?: boolean }) {
     this.islem = 'upsert'; this.yuk = Array.isArray(y) ? y : [y]
     if (o?.onConflict) this.cakisma = o.onConflict.split(',').map((s) => s.trim())
+    // ESNEK-MUAYENE-B: PostgREST `ignoreDuplicates` — an existing row is left untouched and NOT returned
+    this.yokSay = !!o?.ignoreDuplicates
     return this
   }
+  private yokSay = false
   /** `{ count: 'exact' }` on a write answers the number of rows it touched (PostgREST `Prefer: count=exact`). */
   update(g: Satir, o?: { count?: string }) { this.islem = 'update'; this.guncelleme = g; this.yazmaSayimi = !!o?.count; return this }
   delete(o?: { count?: string }) { this.islem = 'delete'; this.yazmaSayimi = !!o?.count; return this }
@@ -343,6 +346,15 @@ class Sorgu {
   lte(k: string, d: unknown) { return this.kosul(k, (v) => v != null && karsilastir(v, d) <= 0) }
   in(k: string, d: unknown[]) { return this.kosul(k, (v) => (d || []).some((x) => esit(v, x))) }
   is(k: string, d: unknown) { return this.kosul(k, (v) => (d === null ? v == null : v === d)) }
+  /** jsonb / array containment (`@>`): every key / element of `d` is in the column value. */
+  contains(k: string, d: unknown) {
+    const icerir = (v: unknown, x: unknown): boolean => {
+      if (Array.isArray(x)) return Array.isArray(v) && x.every((e) => v.some((w) => icerir(w, e)))
+      if (x && typeof x === 'object') return !!v && typeof v === 'object' && Object.entries(x as Satir).every(([a, b]) => icerir((v as Satir)[a], b))
+      return esit(v, x)
+    }
+    return this.kosul(k, (v) => icerir(v, d))
+  }
   like(k: string, d: string) { const r = likeRegex(d, false); return this.kosul(k, (v) => v != null && r.test(String(v))) }
   ilike(k: string, d: string) { const r = likeRegex(d, true); return this.kosul(k, (v) => v != null && r.test(String(v))) }
   not(k: string, op: string, d: unknown) {
@@ -437,7 +449,7 @@ class Sorgu {
       for (const y of this.yuk) {
         if (this.islem === 'upsert') {
           const mevcut = tablo.find((r) => this.cakisma.every((c) => y[c] !== undefined && esit(r[c], y[c])))
-          if (mevcut) { Object.assign(mevcut, y); yazilan.push(mevcut); continue }
+          if (mevcut) { if (this.yokSay) continue; Object.assign(mevcut, y); yazilan.push(mevcut); continue }
         }
         const r = { id: randomUUID(), created_at: new Date().toISOString(), ...y }
         tablo.push(r); yazilan.push(r)

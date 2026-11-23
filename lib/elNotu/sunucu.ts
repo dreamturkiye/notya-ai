@@ -20,16 +20,20 @@ import type { HafizaOrnegi, Sablon, SozlukGirdisi, CizimBolgesi, Kutu } from '@/
 import { kelimeDagarcigi } from '@/core/elNotu/hafiza'
 import { anahtar as sozlukAnahtari } from '@/core/elNotu/sozluk'
 
-export type ElNotuAyari = { hekimOnayiGerekli: boolean; hazirlayan: 'doktor' | 'sekreter'; tabanDk: number | null }
-export const VARSAYILAN_AYAR: ElNotuAyari = { hekimOnayiGerekli: true, hazirlayan: 'doktor', tabanDk: null }
+/** golgeModu (ESNEK-MUAYENE-B1): shadow mode lets staff with 'elnotu.hazirla' upload pages even when the doctor prepares his own notes. */
+export type ElNotuAyari = { hekimOnayiGerekli: boolean; hazirlayan: 'doktor' | 'sekreter'; tabanDk: number | null; golgeModu?: boolean }
+export const VARSAYILAN_AYAR: ElNotuAyari = { hekimOnayiGerekli: true, hazirlayan: 'doktor', tabanDk: null, golgeModu: false }
 
 export async function ayarYukle(sb: SupabaseClient, doktorId: string): Promise<ElNotuAyari> {
-  const { data, error } = await sb.from('esnek_muayene_ayarlari').select('hekim_onayi_gerekli, el_notu_hazirlayan, taban_dakika_not').eq('doctor_id', doktorId).maybeSingle()
+  let { data, error } = await sb.from('esnek_muayene_ayarlari').select('hekim_onayi_gerekli, el_notu_hazirlayan, taban_dakika_not, golge_modu').eq('doctor_id', doktorId).maybeSingle()
+  // a database without migration 203 (no golge_modu column) still reads the Phase A preferences
+  if (error) ({ data, error } = await sb.from('esnek_muayene_ayarlari').select('hekim_onayi_gerekli, el_notu_hazirlayan, taban_dakika_not').eq('doctor_id', doktorId).maybeSingle())
   if (error || !data) return { ...VARSAYILAN_AYAR }
   return {
     hekimOnayiGerekli: data.hekim_onayi_gerekli !== false,
     hazirlayan: data.el_notu_hazirlayan === 'sekreter' ? 'sekreter' : 'doktor',
     tabanDk: data.taban_dakika_not != null ? Number(data.taban_dakika_not) : null,
+    golgeModu: (data as { golge_modu?: boolean }).golge_modu === true,
   }
 }
 
@@ -39,7 +43,7 @@ export const ELNOTU_YETKI_YOK = 'Bu işlem için yetkiniz yok.'
 export function elNotuErisimi(rol: PratikRol, ayar: ElNotuAyari, eylem: 'hazirla' | 'kesinlestir'): NextResponse | null {
   if (rol === 'doktor') return null
   const yetki = eylem === 'hazirla' ? 'elnotu.hazirla' : 'elnotu.kesinlestir'
-  const izin = izinVarMi(rol, yetki) && ayar.hazirlayan === 'sekreter' && (eylem === 'hazirla' || !ayar.hekimOnayiGerekli)
+  const izin = izinVarMi(rol, yetki) && (eylem === 'hazirla' ? ayar.hazirlayan === 'sekreter' || ayar.golgeModu === true : ayar.hazirlayan === 'sekreter' && !ayar.hekimOnayiGerekli)
   return izin ? null : NextResponse.json({ error: ELNOTU_YETKI_YOK }, { status: 403 })
 }
 

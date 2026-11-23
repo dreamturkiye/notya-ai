@@ -190,6 +190,8 @@ describe('pratikOturum kullanan her rota sınıflandırılmış', () => {
       // KD-TARAMA-01: the KD screening records route, doctor only from the start (sadeceDoktor) — no existing secretary access lost.
       // ESNEK-MUAYENE-A: the approval queue and patient-file proposals are new doctor-only routes (no existing access lost).
       if (yol === '/api/doktor/el-notu/onay-bekleyen' || yol === '/api/doktor/el-notu/dosya-onerisi') continue
+      // ESNEK-MUAYENE-B: the doctor's own Phase B routes, doctor only from the start (sadeceDoktor) — no existing access lost.
+      if (yol.startsWith('/api/doktor/esnek/')) continue
       if (YENI_ROTALAR.has(yol) || NOT_KAPALI(yol) || yol.startsWith('/api/doktor/hasta-foto') || yol.startsWith('/api/doktor/genital-estetik') || yol === '/api/doktor/kd-tarama') continue
       for (const m of ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']) {
         assert.equal(yolIzniVarMi('sekreter', yol, m).izin, true, `sekreter ${m} ${yol}`)
@@ -226,7 +228,8 @@ describe('pratikOturum kullanan her rota sınıflandırılmış', () => {
     assert.deepEqual(
       [...yazilabilen].sort(),
       // ESNEK-MUAYENE-A: + the El Notu drafting routes ('elnotu.hazirla' — still gated in-route by the doctor's own choice)
-      ['/api/doktor/documents', '/api/doktor/el-notu/derle', '/api/doktor/el-notu/dogrula', '/api/doktor/el-notu/kaynak', '/api/doktor/el-notu/oku', '/api/doktor/el-notu/orijinal', '/api/doktor/el-notu/sablon', '/api/doktor/el-notu/sozluk', '/api/doktor/el-notu/sure', '/api/doktor/el-notu/taslak', '/api/doktor/hasta-foto/[id]/[id]/kucuk', '/api/doktor/hastalar/[id]/olcumler', '/api/doktor/hesap/oturum', '/api/doktor/hesap/sifre-degistir', '/api/personel/avatar', '/api/personel/me'],
+      // ESNEK-MUAYENE-B: + the shadow-mode upload (same 'elnotu.hazirla' rule; in-route only while shadow mode is in force)
+      ['/api/doktor/documents', '/api/doktor/el-notu/derle', '/api/doktor/el-notu/dogrula', '/api/doktor/el-notu/golge', '/api/doktor/el-notu/golge/kaynak', '/api/doktor/el-notu/kaynak', '/api/doktor/el-notu/oku', '/api/doktor/el-notu/orijinal', '/api/doktor/el-notu/sablon', '/api/doktor/el-notu/sozluk', '/api/doktor/el-notu/sure', '/api/doktor/el-notu/taslak', '/api/doktor/hasta-foto/[id]/[id]/kucuk', '/api/doktor/hastalar/[id]/olcumler', '/api/doktor/hesap/oturum', '/api/doktor/hesap/sifre-degistir', '/api/personel/avatar', '/api/personel/me'],
     )
   })
 })

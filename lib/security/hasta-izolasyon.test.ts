@@ -435,7 +435,47 @@ async function kdOlarak<T>(f: () => Promise<T>): Promise<T> {
 }
 const GE_JPEG = 'data:image/jpeg;base64,' + Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46, 0x49, 0x46, 0x00, 0x01, 0x01, 0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x00, 0xff, 0xda, 0x00, 0x08, 0x01, 0x01, 0x00, 0x00, 0x3f, 0x00, 0xd2, 0xcf, 0x20, 0xff, 0xd9]).toString('base64')
 
+// ─── ESNEK-MUAYENE-B — per-doctor Phase B rows (shadow source, lexicon row, learned candidate), keyed by doctor id ──────
+const ESNEK_B = new Map<string, { golgeKaynak: string; sozluk: string; aday: string }>()
+function esnekKur(A: Hekim, B: Hekim, ayar: Record<string, unknown> = {}) {
+  ESNEK_B.clear()
+  for (const x of [A, B]) {
+    db.ekle('esnek_muayene_ayarlari', { doctor_id: x.id, golge_modu: true, golge_hedef: 0.9, golge_teklif: 'yok', toplu_onay_izni: true, hekim_duzeltmeleri: {}, ...ayar })
+    const golgeKaynak = db.ekle('muayene_kaynaklari', { doctor_id: x.id, patient_id: x.hasta, session_id: null, tur: 'sekreter_yukleme', kanal: 'kamera', durum: 'okundu', metin: null, isleme_anahtari: `golge${x.harf}`.padEnd(32, '0'), ekleyen_user_id: x.id, ekleyen_rol: 'doktor' }).id as string
+    const sozluk = db.ekle('hekim_el_sozlugu', { doctor_id: x.id, kisaltma: 'QX', kisaltma_anahtar: 'qx', anlam: `Anlam ${isaret(x.harf)}`, kaynak: 'gece', sayac: 1 }).id as string
+    db.ekle('hekim_el_sozlugu', { doctor_id: x.id, kisaltma: 'QY', kisaltma_anahtar: 'qy', anlam: 'kalan', kaynak: 'elle', sayac: 1 })
+    const aday = db.ekle('esnek_ogrenme_adaylari', { doctor_id: x.id, tur: 'sozluk', anahtar: 'sozluk:qx', oneri: { tur: 'sozluk', kisaltma: 'QX', anlam: `Anlam ${isaret(x.harf)}` }, kaynak: 'golge', kanit_sayisi: 2, kanit_idler: [], durum: 'aktif', uygulama: { tablo: 'hekim_el_sozlugu', id: sozluk }, aktif_at: new Date().toISOString() }).id as string
+    ESNEK_B.set(x.id, { golgeKaynak, sozluk, aday })
+  }
+}
+const esnekB = (h: Hekim) => ESNEK_B.get(h.id)!
+
 const VAKALAR: Vaka[] = [
+  // ESNEK-MUAYENE-B — shadow mode, autonomy ladder, batch approval, fark notu, learned profile (foreign ids: 404, nothing written)
+  { ad: 'POST /api/doktor/el-notu/golge/kaynak (gölge mod sayfa kaynağı)', red: 404, kur: (A, B) => esnekKur(A, B),
+    yazdi: (a) => tablo('muayene_kaynaklari').some((k) => k.patient_id === a.hasta && k.doctor_id === a.id && k.isleme_anahtari === 'f'.repeat(32) && k.session_id === null),
+    cagir: (r, a, h) => coz(r.golgeKaynak.POST(iste('POST', '/api/doktor/el-notu/golge/kaynak', { token: a.token, govde: { patientId: h.hasta, kanal: 'kamera', isleme: 'f'.repeat(32) } }))) },
+  { ad: 'POST /api/doktor/el-notu/golge (sekreterin notu)', red: 404, kur: (A, B) => esnekKur(A, B),
+    yazdi: (a) => tablo('golge_karsilastirmalari').some((g) => g.doctor_id === a.id && g.kaynak_id === esnekB(a).golgeKaynak),
+    cagir: (r, a, h) => coz(r.golge.POST(iste('POST', '/api/doktor/el-notu/golge', { token: a.token, govde: { kaynakId: esnekB(h).golgeKaynak, kaynagi: 'yapistir', metin: 'Sentetik sekreter notu: septum orta hatta.' } }))) },
+  { ad: 'GET /api/doktor/esnek/not-durumu (alan özerkliği)', red: 404, kur: (A, B) => esnekKur(A, B),
+    cagir: (r, a, h) => coz(r.esnekNotDurumu.GET(iste('GET', `/api/doktor/esnek/not-durumu?noteId=${h.bekleyenNot}`, { token: a.token }))) },
+  { ad: 'POST /api/doktor/esnek/not-durumu (not açıldı)', red: 404, kur: (A, B) => esnekKur(A, B),
+    yazdi: (a) => tablo('esnek_olaylar').some((o) => o.doctor_id === a.id && o.note_id === a.bekleyenNot && o.tur === 'acildi'),
+    cagir: (r, a, h) => coz(r.esnekNotDurumu.POST(iste('POST', '/api/doktor/esnek/not-durumu', { token: a.token, govde: { noteId: h.bekleyenNot, tur: 'acildi' } }))) },
+  { ad: 'POST /api/doktor/esnek/toplu-onay (günlük toplu onay)', kur: (A, B) => esnekKur(A, B),
+    cagir: (r, a, h) => coz(r.esnekToplu.POST(iste('POST', '/api/doktor/esnek/toplu-onay', { token: a.token, govde: { noteIds: [h.bekleyenNot] } }))) },
+  { ad: 'POST /api/doktor/esnek/fark (önizleme: önceki muayene)', red: 404, okur: true, kur: (A, B) => esnekKur(A, B),
+    cagir: (r, a, h) => coz(r.esnekFark.POST(iste('POST', '/api/doktor/esnek/fark', { token: a.token, govde: { islem: 'onizle', patientId: h.hasta, metin: 'öksürük ↓' } }))) },
+  { ad: 'POST /api/doktor/esnek/fark (kontrol notu taslağı)', red: 404, kur: (A, B) => esnekKur(A, B),
+    yazdi: (a) => tablo('notes').some((n) => n.doctor_id === a.id && (n.kaynak_ozeti as { fark?: unknown } | null)?.fark),
+    cagir: (r, a, h) => coz(r.esnekFark.POST(iste('POST', '/api/doktor/esnek/fark', { token: a.token, govde: { islem: 'kaydet', patientId: h.hasta, metin: 'öksürük ↓' } }))) },
+  { ad: 'PATCH /api/doktor/esnek/profil (kısaltmayı unut)', kur: (A, B) => esnekKur(A, B),
+    yazdi: (a) => !tablo('hekim_el_sozlugu').some((x) => x.id === esnekB(a).sozluk),
+    cagir: (r, a, h) => coz(r.esnekProfil.PATCH(iste('PATCH', '/api/doktor/esnek/profil', { token: a.token, govde: { islem: 'sozluk_sil', id: esnekB(h).sozluk } }))) },
+  { ad: 'POST /api/doktor/esnek/ogrenilen (bu hafta öğrendiğini geri al)', red: 404, kur: (A, B) => esnekKur(A, B),
+    yazdi: (a) => tablo('esnek_ogrenme_adaylari').some((x) => x.id === esnekB(a).aday && x.durum === 'geri_alindi'),
+    cagir: (r, a, h) => coz(r.esnekOgrenilen.POST(iste('POST', '/api/doktor/esnek/ogrenilen', { token: a.token, govde: { id: esnekB(h).aday } }))) },
   // GENITAL-ESTETIK-01 — records, recall, intimate photos (KD only; foreign ids answer 404, never a byte or a name)
   { ad: 'GET /api/doktor/genital-estetik (kayıtlar + foto metaverisi)', red: 404, okur: true,
     cagir: (r, a, h) => kdOlarak(() => coz(r.genitalEstetik.GET(iste('GET', `/api/doktor/genital-estetik?patientId=${h.hasta}`, { token: a.token })))) },
@@ -966,6 +1006,13 @@ describe('HASTA-İZOLASYON: doktor A ve doktor B birbirinin hastasına hiçbir r
     fotoGorsel = await import('../doktor/fotoArsiv/testGorselleri')
     const ice = (y: string) => import(`../../${y}`)
     R = {
+      golgeKaynak: await ice('app/api/doktor/el-notu/golge/kaynak/route'),
+      golge: await ice('app/api/doktor/el-notu/golge/route'),
+      esnekNotDurumu: await ice('app/api/doktor/esnek/not-durumu/route'),
+      esnekToplu: await ice('app/api/doktor/esnek/toplu-onay/route'),
+      esnekFark: await ice('app/api/doktor/esnek/fark/route'),
+      esnekProfil: await ice('app/api/doktor/esnek/profil/route'),
+      esnekOgrenilen: await ice('app/api/doktor/esnek/ogrenilen/route'),
       hastalar: await ice('app/api/doktor/hastalar/route'),
       hastaDetay: await ice('app/api/doktor/hastalar/[id]/route'),
       hastaSeanslari: await ice('app/api/doktor/hastalar/[id]/sessions/route'),

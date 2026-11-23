@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
   if ('hata' in o) return o.hata
   const b = (await req.json().catch(() => null)) as { noteId?: unknown; islem?: unknown; duzenlemeler?: unknown } | null
   if (!uuidMu(b?.noteId)) return json({ error: 'Not gerekli.' }, 400)
-  const { data: n } = await o.supabase.from('notes').select('id, session_id, approved_at, kaynak_ozeti, sessions(patient_id)').eq('id', b!.noteId as string).eq('doctor_id', o.doktorId).maybeSingle()
+  const { data: n } = await o.supabase.from('notes').select('id, session_id, approved_at, kaynak_ozeti, content_ilaclar, icd10_codes, sessions(patient_id)').eq('id', b!.noteId as string).eq('doctor_id', o.doktorId).maybeSingle()
   if (!n || (o.rol !== 'doktor' && !elNotuTaslagiMi(n.kaynak_ozeti as KaynakOzeti))) return json({ error: 'Not bulunamadı.' }, 404)
   if (n.approved_at) return json({ error: 'Not zaten kesinleşmiş.' }, 409)
   const hastaId = ((n as { sessions?: { patient_id?: string } | null }).sessions?.patient_id) || null
@@ -44,6 +44,24 @@ export async function POST(req: NextRequest) {
   }
   if (islem !== 'kesinlestir') return json({ error: 'Geçersiz işlem.' }, 400)
   if (!kesinlestirebilirMi(o.rol, o.ayar)) return json({ error: 'Hekim onayı gerekiyor; notu hekime gönderin.' }, 403)
+  // ESNEK-MUAYENE-B3: never automatic, never without the doctor — drugs / doses, diagnosis codes and allergy proposals go
+  // to his queue even when he turned approval off (the secretary finalizes everything else).
+  if (o.rol !== 'doktor') {
+    const { personelKesinlestirmeEngeli } = await import('@/lib/esnek/ozerklikServisi')
+    // the stored note AND the secretary's own edits (adding a drug or a code in the form is the same as having one)
+    const duz = (b?.duzenlemeler && typeof b.duzenlemeler === 'object' ? b.duzenlemeler : {}) as { ilaclar?: unknown; icdKodlari?: unknown }
+    const engel = personelKesinlestirmeEngeli({
+      content_ilaclar: Array.isArray(duz.ilaclar) && duz.ilaclar.length ? duz.ilaclar : (n as { content_ilaclar?: unknown }).content_ilaclar,
+      icd10_codes: Array.isArray(duz.icdKodlari) && duz.icdKodlari.length ? duz.icdKodlari : (n as { icd10_codes?: unknown }).icd10_codes,
+      kaynak_ozeti: n.kaynak_ozeti,
+    })
+    if (engel) {
+      await o.supabase.from('notes').update({ hekim_onayi_bekliyor: true }).eq('id', n.id).eq('doctor_id', o.doktorId)
+      await denetimYaz(o.supabase, { doktorId: o.doktorId, patientId: hastaId, noteId: String(n.id), sessionId: n.session_id as string, eylem: 'hekime_gonderildi', aktor: o.aktor, ayrinti: { korumali: engel } })
+      const neden = { ilac: 'İlaç ve doz', tani_kodu: 'Tanı kodu', alerji: 'Alerji' }[engel]
+      return json({ error: `${neden} içeren not hekim onayı olmadan kesinleşmez; not hekime gönderildi.`, durum: 'hekime_gonderildi', korumali: engel }, 409)
+    }
+  }
   if ((aciklar || []).length) {
     const korumali = (aciklar || []).some((r) => r.sinif === 'korumali' || r.sinif === 'celiski')
     return json({ error: korumali ? 'Sağ/sol, var/yok, sayı, doz, ilaç ve alerji okumaları doğrulanmadan not kesinleşmez.' : 'Önce doğrulama sorularını cevaplayın.', acik: (aciklar || []).length }, 409)

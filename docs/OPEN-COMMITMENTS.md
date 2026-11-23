@@ -5678,7 +5678,8 @@ classes, lexicon + KBB / general Turkish seeds, personal handwriting memory, dra
 patient file / Gelen Belgeler, batch upload, Doğrula with crops, secretary finalize per the doctor's preference, harness
 `scripts/el-notu-degerlendir.mts`. Open:
 
-1. **ESNEK-A-MIGRATION — migration 202 is NOT applied anywhere yet.** Owner: Claude, waits on Kaan. On 2026-11-23 every
+1. **ESNEK-A-MIGRATION — RESOLVED 2026-11-23:** migration 202 is applied on production (`schema_migrations` 202, 20:19 UTC;
+   the 8 tables verified again by the Phase B job). Original entry kept below for the record. Owner: Claude, waits on Kaan. On 2026-11-23 every
    Supabase project (Notya Ai `anjayzospuurymjmmtim` and the six country projects) reported status INACTIVE and refused SQL
    ("Database is possibly not accessible"). Not restored by Claude (cost / infra decision, see the 2026-11-22 Supabase cost
    entry). When Kaan reactivates production: apply `lib/db/migrations/202_esnek_muayene.sql` with the Supabase MCP tools and
@@ -5693,7 +5694,7 @@ patient file / Gelen Belgeler, batch upload, Doğrula with crops, secretary fina
    then iterate prompts / thresholds against the clinical ground truth (facts, invented = 0, Doğrula per page).
 3. **ESNEK-A-ORNEKLER — the KBB doctor will send many more handwritten pages (via Dr. Gökhan)** for accuracy work. Owner:
    Claude (evaluation), Kaan / Dr. Gökhan (collecting, consent). Keep them outside the repo; add clinical-only ground truth.
-4. **ESNEK-A-ULKE — six-country application.** Owner: Claude. Status for us, gb, ca, au, nz, uz: OPEN GAP. The core
+4. **ESNEK-A-ULKE — six-country application (now ONE planned job with Phase B: see ESNEK-AB-ULKE below).** Owner: Claude. Status for us, gb, ca, au, nz, uz: OPEN GAP. The core
    (core/elNotu, components/elNotu) is country-neutral (words, API prefix, seeds, drug matcher injected; prompts English), but
    the country builds run their own visit / note pipeline and their own database (ulke_* tables through ulkeTablosu), so the
    port is its own change: country migration (ulke_muayene_kaynaklari, ulke_hekim_el_sozlugu, ulke_hekim_el_yazisi_hafizasi,
@@ -5715,7 +5716,7 @@ patient file / Gelen Belgeler, batch upload, Doğrula with crops, secretary fina
 
 ### Later phases (logged 2026-11-23, owner Claude)
 
-- **Phase B — shadow mode and autonomy.** Notya drafts in the background from the pages the secretary already types,
+- **Phase B — SHIPPED on main 2026-11-23 (ESNEK-MUAYENE-B, section below).** Notya drafts in the background from the pages the secretary already types,
   compares with the secretary's own note, sends the doctor a daily one-line match report, and offers to take over at
   ≥ 90% content match. Overnight learning loop with a regression test against the doctor's past approved notes.
   Field-level autonomy ladder: B0 draft → B1 highlighted differences → B2 one-tap approval after 20 uncorrected notes →
@@ -5726,3 +5727,43 @@ patient file / Gelen Belgeler, batch upload, Doğrula with crops, secretary fina
   (no photo step, exact positions on the drawing regions, no masking needed for the header — it is typed from the record).
 
 - 2026-11-23 — **Supabase country projects — update (waits on Kaan's decision).** Billing issue paused all projects; org back on Pro. Running: Türkiye (prod), Uzbekistan, Australia. US, UK, Canada and New Zealand were restored to take full backups (verified; archives delivered to Kaan 2026-11-23: data, auth users without secrets, storage metadata, full schema and migration history — almost no real data, one test account in US). Kaan: "Keep them for now." They run and are billed (~$40/month) until he decides; Claude recommends deletion (dashboard: Settings → General → Delete project). Owner: Kaan.
+
+## 2026-11-23 — ESNEK-MUAYENE-B (gölge mod, gece öğrenme, alan özerkliği, fark notu, öneri profili, tanıma kartı, zaman ölçer) — open items
+
+Shipped on main in this change (CORE: all 30 branches + 10 Özel Branşlar, one product): core/esnek (fact-level comparison,
+candidates + never-learned guard + regression guard, autonomy ladder, fark notu merge, suggestion profile, working pattern,
+time meter), lib/esnek (server), routes app/api/doktor/el-notu/golge(/kaynak), app/api/doktor/esnek/*, cron
+app/api/cron/esnek-gece (00:40 UTC = 03:40 TRT), migration 203 (APPLIED on production anjayzospuurymjmmtim 2026-11-23,
+verified: 5 tables RLS on, own-row + 052 restrictive policies, no anon grant, 9 settings columns, lexicon `gece` source).
+Open:
+
+1. **ESNEK-AB-ULKE — Phase A + B country port as ONE planned job.** Owner: Claude. Status 2026-11-23: us OPEN GAP · gb OPEN
+   GAP · ca OPEN GAP · nz OPEN GAP (these four projects are kept but get no new features until Kaan decides — owner of that
+   decision: Kaan) · au OPEN GAP · uz OPEN GAP (live projects sllwiuhobuagumwbvulf / pzleklfytbigsurumekn; first targets).
+   Why not in this change: the country builds have their own visit / note pipeline and `ulke_*` tables and Phase A itself is not
+   ported yet; Phase B sits on Phase A (sources, reader, approval path). Scope of the one job: everything in ESNEK-A-ULKE plus
+   ulke_golge_karsilastirmalari, ulke_esnek_ogrenme_adaylari, ulke_alan_ozerklik, ulke_esnek_olaylar,
+   ulke_oneri_profili_kararlari (+ the settings columns) through ulkeTablosu with the country encryption pattern; the
+   approval hook in the country notOnayla; /api/ulke/esnek/* + the country nightly loop (per country DB, cronYetki); country
+   words for EsnekMetinleri (en; uz Latin/Cyrillic; ru) incl. the number suffix rule per language; the same shared components
+   (components/esnek/* are country-neutral — words / API / routes injected, one look). Migration 203 was deliberately NOT
+   applied to the country databases (their schema is the `ulke_*` set; 203's tables would be unused there).
+2. **ESNEK-B-KALIBRASYON — calibrate the fact-level comparison on real pairs.** Owner: Claude (needs real data: Kaan / Dr.
+   Gökhan collect the KBB doctor's pages + the secretary's typed notes, consent, kept outside the repo). The comparison is
+   deterministic and strict (one missing fact = not "the same content"); synonyms beyond the lexicon (e.g. phrasing families)
+   may under-report the match and delay the offer — never over-report it. Measure on ≥ 30 real pairs, tune the synonym table
+   and ESLESME_ESIGI, never loosen the protected rules (side / presence / numbers).
+3. **ESNEK-B-BILDIRIM — the end-of-day notification is in-app.** Owner: Kaan (product decision). Notya has no push channel
+   (no web push / service-worker notifications in the doctor app); the one daily notification is shown on the home screen at
+   or after the doctor's usual approval time, once a day per device. A real push notification is its own change.
+4. **ESNEK-B-HASTA-DOSYASI — paper-doctor ordering inside the patient file.** Owner: Claude. Home adapts ("El notu ekle"
+   first, no microphone push, Asistan tile moved last); the patient file still shows "Muayeneyi Başlat" before "El notu ekle"
+   because reading the profile there would add a request to the patient-file hot path (performance budget). Do it by carrying
+   `calismaSekli` in the existing patient-file payload, not a new call.
+5. **ESNEK-B-ONERI-FISILTI — suggestion profile covers the note advisory (Ayşe's değerlendirme bullets + reçete önerisi).**
+   Owner: Claude. Fısıltı reminders keep their own per-item hide (NOTYA-FISILTI-GIZLE-01); they are clinical reminders, not
+   advisory suggestions, and are deliberately not quieted by type.
+6. **ESNEK-B-GOLGE-PERSONEL — staff permission while shadow mode is on.** Owner: Claude. Shadow mode lets staff with
+   `elnotu.hazirla` use the El Notu routes even when the doctor prepares his own notes (the desk shows them only the shadow
+   upload panel). Narrow the server gate to the capture routes (kaynak / orijinal / oku / sablon GET / golge) when the El Notu
+   prologue gains a per-route mode.

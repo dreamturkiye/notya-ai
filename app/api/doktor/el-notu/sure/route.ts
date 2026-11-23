@@ -1,13 +1,12 @@
 /**
  * ESNEK-MUAYENE-A — time meter. POST { asama, sureMs, noteId?, sessionId?, kaynakId?, patientId? } records measured active time
- * on a Notya documentation screen; GET → today's summary for the practice (Türkiye day) against the doctor's baseline.
+ * on a Notya documentation screen; GET → today + the week (Türkiye days) against the best honest baseline (ESNEK-MUAYENE-B7).
  * HASTA-IZOLASYON: any patient / session / note / source id is checked to belong to the doctor before it is stored.
  */
 import { NextRequest } from 'next/server'
 import { elNotuIstegi, json, uuidMu } from '@/lib/elNotu/rota'
 import { sureYaz, kaynakAl } from '@/lib/elNotu/sunucu'
 import { hastaSahibiMi, seansSahibi } from '@/lib/doktor/hastaSahipligi'
-import { gunlukOzet } from '@/core/elNotu/zaman'
 import { pratikOturum } from '@/lib/doktor/pratikOturum'
 import { ayarYukle } from '@/lib/elNotu/sunucu'
 
@@ -29,11 +28,11 @@ export async function POST(req: NextRequest) {
   return json({ ok: true })
 }
 
+/** ESNEK-MUAYENE-B7: today + the last 7 days, "önce" from the best honest baseline (shadow-mode measured → declared → doctor's). */
 export async function GET(req: NextRequest) {
   const o = await elNotuIstegi(req, 'doktor')
   if ('hata' in o) return o.hata
-  const gun = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Istanbul' }).format(new Date())
-  const { data } = await o.supabase.from('dokumantasyon_sureleri').select('sure_ms, note_id, session_id, patient_id').eq('doctor_id', o.doktorId).eq('gun', gun).limit(5000)
   const ayar = await ayarYukle(o.supabase, o.doktorId)
-  return json({ gun, ozet: gunlukOzet(data || [], ayar.tabanDk) })
+  const { zamanYukle } = await import('@/lib/esnek/zaman')
+  return json(await zamanYukle(o.supabase, o.doktorId, ayar.tabanDk))
 }

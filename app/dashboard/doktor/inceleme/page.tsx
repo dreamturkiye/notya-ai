@@ -41,6 +41,10 @@ import {
   yenidenDegerlendirDuzenlemeTemizle,
 } from '@/lib/doktor/notYenidenDegerlendir';
 import { doktorFetch } from '@/lib/doktor/oturumFetch'
+import OzerklikSeridi from '@/components/esnek/OzerklikSeridi'
+import OneriListesi from '@/components/esnek/OneriListesi'
+import { ESNEK_API, ESNEK_TR } from '@/components/esnek/trEsnek'
+import { trGetir } from '@/components/elNotu/trBaglam'
 
 interface IlacOner { ad?: string; doz?: string; kullanim?: string; sure?: string }
 interface IcdOner { code?: string; description_tr?: string; description?: string; is_primary?: boolean }
@@ -584,6 +588,8 @@ export default function IncelemePage() {
                     /* Kaan (2026-09-10): Ayşe kutusunda Enter notu daraltıyordu — klavye olayı kartın başlığına yükselmesin */
                     <div onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()} style={{ cursor: 'default' }}>
                       {/* NOTYA-SOAP-02: tam not incelemesi — doktor DÜZENLEYEREK onaylar; düzenlemeler Ayşe'nin öğrenme verisidir */}
+                      {/* ESNEK-MUAYENE-B3: field-level autonomy ladder (protected items always yellow) — CORE, every branş */}
+                      <OzerklikSeridi metin={ESNEK_TR} getir={trGetir} api={ESNEK_API} noteId={note.id} />
                       <div style={{ marginBottom: 10 }}>
                         <div style={{ fontSize: 12, fontWeight: 700, color: CHROME_RENK.pine, marginBottom: 3 }}>Başvuru Yakınması <span style={{ fontWeight: 400, color: CHROME_RENK.muted }}>· düzenlenebilir</span></div>
                         <input value={basvuruTaslak} onChange={(e) => setBasvuruTaslak(e.target.value)} placeholder="Hastanın geliş nedeni"
@@ -651,7 +657,8 @@ export default function IncelemePage() {
                       {aiDegTaslak.trim() && (
                         <div style={{ marginBottom: 10, background: '#FBF3DE', border: '1px solid rgba(180,131,47,0.35)', borderRadius: 8, padding: '8px 10px' }}>
                           <div style={{ fontSize: 12, fontWeight: 700, color: '#B4832F', marginBottom: 5 }}>Ayşe'nin değerlendirmesi <span style={{ fontWeight: 400, color: CHROME_RENK.muted }}>(öneridir — nota ve hastaya yansımaz, yalnız size)</span></div>
-                          <div style={{ fontSize: 13, color: CHROME_RENK.ink }}><HafifMarkdown metin={aiDegTaslak} /></div>
+                          {/* ESNEK-MUAYENE-B5: suggestion profile (quiet always-rejected types; safety never quieted) */}
+                          <div style={{ fontSize: 13, color: CHROME_RENK.ink }}><OneriListesi metin={ESNEK_TR} getir={trGetir} api={ESNEK_API} aiDegerlendirme={aiDegTaslak} varsayilan={<HafifMarkdown metin={aiDegTaslak} />} /></div>
                         </div>
                       )}
                       {receteTaslak.length > 0 && (

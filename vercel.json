@@ -95,6 +95,10 @@
     {
       "path": "/api/cron/odeme-hatirlatma",
       "schedule": "0 5 * * *"
+    },
+    {
+      "path": "/api/cron/esnek-gece",
+      "schedule": "40 0 * * *"
     }
   ]
 }

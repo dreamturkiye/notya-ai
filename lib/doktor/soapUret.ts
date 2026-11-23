@@ -452,6 +452,11 @@ export interface SoapSecenek {
    * (waitUntil) and writes it to the saved note. Not given → B is awaited and merged (scripts / smoke tests).
    */
   oneriAyri?: (oneriSozu: Promise<SoapOnerisi | null>) => void
+  /**
+   * ESNEK-MUAYENE-B1: the advisory (B) is not wanted at all (the shadow-mode draft is compared, never shown) — B is not
+   * called, the advisory fields stay empty. The body (A) call, its prompt and its locks are unchanged.
+   */
+  oneriYok?: boolean
   /** Yalnız test sahtesi — üretim OpenRouter'dan geçer. */
   istemci?: import('@/lib/ai/cagir').AiIstemci
 }
@@ -481,7 +486,7 @@ export async function soapNotuUret(girdi: SoapGirdi, secenek: SoapSecenek = {}):
   }
   const govdeSozu = aiCagir(govdeCagrisi)
   // Klinik öneri (ayırıcı tanı, reçete önerisi, kırmızı bayrak, hasta özeti) — klinik-analiz, JSON (G2 d), kendi politika satırıyla.
-  const hamOneriSozu: Promise<SoapNotu | null> = aiCagir({
+  const hamOneriSozu: Promise<SoapNotu | null> = secenek.oneriYok ? Promise.resolve(null) : aiCagir({
     istemci: secenek.istemci,
     gorev: 'klinik-analiz',
     kademe: 'derin', // NOTYA-KADEME-01: SOAP önerisi arka planda DERİN model

@@ -11,7 +11,6 @@ import { AktifSure } from '@/core/elNotu/zaman'
 import { EL_RENK as R } from './renk'
 import ElNotuYakala, { dugme, type Getirici } from './ElNotuYakala'
 import DogrulaPaneli, { Kirpinti, useSayfaTuvalleri, type DogrulaSatiri, type KaynakGorunumu } from './DogrulaPaneli'
-import GunlukSureSatiri from './GunlukSureSatiri'
 import TopluYukleme, { type RandevuOzeti } from './TopluYukleme'
 
 type Rol = 'doktor' | 'sekreter' | 'asistan' | 'hasta_danismani'
@@ -21,7 +20,7 @@ type TaslakListe = { id: string; sessionId: string; tarih: string; hekimOnayiBek
 
 export type MasaYollari = { notFormu: (noteId: string) => string; hastaDosyasi: (patientId: string) => string; randevular: () => Promise<RandevuOzeti[]> }
 
-export default function ElNotlariMasasi(p: { metin: ElNotuMetinleri; getir: Getirici; api: string; yollar: MasaYollari; hastaSec: (onSec: (h: { id: string; ad: string }) => void) => React.ReactNode }) {
+export default function ElNotlariMasasi(p: { metin: ElNotuMetinleri; getir: Getirici; api: string; yollar: MasaYollari; hastaSec: (onSec: (h: { id: string; ad: string }) => void) => React.ReactNode; /** ESNEK-MUAYENE-B7: the doctor's time meter, injected by the build (today + week). */ ust?: React.ReactNode }) {
   const M = p.metin
   const [ayar, setAyar] = useState<Ayar | null>(null)
   const [kaynaklar, setKaynaklar] = useState<KaynakListe[]>([])
@@ -58,7 +57,7 @@ export default function ElNotlariMasasi(p: { metin: ElNotuMetinleri; getir: Geti
   ]
   return (
     <div style={{ display: 'grid', gap: 16, color: R.murekkep }}>
-      {doktor && <GunlukSureSatiri metin={M} getir={p.getir} api={p.api} />}
+      {doktor && p.ust}
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
         {sekmeler.map((s) => (
           <button key={s.id} type="button" onClick={() => setSekme(s.id)} style={{ ...dugme(sekme === s.id ? 'birincil' : 'ikincil'), borderRadius: 999 }}>

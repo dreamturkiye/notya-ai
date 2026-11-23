@@ -22,6 +22,17 @@ export async function POST(req: NextRequest) {
   try {
     const r = await muayeneDerle(o.supabase, { doktorId: o.doktorId, sessionId: b!.sessionId as string, aktor: o.aktor, metin: EL_NOTU_TR })
     if ('hata' in r) return json({ error: r.hata }, r.durum)
+    // ESNEK-MUAYENE-B1: after the shadow-mode offer was accepted, the secretary does not write — a draft she compiles goes
+    // straight to the doctor's approval queue (Notya drafts, the doctor approves).
+    if (o.rol !== 'doktor') {
+      const { esnekAyarYukle, sekreterYazmasinMi } = await import('@/lib/esnek/sunucu')
+      if (sekreterYazmasinMi(await esnekAyarYukle(o.supabase, o.doktorId))) {
+        await o.supabase.from('notes').update({ hekim_onayi_bekliyor: true }).eq('id', r.noteId).eq('doctor_id', o.doktorId).is('approved_at', null)
+        const { denetimYaz } = await import('@/lib/elNotu/sunucu')
+        await denetimYaz(o.supabase, { doktorId: o.doktorId, noteId: r.noteId, sessionId: b!.sessionId as string, eylem: 'hekime_gonderildi', aktor: o.aktor, ayrinti: { sekreterYazmasin: true } })
+        return json({ ...r, hekimeGonderildi: true })
+      }
+    }
     return json(r)
   } catch (e) {
     console.error(`[el-notu/derle] ${e instanceof Error ? e.name : 'Hata'}`)

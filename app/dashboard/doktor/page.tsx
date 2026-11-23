@@ -40,8 +40,10 @@ import IpucuBaloncugu from '@/components/doktor/IpucuBaloncugu'
 import { useRutinPaket } from '@/lib/doktor/ogrenme/rutinIstemci'
 import { tarayiciSaatDilimi } from '@/lib/doktor/selam'
 import { doktorFetch } from '@/lib/doktor/oturumFetch'
-import GunlukSureSatiri from '@/components/elNotu/GunlukSureSatiri'
-import { EL_NOTU_TR } from '@/core/elNotu/metinTr'
+import ZamanSayaci from '@/components/esnek/ZamanSayaci'
+import EsnekAnaSayfa from '@/components/esnek/EsnekAnaSayfa'
+import { ESNEK_API, ESNEK_TR, ESNEK_YOLLAR, GOLGE_API } from '@/components/esnek/trEsnek'
+import type { AnaSayfaKarari } from '@/core/esnek/tanima'
 
 interface KpiData {
   bugunkuMuayene: number
@@ -141,6 +143,10 @@ export default function DoktorDashboard() {
   const [pediatriAraci, setPediatriAraci] = useState(false)
   const [yeniMesajlar, setYeniMesajlar] = useState<MesajOzet[]>([])
   const rutinPaket = useRutinPaket()
+  // ESNEK-MUAYENE-B6: the home screen adapts to how the doctor works (paper doctor → "El notu ekle" first, no microphone push)
+  const [esnekKarar, setEsnekKarar] = useState<AnaSayfaKarari | null>(null)
+  const esnekGetir = useMemo(() => (u: string, i?: RequestInit) => doktorFetch(u, i || {}), [])
+  const kagitHekim = esnekKarar?.elNotuOnce === true
 
   useEffect(() => {
     // Cached name from a previous session -- read after mount only, never during the initial
@@ -297,8 +303,8 @@ export default function DoktorDashboard() {
           }
         }
         .yg-mobil-ust { display: none; }`}</style>
-      {/* ESNEK-MUAYENE-A: honest daily time line (measured documentation time; gain only against the doctor's own baseline). Hidden on a day with no measurement. */}
-      <GunlukSureSatiri metin={EL_NOTU_TR} getir={(u, i) => doktorFetch(u, i || {})} api="/api/doktor/el-notu" />
+      {/* ESNEK-MUAYENE-A/B7: honest time line — today + week, measured documentation time, "önce" from the best honest baseline. Hidden with no measurement. */}
+      <ZamanSayaci metin={ESNEK_TR} getir={esnekGetir} api="/api/doktor/el-notu" />
 
       {/* Kicker + title */}
       <div>
@@ -323,6 +329,10 @@ export default function DoktorDashboard() {
           return ilk?.patientId ? <IlkHastaAdimi hastaAdi={ilk.hastaAdi} patientId={ilk.patientId} /> : null
         })()}
       </div>
+
+      {/* ESNEK-MUAYENE-B6: how this doctor works — "El notu ekle" first for a paper doctor, ONE notification at an end-of-day
+          approver's usual time, the shadow-mode line, "Bu hafta öğrendiklerim" (one-tap undo). One request, CORE (every branş). */}
+      <EsnekAnaSayfa metin={ESNEK_TR} getir={esnekGetir} api={ESNEK_API} golgeApi={GOLGE_API} yollar={ESNEK_YOLLAR} git={(y) => router.push(y)} onKarar={setEsnekKarar} />
 
       {/* YENI-DOKTOR-UX-2026-10: yeni hesapta kurulum listesi — her satır ilgili ekrana götürür. */}
       <IlkAdimlarKarti />
@@ -363,7 +373,7 @@ export default function DoktorDashboard() {
         </div>
         <div style={S({ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 8 })}>
           {([
-            { ikon: 'asistan', text: 'Asistan', path: '/asistan' },
+            ...(kagitHekim ? [{ ikon: 'belge', text: 'El notu', path: ESNEK_YOLLAR.elNotlari }] : [{ ikon: 'asistan', text: 'Asistan', path: '/asistan' }]),
             { ikon: 'takvim', text: 'Randevu', path: '/dashboard/doktor/randevular' },
             { ikon: 'hastalar', text: 'Hastalar', path: '/dashboard/doktor/hastalar' },
             { ikon: 'belge', text: 'Belge', path: '/dashboard/doktor/belgeler' },
@@ -373,6 +383,7 @@ export default function DoktorDashboard() {
             { ikon: 'inceleme', text: 'İnceleme', path: '/dashboard/doktor/inceleme' },
             { ikon: 'raporlar', text: 'Raporlar', path: '/dashboard/doktor/raporlar' },
             { ikon: 'araclar', text: 'Araçlar', not: 'tümü', path: '/doktor-tools' },
+            ...(kagitHekim ? [{ ikon: 'asistan', text: 'Asistan', path: '/asistan' }] : []),
           ] satisfies { ikon: string; text: string; path: string; not?: string }[]).map((karo) => (
             <button key={karo.text} type="button" onClick={() => router.push(karo.path)}
               style={S({ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 4, minHeight: 64, padding: '8px', borderRadius: 16, border: '1px solid rgba(30,51,54,0.18)', background: '#d0d8d5', color: CHROME_RENK.ink, textAlign: 'left', cursor: 'pointer' })}>
@@ -564,13 +575,15 @@ export default function DoktorDashboard() {
         <div style={S({ fontSize: 14, fontWeight: 700, color: '#4A4030', marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.04em' })}>Hızlı erişim</div>
         <div style={S({ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10 })}>
           {[
+            ...(kagitHekim ? [{ ikon: 'belge', text: 'El notu ekle', path: ESNEK_YOLLAR.elNotlari }] : []),
             { ikon: 'takvim', text: 'Randevular', path: '/dashboard/doktor/randevular' },
-            { ikon: 'asistan', text: 'Asistanı Aç', path: '/asistan' },
+            ...(kagitHekim ? [] : [{ ikon: 'asistan', text: 'Asistanı Aç', path: '/asistan' }]),
             { ikon: 'hastaEkle', text: 'Hasta Ekle', path: '/dashboard/doktor/hasta-ekle' },
             pediatriAraci ? { ikon: 'araclar', text: 'Hedef Boy', path: '/doktor-tools/hedef-boy' } : { ikon: 'araclar', text: 'Araçlar', path: '/doktor-tools' },
             { ikon: 'belge', text: 'Belge Yükle', path: '/dashboard/doktor/belgeler' },
             { ikon: 'inceleme', text: 'İnceleme', path: '/dashboard/doktor/inceleme' },
             { ikon: 'raporlar', text: 'Raporlar', path: '/dashboard/doktor/raporlar' },
+            ...(kagitHekim ? [{ ikon: 'asistan', text: 'Asistanı Aç', path: '/asistan' }] : []),
           ].map((karo) => (
             <button key={karo.text} type="button" className="yg-karo" onClick={() => router.push(karo.path)}
               style={S({ ...card, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 10, padding: '16px', cursor: 'pointer', color: CHROME_RENK.ink, textAlign: 'left' })}>

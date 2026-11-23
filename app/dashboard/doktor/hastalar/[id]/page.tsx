@@ -121,6 +121,8 @@ import { doktorFetch } from '@/lib/doktor/oturumFetch'
 import dynamicImport from 'next/dynamic'
 // ESNEK-MUAYENE-A: the capture modal (and the on-device reader behind it) loads only on tap — the patient-file bundle is unchanged.
 const ElNotuYakala = dynamicImport(() => import('@/components/elNotu/ElNotuYakala'), { ssr: false })
+// ESNEK-MUAYENE-B4: "Kontrol: yalnız değişeni yazın" (fark notu) loads only on tap — the patient-file bundle is unchanged.
+const FarkNotuKapsayici = dynamicImport(() => import('@/components/esnek/FarkNotuKapsayici'), { ssr: false })
 
 export const dynamic = 'force-dynamic';
 
@@ -176,6 +178,7 @@ export default function HastaProfilPage() {
   const router = useRouter();
   const [elNotu, setElNotu] = useState<'kapali' | 'acik' | 'derleniyor'>('kapali');
   const [elNotuHata, setElNotuHata] = useState('');
+  const [farkNotu, setFarkNotu] = useState(false);
   const params = useParams();
   const searchParams = useSearchParams();
   const patientId = params?.id as string;
@@ -567,8 +570,18 @@ export default function HastaProfilPage() {
               >
                 ✍️ {elNotu === 'derleniyor' ? 'Not oluşturuluyor…' : 'El notu ekle'}
               </button>
+              <button
+                onClick={() => setFarkNotu((x) => !x)}
+                aria-expanded={farkNotu}
+                style={{ padding: '10px 18px', background: '#FFFFFF', color: CHROME_RENK.pine, border: `1.5px solid ${CHROME_RENK.pine}`, borderRadius: 999, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
+              >
+                ↻ Kontrol: yalnız değişen
+              </button>
               {elNotuHata && <span role="alert" style={{ fontSize: 12, color: '#B42318', alignSelf: 'center' }}>{elNotuHata}</span>}
             </div>
+          )}
+          {patient && farkNotu && (
+            <div style={{ marginTop: 12 }}><FarkNotuKapsayici patientId={String(patient.id)} kapat={() => setFarkNotu(false)} /></div>
           )}
           {patient && elNotu === 'acik' && (
             <ElNotuYakalaKapsayici patientId={String(patient.id)} onKapat={() => setElNotu('kapali')}

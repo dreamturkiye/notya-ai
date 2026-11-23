@@ -467,5 +467,16 @@ export async function notOnayla(supabase: SupabaseClient, g: NotOnaylaGirdisi): 
     } catch (e) { console.error('[klinik-ozet] onay', e) }
   }
 
+  // ESNEK-MUAYENE-B3/B5: field-level autonomy ladder + suggestion profile, after the response (waitUntil). Never blocks or
+  // changes the approval; idempotent per note. A staff finalization (ogrenme false) only records corrections, never promotes.
+  try {
+    const [{ esnekOnaySonrasi }, { arkaPlanda }] = await Promise.all([import('@/lib/esnek/onaySonrasi'), import('@/lib/esnek/sunucu')])
+    const son: Record<string, unknown> = { ...(existing as Record<string, unknown>), content_tetkikler: mevcutTetkikler, ...guncelleme }
+    arkaPlanda(esnekOnaySonrasi(supabase, {
+      doktorId, noteId, patientId: hastaBenim && hastaIdA ? hastaIdA : null, hekim: g.ogrenme, loglar, son,
+      aiDegerlendirme: (existing.ai_degerlendirme as string | null) ?? null, receteOnerisi: existing.recete_onerisi,
+    }).catch(() => console.error('[esnek] onay sonrası')))
+  } catch { /* öğrenme kritik değil */ }
+
   return NextResponse.json({ success: true, duzenlenenAlanSayisi: loglar.length, receteAktarim, asiAktarim, tetkikAktarim, ilacSonlandirma, ...(kontrolOnerisi ? { kontrolOnerisi } : {}) })
 }
