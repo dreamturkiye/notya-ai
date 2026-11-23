@@ -5724,3 +5724,5 @@ patient file / Gelen Belgeler, batch upload, Doğrula with crops, secretary fina
   (his abbreviations, habits and form, editable).
 - **Phase C — tablet digital paper.** The doctor's own printed form on a tablet screen, pencil strokes captured directly
   (no photo step, exact positions on the drawing regions, no masking needed for the header — it is typed from the record).
+
+- 2026-11-23 — **Supabase country projects — update (waits on Kaan's decision).** Billing issue paused all projects; org back on Pro. Running: Türkiye (prod), Uzbekistan, Australia. US, UK, Canada and New Zealand were restored to take full backups (verified; archives delivered to Kaan 2026-11-23: data, auth users without secrets, storage metadata, full schema and migration history — almost no real data, one test account in US). Kaan: "Keep them for now." They run and are billed (~$40/month) until he decides; Claude recommends deletion (dashboard: Settings → General → Delete project). Owner: Kaan.
