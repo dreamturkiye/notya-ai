@@ -4,6 +4,12 @@
  *   npx tsx scripts/el-notu-degerlendir.mts --klasor <dir> [--sablon <file>] [--serbest] [--model canli|karma|kayit|yok] [--sayfa id,id]
  *                                           [--kayit <dir>] [--cikti <dir>] [--okuma 1-3] [--butce n]
  *                                           [--uzak https://<host>/api/kurucu/el-notu-degerlendir [--kademe hizli|derin]]
+ *                                           [--anthropic-model <id> [--anthropic-effort low|medium|high|xhigh|max] [--normal-model <id>]]
+ *
+ * --anthropic-model (model comparison, TEST ONLY): the image reads go straight to that Anthropic model (Messages API,
+ * ANTHROPIC_API_KEY from the environment, never printed), bypassing the central policy — production routing is not
+ * touched. Reports real usage: tokens, list-price cost per page, reading wall time per page, and the reading ceiling
+ * (facts present anywhere in the model's output). Use a separate --cikti per model (replay keys do not carry the model).
  *
  * --uzak (ESNEK-READER-2): the PRODUCTION model path without handling its key — the masked package of each page (built
  * here by the on-device masker) goes to the admin evaluation route, which runs the reader server-side and returns metrics
@@ -35,7 +41,7 @@ import { sayfaPaketiHazirla, type TuvalAdaptoru } from '../core/elNotu/sayfaPake
 import { parmakIzi } from '../core/elNotu/sablon'
 import { sayfayiHazirla } from '../core/elNotu/onisleme'
 import { sayfayiOku, kaynakMetni, type ModelKapisi } from '../core/elNotu/okuyucu'
-import { sayfaPuanla, toplamPuan, type SayfaPuani } from '../core/elNotu/degerlendirme'
+import { sayfaPuanla, toplamPuan, icerir, type SayfaPuani } from '../core/elNotu/degerlendirme'
 import { anahatOgren } from '../core/elNotu/anahat'
 import { sozlukKur } from '../core/elNotu/sozluk'
 import { tohumlarTr, anahatTr } from '../core/elNotu/tohum'
@@ -57,6 +63,12 @@ const okumaSayisi = arg('okuma') ? Number(arg('okuma')) : undefined
 const butce = arg('butce') ? Number(arg('butce')) : undefined
 const uzak = arg('uzak')
 const kademe = arg('kademe') as 'hizli' | 'derin' | undefined
+// model comparison (test only, never production): image reads (page reads + drawing read) go straight to this Anthropic
+// model id; the clinical normalisation goes to --normal-model (default: the same id). Needs ANTHROPIC_API_KEY; run Node
+// with NODE_USE_ENV_PROXY=1 behind a proxy. --anthropic-effort sets output_config.effort on the image reads only.
+const dogrudanModel = arg('anthropic-model')
+const dogrudanCaba = arg('anthropic-effort')
+const normalModeli = arg('normal-model') || dogrudanModel
 
 type Gercek = { id: string; metin: string; anahtarlar: string[][]; korumali?: boolean; belirsiz?: boolean }
 type Dogruluk = { sayfalar: Record<string, { tur: 'anlati' | 'form'; kimlik: boolean; gercekler: Gercek[]; kelimeler?: string }> }
@@ -110,6 +122,56 @@ async function jetonSay(sistem: string, parcalar: { tur: string; metin?: string;
   jeton.girdi += Math.ceil(g); jeton.cikti += Math.ceil(JSON.stringify(y ?? '').length / 3); jeton.cagri++
 }
 
+/**
+ * Direct Anthropic Messages call (model comparison only). Streams (long adaptive-thinking reads), keeps only text blocks,
+ * records the real usage (tokens, cost at list price, wall time). Output room: thinking counts toward max_tokens on the
+ * adaptive-thinking models, so the reader's own budget gets +24k headroom (the same for every model compared).
+ */
+const FIYAT: [RegExp, number, number][] = [[/fable-5-2|mythos-5-2/, 8, 40], [/fable|mythos/, 10, 50], [/opus-5-5/, 4, 20], [/opus/, 5, 25], [/sonnet-4/, 3, 15], [/sonnet/, 2, 10], [/haiku-5-5/, 0.1, 0.5], [/haiku/, 1, 5]]
+type Kullanim = { cagri: number; ms: number; girdi: number; cikti: number; onbellekYaz: number; onbellekOku: number; usd: number; kesik: number }
+const bosKullanim = (): Kullanim => ({ cagri: 0, ms: 0, girdi: 0, cikti: 0, onbellekYaz: 0, onbellekOku: 0, usd: 0, kesik: 0 })
+const kullanim: Record<'gorsel' | 'normal', Kullanim> = { gorsel: bosKullanim(), normal: bosKullanim() }
+let sayfaKullanimi = bosKullanim()
+function dogrudanBloklar(parcalar: Parameters<ModelKapisi['gorselJson']>[0]['parcalar']): unknown[] {
+  return parcalar.map((p) => (p.tur === 'metin' ? { type: 'text', text: p.metin } : { type: 'image', source: { type: 'base64', media_type: /^image\/(jpeg|png|webp)$/.test(p.gorsel.mime) ? p.gorsel.mime : 'image/jpeg', data: p.gorsel.base64 } }))
+}
+async function dogrudanCagir(model: string, sistem: string, icerik: unknown, azami: number, caba: string | undefined, tur: 'gorsel' | 'normal'): Promise<unknown> {
+  const anahtar = process.env.ANTHROPIC_API_KEY
+  if (!anahtar) throw new Error('ANTHROPIC_API_KEY is not set')
+  const t0 = Date.now()
+  const y = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', 'x-api-key': anahtar, 'anthropic-version': '2023-06-01' },
+    body: JSON.stringify({ model, max_tokens: azami + 24000, stream: true, system: [{ type: 'text', text: sistem, cache_control: { type: 'ephemeral' } }], messages: [{ role: 'user', content: icerik }], ...(caba ? { output_config: { effort: caba } } : {}) }),
+  })
+  if (!y.ok || !y.body) throw new Error(`anthropic ${y.status} ${(await y.text()).slice(0, 200)}`)
+  let metin = '', tampon = '', durma = ''
+  const u = { girdi: 0, cikti: 0, yaz: 0, oku: 0 }
+  const blokTuru = new Map<number, string>()
+  const coz = new TextDecoder()
+  for await (const parca of y.body as unknown as AsyncIterable<Uint8Array>) {
+    tampon += coz.decode(parca, { stream: true })
+    let i: number
+    while ((i = tampon.indexOf('\n')) >= 0) {
+      const satir = tampon.slice(0, i).trim(); tampon = tampon.slice(i + 1)
+      if (!satir.startsWith('data:')) continue
+      const o = JSON.parse(satir.slice(5)) as Record<string, any>
+      if (o.type === 'message_start') { const m = o.message.usage || {}; u.girdi = m.input_tokens || 0; u.yaz = m.cache_creation_input_tokens || 0; u.oku = m.cache_read_input_tokens || 0; u.cikti = m.output_tokens || 0 }
+      else if (o.type === 'content_block_start') blokTuru.set(o.index, o.content_block?.type)
+      else if (o.type === 'content_block_delta' && o.delta?.type === 'text_delta' && blokTuru.get(o.index) === 'text') metin += o.delta.text
+      else if (o.type === 'message_delta') { if (o.usage?.output_tokens != null) u.cikti = o.usage.output_tokens; if (o.delta?.stop_reason) durma = o.delta.stop_reason }
+      else if (o.type === 'error') throw new Error(`anthropic stream ${o.error?.type || 'error'}`)
+    }
+  }
+  const f = FIYAT.find(([r]) => r.test(model)) || [/x/, 0, 0]
+  const usd = (u.girdi * f[1] + u.yaz * f[1] * 1.25 + u.oku * f[1] * 0.1 + u.cikti * f[2]) / 1e6
+  for (const k of [kullanim[tur], sayfaKullanimi]) { k.cagri++; k.ms += Date.now() - t0; k.girdi += u.girdi; k.cikti += u.cikti; k.onbellekYaz += u.yaz; k.onbellekOku += u.oku; k.usd += usd; if (durma === 'max_tokens') k.kesik++ }
+  const { jsonOnarDetay } = await import('../lib/ai/jsonOnar')
+  const r = jsonOnarDetay(metin)
+  if (r.neden !== 'ok') throw new Error(`el-notu json ${r.neden}${durma === 'max_tokens' ? ' (max_tokens)' : ''}`)
+  return r.deger
+}
+
 function modelKapisi(sayfaAdi: string): ModelKapisi | null {
   // the replay key covers the system prompt and every input (images by their first bytes), so a prompt change re-asks
   const anahtar = (etiket: string, sistem: string, girdi: unknown) => `${sayfaAdi}-${etiket}-${crypto.createHash('sha256').update(JSON.stringify([sistem, girdi])).digest('hex').slice(0, 16)}.json`
@@ -131,6 +193,16 @@ function modelKapisi(sayfaAdi: string): ModelKapisi | null {
     await say(y)
     kaydet(f, y)
     return y
+  }
+  if (dogrudanModel) {
+    return {
+      async gorselJson(o) {
+        return sor(o.etiket, anahtar(o.etiket, o.sistem, gorselGirdi(o)), () => dogrudanCagir(dogrudanModel, o.sistem, dogrudanBloklar(o.parcalar), o.azamiToken, dogrudanCaba, 'gorsel'), (y) => jetonSay(o.sistem, o.parcalar as never, y))
+      },
+      async metinJson(o) {
+        return sor(o.etiket, anahtar(o.etiket, o.sistem, o.mesaj), () => dogrudanCagir(normalModeli!, o.sistem, o.mesaj, o.azamiToken, undefined, 'normal'), (y) => jetonSay(o.sistem, o.mesaj, y))
+      },
+    }
   }
   return {
     async gorselJson(o) {
@@ -165,6 +237,7 @@ async function ana() {
   const anlamSozcukleri = new Set(sozluk.girdiler.flatMap((x) => x.anlam.split(/\s+/)).map(kelimeAnahtari))
   const satirlar: Record<string, unknown>[] = []
   const puanlar: SayfaPuani[] = []
+  let herhangiToplam = 0
   const gizlilikToplam = { sayfa: 0, gonderilen: 0, sizinti: 0, resim: 0 }
   const izinliTaban = [...sozluk.girdiler.flatMap((x) => [x.kisaltma, x.anlam]), ...EL_NOTU_TR.dil.bagSozcukleri, EL_NOTU_TR.dil.cizimBasligi, ...Object.values(EL_NOTU_TR.dil.taraf)]
   for (const f of dosyalar) {
@@ -200,11 +273,18 @@ async function ana() {
       const model = uzak ? null : modelKapisi(ad)
       if (model && gt) {
         try {
+          sayfaKullanimi = bosKullanim()
+          const tOku = Date.now()
           const s = await sayfayiOku(sonuc.paket, { bransAdi: 'Kulak Burun Boğaz', dil: EL_NOTU_TR.dil, sozluk, hafiza: [], dagarcik: new Map(), sorulmusKisaltmalar: new Set(), ilac: (await import('../lib/elNotu/ilac')).ilacEslesmesi, sozcukMu: (t) => anlamSozcukleri.has(kelimeAnahtari(t)), sayfaGorseli: sonuc.maskeliSayfa, anahat: anahatOgren([], anahatTr('kulak-burun-bogaz')), okumaSayisi, dogrulaButcesi: butce }, model)
           const metin = kaynakMetni([s], EL_NOTU_TR.dil, (id) => sonuc.sablon?.cizimBolgeleri.find((b) => b.id === id)?.etiket || id)
           const puan = sayfaPuanla({ metin, dogrula: s.dogrula, gercekler: gt.gercekler, hamKelimeler: s.satirlar.flatMap((l) => l.kelimeler.flatMap((k) => [k.metin, ...k.adaylar])), izinli: [...izinliTaban, ...(sonuc.sablon?.cizimBolgeleri || []).map((b) => b.etiket)], okunamadi: EL_NOTU_TR.dil.okunamadi })
           puanlar.push(puan)
-          Object.assign(satir, ozetSatiri(puan), { okumaCagrisi: s.okumaSayisi, butceDisi: s.butceDisi, okunamadi: s.okunamadi })
+          // reading ceiling: facts whose keys appear anywhere in the model's output (every raw read, every alternative,
+          // the drawing findings in the text) — what no orchestration can exceed
+          const hamMetin = `${s.satirlar.flatMap((l) => l.kelimeler.flatMap((k) => [k.metin, ...k.adaylar])).join(' ')}\n${metin}\n${s.dogrula.flatMap((d) => [d.okunan, ...d.adaylar]).join(' ')}`
+          const herhangiOkumada = gt.gercekler.filter((g) => g.anahtarlar.every((grup) => grup.some((a) => icerir(hamMetin, a)))).length
+          herhangiToplam += herhangiOkumada
+          Object.assign(satir, ozetSatiri(puan), { okumaCagrisi: s.okumaSayisi, butceDisi: s.butceDisi, okunamadi: s.okunamadi, herhangiOkumada, okumaMs: Date.now() - tOku, ...(dogrudanModel ? { usd: Math.round(sayfaKullanimi.usd * 10000) / 10000, kesik: sayfaKullanimi.kesik } : {}) })
           if (cikti) fs.writeFileSync(path.join(cikti, `${ad}-okuma.txt`), metin)
         } catch (e) { satir.okumaHatasi = e instanceof Error ? e.message : 'hata' }
       }
@@ -216,11 +296,12 @@ async function ana() {
   const rapor = {
     tarih: new Date().toISOString(), model: uzak ? `uzak:${kademe || 'politika'}` : modelTuru, sablon: sablonlar.map((s) => s.id), okumaSayisi: okumaSayisi ?? 3, butce: butce ?? 5,
     gizlilik: gizlilikToplam,
-    okuma: puanlar.length ? toplamPuan(puanlar) : 'ölçülmedi — model yok (--uzak, ANTHROPIC_API_KEY / OPENROUTER_API_KEY, ya da --model kayit için kayıt gerekli)',
+    ...(dogrudanModel ? { dogrudan: { model: dogrudanModel, caba: dogrudanCaba || 'default', normalModel: normalModeli, kullanim, herhangiOkumada: herhangiToplam, okumaMsOrt: Math.round(satirlar.reduce((a, x) => a + (Number(x.okumaMs) || 0), 0) / Math.max(1, puanlar.length)), usdSayfaBasina: Math.round(((kullanim.gorsel.usd + kullanim.normal.usd) / Math.max(1, puanlar.length)) * 10000) / 10000 } } : {}),
+    okuma: puanlar.length ? toplamPuan(puanlar) :'ölçülmedi — model yok (--uzak, ANTHROPIC_API_KEY / OPENROUTER_API_KEY, ya da --model kayit için kayıt gerekli)',
     sayfalar: satirlar,
     ...(jeton.cagri ? { jetonTahmini: { ...jeton, not: 'estimate: images w·h/750 after resize, text chars/3.5, output JSON chars/3; prompt caching and hidden reasoning ignored' } } : {}),
   }
-  console.log(JSON.stringify({ ozet: { gizlilik: rapor.gizlilik, okuma: rapor.okuma, jeton: jeton.cagri ? jeton : undefined } }, null, 2))
+  console.log(JSON.stringify({ ozet: { gizlilik: rapor.gizlilik, okuma: rapor.okuma, herhangiOkumada: herhangiToplam, dogrudan: (rapor as { dogrudan?: unknown }).dogrudan, jeton: jeton.cagri ? jeton : undefined } }, null, 2))
   if (cikti) fs.writeFileSync(path.join(cikti, 'rapor.json'), JSON.stringify(rapor, null, 2))
   if (isci) await isci.terminate()
   if (gizlilikToplam.sizinti > 0) process.exitCode = 1

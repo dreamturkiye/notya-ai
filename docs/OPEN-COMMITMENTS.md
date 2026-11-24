@@ -5714,6 +5714,38 @@ patient file / Gelen Belgeler, batch upload, Doğrula with crops, secretary fina
      33/55 facts (narratives 28/37) — the remaining gap is the model's recognition of this hand, not the orchestration.
      The deciding run is the production model (goruntu-inceleme → GPT-6 Luna-Pro), which the diagnosis read suggests reads
      this hand far better.
+   - **Stronger-Claude comparison (2026-11-24, TEST ONLY, Kaan "go"; production routing untouched).** Harness flag
+     `--anthropic-model <id> [--anthropic-effort …] [--normal-model <id>]` sends the image reads (3 page reads + drawing
+     read) straight to one Anthropic model; normalisation fixed on Sonnet 5 for every run so only the reader changes. Same
+     9 pages, same on-device masking (63 outbound pictures per run, **0 identity leaks in every run**). Cost = real API
+     usage at list price; latency = wall time of one page's reading (reads run in parallel). "Any read" = facts whose keys
+     appear anywhere in the model output (all reads, alternatives, drawing findings) — broader than the earlier 33/55 count.
+
+     | Run (3 reads unless noted) | Accepted | After Doğrula | Any read /55 | Q/page | Invented | US$/page | s/page |
+     |---|---|---|---|---|---|---|---|
+     | Sonnet 5 (same-day baseline) | 34.5 % | 52.7 % | 42 | 8.3 | 0 | 0.31 | 129 |
+     | Sonnet 5.5 (2 runs) | 36.4 / 40.0 % | 60.0 / 58.2 % | 43 / 44 | 7.1 / 7.0 | 9 / 9 | 0.13 | 29–32 |
+     | **Opus 5.5 medium (API default)** | **61.8 %** | **78.2 %** | 45 | 7.8 | **0** | **0.28** | 54 |
+     | Opus 5.5 high (2 runs) | 65.5 / 61.8 % | 74.5 / 78.2 % | 45 / 46 | 7.0 / 7.1 | 1 / 2 | 0.35 / 0.34 | 60–66 |
+     | Fable 5.2 high (default) | 63.6 % | 76.4 % | 46 | 7.0 | 2 | 0.72 | 69 |
+     | Opus 5.5 high, ONE read | 12.7 % | 30.9 % | 43 | 4.8 | 0 | 0.14 | 46 |
+     | Fable 5.2 high, ONE read | 20.0 % | 36.4 % | 45 | 5.0 | 3 | 0.26 | 47 |
+
+     Findings: Opus 5.5 nearly doubles accepted facts vs Sonnet 5 (≈ 62–66 % vs 35 %) and lifts after-Doğrula to 75–78 %,
+     at the same cost per page and half the latency; Fable 5.2 is no better than Opus within run noise (1 fact = 1.8 pts)
+     at 2.6× the cost. The gain is mostly read-to-read AGREEMENT (stronger models agree, so consensus accepts more), not a
+     higher ceiling (any-read 42 → 45–46). A single read, even high-effort Opus/Fable, sees about as much (43–45) but the
+     orchestration cannot accept without agreement → keep 3 reads. "Invented" words on the strong models are all drawing
+     narration (e.g. "with an arrow", "marked on the drum"), not clinical facts; Sonnet 5.5 adds 9 such narration words on
+     one form page in both runs. Still below the 95 % target: the remaining gap is ~9–10 facts no model reads.
+     **Proposal for Kaan's explicit "go" (not applied):** route El Notu image reads to Opus 5.5 at default (medium) effort —
+     `lib/ai/modeller.ts` (FOUNDER LOCK) gets a new task `'el-notu-okuma'` in `Gorev` + `GOREV_POLITIKASI`
+     (`{ kademe: 'derin', maxTokens: 12000 }`) and a per-task model override `MODEL_EL_NOTU = 'anthropic/claude-opus-5.5'`
+     honoured by `modelSec` for that task only (OpenRouter slug; direct path maps to `claude-opus-5-5`); `lib/elNotu/model.ts`
+     `gorselJson` switches from `'goruntu-inceleme'` to `'el-notu-okuma'`. Cost ≈ US$ 0.28 per page (≈ US$ 280 per 1,000
+     pages; e.g. 10 doctors × 20 pages × 22 days ≈ 4,400 pages ≈ US$ 1,200 / month). Luna-Pro (current production) is still
+     unmeasured on these pages (container cannot reach notya.io) — run it first if egress is opened, then decide.
+     Run cost of this comparison ≈ US$ 24 (10 runs). Owner: Kaan (go / no-go), Claude (apply the same day on "go").
    - **Production-model run — BLOCKED, waits on Kaan:** the admin route `POST /api/kurucu/el-notu-degerlendir` is live
      (founder session or CRON_SECRET; refuses a page whose masking it cannot prove; stores nothing; returns metrics + the
      de-identified reading; optional `kademe: 'hizli'` compares GPT-6 Luna with Luna-Pro through the policy's existing tier
