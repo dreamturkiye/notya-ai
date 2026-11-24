@@ -72,16 +72,42 @@ export type OkuyucuBaglami = {
   sorulmusKisaltmalar: Set<string>
   /** Is this a common word of the language (not an abbreviation)? */
   sozcukMu: (t: string) => boolean
+  /** The whole MASKED page (the same picture the vault keeps): read B sees it once as context for its strips. */
+  sayfaGorseli?: GorselBlok | null
 }
 
 const OKUMA_KURALLARI = (dilAdi: string, brans: string) => `You transcribe a physician's HANDWRITTEN clinical notes, ${dilAdi}, specialty: ${brans}.
 You see one image per line, labelled L<n>. Each image is a horizontal strip; transcribe ONLY the central line of handwriting in it.
+Some strips also show the lines above and below, FADED (light grey): they are context only — never transcribe faded text.
+The notes are a clinical history / examination: age and sex, complaint, its history, past illnesses, regular medication, drug allergy,
+smoking, fluid intake, examination findings, tests, diagnosis and plan.
 Rules:
 - Literal transcription: write exactly what is written, letter by letter, in the order written. Keep the doctor's abbreviations, symbols (Ø, ∅, +, -, ↑, ↓, →, ?, =, /), numbers and punctuation as written. Do NOT expand, correct, translate or complete anything.
 - Every word gets "g": your confidence 0..1 that you read it correctly, and "alt": up to 3 alternative readings when unsure.
 - If a word or part is unreadable write "?" for it with g <= 0.2. Never guess a drug name, a number, a dose or a side (right/left) — if unsure, give low g and alternatives.
 - Crossed-out words: omit them.
-- Return ONLY JSON: {"satirlar":[{"no":<n>,"kelimeler":[{"m":"<word>","g":0.0,"alt":["..."]}],"okunamadi":false}]}`
+- PRINTED text (form labels, letterhead, stamps, legal footers) and the printed drawings are not handwriting: never transcribe them. Pen writing IS handwriting, however short — a single letter such as "N", an abbreviation, a word next to a drawing or at the end of an arrow: transcribe it. Only a strip with no pen writing at all → "bos": true and no words.
+- Return ONLY JSON: {"satirlar":[{"no":<n>,"kelimeler":[{"m":"<word>","g":0.0,"alt":["..."]}],"okunamadi":false,"bos":false}]}`
+
+/** Read B only: the physician's vocabulary as a recognition aid (read A stays purely literal, so the two reads stay independent). */
+const SOZCUK_YARDIMI = (sozcukler: string[]) => sozcukler.length
+  ? `\nVocabulary this physician and specialty use (abbreviation (meaning) or word) — it only helps you RECOGNISE a word that is really written; never write a vocabulary word that is not on the strip:\n${sozcukler.join('; ')}`
+  : ''
+
+/** Vocabulary list for read B from the lexicon (doctor first, then branş, then general), capped. */
+export function okumaSozcukleri(s: Sozluk, azami = 260): string[] {
+  const gorulen = new Set<string>()
+  const out: string[] = []
+  for (const g of s.girdiler) {
+    if (g.baglam === 'sembol') continue
+    const k = kelimeAnahtari(g.kisaltma)
+    if (!k || gorulen.has(k)) continue
+    gorulen.add(k)
+    out.push(kelimeAnahtari(g.anlam) === k ? g.anlam : `${g.kisaltma} (${g.anlam})`)
+    if (out.length >= azami) break
+  }
+  return out
+}
 
 const CIZIM_KURALLARI = (dilAdi: string, brans: string) => `You look at regions of a printed ${brans} examination form on which a physician marked findings with a pen (${dilAdi}).
 For each region image (labelled with its id and anatomy) describe ONLY the physician's pen marks: a letter "N" (normal), a circle, hatching, an arrow, a line, a dot, and any handwritten words in or pointing into the region.
@@ -108,13 +134,19 @@ function satirlariAyikla(ham: unknown): HamSatir[] {
     const kelimeler: HamKelime[] = (Array.isArray(s.kelimeler) ? s.kelimeler : [])
       .map((k: Record<string, unknown>) => ({ m: String(k?.m ?? '').trim(), g: Number(k?.g ?? 0), alt: Array.isArray(k?.alt) ? (k.alt as unknown[]).map(String).filter(Boolean).slice(0, 3) : [] }))
       .filter((k: HamKelime) => k.m)
-    out.push({ no, kelimeler, okunamadi: Boolean(s.okunamadi) })
+    out.push({ no, kelimeler, okunamadi: Boolean(s.okunamadi), bos: Boolean(s.bos) && !kelimeler.some((k: HamKelime) => k.m !== '?') })
   }
   return out
 }
 
-function okumaParcalari(satirlar: SatirPaketi[], hangi: 'A' | 'B', ornekler: HafizaOrnegi[]): IstemParcasi[] {
+function okumaParcalari(satirlar: SatirPaketi[], hangi: 'A' | 'B', ornekler: HafizaOrnegi[], sayfaGorseli?: GorselBlok | null): IstemParcasi[] {
   const p: IstemParcasi[] = []
+  if (hangi === 'B' && sayfaGorseli) {
+    // context: the note as a whole (identity areas are blacked out) — words are easier to recognise in their sentence
+    p.push({ tur: 'metin', metin: 'The whole page, for CONTEXT only (identity areas blacked out). Use it to understand the note; transcribe only the labelled strips that follow:' })
+    p.push({ tur: 'gorsel', gorsel: sayfaGorseli })
+    p.push({ tur: 'metin', metin: 'Strips to transcribe:' })
+  }
   const gorselli = ornekler.filter((o) => o.gorsel)
   if (hangi === 'A' && gorselli.length) {
     p.push({ tur: 'metin', metin: 'Examples of THIS physician\'s handwriting, already confirmed (image → correct text). Use them to recognise his letter shapes and habits:' })
@@ -126,8 +158,11 @@ function okumaParcalari(satirlar: SatirPaketi[], hangi: 'A' | 'B', ornekler: Haf
   return p
 }
 
+/** Output budget of one reading call (10 lines × words × alternatives, plus the room a model spends before answering). */
+export const OKUMA_TOKEN = 8000
+
 /** Lines per model call (keeps one call well inside the output budget and the request size). */
-export const PARTI_SATIR = 16
+export const PARTI_SATIR = 10
 
 async function partilerHalinde<T>(satirlar: SatirPaketi[], f: (parti: SatirPaketi[]) => Promise<T[]>): Promise<T[]> {
   const partiler: SatirPaketi[][] = []
@@ -171,12 +206,17 @@ export async function sayfayiOku(p: SayfaPaketi, b: OkuyucuBaglami, model: Model
   const tumTanimlar = p.satirlar.flatMap((s) => s.tanimlar.filter(Boolean) as { v: number[]; enBoy: number }[])
   const ornekler = benzerOrnekler(tumTanimlar, b.hafiza, 12)
   const sistemOku = OKUMA_KURALLARI(b.dil.dilAdi, b.bransAdi)
+  const sistemOkuB = sistemOku + SOZCUK_YARDIMI(okumaSozcukleri(b.sozluk))
   let okumaSayisi = 0
   const oku = (hangi: 'A' | 'B') => partilerHalinde(p.satirlar, async (parti) => {
-    okumaSayisi++
-    try {
-      return satirlariAyikla(await model.gorselJson({ sistem: sistemOku, parcalar: okumaParcalari(parti, hangi, ornekler), azamiToken: 6000, etiket: `el-notu-okuma-${hangi}` }))
-    } catch { return [] }
+    const istek = { sistem: hangi === 'A' ? sistemOku : sistemOkuB, parcalar: okumaParcalari(parti, hangi, ornekler, b.sayfaGorseli), etiket: `el-notu-okuma-${hangi}` }
+    // one retry when the answer is not usable JSON (a lost read would turn every word of the batch into a question); the
+    // retry gets twice the output room — an empty answer is most often a reply that spent its budget before the JSON
+    for (let deneme = 0; deneme < 2; deneme++) {
+      okumaSayisi++
+      try { return satirlariAyikla(await model.gorselJson({ ...istek, azamiToken: deneme === 0 ? OKUMA_TOKEN : OKUMA_TOKEN * 2 })) } catch { /* retry once */ }
+    }
+    return []
   })
   const [okA, okB] = await Promise.all([oku('A'), oku('B')])
   const harita = (l: HamSatir[]) => new Map(l.map((s) => [s.no, s]))
@@ -185,7 +225,11 @@ export async function sayfayiOku(p: SayfaPaketi, b: OkuyucuBaglami, model: Model
   const dogrula: DogrulaSorusu[] = []
   const satirlar: SatirOkuma[] = []
   for (const s of p.satirlar) {
-    const birlesik = uzlastir(hA.get(s.no) || null, hB.get(s.no) || null)
+    const rA = hA.get(s.no) || null, rB = hB.get(s.no) || null
+    // no pen writing in the strip (printed text, a printed drawing, noise): BOTH independent reads must say so — then the
+    // strip is dropped, not asked (an illegible HANDWRITTEN line is 'okunamadi', never 'bos')
+    if (rA?.bos && rB?.bos) continue
+    const birlesik = uzlastir(rA, rB)
     const korumali = satirKorumali(birlesik.map((k) => k.metin), b.ilac)
     const kelimeler: OkunanKelime[] = birlesik.map((k, i) => {
       const tanim = s.tanimlar.length === birlesik.length ? s.tanimlar[i] : null
@@ -193,7 +237,9 @@ export async function sayfayiOku(p: SayfaPaketi, b: OkuyucuBaglami, model: Model
       const ilac = korumali[i].includes('ilac') && b.ilac ? b.ilac(r.metin) : null
       const kutu = s.kelimeler.length === birlesik.length ? s.kelimeler[i] : s.kutu
       const okunamaz = r.metin === '?' || /^\?+$/.test(r.metin)
-      const kabul = !okunamaz && kabulEdilirMi({ guven: r.guven, uyum: k.uyum || r.hafizadan, korumali: korumali[i], bilinenIlac: ilac?.durum === 'tam' && kelimeAnahtari(ilac.ad) === kelimeAnahtari(r.metin) })
+      // a protected word needs the two reads to agree EXACTLY; a near-identical reading (uzlastir: yakin) is enough only for plain words
+      const uyum = (k.uyum && (!k.yakin || !korumali[i].length)) || r.hafizadan
+      const kabul = !okunamaz && kabulEdilirMi({ guven: r.guven, uyum, korumali: korumali[i], bilinenIlac: ilac?.durum === 'tam' && kelimeAnahtari(ilac.ad) === kelimeAnahtari(r.metin) })
       const adaylar = ilac && ilac.durum === 'yakin' ? [...new Set([r.metin, ilac.ad, ...r.adaylar])] : r.adaylar
       return { metin: r.metin, guven: r.guven, adaylar, uyum: k.uyum, korumali: korumali[i], kabul, kutu, hafizadan: r.hafizadan }
     })
@@ -240,16 +286,17 @@ export async function sayfayiOku(p: SayfaPaketi, b: OkuyucuBaglami, model: Model
   const bag = new Set(b.dil.bagSozcukleri.map(kelimeAnahtari))
   let normaller = new Map<number, string>()
   if (girdiSatirlari.length) {
-    okumaSayisi++
-    try {
-      const ham = await model.metinJson({
-        sistem: NORMAL_KURALLARI(b.dil.dilAdi, b.bransAdi),
-        mesaj: `LEXICON (abbreviation = meaning):\n${sozlukBlogu(b.sozluk)}\n\nLINES:\n${girdiSatirlari.map((s) => `${s.no}: ${s.metin}`).join('\n')}`,
-        azamiToken: 4000, etiket: 'el-notu-normal',
-      })
-      const liste = Array.isArray((ham as { satirlar?: unknown })?.satirlar) ? (ham as { satirlar: { no: unknown; normal: unknown }[] }).satirlar : []
-      normaller = new Map(liste.map((x) => [Number(x.no), String(x.normal ?? '')]))
-    } catch { normaller = new Map() }
+    const mesaj = `LEXICON (abbreviation = meaning):\n${sozlukBlogu(b.sozluk)}\n\nLINES:\n${girdiSatirlari.map((s) => `${s.no}: ${s.metin}`).join('\n')}`
+    // same one retry with twice the output room as the reads (a long page can exhaust the first budget)
+    for (let deneme = 0; deneme < 2; deneme++) {
+      okumaSayisi++
+      try {
+        const ham = await model.metinJson({ sistem: NORMAL_KURALLARI(b.dil.dilAdi, b.bransAdi), mesaj, azamiToken: deneme === 0 ? 4000 : 8000, etiket: 'el-notu-normal' })
+        const liste = Array.isArray((ham as { satirlar?: unknown })?.satirlar) ? (ham as { satirlar: { no: unknown; normal: unknown }[] }).satirlar : []
+        normaller = new Map(liste.map((x) => [Number(x.no), String(x.normal ?? '')]))
+        break
+      } catch { normaller = new Map() }
+    }
   }
   for (const s of satirlar) {
     const girdi = girdiSatirlari.find((g) => g.no === s.no)!.metin

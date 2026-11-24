@@ -30,6 +30,10 @@ export const GENEL_TR_TOHUM: SozlukGirdisi[] = [
   g('KBY', 'kronik böbrek yetmezliği'), g('KKY', 'konjestif kalp yetmezliği'), g('AF', 'atriyal fibrilasyon'), g('GÖRH', 'gastroözofageal reflü hastalığı'),
   g('GÖR', 'gastroözofageal reflü'), g('LPR', 'larengofaringeal reflü'), g('Op', 'operasyon'), g('op', 'operasyon'), g('postop', 'postoperatif'),
   g('preop', 'preoperatif'), g('bx', 'biyopsi'), g('Bx', 'biyopsi'), g('Px', 'prognoz'), g('Hx', 'öykü'), g('c/o', 'şikayeti'),
+  // standard history headings of a Turkish clinical note (written in full or shortened)
+  g('sist hast', 'sistemik hastalık'), g('sist. hast.', 'sistemik hastalık'), g('sistemik hastalık', 'sistemik hastalık'),
+  g('sürekli ilaç', 'sürekli ilaç'), g('ilaç alerjisi', 'ilaç alerjisi'), g('alkol', 'alkol'), g('özgeçmiş', 'özgeçmiş'),
+  g('soygeçmiş', 'soygeçmiş'), g('şikayet', 'şikayet'), g('muayene', 'muayene'), g('tedavi', 'tedavi'), g('takip', 'takip'),
   g('ilaç alj', 'ilaç alerjisi'), g('alj', 'alerji'), g('allerji', 'alerji'), g('sigara', 'sigara'), g('pk/yıl', 'paket-yıl'), g('pkt', 'paket'),
   g('sv', 'sıvı'), g('lt', 'litre'), g('gün', 'gün'), g('hf', 'hafta'), g('hft', 'hafta'), g('ay', 'ay'), g('yl', 'yıl'),
   // radiology / lab

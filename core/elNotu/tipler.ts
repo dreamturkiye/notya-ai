@@ -49,7 +49,7 @@ export type Sablon = {
 
 /** One word as read by one model pass. `g` = the model's own 0..1 confidence; `alt` = alternative readings. */
 export type HamKelime = { m: string; g: number; alt?: string[] }
-export type HamSatir = { no: number; kelimeler: HamKelime[]; okunamadi?: boolean }
+export type HamSatir = { no: number; kelimeler: HamKelime[]; okunamadi?: boolean; /** the strip holds no handwriting (printed text / drawing / noise) */ bos?: boolean }
 
 /** A word after self-consistency and re-ranking. */
 export type OkunanKelime = {

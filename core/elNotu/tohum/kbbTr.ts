@@ -30,5 +30,9 @@ export const KBB_TR_TOHUM: SozlukGirdisi[] = [
   // head & neck
   b('LAP', 'lenfadenopati'), b('LN', 'lenf nodu'), b('SMG', 'submandibuler gland'), b('SMB', 'submandibuler bez'), b('PG', 'parotis bezi'),
   b('Par', 'parotis'), b('Tir', 'tiroid'), b('TN', 'tiroid nodülü'), b('İİAB', 'ince iğne aspirasyon biyopsisi'), b('KBB', 'kulak burun boğaz'),
-  b('sialolit', 'sialolit'), b('sialadenit', 'sialadenit'), b('SCM', 'sternokleidomastoid kas'), b('ÖSB', 'ön servikal bölge'),
+  b('sialolit', 'sialolit'), b('sialadenit', 'sialadenit'), b('sialolitiazis', 'sialolitiazis'), b('sialendoskopi', 'sialendoskopi'),
+  b('sialendoskopik', 'sialendoskopik'), b('submandibuler', 'submandibuler'), b('submand', 'submandibuler'), b('parotis', 'parotis'),
+  b('tükürük bezi', 'tükürük bezi'), b('tonsillektomi', 'tonsillektomi'), b('adenoidektomi', 'adenoidektomi'), b('konka', 'konka'),
+  b('nazofarenks', 'nazofarenks'), b('orofarenks', 'orofarenks'), b('larenks', 'larenks'), b('kulak zarı', 'kulak zarı'),
+  b('masseter', 'masseter'), b('botoks', 'botoks'), b('kulak yolu', 'kulak yolu'), b('işitme kaybı', 'işitme kaybı'), b('SCM', 'sternokleidomastoid kas'), b('ÖSB', 'ön servikal bölge'),
 ]

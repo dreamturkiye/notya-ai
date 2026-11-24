@@ -78,6 +78,7 @@ export async function sayfaOkut(sb: SupabaseClient, g: SayfaOkutGirdisi): Promis
     sayfa = await sayfayiOku(g.paket, {
       bransAdi: g.bransAdi, dil: g.metin.dil, sozluk, hafiza: hafizaTum, dagarcik, ilac: ilacEslesmesi, sorulmusKisaltmalar: sorulmus,
       sozcukMu: (t) => (dagarcik.get(kelimeAnahtari(t)) || 0) >= 2 || anlamSozcukleri.has(kelimeAnahtari(t)),
+      sayfaGorseli: g.maskeliSayfa,
     }, g.model)
   } catch (e) {
     await sb.from('muayene_kaynaklari').update({ durum: 'hata', hata_kodu: e instanceof Error ? e.name : 'Hata', updated_at: new Date().toISOString() }).eq('id', g.kaynak.id).eq('doctor_id', g.doktorId)

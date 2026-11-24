@@ -99,8 +99,9 @@ export function gizlilikKarari(g: GizlilikGirdisi): GizlilikKarari {
   const kutular: Kutu[] = []
   let neden: GizlilikKarari['neden'] = null
   const formlu = g.sablon && g.sablon.tur === 'formlu' && g.sablonEslesmesi >= SABLON_ESIK
+  const sablonKutulari: Kutu[] = []
   if (formlu) {
-    for (const k of g.sablon!.baslikBolgeleri) kutular.push(genislet(k, 0.015, 0.012))
+    for (const k of g.sablon!.baslikBolgeleri) sablonKutulari.push(genislet(k, 0.015, 0.012))
     neden = 'sablon'
   }
   if (g.kullaniciBolgeleri?.length) {
@@ -134,7 +135,14 @@ export function gizlilikKarari(g: GizlilikGirdisi): GizlilikKarari {
         }
       }
     }
-    for (const k of etiketSatirlari) kutular.push(normal(k, g.w, g.h))
+    // the identity block ends at "ŞİKAYETİ" / "Complaints" when at least two identity label rows were read above it: the
+    // complaint is written on that row. A template band (drawn on one print of the form) or a label row's downward margin
+    // that reaches past it is cut there — another print of the same form places the complaint row higher (seen on the
+    // KBB form: the band of print 1 blacked out the complaint line of print 2). Everything above stays masked.
+    const kesimY = blokSonuY !== Infinity && etiketSatirlari.filter((k) => k.y0 < blokSonuY).length >= 2 ? blokSonuY / g.h - 0.003 : null
+    const kes = (k: Kutu): Kutu => (kesimY !== null && k.y0 < kesimY && k.y1 > kesimY ? { ...k, y1: kesimY } : k)
+    for (let i = 0; i < sablonKutulari.length; i++) sablonKutulari[i] = kes(sablonKutulari[i])
+    for (const k of etiketSatirlari) kutular.push(kes(normal(k, g.w, g.h)))
     // with a matched template the template's header band defines the block; label rows are only added on top (a form
     // printed slightly differently still gets its label rows covered), never the spanning block (it would cover the complaint)
     if (etiketSatirlari.length >= 2 && !formlu) {
@@ -150,6 +158,7 @@ export function gizlilikKarari(g: GizlilikGirdisi): GizlilikKarari {
       neden = neden ?? 'etiket'
     } else if (etiketSatirlari.length === 1) neden = neden ?? 'etiket'
   }
+  kutular.unshift(...sablonKutulari)
   for (const k of g.kenarOcr || []) {
     const etiketler = k.satirlar.flatMap((s) => s.kelimeler.filter((w) => etiketMi(w)))
     const rakam = k.satirlar.flatMap((s) => s.kelimeler.filter((w) => /\d{5,}/.test(w.text)))

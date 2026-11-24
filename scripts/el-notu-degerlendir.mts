@@ -1,7 +1,7 @@
 /**
  * ESNEK-MUAYENE-A — El Notu Okuyucu evaluation harness.
  *
- *   npx tsx scripts/el-notu-degerlendir.mts --klasor <dir> [--sablon <file>] [--serbest] [--model canli|kayit|yok]
+ *   npx tsx scripts/el-notu-degerlendir.mts --klasor <dir> [--sablon <file>] [--serbest] [--model canli|karma|kayit|yok] [--sayfa id,id]
  *                                           [--kayit <dir>] [--cikti <dir>]
  *
  * <dir> holds page images (jpg / png / pdf pages as images) and `dogruluk.json` (clinical ground truth only — see
@@ -42,7 +42,7 @@ if (!klasor || !fs.existsSync(klasor)) { console.error('--klasor <dir> gerekli')
 const KOK = path.resolve(new URL('.', import.meta.url).pathname, '..')
 if (path.resolve(klasor).startsWith(KOK)) { console.error('Gerçek sayfalar repo içinde tutulamaz: klasörü repo dışına taşıyın.'); process.exit(2) }
 const cikti = arg('cikti')
-const modelTuru = (arg('model') || (process.env.OPENROUTER_API_KEY || process.env.ANTHROPIC_API_KEY ? 'canli' : 'yok')) as 'canli' | 'kayit' | 'yok'
+const modelTuru = (arg('model') || (process.env.OPENROUTER_API_KEY || process.env.ANTHROPIC_API_KEY ? 'canli' : 'yok')) as 'canli' | 'karma' | 'kayit' | 'yok'
 const kayitKlasoru = arg('kayit') || (cikti ? path.join(cikti, 'kayit') : undefined)
 
 type Gercek = { id: string; metin: string; anahtarlar: string[][]; korumali?: boolean; belirsiz?: boolean }
@@ -81,27 +81,52 @@ async function sizintiVarMi(b64: string): Promise<boolean> {
   return ETIKET_SIZINTI.test(metin) || /\d[\d\s.\-/]{8,}\d/.test(metin) || /\S+@\S+\.\S+/.test(metin)
 }
 
+/** Token estimate of one live call (images: Anthropic's w·h/750 after the ≤1568 px / 1.15 MP resize; text: chars/3.5). */
+const jeton = { girdi: 0, cikti: 0, cagri: 0 }
+async function gorselJetonu(b64: string): Promise<number> {
+  const img = await loadImage(Buffer.from(b64, 'base64'))
+  let w = img.width, h = img.height
+  const o = Math.min(1, 1568 / Math.max(w, h), Math.sqrt(1_150_000 / (w * h)))
+  w *= o; h *= o
+  return Math.ceil((w * h) / 750)
+}
+async function jetonSay(sistem: string, parcalar: { tur: string; metin?: string; gorsel?: { base64: string } }[] | string, y: unknown) {
+  let g = sistem.length / 3.5
+  if (typeof parcalar === 'string') g += parcalar.length / 3.5
+  else for (const p of parcalar) g += p.tur === 'metin' ? (p.metin || '').length / 3.5 : await gorselJetonu(p.gorsel!.base64)
+  jeton.girdi += Math.ceil(g); jeton.cikti += Math.ceil(JSON.stringify(y ?? '').length / 3); jeton.cagri++
+}
+
 function modelKapisi(sayfaAdi: string): ModelKapisi | null {
-  const anahtar = (etiket: string, girdi: unknown) => `${sayfaAdi}-${etiket}-${crypto.createHash('sha256').update(JSON.stringify(girdi)).digest('hex').slice(0, 16)}.json`
+  // the replay key covers the system prompt and every input (images by their first bytes), so a prompt change re-asks
+  const anahtar = (etiket: string, sistem: string, girdi: unknown) => `${sayfaAdi}-${etiket}-${crypto.createHash('sha256').update(JSON.stringify([sistem, girdi])).digest('hex').slice(0, 16)}.json`
+  const gorselGirdi = (o: Parameters<ModelKapisi['gorselJson']>[0]) => o.parcalar.map((p) => (p.tur === 'metin' ? p.metin : p.gorsel.base64.slice(0, 64) + p.gorsel.base64.length))
+  const kayittan = (f: string) => (kayitKlasoru && fs.existsSync(path.join(kayitKlasoru, f)) ? JSON.parse(fs.readFileSync(path.join(kayitKlasoru, f), 'utf8')) : undefined)
+  const kaydet = (f: string, y: unknown) => { if (kayitKlasoru) { fs.mkdirSync(kayitKlasoru, { recursive: true }); fs.writeFileSync(path.join(kayitKlasoru, f), JSON.stringify(y)) } }
   if (modelTuru === 'kayit') {
     if (!kayitKlasoru) return null
-    const oku = (etiket: string, girdi: unknown) => { const f = path.join(kayitKlasoru, anahtar(etiket, girdi)); if (!fs.existsSync(f)) throw new Error('kayıt yok'); return JSON.parse(fs.readFileSync(f, 'utf8')) }
-    return { async gorselJson(o) { return oku(o.etiket, o.parcalar.map((p) => (p.tur === 'metin' ? p.metin : p.gorsel.base64.slice(0, 64)))) }, async metinJson(o) { return oku(o.etiket, o.mesaj) } }
+    const oku = (f: string) => { const y = kayittan(f); if (y === undefined) throw new Error('kayıt yok'); return y }
+    return { async gorselJson(o) { return oku(anahtar(o.etiket, o.sistem, gorselGirdi(o))) }, async metinJson(o) { return oku(anahtar(o.etiket, o.sistem, o.mesaj)) } }
   }
-  if (modelTuru !== 'canli') return null
-  // the production path (lib/ai/cagir.ts → central model policy); answers recorded for replay
+  if (modelTuru !== 'canli' && modelTuru !== 'karma') return null
+  // the production path (lib/ai/cagir.ts → central model policy); answers recorded for replay. karma = replay what was
+  // already asked with the same prompt and input, ask the model only for the rest (cheap re-runs while iterating)
+  const sor = async (etiket: string, f: string, cagir: () => Promise<unknown>, say: (y: unknown) => Promise<void>) => {
+    if (modelTuru === 'karma') { const y = kayittan(f); if (y !== undefined) return y }
+    let y: unknown
+    try { y = await cagir() } catch (e) { console.error(`[el-notu] ${sayfaAdi} ${etiket} call failed: ${e instanceof Error ? e.message.slice(0, 160) : 'error'}`); throw e }
+    await say(y)
+    kaydet(f, y)
+    return y
+  }
   return {
     async gorselJson(o) {
       const { elNotuModeli } = await import('../lib/elNotu/model')
-      const y = await elNotuModeli({ doctorId: null }).gorselJson(o)
-      if (kayitKlasoru) { fs.mkdirSync(kayitKlasoru, { recursive: true }); fs.writeFileSync(path.join(kayitKlasoru, anahtar(o.etiket, o.parcalar.map((p) => (p.tur === 'metin' ? p.metin : p.gorsel.base64.slice(0, 64))))), JSON.stringify(y)) }
-      return y
+      return sor(o.etiket, anahtar(o.etiket, o.sistem, gorselGirdi(o)), () => elNotuModeli({ doctorId: null }).gorselJson(o), (y) => jetonSay(o.sistem, o.parcalar as never, y))
     },
     async metinJson(o) {
       const { elNotuModeli } = await import('../lib/elNotu/model')
-      const y = await elNotuModeli({ doctorId: null }).metinJson(o)
-      if (kayitKlasoru) { fs.mkdirSync(kayitKlasoru, { recursive: true }); fs.writeFileSync(path.join(kayitKlasoru, anahtar(o.etiket, o.mesaj)), JSON.stringify(y)) }
-      return y
+      return sor(o.etiket, anahtar(o.etiket, o.sistem, o.mesaj), () => elNotuModeli({ doctorId: null }).metinJson(o), (y) => jetonSay(o.sistem, o.mesaj, y))
     },
   }
 }
@@ -109,11 +134,14 @@ function modelKapisi(sayfaAdi: string): ModelKapisi | null {
 const icerir = (metin: string, aday: string) => {
   const k = kelimeAnahtari(aday)
   if (!k) return false
+  // a one- or two-letter key ("N", "E", "K", "SD") must be a whole token — as a substring it would match almost any text
+  if (k.length <= 2) return metin.split(/[^\p{L}\p{N}]+/u).some((w) => kelimeAnahtari(w) === k)
   if (kelimeAnahtari(metin).includes(k)) return true
   return metin.split(/[^\p{L}\p{N},.\-]+/u).some((w) => kelimeAnahtari(w).length >= 3 && k.length >= 4 && benzerlik(w, aday) >= 0.8)
 }
 
 async function ana() {
+  const yalniz = arg('sayfa')?.split(',')
   const dosyalar = fs.readdirSync(klasor!).filter((f) => /\.(jpe?g|png)$/i.test(f)).sort()
   const sablonDosyasi = arg('sablon')
   const sablonlar: Sablon[] = []
@@ -129,9 +157,12 @@ async function ana() {
   if (bayrak('serbest')) sablonlar.push({ id: 'serbest', ad: 'Düz kağıt', tur: 'serbest', brans: null, enBoy: 0.707, baslikBolgeleri: [], cizimBolgeleri: [], parmakIzi: null })
   const tohum = tohumlarTr('kulak-burun-bogaz')
   const sozluk = sozlukKur([], tohum.brans, tohum.genel)
+  // same "is this a word, not an abbreviation" test as production (lib/elNotu/okumaServisi.ts) with an empty vocabulary
+  const anlamSozcukleri = new Set(sozluk.girdiler.flatMap((x) => x.anlam.split(/\s+/)).map(kelimeAnahtari))
   const satirlar: Record<string, unknown>[] = []
-  const toplam = { sayfa: 0, gonderilen: 0, sizinti: 0, gercek: 0, bulunan: 0, dogrulamada: 0, kacan: 0, uydurma: 0, dogrula: 0, okunanSayfa: 0 }
+  const toplam = { sayfa: 0, gonderilen: 0, sizinti: 0, gercek: 0, bulunan: 0, dogrulamada: 0, adayda: 0, kacan: 0, uydurma: 0, dogrula: 0, okunanSayfa: 0 }
   for (const f of dosyalar) {
+    if (yalniz && !yalniz.some((y) => f.startsWith(y))) continue
     const ad = f.replace(/-image\.(jpe?g|png)$/i, '').replace(/\.(jpe?g|png)$/i, '')
     const gt = dogruluk.sayfalar[ad]
     const t0 = Date.now()
@@ -149,26 +180,31 @@ async function ana() {
       const model = modelKapisi(ad)
       if (model && gt) {
         try {
-          const s = await sayfayiOku(sonuc.paket, { bransAdi: 'Kulak Burun Boğaz', dil: EL_NOTU_TR.dil, sozluk, hafiza: [], dagarcik: new Map(), sorulmusKisaltmalar: new Set(), sozcukMu: () => false }, model)
+          const s = await sayfayiOku(sonuc.paket, { bransAdi: 'Kulak Burun Boğaz', dil: EL_NOTU_TR.dil, sozluk, hafiza: [], dagarcik: new Map(), sorulmusKisaltmalar: new Set(), sozcukMu: (t) => anlamSozcukleri.has(kelimeAnahtari(t)), sayfaGorseli: sonuc.maskeliSayfa }, model)
           const metin = kaynakMetni([s], EL_NOTU_TR.dil, (id) => sonuc.sablon?.cizimBolgeleri.find((b) => b.id === id)?.etiket || id)
           const kesin = metin.replace(/⟦[^⟧]*⟧/g, ' ')
           const bekleyen = [...metin.matchAll(/⟦[^|⟧]*\|([^⟧]*)⟧/g)].map((m) => m[1]).join(' ')
-          let bulunan = 0, dogrulamada = 0, kacan = 0
+          // the tappable candidates of every Doğrula question (both reads + their alternatives, DogrulaPaneli shows them)
+          const adaylar = s.dogrula.flatMap((d) => d.adaylar).join(' ')
+          let bulunan = 0, dogrulamada = 0, adayda = 0, kacan = 0
           for (const g of gt.gercekler) {
             const kesinde = g.anahtarlar.every((grup) => grup.some((a) => icerir(kesin, a)))
             const toplamda = g.anahtarlar.every((grup) => grup.some((a) => icerir(`${kesin} ${bekleyen}`, a)))
-            if (kesinde) bulunan++; else if (toplamda) dogrulamada++; else kacan++
+            const secenekte = g.anahtarlar.every((grup) => grup.some((a) => icerir(`${kesin} ${bekleyen} ${adaylar}`, a)))
+            if (kesinde) bulunan++; else if (toplamda) dogrulamada++; else if (secenekte) adayda++; else kacan++
           }
           // invented facts: content words of the accepted text that neither the page's ground truth nor the lexicon carries
-          const izinli = new Set([...gt.gercekler.flatMap((g) => `${g.metin} ${g.anahtarlar.flat().join(' ')}`.split(/[^\p{L}\p{N}]+/u)), ...(gt.kelimeler || '').split(/[^\p{L}\p{N}]+/u), ...sozluk.girdiler.flatMap((x) => `${x.kisaltma} ${x.anlam}`.split(/[^\p{L}\p{N}]+/u)), ...EL_NOTU_TR.dil.bagSozcukleri].map(kelimeAnahtari).filter(Boolean))
+          const izinli = new Set([...gt.gercekler.flatMap((g) => `${g.metin} ${g.anahtarlar.flat().join(' ')}`.split(/[^\p{L}\p{N}]+/u)), ...(gt.kelimeler || '').split(/[^\p{L}\p{N}]+/u), ...sozluk.girdiler.flatMap((x) => `${x.kisaltma} ${x.anlam}`.split(/[^\p{L}\p{N}]+/u)), ...EL_NOTU_TR.dil.bagSozcukleri,
+            // the source text's own structure: the drawing heading, sides and region labels come from the template, not the model
+            ...`${EL_NOTU_TR.dil.cizimBasligi} ${Object.values(EL_NOTU_TR.dil.taraf).join(' ')} ${(sonuc.sablon?.cizimBolgeleri || []).map((b) => b.etiket).join(' ')}`.split(/[^\p{L}\p{N}]+/u)].map(kelimeAnahtari).filter(Boolean))
           const literal = new Set(s.satirlar.flatMap((l) => l.kelimeler.map((k) => kelimeAnahtari(k.metin))))
           const uydurma = kesin.split(/[^\p{L}\p{N}]+/u).filter((w) => {
             const k = kelimeAnahtari(w)
             if (!k || k.length < 4 || /^\d/.test(k) || izinli.has(k) || literal.has(k)) return false
             return ![...izinli, ...literal].some((z) => z.length >= 4 && benzerlik(z, k) >= 0.75)
           })
-          Object.assign(satir, { gercek: gt.gercekler.length, bulunan, dogrulamada, kacan, dogrula: s.dogrula.length, uydurmaAday: uydurma.length, okumaCagrisi: s.okumaSayisi })
-          Object.assign(toplam, { gercek: toplam.gercek + gt.gercekler.length, bulunan: toplam.bulunan + bulunan, dogrulamada: toplam.dogrulamada + dogrulamada, kacan: toplam.kacan + kacan, uydurma: toplam.uydurma + uydurma.length, dogrula: toplam.dogrula + s.dogrula.length, okunanSayfa: toplam.okunanSayfa + 1 })
+          Object.assign(satir, { gercek: gt.gercekler.length, bulunan, dogrulamada, adayda, kacan, dogrula: s.dogrula.length, uydurmaAday: uydurma.length, okumaCagrisi: s.okumaSayisi })
+          Object.assign(toplam, { gercek: toplam.gercek + gt.gercekler.length, bulunan: toplam.bulunan + bulunan, dogrulamada: toplam.dogrulamada + dogrulamada, adayda: toplam.adayda + adayda, kacan: toplam.kacan + kacan, uydurma: toplam.uydurma + uydurma.length, dogrula: toplam.dogrula + s.dogrula.length, okunanSayfa: toplam.okunanSayfa + 1 })
           if (cikti) fs.writeFileSync(path.join(cikti, `${ad}-okuma.txt`), metin)
         } catch (e) { satir.okumaHatasi = e instanceof Error ? e.message : 'hata' }
       }
@@ -184,11 +220,14 @@ async function ana() {
       sayfa: toplam.okunanSayfa, gercek: toplam.gercek,
       dogrulukKesin: Math.round((toplam.bulunan / toplam.gercek) * 1000) / 10,
       dogrulukDogrulamaIle: Math.round(((toplam.bulunan + toplam.dogrulamada) / toplam.gercek) * 1000) / 10,
+      dogrulukAdayIle: Math.round(((toplam.bulunan + toplam.dogrulamada + toplam.adayda) / toplam.gercek) * 1000) / 10,
+      korumaliGercek: dogruluk.sayfalar ? Object.values(dogruluk.sayfalar).flatMap((p) => p.gercekler).filter((g) => g.korumali).length : 0,
       kacan: toplam.kacan, uydurmaAday: toplam.uydurma, dogrulaSayfaBasina: Math.round((toplam.dogrula / toplam.okunanSayfa) * 10) / 10,
     } : 'ölçülmedi — model yok (OPENROUTER_API_KEY / ANTHROPIC_API_KEY ortamda değil, --model kayit için kayıt yok)',
     sayfalar: satirlar,
+    ...(jeton.cagri ? { jetonTahmini: { ...jeton, not: 'estimate: images w·h/750 after resize, text chars/3.5, output JSON chars/3; prompt caching ignored' } } : {}),
   }
-  console.log(JSON.stringify({ ozet: { gizlilik: rapor.gizlilik, okuma: rapor.okuma } }, null, 2))
+  console.log(JSON.stringify({ ozet: { gizlilik: rapor.gizlilik, okuma: rapor.okuma, jeton: jeton.cagri ? jeton : undefined } }, null, 2))
   if (cikti) fs.writeFileSync(path.join(cikti, 'rapor.json'), JSON.stringify(rapor, null, 2))
   if (isci) await isci.terminate()
   if (toplam.sizinti > 0) process.exitCode = 1

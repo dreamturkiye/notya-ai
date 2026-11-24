@@ -47,7 +47,15 @@ export function hizala(a: HamKelime[], b: HamKelime[]): HizaliKelime[] {
   return out.reverse()
 }
 
-export type UzlasikKelime = { metin: string; guven: number; uyum: boolean; adaylar: string[] }
+export type UzlasikKelime = { metin: string; guven: number; uyum: boolean; adaylar: string[]; /** agreement was near-identical, not exact (plain words only) */ yakin?: boolean }
+
+/** Two readings of a plain word that differ by at most a letter or two count as agreement (never numbers / short words). */
+export const YAKIN_ESIK = 0.8
+export function yakinMi(a: string, b: string): boolean {
+  const x = kelimeAnahtari(a), y = kelimeAnahtari(b)
+  if (x.length < 5 || y.length < 5 || /\d/.test(x + y) || /[?]/.test(a + b)) return false
+  return benzerlik(x, y) >= YAKIN_ESIK
+}
 
 /**
  * Merge two reads of one line. Agree (same word after folding) → that word, confidence = 1 - (1-gA)(1-gB) capped at 0.99.
@@ -63,6 +71,9 @@ export function uzlastir(a: HamSatir | null, b: HamSatir | null): UzlasikKelime[
       const ayni = kelimeAnahtari(x.m) === kelimeAnahtari(y.m)
       const adaylar = [...new Set([x.m, y.m, ...(x.alt || []), ...(y.alt || [])].filter(Boolean))].slice(0, 5)
       if (ayni) return { metin: x.g >= y.g ? x.m : y.m, guven: Math.min(0.99, 1 - (1 - clamp(x.g)) * (1 - clamp(y.g))), uyum: true, adaylar }
+      // near-identical (one letter apart in a long plain word): agreement with a lower confidence; the reader still
+      // demands an exact agreement for protected words (side, negation, number, dose, drug, allergy)
+      if (yakinMi(x.m, y.m)) return { metin: x.g >= y.g ? x.m : y.m, guven: Math.min(0.95, 1 - (1 - clamp(x.g)) * (1 - clamp(y.g))) * 0.92, uyum: true, yakin: true, adaylar }
       const ust = x.g >= y.g ? x : y
       return { metin: ust.m, guven: Math.min(clamp(x.g), clamp(y.g)) * 0.6, uyum: false, adaylar }
     }

@@ -52,6 +52,39 @@ function kirp(r: Rgba, k: Kutu, olcek: number, payY = 0): Rgba {
   return { w, h, d }
 }
 
+/**
+ * Read B's crop keeps the lines above and below as context, but FADED towards white (and the target band untouched), so
+ * the model sees where the line sits without transcribing its neighbours. `bant` = the line's rows inside the crop.
+ */
+export function baglamiSoldur(r: Rgba, bant: { y0: number; y1: number }, oran = 0.72): Rgba {
+  const y0 = Math.max(0, Math.round(bant.y0)), y1 = Math.min(r.h, Math.round(bant.y1))
+  for (let y = 0; y < r.h; y++) {
+    if (y >= y0 && y < y1) continue
+    for (let x = 0; x < r.w; x++) {
+      const i = (y * r.w + x) * 4
+      r.d[i] = r.d[i] + (255 - r.d[i]) * oran; r.d[i + 1] = r.d[i + 1] + (255 - r.d[i + 1]) * oran; r.d[i + 2] = r.d[i + 2] + (255 - r.d[i + 2]) * oran
+    }
+  }
+  return r
+}
+
+/**
+ * A line the on-device OCR read as PRINT (form labels, letterhead, stamp, legal footer): high-confidence words of ≥ 3
+ * letters cover at least half of its width. Handwriting is not recognised at that confidence. Such strips are not sent.
+ */
+export function basiliSatirMi(k: Kutu, ocr: OcrSatir[] | null, w: number, h: number): boolean {
+  if (!ocr?.length) return false
+  const x0 = k.x0 * w, x1 = k.x1 * w, y0 = k.y0 * h, y1 = k.y1 * h
+  let kapli = 0
+  for (const l of ocr) for (const kel of l.kelimeler) {
+    if (kel.conf < 80 || (kel.text.match(/\p{L}/gu) || []).length < 3) continue
+    const cy = (kel.y0 + kel.y1) / 2
+    if (cy < y0 || cy > y1) continue
+    kapli += Math.max(0, Math.min(x1, kel.x1) - Math.max(x0, kel.x0))
+  }
+  return kapli >= (x1 - x0) * 0.5
+}
+
 function griRgba(g: Gri): Rgba {
   const d = new Uint8ClampedArray(g.w * g.h * 4)
   for (let i = 0; i < g.d.length; i++) { d[i * 4] = d[i * 4 + 1] = d[i * 4 + 2] = g.d[i]; d[i * 4 + 3] = 255 }
@@ -163,13 +196,17 @@ export async function sayfaPaketiHazirla(g: PaketGirdisi): Promise<PaketSonucu> 
   const satirlar: SatirPaketi[] = []
   for (const s of yer.satirlar) {
     if (maskeliMi(s.kutu, karar.kutular, 0.35)) continue
+    if (basiliSatirMi(s.kutu, ocr, on.sayfa.w, on.sayfa.h)) continue
     const yukPx = (s.kutu.y1 - s.kutu.y0) * maskeli.h
     const olcekA = Math.max(1, Math.min(3, 112 / Math.max(1, yukPx)))
     const genA = (s.kutu.x1 - s.kutu.x0) * maskeli.w * olcekA
     const oA = genA > 1800 ? olcekA * (1800 / genA) : olcekA
     const olcekB = Math.max(0.8, Math.min(2.2, 84 / Math.max(1, yukPx)))
     const kA = kirp(normalRgba, s.kutu, oA)
-    const kB = kirp(maskeli, s.kutu, olcekB, 0.4)
+    // the line band inside B's crop (the context margin is clipped at the page edge, so it is not always symmetric)
+    const payPx = (s.kutu.y1 - s.kutu.y0) * maskeli.h * 0.4
+    const ustPx = Math.floor(s.kutu.y0 * maskeli.h) - Math.max(0, Math.floor(s.kutu.y0 * maskeli.h - payPx))
+    const kB = baglamiSoldur(kirp(maskeli, s.kutu, olcekB, 0.4), { y0: ustPx * olcekB, y1: (ustPx + yukPx) * olcekB })
     satirlar.push({
       no: s.no, kutu: s.kutu, kelimeler: s.kelimeler,
       tanimlar: s.kelimeler.map((k) => tanimlayici(maskeliNormal, k)),
