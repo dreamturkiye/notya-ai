@@ -12,3 +12,9 @@
 - Onay satırı: `Kaan-onay: 2026-11-20 ASI-TAKVIM-TEK-01 bug 2 — Ayşe kayıt sınırı güvencesi: dosyada belge yokken cevaptaki 'belgelerde var' cümlesi gerçek cümleyle değiştirilir (lib/asistan/ayseCevapla.ts, tek ekleme; Kaan: 'Go and fix and ensure this does not happen in real life live version from now on.' + 'go')`
 - Taban commit: `60385a94`
 - Değişen kilitli dosyalar: `lib/asistan/ayseCevapla.ts`
+
+## 2026-11-24 — ESNEK-A-EVAL goruntu-inceleme reasoning effort high on Luna-Pro (lib/ai/modeller.ts: Caba gains 'high', GOREV_POLITIKASI goruntu-inceleme caba 'high', derin tier takes effort from its policy row only; Kaan GO 2026-11-24 16:29 EST, measured same day, kept only if it helps)
+
+- Onay satırı: `Kaan-onay: 2026-11-24 ESNEK-A-EVAL goruntu-inceleme reasoning effort high on Luna-Pro (lib/ai/modeller.ts: Caba gains 'high', GOREV_POLITIKASI goruntu-inceleme caba 'high', derin tier takes effort from its policy row only; Kaan GO 2026-11-24 16:29 EST, measured same day, kept only if it helps)`
+- Taban commit: `cd273e7c`
+- Değişen kilitli dosyalar: `lib/ai/modeller.ts`

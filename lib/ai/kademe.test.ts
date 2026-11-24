@@ -88,6 +88,18 @@ describe('kademe tablosu ve modelSec', () => {
     assert.equal(modelSec('soap', { caba: 'none' }).caba, undefined)
     assert.equal(kademeAdi({ kademe: 'guclu' }), 'sonnet')
   })
+  it('ESNEK-A-EVAL: goruntu-inceleme → Luna-Pro + effort high (yalnız politika satırı); luna aşımında ve diğer derin görevlerde effort yok', () => {
+    assert.equal(modelSec('goruntu-inceleme').caba, 'high')
+    assert.equal(kademeAdi(modelSec('goruntu-inceleme')), 'luna-pro')
+    assert.equal(modelSec('goruntu-inceleme', { caba: 'none' }).caba, 'high')
+    assert.equal(modelSec('goruntu-inceleme', { kademe: 'hizli' }).caba, undefined)
+    assert.equal(modelSec('soap').caba, undefined)
+    assert.equal(modelSec('uzman-analiz').caba, undefined)
+    assert.equal(modelSec('klinik-analiz', { kademe: 'derin' }).caba, undefined)
+    const g = istekGovdesi({ gorev: 'goruntu-inceleme', messages: METIN })
+    assert.deepEqual(g.reasoning, { effort: 'high' })
+    assert.deepEqual(openRouterGovdesi(g).reasoning, { effort: 'high' })
+  })
   it('kill-switch NOTYA_TIER_KAPALI=1: her görev hizli/Luna, caba yok, aşımlar yok sayılır', () => {
     process.env.NOTYA_TIER_KAPALI = '1'
     for (const g of Object.keys(GOREV_POLITIKASI) as Gorev[]) {
