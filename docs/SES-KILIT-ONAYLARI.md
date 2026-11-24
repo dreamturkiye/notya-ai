@@ -24,3 +24,9 @@
 - Onay satırı: `Kaan-onay: 2026-11-09 ULKE-UZ-CANLI-04: Kaan written go 2026-11-09 — fix 2 tsc errors in lib/ulke/asistan/motorKilidi.ts (release/uz only): removed the duplicate, identical 'export type MotorSonuc' declaration (TS2300); type-only, no runtime or behaviour change; eleven_v4 pack model and ULKE-UZ-CANLI-01/03 speech-language logic unchanged`
 - Taban commit: `f22b71a59`
 - Değişen kilitli dosyalar: `lib/ulke/asistan/motorKilidi.ts`
+
+## 2026-11-24 — SES-ILK-SOZ-01 country voice start fix (keep unlock AudioContext for the call; pre-check mic kept with call constraints until the greeting is spoken) — Kaan GO 2026-11-24 12:15 EST
+
+- Onay satırı: `Kaan-onay: 2026-11-24 SES-ILK-SOZ-01 country voice start fix (keep unlock AudioContext for the call; pre-check mic kept with call constraints until the greeting is spoken) — Kaan GO 2026-11-24 12:15 EST`
+- Taban commit: `8c99ca7c`
+- Değişen kilitli dosyalar: (yok — yalnız liste)
