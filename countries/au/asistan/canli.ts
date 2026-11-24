@@ -15,6 +15,7 @@
  */
 import { enCanliAsistan } from '../../_dil/en/asistan/canli'
 import { auAsistanKaynakBlogu } from './kaynaklar'
+import { auAsistanOzgecmisi } from './ozgecmis'
 
 export const AU_CANLI_ASISTAN = enCanliAsistan({
   ulkeAdi: 'Australia',
@@ -35,6 +36,8 @@ export const AU_CANLI_ASISTAN = enCanliAsistan({
     'For an emergency, say to call Triple Zero (000) first, then give the immediate steps in a few words.',
   ],
   kaynakBlogu: auAsistanKaynakBlogu,
+  // PERSONA-ARKAPLAN-01 (Kaan, 2026-11-24): each role's persona has a brief professional background, as in Turkey.
+  ozgecmis: auAsistanOzgecmisi,
   // 2026-10-25 (Kaan's decision, docs/OPEN-COMMITMENTS.md AU-LAUNCH-01b): the assistant is ON. There is no opt-in switch any more;
   // it is offered whenever its environment prerequisites exist (lib/ulke/asistan/ajan.ts, fail closed). TGA advice is still pending.
 })

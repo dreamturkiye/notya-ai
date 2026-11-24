@@ -776,6 +776,13 @@ export type CanliAsistanAyarlari = {
   sinirlar: readonly string[]
   /** The role's national sources block for the prompt, or null when the role has none. */
   kaynakBlogu: (rol: string) => string | null
+  /**
+   * PERSONA-ARKAPLAN-01 (Kaan, 2026-11-24) — the persona's brief professional background for a role, as the model is
+   * told it ("a consultant paediatrician with long experience in ..."), the counterpart of Türkiye's persona line
+   * (lib/asistan/personaEngine.ts: name, title, "one of Türkiye's leading specialists", personality). Prompt only, on no
+   * screen. Absent, or null for a role = no background line (the persona still has its name and field).
+   */
+  ozgecmis?: (rol: string) => string | null
   /** Turns (spoken or written exchanges) one account may have per day of the country. */
   gunlukTurLimiti: number
   /**
