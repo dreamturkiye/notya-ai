@@ -12,6 +12,8 @@ export type EnCanliGirdisi = {
   pratikBaglami: readonly string[]
   sinirlar: readonly string[]
   kaynakBlogu: (rol: string) => string | null
+  /** PERSONA-ARKAPLAN-01: the persona's brief professional background per role (prompt only). Absent = none. */
+  ozgecmis?: (rol: string) => string | null
   gunlukTurLimiti?: number
 }
 
@@ -22,6 +24,7 @@ export function enCanliAsistan(g: EnCanliGirdisi): CanliAsistanAyarlari {
     pratikBaglami: g.pratikBaglami,
     sinirlar: g.sinirlar,
     kaynakBlogu: g.kaynakBlogu,
+    ...(g.ozgecmis ? { ozgecmis: g.ozgecmis } : {}),
     gunlukTurLimiti: g.gunlukTurLimiti ?? 150,
     ekranSozleri: {
       liste: (n) => `${n} items, on your screen.`,
