@@ -1,8 +1,14 @@
 # TR Dernek / Kongre / Hekim grubu kanalı — Notya playbook
 
-**Status:** research + operating plan (2026-11-24)  
+**Status:** research + operating plan (2026-11-24); inventory + send-today pack added same day.  
 **Owner:** Kaan + Dr. Gökhan Mamur  
 **Replaces for primary acquisition:** 1:1 WhatsApp individual outreach (paused)
+
+**Next files:**
+- Inventory CRM: `docs/growth/tr-dernek-targets.csv`
+- How they operate: `docs/growth/TR-DERNEK-OPERATING-RESEARCH.md`
+- Send today + HubSpot: `docs/growth/TR-DERNEK-OUTREACH-TODAY.md`
+- HubSpot import: `docs/growth/hubspot-dernek-contacts.csv`
 
 Goal: put **Dr. Gökhan Mamur** (pediatrist peer + Notya clinical face) in front of **5–100+ doctors per session**, via dernek / kongre / hekim community channels — not one inbox at a time.
 
