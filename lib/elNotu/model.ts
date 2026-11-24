@@ -33,22 +33,34 @@ function bloklar(parcalar: IstemParcasi[]): unknown[] {
  * `kademe` (evaluation only): the existing per-call tier override of the central policy (modelSec) — 'derin' is the
  * policy's own tier for 'goruntu-inceleme'; 'hizli' asks the primary tier, for a comparison. No model name here.
  */
-export function elNotuModeli(o: { doctorId: string | null; istemci?: AiIstemci; butceMs?: number; kademe?: 'hizli' | 'derin' }): ModelKapisi {
+/** One model call's usage as the provider reported it (evaluation route: tokens + cost per page; nothing stored). */
+export type ElNotuOlcum = { gorev: 'goruntu-inceleme' | 'klinik-analiz'; model: string; usage: Record<string, number | null>; durma: string | null; ms: number }
+
+export function elNotuModeli(o: { doctorId: string | null; istemci?: AiIstemci; butceMs?: number; kademe?: 'hizli' | 'derin'; olcum?: (x: ElNotuOlcum) => void }): ModelKapisi {
+  const olc = (gorev: ElNotuOlcum['gorev'], y: Awaited<ReturnType<typeof aiCagir>>, t0: number) => {
+    if (!o.olcum) return
+    const m = y as unknown as { model?: string; usage?: Record<string, number | null>; stop_reason?: string | null }
+    o.olcum({ gorev, model: String(m.model || ''), usage: { ...(m.usage || {}) }, durma: m.stop_reason ?? null, ms: Date.now() - t0 })
+  }
   return {
     async gorselJson({ sistem, parcalar, azamiToken }) {
+      const t0 = Date.now()
       const y = await aiCagir({
         gorev: 'goruntu-inceleme', istemci: o.istemci, doctorId: o.doctorId, maxTokens: azamiToken, jsonBekleniyor: true, ...(o.kademe ? { kademe: o.kademe } : {}),
         system: [{ metin: sistem, onbellek: true }],
         messages: [{ role: 'user', content: bloklar(parcalar) }],
       })
+      olc('goruntu-inceleme', y, t0)
       return jsonAl(metniAl(y))
     },
     async metinJson({ sistem, mesaj, azamiToken }) {
+      const t0 = Date.now()
       const y = await aiCagir({
         gorev: 'klinik-analiz', istemci: o.istemci, doctorId: o.doctorId, maxTokens: azamiToken, jsonBekleniyor: true,
         system: [{ metin: sistem, onbellek: true }],
         messages: [{ role: 'user', content: mesaj }],
       })
+      olc('klinik-analiz', y, t0)
       return jsonAl(metniAl(y))
     },
   }

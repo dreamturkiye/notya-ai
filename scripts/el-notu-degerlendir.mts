@@ -17,6 +17,13 @@
  * authorization is read from the environment variable EL_NOTU_DEGERLENDIR_YETKI (a founder session token or the cron
  * secret) and is never printed or written.
  *
+ * --uzak … --cagri (ESNEK-A-EVAL, 2026-11-24): the reader orchestration runs HERE (so it can be tuned without a deploy per
+ * change) and only each model call goes to the route's single-call mode; pictures travel as references into the page's
+ * masked package (re-proven by the route on every call). Answers are recorded under --kayit / <cikti>/kayit like a canli
+ * run, so --model kayit / karma replay them locally. Usage (tokens → US$ at the Luna list price) and wall time per page.
+ * Authorization: EL_NOTU_DEGERLENDIR_ANAHTARI (a short-lived evaluation pass, header x-degerlendirme-anahtari) or
+ * EL_NOTU_DEGERLENDIR_YETKI (Bearer); neither is ever printed or written.
+ *
  * <dir> holds page images (jpg / png / pdf pages as images) and `dogruluk.json` (clinical ground truth only — see
  * /home/claude/esnek-eval/dogruluk.json for the format). Real patient pages NEVER go into this repo: keep the folder
  * outside it. The harness runs the SAME device pipeline as the browser (core/elNotu/sayfaPaketi.ts, Node canvas + the
@@ -57,12 +64,20 @@ if (!klasor || !fs.existsSync(klasor)) { console.error('--klasor <dir> gerekli')
 const KOK = path.resolve(new URL('.', import.meta.url).pathname, '..')
 if (path.resolve(klasor).startsWith(KOK)) { console.error('Gerçek sayfalar repo içinde tutulamaz: klasörü repo dışına taşıyın.'); process.exit(2) }
 const cikti = arg('cikti')
-const modelTuru = (arg('model') || (process.env.OPENROUTER_API_KEY || process.env.ANTHROPIC_API_KEY ? 'canli' : 'yok')) as 'canli' | 'karma' | 'kayit' | 'yok'
+const modelTuru = (arg('model') || (process.env.OPENROUTER_API_KEY || process.env.ANTHROPIC_API_KEY || (process.argv.includes('--uzak') && process.argv.includes('--cagri')) ? 'canli' : 'yok')) as 'canli' | 'karma' | 'kayit' | 'yok'
 const kayitKlasoru = arg('kayit') || (cikti ? path.join(cikti, 'kayit') : undefined)
 const okumaSayisi = arg('okuma') ? Number(arg('okuma')) : undefined
 const butce = arg('butce') ? Number(arg('butce')) : undefined
 const uzak = arg('uzak')
 const kademe = arg('kademe') as 'hizli' | 'derin' | undefined
+const uzakCagri = !!uzak && bayrak('cagri')
+/** Route authorization (never printed): the evaluation pass if set, else the Bearer secret. */
+function uzakBasliklari(): Record<string, string> {
+  const anahtar = process.env.EL_NOTU_DEGERLENDIR_ANAHTARI, yetki = process.env.EL_NOTU_DEGERLENDIR_YETKI
+  if (anahtar) return { 'content-type': 'application/json', 'x-degerlendirme-anahtari': anahtar }
+  if (yetki) return { 'content-type': 'application/json', authorization: `Bearer ${yetki}` }
+  throw new Error('EL_NOTU_DEGERLENDIR_ANAHTARI / EL_NOTU_DEGERLENDIR_YETKI is not set')
+}
 // model comparison (test only, never production): image reads (page reads + drawing read) go straight to this Anthropic
 // model id; the clinical normalisation goes to --normal-model (default: the same id). Needs ANTHROPIC_API_KEY; run Node
 // with NODE_USE_ENV_PROXY=1 behind a proxy. --anthropic-effort sets output_config.effort on the image reads only.
@@ -127,11 +142,23 @@ async function jetonSay(sistem: string, parcalar: { tur: string; metin?: string;
  * records the real usage (tokens, cost at list price, wall time). Output room: thinking counts toward max_tokens on the
  * adaptive-thinking models, so the reader's own budget gets +24k headroom (the same for every model compared).
  */
-const FIYAT: [RegExp, number, number][] = [[/fable-5-2|mythos-5-2/, 8, 40], [/fable|mythos/, 10, 50], [/opus-5-5/, 4, 20], [/opus/, 5, 25], [/sonnet-4/, 3, 15], [/sonnet/, 2, 10], [/haiku-5-5/, 0.1, 0.5], [/haiku/, 1, 5]]
+const FIYAT: [RegExp, number, number][] = [[/gpt-6-luna/, 0.1, 0.5], [/fable-5-2|mythos-5-2/, 8, 40], [/fable|mythos/, 10, 50], [/opus-5-5/, 4, 20], [/opus/, 5, 25], [/sonnet-4/, 3, 15], [/sonnet/, 2, 10], [/haiku-5-5/, 0.1, 0.5], [/haiku/, 1, 5]]
 type Kullanim = { cagri: number; ms: number; girdi: number; cikti: number; onbellekYaz: number; onbellekOku: number; usd: number; kesik: number }
 const bosKullanim = (): Kullanim => ({ cagri: 0, ms: 0, girdi: 0, cikti: 0, onbellekYaz: 0, onbellekOku: 0, usd: 0, kesik: 0 })
 const kullanim: Record<'gorsel' | 'normal', Kullanim> = { gorsel: bosKullanim(), normal: bosKullanim() }
 let sayfaKullanimi = bosKullanim()
+/** Usage reported by the route (provider tokens) → the same accumulators, priced by model. */
+type UzakKullanim = { cagri: number; girdi: number; cikti: number; onbellekOku: number; onbellekYaz: number; kesik: number; modeller: string[]; ms: number }
+const uzakModeller = new Set<string>()
+function uzakKullanimEkle(u: UzakKullanim | undefined, tur: 'gorsel' | 'normal') {
+  if (!u) return
+  u.modeller.forEach((m) => uzakModeller.add(m))
+  const m = u.modeller[0] || ''
+  const f = FIYAT.find(([r]) => r.test(m)) || [/x/, 0, 0]
+  const usd = ((u.girdi + u.onbellekYaz) * f[1] + u.onbellekOku * f[1] + u.cikti * f[2]) / 1e6
+  for (const k of [kullanim[tur], sayfaKullanimi]) { k.cagri += u.cagri; k.ms += u.ms; k.girdi += u.girdi; k.cikti += u.cikti; k.onbellekYaz += u.onbellekYaz; k.onbellekOku += u.onbellekOku; k.usd += usd; k.kesik += u.kesik }
+}
+
 function dogrudanBloklar(parcalar: Parameters<ModelKapisi['gorselJson']>[0]['parcalar']): unknown[] {
   return parcalar.map((p) => (p.tur === 'metin' ? { type: 'text', text: p.metin } : { type: 'image', source: { type: 'base64', media_type: /^image\/(jpeg|png|webp)$/.test(p.gorsel.mime) ? p.gorsel.mime : 'image/jpeg', data: p.gorsel.base64 } }))
 }
@@ -172,7 +199,31 @@ async function dogrudanCagir(model: string, sistem: string, icerik: unknown, aza
   return r.deger
 }
 
-function modelKapisi(sayfaAdi: string): ModelKapisi | null {
+type SayfaKaynagi = { paket: import('../core/elNotu/okuyucu').SayfaPaketi; maskeliSayfa: import('../core/elNotu/okuyucu').GorselBlok }
+/** A picture of a call → its reference into the masked package (the route resolves it after re-proving the mask). */
+function uzakParcalar(parcalar: Parameters<ModelKapisi['gorselJson']>[0]['parcalar'], k: SayfaKaynagi): unknown[] {
+  return parcalar.map((p) => {
+    if (p.tur === 'metin') return p
+    if (p.gorsel.base64 === k.maskeliSayfa.base64) return { tur: 'ref', ref: 'sayfa' }
+    const i = (k.paket.parcalar || []).findIndex((t) => t.gorsel.base64 === p.gorsel.base64)
+    if (i >= 0) return { tur: 'ref', ref: `parca:${i}` }
+    const b = k.paket.bolgeler.find((x) => x.gorsel?.base64 === p.gorsel.base64)
+    if (b) return { tur: 'ref', ref: `bolge:${b.id}` }
+    throw new Error('a picture outside the masked package cannot be sent')
+  })
+}
+async function uzakCagir(k: SayfaKaynagi, cagri: Record<string, unknown>, tur: 'gorsel' | 'normal'): Promise<unknown> {
+  for (let deneme = 0; ; deneme++) {
+    const y = await fetch(uzak!, { method: 'POST', headers: uzakBasliklari(), body: JSON.stringify({ paket: k.paket, maskeliSayfa: k.maskeliSayfa, cagri, secenek: { kademe: tur === 'gorsel' ? kademe : undefined } }) })
+    const j = await y.json().catch(() => ({})) as { cevap?: unknown; kullanim?: UzakKullanim; error?: string }
+    uzakKullanimEkle(j.kullanim, tur)
+    if (y.ok && j.cevap !== undefined) return j.cevap
+    // transport trouble (5xx / timeout) once more; a refusal (4xx) is final
+    if (y.status < 500 || deneme >= 1) throw new Error(`route ${y.status} ${j.error || ''}`)
+  }
+}
+
+function modelKapisi(sayfaAdi: string, kaynak?: SayfaKaynagi): ModelKapisi | null {
   // the replay key covers the system prompt and every input (images by their first bytes), so a prompt change re-asks
   const anahtar = (etiket: string, sistem: string, girdi: unknown) => `${sayfaAdi}-${etiket}-${crypto.createHash('sha256').update(JSON.stringify([sistem, girdi])).digest('hex').slice(0, 16)}.json`
   const gorselGirdi = (o: Parameters<ModelKapisi['gorselJson']>[0]) => o.parcalar.map((p) => (p.tur === 'metin' ? p.metin : p.gorsel.base64.slice(0, 64) + p.gorsel.base64.length))
@@ -193,6 +244,16 @@ function modelKapisi(sayfaAdi: string): ModelKapisi | null {
     await say(y)
     kaydet(f, y)
     return y
+  }
+  if (uzakCagri && kaynak) {
+    return {
+      async gorselJson(o) {
+        return sor(o.etiket, anahtar(o.etiket, o.sistem, gorselGirdi(o)), () => uzakCagir(kaynak, { tur: 'gorsel', etiket: o.etiket, sistem: o.sistem, parcalar: uzakParcalar(o.parcalar, kaynak), azamiToken: o.azamiToken }, 'gorsel'), async () => {})
+      },
+      async metinJson(o) {
+        return sor(o.etiket, anahtar(o.etiket, o.sistem, o.mesaj), () => uzakCagir(kaynak, { tur: 'metin', etiket: o.etiket, sistem: o.sistem, mesaj: o.mesaj, azamiToken: o.azamiToken }, 'normal'), async () => {})
+      },
+    }
   }
   if (dogrudanModel) {
     return {
@@ -257,20 +318,21 @@ async function ana() {
       gizlilikToplam.sizinti += sizinti; gizlilikToplam.resim += resimler.length
       Object.assign(satir, { gizlilik: sonuc.gizlilik.neden, kutu: sonuc.gizlilik.kutular.length, sablon: Math.round(sonuc.sablonSkoru * 100) / 100, satir: sonuc.paket.satirlar.length, parca: sonuc.paket.parcalar?.length || 0, yerlesim: sonuc.yontem, bolge: sonuc.paket.bolgeler.filter((b) => b.murekkep >= 0.0004).length, resim: resimler.length, sizinti })
       if (cikti) { fs.mkdirSync(cikti, { recursive: true }); fs.writeFileSync(path.join(cikti, `${ad}-maskeli.jpg`), Buffer.from(sonuc.maskeliSayfa.base64, 'base64')) }
-      if (gt && uzak && sizinti === 0) {
+      if (gt && uzak && !uzakCagri && sizinti === 0) {
         // production model path through the admin route (the key never leaves the host)
         try {
-          const yetki = process.env.EL_NOTU_DEGERLENDIR_YETKI
-          if (!yetki) throw new Error('EL_NOTU_DEGERLENDIR_YETKI is not set')
-          const y = await fetch(uzak, { method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${yetki}` }, body: JSON.stringify({ ad, paket: sonuc.paket, maskeliSayfa: sonuc.maskeliSayfa, gercekler: gt.gercekler, brans: 'kulak-burun-bogaz', secenek: { kademe, okumaSayisi, butce } }) })
-          const j = await y.json() as { puan?: SayfaPuani; metin?: string; okumaSayisi?: number; butceDisi?: number; okunamadi?: number; ms?: number; error?: string }
+          sayfaKullanimi = bosKullanim()
+          const y = await fetch(uzak, { method: 'POST', headers: uzakBasliklari(), body: JSON.stringify({ ad, paket: sonuc.paket, maskeliSayfa: sonuc.maskeliSayfa, gercekler: gt.gercekler, brans: 'kulak-burun-bogaz', secenek: { kademe, okumaSayisi, butce } }) })
+          const j = await y.json() as { puan?: SayfaPuani; metin?: string; okumaSayisi?: number; butceDisi?: number; okunamadi?: number; ms?: number; error?: string; kullanim?: UzakKullanim; herhangiOkumada?: number }
           if (!y.ok || !j.puan) throw new Error(`route ${y.status} ${j.error || ''}`)
           puanlar.push(j.puan)
-          Object.assign(satir, ozetSatiri(j.puan), { okumaCagrisi: j.okumaSayisi, butceDisi: j.butceDisi, okunamadi: j.okunamadi, sunucuMs: j.ms })
+          uzakKullanimEkle(j.kullanim, 'gorsel')
+          herhangiToplam += j.herhangiOkumada || 0
+          Object.assign(satir, ozetSatiri(j.puan), { okumaCagrisi: j.okumaSayisi, butceDisi: j.butceDisi, okunamadi: j.okunamadi, sunucuMs: j.ms, herhangiOkumada: j.herhangiOkumada, usd: Math.round(sayfaKullanimi.usd * 10000) / 10000, kesik: sayfaKullanimi.kesik })
           if (cikti && j.metin) fs.writeFileSync(path.join(cikti, `${ad}-okuma.txt`), j.metin)
         } catch (e) { satir.okumaHatasi = e instanceof Error ? e.message.slice(0, 160) : 'hata' }
       }
-      const model = uzak ? null : modelKapisi(ad)
+      const model = uzak && !uzakCagri ? null : modelKapisi(ad, { paket: sonuc.paket, maskeliSayfa: sonuc.maskeliSayfa })
       if (model && gt) {
         try {
           sayfaKullanimi = bosKullanim()
@@ -284,7 +346,7 @@ async function ana() {
           const hamMetin = `${s.satirlar.flatMap((l) => l.kelimeler.flatMap((k) => [k.metin, ...k.adaylar])).join(' ')}\n${metin}\n${s.dogrula.flatMap((d) => [d.okunan, ...d.adaylar]).join(' ')}`
           const herhangiOkumada = gt.gercekler.filter((g) => g.anahtarlar.every((grup) => grup.some((a) => icerir(hamMetin, a)))).length
           herhangiToplam += herhangiOkumada
-          Object.assign(satir, ozetSatiri(puan), { okumaCagrisi: s.okumaSayisi, butceDisi: s.butceDisi, okunamadi: s.okunamadi, herhangiOkumada, okumaMs: Date.now() - tOku, ...(dogrudanModel ? { usd: Math.round(sayfaKullanimi.usd * 10000) / 10000, kesik: sayfaKullanimi.kesik } : {}) })
+          Object.assign(satir, ozetSatiri(puan), { okumaCagrisi: s.okumaSayisi, butceDisi: s.butceDisi, okunamadi: s.okunamadi, herhangiOkumada, okumaMs: Date.now() - tOku, ...(dogrudanModel || uzak ? { usd: Math.round(sayfaKullanimi.usd * 10000) / 10000, kesik: sayfaKullanimi.kesik } : {}) })
           if (cikti) fs.writeFileSync(path.join(cikti, `${ad}-okuma.txt`), metin)
         } catch (e) { satir.okumaHatasi = e instanceof Error ? e.message : 'hata' }
       }
@@ -294,14 +356,15 @@ async function ana() {
     console.log(JSON.stringify(satir))
   }
   const rapor = {
-    tarih: new Date().toISOString(), model: uzak ? `uzak:${kademe || 'politika'}` : modelTuru, sablon: sablonlar.map((s) => s.id), okumaSayisi: okumaSayisi ?? 3, butce: butce ?? 5,
+    tarih: new Date().toISOString(), model: uzak ? `uzak${uzakCagri ? '-cagri' : ''}:${kademe || 'politika'}` : modelTuru,
+    ...(uzak ? { uzakKullanim: { kullanim, modeller: [...uzakModeller], usdSayfaBasina: Math.round(((kullanim.gorsel.usd + kullanim.normal.usd) / Math.max(1, puanlar.length)) * 10000) / 10000, okumaMsOrt: Math.round(satirlar.reduce((a, x) => a + (Number(x.okumaMs ?? x.sunucuMs) || 0), 0) / Math.max(1, puanlar.length)), fiyat: 'Luna family list price US$ 0.10 / 1M prompt, 0.50 / 1M completion (docs/ARCH-MODEL-TIERING.md); cache reads priced as prompt' } } : {}), sablon: sablonlar.map((s) => s.id), okumaSayisi: okumaSayisi ?? 3, butce: butce ?? 5,
     gizlilik: gizlilikToplam,
     ...(dogrudanModel ? { dogrudan: { model: dogrudanModel, caba: dogrudanCaba || 'default', normalModel: normalModeli, kullanim, herhangiOkumada: herhangiToplam, okumaMsOrt: Math.round(satirlar.reduce((a, x) => a + (Number(x.okumaMs) || 0), 0) / Math.max(1, puanlar.length)), usdSayfaBasina: Math.round(((kullanim.gorsel.usd + kullanim.normal.usd) / Math.max(1, puanlar.length)) * 10000) / 10000 } } : {}),
     okuma: puanlar.length ? toplamPuan(puanlar) :'ölçülmedi — model yok (--uzak, ANTHROPIC_API_KEY / OPENROUTER_API_KEY, ya da --model kayit için kayıt gerekli)',
     sayfalar: satirlar,
     ...(jeton.cagri ? { jetonTahmini: { ...jeton, not: 'estimate: images w·h/750 after resize, text chars/3.5, output JSON chars/3; prompt caching and hidden reasoning ignored' } } : {}),
   }
-  console.log(JSON.stringify({ ozet: { gizlilik: rapor.gizlilik, okuma: rapor.okuma, herhangiOkumada: herhangiToplam, dogrudan: (rapor as { dogrudan?: unknown }).dogrudan, jeton: jeton.cagri ? jeton : undefined } }, null, 2))
+  console.log(JSON.stringify({ ozet: { gizlilik: rapor.gizlilik, okuma: rapor.okuma, herhangiOkumada: herhangiToplam, dogrudan: (rapor as { dogrudan?: unknown }).dogrudan, uzak: (rapor as { uzakKullanim?: unknown }).uzakKullanim, jeton: jeton.cagri ? jeton : undefined } }, null, 2))
   if (cikti) fs.writeFileSync(path.join(cikti, 'rapor.json'), JSON.stringify(rapor, null, 2))
   if (isci) await isci.terminate()
   if (gizlilikToplam.sizinti > 0) process.exitCode = 1
