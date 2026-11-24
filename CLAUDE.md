@@ -92,3 +92,7 @@ For every request (including live feedback relayed from Dr. Gökhan Mamur), Clau
 ## Standing rule — one look in every country (Kaan, 2026-10-23, permanent)
 
 "Our application look and feel and the pages cannot look different for each country. This is not acceptable. They must all look exactly the same." Every country build uses the SAME visual design, layout, components and page structure as Türkiye (main). Only language, voices, personas, reference books, laws/regulatory content, tools that exist by law and country data differ. A country-only visual or layout fork is a defect (share the Türkiye component with injected words/data instead). Full text: `.cursor/rules/gorunum-paritesi-ulke.mdc`.
+
+## Country carry-over queue (Kaan, 2026-11-24 — overrides "same change set" until he says otherwise)
+
+Core/shared Türkiye changes ship on `main` first and are appended to `docs/ULKE-TASIMA-KUYRUGU.md` instead of being ported to the country builds in the same change set (Kaan: "I do not want to bother with all of them at this time since it takes too much time"). When Kaan says "carry the country queue", one job ports every OPEN item, country-adapted, to the active countries (au, uz; us/gb/ca/nz frozen). Every core change must add its queue entry before it is closed.
