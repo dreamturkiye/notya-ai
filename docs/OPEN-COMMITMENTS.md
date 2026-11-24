@@ -5685,10 +5685,11 @@ patient file / Gelen Belgeler, batch upload, Doğrula with crops, secretary fina
    entry). When Kaan reactivates production: apply `lib/db/migrations/202_esnek_muayene.sql` with the Supabase MCP tools and
    verify the 8 tables, the notes columns, RLS on and the policies. Until then the code fails soft: approval retries without
    `hekim_onayi_bekliyor`, sessions/end falls back to transcript-only, preferences read as defaults.
-2. **ESNEK-A-EVAL — READER v2 (ESNEK-READER-2) SHIPPED 2026-11-23; production-model measurement BLOCKED (waits on Kaan:
-   container egress); Sonnet 5 measured, still BELOW TARGET (target: ≥ 95 % clinical facts after ≤ ~5 Doğrula answers per
-   page, 0 invented).** Owner: Kaan (unblock the production run, below), Claude (run it the same day it is unblocked, then
-   the next accuracy round).
+2. **ESNEK-A-EVAL — READER v2 SHIPPED 2026-11-23; PRODUCTION MODEL (GPT-6 Luna-Pro) MEASURED AND TUNED 2026-11-24
+   (`c70750cd`); still BELOW TARGET (target: ≥ 95 % clinical facts after ≤ ~5 Doğrula answers per page, 0 invented) —
+   ceiling is the model's recognition of this hand (≈ 40–42 of 55 facts appear in any read), not the orchestration.**
+   Owner: Claude (next round when new pages / the overnight learning loop data exist); Kaan (only the optional
+   locked-file effort request below).
    - **What v2 changed (core, all 40 branşlar; country port stays in ESNEK-AB-ULKE):** the reader no longer cuts the page
      into single-line crops (v1 lost the context a human reader uses). It reads the WHOLE masked page 3× independently
      (whole page + overlapping ≤ 1 MP tiles / tiles first with the outline after the images / whole page alone), each read
@@ -5746,30 +5747,48 @@ patient file / Gelen Belgeler, batch upload, Doğrula with crops, secretary fina
      pages; e.g. 10 doctors × 20 pages × 22 days ≈ 4,400 pages ≈ US$ 1,200 / month). Luna-Pro (current production) is still
      unmeasured on these pages (container cannot reach notya.io) — run it first if egress is opened, then decide.
      Run cost of this comparison ≈ US$ 24 (10 runs). Owner: Kaan (go / no-go), Claude (apply the same day on "go").
-   - **Luna-Pro (production model) run — tooling SHIPPED, run BLOCKED on egress (2026-11-24).** Kaan's decision: Luna-Pro
-     stays the hand-note model; tune the reader for it (the Opus routing proposal above is withdrawn). Shipped in
-     `1ef26889` (production deployment READY): migration 204 `degerlendirme_anahtarlari` (hash of a random token, one
-     purpose, ≤ 2 h, revocable, RLS on / service role only, applied on production); the evaluation route accepts
-     `x-degerlendirme-anahtari` (unknown / revoked / expired / wrong purpose → 403; founder session and CRON_SECRET paths
-     unchanged); a single-call mode so the harness runs the reader orchestration locally and only each model call goes to
-     the host (pictures only as references into the package whose masking the route re-proves on every call); usage and
-     reading ceiling reported per page; `maxDuration` 300 for the route in vercel.json (the `app/api/**` glob caps at 60).
-     Harness: `--uzak https://www.notya.io/api/kurucu/el-notu-degerlendir [--cagri] [--kademe hizli]` with
-     `EL_NOTU_DEGERLENDIR_ANAHTARI`. Device side re-checked: 9/9 pages masked, 63 outbound pictures, 0 identity leaks.
-     **Blocked:** the container's egress proxy allows `notya.io` but refuses `www.notya.io` (HTTP 403 at CONNECT), and the
-     apex answers every path with a 308 to www, so no request reaches the route. The evaluation pass minted for the run was
-     revoked unused and its plaintext destroyed. **Waits on Kaan:** allow `www.notya.io` in the session's allowed domains
-     (claude.ai → Settings / Organization settings → Capabilities). **Then Claude, the same day:** mint a new pass, run
-     Luna-Pro (default) and Luna (`--kademe hizli`) on the 9 pages, tune the reader for Luna-Pro (tiles / resolution,
-     prompts, agreement thresholds, Doğrula selection, drawing reads), re-run, revoke the pass, record the numbers here.
-   - **Production-model run — BLOCKED, waits on Kaan:** the admin route `POST /api/kurucu/el-notu-degerlendir` is live
-     (founder session or CRON_SECRET; refuses a page whose masking it cannot prove; stores nothing; returns metrics + the
-     de-identified reading; optional `kademe: 'hizli'` compares GPT-6 Luna with Luna-Pro through the policy's existing tier
-     override — no locked file touched). The build container cannot reach notya.io, *.vercel.app or Supabase (egress proxy
-     403), and the Vercel fetch tool is GET-only, so the masked pages cannot be posted from here. To unblock: allow
-     `notya.io` for this environment (claude.ai → Settings → Capabilities / org admin), then Claude runs
-     `scripts/el-notu-degerlendir.mts --uzak https://notya.io/api/kurucu/el-notu-degerlendir` (with and without
-     `--kademe hizli`) with `EL_NOTU_DEGERLENDIR_YETKI` set to a founder session token. Expected cost ≈ 27 page reads.
+   - **Luna-Pro (production model) — MEASURED and TUNED 2026-11-24.** Kaan's decision: Luna-Pro stays the hand-note
+     model; the reader is tuned for it (the Opus routing proposal above is withdrawn). Tooling `1ef26889`: migration 204
+     `degerlendirme_anahtarlari` (hash of a random token, one purpose, ≤ 2 h, revocable, RLS on / service role only);
+     the evaluation route accepts `x-degerlendirme-anahtari` (unknown / revoked / expired / wrong purpose → 403; founder
+     session and CRON_SECRET unchanged); single-call mode (harness runs the orchestration locally, each model call goes to
+     the host, pictures only as references into the package the route re-proves); `maxDuration` 300. Harness:
+     `--uzak https://www.notya.io/api/kurucu/el-notu-degerlendir --cagri [--kademe hizli]`, pass in
+     `EL_NOTU_DEGERLENDIR_ANAHTARI`. Every pass minted for the runs was revoked at the end; no secret or identity printed.
+     Same 9 pages / 55 facts, on-device masking every run (63 → 81 outbound pictures with 4 tiles, **0 identity leaks in
+     every run**). Scores use the shared scorer with one fix (a range "2,5-3" now matches the key "2,5"; baselines
+     re-scored with it). Cost = provider tokens at the Luna list price (US$ 0.10 / 0.50 per 1M); s = reading wall time
+     per page (3 reads in parallel + drawing + normalisation, through the deployed route).
+
+     | Run (fresh reads unless noted) | Accepted | After Doğrula | Any read /55 | Q/page (max) | Invented | US$/page | s/page |
+     |---|---|---|---|---|---|---|---|
+     | Luna-Pro, reader v2 (before) | 45.5 % | 60.0 % | 37 | 6.8 (14) | 9 | 0.028 | 83 |
+     | Luna (`--kademe hizli`), reader v2 (before) | 45.5 % | 56.4 % | 35 | 5.8 (12) | 27 | 0.008 | 50 |
+     | Luna-Pro, tuned (replay of the tuning-round reads) | 49.1 % | 65.5 % | 42 | 6.3 (14) | 0 | 0.055 | 125 |
+     | **Luna-Pro, tuned (fresh reads)** | **41.8–43.6 %** | **60.0–61.8 %** | 40–41 | 6.6–6.8 (13) | **0** (1 before the last drawing-prompt fix) | 0.055 | 103 |
+     | Luna, tuned (fresh reads) | 47.3 % | 63.6–65.5 % | 40–41 | 6.1 (12) | 0 (1 before the fix) | 0.008 | 52 |
+     | Luna-Pro, 5 reads (rejected) | 43.6 % | 60.0 % | 44 | 9.3 (20) | 0 | 0.039 | 120 |
+
+     What changed (`c70750cd`, core, all 40 branşlar; country port in ESNEK-AB-ULKE): tiles ≤ 560 px tall, up to 4 per
+     page (a 768-px-short-side model sees the photo at its own resolution); read 3 = tiles alone (the shrunk whole page was
+     the weakest voter); "?" abstains in the vote; number + suffix ("2017 de" / "2017'de") is one token; printed forms:
+     a short entry carries its row label ("Boyun: N") when ≥ 2 reads agree on the field, and uncertain drawing findings
+     are asked before non-protected words; drawing prompt gives the clinical finding only (no pen-gesture / region
+     narration → invented 9 → 0); a capitalised near drug-name match needs ≥ 5 letters. Kept: never invent, protected
+     words need unanimous agreement or a question, budget 5, masking proof.
+     Findings: (1) Luna-Pro run-to-run noise is ± 2–3 facts (1 fact = 1.8 pts), so its after-Doğrula gain on fresh reads is
+     within noise (60.0 → 60–62 %); the clear gains are invented 9 → 0 and the reading ceiling 37 → 40–42. (2) The 4 tiles
+     double Luna-Pro's cost (still ≈ US$ 55 per 1,000 pages) and add ≈ 20 s per page. (3) Q/page is above 5 on the dense
+     narrative pages only because protected words (years, sides, allergy lines) are never budgeted away (2 pages 13 / 8;
+     5 of 9 pages ≤ 5). (4) 95 % is not reachable on these pages with this model: ~14 facts appear in NO read
+     (sialendoskopi ×2, sialolitiyazis, masseter botoksu, Allergodil, Avamys, yıkama, parotis ×2, duyma kaybı, IgE 305,
+     septum, …) on WhatsApp-compressed ~1100×1550 photos; the realistic ceiling with ≤ 5 questions is ≈ 70 %.
+     **Optional, waits on Kaan's explicit "go" (FOUNDER LOCK, not measured):** a higher reasoning effort for the image
+     reads — `lib/ai/modeller.ts`: `Caba` gains `'high'` and `GOREV_POLITIKASI['goruntu-inceleme']` becomes
+     `{ kademe: 'derin', maxTokens: 12000, caba: 'high' }` (affects every goruntu-inceleme call, not only El Notu). Claude
+     measures it the same day on "go" before it stays.
+   - **Production-model run — RESOLVED 2026-11-24:** egress opened (`www.notya.io`), measured and tuned — see the Luna-Pro
+     bullet above.
    - Next accuracy levers (after the production numbers): drawing regions — accept threshold and ink window (form facts);
      the doctor's confirmed crops as in-context examples once real Doğrula answers exist (ESNEK-A-ORNEKLER); learned outline
      once ≥ 3 confirmed sources exist. Generalises: whole-page reading, outline prior, consensus, budget and masking proof
