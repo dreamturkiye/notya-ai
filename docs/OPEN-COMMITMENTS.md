@@ -5746,6 +5746,22 @@ patient file / Gelen Belgeler, batch upload, Doğrula with crops, secretary fina
      pages; e.g. 10 doctors × 20 pages × 22 days ≈ 4,400 pages ≈ US$ 1,200 / month). Luna-Pro (current production) is still
      unmeasured on these pages (container cannot reach notya.io) — run it first if egress is opened, then decide.
      Run cost of this comparison ≈ US$ 24 (10 runs). Owner: Kaan (go / no-go), Claude (apply the same day on "go").
+   - **Luna-Pro (production model) run — tooling SHIPPED, run BLOCKED on egress (2026-11-24).** Kaan's decision: Luna-Pro
+     stays the hand-note model; tune the reader for it (the Opus routing proposal above is withdrawn). Shipped in
+     `1ef26889` (production deployment READY): migration 204 `degerlendirme_anahtarlari` (hash of a random token, one
+     purpose, ≤ 2 h, revocable, RLS on / service role only, applied on production); the evaluation route accepts
+     `x-degerlendirme-anahtari` (unknown / revoked / expired / wrong purpose → 403; founder session and CRON_SECRET paths
+     unchanged); a single-call mode so the harness runs the reader orchestration locally and only each model call goes to
+     the host (pictures only as references into the package whose masking the route re-proves on every call); usage and
+     reading ceiling reported per page; `maxDuration` 300 for the route in vercel.json (the `app/api/**` glob caps at 60).
+     Harness: `--uzak https://www.notya.io/api/kurucu/el-notu-degerlendir [--cagri] [--kademe hizli]` with
+     `EL_NOTU_DEGERLENDIR_ANAHTARI`. Device side re-checked: 9/9 pages masked, 63 outbound pictures, 0 identity leaks.
+     **Blocked:** the container's egress proxy allows `notya.io` but refuses `www.notya.io` (HTTP 403 at CONNECT), and the
+     apex answers every path with a 308 to www, so no request reaches the route. The evaluation pass minted for the run was
+     revoked unused and its plaintext destroyed. **Waits on Kaan:** allow `www.notya.io` in the session's allowed domains
+     (claude.ai → Settings / Organization settings → Capabilities). **Then Claude, the same day:** mint a new pass, run
+     Luna-Pro (default) and Luna (`--kademe hizli`) on the 9 pages, tune the reader for Luna-Pro (tiles / resolution,
+     prompts, agreement thresholds, Doğrula selection, drawing reads), re-run, revoke the pass, record the numbers here.
    - **Production-model run — BLOCKED, waits on Kaan:** the admin route `POST /api/kurucu/el-notu-degerlendir` is live
      (founder session or CRON_SECRET; refuses a page whose masking it cannot prove; stores nothing; returns metrics + the
      de-identified reading; optional `kademe: 'hizli'` compares GPT-6 Luna with Luna-Pro through the policy's existing tier
