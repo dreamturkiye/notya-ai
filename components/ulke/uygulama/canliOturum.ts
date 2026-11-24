@@ -25,7 +25,7 @@ import { ulkeYolu } from '@/lib/ulke/yol'
 import { ekranCevabi, geciciyiOturt, saklanacak, saklidan, selamEkle, sesAsistani, sesKullanicisi, yeniCagri, type BalonSayaci, type SohbetBalon } from '@/lib/ulke/asistan/balonlar'
 import type { UygulamaMetni } from '@/lib/ulke/arayuz'
 import { hataYazisi, kisaAyrinti } from '@/lib/ulke/asistan/ayrinti'
-import { okunurMu, sesiDokunustaAc } from '@/lib/ulke/asistan/sesAcma'
+import { okunurMu, sesBaglaminiKapat, sesiDokunustaAc } from '@/lib/ulke/asistan/sesAcma'
 import type { Api } from './Kabuk'
 
 /** `sessiz` = the written chat was used while the voice was live: the call ended, the page stays; the microphone starts a new one (Türkiye's "sessiz"). */
@@ -46,19 +46,33 @@ export const CALAR = {
   libsampleratePath: ulkeYolu(SES_CALAR.libsampleratePath),
 } as const
 
-/** Microphone first, so that a refusal is named as one. */
-export async function mikrofonIste(): Promise<'tamam' | 'reddedildi' | 'yok'> {
+/**
+ * SES-ILK-SOZ-01 (Kaan GO 2026-11-24 12:15 EST): the constraints the WebRTC call publishes the microphone with (livekit-client
+ * 2.16 `audioDefaults`). The pre-check opens the microphone with the SAME processing, so the browser switches into its voice
+ * mode ONCE, before the agent speaks, and the call's own track reuses it.
+ */
+export const MIKROFON_KISITLARI = { echoCancellation: true, noiseSuppression: true, autoGainControl: true, voiceIsolation: true } as MediaTrackConstraints
+
+/**
+ * Microphone first, so that a refusal is named as one. SES-ILK-SOZ-01: the stream is KEPT (the caller stops it once the
+ * greeting has been spoken, or when the call ends). It used to be opened and stopped at once, and the SDK then opened and
+ * closed streams of its own while the greeting played: the audio set-up changed mid-greeting and the start of the voice
+ * sounded quiet and far away (AU Paediatrics / Dietitian test, 2026-11-24).
+ */
+export async function mikrofonIste(): Promise<{ durum: 'tamam'; akis: MediaStream } | { durum: 'reddedildi' | 'yok' }> {
   try {
     const md = typeof navigator !== 'undefined' ? navigator.mediaDevices : undefined
-    if (!md || typeof md.getUserMedia !== 'function') return 'yok'
-    const akis = await md.getUserMedia({ audio: true })
-    akis.getTracks().forEach((x) => x.stop())
-    return 'tamam'
+    if (!md || typeof md.getUserMedia !== 'function') return { durum: 'yok' }
+    const akis = await md.getUserMedia({ audio: MIKROFON_KISITLARI })
+    return { durum: 'tamam', akis }
   } catch (e) {
     const ad = e instanceof Error ? e.name : ''
-    return ad === 'NotAllowedError' || ad === 'SecurityError' || ad === 'PermissionDeniedError' ? 'reddedildi' : 'yok'
+    return { durum: ad === 'NotAllowedError' || ad === 'SecurityError' || ad === 'PermissionDeniedError' ? 'reddedildi' : 'yok' }
   }
 }
+
+/** How long after the call connects the pre-check stream is kept at most when the greeting gives no mode change. */
+export const ON_MIKROFON_AZAMI_MS = 12_000
 
 type Baglanti = Awaited<ReturnType<typeof Conversation.startSession>>
 interface TanimaSonucu { isFinal: boolean; 0: { transcript: string } }
@@ -90,6 +104,12 @@ export function useCanliOturum({ t, api, dil }: { t: Metin | undefined; api: Api
   const durumRef = useRef<CanliDurumu>('bosta')
   durumRef.current = durum
   const sohbet = useRef<Baglanti | null>(null)
+  // SES-ILK-SOZ-01: the unlock AudioContext of the tap and the pre-check microphone stream, both kept while the call opens
+  // and the greeting plays, and released here (never on a timer in the middle of the greeting).
+  const dokunusRef = useRef<AudioContext | null>(null)
+  const onMikRef = useRef<MediaStream | null>(null)
+  const onMikBirak = () => { const a = onMikRef.current; onMikRef.current = null; try { a?.getTracks().forEach((x) => x.stop()) } catch { /* quiet */ } }
+  const sesiBirak = () => { onMikBirak(); sesBaglaminiKapat(dokunusRef.current); dokunusRef.current = null }
   /**
    * STRIPE-NOTYA-AU-05 (pricing/limits only): the open call's token and when it connected. Sent ONCE when the call ends,
    * however it ends, so the server can count the plan's live-voice minutes. Nothing in the call itself changes.
@@ -181,19 +201,25 @@ export function useCanliOturum({ t, api, dil }: { t: Metin | undefined; api: Api
     const c = sohbet.current
     sohbet.current = null
     cagriyiKapat()
+    sesiBirak()
     setBalonlar((b) => geciciyiOturt(b))
     if (c) { try { await c.endSession() } catch { /* already closed */ } }
     setDurum('bosta')
   }, [cagriyiKapat])
 
-  useEffect(() => () => { nesil.current += 1; try { tanimaRef.current?.stop() } catch { /* quiet */ } const c = sohbet.current; sohbet.current = null; cagriyiKapat(); if (c) void c.endSession().catch(() => {}) }, [cagriyiKapat])
+  useEffect(() => () => { nesil.current += 1; try { tanimaRef.current?.stop() } catch { /* quiet */ } const c = sohbet.current; sohbet.current = null; cagriyiKapat(); sesiBirak(); if (c) void c.endSession().catch(() => {}) }, [cagriyiKapat])
 
   const baslat = useCallback(async () => {
     if (!t || !api || sohbet.current || durum === 'baglaniyor') return
-    sesiDokunustaAc() // inside the click, before any await: Safari plays the voice only after this
+    // Inside the click, before any await: Safari plays the voice only after this. Kept until the call ends (SES-ILK-SOZ-01).
+    const oncekiDokunus = dokunusRef.current
+    dokunusRef.current = sesiDokunustaAc()
+    sesBaglaminiKapat(oncekiDokunus)
     setHata(null); setDurum('baglaniyor')
     const izin = await mikrofonIste()
-    if (izin !== 'tamam') { setHata(t.mikrofon); setDurum('hata'); return }
+    if (izin.durum !== 'tamam') { setHata(t.mikrofon); setDurum('hata'); sesiBirak(); return }
+    onMikBirak()
+    onMikRef.current = izin.akis
     setBalonlar((b) => yeniCagri(geciciyiOturt(b)))
     const benim = ++nesil.current
     const gecerli = () => nesil.current === benim
@@ -204,6 +230,7 @@ export function useCanliOturum({ t, api, dil }: { t: Metin | undefined; api: Api
       let baglandi = false
       let baglanmaAni = 0 // when the call opened; what the assistant says first, before the doctor has spoken, is the greeting
       let kullaniciKonustu = false
+      let ajanKonustu = false // SES-ILK-SOZ-01: the pre-check microphone is released once the greeting has been spoken
       const basarisiz = (yenidenDene: boolean, ayrinti: string) => {
         if (bitti || !gecerli()) return
         bitti = true
@@ -212,6 +239,7 @@ export function useCanliOturum({ t, api, dil }: { t: Metin | undefined; api: Api
         cagriyiKapat()
         if (c) void c.endSession().catch(() => {})
         if (yenidenDene && ovr && !baglandi) { void dene(false); return }
+        sesiBirak()
         setHata(hataYazisi(t.hata, ayrinti)); setDurum('hata')
       }
       try {
@@ -222,12 +250,12 @@ export function useCanliOturum({ t, api, dil }: { t: Metin | undefined; api: Api
           // STRIPE-NOTYA-AU-05: the plan's live-voice minutes are used; the text assistant stays open.
           const kod = r.j as { code?: unknown; tur?: unknown }
           const dakika = kod.code === 'SES_DAKIKA' ? (kod.tur === 'ucretli' ? t.sesAylikDoldu : t.sesDenemeDoldu) : undefined
-          setHata(dakika || t.limit); setDurum('hata'); return
+          setHata(dakika || t.limit); setDurum('hata'); sesiBirak(); return
         }
         if (!r.ok || !j.signed_url || !j.notya_jeton || !j.voice_id) {
           // Which part of the opening answer was missing is the whole diagnosis (a 502 = the provider gave no address, a 404 = not available here).
           const eksik = !j.signed_url ? 'no address' : !j.notya_jeton ? 'no token' : !j.voice_id ? 'no voice' : ''
-          setHata(hataYazisi(t.hata, kisaAyrinti(`start ${r.status}`, [(r.j as { code?: unknown }).code, eksik].filter((x) => typeof x === 'string' && x).join(' ')))); setDurum('hata'); return
+          setHata(hataYazisi(t.hata, kisaAyrinti(`start ${r.status}`, [(r.j as { code?: unknown }).code, eksik].filter((x) => typeof x === 'string' && x).join(' ')))); setDurum('hata'); sesiBirak(); return
         }
         const aracAdi = j.ekran_araci || 'show_on_screen'
         // SES-OMURGA-V2 (C): WebRTC (browser echo cancellation + noise suppression) when the server minted a token; the signed
@@ -243,12 +271,12 @@ export function useCanliOturum({ t, api, dil }: { t: Metin | undefined; api: Api
               return 'ok'
             },
           },
-          onConnect: () => { baglandi = true; baglanmaAni = Date.now(); acikCagri.current = { jeton: j.notya_jeton as string, basladi: baglanmaAni }; if (!bitti && gecerli()) setDurum('dinliyor') },
+          onConnect: () => { baglandi = true; baglanmaAni = Date.now(); const mik = onMikRef.current; setTimeout(() => { if (onMikRef.current === mik) onMikBirak() }, ON_MIKROFON_AZAMI_MS); acikCagri.current = { jeton: j.notya_jeton as string, basladi: baglanmaAni }; if (!bitti && gecerli()) setDurum('dinliyor') },
           onDisconnect: (d?: { reason?: string; message?: string; closeCode?: number; closeReason?: string }) => {
             cagriyiKapat(j.notya_jeton)
             if (bitti || !gecerli()) return
             if (d?.reason === 'error') { basarisiz(true, kisaAyrinti(`call closed ${d.closeCode ?? ''}`.trim(), d.closeReason || d.message)); return }
-            bitti = true; sohbet.current = null; setBalonlar((b) => geciciyiOturt(b)); setDurum((x) => (x === 'hata' ? x : 'bosta'))
+            bitti = true; sohbet.current = null; sesiBirak(); setBalonlar((b) => geciciyiOturt(b)); setDurum((x) => (x === 'hata' ? x : 'bosta'))
           },
           // A provider error BEFORE the call is up ends the attempt; one in the middle of a call (a screen-tool hiccup, a model
           // error on one turn) is shown but does not hang the call up — the provider closes the socket itself when it is fatal.
@@ -264,7 +292,11 @@ export function useCanliOturum({ t, api, dil }: { t: Metin | undefined; api: Api
             else if (!kullaniciKonustu && baglanmaAni && Date.now() - baglanmaAni < 8000) setBalonlar((b) => selamEkle(b, message, sayac.current))
             else setBalonlar((b) => sesAsistani(b, message, sayac.current))
           },
-          onModeChange: ({ mode }: { mode: string }) => { if (!bitti && gecerli()) setDurum(mode === 'speaking' ? 'konusuyor' : 'dinliyor') },
+          onModeChange: ({ mode }: { mode: string }) => {
+            if (mode === 'speaking') ajanKonustu = true
+            else if (ajanKonustu && onMikRef.current) onMikBirak()
+            if (!bitti && gecerli()) setDurum(mode === 'speaking' ? 'konusuyor' : 'dinliyor')
+          },
         })
         const baglanti = await ac(Boolean(j.conversation_token)).catch((e: unknown) => {
           if (!j.conversation_token) throw e
@@ -292,6 +324,7 @@ export function useCanliOturum({ t, api, dil }: { t: Metin | undefined; api: Api
     const c = sohbet.current
     sohbet.current = null
     cagriyiKapat()
+    sesiBirak()
     setBalonlar((b) => geciciyiOturt(b))
     if (c) { try { await c.endSession() } catch { /* already closed */ } }
     setDurum('sessiz')

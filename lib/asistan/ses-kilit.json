@@ -1,7 +1,7 @@
 {
   "kural": ".cursor/rules/ses-omurga-kilidi.mdc",
-  "onay": "Kaan-onay: 2026-10-29 Ses Omurgası v2 (A–I) + founder lock — ordered and signed off by Kaan in the job brief",
-  "guncelleme": "2026-10-29",
+  "onay": "Kaan-onay: 2026-11-24 SES-ILK-SOZ-01 country voice start fix (keep unlock AudioContext for the call; pre-check mic kept with call constraints until the greeting is spoken) — Kaan GO 2026-11-24 12:15 EST",
+  "guncelleme": "2026-11-24",
   "dosyalar": {
     ".cursor/rules/ses-omurga-kilidi.mdc": "fa7dcef64483f66ea83cebd1b9b6286bfccd5b16ccabc611366ffcc257ef80fa",
     "app/api/asistan/ses-ekran/route.ts": "4fa0f2e003a5e8312c3b7fc3cbc8199cd5a962d4ef02f8d82e6214348671f1e3",

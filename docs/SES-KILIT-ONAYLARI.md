@@ -18,3 +18,9 @@
 
 - Covered by Kaan's 2026-11-02 approval above (pricing and limits, not voice architecture).
 - Değişen kilitli dosyalar: none. `app/api/ulke/asistan-canli/route.ulke.ts` and `.../yazili/route.ulke.ts` (not hashed) refuse a new call / typed turn with 402 `DENEME_BITTI` once the AU free trial is over without a paid plan (`lib/ulke/uygulama/deneme.ts`). No change to routing, prompts, streaming or turns; `lib/asistan/ses-kilit.json` unchanged; `npm run test:ses` green (324/324).
+
+## 2026-11-24 — SES-ILK-SOZ-01 country voice start fix (keep unlock AudioContext for the call; pre-check mic kept with call constraints until the greeting is spoken) — Kaan GO 2026-11-24 12:15 EST
+
+- Onay satırı: `Kaan-onay: 2026-11-24 SES-ILK-SOZ-01 country voice start fix (keep unlock AudioContext for the call; pre-check mic kept with call constraints until the greeting is spoken) — Kaan GO 2026-11-24 12:15 EST`
+- Taban commit: `c54bc879`
+- Değişen kilitli dosyalar: (yok — yalnız liste)
