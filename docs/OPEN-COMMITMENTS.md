@@ -5688,8 +5688,8 @@ patient file / Gelen Belgeler, batch upload, Doğrula with crops, secretary fina
 2. **ESNEK-A-EVAL — READER v2 SHIPPED 2026-11-23; PRODUCTION MODEL (GPT-6 Luna-Pro) MEASURED AND TUNED 2026-11-24
    (`c70750cd`); still BELOW TARGET (target: ≥ 95 % clinical facts after ≤ ~5 Doğrula answers per page, 0 invented) —
    ceiling is the model's recognition of this hand (≈ 40–42 of 55 facts appear in any read), not the orchestration.**
-   Owner: Claude (next round when new pages / the overnight learning loop data exist); Kaan (only the optional
-   locked-file effort request below).
+   Owner: Claude (next round when new pages / the overnight learning loop data exist); Kaan: nothing open (the locked-file
+   effort request was measured and reverted on 2026-11-24, see below).
    - **What v2 changed (core, all 40 branşlar; country port stays in ESNEK-AB-ULKE):** the reader no longer cuts the page
      into single-line crops (v1 lost the context a human reader uses). It reads the WHOLE masked page 3× independently
      (whole page + overlapping ≤ 1 MP tiles / tiles first with the outline after the images / whole page alone), each read
@@ -5783,10 +5783,31 @@ patient file / Gelen Belgeler, batch upload, Doğrula with crops, secretary fina
      5 of 9 pages ≤ 5). (4) 95 % is not reachable on these pages with this model: ~14 facts appear in NO read
      (sialendoskopi ×2, sialolitiyazis, masseter botoksu, Allergodil, Avamys, yıkama, parotis ×2, duyma kaybı, IgE 305,
      septum, …) on WhatsApp-compressed ~1100×1550 photos; the realistic ceiling with ≤ 5 questions is ≈ 70 %.
-     **Optional, waits on Kaan's explicit "go" (FOUNDER LOCK, not measured):** a higher reasoning effort for the image
-     reads — `lib/ai/modeller.ts`: `Caba` gains `'high'` and `GOREV_POLITIKASI['goruntu-inceleme']` becomes
-     `{ kademe: 'derin', maxTokens: 12000, caba: 'high' }` (affects every goruntu-inceleme call, not only El Notu). Claude
-     measures it the same day on "go" before it stays.
+     **Reasoning effort 'high' for image reads — MEASURED AND REVERTED 2026-11-24 (Kaan GO 2026-11-24 16:29 EST, "keep
+     only if it helps").** Applied `6dfb188e` (`lib/ai/modeller.ts`: `Caba` + `'high'`, `goruntu-inceleme` →
+     `caba: 'high'`, derin tier takes its policy row's effort; lock manifest re-hashed), deployed, `effort=high` confirmed
+     in the production `[ai]` log lines, measured through the deployed route with fresh reads (same 9 pages / 55 facts,
+     same harness, 0 identity leaks in every run, 81 outbound pictures each), then reverted (revert commit below, manifest
+     hash of `lib/ai/modeller.ts` back to `f6f8c7b2…`).
+
+     | Run (fresh reads) | Accepted | After Doğrula | Any read /55 | Q/page (max) | Invented | US$/page | s/page |
+     |---|---|---|---|---|---|---|---|
+     | Luna-Pro default effort, same-day baseline | 50.9 % | 61.8 % (34) | 37 | 5.9 (13) | 0 | 0.033 | 54 |
+     | Luna-Pro effort high, run 1 | 47.3 % | 60.0 % (33) | 39 | 6.1 (11) | 0 | 0.081 | 162 |
+     | Luna-Pro effort high, run 2 | 52.7 % | 67.3 % (37) | 42 | 6.7 (14) | 0 | 0.064 | 144 |
+
+     Mean after Doğrula 35.0 vs 33–34 for today's three fresh default-effort runs → + 1 to + 1.3 facts, inside the ± 2–3
+     fact noise and below the + 3 bar. Cost: high effort makes each Luna-Pro page read emit ≈ 10–11 k output tokens
+     (median, hidden reasoning included) against the 12 000 cap. Median read time is 56–57 s against the 60 s primary
+     timeout, so 11–12 of ~31 reads per run went past 60 s, and 5–6 per run (16–19 %) ended on the Sonnet 5 guard after two
+     timeouts, with 2 truncated. Page time went up 2.7–3× and cost 2–2.4×. Other goruntu-inceleme reads (synthetic documents with no patient data, through the
+     same route, real production prompts: document type 200-token cap, general document 3000, lab extraction 6000; 2–3
+     calls each, before / after): mean 5.0 s → 5.9 s (+ 18 %; type 2.9 → 3.7 s, general 6.1 → 7.0 s, lab 7.2 → 8.3 s),
+     US$ 0.0005 → 0.0007 per call, all answered by Luna-Pro, none truncated. So the side effect on simple documents is
+     small. The decision rests on El Notu not improving. **Not applied (waits on a new "go" if ever wanted):** a narrower
+     `'el-notu-okuma'` task would not help either, because the hand-note reads themselves showed no gain.
+     Measurement passes: 2 minted (hash only in `degerlendirme_anahtarlari`), plus 1 mistyped row revoked unused. All 3
+     revoked at the end; no secret or identity printed.
    - **Production-model run — RESOLVED 2026-11-24:** egress opened (`www.notya.io`), measured and tuned — see the Luna-Pro
      bullet above.
    - Next accuracy levers (after the production numbers): drawing regions — accept threshold and ink window (form facts);

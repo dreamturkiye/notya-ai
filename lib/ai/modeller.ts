@@ -68,9 +68,8 @@ export const kademeKapali = (): boolean => (typeof process !== 'undefined' ? pro
 
 /** guclu = koruyucu Sonnet 5 (G1–G4) · hizli = luna (birincil) · derin = luna-pro (arka plan ağır işler). */
 export type Kademe = 'guclu' | 'hizli' | 'derin'
-/** OpenRouter `reasoning.effort` — yalnız openai/* modellerde gönderilir (saglayici.openRouterGovdesi).
- * 'high' (ESNEK-A-EVAL, Kaan GO 2026-11-24): yalnız politika satırından, derin kademede (goruntu-inceleme). */
-export type Caba = 'none' | 'low' | 'medium' | 'high'
+/** OpenRouter `reasoning.effort` — yalnız openai/* modellerde gönderilir (saglayici.openRouterGovdesi). */
+export type Caba = 'none' | 'low' | 'medium'
 /** Günlük satırındaki kademe adı ([ai] kademe=…). */
 export type KademeAdi = 'luna-none' | 'luna' | 'luna-pro' | 'sonnet'
 
@@ -141,9 +140,7 @@ export const GOREV_POLITIKASI: Record<Gorev, { kademe: Kademe; maxTokens: number
   // Kaan (2026-09-19) 12000 istedi: cok dozlu/uzun karnelerde 8000 de yetmeyebilir. Bu bir
   // TAVAN'dir, sabit maliyet degil — cikti kisa ise kisa faturalanir; yalniz gercekten uzun
   // karnede devreye girer. Karne okuma seyrek bir islem oldugu icin risk dusuk.
-  // ESNEK-A-EVAL (Kaan GO 2026-11-24 16:29 EST): Luna-Pro image reads at reasoning effort 'high' — kept only if measured
-  // better the same day (docs/OPEN-COMMITMENTS.md ESNEK-A-EVAL).
-  'goruntu-inceleme': { kademe: 'derin', maxTokens: 12000, caba: 'high' },
+  'goruntu-inceleme': { kademe: 'derin', maxTokens: 12000 },
   'uzman-analiz': { kademe: 'derin', maxTokens: 2000 },
   // F3 (KD-DERM-SAFETY-FINDINGS): 800 uzun klinik cevabı JSON ortasında kesiyordu — klinik tur bu yüzden 1600.
   // sohbet-uzman: luna; tek-slot kısa takip turu ayseCevapla'da sohbetKademesi ile 'none' alır.
@@ -185,11 +182,7 @@ export function modelSec(gorev: Gorev, secenek: KademeSecenegi = {}): ModelSecim
     return { gorev, kademe, model: kademeModeli(kademe), maxTokens: p.maxTokens }
   }
   const kademe: Kademe = p.kademe === 'guclu' ? 'guclu' : (secenek.kademe ?? p.kademe)
-  // Derin kademe: effort yalnız politika satırından (çağrı yeri aşımı yok sayılır); hizli kademe: aşım, yoksa hizli satırın effortu.
-  // Derin satırın effortu (goruntu-inceleme 'high') çağrı yeri luna'ya indirdiğinde taşınmaz.
-  const caba = kademe === 'hizli'
-    ? (secenek.caba ?? (p.kademe === 'hizli' ? p.caba : undefined))
-    : kademe === 'derin' && p.kademe === 'derin' ? p.caba : undefined
+  const caba = kademe === 'hizli' ? (secenek.caba ?? p.caba) : undefined
   return { gorev, kademe, model: kademeModeli(kademe), maxTokens: p.maxTokens, ...(caba ? { caba } : {}) }
 }
 

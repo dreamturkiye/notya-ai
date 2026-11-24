@@ -1,6 +1,6 @@
 {
   "kural": ".cursor/rules/ses-omurga-kilidi.mdc",
-  "onay": "Kaan-onay: 2026-11-24 ESNEK-A-EVAL goruntu-inceleme reasoning effort high on Luna-Pro (lib/ai/modeller.ts: Caba gains 'high', GOREV_POLITIKASI goruntu-inceleme caba 'high', derin tier takes effort from its policy row only; Kaan GO 2026-11-24 16:29 EST, measured same day, kept only if it helps)",
+  "onay": "Kaan-onay: 2026-11-24 ESNEK-A-EVAL revert of goruntu-inceleme reasoning effort high (lib/ai/modeller.ts back to cd273e7c; measured same day under Kaan GO 2026-11-24 16:29 EST: no accuracy gain, image reads ~3x slower, timeouts to Sonnet; the GO's keep-only-if-it-helps rule)",
   "guncelleme": "2026-11-24",
   "dosyalar": {
     ".cursor/rules/ses-omurga-kilidi.mdc": "fa7dcef64483f66ea83cebd1b9b6286bfccd5b16ccabc611366ffcc257ef80fa",
@@ -8,7 +8,7 @@
     "app/api/asistan/ses-llm/v1/chat/completions/route.ts": "4efdf3f94f51837c2f84deb3344e4ed2f7f6a30ec323d692220b68609e8339f0",
     "app/api/asistan/signed-url/route.ts": "63706277a766f49d907e07460f6641fee88e3996ef91176bee106c1febe94ca5",
     "components/asistan/AsistanOturumContext.tsx": "ebf5a1630a2acfb2f21a7ea6582fb13b3757d7b47834cd3fd9c5e70b89586903",
-    "lib/ai/modeller.ts": "540801b6a55550f2fd7d2f48f5a11ebf0e099c5c304acfca5dff9f2342a8dd4e",
+    "lib/ai/modeller.ts": "f6f8c7b2e7d1224fd3dd829f425b2fdf1cf7e00bbd5e2b1d353ac372cf109a9c",
     "lib/asistan/ayseCevapla.ts": "7367e5a3a6ed9aed8b2d3b19f07feff1453b1a8eec4f76feeddd3b12a4373917",
     "lib/asistan/duraklama.ts": "a799f5be7a0b21e684bc21a33c53d0e5f5fc7ec125ac725fe56ac2c04cdc17bd",
     "lib/asistan/elevenKapi.ts": "982862e089985f755a5eb2e33380121fdefba977f5a1b1f18dec4d220a22856e",

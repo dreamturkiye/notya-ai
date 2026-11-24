@@ -18,3 +18,9 @@
 - Onay satırı: `Kaan-onay: 2026-11-24 ESNEK-A-EVAL goruntu-inceleme reasoning effort high on Luna-Pro (lib/ai/modeller.ts: Caba gains 'high', GOREV_POLITIKASI goruntu-inceleme caba 'high', derin tier takes effort from its policy row only; Kaan GO 2026-11-24 16:29 EST, measured same day, kept only if it helps)`
 - Taban commit: `cd273e7c`
 - Değişen kilitli dosyalar: `lib/ai/modeller.ts`
+
+## 2026-11-24 — ESNEK-A-EVAL revert of goruntu-inceleme reasoning effort high (lib/ai/modeller.ts back to cd273e7c; measured same day under Kaan GO 2026-11-24 16:29 EST: no accuracy gain, image reads ~3x slower, timeouts to Sonnet; the GO's keep-only-if-it-helps rule)
+
+- Onay satırı: `Kaan-onay: 2026-11-24 ESNEK-A-EVAL revert of goruntu-inceleme reasoning effort high (lib/ai/modeller.ts back to cd273e7c; measured same day under Kaan GO 2026-11-24 16:29 EST: no accuracy gain, image reads ~3x slower, timeouts to Sonnet; the GO's keep-only-if-it-helps rule)`
+- Taban commit: `6dfb188e`
+- Değişen kilitli dosyalar: (yok — yalnız liste)
