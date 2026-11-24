@@ -194,6 +194,16 @@ export async function dagarcikYukle(sb: SupabaseClient, doktorId: string): Promi
   return kelimeDagarcigi((data || []).map((n) => [n.content_subjektif, n.content_objektif, n.content_degerlendirme, n.content_plan].filter(Boolean).join('\n')))
 }
 
+/**
+ * ESNEK-READER-2 — texts the reader learns this doctor's outline from (core/elNotu/anahat.ts): his sources whose every
+ * Doğrula question is answered (confirmed readings) and the secretary's typed notes from shadow mode (tur 'yazili_not').
+ * Scoped by doctor_id (hasta-izolasyon); text only, the latest 40.
+ */
+export async function anahatMetinleri(sb: SupabaseClient, doktorId: string): Promise<string[]> {
+  const { data } = await sb.from('muayene_kaynaklari').select('metin, tur, durum, acik_dogrula').eq('doctor_id', doktorId).not('metin', 'is', null).order('updated_at', { ascending: false }).limit(60)
+  return (data || []).filter((r) => r.tur === 'yazili_not' || (r.durum === 'okundu' && Number(r.acik_dogrula || 0) === 0)).map((r) => String(r.metin || '')).slice(0, 40)
+}
+
 export async function sorulmusKisaltmalar(sb: SupabaseClient, doktorId: string): Promise<Set<string>> {
   const { data } = await sb.from('okuma_dogrulamalari').select('soru_anahtari').eq('doctor_id', doktorId).eq('sinif', 'kisaltma').limit(2000)
   return new Set((data || []).map((r) => String(r.soru_anahtari)))

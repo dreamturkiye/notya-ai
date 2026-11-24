@@ -116,6 +116,7 @@ export const EL_NOTU_TR: ElNotuMetinleri = {
     dilAdi: 'Turkish',
     cizimBasligi: 'Çizim bulguları',
     taraf: { sag: 'Sağ', sol: 'Sol', iki: 'Bilateral' },
+    okunamadi: '[okunamadı]',
     bagSozcukleri: ['ve', 'ile', 'de', 'da', 'ki', 'olarak', 'yok', 'var', 'normal', 'mevcut', 'bir', 'iki', 'sağ', 'sol', 'yaş', 'kadın', 'erkek', 'veya', 'ya', 'kez', 'günde', 'hasta', 'şikayet'],
   },
   yerel: 'tr-TR',

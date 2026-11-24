@@ -83,3 +83,99 @@ export function uzlastir(a: HamSatir | null, b: HamSatir | null): UzlasikKelime[
 }
 
 const clamp = (g: number) => (Number.isFinite(g) ? Math.max(0, Math.min(1, g)) : 0)
+
+/** One word after N independent page reads (reader v2). */
+export type OyluKelime = {
+  metin: string
+  /** 0..1, combined from the agreeing reads, scaled by the share of reads that agree */
+  guven: number
+  /** reads that agree on `metin` (exact or near-identical for plain words) */
+  oy: number
+  /** reads that agree on `metin` EXACTLY (after folding) — protected words need tamOy === okuma */
+  tamOy: number
+  /** reads taken of the page (a read that missed the line counts as a disagreeing read) */
+  okuma: number
+  adaylar: string[]
+  /** lowest confidence among the agreeing reads */
+  enDusuk: number
+  /** reads that wrote ANY word at this position (1 = a word only one read saw) */
+  kapsam: number
+}
+
+/** Sum of matched-word similarity of two word lists (used to pick the medoid read). */
+function hizaSkoru(a: HamKelime[], b: HamKelime[]): number {
+  return hizala(a, b).reduce((t, { a: x, b: y }) => t + (x && y ? benzerlik(x.m, y.m) : 0), 0)
+}
+
+/**
+ * Consensus of N independent reads of the same line. Pivot = the read most similar to the others (medoid); every other read
+ * is aligned to it word by word (hizala). Each slot takes the reading most reads give (ties → higher summed confidence).
+ * Words the pivot lacks: inserted when another read has them with g ≥ 0.5 or two reads share them — never silently lost,
+ * but a word only one read saw stays a minority reading (oy = 1). `toplamOkuma` = reads taken of the page.
+ */
+export function cokluUzlastir(okumalar: (HamKelime[] | null)[], toplamOkuma = okumalar.length): OyluKelime[] {
+  const dolu = okumalar.filter((o): o is HamKelime[] => !!o && o.length > 0)
+  if (!dolu.length) return []
+  let pivot = 0, enIyi = -1
+  dolu.forEach((o, i) => {
+    const s = dolu.reduce((t, p, j) => (j === i ? t : t + hizaSkoru(o, p)), 0) + o.length * 1e-3
+    if (s > enIyi) { enIyi = s; pivot = i }
+  })
+  const P = dolu[pivot]
+  const yuvalar: HamKelime[][] = P.map((k) => [k])
+  // gap words of other reads, keyed by the pivot index they follow (-1 = before the first word)
+  const araliklar = new Map<number, HamKelime[][]>()
+  dolu.forEach((o, j) => {
+    if (j === pivot) return
+    let son = -1
+    const bekleyen: HamKelime[] = []
+    const bosalt = () => { if (bekleyen.length) { const l = araliklar.get(son) || []; l.push([...bekleyen]); araliklar.set(son, l); bekleyen.length = 0 } }
+    let pi = 0
+    for (const { a: x, b: y } of hizala(P, o)) {
+      if (x) { const idx = P.indexOf(x, pi); pi = idx + 1; bosalt(); son = idx; if (y) yuvalar[idx].push(y) } else if (y) bekleyen.push(y)
+    }
+    bosalt()
+  })
+  const karar = (grup: HamKelime[]): OyluKelime => {
+    const kumeler = new Map<string, HamKelime[]>()
+    for (const k of grup) { const a = kelimeAnahtari(k.m); kumeler.set(a, [...(kumeler.get(a) || []), k]) }
+    let sec: HamKelime[] = []
+    for (const k of kumeler.values()) {
+      const skor = k.length * 10 + k.reduce((t, x) => t + clamp(x.g), 0)
+      const enIyiSkor = sec.length * 10 + sec.reduce((t, x) => t + clamp(x.g), 0)
+      if (skor > enIyiSkor) sec = k
+    }
+    const ust = sec.reduce((m, x) => (clamp(x.g) > clamp(m.g) ? x : m), sec[0])
+    const yakinlar = grup.filter((k) => !sec.includes(k) && yakinMi(k.m, ust.m))
+    const uyan = [...sec, ...yakinlar]
+    const birlesik = Math.min(0.99, 1 - uyan.reduce((t, x) => t * (1 - clamp(x.g)), 1))
+    const adaylar = [...new Set([ust.m, ...grup.map((k) => k.m), ...grup.flatMap((k) => k.alt || [])].filter(Boolean))].slice(0, 5)
+    return { metin: ust.m, guven: birlesik * (uyan.length / Math.max(1, toplamOkuma)), oy: uyan.length, tamOy: sec.length, okuma: toplamOkuma, adaylar, enDusuk: Math.min(...uyan.map((x) => clamp(x.g))), kapsam: grup.length }
+  }
+  const ekle = (sonra: number): OyluKelime[] => {
+    const l = araliklar.get(sonra)
+    if (!l) return []
+    // align the gap runs of the other reads to each other: the longest run is the frame
+    const cerceve = l.reduce((m, x) => (x.length > m.length ? x : m), l[0])
+    const gruplar: HamKelime[][] = cerceve.map((k) => [k])
+    for (const run of l) if (run !== cerceve) for (const { a: x, b: y } of hizala(cerceve, run)) if (x && y) gruplar[cerceve.indexOf(x)].push(y)
+    return gruplar.filter((g) => g.length >= 2 || clamp(g[0].g) >= 0.5).map(karar)
+  }
+  const out: OyluKelime[] = [...ekle(-1)]
+  yuvalar.forEach((g, i) => { out.push(karar(g)); out.push(...ekle(i)) })
+  return out
+}
+
+/** Similarity of two transcribed lines (fuzzy word overlap, Dice) — used to align the lines of independent page reads. */
+export function satirBenzerligi(a: string[], b: string[]): number {
+  const x = a.map(kelimeAnahtari).filter(Boolean), y = b.map(kelimeAnahtari).filter(Boolean)
+  if (!x.length || !y.length) return 0
+  const kullanildi = new Set<number>()
+  let eslesme = 0
+  for (const w of x) {
+    let en = -1, enS = 0
+    y.forEach((z, j) => { if (kullanildi.has(j)) return; const s = w === z ? 1 : benzerlik(w, z); if (s > enS) { enS = s; en = j } })
+    if (en >= 0 && enS >= 0.7) { kullanildi.add(en); eslesme += enS }
+  }
+  return (2 * eslesme) / (x.length + y.length)
+}

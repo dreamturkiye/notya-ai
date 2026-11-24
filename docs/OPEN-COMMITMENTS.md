@@ -5685,42 +5685,49 @@ patient file / Gelen Belgeler, batch upload, Doğrula with crops, secretary fina
    entry). When Kaan reactivates production: apply `lib/db/migrations/202_esnek_muayene.sql` with the Supabase MCP tools and
    verify the 8 tables, the notes columns, RLS on and the policies. Until then the code fails soft: approval retries without
    `hekim_onayi_bekliyor`, sessions/end falls back to transcript-only, preferences read as defaults.
-2. **ESNEK-A-EVAL — MEASURED 2026-11-23, BELOW TARGET (target: ≥ 95% clinical facts, 0 invented).** Owner: Claude (next
-   rounds), Kaan (decision on the primary-model run, below). Kaan approved one evaluation with the production key. Only
-   `ANTHROPIC_API_KEY` could be read (Vercel stores `OPENROUTER_API_KEY` as *sensitive* — not decryptable — and openrouter.ai
-   is not reachable from the build container), so every call went through `lib/ai/cagir.ts` on the **koruyucu Sonnet 5**
-   (neden=transport), NOT the production primary GPT-6 Luna. Pages: 9 (4 narrative, 5 form), 55 clinical facts, 20 of them
-   protected (side / Ø / number / dose / drug / allergy → need confirmation by design unless both reads agree ≥ 0.92).
-   Privacy: 9/9 pages packaged, 0 identity leaks in every outbound picture (OCR leak check), all runs.
-   Results (fact matcher corrected in this change: one/two-letter keys like "N", "E", "K" now must be whole tokens — before,
-   they matched any text containing that letter, so the first numbers were inflated):
-   - before (main @ bef7bf3e): accepted text 12.7% (7/55); with the shown Doğrula reading 41.8% (23/55); 32 missed;
-     invented-word candidates 14 (form pages: printed letterhead / KVKK footer accepted as handwriting, template labels);
-     46.9 Doğrula questions per page.
-   - after (this change, round 3): accepted 10.9% (6/55); with the shown Doğrula reading 45.5% (25/55); with a tappable
-     Doğrula candidate 52.7% (29/55); 26 missed; **invented 0** (template structure words now whitelisted in the checker;
-     no printed text accepted); 41.2 Doğrula per page (narrative pages 49–119, form pages 3–28).
-   - per-word accuracy: not measurable — the ground truth carries no word transcription.
-   What changed (all general, none page-specific): template header band cut at "ŞİKAYETİ"/"Complaints" when ≥ 2 identity
-   label rows sit above it (the other print's complaint line is now readable; identity rows stay masked); strips the device
-   OCR reads as print are not sent; "bos" (no pen writing) drops a strip only when BOTH reads say so; read B gets the masked
-   page once as context + the lexicon vocabulary, read A stays literal (independence kept); read B's crop fades its
-   neighbouring lines; near-identical plain words (≥ 5 letters, similarity ≥ 0.8, no digits) count as agreement — protected
-   words still need an exact match; one retry with double output room for an empty / non-JSON answer (Sonnet 5 sometimes spent
-   its whole budget before answering: up to 5 of 9 pages lost a whole read B batch silently); batches of 10 lines; standard
-   Turkish history headings + KBB terms in the seeds. Harness: `--model karma` (replay what was already asked, ask the rest),
-   `--sayfa`, token estimate, candidate metric, production-identical word test.
-   Remaining weaknesses: recognition itself — both reads mostly return this doctor's narrative hand at confidence 0.1–0.5,
-   so almost nothing is auto-accepted and Doğrula stays high; 20/55 facts are protected and can never be "accepted" unless the
-   model is very sure (the 95% target can only be met as "after Doğrula"); the oblique close-up (037d0ec5) loses its complaint
-   line under the label-block mask (no "ŞİKAYETİ" read there — not loosened, privacy first); drawing marks just outside the
-   template regions on the second print are missed; a token that may be a person's first name was read once on fe919a65
-   outside the masked header (probably bleed-through from the reverse side) — to check with the next page batch.
-   Next: (a) run the same harness on the production primary GPT-6 Luna — needs Kaan to give the evaluation an OpenRouter key
-   outside Vercel (the stored one is not readable) or a run where openrouter.ai is reachable; (b) the doctor's confirmed
-   crops (handwriting memory, read A in-context examples) are empty in this evaluation — measure again after ~50 Doğrula
-   answers from real use (ESNEK-A-ORNEKLER); (c) widen the drawing-region ink window. Cost of the evaluation: ≈ 4 full live
-   runs + diagnostics, ≈ 0.6 M input / 0.12 M output tokens on Sonnet 5 (harness estimate), roughly US$ 3–5 in total (hidden reasoning tokens are not visible to the estimate).
+2. **ESNEK-A-EVAL — READER v2 (ESNEK-READER-2) SHIPPED 2026-11-23; production-model measurement BLOCKED (waits on Kaan:
+   container egress); Sonnet 5 measured, still BELOW TARGET (target: ≥ 95 % clinical facts after ≤ ~5 Doğrula answers per
+   page, 0 invented).** Owner: Kaan (unblock the production run, below), Claude (run it the same day it is unblocked, then
+   the next accuracy round).
+   - **What v2 changed (core, all 40 branşlar; country port stays in ESNEK-AB-ULKE):** the reader no longer cuts the page
+     into single-line crops (v1 lost the context a human reader uses). It reads the WHOLE masked page 3× independently
+     (whole page + overlapping ≤ 1 MP tiles / tiles first with the outline after the images / whole page alone), each read
+     with the branş vocabulary, the doctor's lexicon, his confirmed crops and a STRUCTURE PRIOR (`core/elNotu/anahat.ts`:
+     the doctor's outline learned from his Doğrula-complete sources and shadow-mode typed notes; default outline per branş
+     in `core/elNotu/tohum/anahatTr.ts`). Lines of the reads are matched by text (two-column pages are read in different
+     orders), words by N-read consensus (`cokluUzlastir`). Protected items (side, Ø, numbers, doses, drugs, allergies — now
+     also every word of the "İlaç alerjisi" field, continuation lines included) are accepted only when every read gives
+     exactly the same reading; otherwise asked, never budgeted away. Doğrula budget 5 per page: protected first, then
+     words that change clinical meaning; several doubtful words on a line = ONE line question (the reads' line texts are
+     the candidates); non-clinical noise → "[okunamadı]" without a question; clinical words beyond the budget are shown
+     with "(?)" only when ≥ 2 reads give them (a single read's guess is never shown). Every question keeps its crop box
+     (the model's line extent snapped to the device's line boxes). Server now PROVES the masking before any model call
+     (`core/elNotu/maskeKaniti.ts` + `lib/elNotu/maskeDogrula.ts`: every declared identity box must be black on the page
+     and on every tile). Kept from round 1: ŞİKAYETİ cut, print filtering, retry, lexicons, harness replay.
+   - **Sonnet 5 (koruyucu, local path), 9 real KBB pages, 55 facts, v1 → v2:** accepted 10.9 % → **38.2 %** (21/55); after
+     Doğrula (shown reading or a tappable candidate) 52.7 % → **49.1 %** (27/55); + "(?)"-flagged visible (not confirmed)
+     **61.8 %**; Doğrula questions per page 41.2 → **7.2** (7 of 9 pages ≤ 6; one hard narrative page 21, all protected);
+     **invented 0**; privacy: 9/9 pages, 45 outbound pictures, 0 identity leaks. Narrative pages: accepted 14/37, after
+     Doğrula 20/37. Form pages: most facts are drawing findings (separate drawing call): after Doğrula 8/18, 4 more shown
+     "(?)" beyond the budget.
+   - **Why 95 % is not reachable on Sonnet 5:** the union of all three raw reads INCLUDING every alternative holds only
+     33/55 facts (narratives 28/37) — the remaining gap is the model's recognition of this hand, not the orchestration.
+     The deciding run is the production model (goruntu-inceleme → GPT-6 Luna-Pro), which the diagnosis read suggests reads
+     this hand far better.
+   - **Production-model run — BLOCKED, waits on Kaan:** the admin route `POST /api/kurucu/el-notu-degerlendir` is live
+     (founder session or CRON_SECRET; refuses a page whose masking it cannot prove; stores nothing; returns metrics + the
+     de-identified reading; optional `kademe: 'hizli'` compares GPT-6 Luna with Luna-Pro through the policy's existing tier
+     override — no locked file touched). The build container cannot reach notya.io, *.vercel.app or Supabase (egress proxy
+     403), and the Vercel fetch tool is GET-only, so the masked pages cannot be posted from here. To unblock: allow
+     `notya.io` for this environment (claude.ai → Settings → Capabilities / org admin), then Claude runs
+     `scripts/el-notu-degerlendir.mts --uzak https://notya.io/api/kurucu/el-notu-degerlendir` (with and without
+     `--kademe hizli`) with `EL_NOTU_DEGERLENDIR_YETKI` set to a founder session token. Expected cost ≈ 27 page reads.
+   - Next accuracy levers (after the production numbers): drawing regions — accept threshold and ink window (form facts);
+     the doctor's confirmed crops as in-context examples once real Doğrula answers exist (ESNEK-A-ORNEKLER); learned outline
+     once ≥ 3 confirmed sources exist. Generalises: whole-page reading, outline prior, consensus, budget and masking proof
+     are page- and doctor-independent; nothing is tuned to these 9 pages (the seed outline is the standard Turkish history
+     outline). Cost of this round: ≈ 175 k input / 36 k output tokens on Sonnet 5 (harness estimate, hidden reasoning not
+     visible), ≈ US$ 1–2.
 3. **ESNEK-A-ORNEKLER — the KBB doctor will send many more handwritten pages (via Dr. Gökhan)** for accuracy work. Owner:
    Claude (evaluation), Kaan / Dr. Gökhan (collecting, consent). Keep them outside the repo; add clinical-only ground truth.
 4. **ESNEK-A-ULKE — six-country application (now ONE planned job with Phase B: see ESNEK-AB-ULKE below).** Owner: Claude. Status for us, gb, ca, au, nz, uz: OPEN GAP. The core

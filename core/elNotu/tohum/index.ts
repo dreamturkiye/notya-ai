@@ -15,3 +15,5 @@ const BRANS_TR: Record<string, SozlukGirdisi[]> = {
 export function tohumlarTr(brans: string | null | undefined): { brans: SozlukGirdisi[]; genel: SozlukGirdisi[] } {
   return { brans: (brans && BRANS_TR[brans]) || [], genel: GENEL_TR_TOHUM }
 }
+
+export { anahatTr } from './anahatTr'

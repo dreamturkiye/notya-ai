@@ -1,8 +1,8 @@
 /**
  * ESNEK-MUAYENE-A — one captured photo → the outbound page package (runs on the DEVICE; the evaluation harness runs the
  * same code in Node with a canvas adapter). Order matters for privacy: de-warp → quality gate → identity regions (template
- * position + OCR labels + rotated margins) → black them out on the page raster → ONLY THEN cut line / region crops and
- * descriptors from the masked raster. The original photo goes to the vault untouched (the doctor sees it); no unmasked
+ * position + OCR labels + rotated margins) → black them out on the page raster → ONLY THEN cut line boxes, region crops,
+ * descriptors and the reader's page tiles from the masked raster. The original photo goes to the vault untouched (the doctor sees it); no unmasked
  * pixel is ever placed in the package.
  */
 import type { OcrSatir } from '@/core/belgeler/kimlikMaske'
@@ -12,7 +12,7 @@ import { gizlilikKarari, maskeyiBoya, maskeliMi, type GizlilikKarari, type Kenar
 import { parmakIzi, sablonBul } from './sablon'
 import { tanimlayici } from './hafiza'
 import { bolgeMurekkebi } from './cizim'
-import type { GorselBlok, SayfaPaketi, SatirPaketi } from './okuyucu'
+import type { GorselBlok, SayfaPaketi, SatirPaketi, SayfaParcasi } from './okuyucu'
 import type { Gri, KaliteKarari, Kutu, Rgba, Sablon } from './tipler'
 
 /** Raster ↔ encoded image, provided by the environment (browser canvas / @napi-rs/canvas). */
@@ -53,22 +53,6 @@ function kirp(r: Rgba, k: Kutu, olcek: number, payY = 0): Rgba {
 }
 
 /**
- * Read B's crop keeps the lines above and below as context, but FADED towards white (and the target band untouched), so
- * the model sees where the line sits without transcribing its neighbours. `bant` = the line's rows inside the crop.
- */
-export function baglamiSoldur(r: Rgba, bant: { y0: number; y1: number }, oran = 0.72): Rgba {
-  const y0 = Math.max(0, Math.round(bant.y0)), y1 = Math.min(r.h, Math.round(bant.y1))
-  for (let y = 0; y < r.h; y++) {
-    if (y >= y0 && y < y1) continue
-    for (let x = 0; x < r.w; x++) {
-      const i = (y * r.w + x) * 4
-      r.d[i] = r.d[i] + (255 - r.d[i]) * oran; r.d[i + 1] = r.d[i + 1] + (255 - r.d[i + 1]) * oran; r.d[i + 2] = r.d[i + 2] + (255 - r.d[i + 2]) * oran
-    }
-  }
-  return r
-}
-
-/**
  * A line the on-device OCR read as PRINT (form labels, letterhead, stamp, legal footer): high-confidence words of ≥ 3
  * letters cover at least half of its width. Handwriting is not recognised at that confidence. Such strips are not sent.
  */
@@ -83,12 +67,6 @@ export function basiliSatirMi(k: Kutu, ocr: OcrSatir[] | null, w: number, h: num
     kapli += Math.max(0, Math.min(x1, kel.x1) - Math.max(x0, kel.x0))
   }
   return kapli >= (x1 - x0) * 0.5
-}
-
-function griRgba(g: Gri): Rgba {
-  const d = new Uint8ClampedArray(g.w * g.h * 4)
-  for (let i = 0; i < g.d.length; i++) { d[i * 4] = d[i * 4 + 1] = d[i * 4 + 2] = g.d[i]; d[i * 4 + 3] = 255 }
-  return { w: g.w, h: g.h, d }
 }
 
 function kucult(r: Rgba, maxKenar: number): Rgba {
@@ -116,6 +94,36 @@ function kenarSeritleri(r: Rgba): { kenar: KenarOcr['kenar']; raster: Rgba; geri
     out.push({ kenar: 'sol', raster: dondur(r, 0, 0, genislik, r.h, saat), geri: (x, y) => (saat ? { x: y, y: r.h - 1 - x } : { x: genislik - 1 - y, y: x }) })
   }
   void yukseklik
+  return out
+}
+
+/** Long edge of the whole-page picture (the vault copy and the reader's overview). */
+export const SAYFA_KENAR = 1600
+/** Width of a tile (never wider than the page itself: tiles are never upscaled). */
+export const PARCA_GENISLIK = 1600
+/**
+ * Vision models shrink a picture above roughly a megapixel before reading it (≈ 1.15 MP / 1568 px long edge on one
+ * provider, a 768 px short side on another), so a whole page loses resolution exactly where the scrawl needs it.
+ */
+export const MODEL_PIKSEL = 1_150_000
+
+/**
+ * Overlapping horizontal bands of the MASKED page, each at most ~1 MP at tile width — only when the page is larger than
+ * what a model reads at full resolution. Never single lines: the reader keeps the context of whole paragraphs.
+ */
+export async function sayfaParcalari(maskeli: Rgba, tuval: TuvalAdaptoru): Promise<SayfaParcasi[]> {
+  const genislik = Math.min(PARCA_GENISLIK, maskeli.w)
+  const olcek = genislik / maskeli.w
+  const toplam = genislik * maskeli.h * olcek
+  if (toplam <= MODEL_PIKSEL) return []
+  const n = Math.max(2, Math.min(4, Math.ceil((toplam * 1.1) / 1_000_000)))
+  const pay = 0.04
+  const out: SayfaParcasi[] = []
+  for (let i = 0; i < n; i++) {
+    const y0 = Math.max(0, i / n - pay), y1 = Math.min(1, (i + 1) / n + pay)
+    const k = kirp(maskeli, { x0: 0, y0, x1: 1, y1 }, olcek)
+    out.push({ gorsel: { mime: 'image/jpeg', base64: await tuval.jpeg(k, 0.86) }, y0: Math.round(y0 * 1000) / 1000, y1: Math.round(y1 * 1000) / 1000 })
+  }
   return out
 }
 
@@ -192,26 +200,15 @@ export async function sayfaPaketiHazirla(g: PaketGirdisi): Promise<PaketSonucu> 
   const bolgeler = aktifSablon?.cizimBolgeleri || []
   const haric = [...karar.kutular, ...bolgeler.map((b) => b.kutu)]
   const yer = satirlariCikar(murekkep, haric)
-  const normalRgba = griRgba(maskeliNormal)
   const satirlar: SatirPaketi[] = []
   for (const s of yer.satirlar) {
     if (maskeliMi(s.kutu, karar.kutular, 0.35)) continue
     if (basiliSatirMi(s.kutu, ocr, on.sayfa.w, on.sayfa.h)) continue
-    const yukPx = (s.kutu.y1 - s.kutu.y0) * maskeli.h
-    const olcekA = Math.max(1, Math.min(3, 112 / Math.max(1, yukPx)))
-    const genA = (s.kutu.x1 - s.kutu.x0) * maskeli.w * olcekA
-    const oA = genA > 1800 ? olcekA * (1800 / genA) : olcekA
-    const olcekB = Math.max(0.8, Math.min(2.2, 84 / Math.max(1, yukPx)))
-    const kA = kirp(normalRgba, s.kutu, oA)
-    // the line band inside B's crop (the context margin is clipped at the page edge, so it is not always symmetric)
-    const payPx = (s.kutu.y1 - s.kutu.y0) * maskeli.h * 0.4
-    const ustPx = Math.floor(s.kutu.y0 * maskeli.h) - Math.max(0, Math.floor(s.kutu.y0 * maskeli.h - payPx))
-    const kB = baglamiSoldur(kirp(maskeli, s.kutu, olcekB, 0.4), { y0: ustPx * olcekB, y1: (ustPx + yukPx) * olcekB })
+    // reader v2 reads the whole page: a device line travels as numbers only (box, word boxes, shape descriptors for the
+    // doctor's handwriting memory) — it is where a Doğrula question's crop is cut from the masked page
     satirlar.push({
       no: s.no, kutu: s.kutu, kelimeler: s.kelimeler,
       tanimlar: s.kelimeler.map((k) => tanimlayici(maskeliNormal, k)),
-      gorselA: { mime: 'image/jpeg', base64: await g.tuval.jpeg(kA, 0.85) },
-      gorselB: { mime: 'image/jpeg', base64: await g.tuval.jpeg(kB, 0.8) },
       bolgeId: bolgeler.length ? bolgeyeBagla(s.kutu, bolgeler, yer.cizgiler) : null,
     })
   }
@@ -223,10 +220,11 @@ export async function sayfaPaketiHazirla(g: PaketGirdisi): Promise<PaketSonucu> 
     const kr = kirp(maskeli, k, Math.min(2, 520 / Math.max(1, (k.x1 - k.x0) * maskeli.w)))
     bolgePaketleri.push({ ...b, murekkep: ink, gorsel: { mime: 'image/jpeg', base64: await g.tuval.jpeg(kr, 0.82) } })
   }
-  const sayfaGorseli = kucult(maskeli, 1600)
+  const sayfaGorseli = kucult(maskeli, SAYFA_KENAR)
+  const parcalar = await sayfaParcalari(maskeli, g.tuval)
   return {
     durum: 'hazir',
-    paket: { sayfa: g.sayfa, sablonId: aktifSablon?.id ?? null, kalite: on.kalite, satirlar, bolgeler: bolgePaketleri },
+    paket: { sayfa: g.sayfa, sablonId: aktifSablon?.id ?? null, kalite: on.kalite, satirlar, bolgeler: bolgePaketleri, parcalar, gizlilikKutulari: karar.kutular, serbest: karar.kutular.length === 0 && Boolean(serbest) },
     maskeliSayfa: { mime: 'image/jpeg', base64: await g.tuval.jpeg(sayfaGorseli, 0.82), w: sayfaGorseli.w, h: sayfaGorseli.h },
     gizlilik: karar, sablon: aktifSablon, sablonSkoru: skor, parmakIzi: izi, enBoy, yontem: yer.yontem,
   }
@@ -235,5 +233,5 @@ export async function sayfaPaketiHazirla(g: PaketGirdisi): Promise<PaketSonucu> 
 /** Shared size guard (the request body cap is 4.5 MB on the host). */
 export const PAKET_AZAMI_KARAKTER = 4_000_000
 export function paketBoyutu(p: SayfaPaketi, sayfa: GorselBlok): number {
-  return sayfa.base64.length + p.satirlar.reduce((t, s) => t + s.gorselA.base64.length + s.gorselB.base64.length, 0) + p.bolgeler.reduce((t, b) => t + (b.gorsel?.base64.length || 0), 0)
+  return sayfa.base64.length + (p.parcalar || []).reduce((t, x) => t + x.gorsel.base64.length, 0) + p.bolgeler.reduce((t, b) => t + (b.gorsel?.base64.length || 0), 0)
 }

@@ -29,11 +29,15 @@ function bloklar(parcalar: IstemParcasi[]): unknown[] {
   )
 }
 
-export function elNotuModeli(o: { doctorId: string | null; istemci?: AiIstemci; butceMs?: number }): ModelKapisi {
+/**
+ * `kademe` (evaluation only): the existing per-call tier override of the central policy (modelSec) — 'derin' is the
+ * policy's own tier for 'goruntu-inceleme'; 'hizli' asks the primary tier, for a comparison. No model name here.
+ */
+export function elNotuModeli(o: { doctorId: string | null; istemci?: AiIstemci; butceMs?: number; kademe?: 'hizli' | 'derin' }): ModelKapisi {
   return {
     async gorselJson({ sistem, parcalar, azamiToken }) {
       const y = await aiCagir({
-        gorev: 'goruntu-inceleme', istemci: o.istemci, doctorId: o.doctorId, maxTokens: azamiToken, jsonBekleniyor: true,
+        gorev: 'goruntu-inceleme', istemci: o.istemci, doctorId: o.doctorId, maxTokens: azamiToken, jsonBekleniyor: true, ...(o.kademe ? { kademe: o.kademe } : {}),
         system: [{ metin: sistem, onbellek: true }],
         messages: [{ role: 'user', content: bloklar(parcalar) }],
       })

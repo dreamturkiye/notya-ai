@@ -12,30 +12,37 @@ import { benzerOrnekler } from '@/core/elNotu/hafiza'
 import { kelimeAnahtari } from '@/core/elNotu/uzlastir'
 import type { KaynakOkuma, Kutu, HafizaOrnegi } from '@/core/elNotu/tipler'
 import type { ElNotuMetinleri } from '@/core/elNotu/metinTr'
-import { tohumlarTr } from '@/core/elNotu/tohum'
+import { tohumlarTr, anahatTr } from '@/core/elNotu/tohum'
+import { anahatOgren } from '@/core/elNotu/anahat'
+import { sayfaMaskeKaniti } from './maskeDogrula'
 import { PAKET_AZAMI_KARAKTER, paketBoyutu } from '@/core/elNotu/sayfaPaketi'
 import { ilacEslesmesi } from './ilac'
-import { dagarcikYukle, hafizaYukle, ornekGorselleri, sablonlarYukle, sorulmusKisaltmalar, sozlukYukle, vaultaYaz, type KaynakSatiri } from './sunucu'
+import { anahatMetinleri, dagarcikYukle, hafizaYukle, ornekGorselleri, sablonlarYukle, sorulmusKisaltmalar, sozlukYukle, vaultaYaz, type KaynakSatiri } from './sunucu'
 
 const MIME = /^image\/(jpeg|png|webp)$/
 const kutuMu = (k: unknown): k is Kutu => !!k && typeof k === 'object' && ['x0', 'y0', 'x1', 'y1'].every((a) => { const v = (k as Record<string, number>)[a]; return Number.isFinite(v) && v >= -0.01 && v <= 1.01 })
-const gorselMu = (g: unknown): g is GorselBlok => !!g && typeof g === 'object' && typeof (g as GorselBlok).base64 === 'string' && (g as GorselBlok).base64.length > 20 && (g as GorselBlok).base64.length < 600_000 && MIME.test(String((g as GorselBlok).mime))
+export const gorselMu = (g: unknown): g is GorselBlok => !!g && typeof g === 'object' && typeof (g as GorselBlok).base64 === 'string' && (g as GorselBlok).base64.length > 20 && (g as GorselBlok).base64.length < 1_400_000 && MIME.test(String((g as GorselBlok).mime))
 
 /** Request body → package, or null (anything malformed is refused, never "partially read"). */
 export function paketCoz(x: unknown): SayfaPaketi | null {
   const p = x as SayfaPaketi
   if (!p || typeof p !== 'object' || !Number.isInteger(p.sayfa) || p.sayfa < 1 || p.sayfa > 40) return null
-  if (!Array.isArray(p.satirlar) || p.satirlar.length > 90 || !Array.isArray(p.bolgeler) || p.bolgeler.length > 24) return null
+  if (!Array.isArray(p.satirlar) || p.satirlar.length > 120 || !Array.isArray(p.bolgeler) || p.bolgeler.length > 24) return null
   for (const s of p.satirlar) {
-    if (!Number.isInteger(s?.no) || !kutuMu(s.kutu) || !gorselMu(s.gorselA) || !gorselMu(s.gorselB)) return null
+    if (!Number.isInteger(s?.no) || !kutuMu(s.kutu)) return null
     if (!Array.isArray(s.kelimeler) || !s.kelimeler.every(kutuMu) || !Array.isArray(s.tanimlar) || s.tanimlar.length !== s.kelimeler.length) return null
     for (const t of s.tanimlar) if (t !== null && (!Array.isArray(t.v) || t.v.length > 512 || !t.v.every(Number.isFinite) || !Number.isFinite(t.enBoy))) return null
   }
   for (const b of p.bolgeler) if (!b || typeof b.id !== 'string' || !kutuMu(b.kutu) || (b.gorsel != null && !gorselMu(b.gorsel)) || !Number.isFinite(b.murekkep)) return null
+  if (p.parcalar != null && (!Array.isArray(p.parcalar) || p.parcalar.length > 4 || !p.parcalar.every((t) => t && gorselMu(t.gorsel) && Number.isFinite(t.y0) && Number.isFinite(t.y1) && t.y0 >= 0 && t.y1 <= 1 && t.y1 > t.y0))) return null
+  if (p.gizlilikKutulari != null && (!Array.isArray(p.gizlilikKutulari) || p.gizlilikKutulari.length > 40 || !p.gizlilikKutulari.every(kutuMu))) return null
   return {
     sayfa: p.sayfa, sablonId: typeof p.sablonId === 'string' ? p.sablonId : null, kalite: p.kalite,
-    satirlar: p.satirlar.map((s) => ({ no: s.no, kutu: s.kutu, kelimeler: s.kelimeler, tanimlar: s.tanimlar, gorselA: s.gorselA, gorselB: s.gorselB, bolgeId: typeof s.bolgeId === 'string' ? s.bolgeId : null })),
+    satirlar: p.satirlar.map((s) => ({ no: s.no, kutu: s.kutu, kelimeler: s.kelimeler, tanimlar: s.tanimlar, bolgeId: typeof s.bolgeId === 'string' ? s.bolgeId : null })),
     bolgeler: p.bolgeler.map((b) => ({ id: b.id, anatomi: String(b.anatomi || ''), etiket: String(b.etiket || '').slice(0, 60), taraf: b.taraf === 'sag' || b.taraf === 'sol' || b.taraf === 'iki' ? b.taraf : null, kutu: b.kutu, murekkep: b.murekkep, gorsel: b.gorsel ?? null })),
+    ...(p.parcalar ? { parcalar: p.parcalar.map((t) => ({ gorsel: t.gorsel, y0: t.y0, y1: t.y1 })) } : {}),
+    ...(p.gizlilikKutulari ? { gizlilikKutulari: p.gizlilikKutulari.map((k) => ({ x0: k.x0, y0: k.y0, x1: k.x1, y1: k.y1 })) } : {}),
+    serbest: p.serbest === true,
   }
 }
 
@@ -56,13 +63,15 @@ export async function sayfaOkut(sb: SupabaseClient, g: SayfaOkutGirdisi): Promis
   if (!gorselMu(g.maskeliSayfa)) return { hata: 'Sayfa görüntüsü geçersiz.', durum: 400 }
   if (paketBoyutu(g.paket, g.maskeliSayfa) > PAKET_AZAMI_KARAKTER) return { hata: 'Sayfa çok büyük.', durum: 413 }
   if (!g.kaynak.patient_id) return { hata: 'Kaynak bir hastaya bağlı değil.', durum: 400 }
+  // the device masked the page; the server proves it before anything is stored or read (a box that is not black → refused)
+  if (!sayfaMaskeKaniti(g.paket, g.maskeliSayfa, false).tamam) return { hata: 'Kimlik alanları gizlenmemiş görünüyor; sayfa gönderilmedi.', durum: 422 }
   const patientId = g.kaynak.patient_id
 
   const maskeliId = await vaultaYaz(sb, { doktorId: g.doktorId, patientId, sessionId: g.kaynak.session_id, ad: `el-notu-s${g.paket.sayfa}-maskeli.jpg`, mime: g.maskeliSayfa.mime, base64: g.maskeliSayfa.base64, kategori: 'el_notu_maskeli', yukleyen: g.aktor.userId })
   await sb.from('muayene_kaynaklari').update({ durum: 'okunuyor', updated_at: new Date().toISOString() }).eq('id', g.kaynak.id).eq('doctor_id', g.doktorId)
 
-  const [hekimSozluk, hafiza, dagarcik, sorulmus, sablonlar] = await Promise.all([
-    sozlukYukle(sb, g.doktorId), hafizaYukle(sb, g.doktorId), dagarcikYukle(sb, g.doktorId), sorulmusKisaltmalar(sb, g.doktorId), sablonlarYukle(sb, g.doktorId),
+  const [hekimSozluk, hafiza, dagarcik, sorulmus, sablonlar, anahatMetinleri_] = await Promise.all([
+    sozlukYukle(sb, g.doktorId), hafizaYukle(sb, g.doktorId), dagarcikYukle(sb, g.doktorId), sorulmusKisaltmalar(sb, g.doktorId), sablonlarYukle(sb, g.doktorId), anahatMetinleri(sb, g.doktorId),
   ])
   const tohum = tohumlarTr(g.brans)
   const sozluk = sozlukKur(hekimSozluk, tohum.brans, tohum.genel)
@@ -78,7 +87,7 @@ export async function sayfaOkut(sb: SupabaseClient, g: SayfaOkutGirdisi): Promis
     sayfa = await sayfayiOku(g.paket, {
       bransAdi: g.bransAdi, dil: g.metin.dil, sozluk, hafiza: hafizaTum, dagarcik, ilac: ilacEslesmesi, sorulmusKisaltmalar: sorulmus,
       sozcukMu: (t) => (dagarcik.get(kelimeAnahtari(t)) || 0) >= 2 || anlamSozcukleri.has(kelimeAnahtari(t)),
-      sayfaGorseli: g.maskeliSayfa,
+      sayfaGorseli: g.maskeliSayfa, anahat: anahatOgren(anahatMetinleri_, anahatTr(g.brans)),
     }, g.model)
   } catch (e) {
     await sb.from('muayene_kaynaklari').update({ durum: 'hata', hata_kodu: e instanceof Error ? e.name : 'Hata', updated_at: new Date().toISOString() }).eq('id', g.kaynak.id).eq('doctor_id', g.doktorId)

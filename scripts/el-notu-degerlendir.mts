@@ -2,7 +2,14 @@
  * ESNEK-MUAYENE-A — El Notu Okuyucu evaluation harness.
  *
  *   npx tsx scripts/el-notu-degerlendir.mts --klasor <dir> [--sablon <file>] [--serbest] [--model canli|karma|kayit|yok] [--sayfa id,id]
- *                                           [--kayit <dir>] [--cikti <dir>]
+ *                                           [--kayit <dir>] [--cikti <dir>] [--okuma 1-3] [--butce n]
+ *                                           [--uzak https://<host>/api/kurucu/el-notu-degerlendir [--kademe hizli|derin]]
+ *
+ * --uzak (ESNEK-READER-2): the PRODUCTION model path without handling its key — the masked package of each page (built
+ * here by the on-device masker) goes to the admin evaluation route, which runs the reader server-side and returns metrics
+ * and the de-identified reading only (it refuses a page whose masking it cannot prove, and stores nothing). The route's
+ * authorization is read from the environment variable EL_NOTU_DEGERLENDIR_YETKI (a founder session token or the cron
+ * secret) and is never printed or written.
  *
  * <dir> holds page images (jpg / png / pdf pages as images) and `dogruluk.json` (clinical ground truth only — see
  * /home/claude/esnek-eval/dogruluk.json for the format). Real patient pages NEVER go into this repo: keep the folder
@@ -28,10 +35,12 @@ import { sayfaPaketiHazirla, type TuvalAdaptoru } from '../core/elNotu/sayfaPake
 import { parmakIzi } from '../core/elNotu/sablon'
 import { sayfayiHazirla } from '../core/elNotu/onisleme'
 import { sayfayiOku, kaynakMetni, type ModelKapisi } from '../core/elNotu/okuyucu'
+import { sayfaPuanla, toplamPuan, type SayfaPuani } from '../core/elNotu/degerlendirme'
+import { anahatOgren } from '../core/elNotu/anahat'
 import { sozlukKur } from '../core/elNotu/sozluk'
-import { tohumlarTr } from '../core/elNotu/tohum'
+import { tohumlarTr, anahatTr } from '../core/elNotu/tohum'
 import { EL_NOTU_TR } from '../core/elNotu/metinTr'
-import { benzerlik, kelimeAnahtari } from '../core/elNotu/uzlastir'
+import { kelimeAnahtari } from '../core/elNotu/uzlastir'
 import type { OcrSatir } from '../core/belgeler/kimlikMaske'
 import type { Rgba, Sablon } from '../core/elNotu/tipler'
 
@@ -44,6 +53,10 @@ if (path.resolve(klasor).startsWith(KOK)) { console.error('Gerçek sayfalar repo
 const cikti = arg('cikti')
 const modelTuru = (arg('model') || (process.env.OPENROUTER_API_KEY || process.env.ANTHROPIC_API_KEY ? 'canli' : 'yok')) as 'canli' | 'karma' | 'kayit' | 'yok'
 const kayitKlasoru = arg('kayit') || (cikti ? path.join(cikti, 'kayit') : undefined)
+const okumaSayisi = arg('okuma') ? Number(arg('okuma')) : undefined
+const butce = arg('butce') ? Number(arg('butce')) : undefined
+const uzak = arg('uzak')
+const kademe = arg('kademe') as 'hizli' | 'derin' | undefined
 
 type Gercek = { id: string; metin: string; anahtarlar: string[][]; korumali?: boolean; belirsiz?: boolean }
 type Dogruluk = { sayfalar: Record<string, { tur: 'anlati' | 'form'; kimlik: boolean; gercekler: Gercek[]; kelimeler?: string }> }
@@ -131,15 +144,6 @@ function modelKapisi(sayfaAdi: string): ModelKapisi | null {
   }
 }
 
-const icerir = (metin: string, aday: string) => {
-  const k = kelimeAnahtari(aday)
-  if (!k) return false
-  // a one- or two-letter key ("N", "E", "K", "SD") must be a whole token — as a substring it would match almost any text
-  if (k.length <= 2) return metin.split(/[^\p{L}\p{N}]+/u).some((w) => kelimeAnahtari(w) === k)
-  if (kelimeAnahtari(metin).includes(k)) return true
-  return metin.split(/[^\p{L}\p{N},.\-]+/u).some((w) => kelimeAnahtari(w).length >= 3 && k.length >= 4 && benzerlik(w, aday) >= 0.8)
-}
-
 async function ana() {
   const yalniz = arg('sayfa')?.split(',')
   const dosyalar = fs.readdirSync(klasor!).filter((f) => /\.(jpe?g|png)$/i.test(f)).sort()
@@ -160,51 +164,47 @@ async function ana() {
   // same "is this a word, not an abbreviation" test as production (lib/elNotu/okumaServisi.ts) with an empty vocabulary
   const anlamSozcukleri = new Set(sozluk.girdiler.flatMap((x) => x.anlam.split(/\s+/)).map(kelimeAnahtari))
   const satirlar: Record<string, unknown>[] = []
-  const toplam = { sayfa: 0, gonderilen: 0, sizinti: 0, gercek: 0, bulunan: 0, dogrulamada: 0, adayda: 0, kacan: 0, uydurma: 0, dogrula: 0, okunanSayfa: 0 }
+  const puanlar: SayfaPuani[] = []
+  const gizlilikToplam = { sayfa: 0, gonderilen: 0, sizinti: 0, resim: 0 }
+  const izinliTaban = [...sozluk.girdiler.flatMap((x) => [x.kisaltma, x.anlam]), ...EL_NOTU_TR.dil.bagSozcukleri, EL_NOTU_TR.dil.cizimBasligi, ...Object.values(EL_NOTU_TR.dil.taraf)]
   for (const f of dosyalar) {
     if (yalniz && !yalniz.some((y) => f.startsWith(y))) continue
     const ad = f.replace(/-image\.(jpe?g|png)$/i, '').replace(/\.(jpe?g|png)$/i, '')
     const gt = dogruluk.sayfalar[ad]
     const t0 = Date.now()
     const sonuc = await sayfaPaketiHazirla({ foto: await raster(path.join(klasor!, f)), sayfa: 1, sablonlar, serbestBeyan: bayrak('serbest'), tuval, ocr })
-    toplam.sayfa++
+    gizlilikToplam.sayfa++
     const satir: Record<string, unknown> = { sayfa: ad, tur: gt?.tur ?? '?', durum: sonuc.durum, ms: Date.now() - t0 }
     if (sonuc.durum === 'hazir') {
-      toplam.gonderilen++
-      const resimler = [sonuc.maskeliSayfa.base64, ...sonuc.paket.satirlar.flatMap((l) => [l.gorselA.base64, l.gorselB.base64]), ...sonuc.paket.bolgeler.map((b) => b.gorsel?.base64 || '').filter(Boolean)]
+      gizlilikToplam.gonderilen++
+      // every picture that would leave the device: the masked page, its tiles, the drawing regions
+      const resimler = [sonuc.maskeliSayfa.base64, ...(sonuc.paket.parcalar || []).map((t) => t.gorsel.base64), ...sonuc.paket.bolgeler.map((b) => b.gorsel?.base64 || '').filter(Boolean)]
       let sizinti = 0
       for (const r of resimler) if (await sizintiVarMi(r)) sizinti++
-      toplam.sizinti += sizinti
-      Object.assign(satir, { gizlilik: sonuc.gizlilik.neden, kutu: sonuc.gizlilik.kutular.length, sablon: Math.round(sonuc.sablonSkoru * 100) / 100, satir: sonuc.paket.satirlar.length, yerlesim: sonuc.yontem, bolge: sonuc.paket.bolgeler.filter((b) => b.murekkep >= 0.0004).length, sizinti })
+      gizlilikToplam.sizinti += sizinti; gizlilikToplam.resim += resimler.length
+      Object.assign(satir, { gizlilik: sonuc.gizlilik.neden, kutu: sonuc.gizlilik.kutular.length, sablon: Math.round(sonuc.sablonSkoru * 100) / 100, satir: sonuc.paket.satirlar.length, parca: sonuc.paket.parcalar?.length || 0, yerlesim: sonuc.yontem, bolge: sonuc.paket.bolgeler.filter((b) => b.murekkep >= 0.0004).length, resim: resimler.length, sizinti })
       if (cikti) { fs.mkdirSync(cikti, { recursive: true }); fs.writeFileSync(path.join(cikti, `${ad}-maskeli.jpg`), Buffer.from(sonuc.maskeliSayfa.base64, 'base64')) }
-      const model = modelKapisi(ad)
+      if (gt && uzak && sizinti === 0) {
+        // production model path through the admin route (the key never leaves the host)
+        try {
+          const yetki = process.env.EL_NOTU_DEGERLENDIR_YETKI
+          if (!yetki) throw new Error('EL_NOTU_DEGERLENDIR_YETKI is not set')
+          const y = await fetch(uzak, { method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${yetki}` }, body: JSON.stringify({ ad, paket: sonuc.paket, maskeliSayfa: sonuc.maskeliSayfa, gercekler: gt.gercekler, brans: 'kulak-burun-bogaz', secenek: { kademe, okumaSayisi, butce } }) })
+          const j = await y.json() as { puan?: SayfaPuani; metin?: string; okumaSayisi?: number; butceDisi?: number; okunamadi?: number; ms?: number; error?: string }
+          if (!y.ok || !j.puan) throw new Error(`route ${y.status} ${j.error || ''}`)
+          puanlar.push(j.puan)
+          Object.assign(satir, ozetSatiri(j.puan), { okumaCagrisi: j.okumaSayisi, butceDisi: j.butceDisi, okunamadi: j.okunamadi, sunucuMs: j.ms })
+          if (cikti && j.metin) fs.writeFileSync(path.join(cikti, `${ad}-okuma.txt`), j.metin)
+        } catch (e) { satir.okumaHatasi = e instanceof Error ? e.message.slice(0, 160) : 'hata' }
+      }
+      const model = uzak ? null : modelKapisi(ad)
       if (model && gt) {
         try {
-          const s = await sayfayiOku(sonuc.paket, { bransAdi: 'Kulak Burun Boğaz', dil: EL_NOTU_TR.dil, sozluk, hafiza: [], dagarcik: new Map(), sorulmusKisaltmalar: new Set(), sozcukMu: (t) => anlamSozcukleri.has(kelimeAnahtari(t)), sayfaGorseli: sonuc.maskeliSayfa }, model)
+          const s = await sayfayiOku(sonuc.paket, { bransAdi: 'Kulak Burun Boğaz', dil: EL_NOTU_TR.dil, sozluk, hafiza: [], dagarcik: new Map(), sorulmusKisaltmalar: new Set(), ilac: (await import('../lib/elNotu/ilac')).ilacEslesmesi, sozcukMu: (t) => anlamSozcukleri.has(kelimeAnahtari(t)), sayfaGorseli: sonuc.maskeliSayfa, anahat: anahatOgren([], anahatTr('kulak-burun-bogaz')), okumaSayisi, dogrulaButcesi: butce }, model)
           const metin = kaynakMetni([s], EL_NOTU_TR.dil, (id) => sonuc.sablon?.cizimBolgeleri.find((b) => b.id === id)?.etiket || id)
-          const kesin = metin.replace(/⟦[^⟧]*⟧/g, ' ')
-          const bekleyen = [...metin.matchAll(/⟦[^|⟧]*\|([^⟧]*)⟧/g)].map((m) => m[1]).join(' ')
-          // the tappable candidates of every Doğrula question (both reads + their alternatives, DogrulaPaneli shows them)
-          const adaylar = s.dogrula.flatMap((d) => d.adaylar).join(' ')
-          let bulunan = 0, dogrulamada = 0, adayda = 0, kacan = 0
-          for (const g of gt.gercekler) {
-            const kesinde = g.anahtarlar.every((grup) => grup.some((a) => icerir(kesin, a)))
-            const toplamda = g.anahtarlar.every((grup) => grup.some((a) => icerir(`${kesin} ${bekleyen}`, a)))
-            const secenekte = g.anahtarlar.every((grup) => grup.some((a) => icerir(`${kesin} ${bekleyen} ${adaylar}`, a)))
-            if (kesinde) bulunan++; else if (toplamda) dogrulamada++; else if (secenekte) adayda++; else kacan++
-          }
-          // invented facts: content words of the accepted text that neither the page's ground truth nor the lexicon carries
-          const izinli = new Set([...gt.gercekler.flatMap((g) => `${g.metin} ${g.anahtarlar.flat().join(' ')}`.split(/[^\p{L}\p{N}]+/u)), ...(gt.kelimeler || '').split(/[^\p{L}\p{N}]+/u), ...sozluk.girdiler.flatMap((x) => `${x.kisaltma} ${x.anlam}`.split(/[^\p{L}\p{N}]+/u)), ...EL_NOTU_TR.dil.bagSozcukleri,
-            // the source text's own structure: the drawing heading, sides and region labels come from the template, not the model
-            ...`${EL_NOTU_TR.dil.cizimBasligi} ${Object.values(EL_NOTU_TR.dil.taraf).join(' ')} ${(sonuc.sablon?.cizimBolgeleri || []).map((b) => b.etiket).join(' ')}`.split(/[^\p{L}\p{N}]+/u)].map(kelimeAnahtari).filter(Boolean))
-          const literal = new Set(s.satirlar.flatMap((l) => l.kelimeler.map((k) => kelimeAnahtari(k.metin))))
-          const uydurma = kesin.split(/[^\p{L}\p{N}]+/u).filter((w) => {
-            const k = kelimeAnahtari(w)
-            if (!k || k.length < 4 || /^\d/.test(k) || izinli.has(k) || literal.has(k)) return false
-            return ![...izinli, ...literal].some((z) => z.length >= 4 && benzerlik(z, k) >= 0.75)
-          })
-          Object.assign(satir, { gercek: gt.gercekler.length, bulunan, dogrulamada, adayda, kacan, dogrula: s.dogrula.length, uydurmaAday: uydurma.length, okumaCagrisi: s.okumaSayisi })
-          Object.assign(toplam, { gercek: toplam.gercek + gt.gercekler.length, bulunan: toplam.bulunan + bulunan, dogrulamada: toplam.dogrulamada + dogrulamada, adayda: toplam.adayda + adayda, kacan: toplam.kacan + kacan, uydurma: toplam.uydurma + uydurma.length, dogrula: toplam.dogrula + s.dogrula.length, okunanSayfa: toplam.okunanSayfa + 1 })
+          const puan = sayfaPuanla({ metin, dogrula: s.dogrula, gercekler: gt.gercekler, hamKelimeler: s.satirlar.flatMap((l) => l.kelimeler.flatMap((k) => [k.metin, ...k.adaylar])), izinli: [...izinliTaban, ...(sonuc.sablon?.cizimBolgeleri || []).map((b) => b.etiket)], okunamadi: EL_NOTU_TR.dil.okunamadi })
+          puanlar.push(puan)
+          Object.assign(satir, ozetSatiri(puan), { okumaCagrisi: s.okumaSayisi, butceDisi: s.butceDisi, okunamadi: s.okunamadi })
           if (cikti) fs.writeFileSync(path.join(cikti, `${ad}-okuma.txt`), metin)
         } catch (e) { satir.okumaHatasi = e instanceof Error ? e.message : 'hata' }
       }
@@ -214,23 +214,21 @@ async function ana() {
     console.log(JSON.stringify(satir))
   }
   const rapor = {
-    tarih: new Date().toISOString(), model: modelTuru, sablon: sablonlar.map((s) => s.id),
-    gizlilik: { sayfa: toplam.sayfa, gonderilen: toplam.gonderilen, sizintiResim: toplam.sizinti },
-    okuma: toplam.okunanSayfa ? {
-      sayfa: toplam.okunanSayfa, gercek: toplam.gercek,
-      dogrulukKesin: Math.round((toplam.bulunan / toplam.gercek) * 1000) / 10,
-      dogrulukDogrulamaIle: Math.round(((toplam.bulunan + toplam.dogrulamada) / toplam.gercek) * 1000) / 10,
-      dogrulukAdayIle: Math.round(((toplam.bulunan + toplam.dogrulamada + toplam.adayda) / toplam.gercek) * 1000) / 10,
-      korumaliGercek: dogruluk.sayfalar ? Object.values(dogruluk.sayfalar).flatMap((p) => p.gercekler).filter((g) => g.korumali).length : 0,
-      kacan: toplam.kacan, uydurmaAday: toplam.uydurma, dogrulaSayfaBasina: Math.round((toplam.dogrula / toplam.okunanSayfa) * 10) / 10,
-    } : 'ölçülmedi — model yok (OPENROUTER_API_KEY / ANTHROPIC_API_KEY ortamda değil, --model kayit için kayıt yok)',
+    tarih: new Date().toISOString(), model: uzak ? `uzak:${kademe || 'politika'}` : modelTuru, sablon: sablonlar.map((s) => s.id), okumaSayisi: okumaSayisi ?? 3, butce: butce ?? 5,
+    gizlilik: gizlilikToplam,
+    okuma: puanlar.length ? toplamPuan(puanlar) : 'ölçülmedi — model yok (--uzak, ANTHROPIC_API_KEY / OPENROUTER_API_KEY, ya da --model kayit için kayıt gerekli)',
     sayfalar: satirlar,
-    ...(jeton.cagri ? { jetonTahmini: { ...jeton, not: 'estimate: images w·h/750 after resize, text chars/3.5, output JSON chars/3; prompt caching ignored' } } : {}),
+    ...(jeton.cagri ? { jetonTahmini: { ...jeton, not: 'estimate: images w·h/750 after resize, text chars/3.5, output JSON chars/3; prompt caching and hidden reasoning ignored' } } : {}),
   }
   console.log(JSON.stringify({ ozet: { gizlilik: rapor.gizlilik, okuma: rapor.okuma, jeton: jeton.cagri ? jeton : undefined } }, null, 2))
   if (cikti) fs.writeFileSync(path.join(cikti, 'rapor.json'), JSON.stringify(rapor, null, 2))
   if (isci) await isci.terminate()
-  if (toplam.sizinti > 0) process.exitCode = 1
+  if (gizlilikToplam.sizinti > 0) process.exitCode = 1
+}
+
+/** One page's numbers for the console (fact ids and stages only, never text). */
+function ozetSatiri(p: SayfaPuani) {
+  return { gercek: p.gercek, kesin: p.kesin, dogrulamada: p.dogrulamada, adayda: p.adayda, isaretli: p.isaretli, kacan: p.kacan, dogrula: p.dogrula, korumaliSoru: p.korumaliSoru, uydurmaAday: p.uydurma.length, kacanlar: p.gercekler.filter((g) => g.asama === 'kacan' || g.asama === 'isaretli').map((g) => `${g.id}:${g.asama}`).join(',') }
 }
 
 void ana()

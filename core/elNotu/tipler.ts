@@ -89,6 +89,8 @@ export type CizimBulgusu = {
   kabul: boolean
   /** The template region box (for the provenance crop). */
   kutu?: Kutu
+  /** Not certain and beyond the page's Doğrula budget: shown with "(?)", not asked. */
+  belirsiz?: boolean
 }
 
 export type DogrulaSorusu = {

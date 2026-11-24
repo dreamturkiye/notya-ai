@@ -4,15 +4,18 @@
  */
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { gizlilikKarari, maskeliMi, SABLON_ESIK } from './gizlilik'
-import { sayfaPaketiHazirla, baglamiSoldur, basiliSatirMi, type TuvalAdaptoru } from './sayfaPaketi'
+import { gizlilikKarari, maskeliMi, maskeyiBoya, SABLON_ESIK } from './gizlilik'
+import { sayfaPaketiHazirla, basiliSatirMi, sayfaParcalari, type TuvalAdaptoru } from './sayfaPaketi'
 import { korumaliSiniflar, kabulEdilirMi, satirKorumali, KORUMALI_ESIK } from './korumali'
-import { uzlastir, benzerlik, yakinMi } from './uzlastir'
+import { uzlastir, benzerlik, yakinMi, cokluUzlastir, satirBenzerligi } from './uzlastir'
 import { sozlukKur, coz, yasCinsiyet, genislet, bilinmeyenKisaltmaMi } from './sozluk'
 import { GENEL_TR_TOHUM } from './tohum/genelTr'
 import { KBB_TR_TOHUM } from './tohum/kbbTr'
-import { tohumlarTr } from './tohum'
-import { uydurmaDenetimi, okumaSozcukleri, sayfayiOku, kaynakMetni, yerTutuculariDoldur, acikYerTutucular, deterministikNormal, metinSatirKonumlari, type ModelKapisi, type SayfaPaketi } from './okuyucu'
+import { tohumlarTr, anahatTr } from './tohum'
+import { anahatOgren, anahatBlogu, alanBul } from './anahat'
+import { maskeKaniti } from './maskeKaniti'
+import { sayfaPuanla, toplamPuan } from './degerlendirme'
+import { uydurmaDenetimi, okumaSozcukleri, sayfayiOku, kaynakMetni, yerTutuculariDoldur, acikYerTutucular, deterministikNormal, metinSatirKonumlari, satirGrupla, DOGRULA_BUTCESI, type ModelKapisi, type SayfaPaketi, type IstemParcasi } from './okuyucu'
 import { izleriAyikla, celiskileriAyikla, bolumleriBirlestir, kaynakBlogu, dosyaOnerileriniAyikla, ETKILEDIGI_ALANLAR, ozet } from './derleyici'
 import { gunlukOzet, gunlukSatir, AktifSure } from './zaman'
 import { parmakIzi, eslesmeSkoru, sablonBul, sablonTaslagi, PARMAK_IZI_SATIR, PARMAK_IZI_SUTUN } from './sablon'
@@ -89,7 +92,7 @@ function sentetikSayfa(): Rgba {
 const hamTuval: TuvalAdaptoru = { async jpeg(r) { return Buffer.from(JSON.stringify({ w: r.w, h: r.h, d: Array.from(r.d) })).toString('base64') } }
 const kirmiziVarMi = (b64: string) => { const r = JSON.parse(Buffer.from(b64, 'base64').toString()) as { d: number[] }; for (let i = 0; i < r.d.length; i += 4) if (r.d[i] > 180 && r.d[i + 1] < 60 && r.d[i + 2] < 60) return true; return false }
 
-test('privacy guard: no pixel of the identity region ever leaves — masked page, every line crop A/B, every region crop', async () => {
+test('privacy guard: no pixel of the identity region ever leaves — masked page, every tile, every region crop', async () => {
   // OCR "finds" the printed labels next to the red values
   const ocr = async (): Promise<OcrSatir[]> => [satir(kelime('ADI-SOYADI', 20, 212, 110, 238)), satir(kelime('GSM', 20, 262, 60, 288)), satir(kelime('ŞİKAYETİ', 20, 330, 110, 350))]
   const sablon: Sablon = { id: 't', ad: 'f', tur: 'formlu', brans: null, enBoy: 1100 / 1500, baslikBolgeleri: [], cizimBolgeleri: [{ id: 'b1', anatomi: 'boyun', etiket: 'Boyun', taraf: 'sag', kutu: { x0: 0.6, y0: 0.1, x1: 0.95, y1: 0.25 } }], parmakIzi: null }
@@ -97,12 +100,30 @@ test('privacy guard: no pixel of the identity region ever leaves — masked page
   assert.equal(s.durum, 'hazir')
   if (s.durum !== 'hazir') return
   assert.ok(!kirmiziVarMi(s.maskeliSayfa.base64), 'masked page shows identity pixels')
-  for (const l of s.paket.satirlar) {
-    assert.ok(!kirmiziVarMi(l.gorselA.base64), `line ${l.no} crop A`)
-    assert.ok(!kirmiziVarMi(l.gorselB.base64), `line ${l.no} crop B`)
-  }
+  for (const t of s.paket.parcalar || []) assert.ok(!kirmiziVarMi(t.gorsel.base64), 'page tile')
+  assert.ok(s.paket.gizlilikKutulari?.length, 'the package declares the boxes it painted (the server re-checks them)')
+  const ham = JSON.parse(Buffer.from(s.maskeliSayfa.base64, 'base64').toString()) as { w: number; h: number; d: number[] }
+  assert.deepEqual(maskeKaniti({ w: ham.w, h: ham.h, d: Uint8ClampedArray.from(ham.d) }, s.paket.gizlilikKutulari!), { tamam: true }, 'masking proof holds on the outbound page')
   for (const b of s.paket.bolgeler) if (b.gorsel) assert.ok(!kirmiziVarMi(b.gorsel.base64), `region ${b.id}`)
   assert.ok(s.paket.satirlar.length >= 4, 'handwriting lines were found')
+})
+
+test('privacy guard: page tiles are cut from the MASKED raster only; a small page gets no tiles', async () => {
+  const w = 2400, h = 3400
+  const r: Rgba = { w, h, d: new Uint8ClampedArray(w * h * 4).fill(235) }
+  for (let y = 300; y < 600; y++) for (let x = 100; x < 2300; x++) { const i = (y * w + x) * 4; r.d[i] = 220; r.d[i + 1] = 20; r.d[i + 2] = 20 }
+  const kutu = { x0: 0.03, y0: 0.08, x1: 0.97, y1: 0.18 }
+  maskeyiBoya(r, [kutu])
+  const t = await sayfaParcalari(r, hamTuval)
+  assert.equal(t.length, 4, 'a large page → bands of ≤ ~1 MP')
+  for (const p of t) {
+    assert.ok(!kirmiziVarMi(p.gorsel.base64))
+    const ham = JSON.parse(Buffer.from(p.gorsel.base64, 'base64').toString()) as { w: number; h: number; d: number[] }
+    assert.deepEqual(maskeKaniti({ w: ham.w, h: ham.h, d: Uint8ClampedArray.from(ham.d) }, [kutu], { bant: { y0: p.y0, y1: p.y1 } }), { tamam: true })
+  }
+  assert.equal((await sayfaParcalari({ w: 800, h: 1100, d: new Uint8ClampedArray(800 * 1100 * 4) }, hamTuval)).length, 0, 'a page a model reads whole at full resolution gets no tiles')
+  assert.equal((await sayfaParcalari({ w: 1131, h: 1599, d: new Uint8ClampedArray(1131 * 1599 * 4) }, hamTuval)).length, 2)
+  assert.ok(okumaSozcukleri(SOZLUK).some((x) => x.startsWith('SD (septum')))
 })
 
 test('privacy guard: OCR failure → nothing is packaged (gizlenemedi); unknown form → only a masked preview for marking', async () => {
@@ -115,7 +136,7 @@ test('privacy guard: OCR failure → nothing is packaged (gizlenemedi); unknown 
   assert.equal(isaretli.durum, 'hazir')
   if (isaretli.durum === 'hazir') {
     assert.ok(!kirmiziVarMi(isaretli.maskeliSayfa.base64))
-    for (const l of isaretli.paket.satirlar) assert.ok(!kirmiziVarMi(l.gorselA.base64) && !kirmiziVarMi(l.gorselB.base64))
+    for (const t of isaretli.paket.parcalar || []) assert.ok(!kirmiziVarMi(t.gorsel.base64))
   }
 })
 
@@ -180,52 +201,113 @@ test('never invent: the normalisation guard refuses added words, numbers, or a d
   assert.equal(deterministikNormal(girdi, SOZLUK), 'Sigara yok ⟦s1-l2-w3|5mg?⟧ septum deviasyonu')
 })
 
-function sahteModel(o: { okuA: unknown; okuB: unknown; cizim?: unknown; normal?: unknown }): ModelKapisi & { cagri: string[] } {
-  const cagri: string[] = []
+type SayfaYaniti = { satirlar: { y0: number; y1: number; alan?: string | null; kelimeler: { m: string; g: number; alt?: string[] }[] }[] }
+function sahteModel(o: { oku: (SayfaYaniti | Error)[]; cizim?: unknown; normal?: unknown }): ModelKapisi & { cagri: { etiket: string; parcalar: IstemParcasi[]; sistem: string }[] } {
+  const cagri: { etiket: string; parcalar: IstemParcasi[]; sistem: string }[] = []
   return {
     cagri,
-    async gorselJson({ etiket }) { cagri.push(etiket); return etiket === 'el-notu-okuma-A' ? o.okuA : etiket === 'el-notu-okuma-B' ? o.okuB : o.cizim ?? { bulgular: [] } },
-    async metinJson({ etiket }) { cagri.push(etiket); return o.normal ?? { satirlar: [] } },
+    async gorselJson({ etiket, parcalar, sistem }) {
+      cagri.push({ etiket, parcalar, sistem })
+      const m = /^el-notu-sayfa-(\d)$/.exec(etiket)
+      if (m) { const y = o.oku[Number(m[1]) - 1]; if (y instanceof Error) throw y; return y ?? { satirlar: [] } }
+      return o.cizim ?? { bulgular: [] }
+    },
+    async metinJson({ etiket }) { cagri.push({ etiket, parcalar: [], sistem: '' }); return o.normal ?? { satirlar: [] } },
   }
 }
 const GORSEL = { mime: 'image/jpeg', base64: 'TUFTS0VE' }
 const paket = (bolgeler: SayfaPaketi['bolgeler'] = []): SayfaPaketi => ({
   sayfa: 1, sablonId: 's', kalite: kaliteKarari({ bulaniklik: 500, parlama: 0, parlaklik: 160, kisaKenar: 1100, sayfaOrani: 0.9 }),
   satirlar: [
-    { no: 1, kutu: { x0: 0.1, y0: 0.4, x1: 0.9, y1: 0.43 }, kelimeler: [], tanimlar: [], gorselA: GORSEL, gorselB: GORSEL, bolgeId: null },
-    { no: 2, kutu: { x0: 0.1, y0: 0.45, x1: 0.9, y1: 0.48 }, kelimeler: [], tanimlar: [], gorselA: GORSEL, gorselB: GORSEL, bolgeId: 'b1' },
+    { no: 1, kutu: { x0: 0.1, y0: 0.4, x1: 0.9, y1: 0.43 }, kelimeler: [], tanimlar: [], bolgeId: null },
+    { no: 2, kutu: { x0: 0.1, y0: 0.45, x1: 0.9, y1: 0.48 }, kelimeler: [], tanimlar: [], bolgeId: 'b1' },
   ],
   bolgeler,
+  parcalar: [{ gorsel: GORSEL, y0: 0, y1: 0.54 }, { gorsel: GORSEL, y0: 0.46, y1: 1 }],
+  gizlilikKutulari: [{ x0: 0, y0: 0, x1: 1, y1: 0.1 }],
 })
-const baglam = () => ({ bransAdi: 'KBB', dil: EL_NOTU_TR.dil, sozluk: SOZLUK, hafiza: [], dagarcik: new Map<string, number>(), sorulmusKisaltmalar: new Set<string>(), sozcukMu: () => false })
+const baglam = () => ({ bransAdi: 'KBB', dil: EL_NOTU_TR.dil, sozluk: SOZLUK, hafiza: [], dagarcik: new Map<string, number>(), sorulmusKisaltmalar: new Set<string>(), sozcukMu: () => false, sayfaGorseli: GORSEL, anahat: anahatOgren([], anahatTr('kulak-burun-bogaz')) })
+const L = (y0: number, ...k: [string, number][]) => ({ y0, y1: y0 + 30, kelimeler: k.map(([m, g]) => ({ m, g })) })
 
-test('reader: two independent reads; disagreement / low-confidence protected words → Doğrula with crop; invented normalisation falls back', async () => {
+test('reader v2: three independent page reads; unanimous words accepted; a side the reads disagree on is asked, crop snapped to the device line; invented normalisation falls back', async () => {
   const m = sahteModel({
-    okuA: { satirlar: [{ no: 1, kelimeler: [{ m: 'Sigara', g: 0.95 }, { m: 'Ø', g: 0.95 }] }, { no: 2, kelimeler: [{ m: 'SD', g: 0.95 }, { m: 'sağa', g: 0.9 }] }] },
-    okuB: { satirlar: [{ no: 1, kelimeler: [{ m: 'Sigara', g: 0.95 }, { m: 'Ø', g: 0.97 }] }, { no: 2, kelimeler: [{ m: 'SD', g: 0.95 }, { m: 'sola', g: 0.9 }] }] },
+    oku: [
+      { satirlar: [L(400, ['Sigara', 0.95], ['Ø', 0.95]), L(450, ['SD', 0.95], ['sağa', 0.9])] },
+      { satirlar: [L(402, ['Sigara', 0.9], ['Ø', 0.97]), L(452, ['SD', 0.9], ['sola', 0.9])] },
+      { satirlar: [L(398, ['Sigara', 0.9], ['Ø', 0.96]), L(449, ['SD', 0.9], ['sağa', 0.8])] },
+    ],
     normal: { satirlar: [{ no: 1, normal: 'Sigara yok, alkol yok' }, { no: 2, normal: 'septum deviasyonu ⟦s1-l2-w1|sağa?⟧' }] },
   })
   const s = await sayfayiOku(paket(), baglam(), m)
-  assert.deepEqual(m.cagri.filter((c) => c.startsWith('el-notu-okuma')).sort(), ['el-notu-okuma-A', 'el-notu-okuma-B'])
+  const okumalar = m.cagri.filter((c) => c.etiket.startsWith('el-notu-sayfa'))
+  assert.deepEqual(okumalar.map((c) => c.etiket).sort(), ['el-notu-sayfa-1', 'el-notu-sayfa-2', 'el-notu-sayfa-3'])
+  const gorsel = (c: { parcalar: IstemParcasi[] }) => c.parcalar.filter((p) => p.tur === 'gorsel').length
+  assert.equal(gorsel(okumalar.find((c) => c.etiket === 'el-notu-sayfa-1')!), 3, 'read 1: the page + 2 tiles')
+  assert.equal(gorsel(okumalar.find((c) => c.etiket === 'el-notu-sayfa-3')!), 1, 'read 3: the whole page alone')
+  const r2 = okumalar.find((c) => c.etiket === 'el-notu-sayfa-2')!
+  assert.equal((r2.parcalar.find((p) => p.tur === 'gorsel') as { gorsel: { base64: string } }).gorsel, paket().parcalar![0].gorsel, 'read 2: tiles first')
+  assert.ok(!r2.sistem.includes('usually follow this outline') && r2.parcalar.some((p) => p.tur === 'metin' && p.metin.includes('usually follow this outline')), 'read 2: the outline after the images')
+  assert.ok(okumalar.every((c) => c.sistem.includes('Vocabulary')), 'every read gets the vocabulary aid')
+  assert.equal(s.satirlar[0].kelimeler.every((k) => k.kabul), true, 'unanimous words (Ø included) accepted')
   const taraf = s.dogrula.find((d) => d.anahtar === 's1-l2-w1')
-  assert.ok(taraf, 'the side the reads disagree on is asked')
+  assert.ok(taraf, 'the side 2 of 3 reads give is still asked (protected: every read must agree)')
   assert.equal(taraf!.sinif, 'korumali')
   assert.equal(taraf!.korumaliTur, 'taraf')
-  assert.ok(taraf!.kutu, 'question carries its crop box')
-  // "alkol yok" is not on the page → the line falls back to the deterministic expansion
-  assert.equal(s.satirlar[0].normal, 'Sigara yok')
+  assert.deepEqual(taraf!.kutu, paket().satirlar[1].kutu, 'crop = the device line box')
+  assert.equal(s.satirlar[1].bolgeId, 'b1')
+  assert.equal(s.satirlar[0].normal, 'Sigara yok', '"alkol yok" is not on the page → deterministic expansion')
   assert.equal(s.satirlar[1].normal, 'septum deviasyonu ⟦s1-l2-w1|sağa?⟧')
 })
 
-test('reader: a drawing finding for an UNMARKED region is dropped; the side always comes from the template region', async () => {
+test('reader v2: Doğrula budget — protected always asked; non-clinical noise → "[okunamadı]" without a question; clinical words beyond the budget stay visible with "(?)"', async () => {
+  const klinik = [['rinit', 'otit', 'sinüzit'], ['polip', 'kist', 'nodül'], ['larenjit', 'tonsillit', 'adenoidit'], ['otoskopi', 'endoskopi', 'rinoskopi'], ['hipertrofi', 'atrofi', 'distrofi'], ['sialolit', 'kolelit', 'nefrolit'], ['efüzyon', 'perforasyon', 'retraksiyon']]
+  const oku = [0, 1, 2].map((r) => ({ satirlar: [
+    L(100, ['Şikayet', 0.9], [['qwzx', 'brvt', 'plmk'][r], 0.4]),
+    ...klinik.map((k, i) => L(150 + i * 50, ['Bulgu', 0.9], [k[r], 0.5])),
+    L(600, ['Sigara', 0.9], [['5', '3', '5'][r], 0.9]),
+  ] }))
+  const s = await sayfayiOku(paket(), baglam(), sahteModel({ oku }))
+  const korumali = s.dogrula.filter((d) => d.sinif === 'korumali')
+  assert.equal(korumali.length, 1, 'the number the reads disagree on is asked')
+  assert.equal(s.dogrula.length, DOGRULA_BUTCESI, 'protected first, then clinical words up to the budget')
+  assert.equal(s.butceDisi, klinik.length - (DOGRULA_BUTCESI - 1))
+  assert.equal(s.okunamadi, 1)
+  const metin = kaynakMetni([s], EL_NOTU_TR.dil, () => '')
+  assert.ok(metin.includes('[okunamadı]'), 'noise marked')
+  assert.ok(!s.dogrula.some((d) => ['qwzx', 'brvt', 'plmk'].includes(d.okunan)), 'noise never asked')
+  assert.equal((metin.match(/\(\?\)/g) || []).length, 0, 'an over-budget word only one read gave is never shown (it may be a guess)')
+  assert.equal(metin.split('[okunamadı]').length - 1, 1 + klinik.length - (DOGRULA_BUTCESI - 1))
+  // the same over-budget word given by two of three reads is shown, flagged
+  const iki = [0, 1, 2].map((r) => ({ satirlar: [...[0, 1, 2, 3, 4, 5].map((i) => L(100 + i * 50, ['Bulgu', 0.9], [klinik[i][r], 0.5])), L(500, ['Bulgu', 0.9], [r === 2 ? 'kist' : 'polip', 0.3])] }))
+  const s2 = await sayfayiOku(paket(), baglam(), sahteModel({ oku: iki }))
+  assert.ok(kaynakMetni([s2], EL_NOTU_TR.dil, () => '').includes('polip(?)'))
+})
+
+test('reader v2: several doubtful words on one line → ONE line question whose candidates are the reads\' line texts', async () => {
+  const oku = [['sağ', 'KZ', '3'], ['sol', 'KZ', '5'], ['sağ', 'KZ', '8']].map((w) => ({ satirlar: [L(450, [w[0], 0.7], [w[1], 0.9], [w[2], 0.5])] }))
+  const s = await sayfayiOku(paket(), baglam(), sahteModel({ oku }))
+  assert.equal(s.dogrula.length, 1)
+  assert.equal(s.dogrula[0].anahtar, 's1-l1')
+  assert.equal(s.dogrula[0].sinif, 'korumali')
+  assert.ok(s.dogrula[0].adaylar.includes('sol KZ 5') && s.dogrula[0].adaylar.includes('sağ KZ 3'))
+})
+
+test('reader v2: a read that fails twice does not vote; the answering reads must all agree on a protected word', async () => {
+  const iyi = { satirlar: [L(450, ['sağ', 0.97], ['kulak', 0.95])] }
+  const m = sahteModel({ oku: [iyi, new Error('json'), iyi] })
+  const s = await sayfayiOku(paket(), baglam(), m)
+  assert.equal(s.satirlar[0].kelimeler[0].kabul, true)
+  assert.equal(s.okumaSayisi, 1 + 2 + 1 + 1, 'read 1 + read 2 twice + read 3 + normalisation')
+  const tek = await sayfayiOku(paket(), { ...baglam(), okumaSayisi: 1 }, sahteModel({ oku: [iyi] }))
+  assert.equal(tek.satirlar[0].kelimeler[0].kabul, false, 'one read alone never accepts a protected word')
+})
+
+test('reader v2: a drawing finding for an UNMARKED region is dropped; the side always comes from the template region', async () => {
   const bolgeler: SayfaPaketi['bolgeler'] = [
     { id: 'b1', anatomi: 'kulak_zari', etiket: 'Kulak zarı', taraf: 'sag', kutu: { x0: 0.3, y0: 0.35, x1: 0.45, y1: 0.48 }, murekkep: 0.002, gorsel: GORSEL },
     { id: 'b2', anatomi: 'kulak_zari', etiket: 'Kulak zarı', taraf: 'sol', kutu: { x0: 0.55, y0: 0.35, x1: 0.7, y1: 0.48 }, murekkep: 0, gorsel: GORSEL },
   ]
-  const m = sahteModel({
-    okuA: { satirlar: [] }, okuB: { satirlar: [] },
-    cizim: { bulgular: [{ bolgeId: 'b1', bulgu: 'normal (N)', isaret: 'normal_isareti', g: 0.95 }, { bolgeId: 'b2', bulgu: 'perforasyon', isaret: 'daire', g: 0.99 }] },
-  })
+  const m = sahteModel({ oku: [], cizim: { bulgular: [{ bolgeId: 'b1', bulgu: 'normal (N)', isaret: 'normal_isareti', g: 0.95 }, { bolgeId: 'b2', bulgu: 'perforasyon', isaret: 'daire', g: 0.99 }] } })
   const p = paket(bolgeler)
   p.satirlar = []
   const s = await sayfayiOku(p, baglam(), m)
@@ -240,14 +322,90 @@ test('reader: a drawing finding for an UNMARKED region is dropped; the side alwa
   assert.equal(metinSatirKonumlari([s]).length, metin.split('\n').length)
 })
 
-test('reader: an unknown abbreviation is asked once; never again once asked', async () => {
-  const okuma = { satirlar: [{ no: 1, kelimeler: [{ m: 'QZK', g: 0.98 }, { m: 'normal', g: 0.98 }] }] }
+test('reader v2: an unknown abbreviation is asked once; never again once asked', async () => {
+  const oku = [0, 1, 2].map(() => ({ satirlar: [L(400, ['QZK', 0.98], ['normal', 0.98])] }))
   const p = paket(); p.satirlar = [p.satirlar[0]]
-  const s1 = await sayfayiOku(p, baglam(), sahteModel({ okuA: okuma, okuB: okuma }))
+  const s1 = await sayfayiOku(p, baglam(), sahteModel({ oku }))
   assert.ok(s1.dogrula.some((d) => d.sinif === 'kisaltma' && d.okunan === 'QZK'))
   const b = baglam(); b.sorulmusKisaltmalar = new Set(['kis-qzk'])
-  const s2 = await sayfayiOku(p, b, sahteModel({ okuA: okuma, okuB: okuma }))
+  const s2 = await sayfayiOku(p, b, sahteModel({ oku }))
   assert.ok(!s2.dogrula.some((d) => d.sinif === 'kisaltma'))
+})
+
+test('self-consistency over N reads: majority wins, near-identical plain words agree, protected words count exact votes only, insertions need support', () => {
+  const k = (m: string, g = 0.9) => ({ m, g })
+  const r = cokluUzlastir([[k('sol'), k('submandibuler'), k('gland')], [k('sol'), k('submandibular'), k('gland')], [k('sağ'), k('submandibuler'), k('gland'), k('taş', 0.3)]])
+  assert.deepEqual(r.map((x) => x.metin), ['sol', 'submandibuler', 'gland'], 'a low-confidence word one read alone saw is not inserted')
+  assert.equal(r[0].tamOy, 2)
+  assert.equal(r[1].oy, 3, 'near-identical spelling counts as agreement')
+  assert.equal(r[1].tamOy, 2)
+  const ek = cokluUzlastir([[k('multipl'), k('taş')], [k('multipl'), k('küçük'), k('taş')], [k('multipl'), k('küçük'), k('taş')]])
+  assert.deepEqual(ek.map((x) => x.metin), ['multipl', 'küçük', 'taş'])
+  assert.equal(cokluUzlastir([null, [k('x')], null], 3)[0].oy, 1, 'reads that missed the line count against it')
+  assert.equal(yakinMi('sialendoskopik', 'sialendoskopic'), true)
+  assert.equal(yakinMi('sağda', 'solda'), false)
+  assert.equal(yakinMi('12,5', '12,6'), false)
+  const iki = uzlastir({ no: 1, kelimeler: [{ m: 'submandibuler', g: 0.85 }] }, { no: 1, kelimeler: [{ m: 'submandibular', g: 0.85 }] })
+  assert.equal(iki[0].yakin, true)
+  assert.ok(satirBenzerligi(['Sigara', '2', 'aydır', 'yok'], ['Sigara', '2', 'aydir', 'yok']) > 0.9)
+})
+
+test('line grouping: the same written line across reads is grouped by text and position; a line one read missed stays its own group in order', () => {
+  const l = (y: number, t: string) => ({ y0: y, y1: y + 20, alan: null, kelimeler: t.split(' ').map((m) => ({ m, g: 0.9 })) })
+  const g = satirGrupla([
+    [l(100, '37 K sol çene altı'), l(200, 'sistemik hastalık Ø'), l(300, 'sigara 4-5 / gün')],
+    [l(110, '37 K sol cene alti'), l(310, 'sigara 4-5/gün')],
+    [l(95, '37 K sol çene altı'), l(205, 'sist hast Ø'), l(250, 'tiroid nodül bx'), l(305, 'sigara 4-5 / gün')],
+  ])
+  assert.equal(g.length, 4)
+  assert.deepEqual(g.map((x) => x.uyeler.filter(Boolean).length), [3, 2, 1, 3])
+  assert.equal(g[2].uyeler[2]?.kelimeler[0].m, 'tiroid')
+})
+
+test('structure prior: the outline is learned from confirmed texts in the doctor\'s order; too few texts → the branş default', () => {
+  const v = anahatTr('kulak-burun-bogaz')
+  assert.equal(anahatOgren(['kısa'], v).kaynak, 'varsayilan')
+  assert.ok(v.some((a) => a.ad === 'Kulak') && !anahatTr('kardiyoloji').some((a) => a.ad === 'Kulak'), 'KBB fields only in KBB (no leak)')
+  const metin = (i: number) => `40 E burun tıkanıklığı ${i} yıl\nSigara: 1 pk\nSist hast: Ø\nİlaç alj: Ø\nKontrol tarihi: 2 hf sonra`
+  const a = anahatOgren([1, 2, 3, 4].map(metin), v)
+  assert.equal(a.kaynak, 'hekim')
+  const adlar = a.alanlar.map((x) => x.ad)
+  assert.ok(adlar.indexOf('Sigara') < adlar.indexOf('Sistemik hastalık') && adlar.indexOf('Sistemik hastalık') < adlar.indexOf('İlaç alerjisi'), 'his own order')
+  assert.ok(adlar.includes('Kontrol tarihi'), 'his own heading kept')
+  assert.equal(alanBul('sist. hast.', v)?.tur, 'sistemik')
+  assert.ok(anahatBlogu(a).includes('THIS physician'))
+})
+
+test('masking proof: every declared identity box must be black on the picture and on each tile; no box only under the plain-sheet declaration', () => {
+  const r: Rgba = { w: 100, h: 200, d: new Uint8ClampedArray(100 * 200 * 4).fill(240) }
+  const kutu = { x0: 0, y0: 0, x1: 1, y1: 0.2 }
+  assert.deepEqual(maskeKaniti(r, [kutu]), { tamam: false, neden: 'kutu_acik' })
+  maskeyiBoya(r, [kutu])
+  assert.deepEqual(maskeKaniti(r, [kutu]), { tamam: true })
+  assert.deepEqual(maskeKaniti(r, []), { tamam: false, neden: 'kutu_yok' })
+  assert.deepEqual(maskeKaniti(r, [], { serbest: true }), { tamam: true })
+  // a tile covering the lower half does not contain the box → nothing to check there; one covering the top must show it black
+  const alt: Rgba = { w: 100, h: 100, d: new Uint8ClampedArray(100 * 100 * 4).fill(240) }
+  assert.deepEqual(maskeKaniti(alt, [kutu], { bant: { y0: 0.5, y1: 1 } }), { tamam: true })
+  assert.deepEqual(maskeKaniti(alt, [kutu], { bant: { y0: 0, y1: 0.5 } }), { tamam: false, neden: 'kutu_acik' })
+})
+
+test('scoring: facts by stage (accepted / Doğrula reading / candidate / flagged), invented words of the accepted text', () => {
+  const p = sayfaPuanla({
+    metin: 'Sigara 2 aydır yok\nSistemik ⟦s1-l2-w1|hastalk?⟧ Ø\neritromisin(?)\nplan uydurmaca',
+    dogrula: [{ okunan: 'hastalk', adaylar: ['hastalık'], sinif: 'kelime' }],
+    gercekler: [
+      { id: 'a', metin: 'Sigara 2 aydır yok', anahtarlar: [['sigara'], ['2']] },
+      { id: 'b', metin: 'Sistemik hastalık yok', anahtarlar: [['sistemik'], ['hastalık']] },
+      { id: 'c', metin: 'alerji eritromisin', anahtarlar: [['eritromisin']], korumali: true },
+      { id: 'd', metin: 'Submandibuler', anahtarlar: [['submand']] },
+    ],
+    hamKelimeler: ['Sigara', '2', 'aydır', 'yok', 'Sistemik', 'hastalk', 'Ø', 'eritromisin', 'plan'],
+    izinli: ['plan'],
+  })
+  assert.deepEqual(p.gercekler.map((x) => x.asama), ['kesin', 'dogrulamada', 'isaretli', 'kacan'], 'a reading one letter off the fact still counts once confirmed')
+  assert.deepEqual(p.uydurma, ['uydurmaca'])
+  assert.equal(toplamPuan([p]).dogrulaIleYuzde, 50)
 })
 
 test('privacy: another print of a templated form — the band is cut at "ŞİKAYETİ" when label rows sit above it; the rest stays masked', () => {
@@ -267,63 +425,11 @@ test('privacy: another print of a templated form — the band is cut at "ŞİKAY
   assert.ok(maskeliMi({ x0: 0.2, y0: 0.284, x1: 0.8, y1: 0.296 }, tek.kutular, 0.99))
 })
 
-test('layout: a strip read as print by the device OCR is not sent; read B context is faded, the line band untouched', () => {
+test('layout: a line the device OCR reads as print is not a handwriting line', () => {
   const basili = [satir(kelime('Kulak-Burun-Boğaz', 100, 100, 400, 120, 93), kelime('Uzmanı', 410, 100, 520, 120, 91))]
   assert.equal(basiliSatirMi({ x0: 0.09, y0: 0.095, x1: 0.55, y1: 0.125 }, basili, 1000, 1000), true)
   const el = [satir(kelime('Sağ', 100, 100, 140, 120, 92), kelime('mukz', 150, 100, 400, 120, 40))]
   assert.equal(basiliSatirMi({ x0: 0.09, y0: 0.095, x1: 0.55, y1: 0.125 }, el, 1000, 1000), false, 'a printed label beside handwriting keeps the line')
-  const r: Rgba = { w: 2, h: 10, d: new Uint8ClampedArray(2 * 10 * 4).fill(0) }
-  baglamiSoldur(r, { y0: 3, y1: 7 })
-  assert.ok(r.d[0] > 150, 'context row faded')
-  assert.equal(r.d[(5 * 2) * 4], 0, 'line band unchanged')
-})
-
-test('self-consistency: a near-identical plain word counts as agreement; protected words still need an exact match', async () => {
-  assert.equal(yakinMi('sialendoskopik', 'sialendoskopic'), true)
-  assert.equal(yakinMi('sağda', 'solda'), false)
-  assert.equal(yakinMi('12,5', '12,6'), false)
-  const r = uzlastir({ no: 1, kelimeler: [{ m: 'submandibuler', g: 0.85 }] }, { no: 1, kelimeler: [{ m: 'submandibular', g: 0.85 }] })
-  assert.equal(r[0].uyum, true)
-  assert.equal(r[0].yakin, true)
-  // reader: plain near-agreement accepted; a protected near-agreement (allergy context) is asked
-  const m = sahteModel({
-    okuA: { satirlar: [{ no: 1, kelimeler: [{ m: 'submandibuler', g: 0.9 }] }, { no: 2, kelimeler: [{ m: 'alerji', g: 0.95 }, { m: 'eritromisin', g: 0.95 }] }] },
-    okuB: { satirlar: [{ no: 1, kelimeler: [{ m: 'submandibular', g: 0.9 }] }, { no: 2, kelimeler: [{ m: 'alerji', g: 0.95 }, { m: 'eritromycin', g: 0.95 }] }] },
-  })
-  const s = await sayfayiOku(paket(), baglam(), m)
-  assert.equal(s.satirlar[0].kelimeler[0].kabul, true)
-  assert.ok(s.dogrula.some((d) => d.anahtar === 's1-l2-w1' && d.sinif === 'korumali'), 'drug under an allergy is asked')
-})
-
-test('reader: a strip both reads call blank (no pen writing) is dropped; one read alone cannot drop it; read B gets the page and the vocabulary', async () => {
-  const parcalar: { etiket: string; sistem: string; metinler: string[]; gorsel: number }[] = []
-  const m: ModelKapisi = {
-    async gorselJson({ etiket, sistem, parcalar: p }) {
-      parcalar.push({ etiket, sistem, metinler: p.filter((x) => x.tur === 'metin').map((x) => (x as { metin: string }).metin), gorsel: p.filter((x) => x.tur === 'gorsel').length })
-      return etiket === 'el-notu-okuma-A'
-        ? { satirlar: [{ no: 1, kelimeler: [], bos: true }, { no: 2, kelimeler: [], bos: true }] }
-        : { satirlar: [{ no: 1, kelimeler: [], bos: true }, { no: 2, kelimeler: [{ m: 'N', g: 0.6 }] }] }
-    },
-    async metinJson() { return { satirlar: [] } },
-  }
-  const s = await sayfayiOku(paket(), { ...baglam(), sayfaGorseli: GORSEL }, m)
-  assert.deepEqual(s.satirlar.map((l) => l.no), [2])
-  const a = parcalar.find((x) => x.etiket === 'el-notu-okuma-A')!, bb = parcalar.find((x) => x.etiket === 'el-notu-okuma-B')!
-  assert.equal(a.gorsel, 2, 'read A: the strips only')
-  assert.equal(bb.gorsel, 3, 'read B: the masked page + the strips')
-  assert.ok(!a.sistem.includes('Vocabulary') && bb.sistem.includes('Vocabulary'), 'only read B gets the vocabulary aid')
-  assert.ok(okumaSozcukleri(SOZLUK).some((w) => w.startsWith('SD (septum')))
-})
-
-test('reader: an unusable answer is asked once more before the batch counts as unread', async () => {
-  let n = 0
-  const m: ModelKapisi = {
-    async gorselJson({ etiket }) { if (etiket === 'el-notu-okuma-B' && n++ === 0) throw new Error('json'); return { satirlar: [{ no: 1, kelimeler: [{ m: 'Septum', g: 0.95 }] }, { no: 2, kelimeler: [{ m: 'normal', g: 0.95 }] }] } },
-    async metinJson() { return { satirlar: [] } },
-  }
-  const s = await sayfayiOku(paket(), baglam(), m)
-  assert.equal(s.satirlar[0].kelimeler[0].kabul, true)
-  assert.equal(s.okumaSayisi, 4, 'A + B + B retry + normalisation')
 })
 
 test('placeholders: answered ones are filled, open ones stay (and are listed)', () => {

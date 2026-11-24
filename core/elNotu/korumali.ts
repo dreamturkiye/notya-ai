@@ -45,10 +45,14 @@ export function korumaliSiniflar(token: string, o: { oncekiAlerji?: boolean; ila
 }
 
 /** Classes of every word of a line; a word after an allergy keyword inherits 'alerji' until the line ends. */
+/** Unit abbreviations that collide with side abbreviations ("lt" = litre, not left) when they follow a number. */
+const BIRIM_SONRASI = new Set(['lt', 'l', 'ml', 'cc'])
+
 export function satirKorumali(kelimeler: string[], ilac?: IlacEslesmesi): KorumaliTur[][] {
   let alerjiBaglami = false
-  return kelimeler.map((w) => {
-    const s = korumaliSiniflar(w, { oncekiAlerji: alerjiBaglami, ilac })
+  return kelimeler.map((w, i) => {
+    let s = korumaliSiniflar(w, { oncekiAlerji: alerjiBaglami, ilac })
+    if (i > 0 && /\d/.test(kelimeler[i - 1]) && BIRIM_SONRASI.has(katla(w))) s = [...s.filter((x) => x !== 'taraf'), 'doz']
     if (ALERJI.test(katla(w))) alerjiBaglami = true
     return s
   })
