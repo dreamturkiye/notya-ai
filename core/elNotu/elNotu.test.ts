@@ -14,8 +14,8 @@ import { KBB_TR_TOHUM } from './tohum/kbbTr'
 import { tohumlarTr, anahatTr } from './tohum'
 import { anahatOgren, anahatBlogu, alanBul } from './anahat'
 import { maskeKaniti } from './maskeKaniti'
-import { sayfaPuanla, toplamPuan } from './degerlendirme'
-import { uydurmaDenetimi, okumaSozcukleri, sayfayiOku, kaynakMetni, yerTutuculariDoldur, acikYerTutucular, deterministikNormal, metinSatirKonumlari, satirGrupla, DOGRULA_BUTCESI, type ModelKapisi, type SayfaPaketi, type IstemParcasi } from './okuyucu'
+import { sayfaPuanla, toplamPuan, icerir } from './degerlendirme'
+import { uydurmaDenetimi, okumaSozcukleri, sayfayiOku, sayiEkiBirlestir, kaynakMetni, yerTutuculariDoldur, acikYerTutucular, deterministikNormal, metinSatirKonumlari, satirGrupla, DOGRULA_BUTCESI, type ModelKapisi, type SayfaPaketi, type IstemParcasi } from './okuyucu'
 import { izleriAyikla, celiskileriAyikla, bolumleriBirlestir, kaynakBlogu, dosyaOnerileriniAyikla, ETKILEDIGI_ALANLAR, ozet } from './derleyici'
 import { gunlukOzet, gunlukSatir, AktifSure } from './zaman'
 import { parmakIzi, eslesmeSkoru, sablonBul, sablonTaslagi, PARMAK_IZI_SATIR, PARMAK_IZI_SUTUN } from './sablon'
@@ -122,7 +122,7 @@ test('privacy guard: page tiles are cut from the MASKED raster only; a small pag
     assert.deepEqual(maskeKaniti({ w: ham.w, h: ham.h, d: Uint8ClampedArray.from(ham.d) }, [kutu], { bant: { y0: p.y0, y1: p.y1 } }), { tamam: true })
   }
   assert.equal((await sayfaParcalari({ w: 800, h: 1100, d: new Uint8ClampedArray(800 * 1100 * 4) }, hamTuval)).length, 0, 'a page a model reads whole at full resolution gets no tiles')
-  assert.equal((await sayfaParcalari({ w: 1131, h: 1599, d: new Uint8ClampedArray(1131 * 1599 * 4) }, hamTuval)).length, 2)
+  assert.equal((await sayfaParcalari({ w: 1131, h: 1599, d: new Uint8ClampedArray(1131 * 1599 * 4) }, hamTuval)).length, 4, 'a phone photo → bands ≤ PARCA_YUKSEKLIK tall')
   assert.ok(okumaSozcukleri(SOZLUK).some((x) => x.startsWith('SD (septum')))
 })
 
@@ -243,7 +243,9 @@ test('reader v2: three independent page reads; unanimous words accepted; a side 
   assert.deepEqual(okumalar.map((c) => c.etiket).sort(), ['el-notu-sayfa-1', 'el-notu-sayfa-2', 'el-notu-sayfa-3'])
   const gorsel = (c: { parcalar: IstemParcasi[] }) => c.parcalar.filter((p) => p.tur === 'gorsel').length
   assert.equal(gorsel(okumalar.find((c) => c.etiket === 'el-notu-sayfa-1')!), 3, 'read 1: the page + 2 tiles')
-  assert.equal(gorsel(okumalar.find((c) => c.etiket === 'el-notu-sayfa-3')!), 1, 'read 3: the whole page alone')
+  const r3 = okumalar.find((c) => c.etiket === 'el-notu-sayfa-3')!
+  assert.equal(gorsel(r3), 2, 'read 3: the tiles alone')
+  assert.ok(!r3.parcalar.some((p) => p.tur === 'metin' && p.metin === 'The whole page:'), 'read 3: no shrunk whole-page picture')
   const r2 = okumalar.find((c) => c.etiket === 'el-notu-sayfa-2')!
   assert.equal((r2.parcalar.find((p) => p.tur === 'gorsel') as { gorsel: { base64: string } }).gorsel, paket().parcalar![0].gorsel, 'read 2: tiles first')
   assert.ok(!r2.sistem.includes('usually follow this outline') && r2.parcalar.some((p) => p.tur === 'metin' && p.metin.includes('usually follow this outline')), 'read 2: the outline after the images')
@@ -539,4 +541,52 @@ test('layout: lines found on a synthetic page; annotation linked to the nearest 
   assert.equal(y.satirlar.length, 5)
   assert.ok(y.satirlar.every((s, i) => i === 0 || s.kutu.y0 > y.satirlar[i - 1].kutu.y0))
   assert.equal(bolgeyeBagla({ x0: 0.1, y0: 0.5, x1: 0.2, y1: 0.52 }, [{ id: 'kulak', kutu: { x0: 0.21, y0: 0.45, x1: 0.3, y1: 0.55 } }, { id: 'boyun', kutu: { x0: 0.7, y0: 0.8, x1: 0.9, y1: 0.95 } }], []), 'kulak')
+})
+
+test('ESNEK-A-EVAL (Luna-Pro tuning): "?" abstains in the vote; number suffixes merge; a range carries both ends in scoring', () => {
+  const k = (m: string, g = 0.8) => ({ m, g })
+  const o = cokluUzlastir([[k('sol', 0.9), k('çene', 0.6)], [k('sol', 0.85), k('?', 0.2)], [k('sol', 0.9), k('?', 0.15)]], 3)
+  assert.equal(o[1].metin, 'çene', 'a real reading is not outvoted by two "?"')
+  assert.equal(o[1].oy, 1, '… but it is a single-read reading (never accepted on that basis)')
+  assert.equal(cokluUzlastir([[k('?', 0.1)], [k('?', 0.2)]], 2)[0].metin, '?', 'only "?" → still unreadable')
+  const b = (l: string[]) => sayiEkiBirlestir(l.map((m) => k(m)), EL_NOTU_TR.dil.sayiEkleri).map((x) => x.m)
+  assert.deepEqual(b(['2017', 'de', 'ağrı']), ["2017'de", 'ağrı'])
+  assert.deepEqual(b(['2023’te']), ["2023'te"])
+  assert.deepEqual(b(['ben', 'de', '5', 'lt']), ['ben', 'de', '5', 'lt'], 'only after a number, only the language suffixes')
+  assert.deepEqual(sayiEkiBirlestir([k('2017'), k('de')], undefined).map((x) => x.m), ['2017', 'de'], 'a language without suffixes: untouched')
+  assert.equal(icerir('Su 2,5-3 lt', '2,5'), true)
+  assert.equal(icerir('Su 2,5-3 lt', '2,5-3'), true)
+  assert.equal(icerir('Su 2,6-3 lt', '2,5'), false)
+})
+
+test('ESNEK-A-EVAL: a printed form carries the row label of a short entry when ≥ 2 reads agree on the field; drawings first on forms', async () => {
+  const S = (y0: number, alan: string | null, ...k: [string, number][]) => ({ ...L(y0, ...k), alan })
+  const m = sahteModel({
+    oku: [
+      { satirlar: [S(402, 'Boyun', ['N', 0.9])] },
+      { satirlar: [S(400, 'Boyun', ['N', 0.9])] },
+      { satirlar: [S(401, null, ['N', 0.9])] },
+    ],
+    normal: { satirlar: [] },
+  })
+  const s = await sayfayiOku(paket(), baglam(), m)
+  assert.equal(s.satirlar[0].normal, 'Boyun: normal', 'label + lexicon expansion (N = normal)')
+  const anlati = await sayfayiOku({ ...paket(), sablonId: null }, baglam(), sahteModel({ oku: [{ satirlar: [S(402, 'Boyun', ['N', 0.9])] }, { satirlar: [S(400, 'Boyun', ['N', 0.9])] }, { satirlar: [S(401, 'Boyun', ['N', 0.9])] }] }))
+  assert.ok(!anlati.satirlar[0].normal.startsWith('Boyun'), 'a narrative page writes its own headings: nothing added')
+  const tek = await sayfayiOku(paket(), baglam(), sahteModel({ oku: [{ satirlar: [S(402, 'Boyun', ['N', 0.9])] }, { satirlar: [S(400, null, ['N', 0.9])] }, { satirlar: [S(401, null, ['N', 0.9])] }] }))
+  assert.ok(!tek.satirlar[0].normal.startsWith('Boyun'), 'one read alone does not decide the field')
+})
+
+test('ESNEK-A-EVAL: on a printed form an uncertain drawing finding is asked before non-protected words; on a narrative page after them', async () => {
+  const bolgeler: SayfaPaketi['bolgeler'] = [{ id: 'b1', anatomi: 'kulak_zari', etiket: 'Kulak zarı', taraf: 'sag', kutu: { x0: 0.3, y0: 0.35, x1: 0.45, y1: 0.48 }, murekkep: 0.002, gorsel: GORSEL }]
+  // five lines, each with one clinical word the reads disagree on (non-protected) → five word questions compete
+  const satir = (i: number, w: string) => ({ ...L(100 + i * 40, ['hasta', 0.9], [w, 0.6]), alan: 'Tanı' })
+  const oku = [['otit', 'kist', 'polip', 'apse', 'nodül'], ['otalji', 'kanama', 'ödem', 'lezyon', 'tümör'], ['ateş', 'ağrı', 'sinüzit', 'plak', 'kitle']].map((ws) => ({ satirlar: ws.map((w, i) => satir(i, w)) }))
+  const cizim = { bulgular: [{ bolgeId: 'b1', bulgu: 'perforasyon', isaret: 'daire', g: 0.4 }] }
+  const p = paket(bolgeler)
+  const form = await sayfayiOku(p, baglam(), sahteModel({ oku, cizim }))
+  assert.ok(form.dogrula.some((d) => d.sinif === 'cizim'), 'form: the drawing finding gets a question')
+  assert.ok(form.dogrula.length <= DOGRULA_BUTCESI)
+  const anlati = await sayfayiOku({ ...p, sablonId: null }, baglam(), sahteModel({ oku, cizim }))
+  assert.ok(!anlati.dogrula.some((d) => d.sinif === 'cizim'), 'narrative: the words take the budget, the drawing is shown with "(?)"')
 })

@@ -347,7 +347,7 @@ async function ana() {
           const herhangiOkumada = gt.gercekler.filter((g) => g.anahtarlar.every((grup) => grup.some((a) => icerir(hamMetin, a)))).length
           herhangiToplam += herhangiOkumada
           Object.assign(satir, ozetSatiri(puan), { okumaCagrisi: s.okumaSayisi, butceDisi: s.butceDisi, okunamadi: s.okunamadi, herhangiOkumada, okumaMs: Date.now() - tOku, ...(dogrudanModel || uzak ? { usd: Math.round(sayfaKullanimi.usd * 10000) / 10000, kesik: sayfaKullanimi.kesik } : {}) })
-          if (cikti) fs.writeFileSync(path.join(cikti, `${ad}-okuma.txt`), metin)
+          if (cikti) { fs.writeFileSync(path.join(cikti, `${ad}-okuma.txt`), metin); fs.writeFileSync(path.join(cikti, `${ad}-puan.json`), JSON.stringify({ ...puan, herhangiOkumada, dogrulaSorulari: s.dogrula.map((d) => ({ sinif: d.sinif, korumaliTur: d.korumaliTur ?? null, okunan: d.okunan, adaylar: d.adaylar })) })) }
         } catch (e) { satir.okumaHatasi = e instanceof Error ? e.message : 'hata' }
       }
     } else if (sonuc.durum === 'baslik_gerekli' || sonuc.durum === 'gizlenemedi') satir.gizlilik = sonuc.gizlilik.durum

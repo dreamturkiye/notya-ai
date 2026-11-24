@@ -78,6 +78,11 @@ export type OkuyucuDili = {
   bagSozcukleri: string[]
   /** Marker for non-clinical noise the reads disagree on ("[okunamadı]"). */
   okunamadi?: string
+  /**
+   * Suffixes written after a number ("2017'de" = "2017 de"): a number followed by one of them is one token, so reads that
+   * split it and reads that do not still agree (empty / absent = no merging, e.g. English).
+   */
+  sayiEkleri?: string[]
 }
 
 export type OkuyucuBaglami = {
@@ -104,7 +109,9 @@ export type OkuyucuBaglami = {
 const CIZIM_KURALLARI = (dilAdi: string, brans: string) => `You look at regions of a printed ${brans} examination form on which a physician marked findings with a pen (${dilAdi}).
 For each region image (labelled with its id and anatomy) describe ONLY the physician's pen marks: a letter "N" (normal), a circle, hatching, an arrow, a line, a dot, and any handwritten words in or pointing into the region.
 Rules:
-- Describe what is marked, in ${dilAdi}, in clinical words, short. Never invent a finding that is not drawn or written. Printed drawing lines are not findings.
+- "bulgu" = the CLINICAL finding the mark records, in ${dilAdi}, short (a few words), as the physician would write it in the note: e.g. an "N" → the word for "normal"; a hatched or circled area → the finding (lesion, perforation, retraction, hypertrophy …) if written or unmistakable, else only the word for "marked". Do not repeat the region's name or the word "region": the form adds the anatomy and the side. Handwritten words in or pointing into the region → those words, as written.
+- NEVER describe the pen gesture in "bulgu" (no "letter", "circle", "arrow", "line", "dot", "drawn", "pointing to"): the gesture goes ONLY in "isaret".
+- Never invent a finding that is not drawn or written. Printed drawing lines are not findings.
 - Do not state the side (right/left): the form decides it.
 - If a region has no pen mark, return nothing for it.
 - Return ONLY JSON: {"bulgular":[{"bolgeId":"<id>","bulgu":"<short finding>","isaret":"yazi|ok|daire|tarama|cizgi|normal_isareti|nokta","g":0.0}]}`
@@ -158,7 +165,23 @@ export const OKUMA_SAYISI = 3
 
 type HamSayfaSatiri = { y0: number; y1: number; alan: string | null; kelimeler: HamKelime[] }
 
-function sayfaSatirlariAyikla(ham: unknown): HamSayfaSatiri[] {
+/** "2017 de" / "2017'de" / "2017’de" → one token "2017'de" (the language's number suffixes only). */
+export function sayiEkiBirlestir(kelimeler: HamKelime[], ekler: string[] | undefined): HamKelime[] {
+  if (!ekler?.length) return kelimeler
+  const ek = new Set(ekler.map((e) => e.toLocaleLowerCase('tr')))
+  const out: HamKelime[] = []
+  for (const k of kelimeler) {
+    const m = /^(.*\d)[’`´]([\p{L}]+)$/u.exec(k.m)
+    if (m && ek.has(m[2].toLocaleLowerCase('tr'))) { out.push({ ...k, m: `${m[1]}'${m[2]}` }); continue }
+    const o = out[out.length - 1]
+    const yalin = k.m.replace(/^['’`´]/, '')
+    if (o && /\d$/.test(o.m) && ek.has(yalin.toLocaleLowerCase('tr'))) { out[out.length - 1] = { ...o, m: `${o.m}'${yalin}`, g: Math.min(o.g, k.g), alt: [] }; continue }
+    out.push(k)
+  }
+  return out
+}
+
+function sayfaSatirlariAyikla(ham: unknown, sayiEkleri?: string[]): HamSayfaSatiri[] {
   const liste = Array.isArray((ham as { satirlar?: unknown })?.satirlar) ? (ham as { satirlar: unknown[] }).satirlar : Array.isArray(ham) ? (ham as unknown[]) : []
   const out: HamSayfaSatiri[] = []
   for (const [i, s] of (liste as Record<string, unknown>[]).entries()) {
@@ -167,6 +190,7 @@ function sayfaSatirlariAyikla(ham: unknown): HamSayfaSatiri[] {
       .map((k: Record<string, unknown>) => ({ m: String(k?.m ?? '').trim(), g: Number(k?.g ?? 0), alt: Array.isArray(k?.alt) ? (k.alt as unknown[]).map(String).filter(Boolean).slice(0, 3) : [] }))
       .filter((k: HamKelime) => k.m)
     if (!kelimeler.length) continue
+    kelimeler.splice(0, kelimeler.length, ...sayiEkiBirlestir(kelimeler, sayiEkleri))
     let y0 = Number(s.y0), y1 = Number(s.y1)
     if (!Number.isFinite(y0) || !Number.isFinite(y1)) { y0 = NaN; y1 = NaN } else { y0 = Math.max(0, Math.min(1000, y0)); y1 = Math.max(y0, Math.min(1000, y1)) }
     out.push({ y0, y1, alan: typeof s.alan === 'string' && s.alan.trim() ? s.alan.trim().slice(0, 60) : null, kelimeler })
@@ -179,11 +203,18 @@ function sayfaSatirlariAyikla(ham: unknown): HamSayfaSatiri[] {
 }
 
 /** One read's plan: which pictures it sees and in which order (independence comes from different views + orders). */
-type OkumaPlani = { etiket: string; parcalarOnce: boolean; parcaKullan: boolean; anahatSonda: boolean }
+/**
+ * `sayfaYok` = tiles only, no whole-page picture (ESNEK-A-EVAL 2026-11-24: on the production model a whole-page-only read
+ * sees a phone photo shrunk to a 768 px short side and was the weakest voter; a page without tiles keeps the page).
+ */
+type OkumaPlani = { etiket: string; parcalarOnce: boolean; parcaKullan: boolean; anahatSonda: boolean; sayfaYok?: boolean; tersSira?: boolean }
 const OKUMA_PLANLARI: OkumaPlani[] = [
   { etiket: 'el-notu-sayfa-1', parcalarOnce: false, parcaKullan: true, anahatSonda: false },
   { etiket: 'el-notu-sayfa-2', parcalarOnce: true, parcaKullan: true, anahatSonda: true },
-  { etiket: 'el-notu-sayfa-3', parcalarOnce: false, parcaKullan: false, anahatSonda: false },
+  { etiket: 'el-notu-sayfa-3', parcalarOnce: true, parcaKullan: true, anahatSonda: false, sayfaYok: true },
+  // reads 4–5 (okumaSayisi > 3): the tiles in reverse order — more independent votes and candidates
+  { etiket: 'el-notu-sayfa-4', parcalarOnce: true, parcaKullan: true, anahatSonda: true, sayfaYok: true, tersSira: true },
+  { etiket: 'el-notu-sayfa-5', parcalarOnce: true, parcaKullan: true, anahatSonda: false, tersSira: true },
 ]
 
 function formBilgisi(p: SayfaPaketi): string {
@@ -199,8 +230,10 @@ function okumaParcalari(p: SayfaPaketi, plan: OkumaPlani, sayfaGorseli: GorselBl
     out.push({ tur: 'metin', metin: "Confirmed examples of THIS physician's handwriting (image → correct text). Use them to learn his letter shapes and habits:" })
     for (const o of gorselli) { out.push({ tur: 'gorsel', gorsel: o.gorsel! }); out.push({ tur: 'metin', metin: `= "${o.metin}"` }) }
   }
-  const tam: IstemParcasi[] = sayfaGorseli ? [{ tur: 'metin', metin: 'The whole page:' }, { tur: 'gorsel', gorsel: sayfaGorseli }] : []
-  const parcalar: IstemParcasi[] = plan.parcaKullan ? (p.parcalar || []).flatMap((t, i) => [
+  const parcaVar = plan.parcaKullan && (p.parcalar || []).length > 0
+  const tam: IstemParcasi[] = sayfaGorseli && !(plan.sayfaYok && parcaVar) ? [{ tur: 'metin', metin: 'The whole page:' }, { tur: 'gorsel', gorsel: sayfaGorseli }] : []
+  const parcaListesi = plan.tersSira ? [...(p.parcalar || [])].map((t, i) => ({ t, i })).reverse() : (p.parcalar || []).map((t, i) => ({ t, i }))
+  const parcalar: IstemParcasi[] = plan.parcaKullan ? parcaListesi.flatMap(({ t, i }) => [
     { tur: 'metin' as const, metin: `Higher-resolution tile ${i + 1}: page height ${Math.round(t.y0 * 1000)}–${Math.round(t.y1 * 1000)} (of 1000). Tiles overlap: transcribe a line that appears in two tiles ONCE.` },
     { tur: 'gorsel' as const, gorsel: t.gorsel },
   ]) : []
@@ -309,7 +342,7 @@ export async function sayfayiOku(p: SayfaPaketi, b: OkuyucuBaglami, model: Model
     for (let deneme = 0; deneme < 2; deneme++) {
       okumaSayisi++
       try {
-        const l = sayfaSatirlariAyikla(await model.gorselJson({ sistem, parcalar, azamiToken: deneme === 0 ? OKUMA_TOKEN : OKUMA_TOKEN * 2, etiket: plan.etiket }))
+        const l = sayfaSatirlariAyikla(await model.gorselJson({ sistem, parcalar, azamiToken: deneme === 0 ? OKUMA_TOKEN : OKUMA_TOKEN * 2, etiket: plan.etiket }), b.dil.sayiEkleri)
         if (l.length || deneme === 1) return l
       } catch { /* retry once */ }
     }
@@ -339,7 +372,7 @@ export async function sayfayiOku(p: SayfaPaketi, b: OkuyucuBaglami, model: Model
   const anlamlar = new Set(b.sozluk.girdiler.flatMap((x) => x.anlam.split(/\s+/)).map(kelimeAnahtari).filter((x) => x.length >= 4))
   const okunamadiIsareti = b.dil.okunamadi || '[okunamadı]'
 
-  type IcSatir = { satir: SatirOkuma; acik: AcikKelime[]; satirAdaylari: string[]; alan: AnahatAlani | null; tekCihaz: boolean; oylar: number[] }
+  type IcSatir = { satir: SatirOkuma; acik: AcikKelime[]; satirAdaylari: string[]; alan: AnahatAlani | null; tekCihaz: boolean; oylar: number[]; etiket: string | null }
   const ic: IcSatir[] = []
   for (const g of gruplar) {
     const uyeler = g.uyeler.filter((u): u is HamSayfaSatiri => !!u)
@@ -351,6 +384,10 @@ export async function sayfayiOku(p: SayfaPaketi, b: OkuyucuBaglami, model: Model
     const alanAdlari = uyeler.map((u) => u.alan).filter((x): x is string => !!x)
     const alanAdi = alanAdlari.sort((a, c) => alanAdlari.filter((x) => x === c).length - alanAdlari.filter((x) => x === a).length)[0]
     const alan = anahat && alanAdi ? alanBul(alanAdi, anahat.alanlar) : null
+    // printed form: a short handwritten entry ("N", "kuru") sits next to a PRINTED row label the reads do not transcribe;
+    // when at least two reads put the line in the same outline field, the field name is carried as the line's label
+    // ("Boyun: N") — the form's own context, never a finding. Narrative pages write their headings themselves.
+    const alanOyu = alan ? alanAdlari.filter((x) => alanBul(x, anahat!.alanlar) === alan).length : 0
     const korumali = satirKorumali(oylu.map((k) => k.metin), b.ilac)
     // structure prior: every word of an allergy field after its heading is allergy-protected, also on the field's
     // continuation lines (a drug written under "İlaç alerjisi =" on the next line)
@@ -359,7 +396,8 @@ export async function sayfayiOku(p: SayfaPaketi, b: OkuyucuBaglami, model: Model
     korumali.forEach((kor, i) => {
       if (!kor.includes('ilac') || !b.ilac) return
       const e = b.ilac(oylu[i].metin)
-      if (e?.durum === 'yakin' && !(alan && (alan.tur === 'ilac' || alan.tur === 'alerji')) && !/^\p{Lu}/u.test(oylu[i].metin)) korumali[i] = kor.filter((x) => x !== 'ilac')
+      // a capitalised word counts as a possible brand only from 5 letters on ("Anti", "Ana" are not drug names)
+      if (e?.durum === 'yakin' && !(alan && (alan.tur === 'ilac' || alan.tur === 'alerji')) && !(/^\p{Lu}/u.test(oylu[i].metin) && kelimeAnahtari(oylu[i].metin).length >= 5)) korumali[i] = kor.filter((x) => x !== 'ilac')
     })
     if (alan?.korumali === 'alerji') {
       const basEki = oylu.findIndex((k) => /[:=]$/.test(k.metin) || k.metin === '=' || k.metin === ':')
@@ -395,7 +433,9 @@ export async function sayfayiOku(p: SayfaPaketi, b: OkuyucuBaglami, model: Model
     })
     const ham = kelimeler.map((k) => k.metin).join(' ')
     const satirAdaylari = [...new Set(uyeler.map((u) => u.kelimeler.map((k) => k.m).join(' ')))].slice(0, 4)
-    ic.push({ satir: { no, kutu: yer.kutu, kelimeler, ham, normal: ham, bolgeId: yer.satir?.bolgeId ?? null }, acik, satirAdaylari, alan, tekCihaz: yer.tek, oylar: oylu.map((k) => k.oy) })
+    const etiketVar = alan && [alan.ad, ...(alan.esler || [])].some((e) => kelimeAnahtari(ham).includes(kelimeAnahtari(e)))
+    const etiket = p.sablonId && alan && alanOyu >= 2 && oylu.length <= 4 && !etiketVar ? alan.ad : null
+    ic.push({ satir: { no, kutu: yer.kutu, kelimeler, ham, normal: ham, bolgeId: yer.satir?.bolgeId ?? null }, acik, satirAdaylari, alan, tekCihaz: yer.tek, oylar: oylu.map((k) => k.oy), etiket })
   }
 
   // ---- Doğrula budget: protected always; then clinical-meaning words, most doubtful first; one question per line ----
@@ -410,13 +450,14 @@ export async function sayfayiOku(p: SayfaPaketi, b: OkuyucuBaglami, model: Model
   const sorulan = new Set<SoruBirimi>()
   let kalan = butce
   // protected questions count against the budget but are never dropped by it
-  for (const u of birimler) {
-    if (u.oncelik >= 3) { sorulan.add(u); kalan--; continue }
-    if (kalan > 0) { sorulan.add(u); kalan-- }
-  }
-  // drawing findings that are not certain compete for what is left of the budget; the rest are shown with "(?)"
-  const cizimSorulan = new Set(cizimAcik.slice(0, Math.max(0, kalan)))
-  kalan -= cizimSorulan.size
+  for (const u of birimler) if (u.oncelik >= 3) { sorulan.add(u); kalan-- }
+  // on a printed form the drawings ARE the examination (most of its findings): uncertain drawing findings come before
+  // the non-protected words; on a narrative page they compete for what is left. Beyond the budget: shown with "(?)"
+  const cizimOnce = !!p.sablonId
+  const cizimSorulan = new Set<CizimBulgusu>()
+  if (cizimOnce) for (const c of cizimAcik) if (kalan > 0) { cizimSorulan.add(c); kalan-- }
+  for (const u of birimler) if (u.oncelik < 3 && kalan > 0) { sorulan.add(u); kalan-- }
+  if (!cizimOnce) for (const c of cizimAcik) if (kalan > 0) { cizimSorulan.add(c); kalan-- }
   let butceDisi = 0
   for (const c of cizimAcik) if (!cizimSorulan.has(c)) { c.belirsiz = true; butceDisi++ }
 
@@ -458,7 +499,7 @@ export async function sayfayiOku(p: SayfaPaketi, b: OkuyucuBaglami, model: Model
       if (x.oylar[i] >= 2) parcalar.push(`${k.metin}(?)`)
       else if (parcalar[parcalar.length - 1] !== okunamadiIsareti) parcalar.push(okunamadiIsareti)
     })
-    girdiSatirlari.push({ no: s.no, metin: parcalar.join(' ') })
+    girdiSatirlari.push({ no: s.no, metin: `${x.etiket ? `${x.etiket}: ` : ''}${parcalar.join(' ')}` })
   })
   for (const c of cizimSorulan) {
     const r = durumlar.find((d) => d.id === c.bolgeId)!

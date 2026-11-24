@@ -26,7 +26,8 @@ export function icerir(metin: string, aday: string): boolean {
   // a number ("8,8", "4-5", "2") must be a whole number token of the text ("x5,7x10mm" carries 5,7 and 10)
   if (/\d/.test(aday)) {
     const sayi = aday.replace(/\s+/g, '').replace('.', ',')
-    return (metin.match(/\d+(?:[.,]\d+)?(?:-\d+(?:[.,]\d+)?)?/g) || []).some((t) => t.replace('.', ',') === sayi)
+    // a range written "2,5-3" carries both ends: the key "2,5" matches it, as does the key "2,5-3"
+    return (metin.match(/\d+(?:[.,]\d+)?(?:-\d+(?:[.,]\d+)?)?/g) || []).some((t) => { const n = t.replace(/\./g, ','); return n === sayi || (!sayi.includes('-') && n.split('-').includes(sayi)) })
   }
   // a one- or two-letter key ("N", "E", "K", "SD") must be a whole token — as a substring it would match almost any text
   if (k.length <= 2) return metin.split(/[^\p{L}\p{N}]+/u).some((w) => kelimeAnahtari(w) === k)

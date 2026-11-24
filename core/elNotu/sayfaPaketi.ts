@@ -106,6 +106,12 @@ export const PARCA_GENISLIK = 1600
  * provider, a 768 px short side on another), so a whole page loses resolution exactly where the scrawl needs it.
  */
 export const MODEL_PIKSEL = 1_150_000
+/**
+ * Tallest tile (px at tile width). ESNEK-A-EVAL 2026-11-24 (GPT-6 Luna-Pro, the production reader): a provider that scales
+ * a picture to a 768 px short side shrinks a 2-band tile of a phone photo; bands ≤ ~560 px tall reach the model at the
+ * photo's own resolution (3–4 bands on a typical portrait page, the request cap allows 4).
+ */
+export const PARCA_YUKSEKLIK = 560
 
 /**
  * Overlapping horizontal bands of the MASKED page, each at most ~1 MP at tile width — only when the page is larger than
@@ -116,8 +122,11 @@ export async function sayfaParcalari(maskeli: Rgba, tuval: TuvalAdaptoru): Promi
   const olcek = genislik / maskeli.w
   const toplam = genislik * maskeli.h * olcek
   if (toplam <= MODEL_PIKSEL) return []
-  const n = Math.max(2, Math.min(4, Math.ceil((toplam * 1.1) / 1_000_000)))
   const pay = 0.04
+  const yuk = maskeli.h * olcek
+  // the smallest n whose bands (1/n of the page + both overlaps) stay within PARCA_YUKSEKLIK and ~1 MP, at most 4
+  let n = 2
+  while (n < 4 && (yuk * (1 / n + 2 * pay) > PARCA_YUKSEKLIK || genislik * yuk * (1 / n + 2 * pay) > 1_000_000)) n++
   const out: SayfaParcasi[] = []
   for (let i = 0; i < n; i++) {
     const y0 = Math.max(0, i / n - pay), y1 = Math.min(1, (i + 1) / n + pay)

@@ -137,8 +137,12 @@ export function cokluUzlastir(okumalar: (HamKelime[] | null)[], toplamOkuma = ok
     bosalt()
   })
   const karar = (grup: HamKelime[]): OyluKelime => {
+    // "?" is an abstention, not a reading: when any read gives a real word here, the "?" reads do not outvote it (they
+    // still count as reads that did not agree, so the word is never accepted on that basis alone)
+    const somut = grup.filter((k) => !/^\?+$/.test(k.m.trim()))
+    const oylayan = somut.length ? somut : grup
     const kumeler = new Map<string, HamKelime[]>()
-    for (const k of grup) { const a = kelimeAnahtari(k.m); kumeler.set(a, [...(kumeler.get(a) || []), k]) }
+    for (const k of oylayan) { const a = kelimeAnahtari(k.m); kumeler.set(a, [...(kumeler.get(a) || []), k]) }
     let sec: HamKelime[] = []
     for (const k of kumeler.values()) {
       const skor = k.length * 10 + k.reduce((t, x) => t + clamp(x.g), 0)
@@ -146,7 +150,7 @@ export function cokluUzlastir(okumalar: (HamKelime[] | null)[], toplamOkuma = ok
       if (skor > enIyiSkor) sec = k
     }
     const ust = sec.reduce((m, x) => (clamp(x.g) > clamp(m.g) ? x : m), sec[0])
-    const yakinlar = grup.filter((k) => !sec.includes(k) && yakinMi(k.m, ust.m))
+    const yakinlar = oylayan.filter((k) => !sec.includes(k) && yakinMi(k.m, ust.m))
     const uyan = [...sec, ...yakinlar]
     const birlesik = Math.min(0.99, 1 - uyan.reduce((t, x) => t * (1 - clamp(x.g)), 1))
     const adaylar = [...new Set([ust.m, ...grup.map((k) => k.m), ...grup.flatMap((k) => k.alt || [])].filter(Boolean))].slice(0, 5)
