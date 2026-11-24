@@ -1,10 +1,33 @@
-# TR outreach durum (canlı)
+# TR outreach durum — PAUSED
 
-**Anti-ban:** 22/gün · gap ≥10 dk · 5/saat.
+**Durum:** WhatsApp Business **bireysel hekim** outreach **DURAKLATILDI** (2026-11-24, Kaan).
+Yeni `mesaj_1` gönderme · `gitti/next` akışı kapalı. Resume edilene kadar sıradaki isim besleme.
 
-**Sıradaki:** Doç. Dr. Mine Genç · KD · İzmir · +905416244832
-(variant kd-B-0003 · paket W6-48 · bugün 11/22)
+**Neden:** başka kanala / işe geçiş (daha yüksek verim bekleniyor).
 
-```bash
-python3 scripts/tr-outreach-next.py --mark-gitti "Doç. Dr. Mine Genç" --phone +905416244832 --brans kadin-dogum --city İzmir --variant-id kd-B-0003
-```
+## Snapshot (pause anı)
+
+| durum | n |
+|-------|---|
+| hazir | 29 |
+| teklif_edildi | 8 |
+| kart_gonderildi | 1 |
+| reddetti | 1 |
+| wa_yok | 1 |
+| **batch** | **40** |
+
+**Freeze next (resume’da buradan):** Uzm. Dr. Berkant Oman · dermatoloji · İzmir · +905523614988 · B  
+→ seminar daveti (`mesaj_1`, URL yok — “kayıt” → `/kayit`)
+
+**Açık takip (manuel, zorunlu değil):** Ali Demirhan · `kart_gonderildi` · STEP 2 `/demo-ped` (sessiz)
+
+## Dosyalar (dokunma / silme)
+
+- `docs/growth/tr-wa-gift-batch.csv` + `.html`
+- `docs/growth/tr-wa-reddetti.csv` (Müjdegül DNC)
+- `docs/growth/whatsapp-hazir-yanitlar.md` (`/kayit`, 4 adım, `/tesekkur`)
+- `scripts/tr-wa-gift-first.py`
+
+Seminer: 25 Kasım Çarşamba 20:00 · kayıt cal.com (yalnız `/kayit` ile).
+
+Hazır yanıtlar: `docs/growth/whatsapp-hazir-yanitlar.md`

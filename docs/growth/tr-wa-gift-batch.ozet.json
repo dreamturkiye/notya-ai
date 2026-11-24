@@ -1,0 +1,57 @@
+{
+  "pool_total": 247,
+  "excluded_eski": 43,
+  "eligible_kadin-dogum": 104,
+  "eligible_dermatoloji": 40,
+  "eligible_pediatri": 60,
+  "batch_rows": 40,
+  "by_brans": {
+    "pediatri": 14,
+    "kadin-dogum": 13,
+    "dermatoloji": 13
+  },
+  "by_varyant": {
+    "A": 21,
+    "B": 19
+  },
+  "by_brans_varyant": {
+    "pediatri:A": 7,
+    "kadin-dogum:A": 7,
+    "dermatoloji:A": 7,
+    "pediatri:B": 7,
+    "kadin-dogum:B": 6,
+    "dermatoloji:B": 6
+  },
+  "excluded_eski_phones": 132,
+  "hold_rows": 0,
+  "files": {
+    "csv": "docs/growth/tr-wa-gift-batch.csv",
+    "html": "docs/growth/tr-wa-gift-batch.html",
+    "hold": "docs/growth/tr-wa-gift-hold.csv",
+    "eski": "docs/growth/tr-wa-eski-mesaj.csv",
+    "quick_replies": "docs/growth/whatsapp-hazir-yanitlar.md"
+  },
+  "next": {
+    "ad": "Ali",
+    "soyad": "Demirhan",
+    "brans": "pediatri",
+    "sehir": "Mersin",
+    "telefon": "+905333752572",
+    "varyant": "A",
+    "wa_link": "https://wa.me/905333752572?text=Ali%20Hocam%20merhaba%2C%20ben%20Kaan%2C%20Dr.%20G%C3%B6khan%20Mamur%27un%20ekibinden.%20%C3%87ocuk%20hekimleri%20i%C3%A7in%20tek%20sayfal%C4%B1k%2C%20her%20sat%C4%B1r%C4%B1%20kaynakl%C4%B1%20bir%20Pediatri%20Pratik%20Kart%C4%B1%20haz%C4%B1rlad%C4%B1k%3A%20a%C5%9F%C4%B1%20takvimi%20ve%20telafi%20ilkeleri%2C%20premat%C3%BCre%20izlemi%2C%20d%C3%BCzeltilmi%C5%9F%20ya%C5%9F.%20%C3%9Ccretsiz%3B%20isterseniz%20PDF%20olarak%20buradan%20g%C3%B6ndereyim%3F",
+    "mesaj_1_preview": "Ali Hocam merhaba, ben Kaan, Dr. Gökhan Mamur'un ekibinden. Çocuk hekimleri için"
+  },
+  "copy_note": "4 sayfalık (A) / kısa başvuru kartı (B); tek sayfa yok",
+  "reply_flow": "4-step",
+  "demo_placeholders": {
+    "Secenek1": "Perşembe 20:00",
+    "Secenek2": "Cuma 13:00"
+  },
+  "capability_check": {
+    "pediatri_asi_telafi_hatirlatma": "OK — specialties/pediatri/engines/asiPlan.ts + pedi-kohort + lib/asi/hatirlatma + _kohortHatirlatma",
+    "kd_gebelik_izlem_hatirlatma": "OK — lib/clinical/gebelik.ts + kd-gebelik-takvim + kd-kohort hatırlatma",
+    "derm_sistemik_tahlil_kontrol_hatirlatma": "OK — derm kohort ilacTakip (izotretinoin/biyolojik) + derm_gorevleri + _kohortHatirlatma",
+    "muayene_notu": "OK — SOAP / ses omurgası",
+    "replacements": []
+  }
+}
