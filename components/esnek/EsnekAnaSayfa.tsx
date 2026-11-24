@@ -4,7 +4,8 @@
  *   - paper doctor → "El notu ekle" first (and the page drops its microphone / assistant push — `onKarar`);
  *   - end-of-day approver → ONE notification at his usual time (once a day, on this device), nothing during the day;
  *   - shadow mode → the one daily line + the offer;
- *   - "Bu hafta öğrendiklerim" (max 3), each one-tap reversible; the B3 offer when every field earned it.
+ *   - "Bu hafta öğrendiklerim" (max 3), each one-tap reversible, plus the handwriting learned this week (ESNEK-GELISIM:
+ *     "Yazınızdan 14 yeni kelime öğrendim"); the B3 offer when every field earned it.
  * Country-neutral: words, API and routes injected.
  */
 import { useEffect, useState } from 'react'
@@ -15,7 +16,7 @@ import { EL_RENK as R } from '@/components/elNotu/renk'
 import { dugme, type Getirici } from '@/components/elNotu/ElNotuYakala'
 import GolgeSatiri, { type GolgeVeri } from './GolgeSatiri'
 
-type Ana = { karar: AnaSayfaKarari; golge: GolgeVeri | null; haftalik: { id: string; tur: string; oneri: Oneri }[]; b3Teklif: boolean; topluOnayIzni: boolean }
+type Ana = { karar: AnaSayfaKarari; golge: GolgeVeri | null; haftalik: { id: string; tur: string; oneri: Oneri }[]; elYazisi?: { kelime: number; kisaltma: number }; b3Teklif: boolean; topluOnayIzni: boolean }
 export type EsnekYollar = { elNotlari: string; inceleme: string; topluOnay: string; tanima: string }
 
 const BILDIRIM_ANAHTARI = 'notya-esnek-bildirim'
@@ -50,6 +51,7 @@ export default function EsnekAnaSayfa(p: {
     const r = await getir(`${api}/profil`, { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ islem: 'ozerklik', alt: 'toplu_ac' }) }).catch(() => null)
     if (r?.ok) setV({ ...v!, b3Teklif: false, topluOnayIzni: true })
   }
+  const elSatirlari = [v.elYazisi?.kelime ? M.ogrenme.elYazisiKelime(v.elYazisi.kelime) : null, v.elYazisi?.kisaltma ? M.ogrenme.elYazisiKisaltma(v.elYazisi.kisaltma) : null].filter((x): x is string => !!x)
   const kart: React.CSSProperties = { background: R.kagit, border: `1px solid ${R.cizgi}`, borderRadius: 14, padding: '12px 16px', color: R.murekkep }
 
   return (
@@ -74,13 +76,14 @@ export default function EsnekAnaSayfa(p: {
           <button type="button" style={dugme('birincil')} onClick={() => void topluAc()}>{M.ozerklik.b3Evet}</button>
         </div>
       )}
-      {v.haftalik.length > 0 && (
+      {(v.haftalik.length > 0 || elSatirlari.length > 0) && (
         <div style={kart}>
           <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'baseline' }}>
             <span style={{ fontSize: 14, fontWeight: 700 }}>{M.ogrenme.haftalik}</span>
             <button type="button" onClick={() => p.git(p.yollar.tanima)} style={{ border: 'none', background: 'none', color: R.cam, fontSize: 12, cursor: 'pointer', textDecoration: 'underline' }}>{M.tanima.baslik}</button>
           </div>
           <ul style={{ margin: '8px 0 0', padding: 0, listStyle: 'none', display: 'grid', gap: 6 }}>
+            {elSatirlari.map((s) => <li key={s} style={{ fontSize: 14 }}>{s}</li>)}
             {v.haftalik.map((o) => (
               <li key={o.id} style={{ display: 'flex', gap: 10, alignItems: 'center', fontSize: 14, opacity: geriAlinan.has(o.id) ? 0.5 : 1 }}>
                 <span style={{ flex: 1, minWidth: 0 }}>{adayCumlesi(o.oneri, M.ogrenme)}</span>

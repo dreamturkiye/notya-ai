@@ -2,6 +2,7 @@
  * ESNEK-MUAYENE-A — POST { kaynakId, paket, maskeliSayfa, orijinalBelgeId? } → one page read.
  * Privacy: `paket` / `maskeliSayfa` are the device's MASKED crops and page (core/elNotu/sayfaPaketi.ts); the vault original
  * is never read here. HASTA-IZOLASYON: kaynak by id AND doctor_id; the original's vault id must be the same patient's.
+ * ESNEK-GELISIM: with the doctor's consent the masked package also enters the regression set (lib/elNotu/regresyon.ts).
  */
 import { NextRequest } from 'next/server'
 import { elNotuIstegi, json, uuidMu } from '@/lib/elNotu/rota'
@@ -12,6 +13,9 @@ import { EL_NOTU_TR } from '@/core/elNotu/metinTr'
 import { aiKotaKullan, KOTA_MESAJI } from '@/lib/doktor/hizLimiti'
 import { getDocumentMeta } from '@/lib/vault/service'
 import { SPECIALTIES } from '@/lib/doktor/specialties'
+import { regresyonAdayiYaz } from '@/lib/elNotu/regresyon'
+import { sayfaMaskeKaniti } from '@/lib/elNotu/maskeDogrula'
+import { arkaPlanda } from '@/lib/esnek/sunucu'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 300
@@ -45,5 +49,8 @@ export async function POST(req: NextRequest) {
     model: elNotuModeli({ doctorId: o.doktorId }), metin: EL_NOTU_TR, brans, bransAdi,
   })
   if ('hata' in r) return json({ error: r.hata }, r.durum)
+  // ESNEK-GELISIM: ONLY with the doctor's consent (default off), the masked package — its masking proven again, box list
+  // required — becomes a pending regression-set page (after the response; never blocks or changes the reading)
+  arkaPlanda(regresyonAdayiYaz(o.supabase, { doktorId: o.doktorId, kaynakId: kaynak.id, brans, paket, maskeliSayfa: b?.maskeliSayfa as never, maskeKaniti: (p, s) => sayfaMaskeKaniti(p, s, true).tamam === true }).catch(() => undefined))
   return json({ sayfa: r.sayfa, metin: r.okuma.metin, istatistik: r.okuma.istatistik, acik: r.acik, korumaliAcik: r.korumaliAcik })
 }

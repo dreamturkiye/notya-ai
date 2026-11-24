@@ -42,6 +42,7 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   'app/api/doktor/esnek/ana/route.ts': I('doctor only (sadeceDoktor); takes no id; every count / row by doctor_id (lib/esnek/profil.ts anaSayfaYukle)'),
   'app/api/doktor/esnek/oneri/route.ts': I('doctor only (sadeceDoktor); takes no id; suggestion events and choices by doctor_id'),
   'app/api/cron/esnek-gece/route.ts': I('cronYetkiliMi only; per doctor every read / write by that doctor_id (lib/esnek/gece.ts); the regression set is that doctor\'s own approved notes; patient names read doctor-scoped only to refuse a candidate'),
+  'app/api/cron/el-notu-regresyon/route.ts': I('cronYetkiliMi only; takes no id; reads the consented regression set (no patient / session / note id stored, kaynak_id NULL on set pages) and writes numbers only (lib/elNotu/regresyon.ts haftalikRegresyon)'),
   // ── MUAYENE-EKLERI-01 ──
   'app/api/doktor/muayene-ekleri/durum/route.ts': I('takes no id; returns only the feature-flag state to an authenticated user'),
   'app/api/doktor/muayene-ekleri/siniflandir/route.ts': I('sessionId + belgeId resolved by baglamYukle: seansSahibi(doctor, session) then getDocumentMeta(doctor, belge) with visitId === session and patientId === the session patient; 404 otherwise; doctor-only'),
@@ -408,6 +409,7 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   'app/api/entegrasyon/hl7/al/route.ts': I('per-institution inbound key; patient mapping scoped by kurum_id'),
   'app/api/entegrasyon/yonetim/route.ts': I('ADMIN_EMAILS only'),
   'app/api/kurucu/ozet/route.ts': I('FOUNDER_EMAILS only (404 for everyone else); takes no id; reads notes/sessions as doctor_id + created_at counts only, no patient id or content leaves (lib/kurucu/tipler.ts hesapSatiriTemizle)'),
+  'app/api/kurucu/el-notu-kalite/route.ts': I('FOUNDER_EMAILS only (404 for everyone else); takes no patient / note / session id (only a branş lexicon proposal row id, which carries no doctor or patient); per doctor × week counts aggregated in SQL (el_notu_kalite_haftalik), doctor ids never leave (lib/kurucu/elNotuKalite.ts)'),
   'app/api/cron/randevu-v2/route.ts': I('cron-secret gated; NOTYA-RANDEVU-V2 jobs: each randevu_isleri row is re-resolved as randevular.id + the job\'s own doktor_id, the patient via hastaIletisimi(doktor_id, patient_id), mail leaves only from that doctor\'s own account, every write .eq(doktor_id)'),
   'app/api/cron/takip-hatirlatma/route.ts': I('cron-secret gated (cronYetkiliMi); takes no id from the request. For each doctor that has an open kontrol case: takipSenkronize + takipHatirlatmalariHazirla, every read and write scoped by that doktor_id; a case is opened and a reminder queued only for a patient re-checked as that doctor\'s own (patients.doctor_id) — nothing is sent, the item waits in that doctor\'s Hazır mesajlar'),
   'app/api/cron/randevu-hatirlatma/route.ts': I('cron-secret gated; enqueues tomorrow\'s reminder into the booking owner\'s queue only when patients.id is re-found with doctor_id = the row\'s doktor_id; then (NOTYA-ILETISIM-04) the dispatcher sends from each item\'s own doctor\'s account — see iletisim-otomatik'),

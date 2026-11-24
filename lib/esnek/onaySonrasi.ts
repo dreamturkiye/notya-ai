@@ -2,7 +2,8 @@
  * ESNEK-MUAYENE-B3 + B5 — after a note is approved (the ONE approval path, lib/doktor/notOnayla.ts), after the response:
  *   - the field-level autonomy ladder: a corrected field drops one step; an uncorrected field present in the note counts
  *     towards the next step — only on the DOCTOR's approval (a secretary's finalization never promotes anything);
- *   - the suggestion profile: which of Ayşe's suggestion types reached his final note (doctor's approval only).
+ *   - the suggestion profile: which of Ayşe's suggestion types reached his final note (doctor's approval only);
+ *   - ESNEK-GELISIM: the regression set's pending pages of this note get their facts (doctor's approval + consent only).
  * Idempotent per note (esnek_olaylar unique (doctor, note, kind, key)): a re-approval never counts twice.
  * HASTA-IZOLASYON: called with the doctor id and the note id the approval already proved; every row carries doctor_id.
  */
@@ -82,6 +83,10 @@ export async function esnekOnaySonrasi(sb: SupabaseClient, g: OnaySonrasiGirdisi
       const { data } = await sb.from('esnek_olaylar').upsert(gb.map((x) => ({ doctor_id: g.doktorId, note_id: g.noteId, patient_id: g.patientId, tur: 'oneri', anahtar: x.tur, deger: { kabul: x.kabul } })), { onConflict: 'doctor_id,note_id,tur,anahtar', ignoreDuplicates: true }).select('id')
       oneriSayi = data?.length || 0
     }
+  }
+  // ESNEK-GELISIM: pending regression-set pages of this note get their facts (doctor's approval + consent only)
+  if (g.hekim) {
+    try { const { regresyonuTamamla } = await import('@/lib/elNotu/regresyon'); await regresyonuTamamla(sb, { doktorId: g.doktorId, noteId: g.noteId, hekim: g.hekim, son: g.son }) } catch { /* the set is never critical */ }
   }
   return { alan: alanSayi, oneri: oneriSayi }
 }

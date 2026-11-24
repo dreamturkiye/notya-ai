@@ -40,7 +40,6 @@
  */
 import fs from 'node:fs'
 import path from 'node:path'
-import crypto from 'node:crypto'
 import jpeg from 'jpeg-js'
 import { createCanvas, loadImage } from '@napi-rs/canvas'
 import { createWorker, type Worker } from 'tesseract.js'
@@ -49,6 +48,7 @@ import { parmakIzi } from '../core/elNotu/sablon'
 import { sayfayiHazirla } from '../core/elNotu/onisleme'
 import { sayfayiOku, kaynakMetni, type ModelKapisi } from '../core/elNotu/okuyucu'
 import { sayfaPuanla, toplamPuan, icerir, type SayfaPuani } from '../core/elNotu/degerlendirme'
+import { kayitAnahtari, gorselGirdi } from '../core/elNotu/regresyonBekcisi'
 import { anahatOgren } from '../core/elNotu/anahat'
 import { sozlukKur } from '../core/elNotu/sozluk'
 import { tohumlarTr, anahatTr } from '../core/elNotu/tohum'
@@ -225,8 +225,8 @@ async function uzakCagir(k: SayfaKaynagi, cagri: Record<string, unknown>, tur: '
 
 function modelKapisi(sayfaAdi: string, kaynak?: SayfaKaynagi): ModelKapisi | null {
   // the replay key covers the system prompt and every input (images by their first bytes), so a prompt change re-asks
-  const anahtar = (etiket: string, sistem: string, girdi: unknown) => `${sayfaAdi}-${etiket}-${crypto.createHash('sha256').update(JSON.stringify([sistem, girdi])).digest('hex').slice(0, 16)}.json`
-  const gorselGirdi = (o: Parameters<ModelKapisi['gorselJson']>[0]) => o.parcalar.map((p) => (p.tur === 'metin' ? p.metin : p.gorsel.base64.slice(0, 64) + p.gorsel.base64.length))
+  // the same replay key as the weekly regression run and the regression guard (core/elNotu/regresyonBekcisi.ts)
+  const anahtar = (etiket: string, sistem: string, girdi: unknown) => kayitAnahtari(sayfaAdi, etiket, sistem, girdi)
   const kayittan = (f: string) => (kayitKlasoru && fs.existsSync(path.join(kayitKlasoru, f)) ? JSON.parse(fs.readFileSync(path.join(kayitKlasoru, f), 'utf8')) : undefined)
   const kaydet = (f: string, y: unknown) => { if (kayitKlasoru) { fs.mkdirSync(kayitKlasoru, { recursive: true }); fs.writeFileSync(path.join(kayitKlasoru, f), JSON.stringify(y)) } }
   if (modelTuru === 'kayit') {

@@ -11,7 +11,7 @@ import { esnekAyarYaz, esnekAyarYukle, type EsnekAyari } from './sunucu'
 import { golgeDurumu, type GolgeDurumu } from './golge'
 import { oneriProfiliYukle, oneriKarariYaz, type OneriProfilOzeti } from './oneriServisi'
 import { ozerklikOzeti, ozerklikIslem } from './ozerklikServisi'
-import { haftalikOgrenilenler } from './gece'
+import { haftalikOgrenilenler, haftalikElYazisi } from './gece'
 
 export async function calismaVerisi(sb: SupabaseClient, doktorId: string, a: EsnekAyari): Promise<{ sekil: CalismaSekli | null; ogrenilen: CalismaSekli | null; onay: OnayAliskanligi | null; ogrenilenOnay: OnayAliskanligi | null }> {
   const kesim = new Date(Date.now() - 30 * 86400000).toISOString()
@@ -116,6 +116,8 @@ export type AnaSayfa = {
   karar: AnaSayfaKarari
   golge: GolgeDurumu | null
   haftalik: Awaited<ReturnType<typeof haftalikOgrenilenler>>
+  /** ESNEK-GELISIM: handwriting learned this week ("Yazınızdan N yeni kelime öğrendim"). */
+  elYazisi: { kelime: number; kisaltma: number }
   b3Teklif: boolean
   topluOnayIzni: boolean
 }
@@ -123,14 +125,15 @@ export type AnaSayfa = {
 /** The home screen's adaptive part in ONE request (no polling): working style, the daily notification, shadow line, learned. */
 export async function anaSayfaYukle(sb: SupabaseClient, doktorId: string, simdi = new Date()): Promise<AnaSayfa> {
   const a = await esnekAyarYukle(sb, doktorId)
-  const [calisma, bekleyen, golge, haftalik, ozerklik] = await Promise.all([
+  const [calisma, bekleyen, golge, haftalik, ozerklik, elYazisi] = await Promise.all([
     calismaVerisi(sb, doktorId, a),
     arsivsizNotlar(sb, 'id', { count: 'exact', head: true }).eq('doctor_id', doktorId).is('approved_at', null),
     golgeDurumu(sb, doktorId, a),
     haftalikOgrenilenler(sb, doktorId),
     ozerklikOzeti(sb, doktorId),
+    haftalikElYazisi(sb, doktorId, simdi).catch(() => ({ kelime: 0, kisaltma: 0 })),
   ])
   const karar = anaSayfaKarari({ sekil: calisma.sekil, onay: calisma.onay, simdiDk: gunDakikasi(simdi), bekleyen: bekleyen.count || 0, bugunGosterildi: false })
   const golgeGoster = golge.acik || golge.teklif || golge.sekreterYazmasin
-  return { karar, golge: golgeGoster ? golge : null, haftalik, b3Teklif: ozerklik.b3Teklif, topluOnayIzni: ozerklik.topluOnayIzni }
+  return { karar, golge: golgeGoster ? golge : null, haftalik, elYazisi, b3Teklif: ozerklik.b3Teklif, topluOnayIzni: ozerklik.topluOnayIzni }
 }

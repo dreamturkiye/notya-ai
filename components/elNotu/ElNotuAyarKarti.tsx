@@ -15,7 +15,7 @@ type SozlukSatiri = { id: string; kisaltma: string; anlam: string; kaynak: strin
 
 export default function ElNotuAyarKarti(p: { metin: ElNotuMetinleri; getir: Getirici; api: string; anatomi: AnatomiSecenegi[] }) {
   const M = p.metin
-  const [ayar, setAyar] = useState<{ hekimOnayiGerekli: boolean; hazirlayan: 'doktor' | 'sekreter'; tabanDk: number | null } | null>(null)
+  const [ayar, setAyar] = useState<{ hekimOnayiGerekli: boolean; hazirlayan: 'doktor' | 'sekreter'; tabanDk: number | null; gelistirmeOnayi?: boolean } | null>(null)
   const [sozluk, setSozluk] = useState<SozlukSatiri[]>([])
   const [sablonlar, setSablonlar] = useState<(Sablon & { ornekBelgeId?: string | null })[]>([])
   const [yeni, setYeni] = useState({ kisaltma: '', anlam: '' })
@@ -67,6 +67,11 @@ export default function ElNotuAyarKarti(p: { metin: ElNotuMetinleri; getir: Geti
         </div>
         <div style={{ fontSize: 12, color: R.soluk }}>{M.ayar.tabanAlt}</div>
       </div>
+
+      <label style={{ display: 'flex', gap: 10, alignItems: 'flex-start', cursor: 'pointer' }}>
+        <input type="checkbox" checked={ayar.gelistirmeOnayi === true} onChange={(e) => void kaydet({ gelistirmeOnayi: e.target.checked })} style={{ width: 20, height: 20, marginTop: 2 }} />
+        <span><span style={{ fontSize: 14, fontWeight: 600 }}>{M.ayar.gelistirme}</span><span style={{ display: 'block', fontSize: 12, color: R.soluk, marginTop: 2 }}>{M.ayar.gelistirmeAlt}</span></span>
+      </label>
 
       <div style={{ display: 'grid', gap: 8 }}>
         <div><div style={{ fontSize: 14, fontWeight: 600 }}>{M.ayar.sozluk}</div><div style={{ fontSize: 12, color: R.soluk }}>{M.ayar.sozlukAlt}</div></div>

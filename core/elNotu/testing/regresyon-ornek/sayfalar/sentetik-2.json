@@ -1,0 +1,120 @@
+{
+ "ad": "sentetik-2",
+ "brans": "kulak-burun-bogaz",
+ "paket": {
+  "sayfa": 1,
+  "sablonId": null,
+  "kalite": {
+   "tamam": true,
+   "nedenler": [],
+   "olcum": {
+    "bulaniklik": 500,
+    "parlama": 0,
+    "parlaklik": 160,
+    "kisaKenar": 1100,
+    "sayfaOrani": 0.9
+   }
+  },
+  "satirlar": [
+   {
+    "no": 1,
+    "kutu": {
+     "x0": 0.1,
+     "y0": 0.2,
+     "x1": 0.9,
+     "y1": 0.24
+    },
+    "kelimeler": [],
+    "tanimlar": [],
+    "bolgeId": null
+   },
+   {
+    "no": 2,
+    "kutu": {
+     "x0": 0.1,
+     "y0": 0.26,
+     "x1": 0.9,
+     "y1": 0.3
+    },
+    "kelimeler": [],
+    "tanimlar": [],
+    "bolgeId": null
+   },
+   {
+    "no": 3,
+    "kutu": {
+     "x0": 0.1,
+     "y0": 0.32,
+     "x1": 0.9,
+     "y1": 0.36
+    },
+    "kelimeler": [],
+    "tanimlar": [],
+    "bolgeId": null
+   }
+  ],
+  "bolgeler": [],
+  "parcalar": [
+   {
+    "gorsel": {
+     "mime": "image/jpeg",
+     "base64": "U0VOVEVUSUstTUFTS0VMSQ=="
+    },
+    "y0": 0,
+    "y1": 1
+   }
+  ],
+  "gizlilikKutulari": [
+   {
+    "x0": 0,
+    "y0": 0,
+    "x1": 1,
+    "y1": 0.1
+   }
+  ]
+ },
+ "maskeliSayfa": {
+  "mime": "image/jpeg",
+  "base64": "U0VOVEVUSUstTUFTS0VMSQ=="
+ },
+ "gercekler": [
+  {
+   "id": "g1",
+   "metin": "burun tıkanıklığı",
+   "anahtarlar": [
+    [
+     "burun"
+    ],
+    [
+     "tıkanıklığı"
+    ]
+   ]
+  },
+  {
+   "id": "g2",
+   "metin": "septum sağa",
+   "anahtarlar": [
+    [
+     "septum"
+    ],
+    [
+     "sağa",
+     "sağ"
+    ]
+   ],
+   "korumali": true
+  },
+  {
+   "id": "g3",
+   "metin": "nazal sprey",
+   "anahtarlar": [
+    [
+     "nazal"
+    ],
+    [
+     "sprey"
+    ]
+   ]
+  }
+ ]
+}

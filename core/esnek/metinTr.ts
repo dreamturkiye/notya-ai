@@ -50,6 +50,9 @@ export type EsnekMetinleri = {
     bolumSirasi: (etiketler: string) => string
     planNumarali: string
     planTire: string
+    /** ESNEK-GELISIM: handwriting learned this week (confirmed words not in his memory before; his new abbreviations). */
+    elYazisiKelime: (n: number) => string
+    elYazisiKisaltma: (n: number) => string
   }
   ozerklik: {
     baslik: string
@@ -189,6 +192,8 @@ export const ESNEK_TR: EsnekMetinleri = {
     bolumSirasi: (e) => `Bölüm sırası: ${e}`,
     planNumarali: 'Plan maddelerini numaralı yaz',
     planTire: 'Plan maddelerini tire ile yaz',
+    elYazisiKelime: (n) => `Yazınızdan ${n} yeni kelime öğrendim.`,
+    elYazisiKisaltma: (n) => `${n} yeni kısaltmanızı öğrendim.`,
   },
   ozerklik: {
     baslik: 'Alan alan özerklik',

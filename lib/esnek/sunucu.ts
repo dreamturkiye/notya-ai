@@ -55,11 +55,12 @@ export function sekreterYazmasinMi(a: EsnekAyari, simdi = new Date()): boolean {
   return Boolean(a.sekreterYazmasinGun && gunAnahtari(simdi) >= a.sekreterYazmasinGun)
 }
 
-/** The doctor's lexicon + the branş and general seeds of the Türkiye build (for expansion while comparing / testing). */
+/** The doctor's lexicon + the branş (curated + founder-approved) and general seeds of the Türkiye build (for expansion while comparing / testing). */
 export async function sozlukParcalari(sb: SupabaseClient, doktorId: string): Promise<{ hekim: SozlukGirdisi[]; brans: SozlukGirdisi[]; genel: SozlukGirdisi[]; bransAnahtari: string | null }> {
-  const [{ sozlukYukle }, { tohumlarTr }, { hekimBransi }] = await Promise.all([import('@/lib/elNotu/sunucu'), import('@/core/elNotu/tohum'), import('@/lib/doktor/hekimAdi')])
+  const [{ sozlukYukle }, { bransTohumu }, { hekimBransi }] = await Promise.all([import('@/lib/elNotu/sunucu'), import('@/lib/elNotu/bransSozluk'), import('@/lib/doktor/hekimAdi')])
   const [hekim, brans] = await Promise.all([sozlukYukle(sb, doktorId), hekimBransi(sb, doktorId).catch(() => null)])
-  const t = tohumlarTr(brans || null)
+  // ESNEK-GELISIM: curated branş seed + founder-approved pairs
+  const t = await bransTohumu(sb, brans || null)
   return { hekim, brans: t.brans, genel: t.genel, bransAnahtari: brans || null }
 }
 

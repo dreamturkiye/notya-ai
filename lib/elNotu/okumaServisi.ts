@@ -12,7 +12,8 @@ import { benzerOrnekler } from '@/core/elNotu/hafiza'
 import { kelimeAnahtari } from '@/core/elNotu/uzlastir'
 import type { KaynakOkuma, Kutu, HafizaOrnegi } from '@/core/elNotu/tipler'
 import type { ElNotuMetinleri } from '@/core/elNotu/metinTr'
-import { tohumlarTr, anahatTr } from '@/core/elNotu/tohum'
+import { anahatTr } from '@/core/elNotu/tohum'
+import { bransTohumu } from './bransSozluk'
 import { anahatOgren } from '@/core/elNotu/anahat'
 import { sayfaMaskeKaniti } from './maskeDogrula'
 import { PAKET_AZAMI_KARAKTER, paketBoyutu } from '@/core/elNotu/sayfaPaketi'
@@ -70,10 +71,10 @@ export async function sayfaOkut(sb: SupabaseClient, g: SayfaOkutGirdisi): Promis
   const maskeliId = await vaultaYaz(sb, { doktorId: g.doktorId, patientId, sessionId: g.kaynak.session_id, ad: `el-notu-s${g.paket.sayfa}-maskeli.jpg`, mime: g.maskeliSayfa.mime, base64: g.maskeliSayfa.base64, kategori: 'el_notu_maskeli', yukleyen: g.aktor.userId })
   await sb.from('muayene_kaynaklari').update({ durum: 'okunuyor', updated_at: new Date().toISOString() }).eq('id', g.kaynak.id).eq('doctor_id', g.doktorId)
 
-  const [hekimSozluk, hafiza, dagarcik, sorulmus, sablonlar, anahatMetinleri_] = await Promise.all([
-    sozlukYukle(sb, g.doktorId), hafizaYukle(sb, g.doktorId), dagarcikYukle(sb, g.doktorId), sorulmusKisaltmalar(sb, g.doktorId), sablonlarYukle(sb, g.doktorId), anahatMetinleri(sb, g.doktorId),
+  // ESNEK-GELISIM: the branş seed = curated + founder-approved pairs (lib/elNotu/bransSozluk.ts); his own lexicon still wins
+  const [hekimSozluk, hafiza, dagarcik, sorulmus, sablonlar, anahatMetinleri_, tohum] = await Promise.all([
+    sozlukYukle(sb, g.doktorId), hafizaYukle(sb, g.doktorId), dagarcikYukle(sb, g.doktorId), sorulmusKisaltmalar(sb, g.doktorId), sablonlarYukle(sb, g.doktorId), anahatMetinleri(sb, g.doktorId), bransTohumu(sb, g.brans),
   ])
-  const tohum = tohumlarTr(g.brans)
   const sozluk = sozlukKur(hekimSozluk, tohum.brans, tohum.genel)
   // the doctor's most similar confirmed crops → in-context examples (only these few crops are read from the vault)
   const tanimlar = g.paket.satirlar.flatMap((s) => s.tanimlar.filter(Boolean) as { v: number[]; enBoy: number }[])

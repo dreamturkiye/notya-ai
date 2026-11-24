@@ -167,6 +167,24 @@ export async function haftalikOgrenilenler(sb: SupabaseClient, doktorId: string)
   return ((data || []) as { id: string; tur: string; oneri: Oneri; aktif_at: string }[]).map((r) => ({ id: String(r.id), tur: r.tur, oneri: r.oneri, aktifAt: r.aktif_at }))
 }
 
+/**
+ * ESNEK-GELISIM — handwriting learned this week, for "Bu hafta öğrendiklerim": distinct words he confirmed in the last 7
+ * days that his handwriting memory did not hold before (protected readings — sides, numbers, doses — are not counted:
+ * they are always read fresh), and abbreviations he taught through Doğrula or entered himself. Counts only, doctor_id only.
+ */
+export async function haftalikElYazisi(sb: SupabaseClient, doktorId: string, simdi = new Date()): Promise<{ kelime: number; kisaltma: number }> {
+  const kesim = new Date(simdi.getTime() - 7 * 86400000).toISOString()
+  const [{ data: yeni }, { data: eski }, { data: soz }] = await Promise.all([
+    sb.from('hekim_el_yazisi_hafizasi').select('metin').eq('doctor_id', doktorId).eq('korumali', false).gte('created_at', kesim).limit(2000),
+    sb.from('hekim_el_yazisi_hafizasi').select('metin').eq('doctor_id', doktorId).lt('created_at', kesim).order('created_at', { ascending: false }).limit(3000),
+    sb.from('hekim_el_sozlugu').select('kisaltma_anahtar').eq('doctor_id', doktorId).in('kaynak', ['dogrulama', 'elle']).gte('created_at', kesim).limit(500),
+  ])
+  const { katla, kelimeler } = await import('@/core/esnek/metinAraclari')
+  const sozcukler = (rows: unknown) => ((rows || []) as { metin: string }[]).flatMap((r) => kelimeler(String(r.metin || ''))).map(katla).filter((w) => w.length >= 2 && !/\d/.test(w))
+  const once = new Set(sozcukler(eski))
+  return { kelime: new Set(sozcukler(yeni).filter((w) => !once.has(w))).size, kisaltma: new Set(((soz || []) as { kisaltma_anahtar: string }[]).map((r) => r.kisaltma_anahtar)).size }
+}
+
 /** One-tap undo: exactly what activation wrote. A reverted candidate is never re-learned. */
 export async function ogrenileniGeriAl(sb: SupabaseClient, doktorId: string, id: unknown): Promise<boolean> {
   if (typeof id !== 'string' || !/^[0-9a-f-]{36}$/i.test(id)) return false

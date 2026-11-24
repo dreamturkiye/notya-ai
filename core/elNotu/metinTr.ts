@@ -86,6 +86,9 @@ export type ElNotuMetinleri = {
     hazirlayanSekreter: string
     taban: string
     tabanAlt: string
+    /** ESNEK-GELISIM: consent to the de-identified regression set (default off). */
+    gelistirme: string
+    gelistirmeAlt: string
     sozluk: string
     sozlukAlt: string
     kisaltma: string
@@ -204,6 +207,8 @@ export const EL_NOTU_TR: ElNotuMetinleri = {
     hazirlayanSekreter: 'Sekreterim',
     taban: 'Notya öncesi bir muayene notu kaç dakikanızı alıyordu?',
     tabanAlt: 'Bir kez girin; günlük kazanç bu sayıya göre hesaplanır.',
+    gelistirme: 'Notya\'nın okuma kalitesini ölçmeye katkıda bulunmak istiyorum (isteğe bağlı)',
+    gelistirmeAlt: 'Açarsanız, bundan sonra okunan el notu sayfalarınızın kimlik alanları karartılmış kopyası ve onayladığınız nottaki klinik bulgular (ad, T.C. kimlik no, telefon, adres ve tarih olmadan) Notya\'nın el yazısı okumasını her hafta yeniden ölçen bir test setinde saklanır. Yalnızca okuyucunun kötüleşmediğini denetlemek için kullanılır; hastanın kimliği hiçbir yerde tutulmaz, kimseyle paylaşılmaz. İstediğiniz an kapatabilirsiniz: kapattığınızda sizden gelen bütün sayfalar hemen silinir. Varsayılan: kapalı.',
     sozluk: 'Kısaltma sözlüğüm',
     sozlukAlt: 'El yazınızdaki kısaltmalar. Doğrula sorularına verdiğiniz cevaplar buraya kendiliğinden eklenir.',
     kisaltma: 'Kısaltma',

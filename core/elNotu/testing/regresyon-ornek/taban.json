@@ -1,0 +1,16 @@
+{
+  "sayfa": 2,
+  "gercek": 6,
+  "kesinYuzde": 83.3,
+  "dogrulaIleYuzde": 100,
+  "isaretliDahilYuzde": 100,
+  "kacan": 0,
+  "uydurma": 0,
+  "dogrulaSayfaBasina": 0.5,
+  "enCokDogrula": 1,
+  "korumali": {
+    "gercek": 1,
+    "kesin": 0,
+    "dogrulaIle": 1
+  }
+}

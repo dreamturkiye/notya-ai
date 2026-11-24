@@ -1,0 +1,145 @@
+{
+ "kayit": {
+  "sentetik-1-el-notu-sayfa-1-b1854c676e88e2c6.json": {
+   "satirlar": [
+    {
+     "y0": 200,
+     "y1": 230,
+     "kelimeler": [
+      {
+       "m": "KZ",
+       "g": 0.95
+      },
+      {
+       "m": "doğal",
+       "g": 0.95
+      }
+     ]
+    },
+    {
+     "y0": 260,
+     "y1": 290,
+     "kelimeler": [
+      {
+       "m": "Tonsil",
+       "g": 0.95
+      },
+      {
+       "m": "hipertrofik",
+       "g": 0.93
+      }
+     ]
+    },
+    {
+     "y0": 320,
+     "y1": 350,
+     "kelimeler": [
+      {
+       "m": "Odyometri",
+       "g": 0.94
+      },
+      {
+       "m": "istendi",
+       "g": 0.92
+      }
+     ]
+    }
+   ]
+  },
+  "sentetik-1-el-notu-sayfa-2-841bf03e1993eaf2.json": {
+   "satirlar": [
+    {
+     "y0": 202,
+     "y1": 232,
+     "kelimeler": [
+      {
+       "m": "KZ",
+       "g": 0.96
+      },
+      {
+       "m": "doğal",
+       "g": 0.94
+      }
+     ]
+    },
+    {
+     "y0": 262,
+     "y1": 292,
+     "kelimeler": [
+      {
+       "m": "Tonsil",
+       "g": 0.94
+      },
+      {
+       "m": "hipertrofik",
+       "g": 0.95
+      }
+     ]
+    },
+    {
+     "y0": 322,
+     "y1": 352,
+     "kelimeler": [
+      {
+       "m": "Odyometri",
+       "g": 0.95
+      },
+      {
+       "m": "istendi",
+       "g": 0.9
+      }
+     ]
+    }
+   ]
+  },
+  "sentetik-1-el-notu-sayfa-3-da42be4b89dbec31.json": {
+   "satirlar": [
+    {
+     "y0": 199,
+     "y1": 229,
+     "kelimeler": [
+      {
+       "m": "KZ",
+       "g": 0.94
+      },
+      {
+       "m": "doğal",
+       "g": 0.96
+      }
+     ]
+    },
+    {
+     "y0": 259,
+     "y1": 289,
+     "kelimeler": [
+      {
+       "m": "Tonsil",
+       "g": 0.93
+      },
+      {
+       "m": "hipertrofik",
+       "g": 0.94
+      }
+     ]
+    },
+    {
+     "y0": 319,
+     "y1": 349,
+     "kelimeler": [
+      {
+       "m": "Odyometri",
+       "g": 0.93
+      },
+      {
+       "m": "istendi",
+       "g": 0.93
+      }
+     ]
+    }
+   ]
+  },
+  "sentetik-1-el-notu-normal-e50d999601ae2bd2.json": {
+   "satirlar": []
+  }
+ }
+}

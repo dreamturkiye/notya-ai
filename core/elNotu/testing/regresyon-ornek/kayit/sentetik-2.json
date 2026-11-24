@@ -1,0 +1,145 @@
+{
+ "kayit": {
+  "sentetik-2-el-notu-sayfa-1-b1854c676e88e2c6.json": {
+   "satirlar": [
+    {
+     "y0": 200,
+     "y1": 230,
+     "kelimeler": [
+      {
+       "m": "Burun",
+       "g": 0.95
+      },
+      {
+       "m": "tıkanıklığı",
+       "g": 0.94
+      }
+     ]
+    },
+    {
+     "y0": 260,
+     "y1": 290,
+     "kelimeler": [
+      {
+       "m": "Septum",
+       "g": 0.95
+      },
+      {
+       "m": "sağa",
+       "g": 0.9
+      }
+     ]
+    },
+    {
+     "y0": 320,
+     "y1": 350,
+     "kelimeler": [
+      {
+       "m": "Nazal",
+       "g": 0.94
+      },
+      {
+       "m": "sprey",
+       "g": 0.93
+      }
+     ]
+    }
+   ]
+  },
+  "sentetik-2-el-notu-sayfa-2-841bf03e1993eaf2.json": {
+   "satirlar": [
+    {
+     "y0": 201,
+     "y1": 231,
+     "kelimeler": [
+      {
+       "m": "Burun",
+       "g": 0.94
+      },
+      {
+       "m": "tıkanıklığı",
+       "g": 0.95
+      }
+     ]
+    },
+    {
+     "y0": 261,
+     "y1": 291,
+     "kelimeler": [
+      {
+       "m": "Septum",
+       "g": 0.94
+      },
+      {
+       "m": "sola",
+       "g": 0.9
+      }
+     ]
+    },
+    {
+     "y0": 321,
+     "y1": 351,
+     "kelimeler": [
+      {
+       "m": "Nazal",
+       "g": 0.95
+      },
+      {
+       "m": "sprey",
+       "g": 0.92
+      }
+     ]
+    }
+   ]
+  },
+  "sentetik-2-el-notu-sayfa-3-da42be4b89dbec31.json": {
+   "satirlar": [
+    {
+     "y0": 198,
+     "y1": 228,
+     "kelimeler": [
+      {
+       "m": "Burun",
+       "g": 0.96
+      },
+      {
+       "m": "tıkanıklığı",
+       "g": 0.93
+      }
+     ]
+    },
+    {
+     "y0": 258,
+     "y1": 288,
+     "kelimeler": [
+      {
+       "m": "Septum",
+       "g": 0.96
+      },
+      {
+       "m": "sağa",
+       "g": 0.8
+      }
+     ]
+    },
+    {
+     "y0": 318,
+     "y1": 348,
+     "kelimeler": [
+      {
+       "m": "Nazal",
+       "g": 0.93
+      },
+      {
+       "m": "sprey",
+       "g": 0.94
+      }
+     ]
+    }
+   ]
+  },
+  "sentetik-2-el-notu-normal-8e6de33d0387a001.json": {
+   "satirlar": []
+  }
+ }
+}

@@ -148,7 +148,11 @@ export default function KurucuKonsolu() {
       {/* eslint-disable-next-line @next/next/no-page-custom-font */}
       <link rel="stylesheet" href={CHROME_FONT_HREF} />
       <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-        <div style={{ fontFamily: CHROME_FONT.serif, fontSize: 30, color: R.pine, marginBottom: 18 }}>Notya · Founder console</div>
+        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 18 }}>
+          <div style={{ fontFamily: CHROME_FONT.serif, fontSize: 30, color: R.pine }}>Notya · Founder console</div>
+          {/* ESNEK-GELISIM: the El Notu quality dashboard (same founder allowlist on its own route) */}
+          {d.tur === 'tamam' && <a href="/kurucu/el-notu" style={{ color: R.pine, fontSize: 14 }}>El Notu quality →</a>}
+        </div>
         {d.tur === 'yukleniyor' ? <p style={{ color: R.muted }}>Loading…</p>
           : d.tur === 'hata' ? <p style={{ color: R.warn }}>Could not load. Try again in a moment.</p>
           : <KonsolGorunumu veri={d.veri} />}

@@ -21,12 +21,14 @@ import { kelimeDagarcigi } from '@/core/elNotu/hafiza'
 import { anahtar as sozlukAnahtari } from '@/core/elNotu/sozluk'
 
 /** golgeModu (ESNEK-MUAYENE-B1): shadow mode lets staff with 'elnotu.hazirla' upload pages even when the doctor prepares his own notes. */
-export type ElNotuAyari = { hekimOnayiGerekli: boolean; hazirlayan: 'doktor' | 'sekreter'; tabanDk: number | null; golgeModu?: boolean }
-export const VARSAYILAN_AYAR: ElNotuAyari = { hekimOnayiGerekli: true, hazirlayan: 'doktor', tabanDk: null, golgeModu: false }
+/** gelistirmeOnayi (ESNEK-GELISIM): the doctor's consent to the regression set — default OFF. */
+export type ElNotuAyari = { hekimOnayiGerekli: boolean; hazirlayan: 'doktor' | 'sekreter'; tabanDk: number | null; golgeModu?: boolean; gelistirmeOnayi?: boolean }
+export const VARSAYILAN_AYAR: ElNotuAyari = { hekimOnayiGerekli: true, hazirlayan: 'doktor', tabanDk: null, golgeModu: false, gelistirmeOnayi: false }
 
 export async function ayarYukle(sb: SupabaseClient, doktorId: string): Promise<ElNotuAyari> {
-  let { data, error } = await sb.from('esnek_muayene_ayarlari').select('hekim_onayi_gerekli, el_notu_hazirlayan, taban_dakika_not, golge_modu').eq('doctor_id', doktorId).maybeSingle()
-  // a database without migration 203 (no golge_modu column) still reads the Phase A preferences
+  let { data, error } = await sb.from('esnek_muayene_ayarlari').select('hekim_onayi_gerekli, el_notu_hazirlayan, taban_dakika_not, golge_modu, gelistirme_onayi').eq('doctor_id', doktorId).maybeSingle()
+  // a database without migration 205 / 203 still reads the earlier preferences (consent then reads as OFF)
+  if (error) ({ data, error } = await sb.from('esnek_muayene_ayarlari').select('hekim_onayi_gerekli, el_notu_hazirlayan, taban_dakika_not, golge_modu').eq('doctor_id', doktorId).maybeSingle())
   if (error) ({ data, error } = await sb.from('esnek_muayene_ayarlari').select('hekim_onayi_gerekli, el_notu_hazirlayan, taban_dakika_not').eq('doctor_id', doktorId).maybeSingle())
   if (error || !data) return { ...VARSAYILAN_AYAR }
   return {
@@ -34,6 +36,7 @@ export async function ayarYukle(sb: SupabaseClient, doktorId: string): Promise<E
     hazirlayan: data.el_notu_hazirlayan === 'sekreter' ? 'sekreter' : 'doktor',
     tabanDk: data.taban_dakika_not != null ? Number(data.taban_dakika_not) : null,
     golgeModu: (data as { golge_modu?: boolean }).golge_modu === true,
+    gelistirmeOnayi: (data as { gelistirme_onayi?: boolean }).gelistirme_onayi === true,
   }
 }
 
