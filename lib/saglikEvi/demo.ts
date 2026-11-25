@@ -74,7 +74,8 @@ export function gunlukDemoHam(simdiIso: string, doktorBransi: string | null = 'd
         const at = trSaatAni(gun, s)
         if (Date.parse(at) > simdi - 30 * 60_000) continue
         // A few fixed gaps so the demo shows a realistic week (skipped / not marked), whatever the random draw.
-        const bosluk = (i === 3 && p.id === 'demo-plan-4') || (i === 5 && s === '20:00' && p.id === 'demo-plan-1') || (i === 2 && p.id === 'demo-plan-5')
+        // BUGUN-V2: today's 08:00 Empagliflozin left unmarked — the Bugün home shows the one-tap fix for a missed dose.
+        const bosluk = (i === 3 && p.id === 'demo-plan-4') || (i === 5 && s === '20:00' && p.id === 'demo-plan-1') || (i === 2 && p.id === 'demo-plan-5') || (i === 0 && p.id === 'demo-plan-3')
         const x = bosluk ? (i === 3 ? 0.9 : 0.99) : r()
         if (x < 0.88) {
           const dk = Math.round(-10 + r() * 35)
@@ -98,6 +99,38 @@ export function gunlukDemoHam(simdiIso: string, doktorBransi: string | null = 'd
     ldl: tipler.has('glukoz') ? { deger: 92, tarih: gunEkle(bugun, -41) } : null,
     sorular: tipler.has('glukoz') ? [{ id: 'demo-s1', metin: 'Öğleden sonra şekerim yükseliyor, Metformin saatini değiştirmeli miyim?', createdAt: new Date(simdi - 26 * 3600_000).toISOString() }] : [],
   }
+}
+
+/** BUGUN-V2 — internal demo previews of the designed states (/portal/demo?durum=…): first day, few readings, no
+ * medicines, no consent, everything done. Pure transforms of the default demo patient; synthetic data only. */
+export type DemoDurumu = 'ilk' | 'az' | 'ilacsiz' | 'onaysiz' | 'tamam'
+export function demoDurumuUygula(h: HamGunluk, durum: string | null | undefined): HamGunluk {
+  const simdi = Date.parse(h.simdi)
+  const bugun = trGun(h.simdi)
+  if (durum === 'ilk') return { ...h, olcumler: [], toplamOlcum: 0, fotoOlcum: 0, kayitlar: [], uyarilar: [], kazanilanRozetler: [], sorular: [], ldl: null, tercihler: { ...h.tercihler, paylasimOnayi: false, onayAt: null } }
+  if (durum === 'az') {
+    const sinir = gunEkle(bugun, -2)
+    const olcumler = h.olcumler.filter((o) => trGun(o.olcumAt) >= sinir)
+    return { ...h, olcumler, toplamOlcum: olcumler.length, fotoOlcum: 0, kayitlar: h.kayitlar.filter((k) => trGun(k.planlananAt) >= sinir), uyarilar: [], kazanilanRozetler: h.kazanilanRozetler.filter((r) => r.rozet === 'ilk-adim').map((r) => ({ ...r, kazanildiAt: new Date(simdi - 2 * 86_400_000).toISOString() })), sorular: [] }
+  }
+  if (durum === 'ilacsiz') return { ...h, planlar: [], kayitlar: [] }
+  if (durum === 'onaysiz') return { ...h, tercihler: { ...h.tercihler, paylasimOnayi: false, onayAt: null } }
+  if (durum === 'tamam') {
+    // every slot of today taken, every reading of today entered, alerts read
+    const kayitlar = [...h.kayitlar]
+    for (const p of h.planlar) for (const s of p.saatler) {
+      const at = trSaatAni(bugun, s)
+      if (!kayitlar.some((k) => k.planId === p.id && k.planlananAt === at)) kayitlar.push({ id: `demo-t-${p.id}-${s}`, planId: p.id, planlananAt: at, durum: 'alindi', kayitAt: h.simdi, erteleUntil: null })
+    }
+    const olcumler = [...h.olcumler]
+    for (const t of h.ayar.olcumler) {
+      const hedef = h.ayar.gunlukHedef[t] ?? 0
+      const var_ = olcumler.filter((o) => o.tip === t && trGun(o.olcumAt) === bugun).length
+      for (let i = var_; i < hedef; i++) olcumler.push({ id: `demo-t-${t}-${i}`, tip: t, deger: t === 'kb' ? 124 : t === 'glukoz' ? 118 : 72, deger2: t === 'kb' ? 78 : null, baglam: t === 'glukoz' ? 'tokluk2' : null, olcumAt: new Date(simdi - (i + 1) * 60_000).toISOString(), kaynak: 'portal' })
+    }
+    return { ...h, kayitlar, olcumler, toplamOlcum: olcumler.length, uyarilar: h.uyarilar.map((u) => ({ ...u, hastaGorduAt: h.simdi })) }
+  }
+  return h
 }
 
 /** The same demo patient as the doctor sees it on the Ev verisi card. */

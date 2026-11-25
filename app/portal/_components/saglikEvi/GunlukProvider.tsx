@@ -10,7 +10,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import type { GunlukDurum, HamGunluk } from '@/lib/saglikEvi/ozet'
 import { gunlukOzeti } from '@/lib/saglikEvi/ozet'
-import { gunlukDemoHam } from '@/lib/saglikEvi/demo'
+import { demoDurumuUygula, gunlukDemoHam } from '@/lib/saglikEvi/demo'
 import { olcumDogrula } from '@/lib/saglikEvi/olcumler'
 import { tekDegerKurallari, egilimKurallari, gurultuSuz } from '@/lib/saglikEvi/kurallar'
 import { etkinEsikler } from '@/lib/saglikEvi/hedefler'
@@ -72,7 +72,9 @@ export function GunlukProvider({ children }: { children: ReactNode }) {
     istendi.current = true
     sonYukleme.current = Date.now()
     if (ornek) {
-      if (!ham.current) ham.current = gunlukDemoHam(new Date().toISOString(), data.hekim?.brans || 'dahiliye')
+      // internal demo only: ?durum=ilk|az|ilacsiz|onaysiz|tamam previews the designed states (BUGUN-V2)
+      const durumOnizleme = basePath.startsWith('/portal/demo') ? new URLSearchParams(window.location.search).get('durum') : null
+      if (!ham.current) ham.current = demoDurumuUygula(gunlukDemoHam(new Date().toISOString(), data.hekim?.brans || 'dahiliye'), durumOnizleme)
       yenidenHesapla()
       return
     }
@@ -83,7 +85,7 @@ export function GunlukProvider({ children }: { children: ReactNode }) {
       if (!r.ok) throw new Error(j?.error || 'Günlük bilgileriniz yüklenemedi.')
       setDurum(j as GunlukDurum); setHata(null)
     } catch (e) { setHata(e instanceof Error ? e.message : 'Günlük bilgileriniz yüklenemedi.') } finally { setYukleniyor(false) }
-  }, [ornek, api, data.hekim?.brans, yenidenHesapla])
+  }, [ornek, api, basePath, data.hekim?.brans, yenidenHesapla])
 
   const gonder = useCallback(async (govde: Record<string, unknown>, yol = api, method = 'POST') => {
     const r = await portalFetch(yol, { method, credentials: 'include', headers: { 'content-type': 'application/json' }, body: JSON.stringify(govde) })

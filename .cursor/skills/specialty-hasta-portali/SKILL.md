@@ -37,7 +37,8 @@ Do **not** duplicate these per specialty. Do **not** invent a second portal prod
 
 ## Daily health home — "Bugün" (core, HASTA-PORTALI-GUNLUK, Kaan 2026-11-24)
 
-The portal home is the daily health home: doses (Aldım / Atladım / Ertele), one-tap readings, the day dial, trends,
+The portal home is the daily health home: doses (Aldım / Atladım / Ertele), one-tap readings, the day rings (BUGUN-V2:
+İlaç / Ölçüm / Hedef + ONE next step above the fold; display helpers in `lib/saglikEvi/bugunGorunum.ts`), trends,
 Sağlık Karnesi + badges, Kontrol Öncesi Özet, the doctor's Ev verisi card + Fısıltı. It is CORE for all 40 branşlar —
 what differs per branş is DATA in `lib/saglikEvi/bransAyari.ts` (which measurements / badges / cards, measurement-led
 vs adherence-led). A new chapter adds or adjusts its row there; it never forks the screens. Branş-only pieces stay gated

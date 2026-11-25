@@ -12,6 +12,7 @@ import { OLCUM_TANIMLARI } from '@/lib/saglikEvi/olcumler'
 import type { SaglikEviSozleri } from '@/lib/saglikEvi/sozler'
 import type { GunlukEylemleri } from './eylemler'
 import { UyariKarti } from './UyariKarti'
+import { metrikRengi } from '@/lib/saglikEvi/evVerisiGorunum'
 
 function Sayac({ deger, ayarla, adim, ondalik, min, max, etiket, s }: { deger: string; ayarla: (v: string) => void; adim: number; ondalik: number; min: number; max: number; etiket: string; s: SaglikEviSozleri }) {
   const zaman = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -65,6 +66,7 @@ export function OlcumGirisi({ kart, s, eylemler, kapat }: { kart: OlcumKarti; s:
     let tum = r.uyarilar || []
     if (foto && ekNabiz != null) { const n = await eylemler.olcumEkle({ tip: 'nabiz', deger: ekNabiz, olcumAt: geri ? new Date(Date.now() - geri * 60_000).toISOString() : undefined, foto: true }); if (n.ok) tum = [...tum, ...(n.uyarilar || [])] }
     setNotlar(tum)
+    try { navigator.vibrate?.(14) } catch { /* yok */ }
     setDurum('tamam')
     if (!tum.length) setTimeout(kapat, 1100)
   }
@@ -85,7 +87,7 @@ export function OlcumGirisi({ kart, s, eylemler, kapat }: { kart: OlcumKarti; s:
   const su = kart.tip === 'su'
   return (
     <div className="sge-perde" role="presentation" onClick={(e) => { if (e.target === e.currentTarget) kapat() }}>
-      <div className="sge-sayfa" role="dialog" aria-modal="true" aria-labelledby="sge-giris-baslik">
+      <div className="sge-sayfa" role="dialog" aria-modal="true" aria-labelledby="sge-giris-baslik" style={{ ['--sgb-renk' as string]: metrikRengi(kart.tip) }}>
         <div className="sge-tutamak" aria-hidden />
         <div className="sge-sayfa-bas">
           <h2 id="sge-giris-baslik" className="sge-sayfa-baslik">{t.ad}</h2>
@@ -94,7 +96,7 @@ export function OlcumGirisi({ kart, s, eylemler, kapat }: { kart: OlcumKarti; s:
 
         {durum === 'tamam' ? (
           <div className="sge-kayit-tamam" role="status">
-            <svg viewBox="0 0 84 84" aria-hidden><circle cx="42" cy="42" r="38" fill="#e2f2ef" /><path className="yol" d="M26 43l11 11 21-24" fill="none" stroke="#0f9b8e" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" /></svg>
+            <svg viewBox="0 0 84 84" aria-hidden><circle cx="42" cy="42" r="38" fill="var(--sgb-renk)" opacity="0.14" /><path className="yol" d="M26 43l11 11 21-24" fill="none" stroke="var(--sgb-renk)" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" /></svg>
             <p style={{ fontSize: 18, fontWeight: 600, margin: '6px 0 14px' }}>{s.kaydedildi}</p>
             {notlar.map((n, i) => <UyariKarti key={i} s={s} duzey={n.duzey} metin={n.hastaMetni} />)}
             {notlar.length ? <button type="button" className="sge-kaydet" onClick={kapat}>{s.kapat}</button> : null}
@@ -106,7 +108,7 @@ export function OlcumGirisi({ kart, s, eylemler, kapat }: { kart: OlcumKarti; s:
         ) : (
           <>
             {kart.tip === 'glukoz' ? (
-              <div className="sge-cipler" role="group" aria-label={t.ad}>
+              <div className="sge-cipler sge-cipler--baglam" role="group" aria-label={t.ad}>
                 {(['aclik', 'tokluk2', 'yatmadan', 'rastgele'] as const).map((b) => (
                   <button key={b} type="button" className="sge-cip" aria-pressed={baglam === b} onClick={() => setBaglam(b)}>{s.baglam[b]}</button>
                 ))}
@@ -123,7 +125,7 @@ export function OlcumGirisi({ kart, s, eylemler, kapat }: { kart: OlcumKarti; s:
               <Sayac deger={deger} ayarla={setDeger} adim={t.adim} ondalik={t.ondalik} min={t.min} max={t.max} etiket={t.birim} s={s} />
             )}
             {foto ? <p className="sge-not" style={{ textAlign: 'center' }}>{s.fotoOneri}{ekNabiz != null ? ` · ${OLCUM_TANIMLARI.nabiz.ad} ${ekNabiz} ${OLCUM_TANIMLARI.nabiz.birim}` : ''}</p> : null}
-            <div className="sge-cipler" role="group" aria-label="Zaman">
+            <div className="sge-cipler sge-cipler--zaman" role="group" aria-label="Zaman">
               {([0, 30, 60, 120] as const).map((dk) => (
                 <button key={dk} type="button" className="sge-cip" aria-pressed={geri === dk} onClick={() => setGeri(dk)}>{dk === 0 ? s.zaman.simdi : dk === 30 ? s.zaman.y30 : dk === 60 ? s.zaman.y60 : s.zaman.y120}</button>
               ))}

@@ -3,6 +3,7 @@
  * HASTA-PORTALI-GUNLUK — today's doses grouped by time. One big "Aldım" per time group (5 medicines at 08:00 = one tap),
  * a round check per medicine, and Atladım / Ertele behind a second tap. As-needed medicines show the time since the last
  * dose and the doctor's minimum interval when set (never a computed dose).
+ * BUGUN-V2: Atladım / Ertele sit behind a quiet "…" in the row (and long-press), not under every medicine.
  */
 import { useState } from 'react'
 import type { GunlukDurum } from '@/lib/saglikEvi/ozet'
@@ -19,6 +20,7 @@ export function DozListesi({ s, durum, eylemler }: { s: SaglikEviSozleri; durum:
   for (const d of durum.bugunDozlar) gruplar.set(d.at, [...(gruplar.get(d.at) || []), d])
   const isle = async (anahtar: string, planIds: string[], at: string | null, d: 'alindi' | 'atlandi' | 'ertelendi' | 'geri') => {
     setMesgul(anahtar)
+    if (d === 'alindi') try { navigator.vibrate?.(12) } catch { /* yok */ }
     try { await eylemler.doz(planIds, at, d) } finally { setMesgul(null); setAcik(null) }
   }
   const simdi = Date.now()
@@ -29,7 +31,7 @@ export function DozListesi({ s, durum, eylemler }: { s: SaglikEviSozleri; durum:
         const saat = liste[0].saat
         return (
           <div key={at} className="sge-doz-grup">
-            <div className="sge-doz-saat">{saat}<small>{bekleyen.length ? s.durum[bekleyen[0].durum] : s.durum.alindi}</small></div>
+            <div className="sge-doz-saat">{saat}<small>{bekleyen.length ? (bekleyen.find((b) => b.durum !== 'kacirildi') ? s.durum[bekleyen.find((b) => b.durum !== 'kacirildi')!.durum] : '') : s.durum.alindi}</small></div>
             <div>
               {liste.map((x) => {
                 const anahtar = `${x.planId}|${at}`
@@ -42,6 +44,11 @@ export function DozListesi({ s, durum, eylemler }: { s: SaglikEviSozleri; durum:
                         {x.doz ? <div className="sge-dozsatir-doz">{x.doz}</div> : null}
                         {x.durum === 'atlandi' || x.durum === 'ertelendi' || x.durum === 'kacirildi' ? <div className="sge-dozsatir-doz">{s.durum[x.durum]}</div> : null}
                       </div>
+                      {!dolu && x.durum !== 'atlandi' ? (
+                        <button type="button" className="sge-doz-diger" aria-label={`${x.ad} ${saat}: ${s.digerSecenek}`} aria-expanded={acik === anahtar} onClick={() => setAcik(acik === anahtar ? null : anahtar)}>
+                          <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden><circle cx="5" cy="12" r="1.8" fill="currentColor" /><circle cx="12" cy="12" r="1.8" fill="currentColor" /><circle cx="19" cy="12" r="1.8" fill="currentColor" /></svg>
+                        </button>
+                      ) : null}
                       <button
                         type="button"
                         className={`sge-tik${dolu ? ' sge-tik--dolu' : x.durum === 'atlandi' ? ' sge-tik--atla' : x.durum === 'kacirildi' ? ' sge-tik--kacti' : ''}`}
@@ -54,16 +61,12 @@ export function DozListesi({ s, durum, eylemler }: { s: SaglikEviSozleri; durum:
                         {dolu ? <Tik /> : x.durum === 'atlandi' ? '–' : <Tik />}
                       </button>
                     </div>
-                    {!dolu && x.durum !== 'atlandi' ? (
-                      acik === anahtar ? (
-                        <div className="sge-doz-menu">
-                          <button type="button" onClick={() => isle(anahtar, [x.planId], at, 'atlandi')}>{s.simdiAtladim}</button>
-                          <button type="button" onClick={() => isle(anahtar, [x.planId], at, 'ertelendi')}>{s.simdiErtele}</button>
-                          <button type="button" onClick={() => setAcik(null)}>{s.vazgec}</button>
-                        </div>
-                      ) : (
-                        <button type="button" className="sge-baglanti" style={{ fontSize: 13.5, margin: '-2px 0 6px 4px', fontWeight: 500 }} onClick={() => setAcik(anahtar)}>{s.simdiAtladim} / {s.simdiErtele}</button>
-                      )
+                    {!dolu && x.durum !== 'atlandi' && acik === anahtar ? (
+                      <div className="sge-doz-menu">
+                        <button type="button" onClick={() => isle(anahtar, [x.planId], at, 'atlandi')}>{s.simdiAtladim}</button>
+                        <button type="button" onClick={() => isle(anahtar, [x.planId], at, 'ertelendi')}>{s.simdiErtele}</button>
+                        <button type="button" onClick={() => setAcik(null)}>{s.vazgec}</button>
+                      </div>
                     ) : null}
                   </div>
                 )

@@ -42,32 +42,10 @@
 .sge-seri b { font-family: var(--sg-font-display); font-size: 22px; font-weight: 600; line-height: 1; }
 .sge-seri small { color: var(--sg-muted); font-weight: 500; }
 
-/* ── Day dial ─────────────────────────────────────────────────────────────── */
-.sge-kadran-blok { display: grid; gap: 14px; margin: 10px 0 18px; }
-.sge-kadran { position: relative; width: min(100%, 360px); margin: 0 auto; aspect-ratio: 1; }
-.sge-kadran svg { display: block; width: 100%; height: 100%; overflow: visible; }
-.sge-kadran-merkez { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; pointer-events: none; }
-.sge-kadran-sayi { font-family: var(--sg-font-display); font-size: clamp(40px, 12vw, 54px); line-height: 1; font-weight: 500; font-variant-numeric: tabular-nums; }
-.sge-kadran-sayi span { color: var(--sg-muted); font-size: 0.55em; }
-.sge-kadran-etiket { margin-top: 6px; font-size: 13px; color: var(--sg-muted); max-width: 150px; line-height: 1.3; }
-.sge-halka-anahtar { display: flex; justify-content: center; gap: 18px; flex-wrap: wrap; font-size: 14px; }
-.sge-halka-anahtar span { display: inline-flex; align-items: center; gap: 7px; }
-.sge-halka-anahtar i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
-.sge-halka-anahtar b { font-variant-numeric: tabular-nums; }
+/* Progress arcs on Doz Takvimi. */
 @media (prefers-reduced-motion: no-preference) {
   .sge-halka-yay { transition: stroke-dasharray 900ms var(--sg-ease), stroke-dashoffset 900ms var(--sg-ease); }
-  .sge-kadran-giris .sge-halka-yay { animation: sgeHalka 1100ms var(--sg-ease) both; }
 }
-@keyframes sgeHalka { from { stroke-dasharray: var(--sge-tam); } }
-
-/* ── "Şimdi" card ─────────────────────────────────────────────────────────── */
-.sge-simdi { display: grid; grid-template-columns: 1fr auto; gap: 12px 14px; align-items: center; padding: 18px; border-radius: 22px; background: linear-gradient(135deg, #24473f 0%, #2f4334 100%); color: #f6f1e7; box-shadow: 0 18px 40px -24px rgba(36, 71, 63, 0.9); margin-bottom: 18px; }
-.sge-simdi-saat { font-family: var(--sg-font-display); font-size: 30px; line-height: 1; }
-.sge-simdi-ad { margin: 6px 0 0; font-size: 16px; line-height: 1.35; color: rgba(246, 241, 231, 0.88); }
-.sge-simdi .sge-btn-aldim { background: #f6f1e7; color: #24473f; }
-.sge-simdi-alt { grid-column: 1 / -1; display: flex; gap: 8px; }
-.sge-simdi-alt button { flex: 1; min-height: 44px; border-radius: 12px; border: 1px solid rgba(246, 241, 231, 0.3); background: transparent; color: #f6f1e7; font-size: 15px; font-weight: 500; cursor: pointer; }
-.sge-simdi--tamam { background: linear-gradient(135deg, #0f9b8e 0%, #24473f 100%); }
 
 /* ── Buttons ─────────────────────────────────────────────────────────────── */
 .sge-btn-aldim { min-height: 56px; min-width: 112px; padding: 0 22px; border: none; border-radius: 16px; background: var(--sge-ilac); color: #fff; font-size: 18px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
@@ -97,34 +75,35 @@
 .sge-hizli-deger small { font-family: var(--sg-font-ui); font-size: 13px; color: var(--sg-muted); margin-left: 4px; }
 .sge-hizli-alt { font-size: 13px; color: var(--sg-muted); margin-top: auto; display: flex; justify-content: space-between; gap: 6px; padding-right: 44px; }
 .sge-hizli-arti { position: absolute; right: 12px; bottom: 12px; width: 36px; height: 36px; border-radius: 50%; background: var(--sg-ink); color: #faf6ee; display: grid; place-items: center; font-size: 22px; line-height: 1; z-index: 2; }
-.sge-hizli--tamam::after { background: var(--sge-ilac-soft); }
-.sge-hizli-noktalar { display: inline-flex; gap: 4px; }
-.sge-hizli-noktalar i { width: 8px; height: 8px; border-radius: 50%; background: var(--sge-cizgi); }
-.sge-hizli-noktalar i.dolu { background: var(--sge-olcum); }
 .sge-foto-btn { margin-top: 12px; width: 100%; }
 
-/* ── Dose timeline ───────────────────────────────────────────────────────── */
-.sge-doz-grup { display: grid; grid-template-columns: 64px 1fr; gap: 10px; padding: 12px 0; border-top: 1px solid var(--sge-cizgi); }
-.sge-doz-grup:first-child { border-top: none; padding-top: 2px; }
-.sge-doz-saat { font-family: var(--sg-font-display); font-size: 22px; line-height: 1.2; font-variant-numeric: tabular-nums; }
-.sge-doz-saat small { display: block; font-family: var(--sg-font-ui); font-size: 12px; color: var(--sg-muted); }
-.sge-dozsatir { display: flex; align-items: center; gap: 10px; padding: 10px 10px 10px 12px; border: 1px solid var(--sge-cizgi); border-radius: 14px; margin-bottom: 8px; background: #fff; }
-.sge-dozsatir:last-child { margin-bottom: 0; }
+/* ── Dose timeline (Bugün + Doz Takvimi) — BUGUN-V2: no box per row, one quiet card, round checks ── */
+.sge-doz-grup { display: grid; grid-template-columns: 62px 1fr; gap: 12px; padding: 14px 0; }
+.sge-doz-grup + .sge-doz-grup { border-top: 1px solid rgba(58, 44, 34, 0.06); }
+.sge-doz-grup:first-child { padding-top: 2px; }
+.sge-doz-grup:last-child { padding-bottom: 2px; }
+.sge-doz-saat { font-family: var(--sg-font-display); font-size: 22px; line-height: 1.15; font-weight: 500; font-variant-numeric: tabular-nums; padding-top: 6px; }
+.sge-doz-saat small { display: block; font-family: var(--sg-font-ui); font-size: 12px; color: var(--sg-muted); margin-top: 2px; overflow-wrap: anywhere; }
+.sge-dozsatir { display: flex; align-items: center; gap: 6px; padding: 6px 0; min-height: 60px; }
 .sge-dozsatir-metin { flex: 1; min-width: 0; }
-.sge-dozsatir-ad { font-weight: 600; font-size: 16px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-.sge-dozsatir-doz { font-size: 13.5px; color: var(--sg-muted); margin-top: 2px; }
+.sge-dozsatir-ad { font-weight: 600; font-size: 16.5px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.sge-dozsatir-doz { font-size: 13.5px; color: var(--sg-muted); margin-top: 1px; }
 .sge-etiket { white-space: nowrap; font-size: 11.5px; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: var(--sge-hedef-soft); color: var(--sge-hedef); }
 .sge-etiket--hasta { background: var(--sge-olcum-soft); color: #7a5b1e; }
 .sge-etiket--kritik { background: var(--sge-uyari-soft); color: var(--sge-uyari); }
-.sge-tik { width: 48px; height: 48px; flex-shrink: 0; border-radius: 50%; border: 2px solid var(--sge-ilac); background: transparent; color: var(--sge-ilac); display: grid; place-items: center; cursor: pointer; }
-.sge-tik--dolu { background: var(--sge-ilac); color: #fff; }
-.sge-tik--atla { border-color: var(--sg-muted); color: var(--sg-muted); }
+.sge-tik { width: 48px; height: 48px; flex-shrink: 0; border-radius: 50%; border: 2px solid rgba(15, 155, 142, 0.45); background: transparent; color: rgba(15, 155, 142, 0.55); display: grid; place-items: center; cursor: pointer; transition: background 0.25s var(--sg-ease), border-color 0.25s var(--sg-ease), transform 0.15s ease; touch-action: manipulation; }
+.sge-tik:active { transform: scale(0.92); }
+.sge-tik--dolu { background: var(--sge-ilac); border-color: var(--sge-ilac); color: #fff; }
+.sge-tik--atla { border-color: rgba(58, 44, 34, 0.25); color: var(--sg-muted); font-size: 22px; }
 .sge-tik--kacti { border-style: dashed; border-color: var(--sge-uyari); color: var(--sge-uyari); }
-.sge-doz-menu { display: flex; gap: 6px; margin-top: 8px; }
-.sge-doz-menu button { min-height: 40px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--sge-cizgi); background: var(--sge-kagit); font-size: 14px; cursor: pointer; color: var(--sg-ink); }
-.sge-grup-aldim { margin-top: 8px; width: 100%; min-height: 48px; }
-@media (prefers-reduced-motion: no-preference) { .sge-tik--dolu svg { animation: sgeTik 380ms var(--sg-ease) both; } }
-@keyframes sgeTik { from { transform: scale(0.4); opacity: 0; } }
+.sge-doz-diger { width: 40px; height: 44px; flex-shrink: 0; border: none; background: transparent; color: rgba(58, 44, 34, 0.4); border-radius: 12px; cursor: pointer; display: grid; place-items: center; }
+.sge-doz-diger[aria-expanded='true'] { background: rgba(58, 44, 34, 0.06); color: var(--sg-ink); }
+.sge-doz-menu { display: flex; gap: 6px; margin: 0 0 8px; flex-wrap: wrap; }
+.sge-doz-menu button { min-height: 40px; padding: 0 14px; border-radius: 999px; border: none; background: rgba(58, 44, 34, 0.06); font-size: 14px; font-weight: 500; cursor: pointer; color: var(--sg-ink); font-family: inherit; }
+.sge-grup-aldim { margin-top: 6px; width: 100%; min-height: 50px; font-size: 16px; background: var(--sge-ilac-soft); color: #0b6f66; }
+.sge-btn-aldim.sge-grup-aldim:active { transform: scale(0.98); }
+@media (prefers-reduced-motion: no-preference) { .sge-tik--dolu svg { animation: sgeTik 420ms cubic-bezier(0.2, 1.5, 0.4, 1) both; } }
+@keyframes sgeTik { from { transform: scale(0.3); opacity: 0; } }
 
 /* ── Trend cards ─────────────────────────────────────────────────────────── */
 .sge-egilim-izgara { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
@@ -133,31 +112,27 @@
 .sge-egilim-ad { font-size: 14.5px; font-weight: 600; }
 .sge-egilim-yon { font-size: 13px; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: var(--sge-hedef-soft); color: var(--sge-hedef); white-space: nowrap; }
 .sge-egilim-yon--yukari { background: var(--sge-uyari-soft); color: var(--sge-uyari); }
-.sge-egilim-deger { font-family: var(--sg-font-display); font-size: 28px; margin: 4px 0 0; font-variant-numeric: tabular-nums; }
-.sge-egilim-deger small { font-family: var(--sg-font-ui); font-size: 13px; color: var(--sg-muted); margin-left: 4px; }
 .sge-egilim-alt { font-size: 12.5px; color: var(--sg-muted); display: flex; justify-content: space-between; margin-top: 2px; }
 
-/* ── Alerts (friendly) ───────────────────────────────────────────────────── */
-.sge-uyari { display: grid; grid-template-columns: 28px 1fr; gap: 10px; padding: 14px 16px; border-radius: 18px; background: var(--sge-olcum-soft); border: 1px solid rgba(180, 131, 47, 0.25); margin-bottom: 10px; font-size: 15px; line-height: 1.5; }
-.sge-uyari--hekime_bildir { background: var(--sge-uyari-soft); border-color: rgba(164, 91, 62, 0.28); }
-.sge-uyari--acil { background: #fff1ec; border: 2px solid var(--sge-acil); }
-.sge-uyari--bilgi { background: var(--sge-ilac-soft); border-color: rgba(15, 155, 142, 0.22); }
-.sge-uyari-alt { display: flex; gap: 12px; margin-top: 8px; align-items: center; flex-wrap: wrap; }
-.sge-112 { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 16px; border-radius: 12px; background: var(--sge-acil); color: #fff !important; font-weight: 700; }
+/* ── Alerts (friendly) — BUGUN-V2: calm tint, lead line, the metric's curve; acil = strong border + big 112 ── */
+.sge-uyari { display: grid; grid-template-columns: 10px 1fr; gap: 14px; padding: 18px 18px 14px; border-radius: 22px; background: linear-gradient(180deg, rgba(180, 131, 47, 0.1), rgba(180, 131, 47, 0.04)); margin-bottom: 12px; font-size: 15px; line-height: 1.5; text-align: left; color: var(--sg-ink); }
+.sge-uyari--hekime_bildir, .sge-uyari--dikkat { background: linear-gradient(180deg, rgba(164, 91, 62, 0.1), rgba(164, 91, 62, 0.035)); }
+.sge-uyari--bilgi { background: linear-gradient(180deg, rgba(15, 155, 142, 0.1), rgba(15, 155, 142, 0.035)); }
+.sge-uyari--acil { background: #fff3ee; box-shadow: inset 0 0 0 2px var(--sge-acil); }
+.sge-uyari-nokta { width: 10px; height: 10px; border-radius: 50%; margin-top: 8px; background: var(--sge-olcum); box-shadow: 0 0 0 5px rgba(180, 131, 47, 0.14); }
+.sge-uyari--hekime_bildir .sge-uyari-nokta, .sge-uyari--dikkat .sge-uyari-nokta { background: var(--sge-uyari); box-shadow: 0 0 0 5px rgba(164, 91, 62, 0.14); }
+.sge-uyari--bilgi .sge-uyari-nokta { background: var(--sge-ilac); box-shadow: 0 0 0 5px rgba(15, 155, 142, 0.14); }
+.sge-uyari--acil .sge-uyari-nokta { background: var(--sge-acil); box-shadow: 0 0 0 5px rgba(139, 58, 46, 0.18); }
+.sge-uyari-govde { min-width: 0; }
+.sge-uyari-baslik { margin: 0 0 4px; font-family: var(--sg-font-display); font-size: 21px; line-height: 1.25; font-weight: 500; letter-spacing: -0.01em; text-wrap: balance; }
+.sge-uyari-metin { margin: 0; font-size: 14.5px; line-height: 1.55; color: #5d4f43; text-wrap: pretty; }
+.sge-uyari .sgb-egri { margin-top: 14px; }
+.sge-uyari-alt { display: flex; gap: 8px 14px; margin-top: 12px; align-items: center; flex-wrap: wrap; }
+.sge-uyari-btn { display: inline-flex; align-items: center; min-height: 44px; padding: 0 18px; border-radius: 999px; background: var(--sg-ink); color: #faf6ee !important; font-weight: 600; font-size: 15px; text-decoration: none; }
+.sge-uyari-okudum { min-height: 44px; padding: 0 6px; border: none; background: none; font: inherit; font-weight: 600; font-size: 15px; color: #6d5f52; cursor: pointer; }
+.sge-112 { display: inline-flex; align-items: center; gap: 8px; min-height: 52px; padding: 0 22px; border-radius: 999px; background: var(--sge-acil); color: #fff !important; font-weight: 700; font-size: 17px; text-decoration: none; }
 
-/* ── Bridge to the doctor ────────────────────────────────────────────────── */
-.sge-kopru { display: grid; gap: 10px; }
-@media (min-width: 720px) { .sge-kopru { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-.sge-kopru-oge { display: flex; gap: 12px; align-items: center; padding: 14px 16px; min-height: 72px; border-radius: 18px; background: var(--sge-kagit); border: 1px solid var(--sge-cizgi); color: var(--sg-ink); }
-.sge-kopru-ikon { width: 42px; height: 42px; border-radius: 12px; background: var(--sge-hedef-soft); color: var(--sge-hedef); display: grid; place-items: center; flex-shrink: 0; }
-.sge-kopru-oge--vurgu { border-color: rgba(15, 155, 142, 0.45); background: var(--sge-ilac-soft); }
-.sge-kopru-oge--vurgu .sge-kopru-ikon { background: var(--sge-ilac); color: #fff; }
-.sge-kopru-baslik { font-weight: 600; font-size: 15.5px; }
-.sge-kopru-alt { font-size: 13.5px; color: var(--sg-muted); margin-top: 2px; }
-.sge-soru-form { display: flex; gap: 8px; margin-top: 10px; }
-.sge-soru-form input, .sge-alan { flex: 1; min-height: 48px; border-radius: 14px; border: 1px solid var(--sge-cizgi); padding: 0 14px; font-size: 16px; background: #fff; color: var(--sg-ink); font-family: inherit; }
-.sge-soru-liste { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 6px; }
-.sge-soru-liste li { display: flex; justify-content: space-between; gap: 10px; font-size: 14.5px; padding: 10px 12px; background: #fff; border-radius: 12px; border: 1px solid var(--sge-cizgi); }
+.sge-alan { flex: 1; min-height: 48px; border-radius: 14px; border: 1px solid var(--sge-cizgi); padding: 0 14px; font-size: 16px; background: #fff; color: var(--sg-ink); font-family: inherit; }
 
 /* ── Badges shelf ────────────────────────────────────────────────────────── */
 .sge-raf { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 14px; }
@@ -166,9 +141,6 @@
 .sge-rozet--kilitli svg { filter: none; }
 .sge-rozet-ad { font-size: 14px; font-weight: 600; margin-top: 8px; line-height: 1.25; }
 .sge-rozet-alt { font-size: 12px; color: var(--sg-muted); margin-top: 2px; font-variant-numeric: tabular-nums; }
-.sge-rozet-serit { display: flex; gap: 10px; overflow-x: auto; padding: 4px 2px 10px; scrollbar-width: none; }
-.sge-rozet-serit .sge-rozet { flex: 0 0 96px; }
-.sge-rozet-serit .sge-rozet svg { width: 72px; height: 72px; }
 
 .sge-acilis { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; background: rgba(36, 30, 24, 0.55); padding: 24px; }
 .sge-acilis-kart { width: min(360px, 100%); background: var(--sge-kagit); border-radius: 28px; padding: 28px 22px 22px; text-align: center; box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.45); }
@@ -213,28 +185,43 @@
 .sge-seri-serit i.aktif { background: var(--sge-uyari); color: #fff; }
 .sge-seri-serit i.kalkan { background: var(--sge-hedef); color: #fff; }
 
-/* ── Entry sheet ─────────────────────────────────────────────────────────── */
-.sge-perde { position: fixed; inset: 0; z-index: 70; background: rgba(36, 30, 24, 0.45); display: flex; align-items: flex-end; justify-content: center; }
-.sge-sayfa { width: min(560px, 100%); max-height: 94dvh; overflow-y: auto; background: var(--sg-bg); border-radius: 26px 26px 0 0; padding: 10px 18px calc(18px + env(safe-area-inset-bottom)); box-shadow: 0 -20px 50px -20px rgba(0, 0, 0, 0.4); }
-@media (min-width: 720px) { .sge-perde { align-items: center; } .sge-sayfa { border-radius: 26px; } }
-@media (prefers-reduced-motion: no-preference) { .sge-sayfa { animation: sgeSayfa 320ms var(--sg-ease) both; } }
-@keyframes sgeSayfa { from { transform: translateY(40px); opacity: 0; } }
-.sge-tutamak { width: 44px; height: 5px; border-radius: 3px; background: rgba(58, 44, 34, 0.2); margin: 0 auto 10px; }
+/* ── Entry sheet — BUGUN-V2: one big number in the metric's colour, round steppers, chips, one save ── */
+.sge-perde { position: fixed; inset: 0; z-index: 70; background: rgba(36, 30, 24, 0.42); display: flex; align-items: flex-end; justify-content: center; }
+.sge-sayfa { --sgb-renk: var(--sg-ink); width: min(520px, 100%); max-height: 94dvh; overflow-y: auto; background: #fbf7f0; border-radius: 30px 30px 0 0; padding: 10px 20px calc(20px + env(safe-area-inset-bottom)); box-shadow: 0 -24px 60px -24px rgba(0, 0, 0, 0.45); }
+@media (min-width: 720px) { .sge-perde { align-items: center; } .sge-sayfa { border-radius: 30px; } }
+@media (prefers-reduced-motion: no-preference) {
+  .sge-sayfa { animation: sgeSayfa 380ms cubic-bezier(0.2, 0.9, 0.25, 1) both; }
+  .sge-perde { animation: sgePerde 260ms ease both; }
+}
+@keyframes sgeSayfa { from { transform: translateY(60px); opacity: 0; } }
+@keyframes sgePerde { from { background: rgba(36, 30, 24, 0); } }
+.sge-tutamak { width: 40px; height: 5px; border-radius: 3px; background: rgba(58, 44, 34, 0.18); margin: 0 auto 12px; }
 .sge-sayfa-bas { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-.sge-sayfa-baslik { font-family: var(--sg-font-display); font-size: 26px; margin: 0; font-weight: 500; }
-.sge-kapat { width: 44px; height: 44px; border-radius: 50%; border: none; background: rgba(58, 44, 34, 0.07); font-size: 20px; cursor: pointer; color: var(--sg-ink); }
-.sge-cipler { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0 4px; }
-.sge-cip { min-height: 44px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--sge-cizgi); background: #fff; font-size: 15px; font-weight: 500; cursor: pointer; color: var(--sg-ink); }
-.sge-cip[aria-pressed='true'] { background: var(--sg-ink); color: #faf6ee; border-color: var(--sg-ink); }
-.sge-sayac { display: grid; grid-template-columns: 64px 1fr 64px; align-items: center; gap: 10px; margin: 14px 0 6px; }
-.sge-sayac-btn { height: 64px; border-radius: 20px; border: 1px solid var(--sge-cizgi); background: #fff; font-size: 30px; cursor: pointer; color: var(--sg-ink); touch-action: manipulation; }
-.sge-sayac input { width: 100%; text-align: center; border: none; background: transparent; font-family: var(--sg-font-display); font-size: 58px; line-height: 1; color: var(--sg-ink); font-variant-numeric: tabular-nums; padding: 0; -moz-appearance: textfield; }
+.sge-sayfa-baslik { font-family: var(--sg-font-display); font-size: 28px; margin: 0; font-weight: 500; display: flex; align-items: center; gap: 10px; letter-spacing: -0.01em; }
+.sge-sayfa-baslik::before { content: ''; width: 10px; height: 10px; border-radius: 50%; background: var(--sgb-renk); }
+.sge-kapat { width: 44px; height: 44px; border-radius: 50%; border: none; background: rgba(58, 44, 34, 0.06); font-size: 22px; cursor: pointer; color: var(--sg-ink); }
+.sge-cipler { display: flex; gap: 8px; flex-wrap: wrap; margin: 14px 0 4px; }
+.sge-cip { min-height: 44px; padding: 0 16px; border-radius: 999px; border: none; background: rgba(58, 44, 34, 0.06); font-size: 15px; font-weight: 500; cursor: pointer; color: var(--sg-ink); font-family: inherit; transition: background 0.2s ease, color 0.2s ease; }
+.sge-cip[aria-pressed='true'] { background: var(--sg-ink); color: #faf6ee; }
+.sge-cipler--baglam { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.sge-cipler--zaman { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin-top: 18px; }
+.sge-cipler--zaman .sge-cip { padding: 0 6px; font-size: 14px; white-space: nowrap; }
+.sge-sayac { display: grid; grid-template-columns: 64px 1fr 64px; align-items: center; gap: 8px; margin: 18px 0 2px; }
+.sge-sayac-btn { width: 64px; height: 64px; border-radius: 50%; border: none; background: #fff; box-shadow: 0 1px 0 rgba(58, 44, 34, 0.04), 0 8px 20px -12px rgba(58, 44, 34, 0.4); font-size: 30px; line-height: 1; cursor: pointer; color: var(--sgb-renk); touch-action: manipulation; transition: transform 0.12s ease; }
+.sge-sayac-btn:active { transform: scale(0.9); }
+.sge-sayac input { width: 100%; text-align: center; border: none; background: transparent; font-family: var(--sg-font-display); font-size: clamp(64px, 19vw, 84px); font-weight: 500; letter-spacing: -0.03em; line-height: 1; color: var(--sg-ink); font-variant-numeric: tabular-nums lining-nums; padding: 0; -moz-appearance: textfield; }
+.sge-sayac input:focus { outline: none; }
 .sge-sayac input::-webkit-outer-spin-button, .sge-sayac input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-.sge-sayac-etiket { text-align: center; font-size: 13px; color: var(--sg-muted); margin-top: -2px; }
-.sge-kaydet { width: 100%; min-height: 60px; margin-top: 16px; border-radius: 18px; border: none; background: var(--sg-ink); color: #faf6ee; font-size: 19px; font-weight: 600; cursor: pointer; }
-.sge-kayit-tamam { text-align: center; padding: 18px 0 6px; }
-.sge-kayit-tamam svg { width: 84px; height: 84px; }
-@media (prefers-reduced-motion: no-preference) { .sge-kayit-tamam .yol { stroke-dasharray: 60; animation: sgeCiz 600ms var(--sg-ease) both; } }
+.sge-sayac-etiket { text-align: center; font-size: 14px; color: var(--sg-muted); margin-top: 2px; }
+.sge-kaydet { width: 100%; min-height: 60px; margin-top: 18px; border-radius: 999px; border: none; background: var(--sg-ink); color: #faf6ee; font-size: 19px; font-weight: 600; cursor: pointer; font-family: inherit; transition: transform 0.12s ease; }
+.sge-kaydet:active { transform: scale(0.98); }
+.sge-sayfa .sge-foto-btn { margin-top: 10px; width: 100%; border: none; background: transparent; color: #5d4f43; border-radius: 999px; }
+.sge-kayit-tamam { text-align: center; padding: 20px 0 6px; }
+.sge-kayit-tamam svg { width: 96px; height: 96px; }
+@media (prefers-reduced-motion: no-preference) {
+  .sge-kayit-tamam .yol { stroke-dasharray: 60; animation: sgeCiz 600ms var(--sg-ease) 120ms both; }
+  .sge-kayit-tamam svg circle { animation: sgeTik 420ms cubic-bezier(0.2, 1.5, 0.4, 1) both; transform-origin: 50% 50%; }
+}
 @keyframes sgeCiz { from { stroke-dashoffset: 60; } to { stroke-dashoffset: 0; } }
 .sge-hata { color: var(--sge-acil); font-size: 14.5px; margin: 8px 0 0; }
 .sge-satir-liste { list-style: none; margin: 0; padding: 0; }
@@ -262,9 +249,215 @@
 .sge-dugme::after { content: ''; position: absolute; top: 3px; left: 3px; width: 26px; height: 26px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25); transition: transform 0.2s var(--sg-ease); }
 .sge-dugme[aria-checked='true'] { background: var(--sge-ilac); }
 .sge-dugme[aria-checked='true']::after { transform: translateX(24px); }
-.sge-onay { padding: 18px; border-radius: 22px; background: var(--sge-kagit); border: 1px solid rgba(15, 155, 142, 0.35); box-shadow: var(--sge-golge); margin: 6px 0 16px; }
-.sge-onay h2 { font-family: var(--sg-font-display); font-size: 22px; margin: 0 0 6px; font-weight: 500; }
-.sge-onay p { margin: 0 0 10px; font-size: 14.5px; line-height: 1.55; color: var(--sg-ink); }
-.sge-onay label { display: flex; gap: 10px; align-items: flex-start; font-size: 15px; line-height: 1.45; margin: 10px 0 14px; cursor: pointer; }
-.sge-onay input[type='checkbox'] { width: 24px; height: 24px; flex-shrink: 0; accent-color: var(--sge-ilac); }
+.sge-onay { padding: 20px 20px 18px; border-radius: 24px; background: #fffdf9; box-shadow: inset 0 0 0 1.5px rgba(15, 155, 142, 0.35), 0 18px 40px -30px rgba(58, 44, 34, 0.35); margin: 4px 0 18px; }
+.sge-onay h2 { font-family: var(--sg-font-display); font-size: 23px; line-height: 1.2; margin: 0 0 8px; font-weight: 500; letter-spacing: -0.01em; }
+.sge-onay p { margin: 0 0 10px; font-size: 14.5px; line-height: 1.6; color: #5d4f43; max-width: 68ch; }
+.sge-onay label { display: flex; gap: 12px; align-items: flex-start; font-size: 15.5px; line-height: 1.45; margin: 12px 0 16px; cursor: pointer; font-weight: 500; }
+.sge-onay input[type='checkbox'] { width: 26px; height: 26px; flex-shrink: 0; accent-color: var(--sge-ilac); margin: 0; }
+.sge-onay .sge-btn { border-radius: 999px; }
 .sge-gizli { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* ═══ BUGUN-V2 (Kaan, 2026-11-24) — the Bugün home ══════════════════════════════════════════════════════════════════
+   One glance first: greeting + streak, the three day rings with big numbers, ONE next step with one big action.
+   Everything below is quiet: no borders, soft paper tiles, generous space. Same family as the doctor's Ev verisi card:
+   ring teal (İlaç) / sun (Ölçüm) / calm green (Hedef), one colour per measurement kind, serif numbers, smooth curves.
+   The one orchestrated motion is the ring draw-in on load; everything else answers a tap. */
+.sgb { --sgb-kagit: #fffdf9; --sgb-yuzey: #f7f1e6; --sgb-golge: 0 1px 0 rgba(58, 44, 34, 0.03), 0 20px 44px -32px rgba(58, 44, 34, 0.42); --sge-olcum: #c08a2e; padding-bottom: 36px; }
+.sgb a { text-decoration: none; }
+
+.sgb-ust { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 22px 0 4px; }
+.sgb-selam { font-family: var(--sg-font-display); font-size: clamp(29px, 8vw, 44px); line-height: 1.04; margin: 0; font-weight: 500; letter-spacing: -0.02em; }
+.sgb-tarih { margin: 6px 0 0; color: var(--sg-muted); font-size: 15px; }
+.sgb-tarih::first-letter { text-transform: uppercase; }
+.sgb-seri { flex: none; display: inline-flex; align-items: center; gap: 5px; padding: 7px 13px 7px 10px; margin-top: 4px; border-radius: 999px; background: var(--sgb-kagit); box-shadow: var(--sgb-golge); color: var(--sg-ink); white-space: nowrap; }
+.sgb-seri b { font-family: var(--sg-font-display); font-size: 23px; font-weight: 600; line-height: 1; font-variant-numeric: lining-nums; }
+.sgb-seri small { color: var(--sg-muted); font-size: 13.5px; font-weight: 500; }
+.sgb-seri-kalkan { display: inline-flex; gap: 2px; margin-left: 2px; }
+
+/* ── Hero: rings + the next step ── */
+.sgb-kahraman { display: grid; gap: 18px; margin: 14px 0 22px; }
+.sgb-halkalar { display: grid; grid-template-columns: minmax(0, 172px) minmax(0, 1fr); gap: 22px; align-items: center; }
+.sgb-halka-svg { width: 100%; height: auto; display: block; overflow: visible; }
+.sgb-lejant { margin: 0; display: grid; gap: 12px; }
+.sgb-lejant-s { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 8px; }
+.sgb-lejant-s dt { flex-basis: 100%; }
+.sgb-lejant-s dt { display: flex; align-items: center; gap: 8px; font-size: 14px; color: #6d5f52; font-weight: 500; }
+.sgb-lejant-s dt i { width: 9px; height: 9px; border-radius: 50%; }
+.sgb-lejant-d { margin: 3px 0 0; font-family: var(--sg-font-display); font-size: 29px; line-height: 1; font-weight: 500; letter-spacing: -0.02em; font-variant-numeric: lining-nums tabular-nums; }
+.sgb-lejant-d:empty { display: none; }
+.sgb-lejant-d small { font-size: 0.62em; color: var(--sg-muted); letter-spacing: 0; margin-left: 1px; }
+.sgb-lejant-alt { margin: 0; font-size: 12.5px; color: var(--sg-muted); white-space: nowrap; }
+.sgb-lejant-alt--uyari { color: var(--sge-uyari); font-weight: 600; }
+.sgb-lejant-alt--tamam { color: #2f6b4f; font-weight: 600; }
+.sgb-yay { transition: stroke-dashoffset 900ms cubic-bezier(0.3, 0.7, 0.2, 1); }
+@media (prefers-reduced-motion: no-preference) {
+  .sgb-yay { animation: sgbHalka 1200ms cubic-bezier(0.3, 0.7, 0.2, 1) both; }
+  .sgb-yay--tamam { animation: sgbHalka 1200ms cubic-bezier(0.3, 0.7, 0.2, 1) both, sgbParla 1400ms ease-out 1200ms 1; }
+  .sgb-yay-tik { animation: sgbSol 300ms ease 1100ms both; }
+}
+@keyframes sgbHalka { from { stroke-dashoffset: var(--sgb-c); } }
+@keyframes sgbParla { 40% { filter: drop-shadow(0 0 6px currentColor) brightness(1.08); } }
+@keyframes sgbSol { from { opacity: 0; } }
+
+.sgb-siradaki { background: var(--sgb-kagit); border-radius: 28px; padding: 20px 20px 16px; box-shadow: var(--sgb-golge); }
+.sgb-siradaki-ic { display: grid; gap: 4px; }
+@media (prefers-reduced-motion: no-preference) { .sgb-siradaki-ic { animation: sgbGir 420ms cubic-bezier(0.2, 0.9, 0.25, 1) both; } }
+@keyframes sgbGir { from { opacity: 0; transform: translateY(8px); } }
+.sgb-siradaki-ust { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.sgb-etiket { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; color: #6d5f52; }
+.sgb-etiket i { width: 9px; height: 9px; border-radius: 50%; }
+.sgb-zaman { font-size: 13.5px; color: var(--sg-muted); font-variant-numeric: tabular-nums; }
+.sgb-zaman--simdi { color: #0b6f66; background: var(--sge-ilac-soft); padding: 4px 10px; border-radius: 999px; font-weight: 600; }
+.sgb-cumle { margin: 6px 0 0; font-family: var(--sg-font-display); font-size: clamp(25px, 6.8vw, 31px); line-height: 1.18; font-weight: 500; letter-spacing: -0.015em; text-wrap: balance; }
+.sgb-cumle-saat { font-variant-numeric: lining-nums tabular-nums; }
+.sgb-cumle-alt { margin: 4px 0 0; font-size: 14.5px; color: var(--sg-muted); }
+.sgb-ana { margin-top: 16px; width: 100%; min-height: 60px; border: none; border-radius: 999px; background: var(--sge-hedef); color: #faf6ee; font-family: inherit; font-size: 18.5px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; box-shadow: 0 14px 28px -18px rgba(47, 67, 52, 0.9); transition: transform 0.12s ease, background 0.2s ease; touch-action: manipulation; }
+.sgb-ana:active { transform: scale(0.97); }
+.sgb-ana:disabled { opacity: 0.6; cursor: default; }
+.sgb-ikincil { display: flex; justify-content: center; gap: 4px; margin-top: 6px; }
+.sgb-ikincil button { min-height: 44px; padding: 0 16px; border: none; background: none; font-family: inherit; font-size: 15px; font-weight: 500; color: #6d5f52; cursor: pointer; border-radius: 999px; }
+.sgb-ikincil button:active { background: rgba(58, 44, 34, 0.06); }
+.sgb-siradaki-ic--tamam { grid-template-columns: auto 1fr; gap: 16px; align-items: center; padding: 4px 0; }
+.sgb-siradaki-ic--tamam .sgb-cumle { margin: 0; font-size: clamp(22px, 6vw, 26px); }
+.sgb-tamam-isaret { width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center; background: var(--sge-ilac); color: #fff; box-shadow: 0 0 0 7px var(--sge-ilac-soft); }
+.sgb-tamam-isaret--bos { background: rgba(58, 44, 34, 0.06); color: var(--sg-muted); box-shadow: none; }
+@media (prefers-reduced-motion: no-preference) { .sgb-tamam-isaret:not(.sgb-tamam-isaret--bos) { animation: sgeTik 600ms cubic-bezier(0.2, 1.5, 0.4, 1) both; } }
+.sgb-eksik { display: grid; grid-template-columns: 8px 1fr auto; gap: 12px; align-items: center; margin-top: 14px; padding-top: 14px; border-top: 1px solid rgba(58, 44, 34, 0.07); }
+.sgb-eksik-nokta { width: 8px; height: 8px; border-radius: 50%; background: var(--sge-uyari); }
+.sgb-eksik-metin { min-width: 0; }
+.sgb-eksik-metin b { display: block; font-size: 15px; font-weight: 600; line-height: 1.35; }
+.sgb-eksik-metin small { display: block; font-size: 13px; color: var(--sg-muted); margin-top: 1px; }
+.sgb-eksik-btn { min-height: 44px; padding: 0 18px; border-radius: 999px; border: none; background: var(--sge-ilac-soft); color: #0b6f66; font-family: inherit; font-size: 15px; font-weight: 600; cursor: pointer; }
+
+/* ── Sections ── */
+.sgb-bolum { margin: 30px 0 0; min-width: 0; }
+.sgb-bolum-bas { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.sgb-bolum-bas h2 { font-family: var(--sg-font-display); font-size: 25px; font-weight: 500; margin: 0; letter-spacing: -0.012em; }
+.sgb-bolum-bas a { font-size: 15px; font-weight: 600; color: #0b6f66; padding: 8px 0; }
+.sgb-kart { background: var(--sgb-kagit); border-radius: 24px; padding: 16px 18px; box-shadow: var(--sgb-golge); }
+.sgb-kart--doz { padding: 10px 16px; }
+.sgb-not { font-size: 13.5px; color: var(--sg-muted); line-height: 1.5; margin: 10px 2px 0; }
+.sgb-uyarilar { margin: 0 0 4px; }
+.sgb-ikili { display: grid; gap: 0; }
+
+/* ── Measurements ── */
+.sgb-olcum-izgara { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.sgb-olcum { --sgb-renk: #6b5d50; position: relative; text-align: left; min-height: 132px; padding: 15px 15px 13px; border-radius: 22px; border: none; background: var(--sgb-kagit); box-shadow: var(--sgb-golge); cursor: pointer; display: flex; flex-direction: column; gap: 2px; color: var(--sg-ink); font-family: inherit; transition: transform 0.12s ease; touch-action: manipulation; }
+.sgb-olcum:active { transform: scale(0.97); }
+.sgb-olcum-ad { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; color: #5d4f43; }
+.sgb-olcum-ad i { width: 8px; height: 8px; border-radius: 50%; background: var(--sgb-renk); }
+.sgb-olcum-deger { font-family: var(--sg-font-display); font-size: 32px; line-height: 1.05; font-weight: 500; letter-spacing: -0.02em; margin-top: 8px; font-variant-numeric: lining-nums tabular-nums; white-space: nowrap; }
+.sgb-olcum-deger small { font-family: var(--sg-font-ui); font-size: 12.5px; color: var(--sg-muted); margin-left: 4px; letter-spacing: 0; font-weight: 500; }
+.sgb-olcum-deger--ilk { font-size: 19px; color: var(--sg-muted); }
+.sgb-olcum-alt { margin-top: auto; padding-right: 46px; display: flex; flex-direction: column; gap: 7px; font-size: 12px; color: var(--sg-muted); white-space: nowrap; }
+.sgb-olcum-tamam { display: inline-flex; align-items: center; gap: 4px; color: #2f6b4f; font-weight: 600; }
+.sgb-noktalar { display: inline-flex; gap: 5px; }
+.sgb-noktalar i { width: 18px; height: 5px; border-radius: 3px; background: rgba(58, 44, 34, 0.1); }
+.sgb-noktalar i.dolu { background: var(--sgb-renk); }
+.sgb-olcum-arti { position: absolute; right: 13px; bottom: 13px; width: 42px; height: 42px; border-radius: 50%; background: var(--sgb-renk); color: #fff; display: grid; place-items: center; box-shadow: 0 8px 16px -10px var(--sgb-renk); }
+.sgb-olcum--tamam .sgb-olcum-arti { background: transparent; color: var(--sgb-renk); box-shadow: inset 0 0 0 2px var(--sgb-renk); opacity: 0.6; }
+
+/* ── Trends ── */
+.sgb-egilim-izgara { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.sgb-egilim { --sgb-renk: #6b5d50; display: flex; flex-direction: column; gap: 2px; padding: 14px 15px 12px; border-radius: 22px; background: var(--sgb-yuzey); min-width: 0; }
+.sgb-egilim-ad { display: flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 600; color: #5d4f43; }
+.sgb-egilim-ad i { width: 8px; height: 8px; border-radius: 50%; background: var(--sgb-renk); flex: none; }
+.sgb-egilim-deger { font-family: var(--sg-font-display); font-size: 30px; line-height: 1.05; font-weight: 500; letter-spacing: -0.02em; margin-top: 6px; font-variant-numeric: lining-nums; white-space: nowrap; }
+.sgb-egilim-deger small { font-family: var(--sg-font-ui); font-size: 12.5px; color: var(--sg-muted); margin-left: 4px; letter-spacing: 0; font-weight: 500; }
+.sgb-egilim-yon { display: flex; align-items: center; gap: 2px 5px; flex-wrap: wrap; font-size: 12.5px; color: var(--sg-muted); font-weight: 500; margin-top: 2px; min-height: 18px; }
+.sgb-egilim-yon--dikkat { color: var(--sge-uyari); }
+.sgb-egilim-onc { flex-basis: 100%; color: var(--sg-muted); font-weight: 400; }
+.sgb-egilim .sgb-egri { margin-top: auto; padding-top: 10px; }
+.sgb-egri { position: relative; display: block; }
+.sgb-egri svg { display: block; width: 100%; height: 56px; overflow: visible; }
+.sgb-egri--genis svg { height: 112px; }
+.sgb-egri-son { position: absolute; width: 9px; height: 9px; margin: -4.5px 0 0 -4.5px; border-radius: 50%; box-shadow: 0 0 0 2px #fffdf9, 0 0 0 6px rgba(58, 44, 34, 0.06); }
+.sgb-egri--genis .sgb-egri-son { width: 11px; height: 11px; margin: -5.5px 0 0 -5.5px; }
+.sgb-egri-hafta { position: absolute; top: 6px; margin-left: 10px; font-size: 11.5px; color: var(--sg-muted); }
+@media (prefers-reduced-motion: no-preference) {
+  .sgb-egri svg { animation: sgbAc 1100ms cubic-bezier(0.3, 0.6, 0.2, 1) both; }
+  .sgb-egri-son { animation: sgbSol 400ms ease 900ms both; }
+}
+@keyframes sgbAc { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+.sgb-bos { padding: 18px 20px; border-radius: 22px; background: var(--sgb-yuzey); color: #6d5f52; font-size: 15px; line-height: 1.5; }
+
+/* ── Game layer: streak, kalkan, this week's habits, badges ── */
+.sgb-oyun { padding: 18px 18px 14px; }
+.sgb-oyun-seri { display: grid; grid-template-columns: auto 1fr auto; gap: 14px; align-items: center; }
+.sgb-oyun-sayi { font-family: var(--sg-font-display); font-size: 46px; line-height: 0.95; font-weight: 500; letter-spacing: -0.03em; font-variant-numeric: lining-nums; }
+.sgb-oyun-sayi small { font-family: var(--sg-font-ui); font-size: 15px; letter-spacing: 0; color: #6d5f52; font-weight: 500; margin-left: 8px; }
+.sgb-oyun-alt { margin: 6px 0 0; font-size: 13.5px; color: var(--sg-muted); line-height: 1.4; }
+.sgb-oyun-kalkan { display: grid; justify-items: center; gap: 4px; align-self: start; }
+.sgb-oyun-kalkan > span { display: inline-flex; gap: 3px; }
+.sgb-oyun-kalkan small { font-size: 12px; color: var(--sg-muted); white-space: nowrap; }
+.sgb-gunler { list-style: none; margin: 16px 0 0; padding: 0; display: grid; grid-template-columns: repeat(14, minmax(0, 1fr)); gap: 4px; }
+.sgb-gunler li { position: relative; aspect-ratio: 1; border-radius: 50%; background: rgba(58, 44, 34, 0.06); display: grid; place-items: center; font-size: 9.5px; color: var(--sg-muted); font-variant-numeric: tabular-nums; }
+.sgb-gunler li.aktif { background: #f3d2bf; color: #9a4526; }
+.sgb-gunler li.aktif:last-child { background: #d0673f; color: #fff; box-shadow: 0 0 0 3px rgba(208, 103, 63, 0.2); }
+.sgb-gunler li.kalkan { background: #e3e8df; }
+.sgb-gunler li.kalkan span { display: none; }
+.sgb-gunler li.bugun { box-shadow: inset 0 0 0 1.5px #d0673f; color: #d0673f; background: transparent; }
+.sgb-dersler { margin-top: 16px; }
+.sgb-dersler-b { display: block; font-size: 13px; color: var(--sg-muted); margin-bottom: 8px; }
+.sgb-dersler > div { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.sgb-ders { display: grid; grid-template-columns: 1fr auto; align-items: baseline; padding: 11px 14px 10px; border-radius: 16px; background: var(--sgb-yuzey); font-size: 13px; color: #6d5f52; }
+.sgb-ders > span { grid-column: 1 / -1; }
+.sgb-ders b { font-family: var(--sg-font-display); font-size: 20px; line-height: 1.15; font-weight: 500; color: #2f4334; margin-top: 2px; }
+.sgb-ders small { font-size: 12.5px; color: var(--sg-muted); font-variant-numeric: tabular-nums; }
+.sgb-ders--5 b { color: #0b6f66; } .sgb-ders--3 b, .sgb-ders--2 b { color: #8a6420; } .sgb-ders--1 b { color: #6d6258; }
+.sgb-rozetler { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; margin: 16px -6px 0; }
+.sgb-rozet { display: grid; justify-items: center; gap: 2px; padding: 8px 4px 10px; border-radius: 18px; color: var(--sg-ink); scroll-snap-align: start; text-align: center; }
+.sgb-rozet svg { width: 60px; height: 67px; display: block; filter: drop-shadow(0 7px 8px rgba(58, 44, 34, 0.18)); }
+.sgb-rozet--kilitli svg { filter: none; }
+.sgb-rozet-ad { font-size: 12.5px; font-weight: 600; line-height: 1.2; margin-top: 4px; }
+.sgb-rozet-alt { font-size: 11.5px; color: var(--sg-muted); font-variant-numeric: tabular-nums; }
+.sgb-rozet--yeni svg { filter: drop-shadow(0 0 12px rgba(246, 176, 80, 0.75)) drop-shadow(0 7px 8px rgba(58, 44, 34, 0.18)); }
+.sgb-rozet--yeni .sgb-rozet-alt { color: #fff; background: #c95e3a; padding: 1px 8px; border-radius: 999px; font-weight: 600; }
+@media (prefers-reduced-motion: no-preference) { .sgb-rozet--yeni svg { animation: sgbRozet 2.6s ease-in-out 600ms 2; } }
+@keyframes sgbRozet { 0%, 100% { transform: rotate(0); } 20% { transform: rotate(-6deg) scale(1.04); } 40% { transform: rotate(4deg) scale(1.04); } 60% { transform: rotate(0) scale(1); } }
+
+/* ── Doctor bridge ── */
+.sgb-kopru { padding: 4px 6px; display: grid; }
+.sgb-kopru-s { display: flex; align-items: center; gap: 14px; padding: 12px 10px; min-height: 64px; color: var(--sg-ink); border-radius: 16px; }
+.sgb-kopru-s { position: relative; }
+.sgb-kopru-s + .sgb-kopru-s::before { content: ''; position: absolute; top: 0; left: 64px; right: 10px; height: 1px; background: rgba(58, 44, 34, 0.07); }
+.sgb-kopru-s:active { background: rgba(58, 44, 34, 0.04); }
+.sgb-kopru-ikon { width: 40px; height: 40px; border-radius: 13px; background: var(--sgb-yuzey); color: var(--sge-hedef); display: grid; place-items: center; flex-shrink: 0; }
+.sgb-kopru-m { flex: 1; min-width: 0; display: grid; }
+.sgb-kopru-m b { font-size: 15.5px; font-weight: 600; }
+.sgb-kopru-m small { font-size: 13.5px; color: var(--sg-muted); margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sgb-rozetsayi { min-width: 26px; height: 26px; padding: 0 8px; border-radius: 999px; background: var(--sge-ilac); color: #fff; font-size: 13px; font-weight: 700; display: grid; place-items: center; }
+.sgb-soru { margin-top: 12px; }
+.sgb-soru-b { display: block; font-size: 15.5px; font-weight: 600; }
+.sgb-soru-liste { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 8px; }
+.sgb-soru-liste li { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 12px 14px; border-radius: 16px; background: var(--sgb-yuzey); font-family: var(--sg-font-display); font-style: italic; font-size: 16px; line-height: 1.45; }
+.sgb-soru-liste button { flex: none; border: none; background: none; font-family: var(--sg-font-ui); font-style: normal; font-size: 14px; font-weight: 600; color: #6d5f52; cursor: pointer; min-height: 32px; }
+.sgb-soru-form { display: flex; gap: 8px; margin-top: 10px; }
+.sgb-soru-form input { flex: 1; min-width: 0; min-height: 50px; border-radius: 999px; border: none; padding: 0 18px; font-size: 16px; background: var(--sgb-yuzey); color: var(--sg-ink); font-family: inherit; }
+.sgb-soru-form input:focus { outline: 2px solid var(--sge-ilac); outline-offset: 1px; }
+.sgb-soru-form button { min-height: 50px; padding: 0 20px; border-radius: 999px; border: none; background: var(--sg-ink); color: #faf6ee; font-family: inherit; font-size: 16px; font-weight: 600; cursor: pointer; }
+.sgb-soru-form button:disabled { opacity: 0.35; cursor: default; }
+.sgb-dip { margin: 26px 2px 0; font-size: 13px; line-height: 1.5; color: var(--sg-muted); }
+.sgb-dip a { color: #0b6f66; font-weight: 600; }
+
+@media (max-width: 859px) { .sgb-egilim:last-child:nth-child(odd) { grid-column: 1 / -1; } .sgb-egilim:last-child:nth-child(odd) .sgb-egri svg { height: 64px; } }
+
+/* ── Desktop: hero side by side, sections in pairs ── */
+@media (min-width: 860px) {
+  .sgb-ust { padding-top: 30px; }
+  .sgb-kahraman { grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: 28px; align-items: center; margin: 22px 0 26px; }
+  .sgb-halkalar { grid-template-columns: 236px minmax(0, 1fr); gap: 34px; }
+  .sgb-lejant-d { font-size: 34px; }
+  .sgb-siradaki { padding: 24px 26px 18px; }
+  .sgb-ikili { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0 24px; align-items: start; }
+  .sgb-egilim-izgara { grid-template-columns: repeat(auto-fit, minmax(176px, 1fr)); }
+  .sgb-uyarilar .sge-uyari { padding: 24px 26px 18px; }
+  .sgb-uyarilar .sge-uyari-govde { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-areas: 'b e' 'm e' 'a e'; column-gap: 36px; align-items: start; }
+  .sgb-uyarilar .sge-uyari-baslik { grid-area: b; }
+  .sgb-uyarilar .sge-uyari-metin { grid-area: m; }
+  .sgb-uyarilar .sge-uyari-alt { grid-area: a; }
+  .sgb-uyarilar .sgb-egri { grid-area: e; margin-top: 0; align-self: center; }
+}
+.sagligim-root.sg-kontrast .sgb-olcum, .sagligim-root.sg-kontrast .sgb-kart, .sagligim-root.sg-kontrast .sgb-siradaki { box-shadow: inset 0 0 0 1px rgba(29, 22, 17, 0.45); }
+.sagligim-root.sg-kontrast .sgb-egilim { box-shadow: inset 0 0 0 1px rgba(29, 22, 17, 0.35); }
+@media (prefers-reduced-motion: reduce) { .sgb *, .sge-sayfa, .sge-perde { animation: none !important; transition: none !important; } }
