@@ -6,7 +6,7 @@
  * and every country's patient page draw THROUGH this. It holds only what the eye needs (which folder, which
  * conversation, the text being typed); sending, reading and the words are the container's. Needs `sagligim.css`.
  */
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { DosyaSecDugmesi } from '@/components/core/DosyaSecDugmesi'
 import { EmptyState, SectionHeader, SoftPanel } from './ui'
 
@@ -59,12 +59,14 @@ export type PortalMesajGonderimi = { konuId?: string; konu?: string; metin: stri
 /** null = sent; text = the error to show; { konuId } = sent, and this conversation is to be opened. */
 export type PortalMesajSonucu = null | string | { konuId: string }
 
-export function PortalMesajlarGorunumu({ s, mesajlar, yanitlayabilir, yeniMesajAcik = yanitlayabilir, ekler = true, ekAzami = 0, ekAccept = '', ust, onOku, onGonder, onEkHata }: {
+export function PortalMesajlarGorunumu({ s, mesajlar, yanitlayabilir, yeniMesajAcik = yanitlayabilir, yaz = false, ekler = true, ekAzami = 0, ekAccept = '', ust, onOku, onGonder, onEkHata }: {
   s: PortalMesajSozleri
   mesajlar: PortalMesajKonusuG[]
   /** Replies (and, with `yeniMesajAcik`, new messages) can be sent. */
   yanitlayabilir: boolean
   yeniMesajAcik?: boolean
+  /** PORTAL-TABAN-ONCE — opened from the home's "Doktoruma yaz": the new-message composer opens with the cursor in it. */
+  yaz?: boolean
   /** Files can be attached. */
   ekler?: boolean
   ekAzami?: number
@@ -88,6 +90,22 @@ export function PortalMesajlarGorunumu({ s, mesajlar, yanitlayabilir, yeniMesajA
   const [replyEkler, setReplyEkler] = useState<File[]>([])
   const [sending, setSending] = useState(false)
   const [sendError, setSendError] = useState<string | null>(null)
+  const yazAlani = useRef<HTMLTextAreaElement | null>(null)
+  const odaklan = useRef(false)
+
+  // PORTAL-TABAN-ONCE: "Doktoruma yaz" on the home lands here with the composer open and focused.
+  useEffect(() => {
+    if (!yaz || !yeniMesajAcik) return
+    odaklan.current = true
+    setComposeOpen(true)
+    setThreadOpen(false)
+  }, [yaz, yeniMesajAcik])
+  useEffect(() => {
+    if (!composeOpen || !odaklan.current) return
+    odaklan.current = false
+    yazAlani.current?.focus()
+    yazAlani.current?.scrollIntoView({ block: 'center' })
+  }, [composeOpen])
 
   const canSend = yanitlayabilir
   const messages = mesajlar
@@ -171,6 +189,8 @@ export function PortalMesajlarGorunumu({ s, mesajlar, yanitlayabilir, yeniMesajA
           <div style={{ fontWeight: 650, marginBottom: 10 }}>{s.yeniMesaj}</div>
           {s.konuYer ? <input value={draftKonu} onChange={(e) => setDraftKonu(e.target.value)} placeholder={s.konuYer} className="sg-field" /> : null}
           <textarea
+            ref={yazAlani}
+            data-testid="mesaj-yeni-metin"
             value={draftMetin}
             onChange={(e) => setDraftMetin(e.target.value)}
             placeholder={s.mesajYer}

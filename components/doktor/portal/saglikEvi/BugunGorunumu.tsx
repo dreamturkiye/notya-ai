@@ -55,6 +55,12 @@ export interface BugunKoprusu {
   bolumler?: BugunBolumu[]
   aktiviteler?: Array<{ id: string; baslik: string; tarih: string; href?: string }>
   veli?: boolean
+  /**
+   * PORTAL-TABAN-ONCE (Kaan, 2026-11-25) — the base portal's two actions, first on the home: "Randevu al" (the booking
+   * page; null while the doctor's online booking is OFF) and "Doktoruma yaz" (Mesajlar with the composer open).
+   */
+  randevuAlHref?: string | null
+  yazHref?: string
 }
 
 export type BugunHekimi = { ad: string; altSatir: string; adres: string | null; telefon: string | null; telefonHref: string | null; avatarUrl: string | null; harfler: string }
@@ -143,6 +149,40 @@ export function BugunAktiviteleri({ s, aktiviteler }: { s: SaglikEviSozleri; akt
   )
 }
 
+/**
+ * PORTAL-TABAN-ONCE — the base actions under the greeting, above the day rings: "Randevu al" (only while the doctor's
+ * online booking is ON) and "Doktoruma yaz", plus the earlier home's loud "Yeni mesajınız var!" with the unread count.
+ * New Sağlığım features sit below these, never in their place.
+ */
+export function BugunEylemleri({ s, kopru }: { s: SaglikEviSozleri; kopru: BugunKoprusu }) {
+  if (!kopru.randevuAlHref && !kopru.yazHref && !kopru.mesajSayisi) return null
+  return (
+    <nav className="sgb-eylemler" aria-label={s.eylemlerAria} data-testid="bugun-eylemler">
+      <div className={`sgb-eylem-izgara${kopru.randevuAlHref && kopru.yazHref ? '' : ' sgb-eylem-izgara--tek'}`}>
+        {kopru.randevuAlHref ? (
+          <Link href={kopru.randevuAlHref} className="sgb-eylem sgb-eylem--randevu" data-testid="bugun-randevu-al">
+            <span className="sgb-eylem-ikon"><Ikon d="M7 3v3M17 3v3M4 8h16M5 5h14v15H5zM12 11v6M9 14h6" boyut={22} /></span>
+            <span className="sgb-eylem-m"><b>{s.randevuAl}</b><small>{kopru.randevu ? s.randevuAlSiradaki(kopru.randevu) : s.randevuAlAlt}</small></span>
+          </Link>
+        ) : null}
+        {kopru.yazHref ? (
+          <Link href={kopru.yazHref} className="sgb-eylem sgb-eylem--yaz" data-testid="bugun-doktoruma-yaz">
+            <span className="sgb-eylem-ikon"><Ikon d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2zM8 9h8M8 12.5h5" boyut={22} /></span>
+            <span className="sgb-eylem-m"><b>{s.doktorumaYaz}</b><small>{s.doktorumaYazAlt}</small></span>
+          </Link>
+        ) : null}
+      </div>
+      {kopru.mesajSayisi ? (
+        <Link href={kopru.mesajHref} className="sgb-yeni-mesaj" data-testid="bugun-yeni-mesaj">
+          <span className="sgb-yeni-mesaj-ikon" aria-hidden><Ikon d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" boyut={22} /></span>
+          <span className="sgb-eylem-m"><b>{s.yeniMesajVar}</b><small>{s.okunmamis(kopru.mesajSayisi)}</small></span>
+          <span className="sgb-rozetsayi">{kopru.mesajSayisi}</span>
+        </Link>
+      ) : null}
+    </nav>
+  )
+}
+
 /** The bridge links to the doctor (randevu, mesajlar, son muayene, sonuçlar). */
 function KopruBaglantilari({ s, kopru }: { s: SaglikEviSozleri; kopru: BugunKoprusu }) {
   return (
@@ -162,6 +202,7 @@ function KopruBaglantilari({ s, kopru }: { s: SaglikEviSozleri; kopru: BugunKopr
 export function BugunKopruYedek({ s, kopru, durumMetni, hata }: { s: SaglikEviSozleri; kopru: BugunKoprusu; durumMetni: string; hata?: boolean }) {
   return (
     <div className="sge sgb">
+      <BugunEylemleri s={s} kopru={kopru} />
       <p className="sge-not" style={{ padding: '18px 0 6px' }} role={hata ? 'alert' : undefined} aria-busy={hata ? undefined : true}>{durumMetni}</p>
       {kopru.muayeneUyari48s ? <BugunMuayeneUyarisi s={s} ne={kopru.muayeneUyari48s} href={kopru.randevuHref} /> : null}
       <section className="sgb-bolum" aria-labelledby="sgb-kopru-b">
@@ -311,6 +352,8 @@ export function BugunGorunumu({ s, durum, eylemler, kopru, hastaAdi }: { s: Sagl
           {seri.kalkan ? <span className="sgb-seri-kalkan">{Array.from({ length: seri.kalkan }, (_, i) => <Kalkan key={i} boyut={13} />)}</span> : null}
         </Link> : null}
       </header>
+
+      <BugunEylemleri s={s} kopru={kopru} />
 
       {kopru.muayeneUyari48s ? <BugunMuayeneUyarisi s={s} ne={kopru.muayeneUyari48s} href={kopru.randevuHref} /> : null}
 

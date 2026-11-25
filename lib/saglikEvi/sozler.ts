@@ -263,6 +263,15 @@ export const SAGLIK_EVI_SOZLERI = {
   bolumTakipBuyumeAlt: 'Yaşamsal bulgular · büyüme · hedef boy',
   aktiviteBaslik: 'Son paylaşılanlar',
   yukleniyor: 'Bugününüz hazırlanıyor…',
+  // PORTAL-TABAN-ONCE (Kaan, 2026-11-25) — the base actions, first on the home: book from the doctor's calendar, write to the doctor.
+  eylemlerAria: 'Doktorunuzla hızlı işlemler',
+  randevuAl: 'Randevu al',
+  randevuAlAlt: 'Doktorunuzun takviminden boş saat seçin',
+  randevuAlSiradaki: (ne: string) => `Sıradaki: ${ne}`,
+  doktorumaYaz: 'Doktoruma yaz',
+  doktorumaYazAlt: 'Kısa bir mesaj gönderin',
+  yeniMesajVar: 'Yeni mesajınız var!',
+  okunmamis: (n: number) => `${n} okunmamış`,
   gunlukYuklenemedi: 'Bugünkü ilaç ve ölçüm bilgileriniz şu an yüklenemedi. Doktorunuzla ilgili her şey aşağıda.',
 } as const
 

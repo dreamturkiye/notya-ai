@@ -2,26 +2,18 @@
 
 import { PortalKabukGorunumu } from '@/components/doktor/portal/PortalKabukGorunumu'
 import { usePathname } from 'next/navigation'
-import type { PortalNavKey, PortalNavOge } from '@/lib/portal/types'
+import type { PortalNavOge } from '@/lib/portal/types'
+import { portalNavSirasi } from '@/lib/portal/navSirasi'
 
-/** Core nav — identical for every specialty. Chapter extras come from the registry (bundle.portal.nav). */
-const NAV: Array<{ key: PortalNavKey; label: string; path: string }> = [
-  // HASTA-PORTALI-GUNLUK (Kaan, 2026-11-24): the home is "Bugün"; the daily health home pages follow it (core, every branş).
-  { key: 'ozet', label: 'Bugün', path: '' },
-  { key: 'gunluk', label: 'Günlük', path: '/gunluk' },
-  { key: 'doz-takvimi', label: 'Doz Takvimi', path: '/doz-takvimi' },
-  { key: 'karne', label: 'Karne', path: '/karne' },
-  { key: 'mesajlar', label: 'Mesajlar', path: '/mesajlar' },
-  { key: 'ziyaretler', label: 'Ziyaretler', path: '/ziyaretler' },
-  { key: 'sonuclar', label: 'Sonuçlar', path: '/sonuclar' },
-  { key: 'ilaclar', label: 'İlaçlar', path: '/ilaclar' },
-  { key: 'gecmis', label: 'Öykü', path: '/gecmis' },
-  { key: 'takip', label: 'Takip', path: '/takip' },
-]
-
+/**
+ * Core nav — identical for every specialty; chapter extras come from the registry (bundle.portal.nav).
+ * PORTAL-TABAN-ONCE (Kaan, 2026-11-25): base tabs first (Randevu right after the home when booking is open), chapter
+ * modules, then the daily-health-home pages — the order lives in lib/portal/navSirasi.ts.
+ */
 export function PortalShell({
   basePath,
   ekNav = [],
+  randevuAcik = false,
   hastaAdi = null,
   children,
 }: {
@@ -30,10 +22,12 @@ export function PortalShell({
   hastaAdi?: string | null
   /** SAGLIGIM-PORTAL-REGISTRY — attached specialty modules' nav (e.g. Gözlerim), never hardcoded per branş */
   ekNav?: PortalNavOge[]
+  /** NOTYA-RANDEVU-V2 — the doctor's 'Hasta Portalı Randevu' is ON: Randevu sits right after the home. */
+  randevuAcik?: boolean
   children: React.ReactNode
 }) {
   const pathname = usePathname() || ''
-  const nav = [...NAV, ...ekNav].map((item) => {
+  const nav = portalNavSirasi({ randevuAcik, moduller: ekNav }).map((item) => {
     const href = `${basePath}${item.path}`
     const active =
       item.path === ''

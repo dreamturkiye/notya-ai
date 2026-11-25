@@ -282,6 +282,29 @@
 .sgb-seri small { color: var(--sg-muted); font-size: 13.5px; font-weight: 500; }
 .sgb-seri-kalkan { display: inline-flex; gap: 2px; margin-left: 2px; }
 
+/* ── PORTAL-TABAN-ONCE: base actions under the greeting (Randevu al · Doktoruma yaz · Yeni mesajınız var!) ── */
+.sgb-eylemler { display: grid; gap: 10px; margin: 16px 0 6px; }
+.sgb-eylem-izgara { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }
+.sgb-eylem-izgara--tek { grid-template-columns: minmax(0, 1fr); }
+.sgb-eylem { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; min-height: 104px; padding: 14px 14px 13px; border-radius: 20px; color: var(--sg-ink); background: var(--sgb-kagit); box-shadow: var(--sgb-golge); }
+.sgb-eylem:active { transform: scale(0.985); }
+.sgb-eylem--randevu { background: #2f4334; color: #faf6ee; box-shadow: 0 18px 36px -24px rgba(31, 46, 35, 0.75); }
+.sgb-eylem-izgara--tek .sgb-eylem { flex-direction: row; align-items: center; min-height: 72px; }
+.sgb-eylem-ikon { width: 40px; height: 40px; border-radius: 13px; display: grid; place-items: center; flex-shrink: 0; background: var(--sge-ilac-soft); color: #0b6f66; }
+.sgb-eylem--randevu .sgb-eylem-ikon { background: rgba(250, 246, 238, 0.14); color: #faf6ee; }
+.sgb-eylem-m { display: grid; gap: 2px; min-width: 0; }
+.sgb-eylem-m b { font-size: 17px; font-weight: 650; line-height: 1.2; }
+.sgb-eylem-m small { font-size: 13px; line-height: 1.35; color: var(--sg-muted); }
+.sgb-eylem--randevu .sgb-eylem-m b { color: #faf6ee; }
+.sgb-eylem--randevu .sgb-eylem-m small { color: rgba(250, 246, 238, 0.78); }
+.sgb-yeni-mesaj { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 18px; color: #7a3d28; background: #fbe9df; box-shadow: inset 0 0 0 1.5px rgba(164, 91, 62, 0.35); }
+.sgb-yeni-mesaj .sgb-eylem-m { flex: 1; }
+.sgb-yeni-mesaj .sgb-eylem-m small { color: #8a5643; }
+.sgb-yeni-mesaj-ikon { width: 40px; height: 40px; border-radius: 13px; display: grid; place-items: center; flex-shrink: 0; background: rgba(164, 91, 62, 0.14); }
+.sgb-yeni-mesaj .sgb-rozetsayi { background: var(--sge-uyari); }
+@media (min-width: 860px) { .sgb-eylem { flex-direction: row; align-items: center; min-height: 76px; } }
+.sagligim-root.sg-kontrast .sgb-eylem, .sagligim-root.sg-kontrast .sgb-yeni-mesaj { box-shadow: inset 0 0 0 1px rgba(29, 22, 17, 0.45); }
+
 /* ── Hero: rings + the next step ── */
 .sgb-kahraman { display: grid; gap: 18px; margin: 14px 0 22px; }
 .sgb-halkalar { display: grid; grid-template-columns: minmax(0, 172px) minmax(0, 1fr); gap: 22px; align-items: center; }

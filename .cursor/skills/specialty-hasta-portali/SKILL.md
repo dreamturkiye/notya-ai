@@ -35,6 +35,26 @@ Keep identical across all specialties:
 
 Do **not** duplicate these per specialty. Do **not** invent a second portal product.
 
+## Taban önce — Kaan 2026-11-25 (standing rule)
+
+Kaan, verbatim: "We had the patient able to create a new appointment based on the doctor's calendar right in the hasta
+portalı app. Also patients are able to send quick messages to the doktor on the portal. So in short I want all the
+functionality of the old hasta portalı … and build the new stuff over and above the base functionality we already had built in."
+
+- **The pre-Sağlığım portal (baseline `9163a02a`) is the BASE.** Its capabilities are never removed, re-pointed or demoted
+  by a new feature: Randevu (booking from the doctor's calendar, when the doctor turned it on), Mesajlar (quick message to
+  the doctor), Ziyaretler, Sonuçlar, İlaçlar, Öykü, Takip, chapter modules, the doctor card, the 48 h alert, the unread
+  "Yeni mesajınız var!" emphasis.
+- **New features are additive** — added after / below base items, never in their place or ahead of them.
+- **Nav order lives in one place:** `lib/portal/navSirasi.ts` (Bugün · Randevu when open · base tabs · chapter modules ·
+  daily-health-home pages). Do not hand-edit an order in a shell.
+- **Bugün keeps the base actions first:** "Randevu al" (booking ON only) and "Doktoruma yaz" directly under the greeting,
+  above the rings, also while the daily state loads or fails; booking state comes from HastaShell's context (no second
+  request on the home).
+- **Any demotion needs Kaan's explicit OK** for that change. Pinned by `lib/portal/tabanOnce.test.ts` (nav order, home
+  actions on all 40 branşlar) and `lib/portal/tabanOnce-rota.test.ts` (booking → doctor's request list → approval;
+  portal message → doctor's unread badge + inbox; cross-doctor isolation).
+
 ## Daily health home — "Bugün" (core, HASTA-PORTALI-GUNLUK, Kaan 2026-11-24)
 
 The portal home is the daily health home: doses (Aldım / Atladım / Ertele), one-tap readings, the day rings (BUGUN-V2:

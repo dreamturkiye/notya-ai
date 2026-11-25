@@ -14,6 +14,8 @@ type Props = {
   /** Live portal token — enables real compose/send. Demo omits this. */
   token?: string
   onMessagesUpdated?: (messages: PortalMessage[]) => void
+  /** PORTAL-TABAN-ONCE — opened from Bugün's "Doktoruma yaz" (?yaz=1): the composer opens focused. */
+  yaz?: boolean
 }
 
 function boyutuYaz(n: number): string {
@@ -52,7 +54,7 @@ const SOZLER: PortalMesajSozleri = {
   ac: 'Aç',
 }
 
-export function MessagesView({ data, token, onMessagesUpdated }: Props) {
+export function MessagesView({ data, token, onMessagesUpdated, yaz = false }: Props) {
   const [localMessages, setLocalMessages] = useState<PortalMessage[] | null>(null)
   const messages = localMessages || data.messages
   const canSend = Boolean(token)
@@ -152,6 +154,7 @@ export function MessagesView({ data, token, onMessagesUpdated }: Props) {
         })),
       }))}
       yanitlayabilir={canSend}
+      yaz={yaz}
       ekAzami={MESAJ_EK_AZAMI}
       ekAccept={MESAJ_EK_ACCEPT}
       onOku={(id) => void markRead(id)}

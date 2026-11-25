@@ -101,6 +101,6 @@ describe('registry contract', () => {
     const api = fs.readFileSync(path.join(kok, 'app/api/portal/hasta/[token]/route.ts'), 'utf8')
     for (const id of ['buyume', 'gebelik', 'jinekoloji']) assert.ok(api.includes(`modulAktif('${id}')`), id)
     const shell = fs.readFileSync(path.join(kok, 'app/portal/_components/PortalShell.tsx'), 'utf8')
-    assert.ok(shell.includes('[...NAV, ...ekNav]') && !/goz|pediatri|dahiliye/i.test(shell.replace(/\/\/.*|\/\*[\s\S]*?\*\//g, '').replace(/Gözlerim/g, '')))
+    assert.ok(shell.includes('portalNavSirasi({ randevuAcik, moduller: ekNav })') && !/goz|pediatri|dahiliye/i.test(shell.replace(/\/\/.*|\/\*[\s\S]*?\*\//g, '').replace(/Gözlerim/g, '')))
   })
 })

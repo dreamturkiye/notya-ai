@@ -3,12 +3,9 @@
 import { useEffect, useState } from 'react'
 import { PortalShell } from '../../_components/PortalShell'
 import { LiveGate, PortalLiveProvider, usePortalLive } from '../../_components/PortalLiveProvider'
-import type { PortalNavOge } from '@/lib/portal/types'
 import { portalFetch } from '@/lib/portal/portalFetch'
 import { GunlukProvider } from '../../_components/saglikEvi/GunlukProvider'
-
-/** NOTYA-RANDEVU-V2: 'Randevu' joins the nav only while the doctor's 'Hasta Portalı Randevu' is ON. */
-const RANDEVU_NAV: PortalNavOge = { key: 'randevu', label: 'Randevu', path: '/randevu' }
+import { RandevuAcikSaglayici } from '../../_components/RandevuAcikBaglami'
 
 /** Nav extras follow the registry modules attached to this token's bundle (lib/portal/moduller.ts). */
 function ModulluShell({ token, children }: { token: string; children: React.ReactNode }) {
@@ -25,11 +22,14 @@ function ModulluShell({ token, children }: { token: string; children: React.Reac
   return (
     <PortalShell
       basePath={`/portal/hasta/${token}`}
-      ekNav={randevuAcik ? [RANDEVU_NAV, ...nav] : nav}
+      ekNav={nav}
+      // NOTYA-RANDEVU-V2: 'Randevu' joins the nav only while the doctor's 'Hasta Portalı Randevu' is ON —
+      // PORTAL-TABAN-ONCE: right after the home (lib/portal/navSirasi.ts), and Bugün's "Randevu al" reads the same state.
+      randevuAcik={randevuAcik}
       hastaAdi={loading ? null : data.hasta?.adSoyad}
     >
       {/* HASTA-PORTALI-GUNLUK: the daily health home state, loaded lazily by the pages that use it. */}
-      <LiveGate><GunlukProvider>{children}</GunlukProvider></LiveGate>
+      <LiveGate><RandevuAcikSaglayici value={randevuAcik}><GunlukProvider>{children}</GunlukProvider></RandevuAcikSaglayici></LiveGate>
     </PortalShell>
   )
 }

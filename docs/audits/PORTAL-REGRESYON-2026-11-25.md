@@ -109,3 +109,51 @@ bundle flag is therefore named `onSekizAlti`).
 
 - The live token page against production data (needs a real patient link + PIN). The production portal demo returned
   200 on deployment `dpl_J4mfSPEwuTB1QkZBnEM4g1GytLeM` (dfd76656, READY); its content sits behind Notya sign-in.
+
+## Taban önce (PORTAL-TABAN-ONCE, Kaan 2026-11-25, later the same day)
+
+Kaan: "We had the patient able to create a new appointment based on the doctor's calendar right in the hasta portalı app.
+Also patients are able to send quick messages to the doktor on the portal … build the new stuff over and above the base
+functionality." Classification: **core** (all 30 branşlar + 10 Özel Branşlar). Queue: `PORTAL-TABAN-ONCE`.
+
+The first pass above checked that every baseline feature still *exists and is reachable*. It did not check *prominence*.
+Baseline = `9163a02a` (= `f82f84ac^`). Diff of `app/portal/**`, `app/api/portal/**`, `lib/portal/**`,
+`components/doktor/portal/**` against `origin/main` (4b3fe29d):
+
+| Base capability | Baseline (9163a02a) | main before this change | Now | Status |
+|---|---|---|---|---|
+| Booking from the doctor's calendar (`/randevu`, slots from the doctor's working hours, request → practice approval) | Code unchanged; nav tab `Randevu` 8th (after Takip), shown only when `/randevu` says `acik` | Code unchanged; tab pushed to ~11th (Günlük, Doz Takvimi, Karne inserted before Mesajlar) → off-screen on a phone; no action on the home | Tab 2nd (right after Bugün); **"Randevu al"** tile under the greeting, above the rings | düzeltildi (more prominent than baseline, as asked) |
+| Quick message to the doctor (Mesajlar compose) | Tab 2nd; hero CTA "Mesajlara git"; chip "Yeni mesajınız var! · N okunmamış" | Tab 5th; Mesajlar row only in "Doktorumla" near the bottom of Bugün | Tab 3rd; **"Doktoruma yaz"** tile (opens Mesajlar with the composer open and focused, `?yaz=1`) + the loud "Yeni mesajınız var! · N okunmamış" strip under it | düzeltildi |
+| Ziyaretler / Sonuçlar / İlaçlar / Öykü / Takip tabs | 3rd–7th | 6th–10th | 4th–8th (baseline order) | düzeltildi |
+| Chapter module tabs (Aşı Karnesi, Gözlerim…) | after Takip (after Randevu) | after Karne | after Takip, before Günlük / Doz Takvimi / Karne | düzeltildi |
+| Upcoming appointment link | Chip "Yaklaşan kontrol" and 48 h alert "Detay" → `/ziyaretler` (there was no other target then on the home) | Bugün "Sıradaki randevu" → `/ziyaretler` | Booking ON → `/randevu` (Randevularım: Geliyorum / Başka saat seç / İptal et); OFF → `/ziyaretler` as baseline | düzeltildi |
+| Home actions while the daily state loads | n/a | "Bugününüz hazırlanıyor…" only | Randevu al / Doktoruma yaz shown at once (they need only the bundle) | düzeltildi |
+| Booking / messaging code (pages, API, doctor side) | — | unchanged since baseline (`git diff --stat 9163a02a origin/main` on `lib/randevu`, `app/api/doktor/randevu-portal`, portal + doctor `mesajlar` routes, `RandevuTalepleri`, `MessagesView`, `PortalMesajlarGorunumu`: empty) | `yaz` prop added to the messages view; nothing else | var |
+| Demos `/portal/demo`, `/portal/demo-goz`, `/portal/demo-kbb`, preview | No Randevu (no booking there) | same | same; "Doktoruma yaz" shown (preview/demo messages are read-only, as before) | var |
+
+Everything restored in the first pass (doctor card, 48 h alert, Bölümlerim, Son paylaşılanlar, minor rules) is unchanged.
+
+**Performance:** no added request on the portal home. The booking state was already fetched once by `HastaShell` for the
+Randevu tab; Bugün now reads that same value through `RandevuAcikBaglami` (verified in the browser run: home load =
+unlock check, bundle, `gunluk`, one `/randevu`).
+
+**End-to-end proof** (real route handlers on an in-memory Supabase stand-in; the live token pages in Chrome at 390×844):
+
+- `lib/portal/tabanOnce-rota.test.ts`: `/randevu` → `{ acik: true }` and types → `?tur=` free slots from the doctor's
+  calendar → POST `talep` → row on that doctor's calendar (`kaynak: portal`, `onayBekliyor: true`) → doctor's
+  `/api/doktor/randevu-portal/talepler` lists it with the patient's name → `onayla` → the patient's Randevularım shows it
+  confirmed; booking OFF → `{ acik: false }`. Portal message POST → doctor's `unread-count` = 1 and `/api/doktor/mesajlar`
+  lists the thread; a second doctor sees neither.
+- Browser run (dev server; `/api/**` served by the same real handlers): Bugün → "Randevu al" → Muayene → 26 Kas → 09:20 →
+  "Talebiniz alındı…" + Randevularım "Onay bekliyor"; doctor's Randevular page shows "1 randevu talebi · Selin Kaya · 26
+  Kasım Perşembe 09:20 · Onayla / Başka saat öner / Reddet". Bugün → "Doktoruma yaz" → composer open with the cursor in it
+  → sent → doctor's Mesajlar shows the thread with the text (envelope badge 1 before opening).
+- Screenshots: `/mnt/user-data/outputs/notya-portal/taban/` — `bugun-eylemler-telefon.png`, `nav-sirasi-telefon.png` (the
+  phone strip wrapped for one picture of the whole order), `randevu-slotlar-telefon.png`,
+  `randevu-talep-gonderildi-telefon.png`, `mesaj-gonderildi-telefon.png`, `hekim-randevu-talebi.png`, `hekim-mesaj.png`.
+
+**Tests:** `lib/portal/tabanOnce.test.ts` (nav order pinned; actions above the rings on all 40 branşlar; fallback; no
+fetch in the Bugün container; `?yaz=1` path), `lib/portal/tabanOnce-rota.test.ts` (above). Golden `kabuk*.html` rewritten
+on purpose (tab order only). Standing rule written in `.cursor/skills/specialty-hasta-portali/SKILL.md` § Taban önce.
+
+**Not verified:** the live production page with a real patient link + PIN (no production data used).
