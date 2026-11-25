@@ -59,6 +59,12 @@ export function DozTakvimiGorunumu({ s, durum, eylemler }: { s: SaglikEviSozleri
                 ))}
               </tbody>
             </table>
+            {/* UYARI-RENKLERI: the week grid's legend — taken (teal) vs the adherence family (slate, dashed), never red. */}
+            <div className="sge-not" style={{ display: 'flex', gap: 14, flexWrap: 'wrap', alignItems: 'center', marginTop: 10 }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><span className="sge-hucre" aria-hidden><i className="alindi" /></span>{s.durum.alindi}</span>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><span className="sge-hucre" aria-hidden><i className="atlandi" /></span>{s.uyumAtlandi}</span>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><span className="sge-hucre" aria-hidden><i className="kacirildi" /></span>{s.uyumIsaretlenmedi}</span>
+            </div>
           </div>
         </section>
       ) : null}

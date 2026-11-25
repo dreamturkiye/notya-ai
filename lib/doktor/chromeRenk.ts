@@ -20,6 +20,30 @@ export const CHROME_RENK = {
   borderSoft: 'rgba(58,44,34,0.045)',
 } as const
 
+/**
+ * UYARI-RENKLERI (Kaan, 2026-11-25: "have the real high readings show with a different color than the missed aşı per se")
+ * — ONE semantic palette for alerts, shared by the doctor app and Sağlığım (app/portal/saglik-evi.css mirrors these values;
+ * lib/saglikEvi/uyariRenkleri.test.ts pins the two together and checks WCAG AA).
+ *
+ *  Clinical readings (a measured value crossed a threshold) — warm, rising urgency:
+ *    acil           strong red         (patient is told to call 112)
+ *    hekime_bildir  coral / orange-red (doctor notified)
+ *    dikkat         amber              (keep measuring)
+ *  Adherence lapses (missed dose, missed / late aşı, missed measurement, "işaretlenmedi") — a calm, clearly different
+ *  slate-indigo family, drawn with an outline / dashed icon, NEVER red.
+ *
+ *  Per tone: `ana` = text and icons (≥ 4.5:1 on paper), `vurgu` = fills, bars, borders, dots (≥ 3:1 on paper),
+ *  `zemin` = soft background behind a card or chip (ana stays ≥ 4.5:1 on it). Colour is never alone: every use carries an
+ *  icon + a word ("Acil", "Doktora bildirildi", "Dikkat", "Atlandı / İşaretlenmedi").
+ */
+export const UYARI_RENK = {
+  acil: { ana: '#a3201a', vurgu: '#c8281f', zemin: '#fdecea' },
+  hekime_bildir: { ana: '#a8461c', vurgu: '#d9622b', zemin: '#fdf0e8' },
+  dikkat: { ana: '#7d5800', vurgu: '#b07d0a', zemin: '#fbf3dc' },
+  uyum: { ana: '#4a5274', vurgu: '#6e7699', zemin: '#eef0f6' },
+} as const
+export type UyariTonu = keyof typeof UYARI_RENK
+
 export const CHROME_FONT = {
   serif: `'Fraunces', Georgia, serif`,
   sans: `'Source Sans 3', system-ui, sans-serif`,

@@ -15,9 +15,10 @@ import { aktifIlacAdlari, klinikGirdi } from './ilacSinifi'
 import { arsivsizIlaclar } from '@/lib/doktor/arsiv'
 import { kontrolOncesiOzet, type KontrolOzeti } from './ozet'
 import { evVerisiHesapla, type EvVerisiKarti } from './evVerisi'
-import { kayitSatiri, notIcdSorgusu, olcumSatiri, planSatiri, tercihSatiri, uyariSatiri, type IslemSonucu } from './sunucu'
+import { kayitSatiri, notIcdSorgusu, OLCUM_SECIMI, olcumSatirlari, planSatiri, tercihSatiri, uyariSatiri, type IslemSonucu } from './sunucu'
 import { hekimBransi } from '@/lib/doktor/hekimAdi'
 import { gunEkle, trGun, trGunBasi, GUN_MS } from './zaman'
+import { enYuksekTon, uyariTonu } from './uyariRenkleri'
 
 export type { EvVerisiKarti }
 
@@ -34,7 +35,7 @@ export async function evVerisiKarti(sb: Sb, doktorId: string, patientId: string,
     q('ev_hedefler').maybeSingle(),
     hekimBransi(sb, doktorId).catch(() => null),
     sb.from('gebelikler').select('id').eq('patient_id', patientId).eq('doctor_id', doktorId).eq('durum', 'aktif').limit(1).maybeSingle(),
-    sb.from('ev_olcumleri').select('id, tip, deger, deger2, baglam, olcum_at, kaynak').eq('doctor_id', doktorId).eq('patient_id', patientId).gte('olcum_at', d90).order('olcum_at', { ascending: true }).limit(1500),
+    sb.from('ev_olcumleri').select(OLCUM_SECIMI).eq('doctor_id', doktorId).eq('patient_id', patientId).gte('olcum_at', d90).order('olcum_at', { ascending: true }).limit(1500),
     q('ev_ilac_planlari').limit(200),
     sb.from('ev_doz_kayitlari').select('id, plan_id, planlanan_at, durum, kayit_at, ertele_until').eq('doctor_id', doktorId).eq('patient_id', patientId).gte('planlanan_at', d35).limit(3000),
     q('ev_uyarilar').gte('olusturma_at', new Date(simdiMs - 30 * GUN_MS).toISOString()).order('olusturma_at', { ascending: false }).limit(50),
@@ -47,7 +48,7 @@ export async function evVerisiKarti(sb: Sb, doktorId: string, patientId: string,
   ])
   return evVerisiHesapla({
     simdiMs, brans: await Promise.resolve(brans), gebelikAktif: !!geb.data, tercih: tercihSatiri(tercih.data), hekimAyarHam: hedef.data?.ayarlar,
-    olcumler: ((olc.data || []) as Record<string, any>[]).map(olcumSatiri),
+    ...(() => { const o = olcumSatirlari(olc.data as Record<string, any>[]); return { olcumler: o.sayisal, isaretliOlcumler: o.isaretli } })(),
     planlar: ((planR.data || []) as Record<string, any>[]).map(planSatiri),
     kayitlar: ((kayitR.data || []) as Record<string, any>[]).map(kayitSatiri),
     uyarilar: ((uyariR.data || []) as Record<string, any>[]).map(uyariSatiri),
@@ -114,13 +115,14 @@ export async function kontrolOzetiOlustur(sb: Sb, doktorId: string, patientId: s
   if (!kart.onay) return { ok: false, status: 403, hata: 'Hasta ev verisini paylaşmaya onay vermedi.' }
   const d35 = new Date(simdiMs - 35 * GUN_MS).toISOString()
   const [olc, planR, kayitR, uyariR] = await Promise.all([
-    sb.from('ev_olcumleri').select('id, tip, deger, deger2, baglam, olcum_at, kaynak').eq('doctor_id', doktorId).eq('patient_id', patientId).gte('olcum_at', d35).limit(1500),
+    sb.from('ev_olcumleri').select(OLCUM_SECIMI).eq('doctor_id', doktorId).eq('patient_id', patientId).gte('olcum_at', d35).limit(1500),
     sb.from('ev_ilac_planlari').select('*').eq('doctor_id', doktorId).eq('patient_id', patientId).limit(200),
     sb.from('ev_doz_kayitlari').select('id, plan_id, planlanan_at, durum, kayit_at, ertele_until').eq('doctor_id', doktorId).eq('patient_id', patientId).gte('planlanan_at', d35).limit(3000),
     sb.from('ev_uyarilar').select('*').eq('doctor_id', doktorId).eq('patient_id', patientId).gte('olusturma_at', d35).neq('duzey', 'bilgi').limit(100),
   ])
+  const olcRows = olcumSatirlari(olc.data as Record<string, any>[])
   const ozet = kontrolOncesiOzet({
-    olcumler: ((olc.data || []) as Record<string, any>[]).map(olcumSatiri),
+    olcumler: olcRows.sayisal, isaretliOlcumler: olcRows.isaretli,
     planlar: ((planR.data || []) as Record<string, any>[]).map(planSatiri),
     kayitlar: ((kayitR.data || []) as Record<string, any>[]).map(kayitSatiri),
     uyarilar: ((uyariR.data || []) as Record<string, any>[]).map(uyariSatiri),
@@ -140,14 +142,14 @@ export async function kontrolOzetiOlustur(sb: Sb, doktorId: string, patientId: s
  */
 export async function evFisiltiOgeleri(sb: Sb, doktorId: string, brans: string): Promise<FisiltiItem[]> {
   const [uy, oz] = await Promise.all([
-    sb.from('ev_uyarilar').select('patient_id, duzey, hekim_metni, olusturma_at').eq('doctor_id', doktorId).is('hekim_gordu_at', null).in('duzey', ['hekime_bildir', 'acil']).gte('olusturma_at', new Date(Date.now() - 30 * GUN_MS).toISOString()).order('olusturma_at', { ascending: true }).limit(300),
+    sb.from('ev_uyarilar').select('patient_id, duzey, kural, hekim_metni, olusturma_at').eq('doctor_id', doktorId).is('hekim_gordu_at', null).in('duzey', ['hekime_bildir', 'acil']).gte('olusturma_at', new Date(Date.now() - 30 * GUN_MS).toISOString()).order('olusturma_at', { ascending: true }).limit(300),
     sb.from('ev_kontrol_ozetleri').select('patient_id, randevu_at, olusturma_at').eq('doctor_id', doktorId).is('hekim_gordu_at', null).gte('olusturma_at', new Date(Date.now() - 3 * GUN_MS).toISOString()).limit(100),
   ])
   if (uy.error || oz.error) return []
-  const hastalar = new Map<string, { uyarilar: Array<{ duzey: string; metin: string; at: string }>; ozet: string | null }>()
+  const hastalar = new Map<string, { uyarilar: Array<{ duzey: string; kural: string; metin: string; at: string }>; ozet: string | null }>()
   for (const r of (uy.data || []) as Record<string, any>[]) {
     const h = hastalar.get(String(r.patient_id)) || { uyarilar: [], ozet: null }
-    h.uyarilar.push({ duzey: String(r.duzey), metin: String(r.hekim_metni), at: String(r.olusturma_at) })
+    h.uyarilar.push({ duzey: String(r.duzey), kural: String(r.kural || ''), metin: String(r.hekim_metni), at: String(r.olusturma_at) })
     hastalar.set(String(r.patient_id), h)
   }
   for (const r of (oz.data || []) as Record<string, any>[]) {
@@ -169,7 +171,9 @@ export async function evFisiltiOgeleri(sb: Sb, doktorId: string, brans: string):
     const acil = h.uyarilar.some((u) => u.duzey === 'acil')
     const baslik = h.uyarilar.length ? `Ev verisi: ${h.uyarilar.length} uyarı${acil ? ' (acil eşik)' : ''}` : 'Kontrol öncesi ev verisi özeti hazır'
     const detay = [...h.uyarilar.slice(-3).reverse().map((u) => u.metin), ...(h.ozet ? ['Kontrol öncesi özet hazır.'] : [])]
-    out.push({ id: `ev:${pid}`, brans, patientId: pid, ad: ad.get(pid) as string, baslik, detay, enErkenTarih: h.uyarilar[0]?.at ?? h.ozet, hedefYol: `/dashboard/doktor/hastalar/${pid}?ev=1`, toplamBekleyen: h.uyarilar.length, kaynak: 'ev' })
+    // UYARI-RENKLERI: the item's tone = its most urgent alert (clinical outranks an adherence lapse).
+    const evTon = enYuksekTon(h.uyarilar.map((u) => uyariTonu(u.duzey, u.kural)))
+    out.push({ id: `ev:${pid}`, brans, patientId: pid, ad: ad.get(pid) as string, baslik, detay, enErkenTarih: h.uyarilar[0]?.at ?? h.ozet, hedefYol: `/dashboard/doktor/hastalar/${pid}?ev=1${h.uyarilar.length ? '&evAyrinti=uyarilar' : ''}`, toplamBekleyen: h.uyarilar.length, kaynak: 'ev', ...(evTon ? { evTon } : {}) })
   }
   return out
 }

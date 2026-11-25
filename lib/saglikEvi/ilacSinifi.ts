@@ -39,3 +39,14 @@ export function aktifIlacAdlari(ilaclar: Array<Record<string, any>>, bugun: stri
 export function klinikGirdi(notesEncrypted: unknown, notSatirlari: Array<Record<string, unknown>>, ilacAdlari: string[]): KlinikGirdi {
   return { tanilar: kronikListe(notAlanlariCoz(notesEncrypted as string | null)), icdKodlari: notIcdKodlari(notSatirlari), ilaclar: ilacGirdileri(ilacAdlari) }
 }
+
+/**
+ * EV-ACIL-SEKER — is any of these medicines an insulin? The drug table's class first ('İnsülin'); then the common insulin
+ * molecule / brand names the table does not resolve (it misses e.g. Humalog / NovoRapid / Tresiba, and its fuzzy match
+ * reads "Levemir" as levetirasetam), so a ketone reminder is never lost to a table gap. Pure name check, conservative:
+ * it only ADDS the reminder line — never a dose, never a module.
+ */
+export const INSULIN_ADI = /ins[uü]lin|glarjin|glargin|detemir|degludek|degludec|aspart|lispro|gl[uü]lisin|glulisine|lantus|levemir|tresiba|toujeo|abasaglar|basaglar|semglee|humalog|novorapid|fiasp|apidra|lyumjev|humulin|insuman|actrapid|mixtard|novomix|humamix|ryzodeg|xultophy|soliqua/i
+export function insulinVarMi(ilaclar: Array<Pick<IlacGirdisi, 'ad' | 'siniflar'>>): boolean {
+  return ilaclar.some((i) => i.siniflar.includes('İnsülin') || INSULIN_ADI.test(i.ad))
+}

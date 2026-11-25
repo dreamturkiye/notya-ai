@@ -19,6 +19,7 @@ import { kayitSatiri, planSatiri } from './sunucu'
 import { kontrolOzetiOlustur } from './hekimSunucu'
 import { pushGonder, type PushIcerigi, type PushSonucu, type VapidAnahtarlari } from './push/webPush'
 import { gunEkle, sessizSaatteMi, trDakika, trGun, trGunBasi, GUN_MS } from './zaman'
+import { hekimeBildir, type HekimGonderici, type YeniUyari } from './hekimBildirim'
 import type { DozPlani, UyariDuzeyi } from './tipler'
 
 type Sb = SupabaseClient
@@ -118,7 +119,7 @@ export async function dozHatirlatmalari(sb: Sb, gonder: Gonderici, simdiMs = Dat
   return { aday: gruplar.size, ...r }
 }
 
-export async function gunlukIsler(sb: Sb, gonder: Gonderici | null, simdiMs = Date.now()) {
+export async function gunlukIsler(sb: Sb, gonder: Gonderici | null, simdiMs = Date.now(), hekimGonder: HekimGonderici | null = null) {
   const bugun = trGun(simdiMs)
   // ── 1) two missed days ──
   const { data: planR } = await sb.from('ev_ilac_planlari').select('*').eq('aktif', true).eq('gerektikce', false).limit(20000)
@@ -150,7 +151,12 @@ export async function gunlukIsler(sb: Sb, gonder: Gonderici | null, simdiMs = Da
         }
       }
     }
-    if (uyariSatirlari.length) { await sb.from('ev_uyarilar').insert(uyariSatirlari); kritik = uyariSatirlari.length }
+    if (uyariSatirlari.length) {
+      const { data: eklenen } = await sb.from('ev_uyarilar').insert(uyariSatirlari).select('id, doctor_id, patient_id, duzey, kural')
+      kritik = uyariSatirlari.length
+      // HEKIM-PUSH: a kritik medicine lapse is hekime_bildir (adherence family) → working-hours push or the morning summary.
+      if (hekimGonder && eklenen?.length) await hekimeBildir(sb, hekimGonder, (eklenen as YeniUyari[]).map((u) => ({ ...u, id: String(u.id), doctor_id: String(u.doctor_id), patient_id: String(u.patient_id) })), simdiMs)
+    }
     const alinan = await talepEt(sb, hastaKayit)
     if (gonder && alinan.size) {
       const { abonelikler, uygun } = await aboneVeTercihler(sb, simdiMs)

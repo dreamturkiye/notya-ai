@@ -27,6 +27,8 @@ import { lotYerTemizle, LOT_AZAMI, YER_AZAMI } from '@/lib/asi/asiLotYeri'
 import { trTarih, type AsiKaynakTuru } from '@/lib/asi/karneOkuma'
 import { dosyaPaylasimiVar } from '@/lib/asi/karnePaylasim'
 import { EmptyState, SectionHeader, SoftPanel } from './ui'
+import { UYARI_RENK } from '@/lib/doktor/chromeRenk'
+import { UyariIsareti } from '@/components/doktor/saglikEvi/UyariIsareti'
 import { portalFetch } from '@/lib/portal/portalFetch'
 
 const ALT_BASLIK = 'Doktorunuzun muayenehanesinde kayıtlı aşılarınız. PDF olarak indirebilir, paylaşabilir ya da yazdırabilirsiniz.'
@@ -144,6 +146,16 @@ export function AsiKarnesiView({ karne, basePath, pdfUrl }: { karne: PortalAsiKa
         ) : (
           <div className="sg-goz-meta" style={{ fontSize: 14.5 }}>Doktorunuzun kaydettiği bir sonraki aşı tarihi yok.</div>
         )}
+        {/* UYARI-RENKLERI: a passed next-dose date is an adherence lapse — calm slate, dashed mark, its word; never red. */}
+        {karne.gecikenler?.length ? (
+          <div className="asi-karnesi-tarihi-gecen" data-yazdirma-gizle="" style={{ marginTop: 14, padding: '12px 14px', borderRadius: 14, background: UYARI_RENK.uyum.zemin, border: `1.5px dashed ${UYARI_RENK.uyum.vurgu}` }}>
+            <UyariIsareti ton="uyum" etiket="Tarihi geçti" kucuk zeminsiz />
+            <ul style={{ margin: '6px 0 0', paddingLeft: 18 }}>
+              {karne.gecikenler.map((d) => <li key={`${d.ad}${d.tarih}`} style={{ fontSize: 14.5, color: UYARI_RENK.uyum.ana }}>{d.ad} · {trTarih(d.tarih)}</li>)}
+            </ul>
+            <div className="sg-goz-meta" style={{ marginTop: 6 }}>Bu dozun yapıldığı kaydedilmedi. Yaptırdıysanız ya da randevu için muayenehanenizle görüşebilirsiniz.</div>
+          </div>
+        ) : null}
       </SoftPanel>
 
       <SoftPanel className="sg-goz-panel">

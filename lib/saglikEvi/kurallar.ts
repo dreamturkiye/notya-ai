@@ -12,10 +12,10 @@
  * rule fires again inside the cool-down only when its level rises. Trends need ≥4 readings in the last 7 days and ≥4
  * in the 3 weeks before — a single reading never makes a trend.
  */
-import type { EvOlcum, UyariDuzeyi } from './tipler'
+import type { EvOlcum, IsaretliOlcum, UyariDuzeyi } from './tipler'
 import { DUZEY_SIRASI } from './tipler'
 import type { EsikSeti } from './hedefler'
-import { metrikAnahtari, metrikEtiketi, OLCUM_TANIMLARI } from './olcumler'
+import { BAGLAM_ADI, metrikAnahtari, metrikEtiketi, OLCUM_TANIMLARI } from './olcumler'
 import { gunEkle, trGun, GUN_MS } from './zaman'
 
 export interface KuralSonucu {
@@ -30,6 +30,8 @@ export interface KuralSonucu {
 }
 
 export const ACIL_METNI = "Kendinizi kötü hissediyorsanız, göğüs ağrısı, nefes darlığı, konuşma bozukluğu, güçsüzlük veya bilinç bulanıklığı varsa hemen 112'yi arayın. Notya bir acil yardım hizmeti değildir."
+/** EV-ACIL-SEKER: the stored note for a very high glucose (the interactive symptom check is in the patient view). No dose words. */
+export const SEKER_ACIL_METNI = "Kusma, karın ağrısı, aşırı uyku hali ya da bilinç bulanıklığı, derin ve hızlı nefes varsa hemen 112'yi arayın. Notya bir acil yardım hizmeti değildir."
 const ILAC_UYARISI = 'İlaçlarınızı kendiniz değiştirmeyin.'
 
 const yuvarla = (x: number, o = 0) => Math.round(x * 10 ** o) / 10 ** o
@@ -40,6 +42,17 @@ export interface KuralBaglami {
   yasAy: number | null
   /** Weight gain notifies the doctor (heart / kidney follow-up). */
   kiloHekimeBildir: boolean
+  /** EV-ACIL-SEKER: an active insulin on the file / the patient's own plans (lib/saglikEvi/ilacSinifi.ts) → ketone reminder. */
+  insulinAktif?: boolean
+}
+
+/** EV-ACIL-SEKER: what the patient view needs to open the symptom check (kept in ev_uyarilar.veri, display only). */
+export interface SekerAcilVerisi { sekerAcil: 'yuksek' | 'dusuk'; keton: boolean; isaret?: 'hi' | 'lo' }
+
+/** EV-ACIL-SEKER: the two display fields the patient view needs from an alert's veri (symptom check / ketone line). */
+export function sekerAcilAlani(veri: Record<string, unknown> | null | undefined): { sekerAcil?: 'yuksek' | 'dusuk'; keton?: boolean } {
+  const v = veri || {}
+  return v.sekerAcil === 'yuksek' || v.sekerAcil === 'dusuk' ? { sekerAcil: v.sekerAcil, keton: v.keton === true } : {}
 }
 
 /** Rules on one new reading (thresholds). */
@@ -64,12 +77,18 @@ export function tekDegerKurallari(o: EvOlcum, esikler: Record<string, EsikSeti>,
   const alt = (esik?: number) => esik != null && v < esik
 
   if (ust(e.acilUst, e.acilUst2)) {
-    ekle('cok_yuksek', 'acil', `${t.ad} değeriniz çok yüksek (${deg}). 5 dakika oturup dinlenin ve yeniden ölçün. Doktorunuza da bildirdik. ${ACIL_METNI}`, `${t.ad} ${deg} — acil eşiğin üstünde.`)
+    if (o.tip === 'glukoz') {
+      ekle('cok_yuksek', 'acil', `Kan şekeriniz çok yüksek (${deg}). Doktorunuza da bildirdik. ${SEKER_ACIL_METNI}`, `${metrikEtiketi(m)} ${deg} — acil eşiğin (${fmt(e.acilUst as number)} mg/dL) üstünde.${b.insulinAktif ? ' Aktif insülin var.' : ''}`)
+      Object.assign(out[out.length - 1].veri, { sekerAcil: 'yuksek', keton: !!b.insulinAktif } satisfies SekerAcilVerisi)
+    } else {
+      ekle('cok_yuksek', 'acil', `${t.ad} değeriniz çok yüksek (${deg}). 5 dakika oturup dinlenin ve yeniden ölçün. Doktorunuza da bildirdik. ${ACIL_METNI}`, `${t.ad} ${deg} — acil eşiğin üstünde.`)
+    }
   } else if (alt(e.acilAlt)) {
     const hasta = o.tip === 'glukoz'
       ? `Kan şekeriniz çok düşük (${deg}). Doktorunuzun size verdiği düşük şeker planını hemen uygulayın. Doktorunuza da bildirdik. ${ACIL_METNI}`
       : `${t.ad} değeriniz çok düşük (${deg}). Doktorunuza da bildirdik. ${ACIL_METNI}`
     ekle('cok_dusuk', 'acil', hasta, `${t.ad} ${deg} — acil alt eşiğin altında.`)
+    if (o.tip === 'glukoz') Object.assign(out[out.length - 1].veri, { sekerAcil: 'dusuk', keton: false } satisfies SekerAcilVerisi)
   } else if (ust(e.bildirUst, e.bildirUst2)) {
     ekle('yuksek_bildir', 'hekime_bildir', `${t.ad} değeriniz yüksek (${deg}). Bu ölçümü doktorunuza ilettik. ${ILAC_UYARISI} Şikâyetiniz varsa Mesajlar'dan yazabilirsiniz; ağır bir belirtiniz varsa 112'yi arayın.`, `${t.ad} ${deg} — hekime bildir eşiğinin üstünde.`)
   } else if (alt(e.bildirAlt)) {
@@ -85,6 +104,44 @@ export function tekDegerKurallari(o: EvOlcum, esikler: Record<string, EsikSeti>,
     ekle('ates_var', 'bilgi', `Ateş ${deg}. Doktorunuzun önerdiği şekilde takip edin ve birkaç saat sonra yeniden ölçün.`, `Ateş ${deg}.`)
   }
   return out
+}
+
+/**
+ * EV-ACIL-SEKER — a glucometer "HI" / "LO". Always urgent (never a number, never a trend): HI → the very-high glucose path
+ * (same dedupe key as a numeric ≥ acilUst reading, so the two never double-alert), LO → the very-low path. Runs whether or
+ * not the glucose module is on (urgent values are always checked).
+ */
+export function isaretKurallari(o: IsaretliOlcum, b: KuralBaglami): KuralSonucu[] {
+  const m = metrikAnahtari(o)
+  const yer = o.baglam ? ` · ${BAGLAM_ADI[o.baglam]}` : ''
+  const veri = { deger: null, deger2: null, isaret: o.isaret, olcumAt: o.olcumAt, olcumId: o.id }
+  if (o.isaret === 'hi') {
+    return [{
+      kural: 'cok_yuksek', anahtar: `cok_yuksek:${m}`, duzey: 'acil', metrik: m,
+      hastaMetni: `Ölçüm cihazınız "HI" gösterdi: kan şekeriniz cihazın ölçebileceğinden yüksek. Doktorunuza da bildirdik. ${SEKER_ACIL_METNI}`,
+      hekimMetni: `Kan şekeri${yer}: cihaz "HI" gösterdi (ölçüm aralığının üstü) — acil.${b.insulinAktif ? ' Aktif insülin var.' : ''}`,
+      veri: { ...veri, sekerAcil: 'yuksek', keton: !!b.insulinAktif } satisfies Record<string, unknown> & SekerAcilVerisi,
+    }]
+  }
+  return [{
+    kural: 'cok_dusuk', anahtar: `cok_dusuk:${m}`, duzey: 'acil', metrik: m,
+    hastaMetni: `Ölçüm cihazınız "LO" gösterdi: kan şekeriniz çok düşük olabilir. Doktorunuzun size verdiği düşük şeker planını hemen uygulayın. Doktorunuza da bildirdik. ${ACIL_METNI}`,
+    hekimMetni: `Kan şekeri${yer}: cihaz "LO" gösterdi (ölçüm aralığının altı) — acil.`,
+    veri: { ...veri, sekerAcil: 'dusuk', keton: false } satisfies Record<string, unknown> & SekerAcilVerisi,
+  }]
+}
+
+/**
+ * UYARI-RENKLERI — the clinical level of ONE reading against the thresholds (display only: tiles, lists, curves). Same
+ * thresholds as the rule engine; 'bilgi' and in-range → null. A HI / LO flag is always 'acil'.
+ */
+export function olcumSeviyesi(o: Pick<EvOlcum, 'tip' | 'deger' | 'deger2' | 'baglam'> | Pick<IsaretliOlcum, 'tip' | 'isaret' | 'baglam'>, esikler: Record<string, EsikSeti>): Exclude<UyariDuzeyi, 'bilgi'> | null {
+  if ('isaret' in o && o.isaret) return 'acil'
+  const n = o as Pick<EvOlcum, 'tip' | 'deger' | 'deger2' | 'baglam'>
+  const r = tekDegerKurallari({ ...n, id: '', olcumAt: new Date(0).toISOString(), kaynak: 'portal' }, esikler, { yasAy: null, kiloHekimeBildir: false })
+  let en: Exclude<UyariDuzeyi, 'bilgi'> | null = null
+  for (const x of r) if (x.duzey !== 'bilgi' && (en == null || DUZEY_SIRASI[x.duzey] > DUZEY_SIRASI[en])) en = x.duzey
+  return en
 }
 
 export interface Pencere {

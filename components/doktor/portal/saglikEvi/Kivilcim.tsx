@@ -2,8 +2,13 @@
 /**
  * HASTA-PORTALI-GUNLUK — sparkline of daily averages with the target band (and a second series for diastolic BP).
  * Presentational, no words. Gaps (days without a reading) break the line instead of inventing values.
+ * EV-ACIL-SEKER: `isaretler[i]` = a glucometer HI / LO that day — an off-scale triangle on the top / bottom edge in the
+ * acil red (UYARI_RENK), never a point on the line.
  */
-export function Kivilcim({ seri, seri2, hedefMin, hedefMax, renk = '#b4832f', yukseklik = 56, aria }: {
+import { UYARI_RENK } from '@/lib/doktor/chromeRenk'
+
+export function Kivilcim({ seri, seri2, hedefMin, hedefMax, renk = '#b4832f', yukseklik = 56, aria, isaretler }: {
+  isaretler?: Array<'hi' | 'lo' | null | undefined>
   seri: Array<number | null>
   seri2?: Array<number | null>
   hedefMin?: number | null
@@ -14,8 +19,9 @@ export function Kivilcim({ seri, seri2, hedefMin, hedefMax, renk = '#b4832f', yu
 }) {
   const W = 240, H = yukseklik, P = 4
   const hepsi = [...seri, ...(seri2 || [])].filter((x): x is number => x != null)
-  if (hepsi.length < 2) return <div style={{ height: H, display: 'grid', placeItems: 'center', fontSize: 12, color: 'var(--sg-muted)' }} aria-label={aria}>—</div>
-  let min = Math.min(...hepsi, ...(hedefMin != null ? [hedefMin] : [])), max = Math.max(...hepsi, ...(hedefMax != null ? [hedefMax] : []))
+  const isaretVar = !!isaretler?.some(Boolean)
+  if (hepsi.length < 2 && !isaretVar) return <div style={{ height: H, display: 'grid', placeItems: 'center', fontSize: 12, color: 'var(--sg-muted)' }} aria-label={aria}>—</div>
+  let min = Math.min(...hepsi, ...(hedefMin != null ? [hedefMin] : []), ...(hepsi.length ? [] : [0])), max = Math.max(...hepsi, ...(hedefMax != null ? [hedefMax] : []), ...(hepsi.length ? [] : [1]))
   const pay = (max - min || 1) * 0.12; min -= pay; max += pay
   const x = (i: number, n: number) => P + (i / Math.max(1, n - 1)) * (W - 2 * P)
   const y = (v: number) => P + (1 - (v - min) / (max - min || 1)) * (H - 2 * P)
@@ -34,6 +40,9 @@ export function Kivilcim({ seri, seri2, hedefMin, hedefMax, renk = '#b4832f', yu
       {seri2 ? <path d={yol(seri2)} fill="none" stroke={renk} strokeOpacity={0.45} strokeWidth={1.6} strokeLinejoin="round" vectorEffect="non-scaling-stroke" /> : null}
       <path d={yol(seri)} fill="none" stroke={renk} strokeWidth={2.4} strokeLinejoin="round" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
       {son != null && sonI >= 0 ? <circle cx={x(sonI, seri.length)} cy={y(son)} r={3.5} fill={renk} /> : null}
+      {(isaretler || []).map((i, k) => (i ? (
+        <path key={k} data-isaret={i} d={i === 'hi' ? `M${x(k, seri.length) - 5} 7 L${x(k, seri.length) + 5} 7 L${x(k, seri.length)} 0 Z` : `M${x(k, seri.length) - 5} ${H - 7} L${x(k, seri.length) + 5} ${H - 7} L${x(k, seri.length)} ${H} Z`} fill={UYARI_RENK.acil.vurgu} />
+      ) : null))}
     </svg>
   )
 }

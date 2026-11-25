@@ -19,9 +19,9 @@ const MS = Date.parse(SIMDI)
 const demo = () => evVerisiHesapla(evVerisiDemoGirdisi(SIMDI))
 
 describe('Ev verisi v2 — status sentence', () => {
-  it('names the rising after-lunch glucose in plain Turkish, attention tone', () => {
+  it('names the rising after-lunch glucose in plain Turkish, doctor-notified (coral) tone', () => {
     const d = durumCumlesi(demo(), MS)
-    assert.equal(d.ton, 'dikkat')
+    assert.equal(d.ton, 'bildir', 'UYARI-RENKLERI: a hekime_bildir trend is the coral clinical tone')
     assert.match(d.baslik, /^Tokluk şekeri bu hafta yükseliyor — ort\. \d+ mg\/dL$/)
     assert.match(d.alt, /^Önceki 3 haftada \d+ mg\/dL idi\./)
     assert.equal(d.metrik, 'glukoz:tokluk2')

@@ -11,15 +11,17 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { decrypt } from '@/lib/security/encryption'
 import { hekimBransi } from '@/lib/doktor/hekimAdi'
 import { arsivsizIlaclar, arsivsizNotlar } from '@/lib/doktor/arsiv'
-import type { DozKaydi, DozPlani, EvOlcum, EvTercihler, EvUyari, GlukozBaglami, OlcumTipi, UyariDuzeyi } from './tipler'
-import { PAYLASIM_ONAY_SURUMU, VARSAYILAN_TERCIHLER } from './tipler'
+import type { DozKaydi, DozPlani, EvOlcum, EvTercihler, EvUyari, GlukozBaglami, GunlukOlcum, IsaretliOlcum, OlcumTipi, UyariDuzeyi } from './tipler'
+import { isaretliMi, PAYLASIM_ONAY_SURUMU, VARSAYILAN_TERCIHLER } from './tipler'
 import { bransGunlukAyari, hedefProfili, type BransGunlukAyari } from './bransAyari'
 import { etkinEsikler, hekimAyarlariniTemizle, type HedefProfili, type HekimAyarlari } from './hedefler'
 import { olcumDogrula } from './olcumler'
 import { siklikCoz, gunSlotlari, ERTELE_DK } from './dozPlani'
-import { gurultuSuz, olcumKurallari, type KuralSonucu } from './kurallar'
+import { gurultuSuz, isaretKurallari, olcumKurallari, sekerAcilAlani, type KuralSonucu } from './kurallar'
 import { hastaModulleri, hastaTercihiDegistir, hastaTercihiTemizle, type KlinikGirdi } from './moduller'
-import { aktifIlacAdlari, klinikGirdi } from './ilacSinifi'
+import { aktifIlacAdlari, ilacGirdileri, insulinVarMi, klinikGirdi } from './ilacSinifi'
+import { hekimeBildir, varsayilanHekimGonderici, type YeniUyari } from './hekimBildirim'
+import { arkaPlanda } from '@/lib/kurucu/denemeBildirimi'
 import { gunlukOzeti, type GunlukDurum, type HamGunluk } from './ozet'
 import { gunEkle, saatGecerliMi, trGun, trGunBasi, GUN_MS } from './zaman'
 
@@ -31,6 +33,18 @@ export const GUNLUK_OLCUM_SINIRI = 60
 
 // ─── row ↔ type ─────────────────────────────────────────────────────────────────────────────────────────────────
 export const olcumSatiri = (r: Record<string, any>): EvOlcum => ({ id: String(r.id), tip: r.tip, deger: Number(r.deger), deger2: r.deger2 == null ? null : Number(r.deger2), baglam: r.baglam ?? null, olcumAt: new Date(r.olcum_at).toISOString(), kaynak: r.kaynak })
+/** EV-ACIL-SEKER: the columns every ev_olcumleri read selects (isaret included). */
+export const OLCUM_SECIMI = 'id, tip, deger, deger2, baglam, olcum_at, kaynak, isaret'
+export const isaretliSatir = (r: Record<string, any>): IsaretliOlcum => ({ id: String(r.id), tip: 'glukoz', isaret: r.isaret === 'lo' ? 'lo' : 'hi', baglam: r.baglam ?? null, olcumAt: new Date(r.olcum_at).toISOString(), kaynak: r.kaynak })
+/** Rows → numeric readings (every computation) + HI / LO flags (kept apart, never averaged). */
+export function olcumSatirlari(rows: Array<Record<string, any>> | null | undefined): { sayisal: EvOlcum[]; isaretli: IsaretliOlcum[] } {
+  const sayisal: EvOlcum[] = [], isaretli: IsaretliOlcum[] = []
+  for (const r of rows || []) {
+    if (r.isaret === 'hi' || r.isaret === 'lo') isaretli.push(isaretliSatir(r))
+    else if (r.deger != null && Number.isFinite(Number(r.deger))) sayisal.push(olcumSatiri(r))
+  }
+  return { sayisal, isaretli }
+}
 export const planSatiri = (r: Record<string, any>): DozPlani => ({ id: String(r.id), ilacId: r.ilac_id ?? null, ad: String(r.ad), doz: r.doz ?? null, saatler: Array.isArray(r.saatler) ? r.saatler.filter(saatGecerliMi) : [], gerektikce: !!r.gerektikce, haftaGunu: r.hafta_gunu ?? null, kaynak: r.kaynak === 'hasta' ? 'hasta' : 'hekim', kritik: !!r.kritik, minAralikSaat: r.min_aralik_saat == null ? null : Number(r.min_aralik_saat), aktif: r.aktif !== false, baslangic: r.baslangic ?? null, bitis: r.bitis ?? null })
 export const kayitSatiri = (r: Record<string, any>): DozKaydi => ({ id: String(r.id), planId: String(r.plan_id), planlananAt: new Date(r.planlanan_at).toISOString(), durum: r.durum, kayitAt: new Date(r.kayit_at).toISOString(), erteleUntil: r.ertele_until ? new Date(r.ertele_until).toISOString() : null })
 export const uyariSatiri = (r: Record<string, any>): EvUyari => ({ id: String(r.id), kural: r.kural, anahtar: r.anahtar, duzey: r.duzey, metrik: r.metrik, hastaMetni: r.hasta_metni, hekimMetni: r.hekim_metni, olusturmaAt: new Date(r.olusturma_at).toISOString(), hastaGorduAt: r.hasta_gordu_at ?? null, hekimGorduAt: r.hekim_gordu_at ?? null, veri: r.veri || {} })
@@ -98,7 +112,7 @@ export async function gunlukYukle(sb: Sb, k: Kapsam, simdiMs = Date.now()): Prom
     sb.from('ev_tercihler').select('*').eq('doctor_id', k.doktorId).eq('patient_id', k.patientId).maybeSingle(),
     sb.from('ev_ilac_planlari').select('*').eq('doctor_id', k.doktorId).eq('patient_id', k.patientId).limit(200),
     aktifIlacSorgusu(sb, k),
-    sb.from('ev_olcumleri').select('id, tip, deger, deger2, baglam, olcum_at, kaynak').eq('doctor_id', k.doktorId).eq('patient_id', k.patientId).gte('olcum_at', d90).order('olcum_at', { ascending: false }).limit(1500),
+    sb.from('ev_olcumleri').select(OLCUM_SECIMI).eq('doctor_id', k.doktorId).eq('patient_id', k.patientId).gte('olcum_at', d90).order('olcum_at', { ascending: false }).limit(1500),
     sb.from('ev_olcumleri').select('id', { count: 'exact', head: true }).eq('doctor_id', k.doktorId).eq('patient_id', k.patientId),
     sb.from('ev_olcumleri').select('id', { count: 'exact', head: true }).eq('doctor_id', k.doktorId).eq('patient_id', k.patientId).eq('kaynak', 'portal_foto'),
     sb.from('ev_doz_kayitlari').select('id, plan_id, planlanan_at, durum, kayit_at, ertele_until').eq('doctor_id', k.doktorId).eq('patient_id', k.patientId).gte('planlanan_at', d35).limit(3000),
@@ -122,7 +136,7 @@ export async function gunlukYukle(sb: Sb, k: Kapsam, simdiMs = Date.now()): Prom
 
   const ham: HamGunluk = {
     simdi, bransAnahtar: kk.brans.anahtar, ayar: kk.brans.ayar, hekimAyar: kk.hekimAyar, profil: kk.profil,
-    olcumler: ((olcumler.data || []) as Record<string, any>[]).map(olcumSatiri),
+    ...(() => { const o = olcumSatirlari(olcumler.data as Record<string, any>[]); return { olcumler: o.sayisal, isaretliOlcumler: o.isaretli } })(),
     toplamOlcum: toplam.count || 0, fotoOlcum: foto.count || 0,
     planlar: planListesi,
     kayitlar: ((kayitlar.data || []) as Record<string, any>[]).map(kayitSatiri),
@@ -147,10 +161,11 @@ export type IslemSonucu = { ok: true; [k: string]: unknown } | { ok: false; stat
 const hata = (status: number, h: string): IslemSonucu => ({ ok: false, status, hata: h })
 
 /** Patient-facing alert view (never the doctor text). */
-export const hastaUyarisi = (u: KuralSonucu) => ({ duzey: u.duzey as UyariDuzeyi, metrik: u.metrik, hastaMetni: u.hastaMetni })
+export const hastaUyarisi = (u: KuralSonucu) => ({ duzey: u.duzey as UyariDuzeyi, metrik: u.metrik, hastaMetni: u.hastaMetni, kural: u.kural, ...sekerAcilAlani(u.veri) })
+
 
 /** Save one reading, then run the rules on it (single-value + the trend of that metric) with dedupe / cool-down. */
-export async function olcumKaydet(sb: Sb, k: Kapsam, ham: { tip?: unknown; deger?: unknown; deger2?: unknown; baglam?: unknown; olcumAt?: unknown; foto?: unknown }, simdiMs = Date.now()): Promise<IslemSonucu> {
+export async function olcumKaydet(sb: Sb, k: Kapsam, ham: { tip?: unknown; deger?: unknown; deger2?: unknown; baglam?: unknown; isaret?: unknown; olcumAt?: unknown; foto?: unknown }, simdiMs = Date.now()): Promise<IslemSonucu> {
   const v = olcumDogrula(ham)
   if (!v.ok) return hata(422, v.hata)
   let olcumAt = new Date(simdiMs).toISOString()
@@ -162,33 +177,51 @@ export async function olcumKaydet(sb: Sb, k: Kapsam, ham: { tip?: unknown; deger
   const gunBas = trGunBasi(trGun(simdiMs)).toISOString()
   const { count } = await sb.from('ev_olcumleri').select('id', { count: 'exact', head: true }).eq('doctor_id', k.doktorId).eq('patient_id', k.patientId).gte('created_at', gunBas)
   if ((count || 0) >= GUNLUK_OLCUM_SINIRI) return hata(429, 'Bugün için ölçüm sınırına ulaşıldı. Yarın yeniden deneyebilirsiniz.')
-  const { data: satir, error } = await sb.from('ev_olcumleri').insert({ doctor_id: k.doktorId, patient_id: k.patientId, tip: v.tip, deger: v.deger, deger2: v.deger2, baglam: v.baglam, olcum_at: olcumAt, kaynak: ham.foto === true ? 'portal_foto' : 'portal' }).select('id, tip, deger, deger2, baglam, olcum_at, kaynak').single()
+  const { data: satir, error } = await sb.from('ev_olcumleri').insert({ doctor_id: k.doktorId, patient_id: k.patientId, tip: v.tip, deger: v.deger, deger2: v.deger2, baglam: v.baglam, olcum_at: olcumAt, kaynak: ham.foto === true ? 'portal_foto' : 'portal', ...(v.isaret ? { isaret: v.isaret } : {}) }).select(OLCUM_SECIMI).single()
   if (error || !satir) return hata(500, 'Ölçüm kaydedilemedi. Lütfen yeniden deneyin.')
-  const olcum = olcumSatiri(satir as Record<string, any>)
+  const olcum: GunlukOlcum = v.isaret ? isaretliSatir(satir as Record<string, any>) : olcumSatiri(satir as Record<string, any>)
   const uyarilar = await kurallariCalistir(sb, k, olcum, simdiMs)
   return { ok: true, olcum, uyarilar: uyarilar.map(hastaUyarisi) }
 }
 
-async function kurallariCalistir(sb: Sb, k: Kapsam, o: EvOlcum, simdiMs: number): Promise<KuralSonucu[]> {
+async function kurallariCalistir(sb: Sb, k: Kapsam, o: GunlukOlcum, simdiMs: number): Promise<KuralSonucu[]> {
   const d28 = new Date(simdiMs - 29 * GUN_MS).toISOString()
-  const [kk, gecmis, onceki, ilaclar, tercih] = await Promise.all([
+  const [kk, gecmis, onceki, ilaclar, tercih, kendi] = await Promise.all([
     kuralKapsami(sb, k, simdiMs),
-    sb.from('ev_olcumleri').select('id, tip, deger, deger2, baglam, olcum_at, kaynak').eq('doctor_id', k.doktorId).eq('patient_id', k.patientId).eq('tip', o.tip).gte('olcum_at', d28).limit(600),
+    sb.from('ev_olcumleri').select(OLCUM_SECIMI).eq('doctor_id', k.doktorId).eq('patient_id', k.patientId).eq('tip', o.tip).gte('olcum_at', d28).limit(600),
     sb.from('ev_uyarilar').select('anahtar, duzey, olusturma_at').eq('doctor_id', k.doktorId).eq('patient_id', k.patientId).gte('olusturma_at', new Date(simdiMs - 3 * GUN_MS).toISOString()).limit(200),
     aktifIlacSorgusu(sb, k),
-    sb.from('ev_tercihler').select('moduller').eq('doctor_id', k.doktorId).eq('patient_id', k.patientId).maybeSingle().then((r) => r, () => ({ data: null })),
+    sb.from('ev_tercihler').select('moduller, paylasim_onayi').eq('doctor_id', k.doktorId).eq('patient_id', k.patientId).maybeSingle().then((r) => r, () => ({ data: null })),
+    // EV-ACIL-SEKER: the patient's own active medicines count for the insulin check too (same batch, no extra round trip).
+    sb.from('ev_ilac_planlari').select('ad').eq('doctor_id', k.doktorId).eq('patient_id', k.patientId).eq('kaynak', 'hasta').eq('aktif', true).limit(40).then((r) => r, () => ({ data: [] })),
   ])
   const esikler = etkinEsikler(kk.profil, kk.hekimAyar)
   // HASTA-MODULLERI: a kind the patient is not followed for is stored and still checked for an urgent value only.
-  const klinik: KlinikGirdi = klinikGirdi(kk.notesEncrypted, kk.notSatirlari, aktifIlacAdlari((ilaclar.data || []) as Record<string, any>[], trGun(simdiMs)))
-  const mod = hastaModulleri({ bransAnahtar: kk.brans.anahtar, ayar: kk.brans.ayar, hekim: kk.hekimAyar, klinik, hasta: hastaTercihiTemizle((tercih as { data?: Record<string, unknown> | null }).data?.moduller) })
-  const b = { yasAy: kk.yasAy, kiloHekimeBildir: mod.kiloHekimeBildir }
-  const liste = ((gecmis.data || []) as Record<string, any>[]).map(olcumSatiri)
-  if (!liste.some((x) => x.id === o.id)) liste.push(o)
-  const adaylar = olcumKurallari(o, liste, esikler, simdiMs, b, mod.olcumler.includes(o.tip))
+  const doktorIlaclari = aktifIlacAdlari((ilaclar.data || []) as Record<string, any>[], trGun(simdiMs))
+  const klinik: KlinikGirdi = klinikGirdi(kk.notesEncrypted, kk.notSatirlari, doktorIlaclari)
+  const tercihV = (tercih as { data?: Record<string, unknown> | null }).data
+  const mod = hastaModulleri({ bransAnahtar: kk.brans.anahtar, ayar: kk.brans.ayar, hekim: kk.hekimAyar, klinik, hasta: hastaTercihiTemizle(tercihV?.moduller) })
+  const kendiAdlari = (((kendi as { data?: unknown }).data || []) as Array<{ ad?: unknown }>).map((r) => String(r.ad || ''))
+  const insulinAktif = insulinVarMi([...klinik.ilaclar, ...ilacGirdileri(kendiAdlari)])
+  const b = { yasAy: kk.yasAy, kiloHekimeBildir: mod.kiloHekimeBildir, insulinAktif }
+  let adaylar: KuralSonucu[]
+  if (isaretliMi(o)) {
+    // EV-ACIL-SEKER: a meter "HI" / "LO" is always urgent, whether or not the glucose module is on.
+    adaylar = isaretKurallari(o, b)
+  } else {
+    const liste = olcumSatirlari(gecmis.data as Record<string, any>[]).sayisal
+    if (!liste.some((x) => x.id === o.id)) liste.push(o)
+    adaylar = olcumKurallari(o, liste, esikler, simdiMs, b, mod.olcumler.includes(o.tip))
+  }
   const yeni = gurultuSuz(adaylar, ((onceki.data || []) as Record<string, any>[]).map((r) => ({ anahtar: String(r.anahtar), duzey: r.duzey as UyariDuzeyi, olusturmaAt: String(r.olusturma_at) })), simdiMs)
   if (yeni.length) {
-    await sb.from('ev_uyarilar').insert(yeni.map((r) => ({ doctor_id: k.doktorId, patient_id: k.patientId, kural: r.kural, anahtar: r.anahtar, duzey: r.duzey, metrik: r.metrik, hasta_metni: r.hastaMetni, hekim_metni: r.hekimMetni, veri: r.veri, olusturma_at: new Date(simdiMs).toISOString() })))
+    const { data: eklenen } = await sb.from('ev_uyarilar').insert(yeni.map((r) => ({ doctor_id: k.doktorId, patient_id: k.patientId, kural: r.kural, anahtar: r.anahtar, duzey: r.duzey, metrik: r.metrik, hasta_metni: r.hastaMetni, hekim_metni: r.hekimMetni, veri: r.veri, olusturma_at: new Date(simdiMs).toISOString() }))).select('id, doctor_id, patient_id, duzey, kural')
+    // HEKIM-PUSH: the doctor's phone hears about acil / hekime_bildir — after the response (waitUntil), never on this request.
+    const doktoraGiden = ((eklenen || []) as YeniUyari[]).filter((u) => u.duzey === 'acil' || u.duzey === 'hekime_bildir')
+    if (doktoraGiden.length && tercihV?.paylasim_onayi === true) {
+      const gonder = varsayilanHekimGonderici()
+      if (gonder) arkaPlanda(() => hekimeBildir(sb, gonder, doktoraGiden.map((u) => ({ ...u, id: String(u.id), doctor_id: String(u.doctor_id), patient_id: String(u.patient_id) })), simdiMs), 'hekim-push')
+    }
   }
   return yeni
 }
@@ -333,8 +366,8 @@ export async function veriDisaAktar(sb: Sb, k: Kapsam): Promise<Record<string, u
 
 export function olcumlerCsv(satirlar: unknown[]): string {
   const kac = (x: unknown) => { const s = x == null ? '' : String(x); return /[",\n;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s }
-  const rows = (satirlar as Record<string, unknown>[]).map((r) => [r.olcum_at, r.tip, r.deger, r.deger2, r.baglam, r.kaynak].map(kac).join(';'))
-  return ['olcum_zamani;tur;deger;deger2;baglam;kaynak', ...rows].join('\n')
+  const rows = (satirlar as Record<string, unknown>[]).map((r) => [r.olcum_at, r.tip, r.deger, r.deger2, r.baglam, r.kaynak, r.isaret ? String(r.isaret).toUpperCase() : ''].map(kac).join(';'))
+  return ['olcum_zamani;tur;deger;deger2;baglam;kaynak;cihaz_isareti', ...rows].join('\n')
 }
 
 /** Delete everything the patient entered (readings, dose marks, own medicines, alerts, badges, questions, push). */

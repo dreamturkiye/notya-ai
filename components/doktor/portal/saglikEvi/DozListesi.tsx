@@ -10,6 +10,7 @@ import type { GunlukDurum } from '@/lib/saglikEvi/ozet'
 import type { SaglikEviSozleri } from '@/lib/saglikEvi/sozler'
 import { saatMetni, sureMetni } from '@/lib/saglikEvi/sozler'
 import type { GunlukEylemleri } from './eylemler'
+import { UyariIsareti } from '@/components/doktor/saglikEvi/UyariIsareti'
 
 const Tik = () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
 
@@ -42,7 +43,8 @@ export function DozListesi({ s, durum, eylemler }: { s: SaglikEviSozleri; durum:
                       <div className="sge-dozsatir-metin">
                         <div className="sge-dozsatir-ad">{x.ad}{x.kaynak === 'hasta' ? <span className="sge-etiket sge-etiket--hasta">{s.hastaEkledi}</span> : null}{x.kritik ? <span className="sge-etiket sge-etiket--kritik">{s.kritik}</span> : null}</div>
                         {x.doz ? <div className="sge-dozsatir-doz">{x.doz}</div> : null}
-                        {x.durum === 'atlandi' || x.durum === 'ertelendi' || x.durum === 'kacirildi' ? <div className="sge-dozsatir-doz">{s.durum[x.durum]}</div> : null}
+                        {/* UYARI-RENKLERI: a missed / skipped dose is an adherence lapse — slate, dashed mark, its word; never red. */}
+                        {x.durum === 'atlandi' || x.durum === 'kacirildi' ? <div className="sge-dozsatir-doz"><UyariIsareti ton="uyum" etiket={x.durum === 'atlandi' ? s.uyumAtlandi : s.uyumIsaretlenmedi} kucuk /></div> : x.durum === 'ertelendi' ? <div className="sge-dozsatir-doz">{s.durum[x.durum]}</div> : null}
                       </div>
                       {!dolu && x.durum !== 'atlandi' ? (
                         <button type="button" className="sge-doz-diger" aria-label={`${x.ad} ${saat}: ${s.digerSecenek}`} aria-expanded={acik === anahtar} onClick={() => setAcik(acik === anahtar ? null : anahtar)}>
@@ -91,7 +93,7 @@ export function DozListesi({ s, durum, eylemler }: { s: SaglikEviSozleri; durum:
                   <div className="sge-dozsatir-ad">{g.ad}</div>
                   {g.doz ? <div className="sge-dozsatir-doz">{g.doz}</div> : null}
                   <div className="sge-dozsatir-doz">{g.sonAt ? s.sonDoz(sureMetni(simdi - Date.parse(g.sonAt))) : s.sonDozYok}</div>
-                  {g.minAralikSaat && g.uygunAt ? <div className="sge-dozsatir-doz" style={{ color: g.bekle ? 'var(--sge-uyari)' : undefined }}>{s.aralik(g.minAralikSaat, saatMetni(g.uygunAt))}</div> : null}
+                  {g.minAralikSaat && g.uygunAt ? <div className="sge-dozsatir-doz" style={{ color: g.bekle ? 'var(--sge-uyum)' : undefined }}>{s.aralik(g.minAralikSaat, saatMetni(g.uygunAt))}</div> : null}
                 </div>
                 <button type="button" className="sge-btn" disabled={mesgul === g.planId} onClick={() => isle(g.planId, [g.planId], null, 'alindi')}>{s.gerektikceVerdim}</button>
               </div>

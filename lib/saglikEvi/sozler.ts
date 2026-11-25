@@ -275,6 +275,39 @@ export const SAGLIK_EVI_SOZLERI = {
   yeniMesajVar: 'Yeni mesajınız var!',
   okunmamis: (n: number) => `${n} okunmamış`,
   gunlukYuklenemedi: 'Bugünkü ilaç ve ölçüm bilgileriniz şu an yüklenemedi. Doktorunuzla ilgili her şey aşağıda.',
+
+  // ── UYARI-RENKLERI (Kaan, 2026-11-25): never colour alone — every warning tone carries a word and an icon ──
+  /** Clinical reading levels (warm family). */
+  seviye: { acil: 'Acil', hekime_bildir: 'Doktora bildirildi', dikkat: 'Dikkat' } as Record<'acil' | 'hekime_bildir' | 'dikkat', string>,
+  /** Adherence lapse (calm slate family, outline icon). */
+  uyumIsaretlenmedi: 'İşaretlenmedi',
+  uyumAtlandi: 'Atlandı',
+  uyumGecikti: 'Gecikti',
+  uyumAsiGecikti: 'Tarihi geçti',
+  uyumOlcumEksik: 'Ölçülmedi',
+  hedefDisi: 'Hedef dışı',
+
+  // ── EV-ACIL-SEKER (Kaan, 2026-11-25): meter HI / LO and the calm symptom check on a very high glucose ──
+  isaret: { hi: 'HI', lo: 'LO' } as Record<'hi' | 'lo', string>,
+  isaretAlt: { hi: 'ölçüm aralığının üstü', lo: 'ölçüm aralığının altı' } as Record<'hi' | 'lo', string>,
+  isaretSoru: 'Cihaz ekranında sayı yerine şu mu yazıyor?',
+  isaretSecildi: (i: string) => `Cihazınız “${i}” gösterdi. Kaydet’e dokunun.`,
+  isaretVazgec: 'Sayı gireceğim',
+  sekerAcilBaslik: 'Kan şekeriniz çok yüksek',
+  sekerAcilBaslikHi: 'Cihazınız “HI” gösterdi',
+  sekerAcilAlt: 'Doktorunuza da bildirdik. Şu an aşağıdakilerden biri var mı?',
+  sekerAcilBelirtiler: ['Kusma', 'Karın ağrısı', 'Bilinç bulanıklığı ya da aşırı uyku hali', 'Çok susama ya da sık idrara çıkma', 'Derin ve hızlı nefes alma', 'Nefeste meyve ya da aseton kokusu'] as readonly string[],
+  sekerAcilBelirtiAria: (b: string) => `${b}: var`,
+  sekerAcilHicbiri: 'Hayır, hiçbiri yok',
+  sekerAcilVar: 'Var',
+  sekerAcil112Baslik: 'Hemen 112’yi arayın',
+  sekerAcil112Metin: 'Bu belirti acil değerlendirme gerektirebilir. Doktorunuza da bildirdik.',
+  sekerAcilSakinBaslik: 'Belirtiniz yoksa',
+  sekerAcilSakin: ['Oturun ve dinlenin.', 'Doktorunuz aksini söylemediyse su için.', '15–30 dakika sonra yeniden ölçün.'] as readonly string[],
+  sekerAcilKeton: 'Keton çubuğunuz varsa keton ölçün.',
+  sekerAcilTekrar: 'Yeniden ölçtüğünüzde yine çok yüksekse ya da kendinizi kötü hissederseniz 112’yi arayın.',
+  sekerAcilDoktor: 'Doktorunuza da bildirdik.',
+  sekerAcilTamam: 'Anladım',
 } as const
 
 export type SaglikEviSozleri = typeof SAGLIK_EVI_SOZLERI

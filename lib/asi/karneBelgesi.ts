@@ -82,6 +82,9 @@ export interface AsiKarnesi {
   yapilanlar: AsiKarnesiSatiri[]
   /** Yalnız bugün ve sonrası; en yakın ilk — "Sıradaki aşı" ilk eleman */
   siradakiler: AsiKarnesiSiradaki[]
+  /** UYARI-RENKLERI (2026-11-25): the doctor's next-dose dates that have passed without that dose being recorded (adherence
+   *  lapse — shown in the calm slate family, never red). Only present when there is at least one. */
+  gecikenler?: AsiKarnesiSiradaki[]
   uyari: { baslik: string; metin: string }
 }
 
@@ -100,6 +103,7 @@ export function asiKarnesiOlustur(g: {
 }): AsiKarnesi {
   const yapilanlar: AsiKarnesiSatiri[] = []
   const siradaki = new Map<string, AsiKarnesiSiradaki>()
+  const geciken = new Map<string, AsiKarnesiSiradaki>()
   // Sonraki dozu aynı hastada daha sonra kaydedilmiş satır "sıradaki" olarak gösterilmez (hekim listesiyle aynı kural).
   const karsilama = (g.asilar || []).map((a, i) => ({ id: String(i), patient_id: 'hasta', asi_adi: a.asi_adi, uygulama_tarihi: a.uygulama_tarihi }))
   for (const [i, a] of (g.asilar || []).entries()) {
@@ -113,16 +117,19 @@ export function asiKarnesiOlustur(g: {
     })
     const sonraki = gun(a.sonraki_doz_tarihi)
     if (sonraki && sonraki >= g.bugunIso && !sonrakiDozKarsilandiMi(karsilama[i], karsilama)) siradaki.set(`${ad}|${sonraki}`, { ad, tarih: sonraki })
+    else if (sonraki && sonraki < g.bugunIso && !sonrakiDozKarsilandiMi(karsilama[i], karsilama)) geciken.set(`${ad}|${sonraki}`, { ad, tarih: sonraki })
   }
   // Eskiden yeniye; tarihsiz kayıtlar sonda, kendi içinde ada göre.
   yapilanlar.sort((a, b) => (a.tarih && b.tarih ? a.tarih.localeCompare(b.tarih) : a.tarih ? -1 : b.tarih ? 1 : 0) || a.ad.localeCompare(b.ad, 'tr') || (a.doz ?? 0) - (b.doz ?? 0))
   const siradakiler = [...siradaki.values()].sort((a, b) => a.tarih.localeCompare(b.tarih) || a.ad.localeCompare(b.ad, 'tr'))
+  const gecikenler = [...geciken.values()].sort((a, b) => a.tarih.localeCompare(b.tarih) || a.ad.localeCompare(b.ad, 'tr'))
   return {
     hasta: { adSoyad: g.hasta.adSoyad ? temiz(g.hasta.adSoyad) : null, dogumTarihi: gun(g.hasta.dogumTarihi) },
     hekim: { ad: g.hekim.ad ? temiz(g.hekim.ad) : null, klinik: g.hekim.klinik ? temiz(g.hekim.klinik) : null },
     uretimTarihi: g.bugunIso,
     yapilanlar,
     siradakiler,
+    ...(gecikenler.length ? { gecikenler } : {}),
     uyari: { baslik: E_NABIZ_BASLIK, metin: E_NABIZ_UYARISI },
   }
 }

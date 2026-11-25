@@ -10,8 +10,22 @@
  *    morning + evening for 7 days; grade 3 ≥180/110); Türk Hipertansiyon Uzlaşı Raporu (TKD / TİHD / THD) follows them.
  *    Severe ≥180/120 with symptoms = emergency (112).
  *  - Glucose: TEMD Diabetes Mellitus ve Komplikasyonlarının Tanı, Tedavi ve İzlem Kılavuzu (latest edition) — açlık /
- *    öğün öncesi 80–130 mg/dL, tokluk 2. saat <160 mg/dL; ADA Standards of Care in Diabetes (latest annual edition) —
- *    level 1 hypoglycaemia <70, level 2 <54 mg/dL.
+ *    öğün öncesi 80–130 mg/dL, tokluk 2. saat <160 mg/dL; ADA Standards of Care in Diabetes—2026 (Diabetes Care 49,
+ *    Suppl. 1, Dec 2025 — latest annual edition) — level 1 hypoglycaemia <70, level 2 <54 mg/dL.
+ *  - EV-ACIL-SEKER (Kaan, 2026-11-25) — very high glucose: ≥300 mg/dL = hekime bildir (unchanged); ≥400 mg/dL or a meter
+ *    "HI" = ACİL (symptom check + 112 when any red flag; ketone reminder when an insulin is active). Sources (latest
+ *    editions, registry lib/kaynaklar/protokolKutuphanesi/belgeler.ts): SB Diyabet Tedavi ve İzlem Klinik Protokolleri
+ *    (`sb-kp-diyabet`, v1.0, §3.2 Hiperglisemik Aciller — DKA / HHS red flags: kusma, karın ağrısı, bilinç değişikliği,
+ *    Kussmaul solunumu, aseton kokusu, poliüri / polidipsi); TEMD DM Kılavuzu (`dernek-temd-dm`, latest edition) hiperglisemik
+ *    aciller; ADA Standards of Care—2026 §6 / §16 and the ADA–EASD–JBDS–AACE–DTS hyperglycaemic crises consensus
+ *    (Umpierrez et al., Diabetes Care 2024 — DKA with glucose ≥200 mg/dL, HHS ≥600 mg/dL; ketone testing in hyperglycaemia
+ *    for people on insulin). 400 mg/dL sits inside the crisis range and well below the HHS cut-off, so the patient is asked
+ *    about red flags early rather than late. LO and <54 mg/dL stay acil (level 2 hypoglycaemia).
+ *    Hard safety ceiling GLUKOZ_ACIL_TAVAN = 450 mg/dL: a doctor may lower the acil threshold per patient, or raise it, but
+ *    never above 450 — the lowest upper display limit of common home glucometers is ~500 mg/dL (above it they show "HI"),
+ *    so 450 keeps a margin under it: every value a meter can still print at the top of its range stays urgent. Likewise the
+ *    acil LOW threshold can never be set below 54 mg/dL (ADA level 2). Both are enforced in etkinEsikler(), whatever is
+ *    stored in ev_hedefler.
  *  - Pregnancy BP (Kadın Hastalıkları ve Doğum, active pregnancy only): T.C. Sağlık Bakanlığı Doğum Öncesi Bakım
  *    Yönetim Rehberi and TJOD gebelikte hipertansiyon önerileri — ≥140/90 notify, ≥160/110 severe range (urgent).
  *  - Weight gain alert (+2 kg within 3 days): 2021 ESC Heart Failure Guidelines with the 2023 focused update (patient
@@ -52,12 +66,17 @@ export type MetrikAnahtari = OlcumTipi | `glukoz:${'aclik' | 'tokluk2' | 'yatmad
 
 export type HedefProfili = 'genel' | 'gebelik'
 
+/** EV-ACIL-SEKER — default acil glucose threshold and the hard safety limits (see the source note above). */
+export const GLUKOZ_ACIL_UST = 400
+export const GLUKOZ_ACIL_TAVAN = 450
+export const GLUKOZ_ACIL_ALT_TABAN = 54
+
 const GENEL: Record<string, EsikSeti> = {
   kb: { hedefMax: 130, hedefMax2: 80, dikkatUst: 160, dikkatUst2: 100, bildirUst: 170, bildirUst2: 105, acilUst: 180, acilUst2: 120, dikkatAlt: 90, bildirAlt: 80, trendDelta: 10, trendTaban: 135 },
-  'glukoz:aclik': { hedefMin: 80, hedefMax: 130, dikkatAlt: 70, acilAlt: 54, bildirUst: 300, trendDelta: 20, trendTaban: 130 },
-  'glukoz:tokluk2': { hedefMin: 80, hedefMax: 160, dikkatAlt: 70, acilAlt: 54, bildirUst: 300, trendDelta: 30, trendTaban: 140 },
-  'glukoz:yatmadan': { hedefMin: 90, hedefMax: 150, dikkatAlt: 70, acilAlt: 54, bildirUst: 300, trendDelta: 30, trendTaban: 150 },
-  'glukoz:rastgele': { hedefMin: 70, hedefMax: 180, dikkatAlt: 70, acilAlt: 54, bildirUst: 300 },
+  'glukoz:aclik': { hedefMin: 80, hedefMax: 130, dikkatAlt: 70, acilAlt: 54, bildirUst: 300, acilUst: 400, trendDelta: 20, trendTaban: 130 },
+  'glukoz:tokluk2': { hedefMin: 80, hedefMax: 160, dikkatAlt: 70, acilAlt: 54, bildirUst: 300, acilUst: 400, trendDelta: 30, trendTaban: 140 },
+  'glukoz:yatmadan': { hedefMin: 90, hedefMax: 150, dikkatAlt: 70, acilAlt: 54, bildirUst: 300, acilUst: 400, trendDelta: 30, trendTaban: 150 },
+  'glukoz:rastgele': { hedefMin: 70, hedefMax: 180, dikkatAlt: 70, acilAlt: 54, bildirUst: 300, acilUst: 400 },
   kilo: {},
   nabiz: { hedefMin: 60, hedefMax: 100, dikkatAlt: 50, dikkatUst: 110, bildirAlt: 40, bildirUst: 130 },
   spo2: { hedefMin: 95, hedefMax: 100, dikkatAlt: 94, bildirAlt: 92, acilAlt: 88 },
@@ -131,6 +150,13 @@ export function etkinEsikler(profil: HedefProfili, ayar: HekimAyarlari | null | 
   for (const [anahtar, v] of Object.entries(ayar?.esikler || {})) {
     if (!v) continue
     k[anahtar] = { ...(k[anahtar] || {}), ...v }
+  }
+  // EV-ACIL-SEKER hard safety limits: no per-patient setting can make a very high (≥ 450) or a level-2 low (< 54) glucose
+  // non-urgent.
+  for (const [anahtar, e] of Object.entries(k)) {
+    if (!anahtar.startsWith('glukoz:')) continue
+    e.acilUst = Math.min(e.acilUst ?? GLUKOZ_ACIL_UST, GLUKOZ_ACIL_TAVAN)
+    e.acilAlt = Math.max(e.acilAlt ?? GLUKOZ_ACIL_ALT_TABAN, GLUKOZ_ACIL_ALT_TABAN)
   }
   return k
 }

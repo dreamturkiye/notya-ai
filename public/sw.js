@@ -1,4 +1,4 @@
-const CACHE = 'notya-v5'
+const CACHE = 'notya-v6'
 // HASTA-PORTALI-GUNLUK: Sağlığım push settings (the portal path to open on a notification tap). Never cleared on activate.
 const AYAR = 'sg-ayar'
 const OFFLINE_ASSETS = ['/', '/notes', '/session/new', '/manifest.json']
@@ -43,14 +43,21 @@ self.addEventListener('message', e => {
   }
 })
 
+// HEKIM-PUSH (2026-11-25) — the doctor's own notifications use the same worker. Their `yol` is an in-app doctor path
+// (/dashboard/doktor/…, opened as is — the doctor's sign-in guards it); an acil one stays on screen until tapped.
+const hekimYoluMu = y => typeof y === 'string' && y.startsWith('/dashboard/doktor')
+
 self.addEventListener('push', e => {
   let d = {}
   try { d = e.data ? e.data.json() : {} } catch (_) { d = {} }
-  e.waitUntil(self.registration.showNotification(d.baslik || 'Sağlığım', {
+  const hekim = hekimYoluMu(d.yol)
+  e.waitUntil(self.registration.showNotification(d.baslik || (hekim ? 'Notya' : 'Sağlığım'), {
     body: d.govde || '',
     tag: d.etiket || 'saglikim',
     icon: '/icon-192.png',
     badge: '/icon-192.png',
+    renotify: hekim,
+    requireInteraction: hekim && typeof d.etiket === 'string' && d.etiket.startsWith('ev-acil'),
     data: { yol: typeof d.yol === 'string' ? d.yol : '' },
   }))
 })
@@ -65,8 +72,17 @@ self.addEventListener('notificationclick', e => {
       if (r) taban = await r.text()
     } catch (_) { /* yok */ }
     const ek = (e.notification.data && e.notification.data.yol) || ''
-    const hedef = taban === '/' ? '/' : taban + ek
     const pencereler = await self.clients.matchAll({ type: 'window', includeUncontrolled: true })
+    if (hekimYoluMu(ek)) {
+      for (const p of pencereler) {
+        if (p.url.includes('/dashboard/doktor') && 'focus' in p) {
+          try { await p.navigate(ek) } catch (_) { /* yok */ }
+          return p.focus()
+        }
+      }
+      return self.clients.openWindow(ek)
+    }
+    const hedef = taban === '/' ? '/' : taban + ek
     for (const p of pencereler) {
       if (taban !== '/' && p.url.includes(taban) && 'focus' in p) {
         try { await p.navigate(hedef) } catch (_) { /* yok */ }

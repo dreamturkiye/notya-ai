@@ -2,17 +2,20 @@
  * HASTA-PORTALI-GUNLUK — the action contract between the shared daily-health-home views and whoever hosts them
  * (Türkiye's live portal, the example/preview mode, later a country build). Views call these; they never fetch.
  */
-import type { DozDurumu, GlukozBaglami, OlcumTipi, UyariDuzeyi } from '@/lib/saglikEvi/tipler'
+import type { DozDurumu, GlukozBaglami, OlcumIsareti, OlcumTipi, UyariDuzeyi } from '@/lib/saglikEvi/tipler'
 import type { FotoOneri } from '@/lib/saglikEvi/fotoOku'
 import type { ModulAnahtari } from '@/lib/saglikEvi/moduller'
 
 export type PushDurumu = 'yukleniyor' | 'yok' | 'acik' | 'kapali' | 'reddedildi' | 'desteklenmiyor'
 
-export interface OlcumGirdisi { tip: OlcumTipi; deger: number; deger2?: number | null; baglam?: GlukozBaglami | null; olcumAt?: string; foto?: boolean }
+/** EV-ACIL-SEKER: `isaret` = the meter showed HI / LO (glucose only; `deger` is then ignored and nothing numeric is stored). */
+export interface OlcumGirdisi { tip: OlcumTipi; deger: number; deger2?: number | null; baglam?: GlukozBaglami | null; olcumAt?: string; foto?: boolean; isaret?: OlcumIsareti }
+/** The patient-facing note after a save; sekerAcil / keton open the acil glucose symptom check. */
+export interface KayitNotu { duzey: UyariDuzeyi; metrik: string; hastaMetni: string; kural?: string; sekerAcil?: 'yuksek' | 'dusuk'; keton?: boolean }
 export type EylemSonucu = { ok: true } | { ok: false; hata: string }
 
 export interface GunlukEylemleri {
-  olcumEkle: (g: OlcumGirdisi) => Promise<EylemSonucu & { uyarilar?: Array<{ duzey: UyariDuzeyi; metrik: string; hastaMetni: string }> }>
+  olcumEkle: (g: OlcumGirdisi) => Promise<EylemSonucu & { uyarilar?: KayitNotu[] }>
   olcumSil: (id: string) => Promise<EylemSonucu>
   doz: (planIds: string[], planlananAt: string | null, durum: DozDurumu | 'geri') => Promise<EylemSonucu>
   plan: (g: { tur: 'ekle' | 'saat' | 'kaldir'; planId?: string; saatler?: string[]; ad?: string; doz?: string; gerektikce?: boolean }) => Promise<EylemSonucu>

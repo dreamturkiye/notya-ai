@@ -51,7 +51,7 @@ export function AsiHatirlatmaListesiGorunum({
               {satirlar.map((s) => (
                 <div key={s.asiId} data-asi-hatirlatma-satir={s.asiId} style={{ padding: '8px 10px', borderRadius: 12, border: '1px solid rgba(58,44,34,0.12)', background: 'rgba(58,44,34,0.05)', display: 'grid', gap: 8 }}>
                   <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', minHeight: 44 }}>
-                    <Rozet ton={s.durum === 'gecikti' ? 'kirmizi' : 'uyari'}>{s.durumEtiketi}</Rozet>
+                    <Rozet ton={s.durum === 'gecikti' ? 'uyum' : 'uyari'}>{s.durum === 'gecikti' ? '◌ ' : ''}{s.durumEtiketi}</Rozet>
                     {!hastaModu && <a href={asiDosyaYolu(s.patientId)} style={{ fontWeight: 700, fontSize: 14, color: CHROME_RENK.ink, textDecoration: 'none', overflowWrap: 'anywhere' }}>{s.hastaAdi}</a>}
                     <span style={stil.kucuk}>{s.asiAdi}{s.dozNo ? ` · ${s.dozNo}. doz` : ''} → sonraki: {trTarih(s.sonrakiDozTarihi)}</span>
                     <span style={{ marginLeft: 'auto' }}>

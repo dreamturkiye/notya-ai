@@ -12,7 +12,7 @@ import type { GunlukDurum, HamGunluk } from '@/lib/saglikEvi/ozet'
 import { gunlukOzeti } from '@/lib/saglikEvi/ozet'
 import { demoDurumuUygula, gunlukDemoHam } from '@/lib/saglikEvi/demo'
 import { olcumDogrula } from '@/lib/saglikEvi/olcumler'
-import { gurultuSuz, olcumKurallari } from '@/lib/saglikEvi/kurallar'
+import { gurultuSuz, isaretKurallari, olcumKurallari, sekerAcilAlani } from '@/lib/saglikEvi/kurallar'
 import { hastaModulleri, hastaTercihiDegistir } from '@/lib/saglikEvi/moduller'
 import { etkinEsikler } from '@/lib/saglikEvi/hedefler'
 import { ERTELE_DK } from '@/lib/saglikEvi/dozPlani'
@@ -114,23 +114,36 @@ export function GunlukProvider({ children }: { children: ReactNode }) {
       if (ornek && ham.current) {
         const v = olcumDogrula(g)
         if (!v.ok) return { ok: false, hata: v.hata }
-        const o = { id: `ornek-${Date.now()}`, tip: v.tip, deger: v.deger, deger2: v.deger2, baglam: v.baglam, olcumAt: g.olcumAt || new Date().toISOString(), kaynak: (g.foto ? 'portal_foto' : 'portal') as 'portal' }
+        const at = g.olcumAt || new Date().toISOString()
+        const kaynak = (g.foto ? 'portal_foto' : 'portal') as 'portal'
         const h = ham.current
         const esik = etkinEsikler(h.profil, h.hekimAyar)
         const mod = hastaModulleri({ bransAnahtar: h.bransAnahtar, ayar: h.ayar, hekim: h.hekimAyar, klinik: h.klinik, hasta: h.tercihler.moduller })
-        const b = { yasAy: null, kiloHekimeBildir: mod.kiloHekimeBildir }
-        const liste = [...h.olcumler, o]
-        const yeni = gurultuSuz(olcumKurallari(o, liste, esik, Date.now(), b, mod.olcumler.includes(o.tip)), h.uyarilar.map((u) => ({ anahtar: u.anahtar, duzey: u.duzey, olusturmaAt: u.olusturmaAt })), Date.now())
-        ham.current = { ...h, olcumler: liste, toplamOlcum: h.toplamOlcum + 1, uyarilar: [...yeni.map((r, i) => ({ id: `ornek-u${Date.now()}${i}`, kural: r.kural, anahtar: r.anahtar, duzey: r.duzey, metrik: r.metrik, hastaMetni: r.hastaMetni, hekimMetni: r.hekimMetni, olusturmaAt: new Date().toISOString(), hastaGorduAt: null, hekimGorduAt: null })), ...h.uyarilar] }
+        // EV-ACIL-SEKER: the example knows the drug classes of its persona (the server reads ilacSinifi.ts).
+        const b = { yasAy: null, kiloHekimeBildir: mod.kiloHekimeBildir, insulinAktif: !!h.klinik?.ilaclar.some((i) => i.siniflar.includes('İnsülin')) }
+        const oncekiler = h.uyarilar.map((u) => ({ anahtar: u.anahtar, duzey: u.duzey, olusturmaAt: u.olusturmaAt }))
+        let yeni: ReturnType<typeof olcumKurallari>
+        if (v.isaret) {
+          const o = { id: `ornek-${Date.now()}`, tip: 'glukoz' as const, isaret: v.isaret, baglam: v.baglam, olcumAt: at, kaynak }
+          yeni = gurultuSuz(isaretKurallari(o, b), oncekiler, Date.now())
+          ham.current = { ...h, isaretliOlcumler: [...(h.isaretliOlcumler || []), o], toplamOlcum: h.toplamOlcum + 1 }
+        } else {
+          const o = { id: `ornek-${Date.now()}`, tip: v.tip, deger: v.deger, deger2: v.deger2, baglam: v.baglam, olcumAt: at, kaynak }
+          const liste = [...h.olcumler, o]
+          yeni = gurultuSuz(olcumKurallari(o, liste, esik, Date.now(), b, mod.olcumler.includes(o.tip)), oncekiler, Date.now())
+          ham.current = { ...h, olcumler: liste, toplamOlcum: h.toplamOlcum + 1 }
+        }
+        const h2 = ham.current
+        ham.current = { ...h2, uyarilar: [...yeni.map((r, i) => ({ id: `ornek-u${Date.now()}${i}`, kural: r.kural, anahtar: r.anahtar, duzey: r.duzey, metrik: r.metrik, hastaMetni: r.hastaMetni, hekimMetni: r.hekimMetni, olusturmaAt: new Date().toISOString(), hastaGorduAt: null, hekimGorduAt: null, veri: r.veri })), ...h2.uyarilar] }
         yenidenHesapla()
-        return { ok: true, uyarilar: yeni.map((r) => ({ duzey: r.duzey, metrik: r.metrik, hastaMetni: r.hastaMetni })) }
+        return { ok: true, uyarilar: yeni.map((r) => ({ duzey: r.duzey, metrik: r.metrik, hastaMetni: r.hastaMetni, kural: r.kural, ...sekerAcilAlani(r.veri) })) }
       }
       const r = await gonder({ islem: 'olcum', ...g })
       if (r.ok) void yukle()
       return r.ok ? { ok: true, uyarilar: (r as { uyarilar?: [] }).uyarilar || [] } : r
     },
     olcumSil: async (id) => {
-      if (ornek && ham.current) { ham.current = { ...ham.current, olcumler: ham.current.olcumler.filter((o) => o.id !== id) }; yenidenHesapla(); return { ok: true } }
+      if (ornek && ham.current) { ham.current = { ...ham.current, olcumler: ham.current.olcumler.filter((o) => o.id !== id), isaretliOlcumler: (ham.current.isaretliOlcumler || []).filter((o) => o.id !== id) }; yenidenHesapla(); return { ok: true } }
       const r = await gonder({ islem: 'olcum-sil', id }); if (r.ok) void yukle(); return r.ok ? { ok: true } : r
     },
     doz: async (planIds, planlananAt, d) => {

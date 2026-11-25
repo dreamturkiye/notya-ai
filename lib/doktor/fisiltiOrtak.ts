@@ -34,6 +34,9 @@ export interface FisiltiItem {
    * HASTA-PORTALI-GUNLUK (2026-11-24): 'ev' = ONE consolidated item per patient for unseen home-data alerts
    * (Sağlığım daily health home, lib/saglikEvi/hekimSunucu.ts); resolved by "Gördüm" on the Ev verisi card. */
   kaynak: 'klinik' | 'mesaj' | 'kalkan' | 'takip' | 'kaynak' | 'ev'
+  /** UYARI-RENKLERI: only when kaynak === 'ev' — the most urgent alert's tone (acil / hekime_bildir / dikkat = clinical
+   *  reading; uyum = adherence lapse). Drives the chip colour + word + icon on the card (lib/saglikEvi/uyariRenkleri.ts). */
+  evTon?: import('@/lib/doktor/chromeRenk').UyariTonu
   /** TR-PROTOKOL-KUTUPHANESI: only when kaynak === 'kaynak' — a reviewed new edition of an official protocol (no patient;
    * patientId is ''). Gizle marks it seen for this doctor (protokol_duyuru_gorulen), never fisilti_gizlenen. */
   duyuruId?: string

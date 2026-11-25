@@ -4,14 +4,17 @@
  * steppers (hold to repeat), the glucose context chip is pre-selected from the patient's habit / time of day, the time is
  * "Şimdi" unless changed. "Fotoğrafla gir" reads the device screen and shows the values for confirmation — nothing is
  * saved until the patient taps Kaydet. After saving, the rule engine's friendly note (if any) appears in place.
+ * EV-ACIL-SEKER (Kaan, 2026-11-25): glucose also takes the meter's "HI" / "LO" (stored as a flag, never a number); a very
+ * high glucose (≥ acil threshold or HI) opens the calm symptom check (SekerAcilKontrolu) instead of a plain note.
  */
 import { useEffect, useRef, useState } from 'react'
 import type { OlcumKarti } from '@/lib/saglikEvi/ozet'
-import type { GlukozBaglami, UyariDuzeyi } from '@/lib/saglikEvi/tipler'
+import type { GlukozBaglami, OlcumIsareti } from '@/lib/saglikEvi/tipler'
 import { OLCUM_TANIMLARI } from '@/lib/saglikEvi/olcumler'
 import type { SaglikEviSozleri } from '@/lib/saglikEvi/sozler'
-import type { GunlukEylemleri } from './eylemler'
+import type { GunlukEylemleri, KayitNotu } from './eylemler'
 import { UyariKarti } from './UyariKarti'
+import { SekerAcilKontrolu } from './SekerAcilKontrolu'
 import { metrikRengi } from '@/lib/saglikEvi/evVerisiGorunum'
 
 function Sayac({ deger, ayarla, adim, ondalik, min, max, etiket, s }: { deger: string; ayarla: (v: string) => void; adim: number; ondalik: number; min: number; max: number; etiket: string; s: SaglikEviSozleri }) {
@@ -47,7 +50,9 @@ export function OlcumGirisi({ kart, s, eylemler, kapat }: { kart: OlcumKarti; s:
   const [foto, setFoto] = useState(false)
   /** A blood-pressure photo also shows the pulse: saved together when the patient confirms. */
   const [ekNabiz, setEkNabiz] = useState<number | null>(null)
-  const [notlar, setNotlar] = useState<Array<{ duzey: UyariDuzeyi; hastaMetni: string }>>([])
+  const [notlar, setNotlar] = useState<KayitNotu[]>([])
+  /** EV-ACIL-SEKER: the meter showed HI / LO instead of a number (glucose only). */
+  const [isaret, setIsaret] = useState<OlcumIsareti | null>(null)
   const dosyaRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -61,6 +66,7 @@ export function OlcumGirisi({ kart, s, eylemler, kapat }: { kart: OlcumKarti; s:
     const r = await eylemler.olcumEkle({
       tip: kart.tip, deger: ozel ? ozel.deger : Number(String(deger).replace(',', '.')), deger2: ozel ? ozel.deger2 : kart.tip === 'kb' ? Number(deger2) : null,
       baglam, olcumAt: geri ? new Date(Date.now() - geri * 60_000).toISOString() : undefined, foto,
+      ...(isaret && kart.tip === 'glukoz' ? { isaret } : {}),
     })
     if (!r.ok) { setHata(r.hata); setDurum('giris'); return }
     let tum = r.uyarilar || []
@@ -79,12 +85,14 @@ export function OlcumGirisi({ kart, s, eylemler, kapat }: { kart: OlcumKarti; s:
     const o = r.oneriler.find((x) => x.tip === kart.tip) || r.oneriler[0]
     if (!o || r.okunamadi) { setHata(s.fotoOkunamadi); setDurum('giris'); return }
     if (o.tip !== kart.tip) { setHata(s.fotoOkunamadi); setDurum('giris'); return }
-    setDeger(o.deger.toFixed(t.ondalik)); if (o.deger2 != null) setDeger2(String(o.deger2))
+    if (o.isaret) setIsaret(o.isaret)
+    else { setIsaret(null); setDeger((o.deger ?? kart.onDeger).toFixed(t.ondalik)); if (o.deger2 != null) setDeger2(String(o.deger2)) }
     setEkNabiz(kart.tip === 'kb' ? r.oneriler.find((x) => x.tip === 'nabiz')?.deger ?? null : null)
     setFoto(true); setDurum('giris')
   }
 
   const su = kart.tip === 'su'
+  const acilSeker = notlar.find((n) => n.sekerAcil === 'yuksek') || null
   return (
     <div className="sge-perde" role="presentation" onClick={(e) => { if (e.target === e.currentTarget) kapat() }}>
       <div className="sge-sayfa" role="dialog" aria-modal="true" aria-labelledby="sge-giris-baslik" style={{ ['--sgb-renk' as string]: metrikRengi(kart.tip) }}>
@@ -96,10 +104,16 @@ export function OlcumGirisi({ kart, s, eylemler, kapat }: { kart: OlcumKarti; s:
 
         {durum === 'tamam' ? (
           <div className="sge-kayit-tamam" role="status">
-            <svg viewBox="0 0 84 84" aria-hidden><circle cx="42" cy="42" r="38" fill="var(--sgb-renk)" opacity="0.14" /><path className="yol" d="M26 43l11 11 21-24" fill="none" stroke="var(--sgb-renk)" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" /></svg>
-            <p style={{ fontSize: 18, fontWeight: 600, margin: '6px 0 14px' }}>{s.kaydedildi}</p>
-            {notlar.map((n, i) => <UyariKarti key={i} s={s} duzey={n.duzey} metin={n.hastaMetni} />)}
-            {notlar.length ? <button type="button" className="sge-kaydet" onClick={kapat}>{s.kapat}</button> : null}
+            {acilSeker ? null : <svg viewBox="0 0 84 84" aria-hidden><circle cx="42" cy="42" r="38" fill="var(--sgb-renk)" opacity="0.14" /><path className="yol" d="M26 43l11 11 21-24" fill="none" stroke="var(--sgb-renk)" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" /></svg>}
+            <p style={acilSeker ? { fontSize: 14, color: 'var(--sg-muted)', margin: '0 0 10px', textAlign: 'left' } : { fontSize: 18, fontWeight: 600, margin: '6px 0 14px' }}>{s.kaydedildi}</p>
+            {acilSeker ? (
+              <SekerAcilKontrolu s={s} keton={!!acilSeker.keton} isaret={isaret} degerMetni={isaret ? s.isaret[isaret] : `${deger} ${t.birim}`} bitti={kapat} />
+            ) : (
+              <>
+                {notlar.map((n, i) => <UyariKarti key={i} s={s} duzey={n.duzey} kural={n.kural} metin={n.hastaMetni} />)}
+                {notlar.length ? <button type="button" className="sge-kaydet" onClick={kapat}>{s.kapat}</button> : null}
+              </>
+            )}
           </div>
         ) : durum === 'foto' ? (
           <div className="sge-kayit-tamam" role="status" aria-live="polite">
@@ -114,7 +128,9 @@ export function OlcumGirisi({ kart, s, eylemler, kapat }: { kart: OlcumKarti; s:
                 ))}
               </div>
             ) : null}
-            {su ? (
+            {isaret && kart.tip === 'glukoz' ? (
+              <div className="sge-isaret-buyuk" role="status"><b>{s.isaret[isaret]}</b><small>{s.isaretSecildi(s.isaret[isaret])}</small></div>
+            ) : su ? (
               <Sayac deger={deger} ayarla={setDeger} adim={1} ondalik={0} min={1} max={6} etiket={t.birim} s={s} />
             ) : kart.tip === 'kb' ? (
               <>
@@ -124,6 +140,15 @@ export function OlcumGirisi({ kart, s, eylemler, kapat }: { kart: OlcumKarti; s:
             ) : (
               <Sayac deger={deger} ayarla={setDeger} adim={t.adim} ondalik={t.ondalik} min={t.min} max={t.max} etiket={t.birim} s={s} />
             )}
+            {kart.tip === 'glukoz' ? (
+              <div className="sge-isaret-cipler" role="group" aria-label={s.isaretSoru}>
+                <span>{s.isaretSoru}</span>
+                {(['hi', 'lo'] as const).map((i) => (
+                  <button key={i} type="button" className="sge-isaret-cip" aria-pressed={isaret === i} aria-label={`${s.isaret[i]} — ${s.isaretAlt[i]}`} onClick={() => setIsaret(isaret === i ? null : i)}>{s.isaret[i]}</button>
+                ))}
+                {isaret ? <button type="button" className="sge-baglanti" onClick={() => setIsaret(null)}>{s.isaretVazgec}</button> : null}
+              </div>
+            ) : null}
             {foto ? <p className="sge-not" style={{ textAlign: 'center' }}>{s.fotoOneri}{ekNabiz != null ? ` · ${OLCUM_TANIMLARI.nabiz.ad} ${ekNabiz} ${OLCUM_TANIMLARI.nabiz.birim}` : ''}</p> : null}
             <div className="sge-cipler sge-cipler--zaman" role="group" aria-label="Zaman">
               {([0, 30, 60, 120] as const).map((dk) => (

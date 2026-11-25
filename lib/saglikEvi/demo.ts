@@ -15,7 +15,7 @@ import { hastaModulleri, type HastaModulTercihi, type IlacGirdisi, type KlinikGi
 import type { HamGunluk } from './ozet'
 import type { EvVerisiGirdisi } from './evVerisi'
 import { gunEkle, trGun, trSaatAni } from './zaman'
-import { egilimKurallari } from './kurallar'
+import { egilimKurallari, isaretKurallari, tekDegerKurallari } from './kurallar'
 import { etkinEsikler } from './hedefler'
 
 function rastgele(tohum: number) {
@@ -49,11 +49,15 @@ export const DEMO_ILAC_SINIFLARI: Record<string, IlacGirdisi> = {
   Empagliflozin: { ad: 'Empagliflozin', anahtar: 'empagliflozin', siniflar: ['Antidiyabetik', 'SGLT2 inhibitörü', 'Oral antidiyabetik'] },
   Amlodipin: { ad: 'Amlodipin', anahtar: 'amlodipin', siniflar: ['Kalsiyum kanal blokörü', 'Dihidropiridin', 'Antihipertansif', 'Antianjinal'] },
   Atorvastatin: { ad: 'Atorvastatin', anahtar: 'atorvastatin', siniflar: ['Statin', 'HMG-CoA redüktaz inhibitörü', 'Lipid düşürücü'] },
+  'İnsülin glarjin': { ad: 'İnsülin glarjin', anahtar: 'insulinGlarjin', siniflar: ['İnsülin', 'Antidiyabetik', 'Uzun etkili insülin'] },
 }
 
-export type DemoSenaryosu = 'dm-ht' | 'ht'
+/** 'acil' (EV-ACIL-SEKER / UYARI-RENKLERI screenshots): the dm-ht persona on insulin with a very high glucose today, a meter
+ *  "HI" yesterday evening, today's missed dose and a kritik medicine left unmarked — both colour families side by side. */
+export type DemoSenaryosu = 'dm-ht' | 'ht' | 'acil'
 
 export function gunlukDemoHam(simdiIso: string, doktorBransi: string | null = 'dahiliye', senaryo: DemoSenaryosu = 'dm-ht'): HamGunluk {
+  if (senaryo === 'acil') return acilDemo(gunlukDemoHam(simdiIso, doktorBransi, 'dm-ht'))
   const r = rastgele(20261124)
   const b = bransGunlukAyari(doktorBransi)
   const bugun = trGun(simdiIso)
@@ -132,14 +136,41 @@ export function gunlukDemoHam(simdiIso: string, doktorBransi: string | null = 'd
   }
 }
 
+/** EV-ACIL-SEKER / UYARI-RENKLERI demo: synthetic only. */
+function acilDemo(h: HamGunluk): HamGunluk {
+  if (!h.klinik) return h
+  const simdi = Date.parse(h.simdi)
+  const bugun = trGun(h.simdi)
+  const insulin: DozPlani = { id: 'demo-plan-ins', ilacId: 'demo-i6', ad: 'İnsülin glarjin', doz: 'Doktorunuzun yazdığı doz · akşam', saatler: ['22:00'], gerektikce: false, haftaGunu: null, kaynak: 'hekim', kritik: false, minAralikSaat: null, aktif: true, baslangic: null, bitis: null }
+  const klinik = { ...h.klinik, ilaclar: [...h.klinik.ilaclar, DEMO_ILAC_SINIFLARI['İnsülin glarjin']] }
+  const esikler = etkinEsikler(h.profil, h.hekimAyar)
+  const b = { yasAy: null, kiloHekimeBildir: false, insulinAktif: true }
+  const yuksekAt = new Date(simdi - 40 * 60_000).toISOString()
+  const yuksek: EvOlcum = { id: 'demo-acil-1', tip: 'glukoz', deger: 452, deger2: null, baglam: 'tokluk2', olcumAt: yuksekAt, kaynak: 'portal' }
+  const hi = { id: 'demo-acil-hi', tip: 'glukoz' as const, isaret: 'hi' as const, baglam: 'yatmadan' as const, olcumAt: trSaatAni(gunEkle(bugun, -1), '22:40'), kaynak: 'portal_foto' as const }
+  const acil = tekDegerKurallari(yuksek, esikler, b).filter((k) => k.duzey === 'acil')
+  const hiK = isaretKurallari(hi, b)
+  // Ramipril (kritik) left unmarked for two days → the adherence-family alert.
+  const ramipril = h.planlar.find((p) => p.ad === 'Ramipril')
+  const kayitlar = ramipril ? h.kayitlar.filter((k) => !(k.planId === ramipril.id && trGun(k.planlananAt) >= gunEkle(bugun, -1))) : h.kayitlar
+  const uyarilar: EvUyari[] = [
+    ...acil.map((k, i) => ({ id: `demo-acil-u${i}`, kural: k.kural, anahtar: k.anahtar, duzey: k.duzey, metrik: k.metrik, hastaMetni: k.hastaMetni, hekimMetni: k.hekimMetni, olusturmaAt: yuksekAt, hastaGorduAt: null, hekimGorduAt: null, veri: k.veri })),
+    ...hiK.map((k, i) => ({ id: `demo-hi-u${i}`, kural: k.kural, anahtar: k.anahtar, duzey: k.duzey, metrik: k.metrik, hastaMetni: k.hastaMetni, hekimMetni: k.hekimMetni, olusturmaAt: hi.olcumAt, hastaGorduAt: hi.olcumAt, hekimGorduAt: null, veri: k.veri })),
+    ...(ramipril ? [{ id: 'demo-kritik-u', kural: 'kritik_ilac', anahtar: `kritik_ilac:${ramipril.id}`, duzey: 'hekime_bildir' as const, metrik: 'ilac', hastaMetni: `${ramipril.ad} için iki gündür doz işaretlenmedi. Doktorunuza bildirdik. İlacınızı bıraktıysanız ya da bir sorun yaşıyorsanız Mesajlar'dan yazın.`, hekimMetni: `Kritik ilaç "${ramipril.ad}": son 2 günde hiç doz işaretlenmedi.`, olusturmaAt: new Date(simdi - 5 * 3600_000).toISOString(), hastaGorduAt: new Date(simdi - 4 * 3600_000).toISOString(), hekimGorduAt: null, veri: { planId: ramipril.id } }] : []),
+    ...h.uyarilar.map((u) => ({ ...u, hastaGorduAt: h.simdi })),
+  ]
+  return { ...h, klinik, planlar: [...h.planlar, insulin], kayitlar, olcumler: [...h.olcumler, yuksek], isaretliOlcumler: [hi], toplamOlcum: h.toplamOlcum + 2, uyarilar }
+}
+
 /** BUGUN-V2 — internal demo previews of the designed states (/portal/demo?durum=…): first day, few readings, no
  * medicines, no consent, everything done. Pure transforms of the default demo patient; synthetic data only. */
-export type DemoDurumu = 'ilk' | 'az' | 'ilacsiz' | 'onaysiz' | 'tamam' | 'ht'
+export type DemoDurumu = 'ilk' | 'az' | 'ilacsiz' | 'onaysiz' | 'tamam' | 'ht' | 'acil'
 export function demoDurumuUygula(h: HamGunluk, durum: string | null | undefined): HamGunluk {
   const simdi = Date.parse(h.simdi)
   const bugun = trGun(h.simdi)
   // HASTA-MODULLERI: a hypertension-only patient (no glucose anywhere).
   if (durum === 'ht') return gunlukDemoHam(h.simdi, h.bransAnahtar, 'ht')
+  if (durum === 'acil') return acilDemo(h)
   if (durum === 'ilk') return { ...h, olcumler: [], toplamOlcum: 0, fotoOlcum: 0, kayitlar: [], uyarilar: [], kazanilanRozetler: [], sorular: [], ldl: null, tercihler: { ...h.tercihler, paylasimOnayi: false, onayAt: null } }
   if (durum === 'az') {
     const sinir = gunEkle(bugun, -2)
@@ -172,7 +203,7 @@ export function evVerisiDemoGirdisi(simdiIso: string, doktorBransi: string | nul
   const h = gunlukDemoHam(simdiIso, doktorBransi, senaryo)
   return {
     simdiMs: Date.parse(simdiIso), brans: doktorBransi, gebelikAktif: false, tercih: h.tercihler, hekimAyarHam: h.hekimAyar,
-    olcumler: h.olcumler, planlar: h.planlar, kayitlar: h.kayitlar, uyarilar: h.uyarilar, kontrolOzeti: null,
+    olcumler: h.olcumler, isaretliOlcumler: h.isaretliOlcumler, planlar: h.planlar, kayitlar: h.kayitlar, uyarilar: h.uyarilar, kontrolOzeti: null,
     sorular: h.sorular.map((s) => ({ metin: s.metin, tarih: s.createdAt })), klinik: h.klinik,
   }
 }

@@ -4,6 +4,8 @@
  * reading), the target band shaded, the latest point emphasised; the wide version shades "this week". Diastolic BP is
  * a lighter second line. Days without a reading are skipped, never invented; fewer than 3 days → dots only.
  * Same drawing language as the doctor's Ev verisi curves. Pure SVG, wordless except the passed labels.
+ * EV-ACIL-SEKER: a day with a glucometer HI / LO gets an off-scale marker (triangle on the top / bottom edge, acil red),
+ * never a point on the curve.
  */
 import { useId } from 'react'
 import type { Egilim } from '@/lib/saglikEvi/ozet'
@@ -15,7 +17,16 @@ export function Egri({ e, renk, genis = false, aria, buHafta }: { e: Egilim; ren
   const kb = e.anahtar === 'kb'
   const p1 = egriNoktalari(e)
   const p2 = kb ? egriNoktalari(e, true) : []
-  if (!p1.length) return null
+  const n0 = e.gunluk.length
+  const isaretler = e.gunluk.map((g, i) => (g.isaret ? { x: n0 > 1 ? i / (n0 - 1) : 1, isaret: g.isaret } : null)).filter((v): v is { x: number; isaret: 'hi' | 'lo' } => !!v)
+  if (!p1.length && !isaretler.length) return null
+  if (!p1.length) {
+    return (
+      <span className={`sgb-egri${genis ? ' sgb-egri--genis' : ''}`} style={{ height: genis ? 60 : 40 }} role="img" aria-label={aria}>
+        {isaretler.map((m, i) => <span key={i} className={`sge-egri-isaret sge-egri-isaret--${m.isaret}`} data-isaret={m.isaret} style={{ left: `${m.x * 100}%` }} aria-hidden />)}
+      </span>
+    )
+  }
   const W = genis ? 600 : 300, H = genis ? 132 : 70, PT = genis ? 14 : 6, PB = genis ? 8 : 5, PR = 8, PL = 4
   const hedef = [e.hedefMin, e.hedefMax].filter((x): x is number => x != null)
   const tum = [...p1.map((p) => p.y), ...p2.map((p) => p.y)]
@@ -56,6 +67,7 @@ export function Egri({ e, renk, genis = false, aria, buHafta }: { e: Egilim; ren
       {/* the latest point in HTML so it stays round when the SVG stretches */}
       <span className="sgb-egri-son" style={{ left: `${(son[0] / W) * 100}%`, top: `${(son[1] / H) * 100}%`, background: renk }} aria-hidden />
       {genis && haftaX != null && buHafta ? <span className="sgb-egri-hafta" style={{ left: `${(haftaX / W) * 100}%` }}>{buHafta}</span> : null}
+      {isaretler.map((m, i) => <span key={i} className={`sge-egri-isaret sge-egri-isaret--${m.isaret}`} data-isaret={m.isaret} style={{ left: `${(x(m.x) / W) * 100}%` }} aria-hidden />)}
     </span>
   )
 }

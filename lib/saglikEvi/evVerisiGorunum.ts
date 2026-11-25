@@ -10,17 +10,29 @@ import type { EvVerisiKarti } from './evVerisi'
 import { BAGLAM_ADI, OLCUM_TANIMLARI } from './olcumler'
 import type { GlukozBaglami, OlcumTipi } from './tipler'
 import { GUN_MS, trGun } from './zaman'
+import { UYARI_RENK } from '@/lib/doktor/chromeRenk'
 
 export type Metrik = EvVerisiKarti['metrikler'][number]
-export type Ton = 'sakin' | 'dikkat' | 'acil'
+/** UYARI-RENKLERI: sakin = calm green; dikkat / bildir / acil = the clinical family (amber / coral / red); uyum = an
+ *  adherence lapse (slate). */
+export type Ton = 'sakin' | 'dikkat' | 'bildir' | 'acil' | 'uyum'
 
 /** Ring colours match the patient's own Sağlığım rings (İlaç teal, Ölçüm sun) so both sides speak one language. */
 export const HALKA_RENK = { ilac: '#0f9b8e', olcum: '#c08a2e' } as const
-export const TON_RENK: Record<Ton, { ana: string; yumusak: string }> = {
-  sakin: { ana: '#2f6b4f', yumusak: 'rgba(47,107,79,0.08)' },
-  dikkat: { ana: '#a45b3e', yumusak: 'rgba(164,91,62,0.08)' },
-  acil: { ana: '#8b3a2e', yumusak: 'rgba(139,58,46,0.10)' },
+export const TON_RENK: Record<Ton, { ana: string; vurgu: string; yumusak: string }> = {
+  sakin: { ana: '#2f6b4f', vurgu: '#2f6b4f', yumusak: 'rgba(47,107,79,0.08)' },
+  dikkat: { ana: UYARI_RENK.dikkat.ana, vurgu: UYARI_RENK.dikkat.vurgu, yumusak: 'rgba(176,125,10,0.09)' },
+  bildir: { ana: UYARI_RENK.hekime_bildir.ana, vurgu: UYARI_RENK.hekime_bildir.vurgu, yumusak: 'rgba(217,98,43,0.09)' },
+  acil: { ana: UYARI_RENK.acil.ana, vurgu: UYARI_RENK.acil.vurgu, yumusak: 'rgba(200,40,31,0.10)' },
+  uyum: { ana: UYARI_RENK.uyum.ana, vurgu: UYARI_RENK.uyum.vurgu, yumusak: 'rgba(110,118,153,0.10)' },
 }
+/** Ton of one alert on the doctor's card (adherence rules → uyum whatever their level). */
+export function uyariTonuKart(u: { duzey: string; kural?: string | null }): Exclude<Ton, 'sakin'> {
+  if (u.kural === 'kritik_ilac') return 'uyum'
+  return u.duzey === 'acil' ? 'acil' : u.duzey === 'hekime_bildir' ? 'bildir' : 'dikkat'
+}
+/** Card ton → the shared palette key (UyariIsareti). */
+export const TON_PALET: Record<Exclude<Ton, 'sakin'>, 'acil' | 'hekime_bildir' | 'dikkat' | 'uyum'> = { acil: 'acil', bildir: 'hekime_bildir', dikkat: 'dikkat', uyum: 'uyum' }
 /** One colour per measurement kind; none of them is the ring teal / sun or the alert terracotta. */
 export const METRIK_RENK: Record<OlcumTipi, string> = {
   glukoz: '#a2557a',
@@ -94,6 +106,17 @@ export function hedefDisi(m: Metrik): boolean {
   if (m.hedefMax != null && o > m.hedefMax) return true
   if (m.hedefMin != null && o < m.hedefMin) return true
   return m.hedefMax2 != null && m.hafta.ort2 != null && m.hafta.ort2 > m.hedefMax2
+}
+
+/** UYARI-RENKLERI: the clinical level of one reading against the card's effective thresholds (display only). */
+export function degerSeviyesi(m: Metrik, deger: number, deger2: number | null): 'acil' | 'hekime_bildir' | 'dikkat' | null {
+  const e = m.esik || {}
+  const ust = (a?: number, a2?: number) => (a != null && deger >= a) || (a2 != null && deger2 != null && deger2 >= a2)
+  const alt = (a?: number) => a != null && deger < a
+  if (ust(e.acilUst, e.acilUst2) || alt(e.acilAlt)) return 'acil'
+  if (ust(e.bildirUst, e.bildirUst2) || alt(e.bildirAlt)) return 'hekime_bildir'
+  if (ust(e.dikkatUst, e.dikkatUst2) || alt(e.dikkatAlt)) return 'dikkat'
+  return null
 }
 
 export function degerHedefDisi(m: Metrik, deger: number, deger2: number | null): boolean {
@@ -171,7 +194,7 @@ export function durumCumlesi(v: EvVerisiKarti, simdiMs: number): { ton: Ton; bas
   if (acik.length) {
     const u = acik[0]
     const m = uyariMetrigi(v, u.metrik)
-    const ton: Ton = u.duzey === 'acil' ? 'acil' : 'dikkat'
+    const ton: Ton = uyariTonuKart(u)
     const ad = m ? kisaAd(m.anahtar) : kisaAd(u.metrik)
     const birim = m?.birim ?? OLCUM_TANIMLARI[metrikTipi(u.metrik)]?.birim ?? ''
     const od = ondalikOf(u.metrik)
@@ -186,15 +209,16 @@ export function durumCumlesi(v: EvVerisiKarti, simdiMs: number): { ton: Ton; bas
       case 'ates_3gun': return ret('Üç gündür ateş ölçülüyor', u.metin)
       case 'ates_bebek': return ret(`Bebekte ateş${okunan ? ` — ${okunan} °C` : ''}`, u.metin)
       case 'tekrar_dusuk_seker': return ret('Bu hafta tekrarlayan düşük şeker', u.metin)
-      case 'cok_yuksek': case 'yuksek_bildir': case 'yuksek_dikkat': return ret(`${ad} yüksek ölçüldü${okunan ? ` — ${okunan} ${birim}` : ''}`, trTarihSaat(u.tarih))
-      case 'cok_dusuk': case 'dusuk_bildir': case 'dusuk_dikkat': return ret(`${ad} düşük ölçüldü${okunan ? ` — ${okunan} ${birim}` : ''}`, trTarihSaat(u.tarih))
+      case 'kritik_ilac': return ret('Kritik ilaç iki gündür işaretlenmedi', u.metin)
+      case 'cok_yuksek': case 'yuksek_bildir': case 'yuksek_dikkat': return ret(`${ad} yüksek ölçüldü${okunan ? ` — ${okunan} ${birim}` : ''}`, `${trTarihSaat(u.tarih)}.`)
+      case 'cok_dusuk': case 'dusuk_bildir': case 'dusuk_dikkat': return ret(`${ad} düşük ölçüldü${okunan ? ` — ${okunan} ${birim}` : ''}`, `${trTarihSaat(u.tarih)}.`)
       default: return ret(u.metin, '')
     }
   }
   const toplamOlcum = v.metrikler.reduce((a, m) => a + m.hafta.n, 0)
   const uyumYuzde = v.uyum.hafta.yuzde
   if (!v.metrikler.length && !v.uyum.ilaclar.length) return { ton: 'sakin', baslik: 'Henüz ev verisi yok', alt: 'Hasta ölçüm girdiğinde ya da ilaçlarını işaretlediğinde burada görünür.', metrik: null }
-  if (uyumYuzde != null && uyumYuzde < 70) return { ton: 'dikkat', baslik: `İlaç uyumu bu hafta düşük — %${uyumYuzde}`, alt: `${v.uyum.hafta.beklenen - v.uyum.hafta.alinan} doz alınmadı.`, metrik: null }
+  if (uyumYuzde != null && uyumYuzde < 70) return { ton: 'uyum', baslik: `İlaç uyumu bu hafta düşük — %${uyumYuzde}`, alt: `${v.uyum.hafta.beklenen - v.uyum.hafta.alinan} doz alınmadı.`, metrik: null }
   const parca = [toplamOlcum ? `Bu hafta ${toplamOlcum} ölçüm` : 'Bu hafta ölçüm girilmedi', uyumYuzde != null ? `ilaç uyumu %${uyumYuzde}` : null].filter(Boolean).join(', ')
   // Alerts already acknowledged with "Gördüm": say so plainly instead of claiming there is no trend.
   if (v.uyarilar.length) return { ton: 'sakin', baslik: 'Yeni uyarı yok', alt: `Son uyarıyı gördünüz (${trTarihSaat(v.uyarilar[0].tarih)}). ${parca}.`, metrik: null }

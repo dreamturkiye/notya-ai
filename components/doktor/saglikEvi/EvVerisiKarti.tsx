@@ -16,9 +16,12 @@ import type { EvVerisiKarti as Veri } from '@/lib/saglikEvi/evVerisi'
 import { CHROME_RENK as R, CHROME_FONT as F } from '@/lib/doktor/chromeRenk'
 import { doktorFetch } from '@/lib/doktor/oturumFetch'
 import {
-  HALKA_RENK, TON_RENK, acikUyarilar, anaDeger, durumCumlesi, egilim, gunlukSeri, haftaninEksikDozlari,
-  hedefDisi, karoYayilimi, kisaAd, metrikRengi, olcumGunleri, puruzsuzYol, sayi, sonOlcumMetni, type Metrik, type Ton,
+  HALKA_RENK, TON_PALET, TON_RENK, acikUyarilar, anaDeger, durumCumlesi, egilim, gunlukSeri, haftaninEksikDozlari,
+  hedefDisi, karoYayilimi, kisaAd, metrikRengi, olcumGunleri, puruzsuzYol, sayi, sonOlcumMetni, uyariTonuKart, type Metrik, type Ton,
 } from '@/lib/saglikEvi/evVerisiGorunum'
+import { HEKIM_TON_ETIKETI, UYARI_RENK } from '@/lib/saglikEvi/uyariRenkleri'
+import { UyariIsareti } from './UyariIsareti'
+import { HekimPushIstemi } from './HekimPushIstemi'
 import type { Sekme } from './EvVerisiAyrintilar'
 
 // Details and threshold editing: own lazy chunk, fetched only when the doctor opens them.
@@ -166,12 +169,20 @@ function Egri({ m, simdiMs, genis, kolon }: { m: Metrik; simdiMs: number; genis:
   const W = genis ? 600 : Math.round(280 * Math.max(1, (kolon ?? 3) / 3)), H = genis ? 285 : 74, PT = genis ? 22 : 6, PB = genis ? 6 : 4, PR = genis ? 6 : 6
   const degerler = seri.flatMap((s) => [s.y, ...(s.y2 != null ? [s.y2] : [])])
   const hedefler = [m.hedefMin, m.hedefMax, kb ? m.hedefMax2 : null].filter((x): x is number => x != null)
-  if (!degerler.length) return null
+  // EV-ACIL-SEKER: glucometer HI / LO → off-scale triangles on the top / bottom edge (acil red), never a point on the line.
+  const t0 = simdiMs - 28 * 86_400_000
+  const isaretler = (m.isaretler || []).filter((i) => Date.parse(i.at) >= t0).map((i) => ({ x: Math.min(1, Math.max(0, (Date.parse(i.at) - t0) / (28 * 86_400_000))), isaret: i.isaret }))
+  if (!degerler.length && !isaretler.length) return null
+  if (!degerler.length) degerler.push(...(hedefler.length ? hedefler : [0, 1]))
   let min = Math.min(...degerler, ...hedefler), max = Math.max(...degerler, ...hedefler)
   const pay = (max - min || Math.abs(max) * 0.1 || 1) * 0.16; min -= pay; max += pay
   const x = (t: number) => t * (W - PR)
   const y = (d: number) => PT + (1 - (d - min) / (max - min || 1)) * (H - PT - PB)
   const nok = seri.map((s) => [x(s.x), y(s.y)] as [number, number])
+  const isaretCiz = isaretler.map((i, k) => <path key={`i${k}`} data-isaret={i.isaret} d={i.isaret === 'hi' ? `M${x(i.x) - 6} ${PT - 2} L${x(i.x) + 6} ${PT - 2} L${x(i.x)} ${PT - 12} Z` : `M${x(i.x) - 6} ${H - PB - 8} L${x(i.x) + 6} ${H - PB - 8} L${x(i.x)} ${H - PB + 2} Z`} fill={UYARI_RENK.acil.vurgu} />)
+  if (!nok.length) {
+    return <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`${kisaAd(m.anahtar)}: cihaz ölçüm aralığı dışında`} style={{ overflow: 'visible' }}>{isaretCiz}</svg>
+  }
   const nok2 = kb ? seri.filter((s) => s.y2 != null).map((s) => [x(s.x), y(s.y2!)] as [number, number]) : []
   const az = seri.length < 3
   const yol = az ? '' : puruzsuzYol(nok)
@@ -201,6 +212,7 @@ function Egri({ m, simdiMs, genis, kolon }: { m: Metrik; simdiMs: number; genis:
         <circle cx={son[0]} cy={son[1]} r={genis ? 9 : 7} fill={renk} opacity={0.16} />
         <circle cx={son[0]} cy={son[1]} r={genis ? 4.8 : 4} fill={renk} stroke="#fffdf9" strokeWidth={2} />
       </g>
+      {isaretCiz}
     </svg>
   )
   if (!genis) return svg
@@ -245,10 +257,12 @@ function Karo({ m, simdiMs, one, uyarili, ac, kolon }: { m: Metrik; simdiMs: num
   const e = egilim(m)
   const vurgu = uyarili ? TON_RENK[uyarili].ana : hedefDisi(m) ? TON_RENK.dikkat.ana : null
   const renk = metrikRengi(m.anahtar)
+  const sonIsaret = !m.noktalar.length && m.isaretler?.length ? m.isaretler[m.isaretler.length - 1] : null
   return (
     <button type="button" className="evv-karo" data-one={one ? '1' : '0'} style={kolon ? { gridColumn: `span ${kolon}` } : undefined} onClick={ac} aria-label={`${kisaAd(m.anahtar)}: ${d.metin} ${m.birim}, ${d.aciklama}${e ? `, ${e.metin}` : ''}. Ölçümleri göster.`}>
-      <span className="evv-karo-ad"><i style={{ background: renk }} />{kisaAd(m.anahtar)}</span>
-      <span className="evv-deger">{d.metin}<small>{m.birim}</small></span>
+      <span className="evv-karo-ad"><i style={{ background: renk }} />{kisaAd(m.anahtar)}{uyarili && uyarili !== 'sakin' ? <UyariIsareti ton={TON_PALET[uyarili]} etiket={HEKIM_TON_ETIKETI[TON_PALET[uyarili]]} kucuk style={{ marginLeft: 'auto' }} /> : null}</span>
+      {sonIsaret ? <span className="evv-deger" style={{ color: UYARI_RENK.acil.ana }}>{sonIsaret.isaret.toUpperCase()}<small>cihaz ölçüm aralığı {sonIsaret.isaret === 'hi' ? 'üstü' : 'altı'}</small></span> : <span className="evv-deger">{d.metin}<small>{m.birim}</small></span>}
+      {m.isaretler?.length && m.noktalar.length ? <span className="evv-acik" style={{ color: UYARI_RENK.acil.ana, fontWeight: 600 }}>Cihaz {m.isaretler.filter((i) => i.isaret === 'hi').length ? `HI ×${m.isaretler.filter((i) => i.isaret === 'hi').length}` : ''}{m.isaretler.filter((i) => i.isaret === 'lo').length ? ` LO ×${m.isaretler.filter((i) => i.isaret === 'lo').length}` : ''} · ortalamaya katılmadı</span> : null}
       {e ? (
         <span className="evv-egilim" style={{ color: vurgu ?? R.muted }}><Ok yon={e.yon} renk={vurgu ?? R.muted} />{e.metin}</span>
       ) : <span className="evv-acik">{azVeri ? 'Eğilim için birkaç gün daha ölçüm gerekiyor' : d.aciklama}</span>}
@@ -378,7 +392,7 @@ export default function EvVerisiKarti({ patientId, ornek }: { patientId: string;
   const sirali = one ? [...veri.metrikler].sort((a, b) => Number(b.anahtar === one) - Number(a.anahtar === one)) : veri.metrikler
   const uyariTonu = (anahtar: string): Ton | null => {
     const u = acikU.find((x) => x.metrik === anahtar || anahtar.startsWith(`${x.metrik}:`))
-    return u ? (u.duzey === 'acil' ? 'acil' : 'dikkat') : null
+    return u ? uyariTonuKart(u) : null
   }
   const ayrintiAc = (s: Sekme, mk?: string) => { setSekme(s); if (mk) setMetrik(mk); setAcik(true) }
   const yayilim = karoYayilimi(sirali.length)
@@ -388,10 +402,13 @@ export default function EvVerisiKarti({ patientId, ornek }: { patientId: string;
   return (
     <Kabuk ton={ton}>
       {baslik(sonOlcumMetni(veri, simdiMs))}
+      {/* HEKIM-PUSH: one-time prompt to get acil / doctor-notify alerts on the phone (never in the example). */}
+      {!ornek ? <HekimPushIstemi /> : null}
       <div className="evv-ust">
         <button type="button" className="evv-durum" data-tik={acikU.length ? '1' : '0'} onClick={acikU.length ? () => ayrintiAc('uyarilar') : undefined} tabIndex={acikU.length ? 0 : -1} aria-label={acikU.length ? `${d.baslik}. Uyarıyı göster.` : undefined}>
-          <span className="evv-nokta" style={{ background: TON_RENK[ton].ana, boxShadow: `0 0 0 5px ${TON_RENK[ton].yumusak.replace(/0\.\d+\)$/, '0.16)')}` }} aria-hidden />
+          <span className="evv-nokta" style={ton === 'uyum' ? { background: 'transparent', border: `2px dashed ${TON_RENK.uyum.vurgu}`, width: 12, height: 12 } : { background: TON_RENK[ton].vurgu, boxShadow: `0 0 0 5px ${TON_RENK[ton].yumusak.replace(/0\.\d+\)$/, '0.16)')}` }} aria-hidden />
           <span>
+            {ton !== 'sakin' ? <span style={{ display: 'block', marginBottom: 8 }}><UyariIsareti ton={TON_PALET[ton]} etiket={HEKIM_TON_ETIKETI[TON_PALET[ton]]} /></span> : null}
             <span role="status" className="evv-cumle" style={{ display: 'block' }}>{d.baslik}</span>
             {d.alt ? <span className="evv-alt" style={{ display: 'block' }}>{d.alt}</span> : null}
           </span>
@@ -404,7 +421,7 @@ export default function EvVerisiKarti({ patientId, ornek }: { patientId: string;
                 <span className="evv-lej-s">
                   <i style={{ background: HALKA_RENK.ilac }} /><span className="evv-lej-ad">İlaç, bu hafta</span>
                   <span className="evv-lej-d">{veri.uyum.hafta.yuzde == null ? '—' : `%${veri.uyum.hafta.yuzde}`}{veri.uyum.ay.yuzde != null ? <small>30 günde %{veri.uyum.ay.yuzde}</small> : null}</span>
-                  {eksik.toplam ? <span className="evv-lej-n" style={{ color: TON_RENK.dikkat.ana }}>{eksik.toplam} doz alınmadı{eksik.ilaclar.length === 1 ? ` (${eksik.ilaclar[0]})` : ''}</span> : <span className="evv-lej-n">Tüm dozlar alındı</span>}
+                  {eksik.toplam ? <span className="evv-lej-n" style={{ color: TON_RENK.uyum.ana, display: 'inline-flex', alignItems: 'center', gap: 5 }}><svg width="11" height="11" viewBox="0 0 24 24" aria-hidden><circle cx="12" cy="12" r="8.5" fill="none" stroke={TON_RENK.uyum.vurgu} strokeWidth="3" strokeDasharray="3.2 3" /></svg>{eksik.toplam} doz alınmadı{eksik.ilaclar.length === 1 ? ` (${eksik.ilaclar[0]})` : ''}</span> : <span className="evv-lej-n">Tüm dozlar alındı</span>}
                 </span>
               ) : null}
               <span className="evv-lej-s">

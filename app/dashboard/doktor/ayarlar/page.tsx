@@ -13,6 +13,8 @@ import IpucuBaloncugu from '@/components/doktor/IpucuBaloncugu';
 const BOLUMLER = [
   { baslik: 'Entegrasyonlar', aciklama: 'Takvim, e-posta ve dış sistem bağlantıları', rota: '/dashboard/doktor/entegrasyonlar', ikon: '🔌' },
   { baslik: 'Hesabım', aciklama: 'E-posta ve şifre', rota: '/dashboard/doktor/hesap', ikon: '🔑' },
+  // HEKIM-PUSH (2026-11-25): Sağlığım ev verisi uyarıları hekimin telefonuna.
+  { baslik: 'Bildirimler', aciklama: 'Acil ev ölçümleri ve hasta uyarıları telefonunuza — çalışma saatleriniz, sabah özeti', rota: '/dashboard/doktor/ayarlar/bildirimler', ikon: '🔔' },
   { baslik: 'İletişim', aciklama: 'Hastalarınıza kendi WhatsApp ve e-postanızdan tek dokunuşla yazın', rota: '/dashboard/doktor/ayarlar/iletisim', ikon: '💬' },
   { baslik: 'Esnek muayene ve el notları', aciklama: 'Kağıda yazdığınız notlar: kim hazırlasın, onayınız gereksin mi, kısaltma sözlüğünüz, form şablonlarınız', rota: '/dashboard/doktor/ayarlar/el-notu', ikon: '✍️' },
   { baslik: 'Gelen Belgeler', aciklama: 'Sekreterinizin gelen belgeleri görüp dosyalamasına izin verin', rota: '/dashboard/doktor/ayarlar/gelen-belgeler', ikon: '📥' },

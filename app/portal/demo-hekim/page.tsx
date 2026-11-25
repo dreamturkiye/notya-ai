@@ -4,6 +4,7 @@
  * (/portal/demo) shows. Example data only (lib/saglikEvi/demo.ts); nothing is fetched or saved.
  * EV-VERISI-V2: ?durum=sakin | az | bos | onaysiz | kullanmiyor previews the card's other states with the same patient.
  * HASTA-MODULLERI: ?durum=ht is the hypertension-only patient (BP from the file, no glucose tile / rule / summary line).
+ * EV-ACIL-SEKER / UYARI-RENKLERI: ?durum=acil — a very high glucose today, a meter HI, a missed kritik medicine.
  */
 import { useEffect, useMemo, useState } from 'react'
 import EvVerisiKarti from '@/components/doktor/saglikEvi/EvVerisiKarti'
@@ -29,9 +30,9 @@ export default function DemoHekimPage() {
   const veri = useMemo(() => {
     if (durum === undefined) return null
     const simdi = new Date().toISOString()
-    const g = durumaGore(evVerisiDemoGirdisi(simdi, 'dahiliye', durum === 'ht' ? 'ht' : 'dm-ht'), durum, Date.parse(simdi))
+    const g = durumaGore(evVerisiDemoGirdisi(simdi, 'dahiliye', durum === 'ht' ? 'ht' : durum === 'acil' ? 'acil' : 'dm-ht'), durum, Date.parse(simdi))
     const kart = evVerisiHesapla(g)
-    const ozet = kontrolOncesiOzet({ olcumler: g.olcumler, planlar: g.planlar, kayitlar: g.kayitlar, uyarilar: g.uyarilar, sorular: g.sorular.map((s) => ({ metin: s.metin, createdAt: s.tarih })), esikler: etkinEsikler('genel', null), simdi, randevuAt: new Date(Date.now() + 86_400_000).toISOString(), takipTipleri: kart.olcumTipleri })
+    const ozet = kontrolOncesiOzet({ olcumler: g.olcumler, isaretliOlcumler: g.isaretliOlcumler, planlar: g.planlar, kayitlar: g.kayitlar, uyarilar: g.uyarilar, sorular: g.sorular.map((s) => ({ metin: s.metin, createdAt: s.tarih })), esikler: etkinEsikler('genel', null), simdi, randevuAt: new Date(Date.now() + 86_400_000).toISOString(), takipTipleri: kart.olcumTipleri })
     return { ...kart, kontrolOzeti: kart.onay ? { id: 'demo', olusturmaAt: simdi, randevuAt: ozet.randevuAt, ozet, metin: ozet.metin } : null }
   }, [durum])
   return (

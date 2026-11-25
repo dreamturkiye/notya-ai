@@ -29,6 +29,8 @@ import { OlcumGirisi } from './OlcumGirisi'
 import { DozListesi } from './DozListesi'
 import { UyariKarti } from './UyariKarti'
 import { OnayKarti } from './OnayKarti'
+import { SekerAcilKontrolu } from './SekerAcilKontrolu'
+import { UyariIsareti } from '@/components/doktor/saglikEvi/UyariIsareti'
 import { RozetAcilisi } from './RozetAcilisi'
 
 export interface BugunKoprusu {
@@ -262,11 +264,15 @@ function OlcumKutusu({ k, s, ac }: { k: OlcumKarti; s: SaglikEviSozleri; ac: () 
       <span className="sgb-olcum-ad"><i />{k.ad}</span>
       {su ? (
         <span className="sgb-olcum-deger">{k.bugunSayi}<small>/ {k.gunlukHedef || 8} {k.birim}</small></span>
-      ) : k.son ? (
-        <span className="sgb-olcum-deger">{degerMetni({ tip: k.tip, deger: k.son.deger, deger2: k.son.deger2 })}<small>{k.birim}</small></span>
+      ) : k.son?.isaret ? (
+        <span className="sgb-olcum-deger sge-deger--acil sge-isaret-deger">{s.isaret[k.son.isaret]}<small>{s.isaretAlt[k.son.isaret]}</small></span>
+      ) : k.son && k.son.deger != null ? (
+        <span className={`sgb-olcum-deger${k.son.seviye ? ` sge-deger--${k.son.seviye}` : ''}`}>{degerMetni({ tip: k.tip, deger: k.son.deger, deger2: k.son.deger2 })}<small>{k.birim}</small></span>
       ) : (
         <span className="sgb-olcum-deger sgb-olcum-deger--ilk">{s.hizliIlk}</span>
       )}
+      {/* UYARI-RENKLERI: an out-of-range last value carries its level as word + icon (never colour alone). */}
+      {k.son?.seviye && !su ? <span className="sgb-olcum-seviye"><UyariIsareti ton={k.son.seviye} etiket={s.seviye[k.son.seviye]} kucuk /></span> : null}
       <span className="sgb-olcum-alt">
         {tamam ? <span className="sgb-olcum-tamam"><Tik boyut={14} />{s.bugunTamam}</span> : <span>{k.son && !su ? onceMetni(Date.now() - Date.parse(k.son.olcumAt)) : s.hizliGunluk(k.bugunSayi, k.gunlukHedef)}</span>}
         {k.gunlukHedef > 0 && k.gunlukHedef <= 4 ? <span className="sgb-noktalar" aria-hidden>{Array.from({ length: k.gunlukHedef }, (_, i) => <i key={i} className={i < k.bugunSayi ? 'dolu' : ''} />)}</span> : null}
@@ -338,7 +344,7 @@ export function BugunGorunumu({ s, durum, eylemler, kopru, hastaAdi }: { s: Sagl
       {eksik.slice(0, 2).map((e) => (
         <div key={e.at} className="sgb-eksik">
           <span className="sgb-eksik-nokta" aria-hidden />
-          <span className="sgb-eksik-metin"><b>{adlarMetni(e.adlar, s.ve)}</b><small>{s.eksik(e.saat)}</small></span>
+          <span className="sgb-eksik-metin"><b>{adlarMetni(e.adlar, s.ve)}</b><small className="sgb-eksik-uyum">{s.eksik(e.saat)}</small></span>
           <button type="button" className="sgb-eksik-btn" disabled={mesgul} onClick={() => doz(e.planIds, e.at, 'alindi')}>{s.simdiAldim}</button>
         </div>
       ))}
@@ -385,10 +391,13 @@ export function BugunGorunumu({ s, durum, eylemler, kopru, hastaAdi }: { s: Sagl
             const yon = e?.yon === 'yukari' || e?.yon === 'asagi' ? e.yon : null
             const [ilk, kalan] = ilkCumle(u.hastaMetni)
             const baslik = u.duzey !== 'acil' && yon && e ? s.uyariEgilim(kisaAd(e.anahtar), yon) : ilk
-            const metin = baslik === ilk ? kalan || u.hastaMetni : u.hastaMetni
+            // EV-ACIL-SEKER: a very high glucose shows its lead line + the symptom check (which carries the rest), not both.
+            const metin = u.sekerAcil === 'yuksek' ? '' : baslik === ilk ? kalan || u.hastaMetni : u.hastaMetni
             return (
-              <UyariKarti key={u.id} s={s} duzey={u.duzey} baslik={baslik} metin={metin} mesajHref={kopru.mesajHref} okudum={() => eylemler.uyariGoruldu([u.id])}>
-                {e && e.hafta.n >= 3 ? <Egri e={e} renk={metrikRengi(e.anahtar)} genis aria={kisaAd(e.anahtar)} buHafta={s.buHafta} /> : null}
+              <UyariKarti key={u.id} s={s} duzey={u.duzey} kural={u.kural} baslik={baslik} metin={metin} mesajHref={kopru.mesajHref} okudum={() => eylemler.uyariGoruldu([u.id])}>
+                {/* EV-ACIL-SEKER: a very high glucose keeps its calm symptom check on the home until the patient reads it. */}
+                {u.sekerAcil === 'yuksek' ? <SekerAcilKontrolu s={s} keton={!!u.keton} baslikGoster={false} /> : null}
+                {u.sekerAcil !== 'yuksek' && e && e.hafta.n >= 3 ? <Egri e={e} renk={metrikRengi(e.anahtar)} genis aria={kisaAd(e.anahtar)} buHafta={s.buHafta} /> : null}
               </UyariKarti>
             )
           })}
@@ -507,7 +516,8 @@ export function BugunGorunumu({ s, durum, eylemler, kopru, hastaAdi }: { s: Sagl
       <p className="sgb-dip">{s.acilDegil} <Link href={kopru.tercihHref}>{s.tercihlerBaslik}</Link></p>
 
       {giris ? <OlcumGirisi kart={giris} s={s} eylemler={eylemler} kapat={() => setGiris(null)} /> : null}
-      {yeniRozet ? <RozetAcilisi s={s} rozet={yeniRozet} tamam={() => eylemler.rozetGoruldu()} /> : null}
+      {/* EV-ACIL-SEKER: a badge is never celebrated over the entry sheet or while an acil note is still unread. */}
+      {yeniRozet && !giris && !acikUyarilar.some((u) => u.duzey === 'acil') ? <RozetAcilisi s={s} rozet={yeniRozet} tamam={() => eylemler.rozetGoruldu()} /> : null}
     </div>
   )
 }

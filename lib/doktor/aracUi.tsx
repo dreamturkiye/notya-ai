@@ -22,6 +22,7 @@ import { eklenenNotId } from '@/lib/doktor/muayeneFormuYolu';
 import MuayeneFormunaDon from '@/components/doktor/MuayeneFormunaDon';
 import { doktorBasHarfleri } from '@/lib/doktor/avatar';
 import { CHROME_RENK, CHROME_FONT } from '@/lib/doktor/chromeTheme';
+import { UYARI_RENK } from '@/lib/doktor/chromeRenk';
 import { doktorFetch } from '@/lib/doktor/oturumFetch'
 
 /** Bir branşın renk vurgusu — birincil düğme, etiket ve sayfa üst şeridi. */
@@ -211,15 +212,18 @@ export function TaslakNotu({ children }: { children?: React.ReactNode }) {
 }
 
 /** Küçük durum rozeti (renk tonu: iyi / uyarı / kırmızı / bilgi / nötr). Ton semantiktir — branş vurgusundan bağımsız. */
-export function Rozet({ ton = 'notr', children }: { ton?: 'iyi' | 'uyari' | 'kirmizi' | 'notr' | 'bilgi'; children: React.ReactNode }) {
+/** UYARI-RENKLERI (2026-11-25): 'uyum' = an adherence lapse (missed / late aşı, unmarked dose) — the calm slate family
+ *  with a dashed edge (lib/doktor/chromeRenk.ts UYARI_RENK.uyum), never the red 'kirmizi'. */
+export function Rozet({ ton = 'notr', children }: { ton?: 'iyi' | 'uyari' | 'kirmizi' | 'notr' | 'bilgi' | 'uyum'; children: React.ReactNode }) {
   const r = {
     iyi: ['#E4F3EA', '#8FCBA8', '#2E6E4E'],
     uyari: ['#FBF3DE', '#E4C989', '#7A5B1E'],
     kirmizi: ['#FBEAE3', `${CHROME_RENK.warn}80`, '#7A3D28'],
     notr: ['#F6F0E4', CHROME_RENK.border, CHROME_RENK.muted],
     bilgi: ['#EAEEF5', '#A9B8D8', '#3E4F7A'],
+    uyum: [UYARI_RENK.uyum.zemin, UYARI_RENK.uyum.vurgu, UYARI_RENK.uyum.ana],
   }[ton];
-  return <span style={{ background: r[0], border: `1px solid ${r[1]}`, color: r[2], borderRadius: 999, padding: '2px 9px', fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap', display: 'inline-block' }}>{children}</span>;
+  return <span data-ton={ton} style={{ background: r[0], border: `1px ${ton === 'uyum' ? 'dashed' : 'solid'} ${r[1]}`, color: r[2], borderRadius: 999, padding: '2px 9px', fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap', display: 'inline-block' }}>{children}</span>;
 }
 
 /** Doğrulanamayan her ön ayarın yanındaki etiket (klinik kaynak disiplini). */

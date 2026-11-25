@@ -24,6 +24,24 @@ export interface EvOlcum {
   kaynak: OlcumKaynagi
 }
 
+/**
+ * EV-ACIL-SEKER (Kaan, 2026-11-25) — a glucometer that shows "HI" / "LO" (above / below its measuring range). Stored as a
+ * flag (ev_olcumleri.isaret, deger null) and kept OUT of every numeric computation (averages, time in target, trends,
+ * karne, badges); shown as an off-scale marker and always run through the urgent rules.
+ */
+export type OlcumIsareti = 'hi' | 'lo'
+export interface IsaretliOlcum {
+  id: string
+  tip: 'glukoz'
+  isaret: OlcumIsareti
+  baglam: GlukozBaglami | null
+  olcumAt: string
+  kaynak: OlcumKaynagi
+}
+/** A row of the Günlük list: a numeric reading or a HI / LO flag. */
+export type GunlukOlcum = EvOlcum | IsaretliOlcum
+export const isaretliMi = (o: GunlukOlcum | null | undefined): o is IsaretliOlcum => !!o && 'isaret' in o && (o.isaret === 'hi' || o.isaret === 'lo')
+
 /** Rule-engine level. 'acil' always tells the patient to call 112 — Notya is not an emergency service. */
 export type UyariDuzeyi = 'bilgi' | 'dikkat' | 'hekime_bildir' | 'acil'
 export const DUZEY_SIRASI: Record<UyariDuzeyi, number> = { bilgi: 0, dikkat: 1, hekime_bildir: 2, acil: 3 }

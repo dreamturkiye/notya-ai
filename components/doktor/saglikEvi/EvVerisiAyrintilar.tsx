@@ -11,7 +11,10 @@ import { CHROME_RENK as R } from '@/lib/doktor/chromeRenk'
 import { OLCUM_TANIMLARI, metrikEtiketi } from '@/lib/saglikEvi/olcumler'
 import type { EsikSeti } from '@/lib/saglikEvi/hedefler'
 import type { OlcumTipi } from '@/lib/saglikEvi/tipler'
-import { HALKA_RENK, TON_RENK, acikUyarilar, degerHedefDisi, kisaAd, metrikRengi, sayi, trTarihSaat, type Metrik } from '@/lib/saglikEvi/evVerisiGorunum'
+import { HALKA_RENK, TON_PALET, TON_RENK, acikUyarilar, degerHedefDisi, degerSeviyesi, kisaAd, metrikRengi, sayi, trTarihSaat, uyariTonuKart, type Metrik } from '@/lib/saglikEvi/evVerisiGorunum'
+import { HEKIM_TON_ETIKETI, UYARI_RENK } from '@/lib/saglikEvi/uyariRenkleri'
+import { GLUKOZ_ACIL_TAVAN } from '@/lib/saglikEvi/hedefler'
+import { UyariIsareti } from './UyariIsareti'
 
 import type { ModulSecenegi } from '@/lib/saglikEvi/moduller'
 
@@ -48,7 +51,8 @@ export function EsikPaneli({ veri, kaydet }: { veri: Veri; kaydet: (ayar: Record
         <label style={{ fontSize: 13, display: 'inline-flex', gap: 8, alignItems: 'center' }}>LDL hedefi (mg/dL) <input inputMode="numeric" value={ldl} onChange={(e) => setLdl(e.target.value)} style={{ ...girdi, width: 76 }} /></label>
         <label style={{ fontSize: 13, display: 'inline-flex', gap: 8, alignItems: 'center' }}><input type="checkbox" checked={kilo} onChange={(e) => setKilo(e.target.checked)} />3 günde +2 kg artışı bana bildir</label>
       </div>
-      <p className="evv-kucuk" style={{ margin: '0 0 12px', lineHeight: 1.5, maxWidth: '75ch' }}>Boş alanlar kılavuz varsayılanını kullanır (gri değer). Kaynaklar: ESC 2024 / ESH 2023 hipertansiyon, TEMD diyabet kılavuzu (son baskı), ADA Standards of Care, gebelikte SB Doğum Öncesi Bakım Rehberi.</p>
+      <p className="evv-kucuk" style={{ margin: '0 0 12px', lineHeight: 1.5, maxWidth: '75ch' }}>Boş alanlar kılavuz varsayılanını kullanır (gri değer). Kaynaklar: ESC 2024 / ESH 2023 hipertansiyon, TEMD diyabet kılavuzu (son baskı), SB Diyabet Klinik Protokolleri (hiperglisemik aciller), ADA Standards of Care 2026, gebelikte SB Doğum Öncesi Bakım Rehberi.</p>
+      <p className="evv-kucuk" style={{ margin: '0 0 12px', lineHeight: 1.5, maxWidth: '75ch' }}>Kan şekeri güvenlik sınırı: acil üst eşik en fazla {GLUKOZ_ACIL_TAVAN} mg/dL, acil alt eşik en az 54 mg/dL olabilir; cihazın “HI” / “LO” göstermesi her zaman acildir.</p>
       <button type="button" className="evv-btn evv-btn-ana" disabled={mesgul} onClick={async () => {
         setMesgul(true)
         const temiz: Record<string, Record<string, number>> = {}
@@ -108,7 +112,7 @@ export function ModulPaneli({ veri, istek, mesgul }: { veri: Veri; istek: (metho
   )
 }
 
-const GUN_RENK: Record<DozGunu, string> = { tam: HALKA_RENK.ilac, kismi: 'rgba(15,155,142,0.42)', alinmadi: R.warn, yok: '#ebe4d8' }
+const GUN_RENK: Record<DozGunu, string> = { tam: HALKA_RENK.ilac, kismi: 'rgba(15,155,142,0.42)', alinmadi: UYARI_RENK.uyum.vurgu, yok: '#ebe4d8' }
 
 export default function Ayrintilar({ veri, sirali, sekme, setSekme, metrik, setMetrik, mesgul, istek, kaydet }: {
   veri: Veri; sirali: Metrik[]; sekme: Sekme; setSekme: (s: Sekme) => void; metrik: string | null; setMetrik: (m: string) => void; mesgul: boolean
@@ -122,7 +126,7 @@ export default function Ayrintilar({ veri, sirali, sekme, setSekme, metrik, setM
       <div className="evv-sekmeler" role="tablist" aria-label="Ev verisi ayrıntıları">
         {sekmeler.map(([k, ad]) => (
           <button key={k} type="button" role="tab" aria-selected={sekme === k} onClick={() => setSekme(k)} aria-label={k === 'uyarilar' && acik.length ? `Uyarılar, ${acik.length} yeni` : undefined}>
-            {ad}{k === 'uyarilar' && acik.length ? <i aria-hidden style={{ display: 'inline-block', width: 6, height: 6, borderRadius: '50%', background: TON_RENK.dikkat.ana, marginLeft: 6, verticalAlign: 'middle' }} /> : null}
+            {ad}{k === 'uyarilar' && acik.length ? <i aria-hidden style={{ display: 'inline-block', width: 6, height: 6, borderRadius: '50%', background: TON_RENK[uyariTonuKart(acik[0])].vurgu, marginLeft: 6, verticalAlign: 'middle' }} /> : null}
           </button>
         ))}
       </div>
@@ -131,8 +135,9 @@ export default function Ayrintilar({ veri, sirali, sekme, setSekme, metrik, setM
           veri.uyarilar.length ? (
             <div>
               {veri.uyarilar.slice(0, 12).map((u) => (
-                <div key={u.id} className="evv-satir" style={{ gridTemplateColumns: '10px minmax(0,1fr) auto', opacity: u.goruldu ? 0.55 : 1 }}>
-                  <i style={{ width: 8, height: 8, borderRadius: '50%', background: u.duzey === 'acil' ? TON_RENK.acil.ana : u.duzey === 'dikkat' ? '#b58a3a' : TON_RENK.dikkat.ana }} />
+                <div key={u.id} className="evv-satir" data-ton={TON_PALET[uyariTonuKart(u)]} style={{ gridTemplateColumns: 'minmax(108px,auto) minmax(0,1fr) auto', opacity: u.goruldu ? 0.55 : 1 }}>
+                  {/* UYARI-RENKLERI: word + icon + colour; a kritik medicine lapse is the slate adherence family. */}
+                  <UyariIsareti ton={TON_PALET[uyariTonuKart(u)]} etiket={HEKIM_TON_ETIKETI[TON_PALET[uyariTonuKart(u)]]} kucuk style={{ justifySelf: 'start' }} />
                   <span style={{ lineHeight: 1.45 }}>{u.metin}</span>
                   <span className="evv-kucuk" style={{ whiteSpace: 'nowrap' }}>{u.goruldu ? 'görüldü · ' : ''}{trTarihSaat(u.tarih)}</span>
                 </div>
@@ -147,7 +152,7 @@ export default function Ayrintilar({ veri, sirali, sekme, setSekme, metrik, setM
             <div>
               <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', alignItems: 'center', marginBottom: 4 }} className="evv-kucuk">
                 <span>Son 14 gün</span>
-                {([['tam', 'alındı'], ['kismi', 'eksik'], ['alinmadi', 'alınmadı']] as Array<[DozGunu, string]>).map(([k, ad]) => <span key={k} style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><b style={{ width: 8, height: 8, borderRadius: 2, display: 'inline-block', ...(k === 'alinmadi' ? { boxShadow: `inset 0 0 0 1.5px ${R.warn}` } : { background: GUN_RENK[k] }) }} />{ad}</span>)}
+                {([['tam', 'alındı'], ['kismi', 'eksik'], ['alinmadi', 'alınmadı']] as Array<[DozGunu, string]>).map(([k, ad]) => <span key={k} style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><b style={{ width: 8, height: 10, borderRadius: 2, display: 'inline-block', boxSizing: 'border-box', ...(k === 'alinmadi' ? { border: `1.5px dashed ${UYARI_RENK.uyum.vurgu}` } : { background: GUN_RENK[k] }) }} />{ad}</span>)}
                 <span style={{ marginLeft: 'auto' }}>Kritik ilaç 2 gün işaretlenmezse size bildirilir</span>
               </div>
               {veri.uyum.ilaclar.map((i) => {
@@ -180,14 +185,22 @@ export default function Ayrintilar({ veri, sirali, sekme, setSekme, metrik, setM
                 {m.noktalar.length} ölçüm, son 4 hafta{m.hedefMin != null || m.hedefMax != null ? ` · hedef ${m.hedefMin != null ? `${sayi(m.hedefMin)}–` : '<'}${sayi(m.hedefMax)}${m.hedefMax2 != null ? `/${sayi(m.hedefMax2)}` : ''} ${m.birim}` : ''}
               </div>
               <div className="evv-liste">
-                {[...m.noktalar].reverse().map((n, k) => {
-                  const disi = degerHedefDisi(m, n.deger, n.deger2)
+                {/* UYARI-RENKLERI: each reading carries its clinical level (Acil / Hekime bildir / Dikkat) as word + icon +
+                    colour; merely outside the target range = plain "hedef dışı". A glucometer HI / LO is listed as that flag. */}
+                {[
+                  ...m.noktalar.map((n) => ({ at: n.at, n, isaret: null as 'hi' | 'lo' | null })),
+                  ...(m.isaretler || []).map((i) => ({ at: i.at, n: null, isaret: i.isaret })),
+                ].sort((a, b) => b.at.localeCompare(a.at)).map((satir, k) => {
                   const od = OLCUM_TANIMLARI[m.anahtar.split(':')[0] as OlcumTipi]?.ondalik ?? 0
+                  const seviye = satir.isaret ? 'acil' as const : satir.n ? degerSeviyesi(m, satir.n.deger, satir.n.deger2) : null
+                  const disi = !seviye && satir.n ? degerHedefDisi(m, satir.n.deger, satir.n.deger2) : false
+                  const renk = seviye ? UYARI_RENK[seviye].ana : R.ink
                   return (
-                    <div key={k} className="evv-satir" style={{ gridTemplateColumns: 'minmax(0,1fr) auto', padding: '9px 0' }}>
-                      <span className="evv-kucuk" style={{ fontSize: 13.5 }}>{new Date(n.at).toLocaleString('tr-TR', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Istanbul' })}</span>
-                      <span style={{ fontWeight: 600, fontVariantNumeric: 'tabular-nums', color: disi ? TON_RENK.dikkat.ana : R.ink }}>
-                        {n.deger2 != null ? `${sayi(n.deger)}/${sayi(n.deger2)}` : sayi(n.deger, od)} <span className="evv-kucuk" style={{ fontWeight: 500 }}>{m.birim}</span>{disi ? <span className="evv-kucuk" style={{ color: TON_RENK.dikkat.ana, fontWeight: 500 }}> · hedef dışı</span> : null}
+                    <div key={k} className="evv-satir" data-ton={seviye ?? undefined} style={{ gridTemplateColumns: 'minmax(0,1fr) auto', padding: '9px 0' }}>
+                      <span className="evv-kucuk" style={{ fontSize: 13.5 }}>{new Date(satir.at).toLocaleString('tr-TR', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Istanbul' })}</span>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontWeight: 600, fontVariantNumeric: 'tabular-nums', color: renk, justifySelf: 'end' }}>
+                        {seviye ? <UyariIsareti ton={seviye} etiket={HEKIM_TON_ETIKETI[seviye]} kucuk /> : null}
+                        <span>{satir.isaret ? `${satir.isaret.toUpperCase()}` : satir.n!.deger2 != null ? `${sayi(satir.n!.deger)}/${sayi(satir.n!.deger2)}` : sayi(satir.n!.deger, od)} <span className="evv-kucuk" style={{ fontWeight: 500 }}>{satir.isaret ? `cihaz ölçüm aralığı ${satir.isaret === 'hi' ? 'üstü' : 'altı'}` : m.birim}</span>{disi ? <span className="evv-kucuk" style={{ fontWeight: 500 }}> · hedef dışı</span> : null}</span>
                       </span>
                     </div>
                   )
@@ -202,6 +215,14 @@ export default function Ayrintilar({ veri, sirali, sekme, setSekme, metrik, setM
             {veri.kontrolOzeti ? (
               <>
                 <div className="evv-kucuk">Hazırlandı {trTarihSaat(veri.kontrolOzeti.olusturmaAt)}{veri.kontrolOzeti.randevuAt ? `, randevu ${trTarihSaat(veri.kontrolOzeti.randevuAt)}` : ''}</div>
+                {veri.kontrolOzeti.ozet?.uyarilar?.length ? (
+                  <ul aria-label="Dönemdeki uyarılar" style={{ listStyle: 'none', margin: '10px 0 0', padding: 0, display: 'grid', gap: 6, maxWidth: '80ch' }}>
+                    {veri.kontrolOzeti.ozet.uyarilar.slice(0, 8).map((u, i) => {
+                      const t = TON_PALET[uyariTonuKart(u)]
+                      return <li key={i} data-ton={t} style={{ display: 'grid', gridTemplateColumns: 'minmax(108px,auto) 1fr', gap: 10, alignItems: 'center', fontSize: 13.5 }}><UyariIsareti ton={t} etiket={HEKIM_TON_ETIKETI[t]} kucuk style={{ justifySelf: 'start' }} /><span>{trTarihSaat(u.tarih)} — {u.metin}</span></li>
+                    })}
+                  </ul>
+                ) : null}
                 <pre style={{ whiteSpace: 'pre-wrap', fontFamily: 'inherit', fontSize: 13.5, lineHeight: 1.6, background: '#f8f3ea', borderRadius: 14, padding: '14px 16px', margin: '10px 0 12px', maxWidth: '80ch' }}>{veri.kontrolOzeti.metin}</pre>
               </>
             ) : <p className="evv-kucuk" style={{ margin: '0 0 12px' }}>Randevudan bir gün önce kendiliğinden hazırlanır.</p>}

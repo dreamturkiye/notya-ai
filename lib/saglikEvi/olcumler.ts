@@ -2,7 +2,7 @@
  * HASTA-PORTALI-GUNLUK — the home-measurement catalog: patient-facing names, units, plausible input ranges (a typo
  * guard, not a clinical judgement), step sizes for the one-tap steppers, and the smart default context.
  */
-import type { EvOlcum, GlukozBaglami, OlcumTipi } from './tipler'
+import type { EvOlcum, GlukozBaglami, OlcumIsareti, OlcumTipi } from './tipler'
 import { trDakika } from './zaman'
 
 export interface OlcumTanimi {
@@ -69,11 +69,22 @@ export function onerilenBaglam(gecmis: Pick<EvOlcum, 'tip' | 'baglam' | 'olcumAt
   return en && n >= 2 ? en : saateGoreBaglam(d)
 }
 
+const baglamCoz = (b: unknown): GlukozBaglami => ((['aclik', 'tokluk2', 'yatmadan', 'rastgele'] as const).includes(b as GlukozBaglami) ? (b as GlukozBaglami) : 'rastgele')
+
+/** EV-ACIL-SEKER: "HI" / "LO" as the meter shows it (glucose only). */
+export const ISARET_METNI: Record<OlcumIsareti, string> = { hi: 'HI', lo: 'LO' }
+
 /** Validate one reading from the patient. Returns the cleaned value or a Turkish error. */
-export function olcumDogrula(ham: { tip?: unknown; deger?: unknown; deger2?: unknown; baglam?: unknown }): { ok: true; tip: OlcumTipi; deger: number; deger2: number | null; baglam: GlukozBaglami | null } | { ok: false; hata: string } {
+export function olcumDogrula(ham: { tip?: unknown; deger?: unknown; deger2?: unknown; baglam?: unknown; isaret?: unknown }): { ok: true; tip: OlcumTipi; deger: number; deger2: number | null; baglam: GlukozBaglami | null; isaret?: undefined } | { ok: true; tip: 'glukoz'; isaret: OlcumIsareti; deger: null; deger2: null; baglam: GlukozBaglami } | { ok: false; hata: string } {
   const tip = ham.tip as OlcumTipi
   const t = OLCUM_TANIMLARI[tip]
   if (!t) return { ok: false, hata: 'Ölçüm türü tanınmadı.' }
+  if (ham.isaret !== undefined && ham.isaret !== null) {
+    // EV-ACIL-SEKER: a flag, never a number. Only a glucometer reads "HI" / "LO".
+    const i = String(ham.isaret).toLowerCase()
+    if (tip !== 'glukoz' || (i !== 'hi' && i !== 'lo')) return { ok: false, hata: 'Bu ölçüm için HI / LO girilemez.' }
+    return { ok: true, tip: 'glukoz', isaret: i, deger: null, deger2: null, baglam: baglamCoz(ham.baglam) }
+  }
   const deger = Number(String(ham.deger ?? '').replace(',', '.'))
   if (!Number.isFinite(deger) || deger < t.min || deger > t.max) return { ok: false, hata: `${t.ad} değeri ${t.min}–${t.max} ${t.birim} arasında olmalı. Lütfen kontrol edin.` }
   let deger2: number | null = null
@@ -84,7 +95,7 @@ export function olcumDogrula(ham: { tip?: unknown; deger?: unknown; deger2?: unk
   }
   let baglam: GlukozBaglami | null = null
   if (tip === 'glukoz') {
-    baglam = (['aclik', 'tokluk2', 'yatmadan', 'rastgele'] as const).includes(ham.baglam as GlukozBaglami) ? (ham.baglam as GlukozBaglami) : 'rastgele'
+    baglam = baglamCoz(ham.baglam)
   }
   const yuvarla = (x: number) => Math.round(x * 10 ** t.ondalik) / 10 ** t.ondalik
   return { ok: true, tip, deger: yuvarla(deger), deger2: deger2 == null ? null : Math.round(deger2), baglam }

@@ -27,6 +27,8 @@ import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth'
 import { CHROME_FONT } from '@/lib/doktor/chromeTheme'
 import type { FisiltiItem } from '@/lib/doktor/fisiltiOrtak'
 import { doktorFetch } from '@/lib/doktor/oturumFetch'
+import { UyariIsareti } from '@/components/doktor/saglikEvi/UyariIsareti'
+import { HEKIM_TON_ETIKETI } from '@/lib/saglikEvi/uyariRenkleri'
 
 // Sampled from public/doktor-chrome/plant.jpg (blue-green leaf tones), not a design-system token --
 // this box is deliberately its own accent, separate from the page's pine.
@@ -189,6 +191,8 @@ export default function NotyaFisildiyor({ specialty }: { specialty: string }) {
         <div style={S({ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', color: '#2f5155', fontSize: 15, display: 'flex', alignItems: 'center', gap: 7, marginBottom: 10 })}>
           {LEAF} Notya fısıldıyor
         </div>
+        {/* UYARI-RENKLERI: a home-data item says which family it is — clinical reading vs adherence lapse (word + icon). */}
+        {item.kaynak === 'ev' && item.evTon ? <div style={S({ marginBottom: 8 })}><UyariIsareti ton={item.evTon} etiket={HEKIM_TON_ETIKETI[item.evTon]} kucuk /></div> : null}
         <div style={S({ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', fontSize: 18, lineHeight: 1.3, fontWeight: 500, color: FISILTI_INK, whiteSpace: 'pre-wrap' })}>
           {item.kaynak === 'kalkan' ? item.detay[0] : `${item.ad} — ${item.baslik}`}
         </div>

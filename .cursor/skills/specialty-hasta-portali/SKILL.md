@@ -84,6 +84,16 @@ approved drugs (conservative; only measurements the branş row lists) > the pati
 branş-only modules (Tercihler › Takip ettiklerim) > the branş row as fallback. Never add a "show glucose" branch in a view:
 every downstream piece (tiles, ring goal, trends, rules, badges, karne, Özet, doctor tiles) reads the resolver's result.
 
+**Alert colours + acil glucose (UYARI-RENKLERI / EV-ACIL-SEKER / HEKIM-PUSH, Kaan 2026-11-25, standing):** one semantic
+palette for every warning, patient AND doctor side — clinical readings acil red / hekime bildir coral / dikkat amber (solid
+mark), adherence lapses (missed dose / aşı / measurement, kritik medicine unmarked, karne low grades) calm slate with a dashed
+mark, never red; never colour alone (word + icon). Tokens `UYARI_RENK` (lib/doktor/chromeRenk.ts, mirrored in
+saglik-evi.css), semantics lib/saglikEvi/uyariRenkleri.ts, mark components/doktor/saglikEvi/UyariIsareti.tsx — a view never
+picks its own red. Glucose ≥ 400 mg/dL or a meter "HI" is acil (symptom check + 112; ketone line with an active insulin; no
+dose words); HI / LO are flags (`ev_olcumleri.isaret`, deger null), never averaged. acil / hekime_bildir alerts also push to
+the doctor's phone (lib/saglikEvi/hekimBildirim*.ts — no PHI on the lock screen). Pinned by lib/saglikEvi/evAcil.test.ts,
+hekimPush.test.ts, uyariRenkleri.test.ts.
+
 ## Specialty module (required for every chapter build)
 
 Each specialty that is more than `baseline` **must** declare a portal module. Prefer extending `SpecialtyProfile` (see `lib/specialties/profile.ts`) rather than hardcoding `if (brans === …)` in `PortalShell` / `TrackingView` / the portal API.
