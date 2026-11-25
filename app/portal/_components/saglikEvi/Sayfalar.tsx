@@ -9,7 +9,7 @@ import { usePortalLive } from '../PortalLiveProvider'
 import { GunlukKapsayici, useGunluk } from './GunlukProvider'
 import { SAGLIK_EVI_SOZLERI as S } from '@/lib/saglikEvi/sozler'
 import { formatTrDate } from '@/components/doktor/portal/ui'
-import { BugunEylemleri, BugunGorunumu, BugunKopruYedek, type BugunBolumu, type BugunKoprusu } from '@/components/doktor/portal/saglikEvi/BugunGorunumu'
+import { BugunBasligi, BugunEylemleri, BugunGorunumu, BugunKopruYedek, type BugunBolumu, type BugunKoprusu } from '@/components/doktor/portal/saglikEvi/BugunGorunumu'
 import { useRandevuAcik } from '../RandevuAcikBaglami'
 import { doktorBasHarfleri } from '@/lib/doktor/avatar'
 import { modulIpucu } from '@/lib/portal/modulIpucu'
@@ -85,8 +85,8 @@ function Bugun() {
   const kopru = useKopru()
   return (
     <Durumlu
-      yedek={() => <BugunKopruYedek s={S} kopru={kopru} durumMetni={S.gunlukYuklenemedi} hata />}
-      bekliyor={<div className="sge sgb" aria-busy="true"><BugunEylemleri s={S} kopru={kopru} /><p className="sge-not" style={{ padding: '32px 0', textAlign: 'center' }}>{S.yukleniyor}</p></div>}
+      yedek={() => <BugunKopruYedek s={S} kopru={kopru} durumMetni={S.gunlukYuklenemedi} hata hastaAdi={data.hasta?.adSoyad || null} />}
+      bekliyor={<div className="sge sgb" aria-busy="true"><BugunBasligi s={S} hastaAdi={data.hasta?.adSoyad || null} veli={kopru.veli} /><BugunEylemleri s={S} kopru={kopru} /><p className="sge-not" style={{ padding: '32px 0', textAlign: 'center' }}>{S.yukleniyor}</p></div>}
     >
       {(d) => <BugunGorunumu s={S} durum={d} eylemler={g.eylemler} kopru={kopru} hastaAdi={data.hasta?.adSoyad || null} />}
     </Durumlu>

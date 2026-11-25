@@ -541,3 +541,41 @@
 .sge-doz-grup--gerektikce .sge-doz-saat { font-family: var(--sg-font-ui); font-size: 12.5px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--sg-muted); padding-top: 0; }
 .sge-dozsatir--gerektikce { flex-wrap: wrap; row-gap: 8px; }
 .sge-dozsatir--gerektikce .sge-dozsatir-metin { flex: 1 1 180px; }
+
+/* ── SAGLIGIM-GORUNUM-V3 (Kaan, 2026-11-25) — the illustrated morning band behind the Bugün greeting ──────────────
+   Full-bleed dawn wash (sage mist → cream, melting into the page) with our own windowsill-at-sunrise drawing on the
+   right; the band's height is fixed by CSS (never by the image) so nothing below moves when the art or the daily state
+   arrives. One image set for every branş and every country. Text stays on the art's faded left side (WCAG AA). */
+.sgk {
+  margin: 0 calc(50% - 50vw);
+  padding: 0 calc(50vw - 50%);
+  background:
+    radial-gradient(120% 90% at 88% 0%, rgba(246, 220, 170, 0.42), transparent 60%),
+    linear-gradient(180deg, #e6efe8 0%, #edf0e6 46%, rgba(244, 238, 227, 0) 100%);
+}
+.sgk-ic { position: relative; min-height: 196px; display: flex; flex-direction: column; justify-content: center; padding: 18px 0 14px; }
+/* phone: the art sits low and right (86 % of the band) so the greeting's line never runs into the drawing */
+.sgk-gorsel { position: absolute; right: calc(-1 * var(--sg-pad-x-r)); bottom: 0; height: 86%; aspect-ratio: 3 / 2; pointer-events: none; user-select: none; }
+.sgk-gorsel picture, .sgk-gorsel img { display: block; height: 100%; width: 100%; }
+.sgk-gorsel img { object-fit: contain; object-position: right bottom; }
+.sgk-metin { position: relative; z-index: 1; max-width: 62%; display: grid; justify-items: start; }
+.sgk-metin .sgb-selam { text-wrap: balance; }
+.sgk-metin .sgb-tarih { margin-top: 8px; color: #6d5f52; }
+.sgk-metin .sgb-kimlik { padding: 6px 12px 7px; border-radius: 14px; background: rgba(255, 253, 249, 0.72); }
+.sgk-metin .sgb-seri { margin-top: 12px; background: rgba(255, 253, 249, 0.9); }
+.sgk-sag { position: absolute; right: 0; top: 16px; z-index: 1; }
+.sgk + .sgb-eylemler { margin-top: 4px; }
+@media (min-width: 720px) {
+  .sgk-ic { min-height: 256px; padding: 28px 0 22px; }
+  .sgk-gorsel { right: -8px; height: 100%; }
+  .sgk-metin { max-width: 56%; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .sgk-gorsel img { animation: sgkGir 900ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+  @keyframes sgkGir { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+}
+@media (prefers-reduced-data: reduce) { .sgk-gorsel { display: none; } .sgk-metin { max-width: none; } }
+.sagligim-root.sg-kontrast .sgk { background: #edf0e6; }
+.sagligim-root.sg-kontrast .sgk-gorsel { opacity: 0.55; }
+@media print { .sgk { background: none; } .sgk-gorsel { display: none; } }
+.sgk-fide { display: block; flex-shrink: 0; }

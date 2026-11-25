@@ -1,0 +1,137 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 480" width="720" height="480">
+  <defs>
+    <radialGradient id="gunes" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#fbe9c4"/>
+      <stop offset="0.7" stop-color="#f6dcaa"/>
+      <stop offset="1" stop-color="#f3d49a" stop-opacity="0.85"/>
+    </radialGradient>
+    <linearGradient id="solSoluk" x1="0" x2="1" y1="0" y2="0">
+      <stop offset="0" stop-color="#fff" stop-opacity="0"/>
+      <stop offset="0.32" stop-color="#fff" stop-opacity="1"/>
+      <stop offset="0.9" stop-color="#fff" stop-opacity="1"/>
+      <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+    </linearGradient>
+    <mask id="sol"><rect width="720" height="480" fill="url(#solSoluk)"/></mask>
+    <linearGradient id="tepe1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c7d6c2"/><stop offset="1" stop-color="#dde6d6"/></linearGradient>
+    <linearGradient id="tepe2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a9c0a6"/><stop offset="1" stop-color="#c9d7c2"/></linearGradient>
+    <linearGradient id="pervaz" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f3eadb"/><stop offset="0.25" stop-color="#e9ddc8"/><stop offset="1" stop-color="#dccdb4"/></linearGradient>
+    <linearGradient id="vazo" x1="0" x2="1"><stop offset="0" stop-color="#fffdf8"/><stop offset="0.55" stop-color="#f4eee3"/><stop offset="1" stop-color="#e2d8c7"/></linearGradient>
+    <linearGradient id="cam" x1="0" x2="1"><stop offset="0" stop-color="#e9f4f1" stop-opacity="0.95"/><stop offset="0.5" stop-color="#d6ebe6" stop-opacity="0.7"/><stop offset="1" stop-color="#bfdcd5" stop-opacity="0.9"/></linearGradient>
+    <linearGradient id="su" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#bfe0d9" stop-opacity="0.85"/><stop offset="1" stop-color="#9fcfc6" stop-opacity="0.9"/></linearGradient>
+    <linearGradient id="kase" x1="0" x2="1"><stop offset="0" stop-color="#3f5a46"/><stop offset="0.6" stop-color="#2f4334"/><stop offset="1" stop-color="#243429"/></linearGradient>
+    <linearGradient id="armut" x1="0" x2="1"><stop offset="0" stop-color="#dfe08c"/><stop offset="0.6" stop-color="#c7c964"/><stop offset="1" stop-color="#a9ad4c"/></linearGradient>
+    <linearGradient id="fincan" x1="0" x2="1"><stop offset="0" stop-color="#fffdf8"/><stop offset="0.6" stop-color="#f6f0e5"/><stop offset="1" stop-color="#e3d9c8"/></linearGradient>
+    <linearGradient id="altSoluk" x1="0" x2="0" y1="0" y2="1"><stop offset="0.86" stop-color="#fff"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+    <mask id="alt"><rect width="720" height="480" fill="url(#altSoluk)"/></mask>
+    <radialGradient id="mandalina" cx="0.38" cy="0.35" r="0.7"><stop offset="0" stop-color="#f8bf6e"/><stop offset="0.7" stop-color="#ee9c42"/><stop offset="1" stop-color="#d9832f"/></radialGradient>
+    <linearGradient id="kaseIc" x1="0" x2="1"><stop offset="0" stop-color="#1f2e24"/><stop offset="1" stop-color="#2b3e31"/></linearGradient>
+    <filter id="bulanik" x="-20%" y="-50%" width="140%" height="200%"><feGaussianBlur stdDeviation="6"/></filter>
+    <filter id="yumusak"><feGaussianBlur stdDeviation="1.2"/></filter>
+  </defs>
+<g mask="url(#alt)">
+
+  <g mask="url(#sol)">
+    <!-- sunrise: the day rings as a rising sun -->
+    <circle cx="478" cy="226" r="132" fill="url(#gunes)"/>
+    <circle cx="478" cy="226" r="164" fill="none" stroke="#c08a2e" stroke-opacity="0.18" stroke-width="1.5"/>
+    <circle cx="478" cy="226" r="196" fill="none" stroke="#0f9b8e" stroke-opacity="0.12" stroke-width="1.5"/>
+    <path d="M 314 226 A 164 164 0 0 1 560 84" fill="none" stroke="#c08a2e" stroke-opacity="0.5" stroke-width="5" stroke-linecap="round"/>
+    <path d="M 282 226 A 196 196 0 0 1 380 56" fill="none" stroke="#0f9b8e" stroke-opacity="0.42" stroke-width="5" stroke-linecap="round"/>
+    <path d="M 674 226 A 196 196 0 0 1 652 316" fill="none" stroke="#2f4334" stroke-opacity="0.28" stroke-width="5" stroke-linecap="round"/>
+    <!-- far hills -->
+    <path d="M0 330 C 110 300 200 296 300 312 C 400 328 470 286 560 280 C 640 275 690 292 720 300 L720 420 L0 420 Z" fill="url(#tepe1)"/>
+    <path d="M0 360 C 120 340 230 352 330 344 C 440 334 520 316 620 330 C 670 337 700 346 720 350 L720 420 L0 420 Z" fill="url(#tepe2)"/>
+    <!-- ledge -->
+    <rect x="0" y="404" width="720" height="76" fill="url(#pervaz)"/>
+    <rect x="0" y="404" width="720" height="3" fill="#fbf6ec"/>
+  </g>
+
+  <!-- soft shadows on the ledge -->
+  <g filter="url(#bulanik)" fill="#3b2e24" fill-opacity="0.13">
+    <ellipse cx="208" cy="414" rx="50" ry="7"/>
+    <ellipse cx="318" cy="414" rx="74" ry="8"/>
+    <ellipse cx="452" cy="414" rx="46" ry="7"/>
+    <ellipse cx="598" cy="414" rx="56" ry="8"/>
+  </g>
+
+  <!-- herbal tea cup with steam -->
+  <g>
+    <path d="M 192 328 C 199 314 186 304 194 290" fill="none" stroke="#ffffff" stroke-opacity="0.9" stroke-width="3.5" stroke-linecap="round"/>
+    <path d="M 214 330 C 222 314 207 302 216 284" fill="none" stroke="#ffffff" stroke-opacity="0.75" stroke-width="3.5" stroke-linecap="round"/>
+    <path d="M 168 338 L 248 338 L 242 396 C 241 406 233 412 222 412 L 194 412 C 183 412 175 406 174 396 Z" fill="url(#fincan)"/>
+    <path d="M 170 352 L 246 352 L 245 362 L 171 362 Z" fill="#0f9b8e" fill-opacity="0.85"/>
+    <path d="M 247 352 C 266 352 270 384 244 388" fill="none" stroke="#e7dece" stroke-width="7" stroke-linecap="round"/>
+    <ellipse cx="208" cy="338" rx="40" ry="5" fill="#d9b26a"/>
+    <ellipse cx="208" cy="338" rx="40" ry="5" fill="none" stroke="#efe6d6" stroke-width="2"/>
+  </g>
+
+  <!-- bowl of fruit: pine-glazed bowl, a pear, a fig, a clementine -->
+  <g>
+    <ellipse cx="320" cy="314" rx="74" ry="13" fill="url(#kaseIc)"/>
+    <path d="M 296 302 C 284 252 300 228 312 224 C 316 212 314 202 312 196" fill="none" stroke="#6a5a3c" stroke-width="3" stroke-linecap="round"/>
+    <path d="M 312 224 C 334 224 344 264 336 298 C 332 316 290 318 284 302 C 278 278 290 258 296 248 C 300 238 302 226 312 224 Z" fill="url(#armut)"/>
+    <path d="M 322 238 C 330 252 332 272 328 290" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="4" stroke-linecap="round"/>
+    <path d="M 314 208 C 326 198 342 200 348 208 C 336 214 324 214 314 208 Z" fill="#6f9a72"/>
+    <circle cx="364" cy="300" r="28" fill="url(#mandalina)"/>
+    <path d="M 366 273 C 372 262 386 260 392 266 C 386 274 374 276 366 273 Z" fill="#5f8f66"/>
+    <path d="M 262 312 C 254 288 266 272 280 274 C 292 276 296 298 286 316 Z" fill="#8a4a62"/>
+    <path d="M 266 306 C 264 292 270 284 278 285 C 285 287 286 300 280 312 Z" fill="#e8a6a4"/>
+    <g fill="#f5d7c9"><circle cx="275" cy="296" r="1.6"/><circle cx="272" cy="302" r="1.4"/><circle cx="279" cy="301" r="1.4"/><circle cx="276" cy="307" r="1.3"/></g>
+    <path d="M 246 314 A 74 13 0 0 0 394 314 C 392 360 362 394 320 396 C 278 394 248 360 246 314 Z" fill="url(#kase)"/>
+    <path d="M 246 314 A 74 13 0 0 0 394 314" fill="none" stroke="#6d8b72" stroke-width="3"/>
+    <path d="M 262 340 C 272 362 288 376 308 382" fill="none" stroke="#ffffff" stroke-opacity="0.2" stroke-width="5" stroke-linecap="round"/>
+    <path d="M 298 394 L 342 394 L 339 408 L 301 408 Z" fill="#26372b"/>
+  </g>
+
+  <!-- glass carafe of water with lemon and mint -->
+  <g>
+    <path d="M 436 220 L 468 220 L 468 252 C 496 268 502 300 500 340 C 498 386 486 410 452 410 C 418 410 406 386 404 340 C 402 300 408 268 436 252 Z" fill="url(#cam)" stroke="#b9d6cf" stroke-width="2"/>
+    <path d="M 410 300 C 446 292 466 306 498 298 L 500 340 C 498 386 486 408 452 408 C 418 408 406 386 405 340 Z" fill="url(#su)"/>
+    <g>
+      <circle cx="440" cy="352" r="17" fill="#f6dc7c"/><circle cx="440" cy="352" r="13" fill="#fbeaa6"/>
+      <g stroke="#f6dc7c" stroke-width="1.6"><line x1="440" y1="339" x2="440" y2="365"/><line x1="427" y1="352" x2="453" y2="352"/><line x1="431" y1="343" x2="449" y2="361"/><line x1="449" y1="343" x2="431" y2="361"/></g>
+      <circle cx="470" cy="380" r="13" fill="#f6dc7c" fill-opacity="0.9"/><circle cx="470" cy="380" r="9.5" fill="#fbeaa6" fill-opacity="0.9"/>
+      <path d="M 462 322 C 472 312 486 314 490 322 C 480 330 470 330 462 322 Z" fill="#5f9c74"/>
+      <path d="M 448 384 C 456 396 470 398 476 392 C 468 384 458 382 448 384 Z" fill="#5f9c74" fill-opacity="0.85"/>
+    </g>
+    <path d="M 418 300 C 414 330 416 362 426 388" fill="none" stroke="#ffffff" stroke-opacity="0.75" stroke-width="5" stroke-linecap="round"/>
+    <rect x="432" y="212" width="40" height="10" rx="4" fill="#cfe5e0" stroke="#b9d6cf" stroke-width="2"/>
+  </g>
+
+  <!-- ceramic vase with eucalyptus -->
+  <g>
+    <g fill="none" stroke="#6b8a70" stroke-width="2.6" stroke-linecap="round">
+      <path d="M 596 262 C 590 200 570 150 540 104"/>
+      <path d="M 600 262 C 606 196 624 140 662 98"/>
+      <path d="M 598 262 C 598 200 596 150 604 70"/>
+      <path d="M 594 262 C 582 220 556 196 520 182"/>
+    </g>
+    <g fill="#9cb59b">
+      <ellipse cx="540" cy="104" rx="11" ry="9"/><ellipse cx="552" cy="124" rx="12" ry="10"/><ellipse cx="531" cy="130" rx="10" ry="8.5"/>
+      <ellipse cx="566" cy="152" rx="12" ry="10"/><ellipse cx="548" cy="160" rx="10" ry="8.5"/><ellipse cx="578" cy="186" rx="11" ry="9"/>
+      <ellipse cx="662" cy="98" rx="11" ry="9"/><ellipse cx="646" cy="114" rx="12" ry="10"/><ellipse cx="664" cy="124" rx="10" ry="8.5"/>
+      <ellipse cx="630" cy="146" rx="12" ry="10"/><ellipse cx="648" cy="156" rx="10" ry="8.5"/><ellipse cx="618" cy="184" rx="11" ry="9"/>
+      <ellipse cx="520" cy="182" rx="10" ry="8.5"/><ellipse cx="540" cy="200" rx="11" ry="9"/><ellipse cx="560" cy="214" rx="10" ry="8"/>
+    </g>
+    <g fill="#7e9d82">
+      <ellipse cx="604" cy="70" rx="10" ry="8.5"/><ellipse cx="590" cy="88" rx="11" ry="9"/><ellipse cx="612" cy="98" rx="11" ry="9"/>
+      <ellipse cx="594" cy="122" rx="11" ry="9"/><ellipse cx="612" cy="134" rx="10" ry="8.5"/><ellipse cx="596" cy="160" rx="10" ry="8.5"/>
+      <ellipse cx="560" cy="134" rx="8" ry="7"/><ellipse cx="636" cy="170" rx="9" ry="7.5"/>
+    </g>
+    <path d="M 578 256 L 618 256 C 620 272 640 290 642 330 C 644 378 628 410 598 410 C 568 410 552 378 554 330 C 556 290 576 272 578 256 Z" fill="url(#vazo)"/>
+    <path d="M 556 318 C 584 324 612 324 641 318 L 642 336 C 612 342 584 342 555 336 Z" fill="#2f4334"/>
+    <path d="M 566 296 C 562 320 562 352 570 380" fill="none" stroke="#ffffff" stroke-opacity="0.9" stroke-width="5" stroke-linecap="round"/>
+    <ellipse cx="598" cy="256" rx="20" ry="4" fill="#e2d8c7"/>
+  </g>
+
+  <!-- rosemary sprig on the ledge -->
+  <g>
+    <path d="M 640 424 C 664 418 690 418 712 422" fill="none" stroke="#6b5b40" stroke-width="2" stroke-linecap="round"/>
+    <g fill="#6f9a72">
+      <ellipse cx="650" cy="418" rx="7" ry="2.4" transform="rotate(-24 650 418)"/><ellipse cx="660" cy="426" rx="7" ry="2.4" transform="rotate(20 660 426)"/>
+      <ellipse cx="672" cy="414" rx="7" ry="2.4" transform="rotate(-30 672 414)"/><ellipse cx="682" cy="424" rx="7" ry="2.4" transform="rotate(24 682 424)"/>
+      <ellipse cx="694" cy="414" rx="7" ry="2.4" transform="rotate(-26 694 414)"/><ellipse cx="704" cy="424" rx="7" ry="2.4" transform="rotate(22 704 424)"/>
+    </g>
+  </g>
+</g>
+</svg>

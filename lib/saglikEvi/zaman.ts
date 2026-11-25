@@ -28,6 +28,16 @@ export function trDakika(d: Date | number | string): number {
   return t.getUTCHours() * 60 + t.getUTCMinutes()
 }
 
+/**
+ * SAGLIGIM-GORUNUM-V3 (Kaan, 2026-11-25) — minutes since the DEVICE's local midnight (0..1439). Only for the greeting /
+ * day-part: a patient in Baltimore at 10:11 is greeted "Günaydın", not by Türkiye's 18:11. Dose schedules, day
+ * boundaries and streaks keep the Türkiye helpers above.
+ */
+export function yerelDakika(d: Date | number = Date.now()): number {
+  const t = d instanceof Date ? d : new Date(d)
+  return t.getHours() * 60 + t.getMinutes()
+}
+
 /** The instant of Türkiye midnight starting `gun`. */
 export function trGunBasi(gun: string): Date {
   return new Date(Date.parse(`${gun}T00:00:00Z`) - TR_OFSET_MS)

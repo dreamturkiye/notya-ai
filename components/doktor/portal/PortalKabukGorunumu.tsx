@@ -32,6 +32,23 @@ export function PortalKabukGorunumu({ marka, urun, anaHref, hastaAdi, hastaAlani
     const active = navRef.current?.querySelector<HTMLElement>('.sg-nav-link.is-active')
     active?.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' })
   }, [aktifKey])
+  // SAGLIGIM-GORUNUM-V3: show that the tab row scrolls (soft fade on the side that has more tabs); from 720 px the row
+  // wraps instead (sagligim.css), so no tab is ever cut off at the edge.
+  useEffect(() => {
+    const n = navRef.current
+    if (!n) return
+    const olc = () => {
+      const sol = n.scrollLeft > 4
+      const sag = n.scrollLeft + n.clientWidth < n.scrollWidth - 4
+      n.classList.toggle('is-sol-tasma', sol)
+      n.classList.toggle('is-sag-tasma', sag)
+    }
+    olc()
+    n.addEventListener('scroll', olc, { passive: true })
+    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(olc) : null
+    ro?.observe(n)
+    return () => { n.removeEventListener('scroll', olc); ro?.disconnect() }
+  }, [nav.length])
   const tikla = (href: string) => (git ? (e: React.MouseEvent) => { e.preventDefault(); git(href) } : undefined)
 
   return (

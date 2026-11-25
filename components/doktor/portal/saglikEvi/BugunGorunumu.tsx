@@ -19,8 +19,8 @@ import type { SaglikEviSozleri } from '@/lib/saglikEvi/sozler'
 import { kisaTarih, onceMetni } from '@/lib/saglikEvi/sozler'
 import { degerMetni, OLCUM_TANIMLARI } from '@/lib/saglikEvi/olcumler'
 import { kisaAd, metrikRengi, metrikTipi, sayi } from '@/lib/saglikEvi/evVerisiGorunum'
-import { adlarMetni, bugunKazanildiMi, eksikDozlar, gunHalkalari, ilkCumle, siradakiAdim, uyariEgilimi, type GunHalkasi } from '@/lib/saglikEvi/bugunGorunum'
-import { trDakika } from '@/lib/saglikEvi/zaman'
+import { adlarMetni, bugunKazanildiMi, bugunSelami, eksikDozlar, gunHalkalari, ilkCumle, siradakiAdim, uyariEgilimi, type GunHalkasi } from '@/lib/saglikEvi/bugunGorunum'
+import { FideGorseli, SaglikKahramani, useCihazDakikasi } from './SaglikKahramani'
 import type { GunlukEylemleri } from './eylemler'
 import { GunHalkalari, type HalkaEtiketi } from './GunHalkalari'
 import { Egri } from './Egri'
@@ -78,6 +78,29 @@ const Alev = ({ aktif, boyut = 22 }: { aktif: boolean; boyut?: number }) => (
 const Kalkan = ({ boyut = 16, dolu = true }: { boyut?: number; dolu?: boolean }) => (
   <svg width={boyut} height={boyut * 1.08} viewBox="0 0 24 26" aria-hidden><path d="M12 2l9 3.4c0 8-3.4 14-9 18-5.6-4-9-10-9-18z" fill={dolu ? '#2f4334' : 'none'} stroke="#2f4334" strokeWidth={dolu ? 0 : 1.6} /></svg>
 )
+
+/**
+ * SAGLIGIM-GORUNUM-V3 — the Bugün greeting on the illustrated morning band. Drawn in every state of the home (loading,
+ * daily state failed, loaded) so the base actions below never jump when the daily state arrives. Greeting by the
+ * DEVICE's local time (neutral until the client clock is known); an adult is greeted by first name, a minor's page
+ * (veli reads it) without the child's name and with the "Hasta · ad" line instead (veliDiliMi age rule).
+ */
+export function BugunBasligi({ s, hastaAdi, veli, tarihIso, seri, karneHref }: { s: SaglikEviSozleri; hastaAdi: string | null; veli?: boolean; tarihIso?: string | null; seri?: GunlukDurum['seri'] | null; karneHref?: string }) {
+  const dakika = useCihazDakikasi()
+  const selam = bugunSelami({ dakika, hastaAdi, veli, selam: s.selam, notr: s.selamNotr })
+  return (
+    <SaglikKahramani>
+      <h1 className="sgb-selam" data-testid="bugun-selam">{selam}</h1>
+      {tarihIso ? <p className="sgb-tarih">{s.tarihKisa(tarihIso)}</p> : null}
+      {veli && hastaAdi ? <p className="sgb-kimlik" data-testid="bugun-hasta-kimlik"><small>{s.hastaEtiketi}</small>{hastaAdi}</p> : null}
+      {seri && seri.seri > 0 && karneHref ? <Link href={karneHref} className={`sgb-seri${seri.bugunAktif ? ' sgb-seri--aktif' : ''}`} aria-label={s.seriAria(seri.seri, seri.kalkan)}>
+        <Alev aktif={seri.bugunAktif} />
+        <b>{seri.seri}</b><small>{s.seriKisa}</small>
+        {seri.kalkan ? <span className="sgb-seri-kalkan">{Array.from({ length: seri.kalkan }, (_, i) => <Kalkan key={i} boyut={13} />)}</span> : null}
+      </Link> : null}
+    </SaglikKahramani>
+  )
+}
 
 /** The doctor's card (PORTAL-HEKIM-01 carried into Bugün): photo or initials, name, branş · klinik, address, one-tap call. */
 export function BugunHekimKarti({ s, hekim }: { s: SaglikEviSozleri; hekim: BugunHekimi }) {
@@ -199,9 +222,10 @@ function KopruBaglantilari({ s, kopru }: { s: SaglikEviSozleri; kopru: BugunKopr
  * Bugün without the daily state (still loading, or the daily-home API failed): the patient keeps everything the home
  * gave before — visit alert, doctor, messages / visits / results, sections, recent items. Never a blank home.
  */
-export function BugunKopruYedek({ s, kopru, durumMetni, hata }: { s: SaglikEviSozleri; kopru: BugunKoprusu; durumMetni: string; hata?: boolean }) {
+export function BugunKopruYedek({ s, kopru, durumMetni, hata, hastaAdi = null }: { s: SaglikEviSozleri; kopru: BugunKoprusu; durumMetni: string; hata?: boolean; hastaAdi?: string | null }) {
   return (
     <div className="sge sgb">
+      <BugunBasligi s={s} hastaAdi={hastaAdi} veli={kopru.veli} />
       <BugunEylemleri s={s} kopru={kopru} />
       <p className="sge-not" style={{ padding: '18px 0 6px' }} role={hata ? 'alert' : undefined} aria-busy={hata ? undefined : true}>{durumMetni}</p>
       {kopru.muayeneUyari48s ? <BugunMuayeneUyarisi s={s} ne={kopru.muayeneUyari48s} href={kopru.randevuHref} /> : null}
@@ -260,7 +284,6 @@ export function BugunGorunumu({ s, durum, eylemler, kopru, hastaAdi }: { s: Sagl
   useEffect(() => { try { setOnaySonra(Date.now() - Number(localStorage.getItem('sg-onay-sonra') || 0) < 7 * 86_400_000) } catch { setOnaySonra(false) } }, [])
 
   const simdiMs = Date.now()
-  const ad = hastaAdi ? hastaAdi.split(' ')[0] : null
   const adim = siradakiAdim(durum, simdiMs)
   const eksik = eksikDozlar(durum)
   const halkalar = gunHalkalari(durum)
@@ -305,7 +328,7 @@ export function BugunGorunumu({ s, durum, eylemler, kopru, hastaAdi }: { s: Sagl
         </div>
       ) : (
         <div key={adim.tur} className="sgb-siradaki-ic sgb-siradaki-ic--tamam">
-          <span className={`sgb-tamam-isaret${adim.tur === 'bos' ? ' sgb-tamam-isaret--bos' : ''}`} aria-hidden>{adim.tur === 'tamam' ? <Tik boyut={30} /> : <Ikon d="M12 6v6l4 2M12 21a9 9 0 1 1 0-18 9 9 0 0 1 0 18z" boyut={28} />}</span>
+          {adim.tur === 'bos' ? <FideGorseli boyut={64} /> : <span className="sgb-tamam-isaret" aria-hidden><Tik boyut={30} /></span>}
           <div>
             <p id="sgb-siradaki-b" className="sgb-cumle">{adim.tur === 'tamam' ? s.planTamam : s.planBos}</p>
             <p className="sgb-cumle-alt">{adim.tur === 'tamam' ? s.planTamamAlt : s.planBosAlt}</p>
@@ -340,18 +363,7 @@ export function BugunGorunumu({ s, durum, eylemler, kopru, hastaAdi }: { s: Sagl
   const seri = durum.seri
   return (
     <div className="sge sgb">
-      <header className="sgb-ust">
-        <div>
-          <h1 className="sgb-selam">{s.selam(trDakika(simdiMs))}{ad && !kopru.veli ? `, ${ad}` : ''}</h1>
-          <p className="sgb-tarih">{s.tarihKisa(durum.simdi)}</p>
-          {kopru.veli && hastaAdi ? <p className="sgb-kimlik" data-testid="bugun-hasta-kimlik"><small>{s.hastaEtiketi}</small>{hastaAdi}</p> : null}
-        </div>
-        {seri.seri > 0 ? <Link href={kopru.karneHref} className={`sgb-seri${seri.bugunAktif ? ' sgb-seri--aktif' : ''}`} aria-label={s.seriAria(seri.seri, seri.kalkan)}>
-          <Alev aktif={seri.bugunAktif} />
-          <b>{seri.seri}</b><small>{s.seriKisa}</small>
-          {seri.kalkan ? <span className="sgb-seri-kalkan">{Array.from({ length: seri.kalkan }, (_, i) => <Kalkan key={i} boyut={13} />)}</span> : null}
-        </Link> : null}
-      </header>
+      <BugunBasligi s={s} hastaAdi={hastaAdi} veli={kopru.veli} tarihIso={durum.simdi} seri={seri} karneHref={kopru.karneHref} />
 
       <BugunEylemleri s={s} kopru={kopru} />
 

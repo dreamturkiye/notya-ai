@@ -12,6 +12,9 @@ import {
 } from '@/lib/klinik/seansDefter'
 import { ikiNushaYaz } from '@/lib/klinik/ikiNushaYaz'
 import { NUSHA_ROLLERI } from '@/lib/klinik/ikiNusha'
+import { decrypt } from '@/lib/security/encryption'
+
+const dogumCoz = (v: unknown): string => { try { return v ? decrypt(String(v)) : '' } catch { return '' } }
 
 export async function POST(req: NextRequest) {
   const oturum = await doktorOturum(req)
@@ -36,14 +39,15 @@ export async function POST(req: NextRequest) {
   if (!slug) return NextResponse.json({ error: 'Hasta bulunamadı.' }, { status: 404 })
   const { data: hasta } = await supabase
     .from('patients')
-    .select('dogum_tarihi')
+    .select('dob_encrypted')
     .eq('id', patientId)
     .eq('doctor_id', user.id)
     .maybeSingle()
   const kapali = seansKapisi({
     metin: String(body?.metin || ''),
     rizaIkiNusha: body?.rizaIkiNusha === true,
-    kucuk: yasKucukMu(hasta?.dogum_tarihi ? String(hasta.dogum_tarihi) : ''),
+    // SAGLIGIM-GORUNUM-V3: patients has no plain dogum_tarihi column (the read failed, so a minor never hit the veli gate)
+    kucuk: yasKucukMu(dogumCoz(hasta?.dob_encrypted)),
     veliOnam: body?.veliOnam === true,
     muttefik: muttefikMeslekMi(slug),
     hekimPlani: body?.hekimPlani === true,

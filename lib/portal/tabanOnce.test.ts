@@ -126,7 +126,8 @@ describe('PORTAL-TABAN-ONCE — Bugün carries the base actions first', () => {
     assert.match(s, /randevuHref: randevuAcik \? `\$\{basePath\}\/randevu` : `\$\{basePath\}\/ziyaretler`/)
     assert.match(s, /yazHref: `\$\{basePath\}\/mesajlar\?yaz=1`/)
     assert.ok(!/portalFetch|fetch\(/.test(s), 'Bugün container must not add a request on the portal home')
-    assert.match(s, /bekliyor=\{<div className="sge sgb" aria-busy="true"><BugunEylemleri/)
+    // SAGLIGIM-GORUNUM-V3: the greeting band comes first (same height in every state — nothing jumps), then the base actions
+    assert.match(s, /bekliyor=\{<div className="sge sgb" aria-busy="true"><BugunBasligi [^>]*\/><BugunEylemleri/)
   })
   it('Mesajlar opens the composer for ?yaz=1 (live page → MessagesView → shared view)', () => {
     assert.match(yorumsuz(oku('app/portal/hasta/[token]/mesajlar/page.tsx')), /get\('yaz'\) === '1'/)

@@ -110,3 +110,15 @@ export function bugunKazanildiMi(kazanildiAt: string | null, bugun: string): boo
   if (!kazanildiAt) return false
   return trGun(kazanildiAt) === bugun
 }
+
+/**
+ * SAGLIGIM-GORUNUM-V3 (Kaan, 2026-11-25: "Burada 'İyi günler' hastanın adının olması iyi olur") — the Bugün greeting.
+ * Adult → "<day-part>, <first name>"; a patient under 18 (a parent reads the page; veliDiliMi age rule) → no name in the
+ * greeting (the "Hasta · ad" line carries it). `dakika` is the DEVICE's local minute, or null before the client clock is
+ * known (server render / hydration) → the neutral word, so server and client markup match.
+ */
+export function bugunSelami(o: { dakika: number | null; hastaAdi: string | null | undefined; veli: boolean | undefined; selam: (dakika: number) => string; notr: string }): string {
+  const bas = o.dakika == null ? o.notr : o.selam(o.dakika)
+  const ad = (o.hastaAdi || '').trim().split(/\s+/)[0] || ''
+  return ad && !o.veli ? `${bas}, ${ad}` : bas
+}

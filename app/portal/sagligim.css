@@ -52,6 +52,18 @@ body:has(.sagligim-root) {
     radial-gradient(700px 420px at 100% 0%, rgba(164, 91, 62, 0.08), transparent 50%),
     radial-gradient(600px 360px at 70% 100%, rgba(180, 131, 47, 0.06), transparent 45%),
     linear-gradient(180deg, #faf6ee 0%, var(--sg-bg) 42%, #efe9dc 100%);
+  /* SAGLIGIM-GORUNUM-V3: a faint line-drawn texture (day rings + a eucalyptus sprig, 0.9 kB SVG) on every portal page —
+     behind the content, never under the reading column's text at a strength that matters. */
+  background-image:
+    url('/portal/gorseller/doku.svg'),
+    url('/portal/gorseller/doku.svg'),
+    radial-gradient(900px 480px at 0% -5%, rgba(15, 155, 142, 0.11), transparent 55%),
+    radial-gradient(700px 420px at 100% 0%, rgba(164, 91, 62, 0.08), transparent 50%),
+    radial-gradient(600px 360px at 70% 100%, rgba(180, 131, 47, 0.06), transparent 45%),
+    linear-gradient(180deg, #faf6ee 0%, var(--sg-bg) 42%, #efe9dc 100%);
+  background-repeat: no-repeat;
+  background-size: 560px auto, 460px auto, auto, auto, auto, auto;
+  background-position: right -230px top 1040px, left -230px bottom 260px, 0 0, 0 0, 0 0, 0 0;
   color: var(--sg-ink);
   font-family: var(--sg-font-ui);
   -webkit-font-smoothing: antialiased;
@@ -166,7 +178,8 @@ body:has(.sagligim-root) {
   z-index: 40;
   backdrop-filter: blur(16px) saturate(1.2);
   -webkit-backdrop-filter: blur(16px) saturate(1.2);
-  background: rgba(232, 238, 242, 0.86);
+  /* SAGLIGIM-GORUNUM-V3: sage-mist glass, continuous with the morning band below it */
+  background: rgba(236, 241, 235, 0.86);
   border-bottom: 1px solid var(--sg-line);
   padding-top: env(safe-area-inset-top);
   width: 100%;
@@ -1983,4 +1996,21 @@ body:has(.sagligim-root) {
   font-size: 12px;
   font-weight: 560;
   color: var(--sg-muted);
+}
+
+/* SAGLIGIM-GORUNUM-V3 — no texture when the reader asked to save data. */
+@media (prefers-reduced-data: reduce) {
+  .sagligim-root { background-image: linear-gradient(180deg, #faf6ee 0%, var(--sg-bg) 42%, #efe9dc 100%); }
+}
+
+/* SAGLIGIM-GORUNUM-V3 — the tab row never hides a tab: on a phone it scrolls (soft edge fades show there is more, set
+   by PortalKabukGorunumu from the scroll position); from 720 px it wraps onto a second row instead of clipping
+   ("Karne" was cut to "K" at the right edge). Order is untouched (lib/portal/navSirasi.ts). */
+.sg-nav.is-sag-tasma { -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 36px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 36px), transparent); }
+.sg-nav.is-sol-tasma { -webkit-mask-image: linear-gradient(90deg, transparent, #000 36px); mask-image: linear-gradient(90deg, transparent, #000 36px); }
+.sg-nav.is-sol-tasma.is-sag-tasma { -webkit-mask-image: linear-gradient(90deg, transparent, #000 36px, #000 calc(100% - 36px), transparent); mask-image: linear-gradient(90deg, transparent, #000 36px, #000 calc(100% - 36px), transparent); }
+@media (min-width: 720px) {
+  .sg-nav { flex-wrap: wrap; overflow-x: visible; row-gap: 2px; column-gap: 2px; scroll-snap-type: none; }
+  .sg-nav-link { padding: 0 13px; min-height: 40px; }
+  .sg-nav.is-sag-tasma, .sg-nav.is-sol-tasma { -webkit-mask-image: none; mask-image: none; }
 }

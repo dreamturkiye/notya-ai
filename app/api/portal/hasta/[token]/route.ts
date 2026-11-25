@@ -398,7 +398,7 @@ export async function GET(
     .eq('onay_durum', 'hasta_paylas')
     .order('tarih', { ascending: false, nullsFirst: false })
     .limit(20))
-  const hastaRowP = Promise.resolve(sb.from('patients').select('name_encrypted, dob_encrypted, gender_encrypted, notes_encrypted, gender').eq('id', patientId).eq('doctor_id', doctorId).maybeSingle())
+  const hastaRowP = Promise.resolve(sb.from('patients').select('name_encrypted, dob_encrypted, gender_encrypted, notes_encrypted').eq('id', patientId).eq('doctor_id', doctorId).maybeSingle())
   const hekimBransiP = sar(hekimBransi(sb, tokenData.doctor_id as string))
   const gebP = Promise.resolve(sb.from('gebelikler').select('id, sat, tdt').eq('patient_id', patientId).eq('doctor_id', doctorId).eq('durum', 'aktif').order('created_at', { ascending: false }).limit(1).maybeSingle())
   const ksP = Promise.resolve(sb.from('kadin_sagligi').select('son_pap, son_hpv, son_mamografi, son_dxa, son_kolorektal, hrt, hrt_baslangic, histerektomi').eq('patient_id', patientId).eq('doctor_id', doctorId).maybeSingle())
@@ -697,7 +697,13 @@ export async function GET(
   // SAGLIGIM-PORTAL-REGISTRY — specialty slices attach ONLY via lib/portal/moduller.ts eligibility
   // (token doctor's specialty × patient records × age). Previously büyüme was computed for every patient
   // with a DOB (adults included) and Pap/HPV reminders for every woman, whatever the practice.
-  const hastaRow = (await hastaRowP).data
+  // SAGLIGIM-GORUNUM-V3 (2026-11-25): this select carried a plain `gender` column that production `patients` does not
+  // have (only gender_encrypted) — PostgREST failed the whole query, so since #291 every patient's name, DOB, gender and
+  // notes were null here (no name in the greeting, no age rule, no büyüme). Columns are pinned by
+  // lib/portal/hastaSutunlari.test.ts; a failed read is logged instead of silently looking like an empty record.
+  const hastaSonuc = await hastaRowP
+  if (hastaSonuc.error) console.error('[portal] hasta satırı okunamadı:', hastaSonuc.error.message)
+  const hastaRow = hastaSonuc.data
   const coz = (v: unknown) => { try { return v ? decrypt(String(v)) : null } catch { return null } }
   // PORTAL-HASTA-ADI — name only (this point is past requirePortalUnlock); null → UI shows nothing.
   const dogumIso = coz(hastaRow?.dob_encrypted)

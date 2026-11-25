@@ -7,6 +7,8 @@
 import type { DozDurumu, GlukozBaglami, OlcumTipi } from './tipler'
 
 export const SAGLIK_EVI_SOZLERI = {
+  /** Before the device clock is known (server render) — no day-part, so it is never wrong. */
+  selamNotr: 'Hoş geldiniz',
   selam: (dakika: number) => (dakika < 5 * 60 ? 'İyi geceler' : dakika < 11 * 60 ? 'Günaydın' : dakika < 17 * 60 ? 'İyi günler' : dakika < 22 * 60 ? 'İyi akşamlar' : 'İyi geceler'),
   tarih: (iso: string) => new Date(iso).toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Europe/Istanbul' }),
   seriEtiket: (n: number) => (n === 1 ? 'gün' : 'gün seri'),

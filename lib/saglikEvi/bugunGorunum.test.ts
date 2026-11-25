@@ -133,7 +133,8 @@ describe('Bugün v2 — rendered screen, every branş (core component)', () => {
   }
   it('first screen of the design target: greeting, rings, the sentence, one primary action', () => {
     const html = ciz(durum())
-    assert.match(html, /İyi günler, Demo/)
+    // SAGLIGIM-GORUNUM-V3: server markup greets neutrally (device clock unknown); day-part rule in lib/portal/hastaSutunlari.test.ts
+    assert.match(html, /Hoş geldiniz, Demo/)
     assert.match(html, /20:00<\/span> — (Amlodipin ve Metformin|Metformin ve Amlodipin)/)
     assert.equal((html.match(/class="sgb-ana"/g) || []).length, 1)
     assert.match(html, /Empagliflozin<\/b><small>08:00 dozu işaretlenmedi/)
@@ -216,7 +217,7 @@ describe('Bugün keeps the earlier Özet home (PORTAL-REGRESYON-2026-11-25)', ()
     assert.doesNotMatch(cocuk, /, Elif/)
     assert.match(cocuk, /data-testid="bugun-hasta-kimlik"><small>Hasta<\/small>Elif Yılmaz/)
     const yetiskin = cizK(TAM, 'Ayşe Demir')
-    assert.match(yetiskin, /İyi günler, Ayşe/)
+    assert.match(yetiskin, /Hoş geldiniz, Ayşe/)
     assert.doesNotMatch(yetiskin, /bugun-hasta-kimlik/)
   })
   for (const b of [...Object.keys(TIBBI_BRANS_AYARLARI), ...Object.keys(OZEL_BRANS_AYARLARI)]) {
