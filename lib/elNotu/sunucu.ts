@@ -17,7 +17,7 @@ import { izinVarMi, type PratikRol } from '@/lib/doktor/personelYetki'
 import { hastaSahibiMi, seansSahibi } from '@/lib/doktor/hastaSahipligi'
 import { uploadDocument, downloadDocument } from '@/lib/vault/service'
 import type { HafizaOrnegi, Sablon, SozlukGirdisi, CizimBolgesi, Kutu } from '@/core/elNotu/tipler'
-import { kelimeDagarcigi } from '@/core/elNotu/hafiza'
+import { kelimeDagarcigi, sikSozcukler } from '@/core/elNotu/hafiza'
 import { anahtar as sozlukAnahtari } from '@/core/elNotu/sozluk'
 
 /** golgeModu (ESNEK-MUAYENE-B1): shadow mode lets staff with 'elnotu.hazirla' upload pages even when the doctor prepares his own notes. */
@@ -193,8 +193,14 @@ export async function hafizayaEkle(sb: SupabaseClient, g: {
 
 /** Vocabulary of the doctor's own approved notes (last 80), never another doctor's. */
 export async function dagarcikYukle(sb: SupabaseClient, doktorId: string): Promise<Map<string, number>> {
+  return (await yaziDagarcigi(sb, doktorId)).dagarcik
+}
+
+/** ESNEK-KBB2 — the same notes once: folded word counts + his frequent words as he spells them (recognition aid). */
+export async function yaziDagarcigi(sb: SupabaseClient, doktorId: string): Promise<{ dagarcik: Map<string, number>; sozcukler: string[] }> {
   const { data } = await sb.from('notes').select('content_subjektif, content_objektif, content_degerlendirme, content_plan').eq('doctor_id', doktorId).not('approved_at', 'is', null).order('created_at', { ascending: false }).limit(80)
-  return kelimeDagarcigi((data || []).map((n) => [n.content_subjektif, n.content_objektif, n.content_degerlendirme, n.content_plan].filter(Boolean).join('\n')))
+  const metinler = (data || []).map((n) => [n.content_subjektif, n.content_objektif, n.content_degerlendirme, n.content_plan].filter(Boolean).join('\n'))
+  return { dagarcik: kelimeDagarcigi(metinler), sozcukler: sikSozcukler(metinler) }
 }
 
 /**

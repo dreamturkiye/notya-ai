@@ -9,6 +9,7 @@ import { randomUUID } from 'crypto'
 import { elNotuIstegi, json, uuidMu } from '@/lib/elNotu/rota'
 import { sablonSatiri, sablonlarYukle } from '@/lib/elNotu/sunucu'
 import { sablonTaslagi } from '@/core/elNotu/sablon'
+import { kayitliSablonlarTr } from '@/core/elNotu/tohum'
 import type { CizimBolgesi, Kutu } from '@/core/elNotu/tipler'
 
 export const dynamic = 'force-dynamic'
@@ -27,7 +28,10 @@ export async function GET(req: NextRequest) {
     const sayfa = ((k.okuma as { sayfalar?: { sablonId?: string | null; maskeliBelgeId?: string }[] } | null)?.sayfalar || []).find((x) => x.sablonId === sid && x.maskeliBelgeId)
     if (sayfa?.maskeliBelgeId) ornek.set(sid, sayfa.maskeliBelgeId)
   }
-  return json({ sablonlar: sablonlar.map((x) => ({ ...x, ornekBelgeId: ornek.get(x.id) || null })) })
+  // ESNEK-KBB2: the build's registry forms of the doctor's branş (read-only, placed on a photo by their printed labels;
+  // kept apart so the settings card does not offer them for editing)
+  const { data: u } = await o.supabase.from('users').select('specialty').eq('id', o.doktorId).maybeSingle()
+  return json({ sablonlar: sablonlar.map((x) => ({ ...x, ornekBelgeId: ornek.get(x.id) || null })), kayitli: kayitliSablonlarTr((u?.specialty as string) || null) })
 }
 
 export async function POST(req: NextRequest) {

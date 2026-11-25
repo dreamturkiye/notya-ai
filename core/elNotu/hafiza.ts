@@ -83,6 +83,24 @@ export function kelimeDagarcigi(metinler: string[]): Map<string, number> {
   return m
 }
 
+/**
+ * ESNEK-KBB2 — the doctor's own frequent words AS HE SPELLS THEM in his approved notes (drug brands he prescribes, his
+ * clinical words): the most common written form of every folded word seen ≥ `enAz` times, most frequent first. Given to
+ * the page reads as a recognition aid next to his lexicon — a word he writes every day is recognised on the next page.
+ */
+export function sikSozcukler(metinler: string[], azami = 150, enAz = 2): string[] {
+  const sayi = new Map<string, number>(), bicim = new Map<string, Map<string, number>>()
+  for (const t of metinler) for (const w of t.split(/[^\p{L}\p{N}]+/u)) {
+    if (w.length < 4 || !/\p{L}{3}/u.test(w) || /^\d/.test(w)) continue
+    const k = kelimeAnahtari(w)
+    sayi.set(k, (sayi.get(k) || 0) + 1)
+    const b = bicim.get(k) || new Map<string, number>(); b.set(w, (b.get(w) || 0) + 1); bicim.set(k, b)
+  }
+  return [...sayi].filter(([, n]) => n >= enAz).sort((a, b) => b[1] - a[1]).slice(0, azami)
+    // his most frequent spelling; a tie goes to the lower-case form (a capital at the start of a sentence is not his spelling)
+    .map(([k]) => [...bicim.get(k)!].sort((a, b) => b[1] - a[1] || Number(b[0] === b[0].toLocaleLowerCase('tr')) - Number(a[0] === a[0].toLocaleLowerCase('tr')))[0][0])
+}
+
 export type SiralamaGirdisi = {
   metin: string
   guven: number

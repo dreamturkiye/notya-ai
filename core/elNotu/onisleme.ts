@@ -457,8 +457,13 @@ export function dondur(r: Rgba, aci: number): Rgba {
   return { w: r.w, h: r.h, d }
 }
 
-/** Thresholds of the capture gate (measured on the 2026-11 KBB sample set; see scripts/el-notu-degerlendir.mjs). */
-export const KALITE_ESIKLERI = { bulaniklik: 55, parlama: 0.035, karanlik: 70, kisaKenar: 900, sayfaOrani: 0.2 }
+/**
+ * Thresholds of the capture gate (measured on the 2026-11 KBB sample set; see scripts/el-notu-degerlendir.mts).
+ * kisaKenar is the short side of the DE-WARPED page: a WhatsApp "standard quality" photo is 900 × 1600 and the sheet
+ * fills ~75–95 % of it, so its page is ~680–860 px wide. The founder's standard is WhatsApp-quality photos (2026-11-25,
+ * KBB batch 2: 5 of 20 such pages were refused at 900) — 640 keeps them and still refuses thumbnails.
+ */
+export const KALITE_ESIKLERI = { bulaniklik: 55, parlama: 0.035, karanlik: 70, kisaKenar: 640, sayfaOrani: 0.2 }
 
 export function kaliteKarari(o: { bulaniklik: number; parlama: number; parlaklik: number; kisaKenar: number; sayfaOrani: number }): KaliteKarari {
   const n: KaliteNedeni[] = []

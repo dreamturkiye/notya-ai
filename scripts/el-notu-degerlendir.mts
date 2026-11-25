@@ -37,6 +37,20 @@
  *    words traceable to neither the page's ground truth nor the lexicon — must be 0), Doğrula questions per page,
  *    per-word accuracy when the ground truth carries a word transcription.
  * --model kayit replays recorded model answers from --kayit (written by a previous canli run) for deterministic re-runs.
+ *
+ * --ogren <page,page,…> (ESNEK-KBB2, 2026-11-25): the DOCTOR'S LEARNING LOOP, end to end through the production code —
+ * before the measured pages are read, each learning page is read and its Doğrula questions are answered the way the doctor
+ * answers them in the app: the reading is stored as a source, the answers go through lib/elNotu/dogrulaServisi.ts
+ * cevaplariUygula (abbreviation → his lexicon, word / line → his handwriting memory with the masked crop and its shape
+ * descriptor, exactly as DogrulaPaneli sends them), and the page's note is approved (his vocabulary). The measured pages
+ * are then read with the context built the way lib/elNotu/okumaServisi.ts builds it (lexicon, memory + crops from the
+ * vault, vocabulary, asked abbreviations, learned outline). Everything lives in an in-memory database
+ * (lib/security/testing/sahteSupabase.ts) and is dropped at exit; nothing is written anywhere. The answers come from the
+ * folder's ground truth: `metin` (clinical transcription of the page, identity never written, "?" = unreadable — never
+ * answered) and `kisaltmalar.json` (the doctor's own expansions, the answer he types to an abbreviation question).
+ * A question the transcription cannot answer is skipped (the doctor's "okunamadı"), never guessed.
+ * --kayitsiz: without the build's registry forms (the "before" of ESNEK-KBB2).
+ * --ogrenme-kaydet <file> / --ogrenme-yukle <file>: share one learning pass between processes (file outside the repo).
  */
 import fs from 'node:fs'
 import path from 'node:path'
@@ -51,9 +65,9 @@ import { sayfaPuanla, toplamPuan, icerir, type SayfaPuani } from '../core/elNotu
 import { kayitAnahtari, gorselGirdi } from '../core/elNotu/regresyonBekcisi'
 import { anahatOgren } from '../core/elNotu/anahat'
 import { sozlukKur } from '../core/elNotu/sozluk'
-import { tohumlarTr, anahatTr } from '../core/elNotu/tohum'
+import { tohumlarTr, anahatTr, kayitliSablonlarTr } from '../core/elNotu/tohum'
 import { EL_NOTU_TR } from '../core/elNotu/metinTr'
-import { kelimeAnahtari } from '../core/elNotu/uzlastir'
+import { kelimeAnahtari, satirBenzerligi, benzerlik } from '../core/elNotu/uzlastir'
 import type { OcrSatir } from '../core/belgeler/kimlikMaske'
 import type { Rgba, Sablon } from '../core/elNotu/tipler'
 
@@ -86,7 +100,7 @@ const dogrudanCaba = arg('anthropic-effort')
 const normalModeli = arg('normal-model') || dogrudanModel
 
 type Gercek = { id: string; metin: string; anahtarlar: string[][]; korumali?: boolean; belirsiz?: boolean }
-type Dogruluk = { sayfalar: Record<string, { tur: 'anlati' | 'form'; kimlik: boolean; gercekler: Gercek[]; kelimeler?: string }> }
+type Dogruluk = { sayfalar: Record<string, { tur: 'anlati' | 'form'; kimlik: boolean; gercekler: Gercek[]; kelimeler?: string; metin?: string }> }
 const dogruluk = JSON.parse(fs.readFileSync(path.join(klasor, 'dogruluk.json'), 'utf8')) as Dogruluk
 
 const tuval: TuvalAdaptoru = {
@@ -199,10 +213,22 @@ async function dogrudanCagir(model: string, sistem: string, icerik: unknown, aza
   return r.deger
 }
 
+let disariOrnek = 0
 type SayfaKaynagi = { paket: import('../core/elNotu/okuyucu').SayfaPaketi; maskeliSayfa: import('../core/elNotu/okuyucu').GorselBlok }
 /** A picture of a call → its reference into the masked package (the route resolves it after re-proving the mask). */
-function uzakParcalar(parcalar: Parameters<ModelKapisi['gorselJson']>[0]['parcalar'], k: SayfaKaynagi): unknown[] {
-  return parcalar.map((p) => {
+function uzakParcalar(parcalar_: Parameters<ModelKapisi['gorselJson']>[0]['parcalar'], k: SayfaKaynagi): unknown[] {
+  // the doctor's confirmed crops (in-context examples, --ogren) are masked crops from earlier pages, but the route can only
+  // re-prove THIS page's package: they are left out of the remote call (with their "= text" line and the heading), and
+  // counted — the handwriting-memory examples are measured only on a local model path
+  const parcalar: typeof parcalar_ = []
+  const icinde = (b64: string) => b64 === k.maskeliSayfa.base64 || (k.paket.parcalar || []).some((t) => t.gorsel.base64 === b64) || k.paket.bolgeler.some((b) => b.gorsel?.base64 === b64)
+  for (let i = 0; i < parcalar_.length; i++) {
+    const p = parcalar_[i]
+    if (p.tur === 'gorsel' && !icinde(p.gorsel.base64)) { disariOrnek++; if (parcalar_[i + 1]?.tur === 'metin' && /^= "/.test((parcalar_[i + 1] as { metin: string }).metin)) i++; continue }
+    parcalar.push(p)
+  }
+  const ornekVar = parcalar.some((p, i) => p.tur === 'metin' && /^= "/.test(p.metin) && parcalar[i - 1]?.tur === 'gorsel')
+  return parcalar.filter((p) => ornekVar || !(p.tur === 'metin' && p.metin.startsWith('Confirmed examples of THIS physician'))).map((p) => {
     if (p.tur === 'metin') return p
     if (p.gorsel.base64 === k.maskeliSayfa.base64) return { tur: 'ref', ref: 'sayfa' }
     const i = (k.paket.parcalar || []).findIndex((t) => t.gorsel.base64 === p.gorsel.base64)
@@ -277,6 +303,131 @@ function modelKapisi(sayfaAdi: string, kaynak?: SayfaKaynagi): ModelKapisi | nul
   }
 }
 
+// ---- ESNEK-KBB2: the doctor's learning loop through the production learning path (in-memory database) ----
+type OgrenmeDurumu = { sb: import('@supabase/supabase-js').SupabaseClient; db: import('../lib/security/testing/sahteSupabase').SahteVeritabani; doktorId: string; hastaId: string; kisaltmalar: Record<string, string>; sayac: { soru: number; cevap: number; kisaltma: number; hafiza: number; atlandi: number } }
+let ogrenme: OgrenmeDurumu | null = null
+async function ogrenmeKur(): Promise<OgrenmeDurumu> {
+  // a local key for the in-memory vault only (crops are encrypted like in production, then dropped at exit)
+  process.env.ENCRYPTION_MASTER_KEY = process.env.ENCRYPTION_MASTER_KEY || `harness-yerel-${Date.now()}`
+  const { SahteVeritabani } = await import('../lib/security/testing/sahteSupabase')
+  const { randomUUID } = await import('node:crypto')
+  const db = new SahteVeritabani()
+  const doktorId = randomUUID()
+  db.ekle('users', { id: doktorId, specialty: 'kulak-burun-bogaz' })
+  const hastaId = db.ekle('patients', { doctor_id: doktorId, is_active: true }).id as string
+  const kf = path.join(klasor!, 'kisaltmalar.json')
+  const kisaltmalar = fs.existsSync(kf) ? JSON.parse(fs.readFileSync(kf, 'utf8')) as Record<string, string> : {}
+  return { sb: db.istemci() as never, db, doktorId, hastaId, kisaltmalar: Object.fromEntries(Object.entries(kisaltmalar).map(([k, v]) => [kelimeAnahtari(k), v])), sayac: { soru: 0, cevap: 0, kisaltma: 0, hafiza: 0, atlandi: 0 } }
+}
+
+/**
+ * --ogrenme-kaydet <file> / --ogrenme-yukle <file>: the learned in-memory database written to / read from a local file
+ * OUTSIDE the repo, so several measuring processes can share one learning pass (masked crops + clinical words only; the
+ * caller deletes the file when the run ends).
+ */
+function ogrenmeKaydet(dosya: string) {
+  const o = ogrenme!
+  const kodla = (v: unknown): unknown => (v instanceof Uint8Array ? { __b64: Buffer.from(v).toString('base64') } : v)
+  const veri = { doktorId: o.doktorId, hastaId: o.hastaId, anahtar: process.env.ENCRYPTION_MASTER_KEY, tablolar: Object.fromEntries(o.db.tablolar), bloblar: Object.fromEntries(o.db.bloblar), depolama: Object.fromEntries([...o.db.depolama].map(([k, m]) => [k, Object.fromEntries([...m].map(([y, v]) => [y, kodla(v)]))])) }
+  if (path.resolve(dosya).startsWith(KOK)) throw new Error('the learning file stays outside the repo')
+  fs.writeFileSync(dosya, JSON.stringify(veri), { mode: 0o600 })
+}
+async function ogrenmeYukle(dosya: string) {
+  const veri = JSON.parse(fs.readFileSync(dosya, 'utf8')) as { doktorId: string; hastaId: string; anahtar: string; tablolar: Record<string, Record<string, unknown>[]>; bloblar?: Record<string, string>; depolama: Record<string, Record<string, unknown>> }
+  process.env.ENCRYPTION_MASTER_KEY = veri.anahtar
+  ogrenme = await ogrenmeKur()
+  ogrenme.doktorId = veri.doktorId; ogrenme.hastaId = veri.hastaId
+  ogrenme.db.tablolar = new Map(Object.entries(veri.tablolar))
+  ogrenme.db.bloblar = new Map(Object.entries(veri.bloblar || {}))
+  const coz = (v: unknown) => (v && typeof v === 'object' && '__b64' in (v as object) ? Buffer.from((v as { __b64: string }).__b64, 'base64') : v)
+  ogrenme.db.depolama = new Map(Object.entries(veri.depolama).map(([k, m]) => [k, new Map(Object.entries(m).map(([y, v]) => [y, coz(v)]))]))
+  ogrenme.sb = ogrenme.db.istemci() as never
+}
+
+/** The reading context — from the learning database exactly as okumaServisi.ts builds it, or the empty first-day doctor. */
+async function okumaBaglami(paket: import('../core/elNotu/okuyucu').SayfaPaketi, sayfaGorseli: import('../core/elNotu/okuyucu').GorselBlok) {
+  const ilac = (await import('../lib/elNotu/ilac')).ilacEslesmesi
+  const tohum = tohumlarTr('kulak-burun-bogaz')
+  if (!ogrenme) {
+    const sozluk = sozlukKur([], tohum.brans, tohum.genel)
+    const anlam = new Set(sozluk.girdiler.flatMap((x) => x.anlam.split(/\s+/)).map(kelimeAnahtari))
+    return { bransAdi: 'Kulak Burun Boğaz', dil: EL_NOTU_TR.dil, sozluk, hafiza: [], dagarcik: new Map<string, number>(), sorulmusKisaltmalar: new Set<string>(), ilac, sozcukMu: (t: string) => anlam.has(kelimeAnahtari(t)), sayfaGorseli, anahat: anahatOgren([], anahatTr('kulak-burun-bogaz')), okumaSayisi, dogrulaButcesi: butce }
+  }
+  const S = await import('../lib/elNotu/sunucu')
+  const { benzerOrnekler } = await import('../core/elNotu/hafiza')
+  const { sb, doktorId } = ogrenme
+  const [hekimSozluk, hafiza, { dagarcik, sozcukler: hekimSozcukleri }, sorulmus, metinler] = await Promise.all([S.sozlukYukle(sb, doktorId), S.hafizaYukle(sb, doktorId), S.yaziDagarcigi(sb, doktorId), S.sorulmusKisaltmalar(sb, doktorId), S.anahatMetinleri(sb, doktorId)])
+  const sozluk = sozlukKur(hekimSozluk, tohum.brans, tohum.genel)
+  const tanimlar = paket.satirlar.flatMap((x) => x.tanimlar.filter(Boolean) as { v: number[]; enBoy: number }[])
+  const secilen = await S.ornekGorselleri(sb, doktorId, benzerOrnekler(tanimlar, hafiza, 12))
+  const secilenId = new Set(secilen.map((o) => o.id))
+  const anlam = new Set(sozluk.girdiler.flatMap((x) => x.anlam.split(/\s+/)).map(kelimeAnahtari))
+  return { bransAdi: 'Kulak Burun Boğaz', dil: EL_NOTU_TR.dil, sozluk, hafiza: [...secilen, ...hafiza.filter((o) => !secilenId.has(o.id))], dagarcik, hekimSozcukleri, sorulmusKisaltmalar: sorulmus, ilac, sozcukMu: (t: string) => (dagarcik.get(kelimeAnahtari(t)) || 0) >= 2 || anlam.has(kelimeAnahtari(t)), sayfaGorseli, anahat: anahatOgren(metinler, anahatTr('kulak-burun-bogaz')), okumaSayisi, dogrulaButcesi: butce }
+}
+
+const sozcukler = (t: string) => t.split(/\s+/).map((w) => w.replace(/^[^\p{L}\p{N}Ø]+|[^\p{L}\p{N}Ø%]+$/gu, '')).filter(Boolean)
+/** The doctor's answer to one Doğrula question, from the page's clinical transcription. Null = he skips it. */
+function dogruCevap(d: import('../core/elNotu/tipler').DogrulaSorusu, metin: string): string | null {
+  if (!ogrenme) return null
+  if (d.sinif === 'kisaltma') return ogrenme.kisaltmalar[kelimeAnahtari(d.okunan.replace(/[,;:]+$/, ''))] ?? null
+  if (d.sinif === 'cizim' || d.sinif === 'celiski') return null
+  const satirlar = metin.split('\n').map((l) => l.trim()).filter(Boolean)
+  const baglam = sozcukler(d.baglam.replace(/⟦[^|⟧]*\|([^⟧]*)\?⟧/g, '$1'))
+  let en = -1, skor = 0
+  satirlar.forEach((l, i) => { const v = satirBenzerligi(baglam, sozcukler(l)); if (v > skor) { skor = v; en = i } })
+  if (en < 0 || skor < 0.3) return null
+  const satir = sozcukler(satirlar[en])
+  if (!/-w\d+$/.test(d.anahtar)) {
+    // a line question: the line as he wrote it (an unreadable word stays out — never guessed)
+    const t = satir.filter((w) => w !== '?').join(' ')
+    return t.length >= 2 ? t : null
+  }
+  const adaylar = [d.okunan, ...d.adaylar].filter((a) => a && a !== '?')
+  let kelime: string | null = null, k = 0
+  for (const w of satir) for (const a of adaylar) { const v = benzerlik(w, a); if (v > k) { k = v; kelime = w } }
+  return kelime && k >= 0.5 && kelime !== '?' ? kelime : null
+}
+
+/** The masked crop + its shape descriptor, as core/elNotu/tarayici.ts ogrenmeKirpintisi gives it to the Doğrula answer. */
+async function ogrenmeKirpintisi(maskeli: { base64: string }, kutu: import('../core/elNotu/tipler').Kutu) {
+  const img = await loadImage(Buffer.from(maskeli.base64, 'base64'))
+  const x0 = Math.max(0, Math.floor(kutu.x0 * img.width)), y0 = Math.max(0, Math.floor(kutu.y0 * img.height))
+  const w = Math.min(img.width - x0, Math.ceil((kutu.x1 - kutu.x0) * img.width)), h = Math.min(img.height - y0, Math.ceil((kutu.y1 - kutu.y0) * img.height))
+  if (w < 4 || h < 4) return null
+  const c = createCanvas(w, h); const ctx = c.getContext('2d'); ctx.drawImage(img, x0, y0, w, h, 0, 0, w, h)
+  const r: Rgba = { w, h, d: new Uint8ClampedArray(ctx.getImageData(0, 0, w, h).data) }
+  const { griyeCevir, kontrastNormalize } = await import('../core/elNotu/onisleme')
+  const { tanimlayici } = await import('../core/elNotu/hafiza')
+  const t = tanimlayici(kontrastNormalize(griyeCevir(r)), { x0: 0, y0: 0, x1: 1, y1: 1 })
+  if (!t) return null
+  return { tanimlayici: t.v, enBoy: t.enBoy, kirpinti: { mime: 'image/jpeg', base64: (await c.encode('jpeg', 85)).toString('base64') } }
+}
+
+/** One learning page: read → store as a source with its questions → the doctor answers (production service) → approves. */
+async function ogrenmeSayfasi(ad: string, s: import('../core/elNotu/okuyucu').SayfaSonucu, maskeli: { base64: string }, metin: string) {
+  const o = ogrenme!
+  const { cevaplariUygula } = await import('../lib/elNotu/dogrulaServisi')
+  const simdi = new Date().toISOString()
+  const sessionId = o.db.ekle('sessions', { doctor_id: o.doktorId, patient_id: o.hastaId, specialty: 'kulak-burun-bogaz', archived_at: null }).id as string
+  const kaynakMetni_ = kaynakMetni([s], EL_NOTU_TR.dil, (id) => id)
+  const kaynak = o.db.ekle('muayene_kaynaklari', { doctor_id: o.doktorId, patient_id: o.hastaId, session_id: sessionId, note_id: null, tur: 'el_notu', kanal: 'harness', durum: s.dogrula.length ? 'dogrulama' : 'okundu', sayfa_sayisi: 1, maskeli_belge_ids: [], orijinal_belge_ids: [], okuma: { surum: 1, sayfalar: [s], metin: kaynakMetni_ }, metin: kaynakMetni_, acik_dogrula: s.dogrula.length, korumali_acik: 0, isleme_anahtari: ad, ziyaret_tarihi: null, ekleyen_user_id: o.doktorId, ekleyen_rol: 'doktor', updated_at: simdi, sablon_id: s.sablonId })
+  for (const d of s.dogrula) o.db.ekle('okuma_dogrulamalari', { doctor_id: o.doktorId, patient_id: o.hastaId, kaynak_id: kaynak.id, soru_anahtari: d.anahtar, sinif: d.sinif, korumali_tur: d.korumaliTur ?? null, okunan: d.okunan, adaylar: d.adaylar, sayfa: d.sayfa, kutu: d.kutu, durum: 'acik' })
+  const cevaplar = []
+  for (const d of s.dogrula) {
+    o.sayac.soru++
+    const cevap = dogruCevap(d, metin)
+    if (cevap === null) { o.sayac.atlandi++; cevaplar.push({ anahtar: d.anahtar, cevap: null }); continue }
+    o.sayac.cevap++
+    if (d.sinif === 'kisaltma') o.sayac.kisaltma++
+    const ogren = (d.sinif === 'kelime' || d.sinif === 'korumali') && d.kutu ? await ogrenmeKirpintisi(maskeli, d.kutu) : null
+    if (ogren) o.sayac.hafiza++
+    cevaplar.push({ anahtar: d.anahtar, cevap, ogrenme: ogren })
+  }
+  await cevaplariUygula(o.sb, { doktorId: o.doktorId, kaynak: kaynak as never, cevaplar, aktor: { userId: o.doktorId, rol: 'doktor' }, brans: 'kulak-burun-bogaz', okunamadiMetni: 'okunamadı' })
+  // the visit's note, approved by the doctor: his vocabulary (dagarcik) learns from approved notes
+  o.db.ekle('notes', { doctor_id: o.doktorId, patient_id: o.hastaId, session_id: sessionId, approved_at: simdi, content_subjektif: metin, content_objektif: '', content_degerlendirme: '', content_plan: '' })
+}
+
 async function ana() {
   const yalniz = arg('sayfa')?.split(',')
   const dosyalar = fs.readdirSync(klasor!).filter((f) => /\.(jpe?g|png)$/i.test(f)).sort()
@@ -292,6 +443,8 @@ async function ana() {
     }
   }
   if (bayrak('serbest')) sablonlar.push({ id: 'serbest', ad: 'Düz kağıt', tur: 'serbest', brans: null, enBoy: 0.707, baslikBolgeleri: [], cizimBolgeleri: [], parmakIzi: null })
+  // the build's registry forms of the branş, as the device gets them from GET /sablon (placed by printed labels)
+  if (!bayrak('kayitsiz')) sablonlar.push(...kayitliSablonlarTr('kulak-burun-bogaz'))
   const tohum = tohumlarTr('kulak-burun-bogaz')
   const sozluk = sozlukKur([], tohum.brans, tohum.genel)
   // same "is this a word, not an abbreviation" test as production (lib/elNotu/okumaServisi.ts) with an empty vocabulary
@@ -301,8 +454,26 @@ async function ana() {
   let herhangiToplam = 0
   const gizlilikToplam = { sayfa: 0, gonderilen: 0, sizinti: 0, resim: 0 }
   const izinliTaban = [...sozluk.girdiler.flatMap((x) => [x.kisaltma, x.anlam]), ...EL_NOTU_TR.dil.bagSozcukleri, EL_NOTU_TR.dil.cizimBasligi, ...Object.values(EL_NOTU_TR.dil.taraf)]
-  for (const f of dosyalar) {
-    if (yalniz && !yalniz.some((y) => f.startsWith(y))) continue
+  // --ogren: the learning pages first (in the given order), then the measured pages
+  const ogrenListe = arg('ogren')?.split(',').filter(Boolean)
+  if (ogrenListe?.length) {
+    ogrenme = await ogrenmeKur()
+    // --hekim-girdileri: the doctor also types his own abbreviations once into "Notya sizi böyle tanıyor" (the same
+    // lexicon, source 'elle') — only those that occur on the learning pages
+    if (bayrak('hekim-girdileri')) {
+      const S = await import('../lib/elNotu/sunucu')
+      const ogrenMetni = ogrenListe.map((y) => Object.entries(dogruluk.sayfalar).find(([k]) => k.startsWith(y))?.[1].metin || '').join('\n')
+      const jetonlar = new Set(ogrenMetni.split(/\s+/).map((w) => kelimeAnahtari(w.replace(/[,;:()]+$/g, '').replace(/^[(]+/, ''))))
+      const ham = JSON.parse(fs.readFileSync(path.join(klasor!, 'kisaltmalar.json'), 'utf8')) as Record<string, string>
+      for (const [k, v] of Object.entries(ham)) if (jetonlar.has(kelimeAnahtari(k)) && kelimeAnahtari(k) !== kelimeAnahtari(v)) await S.sozlugeEkle(ogrenme.sb, ogrenme.doktorId, k, v, 'elle', 'kulak-burun-bogaz')
+    }
+  }
+  else if (arg('ogrenme-yukle')) await ogrenmeYukle(arg('ogrenme-yukle')!)
+  const ogrenDosyalari = (ogrenListe || []).map((y) => dosyalar.find((f) => f.startsWith(y))).filter((f): f is string => !!f)
+  const olculen = dosyalar.filter((f) => !yalniz || yalniz.some((y) => f.startsWith(y)))
+  const sira = [...ogrenDosyalari.map((f) => ({ f, ogren: true })), ...olculen.map((f) => ({ f, ogren: false }))]
+  const ogrenmePuanlari: SayfaPuani[] = []
+  for (const { f, ogren } of sira) {
     const ad = f.replace(/-image\.(jpe?g|png)$/i, '').replace(/\.(jpe?g|png)$/i, '')
     const gt = dogruluk.sayfalar[ad]
     const t0 = Date.now()
@@ -316,7 +487,7 @@ async function ana() {
       let sizinti = 0
       for (const r of resimler) if (await sizintiVarMi(r)) sizinti++
       gizlilikToplam.sizinti += sizinti; gizlilikToplam.resim += resimler.length
-      Object.assign(satir, { gizlilik: sonuc.gizlilik.neden, kutu: sonuc.gizlilik.kutular.length, sablon: Math.round(sonuc.sablonSkoru * 100) / 100, satir: sonuc.paket.satirlar.length, parca: sonuc.paket.parcalar?.length || 0, yerlesim: sonuc.yontem, bolge: sonuc.paket.bolgeler.filter((b) => b.murekkep >= 0.0004).length, resim: resimler.length, sizinti })
+      Object.assign(satir, { gizlilik: sonuc.gizlilik.neden, kutu: sonuc.gizlilik.kutular.length, sablon: Math.round(sonuc.sablonSkoru * 100) / 100, satir: sonuc.paket.satirlar.length, parca: sonuc.paket.parcalar?.length || 0, yerlesim: sonuc.yontem, sablonId: sonuc.sablon?.id ?? null, sablonYontemi: sonuc.sablonYontemi, bolge: sonuc.paket.bolgeler.filter((b) => b.murekkep >= 0.0004).length, resim: resimler.length, sizinti })
       if (cikti) { fs.mkdirSync(cikti, { recursive: true }); fs.writeFileSync(path.join(cikti, `${ad}-maskeli.jpg`), Buffer.from(sonuc.maskeliSayfa.base64, 'base64')) }
       if (gt && uzak && !uzakCagri && sizinti === 0) {
         // production model path through the admin route (the key never leaves the host)
@@ -337,10 +508,13 @@ async function ana() {
         try {
           sayfaKullanimi = bosKullanim()
           const tOku = Date.now()
-          const s = await sayfayiOku(sonuc.paket, { bransAdi: 'Kulak Burun Boğaz', dil: EL_NOTU_TR.dil, sozluk, hafiza: [], dagarcik: new Map(), sorulmusKisaltmalar: new Set(), ilac: (await import('../lib/elNotu/ilac')).ilacEslesmesi, sozcukMu: (t) => anlamSozcukleri.has(kelimeAnahtari(t)), sayfaGorseli: sonuc.maskeliSayfa, anahat: anahatOgren([], anahatTr('kulak-burun-bogaz')), okumaSayisi, dogrulaButcesi: butce }, model)
+          const baglam = await okumaBaglami(sonuc.paket, sonuc.maskeliSayfa)
+          const s = await sayfayiOku(sonuc.paket, baglam, model)
+          satir.hafizaOrnegi = s.hafizaOrnegi
+          if (ogrenme) satir.hekimSozlugu = baglam.sozluk.girdiler.filter((x) => x.kaynak === 'hekim').length
           const metin = kaynakMetni([s], EL_NOTU_TR.dil, (id) => sonuc.sablon?.cizimBolgeleri.find((b) => b.id === id)?.etiket || id)
-          const puan = sayfaPuanla({ metin, dogrula: s.dogrula, gercekler: gt.gercekler, hamKelimeler: s.satirlar.flatMap((l) => l.kelimeler.flatMap((k) => [k.metin, ...k.adaylar])), izinli: [...izinliTaban, ...(sonuc.sablon?.cizimBolgeleri || []).map((b) => b.etiket)], okunamadi: EL_NOTU_TR.dil.okunamadi })
-          puanlar.push(puan)
+          const puan = sayfaPuanla({ metin, dogrula: s.dogrula, gercekler: gt.gercekler, hamKelimeler: s.satirlar.flatMap((l) => l.kelimeler.flatMap((k) => [k.metin, ...k.adaylar])), izinli: [...izinliTaban, ...baglam.sozluk.girdiler.flatMap((x) => [x.kisaltma, x.anlam]), ...(sonuc.sablon?.cizimBolgeleri || []).map((b) => b.etiket)], okunamadi: EL_NOTU_TR.dil.okunamadi })
+          if (ogren) { ogrenmePuanlari.push(puan); satir.ogrenme = true } else puanlar.push(puan)
           // reading ceiling: facts whose keys appear anywhere in the model's output (every raw read, every alternative,
           // the drawing findings in the text) — what no orchestration can exceed
           const hamMetin = `${s.satirlar.flatMap((l) => l.kelimeler.flatMap((k) => [k.metin, ...k.adaylar])).join(' ')}\n${metin}\n${s.dogrula.flatMap((d) => [d.okunan, ...d.adaylar]).join(' ')}`
@@ -348,6 +522,8 @@ async function ana() {
           herhangiToplam += herhangiOkumada
           Object.assign(satir, ozetSatiri(puan), { okumaCagrisi: s.okumaSayisi, butceDisi: s.butceDisi, okunamadi: s.okunamadi, herhangiOkumada, okumaMs: Date.now() - tOku, ...(dogrudanModel || uzak ? { usd: Math.round(sayfaKullanimi.usd * 10000) / 10000, kesik: sayfaKullanimi.kesik } : {}) })
           if (cikti) { fs.writeFileSync(path.join(cikti, `${ad}-okuma.txt`), metin); fs.writeFileSync(path.join(cikti, `${ad}-puan.json`), JSON.stringify({ ...puan, herhangiOkumada, dogrulaSorulari: s.dogrula.map((d) => ({ sinif: d.sinif, korumaliTur: d.korumaliTur ?? null, okunan: d.okunan, adaylar: d.adaylar })) })) }
+          // the doctor answers this learning page's questions and approves its note (production learning path)
+          if (ogren && ogrenme) await ogrenmeSayfasi(ad, s, sonuc.maskeliSayfa, gt.metin || '')
         } catch (e) { satir.okumaHatasi = e instanceof Error ? e.message : 'hata' }
       }
     } else if (sonuc.durum === 'baslik_gerekli' || sonuc.durum === 'gizlenemedi') satir.gizlilik = sonuc.gizlilik.durum
@@ -355,16 +531,17 @@ async function ana() {
     satirlar.push(satir)
     console.log(JSON.stringify(satir))
   }
+  if (ogrenme && arg('ogrenme-kaydet')) ogrenmeKaydet(arg('ogrenme-kaydet')!)
   const rapor = {
     tarih: new Date().toISOString(), model: uzak ? `uzak${uzakCagri ? '-cagri' : ''}:${kademe || 'politika'}` : modelTuru,
-    ...(uzak ? { uzakKullanim: { kullanim, modeller: [...uzakModeller], usdSayfaBasina: Math.round(((kullanim.gorsel.usd + kullanim.normal.usd) / Math.max(1, puanlar.length)) * 10000) / 10000, okumaMsOrt: Math.round(satirlar.reduce((a, x) => a + (Number(x.okumaMs ?? x.sunucuMs) || 0), 0) / Math.max(1, puanlar.length)), fiyat: 'Luna family list price US$ 0.10 / 1M prompt, 0.50 / 1M completion (docs/ARCH-MODEL-TIERING.md); cache reads priced as prompt' } } : {}), sablon: sablonlar.map((s) => s.id), okumaSayisi: okumaSayisi ?? 3, butce: butce ?? 5,
+    ...(uzak ? { uzakKullanim: { kullanim, modeller: [...uzakModeller], usdSayfaBasina: Math.round(((kullanim.gorsel.usd + kullanim.normal.usd) / Math.max(1, puanlar.length)) * 10000) / 10000, okumaMsOrt: Math.round(satirlar.reduce((a, x) => a + (Number(x.okumaMs ?? x.sunucuMs) || 0), 0) / Math.max(1, puanlar.length)), fiyat: 'Luna family list price US$ 0.10 / 1M prompt, 0.50 / 1M completion (docs/ARCH-MODEL-TIERING.md); cache reads priced as prompt' } } : {}), ...(ogrenme ? { ogrenme: { sayfa: ogrenDosyalari.length, ...ogrenme.sayac, hekimSozlugu: (ogrenme.db.tablolar.get('hekim_el_sozlugu') || []).length, hafiza: (ogrenme.db.tablolar.get('hekim_el_yazisi_hafizasi') || []).length, okuma: ogrenmePuanlari.length ? toplamPuan(ogrenmePuanlari) : null } } : {}), disariOrnek, sablon: sablonlar.map((s) => s.id), okumaSayisi: okumaSayisi ?? 3, butce: butce ?? 5,
     gizlilik: gizlilikToplam,
     ...(dogrudanModel ? { dogrudan: { model: dogrudanModel, caba: dogrudanCaba || 'default', normalModel: normalModeli, kullanim, herhangiOkumada: herhangiToplam, okumaMsOrt: Math.round(satirlar.reduce((a, x) => a + (Number(x.okumaMs) || 0), 0) / Math.max(1, puanlar.length)), usdSayfaBasina: Math.round(((kullanim.gorsel.usd + kullanim.normal.usd) / Math.max(1, puanlar.length)) * 10000) / 10000 } } : {}),
     okuma: puanlar.length ? toplamPuan(puanlar) :'ölçülmedi — model yok (--uzak, ANTHROPIC_API_KEY / OPENROUTER_API_KEY, ya da --model kayit için kayıt gerekli)',
     sayfalar: satirlar,
     ...(jeton.cagri ? { jetonTahmini: { ...jeton, not: 'estimate: images w·h/750 after resize, text chars/3.5, output JSON chars/3; prompt caching and hidden reasoning ignored' } } : {}),
   }
-  console.log(JSON.stringify({ ozet: { gizlilik: rapor.gizlilik, okuma: rapor.okuma, herhangiOkumada: herhangiToplam, dogrudan: (rapor as { dogrudan?: unknown }).dogrudan, uzak: (rapor as { uzakKullanim?: unknown }).uzakKullanim, jeton: jeton.cagri ? jeton : undefined } }, null, 2))
+  console.log(JSON.stringify({ ozet: { gizlilik: rapor.gizlilik, okuma: rapor.okuma, ogrenme: (rapor as { ogrenme?: unknown }).ogrenme, herhangiOkumada: herhangiToplam, dogrudan: (rapor as { dogrudan?: unknown }).dogrudan, uzak: (rapor as { uzakKullanim?: unknown }).uzakKullanim, jeton: jeton.cagri ? jeton : undefined } }, null, 2))
   if (cikti) fs.writeFileSync(path.join(cikti, 'rapor.json'), JSON.stringify(rapor, null, 2))
   if (isci) await isci.terminate()
   if (gizlilikToplam.sizinti > 0) process.exitCode = 1

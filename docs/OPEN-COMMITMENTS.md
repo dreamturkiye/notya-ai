@@ -5835,6 +5835,8 @@ patient file / Gelen Belgeler, batch upload, Doğrula with crops, secretary fina
      visible), ≈ US$ 1–2.
 3. **ESNEK-A-ORNEKLER — the KBB doctor will send many more handwritten pages (via Dr. Gökhan)** for accuracy work. Owner:
    Claude (evaluation), Kaan / Dr. Gökhan (collecting, consent). Keep them outside the repo; add clinical-only ground truth.
+   **2026-11-25: batch 2 (20 pages) received and used — see ESNEK-KBB2 below.** Still open for the next batches (the
+   learning loop needs volume: ~50+ pages of one doctor, ideally with his own Doğrula answers in the app).
 4. **ESNEK-A-ULKE — six-country application (now ONE planned job with Phase B: see ESNEK-AB-ULKE below).** Owner: Claude. Status for us, gb, ca, au, nz, uz: OPEN GAP. The core
    (core/elNotu, components/elNotu) is country-neutral (words, API prefix, seeds, drug matcher injected; prompts English), but
    the country builds run their own visit / note pipeline and their own database (ulke_* tables through ulkeTablosu), so the
@@ -5854,6 +5856,54 @@ patient file / Gelen Belgeler, batch upload, Doğrula with crops, secretary fina
    the KBB seed by Dr. Gökhan when convenient (owner Kaan).
 7. **ESNEK-A-PERF — measure the patient-file bundle with `next build`** after merge (the change logged an esbuild estimate).
    Owner: Claude.
+
+### 2026-11-25 — ESNEK-KBB2 (20 more pages of the same KBB doctor, WhatsApp quality) — done + open items
+
+Core (all 30 branşlar + 10 Özel Branşlar; branş differences are data). Country port queued (`docs/ULKE-TASIMA-KUYRUGU.md`
+ESNEK-KBB2). Pages, gold and every run stay outside the repo (`/home/claude/esnek-eval/kbb2`, identity never transcribed).
+Luna-Pro only (production model; `lib/ai/modeller.ts` and the voice lock untouched).
+
+- **Privacy findings, fixed before any model call:** (1) 8 of 15 plain sheets carry the PATIENT'S NAME as a centred
+  handwritten heading; the "serbest" declaration let them through unmasked → `serbestBaslikKutulari` (gizlilik.ts) blacks
+  out a short centred word group above the first body line (date / age at the margins and the body stay; an insertion
+  written just above a line is not a heading). 8/8 names masked, 1 harmless false positive (table area), 0 on the original 9.
+  (2) form pages: an address line running past the label block and a district written onto the "ŞİKAYETİ" row leaked →
+  `tasmaKutulari` blacks out a handwriting line whose ink starts inside / touches an identity box (privacy first: a complaint
+  written that high is lost too). (3) the clinic file number ("No :") above the printed "Tarih" is masked. (4) 5 of 20
+  WhatsApp pages (900 × 1600) were refused as "too small" → capture gate 900 → 640 px de-warped short side. Leak check:
+  159 page runs, 1234 outbound pictures, 0 leaks. The doctor's rubber stamp (his own name / diploma no., rotated) is
+  still sent on some pages — doctor's data, not the patient's; not masked (owner: Kaan to decide if wanted).
+- **Template registry placed by printed labels (`core/elNotu/kayit.ts`, `core/elNotu/tohum/sablonlarTr.ts`):** the KBB
+  anatomi formu (ears / eardrums Sağ-Sol, nasopharynx, coronal nose Sağ-Sol halves, mouth, larynx, neck) with a note area
+  per drawing (where he writes beside / under it) and sides from the template. Placed by an affine fit of ≥ 4 printed labels
+  read by the on-device OCR (outliers dropped; the drawing block re-fitted on its own "Sağ / Sol"), so it works when the
+  fingerprint does not (table around the sheet, keystone, another print run): 3/3 new form pages + 1 old one now placed
+  (fingerprint: 0/3). GET /sablon returns `kayitli` (the doctor's branş) and the capture merges them. Drawing reads now say
+  which half a sided region is; a drawing's handwritten words are confirmed only if a page read also saw them (invented 1 → 0).
+- **Learning loop proven end to end** (harness `--ogren`): 14 learning pages read → stored as sources → 100 Doğrula
+  questions answered from the gold through `cevaplariUygula` (57 answered: 57 handwriting-memory crops stored; 43 skipped —
+  the gold could not answer them; 0 abbreviation questions were ever asked: protected questions use up the budget of 5) →
+  notes approved; plus his 41 own abbreviations typed once into his lexicon (source 'elle'). Measured pages read with the
+  context exactly as okumaServisi builds it. NEW reader input: the doctor's own frequent written words from his approved
+  notes (`sikSozcukler` / `yaziDagarcigi`) join the recognition vocabulary after the lexicon (no extra call).
+- **Numbers (Luna-Pro through the production route, 3 reads + drawing + normalisation, budget 5; after Doğrula = accepted +
+  shown reading + tappable candidate).** Batch 2, all 20 pages, production reader: accepted 27.6 %, after Doğrula 47.9 %
+  (139/290), any read 201/290, invented 0, Q/page 9.1 (max 17; all above 5 are protected). Held-out 6 (90 facts), 3 runs
+  each: before 48.9 / 63.3 / 58.9 % (mean 57.0) → after 67.8 / 63.3 / 62.2 % (mean 64.4, +7.4 pts, inside the run-to-run
+  noise of ±7); facts present in any read 67 / 69 / 65 → 72 / 74 / 75 (consistent gain, the vocabulary); invented 0 / 0 in
+  all runs (after the drawing check); Q/page 8.9 → 9.7. Original 9 (55 facts): before 56.4 / 60.0 / 67.3 → after 61.8 /
+  65.5 / 52.7 — no measurable change. Cost ≈ US$ 0.020 → 0.021–0.027 per page (larger vocabulary prompt), 4.3 → 4.4 model
+  calls per page (no extra pass), ~50 → ~60 s per page. Evaluation pass: 1 minted, revoked at the end, local copy deleted.
+
+Open:
+1. **ESNEK-KBB2-ORNEK — handwriting-memory crops are not measurable through the evaluation route** (its single-call mode
+   re-proves only THIS page's package; the doctor's crops from earlier pages are dropped there and counted). Owner: Claude —
+   measure them on a local path, or teach the route to accept crops that carry their source page's mask proof. 2026-11-25.
+2. **ESNEK-KBB2-KISALTMA — abbreviation questions never get budget** (0 of 100 questions in the learning pass): protected
+   questions (sides, numbers, doses) fill the 5. Owner: Claude — proposal: one abbreviation question per page outside the
+   budget the first time an unknown abbreviation appears (asked once per doctor, ever). Needs Kaan's OK (Q/page rises). 2026-11-25.
+3. **ESNEK-KBB2-GURULTU — run-to-run noise is ±7 pts on 6 pages:** decisions need ≥ 3 runs or more pages. Owner: Claude. 2026-11-25.
+4. **ESNEK-KBB2-DAMGA — the doctor's own stamp** is sent in the picture on some pages. Owner: Kaan (mask it or not). 2026-11-25.
 
 ### Later phases (logged 2026-11-23, owner Claude)
 

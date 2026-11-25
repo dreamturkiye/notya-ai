@@ -18,7 +18,7 @@ import { anahatOgren } from '@/core/elNotu/anahat'
 import { sayfaMaskeKaniti } from './maskeDogrula'
 import { PAKET_AZAMI_KARAKTER, paketBoyutu } from '@/core/elNotu/sayfaPaketi'
 import { ilacEslesmesi } from './ilac'
-import { anahatMetinleri, dagarcikYukle, hafizaYukle, ornekGorselleri, sablonlarYukle, sorulmusKisaltmalar, sozlukYukle, vaultaYaz, type KaynakSatiri } from './sunucu'
+import { anahatMetinleri, yaziDagarcigi, hafizaYukle, ornekGorselleri, sablonlarYukle, sorulmusKisaltmalar, sozlukYukle, vaultaYaz, type KaynakSatiri } from './sunucu'
 
 const MIME = /^image\/(jpeg|png|webp)$/
 const kutuMu = (k: unknown): k is Kutu => !!k && typeof k === 'object' && ['x0', 'y0', 'x1', 'y1'].every((a) => { const v = (k as Record<string, number>)[a]; return Number.isFinite(v) && v >= -0.01 && v <= 1.01 })
@@ -72,8 +72,8 @@ export async function sayfaOkut(sb: SupabaseClient, g: SayfaOkutGirdisi): Promis
   await sb.from('muayene_kaynaklari').update({ durum: 'okunuyor', updated_at: new Date().toISOString() }).eq('id', g.kaynak.id).eq('doctor_id', g.doktorId)
 
   // ESNEK-GELISIM: the branş seed = curated + founder-approved pairs (lib/elNotu/bransSozluk.ts); his own lexicon still wins
-  const [hekimSozluk, hafiza, dagarcik, sorulmus, sablonlar, anahatMetinleri_, tohum] = await Promise.all([
-    sozlukYukle(sb, g.doktorId), hafizaYukle(sb, g.doktorId), dagarcikYukle(sb, g.doktorId), sorulmusKisaltmalar(sb, g.doktorId), sablonlarYukle(sb, g.doktorId), anahatMetinleri(sb, g.doktorId), bransTohumu(sb, g.brans),
+  const [hekimSozluk, hafiza, { dagarcik, sozcukler: hekimSozcukleri }, sorulmus, sablonlar, anahatMetinleri_, tohum] = await Promise.all([
+    sozlukYukle(sb, g.doktorId), hafizaYukle(sb, g.doktorId), yaziDagarcigi(sb, g.doktorId), sorulmusKisaltmalar(sb, g.doktorId), sablonlarYukle(sb, g.doktorId), anahatMetinleri(sb, g.doktorId), bransTohumu(sb, g.brans),
   ])
   const sozluk = sozlukKur(hekimSozluk, tohum.brans, tohum.genel)
   // the doctor's most similar confirmed crops → in-context examples (only these few crops are read from the vault)
@@ -86,7 +86,7 @@ export async function sayfaOkut(sb: SupabaseClient, g: SayfaOkutGirdisi): Promis
   let sayfa: SayfaSonucu
   try {
     sayfa = await sayfayiOku(g.paket, {
-      bransAdi: g.bransAdi, dil: g.metin.dil, sozluk, hafiza: hafizaTum, dagarcik, ilac: ilacEslesmesi, sorulmusKisaltmalar: sorulmus,
+      bransAdi: g.bransAdi, dil: g.metin.dil, sozluk, hafiza: hafizaTum, dagarcik, hekimSozcukleri, ilac: ilacEslesmesi, sorulmusKisaltmalar: sorulmus,
       sozcukMu: (t) => (dagarcik.get(kelimeAnahtari(t)) || 0) >= 2 || anlamSozcukleri.has(kelimeAnahtari(t)),
       sayfaGorseli: g.maskeliSayfa, anahat: anahatOgren(anahatMetinleri_, anahatTr(g.brans)),
     }, g.model)

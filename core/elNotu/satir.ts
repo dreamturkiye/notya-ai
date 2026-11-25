@@ -161,8 +161,12 @@ function kelimeKutulari(parca: Blob[], medH: number): Blob[] {
 }
 
 /** Which template drawing region a line annotates: a leader line touching both wins, else the nearest region within reach. */
-export function bolgeyeBagla(satir: Kutu, bolgeler: { id: string; kutu: Kutu }[], cizgiler: CizgiKutusu[], erisim = 0.12): string | null {
+export function bolgeyeBagla(satir: Kutu, bolgeler: { id: string; kutu: Kutu; notKutusu?: Kutu }[], cizgiler: CizgiKutusu[], erisim = 0.12): string | null {
   if (!bolgeler.length) return null
+  // written in a drawing's note area (under the eardrum, beside the head …): that drawing, before any proximity guess.
+  // A leader line from it into another drawing wins (checked first below only for lines outside every note area).
+  const orta = { x: (satir.x0 + satir.x1) / 2, y: (satir.y0 + satir.y1) / 2 }
+  const notta = bolgeler.filter((r) => r.notKutusu && orta.x >= r.notKutusu.x0 && orta.x <= r.notKutusu.x1 && orta.y >= r.notKutusu.y0 && orta.y <= r.notKutusu.y1)
   const yakin = (p: { x: number; y: number }, k: Kutu, pay: number) => p.x >= k.x0 - pay && p.x <= k.x1 + pay && p.y >= k.y0 - pay && p.y <= k.y1 + pay
   for (const c of cizgiler) {
     for (const [a, b] of [[c.uclar[0], c.uclar[1]], [c.uclar[1], c.uclar[0]]] as const) {
@@ -171,6 +175,7 @@ export function bolgeyeBagla(satir: Kutu, bolgeler: { id: string; kutu: Kutu }[]
       if (hedef) return hedef.id
     }
   }
+  if (notta.length) return notta[0].id
   const mesafe = (a: Kutu, b: Kutu) => {
     const dx = Math.max(0, a.x0 - b.x1, b.x0 - a.x1), dy = Math.max(0, a.y0 - b.y1, b.y0 - a.y1)
     return Math.hypot(dx, dy)

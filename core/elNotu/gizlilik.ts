@@ -135,6 +135,15 @@ export function gizlilikKarari(g: GizlilikGirdisi): GizlilikKarari {
         }
       }
     }
+    // the clinic's file number: on a registration form the "No :" row sits right above the printed "Tarih :" row at the
+    // top right; a two-letter "No" is often missed by the OCR, the date label is not. The visit date itself is kept.
+    if (etiketSatirlari.length >= 2) {
+      for (const s of g.ocr) for (const k of s.kelimeler) {
+        if (k.conf < 60 || katla(k.text) !== 'tarih' || k.y1 > g.h * 0.35) continue
+        const yuk = k.y1 - k.y0
+        kutular.push(normal({ x0: k.x0 - yuk * 1.5, y0: k.y0 - yuk * 3.2, x1: g.w, y1: k.y0 - yuk * 0.1 }, g.w, g.h))
+      }
+    }
     // the identity block ends at "ŞİKAYETİ" / "Complaints" when at least two identity label rows were read above it: the
     // complaint is written on that row. A template band (drawn on one print of the form) or a label row's downward margin
     // that reaches past it is cut there — another print of the same form places the complaint row higher (seen on the
@@ -184,6 +193,92 @@ export function gizlilikKarari(g: GizlilikGirdisi): GizlilikKarari {
   // not a printed document (a printout with no recognised label is not "a plain sheet").
   if (g.serbestBeyan && basiliMetin < 25) return { durum: 'maskelendi', neden: 'serbest', kutular, etiketSayisi, basiliMetin }
   return { durum: 'baslik_gerekli', neden: null, kutular, etiketSayisi, basiliMetin }
+}
+
+/** A handwriting line the device found on the UNMASKED page (normalised box + word boxes), as core/elNotu/satir.ts gives it. */
+export type ElSatiri = { kutu: Kutu; kelimeler: Kutu[] }
+
+/**
+ * Plain sheet (no form, no printed label): the PATIENT'S NAME written as a heading (2026-11-25, KBB batch 2 — 8 of 15 plain
+ * sheets carried it). Handwriting is not readable on the device, so the heading is found by its place: a short word group
+ * in the first two written rows, away from the left margin (where age / sex "67E" sits) and from the right edge (where
+ * the date sits), roughly centred. Such a group is blacked out: a lost heading word costs little, a name sent costs much.
+ * The date and the age / sex token are not matched (they sit at the margins); a body line is wider than a heading.
+ */
+export function serbestBaslikKutulari(satirlar: ElSatiri[]): Kutu[] {
+  // lines touching the photo's side edges are the table / another sheet, not this page's writing
+  const sayfada = satirlar.filter((s) => s.kutu.x1 < 0.97 && s.kutu.x0 > 0.03 && s.kutu.y1 - s.kutu.y0 < 0.08)
+  const orta = (k: Kutu) => (k.y0 + k.y1) / 2
+  // margin items: age / sex or a date at the left margin, a date at the right edge
+  const kenar = (k: { x0: number; x1: number }) => k.x1 < 0.36 || k.x0 > 0.74
+  // the first BODY line (a wide written line) — the heading sits above it
+  const govde = sayfada.filter((s) => s.kutu.x1 - s.kutu.x0 >= 0.4).sort((a, c) => orta(a.kutu) - orta(c.kutu))[0]
+  const sinir = govde ? govde.kutu.y0 : 0.3
+  const yukler = sayfada.map((x) => x.kutu.y1 - x.kutu.y0).sort((a, c) => a - c)
+  const medH = yukler.length ? yukler[Math.floor(yukler.length / 2)] : 0.03
+  const adaylar: Kutu[] = []
+  for (const s of sayfada) {
+    if (orta(s.kutu) >= Math.min(0.3, sinir) || s === govde) continue
+    // word groups: a gap wider than ~4 % of the page separates a date from a name written on the same line
+    const kel = [...(s.kelimeler.length ? s.kelimeler : [s.kutu])].sort((x, y) => x.x0 - y.x0)
+    const gruplar: Kutu[][] = []
+    for (const k of kel) { const g = gruplar[gruplar.length - 1]; if (g && k.x0 - g[g.length - 1].x1 < 0.04) g.push(k); else gruplar.push([k]) }
+    const kutular = gruplar.map((g) => ({ x0: Math.min(...g.map((k) => k.x0)), x1: Math.max(...g.map((k) => k.x1)), y0: s.kutu.y0, y1: s.kutu.y1, n: g.length }))
+    const ic = kutular.filter((k) => !kenar(k))
+    // the heading is the only body group of its line …
+    if (ic.length !== 1) continue
+    const k = ic[0], om = (k.x0 + k.x1) / 2
+    if (k.x0 < 0.25 || om < 0.33 || om > 0.7 || k.x1 > 0.8 || k.x1 - k.x0 > 0.36 || k.x1 - k.x0 < 0.03 || k.n > 4) continue
+    // … and of its height on the page (slanted photos: another line whose middle lies at this height = a body line)
+    const yan = sayfada.some((d) => d !== s && orta(d.kutu) > k.y0 && orta(d.kutu) < k.y1 && !kenar(d.kutu) && Math.min(d.kutu.x1, 0.74) - Math.max(d.kutu.x0, 0.36) > 0)
+    if (yan) continue
+    // the heading is the first writing of the page: no body line above it (specks / a strip of another sheet do not count)
+    if (sayfada.some((d) => d !== s && !kenar(d.kutu) && d.kutu.x0 > 0.1 && d.kutu.y1 - d.kutu.y0 >= medH * 0.6 && orta(d.kutu) < k.y0)) continue
+    // a word written just above the next line (an insertion "doymadı" over "rahat değil") is not a heading: a heading
+    // keeps at least ~a third of its height free below it
+    const ham = (b: Kutu) => { const h = (b.y1 - b.y0) / 1.44; return { y0: b.y0 + h * 0.22, y1: b.y1 - h * 0.22, h } }
+    const kh = ham(k)
+    const alti = sayfada.filter((d) => d !== s && orta(d.kutu) > orta(k) && Math.min(d.kutu.x1, k.x1) - Math.max(d.kutu.x0, k.x0) > (k.x1 - k.x0) * 0.3)
+    if (alti.some((d) => ham(d.kutu).y0 - kh.y1 < kh.h * 0.3)) continue
+    adaylar.push(k)
+  }
+  if (!adaylar.length) return []
+  // only the first written heading row (an insertion written above a later line is not a heading)
+  adaylar.sort((x, y) => orta(x) - orta(y))
+  const ilk = adaylar[0]
+  return adaylar.filter((k) => orta(k) <= ilk.y1).map((k) => {
+    // the device's line box already carries ~22 % of the ink height above and below: a little more, not the next line
+    const yuk = k.y1 - k.y0
+    return { x0: Math.max(0, k.x0 - 0.025), y0: Math.max(0, k.y0 - yuk * 0.12), x1: Math.min(1, k.x1 + 0.025), y1: Math.min(1, k.y1 + yuk * 0.08) }
+  })
+}
+
+/**
+ * Identity written past its box (2026-11-25, KBB batch 2: an address line continued under the last label row, a district
+ * written slanting down onto the next printed row). A handwriting line whose INK starts inside a blacked-out identity box
+ * (or touches its lower edge) and continues below it is the same entry running on: the whole line is blacked out. A line
+ * written clearly below the box stays visible; a complaint written so high that it touches the box is lost too — on purpose (privacy first: a lost complaint line is asked for, a leaked address cannot be taken back).
+ */
+export function tasmaKutulari(satirlar: ElSatiri[], kimlik: Kutu[]): Kutu[] {
+  const out: Kutu[] = []
+  for (const s of satirlar) {
+    const k = s.kutu, yuk = Math.max(1e-6, k.y1 - k.y0)
+    // handwriting lines only: a printed drawing next to the block is not an entry
+    if (yuk > 0.05 || k.x1 - k.x0 > 0.7) continue
+    // already (almost) entirely inside ONE box: nothing new (boxes overlap, so their areas are not summed here)
+    if (kimlik.some((m) => maskeliMi(k, [m], 0.9))) continue
+    // the line's own ink (the device pads a line box by 22 % of the ink height above and below)
+    const murekkepUst = k.y0 + (yuk / 1.44) * 0.22
+    const tasiyor = kimlik.some((m) => {
+      const yatay = Math.min(k.x1, m.x1) - Math.max(k.x0, m.x0)
+      if (yatay < Math.min(0.03, (k.x1 - k.x0) * 0.3)) return false
+      // its ink starts inside the box — or touches its lower edge (within a third of its ink height: a value written a
+      // little lower than its row, the box edge drawn at the printed row) — and it continues below it
+      return murekkepUst < m.y1 + (yuk / 1.44) * 0.35 && m.y0 < murekkepUst && m.y1 < k.y1
+    })
+    if (tasiyor) out.push({ x0: Math.max(0, k.x0 - 0.01), y0: k.y0, x1: Math.min(1, k.x1 + 0.01), y1: Math.min(1, k.y1 + yuk * 0.15) })
+  }
+  return out
 }
 
 /** Paint boxes black on an RGBA raster (in place). Used on the device before encoding and before cutting any crop. */

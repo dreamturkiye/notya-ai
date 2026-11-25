@@ -33,6 +33,19 @@ export type CizimBolgesi = {
   /** Laterality is decided by the template geometry, never by a model (protected class). */
   taraf: Taraf
   kutu: Kutu
+  /**
+   * Where the physician writes ABOUT this drawing (beside / under it, often with a leader line) — read together with the
+   * drawing, and a handwriting line inside it belongs to this region (its side comes from the region, never the model).
+   */
+  notKutusu?: Kutu
+}
+
+/** A printed word of a form at a known place (template frame): registration by on-device OCR (core/elNotu/kayit.ts). */
+export type Capa = {
+  anahtar: string; x: number; y: number
+  /** 'cizim' = printed inside the drawing block ("Sağ" / "Sol" under the drawings): the drawings are placed by these when
+   * the photo shows them — another print run moves the drawing block against the header (measured: up to ~4 % of the page). */
+  grup?: 'cizim'
 }
 
 export type Sablon = {
@@ -45,6 +58,13 @@ export type Sablon = {
   baslikBolgeleri: Kutu[]
   cizimBolgeleri: CizimBolgesi[]
   parmakIzi: number[] | null
+  /**
+   * Printed words of the form (folded keys, template-frame centres). A form that the layout fingerprint does not match
+   * (another print, a photo with the table around it, a keystoned page) is still placed by these (kayit.ts).
+   */
+  capalar?: Capa[]
+  /** A built-in template of the build's registry (tohum/sablonlarTr.ts), not one the doctor marked. */
+  kayitli?: boolean
 }
 
 /** One word as read by one model pass. `g` = the model's own 0..1 confidence; `alt` = alternative readings. */

@@ -7,9 +7,10 @@
  */
 import type { OcrSatir } from '@/core/belgeler/kimlikMaske'
 import { murekkepMaskesi, renkliMurekkep, sayfayiHazirla } from './onisleme'
-import { satirlariCikar, bolgeyeBagla } from './satir'
-import { gizlilikKarari, maskeyiBoya, maskeliMi, type GizlilikKarari, type KenarOcr } from './gizlilik'
+import { satirlariCikar, bolgeyeBagla, yerlesimBul } from './satir'
+import { gizlilikKarari, maskeyiBoya, maskeliMi, serbestBaslikKutulari, tasmaKutulari, SABLON_ESIK, type GizlilikKarari, type KenarOcr } from './gizlilik'
 import { parmakIzi, sablonBul } from './sablon'
+import { sablonKaydi, sablonuYerlestir } from './kayit'
 import { tanimlayici } from './hafiza'
 import { bolgeMurekkebi } from './cizim'
 import type { GorselBlok, SayfaPaketi, SatirPaketi, SayfaParcasi } from './okuyucu'
@@ -36,6 +37,8 @@ export type PaketSonucu =
     parmakIzi: number[]
     enBoy: number
     yontem: 'blob' | 'serit'
+    /** How the template was placed: layout fingerprint, printed anchors (kayit.ts), or none. */
+    sablonYontemi: 'iz' | 'capa' | null
   }
 
 function kirp(r: Rgba, k: Kutu, olcek: number, payY = 0): Rgba {
@@ -164,6 +167,18 @@ export async function sayfaPaketiHazirla(g: PaketGirdisi): Promise<PaketSonucu> 
   }
   const serbest = g.sablonlar.find((s) => s.tur === 'serbest') || null
   const ocr = await g.ocr(on.sayfa)
+  // no fingerprint match: a template with printed anchors (the registry forms, kayit.ts) is placed by the labels the OCR
+  // read — the template is moved onto THIS photo (header band, drawings and their note areas in page coordinates)
+  let kayitYontemi: 'iz' | 'capa' | null = sablon && skor >= SABLON_ESIK ? 'iz' : null
+  if (!kayitYontemi) {
+    let enIyi: { s: Sablon; k: NonNullable<ReturnType<typeof sablonKaydi>> } | null = null
+    for (const s of g.sablonlar) {
+      if (s.tur !== 'formlu' || !s.capalar?.length) continue
+      const k = sablonKaydi(s, ocr, on.sayfa.w, on.sayfa.h)
+      if (k && (!enIyi || k.capa > enIyi.k.capa)) enIyi = { s, k }
+    }
+    if (enIyi) { sablon = sablonuYerlestir(enIyi.s, enIyi.k.donusum, enIyi.k.cizimDonusumu); skor = enIyi.k.skor; kayitYontemi = 'capa' }
+  }
   let kenarOcr: KenarOcr[] | null = null
   if (!g.kenarOcrAtla) {
     kenarOcr = []
@@ -193,6 +208,15 @@ export async function sayfaPaketiHazirla(g: PaketGirdisi): Promise<PaketSonucu> 
     const k = kucult(on2, 900)
     return { durum: 'baslik_gerekli', onizleme: { mime: 'image/jpeg', base64: await g.tuval.jpeg(k, 0.7) }, w: k.w, h: k.h, parmakIzi: izi, enBoy, gizlilik: karar }
   }
+  // identity the regions above cannot see (handwriting is not read on the device, so by place): a patient's name written as
+  // the heading of a plain sheet, and an identity entry running on past its box — found on the UNMASKED ink, painted below
+  const murekkep = murekkepMaskesi(on.normal)
+  {
+    const elSatirlari = yerlesimBul(murekkep).satirlar
+    if (karar.neden === 'serbest') karar.kutular.push(...serbestBaslikKutulari(elSatirlari))
+    // an entry running on past a FORM's identity block (a template band, label rows, a region the user marked)
+    else if (karar.kutular.length) karar.kutular.push(...tasmaKutulari(elSatirlari, karar.kutular))
+  }
   // ---- masked raster: everything below is cut from it ----
   const maskeli: Rgba = { w: on.sayfa.w, h: on.sayfa.h, d: new Uint8ClampedArray(on.sayfa.d) }
   maskeyiBoya(maskeli, karar.kutular)
@@ -203,9 +227,8 @@ export async function sayfaPaketiHazirla(g: PaketGirdisi): Promise<PaketSonucu> 
     for (let y = Math.max(0, Math.floor(k.y0 * maskeliNormal.h)); y < Math.min(maskeliNormal.h, Math.ceil(k.y1 * maskeliNormal.h)); y++)
       for (let x = Math.max(0, Math.floor(k.x0 * maskeliNormal.w)); x < Math.min(maskeliNormal.w, Math.ceil(k.x1 * maskeliNormal.w)); x++) maskeliNormal.d[y * maskeliNormal.w + x] = 0
   }
-  const murekkep = murekkepMaskesi(on.normal)
   const renkli = renkliMurekkep(maskeli)
-  const aktifSablon = sablon && skor >= 0.62 ? sablon : null
+  const aktifSablon = sablon && skor >= SABLON_ESIK ? sablon : null
   const bolgeler = aktifSablon?.cizimBolgeleri || []
   const haric = [...karar.kutular, ...bolgeler.map((b) => b.kutu)]
   const yer = satirlariCikar(murekkep, haric)
@@ -224,7 +247,9 @@ export async function sayfaPaketiHazirla(g: PaketGirdisi): Promise<PaketSonucu> 
   const bolgePaketleri = []
   for (const b of bolgeler) {
     const pay = 0.03
-    const k = { x0: Math.max(0, b.kutu.x0 - pay), y0: Math.max(0, b.kutu.y0 - pay), x1: Math.min(1, b.kutu.x1 + pay), y1: Math.min(1, b.kutu.y1 + pay) }
+    // the drawing together with the area where the physician writes about it
+    const d = b.notKutusu ? { x0: Math.min(b.kutu.x0, b.notKutusu.x0), y0: Math.min(b.kutu.y0, b.notKutusu.y0), x1: Math.max(b.kutu.x1, b.notKutusu.x1), y1: Math.max(b.kutu.y1, b.notKutusu.y1) } : b.kutu
+    const k = { x0: Math.max(0, d.x0 - pay), y0: Math.max(0, d.y0 - pay), x1: Math.min(1, d.x1 + pay), y1: Math.min(1, d.y1 + pay) }
     const ink = bolgeMurekkebi(renkli, b.kutu)
     const kr = kirp(maskeli, k, Math.min(2, 520 / Math.max(1, (k.x1 - k.x0) * maskeli.w)))
     bolgePaketleri.push({ ...b, murekkep: ink, gorsel: { mime: 'image/jpeg', base64: await g.tuval.jpeg(kr, 0.82) } })
@@ -235,7 +260,7 @@ export async function sayfaPaketiHazirla(g: PaketGirdisi): Promise<PaketSonucu> 
     durum: 'hazir',
     paket: { sayfa: g.sayfa, sablonId: aktifSablon?.id ?? null, kalite: on.kalite, satirlar, bolgeler: bolgePaketleri, parcalar, gizlilikKutulari: karar.kutular, serbest: karar.kutular.length === 0 && Boolean(serbest) },
     maskeliSayfa: { mime: 'image/jpeg', base64: await g.tuval.jpeg(sayfaGorseli, 0.82), w: sayfaGorseli.w, h: sayfaGorseli.h },
-    gizlilik: karar, sablon: aktifSablon, sablonSkoru: skor, parmakIzi: izi, enBoy, yontem: yer.yontem,
+    gizlilik: karar, sablon: aktifSablon, sablonSkoru: skor, parmakIzi: izi, enBoy, yontem: yer.yontem, sablonYontemi: aktifSablon ? kayitYontemi : null,
   }
 }
 

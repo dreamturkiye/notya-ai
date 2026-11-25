@@ -65,7 +65,8 @@ export default function ElNotuYakala(p: {
     if (sablonRef.current) return sablonRef.current
     const r = await p.getir(`${p.api}/sablon`)
     const j = r.ok ? await r.json() : { sablonlar: [] }
-    sablonRef.current = j.sablonlar || []
+    // the doctor's own templates first, then the build's registry forms of his branş (placed by their printed labels)
+    sablonRef.current = [...(j.sablonlar || []), ...(j.kayitli || [])]
     return sablonRef.current!
   }
 

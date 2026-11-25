@@ -94,6 +94,8 @@ export type OkuyucuBaglami = {
   ilac?: IlacEslesmesi
   /** Abbreviations already asked (open) or answered for this doctor — asked once, never again. */
   sorulmusKisaltmalar: Set<string>
+  /** The doctor's own frequent written words (his approved notes, most frequent first) — a recognition aid. */
+  hekimSozcukleri?: string[]
   /** Is this a common word of the language (not an abbreviation)? */
   sozcukMu: (t: string) => boolean
   /** The whole MASKED page (the same picture the vault keeps). */
@@ -141,8 +143,11 @@ const SOZCUK_YARDIMI = (sozcukler: string[]) => sozcukler.length
   ? `Vocabulary this physician and specialty use (abbreviation (meaning) or word) — it only helps you RECOGNISE a word that is really written; never write a vocabulary word that is not on the page:\n${sozcukler.join('; ')}`
   : ''
 
-/** Vocabulary list from the lexicon (doctor first, then branş, then general), capped. */
-export function okumaSozcukleri(s: Sozluk, azami = 260): string[] {
+/**
+ * Vocabulary list from the lexicon (doctor first, then branş, then general), capped — then the doctor's own frequent
+ * written words (ESNEK-KBB2: his approved notes, hafiza.ts sikSozcukler), capped apart so they never crowd out the lexicon.
+ */
+export function okumaSozcukleri(s: Sozluk, azami = 260, hekimSozcukleri: string[] = [], hekimAzami = 150): string[] {
   const gorulen = new Set<string>()
   const out: string[] = []
   for (const g of s.girdiler) {
@@ -152,6 +157,12 @@ export function okumaSozcukleri(s: Sozluk, azami = 260): string[] {
     gorulen.add(k)
     out.push(kelimeAnahtari(g.anlam) === k ? g.anlam : `${g.kisaltma} (${g.anlam})`)
     if (out.length >= azami) break
+  }
+  let ek = 0
+  for (const w of hekimSozcukleri) {
+    const k = kelimeAnahtari(w)
+    if (!k || gorulen.has(k) || ek >= hekimAzami) continue
+    gorulen.add(k); out.push(w); ek++
   }
   return out
 }
@@ -328,7 +339,7 @@ export async function sayfayiOku(p: SayfaPaketi, b: OkuyucuBaglami, model: Model
   const ornekler = benzerOrnekler(tumTanimlar, b.hafiza, 12)
   const anahat = b.anahat && b.anahat.alanlar.length ? b.anahat : null
   const anahatMetni = anahat ? anahatBlogu(anahat) : ''
-  const sozcukMetni = SOZCUK_YARDIMI(okumaSozcukleri(b.sozluk))
+  const sozcukMetni = SOZCUK_YARDIMI(okumaSozcukleri(b.sozluk, 260, b.hekimSozcukleri))
   const form = formBilgisi(p)
   const N = Math.max(1, Math.min(OKUMA_PLANLARI.length, b.okumaSayisi ?? OKUMA_SAYISI))
   const planlar = OKUMA_PLANLARI.slice(0, N)
@@ -356,7 +367,9 @@ export async function sayfayiOku(p: SayfaPaketi, b: OkuyucuBaglami, model: Model
     if (!isaretli.length) return []
     const parcalar: IstemParcasi[] = []
     for (const r of isaretli) {
-      parcalar.push({ tur: 'metin', metin: `Region ${r.id} (${r.etiket}):` })
+      // a drawing printed for both sides (two region ids on one picture): only the marks of THIS side's half belong here
+      const yan = r.taraf === 'sag' || r.taraf === 'sol' ? `, ${r.taraf === 'sag' ? 'RIGHT' : 'LEFT'} side only — marks in, or arrows / lines ending in, the part of the drawing printed for that side (the form prints the side names under the drawings)` : ''
+      parcalar.push({ tur: 'metin', metin: `Region ${r.id} (${r.etiket}${yan}):` })
       const g = p.bolgeler.find((x) => x.id === r.id)?.gorsel
       if (g) parcalar.push({ tur: 'gorsel', gorsel: g })
     }
@@ -368,6 +381,15 @@ export async function sayfayiOku(p: SayfaPaketi, b: OkuyucuBaglami, model: Model
   // a read that failed twice does not vote (the agreement rules count only the reads that answered)
   const okumalar = okumalarHam.filter((o): o is HamSayfaSatiri[] => o !== null)
   const R = okumalar.length
+  // a drawing finding is ONE call: handwritten words it reports (isaret 'yazi') are accepted without a question only when
+  // a page read also saw them (the page reads transcribe the words written beside the drawings) — a single read's guess
+  // at a scrawl next to a drawing ("kısal." for "temiz.") is asked or flagged, never shown as confirmed (ESNEK-KBB2)
+  const hamSozcukler = okumalar.flatMap((o) => o.flatMap((l) => l.kelimeler.flatMap((k) => [k.m, ...(k.alt || [])]))).map(kelimeAnahtari).filter((w) => w.length >= 3)
+  for (const c of cizimler) {
+    if (!c.kabul || c.isaret !== 'yazi') continue
+    const icerik = c.bulgu.split(/[^\p{L}\p{N}]+/u).map(kelimeAnahtari).filter((w) => w.length >= 3 && /\p{L}/u.test(w))
+    if (icerik.some((w) => !hamSozcukler.some((h) => h === w || benzerlik(h, w) >= 0.8))) c.kabul = false
+  }
   const gruplar = satirGrupla(okumalar)
   const anlamlar = new Set(b.sozluk.girdiler.flatMap((x) => x.anlam.split(/\s+/)).map(kelimeAnahtari).filter((x) => x.length >= 4))
   const okunamadiIsareti = b.dil.okunamadi || '[okunamadı]'
@@ -543,7 +565,6 @@ export async function sayfayiOku(p: SayfaPaketi, b: OkuyucuBaglami, model: Model
     dogrula.push({ anahtar: anah, sinif: 'kisaltma', okunan: t, adaylar: [], sayfa: p.sayfa, kutu: k.kutu || s.kutu, satirNo: s.no, kelimeNo: i, baglam: s.ham })
     kalan--
   }
-  void benzerlik
   return { sayfa: p.sayfa, sablonId: p.sablonId, satirlar, cizimler, dogrula, okumaSayisi, hafizaOrnegi: ornekler.length, butceDisi, okunamadi }
 }
 

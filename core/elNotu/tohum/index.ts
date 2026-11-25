@@ -17,3 +17,4 @@ export function tohumlarTr(brans: string | null | undefined): { brans: SozlukGir
 }
 
 export { anahatTr } from './anahatTr'
+export { kayitliSablonlarTr, KBB_ANATOMI_FORMU } from './sablonlarTr'
