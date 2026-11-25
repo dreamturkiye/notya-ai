@@ -19,7 +19,7 @@ import {
 } from '@/lib/asistan/specialistsCatalog'
 
 import { KAPSAM_RED } from '@/lib/asistan/kapsamRed'
-import { turkKaynakYigini } from "@/lib/kaynaklar/protokolKutuphanesi"
+import { turkKaynakBelgeleri, turkKaynakYigini } from "@/lib/kaynaklar/protokolKutuphanesi"
 export type PersonaId = string
 export type SpecialtyId = SpecialtyKey | 'genel' | 'acil' | 'psikiyatri' | 'dahiliye' | 'noroloji' | 'pediatri' | 'kardiyoloji'
 
@@ -49,6 +49,8 @@ export interface Persona {
   personality: string
   textbooks: string[]
   turkishGuidelines: string[]
+  /** Registry ids in the same order as turkishGuidelines when it came from the registry (else empty): Ayşe's "k" numbers map here. */
+  kaynakBelgeIdleri: string[]
   clinicalFocus: string[]
   voiceDescription: string
   voiceId: string
@@ -70,6 +72,7 @@ function toPersona(s: SpecialistDef): Persona {
     textbooks: s.textbooks,
     // TR-PROTOKOL-KUTUPHANESI (Kaan GO 2026-11-24): the edition-aware registry stack; the old static list only if the registry has none.
     turkishGuidelines: turkKaynakYigini(s.specialtyKey).length ? turkKaynakYigini(s.specialtyKey) : s.turkishGuidelines,
+    kaynakBelgeIdleri: turkKaynakBelgeleri(s.specialtyKey).map((b) => b.id),
     clinicalFocus: s.clinicalFocus,
     voiceDescription: `${s.voice.label}`,
     voiceId: s.voice.voiceId,
@@ -111,7 +114,7 @@ Klinik karar, doz, tanı basamağı ve sevk için ÖNCE bunları kullan.
 Kaynağı kendiliğinden söyleme ya da yazma (kılavuz adı, yıl, numara); yalnızca hekim kaynağı sorarsa ver. Ekrandaki kaynak etiketleri bunu zaten gösterir.
 ABD (AHA/ACOG/NCCN…) veya İngiltere (NICE…) kılavuzunu Türkiye yerine koyma.
 Çakışmada: aşağıdaki TR kaynaklar > uluslararası metin.
-${persona.turkishGuidelines.map(g => `• ${g}`).join("\n")}
+${persona.kaynakBelgeIdleri.length ? persona.turkishGuidelines.map((g, i) => `${i + 1}. ${g}`).join("\n") : persona.turkishGuidelines.map(g => `• ${g}`).join("\n")}
 
 === ULUSLARARASI METİN (yalnızca derinlik — pratik otorite değil) ===
 ${persona.textbooks.map(b => `• ${b}`).join("\n")}
@@ -184,8 +187,10 @@ TÜRKÇE KONUŞ. Doğal, akıcı tıp Türkçesi. Kısaltma kullan. Gereksiz uzu
 JSON YANIT FORMATINI KULLAN:
 {
   "speech": "Doktora söylenecek söz (doğal Türkçe)",
-  "proactiveWarning": null veya "Uyarı metni"
+  "proactiveWarning": null veya "Uyarı metni",
+  "k": [2]
 }
+"k" İSTEĞE BAĞLI ve EN SONDA: klinik önerin TÜRKİYE PRATİK KAYNAKLARIN listesindeki numaralı bir belgeye dayanıyorsa yalnızca numarası (en çok 2). Dayanmıyorsa "k" alanını hiç yazma. Numara asla "speech" içine yazılmaz.
 Dosyaya kayıt bu JSON'dan YAPILMAZ. Kayıt hazırlamanın tek yolu sana verilen araçlardır (eylem katmanı): araç çağırırsın, hekimin ekranında onay kartı çıkar, kaydı onun dokunuşu yapar.
 Yanıtın TAMAMI (liste ve tablolar dahil) "speech" alanının İÇİNDE olsun; JSON'dan önce veya sonra metin yazma. Kapsamlı bir konu sorulursa en önemli maddeleri özlü ver, ayrıntı için "devam edeyim mi" diye sor.
 BİÇİM (ekranda okunurluk): "speech" içinde gerçek satır sonları kullan — kısa paragraflar, madde için satır başında "- ", vurgu için **kalın**. Maddeleri ASLA tek satırda • işaretiyle zincirleme; her madde kendi satırında olsun.

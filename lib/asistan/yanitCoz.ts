@@ -15,6 +15,8 @@ export interface AsistanYaniti {
   action: Record<string, unknown> | null
   proactiveWarning: string | null
   kesildi: boolean
+  /** Hidden source numbers (1-based, into the persona's numbered TR list) — never shown or spoken; the server maps them. */
+  k?: number[]
 }
 
 export const KESIK_YANIT_NOTU = '— Yanıt uzunluk sınırında kesildi. Devamı için "devam et" yazın ya da soruyu daraltarak tekrar sorun.'
@@ -90,6 +92,7 @@ export function asistanYanitiCoz(ham: string, stopReason?: string | null): Asist
             action: kesildi ? null : v.action && typeof v.action === 'object' ? (v.action as Record<string, unknown>) : null,
             proactiveWarning: typeof v.proactiveWarning === 'string' && v.proactiveWarning ? v.proactiveWarning : null,
             kesildi,
+            ...(Array.isArray(v.k) ? { k: v.k.filter((n): n is number => typeof n === 'number').slice(0, 2) } : {}),
           }
         }
       } catch { /* malformed — salvage below */ }

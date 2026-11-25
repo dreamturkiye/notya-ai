@@ -79,10 +79,20 @@ export function bransDogrulanmisKaynaklar(brans: string | null | undefined): Dog
 }
 
 /** Edition-aware Turkish source stack of a branş (same 5-slot spirit as TURKISH_REFS, read from the registry). */
+export function turkKaynakBelgeleri(brans: BransKodu): ProtokolBelgesi[] {
+  return bransBelgeleri(brans).filter((b) => b.durum !== 'yerine-yenisi-geldi')
+}
+
 export function turkKaynakYigini(brans: BransKodu): string[] {
-  return bransBelgeleri(brans)
-    .filter((b) => b.durum !== 'yerine-yenisi-geldi')
+  return turkKaynakBelgeleri(brans)
     .map((b) => (b.durum === 'guncel' && b.surum ? `${b.kisaAd} — ${b.surum}` : `${b.kisaAd} (baskı doğrulanmadı)`))
+}
+
+/** Ayşe's hidden "k" field: 1-based numbers into her numbered TR source list → registry ids (max 2, invalid ones dropped). */
+export function kaynakNumaralariniCoz(belgeIdleri: readonly string[] | undefined, k: unknown): string[] {
+  if (!belgeIdleri?.length || !Array.isArray(k)) return []
+  const ids = k.map((n) => (typeof n === 'number' ? n : Number(n))).filter((n) => Number.isInteger(n) && n >= 1 && n <= belgeIdleri.length).map((n) => belgeIdleri[n - 1])
+  return [...new Set(ids)].slice(0, 2)
 }
 
 export type BransKapsami = { brans: BransKodu; toplam: number; surumDogrulanmis: number; dogrulanamadi: number; yerineYenisiGeldi: number }

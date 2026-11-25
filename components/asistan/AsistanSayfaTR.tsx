@@ -81,7 +81,7 @@ export function YaziliSohbetTR({ o }: { o: Oturum }) {
     ek: (
       <>
         {/* TR-PROTOKOL-KUTUPHANESI: official source chips for the documents this answer names (registry-confirmed editions only). */}
-        {m.rol === 'asistan' ? <KaynakCipleri metin={m.icerik} /> : null}
+        {m.rol === 'asistan' ? <KaynakCipleri metin={m.icerik} belgeIdleri={m.kaynakIdleri} /> : null}
         {m.oneriler?.length && m.hasta ? (
           m.oneriler.length > 1 ? <EylemToplu oneriler={m.oneriler} hasta={m.hasta} /> : <EylemKarti oneri={m.oneriler[0]} hasta={m.hasta} />
         ) : null}

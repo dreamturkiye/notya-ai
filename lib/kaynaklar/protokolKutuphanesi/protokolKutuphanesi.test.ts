@@ -339,3 +339,31 @@ describe('library page view model', () => {
     assert.equal(g.belgeler[0].durum, 'guncel')
   })
 })
+
+describe('hidden "k" source numbers → chips (Kaan GO 2026-11-24)', () => {
+  test('numbers map to registry ids: 1-based, max 2, invalid dropped, deduped', async () => {
+    const { kaynakNumaralariniCoz } = await import('./index')
+    const ids = ['a', 'b', 'c']
+    assert.deepEqual(kaynakNumaralariniCoz(ids, [2, 2, 9, 0, 'x', 1, 3]), ['b', 'a'])
+    assert.deepEqual(kaynakNumaralariniCoz([], [1]), [])
+    assert.deepEqual(kaynakNumaralariniCoz(ids, 'nope'), [])
+  })
+  test('parser keeps "k" out of speech; persona list is numbered and maps to the registry', async () => {
+    const { asistanYanitiCoz, speechOneki } = await import('@/lib/asistan/yanitCoz')
+    const ham = '{"speech":"Ferritin düşükse oral demir 3 ay.","proactiveWarning":null,"k":[1]}'
+    const r = asistanYanitiCoz(ham)
+    assert.equal(r.speech, 'Ferritin düşükse oral demir 3 ay.')
+    assert.deepEqual(r.k, [1])
+    assert.ok(!speechOneki(ham).includes('"k"'))
+    const { PERSONAS } = await import('@/lib/asistan/personaEngine')
+    const p = Object.values(PERSONAS).find((x) => x.kaynakBelgeIdleri.length)!
+    assert.equal(p.kaynakBelgeIdleri.length, p.turkishGuidelines.length)
+  })
+  test('idCipleri chips a reported document even when the text names none', async () => {
+    const { idCipleri } = await import('./cip')
+    const b = PROTOKOL_BELGELERI.find((x) => x.durum === 'guncel')!
+    const c = idCipleri([b.id, 'yok-boyle-belge'], 'Ferritin düşükse oral demir.')
+    assert.equal(c.length, 1)
+    assert.equal(c[0].belgeId, b.id)
+  })
+})

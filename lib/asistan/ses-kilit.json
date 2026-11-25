@@ -1,15 +1,15 @@
 {
   "kural": ".cursor/rules/ses-omurga-kilidi.mdc",
-  "onay": "Kaan-onay: 2026-11-24 GO 1+2 (19:31 EST) — ayseCevapla.ts: citation lock for every branş against the protocol registry (bransDogrulanmisKaynaklar + protokolKaynakTemizle); persona/Özel Branş prompt stacks read turkKaynakYigini",
+  "onay": "Kaan-onay: 2026-11-24 19:48 EST — 'Go with your recommendation': Ayşe returns hidden guideline numbers (\"k\") → registry ids → source chips; ayseCevapla.ts returns kaynakIdleri, AsistanOturumContext.tsx stores them on the message",
   "guncelleme": "2026-11-24",
   "dosyalar": {
     ".cursor/rules/ses-omurga-kilidi.mdc": "fa7dcef64483f66ea83cebd1b9b6286bfccd5b16ccabc611366ffcc257ef80fa",
     "app/api/asistan/ses-ekran/route.ts": "4fa0f2e003a5e8312c3b7fc3cbc8199cd5a962d4ef02f8d82e6214348671f1e3",
     "app/api/asistan/ses-llm/v1/chat/completions/route.ts": "4efdf3f94f51837c2f84deb3344e4ed2f7f6a30ec323d692220b68609e8339f0",
     "app/api/asistan/signed-url/route.ts": "63706277a766f49d907e07460f6641fee88e3996ef91176bee106c1febe94ca5",
-    "components/asistan/AsistanOturumContext.tsx": "ebf5a1630a2acfb2f21a7ea6582fb13b3757d7b47834cd3fd9c5e70b89586903",
+    "components/asistan/AsistanOturumContext.tsx": "52ddb3d87d892faa6eee0dde9b1c5b00f69c68990a72636534b07fdd36c20fc2",
     "lib/ai/modeller.ts": "f6f8c7b2e7d1224fd3dd829f425b2fdf1cf7e00bbd5e2b1d353ac372cf109a9c",
-    "lib/asistan/ayseCevapla.ts": "e3571841c3bbd88a7699e2b98c22bb14c23751e44d1715d648e208ce9d4c2412",
+    "lib/asistan/ayseCevapla.ts": "8a859b034e8493f7af5587f5501505f4fc04fd30336564c63368cfbc77e86713",
     "lib/asistan/duraklama.ts": "a799f5be7a0b21e684bc21a33c53d0e5f5fc7ec125ac725fe56ac2c04cdc17bd",
     "lib/asistan/elevenKapi.ts": "982862e089985f755a5eb2e33380121fdefba977f5a1b1f18dec4d220a22856e",
     "lib/asistan/elevenMetni.ts": "5cc18820401c98df7fe4603f423f5cdd2296e79cf1999a49ec252e33ebbde3ca",

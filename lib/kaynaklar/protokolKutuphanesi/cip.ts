@@ -91,6 +91,16 @@ export function kaynakCipleri(metin: string, belgeler: readonly ProtokolBelgesi[
   return secilen.slice(0, CIP_SINIRI).map(({ b }) => cipOlustur(b, bolumSec(b, m)))
 }
 
+/** Chips for the registry ids Ayşe reported using (her hidden "k" field); unknown or superseded ids are dropped. */
+export function idCipleri(ids: readonly string[], metin = '', belgeler: readonly ProtokolBelgesi[] = PROTOKOL_BELGELERI): KaynakCipi[] {
+  const m = kucukHarf(metin)
+  return ids
+    .map((id) => belgeler.find((b) => b.id === id && b.durum !== 'yerine-yenisi-geldi'))
+    .filter((b): b is ProtokolBelgesi => !!b)
+    .slice(0, CIP_SINIRI)
+    .map((b) => cipOlustur(b, m ? bolumSec(b, m) : null))
+}
+
 /** "SB Migren Klinik Protokolü · Revizyon No. 01 (Ağustos 2025) · 3. Migren Başağrısı Tedavisi (s. 12)" */
 export function cipMetni(c: KaynakCipi): string {
   return [c.etiket, c.surum, c.bolum].filter(Boolean).join(' · ')

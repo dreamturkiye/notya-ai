@@ -104,7 +104,7 @@ export type Message = { id: string; role: "user" | "ai"; text: string; sira: num
 // the patient is resolved server-side from free text — so both the proposal ids and the header name
 // come back from the route; the client never picks a patient for a write.
 export interface Yonlendirme { metin: string; etiket: string | null; yol: string | null }
-export interface YaziliMesaj { rol: 'doktor' | 'asistan'; icerik: string; oneriler?: EylemOneriGorunumu[]; hasta?: EylemHasta; yonlendirme?: Yonlendirme | null; sira: number }
+export interface YaziliMesaj { rol: 'doktor' | 'asistan'; icerik: string; kaynakIdleri?: string[]; oneriler?: EylemOneriGorunumu[]; hasta?: EylemHasta; yonlendirme?: Yonlendirme | null; sira: number }
 
 interface TanimaSonucu { isFinal: boolean; 0: { transcript: string } }
 interface TanimaOlayi { resultIndex: number; results: { length: number; [i: number]: TanimaSonucu } }
@@ -1879,7 +1879,7 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
       else if (sayfaHastasi && veri.asistanSessionId) void odagiSayfayaAl(String(veri.asistanSessionId), sayfaHastasi)
       // NOTYA-EYLEM-24: Ayşe bir şeyi bu yoldan yapmıyorsa (reçete, tanı, hasta açma) cümlesi
       // baloncukta; ilgili ekranın bağlantısı burada, baloncuğun altında tek satır.
-      ekle({ rol: 'asistan', icerik: cevap || 'Yanıt alınamadı.', oneriler: (veri.eylemOnerileri as EylemOneriGorunumu[]) || [], hasta: (veri.eylemHastasi as EylemHasta) || undefined, yonlendirme: (veri.eylemYonlendirme as Yonlendirme) || null })
+      ekle({ rol: 'asistan', icerik: cevap || 'Yanıt alınamadı.', kaynakIdleri: Array.isArray(veri.kaynakIdleri) ? (veri.kaynakIdleri as unknown[]).map(String) : undefined, oneriler: (veri.eylemOnerileri as EylemOneriGorunumu[]) || [], hasta: (veri.eylemHastasi as EylemHasta) || undefined, yonlendirme: (veri.eylemYonlendirme as Yonlendirme) || null })
     } catch (e) {
       ekle({ rol: 'asistan', icerik: e instanceof Error ? e.message : `${personaAdi} yanıt veremedi.` })
     } finally {

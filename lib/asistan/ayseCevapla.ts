@@ -43,7 +43,7 @@ import { SPECIALTIES } from "@/lib/doktor/specialties"
 import { dozKilitliBrans } from "@/lib/doktor/soapUret"
 import { kaynakSayilari, uydurmaDozTemizle } from "@/lib/doktor/dozKilidi"
 import { protokolKaynakTemizle } from "@/lib/doktor/kaynakKilidi"
-import { bransDogrulanmisKaynaklar } from "@/lib/kaynaklar/protokolKutuphanesi"
+import { bransDogrulanmisKaynaklar, kaynakNumaralariniCoz } from "@/lib/kaynaklar/protokolKutuphanesi"
 import { asistanYanitiCoz, speechOneki } from "@/lib/asistan/yanitCoz"
 import { doktorMetniTemizle } from "@/lib/doktor/klinikMetin"
 import { cozumKonus, hastaninSozunuCoz, hitabiAracSozundenAyikla, mesajdakiAdParcalari, personaIlkAdi, type HastaCozumu } from "@/lib/doktor/hastaCozumleyici"
@@ -1583,6 +1583,8 @@ ${ilacBaglamMetni(drugs[0])}`
         eylemHastasi: kartHastasi ? { ad: kartHastasi.ad, dogumTarihi: kartHastasi.dogumTarihi } : null,
         speech: ekranMetni,
         proactiveWarning: aiData.proactiveWarning,
+        // TR-PROTOKOL-KUTUPHANESI (Kaan GO 2026-11-24): the guideline(s) Ayşe used, as registry ids → source chips (no text cost).
+        kaynakIdleri: kaynakNumaralariniCoz(persona.kaynakBelgeIdleri, aiData.k),
         action: aiData.action,
         actionResult,
         asistanSessionId: oturumId,

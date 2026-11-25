@@ -30,3 +30,9 @@
 - Onay satırı: `Kaan-onay: 2026-11-24 GO 1+2 (19:31 EST) — ayseCevapla.ts: citation lock for every branş against the protocol registry (bransDogrulanmisKaynaklar + protokolKaynakTemizle); persona/Özel Branş prompt stacks read turkKaynakYigini`
 - Taban commit: `e39cd92b`
 - Değişen kilitli dosyalar: `lib/asistan/ayseCevapla.ts`
+
+## 2026-11-24 — 19:48 EST — 'Go with your recommendation': Ayşe returns hidden guideline numbers ("k") → registry ids → source chips; ayseCevapla.ts returns kaynakIdleri, AsistanOturumContext.tsx stores them on the message
+
+- Onay satırı: `Kaan-onay: 2026-11-24 19:48 EST — 'Go with your recommendation': Ayşe returns hidden guideline numbers ("k") → registry ids → source chips; ayseCevapla.ts returns kaynakIdleri, AsistanOturumContext.tsx stores them on the message`
+- Taban commit: `03e6d713`
+- Değişen kilitli dosyalar: `components/asistan/AsistanOturumContext.tsx`, `lib/asistan/ayseCevapla.ts`
