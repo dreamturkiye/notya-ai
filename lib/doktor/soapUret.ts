@@ -22,8 +22,8 @@ import { normalize } from '@/lib/ilac/ilacArama'
 import { SPECIALTIES } from '@/lib/doktor/specialties'
 import { dahiliyeKilidi, dahiliyeMi } from '@/specialties/dahiliye/prompts'
 import { soapDozKilidi, soapDozUydurmaKilidi } from '@/lib/doktor/dozKilidi'
-import { soapKaynakKilidi } from '@/lib/doktor/kaynakKilidi'
-import { kdDogrulanmisKaynaklar } from '@/specialties/kadin-dogum/protocols/dogrulanmis-kaynaklar'
+import { soapKaynakKilidi, protokolKaynakTemizle } from '@/lib/doktor/kaynakKilidi'
+import { bransDogrulanmisKaynaklar } from '@/lib/kaynaklar/protokolKutuphanesi'
 import { notMetinleriniTemizle } from '@/lib/doktor/klinikMetin'
 import { soapNumaraliAlanlariDuzenle } from '@/lib/doktor/satirBasiNumarala'
 import { kadinDogumKilidi, kadinDogumMi } from '@/specialties/kadin-dogum/prompts'
@@ -400,7 +400,9 @@ function oneriHataKodu(e: unknown): string {
  * keeps a guideline number / year that is not in the verified list. Each lock appends its review line to aiDegerlendirme. */
 function kilitle<T extends object>(veri: T, girdi: SoapGirdi): T & { aiDegerlendirme?: string } {
   const dozlu = dozKilitliBrans(girdi.specialty, girdi.doktorBransi) ? soapDozKilidi(veri, girdi.transcript, girdi.klinikBaglam) : soapDozUydurmaKilidi(veri, girdi.transcript, girdi.klinikBaglam)
-  return kadinDogumMi(girdi.specialty, girdi.doktorBransi) ? soapKaynakKilidi(dozlu, kdDogrulanmisKaynaklar()) : dozlu
+  // TR-PROTOKOL-KUTUPHANESI: every branch's note is locked against the protocol registry (kadın doğum: + its ACOG / legacy list).
+  const brans = kadinDogumMi(girdi.specialty, girdi.doktorBransi) ? 'kadin-hastaliklari-dogum' : soapPersonaAnahtari(girdi)
+  return soapKaynakKilidi(dozlu, bransDogrulanmisKaynaklar(brans), protokolKaynakTemizle)
 }
 
 /** NOTYA-NOT-HIZ-03: B's raw JSON → the advisory fields only, SGK-checked, locked and F4-cleaned. */

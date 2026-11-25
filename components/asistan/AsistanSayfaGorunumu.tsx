@@ -47,11 +47,13 @@ export interface AsistanSayfaGorunumuProps {
   mikrofonAdi?: string
   /** The page starts in the phone layout and switches on the first effect; a test can start in the wide one. */
   mobilBaslangic?: boolean
+  /** Under an assistant bubble: the caller's source chips for that text (Türkiye: TR-PROTOKOL-KUTUPHANESI). Absent = none. */
+  cipler?: (metin: string) => React.ReactNode
 }
 
 export default function AsistanSayfaGorunumu({
   persona, personalar, onPersona, durum: status, aktif: isActive, mesajlar: messages, hata: errorMsg, sureUzatmaGoster, metin,
-  onBasla, onBitir, onSureUzat, kart, geri, yazili, ustSag, yanKolonBasHarf, mikrofonAdi, mobilBaslangic = true,
+  onBasla, onBitir, onSureUzat, kart, geri, yazili, ustSag, yanKolonBasHarf, mikrofonAdi, mobilBaslangic = true, cipler,
 }: AsistanSayfaGorunumuProps) {
   const [isMobile, setIsMobile] = useState(mobilBaslangic)
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -183,6 +185,7 @@ export default function AsistanSayfaGorunumu({
                           whiteSpace: msg.role === "user" ? "pre-wrap" : "normal", overflowWrap: "anywhere" }}>
               {/* NOTYA-ASISTAN-REHBER-01: asistan balonu ham ** ve tek satır • zinciri gösteriyordu; YaziliSohbet ile aynı hafif biçimlendirici. */}
               {msg.role === "ai" ? <HafifMarkdown metin={msg.text} /> : msg.text}
+              {msg.role === "ai" && cipler ? cipler(msg.text) : null}
             </div>
           </div>
         ))}

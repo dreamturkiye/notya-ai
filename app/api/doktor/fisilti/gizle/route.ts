@@ -39,6 +39,12 @@ export async function POST(req: NextRequest) {
   const { ogeler } = await fisiltiOgeleri(req, supabase, user.id)
   const item = ogeler.find((o) => o.id === itemId)
   if (!item) return NextResponse.json({ error: 'Bu uyarı artık listede değil.' }, { status: 404 })
+  // TR-PROTOKOL-KUTUPHANESI: an edition announcement has no patient — hiding it marks it seen for this doctor only.
+  if (item.kaynak === 'kaynak' && item.duyuruId) {
+    const { duyuruGoruldu } = await import('@/lib/kaynaklar/protokolKutuphanesi/duyuru')
+    if (!(await duyuruGoruldu(supabase, user.id, item.duyuruId))) return NextResponse.json({ error: 'Gizlenemedi — tekrar deneyin.' }, { status: 500 })
+    return NextResponse.json({ ok: true, gizleId: null })
+  }
 
   const { data, error } = await supabase
     .from('fisilti_gizlenen')

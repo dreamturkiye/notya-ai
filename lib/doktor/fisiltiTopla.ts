@@ -118,10 +118,21 @@ export async function fisiltiOgeleri(req: NextRequest, supabase: SupabaseClient,
     // Migration 121 yoksa sessiz.
   }
 
+  // TR-PROTOKOL-KUTUPHANESI: a reviewed new edition of an official protocol for this doctor's branş (all 40, Özel Branşlar
+  // included) — one item per announcement until the doctor opens it or hides it. Never ahead of patient items.
+  let kaynakOgeleri: FisiltiItem[] = []
+  try {
+    const { bekleyenDuyuruFisiltileri, bransKoduCoz } = await import('@/lib/kaynaklar/protokolKutuphanesi/duyuru')
+    kaynakOgeleri = await bekleyenDuyuruFisiltileri(supabase, doktorId, bransKoduCoz(String(profil?.specialty || '')))
+  } catch {
+    // Migration 206 yoksa sessiz.
+  }
+
   const ogeler = [...kalkanOgeleri, ...takipOgeleri, ...klinikOgeleri, ...mesajOgeleri]
   // En eski gecikme üstte -- klinik motorlarının kendi kuralıyla aynı; tarihi olmayan öğeler en sona düşer.
   ogeler.sort((a, b) => String(a.enErkenTarih || '9999').localeCompare(String(b.enErkenTarih || '9999')))
   ogeler.sort((a, b) => Number(a.kaynak !== 'kalkan') - Number(b.kaynak !== 'kalkan'))
+  ogeler.push(...kaynakOgeleri)
   return { ogeler, bransDestekli }
 }
 

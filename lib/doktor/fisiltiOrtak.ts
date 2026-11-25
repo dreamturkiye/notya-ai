@@ -31,7 +31,10 @@ export interface FisiltiItem {
    * source); 'mesaj' = an unread patient-portal message the practice hasn't answered in a while.
    * Same card, same self-clearing rule, different resolving eylem (mesaj_hasta_ile_konusuldu vs.
    * the clinical actions) -- kaynak tells the UI/Ayşe which one applies. */
-  kaynak: 'klinik' | 'mesaj' | 'kalkan' | 'takip'
+  kaynak: 'klinik' | 'mesaj' | 'kalkan' | 'takip' | 'kaynak'
+  /** TR-PROTOKOL-KUTUPHANESI: only when kaynak === 'kaynak' — a reviewed new edition of an official protocol (no patient;
+   * patientId is ''). Gizle marks it seen for this doctor (protokol_duyuru_gorulen), never fisilti_gizlenen. */
+  duyuruId?: string
   /** Only set when kaynak === 'mesaj': the hasta_mesaj_konulari.id the resolving action needs. */
   konuId?: string
   /** NOTYA-KALKAN-01: WhatsApp ilaç taslağı. Onayla kartı değiştirir; Gizle klinik veriyi silmez. */

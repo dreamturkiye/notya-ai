@@ -106,6 +106,43 @@ export function uydurmaKaynakTemizle(metin: string, dogrulanmis: DogrulanmisKayn
   return { metin: metin.replace(/[ \t]{2,}/g, ' '), bulgular }
 }
 
+/**
+ * TR-PROTOKOL-KUTUPHANESI (2026-11-24) — the registry-wide pass, on top of uydurmaKaynakTemizle (which is unchanged: Ayşe's
+ * founder-locked answer path calls it). Two more citation shapes, both decided against the list the caller passes
+ * (lib/kaynaklar/protokolKutuphanesi bransDogrulanmisKaynaklar):
+ *   1. a Turkish society code + a year in the same clause ("TEMD 2024 kılavuzu", "TKD … (2023)") — kept only when the list has
+ *      that society + year AND the text discusses its topic; otherwise the year goes ("TEMD kılavuzu");
+ *   2. a named SB document + a year ("Hipertansiyon Klinik Protokolü 2020", "Migren Klinik Protokolü (2025)") — kept only when
+ *      an 'SB-BELGE' entry with that year has a topic word INSIDE the document name (binds the year to the right document).
+ * TJOD / TMFTP / DÖBYR years and "Yayın No." stay with the first pass.
+ */
+const TR_KURUM_KODLARI = ['TEMD', 'TKD', 'TTD', 'TND', 'KLİMİK', 'KLIMIK', 'TPK', 'TDD', 'TÜD', 'TOD', 'TARD', 'TATD', 'TPD', 'TTOD', 'TGD', 'TİHUD', 'TAHUD', 'THBHD', 'AGD', 'TOTBİD', 'TPRECD', 'EKMUD', 'TÜBER', 'ÇAYD']
+const TR_KURUM_YIL_RE = new RegExp(String.raw`\b(${TR_KURUM_KODLARI.join('|')})\b([^.\n;]{0,60}?)\(?\b((?:19|20)\d{2})\b(?:'[a-zçğıöşü]+)?\)?`, 'gu')
+const SB_BELGE_YIL_RE = /((?:[A-ZÇĞİÖŞÜ][A-Za-zÇĞİÖŞÜçğıöşü()-]*\s+){1,8}(?:Klinik\s+Protokol(?:ü|u|leri)|Klinik\s+Rehberi|Yönetim\s+Rehberi|Uygulama\s+Rehberi|İzlem\s+Kılavuzu|Değerlendirmesi\s+Kılavuzu|Beslenme\s+Rehberi))([\s,(]{0,4}(?:\(TÜBER\)\s*)?)\(?((?:19|20)\d{2})\b(?:'[a-zçğıöşü]+)?\)?/gu
+
+export function protokolKaynakTemizle(metin: string, dogrulanmis: DogrulanmisKaynak[]): { metin: string; bulgular: KaynakBulgusu[] } {
+  const ilk = uydurmaKaynakTemizle(metin, dogrulanmis)
+  const bulgular = [...ilk.bulgular]
+  let t = ilk.metin
+  const butun = kucuk(t)
+  const kurumNorm = (k: string) => (k === 'KLIMIK' ? 'KLİMİK' : k)
+  t = t.replace(TR_KURUM_YIL_RE, (tam, org: string, ara: string, yil: string) => {
+    const aile = kurumNorm(org)
+    const adaylar = dogrulanmis.filter((d) => d.aile === aile && d.numara === Number(yil))
+    if (adaylar.some((d) => d.konu.some((k) => butun.includes(k)))) return tam
+    bulgular.push({ alinti: tam.trim(), neden: adaylar.length ? 'konu-uyusmuyor' : 'dogrulanmamis' })
+    return `${org}${ara.replace(/[\s(,]+$/, '')}`
+  })
+  t = t.replace(SB_BELGE_YIL_RE, (tam, ad: string, ara: string, yil: string) => {
+    const adK = kucuk(ad)
+    const adaylar = dogrulanmis.filter((d) => d.aile === 'SB-BELGE' && d.numara === Number(yil))
+    if (adaylar.some((d) => d.konu.some((k) => adK.includes(k)))) return tam
+    bulgular.push({ alinti: tam.trim(), neden: adaylar.length ? 'konu-uyusmuyor' : 'dogrulanmamis' })
+    return `${ad.trimEnd()}${ara.includes('TÜBER') ? ' (TÜBER)' : ''}`
+  })
+  return { metin: t.replace(/[ \t]{2,}/g, ' '), bulgular }
+}
+
 export function kaynakKontrolSatiri(bulgular: { alan: string; alinti: string }[]): string {
   const liste = bulgular.slice(0, 8).map((b) => `"${b.alinti}" (${b.alan})`).join(', ')
   return `⚠ Kaynak kontrolü (hekim onayı): doğrulanamayan kılavuz numarası / yılı taslaktan çıkarıldı — ${liste}. Kaynağı hekim doğrular; notu onaylamadan önce kontrol edin.`
@@ -115,11 +152,15 @@ const METIN_ALANLARI = ['basvuruYakinmasi', 'anamnez', 'fizik_muayene', 'tani', 
 const LISTE_ALANLARI = ['alarmBulgulari', 'kritik_bulgular'] as const
 
 /** Apply the citation lock to a generated SOAP note (copy). The review line goes into aiDegerlendirme. */
-export function soapKaynakKilidi<T extends object>(veri: T, dogrulanmis: DogrulanmisKaynak[]): T & { aiDegerlendirme?: string } {
+export function soapKaynakKilidi<T extends object>(
+  veri: T,
+  dogrulanmis: DogrulanmisKaynak[],
+  temizleyici: (metin: string, dogrulanmis: DogrulanmisKaynak[]) => { metin: string; bulgular: KaynakBulgusu[] } = uydurmaKaynakTemizle,
+): T & { aiDegerlendirme?: string } {
   const bulunan: { alan: string; alinti: string }[] = []
   const temizle = (alan: string, v: unknown): unknown => {
     if (typeof v !== 'string') return v
-    const r = uydurmaKaynakTemizle(v, dogrulanmis)
+    const r = temizleyici(v, dogrulanmis)
     for (const b of r.bulgular) bulunan.push({ alan, alinti: b.alinti })
     return r.metin
   }

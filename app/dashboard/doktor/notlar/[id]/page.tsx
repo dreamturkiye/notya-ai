@@ -66,6 +66,7 @@ import { useRutinPaket } from '@/lib/doktor/ogrenme/rutinIstemci'
 import { kullanimEylem } from '@/lib/telemetri/kullanim'
 import { oneriGeldiMi, oneriYoklamasiGerekli, oneriyiYokla } from '@/lib/doktor/oneriBekle';
 import { doktorFetch } from '@/lib/doktor/oturumFetch'
+import KaynakCipleri from '@/components/kaynaklar/KaynakCipleri'
 
 interface IcdOner { code?: string; description?: string; description_tr?: string; is_primary?: boolean }
 interface ReceteOner { etkenMadde?: string; ticariOrnek?: string; doz?: string; kullanim?: string; sure?: string; not?: string; sgkListesinde?: boolean }
@@ -677,6 +678,8 @@ export default function NotSayfasi() {
             {/* ESNEK-MUAYENE-B5: the doctor's suggestion profile (quiet always-rejected types, emphasise accepted; safety never quieted) */}
             <div style={{ ...kutu, color: CHROME_RENK.ink }}>
               <OneriListesi metin={ESNEK_TR} getir={trGetir} api={ESNEK_API} aiDegerlendirme={aiDegGorunen} varsayilan={<div style={{ whiteSpace: 'pre-wrap' }}>{aiDegGorunen}</div>} />
+              {/* TR-PROTOKOL-KUTUPHANESI: official source chips for the documents the suggestion names. */}
+              <KaynakCipleri metin={aiDegGorunen} />
             </div>
           </div>
         ) : null}

@@ -122,7 +122,10 @@ describe('(d) hekim / uzman lock language', () => {
     for (const y of ['soap', 'asistan', 'ses'] as const) assert.ok(kadinDogumKilidi(y).includes('Kılavuz doküman numarası veya yayın yılını hafızadan yazma'), y)
     for (const y of ['soap', 'asistan'] as const) assert.ok(kadinDogumKilidi(y).includes('## Doğrulanmış kaynaklar (Kaynak kilidi') && kadinDogumKilidi(y).includes('gbs: Türk rehberi repoda yok; uluslararası: ACOG CO 797'), y)
     assert.ok(!kadinDogumKilidi('ses').includes('## Doğrulanmış kaynaklar'), 'voice stays short: rule only, so no number at all')
-    assert.ok(kaynak('lib/doktor/soapUret.ts').includes('kadinDogumMi(girdi.specialty, girdi.doktorBransi) ? soapKaynakKilidi(dozlu, kdDogrulanmisKaynaklar())'))
+    // TR-PROTOKOL-KUTUPHANESI: SOAP is now locked for every branch; KD's list = the KD list (ACOG + legacy TR) + the registry.
+    assert.ok(kaynak('lib/doktor/soapUret.ts').includes("kadinDogumMi(girdi.specialty, girdi.doktorBransi) ? 'kadin-hastaliklari-dogum'"))
+    assert.ok(kaynak('lib/doktor/soapUret.ts').includes('soapKaynakKilidi(dozlu, bransDogrulanmisKaynaklar(brans), protokolKaynakTemizle)'))
+    assert.ok(kaynak('lib/kaynaklar/protokolKutuphanesi/index.ts').includes("brans === 'kadin-hastaliklari-dogum' ? [...kdEskiListe(), ...kayit] : kayit"))
     assert.ok(kaynak('lib/asistan/ayseCevapla.ts').includes('uydurmaKaynakTemizle(String(aiData.speech || ""), liste)'))
     assert.ok(!kadinDogumKilidi('asistan').includes('pratik gold standard'))
   })

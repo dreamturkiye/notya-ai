@@ -17,6 +17,7 @@ import { formatColleagueTabLabel, formatColleagueDisplayName } from '@/lib/colle
 import { EylemKarti, EylemToplu } from '@/components/core/EylemKarti'
 import AsistanSayfaGorunumu from '@/components/asistan/AsistanSayfaGorunumu'
 import YaziliSohbetGorunumu from '@/components/asistan/YaziliSohbetGorunumu'
+import KaynakCipleri from '@/components/kaynaklar/KaynakCipleri'
 import type { AsistanSayfaMetni, PersonaSecenegi, SayfaPersona, YaziliSatir, YaziliSohbetMetni } from '@/components/asistan/asistanSayfaTipleri'
 import type { AsistanOturumDegeri } from '@/components/asistan/AsistanOturumContext'
 
@@ -79,6 +80,8 @@ export function YaziliSohbetTR({ o }: { o: Oturum }) {
     icerik: m.icerik,
     ek: (
       <>
+        {/* TR-PROTOKOL-KUTUPHANESI: official source chips for the documents this answer names (registry-confirmed editions only). */}
+        {m.rol === 'asistan' ? <KaynakCipleri metin={m.icerik} /> : null}
         {m.oneriler?.length && m.hasta ? (
           m.oneriler.length > 1 ? <EylemToplu oneriler={m.oneriler} hasta={m.hasta} /> : <EylemKarti oneri={m.oneriler[0]} hasta={m.hasta} />
         ) : null}
@@ -131,6 +134,7 @@ export function AsistanSayfaTR({ o, mobilBaslangic }: { o: Oturum; mobilBaslangi
       geri={(p) => <Link href="/dashboard/doktor" {...p}>‹</Link>}
       yazili={<YaziliSohbetTR o={o} />}
       mobilBaslangic={mobilBaslangic}
+      cipler={(t) => <KaynakCipleri metin={t} />}
     />
   )
 }

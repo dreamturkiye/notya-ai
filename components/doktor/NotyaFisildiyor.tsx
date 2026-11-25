@@ -196,7 +196,7 @@ export default function NotyaFisildiyor({ specialty }: { specialty: string }) {
           <div style={S({ marginTop: 8, fontSize: 13, opacity: 0.8, lineHeight: 1.5, color: FISILTI_INK })}>{item.detay[0]}</div>
         )}
         {toplam > 1 && (
-          <div style={S({ marginTop: 10, fontSize: 12, opacity: 0.65, color: FISILTI_INK })}>+{toplam - 1} hastada daha bekleyen kontrol var</div>
+          <div style={S({ marginTop: 10, fontSize: 12, opacity: 0.65, color: FISILTI_INK })}>{item.kaynak === 'kaynak' ? `+${toplam - 1} kaynak duyurusu daha` : `+${toplam - 1} hastada daha bekleyen kontrol var`}</div>
         )}
       </button>
       <div style={{ marginTop: 10, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>

@@ -98,6 +98,8 @@ const navItems: (NavItem & { grup: 'asistan' | 'calisma' | 'diger' })[] = [
   { label: 'Raporlar', route: '/dashboard/doktor/raporlar', sadeceDoktor: true, grup: 'diger' },
   { label: 'e-Nabız', route: '/doktor-tools/enabiz', grup: 'diger' },
   { label: 'Araçlar', route: '/doktor-tools', sadeceDoktor: true, grup: 'diger' },
+  // TR-PROTOKOL-KUTUPHANESI: official Turkish protocols / guidelines per branş with editions (all 40 branşlar).
+  { label: 'Kaynak kütüphanesi', route: '/dashboard/doktor/kaynaklar', sadeceDoktor: true, grup: 'diger' },
   { label: 'Ayarlar', route: '/dashboard/doktor/ayarlar', sadeceDoktor: true, grup: 'diger' },
 ];
 
@@ -113,6 +115,7 @@ const NAV_IKON_ANAHTARI: Record<string, string> = {
   '/dashboard/doktor/raporlar': 'raporlar',
   '/doktor-tools/enabiz': 'belge',
   '/doktor-tools': 'araclar',
+  '/dashboard/doktor/kaynaklar': 'belge',
   '/dashboard/doktor/ayarlar': 'ayarlar',
 };
 
