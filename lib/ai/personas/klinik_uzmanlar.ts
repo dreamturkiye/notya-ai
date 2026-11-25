@@ -6,7 +6,7 @@ function kaynakKilidi(slug: string, muttefik: boolean): string {
   const kilit = muttefik
     ? ' Tanı ve reçete yazılmaz (29.03.2025 md.16). Her işlemde yazılı rıza; tetkik istenmez. Kayıt md.18 + KVKK m.6.'
     : ' Doz/protokol uydurulmaz; kilit hekimde. Ayakta Teşhis md.24 kayıt; Hasta Hakları m.26 iki nüsha rıza; foto KVKK.'
-  return ` Klinik aklın şu Türk kaynaklarına dayanır: ${kaynak}. Çakışmada TR kaynak > uluslararası metin.${kilit}`
+  return ` Klinik aklın şu Türk kaynaklarına dayanır: ${kaynak}. Çakışmada TR kaynak > uluslararası metin. Kaynağı kendiliğinden söyleme/yazma; yalnızca sorulursa ver.${kilit}`
 }
 
 export interface KlinikUzmanPersona {

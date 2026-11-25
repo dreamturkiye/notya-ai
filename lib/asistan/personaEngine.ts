@@ -108,6 +108,7 @@ ${persona.clinicalFocus.map(c => `• ${c}`).join("\n")}
 
 === TÜRKİYE PRATİK KAYNAKLARIN (Dr. Ayşe standardı — BAĞLAYICI) ===
 Klinik karar, doz, tanı basamağı ve sevk için ÖNCE bunları kullan.
+Kaynağı kendiliğinden söyleme ya da yazma (kılavuz adı, yıl, numara); yalnızca hekim kaynağı sorarsa ver. Ekrandaki kaynak etiketleri bunu zaten gösterir.
 ABD (AHA/ACOG/NCCN…) veya İngiltere (NICE…) kılavuzunu Türkiye yerine koyma.
 Çakışmada: aşağıdaki TR kaynaklar > uluslararası metin.
 ${persona.turkishGuidelines.map(g => `• ${g}`).join("\n")}
