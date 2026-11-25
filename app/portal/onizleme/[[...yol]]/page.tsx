@@ -16,6 +16,7 @@ import { PortalShell } from '../../_components/PortalShell'
 import { PortalOnizlemeProvider } from '../../_components/PortalLiveProvider'
 import { SectionHeader } from '../../_components/ui'
 import { doktorFetch } from '@/lib/doktor/oturumFetch'
+import { markaCoz, type PortalMarka } from '@/lib/portal/marka'
 
 const TABAN = '/portal/onizleme'
 
@@ -71,7 +72,7 @@ const SAYFALAR: Record<string, ComponentType> = {
   'ziyaretler': dynamic(() => import('@/app/portal/hasta/[token]/ziyaretler/page')),
 }
 
-type Durum = { tur: 'bekliyor' } | { tur: 'yok' } | { tur: 'hazir'; paket: NonNullable<ReturnType<typeof onizlemePaketi>> }
+type Durum = { tur: 'bekliyor' } | { tur: 'yok' } | { tur: 'hazir'; paket: NonNullable<ReturnType<typeof onizlemePaketi>>; marka: PortalMarka | null }
 
 export default function PortalOnizlemePage({ params }: { params: { yol?: string[] } }) {
   const router = useRouter()
@@ -82,11 +83,19 @@ export default function PortalOnizlemePage({ params }: { params: { yol?: string[
       const t = await ensureDoctorAccessToken()
       if (!t) { router.replace('/giris'); return }
       try {
-        const r = await doktorFetch('/api/users/me', {})
+        // HASTA-ALANI-MARKA: the preview opens under the doctor's own brand (Ayarlar › Hasta Alanı Görünümü).
+        const [r, mr, av] = await Promise.all([
+          doktorFetch('/api/users/me', {}),
+          doktorFetch('/api/doktor/hasta-alani', {}).catch(() => null),
+          doktorFetch('/api/doktor/profil/avatar', {}).catch(() => null),
+        ])
         if (!r.ok) { router.replace('/giris'); return }
         const j = await r.json()
+        const m = mr && mr.ok ? await mr.json().catch(() => null) : null
+        const a = av && av.ok ? await av.json().catch(() => null) : null
+        const marka = m?.girdi ? markaCoz({ ...m.girdi, fotoUrl: a?.avatar?.dataUrl || null }) : null
         const paket = onizlemePaketi(j?.data?.specialty, new Date().toISOString().slice(0, 10))
-        if (!iptal) setDurum(paket ? { tur: 'hazir', paket } : { tur: 'yok' })
+        if (!iptal) setDurum(paket ? { tur: 'hazir', paket, marka } : { tur: 'yok' })
       } catch { if (!iptal) router.replace('/giris') }
     })()
     return () => { iptal = true }
@@ -99,7 +108,7 @@ export default function PortalOnizlemePage({ params }: { params: { yol?: string[
   const Sayfa = SAYFALAR[yol]
   return (
     <PortalOnizlemeProvider data={paket} basePath={TABAN}>
-      <PortalShell basePath={TABAN} ekNav={paket.portal.nav} hastaAdi={paket.hasta.adSoyad} onSekizAlti={paket.hasta.onSekizAlti === true}>
+      <PortalShell marka={durum.marka} basePath={TABAN} ekNav={paket.portal.nav} hastaAdi={paket.hasta.adSoyad} onSekizAlti={paket.hasta.onSekizAlti === true}>
         <div data-alan="portal-onizleme" data-ornek="evet" data-brans={paket.brans.anahtar} role="note" style={{ margin: '0 16px 12px', padding: '10px 12px', borderRadius: 10, background: '#FFF7E6', border: '1px solid #E8C98A', color: '#5b4300', fontSize: 13, lineHeight: 1.45 }}>
           <b>Örnek veri — önizleme.</b> {paket.brans.etiket} hastanızın Sağlığım sayfası böyle görünür. Gerçek hasta bilgisi yoktur; mesaj, randevu ve formlar burada çalışmaz.
         </div>

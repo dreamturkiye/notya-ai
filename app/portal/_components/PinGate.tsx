@@ -3,10 +3,13 @@
 import { useEffect, useRef, useState } from 'react'
 import { turkceHataMesaji } from '@/lib/turkce/dogrulamaMesaji'
 import { PortalPinGorunumu, type PortalPinSozleri } from '@/components/doktor/portal/PortalPinGorunumu'
+import { MarkaKarsilama, NotyaAltyapi } from '@/components/doktor/portal/HekimMarkasi'
+import { BILINMEYEN_MARKA, BOLUM_ADI, type PortalMarka } from '@/lib/portal/marka'
 
-const SOZLER: PortalPinSozleri = {
-  marka: 'Notya',
-  urun: 'Sağlığım',
+export const PIN_SOZLERI: PortalPinSozleri = {
+  // HASTA-ALANI-MARKA: the word mark is not drawn in Türkiye — the doctor's block (MarkaKarsilama) takes its place.
+  marka: BOLUM_ADI,
+  urun: BOLUM_ADI,
   aciklama: 'Alanınızı açmak için doktorunuzun verdiği 6 haneli PIN\'i girin.',
   etiket: '6 haneli PIN',
   devam: 'Devam',
@@ -17,9 +20,11 @@ const SOZLER: PortalPinSozleri = {
 type Props = {
   token: string
   onUnlocked: () => void
+  /** HASTA-ALANI-MARKA — the doctor's brand, rendered by the server layout (no request before the PIN). */
+  marka?: PortalMarka | null
 }
 
-export function PinGate({ token, onUnlocked }: Props) {
+export function PinGate({ token, onUnlocked, marka = null }: Props) {
   const [pin, setPin] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
@@ -63,7 +68,7 @@ export function PinGate({ token, onUnlocked }: Props) {
 
   return (
     <PortalPinGorunumu
-      s={SOZLER}
+      s={PIN_SOZLERI}
       pin={pin}
       onPin={(next) => {
         setPin(next)
@@ -75,6 +80,8 @@ export function PinGate({ token, onUnlocked }: Props) {
       hata={error}
       eskiLink={legacy}
       girdiRef={inputRef}
+      ust={<MarkaKarsilama marka={marka || BILINMEYEN_MARKA} />}
+      alt={<NotyaAltyapi />}
     />
   )
 }

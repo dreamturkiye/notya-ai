@@ -112,4 +112,6 @@ export interface EvTercihler {
 export const VARSAYILAN_TERCIHLER: EvTercihler = { paylasimOnayi: false, onayAt: null, sessizBas: '23:00', sessizBit: '07:00', hatirlatmaAcik: true, moduller: { eklenen: [], cikarilan: [] } }
 
 /** Version of the consent text the patient accepted (stored with the consent). */
-export const PAYLASIM_ONAY_SURUMU = 'saglik-evi-paylasim-v1-2026-11-24'
+// v2 (HASTA-ALANI-MARKA, 2026-11-25): wording names the doctor as data controller and Notya as processor (KVKK m.3);
+// same processing, same purpose. Consents recorded under v1 stay valid; new consents record v2.
+export const PAYLASIM_ONAY_SURUMU = 'saglik-evi-paylasim-v2-2026-11-25'

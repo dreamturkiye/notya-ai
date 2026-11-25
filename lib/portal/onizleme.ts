@@ -106,9 +106,9 @@ function ornekCekirdek(b: OnizlemeBransi, bugun: string): PortalBundle {
     plan: `Planlanan tarihte kontrol (${tarihYaz(kontrol)}).`, takip: tarihYaz(kontrol),
   }] as PortalBundle['visits']
   paket.messages = [{
-    id: 'om1', klasor: 'gelen', konu: 'Kontrol randevunuz', gonderen: 'Notya Klinik Asistanı',
+    id: 'om1', klasor: 'gelen', konu: 'Kontrol randevunuz', gonderen: 'Klinik',
     ozet: `Kontrol randevunuz ${tarihYaz(kontrol)} tarihinde.`, tarih: `${gunEkle(bugun, -2)}T08:00:00.000Z`, okundu: false,
-    mesajlar: [{ id: 'om1a', kimden: 'Notya Klinik Asistanı', taraf: 'klinik', tarih: `${gunEkle(bugun, -2)}T08:00:00.000Z`, metin: `Kontrol randevunuz ${tarihYaz(kontrol)} tarihindedir. Değiştirmek isterseniz bize yazabilirsiniz.` }],
+    mesajlar: [{ id: 'om1a', kimden: 'Klinik', taraf: 'klinik', tarih: `${gunEkle(bugun, -2)}T08:00:00.000Z`, metin: `Kontrol randevunuz ${tarihYaz(kontrol)} tarihindedir. Değiştirmek isterseniz bize yazabilirsiniz.` }],
   }] as PortalBundle['messages']
   return paket
 }

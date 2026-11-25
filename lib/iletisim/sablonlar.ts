@@ -197,8 +197,14 @@ export function mesajHazirla(tur: MesajTuru, g: SablonGirdisi): HazirMesaj | nul
       if (!link) return null
       const kimin = g.veliDili && temiz(g.hastaAdi) ? `${temiz(g.hastaAdi)} için ` : ''
       return {
-        konu: konuYap('Sağlığım bağlantınız', g),
-        metin: imzala([`${merhaba(g)} ${kimin}belgelerinize, mesajlarınıza ve kayıtlarınıza Sağlığım’dan güvenle ulaşabilirsiniz:`, link, 'Giriş için muayenehanemizin size verdiği 6 haneli PIN gerekir.', '', ACIL_SATIRI], g),
+        konu: temiz(g.doktorAdi) ? `${temiz(g.doktorAdi)} sizi Sağlığım’a davet ediyor` : 'Sağlığım bağlantınız',
+        // HASTA-ALANI-MARKA (Kaan, 2026-11-25): the invitation comes from the doctor — "Dr. X sizi … davet ediyor".
+        metin: imzala([
+          temiz(g.doktorAdi)
+            ? `${merhaba(g)} ${temiz(g.doktorAdi)} sizi ${kimin ? `${temiz(g.hastaAdi)} için açtığı ` : 'kişisel '}Sağlığım alanına davet ediyor. ${kimin ? 'Belgelere, mesajlara ve kayıtlara' : 'Belgelerinize, mesajlarınıza ve kayıtlarınıza'} buradan güvenle ulaşabilirsiniz:`
+            : `${merhaba(g)} ${kimin}belgelerinize, mesajlarınıza ve kayıtlarınıza Sağlığım’dan güvenle ulaşabilirsiniz:`,
+          link, 'Giriş için muayenehanemizin size verdiği 6 haneli PIN gerekir.', '', ACIL_SATIRI,
+        ], g),
       }
     }
     case 'asi_onam_hazir': {

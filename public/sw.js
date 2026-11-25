@@ -51,15 +51,27 @@ self.addEventListener('push', e => {
   let d = {}
   try { d = e.data ? e.data.json() : {} } catch (_) { d = {} }
   const hekim = hekimYoluMu(d.yol)
-  e.waitUntil(self.registration.showNotification(d.baslik || (hekim ? 'Notya' : 'Sağlığım'), {
+  e.waitUntil((async () => {
+    // HASTA-ALANI-MARKA (2026-11-25): a patient's reminder shows HIS DOCTOR's icon (logo → photo → monogram), drawn by
+    // /api/portal/hasta/<token>/marka/ikon for the portal link this browser opened last; the doctor's own alerts keep Notya's.
+    let ikon = '/icon-192.png'
+    if (!hekim) {
+      try {
+        const r = await (await caches.open(AYAR)).match('/__sg_portal_yol')
+        const m = r ? (await r.text()).match(/^\/portal\/hasta\/([^/?#]+)/) : null
+        if (m) ikon = `/api/portal/hasta/${m[1]}/marka/ikon?b=192`
+      } catch (_) { /* Notya icon */ }
+    }
+    return self.registration.showNotification(d.baslik || (hekim ? 'Notya' : 'Sağlığım'), {
     body: d.govde || '',
     tag: d.etiket || 'saglikim',
-    icon: '/icon-192.png',
+    icon: ikon,
     badge: '/icon-192.png',
     renotify: hekim,
     requireInteraction: hekim && typeof d.etiket === 'string' && d.etiket.startsWith('ev-acil'),
     data: { yol: typeof d.yol === 'string' ? d.yol : '' },
-  }))
+    })
+  })())
 })
 
 self.addEventListener('notificationclick', e => {

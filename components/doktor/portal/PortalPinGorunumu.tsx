@@ -5,7 +5,7 @@
  * country's patient page draw THROUGH this. No word is written here, and nothing is sent: the container owns the PIN,
  * the request and the errors. Needs `sagligim.css`.
  */
-import type { Ref } from 'react'
+import type { ReactNode, Ref } from 'react'
 
 export type PortalPinSozleri = {
   marka: string
@@ -21,7 +21,7 @@ export type PortalPinSozleri = {
   unuttum?: string
 }
 
-export function PortalPinGorunumu({ s, pin, onPin, onGonder, mesgul, hata, eskiLink, hane = 6, girdiRef, oturumBitti }: {
+export function PortalPinGorunumu({ s, pin, onPin, onGonder, mesgul, hata, eskiLink, hane = 6, girdiRef, oturumBitti, ust, alt }: {
   s: PortalPinSozleri
   pin: string
   /** The digits only, already cut to `hane`. */
@@ -34,11 +34,20 @@ export function PortalPinGorunumu({ s, pin, onPin, onGonder, mesgul, hata, eskiL
   girdiRef?: Ref<HTMLInputElement>
   /** Said above the form: the session ended. */
   oturumBitti?: string | null
+  /** HASTA-ALANI-MARKA: the doctor's block (HekimMarkasi › MarkaKarsilama) in place of the word mark. */
+  ust?: ReactNode
+  /** Drawn last (Türkiye: the small "Notya altyapısıyla" line). */
+  alt?: ReactNode
 }) {
   return (
     <div className="sg-fade sg-pin-gate">
-      <p className="sg-pin-brand">{s.marka}</p>
-      <p className="sg-pin-product">{s.urun}</p>
+      {alt ? <div aria-hidden style={{ marginTop: 'auto' }} /> : null}
+      {ust ?? (
+        <>
+          <p className="sg-pin-brand">{s.marka}</p>
+          <p className="sg-pin-product">{s.urun}</p>
+        </>
+      )}
       <p style={{ margin: '0 0 28px', color: 'var(--sg-muted)', lineHeight: 1.55, maxWidth: 340, fontSize: 15 }}>{s.aciklama}</p>
       {oturumBitti ? <p role="status" style={{ margin: '0 0 18px', color: 'var(--sg-muted)', maxWidth: 340, fontSize: 14 }}>{oturumBitti}</p> : null}
 
@@ -81,6 +90,7 @@ export function PortalPinGorunumu({ s, pin, onPin, onGonder, mesgul, hata, eskiL
         </form>
       )}
       {s.unuttum ? <p data-alan="pin-unuttum" style={{ margin: '22px 0 0', color: 'var(--sg-muted)', fontSize: 14, lineHeight: 1.5, maxWidth: 340 }}>{s.unuttum}</p> : null}
+      {alt ? <div style={{ marginTop: 'auto', paddingTop: 36 }}>{alt}</div> : null}
     </div>
   )
 }

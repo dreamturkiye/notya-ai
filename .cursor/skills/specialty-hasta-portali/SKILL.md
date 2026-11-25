@@ -27,7 +27,7 @@ Keep identical across all specialties:
 | Surface | Why universal |
 |---------|----------------|
 | PIN gate + token expiry | Security / KVKK |
-| Brand: Notya · Sağlığım | Trust |
+| Brand: the DOCTOR's (logo → photo → monogram, name, “Sağlığım” quieter; Notya only “Notya altyapısıyla” in the footer) — see § Hekim önce marka | Trust |
 | Mesajlar (compose + practice reply + e-mail notify, no body in mail) | Care continuity |
 | Ziyaretler / Sonuçlar / İlaçlar / Öykü | Shared medical record spine |
 | Footer: 112, KVKK, “acil değil” | Legal |
@@ -54,6 +54,30 @@ functionality of the old hasta portalı … and build the new stuff over and abo
 - **Any demotion needs Kaan's explicit OK** for that change. Pinned by `lib/portal/tabanOnce.test.ts` (nav order, home
   actions on all 40 branşlar) and `lib/portal/tabanOnce-rota.test.ts` (booking → doctor's request list → approval;
   portal message → doctor's unread badge + inbox; cross-doctor isolation).
+
+## Hekim önce marka — HASTA-ALANI-MARKA (Kaan, 2026-11-25, standing)
+
+Kaan: "Hasta portalını doktorun bir ek servisi olarak lanse etmemiz iyi olur … it should be brought to you by the doctor,
+not brought to you by the Notya company."
+
+- **One resolved brand** (`lib/portal/marka.ts › markaCoz`) drives every patient surface: header (`HekimMarkasi ›
+  MarkaBasligi` through `PortalKabukGorunumu.markaBasligi`), PIN / loading / old-link screens (`MarkaKarsilama`), tab
+  title, PWA manifest + per-link icon (`/marka/ikon`), link preview (`opengraph-image.tsx`), patient push title + icon,
+  the "Dr. X sizi … davet ediyor" invite. Mark order: the doctor's logo (Notya Klinik: the clinic's logo first, clinic
+  name leads, treating doctor underneath) → his profile photo (unless switched off) → monogram in an accent from the
+  fixed accessible list. Never a Notya mark in a header, a title, an icon or a push.
+- **Notya appears only** as `NOTYA_ALTYAPI` ("Notya altyapısıyla") at the end of the footer / PIN screen, and in legal
+  text where it is correct: the doctor (or clinic) is the KVKK data controller, Notya the processor — never weaken it.
+- **Brand is read on the server** (`lib/portal/markaSunucu.ts`, token layout; React cache + 5-min data cache): no request
+  from the phone, no PHI, only the token's own doctor's rows. Do not move it into a client fetch.
+- **Images**: logos only through the upload gate (`lib/portal/markaGorsel.ts`: PNG / JPEG / WebP by magic bytes, NO SVG,
+  ≤ 2 MB, ≤ 1024 px, metadata stripped) into bucket `hasta-alani-marka` (<doctor_id>/ or klinik/<clinic_id>/,
+  content-hashed); an outside image URL is never drawn on a patient's device (`guvenliGorselUrl`, `klinikLogoGuvenli`).
+- Settings: Ayarlar › Hasta Alanı Görünümü (`components/doktor/HastaAlaniGorunumuAyarlari.tsx`, the SAME lockup in its
+  preview); Notya Klinik › Ayarlar uses it with `klinikModu`. Demo: `/portal/demo?marka=logo|foto|monogram|klinik`,
+  `&ekran=pin` (fictional brands, `lib/portal/demoMarka.ts`).
+- Pinned by `lib/portal/marka.test.ts` (order, names, contrast, no "Notya" in the header / PIN on all 40 branşlar, KVKK
+  footer intact), `lib/portal/markaGorsel.test.ts` (gate), `lib/portal/markaIzolasyon.test.ts` (cross-doctor rows + files).
 
 ## Background photos — one map, child rule (SAGLIGIM-ZEMIN, Kaan 2026-11-25, standing)
 

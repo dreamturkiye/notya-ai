@@ -3,6 +3,7 @@ import { Newsreader, Outfit } from 'next/font/google'
 import type { Metadata, Viewport } from 'next'
 import './sagligim.css'
 import './saglik-evi.css'
+import '@/components/doktor/portal/hekimMarkasi.css'
 
 const newsreader = Newsreader({
   subsets: ['latin', 'latin-ext'],
@@ -17,7 +18,7 @@ const outfit = Outfit({
 })
 
 export const metadata: Metadata = {
-  title: 'Notya · Sağlığım',
+  title: 'Sağlığım',
   description: 'Sağlık kayıtlarınız, sonuçlarınız ve mesajlarınız tek yerde.',
 }
 

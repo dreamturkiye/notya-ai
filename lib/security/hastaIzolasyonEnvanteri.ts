@@ -392,6 +392,11 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   'app/api/asistan/mali-signed-url/route.ts': I('accountant product; no patient data'),
   // ── Sağlığım portalı / intake (token = kimlik) ──
   'app/api/portal/hasta/[token]/route.ts': T,
+  // ── HASTA-ALANI-MARKA (2026-11-25) — the doctor's brand on his patients' portal (no patient data; cross-doctor test: lib/portal/markaIzolasyon.test.ts) ──
+  'app/api/portal/hasta/[token]/marka/gorsel/route.ts': I('token → its own doctor_id only (tokenDoktoru: token_hash + not expired); reads that doctor\'s hasta_alani_gorunumu.foto_goster and doctor_avatars row — no patient row, no other doctor; 404 for an unknown token'),
+  'app/api/portal/hasta/[token]/marka/ikon/route.ts': I('token → its own doctor_id only; brand rows keyed by that doctor_id (hamMarkaOku); logo bytes only from the brand bucket path stored on that doctor\'s row / his clinic; no patient data'),
+  'app/api/doktor/hasta-alani/route.ts': I('takes no doctor or patient id; doktorOturum → user.id; hasta_alani_gorunumu read/upserted with doctor_id = user.id only'),
+  'app/api/doktor/hasta-alani/logo/route.ts': I('takes no id or path; doktorOturum → user.id; file stored under <user.id>/logo-<hash>; row keyed doctor_id = user.id; old file removed only inside the same folder (eskiLogoyuSil)'),
   'app/api/portal/hasta/[token]/goruntu/route.ts': I('410 — patient cannot upload to belgeler; redirects to Mesajlar (no vault write)'),
   'app/api/portal/hasta/[token]/goruntu/[id]/route.ts': I('token unlock; jacket id+patient_id+doctor_id; portaldaGorunurMu else 404; vault download doctor-scoped'),
   'app/api/portal/hasta/[token]/mesajlar/route.ts': T,
@@ -413,7 +418,7 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   'app/api/portal/hasta/[token]/gunluk/foto/route.ts': I('portalKapsami (token + PIN); reads nothing patient-derived; the photo goes to the model gate only, nothing stored; the daily limit row is written with the token scope'),
   'app/api/portal/hasta/[token]/gunluk/push/route.ts': I('portalKapsami (token + PIN); subscriptions stored with the token doctor_id + patient_id; DELETE scoped by endpoint AND both ids (izolasyon.test.ts)'),
   'app/api/portal/hasta/[token]/gunluk/veri/route.ts': I('portalKapsami (token + PIN); KVKK export / delete select / delete every ev_* table by doctor_id AND patient_id; ids stripped from the export (izolasyon.test.ts)'),
-  'app/api/portal/hasta/[token]/manifest/route.ts': I('no database read; returns the token link the patient already has (PWA install)'),
+  'app/api/portal/hasta/[token]/manifest/route.ts': I('returns the token link the patient already has (PWA install) + the token doctor\'s brand name (portalMarkasiTokenla: token → its own doctor_id; users / hasta_alani_gorunumu / clinic rows of that doctor only; no patient data)'),
   'app/api/doktor/bildirimler/route.ts': I('HEKIM-PUSH: takes no patient id; pratikOturum + sadeceDoktor (the doctor himself); hekim_push_abonelikleri / hekim_bildirim_ayarlari read and written by doctor_id = signed-in doctor; DELETE by endpoint AND doctor_id; another doctor\'s row with the same endpoint is removed only with the same endpoint + p256dh + auth (possession of that browser subscription), else 409 (lib/saglikEvi/hekimPush.test.ts)'),
   'app/api/doktor/hastalar/[id]/ev-verisi/route.ts': I('pratikOturum → doktorId; hastaSahibiMi(doktorId, id) first (404 otherwise); every read / write in lib/saglikEvi/hekimSunucu.ts by doctor_id AND patient_id; plan id updates by id AND doctor_id AND patient_id; module switches (PATCH modul) read-merge-write ev_hedefler by doctor_id AND patient_id; KVKK consent gates the values (izolasyon.test.ts)'),
   'app/api/intake/[token]/route.ts': I('token → form row; patient from that row (form was created after an ownership check); NOTYA-ILETISIM-01 / NOTYA-GELEN-BELGELER consent writes scoped by that row\'s patient_id AND doktor_id'),

@@ -21,6 +21,8 @@ import { pushGonder, type PushIcerigi, type PushSonucu, type VapidAnahtarlari } 
 import { gunEkle, sessizSaatteMi, trDakika, trGun, trGunBasi, GUN_MS } from './zaman'
 import { hekimeBildir, type HekimGonderici, type YeniUyari } from './hekimBildirim'
 import type { DozPlani, UyariDuzeyi } from './tipler'
+import { pushMarkaAdlari } from '@/lib/portal/markaSunucu'
+import { markaliPushIcerigi } from '@/lib/portal/marka'
 
 type Sb = SupabaseClient
 export const PENCERE_DK = 15
@@ -43,9 +45,13 @@ async function hepsiniGonder(sb: Sb, isler: Array<{ kisi: string; icerik: PushIc
   const gorevler: Array<() => Promise<void>> = []
   let basarili = 0
   const silinecek: string[] = []
+  // HASTA-ALANI-MARKA: the notification comes from the patient's doctor ("Dr. Arıoğlu"), not from an app name.
+  // One batched lookup per run (lib/portal/markaSunucu.ts › pushMarkaAdlari), never one per patient.
+  const adlar = isler.length ? await pushMarkaAdlari(sb, isler.map((is) => is.kisi.split('|')[0])) : new Map<string, string>()
   for (const is of isler) for (const a of abonelikler.get(is.kisi) || []) {
+    const icerik = markaliPushIcerigi(is.icerik, adlar.get(is.kisi.split('|')[0]))
     gorevler.push(async () => {
-      const r = await gonder({ endpoint: a.endpoint, p256dh: a.p256dh, auth: a.auth }, is.icerik)
+      const r = await gonder({ endpoint: a.endpoint, p256dh: a.p256dh, auth: a.auth }, icerik)
       if (r.ok) basarili++
       else if (r.sil) silinecek.push(String(a.id))
     })

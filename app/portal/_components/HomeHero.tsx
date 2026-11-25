@@ -11,9 +11,10 @@ import { doktorBasHarfleri } from '@/lib/doktor/avatar'
 
 const SOZLER: PortalOzetSozleri = {
   karsilamaAria: 'Sağlığım karşılama',
-  markaAria: 'Notya Sağlığım',
-  marka: 'Notya',
-  urun: 'Sağlığım',
+  // HASTA-ALANI-MARKA: no Notya mark on a patient surface — the doctor card beside it carries the identity.
+  markaAria: 'Sağlığım',
+  marka: 'Sağlığım',
+  urun: 'Kişisel sağlık alanınız',
   hastaEtiketi: 'Hasta',
   lede: 'Kayıtlar, sonuçlar ve mesajlar tek yerde.',
   ctaEtiket: 'Mesajlara git',

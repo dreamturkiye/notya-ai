@@ -12,7 +12,7 @@ export const SAGLIGIM_DEMO: PortalBundle = {
   hekim: {
     ad: 'Dr. Gökhan Mamur',
     brans: 'İç Hastalıkları',
-    klinik: 'Notya Muayenehanesi',
+    klinik: 'Kadıköy Muayenehanesi',
     adres: 'Bağdat Cad. No:12 Kadıköy/İstanbul',
     telefon: '0216 000 00 00',
     telefonHref: 'tel:+902160000000',
@@ -142,14 +142,14 @@ export const SAGLIGIM_DEMO: PortalBundle = {
       id: 'm2',
       klasor: 'gelen',
       konu: 'Kontrol randevusu hatırlatması',
-      gonderen: 'Notya Klinik Asistanı',
+      gonderen: 'Klinik',
       ozet: '28 Kasım 10:30 iç hastalıkları kontrolünüz yaklaştı.',
       tarih: '2026-08-30T08:00:00Z',
       okundu: false,
       mesajlar: [
         {
           id: 'm2a',
-          kimden: 'Notya Klinik Asistanı',
+          kimden: 'Klinik',
           taraf: 'klinik',
           tarih: '2026-08-30T08:00:00Z',
           metin:
@@ -475,14 +475,14 @@ export const SAGLIGIM_DEMO_GOZ: PortalBundle = {
       id: 'gm1',
       klasor: 'gelen',
       konu: 'Kontrol öncesi bilgilendirme',
-      gonderen: 'Notya Klinik Asistanı',
+      gonderen: 'Klinik',
       ozet: '15 Ekim kontrolünüzde göz bebeği büyütme damlası uygulanacak.',
       tarih: '2026-09-10T09:00:00Z',
       okundu: false,
       mesajlar: [
         {
           id: 'gm1a',
-          kimden: 'Notya Klinik Asistanı',
+          kimden: 'Klinik',
           taraf: 'klinik',
           tarih: '2026-09-10T09:00:00Z',
           metin: '15 Ekim 2026 saat 09:30 kontrolünüzde göz bebeği büyütme damlası uygulanacaktır. Muayene sonrası birkaç saat araç kullanmamanız önerilir; yanınızda bir refakatçi olması iyi olur.',

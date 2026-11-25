@@ -192,7 +192,7 @@ export const SAGLIK_EVI_SOZLERI = {
 
   // Consent card (KVKK açık rıza)
   onayBaslik: 'Ölçümleriniz doktorunuzla paylaşılsın mı?',
-  onayMetni: 'Sağlığım’a girdiğiniz ev ölçümleri (tansiyon, şeker, kilo, ateş vb.), ilaç işaretleriniz ve kontrol sorularınız, onay verirseniz doktorunuza ve muayenehanesinin yetkili personeline gösterilir. Belirgin bir değişiklikte doktorunuza bildirim gider ve kontrolden bir gün önce doktorunuz için özet hazırlanır. Notya bu verileri 6698 sayılı KVKK kapsamında, yalnız tedaviniz için işler. Onayınızı istediğiniz zaman bu ekrandan geri çekebilir, verilerinizi indirebilir ya da silebilirsiniz.',
+  onayMetni: 'Sağlığım’a girdiğiniz ev ölçümleri (tansiyon, şeker, kilo, ateş vb.), ilaç işaretleriniz ve kontrol sorularınız, onay verirseniz doktorunuza ve muayenehanesinin yetkili personeline gösterilir. Belirgin bir değişiklikte doktorunuza bildirim gider ve kontrolden bir gün önce doktorunuz için özet hazırlanır. Bu veriler 6698 sayılı KVKK kapsamında, veri sorumlusu olan doktorunuz (ya da kliniğiniz) adına ve yalnız tedaviniz için işlenir; Notya, veri işleyen olarak bu alanın teknik altyapısını sağlar. Onayınızı istediğiniz zaman bu ekrandan geri çekebilir, verilerinizi indirebilir ya da silebilirsiniz.',
   onayKutu: 'Ev ölçümlerimin ve ilaç kayıtlarımın doktorumla paylaşılmasına açık rıza veriyorum.',
   onayVer: 'Onaylıyorum',
   onaySonra: 'Şimdi değil',

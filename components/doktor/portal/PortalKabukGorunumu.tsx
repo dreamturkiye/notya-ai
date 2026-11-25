@@ -33,9 +33,15 @@ function PortalZemini({ zemin }: { zemin: ZeminGorseli }) {
   )
 }
 
-export function PortalKabukGorunumu({ marka, urun, anaHref, hastaAdi, hastaAlani, navEtiketi, nav, altBilgi, git, zemin, children }: {
+export function PortalKabukGorunumu({ marka, urun, markaBasligi, anaHref, hastaAdi, hastaAlani, navEtiketi, nav, altBilgi, git, zemin, children }: {
+  /** Word mark — drawn only when no `markaBasligi` is given (country builds until the carry-over queue reaches them). */
   marka: string
   urun: string
+  /**
+   * HASTA-ALANI-MARKA (Kaan, 2026-11-25): the doctor's own lockup (HekimMarkasi › MarkaBasligi — logo → photo →
+   * monogram, name, "Sağlığım"). When given it REPLACES the word mark: the portal is the doctor's service.
+   */
+  markaBasligi?: React.ReactNode
   anaHref: string
   /** The patient's name, or null (then `hastaAlani` is drawn). */
   hastaAdi: string | null
@@ -81,11 +87,17 @@ export function PortalKabukGorunumu({ marka, urun, anaHref, hastaAdi, hastaAlani
       {zemin ? <PortalZemini zemin={zemin} /> : null}
       <header className="sg-header">
         <div className="sg-header-inner">
-          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12 }}>
-            <Link href={anaHref} className="sg-brand-lockup" onClick={tikla(anaHref)}>
-              <span className="sg-brand-mark">{marka}</span>
-              <span className="sg-brand-product">{urun}</span>
-            </Link>
+          <div style={{ display: 'flex', alignItems: markaBasligi ? 'center' : 'baseline', justifyContent: 'space-between', gap: 12 }}>
+            {markaBasligi ? (
+              <Link href={anaHref} className="sg-brand-lockup sg-brand-lockup--hekim" onClick={tikla(anaHref)}>
+                {markaBasligi}
+              </Link>
+            ) : (
+              <Link href={anaHref} className="sg-brand-lockup" onClick={tikla(anaHref)}>
+                <span className="sg-brand-mark">{marka}</span>
+                <span className="sg-brand-product">{urun}</span>
+              </Link>
+            )}
             {hastaAdi ? (
               <span className="sg-header-hasta" data-testid="portal-header-hasta-adi" title={hastaAdi}>
                 {hastaAdi}

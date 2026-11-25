@@ -6,9 +6,10 @@ import { LiveGate, PortalLiveProvider, usePortalLive } from '../../_components/P
 import { portalFetch } from '@/lib/portal/portalFetch'
 import { GunlukProvider } from '../../_components/saglikEvi/GunlukProvider'
 import { RandevuAcikSaglayici } from '../../_components/RandevuAcikBaglami'
+import type { PortalMarka } from '@/lib/portal/marka'
 
 /** Nav extras follow the registry modules attached to this token's bundle (lib/portal/moduller.ts). */
-function ModulluShell({ token, children }: { token: string; children: React.ReactNode }) {
+function ModulluShell({ token, marka, children }: { token: string; marka: PortalMarka | null; children: React.ReactNode }) {
   const { data, loading } = usePortalLive()
   const [randevuAcik, setRandevuAcik] = useState(false)
   useEffect(() => {
@@ -28,6 +29,7 @@ function ModulluShell({ token, children }: { token: string; children: React.Reac
       randevuAcik={randevuAcik}
       hastaAdi={loading ? null : data.hasta?.adSoyad}
       onSekizAlti={!loading && data.hasta?.onSekizAlti === true}
+      marka={marka}
     >
       {/* HASTA-PORTALI-GUNLUK: the daily health home state, loaded lazily by the pages that use it. */}
       <LiveGate><RandevuAcikSaglayici value={randevuAcik}><GunlukProvider>{children}</GunlukProvider></RandevuAcikSaglayici></LiveGate>
@@ -35,10 +37,11 @@ function ModulluShell({ token, children }: { token: string; children: React.Reac
   )
 }
 
-export function HastaShell({ token, children }: { token: string; children: React.ReactNode }) {
+/** HASTA-ALANI-MARKA: `marka` is resolved on the server (layout.tsx) — the doctor's identity on every state of the page. */
+export function HastaShell({ token, marka = null, children }: { token: string; marka?: PortalMarka | null; children: React.ReactNode }) {
   return (
-    <PortalLiveProvider token={token}>
-      <ModulluShell token={token}>{children}</ModulluShell>
+    <PortalLiveProvider token={token} marka={marka}>
+      <ModulluShell token={token} marka={marka}>{children}</ModulluShell>
     </PortalLiveProvider>
   )
 }

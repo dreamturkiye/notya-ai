@@ -29,9 +29,9 @@ export interface KuralSonucu {
   veri: Record<string, unknown>
 }
 
-export const ACIL_METNI = "Kendinizi kötü hissediyorsanız, göğüs ağrısı, nefes darlığı, konuşma bozukluğu, güçsüzlük veya bilinç bulanıklığı varsa hemen 112'yi arayın. Notya bir acil yardım hizmeti değildir."
+export const ACIL_METNI = "Kendinizi kötü hissediyorsanız, göğüs ağrısı, nefes darlığı, konuşma bozukluğu, güçsüzlük veya bilinç bulanıklığı varsa hemen 112'yi arayın. Sağlığım bir acil yardım hizmeti değildir."
 /** EV-ACIL-SEKER: the stored note for a very high glucose (the interactive symptom check is in the patient view). No dose words. */
-export const SEKER_ACIL_METNI = "Kusma, karın ağrısı, aşırı uyku hali ya da bilinç bulanıklığı, derin ve hızlı nefes varsa hemen 112'yi arayın. Notya bir acil yardım hizmeti değildir."
+export const SEKER_ACIL_METNI = "Kusma, karın ağrısı, aşırı uyku hali ya da bilinç bulanıklığı, derin ve hızlı nefes varsa hemen 112'yi arayın. Sağlığım bir acil yardım hizmeti değildir."
 const ILAC_UYARISI = 'İlaçlarınızı kendiniz değiştirmeyin.'
 
 const yuvarla = (x: number, o = 0) => Math.round(x * 10 ** o) / 10 ** o

@@ -103,7 +103,7 @@ export default function HastaPortaliPage() {
     if (!portalUrl || !pin) return
     try {
       await navigator.clipboard.writeText(
-        `Notya · Sağlığım\nLink: ${portalUrl}\nPIN: ${pin}\n(PIN’i başkalarıyla paylaşmayın.)`
+        `Sağlığım — kişisel hasta alanınız\nLink: ${portalUrl}\nPIN: ${pin}\n(PIN’i başkalarıyla paylaşmayın.)`
       )
       setCopied('both')
     } catch {

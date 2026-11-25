@@ -6,6 +6,8 @@ import { emptyPortalBundle } from '@/lib/portal/emptyBundle'
 import { PinGate } from './PinGate'
 import { PORTAL_PIN_GEREKLI_OLAYI } from '@/lib/portal/portalFetch'
 import { turkceHataMesaji } from '@/lib/turkce/dogrulamaMesaji'
+import { MarkaKarsilama, NotyaAltyapi } from '@/components/doktor/portal/HekimMarkasi'
+import { BILINMEYEN_MARKA, type PortalMarka } from '@/lib/portal/marka'
 
 type LiveState = {
   loading: boolean
@@ -38,11 +40,15 @@ type UnlockPhase = 'checking' | 'need_pin' | 'unlocked' | 'legacy'
 
 export function PortalLiveProvider({
   token,
+  marka = null,
   children,
 }: {
   token: string
+  /** HASTA-ALANI-MARKA — the doctor's brand from the server layout: the loading and PIN screens open under his name. */
+  marka?: PortalMarka | null
   children: React.ReactNode
 }) {
+  const m = marka || BILINMEYEN_MARKA
   const basePath = `/portal/hasta/${token}`
   const [unlockPhase, setUnlockPhase] = useState<UnlockPhase>('checking')
   const [loading, setLoading] = useState(true)
@@ -153,8 +159,10 @@ export function PortalLiveProvider({
   if (unlockPhase === 'checking') {
     return (
       <Ctx.Provider value={{ loading: true, error: null, data, basePath, token, refresh, setData }}>
-        <div className="sg-fade" style={{ padding: '48px 8px', color: 'var(--sg-muted)', textAlign: 'center' }}>
-          Sağlık alanınız yükleniyor…
+        <div className="sg-fade sg-pin-gate" aria-busy="true">
+          <MarkaKarsilama marka={m}>
+            <p style={{ margin: 0, color: 'var(--sg-muted)', fontSize: 15 }}>Sağlık alanınız yükleniyor…</p>
+          </MarkaKarsilama>
         </div>
       </Ctx.Provider>
     )
@@ -165,16 +173,19 @@ export function PortalLiveProvider({
       <Ctx.Provider value={{ loading: false, error: null, data, basePath, token, refresh, setData }}>
         {unlockPhase === 'legacy' ? (
           <div className="sg-fade sg-pin-gate">
-            <h1 className="sg-display" style={{ fontSize: 24, margin: '0 0 12px' }}>
-              Yeni bağlantı gerekli
-            </h1>
-            <p style={{ color: 'var(--sg-muted)', lineHeight: 1.55, maxWidth: 360, margin: 0 }}>
-              Bu eski portal linkinde PIN yok. Güvenlik için doktorunuzdan yeni bir Sağlığım linki ve 6
-              haneli PIN isteyin.
-            </p>
+            <MarkaKarsilama marka={m}>
+              <h1 className="sg-display" style={{ fontSize: 24, margin: '0 0 12px' }}>
+                Yeni bağlantı gerekli
+              </h1>
+              <p style={{ color: 'var(--sg-muted)', lineHeight: 1.55, maxWidth: 360, margin: 0 }}>
+                Bu eski portal linkinde PIN yok. Güvenlik için doktorunuzdan yeni bir Sağlığım linki ve 6
+                haneli PIN isteyin.
+              </p>
+            </MarkaKarsilama>
+            <NotyaAltyapi />
           </div>
         ) : (
-          <PinGate token={token} onUnlocked={onUnlocked} />
+          <PinGate token={token} onUnlocked={onUnlocked} marka={m} />
         )}
       </Ctx.Provider>
     )

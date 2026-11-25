@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import KlinikNav from '@/components/klinik/KlinikNav'
+import HastaAlaniGorunumuAyarlari from '@/components/doktor/HastaAlaniGorunumuAyarlari'
 import { doktorFetch, oturumSuresiDoldu } from '@/lib/doktor/oturumFetch'
 import { getDoctorAccessToken } from '@/lib/doktor/clientAuth'
 
@@ -22,7 +23,6 @@ export default function AyarlarPage() {
   const [city, setCity] = useState('')
   const [phone, setPhone] = useState('')
   const [website, setWebsite] = useState('')
-  const [logoUrl, setLogoUrl] = useState('')
   const [selectedSpecialties, setSelectedSpecialties] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -40,7 +40,7 @@ export default function AyarlarPage() {
       const sd = await sr.json(); const md = await mr.json()
       if (sd.success && sd.data) {
         setName(sd.data.name || ''); setCity(sd.data.city || ''); setPhone(sd.data.phone || '')
-        setWebsite(sd.data.website || ''); setLogoUrl(sd.data.logo_url || '')
+        setWebsite(sd.data.website || '');
         setSelectedSpecialties(sd.data.specialty_focus || [])
       }
       if (md.success) setAdminName(md.data.adminName || '')
@@ -54,7 +54,7 @@ export default function AyarlarPage() {
       const res = await doktorFetch('/api/klinik/settings', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, city, phone, website, logo_url: logoUrl, specialty_focus: selectedSpecialties })
+        body: JSON.stringify({ name, city, phone, website, specialty_focus: selectedSpecialties })
       })
       const data = await res.json()
       setMsg(data.success ? 'Ayarlar kaydedildi.' : (data.error || 'Kayıt başarısız.'))
@@ -93,13 +93,6 @@ export default function AyarlarPage() {
               <div>
                 <label style={{ fontSize: '13px', color: '#8b7d70', display: 'block', marginBottom: '6px' }}>Web Sitesi</label>
                 <input value={website} onChange={e => setWebsite(e.target.value)} style={inp} placeholder='https://kliniginiz.com' />
-              </div>
-            </div>
-            <div>
-              <label style={{ fontSize: '13px', color: '#8b7d70', display: 'block', marginBottom: '6px' }}>Logo URL</label>
-              <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                <input value={logoUrl} onChange={e => setLogoUrl(e.target.value)} style={{ ...inp, flex: 1 }} placeholder='https://...' />
-                {logoUrl && <img src={logoUrl} alt='logo' style={{ width: '40px', height: '40px', objectFit: 'contain', borderRadius: '6px', border: '1px solid rgba(58,44,34,0.08)' }} onError={e => (e.currentTarget.style.display = 'none')} />}
               </div>
             </div>
             <div>
@@ -143,6 +136,13 @@ export default function AyarlarPage() {
             {saving ? 'Kaydediliyor...' : 'Değişiklikleri Kaydet'}
           </button>
         </form>
+        {/* HASTA-ALANI-MARKA (Kaan, 2026-11-25): the clinic logo patients see at the top of Sağlığım — uploaded and
+            stored by Notya (no outside image URL on a patient's phone), with the same live preview doctors get. */}
+        <section style={{ marginTop: 40 }} data-alan="klinik-hasta-alani">
+          <h2 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: '22px', fontWeight: 400, color: '#3b2e24', margin: '0 0 6px' }}>Hasta alanı görünümü</h2>
+          <p style={{ fontSize: 14, color: '#8b7d70', margin: '0 0 18px' }}>Kliniğinizdeki hekimlerin hastaları Sağlığım’ı kliniğinizin adı ve logosuyla açar; tedavi eden hekimin adı hemen altında görünür.</p>
+          <HastaAlaniGorunumuAyarlari klinikModu />
+        </section>
       </div>
     </div>
   )

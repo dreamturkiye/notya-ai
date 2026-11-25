@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { SAGLIGIM_DEMO_GOZ } from '@/lib/portal/demoData'
 import { PortalShell } from '../_components/PortalShell'
+import { markaCoz } from '@/lib/portal/marka'
 import { DemoOturumKapisi } from '@/components/demo/DemoOturumKapisi'
 
 /** NOTYA-LANDING-2026-10: demo is internal — signed-in Notya users only, never indexed. */
@@ -10,7 +11,7 @@ export const metadata: Metadata = { robots: { index: false, follow: false } }
 export default function DemoGozLayout({ children }: { children: React.ReactNode }) {
   return (
     <DemoOturumKapisi>
-      <PortalShell basePath="/portal/demo-goz" ekNav={SAGLIGIM_DEMO_GOZ.portal?.nav || []} hastaAdi={SAGLIGIM_DEMO_GOZ.hasta.adSoyad}>{children}</PortalShell>
+      <PortalShell marka={markaCoz({ hekimAdi: SAGLIGIM_DEMO_GOZ.hekim.ad, brans: SAGLIGIM_DEMO_GOZ.hekim.brans, klinikAdi: SAGLIGIM_DEMO_GOZ.hekim.klinik })} basePath="/portal/demo-goz" ekNav={SAGLIGIM_DEMO_GOZ.portal?.nav || []} hastaAdi={SAGLIGIM_DEMO_GOZ.hasta.adSoyad}>{children}</PortalShell>
     </DemoOturumKapisi>
   )
 }
