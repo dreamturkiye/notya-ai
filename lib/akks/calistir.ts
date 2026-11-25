@@ -22,6 +22,7 @@ import { incelemeNedeni } from '@/core/akks/orneklem'
 import type { CevapKaydi, InsanKarari, Kategori, Notlama, SoruMaddesi } from '@/core/akks/tipler'
 import izlenen from '@/core/akks/izlenen.json'
 import { bransAdi, degerlendirmeHekimi, degerlendirmeHekimleri, hafizaSifirla } from './hekim'
+import { ONCELIKLI_BRANSLAR } from '@/core/akks/banka'
 
 export const IZLENEN_OZET: string = (izlenen as { ozet: string }).ozet
 export type KosuTuru = 'taban' | 'haftalik' | 'kapi' | 'elle'
@@ -257,11 +258,17 @@ export async function devamEt(sb: SupabaseClient, o: { butceMs: number; paralel:
     const satirlar = (son || []) as { tur: string; basladi_at: string; izlenen_ozet: string | null; taban_mi: boolean; durum: string }[]
     const tabanVar = satirlar.some((r) => r.taban_mi && r.durum === 'tamam')
     const olculdu = satirlar.some((r) => r.izlenen_ozet === IZLENEN_OZET)
-    const haftalikYakin = satirlar.some((r) => r.tur === 'haftalik' && Date.parse(r.basladi_at) > simdi.getTime() - 6 * 86400_000)
+    // COST CAP (Kaan, 2026-11-24): a gate run (~100 items, the 5 priority branşlar' monitoring sample) only when a watched
+    // prompt/model file changed, at most once per 24 h (later changes are picked up by the next one); the full monitoring set
+    // (~275 items, all 40 branşlar) once a month — the first Sunday. The whole bank (1,550) runs only by hand.
+    const kapiYakin = satirlar.some((r) => r.tur === 'kapi' && Date.parse(r.basladi_at) > simdi.getTime() - 86400_000)
+    const aylikYakin = satirlar.some((r) => r.tur === 'haftalik' && Date.parse(r.basladi_at) > simdi.getTime() - 25 * 86400_000)
     const gun = simdi.toISOString().slice(0, 10)
-    if (tabanVar && !olculdu) baslatildi = 'kapi'
-    else if (simdi.getUTCDay() === 0 && !haftalikYakin) baslatildi = 'haftalik'
-    if (baslatildi) kosuId = (await kosuAc(sb, { etiket: `${baslatildi}-${gun}`, tur: baslatildi as KosuTuru, sadeceIzleme: true })).id
+    if (tabanVar && !olculdu && !kapiYakin) baslatildi = 'kapi'
+    else if (simdi.getUTCDay() === 0 && simdi.getUTCDate() <= 7 && !aylikYakin) baslatildi = 'haftalik' // DB value kept; it is the monthly run
+    if (baslatildi) kosuId = (await kosuAc(sb, baslatildi === 'kapi'
+      ? { etiket: `kapi-${gun}`, tur: 'kapi', sadeceIzleme: true, branslar: [...ONCELIKLI_BRANSLAR] }
+      : { etiket: `aylik-${gun}`, tur: 'haftalik', sadeceIzleme: true })).id
   }
   if (!kosuId) return { is: 'yok' }
   const kalan = await kalanMaddeler(sb, kosuId)
