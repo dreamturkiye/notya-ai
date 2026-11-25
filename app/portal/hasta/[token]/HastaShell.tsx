@@ -27,6 +27,7 @@ function ModulluShell({ token, children }: { token: string; children: React.Reac
       // PORTAL-TABAN-ONCE: right after the home (lib/portal/navSirasi.ts), and Bugün's "Randevu al" reads the same state.
       randevuAcik={randevuAcik}
       hastaAdi={loading ? null : data.hasta?.adSoyad}
+      onSekizAlti={!loading && data.hasta?.onSekizAlti === true}
     >
       {/* HASTA-PORTALI-GUNLUK: the daily health home state, loaded lazily by the pages that use it. */}
       <LiveGate><RandevuAcikSaglayici value={randevuAcik}><GunlukProvider>{children}</GunlukProvider></RandevuAcikSaglayici></LiveGate>

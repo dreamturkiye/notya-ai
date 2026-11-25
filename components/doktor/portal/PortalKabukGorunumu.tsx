@@ -6,11 +6,34 @@
  * the look cannot drift. No word is written here: every string arrives as a prop. Needs `sagligim.css`.
  */
 import Link from 'next/link'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { useGorselIzni } from './saglikEvi/SaglikKahramani'
+import type { ZeminGorseli } from '@/lib/portal/zemin'
 
 export type PortalNavOgesi = { key: string; label: string; href: string; aktif: boolean }
 
-export function PortalKabukGorunumu({ marka, urun, anaHref, hastaAdi, hastaAlani, navEtiketi, nav, altBilgi, git, children }: {
+/**
+ * SAGLIGIM-ZEMIN (Kaan, 2026-11-25) — the soft, faded full-page photo behind every portal page (which photo: one map,
+ * lib/portal/zemin.ts). Fixed, behind the content, decorative (aria-hidden). Drawn only on the client after hydration
+ * and never under Save-Data (useGorselIzni), so the server markup, the first paint and the content's LCP are untouched
+ * and nothing moves. A page change cross-fades: the previous photo stays underneath while the new one fades in (CSS;
+ * no fade under prefers-reduced-motion).
+ */
+function PortalZemini({ zemin }: { zemin: ZeminGorseli }) {
+  const izin = useGorselIzni()
+  const [simdiki, setSimdiki] = useState(zemin)
+  const [onceki, setOnceki] = useState<ZeminGorseli | null>(null)
+  if (zemin !== simdiki) { setOnceki(simdiki); setSimdiki(zemin) }
+  if (!izin) return null
+  return (
+    <div className="sg-zemin" aria-hidden data-testid="portal-zemin">
+      {onceki && onceki !== simdiki ? <div key={`o-${onceki}`} className="sg-zemin-foto" data-zemin={onceki} /> : null}
+      <div key={simdiki} className="sg-zemin-foto is-yeni" data-zemin={simdiki} />
+    </div>
+  )
+}
+
+export function PortalKabukGorunumu({ marka, urun, anaHref, hastaAdi, hastaAlani, navEtiketi, nav, altBilgi, git, zemin, children }: {
   marka: string
   urun: string
   anaHref: string
@@ -24,6 +47,8 @@ export function PortalKabukGorunumu({ marka, urun, anaHref, hastaAdi, hastaAlani
   altBilgi: React.ReactNode
   /** A page that keeps its own tabs opens a tab itself instead of navigating. */
   git?: (href: string) => void
+  /** SAGLIGIM-ZEMIN — the page's background photo (lib/portal/zemin.ts › portalZemini); omitted = none. */
+  zemin?: ZeminGorseli | null
   children: React.ReactNode
 }) {
   const navRef = useRef<HTMLElement>(null)
@@ -53,6 +78,7 @@ export function PortalKabukGorunumu({ marka, urun, anaHref, hastaAdi, hastaAlani
 
   return (
     <div className="sg-shell">
+      {zemin ? <PortalZemini zemin={zemin} /> : null}
       <header className="sg-header">
         <div className="sg-header-inner">
           <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12 }}>

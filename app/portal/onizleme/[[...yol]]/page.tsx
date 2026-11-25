@@ -99,7 +99,7 @@ export default function PortalOnizlemePage({ params }: { params: { yol?: string[
   const Sayfa = SAYFALAR[yol]
   return (
     <PortalOnizlemeProvider data={paket} basePath={TABAN}>
-      <PortalShell basePath={TABAN} ekNav={paket.portal.nav} hastaAdi={paket.hasta.adSoyad}>
+      <PortalShell basePath={TABAN} ekNav={paket.portal.nav} hastaAdi={paket.hasta.adSoyad} onSekizAlti={paket.hasta.onSekizAlti === true}>
         <div data-alan="portal-onizleme" data-ornek="evet" data-brans={paket.brans.anahtar} role="note" style={{ margin: '0 16px 12px', padding: '10px 12px', borderRadius: 10, background: '#FFF7E6', border: '1px solid #E8C98A', color: '#5b4300', fontSize: 13, lineHeight: 1.45 }}>
           <b>Örnek veri — önizleme.</b> {paket.brans.etiket} hastanızın Sağlığım sayfası böyle görünür. Gerçek hasta bilgisi yoktur; mesaj, randevu ve formlar burada çalışmaz.
         </div>

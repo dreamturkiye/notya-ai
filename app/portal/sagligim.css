@@ -2014,3 +2014,66 @@ body:has(.sagligim-root) {
   .sg-nav-link { padding: 0 13px; min-height: 40px; }
   .sg-nav.is-sag-tasma, .sg-nav.is-sol-tasma { -webkit-mask-image: none; mask-image: none; }
 }
+
+
+/* ── SAGLIGIM-ZEMIN (Kaan, 2026-11-25: "The background of the full page should have a nice faded image … It is still very
+   empty in the background") ─────────────────────────────────────────────────────────────────────────────────────────
+   A soft, faded photo behind the whole page, in the doctor dashboard's manner: fixed, behind the content; on a wide
+   screen strongest on the right ~55 % and melting into cream under the reading column; on a phone in the top part
+   (behind the header and the greeting) and gone by mid-screen. Which photo: lib/portal/zemin.ts (one map, every branş,
+   every country). Drawn by PortalKabukGorunumu only after hydration and never under Save-Data; no photo under
+   prefers-reduced-data or high contrast; no fade under prefers-reduced-motion (and it scrolls with the page there).
+   Text never sits on the photo at a strength that matters: the cream wash keeps body text at the same contrast as the
+   plain page (WCAG AA unchanged). The layer is z-index -1 INSIDE .sg-shell (its own stacking context): under every card
+   and word, above the page colour. */
+.sagligim-root { position: relative; }
+.sg-shell { position: relative; z-index: 1; }
+.sg-zemin { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; contain: strict; }
+.sg-zemin-foto {
+  position: absolute; left: 0; right: 0; top: 0; height: min(78vh, 680px);
+  background-repeat: no-repeat; background-size: cover;
+  background-image: var(--zm-tel-y); background-image: var(--zm-tel); background-position: var(--zm-odak-tel);
+  opacity: 0.58;
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, rgba(0, 0, 0, 0.82) 34%, rgba(0, 0, 0, 0.28) 68%, transparent 100%);
+  mask-image: linear-gradient(180deg, #000 0%, rgba(0, 0, 0, 0.82) 34%, rgba(0, 0, 0, 0.28) 68%, transparent 100%);
+}
+/* cream wash over the photo: the photo reads as a memory of a scene, never as a picture to look at */
+.sg-zemin::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(180deg, rgba(250, 246, 238, 0.30) 0%, rgba(244, 238, 227, 0.42) 40%, rgba(244, 238, 227, 0) 80%);
+}
+@media (min-width: 900px) {
+  .sg-zemin-foto {
+    left: auto; right: 0; top: 0; bottom: 0; height: auto; width: 58vw;
+    background-image: var(--zm-mas-y); background-image: var(--zm-mas); background-position: var(--zm-odak-mas);
+    opacity: 0.46;
+    -webkit-mask-image: linear-gradient(90deg, transparent 0%, rgba(0, 0, 0, 0.45) 24%, #000 52%), linear-gradient(180deg, #000 70%, rgba(0, 0, 0, 0.55) 100%);
+    -webkit-mask-composite: source-in;
+    mask-image: linear-gradient(90deg, transparent 0%, rgba(0, 0, 0, 0.45) 24%, #000 52%), linear-gradient(180deg, #000 70%, rgba(0, 0, 0, 0.55) 100%);
+    mask-composite: intersect;
+  }
+  .sg-zemin::after { background: linear-gradient(90deg, rgba(244, 238, 227, 0.55) 0%, rgba(244, 238, 227, 0.18) 55%, rgba(244, 238, 227, 0.08) 100%); }
+}
+@supports not (background-image: image-set(url('x.avif') type('image/avif'))) {
+  .sg-zemin-foto { background-image: var(--zm-tel-y); }
+  @media (min-width: 900px) { .sg-zemin-foto { background-image: var(--zm-mas-y); } }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .sg-zemin-foto.is-yeni { animation: sgZeminGir 700ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+  @keyframes sgZeminGir { from { opacity: 0; } }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sg-zemin { position: absolute; bottom: auto; height: 100vh; }
+}
+@media (prefers-reduced-data: reduce) { .sg-zemin { display: none; } }
+.sagligim-root.sg-kontrast .sg-zemin { display: none; }
+@media print { .sg-zemin { display: none; } }
+.sg-zemin-foto[data-zemin='hero'] { --zm-tel: image-set(url('/portal/zemin/hero-telefon.avif') type('image/avif'), url('/portal/zemin/hero-telefon.webp') type('image/webp')); --zm-tel-y: url('/portal/zemin/hero-telefon.webp'); --zm-mas: image-set(url('/portal/zemin/hero-masaustu.avif') type('image/avif'), url('/portal/zemin/hero-masaustu.webp') type('image/webp')); --zm-mas-y: url('/portal/zemin/hero-masaustu.webp'); --zm-odak-tel: 50% 30%; --zm-odak-mas: 62% 40%; }
+.sg-zemin-foto[data-zemin='calm-empty'] { --zm-tel: image-set(url('/portal/zemin/calm-empty-telefon.avif') type('image/avif'), url('/portal/zemin/calm-empty-telefon.webp') type('image/webp')); --zm-tel-y: url('/portal/zemin/calm-empty-telefon.webp'); --zm-mas: image-set(url('/portal/zemin/calm-empty-masaustu.avif') type('image/avif'), url('/portal/zemin/calm-empty-masaustu.webp') type('image/webp')); --zm-mas-y: url('/portal/zemin/calm-empty-masaustu.webp'); --zm-odak-tel: 50% 40%; --zm-odak-mas: 70% 50%; }
+.sg-zemin-foto[data-zemin='empty-cool'] { --zm-tel: image-set(url('/portal/zemin/empty-cool-telefon.avif') type('image/avif'), url('/portal/zemin/empty-cool-telefon.webp') type('image/webp')); --zm-tel-y: url('/portal/zemin/empty-cool-telefon.webp'); --zm-mas: image-set(url('/portal/zemin/empty-cool-masaustu.avif') type('image/avif'), url('/portal/zemin/empty-cool-masaustu.webp') type('image/webp')); --zm-mas-y: url('/portal/zemin/empty-cool-masaustu.webp'); --zm-odak-tel: 50% 35%; --zm-odak-mas: 62% 40%; }
+.sg-zemin-foto[data-zemin='ilaclar-care'] { --zm-tel: image-set(url('/portal/zemin/ilaclar-care-telefon.avif') type('image/avif'), url('/portal/zemin/ilaclar-care-telefon.webp') type('image/webp')); --zm-tel-y: url('/portal/zemin/ilaclar-care-telefon.webp'); --zm-mas: image-set(url('/portal/zemin/ilaclar-care-masaustu.avif') type('image/avif'), url('/portal/zemin/ilaclar-care-masaustu.webp') type('image/webp')); --zm-mas-y: url('/portal/zemin/ilaclar-care-masaustu.webp'); --zm-odak-tel: 50% 55%; --zm-odak-mas: 45% 60%; }
+.sg-zemin-foto[data-zemin='sonuclar-care'] { --zm-tel: image-set(url('/portal/zemin/sonuclar-care-telefon.avif') type('image/avif'), url('/portal/zemin/sonuclar-care-telefon.webp') type('image/webp')); --zm-tel-y: url('/portal/zemin/sonuclar-care-telefon.webp'); --zm-mas: image-set(url('/portal/zemin/sonuclar-care-masaustu.avif') type('image/avif'), url('/portal/zemin/sonuclar-care-masaustu.webp') type('image/webp')); --zm-mas-y: url('/portal/zemin/sonuclar-care-masaustu.webp'); --zm-odak-tel: 50% 45%; --zm-odak-mas: 50% 50%; }
+.sg-zemin-foto[data-zemin='wellness-cycle'] { --zm-tel: image-set(url('/portal/zemin/wellness-cycle-telefon.avif') type('image/avif'), url('/portal/zemin/wellness-cycle-telefon.webp') type('image/webp')); --zm-tel-y: url('/portal/zemin/wellness-cycle-telefon.webp'); --zm-mas: image-set(url('/portal/zemin/wellness-cycle-masaustu.avif') type('image/avif'), url('/portal/zemin/wellness-cycle-masaustu.webp') type('image/webp')); --zm-mas-y: url('/portal/zemin/wellness-cycle-masaustu.webp'); --zm-odak-tel: 50% 40%; --zm-odak-mas: 70% 40%; }
+.sg-zemin-foto[data-zemin='hero-atelier'] { --zm-tel: image-set(url('/portal/zemin/hero-atelier-telefon.avif') type('image/avif'), url('/portal/zemin/hero-atelier-telefon.webp') type('image/webp')); --zm-tel-y: url('/portal/zemin/hero-atelier-telefon.webp'); --zm-mas: image-set(url('/portal/zemin/hero-atelier-masaustu.avif') type('image/avif'), url('/portal/zemin/hero-atelier-masaustu.webp') type('image/webp')); --zm-mas-y: url('/portal/zemin/hero-atelier-masaustu.webp'); --zm-odak-tel: 50% 35%; --zm-odak-mas: 55% 50%; }
+.sg-zemin-foto[data-zemin='wellness-kitchen'] { --zm-tel: image-set(url('/portal/zemin/wellness-kitchen-telefon.avif') type('image/avif'), url('/portal/zemin/wellness-kitchen-telefon.webp') type('image/webp')); --zm-tel-y: url('/portal/zemin/wellness-kitchen-telefon.webp'); --zm-mas: image-set(url('/portal/zemin/wellness-kitchen-masaustu.avif') type('image/avif'), url('/portal/zemin/wellness-kitchen-masaustu.webp') type('image/webp')); --zm-mas-y: url('/portal/zemin/wellness-kitchen-masaustu.webp'); --zm-odak-tel: 50% 25%; --zm-odak-mas: 72% 30%; }
+.sg-zemin-foto[data-zemin='baby-health'] { --zm-tel: image-set(url('/portal/zemin/baby-health-telefon.avif') type('image/avif'), url('/portal/zemin/baby-health-telefon.webp') type('image/webp')); --zm-tel-y: url('/portal/zemin/baby-health-telefon.webp'); --zm-mas: image-set(url('/portal/zemin/baby-health-masaustu.avif') type('image/avif'), url('/portal/zemin/baby-health-masaustu.webp') type('image/webp')); --zm-mas-y: url('/portal/zemin/baby-health-masaustu.webp'); --zm-odak-tel: 50% 35%; --zm-odak-mas: 60% 40%; }

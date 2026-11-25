@@ -579,3 +579,7 @@
 .sagligim-root.sg-kontrast .sgk-gorsel { opacity: 0.55; }
 @media print { .sgk { background: none; } .sgk-gorsel { display: none; } }
 .sgk-fide { display: block; flex-shrink: 0; }
+/* SAGLIGIM-ZEMIN — with the page photo behind it, the morning band drops its own sage wash (two skies would fight) and
+   keeps only the warm sun glow; the drawing stays on top of the photo. Without the photo (server render, Save-Data,
+   reduced data) the band keeps its full wash. */
+.sg-shell:has(.sg-zemin) .sgk { background: radial-gradient(120% 90% at 88% 0%, rgba(246, 220, 170, 0.30), transparent 60%); }

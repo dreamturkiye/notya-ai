@@ -4,6 +4,7 @@ import { PortalKabukGorunumu } from '@/components/doktor/portal/PortalKabukGorun
 import { usePathname } from 'next/navigation'
 import type { PortalNavOge } from '@/lib/portal/types'
 import { portalNavSirasi } from '@/lib/portal/navSirasi'
+import { portalZemini } from '@/lib/portal/zemin'
 
 /**
  * Core nav — identical for every specialty; chapter extras come from the registry (bundle.portal.nav).
@@ -15,6 +16,7 @@ export function PortalShell({
   ekNav = [],
   randevuAcik = false,
   hastaAdi = null,
+  onSekizAlti = false,
   children,
 }: {
   basePath: string
@@ -24,6 +26,8 @@ export function PortalShell({
   ekNav?: PortalNavOge[]
   /** NOTYA-RANDEVU-V2 — the doctor's 'Hasta Portalı Randevu' is ON: Randevu sits right after the home. */
   randevuAcik?: boolean
+  /** SAGLIGIM-ZEMIN — the bundle's under-18 flag: a child photo is only ever drawn for a child on a pediatric page. */
+  onSekizAlti?: boolean
   children: React.ReactNode
 }) {
   const pathname = usePathname() || ''
@@ -45,6 +49,7 @@ export function PortalShell({
       hastaAlani="Hasta alanı"
       navEtiketi="Sağlığım bölümleri"
       nav={nav}
+      zemin={portalZemini(nav.find((o) => o.aktif)?.key, { onSekizAlti })}
       altBilgi={
         <>
         <p style={{ margin: '0 0 10px' }}>

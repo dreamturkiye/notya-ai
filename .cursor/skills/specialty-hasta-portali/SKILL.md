@@ -55,6 +55,17 @@ functionality of the old hasta portalı … and build the new stuff over and abo
   actions on all 40 branşlar) and `lib/portal/tabanOnce-rota.test.ts` (booking → doctor's request list → approval;
   portal message → doctor's unread badge + inbox; cross-doctor isolation).
 
+## Background photos — one map, child rule (SAGLIGIM-ZEMIN, Kaan 2026-11-25, standing)
+
+- Every portal page has a soft, faded full-page photo behind it (`PortalKabukGorunumu` layer). Which photo is decided in
+  ONE place, `lib/portal/zemin.ts`, by the PAGE (nav key) — never by branş, never in a page component. Calm, people-free
+  scenes behind dense pages; no face ever behind a page title (crop or blur the photo in `scripts/portal-zemin-uret.cjs`).
+- **Child rule:** a photo with a baby or child is never shown to an adult patient or on an adult branş page — only on the
+  pediatric pages (pediatri / çocuk cerrahisi modules) AND only when `hasta.onSekizAlti === true`; unknown age = adult.
+  Pinned by `lib/portal/zemin.test.ts` (all 40 branşlar).
+- Budget: desktop AVIF ≤ ~120 kB, phone ≤ ~50 kB; the layer is never in the server markup (after hydration, Save-Data /
+  reduced-data aware).
+
 ## Daily health home — "Bugün" (core, HASTA-PORTALI-GUNLUK, Kaan 2026-11-24)
 
 The portal home is the daily health home: doses (Aldım / Atladım / Ertele), one-tap readings, the day rings (BUGUN-V2:
