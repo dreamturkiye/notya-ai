@@ -17,9 +17,11 @@ export interface EvVerisiKarti {
   /** Portal used at all (any reading / dose mark / plan). */
   kullaniyor: boolean
   metrikler: Array<{ anahtar: string; etiket: string; birim: string; noktalar: Array<{ at: string; deger: number; deger2: number | null }>; hafta: { ort: number | null; ort2: number | null; n: number }; onceki: { ort: number | null; ort2: number | null; n: number }; hedefMin: number | null; hedefMax: number | null; hedefMax2: number | null }>
-  uyum: { hafta: ReturnType<typeof uyum>; ay: ReturnType<typeof uyum>; ilaclar: ReturnType<typeof planUyumlari> }
+  /** ilaclar: 14-day figure per plan, plus (display only) its last-7-day figure and one status per day for the 14-day strip. */
+  uyum: { hafta: ReturnType<typeof uyum>; ay: ReturnType<typeof uyum>; ilaclar: Array<ReturnType<typeof planUyumlari>[number] & { hafta: ReturnType<typeof uyum>; gunler: DozGunu[] }> }
   planlar: Array<{ id: string; ad: string; doz: string | null; saatler: string[]; gerektikce: boolean; kaynak: 'hekim' | 'hasta'; kritik: boolean; minAralikSaat: number | null }>
-  uyarilar: Array<{ id: string; duzey: string; metin: string; tarih: string; goruldu: boolean }>
+  /** metrik / kural / deger: display only (the card's status sentence names the metric and the reading that fired). */
+  uyarilar: Array<{ id: string; duzey: string; metin: string; tarih: string; goruldu: boolean; metrik: string; kural: string; deger: number | null; deger2: number | null }>
   acikUyari: number
   esikler: Record<string, unknown>
   varsayilan: Record<string, unknown>
@@ -29,6 +31,9 @@ export interface EvVerisiKarti {
   kontrolOzeti: { id: string; olusturmaAt: string; randevuAt: string | null; ozet: KontrolOzeti; metin: string } | null
   sorular: Array<{ metin: string; tarih: string }>
 }
+
+/** One day of one medicine on the 14-day strip: nothing due · all taken · some taken · none taken. */
+export type DozGunu = 'yok' | 'tam' | 'kismi' | 'alinmadi'
 
 export interface EvVerisiGirdisi {
   simdiMs: number
@@ -73,8 +78,16 @@ export function evVerisiHesapla(g: EvVerisiGirdisi): EvVerisiKarti {
       const e = esikler[a]
       return { anahtar: a, etiket: metrikEtiketi(a), birim: OLCUM_TANIMLARI[a.split(':')[0] as OlcumTipi].birim, noktalar: olcumler.filter((o) => metrikAnahtari(o) === a && o.olcumAt >= d28).map((o) => ({ at: o.olcumAt, deger: o.deger, deger2: o.deger2 })), hafta: p.hafta, onceki: p.onceki, hedefMin: e?.hedefMin ?? null, hedefMax: e?.hedefMax ?? null, hedefMax2: e?.hedefMax2 ?? null }
     }).filter((m) => m.noktalar.length > 0),
-    uyum: { hafta: uyum(planlar, kayitlar, gunEkle(bugun, -6), bugun, simdiMs), ay: uyum(planlar, kayitlar, gunEkle(bugun, -29), bugun, simdiMs), ilaclar: planUyumlari(planlar, kayitlar, gunEkle(bugun, -13), bugun, simdiMs) },
-    uyarilar: uyarilar.map((u) => ({ id: u.id, duzey: u.duzey, metin: u.hekimMetni, tarih: u.olusturmaAt, goruldu: !!u.hekimGorduAt })),
+    uyum: { hafta: uyum(planlar, kayitlar, gunEkle(bugun, -6), bugun, simdiMs), ay: uyum(planlar, kayitlar, gunEkle(bugun, -29), bugun, simdiMs), ilaclar: planUyumlari(planlar, kayitlar, gunEkle(bugun, -13), bugun, simdiMs).map((i) => {
+      const p = planlar.filter((x) => x.id === i.planId)
+      const gunler = Array.from({ length: 14 }, (_, k): DozGunu => {
+        const gun = gunEkle(bugun, k - 13)
+        const u = uyum(p, kayitlar, gun, gun, simdiMs)
+        return !u.beklenen ? 'yok' : u.alinan === u.beklenen ? 'tam' : u.alinan ? 'kismi' : 'alinmadi'
+      })
+      return { ...i, hafta: uyum(p, kayitlar, gunEkle(bugun, -6), bugun, simdiMs), gunler }
+    }) },
+    uyarilar: uyarilar.map((u) => ({ id: u.id, duzey: u.duzey, metin: u.hekimMetni, tarih: u.olusturmaAt, goruldu: !!u.hekimGorduAt, metrik: u.metrik, kural: u.kural, deger: typeof u.veri?.deger === 'number' ? u.veri.deger : null, deger2: typeof u.veri?.deger2 === 'number' ? u.veri.deger2 : null })),
     acikUyari: uyarilar.filter((u) => !u.hekimGorduAt && (u.duzey === 'hekime_bildir' || u.duzey === 'acil')).length,
     kontrolOzeti: g.kontrolOzeti,
     sorular: g.sorular,
