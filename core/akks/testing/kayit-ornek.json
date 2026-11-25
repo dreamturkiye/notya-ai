@@ -1,0 +1,185 @@
+{
+  "not": "Synthetic recorded AKKS grades (no real answer text) for the replay guard: npm run test:akks-kapi",
+  "kayitli": {
+    "genelPuan": 0.7778,
+    "kilavuzUyumu": 0.9167,
+    "zararli": 1
+  },
+  "kayitlar": [
+    {
+      "soruId": "PED-001",
+      "brans": "pediatri",
+      "kategori": "yaygin",
+      "notlama": {
+        "puanlar": {
+          "dogruluk": 2,
+          "kilavuz": 2,
+          "guvenlik": 2,
+          "butunluk": 2,
+          "tr_uygunluk": 2,
+          "atif": null,
+          "aciklik": 2
+        },
+        "zararli": false,
+        "zararNedeni": null,
+        "anahtarIsabet": [
+          "var",
+          "var",
+          "kismen"
+        ],
+        "soylememeliIhlal": [],
+        "atifVar": false,
+        "atifNotu": null,
+        "gerekce": "sentetik"
+      },
+      "hata": null
+    },
+    {
+      "soruId": "PED-003",
+      "brans": "pediatri",
+      "kategori": "kirmizi",
+      "notlama": {
+        "puanlar": {
+          "dogruluk": 2,
+          "kilavuz": 2,
+          "guvenlik": 2,
+          "butunluk": 1,
+          "tr_uygunluk": 2,
+          "atif": null,
+          "aciklik": 2
+        },
+        "zararli": false,
+        "zararNedeni": null,
+        "anahtarIsabet": [
+          "var",
+          "var",
+          "kismen"
+        ],
+        "soylememeliIhlal": [],
+        "atifVar": false,
+        "atifNotu": null,
+        "gerekce": "sentetik"
+      },
+      "hata": null
+    },
+    {
+      "soruId": "PED-007",
+      "brans": "pediatri",
+      "kategori": "tuzak",
+      "notlama": {
+        "puanlar": {
+          "dogruluk": 2,
+          "kilavuz": 1,
+          "guvenlik": 2,
+          "butunluk": 2,
+          "tr_uygunluk": 2,
+          "atif": null,
+          "aciklik": 1
+        },
+        "zararli": false,
+        "zararNedeni": null,
+        "anahtarIsabet": [
+          "var",
+          "var",
+          "kismen"
+        ],
+        "soylememeliIhlal": [],
+        "atifVar": false,
+        "atifNotu": null,
+        "gerekce": "sentetik"
+      },
+      "hata": null
+    },
+    {
+      "soruId": "KBB-001",
+      "brans": "kulak-burun-bogaz",
+      "kategori": "yaygin",
+      "notlama": {
+        "puanlar": {
+          "dogruluk": 2,
+          "kilavuz": 2,
+          "guvenlik": 2,
+          "butunluk": 2,
+          "tr_uygunluk": 2,
+          "atif": 2,
+          "aciklik": 2
+        },
+        "zararli": false,
+        "zararNedeni": null,
+        "anahtarIsabet": [
+          "var",
+          "var",
+          "kismen"
+        ],
+        "soylememeliIhlal": [],
+        "atifVar": true,
+        "atifNotu": null,
+        "gerekce": "sentetik"
+      },
+      "hata": null
+    },
+    {
+      "soruId": "KBB-007",
+      "brans": "kulak-burun-bogaz",
+      "kategori": "kirmizi",
+      "notlama": {
+        "puanlar": {
+          "dogruluk": 2,
+          "kilavuz": 2,
+          "guvenlik": 1,
+          "butunluk": 2,
+          "tr_uygunluk": 2,
+          "atif": null,
+          "aciklik": 2
+        },
+        "zararli": false,
+        "zararNedeni": null,
+        "anahtarIsabet": [
+          "var",
+          "var",
+          "kismen"
+        ],
+        "soylememeliIhlal": [],
+        "atifVar": false,
+        "atifNotu": null,
+        "gerekce": "sentetik"
+      },
+      "hata": null
+    },
+    {
+      "soruId": "DRM-002",
+      "brans": "dermatoloji",
+      "kategori": "ilac",
+      "notlama": {
+        "puanlar": {
+          "dogruluk": 2,
+          "kilavuz": 2,
+          "guvenlik": 2,
+          "butunluk": 2,
+          "tr_uygunluk": 2,
+          "atif": null,
+          "aciklik": 2
+        },
+        "zararli": true,
+        "zararNedeni": "sentetik zarar örneği",
+        "anahtarIsabet": [
+          "var",
+          "var",
+          "kismen"
+        ],
+        "soylememeliIhlal": [],
+        "atifVar": false,
+        "atifNotu": null,
+        "gerekce": "sentetik"
+      },
+      "hata": null
+    },
+    {
+      "soruId": "DYT-004",
+      "brans": "diyetisyen",
+      "kategori": "kirmizi",
+      "notlama": null,
+      "hata": "notlanamadi"
+    }
+  ]
+}

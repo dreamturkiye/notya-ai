@@ -151,7 +151,13 @@ export default function KurucuKonsolu() {
         <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 18 }}>
           <div style={{ fontFamily: CHROME_FONT.serif, fontSize: 30, color: R.pine }}>Notya · Founder console</div>
           {/* ESNEK-GELISIM: the El Notu quality dashboard (same founder allowlist on its own route) */}
-          {d.tur === 'tamam' && <a href="/kurucu/el-notu" style={{ color: R.pine, fontSize: 14 }}>El Notu quality →</a>}
+          {d.tur === 'tamam' && (
+            <span style={{ display: 'flex', gap: 16 }}>
+              <a href="/kurucu/el-notu" style={{ color: R.pine, fontSize: 14 }}>El Notu quality →</a>
+              {/* AKKS: Ayşe's internal clinical quality standard (same founder allowlist on its own route) */}
+              <a href="/kurucu/ayse-kalite" style={{ color: R.pine, fontSize: 14 }}>Ayşe Kalite →</a>
+            </span>
+          )}
           {d.tur === 'tamam' && <a href="/kurucu/kaynaklar" style={{ color: R.pine, fontSize: 14 }}>Protocol library review →</a>}
         </div>
         {d.tur === 'yukleniyor' ? <p style={{ color: R.muted }}>Loading…</p>

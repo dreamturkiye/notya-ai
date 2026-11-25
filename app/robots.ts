@@ -27,6 +27,7 @@ export default function robots(): MetadataRoute.Robots {
       ],
       disallow: [
         "/api/",
+        "/akks-panel",
         "/dashboard",
         "/session",
         "/portal",

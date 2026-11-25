@@ -12,7 +12,7 @@ import { createHash } from 'node:crypto'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 export const DEGERLENDIRME_BASLIGI = 'x-degerlendirme-anahtari'
-export type DegerlendirmeAmaci = 'el-notu-degerlendir'
+export type DegerlendirmeAmaci = 'el-notu-degerlendir' | 'ayse-kalite-degerlendir'
 export type AnahtarSonucu = 'yok' | 'tamam' | 'gecersiz'
 type Satir = { amac?: unknown; son_kullanma?: unknown; iptal?: unknown }
 

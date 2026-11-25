@@ -22,6 +22,12 @@
     "app/api/cron/protokol-surum/route.ts": {
       "maxDuration": 300
     },
+    "app/api/kurucu/ayse-kalite-degerlendir/route.ts": {
+      "maxDuration": 300
+    },
+    "app/api/cron/ayse-kalite/route.ts": {
+      "maxDuration": 300
+    },
     "app/api/**/*.ts": {
       "maxDuration": 60
     }
@@ -127,6 +133,10 @@
     {
       "path": "/api/cron/protokol-surum",
       "schedule": "17 2 3 * *"
+    },
+    {
+      "path": "/api/cron/ayse-kalite",
+      "schedule": "*/15 1-4 * * *"
     }
   ]
 }

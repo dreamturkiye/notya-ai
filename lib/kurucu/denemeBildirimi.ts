@@ -37,8 +37,13 @@ export function kurucuEpostalari(ham: string | undefined = process.env.FOUNDER_E
 export function bildirimDisiMi(eposta: unknown, kurucular: readonly string[] = kurucuEpostalari()): boolean {
   const e = typeof eposta === 'string' ? eposta.trim().toLowerCase() : ''
   if (!e) return true
+  // AKKS (2026-11-24): the synthetic evaluation doctors (lib/akks/hekim.ts) are never real sign-ups or console doctors.
+  if (e.endsWith(`@${AKKS_EPOSTA_ALANI}`)) return true
   return e === KAAN_TEST_EPOSTASI || kurucular.includes(e)
 }
+
+/** AKKS evaluation doctors' e-mail domain (a subdomain with no mailbox; the accounts never sign in). */
+export const AKKS_EPOSTA_ALANI = 'degerlendirme.notya.io'
 
 export type BildirimUlkesi = 'tr' | 'us' | 'gb' | 'ca' | 'au' | 'nz' | 'uz'
 
