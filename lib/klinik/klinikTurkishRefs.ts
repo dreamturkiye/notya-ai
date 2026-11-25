@@ -16,6 +16,7 @@
  */
 
 import { KLINIK_YENI_SLUGS, klinikSlugCoz, type KlinikYeniSlug } from '@/lib/specialties/klinikDikey'
+import { turkKaynakYigini } from '@/lib/kaynaklar/protokolKutuphanesi'
 
 export const KLINIK_TURKISH_REFS: Record<KlinikYeniSlug, string[]> = {
   'sac-ekimi': [
@@ -153,7 +154,10 @@ export function klinikSecondaryTextbooks(ham: string | null | undefined): string
 }
 
 export function klinikKaynakCumlesi(ham: string | null | undefined): string {
-  const refs = klinikTurkishRefs(ham)
+  // TR-PROTOKOL-KUTUPHANESI (Kaan GO 2026-11-24): the edition-aware registry stack first; the static list only if it has none.
+  const slug = klinikSlugCoz(ham) ?? (String(ham || '').trim().toLocaleLowerCase('tr-TR') === 'dermatoloji' ? LANDING_DERM : null)
+  const kayit = slug ? turkKaynakYigini(slug) : []
+  const refs = kayit.length ? kayit : klinikTurkishRefs(ham)
   return refs.length ? refs.join('; ') : ''
 }
 

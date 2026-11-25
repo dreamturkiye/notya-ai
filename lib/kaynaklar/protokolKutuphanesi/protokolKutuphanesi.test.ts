@@ -134,10 +134,12 @@ describe('citation lock reads the registry', () => {
     assert.equal(konuDisi.bulgular[0].neden, 'konu-uyusmuyor')
   })
 
-  test('the old pass (used by Ayşe’s founder-locked path) is unchanged: it does not touch SB document years', () => {
+  test('the old pass does not touch SB document years; Ayşe (Kaan GO 2026-11-24) locks every branş with the registry pass', () => {
     const t = 'Hipertansiyon Klinik Protokolü 2020 ve TEMD 2024.'
     assert.equal(uydurmaKaynakTemizle(t, L).metin, t)
-    assert.ok(oku('lib/asistan/ayseCevapla.ts').includes('const liste = kdMi ? kdDogrulanmisKaynaklar() : []'), 'locked file untouched')
+    const ayse = oku('lib/asistan/ayseCevapla.ts')
+    assert.ok(ayse.includes('const liste = bransDogrulanmisKaynaklar(kdMi ? "kadin-hastaliklari-dogum" : null)'), 'Ayşe reads the registry list')
+    assert.ok(!ayse.includes('uydurmaKaynakTemizle(') && !ayse.includes('if (kdMi) t ='), 'Ayşe: no KD-only lock left')
   })
 
   test('SOAP lock with the registry adds the hekim-review line', () => {

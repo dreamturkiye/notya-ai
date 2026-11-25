@@ -19,6 +19,7 @@ import {
 } from '@/lib/asistan/specialistsCatalog'
 
 import { KAPSAM_RED } from '@/lib/asistan/kapsamRed'
+import { turkKaynakYigini } from "@/lib/kaynaklar/protokolKutuphanesi"
 export type PersonaId = string
 export type SpecialtyId = SpecialtyKey | 'genel' | 'acil' | 'psikiyatri' | 'dahiliye' | 'noroloji' | 'pediatri' | 'kardiyoloji'
 
@@ -67,7 +68,8 @@ function toPersona(s: SpecialistDef): Persona {
     specialty: [s.specialtyKey],
     personality: s.personality,
     textbooks: s.textbooks,
-    turkishGuidelines: s.turkishGuidelines,
+    // TR-PROTOKOL-KUTUPHANESI (Kaan GO 2026-11-24): the edition-aware registry stack; the old static list only if the registry has none.
+    turkishGuidelines: turkKaynakYigini(s.specialtyKey).length ? turkKaynakYigini(s.specialtyKey) : s.turkishGuidelines,
     clinicalFocus: s.clinicalFocus,
     voiceDescription: `${s.voice.label}`,
     voiceId: s.voice.voiceId,

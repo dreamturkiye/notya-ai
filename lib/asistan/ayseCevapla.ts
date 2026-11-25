@@ -42,8 +42,8 @@ import { ozelBransKilidi } from "@/lib/klinik/ozelPrompt"
 import { SPECIALTIES } from "@/lib/doktor/specialties"
 import { dozKilitliBrans } from "@/lib/doktor/soapUret"
 import { kaynakSayilari, uydurmaDozTemizle } from "@/lib/doktor/dozKilidi"
-import { uydurmaKaynakTemizle } from "@/lib/doktor/kaynakKilidi"
-import { kdDogrulanmisKaynaklar } from "@/specialties/kadin-dogum/protocols/dogrulanmis-kaynaklar"
+import { protokolKaynakTemizle } from "@/lib/doktor/kaynakKilidi"
+import { bransDogrulanmisKaynaklar } from "@/lib/kaynaklar/protokolKutuphanesi"
 import { asistanYanitiCoz, speechOneki } from "@/lib/asistan/yanitCoz"
 import { doktorMetniTemizle } from "@/lib/doktor/klinikMetin"
 import { cozumKonus, hastaninSozunuCoz, hitabiAracSozundenAyikla, mesajdakiAdParcalari, personaIlkAdi, type HastaCozumu } from "@/lib/doktor/hastaCozumleyici"
@@ -1075,7 +1075,8 @@ ${ilacBaglamMetni(drugs[0])}`
   // `let`: a read-tool result is a source too (set below, before the answer that uses it is generated).
   let dozKaynak = kaynakSayilari(...dozKaynakMetinleri)
   const kdMi = kadinDogumMi(hekimBransi, specialty)
-  const liste = kdMi ? kdDogrulanmisKaynaklar() : []
+  // TR-PROTOKOL-KUTUPHANESI (Kaan GO 2026-11-24): every branş is locked against the protocol registry (KD keeps its ACOG/SMFM list on top).
+  const liste = bransDogrulanmisKaynaklar(kdMi ? "kadin-hastaliklari-dogum" : null)
   // NOTYA-AYSE-ALAN-01: the identity placeholders issued in this turn (hasta_alan). References only — the values are
   // read when the final answer is delivered, never before, and never reach a model or the speech provider.
   const alanDefteri = new AlanDefteri()
@@ -1087,7 +1088,7 @@ ${ilacBaglamMetni(drugs[0])}`
     // NOTYA-AYSE-GERI-06: the "ask again with the full chart" marker is never spoken.
     if (sesTamDosyaIstendiMi(c)) return ""
     let t = uydurmaDozTemizle(doktorMetniTemizle(c), dozKaynak).metin
-    if (kdMi) t = uydurmaKaynakTemizle(t, liste).metin
+    t = protokolKaynakTemizle(t, liste).metin
     // A sentence that would carry an identity value is not read: once per turn "… ekranınıza yazdım Hocam".
     t = alanSozu(t)
     if (g.saglayici === 'elevenlabs' && t.trim()) t = elevenMetni(t, { detay: sesDetay })
@@ -1274,12 +1275,13 @@ ${ilacBaglamMetni(drugs[0])}`
   if (dozKilitliBrans(hekimBransi, specialty)) {
     if (dozTemiz.dozlar.length) aiData.speech = `${aiData.speech}\n\n⚠ Doz kontrolü (hekim onayı): mesajda/dosyada geçmeyen doz ifadesi yanıttan çıkarıldı; doz hekim tarafından belirlenir.`
   }
-  // KD-KAYNAK-KILIDI: a kadın doğum answer never carries a guideline number / year from memory (ACOG PB 797, TJOD 2019 …).
-  if (kdMi) {
-    const r = uydurmaKaynakTemizle(String(aiData.speech || ""), liste)
+  // KD-KAYNAK-KILIDI → TR-PROTOKOL-KUTUPHANESI: no answer, in any branş, carries a guideline number / year from memory
+  // (ACOG PB 797, TJOD 2019, TEMD 2024 …) unless the registry confirms it for that topic.
+  {
+    const r = protokolKaynakTemizle(String(aiData.speech || ""), liste)
     if (r.bulgular.length) console.warn("[asistan/chat] kaynak kilidi", r.bulgular)
     aiData.speech = r.bulgular.length ? `${r.metin}\n\n⚠ Kaynak kontrolü (hekim onayı): doğrulanamayan kılavuz numarası / yılı yanıttan çıkarıldı; kaynağı hekim doğrular.` : r.metin
-    if (aiData.proactiveWarning) aiData.proactiveWarning = uydurmaKaynakTemizle(String(aiData.proactiveWarning), liste).metin
+    if (aiData.proactiveWarning) aiData.proactiveWarning = protokolKaynakTemizle(String(aiData.proactiveWarning), liste).metin
   }
   // NOTYA-SES-AKTIF-HASTA-01: no chart this turn → the model may not claim one is open.
   if (!cozulenHasta && !currentPatient && /dosya\w*\s+(açık|açtım|açıyorum|açıldı|önümde|hazır)/iu.test(String(aiData.speech || ""))) {

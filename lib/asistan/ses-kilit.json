@@ -1,6 +1,6 @@
 {
   "kural": ".cursor/rules/ses-omurga-kilidi.mdc",
-  "onay": "Kaan-onay: 2026-11-24 ESNEK-A-EVAL revert of goruntu-inceleme reasoning effort high (lib/ai/modeller.ts back to cd273e7c; measured same day under Kaan GO 2026-11-24 16:29 EST: no accuracy gain, image reads ~3x slower, timeouts to Sonnet; the GO's keep-only-if-it-helps rule)",
+  "onay": "Kaan-onay: 2026-11-24 GO 1+2 (19:31 EST) — ayseCevapla.ts: citation lock for every branş against the protocol registry (bransDogrulanmisKaynaklar + protokolKaynakTemizle); persona/Özel Branş prompt stacks read turkKaynakYigini",
   "guncelleme": "2026-11-24",
   "dosyalar": {
     ".cursor/rules/ses-omurga-kilidi.mdc": "fa7dcef64483f66ea83cebd1b9b6286bfccd5b16ccabc611366ffcc257ef80fa",
@@ -9,7 +9,7 @@
     "app/api/asistan/signed-url/route.ts": "63706277a766f49d907e07460f6641fee88e3996ef91176bee106c1febe94ca5",
     "components/asistan/AsistanOturumContext.tsx": "ebf5a1630a2acfb2f21a7ea6582fb13b3757d7b47834cd3fd9c5e70b89586903",
     "lib/ai/modeller.ts": "f6f8c7b2e7d1224fd3dd829f425b2fdf1cf7e00bbd5e2b1d353ac372cf109a9c",
-    "lib/asistan/ayseCevapla.ts": "7367e5a3a6ed9aed8b2d3b19f07feff1453b1a8eec4f76feeddd3b12a4373917",
+    "lib/asistan/ayseCevapla.ts": "e3571841c3bbd88a7699e2b98c22bb14c23751e44d1715d648e208ce9d4c2412",
     "lib/asistan/duraklama.ts": "a799f5be7a0b21e684bc21a33c53d0e5f5fc7ec125ac725fe56ac2c04cdc17bd",
     "lib/asistan/elevenKapi.ts": "982862e089985f755a5eb2e33380121fdefba977f5a1b1f18dec4d220a22856e",
     "lib/asistan/elevenMetni.ts": "5cc18820401c98df7fe4603f423f5cdd2296e79cf1999a49ec252e33ebbde3ca",
