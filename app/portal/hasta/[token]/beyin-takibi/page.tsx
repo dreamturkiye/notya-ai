@@ -12,7 +12,7 @@ export default function HastaBeyinTakibiPage() {
     return (
       <div className="sg-fade">
         <SectionHeader title="Beyin Cerrahisi takibi" subtitle="Bu bölüm beyin cerrahisi takibinizde açılır." />
-        <Link href={basePath} className="sg-back-link" style={{ margin: '0 20px' }}>← Özet</Link>
+        <Link href={basePath} className="sg-back-link" style={{ margin: '0 20px' }}>← Bugün</Link>
       </div>
     )
   }

@@ -203,7 +203,14 @@ export interface PortalBundle {
    * PORTAL-HASTA-ADI — whose page this is (çekirdek; her branş). Name ONLY — no T.C., doğum tarihi or iletişim.
    * Filled after requirePortalUnlock; null when the record has no name (UI then shows nothing).
    */
-  hasta: { adSoyad: string | null }
+  hasta: {
+    adSoyad: string | null
+    /**
+     * PORTAL-REGRESYON-2026-11-25 — true when the patient is under 18 (VELI-YASAL-ONAM: veli wording follows AGE, every
+     * branş): the parent reads the page, so Bugün never greets the child by name. A flag only — the DOB never leaves.
+     */
+    onSekizAlti?: boolean
+  }
   /** SAGLIGIM-PORTAL-REGISTRY — attached specialty modules + their extra nav (lib/portal/moduller.ts). */
   portal: { moduller: PortalModulId[]; nav: PortalNavOge[] }
   // Specialty slices — each is null unless its module attached (never "just in case").

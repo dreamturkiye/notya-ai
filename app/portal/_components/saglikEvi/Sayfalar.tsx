@@ -9,16 +9,20 @@ import { usePortalLive } from '../PortalLiveProvider'
 import { GunlukKapsayici, useGunluk } from './GunlukProvider'
 import { SAGLIK_EVI_SOZLERI as S } from '@/lib/saglikEvi/sozler'
 import { formatTrDate } from '@/components/doktor/portal/ui'
-import { BugunGorunumu, type BugunKoprusu } from '@/components/doktor/portal/saglikEvi/BugunGorunumu'
+import { BugunGorunumu, BugunKopruYedek, type BugunBolumu, type BugunKoprusu } from '@/components/doktor/portal/saglikEvi/BugunGorunumu'
+import { doktorBasHarfleri } from '@/lib/doktor/avatar'
+import { modulIpucu } from '@/lib/portal/modulIpucu'
 import { GunlukKayitGorunumu } from '@/components/doktor/portal/saglikEvi/GunlukKayitGorunumu'
 import { DozTakvimiGorunumu } from '@/components/doktor/portal/saglikEvi/DozTakvimiGorunumu'
 import { KarneGorunumu } from '@/components/doktor/portal/saglikEvi/KarneGorunumu'
 import { TercihlerGorunumu } from '@/components/doktor/portal/saglikEvi/TercihlerGorunumu'
 
-function Durumlu({ children }: { children: (d: NonNullable<ReturnType<typeof useGunluk>['durum']>) => ReactNode }) {
+function Durumlu({ children, yedek }: { children: (d: NonNullable<ReturnType<typeof useGunluk>['durum']>) => ReactNode; yedek?: (hata: string) => ReactNode }) {
   const g = useGunluk()
+  // Bugün: a failed daily-state load never leaves the home blank — the doctor bridge stays (PORTAL-REGRESYON-2026-11-25).
+  if (g.hata && !g.durum && yedek) return <>{yedek(g.hata)}</>
   if (g.hata && !g.durum) return <div className="sge"><p className="sge-not" style={{ padding: '40px 0', textAlign: 'center' }} role="alert">{g.hata}</p></div>
-  if (!g.durum) return <div className="sge" aria-busy="true"><p className="sge-not" style={{ padding: '40px 0', textAlign: 'center' }}>Bugününüz hazırlanıyor…</p></div>
+  if (!g.durum) return <div className="sge" aria-busy="true"><p className="sge-not" style={{ padding: '40px 0', textAlign: 'center' }}>{S.yukleniyor}</p></div>
   return <>{children(g.durum)}</>
 }
 
@@ -38,14 +42,43 @@ function useKopru(): BugunKoprusu {
     dozHref: `${basePath}/doz-takvimi`,
     tercihHref: `${basePath}/tercihler`,
     kvkkHref: '/kvkk',
+    // PORTAL-REGRESYON-2026-11-25 — the earlier Özet home's doctor card, 48 h alert, shortcuts and recent items.
+    hekim: data.hekim ? {
+      ad: data.hekim.ad,
+      altSatir: [data.hekim.brans, data.hekim.klinik].filter(Boolean).join(' · '),
+      adres: data.hekim.adres, telefon: data.hekim.telefon, telefonHref: data.hekim.telefonHref, avatarUrl: data.hekim.avatarUrl,
+      harfler: doktorBasHarfleri(data.hekim.ad),
+    } : null,
+    muayeneUyari48s: data.summary.muayeneUyari48s || null,
+    bolumler: bolumler(data, basePath),
+    aktiviteler: (data.summary.sonAktivite || []).map((a) => ({ id: a.id, baslik: a.baslik, tarih: formatTrDate(a.tarih, true), href: a.href ? `${basePath}/${a.href}` : undefined })),
+    veli: !!data.hasta?.onSekizAlti,
   }
+}
+
+/**
+ * Bölümlerim: every attached chapter module (registry nav, never hardcoded per branş), then the core record sections.
+ * Reads bundle.portal directly (same as portalModulAktif) so the registry never enters the patient's client bundle.
+ */
+function bolumler(data: ReturnType<typeof usePortalLive>['data'], basePath: string): BugunBolumu[] {
+  const moduller = (data.portal?.nav || []).map((n) => ({ anahtar: n.key, ad: n.label, alt: modulIpucu(n.key), href: `${basePath}${n.path}`, modul: true }))
+  return [
+    ...moduller,
+    { anahtar: 'ilaclar', ad: S.bolumIlaclar, alt: S.bolumIlaclarAlt(data.summary.aktifIlac || 0), href: `${basePath}/ilaclar` },
+    { anahtar: 'gecmis', ad: S.bolumOyku, alt: S.bolumOykuAlt, href: `${basePath}/gecmis` },
+    { anahtar: 'takip', ad: S.bolumTakip, alt: data.portal?.moduller.includes('buyume') && data.hedefBoy ? S.bolumTakipBuyumeAlt : S.bolumTakipAlt, href: `${basePath}/takip` },
+  ]
 }
 
 function Bugun() {
   const { data } = usePortalLive()
   const g = useGunluk()
   const kopru = useKopru()
-  return <Durumlu>{(d) => <BugunGorunumu s={S} durum={d} eylemler={g.eylemler} kopru={kopru} hastaAdi={data.hasta?.adSoyad || null} />}</Durumlu>
+  return (
+    <Durumlu yedek={() => <BugunKopruYedek s={S} kopru={kopru} durumMetni={S.gunlukYuklenemedi} hata />}>
+      {(d) => <BugunGorunumu s={S} durum={d} eylemler={g.eylemler} kopru={kopru} hastaAdi={data.hasta?.adSoyad || null} />}
+    </Durumlu>
+  )
 }
 function Gunluk() { const g = useGunluk(); return <Durumlu>{(d) => <GunlukKayitGorunumu s={S} durum={d} eylemler={g.eylemler} />}</Durumlu> }
 function Doz() { const g = useGunluk(); return <Durumlu>{(d) => <DozTakvimiGorunumu s={S} durum={d} eylemler={g.eylemler} />}</Durumlu> }

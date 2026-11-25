@@ -33,24 +33,34 @@ describe('PORTAL-HASTA-ADI hasta adı', () => {
     assert.deepEqual(SAGLIGIM_DEMO.hasta, { adSoyad: 'Demo Hasta' })
   })
 
-  it('route fills hasta only after requirePortalUnlock, scoped to token doctor, name only', () => {
+  it('route fills hasta only after requirePortalUnlock, scoped to token doctor, name + under-18 flag only', () => {
     const src = oku(ROTA)
     const kilit = src.indexOf('if (locked) return locked')
-    const atama = src.indexOf('bundle.hasta = { adSoyad: hastaAdSoyad(coz(hastaRow?.name_encrypted)) }')
+    const atama = src.indexOf('bundle.hasta = { adSoyad: hastaAdSoyad(coz(hastaRow?.name_encrypted)), onSekizAlti: veliOnamGerekliMi(dogumIso) }')
     assert.ok(kilit > 0 && atama > kilit, 'hasta adı PIN kontrolünden sonra atanmalı')
     assert.match(src, /from\('patients'\)\.select\('name_encrypted, [^']*'\)\.eq\('id', patientId\)\.eq\('doctor_id', doctorId\)/)
-    // only adSoyad on bundle.hasta — no T.C., doğum tarihi or iletişim
+    // only adSoyad + the boolean onSekizAlti on bundle.hasta — no T.C., doğum tarihi or iletişim
     assert.equal((src.match(/bundle\.hasta\s*=/g) || []).length, 1)
     assert.doesNotMatch(src, /bundle\.hasta\.\w+\s*=/)
   })
 
-  it('UI: hero identity + header name, both hidden when null; no greeting', () => {
-    const hero = oku('app/portal/_components/HomeHero.tsx')
-    assert.match(hero, /\{hastaAdi \? \(/)
-    assert.match(hero, /sg-hero-hasta-etiket">Hasta</)
-    assert.doesNotMatch(hero, /Merhaba/)
-    const shell = oku('app/portal/_components/PortalShell.tsx')
-    assert.match(shell, /\{hastaAdi \? \(/)
+  // PORTAL-REGRESYON-2026-11-25: the live home is Bugün (HASTA-PORTALI-GUNLUK); HomeHero is now only the göz / KBB demo
+  // home, drawn through the shared PortalOzetGorunumu since 9fa006b3 — so the identity checks follow the real screens.
+  it('UI: header name on every page; Bugün greets an adult by first name, never a minor (identity line instead)', () => {
+    const ozet = oku('components/doktor/portal/PortalOzetGorunumu.tsx')
+    assert.match(ozet, /\{hastaAdi \? \(/)
+    assert.match(ozet, /sg-hero-hasta-etiket/)
+    assert.doesNotMatch(ozet, /Merhaba/)
+    // header name: PortalShell passes it, the shared frame (since 9fa006b3) draws it only when set
+    assert.match(oku('app/portal/_components/PortalShell.tsx'), /hastaAdi=\{hastaAdi\}/)
+    assert.match(oku('components/doktor/portal/PortalKabukGorunumu.tsx'), /\{hastaAdi \? \(/)
+    assert.match(oku('app/portal/hasta/[token]/page.tsx'), /<BugunSayfasi \/>/)
+    const sayfa = oku('app/portal/_components/saglikEvi/Sayfalar.tsx')
+    assert.match(sayfa, /hastaAdi=\{data\.hasta\?\.adSoyad \|\| null\}/)
+    assert.match(sayfa, /veli: !!data\.hasta\?\.onSekizAlti/)
+    const bugun = oku('components/doktor/portal/saglikEvi/BugunGorunumu.tsx')
+    assert.match(bugun, /ad && !kopru\.veli \? `, \$\{ad\}`/)
+    assert.doesNotMatch(bugun, /Merhaba/)
     assert.doesNotMatch(oku('app/portal/_components/PinGate.tsx'), /adSoyad|hastaAdi/)
   })
 })

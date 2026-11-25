@@ -12,7 +12,7 @@ export default function HastaHormonlarimPage() {
     return (
       <div className="sg-fade">
         <SectionHeader title="Hormonlarım" subtitle="Bu bölüm endokrinoloji takibinizde açılır." />
-        <Link href={basePath} className="sg-back-link" style={{ margin: '0 20px' }}>← Özet</Link>
+        <Link href={basePath} className="sg-back-link" style={{ margin: '0 20px' }}>← Bugün</Link>
       </div>
     )
   }

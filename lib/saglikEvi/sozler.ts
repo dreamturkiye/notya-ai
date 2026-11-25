@@ -244,6 +244,26 @@ export const SAGLIK_EVI_SOZLERI = {
   rozetBugun: 'Bugün',
   rozetSiradaki: 'Sıradaki',
   kopruRandevuYok: 'Planlı randevu yok',
+
+  // PORTAL-REGRESYON-2026-11-25 — what the earlier Özet home gave the patient, back inside Bugün.
+  hastaEtiketi: 'Hasta',
+  hekimEtiketi: 'Doktorunuz',
+  hekimAra: 'Ara',
+  hekimBos: 'Muayenehane adresi ve telefonu henüz eklenmemiş.',
+  muayeneYaklasiyor: 'Muayeneniz yaklaşıyor',
+  muayeneYaklasiyorMetin: (ne: string) => `${ne} için randevunuz var. Gelemeyecekseniz lütfen haber verin.`,
+  detay: 'Detay',
+  bolumlerBaslik: 'Bölümlerim',
+  bolumIlaclar: 'İlaçlarım',
+  bolumIlaclarAlt: (n: number) => (n ? `${n} aktif ilaç · reçeteleriniz` : 'Aktif reçeteleriniz'),
+  bolumOyku: 'Öykü',
+  bolumOykuAlt: 'Alerji ve geçmiş',
+  bolumTakip: 'Takip',
+  bolumTakipAlt: 'Yaşamsal bulgular',
+  bolumTakipBuyumeAlt: 'Yaşamsal bulgular · büyüme · hedef boy',
+  aktiviteBaslik: 'Son paylaşılanlar',
+  yukleniyor: 'Bugününüz hazırlanıyor…',
+  gunlukYuklenemedi: 'Bugünkü ilaç ve ölçüm bilgileriniz şu an yüklenemedi. Doktorunuzla ilgili her şey aşağıda.',
 } as const
 
 export type SaglikEviSozleri = typeof SAGLIK_EVI_SOZLERI

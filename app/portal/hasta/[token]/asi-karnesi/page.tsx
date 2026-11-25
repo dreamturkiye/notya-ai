@@ -12,7 +12,7 @@ export default function HastaAsiKarnesiPage() {
     return (
       <div className="sg-fade">
         <SectionHeader title="Aşı Karnesi" subtitle="Doktorunuz aşı kaydı girdiğinde bu bölüm açılır." />
-        <Link href={basePath} className="sg-back-link" style={{ margin: '0 20px' }}>← Özet</Link>
+        <Link href={basePath} className="sg-back-link" style={{ margin: '0 20px' }}>← Bugün</Link>
       </div>
     )
   }

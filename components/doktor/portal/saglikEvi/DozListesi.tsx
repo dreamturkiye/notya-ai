@@ -81,11 +81,12 @@ export function DozListesi({ s, durum, eylemler }: { s: SaglikEviSozleri; durum:
         )
       })}
       {durum.gerektikce.length ? (
-        <div className="sge-doz-grup">
-          <div className="sge-doz-saat" style={{ fontSize: 15 }}>{s.gerektikceBaslik}</div>
+        // PORTAL-REGRESYON-2026-11-25: the "as needed" word gets the full width (it never fit the 62 px time column).
+        <div className="sge-doz-grup sge-doz-grup--gerektikce">
+          <div className="sge-doz-saat">{s.gerektikceBaslik}</div>
           <div>
             {durum.gerektikce.map((g) => (
-              <div key={g.planId} className="sge-dozsatir" style={{ flexWrap: 'wrap' }}>
+              <div key={g.planId} className="sge-dozsatir sge-dozsatir--gerektikce">
                 <div className="sge-dozsatir-metin">
                   <div className="sge-dozsatir-ad">{g.ad}</div>
                   {g.doz ? <div className="sge-dozsatir-doz">{g.doz}</div> : null}

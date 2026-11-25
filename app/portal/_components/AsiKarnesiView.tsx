@@ -95,7 +95,7 @@ export function AsiKarnesiView({ karne, basePath, pdfUrl }: { karne: PortalAsiKa
       <div className="sg-fade">
         <SectionHeader title={ASI_KARNESI_BASLIK} subtitle={ALT_BASLIK} />
         <EmptyState art="gecmis" title="Henüz kayıtlı aşı yok" body="Doktorunuz aşı kaydı girdiğinde burada görünür." />
-        <Link href={basePath} className="sg-back-link" style={{ margin: '0 20px' }}>← Özet</Link>
+        <Link href={basePath} className="sg-back-link" style={{ margin: '0 20px' }}>← Bugün</Link>
       </div>
     )
   }
@@ -106,7 +106,7 @@ export function AsiKarnesiView({ karne, basePath, pdfUrl }: { karne: PortalAsiKa
     <div className="sg-fade asi-karnesi" lang="tr">
       <style>{ASI_KARNESI_YAZDIRMA_CSS}</style>
       <SectionHeader title={ASI_KARNESI_BASLIK} subtitle={ALT_BASLIK} />
-      <Link href={basePath} className="sg-back-link" style={{ margin: '0 20px 12px' }}>← Özet</Link>
+      <Link href={basePath} className="sg-back-link" style={{ margin: '0 20px 12px' }}>← Bugün</Link>
       <Eylemler pdfUrl={pdfUrl} dosyaAdi={asiKarnesiDosyaAdi(karne)} />
 
       {/* ZORUNLU — küçültülmez, gizlenmez; ekranda ve çıktıda görünür. */}

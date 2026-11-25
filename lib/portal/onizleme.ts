@@ -93,7 +93,8 @@ function ornekCekirdek(b: OnizlemeBransi, bugun: string): PortalBundle {
   const ziyaret = `${gunEkle(bugun, -14)}T09:30:00.000Z`
   const kontrol = gunEkle(bugun, 21)
   const hekim = 'Dr. Örnek Hekim'
-  paket.hasta = { adSoyad: 'Örnek Hasta' }
+  // PORTAL-REGRESYON-2026-11-25: a child branş previews a minor's page (veli reads it — no greeting by the child's name)
+  paket.hasta = { adSoyad: 'Örnek Hasta', onSekizAlti: COCUK_BRANSLARI.has(b.anahtar) }
   paket.hekim = { ...paket.hekim, ad: hekim, brans: b.etiket, klinik: 'Örnek Muayenehane' }
   paket.summary = { ...paket.summary, bekleyenMesaj: 1, yaklasanKontrol: tarihYaz(kontrol), sonAktivite: [
     { id: 'o1', tur: 'mesaj', baslik: 'Yeni mesaj: Kontrol randevunuz', tarih: `${gunEkle(bugun, -2)}T08:00:00.000Z`, href: 'mesajlar' },

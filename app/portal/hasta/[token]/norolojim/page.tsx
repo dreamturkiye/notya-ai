@@ -12,7 +12,7 @@ export default function HastaNorolojimPage() {
     return (
       <div className="sg-fade">
         <SectionHeader title="Nörolojimm" subtitle="Bu bölüm nöroloji takibinizde açılır." />
-        <Link href={basePath} className="sg-back-link" style={{ margin: '0 20px' }}>← Özet</Link>
+        <Link href={basePath} className="sg-back-link" style={{ margin: '0 20px' }}>← Bugün</Link>
       </div>
     )
   }

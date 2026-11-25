@@ -9,6 +9,7 @@ import type { GunlukDurum } from '@/lib/saglikEvi/ozet'
 import type { SaglikEviSozleri } from '@/lib/saglikEvi/sozler'
 import type { GunlukEylemleri } from './eylemler'
 import { DozListesi } from './DozListesi'
+import { SaatSecici } from './SaatSecici'
 
 function Halka({ yuzde, etiket }: { yuzde: number | null; etiket: string }) {
   const r = 34, c = 2 * Math.PI * r
@@ -68,17 +69,18 @@ export function DozTakvimiGorunumu({ s, durum, eylemler }: { s: SaglikEviSozleri
           <ul className="sge-satir-liste">
             {aktif.map((p) => (
               <li key={p.id} style={{ display: 'block' }}>
+                {/* PORTAL-REGRESYON-2026-11-25: the text column shrinks and wraps; the edit link never leaves the card. */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'flex-start' }}>
-                  <div>
-                    <b>{p.ad}</b>{p.kaynak === 'hasta' ? <span className="sge-etiket sge-etiket--hasta" style={{ marginLeft: 6 }}>{s.hastaEkledi}</span> : null}{p.kritik ? <span className="sge-etiket sge-etiket--kritik" style={{ marginLeft: 6 }}>{s.kritik}</span> : null}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <b>{p.ad}</b>{p.kaynak === 'hasta' ? <span className="sge-etiket sge-etiket--hasta" style={{ marginLeft: 6, display: 'inline-block' }}>{s.hastaEkledi}</span> : null}{p.kritik ? <span className="sge-etiket sge-etiket--kritik" style={{ marginLeft: 6, display: 'inline-block' }}>{s.kritik}</span> : null}
                     <div className="sge-not">{p.doz || ''}{p.gerektikce ? ` · ${s.gerektikceBaslik}` : ` · ${p.saatler.join(', ')}`}</div>
                   </div>
-                  {!p.gerektikce && duzenle !== p.id ? <button type="button" className="sge-baglanti" onClick={() => { setDuzenle(p.id); setSaatler(p.saatler) }}>{s.saatleriDuzenle}</button> : null}
+                  {!p.gerektikce && duzenle !== p.id ? <button type="button" className="sge-baglanti" style={{ flexShrink: 0 }} onClick={() => { setDuzenle(p.id); setSaatler(p.saatler) }}>{s.saatleriDuzenle}</button> : null}
                 </div>
                 {duzenle === p.id ? (
                   <div>
                     <div className="sge-saat-satir">
-                      {saatler.map((sa, i) => <input key={i} type="time" value={sa} aria-label={`${p.ad} saat ${i + 1}`} onChange={(e) => setSaatler(saatler.map((x, j) => (j === i ? e.target.value : x)))} />)}
+                      {saatler.map((sa, i) => <SaatSecici key={i} deger={sa} etiket={`${p.ad} saat ${i + 1}`} degistir={(v) => setSaatler(saatler.map((x, j) => (j === i ? v : x)))} />)}
                       {saatler.length < 6 ? <button type="button" className="sge-btn" onClick={() => setSaatler([...saatler, '12:00'])}>{s.saatEkle}</button> : null}
                     </div>
                     {p.kaynak === 'hekim' ? <p className="sge-not">{s.doktorYazdi}</p> : null}
@@ -99,7 +101,7 @@ export function DozTakvimiGorunumu({ s, durum, eylemler }: { s: SaglikEviSozleri
               <input className="sge-alan" placeholder={s.ilacAdi} aria-label={s.ilacAdi} value={yeni.ad} onChange={(e) => setYeni({ ...yeni, ad: e.target.value })} maxLength={120} required />
               <input className="sge-alan" placeholder={s.dozMetni} aria-label={s.dozMetni} value={yeni.doz} onChange={(e) => setYeni({ ...yeni, doz: e.target.value })} maxLength={120} />
               <div className="sge-saat-satir" style={{ marginTop: 0 }}>
-                {!yeni.gerektikce ? <input type="time" value={yeni.saat} aria-label="Saat" onChange={(e) => setYeni({ ...yeni, saat: e.target.value })} /> : null}
+                {!yeni.gerektikce ? <SaatSecici deger={yeni.saat} etiket="Saat" degistir={(v) => setYeni({ ...yeni, saat: v })} /> : null}
                 <label style={{ display: 'inline-flex', gap: 8, alignItems: 'center', fontSize: 15 }}><input type="checkbox" checked={yeni.gerektikce} onChange={(e) => setYeni({ ...yeni, gerektikce: e.target.checked })} style={{ width: 22, height: 22 }} />{s.gerektikceSecenek}</label>
               </div>
               <div className="sge-saat-satir" style={{ marginTop: 0 }}><button type="submit" className="sge-btn sge-btn--ana">{s.ekle}</button><button type="button" className="sge-btn" onClick={() => setEkle(false)}>{s.vazgec}</button></div>

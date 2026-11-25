@@ -26,7 +26,7 @@ export function TakibimView({ kronik, basePath }: { kronik: PortalKronik | null;
       <div className="sg-fade">
         <SectionHeader title="Takibim" subtitle="Hedefler, hatırlatmalar ve ev ölçüm özetiniz." />
         <EmptyState art="takip" title="Henüz paylaşılan takip yok" body="Doktorunuz hedef veya kontrol kaydettiğinde burada görünür." />
-        <Link href={basePath} className="sg-back-link" style={{ margin: '0 20px' }}>← Özet</Link>
+        <Link href={basePath} className="sg-back-link" style={{ margin: '0 20px' }}>← Bugün</Link>
       </div>
     )
   }
@@ -44,7 +44,7 @@ export function TakibimView({ kronik, basePath }: { kronik: PortalKronik | null;
         title="Takibim"
         subtitle="Doktorunuzun belirlediği hedefler, hatırlatmalar ve ev ölçüm özeti. Yorum ve plan doktorunuzdadır."
       />
-      <Link href={basePath} className="sg-back-link" style={{ margin: '0 20px 16px' }}>← Özet</Link>
+      <Link href={basePath} className="sg-back-link" style={{ margin: '0 20px 16px' }}>← Bugün</Link>
 
       {bos && (
         <EmptyState art="takip" title="Henüz paylaşılan takip yok" body="Doktorunuz kontrol veya hedef kaydettiğinde burada görünür. Ön anket ile ev ölçülerinizi de iletebilirsiniz." />

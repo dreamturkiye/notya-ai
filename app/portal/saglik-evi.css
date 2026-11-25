@@ -469,3 +469,52 @@
 .sagligim-root.sg-kontrast .sgb-olcum, .sagligim-root.sg-kontrast .sgb-kart, .sagligim-root.sg-kontrast .sgb-siradaki { box-shadow: inset 0 0 0 1px rgba(29, 22, 17, 0.45); }
 .sagligim-root.sg-kontrast .sgb-egilim { box-shadow: inset 0 0 0 1px rgba(29, 22, 17, 0.35); }
 @media (prefers-reduced-motion: reduce) { .sgb *, .sge-sayfa, .sge-perde { animation: none !important; transition: none !important; } }
+
+/* ── PORTAL-REGRESYON-2026-11-25 — the earlier Özet home's pieces, back inside Bugün (same Bugün v2 family) ── */
+.sgb-kimlik { margin: 6px 0 0; font-family: var(--sg-font-display); font-size: 18px; color: var(--sg-ink); }
+.sgb-kimlik small { display: block; font-family: var(--sg-font-ui); font-size: 11.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--sg-muted); font-weight: 600; }
+.sgb-muayene { display: flex; align-items: center; gap: 14px; margin: 14px 0 4px; padding: 14px 16px; border-radius: 20px; background: var(--sgb-kagit); box-shadow: inset 0 0 0 1.5px rgba(164, 91, 62, 0.35), var(--sgb-golge); }
+.sgb-muayene-ikon { width: 42px; height: 42px; border-radius: 14px; display: grid; place-items: center; flex-shrink: 0; background: rgba(164, 91, 62, 0.12); color: var(--sge-uyari); }
+.sgb-muayene-m { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.sgb-muayene-m b { font-size: 16px; font-weight: 650; }
+.sgb-muayene-m span { font-size: 14px; line-height: 1.45; color: var(--sg-muted); }
+.sgb-muayene-git { flex-shrink: 0; font-size: 15px; font-weight: 600; color: #0b6f66; padding: 10px 4px; }
+.sgb-hekim { margin-bottom: 12px; padding: 16px 18px; }
+.sgb-hekim-ust { display: flex; align-items: center; gap: 14px; }
+.sgb-hekim-avatar { width: 56px; height: 56px; min-width: 56px; border-radius: 50%; object-fit: cover; display: block; }
+.sgb-hekim-avatar--harf { display: grid; place-items: center; background: var(--sgb-yuzey); color: var(--sge-hedef); font-family: var(--sg-font-display); font-size: 20px; }
+.sgb-hekim-m { min-width: 0; display: grid; }
+.sgb-hekim-m small { font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; font-weight: 600; color: var(--sg-muted); }
+.sgb-hekim-m b { font-family: var(--sg-font-display); font-size: 21px; font-weight: 500; line-height: 1.2; }
+.sgb-hekim-m span { font-size: 14px; color: var(--sg-muted); margin-top: 2px; }
+.sgb-hekim-alt { margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(58, 44, 34, 0.07); display: grid; gap: 10px; }
+.sgb-hekim-adres { margin: 0; display: flex; gap: 8px; align-items: flex-start; font-size: 14px; line-height: 1.45; color: var(--sg-ink); }
+.sgb-hekim-adres svg, .sgb-hekim-tel svg { flex-shrink: 0; margin-top: 2px; color: var(--sge-hedef); }
+.sgb-hekim-tel { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 14px; border-radius: 14px; background: var(--sgb-yuzey); color: var(--sg-ink); font-size: 15px; font-variant-numeric: tabular-nums; }
+.sgb-hekim-tel em { margin-left: auto; font-style: normal; font-weight: 600; color: #0b6f66; }
+.sgb-aktivite { margin-top: 12px; padding: 14px 18px 8px; }
+.sgb-aktivite-b { margin: 0 0 4px; font-size: 13px; letter-spacing: 0.06em; text-transform: uppercase; font-weight: 600; color: var(--sg-muted); }
+.sgb-aktivite ul { list-style: none; margin: 0; padding: 0; }
+.sgb-aktivite li + li { border-top: 1px solid rgba(58, 44, 34, 0.07); }
+.sgb-aktivite li a, .sgb-aktivite li > span { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 10px 0; color: var(--sg-ink); font-size: 14.5px; }
+.sgb-aktivite li span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sgb-aktivite li small { flex-shrink: 0; font-size: 12.5px; color: var(--sg-muted); font-variant-numeric: tabular-nums; }
+.sgb-bolumler { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.sgb-bolum-k { display: grid; align-content: start; gap: 3px; min-height: 76px; padding: 14px 14px 12px; border-radius: 18px; background: var(--sgb-kagit); box-shadow: var(--sgb-golge); color: var(--sg-ink); }
+.sgb-bolum-k b { font-size: 15.5px; font-weight: 600; }
+.sgb-bolum-k small { font-size: 12.5px; line-height: 1.4; color: var(--sg-muted); }
+.sgb-bolum-k--modul { background: linear-gradient(160deg, #fffdf9 0%, #f3efe4 100%); box-shadow: inset 0 0 0 1px rgba(47, 67, 52, 0.12), var(--sgb-golge); }
+.sgb-bolum-k--modul b { color: var(--sge-hedef); }
+.sgb-bolum-k:active { transform: scale(0.985); }
+@media (min-width: 900px) { .sgb-bolumler { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); } }
+.sagligim-root.sg-kontrast .sgb-bolum-k, .sagligim-root.sg-kontrast .sgb-muayene { box-shadow: inset 0 0 0 1px rgba(29, 22, 17, 0.45); }
+/* 24-hour time pickers (SaatSecici) + the quiet-hours row that wraps under its text on a phone */
+.sge-saat-sec { min-height: 44px; min-width: 88px; border-radius: 12px; border: 1px solid var(--sge-cizgi); padding: 0 10px; font-size: 16px; background: #fff; color: var(--sg-ink); font-variant-numeric: tabular-nums; }
+.sge-anahtar--saat { flex-wrap: wrap; }
+.sge-anahtar--saat .sge-anahtar-metin { flex: 1 1 170px; min-width: 0; }
+.sge-saat-cift { flex-wrap: nowrap; margin-left: auto; }
+/* as-needed medicines: label across the card, the "Verdim / Aldım" button wraps under the text on a narrow phone */
+.sge-doz-grup--gerektikce { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+.sge-doz-grup--gerektikce .sge-doz-saat { font-family: var(--sg-font-ui); font-size: 12.5px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--sg-muted); padding-top: 0; }
+.sge-dozsatir--gerektikce { flex-wrap: wrap; row-gap: 8px; }
+.sge-dozsatir--gerektikce .sge-dozsatir-metin { flex: 1 1 180px; }

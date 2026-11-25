@@ -44,7 +44,21 @@ export interface BugunKoprusu {
   dozHref: string
   tercihHref: string
   kvkkHref: string
+  /**
+   * PORTAL-REGRESYON-2026-11-25 — what the earlier Özet home carried and Bugün must keep (all optional so a country
+   * container that has not passed them yet still renders): the doctor's card, the ≤48 h visit alert, the patient's
+   * sections (chapter modules + İlaçlarım / Öykü / Takip shortcuts), the recently shared items, and whether a parent
+   * reads the page (patient under 18 → no greeting by the child's name).
+   */
+  hekim?: BugunHekimi | null
+  muayeneUyari48s?: string | null
+  bolumler?: BugunBolumu[]
+  aktiviteler?: Array<{ id: string; baslik: string; tarih: string; href?: string }>
+  veli?: boolean
 }
+
+export type BugunHekimi = { ad: string; altSatir: string; adres: string | null; telefon: string | null; telefonHref: string | null; avatarUrl: string | null; harfler: string }
+export type BugunBolumu = { anahtar: string; ad: string; alt: string; href: string; modul?: boolean }
 
 const titret = () => { try { navigator.vibrate?.(12) } catch { /* yok */ } }
 const Ikon = ({ d, boyut = 20 }: { d: string; boyut?: number }) => <svg width={boyut} height={boyut} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d={d} /></svg>
@@ -58,6 +72,109 @@ const Alev = ({ aktif, boyut = 22 }: { aktif: boolean; boyut?: number }) => (
 const Kalkan = ({ boyut = 16, dolu = true }: { boyut?: number; dolu?: boolean }) => (
   <svg width={boyut} height={boyut * 1.08} viewBox="0 0 24 26" aria-hidden><path d="M12 2l9 3.4c0 8-3.4 14-9 18-5.6-4-9-10-9-18z" fill={dolu ? '#2f4334' : 'none'} stroke="#2f4334" strokeWidth={dolu ? 0 : 1.6} /></svg>
 )
+
+/** The doctor's card (PORTAL-HEKIM-01 carried into Bugün): photo or initials, name, branş · klinik, address, one-tap call. */
+export function BugunHekimKarti({ s, hekim }: { s: SaglikEviSozleri; hekim: BugunHekimi }) {
+  return (
+    <article className="sgb-kart sgb-hekim" aria-label={s.hekimEtiketi} data-testid="bugun-hekim-karti">
+      <div className="sgb-hekim-ust">
+        {hekim.avatarUrl
+          // eslint-disable-next-line @next/next/no-img-element -- data URL; next/image does not apply
+          ? <img src={hekim.avatarUrl} alt="" width={56} height={56} className="sgb-hekim-avatar" />
+          : <span className="sgb-hekim-avatar sgb-hekim-avatar--harf" aria-hidden>{hekim.harfler}</span>}
+        <div className="sgb-hekim-m">
+          <small>{s.hekimEtiketi}</small>
+          <b>{hekim.ad}</b>
+          {hekim.altSatir ? <span>{hekim.altSatir}</span> : null}
+        </div>
+      </div>
+      {hekim.adres || hekim.telefon ? (
+        <div className="sgb-hekim-alt">
+          {hekim.adres ? <p className="sgb-hekim-adres"><Ikon d="M12 21s7-4.5 7-11a7 7 0 1 0-14 0c0 6.5 7 11 7 11zM12 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z" boyut={16} /><span>{hekim.adres}</span></p> : null}
+          {hekim.telefon ? (hekim.telefonHref
+            ? <a href={hekim.telefonHref} className="sgb-hekim-tel"><Ikon d="M22 16.9v2a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h2a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.6a2 2 0 0 1-.5 2.1L7.1 9.6a16 16 0 0 0 6 6l1.2-1.2a2 2 0 0 1 2.1-.5c.8.3 1.7.6 2.6.7A2 2 0 0 1 22 16.9z" boyut={16} /><span>{hekim.telefon}</span><em>{s.hekimAra}</em></a>
+            : <p className="sgb-hekim-adres"><span>{hekim.telefon}</span></p>) : null}
+        </div>
+      ) : <p className="sgb-not">{s.hekimBos}</p>}
+    </article>
+  )
+}
+
+/** The ≤48 h visit alert (NOTYA-PORTAL-48S), above the fold. */
+export function BugunMuayeneUyarisi({ s, ne, href }: { s: SaglikEviSozleri; ne: string; href: string }) {
+  return (
+    <section className="sgb-muayene" role="status" data-testid="bugun-muayene-uyari">
+      <span className="sgb-muayene-ikon" aria-hidden><Ikon d="M7 3v3M17 3v3M4 8h16M5 5h14v15H5zM9 13l2 2 4-4" /></span>
+      <div className="sgb-muayene-m"><b>{s.muayeneYaklasiyor}</b><span>{s.muayeneYaklasiyorMetin(ne)}</span></div>
+      <Link href={href} className="sgb-muayene-git">{s.detay}</Link>
+    </section>
+  )
+}
+
+/** Bölümlerim — the attached chapter modules first (Aşı Karnesi, Gözlerim, Derim…), then the core record sections. */
+export function BugunBolumleri({ s, bolumler }: { s: SaglikEviSozleri; bolumler: BugunBolumu[] }) {
+  if (!bolumler.length) return null
+  return (
+    <section className="sgb-bolum" aria-labelledby="sgb-bolumler-b">
+      <div className="sgb-bolum-bas"><h2 id="sgb-bolumler-b">{s.bolumlerBaslik}</h2></div>
+      <nav className="sgb-bolumler" aria-labelledby="sgb-bolumler-b">
+        {bolumler.map((b) => (
+          <Link key={b.anahtar} href={b.href} className={`sgb-bolum-k${b.modul ? ' sgb-bolum-k--modul' : ''}`} data-bolum={b.anahtar}>
+            <b>{b.ad}</b><small>{b.alt}</small>
+          </Link>
+        ))}
+      </nav>
+    </section>
+  )
+}
+
+/** Son paylaşılanlar — the last messages / visits / results the practice shared (bundle.summary.sonAktivite). */
+export function BugunAktiviteleri({ s, aktiviteler }: { s: SaglikEviSozleri; aktiviteler: NonNullable<BugunKoprusu['aktiviteler']> }) {
+  if (!aktiviteler.length) return null
+  return (
+    <div className="sgb-kart sgb-aktivite">
+      <h3 className="sgb-aktivite-b">{s.aktiviteBaslik}</h3>
+      <ul>
+        {aktiviteler.slice(0, 4).map((a) => (
+          <li key={a.id}>{a.href ? <Link href={a.href}><span>{a.baslik}</span><small>{a.tarih}</small></Link> : <><span>{a.baslik}</span><small>{a.tarih}</small></>}</li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
+/** The bridge links to the doctor (randevu, mesajlar, son muayene, sonuçlar). */
+function KopruBaglantilari({ s, kopru }: { s: SaglikEviSozleri; kopru: BugunKoprusu }) {
+  return (
+    <nav className="sgb-kart sgb-kopru" aria-labelledby="sgb-kopru-b">
+      <Link href={kopru.randevuHref} className="sgb-kopru-s"><span className="sgb-kopru-ikon"><Ikon d="M7 3v3M17 3v3M4 8h16M5 5h14v15H5z" /></span><span className="sgb-kopru-m"><b>{s.randevu}</b><small>{kopru.randevu || s.randevuYok}</small></span></Link>
+      <Link href={kopru.mesajHref} className="sgb-kopru-s"><span className="sgb-kopru-ikon"><Ikon d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></span><span className="sgb-kopru-m"><b>{s.mesajlar}</b><small>{kopru.mesajSayisi ? s.mesajYeni(kopru.mesajSayisi) : s.mesajYok}</small></span>{kopru.mesajSayisi ? <span className="sgb-rozetsayi">{kopru.mesajSayisi}</span> : null}</Link>
+      <Link href={kopru.sonZiyaret?.href || kopru.randevuHref} className="sgb-kopru-s"><span className="sgb-kopru-ikon"><Ikon d="M6 3h9l4 4v14H6zM14 3v5h5M9 13h7M9 17h5" /></span><span className="sgb-kopru-m"><b>{s.sonZiyaret}</b><small>{kopru.sonZiyaret ? `${kopru.sonZiyaret.tarih} · ${kopru.sonZiyaret.baslik}` : s.ziyaretYok}</small></span></Link>
+      <Link href={kopru.sonucHref} className="sgb-kopru-s"><span className="sgb-kopru-ikon"><Ikon d="M9 3v6L4 18a2 2 0 0 0 1.8 3h12.4A2 2 0 0 0 20 18l-5-9V3M8 3h8M7 14h10" /></span><span className="sgb-kopru-m"><b>{s.sonuclar}</b><small>{s.sonucSayisi(kopru.sonucSayisi)}</small></span></Link>
+    </nav>
+  )
+}
+
+/**
+ * Bugün without the daily state (still loading, or the daily-home API failed): the patient keeps everything the home
+ * gave before — visit alert, doctor, messages / visits / results, sections, recent items. Never a blank home.
+ */
+export function BugunKopruYedek({ s, kopru, durumMetni, hata }: { s: SaglikEviSozleri; kopru: BugunKoprusu; durumMetni: string; hata?: boolean }) {
+  return (
+    <div className="sge sgb">
+      <p className="sge-not" style={{ padding: '18px 0 6px' }} role={hata ? 'alert' : undefined} aria-busy={hata ? undefined : true}>{durumMetni}</p>
+      {kopru.muayeneUyari48s ? <BugunMuayeneUyarisi s={s} ne={kopru.muayeneUyari48s} href={kopru.randevuHref} /> : null}
+      <section className="sgb-bolum" aria-labelledby="sgb-kopru-b">
+        <div className="sgb-bolum-bas"><h2 id="sgb-kopru-b">{s.kopruBaslik}</h2></div>
+        {kopru.hekim ? <BugunHekimKarti s={s} hekim={kopru.hekim} /> : null}
+        <KopruBaglantilari s={s} kopru={kopru} />
+        <BugunAktiviteleri s={s} aktiviteler={kopru.aktiviteler || []} />
+      </section>
+      <BugunBolumleri s={s} bolumler={kopru.bolumler || []} />
+      <p className="sgb-dip">{s.acilDegil}</p>
+    </div>
+  )
+}
 
 function halkaEtiketleri(s: SaglikEviSozleri, h: GunHalkasi[]): HalkaEtiketi[] {
   return h.map((x) => {
@@ -184,8 +301,9 @@ export function BugunGorunumu({ s, durum, eylemler, kopru, hastaAdi }: { s: Sagl
     <div className="sge sgb">
       <header className="sgb-ust">
         <div>
-          <h1 className="sgb-selam">{s.selam(trDakika(simdiMs))}{ad ? `, ${ad}` : ''}</h1>
+          <h1 className="sgb-selam">{s.selam(trDakika(simdiMs))}{ad && !kopru.veli ? `, ${ad}` : ''}</h1>
           <p className="sgb-tarih">{s.tarihKisa(durum.simdi)}</p>
+          {kopru.veli && hastaAdi ? <p className="sgb-kimlik" data-testid="bugun-hasta-kimlik"><small>{s.hastaEtiketi}</small>{hastaAdi}</p> : null}
         </div>
         {seri.seri > 0 ? <Link href={kopru.karneHref} className={`sgb-seri${seri.bugunAktif ? ' sgb-seri--aktif' : ''}`} aria-label={s.seriAria(seri.seri, seri.kalkan)}>
           <Alev aktif={seri.bugunAktif} />
@@ -193,6 +311,8 @@ export function BugunGorunumu({ s, durum, eylemler, kopru, hastaAdi }: { s: Sagl
           {seri.kalkan ? <span className="sgb-seri-kalkan">{Array.from({ length: seri.kalkan }, (_, i) => <Kalkan key={i} boyut={13} />)}</span> : null}
         </Link> : null}
       </header>
+
+      {kopru.muayeneUyari48s ? <BugunMuayeneUyarisi s={s} ne={kopru.muayeneUyari48s} href={kopru.randevuHref} /> : null}
 
       <div className="sgb-kahraman">
         {halkalar.length ? <GunHalkalari halkalar={halkalar} etiketler={etiketler} aria={s.halkaAria(etiketler.map((e) => `${e.ad} ${e.deger}${e.pay ? `/${e.pay}` : ''}`))} /> : null}
@@ -310,12 +430,9 @@ export function BugunGorunumu({ s, durum, eylemler, kopru, hastaAdi }: { s: Sagl
 
         <section className="sgb-bolum" aria-labelledby="sgb-kopru-b">
           <div className="sgb-bolum-bas"><h2 id="sgb-kopru-b">{s.kopruBaslik}</h2></div>
-          <nav className="sgb-kart sgb-kopru" aria-labelledby="sgb-kopru-b">
-            <Link href={kopru.randevuHref} className="sgb-kopru-s"><span className="sgb-kopru-ikon"><Ikon d="M7 3v3M17 3v3M4 8h16M5 5h14v15H5z" /></span><span className="sgb-kopru-m"><b>{s.randevu}</b><small>{kopru.randevu || s.randevuYok}</small></span></Link>
-            <Link href={kopru.mesajHref} className="sgb-kopru-s"><span className="sgb-kopru-ikon"><Ikon d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></span><span className="sgb-kopru-m"><b>{s.mesajlar}</b><small>{kopru.mesajSayisi ? s.mesajYeni(kopru.mesajSayisi) : s.mesajYok}</small></span>{kopru.mesajSayisi ? <span className="sgb-rozetsayi">{kopru.mesajSayisi}</span> : null}</Link>
-            <Link href={kopru.sonZiyaret?.href || kopru.randevuHref} className="sgb-kopru-s"><span className="sgb-kopru-ikon"><Ikon d="M6 3h9l4 4v14H6zM14 3v5h5M9 13h7M9 17h5" /></span><span className="sgb-kopru-m"><b>{s.sonZiyaret}</b><small>{kopru.sonZiyaret ? `${kopru.sonZiyaret.tarih} · ${kopru.sonZiyaret.baslik}` : s.ziyaretYok}</small></span></Link>
-            <Link href={kopru.sonucHref} className="sgb-kopru-s"><span className="sgb-kopru-ikon"><Ikon d="M9 3v6L4 18a2 2 0 0 0 1.8 3h12.4A2 2 0 0 0 20 18l-5-9V3M8 3h8M7 14h10" /></span><span className="sgb-kopru-m"><b>{s.sonuclar}</b><small>{s.sonucSayisi(kopru.sonucSayisi)}</small></span></Link>
-          </nav>
+          {kopru.hekim ? <BugunHekimKarti s={s} hekim={kopru.hekim} /> : null}
+          <KopruBaglantilari s={s} kopru={kopru} />
+          <BugunAktiviteleri s={s} aktiviteler={kopru.aktiviteler || []} />
           <div className="sgb-kart sgb-soru">
             <label htmlFor="sgb-soru-i" className="sgb-soru-b">{s.soruBaslik}</label>
             {durum.sorular.length ? (
@@ -329,6 +446,8 @@ export function BugunGorunumu({ s, durum, eylemler, kopru, hastaAdi }: { s: Sagl
           </div>
         </section>
       </div>
+
+      <BugunBolumleri s={s} bolumler={kopru.bolumler || []} />
 
       <p className="sgb-dip">{s.acilDegil} <Link href={kopru.tercihHref}>{s.tercihlerBaslik}</Link></p>
 

@@ -106,7 +106,7 @@ export default function PortalOnizlemePage({ params }: { params: { yol?: string[
         {Sayfa ? <Sayfa /> : (
           <div className="sg-fade">
             <SectionHeader title="Önizlemede kapalı" subtitle="Bu bölüm hastanın kendi bağlantısında çalışır; örnek veriyle gösterilmez." />
-            <Link href={TABAN} className="sg-back-link" style={{ margin: '0 20px' }}>← Özet</Link>
+            <Link href={TABAN} className="sg-back-link" style={{ margin: '0 20px' }}>← Bugün</Link>
           </div>
         )}
       </PortalShell>

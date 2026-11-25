@@ -27,7 +27,7 @@ export function DerimView({ deri, basePath }: { deri: PortalDeri | null; basePat
       <div className="sg-fade">
         <SectionHeader title="Derim" subtitle="Kontrol tarihleri, fotoğraf bildirimleri ve tedavi hatırlatmaları." />
         <EmptyState art="takip" title="Henüz paylaşılan deri takibi yok" body="Doktorunuz kayıt paylaştığında burada görünür." />
-        <Link href={basePath} className="sg-back-link" style={{ margin: '0 20px' }}>← Özet</Link>
+        <Link href={basePath} className="sg-back-link" style={{ margin: '0 20px' }}>← Bugün</Link>
       </div>
     )
   }
@@ -46,7 +46,7 @@ export function DerimView({ deri, basePath }: { deri: PortalDeri | null; basePat
         title="Derim"
         subtitle="Kontrol tarihleri, fotoğraf bildirimleri ve tedavi hatırlatmaları. Yorum ve tanı doktorunuzdadır."
       />
-      <Link href={basePath} className="sg-back-link" style={{ margin: '0 20px 16px' }}>← Özet</Link>
+      <Link href={basePath} className="sg-back-link" style={{ margin: '0 20px 16px' }}>← Bugün</Link>
 
       {bos && (
         <EmptyState art="takip" title="Henüz paylaşılan deri takibi yok" body="Doktorunuz kontrol veya fotoğraf kaydettiğinde burada görünür." />

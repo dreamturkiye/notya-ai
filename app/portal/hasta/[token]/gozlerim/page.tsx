@@ -12,7 +12,7 @@ export default function HastaGozlerimPage() {
     return (
       <div className="sg-fade">
         <SectionHeader title="Gözlerim" subtitle="Bu bölüm göz hastalıkları takibinizde açılır." />
-        <Link href={basePath} className="sg-back-link" style={{ margin: '0 20px' }}>← Özet</Link>
+        <Link href={basePath} className="sg-back-link" style={{ margin: '0 20px' }}>← Bugün</Link>
       </div>
     )
   }

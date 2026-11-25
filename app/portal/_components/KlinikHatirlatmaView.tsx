@@ -40,7 +40,7 @@ export function KlinikHatirlatmaView({
       )}
       <p style={{ margin: '0 20px 16px', fontSize: 13, color: '#b45309' }}>{acil}</p>
       <p style={{ margin: '0 20px 16px', fontSize: 12, color: '#64748b' }}>Bu sayfa tanı veya doz yazmaz. Acilde portal mesajı beklenmez — 112.</p>
-      <Link href={basePath} className="sg-back-link" style={{ margin: '0 20px' }}>← Özet</Link>
+      <Link href={basePath} className="sg-back-link" style={{ margin: '0 20px' }}>← Bugün</Link>
     </div>
   )
 }

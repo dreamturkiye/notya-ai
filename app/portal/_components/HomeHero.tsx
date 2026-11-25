@@ -6,7 +6,7 @@ import { SoftPanel, formatTrDate } from './ui'
 import { PortalOzetGorunumu, type PortalOzetSozleri } from '@/components/doktor/portal/PortalOzetGorunumu'
 import { HedefBoyAileKart } from '@/components/hedefBoy/HedefBoyManken'
 import { portalModulAktif } from '@/lib/portal/moduller'
-import { KLINIK_PORTAL_IPUCU } from '@/lib/klinik/klinikPortal'
+import { modulIpucu } from '@/lib/portal/modulIpucu'
 import { doktorBasHarfleri } from '@/lib/doktor/avatar'
 
 const SOZLER: PortalOzetSozleri = {
@@ -26,32 +26,7 @@ const SOZLER: PortalOzetSozleri = {
   aktiviteAc: 'Aç',
 }
 
-const MODUL_IPUCU: Record<string, string> = {
-  'asi-karnesi': 'Kayıtlı aşılar · PDF · yazdır',
-  gozlerim: 'Kontrol, damla ve ölçümleriniz',
-  derim: 'Kontrol, fotoğraf ve hatırlatmalarınız',
-  ruhsagligim: 'Kontrol ve hatırlatmalarınız',
-  kulaklarim: 'Kontrol, test ve işlem hatırlatmalarınız',
-  kalbim: 'Kontrol ve kalp takibi hatırlatmalarınız',
-  akcigerlerim: 'Kontrol, solunum testi ve inhaler hatırlatmalarınız',
-  norolojim: 'Kontrol, form ve ilaç güvenlik hatırlatmalarınız',
-  hormonlarim: 'Kontrol, kan tahlili ve hatırlatmalarınız',
-  romatizmam: 'Kontrol, kan tahlili ve hatırlatmalarınız',
-  tedavim: 'Kontrol, tedavi günü ve hatırlatmalarınız',
-  'beyin-takibi': 'Kontrol, ameliyat sonrası ve görüntü hatırlatmalarınız',
-  tetkiklerim: 'Tetkik durumu ve randevu tarihleriniz',
-  'damar-cerrahisi-takibi': 'Kontrol, greft/yara ve ilaç izlem hatırlatmalarınız',
-  'anestezi-oncesi': 'Anestezi öncesi kontrol ve hatırlatmalarınız',
-  'acil-sonrasi': 'Acil sonrası kontrol ve kısa takip hatırlatmalarınız',
-  ameliyatim: 'Kontrol, ameliyat ve yara hatırlatmalarınız',
-  yaram: 'Kontrol, pansuman ve foto hatırlatmalarınız',
-  sindirimim: 'Kontrol, endoskopi ve hatırlatmalarınız',
-  'enfeksiyon-takibim': 'Kontrol, ilaç süre ve hatırlatmalarınız',
-  urolojim: 'Kontrol ve hatırlatmalarınız',
-  sporum: 'Kontrol ve antrenmana dönüş planınız',
-  'on-anket': 'Muayene öncesi bilgileriniz',
-}
-
+// PORTAL-REGRESYON-2026-11-25: chapter-module hints moved to lib/portal/modulIpucu.ts (shared with Bugün › Bölümlerim).
 export function HomeHero({ basePath, data }: { basePath: string; data: PortalBundle }) {
   const yeniMesaj = (data.summary.bekleyenMesaj || 0) > 0
   const tetkikSayisi = data.summary.tetkikSayisi ?? data.results?.length ?? 0
@@ -92,7 +67,7 @@ export function HomeHero({ basePath, data }: { basePath: string; data: PortalBun
     ...(data.portal?.nav || []).map((n) => ({
       label: n.label,
       href: `${basePath}${n.path}`,
-      hint: MODUL_IPUCU[n.key] || KLINIK_PORTAL_IPUCU[n.key as keyof typeof KLINIK_PORTAL_IPUCU] || 'Uzmanınızın takibi',
+      hint: modulIpucu(n.key),
     })),
   ]
 

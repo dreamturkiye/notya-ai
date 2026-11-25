@@ -13,6 +13,7 @@ import { kisaTarih } from '@/lib/saglikEvi/sozler'
 import type { GunlukEylemleri } from './eylemler'
 import { metrikRengi } from '@/lib/saglikEvi/evVerisiGorunum'
 import type { ModulAnahtari } from '@/lib/saglikEvi/moduller'
+import { SaatSecici } from './SaatSecici'
 
 const LDL_RENK = '#8a6d3b'
 function ModulNokta({ anahtar }: { anahtar: ModulAnahtari }) {
@@ -91,12 +92,13 @@ export function TercihlerGorunumu({ s, durum, eylemler, gorunum, gorunumAyarla }
           <div className="sge-anahtar-metin"><b>{s.hatirlatma}</b><span>{s.hatirlatmaAlt}</span></div>
           <Dugme acik={t.hatirlatmaAcik} etiket={s.hatirlatma} degistir={(v) => eylemler.tercih({ hatirlatmaAcik: v })} />
         </div>
-        <div className="sge-anahtar">
+        {/* PORTAL-REGRESYON-2026-11-25: 24-hour pickers that wrap under the text on a phone (never wider than the card). */}
+        <div className="sge-anahtar sge-anahtar--saat">
           <div className="sge-anahtar-metin"><b>{s.sessizSaat}</b><span>{s.sessizSaatAlt}</span></div>
-          <div className="sge-saat-satir" style={{ marginTop: 0, flexWrap: 'nowrap', alignItems: 'center' }}>
-            <input type="time" value={t.sessizBas} aria-label={`${s.sessizSaat} başlangıç`} onChange={(e) => e.target.value && eylemler.tercih({ sessizBas: e.target.value })} />
+          <div className="sge-saat-satir sge-saat-cift" style={{ marginTop: 0 }}>
+            <SaatSecici deger={t.sessizBas} etiket={`${s.sessizSaat} başlangıç`} degistir={(v) => eylemler.tercih({ sessizBas: v })} />
             <span aria-hidden>–</span>
-            <input type="time" value={t.sessizBit} aria-label={`${s.sessizSaat} bitiş`} onChange={(e) => e.target.value && eylemler.tercih({ sessizBit: e.target.value })} />
+            <SaatSecici deger={t.sessizBit} etiket={`${s.sessizSaat} bitiş`} degistir={(v) => eylemler.tercih({ sessizBit: v })} />
           </div>
         </div>
         {mesaj ? <p className="sge-hata" role="alert">{mesaj}</p> : null}

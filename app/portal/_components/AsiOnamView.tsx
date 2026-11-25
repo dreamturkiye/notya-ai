@@ -146,7 +146,7 @@ export function AsiOnamView({ token, basePath }: { token: string; basePath: stri
           </div>
         </div>
       )}
-      <a href={basePath} className="sg-back-link" style={{ margin: '16px 20px', display: 'inline-block' }}>← Özet</a>
+      <a href={basePath} className="sg-back-link" style={{ margin: '16px 20px', display: 'inline-block' }}>← Bugün</a>
     </div>
   )
 }

@@ -12,7 +12,7 @@ export default function HastaFtrmPage() {
     return (
       <div className="sg-fade">
         <SectionHeader title="FTR'm" subtitle="Bu bölüm fizik tedavi takibinizde açılır." />
-        <Link href={basePath} className="sg-back-link" style={{ margin: '0 20px' }}>← Özet</Link>
+        <Link href={basePath} className="sg-back-link" style={{ margin: '0 20px' }}>← Bugün</Link>
       </div>
     )
   }

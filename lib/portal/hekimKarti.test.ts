@@ -78,17 +78,25 @@ describe('PORTAL-HEKIM-01 hekim kartı', () => {
     assert.equal(ozel.telefon, '0533 111 22 33')
   })
 
-  it('bundle ve demo hekim taşır; Özet hero hekim kartını bağlar', () => {
+  it('bundle ve demo hekim taşır; hekim kartı hastanın ana sayfasında (Bugün) ve Özet görünümünde', () => {
     assert.equal(emptyPortalBundle().hekim.ad, 'Doktorunuz')
     assert.equal(SAGLIGIM_DEMO.hekim.ad, 'Dr. Gökhan Mamur')
     assert.ok(SAGLIGIM_DEMO.hekim.adres)
     assert.ok(SAGLIGIM_DEMO.hekim.telefon)
-    const hero = oku('app/portal/_components/HomeHero.tsx')
-    assert.match(hero, /PORTAL-HEKIM-01/)
-    assert.match(hero, /sg-hekim-kart/)
-    assert.match(hero, /data\.hekim/)
+    // Shared Özet view (göz / KBB demo home, country pages) — drawn through PortalOzetGorunumu since 9fa006b3.
+    const ozet = oku('components/doktor/portal/PortalOzetGorunumu.tsx')
+    assert.match(ozet, /PORTAL-HEKIM-01/)
+    assert.match(ozet, /sg-hekim-kart/)
+    assert.match(oku('app/portal/_components/HomeHero.tsx'), /data\.hekim/)
+    // PORTAL-REGRESYON-2026-11-25: the live home is Bugün — its container passes data.hekim, the view draws the card.
+    const sayfa = oku('app/portal/_components/saglikEvi/Sayfalar.tsx')
+    assert.match(sayfa, /hekim: data\.hekim \?/)
+    assert.match(sayfa, /telefonHref: data\.hekim\.telefonHref/)
+    assert.match(oku('components/doktor/portal/saglikEvi/BugunGorunumu.tsx'), /<BugunHekimKarti s=\{s\} hekim=\{kopru\.hekim\} \/>/)
     const rota = oku('app/api/portal/hasta/[token]/route.ts')
     assert.match(rota, /portalHekimKarti/)
-    assert.match(rota, /bundle\.hekim = await portalHekimKarti/)
+    // since 3c18a116 (PERF-SAGLAMLIK-2026-10) the card is loaded in parallel and assigned when it resolves
+    assert.match(rota, /const hekimKartiP = sar\(portalHekimKarti\(sb, doctorId\)\)/)
+    assert.match(rota, /if \(r\.ok\) bundle\.hekim = r\.v/)
   })
 })

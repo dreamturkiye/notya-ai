@@ -12,7 +12,7 @@ export default function HastaEnfeksiyonTakibimPage() {
     return (
       <div className="sg-fade">
         <SectionHeader title="Enfeksiyon Takibim" subtitle="Bu bölüm enfeksiyon hastalıkları takibinizde açılır." />
-        <Link href={basePath} className="sg-back-link" style={{ margin: '0 20px' }}>← Özet</Link>
+        <Link href={basePath} className="sg-back-link" style={{ margin: '0 20px' }}>← Bugün</Link>
       </div>
     )
   }

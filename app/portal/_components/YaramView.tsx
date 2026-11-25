@@ -28,7 +28,7 @@ export function YaramView({ plastik, basePath }: { plastik: PortalPlastik | null
       <div className="sg-fade">
         <SectionHeader title="Yaram" subtitle={ALT_BASLIK} />
         <EmptyState art="takip" title="Henüz paylaşılan takip yok" body="Doktorunuz pansuman veya kontrol kaydettiğinde burada görünür." />
-        <Link href={basePath} className="sg-back-link" style={{ margin: '0 20px' }}>← Özet</Link>
+        <Link href={basePath} className="sg-back-link" style={{ margin: '0 20px' }}>← Bugün</Link>
       </div>
     )
   }
@@ -38,7 +38,7 @@ export function YaramView({ plastik, basePath }: { plastik: PortalPlastik | null
   return (
     <div className="sg-fade">
       <SectionHeader title="Yaram" subtitle={ALT_BASLIK} />
-      <Link href={basePath} className="sg-back-link" style={{ margin: '0 20px 16px' }}>← Özet</Link>
+      <Link href={basePath} className="sg-back-link" style={{ margin: '0 20px 16px' }}>← Bugün</Link>
 
       {bos && (
         <EmptyState art="takip" title="Henüz paylaşılan takip yok" body="Doktorunuz pansuman veya kontrol kaydettiğinde burada görünür." />

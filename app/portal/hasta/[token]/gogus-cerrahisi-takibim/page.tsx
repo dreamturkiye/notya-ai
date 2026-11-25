@@ -12,7 +12,7 @@ export default function HastaGogusCerrahiTakibimPage() {
     return (
       <div className="sg-fade">
         <SectionHeader title="Göğüs Cerrahisi takibi" subtitle="Bu bölüm göğüs cerrahisi takibinizde açılır." />
-        <Link href={basePath} className="sg-back-link" style={{ margin: '0 20px' }}>← Özet</Link>
+        <Link href={basePath} className="sg-back-link" style={{ margin: '0 20px' }}>← Bugün</Link>
       </div>
     )
   }

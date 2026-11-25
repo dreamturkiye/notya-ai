@@ -12,7 +12,7 @@ export default function HastaYaramPage() {
     return (
       <div className="sg-fade">
         <SectionHeader title="Yaram" subtitle="Bu bölüm plastik cerrahi takibinizde açılır." />
-        <Link href={basePath} className="sg-back-link" style={{ margin: '0 20px' }}>← Özet</Link>
+        <Link href={basePath} className="sg-back-link" style={{ margin: '0 20px' }}>← Bugün</Link>
       </div>
     )
   }

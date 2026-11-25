@@ -249,6 +249,7 @@ import type {
   PortalVisit,
 } from '@/lib/portal/types'
 import { cinsiyetKanonik } from '@/lib/utils/cinsiyet'
+import { veliOnamGerekliMi } from '@/lib/specialties/kapsam'
 
 export const dynamic = 'force-dynamic'
 
@@ -699,8 +700,9 @@ export async function GET(
   const hastaRow = (await hastaRowP).data
   const coz = (v: unknown) => { try { return v ? decrypt(String(v)) : null } catch { return null } }
   // PORTAL-HASTA-ADI — name only (this point is past requirePortalUnlock); null → UI shows nothing.
-  bundle.hasta = { adSoyad: hastaAdSoyad(coz(hastaRow?.name_encrypted)) }
   const dogumIso = coz(hastaRow?.dob_encrypted)
+  // PORTAL-REGRESYON-2026-11-25: + the under-18 flag (age rule, every branş); the DOB itself is never sent.
+  bundle.hasta = { adSoyad: hastaAdSoyad(coz(hastaRow?.name_encrypted)), onSekizAlti: veliOnamGerekliMi(dogumIso) }
   const cinsiyetHam = coz(hastaRow?.gender_encrypted) || ''
   const hekimBransiSonuc = await hekimBransiP
   if (!hekimBransiSonuc.ok) throw hekimBransiSonuc.e

@@ -12,7 +12,7 @@ export default function HastaKalbimPage() {
     return (
       <div className="sg-fade">
         <SectionHeader title="Kalbim" subtitle="Bu bölüm kardiyoloji takibinizde açılır." />
-        <Link href={basePath} className="sg-back-link" style={{ margin: '0 20px' }}>← Özet</Link>
+        <Link href={basePath} className="sg-back-link" style={{ margin: '0 20px' }}>← Bugün</Link>
       </div>
     )
   }

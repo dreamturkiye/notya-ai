@@ -237,7 +237,8 @@ describe('Sağlığım ekranı (SSR)', () => {
     assert.match(css, /\.asi-karnesi-satir[^{]*\{[^}]*break-inside: avoid/)
   })
   it('PortalShell sınıfları gerçekten o adları taşır (CSS ile kabuk eşleşir)', () => {
-    const kabuk = oku('app/portal/_components/PortalShell.tsx')
+    // since 9fa006b3 PortalShell draws through the shared frame view, which carries the class names
+    const kabuk = oku('components/doktor/portal/PortalKabukGorunumu.tsx')
     for (const c of ['sg-header', 'sg-nav', 'sg-footer']) assert.ok(kabuk.includes(`className="${c}"`), c)
   })
 })
