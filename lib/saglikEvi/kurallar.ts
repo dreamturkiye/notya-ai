@@ -177,6 +177,18 @@ export function egilimKurallari(olcumler: EvOlcum[], esikler: Record<string, Esi
   return out
 }
 
+/**
+ * HASTA-MODULLERI — the rules for one new reading. A followed kind (an active module, lib/saglikEvi/moduller.ts) gets the
+ * full set: thresholds + that metric's trend. A kind the patient is NOT followed for (e.g. glucose for a hypertension-only
+ * patient who measured it anyway) is still stored and still checked for an urgent value — only the 'acil' level is kept;
+ * no trend, no dikkat / hekime_bildir noise for a module that is off.
+ */
+export function olcumKurallari(o: EvOlcum, liste: EvOlcum[], esikler: Record<string, EsikSeti>, simdi: Date | number | string, b: KuralBaglami, takipte: boolean): KuralSonucu[] {
+  const tek = tekDegerKurallari(o, esikler, b)
+  if (!takipte) return tek.filter((r) => r.duzey === 'acil')
+  return [...tek, ...egilimKurallari(liste, esikler, simdi, b).filter((r) => r.metrik.split(':')[0] === o.tip)]
+}
+
 export const SOGUMA_SAAT: Record<UyariDuzeyi, number> = { acil: 6, hekime_bildir: 72, dikkat: 48, bilgi: 24 }
 
 /** Drop candidates whose key fired recently at the same or a higher level; keep one candidate per key (the highest). */

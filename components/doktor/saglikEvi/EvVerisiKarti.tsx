@@ -25,6 +25,7 @@ import type { Sekme } from './EvVerisiAyrintilar'
 const panelYukleniyor = () => <div className="evv-iskelet" style={{ height: 120, marginTop: 18 }} />
 const Ayrintilar = dinamik(() => import('./EvVerisiAyrintilar'), { ssr: false, loading: panelYukleniyor })
 const EsikPaneli = dinamik(() => import('./EvVerisiAyrintilar').then((m) => m.EsikPaneli), { ssr: false, loading: panelYukleniyor })
+const ModulPaneli = dinamik(() => import('./EvVerisiAyrintilar').then((m) => m.ModulPaneli), { ssr: false, loading: panelYukleniyor })
 
 const CSS = `
 .evv{font-family:${F.sans};color:${R.ink};background:#fffdf9;border:1px solid ${R.border};border-radius:22px;padding:22px 24px 20px;position:relative;overflow:hidden;box-shadow:0 1px 0 rgba(58,44,34,.03),0 18px 40px -30px rgba(58,44,34,.35)}
@@ -100,6 +101,14 @@ const CSS = `
 .evv-anahtar::after{content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.18);transition:transform .2s ease}
 .evv-anahtar[aria-checked="true"]{background:${R.warn}}
 .evv-anahtar[aria-checked="true"]::after{transform:translateX(16px)}
+.evv-anahtar[data-ton="ilac"][aria-checked="true"]{background:${HALKA_RENK.ilac}}
+.evv-anahtar:disabled{opacity:.6;cursor:default}
+.evv-modul{grid-template-columns:12px minmax(0,1fr) auto auto}
+.evv-modul[data-acik="0"]{color:#7a6c5f}
+.evv-modul-nokta{width:10px;height:10px;border-radius:50%;display:block}
+.evv-modul-baslik{font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:${R.muted};margin:10px 0 0}
+.evv-bag{all:unset;cursor:pointer;font-size:12.5px;font-weight:600;color:#0b7a70;padding:2px 2px}
+.evv-bag:hover{text-decoration:underline}
 .evv-cipler{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
 .evv-cip{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:7px;padding:6px 12px;border-radius:999px;font-size:13px;font-weight:600;background:#f6f0e6;color:#5d4f43}
 .evv-cip[aria-pressed="true"]{background:${R.ink};color:#faf6ee}
@@ -286,7 +295,7 @@ export default function EvVerisiKarti({ patientId, ornek }: { patientId: string;
     const q = new URLSearchParams(window.location.search)
     if (q.get('ev') === '1') document.getElementById('ev-verisi-karti')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
     const s = q.get('evAyrinti') as Sekme | null
-    if (s && ['uyarilar', 'ilaclar', 'olcumler', 'ozet', 'hedefler'].includes(s)) { setAcik(true); setSekme(s) }
+    if (s && ['uyarilar', 'ilaclar', 'olcumler', 'ozet', 'hedefler', 'moduller'].includes(s)) { setAcik(true); setSekme(s) }
   }, [veri])
   const istek = async (method: 'POST' | 'PATCH', govde: Record<string, unknown>) => {
     if (ornek) {
@@ -294,6 +303,11 @@ export default function EvVerisiKarti({ patientId, ornek }: { patientId: string;
       setVeri((v) => {
         if (!v) return v
         if (govde.islem === 'gordum') return { ...v, uyarilar: v.uyarilar.map((u) => ({ ...u, goruldu: true })), acikUyari: 0 }
+        const md = govde.modul as { anahtar: string; durum: 'acik' | 'kapali' | 'otomatik' } | undefined
+        if (md) {
+          const moduller = v.moduller.map((m) => (m.anahtar !== md.anahtar ? m : { ...m, hekimSecimi: md.durum === 'otomatik' ? null : md.durum, acik: md.durum === 'otomatik' ? m.kaynak != null && !m.hastaKapatti : md.durum === 'acik', kaynak: md.durum === 'acik' && !m.kaynak ? 'hekim' as const : m.kaynak }))
+          return { ...v, moduller, olcumTipleri: moduller.filter((m) => m.acik && m.tur === 'olcum').map((m) => m.anahtar as never) }
+        }
         const p = govde.plan as { planId: string; kritik: boolean } | undefined
         if (p) return { ...v, planlar: v.planlar.map((x) => (x.id === p.planId ? { ...x, kritik: p.kritik } : x)) }
         return v
@@ -347,9 +361,9 @@ export default function EvVerisiKarti({ patientId, ornek }: { patientId: string;
           </div>
         </div>
         <div className="evv-alt-satir">
-          <button type="button" className="evv-btn" aria-expanded={esikAcik} onClick={() => setEsikAcik(!esikAcik)}>Hedef ve eşikleri ayarla<Chevron /></button>
+          <button type="button" className="evv-btn" aria-expanded={esikAcik} onClick={() => setEsikAcik(!esikAcik)}>Modüller, hedef ve eşikler<Chevron /></button>
         </div>
-        <div className="evv-ac" data-acik={esikAcik ? '1' : '0'}><div>{esikAcik ? <div className="evv-ayr"><EsikPaneli veri={veri} kaydet={kaydet} /></div> : null}</div></div>
+        <div className="evv-ac" data-acik={esikAcik ? '1' : '0'}><div>{esikAcik ? <div className="evv-ayr"><ModulPaneli veri={veri} istek={istek} mesgul={mesgul} /><div style={{ height: 18 }} /><EsikPaneli veri={veri} kaydet={kaydet} /></div> : null}</div></div>
       </Kabuk>
     )
   }

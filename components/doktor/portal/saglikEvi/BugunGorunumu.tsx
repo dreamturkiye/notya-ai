@@ -322,7 +322,7 @@ export function BugunGorunumu({ s, durum, eylemler, kopru, hastaAdi }: { s: Sagl
               <ul className="sgb-soru-liste">{durum.sorular.map((q) => <li key={q.id}><span>“{q.metin}”</span><button type="button" onClick={() => eylemler.soruSil(q.id)}>{s.soruSil}</button></li>)}</ul>
             ) : null}
             <form className="sgb-soru-form" onSubmit={async (e) => { e.preventDefault(); const m = soru.trim(); if (!m) return; const r = await eylemler.soru(m); if (r.ok) setSoru('') }}>
-              <input id="sgb-soru-i" value={soru} onChange={(e) => setSoru(e.target.value)} placeholder={s.soruYer} maxLength={500} />
+              <input id="sgb-soru-i" value={soru} onChange={(e) => setSoru(e.target.value)} placeholder={durum.olcumKartlari.some((k) => k.tip === 'glukoz') ? s.soruYer : durum.olcumKartlari.some((k) => k.tip === 'kb') ? s.soruYerTansiyon : s.soruYerGenel} maxLength={500} />
               <button type="submit" disabled={!soru.trim()}>{s.soruEkle}</button>
             </form>
             <p className="sgb-not">{s.soruNot}</p>

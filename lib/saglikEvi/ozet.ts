@@ -5,7 +5,7 @@
  */
 import type { DozKaydi, DozPlani, EvOlcum, EvTercihler, EvUyari, GlukozBaglami, OlcumTipi, SlotDurumu } from './tipler'
 import type { BransGunlukAyari, GunlukKarti } from './bransAyari'
-import { etkinOlcumler } from './bransAyari'
+import { hastaModulleri, type KlinikGirdi, type ModulAnahtari } from './moduller'
 import type { EsikSeti, HedefProfili, HekimAyarlari } from './hedefler'
 import { etkinEsikler, hedefMetni, hedefteMi } from './hedefler'
 import { metrikAnahtari, metrikEtiketi, OLCUM_TANIMLARI, onerilenBaglam } from './olcumler'
@@ -32,6 +32,15 @@ export interface HamGunluk {
   tercihler: EvTercihler
   ldl: { deger: number; tarih: string } | null
   sorular: Array<{ id: string; metin: string; createdAt: string }>
+  /** HASTA-MODULLERI: what the patient file says (chronic list, ICD-10 of approved notes, active approved drugs). */
+  klinik?: KlinikGirdi | null
+}
+
+/** Patient-facing module list (Tercihler). Never carries a diagnosis or drug name — only "your doctor follows this". */
+export interface GunlukModulleri {
+  aktif: Array<{ anahtar: ModulAnahtari; tur: 'olcum' | 'kart'; hekimTakip: boolean; hastaKapatabilir: boolean; gunlukHedef: number }>
+  eklenebilir: OlcumTipi[]
+  hastaKapatti: ModulAnahtari[]
 }
 
 export interface OlcumKarti {
@@ -86,7 +95,8 @@ export interface GunlukDurum {
   uyum7: UyumSonucu
   uyum30: UyumSonucu
   tercihler: EvTercihler
-  ldl: { deger: number; tarih: string; hedef: number } | null
+  ldl: { deger: number; tarih: string; hedef: number | null } | null
+  moduller: GunlukModulleri
   sorular: HamGunluk['sorular']
   siradaki: { tur: 'doz'; saat: string; at: string; planIds: string[]; adlar: string[] } | null
   esikler: Record<string, EsikSeti>
@@ -108,10 +118,14 @@ export function gunlukOzeti(h: HamGunluk): GunlukDurum {
   const simdi = h.simdi
   const bugun = trGun(simdi)
   const esikler = etkinEsikler(h.profil, h.hekimAyar)
-  const son90Tipler = new Set(h.olcumler.map((o) => o.tip))
-  const tipler = etkinOlcumler(h.ayar, h.hekimAyar, son90Tipler)
-  const gunlukHedef: Partial<Record<OlcumTipi, number>> = {}
-  for (const t of tipler) gunlukHedef[t] = h.ayar.gunlukHedef[t] ?? (h.ayar.olcumler.includes(t) ? OLCUM_TANIMLARI[t].gunlukHedef : 0)
+  // HASTA-MODULLERI: the active modules are resolved PER PATIENT; everything below follows them. Readings of a kind the
+  // patient is not followed for stay stored (Günlük list, streak, total count) but are not prompted, goal-counted,
+  // trended or graded.
+  const mod = hastaModulleri({ bransAnahtar: h.bransAnahtar, ayar: h.ayar, hekim: h.hekimAyar, klinik: h.klinik, hasta: h.tercihler.moduller })
+  const tipler = mod.olcumler
+  const gunlukHedef = mod.gunlukHedef
+  const takipSet = new Set(tipler)
+  const takipOlcumleri = h.olcumler.filter((o) => takipSet.has(o.tip))
   const aktifPlanlar = h.planlar.filter((p) => p.aktif)
 
   const sirali = [...h.olcumler].sort((a, b) => b.olcumAt.localeCompare(a.olcumAt))
@@ -138,7 +152,7 @@ export function gunlukOzeti(h: HamGunluk): GunlukDurum {
   const gerektikce = gerektikceDurumu(h.planlar, h.kayitlar, simdi)
   const olcumToplam = olcumKartlari.reduce((a, k) => a + k.gunlukHedef, 0)
   const olcumYapilan = olcumKartlari.reduce((a, k) => a + Math.min(k.bugunSayi, k.gunlukHedef), 0)
-  const son7 = h.olcumler.filter((o) => trGun(o.olcumAt) >= gunEkle(bugun, -6))
+  const son7 = takipOlcumleri.filter((o) => trGun(o.olcumAt) >= gunEkle(bugun, -6))
   const hedefDeg = son7.map((o) => hedefteMi(esikler[metrikAnahtari(o)], o.deger, o.deger2)).filter((x): x is boolean => x != null)
 
   const kadran: GunlukDurum['kadran'] = [
@@ -151,9 +165,9 @@ export function gunlukOzeti(h: HamGunluk): GunlukDurum {
   const kalkanSet = new Set(seri.kalkanGunleri)
   const son14 = Array.from({ length: 14 }, (_, i) => { const g = gunEkle(bugun, -13 + i); return { gun: g, aktif: aktif.has(g), kalkan: kalkanSet.has(g) } })
 
-  const anahtarlar = [...new Set(h.olcumler.map(metrikAnahtari))].filter((a) => !a.startsWith('su'))
+  const anahtarlar = [...new Set(takipOlcumleri.map(metrikAnahtari))].filter((a) => !a.startsWith('su'))
   const egilimler: Egilim[] = anahtarlar.map((a): Egilim => {
-    const p = pencere(h.olcumler, a, simdi, 14)
+    const p = pencere(takipOlcumleri, a, simdi, 14)
     const e = esikler[a]
     const fark = p.hafta.ort != null && p.onceki.ort != null ? p.hafta.ort - p.onceki.ort : null
     const esik = a === 'kb' ? 3 : a.startsWith('glukoz') ? 8 : a === 'kilo' ? 0.5 : 2
@@ -166,8 +180,8 @@ export function gunlukOzeti(h: HamGunluk): GunlukDurum {
   }).sort((x, y) => y.hafta.n - x.hafta.n)
 
   const ilkGun = [...aktif].sort()[0] ?? null
-  const karneGirdi = { olcumler: h.olcumler, planlar: aktifPlanlar, kayitlar: h.kayitlar, esikler, olcumTipleri: tipler, gunlukHedef, aktifGunler: aktif, ilkGun, simdi }
-  const durumlar = rozetDurumlari({ olcumler: h.olcumler, toplamOlcum: h.toplamOlcum, fotoOlcum: h.fotoOlcum, planlar: aktifPlanlar, kayitlar: h.kayitlar, esikler, olcumTipleri: tipler, gunlukHedef, seri, aktifGunSayisi: aktif.size, simdi })
+  const karneGirdi = { olcumler: takipOlcumleri, planlar: aktifPlanlar, kayitlar: h.kayitlar, esikler, olcumTipleri: tipler, gunlukHedef, aktifGunler: aktif, ilkGun, simdi }
+  const durumlar = rozetDurumlari({ olcumler: takipOlcumleri, toplamOlcum: h.toplamOlcum, fotoOlcum: h.fotoOlcum, planlar: aktifPlanlar, kayitlar: h.kayitlar, esikler, olcumTipleri: tipler, gunlukHedef, seri, aktifGunSayisi: aktif.size, simdi })
   const kayitli = new Map(h.kazanilanRozetler.map((r) => [r.rozet, r]))
   const rozetler: GunlukRozet[] = durumlar.map((d) => {
     const t = ROZETLER.find((r) => r.id === d.id) as RozetTanimi
@@ -181,12 +195,12 @@ export function gunlukOzeti(h: HamGunluk): GunlukDurum {
   const ilk = bekleyen[0]
   const siradaki = ilk ? { tur: 'doz' as const, saat: ilk.saat, at: ilk.at, planIds: bekleyen.filter((s) => s.at === ilk.at).map((s) => s.planId), adlar: bekleyen.filter((s) => s.at === ilk.at).map((s) => s.ad) } : null
 
-  const ldlHedef = h.hekimAyar?.ldlHedef
+  const ldlHedef = h.hekimAyar?.ldlHedef ?? null
   const haftaGunleri = Array.from({ length: 7 }, (_, i) => gunEkle(bugun, -6 + i))
   const harita = kayitHaritasi(h.kayitlar)
   const hafta = { gunler: haftaGunleri, planlar: aktifPlanlar.filter((p) => !p.gerektikce).map((p) => ({ planId: p.id, ad: p.ad, gunler: haftaGunleri.map((g) => gunSlotlari(p, g).map((sl) => slotDurumu(p.id, sl, harita, simdi))) })) }
   return {
-    simdi, bugun, brans: h.bransAnahtar, vurgu: h.ayar.vurgu, kartlar: h.ayar.kartlar,
+    simdi, bugun, brans: h.bransAnahtar, vurgu: h.ayar.vurgu, kartlar: mod.kartlar,
     olcumKartlari, bugunDozlar, gerektikce, planlar: h.planlar,
     halkalar: {
       ilac: { yapilan: bugunDozlar.filter((s) => s.durum === 'alindi').length, toplam: bugunDozlar.length },
@@ -200,7 +214,12 @@ export function gunlukOzeti(h: HamGunluk): GunlukDurum {
     uyum7: uyum(aktifPlanlar, h.kayitlar, gunEkle(bugun, -6), bugun, simdi),
     uyum30: uyum(aktifPlanlar, h.kayitlar, gunEkle(bugun, -29), bugun, simdi),
     tercihler: h.tercihler,
-    ldl: h.ldl && ldlHedef && h.ayar.kartlar.includes('ldl') ? { ...h.ldl, hedef: ldlHedef } : null,
+    ldl: h.ldl && mod.kartlar.includes('ldl') ? { ...h.ldl, hedef: ldlHedef } : null,
+    moduller: {
+      aktif: mod.aktif.map((m) => ({ anahtar: m.anahtar, tur: m.tur, hekimTakip: m.kaynak === 'hekim' || m.kaynak === 'tani' || m.kaynak === 'ilac', hastaKapatabilir: m.hastaKapatabilir, gunlukHedef: m.gunlukHedef })),
+      eklenebilir: mod.eklenebilir,
+      hastaKapatti: mod.hastaKapatti,
+    },
     sorular: h.sorular,
     siradaki,
     esikler,
@@ -226,10 +245,14 @@ export interface KontrolOzeti {
 const f = (x: number | null, o = 0) => (x == null ? null : (Math.round(x * 10 ** o) / 10 ** o).toLocaleString('tr-TR', { maximumFractionDigits: o }))
 
 /** Last 4 weeks of home data, adherence, alerts and the patient's questions — one printable page for the doctor. */
-export function kontrolOncesiOzet(g: { olcumler: EvOlcum[]; planlar: DozPlani[]; kayitlar: DozKaydi[]; uyarilar: EvUyari[]; sorular: Array<{ metin: string; createdAt: string }>; esikler: Record<string, EsikSeti>; simdi: string; randevuAt: string | null }): KontrolOzeti {
+export function kontrolOncesiOzet(g: { olcumler: EvOlcum[]; planlar: DozPlani[]; kayitlar: DozKaydi[]; uyarilar: EvUyari[]; sorular: Array<{ metin: string; createdAt: string }>; esikler: Record<string, EsikSeti>; simdi: string; randevuAt: string | null; takipTipleri?: OlcumTipi[] | null }): KontrolOzeti {
   const bit = trGun(g.simdi)
   const bas = gunEkle(bit, -27)
-  const ol = g.olcumler.filter((o) => { const d = trGun(o.olcumAt); return d >= bas && d <= bit })
+  const donemde = g.olcumler.filter((o) => { const d = trGun(o.olcumAt); return d >= bas && d <= bit })
+  // HASTA-MODULLERI: the summary follows the patient's active modules; readings of other kinds are named in one line.
+  const takip = g.takipTipleri ? new Set(g.takipTipleri) : null
+  const ol = takip ? donemde.filter((o) => takip.has(o.tip)) : donemde
+  const disi = takip ? donemde.filter((o) => !takip.has(o.tip)) : []
   const anahtarlar = [...new Set(ol.map(metrikAnahtari))]
   const metrikler = anahtarlar.map((a) => {
     const s = ol.filter((o) => metrikAnahtari(o) === a)
@@ -253,13 +276,18 @@ export function kontrolOncesiOzet(g: { olcumler: EvOlcum[]; planlar: DozPlani[];
   const ilaclar = planUyumlari(aktifP, g.kayitlar, bas, bit, g.simdi)
   const uyarilar = g.uyarilar.filter((u) => trGun(u.olusturmaAt) >= bas).map((u) => ({ duzey: u.duzey, metin: u.hekimMetni, tarih: u.olusturmaAt }))
   const sorular = g.sorular.map((s) => ({ metin: s.metin, tarih: s.createdAt }))
-  const aktifGun = aktifGunler(ol, g.kayitlar.filter((k) => trGun(k.kayitAt) >= bas)).size
+  const aktifGun = aktifGunler(donemde, g.kayitlar.filter((k) => trGun(k.kayitAt) >= bas)).size
 
   const satirlar: string[] = [`Kontrol öncesi ev verisi özeti — ${bas} / ${bit} (son 4 hafta, ${aktifGun} gün kayıt)`]
   if (metrikler.length) {
     satirlar.push('', 'Ölçümler:')
     for (const m of metrikler) satirlar.push(`- ${m.etiket}: ort ${m.ort} ${m.birim} (n=${m.n}; en düşük ${m.min}, en yüksek ${m.max}${m.hedefteYuzde != null ? `; hedefte %${m.hedefteYuzde}` : ''}${m.ilkHafta && m.sonHafta ? `; ilk hafta ${m.ilkHafta} → son hafta ${m.sonHafta}` : ''})`)
   } else satirlar.push('', 'Bu dönemde ev ölçümü yok.')
+  if (disi.length) {
+    const say = new Map<OlcumTipi, number>()
+    for (const o of disi) say.set(o.tip, (say.get(o.tip) || 0) + 1)
+    satirlar.push(`Takip dışı girilen ölçümler: ${[...say].map(([t, n]) => `${OLCUM_TANIMLARI[t].ad} (n=${n})`).join(', ')}`)
+  }
   if (ilaclar.length) {
     satirlar.push('', `İlaç uyumu: ${genel.yuzde == null ? '—' : `%${genel.yuzde}`} (${genel.alinan}/${genel.beklenen} doz)`)
     for (const i of ilaclar) satirlar.push(`- ${i.ad}${i.kritik ? ' (kritik)' : ''}${i.kaynak === 'hasta' ? ' (hastanın eklediği)' : ''}: ${i.yuzde == null ? '—' : `%${i.yuzde}`} (${i.alinan}/${i.beklenen})`)

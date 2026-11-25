@@ -13,7 +13,9 @@ import type { EsikSeti } from '@/lib/saglikEvi/hedefler'
 import type { OlcumTipi } from '@/lib/saglikEvi/tipler'
 import { HALKA_RENK, TON_RENK, acikUyarilar, degerHedefDisi, kisaAd, metrikRengi, sayi, trTarihSaat, type Metrik } from '@/lib/saglikEvi/evVerisiGorunum'
 
-export type Sekme = 'uyarilar' | 'ilaclar' | 'olcumler' | 'ozet' | 'hedefler'
+import type { ModulSecenegi } from '@/lib/saglikEvi/moduller'
+
+export type Sekme = 'uyarilar' | 'ilaclar' | 'olcumler' | 'ozet' | 'hedefler' | 'moduller'
 
 const ALANLAR: Array<[keyof EsikSeti, string]> = [['hedefMin', 'Hedef alt'], ['hedefMax', 'Hedef üst'], ['hedefMax2', 'Hedef üst (diyastolik)'], ['dikkatUst', 'Dikkat ≥'], ['dikkatAlt', 'Dikkat <'], ['bildirUst', 'Bildir ≥'], ['bildirAlt', 'Bildir <'], ['acilUst', 'Acil ≥'], ['acilAlt', 'Acil <'], ['bildirUst2', 'Bildir ≥ (diyastolik)'], ['acilUst2', 'Acil ≥ (diyastolik)'], ['trendDelta', 'Eğilim: haftalık artış ≥'], ['trendTaban', 'Eğilim: haftalık ort. ≥']]
 const girdi: React.CSSProperties = { minHeight: 34, borderRadius: 10, border: `1px solid ${R.border}`, padding: '0 10px', fontSize: 13.5, color: R.ink, background: '#fff', font: 'inherit' }
@@ -21,7 +23,7 @@ const girdi: React.CSSProperties = { minHeight: 34, borderRadius: 10, border: `1
 export function EsikPaneli({ veri, kaydet }: { veri: Veri; kaydet: (ayar: Record<string, unknown>) => Promise<void> }) {
   const varsayilan = veri.varsayilan as Record<string, EsikSeti>
   const [esik, setEsik] = useState<Record<string, Partial<Record<keyof EsikSeti, string>>>>(() => Object.fromEntries(Object.entries(veri.hekimAyar.esikler || {}).map(([k, v]) => [k, Object.fromEntries(Object.entries(v || {}).map(([a, n]) => [a, String(n)]))])))
-  const [olcumler, setOlcumler] = useState<OlcumTipi[]>(veri.olcumTipleri)
+  const olcumler = veri.olcumTipleri
   const [ldl, setLdl] = useState(veri.hekimAyar.ldlHedef ? String(veri.hekimAyar.ldlHedef) : '')
   const [kilo, setKilo] = useState<boolean>(veri.hekimAyar.kiloBildir ?? false)
   const [mesgul, setMesgul] = useState(false)
@@ -29,12 +31,7 @@ export function EsikPaneli({ veri, kaydet }: { veri: Veri; kaydet: (ayar: Record
   const anahtarlar = Object.keys(varsayilan).filter((k) => Object.keys(varsayilan[k]).length && olcumler.includes(k.split(':')[0] as OlcumTipi))
   return (
     <div>
-      <div style={{ fontSize: 13.5, fontWeight: 700, marginBottom: 8 }}>Bu hastadan istenen ölçümler</div>
-      <div className="evv-cipler" style={{ marginBottom: 16 }}>
-        {(Object.keys(OLCUM_TANIMLARI) as OlcumTipi[]).map((t) => (
-          <button key={t} type="button" className="evv-cip" aria-pressed={olcumler.includes(t)} onClick={() => setOlcumler(olcumler.includes(t) ? olcumler.filter((x) => x !== t) : [...olcumler, t])}>{OLCUM_TANIMLARI[t].ad}</button>
-        ))}
-      </div>
+      {!anahtarlar.length ? <p className="evv-kucuk" style={{ margin: '0 0 12px' }}>Bu hastada eşiği olan açık bir ölçüm yok. Ölçümleri Modüller sekmesinden açabilirsiniz.</p> : null}
       {anahtarlar.map((k) => (
         <div key={k} style={{ marginBottom: 14 }}>
           <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 7 }}><i style={{ width: 7, height: 7, borderRadius: '50%', background: metrikRengi(k), display: 'inline-block' }} />{metrikEtiketi(k)} <span className="evv-kucuk" style={{ fontWeight: 500 }}>{OLCUM_TANIMLARI[k.split(':')[0] as OlcumTipi].birim}</span></div>
@@ -56,10 +53,57 @@ export function EsikPaneli({ veri, kaydet }: { veri: Veri; kaydet: (ayar: Record
         setMesgul(true)
         const temiz: Record<string, Record<string, number>> = {}
         for (const [k, v] of Object.entries(esik)) for (const [a, n] of Object.entries(v || {})) if (n !== '' && n != null && Number.isFinite(Number(n))) (temiz[k] ||= {})[a] = Number(n)
-        const ekstra = olcumler.filter((t) => !veri.olcumTipleri.includes(t))
-        const kapali = veri.olcumTipleri.filter((t) => !olcumler.includes(t))
-        try { await kaydet({ esikler: temiz, olcumler: [...(veri.hekimAyar.olcumler || []).filter((t) => olcumler.includes(t)), ...ekstra], kapali, ldlHedef: ldl ? Number(ldl) : null, kiloBildir: kilo }); setKaydedildi(true) } finally { setMesgul(false) }
+        // Module switches are kept by the server (HASTA-MODULLERI: Modüller tab); the older on/off lists are carried as-is.
+        try { await kaydet({ esikler: temiz, olcumler: veri.hekimAyar.olcumler, kapali: veri.hekimAyar.kapali, ldlHedef: ldl ? Number(ldl) : null, kiloBildir: kilo }); setKaydedildi(true) } finally { setMesgul(false) }
       }}>{kaydedildi ? 'Kaydedildi' : 'Kaydet'}</button>
+    </div>
+  )
+}
+
+const MODUL_AD: Record<ModulSecenegi['anahtar'], string> = { kb: 'Tansiyon', glukoz: 'Kan şekeri', kilo: 'Kilo', nabiz: 'Nabız', spo2: 'Oksijen (SpO₂)', ates: 'Ateş', bel: 'Bel çevresi', su: 'Su', ldl: 'LDL kartı' }
+const LDL_RENK = '#8a6d3b'
+
+function modulNedeni(m: ModulSecenegi): string | null {
+  const oto = m.kaynak === 'tani' ? `Tanı: ${m.neden}` : m.kaynak === 'ilac' ? `İlaç: ${m.neden}` : m.kaynak === 'brans' ? 'Branş varsayılanı' : m.kaynak === 'hasta' ? 'Hastanın eklediği' : null
+  if (m.hekimSecimi === 'acik') return 'Sizin açtığınız'
+  if (m.hekimSecimi === 'kapali') return oto ? `Sizin kapattığınız · kendiliğinden: ${oto}` : 'Sizin kapattığınız'
+  if (m.hastaKapatti) return 'Hasta kapattı · branş varsayılanı'
+  return oto
+}
+
+/**
+ * HASTA-MODULLERI — the doctor's per-patient Modüller control. Every module (8 measurements + LDL card) with where it
+ * comes from (diagnosis / drug on the file, branş default, the patient's own choice) and a switch; the doctor's choice
+ * always wins, "Otomatik" removes it. Saved one switch at a time (PATCH { modul }).
+ */
+export function ModulPaneli({ veri, istek, mesgul }: { veri: Veri; istek: (method: 'POST' | 'PATCH', govde: Record<string, unknown>) => Promise<void>; mesgul: boolean }) {
+  const satir = (m: ModulSecenegi) => {
+    const renk = m.anahtar === 'ldl' ? LDL_RENK : metrikRengi(m.anahtar)
+    return (
+      <div key={m.anahtar} className="evv-satir evv-modul" data-acik={m.acik ? '1' : '0'}>
+        <i className="evv-modul-nokta" style={{ background: m.acik ? renk : 'transparent', boxShadow: m.acik ? 'none' : `inset 0 0 0 1.5px ${renk}` }} aria-hidden />
+        <span style={{ minWidth: 0 }}>
+          <span style={{ fontWeight: 600 }}>{MODUL_AD[m.anahtar]}</span>
+          {modulNedeni(m) ? <span className="evv-kucuk" style={{ display: 'block', marginTop: 1 }}>{modulNedeni(m)}</span> : null}
+        </span>
+        <span className="evv-kucuk" style={{ whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>{m.acik && m.tur === 'olcum' ? (m.gunlukHedef > 0 ? `günde ${m.gunlukHedef}` : 'isteğe bağlı') : ''}</span>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10, justifySelf: 'end' }}>
+          {m.hekimSecimi ? <button type="button" className="evv-bag" disabled={mesgul} onClick={() => istek('PATCH', { modul: { anahtar: m.anahtar, durum: 'otomatik' } })}>Otomatik</button> : null}
+          <button type="button" role="switch" className="evv-anahtar" data-ton="ilac" aria-checked={m.acik} aria-label={`${MODUL_AD[m.anahtar]} ${m.acik ? 'açık' : 'kapalı'}`} disabled={mesgul} onClick={() => istek('PATCH', { modul: { anahtar: m.anahtar, durum: m.acik ? 'kapali' : 'acik' } })} />
+        </span>
+      </div>
+    )
+  }
+  const acik = veri.moduller.filter((m) => m.acik), kapali = veri.moduller.filter((m) => !m.acik)
+  return (
+    <div>
+      <p className="evv-kucuk" style={{ margin: '0 0 6px', lineHeight: 1.5, maxWidth: '78ch' }}>Hastanın Sağlığım ekranında yalnız açık olanlar görünür: hızlı kayıt, günlük ölçüm hedefi, eğilimler, uyarılar ve kontrol öncesi özet bunlara göre çalışır. Tanı listesinden, onaylı notlardaki ICD-10 kodlarından ve aktif reçeteden kendiliğinden açılır; sizin seçiminiz her zaman geçerlidir.</p>
+      <div className="evv-modul-baslik">Açık · {acik.length}</div>
+      {acik.map(satir)}
+      {kapali.length ? <div className="evv-modul-baslik" style={{ marginTop: 14 }}>Kapalı · {kapali.length}</div> : null}
+      {kapali.map(satir)}
+      {veri.takipDisi.length ? <p className="evv-kucuk" style={{ margin: '12px 0 0' }}>Takip dışı girilen ölçümler (son 4 hafta): {veri.takipDisi.map((x) => `${x.ad} (${x.n})`).join(', ')}. Saklanır; acil değerler yine size bildirilir.</p> : null}
+      <p className="evv-kucuk" style={{ margin: '10px 0 0', lineHeight: 1.5, maxWidth: '78ch' }}>Kapatılan bir modülün eski kayıtları silinmez; yalnız hatırlatılmaz, hedefe sayılmaz ve eğilim uyarısı üretmez.</p>
     </div>
   )
 }
@@ -71,7 +115,7 @@ export default function Ayrintilar({ veri, sirali, sekme, setSekme, metrik, setM
   istek: (method: 'POST' | 'PATCH', govde: Record<string, unknown>) => Promise<void>; kaydet: (a: Record<string, unknown>) => Promise<void>
 }) {
   const acik = acikUyarilar(veri)
-  const sekmeler: Array<[Sekme, string]> = [['uyarilar', 'Uyarılar'], ['ilaclar', 'İlaçlar'], ['olcumler', 'Ölçümler'], ['ozet', 'Özet'], ['hedefler', 'Eşikler']]
+  const sekmeler: Array<[Sekme, string]> = [['uyarilar', 'Uyarılar'], ['ilaclar', 'İlaçlar'], ['olcumler', 'Ölçümler'], ['ozet', 'Özet'], ['hedefler', 'Eşikler'], ['moduller', 'Modüller']]
   const m = sirali.find((x) => x.anahtar === metrik) || sirali[0]
   return (
     <div className="evv-ayr">
@@ -166,6 +210,7 @@ export default function Ayrintilar({ veri, sirali, sekme, setSekme, metrik, setM
         ) : null}
 
         {sekme === 'hedefler' ? <EsikPaneli veri={veri} kaydet={kaydet} /> : null}
+        {sekme === 'moduller' ? <ModulPaneli veri={veri} istek={istek} mesgul={mesgul} /> : null}
       </div>
     </div>
   )

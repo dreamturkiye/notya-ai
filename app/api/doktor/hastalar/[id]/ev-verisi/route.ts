@@ -3,7 +3,8 @@
  *   GET   → charts (28 days), adherence (7 / 30 days, per medicine), alerts, thresholds (effective + defaults + the
  *           doctor's overrides), dose plans, the latest Kontrol Öncesi Özet, the patient's open questions. Without the
  *           patient's KVKK consent: only that fact + the doctor's own settings.
- *   PATCH { ayarlar } | { plan: { planId, kritik?, minAralikSaat? } } → per-patient thresholds / kritik flag
+ *   PATCH { ayarlar } | { plan: { planId, kritik?, minAralikSaat? } } | { modul: { anahtar, durum: 'acik'|'kapali'|'otomatik' } }
+ *         → per-patient thresholds / kritik flag / HASTA-MODULLERI module switch (doctor's choice wins)
  *   POST  { islem: 'gordum' | 'ozet' } → acknowledge alerts (clears the Fısıltı) / build the summary now
  * HASTA-IZOLASYON: pratikOturum → doktorId; hastaSahibiMi(doktorId, id) before anything else (404 for a foreign id);
  * every query in lib/saglikEvi/hekimSunucu.ts carries doctor_id + patient_id.
@@ -11,7 +12,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { pratikOturum } from '@/lib/doktor/pratikOturum'
 import { hastaSahibiMi } from '@/lib/doktor/hastaSahipligi'
-import { evVerisiKarti, hekimAyarKaydet, kontrolOzetiOlustur, planHekimAyari, uyarilariGordum } from '@/lib/saglikEvi/hekimSunucu'
+import { evVerisiKarti, hekimAyarKaydet, hekimModulKaydet, kontrolOzetiOlustur, planHekimAyari, uyarilariGordum } from '@/lib/saglikEvi/hekimSunucu'
 
 export const dynamic = 'force-dynamic'
 
@@ -41,6 +42,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   const b = (await req.json().catch(() => null)) as Record<string, unknown> | null
   if (!b) return NextResponse.json({ error: 'Geçersiz istek.' }, { status: 400 })
   if (b.plan && typeof b.plan === 'object') return yanit(await planHekimAyari(k.o.supabase, k.o.doktorId, params.id, b.plan as Record<string, unknown>))
+  if (b.modul && typeof b.modul === 'object') return yanit(await hekimModulKaydet(k.o.supabase, k.o.doktorId, params.id, b.modul as Record<string, unknown>, k.o.user.id))
   if ('ayarlar' in b) return yanit(await hekimAyarKaydet(k.o.supabase, k.o.doktorId, params.id, b.ayarlar, k.o.user.id))
   return NextResponse.json({ error: 'Geçersiz istek.' }, { status: 400 })
 }

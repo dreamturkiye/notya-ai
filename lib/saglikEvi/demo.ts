@@ -4,9 +4,14 @@
  * Default persona = Kaan's design target: diabetes + hypertension + high cholesterol, 5 daily medicines, fasting and
  * after-lunch glucose twice a day, with the after-lunch average drifting from ~120 to ~160 in the last week (the
  * Eğilim Bekçisi example).
+ * HASTA-MODULLERI: the dahiliye persona carries its patient file (Hipertansiyon + Diyabet + Hiperlipidemi on the chronic
+ * list, I10 / E11.9 on approved notes, the five drugs) so its modules are resolved per patient like a real one (BP +
+ * glucose + LDL from the file, weight added by the patient). Scenario 'ht' (/portal/demo?durum=ht, /portal/demo-hekim?
+ * durum=ht) is a hypertension-only patient: Ramipril + Amlodipin, no glucose anywhere.
  */
 import type { DozKaydi, DozPlani, EvOlcum, EvUyari, OlcumTipi } from './tipler'
 import { bransGunlukAyari, hedefProfili } from './bransAyari'
+import { hastaModulleri, type HastaModulTercihi, type IlacGirdisi, type KlinikGirdi } from './moduller'
 import type { HamGunluk } from './ozet'
 import type { EvVerisiGirdisi } from './evVerisi'
 import { gunEkle, trGun, trSaatAni } from './zaman'
@@ -34,14 +39,38 @@ const PLANLAR_UYUM: Array<Omit<DozPlani, 'id'>> = [
   { ilacId: 'demo-u2', ad: 'Nemlendirici', doz: 'Sabah–akşam', saatler: ['08:00', '21:00'], gerektikce: false, haftaGunu: null, kaynak: 'hasta', kritik: false, minAralikSaat: null, aktif: true, baslangic: null, bitis: null },
 ]
 
-export function gunlukDemoHam(simdiIso: string, doktorBransi: string | null = 'dahiliye'): HamGunluk {
+/**
+ * Class labels of the demo drugs exactly as the server's drug-table bridge (lib/saglikEvi/ilacSinifi.ts) resolves them —
+ * written out here because the demo runs in the browser, which never loads the drug table. A test pins the two together.
+ */
+export const DEMO_ILAC_SINIFLARI: Record<string, IlacGirdisi> = {
+  Metformin: { ad: 'Metformin', anahtar: 'metformin', siniflar: ['Antidiyabetik', 'Biguanid', 'Oral antidiyabetik'] },
+  Ramipril: { ad: 'Ramipril', anahtar: 'ramipril', siniflar: ['Antihipertansif', 'RAAS blokeri', 'ACE inhibitörü', 'ADE inhibitörü'] },
+  Empagliflozin: { ad: 'Empagliflozin', anahtar: 'empagliflozin', siniflar: ['Antidiyabetik', 'SGLT2 inhibitörü', 'Oral antidiyabetik'] },
+  Amlodipin: { ad: 'Amlodipin', anahtar: 'amlodipin', siniflar: ['Kalsiyum kanal blokörü', 'Dihidropiridin', 'Antihipertansif', 'Antianjinal'] },
+  Atorvastatin: { ad: 'Atorvastatin', anahtar: 'atorvastatin', siniflar: ['Statin', 'HMG-CoA redüktaz inhibitörü', 'Lipid düşürücü'] },
+}
+
+export type DemoSenaryosu = 'dm-ht' | 'ht'
+
+export function gunlukDemoHam(simdiIso: string, doktorBransi: string | null = 'dahiliye', senaryo: DemoSenaryosu = 'dm-ht'): HamGunluk {
   const r = rastgele(20261124)
   const b = bransGunlukAyari(doktorBransi)
   const bugun = trGun(simdiIso)
   const simdi = Date.parse(simdiIso)
-  const tipler = new Set<OlcumTipi>(b.ayar.olcumler)
-  const sablon = b.ayar.kartlar.includes('ates_ilac') ? PLANLAR_PEDIATRI : b.ayar.vurgu === 'uyum' && !tipler.has('kb') ? PLANLAR_UYUM : PLANLAR_DAHILIYE
-  const planlar: DozPlani[] = sablon.map((p, i) => ({ ...p, id: `demo-plan-${i + 1}` }))
+  const bransTipleri = new Set<OlcumTipi>(b.ayar.olcumler)
+  const sablon = b.ayar.kartlar.includes('ates_ilac') ? PLANLAR_PEDIATRI : b.ayar.vurgu === 'uyum' && !bransTipleri.has('kb') ? PLANLAR_UYUM : PLANLAR_DAHILIYE
+  const kardiyometabolik = sablon === PLANLAR_DAHILIYE
+  const ht = kardiyometabolik && senaryo === 'ht'
+  const planSablonu = ht ? sablon.filter((p) => p.ad === 'Ramipril' || p.ad === 'Amlodipin') : sablon
+  const planlar: DozPlani[] = planSablonu.map((p, i) => ({ ...p, id: `demo-plan-${sablon.indexOf(p) + 1}` }))
+  // The patient file of the persona (cardiometabolic templates only; other branşlar keep their branş default).
+  const klinik: KlinikGirdi | null = !kardiyometabolik ? null : ht
+    ? { tanilar: ['Hipertansiyon'], icdKodlari: ['I10'], ilaclar: planlar.map((p) => DEMO_ILAC_SINIFLARI[p.ad]).filter(Boolean) }
+    : { tanilar: ['Hipertansiyon', 'Diyabet', 'Hiperlipidemi'], icdKodlari: ['I10', 'E11.9'], ilaclar: planlar.map((p) => DEMO_ILAC_SINIFLARI[p.ad]).filter(Boolean) }
+  const hastaModul: HastaModulTercihi = { eklenen: kardiyometabolik ? ['kilo'] : [], cikarilan: [] }
+  const hekimAyar = kardiyometabolik && !ht ? { ldlHedef: 70 } : null
+  const tipler = new Set<OlcumTipi>(hastaModulleri({ bransAnahtar: b.anahtar, ayar: b.ayar, hekim: hekimAyar, klinik, hasta: hastaModul }).olcumler)
   const olcumler: EvOlcum[] = []
   const kayitlar: DozKaydi[] = []
   let n = 0
@@ -90,23 +119,27 @@ export function gunlukDemoHam(simdiIso: string, doktorBransi: string | null = 'd
     id: `demo-u${i}`, kural: k.kural, anahtar: k.anahtar, duzey: k.duzey, metrik: k.metrik, hastaMetni: k.hastaMetni, hekimMetni: k.hekimMetni, olusturmaAt: new Date(simdi - 3 * 3600_000).toISOString(), hastaGorduAt: null, hekimGorduAt: null,
   }))
   return {
-    simdi: simdiIso, bransAnahtar: b.anahtar, ayar: b.ayar, hekimAyar: tipler.has('glukoz') ? { ldlHedef: 70 } : null, profil,
+    simdi: simdiIso, bransAnahtar: b.anahtar, ayar: b.ayar, hekimAyar, profil, klinik,
     olcumler, toplamOlcum: olcumler.length, fotoOlcum: olcumler.filter((o) => o.kaynak === 'portal_foto').length,
     planlar, kayitlar, uyarilar,
     // Earned on different days; 'hizli-goz' is left out so the demo shows the unlock moment once.
-    kazanilanRozetler: ([['ilk-adim', 60], ['seri-7', 27], ['olcum-25', 40], ['olcum-100', 6], ['sabah-duzeni', 9], ['seker-ustasi', 12], ['tansiyon-takipcisi', 25], ['uyum-haftasi', 18], ['tam-gun', 30], ['seri-kalkani', 20]] as const).map(([rozet, gun]) => ({ rozet, kazanildiAt: new Date(simdi - gun * 86_400_000).toISOString(), hastaGorduAt: new Date(simdi - gun * 86_400_000).toISOString() })),
-    tercihler: { paylasimOnayi: true, onayAt: new Date(simdi - 40 * 86_400_000).toISOString(), sessizBas: '23:00', sessizBit: '07:00', hatirlatmaAcik: true },
-    ldl: tipler.has('glukoz') ? { deger: 92, tarih: gunEkle(bugun, -41) } : null,
-    sorular: tipler.has('glukoz') ? [{ id: 'demo-s1', metin: 'Öğleden sonra şekerim yükseliyor, Metformin saatini değiştirmeli miyim?', createdAt: new Date(simdi - 26 * 3600_000).toISOString() }] : [],
+    kazanilanRozetler: (([['ilk-adim', 60], ['seri-7', 27], ['olcum-25', 40], ['olcum-100', 6], ['sabah-duzeni', 9], ['seker-ustasi', 12], ['tansiyon-takipcisi', 25], ['uyum-haftasi', 18], ['tam-gun', 30], ['seri-kalkani', 20]] as const).filter(([rozet]) => tipler.has('glukoz') || rozet !== 'seker-ustasi')).map(([rozet, gun]) => ({ rozet, kazanildiAt: new Date(simdi - gun * 86_400_000).toISOString(), hastaGorduAt: new Date(simdi - gun * 86_400_000).toISOString() })),
+    tercihler: { paylasimOnayi: true, onayAt: new Date(simdi - 40 * 86_400_000).toISOString(), sessizBas: '23:00', sessizBit: '07:00', hatirlatmaAcik: true, moduller: hastaModul },
+    ldl: kardiyometabolik && !ht ? { deger: 92, tarih: gunEkle(bugun, -41) } : null,
+    sorular: !kardiyometabolik ? [] : ht
+      ? [{ id: 'demo-s1', metin: 'Akşam ölçtüğüm tansiyon sabahkinden yüksek çıkıyor, bu normal mi?', createdAt: new Date(simdi - 26 * 3600_000).toISOString() }]
+      : [{ id: 'demo-s1', metin: 'Öğleden sonra şekerim yükseliyor, Metformin saatini değiştirmeli miyim?', createdAt: new Date(simdi - 26 * 3600_000).toISOString() }],
   }
 }
 
 /** BUGUN-V2 — internal demo previews of the designed states (/portal/demo?durum=…): first day, few readings, no
  * medicines, no consent, everything done. Pure transforms of the default demo patient; synthetic data only. */
-export type DemoDurumu = 'ilk' | 'az' | 'ilacsiz' | 'onaysiz' | 'tamam'
+export type DemoDurumu = 'ilk' | 'az' | 'ilacsiz' | 'onaysiz' | 'tamam' | 'ht'
 export function demoDurumuUygula(h: HamGunluk, durum: string | null | undefined): HamGunluk {
   const simdi = Date.parse(h.simdi)
   const bugun = trGun(h.simdi)
+  // HASTA-MODULLERI: a hypertension-only patient (no glucose anywhere).
+  if (durum === 'ht') return gunlukDemoHam(h.simdi, h.bransAnahtar, 'ht')
   if (durum === 'ilk') return { ...h, olcumler: [], toplamOlcum: 0, fotoOlcum: 0, kayitlar: [], uyarilar: [], kazanilanRozetler: [], sorular: [], ldl: null, tercihler: { ...h.tercihler, paylasimOnayi: false, onayAt: null } }
   if (durum === 'az') {
     const sinir = gunEkle(bugun, -2)
@@ -123,8 +156,9 @@ export function demoDurumuUygula(h: HamGunluk, durum: string | null | undefined)
       if (!kayitlar.some((k) => k.planId === p.id && k.planlananAt === at)) kayitlar.push({ id: `demo-t-${p.id}-${s}`, planId: p.id, planlananAt: at, durum: 'alindi', kayitAt: h.simdi, erteleUntil: null })
     }
     const olcumler = [...h.olcumler]
-    for (const t of h.ayar.olcumler) {
-      const hedef = h.ayar.gunlukHedef[t] ?? 0
+    const mod = hastaModulleri({ bransAnahtar: h.bransAnahtar, ayar: h.ayar, hekim: h.hekimAyar, klinik: h.klinik, hasta: h.tercihler.moduller })
+    for (const t of mod.olcumler) {
+      const hedef = mod.gunlukHedef[t] ?? 0
       const var_ = olcumler.filter((o) => o.tip === t && trGun(o.olcumAt) === bugun).length
       for (let i = var_; i < hedef; i++) olcumler.push({ id: `demo-t-${t}-${i}`, tip: t, deger: t === 'kb' ? 124 : t === 'glukoz' ? 118 : 72, deger2: t === 'kb' ? 78 : null, baglam: t === 'glukoz' ? 'tokluk2' : null, olcumAt: new Date(simdi - (i + 1) * 60_000).toISOString(), kaynak: 'portal' })
     }
@@ -134,11 +168,11 @@ export function demoDurumuUygula(h: HamGunluk, durum: string | null | undefined)
 }
 
 /** The same demo patient as the doctor sees it on the Ev verisi card. */
-export function evVerisiDemoGirdisi(simdiIso: string, doktorBransi: string | null = 'dahiliye'): EvVerisiGirdisi {
-  const h = gunlukDemoHam(simdiIso, doktorBransi)
+export function evVerisiDemoGirdisi(simdiIso: string, doktorBransi: string | null = 'dahiliye', senaryo: DemoSenaryosu = 'dm-ht'): EvVerisiGirdisi {
+  const h = gunlukDemoHam(simdiIso, doktorBransi, senaryo)
   return {
     simdiMs: Date.parse(simdiIso), brans: doktorBransi, gebelikAktif: false, tercih: h.tercihler, hekimAyarHam: h.hekimAyar,
     olcumler: h.olcumler, planlar: h.planlar, kayitlar: h.kayitlar, uyarilar: h.uyarilar, kontrolOzeti: null,
-    sorular: h.sorular.map((s) => ({ metin: s.metin, tarih: s.createdAt })),
+    sorular: h.sorular.map((s) => ({ metin: s.metin, tarih: s.createdAt })), klinik: h.klinik,
   }
 }

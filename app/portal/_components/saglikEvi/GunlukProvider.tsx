@@ -12,7 +12,8 @@ import type { GunlukDurum, HamGunluk } from '@/lib/saglikEvi/ozet'
 import { gunlukOzeti } from '@/lib/saglikEvi/ozet'
 import { demoDurumuUygula, gunlukDemoHam } from '@/lib/saglikEvi/demo'
 import { olcumDogrula } from '@/lib/saglikEvi/olcumler'
-import { tekDegerKurallari, egilimKurallari, gurultuSuz } from '@/lib/saglikEvi/kurallar'
+import { gurultuSuz, olcumKurallari } from '@/lib/saglikEvi/kurallar'
+import { hastaModulleri, hastaTercihiDegistir } from '@/lib/saglikEvi/moduller'
 import { etkinEsikler } from '@/lib/saglikEvi/hedefler'
 import { ERTELE_DK } from '@/lib/saglikEvi/dozPlani'
 import type { GunlukEylemleri, PushDurumu } from '@/components/doktor/portal/saglikEvi/eylemler'
@@ -116,9 +117,10 @@ export function GunlukProvider({ children }: { children: ReactNode }) {
         const o = { id: `ornek-${Date.now()}`, tip: v.tip, deger: v.deger, deger2: v.deger2, baglam: v.baglam, olcumAt: g.olcumAt || new Date().toISOString(), kaynak: (g.foto ? 'portal_foto' : 'portal') as 'portal' }
         const h = ham.current
         const esik = etkinEsikler(h.profil, h.hekimAyar)
-        const b = { yasAy: null, kiloHekimeBildir: h.ayar.kiloHekimeBildir }
+        const mod = hastaModulleri({ bransAnahtar: h.bransAnahtar, ayar: h.ayar, hekim: h.hekimAyar, klinik: h.klinik, hasta: h.tercihler.moduller })
+        const b = { yasAy: null, kiloHekimeBildir: mod.kiloHekimeBildir }
         const liste = [...h.olcumler, o]
-        const yeni = gurultuSuz([...tekDegerKurallari(o, esik, b), ...egilimKurallari(liste, esik, Date.now(), b).filter((r) => r.metrik.split(':')[0] === o.tip)], h.uyarilar.map((u) => ({ anahtar: u.anahtar, duzey: u.duzey, olusturmaAt: u.olusturmaAt })), Date.now())
+        const yeni = gurultuSuz(olcumKurallari(o, liste, esik, Date.now(), b, mod.olcumler.includes(o.tip)), h.uyarilar.map((u) => ({ anahtar: u.anahtar, duzey: u.duzey, olusturmaAt: u.olusturmaAt })), Date.now())
         ham.current = { ...h, olcumler: liste, toplamOlcum: h.toplamOlcum + 1, uyarilar: [...yeni.map((r, i) => ({ id: `ornek-u${Date.now()}${i}`, kural: r.kural, anahtar: r.anahtar, duzey: r.duzey, metrik: r.metrik, hastaMetni: r.hastaMetni, hekimMetni: r.hekimMetni, olusturmaAt: new Date().toISOString(), hastaGorduAt: null, hekimGorduAt: null })), ...h.uyarilar] }
         yenidenHesapla()
         return { ok: true, uyarilar: yeni.map((r) => ({ duzey: r.duzey, metrik: r.metrik, hastaMetni: r.hastaMetni })) }
@@ -157,7 +159,13 @@ export function GunlukProvider({ children }: { children: ReactNode }) {
       const r = await gonder({ islem: 'plan', ...g }); if (r.ok) void yukle(); return r.ok ? { ok: true } : r
     },
     tercih: async (g) => {
-      if (ornek && ham.current) { const t = ham.current.tercihler; ham.current = { ...ham.current, tercihler: { ...t, ...g, onayAt: g.paylasimOnayi ? new Date().toISOString() : t.onayAt } }; yenidenHesapla(); return { ok: true } }
+      if (ornek && ham.current) {
+        const t = ham.current.tercihler
+        const { modul, ...geri } = g
+        const moduller = modul ? hastaTercihiDegistir(t.moduller, modul.anahtar, modul.acik) ?? t.moduller : t.moduller
+        ham.current = { ...ham.current, tercihler: { ...t, ...geri, moduller, onayAt: g.paylasimOnayi ? new Date().toISOString() : t.onayAt } }
+        yenidenHesapla(); return { ok: true }
+      }
       const r = await gonder({ islem: 'tercih', ...g }); if (r.ok) void yukle(); return r.ok ? { ok: true } : r
     },
     soru: async (metin) => {

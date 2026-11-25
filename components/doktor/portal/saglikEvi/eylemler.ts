@@ -4,6 +4,7 @@
  */
 import type { DozDurumu, GlukozBaglami, OlcumTipi, UyariDuzeyi } from '@/lib/saglikEvi/tipler'
 import type { FotoOneri } from '@/lib/saglikEvi/fotoOku'
+import type { ModulAnahtari } from '@/lib/saglikEvi/moduller'
 
 export type PushDurumu = 'yukleniyor' | 'yok' | 'acik' | 'kapali' | 'reddedildi' | 'desteklenmiyor'
 
@@ -15,7 +16,7 @@ export interface GunlukEylemleri {
   olcumSil: (id: string) => Promise<EylemSonucu>
   doz: (planIds: string[], planlananAt: string | null, durum: DozDurumu | 'geri') => Promise<EylemSonucu>
   plan: (g: { tur: 'ekle' | 'saat' | 'kaldir'; planId?: string; saatler?: string[]; ad?: string; doz?: string; gerektikce?: boolean }) => Promise<EylemSonucu>
-  tercih: (g: { sessizBas?: string; sessizBit?: string; hatirlatmaAcik?: boolean; paylasimOnayi?: boolean }) => Promise<EylemSonucu>
+  tercih: (g: { sessizBas?: string; sessizBit?: string; hatirlatmaAcik?: boolean; paylasimOnayi?: boolean; modul?: { anahtar: ModulAnahtari; acik: boolean } }) => Promise<EylemSonucu>
   soru: (metin: string) => Promise<EylemSonucu>
   soruSil: (id: string) => Promise<EylemSonucu>
   rozetGoruldu: () => Promise<void>

@@ -2,6 +2,7 @@
  * HASTA-PORTALI-GUNLUK (Kaan, 2026-11-24) — shared contracts of the Sağlığım daily health home: home readings, the dose
  * plan, dose events, the rule engine's alerts, badges and the patient's preferences. Pure types — client and server.
  */
+import type { HastaModulTercihi } from './moduller'
 
 /** Home measurement kinds. 'kb' carries systolic in `deger`, diastolic in `deger2`. */
 export type OlcumTipi = 'kb' | 'glukoz' | 'kilo' | 'nabiz' | 'spo2' | 'ates' | 'bel' | 'su'
@@ -86,9 +87,11 @@ export interface EvTercihler {
   sessizBas: string
   sessizBit: string
   hatirlatmaAcik: boolean
+  /** HASTA-MODULLERI: optional modules the patient added / branş-default modules they switched off (ev_tercihler.moduller). */
+  moduller: HastaModulTercihi
 }
 
-export const VARSAYILAN_TERCIHLER: EvTercihler = { paylasimOnayi: false, onayAt: null, sessizBas: '23:00', sessizBit: '07:00', hatirlatmaAcik: true }
+export const VARSAYILAN_TERCIHLER: EvTercihler = { paylasimOnayi: false, onayAt: null, sessizBas: '23:00', sessizBit: '07:00', hatirlatmaAcik: true, moduller: { eklenen: [], cikarilan: [] } }
 
 /** Version of the consent text the patient accepted (stored with the consent). */
 export const PAYLASIM_ONAY_SURUMU = 'saglik-evi-paylasim-v1-2026-11-24'

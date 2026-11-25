@@ -23,6 +23,7 @@
  *  - Pulse: resting <40 or >130 /min notify; <50 or >110 attention (general adult resting range 60–100).
  */
 import type { OlcumTipi } from './tipler'
+import type { ModulAnahtari } from './moduller'
 
 export interface EsikSeti {
   /** Target range used for "time in target" and the patient's goal ring. */
@@ -80,6 +81,9 @@ export interface HekimAyarlari {
   olcumler?: OlcumTipi[]
   /** Kinds the doctor turned off for this patient. */
   kapali?: OlcumTipi[]
+  /** HASTA-MODULLERI: the doctor's per-patient module switches (measurements + the LDL card). Absent = automatic. The
+   *  older `olcumler` / `kapali` fields above still read as switches (lib/saglikEvi/moduller.ts hekimSecimleri). */
+  moduller?: { acik?: ModulAnahtari[]; kapali?: ModulAnahtari[] }
   /** LDL target (mg/dL), shown with the latest lab value — no default, the doctor's risk decision. */
   ldlHedef?: number | null
   /** Weight-gain alert goes to the doctor (heart / kidney follow-up). Branş default when unset. */
@@ -111,6 +115,13 @@ export function hekimAyarlariniTemizle(ham: unknown): HekimAyarlari {
   if (h.ldlHedef === null) out.ldlHedef = null
   else if (Number.isFinite(Number(h.ldlHedef)) && Number(h.ldlHedef) > 0 && Number(h.ldlHedef) < 400) out.ldlHedef = Number(h.ldlHedef)
   if (typeof h.kiloBildir === 'boolean') out.kiloBildir = h.kiloBildir
+  if (h.moduller && typeof h.moduller === 'object') {
+    const m = h.moduller as Record<string, unknown>
+    const anahtarlar: ModulAnahtari[] = [...tipler, 'ldl']
+    const acik = Array.isArray(m.acik) ? anahtarlar.filter((t) => (m.acik as unknown[]).includes(t)) : []
+    const kapali = Array.isArray(m.kapali) ? anahtarlar.filter((t) => (m.kapali as unknown[]).includes(t) && !acik.includes(t)) : []
+    if (acik.length || kapali.length) out.moduller = { acik, kapali }
+  }
   return out
 }
 

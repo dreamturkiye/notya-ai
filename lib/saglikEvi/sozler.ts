@@ -74,10 +74,13 @@ export const SAGLIK_EVI_SOZLERI = {
   sonucSayisi: (n: number) => (n ? `${n} sonuç ve belge` : 'Henüz sonuç yok'),
   soruBaslik: 'Kontrolde sormak istediklerim',
   soruYer: 'Örn. Öğleden sonra şekerim neden yükseliyor?',
+  // HASTA-MODULLERI: the example follows what the patient actually follows (no sugar example for a non-glucose patient)
+  soruYerTansiyon: 'Örn. Akşam tansiyonum neden daha yüksek çıkıyor?',
+  soruYerGenel: 'Örn. İlacımı yemekten önce mi sonra mı almalıyım?',
   soruEkle: 'Ekle',
   soruSil: 'Sil',
   soruNot: 'Sorularınız kontrolden bir gün önce doktorunuzun özetine eklenir.',
-  ldl: (deger: number, hedef: number, tarih: string) => `LDL kolesterol ${deger} mg/dL (${tarih}) · doktorunuzun hedefi ${hedef} altı`,
+  ldl: (deger: number, hedef: number | null, tarih: string) => (hedef != null ? `LDL kolesterol ${deger} mg/dL (${tarih}) · doktorunuzun hedefi ${hedef} altı` : `Son LDL kolesterol ${deger} mg/dL (${tarih}) · doktorunuz kontrolde değerlendirecek`),
 
   // Entry sheet
   kaydet: 'Kaydet',
@@ -143,7 +146,19 @@ export const SAGLIK_EVI_SOZLERI = {
 
   // Tercihler
   tercihlerBaslik: 'Bildirimler ve gizlilik',
-  tercihlerAlt: 'Hatırlatmalar, sessiz saatler, görünüm ve verileriniz.',
+  tercihlerAlt: 'Takip ettikleriniz, hatırlatmalar, sessiz saatler, görünüm ve verileriniz.',
+  // HASTA-MODULLERI — what the patient follows on Bugün (never names a diagnosis)
+  modulBaslik: 'Takip ettiklerim',
+  modulAlt: 'Bugün ekranınızda yalnız sizin için anlamlı olanlar görünür.',
+  modulAd: { kb: 'Tansiyon', glukoz: 'Kan şekeri', kilo: 'Kilo', nabiz: 'Nabız', spo2: 'Oksijen (SpO₂)', ates: 'Ateş', bel: 'Bel çevresi', su: 'Su', ldl: 'LDL kolesterol' } as Record<OlcumTipi | 'ldl', string>,
+  modulHekim: 'Hekiminiz takip ediyor',
+  modulHekimHedef: (n: number) => `Hekiminiz takip ediyor · günde ${n} ölçüm`,
+  modulVarsayilan: 'Açık · isterseniz kapatabilirsiniz',
+  modulSizin: 'Sizin eklediğiniz · günlük hedef yok',
+  modulKapali: 'Kapalı · açarsanız Bugün ekranına eklenir',
+  modulEkleBaslik: 'İsterseniz ekleyin',
+  modulEkleAlt: 'Kendi takibiniz için; günlük hedefe sayılmaz.',
+  modulNot: 'Kapattığınız bir takibin eski kayıtları silinmez. Hekiminizin takip ettiği ölçümleri yalnız hekiminiz değiştirebilir.',
   bildirimBaslik: 'Telefon bildirimleri',
   bildirimAcik: 'Bu cihazda açık',
   bildirimKapali: 'İlaç saatlerinde bu cihaza bildirim gönderelim.',

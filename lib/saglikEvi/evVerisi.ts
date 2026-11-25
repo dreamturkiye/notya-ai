@@ -3,7 +3,8 @@
  * demo run the same function). Without the patient's KVKK consent the card carries no home data at all.
  */
 import type { DozKaydi, DozPlani, EvOlcum, EvTercihler, EvUyari, OlcumTipi } from './tipler'
-import { bransGunlukAyari, etkinOlcumler, hedefProfili } from './bransAyari'
+import { bransGunlukAyari, hedefProfili } from './bransAyari'
+import { hastaModulleri, type KlinikGirdi, type ModulSecenegi } from './moduller'
 import { etkinEsikler, hekimAyarlariniTemizle, varsayilanEsikler, type HekimAyarlari } from './hedefler'
 import { metrikAnahtari, metrikEtiketi, OLCUM_TANIMLARI } from './olcumler'
 import { planUyumlari, uyum } from './dozPlani'
@@ -27,6 +28,10 @@ export interface EvVerisiKarti {
   varsayilan: Record<string, unknown>
   hekimAyar: HekimAyarlari
   olcumTipleri: OlcumTipi[]
+  /** HASTA-MODULLERI: the doctor's Modüller control — every switchable module, on / off, and why (doctor-side only). */
+  moduller: ModulSecenegi[]
+  /** Readings (last 28 days) of kinds this patient is not followed for — stored, shown as one line, never as tiles. */
+  takipDisi: Array<{ tip: OlcumTipi; ad: string; n: number }>
   brans: string
   kontrolOzeti: { id: string; olusturmaAt: string; randevuAt: string | null; ozet: KontrolOzeti; metin: string } | null
   sorular: Array<{ metin: string; tarih: string }>
@@ -47,6 +52,7 @@ export interface EvVerisiGirdisi {
   uyarilar: EvUyari[]
   kontrolOzeti: EvVerisiKarti['kontrolOzeti']
   sorular: EvVerisiKarti['sorular']
+  klinik?: KlinikGirdi | null
 }
 
 export function evVerisiHesapla(g: EvVerisiGirdisi): EvVerisiKarti {
@@ -56,6 +62,7 @@ export function evVerisiHesapla(g: EvVerisiGirdisi): EvVerisiKarti {
   const hekimAyar = hekimAyarlariniTemizle(g.hekimAyarHam)
   const profil = hedefProfili(b.anahtar, g.gebelikAktif)
   const esikler = etkinEsikler(profil, hekimAyar)
+  const mod = hastaModulleri({ bransAnahtar: b.anahtar, ayar: b.ayar, hekim: hekimAyar, klinik: g.klinik, hasta: g.tercih.moduller })
   const olcumler = [...g.olcumler].sort((x, y) => x.olcumAt.localeCompare(y.olcumAt))
   const planlar = g.planlar.filter((p) => p.aktif)
   const kayitlar = g.kayitlar
@@ -63,16 +70,20 @@ export function evVerisiHesapla(g: EvVerisiGirdisi): EvVerisiKarti {
   const bos: EvVerisiKarti = {
     onay: g.tercih.paylasimOnayi, onayAt: g.tercih.onayAt, kullaniyor, metrikler: [], uyum: { hafta: { alinan: 0, beklenen: 0, yuzde: null }, ay: { alinan: 0, beklenen: 0, yuzde: null }, ilaclar: [] },
     planlar: planlar.map((p) => ({ id: p.id, ad: p.ad, doz: p.doz, saatler: p.saatler, gerektikce: p.gerektikce, kaynak: p.kaynak, kritik: p.kritik, minAralikSaat: p.minAralikSaat })),
-    uyarilar: [], acikUyari: 0, esikler, varsayilan: varsayilanEsikler(profil), hekimAyar, olcumTipleri: etkinOlcumler(b.ayar, hekimAyar), brans: b.anahtar, kontrolOzeti: null, sorular: [],
+    uyarilar: [], acikUyari: 0, esikler, varsayilan: varsayilanEsikler(profil), hekimAyar, olcumTipleri: mod.olcumler, moduller: mod.secenekler, takipDisi: [], brans: b.anahtar, kontrolOzeti: null, sorular: [],
   }
   // Without consent the doctor may still set thresholds / kritik flags (his own clinical settings), but sees no home data.
   if (!g.tercih.paylasimOnayi) return bos
-  const anahtarlar = [...new Set(olcumler.map(metrikAnahtari))]
+  const takip = new Set(mod.olcumler)
+  const anahtarlar = [...new Set(olcumler.filter((o) => takip.has(o.tip)).map(metrikAnahtari))]
+  const d28Ms = simdiMs - 28 * GUN_MS
+  const disiSay = new Map<OlcumTipi, number>()
+  for (const o of olcumler) if (!takip.has(o.tip) && Date.parse(o.olcumAt) >= d28Ms) disiSay.set(o.tip, (disiSay.get(o.tip) || 0) + 1)
   const uyarilar = g.uyarilar.filter((u) => u.duzey !== 'bilgi').sort((x, y) => y.olusturmaAt.localeCompare(x.olusturmaAt))
   const d28 = new Date(simdiMs - 28 * GUN_MS).toISOString()
   return {
     ...bos,
-    olcumTipleri: etkinOlcumler(b.ayar, hekimAyar, new Set(olcumler.map((o) => o.tip))),
+    takipDisi: [...disiSay].map(([tip, n]) => ({ tip, ad: OLCUM_TANIMLARI[tip].ad, n })),
     metrikler: anahtarlar.map((a) => {
       const p = pencere(olcumler, a, simdiMs, 7)
       const e = esikler[a]

@@ -47,6 +47,12 @@ cardiometabolic). Shared views: `components/doktor/portal/saglikEvi/*` (words fr
 in every country). Rules: no diagnosis, no dose advice, 112 on every acil level, KVKK consent gates everything the doctor
 sees. Phase 2 modules: `docs/OPEN-COMMITMENTS.md` § HASTA-PORTALI-GUNLUK.
 
+**Per-patient modules (HASTA-MODULLERI, Kaan 2026-11-24):** which measurements / cards are ON is resolved PER PATIENT by
+`lib/saglikEvi/moduller.ts` — doctor's switches (Ev verisi › Modüller) > chronic list / ICD-10 of approved notes / active
+approved drugs (conservative; only measurements the branş row lists) > the patient's own optional additions / removal of
+branş-only modules (Tercihler › Takip ettiklerim) > the branş row as fallback. Never add a "show glucose" branch in a view:
+every downstream piece (tiles, ring goal, trends, rules, badges, karne, Özet, doctor tiles) reads the resolver's result.
+
 ## Specialty module (required for every chapter build)
 
 Each specialty that is more than `baseline` **must** declare a portal module. Prefer extending `SpecialtyProfile` (see `lib/specialties/profile.ts`) rather than hardcoding `if (brans === …)` in `PortalShell` / `TrackingView` / the portal API.

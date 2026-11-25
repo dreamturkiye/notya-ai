@@ -171,6 +171,70 @@ describe('HASTA-PORTALI-GUNLUK: Sağlığım günlük rotaları hasta / hekim s�
     })
   }
 
+  // HASTA-MODULLERI — the doctor's per-patient module switches (PATCH { modul }) and the patient's own module choice.
+  for (const [hh, dd] of [['A', 'B'], ['B', 'A']] as const) {
+    it(`${hh} hekimi modül anahtarını yalnız kendi hastasında değiştirir (${dd} hastası 404, satırı değişmez)`, async () => {
+      const h = hh === 'A' ? A : B, v = hh === 'A' ? B : A
+      const kendi = `/api/doktor/hastalar/${h.hasta}/ev-verisi`, yabanci = `/api/doktor/hastalar/${v.hasta}/ev-verisi`
+      db.ekle('ev_hedefler', { doctor_id: v.id, patient_id: v.hasta, ayarlar: { moduller: { acik: ['spo2'], kapali: [] } }, updated_by: v.id, updated_at: new Date().toISOString() })
+      const once = JSON.stringify(db.tablo('ev_hedefler').filter((x) => x.patient_id === v.hasta))
+      for (const govde of [{ modul: { anahtar: 'glukoz', durum: 'kapali' } }, { modul: { anahtar: 'spo2', durum: 'otomatik' } }]) {
+        assert.equal((await coz(R.evVerisi.PATCH(iste('PATCH', yabanci, { jwt: h.jwt, govde }), prm({ id: v.hasta })))).status, 404)
+      }
+      assert.equal(JSON.stringify(db.tablo('ev_hedefler').filter((x) => x.patient_id === v.hasta)), once, 'victim row changed')
+      // positive control: own patient — switch glucose off, the card follows, the row carries both own ids
+      const ok = await coz(R.evVerisi.PATCH(iste('PATCH', kendi, { jwt: h.jwt, govde: { modul: { anahtar: 'glukoz', durum: 'kapali' } } }), prm({ id: h.hasta })))
+      assert.equal(ok.status, 200, ok.metin)
+      const sat = db.tablo('ev_hedefler').filter((x) => x.patient_id === h.hasta)
+      assert.deepEqual(sat.map((x) => [x.doctor_id, (x.ayarlar as Record<string, any>).moduller.kapali]), [[h.id, ['glukoz']]])
+      const kart = JSON.parse((await coz(R.evVerisi.GET(iste('GET', kendi, { jwt: h.jwt }), prm({ id: h.hasta })))).metin)
+      assert.ok(!kart.olcumTipleri.includes('glukoz') && kart.olcumTipleri.includes('kb'))
+      assert.equal(kart.moduller.find((m: { anahtar: string }) => m.anahtar === 'glukoz').hekimSecimi, 'kapali')
+      // the patient's Bugün follows the doctor's switch
+      const bugun = JSON.parse((await coz(R.gunluk.GET(iste('GET', `/api/portal/hasta/${h.token}/gunluk`, { cerez: await cerez(h.token) }), prm({ token: h.token })))).metin)
+      assert.ok(!bugun.olcumKartlari.some((k: { tip: string }) => k.tip === 'glukoz'))
+      // the thresholds panel does not wipe the switches
+      assert.equal((await coz(R.evVerisi.PATCH(iste('PATCH', kendi, { jwt: h.jwt, govde: { ayarlar: { esikler: { kb: { hedefMax: 125 } } } } }), prm({ id: h.hasta })))).status, 200)
+      assert.deepEqual((db.tablo('ev_hedefler').find((x) => x.patient_id === h.hasta)!.ayarlar as Record<string, any>).moduller.kapali, ['glukoz'])
+      assert.equal((await coz(R.evVerisi.PATCH(iste('PATCH', kendi, { jwt: h.jwt, govde: { modul: { anahtar: 'xx', durum: 'acik' } } }), prm({ id: h.hasta })))).status, 422)
+    })
+
+    it(`${hh} hastasının modül tercihi yalnız kendi kapsamına yazılır; hekim / tanı modülünü kapatamaz`, async () => {
+      const h = hh === 'A' ? A : B, v = hh === 'A' ? B : A
+      const c = await cerez(h.token)
+      const yol = `/api/portal/hasta/${h.token}/gunluk`
+      const onceV = satir('ev_tercihler', db.tablo('ev_tercihler').find((x) => x.patient_id === v.hasta)!.id)
+      assert.equal((await coz(R.gunluk.POST(iste('POST', yol, { cerez: c, govde: { islem: 'tercih', modul: { anahtar: 'su', acik: true } } }), prm({ token: h.token })))).status, 200)
+      assert.equal((await coz(R.gunluk.POST(iste('POST', yol, { cerez: c, govde: { islem: 'tercih', modul: { anahtar: 'nabiz', acik: false } } }), prm({ token: h.token })))).status, 200)
+      assert.equal((await coz(R.gunluk.POST(iste('POST', yol, { cerez: c, govde: { islem: 'tercih', modul: { anahtar: 'zz', acik: true } } }), prm({ token: h.token })))).status, 422)
+      const t = db.tablo('ev_tercihler').filter((x) => x.patient_id === h.hasta)
+      assert.deepEqual(t.map((x) => [x.doctor_id, x.moduller]), [[h.id, { eklenen: ['su'], cikarilan: ['nabiz'] }]])
+      assert.equal(satir('ev_tercihler', db.tablo('ev_tercihler').find((x) => x.patient_id === v.hasta)!.id), onceV, "the other patient's preferences changed")
+      // a diagnosis on the file: BP comes from the file and the patient's "off" for it has no effect
+      db.tablo('patients').find((x) => x.id === h.hasta)!.notes_encrypted = encrypt(JSON.stringify({ kronikHastaliklar: ['Hipertansiyon'] }))
+      await coz(R.gunluk.POST(iste('POST', yol, { cerez: c, govde: { islem: 'tercih', modul: { anahtar: 'kb', acik: false } } }), prm({ token: h.token })))
+      const d = JSON.parse((await coz(R.gunluk.GET(iste('GET', yol, { cerez: c }), prm({ token: h.token })))).metin)
+      assert.deepEqual(d.olcumKartlari.map((k: { tip: string }) => k.tip), ['kb', 'su'])
+      assert.ok(d.moduller.aktif.find((x: { anahtar: string }) => x.anahtar === 'kb').hekimTakip)
+      assert.ok(!JSON.stringify(d).includes('Hipertansiyon'), 'the diagnosis name never reaches the patient')
+    })
+
+    it(`${hh} hastasının modülleri ${dd} hekiminin notlarındaki tanıdan etkilenmez`, async () => {
+      const h = hh === 'A' ? A : B, v = hh === 'A' ? B : A
+      db.tablo('patients').find((x) => x.id === h.hasta)!.notes_encrypted = encrypt(JSON.stringify({ kronikHastaliklar: ['Hipertansiyon'] }))
+      // an approved note of the OTHER doctor carrying E11 on a session that names this patient (dirty row): ignored
+      const ses = db.ekle('sessions', { doctor_id: v.id, patient_id: h.hasta, archived_at: null }).id
+      db.ekle('notes', { doctor_id: v.id, session_id: ses, approved_at: new Date().toISOString(), created_at: new Date().toISOString(), icd10_codes: [{ code: 'E11.9' }] })
+      const d = JSON.parse((await coz(R.gunluk.GET(iste('GET', `/api/portal/hasta/${h.token}/gunluk`, { cerez: await cerez(h.token) }), prm({ token: h.token })))).metin)
+      assert.deepEqual(d.olcumKartlari.map((k: { tip: string }) => k.tip), ['kb'])
+      // positive control: the same note by this patient's OWN doctor does turn glucose on
+      const ses2 = db.ekle('sessions', { doctor_id: h.id, patient_id: h.hasta, archived_at: null }).id
+      db.ekle('notes', { doctor_id: h.id, session_id: ses2, approved_at: new Date().toISOString(), created_at: new Date().toISOString(), icd10_codes: [{ code: 'E11.9' }] })
+      const d2 = JSON.parse((await coz(R.gunluk.GET(iste('GET', `/api/portal/hasta/${h.token}/gunluk`, { cerez: await cerez(h.token) }), prm({ token: h.token })))).metin)
+      assert.deepEqual(d2.olcumKartlari.map((k: { tip: string }) => k.tip), ['kb', 'glukoz'])
+    })
+  }
+
   it('KVKK: without the patient\'s consent the doctor sees no values, alerts or questions', async () => {
     db = new SahteVeritabani(); A = hekimKur('A', false); B = hekimKur('B', true)
     const r = await coz(R.evVerisi.GET(iste('GET', `/api/doktor/hastalar/${A.hasta}/ev-verisi`, { jwt: A.jwt }), prm({ id: A.hasta })))

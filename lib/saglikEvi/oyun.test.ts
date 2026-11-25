@@ -14,7 +14,8 @@ import { karneHesapla, notVer } from './karne'
 import { gunlukOzeti, kontrolOncesiOzet } from './ozet'
 import { gunlukDemoHam, evVerisiDemoGirdisi } from './demo'
 import { evVerisiHesapla } from './evVerisi'
-import { bransGunlukAyari, etkinOlcumler, hedefProfili, OZEL_BRANS_AYARLARI, TIBBI_BRANS_AYARLARI } from './bransAyari'
+import { hastaModulleri } from './moduller'
+import { bransGunlukAyari, hedefProfili, OZEL_BRANS_AYARLARI, TIBBI_BRANS_AYARLARI } from './bransAyari'
 import { onerilenBaglam, olcumDogrula, saateGoreBaglam } from './olcumler'
 import { varsayilanEsikler } from './hedefler'
 import { KLINIK_YENI_SLUGS } from '@/lib/specialties/klinikDikey'
@@ -177,9 +178,11 @@ describe('branş ayarı — 30 branş + 10 Özel Branşlar, sızıntı yok', () 
     assert.equal(hedefProfili('kadin-hastaliklari-dogum', false), 'genel')
     assert.equal(hedefProfili('dahiliye', true), 'genel')
   })
-  it('the doctor can add / remove kinds per patient; kinds the patient already logs keep their tile', () => {
-    assert.deepEqual(etkinOlcumler(TIBBI_BRANS_AYARLARI.dermatoloji, { olcumler: ['kilo'] }), ['kilo'])
-    assert.deepEqual(etkinOlcumler(TIBBI_BRANS_AYARLARI.dahiliye, { kapali: ['nabiz'] }, ['spo2']), ['kb', 'glukoz', 'kilo', 'spo2'])
+  it('the doctor can add / remove kinds per patient (older olcumler / kapali fields read as switches — HASTA-MODULLERI)', () => {
+    const m = (b: string, hekim: Record<string, unknown>) => hastaModulleri({ bransAnahtar: b, ayar: TIBBI_BRANS_AYARLARI[b], hekim }).olcumler
+    assert.deepEqual(m('dermatoloji', { olcumler: ['kilo'] }), ['kilo'])
+    // a kind the patient logged without an active module no longer brings its tile back (it is stored, not prompted)
+    assert.deepEqual(m('dahiliye', { kapali: ['nabiz'] }), ['kb', 'glukoz', 'kilo'])
   })
   it('a pediatri patient\'s Bugün shows the as-needed fever medicine with the doctor\'s interval', () => {
     const d = gunlukOzeti(gunlukDemoHam(SIMDI, 'pediatri'))

@@ -10,9 +10,11 @@
  *  - LDL target card only for the cardiometabolic branches.
  * Deeper branş modules (photo diary, family account, voice / WhatsApp entry, safe patient guide, micro tasks) are
  * Phase 2 — docs/OPEN-COMMITMENTS.md § HASTA-PORTALI-GUNLUK-FAZ2.
+ * HASTA-MODULLERI (2026-11-24): a row here is now the branş's FALLBACK and its follow-up scope — which modules are on is
+ * resolved per patient in lib/saglikEvi/moduller.ts (doctor switches > diagnoses / drugs > patient choice > this row).
  */
 import type { OlcumTipi } from './tipler'
-import type { HedefProfili, HekimAyarlari } from './hedefler'
+import type { HedefProfili } from './hedefler'
 import { bransAnahtari } from '@/lib/specialties/bransAnahtari'
 import { klinikSlugCoz } from '@/lib/specialties/klinikDikey'
 
@@ -91,17 +93,6 @@ export function bransGunlukAyari(doktorBransi: string | null | undefined): { ana
   const b = bransAnahtari(doktorBransi)
   if (b && TIBBI_BRANS_AYARLARI[b]) return { anahtar: b, ayar: TIBBI_BRANS_AYARLARI[b] }
   return { anahtar: 'genel', ayar: GENEL }
-}
-
-/**
- * The patient's effective quick-add list: branş defaults + kinds the doctor turned on − kinds the doctor turned off +
- * kinds the patient already recorded in the last 90 days (a patient who logs weight keeps the tile).
- */
-export function etkinOlcumler(ayar: BransGunlukAyari, hekim: HekimAyarlari | null | undefined, kayitliTipler: Iterable<OlcumTipi> = []): OlcumTipi[] {
-  const kapali = new Set(hekim?.kapali || [])
-  const out: OlcumTipi[] = []
-  for (const t of [...ayar.olcumler, ...(hekim?.olcumler || []), ...kayitliTipler]) if (!kapali.has(t) && !out.includes(t)) out.push(t)
-  return out
 }
 
 /** Target profile: pregnancy thresholds only for a KD doctor with an active pregnancy on the chart. */
