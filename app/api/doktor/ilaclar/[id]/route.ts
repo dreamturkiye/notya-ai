@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
+import { icNotTemizle } from '@/lib/doktor/ilacNotu';
 
 export const dynamic = 'force-dynamic';
 
@@ -29,6 +30,9 @@ export async function PUT(
   const updateData: Record<string, unknown> = {};
   if (typeof aktif === 'boolean') updateData.aktif = aktif;
   if (notlar !== undefined) updateData.notlar = notlar;
+  // ILAC-NOTU-AYRIMI (211): "İç not" — doctor only. Sent → set (empty string clears it); absent → untouched.
+  const icNotHam = body.ic_not !== undefined ? body.ic_not : body.icNot;
+  if (icNotHam !== undefined) updateData.ic_not = icNotTemizle(icNotHam);
 
   const yeniAd = typeof ad === 'string' ? ad.trim() : typeof ilac_adi === 'string' ? ilac_adi.trim() : '';
   if (yeniAd) updateData.ilac_adi = yeniAd.slice(0, 200);

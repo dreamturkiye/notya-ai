@@ -24,6 +24,7 @@ import type { GruplanmisIlac, SunumSecenegi } from '@/app/api/doktor/ilac-ara/ro
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 import { doktorFetch } from '@/lib/doktor/oturumFetch'
+import { ILAC_NOTU_METIN as NM, IC_NOT_AZAMI } from '@/lib/doktor/ilacNotu'
 
 interface Ilac {
   id: string;
@@ -34,7 +35,10 @@ interface Ilac {
   baslangic_tarihi: string | null;
   bitis_tarihi: string | null;
   aktif: boolean;
+  /** "Hastaya not" — shown to the patient on Sağlığım › İlaçlarım. */
   notlar: string | null;
+  /** ILAC-NOTU-AYRIMI: "İç not" — doctor only, never in any patient payload (migration 211). */
+  ic_not?: string | null;
   barkod?: string | null;
   kutu_adedi?: number | null;
   /** NOTYA-RECETE-01: 'beklemede' = nottan aktarıldı, hekim kararı bekliyor. */
@@ -75,12 +79,13 @@ export default function HastaIlaclar({ patientId }: { patientId: string }) {
   const [siklik, setSiklik] = useState('');
   const [baslangic, setBaslangic] = useState(() => new Date().toISOString().slice(0, 10));
   const [notlar, setNotlar] = useState('');
+  const [icNot, setIcNot] = useState('');
   const [dozOnerisi, setDozOnerisi] = useState<{ doz: string; kullanim: string; aciklama: string } | null>(null);
   const [dozOneriYukleniyor, setDozOneriYukleniyor] = useState(false);
   const [dozOneriNot, setDozOneriNot] = useState('');
   // NOTYA-ILAC-DUZEN-01: mevcut satırı doğrudan revize et.
   const [duzenId, setDuzenId] = useState<string | null>(null);
-  const [duzen, setDuzen] = useState({ ad: '', etkenMadde: '', doz: '', siklik: '', baslangic: '', notlar: '' });
+  const [duzen, setDuzen] = useState({ ad: '', etkenMadde: '', doz: '', siklik: '', baslangic: '', notlar: '', icNot: '' });
   const [duzenKaydediyor, setDuzenKaydediyor] = useState(false);
 
   // Debounced: a doctor types faster than a round trip, and one request per keystroke would both
@@ -228,6 +233,7 @@ export default function HastaIlaclar({ patientId }: { patientId: string }) {
           barkod: sunum?.barkod || null,
           kutu_adedi: kutuAdedi,
           notlar: notlar.trim() || null,
+          ...(icNot.trim() ? { ic_not: icNot.trim() } : {}),
         }),
       });
       if (!r.ok) {
@@ -235,7 +241,7 @@ export default function HastaIlaclar({ patientId }: { patientId: string }) {
         setHata(j.error || 'İlaç eklenemedi. Lütfen tekrar deneyin.');
         return;
       }
-      setAd(''); setEtkenMadde(''); setDoz(''); setNotlar(''); setSecili(null); setSunum(null); setKutuAdedi(1); setSiklik('2x1');
+      setAd(''); setEtkenMadde(''); setDoz(''); setNotlar(''); setIcNot(''); setSecili(null); setSunum(null); setKutuAdedi(1); setSiklik('2x1');
       await listele();
     } catch {
       setHata('İlaç eklenemedi. Bağlantınızı kontrol edin.');
@@ -300,6 +306,7 @@ export default function HastaIlaclar({ patientId }: { patientId: string }) {
       siklik: i.kullanim_sikli || '',
       baslangic: (i.baslangic_tarihi || '').slice(0, 10),
       notlar: i.notlar || '',
+      icNot: i.ic_not || '',
     });
     setHata('');
   }
@@ -326,6 +333,7 @@ export default function HastaIlaclar({ patientId }: { patientId: string }) {
           kullanim_sikli: duzen.siklik.trim(),
           baslangic_tarihi: duzen.baslangic || undefined,
           notlar: duzen.notlar.trim() || null,
+          ...(duzen.icNot.trim() || (ilaclar.find((x) => x.id === duzenId)?.ic_not || '') ? { ic_not: duzen.icNot.trim() || null } : {}),
         }),
       });
       if (!r.ok) {
@@ -371,7 +379,7 @@ export default function HastaIlaclar({ patientId }: { patientId: string }) {
                     Reçete tarihi: {new Date(i.baslangic_tarihi).toLocaleDateString('tr-TR')}
                   </div>
                 )}
-                {i.notlar && <div className="ni-item-date">{i.notlar}</div>}
+                <IlacNotlari i={i} />
               </div>
               <div className="ni-pending-actions">
                 <button type="button" className="ni-btn-yes" onClick={() => receteKarar(i.id, 'aktif')}>
@@ -509,11 +517,14 @@ export default function HastaIlaclar({ patientId }: { patientId: string }) {
             <label className="ni-label">Başlangıç *</label>
             <input className="ni-input" type="date" value={baslangic} onChange={(e) => setBaslangic(e.target.value)} />
           </div>
-          <div className="ni-field">
-            <label className="ni-label">Not</label>
-            <input className="ni-input" value={notlar} onChange={(e) => setNotlar(e.target.value)} placeholder="İsteğe bağlı" />
-          </div>
         </div>
+        <NotAlanlari
+          kimlik="ekle"
+          hastaya={notlar}
+          ic={icNot}
+          hastayaDegisti={setNotlar}
+          icDegisti={setIcNot}
+        />
 
         {hata && <div className="ni-error">{hata}</div>}
 
@@ -561,11 +572,14 @@ export default function HastaIlaclar({ patientId }: { patientId: string }) {
                     <label className="ni-label">Başlangıç</label>
                     <input className="ni-input" type="date" value={duzen.baslangic} onChange={(e) => setDuzen((d) => ({ ...d, baslangic: e.target.value }))} />
                   </div>
-                  <div className="ni-field">
-                    <label className="ni-label">Not</label>
-                    <input className="ni-input" value={duzen.notlar} onChange={(e) => setDuzen((d) => ({ ...d, notlar: e.target.value }))} />
-                  </div>
                 </div>
+                <NotAlanlari
+                  kimlik={`duzen-${i.id}`}
+                  hastaya={duzen.notlar}
+                  ic={duzen.icNot}
+                  hastayaDegisti={(v) => setDuzen((d) => ({ ...d, notlar: v }))}
+                  icDegisti={(v) => setDuzen((d) => ({ ...d, icNot: v }))}
+                />
                 <div className="ni-pending-actions" style={{ marginTop: 10 }}>
                   <button type="submit" className="ni-btn-yes" disabled={duzenKaydediyor}>{duzenKaydediyor ? 'Kaydediliyor…' : 'Kaydet'}</button>
                   <button type="button" className="ni-btn-no" onClick={() => setDuzenId(null)}>Vazgeç</button>
@@ -587,7 +601,7 @@ export default function HastaIlaclar({ patientId }: { patientId: string }) {
                       {i.bitis_tarihi ? ` · Bitiş: ${new Date(i.bitis_tarihi).toLocaleDateString('tr-TR')}` : ''}
                     </div>
                   )}
-                  {i.notlar && <div className="ni-item-date">{i.notlar}</div>}
+                  <IlacNotlari i={i} />
                   {i.aktif && (i.doz_guvenligi || []).map((m, n) => (
                     <div key={n} role="alert" style={{ marginTop: 6, padding: '8px 10px', background: 'rgba(220,38,38,0.07)', border: '1px solid rgba(220,38,38,0.3)', borderRadius: 8, fontSize: 12.5, lineHeight: 1.45, color: '#991B1B' }}>
                       <strong>⚠ Doz güvenliği:</strong> {m}
@@ -613,5 +627,76 @@ export default function HastaIlaclar({ patientId }: { patientId: string }) {
         ))}
       </div>
     </div>
+  );
+}
+
+/**
+ * ILAC-NOTU-AYRIMI (Kaan, 2026-11-25): the single "Not" field was shown to the patient verbatim on Sağlığım and the
+ * form never said so. Two fields now, side by side in the add and the edit form:
+ *   "Hastaya not" (notlar) — the patient sees it on Sağlığım › İlaçlarım; the hint says so.
+ *   "İç not" (ic_not)      — only the doctor sees it; it never leaves the doctor's side (portal, PDFs, shares).
+ */
+const IC_NOT_RENK = { zemin: 'rgba(100,116,139,0.08)', kenar: 'rgba(100,116,139,0.35)', yazi: '#475569' };
+
+export function NotAlanlari({ kimlik, hastaya, ic, hastayaDegisti, icDegisti }: {
+  kimlik: string;
+  hastaya: string;
+  ic: string;
+  hastayaDegisti: (v: string) => void;
+  icDegisti: (v: string) => void;
+}) {
+  return (
+    <div className="ni-grid" style={{ marginTop: 4 }}>
+      <div className="ni-field">
+        <label className="ni-label" htmlFor={`ni-hastaya-not-${kimlik}`}>{NM.hastayaEtiket}</label>
+        <input
+          id={`ni-hastaya-not-${kimlik}`}
+          data-alan="hastaya-not"
+          className="ni-input"
+          value={hastaya}
+          onChange={(e) => hastayaDegisti(e.target.value)}
+          placeholder={NM.hastayaOrnek}
+          aria-describedby={`ni-hastaya-not-ipucu-${kimlik}`}
+        />
+        <p id={`ni-hastaya-not-ipucu-${kimlik}`} className="ni-hint" style={{ margin: '4px 0 0' }}>{NM.hastayaIpucu}</p>
+      </div>
+      <div className="ni-field">
+        <label className="ni-label" htmlFor={`ni-ic-not-${kimlik}`}>{NM.icEtiket}</label>
+        <input
+          id={`ni-ic-not-${kimlik}`}
+          data-alan="ic-not"
+          className="ni-input"
+          value={ic}
+          maxLength={IC_NOT_AZAMI}
+          onChange={(e) => icDegisti(e.target.value)}
+          placeholder={NM.icOrnek}
+          aria-describedby={`ni-ic-not-ipucu-${kimlik}`}
+          style={{ background: IC_NOT_RENK.zemin, borderStyle: 'dashed', borderColor: IC_NOT_RENK.kenar }}
+        />
+        <p id={`ni-ic-not-ipucu-${kimlik}`} className="ni-hint" style={{ margin: '4px 0 0' }}>🔒 {NM.icIpucu}</p>
+      </div>
+    </div>
+  );
+}
+
+/** List / pending-card rendering of both notes; the internal one is visibly marked as doctor-only. */
+export function IlacNotlari({ i }: { i: Pick<Ilac, 'notlar' | 'ic_not'> }) {
+  return (
+    <>
+      {i.notlar && (
+        <div className="ni-item-date" data-not="hastaya">
+          <span style={{ fontWeight: 600 }}>{NM.hastayaEtiket}:</span> {i.notlar}
+        </div>
+      )}
+      {i.ic_not && (
+        <div
+          data-not="ic"
+          style={{ marginTop: 4, padding: '5px 8px', background: IC_NOT_RENK.zemin, border: `1px dashed ${IC_NOT_RENK.kenar}`, borderRadius: 8, fontSize: 12.5, color: IC_NOT_RENK.yazi }}
+        >
+          <span style={{ fontWeight: 600 }}>{NM.icEtiket}</span>{' '}
+          <span style={{ fontSize: 11, opacity: 0.85 }}>(🔒 {NM.icIpucu.toLocaleLowerCase('tr-TR')})</span>: {i.ic_not}
+        </div>
+      )}
+    </>
   );
 }

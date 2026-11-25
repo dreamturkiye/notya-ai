@@ -17,6 +17,7 @@ import {
 } from '@/lib/doktor/toolsUi';
 import { CHROME_RENK, CHROME_FONT } from '@/lib/doktor/chromeTheme';
 import { doktorFetch } from '@/lib/doktor/oturumFetch'
+import { ILAC_NOTU_METIN as NM, IC_NOT_AZAMI } from '@/lib/doktor/ilacNotu'
 
 interface Ilac {
   id: string;
@@ -26,7 +27,10 @@ interface Ilac {
   kullanim: string;
   baslangic: string;
   bitis: string;
+  /** ILAC-NOTU-AYRIMI: "Hastaya not" — shown on the patient's Sağlığım. */
   notlar: string;
+  /** "İç not" — doctor only (migration 211). */
+  icNot: string;
   aktif: boolean;
 }
 
@@ -38,6 +42,7 @@ interface NewIlac {
   baslangic: string;
   bitis: string;
   notlar: string;
+  icNot: string;
 }
 
 // Öneri — hekim serbest metin yazabilir (NOTYA-ILAC-SIKLIK-01).
@@ -67,6 +72,7 @@ const EMPTY_ILAC: NewIlac = {
   baslangic: '',
   bitis: '',
   notlar: '',
+  icNot: '',
 };
 
 /** API satırlarını (snake_case) UI modeline çevirir. Dizi olmayan payload'da [] döner. */
@@ -91,6 +97,7 @@ function normalizeIlac(item: unknown, idx = 0): Ilac {
     baslangic: String(r.baslangic_tarihi ?? r.baslangic ?? ''),
     bitis: String(r.bitis_tarihi ?? r.bitis ?? ''),
     notlar: String(r.notlar ?? ''),
+    icNot: String(r.ic_not ?? ''),
     aktif: r.aktif !== false,
   };
 }
@@ -222,6 +229,7 @@ export default function DoktorIlaclarPage() {
           baslangic_tarihi: newIlac.baslangic,
           bitis_tarihi: newIlac.bitis || null,
           notlar: newIlac.notlar.trim() || null,
+          ...(newIlac.icNot.trim() ? { ic_not: newIlac.icNot.trim() } : {}),
         }),
       });
 
@@ -287,6 +295,7 @@ export default function DoktorIlaclarPage() {
       baslangic: (ilac.baslangic || '').slice(0, 10),
       bitis: (ilac.bitis || '').slice(0, 10),
       notlar: ilac.notlar,
+      icNot: ilac.icNot,
     });
     setError('');
     setInfo('');
@@ -316,6 +325,7 @@ export default function DoktorIlaclarPage() {
           baslangic_tarihi: duzenIlac.baslangic || undefined,
           bitis_tarihi: duzenIlac.bitis || null,
           notlar: duzenIlac.notlar.trim() || null,
+          ...(duzenIlac.icNot.trim() || ilaclar.find((x) => x.id === duzenId)?.icNot ? { ic_not: duzenIlac.icNot.trim() || null } : {}),
         }),
       });
       if (!res.ok) {
@@ -339,6 +349,7 @@ export default function DoktorIlaclarPage() {
                 baslangic: duzenIlac.baslangic,
                 bitis: duzenIlac.bitis,
                 notlar: duzenIlac.notlar.trim(),
+                icNot: duzenIlac.icNot.trim(),
               }
             : i,
         ),
@@ -436,8 +447,14 @@ export default function DoktorIlaclarPage() {
             </div>
           </div>
           <div style={{ marginTop: 12 }}>
-            <label style={toolsLabel}>Notlar</label>
-            <textarea value={duzenIlac.notlar} onChange={(e) => setDuzenIlac((p) => ({ ...p, notlar: e.target.value }))} rows={2} style={{ ...toolsInput, resize: 'vertical', fontFamily: 'inherit' }} />
+            <label style={toolsLabel} htmlFor="ilac-duzen-hastaya-not">{NM.hastayaEtiket}</label>
+            <textarea id="ilac-duzen-hastaya-not" data-alan="hastaya-not" value={duzenIlac.notlar} onChange={(e) => setDuzenIlac((p) => ({ ...p, notlar: e.target.value }))} placeholder={NM.hastayaOrnek} rows={2} style={{ ...toolsInput, resize: 'vertical', fontFamily: 'inherit' }} />
+            <p style={{ margin: '4px 0 0', fontSize: 12, color: CHROME_RENK.muted }}>{NM.hastayaIpucu}</p>
+          </div>
+          <div style={{ marginTop: 12 }}>
+            <label style={toolsLabel} htmlFor="ilac-duzen-ic-not">{NM.icEtiket}</label>
+            <textarea id="ilac-duzen-ic-not" data-alan="ic-not" value={duzenIlac.icNot} maxLength={IC_NOT_AZAMI} onChange={(e) => setDuzenIlac((p) => ({ ...p, icNot: e.target.value }))} placeholder={NM.icOrnek} rows={2} style={{ ...toolsInput, resize: 'vertical', fontFamily: 'inherit', background: 'rgba(100,116,139,0.08)', borderStyle: 'dashed', borderColor: 'rgba(100,116,139,0.35)' }} />
+            <p style={{ margin: '4px 0 0', fontSize: 12, color: CHROME_RENK.muted }}>🔒 {NM.icIpucu}</p>
           </div>
           <div style={{ marginTop: 12, display: 'flex', gap: 8 }}>
             <button onClick={() => void duzenKaydet()} disabled={saving} style={toolsPrimaryBtn(saving)}>
@@ -537,7 +554,12 @@ export default function DoktorIlaclarPage() {
           </div>
 
           {ilac.notlar && (
-            <div style={{ marginTop: 10, fontSize: 13, color: CHROME_RENK.ink, lineHeight: 1.5 }}>{ilac.notlar}</div>
+            <div data-not="hastaya" style={{ marginTop: 10, fontSize: 13, color: CHROME_RENK.ink, lineHeight: 1.5 }}><span style={{ fontWeight: 600 }}>{NM.hastayaEtiket}:</span> {ilac.notlar}</div>
+          )}
+          {ilac.icNot && (
+            <div data-not="ic" style={{ marginTop: 6, padding: '5px 8px', background: 'rgba(100,116,139,0.08)', border: '1px dashed rgba(100,116,139,0.35)', borderRadius: 8, fontSize: 12.5, color: '#475569', lineHeight: 1.5 }}>
+              <span style={{ fontWeight: 600 }}>{NM.icEtiket}</span> <span style={{ fontSize: 11, opacity: 0.85 }}>(🔒 {NM.icIpucu.toLocaleLowerCase('tr-TR')})</span>: {ilac.icNot}
+            </div>
           )}
         </>
       )}
@@ -712,14 +734,31 @@ export default function DoktorIlaclarPage() {
             </div>
 
             <div style={{ marginTop: 14 }}>
-              <label style={toolsLabel}>Notlar</label>
+              <label style={toolsLabel} htmlFor="ilac-ekle-hastaya-not">{NM.hastayaEtiket}</label>
               <textarea
+                id="ilac-ekle-hastaya-not"
+                data-alan="hastaya-not"
                 value={newIlac.notlar}
                 onChange={(e) => handleInputChange('notlar', e.target.value)}
-                placeholder="Ek notlar..."
-                rows={3}
+                placeholder={NM.hastayaOrnek}
+                rows={2}
                 style={{ ...toolsInput, resize: 'vertical', fontFamily: 'inherit' }}
               />
+              <p style={{ margin: '4px 0 0', fontSize: 12, color: CHROME_RENK.muted }}>{NM.hastayaIpucu}</p>
+            </div>
+            <div style={{ marginTop: 14 }}>
+              <label style={toolsLabel} htmlFor="ilac-ekle-ic-not">{NM.icEtiket}</label>
+              <textarea
+                id="ilac-ekle-ic-not"
+                data-alan="ic-not"
+                value={newIlac.icNot}
+                maxLength={IC_NOT_AZAMI}
+                onChange={(e) => handleInputChange('icNot', e.target.value)}
+                placeholder={NM.icOrnek}
+                rows={2}
+                style={{ ...toolsInput, resize: 'vertical', fontFamily: 'inherit', background: 'rgba(100,116,139,0.08)', borderStyle: 'dashed', borderColor: 'rgba(100,116,139,0.35)' }}
+              />
+              <p style={{ margin: '4px 0 0', fontSize: 12, color: CHROME_RENK.muted }}>🔒 {NM.icIpucu}</p>
             </div>
 
             <div style={{ marginTop: 16 }}>

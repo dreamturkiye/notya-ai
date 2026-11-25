@@ -4,6 +4,7 @@ import { hastaSahibiMi } from '@/lib/doktor/hastaSahipligi';
 import { arsivsizIlaclar } from '@/lib/doktor/arsiv';
 import { dosyaSorguVerisiDerle } from '@/lib/doktor/dosyaOlaylari';
 import { dozGuvenligi } from '@/lib/doktor/dozGuvenligi';
+import { icNotTemizle } from '@/lib/doktor/ilacNotu';
 
 export const dynamic = 'force-dynamic';
 
@@ -73,6 +74,9 @@ export async function POST(request: NextRequest) {
 
   const body = await request.json();
   const { hastaId, ad, etkenMadde, doz, kullanim_sikli, baslangic_tarihi, bitis_tarihi, notlar, barkod, kutu_adedi } = body;
+  // ILAC-NOTU-AYRIMI (211): `notlar` = "Hastaya not" (shown on Sağlığım); `ic_not` = "İç not" (doctor only, never in a
+  // patient payload). The key is sent only when filled, so an add without an İç not never names the column.
+  const icNot = icNotTemizle(body.ic_not ?? body.icNot);
 
   if (!hastaId || !ad || !etkenMadde || !doz || !kullanim_sikli || !baslangic_tarihi) {
     return NextResponse.json({ error: 'Zorunlu alanlar eksik.' }, { status: 400 });
@@ -101,6 +105,7 @@ export async function POST(request: NextRequest) {
       bitis_tarihi: bitis_tarihi || null,
       aktif: true,
       notlar: notlar || null,
+      ...(icNot ? { ic_not: icNot } : {}),
     })
     .select()
     .single();

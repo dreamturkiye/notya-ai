@@ -362,6 +362,8 @@ export async function GET(
     .not('hedef_brans', 'is', null)
     .order('created_at', { ascending: false })
     .limit(40))
+  // ILAC-NOTU-AYRIMI (211): `notlar` is the doctor's "Hastaya not" (meant for the patient). The doctor's "İç not"
+  // (`ic_not`) is NEVER selected here — keep this an explicit column list, never '*' (lib/portal/ilacNotuAyrimi-rota.test.ts).
   const medsP = Promise.resolve(arsivsizIlaclar(sb, 'id, ilac_adi, doz, kullanim_sikli, notlar, aktif, baslangic_tarihi, bitis_tarihi, yazan_doktor')
     .eq('patient_id', patientId)
     .eq('doctor_id', doctorId)
