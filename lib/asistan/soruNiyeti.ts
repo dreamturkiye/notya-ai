@@ -36,8 +36,9 @@ export function asiSozuVarMi(mesaj: string | null | undefined): boolean {
   return ASI_SOZU.test(hitabiAyikla(duzMetin(mesaj)))
 }
 
-/** A dose / guideline / drug-information cue. */
-const TIBBI_BILGI = / (doz\w*|dozaj\w*|mg|mcg|mg\/kg|mgkg|ml\/kg|kilo basina|kg basina|kilogram basina|gunluk doz\w*|maksimum|maks|azami|kilavuz\w*|rehber\w*|guideline|protokol\w*|endikasyon\w*|kontrendikasyon\w*|yan etki\w*|etkilesim\w*|ne kadar ver\w*|kac mg|kac ml|nasil kullan\w*|nasil ver\w*|nasil tedavi\w*|tedavisi ne\w*|tedavi protokol\w*|ilk secenek|ilk tercih|antibiyotik\w*|amoksisilin\w*|klavulan\w*|parasetamol\w*|ibuprofen\w*|azitromisin\w*|sefuroksim\w*|seftriakson\w*|klaritromisin\w*|salbutamol\w*|budesonid\w*|prednizolon\w*|deksametazon\w*|setirizin\w*|desloratadin\w*|demir sulfat\w*|vitamin d\w*|d vitamini\w*|ferroz\w*|asit) /
+/** A dose / guideline / drug-information cue. AKKS GO A (Kaan 2026-11-24): textbook forms ("kimlere uygulanmamalı", "verilir mi",
+ * "endike mi", "başlanmalı mı") are general questions too — they must never fall into the practice-records search. */
+const TIBBI_BILGI = / (doz\w*|dozaj\w*|mg|mcg|mg\/kg|mgkg|ml\/kg|kilo basina|kg basina|kilogram basina|gunluk doz\w*|maksimum|maks|azami|kilavuz\w*|rehber\w*|guideline|protokol\w*|endikasyon\w*|kontrendikasyon\w*|yan etki\w*|etkilesim\w*|ne kadar ver\w*|kac mg|kac ml|nasil kullan\w*|nasil ver\w*|nasil tedavi\w*|tedavisi ne\w*|tedavi protokol\w*|ilk secenek|ilk tercih|antibiyotik\w*|amoksisilin\w*|klavulan\w*|parasetamol\w*|ibuprofen\w*|azitromisin\w*|sefuroksim\w*|seftriakson\w*|klaritromisin\w*|salbutamol\w*|budesonid\w*|prednizolon\w*|deksametazon\w*|setirizin\w*|desloratadin\w*|demir sulfat\w*|vitamin d\w*|d vitamini\w*|ferroz\w*|asit|onerilir|onerilmez|verilir|verilmez|verilmeli|uygundur|uygun mu|endike\w*|uygulanir|uygulanmaz|uygulanmali|uygulanmamali|izlenmeli|takip edilmeli|baslanmali|kesilmeli|gerektirir|profilaksi\w*|tarama\w*|tani kriter\w*|ayirici tani\w*) /
 
 /** A question / information-request form. */
 const SORU_BICIMI = / (mi|mu|miydi|muydu|misin|musun|misiniz|musunuz|ne|nedir|neydi|neler|nelerdir|kac|kaca|nasil|hangi|hangisi|ne kadar|ne zaman|neden|niye|soyle\w*|soyler|anlat\w*|ogren\w*|bilgi|rica ediyorum|rica edecegim|lutfen soyle\w*) /

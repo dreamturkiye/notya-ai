@@ -36,3 +36,9 @@
 - Onay satırı: `Kaan-onay: 2026-11-24 19:48 EST — 'Go with your recommendation': Ayşe returns hidden guideline numbers ("k") → registry ids → source chips; ayseCevapla.ts returns kaynakIdleri, AsistanOturumContext.tsx stores them on the message`
 - Taban commit: `03e6d713`
 - Değişen kilitli dosyalar: `components/asistan/AsistanOturumContext.tsx`, `lib/asistan/ayseCevapla.ts`
+
+## 2026-11-24 — 22:13 EST — GO A: soruNiyeti.ts TIBBI_BILGI gains textbook forms (kimlere uygulanmamalı, verilir mi, endike mi, başlanmalı mı …) so general questions never fall into the records search
+
+- Onay satırı: `Kaan-onay: 2026-11-24 22:13 EST — GO A: soruNiyeti.ts TIBBI_BILGI gains textbook forms (kimlere uygulanmamalı, verilir mi, endike mi, başlanmalı mı …) so general questions never fall into the records search`
+- Taban commit: `1238b28e`
+- Değişen kilitli dosyalar: `lib/asistan/soruNiyeti.ts`

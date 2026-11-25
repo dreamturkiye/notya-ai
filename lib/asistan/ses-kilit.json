@@ -1,6 +1,6 @@
 {
   "kural": ".cursor/rules/ses-omurga-kilidi.mdc",
-  "onay": "Kaan-onay: 2026-11-24 19:48 EST — 'Go with your recommendation': Ayşe returns hidden guideline numbers (\"k\") → registry ids → source chips; ayseCevapla.ts returns kaynakIdleri, AsistanOturumContext.tsx stores them on the message",
+  "onay": "Kaan-onay: 2026-11-24 22:13 EST — GO A: soruNiyeti.ts TIBBI_BILGI gains textbook forms (kimlere uygulanmamalı, verilir mi, endike mi, başlanmalı mı …) so general questions never fall into the records search",
   "guncelleme": "2026-11-24",
   "dosyalar": {
     ".cursor/rules/ses-omurga-kilidi.mdc": "fa7dcef64483f66ea83cebd1b9b6286bfccd5b16ccabc611366ffcc257ef80fa",
@@ -34,7 +34,7 @@
     "lib/asistan/sesTurYoneticisi.ts": "8d00fda86600f7818d0dd64e9a031461e9c025b51ddffeb74ea43dfce7d01d15",
     "lib/asistan/sesYay.ts": "171f9d2d8da8c61c8c150ea45d4a820934adc832114376004f203b0e2e435d30",
     "lib/asistan/sesliOnay.ts": "d0dd7a96b2f7a2ff05d4c47b2f5cc637759d1988094138b7766886a072a51bcb",
-    "lib/asistan/soruNiyeti.ts": "b524658d159ee29b16c36f6bfc446c1c4a6e488f01ae4344c12a293abb8e5124",
+    "lib/asistan/soruNiyeti.ts": "1b67d41cc247a7014e4c8738e58f3912976cc2163223c722e81564e6ff91ad12",
     "lib/db/migrations/178_ses_turu_ac.sql": "ab57c676ab7d949f44696957cafd5c554e12bdec6fd63cbb4d2783ffd45f510c",
     "lib/db/migrations/180_ses_turu_ac_grant_fix.sql": "5c142f3d6c97eb62a6fb4826bd735675d0a4970aa87cd5d25649de418fc9a3f7",
     "lib/db/migrations/183_ses_omurga_v2.sql": "7cdc0bcdabee575afcd2c9733069df525d6f876e95c4cd0a730316c8293d0f84",
