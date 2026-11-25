@@ -2,6 +2,7 @@ import type { CSSProperties, ReactNode } from 'react'
 import { Newsreader, Outfit } from 'next/font/google'
 import type { Metadata, Viewport } from 'next'
 import './sagligim.css'
+import './saglik-evi.css'
 
 const newsreader = Newsreader({
   subsets: ['latin', 'latin-ext'],

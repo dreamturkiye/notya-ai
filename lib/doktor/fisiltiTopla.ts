@@ -128,7 +128,16 @@ export async function fisiltiOgeleri(req: NextRequest, supabase: SupabaseClient,
     // Migration 206 yoksa sessiz.
   }
 
-  const ogeler = [...kalkanOgeleri, ...takipOgeleri, ...klinikOgeleri, ...mesajOgeleri]
+  // HASTA-PORTALI-GUNLUK: one item per patient with unseen home-data alerts (consented patients only) — core, every branş.
+  let evOgeleri: FisiltiItem[] = []
+  try {
+    const { evFisiltiOgeleri } = await import('@/lib/saglikEvi/hekimSunucu')
+    evOgeleri = await evFisiltiOgeleri(supabase, doktorId, brans || '')
+  } catch {
+    // Migration 208 yoksa sessiz.
+  }
+
+  const ogeler = [...kalkanOgeleri, ...takipOgeleri, ...evOgeleri, ...klinikOgeleri, ...mesajOgeleri]
   // En eski gecikme üstte -- klinik motorlarının kendi kuralıyla aynı; tarihi olmayan öğeler en sona düşer.
   ogeler.sort((a, b) => String(a.enErkenTarih || '9999').localeCompare(String(b.enErkenTarih || '9999')))
   ogeler.sort((a, b) => Number(a.kaynak !== 'kalkan') - Number(b.kaynak !== 'kalkan'))

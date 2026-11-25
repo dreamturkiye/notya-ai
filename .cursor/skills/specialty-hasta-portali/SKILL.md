@@ -35,6 +35,17 @@ Keep identical across all specialties:
 
 Do **not** duplicate these per specialty. Do **not** invent a second portal product.
 
+## Daily health home — "Bugün" (core, HASTA-PORTALI-GUNLUK, Kaan 2026-11-24)
+
+The portal home is the daily health home: doses (Aldım / Atladım / Ertele), one-tap readings, the day dial, trends,
+Sağlık Karnesi + badges, Kontrol Öncesi Özet, the doctor's Ev verisi card + Fısıltı. It is CORE for all 40 branşlar —
+what differs per branş is DATA in `lib/saglikEvi/bransAyari.ts` (which measurements / badges / cards, measurement-led
+vs adherence-led). A new chapter adds or adjusts its row there; it never forks the screens. Branş-only pieces stay gated
+there (fever-medicine card: pediatri / çocuk cerrahisi; pregnancy thresholds: KD + active pregnancy; LDL card:
+cardiometabolic). Shared views: `components/doktor/portal/saglikEvi/*` (words from `lib/saglikEvi/sozler.ts`, one look
+in every country). Rules: no diagnosis, no dose advice, 112 on every acil level, KVKK consent gates everything the doctor
+sees. Phase 2 modules: `docs/OPEN-COMMITMENTS.md` § HASTA-PORTALI-GUNLUK.
+
 ## Specialty module (required for every chapter build)
 
 Each specialty that is more than `baseline` **must** declare a portal module. Prefer extending `SpecialtyProfile` (see `lib/specialties/profile.ts`) rather than hardcoding `if (brans === …)` in `PortalShell` / `TrackingView` / the portal API.

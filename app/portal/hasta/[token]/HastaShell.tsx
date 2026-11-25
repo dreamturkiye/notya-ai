@@ -5,6 +5,7 @@ import { PortalShell } from '../../_components/PortalShell'
 import { LiveGate, PortalLiveProvider, usePortalLive } from '../../_components/PortalLiveProvider'
 import type { PortalNavOge } from '@/lib/portal/types'
 import { portalFetch } from '@/lib/portal/portalFetch'
+import { GunlukProvider } from '../../_components/saglikEvi/GunlukProvider'
 
 /** NOTYA-RANDEVU-V2: 'Randevu' joins the nav only while the doctor's 'Hasta Portalı Randevu' is ON. */
 const RANDEVU_NAV: PortalNavOge = { key: 'randevu', label: 'Randevu', path: '/randevu' }
@@ -27,7 +28,8 @@ function ModulluShell({ token, children }: { token: string; children: React.Reac
       ekNav={randevuAcik ? [RANDEVU_NAV, ...nav] : nav}
       hastaAdi={loading ? null : data.hasta?.adSoyad}
     >
-      <LiveGate>{children}</LiveGate>
+      {/* HASTA-PORTALI-GUNLUK: the daily health home state, loaded lazily by the pages that use it. */}
+      <LiveGate><GunlukProvider>{children}</GunlukProvider></LiveGate>
     </PortalShell>
   )
 }

@@ -30,8 +30,10 @@ export interface FisiltiItem {
   /** NOTYA-FISILTI-MESAJ (Kaan, 2026-09-24): 'klinik' = from a branş kohort engine (the original
    * source); 'mesaj' = an unread patient-portal message the practice hasn't answered in a while.
    * Same card, same self-clearing rule, different resolving eylem (mesaj_hasta_ile_konusuldu vs.
-   * the clinical actions) -- kaynak tells the UI/Ayşe which one applies. */
-  kaynak: 'klinik' | 'mesaj' | 'kalkan' | 'takip' | 'kaynak'
+   * the clinical actions) -- kaynak tells the UI/Ayşe which one applies.
+   * HASTA-PORTALI-GUNLUK (2026-11-24): 'ev' = ONE consolidated item per patient for unseen home-data alerts
+   * (Sağlığım daily health home, lib/saglikEvi/hekimSunucu.ts); resolved by "Gördüm" on the Ev verisi card. */
+  kaynak: 'klinik' | 'mesaj' | 'kalkan' | 'takip' | 'kaynak' | 'ev'
   /** TR-PROTOKOL-KUTUPHANESI: only when kaynak === 'kaynak' — a reviewed new edition of an official protocol (no patient;
    * patientId is ''). Gizle marks it seen for this doctor (protokol_duyuru_gorulen), never fisilti_gizlenen. */
   duyuruId?: string

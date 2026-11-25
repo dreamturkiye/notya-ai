@@ -6,7 +6,11 @@ import type { PortalNavKey, PortalNavOge } from '@/lib/portal/types'
 
 /** Core nav — identical for every specialty. Chapter extras come from the registry (bundle.portal.nav). */
 const NAV: Array<{ key: PortalNavKey; label: string; path: string }> = [
-  { key: 'ozet', label: 'Özet', path: '' },
+  // HASTA-PORTALI-GUNLUK (Kaan, 2026-11-24): the home is "Bugün"; the daily health home pages follow it (core, every branş).
+  { key: 'ozet', label: 'Bugün', path: '' },
+  { key: 'gunluk', label: 'Günlük', path: '/gunluk' },
+  { key: 'doz-takvimi', label: 'Doz Takvimi', path: '/doz-takvimi' },
+  { key: 'karne', label: 'Karne', path: '/karne' },
   { key: 'mesajlar', label: 'Mesajlar', path: '/mesajlar' },
   { key: 'ziyaretler', label: 'Ziyaretler', path: '/ziyaretler' },
   { key: 'sonuclar', label: 'Sonuçlar', path: '/sonuclar' },

@@ -1,5 +1,22 @@
 # OPEN COMMITMENTS — Notya AI
 
+## HASTA-PORTALI-GUNLUK — Sağlığım daily health home, Phase 1 shipped; Phase 2 and the open items (Claude, 2026-11-24)
+
+Kaan approved the design 2026-11-24 (Claude Doc "Notya — Güvenilir Ayşe ve Günlük Hasta Portalı", section 3). **Core** — all 30 branşlar + 10 Özel Branşlar (branş differences are data in `lib/saglikEvi/bransAyari.ts`). Türkiye `main` only; country port queued in `docs/ULKE-TASIMA-KUYRUGU.md` (HASTA-PORTALI-GUNLUK).
+
+**Built in Phase 1:** portal home "Bugün" (24-hour day dial + İlaç / Ölçüm / Hedef rings, "Şimdi" next-dose card, quick-add tiles, trends, karne strip, bridge to the doctor: appointment, messages, last visit report, results, "kontrolde sormak istediklerim"); Günlük Kayıt (one tap, prefilled, context chips by habit / time of day, "Fotoğrafla gir" via `lib/ai/cagir.ts` task goruntu-inceleme with a confirm step); Doz Takvimi (plans from the doctor's approved medicines + patient-added, Aldım / Atladım / Ertele, adherence 7 / 30 days, week grid, editable times); Eğilim Bekçisi + rule engine (bilgi / dikkat / hekime bildir / acil with 112, cool-down + dedupe); Sağlık Karnesi + 13 SVG badges + streak kalkan; Kontrol Öncesi Özet (cron, day before the appointment, + "Şimdi oluştur"); doctor's "Ev verisi" card (charts, adherence, kritik flag, per-patient thresholds, "Gördüm") + ONE consolidated Fısıltı item per patient (kaynak 'ev'); web push (VAPID keys set on Vercel prod + preview 2026-11-25, service worker push handlers, per-portal install manifest, quiet hours); KVKK açık rıza (versioned), export (JSON / CSV) and delete. Migration 208 (applied + verified on production).
+
+**ESNEK-B-BILDIRIM (patient portal half) — CLOSED 2026-11-24** by the web push above. The doctor-app half (the El Notu end-of-day notification) is still in-app; giving the doctor app push is its own change (owner: Kaan decides, Claude builds — the same `lib/saglikEvi/push/webPush.ts` sender can be reused).
+
+Open items (dated, owned):
+1. **HASTA-PORTALI-GUNLUK-FAZ2 — deeper branş modules (Phase 2). Owner: Claude. Waits on: Kaan's go for Phase 2.** Not half-built on purpose: (a) rehberli fotoğraf günlüğü (derm / plastik / yara: same angle + light, timeline, doctor compare); (b) aile hesabı (parent ↔ children, adult child ↔ elderly parent, caregiver role, veli rule by age); (c) sesle / WhatsApp ile veri girişi ("tansiyonum 135'e 85"); (d) güvenli hasta rehberi (answers only from the doctor's note / approved content, otherwise "doktorunuza sorun" + forwards the question); (e) hekimden mikro görevler (cards from the note, patient ticks, doctor sees); plus the branş-specific modules of the design doc (pediatri gelişim basamakları + aşı sonrası reaksiyon günlüğü + bebek beslenme / bez / uyku; derm izotretinoin programı + POEM / DLQI + kaşıntı skoru + UV hatırlatıcı; KBB ameliyat sonrası iyileşme kartı; diyetisyen menü planı checklist).
+2. **HASTA-PORTALI-GUNLUK-WHATSAPP — patient-consented WhatsApp dose reminders. Owner: Claude (build) + Kaan (Meta template approval per doctor WABA). Waits on: decision.** Verified 2026-11-24: the WhatsApp Business integration sends only the five UTILITY templates in `lib/iletisim/otomatik/whatsapp/sablonlar.ts` (randevu, yeni mesaj, sonuç hazır, genel bildirim, iptal onayı) from each doctor's own WABA; there is no dose-reminder template and no per-patient opt-in record for reminders. Next step: add an `ilac_hatirlatma` UTILITY template (no medicine name), a patient opt-in in Tercihler stored with the consent version, the per-doctor quota, and send from the existing cron next to web push.
+3. **HASTA-PORTALI-GUNLUK-DAHILIYE-BIRLESTIR — one store for home readings. Owner: Claude.** The older dahiliye ön anket still writes `dahiliye_ev_kayitlari`, which the dahiliye cards / Takibim read; the daily health home writes `ev_olcumleri`, which the Ev verisi card reads. Make the dahiliye cards and Takibim read `ev_olcumleri` too (or the ön anket write there), then retire the duplicate path.
+4. **HASTA-PORTALI-GUNLUK-OLCUM — product metrics. Owner: Claude, after 2 weeks of real use.** Weekly active patient %, adherence %, days in target, false-alarm rate (alerts the doctor marked seen without action) — the design doc's measurement list; feed the founder console.
+5. **HASTA-PORTALI-GUNLUK-KAYNAK — guideline editions. Owner: Claude, monthly (MEVZUAT-TAKIP).** Threshold defaults cite ESC 2024 / ESH 2023 hypertension, TEMD diabetes (latest edition), ADA Standards of Care (latest annual), SB Doğum Öncesi Bakım Rehberi, ESC HF 2021 + 2023 update, BTS oxygen — re-check editions monthly and update `lib/saglikEvi/hedefler.ts`.
+6. **HASTA-PORTALI-GUNLUK-TIBBI-CIHAZ — medical-device software assessment. Owner: Kaan (legal).** The design doc's note: a module that raises alerts from trends may count as medical-device software; include it in the legal review of section 2.
+
+
 ## DEMO-1121 — four bugs found while filming in the demo account (Claude, 2026-11-21)
 
 Classification: all four CORE (all 30 medical branches + 10 Özel Branşlar; shared code paths). Shipped on main + release/us, gb, ca, au, nz, uz.
@@ -5882,7 +5899,7 @@ Open:
    deterministic and strict (one missing fact = not "the same content"); synonyms beyond the lexicon (e.g. phrasing families)
    may under-report the match and delay the offer — never over-report it. Measure on ≥ 30 real pairs, tune the synonym table
    and ESLESME_ESIGI, never loosen the protected rules (side / presence / numbers).
-3. **ESNEK-B-BILDIRIM — the end-of-day notification is in-app.** Owner: Kaan (product decision). Notya has no push channel
+3. **ESNEK-B-BILDIRIM — the end-of-day notification is in-app.** (2026-11-24: the PATIENT PORTAL half is closed by HASTA-PORTALI-GUNLUK web push — see the top of this file; the doctor-app half below stays open.) Owner: Kaan (product decision). Notya had no push channel
    (no web push / service-worker notifications in the doctor app); the one daily notification is shown on the home screen at
    or after the doctor's usual approval time, once a day per device. A real push notification is its own change.
 4. **ESNEK-B-HASTA-DOSYASI — paper-doctor ordering inside the patient file.** Owner: Claude. Home adapts ("El notu ekle"

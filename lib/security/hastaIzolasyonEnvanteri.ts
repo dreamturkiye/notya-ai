@@ -45,6 +45,7 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   'app/api/cron/protokol-surum/route.ts': I('cronYetkiliMi only; takes no id; reads official public URLs and writes only protokol_takip_durum / protokol_inceleme_kuyrugu (no patient, doctor, note or session data) — TR-PROTOKOL-KUTUPHANESI'),
   'app/api/doktor/kaynaklar/route.ts': I('doktorOturum; takes no patient / note / session id — only a branş key (registry data) and an announcement id; the seen-mark is written with doctor_id = the session user (lib/kaynaklar/protokolKutuphanesi/duyuru.ts duyuruGoruldu) — TR-PROTOKOL-KUTUPHANESI'),
   'app/api/kurucu/kaynaklar/route.ts': I('FOUNDER_EMAILS only (404 for everyone else); takes no patient / note / session id — only a review-queue row id and a registry document id — TR-PROTOKOL-KUTUPHANESI'),
+  'app/api/cron/saglik-evi/route.ts': I('cronYetkiliMi only; takes no id; lib/saglikEvi/hatirlatmaCron.ts groups every row by its own (doctor_id, patient_id); push goes to that pair\'s own subscriptions with generic words; doctor alerts only for consented patients and only to the plan\'s own doctor; the pre-visit summary per appointment uses the appointment\'s doktor_id + patient_id (lib/saglikEvi/push.test.ts)'),
   'app/api/cron/el-notu-regresyon/route.ts': I('cronYetkiliMi only; takes no id; reads the consented regression set (no patient / session / note id stored, kaynak_id NULL on set pages) and writes numbers only (lib/elNotu/regresyon.ts haftalikRegresyon)'),
   // ── MUAYENE-EKLERI-01 ──
   'app/api/doktor/muayene-ekleri/durum/route.ts': I('takes no id; returns only the feature-flag state to an authenticated user'),
@@ -406,6 +407,13 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   // KD-TARAMA-01: the PMS/PMDD diary — open only for a KD doctor's token with an open diary of that same (doctor, patient)
   'app/api/portal/hasta/[token]/kd-gunluk/route.ts': I('resolvePortalToken fixes doctor_id+patient_id; the open diary is found by both; every diary read/upsert carries doctor_id, patient_id and that diary id; a non-KD token answers uygun:false / 404'),
   'app/api/portal/hasta/[token]/unlock/route.ts': I('PIN check for the token row only'),
+  // ── HASTA-PORTALI-GUNLUK — Sağlığım daily health home (cross-doctor both ways, real handlers: lib/saglikEvi/izolasyon.test.ts) ──
+  'app/api/portal/hasta/[token]/gunluk/route.ts': I('portalKapsami: token → (patient_id, doctor_id) + PIN unlock; every read / write in lib/saglikEvi/sunucu.ts carries both; plan / reading / alert / question ids from the body match only inside that scope (foreign id = 404 / no row). Tested A→B and B→A in lib/saglikEvi/izolasyon.test.ts'),
+  'app/api/portal/hasta/[token]/gunluk/foto/route.ts': I('portalKapsami (token + PIN); reads nothing patient-derived; the photo goes to the model gate only, nothing stored; the daily limit row is written with the token scope'),
+  'app/api/portal/hasta/[token]/gunluk/push/route.ts': I('portalKapsami (token + PIN); subscriptions stored with the token doctor_id + patient_id; DELETE scoped by endpoint AND both ids (izolasyon.test.ts)'),
+  'app/api/portal/hasta/[token]/gunluk/veri/route.ts': I('portalKapsami (token + PIN); KVKK export / delete select / delete every ev_* table by doctor_id AND patient_id; ids stripped from the export (izolasyon.test.ts)'),
+  'app/api/portal/hasta/[token]/manifest/route.ts': I('no database read; returns the token link the patient already has (PWA install)'),
+  'app/api/doktor/hastalar/[id]/ev-verisi/route.ts': I('pratikOturum → doktorId; hastaSahibiMi(doktorId, id) first (404 otherwise); every read / write in lib/saglikEvi/hekimSunucu.ts by doctor_id AND patient_id; plan id updates by id AND doctor_id AND patient_id; KVKK consent gates the values (izolasyon.test.ts)'),
   'app/api/intake/[token]/route.ts': I('token → form row; patient from that row (form was created after an ownership check); NOTYA-ILETISIM-01 / NOTYA-GELEN-BELGELER consent writes scoped by that row\'s patient_id AND doktor_id'),
   // ── Entegrasyon / cron (oturumsuz, sunucu içi) ──
   'app/api/entegrasyon/fhir/isle/route.ts': I('cron-secret gated; exports notes only of doctors enrolled in that institution'),

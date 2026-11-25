@@ -6,6 +6,9 @@ export type { PortalModulId, PortalNavOge }
 
 export type PortalNavKey =
   | 'ozet'
+  | 'gunluk'
+  | 'doz-takvimi'
+  | 'karne'
   | 'mesajlar'
   | 'ziyaretler'
   | 'sonuclar'

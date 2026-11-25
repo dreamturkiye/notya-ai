@@ -32,6 +32,11 @@ const SAYFALAR: Record<string, ComponentType> = {
   'cocugumun-cerrahisi': dynamic(() => import('@/app/portal/hasta/[token]/cocugumun-cerrahisi/page')),
   'damar-cerrahisi-takibi': dynamic(() => import('@/app/portal/hasta/[token]/damar-cerrahisi-takibi/page')),
   'derim': dynamic(() => import('@/app/portal/hasta/[token]/derim/page')),
+  // HASTA-PORTALI-GUNLUK: the daily health home pages run on example data here (nothing is sent).
+  'doz-takvimi': dynamic(() => import('@/app/portal/hasta/[token]/doz-takvimi/page')),
+  'gunluk': dynamic(() => import('@/app/portal/hasta/[token]/gunluk/page')),
+  'karne': dynamic(() => import('@/app/portal/hasta/[token]/karne/page')),
+  'tercihler': dynamic(() => import('@/app/portal/hasta/[token]/tercihler/page')),
   'eklemlerim': dynamic(() => import('@/app/portal/hasta/[token]/eklemlerim/page')),
   'enfeksiyon-takibim': dynamic(() => import('@/app/portal/hasta/[token]/enfeksiyon-takibim/page')),
   'ergom': dynamic(() => import('@/app/portal/hasta/[token]/ergom/page')),

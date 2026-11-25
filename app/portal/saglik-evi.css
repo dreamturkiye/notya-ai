@@ -1,0 +1,270 @@
+/* HASTA-PORTALI-GUNLUK (Kaan, 2026-11-24) — Sağlığım daily health home. Built on sagligim.css tokens (cream / teal /
+   sun / coral, Newsreader + Outfit); one look in every country (gorunum-paritesi-ulke): country builds reuse these
+   classes through the shared components in components/doktor/portal/saglikEvi.
+   The one bold element is the 24-hour day dial on Bugün; everything around it stays quiet. Ring colours carry meaning
+   everywhere: teal = medicines, sun = measurements, pine = time in target. */
+
+.sge {
+  --sge-ilac: #0f9b8e;
+  --sge-ilac-soft: #e2f2ef;
+  --sge-olcum: #b4832f;
+  --sge-olcum-soft: #f8efd9;
+  --sge-hedef: #2f4334;
+  --sge-hedef-soft: #e3e8df;
+  --sge-uyari: #a45b3e;
+  --sge-uyari-soft: #fbeae3;
+  --sge-acil: #8b3a2e;
+  --sge-kagit: #fffdf8;
+  --sge-cizgi: rgba(58, 44, 34, 0.1);
+  --sge-golge: 0 1px 0 rgba(58, 44, 34, 0.04), 0 10px 28px -18px rgba(58, 44, 34, 0.35);
+  padding: 0 var(--sg-pad-x) 24px var(--sg-pad-x-r);
+  color: var(--sg-ink);
+}
+
+/* Accessibility toggles (Tercihler): bigger type and high contrast, applied to the whole portal. */
+.sagligim-root.sg-buyuk .sg-main { zoom: 1.16; }
+.sagligim-root.sg-kontrast {
+  --sg-ink: #1d1611;
+  --sg-muted: #4f4339;
+  --sg-line: rgba(29, 22, 17, 0.32);
+  --sg-accent: #006d63;
+  --sg-accent-ink: #00564e;
+}
+.sagligim-root.sg-kontrast .sge { --sge-ilac: #006d63; --sge-olcum: #7a5310; --sge-hedef: #1c2c20; --sge-uyari: #7a3d28; --sge-cizgi: rgba(29, 22, 17, 0.35); }
+.sagligim-root.sg-kontrast .sge-kart, .sagligim-root.sg-kontrast .sge-dozsatir, .sagligim-root.sg-kontrast .sge-hizli { border-color: rgba(29, 22, 17, 0.45); }
+
+.sge :focus-visible { outline: 3px solid var(--sge-ilac); outline-offset: 2px; border-radius: 10px; }
+
+.sge-ust { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; padding: 22px 0 6px; }
+.sge-selam { font-family: var(--sg-font-display); font-size: clamp(28px, 7vw, 40px); line-height: 1.05; margin: 0; font-weight: 500; letter-spacing: -0.01em; }
+.sge-tarih { margin: 6px 0 0; color: var(--sg-muted); font-size: 15px; }
+.sge-seri { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px 8px 10px; border-radius: 999px; background: var(--sge-kagit); border: 1px solid var(--sge-cizgi); box-shadow: var(--sge-golge); font-weight: 600; font-size: 15px; white-space: nowrap; color: var(--sg-ink); }
+.sge-seri b { font-family: var(--sg-font-display); font-size: 22px; font-weight: 600; line-height: 1; }
+.sge-seri small { color: var(--sg-muted); font-weight: 500; }
+
+/* ── Day dial ─────────────────────────────────────────────────────────────── */
+.sge-kadran-blok { display: grid; gap: 14px; margin: 10px 0 18px; }
+.sge-kadran { position: relative; width: min(100%, 360px); margin: 0 auto; aspect-ratio: 1; }
+.sge-kadran svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.sge-kadran-merkez { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; pointer-events: none; }
+.sge-kadran-sayi { font-family: var(--sg-font-display); font-size: clamp(40px, 12vw, 54px); line-height: 1; font-weight: 500; font-variant-numeric: tabular-nums; }
+.sge-kadran-sayi span { color: var(--sg-muted); font-size: 0.55em; }
+.sge-kadran-etiket { margin-top: 6px; font-size: 13px; color: var(--sg-muted); max-width: 150px; line-height: 1.3; }
+.sge-halka-anahtar { display: flex; justify-content: center; gap: 18px; flex-wrap: wrap; font-size: 14px; }
+.sge-halka-anahtar span { display: inline-flex; align-items: center; gap: 7px; }
+.sge-halka-anahtar i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.sge-halka-anahtar b { font-variant-numeric: tabular-nums; }
+@media (prefers-reduced-motion: no-preference) {
+  .sge-halka-yay { transition: stroke-dasharray 900ms var(--sg-ease), stroke-dashoffset 900ms var(--sg-ease); }
+  .sge-kadran-giris .sge-halka-yay { animation: sgeHalka 1100ms var(--sg-ease) both; }
+}
+@keyframes sgeHalka { from { stroke-dasharray: var(--sge-tam); } }
+
+/* ── "Şimdi" card ─────────────────────────────────────────────────────────── */
+.sge-simdi { display: grid; grid-template-columns: 1fr auto; gap: 12px 14px; align-items: center; padding: 18px; border-radius: 22px; background: linear-gradient(135deg, #24473f 0%, #2f4334 100%); color: #f6f1e7; box-shadow: 0 18px 40px -24px rgba(36, 71, 63, 0.9); margin-bottom: 18px; }
+.sge-simdi-saat { font-family: var(--sg-font-display); font-size: 30px; line-height: 1; }
+.sge-simdi-ad { margin: 6px 0 0; font-size: 16px; line-height: 1.35; color: rgba(246, 241, 231, 0.88); }
+.sge-simdi .sge-btn-aldim { background: #f6f1e7; color: #24473f; }
+.sge-simdi-alt { grid-column: 1 / -1; display: flex; gap: 8px; }
+.sge-simdi-alt button { flex: 1; min-height: 44px; border-radius: 12px; border: 1px solid rgba(246, 241, 231, 0.3); background: transparent; color: #f6f1e7; font-size: 15px; font-weight: 500; cursor: pointer; }
+.sge-simdi--tamam { background: linear-gradient(135deg, #0f9b8e 0%, #24473f 100%); }
+
+/* ── Buttons ─────────────────────────────────────────────────────────────── */
+.sge-btn-aldim { min-height: 56px; min-width: 112px; padding: 0 22px; border: none; border-radius: 16px; background: var(--sge-ilac); color: #fff; font-size: 18px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.sge-btn-aldim:active { transform: scale(0.97); }
+.sge-btn { white-space: nowrap; min-height: 48px; padding: 0 18px; border-radius: 14px; border: 1px solid var(--sge-cizgi); background: var(--sge-kagit); color: var(--sg-ink); font-size: 16px; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.sge-btn--ana { background: var(--sg-ink); color: #faf6ee; border-color: var(--sg-ink); }
+.sge-btn--tehlike { color: var(--sge-acil); border-color: rgba(139, 58, 46, 0.35); }
+.sge-btn:disabled, .sge-btn-aldim:disabled { opacity: 0.55; cursor: default; }
+.sge-baglanti { white-space: nowrap; background: none; border: none; color: var(--sge-ilac); font-weight: 600; font-size: 15px; cursor: pointer; padding: 6px 0; text-decoration: underline; text-underline-offset: 3px; }
+
+/* ── Sections ────────────────────────────────────────────────────────────── */
+.sge-bolum { margin: 26px 0 0; }
+.sge-bolum-bas { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.sge-bolum-baslik { font-family: var(--sg-font-display); font-size: 24px; font-weight: 500; margin: 0; letter-spacing: -0.005em; }
+.sge-bolum-git { font-size: 15px; font-weight: 600; color: var(--sge-ilac); }
+.sge-kart { background: var(--sge-kagit); border: 1px solid var(--sge-cizgi); border-radius: 20px; box-shadow: var(--sge-golge); padding: 16px; }
+.sge-not { font-size: 13.5px; color: var(--sg-muted); line-height: 1.5; }
+
+/* ── Quick add tiles ─────────────────────────────────────────────────────── */
+.sge-hizli-izgara { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+@media (min-width: 720px) { .sge-hizli-izgara { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.sge-hizli { position: relative; text-align: left; min-height: 124px; padding: 14px 14px 12px; border-radius: 20px; border: 1px solid var(--sge-cizgi); background: var(--sge-kagit); box-shadow: var(--sge-golge); cursor: pointer; display: flex; flex-direction: column; gap: 4px; color: var(--sg-ink); overflow: hidden; }
+.sge-hizli::after { content: ''; position: absolute; right: -24px; top: -24px; width: 84px; height: 84px; border-radius: 50%; background: var(--sge-olcum-soft); opacity: 0.8; }
+.sge-hizli > * { position: relative; z-index: 1; }
+.sge-hizli-ad { font-size: 15px; font-weight: 600; }
+.sge-hizli-deger { font-family: var(--sg-font-display); font-size: 30px; line-height: 1.05; font-variant-numeric: tabular-nums; }
+.sge-hizli-deger small { font-family: var(--sg-font-ui); font-size: 13px; color: var(--sg-muted); margin-left: 4px; }
+.sge-hizli-alt { font-size: 13px; color: var(--sg-muted); margin-top: auto; display: flex; justify-content: space-between; gap: 6px; padding-right: 44px; }
+.sge-hizli-arti { position: absolute; right: 12px; bottom: 12px; width: 36px; height: 36px; border-radius: 50%; background: var(--sg-ink); color: #faf6ee; display: grid; place-items: center; font-size: 22px; line-height: 1; z-index: 2; }
+.sge-hizli--tamam::after { background: var(--sge-ilac-soft); }
+.sge-hizli-noktalar { display: inline-flex; gap: 4px; }
+.sge-hizli-noktalar i { width: 8px; height: 8px; border-radius: 50%; background: var(--sge-cizgi); }
+.sge-hizli-noktalar i.dolu { background: var(--sge-olcum); }
+.sge-foto-btn { margin-top: 12px; width: 100%; }
+
+/* ── Dose timeline ───────────────────────────────────────────────────────── */
+.sge-doz-grup { display: grid; grid-template-columns: 64px 1fr; gap: 10px; padding: 12px 0; border-top: 1px solid var(--sge-cizgi); }
+.sge-doz-grup:first-child { border-top: none; padding-top: 2px; }
+.sge-doz-saat { font-family: var(--sg-font-display); font-size: 22px; line-height: 1.2; font-variant-numeric: tabular-nums; }
+.sge-doz-saat small { display: block; font-family: var(--sg-font-ui); font-size: 12px; color: var(--sg-muted); }
+.sge-dozsatir { display: flex; align-items: center; gap: 10px; padding: 10px 10px 10px 12px; border: 1px solid var(--sge-cizgi); border-radius: 14px; margin-bottom: 8px; background: #fff; }
+.sge-dozsatir:last-child { margin-bottom: 0; }
+.sge-dozsatir-metin { flex: 1; min-width: 0; }
+.sge-dozsatir-ad { font-weight: 600; font-size: 16px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.sge-dozsatir-doz { font-size: 13.5px; color: var(--sg-muted); margin-top: 2px; }
+.sge-etiket { white-space: nowrap; font-size: 11.5px; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: var(--sge-hedef-soft); color: var(--sge-hedef); }
+.sge-etiket--hasta { background: var(--sge-olcum-soft); color: #7a5b1e; }
+.sge-etiket--kritik { background: var(--sge-uyari-soft); color: var(--sge-uyari); }
+.sge-tik { width: 48px; height: 48px; flex-shrink: 0; border-radius: 50%; border: 2px solid var(--sge-ilac); background: transparent; color: var(--sge-ilac); display: grid; place-items: center; cursor: pointer; }
+.sge-tik--dolu { background: var(--sge-ilac); color: #fff; }
+.sge-tik--atla { border-color: var(--sg-muted); color: var(--sg-muted); }
+.sge-tik--kacti { border-style: dashed; border-color: var(--sge-uyari); color: var(--sge-uyari); }
+.sge-doz-menu { display: flex; gap: 6px; margin-top: 8px; }
+.sge-doz-menu button { min-height: 40px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--sge-cizgi); background: var(--sge-kagit); font-size: 14px; cursor: pointer; color: var(--sg-ink); }
+.sge-grup-aldim { margin-top: 8px; width: 100%; min-height: 48px; }
+@media (prefers-reduced-motion: no-preference) { .sge-tik--dolu svg { animation: sgeTik 380ms var(--sg-ease) both; } }
+@keyframes sgeTik { from { transform: scale(0.4); opacity: 0; } }
+
+/* ── Trend cards ─────────────────────────────────────────────────────────── */
+.sge-egilim-izgara { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+.sge-egilim { padding: 14px 14px 10px; }
+.sge-egilim-bas { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.sge-egilim-ad { font-size: 14.5px; font-weight: 600; }
+.sge-egilim-yon { font-size: 13px; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: var(--sge-hedef-soft); color: var(--sge-hedef); white-space: nowrap; }
+.sge-egilim-yon--yukari { background: var(--sge-uyari-soft); color: var(--sge-uyari); }
+.sge-egilim-deger { font-family: var(--sg-font-display); font-size: 28px; margin: 4px 0 0; font-variant-numeric: tabular-nums; }
+.sge-egilim-deger small { font-family: var(--sg-font-ui); font-size: 13px; color: var(--sg-muted); margin-left: 4px; }
+.sge-egilim-alt { font-size: 12.5px; color: var(--sg-muted); display: flex; justify-content: space-between; margin-top: 2px; }
+
+/* ── Alerts (friendly) ───────────────────────────────────────────────────── */
+.sge-uyari { display: grid; grid-template-columns: 28px 1fr; gap: 10px; padding: 14px 16px; border-radius: 18px; background: var(--sge-olcum-soft); border: 1px solid rgba(180, 131, 47, 0.25); margin-bottom: 10px; font-size: 15px; line-height: 1.5; }
+.sge-uyari--hekime_bildir { background: var(--sge-uyari-soft); border-color: rgba(164, 91, 62, 0.28); }
+.sge-uyari--acil { background: #fff1ec; border: 2px solid var(--sge-acil); }
+.sge-uyari--bilgi { background: var(--sge-ilac-soft); border-color: rgba(15, 155, 142, 0.22); }
+.sge-uyari-alt { display: flex; gap: 12px; margin-top: 8px; align-items: center; flex-wrap: wrap; }
+.sge-112 { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 16px; border-radius: 12px; background: var(--sge-acil); color: #fff !important; font-weight: 700; }
+
+/* ── Bridge to the doctor ────────────────────────────────────────────────── */
+.sge-kopru { display: grid; gap: 10px; }
+@media (min-width: 720px) { .sge-kopru { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.sge-kopru-oge { display: flex; gap: 12px; align-items: center; padding: 14px 16px; min-height: 72px; border-radius: 18px; background: var(--sge-kagit); border: 1px solid var(--sge-cizgi); color: var(--sg-ink); }
+.sge-kopru-ikon { width: 42px; height: 42px; border-radius: 12px; background: var(--sge-hedef-soft); color: var(--sge-hedef); display: grid; place-items: center; flex-shrink: 0; }
+.sge-kopru-oge--vurgu { border-color: rgba(15, 155, 142, 0.45); background: var(--sge-ilac-soft); }
+.sge-kopru-oge--vurgu .sge-kopru-ikon { background: var(--sge-ilac); color: #fff; }
+.sge-kopru-baslik { font-weight: 600; font-size: 15.5px; }
+.sge-kopru-alt { font-size: 13.5px; color: var(--sg-muted); margin-top: 2px; }
+.sge-soru-form { display: flex; gap: 8px; margin-top: 10px; }
+.sge-soru-form input, .sge-alan { flex: 1; min-height: 48px; border-radius: 14px; border: 1px solid var(--sge-cizgi); padding: 0 14px; font-size: 16px; background: #fff; color: var(--sg-ink); font-family: inherit; }
+.sge-soru-liste { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 6px; }
+.sge-soru-liste li { display: flex; justify-content: space-between; gap: 10px; font-size: 14.5px; padding: 10px 12px; background: #fff; border-radius: 12px; border: 1px solid var(--sge-cizgi); }
+
+/* ── Badges shelf ────────────────────────────────────────────────────────── */
+.sge-raf { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 14px; }
+.sge-rozet { text-align: center; padding: 10px 6px 12px; border-radius: 18px; background: transparent; border: none; cursor: pointer; color: var(--sg-ink); }
+.sge-rozet svg { width: 92px; height: 92px; display: block; margin: 0 auto; filter: drop-shadow(0 8px 10px rgba(58, 44, 34, 0.18)); }
+.sge-rozet--kilitli svg { filter: none; }
+.sge-rozet-ad { font-size: 14px; font-weight: 600; margin-top: 8px; line-height: 1.25; }
+.sge-rozet-alt { font-size: 12px; color: var(--sg-muted); margin-top: 2px; font-variant-numeric: tabular-nums; }
+.sge-rozet-serit { display: flex; gap: 10px; overflow-x: auto; padding: 4px 2px 10px; scrollbar-width: none; }
+.sge-rozet-serit .sge-rozet { flex: 0 0 96px; }
+.sge-rozet-serit .sge-rozet svg { width: 72px; height: 72px; }
+
+.sge-acilis { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; background: rgba(36, 30, 24, 0.55); padding: 24px; }
+.sge-acilis-kart { width: min(360px, 100%); background: var(--sge-kagit); border-radius: 28px; padding: 28px 22px 22px; text-align: center; box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.45); }
+.sge-acilis-kart svg { width: 168px; height: 168px; margin: -8px auto 6px; display: block; }
+.sge-acilis-kart h2 { font-family: var(--sg-font-display); font-size: 28px; margin: 4px 0 6px; font-weight: 500; }
+.sge-acilis-kart p { margin: 0 0 18px; color: var(--sg-muted); line-height: 1.5; }
+@media (prefers-reduced-motion: no-preference) {
+  .sge-acilis-kart svg { animation: sgeAcilis 900ms cubic-bezier(0.2, 1.4, 0.4, 1) both; }
+  .sge-isilti { animation: sgeIsilti 1600ms ease-out both; transform-origin: 50% 50%; }
+}
+@keyframes sgeAcilis { 0% { transform: scale(0.3) rotate(-25deg); opacity: 0; } 60% { transform: scale(1.08) rotate(4deg); opacity: 1; } 100% { transform: scale(1) rotate(0); } }
+@keyframes sgeIsilti { 0% { transform: scale(0.6); opacity: 0.9; } 100% { transform: scale(1.5); opacity: 0; } }
+
+/* ── Karne (report card) ─────────────────────────────────────────────────── */
+.sge-karne { position: relative; background: #fffef9 repeating-linear-gradient(180deg, transparent 0 31px, rgba(47, 67, 52, 0.07) 31px 32px); border: 1px solid rgba(47, 67, 52, 0.18); border-radius: 6px 22px 22px 6px; box-shadow: var(--sge-golge), inset 6px 0 0 #2f4334; padding: 22px 18px 18px 26px; }
+.sge-karne-bas { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; border-bottom: 2px solid #2f4334; padding-bottom: 10px; margin-bottom: 6px; }
+.sge-karne-baslik { font-family: var(--sg-font-display); font-size: 26px; margin: 0; font-weight: 600; color: #2f4334; }
+.sge-karne-donem { font-size: 13.5px; color: var(--sg-muted); margin-top: 4px; }
+.sge-sekme { display: inline-flex; padding: 3px; border-radius: 999px; background: var(--sge-hedef-soft); }
+.sge-sekme { flex-shrink: 0; }
+.sge-sekme button { white-space: nowrap; min-height: 38px; padding: 0 14px; border: none; border-radius: 999px; background: transparent; font-size: 14px; font-weight: 600; color: var(--sge-hedef); cursor: pointer; }
+.sge-sekme button[aria-pressed='true'] { background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12); }
+.sge-ders { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; align-items: center; padding: 14px 0; border-bottom: 1px dashed rgba(47, 67, 52, 0.25); }
+.sge-ders-ad { font-size: 17px; font-weight: 600; }
+.sge-ders-ayrinti { font-size: 13.5px; color: var(--sg-muted); grid-column: 1; }
+.sge-damga { grid-row: 1 / span 2; grid-column: 2; width: 92px; height: 92px; border-radius: 50%; border: 3px double currentColor; display: grid; place-content: center; text-align: center; transform: rotate(-8deg); font-family: var(--sg-font-display); line-height: 1; }
+.sge-damga b { font-size: 30px; font-weight: 600; }
+.sge-damga span { font-size: 13px; font-weight: 600; margin-top: 3px; }
+.sge-damga--5 { color: #0f7a6f; } .sge-damga--4 { color: #2f4334; } .sge-damga--3 { color: #8a6420; } .sge-damga--2 { color: #9a5a3c; } .sge-damga--1 { color: #6d6258; }
+.sge-damga--yok { color: var(--sg-muted); border-style: dotted; transform: none; font-family: var(--sg-font-ui); font-size: 12px; }
+.sge-takvim { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-top: 14px; }
+.sge-takvim-gun { aspect-ratio: 1; border-radius: 8px; background: rgba(47, 67, 52, 0.06); display: grid; place-items: center; font-size: 11px; color: var(--sg-muted); font-variant-numeric: tabular-nums; }
+.sge-karne-dipnot { margin: 14px 0 0; font-size: 12.5px; color: var(--sg-muted); line-height: 1.5; }
+@media print {
+  .sg-header, .sg-footer, .sge-yazdir-gizle { display: none !important; }
+  .sge-karne { box-shadow: none; }
+}
+
+/* ── Streak strip ────────────────────────────────────────────────────────── */
+.sge-seri-serit { display: grid; grid-template-columns: repeat(14, 1fr); gap: 4px; margin-top: 10px; }
+.sge-seri-serit i { height: 26px; border-radius: 6px; background: rgba(58, 44, 34, 0.07); display: grid; place-items: center; font-style: normal; font-size: 10px; color: var(--sg-muted); }
+.sge-seri-serit i.aktif { background: var(--sge-uyari); color: #fff; }
+.sge-seri-serit i.kalkan { background: var(--sge-hedef); color: #fff; }
+
+/* ── Entry sheet ─────────────────────────────────────────────────────────── */
+.sge-perde { position: fixed; inset: 0; z-index: 70; background: rgba(36, 30, 24, 0.45); display: flex; align-items: flex-end; justify-content: center; }
+.sge-sayfa { width: min(560px, 100%); max-height: 94dvh; overflow-y: auto; background: var(--sg-bg); border-radius: 26px 26px 0 0; padding: 10px 18px calc(18px + env(safe-area-inset-bottom)); box-shadow: 0 -20px 50px -20px rgba(0, 0, 0, 0.4); }
+@media (min-width: 720px) { .sge-perde { align-items: center; } .sge-sayfa { border-radius: 26px; } }
+@media (prefers-reduced-motion: no-preference) { .sge-sayfa { animation: sgeSayfa 320ms var(--sg-ease) both; } }
+@keyframes sgeSayfa { from { transform: translateY(40px); opacity: 0; } }
+.sge-tutamak { width: 44px; height: 5px; border-radius: 3px; background: rgba(58, 44, 34, 0.2); margin: 0 auto 10px; }
+.sge-sayfa-bas { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.sge-sayfa-baslik { font-family: var(--sg-font-display); font-size: 26px; margin: 0; font-weight: 500; }
+.sge-kapat { width: 44px; height: 44px; border-radius: 50%; border: none; background: rgba(58, 44, 34, 0.07); font-size: 20px; cursor: pointer; color: var(--sg-ink); }
+.sge-cipler { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0 4px; }
+.sge-cip { min-height: 44px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--sge-cizgi); background: #fff; font-size: 15px; font-weight: 500; cursor: pointer; color: var(--sg-ink); }
+.sge-cip[aria-pressed='true'] { background: var(--sg-ink); color: #faf6ee; border-color: var(--sg-ink); }
+.sge-sayac { display: grid; grid-template-columns: 64px 1fr 64px; align-items: center; gap: 10px; margin: 14px 0 6px; }
+.sge-sayac-btn { height: 64px; border-radius: 20px; border: 1px solid var(--sge-cizgi); background: #fff; font-size: 30px; cursor: pointer; color: var(--sg-ink); touch-action: manipulation; }
+.sge-sayac input { width: 100%; text-align: center; border: none; background: transparent; font-family: var(--sg-font-display); font-size: 58px; line-height: 1; color: var(--sg-ink); font-variant-numeric: tabular-nums; padding: 0; -moz-appearance: textfield; }
+.sge-sayac input::-webkit-outer-spin-button, .sge-sayac input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.sge-sayac-etiket { text-align: center; font-size: 13px; color: var(--sg-muted); margin-top: -2px; }
+.sge-kaydet { width: 100%; min-height: 60px; margin-top: 16px; border-radius: 18px; border: none; background: var(--sg-ink); color: #faf6ee; font-size: 19px; font-weight: 600; cursor: pointer; }
+.sge-kayit-tamam { text-align: center; padding: 18px 0 6px; }
+.sge-kayit-tamam svg { width: 84px; height: 84px; }
+@media (prefers-reduced-motion: no-preference) { .sge-kayit-tamam .yol { stroke-dasharray: 60; animation: sgeCiz 600ms var(--sg-ease) both; } }
+@keyframes sgeCiz { from { stroke-dashoffset: 60; } to { stroke-dashoffset: 0; } }
+.sge-hata { color: var(--sge-acil); font-size: 14.5px; margin: 8px 0 0; }
+.sge-satir-liste { list-style: none; margin: 0; padding: 0; }
+.sge-satir-liste li { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 2px; border-bottom: 1px solid var(--sge-cizgi); font-size: 15px; }
+.sge-satir-liste li:last-child { border-bottom: none; }
+.sge-satir-liste .deger { font-family: var(--sg-font-display); font-size: 20px; font-variant-numeric: tabular-nums; }
+
+/* ── Week grid (Doz Takvimi) ─────────────────────────────────────────────── */
+.sge-hafta { width: 100%; border-collapse: separate; border-spacing: 0 6px; font-size: 14px; }
+.sge-hafta th { font-weight: 600; color: var(--sg-muted); font-size: 12px; text-align: center; padding: 0 2px; }
+.sge-hafta th:first-child { text-align: left; }
+.sge-hafta td { text-align: center; padding: 0 2px; }
+.sge-hafta td:first-child { text-align: left; font-weight: 600; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sge-hucre { display: inline-flex; gap: 2px; }
+.sge-hucre i { width: 10px; height: 18px; border-radius: 4px; background: rgba(58, 44, 34, 0.08); }
+.sge-hucre i.alindi { background: var(--sge-ilac); } .sge-hucre i.atlandi { background: #c9bfb2; } .sge-hucre i.kacirildi { background: var(--sge-uyari); opacity: 0.55; }
+.sge-hucre i.zamani, .sge-hucre i.ertelendi { background: var(--sge-olcum); opacity: 0.6; }
+.sge-saat-satir { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 8px; }
+.sge-saat-satir input[type='time'] { min-height: 44px; border-radius: 12px; border: 1px solid var(--sge-cizgi); padding: 0 10px; font-size: 16px; background: #fff; color: var(--sg-ink); }
+.sge-anahtar { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 14px 0; border-bottom: 1px solid var(--sge-cizgi); }
+.sge-anahtar:last-child { border-bottom: none; }
+.sge-anahtar-metin b { display: block; font-size: 16px; }
+.sge-anahtar-metin span { font-size: 13.5px; color: var(--sg-muted); line-height: 1.45; display: block; margin-top: 2px; }
+.sge-dugme { position: relative; width: 56px; height: 32px; flex-shrink: 0; border-radius: 999px; border: none; background: rgba(58, 44, 34, 0.2); cursor: pointer; }
+.sge-dugme::after { content: ''; position: absolute; top: 3px; left: 3px; width: 26px; height: 26px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25); transition: transform 0.2s var(--sg-ease); }
+.sge-dugme[aria-checked='true'] { background: var(--sge-ilac); }
+.sge-dugme[aria-checked='true']::after { transform: translateX(24px); }
+.sge-onay { padding: 18px; border-radius: 22px; background: var(--sge-kagit); border: 1px solid rgba(15, 155, 142, 0.35); box-shadow: var(--sge-golge); margin: 6px 0 16px; }
+.sge-onay h2 { font-family: var(--sg-font-display); font-size: 22px; margin: 0 0 6px; font-weight: 500; }
+.sge-onay p { margin: 0 0 10px; font-size: 14.5px; line-height: 1.55; color: var(--sg-ink); }
+.sge-onay label { display: flex; gap: 10px; align-items: flex-start; font-size: 15px; line-height: 1.45; margin: 10px 0 14px; cursor: pointer; }
+.sge-onay input[type='checkbox'] { width: 24px; height: 24px; flex-shrink: 0; accent-color: var(--sge-ilac); }
+.sge-gizli { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
