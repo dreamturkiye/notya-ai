@@ -1,5 +1,5 @@
 /**
- * Endokrin — antidiyabetikler (biguanid, sülfonilüre, SGLT2, DPP-4, GLP-1, insülin), tiroid
+ * Endokrin — antidiyabetikler (biguanid, sülfonilüre, SGLT2, DPP-4, GLP-1; insülinler ./insulin.ts), tiroid
  * ilaçları ve lipid düşürücüler.
  *
  * Two classes carry the risk here and are written as class labels so they fire without pairwise
@@ -281,28 +281,7 @@ export const ENDOKRIN: Record<string, TürkishDrug> = {
     kaynak: kub('RYBELSUS 3 MG TABLET (onay 28/08/2026)', 'https://titck.gov.tr/storage/Archive/2026/kubKtAttachments/UygunbulunanKBmetni24_bb04defd-0dc4-434b-8956-560e4c0690e5.pdf'),
   },
 
-  insulinGlarjin: {
-    name: 'İnsülin glarjin',
-    brand: ['Lantus', 'Toujeo', 'Abasaglar', 'Basalog'],
-    dose: 'Günde bir kez subkutan, her gün aynı saatte. Doz kan glukozuna göre bireysel titre edilir. Potens ÜNİTE bazındadır ve diğer insülinlerin IU\'su ile aynı değildir.',
-    pediatricDose: 'Pediatrik doz kan glukozuna göre bireyselleştirilir — mg/kg olarak ifade edilmez',
-    form: 'Subkutan enjeksiyonluk çözelti (kalem/flakon)',
-    sgkCovered: true,
-    category: 'Uzun etkili insülin analoğu',
-    siniflar: ['İnsülin', 'Antidiyabetik', 'Uzun etkili insülin'],
-    contraindications: ['İnsülin glarjine veya yardımcı maddelere aşırı duyarlılık'],
-    interactions: ['Beta blokörler', 'ACE inhibitörleri', 'Kortikosteroidler', 'Alkol', 'Sülfonilüreler', 'SGLT2 inhibitörleri'],
-    etkilesimler: [
-      ...HIPOGLISEMI_ETKILESIM,
-      { ile: 'Kortikosteroid', siddet: 'orta', not: 'İnsülin ihtiyacını artırır; doz gözden geçirilmelidir.' },
-      { ile: 'Alkol', siddet: 'ciddi', not: 'Hipoglisemi riskini artırır ve uzatır.' },
-    ],
-    gebelik: { metin: 'Gebelikte insülin tercih edilen tedavidir; doz gereksinimi trimesterlere göre değişir ve yakın izlem gerekir.' },
-    emzirme: 'Emzirme döneminde kullanılabilir; insülin dozu ve diyet ayarı gerekebilir.',
-    renkliRecete: 'normal',
-    notes: 'Diğer insülinlerle KARIŞTIRILMAZ ve sulandırılmaz. Ünite sayısı ürüne özgüdür — marka değişiminde doz yeniden titre edilmelidir.',
-    kaynak: kub('LANTUS SOLOSTAR 100 U/ML S.C. ENJEKSİYONLUK ÇÖZELTİ (onay 12/08/2026)', 'https://titck.gov.tr/storage/Archive/2026/kubKtAttachments/Ekek4kubtemiz_21_08_2026.pdf'),
-  },
+  // insulinGlarjin → ./insulin.ts (ILAC-TABLOSU-INSULIN, 2026-11-25): every insulin now lives in one file.
 
   levotiroksin: {
     name: 'Levotiroksin sodyum',

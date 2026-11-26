@@ -49,7 +49,7 @@ export const DEMO_ILAC_SINIFLARI: Record<string, IlacGirdisi> = {
   Empagliflozin: { ad: 'Empagliflozin', anahtar: 'empagliflozin', siniflar: ['Antidiyabetik', 'SGLT2 inhibitörü', 'Oral antidiyabetik'] },
   Amlodipin: { ad: 'Amlodipin', anahtar: 'amlodipin', siniflar: ['Kalsiyum kanal blokörü', 'Dihidropiridin', 'Antihipertansif', 'Antianjinal'] },
   Atorvastatin: { ad: 'Atorvastatin', anahtar: 'atorvastatin', siniflar: ['Statin', 'HMG-CoA redüktaz inhibitörü', 'Lipid düşürücü'] },
-  'İnsülin glarjin': { ad: 'İnsülin glarjin', anahtar: 'insulinGlarjin', siniflar: ['İnsülin', 'Antidiyabetik', 'Uzun etkili insülin'] },
+  'İnsülin glarjin': { ad: 'İnsülin glarjin', anahtar: 'insulinGlarjin', siniflar: ['İnsülin', 'Antidiyabetik', 'Uzun etkili insülin', 'Bazal insülin'] },
 }
 
 /** 'acil' (EV-ACIL-SEKER / UYARI-RENKLERI screenshots): the dm-ht persona on insulin with a very high glucose today, a meter

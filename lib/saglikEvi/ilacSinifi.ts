@@ -41,12 +41,19 @@ export function klinikGirdi(notesEncrypted: unknown, notSatirlari: Array<Record<
 }
 
 /**
- * EV-ACIL-SEKER — is any of these medicines an insulin? The drug table's class first ('İnsülin'); then the common insulin
- * molecule / brand names the table does not resolve (it misses e.g. Humalog / NovoRapid / Tresiba, and its fuzzy match
- * reads "Levemir" as levetirasetam), so a ketone reminder is never lost to a table gap. Pure name check, conservative:
- * it only ADDS the reminder line — never a dose, never a module.
+ * EV-ACIL-SEKER — is any of these medicines an insulin? Driven by the drug table: the line's own classes, or the table's
+ * resolution of the written name (`enIyiIlacAnahtari` → `siniflar` includes 'İnsülin'). Since ILAC-TABLOSU-INSULIN
+ * (2026-11-25) the table carries every insulin on the Turkish market (Humalog, NovoRapid, Tresiba, Levemir → insülin
+ * detemir, never levetirasetam). `INSULIN_ADI` stays as a belt-and-braces name fallback for names the table does not
+ * carry (e.g. Xultophy, Awiqli) — it only ADDS the ketone reminder line, never a dose, never a module.
  */
-export const INSULIN_ADI = /ins[uü]lin|glarjin|glargin|detemir|degludek|degludec|aspart|lispro|gl[uü]lisin|glulisine|lantus|levemir|tresiba|toujeo|abasaglar|basaglar|semglee|humalog|novorapid|fiasp|apidra|lyumjev|humulin|insuman|actrapid|mixtard|novomix|humamix|ryzodeg|xultophy|soliqua/i
+export const INSULIN_ADI = /ins[uü]lin|glarjin|glargin|detemir|degludek|degludec|aspart|lispro|gl[uü]lisin|glulisine|ikodek|icodec|lantus|levemir|tresiba|toujeo|abasaglar|basaglar|glarin\b|glaritus|semglee|humalog|novorapid|fiasp|apidra|lyumjev|admelog|humulin|insuman|insulatard|actrapid|mixtard|novomix|humamix|ryzodeg|xultophy|soliqua|suliqua|awiqli/i
+
+function tablodaInsulinMi(ad: string): boolean {
+  const anahtar = enIyiIlacAnahtari(ad)
+  return Boolean(anahtar && TURKISH_DRUGS[anahtar]?.siniflar.includes('İnsülin'))
+}
+
 export function insulinVarMi(ilaclar: Array<Pick<IlacGirdisi, 'ad' | 'siniflar'>>): boolean {
-  return ilaclar.some((i) => i.siniflar.includes('İnsülin') || INSULIN_ADI.test(i.ad))
+  return ilaclar.some((i) => i.siniflar.includes('İnsülin') || tablodaInsulinMi(i.ad) || INSULIN_ADI.test(i.ad))
 }

@@ -9,7 +9,7 @@ import { etkinEsikler, varsayilanEsikler, GLUKOZ_ACIL_TAVAN, GLUKOZ_ACIL_UST } f
 import { isaretKurallari, olcumKurallari, olcumSeviyesi, tekDegerKurallari, gurultuSuz } from './kurallar'
 import { olcumDogrula } from './olcumler'
 import { fotoCevabiniCoz } from './fotoOku'
-import { insulinVarMi } from './ilacSinifi'
+import { ilacGirdileri, insulinVarMi } from './ilacSinifi'
 import { gunlukOzeti, kontrolOncesiOzet } from './ozet'
 import { demoDurumuUygula, gunlukDemoHam, evVerisiDemoGirdisi } from './demo'
 import { evVerisiHesapla } from './evVerisi'
@@ -121,6 +121,12 @@ describe('EV-ACIL-SEKER — entry, photo, insulin', () => {
     for (const ad of ['NovoRapid', 'Tresiba', 'Levemir', 'Humalog Mix', 'insülin aspart']) assert.equal(insulinVarMi([{ ad, siniflar: [] }]), true, ad)
     assert.equal(insulinVarMi([{ ad: 'Lantus', siniflar: ['İnsülin'] }]), true)
     assert.equal(insulinVarMi([{ ad: 'Metformin', siniflar: ['Antidiyabetik'] }, { ad: 'Empagliflozin', siniflar: [] }]), false)
+  })
+  it('ILAC-TABLOSU-INSULIN: the table itself now resolves the insulin brands (class İnsülin), and Keppra / Levemax are never insulin', () => {
+    const g = ilacGirdileri(['Humalog', 'NovoRapid FlexPen', 'Tresiba', 'Levemir', 'Humulin N', 'Ryzodeg', 'Soliqua'])
+    for (const i of g) assert.ok(i.siniflar.includes('İnsülin'), `${i.ad} → ${i.anahtar}`)
+    assert.equal(g.find((i) => i.ad === 'Levemir')!.anahtar, 'insulinDetemir')
+    assert.equal(insulinVarMi(ilacGirdileri(['Keppra 500 mg', 'Levemax'])), false)
   })
 })
 

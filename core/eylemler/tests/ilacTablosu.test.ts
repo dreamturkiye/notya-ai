@@ -35,6 +35,7 @@ import {
   pediatrikDozHesapla,
   tumSiniflar,
 } from '@/lib/asistan/turkishDrugs'
+import { enIyiIlacAnahtari, ilacAdiAdaylari, searchDrug, ilacBaglamMetni } from '@/lib/asistan/turkishDrugs'
 
 const GIRDILER = Object.entries(TURKISH_DRUGS)
 
@@ -435,5 +436,153 @@ describe('NOTYA-SUT-RAPOR-01 · SGK satırları resmî SUT metniyle aynı kural�
     assert.match(satir('empagliflozin'), /kalp yetmezliği/)
     assert.match(satir('empagliflozin'), /SUT 4\.2\.38/)
     assert.equal(TURKISH_DRUGS.empagliflozin.sgkCovered, true)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+// ILAC-TABLOSU-INSULIN (Kaan, 2026-11-25) — insulins + the cross-class fuzzy-match guard. Sources:
+// docs/kaynak/ILAC-TABLOSU-INSULIN.md. The bug: "Levemir" (insülin detemir) resolved to levetirasetam through the brand
+// "Levemax" (5-letter shared prefix) and reached the interaction check; on origin/main 41 of the table's OWN names and
+// brands also resolved to another molecule ("Metoprolol" → TMP-SMX, "Controloc" → tramadol, "Varfarin sodyum" → metamizol).
+// ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+describe('ILAC-TABLOSU-INSULIN · insülinler', () => {
+  it('her insülin markası doğru etken maddeye ve türe çözülür', () => {
+    const vakalar: [string, string][] = [
+      ['Lantus', 'insulinGlarjin'], ['Toujeo SoloStar 300 U/ml', 'insulinGlarjin'], ['Basaglar KwikPen', 'insulinGlarjin'],
+      ['Glarin', 'insulinGlarjin'], ['Abasaglar', 'insulinGlarjin'], ['Glaritus', 'insulinGlarjin'],
+      ['Levemir', 'insulinDetemir'], ['Levemir FlexPen 100 U/mL', 'insulinDetemir'], ["Levemir'i", 'insulinDetemir'],
+      ['Tresiba', 'insulinDegludek'], ['Tresiba FlexTouch 200 U/mL', 'insulinDegludek'],
+      ['Humalog', 'insulinLispro'], ['Humalog KwikPen 200', 'insulinLispro'], ['Lyumjev', 'insulinLispro'],
+      ['NovoRapid', 'insulinAspart'], ['NovoRapid FlexPen', 'insulinAspart'], ['Fiasp', 'insulinAspart'],
+      ['Apidra SoloStar', 'insulinGlulisin'],
+      ['Humulin R', 'insanInsuliniRegular'], ['Actrapid HM Penfill', 'insanInsuliniRegular'],
+      ['Humulin N', 'insanInsuliniNph'], ['Humulin NPH', 'insanInsuliniNph'], ['Insulatard HM Penfill', 'insanInsuliniNph'],
+      ['Humulin M 70/30', 'insanInsuliniKarisim'], ['Mixtard 30 HM Penfill', 'insanInsuliniKarisim'],
+      ['Humalog Mix 25 KwikPen', 'insulinLisproKarisim'], ['Humalog Mix 50', 'insulinLisproKarisim'],
+      ['NovoMix 30 FlexPen', 'insulinAspartKarisim'],
+      ['Ryzodeg', 'insulinDegludekAspart'], ['Soliqua SoloStar', 'insulinGlarjinLiksisenatid'],
+      ['insülin lispro', 'insulinLispro'], ['insülin aspart', 'insulinAspart'], ['İnsülin detemir', 'insulinDetemir'],
+    ]
+    for (const [yazilan, beklenen] of vakalar) {
+      assert.equal(enIyiIlacAnahtari(yazilan), beklenen, `"${yazilan}" → ${enIyiIlacAnahtari(yazilan)}, beklenen ${beklenen}`)
+      assert.equal(drugKeyFor(yazilan), beklenen, `drugKeyFor("${yazilan}")`)
+    }
+  })
+
+  it('Levemir → insülin detemir, ASLA levetirasetam; Keppra/Levemax → levetirasetam, asla insülin', () => {
+    for (const y of ['Levemir', 'LEVEMIR', 'levemir flexpen', 'Levemır']) assert.equal(enIyiIlacAnahtari(y), 'insulinDetemir', y)
+    for (const y of ['Keppra 500 mg', 'Levemax', 'levetirasetam']) assert.equal(enIyiIlacAnahtari(y), 'levetirasetam', y)
+    assert.equal(ifadeIlaciAnlatiyorMu('Levemir', TURKISH_DRUGS.levetirasetam), false, 'Levemir alerjisi Levemax kartına düşmez')
+    assert.equal(ifadeIlaciAnlatiyorMu('Levemax', TURKISH_DRUGS.insulinDetemir), false)
+  })
+
+  it('her insülin girişi ATC (A10A…), insülin türü ve İnsülin sınıfı taşır; Levemir çekiliyor olarak işaretli ve kaynaklı', () => {
+    const ins = GIRDILER.filter(([, d]) => d.siniflar.includes('İnsülin'))
+    assert.ok(ins.length >= 13, `${ins.length} insülin girişi`)
+    for (const [k, d] of ins) {
+      assert.match(d.atc ?? '', /^A10A[B-E]\d\d$/, `${k}: ATC`)
+      assert.ok(d.insulinTuru, `${k}: insülin türü`)
+      assert.equal(d.pediatrik, undefined, `${k}: insülin mg/kg ile hesaplanmaz`)
+    }
+    const p = TURKISH_DRUGS.insulinDetemir.piyasaDurumu
+    assert.ok(p && p.durum === 'cekiliyor' && /^\d{4}-\d{2}-\d{2}$/.test(p.kontrol) && p.kaynak.length > 20)
+    assert.match(ilacBaglamMetni(TURKISH_DRUGS.insulinDetemir), /PİYASA DURUMU \(piyasadan çekiliyor/)
+    assert.match(ilacBaglamMetni(TURKISH_DRUGS.insulinDetemir), /LEVETİRASETAM/)
+  })
+
+  it('insülin etkileşimi insülin etkileşimidir: beta blokör hipoglisemiyi maskeler; antiepileptik etkileşimi gelmez', () => {
+    for (const ins of ['insulinDetemir', 'insulinLispro', 'insulinAspart', 'insulinDegludek', 'insanInsuliniNph']) {
+      const b = etkilesimBul(ins, 'metoprolol')
+      assert.ok(b && b.siddet === 'ciddi' && /maskele/i.test(b.not), `${ins} + metoprolol: ${b?.not}`)
+      assert.ok(etkilesimBul(ins, 'prednizolon'), `${ins} + prednizolon (insülin ihtiyacı artar)`)
+    }
+    // Levemir written on a prescription → the check must run against insulin, not levetirasetam's list.
+    const anahtar = drugKeyFor('Levemir FlexPen')!
+    assert.equal(anahtar, 'insulinDetemir')
+    assert.ok(!(TURKISH_DRUGS[anahtar].etkilesimler || []).some((e) => /karbamazepin|valproat|antiepilept/i.test(e.ile)))
+  })
+
+  it('bazal-bolus (bazal + hızlı etkili insülin) etkileşim üretmez; aynı içerik tekrarı (Soliqua + bazal, Soliqua + GLP-1) ciddidir', () => {
+    assert.equal(etkilesimBul('insulinGlarjin', 'insulinAspart'), null)
+    assert.equal(etkilesimBul('insulinDegludek', 'insulinLispro'), null)
+    assert.equal(etkilesimBul('insulinGlarjinLiksisenatid', 'insulinDetemir')?.siddet, 'ciddi')
+    assert.equal(etkilesimBul('insulinDegludekAspart', 'insulinGlarjin')?.siddet, 'ciddi')
+  })
+
+  it("Ayşe'nin reçete bağlamı (searchDrug) adı verilen ilacı başa koyar", () => {
+    assert.equal(searchDrug('Levemir')[0]?.name, 'İnsülin detemir')
+    assert.equal(searchDrug('Humalog')[0]?.name, 'İnsülin lispro')
+  })
+})
+
+describe('ILAC-TABLOSU-INSULIN · sınıflar arası yanlış eşleşme taraması', () => {
+  it('TÜM tablo: her ad, marka ve anahtar kendi molekülüne çözülür (0 uyumsuzluk)', () => {
+    const uyumsuz: string[] = []
+    for (const [anahtar, d] of GIRDILER) {
+      for (const yazilan of [d.name, ...d.brand, anahtar]) {
+        if (/\(kombinasyon\)/i.test(yazilan)) continue // a fixed combination brand is listed on each of its molecules
+        const bulunan = enIyiIlacAnahtari(yazilan)
+        if (bulunan !== anahtar) uyumsuz.push(`"${yazilan}" [${anahtar}] → ${bulunan}`)
+      }
+    }
+    assert.deepEqual(uyumsuz, [], `${uyumsuz.length} uyumsuzluk: ${uyumsuz.slice(0, 15).join('; ')}`)
+  })
+
+  // ISMP confused-drug-name list + TİTCK-market brands, kept to pairs a Turkish prescriber meets. Left side written →
+  // must never resolve to the right side's molecule (and vice versa). Absent molecules must resolve to nothing.
+  const BENZER_ADLAR: [string, string][] = [
+    ['Levemir', 'Levemax'], ['Levemir', 'Keppra'], ['Lamictal', 'Lamisil'], ['Losec', 'Lasix'], ['Xanax', 'Zantac'],
+    ['Celebrex', 'Celexa'], ['Seroquel', 'Sinequan'], ['Humalog', 'Humira'], ['Tresiba', 'Trental'], ['Zyprexa', 'Zyrtec'],
+    ['Paxil', 'Plavix'], ['Diamox', 'Diamicron'], ['Lantus', 'Lanoxin'], ['NovoRapid', 'NovoMix 30'], ['Humalog', 'Humalog Mix 25'],
+    ['Humulin R', 'Humulin N'], ['Humulin N', 'Humulin M 70/30'], ['Metoprolol', 'Metotreksat'], ['Trimetoprim', 'Trimebutin'],
+    ['Metildopa', 'Metilfenidat'], ['Metildopa', 'Metilprednizolon'], ['Simetidin', 'Simetikon'], ['Sülfasalazin', 'Çinko sülfat'],
+    ['Prednizolon', 'Metilprednizolon'], ['Hidroklorotiyazid', 'Hidroksizin'], ['Levonorgestrel', 'Levofloksasin'],
+    ['Folik asit', 'Asetilsalisilik asit'], ['Controloc', 'Contramal'], ['Tegretol', 'Trental'], ['Euthyrox', 'Eutirox'],
+  ]
+
+  it('benzer görünen/okunan ad çiftleri birbirinin molekülüne düşmez', () => {
+    const hatali: string[] = []
+    for (const [a, b] of BENZER_ADLAR) {
+      const ka = enIyiIlacAnahtari(a)
+      const kb = enIyiIlacAnahtari(b)
+      if (ka && kb && ka === kb && TURKISH_DRUGS[ka].name !== a && a !== b) {
+        // same molecule is only fine when both are genuinely the same drug (none in this list are)
+        hatali.push(`${a} ve ${b} ikisi de → ${ka}`)
+      }
+    }
+    assert.deepEqual(hatali, [])
+    assert.notEqual(enIyiIlacAnahtari('Levemir'), 'levetirasetam')
+    assert.notEqual(enIyiIlacAnahtari('Lamictal'), 'terbinafin')
+    assert.notEqual(enIyiIlacAnahtari('Lamisil'), 'lamotrijin')
+    assert.notEqual(enIyiIlacAnahtari('Losec'), 'furosemid')
+    assert.notEqual(enIyiIlacAnahtari('Lasix'), 'omeprazol')
+    assert.notEqual(enIyiIlacAnahtari('Zantac'), 'alprazolam')
+    assert.notEqual(enIyiIlacAnahtari('Celexa'), enIyiIlacAnahtari('Celebrex') ?? '∅')
+    assert.notEqual(enIyiIlacAnahtari('Sinequan'), 'ketiapin')
+    assert.notEqual(enIyiIlacAnahtari('Humira'), 'insulinLispro')
+    assert.notEqual(enIyiIlacAnahtari('Trental'), 'insulinDegludek')
+    assert.notEqual(enIyiIlacAnahtari('Diamox'), 'gliklazid')
+    assert.notEqual(enIyiIlacAnahtari('Lanoxin'), 'insulinGlarjin')
+  })
+
+  it('tabloda olmayan adlar hiçbir şeye çözülmez (bilinmeyen > yanlış)', () => {
+    for (const ad of ['Humira', 'Trental', 'Sinequan', 'Celexa', 'Zantac', 'Celebrex', 'Zyrtlonaxil', 'Xultophy', 'Awiqli', 'Levemaks', 'Lantuss'])
+      assert.equal(enIyiIlacAnahtari(ad), null, `${ad} → ${enIyiIlacAnahtari(ad)}`)
+  })
+
+  it('yazım hatası yalnız tek, belirsiz olmayan bir tablo sözcüğüne bir harf uzaklıktaysa düzeltilir', () => {
+    assert.equal(enIyiIlacAnahtari('Humalogg'), 'insulinLispro')
+    assert.equal(enIyiIlacAnahtari('Tresbia'), 'insulinDegludek', 'harf yer değiştirmesi')
+    assert.equal(ilacAdiAdaylari('Tresbia')[0]?.yol, 'yazim')
+    assert.equal(ilacAdiAdaylari('Levemir')[0]?.yol, 'guclu')
+  })
+
+  it('bir etkileşim satırındaki molekül adı, adı benzeyen başka bir moleküle düşmez', () => {
+    assert.equal(ifadeIlaciAnlatiyorMu('Metoprolol', TURKISH_DRUGS.trimetoprimSulfametoksazol), false)
+    assert.equal(ifadeIlaciAnlatiyorMu('Trimetoprim', TURKISH_DRUGS.trimebutin), false)
+    assert.equal(ifadeIlaciAnlatiyorMu('Metildopa', TURKISH_DRUGS.metilprednizolon), false)
+    assert.equal(ifadeIlaciAnlatiyorMu('Simetidin', TURKISH_DRUGS.simetikon), false)
+    assert.equal(ifadeIlaciAnlatiyorMu('Sülfasalazin', TURKISH_DRUGS.cinko), false)
+    assert.equal(ifadeIlaciAnlatiyorMu('Trimetoprim', TURKISH_DRUGS.trimetoprimSulfametoksazol), true, 'gerçek eşleşme korunur')
   })
 })

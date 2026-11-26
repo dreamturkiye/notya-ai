@@ -20,6 +20,7 @@ import { SOLUNUM_ALERJI } from './ilac/veri/solunumAlerji'
 import { GASTROINTESTINAL } from './ilac/veri/gastrointestinal'
 import { KARDIYOVASKULER } from './ilac/veri/kardiyovaskuler'
 import { ENDOKRIN } from './ilac/veri/endokrin'
+import { INSULIN } from './ilac/veri/insulin'
 import { HEMATOLOJI } from './ilac/veri/hematoloji'
 import { NOROPSIKIYATRI } from './ilac/veri/noropsikiyatri'
 import { DERM_ROMATOLOJI } from './ilac/veri/dermRomatoloji'
@@ -37,6 +38,7 @@ export const TURKISH_DRUGS: Record<string, TürkishDrug> = {
   ...GASTROINTESTINAL,
   ...KARDIYOVASKULER,
   ...ENDOKRIN,
+  ...INSULIN,
   ...HEMATOLOJI,
   ...NOROPSIKIYATRI,
   ...DERM_ROMATOLOJI,
@@ -58,11 +60,17 @@ export function dogrulamaSayilari(): Record<Dogrulama, number> {
 // ============================================================
 export function searchDrug(query: string): TürkishDrug[] {
   const q = query.toLowerCase()
-  return Object.values(TURKISH_DRUGS).filter(d =>
+  const bulunan = Object.values(TURKISH_DRUGS).filter(d =>
     d.name.toLowerCase().includes(q) ||
     d.brand.some(b => b.toLowerCase().includes(q)) ||
     d.category.toLowerCase().includes(q)
   )
+  // ILAC-TABLOSU-INSULIN: the caller reads drugs[0]. A substring hit in table order put the first entry whose CATEGORY
+  // contains the word ahead of the molecule the doctor named; the confident name match now always comes first.
+  const enIyi = enIyiIlacAnahtari(query)
+  if (!enIyi) return bulunan
+  const d = TURKISH_DRUGS[enIyi]
+  return [d, ...bulunan.filter((x) => x !== d)]
 }
 
 /**
@@ -79,6 +87,9 @@ export function ilacBaglamMetni(d: TürkishDrug): string {
     d.interactions.length ? `Etkileşim: ${d.interactions.slice(0, 8).join(', ')}` : '',
     d.gebelik ? `Gebelik: ${d.gebelik.kategori ? `kategori ${d.gebelik.kategori} — ` : ''}${d.gebelik.metin}` : '',
     d.sgkRestriction ? `SGK: ${d.sgkRestriction}` : '',
+    d.atc || d.insulinTuru ? `ATC: ${d.atc ?? '—'}${d.insulinTuru ? ` · İnsülin türü: ${d.insulinTuru}` : ''}` : '',
+    d.piyasaDurumu ? `PİYASA DURUMU (${d.piyasaDurumu.durum === 'cekildi' ? 'piyasadan çekildi' : 'piyasadan çekiliyor'}, kontrol ${d.piyasaDurumu.kontrol}): ${d.piyasaDurumu.metin}` : '',
+    d.notes && /KARIŞTIRILMAMALIDIR/.test(d.notes) ? `Dikkat: ${d.notes}` : '',
     `Kaynak: ${d.kaynak.belge}`,
   ]
   return satir.filter(Boolean).join('\n')
@@ -254,29 +265,31 @@ function tokenEslesir(a: string, b: string): boolean {
   return i >= 5 // "inhibitörleri" ↔ "inhibitörü"
 }
 
-/** The searchable vocabulary of a drug: generic name, brands, primary class and every class label. */
-function ilacTokenlari(d: TürkishDrug): string[] {
-  return [
-    ...tokenlar(d.name),
-    ...d.brand.flatMap(tokenlar),
-    ...tokenlar(d.category),
-    ...(d.siniflar || []).flatMap(tokenlar),
-  ]
-}
-
 /**
- * True when a free-text clinical phrase (an interaction entry, a contraindication, a recorded
- * allergy) names this drug — by molecule, by brand or by class.
+ * ILAC-TABLOSU-INSULIN — a phrase names this drug when every token matches: a NAME or BRAND token only by the strict
+ * name rule (`adTokenEslesir` — exact, Turkish case suffix, long substance stem), a CLASS token by the lenient
+ * `tokenEslesir` ("inhibitörleri" ↔ "inhibitörü"). The lenient 5-letter shared-prefix rule on brand names is what made a
+ * "Levemir" allergy fire on Levemax (levetirasetam) and back.
  */
 export function ifadeIlaciAnlatiyorMu(ifade: string, drug: TürkishDrug): boolean {
-  const hedef = ilacTokenlari(drug)
+  const ad = tokenlar(drug.name)
+  const marka = drug.brand.flatMap(tokenlar)
+  const sinif = [...tokenlar(drug.category), ...(drug.siniflar || []).flatMap(tokenlar)]
   // "SSRI/SNRI", "Warfarin, Lityum" → alternatives; each alternative must match on its own.
   return ESLESME_KATLA(KUCUK_TR(ifade))
     .replace(/\([^)]*\)/g, ' ')
     .split(/[/,;+]|\bveya\b|\bve\b/)
     .some((alt) => {
       const t = tokenlar(alt)
-      return t.length > 0 && t.every((x) => hedef.some((h) => tokenEslesir(x, h)))
+      return (
+        t.length > 0 &&
+        t.every(
+          (x) =>
+            ad.some((h) => adTokenEslesir(x, h) || maddeKokuEslesir(x, h)) ||
+            marka.some((h) => adTokenEslesir(x, h)) ||
+            sinif.some((h) => tokenEslesir(x, h))
+        )
+      )
     })
 }
 
@@ -287,41 +300,193 @@ export function ifadeMetindeGecerMi(aranan: string, hedef: string): boolean {
   return a.length > 0 && h.length > 0 && a.every((x) => h.some((y) => tokenEslesir(x, y)))
 }
 
+// ============================================================
+// AD → MOLEKÜL ÇÖZÜMÜ — ILAC-TABLOSU-INSULIN (2026-11-25)
+// ============================================================
 /**
- * Free-text drug name ("Largopen 1000 mg", "PAROL (parasetamol)") → table key, or null.
+ * The bug class this section closes: the old resolver accepted any two tokens sharing their first five letters, so
+ * "Levemir" (insülin detemir) resolved to levetirasetam through the brand "Levemax" — an antiepileptic's interactions on
+ * an insulin card — and Humalog / NovoRapid / Tresiba resolved to nothing. Name resolution now has three tiers:
  *
- * Matches on molecule name, brand and the table key only — NOT on `category`/`siniflar`: a class
- * label resolving a written prescription line to one arbitrary member of that class would make the
- * duplicate-ingredient check wrong ("bir NSAİİ" is not ibuprofen).
+ *   1. STRONG — exact token, or the table token + a Turkish case suffix ("Lantus'u", "insülini", "Parolü"), or (generic
+ *      substance names only) a long shared stem ("klavulanat" ↔ "klavulanik": ≥7 letters and ≥70 % of the shorter).
+ *      Brand names never stem-match: brands are coined words and look-alike brands belong to unrelated drugs.
+ *   2. PHRASE — a multi-word brand written out whole ("Humulin N", "Humalog Mix 25") adds its word count, so one- and
+ *      two-letter brand parts that the token rule drops still pick the right product.
+ *   3. TYPO — only when nothing matched strongly anywhere: one edit (Damerau) on a ≥7-letter token, same first letter,
+ *      AND exactly one table entry has any token within two edits. A name close to two entries is ambiguous → nothing.
+ *
+ * No confident match → null. Unknown is safer than wrong: the card then says "tabloda yok" instead of checking the
+ * wrong molecule. Numbers, units, dosage forms and pen names are not drug names and are ignored on both sides.
  */
-export function drugKeyFor(ad: string): string | null {
-  const t = tokenlar(String(ad || ''))
-  if (!t.length) return null
-  for (const [anahtar, d] of Object.entries(TURKISH_DRUGS)) {
-    const hedef = [...tokenlar(d.name), ...d.brand.flatMap(tokenlar), ...tokenlar(anahtar)]
-    if (t.some((x) => hedef.some((h) => tokenEslesir(x, h)))) return anahtar
+const AD_DOLGU: ReadonlySet<string> = new Set([
+  'tablet', 'tablet', 'tab', 'film', 'kapli', 'kapsul', 'kapsül', 'şurup', 'surup', 'süspansiyon', 'suspansiyon', 'damla',
+  'flakon', 'ampul', 'kalem', 'kartuş', 'kartus', 'enjeksiyon', 'enjeksiyonluk', 'çözelti', 'cozelti', 'krem', 'merhem',
+  'jel', 'sprey', 'efervesan', 'oral', 'iceren', 'içeren', 'kullanima', 'kullanıma', 'hazir', 'hazır', 'steril', 'adet',
+  'kutu', 'birim', 'unite', 'ünite', 'solostar', 'flexpen', 'kwikpen', 'penfill', 'penfil', 'flextouch', 'dispopen',
+  'junior', 'mcg', 'mikrogram',
+])
+
+/** Turkish case/possessive/plural endings a written drug name carries (after ı→i folding). */
+const AD_EKLERI: ReadonlySet<string> = new Set([
+  'i', 'u', 'ü', 'a', 'e', 'yi', 'yu', 'yü', 'ya', 'ye', 'ni', 'nu', 'nü', 'si', 'su', 'sü', 'in', 'un', 'ün', 'nin',
+  'nun', 'nün', 'yin', 'yun', 'yün', 'da', 'de', 'ta', 'te', 'dan', 'den', 'tan', 'ten', 'la', 'le', 'yla', 'yle', 'lar',
+  'ler', 'lari', 'leri',
+])
+
+function adTokenlari(ifade: string): string[] {
+  return tokenlar(ifade).filter((t) => !/^\d+$/.test(t) && !AD_DOLGU.has(t))
+}
+
+/** Strict name-token match: identical, or the table token followed by a Turkish suffix. */
+function adTokenEslesir(girdi: string, hedef: string): boolean {
+  if (girdi === hedef) return true
+  return hedef.length >= 5 && girdi.startsWith(hedef) && AD_EKLERI.has(girdi.slice(hedef.length))
+}
+
+/** Generic substance stems only ("klavulanat" ↔ "klavulanik"): ≥7 shared leading letters covering ≥70 % of the shorter. */
+function maddeKokuEslesir(a: string, b: string): boolean {
+  if (a.length < 8 || b.length < 8) return false
+  let i = 0
+  while (i < a.length && i < b.length && a[i] === b[i]) i++
+  return i >= 7 && i >= 0.7 * Math.min(a.length, b.length)
+}
+
+/** Optimal-string-alignment (Damerau) distance, capped: returns `sinir + 1` as soon as the distance exceeds it. */
+export function duzeltmeMesafesi(a: string, b: string, sinir = 2): number {
+  if (Math.abs(a.length - b.length) > sinir) return sinir + 1
+  const d: number[][] = Array.from({ length: a.length + 1 }, (_, i) => [i, ...Array(b.length).fill(0)])
+  for (let j = 0; j <= b.length; j++) d[0][j] = j
+  for (let i = 1; i <= a.length; i++) {
+    let satirMin = Infinity
+    for (let j = 1; j <= b.length; j++) {
+      const m = a[i - 1] === b[j - 1] ? 0 : 1
+      d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + m)
+      if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) d[i][j] = Math.min(d[i][j], d[i - 2][j - 2] + 1)
+      satirMin = Math.min(satirMin, d[i][j])
+    }
+    if (satirMin > sinir) return sinir + 1
   }
-  return null
+  return Math.min(d[a.length][b.length], sinir + 1)
+}
+
+/** Words of a phrase, every length kept (for multi-word brand phrases: "Humulin N"). */
+function ifadeKelimeleri(x: string): string[] {
+  return ESLESME_KATLA(KUCUK_TR(x)).replace(/\([^)]*\)/g, ' ').split(/[^a-zçğiöşü0-9]+/i).filter(Boolean)
+}
+
+/** Whole written name, for the exact-name tie-break: every word kept except dosage-form/pen words ("Aerius" ≠ "Aerius-L"). */
+function tamAd(x: string): string {
+  return ifadeKelimeleri(x).filter((w) => !AD_DOLGU.has(w)).join(' ')
+}
+
+function altDiziMi(buyuk: string[], kucuk: string[]): boolean {
+  if (!kucuk.length || kucuk.length > buyuk.length) return false
+  for (let i = 0; i + kucuk.length <= buyuk.length; i++) if (kucuk.every((k, j) => buyuk[i + j] === k)) return true
+  return false
+}
+
+interface AdSozlugu {
+  anahtar: string
+  ad: string[]
+  marka: string[]
+  anahtarToken: string[]
+  /** Multi-word brands, as word lists. */
+  ifadeler: string[][]
+  /** The name and every brand as a whole (name tokens joined) — an exact whole-name hit breaks a tie. */
+  tamAdlar: Set<string>
+  hepsi: string[]
+}
+
+let SOZLUK: AdSozlugu[] | null = null
+function adSozlugu(): AdSozlugu[] {
+  if (SOZLUK) return SOZLUK
+  SOZLUK = Object.entries(TURKISH_DRUGS).map(([anahtar, d]) => {
+    const ad = adTokenlari(d.name)
+    const marka = d.brand.flatMap(adTokenlari)
+    const anahtarToken = tokenlar(anahtar)
+    const ifadeler = d.brand.map(ifadeKelimeleri).filter((k) => k.length >= 2)
+    const tamAdlar = new Set([d.name, ...d.brand, anahtar].map(tamAd).filter(Boolean))
+    return { anahtar, ad, marka, anahtarToken, ifadeler, tamAdlar, hepsi: [...ad, ...marka, ...anahtarToken] }
+  })
+  return SOZLUK
+}
+
+function gucluEslesir(x: string, s: AdSozlugu): boolean {
+  return (
+    s.ad.some((h) => adTokenEslesir(x, h) || maddeKokuEslesir(x, h)) ||
+    s.marka.some((h) => adTokenEslesir(x, h)) ||
+    s.anahtarToken.some((h) => adTokenEslesir(x, h))
+  )
 }
 
 /**
- * NOTYA-ILK10-DOZ-01 — the table key that matches a written drug BEST, or null.
- *
- * `drugKeyFor` returns the first entry any token touches, so "amoksisilin-klavulanat" resolves to plain amoksisilin
- * (the first entry carrying that word) — a different reference range. A dose verdict must be measured against the
- * right molecule: this picks the entry that the most tokens of the written text match (name, brand, key), the
- * earlier entry on a tie. Same vocabulary and same token rules as `drugKeyFor`.
+ * Every candidate for a written name, best first (score, then table order). Empty when nothing matches confidently.
+ * Exported for the cross-class sweep test.
+ */
+export function ilacAdiAdaylari(ad: string): Array<{ anahtar: string; puan: number; yol: 'guclu' | 'yazim' }> {
+  const metin = String(ad || '')
+  const t = [...new Set(adTokenlari(metin))]
+  if (!t.length) return []
+  const kelimeler = ifadeKelimeleri(metin)
+  const tamGirdi = tamAd(metin)
+  const sozluk = adSozlugu()
+
+  const guclu: Array<{ anahtar: string; puan: number; sira: number; yol: 'guclu' }> = []
+  sozluk.forEach((s, sira) => {
+    const eslesen = t.filter((x) => gucluEslesir(x, s)).length
+    if (!eslesen) return
+    const ifade = Math.max(0, ...s.ifadeler.filter((k) => altDiziMi(kelimeler, k)).map((k) => k.length))
+    // Tie-break only (½ point): "Levonorgestrel (acil kontrasepsiyon)" is the single-agent row, not the first row
+    // that also carries the word levonorgestrel.
+    const tam = s.tamAdlar.has(tamGirdi) ? 0.5 : 0
+    guclu.push({ anahtar: s.anahtar, puan: eslesen + ifade + tam, sira, yol: 'guclu' })
+  })
+  if (guclu.length) {
+    guclu.sort((a, b) => b.puan - a.puan || a.sira - b.sira)
+    return guclu.map(({ anahtar, puan, yol }) => ({ anahtar, puan, yol }))
+  }
+
+  // Typo tier — one edit, one unambiguous table word, nothing else nearby. "Humalogg" is one edit from "humalog", which
+  // two rows carry (Humalog, Humalog Mix) — still ONE word, so it is re-read as "humalog"; "Levemir" is two edits from
+  // "levemax" and resolves only because "levemir" itself is now in the table.
+  for (const x of t) {
+    if (x.length < 7) continue
+    const yakin = new Set<string>()
+    let tekHata: string | null = null
+    for (const s of sozluk) {
+      for (const h of s.hepsi) {
+        if (h.length < 5) continue
+        const m = duzeltmeMesafesi(x, h, 2)
+        if (m <= 2) yakin.add(h)
+        if (m === 1 && h.length >= 7 && h[0] === x[0]) tekHata = h
+      }
+    }
+    if (tekHata && yakin.size === 1) {
+      const duzeltilmis = t.map((y) => (y === x ? tekHata! : y)).join(' ')
+      return ilacAdiAdaylari(duzeltilmis).map((a) => ({ ...a, yol: 'yazim' as const }))
+    }
+  }
+  return []
+}
+
+/**
+ * NOTYA-ILK10-DOZ-01 / ILAC-TABLOSU-INSULIN — the table key that matches a written drug BEST, or null when no entry
+ * matches confidently. "amoksisilin-klavulanat" → the combination (more tokens), "Humulin N" → NPH (whole brand
+ * phrase), "Levemir" → insülin detemir (never levetirasetam).
  */
 export function enIyiIlacAnahtari(ad: string): string | null {
-  const t = [...new Set(tokenlar(String(ad || '')))]
-  if (!t.length) return null
-  let en: { anahtar: string; puan: number } | null = null
-  for (const [anahtar, d] of Object.entries(TURKISH_DRUGS)) {
-    const hedef = [...tokenlar(d.name), ...d.brand.flatMap(tokenlar), ...tokenlar(anahtar)]
-    const puan = t.filter((x) => hedef.some((h) => tokenEslesir(x, h))).length
-    if (puan > 0 && (!en || puan > en.puan)) en = { anahtar, puan }
-  }
-  return en?.anahtar ?? null
+  return ilacAdiAdaylari(ad)[0]?.anahtar ?? null
+}
+
+/**
+ * Free-text drug name ("Largopen 1000 mg", "PAROL (parasetamol)") → table key, or null. Matches on molecule name, brand
+ * and the table key only — NOT on `category`/`siniflar` (a class label is not one molecule: "bir NSAİİ" is not
+ * ibuprofen). Since ILAC-TABLOSU-INSULIN this is the same best-match resolver the dose check uses; the old first-hit
+ * loop returned whichever entry a token touched first ("Humalog Mix 25" → plain lispro).
+ */
+export function drugKeyFor(ad: string): string | null {
+  return enIyiIlacAnahtari(ad)
 }
 
 /** Every class label used anywhere in the table — the vocabulary a class-level entry may draw on. */
@@ -335,7 +500,7 @@ export function tumSiniflar(): Set<string> {
 }
 
 /**
- * NOTYA-EYLEM-29 — interaction targets that are KNOWINGLY outside the 176-molecule table.
+ * NOTYA-EYLEM-29 — interaction targets that are KNOWINGLY outside the molecule table.
  *
  * The bug this list exists to prevent: an interaction written against a name nothing in the table
  * answers to fires for nobody and says nothing, so the gap is invisible. Every such name now has to
@@ -357,7 +522,7 @@ export const TABLO_DISI_ETKILESIM: ReadonlySet<string> = new Set([
   'Disülfiram', 'Fenitoin', 'Fenobarbital', 'Flukloksasilin', 'Gemfibrozil', 'Ketokonazol',
   'Klonidin', 'Kloramfenikol', 'Klorpromazin', 'Levodopa', 'Linezolid', 'Lityum', 'Midazolam',
   'Mikofenolat mofetil', 'Mikonazol', 'Nelfinavir', 'Pimozid', 'Probenesid', 'Rilpivirin',
-  'Ritonavir', 'Sisaprid', 'Sitalopram', 'Sukralfat', 'Takrolimus', 'Tamoksifen', 'Teofilin',
+  'Ritonavir', 'Sisaprid', 'Simetidin', 'Sitalopram', 'Sukralfat', 'Takrolimus', 'Tamoksifen', 'Teofilin',
   'Tizanidin', 'Verapamil', 'Vildagliptin', 'Vorikonazol', 'Zidovudin',
 ])
 

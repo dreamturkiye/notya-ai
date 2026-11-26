@@ -107,6 +107,23 @@ export interface GebelikBilgisi {
   metin: string
 }
 
+/** ILAC-TABLOSU-INSULIN — insulin type, for the card and the patient's dose calendar. */
+export type InsulinTuru = 'bazal' | 'hızlı etkili' | 'kısa etkili' | 'NPH' | 'hazır karışım' | 'bazal + GLP-1'
+
+/**
+ * ILAC-TABLOSU-INSULIN — market status when it is NOT simply "on the market": a product being withdrawn still has to
+ * RESOLVE (patients keep saying the name), and the card has to say what is happening, with the date it was checked and
+ * where. Never set from memory: `kaynak` names the documents read on `kontrol`.
+ */
+export interface PiyasaDurumu {
+  durum: 'cekiliyor' | 'cekildi'
+  /** One Turkish paragraph: what is happening, where, since when, and what was NOT verified. */
+  metin: string
+  /** ISO date the status was checked. */
+  kontrol: string
+  kaynak: string
+}
+
 export interface TürkishDrug {
   /** Etken madde, Turkish spelling. */
   name: string
@@ -151,6 +168,13 @@ export interface TürkishDrug {
   /** Must equal `receteRengi(name)` — asserted by a test, so the two lists cannot drift. */
   renkliRecete?: ReceteRengi
   notes?: string
+  /** WHO ATC code, when the entry was checked against it (insulins: A10A…). */
+  atc?: string
+  insulinTuru?: InsulinTuru
+  /** Set only when the product is being withdrawn or has been withdrawn. */
+  piyasaDurumu?: PiyasaDurumu
+  /** Per-brand Turkish market note (status, company, check date) — a brand absent here was not individually checked. */
+  markaDurumu?: Readonly<Record<string, string>>
   kaynak: IlacKaynagi
 }
 
