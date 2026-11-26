@@ -179,19 +179,19 @@ What burns the channel: blasting “Notya satın al” into member WhatsApp grou
 
 Subject: `Üyeleriniz için ücretsiz online seminer önerisi — Pediatride pratik AI`
 
-Canonical send copy (Google Meet + live Cal.com hours): `docs/growth/TR-DERNEK-OUTREACH-TODAY.md` §2.
+Canonical send copy (first person, Google Meet + live Cal.com hours): `docs/growth/TR-DERNEK-OUTREACH-TODAY.md` §2.  
+**From:** `Uzm. Dr. Gökhan Mamur <drhanmamur@notya.io>`
 
 ```
 Sayın Yönetim Kurulu,
 
-Dr. Gökhan Mamur (pediatri) adına yazıyorum — Kaan, Notya ekibinden.
-
-Hocamız ABD’den Google Meet ile bağlanarak derneğinizin üyelerine ücretsiz,
-45–60 dakikalık bilimsel bir seminer önermek istiyor:
+Uzm. Dr. Gökhan Mamur, pediatri. ABD’den Google Meet ile bağlanarak
+derneğinizin üyelerine ücretsiz, 45–60 dakikalık bilimsel bir seminer
+önermek isterim:
 
 “Pediatride muayene notu ve aşı / telafi takibinde pratik yapay zekâ kullanımı”
 
-Açık akşam saatlerinden üç öneri (Türkiye saati):
+Açık akşam saatlerimden üç öneri (Türkiye saati):
 • Pazartesi 30 Kasım 2026, 20:00
 • Salı 1 Aralık 2026, 20:00
 • Perşembe 3 Aralık 2026, 20:00
@@ -200,8 +200,9 @@ Başka bir akşam: https://cal.com/han-mamur-sugmbo/demo-tr
 (Google Meet bağlantısı onay e-postasında gelir.)
 
 Saygılarımla,
-Kaan
-Dr. Gökhan Mamur’un ekibinden — Notya
+Uzm. Dr. Gökhan Mamur
+Pediatri
+drhanmamur@notya.io
 ```
 
 ---
