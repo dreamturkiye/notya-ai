@@ -74,6 +74,8 @@ If bounce: search `iletisim` on their site and retry once. Log in CSV `status=BO
 **Reply-To:** `drhanmamur@notya.io`  
 **BCC:** `kaan@notya.io` (ops only — not in the body)
 
+**Send status (26 Kas 2026, 11:24 America/New_York):** copy approved; Cal.com 20:00 TR still open on 30 Kas / 1 Ara / 3 Ara. **Not sent.** This VM cannot decrypt Vercel `SMTP_PASS` and has no Purelymail password for `drhanmamur@notya.io`. Waiting on secret `DRHANMAMUR_SMTP_PASS`. Skip EKDD.
+
 ### Pediatri (Marmara / TMPD / TPK / PUADER)
 
 **Subject:** Üyeleriniz için ücretsiz 45 dk online seminer — Pediatride pratik AI
