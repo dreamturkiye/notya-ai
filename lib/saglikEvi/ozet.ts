@@ -3,13 +3,14 @@
  * badges, karne) from raw rows, and the doctor's Kontrol Öncesi Özet. Pure: the server route, the doctor's preview and
  * the demo all run the same function, so the three can never disagree.
  */
-import type { DozKaydi, DozPlani, EvOlcum, EvTercihler, EvUyari, GlukozBaglami, GunlukOlcum, IsaretliOlcum, OlcumIsareti, OlcumTipi, SlotDurumu, UyariDuzeyi } from './tipler'
+import type { DozKaydi, DozPlani, EvOlcum, EvTercihler, EvUyari, GlukozBaglami, GunlukOlcum, IsaretliOlcum, KayitTutma, DozSecimi, OlcumIsareti, OlcumTipi, SlotDurumu, UyariDuzeyi } from './tipler'
 import type { BransGunlukAyari, GunlukKarti } from './bransAyari'
 import { hastaModulleri, type KlinikGirdi, type ModulAnahtari } from './moduller'
 import type { EsikSeti, HedefProfili, HekimAyarlari } from './hedefler'
 import { etkinEsikler, hedefMetni, hedefteMi } from './hedefler'
 import { metrikAnahtari, metrikEtiketi, OLCUM_TANIMLARI, onerilenBaglam } from './olcumler'
-import { bugunPlani, gerektikceDurumu, gunSlotlari, kayitHaritasi, planUyumlari, slotDurumu, uyum, type UyumSonucu } from './dozPlani'
+import { bugunPlani, gerektikceDurumu, gunSlotlari, kayitAcikMi, kayitHaritasi, planUyumlari, slotDurumu, uyum, type UyumSonucu } from './dozPlani'
+import { kayitSorusuGosterilsinMi, kayitTercihiUygula } from './dozKaydi'
 import { seriHesapla, type SeriSonucu } from './seri'
 import { ROZETLER, rozetDurumlari, type RozetDurumu, type RozetId, type RozetTanimi } from './rozetler'
 import { karneHesapla, type Karne } from './karne'
@@ -103,7 +104,11 @@ export interface GunlukDurum {
   ldl: { deger: number; tarih: string; hedef: number | null } | null
   moduller: GunlukModulleri
   sorular: HamGunluk['sorular']
-  siradaki: { tur: 'doz'; saat: string; at: string; planIds: string[]; adlar: string[] } | null
+  /** kayitPlanIds: the medicines of this group the patient logs (the "Aldım" button marks only these; none → reminder
+   *  only, no button). */
+  siradaki: { tur: 'doz'; saat: string; at: string; planIds: string[]; adlar: string[]; kayitPlanIds: string[] } | null
+  /** DOZ-KAYDI-ISTEGE-BAGLI: the one-time answer, whether to ask it now, how many scheduled medicines are logged. */
+  kayit: { tercih: KayitTutma | null; secim: DozSecimi | null; hatirlatmaAcik: boolean; soruGoster: boolean; kayitliIlac: number; planliIlac: number }
   esikler: Record<string, EsikSeti>
   /** Latest readings, newest first (Günlük list) — numeric readings and HI / LO flags. */
   sonOlcumler: GunlukOlcum[]
@@ -140,7 +145,9 @@ export function gunlukOzeti(h: HamGunluk): GunlukDurum {
   const gunlukHedef = mod.gunlukHedef
   const takipSet = new Set(tipler)
   const takipOlcumleri = h.olcumler.filter((o) => takipSet.has(o.tip))
-  const aktifPlanlar = h.planlar.filter((p) => p.aktif)
+  // DOZ-KAYDI-ISTEGE-BAGLI: every plan carries its effective "patient logs it" from here on.
+  const planlarK = kayitTercihiUygula(h.planlar, h.tercihler.dozKaydi)
+  const aktifPlanlar = planlarK.filter((p) => p.aktif)
 
   const isaretli = [...(h.isaretliOlcumler || [])].sort((a, b) => b.olcumAt.localeCompare(a.olcumAt))
   const sirali = [...h.olcumler].sort((a, b) => b.olcumAt.localeCompare(a.olcumAt))
@@ -170,14 +177,16 @@ export function gunlukOzeti(h: HamGunluk): GunlukDurum {
   })
 
   const bugunDozlar = bugunPlani(aktifPlanlar, h.kayitlar, simdi)
-  const gerektikce = gerektikceDurumu(h.planlar, h.kayitlar, simdi)
+  const gerektikce = gerektikceDurumu(planlarK, h.kayitlar, simdi)
+  // Only logged medicines fill the İlaç ring (a reminder-only patient gets no ring that can never fill).
+  const kayitDozlar = bugunDozlar.filter((s) => s.kayitAcik)
   const olcumToplam = olcumKartlari.reduce((a, k) => a + k.gunlukHedef, 0)
   const olcumYapilan = olcumKartlari.reduce((a, k) => a + Math.min(k.bugunSayi, k.gunlukHedef), 0)
   const son7 = takipOlcumleri.filter((o) => trGun(o.olcumAt) >= gunEkle(bugun, -6))
   const hedefDeg = son7.map((o) => hedefteMi(esikler[metrikAnahtari(o)], o.deger, o.deger2)).filter((x): x is boolean => x != null)
 
   const kadran: GunlukDurum['kadran'] = [
-    ...bugunDozlar.map((s) => ({ dakika: trDakika(s.at), tur: 'doz' as const, durum: (s.durum === 'alindi' ? 'tamam' : s.durum === 'kacirildi' || s.durum === 'atlandi' ? 'kacti' : 'bekliyor') as 'tamam' | 'bekliyor' | 'kacti', etiket: `${s.saat} ${s.ad}` })),
+    ...bugunDozlar.map((s) => ({ dakika: trDakika(s.at), tur: 'doz' as const, durum: (s.durum === 'alindi' ? 'tamam' : s.durum === 'atlandi' || (s.durum === 'kayit_yok' && s.kayitAcik) ? 'kacti' : 'bekliyor') as 'tamam' | 'bekliyor' | 'kacti', etiket: `${s.saat} ${s.ad}` })),
     ...hepsi.filter((o) => trGun(o.olcumAt) === bugun).map((o) => ({ dakika: trDakika(o.olcumAt), tur: 'olcum' as const, durum: 'tamam' as const, etiket: OLCUM_TANIMLARI[o.tip].kisaAd })),
   ]
 
@@ -212,19 +221,22 @@ export function gunlukOzeti(h: HamGunluk): GunlukDurum {
   })
   const yeniKazanilan = durumlar.filter((d) => d.kazanildi && !kayitli.has(d.id)).map((d) => d.id)
 
-  const bekleyen = bugunDozlar.filter((s) => s.durum === 'zamani' || s.durum === 'bekliyor' || s.durum === 'ertelendi')
+  // A reminder-only dose stays "next" until 30 min after its time (nothing to mark, so it moves on by itself).
+  const simdiMs = Date.parse(simdi)
+  const bekleyen = bugunDozlar.filter((s) => (s.durum === 'zamani' || s.durum === 'bekliyor' || s.durum === 'ertelendi') && (s.kayitAcik || Date.parse(s.at) >= simdiMs - 30 * 60_000))
   const ilk = bekleyen[0]
-  const siradaki = ilk ? { tur: 'doz' as const, saat: ilk.saat, at: ilk.at, planIds: bekleyen.filter((s) => s.at === ilk.at).map((s) => s.planId), adlar: bekleyen.filter((s) => s.at === ilk.at).map((s) => s.ad) } : null
+  const grup = ilk ? bekleyen.filter((s) => s.at === ilk.at) : []
+  const siradaki = ilk ? { tur: 'doz' as const, saat: ilk.saat, at: ilk.at, planIds: grup.map((s) => s.planId), adlar: grup.map((s) => s.ad), kayitPlanIds: grup.filter((s) => s.kayitAcik).map((s) => s.planId) } : null
 
   const ldlHedef = h.hekimAyar?.ldlHedef ?? null
   const haftaGunleri = Array.from({ length: 7 }, (_, i) => gunEkle(bugun, -6 + i))
   const harita = kayitHaritasi(h.kayitlar)
-  const hafta = { gunler: haftaGunleri, planlar: aktifPlanlar.filter((p) => !p.gerektikce).map((p) => ({ planId: p.id, ad: p.ad, gunler: haftaGunleri.map((g) => gunSlotlari(p, g).map((sl) => slotDurumu(p.id, sl, harita, simdi))) })) }
+  const hafta = { gunler: haftaGunleri, planlar: aktifPlanlar.filter((p) => !p.gerektikce && kayitAcikMi(p)).map((p) => ({ planId: p.id, ad: p.ad, gunler: haftaGunleri.map((g) => gunSlotlari(p, g).map((sl) => slotDurumu(p.id, sl, harita, simdi))) })) }
   return {
     simdi, bugun, brans: h.bransAnahtar, vurgu: h.ayar.vurgu, kartlar: mod.kartlar,
-    olcumKartlari, bugunDozlar, gerektikce, planlar: h.planlar,
+    olcumKartlari, bugunDozlar, gerektikce, planlar: planlarK,
     halkalar: {
-      ilac: { yapilan: bugunDozlar.filter((s) => s.durum === 'alindi').length, toplam: bugunDozlar.length },
+      ilac: { yapilan: kayitDozlar.filter((s) => s.durum === 'alindi').length, toplam: kayitDozlar.length },
       olcum: { yapilan: olcumYapilan, toplam: olcumToplam },
       hedef: { yuzde: hedefDeg.length >= 3 ? Math.round((hedefDeg.filter(Boolean).length / hedefDeg.length) * 100) : null, n: hedefDeg.length },
     },
@@ -247,6 +259,7 @@ export function gunlukOzeti(h: HamGunluk): GunlukDurum {
     sonOlcumler: hepsi.slice(0, 40),
     isaretliOlcumler: isaretli,
     hafta,
+    kayit: { tercih: h.tercihler.dozKaydi ?? null, secim: h.tercihler.dozSecimi ?? null, hatirlatmaAcik: h.tercihler.hatirlatmaAcik !== false, soruGoster: kayitSorusuGosterilsinMi(planlarK, h.tercihler), kayitliIlac: aktifPlanlar.filter((p) => !p.gerektikce && kayitAcikMi(p)).length, planliIlac: aktifPlanlar.filter((p) => !p.gerektikce).length },
   }
 }
 
@@ -270,7 +283,7 @@ export interface KontrolOzeti {
 const f = (x: number | null, o = 0) => (x == null ? null : (Math.round(x * 10 ** o) / 10 ** o).toLocaleString('tr-TR', { maximumFractionDigits: o }))
 
 /** Last 4 weeks of home data, adherence, alerts and the patient's questions — one printable page for the doctor. */
-export function kontrolOncesiOzet(g: { olcumler: EvOlcum[]; isaretliOlcumler?: IsaretliOlcum[]; planlar: DozPlani[]; kayitlar: DozKaydi[]; uyarilar: EvUyari[]; sorular: Array<{ metin: string; createdAt: string }>; esikler: Record<string, EsikSeti>; simdi: string; randevuAt: string | null; takipTipleri?: OlcumTipi[] | null }): KontrolOzeti {
+export function kontrolOncesiOzet(g: { olcumler: EvOlcum[]; isaretliOlcumler?: IsaretliOlcum[]; planlar: DozPlani[]; kayitVarsayilan?: KayitTutma | null; kayitlar: DozKaydi[]; uyarilar: EvUyari[]; sorular: Array<{ metin: string; createdAt: string }>; esikler: Record<string, EsikSeti>; simdi: string; randevuAt: string | null; takipTipleri?: OlcumTipi[] | null }): KontrolOzeti {
   const bit = trGun(g.simdi)
   const bas = gunEkle(bit, -27)
   const donemde = g.olcumler.filter((o) => { const d = trGun(o.olcumAt); return d >= bas && d <= bit })
@@ -296,7 +309,7 @@ export function kontrolOncesiOzet(g: { olcumler: EvOlcum[]; isaretliOlcumler?: I
       ilkHafta: hafta(bas, gunEkle(bas, 6)), sonHafta: hafta(gunEkle(bit, -6), bit),
     }
   })
-  const aktifP = g.planlar.filter((p) => p.aktif)
+  const aktifP = kayitTercihiUygula(g.planlar.filter((p) => p.aktif), g.kayitVarsayilan)
   const genel = uyum(aktifP, g.kayitlar, bas, bit, g.simdi)
   const ilaclar = planUyumlari(aktifP, g.kayitlar, bas, bit, g.simdi)
   const uyarilar = g.uyarilar.filter((u) => trGun(u.olusturmaAt) >= bas).map((u) => ({ duzey: u.duzey, metin: u.hekimMetni, tarih: u.olusturmaAt, kural: u.kural }))
@@ -317,8 +330,11 @@ export function kontrolOncesiOzet(g: { olcumler: EvOlcum[]; isaretliOlcumler?: I
     satirlar.push(`Takip dışı girilen ölçümler: ${[...say].map(([t, n]) => `${OLCUM_TANIMLARI[t].ad} (n=${n})`).join(', ')}`)
   }
   if (ilaclar.length) {
-    satirlar.push('', `İlaç uyumu: ${genel.yuzde == null ? '—' : `%${genel.yuzde}`} (${genel.alinan}/${genel.beklenen} doz)`)
-    for (const i of ilaclar) satirlar.push(`- ${i.ad}${i.kritik ? ' (kritik)' : ''}${i.kaynak === 'hasta' ? ' (hastanın eklediği)' : ''}: ${i.yuzde == null ? '—' : `%${i.yuzde}`} (${i.alinan}/${i.beklenen})`)
+    // DOZ-KAYDI-ISTEGE-BAGLI: a % only where the patient logs; otherwise "doz kaydı tutmuyor" / "kayıt yok" — never 0 %.
+    const kayitli = ilaclar.filter((i) => i.kayitAcik)
+    const genelMetin = !kayitli.length ? 'Hasta doz kaydı tutmuyor (yalnız hatırlatma alıyor)' : genel.yuzde == null ? 'Kayıt yok' : `%${genel.yuzde} (${genel.alinan}/${genel.beklenen} işaretli doz; ${genel.beklenen - genel.alinan} "Atladım")`
+    satirlar.push('', `İlaç uyumu: ${genelMetin}`)
+    for (const i of ilaclar) satirlar.push(`- ${i.ad}${i.kritik ? ' (kritik)' : ''}${i.kaynak === 'hasta' ? ' (hastanın eklediği)' : ''}: ${!i.kayitAcik ? 'yalnız hatırlatma' : i.yuzde == null ? 'kayıt yok' : `%${i.yuzde} (${i.alinan}/${i.beklenen})`}`)
   }
   if (uyarilar.length) { satirlar.push('', 'Uyarılar:'); for (const u of uyarilar) satirlar.push(`- [${u.kural === 'kritik_ilac' ? 'uyum' : u.duzey}] ${trGun(u.tarih)} — ${u.metin}`) }
   if (sorular.length) { satirlar.push('', 'Hastanın soruları:'); for (const s of sorular) satirlar.push(`- ${s.metin}`) }

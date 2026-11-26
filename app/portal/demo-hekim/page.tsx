@@ -9,8 +9,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import EvVerisiKarti from '@/components/doktor/saglikEvi/EvVerisiKarti'
 import { evVerisiHesapla, type EvVerisiGirdisi } from '@/lib/saglikEvi/evVerisi'
-import { evVerisiDemoGirdisi } from '@/lib/saglikEvi/demo'
-import { kontrolOncesiOzet } from '@/lib/saglikEvi/ozet'
+import { dozKaydiDemoUygula, evVerisiDemoGirdisi } from '@/lib/saglikEvi/demo'
+import { kontrolOncesiOzet, type HamGunluk } from '@/lib/saglikEvi/ozet'
 import { etkinEsikler } from '@/lib/saglikEvi/hedefler'
 import { CHROME_RENK as R, CHROME_FONT, CHROME_FONT_HREF } from '@/lib/doktor/chromeRenk'
 
@@ -19,6 +19,12 @@ function durumaGore(g: EvVerisiGirdisi, durum: string | null, simdiMs: number): 
   if (durum === 'az') return { ...g, uyarilar: [], olcumler: g.olcumler.filter((o) => Date.parse(o.olcumAt) > simdiMs - 2.2 * 86_400_000) }
   if (durum === 'bos') return { ...g, uyarilar: [], olcumler: [], kayitlar: [], planlar: [], sorular: [] }
   if (durum === 'onaysiz') return { ...g, tercih: { ...g.tercih, paylasimOnayi: false } }
+  // DOZ-KAYDI-ISTEGE-BAGLI: ?durum=kayit-yok (reminder-only patient) | kritik (kritik medicine, no record for 2 days,
+  // reminder switched off by the patient). Same transform as the patient demo.
+  if (durum === 'kayit-yok' || durum === 'kritik') {
+    const h = dozKaydiDemoUygula({ simdi: new Date(simdiMs).toISOString(), planlar: g.planlar, kayitlar: g.kayitlar, uyarilar: g.uyarilar, tercihler: g.tercih } as unknown as HamGunluk, durum)
+    if (h) return { ...g, planlar: h.planlar, kayitlar: h.kayitlar, uyarilar: h.uyarilar, tercih: h.tercihler }
+  }
   if (durum === 'kullanmiyor') return { ...g, tercih: { ...g.tercih, paylasimOnayi: false }, olcumler: [], kayitlar: [], planlar: g.planlar.filter((p) => p.kaynak !== 'hasta') }
   return g
 }
@@ -32,7 +38,7 @@ export default function DemoHekimPage() {
     const simdi = new Date().toISOString()
     const g = durumaGore(evVerisiDemoGirdisi(simdi, 'dahiliye', durum === 'ht' ? 'ht' : durum === 'acil' ? 'acil' : 'dm-ht'), durum, Date.parse(simdi))
     const kart = evVerisiHesapla(g)
-    const ozet = kontrolOncesiOzet({ olcumler: g.olcumler, isaretliOlcumler: g.isaretliOlcumler, planlar: g.planlar, kayitlar: g.kayitlar, uyarilar: g.uyarilar, sorular: g.sorular.map((s) => ({ metin: s.metin, createdAt: s.tarih })), esikler: etkinEsikler('genel', null), simdi, randevuAt: new Date(Date.now() + 86_400_000).toISOString(), takipTipleri: kart.olcumTipleri })
+    const ozet = kontrolOncesiOzet({ olcumler: g.olcumler, isaretliOlcumler: g.isaretliOlcumler, planlar: g.planlar, kayitVarsayilan: g.tercih.dozKaydi, kayitlar: g.kayitlar, uyarilar: g.uyarilar, sorular: g.sorular.map((s) => ({ metin: s.metin, createdAt: s.tarih })), esikler: etkinEsikler('genel', null), simdi, randevuAt: new Date(Date.now() + 86_400_000).toISOString(), takipTipleri: kart.olcumTipleri })
     return { ...kart, kontrolOzeti: kart.onay ? { id: 'demo', olusturmaAt: simdi, randevuAt: ozet.randevuAt, ozet, metin: ozet.metin } : null }
   }, [durum])
   return (

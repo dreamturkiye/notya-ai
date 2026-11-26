@@ -137,7 +137,7 @@ describe('Bugün v2 — rendered screen, every branş (core component)', () => {
     assert.match(html, /Hoş geldiniz, Demo/)
     assert.match(html, /20:00<\/span> — (Amlodipin ve Metformin|Metformin ve Amlodipin)/)
     assert.equal((html.match(/class="sgb-ana"/g) || []).length, 1)
-    assert.match(html, /Empagliflozin<\/b><small[^>]*>08:00 dozu işaretlenmedi/)
+    assert.match(html, /Empagliflozin<\/b><small[^>]*>08:00 dozu için kayıt yok/)
     assert.match(html, /Tokluk şekeri bu hafta yükseliyor/)
   })
   it('an acil note always shows the 112 call', () => {

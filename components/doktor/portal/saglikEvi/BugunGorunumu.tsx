@@ -29,6 +29,7 @@ import { OlcumGirisi } from './OlcumGirisi'
 import { DozListesi } from './DozListesi'
 import { UyariKarti } from './UyariKarti'
 import { OnayKarti } from './OnayKarti'
+import { DozSecimKarti } from './DozSecimKarti'
 import { SekerAcilKontrolu } from './SekerAcilKontrolu'
 import { UyariIsareti } from '@/components/doktor/saglikEvi/UyariIsareti'
 import { RozetAcilisi } from './RozetAcilisi'
@@ -317,11 +318,16 @@ export function BugunGorunumu({ s, durum, eylemler, kopru, hastaAdi }: { s: Sagl
             <span className={`sgb-zaman${adim.durum === 'zamani' ? ' sgb-zaman--simdi' : ''}`}>{adim.durum === 'ertelendi' ? s.ertelendiAlt : s.kalan(adim.kalanDk)}</span>
           </div>
           <p className="sgb-cumle"><span className="sgb-cumle-saat">{adim.saat}</span> — {adlarMetni(adim.adlar, s.ve)}</p>
-          <button type="button" className="sgb-ana" disabled={mesgul} onClick={() => doz(adim.planIds, adim.at, 'alindi')}><Tik />{s.aldimGrup(adim.planIds.length)}</button>
-          <div className="sgb-ikincil">
-            <button type="button" disabled={mesgul} onClick={() => doz(adim.planIds, adim.at, 'ertelendi')}>{s.simdiErtele}</button>
-            <button type="button" disabled={mesgul} onClick={() => doz(adim.planIds, adim.at, 'atlandi')}>{s.simdiAtladim}</button>
-          </div>
+          {/* DOZ-KAYDI-ISTEGE-BAGLI: "Aldım" only for medicines the patient logs; reminder-only shows the time, nothing to tap. */}
+          {adim.kayitPlanIds.length ? (
+            <>
+              <button type="button" className="sgb-ana" disabled={mesgul} onClick={() => doz(adim.kayitPlanIds, adim.at, 'alindi')}><Tik />{s.aldimGrup(adim.kayitPlanIds.length)}</button>
+              <div className="sgb-ikincil">
+                <button type="button" disabled={mesgul} onClick={() => doz(adim.kayitPlanIds, adim.at, 'ertelendi')}>{s.simdiErtele}</button>
+                <button type="button" disabled={mesgul} onClick={() => doz(adim.kayitPlanIds, adim.at, 'atlandi')}>{s.simdiAtladim}</button>
+              </div>
+            </>
+          ) : <p className="sgb-cumle-alt">{durum.kayit.hatirlatmaAcik && adim.planIds.some((id) => durum.planlar.find((p) => p.id === id)?.hatirlatmaAcik !== false) ? s.siradakiHatirlatmaAlt : s.siradakiSessizAlt}</p>}
         </div>
       ) : adim.tur === 'olcum' ? (
         <div key={`o-${adim.tip}`} className="sgb-siradaki-ic">
@@ -379,6 +385,8 @@ export function BugunGorunumu({ s, durum, eylemler, kopru, hastaAdi }: { s: Sagl
         {halkalar.length ? <GunHalkalari halkalar={halkalar} etiketler={etiketler} aria={s.halkaAria(etiketler.map((e) => `${e.ad} ${e.deger}${e.pay ? `/${e.pay}` : ''}`))} /> : null}
         {siradaki}
       </div>
+
+      {durum.kayit.soruGoster ? <DozSecimKarti s={s} sec={async (x) => { await eylemler.tercih({ dozSecimi: x }) }} /> : null}
 
       {!durum.tercihler.paylasimOnayi && !onaySonra ? (
         <OnayKarti s={s} kvkkHref={kopru.kvkkHref} onayla={async () => { await eylemler.tercih({ paylasimOnayi: true }) }} sonra={() => { try { localStorage.setItem('sg-onay-sonra', String(Date.now())) } catch { /* yok */ } setOnaySonra(true) }} />

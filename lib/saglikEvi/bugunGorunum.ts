@@ -17,7 +17,7 @@ import { trGun } from './zaman'
 export const GUN_HALKA_RENK = { ilac: HALKA_RENK.ilac, olcum: HALKA_RENK.olcum, hedef: '#2f6b4f' } as const
 
 export type SiradakiAdim =
-  | { tur: 'doz'; saat: string; at: string; planIds: string[]; adlar: string[]; durum: 'zamani' | 'bekliyor' | 'ertelendi'; kalanDk: number }
+  | { tur: 'doz'; saat: string; at: string; planIds: string[]; adlar: string[]; durum: 'zamani' | 'bekliyor' | 'ertelendi'; kalanDk: number; kayitPlanIds: string[] }
   | { tur: 'olcum'; tip: OlcumTipi; ad: string; yapilan: number; hedef: number }
   | { tur: 'tamam' }
   | { tur: 'bos' }
@@ -31,7 +31,7 @@ export function siradakiAdim(d: Pick<GunlukDurum, 'siradaki' | 'bugunDozlar' | '
   if (s) {
     const slot = d.bugunDozlar.find((x) => x.at === s.at && s.planIds.includes(x.planId))
     const durum = slot?.durum === 'zamani' || slot?.durum === 'ertelendi' ? slot.durum : 'bekliyor'
-    return { tur: 'doz', saat: s.saat, at: s.at, planIds: s.planIds, adlar: s.adlar, durum, kalanDk: Math.round((Date.parse(s.at) - simdiMs) / 60_000) }
+    return { tur: 'doz', saat: s.saat, at: s.at, planIds: s.planIds, adlar: s.adlar, durum, kalanDk: Math.round((Date.parse(s.at) - simdiMs) / 60_000), kayitPlanIds: s.kayitPlanIds ?? s.planIds }
   }
   const k = d.olcumKartlari.find((x) => x.tip !== 'su' && x.gunlukHedef > 0 && x.bugunSayi < x.gunlukHedef)
   if (k) return { tur: 'olcum', tip: k.tip, ad: k.ad, yapilan: k.bugunSayi, hedef: k.gunlukHedef }
@@ -39,11 +39,12 @@ export function siradakiAdim(d: Pick<GunlukDurum, 'siradaki' | 'bugunDozlar' | '
   return planVar ? { tur: 'tamam' } : { tur: 'bos' }
 }
 
-/** Today's doses whose time passed without a mark, grouped by time (oldest first). */
+/** Today's doses whose time passed without a mark, grouped by time (oldest first) — only medicines the patient logs
+ *  (DOZ-KAYDI-ISTEGE-BAGLI: a reminder-only patient is never shown a "fix this" row). */
 export function eksikDozlar(d: Pick<GunlukDurum, 'bugunDozlar'>): Array<{ saat: string; at: string; planIds: string[]; adlar: string[] }> {
   const g = new Map<string, { saat: string; at: string; planIds: string[]; adlar: string[] }>()
   for (const x of d.bugunDozlar) {
-    if (x.durum !== 'kacirildi') continue
+    if (x.durum !== 'kayit_yok' || !x.kayitAcik) continue
     const v = g.get(x.at) || { saat: x.saat, at: x.at, planIds: [], adlar: [] }
     v.planIds.push(x.planId); v.adlar.push(x.ad)
     g.set(x.at, v)
@@ -63,12 +64,13 @@ export interface GunHalkasi {
   tamam: boolean
 }
 
-/** Rings only for what the patient has: no medicines → no İlaç ring; no daily reading target → no Ölçüm / Hedef ring. */
+/** Rings only for what the patient has: no LOGGED medicine → no İlaç ring (halkalar.ilac counts logged doses only);
+ *  no daily reading target → no Ölçüm / Hedef ring. */
 export function gunHalkalari(d: Pick<GunlukDurum, 'halkalar' | 'bugunDozlar' | 'olcumKartlari'>): GunHalkasi[] {
   const h = d.halkalar
   const out: GunHalkasi[] = []
   if (h.ilac.toplam > 0) {
-    const eksik = d.bugunDozlar.filter((x) => x.durum === 'kacirildi').length
+    const eksik = d.bugunDozlar.filter((x) => x.durum === 'kayit_yok' && x.kayitAcik).length
     out.push({ anahtar: 'ilac', renk: GUN_HALKA_RENK.ilac, oran: h.ilac.yapilan / h.ilac.toplam, yapilan: h.ilac.yapilan, toplam: h.ilac.toplam, eksik, tamam: h.ilac.yapilan >= h.ilac.toplam })
   }
   if (h.olcum.toplam > 0) {

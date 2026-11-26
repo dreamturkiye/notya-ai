@@ -261,7 +261,7 @@
 .sge-hafta td:first-child { text-align: left; font-weight: 600; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .sge-hucre { display: inline-flex; gap: 2px; }
 .sge-hucre i { width: 10px; height: 18px; border-radius: 4px; background: rgba(58, 44, 34, 0.08); }
-.sge-hucre i.alindi { background: var(--sge-ilac); } .sge-hucre i.atlandi { background: var(--sge-uyum-zemin); box-shadow: inset 0 0 0 1.5px var(--sge-uyum-vurgu); } .sge-hucre i.kacirildi { background: transparent; box-shadow: none; border: 1.6px dashed var(--sge-uyum-vurgu); box-sizing: border-box; }
+.sge-hucre i.alindi { background: var(--sge-ilac); } .sge-hucre i.atlandi { background: var(--sge-uyum-zemin); box-shadow: inset 0 0 0 1.5px var(--sge-uyum-vurgu); } .sge-hucre i.kayit_yok { background: transparent; box-shadow: none; border: 1.6px dashed var(--sge-uyum-vurgu); box-sizing: border-box; }
 .sge-hucre i.zamani, .sge-hucre i.ertelendi { background: var(--sge-olcum); opacity: 0.6; }
 .sge-saat-satir { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 8px; }
 .sge-saat-satir input[type='time'] { min-height: 44px; border-radius: 12px; border: 1px solid var(--sge-cizgi); padding: 0 10px; font-size: 16px; background: #fff; color: var(--sg-ink); }
@@ -644,3 +644,15 @@
 .sge-egri-isaret--hi { top: -2px; border-bottom: 9px solid var(--sge-k-acil-vurgu); }
 .sge-egri-isaret--lo { bottom: -2px; border-top: 9px solid var(--sge-k-acil-vurgu); }
 .sagligim-root.sg-kontrast .sge { --sge-uyum: #353c5c; --sge-uyum-vurgu: #4a5274; --sge-k-acil: #861a15; --sge-k-bildir: #8a3814; --sge-k-dikkat: #5f4300; }
+
+/* DOZ-KAYDI-ISTEGE-BAGLI (2026-11-26): the one-time reminder / logging choice + per-medicine switches. */
+.sge-secim-liste { display: grid; gap: 10px; margin: 12px 0 12px; }
+.sge-secim { display: block; width: 100%; text-align: left; font: inherit; color: inherit; cursor: pointer; padding: 12px 15px; border-radius: 16px; border: 1.5px solid var(--sge-cizgi); background: #fff; min-height: 56px; }
+.sge-secim b { display: block; font-size: 16px; font-weight: 600; }
+.sge-secim span { display: block; font-size: 13.5px; line-height: 1.4; color: #6b5d50; margin-top: 2px; }
+.sge-secim--ana { border-color: rgba(15, 155, 142, 0.5); background: rgba(15, 155, 142, 0.06); }
+.sge-secim:disabled { opacity: 0.6; }
+.sge-ilac-ayar { display: grid; gap: 2px; margin-top: 8px; padding-top: 4px; border-top: 1px dashed var(--sge-cizgi); }
+.sge-ilac-ayar .sge-anahtar { padding: 8px 0; border-bottom: none; }
+.sge-ilac-ayar .sge-anahtar-metin b { font-size: 14.5px; font-weight: 600; }
+.sge-kritik-neden { font-size: 13.5px; line-height: 1.5; color: #5d4f43; margin: 6px 0 2px; }

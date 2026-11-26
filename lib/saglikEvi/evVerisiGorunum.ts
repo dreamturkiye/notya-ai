@@ -178,7 +178,10 @@ export function uyariMetrigi(v: Pick<EvVerisiKarti, 'metrikler'>, metrik: string
   return v.metrikler.find((m) => m.anahtar === metrik) || v.metrikler.find((m) => metrikTipi(m.anahtar) === metrik)
 }
 
-/** Medicines not taken this week (doses due and not marked taken, skipped on purpose included). */
+/**
+ * Doses not taken this week — DOZ-KAYDI-ISTEGE-BAGLI: ONLY explicit "Atladım" on logged medicines (uyum's beklenen −
+ * alinan). An unmarked dose is "kayıt yok" and is never counted here.
+ */
 export function haftaninEksikDozlari(v: Pick<EvVerisiKarti, 'uyum'>): { toplam: number; ilaclar: string[] } {
   const ilaclar = v.uyum.ilaclar.filter((i) => i.hafta && i.hafta.beklenen > i.hafta.alinan)
   return { toplam: Math.max(0, v.uyum.hafta.beklenen - v.uyum.hafta.alinan), ilaclar: ilaclar.map((i) => i.ad) }
@@ -209,7 +212,9 @@ export function durumCumlesi(v: EvVerisiKarti, simdiMs: number): { ton: Ton; bas
       case 'ates_3gun': return ret('Üç gündür ateş ölçülüyor', u.metin)
       case 'ates_bebek': return ret(`Bebekte ateş${okunan ? ` — ${okunan} °C` : ''}`, u.metin)
       case 'tekrar_dusuk_seker': return ret('Bu hafta tekrarlayan düşük şeker', u.metin)
-      case 'kritik_ilac': return ret('Kritik ilaç iki gündür işaretlenmedi', u.metin)
+      // DOZ-KAYDI-ISTEGE-BAGLI: "kayıt yok" or "Atladım" — never "almadı" (alerts from before carry no neden: they were
+      // raised by unmarked doses, which is "kayıt yok").
+      case 'kritik_ilac': return ret((u as { neden?: string }).neden === 'atlandi' ? 'Kritik ilaç 2 gündür “Atladım” işaretli' : 'Kritik ilaç: 2 gündür kayıt yok', u.metin)
       case 'cok_yuksek': case 'yuksek_bildir': case 'yuksek_dikkat': return ret(`${ad} yüksek ölçüldü${okunan ? ` — ${okunan} ${birim}` : ''}`, `${trTarihSaat(u.tarih)}.`)
       case 'cok_dusuk': case 'dusuk_bildir': case 'dusuk_dikkat': return ret(`${ad} düşük ölçüldü${okunan ? ` — ${okunan} ${birim}` : ''}`, `${trTarihSaat(u.tarih)}.`)
       default: return ret(u.metin, '')
@@ -218,8 +223,12 @@ export function durumCumlesi(v: EvVerisiKarti, simdiMs: number): { ton: Ton; bas
   const toplamOlcum = v.metrikler.reduce((a, m) => a + m.hafta.n, 0)
   const uyumYuzde = v.uyum.hafta.yuzde
   if (!v.metrikler.length && !v.uyum.ilaclar.length) return { ton: 'sakin', baslik: 'Henüz ev verisi yok', alt: 'Hasta ölçüm girdiğinde ya da ilaçlarını işaretlediğinde burada görünür.', metrik: null }
-  if (uyumYuzde != null && uyumYuzde < 70) return { ton: 'uyum', baslik: `İlaç uyumu bu hafta düşük — %${uyumYuzde}`, alt: `${v.uyum.hafta.beklenen - v.uyum.hafta.alinan} doz alınmadı.`, metrik: null }
-  const parca = [toplamOlcum ? `Bu hafta ${toplamOlcum} ölçüm` : 'Bu hafta ölçüm girilmedi', uyumYuzde != null ? `ilaç uyumu %${uyumYuzde}` : null].filter(Boolean).join(', ')
+  // DOZ-KAYDI-ISTEGE-BAGLI: "low adherence" only from real marks (taken vs "Atladım" on logged medicines); a patient
+  // who does not log is said to not log — never shown as non-adherent.
+  if (uyumYuzde != null && uyumYuzde < 70) return { ton: 'uyum', baslik: `İlaç uyumu bu hafta düşük — %${uyumYuzde}`, alt: `${v.uyum.hafta.beklenen - v.uyum.hafta.alinan} doz alınmadı (hasta “Atladım” işaretledi).`, metrik: null }
+  const planli = v.uyum.ilaclar.length > 0
+  const ilacParca = !planli ? null : !v.uyum.kayitTutan ? 'hasta doz kaydı tutmuyor' : uyumYuzde != null ? `ilaç uyumu %${uyumYuzde}` : 'doz kaydı yok'
+  const parca = [toplamOlcum ? `Bu hafta ${toplamOlcum} ölçüm` : 'Bu hafta ölçüm girilmedi', ilacParca].filter(Boolean).join(', ')
   // Alerts already acknowledged with "Gördüm": say so plainly instead of claiming there is no trend.
   if (v.uyarilar.length) return { ton: 'sakin', baslik: 'Yeni uyarı yok', alt: `Son uyarıyı gördünüz (${trTarihSaat(v.uyarilar[0].tarih)}). ${parca}.`, metrik: null }
   return { ton: 'sakin', baslik: 'Son 7 günde dikkat gerektiren bir eğilim yok', alt: `${parca}.`, metrik: null }
@@ -238,6 +247,23 @@ export function sonOlcumMetni(v: Pick<EvVerisiKarti, 'metrikler'>, simdiMs: numb
   if (g === dun) return `Son ölçüm dün ${saat}`
   return `Son ölçüm ${new Date(son).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', timeZone: 'Europe/Istanbul' })}`
 }
+
+/**
+ * DOZ-KAYDI-ISTEGE-BAGLI — the İlaç line of the card's legend: a % only where it is real; otherwise a calm fact in the
+ * adherence family's slate ("Hasta doz kaydı tutmuyor" / "Kayıt yok"). null = no scheduled medicine (no line).
+ */
+export function ilacOzetDurumu(v: Pick<EvVerisiKarti, 'uyum'>): { tur: 'yuzde'; yuzde: number; ay: number | null } | { tur: 'tutmuyor' | 'kayit_yok' } | null {
+  if (!v.uyum.ilaclar.length) return null
+  if (!v.uyum.kayitTutan) return { tur: 'tutmuyor' }
+  if (v.uyum.hafta.yuzde == null) return { tur: 'kayit_yok' }
+  return { tur: 'yuzde', yuzde: v.uyum.hafta.yuzde, ay: v.uyum.ay.yuzde }
+}
+
+/** DOZ-KAYDI-ISTEGE-BAGLI — kritik medicines whose reminders the patient switched off (a neutral note, slate, never red). */
+export function hatirlatmasiKapaliKritikler(v: Pick<EvVerisiKarti, 'planlar'>): string[] {
+  return v.planlar.filter((p) => p.kritik && !p.gerektikce && p.hatirlatmaKapali).map((p) => p.ad)
+}
+export const HATIRLATMA_KAPALI_NOTU = 'Hasta bu ilaç için hatırlatmayı kapattı'
 
 /** Tiles without a featured one: rows of at most 4, spread evenly (5 → 3 + 2, 7 → 4 + 3) on a 12-column grid. */
 export function karoYayilimi(n: number): number[] {

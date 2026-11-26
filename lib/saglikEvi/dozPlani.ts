@@ -1,6 +1,14 @@
 /**
  * HASTA-PORTALI-GUNLUK — Doz Takvimi math: turning the doctor's "kullanım sıklığı" text into suggested times, the slots
- * of a day, each slot's state, adherence %, and the "two missed days" rule. Pure, no I/O.
+ * of a day, each slot's state, adherence %, and the "two days" rule. Pure, no I/O.
+ *
+ * DOZ-KAYDI-ISTEGE-BAGLI (Kaan, 2026-11-26) — reminders are the core; logging doses is optional. The rule, chosen as the
+ * simplest one that can never show false non-adherence:
+ *   - a slot with no record after its window is 'kayit_yok' ("kayıt yok"), never "missed" — for every medicine, logged
+ *     or not. Silence is not evidence that a dose was not taken.
+ *   - only an explicit "Atladım" ('atlandi') counts as a dose not taken.
+ *   - adherence % (uyum) is computed only over medicines the patient logs (kayitAcikMi) and only over resolved slots
+ *     (alindi / atlandi); no such data → yuzde null ("Kayıt yok" / "Hasta doz kaydı tutmuyor"), never 0 %.
  *
  * Nothing here computes a dose. The dose text is shown exactly as the doctor wrote it; times are a suggestion the
  * patient can move.
@@ -8,7 +16,7 @@
 import type { DozKaydi, DozPlani, SlotDurumu } from './tipler'
 import { gunEkle, haftaGunu, trGun, trSaatAni } from './zaman'
 
-/** A slot is "due now" from 60 min before to 3 h after its time; later without a record = missed. */
+/** A slot is "due now" from 60 min before to 3 h after its time; later without a record = 'kayit_yok'. */
 export const ERKEN_DK = 60
 export const GEC_DK = 180
 export const ERTELE_DK = 30
@@ -71,69 +79,92 @@ export function kayitHaritasi(kayitlar: DozKaydi[]): Map<string, DozKaydi> {
   return m
 }
 
+/**
+ * Does the patient log this medicine? Effective value set by kayitTercihiUygula (own choice → kritik default → the
+ * one-time answer); without it: own choice, else a doctor-flagged kritik medicine (logging requested), else reminder only.
+ */
+export function kayitAcikMi(p: Pick<DozPlani, 'kayitAcik' | 'kayitTutma' | 'kritik'>): boolean {
+  if (typeof p.kayitAcik === 'boolean') return p.kayitAcik
+  return p.kayitTutma ? p.kayitTutma === 'acik' : !!p.kritik
+}
+
 export function slotDurumu(planId: string, slotIso: string, harita: Map<string, DozKaydi>, simdi: Date | number | string): SlotDurumu {
   const t = new Date(simdi).getTime(), s = Date.parse(slotIso)
   const k = harita.get(`${planId}|${new Date(slotIso).toISOString()}`)
   if (k?.durum === 'alindi' || k?.durum === 'atlandi') return k.durum
   if (k?.durum === 'ertelendi') {
     const bitis = k.erteleUntil ? Date.parse(k.erteleUntil) : s + ERTELE_DK * 60_000
-    return t > bitis + GEC_DK * 60_000 ? 'kacirildi' : 'ertelendi'
+    return t > bitis + GEC_DK * 60_000 ? 'kayit_yok' : 'ertelendi'
   }
   if (t < s - ERKEN_DK * 60_000) return 'bekliyor'
   if (t <= s + GEC_DK * 60_000) return 'zamani'
-  return 'kacirildi'
+  return 'kayit_yok'
 }
 
+/** alinan = taken; beklenen = resolved (taken + explicitly skipped) — so beklenen − alinan = explicit "Atladım" only. */
 export interface UyumSonucu { alinan: number; beklenen: number; yuzde: number | null }
 
 /**
- * Adherence over [bas, bit] (Türkiye days, inclusive): taken ÷ resolved slots. A slot counts once it is resolved —
- * taken, skipped or missed. Future, due-now and postponed slots don't count yet (no penalty before the window closes).
+ * Adherence over [bas, bit] (Türkiye days, inclusive) — DOZ-KAYDI-ISTEGE-BAGLI: only medicines the patient logs
+ * (kayitAcikMi) and only resolved slots: taken ÷ (taken + "Atladım"). An unmarked slot ('kayit_yok') never counts, so a
+ * patient who does not log is never shown as non-adherent: no real data → yuzde null.
  */
 export function uyum(planlar: DozPlani[], kayitlar: DozKaydi[], bas: string, bit: string, simdi: Date | number | string): UyumSonucu {
   const harita = kayitHaritasi(kayitlar)
   let alinan = 0, beklenen = 0
+  const kayitli = planlar.filter((p) => kayitAcikMi(p))
   for (let g = bas; g <= bit; g = gunEkle(g, 1)) {
-    for (const p of planlar) {
+    for (const p of kayitli) {
       for (const s of gunSlotlari(p, g)) {
         const d = slotDurumu(p.id, s, harita, simdi)
-        if (d === 'alindi') { alinan++; beklenen++ } else if (d === 'atlandi' || d === 'kacirildi') beklenen++
+        if (d === 'alindi') { alinan++; beklenen++ } else if (d === 'atlandi') beklenen++
       }
     }
   }
   return { alinan, beklenen, yuzde: beklenen ? Math.round((alinan / beklenen) * 100) : null }
 }
 
-/** Per-plan adherence for the doctor's card. */
+/** Per-plan adherence for the doctor's card (kayitAcik: does the patient log it — false → "yalnız hatırlatma", no %). */
 export function planUyumlari(planlar: DozPlani[], kayitlar: DozKaydi[], bas: string, bit: string, simdi: Date | number | string) {
-  return planlar.filter((p) => !p.gerektikce).map((p) => ({ planId: p.id, ad: p.ad, kritik: p.kritik, kaynak: p.kaynak, ...uyum([p], kayitlar, bas, bit, simdi) }))
+  return planlar.filter((p) => !p.gerektikce).map((p) => ({ planId: p.id, ad: p.ad, kritik: p.kritik, kaynak: p.kaynak, kayitAcik: kayitAcikMi(p), ...uyum([p], kayitlar, bas, bit, simdi) }))
 }
 
+/** Why a medicine raised the two-day rule: explicit "Atladım" on both days, or (logged medicine) no record for 2 days. */
+export type IkiGunNedeni = 'atlandi' | 'kayit_yok'
+
 /**
- * Two missed days: the plan had slots on BOTH of the last two complete days and not one of them was taken.
- * Skipped-on-purpose counts as not taken (the doctor of a kritik medicine still wants to know).
+ * The two-day rule (DOZ-KAYDI-ISTEGE-BAGLI). The plan had slots on BOTH of the last two complete days and not one was
+ * marked taken, AND either
+ *   - the patient explicitly tapped "Atladım" on both days → 'atlandi' (any medicine), or
+ *   - the patient logs this medicine (kayitAcikMi) → 'kayit_yok' ("2 gündür kayıt yok" — never "almadı").
+ * A reminder-only medicine with no marks never fires: silence is not a missed dose.
  */
-export function ikiGunKacirdiMi(p: DozPlani, kayitlar: DozKaydi[], simdi: Date | number | string): boolean {
+export function ikiGunKacirdiMi(p: DozPlani, kayitlar: DozKaydi[], simdi: Date | number | string): IkiGunNedeni | null {
   const bugun = trGun(simdi)
   const harita = kayitHaritasi(kayitlar)
+  let ikisindeAtladi = true
   for (const g of [gunEkle(bugun, -1), gunEkle(bugun, -2)]) {
     const s = gunSlotlari(p, g)
-    if (!s.length) return false
-    if (s.some((x) => slotDurumu(p.id, x, harita, simdi) === 'alindi')) return false
+    if (!s.length) return null
+    const d = s.map((x) => slotDurumu(p.id, x, harita, simdi))
+    if (d.includes('alindi')) return null
+    if (!d.includes('atlandi')) ikisindeAtladi = false
   }
-  return true
+  if (ikisindeAtladi) return 'atlandi'
+  return kayitAcikMi(p) ? 'kayit_yok' : null
 }
 
 /** Today's timeline: every slot of every plan, grouped by time. */
 export function bugunPlani(planlar: DozPlani[], kayitlar: DozKaydi[], simdi: Date | number | string) {
   const gun = trGun(simdi)
   const harita = kayitHaritasi(kayitlar)
-  const slotlar: Array<{ planId: string; ad: string; doz: string | null; kritik: boolean; kaynak: DozPlani['kaynak']; at: string; saat: string; durum: SlotDurumu }> = []
+  const slotlar: Array<{ planId: string; ad: string; doz: string | null; kritik: boolean; kaynak: DozPlani['kaynak']; at: string; saat: string; durum: SlotDurumu; kayitAcik: boolean }> = []
   for (const p of planlar) {
+    const kayitAcik = kayitAcikMi(p)
     for (const s of [...p.saatler].sort()) {
       if (!plandaMi(p, gun)) continue
       const at = trSaatAni(gun, s)
-      slotlar.push({ planId: p.id, ad: p.ad, doz: p.doz, kritik: p.kritik, kaynak: p.kaynak, at, saat: s, durum: slotDurumu(p.id, at, harita, simdi) })
+      slotlar.push({ planId: p.id, ad: p.ad, doz: p.doz, kritik: p.kritik, kaynak: p.kaynak, at, saat: s, durum: slotDurumu(p.id, at, harita, simdi), kayitAcik })
     }
   }
   slotlar.sort((a, b) => a.at.localeCompare(b.at) || a.ad.localeCompare(b.ad, 'tr'))

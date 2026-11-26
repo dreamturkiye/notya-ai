@@ -3,6 +3,9 @@
  * HASTA-PORTALI-GUNLUK — Sağlığım › Doz Takvimi: adherence rings (7 / 30 days), today's doses, the week grid, the
  * medicine list with editable times, and "Kendi ilacımı ekle" (shown to the doctor as patient-added). The patient never
  * edits the doctor's dose text.
+ * DOZ-KAYDI-ISTEGE-BAGLI (2026-11-26): every medicine has two switches — Hatırlat (reminders) and Dozlarımı işaretle
+ * (logging). A kritik medicine shows one gentle sentence why the doctor marked it; the switches stay the patient's
+ * choice. Adherence rings only when at least one medicine is logged; the week grid shows logged medicines only.
  */
 import { useState } from 'react'
 import type { GunlukDurum } from '@/lib/saglikEvi/ozet'
@@ -10,6 +13,12 @@ import type { SaglikEviSozleri } from '@/lib/saglikEvi/sozler'
 import type { GunlukEylemleri } from './eylemler'
 import { DozListesi } from './DozListesi'
 import { SaatSecici } from './SaatSecici'
+import { DozSecimKarti } from './DozSecimKarti'
+import { kayitAcikMi } from '@/lib/saglikEvi/dozPlani'
+
+function Anahtar({ acik, etiket, degistir, mesgul }: { acik: boolean; etiket: string; degistir: (v: boolean) => void; mesgul?: boolean }) {
+  return <button type="button" role="switch" aria-checked={acik} aria-label={etiket} className="sge-dugme" disabled={mesgul} onClick={() => degistir(!acik)} />
+}
 
 function Halka({ yuzde, etiket }: { yuzde: number | null; etiket: string }) {
   const r = 34, c = 2 * Math.PI * r
@@ -34,16 +43,27 @@ export function DozTakvimiGorunumu({ s, durum, eylemler }: { s: SaglikEviSozleri
   const [yeni, setYeni] = useState({ ad: '', doz: '', saat: '09:00', gerektikce: false })
   const [hata, setHata] = useState<string | null>(null)
   const aktif = durum.planlar.filter((p) => p.aktif)
+  const [ayarMesgul, setAyarMesgul] = useState<string | null>(null)
+  const ayar = async (planId: string, g: { tur: 'kayit' | 'hatirlatma'; kayitTutma?: 'acik' | 'kapali'; hatirlatmaAcik?: boolean }) => {
+    setAyarMesgul(planId); setHata(null)
+    try { const r = await eylemler.plan({ ...g, planId }); if (!r.ok) setHata(r.hata) } finally { setAyarMesgul(null) }
+  }
+  const globalHatirlatma = durum.kayit.hatirlatmaAcik
   return (
     <div className="sge">
       <header className="sge-ust" style={{ alignItems: 'flex-start' }}>
         <div><h1 className="sge-selam">{s.dozTakvimiBaslik}</h1><p className="sge-tarih">{s.dozTakvimiAlt}</p></div>
       </header>
-      <div className="sge-kart" style={{ display: 'flex', justifyContent: 'space-around', gap: 12, margin: '10px 0 0' }}>
-        <Halka yuzde={durum.uyum7.yuzde} etiket={s.uyum7} />
-        <Halka yuzde={durum.uyum30.yuzde} etiket={s.uyum30} />
-      </div>
-      <p className="sge-not">{s.uyumNot}</p>
+      {durum.kayit.soruGoster ? <DozSecimKarti s={s} sec={async (x) => { await eylemler.tercih({ dozSecimi: x }) }} /> : null}
+      {durum.kayit.kayitliIlac > 0 ? (
+        <>
+          <div className="sge-kart" style={{ display: 'flex', justifyContent: 'space-around', gap: 12, margin: '10px 0 0' }}>
+            <Halka yuzde={durum.uyum7.yuzde} etiket={s.uyum7} />
+            <Halka yuzde={durum.uyum30.yuzde} etiket={s.uyum30} />
+          </div>
+          <p className="sge-not">{s.uyumNot}</p>
+        </>
+      ) : durum.kayit.planliIlac > 0 ? <p className="sge-not">{s.uyumKayitTutmuyor}</p> : null}
 
       <section className="sge-bolum"><div className="sge-bolum-bas"><h2 className="sge-bolum-baslik">{s.dozBaslik}</h2></div><div className="sge-kart"><DozListesi s={s} durum={durum} eylemler={eylemler} /></div></section>
 
@@ -63,7 +83,7 @@ export function DozTakvimiGorunumu({ s, durum, eylemler }: { s: SaglikEviSozleri
             <div className="sge-not" style={{ display: 'flex', gap: 14, flexWrap: 'wrap', alignItems: 'center', marginTop: 10 }}>
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><span className="sge-hucre" aria-hidden><i className="alindi" /></span>{s.durum.alindi}</span>
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><span className="sge-hucre" aria-hidden><i className="atlandi" /></span>{s.uyumAtlandi}</span>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><span className="sge-hucre" aria-hidden><i className="kacirildi" /></span>{s.uyumIsaretlenmedi}</span>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><span className="sge-hucre" aria-hidden><i className="kayit_yok" /></span>{s.uyumIsaretlenmedi}</span>
             </div>
           </div>
         </section>
@@ -83,6 +103,19 @@ export function DozTakvimiGorunumu({ s, durum, eylemler }: { s: SaglikEviSozleri
                   </div>
                   {!p.gerektikce && duzenle !== p.id ? <button type="button" className="sge-baglanti" style={{ flexShrink: 0 }} onClick={() => { setDuzenle(p.id); setSaatler(p.saatler) }}>{s.saatleriDuzenle}</button> : null}
                 </div>
+                {!p.gerektikce ? (
+                  <div className="sge-ilac-ayar">
+                    <div className="sge-anahtar">
+                      <div className="sge-anahtar-metin"><b>{s.ilacHatirlat}</b>{!globalHatirlatma ? <span>{s.hatirlatmaKapaliEtiket}</span> : null}</div>
+                      <Anahtar acik={globalHatirlatma && p.hatirlatmaAcik !== false} etiket={`${p.ad}: ${s.ilacHatirlat}`} mesgul={ayarMesgul === p.id} degistir={async (v) => { if (v && !globalHatirlatma) { await eylemler.tercih({ hatirlatmaAcik: true }); if (p.hatirlatmaAcik === false) await ayar(p.id, { tur: 'hatirlatma', hatirlatmaAcik: true }) } else await ayar(p.id, { tur: 'hatirlatma', hatirlatmaAcik: v }) }} />
+                    </div>
+                    <div className="sge-anahtar">
+                      <div className="sge-anahtar-metin"><b>{s.ilacIsaretle}</b></div>
+                      <Anahtar acik={kayitAcikMi(p)} etiket={`${p.ad}: ${s.ilacIsaretle}`} mesgul={ayarMesgul === p.id} degistir={(v) => ayar(p.id, { tur: 'kayit', kayitTutma: v ? 'acik' : 'kapali' })} />
+                    </div>
+                    {p.kritik ? <p className="sge-kritik-neden">{s.kritikNeden}</p> : null}
+                  </div>
+                ) : null}
                 {duzenle === p.id ? (
                   <div>
                     <div className="sge-saat-satir">

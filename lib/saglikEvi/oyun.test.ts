@@ -45,7 +45,7 @@ describe('seri + kalkan', () => {
   })
 })
 
-const plan = (o: Partial<DozPlani> = {}): DozPlani => ({ id: 'p1', ilacId: null, ad: 'A', doz: null, saatler: ['08:00'], gerektikce: false, haftaGunu: null, kaynak: 'hekim', kritik: false, minAralikSaat: null, aktif: true, baslangic: null, bitis: null, ...o })
+const plan = (o: Partial<DozPlani> = {}): DozPlani => ({ id: 'p1', ilacId: null, ad: 'A', doz: null, saatler: ['08:00'], gerektikce: false, haftaGunu: null, kaynak: 'hekim', kritik: false, minAralikSaat: null, aktif: true, baslangic: null, bitis: null, kayitTutma: 'acik', ...o }) // a patient who logs (DOZ-KAYDI-ISTEGE-BAGLI: dose badges need logging)
 let n = 0
 const olc = (tip: EvOlcum['tip'], gunOnce: number, saat: string, deger: number, deger2: number | null = null, baglam: EvOlcum['baglam'] = null): EvOlcum => ({ id: `o${++n}`, tip, deger, deger2, baglam, olcumAt: trSaatAni(gunEkle(BUGUN, -gunOnce), saat), kaynak: 'portal' })
 

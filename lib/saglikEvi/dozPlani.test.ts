@@ -1,5 +1,5 @@
 /**
- * HASTA-PORTALI-GUNLUK — Doz Takvimi math: frequency text → times, slot states (due / missed / postponed), adherence
+ * HASTA-PORTALI-GUNLUK — Doz Takvimi math: frequency text → times, slot states (due / kayıt yok / postponed), adherence
  * (only resolved slots count, no penalty before a window closes), two missed days, as-needed state, plan sync.
  */
 import { describe, it } from 'node:test'
@@ -11,7 +11,7 @@ import { gunEkle, trGun, trSaatAni } from './zaman'
 
 const SIMDI = '2026-11-24T10:00:00Z' // 13:00 Türkiye
 const BUGUN = trGun(SIMDI)
-const plan = (o: Partial<DozPlani> = {}): DozPlani => ({ id: 'p1', ilacId: 'i1', ad: 'Metformin', doz: '1000 mg', saatler: ['08:00', '20:00'], gerektikce: false, haftaGunu: null, kaynak: 'hekim', kritik: false, minAralikSaat: null, aktif: true, baslangic: null, bitis: null, ...o })
+const plan = (o: Partial<DozPlani> = {}): DozPlani => ({ id: 'p1', ilacId: 'i1', ad: 'Metformin', doz: '1000 mg', saatler: ['08:00', '20:00'], gerektikce: false, haftaGunu: null, kaynak: 'hekim', kritik: false, minAralikSaat: null, aktif: true, baslangic: null, bitis: null, kayitTutma: 'acik', ...o })
 let n = 0
 const kayit = (planId: string, gunOnce: number, saat: string, durum: DozKaydi['durum'], o: Partial<DozKaydi> = {}): DozKaydi => {
   const at = trSaatAni(gunEkle(BUGUN, -gunOnce), saat)
@@ -41,18 +41,18 @@ describe('siklikCoz', () => {
 
 describe('slot durumu', () => {
   const p = plan()
-  it('before -60 min: bekliyor; until +3 h: zamani; later unmarked: kacirildi', () => {
+  it('before -60 min: bekliyor; until +3 h: zamani; later unmarked: kayit_yok', () => {
     const h = kayitHaritasi([])
     const s08 = trSaatAni(BUGUN, '08:00'), s20 = trSaatAni(BUGUN, '20:00')
     assert.equal(slotDurumu(p.id, s20, h, SIMDI), 'bekliyor')
     assert.equal(slotDurumu(p.id, s08, h, '2026-11-24T07:30:00Z'), 'zamani') // 10:30 TR
-    assert.equal(slotDurumu(p.id, s08, h, SIMDI), 'kacirildi') // 13:00 TR > 08:00 + 3 h
+    assert.equal(slotDurumu(p.id, s08, h, SIMDI), 'kayit_yok') // 13:00 TR > 08:00 + 3 h
   })
-  it('postponed: ertelendi until the snooze + 3 h, then kacirildi; marks win', () => {
+  it('postponed: ertelendi until the snooze + 3 h, then kayit_yok; marks win', () => {
     const s08 = trSaatAni(BUGUN, '08:00')
     const e = kayit('p1', 0, '08:00', 'ertelendi', { erteleUntil: trSaatAni(BUGUN, '08:30') })
     assert.equal(slotDurumu('p1', s08, kayitHaritasi([e]), '2026-11-24T08:00:00Z'), 'ertelendi') // 11:00 TR
-    assert.equal(slotDurumu('p1', s08, kayitHaritasi([e]), SIMDI), 'kacirildi')
+    assert.equal(slotDurumu('p1', s08, kayitHaritasi([e]), SIMDI), 'kayit_yok')
     assert.equal(slotDurumu('p1', s08, kayitHaritasi([kayit('p1', 0, '08:00', 'alindi')]), SIMDI), 'alindi')
   })
   it('weekly plans and start / end dates', () => {
@@ -72,8 +72,8 @@ describe('uyum (adherence)', () => {
     // yesterday: 2 resolved (1 taken), today 08:00 taken, 20:00 future → 2/3
     assert.deepEqual(uyum([p], k, gunEkle(BUGUN, -1), BUGUN, SIMDI), { alinan: 2, beklenen: 3, yuzde: 67 })
   })
-  it('a slot never marked counts as missed once its window closed', () => {
-    assert.deepEqual(uyum([plan()], [], gunEkle(BUGUN, -1), gunEkle(BUGUN, -1), SIMDI), { alinan: 0, beklenen: 2, yuzde: 0 })
+  it('DOZ-KAYDI-ISTEGE-BAGLI: a slot never marked is "kayıt yok" — it never counts, even for a logged medicine', () => {
+    assert.deepEqual(uyum([plan()], [], gunEkle(BUGUN, -1), gunEkle(BUGUN, -1), SIMDI), { alinan: 0, beklenen: 0, yuzde: null })
   })
   it('no plans → yuzde null (nothing to grade)', () => {
     assert.equal(uyum([], [], BUGUN, BUGUN, SIMDI).yuzde, null)
@@ -86,19 +86,19 @@ describe('uyum (adherence)', () => {
 })
 
 describe('iki gün kaçırma', () => {
-  it('true only when both complete days had slots and none was taken', () => {
+  it('fires only when both complete days had slots and none was taken: kayit_yok (logged) / atlandi (explicit)', () => {
     const p = plan()
-    assert.equal(ikiGunKacirdiMi(p, [], SIMDI), true)
-    assert.equal(ikiGunKacirdiMi(p, [kayit('p1', 2, '20:00', 'alindi')], SIMDI), false)
-    assert.equal(ikiGunKacirdiMi(p, [kayit('p1', 1, '08:00', 'atlandi'), kayit('p1', 2, '08:00', 'atlandi')], SIMDI), true)
-    assert.equal(ikiGunKacirdiMi(plan({ baslangic: gunEkle(BUGUN, -1) }), [], SIMDI), false) // started yesterday: no 2 days yet
+    assert.equal(ikiGunKacirdiMi(p, [], SIMDI), 'kayit_yok')
+    assert.equal(ikiGunKacirdiMi(p, [kayit('p1', 2, '20:00', 'alindi')], SIMDI), null)
+    assert.equal(ikiGunKacirdiMi(p, [kayit('p1', 1, '08:00', 'atlandi'), kayit('p1', 2, '08:00', 'atlandi')], SIMDI), 'atlandi')
+    assert.equal(ikiGunKacirdiMi(plan({ baslangic: gunEkle(BUGUN, -1) }), [], SIMDI), null) // started yesterday: no 2 days yet
   })
 })
 
 describe('bugün planı ve gerektiğinde', () => {
   it('timeline sorted by time with states', () => {
     const l = bugunPlani([plan(), plan({ id: 'p2', ad: 'Ramipril', saatler: ['08:00'] })], [kayit('p2', 0, '08:00', 'alindi')], SIMDI)
-    assert.deepEqual(l.map((x) => [x.saat, x.ad, x.durum]), [['08:00', 'Metformin', 'kacirildi'], ['08:00', 'Ramipril', 'alindi'], ['20:00', 'Metformin', 'bekliyor']])
+    assert.deepEqual(l.map((x) => [x.saat, x.ad, x.durum]), [['08:00', 'Metformin', 'kayit_yok'], ['08:00', 'Ramipril', 'alindi'], ['20:00', 'Metformin', 'bekliyor']])
   })
   it('as-needed: last dose, the doctor\'s minimum interval and the next suitable time (never a dose)', () => {
     const p = plan({ id: 'g', gerektikce: true, saatler: [], minAralikSaat: 6 })

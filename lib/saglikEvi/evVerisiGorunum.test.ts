@@ -58,13 +58,13 @@ describe('Ev verisi v2 — numbers', () => {
     const g = olcumGunleri(v, MS)
     assert.ok(g >= 1 && g <= 7)
   })
-  it('a missed dose this week is surfaced; every medicine has a 14-day strip', () => {
+  it('an explicit "Atladım" this week is surfaced (DOZ-KAYDI-ISTEGE-BAGLI: unmarked = kayıt yok); every medicine has a 14-day strip', () => {
     const v = demo()
     const e = haftaninEksikDozlari(v)
     assert.ok(e.toplam > 0 && e.ilaclar.length > 0)
     for (const i of v.uyum.ilaclar) {
       assert.equal(i.gunler.length, 14)
-      assert.ok(i.gunler.every((x) => ['yok', 'tam', 'kismi', 'alinmadi'].includes(x)))
+      assert.ok(i.gunler.every((x) => ['yok', 'tam', 'kismi', 'alinmadi', 'kayit_yok'].includes(x)))
       assert.ok(i.hafta.beklenen >= i.hafta.alinan)
     }
   })

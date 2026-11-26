@@ -16,6 +16,7 @@ import { gurultuSuz, isaretKurallari, olcumKurallari, sekerAcilAlani } from '@/l
 import { hastaModulleri, hastaTercihiDegistir } from '@/lib/saglikEvi/moduller'
 import { etkinEsikler } from '@/lib/saglikEvi/hedefler'
 import { ERTELE_DK } from '@/lib/saglikEvi/dozPlani'
+import { dozSecimiEtkisi } from '@/lib/saglikEvi/dozKaydi'
 import type { GunlukEylemleri, PushDurumu } from '@/components/doktor/portal/saglikEvi/eylemler'
 import { portalFetch } from '@/lib/portal/portalFetch'
 import { usePortalLive } from '../PortalLiveProvider'
@@ -167,6 +168,8 @@ export function GunlukProvider({ children }: { children: ReactNode }) {
         if (g.tur === 'ekle') ham.current = { ...h, planlar: [...h.planlar, { id: `ornek-p${Date.now()}`, ilacId: null, ad: g.ad || 'İlaç', doz: g.doz || null, saatler: g.gerektikce ? [] : g.saatler || [], gerektikce: !!g.gerektikce, haftaGunu: null, kaynak: 'hasta', kritik: false, minAralikSaat: null, aktif: true, baslangic: null, bitis: null }] }
         if (g.tur === 'saat') ham.current = { ...h, planlar: h.planlar.map((p) => (p.id === g.planId ? { ...p, saatler: g.saatler || p.saatler } : p)) }
         if (g.tur === 'kaldir') ham.current = { ...h, planlar: h.planlar.map((p) => (p.id === g.planId && p.kaynak === 'hasta' ? { ...p, aktif: false } : p)) }
+        if (g.tur === 'kayit' && g.kayitTutma) ham.current = { ...h, planlar: h.planlar.map((p) => (p.id === g.planId ? { ...p, kayitTutma: g.kayitTutma, kayitAcik: undefined } : p)) }
+        if (g.tur === 'hatirlatma' && typeof g.hatirlatmaAcik === 'boolean') ham.current = { ...h, planlar: h.planlar.map((p) => (p.id === g.planId ? { ...p, hatirlatmaAcik: g.hatirlatmaAcik } : p)) }
         yenidenHesapla(); return { ok: true }
       }
       const r = await gonder({ islem: 'plan', ...g }); if (r.ok) void yukle(); return r.ok ? { ok: true } : r
@@ -174,9 +177,11 @@ export function GunlukProvider({ children }: { children: ReactNode }) {
     tercih: async (g) => {
       if (ornek && ham.current) {
         const t = ham.current.tercihler
-        const { modul, ...geri } = g
+        const { modul, dozSecimi, ...geri } = g
         const moduller = modul ? hastaTercihiDegistir(t.moduller, modul.anahtar, modul.acik) ?? t.moduller : t.moduller
-        ham.current = { ...ham.current, tercihler: { ...t, ...geri, moduller, onayAt: g.paylasimOnayi ? new Date().toISOString() : t.onayAt } }
+        // DOZ-KAYDI-ISTEGE-BAGLI: the one-time answer sets the logging default and the global reminder switch.
+        const secim = dozSecimi ? { dozSecimi, ...dozSecimiEtkisi(dozSecimi) } : {}
+        ham.current = { ...ham.current, tercihler: { ...t, ...geri, ...secim, moduller, onayAt: g.paylasimOnayi ? new Date().toISOString() : t.onayAt } }
         yenidenHesapla(); return { ok: true }
       }
       const r = await gonder({ islem: 'tercih', ...g }); if (r.ok) void yukle(); return r.ok ? { ok: true } : r

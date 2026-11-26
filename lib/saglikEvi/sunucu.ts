@@ -13,6 +13,7 @@ import { hekimBransi } from '@/lib/doktor/hekimAdi'
 import { arsivsizIlaclar, arsivsizNotlar } from '@/lib/doktor/arsiv'
 import type { DozKaydi, DozPlani, EvOlcum, EvTercihler, EvUyari, GlukozBaglami, GunlukOlcum, IsaretliOlcum, OlcumTipi, UyariDuzeyi } from './tipler'
 import { isaretliMi, PAYLASIM_ONAY_SURUMU, VARSAYILAN_TERCIHLER } from './tipler'
+import { DOZ_SECIMLERI, dozSecimiEtkisi } from './dozKaydi'
 import { bransGunlukAyari, hedefProfili, type BransGunlukAyari } from './bransAyari'
 import { etkinEsikler, hekimAyarlariniTemizle, type HedefProfili, type HekimAyarlari } from './hedefler'
 import { olcumDogrula } from './olcumler'
@@ -45,10 +46,10 @@ export function olcumSatirlari(rows: Array<Record<string, any>> | null | undefin
   }
   return { sayisal, isaretli }
 }
-export const planSatiri = (r: Record<string, any>): DozPlani => ({ id: String(r.id), ilacId: r.ilac_id ?? null, ad: String(r.ad), doz: r.doz ?? null, saatler: Array.isArray(r.saatler) ? r.saatler.filter(saatGecerliMi) : [], gerektikce: !!r.gerektikce, haftaGunu: r.hafta_gunu ?? null, kaynak: r.kaynak === 'hasta' ? 'hasta' : 'hekim', kritik: !!r.kritik, minAralikSaat: r.min_aralik_saat == null ? null : Number(r.min_aralik_saat), aktif: r.aktif !== false, baslangic: r.baslangic ?? null, bitis: r.bitis ?? null })
+export const planSatiri = (r: Record<string, any>): DozPlani => ({ id: String(r.id), ilacId: r.ilac_id ?? null, ad: String(r.ad), doz: r.doz ?? null, saatler: Array.isArray(r.saatler) ? r.saatler.filter(saatGecerliMi) : [], gerektikce: !!r.gerektikce, haftaGunu: r.hafta_gunu ?? null, kaynak: r.kaynak === 'hasta' ? 'hasta' : 'hekim', kritik: !!r.kritik, minAralikSaat: r.min_aralik_saat == null ? null : Number(r.min_aralik_saat), aktif: r.aktif !== false, baslangic: r.baslangic ?? null, bitis: r.bitis ?? null, kayitTutma: r.kayit_tutma === 'acik' || r.kayit_tutma === 'kapali' ? r.kayit_tutma : null, hatirlatmaAcik: r.hatirlatma_acik !== false })
 export const kayitSatiri = (r: Record<string, any>): DozKaydi => ({ id: String(r.id), planId: String(r.plan_id), planlananAt: new Date(r.planlanan_at).toISOString(), durum: r.durum, kayitAt: new Date(r.kayit_at).toISOString(), erteleUntil: r.ertele_until ? new Date(r.ertele_until).toISOString() : null })
 export const uyariSatiri = (r: Record<string, any>): EvUyari => ({ id: String(r.id), kural: r.kural, anahtar: r.anahtar, duzey: r.duzey, metrik: r.metrik, hastaMetni: r.hasta_metni, hekimMetni: r.hekim_metni, olusturmaAt: new Date(r.olusturma_at).toISOString(), hastaGorduAt: r.hasta_gordu_at ?? null, hekimGorduAt: r.hekim_gordu_at ?? null, veri: r.veri || {} })
-export const tercihSatiri = (r: Record<string, any> | null | undefined): EvTercihler => (r ? { paylasimOnayi: !!r.paylasim_onayi, onayAt: r.onay_at ?? null, sessizBas: r.sessiz_bas || '23:00', sessizBit: r.sessiz_bit || '07:00', hatirlatmaAcik: r.hatirlatma_acik !== false, moduller: hastaTercihiTemizle(r.moduller) } : { ...VARSAYILAN_TERCIHLER })
+export const tercihSatiri = (r: Record<string, any> | null | undefined): EvTercihler => (r ? { paylasimOnayi: !!r.paylasim_onayi, onayAt: r.onay_at ?? null, sessizBas: r.sessiz_bas || '23:00', sessizBit: r.sessiz_bit || '07:00', hatirlatmaAcik: r.hatirlatma_acik !== false, moduller: hastaTercihiTemizle(r.moduller), dozKaydi: r.doz_kaydi === 'acik' || r.doz_kaydi === 'kapali' ? r.doz_kaydi : null, dozSecimi: DOZ_SECIMLERI.includes(r.doz_secimi) ? r.doz_secimi : null } : { ...VARSAYILAN_TERCIHLER })
 
 const coz = (v: unknown) => { try { return v ? decrypt(String(v)) : null } catch { return null } }
 function yasAy(dobEnc: unknown, simdi: number): number | null {
@@ -273,7 +274,7 @@ export async function dozIsaretle(sb: Sb, k: Kapsam, ham: { planIds?: unknown; p
 }
 
 /** The patient moves times of any plan, or adds / removes their own medicine (never edits the doctor's dose text). */
-export async function planDuzenle(sb: Sb, k: Kapsam, ham: { islem?: unknown; planId?: unknown; saatler?: unknown; ad?: unknown; doz?: unknown; gerektikce?: unknown }): Promise<IslemSonucu> {
+export async function planDuzenle(sb: Sb, k: Kapsam, ham: { islem?: unknown; planId?: unknown; saatler?: unknown; ad?: unknown; doz?: unknown; gerektikce?: unknown; kayitTutma?: unknown; hatirlatmaAcik?: unknown }): Promise<IslemSonucu> {
   const saatler = Array.isArray(ham.saatler) ? [...new Set(ham.saatler.filter(saatGecerliMi))].sort().slice(0, 8) : null
   const simdi = new Date().toISOString()
   if (ham.islem === 'ekle') {
@@ -294,6 +295,18 @@ export async function planDuzenle(sb: Sb, k: Kapsam, ham: { islem?: unknown; pla
     await sb.from('ev_ilac_planlari').update({ aktif: false, updated_at: simdi }).eq('id', p.id).eq('doctor_id', k.doktorId).eq('patient_id', k.patientId)
     return { ok: true }
   }
+  // DOZ-KAYDI-ISTEGE-BAGLI: the patient's per-medicine switches — İşaretle (logging) and Hatırlat (reminders). Allowed on
+  // every medicine, the doctor's and kritik ones too (the patient's choice; the doctor's card shows a neutral note).
+  if (ham.islem === 'kayit') {
+    if (ham.kayitTutma !== 'acik' && ham.kayitTutma !== 'kapali') return hata(422, 'Geçersiz seçim.')
+    await sb.from('ev_ilac_planlari').update({ kayit_tutma: ham.kayitTutma, updated_at: simdi }).eq('id', p.id).eq('doctor_id', k.doktorId).eq('patient_id', k.patientId)
+    return { ok: true }
+  }
+  if (ham.islem === 'hatirlatma') {
+    if (typeof ham.hatirlatmaAcik !== 'boolean') return hata(422, 'Geçersiz seçim.')
+    await sb.from('ev_ilac_planlari').update({ hatirlatma_acik: ham.hatirlatmaAcik, updated_at: simdi }).eq('id', p.id).eq('doctor_id', k.doktorId).eq('patient_id', k.patientId)
+    return { ok: true }
+  }
   if (ham.islem === 'saat') {
     if (p.gerektikce) return hata(422, 'Gerektiğinde alınan ilacın saati yoktur.')
     if (!saatler?.length) return hata(422, 'En az bir saat seçin.')
@@ -303,8 +316,19 @@ export async function planDuzenle(sb: Sb, k: Kapsam, ham: { islem?: unknown; pla
   return hata(422, 'Geçersiz işlem.')
 }
 
-export async function tercihKaydet(sb: Sb, k: Kapsam, ham: { sessizBas?: unknown; sessizBit?: unknown; hatirlatmaAcik?: unknown; paylasimOnayi?: unknown; modul?: unknown }): Promise<IslemSonucu> {
+export async function tercihKaydet(sb: Sb, k: Kapsam, ham: { sessizBas?: unknown; sessizBit?: unknown; hatirlatmaAcik?: unknown; paylasimOnayi?: unknown; modul?: unknown; dozSecimi?: unknown; dozKaydi?: unknown }): Promise<IslemSonucu> {
   const g: Record<string, unknown> = { doctor_id: k.doktorId, patient_id: k.patientId, updated_at: new Date().toISOString() }
+  // DOZ-KAYDI-ISTEGE-BAGLI: the one-time three-option answer sets the logging default and the global reminder switch;
+  // dozKaydi alone = Tercihler's "Dozlarımı işaretle" default switch.
+  if (ham.dozSecimi !== undefined) {
+    if (!DOZ_SECIMLERI.includes(ham.dozSecimi as never)) return hata(422, 'Geçersiz seçim.')
+    const e = dozSecimiEtkisi(ham.dozSecimi as (typeof DOZ_SECIMLERI)[number])
+    g.doz_secimi = ham.dozSecimi; g.doz_kaydi = e.dozKaydi; g.hatirlatma_acik = e.hatirlatmaAcik; g.doz_kaydi_at = g.updated_at
+  }
+  if (ham.dozKaydi !== undefined) {
+    if (ham.dozKaydi !== 'acik' && ham.dozKaydi !== 'kapali') return hata(422, 'Geçersiz seçim.')
+    g.doz_kaydi = ham.dozKaydi; g.doz_kaydi_at = g.updated_at
+  }
   if (ham.modul !== undefined) {
     // HASTA-MODULLERI: the patient adds an optional module or switches a branş-default one off / back on. Stored as the
     // patient's wish; the resolver (moduller.ts) never lets it remove a doctor-enabled or diagnosis / drug-derived module.

@@ -2,7 +2,7 @@
  * HASTA-PORTALI-GUNLUK — the action contract between the shared daily-health-home views and whoever hosts them
  * (Türkiye's live portal, the example/preview mode, later a country build). Views call these; they never fetch.
  */
-import type { DozDurumu, GlukozBaglami, OlcumIsareti, OlcumTipi, UyariDuzeyi } from '@/lib/saglikEvi/tipler'
+import type { DozDurumu, DozSecimi, GlukozBaglami, KayitTutma, OlcumIsareti, OlcumTipi, UyariDuzeyi } from '@/lib/saglikEvi/tipler'
 import type { FotoOneri } from '@/lib/saglikEvi/fotoOku'
 import type { ModulAnahtari } from '@/lib/saglikEvi/moduller'
 
@@ -18,8 +18,10 @@ export interface GunlukEylemleri {
   olcumEkle: (g: OlcumGirdisi) => Promise<EylemSonucu & { uyarilar?: KayitNotu[] }>
   olcumSil: (id: string) => Promise<EylemSonucu>
   doz: (planIds: string[], planlananAt: string | null, durum: DozDurumu | 'geri') => Promise<EylemSonucu>
-  plan: (g: { tur: 'ekle' | 'saat' | 'kaldir'; planId?: string; saatler?: string[]; ad?: string; doz?: string; gerektikce?: boolean }) => Promise<EylemSonucu>
-  tercih: (g: { sessizBas?: string; sessizBit?: string; hatirlatmaAcik?: boolean; paylasimOnayi?: boolean; modul?: { anahtar: ModulAnahtari; acik: boolean } }) => Promise<EylemSonucu>
+  /** DOZ-KAYDI-ISTEGE-BAGLI: 'kayit' = per-medicine İşaretle switch (kayitTutma); 'hatirlatma' = per-medicine Hatırlat switch. */
+  plan: (g: { tur: 'ekle' | 'saat' | 'kaldir' | 'kayit' | 'hatirlatma'; planId?: string; saatler?: string[]; ad?: string; doz?: string; gerektikce?: boolean; kayitTutma?: KayitTutma; hatirlatmaAcik?: boolean }) => Promise<EylemSonucu>
+  /** dozSecimi = the one-time three-option answer; dozKaydi = Tercihler's logging default. */
+  tercih: (g: { sessizBas?: string; sessizBit?: string; hatirlatmaAcik?: boolean; paylasimOnayi?: boolean; modul?: { anahtar: ModulAnahtari; acik: boolean }; dozSecimi?: DozSecimi; dozKaydi?: KayitTutma }) => Promise<EylemSonucu>
   soru: (metin: string) => Promise<EylemSonucu>
   soruSil: (id: string) => Promise<EylemSonucu>
   rozetGoruldu: () => Promise<void>

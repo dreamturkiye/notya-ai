@@ -4,6 +4,8 @@
  * a round check per medicine, and Atladım / Ertele behind a second tap. As-needed medicines show the time since the last
  * dose and the doctor's minimum interval when set (never a computed dose).
  * BUGUN-V2: Atladım / Ertele sit behind a quiet "…" in the row (and long-press), not under every medicine.
+ * DOZ-KAYDI-ISTEGE-BAGLI: a medicine the patient does not log shows its time and dose only — no tick, no menu, a quiet
+ * "Hatırlatma" / "Hatırlatma kapalı" word; an unmarked logged dose says "Kayıt yok", never "alınmadı".
  */
 import { useState } from 'react'
 import type { GunlukDurum } from '@/lib/saglikEvi/ozet'
@@ -25,18 +27,32 @@ export function DozListesi({ s, durum, eylemler }: { s: SaglikEviSozleri; durum:
     try { await eylemler.doz(planIds, at, d) } finally { setMesgul(null); setAcik(null) }
   }
   const simdi = Date.now()
+  const hatirlatmaGlobal = durum.tercihler.hatirlatmaAcik !== false
+  const hatirlatiyor = (planId: string) => hatirlatmaGlobal && durum.planlar.find((p) => p.id === planId)?.hatirlatmaAcik !== false
   return (
     <div>
       {[...gruplar.entries()].map(([at, liste]) => {
-        const bekleyen = liste.filter((x) => x.durum !== 'alindi' && x.durum !== 'atlandi')
+        const bekleyen = liste.filter((x) => x.kayitAcik && x.durum !== 'alindi' && x.durum !== 'atlandi')
+        const acikta = bekleyen.find((b) => b.durum !== 'kayit_yok')
         const saat = liste[0].saat
         return (
           <div key={at} className="sge-doz-grup">
-            <div className="sge-doz-saat">{saat}<small>{bekleyen.length ? (bekleyen.find((b) => b.durum !== 'kacirildi') ? s.durum[bekleyen.find((b) => b.durum !== 'kacirildi')!.durum] : '') : s.durum.alindi}</small></div>
+            <div className="sge-doz-saat">{saat}<small>{bekleyen.length ? (acikta ? s.durum[acikta.durum] : '') : liste.some((x) => x.kayitAcik) ? s.durum.alindi : ''}</small></div>
             <div>
               {liste.map((x) => {
                 const anahtar = `${x.planId}|${at}`
                 const dolu = x.durum === 'alindi'
+                if (!x.kayitAcik) {
+                  return (
+                    <div key={anahtar} className="sge-dozsatir">
+                      <div className="sge-dozsatir-metin">
+                        <div className="sge-dozsatir-ad">{x.ad}{x.kaynak === 'hasta' ? <span className="sge-etiket sge-etiket--hasta">{s.hastaEkledi}</span> : null}{x.kritik ? <span className="sge-etiket sge-etiket--kritik">{s.kritik}</span> : null}</div>
+                        {x.doz ? <div className="sge-dozsatir-doz">{x.doz}</div> : null}
+                      </div>
+                      <span className="sge-not" style={{ margin: 0, flexShrink: 0 }}>{dolu ? s.durum.alindi : hatirlatiyor(x.planId) ? s.yalnizHatirlatma : s.hatirlatmaKapaliEtiket}</span>
+                    </div>
+                  )
+                }
                 return (
                   <div key={anahtar}>
                     <div className="sge-dozsatir">
@@ -44,7 +60,7 @@ export function DozListesi({ s, durum, eylemler }: { s: SaglikEviSozleri; durum:
                         <div className="sge-dozsatir-ad">{x.ad}{x.kaynak === 'hasta' ? <span className="sge-etiket sge-etiket--hasta">{s.hastaEkledi}</span> : null}{x.kritik ? <span className="sge-etiket sge-etiket--kritik">{s.kritik}</span> : null}</div>
                         {x.doz ? <div className="sge-dozsatir-doz">{x.doz}</div> : null}
                         {/* UYARI-RENKLERI: a missed / skipped dose is an adherence lapse — slate, dashed mark, its word; never red. */}
-                        {x.durum === 'atlandi' || x.durum === 'kacirildi' ? <div className="sge-dozsatir-doz"><UyariIsareti ton="uyum" etiket={x.durum === 'atlandi' ? s.uyumAtlandi : s.uyumIsaretlenmedi} kucuk /></div> : x.durum === 'ertelendi' ? <div className="sge-dozsatir-doz">{s.durum[x.durum]}</div> : null}
+                        {x.durum === 'atlandi' || x.durum === 'kayit_yok' ? <div className="sge-dozsatir-doz"><UyariIsareti ton="uyum" etiket={x.durum === 'atlandi' ? s.uyumAtlandi : s.uyumIsaretlenmedi} kucuk /></div> : x.durum === 'ertelendi' ? <div className="sge-dozsatir-doz">{s.durum[x.durum]}</div> : null}
                       </div>
                       {!dolu && x.durum !== 'atlandi' ? (
                         <button type="button" className="sge-doz-diger" aria-label={`${x.ad} ${saat}: ${s.digerSecenek}`} aria-expanded={acik === anahtar} onClick={() => setAcik(acik === anahtar ? null : anahtar)}>
@@ -53,7 +69,7 @@ export function DozListesi({ s, durum, eylemler }: { s: SaglikEviSozleri; durum:
                       ) : null}
                       <button
                         type="button"
-                        className={`sge-tik${dolu ? ' sge-tik--dolu' : x.durum === 'atlandi' ? ' sge-tik--atla' : x.durum === 'kacirildi' ? ' sge-tik--kacti' : ''}`}
+                        className={`sge-tik${dolu ? ' sge-tik--dolu' : x.durum === 'atlandi' ? ' sge-tik--atla' : x.durum === 'kayit_yok' ? ' sge-tik--kacti' : ''}`}
                         aria-pressed={dolu}
                         aria-label={`${x.ad} ${saat}: ${dolu ? s.geriAl : s.simdiAldim}`}
                         disabled={mesgul === anahtar}

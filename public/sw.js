@@ -69,7 +69,9 @@ self.addEventListener('push', e => {
     badge: '/icon-192.png',
     renotify: hekim,
     requireInteraction: hekim && typeof d.etiket === 'string' && d.etiket.startsWith('ev-acil'),
-    data: { yol: typeof d.yol === 'string' ? d.yol : '' },
+    data: { yol: typeof d.yol === 'string' ? d.yol : '', eylemler: Array.isArray(d.eylemler) ? d.eylemler.slice(0, 2) : [] },
+    // DOZ-KAYDI-ISTEGE-BAGLI (2026-11-26): a dose reminder carries "Hatırlatmaları kapat" until the patient chose.
+    actions: Array.isArray(d.eylemler) ? d.eylemler.slice(0, 2).filter(a => a && typeof a.eylem === 'string' && typeof a.baslik === 'string').map(a => ({ action: a.eylem, title: a.baslik })) : [],
     })
   })())
 })
@@ -83,7 +85,10 @@ self.addEventListener('notificationclick', e => {
       const r = await c.match('/__sg_portal_yol')
       if (r) taban = await r.text()
     } catch (_) { /* yok */ }
-    const ek = (e.notification.data && e.notification.data.yol) || ''
+    const veri = e.notification.data || {}
+    const eylem = e.action && Array.isArray(veri.eylemler) ? veri.eylemler.find(a => a && a.eylem === e.action) : null
+    // An action path is portal-relative ("/tercihler?hatirlatma=kapat"); never a doctor path or an outside URL.
+    const ek = (eylem && typeof eylem.yol === 'string' && eylem.yol.startsWith('/') && !eylem.yol.startsWith('//') && !hekimYoluMu(eylem.yol) ? eylem.yol : veri.yol) || ''
     const pencereler = await self.clients.matchAll({ type: 'window', includeUncontrolled: true })
     if (hekimYoluMu(ek)) {
       for (const p of pencereler) {

@@ -67,7 +67,21 @@ export interface DozPlani {
   aktif: boolean
   baslangic: string | null
   bitis: string | null
+  /** DOZ-KAYDI-ISTEGE-BAGLI: the patient's own choice for this medicine (ev_ilac_planlari.kayit_tutma); null = not chosen. */
+  kayitTutma?: KayitTutma | null
+  /** Effective "the patient logs this medicine" (own choice → kritik default → the one-time answer → reminder only).
+   *  Set by kayitTercihiUygula; when absent, dozPlani.kayitAcikMi falls back to own choice / kritik. */
+  kayitAcik?: boolean
+  /** DOZ-KAYDI-ISTEGE-BAGLI: the patient's per-medicine reminder switch (ev_ilac_planlari.hatirlatma_acik; absent = on).
+   *  Effective reminder = this AND the global EvTercihler.hatirlatmaAcik. */
+  hatirlatmaAcik?: boolean
 }
+
+/** DOZ-KAYDI-ISTEGE-BAGLI: the one-time answer (three options); null = not answered → reminders on. */
+export type DozSecimi = 'hatirlat_isaretle' | 'sadece_hatirlat' | 'istemiyorum'
+
+/** DOZ-KAYDI-ISTEGE-BAGLI: 'acik' = the patient marks doses; 'kapali' = reminder only. */
+export type KayitTutma = 'acik' | 'kapali'
 
 export type DozDurumu = 'alindi' | 'atlandi' | 'ertelendi'
 
@@ -81,8 +95,12 @@ export interface DozKaydi {
   erteleUntil: string | null
 }
 
-/** A slot's state on a given day. */
-export type SlotDurumu = DozDurumu | 'bekliyor' | 'zamani' | 'kacirildi'
+/**
+ * A slot's state on a given day. DOZ-KAYDI-ISTEGE-BAGLI: a slot whose window passed with no record is 'kayit_yok'
+ * ("no record") — never "missed": logging is optional, so silence is not non-adherence. Only an explicit "Atladım"
+ * ('atlandi') counts as a dose not taken.
+ */
+export type SlotDurumu = DozDurumu | 'bekliyor' | 'zamani' | 'kayit_yok'
 
 export interface EvUyari {
   id: string
@@ -107,9 +125,14 @@ export interface EvTercihler {
   hatirlatmaAcik: boolean
   /** HASTA-MODULLERI: optional modules the patient added / branş-default modules they switched off (ev_tercihler.moduller). */
   moduller: HastaModulTercihi
+  /** DOZ-KAYDI-ISTEGE-BAGLI: the one-time answer to "Dozlarınızı işaretlemek ister misiniz?" (null = not answered →
+   *  reminder only). A medicine's own choice and the kritik default win over it (dozKaydi.etkinKayit). */
+  dozKaydi?: KayitTutma | null
+  /** The one-time answer itself (ev_tercihler.doz_secimi) — null = not asked yet (reminders on, "Hatırlatmaları kapat"). */
+  dozSecimi?: DozSecimi | null
 }
 
-export const VARSAYILAN_TERCIHLER: EvTercihler = { paylasimOnayi: false, onayAt: null, sessizBas: '23:00', sessizBit: '07:00', hatirlatmaAcik: true, moduller: { eklenen: [], cikarilan: [] } }
+export const VARSAYILAN_TERCIHLER: EvTercihler = { paylasimOnayi: false, onayAt: null, sessizBas: '23:00', sessizBit: '07:00', hatirlatmaAcik: true, moduller: { eklenen: [], cikarilan: [] }, dozKaydi: null, dozSecimi: null }
 
 /** Version of the consent text the patient accepted (stored with the consent). */
 // v2 (HASTA-ALANI-MARKA, 2026-11-25): wording names the doctor as data controller and Notya as processor (KVKK m.3);

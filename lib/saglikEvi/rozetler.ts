@@ -8,7 +8,7 @@ import type { DozKaydi, DozPlani, EvOlcum, OlcumTipi } from './tipler'
 import type { EsikSeti } from './hedefler'
 import { hedefteMi } from './hedefler'
 import { metrikAnahtari } from './olcumler'
-import { gunSlotlari, kayitHaritasi, slotDurumu, uyum } from './dozPlani'
+import { gunSlotlari, kayitAcikMi, kayitHaritasi, slotDurumu, uyum } from './dozPlani'
 import { gunEkle, trDakika, trGun } from './zaman'
 
 export type RozetId =
@@ -74,14 +74,15 @@ function enUzunArdisik(bugun: string, pencere: number, kosul: (g: string) => boo
 
 /** Applicable badges for this patient. */
 export function uygunRozetler(g: Pick<RozetGirdisi, 'olcumTipleri' | 'planlar'>): RozetTanimi[] {
-  const sabahPlani = g.planlar.some((p) => p.aktif && !p.gerektikce && p.saatler.some((s) => s < '11:00'))
+  const sabahPlani = g.planlar.some((p) => p.aktif && !p.gerektikce && kayitAcikMi(p) && p.saatler.some((s) => s < '11:00'))
   const planVar = g.planlar.some((p) => p.aktif && !p.gerektikce)
   const olcumVar = g.olcumTipleri.length > 0
   return ROZETLER.filter((r) => {
     if (r.id === 'seker-ustasi') return g.olcumTipleri.includes('glukoz')
     if (r.id === 'tansiyon-takipcisi') return g.olcumTipleri.includes('kb')
     if (r.id === 'sabah-duzeni') return sabahPlani
-    if (r.id === 'uyum-haftasi') return planVar
+    // DOZ-KAYDI-ISTEGE-BAGLI: dose badges only for a medicine the patient logs.
+    if (r.id === 'uyum-haftasi') return planVar && g.planlar.some((p) => p.aktif && !p.gerektikce && kayitAcikMi(p))
     if (r.id === 'olcum-25' || r.id === 'olcum-100' || r.id === 'hedefte-hafta' || r.id === 'hizli-goz') return olcumVar
     return true
   })
@@ -99,7 +100,7 @@ export function rozetDurumlari(g: RozetGirdisi): RozetDurumu[] {
   const kbGun = (gun: string) => { const s = gunOlcum(gun).filter((o) => o.tip === 'kb'); return s.some((o) => trDakika(o.olcumAt) < 12 * 60) && s.some((o) => trDakika(o.olcumAt) >= 17 * 60) }
   const sabahGun = (gun: string) => {
     let var_ = false
-    for (const p of g.planlar) for (const s of gunSlotlari(p, gun)) {
+    for (const p of g.planlar) for (const s of kayitAcikMi(p) ? gunSlotlari(p, gun) : []) {
       if (trDakika(s) >= 11 * 60) continue
       var_ = true
       const k = harita.get(`${p.id}|${new Date(s).toISOString()}`)
@@ -119,7 +120,7 @@ export function rozetDurumlari(g: RozetGirdisi): RozetDurumu[] {
   }
   const tamGun = (gun: string) => {
     let slotVar = false
-    for (const p of g.planlar) for (const s of gunSlotlari(p, gun)) { slotVar = true; if (slotDurumu(p.id, s, harita, g.simdi) !== 'alindi') return false }
+    for (const p of g.planlar) for (const s of kayitAcikMi(p) ? gunSlotlari(p, gun) : []) { slotVar = true; if (slotDurumu(p.id, s, harita, g.simdi) !== 'alindi') return false }
     const os = gunOlcum(gun)
     let olcumHedefi = false
     for (const t of g.olcumTipleri) { const h = g.gunlukHedef[t] ?? 0; if (h > 0) { olcumHedefi = true; if (os.filter((o) => o.tip === t).length < h) return false } }

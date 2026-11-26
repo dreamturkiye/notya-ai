@@ -66,7 +66,7 @@ describe('UYARI-RENKLERI — the palette', () => {
     assert.equal(v('sge-uyum'), UYARI_RENK.uyum.ana); assert.equal(v('sge-uyum-vurgu'), UYARI_RENK.uyum.vurgu); assert.equal(v('sge-uyum-zemin'), UYARI_RENK.uyum.zemin)
     // missed dose / week grid / karne low grades → adherence variables, never the warm accent
     assert.match(css, /\.sge-tik--kacti \{[^}]*--sge-uyum/)
-    assert.match(css, /\.sge-hucre i\.kacirildi \{[^}]*dashed var\(--sge-uyum-vurgu\)/)
+    assert.match(css, /\.sge-hucre i\.kayit_yok \{[^}]*dashed var\(--sge-uyum-vurgu\)/)
     assert.match(css, /\.sgb-eksik-nokta \{[^}]*dashed var\(--sge-uyum-vurgu\)/)
     assert.match(css, /\.sge-uyari--uyum \{[^}]*dashed/)
   })
@@ -84,7 +84,7 @@ describe('UYARI-RENKLERI — classification', () => {
     assert.equal(durumCumlesi(k, MS).ton, 'acil')
     const yalnizKritik = { ...k, uyarilar: k.uyarilar.filter((u) => u.kural === 'kritik_ilac') }
     assert.equal(durumCumlesi(yalnizKritik, MS).ton, 'uyum')
-    assert.match(durumCumlesi(yalnizKritik, MS).baslik, /Kritik ilaç iki gündür işaretlenmedi/)
+    assert.match(durumCumlesi(yalnizKritik, MS).baslik, /Kritik ilaç: 2 gündür kayıt yok/)
     const dusukUyum = { ...k, uyarilar: [], uyum: { ...k.uyum, hafta: { alinan: 5, beklenen: 10, yuzde: 50 } } }
     assert.equal(durumCumlesi(dusukUyum, MS).ton, 'uyum')
   })
@@ -97,7 +97,7 @@ describe('UYARI-RENKLERI — rendered screens (never colour alone)', () => {
     const bildir = renderToStaticMarkup(createElement(UyariKarti, { s: S, duzey: 'hekime_bildir', kural: 'yuksek_bildir', metin: 'x' }))
     assert.match(bildir, />Doktora bildirildi</); assert.match(bildir, new RegExp(UYARI_RENK.hekime_bildir.ana))
     const uyum = renderToStaticMarkup(createElement(UyariKarti, { s: S, duzey: 'hekime_bildir', kural: 'kritik_ilac', metin: 'Ramipril için iki gündür doz işaretlenmedi.' }))
-    assert.match(uyum, /sge-uyari--uyum/); assert.match(uyum, />İşaretlenmedi</); assert.match(uyum, /data-ton-ikon="kesikli"/)
+    assert.match(uyum, /sge-uyari--uyum/); assert.match(uyum, />Doz kaydı</); assert.match(uyum, /data-ton-ikon="kesikli"/)
     for (const k of KLINIK) assert.ok(!uyum.includes(UYARI_RENK[k].ana) && !uyum.includes(UYARI_RENK[k].vurgu), `clinical ${k} colour on an adherence card`)
   })
   it('Bugün with an acil reading next to a missed dose: two families side by side', () => {
@@ -112,7 +112,7 @@ describe('UYARI-RENKLERI — rendered screens (never colour alone)', () => {
     assert.match(html, /data-adim="soru"/, 'the acil glucose card keeps the symptom check')
     assert.match(html, /Kusma/)
     assert.match(html, /class="sgb-olcum-deger sge-deger--acil">452/, 'the out-of-range tile value is coloured by level')
-    assert.match(html, /<small class="sgb-eksik-uyum">08:00 dozu işaretlenmedi/, 'the missed dose uses the adherence family with its word')
+    assert.match(html, /<small class="sgb-eksik-uyum">08:00 dozu için kayıt yok/, 'the missed dose uses the adherence family with its word')
     const eksik = html.slice(html.indexOf('class="sgb-eksik"'), html.indexOf('class="sgb-eksik"') + 400)
     for (const k of KLINIK) assert.ok(!eksik.includes(UYARI_RENK[k].ana), 'clinical colour inside the missed-dose row')
   })

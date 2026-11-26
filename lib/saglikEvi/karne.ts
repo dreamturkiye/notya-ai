@@ -2,7 +2,8 @@
  * HASTA-PORTALI-GUNLUK — Sağlık Karnesi: a weekly / monthly report card in the Turkish school karne idiom
  * (Pekiyi · İyi · Orta · Geçer). It never punishes: the lowest band is "Yolun başında", not a failing grade, and a
  * subject with nothing to grade says so instead of showing a zero.
- *  - İlaç uyumu: doses taken ÷ resolved doses (dozPlani.uyum).
+ *  - İlaç uyumu: doses taken ÷ (taken + "Atladım") over the medicines the patient logs (dozPlani.uyum). DOZ-KAYDI-ISTEGE-
+ *    BAGLI: a patient who does not log gets no İlaç uyumu subject at all — never a low grade for not logging.
  *  - Ölçüm düzeni: days the daily measurement goal was met ÷ days in the period (from the first logged day).
  *  - Hedefte kalma: readings inside the target range ÷ readings with a target — a record of numbers, not a medical
  *    verdict; the card says the doctor makes the assessment.
@@ -11,7 +12,7 @@ import type { DozKaydi, DozPlani, EvOlcum, OlcumTipi } from './tipler'
 import type { EsikSeti } from './hedefler'
 import { hedefteMi } from './hedefler'
 import { metrikAnahtari } from './olcumler'
-import { uyum } from './dozPlani'
+import { kayitAcikMi, uyum } from './dozPlani'
 import { gunEkle, gunFarki, trGun } from './zaman'
 
 export type NotAdi = 'Pekiyi' | 'İyi' | 'Orta' | 'Geçer' | 'Yolun başında'
@@ -58,7 +59,8 @@ export function karneHesapla(g: KarneGirdisi, donem: 'hafta' | 'ay'): Karne {
   const ol = g.olcumler.filter((o) => aralikta(o.olcumAt))
 
   const u = uyum(g.planlar, g.kayitlar, bas, bit, g.simdi)
-  const uyumDersi: KarneDersi = { anahtar: 'uyum', ad: 'İlaç uyumu', yuzde: u.yuzde, not: u.yuzde == null ? null : notVer(u.yuzde), ayrinti: u.beklenen ? `${u.beklenen} dozun ${u.alinan} tanesi alındı` : 'Bu dönemde planlı ilaç yok' }
+  const kayitli = g.planlar.some((p) => p.aktif && !p.gerektikce && kayitAcikMi(p))
+  const uyumDersi: KarneDersi | null = !kayitli ? null : { anahtar: 'uyum', ad: 'İlaç uyumu', yuzde: u.yuzde, not: u.yuzde == null ? null : notVer(u.yuzde), ayrinti: u.beklenen ? `İşaretlediğiniz ${u.beklenen} dozun ${u.alinan} tanesi alındı` : 'Henüz işaretlenmiş doz yok' }
 
   const hedefli = g.olcumTipleri.filter((t) => (g.gunlukHedef[t] ?? 0) > 0)
   const gunIndeksi = new Map<string, EvOlcum[]>()
@@ -89,5 +91,5 @@ export function karneHesapla(g: KarneGirdisi, donem: 'hafta' | 'ay'): Karne {
     gunler.push({ gun, oran: parcalar.length ? parcalar.reduce((a, b) => a + b, 0) / parcalar.length : g.aktifGunler.has(gun) ? 1 : 0 })
   }
   const aktifGun = [...g.aktifGunler].filter((d) => d >= bas && d <= bit).length
-  return { donem, bas, bit, dersler: [uyumDersi, duzenDersi, hedefDersi], gunler, toplamOlcum: ol.length, aktifGun }
+  return { donem, bas, bit, dersler: [...(uyumDersi ? [uyumDersi] : []), duzenDersi, hedefDersi], gunler, toplamOlcum: ol.length, aktifGun }
 }

@@ -38,7 +38,7 @@ export const SAGLIK_EVI_SOZLERI = {
   dozBaslik: 'Bugünün ilaçları',
   dozHepsi: 'Doz Takvimi',
   grupAldim: (n: number) => (n > 1 ? `${n} ilacın hepsini aldım` : 'Aldım'),
-  durum: { alindi: 'Alındı', atlandi: 'Atlandı', ertelendi: 'Ertelendi', bekliyor: 'Sırada', zamani: 'Şimdi', kacirildi: 'İşaretlenmedi' } as Record<DozDurumu | 'bekliyor' | 'zamani' | 'kacirildi', string>,
+  durum: { alindi: 'Alındı', atlandi: 'Atlandı', ertelendi: 'Ertelendi', bekliyor: 'Sırada', zamani: 'Şimdi', kayit_yok: 'Kayıt yok' } as Record<DozDurumu | 'bekliyor' | 'zamani' | 'kayit_yok', string>,
   hastaEkledi: 'Sizin eklediğiniz',
   kritik: 'Doktorunuz önemli dedi',
   geriAl: 'Geri al',
@@ -106,7 +106,7 @@ export const SAGLIK_EVI_SOZLERI = {
   dozTakvimiAlt: 'İlaçlarınız, saatleri ve bu haftaki düzeniniz.',
   uyum7: 'Son 7 gün',
   uyum30: 'Son 30 gün',
-  uyumNot: 'Uyum, saati geçmiş dozlardan alınanların oranıdır.',
+  uyumNot: 'Uyum yalnızca işaretlediğiniz ilaçlar için hesaplanır: aldım ÷ (aldım + atladım). İşaretlenmeyen doz “kayıt yok” sayılır, eksi puan değildir.',
   haftaBaslik: 'Bu hafta',
   ilaclarim: 'İlaçlarım',
   saatleriDuzenle: 'Saatleri değiştir',
@@ -170,7 +170,10 @@ export const SAGLIK_EVI_SOZLERI = {
   bildirimReddedildi: 'Bildirim izni tarayıcı ayarlarından kapatılmış.',
   bildirimNot: 'Bildirimde ilaç adı veya ölçüm değeri yazmaz.',
   hatirlatma: 'Hatırlatmalar',
-  hatirlatmaAlt: 'İlaç saatleri ve iki gün işaretlenmeyen ilaçlar için nazik hatırlatma.',
+  hatirlatmaAlt: 'İlaç saatlerinde nazik hatırlatma. Kapatırsanız ilaç planınız silinmez; Doz Takvimi’nde görünmeye devam eder.',
+  hatirlatmaKapatildi: 'Hatırlatmalar kapatıldı. İstediğiniz zaman buradan yeniden açabilirsiniz.',
+  dozKaydiVarsayilan: 'Dozlarımı işaretle',
+  dozKaydiVarsayilanAlt: 'Açıksa ilaçlarınızı “Aldım” ile işaretlersiniz. Kapalıysa yalnızca hatırlatma alırsınız. Her ilaç için Doz Takvimi’nden ayrıca seçebilirsiniz.',
   sessizSaat: 'Sessiz saatler',
   sessizSaatAlt: 'Bu saatlerde bildirim gönderilmez.',
   buyukYazi: 'Büyük yazı',
@@ -215,12 +218,12 @@ export const SAGLIK_EVI_SOZLERI = {
   planTamamAlt: 'Hepsini işaretlediniz. Yarın görüşmek üzere.',
   planBos: 'Bugün için planlı bir şey yok',
   planBosAlt: 'İsterseniz aşağıdan bir ölçüm ekleyebilirsiniz.',
-  eksik: (saat: string) => `${saat} dozu işaretlenmedi`,
+  eksik: (saat: string) => `${saat} dozu için kayıt yok`,
   digerSecenek: 'Diğer seçenekler',
   halkaAria: (parcalar: string[]) => `Bugün: ${parcalar.join(', ')}`,
   halkaAlt: {
     ilacSirada: (n: number) => `${n} sırada`,
-    ilacEksik: (n: number) => `${n} işaretlenmedi`,
+    ilacEksik: (n: number) => `${n} kayıt yok`,
     olcumKalan: (n: number) => `${n} kaldı`,
     tamam: 'Tamam',
     hedef: 'son 7 gün',
@@ -280,7 +283,9 @@ export const SAGLIK_EVI_SOZLERI = {
   /** Clinical reading levels (warm family). */
   seviye: { acil: 'Acil', hekime_bildir: 'Doktora bildirildi', dikkat: 'Dikkat' } as Record<'acil' | 'hekime_bildir' | 'dikkat', string>,
   /** Adherence lapse (calm slate family, outline icon). */
-  uyumIsaretlenmedi: 'İşaretlenmedi',
+  uyumIsaretlenmedi: 'Kayıt yok',
+  /** DOZ-KAYDI-ISTEGE-BAGLI: the neutral word on a kritik-medicine note ("kayıt yok" or "Atladım" — never "alınmadı"). */
+  uyumDozKaydi: 'Doz kaydı',
   uyumAtlandi: 'Atlandı',
   uyumGecikti: 'Gecikti',
   uyumAsiGecikti: 'Tarihi geçti',
@@ -308,6 +313,22 @@ export const SAGLIK_EVI_SOZLERI = {
   sekerAcilTekrar: 'Yeniden ölçtüğünüzde yine çok yüksekse ya da kendinizi kötü hissederseniz 112’yi arayın.',
   sekerAcilDoktor: 'Doktorunuza da bildirdik.',
   sekerAcilTamam: 'Anladım',
+
+  // ── DOZ-KAYDI-ISTEGE-BAGLI (Kaan, 2026-11-26): reminders and logging are both optional ──
+  dozSecimBaslik: 'İlaç hatırlatmaları nasıl olsun?',
+  dozSecimMetni: 'Dozlarınızı işaretlemek ister misiniz? İsterseniz yalnızca hatırlatma alırsınız. Bu seçimi her ilaç için Doz Takvimi’nden değiştirebilirsiniz.',
+  dozSecim: { hatirlat_isaretle: 'Hatırlat, ben de işaretleyeyim', sadece_hatirlat: 'Sadece hatırlat', istemiyorum: 'Hatırlatma istemiyorum' } as Record<'hatirlat_isaretle' | 'sadece_hatirlat' | 'istemiyorum', string>,
+  dozSecimAlt: { hatirlat_isaretle: 'Bildirim gelir, “Aldım” ile işaretlersiniz', sadece_hatirlat: 'Bildirim gelir, işaretlemeniz gerekmez', istemiyorum: 'Bildirim gelmez; ilaç planınız yine görünür' } as Record<'hatirlat_isaretle' | 'sadece_hatirlat' | 'istemiyorum', string>,
+  hatirlatmalariKapat: 'Hatırlatmaları kapat',
+  dozSecimSimdilik: 'Seçim yapana kadar hatırlatmalar açık kalır.',
+  ilacHatirlat: 'Hatırlat',
+  ilacIsaretle: 'Dozlarımı işaretle',
+  kritikNeden: 'Doktorunuz bu ilacı önemli olarak işaretledi: düzenli kullanmanız tedavinizin işlemesi için önemli. Hatırlatma ve işaretleme yine sizin seçiminiz.',
+  yalnizHatirlatma: 'Hatırlatma',
+  hatirlatmaKapaliEtiket: 'Hatırlatma kapalı',
+  siradakiHatirlatmaAlt: 'Zamanı gelince hatırlatırız. İşaretlemeniz gerekmez.',
+  siradakiSessizAlt: 'Hatırlatma kapalı. İlacınızın saati planınızda görünür.',
+  uyumKayitTutmuyor: 'Dozlarınızı işaretlemiyorsunuz; uyum yüzdesi yalnızca işaretlediğiniz ilaçlar için gösterilir. Hatırlatmalar planınıza göre gelir.',
 } as const
 
 export type SaglikEviSozleri = typeof SAGLIK_EVI_SOZLERI

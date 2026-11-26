@@ -20,7 +20,7 @@ export function TelefonIkonu({ boyut = 18 }: { boyut?: number }) {
 export function UyariKarti({ s, duzey, kural, metin, okudum, mesajHref, baslik, children, ara112 = true }: { s: SaglikEviSozleri; duzey: UyariDuzeyi; kural?: string | null; metin: string; okudum?: () => void; mesajHref?: string; baslik?: string; children?: ReactNode; ara112?: boolean }) {
   const ton = uyariTonu(duzey, kural)
   const sinif = ton === 'uyum' ? 'uyum' : duzey
-  const etiket = ton === 'uyum' ? s.uyumIsaretlenmedi : ton ? s.seviye[ton] : null
+  const etiket = ton === 'uyum' ? s.uyumDozKaydi : ton ? s.seviye[ton] : null
   return (
     <div className={`sge-uyari sge-uyari--${sinif}`} role={duzey === 'acil' ? 'alert' : 'status'} data-ton={ton ?? 'bilgi'}>
       <span className="sge-uyari-nokta" aria-hidden />

@@ -6,7 +6,7 @@
  * takip ediyor", never a diagnosis name); branş-default ones can be switched off; optional ones (kilo, nabız, su, bel)
  * can be added. The resolver (lib/saglikEvi/moduller.ts) enforces the same rules on the server.
  */
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { GunlukDurum } from '@/lib/saglikEvi/ozet'
 import type { SaglikEviSozleri } from '@/lib/saglikEvi/sozler'
 import { kisaTarih } from '@/lib/saglikEvi/sozler'
@@ -41,6 +41,21 @@ export function TercihlerGorunumu({ s, durum, eylemler, gorunum, gorunumAyarla }
   const m = durum.moduller
   const eklenen = new Set(t.moduller?.eklenen || [])
   const modul = async (anahtar: ModulAnahtari, acik: boolean) => { const r = await eylemler.tercih({ modul: { anahtar, acik } }); setMesaj(r.ok ? null : r.hata) }
+  // DOZ-KAYDI-ISTEGE-BAGLI: the "Hatırlatmaları kapat" action of a dose push opens ?hatirlatma=kapat — the patient tapped
+  // it, so reminders go off at once (unanswered question → recorded as "Hatırlatma istemiyorum"); the plan stays.
+  const kapatildi = useRef(false)
+  const [kapatNotu, setKapatNotu] = useState(false)
+  useEffect(() => {
+    if (kapatildi.current) return
+    let istek = false
+    try { istek = new URLSearchParams(window.location.search).get('hatirlatma') === 'kapat' } catch { /* yok */ }
+    if (!istek) return
+    kapatildi.current = true
+    void (async () => {
+      if (t.hatirlatmaAcik !== false) await eylemler.tercih(durum.kayit.secim || durum.kayit.tercih ? { hatirlatmaAcik: false } : { dozSecimi: 'istemiyorum' })
+      setKapatNotu(true)
+    })()
+  }, [t.hatirlatmaAcik, durum.kayit.secim, durum.kayit.tercih, eylemler])
   return (
     <div className="sge">
       <header className="sge-ust" style={{ alignItems: 'flex-start' }}>
@@ -91,6 +106,11 @@ export function TercihlerGorunumu({ s, durum, eylemler, gorunum, gorunumAyarla }
         <div className="sge-anahtar">
           <div className="sge-anahtar-metin"><b>{s.hatirlatma}</b><span>{s.hatirlatmaAlt}</span></div>
           <Dugme acik={t.hatirlatmaAcik} etiket={s.hatirlatma} degistir={(v) => eylemler.tercih({ hatirlatmaAcik: v })} />
+        </div>
+        {kapatNotu ? <p className="sge-not" role="status" style={{ margin: '0 0 6px' }}>{s.hatirlatmaKapatildi}</p> : null}
+        <div className="sge-anahtar">
+          <div className="sge-anahtar-metin"><b>{s.dozKaydiVarsayilan}</b><span>{s.dozKaydiVarsayilanAlt}</span></div>
+          <Dugme acik={t.dozKaydi === 'acik'} etiket={s.dozKaydiVarsayilan} degistir={(v) => eylemler.tercih({ dozKaydi: v ? 'acik' : 'kapali' })} />
         </div>
         {/* PORTAL-REGRESYON-2026-11-25: 24-hour pickers that wrap under the text on a phone (never wider than the card). */}
         <div className="sge-anahtar sge-anahtar--saat">

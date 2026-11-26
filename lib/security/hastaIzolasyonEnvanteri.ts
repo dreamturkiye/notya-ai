@@ -426,6 +426,7 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   'app/api/entegrasyon/fhir/isle/route.ts': I('cron-secret gated; exports notes only of doctors enrolled in that institution'),
   'app/api/entegrasyon/hl7/al/route.ts': I('per-institution inbound key; patient mapping scoped by kurum_id'),
   'app/api/entegrasyon/yonetim/route.ts': I('ADMIN_EMAILS only'),
+  'app/api/kurucu/doz-kaydi/route.ts': I('FOUNDER_EMAILS only (404 for everyone else); takes no id; reads ev_ilac_planlari / ev_tercihler / ev_doz_kayitlari flags + timestamps and returns counts only — no patient id, name, drug or reading leaves (lib/saglikEvi/dozKaydi.ts dozKaydiKullanimiHesapla)'),
   'app/api/kurucu/ozet/route.ts': I('FOUNDER_EMAILS only (404 for everyone else); takes no id; reads notes/sessions as doctor_id + created_at counts only, no patient id or content leaves (lib/kurucu/tipler.ts hesapSatiriTemizle)'),
   'app/api/kurucu/el-notu-kalite/route.ts': I('FOUNDER_EMAILS only (404 for everyone else); takes no patient / note / session id (only a branş lexicon proposal row id, which carries no doctor or patient); per doctor × week counts aggregated in SQL (el_notu_kalite_haftalik), doctor ids never leave (lib/kurucu/elNotuKalite.ts)'),
   'app/api/cron/randevu-v2/route.ts': I('cron-secret gated; NOTYA-RANDEVU-V2 jobs: each randevu_isleri row is re-resolved as randevular.id + the job\'s own doktor_id, the patient via hastaIletisimi(doktor_id, patient_id), mail leaves only from that doctor\'s own account, every write .eq(doktor_id)'),

@@ -16,6 +16,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { gunSlotlari, ikiGunKacirdiMi } from './dozPlani'
 import { gurultuSuz } from './kurallar'
 import { kayitSatiri, planSatiri } from './sunucu'
+import { dozHatirlatmaMetni, etkinKayit, hastaIkiGunPushMetni, HATIRLATMA_KAPAT_EYLEMI, kritikIlacKurali } from './dozKaydi'
 import { kontrolOzetiOlustur } from './hekimSunucu'
 import { pushGonder, type PushIcerigi, type PushSonucu, type VapidAnahtarlari } from './push/webPush'
 import { gunEkle, sessizSaatteMi, trDakika, trGun, trGunBasi, GUN_MS } from './zaman'
@@ -69,22 +70,28 @@ async function aboneVeTercihler(sb: Sb, simdiMs: number) {
     abonelikler.set(k, [...(abonelikler.get(k) || []), a])
   }
   const hastaIdler = [...new Set(((abo || []) as Record<string, any>[]).map((a) => String(a.patient_id)))]
-  if (!hastaIdler.length) return { abonelikler, hastaIdler, uygun: new Set<string>() }
-  const { data: ter } = await sb.from('ev_tercihler').select('doctor_id, patient_id, sessiz_bas, sessiz_bit, hatirlatma_acik').in('patient_id', hastaIdler)
+  if (!hastaIdler.length) return { abonelikler, hastaIdler, uygun: new Set<string>(), kayitVarsayilan: new Map<string, 'acik' | 'kapali' | null>(), secimsiz: new Set<string>() }
+  const { data: ter } = await sb.from('ev_tercihler').select('doctor_id, patient_id, sessiz_bas, sessiz_bit, hatirlatma_acik, doz_kaydi, doz_secimi').in('patient_id', hastaIdler)
   const tercih = new Map(((ter || []) as Record<string, any>[]).map((t) => [`${t.doctor_id}|${t.patient_id}`, t]))
   const dk = trDakika(simdiMs)
   const uygun = new Set<string>()
+  // DOZ-KAYDI-ISTEGE-BAGLI: kişi → logging default; secimsiz = the one-time question is unanswered (pushes carry
+  // "Hatırlatmaları kapat").
+  const kayitVarsayilan = new Map<string, 'acik' | 'kapali' | null>()
+  const secimsiz = new Set<string>()
   for (const k of abonelikler.keys()) {
     const t = tercih.get(k)
+    kayitVarsayilan.set(k, t?.doz_kaydi === 'acik' || t?.doz_kaydi === 'kapali' ? t.doz_kaydi : null)
+    if (!t?.doz_secimi && !t?.doz_kaydi) secimsiz.add(k)
     if (t && t.hatirlatma_acik === false) continue
     if (sessizSaatteMi(dk, t?.sessiz_bas || '23:00', t?.sessiz_bit || '07:00')) continue
     uygun.add(k)
   }
-  return { abonelikler, hastaIdler, uygun }
+  return { abonelikler, hastaIdler, uygun, kayitVarsayilan, secimsiz }
 }
 
 export async function dozHatirlatmalari(sb: Sb, gonder: Gonderici, simdiMs = Date.now()) {
-  const { abonelikler, uygun } = await aboneVeTercihler(sb, simdiMs)
+  const { abonelikler, uygun, kayitVarsayilan, secimsiz } = await aboneVeTercihler(sb, simdiMs)
   if (!uygun.size) return { aday: 0, gonderilen: 0, silinen: 0 }
   const hastaIdler = [...new Set([...uygun].map((k) => k.split('|')[1]))]
   const bugun = trGun(simdiMs)
@@ -95,31 +102,41 @@ export async function dozHatirlatmalari(sb: Sb, gonder: Gonderici, simdiMs = Dat
   const pencereBas = simdiMs - PENCERE_DK * 60_000
   const kayitlar = ((kayitR || []) as Record<string, any>[]).map((r) => ({ ...kayitSatiri(r), kisi: `${r.doctor_id}|${r.patient_id}` }))
   const isaretli = new Set(kayitlar.filter((k) => k.durum === 'alindi' || k.durum === 'atlandi').map((k) => `${k.planId}|${k.planlananAt}`))
-  // kişi|slot → plan count
-  const gruplar = new Map<string, { kisi: string; slot: string; sayi: number; ertele: boolean }>()
+  // kişi|slot → plan count. DOZ-KAYDI-ISTEGE-BAGLI: a medicine whose reminder the patient switched off is skipped
+  // (global off is already out of `uygun`); kayitli = how many of the group the patient logs (push wording).
+  const gruplar = new Map<string, { kisi: string; slot: string; sayi: number; kayitli: number; ertele: boolean }>()
+  const sessizPlan = new Set<string>()
+  const kayitliPlan = new Set<string>()
   for (const r of (planR || []) as Record<string, any>[]) {
     const kisi = `${r.doctor_id}|${r.patient_id}`
     if (!uygun.has(kisi)) continue
     const p: DozPlani = planSatiri(r)
+    if (p.hatirlatmaAcik === false) { sessizPlan.add(p.id); continue }
+    const kayit = etkinKayit(p.kayitTutma, p.kritik, kayitVarsayilan.get(kisi))
+    if (kayit) kayitliPlan.add(p.id)
     for (const s of gunSlotlari(p, bugun)) {
       const t = Date.parse(s)
       if (t <= pencereBas || t > simdiMs || isaretli.has(`${p.id}|${s}`)) continue
       const k = `${kisi}|${s}`
-      gruplar.set(k, { kisi, slot: s, sayi: (gruplar.get(k)?.sayi || 0) + 1, ertele: false })
+      const g = gruplar.get(k)
+      gruplar.set(k, { kisi, slot: s, sayi: (g?.sayi || 0) + 1, kayitli: (g?.kayitli || 0) + (kayit ? 1 : 0), ertele: false })
     }
   }
   for (const k of kayitlar) {
-    if (k.durum !== 'ertelendi' || !k.erteleUntil || !uygun.has(k.kisi)) continue
+    if (k.durum !== 'ertelendi' || !k.erteleUntil || !uygun.has(k.kisi) || sessizPlan.has(k.planId)) continue
     const t = Date.parse(k.erteleUntil)
     if (t <= pencereBas || t > simdiMs) continue
     const anahtar = `${k.kisi}|${k.planlananAt}|e`
-    gruplar.set(anahtar, { kisi: k.kisi, slot: k.planlananAt, sayi: (gruplar.get(anahtar)?.sayi || 0) + 1, ertele: true })
+    const g = gruplar.get(anahtar)
+    gruplar.set(anahtar, { kisi: k.kisi, slot: k.planlananAt, sayi: (g?.sayi || 0) + 1, kayitli: (g?.kayitli || 0) + (kayitliPlan.has(k.planId) ? 1 : 0), ertele: true })
   }
   const satirlar = [...gruplar.entries()].map(([k, g]) => { const [d, p] = g.kisi.split('|'); return { doctor_id: d, patient_id: p, tur: 'doz', anahtar: `doz:${k}` } })
   const alinan = await talepEt(sb, satirlar)
   const isler = [...gruplar.entries()].filter(([k]) => alinan.has(`doz:${k}`)).map(([, g]) => {
     const saat = new Date(Date.parse(g.slot) + 3 * 3600_000).toISOString().slice(11, 16)
-    return { kisi: g.kisi, icerik: { baslik: g.ertele ? 'Ertelediğiniz ilaç' : `İlaç saati · ${saat}`, govde: g.sayi > 1 ? `${g.sayi} ilacınız işaretlenmeyi bekliyor. Aldıysanız "Aldım"a dokunun.` : 'Bir ilacınız işaretlenmeyi bekliyor. Aldıysanız "Aldım"a dokunun.', yol: '', etiket: `doz-${g.slot}` } }
+    const m = dozHatirlatmaMetni({ saat, sayi: g.sayi, kayitli: g.kayitli, ertele: g.ertele })
+    // Until the one-time question is answered, every dose push carries a plain "Hatırlatmaları kapat" action.
+    return { kisi: g.kisi, icerik: { ...m, yol: '', etiket: `doz-${g.slot}`, ...(secimsiz.has(g.kisi) ? { eylemler: [HATIRLATMA_KAPAT_EYLEMI] } : {}) } }
   })
   const r = await hepsiniGonder(sb, isler, abonelikler, gonder)
   return { aday: gruplar.size, ...r }
@@ -135,7 +152,7 @@ export async function gunlukIsler(sb: Sb, gonder: Gonderici | null, simdiMs = Da
   if (hastaIdler.length) {
     const [{ data: kayitR }, { data: ter }, { data: log }, { data: oncekiUyari }] = await Promise.all([
       sb.from('ev_doz_kayitlari').select('id, plan_id, planlanan_at, durum, kayit_at, ertele_until').in('patient_id', hastaIdler).gte('planlanan_at', trGunBasi(gunEkle(bugun, -2)).toISOString()).limit(50000),
-      sb.from('ev_tercihler').select('doctor_id, patient_id, paylasim_onayi, hatirlatma_acik').in('patient_id', hastaIdler),
+      sb.from('ev_tercihler').select('doctor_id, patient_id, paylasim_onayi, hatirlatma_acik, doz_kaydi').in('patient_id', hastaIdler),
       sb.from('ev_bildirim_gunlugu').select('anahtar').eq('tur', 'kacirma').gte('created_at', new Date(simdiMs - 3 * GUN_MS).toISOString()).limit(20000),
       sb.from('ev_uyarilar').select('doctor_id, patient_id, anahtar, duzey, olusturma_at').in('patient_id', hastaIdler).eq('kural', 'kritik_ilac').gte('olusturma_at', new Date(simdiMs - 3 * GUN_MS).toISOString()).limit(5000),
     ])
@@ -145,13 +162,18 @@ export async function gunlukIsler(sb: Sb, gonder: Gonderici | null, simdiMs = Da
     const hastaKayit: Array<{ doctor_id: string; patient_id: string; tur: string; anahtar: string }> = []
     const uyariSatirlari: Array<Record<string, unknown>> = []
     for (const x of planlar) {
-      if (!ikiGunKacirdiMi(x.p, kayitlar, simdiMs)) continue
       const t = tercih.get(x.kisi)
-      if (gonder && t?.hatirlatma_acik !== false && !sonUc.has(`kacirma:${x.p.id}`)) hastaKayit.push({ doctor_id: x.doctorId, patient_id: x.patientId, tur: 'kacirma', anahtar: `kacirma:${x.p.id}:${bugun}` })
+      // DOZ-KAYDI-ISTEGE-BAGLI: the medicine's effective logging decides; a reminder-only medicine with no marks never
+      // fires ("kayıt yok" is not "almadı").
+      const p = { ...x.p, kayitAcik: etkinKayit(x.p.kayitTutma, x.p.kritik, t?.doz_kaydi === 'acik' || t?.doz_kaydi === 'kapali' ? t.doz_kaydi : null) }
+      const neden = ikiGunKacirdiMi(p, kayitlar, simdiMs)
+      if (!neden) continue
+      // Patient nudge: only a logged medicine with no record, and only while its reminders are on (global AND its own).
+      if (gonder && neden === 'kayit_yok' && t?.hatirlatma_acik !== false && p.hatirlatmaAcik !== false && !sonUc.has(`kacirma:${x.p.id}`)) hastaKayit.push({ doctor_id: x.doctorId, patient_id: x.patientId, tur: 'kacirma', anahtar: `kacirma:${x.p.id}:${bugun}` })
       if (x.p.kritik && t?.paylasim_onayi) {
-        const anahtar = `kritik_ilac:${x.p.id}`
         const onceki = ((oncekiUyari || []) as Record<string, any>[]).filter((u) => u.doctor_id === x.doctorId && u.patient_id === x.patientId).map((u) => ({ anahtar: String(u.anahtar), duzey: u.duzey as UyariDuzeyi, olusturmaAt: String(u.olusturma_at) }))
-        const kural = { kural: 'kritik_ilac', anahtar, duzey: 'hekime_bildir' as const, metrik: 'ilac', hastaMetni: `${x.p.ad} için iki gündür doz işaretlenmedi. Doktorunuza bildirdik. İlacınızı bıraktıysanız ya da bir sorun yaşıyorsanız Mesajlar'dan yazın.`, hekimMetni: `Kritik ilaç "${x.p.ad}": son 2 günde hiç doz işaretlenmedi.`, veri: { planId: x.p.id } }
+        const kural = kritikIlacKurali(x.p, neden)
+        const anahtar = kural.anahtar
         if (gurultuSuz([kural], onceki, simdiMs).length) {
           uyariSatirlari.push({ doctor_id: x.doctorId, patient_id: x.patientId, kural: kural.kural, anahtar, duzey: kural.duzey, metrik: kural.metrik, hasta_metni: kural.hastaMetni, hekim_metni: kural.hekimMetni, veri: kural.veri, olusturma_at: new Date(simdiMs).toISOString() })
         }
@@ -168,7 +190,7 @@ export async function gunlukIsler(sb: Sb, gonder: Gonderici | null, simdiMs = Da
       const { abonelikler, uygun } = await aboneVeTercihler(sb, simdiMs)
       const kisiler = new Map<string, number>()
       for (const h of hastaKayit) if (alinan.has(h.anahtar)) { const k = `${h.doctor_id}|${h.patient_id}`; if (uygun.has(k)) kisiler.set(k, (kisiler.get(k) || 0) + 1) }
-      const r = await hepsiniGonder(sb, [...kisiler].map(([kisi, n]) => ({ kisi, icerik: { baslik: 'Sağlığım', govde: n > 1 ? `${n} ilacınız iki gündür işaretlenmedi. Unuttuysanız sorun değil — bugün yeniden başlayabilirsiniz.` : 'Bir ilacınız iki gündür işaretlenmedi. Unuttuysanız sorun değil — bugün yeniden başlayabilirsiniz.', yol: '/doz-takvimi', etiket: `kacirma-${bugun}` } })), abonelikler, gonder)
+      const r = await hepsiniGonder(sb, [...kisiler].map(([kisi, n]) => ({ kisi, icerik: { baslik: 'Sağlığım', govde: hastaIkiGunPushMetni(n), yol: '/doz-takvimi', etiket: `kacirma-${bugun}` } })), abonelikler, gonder)
       kacirma = r.gonderilen
     }
   }

@@ -17,7 +17,7 @@ import { CHROME_RENK as R, CHROME_FONT as F } from '@/lib/doktor/chromeRenk'
 import { doktorFetch } from '@/lib/doktor/oturumFetch'
 import {
   HALKA_RENK, TON_PALET, TON_RENK, acikUyarilar, anaDeger, durumCumlesi, egilim, gunlukSeri, haftaninEksikDozlari,
-  hedefDisi, karoYayilimi, kisaAd, metrikRengi, olcumGunleri, puruzsuzYol, sayi, sonOlcumMetni, uyariTonuKart, type Metrik, type Ton,
+  hedefDisi, hatirlatmasiKapaliKritikler, HATIRLATMA_KAPALI_NOTU, ilacOzetDurumu, karoYayilimi, kisaAd, metrikRengi, olcumGunleri, puruzsuzYol, sayi, sonOlcumMetni, uyariTonuKart, type Metrik, type Ton,
 } from '@/lib/saglikEvi/evVerisiGorunum'
 import { HEKIM_TON_ETIKETI, UYARI_RENK } from '@/lib/saglikEvi/uyariRenkleri'
 import { UyariIsareti } from './UyariIsareti'
@@ -385,7 +385,10 @@ export default function EvVerisiKarti({ patientId, ornek }: { patientId: string;
   const d = durum!
   const ton = d.ton
   const eksik = haftaninEksikDozlari(veri)
-  const ilacOran = veri.uyum.ilaclar.length && veri.uyum.hafta.yuzde != null ? veri.uyum.hafta.yuzde / 100 : veri.uyum.ilaclar.length ? 0 : null
+  // DOZ-KAYDI-ISTEGE-BAGLI: the İlaç ring only where a real % exists; otherwise a calm slate fact, never a fake 0 %.
+  const ilacDurum = ilacOzetDurumu(veri)
+  const ilacOran = ilacDurum?.tur === 'yuzde' ? ilacDurum.yuzde / 100 : null
+  const sessizKritik = hatirlatmasiKapaliKritikler(veri)
   const gunler = olcumGunleri(veri, simdiMs)
   const acikU = acikUyarilar(veri)
   const one = d.metrik && veri.metrikler.length >= 3 ? d.metrik : null
@@ -414,14 +417,26 @@ export default function EvVerisiKarti({ patientId, ornek }: { patientId: string;
           </span>
         </button>
         {!bos ? (
-          <button type="button" className="evv-halkalar" onClick={() => ayrintiAc('ilaclar')} aria-label={`İlaç uyumu bu hafta ${veri.uyum.hafta.yuzde ?? '—'} yüzde; ölçüm girilen gün ${gunler}/7. İlaçları göster.`}>
+          <button type="button" className="evv-halkalar" onClick={() => ayrintiAc('ilaclar')} aria-label={`${ilacDurum?.tur === 'yuzde' ? `İlaç uyumu bu hafta ${ilacDurum.yuzde} yüzde` : ilacDurum?.tur === 'tutmuyor' ? 'Hasta doz kaydı tutmuyor' : ilacDurum?.tur === 'kayit_yok' ? 'İlaç: kayıt yok' : 'Planlı ilaç yok'}; ölçüm girilen gün ${gunler}/7. İlaçları göster.`}>
             <Halkalar ilac={ilacOran} olcum={gunler / 7} />
             <span className="evv-lej">
-              {ilacOran !== null ? (
+              {ilacDurum?.tur === 'yuzde' ? (
                 <span className="evv-lej-s">
                   <i style={{ background: HALKA_RENK.ilac }} /><span className="evv-lej-ad">İlaç, bu hafta</span>
-                  <span className="evv-lej-d">{veri.uyum.hafta.yuzde == null ? '—' : `%${veri.uyum.hafta.yuzde}`}{veri.uyum.ay.yuzde != null ? <small>30 günde %{veri.uyum.ay.yuzde}</small> : null}</span>
-                  {eksik.toplam ? <span className="evv-lej-n" style={{ color: TON_RENK.uyum.ana, display: 'inline-flex', alignItems: 'center', gap: 5 }}><svg width="11" height="11" viewBox="0 0 24 24" aria-hidden><circle cx="12" cy="12" r="8.5" fill="none" stroke={TON_RENK.uyum.vurgu} strokeWidth="3" strokeDasharray="3.2 3" /></svg>{eksik.toplam} doz alınmadı{eksik.ilaclar.length === 1 ? ` (${eksik.ilaclar[0]})` : ''}</span> : <span className="evv-lej-n">Tüm dozlar alındı</span>}
+                  <span className="evv-lej-d">{`%${ilacDurum.yuzde}`}{ilacDurum.ay != null ? <small>30 günde %{ilacDurum.ay}</small> : null}</span>
+                  {eksik.toplam ? <span className="evv-lej-n" style={{ color: TON_RENK.uyum.ana, display: 'inline-flex', alignItems: 'center', gap: 5 }}><svg width="11" height="11" viewBox="0 0 24 24" aria-hidden><circle cx="12" cy="12" r="8.5" fill="none" stroke={TON_RENK.uyum.vurgu} strokeWidth="3" strokeDasharray="3.2 3" /></svg>{eksik.toplam} doz alınmadı (“Atladım”){eksik.ilaclar.length === 1 ? ` · ${eksik.ilaclar[0]}` : ''}</span> : <span className="evv-lej-n">İşaretlenen dozların hepsi alındı</span>}
+                </span>
+              ) : ilacDurum ? (
+                <span className="evv-lej-s" data-testid="ilac-kayit-yok">
+                  <i style={{ background: 'transparent', border: `1.5px dashed ${TON_RENK.uyum.vurgu}`, boxSizing: 'border-box' }} /><span className="evv-lej-ad">İlaç</span>
+                  <span className="evv-lej-d" style={{ fontSize: 15, color: TON_RENK.uyum.ana }}>{ilacDurum.tur === 'tutmuyor' ? 'Hasta doz kaydı tutmuyor' : 'Kayıt yok'}</span>
+                  <span className="evv-lej-n">{ilacDurum.tur === 'tutmuyor' ? 'Hatırlatma alıyor; işaretlenmeyen doz alınmadı demek değildir' : 'Bu hafta işaretlenen doz yok'}</span>
+                </span>
+              ) : null}
+              {sessizKritik.length ? (
+                <span className="evv-lej-s" data-testid="kritik-hatirlatma-kapali">
+                  <i style={{ background: 'transparent', border: `1.5px dashed ${TON_RENK.uyum.vurgu}`, boxSizing: 'border-box' }} /><span className="evv-lej-ad" style={{ color: TON_RENK.uyum.ana }}>{HATIRLATMA_KAPALI_NOTU}</span>
+                  <span className="evv-lej-n">{sessizKritik.join(', ')} · kritik</span>
                 </span>
               ) : null}
               <span className="evv-lej-s">

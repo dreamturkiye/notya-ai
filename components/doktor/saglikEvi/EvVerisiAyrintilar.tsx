@@ -112,7 +112,8 @@ export function ModulPaneli({ veri, istek, mesgul }: { veri: Veri; istek: (metho
   )
 }
 
-const GUN_RENK: Record<DozGunu, string> = { tam: HALKA_RENK.ilac, kismi: 'rgba(15,155,142,0.42)', alinmadi: UYARI_RENK.uyum.vurgu, yok: '#ebe4d8' }
+// DOZ-KAYDI-ISTEGE-BAGLI: 'alinmadi' = explicit "Atladım" only (slate, dashed); 'kayit_yok' = unmarked (light, neutral).
+const GUN_RENK: Record<DozGunu, string> = { tam: HALKA_RENK.ilac, kismi: 'rgba(15,155,142,0.42)', alinmadi: UYARI_RENK.uyum.vurgu, kayit_yok: '#f4efe6', yok: '#ebe4d8' }
 
 export default function Ayrintilar({ veri, sirali, sekme, setSekme, metrik, setMetrik, mesgul, istek, kaydet }: {
   veri: Veri; sirali: Metrik[]; sekme: Sekme; setSekme: (s: Sekme) => void; metrik: string | null; setMetrik: (m: string) => void; mesgul: boolean
@@ -152,8 +153,8 @@ export default function Ayrintilar({ veri, sirali, sekme, setSekme, metrik, setM
             <div>
               <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', alignItems: 'center', marginBottom: 4 }} className="evv-kucuk">
                 <span>Son 14 gün</span>
-                {([['tam', 'alındı'], ['kismi', 'eksik'], ['alinmadi', 'alınmadı']] as Array<[DozGunu, string]>).map(([k, ad]) => <span key={k} style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><b style={{ width: 8, height: 10, borderRadius: 2, display: 'inline-block', boxSizing: 'border-box', ...(k === 'alinmadi' ? { border: `1.5px dashed ${UYARI_RENK.uyum.vurgu}` } : { background: GUN_RENK[k] }) }} />{ad}</span>)}
-                <span style={{ marginLeft: 'auto' }}>Kritik ilaç 2 gün işaretlenmezse size bildirilir</span>
+                {([['tam', 'alındı'], ['kismi', 'kısmen'], ['alinmadi', 'atlandı'], ['kayit_yok', 'kayıt yok']] as Array<[DozGunu, string]>).map(([k, ad]) => <span key={k} style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><b style={{ width: 8, height: 10, borderRadius: 2, display: 'inline-block', boxSizing: 'border-box', ...(k === 'alinmadi' ? { border: `1.5px dashed ${UYARI_RENK.uyum.vurgu}` } : k === 'kayit_yok' ? { background: GUN_RENK[k], border: '1px solid #ddd3c4' } : { background: GUN_RENK[k] }) }} />{ad}</span>)}
+                <span style={{ marginLeft: 'auto' }}>Kritik ilaç 2 gün kayıtsız ya da “Atladım” ise size bildirilir</span>
               </div>
               {veri.uyum.ilaclar.map((i) => {
                 const plan = veri.planlar.find((p) => p.id === i.planId)
@@ -162,11 +163,13 @@ export default function Ayrintilar({ veri, sirali, sekme, setSekme, metrik, setM
                     <span style={{ minWidth: 0 }}>
                       <span style={{ fontWeight: 600 }}>{i.ad}</span>{i.kaynak === 'hasta' ? <span className="evv-kucuk"> (hastanın eklediği)</span> : null}
                       {plan?.doz ? <span className="evv-kucuk" style={{ display: 'block', marginTop: 1 }}>{plan.doz}</span> : null}
+                      {!i.kayitAcik ? <span className="evv-kucuk" style={{ display: 'block', marginTop: 1, color: TON_RENK.uyum.ana }}>Hasta bu ilaç için doz kaydı tutmuyor (yalnız hatırlatma)</span> : null}
+                      {plan?.kritik && plan.hatirlatmaKapali ? <span className="evv-kucuk" data-testid="kritik-hatirlatma-notu" style={{ display: 'block', marginTop: 1, color: TON_RENK.uyum.ana }}>Hasta bu ilaç için hatırlatmayı kapattı</span> : null}
                     </span>
-                    <span className="evv-serit" aria-label={`Son 14 gün: ${i.gunler.filter((g) => g === 'tam').length} gün tam`}>{i.gunler.map((g, k) => <b key={k} data-d={g} style={{ background: GUN_RENK[g] }} />)}</span>
-                    <span style={{ textAlign: 'right', fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>{i.yuzde == null ? '—' : `%${i.yuzde}`}</span>
+                    <span className="evv-serit" aria-label={`Son 14 gün: ${i.gunler.filter((g) => g === 'tam').length} gün tam, ${i.gunler.filter((g) => g === 'kayit_yok').length} gün kayıt yok`}>{i.gunler.map((g, k) => <b key={k} data-d={g} style={{ background: GUN_RENK[g] }} />)}</span>
+                    <span style={{ textAlign: 'right', fontWeight: 600, fontVariantNumeric: 'tabular-nums', ...(i.yuzde == null ? { color: TON_RENK.uyum.ana, fontWeight: 500, fontSize: 12.5 } : {}) }}>{i.yuzde != null ? `%${i.yuzde}` : i.kayitAcik ? 'Kayıt yok' : 'Kayıt tutmuyor'}</span>
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }} className="evv-kucuk">Kritik
-                      <button type="button" role="switch" className="evv-anahtar" aria-checked={!!plan?.kritik} aria-label={`${i.ad} kritik ilaç`} title="Kritik ilaç: 2 gün işaretlenmezse size bildirilir" onClick={() => istek('PATCH', { plan: { planId: i.planId, kritik: !plan?.kritik } })} />
+                      <button type="button" role="switch" className="evv-anahtar" aria-checked={!!plan?.kritik} aria-label={`${i.ad} kritik ilaç`} title="Kritik ilaç: hastaya doz kaydı nedeniyle önerilir; 2 gün kayıtsız ya da “Atladım” ise size bildirilir" onClick={() => istek('PATCH', { plan: { planId: i.planId, kritik: !plan?.kritik } })} />
                     </span>
                   </div>
                 )

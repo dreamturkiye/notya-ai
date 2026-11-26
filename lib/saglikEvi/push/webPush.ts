@@ -79,7 +79,8 @@ export function sifrele(icerik: Buffer, p256dh: string, auth: string, test?: { t
 export interface PushAboneligi { endpoint: string; p256dh: string; auth: string }
 
 /** The notification the service worker shows. Generic words only (no PHI). */
-export interface PushIcerigi { baslik: string; govde: string; yol: string; etiket: string }
+/** eylemler: notification action buttons (DOZ-KAYDI-ISTEGE-BAGLI: "Hatırlatmaları kapat"); yol is portal-relative. */
+export interface PushIcerigi { baslik: string; govde: string; yol: string; etiket: string; eylemler?: ReadonlyArray<{ eylem: string; baslik: string; yol: string }> }
 
 export type PushSonucu = { ok: true } | { ok: false; sil: boolean; durum: number | null; hata: string }
 

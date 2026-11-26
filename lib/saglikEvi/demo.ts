@@ -17,6 +17,7 @@ import type { EvVerisiGirdisi } from './evVerisi'
 import { gunEkle, trGun, trSaatAni } from './zaman'
 import { egilimKurallari, isaretKurallari, tekDegerKurallari } from './kurallar'
 import { etkinEsikler } from './hedefler'
+import { kritikIlacKurali } from './dozKaydi'
 
 function rastgele(tohum: number) {
   let s = tohum >>> 0
@@ -128,7 +129,8 @@ export function gunlukDemoHam(simdiIso: string, doktorBransi: string | null = 'd
     planlar, kayitlar, uyarilar,
     // Earned on different days; 'hizli-goz' is left out so the demo shows the unlock moment once.
     kazanilanRozetler: (([['ilk-adim', 60], ['seri-7', 27], ['olcum-25', 40], ['olcum-100', 6], ['sabah-duzeni', 9], ['seker-ustasi', 12], ['tansiyon-takipcisi', 25], ['uyum-haftasi', 18], ['tam-gun', 30], ['seri-kalkani', 20]] as const).filter(([rozet]) => tipler.has('glukoz') || rozet !== 'seker-ustasi')).map(([rozet, gun]) => ({ rozet, kazanildiAt: new Date(simdi - gun * 86_400_000).toISOString(), hastaGorduAt: new Date(simdi - gun * 86_400_000).toISOString() })),
-    tercihler: { paylasimOnayi: true, onayAt: new Date(simdi - 40 * 86_400_000).toISOString(), sessizBas: '23:00', sessizBit: '07:00', hatirlatmaAcik: true, moduller: hastaModul },
+    // DOZ-KAYDI-ISTEGE-BAGLI: the default demo patient chose "Hatırlat, ben de işaretleyeyim" (they log — real adherence data).
+    tercihler: { paylasimOnayi: true, onayAt: new Date(simdi - 40 * 86_400_000).toISOString(), sessizBas: '23:00', sessizBit: '07:00', hatirlatmaAcik: true, moduller: hastaModul, dozKaydi: 'acik', dozSecimi: 'hatirlat_isaretle' },
     ldl: kardiyometabolik && !ht ? { deger: 92, tarih: gunEkle(bugun, -41) } : null,
     sorular: !kardiyometabolik ? [] : ht
       ? [{ id: 'demo-s1', metin: 'Akşam ölçtüğüm tansiyon sabahkinden yüksek çıkıyor, bu normal mi?', createdAt: new Date(simdi - 26 * 3600_000).toISOString() }]
@@ -156,10 +158,40 @@ function acilDemo(h: HamGunluk): HamGunluk {
   const uyarilar: EvUyari[] = [
     ...acil.map((k, i) => ({ id: `demo-acil-u${i}`, kural: k.kural, anahtar: k.anahtar, duzey: k.duzey, metrik: k.metrik, hastaMetni: k.hastaMetni, hekimMetni: k.hekimMetni, olusturmaAt: yuksekAt, hastaGorduAt: null, hekimGorduAt: null, veri: k.veri })),
     ...hiK.map((k, i) => ({ id: `demo-hi-u${i}`, kural: k.kural, anahtar: k.anahtar, duzey: k.duzey, metrik: k.metrik, hastaMetni: k.hastaMetni, hekimMetni: k.hekimMetni, olusturmaAt: hi.olcumAt, hastaGorduAt: hi.olcumAt, hekimGorduAt: null, veri: k.veri })),
-    ...(ramipril ? [{ id: 'demo-kritik-u', kural: 'kritik_ilac', anahtar: `kritik_ilac:${ramipril.id}`, duzey: 'hekime_bildir' as const, metrik: 'ilac', hastaMetni: `${ramipril.ad} için iki gündür doz işaretlenmedi. Doktorunuza bildirdik. İlacınızı bıraktıysanız ya da bir sorun yaşıyorsanız Mesajlar'dan yazın.`, hekimMetni: `Kritik ilaç "${ramipril.ad}": son 2 günde hiç doz işaretlenmedi.`, olusturmaAt: new Date(simdi - 5 * 3600_000).toISOString(), hastaGorduAt: new Date(simdi - 4 * 3600_000).toISOString(), hekimGorduAt: null, veri: { planId: ramipril.id } }] : []),
+    ...(ramipril ? [kritikDemoUyarisi(ramipril, simdi, new Date(simdi - 4 * 3600_000).toISOString())] : []),
     ...h.uyarilar.map((u) => ({ ...u, hastaGorduAt: h.simdi })),
   ]
   return { ...h, klinik, planlar: [...h.planlar, insulin], kayitlar, olcumler: [...h.olcumler, yuksek], isaretliOlcumler: [hi], toplamOlcum: h.toplamOlcum + 2, uyarilar }
+}
+
+/** The kritik-medicine alert exactly as the cron writes it (dozKaydi.kritikIlacKurali, "2 gündür kayıt yok"). */
+function kritikDemoUyarisi(p: DozPlani, simdi: number, hastaGorduAt: string | null): EvUyari {
+  const k = kritikIlacKurali(p, 'kayit_yok')
+  return { id: 'demo-kritik-u', kural: k.kural, anahtar: k.anahtar, duzey: k.duzey, metrik: k.metrik, hastaMetni: k.hastaMetni, hekimMetni: k.hekimMetni, olusturmaAt: new Date(simdi - 5 * 3600_000).toISOString(), hastaGorduAt, hekimGorduAt: null, veri: k.veri }
+}
+
+/**
+ * DOZ-KAYDI-ISTEGE-BAGLI demo states (patient /portal/demo?durum=…, doctor /portal/demo-hekim?durum=…):
+ *   secim       the one-time question not answered yet (reminders on, "Hatırlatmaları kapat" on the card)
+ *   hatirlatma  a reminder-only patient ("Sadece hatırlat"; no kritik flag, no marks) — no İlaç ring, no %
+ *   ayarlar     the logging patient with Amlodipin's reminder off and Atorvastatin on reminder only (Doz Takvimi switches)
+ *   kayit-yok   doctor side of the reminder-only patient: "Hasta doz kaydı tutmuyor"
+ *   kritik      kritik Ramipril logged, no record for 2 days, its reminder switched off by the patient → "2 gündür kayıt
+ *               yok" + the neutral "Hasta bu ilaç için hatırlatmayı kapattı"
+ */
+export function dozKaydiDemoUygula(h: HamGunluk, durum: string | null | undefined): HamGunluk | null {
+  const simdi = Date.parse(h.simdi)
+  const bugun = trGun(h.simdi)
+  if (durum === 'secim') return { ...h, tercihler: { ...h.tercihler, dozKaydi: null, dozSecimi: null } }
+  if (durum === 'hatirlatma' || durum === 'kayit-yok') return { ...h, tercihler: { ...h.tercihler, dozKaydi: 'kapali', dozSecimi: 'sadece_hatirlat' }, planlar: h.planlar.map((p) => ({ ...p, kritik: false })), kayitlar: h.kayitlar.filter((k) => h.planlar.find((p) => p.id === k.planId)?.gerektikce), uyarilar: h.uyarilar.filter((u) => u.kural !== 'kritik_ilac').map((u) => ({ ...u, hastaGorduAt: h.simdi, hekimGorduAt: durum === 'kayit-yok' ? h.simdi : u.hekimGorduAt })) }
+  if (durum === 'ayarlar') return { ...h, planlar: h.planlar.map((p) => (p.ad === 'Amlodipin' ? { ...p, hatirlatmaAcik: false } : p.ad === 'Atorvastatin' ? { ...p, kayitTutma: 'kapali' as const } : p)) }
+  if (durum === 'kritik') {
+    const ramipril = h.planlar.find((p) => p.ad === 'Ramipril')
+    if (!ramipril) return h
+    const kayitlar = h.kayitlar.filter((k) => !(k.planId === ramipril.id && trGun(k.planlananAt) >= gunEkle(bugun, -2)))
+    return { ...h, planlar: h.planlar.map((p) => (p.id === ramipril.id ? { ...p, kritik: true, hatirlatmaAcik: false } : p)), kayitlar, uyarilar: [kritikDemoUyarisi(ramipril, simdi, null), ...h.uyarilar.map((u) => ({ ...u, hastaGorduAt: h.simdi, hekimGorduAt: h.simdi }))] }
+  }
+  return null
 }
 
 /** BUGUN-V2 — internal demo previews of the designed states (/portal/demo?durum=…): first day, few readings, no
@@ -171,6 +203,8 @@ export function demoDurumuUygula(h: HamGunluk, durum: string | null | undefined)
   // HASTA-MODULLERI: a hypertension-only patient (no glucose anywhere).
   if (durum === 'ht') return gunlukDemoHam(h.simdi, h.bransAnahtar, 'ht')
   if (durum === 'acil') return acilDemo(h)
+  const dk = dozKaydiDemoUygula(h, durum)
+  if (dk) return dk
   if (durum === 'ilk') return { ...h, olcumler: [], toplamOlcum: 0, fotoOlcum: 0, kayitlar: [], uyarilar: [], kazanilanRozetler: [], sorular: [], ldl: null, tercihler: { ...h.tercihler, paylasimOnayi: false, onayAt: null } }
   if (durum === 'az') {
     const sinir = gunEkle(bugun, -2)

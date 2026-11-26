@@ -123,7 +123,7 @@ export async function kontrolOzetiOlustur(sb: Sb, doktorId: string, patientId: s
   const olcRows = olcumSatirlari(olc.data as Record<string, any>[])
   const ozet = kontrolOncesiOzet({
     olcumler: olcRows.sayisal, isaretliOlcumler: olcRows.isaretli,
-    planlar: ((planR.data || []) as Record<string, any>[]).map(planSatiri),
+    planlar: ((planR.data || []) as Record<string, any>[]).map(planSatiri), kayitVarsayilan: kart.uyum.kayitTercihi,
     kayitlar: ((kayitR.data || []) as Record<string, any>[]).map(kayitSatiri),
     uyarilar: ((uyariR.data || []) as Record<string, any>[]).map(uyariSatiri),
     sorular: kart.sorular.map((s) => ({ metin: s.metin, createdAt: s.tarih })),
