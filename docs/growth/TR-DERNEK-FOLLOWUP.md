@@ -2,7 +2,7 @@
 
 Times: America/New_York. First-person Gökhan, From `drhanmamur@notya.io`, BCC `kaan@notya.io`. Never more than 4 touches. Skip EKDD.
 
-## SENT (17) — do not resend
+## SENT (21) — do not resend
 
 | Org | To | Follow |
 |-----|-----|--------|
@@ -15,10 +15,14 @@ Times: America/New_York. First-person Gökhan, From `drhanmamur@notya.io`, BCC `
 | Çocuk Endokrin | info@cocukendokrindiyabet.org | same |
 | Çocuk Nöroloji | cnd@cnd.org.tr | same |
 | Çocuk Gastro | sekretarya@turkcocukgastro.org | same |
+| Çocuk Nefroloji | info@cocuknefroloji.org | same (retry 26 Kas 13:48 ET) |
+| Doğu Pediatri (PCO) | dopek2026@centerevents.com.tr | same |
 | TJOD merkez | info@tjod.org | same |
+| TJOD İstanbul (Figur) | tjodistanbul@figur.net | same |
 | TJOD İstanbul Anadolu | istanbulanadolutjod@gmail.com | same |
 | TJOV | info@tjov.org.tr | same |
 | Perinatoloji | info@perinatal.org.tr | same |
+| TDD | sekreterya@turkdermatoloji.org.tr | same |
 | TURKDERM | turkderm@turkderm.org.tr | same |
 | Türk KBB | kbb@kbb.org.tr | same |
 | İstanbul KBB | info@istanbulkbb.org | same |
@@ -55,13 +59,6 @@ drhanmamur@notya.io
 
 After 30 Kas, drop the 30 Kas slot from D+7/D+14 copy.
 
-## BOUNCE — resend today to replacements
+## Dead mailboxes (do not retry)
 
-| Failed | Why | Send instead |
-|--------|-----|----------------|
-| dernek@tjodistanbul.org | 550 user unknown | `tjodistanbul@figur.net` (şube kurs PCO, Kas 2026 flyer) |
-| tdd@turkdermatoloji.org.tr | 550 lookup failed | `sekreterya@turkdermatoloji.org.tr` (site iletisim) |
-| info@cocuknefroloji.org.tr | 554 relay denied | `info@cocuknefroloji.org` |
-| info@dogupediatri.org | MX timeout | `dopek2026@centerevents.com.tr` (Center Events PCO) |
-
-Do not retry the dead addresses. TJOD İstanbul site iletisim already points at `info@tjod.org` (SENT); Figur is the şube-event mailbox. Do not use Engin Oral private Gmail unless Figur also bounces.
+`dernek@tjodistanbul.org` (550) · `tdd@turkdermatoloji.org.tr` (550) · `info@cocuknefroloji.org.tr` (554) · `info@dogupediatri.org` (MX timeout). Replacements above were sent 26 Kas 13:48 America/New_York.

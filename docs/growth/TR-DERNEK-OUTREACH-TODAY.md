@@ -74,7 +74,7 @@ If bounce: search `iletisim` on their site and retry once. Log in CSV `status=BO
 **Reply-To:** `drhanmamur@notya.io`  
 **BCC:** `kaan@notya.io` (ops only — not in the body)
 
-**Send status (26 Kas 2026, 13:35 America/New_York):** Kaan sent from `drhanmamur@notya.io` via Purelymail Roundcube. **17 delivered.** Four bounces — replacements in `docs/growth/TR-DERNEK-FOLLOWUP.md`. Follow-up clock started (D+3 29 Kas / D+7 3 Ara / D+14 10 Ara). Skip EKDD.
+**Send status (26 Kas 2026, 13:48 America/New_York):** **21 SENT** from `drhanmamur@notya.io`. Four bounce retries delivered (Figur / TDD sekreterya / nefroloji .org / Center Events). Follow-up: D+3 29 Kas / D+7 3 Ara / D+14 10 Ara. Skip EKDD. Log: `docs/growth/TR-DERNEK-FOLLOWUP.md`.
 
 ### Pediatri (Marmara / TMPD / TPK / PUADER)
 
