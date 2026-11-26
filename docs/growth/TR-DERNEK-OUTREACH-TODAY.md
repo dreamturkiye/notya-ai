@@ -74,7 +74,7 @@ If bounce: search `iletisim` on their site and retry once. Log in CSV `status=BO
 **Reply-To:** `drhanmamur@notya.io`  
 **BCC:** `kaan@notya.io` (ops only — not in the body)
 
-**Send status (26 Kas 2026, 11:24 America/New_York):** copy approved; Cal.com 20:00 TR still open on 30 Kas / 1 Ara / 3 Ara. **Not sent.** This VM cannot decrypt Vercel `SMTP_PASS` and has no Purelymail password for `drhanmamur@notya.io`. Waiting on secret `DRHANMAMUR_SMTP_PASS`. Skip EKDD.
+**Send status (26 Kas 2026, 13:35 America/New_York):** Kaan sent from `drhanmamur@notya.io` via Purelymail Roundcube. **17 delivered.** Four bounces — replacements in `docs/growth/TR-DERNEK-FOLLOWUP.md`. Follow-up clock started (D+3 29 Kas / D+7 3 Ara / D+14 10 Ara). Skip EKDD.
 
 ### Pediatri (Marmara / TMPD / TPK / PUADER)
 
