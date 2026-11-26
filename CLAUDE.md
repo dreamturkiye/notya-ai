@@ -96,3 +96,7 @@ For every request (including live feedback relayed from Dr. Gökhan Mamur), Clau
 ## Country carry-over queue (Kaan, 2026-11-24 — overrides "same change set" until he says otherwise)
 
 Core/shared Türkiye changes ship on `main` first and are appended to `docs/ULKE-TASIMA-KUYRUGU.md` instead of being ported to the country builds in the same change set (Kaan: "I do not want to bother with all of them at this time since it takes too much time"). When Kaan says "carry the country queue", one job ports every OPEN item, country-adapted, to the active countries (au, uz; us/gb/ca/nz frozen). Every core change must add its queue entry before it is closed.
+
+## Standing rule — what Turkish doctors use (Kaan, 2026-11-26, permanent)
+
+"We must always use what the Turkish doctors use as well as their government rules and regulations." Clinical source order for Türkiye: Turkish law and regulators (SB protocols, SGK/SUT, TİTCK, e-Nabız rules) → Turkish specialty societies (TEMD, TKD, TTD …) → the international guidelines Turkish doctors actually use (ESC, ADA, KDIGO, GINA, GOLD …, latest edition) → textbooks. On conflict the Turkish source wins. Registry: `lib/kaynaklar/protokolKutuphanesi/`.

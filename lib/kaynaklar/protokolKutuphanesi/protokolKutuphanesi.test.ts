@@ -26,7 +26,7 @@ import { KLINIK_YENI_SLUGS } from '../../specialties/klinikDikey'
 const KOK = join(__dirname, '..', '..', '..')
 const oku = (p: string) => readFileSync(join(KOK, p), 'utf8')
 const LOG = `${oku('docs/kaynak/PROTOKOL-KUTUPHANESI-ARASTIRMA.md')}\n${oku('docs/kaynak/ESC-KILAVUZLARI.md')}`
-const RESMI = /^https:\/\/([a-z0-9-]+\.)*(saglik\.gov\.tr|titck\.gov\.tr|sgk\.gov\.tr|tuseb\.gov\.tr|org\.tr|escardio\.org|goldcopd\.org|ginasthma\.org|kdigo\.org|uroweb\.org|erc\.edu)(\/|$)/i
+const RESMI = /^https:\/\/([a-z0-9-]+\.)*(saglik\.gov\.tr|titck\.gov\.tr|sgk\.gov\.tr|tuseb\.gov\.tr|org\.tr|escardio\.org|goldcopd\.org|ginasthma\.org|kdigo\.org|uroweb\.org|erc\.edu|diabetesjournals\.org|diabetes\.org)(\/|$)/i
 
 describe('registry integrity', () => {
   test('40 branş keys = the 30 in lib/doktor/specialties.ts + the 10 Özel Branşlar', () => {

@@ -16,7 +16,7 @@
     "lib/kaynaklar/protokolKutuphanesi/belgeler.ts": "9e935608173e85c5",
     "lib/kaynaklar/protokolKutuphanesi/cip.ts": "184e90b543406a7e",
     "lib/kaynaklar/protokolKutuphanesi/index.ts": "93deca73ce776f96",
-    "lib/kaynaklar/protokolKutuphanesi/uluslararasi.ts": "8c5003ea05911c55",
+    "lib/kaynaklar/protokolKutuphanesi/uluslararasi.ts": "3e4635e5e93202ec",
     "lib/klinik/klinikTurkishRefs.ts": "824d67fda25b5180",
     "lib/klinik/ozelPrompt.ts": "42e90f9a5cce218d",
     "specialties/dahiliye/prompts/asistan-ogrenme.md": "45043efd5eb10311",
@@ -68,7 +68,7 @@
     "specialties/sac-ekimi/prompts/system.md": "5a8d5dd8e8038dfc",
     "specialties/sac-ekimi/prompts/voice.md": "17964b4a42036252"
   },
-  "ozet": "eb95bff45e25f789",
+  "ozet": "22eb3ef59e3ba058",
   "guncelleme": "2026-11-26",
-  "not": "KAYNAK-BIRLESTIRME-ESC: Ayşe TR source stack = registry (numbered) + uncovered static items (merge fix for 2026-11-24 either-or); 30 ESC docs + GOLD/GINA/KDIGO/EAU/ERC in registry; ESC/GOLD/GINA/ERC/EAU citation-lock pass; static kardiyoloji years corrected"
+  "not": "ADA SOC 2026 added to registry (Kaan 2026-11-26: use what Turkish doctors use)"
 }
