@@ -114,10 +114,39 @@ export function uydurmaKaynakTemizle(metin: string, dogrulanmis: DogrulanmisKayn
  *      that society + year AND the text discusses its topic; otherwise the year goes ("TEMD kılavuzu");
  *   2. a named SB document + a year ("Hipertansiyon Klinik Protokolü 2020", "Migren Klinik Protokolü (2025)") — kept only when
  *      an 'SB-BELGE' entry with that year has a topic word INSIDE the document name (binds the year to the right document).
+ *   3. (KAYNAK-BIRLESTIRME-ESC, 2026-11-26) an international society code + a year — ESC (topic bound to the same clause),
+ *      GOLD / GINA / ERC / EAU (whole-text topic) — see ULUSLARARASI_YIL_RE.
  * TJOD / TMFTP / DÖBYR years and "Yayın No." stay with the first pass.
  */
 const TR_KURUM_KODLARI = ['TEMD', 'TKD', 'TTD', 'TND', 'KLİMİK', 'KLIMIK', 'TPK', 'TDD', 'TÜD', 'TOD', 'TARD', 'TATD', 'TPD', 'TTOD', 'TGD', 'TİHUD', 'TAHUD', 'THBHD', 'AGD', 'TOTBİD', 'TPRECD', 'EKMUD', 'TÜBER', 'ÇAYD']
-const TR_KURUM_YIL_RE = new RegExp(String.raw`\b(${TR_KURUM_KODLARI.join('|')})\b([^.\n;]{0,60}?)\(?\b((?:19|20)\d{2})\b(?:'[a-zçğıöşü]+)?\)?`, 'gu')
+// "ESC/TKD 2024 …" is an ESC citation (decided by the international pass below), not a TKD one.
+const TR_KURUM_YIL_RE = new RegExp(String.raw`(?<!\/\s?)\b(${TR_KURUM_KODLARI.join('|')})\b([^.\n;]{0,60}?)\(?\b((?:19|20)\d{2})\b(?:'[a-zçğıöşü]+)?\)?`, 'gu')
+
+/**
+ * KAYNAK-BIRLESTIRME-ESC (2026-11-26) — international societies whose current editions are in the registry
+ * (lib/kaynaklar/protokolKutuphanesi/uluslararasi.ts). "ESC 2024 Atriyal Fibrilasyon", "ESC/EAS 2019 dislipidemi", "2024 ESC
+ * AF kılavuzu", "GOLD 2027 raporu". ESC has ~30 current guidelines with different years, so its year is bound to the topic
+ * in the same clause (a few words before / after the citation), not to the whole text: "ESC 2019 AF" is refused although
+ * 2019 is a confirmed ESC year (dislipidemi, PE, SVT). GOLD / GINA / EAU / ERC have one current edition: whole-text topic.
+ * Partner codes after a slash (ESC/EACTS, ESC/ERS, ESC/TKD) stay in the text.
+ */
+const ULUSLARARASI_KODLAR = ['ESC', 'GOLD', 'GINA', 'ERC', 'EAU']
+const ORTAK_KOD = String.raw`(?:\s*\/\s*[A-ZÇĞİÖŞÜ]{2,6})*`
+const ULUSLARARASI_YIL_RE = new RegExp(String.raw`\b(${ULUSLARARASI_KODLAR.join('|')})(${ORTAK_KOD})\b([^.\n;]{0,60}?)\(?\b((?:19|20)\d{2})\b(?:'[a-zçğıöşü]+)?\)?`, 'gu')
+const YIL_ULUSLARARASI_RE = new RegExp(String.raw`\b((?:19|20)\d{2})(?:'[a-zçğıöşü]+)?\s+(${ULUSLARARASI_KODLAR.join('|')})(${ORTAK_KOD})\b`, 'gu')
+const HARF = 'a-zçğıöşüâîû0-9'
+/** Word-start match (Turkish suffixes allowed); ≤ 5-letter terms ("af", "ky", "pe") must stand alone. */
+function terimGeciyor(metin: string, terim: string): boolean {
+  const kacis = terim.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const son = terim.replace(/\s/g, '').length <= 5 ? `(?![${HARF}])` : ''
+  return new RegExp(`(?<![${HARF}])${kacis}${son}`, 'u').test(metin)
+}
+/** The clause around a citation: up to 60 characters before and 80 after, cut at sentence / line ends. */
+function cumleCevresi(metin: string, bas: number, son: number): string {
+  const once = metin.slice(Math.max(0, bas - 60), bas).split(/[.\n;!?]/).pop() || ''
+  const sonra = metin.slice(son, son + 80).split(/[.\n;!?]/)[0] || ''
+  return kucuk(`${once} ${metin.slice(bas, son)} ${sonra}`)
+}
 const SB_BELGE_YIL_RE = /((?:[A-ZÇĞİÖŞÜ][A-Za-zÇĞİÖŞÜçğıöşü()-]*\s+){1,8}(?:Klinik\s+Protokol(?:ü|u|leri)|Klinik\s+Rehberi|Yönetim\s+Rehberi|Uygulama\s+Rehberi|İzlem\s+Kılavuzu|Değerlendirmesi\s+Kılavuzu|Beslenme\s+Rehberi))([\s,(]{0,4}(?:\(TÜBER\)\s*)?)\(?((?:19|20)\d{2})\b(?:'[a-zçğıöşü]+)?\)?/gu
 
 export function protokolKaynakTemizle(metin: string, dogrulanmis: DogrulanmisKaynak[]): { metin: string; bulgular: KaynakBulgusu[] } {
@@ -133,6 +162,34 @@ export function protokolKaynakTemizle(metin: string, dogrulanmis: DogrulanmisKay
     bulgular.push({ alinti: tam.trim(), neden: adaylar.length ? 'konu-uyusmuyor' : 'dogrulanmamis' })
     return `${org}${ara.replace(/[\s(,]+$/, '')}`
   })
+  const uluslararasiKarar = (org: string, yil: string, bas: number, son: number, metin: string): KaynakBulgusu['neden'] | null => {
+    const adaylar = dogrulanmis.filter((d) => d.aile === org && d.numara === Number(yil))
+    if (!adaylar.length) return 'dogrulanmamis'
+    if (org === 'ESC') {
+      const cevre = cumleCevresi(metin, bas, son)
+      return adaylar.some((d) => d.konu.some((k) => terimGeciyor(cevre, k))) ? null : 'konu-uyusmuyor'
+    }
+    const tum = kucuk(metin)
+    return adaylar.some((d) => d.konu.some((k) => tum.includes(k))) ? null : 'konu-uyusmuyor'
+  }
+  {
+    const kaynak = t
+    t = kaynak.replace(ULUSLARARASI_YIL_RE, (tam, org: string, ortak: string, ara: string, yil: string, konum: number) => {
+      const neden = uluslararasiKarar(org, yil, konum, konum + tam.length, kaynak)
+      if (!neden) return tam
+      bulgular.push({ alinti: tam.trim(), neden })
+      return `${org}${ortak}${ara.replace(/[\s(,]+$/, '')}`
+    })
+  }
+  {
+    const kaynak = t
+    t = kaynak.replace(YIL_ULUSLARARASI_RE, (tam, yil: string, org: string, ortak: string, konum: number) => {
+      const neden = uluslararasiKarar(org, yil, konum, konum + tam.length, kaynak)
+      if (!neden) return tam
+      bulgular.push({ alinti: tam.trim(), neden })
+      return `${org}${ortak}`
+    })
+  }
   t = t.replace(SB_BELGE_YIL_RE, (tam, ad: string, ara: string, yil: string) => {
     const adK = kucuk(ad)
     const adaylar = dogrulanmis.filter((d) => d.aile === 'SB-BELGE' && d.numara === Number(yil))

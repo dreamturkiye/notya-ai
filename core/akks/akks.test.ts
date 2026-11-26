@@ -204,7 +204,7 @@ describe('AKKS question bank', () => {
 
 describe('AKKS watched files', () => {
   it('assistant prompts, model policy, routing and the source registry are watched; SOAP prompts and tests are not', () => {
-    for (const y of ['lib/ai/modeller.ts', 'lib/asistan/ayseCevapla.ts', 'lib/asistan/personaEngine.ts', 'specialties/dahiliye/prompts/system.md', 'lib/kaynaklar/protokolKutuphanesi/belgeler.ts']) assert.ok(izlenenMi(y), y)
+    for (const y of ['lib/ai/modeller.ts', 'lib/asistan/ayseCevapla.ts', 'lib/asistan/personaEngine.ts', 'specialties/dahiliye/prompts/system.md', 'lib/kaynaklar/protokolKutuphanesi/belgeler.ts', 'lib/kaynaklar/protokolKutuphanesi/uluslararasi.ts']) assert.ok(izlenenMi(y), y)
     for (const y of ['specialties/dahiliye/prompts/soap-dahiliye.md', 'lib/asistan/tekBeyin.test.ts', 'components/x.tsx']) assert.ok(!izlenenMi(y), y)
   })
   it('manifest difference and hash', () => {

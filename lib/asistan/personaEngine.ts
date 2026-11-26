@@ -19,7 +19,7 @@ import {
 } from '@/lib/asistan/specialistsCatalog'
 
 import { KAPSAM_RED } from '@/lib/asistan/kapsamRed'
-import { turkKaynakBelgeleri, turkKaynakYigini } from "@/lib/kaynaklar/protokolKutuphanesi"
+import { birlesikKaynakYigini } from "@/lib/kaynaklar/protokolKutuphanesi"
 export type PersonaId = string
 export type SpecialtyId = SpecialtyKey | 'genel' | 'acil' | 'psikiyatri' | 'dahiliye' | 'noroloji' | 'pediatri' | 'kardiyoloji'
 
@@ -48,8 +48,9 @@ export interface Persona {
   specialty: SpecialtyKey[]
   personality: string
   textbooks: string[]
+  /** Merged TR source stack: registry lines first (edition-aware), then the static items the registry does not cover. */
   turkishGuidelines: string[]
-  /** Registry ids in the same order as turkishGuidelines when it came from the registry (else empty): Ayşe's "k" numbers map here. */
+  /** Registry ids aligned with turkishGuidelines[0 … length - 1] (the numbered part): Ayşe's "k" numbers map here only. */
   kaynakBelgeIdleri: string[]
   clinicalFocus: string[]
   voiceDescription: string
@@ -70,9 +71,12 @@ function toPersona(s: SpecialistDef): Persona {
     specialty: [s.specialtyKey],
     personality: s.personality,
     textbooks: s.textbooks,
-    // TR-PROTOKOL-KUTUPHANESI (Kaan GO 2026-11-24): the edition-aware registry stack; the old static list only if the registry has none.
-    turkishGuidelines: turkKaynakYigini(s.specialtyKey).length ? turkKaynakYigini(s.specialtyKey) : s.turkishGuidelines,
-    kaynakBelgeIdleri: turkKaynakBelgeleri(s.specialtyKey).map((b) => b.id),
+    // KAYNAK-BIRLESTIRME-ESC (2026-11-26): merge, never replace — registry stack (numbered, edition-aware) + every static item
+    // the registry does not name. The 2026-11-24 either-or dropped the whole static stack whenever the registry had one entry.
+    ...(() => {
+      const y = birlesikKaynakYigini(s.specialtyKey, s.turkishGuidelines)
+      return { turkishGuidelines: y.satirlar, kaynakBelgeIdleri: y.belgeIdleri }
+    })(),
     clinicalFocus: s.clinicalFocus,
     voiceDescription: `${s.voice.label}`,
     voiceId: s.voice.voiceId,
@@ -97,6 +101,14 @@ function bransAdi(persona: Persona): string {
   return persona.title.replace(/\s+Uzmanı$/, '')
 }
 
+/** Numbered registry lines (the hidden "k" numbers point here), then the unnumbered static extras. */
+export function turkKaynakListesi(persona: Pick<Persona, 'turkishGuidelines' | 'kaynakBelgeIdleri'>): string {
+  const n = persona.kaynakBelgeIdleri.length
+  const numarali = persona.turkishGuidelines.slice(0, n).map((g, i) => `${i + 1}. ${g}`)
+  const ekler = persona.turkishGuidelines.slice(n).map((g) => `• ${g}`)
+  return [...numarali, ...(ekler.length ? ['Ek pratik kaynaklar (numarasız; baskı/yıl kayıtta doğrulanmadı — yıl veya numara yazma):', ...ekler] : [])].join("\n")
+}
+
 function specialtyKnowhowBlock(persona: Persona): string {
   return `
 === UZMANLIK KİMLİĞİ (ASLA KARIŞTIRMA) ===
@@ -114,7 +126,7 @@ Klinik karar, doz, tanı basamağı ve sevk için ÖNCE bunları kullan.
 Kaynağı kendiliğinden söyleme ya da yazma (kılavuz adı, yıl, numara); yalnızca hekim kaynağı sorarsa ver. Ekrandaki kaynak etiketleri bunu zaten gösterir.
 ABD (AHA/ACOG/NCCN…) veya İngiltere (NICE…) kılavuzunu Türkiye yerine koyma.
 Çakışmada: aşağıdaki TR kaynaklar > uluslararası metin.
-${persona.kaynakBelgeIdleri.length ? persona.turkishGuidelines.map((g, i) => `${i + 1}. ${g}`).join("\n") : persona.turkishGuidelines.map(g => `• ${g}`).join("\n")}
+${turkKaynakListesi(persona)}
 
 === ULUSLARARASI METİN (yalnızca derinlik — pratik otorite değil) ===
 ${persona.textbooks.map(b => `• ${b}`).join("\n")}

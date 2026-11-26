@@ -25,8 +25,8 @@ import { KLINIK_YENI_SLUGS } from '../../specialties/klinikDikey'
 
 const KOK = join(__dirname, '..', '..', '..')
 const oku = (p: string) => readFileSync(join(KOK, p), 'utf8')
-const LOG = oku('docs/kaynak/PROTOKOL-KUTUPHANESI-ARASTIRMA.md')
-const RESMI = /^https:\/\/([a-z0-9-]+\.)*(saglik\.gov\.tr|titck\.gov\.tr|sgk\.gov\.tr|tuseb\.gov\.tr|org\.tr)(\/|$)/i
+const LOG = `${oku('docs/kaynak/PROTOKOL-KUTUPHANESI-ARASTIRMA.md')}\n${oku('docs/kaynak/ESC-KILAVUZLARI.md')}`
+const RESMI = /^https:\/\/([a-z0-9-]+\.)*(saglik\.gov\.tr|titck\.gov\.tr|sgk\.gov\.tr|tuseb\.gov\.tr|org\.tr|escardio\.org|goldcopd\.org|ginasthma\.org|kdigo\.org|uroweb\.org|erc\.edu)(\/|$)/i
 
 describe('registry integrity', () => {
   test('40 branş keys = the 30 in lib/doktor/specialties.ts + the 10 Özel Branşlar', () => {
@@ -357,7 +357,8 @@ describe('hidden "k" source numbers → chips (Kaan GO 2026-11-24)', () => {
     assert.ok(!speechOneki(ham).includes('"k"'))
     const { PERSONAS } = await import('@/lib/asistan/personaEngine')
     const p = Object.values(PERSONAS).find((x) => x.kaynakBelgeIdleri.length)!
-    assert.equal(p.kaynakBelgeIdleri.length, p.turkishGuidelines.length)
+    // KAYNAK-BIRLESTIRME-ESC: the numbered registry part is a prefix of the merged stack; static extras follow, unnumbered.
+    assert.ok(p.kaynakBelgeIdleri.length <= p.turkishGuidelines.length)
   })
   test('idCipleri chips a reported document even when the text names none', async () => {
     const { idCipleri } = await import('./cip')

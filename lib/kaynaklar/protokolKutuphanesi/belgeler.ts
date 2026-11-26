@@ -6,6 +6,7 @@
  * Edition changes arrive through the monthly check's founder review queue, then a reviewed commit here.
  */
 import type { BransKodu, ProtokolBelgesi, TakipListesi } from './tipler'
+import { ULUSLARARASI_BELGELER } from './uluslararasi'
 
 export const ARASTIRMA_TARIHI = '2026-11-24'
 
@@ -712,4 +713,6 @@ export const PROTOKOL_BELGELERI: ProtokolBelgesi[] = [
       ? 'Derneğin resmî sitesi kayıtlı; güncel kılavuz baskısı/yılı resmî siteden okunamadı. Numara/yıl ile atıf kaynak kilidinde reddedilir.'
       : 'Repo kaynak yığınındaki ad; resmî sitesi ve güncel baskısı araştırmada doğrulanamadı. Numara/yıl ile atıf kaynak kilidinde reddedilir.',
   })),
+  // ─── Uluslararası (ESC — TKD onaylı —, GOLD, GINA, KDIGO, EAU, ERC) — KAYNAK-BIRLESTIRME-ESC 2026-11-26 ───────────────
+  ...ULUSLARARASI_BELGELER,
 ]

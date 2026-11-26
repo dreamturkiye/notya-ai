@@ -30,7 +30,7 @@ export function incelemeKarariCoz(govde: unknown): IncelemeKarari | { hata: stri
     const yil = d.yil === null || d.yil === undefined || d.yil === '' ? null : Number(d.yil)
     if (yil !== null && !(Number.isInteger(yil) && yil >= 1990 && yil <= 2100)) return { hata: 'Year must be 1990–2100.' }
     const url = typeof d.url === 'string' && d.url.trim() ? d.url.trim() : null
-    if (url && !/^https:\/\/([a-z0-9-]+\.)*(saglik\.gov\.tr|titck\.gov\.tr|sgk\.gov\.tr|resmigazete\.gov\.tr|tuseb\.gov\.tr|org\.tr)\//i.test(url)) return { hata: 'Official https link only (saglik.gov.tr, titck, sgk, resmigazete, tuseb, a society .org.tr).' }
+    if (url && !/^https:\/\/([a-z0-9-]+\.)*(saglik\.gov\.tr|titck\.gov\.tr|sgk\.gov\.tr|resmigazete\.gov\.tr|tuseb\.gov\.tr|org\.tr|escardio\.org|goldcopd\.org|ginasthma\.org|kdigo\.org|uroweb\.org|erc\.edu)\//i.test(url)) return { hata: 'Official https link only (saglik.gov.tr, titck, sgk, resmigazete, tuseb, a society .org.tr, or the international society site: escardio.org, goldcopd.org, ginasthma.org, kdigo.org, uroweb.org, erc.edu).' }
     const surum = typeof d.surum === 'string' && d.surum.trim() ? d.surum.trim().slice(0, 200) : null
     if (!surum && yil === null) return { hata: 'Give the new edition (as printed) or its year.' }
     duyuru = { belgeId, surum, yil, url }

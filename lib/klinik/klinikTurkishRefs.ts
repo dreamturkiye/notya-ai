@@ -16,7 +16,7 @@
  */
 
 import { KLINIK_YENI_SLUGS, klinikSlugCoz, type KlinikYeniSlug } from '@/lib/specialties/klinikDikey'
-import { turkKaynakYigini } from '@/lib/kaynaklar/protokolKutuphanesi'
+import { birlesikKaynakYigini } from '@/lib/kaynaklar/protokolKutuphanesi'
 
 export const KLINIK_TURKISH_REFS: Record<KlinikYeniSlug, string[]> = {
   'sac-ekimi': [
@@ -154,10 +154,10 @@ export function klinikSecondaryTextbooks(ham: string | null | undefined): string
 }
 
 export function klinikKaynakCumlesi(ham: string | null | undefined): string {
-  // TR-PROTOKOL-KUTUPHANESI (Kaan GO 2026-11-24): the edition-aware registry stack first; the static list only if it has none.
+  // KAYNAK-BIRLESTIRME-ESC (2026-11-26): merge, never replace — the edition-aware registry stack first, then every static
+  // item the registry does not name (the 2026-11-24 either-or dropped the whole static list).
   const slug = klinikSlugCoz(ham) ?? (String(ham || '').trim().toLocaleLowerCase('tr-TR') === 'dermatoloji' ? LANDING_DERM : null)
-  const kayit = slug ? turkKaynakYigini(slug) : []
-  const refs = kayit.length ? kayit : klinikTurkishRefs(ham)
+  const refs = slug ? birlesikKaynakYigini(slug, KLINIK_TURKISH_REFS[slug]).satirlar : klinikTurkishRefs(ham)
   return refs.length ? refs.join('; ') : ''
 }
 

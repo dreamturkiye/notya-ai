@@ -24,6 +24,7 @@ export type YayinciKodu =
   | 'SGK'
   | 'TÜSEB'
   | 'DERNEK'
+  | 'ULUSLARARASI' // international society used in Türkiye (ESC — TKD-endorsed —, GOLD / GINA via TTD, KDIGO, EAU via TÜD, ERC)
 
 export type BelgeTuru =
   | 'sb-protokol' // SB klinik protokolü
@@ -37,13 +38,16 @@ export type BelgeTuru =
   | 'dernek-uzlasi'
   | 'dernek-yayini'
   | 'kurum-raporu'
+  | 'uluslararasi-kilavuz' // international society guideline / report (ESC, GOLD, GINA, KDIGO, EAU, ERC)
+  | 'uluslararasi-uzlasi' // international consensus document (ESC Universal Definition of MI, ESC clinical consensus statement)
 
 export type BelgeDurumu = 'guncel' | 'yerine-yenisi-geldi' | 'dogrulanamadi'
 
 /**
  * How the edition was confirmed (research log has the URL for each):
  *  kunye        — the document's own imprint / title page was read
- *  resmi-liste  — an official (saglik.gov.tr) listing names the document with its year / revision in the title
+ *  resmi-liste  — an official (saglik.gov.tr) listing names the document with its year / revision in the title — or, for an
+ *                 international society, the society's own official guideline listing / page names it with its year
  *  repo-kaydi   — read in full earlier and recorded in the repo with its download source (e.g. the SUT)
  */
 export type DogrulamaYontemi = 'kunye' | 'resmi-liste' | 'repo-kaydi'
@@ -59,10 +63,20 @@ export interface BelgeBolumu {
   konu: string[]
 }
 
+/** A focused update published on top of a guideline edition (e.g. the 2025 focused update of the 2019 ESC/EAS dyslipidaemia guideline). */
+export interface OdakGuncellemesi {
+  yil: number
+  /** Title exactly as the official listing gives it. */
+  baslik: string
+  url: string | null
+}
+
 export interface ProtokolBelgesi {
   id: string
   /** Title exactly as published (or as the official listing gives it when the imprint could not be read). */
   baslik: string
+  /** Original-language title when `baslik` is a Turkish rendering (international guidelines), exactly as the society lists it. */
+  ozgunBaslik?: string
   /** Short display name for chips. */
   kisaAd: string
   yayinciKodu: YayinciKodu
@@ -90,13 +104,18 @@ export interface ProtokolBelgesi {
   /** YYYY-MM-DD — when the edition was last confirmed against the official source. */
   sonDogrulama: string
   dogrulamaYontemi?: DogrulamaYontemi
+  /** Focused updates that belong to this edition; each year is a confirmed citation year for the citation lock. */
+  odakGuncellemeleri?: OdakGuncellemesi[]
   /** id of the newer document when durum === 'yerine-yenisi-geldi'. */
   yerineGelen?: string
   /** Society short code for the citation lock ("TEMD", "TKD", …). SB documents use 'SB-BELGE'. */
   kurumKodlari?: string[]
   bolumler?: BelgeBolumu[]
-  /** Extra official pages the monthly check watches for this document (listing pages). The document URL is always watched. */
+  /** Extra official pages the monthly check watches for this document (listing pages). The document URL is always watched
+   * unless `yalnizTakipUrl` is set. */
   takipUrl?: string[]
+  /** The monthly check reads only `takipUrl` (one society listing for many guideline pages — avoids one review item per page). */
+  yalnizTakipUrl?: boolean
   /** Short honest note shown on the library page (why unconfirmed, what supersedes it, …). */
   not?: string
 }

@@ -59,7 +59,14 @@ Rules followed:
 | dernek-temd-diyabet-teknolojileri-2025 | 1. Baskı (çevrim içi), Nisan 2025 (online 20.04.2025) · ISBN 978-625-99759-4-8 | https://file.temd.org.tr/Uploads/publications/guides/documents/temd-diyabetteknolojilerikilavuzu-2025.pdf | kunye |
 | dernek-tdd-tum-yonleriyle-psoriasis | Mayıs 2020 · TDD yayın dizisi No. 7 · ISBN 978-605-06264-0-7 (book, not a guideline) | https://turkdermatoloji.org.tr/media/files/file/psoriasis-kitap-kucuk.pdf | kunye |
 | tuseb-nadir-kas-calistayi-2025 | Workshop 20 October 2025 · TÜSEB TAÇESE report | https://files.tuseb.gov.tr/tacese/files/yayinlar/2026-04-03-09-14-41.pdf | kunye |
+| gold-2027 | "2027 GOLD Report and Pocket Guide" (goldcopd.org navigation) · file "GOLD-Report-2027-FINAL-v1.1-20Nov2026" — 2027 Report v1.1, 20 Nov 2026 (read 2026-11-26) | https://goldcopd.org/2026-gold-report-and-pocket-guide/ (page links the 2027 report) | resmi-liste |
+| gina-2026 | "2026 GINA Strategy Report" — current edition on ginasthma.org; older reports under "Archived Reports" (read 2026-11-26) | https://ginasthma.org/2026-gina-strategy-report/ · PDF https://ginasthma.org/wp-content/uploads/2026/05/GINA-2026-Strategy-Report-WMS.pdf | resmi-liste |
+| kdigo-kbh-2024 | "KDIGO 2024 Clinical Practice Guideline for the Evaluation and Management of Chronic Kidney Disease", Kidney International, March 2024; 2027 medications focused update in development (read 2026-11-26) | https://kdigo.org/guidelines/ckd/ | resmi-liste |
+| eau-2026 | "EAU Guidelines. Edn. presented at the EAU Annual Congress London 2026" (current edition per the EAU citation page, read 2026-11-26) | https://uroweb.org/guidelines/how-to-cite-the-eau-guidelines/ | resmi-liste |
+| erc-2025 | "Guidelines 2025 — the newest edition of the ERC guidelines on resuscitation" (read 2026-11-26) | https://www.erc.edu/science-research/ → https://www.erc.edu/science-research/guidelines/guidelines-2025/ | resmi-liste |
 | sgk-sut | "02.10.2026 - Değişiklik Tebliği İşlenmiş Güncel 2013 SUT" | downloaded from https://www.sgk.gov.tr and read in full 2026-10-10 — docs/OPEN-COMMITMENTS.md NOTYA-SUT-RAPOR-01f (branch `kaynak/sut-2026-10-02`) | repo-kaydi |
+
+ESC guidelines (30 registry entries, research 2026-11-26): **docs/kaynak/ESC-KILAVUZLARI.md** (the registry test reads both logs).
 
 ## Read, but no edition recorded (`dogrulanamadi`)
 

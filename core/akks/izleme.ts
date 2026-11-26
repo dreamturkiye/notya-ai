@@ -29,6 +29,7 @@ export const IZLENEN_YOLLAR: readonly string[] = [
   'lib/klinik/ozelPrompt.ts',
   'lib/klinik/klinikTurkishRefs.ts',
   'lib/kaynaklar/protokolKutuphanesi/belgeler.ts',
+  'lib/kaynaklar/protokolKutuphanesi/uluslararasi.ts', // KAYNAK-BIRLESTIRME-ESC: ESC / GOLD / GINA / KDIGO / EAU / ERC entries feed the prompt stack
   'lib/kaynaklar/protokolKutuphanesi/index.ts',
   'lib/kaynaklar/protokolKutuphanesi/cip.ts',
   'specialties/',

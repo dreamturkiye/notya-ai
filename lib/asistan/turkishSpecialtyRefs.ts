@@ -54,9 +54,13 @@ export const TURKISH_REFS: Record<SpecialtyKey, string[]> = {
   ],
   kardiyoloji: [
     'Türk Kardiyoloji Derneği (TKD) — ESC kılavuzlarının resmi TR yayını/yorumu (tkd.org.tr)',
-    'ESC/TKD 2023 Akut Koroner Sendrom (AKS) Kılavuzu',
-    'ESC/TKD 2024 Atriyal Fibrilasyon; ESC 2021 KY + 2024 Odak Güncelleme',
-    'ESC/TKD 2024 Hipertansiyon; ESC/TKD 2025 Dislipidemi; ESC 2023 Diyabet ve KVH',
+    // KAYNAK-BIRLESTIRME-ESC (2026-11-26) — years checked on the ESC listing; the full ESC set lives in the protocol registry
+    // (lib/kaynaklar/protokolKutuphanesi/uluslararasi.ts). Was wrong: "ESC 2021 KY + 2024 Odak Güncelleme" (the focused
+    // update is 2023, and both are replaced by the 2026 HF guideline); "ESC/TKD 2025 Dislipidemi" (2025 is a focused update of
+    // the 2019 ESC/EAS guideline); "ESC/TKD" (no TKD Turkish edition could be confirmed on tkd.org.tr).
+    'ESC 2023 Akut Koroner Sendrom (AKS) Kılavuzu',
+    'ESC 2024 Atriyal Fibrilasyon; ESC 2026 Kalp Yetersizliği (2021 kılavuzu + 2023 odak güncellemesinin yerine)',
+    'ESC 2024 Hipertansiyon; ESC/EAS 2019 Dislipidemi + 2025 Odak Güncellemesi; ESC 2023 Diyabet ve KVH',
     'T.C. SB göğüs ağrısı/AKS acil protokolleri; SGK kardiyak ilaç-stent-rapor',
   ],
   noroloji: [
