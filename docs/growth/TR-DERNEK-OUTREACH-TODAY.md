@@ -1,16 +1,21 @@
 # Send today — Dr. Gökhan dernek webinar booking
 
-**Date:** 24 Kasım 2026 (America/New_York)  
-**Honest constraint:** boards do not confirm a live webinar the same afternoon. Today we **open 20 doors**. First yeses typically 3–10 days. Same-week Zoom is possible with PUADER / TJOD şube / TDD çalışma grubu.
+**Date:** 26 Kasım 2026 (America/New_York)  
+**Honest constraint:** boards do not confirm a live webinar the same afternoon. Today we **open 20 doors**. First yeses typically 3–10 days. Same-week Google Meet is possible with PUADER / TJOD şube / TDD çalışma grubu.
 
-**Gökhan availability to offer (fill before send):**
+**Gökhan availability (live Cal.com `demo-tr`, checked 26 Kas 2026 11:09 America/New_York):**
+
+Event: https://cal.com/han-mamur-sugmbo/demo-tr — 30 dk, **Google Meet**, TZ America/New_York.  
+Weeknights TR **18:00–21:30**; Saturdays **18:00–19:30**; **no Sundays**. 45-dk `canli-grup-demosu` currently has **zero** open slots in this window — offer 45–60 dk Google Meet on a `demo-tr` evening and hold the hour on his calendar.
+
+Do **not** offer 27–28 Kas (Thanksgiving weekend). Prefer 20:00 TR (12:00 noon ET).
 
 ```
-Slot A: … (TR saati, akşam 20:00 tercih)
-Slot B: …
-Slot C: …
-Zoom link: (Notya host; recording only if they ask)
-Registration: Cal.com / Notya form — they can also use their own
+Slot A: Pazartesi 30 Kasım 2026, 20:00 Türkiye saati
+Slot B: Salı 1 Aralık 2026, 20:00 Türkiye saati
+Slot C: Perşembe 3 Aralık 2026, 20:00 Türkiye saati
+Platform: Google Meet (Cal.com onay e-postasında link)
+Takvim: https://cal.com/han-mamur-sugmbo/demo-tr
 ```
 
 CRM: `docs/growth/tr-dernek-targets.csv`  
@@ -65,47 +70,147 @@ If bounce: search `iletisim` on their site and retry once. Log in CSV `status=BO
 
 ## 2. Email templates (Gökhan from personal/professional mailbox; Kaan CC)
 
-### Pediatri (Marmara / TMPD / TPK / PUADER)
+### Pediatri (Marmara / TMPD / TPK / PUADER) — send-from merhaba@notya.io on Gökhan’s behalf
 
 **Subject:** Üyeleriniz için ücretsiz 45 dk online seminer — Pediatride pratik AI
 
 ```
 Sayın Yönetim Kurulu,
 
-Uzm. Dr. Gökhan Mamur (pediatri). ABD’den Zoom ile bağlanarak derneğinizin
-üyelerine ücretsiz, 45–60 dakikalık bilimsel bir seminer önermek isterim:
+Dr. Gökhan Mamur (pediatri) adına yazıyorum — Kaan, Notya ekibinden.
+
+Hocamız ABD’den Google Meet ile bağlanarak derneğinizin üyelerine ücretsiz,
+45–60 dakikalık bilimsel bir seminer önermek istiyor:
 
 “Pediatride muayene notu ve aşı / telafi takibinde pratik yapay zekâ kullanımı”
 
 İçerik klinik ve olgu odaklıdır. Son 5 dakikada, Türk hekimleri için
-geliştirdiğimiz ve kredi kartı istemeyen açık deneme aracı Notya’yı
-kısaca gösterebilirim. Kayıt ve teknik altyapıyı biz üstleniriz;
-Instagram ve üye duyurusu sizin kanallarınızda kalır.
+geliştirilen ve kredi kartı istemeyen açık deneme aracı Notya kısaca
+gösterilir. Kayıt ve teknik altyapıyı biz üstleniriz; Instagram ve üye
+duyurusu sizin kanallarınızda kalır.
 
-Önerdiğim üç akşam (Türkiye saati): {A} / {B} / {C}
+Açık akşam saatlerinden üç öneri (Türkiye saati):
+• Pazartesi 30 Kasım 2026, 20:00
+• Salı 1 Aralık 2026, 20:00
+• Perşembe 3 Aralık 2026, 20:00
 
-20 dakikalık bir ön görüşme uygun mudur?
+Başka bir akşam uygunsa takvimi buradan da seçebilirsiniz:
+https://cal.com/han-mamur-sugmbo/demo-tr
+(Google Meet bağlantısı onay e-postasında gelir.)
+
+Uygun görürseniz 20 dakikalık bir ön görüşme ayarlayabiliriz.
 
 Saygılarımla,
-Dr. Gökhan Mamur
-CC: Kaan — Notya operasyon
+Kaan
+Dr. Gökhan Mamur’un ekibinden — Notya
 www.notya.io
 ```
 
 ### KD / jinekoloji (TJOD + şube)
 
-Same structure; title: **“Gebelik izlem ve tarama takibinde pratik yapay zekâ — muayene notu dahil”**  
-Add one line: *Konuşmacı pediatri kökenlidir; oturuma bir kadın doğum meslektaşınızı eş başkan olarak davet etmek isteriz.*
+**Subject:** Üyeleriniz için ücretsiz 45 dk online seminer — Gebelik izleminde pratik AI
+
+```
+Sayın Yönetim Kurulu,
+
+Dr. Gökhan Mamur (pediatri) adına yazıyorum — Kaan, Notya ekibinden.
+
+Hocamız ABD’den Google Meet ile bağlanarak derneğinizin üyelerine ücretsiz,
+45–60 dakikalık bilimsel bir seminer önermek istiyor:
+
+“Gebelik izlem ve tarama takibinde pratik yapay zekâ — muayene notu dahil”
+
+Konuşmacı pediatri kökenlidir; oturuma bir kadın doğum meslektaşınızı
+eş başkan olarak davet etmek isteriz. İçerik klinik ve olgu odaklıdır.
+Son 5 dakikada, kredi kartı istemeyen açık deneme aracı Notya kısaca
+gösterilir. Kayıt ve teknik altyapıyı biz üstleniriz; duyuru sizin
+kanallarınızda kalır.
+
+Açık akşam saatlerinden üç öneri (Türkiye saati):
+• Pazartesi 30 Kasım 2026, 20:00
+• Salı 1 Aralık 2026, 20:00
+• Perşembe 3 Aralık 2026, 20:00
+
+Başka bir akşam uygunsa: https://cal.com/han-mamur-sugmbo/demo-tr
+(Google Meet bağlantısı onay e-postasında gelir.)
+
+Uygun görürseniz 20 dakikalık bir ön görüşme ayarlayabiliriz.
+
+Saygılarımla,
+Kaan
+Dr. Gökhan Mamur’un ekibinden — Notya
+www.notya.io
+```
 
 ### Dermatoloji (TDD / TURKDERM)
 
-Title: **“Sistemik tedavide (izotretinoin / MTX / biyolojik) tahlil ve kontrol izleminde pratik AI”**  
-TDD extra sentence: *Dermatonline akşam webinar formatınıza uyacak şekilde 45 dk + soru-cevap tasarladık.*
+**Subject:** Üyeleriniz için ücretsiz 45 dk online seminer — Sistemik tedavide pratik AI
+
+```
+Sayın Yönetim Kurulu,
+
+Dr. Gökhan Mamur (pediatri) adına yazıyorum — Kaan, Notya ekibinden.
+
+Hocamız ABD’den Google Meet ile bağlanarak derneğinizin üyelerine ücretsiz,
+45–60 dakikalık bilimsel bir seminer önermek istiyor:
+
+“Sistemik tedavide (izotretinoin / MTX / biyolojik) tahlil ve kontrol
+izleminde pratik yapay zekâ”
+
+Dermatonline akşam webinar formatınıza uyacak şekilde 45 dk + soru-cevap
+tasarladık. Son 5 dakikada Notya (kredi kartı istemez) kısaca gösterilir.
+Kayıt ve teknik altyapıyı biz üstleniriz; duyuru sizin kanallarınızda kalır.
+
+Açık akşam saatlerinden üç öneri (Türkiye saati):
+• Pazartesi 30 Kasım 2026, 20:00
+• Salı 1 Aralık 2026, 20:00
+• Perşembe 3 Aralık 2026, 20:00
+
+Başka bir akşam uygunsa: https://cal.com/han-mamur-sugmbo/demo-tr
+(Google Meet bağlantısı onay e-postasında gelir.)
+
+Uygun görürseniz 20 dakikalık bir ön görüşme ayarlayabiliriz.
+
+Saygılarımla,
+Kaan
+Dr. Gökhan Mamur’un ekibinden — Notya
+www.notya.io
+```
 
 ### KBB
 
-Title: **“KBB muayene notu ve hasta takibinde pratik yapay zekâ”**  
-Extra: *Oturumu bir KBB meslektaşınızla birlikte yürütmek isteriz; ben pediatri ve dijital asistan pratik tarafından katkı sağlarım.*
+**Subject:** Üyeleriniz için ücretsiz 45 dk online seminer — KBB pratiğinde pratik AI
+
+```
+Sayın Yönetim Kurulu,
+
+Dr. Gökhan Mamur (pediatri) adına yazıyorum — Kaan, Notya ekibinden.
+
+Hocamız ABD’den Google Meet ile bağlanarak derneğinizin üyelerine ücretsiz,
+45–60 dakikalık bilimsel bir seminer önermek istiyor:
+
+“KBB muayene notu ve hasta takibinde pratik yapay zekâ”
+
+Oturumu bir KBB meslektaşınızla birlikte yürütmek isteriz; hocamız
+pediatri ve dijital asistan pratik tarafından katkı sağlar. Son 5 dakikada
+Notya (kredi kartı istemez) kısaca gösterilir. Kayıt ve teknik altyapıyı
+biz üstleniriz; duyuru sizin kanallarınızda kalır.
+
+Açık akşam saatlerinden üç öneri (Türkiye saati):
+• Pazartesi 30 Kasım 2026, 20:00
+• Salı 1 Aralık 2026, 20:00
+• Perşembe 3 Aralık 2026, 20:00
+
+Başka bir akşam uygunsa: https://cal.com/han-mamur-sugmbo/demo-tr
+(Google Meet bağlantısı onay e-postasında gelir.)
+
+Uygun görürseniz 20 dakikalık bir ön görüşme ayarlayabiliriz.
+
+Saygılarımla,
+Kaan
+Dr. Gökhan Mamur’un ekibinden — Notya
+www.notya.io
+```
 
 ---
 
@@ -114,8 +219,8 @@ Extra: *Oturumu bir KBB meslektaşınızla birlikte yürütmek isteriz; ben pedi
 ```
 Hocam merhaba, Dr. Gökhan Mamur — pediatri.
 Üyeleriniz için ücretsiz 45 dk online seminer önerisi mail attık
-(muayene notu + takipte pratik AI). Yönetim uygun görürse Zoom’dan
-ABD’den bağlanırım. Mail: {email}
+(muayene notu + takipte pratik AI). Yönetim uygun görürse Google Meet’ten
+ABD’den bağlanır. Mail: {email}
 ```
 
 No product dump. No “follow for follow.” No commenting under old webinar flyers with a sales pitch.
@@ -128,7 +233,7 @@ No product dump. No “follow for follow.” No commenting under old webinar fly
 |-----|---------|------|
 | 0 | Email + optional IG DM | Templates above |
 | 3 | Email | “Mailimizin ulaştığından emin olmak için kısa bir not — üç akşam slottan biri uygun mu?” |
-| 7 | Phone sekreterya | “Üye semineri, ücretsiz, Zoom, kayıt sizin duyurunuz” |
+| 7 | Phone sekreterya | “Üye semineri, ücretsiz, Google Meet, kayıt sizin duyurunuz” |
 | 14 | Email | Offer Collab Reel instead of live if board is slow |
 | 21 | Close or nurture | Status `NURTURE` — quarterly |
 
@@ -138,7 +243,7 @@ Never follow up more than 4 times. Nonprofit boards blacklist pests.
 
 ## 5. If they say yes (same week possible)
 
-1. Deal → Confirmed. Send Zoom + 5-slide outline (education 40 dk / Notya 5 dk / Q&A).
+1. Deal → Confirmed. Send Google Meet + 5-slide outline (education 40 dk / Notya 5 dk / Q&A).
 2. They post IG flyer (we design, **their** logo largest).
 3. Registration on their form **or** Cal.com co-branded.
 4. After live: trial link in chat; we do **not** take their member list unless they volunteer.

@@ -69,7 +69,7 @@ Public facts verified 2026-11-24:
 
 **Recommended ask to Marmara (in this order):**
 
-1. **45–60 dk online seminer** (Zoom) — “Pediatride muayene notu ve aşı/telafi takibinde pratik AI kullanımı” — Gökhan from US, Q&A live.
+1. **45–60 dk online seminer** (Google Meet, Cal.com) — “Pediatride muayene notu ve aşı/telafi takibinde pratik AI kullanımı” — Gökhan from US, Q&A live.
 2. **Collab Reel** announcing that webinar (they post + Collab with Notya).
 3. Optional later: **2027 kongre** panel / workshop / stand — only after webinar trust.
 
@@ -179,22 +179,29 @@ What burns the channel: blasting “Notya satın al” into member WhatsApp grou
 
 Subject: `Üyeleriniz için ücretsiz online seminer önerisi — Pediatride pratik AI`
 
+Canonical send copy (Google Meet + live Cal.com hours): `docs/growth/TR-DERNEK-OUTREACH-TODAY.md` §2.
+
 ```
-Sayın Prof. Dr. …,
+Sayın Yönetim Kurulu,
 
-Uzm. Dr. Gökhan Mamur (pediatri). ABD’den Zoom ile bağlanarak derneğinizin üyelerine
-45–60 dk’lık ücretsiz bir bilimsel seminer önermek isterim:
+Dr. Gökhan Mamur (pediatri) adına yazıyorum — Kaan, Notya ekibinden.
 
-“Muayene sırasında not ve aşı/telafi takibi — pediatride pratik yapay zekâ kullanımı”
+Hocamız ABD’den Google Meet ile bağlanarak derneğinizin üyelerine ücretsiz,
+45–60 dakikalık bilimsel bir seminer önermek istiyor:
 
-İçerik klinik ve olgu odaklıdır; sonunda kullandığımız açık/ücretsiz aracı (Notya —
-kredi kartı istemez) kısaca gösterebilirim. Kayıt ve teknik altyapıyı biz üstleniriz;
-duyuruyu Instagram ve üye listenizden sizin kanallarınız yapar.
+“Pediatride muayene notu ve aşı / telafi takibinde pratik yapay zekâ kullanımı”
 
-Uygun görürseniz 20 dakikalık bir ön görüşme ayarlayabilir miyiz?
+Açık akşam saatlerinden üç öneri (Türkiye saati):
+• Pazartesi 30 Kasım 2026, 20:00
+• Salı 1 Aralık 2026, 20:00
+• Perşembe 3 Aralık 2026, 20:00
+
+Başka bir akşam: https://cal.com/han-mamur-sugmbo/demo-tr
+(Google Meet bağlantısı onay e-postasında gelir.)
 
 Saygılarımla,
-Dr. Gökhan Mamur
+Kaan
+Dr. Gökhan Mamur’un ekibinden — Notya
 ```
 
 ---
