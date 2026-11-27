@@ -141,7 +141,8 @@ export async function gunlukYukle(sb: Sb, k: Kapsam, simdiMs = Date.now()): Prom
     toplamOlcum: toplam.count || 0, fotoOlcum: foto.count || 0,
     planlar: planListesi,
     kayitlar: ((kayitlar.data || []) as Record<string, any>[]).map(kayitSatiri),
-    uyarilar: ((uyarilar.data || []) as Record<string, any>[]).map(uyariSatiri).filter((u) => !u.hastaGorduAt || Date.parse(u.hastaGorduAt) > simdiMs - 2 * GUN_MS),
+    // BRANS-PAKETI: a screening alert (paket-tarama:*) is for the professional only — never on the patient's Bugün.
+    uyarilar: ((uyarilar.data || []) as Record<string, any>[]).map(uyariSatiri).filter((u) => !String(u.kural || '').startsWith('paket-tarama:')).filter((u) => !u.hastaGorduAt || Date.parse(u.hastaGorduAt) > simdiMs - 2 * GUN_MS),
     kazanilanRozetler: ((rozetler.data || []) as Record<string, any>[]).map((r) => ({ rozet: String(r.rozet), kazanildiAt: String(r.kazanildi_at), hastaGorduAt: r.hasta_gordu_at ?? null })),
     tercihler: tercihSatiri(tercih.data),
     ldl: ldl.data?.value_num != null ? { deger: Number(ldl.data.value_num), tarih: String(ldl.data.numune_tarihi || '') } : null,

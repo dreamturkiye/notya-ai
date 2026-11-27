@@ -20,6 +20,9 @@ const ON_DAL: KlinikYeniSlug[] = ['sac-ekimi', 'estetik-cerrahi', 'medikal-estet
 
 export const KLINIK_ARACLARI: readonly KlinikArac[] = [
   { circleColor: '#0F172A', icon: 'HP', title: 'Hasta Portalı', desc: 'Sağlığım linki + PIN — 10 dal, aynı kabuk', route: '/ozel-branslar/hasta-portali', dallar: ON_DAL },
+  // BRANS-PAKETI (Kaan, 2026-11-27) — core for the 10 Özel Branşlar: each professional accepts / edits his own branş's
+  // portal modules and runs them per patient. Content is gated to the doctor's own dal on the server (modulBransaAitMi).
+  { circleColor: '#2F4334', icon: 'PA', title: 'Hasta alanı paketi', desc: 'Hastanızın Sağlığım sayfasında dalınıza özel bölümler — şablonu kabul edin, hastaya açın', route: '/ozel-branslar/hasta-alani-paketi', dallar: ON_DAL },
   { circleColor: '#0F172A', icon: 'KK', title: 'Kayıt · rıza · KVKK', desc: 'SB / Hasta Hakları / KVKK kayıt checklist — 10 dal', route: '/ozel-branslar/kayit-kvkk', dallar: ON_DAL },
   { circleColor: '#0F9B8E', icon: 'EN', title: 'e-Nabız', desc: 'e-Nabız’a siz girersiniz; Notya alanları kopyalamaya hazırlar', route: '/ozel-branslar/enabiz', dallar: ON_DAL },
   // TR-PARITE-01 (2026-11-09) — dalın kendi istem listesi (müttefik meslekte yalnız hekime yönlendirme — md.16) ve
@@ -51,6 +54,7 @@ export const KLINIK_ARACLARI: readonly KlinikArac[] = [
   { circleColor: '#4F46E5', icon: 'PK', title: 'Klinik psikoloji kohort', desc: 'Geciken seans · kriz bayrağı', route: '/ozel-branslar/psikolog-kohort', dallar: ['klinik-psikolog'] },
   { circleColor: '#10B981', icon: 'MK', title: 'Makro bandı', desc: 'kcal / protein karar desteği · hekim tanısı', route: '/ozel-branslar/diyet-makro', dallar: ['diyetisyen'] },
   { circleColor: '#34D399', icon: 'TK', title: 'Kontrol takvimi', desc: '2 / 4 / 8. hafta — öğün kütüphanesi yok', route: '/ozel-branslar/diyet-takvim', dallar: ['diyetisyen'] },
+  { circleColor: '#166534', icon: 'TL', title: 'Tahlil izlemi', desc: 'Glukoz · HbA1c · insülin · TSH · lipid eğrileri — hekim istemi, yorum yok', route: '/ozel-branslar/diyet-lab', dallar: ['diyetisyen'] },
   { circleColor: '#059669', icon: 'DK', title: 'Diyetisyen kohort', desc: 'Geciken kontrol · tanı referansı', route: '/ozel-branslar/diyet-kohort', dallar: ['diyetisyen'] },
   { circleColor: '#8B5CF6', icon: 'GY', title: 'GYA özeti', desc: 'Hekim tanı + GYA odak — Neyzi yok', route: '/ozel-branslar/ergo-gya', dallar: ['ergoterapi'] },
   { circleColor: '#A78BFA', icon: 'ES', title: 'GYA seans vadesi', desc: '3–42 gün — motor skor yok', route: '/ozel-branslar/ergo-seans', dallar: ['ergoterapi'] },

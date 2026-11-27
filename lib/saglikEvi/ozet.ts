@@ -190,7 +190,12 @@ export function gunlukOzeti(h: HamGunluk): GunlukDurum {
     ...hepsi.filter((o) => trGun(o.olcumAt) === bugun).map((o) => ({ dakika: trDakika(o.olcumAt), tur: 'olcum' as const, durum: 'tamam' as const, etiket: OLCUM_TANIMLARI[o.tip].kisaAd })),
   ]
 
-  const aktif = aktifGunler(hepsi, h.kayitlar)
+  // BRANS-PAKETI: kinds the branş keeps outside the game layer (diyetisyen: weight, waist) never make a streak day,
+  // a badge count or a karne grade — they stay recorded, trended and visible.
+  const oyunDisi = new Set(h.ayar.oyunDisi || [])
+  const oyunOlcumleri = oyunDisi.size ? takipOlcumleri.filter((o) => !oyunDisi.has(o.tip)) : takipOlcumleri
+  const oyunTipleri = oyunDisi.size ? tipler.filter((t) => !oyunDisi.has(t)) : tipler
+  const aktif = aktifGunler(oyunDisi.size ? hepsi.filter((o) => !oyunDisi.has(o.tip)) : hepsi, h.kayitlar)
   const seri = seriHesapla(aktif, bugun)
   const kalkanSet = new Set(seri.kalkanGunleri)
   const son14 = Array.from({ length: 14 }, (_, i) => { const g = gunEkle(bugun, -13 + i); return { gun: g, aktif: aktif.has(g), kalkan: kalkanSet.has(g) } })
@@ -210,8 +215,8 @@ export function gunlukOzeti(h: HamGunluk): GunlukDurum {
   }).sort((x, y) => y.hafta.n - x.hafta.n)
 
   const ilkGun = [...aktif].sort()[0] ?? null
-  const karneGirdi = { olcumler: takipOlcumleri, planlar: aktifPlanlar, kayitlar: h.kayitlar, esikler, olcumTipleri: tipler, gunlukHedef, aktifGunler: aktif, ilkGun, simdi }
-  const durumlar = rozetDurumlari({ olcumler: takipOlcumleri, toplamOlcum: h.toplamOlcum, fotoOlcum: h.fotoOlcum, planlar: aktifPlanlar, kayitlar: h.kayitlar, esikler, olcumTipleri: tipler, gunlukHedef, seri, aktifGunSayisi: aktif.size, simdi })
+  const karneGirdi = { olcumler: oyunOlcumleri, planlar: aktifPlanlar, kayitlar: h.kayitlar, esikler, olcumTipleri: oyunTipleri, gunlukHedef, aktifGunler: aktif, ilkGun, simdi }
+  const durumlar = rozetDurumlari({ olcumler: oyunOlcumleri, toplamOlcum: oyunDisi.size ? oyunOlcumleri.length : h.toplamOlcum, fotoOlcum: h.fotoOlcum, planlar: aktifPlanlar, kayitlar: h.kayitlar, esikler, olcumTipleri: oyunTipleri, gunlukHedef, seri, aktifGunSayisi: aktif.size, simdi })
   const kayitli = new Map(h.kazanilanRozetler.map((r) => [r.rozet, r]))
   const rozetler: GunlukRozet[] = durumlar.map((d) => {
     const t = ROZETLER.find((r) => r.id === d.id) as RozetTanimi

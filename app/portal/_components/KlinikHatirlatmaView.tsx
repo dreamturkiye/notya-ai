@@ -4,7 +4,7 @@ import { durumSozcugu } from '@/lib/klinik/telafi'
 import { EmptyState, SectionHeader } from './ui'
 
 export function KlinikHatirlatmaView({
-  title, subtitle, acil, basePath, satirlar, ritim,
+  title, subtitle, acil, basePath, satirlar, ritim, children,
 }: {
   title: string
   subtitle: string
@@ -12,6 +12,8 @@ export function KlinikHatirlatmaView({
   basePath: string
   satirlar?: Array<{ ad: string; durum: string }>
   ritim?: string[]
+  /** BRANS-PAKETI: the branş signature modules, drawn under the base content (Taban önce) and above the footer lines. */
+  children?: React.ReactNode
 }) {
   const dolu = (satirlar || []).filter((s) => s.durum !== 'planli' || !s.ad.includes('kaydedilince'))
   return (
@@ -38,6 +40,7 @@ export function KlinikHatirlatmaView({
           <ul style={{ paddingLeft: 18, margin: 0 }}>{ritim.map((r) => <li key={r}>{r}</li>)}</ul>
         </div>
       )}
+      {children}
       <p style={{ margin: '0 20px 16px', fontSize: 13, color: '#b45309' }}>{acil}</p>
       <p style={{ margin: '0 20px 16px', fontSize: 12, color: '#64748b' }}>Bu sayfa tanı veya doz yazmaz. Acilde portal mesajı beklenmez — 112.</p>
       <Link href={basePath} className="sg-back-link" style={{ margin: '0 20px' }}>← Bugün</Link>

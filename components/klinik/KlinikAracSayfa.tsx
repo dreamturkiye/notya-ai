@@ -10,6 +10,8 @@ import { klinikMevzuat, klinikMevzuatOzet, KLINIK_ORTAK_KANUNLAR, KLINIK_ORTAK_K
 import { KLINIK_ETIKET } from '@/lib/specialties/klinikDikey'
 import { ozelAracBul } from '@/lib/klinik/ozelAracCalistir'
 import OzelStudyo from './OzelStudyo'
+import BransPaketiYonetimi from './BransPaketiYonetimi'
+import DiyetLabPaneli from './DiyetLabPaneli'
 import { KohortBaglantisiGorunumu } from '@/components/doktor/geriCagirma/KohortBaglantisi'
 import { doktorFetch } from '@/lib/doktor/oturumFetch'
 import { getDoctorAccessToken } from '@/lib/doktor/clientAuth'
@@ -29,6 +31,9 @@ const V: Record<string, AracVurgu> = {
 
 const META: Record<string, { slug: string; etiket: string; baslik: string; aciklama: string; vurgu: AracVurgu }> = {
   '/ozel-branslar/hasta-portali': { slug: 'sac-ekimi', etiket: 'Özel Branşlar', baslik: 'Hasta Portalı', aciklama: 'Aynı Sağlığım kabuğu — PIN + link. TUS bölümü yok.', vurgu: V.sac },
+  // BRANS-PAKETI (Kaan, 2026-11-27) — the patient-portal package control (all 10 dallar; each sees its own modules).
+  '/ozel-branslar/hasta-alani-paketi': { slug: 'sac-ekimi', etiket: 'Özel Branşlar', baslik: 'Hasta alanı paketi', aciklama: 'Hastanızın Sağlığım sayfasındaki dalınıza özel bölümler — şablonu siz kabul edersiniz.', vurgu: V.sac },
+  '/ozel-branslar/diyet-lab': { slug: 'diyetisyen', etiket: 'Diyetisyen', baslik: 'Tahlil izlemi', aciklama: 'Hekimin istediği sonuçlar, vizitler boyunca. HOMA-IR hesaplanmaz.', vurgu: V.diy },
   '/ozel-branslar/kayit-kvkk': { slug: 'sac-ekimi', etiket: 'Özel Branşlar', baslik: 'Kayıt · rıza · KVKK', aciklama: 'SB / Hasta Hakları / KVKK — dalınıza göre zorunlu evrak.', vurgu: V.sac },
   '/ozel-branslar/enabiz': { slug: 'sac-ekimi', etiket: 'Özel Branşlar', baslik: 'e-Nabız', aciklama: 'e-Nabız’a siz girersiniz; Notya alanları kopyalamaya hazırlar.', vurgu: V.sac },
   '/ozel-branslar/sac-greft': { slug: 'sac-ekimi', etiket: 'Saç Ekimi', baslik: 'Donör greft bandı', aciklama: 'Karar desteği. Nihai greft hekimindir.', vurgu: V.sac },
@@ -151,6 +156,10 @@ export default function KlinikAracSayfa({ route }: { route: string }) {
   if (!m) return null
   const govde = route === '/ozel-branslar/hasta-portali'
     ? <KlinikHastaPortaliPaneli />
+    : route === '/ozel-branslar/hasta-alani-paketi'
+      ? <BransPaketiYonetimi />
+      : route === '/ozel-branslar/diyet-lab'
+        ? <DiyetLabPaneli />
     : route === '/ozel-branslar/enabiz'
       ? <Suspense fallback={null}><EnabizMasa gizliBaslik /></Suspense>
       : route === '/ozel-branslar/kayit-kvkk'

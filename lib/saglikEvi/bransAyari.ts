@@ -30,6 +30,11 @@ export interface BransGunlukAyari {
   kartlar: GunlukKarti[]
   /** Weight gain (+2 kg / 3 days) notifies the doctor (heart / kidney follow-up). */
   kiloHekimeBildir: boolean
+  /**
+   * BRANS-PAKETI (Kaan, 2026-11-27) — deliberate brake: readings of these kinds are still recorded, trended and shown,
+   * but never feed the habit / game layer (streak days, badges, karne). Diyetisyen: weight loss is never gamified.
+   */
+  oyunDisi?: OlcumTipi[]
 }
 
 const KARDIYOMETABOLIK: BransGunlukAyari = { olcumler: ['kb', 'glukoz', 'kilo', 'nabiz'], gunlukHedef: { kb: 2, glukoz: 2, kilo: 0, nabiz: 0 }, vurgu: 'olcum', kartlar: ['ldl', 'kilo_egilim'], kiloHekimeBildir: false }
@@ -72,7 +77,7 @@ export const TIBBI_BRANS_AYARLARI: Record<string, BransGunlukAyari> = {
 
 /** The 10 Özel Branşlar (KLINIK_YENI_SLUGS). */
 export const OZEL_BRANS_AYARLARI: Record<string, BransGunlukAyari> = {
-  diyetisyen: { olcumler: ['kilo', 'bel', 'su'], gunlukHedef: { kilo: 0, bel: 0, su: 8 }, vurgu: 'olcum', kartlar: ['su_sayaci', 'kilo_egilim'], kiloHekimeBildir: false },
+  diyetisyen: { olcumler: ['kilo', 'bel', 'su'], gunlukHedef: { kilo: 0, bel: 0, su: 8 }, vurgu: 'olcum', kartlar: ['su_sayaci', 'kilo_egilim'], kiloHekimeBildir: false, oyunDisi: ['kilo', 'bel'] },
   longevity: { olcumler: ['kb', 'glukoz', 'kilo', 'nabiz', 'spo2'], gunlukHedef: { kb: 1, glukoz: 0, kilo: 0, nabiz: 0, spo2: 0 }, vurgu: 'olcum', kartlar: ['ldl', 'kilo_egilim'], kiloHekimeBildir: false },
   fizyoterapi: UYUM,
   ergoterapi: UYUM,
