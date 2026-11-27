@@ -31,6 +31,9 @@ import { sonrakiInfuzon, ivGuvenlik, reaksiyonBand, sinifUygun, GUVENLIK_MADDELE
 import { icfOzet, seansVadesi as fizyoVade, evProgrami, kirmiziBayrak, ACIL_METIN as FIZ_A } from '@/specialties/fizyoterapi/engines/fizyo'
 import { seansCercevesi, seansVadesi as psikVade, krizBand, siklikKaydi, ACIL_METIN as PSI_A } from '@/specialties/klinik-psikolog/engines/psikolog'
 import { planKapisi, kontrolTakvimi, ogunIskeleti, ACIL_METIN as DIY_A } from '@/specialties/diyetisyen/engines/diyet'
+import { TANI_SABLONLARI, taniSablonuCikti } from '@/specialties/diyetisyen/engines/sablonlar'
+import { olcumPaneli, AKTIVITE_KATSAYILARI, type AktiviteDuzeyi } from '@/specialties/diyetisyen/engines/olcum'
+import { ILAC_BESIN_NOTLARI, ilacBesinNotlari } from '@/specialties/diyetisyen/engines/ilacBesin'
 import { gyaOzet, seansVadesi as ergoVade, gunlukBlok, dusmeBayrak, GYA, ACIL_METIN as ERG_A } from '@/specialties/ergoterapi/engines/ergo'
 import { ptaKayit, sessizOdaKayit, aniIsitmeBand, cihazIzlem, ACIL_METIN as ODY_A } from '@/specialties/odyoloji/engines/odyo'
 
@@ -424,6 +427,38 @@ export const OZEL_ARACLAR: readonly AracTanim[] = [
   ], (g) => {
     const acil = onay(g, 'kusma') || onay(g, 'alerji')
     return cikti(acil ? DIY_A : 'Beslenme acil bandı boş.', [], acil ? DIY_A : null)
+  }),
+
+  // BRANS-PAKETI (Kaan, 2026-11-27) — diyetisyen professional package: diagnosis-bound templates, measurement panel,
+  // drug–food timing notes. Diyetisyen only (dallar: ['diyetisyen'] via OZEL_ARACLAR). Hekim tanısı lock kept; no dose.
+  T('/ozel-branslar/diyet-sablon', 'diyetisyen', 'Tanıya bağlı beslenme şablonu', 'PKOS · insülin direnci · hipotiroidi · tip 2 DM · gebelik diyabeti · MASLD · dislipidemi — hekim tanısı şart.', '#15803D', [
+    { id: 'tani', etiket: 'Hekim tanısı (referans — diyetisyen tanı koymaz)', tur: 'metin' },
+    { id: 'sablon', etiket: 'Şablon', tur: 'secim', secenekler: TANI_SABLONLARI.map((x) => x.ad) },
+  ], (g) => {
+    const s = TANI_SABLONLARI.find((x) => x.ad === g.sablon)
+    const r = taniSablonuCikti(s?.kod || '', g.tani || '')
+    return 'hata' in r ? r : cikti([r.ozet, ...r.satirlar].join('\n'), [], null)
+  }),
+  T('/ozel-branslar/diyet-olcum', 'diyetisyen', 'Ölçüm paneli', 'BKİ · bel/boy · bel riski (TEMD) · enerji (Mifflin–St Jeor) · güvenli kayıp hızı.', '#166534', [
+    { id: 'kilo', etiket: 'Kilo (kg)', tur: 'sayi' },
+    { id: 'boy', etiket: 'Boy (cm)', tur: 'sayi' },
+    { id: 'bel', etiket: 'Bel çevresi (cm, isteğe bağlı)', tur: 'sayi' },
+    { id: 'yas', etiket: 'Yaş', tur: 'sayi' },
+    { id: 'cinsiyet', etiket: 'Cinsiyet', tur: 'secim', secenekler: ['kadın', 'erkek'] },
+    { id: 'aktivite', etiket: 'Aktivite', tur: 'secim', secenekler: Object.keys(AKTIVITE_KATSAYILARI) },
+  ], (g) => {
+    const aktivite = (g.aktivite in AKTIVITE_KATSAYILARI ? g.aktivite : 'hafif') as AktiviteDuzeyi
+    const r = olcumPaneli({ kiloKg: sayi(g, 'kilo'), boyCm: sayi(g, 'boy'), belCm: g.bel ? sayi(g, 'bel') : null, yas: sayi(g, 'yas'), cinsiyet: g.cinsiyet === 'erkek' ? 'erkek' : 'kadin', aktivite })
+    return 'hata' in r ? r : cikti(r.satirlar.join('\n'), [], null)
+  }),
+  T('/ozel-branslar/diyet-ilac-besin', 'diyetisyen', 'İlaç–besin zamanlaması', 'Levotiroksin · metformin–B12 · GLP-1: kaynaklı notlar, doz yok.', '#14532D', [
+    { id: 'ilaclar', etiket: 'Hastanın kullandığı ilaçlar (virgülle; dosyadaki listeden)', tur: 'metin' },
+  ], (g) => {
+    const adlar = String(g.ilaclar || '').split(',').map((x) => x.trim()).filter(Boolean)
+    if (!adlar.length) return hata(`İlaç adlarını yazın. Notu olanlar: ${Object.values(ILAC_BESIN_NOTLARI).map((n) => n.baslik).join(' · ')}.`)
+    const n = ilacBesinNotlari(adlar)
+    if (!n.length) return hata('Bu ilaçlar için kayıtlı bir besin zamanlama notu yok.')
+    return cikti(n.flatMap((x) => [`${x.baslik}:`, ...x.maddeler.map((m) => `• ${m}`), `Kaynak: ${x.kaynak}`]).join('\n'), [], null)
   }),
 
   T('/ozel-branslar/ergo-gya', 'ergoterapi', 'GYA özeti', 'Hekim tanısı + GYA. Neyzi yok.', '#8B5CF6', [

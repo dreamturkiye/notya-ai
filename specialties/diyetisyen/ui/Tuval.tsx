@@ -26,6 +26,17 @@ export function DiyetTuval({ tanim, sonuc, bugun, girdi = {}, yaz }: { tanim: Ar
       </section>
     )
   }
+  // BRANS-PAKETI — diagnosis templates, measurement panel and drug–food notes: one line per card (ozet is "\n"-joined).
+  if (r.endsWith('diyet-sablon') || r.endsWith('diyet-olcum') || r.endsWith('diyet-ilac-besin')) {
+    const baslik = r.endsWith('diyet-sablon') ? 'TANIYA BAĞLI ŞABLON · HEKİM TANISI ŞART' : r.endsWith('diyet-olcum') ? 'ÖLÇÜM PANELİ · KARAR DESTEĞİ' : 'İLAÇ–BESİN ZAMANLAMASI · DOZ YOK'
+    return (
+      <section data-tuval="diyetisyen" style={{ display: 'grid', gap: 6 }}>
+        {alan}
+        <div style={{ fontSize: 11, fontWeight: 700, color: '#166534' }}>{baslik}</div>
+        {sonuc.ozet.split('\n').filter(Boolean).map((satir, i) => <div key={i} style={{ background: '#f0fdf4', borderRadius: 8, padding: '8px 10px', fontSize: 13, lineHeight: 1.45 }}>{satir}</div>)}
+      </section>
+    )
+  }
   if (r.endsWith('diyet-ogun')) {
     return (
       <section data-tuval="diyetisyen" style={{ display: 'grid', gap: 6 }}>
