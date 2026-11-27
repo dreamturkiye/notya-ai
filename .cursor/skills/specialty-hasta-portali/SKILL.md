@@ -118,6 +118,27 @@ dose words); HI / LO are flags (`ev_olcumleri.isaret`, deger null), never averag
 the doctor's phone (lib/saglikEvi/hekimBildirim*.ts — no PHI on the lock screen). Pinned by lib/saglikEvi/evAcil.test.ts,
 hekimPush.test.ts, uyariRenkleri.test.ts.
 
+## Branş signature modules — BRANS-PAKETI (Kaan, 2026-11-27, standing)
+
+Kaan: "Diyetisyen için yapacağın hasta portalını bütün branşlar için gerektiği şekilde yap. Özel branşlar için de bunu
+yapman şart." A branş page must be something the patient opens daily or at each step of care — not a list of dates.
+
+- **One registry** `lib/portal/bransPaketi.ts` (+ data `lib/portal/paket/*.ts`), shared module KINDS (zaman, liste,
+  gunluk, foto, program, hatirlatma, biyobelirtec, tabak, plan, tarama, ilac-saati), ONE view
+  `components/doktor/portal/bransPaketi/BransPaketiView.tsx` (words in `PAKET_SOZLER`) rendered UNDER the existing branş
+  page (Taban önce). Phase 1 = the 10 Özel Branşlar; the 30 medical branşlar are Phase 2 (`docs/portal/BRANS-PAKETI-FAZ2.md`).
+- **Nothing reaches a patient before the treating professional accepts the template** (Özel Branşlar › Hasta alanı
+  paketi; `brans_paket_sablon.kabul_at` + history). Edits: timeline / list / photo angles / note only — never a dose;
+  diary fields and red flags stay the registry's.
+- Per patient: professional switch (on / off / default) > condition rule (diagnosis / ICD-10 / medicine on file) >
+  default; age gate (child modules only under 18, veli wording). Leak gate `modulBransaAitMi` on every route.
+- Red flags → `ev_uyarilar` (+ doctor push); every acil line says 112. Screening (SCOFF) score never to the patient
+  (`paket-tarama:*` alerts are hidden from Bugün). Photos: private bucket `brans-paket-foto`, metadata stripped,
+  per-module consent text, deletable by the patient.
+- Data layer `lib/portal/bransPaketiSunucu.ts` (both scopes on every query), pure payload `lib/portal/bransPaketiYuk.ts`,
+  demos `/portal/demo-diyetisyen`, `/portal/demo-sac-ekimi`, `/portal/demo-estetik-cerrahi` (`lib/portal/bransPaketiDemo.ts`).
+- Pinned by `lib/portal/bransPaketi.test.ts`, `lib/portal/bransPaketiIzolasyon.test.ts`, `specialties/diyetisyen/tests/paket.test.ts`.
+
 ## Specialty module (required for every chapter build)
 
 Each specialty that is more than `baseline` **must** declare a portal module. Prefer extending `SpecialtyProfile` (see `lib/specialties/profile.ts`) rather than hardcoding `if (brans === …)` in `PortalShell` / `TrackingView` / the portal API.

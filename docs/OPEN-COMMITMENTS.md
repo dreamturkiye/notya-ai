@@ -1,5 +1,19 @@
 # OPEN COMMITMENTS — Notya AI
 
+## BRANS-PAKETI-FAZ2 — branş signature portal modules for the 30 medical branşlar (Claude, 2026-11-27). Owner: Claude. Waits on: Phase 1 live on main.
+
+Kaan 2026-11-27: "Diyetisyen için yapacağın hasta portalını bütün branşlar için gerektiği şekilde yap." Phase 1 (10 Özel
+Branşlar, diyetisyen full package) shipped 2026-11-27 (git log --grep BRANS-PAKETI; migration 216). Phase 2 = the 30
+medical branşlar on the same registry and views — per-branş proposal in docs/portal/BRANS-PAKETI-FAZ2.md. Starts after
+Phase 1 is live. Also open from Phase 1 (owner Claude unless noted):
+- SCOFF Turkish item wording: align the five items to the published Aydemir et al. form when the full text is available
+  (dietitians can already align it when accepting the template). Owner: Claude.
+- TÜRKİYE sources not confirmed in the session (docs/kaynak/DIYETISYEN-PAKETI-ARASTIRMA.md): Türkiye Diyetisyenler Derneği
+  practice guidance, TEMD diabetes / lipid guide editions, the current SB gestational-diabetes text, TİTCK isotretinoin
+  programme, Turkish practice notes for GLP-1 users. Owner: Claude (monthly regulatory check covers it).
+- Doctor-side Ev verisi card: show package red flags in the card's alert list already works via ev_uyarilar; a dedicated
+  package tile on the patient file (instead of the Özel Branşlar tool page) is not built. Owner: Claude.
+
 ## TELESAGLIK-BEKLEMEDE — telehealth ON HOLD (Kaan, 2026-11-25: "Put the telehealth on hold for now"). Owner: Kaan. Waits on: Kaan.
 
 Nothing is being built. Where the research stopped: the choice is in-app video vs a link-to-Zoom/Meet bridge. Türkiye: remote care needs a facility permit under the Uzaktan Sağlık Hizmetlerinin Sunumu Hakkında Yönetmelik plus USBS registration via SBSGM KTS — likely requires a Turkish legal entity (Notya is a US LLC). Market: DoktorTakvimi VIP bundles AI notes + video + Sağlık.net; Doktorsitesi.com completed USBS + MBYS certification in 2023. Next step if Kaan resumes it: check the SBSGM registered-systems list through Kaan's Chrome, then decide in-app vs bridge.
