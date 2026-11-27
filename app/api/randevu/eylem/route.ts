@@ -12,6 +12,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { servisSupabase } from '@/lib/doktor/serverAuth'
 import { doktorIletisimAyari } from '@/lib/iletisim/sunucu'
+import { hekimMarkasi } from '@/lib/portal/markaSunucu'
 import { randevuJetonuCoz, type JetonEylemi } from '@/lib/randevu/v2/jeton'
 import { gunlereAyir } from '@/lib/randevu/v2/slot'
 import { hastaIzinleri, oneriBekliyorMu, v2Durum, V2_ETIKET } from '@/lib/randevu/v2/durum'
@@ -53,6 +54,8 @@ export async function GET(req: NextRequest) {
     const yapilabilir = tk.t.durum === 'acik' && Date.parse(String(tk.t.son_gecerlilik)) > Date.now()
     return NextResponse.json({
       eylem: 'teklif', gun: gunEtiketi(String(tk.t.baslangic)), saat: saatEtiketi(String(tk.t.baslangic)), doktorAdi: doktor.doktorAdi,
+      // RANDEVU-MARKA (Kaan 2026-11-27): the booking link opens as the doctor's own service (logo → monogram), Notya only in the footer.
+      marka: await hekimMarkasi(tk.sb, String(tk.t.doktor_id)),
       durum: 'teklif', etiket: 'Daha erken saat', yapilabilir, neden: yapilabilir ? null : 'Bu teklifin süresi doldu ya da saat başka bir hastaya verildi.', gunler: null,
     })
   }
@@ -83,6 +86,7 @@ export async function GET(req: NextRequest) {
     gun: gunEtiketi(r.baslangic),
     saat: saatEtiketi(r.baslangic),
     doktorAdi: doktor.doktorAdi,
+    marka: await hekimMarkasi(sb, doktorId),
     durum: d,
     etiket: oneriBekliyorMu(r) ? 'Yeni saat önerildi' : V2_ETIKET[d],
     yapilabilir,

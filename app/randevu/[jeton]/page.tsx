@@ -7,6 +7,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import { SoftPanel } from '../../portal/_components/ui'
+import { MarkaBasligi, NotyaAltyapi } from '@/components/doktor/portal/HekimMarkasi'
+import type { PortalMarka } from '@/lib/portal/marka'
 
 type Slot = { bas: string; saat: string }
 type Gun = { gun: string; slotlar: Slot[] }
@@ -19,6 +21,7 @@ type Bilgi = {
   yapilabilir: boolean
   neden: string | null
   gunler: Gun[] | null
+  marka?: PortalMarka | null
 }
 
 const DUGME: Record<Bilgi['eylem'], string> = {
@@ -73,6 +76,7 @@ export default function RandevuEylemSayfasi() {
   const secili = bilgi.gunler?.find((g) => g.gun === gun)
   return (
     <div className="sg-fade" style={{ maxWidth: 560, margin: '0 auto' }}>
+      {bilgi.marka && <header className="sg-header" style={{ margin: '0 -8px 16px' }}><div className="sg-header-inner"><MarkaBasligi marka={bilgi.marka} /></div></header>}
       <h1 className="sg-display" style={{ fontSize: 26, margin: '8px 0 4px' }}>{bilgi.gun} · {bilgi.saat}</h1>
       <p style={{ color: 'var(--sg-muted)', margin: '0 0 16px' }}>{[bilgi.doktorAdi, bilgi.etiket].filter(Boolean).join(' · ')}</p>
       {sonuc ? (
@@ -100,6 +104,7 @@ export default function RandevuEylemSayfasi() {
         <button type="button" className="sg-pin-btn" disabled={mesgul} onClick={() => void yap()}>{DUGME[bilgi.eylem]}</button>
       )}
       {hata && <p style={{ color: 'var(--sg-danger)', marginTop: 12 }}>{hata}</p>}
+      <NotyaAltyapi className="sg-randevu-altyapi" />
     </div>
   )
 }

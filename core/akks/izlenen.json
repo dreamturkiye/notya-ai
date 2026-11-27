@@ -6,7 +6,7 @@
     "lib/asistan/ayseCevapla.ts": "8a859b034e8493f7",
     "lib/asistan/okumaAraclari.ts": "4f0940f7015c602b",
     "lib/asistan/onbellekBloklari.ts": "db089f7913a15672",
-    "lib/asistan/personaEngine.ts": "6a838db48b204d38",
+    "lib/asistan/personaEngine.ts": "3e23d702008b935a",
     "lib/asistan/soruNiyeti.ts": "1b67d41cc247a701",
     "lib/asistan/turkishSpecialtyRefs.ts": "a0dd57ecc5486a37",
     "lib/asistan/yanitCoz.ts": "d1750f504b6d45b7",
@@ -68,7 +68,7 @@
     "specialties/sac-ekimi/prompts/system.md": "5a8d5dd8e8038dfc",
     "specialties/sac-ekimi/prompts/voice.md": "17964b4a42036252"
   },
-  "ozet": "22eb3ef59e3ba058",
-  "guncelleme": "2026-11-26",
-  "not": "ADA SOC 2026 added to registry (Kaan 2026-11-26: use what Turkish doctors use)"
+  "ozet": "5288c9a230a79c23",
+  "guncelleme": "2026-11-27",
+  "not": "AKKS-HEDEF-12: source-list wording no longer suppresses clinical numbers; SGK/SUT/mevzuat/ücret explicitly in Ayşe scope"
 }

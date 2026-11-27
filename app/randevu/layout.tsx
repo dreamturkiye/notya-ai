@@ -2,13 +2,15 @@ import type { CSSProperties, ReactNode } from 'react'
 import { Newsreader, Outfit } from 'next/font/google'
 import type { Metadata, Viewport } from 'next'
 import '../portal/sagligim.css'
+import '@/components/doktor/portal/hekimMarkasi.css'
 
-/** NOTYA-RANDEVU-V2 — e-mail action links (/randevu/<signed token>) use the Sağlığım look, no login. */
+/** NOTYA-RANDEVU-V2 — e-mail action links (/randevu/<signed token>) use the Sağlığım look, no login.
+ *  RANDEVU-MARKA (2026-11-27): no Notya lockup here — the page renders the doctor's brand header and the small Notya footer. */
 const newsreader = Newsreader({ subsets: ['latin', 'latin-ext'], variable: '--font-newsreader', display: 'swap' })
 const outfit = Outfit({ subsets: ['latin', 'latin-ext'], variable: '--font-outfit', display: 'swap' })
 
 export const metadata: Metadata = {
-  title: 'Notya · Randevu',
+  title: 'Randevu',
   description: 'Randevunuzu onaylayın, erteleyin ya da iptal edin.',
   robots: { index: false, follow: false },
 }
@@ -23,14 +25,6 @@ export default function RandevuLayout({ children }: { children: ReactNode }) {
   return (
     <div className={`sagligim-root ${newsreader.variable} ${outfit.variable}`} style={fontVars}>
       <div className="sg-shell">
-        <header className="sg-header">
-          <div className="sg-header-inner">
-            <span className="sg-brand-lockup">
-              <span className="sg-brand-mark">Notya</span>
-              <span className="sg-brand-product">Randevu</span>
-            </span>
-          </div>
-        </header>
         <main className="sg-main">{children}</main>
       </div>
     </div>

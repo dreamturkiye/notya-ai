@@ -4,6 +4,7 @@
  *
  *   AKKS_ANAHTAR=<pass> npx tsx scripts/akks/kos.mts --url https://<host> --tur taban
  *        --branslar pediatri,kulak-burun-bogaz [--bransBasina 40] [--izleme] [--paralel 5] [--etiket taban-2026-11-24]
+ *   AKKS_ANAHTAR=<pass> npx tsx scripts/akks/kos.mts --url https://<host> --tur elle --sorular PED-012,DYT-033 --etiket hedef-…   only these items
  *   AKKS_ANAHTAR=<pass> npx tsx scripts/akks/kos.mts --url https://<host> --kosu <runId>      resume + close a run
  *
  * AKKS_ANAHTAR: a short-lived evaluation pass (purpose 'ayse-kalite-degerlendir', ≤ 2 h, only its SHA-256 in the database).
@@ -43,7 +44,7 @@ if (!kosuId) {
   const tur = arg('tur') || 'elle'
   etiket ||= `${tur}-${new Date().toISOString().slice(0, 10)}`
   const r = await cagir({
-    islem: 'kosu-ac', etiket, tur, branslar: arg('branslar')?.split(',').filter(Boolean),
+    islem: 'kosu-ac', etiket, tur, branslar: arg('branslar')?.split(',').filter(Boolean), soruIdleri: arg('sorular')?.split(',').filter(Boolean),
     sadeceIzleme: process.argv.includes('--izleme'), bransBasina: arg('bransBasina') ? Number(arg('bransBasina')) : undefined,
   })
   kosuId = String(r.kosuId); soruIdleri = r.soruIdleri as string[]
