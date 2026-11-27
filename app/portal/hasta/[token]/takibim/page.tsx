@@ -5,9 +5,10 @@ import { TakibimView } from '../../../_components/TakibimView'
 import { usePortalLive } from '../../../_components/PortalLiveProvider'
 import { SectionHeader } from '../../../_components/ui'
 import { portalModulAktif } from '@/lib/portal/moduller'
+import { BransPaketiView } from '@/components/doktor/portal/bransPaketi/BransPaketiView'
 
 export default function HastaTakibimPage() {
-  const { data, basePath } = usePortalLive()
+  const { data, basePath, token } = usePortalLive()
   if (!portalModulAktif(data, 'dahiliye')) {
     return (
       <div className="sg-fade">
@@ -16,5 +17,11 @@ export default function HastaTakibimPage() {
       </div>
     )
   }
-  return <TakibimView kronik={data.kronik} basePath={basePath} />
+  return (
+    <>
+      <TakibimView kronik={data.kronik} basePath={basePath} />
+      {/* BRANS-PAKETI Phase 2 — the branş signature modules under the base page (Taban önce). */}
+      <BransPaketiView token={token && token !== 'onizleme' ? token : undefined} basePath={basePath} yol="/takibim" />
+    </>
+  )
 }

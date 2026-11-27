@@ -29,8 +29,11 @@ const TIBBI = SPECIALTIES.map((s) => s.key as PaketBransi)
 const PAKETLI = [...KLINIK_YENI_SLUGS, ...TIBBI].filter((b) => BRANS_PAKETLERI[b]?.length)
 
 describe('BRANS-PAKETI Phase 2 — registry and leak gate (all 40)', () => {
-  it('the batch-(a) branşlar have real packages; codes unique; each module filed under its own branş', () => {
+  it('all 30 medical branşlar have a real package (first market ≥ 4 modules); codes unique; each module filed under its own branş', () => {
+    assert.equal(TIBBI.length, 30)
+    for (const b of TIBBI) assert.ok((BRANS_PAKETLERI[b] || []).length >= 2, `${b} has no real package`)
     for (const b of ['pediatri', 'kadin-hastaliklari-dogum', 'dermatoloji'] as PaketBransi[]) assert.ok((BRANS_PAKETLERI[b] || []).length >= 4, `${b}`)
+    assert.equal(PAKETLI.length, 40)
     const k = tum.map((m) => m.kod)
     assert.equal(new Set(k).size, k.length)
     for (const b of PAKETLI) for (const m of BRANS_PAKETLERI[b]!) assert.equal(m.brans, b, m.kod)
@@ -170,5 +173,65 @@ describe('BRANS-PAKETI Phase 2 — patient payload and demos', () => {
       assert.equal(tibbiDemoBundle(b).hasta.onSekizAlti, b === 'pediatri' || b === 'cocuk-cerrahisi')
     }
     assert.ok(tibbiPaketDemosu('pediatri')!.moduller.some((m) => m.kod === 'ped-gelisim-1-3'))
+  })
+})
+
+describe('BRANS-PAKETI Phase 2 batch (b) — procedure-bound journeys and condition modules', () => {
+  const ayar = (baslangic: string | null, acik: boolean | null = null) => ({ acik, baslangic, ayar: {} })
+  it('surgical: nothing until the doctor enters the operation day; then timeline + recovery diary; the diary closes after recovery; an explicit on shows the timeline without a date', () => {
+    assert.deepEqual(kodlar({ doktorBransi: 'genel-cerrahi' }), [])
+    assert.deepEqual(kodlar({ doktorBransi: 'genel-cerrahi', hastaAyar: { 'gc-zaman': ayar(gunOnce(5)) } }), ['gc-iyilesme', 'gc-zaman'])
+    assert.deepEqual(kodlar({ doktorBransi: 'genel-cerrahi', hastaAyar: { 'gc-zaman': ayar(gunOnce(60)) } }), ['gc-zaman'])
+    assert.deepEqual(kodlar({ doktorBransi: 'genel-cerrahi', hastaAyar: { 'gc-zaman': ayar(null, true) } }), ['gc-zaman'])
+    // nothing procedure-bound is counted as "being prepared" while there is no date
+    assert.equal(hastaPaketiCoz(g({ doktorBransi: 'genel-cerrahi', sablonlar: {} })).hazirlaniyor.length, 0)
+  })
+  it('anestezi: pre-operative days count down (negative steps); fasting hours come from the doctor; the after-care diary waits for the day', () => {
+    const k = kodlar({ doktorBransi: 'anestezi', hastaAyar: { 'ane-hazirlik': ayar(gunOnce(-5)) } })
+    assert.deepEqual(k, ['ane-aclik', 'ane-hazirlik'])
+    const p = hastaYukuKur({ brans: 'anestezi', cozum: hastaPaketiCoz(g({ doktorBransi: 'anestezi', hastaAyar: { 'ane-hazirlik': ayar(gunOnce(-5)), 'ane-aclik': { acik: null, baslangic: null, ayar: { katiSaat: '00:00', berrakSaat: '06:00' } } } })), sablonlar: {}, hastaAyar: {}, kayitlar: [], fotolar: [], paylasimOnayi: true, lab: [], ilaclar: [] }, BUGUN)
+    const o = bugunOzeti(p)
+    assert.equal(o.ogeler[0].ilerleme?.etiket, '5 gün kaldı')
+    assert.match(o.ogeler[0].metin, /Sırada: Hazırlık \(2 gün sonra\)/)
+    assert.equal(p.moduller.find((m) => m.kod === 'ane-aclik')?.ayar.berrakSaat, '06:00')
+    assert.ok(kodlar({ doktorBransi: 'anestezi', hastaAyar: { 'ane-hazirlik': ayar(gunOnce(1)) } }).includes('ane-sonrasi'))
+    for (const t of paketModulu('ane-aclik')!.varsayilan.maddeler || []) assert.doesNotMatch(t, /\d+\s*saat/, 'no fasting hour in the template')
+  })
+  it('only a pre-procedure template may take negative days in an edit', async () => {
+    const { sablonDuzenlemesiTemizle } = await import('./bransPaketi')
+    assert.ok(sablonDuzenlemesiTemizle(paketModulu('ane-hazirlik')!, { adimlar: [{ gun: -2, baslik: 'Hazırlık', ayrinti: '' }] }).ok)
+    assert.equal(sablonDuzenlemesiTemizle(paketModulu('gc-zaman')!, { adimlar: [{ gun: -2, baslik: 'x', ayrinti: '' }] }).ok, false)
+  })
+  it('kardiyoloji: heart-failure diary from I50, bleeding diary from an anticoagulant, chest-pain plan from coronary disease; rehab only when switched on', () => {
+    const k = (o: Partial<PaketGirdisi>) => kodlar({ doktorBransi: 'kardiyoloji', ...o })
+    assert.deepEqual(k({}), [])
+    assert.ok(k({ icdKodlari: ['I50.0'] }).includes('kar-ky'))
+    assert.ok(k({ ilaclar: ['Eliquis 5 mg'] }).includes('kar-antikoag'))
+    assert.ok(k({ tanilar: ['Koroner arter hastalığı'] }).includes('kar-gogus-plani'))
+    assert.ok(!k({ ilaclar: ['Coraspin 100 mg'] }).includes('kar-antikoag'), 'aspirin is not an anticoagulant')
+    assert.equal(kayitDegerlendir(paketModulu('kar-antikoag')!.varsayilan, { diski: true })[0].duzey, 'acil')
+  })
+  it('red flags across batch (b) branşlar: tonsillectomy bleeding, flap colour, sudden vision loss, febrile neutropenia, status epilepticus, crisis → acil (112)', () => {
+    const acil = (kod: string, veri: Record<string, unknown>) => { const b = kayitDegerlendir(paketModulu(kod)!.varsayilan, veri)[0]; assert.equal(b?.duzey, 'acil', kod); assert.match(b.bayrak.hasta, /112/) }
+    acil('kbb-tonsil-iyilesme', { kanama: true })
+    acil('pla-iyilesme', { flep: true })
+    acil('goz-iyilesme', { gorme: true })
+    acil('onk-yanetki', { ates: true })
+    acil('nor-nobet', { sure: 6 })
+    acil('psi-gunluk', { zarar: true })
+    acil('gc-iyilesme', { baldir: true })
+    acil('uro-tas', { ates: true })
+    acil('ftr-agri', { kacirma: true })
+  })
+  it('psikiyatri content never resolves for another branş, and çocuk cerrahisi is veli-only', () => {
+    for (const b of PAKETLI) if (b !== 'psikiyatri') for (const m of BRANS_PAKETLERI.psikiyatri!) assert.equal(modulBransaAitMi(m.kod, b), false)
+    for (const m of BRANS_PAKETLERI['cocuk-cerrahisi']!) assert.equal(m.yas, 'cocuk', m.kod)
+    assert.deepEqual(kodlar({ doktorBransi: 'cocuk-cerrahisi', hastaYasYil: 30, hastaAyar: { 'cc-zaman': ayar(gunOnce(2)) } }), [])
+  })
+  it('a diary never re-asks a Bugün measurement (blood pressure, glucose, weight, pulse, SpO₂ as a value)', () => {
+    for (const b of TIBBI) for (const m of BRANS_PAKETLERI[b]!) for (const a of m.varsayilan.alanlar || []) {
+      if (a.tur !== 'sayi') continue
+      assert.doesNotMatch(a.etiket, /tansiyon|kan basıncı|şeker|glukoz|kilo\b|nabız|SpO|oksijen/i, `${m.kod}/${a.id}`)
+    }
   })
 })

@@ -173,10 +173,14 @@ export function bugunOzeti(p: HastaPaketi, sinir = 3): PaketBugunOzeti {
       const bugunAdim = adimlar.find((a) => a.durum === 'bugun')
       const sirada = adimlar.find((a) => a.durum === 'sirada')
       const gecmisSon = [...adimlar].reverse().find((a) => a.durum === 'gecti')
-      const metin = bugunAdim ? `Bugün: ${bugunAdim.baslik}` : sirada ? `Sırada: ${sirada.baslik} (${sirada.gun - fark} gün sonra)` : gecmisSon ? `${gecmisSon.baslik} tamamlandı` : adimlar[0].baslik
-      const n = Math.max(0, Math.min(fark, son.gun))
-      const etiket = m.baslangicEtiketi === 'Son adet tarihi' ? `${Math.floor(Math.max(0, fark) / 7)}. hafta` : `Gün ${Math.max(0, fark)}`
-      ogeler.push({ kod: m.kod, tur: m.tur, baslik: m.baslik, metin, tamam: fark >= son.gun, ilerleme: { n, m: Math.max(1, son.gun), etiket }, o })
+      const kalan = (n: number) => (n === 1 ? 'yarın' : `${n} gün sonra`)
+      const metin = bugunAdim ? `Bugün: ${bugunAdim.baslik}` : sirada ? `Sırada: ${sirada.baslik} (${kalan(sirada.gun - fark)})` : gecmisSon ? `${gecmisSon.baslik} tamamlandı` : adimlar[0].baslik
+      // progress from the first step to the last (pre-procedure timelines start at a negative day)
+      const ilk = Math.min(0, adimlar[0].gun)
+      const n = Math.max(0, Math.min(fark, son.gun) - ilk)
+      const etiket = m.baslangicEtiketi === 'Son adet tarihi' ? `${Math.floor(Math.max(0, fark) / 7)}. hafta`
+        : fark < 0 ? `${-fark} gün kaldı` : fark === 0 && ilk < 0 ? 'Bugün' : `Gün ${fark}`
+      ogeler.push({ kod: m.kod, tur: m.tur, baslik: m.baslik, metin, tamam: fark >= son.gun, ilerleme: { n, m: Math.max(1, son.gun - ilk), etiket }, o })
     } else if (m.tur === 'gunluk' || m.tur === 'ilac-saati') {
       const yapildi = bugunKayit.some((k) => k.modul === m.kod)
       ogeler.push({ kod: m.kod, tur: m.tur, baslik: m.baslik, metin: yapildi ? 'Bugünkü kaydınız alındı.' : 'Bugün bir kayıt girin — bir dakika sürer.', tamam: yapildi, ilerleme: null, o })

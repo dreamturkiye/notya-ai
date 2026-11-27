@@ -16,7 +16,7 @@ import type { PaketAdim, PaketAlan, PaketBayrak, PaketIcerik } from '@/lib/porta
 
 type Sablon = { kod: string; tur: string; baslik: string; aciklama: string; varsayilan: PaketIcerik; icerik: PaketIcerik | null; kabulAt: string | null; duzenlendi: boolean; kaynaklar: string[]; yas: string | null }
 type AyarAlani = { id: string; etiket: string; tur: 'sayi' | 'saat' | 'metin' | 'satirlar' | 'evet' | 'plan' }
-type HastaModul = { kod: string; tur: string; baslik: string; durumModulu: boolean; varsayilanKapali: boolean; yas: string | null; aktif: boolean; neden: string | null; hazirlaniyor: boolean; kabulAt: string | null; acik: boolean | null; baslangic: string | null; ayar: Record<string, unknown>; ayarlar: AyarAlani[]; baslangicEtiketi: string | null }
+type HastaModul = { kod: string; tur: string; baslik: string; durumModulu: boolean; varsayilanKapali: boolean; yas: string | null; aktif: boolean; neden: string | null; hazirlaniyor: boolean; kabulAt: string | null; acik: boolean | null; baslangic: string | null; ayar: Record<string, unknown>; ayarlar: AyarAlani[]; baslangicEtiketi: string | null; tarihBekliyor?: boolean; baslangicModulu?: string | null }
 type HastaVeri = { brans: string | null; moduller: HastaModul[]; paylasimOnayi: boolean; kayitlar: Array<{ id: string; modul: string; gun: string; veri: Record<string, unknown>; seviye: string | null }>; fotolar: Array<{ id: string; modul: string; etiket: string | null; at: string; yorum: string | null }>; plan: Record<string, unknown> | null; lab: Array<{ anahtar: string; ad: string; birim: string | null; noktalar: Array<{ tarih: string; deger: number }> }>; ilacBesin: Array<{ baslik: string; maddeler: string[]; kaynak: string }> }
 
 const kart: React.CSSProperties = { border: '1px solid rgba(58,44,34,0.12)', borderRadius: 12, padding: 14, background: '#fffdf8', display: 'grid', gap: 8 }
@@ -132,7 +132,7 @@ function HastaModulKarti({ patientId, m, yenile }: { patientId: string; m: Hasta
     setMesaj(r.ok ? 'Kaydedildi.' : String(j.error || 'Kaydedilemedi.'))
     if (r.ok) yenile()
   }
-  const durum = m.aktif ? `Açık (${NEDEN[m.neden || ''] || m.neden})` : m.hazirlaniyor ? 'Şablon kabul bekliyor' : 'Kapalı'
+  const durum = m.aktif ? `Açık (${NEDEN[m.neden || ''] || m.neden})` : m.hazirlaniyor ? 'Şablon kabul bekliyor' : m.tarihBekliyor ? (m.baslangicModulu ? 'Bağlı olduğu zaman çizelgesinin tarihi girilince açılır' : 'Tarih girilince açılır') : 'Kapalı'
   return (
     <div style={kart}>
       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}>

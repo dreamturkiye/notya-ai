@@ -148,6 +148,36 @@ const TIBBI_DEMO: Partial<Record<PaketBransi, () => HastaPaketi>> = {
     ],
     fotolar: [{ modul: 'dmt-foto', etiket: 'Sağ dirsek içi (Yakın)', gun: gunOnce(14), yorum: 'Kızarıklık geçen kontrole göre azalmış.' }],
   }),
+  kardiyoloji: () => demoPaket('kardiyoloji', {
+    yas: 64,
+    tanilar: ['Kalp yetmezliği', 'Koroner arter hastalığı'],
+    ilaclar: ['Xarelto 20 mg'],
+    ayar: { 'kar-rehab': ayar({ satirlar: ['Isınma: 5 dakika yavaş yürüyüş', 'Konuşabileceğiniz tempoda 20 dakika yürüyüş', 'Soğuma: 5 dakika yavaş yürüyüş ve esneme'] }, null, true) },
+    kayitlar: [
+      { modul: 'kar-ky', gun: gunOnce(1), veri: { nefes: 3, sislik: false, yastik: false } },
+      { modul: 'kar-ky', gun: gunOnce(2), veri: { nefes: 4, sislik: true }, seviye: 'hekime_bildir' },
+      { modul: 'kar-antikoag', gun: gunOnce(1), veri: { aldim: true } },
+      { modul: 'kar-rehab', gun: BUGUN, veri: { madde: 0, tamam: true } },
+    ],
+  }),
+  ortopedi: () => demoPaket('ortopedi', {
+    yas: 58,
+    ayar: {
+      'ort-zaman': ayar({}, gunOnce(12)),
+      'ort-egzersiz': ayar({ satirlar: ['Ayak bileği pompalama — saatte 20 kez', 'Uyluk kasını sıkma — 10 tekrar, günde 3 kez', 'Topuk kaydırma — 10 tekrar, günde 3 kez', 'Düz bacak kaldırma — 10 tekrar, günde 2 kez'] }),
+    },
+    kayitlar: [
+      { modul: 'ort-iyilesme', gun: gunOnce(1), veri: { agri: 4, hareket: 5, ates: false } },
+      { modul: 'ort-iyilesme', gun: gunOnce(3), veri: { agri: 6, hareket: 3 } },
+      { modul: 'ort-egzersiz', gun: BUGUN, veri: { madde: 0, tamam: true } },
+      { modul: 'ort-egzersiz', gun: BUGUN, veri: { madde: 1, tamam: true } },
+    ],
+  }),
+  'cocuk-cerrahisi': () => demoPaket('cocuk-cerrahisi', {
+    yas: 6,
+    ayar: { 'cc-zaman': ayar({}, gunOnce(3)) },
+    kayitlar: [{ modul: 'cc-iyilesme', gun: gunOnce(1), veri: { agri: 3, ates: false } }],
+  }),
 }
 
 /** Generic fixture: every template accepted as-is, timelines started 9 days ago, condition modules switched on. */

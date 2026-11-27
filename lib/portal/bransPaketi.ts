@@ -109,6 +109,12 @@ export interface PaketModulTanimi {
   baslangicKaynagi?: 'gebelik'
   /** shown only from this many days after the start date (e.g. fetal movements from week 28 = day 196) */
   enErkenGun?: number
+  /** shown only up to this many days after the start date (e.g. the post-op diary until day 42) */
+  sonGun?: number
+  /** on only once a start date exists (the doctor entered the operation / procedure day) — unless switched on */
+  baslangicGerekli?: boolean
+  /** borrow the start date of another module of the same branş (the post-op diary follows the post-op timeline) */
+  baslangicModulu?: string
   /** photo module: the patient may type a free label (body area) instead of choosing a fixed angle */
   serbestEtiket?: boolean
   /** 'liste' modules: can the patient tick items? */
@@ -293,10 +299,15 @@ export function hastaPaketiCoz(g: PaketGirdisi): PaketCozumu {
     else if (t.durum) neden = durumEslesir(t, g)
     else neden = t.varsayilanKapali ? null : 'varsayilan'
     if (!neden) continue
-    const baslangic = h?.baslangic ?? (t.baslangicKaynagi === 'gebelik' ? g.gebelikSat ?? null : null)
-    if (t.enErkenGun != null) {
+    const bagliBas: string | null = t.baslangicModulu ? g.hastaAyar[t.baslangicModulu]?.baslangic || null : null
+    const gebelikBas: string | null = t.baslangicKaynagi === 'gebelik' ? g.gebelikSat || null : null
+    const baslangic: string | null = h?.baslangic || bagliBas || gebelikBas
+    // a procedure-bound module waits for the date (nothing to "prepare" yet) — the doctor's explicit on still shows it
+    if (t.baslangicGerekli && !baslangic && neden !== 'uzman') continue
+    if (t.enErkenGun != null || t.sonGun != null) {
       const fark = baslangic ? gunFarki(baslangic, bugun) : null
-      if (fark == null || fark < t.enErkenGun) continue
+      if (t.enErkenGun != null && (fark == null || fark < t.enErkenGun)) continue
+      if (t.sonGun != null && fark != null && fark > t.sonGun) continue
     }
     const s = g.sablonlar[t.kod]
     if (!s?.kabulAt) { hazirlaniyor.push(t.kod); continue }
@@ -380,12 +391,14 @@ export function sablonDuzenlemesiTemizle(t: PaketModulTanimi, ham: unknown): { o
   const DOZ = DOZ_DESENI
   if (Array.isArray(g.adimlar)) {
     const adimlar: PaketAdim[] = []
+    // only a pre-procedure template (it has steps before day 0) may carry negative days
+    const enAzGun = (t.varsayilan.adimlar || []).some((a) => a.gun < 0) ? -60 : 0
     for (const a of g.adimlar.slice(0, 40)) {
       const o = (a && typeof a === 'object' ? a : {}) as Record<string, unknown>
       const gun = Number(o.gun)
       const baslik = String(o.baslik || '').trim().slice(0, 80)
       const ayrinti = String(o.ayrinti || '').trim().slice(0, 400)
-      if (!Number.isInteger(gun) || gun < 0 || gun > 730 || !baslik) return { ok: false, hata: 'Her adımda gün (0–730) ve başlık olmalı.' }
+      if (!Number.isInteger(gun) || gun < enAzGun || gun > 730 || !baslik) return { ok: false, hata: enAzGun < 0 ? 'Her adımda gün (−60 ile 730 arası; işlemden önceki günler eksi) ve başlık olmalı.' : 'Her adımda gün (0–730) ve başlık olmalı.' }
       if (DOZ.test(baslik) || DOZ.test(ayrinti)) return { ok: false, hata: 'Şablona doz yazılmaz — ilaç planı hasta dosyasında kalır.' }
       adimlar.push({ gun, baslik, ayrinti })
     }

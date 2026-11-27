@@ -220,6 +220,7 @@ function Gunluk({ m, o }: { m: HastaPaketModulu; o: Ortak }) {
   if (typeof m.ayar.adimHedef === 'number') hedefler.push(`Adım: ${m.ayar.adimHedef}`)
   if (typeof m.ayar.aktifHedef === 'number') hedefler.push(`Hareket: haftada ${m.ayar.aktifHedef} dakika`)
   if (typeof m.ayar.ogunSaatleri === 'string') hedefler.push(`Öğün saatleri: ${m.ayar.ogunSaatleri}`)
+  if (typeof m.ayar.siviSiniri === 'number') hedefler.push(`Sıvı: günde en fazla ${m.ayar.siviSiniri} bardak`)
   const sec = (id: string, v: unknown) => setG((x) => ({ ...x, [id]: x[id] === v ? undefined : v }))
   return (
     <>
@@ -523,6 +524,12 @@ function Modul({ m, o, basePath }: { m: HastaPaketModulu; o: Ortak; basePath: st
       {(m.tur === 'gunluk' || m.tur === 'ilac-saati') && <Gunluk m={m} o={o} />}
       {m.tur === 'hatirlatma' && (
         <>
+          {(typeof m.ayar.katiSaat === 'string' || typeof m.ayar.berrakSaat === 'string') && (
+            <div className="bp-tehlike" style={{ background: 'var(--bp-soft)', boxShadow: 'none' }}>
+              {typeof m.ayar.katiSaat === 'string' && <b>Katı gıda en son: {m.ayar.katiSaat}</b>}
+              {typeof m.ayar.berrakSaat === 'string' && <b>Su ve berrak sıvılar en son: {m.ayar.berrakSaat}</b>}
+            </div>
+          )}
           <Liste m={{ ...m, isaretlenir: false }} o={o} satirlar={satirlar} />
           {(m.icerik.alanlar || []).length > 0 && <Gunluk m={m} o={o} />}
           <Link href={`${basePath}/doz-takvimi`} className="bp-btn bp-btn--ikincil" style={{ justifySelf: 'start', display: 'inline-flex', alignItems: 'center', textDecoration: 'none' }}>{o.sozler.ilacTakvimi}</Link>

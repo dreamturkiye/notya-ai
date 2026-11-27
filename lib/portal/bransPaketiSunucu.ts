@@ -294,6 +294,9 @@ export async function hekimHastaPaketi(sb: Sb, k: Kapsam, simdi = Date.now()) {
       kod: t.kod, tur: t.tur, baslik: t.baslik, durumModulu: !!t.durum, varsayilanKapali: !!t.varsayilanKapali, yas: t.yas ?? null,
       aktif: !!aktif, neden: aktif?.neden ?? null, hazirlaniyor: y.cozum.hazirlaniyor.includes(t.kod), kabulAt: y.sablonlar[t.kod]?.kabulAt ?? null,
       acik: y.hastaAyar[t.kod]?.acik ?? null, baslangic: y.hastaAyar[t.kod]?.baslangic ?? null, ayar: y.hastaAyar[t.kod]?.ayar ?? {},
+      // procedure-bound: opens when the date is entered (on the module itself or the module it follows)
+      tarihBekliyor: !aktif && !!t.baslangicGerekli && !(y.hastaAyar[t.kod]?.baslangic || (t.baslangicModulu && y.hastaAyar[t.baslangicModulu]?.baslangic)),
+      baslangicModulu: t.baslangicModulu ?? null,
       ayarlar: t.ayarlar || [], baslangicEtiketi: t.baslangicEtiketi ?? null,
     }
   }) : []

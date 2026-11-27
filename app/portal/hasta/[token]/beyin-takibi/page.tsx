@@ -5,9 +5,10 @@ import { BeyinTakibiView } from '../../../_components/BeyinTakibiView'
 import { usePortalLive } from '../../../_components/PortalLiveProvider'
 import { SectionHeader } from '../../../_components/ui'
 import { portalModulAktif } from '@/lib/portal/moduller'
+import { BransPaketiView } from '@/components/doktor/portal/bransPaketi/BransPaketiView'
 
 export default function HastaBeyinTakibiPage() {
-  const { data, basePath } = usePortalLive()
+  const { data, basePath, token } = usePortalLive()
   if (!portalModulAktif(data, 'beyin-takibi')) {
     return (
       <div className="sg-fade">
@@ -16,5 +17,11 @@ export default function HastaBeyinTakibiPage() {
       </div>
     )
   }
-  return <BeyinTakibiView beyin={data.beyin} basePath={basePath} />
+  return (
+    <>
+      <BeyinTakibiView beyin={data.beyin} basePath={basePath} />
+      {/* BRANS-PAKETI Phase 2 — the branş signature modules under the base page (Taban önce). */}
+      <BransPaketiView token={token && token !== 'onizleme' ? token : undefined} basePath={basePath} yol="/beyin-takibi" />
+    </>
+  )
 }
