@@ -60,7 +60,7 @@ Public facts verified 2026-11-24:
 
 - **Dernek:** Marmara Pediatri Derneği (est. 2018, Marmara Ü. Çocuk Sağlığı orbit) — nonprofit scientific society.
 - **Site:** https://marmarapediatri.org/ · congress https://www.marmarapediatri2027.org/
-- **Contact (published):** Pendik address; historically `info@marmarapediatri.org`, tel `0212 279 00 20` (verify before send).
+- **Contact:** published `info@marmarapediatri.org` has **no MX** (bounced 26 Kas 2026). Live 2027 congress sekreterya: `marmarapediatri@bosphorusmice.net` (Outlook). Tel `0212 279 00 20`. Run `scripts/sanitize-outreach-emails.py` before any send.
 - **14. Kongre:** 26–28 Mart 2027 · Elite World Grand Küçükyalı, İstanbul  
   Theme: *“Pediatride kanıt, deneyim ve pratik yaklaşımlar”* — **perfect thematic fit** for AI-assisted note + follow-up practice.
 - Leadership named on congress site: Kongre Başkanı **Prof. Dr. Nurdan Yıldız**; Dernek Başkanı **Prof. Dr. Figen Akalın**.
@@ -207,13 +207,15 @@ drhanmamur@notya.io
 
 ---
 
-## 9. Target starter list (verify contacts before send)
+## 9. Target starter list (MX-sanitize before send)
+
+Never send a published `info@` until `python3 scripts/sanitize-outreach-emails.py` returns PASS. No MX = bounce. Pleksus MX = WARN, use PCO/Gmail.
 
 ### Pediatri
 
 | Org | Hook | Entry |
 |-----|------|-------|
-| Marmara Pediatri Derneği | 2027 theme + IG webinar culture | info@marmarapediatri.org · marmarapediatri.org |
+| Marmara Pediatri Derneği | 2027 theme + IG webinar culture | marmarapediatri@bosphorusmice.net (info@ has no MX) |
 | Türkiye Milli Pediatri Derneği | National; international speakers already | info@millipediatri.org · 0312 438 19 34 |
 | Uludağ Pediatri | Mar 2027 kongre | uludagpediatri.org |
 | City / üniversite pediatri dernekleri | Faster yes | IG scrape → email |

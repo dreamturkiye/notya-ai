@@ -39,30 +39,32 @@ Research: `docs/growth/TR-DERNEK-OPERATING-RESEARCH.md`
 
 ## 1. Send order today (max 90 min)
 
+Historical 26 Kas list — **do not copy addresses from this table**. Dead boxes are struck in notes. Live remaining work is **§7 (3 retries)**.
+
 | # | To | Why first |
 |---|-----|-----------|
-| 1 | Marmara Pediatri `info@marmarapediatri.org` | Your example; 2027 theme fit; online congress precedent |
+| 1 | Marmara Pediatri ~~`info@marmarapediatri.org`~~ → `marmarapediatri@bosphorusmice.net` | 2027 theme; published info@ has no MX |
 | 2 | PUADER `bilgi@puader.org` | Fastest yes culture (olgu sempozyum) |
 | 3 | TMPD `info@millipediatri.org` | National + regional eğitim |
 | 4 | TPK `info@turkpediatri.org.tr` | Prestige; genç pediatristler |
 | 5 | Neonatoloji `turkneonatolojidernegi@gmail.com` | Already webinar-native |
 | 6 | CAIAD `cocukalerjiastim@gmail.com` | Email confirmed |
 | 7 | TJOD merkez `info@tjod.org` | Unlocks şubeler |
-| 8 | TJOD İstanbul `dernek@tjodistanbul.org` | Hotel evenings |
+| 8 | TJOD İstanbul ~~`dernek@tjodistanbul.org`~~ → `tjodistanbul@figur.net` | Hotel evenings; dernek@ 550 |
 | 9 | TJOD Anadolu `istanbulanadolutjod@gmail.com` | Direct Gmail |
 | 10 | TJOV `info@tjov.org.tr` | Vakıf + IG |
 | 11 | Perinatoloji `info@perinatal.org.tr` | Gebelik story |
-| 12 | TDD `tdd@turkdermatoloji.org.tr` | Evening webinar machine |
+| 12 | TDD ~~`tdd@turkdermatoloji.org.tr`~~ → `sekreterya@turkdermatoloji.org.tr` | Evening webinar machine; tdd@ 550; Pleksus WARN |
 | 13 | TURKDERM `turkderm@turkderm.org.tr` | Monthly olgu |
 | 14 | TKBB `kbb@kbb.org.tr` | National KBB |
-| 15 | İstanbul KBB `info@istanbulkbb.org` | Evening meetings |
+| 15 | İstanbul KBB ~~`info@istanbulkbb.org`~~ → `tkbbd@kbb.org.tr` | Evening meetings; info@ no MX |
 | 16 | Rinoloji `info@rinoturk.org` | Active IG |
 | 17 | Çocuk Nöroloji `cnd@cnd.org.tr` | Confirmed |
-| 18 | Çocuk Nefroloji `info@cocuknefroloji.org.tr` | E-kongre precedent |
+| 18 | Çocuk Nefroloji ~~`info@cocuknefroloji.org.tr`~~ / ~~`.org`~~ → `ozge.altas@burkon.com` | E-kongre; both info@ dead |
 | 19 | Çocuk Gastro `sekretarya@turkcocukgastro.org` | Confirmed |
 | 20 | Çocuk Endokrin `info@cocukendokrindiyabet.org` | Has sosyal medya takımı |
 
-If bounce: search `iletisim` on their site and retry once. Log in CSV `status=BOUNCE`.
+If bounce: **do not** retry the same published iletisim. Run `python3 scripts/sanitize-outreach-emails.py`. FAIL = no MX or known-dead. Next hop is the live congress PCO / Gmail / Yandex membership box, never another empty `info@` on the same domain. Log in CSV `status=BOUNCE`.
 
 **Do not send today:** EKDD (congress week), oncology/surgical derneks, random IG DMs to members.
 
@@ -74,7 +76,7 @@ If bounce: search `iletisim` on their site and retry once. Log in CSV `status=BO
 **Reply-To:** `drhanmamur@notya.io`  
 **BCC:** `kaan@notya.io` (ops only — not in the body)
 
-**Send status (26 Kas 2026, 13:48 America/New_York):** **21 SENT** from `drhanmamur@notya.io`. Four bounce retries delivered (Figur / TDD sekreterya / nefroloji .org / Center Events). Follow-up: D+3 29 Kas / D+7 3 Ara / D+14 10 Ara. Skip EKDD. Log: `docs/growth/TR-DERNEK-FOLLOWUP.md`.
+**Send status (27 Kas 2026, America/New_York):** **18 delivered** (MX PASS/WARN). **3 bounced a second time** because published iletisim had **no MX** — Marmara, Çocuk Nefroloji `.org` retry, İstanbul KBB. Send only §7 (3 addresses). Skip EKDD. Sanitize: `python3 scripts/sanitize-outreach-emails.py`. Log: `docs/growth/TR-DERNEK-FOLLOWUP.md`.
 
 ### Pediatri (Marmara / TMPD / TPK / PUADER)
 
@@ -263,3 +265,134 @@ Legal derneks in these 4 branşlar: **~60**.
 The rest of what you see on IG: **TJOD/TMPD şubeler, kongre yıl-sayfaları, üniversite ABD, hastane pediatri, kongre PCO, kişisel hoca hesapları.**
 
 Treat ABD/hospital pages as **WATCH** (need an inside prof). Treat şube pages as **real booking targets** once email found. Do not DM 100 member-looking accounts.
+
+---
+
+## 7. Bounce wave 2 — send these 3 only (27 Kas)
+
+Delayed Purelymail DSNs 26 Kas 14:38–14:52 ET match the three addresses with **no MX**. The first bounce wave replacements that still had no MX (Nefroloji `.org`) are included. Do **not** resend the 18 MX-PASS mailboxes. Do **not** send `kbb@kbb.org.tr` again.
+
+Sanitizer on the replacements (27 Kas): all three **PASS**.
+
+| # | To | Why this box |
+|---|-----|----------------|
+| 1 | `marmarapediatri@bosphorusmice.net` | 14. Marmara Pediatri Kongresi 2027 `tr/iletisim.html`; Outlook MX |
+| 2 | `ozge.altas@burkon.com` | Çocuk Nefroloji Kongresi organizasyon sekreteryası (site live); vargonen MX |
+| 3 | `tkbbd@kbb.org.tr` | Türk KBB üyelik inbox, Yandex MX, same Nish İstanbul HQ/phone as İstanbul KBB. `info@istanbulkbb.org` has no DNS |
+
+**From:** `Uzm. Dr. Gökhan Mamur <drhanmamur@notya.io>`  
+**BCC:** `kaan@notya.io`
+
+If you later get a DSN for `cnd@cnd.org.tr` or `sekreterya@turkdermatoloji.org.tr` (both Pleksus WARN), send **once** to `pednoro2026@gtturizm.com` / `dermatoloji@honestglobal.com`. Do not guess another `info@`.
+
+The three 27 Kas morning DSNs titled **Muayenehaneniz için Türkiye'ye özel klinik asistanı** are not this pack.
+
+### 1 — Marmara Pediatri (Bosphorus MICE)
+
+**To:** `marmarapediatri@bosphorusmice.net`  
+**Subject:** Üyeleriniz için ücretsiz 45 dk online seminer — Pediatride pratik AI
+
+```
+Sayın Marmara Pediatri Derneği Yönetim Kurulu ve Organizasyon Sekreteryası,
+
+Uzm. Dr. Gökhan Mamur, pediatri. ABD’den Google Meet ile bağlanarak
+derneğinizin üyelerine ücretsiz, 45–60 dakikalık bilimsel bir seminer
+önermek isterim:
+
+“Pediatride muayene notu ve aşı / telafi takibinde pratik yapay zekâ kullanımı”
+
+İçerik klinik ve olgu odaklıdır. 2027 kongre temanızdaki pratik yaklaşımlarla
+örtüşür. Son 5 dakikada, Türk hekimleri için geliştirdiğimiz ve kredi kartı
+istemeyen açık deneme aracı Notya’yı kısaca gösterebilirim. Kayıt ve teknik
+altyapıyı ben üstlenirim; Instagram ve üye duyurusu sizin kanallarınızda kalır.
+
+Açık akşam saatlerimden üç öneri (Türkiye saati):
+• Pazartesi 30 Kasım 2026, 20:00
+• Salı 1 Aralık 2026, 20:00
+• Perşembe 3 Aralık 2026, 20:00
+
+Başka bir akşam uygunsa takvimimden de seçebilirsiniz:
+https://cal.com/han-mamur-sugmbo/demo-tr
+(Google Meet bağlantısı onay e-postasında gelir.)
+
+Uygun görürseniz 20 dakikalık bir ön görüşme ayarlayabiliriz.
+
+Saygılarımla,
+Uzm. Dr. Gökhan Mamur
+Pediatri
+drhanmamur@notya.io
+www.notya.io
+```
+
+### 2 — Çocuk Nefroloji (Burkon)
+
+**To:** `ozge.altas@burkon.com`  
+**Subject:** Üyeleriniz için ücretsiz 45 dk online seminer — Pediatride pratik AI
+
+```
+Sayın Çocuk Nefroloji Derneği Yönetim Kurulu ve Organizasyon Sekreteryası,
+
+Uzm. Dr. Gökhan Mamur, pediatri. ABD’den Google Meet ile bağlanarak
+derneğinizin üyelerine ücretsiz, 45–60 dakikalık bilimsel bir seminer
+önermek isterim:
+
+“Pediatride muayene notu ve izlem takibinde pratik yapay zekâ kullanımı”
+
+İçerik klinik ve olgu odaklıdır. Son 5 dakikada, Türk hekimleri için
+geliştirdiğimiz ve kredi kartı istemeyen açık deneme aracı Notya’yı
+kısaca gösterebilirim. Kayıt ve teknik altyapıyı ben üstlenirim;
+üye duyurusu sizin kanallarınızda kalır.
+
+Açık akşam saatlerimden üç öneri (Türkiye saati):
+• Pazartesi 30 Kasım 2026, 20:00
+• Salı 1 Aralık 2026, 20:00
+• Perşembe 3 Aralık 2026, 20:00
+
+Başka bir akşam uygunsa:
+https://cal.com/han-mamur-sugmbo/demo-tr
+(Google Meet bağlantısı onay e-postasında gelir.)
+
+Uygun görürseniz 20 dakikalık bir ön görüşme ayarlayabiliriz.
+
+Saygılarımla,
+Uzm. Dr. Gökhan Mamur
+Pediatri
+drhanmamur@notya.io
+www.notya.io
+```
+
+### 3 — İstanbul KBB (üyelik sekreterya, same HQ)
+
+**To:** `tkbbd@kbb.org.tr`  
+**Subject:** Üyeleriniz için ücretsiz 45 dk online seminer — KBB pratiğinde pratik AI
+
+```
+Sayın İstanbul KBB-BBC Uzmanları Derneği Yönetim Kurulu,
+
+Uzm. Dr. Gökhan Mamur, pediatri. ABD’den Google Meet ile bağlanarak
+İstanbul KBB aylık bilimsel toplantı takviminize uyacak ücretsiz,
+45–60 dakikalık bir seminer önermek isterim:
+
+“KBB muayene notu ve hasta takibinde pratik yapay zekâ”
+
+Oturumu bir KBB meslektaşınızla birlikte yürütmek isterim; ben pediatri
+ve dijital asistan pratik tarafından katkı sağlarım. Son 5 dakikada
+Notya’yı (kredi kartı istemez) kısaca gösterebilirim. Kayıt ve teknik
+altyapıyı ben üstlenirim; duyuru sizin kanallarınızda kalır.
+
+Açık akşam saatlerimden üç öneri (Türkiye saati):
+• Pazartesi 30 Kasım 2026, 20:00
+• Salı 1 Aralık 2026, 20:00
+• Perşembe 3 Aralık 2026, 20:00
+
+Başka bir akşam uygunsa: https://cal.com/han-mamur-sugmbo/demo-tr
+(Google Meet bağlantısı onay e-postasında gelir.)
+
+Uygun görürseniz 20 dakikalık bir ön görüşme ayarlayabiliriz.
+
+Saygılarımla,
+Uzm. Dr. Gökhan Mamur
+Pediatri
+drhanmamur@notya.io
+www.notya.io
+```

@@ -112,7 +112,7 @@ Precedent is strong: Milli Pediatri 70. already billed international faculty; Ma
 ### KBB
 
 **Two UDEK nationals:** Türk KBB-BBC Derneği (`kbb@kbb.org.tr`, Yenibosna HQ) and Ankara KBB-BBC (`@kbbbbcdernegi`, kbbbbcder.org).  
-**İstanbul KBB uzmanları** share the **same phone/building** as national — one secretariat may serve both (`info@istanbulkbb.org`).
+**İstanbul KBB uzmanları** share the **same phone/building** as national (`0212 234 44 81`, Nish İstanbul). Published `info@istanbulkbb.org` has **no MX and no A** (bounced 26 Kas 2026). Live path: `tkbbd@kbb.org.tr` (Yandex membership inbox). Do not send a second copy to `kbb@kbb.org.tr`.
 
 **Operating pattern:** kadavra courses, Foniatri seminerleri (25 Kas 2026), Doğu Marmara akşam toplantısı, Mersin KBB Günleri Şub 2027. Instagram used since 2022 for duyuru.
 
