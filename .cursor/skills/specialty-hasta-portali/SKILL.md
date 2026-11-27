@@ -132,6 +132,8 @@ yapman şart." A branş page must be something the patient opens daily or at eac
   (`components/doktor/bransPaketi/PaketKarti.tsx`, `?ozet=1`). Templates: Ayarlar › Hasta alanı paketi (medical) /
   Özel Branşlar › Hasta alanı paketi — same component. Don't repeat a Bugün measurement (BP, glucose, weight, fever) in a
   package diary — point to Bugün. Danger-sign diary fields are grouped by the payload's `isaret` (level only).
+  Procedure-bound modules (`baslangicGerekli`, `baslangicModulu`, `sonGun`) open on the doctor-entered date and close after
+  recovery; pre-procedure timelines use negative days; fasting hours are the doctor's settings, never template text.
 - **Nothing reaches a patient before the treating professional accepts the template** (Özel Branşlar › Hasta alanı
   paketi; `brans_paket_sablon.kabul_at` + history). Edits: timeline / list / photo angles / note only — never a dose;
   diary fields and red flags stay the registry's.

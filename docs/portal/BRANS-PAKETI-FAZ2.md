@@ -2,7 +2,8 @@
 
 **Status:** started 2026-11-27 (Kaan: "Faz ikiyi başlat ve hasta portalını exceptional bir şekilde 30+10 branşa uygula").
 Batch (a) shipped: pediatri, kadın hastalıkları-doğum, dermatoloji + Bugün card + design pass + doctor tile + demos
-(`/portal/demo-paket/<branş>`). What each branş got: docs/portal/BRANS-PORTAL-ENVANTER.md. Sources:
+(`/portal/demo-paket/<branş>`). Batch (b) shipped the same day: the other 27 (procedure-bound journeys open on the
+doctor-entered date; pre-procedure countdowns). All 40 branşlar now have a package. What each branş got: docs/portal/BRANS-PORTAL-ENVANTER.md. Sources:
 docs/kaynak/TIBBI-BRANS-PAKETI-ARASTIRMA.md. The table below was the proposal; the shipped modules can differ (e.g. KD
 PMS/PMDD stays KD-TARAMA-01, measurements already on Bugün are not repeated in a diary).
 

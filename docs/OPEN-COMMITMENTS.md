@@ -1,6 +1,6 @@
 # OPEN COMMITMENTS — Notya AI
 
-## BRANS-PAKETI-FAZ2 — branş signature portal modules for the 30 medical branşlar (Claude, 2026-11-27). Owner: Claude. IN PROGRESS (Kaan 2026-11-27 15:09 ET: "Faz ikiyi başlat …").
+## BRANS-PAKETI-FAZ2 — branş signature portal modules for the 30 medical branşlar (Claude, 2026-11-27). Owner: Claude. BUILT 2026-11-27 (both batches on main); open items below.
 
 Kaan 2026-11-27: "Diyetisyen için yapacağın hasta portalını bütün branşlar için gerektiği şekilde yap." Phase 1 (10 Özel
 Branşlar, diyetisyen full package) shipped 2026-11-27 (git log --grep BRANS-PAKETI; migration 216). Phase 2 = the 30
@@ -20,9 +20,20 @@ Phase 2 progress (2026-11-27):
   zaman + günlük, adet takvimi), dermatoloji (cilt günlüğü, fotoğraf günlüğü, ben kontrolü, bakım rutini, izotretinoin /
   sistemik tedavi izlemi); Bugün "what matters today" card for all 40; package design pass (all 40, incl. the 10 Özel
   Branşlar); doctor tile; demos /portal/demo-paket/[brans]. Sources: docs/kaynak/TIBBI-BRANS-PAKETI-ARASTIRMA.md.
-- **Batch (b) — the remaining 27 medical branşlar.** Owner: Claude. Same day.
+- **Batch (b) — DONE 2026-11-27:** the other 27 medical branşlar (per-branş list: docs/portal/BRANS-PORTAL-ENVANTER.md);
+  procedure-bound journeys (open when the doctor enters the operation / procedure / quit / injury day; diaries follow
+  that date and close after recovery; pre-procedure countdowns for anestezi, kolonoskopi, radyoloji).
+- **BRANS-PAKETI-FAZ2-SABLON-KABUL — templates waiting for each doctor's acceptance. Owner: the treating doctors (Kaan to
+  tell beta doctors / Dr. Gökhan where: Ayarlar › Hasta alanı paketi). Waits on: Kaan.** Nothing reaches a patient
+  before acceptance, so live patients see the new modules only after their doctor accepts them (demos show the accepted
+  state). Added 2026-11-27.
+- **BRANS-PAKETI-FAZ2-GORSEL-QA — visual check of the redesigned package view on real phones. Owner: Claude, at the next
+  live session (no browser in this job).** tsc + tests + Vercel build cover correctness, not looks; check
+  /portal/demo-paket/{pediatri,kadin-hastaliklari-dogum,dermatoloji,kardiyoloji,ortopedi} at 375 px. Added 2026-11-27.
 - Unconfirmed Turkish sources (SB İzlem / Doğum Öncesi / Doğum Sonu / acil obstetrik rehberleri current editions, TJOD
-  AUK, TDD atopik dermatit + psoriazis, TPK ateş, SB ASİE): confirm in the monthly regulatory pass (MEVZUAT-TAKIP).
+  AUK, TDD atopik dermatit + psoriazis, TPK ateş, SB ASİE; batch (b): the Turkish society texts marked NOT CONFIRMED in
+  docs/kaynak/TIBBI-BRANS-PAKETI-ARASTIRMA.md — TKD, TEMD, TND, TTD, TPD, TTOD, TGD, TÜD, TKBB, TOD, TARD, TATD …):
+  confirm in the monthly regulatory pass (MEVZUAT-TAKIP).
   Owner: Claude. Physicians accept each template before use, so nothing reaches a patient unreviewed.
 
 ## TELESAGLIK-BEKLEMEDE — telehealth ON HOLD (Kaan, 2026-11-25: "Put the telehealth on hold for now"). Owner: Kaan. Waits on: Kaan.

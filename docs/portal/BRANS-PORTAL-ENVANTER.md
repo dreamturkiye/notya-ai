@@ -12,36 +12,36 @@ Kontrol Öncesi Özet), Randevu (when the doctor's booking is on), Mesajlar, Ziy
 
 | Branş | Branş module page(s) | Ölçüm kutuları · kart · vurgu | Paket |
 |---|---|---|---|
-| dahiliye | Takibim, Ön anket | KB / glukoz / kilo / nabız · LDL, kilo eğilimi · ölçüm | Phase 2 |
-| endokrinoloji | Hormonlarım | KB / glukoz / kilo / nabız · LDL, kilo eğilimi · ölçüm | Phase 2 |
-| kardiyoloji | Kalbim | KB / glukoz / kilo / nabız · LDL, kilo eğilimi (+2 kg/3 gün hekime) · ölçüm | Phase 2 |
-| aile-hekimligi | Sağlık Paketim | KB / glukoz / kilo / nabız · LDL, kilo eğilimi · ölçüm | Phase 2 |
-| nefroloji | Böbreklerim | KB / kilo / glukoz / nabız · LDL, kilo eğilimi (kilo hekime) · ölçüm | Phase 2 |
-| kalp-damar-cerrahisi | Damar Cerrahisi takibi | KB / nabız / kilo · kilo eğilimi · ölçüm | Phase 2 |
+| dahiliye | Takibim, Ön anket | KB / glukoz / kilo / nabız · LDL, kilo eğilimi · ölçüm | under Takibim: Şeker düşmesi günlüğü (insulin / sulfonylurea), Günlük ayak bakımı (diyabet), Hasta gün kuralları |
+| endokrinoloji | Hormonlarım | KB / glukoz / kilo / nabız · LDL, kilo eğilimi · ölçüm | under Hormonlarım: Tiroid ilacı ve kahvaltı (levothyroxine), Şeker düşmesi günlüğü, İnsülin kalemi kontrol listesi, Hasta gün steroid kuralları (adrenal yetmezlik) |
+| kardiyoloji | Kalbim | KB / glukoz / kilo / nabız · LDL, kilo eğilimi (+2 kg/3 gün hekime) · ölçüm | under Kalbim: KY günlüğü (I50), Kanama işaretleri (anticoagulant), Göğüs ağrısı eylem planı (koroner), Kalp rehabilitasyonu ev programı (switched) |
+| aile-hekimligi | Sağlık Paketim | KB / glukoz / kilo / nabız · LDL, kilo eğilimi · ölçüm | under Sağlık Paketim: Yaşıma uygun taramalar (adult), Sigarasız günlerim + bırakma günlüğü (from the quit day) |
+| nefroloji | Böbreklerim | KB / kilo / glukoz / nabız · LDL, kilo eğilimi (kilo hekime) · ölçüm | under Böbreklerim (switched): Sıvı ve şişlik günlüğü (doctor fluid limit), Fistül kontrolü, Potasyum–fosfor rehberi |
+| kalp-damar-cerrahisi | Damar Cerrahisi takibi | KB / nabız / kilo · kilo eğilimi · ölçüm | under Damar Cerrahisi takibi: post-op timeline + diary (from the operation day; sternal / AF flags), Yürüme günlüğü (PAD) |
 | pediatri | Aşı Bilgilendirme (+ Büyüme under 18 / unknown DOB) | ateş / kilo · ateş-ilaç kartı · uyum | on Takip (under 18 only): Hasta gün günlüğü, İlk üç ay günlüğü (0–3 m), Aşı sonrası günlüğü, Beslenme ve uyku (0–24 m), Gelişim adımları 0–1 / 1–3 / 3–6 |
-| cocuk-cerrahisi | Çocuğumun Cerrahisi | ateş / kilo · ateş-ilaç kartı · uyum | Phase 2 |
+| cocuk-cerrahisi | Çocuğumun Cerrahisi | ateş / kilo · ateş-ilaç kartı · uyum | under Çocuğumun Cerrahisi (under 18 only): post-op timeline + veli diary (from the operation day) |
 | kadin-hastaliklari-dogum | Jinekoloji hatırlatmaları (Takip), Gebeliğim on an active pregnancy | KB / kilo · kilo eğilimi · ölçüm | on Takip: Gebelik yolculuğum (from the active pregnancy SAT), Bebeğimin hareketleri (≥ 28 w), Gebelik belirti günlüğüm; doctor-switched: Doğum sonrası ilk altı hafta + günlüğüm, Adet takvimim |
-| gogus-hastaliklari | Akciğerlerim | SpO₂ / nabız / ateş · — · ölçüm | Phase 2 |
-| enfeksiyon-hastaliklari | Enfeksiyon Takibim | ateş / nabız · — · uyum | Phase 2 |
-| onkoloji | Tedavim | ateş / kilo / nabız · kilo eğilimi · uyum | Phase 2 |
-| noroloji | Nörolojim | KB / nabız · — · uyum | Phase 2 |
-| beyin-cerrahisi | Beyin Cerrahisi takibi | ateş / KB · — · uyum | Phase 2 |
-| genel-cerrahi | Ameliyatım | ateş / kilo · — · uyum | Phase 2 |
-| gogus-cerrahisi | Göğüs Cerrahisi takibi | SpO₂ / ateş / nabız · — · ölçüm | Phase 2 |
-| plastik-cerrahi | Yaram | ateş · — · uyum | Phase 2 |
-| anestezi | Anestezi Öncesi | KB / nabız / SpO₂ · — · uyum | Phase 2 |
-| acil-tip | Acil sonrası takip | ateş / KB / nabız · — · uyum | Phase 2 |
-| gastroenteroloji | Sindirimim | kilo / ateş · kilo eğilimi · uyum | Phase 2 |
-| romatoloji | Romatizmam | KB / kilo · — · uyum | Phase 2 |
-| spor-hekimligi | Sporum | nabız / kilo · — · uyum | Phase 2 |
-| ortopedi | Eklemlerim | — · — · uyum | Phase 2 |
-| fizik-tedavi | FTR'm | — · — · uyum | Phase 2 |
-| uroloji | Ürolojim | ateş · — · uyum | Phase 2 |
-| psikiyatri | Ruh Sağlığım | — · — · uyum | Phase 2 |
+| gogus-hastaliklari | Akciğerlerim | SpO₂ / nabız / ateş · — · ölçüm | under Akciğerlerim (astım / KOAH): Eylem planı, Nefes günlüğü (reliever count, PEF), İnhaler tekniği |
+| enfeksiyon-hastaliklari | Enfeksiyon Takibim | ateş / nabız · — · uyum | under Enfeksiyon Takibim: Tedavi günlüğü, Tüberküloz tedavi hatırlatmaları (TB drugs) |
+| onkoloji | Tedavim | ateş / kilo / nabız · kilo eğilimi · uyum | under Tedavim: Kür takvimi (from the cycle day), Yan etki günlüğü (fever = acil), Ağız bakımı |
+| noroloji | Nörolojim | KB / nabız · — · uyum | under Nörolojim: Baş ağrısı günlüğü, Nöbet günlüğü (epilepsy / AED), İnme belirtileri (stroke) |
+| beyin-cerrahisi | Beyin Cerrahisi takibi | ateş / KB · — · uyum | under Beyin Cerrahisi takibi: post-op timeline + diary (neuro deficit / ICP / cauda equina / CSF flags) |
+| genel-cerrahi | Ameliyatım | ateş / kilo · — · uyum | under Ameliyatım: post-op timeline + diary (obstruction flag, drain amount when switched) |
+| gogus-cerrahisi | Göğüs Cerrahisi takibi | SpO₂ / ateş / nabız · — · ölçüm | under Göğüs Cerrahisi takibi: post-op timeline + diary (haemoptysis, surgical emphysema), Solunum egzersizleri |
+| plastik-cerrahi | Yaram | ateş · — · uyum | under Yaram: post-op timeline + diary (flap colour = acil), Yara fotoğraf günlüğü |
+| anestezi | Anestezi Öncesi | KB / nabız / SpO₂ · — · uyum | under Anestezi Öncesi: Ameliyata hazırlık (countdown from −7), Aç kalma talimatı (doctor-set hours), Anestezi sonrası ilk günler |
+| acil-tip | Acil sonrası takip | ateş / KB / nabız · — · uyum | under Acil sonrası takip: Acilden sonraki günler + taburculuk günlüğü (from the discharge day), Kafa travması sonrası (switched) |
+| gastroenteroloji | Sindirimim | kilo / ateş · kilo eğilimi · uyum | under Sindirimim: Sindirim günlüğü (Bristol, alarm features), Kolonoskopi hazırlığı (countdown), Tedavi izlem (biologics) |
+| romatoloji | Romatizmam | KB / kilo · — · uyum | under Romatizmam: Eklem günlüğü, Tedavi izlem hatırlatmaları (DMARD / biologics) |
+| spor-hekimligi | Sporum | nabız / kilo · — · uyum | under Sporum: Spora dönüş yolu (from the injury day), Sarsıntı sonrası dönüş (switched), Antrenman ve ağrı günlüğü |
+| ortopedi | Eklemlerim | — · — · uyum | under Eklemlerim: post-op timeline + diary (neurovascular flag), Ev egzersiz programı, Alçı ve atel bakımı (switched) |
+| fizik-tedavi | FTR'm | — · — · uyum | under FTR'm: Ev egzersiz programı (doctor lines), Ağrı ve hareket günlüğü (cauda equina acil) |
+| uroloji | Ürolojim | ateş · — · uyum | under Ürolojim: İşeme günlüğü (switched), Taş ağrısı günlüğü (stone dx), Sonda bakımı (switched) |
+| psikiyatri | Ruh Sağlığım | — · — · uyum | under Ruh Sağlığım (psikiyatri token only): Duygu durum günlüğü (crisis → 112), Güvenlik planı, Uyku düzeni (switched) |
 | dermatoloji | Derim | — · — · uyum | under Derim: Cilt günlüğüm, Cilt fotoğraf günlüğüm; Ben kontrolü (switched); Bakım rutinim (atopik dermatit); Tedavi izlem (izotretinoin) / Sistemik tedavi (from the approved medicine list) |
-| kulak-burun-bogaz | Kulaklarım | — · — · uyum | Phase 2 |
-| goz-hastaliklari | Gözlerim | — · — · uyum | Phase 2 |
-| radyoloji | Tetkiklerim | — · — · uyum | Phase 2 |
+| kulak-burun-bogaz | Kulaklarım | — · — · uyum | under Kulaklarım: Beklemeden başvurun list, tonsillectomy and nose/sinus post-op timelines + diaries (from the operation day), Burun yıkama (switched) |
+| goz-hastaliklari | Gözlerim | — · — · uyum | under Gözlerim: post-op timeline + diary + damla kuralları (from the operation day), Amsler kontrolü (AMD) |
+| radyoloji | Tetkiklerim | — · — · uyum | under Tetkiklerim: Tetkik hazırlığı (countdown), Kontrast sonrası günlüğü, MR güvenlik kontrol listesi |
 
 Note: the medical chapter pages are reminder/date/notice pages filled from the doctor's chapter records (MD-set
 kontrol, işlem, test dates; patient-safe numbers; no diagnosis). None of them has a patient diary, photo diary or a
