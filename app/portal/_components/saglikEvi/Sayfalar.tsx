@@ -17,6 +17,7 @@ import { GunlukKayitGorunumu } from '@/components/doktor/portal/saglikEvi/Gunluk
 import { DozTakvimiGorunumu } from '@/components/doktor/portal/saglikEvi/DozTakvimiGorunumu'
 import { KarneGorunumu } from '@/components/doktor/portal/saglikEvi/KarneGorunumu'
 import { TercihlerGorunumu } from '@/components/doktor/portal/saglikEvi/TercihlerGorunumu'
+import { BransPaketiBugunKarti } from '@/components/doktor/portal/bransPaketi/BransPaketiBugunKarti'
 
 function Durumlu({ children, yedek, bekliyor }: { children: (d: NonNullable<ReturnType<typeof useGunluk>['durum']>) => ReactNode; yedek?: (hata: string) => ReactNode; bekliyor?: ReactNode }) {
   const g = useGunluk()
@@ -80,7 +81,7 @@ function bolumler(data: ReturnType<typeof usePortalLive>['data'], basePath: stri
 }
 
 function Bugun() {
-  const { data } = usePortalLive()
+  const { data, token, basePath } = usePortalLive()
   const g = useGunluk()
   const kopru = useKopru()
   return (
@@ -88,7 +89,8 @@ function Bugun() {
       yedek={() => <BugunKopruYedek s={S} kopru={kopru} durumMetni={S.gunlukYuklenemedi} hata hastaAdi={data.hasta?.adSoyad || null} />}
       bekliyor={<div className="sge sgb" aria-busy="true"><BugunBasligi s={S} hastaAdi={data.hasta?.adSoyad || null} veli={kopru.veli} /><BugunEylemleri s={S} kopru={kopru} /><p className="sge-not" style={{ padding: '32px 0', textAlign: 'center' }}>{S.yukleniyor}</p></div>}
     >
-      {(d) => <BugunGorunumu s={S} durum={d} eylemler={g.eylemler} kopru={kopru} hastaAdi={data.hasta?.adSoyad || null} />}
+      {/* BRANS-PAKETI Phase 2: the branş package's "today" (lean read after paint; nothing when no module is on). */}
+      {(d) => <BugunGorunumu s={S} durum={d} eylemler={g.eylemler} kopru={kopru} hastaAdi={data.hasta?.adSoyad || null} paket={<BransPaketiBugunKarti token={token} basePath={basePath} />} />}
     </Durumlu>
   )
 }

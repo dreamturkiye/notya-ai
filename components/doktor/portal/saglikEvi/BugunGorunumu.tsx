@@ -12,7 +12,7 @@
  * badges — habits are celebrated, never medical results), and the bridge to the doctor. Core for every branş: only what
  * the patient logs / the doctor planned is shown (lib/saglikEvi/bugunGorunum.ts).
  */
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import Link from 'next/link'
 import type { GunlukDurum, OlcumKarti } from '@/lib/saglikEvi/ozet'
 import type { SaglikEviSozleri } from '@/lib/saglikEvi/sozler'
@@ -283,7 +283,8 @@ function OlcumKutusu({ k, s, ac }: { k: OlcumKarti; s: SaglikEviSozleri; ac: () 
   )
 }
 
-export function BugunGorunumu({ s, durum, eylemler, kopru, hastaAdi }: { s: SaglikEviSozleri; durum: GunlukDurum; eylemler: GunlukEylemleri; kopru: BugunKoprusu; hastaAdi: string | null }) {
+/** `paket`: BRANS-PAKETI Phase 2 — the branş package's "what matters today" card (additive; after the alerts). */
+export function BugunGorunumu({ s, durum, eylemler, kopru, hastaAdi, paket }: { s: SaglikEviSozleri; durum: GunlukDurum; eylemler: GunlukEylemleri; kopru: BugunKoprusu; hastaAdi: string | null; paket?: ReactNode }) {
   const [giris, setGiris] = useState<OlcumKarti | null>(null)
   const [soru, setSoru] = useState('')
   const [onaySonra, setOnaySonra] = useState(true)
@@ -411,6 +412,8 @@ export function BugunGorunumu({ s, durum, eylemler, kopru, hastaAdi }: { s: Sagl
           })}
         </section>
       ) : null}
+
+      {paket}
 
       <div className="sgb-ikili">
         {durum.vurgu === 'olcum' ? <>{olcumler}{dozlar}</> : <>{dozlar}{olcumler}</>}

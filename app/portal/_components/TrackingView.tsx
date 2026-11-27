@@ -136,7 +136,8 @@ function OzetKart({ baslik, deger, birim, degisim, ondalik, aralik, ters }: { ba
   )
 }
 
-export function TrackingView({ data }: { data: PortalBundle }) {
+/** `paket`: BRANS-PAKETI Phase 2 — pediatri / KD package (their chapter views live here), mounted under the base views. */
+export function TrackingView({ data, paket }: { data: PortalBundle; paket?: React.ReactNode }) {
   const t = data.tracking
   // SAGLIGIM-PORTAL-REGISTRY: specialty widgets mount only for attached modules, never "just in case".
   const buyumeModulu = portalModulAktif(data, 'buyume')
@@ -261,6 +262,7 @@ export function TrackingView({ data }: { data: PortalBundle }) {
       {portalModulAktif(data, 'gebelik') && data.gebelik && <GebeligimView gebelik={data.gebelik} />}
       {portalModulAktif(data, 'jinekoloji') && data.jinekoloji && <JinekolojiPortalView jine={data.jinekoloji} />}
       {buyumeModulu && data.buyume && <BuyumeEgrileriView buyume={data.buyume} />}
+      {paket}
     </div>
   )
 }

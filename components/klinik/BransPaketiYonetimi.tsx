@@ -27,7 +27,7 @@ const h2: React.CSSProperties = { fontFamily: "'Fraunces', Georgia, serif", font
 const kucuk: React.CSSProperties = { fontSize: 12, color: '#8b7d70', margin: 0 }
 
 const TUR_ETIKET: Record<string, string> = { zaman: 'Zaman çizelgesi', liste: 'Kontrol listesi', gunluk: 'Günlük', foto: 'Fotoğraf günlüğü', program: 'Program', hatirlatma: 'Hatırlatma', biyobelirtec: 'Değerler', tabak: 'Tabağım', plan: 'Haftalık plan', tarama: 'Tarama soruları', 'ilac-saati': 'İlaç saati' }
-const NEDEN: Record<string, string> = { varsayilan: 'varsayılan', uzman: 'sizin açtığınız', tani: 'dosyadaki tanıdan', ilac: 'dosyadaki ilaçtan' }
+const NEDEN: Record<string, string> = { varsayilan: 'varsayılan', uzman: 'sizin açtığınız', tani: 'dosyadaki tanıdan', ilac: 'dosyadaki ilaçtan', gebelik: 'aktif gebelik kaydından' }
 
 function adimMetni(a: PaketAdim[] | undefined) { return (a || []).map((x) => `${x.gun} | ${x.baslik} | ${x.ayrinti}`).join('\n') }
 function adimCoz(m: string): PaketAdim[] { return m.split('\n').map((s) => s.split('|').map((x) => x.trim())).filter((p) => p.length >= 2 && p[1]).map((p) => ({ gun: Number(p[0]), baslik: p[1], ayrinti: p[2] || '' })) }
@@ -144,7 +144,7 @@ function HastaModulKarti({ patientId, m, yenile }: { patientId: string; m: Hasta
           <button key={String(v)} type="button" aria-pressed={acik === v} onClick={() => setAcik(v)} style={{ ...ikincil, background: acik === v ? '#2f4334' : '#fff', color: acik === v ? '#fff' : '#3b2e24' }}>{e}</button>
         ))}
       </div>
-      {m.baslangicEtiketi && <label style={{ display: 'grid', gap: 4, fontSize: 13 }}>{m.baslangicEtiketi}<input type="date" value={bas} onChange={(e) => setBas(e.target.value)} style={giris} /></label>}
+      {m.baslangicEtiketi && <label style={{ display: 'grid', gap: 4, fontSize: 13 }}>{m.baslangicEtiketi}{m.neden === 'gebelik' && !m.baslangic ? ' (boş bırakılırsa aktif gebelik kaydındaki son adet tarihi kullanılır)' : ''}<input type="date" value={bas} onChange={(e) => setBas(e.target.value)} style={giris} /></label>}
       {m.ayarlar.map((a) => (
         <label key={a.id} style={{ display: 'grid', gap: 4, fontSize: 13 }}>
           {a.etiket}
@@ -171,11 +171,13 @@ function Ic() {
   const [hasta, setHasta] = useState(onceden)
   const [veri, setVeri] = useState<HastaVeri | null>(null)
   const [hata, setHata] = useState('')
+  const [yuklendi, setYuklendi] = useState(false)
 
   const sablonYukle = useCallback(async () => {
     const r = await doktorFetch('/api/ozel-brans/paket', {})
     const j = await r.json().catch(() => ({}))
     if (r.ok) { setSablonlar(j.moduller || []); setBrans(j.brans || null) } else setHata(String(j.error || 'Şablonlar okunamadı.'))
+    setYuklendi(true)
   }, [])
   const hastaYukle = useCallback(async () => {
     if (!hasta) { setVeri(null); return }
@@ -186,7 +188,8 @@ function Ic() {
   useEffect(() => { void sablonYukle() }, [sablonYukle])
   useEffect(() => { void hastaYukle() }, [hastaYukle])
 
-  if (brans === null && sablonlar.length === 0 && !hata) return <p style={kucuk}>Yükleniyor…</p>
+  if (!yuklendi && !hata) return <p style={kucuk}>Yükleniyor…</p>
+  if (yuklendi && !brans && !hata) return <p style={{ ...kucuk, fontSize: 14 }}>Branşınız için hasta alanı paketi henüz hazır değil. Hazır olduğunda şablonlar burada kabulünüze sunulur.</p>
   const bekleyen = sablonlar.filter((s) => !s.kabulAt).length
   const bayrakli = (veri?.kayitlar || []).filter((k) => k.seviye)
   const plan = veri?.plan as { alisveris?: Array<{ grup: string; kalemler: Array<{ ad: string; kez: number }> }> } | null
@@ -195,7 +198,7 @@ function Ic() {
       {hata && <p style={{ color: '#a45b3e', margin: 0 }}>{hata}</p>}
       <section style={{ display: 'grid', gap: 10 }}>
         <h2 style={h2}>Şablonlar {bekleyen ? `· ${bekleyen} kabul bekliyor` : '· hepsi kabul edildi'}</h2>
-        <p style={kucuk}>Her modül bir başlangıç şablonudur. İnceleyin, isterseniz düzenleyin ve kabul edin; kabul etmediğiniz modül hiçbir hastaya gitmez. Kabul tarihi kayda geçer.</p>
+        <p style={kucuk}>Her modül bir başlangıç şablonudur. İnceleyin, isterseniz düzenleyin ve kabul edin; kabul etmediğiniz modül hiçbir hastaya gitmez. Kabul tarihi kayda geçer. Kabul ettiğiniz modüller hastanızın Sağlığım sayfasında ve Bugün ekranındaki günlük kartta görünür.</p>
         {sablonlar.map((s) => <SablonKarti key={s.kod} s={s} yenile={sablonYukle} />)}
       </section>
       <section style={{ display: 'grid', gap: 10 }}>

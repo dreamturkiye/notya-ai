@@ -1,14 +1,16 @@
 /**
  * BRANS-PAKETI (Kaan, 2026-11-27) — the patient's branş signature modules (Sağlığım › Özel Branş page). PIN unlock required.
  *   GET  → the modules on for this patient (accepted templates only), recent entries, photo list, screening due flag.
+ *   GET ?bugun=1 → the lean "what matters today" summary for the Bugün card (no photos, no lab, 14 days of entries).
  *   POST { modul, veri | madde | cevaplar } → one diary entry / checklist or programme tick / screening answers.
  * HASTA-IZOLASYON: token → (patient_id, doctor_id) via portalKapsami; every read / write in lib/portal/bransPaketiSunucu.ts
- * carries both columns; the module code must belong to the token doctor's own Özel Branş and be on for this patient.
- * Not on the Sağlığım bundle hot path: fetched only when a package page opens (performans-butcesi-koruma).
+ * carries both columns; the module code must belong to the token doctor's own branş (Özel Branş or medical specialty) and
+ * be on for this patient. Not on the Sağlığım bundle hot path: fetched when a package page opens, and once (lean mode)
+ * after the Bugün home has painted (performans-butcesi-koruma).
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { portalKapsami, sonucYaniti } from '@/lib/saglikEvi/portalKapisi'
-import { hastaPaketiOku, kayitEkle } from '@/lib/portal/bransPaketiSunucu'
+import { hastaBugunOku, hastaPaketiOku, kayitEkle } from '@/lib/portal/bransPaketiSunucu'
 
 export const dynamic = 'force-dynamic'
 
@@ -16,7 +18,8 @@ export async function GET(req: NextRequest, { params }: { params: { token: strin
   const g = await portalKapsami(req, params.token)
   if ('hata' in g) return g.hata
   try {
-    return NextResponse.json(await hastaPaketiOku(g.sb, g.kapsam), { headers: { 'Cache-Control': 'no-store' } })
+    const bugun = req.nextUrl.searchParams.get('bugun') === '1'
+    return NextResponse.json(bugun ? await hastaBugunOku(g.sb, g.kapsam) : await hastaPaketiOku(g.sb, g.kapsam), { headers: { 'Cache-Control': 'no-store' } })
   } catch (e) {
     console.error('[portal/brans-paketi] oku:', (e as Error).message)
     return NextResponse.json({ error: 'Bu bölüm şu an yüklenemedi.' }, { status: 500 })

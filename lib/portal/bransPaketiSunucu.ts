@@ -7,12 +7,13 @@
  * EVERY read and write below carries BOTH columns (doctor_id AND patient_id); a photo / entry id from the request is only
  * ever used together with that scope, so a foreign id matches no row. Storage paths are built from the scope, never
  * taken from the request.
- * Branş gate (brans-alan-sizmasi): a module code is accepted only when it belongs to the token doctor's own Özel Branş
- * (modulBransaAitMi) AND is active for this patient (hastaPaketiCoz).
+ * Branş gate (brans-alan-sizmasi): a module code is accepted only when it belongs to the token doctor's own branş —
+ * Özel Branş or medical specialty (modulBransaAitMi) — AND is active for this patient (hastaPaketiCoz).
  * KVKK: the professional sees diary entries only after the patient's sharing consent (ev_tercihler.paylasim_onayi);
  * photos carry their own per-upload consent. acil copy (112) is always shown to the patient immediately.
  * Performance: the module page loads with ONE batch of parallel reads (no per-item round trips); this route is NOT on
- * the Sağlığım bundle hot path — it is fetched only when a package page is opened.
+ * the Sağlığım bundle hot path — it is fetched when a package page opens, and in its lean `bugun` mode (no photos, no
+ * lab, 14 days of entries) once after the Bugün home has painted.
  */
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { randomUUID } from 'node:crypto'
@@ -26,13 +27,14 @@ import { kronikListe, notAlanlariCoz } from '@/lib/doktor/hastaKayitAlanlari'
 import { hekimeBildir, varsayilanHekimGonderici } from '@/lib/saglikEvi/hekimBildirim'
 import { arkaPlanda } from '@/lib/kurucu/denemeBildirimi'
 import {
-  BRANS_PAKETLERI, ayarTemizle, hastaPaketiCoz, kayitDegerlendir, kayitTemizle,
-  modulBransaAitMi, paketBransi, paketModulu, sablonDuzenlemesiTemizle,
+  ayarTemizle, bransModulleri, hastaPaketiCoz, kayitDegerlendir, kayitTemizle,
+  modulBransaAitMi, paketBransi, paketModulu, sablonDuzenlemesiTemizle, PAKET_ADI, PAKET_YOLU,
   type CozulmusModul, type HastaAyarKaydi, type PaketIcerik, type SablonKaydi,
 } from './bransPaketi'
+import { klinikSlugCoz } from '@/lib/specialties/klinikDikey'
 import { scoffDegerlendir, TARAMA_HASTA_METNI, TARAMA_TESEKKUR } from '@/specialties/diyetisyen/engines/tarama'
-import { hastaYukuKur, type HastaPaketi, type Yuk } from './bransPaketiYuk'
-export type { HastaPaketi, HastaPaketModulu } from './bransPaketiYuk'
+import { bugunOzeti, hastaYukuKur, type HastaPaketi, type PaketBugunOzeti, type Yuk } from './bransPaketiYuk'
+export type { HastaPaketi, HastaPaketModulu, PaketBugunOzeti } from './bransPaketiYuk'
 import { planCoz } from '@/specialties/diyetisyen/engines/plan'
 import { levotiroksinGunPlani, ilacBesinNotlari } from '@/specialties/diyetisyen/engines/ilacBesin'
 import { degerlerim } from '@/specialties/longevity/engines/degerlerim'
@@ -62,27 +64,34 @@ function yasYil(dobEnc: unknown, simdi: number): number | null {
 // ─── loading ────────────────────────────────────────────────────────────────────────────────────────────────────────
 
 /** One batch of parallel reads, all scoped by doctor_id AND patient_id (sablon: doctor only — no patient data). */
-async function yukle(sb: Sb, k: Kapsam, simdi: number, o: { kayitGun?: number; lab?: boolean } = {}): Promise<Yuk> {
+async function yukle(sb: Sb, k: Kapsam, simdi: number, o: { kayitGun?: number; lab?: boolean; foto?: boolean } = {}): Promise<Yuk> {
   const doktorBransi = await hekimBransi(sb, k.doktorId)
   const brans = paketBransi(doktorBransi)
   const bos: Yuk = { brans, cozum: { brans, moduller: [], hazirlaniyor: [] }, sablonlar: {}, hastaAyar: {}, kayitlar: [], fotolar: [], paylasimOnayi: false, lab: [], ilaclar: [] }
   if (!brans) return bos
-  const durumVar = BRANS_PAKETLERI[brans].some((m) => !!m.durum)
-  const labGerek = o.lab !== false && BRANS_PAKETLERI[brans].some((m) => m.tur === 'biyobelirtec')
+  const tanimlar = bransModulleri(brans)
+  const durumVar = tanimlar.some((m) => !!(m.durum?.tani || m.durum?.icd || m.durum?.ilac))
+  const ozelBrans = !!klinikSlugCoz(brans)
+  const gebelikGerek = tanimlar.some((m) => m.durum?.gebelik || m.baslangicKaynagi === 'gebelik')
+  const labGerek = o.lab !== false && tanimlar.some((m) => m.tur === 'biyobelirtec')
+  const fotoGerek = o.foto !== false && tanimlar.some((m) => m.tur === 'foto' || m.tur === 'tabak')
   const bugun = trBugun(simdi)
   const kayitBas = new Date(simdi - (o.kayitGun ?? 60) * GUN_MS).toISOString().slice(0, 10)
   const bos_ = Promise.resolve({ data: [] as any[] })
-  const [sablonR, ayarR, kayitR, fotoR, hastaR, tercihR, notR, ilacR, planR, labR] = await Promise.all([
+  const bosTek = Promise.resolve({ data: null as any })
+  const [sablonR, ayarR, kayitR, fotoR, hastaR, tercihR, notR, ilacR, planR, labR, gebR] = await Promise.all([
     sb.from('brans_paket_sablon').select('modul, icerik, kabul_at').eq('doctor_id', k.doktorId).eq('brans', brans),
     sb.from('brans_paket_hasta').select('modul, acik, baslangic, ayar').eq('doctor_id', k.doktorId).eq('patient_id', k.patientId),
     sb.from('brans_paket_kayit').select('id, modul, gun, veri, seviye, created_at').eq('doctor_id', k.doktorId).eq('patient_id', k.patientId).gte('gun', kayitBas).order('created_at', { ascending: false }).limit(400),
-    sb.from('brans_paket_foto').select('id, modul, etiket, uzman_yorum, yorum_at, created_at').eq('doctor_id', k.doktorId).eq('patient_id', k.patientId).order('created_at', { ascending: false }).limit(120),
+    fotoGerek ? sb.from('brans_paket_foto').select('id, modul, etiket, uzman_yorum, yorum_at, created_at').eq('doctor_id', k.doktorId).eq('patient_id', k.patientId).order('created_at', { ascending: false }).limit(120) : bos_,
     sb.from('patients').select('dob_encrypted, notes_encrypted').eq('id', k.patientId).eq('doctor_id', k.doktorId).maybeSingle(),
     sb.from('ev_tercihler').select('paylasim_onayi').eq('doctor_id', k.doktorId).eq('patient_id', k.patientId).maybeSingle(),
     durumVar ? notIcdSorgusu(sb, k.doktorId, k.patientId).then((r) => r, () => ({ data: [] })) : bos_,
     durumVar ? arsivsizIlaclar(sb, 'ilac_adi, aktif, bitis_tarihi').eq('patient_id', k.patientId).eq('doctor_id', k.doktorId).eq('onay_durumu', 'onayli').eq('aktif', true).limit(60).then((r) => r, () => ({ data: [] })) : bos_,
-    durumVar ? sb.from('ozel_brans_plan').select('girdi').eq('doctor_id', k.doktorId).eq('patient_id', k.patientId).limit(20).then((r) => r, () => ({ data: [] })) : bos_,
+    durumVar && ozelBrans ? sb.from('ozel_brans_plan').select('girdi').eq('doctor_id', k.doktorId).eq('patient_id', k.patientId).limit(20).then((r) => r, () => ({ data: [] })) : bos_,
     labGerek ? sb.from('lab_satirlar').select('canonical_key, raw_name, value_num, unit, numune_tarihi').eq('patient_id', k.patientId).eq('doctor_id', k.doktorId).eq('onayli', true).order('numune_tarihi', { ascending: false }).limit(500).then((r) => r, () => ({ data: [] })) : bos_,
+    // KD pregnancy journey: the ACTIVE pregnancy of THIS doctor's patient (same scope as the portal bundle's Gebeliğim).
+    gebelikGerek ? sb.from('gebelikler').select('sat').eq('patient_id', k.patientId).eq('doctor_id', k.doktorId).eq('durum', 'aktif').order('created_at', { ascending: false }).limit(1).maybeSingle().then((r) => r, () => ({ data: null })) : bosTek,
   ])
   const sablonlar: Record<string, SablonKaydi> = {}
   for (const r of (sablonR.data || []) as Array<Record<string, any>>) sablonlar[String(r.modul)] = { icerik: (r.icerik || null) as PaketIcerik | null, kabulAt: r.kabul_at ? String(r.kabul_at) : null }
@@ -96,6 +105,8 @@ async function yukle(sb: Sb, k: Kapsam, simdi: number, o: { kayitGun?: number; l
     doktorBransi, sablonlar, hastaAyar, tanilar,
     icdKodlari: durumVar ? notIcdKodlari(((notR as { data?: unknown[] }).data || []) as Array<Record<string, unknown>>) : [],
     ilaclar, hastaYasYil: yasYil(hasta?.dob_encrypted, simdi),
+    gebelikSat: (() => { const v = (gebR as { data?: Record<string, any> | null }).data?.sat; return typeof v === 'string' && /^\d{4}-\d{2}-\d{2}/.test(v) ? v.slice(0, 10) : null })(),
+    bugun,
   })
   return {
     brans, cozum, sablonlar, hastaAyar,
@@ -110,6 +121,12 @@ async function yukle(sb: Sb, k: Kapsam, simdi: number, o: { kayitGun?: number; l
 export async function hastaPaketiOku(sb: Sb, k: Kapsam, simdi = Date.now()): Promise<HastaPaketi> {
   const y = await yukle(sb, k, simdi)
   return hastaYukuKur(y, trBugun(simdi))
+}
+
+/** Lean read for the Bugün card: no photos, no lab, 14 days of entries — the same resolver and payload builder. */
+export async function hastaBugunOku(sb: Sb, k: Kapsam, simdi = Date.now()): Promise<PaketBugunOzeti> {
+  const y = await yukle(sb, k, simdi, { kayitGun: 14, lab: false, foto: false })
+  return bugunOzeti(hastaYukuKur(y, trBugun(simdi)))
 }
 
 // ─── patient writes ─────────────────────────────────────────────────────────────────────────────────────────────────
@@ -198,7 +215,8 @@ export async function fotoEkle(sb: Sb, k: Kapsam, o: { modul: string; etiket: st
   let temiz: Buffer
   try { temiz = metaVeriTemizle(o.bayt, mime) } catch { return { ok: false, status: 400, hata: 'Fotoğraf okunamadı.' } }
   const etiket = o.etiket ? o.etiket.trim().slice(0, 80) || null : null
-  if (etiket && am.m.icerik.acilar?.length && am.m.tanim.tur === 'foto' && !am.m.icerik.acilar.includes(etiket) && am.m.tanim.kod !== 'derm-foto') return { ok: false, status: 400, hata: 'Açı bulunamadı.' }
+  const serbest = !!am.m.tanim.serbestEtiket
+  if (etiket && am.m.icerik.acilar?.length && am.m.tanim.tur === 'foto' && !am.m.icerik.acilar.includes(etiket) && !serbest) return { ok: false, status: 400, hata: 'Açı bulunamadı.' }
   const yol = `${k.doktorId}/${k.patientId}/${randomUUID()}.${MARKA_UZANTI[mime]}`
   const yuk = await sb.storage.from(PAKET_FOTO_KOVA).upload(yol, temiz, { contentType: mime, upsert: false })
   if (yuk.error) return { ok: false, status: 503, hata: 'Fotoğraf yüklenemedi.' }
@@ -241,7 +259,7 @@ export async function sablonListesi(sb: Sb, doktorId: string): Promise<{ brans: 
   const satir = new Map(((data || []) as Array<Record<string, any>>).map((r) => [String(r.modul), r]))
   return {
     brans,
-    moduller: BRANS_PAKETLERI[brans].map((t) => {
+    moduller: bransModulleri(brans).map((t) => {
       const r = satir.get(t.kod)
       return { kod: t.kod, tur: t.tur, baslik: t.baslik, aciklama: t.aciklama, varsayilan: t.varsayilan, icerik: (r?.icerik as PaketIcerik) ?? null, kabulAt: r?.kabul_at ? String(r.kabul_at) : null, duzenlendi: !!r?.duzenlendi, kaynaklar: t.kaynaklar, yas: t.yas ?? null, baslangicEtiketi: t.baslangicEtiketi ?? null, ayarlar: t.ayarlar || [] }
     }),
@@ -270,7 +288,7 @@ export async function hekimHastaPaketi(sb: Sb, k: Kapsam, simdi = Date.now()) {
   const y = await yukle(sb, k, simdi, { kayitGun: 120 })
   const bugun = trBugun(simdi)
   const hasta = hastaYukuKur(y, bugun)
-  const tumModuller = y.brans ? BRANS_PAKETLERI[y.brans].map((t) => {
+  const tumModuller = y.brans ? bransModulleri(y.brans).map((t) => {
     const aktif = y.cozum.moduller.find((m) => m.tanim.kod === t.kod)
     return {
       kod: t.kod, tur: t.tur, baslik: t.baslik, durumModulu: !!t.durum, varsayilanKapali: !!t.varsayilanKapali, yas: t.yas ?? null,
@@ -288,6 +306,42 @@ export async function hekimHastaPaketi(sb: Sb, k: Kapsam, simdi = Date.now()) {
     plan: hasta.moduller.find((m) => m.tur === 'plan')?.ayar ?? null,
     lab: y.lab,
     ilacBesin: y.brans === 'diyetisyen' ? ilacBesinNotlari(y.ilaclar) : [],
+  }
+}
+
+/**
+ * The patient-file tile (doctor side, caller proved hastaSahibiMi): the package at a glance — journey progress, modules
+ * on / waiting for template acceptance, the last 7 days of activity and flagged entries of the last 14 days. Diary
+ * content (counts, flags) only after the patient's sharing consent, exactly like hekimHastaPaketi.
+ */
+export async function hekimPaketOzeti(sb: Sb, k: Kapsam, simdi = Date.now()) {
+  const y = await yukle(sb, k, simdi, { kayitGun: 30, lab: false, foto: true })
+  if (!y.brans) return { brans: null, ad: null, aktif: 0, hazirlaniyor: 0, sablonBekleyen: 0, paylasimOnayi: false, ogeler: [], son7Gun: null, sonKayit: null, bayraklar: [], foto30Gun: 0 }
+  const bugun = trBugun(simdi)
+  const yedi = new Date(Date.parse(`${bugun}T00:00:00Z`) - 6 * GUN_MS).toISOString().slice(0, 10)
+  const ondort = new Date(Date.parse(`${bugun}T00:00:00Z`) - 13 * GUN_MS).toISOString().slice(0, 10)
+  const ozet = bugunOzeti(hastaYukuKur(y, bugun), 4)
+  const onay = y.paylasimOnayi
+  // only this branş's modules (an entry left from another branş's module never counts — brans-alan-sizmasi)
+  const kodlar = new Set(bransModulleri(y.brans).map((t) => t.kod))
+  const kayit = y.kayitlar.filter((r) => kodlar.has(String(r.modul))).map((r) => ({ modul: String(r.modul), gun: String(r.gun).slice(0, 10), veri: (r.veri || {}) as Record<string, unknown>, seviye: (r.seviye ?? null) as string | null }))
+  const bayraklar = onay ? kayit.filter((r) => r.seviye && r.gun >= ondort).slice(0, 8).map((r) => {
+    const m = y.cozum.moduller.find((x) => x.tanim.kod === r.modul)
+    const b = m ? kayitDegerlendir(m.icerik, r.veri)[0] : undefined
+    return { gun: r.gun, seviye: r.seviye as 'acil' | 'hekime_bildir' | 'dikkat', modul: m?.tanim.baslik || paketModulu(r.modul)?.baslik || r.modul, metin: b?.bayrak.hekim || null }
+  }) : []
+  return {
+    brans: y.brans, ad: PAKET_ADI[y.brans], yol: PAKET_YOLU[y.brans],
+    yonetim: klinikSlugCoz(y.brans) ? '/ozel-branslar/hasta-alani-paketi' : '/dashboard/doktor/ayarlar/hasta-alani-paketi',
+    aktif: y.cozum.moduller.length,
+    hazirlaniyor: y.cozum.hazirlaniyor.length,
+    sablonBekleyen: bransModulleri(y.brans).filter((t) => !y.sablonlar[t.kod]?.kabulAt).length,
+    paylasimOnayi: onay,
+    ogeler: ozet.ogeler.map((o) => ({ baslik: o.baslik, tur: o.tur, metin: o.metin, tamam: o.tamam, ilerleme: o.ilerleme })),
+    son7Gun: onay ? kayit.filter((r) => r.gun >= yedi).length : null,
+    sonKayit: onay ? kayit[0]?.gun ?? null : null,
+    bayraklar,
+    foto30Gun: y.fotolar.length ? y.fotolar.filter((f) => String(f.created_at).slice(0, 10) >= new Date(simdi - 30 * GUN_MS).toISOString().slice(0, 10)).length : 0,
   }
 }
 

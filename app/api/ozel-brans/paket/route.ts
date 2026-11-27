@@ -1,10 +1,11 @@
 /**
- * BRANS-PAKETI — the professional's module templates (Özel Branşlar › Hasta alanı paketi).
+ * BRANS-PAKETI — the professional's module templates (Özel Branşlar › Hasta alanı paketi; medical doctors: Ayarlar ›
+ * Hasta alanı paketi — the same route and component, BRANS-PAKETI Phase 2).
  *   GET  → the modules of the professional's OWN branş with their acceptance state (no patient data).
  *   POST { modul, icerik } → accept (and optionally edit) one template; timestamp + history recorded. A module reaches
  *        no patient before this acceptance — the treating professional is the reviewer.
  * HASTA-IZOLASYON: doktorOturum; reads / writes brans_paket_sablon with doctor_id = session user only; the module code
- * must belong to that doctor's own Özel Branş (modulBransaAitMi). No patient id is accepted.
+ * must belong to that doctor's own branş (modulBransaAitMi). No patient id is accepted.
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { doktorOturum } from '@/lib/doktor/serverAuth'

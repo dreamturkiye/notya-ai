@@ -66,6 +66,8 @@ const HastaGenitalEstetik = dinamikYukle(() => import('@/components/doktor/Hasta
 const FotoArsivi = dinamikYukle(() => import('@/components/doktor/fotoArsivi/FotoArsivi'), { loading: SekmeYukleniyor });
 // HASTA-PORTALI-GUNLUK: Sağlığım home data card (core, every branş) — own chunk + own request, never in the page payload.
 const EvVerisiKarti = dinamikYukle(() => import('@/components/doktor/saglikEvi/EvVerisiKarti'), { ssr: false, loading: () => null });
+// BRANS-PAKETI Phase 2 — the branş package tile (own lazy chunk + own lean request; nothing when the branş has no package).
+const PaketKarti = dinamikYukle(() => import('@/components/doktor/bransPaketi/PaketKarti'), { ssr: false, loading: () => null });
 import HastaOzetDuzenlenebilir from '@/components/doktor/HastaOzetDuzenlenebilir';
 import HastaKlinikOzetler from '@/components/doktor/HastaKlinikOzetler';
 import HastaIletisim from '@/components/doktor/iletisim/HastaIletisim';
@@ -661,6 +663,7 @@ export default function HastaProfilPage() {
             <KalkanTaslak patientId={patientId} />
             <EnabizIzinKutusu patientId={patientId} />
             <EvVerisiKarti patientId={patientId} />
+            <PaketKarti patientId={patientId} />
             <div style={{ ...panel, padding: '18px 20px', position: 'relative', overflow: 'hidden' }}>
               <div style={{ position: 'absolute', top: 0, left: 20, right: 20, height: 2, borderRadius: 2, background: `linear-gradient(90deg, ${CHROME_RENK.pine}, transparent)` }} />
               <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 8, color: CHROME_RENK.ink }}>Gelişler ve tanılar</div>

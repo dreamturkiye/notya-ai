@@ -12,7 +12,7 @@ import { KLINIK_YENI_SLUGS } from '@/lib/specialties/klinikDikey'
 import { KLINIK_PORTAL_MODUL } from '@/lib/klinik/klinikPortal'
 import { OZEL_BRANS_AYARLARI, TIBBI_BRANS_AYARLARI } from '@/lib/saglikEvi/bransAyari'
 import {
-  BRANS_PAKETLERI, PAKET_SAYFASI, hastaPaketiCoz, kayitDegerlendir, kayitTemizle, modulBransaAitMi, paketModulu,
+  OZEL_BRANS_PAKETLERI as BRANS_PAKETLERI, BRANS_PAKETLERI as TUM_PAKETLER, PAKET_SAYFASI, type PaketModulTanimi, hastaPaketiCoz, kayitDegerlendir, kayitTemizle, modulBransaAitMi, paketModulu,
   sablonDuzenlemesiTemizle, ayarTemizle, zamanCizelgesi, type PaketGirdisi, type SablonKaydi,
 } from './bransPaketi'
 import { hastaYukuKur } from './bransPaketiYuk'
@@ -22,15 +22,16 @@ import { TARAMA_HASTA_METNI, TARAMA_TESEKKUR } from '@/specialties/diyetisyen/en
 const KABUL = '2026-11-27T08:00:00Z'
 function hepsiKabul(brans: string): Record<string, SablonKaydi> {
   const out: Record<string, SablonKaydi> = {}
-  for (const m of Object.values(BRANS_PAKETLERI).flat()) if (m.brans === brans) out[m.kod] = { icerik: null, kabulAt: KABUL }
+  for (const m of Object.values(TUM_PAKETLER).flat() as PaketModulTanimi[]) if (m.brans === brans) out[m.kod] = { icerik: null, kabulAt: KABUL }
   return out
 }
 /** All templates of ALL branşlar accepted — the strictest leak check (a foreign accepted row must still not resolve). */
 function tumKabul(): Record<string, SablonKaydi> {
-  return Object.fromEntries(Object.values(BRANS_PAKETLERI).flat().map((m) => [m.kod, { icerik: null, kabulAt: KABUL }]))
+  return Object.fromEntries((Object.values(TUM_PAKETLER).flat() as PaketModulTanimi[]).map((m) => [m.kod, { icerik: null, kabulAt: KABUL }]))
 }
 const girdi = (o: Partial<PaketGirdisi>): PaketGirdisi => ({ doktorBransi: 'diyetisyen', sablonlar: tumKabul(), hastaAyar: {}, tanilar: [], icdKodlari: [], ilaclar: [], hastaYasYil: 40, ...o })
-const tumModuller = Object.values(BRANS_PAKETLERI).flat()
+/** every module of every branş (Özel + medical) — the copy / flag rules below hold for all 40 */
+const tumModuller = Object.values(TUM_PAKETLER).flat() as PaketModulTanimi[]
 
 function hastaMetinleri(): string[] {
   return tumModuller.flatMap((m) => [m.baslik, m.aciklama, m.fotoRizaMetni || '', m.varsayilan.not || '', ...(m.varsayilan.maddeler || []), ...(m.varsayilan.adimlar || []).flatMap((a) => [a.baslik, a.ayrinti]), ...(m.varsayilan.alanlar || []).map((a) => a.etiket), ...(m.varsayilan.bayraklar || []).map((b) => b.hasta), ...(m.varsayilan.acilar || [])])
@@ -79,14 +80,17 @@ describe('BRANS-PAKETI brans-alan-sizmasi (leak gate)', () => {
     }
   })
 
-  it('none of the 30 medical branşlar resolves any package module in Phase 1 (plastik cerrahi ≠ estetik cerrahi, dermatoloji ≠ klinik dermatoloji)', () => {
+  it('Phase 2: a medical branş resolves only its OWN modules (plastik cerrahi ≠ estetik cerrahi, dermatoloji ≠ klinik dermatoloji); a branş without a package resolves nothing', () => {
     const tibbi = Object.keys(TIBBI_BRANS_AYARLARI)
     assert.equal(tibbi.length, 30)
     for (const b of tibbi) {
       const c = hastaPaketiCoz(girdi({ doktorBransi: b, tanilar: ['PKOS'], ilaclar: ['Ozempic'] }))
-      assert.equal(c.moduller.length, 0, `${b} got a package`)
-      for (const m of tumModuller) assert.equal(modulBransaAitMi(m.kod, b), false)
+      for (const m of c.moduller) assert.equal(m.tanim.brans, b, `${m.tanim.kod} leaked into ${b}`)
+      for (const m of tumModuller) if (m.brans !== b) assert.equal(modulBransaAitMi(m.kod, b), false, `${m.kod} accepted for ${b}`)
+      if (!TUM_PAKETLER[b as keyof typeof TUM_PAKETLER]?.length) assert.equal(c.moduller.length, 0, `${b} has no package but resolved one`)
     }
+    for (const m of BRANS_PAKETLERI['klinik-dermatoloji']) assert.equal(modulBransaAitMi(m.kod, 'dermatoloji'), false)
+    for (const m of BRANS_PAKETLERI['estetik-cerrahi']) assert.equal(modulBransaAitMi(m.kod, 'plastik-cerrahi'), false)
     assert.equal(hastaPaketiCoz(girdi({ doktorBransi: null })).moduller.length, 0)
     assert.equal(hastaPaketiCoz(girdi({ doktorBransi: 'bilinmeyen' })).moduller.length, 0)
   })

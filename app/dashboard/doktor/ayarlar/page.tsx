@@ -17,6 +17,8 @@ const BOLUMLER = [
   { baslik: 'Bildirimler', aciklama: 'Acil ev ölçümleri ve hasta uyarıları telefonunuza — çalışma saatleriniz, sabah özeti', rota: '/dashboard/doktor/ayarlar/bildirimler', ikon: '🔔' },
   // HASTA-ALANI-MARKA (2026-11-25): Sağlığım hastaya doktorun kendi hizmeti olarak görünür.
   { baslik: 'Hasta Alanı Görünümü', aciklama: 'Hastalarınız Sağlığım’ı logonuz, fotoğrafınız ve adınızla görür — önizlemeli', rota: '/dashboard/doktor/ayarlar/hasta-alani', ikon: '🪪' },
+  // BRANS-PAKETI Phase 2 (2026-11-27): branş package templates — accepted by the doctor before any patient sees them.
+  { baslik: 'Hasta alanı paketi', aciklama: 'Branşınıza özel bakım yolculuğu, günlükler ve kırmızı bayraklar — şablonları inceleyin ve kabul edin', rota: '/dashboard/doktor/ayarlar/hasta-alani-paketi', ikon: '🧭' },
   { baslik: 'İletişim', aciklama: 'Hastalarınıza kendi WhatsApp ve e-postanızdan tek dokunuşla yazın', rota: '/dashboard/doktor/ayarlar/iletisim', ikon: '💬' },
   { baslik: 'Esnek muayene ve el notları', aciklama: 'Kağıda yazdığınız notlar: kim hazırlasın, onayınız gereksin mi, kısaltma sözlüğünüz, form şablonlarınız', rota: '/dashboard/doktor/ayarlar/el-notu', ikon: '✍️' },
   { baslik: 'Gelen Belgeler', aciklama: 'Sekreterinizin gelen belgeleri görüp dosyalamasına izin verin', rota: '/dashboard/doktor/ayarlar/gelen-belgeler', ikon: '📥' },

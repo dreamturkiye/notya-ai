@@ -1,7 +1,9 @@
 /**
  * BRANS-PAKETI (Kaan, 2026-11-27) — branş signature modules of the patient portal (Sağlığım). Phase 1: the 10 Özel
  * Branşlar (diyetisyen full package). Kaan: "Diyetisyen için yapacağın hasta portalını bütün branşlar için gerektiği
- * şekilde yap. Özel branşlar için de bunu yapman şart." The 30 medical branşlar are Phase 2 (docs/portal/BRANS-PAKETI-FAZ2.md).
+ * şekilde yap. Özel branşlar için de bunu yapman şart." Phase 2 (Kaan, 2026-11-27: "Faz ikiyi başlat ve hasta portalını
+ * exceptional bir şekilde 30+10 branşa uygula"): the 30 medical branşlar (lib/portal/paket/tibbi*.ts) on the same
+ * registry, resolver, acceptance flow and view (docs/portal/BRANS-PAKETI-FAZ2.md).
  *
  * One registry, shared module KINDS (one look across branşlar and later countries — gorunum-paritesi): what differs per
  * branş is DATA (lib/portal/paket/*.ts). Combined per patient with
@@ -11,16 +13,22 @@
  *   3. for condition modules (diyetisyen): the diagnoses / ICD-10 / medicines on file (conservative patterns),
  *   4. age rules (ergoterapi sensory diet only under 18 — veli wording follows age, veliDiliMi; never for adults).
  *
- * brans-alan-sizmasi: a module belongs to exactly one Özel Branş; `hastaPaketiCoz` never returns a module whose branş is
- * not the token doctor's branş, and returns nothing for the 30 medical branşlar in Phase 1 (pinned by tests).
+ * brans-alan-sizmasi: a module belongs to exactly one branş (Özel Branş slug or medical specialty key); `hastaPaketiCoz`
+ * never returns a module whose branş is not the token doctor's branş (pinned by tests over all 40).
  * Nothing here is gamified: no streaks, badges or scores (diyetisyen weight loss is deliberately outside the habit
  * layer — see bransAyari.oyunDisi). Pure + client-safe (no fs, no Supabase).
  */
 import { klinikSlugCoz, type KlinikYeniSlug } from '@/lib/specialties/klinikDikey'
+import { bransAnahtari } from '@/lib/specialties/bransAnahtari'
 import type { KlinikPortalModulId } from '@/lib/klinik/klinikPortal'
+import type { SpecialtyKey } from '@/lib/asistan/turkishSpecialtyRefs'
 import { DIYETISYEN_PAKETI } from './paket/diyetisyen'
 import { SAC_EKIMI_PAKETI, ESTETIK_CERRAHI_PAKETI, MEDIKAL_ESTETIK_PAKETI, KLINIK_DERMATOLOJI_PAKETI } from './paket/estetik'
 import { LONGEVITY_PAKETI, FIZYOTERAPI_PAKETI, KLINIK_PSIKOLOG_PAKETI, ERGOTERAPI_PAKETI, ODYOLOJI_PAKETI } from './paket/terapi'
+import { TIBBI_PAKETLER } from './paket/tibbi'
+
+/** A package owner: one of the 10 Özel Branşlar or one of the 30 medical specialties (lib/doktor/specialties.ts). */
+export type PaketBransi = KlinikYeniSlug | SpecialtyKey
 
 export type PaketModulTuru =
   | 'zaman'        // day-by-day timeline from a start date the professional sets
@@ -46,6 +54,9 @@ export interface PaketAlan {
   birim?: string
   /** shown only when the professional's per-patient setting is truthy (e.g. dren) */
   ayarKosulu?: string
+  /** payload only (bransPaketiYuk): the highest red-flag level a yes on this field can trigger — the view groups these
+   *  under one "danger signs" heading. Never carries the professional's text. */
+  isaret?: PaketDuzey
 }
 
 export interface PaketBayrak {
@@ -75,7 +86,7 @@ export interface PaketAyarAlani { id: string; etiket: string; tur: 'sayi' | 'saa
 
 export interface PaketModulTanimi {
   kod: string
-  brans: KlinikYeniSlug
+  brans: PaketBransi
   tur: PaketModulTuru
   baslik: string
   aciklama: string
@@ -87,11 +98,19 @@ export interface PaketModulTanimi {
   /** per-patient settings the professional fills (protein target, plan, exercise list …) */
   ayarlar?: PaketAyarAlani[]
   /** condition module: on when a diagnosis / ICD / medicine on file matches (unless the professional switched it off) */
-  durum?: { tani?: RegExp; icd?: RegExp; ilac?: RegExp }
+  durum?: { tani?: RegExp; icd?: RegExp; ilac?: RegExp; gebelik?: true }
   /** off unless the professional switches it on for this patient (e.g. isotretinoin monitoring) */
   varsayilanKapali?: boolean
   /** age gate: 'cocuk' = only under 18 (veli wording), 'eriskin' = only 18+ (unknown age = adult) */
   yas?: 'cocuk' | 'eriskin'
+  /** age window in months [from, to) — e.g. developmental milestones 0–12 months (unknown age = never) */
+  yasAy?: [number, number]
+  /** start date comes from the active pregnancy record (gebelikler.sat) unless the professional set one */
+  baslangicKaynagi?: 'gebelik'
+  /** shown only from this many days after the start date (e.g. fetal movements from week 28 = day 196) */
+  enErkenGun?: number
+  /** photo module: the patient may type a free label (body area) instead of choosing a fixed angle */
+  serbestEtiket?: boolean
   /** 'liste' modules: can the patient tick items? */
   isaretlenir?: boolean
   /** the photo module needs the patient's separate photo consent text */
@@ -100,7 +119,7 @@ export interface PaketModulTanimi {
 
 export const PAKET_ACIL_ORTAK = 'Acil bir durumda portal mesajı beklemeyin — 112’yi arayın.'
 
-export const BRANS_PAKETLERI: Record<KlinikYeniSlug, readonly PaketModulTanimi[]> = {
+export const OZEL_BRANS_PAKETLERI: Record<KlinikYeniSlug, readonly PaketModulTanimi[]> = {
   diyetisyen: DIYETISYEN_PAKETI,
   'sac-ekimi': SAC_EKIMI_PAKETI,
   'estetik-cerrahi': ESTETIK_CERRAHI_PAKETI,
@@ -113,6 +132,9 @@ export const BRANS_PAKETLERI: Record<KlinikYeniSlug, readonly PaketModulTanimi[]
   odyoloji: ODYOLOJI_PAKETI,
 }
 
+/** Every package: 10 Özel Branşlar + the medical branşlar (Phase 2). A branş without an entry has no package. */
+export const BRANS_PAKETLERI: Partial<Record<PaketBransi, readonly PaketModulTanimi[]>> = { ...OZEL_BRANS_PAKETLERI, ...TIBBI_PAKETLER }
+
 /** The existing Özel Branş portal page each package renders on (lib/klinik/klinikPortal.ts — "Taban önce": kept). */
 export const PAKET_SAYFASI: Record<KlinikYeniSlug, KlinikPortalModulId> = {
   'sac-ekimi': 'sacim', 'estetik-cerrahi': 'estetik-ameliyatim', 'medikal-estetik': 'estetik-bakimim',
@@ -120,21 +142,66 @@ export const PAKET_SAYFASI: Record<KlinikYeniSlug, KlinikPortalModulId> = {
   diyetisyen: 'beslenmem', ergoterapi: 'ergom', odyoloji: 'isitmem-odyoloji',
 }
 
-const TUM_MODULLER: readonly PaketModulTanimi[] = Object.values(BRANS_PAKETLERI).flat()
+/**
+ * The portal page (path under the token) each package renders on — the branş's EXISTING chapter page (Taban önce).
+ * Pediatri and KD have no chapter route of their own: their chapter views (Büyüme, Gebeliğim, jinekoloji) live on Takip,
+ * so their package does too. The Bugün card links here.
+ */
+export const PAKET_YOLU: Record<PaketBransi, string> = {
+  'sac-ekimi': '/sacim', 'estetik-cerrahi': '/estetik-ameliyatim', 'medikal-estetik': '/estetik-bakimim',
+  'klinik-dermatoloji': '/klinik-derim', longevity: '/longevitim', fizyoterapi: '/fizyom', 'klinik-psikolog': '/seanslarim',
+  diyetisyen: '/beslenmem', ergoterapi: '/ergom', odyoloji: '/isitmem-odyoloji',
+  pediatri: '/takip', 'kadin-hastaliklari-dogum': '/takip', dermatoloji: '/derim', dahiliye: '/takibim', endokrinoloji: '/hormonlarim',
+  kardiyoloji: '/kalbim', 'aile-hekimligi': '/saglik-paketim', nefroloji: '/bobreklerim', 'kalp-damar-cerrahisi': '/damar-cerrahisi-takibi',
+  'cocuk-cerrahisi': '/cocugumun-cerrahisi', 'gogus-hastaliklari': '/akcigerlerim', 'enfeksiyon-hastaliklari': '/enfeksiyon-takibim',
+  onkoloji: '/tedavim', noroloji: '/norolojim', 'beyin-cerrahisi': '/beyin-takibi', 'genel-cerrahi': '/ameliyatim',
+  'gogus-cerrahisi': '/gogus-cerrahisi-takibim', 'plastik-cerrahi': '/yaram', anestezi: '/anestezi-oncesi', 'acil-tip': '/acil-sonrasi',
+  gastroenteroloji: '/sindirimim', romatoloji: '/romatizmam', 'spor-hekimligi': '/sporum', ortopedi: '/eklemlerim', 'fizik-tedavi': '/ftrm',
+  uroloji: '/urolojim', psikiyatri: '/ruhsagligim', 'kulak-burun-bogaz': '/kulaklarim', 'goz-hastaliklari': '/gozlerim', radyoloji: '/tetkiklerim',
+}
+
+/** The package's name on the Bugün card ("Bugün · Kalp bakımım"). Neutral wording (no veli / child words). */
+export const PAKET_ADI: Record<PaketBransi, string> = {
+  'sac-ekimi': 'Saç bakımım', 'estetik-cerrahi': 'Ameliyat bakımım', 'medikal-estetik': 'Bakımım', 'klinik-dermatoloji': 'Cilt bakımım',
+  longevity: 'Planım', fizyoterapi: 'Egzersizim', 'klinik-psikolog': 'Görüşmelerim', diyetisyen: 'Beslenmem', ergoterapi: 'Günlük programım',
+  odyoloji: 'İşitme takibim',
+  pediatri: 'Büyüme ve gelişim', 'kadin-hastaliklari-dogum': 'Kadın sağlığım', dermatoloji: 'Cilt bakımım', dahiliye: 'Takibim',
+  endokrinoloji: 'Hormonlarım', kardiyoloji: 'Kalp bakımım', 'aile-hekimligi': 'Sağlık planım', nefroloji: 'Böbrek bakımım',
+  'kalp-damar-cerrahisi': 'Ameliyat sonrası bakımım', 'cocuk-cerrahisi': 'Ameliyat sonrası bakım', 'gogus-hastaliklari': 'Nefes planım',
+  'enfeksiyon-hastaliklari': 'Tedavi takibim', onkoloji: 'Tedavi yolculuğum', noroloji: 'Nöroloji günlüğüm',
+  'beyin-cerrahisi': 'Ameliyat sonrası bakımım', 'genel-cerrahi': 'Ameliyat sonrası bakımım', 'gogus-cerrahisi': 'Ameliyat sonrası bakımım',
+  'plastik-cerrahi': 'Yara bakımım', anestezi: 'Ameliyata hazırlık', 'acil-tip': 'Taburculuk sonrası', gastroenteroloji: 'Sindirim günlüğüm',
+  romatoloji: 'Eklem günlüğüm', 'spor-hekimligi': 'Spora dönüşüm', ortopedi: 'İyileşme planım', 'fizik-tedavi': 'Ev programım',
+  uroloji: 'Üroloji takibim', psikiyatri: 'İyi oluş günlüğüm', 'kulak-burun-bogaz': 'İyileşme planım', 'goz-hastaliklari': 'Göz bakımım',
+  radyoloji: 'Tetkik hazırlığım',
+}
+
+const TUM_MODULLER: readonly PaketModulTanimi[] = Object.values(BRANS_PAKETLERI).flat() as PaketModulTanimi[]
 
 export function paketModulu(kod: string): PaketModulTanimi | null {
   return TUM_MODULLER.find((m) => m.kod === kod) || null
 }
 
-/** The token doctor's Özel Branş, or null (medical branşlar have no Phase-1 package). */
-export function paketBransi(doktorBransi: string | null | undefined): KlinikYeniSlug | null {
-  return klinikSlugCoz(doktorBransi)
+/**
+ * The token doctor's package owner: the Özel Branş slug first (klinik-dermatoloji ≠ dermatoloji, estetik-cerrahi ≠
+ * plastik-cerrahi), else the medical specialty key (free-text / legacy values through bransAnahtari) — null when that
+ * branş has no package yet.
+ */
+export function paketBransi(doktorBransi: string | null | undefined): PaketBransi | null {
+  const ozel = klinikSlugCoz(doktorBransi)
+  if (ozel) return ozel
+  const tibbi = bransAnahtari(doktorBransi)
+  return tibbi && BRANS_PAKETLERI[tibbi]?.length ? tibbi : null
+}
+
+/** The modules of one branş (empty when it has none). */
+export function bransModulleri(b: PaketBransi | null | undefined): readonly PaketModulTanimi[] {
+  return (b && BRANS_PAKETLERI[b]) || []
 }
 
 /** True only when `kod` is a module of this doctor's own branş (the single leak gate every route uses). */
 export function modulBransaAitMi(kod: string, doktorBransi: string | null | undefined): boolean {
-  const b = paketBransi(doktorBransi)
-  return !!b && BRANS_PAKETLERI[b].some((m) => m.kod === kod)
+  return bransModulleri(paketBransi(doktorBransi)).some((m) => m.kod === kod)
 }
 
 // ─── per-patient resolution ─────────────────────────────────────────────────────────────────────────────────────────
@@ -151,6 +218,10 @@ export interface PaketGirdisi {
   icdKodlari: readonly string[]
   ilaclar: readonly string[]
   hastaYasYil: number | null
+  /** son adet tarihi of the ACTIVE pregnancy on file with this doctor (KD), or null */
+  gebelikSat?: string | null
+  /** Istanbul calendar day — needed by `enErkenGun` (defaults to the UTC day) */
+  bugun?: string
 }
 
 export interface CozulmusModul {
@@ -160,19 +231,20 @@ export interface CozulmusModul {
   baslangic: string | null
   ayar: Record<string, unknown>
   /** why it is on — for the professional's panel */
-  neden: 'varsayilan' | 'uzman' | 'tani' | 'ilac'
+  neden: 'varsayilan' | 'uzman' | 'tani' | 'ilac' | 'gebelik'
 }
 
 export interface PaketCozumu {
-  brans: KlinikYeniSlug | null
+  brans: PaketBransi | null
   moduller: CozulmusModul[]
   /** modules that would be on but whose template the professional has not accepted yet */
   hazirlaniyor: string[]
 }
 
-function durumEslesir(t: PaketModulTanimi, g: PaketGirdisi): 'tani' | 'ilac' | null {
+function durumEslesir(t: PaketModulTanimi, g: PaketGirdisi): 'tani' | 'ilac' | 'gebelik' | null {
   const d = t.durum
   if (!d) return null
+  if (d.gebelik) return g.gebelikSat ? 'gebelik' : null
   if (d.tani && g.tanilar.some((x) => d.tani!.test(String(x || '')))) return 'tani'
   if (d.icd && g.icdKodlari.some((x) => d.icd!.test(String(x || '').toUpperCase()))) return 'tani'
   if (d.ilac && g.ilaclar.some((x) => d.ilac!.test(String(x || '')))) return 'ilac'
@@ -180,6 +252,11 @@ function durumEslesir(t: PaketModulTanimi, g: PaketGirdisi): 'tani' | 'ilac' | n
 }
 
 function yasUygun(t: PaketModulTanimi, yas: number | null): boolean {
+  if (t.yasAy) {
+    if (yas == null) return false
+    const ay = yas * 12
+    if (ay < t.yasAy[0] || ay >= t.yasAy[1]) return false
+  }
   if (!t.yas) return true
   const cocuk = yas != null && yas < 18
   return t.yas === 'cocuk' ? cocuk : !cocuk
@@ -206,7 +283,8 @@ export function hastaPaketiCoz(g: PaketGirdisi): PaketCozumu {
   if (!brans) return { brans: null, moduller: [], hazirlaniyor: [] }
   const moduller: CozulmusModul[] = []
   const hazirlaniyor: string[] = []
-  for (const t of BRANS_PAKETLERI[brans]) {
+  const bugun = g.bugun || new Date().toISOString().slice(0, 10)
+  for (const t of bransModulleri(brans)) {
     if (t.brans !== brans || !yasUygun(t, g.hastaYasYil)) continue
     const h = g.hastaAyar[t.kod]
     let neden: CozulmusModul['neden'] | null
@@ -215,9 +293,14 @@ export function hastaPaketiCoz(g: PaketGirdisi): PaketCozumu {
     else if (t.durum) neden = durumEslesir(t, g)
     else neden = t.varsayilanKapali ? null : 'varsayilan'
     if (!neden) continue
+    const baslangic = h?.baslangic ?? (t.baslangicKaynagi === 'gebelik' ? g.gebelikSat ?? null : null)
+    if (t.enErkenGun != null) {
+      const fark = baslangic ? gunFarki(baslangic, bugun) : null
+      if (fark == null || fark < t.enErkenGun) continue
+    }
     const s = g.sablonlar[t.kod]
     if (!s?.kabulAt) { hazirlaniyor.push(t.kod); continue }
-    moduller.push({ tanim: t, icerik: icerikBirlestir(t, s.icerik), baslangic: h?.baslangic ?? null, ayar: h?.ayar ?? {}, neden })
+    moduller.push({ tanim: t, icerik: icerikBirlestir(t, s.icerik), baslangic, ayar: h?.ayar ?? {}, neden })
   }
   return { brans, moduller, hazirlaniyor }
 }

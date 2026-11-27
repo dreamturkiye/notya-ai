@@ -6,7 +6,8 @@
  */
 import type { PortalBundle } from './types'
 import { SAGLIGIM_DEMO } from './demoData'
-import { BRANS_PAKETLERI, hastaPaketiCoz, type HastaAyarKaydi, type SablonKaydi } from './bransPaketi'
+import { BRANS_PAKETLERI, PAKET_ADI, hastaPaketiCoz, type HastaAyarKaydi, type PaketBransi, type SablonKaydi } from './bransPaketi'
+import { SPECIALTY_MAP } from '@/lib/doktor/specialties'
 import { hastaYukuKur, type HastaPaketi } from './bransPaketiYuk'
 import { KLINIK_PORTAL_MODUL, KLINIK_PORTAL_NAV } from '@/lib/klinik/klinikPortal'
 import type { KlinikYeniSlug } from '@/lib/specialties/klinikDikey'
@@ -14,10 +15,12 @@ import type { KlinikYeniSlug } from '@/lib/specialties/klinikDikey'
 const BUGUN = '2026-11-27'
 const gunOnce = (n: number) => new Date(Date.parse(`${BUGUN}T00:00:00Z`) - n * 86_400_000).toISOString().slice(0, 10)
 
-function demoPaket(brans: KlinikYeniSlug, o: { ayar: Record<string, HastaAyarKaydi>; tanilar?: string[]; ilaclar?: string[]; kayitlar?: Array<{ modul: string; gun: string; veri: Record<string, unknown>; seviye?: string | null }>; fotolar?: Array<{ modul: string; etiket: string | null; yorum: string | null; gun: string }> }): HastaPaketi {
+type DemoGirdi = { ayar: Record<string, HastaAyarKaydi>; tanilar?: string[]; icd?: string[]; ilaclar?: string[]; yas?: number; gebelikSat?: string | null; kayitlar?: Array<{ modul: string; gun: string; veri: Record<string, unknown>; seviye?: string | null }>; fotolar?: Array<{ modul: string; etiket: string | null; yorum: string | null; gun: string }> }
+
+function demoPaket(brans: PaketBransi, o: DemoGirdi): HastaPaketi {
   const sablonlar: Record<string, SablonKaydi> = {}
-  for (const m of BRANS_PAKETLERI[brans]) sablonlar[m.kod] = { icerik: null, kabulAt: `${BUGUN}T08:00:00Z` }
-  const cozum = hastaPaketiCoz({ doktorBransi: brans, sablonlar, hastaAyar: o.ayar, tanilar: o.tanilar || [], icdKodlari: [], ilaclar: o.ilaclar || [], hastaYasYil: 34 })
+  for (const m of BRANS_PAKETLERI[brans] || []) sablonlar[m.kod] = { icerik: null, kabulAt: `${BUGUN}T08:00:00Z` }
+  const cozum = hastaPaketiCoz({ doktorBransi: brans, sablonlar, hastaAyar: o.ayar, tanilar: o.tanilar || [], icdKodlari: o.icd || [], ilaclar: o.ilaclar || [], hastaYasYil: o.yas ?? 34, gebelikSat: o.gebelikSat ?? null, bugun: BUGUN })
   return hastaYukuKur({
     brans, cozum, sablonlar, hastaAyar: o.ayar,
     kayitlar: (o.kayitlar || []).map((k, i) => ({ id: `demo-k-${i}`, modul: k.modul, gun: k.gun, veri: k.veri, seviye: k.seviye ?? null, created_at: `${k.gun}T09:00:00Z` })),
@@ -108,3 +111,73 @@ function demoBundle(brans: KlinikYeniSlug, hekim: { ad: string; brans: string; k
 export const SAGLIGIM_DEMO_DIYETISYEN = demoBundle('diyetisyen', { ad: 'Dyt. Elif Demir', brans: 'Diyetisyen', klinik: 'Demir Beslenme Danışmanlığı' }, 'Demo Hasta')
 export const SAGLIGIM_DEMO_SAC_EKIMI = demoBundle('sac-ekimi', { ad: 'Dr. Mert Aksoy', brans: 'Saç Ekimi', klinik: 'Aksoy Saç Kliniği' }, 'Demo Hasta')
 export const SAGLIGIM_DEMO_ESTETIK_CERRAHI = demoBundle('estetik-cerrahi', { ad: 'Op. Dr. Selin Kaya', brans: 'Estetik, Plastik ve Rekonstrüktif Cerrahi', klinik: 'Kaya Estetik Cerrahi' }, 'Demo Hasta')
+
+// ─── BRANS-PAKETI Phase 2 — medical branş demos (/portal/demo-paket/[brans]) ─────────────────────────────────────────
+
+/** Hand-written fixtures for the first market + the requested demos; every other branş gets the generic fixture. */
+const TIBBI_DEMO: Partial<Record<PaketBransi, () => HastaPaketi>> = {
+  pediatri: () => demoPaket('pediatri', {
+    yas: 1.5,
+    ayar: {},
+    kayitlar: [
+      { modul: 'ped-gelisim-1-3', gun: gunOnce(20), veri: { madde: 0, tamam: true } },
+      { modul: 'ped-gelisim-1-3', gun: gunOnce(20), veri: { madde: 1, tamam: true } },
+      { modul: 'ped-gelisim-1-3', gun: gunOnce(6), veri: { madde: 2, tamam: true } },
+      { modul: 'ped-bebek-gunu', gun: gunOnce(1), veri: { beslenme: 5, islakBez: 6, uyku: 13 } },
+      { modul: 'ped-hasta-gun', gun: gunOnce(2), veri: { ates: true, sivi: false, kusma: false } },
+      { modul: 'ped-asi-sonrasi', gun: gunOnce(12), veri: { ates: true, sislik: true }, seviye: 'dikkat' },
+    ],
+  }),
+  'kadin-hastaliklari-dogum': () => demoPaket('kadin-hastaliklari-dogum', {
+    gebelikSat: gunOnce(30 * 7 + 2),
+    ayar: {},
+    kayitlar: [
+      { modul: 'kd-hareket', gun: gunOnce(1), veri: { normal: true } },
+      { modul: 'kd-gebelik-belirti', gun: gunOnce(1), veri: { bulanti: 1 } },
+    ],
+  }),
+  dermatoloji: () => demoPaket('dermatoloji', {
+    tanilar: ['Atopik dermatit'],
+    ilaclar: ['Zoretanin 20 mg kapsül'],
+    ayar: { 'dmt-ben': ayar({}, null, true) },
+    kayitlar: [
+      { modul: 'dmt-gunluk', gun: gunOnce(1), veri: { durum: 4, kasinti: 5, uyku: true, uyguladim: true, nemlendirici: true } },
+      { modul: 'dmt-gunluk', gun: gunOnce(3), veri: { durum: 6, kasinti: 7, uyku: true, uyguladim: true } },
+      { modul: 'dmt-bakim', gun: BUGUN, veri: { madde: 0, tamam: true } },
+      { modul: 'dmt-bakim', gun: BUGUN, veri: { madde: 1, tamam: true } },
+    ],
+    fotolar: [{ modul: 'dmt-foto', etiket: 'Sağ dirsek içi (Yakın)', gun: gunOnce(14), yorum: 'Kızarıklık geçen kontrole göre azalmış.' }],
+  }),
+}
+
+/** Generic fixture: every template accepted as-is, timelines started 9 days ago, condition modules switched on. */
+function genelDemo(brans: PaketBransi): HastaPaketi {
+  const ayar_: Record<string, HastaAyarKaydi> = {}
+  for (const m of BRANS_PAKETLERI[brans] || []) {
+    if (m.yas === 'cocuk' || m.yasAy) continue
+    if (m.tur === 'zaman' || m.durum || m.varsayilanKapali) ayar_[m.kod] = ayar({}, m.tur === 'zaman' && m.baslangicKaynagi !== 'gebelik' ? gunOnce(9) : null, m.durum || m.varsayilanKapali ? true : null)
+  }
+  return demoPaket(brans, { ayar: ayar_, yas: 46 })
+}
+
+export function tibbiPaketDemosu(brans: PaketBransi): HastaPaketi | null {
+  if (!BRANS_PAKETLERI[brans]?.length) return null
+  return (TIBBI_DEMO[brans] || (() => genelDemo(brans)))()
+}
+
+const DEMO_HEKIM: Partial<Record<PaketBransi, string>> = {
+  pediatri: 'Dr. Deniz Arslan', 'kadin-hastaliklari-dogum': 'Op. Dr. Elif Yıldız', dermatoloji: 'Dr. Selin Aksoy', kardiyoloji: 'Dr. Murat Demir', ortopedi: 'Op. Dr. Burak Şen',
+}
+
+/** The synthetic portal bundle of a medical branş demo (fictional doctor and patient; package page at /paket). */
+export function tibbiDemoBundle(brans: PaketBransi): PortalBundle {
+  const etiket = SPECIALTY_MAP[brans]?.label || brans
+  const cocuk = brans === 'pediatri' || brans === 'cocuk-cerrahisi'
+  return {
+    ...SAGLIGIM_DEMO,
+    hekim: { ...SAGLIGIM_DEMO.hekim, ad: DEMO_HEKIM[brans] || 'Dr. Demo Hekim', brans: etiket, klinik: `${etiket} Muayenehanesi`, adres: 'Örnek Mah. Demo Sok. No:1 İstanbul', telefon: null, telefonHref: null, avatarUrl: null },
+    hasta: { adSoyad: cocuk ? 'Demo Çocuk' : 'Demo Hasta', onSekizAlti: cocuk },
+    portal: { moduller: ['asi-karnesi'], nav: [{ key: 'paket', label: PAKET_ADI[brans], path: '/paket' }] },
+    buyume: null, gebelik: null, jinekoloji: null, hedefBoy: null, goz: null, deri: null,
+  }
+}

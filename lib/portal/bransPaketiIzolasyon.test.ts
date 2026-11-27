@@ -191,4 +191,52 @@ describe('BRANS-PAKETI: branş paketi rotaları hasta / hekim sınırını aşma
     assert.ok(row.kabul_at && Array.isArray(row.kabul_gecmisi) && row.kabul_gecmisi.length === 1)
     assert.ok(!db.tablo('brans_paket_sablon').some((x) => x.doctor_id === B.id && x.modul === 'diyet-ir'))
   })
+
+  // ─── Phase 2: medical branş (dermatoloji) — the Bugün card (?bugun=1) and the patient-file tile (?ozet=1) ─────────
+  function dermatolojiyeCevir(h: Hekim, bayrakli: boolean) {
+    const u = db.tablo('users').find((x) => x.id === h.id)!
+    u.specialty = 'Dermatoloji'
+    for (const modul of ['dmt-gunluk', 'dmt-foto']) db.ekle('brans_paket_sablon', { doctor_id: h.id, brans: 'dermatoloji', modul, icerik: {}, kabul_at: new Date().toISOString(), duzenlendi: false, kabul_gecmisi: [] })
+    const bugun = new Date(Date.now() + 3 * 3600_000).toISOString().slice(0, 10)
+    db.ekle('brans_paket_kayit', { doctor_id: h.id, patient_id: h.hasta, modul: 'dmt-gunluk', gun: bugun, veri: bayrakli ? { soyulma: true } : { kasinti: 2 }, seviye: bayrakli ? 'acil' : null, created_at: new Date().toISOString() })
+  }
+
+  it('Phase 2 — Bugün card (?bugun=1): PIN required; each token gets only its own doctor’s dermatoloji package; diyetisyen modules are gone after the branş change', async () => {
+    dermatolojiyeCevir(A, false); dermatolojiyeCevir(B, true)
+    const yolA = `/api/portal/hasta/${A.token}/brans-paketi?bugun=1`
+    assert.equal((await coz(R.paket.GET(iste('GET', yolA), prm({ token: A.token })))).status, 401)
+    const a = await coz(R.paket.GET(iste('GET', yolA, { cerez: await cerez(A.token) }), prm({ token: A.token })))
+    assert.equal(a.status, 200, a.metin)
+    const ja = JSON.parse(a.metin)
+    assert.equal(ja.brans, 'dermatoloji'); assert.equal(ja.yol, '/derim')
+    assert.equal(ja.ogeler.find((x: { kod: string }) => x.kod === 'dmt-gunluk')?.tamam, true, 'positive control: own entry today')
+    assert.equal(ja.bugunBayrak, null, 'B’s acil entry must not colour A’s card')
+    assert.ok(!a.metin.includes('diyet-'), 'old branş modules must not resolve')
+    const b = JSON.parse((await coz(R.paket.GET(iste('GET', `/api/portal/hasta/${B.token}/brans-paketi?bugun=1`, { cerez: await cerez(B.token) }), prm({ token: B.token })))).metin)
+    assert.equal(b.bugunBayrak, 'acil')
+    // a dermatoloji token cannot write a diyetisyen module any more (branş gate)
+    assert.equal((await coz(R.paket.POST(iste('POST', `/api/portal/hasta/${A.token}/brans-paketi`, { cerez: await cerez(A.token), govde: { modul: 'diyet-vucut', veri: { kalca: 90 } } }), prm({ token: A.token })))).status, 404)
+  })
+
+  for (const [hh, dd] of [['A', 'B'], ['B', 'A']] as const) {
+    it(`Phase 2 — patient-file tile (?ozet=1): ${hh} hekimi kendi hastasının özetini görür, ${dd}'nin hastası 404`, async () => {
+      dermatolojiyeCevir(A, hh === 'B'); dermatolojiyeCevir(B, hh === 'A')
+      const h = hh === 'A' ? A : B, v = hh === 'A' ? B : A
+      const kendi = await coz(R.hasta.GET(iste('GET', `/api/ozel-brans/paket/hasta?patientId=${h.hasta}&ozet=1`, { jwt: h.jwt })))
+      assert.equal(kendi.status, 200, kendi.metin)
+      const j = JSON.parse(kendi.metin)
+      assert.equal(j.brans, 'dermatoloji'); assert.equal(j.son7Gun, 1, 'positive control'); assert.equal(j.bayraklar.length, 0, 'the victim’s flag must not appear')
+      assert.equal(j.yonetim, '/dashboard/doktor/ayarlar/hasta-alani-paketi')
+      assert.equal((await coz(R.hasta.GET(iste('GET', `/api/ozel-brans/paket/hasta?patientId=${v.hasta}&ozet=1`, { jwt: h.jwt })))).status, 404)
+      const kurban = JSON.parse((await coz(R.hasta.GET(iste('GET', `/api/ozel-brans/paket/hasta?patientId=${v.hasta}&ozet=1`, { jwt: v.jwt })))).metin)
+      assert.equal(kurban.bayraklar[0]?.seviye, 'acil'); assert.match(String(kurban.bayraklar[0]?.metin), /SJS/)
+    })
+  }
+
+  it('Phase 2 — without the patient’s sharing consent the tile shows no diary counts or flags', async () => {
+    dermatolojiyeCevir(A, true)
+    db.tablo('ev_tercihler').find((x) => x.patient_id === A.hasta)!.paylasim_onayi = false
+    const j = JSON.parse((await coz(R.hasta.GET(iste('GET', `/api/ozel-brans/paket/hasta?patientId=${A.hasta}&ozet=1`, { jwt: A.jwt })))).metin)
+    assert.equal(j.paylasimOnayi, false); assert.equal(j.son7Gun, null); assert.deepEqual(j.bayraklar, [])
+  })
 })

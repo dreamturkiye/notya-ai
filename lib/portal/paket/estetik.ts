@@ -195,7 +195,7 @@ export const MEDIKAL_ESTETIK_PAKETI: readonly PaketModulTanimi[] = [
 // ─── Dermatoloji kliniği ────────────────────────────────────────────────────────────────────────────────────────────
 export const KLINIK_DERMATOLOJI_PAKETI: readonly PaketModulTanimi[] = [
   {
-    kod: 'derm-foto', brans: 'klinik-dermatoloji', tur: 'foto', baslik: 'Cilt fotoğraf günlüğüm',
+    kod: 'derm-foto', brans: 'klinik-dermatoloji', tur: 'foto', serbestEtiket: true, baslik: 'Cilt fotoğraf günlüğüm',
     aciklama: 'Takip edilen bölgenin aynı açı ve ışıkta fotoğrafı. Yorum ve değerlendirme hekiminizdedir.',
     varsayilan: { acilar: ['Bölge (yakın)', 'Bölge (uzak)'], not: 'Gün ışığında, flaşsız; her seferinde aynı mesafeden.' },
     kaynaklar: ['REPO-DERM-FOTO'],

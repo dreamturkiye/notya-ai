@@ -7,6 +7,7 @@ import { usePortalLive } from '../../../_components/PortalLiveProvider'
 import { SoftPanel } from '../../../_components/ui'
 import { portalModulAktif } from '@/lib/portal/moduller'
 import { portalFetch } from '@/lib/portal/portalFetch'
+import { BransPaketiView } from '@/components/doktor/portal/bransPaketi/BransPaketiView'
 
 export default function HastaTrackingPage() {
   const { data, token, basePath } = usePortalLive()
@@ -23,7 +24,9 @@ export default function HastaTrackingPage() {
       {/* MOBILE-REVIEW: .sg-fade parent gives the panel the portal's side inset; sg-hero-cta is a white hero pill (invisible on a white panel) */}
       {anket && <div className="sg-fade"><SoftPanel style={{ marginBottom: 12 }}><b>Muayene öncesi anket</b> — ev tansiyonu, şeker, kilo ve şikâyetlerinizi randevudan önce doktorunuza iletin.<div style={{ marginTop: 10 }}><Link href={`${basePath}/on-anket`} className="sg-pin-btn" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', color: '#f4f8fa' }}>Anketi doldur</Link></div></SoftPanel></div>}
       {gunluk && <div className="sg-fade"><SoftPanel style={{ marginBottom: 12 }}><b>Semptom günlüğü</b> — doktorunuzun istediği günlük; her gün bir dakikada doldurun.<div style={{ marginTop: 10 }}><Link href={`${basePath}/semptom-gunlugu`} className="sg-pin-btn" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', color: '#f4f8fa' }}>Günlüğü doldur</Link></div></SoftPanel></div>}
-      <TrackingView data={data} />
+      {/* BRANS-PAKETI Phase 2: pediatri (asi-onam = pediatri doctor only) and KD (jinekoloji) packages render on Takip,
+          where their chapter views live; the view shows only a package whose page is /takip. */}
+      <TrackingView data={data} paket={(portalModulAktif(data, 'asi-onam') || jineModulu) && token !== 'onizleme' ? <BransPaketiView token={token} basePath={basePath} yol="/takip" /> : null} />
     </>
   )
 }
