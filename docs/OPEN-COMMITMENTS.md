@@ -1,6 +1,6 @@
 # OPEN COMMITMENTS — Notya AI
 
-## BRANS-PAKETI-FAZ2 — branş signature portal modules for the 30 medical branşlar (Claude, 2026-11-27). Owner: Claude. Waits on: Phase 1 live on main.
+## BRANS-PAKETI-FAZ2 — branş signature portal modules for the 30 medical branşlar (Claude, 2026-11-27). Owner: Claude. IN PROGRESS (Kaan 2026-11-27 15:09 ET: "Faz ikiyi başlat …").
 
 Kaan 2026-11-27: "Diyetisyen için yapacağın hasta portalını bütün branşlar için gerektiği şekilde yap." Phase 1 (10 Özel
 Branşlar, diyetisyen full package) shipped 2026-11-27 (git log --grep BRANS-PAKETI; migration 216). Phase 2 = the 30
@@ -11,8 +11,19 @@ Phase 1 is live. Also open from Phase 1 (owner Claude unless noted):
 - TÜRKİYE sources not confirmed in the session (docs/kaynak/DIYETISYEN-PAKETI-ARASTIRMA.md): Türkiye Diyetisyenler Derneği
   practice guidance, TEMD diabetes / lipid guide editions, the current SB gestational-diabetes text, TİTCK isotretinoin
   programme, Turkish practice notes for GLP-1 users. Owner: Claude (monthly regulatory check covers it).
-- Doctor-side Ev verisi card: show package red flags in the card's alert list already works via ev_uyarilar; a dedicated
-  package tile on the patient file (instead of the Özel Branşlar tool page) is not built. Owner: Claude.
+- ~~Doctor-side package tile on the patient file~~ — DONE 2026-11-27 (batch a): `components/doktor/bransPaketi/PaketKarti.tsx`
+  on the patient file Özet (all 40 branşlar) + Ayarlar › Hasta alanı paketi for medical doctors.
+
+Phase 2 progress (2026-11-27):
+- **Batch (a) — DONE:** pediatri (hasta gün, ilk üç ay, aşı sonrası, beslenme–uyku, gelişim 0–1 / 1–3 / 3–6), KD
+  (gebelik yolculuğu from the active pregnancy, bebek hareketleri from week 28, gebelik belirti günlüğü, doğum sonrası
+  zaman + günlük, adet takvimi), dermatoloji (cilt günlüğü, fotoğraf günlüğü, ben kontrolü, bakım rutini, izotretinoin /
+  sistemik tedavi izlemi); Bugün "what matters today" card for all 40; package design pass (all 40, incl. the 10 Özel
+  Branşlar); doctor tile; demos /portal/demo-paket/[brans]. Sources: docs/kaynak/TIBBI-BRANS-PAKETI-ARASTIRMA.md.
+- **Batch (b) — the remaining 27 medical branşlar.** Owner: Claude. Same day.
+- Unconfirmed Turkish sources (SB İzlem / Doğum Öncesi / Doğum Sonu / acil obstetrik rehberleri current editions, TJOD
+  AUK, TDD atopik dermatit + psoriazis, TPK ateş, SB ASİE): confirm in the monthly regulatory pass (MEVZUAT-TAKIP).
+  Owner: Claude. Physicians accept each template before use, so nothing reaches a patient unreviewed.
 
 ## TELESAGLIK-BEKLEMEDE — telehealth ON HOLD (Kaan, 2026-11-25: "Put the telehealth on hold for now"). Owner: Kaan. Waits on: Kaan.
 

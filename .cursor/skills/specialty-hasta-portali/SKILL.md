@@ -126,7 +126,12 @@ yapman şart." A branş page must be something the patient opens daily or at eac
 - **One registry** `lib/portal/bransPaketi.ts` (+ data `lib/portal/paket/*.ts`), shared module KINDS (zaman, liste,
   gunluk, foto, program, hatirlatma, biyobelirtec, tabak, plan, tarama, ilac-saati), ONE view
   `components/doktor/portal/bransPaketi/BransPaketiView.tsx` (words in `PAKET_SOZLER`) rendered UNDER the existing branş
-  page (Taban önce). Phase 1 = the 10 Özel Branşlar; the 30 medical branşlar are Phase 2 (`docs/portal/BRANS-PAKETI-FAZ2.md`).
+  page (Taban önce). Phase 1 = the 10 Özel Branşlar; Phase 2 (2026-11-27) = the 30 medical branşlar (`lib/portal/paket/tibbi*.ts`,
+  `PAKET_YOLU` = the branş's existing chapter page; pediatri / KD on Takip). Every package also feeds the Bugün "today"
+  card (`BransPaketiBugunKarti`, lean `?bugun=1`, after the base actions and alerts) and the doctor's patient-file tile
+  (`components/doktor/bransPaketi/PaketKarti.tsx`, `?ozet=1`). Templates: Ayarlar › Hasta alanı paketi (medical) /
+  Özel Branşlar › Hasta alanı paketi — same component. Don't repeat a Bugün measurement (BP, glucose, weight, fever) in a
+  package diary — point to Bugün. Danger-sign diary fields are grouped by the payload's `isaret` (level only).
 - **Nothing reaches a patient before the treating professional accepts the template** (Özel Branşlar › Hasta alanı
   paketi; `brans_paket_sablon.kabul_at` + history). Edits: timeline / list / photo angles / note only — never a dose;
   diary fields and red flags stay the registry's.
@@ -137,7 +142,8 @@ yapman şart." A branş page must be something the patient opens daily or at eac
   per-module consent text, deletable by the patient.
 - Data layer `lib/portal/bransPaketiSunucu.ts` (both scopes on every query), pure payload `lib/portal/bransPaketiYuk.ts`,
   demos `/portal/demo-diyetisyen`, `/portal/demo-sac-ekimi`, `/portal/demo-estetik-cerrahi` (`lib/portal/bransPaketiDemo.ts`).
-- Pinned by `lib/portal/bransPaketi.test.ts`, `lib/portal/bransPaketiIzolasyon.test.ts`, `specialties/diyetisyen/tests/paket.test.ts`.
+- Pinned by `lib/portal/bransPaketi.test.ts`, `lib/portal/tibbiPaket.test.ts`, `lib/portal/bransPaketiIzolasyon.test.ts`,
+  `lib/portal/bransPaketiPerf.test.ts`, `specialties/diyetisyen/tests/paket.test.ts`. Demos: `/portal/demo-paket/<branş>`.
 
 ## Specialty module (required for every chapter build)
 

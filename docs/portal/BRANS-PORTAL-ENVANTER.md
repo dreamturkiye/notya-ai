@@ -6,7 +6,7 @@ Every branş also gets the CORE spine, which is not repeated per line: Bugün da
 Kontrol Öncesi Özet), Randevu (when the doctor's booking is on), Mesajlar, Ziyaretler (+ Yönlendirmeleriniz), Sonuçlar,
 İlaçlar, Öykü, Takip, Aşı Karnesi (universal), doctor-first brand, per-patient modules (HASTA-MODULLERI).
 "Ölçüm kutuları" = quick-add tiles on Bugün; "kart" = extra Bugün card; vurgu = measurement-led (ölçüm) or dose-led (uyum).
-"Paket" = BRANS-PAKETI signature modules added in this change (Özel Branşlar only; 30 medical = Phase 2).
+"Paket" = BRANS-PAKETI signature modules (Özel Branşlar: Phase 1; medical branşlar: Phase 2, 2026-11-27 — every package also feeds the Bugün "today" card and the doctor's patient-file tile).
 
 ## 30 medical branşlar (lib/doktor/specialties.ts)
 
@@ -18,9 +18,9 @@ Kontrol Öncesi Özet), Randevu (when the doctor's booking is on), Mesajlar, Ziy
 | aile-hekimligi | Sağlık Paketim | KB / glukoz / kilo / nabız · LDL, kilo eğilimi · ölçüm | Phase 2 |
 | nefroloji | Böbreklerim | KB / kilo / glukoz / nabız · LDL, kilo eğilimi (kilo hekime) · ölçüm | Phase 2 |
 | kalp-damar-cerrahisi | Damar Cerrahisi takibi | KB / nabız / kilo · kilo eğilimi · ölçüm | Phase 2 |
-| pediatri | Aşı Bilgilendirme (+ Büyüme under 18 / unknown DOB) | ateş / kilo · ateş-ilaç kartı · uyum | Phase 2 |
+| pediatri | Aşı Bilgilendirme (+ Büyüme under 18 / unknown DOB) | ateş / kilo · ateş-ilaç kartı · uyum | on Takip (under 18 only): Hasta gün günlüğü, İlk üç ay günlüğü (0–3 m), Aşı sonrası günlüğü, Beslenme ve uyku (0–24 m), Gelişim adımları 0–1 / 1–3 / 3–6 |
 | cocuk-cerrahisi | Çocuğumun Cerrahisi | ateş / kilo · ateş-ilaç kartı · uyum | Phase 2 |
-| kadin-hastaliklari-dogum | Jinekoloji hatırlatmaları (Takip), Gebeliğim on an active pregnancy | KB / kilo · kilo eğilimi · ölçüm | Phase 2 |
+| kadin-hastaliklari-dogum | Jinekoloji hatırlatmaları (Takip), Gebeliğim on an active pregnancy | KB / kilo · kilo eğilimi · ölçüm | on Takip: Gebelik yolculuğum (from the active pregnancy SAT), Bebeğimin hareketleri (≥ 28 w), Gebelik belirti günlüğüm; doctor-switched: Doğum sonrası ilk altı hafta + günlüğüm, Adet takvimim |
 | gogus-hastaliklari | Akciğerlerim | SpO₂ / nabız / ateş · — · ölçüm | Phase 2 |
 | enfeksiyon-hastaliklari | Enfeksiyon Takibim | ateş / nabız · — · uyum | Phase 2 |
 | onkoloji | Tedavim | ateş / kilo / nabız · kilo eğilimi · uyum | Phase 2 |
@@ -38,7 +38,7 @@ Kontrol Öncesi Özet), Randevu (when the doctor's booking is on), Mesajlar, Ziy
 | fizik-tedavi | FTR'm | — · — · uyum | Phase 2 |
 | uroloji | Ürolojim | ateş · — · uyum | Phase 2 |
 | psikiyatri | Ruh Sağlığım | — · — · uyum | Phase 2 |
-| dermatoloji | Derim | — · — · uyum | Phase 2 |
+| dermatoloji | Derim | — · — · uyum | under Derim: Cilt günlüğüm, Cilt fotoğraf günlüğüm; Ben kontrolü (switched); Bakım rutinim (atopik dermatit); Tedavi izlem (izotretinoin) / Sistemik tedavi (from the approved medicine list) |
 | kulak-burun-bogaz | Kulaklarım | — · — · uyum | Phase 2 |
 | goz-hastaliklari | Gözlerim | — · — · uyum | Phase 2 |
 | radyoloji | Tetkiklerim | — · — · uyum | Phase 2 |

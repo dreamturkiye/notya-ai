@@ -1,4 +1,10 @@
-# BRANS-PAKETI Phase 2 — signature portal modules for the 30 medical branşlar (proposal, 2026-11-27)
+# BRANS-PAKETI Phase 2 — signature portal modules for the 30 medical branşlar (2026-11-27)
+
+**Status:** started 2026-11-27 (Kaan: "Faz ikiyi başlat ve hasta portalını exceptional bir şekilde 30+10 branşa uygula").
+Batch (a) shipped: pediatri, kadın hastalıkları-doğum, dermatoloji + Bugün card + design pass + doctor tile + demos
+(`/portal/demo-paket/<branş>`). What each branş got: docs/portal/BRANS-PORTAL-ENVANTER.md. Sources:
+docs/kaynak/TIBBI-BRANS-PAKETI-ARASTIRMA.md. The table below was the proposal; the shipped modules can differ (e.g. KD
+PMS/PMDD stays KD-TARAMA-01, measurements already on Bugün are not repeated in a diary).
 
 Owner: Claude. Starts after Phase 1 (10 Özel Branşlar, diyetisyen full package) is live on main.
 Same framework, no fork: add modules to the registry (`lib/portal/bransPaketi.ts` + `lib/portal/paket/<grup>.ts`) with
