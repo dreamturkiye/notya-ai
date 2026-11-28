@@ -6,10 +6,8 @@
  * öğrencilerinde REZZY Yeme Bozuklukları Ölçeği Türkçe formunun güvenilirlik ve geçerliliği", Anadolu Psikiyatri Dergisi
  * 2015;16(Özel Sayı 1):31–35, doi:10.5455/apd.174219 — the Turkish form is named "REZZY"; n = 50, Cronbach α 0,74, one
  * factor, r = 0,52 with the Eating Attitude Test. Turkish users score each "evet" 1 point, ≥ 2 = risk group, max 5 (as
- * cited by Turkish studies using it). The five published Turkish items could NOT be read online (journal full text and
- * thesis appendices not reachable) — the items below are a faithful translation, part of the template the dietitian
- * reviews and accepts (editable once). Aligning them word for word waits on a Chrome pass
- * (docs/kaynak/DIYETISYEN-PAKETI-ARASTIRMA.md § Source verification).
+ * cited by Turkish studies using it). Items below are the published Turkish form WORD FOR WORD (Ek 1, p. 35 of the
+ * article PDF on imrpress.com via doi.org/10.5455/apd.174219; read in the Chrome pass 2026-11-28) — do not paraphrase.
  * Why here: TEMD Obezite 2024 — "Yeme bozuklukları ve depresyon her obezite hastasında mutlaka incelenmeli" (Kanıt A);
  * 2023 International PCOS Guideline — screen for eating disorders / disordered eating where relevant.
  *
@@ -17,11 +15,11 @@
  * professional alert (hekime_bildir) whose patient-side text is gentle and never shows numbers. Not a diagnosis.
  */
 export const SCOFF_SORULARI: readonly string[] = [
-  'Kendinizi rahatsız edecek kadar dolu hissettiğiniz için kendinizi kusturduğunuz oluyor mu?',
-  'Ne kadar yediğiniz üzerindeki kontrolü kaybettiğiniz için endişelendiğiniz oluyor mu?',
-  'Son 3 ay içinde 6 kilodan fazla kilo kaybettiniz mi?',
-  'Başkaları zayıf olduğunuzu söylediği hâlde kendinizi şişman olarak görüyor musunuz?',
-  'Yemek ya da yemekle ilgili düşüncelerin hayatınıza hâkim olduğunu söyleyebilir misiniz?',
+  'Rahatsız edici şekilde tok hissettiğiniz için kendinizi kusturuyor musunuz?',
+  'Ne kadar yediğiniz konusunda kontrolü kaybettiğiniz için endişeleniyor musunuz?',
+  'Son zamanlarda üç ayda altı kilogramdan fazla zayıfladınız mı?',
+  'Başkaları çok zayıf olduğunuzu söylediği halde şişman olduğunuza inanıyor muydunuz?',
+  'Yemeğin hayatınıza hükmettiğini düşünüyor musunuz?',
 ]
 
 export const SCOFF_ESIK = 2

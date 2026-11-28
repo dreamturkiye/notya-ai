@@ -153,7 +153,18 @@ present; listed together at the end). "Read" = date the text was read. Quotes �
 | TFTR / NICE-NG59 | NOT FOUND | — | — | — | none |
 | TSHD / Amsterdam 2022 | TSHD journal review found (older consensus) — Amsterdam 2022 is the latest | Akıncı AT et al., "Sporla ilişkili beyin sarsıntısı", Spor Hekimliği Dergisi (Türkiye Spor Hekimliği Derneği journal) 2021;56(3):146–151 — Zurich/Berlin staged return, starts with absolute rest | https://journalofsportsmedicine.org/full-text-pdf/578/tur | Amsterdam 2022 (relative rest, ≥ 24 h per step) supersedes the 2016 consensus the review used → template stays on Amsterdam 2022 | none |
 
-### NOT REACHABLE ONLINE — needs a Chrome pass with Kaan present
+### Chrome pass with Kaan present — 2026-11-28
+
+| Item | Result |
+|---|---|
+| REZZY (SCOFF) Turkish items | **CONFIRMED** — Ek 1, p. 35 of Aydemir et al. 2015 (doi.org/10.5455/apd.174219 → imrpress.com PDF). Template aligned word for word |
+| ADA SoC 2026 metformin–B12 | **CONFIRMED — Recommendation 3.10, grade B** (Section 3, PMC12690170) |
+| TİTCK isotretinoin pregnancy-prevention programme | **CONFIRMED (relayed official letter)** — TEB circular 19.11.2018 relaying TİTCK letter 30.10.2018 no. 189059: oral retinoids for acne are teratogenic, must be used within a pregnancy prevention programme, never dispensed without prescription + patient information and consent form signed by physician and patient (teb.org.tr). Template (doctor-switched reminders, no doses) is consistent |
+| TEMD DM guide 2026 | **CONFIRMED as current edition** on temd.org.tr/yayinlar/kilavuzlar-ve-kitaplar ("Diabetes Mellitus ve Komplikasyonlarının Tanı, Tedavi ve İzlem Kılavuzu (2026)"; 2024 moved to Arşiv). Text not yet read for the hypo / sick-day lines (they carry no numbers) |
+| TEMD Dislipidemi 2021, Tıbbi Beslenme ve Egzersiz Metabolizması 2023 | **EXIST** on the same TEMD page — earlier "TEMD lipid guide NOT FOUND" was wrong. To be read for the dislipidemi / diyetisyen templates |
+| SB Doğum Öncesi / Doğum Sonu Bakım Rehberi 2026 (HSGM) | **STILL UNREAD** — Google lists "Doğum Öncesi Bakım Yönetim Rehberi 2026" on HSGM's Yayınlarımız page, but hsgm.saglik.gov.tr does not open from the US (Kaan's Chrome as well) and no mirror of the 2026 text exists. Needs a Turkish connection (someone in Türkiye, or the planned Istanbul VPS). Templates stay on the 2018 texts |
+
+### NOT REACHABLE ONLINE — before the Chrome pass (kept for history)
 
 | Item | What exists | What was tried |
 |---|---|---|

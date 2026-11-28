@@ -40,12 +40,14 @@ Phase 2 progress (2026-11-27):
   gum), levothyroxine 4 h (TEMD Tiroid 2025), kar-ky source id → ESC HF 2026. Registry: TEMD Tiroid 2025, TEMD
   Adrenal-Gonadal 2025, SB TB 2019, SB İzlem Protokolleri 2018, SB Total Diz KP 2022 confirmed.
 - **BRANS-PAKETI-KAYNAK-CHROME — sources NOT REACHABLE ONLINE with WebSearch/WebFetch. Owner: Claude, in a Chrome pass with
-  Kaan present. Added 2026-11-28.** (1) SB *Doğum Öncesi Bakım Yönetim Rehberi 2026* and *Doğum Sonu Bakım Yönetim Rehberi
-  2026* (HSGM Dokümanlar page; hsgm.saglik.gov.tr robots-blocked for the fetch tool) — re-check kd-gebelik-*, kd-lohusa-*
-  and the KD chapter's "DÖBYR 2026 / Yayın No 1402" claim; (2) TİTCK isotretinoin pregnancy-prevention programme / KÜB
-  (titck.gov.tr); (3) TEMD DM guide 2026; (4) the five published Turkish REZZY (SCOFF) items → align
-  `specialties/diyetisyen/engines/tarama.ts` word for word; (5) HSGM-hosted copy of the SB TB Rehberi 2019 (registry uses
-  the EKMUD copy). Monthly MEVZUAT-TAKIP keeps re-checking editions.
+  Kaan present. Added 2026-11-28.** Chrome pass done 2026-11-28: REZZY items (aligned word for word), ADA 2026 Rec 3.10,
+  TİTCK isotretinoin programme (TEB-relayed TİTCK letter 30.10.2018/189059) and TEMD DM 2026 edition — CONFIRMED.
+  **Still open (owner Claude):** (1) SB *Doğum Öncesi* and *Doğum Sonu Bakım Yönetim Rehberi 2026* — hsgm.saglik.gov.tr
+  does not open from the US even in Kaan's Chrome; needs a Turkish connection (someone in Türkiye or the planned Istanbul
+  VPS) → then re-check kd-gebelik-*, kd-lohusa-* and the KD chapter's "DÖBYR 2026 / Yayın No 1402" claim; (2) read TEMD DM
+  2026, TEMD Dislipidemi 2021 and TEMD Tıbbi Beslenme ve Egzersiz Metabolizması 2023 texts against the dahiliye /
+  endokrin / diyetisyen templates; (3) HSGM-hosted copy of the SB TB Rehberi 2019 (same Turkish-connection blocker).
+  Monthly MEVZUAT-TAKIP keeps re-checking editions.
 
 ## TELESAGLIK-BEKLEMEDE — telehealth ON HOLD (Kaan, 2026-11-25: "Put the telehealth on hold for now"). Owner: Kaan. Waits on: Kaan.
 

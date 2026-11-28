@@ -10,8 +10,8 @@
  *    her ikisini de karşılar, bu yüzden 4 saat yazılır. Tablo 1.3: kalsiyum karbonat, demir sülfat, omeprazol / lansoprazol
  *    T4 emilimini azaltır. Kahve: KÜB'de yok; UCLA Endocrine Center hasta rehberi 60 dk
  *    önerir (uluslararası destek — Türk kaynağında süre yok, bu yüzden "en az 30–60 dk" diye yazılır).
- *  - Metformin–B12: ADA Standards of Care (Bölüm 9, uzun süreli metforminde B12 düzeyinin periyodik ölçümü; 2026
- *    öneri numarası bu oturumda doğrulanamadı).
+ *  - Metformin–B12: ADA Standards of Care 2026, Öneri 3.10 (Bölüm 3; kanıt B): uzun süreli metformin kullananlarda,
+ *    özellikle anemi veya periferik nöropati varsa B12 düzeyinin periyodik değerlendirilmesi (PMC12690170, 2026-11-28).
  *  - GLP-1 RA (semaglutid, tirzepatid, liraglutid, dulaglutid): ACLM/ASN/OMA/TOS ortak bildirgesi 2025 "Nutritional
  *    Priorities to Support GLP-1 Therapy for Obesity" (yeterli protein + direnç egzersizi ile yağsız kütleyi koruma, GİS
  *    yan etki yönetimi, mikro besin eksikliğini önleme); ADA SoC 2026 öneri 8.14 / 5.23 (kilo kaybında yeterli protein
