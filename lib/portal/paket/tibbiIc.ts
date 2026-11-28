@@ -73,7 +73,7 @@ export const KARDIYOLOJI_PAKETI: readonly PaketModulTanimi[] = [
       ],
       not: 'Kilonuzu her sabah tuvaletten sonra, kahvaltıdan önce Bugün sayfasından girin; üç günde 2 kg artış hekiminize otomatik bildirilir.',
     },
-    kaynaklar: ['ESC-KY-2021-2023', 'TKD-ESC'],
+    kaynaklar: ['ESC-KY-2026', 'TKD-ESC'],
   },
   {
     kod: 'kar-antikoag', brans: 'kardiyoloji', tur: 'gunluk', durum: { ilac: ANTIKOAGULAN }, baslik: 'Kanama işaretleri günlüğüm',

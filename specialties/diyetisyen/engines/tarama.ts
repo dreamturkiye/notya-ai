@@ -2,12 +2,14 @@
  * BRANS-PAKETI (diyetisyen) — eating-disorder screening, the deliberate brake of the diyetisyen package.
  *
  * Instrument: SCOFF (Morgan, Reid & Lacey, BMJ 1999;319:1467) — five yes/no questions, ≥ 2 "evet" = positive screen.
- * Turkish validation: Aydemir Ö, Köksal B, Yalın Sapmaz Ş, Yüceyar H. "Kadın üniversite öğrencilerinde SCOFF Yeme
- * Bozuklukları Ölçeği Türkçe formunun güvenilirlik ve geçerliliği", Anadolu Psikiyatri Dergisi (ISSN 1302-6631) —
- * n = 50, Cronbach α 0,74, one factor, r = 0,52 with the Eating Attitude Test. The record does not report a separate
- * Turkish cut-off, so the original ≥ 2 is used. The exact published Turkish item wording could not be retrieved in this
- * session: the items below are a faithful translation and are part of the module template the dietitian reviews and
- * accepts (editable once) before any patient sees them — docs/kaynak/DIYETISYEN-PAKETI-ARASTIRMA.md § SCOFF.
+ * Turkish validation (citation confirmed 2026-11-27): Aydemir Ö, Köksal B, Yalın Sapmaz Ş, Yüceyar H. "Kadın üniversite
+ * öğrencilerinde REZZY Yeme Bozuklukları Ölçeği Türkçe formunun güvenilirlik ve geçerliliği", Anadolu Psikiyatri Dergisi
+ * 2015;16(Özel Sayı 1):31–35, doi:10.5455/apd.174219 — the Turkish form is named "REZZY"; n = 50, Cronbach α 0,74, one
+ * factor, r = 0,52 with the Eating Attitude Test. Turkish users score each "evet" 1 point, ≥ 2 = risk group, max 5 (as
+ * cited by Turkish studies using it). The five published Turkish items could NOT be read online (journal full text and
+ * thesis appendices not reachable) — the items below are a faithful translation, part of the template the dietitian
+ * reviews and accepts (editable once). Aligning them word for word waits on a Chrome pass
+ * (docs/kaynak/DIYETISYEN-PAKETI-ARASTIRMA.md § Source verification).
  * Why here: TEMD Obezite 2024 — "Yeme bozuklukları ve depresyon her obezite hastasında mutlaka incelenmeli" (Kanıt A);
  * 2023 International PCOS Guideline — screen for eating disorders / disordered eating where relevant.
  *

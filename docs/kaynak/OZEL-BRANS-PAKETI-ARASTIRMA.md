@@ -21,3 +21,9 @@ Rules encoded for every branş: 112 on every acil flag (pinned by test); no diag
 per-patient lines refuse "5 mg / 2 tablet / …"); klinik psikoloji crisis copy says the page is not enough and to call 112;
 ergoterapi child modules only under 18 with veli wording, adults never get it; photos private (bucket brans-paket-foto),
 metadata/location stripped, deletable by the patient, separate consent text per photo module.
+
+## Source verification (Claude, 2026-11-27/28; WebSearch + WebFetch only)
+
+| Id | Result | Finding | Change |
+|---|---|---|---|
+| TITCK-ISOTRETINOIN-DOGRULANAMADI | **NOT REACHABLE ONLINE** (titck.gov.tr "robots unreachable" to WebFetch; KÜB PDFs exist in the 2019 archive) — needs a Chrome pass with Kaan present | Turkish society text read instead: **TDD-IZOTRETINOIN-HASTA** — Türk Dermatoloji Derneği Akne ve Rozase Çalışma Grubu, *Akne Tedavisinde Sistemik İzotretinoin Kullanım Kılavuzu (Hasta Bilgilendirme Broşürü)*, undated, https://turkdermatoloji.org.tr/media/hasta_bilgilendirme/izotretinonin.pdf (read 2026-11-27): two contraception methods; pregnancy tests before, during, 1 month after; mood changes → doctor; no blood donation until 1 month after stopping; sunscreen; moisturisers | `derm-izotretinoin` (klinik-dermatoloji) gained "Tedavi boyunca ve bittikten sonraki 1 ay kan bağışı yapmayın; ilacınızı kimseyle paylaşmayın." and sun protection; source id added. Same in medical `dmt-izotretinoin`. Pinned in lib/portal/tibbiPaket.test.ts |
