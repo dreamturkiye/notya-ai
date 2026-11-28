@@ -81,7 +81,7 @@ export const DERMATOLOJI_PAKETI: readonly PaketModulTanimi[] = [
       maddeler: [
         'Hekiminizin istediği kan tahlillerini planlanan tarihlerde yaptırın.',
         'Gebelik olasılığı olan hastalarda hekiminizin planladığı gebelik testleri ve etkili korunma tedavi boyunca ve sonrasında sürer.',
-        'Tedavi boyunca kan bağışı yapmayın; ilacınızı kimseyle paylaşmayın.',
+        'Tedavi boyunca ve bittikten sonraki 1 ay kan bağışı yapmayın; ilacınızı kimseyle paylaşmayın.',
         'Dudak ve cilt kuruluğu için hekiminizin önerdiği bakımı uygulayın; güneşten korunun.',
         'Ruh hâlinizde değişiklik fark ederseniz hekiminize hemen yazın.',
       ],
@@ -97,7 +97,7 @@ export const DERMATOLOJI_PAKETI: readonly PaketModulTanimi[] = [
       ],
     },
     ayarlar: [{ id: 'satirlar', etiket: 'Hastaya özel izlem satırları (ör. "Kan tahlili — 15 Ocak"; doz yazılmaz)', tur: 'satirlar' }],
-    kaynaklar: ['MHRA-ISOTRETINOIN', 'TITCK-ISOTRETINOIN-DOGRULANAMADI'],
+    kaynaklar: ['TDD-IZOTRETINOIN-HASTA', 'MHRA-ISOTRETINOIN', 'TITCK-ISOTRETINOIN-DOGRULANAMADI'],
   },
   {
     kod: 'dmt-sistemik', brans: 'dermatoloji', tur: 'hatirlatma',

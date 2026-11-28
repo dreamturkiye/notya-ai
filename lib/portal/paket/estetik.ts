@@ -223,7 +223,8 @@ export const KLINIK_DERMATOLOJI_PAKETI: readonly PaketModulTanimi[] = [
         'Hekiminizin istediği kan tahlillerini planlanan tarihlerde yaptırın.',
         'Gebelik olasılığı olan hastalarda hekiminizin planladığı gebelik testleri ve korunma tedavi boyunca ve sonrasında sürer.',
         'Ruh hâlinizde değişiklik fark ederseniz hekiminize hemen yazın. Kendinize zarar verme düşünceleri olursa 112’yi arayın.',
-        'Dudak ve cilt kuruluğu için hekiminizin önerdiği bakım.',
+        'Tedavi boyunca ve bittikten sonraki 1 ay kan bağışı yapmayın; ilacınızı kimseyle paylaşmayın.',
+        'Dudak ve cilt kuruluğu için hekiminizin önerdiği bakım; güneşten korunun.',
       ],
       alanlar: [
         { id: 'ruh', etiket: 'Ruh hâlimde belirgin kötüleşme', tur: 'evet' },
@@ -234,7 +235,7 @@ export const KLINIK_DERMATOLOJI_PAKETI: readonly PaketModulTanimi[] = [
         { id: 'ruh', kosullar: [{ alan: 'ruh', evet: true }], duzey: 'hekime_bildir', hasta: 'Ruh hâlinizle ilgili bilgiyi hekiminize ilettik; hekiminiz sizinle iletişime geçebilir.', hekim: 'İzotretinoin izlemi: belirgin ruh hâli kötüleşmesi.' },
       ],
     },
-    kaynaklar: ['MHRA-ISOTRETINOIN', 'TITCK-ISOTRETINOIN-DOGRULANAMADI'],
+    kaynaklar: ['TDD-IZOTRETINOIN-HASTA', 'MHRA-ISOTRETINOIN', 'TITCK-ISOTRETINOIN-DOGRULANAMADI'],
     ayarlar: [{ id: 'satirlar', etiket: 'Hastaya özel izlem satırları (ör. "Kan tahlili — 15 Ocak"; doz yazılmaz)', tur: 'satirlar' }],
   },
 ]

@@ -77,9 +77,9 @@ export const DIYETISYEN_PAKETI: readonly PaketModulTanimi[] = [
     durum: { tani: /hipotiroid|hashimoto|tiroidit/i, icd: /^(E03|E06\.3)/, ilac: ILAC_DESENLERI.levotiroksin },
     varsayilan: {
       alanlar: [{ id: 'saat', etiket: 'Bugün ilacımı aldığım saat', tur: 'saat' }],
-      not: 'Onaylı ürün bilgisine göre: aç karnına, kahvaltıdan en az yarım saat önce; kalsiyum ve demirle en az 2 saat ara. İsterseniz İlaç hatırlatmaları bölümünden sabah hatırlatması açabilirsiniz. Doz ve ilaç değişikliği hekiminizindir.',
+      not: 'Türk tiroid kılavuzuna ve onaylı ürün bilgisine göre: aç karnına, su ile, kahvaltıdan en az yarım saat önce; kalsiyum ve demirle en az 4 saat ara. İsterseniz İlaç hatırlatmaları bölümünden sabah hatırlatması açabilirsiniz. Doz ve ilaç değişikliği hekiminizindir.',
     },
-    kaynaklar: ['TITCK-KUB-LT4', 'TEMD-TIROID-2025'],
+    kaynaklar: ['TEMD-TIROID-2025', 'TITCK-KUB-LT4'],
     ayarlar: [{ id: 'ilacSaati', etiket: 'Hastanın her gün ilacı aldığı saat (SS:DD)', tur: 'saat' }],
   },
   {

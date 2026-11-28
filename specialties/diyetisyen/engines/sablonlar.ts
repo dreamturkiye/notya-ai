@@ -48,7 +48,7 @@ export const TANI_SABLONLARI: readonly TaniSablonu[] = [
   {
     kod: 'hipotiroidi', ad: 'Hipotiroidi / Hashimoto (hekim tanısı)', icd: ['E03', 'E06.3'], portalModulu: 'diyet-tiroid',
     ilkeler: [
-      'Levotiroksin aç karnına alınır; kahvaltı ilaçtan sonra (KÜB: en az yarım saat), kalsiyum ve demir en az 2 saat arayla (KÜB) — ilaç saatini hasta ile birlikte kahvaltı planına oturtun.',
+      'Levotiroksin aç karnına alınır; kahvaltı ilaçtan sonra (TEMD Tiroid 2025 / KÜB: en az yarım saat), kalsiyum ve demir en az 4 saat arayla (TEMD Tiroid 2025 Bölüm 7) — ilaç saatini hasta ile birlikte kahvaltı planına oturtun.',
       'Kalsiyum karbonat, demir sülfat ve mide asidi baskılayıcılar T4 emilimini azaltabilir (TEMD Tiroid 2025, Tablo 1.3) — bunlar hekimle konuşulur.',
       'Soya içeriği yüksek beslenmeye geçiş/bırakış emilimi etkileyebilir; değişiklik hekime bildirilir (KÜB).',
       'Glütensiz diyet veya selenyum takviyesi bu şablonun parçası değildir — kanıt ve karar hekimdedir.',

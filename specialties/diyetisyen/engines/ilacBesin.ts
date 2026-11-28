@@ -4,9 +4,11 @@
  * medicine list (hasta_ilaclar), so a note appears only when the medicine is really on file.
  *
  * Sources (docs/kaynak/DIYETISYEN-PAKETI-ARASTIRMA.md):
- *  - Levotiroksin: TİTCK onaylı KÜB (Euthyrox, 2020): sabah aç karnına, kahvaltıdan yarım saat önce; kalsiyum ve demir
- *    tuzlarıyla en az 2 saat ara; soya emilimi azaltabilir. TEMD Tiroid Kılavuzu 2025 Tablo 1.3: kalsiyum karbonat, demir
- *    sülfat, omeprazol / lansoprazol T4 emilimini azaltır. Kahve: KÜB'de yok; UCLA Endocrine Center hasta rehberi 60 dk
+ *  - Levotiroksin: TEMD Tiroid Hastalıkları Tanı ve Tedavi Kılavuzu 2025, Bölüm 7 "Levotiroksin kullanımında dikkat edilmesi
+ *    gerekenler" s. 91: öğünden en az 30 dakika önce su ile; demir sülfat / kalsiyum karbonat ile EN AZ 4 SAAT ara (2026-11-28
+ *    doğrulandı). TİTCK onaylı KÜB (Euthyrox, 2020): kahvaltıdan yarım saat önce, kalsiyum/demirle en az 2 saat — 4 saat
+ *    her ikisini de karşılar, bu yüzden 4 saat yazılır. Tablo 1.3: kalsiyum karbonat, demir sülfat, omeprazol / lansoprazol
+ *    T4 emilimini azaltır. Kahve: KÜB'de yok; UCLA Endocrine Center hasta rehberi 60 dk
  *    önerir (uluslararası destek — Türk kaynağında süre yok, bu yüzden "en az 30–60 dk" diye yazılır).
  *  - Metformin–B12: ADA Standards of Care (Bölüm 9, uzun süreli metforminde B12 düzeyinin periyodik ölçümü; 2026
  *    öneri numarası bu oturumda doğrulanamadı).
@@ -27,12 +29,12 @@ export const ILAC_BESIN_NOTLARI: Record<IlacBesinNotu['kod'], IlacBesinNotu> = {
   levotiroksin: {
     kod: 'levotiroksin', baslik: 'Levotiroksin ve öğün zamanı',
     maddeler: [
-      'Sabah aç karnına, kahvaltıdan en az yarım saat önce (onaylı ürün bilgisi).',
-      'Kalsiyum ve demir içeren takviye veya ilaçlarla en az 2 saat ara (onaylı ürün bilgisi).',
+      'Sabah aç karnına, su ile, kahvaltıdan en az yarım saat önce (TEMD 2025; onaylı ürün bilgisi).',
+      'Kalsiyum ve demir içeren takviye veya ilaçlarla en az 4 saat ara (TEMD Tiroid 2025).',
       'Kahve: ilaçtan sonra en az 30–60 dakika beklenmesi önerilir.',
       'Soya ağırlıklı beslenmeye geçiş ya da bırakış ve mide asidi ilaçları emilimi etkileyebilir — değişiklik hekime bildirilir.',
     ],
-    kaynak: 'TİTCK KÜB (levotiroksin); TEMD Tiroid 2025 Tablo 1.3',
+    kaynak: 'TEMD Tiroid 2025 Bölüm 7 (s. 91) ve Tablo 1.3; TİTCK KÜB (levotiroksin)',
   },
   metformin: {
     kod: 'metformin', baslik: 'Metformin ve B12',
@@ -63,12 +65,13 @@ export function ilacBesinNotlari(ilacAdlari: readonly string[]): IlacBesinNotu[]
 
 /**
  * Levothyroxine day plan from the time the patient takes it ("07:00") — earliest breakfast, coffee and calcium/iron.
- * Uses the KÜB's 30 min / 2 h and the 60 min coffee figure; returns null for an invalid time.
+ * Uses TEMD Tiroid 2025's 30 min / 4 h (which also satisfies the KÜB's 30 min / 2 h) and the 60 min coffee figure;
+ * returns null for an invalid time.
  */
 export function levotiroksinGunPlani(ilacSaati: string): { kahvalti: string; kahve: string; kalsiyumDemir: string } | null {
   const m = /^([01]\d|2[0-3]):([0-5]\d)$/.exec(String(ilacSaati || '').trim())
   if (!m) return null
   const dk = Number(m[1]) * 60 + Number(m[2])
   const s = (x: number) => { const y = ((x % 1440) + 1440) % 1440; return `${String(Math.floor(y / 60)).padStart(2, '0')}:${String(y % 60).padStart(2, '0')}` }
-  return { kahvalti: s(dk + 30), kahve: s(dk + 60), kalsiyumDemir: s(dk + 120) }
+  return { kahvalti: s(dk + 30), kahve: s(dk + 60), kalsiyumDemir: s(dk + 240) }
 }

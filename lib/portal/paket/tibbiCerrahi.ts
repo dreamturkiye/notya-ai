@@ -506,8 +506,8 @@ export const ANESTEZI_PAKETI: readonly PaketModulTanimi[] = [
     aciklama: 'Aç kalma saatlerinizi anestezi hekiminiz belirler. Bu saatlere uyun.',
     varsayilan: {
       maddeler: [
-        'Berrak sıvı: su, sütsüz çay, posasız meyve suyu. Süt, ayran ve sakız berrak değildir.',
-        'Sigara ve sakız da aç kalma süresini bozar.',
+        'Berrak sıvı: su, sütsüz çay, posasız meyve suyu. Süt ve ayran berrak sıvı değildir.',
+        'Sakız ve sigara için anestezi hekiminizin talimatına uyun; sakızı ameliyata girmeden önce mutlaka ağzınızdan çıkarın.',
         'Saatlere uyulmazsa güvenliğiniz için ameliyatınız ertelenebilir.',
         'Şeker hastalığınız varsa sabah ilaçlarınızı ve şeker ölçümünüzü hekiminize sorun.',
       ],

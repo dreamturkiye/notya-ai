@@ -428,14 +428,14 @@ export const ENFEKSIYON_PAKETI: readonly PaketModulTanimi[] = [
         'İlaçlarınızı her gün aynı saatte, hekiminizin tarif ettiği şekilde alın.',
         'Doğrudan gözetimli tedavi görüşmelerinizi kaçırmayın.',
         'İdrar, gözyaşı ve terin turuncu renk alması bu tedavide beklenir.',
-        'Gözlerde sararma, bulantı-kusma ya da görmede değişiklik olursa hekiminize hemen yazın.',
+        'Gözlerde sararma, bulantı-kusma, karın ağrısı, iştahsızlık ya da görmede / renkleri ayırt etmede değişiklik olursa hekiminize hemen yazın.',
       ],
       alanlar: [
-        { id: 'sarilik', etiket: 'Gözlerde sararma, bulantı ya da kusma', tur: 'evet' },
+        { id: 'sarilik', etiket: 'Gözlerde sararma, bulantı, kusma, karın ağrısı ya da belirgin iştahsızlık', tur: 'evet' },
         { id: 'gorme', etiket: 'Görmede bulanıklık ya da renkleri ayırt etmede zorluk', tur: 'evet' },
       ],
       bayraklar: [
-        { id: 'sarilik', kosullar: [{ alan: 'sarilik', evet: true }], duzey: 'hekime_bildir', hasta: 'Bu belirtileri hekiminize ilettik; ilaçlarınızla ilgili yanıtını bugün bekleyin.', hekim: 'TB tedavisi: sarılık / bulantı-kusma (hepatotoksisite?).' },
+        { id: 'sarilik', kosullar: [{ alan: 'sarilik', evet: true }], duzey: 'hekime_bildir', hasta: 'Bu belirtileri hekiminize ilettik; ilaçlarınızla ilgili yanıtını bugün bekleyin.', hekim: 'TB tedavisi: sarılık / bulantı-kusma / karın ağrısı / iştahsızlık (hepatotoksisite?).' },
         { id: 'gorme', kosullar: [{ alan: 'gorme', evet: true }], duzey: 'hekime_bildir', hasta: 'Görme değişikliğini hekiminize ilettik.', hekim: 'TB tedavisi: görme / renk görme değişikliği (etambutol?).' },
       ],
     },

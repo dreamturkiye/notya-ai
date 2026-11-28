@@ -235,3 +235,46 @@ describe('BRANS-PAKETI Phase 2 batch (b) — procedure-bound journeys and condit
     }
   })
 })
+
+describe('Turkish-source corrections (source verification 2026-11-28, docs/kaynak/TIBBI-BRANS-PAKETI-ARASTIRMA.md)', () => {
+  it('ilk üç ay: SB İzlem Protokolleri 2018 (s. 20) "ateş, iyi emmeme, kusma, ishal, sarılık, uykuya meyil" all present', () => {
+    const v = paketModulu('ped-yenidogan')!.varsayilan
+    for (const id of ['ates', 'emme', 'kusma', 'ishal', 'sarilik', 'uyku']) assert.ok(v.alanlar!.some((a) => a.id === id), id)
+    assert.equal(kayitDegerlendir(v, { uyku: true })[0].duzey, 'acil')
+    assert.equal(kayitDegerlendir(v, { kusma: true })[0].duzey, 'hekime_bildir')
+    assert.equal(kayitDegerlendir(v, { ishal: true })[0].duzey, 'hekime_bildir')
+  })
+
+  it('doğum sonrası zaman: SB Doğum Sonu Bakım Yönetim Rehberi 2018 home visits (2–5, 13–17, 30–42. gün)', () => {
+    const adim = paketModulu('kd-lohusa-zaman')!.varsayilan.adimlar!
+    const metin = adim.map((a) => `${a.baslik} ${a.ayrinti}`).join(' ')
+    for (const p of ['2–5', '13–17', '30–42']) assert.ok(metin.includes(p), p)
+    assert.ok(adim.some((a) => a.gun >= 13 && a.gun <= 17), 'a step inside days 13–17')
+  })
+
+  it('doğum sonrası günlük: SB DSB 2018 danger signs — seizure / loss of consciousness acil; foul discharge, urinary symptoms reported', () => {
+    const v = paketModulu('kd-lohusa-gunluk')!.varsayilan
+    assert.equal(kayitDegerlendir(v, { nobet: true })[0].duzey, 'acil')
+    assert.equal(kayitDegerlendir(v, { akinti: true })[0].duzey, 'hekime_bildir')
+    assert.equal(kayitDegerlendir(v, { idrar: true })[0].duzey, 'hekime_bildir')
+  })
+
+  it('isotretinoin: no blood donation during treatment AND 1 month after (TDD hasta broşürü), both modules', () => {
+    for (const kod of ['dmt-izotretinoin', 'derm-izotretinoin']) {
+      const t = (paketModulu(kod)!.varsayilan.maddeler || []).join(' ')
+      assert.match(t, /bittikten sonraki 1 ay kan bağışı yapmayın/, kod)
+    }
+  })
+
+  it('aç kalma: gum is not called a fasting break (ASA 2023; TARD 2015 silent) — it must be out of the mouth before surgery', () => {
+    const t = (paketModulu('ane-aclik')!.varsayilan.maddeler || []).join(' ')
+    assert.doesNotMatch(t, /sakız[^.]*bozar|sakız berrak/i)
+    assert.match(t, /sakızı ameliyata girmeden önce mutlaka ağzınızdan çıkarın/)
+  })
+
+  it('TB: hepatotoxicity symptoms as in SB Tüberküloz Tanı ve Tedavi Rehberi 2019 (s. 79)', () => {
+    const a = paketModulu('enf-tb')!.varsayilan.alanlar!.find((x) => x.id === 'sarilik')!
+    assert.match(a.etiket, /karın ağrısı/)
+    assert.match(a.etiket, /iştahsızlık/)
+  })
+})

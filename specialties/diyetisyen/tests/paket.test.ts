@@ -91,9 +91,9 @@ describe('diyetisyen ilaç–besin notları', () => {
     assert.deepEqual(ilacBesinNotlari(['Wegovy']).map((n) => n.kod), ['glp1'])
     for (const n of Object.values(ILAC_BESIN_NOTLARI)) for (const m of n.maddeler) assert.doesNotMatch(m, DOZ_DESENI)
   })
-  it('levothyroxine day plan: breakfast +30 min, coffee +60 min, calcium/iron +2 h (KÜB)', () => {
-    assert.deepEqual(levotiroksinGunPlani('07:00'), { kahvalti: '07:30', kahve: '08:00', kalsiyumDemir: '09:00' })
-    assert.deepEqual(levotiroksinGunPlani('23:45'), { kahvalti: '00:15', kahve: '00:45', kalsiyumDemir: '01:45' })
+  it('levothyroxine day plan: breakfast +30 min, coffee +60 min, calcium/iron +4 h (TEMD Tiroid 2025 §7)', () => {
+    assert.deepEqual(levotiroksinGunPlani('07:00'), { kahvalti: '07:30', kahve: '08:00', kalsiyumDemir: '11:00' })
+    assert.deepEqual(levotiroksinGunPlani('23:45'), { kahvalti: '00:15', kahve: '00:45', kalsiyumDemir: '03:45' })
     assert.equal(levotiroksinGunPlani('7'), null)
   })
 })
