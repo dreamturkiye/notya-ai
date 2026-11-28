@@ -607,7 +607,7 @@ export const PROTOKOL_BELGELERI: ProtokolBelgesi[] = [
 
   // ─── Source verification 2026-11-28 (docs/kaynak/TIBBI-BRANS-PAKETI-ARASTIRMA.md § Source verification) ─────────────
   {
-    id: 'sb-kp-total-diz-2022',
+    id: 'sb-kp-total-diz',
     baslik: 'Total Diz Artroplastisi Klinik Protokolü',
     kisaAd: 'SB Total Diz Artroplastisi Klinik Protokolü',
     yayinciKodu: 'SB-SHGM', yayinci: SB_SHGM_ARGE, tur: 'sb-protokol',
@@ -660,7 +660,7 @@ export const PROTOKOL_BELGELERI: ProtokolBelgesi[] = [
     not: 'Metin okundu (2026-11-27): meme 40–69 yaş, mamografi 2 yılda bir + yılda bir klinik meme muayenesi; serviks 30–65 yaş, HPV-DNA / smear 5 yılda bir; kolorektal 50–70 yaş, gaitada gizli kan 2 yılda bir (yüksek riskte 40 yaştan). Belgede tarih / sürüm yok — sürüm yazılmadı.',
   },
   {
-    id: 'dernek-temd-tiroid-2025',
+    id: 'dernek-temd-tiroid',
     baslik: 'Tiroid Hastalıkları Tanı ve Tedavi Kılavuzu',
     kisaAd: 'TEMD Tiroid Kılavuzu',
     yayinciKodu: 'DERNEK', yayinci: 'Türkiye Endokrinoloji ve Metabolizma Derneği (TEMD)', tur: 'dernek-kilavuzu',

@@ -13,7 +13,7 @@
     "lib/doktor/dozKilidi.ts": "c613f8d078cf2412",
     "lib/doktor/kaynakKilidi.ts": "4d0f6bd0cb80849f",
     "lib/doktor/klinikMetin.ts": "edaad301be6b949c",
-    "lib/kaynaklar/protokolKutuphanesi/belgeler.ts": "9e935608173e85c5",
+    "lib/kaynaklar/protokolKutuphanesi/belgeler.ts": "ecafa68da4d78d71",
     "lib/kaynaklar/protokolKutuphanesi/cip.ts": "184e90b543406a7e",
     "lib/kaynaklar/protokolKutuphanesi/index.ts": "93deca73ce776f96",
     "lib/kaynaklar/protokolKutuphanesi/uluslararasi.ts": "3e4635e5e93202ec",
@@ -68,7 +68,7 @@
     "specialties/sac-ekimi/prompts/system.md": "5a8d5dd8e8038dfc",
     "specialties/sac-ekimi/prompts/voice.md": "17964b4a42036252"
   },
-  "ozet": "5288c9a230a79c23",
-  "guncelleme": "2026-11-27",
-  "not": "AKKS-HEDEF-12: source-list wording no longer suppresses clinical numbers; SGK/SUT/mevzuat/ücret explicitly in Ayşe scope"
+  "ozet": "dd5e1cd8cd0205b5",
+  "guncelleme": "2026-11-28",
+  "not": "BRANS-PAKETI source verification 2026-11-28 (ids kept: dernek-temd-tiroid, sb-kp-total-diz now confirmed entries)"
 }

@@ -40,7 +40,7 @@ describe('merge, never replace — all 40 branşlar', () => {
     }
     assert.deepEqual(dusen.sort(), [
       'endokrinoloji: TEMD Adrenal-Gonadal (2025)', // dernek-temd-adrenal-gonadal-2025 (source verification 2026-11-28)
-      'endokrinoloji: TEMD Tiroid Hastalıkları Tanı ve Tedavi Kılavuzu (2025)', // dernek-temd-tiroid-2025
+      'endokrinoloji: TEMD Tiroid Hastalıkları Tanı ve Tedavi Kılavuzu (2025)', // dernek-temd-tiroid
       'kardiyoloji: ESC 2023 Akut Koroner Sendrom (AKS) Kılavuzu',
       'kardiyoloji: ESC 2023 Diyabet ve KVH',
       'kardiyoloji: ESC 2024 Atriyal Fibrilasyon',

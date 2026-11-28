@@ -4,6 +4,9 @@ Order follows CLAUDE.md "what Turkish doctors use": Turkish law / regulator → 
 guideline Turkish clinicians actually use (latest edition) → textbooks. Everything below was read in this session unless
 marked **NOT CONFIRMED**. Source ids are the ones used in code (`kaynaklar: [...]`).
 
+**2026-11-28:** every NOT CONFIRMED source below was verified — results, corrections and the list still NOT REACHABLE
+ONLINE are in **§ Source verification** at the end; the status column below is the pre-verification state.
+
 ## Legal scope of the dietitian in Türkiye
 - **YONETMELIK-2014** — Sağlık Meslek Mensupları ile Sağlık Hizmetlerinde Çalışan Diğer Meslek Mensuplarının İş ve Görev
   Tanımlarına Dair Yönetmelik, RG 22.05.2014 / 29007, Ek-2 "Diyetisyen" (read via a university mirror of the RG text):
@@ -93,7 +96,7 @@ HOMA-IR, no gamification of weight (bransAyari `oyunDisi: ['kilo','bel']` keeps 
 
 | Item | Result | Source · edition · URL (read) | Finding | Change |
 |---|---|---|---|---|
-| TEMD-TIROID-2025 timing text | CONFIRMED (+ correction) | TEMD *Tiroid Hastalıkları Tanı ve Tedavi Kılavuzu*, 8. Baskı Nisan 2025, ISBN 978-625-95378-1-8 — https://file.temd.org.tr/Uploads/publications/guides/documents/tiroid2025_11042025.pdf (2026-11-28) | Bölüm 7 p. 91: LT4 "öğünden en az 30 dakika önce bir miktar su ile"; bedtime 3–4 h after the last meal; iron / calcium "en az 4 saat ara" | Turkish society text is stricter than the KÜB (2 h) and satisfies it → **4 h** in `ilacBesin.ts` (+240 min), diyet-tiroid note, sablonlar.ts; test updated. Registry `dernek-temd-tiroid-2025` |
+| TEMD-TIROID-2025 timing text | CONFIRMED (+ correction) | TEMD *Tiroid Hastalıkları Tanı ve Tedavi Kılavuzu*, 8. Baskı Nisan 2025, ISBN 978-625-95378-1-8 — https://file.temd.org.tr/Uploads/publications/guides/documents/tiroid2025_11042025.pdf (2026-11-28) | Bölüm 7 p. 91: LT4 "öğünden en az 30 dakika önce bir miktar su ile"; bedtime 3–4 h after the last meal; iron / calcium "en az 4 saat ara" | Turkish society text is stricter than the KÜB (2 h) and satisfies it → **4 h** in `ilacBesin.ts` (+240 min), diyet-tiroid note, sablonlar.ts; test updated. Registry `dernek-temd-tiroid` |
 | TEMD-DIYABET | NEWER EDITION INDICATED (2026) — NOT REACHABLE ONLINE | KLİMİK talk (June 2026) cites the TEMD DM guide "2026" | Not read; nothing in the diyetisyen templates quotes it | none |
 | TEMD-DISLIPIDEMI | NOT FOUND (no current TEMD lipid guide surfaced; ESC/EAS 2019 + 2025 focused update is in the registry) | — | — | none |
 | SB-DOGUM-ONCESI (GDM) | CONFIRMED for 2018 · 2026 edition listed, NOT REACHABLE | SB *Doğum Öncesi Bakım Yönetim Rehberi* 2018, Yayın No 925 (WHO copy) — https://platform.who.int/docs/default-source/mca-documents/policy-documents/guideline/TUR-MN-21-01-GUIDELINE-2018-tur-Antenatal-Care-Management-Guidelines.pdf | 50 g screen at 24–28 w (p. 20); 75 g OGTT for risk groups / after a positive screen, repeat at 24–28 w if first negative (p. 13). PUDER guide not read | none (template only says screening is the obstetrician's) |

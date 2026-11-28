@@ -6,11 +6,12 @@ Kaan 2026-11-27: "Diyetisyen için yapacağın hasta portalını bütün branşl
 Branşlar, diyetisyen full package) shipped 2026-11-27 (git log --grep BRANS-PAKETI; migration 216). Phase 2 = the 30
 medical branşlar on the same registry and views — per-branş proposal in docs/portal/BRANS-PAKETI-FAZ2.md. Starts after
 Phase 1 is live. Also open from Phase 1 (owner Claude unless noted):
-- SCOFF Turkish item wording: align the five items to the published Aydemir et al. form when the full text is available
-  (dietitians can already align it when accepting the template). Owner: Claude.
-- TÜRKİYE sources not confirmed in the session (docs/kaynak/DIYETISYEN-PAKETI-ARASTIRMA.md): Türkiye Diyetisyenler Derneği
-  practice guidance, TEMD diabetes / lipid guide editions, the current SB gestational-diabetes text, TİTCK isotretinoin
-  programme, Turkish practice notes for GLP-1 users. Owner: Claude (monthly regulatory check covers it).
+- SCOFF Turkish item wording: citation confirmed 2026-11-28 (Turkish form = "REZZY", Anadolu Psikiyatri Derg
+  2015;16(Özel Sayı 1):31–35); the five printed items are still NOT REACHABLE ONLINE → Chrome pass below. Owner: Claude.
+- ~~TÜRKİYE sources not confirmed (diyetisyen)~~ — VERIFIED 2026-11-28 (docs/kaynak/DIYETISYEN-PAKETI-ARASTIRMA.md
+  § Source verification): TEMD Tiroid 2025 confirmed (calcium/iron gap corrected to 4 h); Türkiye Diyetisyenler Derneği
+  guidance, TEMD lipid guide and a Turkish GLP-1 nutrition position NOT FOUND (international sources stay, labelled);
+  SB GDM text confirmed for DÖBYR 2018. Still open → Chrome pass below (TEMD DM 2026, TİTCK isotretinoin, DÖBYR 2026).
 - ~~Doctor-side package tile on the patient file~~ — DONE 2026-11-27 (batch a): `components/doktor/bransPaketi/PaketKarti.tsx`
   on the patient file Özet (all 40 branşlar) + Ayarlar › Hasta alanı paketi for medical doctors.
 
@@ -30,11 +31,21 @@ Phase 2 progress (2026-11-27):
 - **BRANS-PAKETI-FAZ2-GORSEL-QA — visual check of the redesigned package view on real phones. Owner: Claude, at the next
   live session (no browser in this job).** tsc + tests + Vercel build cover correctness, not looks; check
   /portal/demo-paket/{pediatri,kadin-hastaliklari-dogum,dermatoloji,kardiyoloji,ortopedi} at 375 px. Added 2026-11-27.
-- Unconfirmed Turkish sources (SB İzlem / Doğum Öncesi / Doğum Sonu / acil obstetrik rehberleri current editions, TJOD
-  AUK, TDD atopik dermatit + psoriazis, TPK ateş, SB ASİE; batch (b): the Turkish society texts marked NOT CONFIRMED in
-  docs/kaynak/TIBBI-BRANS-PAKETI-ARASTIRMA.md — TKD, TEMD, TND, TTD, TPD, TTOD, TGD, TÜD, TKBB, TOD, TARD, TATD …):
-  confirm in the monthly regulatory pass (MEVZUAT-TAKIP).
-  Owner: Claude. Physicians accept each template before use, so nothing reaches a patient unreviewed.
+- ~~Unconfirmed Turkish sources (batch a + b)~~ — VERIFIED 2026-11-28 (Kaan 2026-11-27 "Bunları doğrula"; register in
+  docs/kaynak/TIBBI-BRANS-PAKETI-ARASTIRMA.md § Source verification). 51 checks over the ~48 source rows (some rows name both a society
+  and an SB text): 17 confirmed, 4 newer edition found / indicated (DÖBYR 2026, DSBYR 2026, ESC HF 2026, TEMD DM 2026), 27
+  not found (no Turkish text on the topic → international source kept, labelled), 3 not reachable online (TİTCK isotretinoin
+  programme, the printed Turkish REZZY items, ADA 2026 B12 recommendation number). Template corrections shipped: ped-yenidogan (SB İzlem 2018 danger signs), kd-lohusa-zaman / -gunluk (SB DSB 2018
+  visits + danger signs), enf-tb (SB TB 2019), dmt-/derm-izotretinoin (TDD: no blood donation +1 month), ane-aclik (ASA 2023
+  gum), levothyroxine 4 h (TEMD Tiroid 2025), kar-ky source id → ESC HF 2026. Registry: TEMD Tiroid 2025, TEMD
+  Adrenal-Gonadal 2025, SB TB 2019, SB İzlem Protokolleri 2018, SB Total Diz KP 2022 confirmed.
+- **BRANS-PAKETI-KAYNAK-CHROME — sources NOT REACHABLE ONLINE with WebSearch/WebFetch. Owner: Claude, in a Chrome pass with
+  Kaan present. Added 2026-11-28.** (1) SB *Doğum Öncesi Bakım Yönetim Rehberi 2026* and *Doğum Sonu Bakım Yönetim Rehberi
+  2026* (HSGM Dokümanlar page; hsgm.saglik.gov.tr robots-blocked for the fetch tool) — re-check kd-gebelik-*, kd-lohusa-*
+  and the KD chapter's "DÖBYR 2026 / Yayın No 1402" claim; (2) TİTCK isotretinoin pregnancy-prevention programme / KÜB
+  (titck.gov.tr); (3) TEMD DM guide 2026; (4) the five published Turkish REZZY (SCOFF) items → align
+  `specialties/diyetisyen/engines/tarama.ts` word for word; (5) HSGM-hosted copy of the SB TB Rehberi 2019 (registry uses
+  the EKMUD copy). Monthly MEVZUAT-TAKIP keeps re-checking editions.
 
 ## TELESAGLIK-BEKLEMEDE — telehealth ON HOLD (Kaan, 2026-11-25: "Put the telehealth on hold for now"). Owner: Kaan. Waits on: Kaan.
 
