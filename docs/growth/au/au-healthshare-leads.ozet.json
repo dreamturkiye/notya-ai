@@ -1,0 +1,43 @@
+{
+  "total": 7022,
+  "with_phone": 4405,
+  "with_whatsapp_mobile": 540,
+  "by_specialty": {
+    "dermatology": 683,
+    "dietetics": 3015,
+    "obstetrics-gynaecology": 1702,
+    "paediatrics": 1622
+  },
+  "by_specialty_with_phone": {
+    "dermatology": 634,
+    "dietetics": 1246,
+    "obstetrics-gynaecology": 1384,
+    "paediatrics": 1141
+  },
+  "by_specialty_with_mobile": {
+    "dermatology": 8,
+    "dietetics": 459,
+    "obstetrics-gynaecology": 31,
+    "paediatrics": 42
+  },
+  "by_state": {
+    "NSW": 1598,
+    "QLD": 896,
+    "VIC": 1248,
+    "SA": 296,
+    "WA": 357,
+    "ACT": 135,
+    "NT": 20,
+    "TAS": 64,
+    "?": 2408
+  },
+  "demo": "www.au.notya.io/au/demo",
+  "cal": "www.cal.com/han-mamur-sugmbo/demo-au",
+  "trial": "www.au.notya.io",
+  "source": "healthshare",
+  "files": {
+    "full": "au-healthshare-leads.csv",
+    "call_ready": "au-call-ready-leads.csv",
+    "whatsapp": "au-whatsapp-call-ready.csv"
+  }
+}
