@@ -1,0 +1,14 @@
+{
+  "restriction_ended_at": "2026-11-11T12:00:00+03:00",
+  "note": "Phase-2 post-ban (2026-11-12): 10–20 min gaps + unique variants in place. Ultra-soft 6/day was day-1 floor only — too low once velocity is fixed. Research: WA publishes no Business-app cold cap; industry cold guidance ~20–50/day (lower after a prior ban). See TR-WHATSAPP-ANTI-BAN.md.",
+  "soft_restart_hours": 48,
+  "min_gap_minutes": 10,
+  "soft_min_gap_minutes": 12,
+  "max_per_day": 22,
+  "soft_max_per_day": 16,
+  "max_per_hour": 5,
+  "quiet_hours_start": 9,
+  "quiet_hours_start_minute": 30,
+  "quiet_hours_end": 19,
+  "tz": "Europe/Istanbul"
+}

@@ -1,0 +1,28 @@
+{
+  "tarih": "2026-11-10T10:21:39.998Z",
+  "mode": "whatsapp_social_only",
+  "scanned": 300,
+  "fail": 0,
+  "profiles_with_wa": 15,
+  "whatsapp_mobil_adet": 15,
+  "call_ready_patched": 14,
+  "brans": {
+    "kadin-dogum": 15,
+    "dermatoloji": 0,
+    "pediatri": 0
+  },
+  "siradaki": {
+    "skor": "85",
+    "isim": "Emel Kelestemur",
+    "brans": "kadin-dogum",
+    "sehir": "ankara",
+    "ilce": "",
+    "telefon": "+905074713613",
+    "mobil_yeni": "+905074713613",
+    "url": "https://www.doktorsitesi.com/emel-kelestemur/kadin-hastaliklari-ve-dogum/ankara",
+    "durum": "siradaki",
+    "kaynak_enrich": "whatsapp_social",
+    "gsm_score": 100
+  },
+  "not": "Only Doktorsitesi socialMedia type=whatsapp (or ld+json GSM telephone). No bare 5xx scrapes."
+}
